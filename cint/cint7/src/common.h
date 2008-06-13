@@ -865,12 +865,10 @@ struct G__AppPragma {
 * for function overloading
 **********************************************************************/
 struct G__funclist {
-  /*struct G__ifunc_table *ifunc;
-  int ifn;*/
+  struct G__funclist* next;
   Reflex::Member ifunc;
   unsigned int rate;
   unsigned int p_rate[G__MAXFUNCPARA];
-  struct G__funclist *prev;
 };
 
 /*********************************************************************

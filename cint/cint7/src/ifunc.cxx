@@ -173,7 +173,7 @@ void Cint::Internal::G__asm_storebytecodefunc(const Reflex::Member& func, const 
    /* copy compiled and library function name buffer */
    if (0 == G__asm_name_p) {
       if (G__asm_name) free(G__asm_name);
-      bytecode->asm_name = (char*)NULL;
+      bytecode->asm_name = 0;
    }
    else {
       bytecode->asm_name = G__asm_name;
@@ -937,7 +937,7 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
             G__genericerror("Limitation: Items in header must be separately specified");
          }
       }
-      // entry fp = NULL means this is header
+      // entry fp = 0 means this is header
       builder.fProp.entry.p = 0;
       builder.fProp.entry.line_number = -1;
       builder.fProp.entry.filenum = -1;
@@ -1031,7 +1031,7 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
          dobody = 1;
       }
       else {
-         // entry fp = NULL means this is header
+         // entry fp = 0 means this is header
          builder.fProp.entry.p = 0;
          builder.fProp.entry.line_number = -1;
       }
@@ -2704,22 +2704,24 @@ static int G__param_match(char formal_type, const ::Reflex::Scope& formal_tagnum
 #define G__TOVOIDPMATCH   0x00000003
 
 //______________________________________________________________________________
-struct G__funclist* Cint::Internal::G__funclist_add(G__funclist *last, const ::Reflex::Member &ifunc, int rate)
+struct G__funclist* Cint::Internal::G__funclist_add(G__funclist* head, const ::Reflex::Member ifunc, int rate)
 {
-   struct G__funclist *latest =
-               (struct G__funclist*)malloc(sizeof(struct G__funclist));
-   latest->prev = last;
-   latest->ifunc = ifunc;
-   latest->rate = rate;
-   return(latest);
+   // Add a new entry to a function overloading rating list at the head.
+   struct G__funclist* p = (struct G__funclist*) malloc(sizeof(struct G__funclist));
+   p->next = head;
+   p->ifunc = ifunc;
+   p->rate = rate;
+   return p;
 }
 
 //______________________________________________________________________________
-void Cint::Internal::G__funclist_delete(G__funclist *body)
+void Cint::Internal::G__funclist_delete(G__funclist* node)
 {
-   if (body) {
-      if (body->prev) G__funclist_delete(body->prev);
-      free((void*)body);
+   // Erase a function overloading rating list starting from a given node.
+   while (node) {
+      G__funclist* p = node->next;
+      free(node);
+      node = p;
    }
 }
 
@@ -2806,91 +2808,119 @@ static int G__igrd(int formal_type)
 
 //______________________________________________________________________________
 #ifndef __CINT__
-static ::Reflex::Member G__overload_match(char* funcname, G__param* libp, int hash, const ::Reflex::Scope& p_ifunc, int memfunc_flag, int access, int isrecursive, int doconvert, int* match_error);
-#endif
+static ::Reflex::Member G__overload_match(char* funcname, G__param* libp, int hash, const ::Reflex::Scope p_ifunc, int memfunc_flag, int access, int isrecursive, int doconvert, int* match_error);
+#endif // __CINT__
+
+static void G__display_param(FILE* fp, const ::Reflex::Scope scopetagnum, char* funcname, G__param* libp);
+static void G__display_func(FILE* fp, const ::Reflex::Member func);
 
 //______________________________________________________________________________
-static void G__rate_parameter_match(G__param *libp, const ::Reflex::Member &func, G__funclist *funclist, int recursive)
+static void G__rate_parameter_match(G__param* libp, const ::Reflex::Member func, G__funclist* funclist, int recursive)
 {
+   // Rate the conversion sequence for mapping the argument types to the formal parameter types for each function in funclist.
+   //static int depth = -1;
+   //++depth;
 #ifdef G__DEBUG
    int i = 0xa3a3a3a3;
-#else
-   int i;
-#endif
-   char param_type, formal_type;
-   ::Reflex::Type param_tagnum, formal_tagnum, param_final, formal_final;
-   int param_reftype, formal_reftype;
+#else // G__DEBUG
+   int i = 0;
+#endif // G__DEBUG
+   char arg_type = '\0';
+   char formal_type = '\0';
+   ::Reflex::Type arg_tagnum;
+   ::Reflex::Type formal_tagnum;
+   ::Reflex::Type arg_final;
+   ::Reflex::Type formal_final;
+   int arg_reftype = 0;
+   int formal_reftype = 0;
 #ifdef G__DEBUG
-   int param_isconst = 0xa3a3a3a3, formal_isconst = 0xa5a5a5a5;
-#else
-   int param_isconst = 0, formal_isconst = 0;
-#endif
+   int arg_isconst = 0xa3a3a3a3;
+   int formal_isconst = 0xa5a5a5a5;
+#else // G__DEBUG
+   int arg_isconst = 0;
+   int formal_isconst = 0;
+#endif // G__DEBUG
+   //fprintf(stderr, "\nG__rate_parameter_match: Calling: %d ", depth);
+   //G__display_param(G__serr, func.TypeOf().DeclaringScope(), (char*) func.Name().c_str(), libp);
+   //G__display_param(G__serr, ::Reflex::Scope::GlobalScope(), (char*) func.Name(::Reflex::SCOPED | ::Reflex::QUALIFIED).c_str(), libp);
    funclist->rate = 0;
-   for (i = 0;i < libp->paran;i++) {
-
+   for (i = 0; i < libp->paran; ++i) {
       formal_tagnum = func.TypeOf().FunctionParameterAt(i);
-      param_tagnum = G__value_typenum(libp->para[i]);
-
+      arg_tagnum = G__value_typenum(libp->para[i]);
       formal_final = formal_tagnum.FinalType();
-      param_final = param_tagnum.FinalType();
-
-      param_type = G__get_type(param_tagnum);
+      arg_final = arg_tagnum.FinalType();
+      arg_type = G__get_type(arg_tagnum);
       formal_type = G__get_type(formal_tagnum);
-
-      param_isconst = G__get_isconst(param_tagnum);
+      arg_isconst = G__get_isconst(arg_tagnum);
       formal_isconst = G__get_isconst(formal_tagnum);
-
-      param_reftype = G__get_reftype(param_final);
+      arg_reftype = G__get_reftype(arg_final);
       formal_reftype = G__get_reftype(formal_final);
-
-      param_tagnum = param_tagnum.RawType();
+      arg_tagnum = arg_tagnum.RawType();
       formal_tagnum = formal_tagnum.RawType();
-
       funclist->p_rate[i] = G__NOMATCH;
-
-      /* exact match */
-      if (param_type == formal_type) {
-         if (tolower(param_type) == 'u') {
-            /* If struct,class,union, check tagnum */
-            if (formal_tagnum == param_tagnum) { /* match */
+      //
+      //  Exact Match.
+      //
+      //fprintf(stderr, "G__rate_parameter_match: %d Checking for exact match.\n", depth);
+      if (arg_type == formal_type) {
+         if (tolower(arg_type) == 'u') { // class, struct, union, or pointer to them, check rawtype
+            if (arg_tagnum == formal_tagnum) {
                funclist->p_rate[i] = G__EXACTMATCH;
             }
          }
-         else if (isupper(param_type)) {
-            if (param_reftype == formal_reftype ||
-                  (param_reftype <= G__PARAREFERENCE &&
-                   formal_reftype <= G__PARAREFERENCE)) {
+         else if (isupper(arg_type)) { // two pointers to fundamental type
+            if ( // if pointer count and refness are compatible, then exact match
+               (arg_reftype == formal_reftype) || // pointer count is the same, and refness is the same, or
+               (
+                  (arg_reftype <= G__PARAREFERENCE) && // arg is a pointer, or a ref to a pointer, and
+                  (formal_reftype <= G__PARAREFERENCE) // formal param is a pointer, or a ref to a pointer
+               )
+            ) {
                funclist->p_rate[i] = G__EXACTMATCH;
             }
-            else if ((formal_reftype > G__PARAREF && formal_reftype == param_reftype + G__PARAREF)
-                     || (param_reftype > G__PARAREF && param_reftype == formal_reftype + G__PARAREF)) {
+            else if (
+               (
+                  (arg_reftype > G__PARAREF) &&
+                  (arg_reftype == (formal_reftype + G__PARAREF))
+               ) ||
+               (
+                  (formal_reftype > G__PARAREF) &&
+                  (formal_reftype == (arg_reftype + G__PARAREF))
+               )
+            ) {
                funclist->p_rate[i] = G__STDCONVMATCH;
             }
          }
-         else if ('i' == param_type && (formal_tagnum != param_tagnum)) {
+         else if ((arg_type == 'i') && (arg_tagnum != formal_tagnum)) { // This is for enums.
             funclist->p_rate[i] = G__PROMOTIONMATCH;
          }
-         else { /* match */
+         else {
             funclist->p_rate[i] = G__EXACTMATCH;
          }
       }
-      else if (('I' == param_type || 'U' == param_type) &&
-               ('I' == formal_type || 'U' == formal_type) &&
-               param_tagnum == formal_tagnum &&
-               -1 != G__get_tagnum(formal_tagnum) && 'e' == G__get_tagtype(formal_tagnum)) {
+      else if ( // special hack for pointer to enum
+         (
+            (arg_type == 'I') || // arg is int*, or
+            (arg_type == 'U') // arg is class MyClass*,
+         ) && // and,
+         (
+            (formal_type == 'I') || // formal func param is int*, or
+            (formal_type == 'U') // formal func param is MyClass*,
+         ) && // and,
+         (arg_tagnum == formal_tagnum) && // arg and formal param have same tag, and
+         (G__get_tagnum(formal_tagnum) != -1) && // formal param is of class, enum, struct, or union type, and
+         (G__get_tagtype(formal_tagnum) == 'e') // formal param is of enum type
+      ) {
          funclist->p_rate[i] = G__EXACTMATCH;
       }
-      else if (isupper(formal_type) &&
-               ('i' == param_type || 'l' == param_type)
-               && 0 == libp->para[i].obj.i) {
-         funclist->p_rate[i] = G__STDCONVMATCH + G__I02PCONVMATCH;
-      }
-
-      /* promotion */
-      if (G__NOMATCH == funclist->p_rate[i]) {
+      //
+      //  Promotion.
+      //
+      if (funclist->p_rate[i] == G__NOMATCH) {
+         //fprintf(stderr, "G__rate_parameter_match: %d Checking for promotion.\n", depth);
          switch (formal_type) {
          case 'd': /* 4.6: conv.fpprom */
-            switch (param_type) {
+            switch (arg_type) {
             case 'f':
                funclist->p_rate[i] = G__PROMOTIONMATCH;
                break;
@@ -2900,16 +2930,16 @@ static void G__rate_parameter_match(G__param *libp, const ::Reflex::Member &func
             break;
          case 'i': /* 4.5: conv.prom */
          case 'h': /* 4.5: conv.prom */
-            switch (param_type) {
+            switch (arg_type) {
             case 'b':
             case 'c':
             case 'r':
             case 's':
             case 'g':
-               funclist->p_rate[i] = G__promotiongrade(formal_type, param_type);
+               funclist->p_rate[i] = G__promotiongrade(formal_type, arg_type);
                break;
             case 'u':
-               if ('e' == G__get_tagtype(param_tagnum)) {
+               if ('e' == G__get_tagtype(arg_tagnum)) {
                   funclist->p_rate[i] = G__PROMOTIONMATCH;
                }
                break;
@@ -2919,16 +2949,19 @@ static void G__rate_parameter_match(G__param *libp, const ::Reflex::Member &func
             break;
          case 'l':
          case 'k': /* only enums get promoted to (u)long! */
-            if (param_type == 'u' && 'e' == G__get_tagtype(param_tagnum)) {
+            if (arg_type == 'u' && 'e' == G__get_tagtype(arg_tagnum)) {
                   funclist->p_rate[i] = G__PROMOTIONMATCH;
             }
             break;
          case 'Y':
-            if (isupper(param_type) || 0 == libp->para[i].obj.i
+            if (
+               isupper(arg_type) ||
+               0 == libp->para[i].obj.i
+               // --
 #ifndef G__OLDIMPLEMENTATION2191
-                || '1' == param_type
-#endif
-                ) {
+                || '1' == arg_type
+#endif // G__OLDIMPLEMENTATION2191
+             ) {
                funclist->p_rate[i] = G__PROMOTIONMATCH + G__TOVOIDPMATCH;
             }
             break;
@@ -2936,273 +2969,280 @@ static void G__rate_parameter_match(G__param *libp, const ::Reflex::Member &func
             break;
          }
       }
-
-      /* standard conversion */
-      if (G__NOMATCH == funclist->p_rate[i]) {
-         switch (formal_type) {
-         /* no; f(enum E) cannot be called as f(1)!
-         case 'u':
-            if (0 <= G__get_tagnum(formal_tagnum) && 'e' == G__get_tagtype(formal_tagnum)) {
-               switch (param_type) {
-               case 'i':
-               case 's':
-               case 'l':
-               case 'c':
-               case 'h':
-               case 'r':
-               case 'k':
-               case 'b':
-                  funclist->p_rate[i] = G__PROMOTIONMATCH;
+      //
+      //  Standard Conversion.
+      //
+      if (funclist->p_rate[i] == G__NOMATCH) {
+         //fprintf(stderr, "G__rate_parameter_match: %d Checking for a conversion.\n", depth);
+         if ( // Check for integral const zero conversion to pointer
+            isupper(formal_type) && // formal func param is a pointer, and
+            (
+               (arg_type == 'i') || // arg is int, or
+               (arg_type == 'l') // arg is long
+               // FIXME: we need char, short, unsigned char, unsigned short, unsigned int, unsigned long
+            ) &&
+            !libp->para[i].obj.i && // arg value is zero
+            arg_isconst // arg is const
+         ) {
+            //fprintf(stderr, "G__rate_parameter_match: integral const zero passed to pointer seen for function '%s'.\n", func.Name(::Reflex::SCOPED).c_str());
+            //funclist->p_rate[i] = G__STDCONVMATCH + G__I02PCONVMATCH;
+            funclist->p_rate[i] = G__EXACTMATCH;
+         }
+         if (funclist->p_rate[i] == G__NOMATCH) {
+            switch (formal_type) {
+               case 'b': // unsigned char
+               case 'c': // char
+               case 'r': // unsigned short
+               case 's': // short
+               case 'h': // unsigned int
+               case 'i': // int
+               case 'k': // unsigned long
+               case 'l': // long
+               case 'g': // bool
+               case 'n': // unsigned long long
+               case 'm': // long long
+               case 'd': // double
+               case 'f': // float
+                  switch (arg_type) {
+                     case 'd':
+                     case 'f':
+                     case 'b':
+                     case 'c':
+                     case 'r':
+                     case 's':
+                     case 'h':
+                     case 'i':
+                     case 'k':
+                     case 'l':
+                     case 'g':
+                     case 'n':
+                     case 'm':
+                     case 'q':
+                        funclist->p_rate[i] = G__STDCONVMATCH;
+                        break;
+                     case 'u':
+                        if (G__get_tagtype(arg_tagnum) == 'e') {
+                           funclist->p_rate[i] = G__PROMOTIONMATCH;
+                        }
+                        break;
+                     default:
+                        break;
+                  }
+               case 'C': // char*
+                  if (arg_type == 'Y') { // void* passed to char* FIXME: This is illegal! char* passed to void* is ok!
+                     if (arg_reftype == G__PARANORMAL) {
+                        funclist->p_rate[i] = G__STDCONVMATCH;
+                     }
+                  }
+                  break;
+               case 'Y': // void*
+                  if (isupper(arg_type) || !libp->para[i].obj.i) {
+                     funclist->p_rate[i] = G__STDCONVMATCH;
+                  }
+                  break;
+#ifndef G__OLDIMPLEMENTATION2191
+               case '1':
+#else // G__OLDIMPLEMENTATION2191
+               case 'Q':
+#endif // G__OLDIMPLEMENTATION2191
+                  // --
+                  if (
+                      // --
+#ifndef G__OLDIMPLEMENTATION2191
+                     '1' == arg_type
+#else // G__OLDIMPLEMENTATION2191
+                     'Q' == arg_type
+#endif // G__OLDIMPLEMENTATION2191
+                     // --
+                  ) {
+                     funclist->p_rate[i] = G__STDCONVMATCH;
+                  }
+                  else if ('Y' == arg_type) {
+                     funclist->p_rate[i] = G__STDCONVMATCH + G__V2P2FCONVMATCH;
+                  }
+                  else if ('C' == arg_type) {
+                     if (G__get_funcproperties(func)->entry.size >= 0) {
+                        funclist->p_rate[i] = G__STDCONVMATCH - G__C2P2FCONVMATCH;
+                     }
+                     else {
+                        funclist->p_rate[i] = G__STDCONVMATCH + G__C2P2FCONVMATCH;
+                     }
+                  }
+                  break;
+               case 'u': // MyClass
+                  switch (arg_type) {
+                     case 'u':
+                        {
+                           // reference to derived class can be converted to reference to base
+                           // class. add offset, modify char* parameter and G__value* param
+                           unsigned int rate_inheritance = G__rate_inheritance(formal_tagnum, arg_tagnum);
+                           if (G__NOMATCH != rate_inheritance) {
+                              funclist->p_rate[i] = G__STDCONVMATCH + rate_inheritance;
+                           }
+                        }
+                        break;
+                  }
+                  break;
+               case 'U': // MyClass*
+                  switch (arg_type) {
+                     case 'U':
+                        {
+                           // Pointer to derived class can be converted to
+                           // pointer to base class.  Add offset, modify
+                           // char *parameter and G__value* param.
+                           unsigned int rate_inheritance = G__rate_inheritance(formal_tagnum, arg_tagnum);
+                           if (G__NOMATCH != rate_inheritance) {
+                              funclist->p_rate[i] = G__STDCONVMATCH + rate_inheritance;
+                           }
+                        }
+                        break;
+                     case 'Y':
+                        if (G__PARANORMAL == arg_reftype) {
+                           funclist->p_rate[i] = G__STDCONVMATCH;
+                        }
+                        break;
+#ifndef G__OLDIMPLEMENTATION2191
+                     case '1':
+#else // G__OLDIMPLEMENTATION2191
+                     case 'Q':
+#endif // G__OLDIMPLEMENTATION2191
+                        funclist->p_rate[i] = G__STDCONVMATCH;
+                        break;
+                     case 'i':
+                     case 0:
+                        if (0 == libp->para[0].obj.i) {
+                           funclist->p_rate[i] = G__STDCONVMATCH;
+                        }
+                        break;
+                     default:
+                        break;
+                  }
                   break;
                default:
+                  // --
+#ifndef G__OLDIMPLEMENTATION2191
+                  if ((arg_type == 'Y' || arg_type == '1') && (isupper(formal_type) || 'a' == formal_type)) {
+                     funclist->p_rate[i] = G__STDCONVMATCH;
+                  }
+#else // G__OLDIMPLEMENTATION2191
+                  if ((arg_type == 'Y' || arg_type == 'Q' || 0 == libp->para[0].obj.i) &&
+                        (isupper(formal_type) || 'a' == formal_type)) {
+                     funclist->p_rate[i] = G__STDCONVMATCH;
+                  }
+#endif // G__OLDIMPLEMENTATION2191
                   break;
-               }
             }
-            else {}
-         */
-         case 'b':
-         case 'c':
-         case 'r':
-         case 's':
-         case 'h':
-         case 'i':
-         case 'k':
-         case 'l':
-         case 'g':
-         case 'n':
-         case 'm':
-         case 'd':
-         case 'f':
-            switch (param_type) {
-            case 'd':
-            case 'f':
-            case 'b':
-            case 'c':
-            case 'r':
-            case 's':
-            case 'h':
-            case 'i':
-            case 'k':
-            case 'l':
-            case 'g':
-            case 'n':
-            case 'm':
-            case 'q':
-               funclist->p_rate[i] = G__STDCONVMATCH;
-               break;
-            case 'u':
-               if ('e' == G__get_tagtype(param_tagnum)) {
-                  funclist->p_rate[i] = G__PROMOTIONMATCH;
-               }
-               break;
-            default:
-               break;
-            }
-        case 'C':
-            switch (param_type) {
-            case 'i':
-            case 'l':
-               if (0 == libp->para[i].obj.i)
-                  funclist->p_rate[i] = G__STDCONVMATCH + G__I02PCONVMATCH;
-               break;
-            case 'Y':
-               if (G__PARANORMAL == param_reftype) {
-                  funclist->p_rate[i] = G__STDCONVMATCH;
-               }
-               break;
-            default:
-               break;
-            }
-            break;
-         case 'Y':
-            if (isupper(param_type) || 0 == libp->para[i].obj.i) {
-               funclist->p_rate[i] = G__STDCONVMATCH;
-            }
-            break;
-#ifndef G__OLDIMPLEMENTATION2191
-         case '1': /* questionable */
-#else
-         case 'Q': /* questionable */
-#endif
-            if (
-#ifndef G__OLDIMPLEMENTATION2191
-                '1' == param_type
-#else
-                'Q' == param_type
-#endif
-                )
-               funclist->p_rate[i] = G__STDCONVMATCH;
-            else if ('Y' == param_type)
-               funclist->p_rate[i] = G__STDCONVMATCH + G__V2P2FCONVMATCH;
-            else if ('C' == param_type) {
-               if (
-                   G__get_funcproperties(func)->entry.size >= 0
-                   )
-                  funclist->p_rate[i] = G__STDCONVMATCH - G__C2P2FCONVMATCH;
-               else {
-                  funclist->p_rate[i] = G__STDCONVMATCH + G__C2P2FCONVMATCH;/*???*/
-               }
-            }
-            break;
-         case 'u':
-            switch (param_type) {
-            case 'u':
-               /* reference to derived class can be converted to reference to base
-                * class. add offset, modify char *parameter and G__value *param */
-               {
-                  unsigned int rate_inheritance =
-                     G__rate_inheritance(formal_tagnum, param_tagnum);
-                  if (G__NOMATCH != rate_inheritance) {
-                     funclist->p_rate[i] = G__STDCONVMATCH + rate_inheritance;
-                  }
-               }
-               break;
-            }
-            break;
-         case 'U':
-            switch (param_type) {
-            case 'U':
-               /* Pointer to derived class can be converted to
-                * pointer to base class.
-                * add offset, modify char *parameter and
-                * G__value *param
-                */
-               {
-                  unsigned int rate_inheritance =
-                     G__rate_inheritance(formal_tagnum, param_tagnum);
-                  if (G__NOMATCH != rate_inheritance) {
-                     funclist->p_rate[i] = G__STDCONVMATCH + rate_inheritance;
-                  }
-               }
-               break;
-            case 'Y':
-               if (G__PARANORMAL == param_reftype) {
-                  funclist->p_rate[i] = G__STDCONVMATCH;
-               }
-               break;
-#ifndef G__OLDIMPLEMENTATION2191
-            case '1': /* questionable */
-#else
-            case 'Q': /* questionable */
-#endif
-               funclist->p_rate[i] = G__STDCONVMATCH;
-               break;
-            case 'i':
-            case 0:
-               if (0 == libp->para[0].obj.i) funclist->p_rate[i] = G__STDCONVMATCH;
-               break;
-            default:
-               break;
-            }
-            break;
-         default:
-            /* questionable */
-#ifndef G__OLDIMPLEMENTATION2191
-            if ((param_type == 'Y' || param_type == '1') &&
-                (isupper(formal_type) || 'a' == formal_type)) {
-               funclist->p_rate[i] = G__STDCONVMATCH;
-            }
-#else
-            if ((param_type == 'Y' || param_type == 'Q' || 0 == libp->para[0].obj.i) &&
-                (isupper(formal_type) || 'a' == formal_type)) {
-               funclist->p_rate[i] = G__STDCONVMATCH;
-            }
-#endif
-            break;
          }
       }
-
-      /* user defined conversion */
-      if (0 == recursive && G__NOMATCH == funclist->p_rate[i]) {
-         if (formal_type == 'u') {
-            int hash2;
-            int ifn2;
-            G__StrBuf funcname2_sb(G__ONELINE);
-            char *funcname2 = funcname2_sb;
-            struct G__param para;
-            G__incsetup_memfunc(formal_tagnum);
-            para.paran = 1;
-            para.para[0] = libp->para[i];
-            strcpy(funcname2, formal_tagnum.Name().c_str());
+      //
+      //  User-Defined Conversion.
+      //
+      if (!recursive && (funclist->p_rate[i] == G__NOMATCH) && (formal_type == 'u')) { // Try a constructor.
+         //fprintf(stderr, "G__rate_parameter_match: %d Checking for a user-defined conversion by constructor.\n", depth);
+         G__incsetup_memfunc(formal_tagnum);
+         struct G__param para;
+         para.paran = 1;
+         para.para[0] = libp->para[i];
+         G__StrBuf funcname2_sb(G__ONELINE);
+         char* funcname2 = funcname2_sb;
+         strcpy(funcname2, formal_tagnum.Name().c_str());
+         int hash2 = 0;
+         int ifn2 = 0;
+         G__hash(funcname2, hash2, ifn2);
+         int match_error = 0;
+         ::Reflex::Member func2 = G__overload_match(funcname2, &para, hash2, formal_tagnum, G__TRYCONSTRUCTOR, G__PUBLIC, 1, 1, &match_error);
+         if (func2) {
+            funclist->p_rate[i] = G__USRCONVMATCH;
+         }
+      }
+      if (!recursive && (funclist->p_rate[i] == G__NOMATCH) && (arg_type == 'u') && (G__get_tagnum(arg_tagnum) != -1)) { // Try a type conversion operator function.
+         //fprintf(stderr, "G__rate_parameter_match: %d Checking for a user-defined conversion by operator function.\n", depth);
+         G__incsetup_memfunc(arg_tagnum);
+         struct G__param para;
+         para.paran = 0;
+         // search for  operator type
+         G__StrBuf funcname2_sb(G__ONELINE);
+         char* funcname2 = funcname2_sb;
+         sprintf(funcname2, "operator %s", G__type2string(formal_type, G__get_tagnum(formal_tagnum), -1, 0, 0));
+         int hash2 = 0;
+         int ifn2 = 0;
+         G__hash(funcname2, hash2, ifn2);
+         int match_error;
+         ::Reflex::Member ifunc2 = G__overload_match(funcname2, &para, hash2, arg_tagnum, G__TRYMEMFUNC, G__PUBLIC, 1, 1, &match_error);
+         if (!ifunc2) {
+            // search for  operator const type
+            sprintf(funcname2, "operator %s", G__type2string(formal_type, G__get_tagnum(formal_tagnum), -1, 0, 1));
             G__hash(funcname2, hash2, ifn2);
-            int match_error;
-            ::Reflex::Member func2 = G__overload_match(funcname2, &para, hash2, formal_tagnum
-                                     , G__TRYCONSTRUCTOR, G__PUBLIC, 1
-                                     , 1
-                                     , &match_error
-                                                      );
-            if (func2)
-               funclist->p_rate[i] = G__USRCONVMATCH;
+            ifunc2 = G__overload_match(funcname2, &para, hash2, arg_tagnum, G__TRYMEMFUNC, G__PUBLIC, 1, 1, &match_error);
+         }
+         if (ifunc2) {
+            funclist->p_rate[i] = G__USRCONVMATCH;
          }
       }
-
-      if (0 == recursive && G__NOMATCH == funclist->p_rate[i]) {
-         if (param_type == 'u' && -1 != G__get_tagnum(param_tagnum)) {
-            int hash2, ifn2;
-            G__StrBuf funcname2_sb(G__ONELINE);
-            char *funcname2 = funcname2_sb;
-            struct G__param para;
-            G__incsetup_memfunc(param_tagnum);
-            para.paran = 0;
-            /* search for  operator type */
-            sprintf(funcname2, "operator %s"
-                    , G__type2string(formal_type, G__get_tagnum(formal_tagnum), -1, 0, 0));
-            G__hash(funcname2, hash2, ifn2);
-
-            int match_error;
-            ::Reflex::Member ifunc2 = G__overload_match(funcname2, &para, hash2, param_tagnum
-                                      , G__TRYMEMFUNC, G__PUBLIC, 1
-                                      , 1, &match_error
-                                                       );
-            if (!ifunc2) {
-               /* search for  operator const type */
-               sprintf(funcname2, "operator %s"
-                       , G__type2string(formal_type, G__get_tagnum(formal_tagnum), -1, 0, 1));
-               G__hash(funcname2, hash2, ifn2);
-               ifunc2 = G__overload_match(funcname2, &para, hash2, param_tagnum
-                                          , G__TRYMEMFUNC, G__PUBLIC, 1
-                                          , 1, &match_error
-                                         );
-            }
-            if (ifunc2)
-               funclist->p_rate[i] = G__USRCONVMATCH;
-         }
+      //
+      //  Notice a const/volatile conversion (this should rank Exact Match)
+      //
+      //  TODO: This is unnecessary and should be removed.
+      //
+      if (arg_isconst != formal_isconst) { // notice const/volatile conversion
+         funclist->p_rate[i] += G__CVCONVMATCH; // FIXME: Remove this!  This currently does nothing!  And it should not!
       }
-
-      /* add up matching rate */
-      if (G__NOMATCH == funclist->p_rate[i]) {
+      //
+      //  Check for const passed to non-const ref.
+      //
+      if (arg_isconst && !formal_isconst && formal_final.IsReference()) { // const passed to non-const ref is bad
+         //fprintf(stderr, "G__rate_parameter_match: %d No match, const passed to non-const ref.\n", depth);
+         funclist->p_rate[i] = G__NOMATCH;
+      }
+      //fprintf(stderr, "G__rate_parameter_match: %d rate: %08X  function ", depth, funclist->p_rate[i]);
+      //fprintf(stderr, "%s ", funclist->ifunc.TypeOf().ReturnType().Name(::Reflex::SCOPED |::Reflex::QUALIFIED).c_str());
+      //if (!funclist->ifunc.DeclaringScope().IsTopScope()) {
+      //   fprintf(stderr, "%s::", funclist->ifunc.DeclaringScope().Name(::Reflex::SCOPED).c_str());
+      //}
+      //fprintf(stderr, "%s(", funclist->ifunc.Name().c_str());
+      //for (int j = 0; j < funclist->ifunc.TypeOf().FunctionParameterSize(); ++j) {
+      //   fprintf(stderr, "%s", funclist->ifunc.TypeOf().FunctionParameterAt(i).Name(::Reflex::SCOPED |::Reflex::QUALIFIED).c_str());
+      //   if (j != (funclist->ifunc.TypeOf().FunctionParameterSize() - 1)) {
+      //      fprintf(stderr, ",");
+      //   }
+      //}
+      //fprintf(stderr, ");\n");
+      //
+      //  Stop scanning if a param did not match, function cannot match then.
+      //
+      if (funclist->p_rate[i] == G__NOMATCH) { // Stop scanning, if no param match, func cannot match.
          funclist->rate = G__NOMATCH;
-         break;
+         break; // Stop scanning, function cannot be a match.
       }
-      else {
-         if (param_isconst != formal_isconst) {
-            funclist->p_rate[i] += G__CVCONVMATCH;
-         }
-         if(0!=param_isconst&& 0==formal_isconst && formal_final.IsReference()) {
-            // The formal param is a non const reference and the
-            // actual param is const.
-            funclist->p_rate[i]=G__NOMATCH;
-            funclist->rate = G__NOMATCH;
-         }
-         /*
-         if('u'==param_type && (0!=param_isconst&& 0==formal_isconst)) {
-           funclist->p_rate[i]=G__NOMATCH;
-           funclist->rate = G__NOMATCH;
-         }
-         else */
-         if (G__NOMATCH != funclist->rate)
-            funclist->rate += funclist->p_rate[i];
+      //
+      //  Update the function rank by adding in the parameter rating.
+      //
+      if (funclist->rate != G__NOMATCH) {
+         funclist->rate += funclist->p_rate[i];
       }
    }
-   if (G__NOMATCH != funclist->rate &&
-         ((0 == G__isconst && (func.TypeOf().IsConst()))
-          || (G__isconst && (!func.TypeOf().IsConst())))
+   // Now adjust the rating based on the constness of the implied object parameter.
+   if (
+      (funclist->rate != G__NOMATCH) &&
+      (
+         (
+            !G__isconst && // invoker is not const, and
+            func.TypeOf().IsConst() // function is const
+         ) || // or,
+         (
+            G__isconst && // invoker is const, and
+            !func.TypeOf().IsConst() // function is not const
+         )
       )
-      funclist->rate += G__CVCONVMATCH;
+   ) {
+      funclist->rate += G__CVCONVMATCH; // Notice const/volatile conversion of implied object parameter.
+   }
+   //fprintf(stderr, "G__rate_parameter_match: %d final rate: %08X\n", depth, funclist->rate);
+   //--depth;
 }
 
 //______________________________________________________________________________
-static int G__convert_param(G__param *libp, const ::Reflex::Member &func, G__funclist *pmatch)
+static int G__convert_param(G__param* libp, const ::Reflex::Member& func, G__funclist* pmatch)
 {
    int i;
    unsigned int rate;
@@ -3880,14 +3920,19 @@ static int G__convert_param(G__param *libp, const ::Reflex::Member &func, G__fun
 }
 
 //______________________________________________________________________________
-static void G__display_param(FILE* fp, const ::Reflex::Scope &scopetagnum, char *funcname, G__param *libp)
+static void G__display_param(FILE* fp, const ::Reflex::Scope scopetagnum, char* funcname, G__param* libp)
 {
    int i;
 #ifndef G__OLDIMPLEMENTATION1485
-   if (G__serr == fp) {
-      if (!scopetagnum.IsTopScope()) G__fprinterr(G__serr, "%s::", scopetagnum.Name(::Reflex::SCOPED).c_str());
+   if (fp == G__serr) {
+      if (!scopetagnum.IsTopScope()) {
+         G__fprinterr(G__serr, "%s::", scopetagnum.Name(::Reflex::SCOPED).c_str());
+      }
+      else {
+         G__fprinterr(G__serr, "::");
+      }
       G__fprinterr(G__serr, "%s(", funcname);
-      for (i = 0;i < libp->paran;i++) {
+      for (i = 0; i < libp->paran; ++i) {
          switch (G__get_type(G__value_typenum(libp->para[i]))) {
             case 'd':
             case 'f':
@@ -3905,15 +3950,23 @@ static void G__display_param(FILE* fp, const ::Reflex::Scope &scopetagnum, char 
                             , 0));
                break;
          }
-         if (i != libp->paran - 1) G__fprinterr(G__serr, ",");
+         if (i != (libp->paran - 1)) {
+            G__fprinterr(G__serr, ",");
+         }
       }
       G__fprinterr(G__serr, ");\n");
    }
    else {
-#endif
-      if (scopetagnum && !scopetagnum.IsTopScope()) fprintf(fp, "%s::", scopetagnum.Name(::Reflex::SCOPED).c_str());
+      // --
+#endif // G__OLDIMPLEMENTATION1485
+      if (scopetagnum && !scopetagnum.IsTopScope()) {
+         fprintf(fp, "%s::", scopetagnum.Name(::Reflex::SCOPED).c_str());
+      }
+      else {
+         fprintf(fp, "::");
+      }
       fprintf(fp, "%s(", funcname);
-      for (i = 0;i < libp->paran;i++) {
+      for (i = 0; i < libp->paran; ++i) {
          switch (G__get_type(G__value_typenum(libp->para[i]))) {
             case 'd':
             case 'f':
@@ -3931,16 +3984,19 @@ static void G__display_param(FILE* fp, const ::Reflex::Scope &scopetagnum, char 
                                                 , 0));
                break;
          }
-         if (i != libp->paran - 1) fprintf(fp, ",");
+         if (i != (libp->paran - 1)) {
+            fprintf(fp, ",");
+         }
       }
       fprintf(fp, ");\n");
 #ifndef G__OLDIMPLEMENTATION1485
    }
-#endif
+#endif // G__OLDIMPLEMENTATION1485
+   // --
 }
 
 //______________________________________________________________________________
-static void G__display_func(FILE *fp, const ::Reflex::Member &func)
+static void G__display_func(FILE* fp, const ::Reflex::Member func)
 {
    unsigned int i;
    int store_iscpp = G__iscpp;
@@ -3951,9 +4007,7 @@ static void G__display_func(FILE *fp, const ::Reflex::Member &func)
 #ifndef G__OLDIMPLEMENTATION1485
    if (G__serr == fp) {
       if (G__get_funcproperties(func)->filenum >= 0) { /* 2012 must leave this one */
-         G__fprinterr(G__serr, "%-10s%4d "
-                      , G__stripfilename(G__srcfile[G__get_funcproperties(func)->filenum].filename)
-                      , G__get_funcproperties(func)->linenum);
+         G__fprinterr(G__serr, "%-10s%4d ", G__stripfilename(G__srcfile[G__get_funcproperties(func)->filenum].filename), G__get_funcproperties(func)->linenum);
       }
       else {
          G__fprinterr(G__serr, "%-10s%4d ", "(compiled)", 0);
@@ -4003,7 +4057,7 @@ static void G__display_func(FILE *fp, const ::Reflex::Member &func)
 }
 
 //______________________________________________________________________________
-static void G__display_ambiguous(const ::Reflex::Scope &scopetagnum, char *funcname, G__param *libp, G__funclist *funclist, unsigned int bestmatch)
+static void G__display_ambiguous(const ::Reflex::Scope& scopetagnum, char* funcname, G__param* libp, G__funclist* funclist, unsigned int bestmatch)
 {
    G__fprinterr(G__serr, "Calling : ");
    G__display_param(G__serr, scopetagnum, funcname, libp);
@@ -4012,7 +4066,7 @@ static void G__display_ambiguous(const ::Reflex::Scope &scopetagnum, char *funcn
       if (bestmatch == funclist->rate) G__fprinterr(G__serr, "* %8x ", funclist->rate);
       else                          G__fprinterr(G__serr, "  %8x ", funclist->rate);
       G__display_func(G__serr, funclist->ifunc);
-      funclist = funclist->prev;
+      funclist = funclist->next;
    }
 }
 
@@ -4038,11 +4092,11 @@ struct G__funclist* Cint::Internal::G__add_templatefunc(char *funcnamein, G__par
 
    if (env_tagnum != -1) baseclass = G__struct.baseclass[env_tagnum];
    else               baseclass = &G__globalusingnamespace;
-   if (0 == baseclass->basen) baseclass = (struct G__inheritance*)NULL;
+   if (0 == baseclass->basen) baseclass = 0;
 
 
-   call_para.string = (char*)NULL;
-   call_para.next = (struct G__Charlist*)NULL;
+   call_para.string = 0;
+   call_para.next = 0;
    deftmpfunc = &G__definedtemplatefunc;
 
 #ifndef G__OLDIMPLEMENTATION1560
@@ -4283,12 +4337,12 @@ static int G__identical_function(G__funclist *match, G__funclist *func)
 }
 
 //______________________________________________________________________________
-static ::Reflex::Member G__overload_match(char* funcname, G__param *libp, int hash, const ::Reflex::Scope &p_ifunc, int memfunc_flag, int access, int isrecursive, int doconvert, int *match_error)
+static ::Reflex::Member G__overload_match(char* funcname, G__param* libp, int hash, const ::Reflex::Scope p_ifunc, int memfunc_flag, int access, int isrecursive, int doconvert, int* match_error)
 {
-   struct G__funclist *funclist = (struct G__funclist*)NULL;
-   struct G__funclist *match = (struct G__funclist*)NULL;
+   struct G__funclist* funclist = 0;
+   struct G__funclist* match = 0;
    unsigned int bestmatch = G__NOMATCH;
-   struct G__funclist *func;
+   struct G__funclist* func = 0;
    int ambiguous = 0;
    ::Reflex::Scope store_ifunc = p_ifunc;
    ::Reflex::Scope ifunc = p_ifunc;
@@ -4296,10 +4350,8 @@ static ::Reflex::Member G__overload_match(char* funcname, G__param *libp, int ha
    int ix = 0;
 
 
-   /* Search for name match
-    *  if reserved func or K&R, match immediately
-    *  check number of arguments and default parameters
-    *  rate parameter match */
+   // Search for name match
+   
    while (ifunc) {
       for (::Reflex::Member_Iterator ifn = ifunc.FunctionMember_Begin();
             ifn != ifunc.FunctionMember_End();
@@ -4330,7 +4382,9 @@ static ::Reflex::Member G__overload_match(char* funcname, G__param *libp, int ha
             else {
                G__rate_parameter_match(libp, *ifn, funclist, isrecursive);
             }
-            if (G__EXACTMATCH == (funclist->rate&0xffffff00)) match = funclist;
+            if (G__EXACTMATCH == (funclist->rate & 0xffffff00)) {
+               match = funclist;
+            }
          }
       }
 
@@ -4343,33 +4397,24 @@ static ::Reflex::Member G__overload_match(char* funcname, G__param *libp, int ha
       }
    }
 
-   /* If exact match does not exist
-    *    search for template func
-    *    rate parameter match */
+   // If exact match does not exist
    if (!match) {
-      funclist =  G__add_templatefunc(funcname, libp, hash, funclist
-                                      , store_ifunc, isrecursive);
+      funclist =  G__add_templatefunc(funcname, libp, hash, funclist, store_ifunc, isrecursive);
    }
 
    if (!match && (G__TRYUNARYOPR == memfunc_flag || G__TRYBINARYOPR == memfunc_flag)) {
       for (ix = 0;ix < G__globalusingnamespace.basen;ix++) {
-         funclist = G__rate_binary_operator(
-                       G__Dict::GetDict().GetScope(G__globalusingnamespace.basetagnum[ix])
-                       , libp, G__tagnum, funcname, hash
-                       , funclist, isrecursive);
+         funclist = G__rate_binary_operator(G__Dict::GetDict().GetScope(G__globalusingnamespace.basetagnum[ix]), libp, G__tagnum, funcname, hash, funclist, isrecursive);
       }
-      funclist = G__rate_binary_operator(::Reflex::Scope::GlobalScope(), libp, G__tagnum, funcname, hash
-                                         , funclist, isrecursive);
+      funclist = G__rate_binary_operator(::Reflex::Scope::GlobalScope(), libp, G__tagnum, funcname, hash, funclist, isrecursive);
    }
 
-   /* if there is no name match, return null */
-   if ((struct G__funclist*)NULL == funclist) return ::Reflex::Member();
-   /* else  there is function name match */
+   // if there is no name match, return null
+   if (!funclist) {
+      return ::Reflex::Member();
+   }
 
-
-   /*  choose the best match
-    *    display error if the call is ambiguous
-    *    display error if there is no parameter match */
+   //  choose the best match
    func = funclist;
    ambiguous = 0;
    while (func) {
@@ -4379,43 +4424,29 @@ static ::Reflex::Member G__overload_match(char* funcname, G__param *libp, int ha
          ambiguous = 0;
       }
       else if (func->rate == bestmatch && bestmatch != G__NOMATCH) {
-         if (0 == G__identical_function(match, func)) ++ambiguous;
+         if (0 == G__identical_function(match, func)) {
+            ++ambiguous;
+         }
          match = func;
       }
-      func = func->prev;
+      func = func->next;
    }
 
-   if ((G__TRYUNARYOPR == memfunc_flag || G__TRYBINARYOPR == memfunc_flag) &&
-         match && !match->ifunc) {
+   if ((G__TRYUNARYOPR == memfunc_flag || G__TRYBINARYOPR == memfunc_flag) && match && !match->ifunc) {
       G__funclist_delete(funclist);
       return ::Reflex::Member();
    }
-
-#ifdef G__ASM_DBG
-   /* #define G__ASM_DBG2 */
-#endif
-#ifdef G__ASM_DBG2
-   if (G__dispsource)
-      G__display_ambiguous(p_ifunc, funcname, libp, funclist, bestmatch);
-#endif
 
    if (!match) {
-#if G__NEVER
-      G__genericerror("Error: No appropriate match in the scope");
-      match_error = 1;
-#endif
       G__funclist_delete(funclist);
       return ::Reflex::Member();
    }
 
-   if (ambiguous && G__EXACTMATCH != bestmatch
-         && !isrecursive
-      ) {
+   if (ambiguous && G__EXACTMATCH != bestmatch && !isrecursive) {
       if (!G__mask_error) {
          /* error, ambiguous overloading resolution */
-         G__fprinterr(G__serr, "Error: Ambiguous overload resolution (%x,%d)"
-                      , bestmatch, ambiguous + 1);
-         G__genericerror((char*)NULL);
+         G__fprinterr(G__serr, "Error: Ambiguous overload resolution (%x,%d)", bestmatch, ambiguous + 1);
+         G__genericerror(0);
          G__display_ambiguous(p_ifunc, funcname, libp, funclist, bestmatch);
       }
       *match_error = 1;
@@ -4432,10 +4463,10 @@ static ::Reflex::Member G__overload_match(char* funcname, G__param *libp, int ha
    if (!G__test_access(result, access) && (!G__isfriend(G__get_tagnum(result.DeclaringScope())))
          && G__NOLINK == G__globalcomp
          && G__TRYCONSTRUCTOR !=  memfunc_flag
-      ) {
+   ) {
       /* no access right */
       G__fprinterr(G__serr, "Error: can not call private or protected function");
-      G__genericerror((char*)NULL);
+      G__genericerror(0);
       G__fprinterr(G__serr, "  ");
       G__display_func(G__serr, result);
       G__display_ambiguous(p_ifunc, funcname, libp, funclist, bestmatch);
@@ -4451,7 +4482,7 @@ static ::Reflex::Member G__overload_match(char* funcname, G__param *libp, int ha
       return ::Reflex::Member();
 
    G__funclist_delete(funclist);
-   return(result);
+   return result;
 }
 
 //______________________________________________________________________________
@@ -4565,7 +4596,7 @@ int Cint::Internal::G__interpret_func(G__value *result7, char* funcname, G__para
    int isbase;
    int access;
    int memfunc_or_friend = 0;
-   struct G__inheritance *baseclass = NULL;
+   struct G__inheritance *baseclass = 0;
 #endif
    /* #define G__OLDIMPLEMENTATION590 */
    ::Reflex::Scope local_tagnum;
@@ -4621,10 +4652,7 @@ int Cint::Internal::G__interpret_func(G__value *result7, char* funcname, G__para
    }
 next_base:
 #endif
-   ifn = G__overload_match(funcname, libp, hash, p_ifunc, memfunc_flag
-                           , access, 0
-                           , 1, &match_error
-                          );
+   ifn = G__overload_match(funcname, libp, hash, p_ifunc, memfunc_flag, access, 0, 1, &match_error);
    /* error */
    if (match_error) {
       *result7 = G__null;
@@ -4724,7 +4752,7 @@ next_base:
    /******************************************************************
    * if no such func, return 0
    *******************************************************************/
-   if (p_ifunc == NULL) {
+   if (!p_ifunc) {
       return(0);
    }
    /******************************************************************
@@ -4762,7 +4790,7 @@ asm_ifunc_start:   /* loop compilation execution label */
       !ifn.IsAbstract() &&
       G__ASM_FUNC_NOP == G__asm_wholefunction
 #else
-      ((FILE*) NULL == (FILE*) G__get_funproperties(ifn)->entry.p) &&
+      !G__get_funproperties(ifn)->entry.p &&
       !ifn.IsAbstract()
 #endif
       // --
@@ -4771,9 +4799,8 @@ asm_ifunc_start:   /* loop compilation execution label */
          if (0 == G__templatefunc(result7, funcname, libp, hash, funcmatch)) {
             if (G__USERCONV == funcmatch) {
                *result7 = G__null;
-               G__fprinterr(G__serr, "Error: %s() header declared but not defined"
-                            , funcname);
-               G__genericerror((char*)NULL);
+               G__fprinterr(G__serr, "Error: %s() header declared but not defined", funcname);
+               G__genericerror(0);
                return(1);
             }
             else return(0);
@@ -4800,9 +4827,8 @@ asm_ifunc_start:   /* loop compilation execution label */
 #ifndef G__OLDIMPLEMENTATION1101
    if (memfunc_flag == G__CALLSTATICMEMFUNC && 0 == G__store_struct_offset &&
          -1 != G__tagnum && 0 == p_ifunc->staticalloc[ifn] && 0 == G__no_exec) {
-      G__fprinterr(G__serr, "Error: %s() Illegal non-static member function call"
-                   , funcname);
-      G__genericerror((char*)NULL);
+      G__fprinterr(G__serr, "Error: %s() Illegal non-static member function call", funcname);
+      G__genericerror(0);
       *result7 = G__null;
       return(1);
    }
@@ -4997,9 +5023,9 @@ asm_ifunc_start:   /* loop compilation execution label */
             memcpy((void*)xbase, (void*)ybase, sizeof(int)*nybase);
          }
          if (iexist) {
-            if ((FILE*)NULL == (FILE*)G__get_funcproperties(iexist)->entry.p) {
+            if (!G__get_funcproperties(iexist)->entry.p) {
                G__fprinterr(G__serr, "Error: virtual %s() header found but not defined", funcname);
-               G__genericerror((char*)NULL);
+               G__genericerror(0);
                G__exec_memberfunc = store_exec_memberfunc;
                return(1);
             }
@@ -5014,7 +5040,7 @@ asm_ifunc_start:   /* loop compilation execution label */
          }
          else if (ifn.IsAbstract()) {
             G__fprinterr(G__serr, "Error: pure virtual %s() not defined", funcname);
-            G__genericerror((char*)NULL);
+            G__genericerror(0);
             G__exec_memberfunc = store_exec_memberfunc;
             return(1);
          }
@@ -5469,7 +5495,7 @@ asm_ifunc_start:   /* loop compilation execution label */
          G__calldepth > G__max_stack_depth
       ) {
       G__fprinterr(G__serr, "Error: Stack depth exceeded %d", G__max_stack_depth);
-      G__genericerror((char*)NULL);
+      G__genericerror(0);
       G__pause();
       G__return = G__RETURN_EXIT1;
    }
@@ -5541,9 +5567,8 @@ asm_ifunc_start:   /* loop compilation execution label */
     * Error if goto label not found
     **************************************************************/
    if (G__gotolabel[0]) {
-      G__fprinterr(G__serr, "Error: Goto label '%s' not found in %s()"
-                   , G__gotolabel, funcname);
-      G__genericerror((char*)NULL);
+      G__fprinterr(G__serr, "Error: Goto label '%s' not found in %s()", G__gotolabel, funcname);
+      G__genericerror(0);
       G__gotolabel[0] = '\0';
    }
    /**************************************************************
@@ -5801,7 +5826,7 @@ asm_ifunc_start:   /* loop compilation execution label */
                   if (-1 == offset) {
                      G__fprinterr(G__serr, "Error: Return type mismatch. %s ", ifn.TypeOf().ReturnType().Name(::Reflex::SCOPED).c_str());
                      G__fprinterr(G__serr, "not a public base of %s", G__value_typenum(*result7).RawType().Name(::Reflex::SCOPED).c_str());
-                     G__genericerror((char*)NULL);
+                     G__genericerror(0);
                      G__value_typenum(*result7) = G__replace_rawtype(G__value_typenum(*result7), ifn.TypeOf().ReturnType().RawType());
                      break;
                   }
@@ -6254,7 +6279,7 @@ int Cint::Internal::G__function_signature_match(const Reflex::Member& func1, con
       }
    }
 
-   /* Not found , ifunc=NULL */
+   /* Not found , ifunc=0 */
    return(ifunc);
 }
 
@@ -6287,14 +6312,14 @@ void Cint::Internal::G__argtype2param(char *argtype, G__param *libp)
 }
 
 //______________________________________________________________________________
-extern "C" struct G__ifunc_table *G__get_methodhandle(char *funcname, char *argtype, G__ifunc_table *p_ifunc, long *pifn, long *poffset, int withConversion, int withInheritance)
+extern "C" struct G__ifunc_table* G__get_methodhandle(char* funcname, char* argtype, G__ifunc_table* p_ifunc, long* pifn, long* poffset, int withConversion, int withInheritance)
 {
    ::Reflex::Scope ifunc;
    ::Reflex::Member ifn;
    struct G__param para;
    int hash;
    int temp;
-   struct G__funclist *funclist = (struct G__funclist*)NULL;
+   struct G__funclist* funclist = 0;
 
    ::Reflex::Scope store_def_tagnum = G__def_tagnum;
    ::Reflex::Scope store_tagdefining = G__tagdefining;
@@ -6308,39 +6333,35 @@ extern "C" struct G__ifunc_table *G__get_methodhandle(char *funcname, char *argt
 
    *pifn = -2;
 
-   if (withConversion)
-   {
+   if (withConversion) {
       int tagnum = G__get_tagnum(ifunc); // p_ifunc->tagnum;
-
-      if (-1 != tagnum) G__incsetup_memfunc(tagnum);
-
-      int match_error;
-      ifn = G__overload_match(funcname, &para, hash, ifunc, G__TRYNORMAL
-            , G__PUBLIC_PROTECTED_PRIVATE, 0
-            , (withConversion & 0x2) ? 1 : 0
-            , &match_error);
+      if (tagnum != -1) {
+         G__incsetup_memfunc(tagnum);
+      }
+      int match_error = 0;
+      ifn = G__overload_match(funcname, &para, hash, ifunc, G__TRYNORMAL, G__PUBLIC_PROTECTED_PRIVATE, 0, (withConversion & 0x2) ? 1 : 0, &match_error);
       *poffset = 0;
       *pifn = -2;
-      if (ifunc || !withInheritance) return((struct G__ifunc_table *)ifn.Id());
-      if (-1 != tagnum) {
-         int basen = 0;
-         struct G__inheritance *baseclass = G__struct.baseclass[tagnum];
-         while (basen < baseclass->basen) {
-            if (baseclass->baseaccess[basen]&G__PUBLIC) {
+      if (ifunc || !withInheritance) {
+         return (struct G__ifunc_table*) ifn.Id();
+      }
+      if (tagnum != -1) {
+         struct G__inheritance* baseclass = G__struct.baseclass[tagnum];
+         for (int basen = 0; basen < baseclass->basen; ++basen) {
+            if (baseclass->baseaccess[basen] & G__PUBLIC) {
                G__incsetup_memfunc(baseclass->basetagnum[basen]);
-               *poffset = (long)baseclass->baseoffset[basen];
+               *poffset = (long) baseclass->baseoffset[basen];
                ifunc = G__Dict::GetDict().GetScope(baseclass->basetagnum[basen]);
-               ifn = G__overload_match(funcname, &para, hash, ifunc, G__TRYNORMAL
-                     , G__PUBLIC_PROTECTED_PRIVATE, 0, 0, &match_error);
+               ifn = G__overload_match(funcname, &para, hash, ifunc, G__TRYNORMAL, G__PUBLIC_PROTECTED_PRIVATE, 0, 0, &match_error);
                *pifn = -2;
-               if (ifunc) return((struct G__ifunc_table *)ifn.Id());
+               if (ifunc) {
+                  return (struct G__ifunc_table*) ifn.Id();
+               }
             }
-            ++basen;
          }
       }
    }
-   else
-   {
+   else {
       /* first, search for exact match */
       ifn = G__get_ifunchandle_base(funcname, &para, hash, ifunc, (char**)poffset
             , G__PUBLIC_PROTECTED_PRIVATE, G__EXACT
@@ -6372,7 +6393,7 @@ extern "C" struct G__ifunc_table *G__get_methodhandle(char *funcname, char *argt
       //}
    }
 
-   return((struct G__ifunc_table *)ifn.Id());
+   return (struct G__ifunc_table*) ifn.Id();
 }
 
 //______________________________________________________________________________
@@ -6380,7 +6401,7 @@ extern "C" struct G__ifunc_table *G__get_methodhandle2(char *funcname, G__param 
 {
    int hash;
    int temp;
-   struct G__funclist *funclist = (struct G__funclist*)NULL;
+   struct G__funclist* funclist = 0;
 
    ::Reflex::Scope store_def_tagnum = G__def_tagnum;
    ::Reflex::Scope store_tagdefining = G__tagdefining;
@@ -6402,8 +6423,7 @@ extern "C" struct G__ifunc_table *G__get_methodhandle2(char *funcname, G__param 
       if (-1 != tagnum) G__incsetup_memfunc(tagnum);
 
       int match_error = 0;
-      ifn = G__overload_match(funcname, libp, hash, ifunc, G__TRYNORMAL
-            , G__PUBLIC_PROTECTED_PRIVATE, 0, 0, &match_error);
+      ifn = G__overload_match(funcname, libp, hash, ifunc, G__TRYNORMAL, G__PUBLIC_PROTECTED_PRIVATE, 0, 0, &match_error);
       *poffset = 0;
       if (ifunc || !withInheritance) return((G__ifunc_table*)ifn.Id());
       if (-1 != tagnum) {
@@ -6414,8 +6434,7 @@ extern "C" struct G__ifunc_table *G__get_methodhandle2(char *funcname, G__param 
                G__incsetup_memfunc(baseclass->basetagnum[basen]);
                *poffset = (long)baseclass->baseoffset[basen];
                ifunc = G__Dict::GetDict().GetScope(baseclass->basetagnum[basen]);
-               ifn = G__overload_match(funcname, libp, hash, ifunc, G__TRYNORMAL
-                     , G__PUBLIC_PROTECTED_PRIVATE, 0, 0, &match_error);
+               ifn = G__overload_match(funcname, libp, hash, ifunc, G__TRYNORMAL, G__PUBLIC_PROTECTED_PRIVATE, 0, 0, &match_error);
                if (ifn) return((G__ifunc_table*)ifn.Id());
             }
             ++basen;
