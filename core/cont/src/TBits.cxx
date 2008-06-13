@@ -116,7 +116,7 @@ UInt_t TBits::CountBits(UInt_t startBit) const
 {
    // Return number of bits set to 1 starting at bit startBit
 
-   const Int_t nbits[256] = {
+   static const Int_t nbits[256] = {
              0,1,1,2,1,2,2,3,1,2,2,3,2,3,3,4,
              1,2,2,3,2,3,3,4,2,3,3,4,3,4,4,5,
              1,2,2,3,2,3,3,4,2,3,3,4,3,4,4,5,
@@ -260,9 +260,9 @@ void TBits::DoRightShift(UInt_t shift)
 //______________________________________________________________________________
 UInt_t TBits::FirstNullBit(UInt_t startBit) const
 {
-   // Return position of first null bit
+   // Return position of first null bit (starting from position 0 and up)
 
-   const Int_t fbits[256] = {
+   static const Int_t fbits[256] = {
              0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,4,
              0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,5,
              0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,4,
@@ -305,9 +305,9 @@ UInt_t TBits::FirstNullBit(UInt_t startBit) const
 //______________________________________________________________________________
 UInt_t TBits::FirstSetBit(UInt_t startBit) const
 {
-   // Return position of first non null bit
+   // Return position of first non null bit (starting from position 0 and up)
 
-   const Int_t fbits[256] = {
+   static const Int_t fbits[256] = {
              8,0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,
              4,0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,
              5,0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,
