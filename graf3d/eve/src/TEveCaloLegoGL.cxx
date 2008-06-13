@@ -1164,22 +1164,19 @@ void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
    Float_t sx = (eM-em)/fM->GetEtaRng();
    Float_t sy = (pM-pm)/fM->GetPhiRng();
    glScalef(sx/unit, sy/unit, fM->GetValToHeight());
-
    glTranslatef(-fM->GetEta(), -fM->fPhi, 0);
 
-
-   glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT | GL_POLYGON_BIT);
+   // draw cells
+   glPushAttrib(GL_LINE_BIT | GL_POLYGON_BIT);
    glLineWidth(1);
    glDisable(GL_LIGHTING);
-   glDisable(GL_CULL_FACE);
    glEnable(GL_NORMALIZE);
    glEnable(GL_POLYGON_OFFSET_FILL);
-
-   // draw cells
    glPushName(0);
    glPolygonOffset(0.8, 1);
    cells3D ? DrawCells3D(rnrCtx):DrawCells2D(rnrCtx);
    glPopName();
+   glPopAttrib();
 
    // draw histogram base
    if (rnrCtx.Selection() == kFALSE && rnrCtx.Highlight() == kFALSE)
@@ -1187,9 +1184,11 @@ void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
       DrawHistBase(rnrCtx);
       if (fM->fDrawHPlane)
       {
+         glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT);
          glEnable(GL_BLEND);
          glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
          glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+         glDisable(GL_CULL_FACE);
          TGLUtil::ColorTransparency(fM->fPlaneColor, fM->fPlaneTransparency);
          Float_t zhp = fM->fHPlaneVal*fZAxisMax;
          glBegin(GL_POLYGON);
@@ -1198,11 +1197,11 @@ void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
          glVertex3f(fM->fEtaMax, fM->GetPhiMax(), zhp);
          glVertex3f(fM->fEtaMin, fM->GetPhiMax(), zhp);
          glEnd();
+	 glPopAttrib();
       }
    }
 
    glPopMatrix();
-   glPopAttrib();
 }
 
 //______________________________________________________________________________
