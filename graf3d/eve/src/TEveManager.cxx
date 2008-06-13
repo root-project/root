@@ -55,7 +55,7 @@ TEveManager* gEve = 0;
 ClassImp(TEveManager);
 
 //______________________________________________________________________________
-TEveManager::TEveManager(UInt_t w, UInt_t h) :
+TEveManager::TEveManager(UInt_t w, UInt_t h, Bool_t map_window) :
    fExcHandler  (0),
    fVizDB       (0),
    fGeometries  (0),
@@ -82,7 +82,10 @@ TEveManager::TEveManager(UInt_t w, UInt_t h) :
 
    fStampedElements(),
    fSelection      (0),
-   fHighlight      (0)
+   fHighlight      (0),
+
+   fOrphanage      (0),
+   fUseOrphanage   (kFALSE)
 {
    // Constructor.
 
@@ -100,8 +103,13 @@ TEveManager::TEveManager(UInt_t w, UInt_t h) :
    fVizDB           = new TMap; fVizDB->SetOwnerKeyValue();
 
    fSelection = new TEveSelection("Global Selection");
+   fSelection->IncDenyDestroy();
    fHighlight = new TEveSelection("Global Highlight");
    fHighlight->SetHighlightMode();
+   fHighlight->IncDenyDestroy();
+
+   fOrphanage = new TEveElementList("Global Orphanage");
+   fOrphanage->IncDenyDestroy();
 
    fRedrawTimer.Connect("Timeout()", "TEveManager", this, "DoRedraw3D()");
    fMacroFolder = new TFolder("EVE", "Visualization macros");
@@ -129,7 +137,8 @@ TEveManager::TEveManager(UInt_t w, UInt_t h) :
 
    // Finalize it
    fBrowser->InitPlugins();
-   fBrowser->MapWindow();
+   if (map_window)
+      fBrowser->MapWindow();
 
    // --------------------------------
 
@@ -172,10 +181,25 @@ TEveManager::~TEveManager()
 {
    // Destructor.
 
+   fOrphanage->DecDenyDestroy();
+   fHighlight->DecDenyDestroy();
+   fSelection->DecDenyDestroy();
+
    delete fGeometryAliases;
    delete fGeometries;
    delete fVizDB;
    delete fExcHandler;
+}
+
+//______________________________________________________________________________
+void TEveManager::ClearOrphanage()
+{
+   // Clear the orphanage.
+
+   Bool_t old_state = fUseOrphanage;
+   fUseOrphanage = kFALSE;
+   fOrphanage->DestroyElements();
+   fUseOrphanage = old_state;
 }
 
 /******************************************************************************/
@@ -672,7 +696,7 @@ void TEveManager::SetStatusLine(const char* text)
 /******************************************************************************/
 
 //______________________________________________________________________________
-TEveManager* TEveManager::Create()
+TEveManager* TEveManager::Create(Bool_t map_window)
 {
    // If global TEveManager* gEve is not set initialize it.
    // Returns gEve.
@@ -688,7 +712,7 @@ TEveManager* TEveManager::Create()
 
       TEveUtil::SetupEnvironment();
       TEveUtil::SetupGUI();
-      gEve = new TEveManager(w, h);
+      gEve = new TEveManager(w, h, map_window);
    }
    return gEve;
 }

@@ -390,11 +390,22 @@ void TEveElement::CheckReferenceCount(const TEveException& eh)
    if(NumParents() <= fParentIgnoreCnt && fTopItemCnt  <= 0 &&
       fDestroyOnZeroRefCnt             && fDenyDestroy <= 0)
    {
-      if (gDebug > 0)
-         Info(eh, Form("auto-destructing '%s' on zero reference count.", GetElementName()));
+      if (gEve->GetUseOrphanage())
+      {
+         if (gDebug > 0)
+            Info(eh, Form("moving to orphanage '%s' on zero reference count.", GetElementName()));
 
-      gEve->PreDeleteElement(this);
-      delete this;
+         gEve->PreDeleteElement(this);
+         gEve->GetOrphanage()->AddElement(this);
+      }
+      else
+      {
+         if (gDebug > 0)
+            Info(eh, Form("auto-destructing '%s' on zero reference count.", GetElementName()));
+
+         gEve->PreDeleteElement(this);
+         delete this;
+      }
    }
 }
 
@@ -481,8 +492,11 @@ TGListTreeItem* TEveElement::AddIntoListTree(TGListTree* ltree,
 
    TGListTreeItem* item = new TEveListTreeItem(this);
    ltree->AddItem(parent_lti, item);
-
    fItems.insert(TEveListTreeInfo(ltree, item));
+
+   if (parent_lti == 0)
+      ++fTopItemCnt;
+
    ltree->ClearViewPort();
 
    return item;
@@ -499,7 +513,6 @@ TGListTreeItem* TEveElement::AddIntoListTree(TGListTree* ltree,
    TGListTreeItem* lti = 0;
    if (parent == 0) {
       lti = AddIntoListTree(ltree, (TGListTreeItem*) 0);
-      ++fTopItemCnt;
    } else {
       for (sLTI_ri i = parent->fItems.rbegin(); i != parent->fItems.rend(); ++i)
       {
