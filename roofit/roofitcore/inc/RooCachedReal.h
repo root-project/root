@@ -24,19 +24,40 @@ public:
   virtual TObject* clone(const char* newname) const { return new RooCachedReal(*this,newname); }
   virtual ~RooCachedReal() ;
 
-  void setCdfBoundaries(Bool_t flag) { _useCdfBoundaries = flag ; }
-  Bool_t getCdfBoundaries() const { return _useCdfBoundaries ; }
+  void setCdfBoundaries(Bool_t flag) { 
+    // If flag is true the RooHistFunc that represent the cache histogram
+    // will use special boundary conditions for use with cumulative distribution
+    // functions: at the lower bound the function is forced to converge at zero and the upper 
+    // bound is the function is forced to converge at 1.0
+    _useCdfBoundaries = flag ; 
+  }
+  Bool_t getCdfBoundaries() const { 
+    // If true the c.d.f boundary mode is active
+    return _useCdfBoundaries ; 
+  }
 
 protected:
 
-  virtual const char* inputBaseName() const { return func.arg().GetName() ; } ;
-  virtual RooArgSet* actualObservables(const RooArgSet& nset) const { return func.arg().getObservables(nset) ; }
-  virtual RooArgSet* actualParameters(const RooArgSet& nset) const { return func.arg().getParameters(nset) ; }
+  virtual const char* inputBaseName() const { 
+    // Return base name for caches, i.e. the name of the cached function
+    return func.arg().GetName() ; 
+  } ;
+  virtual RooArgSet* actualObservables(const RooArgSet& nset) const { 
+    // Return the observables to be cached, i.e. the observable of the cached function
+    return func.arg().getObservables(nset) ; 
+  }
+  virtual RooArgSet* actualParameters(const RooArgSet& nset) const { 
+    // Return the parameters on which the cache contents depends, i.e. the parameters of the cached function
+    return func.arg().getParameters(nset) ; 
+  }
   virtual void fillCacheObject(FuncCacheElem& cacheFunc) const ;
-  virtual Double_t evaluate() const { return 0 ; } // dummy
+  virtual Double_t evaluate() const { 
+    // Dummy evaluate, it is never called
+    return 0 ; 
+  }
   
-  RooRealProxy func ; // Proxy to function being cached
-  Bool_t _useCdfBoundaries ;
+  RooRealProxy func ;           // Proxy to function being cached
+  Bool_t _useCdfBoundaries ;    // Are c.d.f boundary conditions used by the RooHistFuncs?
 
 private:
 

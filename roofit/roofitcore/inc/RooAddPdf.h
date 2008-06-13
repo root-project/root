@@ -41,17 +41,36 @@ public:
   Double_t evaluate() const ;
   virtual Bool_t checkObservables(const RooArgSet* nset) const ;	
 
-  virtual Bool_t forceAnalyticalInt(const RooAbsArg& /*dep*/) const { return kTRUE ; }
+  virtual Bool_t forceAnalyticalInt(const RooAbsArg& /*dep*/) const { 
+    // Force RooRealIntegral to offer all observables for internal integration
+    return kTRUE ; 
+  }
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet, const char* rangeName=0) const ;
   Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const ;
-  virtual Bool_t selfNormalized() const { return kTRUE ; }
+  virtual Bool_t selfNormalized() const { 
+    // P.d.f is self normalized
+    return kTRUE ; 
+  }
 
-  virtual ExtendMode extendMode() const { return (_haveLastCoef || _allExtendable) ? MustBeExtended : CanNotBeExtended; }
+  virtual ExtendMode extendMode() const { 
+    // Return extended mode capabilities
+    return (_haveLastCoef || _allExtendable) ? MustBeExtended : CanNotBeExtended; 
+  }
   virtual Double_t expectedEvents(const RooArgSet* nset) const ;
-  virtual Double_t expectedEvents(const RooArgSet& nset) const { return expectedEvents(&nset) ; }
+  virtual Double_t expectedEvents(const RooArgSet& nset) const { 
+    // Return expected number of events for extended likelihood calculation
+    // which is the sum of all coefficients
+    return expectedEvents(&nset) ; 
+  }
 
-  const RooArgList& pdfList() const { return _pdfList ; }
-  const RooArgList& coefList() const { return _coefList ; }
+  const RooArgList& pdfList() const { 
+    // Return list of component p.d.fs
+    return _pdfList ; 
+  }
+  const RooArgList& coefList() const { 
+    // Return list of coefficients of component p.d.f.s
+    return _coefList ; 
+  }
 
   void fixCoefNormalization(const RooArgSet& refCoefNorm) ;
   void fixCoefRange(const char* rangeName) ;
@@ -62,11 +81,11 @@ protected:
   virtual void selectNormalization(const RooArgSet* depSet=0, Bool_t force=kFALSE) ;
   virtual void selectNormalizationRange(const char* rangeName=0, Bool_t force=kFALSE) ;
 
-  mutable RooSetProxy _refCoefNorm ;   //!
-  mutable TNamed* _refCoefRangeName ;  //!
+  mutable RooSetProxy _refCoefNorm ;   //! Reference observable set for coefficient interpretation
+  mutable TNamed* _refCoefRangeName ;  //! Reference range name for coefficient interpreation
 
-  Bool_t _projectCoefs ;
-  mutable Double_t* _coefCache ; //!
+  Bool_t _projectCoefs ;         // If true coefficients need to be projected for use in evaluate()
+  mutable Double_t* _coefCache ; //! Transiet cache with transformed values of coefficients
 
 
   class CacheElem : public RooAbsCacheElement {
@@ -83,7 +102,7 @@ protected:
     virtual RooArgList containedArgs(Action) ;
 
   } ;
-  mutable RooObjCacheManager _projCacheMgr ;  //
+  mutable RooObjCacheManager _projCacheMgr ;  // Manager of cache with coefficient projections and transformations
   CacheElem* getProjCache(const RooArgSet* nset, const RooArgSet* iset=0, const char* rangeName=0) const ;
   void updateCoefficients(CacheElem& cache, const RooArgSet* nset) const ;
 

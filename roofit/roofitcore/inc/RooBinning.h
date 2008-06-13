@@ -35,16 +35,28 @@ public:
   RooAbsBinning* clone(const char* name=0) const { return new RooBinning(*this,name?name:GetName()) ; }
   ~RooBinning() ;
 
-  virtual Int_t numBoundaries() const { return _nbins+1 ; }
+  virtual Int_t numBoundaries() const { 
+    // Return the number boundaries
+    return _nbins+1 ; 
+  }
   virtual Int_t binNumber(Double_t x) const ;
   virtual Int_t rawBinNumber(Double_t x) const ;
   virtual Double_t nearestBoundary(Double_t x) const ;
 
   virtual void setRange(Double_t xlo, Double_t xhi) ;
 
-  virtual Double_t lowBound() const { return _xlo ; }
-  virtual Double_t highBound() const { return _xhi ; }
-  virtual Double_t averageBinWidth() const { return (highBound()-lowBound())/numBins() ; }
+  virtual Double_t lowBound() const { 
+    // Return the lower bound value
+    return _xlo ; 
+  }
+  virtual Double_t highBound() const { 
+    // Return the upper bound value
+    return _xhi ; 
+  }
+  virtual Double_t averageBinWidth() const { 
+    // Return the average bin width
+    return (highBound()-lowBound())/numBins() ; 
+  }
   virtual Double_t* array() const ;
 
   virtual Double_t binCenter(Int_t bin) const ;
@@ -65,17 +77,17 @@ protected:
   Bool_t binEdges(Int_t bin, Double_t& xlo, Double_t& xhi) const ;
   void updateBinCount() ;
 
-  Double_t _xlo ;
-  Double_t _xhi ;
-  Bool_t _ownBoundLo ;
-  Bool_t _ownBoundHi ;
-  Int_t _nbins ;
+  Double_t _xlo ;          // Lower bound
+  Double_t _xhi ;          // Upper bound
+  Bool_t _ownBoundLo ;     // Does the lower bound coincide with a bin boundary
+  Bool_t _ownBoundHi ;     // Does the upper bound coincide with a bin boundary
+  Int_t _nbins ;           // Numer of bins
 
-  TList _boundaries ;
-  TIterator* _bIter ;        //! do not persist
-  mutable Double_t* _array ; //! do not persist
+  TList _boundaries ;        // List with boundaries
+  TIterator* _bIter ;        //! Iterator over boundaries
+  mutable Double_t* _array ; //! Array of boundaries
 
-  ClassDef(RooBinning,1) // Container class for binning specification
+  ClassDef(RooBinning,1) // Generic binning specification
 };
 
 #endif

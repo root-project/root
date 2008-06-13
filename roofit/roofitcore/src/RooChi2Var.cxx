@@ -14,7 +14,8 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [PDF] --
+//////////////////////////////////////////////////////////////////////////////
+// 
 // Class RooChi2Var implements a simple chi^2 calculation from a binned dataset
 // and a PDF. The chi^2 is calculated as 
 //
@@ -24,6 +25,7 @@
 //
 // If no user-defined errors are defined for the dataset, poisson errors
 // are used. In extended PDF mode, N_tot is substituted with N_expected.
+//
 
 #include "RooFit.h"
 
@@ -42,6 +44,8 @@ ClassImp(RooChi2Var)
 
 RooArgSet RooChi2Var::_emptySet ;
 
+
+//_____________________________________________________________________________
 RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsPdf& pdf, RooDataHist& data,
 		       const RooCmdArg& arg1,const RooCmdArg& arg2,const RooCmdArg& arg3,
 		       const RooCmdArg& arg4,const RooCmdArg& arg5,const RooCmdArg& arg6,
@@ -78,41 +82,82 @@ RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsPdf& pdf, RooD
 }
 
 
+
+//_____________________________________________________________________________
 RooChi2Var::RooChi2Var(const char *name, const char *title, RooAbsPdf& pdf, RooDataHist& data,
 		       Bool_t extended, const char* cutRange, const char* addCoefRange,
 		       Int_t nCPU, Bool_t interleave, Bool_t verbose, Bool_t splitCutRange) : 
   RooAbsOptTestStatistic(name,title,pdf,data,RooArgSet(),cutRange,addCoefRange,nCPU,interleave,verbose,splitCutRange),
    _etype(RooAbsData::Poisson), _extended(extended)
 {
-  
+  // Constructor of a chi2 for given p.d.f. with respect given binned
+  // dataset. If cutRange is specified the calculation of the chi2 is
+  // restricted to that named range. If addCoefRange is specified, the
+  // interpretation of fractions for all component RooAddPdfs that do
+  // not have a frozen range interpretation is set to chosen range
+  // name. If nCPU is greater than one the chi^2 calculation is
+  // paralellized over the specified number of processors. If
+  // interleave is true the partitioning of event over processors
+  // follows a (i % n == i_set) strategy rather than a bulk
+  // partitioning strategy which may result in unequal load balancing
+  // in binned datasets with many (adjacent) zero bins. If
+  // splitCutRange is true the cutRange is used to construct an
+  // individual cutRange for each RooSimultaneous index category state
+  // name cutRange_{indexStateName}.
 }
 
 
+
+//_____________________________________________________________________________
 RooChi2Var::RooChi2Var(const char *name, const char *title, RooAbsPdf& pdf, RooDataHist& data,
 		       const RooArgSet& projDeps, Bool_t extended, const char* cutRange, const char* addCoefRange, 
 		       Int_t nCPU, Bool_t interleave, Bool_t verbose, Bool_t splitCutRange) : 
   RooAbsOptTestStatistic(name,title,pdf,data,projDeps,cutRange,addCoefRange,nCPU,interleave,verbose,splitCutRange),
   _etype(RooAbsData::Poisson), _extended(extended)
 {
-  
+  // Constructor of a chi2 for given p.d.f. with respect given binned
+  // dataset taking the observables specified in projDeps as projected
+  // observables. If cutRange is specified the calculation of the chi2
+  // is restricted to that named range. If addCoefRange is specified,
+  // the interpretation of fractions for all component RooAddPdfs that
+  // do not have a frozen range interpretation is set to chosen range
+  // name. If nCPU is greater than one the chi^2 calculation is
+  // paralellized over the specified number of processors. If
+  // interleave is true the partitioning of event over processors
+  // follows a (i % n == i_set) strategy rather than a bulk
+  // partitioning strategy which may result in unequal load balancing
+  // in binned datasets with many (adjacent) zero bins. If
+  // splitCutRange is true the cutRange is used to construct an
+  // individual cutRange for each RooSimultaneous index category state
+  // name cutRange_{indexStateName}.
 }
 
 
+
+//_____________________________________________________________________________
 RooChi2Var::RooChi2Var(const RooChi2Var& other, const char* name) : 
   RooAbsOptTestStatistic(other,name),
   _etype(other._etype),
   _extended(other._extended)
 {
+  // Copy constructor
 }
 
 
+
+//_____________________________________________________________________________
 RooChi2Var::~RooChi2Var()
 {
+  // Destructor
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooChi2Var::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t stepSize) const 
 {
+  // Calculate chi^2 in partition from firstEvent to lastEvent using given stepSize
+
   Int_t i ;
   Double_t result(0) ;
 

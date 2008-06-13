@@ -14,7 +14,15 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [AUX] --
+//////////////////////////////////////////////////////////////////////////////
+// 
+// BEGIN_HTML
+// RooCategorySharedProperties is the container for all properties
+// that are shared between instance of RooCategory objects that
+// are clones of each other. At present the only property that is
+// shared in this way is the list of alternate named range definitions
+// END_HTML
+//
 
 #include "RooFit.h"
 #include "RooCategorySharedProperties.h"
@@ -23,13 +31,18 @@ ClassImp(RooCategorySharedProperties)
 ;
 
 
+//_____________________________________________________________________________
 RooCategorySharedProperties::RooCategorySharedProperties()
 {
+  // Constructor
 } 
 
 
+
+//_____________________________________________________________________________
 RooCategorySharedProperties::~RooCategorySharedProperties() 
 {
+  // Destructor
   _altRanges.Delete() ;
 } 
 

@@ -14,14 +14,20 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [AUX] --
-// A class description belongs here...
+//////////////////////////////////////////////////////////////////////////////
+// 
+// BEGIN_HTML
+// Class RooAcceptReject is a generic toy monte carlo generator implement
+// the accept/reject sampling technique on any positively valued function.
+// The RooAcceptReject generator is used by the various generator context
+// classes to take care of generation of observables for which p.d.fs
+// do not define internal methods
+// END_HTML
+//
 
 
 #include "RooFit.h"
-
 #include "Riostream.h"
-
 
 #include "RooAcceptReject.h"
 #include "RooAcceptReject.h"
@@ -42,6 +48,8 @@
 ClassImp(RooAcceptReject)
   ;
 
+
+//_____________________________________________________________________________
 RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVars, const RooAbsReal* maxFuncVal, Bool_t verbose) :
   TNamed(func), _cloneSet(0), _funcClone(0), _funcMaxVal(maxFuncVal), _verbose(verbose)
 {
@@ -193,7 +201,13 @@ RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVar
   _eventsUsed= 0;
 }
 
-RooAcceptReject::~RooAcceptReject() {
+
+
+//_____________________________________________________________________________
+RooAcceptReject::~RooAcceptReject() 
+{
+  // Destructor
+
   delete _cache ;
   delete _nextCatVar;
   delete _nextRealVar;
@@ -203,17 +217,21 @@ RooAcceptReject::~RooAcceptReject() {
 
 
 
-
+//_____________________________________________________________________________
 void RooAcceptReject::attachParameters(const RooArgSet& vars) 
 {
   // Reattach original parameters to function clone
+
   RooArgSet newParams(vars) ;
   newParams.remove(*_cache->get(),kTRUE,kTRUE) ;
   _funcClone->recursiveRedirectServers(newParams) ;
 }
 
 
-const RooArgSet *RooAcceptReject::generateEvent(UInt_t remaining) {
+
+//_____________________________________________________________________________
+const RooArgSet *RooAcceptReject::generateEvent(UInt_t remaining) 
+{
   // Return a pointer to a generated event. The caller does not own the event and it
   // will be overwritten by a subsequent call. The input parameter 'remaining' should
   // contain your best guess at the total number of subsequent events you will request.
@@ -286,7 +304,11 @@ const RooArgSet *RooAcceptReject::generateEvent(UInt_t remaining) {
   return event;
 }
 
-const RooArgSet *RooAcceptReject::nextAcceptedEvent() {
+
+
+//_____________________________________________________________________________
+const RooArgSet *RooAcceptReject::nextAcceptedEvent() 
+{
   // Scan through events in the cache which have not been used yet,
   // looking for the first accepted one which is added to the specified
   // container. Return a pointer to the accepted event, or else zero
@@ -309,7 +331,11 @@ const RooArgSet *RooAcceptReject::nextAcceptedEvent() {
   return event;
 }
 
-void RooAcceptReject::addEventToCache() {
+
+
+//_____________________________________________________________________________
+void RooAcceptReject::addEventToCache() 
+{
   // Add a trial event to our cache and update our estimates
   // of the function maximum value and integral.
 
@@ -345,6 +371,10 @@ void RooAcceptReject::addEventToCache() {
 
 Double_t RooAcceptReject::getFuncMax() 
 {
+  // Empirically determine maximum value of function by taking a large number
+  // of samples. The actual number depends on the number of dimensions in which
+  // the sampling occurs
+
   // Generate the minimum required number of samples for a reliable maximum estimate
   while(_totalEvents < _minTrials) {
     addEventToCache();
@@ -361,23 +391,41 @@ Double_t RooAcceptReject::getFuncMax()
 }
 
 
+//_____________________________________________________________________________
 void RooAcceptReject::printName(ostream& os) const 
 {
+  // Print name of the generator
+
   os << GetName() ;
 }
 
+
+
+//_____________________________________________________________________________
 void RooAcceptReject::printTitle(ostream& os) const 
 {
+  // Print the title of the generator
+
   os << GetTitle() ;
 }
 
+
+
+//_____________________________________________________________________________
 void RooAcceptReject::printClassName(ostream& os) const 
 {
+  // Print the class name of the generator
+
   os << IsA()->GetName() ;
 }
 
+
+
+//_____________________________________________________________________________
 void RooAcceptReject::printArgs(ostream& os) const 
 {
+  // Print the arguments of the generator
+
   os << "[ function=" << _funcClone->GetName() << " catobs=" << _catVars << " realobs=" << _realVars << " ]" ;
 }
 

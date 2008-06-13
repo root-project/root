@@ -45,22 +45,27 @@ public:
   virtual RooAbsTestStatistic* create(const char *name, const char *title, RooAbsReal& pdf, RooAbsData& data,
 				      const RooArgSet& projDeps, const char* rangeName=0, const char* addCoefRangeName=0, 
 				      Int_t nCPU=1, Bool_t interleave=kFALSE,Bool_t verbose=kTRUE, Bool_t splitCutRange=kTRUE) {
-    return new RooChi2Var(name,title,(RooAbsPdf&)pdf,(RooDataHist&)data,projDeps,_extended,rangeName,addCoefRangeName,nCPU,interleave,verbose, splitCutRange) ;
+    // Virtual constructor
+    return new RooChi2Var(name,title,(RooAbsPdf&)pdf,(RooDataHist&)data,projDeps,_extended,rangeName,
+			  addCoefRangeName,nCPU,interleave,verbose, splitCutRange) ;
   }
   
   virtual ~RooChi2Var();
 
-  virtual Double_t defaultErrorLevel() const { return 1.0 ; }
+  virtual Double_t defaultErrorLevel() const { 
+    // The default error level for MINUIT error analysis for a chi^2 is 1.0
+    return 1.0 ; 
+  }
 
 protected:
 
-  static RooArgSet _emptySet ; // Supports named argument constructor
-
-  RooDataHist::ErrorType _etype ;
-  Bool_t _extended ;
+  static RooArgSet _emptySet ;        // Supports named argument constructor
+ 
+  RooDataHist::ErrorType _etype ;     // Error type store in associated RooDataHist
+  Bool_t _extended ;                  // Include extended term?
   virtual Double_t evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t stepSize) const ;
   
-  ClassDef(RooChi2Var,1) // Abstract real-valued variable
+  ClassDef(RooChi2Var,1) // Chi^2 function of p.d.f w.r.t a binned dataset
 };
 
 

@@ -14,11 +14,17 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [AUX} --
-// RooAddGenContext is an efficient implementation of the generator context
-// specific for RooAddPdf PDFs. The sim-context owns a list of
-// component generator contexts that are used to generate the events
-// for each component PDF sequentially
+//////////////////////////////////////////////////////////////////////////////
+// 
+// BEGIN_HTML 
+// RooAddGenContext is an efficient implementation of the
+// generator context specific for RooAddPdf PDFs. The strategy
+// of RooAddGenContext is to defer generation of each component
+// to a dedicated generator context for that component and to
+// randomly choose one of those context to generate an event,
+// with a probability proportional to its associated coefficient
+// END_HTML
+//
 
 
 #include "RooFit.h"
@@ -36,11 +42,15 @@
 ClassImp(RooAddGenContext)
 ;
   
+
+//_____________________________________________________________________________
 RooAddGenContext::RooAddGenContext(const RooAddPdf &model, const RooArgSet &vars, 
 				   const RooDataSet *prototype, const RooArgSet* auxProto,
 				   Bool_t verbose) :
   RooAbsGenContext(model,vars,prototype,auxProto,verbose)
 {
+  // Constructor
+
   cxcoutI(Generation) << "RooAddGenContext::ctor() setting up event special generator context for sum p.d.f. " << model.GetName() 
 			<< " for generation of observable(s) " << vars ;
   if (prototype) ccxcoutI(Generation) << " with prototype data for " << *prototype->get() ;
@@ -76,9 +86,11 @@ RooAddGenContext::RooAddGenContext(const RooAddPdf &model, const RooArgSet &vars
 
 
 
+//_____________________________________________________________________________
 RooAddGenContext::~RooAddGenContext()
 {
   // Destructor. Delete all owned subgenerator contexts
+
   delete[] _coefThresh ;
   _gcList.Delete() ;
   delete _vars ;
@@ -86,8 +98,12 @@ RooAddGenContext::~RooAddGenContext()
 }
 
 
+
+//_____________________________________________________________________________
 void RooAddGenContext::attach(const RooArgSet& args) 
 {
+  // Attach given set of variables to internal p.d.f. clone
+
   _pdf->recursiveRedirectServers(args) ;
 
   // Forward initGenerator call to all components
@@ -100,8 +116,14 @@ void RooAddGenContext::attach(const RooArgSet& args)
 }
 
 
+
+//_____________________________________________________________________________
 void RooAddGenContext::initGenerator(const RooArgSet &theEvent)
 {
+  // One-time initialization of generator contex. Attach theEvent
+  // to internal p.d.f clone and forward initialization call to 
+  // the component generators
+
   _pdf->recursiveRedirectServers(theEvent) ;
 
   // Forward initGenerator call to all components
@@ -114,9 +136,12 @@ void RooAddGenContext::initGenerator(const RooArgSet &theEvent)
 }
 
 
-
+//_____________________________________________________________________________
 void RooAddGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
 {
+  // Randomly choose one of the component contexts to generate this event,
+  // with a probability proportional to its coefficient
+
   // Throw a random number to determin which component to generate
   updateThresholds() ;
   Double_t rand = RooRandom::uniform() ;
@@ -130,9 +155,12 @@ void RooAddGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
 }
 
 
+//_____________________________________________________________________________
 void RooAddGenContext::updateThresholds()
 {
-  // WVE FIX THIS _pdf->updateCoefCache(_vars,_vars,0) ;  
+  // Update the cumulative threshold table from the current coefficient
+  // values
+
   RooAddPdf::CacheElem* cache = _pdf->getProjCache(_vars) ;
   _pdf->updateCoefficients(*cache,_vars) ;
 
@@ -145,8 +173,11 @@ void RooAddGenContext::updateThresholds()
 }
 
 
+//_____________________________________________________________________________
 void RooAddGenContext::setProtoDataOrder(Int_t* lut)
 {
+  // Forward the setProtoDataOrder call to the component generator contexts
+
   RooAbsGenContext::setProtoDataOrder(lut) ;
   Int_t i ;
   for (i=0 ; i<_nComp ; i++) {
@@ -154,8 +185,13 @@ void RooAddGenContext::setProtoDataOrder(Int_t* lut)
   }
 }
 
+
+
+//_____________________________________________________________________________
 void RooAddGenContext::printMultiline(ostream &os, Int_t content, Bool_t verbose, TString indent) const 
 {
+  // Print the details of the context
+
   RooAbsGenContext::printMultiline(os,content,verbose,indent) ;
   os << indent << "--- RooAddGenContext ---" << endl ;
   os << indent << "Using PDF ";

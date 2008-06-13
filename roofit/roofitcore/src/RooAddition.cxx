@@ -14,12 +14,15 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [REAL] --
-//
+//////////////////////////////////////////////////////////////////////////////
+// 
+// BEGIN_HTML
 // RooAddition calculates the sum of a set of RooAbsReal terms, or
 // when constructed with two sets, it sums the product of the terms
 // in the two sets. This class does not (yet) do any smart handling of integrals, 
 // i.e. all integrals of the product are handled numerically
+// END_HTML
+//
 
 
 #include "RooFit.h"
@@ -40,6 +43,8 @@
 ClassImp(RooAddition)
 ;
 
+
+//_____________________________________________________________________________
 RooAddition::RooAddition()
 {
   _setIter1 = _set1.createIterator() ;
@@ -47,12 +52,17 @@ RooAddition::RooAddition()
 }
 
 
+
+//_____________________________________________________________________________
 RooAddition::RooAddition(const char* name, const char* title, const RooArgSet& sumSet, Bool_t takeOwnership) :
   RooAbsReal(name, title),
   _set1("set1","First set of components",this),
   _set2("set2","Second set of components",this)
 {
-  // Constructor
+  // Constructor with a single set of RooAbsReals. The value of the function will be
+  // the sum of the values in sumSet. If takeOwnership is true the RooAddition object
+  // will take ownership of the arguments in sumSet
+
   _setIter1 = _set1.createIterator() ;
   _setIter2 = 0 ;
 
@@ -75,12 +85,18 @@ RooAddition::RooAddition(const char* name, const char* title, const RooArgSet& s
 
 
 
+//_____________________________________________________________________________
 RooAddition::RooAddition(const char* name, const char* title, const RooArgList& sumSet1, const RooArgList& sumSet2, Bool_t takeOwnership) :
   RooAbsReal(name, title),
   _set1("set1","First set of components",this),
   _set2("set2","Second set of components",this)
 {
-  // Constructor
+  // Constructor with two set of RooAbsReals. The value of the function will be
+  //
+  //  A = sum_i sumSet1(i)*sumSet2(i) 
+  //
+  // If takeOwnership is true the RooAddition object will take ownership of the arguments in sumSet
+
   _setIter1 = _set1.createIterator() ;
   _setIter2 = _set2.createIterator() ;
 
@@ -122,12 +138,14 @@ RooAddition::RooAddition(const char* name, const char* title, const RooArgList& 
 
 
 
+//_____________________________________________________________________________
 RooAddition::RooAddition(const RooAddition& other, const char* name) :
   RooAbsReal(other, name), 
   _set1("set1",this,other._set1),
   _set2("set2",this,other._set2)
 {
   // Copy constructor
+
   _setIter1 = _set1.createIterator() ;
   if (other._setIter2) {
     _setIter2 = _set2.createIterator() ;
@@ -139,16 +157,24 @@ RooAddition::RooAddition(const RooAddition& other, const char* name) :
 }
 
 
+
+//_____________________________________________________________________________
 RooAddition::~RooAddition() 
 {
+  // Destructor
+
   if (_setIter1) delete _setIter1 ;
   if (_setIter2) delete _setIter2 ;
 }
 
 
 
+
+//_____________________________________________________________________________
 Double_t RooAddition::evaluate() const 
 {
+  // Calculate and return current value of self
+
   Double_t sum(0);
   RooAbsReal* comp ;
   const RooArgSet* nset = _set1.nset() ;
@@ -182,9 +208,17 @@ Double_t RooAddition::evaluate() const
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooAddition::defaultErrorLevel() const 
 {
-  // See if we contain a RooNLLVar or RooChi2Var object
+  // Return the default error level for MINUIT error analysis
+  // If the addition contains one or more RooNLLVars and 
+  // no RooChi2Vars, return the defaultErrorLevel() of
+  // RooNLLVar. If the addition contains one ore more RooChi2Vars
+  // and no RooNLLVars, return the defaultErrorLevel() of
+  // RooChi2Var. If the addition contains neither or both
+  // issue a warning message and return a value of 1
 
   RooAbsReal* nllArg(0) ;
   RooAbsReal* chi2Arg(0) ;

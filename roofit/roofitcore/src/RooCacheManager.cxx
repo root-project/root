@@ -14,16 +14,24 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [AUX] --
-// Class RooCacheManager manages a cache for lists of normalization/projection integrals
-// for RooAbsPdf objects. Normalization/projection integrals are always defined by to
-// RooArgSet pointer containing the set of normalization / projection observables respectively.
+//////////////////////////////////////////////////////////////////////////////
+// 
+// BEGIN_HTML
+// Template class RooCacheManager manages the storage of any type of data indexed on
+// the choice of normalization and optionally the set of integrated observables.
+// The purpose of this class is to faciliate storage of intermediate results
+// in operator p.d.f.s whose value and inner working are often highly dependent
+// on the user provided choice of normalization in getVal(). 
 //
-// For efficiency reasons these pointer are derefenced as little as possible. This
-// class contains a lookup table for RooArgSet pointer pairs -> normalization lists.
-// Distinct pointer pairs that represent the same normalization/projection are recognized
-// and will all point to the same normalization list. Lists for up to 'maxSize' different normalization/
-// projection configurations can be cached.
+// For efficiency reasons these normalization set pointer are
+// derefenced as little as possible. This class contains a lookup
+// table for RooArgSet pointer pairs -> normalization lists.  Distinct
+// pointer pairs that represent the same normalization/projection are
+// recognized and will all point to the same normalization list. Lists
+// for up to 'maxSize' different normalization/ projection
+// configurations can be cached.  
+// END_HTML
+//
 // 
 
 #include "RooFit.h"

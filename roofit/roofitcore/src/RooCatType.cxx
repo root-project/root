@@ -14,10 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [CAT] --
+//////////////////////////////////////////////////////////////////////////////
+// 
+// BEGIN_HTML
 // RooCatType is an auxilary class for RooAbsCategory and defines a 
 // a single category state. The class holds a string label and an integer 
 // index value which define the state
+// END_HTML
+//
 
 #include "RooFit.h"
 
@@ -33,8 +37,11 @@ ClassImp(RooCatType)
 ;
 
 
+
+//_____________________________________________________________________________
 void RooCatType::SetName(const Text_t* name) 
 { 
+  // Constructor with name argument
   if (strlen(name)>255) {
     std::cout << "RooCatType::SetName warning: label '" << name << "' truncated at 255 chars" << std::endl ;
     _label[255]=0 ;
@@ -43,23 +50,38 @@ void RooCatType::SetName(const Text_t* name)
 }
 
 
+
+//_____________________________________________________________________________
 void RooCatType::printName(ostream& os) const 
 {
+  // Print the name of the state
   os << GetName() ;
 }
 
+
+
+//_____________________________________________________________________________
 void RooCatType::printTitle(ostream& os) const 
 {
+  // Print the title of the state
   os << GetTitle() ;
 }
 
+
+
+//_____________________________________________________________________________
 void RooCatType::printClassName(ostream& os) const 
 {
+  // Print the class name of the state
   os << IsA()->GetName() ;
 }
 
+
+
+//_____________________________________________________________________________
 void RooCatType::printValue(ostream& os) const
 {
+  // Print the value (index integer) of the state
   os << getVal() ;
 }
 

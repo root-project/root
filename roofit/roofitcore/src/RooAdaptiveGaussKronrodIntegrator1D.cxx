@@ -14,7 +14,9 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [AUX] --
+//////////////////////////////////////////////////////////////////////////////
+// 
+// BEGIN_HTML
 // RooAdaptiveGaussKronrodIntegrator1D implements the Gauss-Kronrod integration algorithm.
 //
 // An adaptive Gaussian quadrature method for numerical integration in
@@ -37,6 +39,8 @@
 //
 // For integrands with integrable singulaties the Wynn epsilon rule
 // can be selected to speed up the converges of these integrals
+// END_HTML
+//
 
 #include "RooFit.h"
 
@@ -130,9 +134,12 @@ gsl_integration_qagiu (gsl_function * f,
 //-------------------------------------------------------------------
 
 
-// Register this class with RooNumIntConfig
+//_____________________________________________________________________________
 void RooAdaptiveGaussKronrodIntegrator1D::registerIntegrator(RooNumIntFactory& fact)
 {
+  // Register this class with RooNumIntConfig as a possible choice of numeric
+  // integrator for one-dimensional integrals over finite and infinite domains
+
   RooRealVar maxSeg("maxSeg","maximum number of segments",100) ;
   RooCategory method("method","Integration method for each segment") ;
   method.defineType("WynnEpsilon",0) ;
@@ -148,12 +155,16 @@ void RooAdaptiveGaussKronrodIntegrator1D::registerIntegrator(RooNumIntFactory& f
 
 
 
+//_____________________________________________________________________________
 RooAdaptiveGaussKronrodIntegrator1D::RooAdaptiveGaussKronrodIntegrator1D() : _x(0), _workspace(0)
 {
+  // Default constructor
 }
 
 
 
+
+//_____________________________________________________________________________
 RooAdaptiveGaussKronrodIntegrator1D::RooAdaptiveGaussKronrodIntegrator1D(const RooAbsFunc& function, 
 									 const RooNumIntConfig& config) :
   RooAbsIntegrator(function),
@@ -161,6 +172,8 @@ RooAdaptiveGaussKronrodIntegrator1D::RooAdaptiveGaussKronrodIntegrator1D(const R
   _epsRel(config.epsAbs()),
   _workspace(0)
 {  
+  // Constructor taking a function binding and a configuration object
+  
   // Use this form of the constructor to integrate over the function's default range.
   const RooArgSet& confSet = config.getConfigSection(IsA()->GetName()) ;  
   _maxSeg = (Int_t) confSet.getRealValue("maxSeg",100) ;
@@ -172,6 +185,7 @@ RooAdaptiveGaussKronrodIntegrator1D::RooAdaptiveGaussKronrodIntegrator1D(const R
 
 
 
+//_____________________________________________________________________________
 RooAdaptiveGaussKronrodIntegrator1D::RooAdaptiveGaussKronrodIntegrator1D(const RooAbsFunc& function, 
 									 Double_t xmin, Double_t xmax,
 									 const RooNumIntConfig& config) :
@@ -182,6 +196,8 @@ RooAdaptiveGaussKronrodIntegrator1D::RooAdaptiveGaussKronrodIntegrator1D(const R
   _xmin(xmin),
   _xmax(xmax)
 {  
+  // Constructor taking a function binding, an integration range and a configuration object
+
   // Use this form of the constructor to integrate over the function's default range.
   const RooArgSet& confSet = config.getConfigSection(IsA()->GetName()) ;  
   _maxSeg = (Int_t) confSet.getRealValue("maxSeg",100) ;
@@ -193,15 +209,20 @@ RooAdaptiveGaussKronrodIntegrator1D::RooAdaptiveGaussKronrodIntegrator1D(const R
 
 
 
+//_____________________________________________________________________________
 RooAbsIntegrator* RooAdaptiveGaussKronrodIntegrator1D::clone(const RooAbsFunc& function, const RooNumIntConfig& config) const
 {
+  // Virtual constructor 
   return new RooAdaptiveGaussKronrodIntegrator1D(function,config) ;
 }
 
 
 
+//_____________________________________________________________________________
 Bool_t RooAdaptiveGaussKronrodIntegrator1D::initialize()
 {
+  // Initialize integrator allocate buffers and setup GSL workspace
+
   // Allocate coordinate buffer size after number of function dimensions
   _x = new Double_t[_function->getDimension()] ;
   _workspace = gsl_integration_workspace_alloc (_maxSeg)  ;
@@ -211,8 +232,11 @@ Bool_t RooAdaptiveGaussKronrodIntegrator1D::initialize()
 
 
 
+//_____________________________________________________________________________
 RooAdaptiveGaussKronrodIntegrator1D::~RooAdaptiveGaussKronrodIntegrator1D()
 {
+  // Destructor.
+
   if (_workspace) {
     gsl_integration_workspace_free ((gsl_integration_workspace*) _workspace) ;
   }
@@ -223,7 +247,9 @@ RooAdaptiveGaussKronrodIntegrator1D::~RooAdaptiveGaussKronrodIntegrator1D()
 
 
 
-Bool_t RooAdaptiveGaussKronrodIntegrator1D::setLimits(Double_t xmin, Double_t xmax) {
+//_____________________________________________________________________________
+Bool_t RooAdaptiveGaussKronrodIntegrator1D::setLimits(Double_t xmin, Double_t xmax) 
+{
   // Change our integration limits. Return kTRUE if the new limits are
   // ok, or otherwise kFALSE. Always returns kFALSE and does nothing
   // if this object was constructed to always use our integrand's limits.
@@ -240,10 +266,12 @@ Bool_t RooAdaptiveGaussKronrodIntegrator1D::setLimits(Double_t xmin, Double_t xm
 
 
 
-Bool_t RooAdaptiveGaussKronrodIntegrator1D::checkLimits() const {
+//_____________________________________________________________________________
+Bool_t RooAdaptiveGaussKronrodIntegrator1D::checkLimits() const 
+{
   // Check that our integration range is finite and otherwise return kFALSE.
   // Update the limits from the integrand if requested.
-
+  
   if(_useIntegrandLimits) {
     assert(0 != integrand() && integrand()->isValid());
     _xmin= integrand()->getMinLimit(0);
@@ -270,16 +298,21 @@ Bool_t RooAdaptiveGaussKronrodIntegrator1D::checkLimits() const {
 
 
 
+//_____________________________________________________________________________
 double RooAdaptiveGaussKronrodIntegrator1D_GSL_GlueFunction(double x, void *data) 
 {
+  // Glue function interacing to GSL code
   RooAdaptiveGaussKronrodIntegrator1D* instance = (RooAdaptiveGaussKronrodIntegrator1D*) data ;
   return instance->integrand(instance->xvec(x)) ;
 }
 
 
 
+//_____________________________________________________________________________
 Double_t RooAdaptiveGaussKronrodIntegrator1D::integral(const Double_t *yvec) 
 {
+  // Calculate and return integral at at given parameter values
+
   assert(isValid());
 
   // Copy yvec to xvec if provided

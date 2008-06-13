@@ -14,12 +14,20 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [REAL] --
+//////////////////////////////////////////////////////////////////////////////
+// 
+// BEGIN_HTML 
+// RooChangeTracker is a meta object that tracks value
+// changes in a given set of RooAbsArgs by registering itself as value
+// client of these objects. The change tracker can perform an
+// additional validation step where it also compares the numeric
+// values of the tracked arguments with reference values to ensure
+// that values have actually changed. This may be useful in case some
+// of the tracked observables are in binned datasets where each
+// observable propates a valueDirty flag when an event is loaded even
+// though usually only one observable actually changes.
+// END_HTML
 //
-// RooChangeTracker calculates the sum of a set of RooAbsReal terms, or
-// when constructed with two sets, it sums the product of the terms
-// in the two sets. This class does not (yet) do any smart handling of integrals, 
-// i.e. all integrals of the product are handled numerically
 
 
 #include "RooFit.h"
@@ -38,13 +46,18 @@ using namespace std ;
 ClassImp(RooChangeTracker)
 ;
 
+//_____________________________________________________________________________
 RooChangeTracker::RooChangeTracker()
 {
+  // Deault constructor
+
   _realSetIter = _realSet.createIterator() ;
   _catSetIter = _catSet.createIterator() ;
 }
 
 
+
+//_____________________________________________________________________________
 RooChangeTracker::RooChangeTracker(const char* name, const char* title, const RooArgSet& trackSet, Bool_t checkValues) :
   RooAbsReal(name, title),
   _realSet("realSet","Set of real-valued components to be tracked",this),
@@ -53,7 +66,12 @@ RooChangeTracker::RooChangeTracker(const char* name, const char* title, const Ro
   _catRef(trackSet.getSize()),
   _checkVal(checkValues)
 {
-  // Constructor
+  // Constructor. The set trackSet contains the observables to be
+  // tracked for changes. If checkValues is true an additional
+  // validation step is activated where the numeric values of the
+  // tracked arguments are compared with reference values ensuring
+  // that values have actually changed.
+
   _realSetIter = _realSet.createIterator() ;
   _catSetIter = _catSet.createIterator() ;
 
@@ -85,6 +103,7 @@ RooChangeTracker::RooChangeTracker(const char* name, const char* title, const Ro
 
 
 
+//_____________________________________________________________________________
 RooChangeTracker::RooChangeTracker(const RooChangeTracker& other, const char* name) :
   RooAbsReal(other, name), 
   _realSet("realSet",this,other._realSet),
@@ -94,6 +113,7 @@ RooChangeTracker::RooChangeTracker(const RooChangeTracker& other, const char* na
   _checkVal(other._checkVal)
 {
   // Copy constructor
+
   _realSetIter = _realSet.createIterator() ;
   _catSetIter = _catSet.createIterator() ;
 
@@ -103,8 +123,14 @@ RooChangeTracker::RooChangeTracker(const RooChangeTracker& other, const char* na
 }
 
 
+
+//_____________________________________________________________________________
 Bool_t RooChangeTracker::hasChanged(Bool_t clearState) 
 {
+  // Returns true if state has changes since last call with clearState=kTRUE
+  // If clearState is true, changeState flag will be cleared.
+
+
   // If dirty flag did not change, object has not changed in any case
   if (!isValueDirty()) {
     return kFALSE ;
@@ -181,16 +207,22 @@ Bool_t RooChangeTracker::hasChanged(Bool_t clearState)
 }
 
 
+
+//_____________________________________________________________________________
 RooChangeTracker::~RooChangeTracker() 
 {
+  // Destructor
   if (_realSetIter) delete _realSetIter ;
   if (_catSetIter) delete _catSetIter ;
 }
 
 
 
+
+//_____________________________________________________________________________
 Double_t RooChangeTracker::evaluate() const 
 {
+  // Value of change tracker is always 1
   return 1 ;
 }
 

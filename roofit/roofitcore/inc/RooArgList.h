@@ -70,9 +70,18 @@ public:
   virtual TObject* create(const char* newname) const { return new RooArgList(newname); }
   RooArgList& operator=(const RooArgList& other) { RooAbsCollection::operator=(other) ; return *this ; }
 
-  inline void sort(Bool_t reverse=kFALSE) { _list.Sort(!reverse) ; }
-  inline Int_t index(const RooAbsArg* arg) const { return _list.IndexOf(arg) ; }
-  inline RooAbsArg* at(Int_t idx) const { return (RooAbsArg*) _list.At(idx) ; }
+  inline void sort(Bool_t reverse=kFALSE) { 
+    // Sort list in requested order
+    _list.Sort(!reverse) ; 
+  }
+  inline Int_t index(const RooAbsArg* arg) const { 
+    // Returns index of given arg, or -1 if arg is not in list
+    return _list.IndexOf(arg) ; 
+  }
+  inline RooAbsArg* at(Int_t idx) const { 
+    // Return object at given index, or 0 if index is out of range
+    return (RooAbsArg*) _list.At(idx) ; 
+  }
 
   // I/O streaming interface (machine readable)
   virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
@@ -82,7 +91,7 @@ public:
 
 protected:
 
-  ClassDef(RooArgList,1) // List of RooAbsArg objects
+  ClassDef(RooArgList,1) // Ordered list of RooAbsArg objects
 };
 
 #endif

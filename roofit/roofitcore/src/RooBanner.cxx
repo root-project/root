@@ -4,10 +4,14 @@
 #include "Rtypes.h"
 #include "Riostream.h"
 
-// -- CLASS DESCRIPTION [AUX] --
+//////////////////////////////////////////////////////////////////////////////
+// 
+// BEGIN_HTML
 // Print banner message when RooFit library is loaded
+// END_HTML
+//
 
-const char* VTAG="2.40" ;
+const char* VTAG="2.50" ;
 
 Int_t doBanner()
 {

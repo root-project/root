@@ -33,18 +33,21 @@ public:
   RooChangeTracker(const RooChangeTracker& other, const char* name = 0);
   virtual TObject* clone(const char* newname) const { return new RooChangeTracker(*this, newname); }
 
-  virtual Double_t getVal(const RooArgSet* /*set*/=0) const { return 0 ; }
+  virtual Double_t getVal(const RooArgSet* /*set*/=0) const { 
+    // The change tracker is meta object and has no sensible value, so return always zero
+    return 0 ; 
+  }
 
   Bool_t hasChanged(Bool_t clearState) ;
 
 
 protected:
 
-  RooListProxy     _realSet ;
-  RooListProxy     _catSet ;
-  std::vector<Double_t> _realRef ;
-  std::vector<Int_t>    _catRef ;
-  Bool_t       _checkVal ; // Check contents as well if true
+  RooListProxy     _realSet ;        // List of reals to track 
+  RooListProxy     _catSet ;         // List of categories to check
+  std::vector<Double_t> _realRef ;   // Reference values for reals
+  std::vector<Int_t>    _catRef ;    // Reference valyes for categories
+  Bool_t       _checkVal ;           // Check contents as well if true
 
   mutable TIterator* _realSetIter ;     //! do not persist
   mutable TIterator* _catSetIter ;     //! do not persist

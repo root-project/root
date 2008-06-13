@@ -14,10 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [AUX] --
+//////////////////////////////////////////////////////////////////////////////
+// 
+// BEGIN_HTML
 // Implement the abstract 1-dimensional root finding interface using
 // the Brent-Decker method. This implementation is based on the one
 // in the GNU scientific library (v0.99).
+// END_HTML
+//
 
 #include "RooFit.h"
 
@@ -32,12 +36,17 @@ ClassImp(RooBrentRootFinder)
 ;
 
 
+//_____________________________________________________________________________
 RooBrentRootFinder::RooBrentRootFinder(const RooAbsFunc& function) :
   RooAbsRootFinder(function),
   _tol(2.2204460492503131e-16)
 {
+  // Constructor taking function binding as input
 }
 
+
+
+//_____________________________________________________________________________
 Bool_t RooBrentRootFinder::findRoot(Double_t &result, Double_t xlo, Double_t xhi, Double_t value) const
 {
   // Do the root finding using the Brent-Decker method. Returns a boolean status and
@@ -49,8 +58,8 @@ Bool_t RooBrentRootFinder::findRoot(Double_t &result, Double_t xlo, Double_t xhi
   Double_t fa= (*_function)(&a) - value;
   Double_t fb= (*_function)(&b) - value;
   if(fb*fa > 0) {
-//     oocoutE((TObject*)0,Eval) << "RooBrentRootFinder::findRoot(" << _function->getName() << "): initial interval does not bracket a root: ("
-// 			      << a << "," << b << "), value = " << value << " f[xlo] = " << fa << " f[xhi] = " << fb << endl;
+    oocxcoutD((TObject*)0,Eval) << "RooBrentRootFinder::findRoot(" << _function->getName() << "): initial interval does not bracket a root: ("
+				<< a << "," << b << "), value = " << value << " f[xlo] = " << fa << " f[xhi] = " << fb << endl;
     return kFALSE;
   }
 

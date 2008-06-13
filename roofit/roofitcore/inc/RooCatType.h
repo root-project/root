@@ -22,30 +22,62 @@
 
 class RooCatType : public TObject, public RooPrintable {
 public:
-  inline RooCatType() : TObject(), RooPrintable() { _value = 0 ; _label[0] = 0 ; } 
-  inline RooCatType(const char* name, Int_t value) : TObject(), RooPrintable(), _value(value) { SetName(name) ; } 
-  inline RooCatType(const RooCatType& other) : TObject(other), RooPrintable(other), _value(other._value) { strcpy(_label,other._label) ;} ;
-  virtual ~RooCatType() {} ;
+  inline RooCatType() : TObject(), RooPrintable() { 
+    // Default constructor
+    _value = 0 ; _label[0] = 0 ; 
+  }
+ 
+  inline RooCatType(const char* name, Int_t value) : TObject(), RooPrintable(), _value(value) { 
+    // Constructor with state name and index value
+    SetName(name) ; 
+  } 
+  inline RooCatType(const RooCatType& other) : 
+    TObject(other), RooPrintable(other), _value(other._value) { 
+    // Copy constructor
+    strcpy(_label,other._label) ;
+  } ;
+
+  virtual ~RooCatType() {
+    // Destructor
+  } ;
   virtual TObject* Clone(const char*) const { return new RooCatType(*this); }
-  virtual const Text_t* GetName() const { return _label ; }
+
+  virtual const Text_t* GetName() const { 
+    // Return state name
+    return _label ; 
+  }
   virtual void SetName(const Text_t* name) ;
 
   inline RooCatType& operator=(const RooCatType& other) { 
+    // Assignment operator from other RooCatType
     if (&other==this) return *this ;
     SetName(other.GetName()) ; 
     _value = other._value ; 
     return *this ; } 
 
   inline Bool_t operator==(const RooCatType& other) {
+    // Equality operator with other RooCatType
     return ( _value==other._value && !strcmp(_label,other._label)) ;
   }
 
-  inline Bool_t operator==(Int_t index) { return (_value==index) ; }
+  inline Bool_t operator==(Int_t index) { 
+    // Return true if index value matches integer
+    return (_value==index) ; 
+  }
 
-  Bool_t operator==(const char* label) { return !strcmp(_label,label) ; }
+  Bool_t operator==(const char* label) { 
+    // Return true if state name matchins string
+    return !strcmp(_label,label) ; 
+  }
 
-  inline Int_t getVal() const { return _value ; }
-  void setVal(Int_t newValue) { _value = newValue ; }
+  inline Int_t getVal() const { 
+    // Return index value
+    return _value ; 
+  }
+  void setVal(Int_t newValue) { 
+    // Set index value
+  _value = newValue ; 
+  }
 
   virtual void printName(ostream& os) const ;
   virtual void printTitle(ostream& os) const ;
@@ -53,13 +85,14 @@ public:
   virtual void printValue(ostream& os) const ;
   
   inline virtual void Print(Option_t *options= 0) const {
+    // Printing interface
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
 
 protected:
   friend class RooAbsCategory ;
-  Int_t _value ;
-  char _label[256] ;
+  Int_t _value ;     // Index value
+  char _label[256] ; // State name
 	
   ClassDef(RooCatType,1) // Category state, (name,index) pair
 } ;

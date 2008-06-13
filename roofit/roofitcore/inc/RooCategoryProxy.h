@@ -24,7 +24,9 @@ class RooCategoryProxy : public RooArgProxy {
 public:
 
   // Constructors, assignment etc.
-  RooCategoryProxy() {} ;
+  RooCategoryProxy() {
+    // Default constructor
+  } ;
   RooCategoryProxy(const char* name, const char* desc, RooAbsArg* owner, RooAbsCategory& ref,
 		   Bool_t valueServer=kTRUE, Bool_t shapeServer=kFALSE, Bool_t proxyOwnsArg=kFALSE) ;
   RooCategoryProxy(const char* name, RooAbsArg* owner, const RooCategoryProxy& other) ;
@@ -32,10 +34,22 @@ public:
   virtual ~RooCategoryProxy();
 
   // Accessors
-  inline operator Int_t() const { return ((RooAbsCategory*)_arg)->getIndex() ; }
-  inline const char* label() const { return ((RooAbsCategory*)_arg)->getLabel() ; }
-  inline const RooAbsCategory& arg() const { return (RooAbsCategory&)*_arg ; }
-  inline Bool_t hasRange(const char* rangeName) const { return arg().hasRange(rangeName) ; }
+  inline operator Int_t() const { 
+    // Facilitates use of proxy as integer
+    return ((RooAbsCategory*)_arg)->getIndex() ; 
+  }
+  inline const char* label() const { 
+    // Facilitates use of proxy as string value
+    return ((RooAbsCategory*)_arg)->getLabel() ; 
+  }
+  inline const RooAbsCategory& arg() const { 
+    // Return proxies argument
+    return (RooAbsCategory&)*_arg ; 
+  }
+  inline Bool_t hasRange(const char* rangeName) const { 
+    // Returns true if proxied argument has range with given name
+    return arg().hasRange(rangeName) ; 
+  }
 
 protected:
 
@@ -44,12 +58,18 @@ protected:
 public:
 
   // LValue operations 
-  RooCategoryProxy& operator=(Int_t index) { lvptr()->setIndex(index) ; return *this ; }
-  RooCategoryProxy& operator=(const char* _label) { lvptr()->setLabel(_label) ; return *this ; }
+  RooCategoryProxy& operator=(Int_t index) { 
+    // Assignment operator with index value
+    lvptr()->setIndex(index) ; return *this ; 
+  }
+  RooCategoryProxy& operator=(const char* _label) { 
+    // Assignment value with string value
+    lvptr()->setLabel(_label) ; return *this ; 
+  }
 
 protected:
 
-  ClassDef(RooCategoryProxy,0) // Proxy for a RooAbsCategory object
+  ClassDef(RooCategoryProxy,1) // Proxy for a RooAbsCategory object
 };
 
 #endif

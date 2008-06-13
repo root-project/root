@@ -36,12 +36,27 @@ public:
   virtual Double_t integral(const Double_t *yvec=0) ;
 
   Bool_t setLimits(Double_t xmin, Double_t xmax);
-  virtual Bool_t setUseIntegrandLimits(Bool_t flag) {_useIntegrandLimits = flag ; return kTRUE ; }
+  virtual Bool_t setUseIntegrandLimits(Bool_t flag) {
+    // If flag is true, intergration limits are taken from definition in input function binding
+    _useIntegrandLimits = flag ; return kTRUE ; 
+  }
 
-  virtual Bool_t canIntegrate1D() const { return kTRUE ; }
-  virtual Bool_t canIntegrate2D() const { return kFALSE ; }
-  virtual Bool_t canIntegrateND() const { return kFALSE ; }
-  virtual Bool_t canIntegrateOpenEnded() const { return kTRUE ; }
+  virtual Bool_t canIntegrate1D() const { 
+    // We can integrate 1-dimensional functions
+    return kTRUE ; 
+  }
+  virtual Bool_t canIntegrate2D() const { 
+    // We can not integrate 2-dimensional functions
+    return kFALSE ; 
+  }
+  virtual Bool_t canIntegrateND() const { 
+    // We can not integrate >2-dimensional functions
+    return kFALSE ; 
+  }
+  virtual Bool_t canIntegrateOpenEnded() const { 
+    // We can integrate over open-ended domains
+    return kTRUE ; 
+  }
 
 protected:
 
@@ -57,8 +72,11 @@ protected:
 
   Bool_t _useIntegrandLimits;  
 
-  Double_t* xvec(Double_t& xx) { _x[0] = xx ; return _x ; }
-  Double_t *_x ; //! do not persist
+  Double_t* xvec(Double_t& xx) {
+    // Return contents of xx in internal array pointer
+    _x[0] = xx ; return _x ; 
+  }
+  Double_t *_x ;                        //! Current coordinate
 
   Double_t _epsAbs ;                   // Absolute precision
   Double_t _epsRel ;                   // Relative precision
@@ -66,8 +84,8 @@ protected:
   Int_t    _maxSeg ;                   // Maximum number of segments
   void*    _workspace ;                // GSL workspace 
 
-  mutable Double_t _xmin;              //! do not persist
-  mutable Double_t _xmax;              //! do not persist
+  mutable Double_t _xmin;              //! Lower integration bound
+  mutable Double_t _xmax;              //! Upper integration bound
 
   ClassDef(RooAdaptiveGaussKronrodIntegrator1D,0) // 1-dimensional adaptive Gauss-Kronrod numerical integration engine
 };

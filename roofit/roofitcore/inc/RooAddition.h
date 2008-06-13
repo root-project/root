@@ -37,15 +37,15 @@ public:
 
 protected:
 
-  RooArgList   _ownedList ;
-  RooListProxy _set1 ;
-  RooListProxy _set2 ;
-  mutable TIterator* _setIter1 ;  //! do not persist
-  mutable TIterator* _setIter2 ;  //! do not persist
+  RooArgList   _ownedList ;       // List of owned components
+  RooListProxy _set1 ;            // First set of terms to be summed
+  RooListProxy _set2 ;            // Second set of terms to be summed
+  mutable TIterator* _setIter1 ;  //! Iterator over set1
+  mutable TIterator* _setIter2 ;  //! Iterator over set2
 
   Double_t evaluate() const;
 
-  ClassDef(RooAddition,1) // Sum of RooAbsReal terms
+  ClassDef(RooAddition,1) // Sum of RooAbsReal objects
 };
 
 #endif

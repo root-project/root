@@ -9,8 +9,13 @@
   * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             * 
   *****************************************************************************/ 
 
- // -- CLASS DESCRIPTION [PDF] -- 
- // Your description goes here... 
+//////////////////////////////////////////////////////////////////////////////
+// 
+// BEGIN_HTML
+// RooCachedReal is an implementation of RooAbsCachedReal that can cache
+// any external RooAbsReal input function provided in the constructor. 
+// END_HTML
+//
 
 #include "Riostream.h" 
 
@@ -25,33 +30,44 @@ ClassImp(RooCachedReal)
   ;
 
 
+//_____________________________________________________________________________
 RooCachedReal::RooCachedReal(const char *name, const char *title, RooAbsReal& _func) :
    RooAbsCachedReal(name,title), 
    func("func","func",this,_func),
    _useCdfBoundaries(kFALSE)
  { 
+   // Constructor taking name, title and function to be cached. To control
+   // granularity of the binning of the cache histogram set the desired properties
+   // in the binning named "cache" in the observables of the function
  } 
 
 
 
 
+//_____________________________________________________________________________
 RooCachedReal::RooCachedReal(const RooCachedReal& other, const char* name) :  
    RooAbsCachedReal(other,name), 
    func("func",this,other.func),
    _useCdfBoundaries(other._useCdfBoundaries)
  { 
+   // Copy constructor
  } 
 
 
+
+//_____________________________________________________________________________
 RooCachedReal::~RooCachedReal() 
 {
+  // Destructor
 }
 
 
 
+//_____________________________________________________________________________
 void RooCachedReal::fillCacheObject(RooAbsCachedReal::FuncCacheElem& cache) const 
 {
-  // Update contents of histogram
+  // Update contents of cache histogram by resampling the input function
+
   if (cache.hist()->get()->getSize()>1) {
     coutP(Eval) << "RooCachedReal::fillCacheObject(" << GetName() << ") filling multi-dimensional cache" ;
   }

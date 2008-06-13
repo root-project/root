@@ -14,7 +14,8 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [CONT] --
+//////////////////////////////////////////////////////////////////////////////
+// 
 // RooArgList is a container object that can hold multiple RooAbsArg objects.
 // The container has list semantics which means that:
 //
@@ -56,26 +57,37 @@
 ClassImp(RooArgList)
   ;
 
+
+//_____________________________________________________________________________
 RooArgList::RooArgList() :
   RooAbsCollection()
 {
   // Default constructor
 }
 
+
+
+//_____________________________________________________________________________
 RooArgList::RooArgList(const RooArgSet& set) :
   RooAbsCollection(set.GetName())
 {
   // Constructor from a RooArgSet. 
+
   add(set) ;
 }
 
 
+
+//_____________________________________________________________________________
 RooArgList::RooArgList(const char *name) :
   RooAbsCollection(name)
 {
   // Empty list constructor
 }
 
+
+
+//_____________________________________________________________________________
 RooArgList::RooArgList(const RooAbsArg& var1,
 		     const char *name) :
   RooAbsCollection(name)
@@ -85,6 +97,9 @@ RooArgList::RooArgList(const RooAbsArg& var1,
   add(var1);
 }
 
+
+
+//_____________________________________________________________________________
 RooArgList::RooArgList(const RooAbsArg& var1, const RooAbsArg& var2,
 		     const char *name) :
   RooAbsCollection(name)
@@ -94,6 +109,9 @@ RooArgList::RooArgList(const RooAbsArg& var1, const RooAbsArg& var2,
   add(var1); add(var2);
 }
 
+
+
+//_____________________________________________________________________________
 RooArgList::RooArgList(const RooAbsArg& var1, const RooAbsArg& var2, 
 		     const RooAbsArg& var3,
 		     const char *name) :
@@ -104,6 +122,9 @@ RooArgList::RooArgList(const RooAbsArg& var1, const RooAbsArg& var2,
   add(var1); add(var2); add(var3);
 }
 
+
+
+//_____________________________________________________________________________
 RooArgList::RooArgList(const RooAbsArg& var1, const RooAbsArg& var2, 
 		     const RooAbsArg& var3, const RooAbsArg& var4,
 		     const char *name) :
@@ -114,6 +135,9 @@ RooArgList::RooArgList(const RooAbsArg& var1, const RooAbsArg& var2,
   add(var1); add(var2); add(var3); add(var4);
 }
 
+
+
+//_____________________________________________________________________________
 RooArgList::RooArgList(const RooAbsArg& var1,
 		     const RooAbsArg& var2, const RooAbsArg& var3,
 		     const RooAbsArg& var4, const RooAbsArg& var5,
@@ -125,6 +149,9 @@ RooArgList::RooArgList(const RooAbsArg& var1,
   add(var1); add(var2); add(var3); add(var4); add(var5);
 }
 
+
+
+//_____________________________________________________________________________
 RooArgList::RooArgList(const RooAbsArg& var1, const RooAbsArg& var2, 
 		     const RooAbsArg& var3, const RooAbsArg& var4, 
 		     const RooAbsArg& var5, const RooAbsArg& var6,
@@ -136,6 +163,9 @@ RooArgList::RooArgList(const RooAbsArg& var1, const RooAbsArg& var2,
   add(var1); add(var2); add(var3); add(var4); add(var5); add(var6);
 }
 
+
+
+//_____________________________________________________________________________
 RooArgList::RooArgList(const RooAbsArg& var1, const RooAbsArg& var2, 
 		     const RooAbsArg& var3, const RooAbsArg& var4, 
 		     const RooAbsArg& var5, const RooAbsArg& var6, 
@@ -148,6 +178,9 @@ RooArgList::RooArgList(const RooAbsArg& var1, const RooAbsArg& var2,
   add(var1); add(var2); add(var3); add(var4); add(var5); add(var6); add(var7) ;
 }
 
+
+
+//_____________________________________________________________________________
 RooArgList::RooArgList(const RooAbsArg& var1, const RooAbsArg& var2, 
 		     const RooAbsArg& var3, const RooAbsArg& var4, 
 		     const RooAbsArg& var5, const RooAbsArg& var6, 
@@ -161,6 +194,8 @@ RooArgList::RooArgList(const RooAbsArg& var1, const RooAbsArg& var2,
 }
 
 
+
+//_____________________________________________________________________________
 RooArgList::RooArgList(const RooAbsArg& var1, const RooAbsArg& var2, 
 		     const RooAbsArg& var3, const RooAbsArg& var4, 
 		     const RooAbsArg& var5, const RooAbsArg& var6, 
@@ -175,6 +210,7 @@ RooArgList::RooArgList(const RooAbsArg& var1, const RooAbsArg& var2,
 
 
 
+//_____________________________________________________________________________
 RooArgList::RooArgList(const TCollection& tcoll, const char* name) :
   RooAbsCollection(name)
 {
@@ -197,6 +233,7 @@ RooArgList::RooArgList(const TCollection& tcoll, const char* name) :
 
 
 
+//_____________________________________________________________________________
 RooArgList::RooArgList(const RooArgList& other, const char *name) 
   : RooAbsCollection(other,name)
 {
@@ -207,6 +244,7 @@ RooArgList::RooArgList(const RooArgList& other, const char *name)
 
 
 
+//_____________________________________________________________________________
 RooArgList::~RooArgList() 
 {
   // Destructor
@@ -214,6 +252,7 @@ RooArgList::~RooArgList()
 
 
 
+//_____________________________________________________________________________
 RooAbsArg& RooArgList::operator[](Int_t idx) const 
 {     
   // Array operator. Element in slot 'idx' must already exist, otherwise
@@ -232,6 +271,8 @@ RooAbsArg& RooArgList::operator[](Int_t idx) const
 }
 
 
+
+//_____________________________________________________________________________
 void RooArgList::writeToStream(ostream& os, Bool_t compact) 
 {
   // Write the contents of the argset in ASCII form to given stream.
@@ -257,7 +298,7 @@ void RooArgList::writeToStream(ostream& os, Bool_t compact)
 
 
 
-
+//_____________________________________________________________________________
 Bool_t RooArgList::readFromStream(istream& is, Bool_t compact, Bool_t verbose) 
 {
   // Read the contents of the argset in ASCII form from given stream.

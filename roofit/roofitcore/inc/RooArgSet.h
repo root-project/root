@@ -79,16 +79,25 @@ public:
   RooArgSet& operator=(const RooArgSet& other) { RooAbsCollection::operator=(other) ; return *this ;}
 
   virtual Bool_t add(const RooAbsArg& var, Bool_t silent=kFALSE) ;
-  virtual Bool_t add(const RooAbsCollection& list, Bool_t silent=kFALSE) { return RooAbsCollection::add(list,silent) ; }
+  virtual Bool_t add(const RooAbsCollection& list, Bool_t silent=kFALSE) {
+    // Add all elements in list to collection
+    return RooAbsCollection::add(list,silent) ; 
+  }
   virtual Bool_t addOwned(RooAbsArg& var, Bool_t silent=kFALSE);
-  virtual Bool_t addOwned(const RooAbsCollection& list, Bool_t silent=kFALSE) { return RooAbsCollection::addOwned(list,silent) ; }
+  virtual Bool_t addOwned(const RooAbsCollection& list, Bool_t silent=kFALSE) { 
+    // Add all elements in list as owned components to collection
+    return RooAbsCollection::addOwned(list,silent) ; 
+  }
   virtual RooAbsArg *addClone(const RooAbsArg& var, Bool_t silent=kFALSE) ;
-  virtual void addClone(const RooAbsCollection& list, Bool_t silent=kFALSE) { RooAbsCollection::addClone(list,silent) ; }
+  virtual void addClone(const RooAbsCollection& list, Bool_t silent=kFALSE) { 
+    // Add owned clone of all elements of list to collection
+    RooAbsCollection::addClone(list,silent) ; 
+  }
 
   RooAbsArg& operator[](const char* name) const ;   
 
-  // I/O streaming interface (machine readable)
   virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) {
+    // I/O streaming interface (machine readable)
     return readFromStream(is, compact, 0, 0, verbose) ;
   }
   Bool_t readFromStream(istream& is, Bool_t compact, const char* flagReadAtt, const char* section, Bool_t verbose=kFALSE) ;
@@ -112,9 +121,9 @@ protected:
 
   Bool_t checkForDup(const RooAbsArg& arg, Bool_t silent) const ;
 
-  static char* _poolBegin ; //!
-  static char* _poolCur ; //!
-  static char* _poolEnd ; //!
+  static char* _poolBegin ; //! Start of memory pool
+  static char* _poolCur ;   //! Next free slot in memory pool
+  static char* _poolEnd ;   //! End of memory pool  
   
   ClassDef(RooArgSet,1) // Set of RooAbsArg objects
 };
