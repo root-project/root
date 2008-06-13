@@ -2037,8 +2037,8 @@ static void G__platformMacro()
        *   o : auto int
        *   O : auto double
        ****************************************************/
-  ::Reflex::TypedefTypeBuilder("macroInt$",::Reflex::Type::ByName("int"));
-  ::Reflex::TypedefTypeBuilder("macroDouble$",::Reflex::Type::ByName("double"));
+  ::Reflex::TypedefTypeBuilder("macroInt$",::Reflex::ConstBuilder(::Reflex::Type::ByName("int")));
+  ::Reflex::TypedefTypeBuilder("macroDouble$",::Reflex::ConstBuilder(::Reflex::Type::ByName("double")));
   ::Reflex::TypedefTypeBuilder("autoInt$",::Reflex::Type::ByName("int"));
   ::Reflex::TypedefTypeBuilder("autoDouble$",::Reflex::Type::ByName("double"));
   ::Reflex::TypedefTypeBuilder("macroChar*$",::Reflex::PointerBuilder(::Reflex::ConstBuilder(::Reflex::Type::ByName("char")))); 
