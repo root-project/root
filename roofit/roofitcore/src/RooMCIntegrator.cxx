@@ -14,11 +14,15 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [AUX] --
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
 // RooMCIntegrator implements an adaptive multi-dimensional Monte Carlo
 // numerical integration, following the VEGAS algorithm originally described
 // in G. P. Lepage, J. Comp. Phys. 27, 192(1978). This implementation is
 // based on a C version from the 0.9 beta release of the GNU scientific library.
+// END_HTML
+//
 
 #include "RooFit.h"
 #include "Riostream.h"
@@ -43,9 +47,13 @@ ClassImp(RooMCIntegrator)
 ;
 
 // Register this class with RooNumIntFactory
+
+//_____________________________________________________________________________
 void RooMCIntegrator::registerIntegrator(RooNumIntFactory& fact)
 {
-  // Construct default configuration
+  // This function registers class RooMCIntegrator, its configuration options
+  // and its capabilities with RooNumIntFactory
+  
   RooCategory samplingMode("samplingMode","Sampling Mode") ;
   samplingMode.defineType("Importance",RooMCIntegrator::Importance) ;
   samplingMode.defineType("ImportanceOnly",RooMCIntegrator::ImportanceOnly) ;
@@ -78,25 +86,40 @@ void RooMCIntegrator::registerIntegrator(RooNumIntFactory& fact)
 }
 
 
+
+//_____________________________________________________________________________
 RooMCIntegrator::RooMCIntegrator()
 {
-  // Dummy default ctor
+  // Default constructor
 }
 
+
+//_____________________________________________________________________________
 RooMCIntegrator::RooMCIntegrator(const RooAbsFunc& function, SamplingMode mode,
 				 GeneratorType genType, Bool_t verbose) :
   RooAbsIntegrator(function), _grid(function), _verbose(verbose),
   _alpha(1.5),  _mode(mode), _genType(genType),
   _nRefineIter(5),_nRefinePerDim(1000),_nIntegratePerDim(5000)
 {
-  // check that our grid initialized without errors
+  // Construct an integrator over 'function' with given sampling mode
+  // and generator type.  The sampling mode can be 'Importance'
+  // (default), 'ImportanceOnly' and 'Stratified'. The generator type
+  // can be 'QuasiRandom' (default) and 'PseudoRandom'. Consult the original
+  // VEGAS documentation on details of the mode and type parameters.
+
+
   if(!(_valid= _grid.isValid())) return;
   if(_verbose) _grid.Print();
 } 
 
+
+//_____________________________________________________________________________
 RooMCIntegrator::RooMCIntegrator(const RooAbsFunc& function, const RooNumIntConfig& config) :
   RooAbsIntegrator(function), _grid(function)
 { 
+  // Construct an integrator over 'function' where the configuration details
+  // are taken from 'config'
+
   const RooArgSet& configSet = config.getConfigSection(IsA()->GetName()) ;
   _verbose = (Bool_t) configSet.getCatIndex("verbose",0) ;
   _alpha = configSet.getRealValue("alpha",1.5) ;
@@ -111,34 +134,54 @@ RooMCIntegrator::RooMCIntegrator(const RooAbsFunc& function, const RooNumIntConf
   if(_verbose) _grid.Print();
 } 
 
+
+//_____________________________________________________________________________
 RooAbsIntegrator* RooMCIntegrator::clone(const RooAbsFunc& function, const RooNumIntConfig& config) const
 {
+  // Return clone of this generator operating on given function with given configuration
+  // Needed to support RooNumIntFactory
+
   return new RooMCIntegrator(function,config) ;
 }
 
 
+
+//_____________________________________________________________________________
 RooMCIntegrator::~RooMCIntegrator() 
 {
+  // Destructor
 }
 
-Bool_t RooMCIntegrator::checkLimits() const {
-  // Check if we can integrate over the current domain.
 
+//_____________________________________________________________________________
+Bool_t RooMCIntegrator::checkLimits() const 
+{
+  // Check if we can integrate over the current domain. If return value
+  // is kTRUE we cannot handle the current limits (e.g. where the domain
+  // of one or more observables is open ended.
+  
   return _grid.initialize(*integrand());
 }
 
-Double_t RooMCIntegrator::integral(const Double_t* /*yvec*/) {
+
+//_____________________________________________________________________________
+Double_t RooMCIntegrator::integral(const Double_t* /*yvec*/) 
+{
   // Evaluate the integral using a fixed number of calls to evaluate the integrand
   // equal to about 10k per dimension. Use the first 5k calls to refine the grid
   // over 5 iterations of 1k calls each, and the remaining 5k calls for a single
   // high statistics integration.
+
   _timer.Start(kTRUE);
   vegas(AllStages,_nRefinePerDim*_grid.getDimension(),_nRefineIter);
   Double_t ret = vegas(ReuseGrid,_nIntegratePerDim*_grid.getDimension(),1);
   return ret ;
 }
 
-Double_t RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, Double_t *absError) {
+
+//_____________________________________________________________________________
+Double_t RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, Double_t *absError) 
+{
   // Perform one step of Monte Carlo integration using the specified number of iterations
   // with (approximately) the specified number of integrand evaluation calls per iteration.
   // Use the VEGAS algorithm, starting from the specified stage. Returns the best estimate

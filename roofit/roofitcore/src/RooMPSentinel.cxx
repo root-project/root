@@ -14,11 +14,15 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [AUX] --
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
 // RooMPSentinel is a singleton class that keeps track of all
 // parellel execution processes for goodness-of-fit calculations.
 // The primary task of RooMPSentinel is to terminate all server processes
 // when the main ROOT process is exiting.
+// END_HTML
+//
 
 
 #include "RooFit.h"
@@ -30,13 +34,21 @@
 ClassImp(RooMPSentinel)
   ;
 
+
+//_____________________________________________________________________________
 RooMPSentinel::RooMPSentinel() 
 {
+  // Constructor
 }
 
 
+
+//_____________________________________________________________________________
 RooMPSentinel::~RooMPSentinel() 
 {
+  // Destructor. Terminate all parallel processes still registered with
+  // the sentinel
+
   TIterator *iter = _mpfeSet.createIterator() ;
   RooRealMPFE* mpfe ;
   while((mpfe=(RooRealMPFE*)iter->Next())) {
@@ -46,13 +58,20 @@ RooMPSentinel::~RooMPSentinel()
 }
  
 
+
+//_____________________________________________________________________________
 void RooMPSentinel::add(RooRealMPFE& mpfe) 
 {
+  // Register given multi-processor front-end object with the sentinel
+
   _mpfeSet.add(mpfe,kTRUE) ;
 }
 
 
+
+//_____________________________________________________________________________
 void RooMPSentinel::remove(RooRealMPFE& mpfe) 
 {
+  // Remove given multi-processor front-end object from the sentinel
   _mpfeSet.remove(mpfe,kTRUE) ;
 }

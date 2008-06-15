@@ -45,6 +45,7 @@ public:
   virtual void printMultiline(ostream& os, Int_t content, Bool_t verbose=kFALSE, TString indent= "") const;
 
   inline virtual void Print(Option_t *options= 0) const {
+    // Printing interface
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
 
@@ -68,7 +69,11 @@ protected:
   Int_t roundBin(Double_t y);
 
 private:
-  Double_t _nominalBinWidth,_nSigma,_entries,_rawEntries;
+  Double_t _nominalBinWidth ; // Average bin width
+  Double_t _nSigma ;          // Number of 'sigmas' error bars represent
+  Double_t _entries ;         // Number of entries in histogram
+  Double_t _rawEntries;        // Number of entries in source dataset
+
   ClassDef(RooHist,1) // 1-dimensional histogram with error bars
 };
 

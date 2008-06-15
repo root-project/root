@@ -36,8 +36,14 @@ public:
   RooArgSet& actualDependents() const ;
   Bool_t changeDependents(const RooAbsCollection& newDeps, Bool_t mustReplaceAll, Bool_t nameChange) ;
 
-  inline RooAbsArg* getParameter(const char* name) const { return (RooAbsArg*) _useList.FindObject(name) ; }
-  inline RooAbsArg* getParameter(Int_t index) const { return (RooAbsArg*) _origList.At(index) ; }
+  inline RooAbsArg* getParameter(const char* name) const { 
+    // Return pointer to parameter with given name
+    return (RooAbsArg*) _useList.FindObject(name) ; 
+  }
+  inline RooAbsArg* getParameter(Int_t index) const { 
+    // Return pointer to parameter at given index
+    return (RooAbsArg*) _origList.At(index) ; 
+  }
 
   // Function value accessor
   inline Bool_t ok() { return _isOK ; }
@@ -55,8 +61,8 @@ public:
   virtual void printArgs(ostream& os) const ;
   void printMultiline(ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const ;
 
-  // Printing interface (human readable)
   inline virtual void Print(Option_t *options= 0) const {
+    // Printing interface (human readable)
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
 
@@ -71,7 +77,7 @@ protected:
   Double_t DefinedValue(Int_t code) ;
 
   RooArgSet* _nset ;
-  mutable Bool_t    _isOK ;
+  mutable Bool_t    _isOK ;     // Is internal state OK?
   RooLinkedList     _origList ; //! Original list of dependents
   RooLinkedList _useList ;      //! List of actual dependents 
   mutable RooArgSet _actual;    //! Set of actual dependents

@@ -28,7 +28,9 @@ class TObject ;
 class RooGenCategory : public RooAbsCategory {
 public:
   // Constructors etc.
-  inline RooGenCategory() { }
+  inline RooGenCategory() { 
+    // Default constructor
+  }
   RooGenCategory(const char *name, const char *title, void* userFunc, RooArgSet& catList);
   RooGenCategory(const RooGenCategory& other, const char *name=0) ;
   virtual TObject* clone(const char* newname) const { return new RooGenCategory(*this,newname); }
@@ -47,16 +49,16 @@ protected:
   TString evalUserFunc(RooArgSet *vars) ;
   void updateIndexList() ;
   
-  RooSuperCategory _superCat ;    //  Super category of input categories
+  RooSuperCategory _superCat ;      //  Super category of input categories
   RooCategoryProxy _superCatProxy ; // Proxy for super category
-  Int_t *_map ;                   //! Super-index to generic-index map
+  Int_t *_map ;                     //! Super-index to generic-index map
 
-  TString      _userFuncName ; // 
-  TMethodCall* _userFunc;      // User function hook
-  Long_t _userArgs[1];         // 
+  TString      _userFuncName ; // Name of user function
+  TMethodCall* _userFunc;      // CINT pointer to user function
+  Long_t _userArgs[1];         // Placeholder for user function arguments
                                  
   virtual RooCatType evaluate() const ; 
-  ClassDef(RooGenCategory,1) // Index variable derived from other indeces, via an external global function
+  ClassDef(RooGenCategory,1) // Generic category-to-category function based on user supplied mapping function
 };
 
 #endif

@@ -55,6 +55,7 @@ public:
   void printMultiline(ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const ;
 
   inline virtual void Print(Option_t *options= 0) const {
+    // Printing interface
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
 
@@ -64,20 +65,45 @@ public:
 
 
   // Accessors
-  inline Int_t status() const { return _status ; }
-  inline Int_t covQual() const { return _covQual ; }
-  inline Int_t numInvalidNLL() const { return _numBadNLL ; }
-  inline Double_t edm() const { return _edm ; }
-  inline Double_t minNll() const { return _minNLL ; }
-  inline const RooArgList& constPars() const { return *_constPars ; } 
-  inline const RooArgList& floatParsInit() const { return *_initPars ; } 
-  inline const RooArgList& floatParsFinal() const { return *_finalPars ; } 
+  inline Int_t status() const {
+    // Return MINUIT status code
+    return _status ; 
+  }
+  inline Int_t covQual() const { 
+    // Return MINUIT quality code of covariance matrix
+    return _covQual ; 
+  }
+  inline Int_t numInvalidNLL() const { 
+    // Return number of NLL evaluations with problems
+    return _numBadNLL ; 
+  }
+  inline Double_t edm() const { 
+    // Return estimated distance to minimum
+    return _edm ; 
+  }
+  inline Double_t minNll() const { 
+    // Return minimized -log(L) value
+    return _minNLL ; 
+  }
+  inline const RooArgList& constPars() const { 
+    // Return list of constant parameters
+    return *_constPars ; 
+  }
+  inline const RooArgList& floatParsInit() const { 
+    // Return list of floating parameters before fit
+    return *_initPars ; 
+  } 
+  inline const RooArgList& floatParsFinal() const { 
+    // Return list of floarting parameters after fit
+    return *_finalPars ; 
+  } 
 
-  // Correlation matrix element and row accessors
   Double_t correlation(const RooAbsArg& par1, const RooAbsArg& par2) const {
+    // Return correlation between par1 and par2
     return correlation(par1.GetName(),par2.GetName()) ;
   }
   const RooArgList* correlation(const RooAbsArg& par) const {
+    // Return pointer to list of correlations of all parameters with par
     return correlation(par.GetName()) ;
   }
 
@@ -93,6 +119,7 @@ public:
   // Add objects to a 2D plot
   inline RooPlot *plotOn(RooPlot *frame, const RooAbsArg &par1, const RooAbsArg &par2,
 			 const char *options= "ME") const {
+    // Plot error ellipse in par1 and par2 on frame
     return plotOn(frame,par1.GetName(),par2.GetName(),options);
   }
   RooPlot *plotOn(RooPlot *plot, const char *parName1, const char *parName2,

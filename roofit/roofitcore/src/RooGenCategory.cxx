@@ -14,16 +14,20 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [CAT] --
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
 // RooGenCategory provides the most flexibe mapping of a series of input categories
 // on a output category via a global function provided in the constructor
-//
+// <p>
 // The mapping function must have the form 'const char* mapFunc(const RooArgSet* catList)'
 // and return the name of the output state for the list of categories supplied in the argument.
 // The global function can be a ROOT interpreted function.
-//
+// <p>
 // RooGenCategory builds a numerical index-to-index map from the user function
 // to achieve a high performance mapping.
+// END_HTML
+//
 
 #include "RooFit.h"
 
@@ -43,13 +47,15 @@ ClassImp(RooGenCategory)
 
 
 
+//_____________________________________________________________________________
 RooGenCategory::RooGenCategory(const char *name, const char *title, void *userFunc, RooArgSet& catList) :
   RooAbsCategory(name, title), 
   _superCat("superCat","Super Category",catList), 
   _superCatProxy("superCatProxy","Super Category Proxy",this,_superCat), 
   _map(0) 
 {
-  // Constructor with pointer to user mapping function and list of input categories
+  // Constructor with pointer to a CINT user mapping function and list of input categories
+  // on which the user mapping function can operate
   
   // Convert the function pointer into a parse object using the CINT
   // dictionary in memory.
@@ -63,12 +69,15 @@ RooGenCategory::RooGenCategory(const char *name, const char *title, void *userFu
 }
 
 
+
+//_____________________________________________________________________________
 RooGenCategory::RooGenCategory(const RooGenCategory& other, const char *name) :
   RooAbsCategory(other,name), _superCat(other._superCat), 
   _superCatProxy("superCatProxy","Super Category Proxy",this,_superCat),
   _map(0), _userFuncName(other._userFuncName)
 {
   // Copy constructor
+
   removeServer((RooAbsArg&)other._superCat) ;
   initialize() ;
 }
@@ -76,6 +85,7 @@ RooGenCategory::RooGenCategory(const RooGenCategory& other, const char *name) :
 
 
 
+//_____________________________________________________________________________
 void RooGenCategory::initialize()
 {
   // Initialization function
@@ -92,6 +102,7 @@ void RooGenCategory::initialize()
 
 
 
+//_____________________________________________________________________________
 RooGenCategory::~RooGenCategory() 
 {
   // Destructor
@@ -105,9 +116,12 @@ RooGenCategory::~RooGenCategory()
 }
 
 
+
+//_____________________________________________________________________________
 TString RooGenCategory::evalUserFunc(RooArgSet *vars) 
 {
   // Utility function to evaluate (interpreted) user function
+
   assert(0 != _userFunc);
   Long_t result;
   _userArgs[0]= (Long_t)vars ;
@@ -119,9 +133,11 @@ TString RooGenCategory::evalUserFunc(RooArgSet *vars)
 
 
 
+//_____________________________________________________________________________
 void RooGenCategory::updateIndexList()
 {
-  // Update list of states and reevaluate input index code to output index code map
+  // Loop over all input state permutations and recalculate the mapped output
+  // state for each input state and store these in the lookup table
 
   // Recreate super-index to gen-index map ;
   if (_map) delete[] _map ;
@@ -160,9 +176,12 @@ void RooGenCategory::updateIndexList()
 
 
 RooCatType
+
+//_____________________________________________________________________________
 RooGenCategory::evaluate() const
 {
   // Calculate current value of object
+  
   if (isShapeDirty()) {
     const_cast<RooGenCategory*>(this)->updateIndexList() ;
   }
@@ -178,24 +197,30 @@ RooGenCategory::evaluate() const
 
 
 
+//_____________________________________________________________________________
 void RooGenCategory::printMultiline(ostream& os, Int_t content, Bool_t verbose, TString indent) const
 {
-   RooAbsCategory::printMultiline(os,content,verbose,indent);
+  // Printing interface
 
-   if (verbose) {     
-     os << indent << "--- RooGenCategory ---" << endl;
-     os << indent << "  Input category list:" << endl ;
-     TString moreIndent(indent) ;
-     indent.Append("   ") ;
-     ((RooSuperCategory&)_superCatProxy.arg()).inputCatList().printStream(os,kName|kClassName|kArgs,kSingleLine) ;
-     os << indent << "  User mapping function is 'const char* " << _userFuncName << "(RooArgSet*)'" << endl ;
-   }
+  RooAbsCategory::printMultiline(os,content,verbose,indent);
+  
+  if (verbose) {     
+    os << indent << "--- RooGenCategory ---" << endl;
+    os << indent << "  Input category list:" << endl ;
+    TString moreIndent(indent) ;
+    indent.Append("   ") ;
+    ((RooSuperCategory&)_superCatProxy.arg()).inputCatList().printStream(os,kName|kClassName|kArgs,kSingleLine) ;
+    os << indent << "  User mapping function is 'const char* " << _userFuncName << "(RooArgSet*)'" << endl ;
+  }
 }
 
 
+
+//_____________________________________________________________________________
 Bool_t RooGenCategory::readFromStream(istream& /*is*/, Bool_t compact, Bool_t /*verbose*/) 
 {
   // Read object contents from given stream
+
    if (compact) {
      coutE(InputArguments) << "RooGenCategory::readFromSteam(" << GetName() << "): can't read in compact mode" << endl ;
      return kTRUE ;    
@@ -207,9 +232,11 @@ Bool_t RooGenCategory::readFromStream(istream& /*is*/, Bool_t compact, Bool_t /*
 
 
 
+//_____________________________________________________________________________
 void RooGenCategory::writeToStream(ostream& os, Bool_t compact) const
 {
   // Write object contents to given stream 
+
   if (compact) {
     // Write value only
     os << getLabel() ;

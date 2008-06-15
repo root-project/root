@@ -14,11 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [PDF] --
-// RooHistFunc implements a probablity density function sample from a 
-// multidimensional histogram. The histogram distribution is explicitly
-// normalized by RooHistFunc and can have an arbitrary number of real or 
-// discrete dimensions.
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
+// RooHistFunc implements a real-valued function sampled from a 
+// multidimensional histogram. The histogram can have an arbitrary number of real or 
+// discrete dimensions and may have negative values
+// END_HTML
+//
 
 #include "RooFit.h"
 #include "Riostream.h"
@@ -35,10 +38,15 @@ ClassImp(RooHistFunc)
 ;
 
 
+
+//_____________________________________________________________________________
 RooHistFunc::RooHistFunc() : _dataHist(0), _totVolume(0)
 {
+  // Default constructor
 }
 
+
+//_____________________________________________________________________________
 RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgSet& vars, 
 		       const RooDataHist& dhist, Int_t intOrder) :
   RooAbsReal(name,title), 
@@ -51,10 +59,10 @@ RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgSet& v
   _unitNorm(kFALSE)
 {
   // Constructor from a RooDataHist. The variable listed in 'vars' control the dimensionality of the
-  // PDF. Any additional dimensions present in 'dhist' will be projected out. RooDataHist dimensions
+  // function. Any additional dimensions present in 'dhist' will be projected out. RooDataHist dimensions
   // can be either real or discrete. See RooDataHist::RooDataHist for details on the binning.
   // RooHistFunc neither owns or clone 'dhist' and the user must ensure the input histogram exists
-  // for the entire life span of this PDF.
+  // for the entire life span of this function.
 
   _depList.add(vars) ;
 
@@ -78,6 +86,8 @@ RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgSet& v
 }
 
 
+
+//_____________________________________________________________________________
 RooHistFunc::RooHistFunc(const RooHistFunc& other, const char* name) :
   RooAbsReal(other,name), 
   _depList("depList",this,other._depList),
@@ -92,16 +102,24 @@ RooHistFunc::RooHistFunc(const RooHistFunc& other, const char* name) :
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooHistFunc::evaluate() const
 {
   // Return the current value: The value of the bin enclosing the current coordinates
-  // of the dependents, normalized by the histograms contents  
+  // of the dependents, normalized by the histograms contents. Interpolation
+  // is applied if the RooHistFunc is configured to do that
+
   Double_t ret =  _dataHist->weight(_depList,_intOrder,kFALSE,_cdfBoundaries) ;  
   return ret ;
 }
 
+
+//_____________________________________________________________________________
 Double_t RooHistFunc::totVolume() const
 {
+  // Return the total volume spanned by the observables of the RooDataHist
+
   // Return previously calculated value, if any
   if (_totVolume>0) {
     return _totVolume ;
@@ -125,10 +143,16 @@ Double_t RooHistFunc::totVolume() const
 }
 
 
+
+//_____________________________________________________________________________
 Int_t RooHistFunc::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
 {
-  // Determine integration scenario. RooHistFunc can perform all integrals over 
-  // its dependents analytically via partial or complete summation of the input histogram.
+  // Determine integration scenario. If no interpolation is used,
+  // RooHistFunc can perform all integrals over its dependents
+  // analytically via partial or complete summation of the input
+  // histogram. If interpolation is used, only the integral
+  // over all RooHistPdf observables is implemented.
+
 
   // Only analytical integrals over the full range are defined
   if (rangeName!=0) {
@@ -172,6 +196,7 @@ Int_t RooHistFunc::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars
 
 
 
+//_____________________________________________________________________________
 Double_t RooHistFunc::analyticalIntegral(Int_t code, const char* /*rangeName*/) const 
 {
   // Return integral identified by 'code'. The actual integration

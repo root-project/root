@@ -14,9 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [AUX] --
-// Implementation of the abstract RooAbsIntegrator interface that can handle
-// integration limits of +/-Infinity.
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
+// Special numeric integrator that can handle integrals over open domains.
+// To this end the range is cut in up three pieces: [-inf,-1],[-1,+1] and [+1,inf]
+// and the outer two pieces, if required are calculated using a 1/x transform
+// END_HTML
+//
 
 
 #include "RooFit.h"
@@ -40,19 +45,29 @@ ClassImp(RooImproperIntegrator1D)
 ;
 
 // Register this class with RooNumIntConfig
+
+//_____________________________________________________________________________
 void RooImproperIntegrator1D::registerIntegrator(RooNumIntFactory& fact)
 {
+  // Register RooImproperIntegrator1D, its parameters and capabilities with RooNumIntFactory
+
   RooImproperIntegrator1D* proto = new RooImproperIntegrator1D() ;
   fact.storeProtoIntegrator(proto,RooArgSet(),RooIntegrator1D::Class()->GetName()) ;
   RooNumIntConfig::defaultConfig().method1DOpen().setLabel(proto->IsA()->GetName()) ;
 }
 
 
+
+//_____________________________________________________________________________
 RooImproperIntegrator1D::RooImproperIntegrator1D() :  
   _function(0), _integrator1(0), _integrator2(0), _integrator3(0)
 {
+  // Default constructor
+
 }
 
+
+//_____________________________________________________________________________
 RooImproperIntegrator1D::RooImproperIntegrator1D(const RooAbsFunc& function) :
   RooAbsIntegrator(function),
   _useIntegrandLimits(kTRUE),
@@ -62,10 +77,14 @@ RooImproperIntegrator1D::RooImproperIntegrator1D(const RooAbsFunc& function) :
   _integrator2(0),
   _integrator3(0)
 {
+  // Constructor with function binding. The integration range is taken from the
+  // definition in the function binding
   initialize(&function) ;
 }
 
 
+
+//_____________________________________________________________________________
 RooImproperIntegrator1D::RooImproperIntegrator1D(const RooAbsFunc& function, const RooNumIntConfig& config) :
   RooAbsIntegrator(function),
   _useIntegrandLimits(kTRUE),
@@ -76,10 +95,14 @@ RooImproperIntegrator1D::RooImproperIntegrator1D(const RooAbsFunc& function, con
   _integrator2(0),
   _integrator3(0)
 {
+  // Constructor with function binding and configuration object. The integration range is taken
+  // from the definition in the function binding
   initialize(&function) ;
 }
 
 
+
+//_____________________________________________________________________________
 RooImproperIntegrator1D::RooImproperIntegrator1D(const RooAbsFunc& function, Double_t xmin, Double_t xmax, const RooNumIntConfig& config) :
   RooAbsIntegrator(function),
   _xmin(xmin),
@@ -92,18 +115,26 @@ RooImproperIntegrator1D::RooImproperIntegrator1D(const RooAbsFunc& function, Dou
   _integrator2(0),
   _integrator3(0)
 {
+  // Constructor with function binding, definition of integration range and configuration object
   initialize(&function) ;
 }
 
 
+
+//_____________________________________________________________________________
 RooAbsIntegrator* RooImproperIntegrator1D::clone(const RooAbsFunc& function, const RooNumIntConfig& config) const
 {
+  // Return clone of integrator with given function and configuration. Needed by RooNumIntFactory.
   return new RooImproperIntegrator1D(function,config) ;
 }
 
 
+
+//_____________________________________________________________________________
 void RooImproperIntegrator1D::initialize(const RooAbsFunc* function)
 {
+  // Initialize the integrator, construct and initialize subintegrators
+
   if(!isValid()) {
     oocoutE((TObject*)0,Integration) << "RooImproperIntegrator: cannot integrate invalid function" << endl;
     return;
@@ -166,14 +197,22 @@ void RooImproperIntegrator1D::initialize(const RooAbsFunc* function)
   }
 }
 
-RooImproperIntegrator1D::~RooImproperIntegrator1D() {
+
+//_____________________________________________________________________________
+RooImproperIntegrator1D::~RooImproperIntegrator1D() 
+{
+  // Destructor
+
   if(0 != _integrator1) delete _integrator1;
   if(0 != _integrator2) delete _integrator2;
   if(0 != _integrator3) delete _integrator3;
   if(0 != _function) delete _function;
 }
 
-Bool_t RooImproperIntegrator1D::setLimits(Double_t xmin, Double_t xmax) {
+
+//_____________________________________________________________________________
+Bool_t RooImproperIntegrator1D::setLimits(Double_t xmin, Double_t xmax) 
+{
   // Change our integration limits. Return kTRUE if the new limits are
   // ok, or otherwise kFALSE. Always returns kFALSE and does nothing
   // if this object was constructed to always use our integrand's limits.
@@ -188,8 +227,14 @@ Bool_t RooImproperIntegrator1D::setLimits(Double_t xmin, Double_t xmax) {
   return checkLimits();
 }
 
-Bool_t RooImproperIntegrator1D::checkLimits() const {
-  // Analyze the current limits to see if the same case applies.
+
+//_____________________________________________________________________________
+Bool_t RooImproperIntegrator1D::checkLimits() const 
+{
+  // Check if the limits are valid. For this integrator all limit configurations
+  // are valid, but if the limits change between two calculate() calls it
+  // may be necessary to reconfigure (e.g. if an open ended range becomes
+  // a closed range
 
   // Has either limit changed?
   if (_useIntegrandLimits) {
@@ -231,9 +276,13 @@ Bool_t RooImproperIntegrator1D::checkLimits() const {
   return kTRUE;
 }
 
-RooImproperIntegrator1D::LimitsCase RooImproperIntegrator1D::limitsCase() const {
-  // Analyze the specified limits to determine which case applies.
 
+//_____________________________________________________________________________
+RooImproperIntegrator1D::LimitsCase RooImproperIntegrator1D::limitsCase() const 
+{
+  // Classify the type of limits we have: OpenBothEnds,ClosedBothEnds,OpenBelow or OpenAbove.
+
+  // Analyze the specified limits to determine which case applies.
   if(0 == integrand() || !integrand()->isValid()) return Invalid;
 
   if (_useIntegrandLimits) {
@@ -270,7 +319,11 @@ RooImproperIntegrator1D::LimitsCase RooImproperIntegrator1D::limitsCase() const 
   // return Invalid; OSF-CC: Statement unreachable
 }
 
-Double_t RooImproperIntegrator1D::integral(const Double_t* yvec) {
+
+//_____________________________________________________________________________
+Double_t RooImproperIntegrator1D::integral(const Double_t* yvec) 
+{
+  // Calculate the integral at the given parameter values of the function binding
 
   Double_t result(0);
   if(0 != _integrator1) result+= _integrator1->integral(yvec);

@@ -14,7 +14,8 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [REAL] --
+//////////////////////////////////////////////////////////////////////////////
+//
 // RooRealVar is a generic implementation of a real valued object
 // which takes a RooArgList of servers and a C++ expression string defining how
 // its value should be calculated from the given list of servers.
@@ -33,6 +34,7 @@
 //
 // The latter form, while slightly less readable, is more versatile because it
 // doesn't hardcode any of the variable names it expects
+//
 
 
 #include "RooFit.h"
@@ -50,32 +52,38 @@
 ClassImp(RooFormulaVar)
 
 
+
+//_____________________________________________________________________________
 RooFormulaVar::RooFormulaVar(const char *name, const char *title, const char* inFormula, const RooArgList& dependents) : 
   RooAbsReal(name,title), 
   _actualVars("actualVars","Variables used by formula expression",this),
   _formula(0), _formExpr(inFormula)
 {  
   // Constructor with formula expression and list of input variables
-//   RooFormula tmpFormula(name,formula,dependents) ;
-  _actualVars.add(dependents) ; //tmpFormula.actualDependents()) ;
+
+  _actualVars.add(dependents) ; 
 
   if (_actualVars.getSize()==0) _value = traceEval(0) ;
 }
 
 
+
+//_____________________________________________________________________________
 RooFormulaVar::RooFormulaVar(const char *name, const char *title, const RooArgList& dependents) : 
   RooAbsReal(name,title),
   _actualVars("actualVars","Variables used by formula expression",this),
   _formula(0), _formExpr(title)
 {  
   // Constructor with formula expression, title and list of input variables
-//   RooFormula tmpFormula(name,title,dependents) ;
-  _actualVars.add(dependents) ; //tmpFormula.actualDependents()) ;
+
+  _actualVars.add(dependents) ; 
 
   if (_actualVars.getSize()==0) _value = traceEval(0) ;
 }
 
 
+
+//_____________________________________________________________________________
 RooFormulaVar::RooFormulaVar(const RooFormulaVar& other, const char* name) : 
   RooAbsReal(other, name), 
   _actualVars("actualVars",this,other._actualVars),
@@ -85,15 +93,22 @@ RooFormulaVar::RooFormulaVar(const RooFormulaVar& other, const char* name) :
 }
 
 
+
+//_____________________________________________________________________________
 RooFormulaVar::~RooFormulaVar() 
 {
   // Destructor
+
   if (_formula) delete _formula ;
 }
 
 
+
+//_____________________________________________________________________________
 RooFormula& RooFormulaVar::formula() const
 {
+  // Return reference to internal RooFormula object
+
   if (!_formula) {
     _formula = new RooFormula(GetName(),_formExpr,_actualVars) ;    
   }
@@ -101,28 +116,37 @@ RooFormula& RooFormulaVar::formula() const
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooFormulaVar::getVal(const RooArgSet* set) const 
 {
+  // Overload RooAbsReal::getVal() to intercept nset pointer.
+
   _nset = (RooArgSet*) set ;
   return RooAbsReal::getVal(set) ;
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooFormulaVar::evaluate() const
 {
-  // Calculate current value of object
+  // Calculate current value of object from internal formula
   return formula().eval(_nset) ;
 }
 
 
 
-Bool_t RooFormulaVar::isValidReal(Double_t /*value*/, Bool_t /*printError*/) const {
+//_____________________________________________________________________________
+Bool_t RooFormulaVar::isValidReal(Double_t /*value*/, Bool_t /*printError*/) const 
+{
   // Check if given value is valid
   return kTRUE ;
 }
 
 
 
+//_____________________________________________________________________________
 Bool_t RooFormulaVar::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t /*isRecursive*/)
 {
   // Propagate server change information to embedded RooFormula object
@@ -131,9 +155,11 @@ Bool_t RooFormulaVar::redirectServersHook(const RooAbsCollection& newServerList,
 
 
 
+//_____________________________________________________________________________
 void RooFormulaVar::printMultiline(ostream& os, Int_t contents, Bool_t verbose, TString indent) const
 {
   // Print info about this object to the specified stream.   
+
   RooAbsReal::printMultiline(os,contents,verbose,indent);
   if(verbose) {
     indent.Append("  ");
@@ -143,17 +169,23 @@ void RooFormulaVar::printMultiline(ostream& os, Int_t contents, Bool_t verbose, 
 }
 
 
+
+//_____________________________________________________________________________
 Bool_t RooFormulaVar::readFromStream(istream& /*is*/, Bool_t /*compact*/, Bool_t /*verbose*/)
 {
   // Read object contents from given stream
+
   coutE(InputArguments) << "RooFormulaVar::readFromStream(" << GetName() << "): can't read" << endl ;
   return kTRUE ;
 }
 
 
+
+//_____________________________________________________________________________
 void RooFormulaVar::writeToStream(ostream& os, Bool_t compact) const
 {
   // Write object contents to given stream
+
   if (compact) {
     cout << getVal() << endl ;
   } else {
@@ -161,9 +193,17 @@ void RooFormulaVar::writeToStream(ostream& os, Bool_t compact) const
   }
 }
 
+
+//_____________________________________________________________________________
 Double_t RooFormulaVar::defaultErrorLevel() const 
 {
-  // See if we contain a RooNLLVar or RooChi2Var object
+  // Return the default error level for MINUIT error analysis
+  // If the formula contains one or more RooNLLVars and 
+  // no RooChi2Vars, return the defaultErrorLevel() of
+  // RooNLLVar. If the addition contains one ore more RooChi2Vars
+  // and no RooNLLVars, return the defaultErrorLevel() of
+  // RooChi2Var. If the addition contains neither or both
+  // issue a warning message and return a value of 1
 
   RooAbsReal* nllArg(0) ;
   RooAbsReal* chi2Arg(0) ;

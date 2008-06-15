@@ -14,9 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [AUX] --
-// RooMCIntegrator implements an adaptive multi-dimensional Monte Carlo
-// numerical integration, following the VEGAS algorithm.
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML 
+// RooGrid is a utility class for RooMCIntegrator which
+// implements an adaptive multi-dimensional Monte Carlo numerical
+// integration, following the VEGAS algorithm.  
+// END_HTML
+//
 
 #include "RooFit.h"
 
@@ -36,14 +41,21 @@
 ClassImp(RooGrid)
 ;
 
+
+//_____________________________________________________________________________
 RooGrid::RooGrid() :
   _xl(0),  _xu(0),  _delx(0),  _d(0),  _xi(0),  _xin(0),  _weight(0)
 {
+  // Default constructor
 }
 
+
+//_____________________________________________________________________________
 RooGrid::RooGrid(const RooAbsFunc &function)
   : _valid(kTRUE), _xl(0),_xu(0),_delx(0),_xi(0)
 {
+  // Constructor with given function binding
+
   // check that the input function is valid
   if(!(_valid= function.isValid())) {
     oocoutE((TObject*)0,InputArguments) << ClassName() << ": cannot initialize using an invalid function" << endl;
@@ -69,7 +81,11 @@ RooGrid::RooGrid(const RooAbsFunc &function)
   _valid= initialize(function);
 }
 
-RooGrid::~RooGrid() {
+
+//_____________________________________________________________________________
+RooGrid::~RooGrid() 
+{
+  // Destructor
   if(_xl)     delete[] _xl;
   if(_xu)     delete[] _xu;
   if(_delx)   delete[] _delx;
@@ -79,7 +95,10 @@ RooGrid::~RooGrid() {
   if(_weight) delete[] _weight;
 }
 
-Bool_t RooGrid::initialize(const RooAbsFunc &function) {
+
+//_____________________________________________________________________________
+Bool_t RooGrid::initialize(const RooAbsFunc &function) 
+{
   // Calculate and store the grid dimensions and volume using the
   // specified function, and initialize the grid using a single bin.
   // Return kTRUE, or else kFALSE if the range is not valid.
@@ -111,7 +130,10 @@ Bool_t RooGrid::initialize(const RooAbsFunc &function) {
   return kTRUE;
 }
 
-void RooGrid::resize(UInt_t bins) {
+
+//_____________________________________________________________________________
+void RooGrid::resize(UInt_t bins) 
+{
   // Adjust the subdivision of each axis to give the specified
   // number of bins, using an algorithm that preserves relative
   // bin density. The new binning can be finer or coarser than
@@ -148,9 +170,12 @@ void RooGrid::resize(UInt_t bins) {
   _bins = bins;
 }
 
-void RooGrid::resetValues() {
-  // Reset the values associated with each grid cell.
 
+//_____________________________________________________________________________
+void RooGrid::resetValues() 
+{
+  // Reset the values associated with each grid cell.
+  
   for(UInt_t i = 0; i < _bins; i++) {
     for (UInt_t j = 0; j < _dim; j++) {
       value(i,j)= 0.0;
@@ -158,8 +183,11 @@ void RooGrid::resetValues() {
   }
 }
 
+
+//_____________________________________________________________________________
 void RooGrid::generatePoint(const UInt_t box[], Double_t x[], UInt_t bin[], Double_t &vol,
-			    Bool_t useQuasiRandom) const {
+			    Bool_t useQuasiRandom) const 
+{
   // Generate a random vector in the specified box and and store its
   // coordinates in the x[] array provided, the corresponding bin
   // indices in the bin[] array, and the volume of this bin in vol.
@@ -205,14 +233,22 @@ void RooGrid::generatePoint(const UInt_t box[], Double_t x[], UInt_t bin[], Doub
   }
 }
 
-void RooGrid::firstBox(UInt_t box[]) const {
+
+
+//_____________________________________________________________________________
+void RooGrid::firstBox(UInt_t box[]) const 
+{
   // Reset the specified array of box indices to refer to the first box
   // in the standard traversal order.
 
   for(UInt_t i= 0; i < _dim; i++) box[i]= 0;
 }
 
-Bool_t RooGrid::nextBox(UInt_t box[]) const {
+
+
+//_____________________________________________________________________________
+Bool_t RooGrid::nextBox(UInt_t box[]) const 
+{
   // Update the specified array of box indices to refer to the next box
   // in the standard traversal order and return kTRUE, or else return
   // kFALSE if we the indices already refer to the last box.
@@ -231,7 +267,9 @@ Bool_t RooGrid::nextBox(UInt_t box[]) const {
 
 
 
-void RooGrid::printMultiline(ostream& os, Int_t /*contents*/, Bool_t verbose, TString indent) const {
+//_____________________________________________________________________________
+void RooGrid::printMultiline(ostream& os, Int_t /*contents*/, Bool_t verbose, TString indent) const 
+{
   // Print info about this object to the specified stream.
 
   os << ClassName() << ": volume = " << getVolume() << endl;
@@ -248,35 +286,50 @@ void RooGrid::printMultiline(ostream& os, Int_t /*contents*/, Bool_t verbose, TS
   }
 }
 
+
+//_____________________________________________________________________________
 void RooGrid::printName(ostream& os) const 
 {
+  // Print name of grid object
   os << GetName() ;
 }
 
+
+//_____________________________________________________________________________
 void RooGrid::printTitle(ostream& os) const 
 {
+  // Print title of grid object
   os << GetTitle() ;
 }
 
+
+//_____________________________________________________________________________
 void RooGrid::printClassName(ostream& os) const 
 {
+  // Print class name of grid object
   os << IsA()->GetName() ;
 }
 
 
-void RooGrid::accumulate(const UInt_t bin[], Double_t amount) {
+
+//_____________________________________________________________________________
+void RooGrid::accumulate(const UInt_t bin[], Double_t amount) 
+{
   // Add the specified amount to bin[j] of the 1D histograms associated
   // with each axis j.
 
   for(UInt_t j = 0; j < _dim; j++) value(bin[j],j) += amount;
 }
 
-void RooGrid::refine(Double_t alpha) {
+
+//_____________________________________________________________________________
+void RooGrid::refine(Double_t alpha) 
+{
   // Refine the grid using the values that have been accumulated so far.
   // The parameter alpha controls the stiffness of the rebinning and should
   // usually be between 1 (stiffer) and 2 (more flexible). A value of zero
   // prevents any rebinning.
-
+  
   for (UInt_t j = 0; j < _dim; j++) {
 
     // smooth this dimension's histogram of grid values and calculate the

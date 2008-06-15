@@ -34,6 +34,7 @@ public:
   RooLinkedList& operator=(const RooLinkedList& other) ;
 
   Int_t getHashTableSize() const {
+    // Return size of hash table
     return _htableName ? _htableName->size() : 0 ;
   }
 
@@ -80,7 +81,7 @@ protected:
   RooHashTable*       _htableName ; //! Hash table by name 
   RooHashTable*       _htableLink ; //! Hash table by link pointer
 
-  ClassDef(RooLinkedList,1) // TList with extra support for Option_t associations
+  ClassDef(RooLinkedList,1) // Doubly linked list for storage of RooAbsArg objects
 };
 
 

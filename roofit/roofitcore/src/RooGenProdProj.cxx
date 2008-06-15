@@ -14,7 +14,9 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [AUX] --
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
 //
 // RooGenProdProj is an auxiliary class for RooProdPdf that calculates
 // a general normalized projection of a product of non-factorizing PDFs, e.g.
@@ -25,6 +27,8 @@
 //
 // Partial integrals that factorize that can be calculated are calculated
 // analytically. Remaining non-factorizing observables are integrated numerically.
+// END_HTML
+//
 
 
 #include "RooFit.h"
@@ -42,10 +46,15 @@
 ClassImp(RooGenProdProj)
 ;
 
+
+//_____________________________________________________________________________
 RooGenProdProj::RooGenProdProj()
 {
+  // Default constructor
 }
 
+
+//_____________________________________________________________________________
 RooGenProdProj::RooGenProdProj(const char *name, const char *title, const RooArgSet& _prodSet, 
 			       const RooArgSet& _intSet, const RooArgSet& _normSet, const char* isetRangeName) :
   RooAbsReal(name, title),
@@ -56,7 +65,8 @@ RooGenProdProj::RooGenProdProj(const char *name, const char *title, const RooArg
   _intList("intList","List of integrals",this,kTRUE),
   _haveD(kFALSE)
 {
-  // Constructor
+  // Constructor for a normalization projection of the product of p.d.f.s _prodSet
+  // integrated over _intSet in range isetRangeName while normalized over _normSet
 
   // Create owners of components created in ctor
   _compSetOwnedN = new RooArgSet ;
@@ -78,6 +88,7 @@ RooGenProdProj::RooGenProdProj(const char *name, const char *title, const RooArg
 
 
 
+//_____________________________________________________________________________
 RooGenProdProj::RooGenProdProj(const RooGenProdProj& other, const char* name) :
   RooAbsReal(other, name), 
   _compSetOwnedN(0), 
@@ -86,7 +97,7 @@ RooGenProdProj::RooGenProdProj(const RooGenProdProj& other, const char* name) :
   _compSetD("compSetD","Set of integral components owned by denominator",this),
   _intList("intList","List of integrals",this)
 {
-//   cout << "RooGenProdProj copy ctor(" << this << ") orig = " << &other << endl ;
+  // Copy constructor
 
   // Explicitly remove all server links at this point
   TIterator* iter = serverIterator() ;
@@ -126,17 +137,26 @@ RooGenProdProj::RooGenProdProj(const RooGenProdProj& other, const char* name) :
 }
 
 
+
+//_____________________________________________________________________________
 RooGenProdProj::~RooGenProdProj()
 {
+  // Destructor
+
   if (_compSetOwnedN) delete _compSetOwnedN ;
   if (_compSetOwnedD) delete _compSetOwnedD ;
 }
 
 
 
+//_____________________________________________________________________________
 RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& compSet, const RooArgSet& intSet, RooArgSet& saveSet, const char* isetRangeName) 
 {
-  // Create integral of compSet over observables in intSet.
+  // Utility function to create integral over observables intSet in range isetRangeName over product of p.d.fs in compSet.
+  // The integration is factorized into components as much as possible and done analytically as far as possible.
+  // All component object needed to represent product integral are added as owned members to saveSet.
+  // The return value is a RooAbsReal object representing the requested integral
+
   RooArgSet anaIntSet, numIntSet ;
 
   // First determine subset of observables in intSet that are factorizable
@@ -215,22 +235,30 @@ RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& comp
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooGenProdProj::evaluate() const 
 {  
+  // Calculate and return value of normalization projection
+
   Double_t nom = ((RooAbsReal*)_intList.at(0))->getVal() ;
 
   if (!_haveD) return nom ;
 
   Double_t den = ((RooAbsReal*)_intList.at(1))->getVal() ;
 
-  //cout << "RooGenProdProj::eval(" << GetName() << ") ret = " << nom << " / " << den << endl ;
-
   return nom / den ;
 }
 
 
+
+//_____________________________________________________________________________
 void RooGenProdProj::operModeHook() 
 {
+  // Intercept cache mode operation changes and propagate them to the components
+
+  // WVE use cache manager here!
+
   RooAbsArg* arg ;
   TIterator* nIter = _compSetOwnedN->createIterator() ;  
   while((arg=(RooAbsArg*)nIter->Next())) {

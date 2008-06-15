@@ -32,7 +32,9 @@ protected:
   void add(RooRealMPFE& mpfe) ;
   void remove(RooRealMPFE& mpfe) ;
 
-  RooMPSentinel(const RooMPSentinel&) {}
+  RooMPSentinel(const RooMPSentinel&) {
+    // Default constructor
+  }
   RooArgSet _mpfeSet ;
   
   ClassDef(RooMPSentinel,1) // Singleton class that terminate MP server processes when parent exists

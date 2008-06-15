@@ -14,8 +14,12 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [AUX] ---
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
 // RooLinkedListElem is an link element for the RooLinkedList class
+// END_HTML
+//
 
 #include "RooFit.h"
 

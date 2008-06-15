@@ -14,7 +14,8 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [REAL] --
+//////////////////////////////////////////////////////////////////////////////
+//
 // RooLinearVar is the most general form of a derived real-valued object that can
 // be used by RooRealIntegral to integrate over. The requirements for this are
 //
@@ -31,8 +32,9 @@
 //
 // In the context of a dataset, (slope) may not contain any real-valued dependents
 // (satisfied constant Jacobian requirement). This check cannot be enforced at
-// construction time, but can be performed any time using the isJacobianOK(depList)
+// construction time, but can be performed at run time through the isJacobianOK(depList)
 // member function.
+//
 //
 
 #include "RooFit.h"
@@ -57,6 +59,8 @@
 
 ClassImp(RooLinearVar)
 
+
+//_____________________________________________________________________________
 RooLinearVar::RooLinearVar(const char *name, const char *title, RooAbsRealLValue& variable, 
 			   const RooAbsReal& slope, const RooAbsReal& offset, const char *unit) :
   RooAbsRealLValue(name, title, unit), 
@@ -65,7 +69,7 @@ RooLinearVar::RooLinearVar(const char *name, const char *title, RooAbsRealLValue
   _slope("slope","slope",this,(RooAbsReal&)slope),
   _offset("offset","offset",this,(RooAbsReal&)offset)
 {
-  // Constructor with RooRealVar variable and RooAbsReal slope and offset
+  // Constructor with RooAbsRealLValue variable and RooAbsReal slope and offset
 
   // Slope and offset may not depend on variable
   if (slope.dependsOn(variable) || offset.dependsOn(variable)) {
@@ -84,6 +88,8 @@ RooLinearVar::RooLinearVar(const char *name, const char *title, RooAbsRealLValue
 }  
 
 
+
+//_____________________________________________________________________________
 RooLinearVar::RooLinearVar(const RooLinearVar& other, const char* name) :
   RooAbsRealLValue(other,name), 
   _binning(other._binning),
@@ -95,23 +101,32 @@ RooLinearVar::RooLinearVar(const RooLinearVar& other, const char* name) :
 }
 
 
+
+//_____________________________________________________________________________
 RooLinearVar::~RooLinearVar() 
 {
   // Destructor
+
   _altBinning.Delete() ;
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooLinearVar::evaluate() const
 {
   // Calculate current value of this object  
+
   return _offset + _var * _slope ;
 }
 
 
+
+//_____________________________________________________________________________
 void RooLinearVar::setVal(Double_t value) 
 {
-  // Assign given value to linear transformation: set input variable to (value-offset)/slope
+  // Assign given value to linear transformation: sets input variable to (value-offset)/slope
+  // If slope is zerom an error message is printed and no assignment is made
 
   //cout << "RooLinearVar::setVal(" << GetName() << "): new value = " << value << endl ;
 
@@ -127,9 +142,12 @@ void RooLinearVar::setVal(Double_t value)
 
 
 
+//_____________________________________________________________________________
 Bool_t RooLinearVar::isJacobianOK(const RooArgSet& depList) const
 {
-  // Check if Jacobian of input LValue is OK
+  // Returns true if Jacobian term associated with current
+  // expression tree is indeed constant.
+
   if (!((RooAbsRealLValue&)_var.arg()).isJacobianOK(depList)) {
     return kFALSE ;
   }
@@ -148,13 +166,18 @@ Bool_t RooLinearVar::isJacobianOK(const RooArgSet& depList) const
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooLinearVar::jacobian() const 
 {
+  // Return value of Jacobian associated with the transformation
+
   return _slope*((RooAbsRealLValue&)_var.arg()).jacobian() ;
 }
 
 
 
+//_____________________________________________________________________________
 Bool_t RooLinearVar::readFromStream(istream& /*is*/, Bool_t /*compact*/, Bool_t /*verbose*/) 
 {
   // Read object contents from stream
@@ -162,9 +185,12 @@ Bool_t RooLinearVar::readFromStream(istream& /*is*/, Bool_t /*compact*/, Bool_t 
 }
 
 
+
+//_____________________________________________________________________________
 void RooLinearVar::writeToStream(ostream& os, Bool_t compact) const
 {
   // Write object contents to stream
+
   if (compact) {
     os << getVal() ;
   } else {
@@ -174,8 +200,14 @@ void RooLinearVar::writeToStream(ostream& os, Bool_t compact) const
 
 
 
+//_____________________________________________________________________________
  RooAbsBinning& RooLinearVar::getBinning(const char* name, Bool_t verbose, Bool_t createOnTheFly) 
 {
+  // Retrieve binning of this linear transformation. A RooLinearVar does not have its own
+  // binnings but uses linearly transformed binnings of teh input variable. If a given
+  // binning exists on the input variable, it will also exists on this linear transformation
+  // and a binning adaptor object is created on the fly.
+
   // Normalization binning
   if (name==0) {
     _binning.updateInput(((RooAbsRealLValue&)_var.arg()).getBinning(),_slope,_offset) ;
@@ -202,12 +234,22 @@ void RooLinearVar::writeToStream(ostream& os, Bool_t compact) const
   return *transBinning ;
 }
 
+
+//_____________________________________________________________________________
 const RooAbsBinning& RooLinearVar::getBinning(const char* name, Bool_t verbose, Bool_t createOnTheFly) const
 {
+  // Const version of getBinning()
+
   return const_cast<RooLinearVar*>(this)->getBinning(name,verbose,createOnTheFly) ;
 }
 
+
+//_____________________________________________________________________________
 Bool_t RooLinearVar::hasBinning(const char* name) const 
 {
+  // Returns true if binning with given name exists.If a given binning
+  // exists on the input variable, it will also exists on this linear
+  // transformation.
+
   return ((RooAbsRealLValue&)_var.arg()).hasBinning(name) ;
 }

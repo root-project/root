@@ -27,11 +27,12 @@ class RooLinkedListElem {
 public:
   // Initial element ctor
   RooLinkedListElem(TObject* arg) : 
+    // Constructor with payload
     _prev(0), _next(0), _arg(arg), _refCount(1) {
   }
 
-  // Link element ctor
   RooLinkedListElem(TObject* arg, RooLinkedListElem* after) : 
+    // Constructor with payload and next chain element
     _prev(after), _next(after->_next), _arg(arg), _refCount(1) {
 
     // Insert self in link

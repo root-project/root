@@ -14,10 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [PLOT] --
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
 // RooHistError is a singleton class used to calculate the error bars
 // for each bin of a RooHist object. Errors are calculated by integrating
 // a specified area of a Poisson or Binomail error distribution.
+// END_HTML
+//
 
 #include "RooFit.h"
 
@@ -33,7 +37,10 @@ ClassImp(RooHistError)
   ;
 
 
-const RooHistError &RooHistError::instance() {
+
+//_____________________________________________________________________________
+const RooHistError &RooHistError::instance() 
+{
   // Return a reference to a singleton object that is created the
   // first time this method is called. Only one object will be
   // constructed per ROOT session.
@@ -42,9 +49,11 @@ const RooHistError &RooHistError::instance() {
   return _theInstance;
 }
 
-RooHistError::RooHistError() {
-  // Construct our singleton object.
 
+//_____________________________________________________________________________
+RooHistError::RooHistError() 
+{
+  // Construct our singleton object.
 
   // Initialize lookup table ;
   Int_t i ;
@@ -55,8 +64,17 @@ RooHistError::RooHistError() {
 }
 
 
+
+//_____________________________________________________________________________
 Bool_t RooHistError::getPoissonInterval(Int_t n, Double_t &mu1, Double_t &mu2, Double_t nSigma) const
 {
+  // Return a confidence interval for the expected number of events given n
+  // observed (unweighted) events. The interval will contain the same probability
+  // as nSigma of a Gaussian. Uses a central interval unless this does not enclose
+  // the point estimate n (ie, for small n) in which case the interval is adjusted
+  // to start at n. This method uses a lookup table to return precalculated results
+  // for n<1000
+
   // Use lookup table for most common cases
   if (n<1000 && nSigma==1.) {
     mu1=_poissonLoLUT[n] ;
@@ -70,6 +88,8 @@ Bool_t RooHistError::getPoissonInterval(Int_t n, Double_t &mu1, Double_t &mu2, D
 }
 
 
+
+//_____________________________________________________________________________
 Bool_t RooHistError::getPoissonIntervalCalc(Int_t n, Double_t &mu1, Double_t &mu2, Double_t nSigma) const
 {
   // Calculate a confidence interval for the expected number of events given n
@@ -102,9 +122,14 @@ Bool_t RooHistError::getPoissonIntervalCalc(Int_t n, Double_t &mu1, Double_t &mu
   return getInterval(&upper,0,(Double_t)n,1.0,mu1,mu2,nSigma);
 }
 
+
+//_____________________________________________________________________________
 Bool_t RooHistError::getBinomialInterval(Int_t n, Int_t m,
 					 Double_t &asym1, Double_t &asym2, Double_t nSigma) const
 {
+  // Return 'nSigma' binomial confidence interval for (n,m). The result is return in asym1 and asym2.
+  // If the return values is kFALSE and error occurred.
+
   // sanity checks
   if(n < 0 || m < 0) {
     oocoutE((TObject*)0,Plotting) << "RooHistError::getPoissonInterval: cannot calculate interval for n,m = " << n << "," << m << endl;
@@ -160,11 +185,13 @@ Bool_t RooHistError::getBinomialInterval(Int_t n, Int_t m,
   return status;
 }
 
+
+//_____________________________________________________________________________
 Bool_t RooHistError::getInterval(const RooAbsFunc *Qu, const RooAbsFunc *Ql, Double_t pointEstimate,
 				 Double_t stepSize, Double_t &lo, Double_t &hi, Double_t nSigma) const
 {
-  // Calculate a confidence interval using the cummulative functions provided.
-  // The interval will be "central" when both cummulative functions are provided,
+  // Calculate a confidence interval using the cumulative functions provided.
+  // The interval will be "central" when both cumulative functions are provided,
   // unless this would exclude the pointEstimate, in which case a one-sided interval
   // pinned at the point estimate is returned instead.
 
@@ -210,10 +237,13 @@ Bool_t RooHistError::getInterval(const RooAbsFunc *Qu, const RooAbsFunc *Ql, Dou
   return ok;
 }
 
-Double_t RooHistError::seek(const RooAbsFunc &f, Double_t startAt, Double_t step, Double_t value) const {
+
+//_____________________________________________________________________________
+Double_t RooHistError::seek(const RooAbsFunc &f, Double_t startAt, Double_t step, Double_t value) const 
+{
   // Scan f(x)-value until it changes sign. Start at the specified point and take constant
   // steps of the specified size. Give up after 1000 steps.
-
+  
   Int_t steps(1000);
   Double_t min(f.getMinLimit(1)),max(f.getMaxLimit(1));
   Double_t x(startAt), f0= f(&startAt) - value;
@@ -229,12 +259,20 @@ Double_t RooHistError::seek(const RooAbsFunc &f, Double_t startAt, Double_t step
 }
 
 
+
+//_____________________________________________________________________________
 RooAbsFunc *RooHistError::createPoissonSum(Int_t n) 
 { 
+  // Create and return a PoissonSum function binding
+
   return new PoissonSum(n); 
 }
 
+
+//_____________________________________________________________________________
 RooAbsFunc *RooHistError::createBinomialSum(Int_t n, Int_t m) 
 { 
+  // Create and return a BinomialSum function binding
+
   return new BinomialSum(n,m); 
 }

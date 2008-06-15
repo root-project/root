@@ -14,11 +14,15 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [PDF] --
-// RooHistPdf implements a probablity density function sample from a 
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
+// RooHistPdf implements a probablity density function sampled from a 
 // multidimensional histogram. The histogram distribution is explicitly
 // normalized by RooHistPdf and can have an arbitrary number of real or 
 // discrete dimensions.
+// END_HTML
+//
 
 #include "RooFit.h"
 #include "Riostream.h"
@@ -35,10 +39,15 @@ ClassImp(RooHistPdf)
 ;
 
 
+
+//_____________________________________________________________________________
 RooHistPdf::RooHistPdf() : _dataHist(0), _totVolume(0)
 {
+  // Default constructor
 }
 
+
+//_____________________________________________________________________________
 RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgSet& vars, 
 		       const RooDataHist& dhist, Int_t intOrder) :
   RooAbsPdf(name,title), 
@@ -78,6 +87,8 @@ RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgSet& var
 }
 
 
+
+//_____________________________________________________________________________
 RooHistPdf::RooHistPdf(const RooHistPdf& other, const char* name) :
   RooAbsPdf(other,name), 
   _depList("depList",this,other._depList),
@@ -92,10 +103,14 @@ RooHistPdf::RooHistPdf(const RooHistPdf& other, const char* name) :
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooHistPdf::evaluate() const
 {
   // Return the current value: The value of the bin enclosing the current coordinates
-  // of the dependents, normalized by the histograms contents  
+  // of the observables, normalized by the histograms contents. Interpolation
+  // is applied if the RooHistPdf is configured to do that
+
   Double_t ret =  _dataHist->weight(_depList,_intOrder,kFALSE,_cdfBoundaries) ;  
   if (ret<0) {
     ret=0 ;
@@ -103,8 +118,12 @@ Double_t RooHistPdf::evaluate() const
   return ret ;
 }
 
+
+//_____________________________________________________________________________
 Double_t RooHistPdf::totVolume() const
 {
+  // Return the total volume spanned by the observables of the RooHistPdf
+
   // Return previously calculated value, if any
   if (_totVolume>0) {
     return _totVolume ;
@@ -128,10 +147,15 @@ Double_t RooHistPdf::totVolume() const
 }
 
 
+
+//_____________________________________________________________________________
 Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
 {
-  // Determine integration scenario. RooHistPdf can perform all integrals over 
-  // its dependents analytically via partial or complete summation of the input histogram.
+  // Determine integration scenario. If no interpolation is used,
+  // RooHistPdf can perform all integrals over its dependents
+  // analytically via partial or complete summation of the input
+  // histogram. If interpolation is used on the integral over
+  // all histogram observables is supported
 
   // Only analytical integrals over the full range are defined
   if (rangeName!=0) {
@@ -175,6 +199,7 @@ Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
 
 
 
+//_____________________________________________________________________________
 Double_t RooHistPdf::analyticalIntegral(Int_t code, const char* /*rangeName*/) const 
 {
   // Return integral identified by 'code'. The actual integration
@@ -182,7 +207,6 @@ Double_t RooHistPdf::analyticalIntegral(Int_t code, const char* /*rangeName*/) c
   // or complete summation over the histograms contents
 
   // WVE needs adaptation for rangeName feature
-
   // Simplest scenario, integration over all dependents
   if (code==1000) {
     return _dataHist->sum(kTRUE) ;
@@ -207,13 +231,19 @@ Double_t RooHistPdf::analyticalIntegral(Int_t code, const char* /*rangeName*/) c
 }
 
 
+
+//_____________________________________________________________________________
 Int_t RooHistPdf::getMaxVal(const RooArgSet& /*vars*/) const 
 {
+  // Not implemented yet
   return 0 ;
 }
 
+
+//_____________________________________________________________________________
 Double_t RooHistPdf::maxVal(Int_t /*code*/) 
 {
+  // Not implemented yet
   return 0 ;
 }
 

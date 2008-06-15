@@ -14,9 +14,13 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [AUX] --
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
 // A RooList is a TList with extra support for working with options
-// that are associated with each node.
+// that are associated with each node. This is a utility class for RooPlot
+// END_HTML
+//
 
 #include "RooFit.h"
 
@@ -29,7 +33,10 @@
 ClassImp(RooList)
 
 
-TObjOptLink *RooList::findLink(const char *name, const char *caller) const {
+
+//_____________________________________________________________________________
+TObjOptLink *RooList::findLink(const char *name, const char *caller) const 
+{
   // Find the link corresponding to the named object in this list.
   // Return 0 if the object is not found or does not have an Option_t
   // string associated with its link. Also print a warning message
@@ -51,7 +58,10 @@ TObjOptLink *RooList::findLink(const char *name, const char *caller) const {
   return dynamic_cast<TObjOptLink*>(link);
 }
 
-Bool_t RooList::moveBefore(const char *before, const char *target, const char *caller) {
+
+//_____________________________________________________________________________
+Bool_t RooList::moveBefore(const char *before, const char *target, const char *caller) 
+{
   // Move the target object immediately before the specified object,
   // preserving any Option_t associated with the target link.
 
@@ -82,7 +92,10 @@ Bool_t RooList::moveBefore(const char *before, const char *target, const char *c
   return kTRUE;
 }
 
-Bool_t RooList::moveAfter(const char *after, const char *target, const char *caller) {
+
+//_____________________________________________________________________________
+Bool_t RooList::moveAfter(const char *after, const char *target, const char *caller) 
+{
   // Move the target object immediately after the specified object,
   // preserving any Option_t associated with the target link.
 

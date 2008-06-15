@@ -14,12 +14,16 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [REAL] --
+//////////////////////////////////////////////////////////////////////////////
 //
-// RooFracRemainder calculates the sum of a set of RooAbsReal terms, or
-// when constructed with two sets, it sums the product of the terms
-// in the two sets. This class does not (yet) do any smart handling of integrals, 
-// i.e. all integrals of the product are handled numerically
+// BEGIN_HTML
+//
+// RooFracRemainder calculates the remainder fraction of a sum of RooAbsReal
+// fraction, i.e (1 - sum_i a_i). This class is used by RooSimWSTool to
+// as specialization of the remainder fraction term of a parameter with
+// a constrained split
+// END_HTML
+//
 
 
 #include "RooFit.h"
@@ -38,17 +42,24 @@
 ClassImp(RooFracRemainder)
 ;
 
+
+//_____________________________________________________________________________
 RooFracRemainder::RooFracRemainder()
 {
+  // Default constructor
+
   _setIter1 = _set1.createIterator() ;
 }
 
 
+
+//_____________________________________________________________________________
 RooFracRemainder::RooFracRemainder(const char* name, const char* title, const RooArgSet& sumSet) :
   RooAbsReal(name, title),
   _set1("set1","First set of components",this)
 {
-  // Constructor
+  // Constructor with given set of input fractions. All arguments in sumSet must be of type RooAbsReal.
+
   _setIter1 = _set1.createIterator() ;
 
   TIterator* inputIter = sumSet.createIterator() ;
@@ -68,26 +79,35 @@ RooFracRemainder::RooFracRemainder(const char* name, const char* title, const Ro
 
 
 
+//_____________________________________________________________________________
 RooFracRemainder::RooFracRemainder(const RooFracRemainder& other, const char* name) :
   RooAbsReal(other, name), 
   _set1("set1",this,other._set1)
 {
   // Copy constructor
+
   _setIter1 = _set1.createIterator() ;
   
   // Member _ownedList is intentionally not copy-constructed -- ownership is not transferred
 }
 
 
+
+//_____________________________________________________________________________
 RooFracRemainder::~RooFracRemainder() 
 {
+  // Destructor
+
   if (_setIter1) delete _setIter1 ;
 }
 
 
 
+//_____________________________________________________________________________
 Double_t RooFracRemainder::evaluate() const 
 {
+  // Calculate value
+
   Double_t sum(1);
   RooAbsReal* comp ;
   const RooArgSet* nset = _set1.nset() ;

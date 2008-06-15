@@ -41,18 +41,18 @@ protected:
   virtual void initGenerator(const RooArgSet &theEvent);
   virtual void generateEvent(RooArgSet &theEvent, Int_t remaining);
 
-  RooArgSet *_cloneSet;
-  RooAbsPdf *_pdfClone;
-  RooArgSet _directVars,_uniformVars,_otherVars;
-  Int_t _code;
-  Double_t _maxProb, _area, _norm;
-  RooRealIntegral *_acceptRejectFunc;
-  RooAcceptReject *_generator;
-  RooRealVar *_maxVar ;
-  TIterator *_uniIter ;
-  Int_t _updateFMaxPerEvent ;
+  RooArgSet *_cloneSet;   // Clone of all nodes of input p.d.f
+  RooAbsPdf *_pdfClone;   // Clone of input p.d.f
+  RooArgSet _directVars,_uniformVars,_otherVars; // List of observables generated internally, randomly, and by accept/reject sampling
+  Int_t _code;                        // Internal generation code
+  Double_t _maxProb, _area, _norm;    // Maximum probability, p.d.f area and normalization
+  RooRealIntegral *_acceptRejectFunc; // Projection function to be passed to accept/reject sampler
+  RooAcceptReject *_generator;        // Accept/reject generation engine
+  RooRealVar *_maxVar ;               // Variable holding maximum value of p.d.f
+  TIterator *_uniIter ;               // Iterator over uniform observables
+  Int_t _updateFMaxPerEvent ;         // If true, maximum p.d.f value needs to be recalculated for each event
 
-  ClassDef(RooGenContext,0) // Context for generating a dataset from a PDF
+  ClassDef(RooGenContext,0) // Universal context for generating toy MC data from any p.d.f
 };
 
 #endif

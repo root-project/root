@@ -31,10 +31,9 @@ public:
   inline virtual Double_t getMaxLimit(UInt_t index) const { return 1/_func->getMinLimit(index); }
 
 protected:
-  const RooAbsFunc *_func;
-  Double_t _scaleFactor;
+  const RooAbsFunc *_func; // Input function binding
 
-  ClassDef(RooInvTransform,0) // RooAbsFunc decorator
+  ClassDef(RooInvTransform,0) // Function binding returning inverse of other function binding
 };
 
 #endif

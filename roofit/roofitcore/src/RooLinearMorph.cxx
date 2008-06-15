@@ -9,8 +9,73 @@
   * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             * 
   *****************************************************************************/ 
 
- // -- CLASS DESCRIPTION [PDF] -- 
- // Your description goes here... 
+//////////////////////////////////////////////////////////////////////////////
+//
+// Class RooLinearMorph is an implementation of the histogram interpolation
+// technique described by Alex Read in 'NIM A 425 (1999) 357-369 'Linear interpolation of histograms'
+// for continuous functions rather than histograms. The interpolation method, in short,
+// works as follows. 
+//
+//   - Given a p.d.f f1(x) with c.d.f F1(x) and p.d.f f2(x) with c.d.f F2(x)
+// 
+//   - One finds takes a value 'y' of both c.d.fs and determines the corresponding x
+//     values x(1,2) at which F(1,2)(x)==y. 
+//
+//   - The value of the interpolated p.d.f fbar(x) is then calculated as 
+//     fbar(alpha*x1+(1-alpha)*x2) = f1(x1)*f2(x2) / ( alpha*f2(x2) + (1-alpha)*f1(x1) ) ;
+// 
+// From a technical point of view class RooLinearMorph is a p.d.f that takes
+// two input p.d.fs f1(x,p) an f2(x,q) and an interpolation parameter to
+// make a p.d.f fbar(x,p,q,alpha). The shapes f1 and f2 are always taken
+// to be end the end-points of the parameter alpha, regardless of what
+// the those numeric values are. 
+//
+// Since the value of fbar(x) cannot be easily calculated for a given value
+// of x, class RooLinearMorph is an implementation of RooAbsCachedPdf and
+// calculates the shape of the interpolated p.d.f. fbar(x) for all values
+// of x for a given value of alpha,p,q and caches these values in a histogram
+// (as implemented by RooAbsCachedPdf). The binning granularity of the cache
+// can be controlled by the binning named "cache" on the RooRealVar representing
+// the observable x. The fbar sampling algorithm is based on a recursive division
+// mechanism with a built-in precision cutoff: First an initial sampling in
+// 64 equally spaced bins is made. Then the value of fbar is calculated in
+// the center of each gap. If the calculated value deviates too much from
+// the value obtained by linear interpolation from the edge bins, gap
+// is recursively divided. This strategy makes it possible to define a very
+// fine cache sampling (e.g. 1000 or 10000) bins without incurring a
+// corresponding CPU penalty.
+//
+// Note on numeric stability of the algorithm. Since the algorithm relies
+// on a numeric inversion of cumulative distributions functions, some precision
+// may be lost at the 'edges' of the same (i.e. at regions in x where the
+// c.d.f. value is close to zero or one). The general sampling strategy is
+// to start with 64 equally spaces samples in the range y=(0.01-0.99).
+// Then the y ranges are pushed outward by reducing y (or the distance of y to 1.0)
+// by a factor of sqrt(10) iteratively up to the point where the corresponding
+// x value no longer changes significantly. For p.d.f.s with very flat tails
+// such as Gaussians some part of the tail may be lost due to limitations
+// in numeric precision in the CDF inversion step. 
+//
+// An effect related to the above limitation in numeric precision should
+// be anticipated when floating the alpha parameter in a fit. If a p.d.f
+// with such flat tails is fitted, it is likely that the dataset contains
+// events in the flat tail region. If the alpha parameter is varied, the
+// likelihood contribution from such events may exhibit discontinuities
+// in alpha, causing discontinuities in the summed likelihood as well
+// that will cause convergence problems in MINUIT. To mitigate this effect
+// one can use the setCacheAlpha() method to instruct RooLinearMorph
+// to construct a two-dimensional cache for its output values in both
+// x and alpha. If linear interpolation is requested on the resulting
+// output histogram, the resulting interpolation of the p.d.f in the
+// alpha dimension will smooth out the discontinities in the tail regions
+// result in a continuous likelihood distribution that can be fitted.
+// An added advantage of the cacheAlpha option is that if parameters
+// p,q of f1,f2 are fixed, the cached values in RooLinearMorph are
+// valid for the entire fit session and do not need to be recalculated
+// for each change in alpha, which may result an considerable increase
+// in calculation speed.
+// 
+//
 
 #include "Riostream.h" 
 
@@ -25,6 +90,8 @@
 
 ClassImp(RooLinearMorph) 
 
+
+//_____________________________________________________________________________
 RooLinearMorph::RooLinearMorph(const char *name, const char *title, 
 			       RooAbsReal& _pdf1,
 			       RooAbsReal& _pdf2,
@@ -39,10 +106,15 @@ RooLinearMorph::RooLinearMorph(const char *name, const char *title,
   _cacheAlpha(doCacheAlpha),
   _cache(0)
 { 
-
+  // Constructor with observables x, pdf shapes pdf1 and pdf2 which represent
+  // the shapes at the end points of the interpolation parameter alpha
+  // If doCacheAlpha is true, a two-dimensional cache is constructed in
+  // both alpha and x
 } 
 
 
+
+//_____________________________________________________________________________
 RooLinearMorph::RooLinearMorph(const RooLinearMorph& other, const char* name) :  
   RooAbsCachedPdf(other,name), 
   pdf1("pdf1",this,other.pdf1),
@@ -52,11 +124,18 @@ RooLinearMorph::RooLinearMorph(const RooLinearMorph& other, const char* name) :
   _cacheAlpha(other._cacheAlpha),
   _cache(0)
 { 
+  // Copy constructor
 } 
 
 
+
+//_____________________________________________________________________________
 RooArgSet* RooLinearMorph::actualObservables(const RooArgSet& /*nset*/) const 
 {
+  // Observable to be cached for given choice of normalization.
+  // Returns the 'x' observable unless doCacheAlpha is set in which
+  // case a set with both x and alpha
+
   RooArgSet* obs = new RooArgSet ;
   if (_cacheAlpha) {
     obs->add(alpha.arg()) ;
@@ -66,8 +145,13 @@ RooArgSet* RooLinearMorph::actualObservables(const RooArgSet& /*nset*/) const
 }
 
 
+
+//_____________________________________________________________________________
 RooArgSet* RooLinearMorph::actualParameters(const RooArgSet& /*nset*/) const 
 {  
+  // Parameters of the cache. Returns parameters of both pdf1 and pdf2
+  // and parameter cache, in case doCacheAlpha is not set.
+
   RooArgSet* par1 = pdf1.arg().getParameters(RooArgSet()) ;
   RooArgSet* par2 = pdf2.arg().getParameters(RooArgSet()) ;
   par1->add(*par2,kTRUE) ;
@@ -80,10 +164,15 @@ RooArgSet* RooLinearMorph::actualParameters(const RooArgSet& /*nset*/) const
 }
 
 
+
+//_____________________________________________________________________________
 const char* RooLinearMorph::inputBaseName() const 
 {
-  // Return base name component for cache components that are auto-generated by RooAbsCachedPdf base class
+  // Return base name component for cache components in this case
+  // a string encoding the names of both end point p.d.f.s
+
   static TString name ;
+
   name = pdf1.arg().GetName() ;
   name.Append("_MORPH_") ;
   name.Append(pdf2.arg().GetName()) ;
@@ -91,8 +180,12 @@ const char* RooLinearMorph::inputBaseName() const
 }
 
   
+
+//_____________________________________________________________________________
 void RooLinearMorph::fillCacheObject(PdfCacheElem& cache) const 
 {
+  // Fill the cache with the interpolated shape. 
+
   MorphCacheElem& mcache = static_cast<MorphCacheElem&>(cache) ;
   
   // If cacheAlpha is true employ slice iterator here to fill all slices
@@ -124,14 +217,22 @@ void RooLinearMorph::fillCacheObject(PdfCacheElem& cache) const
 }
 
 
+
+//_____________________________________________________________________________
 RooAbsCachedPdf::PdfCacheElem* RooLinearMorph::createCache(const RooArgSet* nset) const 
 {
+  // Create and return a derived MorphCacheElem.
+
   return new MorphCacheElem(const_cast<RooLinearMorph&>(*this),nset) ;
 }
 
 
+
+//_____________________________________________________________________________
 RooArgList RooLinearMorph::MorphCacheElem::containedArgs(Action action) 
 {
+  // Return all RooAbsArg components contained in this cache
+
   RooArgList ret ;
   ret.add(PdfCacheElem::containedArgs(action)) ;
   ret.add(*_self) ;
@@ -146,8 +247,14 @@ RooArgList RooLinearMorph::MorphCacheElem::containedArgs(Action action)
 }
 
 
+
+//_____________________________________________________________________________
 RooLinearMorph::MorphCacheElem::MorphCacheElem(RooLinearMorph& self, const RooArgSet* nsetIn) : PdfCacheElem(self,nsetIn)
 {
+  // Construct of cache element, copy relevant input from RooLinearMorph,
+  // create the cdfs from the input p.d.fs and instantiate the root finders
+  // on the cdfs to perform the inversion.
+
   // Mark in base class that normalization of cached pdf is invariant under pdf parameters
   _x = (RooRealVar*)self.x.absArg() ;
   _nset = new RooArgSet(*_x) ;
@@ -174,15 +281,24 @@ RooLinearMorph::MorphCacheElem::MorphCacheElem(RooLinearMorph& self, const RooAr
 
 }
 
+
+//_____________________________________________________________________________
 RooLinearMorph::MorphCacheElem::~MorphCacheElem() 
 {
+  // Destructor
+
   delete[] _yatX ;
   delete[] _calcX ;
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooLinearMorph::MorphCacheElem::calcX(Double_t y, Bool_t& ok)
 {
+  // Calculate the x value of the output p.d.f at the given cdf value y.
+  // The ok boolean is filled with the success status of the operation.
+
   if (y<0 || y>1) {
     oocoutW(_self,Eval) << "RooLinearMorph::MorphCacheElem::calcX() WARNING: requested root finding for unphysical CDF value " << y << endl ; 
   }
@@ -200,16 +316,25 @@ Double_t RooLinearMorph::MorphCacheElem::calcX(Double_t y, Bool_t& ok)
   return _alpha->getVal()*x1 + (1-_alpha->getVal())*x2 ;  
 }
 
+
+//_____________________________________________________________________________
 Int_t RooLinearMorph::MorphCacheElem::binX(Double_t X) 
 {
+  // Return the bin number enclosing the given x value
+
   Double_t xmax = _x->getMax("cache") ;
   Double_t xmin = _x->getMin("cache") ;
   return (Int_t)(_x->numBins("cache")*(X-xmin)/(xmax-xmin)) ;
 }
 
 
+
+//_____________________________________________________________________________
 void RooLinearMorph::MorphCacheElem::calculate(TIterator* dIter)
 {
+  // Calculate shape of p.d.f for x,alpha values 
+  // defined by dIter iterator over cache histogram
+
   Double_t xsave = _self->x ;
 
   if (!_yatX) {
@@ -321,8 +446,15 @@ void RooLinearMorph::MorphCacheElem::calculate(TIterator* dIter)
   oocxcoutD(_self,Eval) << "RooLinearMorph::MorphCacheElem::calculate(" << _self->GetName() << ") calculation required " << _ccounter << " samplings of cdfs" << endl ;
 }
 
+
+//_____________________________________________________________________________
 void RooLinearMorph::MorphCacheElem::fillGap(Int_t ixlo, Int_t ixhi, Double_t splitPoint) 
 {
+  // Fill all empty histogram bins between bins ixlo and ixhi. The value of 'splitPoint'
+  // defines the split point for the recursive division strategy to fill the gaps
+  // If the midpoint value of y is very close to the midpoint in x, use interpolation
+  // to fill the gaps, otherwise the intervals again.
+
   // CONVENTION: _yatX[ixlo] is filled, _yatX[ixhi] is filled, elements in between are empty
   //   cout << "fillGap: gap from _yatX[" << ixlo << "]=" << _yatX[ixlo] << " to _yatX[" << ixhi << "]=" << _yatX[ixhi] << ", size = " << ixhi-ixlo << endl ;
   
@@ -401,8 +533,13 @@ void RooLinearMorph::MorphCacheElem::fillGap(Int_t ixlo, Int_t ixhi, Double_t sp
   }  
 }
 
+
+//_____________________________________________________________________________
 void RooLinearMorph::MorphCacheElem::interpolateGap(Int_t ixlo, Int_t ixhi)
 {
+  // Fill empty histogram bins between ixlo and ixhi with values obtained
+  // from linear interpolation of ixlo,ixhi elements. 
+
   //cout << "filling gap with linear interpolation ixlo=" << ixlo << " ixhi=" << ixhi << endl ;
 
   Double_t xmax = _x->getMax("cache") ;
@@ -424,8 +561,16 @@ void RooLinearMorph::MorphCacheElem::interpolateGap(Int_t ixlo, Int_t ixhi)
 }
 
 
+
+//_____________________________________________________________________________
 void RooLinearMorph::MorphCacheElem::findRange()
 {
+  // Determine which range of y values can be mapped to x values
+  // from the numeric inversion of the input c.d.fs.
+  // Start with a y rannge of [0.1-0.9] and push boundaries
+  // outward with a factor of 1/sqrt(10). Stop iteration if
+  // inverted x values no longer change
+  
   Double_t xmin = _x->getMin("cache") ;
   Double_t xmax = _x->getMax("cache") ;
   Int_t nbins = _x->numBins("cache") ;
@@ -515,14 +660,23 @@ void RooLinearMorph::MorphCacheElem::findRange()
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooLinearMorph::evaluate() const 
 { 
+  // Dummy
   return 0 ;
 } 
 
 
+
+//_____________________________________________________________________________
 void RooLinearMorph::preferredObservableScanOrder(const RooArgSet& obs, RooArgSet& orderedObs) const
 {
+  // Indicate to the RooAbsCachedPdf base class that for the filling of the
+  // cache the traversal of the x should be in the innermost loop, to minimize
+  // recalculation of the one-dimensional internal cache for a fixed value of alpha
+
   // Put x last to minimize cache faulting
   orderedObs.removeAll() ;
 

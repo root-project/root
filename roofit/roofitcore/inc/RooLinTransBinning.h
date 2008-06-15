@@ -53,10 +53,10 @@ protected:
   inline Double_t trans(Double_t x) const { return x*_slope + _offset ; }
   inline Double_t invTrans(Double_t x) const { if (_slope==0.) return 0 ; return (x-_offset)/_slope ; }
 
-  Double_t _slope ;
-  Double_t _offset ;
-  RooAbsBinning* _input ; 
-  mutable Double_t *_array ; //!
+  Double_t _slope ;         // Slope of transformation
+  Double_t _offset ;        // Offset of tranformation
+  RooAbsBinning* _input ;   // Input binning
+  mutable Double_t *_array ; //! Array of transformed bin boundaries
 
   ClassDef(RooLinTransBinning,1) // Linear transformation of binning specification
 };

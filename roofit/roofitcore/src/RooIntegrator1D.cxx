@@ -14,9 +14,13 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [AUX] --
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
 // RooIntegrator1D implements an adaptive one-dimensional 
-// numerical integration algorithm.
+// numerical integration algorithm. 
+// END_HTML
+//
 
 
 #include "RooFit.h"
@@ -40,8 +44,12 @@ ClassImp(RooIntegrator1D)
 ;
 
 // Register this class with RooNumIntConfig
+
+//_____________________________________________________________________________
 void RooIntegrator1D::registerIntegrator(RooNumIntFactory& fact)
 {
+  // Register RooIntegrator1D, is parameters and capabilities with RooNumIntFactory
+
   RooCategory sumRule("sumRule","Summation Rule") ;
   sumRule.defineType("Trapezoid",RooIntegrator1D::Trapezoid) ;
   sumRule.defineType("Midpoint",RooIntegrator1D::Midpoint) ;
@@ -60,21 +68,30 @@ void RooIntegrator1D::registerIntegrator(RooNumIntFactory& fact)
 }
 
 
+
+//_____________________________________________________________________________
 RooIntegrator1D::RooIntegrator1D() :
   _h(0), _s(0), _c(0), _d(0), _x(0)
 {
+  // Default constructor
 }
 
+
+//_____________________________________________________________________________
 RooIntegrator1D::RooIntegrator1D(const RooAbsFunc& function, SummationRule rule,
 				 Int_t maxSteps, Double_t eps) : 
   RooAbsIntegrator(function), _rule(rule), _maxSteps(maxSteps),  _minStepsZero(999), _fixSteps(0), _epsAbs(eps), _epsRel(eps), _doExtrap(kTRUE)
 {
-  // Use this form of the constructor to integrate over the function's default range.
+  // Construct integrator on given function binding, using specified summation
+  // rule, maximum number of steps and conversion tolerance. The integration
+  // limits are taken from the function binding
 
   _useIntegrandLimits= kTRUE;
   _valid= initialize();
 } 
 
+
+//_____________________________________________________________________________
 RooIntegrator1D::RooIntegrator1D(const RooAbsFunc& function, Double_t xmin, Double_t xmax,
 				 SummationRule rule, Int_t maxSteps, Double_t eps) : 
   RooAbsIntegrator(function), 
@@ -86,7 +103,10 @@ RooIntegrator1D::RooIntegrator1D(const RooAbsFunc& function, Double_t xmin, Doub
   _epsRel(eps),
   _doExtrap(kTRUE)
 {
-  // Use this form of the constructor to override the function's default range.
+  // Construct integrator on given function binding for given range,
+  // using specified summation rule, maximum number of steps and
+  // conversion tolerance. The integration limits are taken from the
+  // function binding
 
   _useIntegrandLimits= kFALSE;
   _xmin= xmin;
@@ -94,12 +114,16 @@ RooIntegrator1D::RooIntegrator1D(const RooAbsFunc& function, Double_t xmin, Doub
   _valid= initialize();
 } 
 
+
+//_____________________________________________________________________________
 RooIntegrator1D::RooIntegrator1D(const RooAbsFunc& function, const RooNumIntConfig& config) :
   RooAbsIntegrator(function,config.printEvalCounter()), 
   _epsAbs(config.epsAbs()),
   _epsRel(config.epsRel())
 {
-  // Use this form of the constructor to integrate over the function's default range.
+  // Construct integrator on given function binding, using specified
+  // configuration object. The integration limits are taken from the
+  // function binding
 
   // Extract parameters from config object
   const RooArgSet& configSet = config.getConfigSection(IsA()->GetName()) ;  
@@ -119,13 +143,16 @@ RooIntegrator1D::RooIntegrator1D(const RooAbsFunc& function, const RooNumIntConf
 } 
 
 
+
+//_____________________________________________________________________________
 RooIntegrator1D::RooIntegrator1D(const RooAbsFunc& function, Double_t xmin, Double_t xmax,
 				const RooNumIntConfig& config) :
   RooAbsIntegrator(function,config.printEvalCounter()), 
   _epsAbs(config.epsAbs()),
   _epsRel(config.epsRel())
 {
-  // Use this form of the constructor to override the function's default range.
+  // Construct integrator on given function binding, using specified
+  // configuration object and integration range
 
   // Extract parameters from config object
   const RooArgSet& configSet = config.getConfigSection(IsA()->GetName()) ;  
@@ -143,14 +170,20 @@ RooIntegrator1D::RooIntegrator1D(const RooAbsFunc& function, Double_t xmin, Doub
 
 
 
+//_____________________________________________________________________________
 RooAbsIntegrator* RooIntegrator1D::clone(const RooAbsFunc& function, const RooNumIntConfig& config) const
 {
+  // Clone integrator with new function binding and configuration. Needed by RooNumIntFactory
   return new RooIntegrator1D(function,config) ;
 }
 
 
+
+//_____________________________________________________________________________
 Bool_t RooIntegrator1D::initialize()
 {
+  // Initialize the integrator
+
   // apply defaults if necessary
   if(_maxSteps <= 0) {
     _maxSteps= (_rule == Trapezoid) ? 20 : 14;
@@ -165,13 +198,6 @@ Bool_t RooIntegrator1D::initialize()
     return kFALSE;
   }
 
-//   // check that the function is one dimensional
-//   if(_function->getDimension() != 1) {
-//     cout << "RooIntegrator1D::initialize: cannot integrate function of dimension "
-// 	 << _function->getDimension() << endl;
-//     return kFALSE;
-//   }
-
   // Allocate coordinate buffer size after number of function dimensions
   _x = new Double_t[_function->getDimension()] ;
 
@@ -185,8 +211,12 @@ Bool_t RooIntegrator1D::initialize()
   return checkLimits();
 }
 
+
+//_____________________________________________________________________________
 RooIntegrator1D::~RooIntegrator1D()
 {
+  // Destructor
+
   // Release integrator workspace
   if(_h) delete[] _h;
   if(_s) delete[] _s;
@@ -195,7 +225,10 @@ RooIntegrator1D::~RooIntegrator1D()
   if(_x) delete[] _x;
 }
 
-Bool_t RooIntegrator1D::setLimits(Double_t xmin, Double_t xmax) {
+
+//_____________________________________________________________________________
+Bool_t RooIntegrator1D::setLimits(Double_t xmin, Double_t xmax) 
+{
   // Change our integration limits. Return kTRUE if the new limits are
   // ok, or otherwise kFALSE. Always returns kFALSE and does nothing
   // if this object was constructed to always use our integrand's limits.
@@ -209,7 +242,10 @@ Bool_t RooIntegrator1D::setLimits(Double_t xmin, Double_t xmax) {
   return checkLimits();
 }
 
-Bool_t RooIntegrator1D::checkLimits() const {
+
+//_____________________________________________________________________________
+Bool_t RooIntegrator1D::checkLimits() const 
+{
   // Check that our integration range is finite and otherwise return kFALSE.
   // Update the limits from the integrand if requested.
 
@@ -226,8 +262,12 @@ Bool_t RooIntegrator1D::checkLimits() const {
   return (RooNumber::isInfinite(_xmin) || RooNumber::isInfinite(_xmax)) ? kFALSE : kTRUE;
 }
 
+
+//_____________________________________________________________________________
 Double_t RooIntegrator1D::integral(const Double_t *yvec) 
 {
+  // Calculate numeric integral at given set of function binding parameters
+  
   assert(isValid());
 
   // Copy yvec to xvec if provided
@@ -295,6 +335,8 @@ Double_t RooIntegrator1D::integral(const Double_t *yvec)
   return 0;
 }
 
+
+//_____________________________________________________________________________
 Double_t RooIntegrator1D::addMidpoints(Int_t n)
 {
   // Calculate the n-th stage of refinement of the Second Euler-Maclaurin
@@ -326,6 +368,8 @@ Double_t RooIntegrator1D::addMidpoints(Int_t n)
   }
 }
 
+
+//_____________________________________________________________________________
 Double_t RooIntegrator1D::addTrapezoids(Int_t n)
 {
   // Calculate the n-th stage of refinement of the extended trapezoidal
@@ -338,7 +382,6 @@ Double_t RooIntegrator1D::addTrapezoids(Int_t n)
 
   if (n == 1) {
     // use a single trapezoid to cover the full range
-//     cout << "addTrap[" << n << "] count = 2 " << endl ;
     return (_savedResult= 0.5*_range*(integrand(xvec(_xmin)) + integrand(xvec(_xmax))));
   }
   else {
@@ -348,15 +391,18 @@ Double_t RooIntegrator1D::addTrapezoids(Int_t n)
     tnm= it;
     del= _range/tnm;
     x= _xmin + 0.5*del;
-//     cout << "addTrap[" << n << "] count = " << it << endl ;
     for(sum=0.0, j=1; j<=it; j++, x+=del) sum += integrand(xvec(x));
     return (_savedResult= 0.5*(_savedResult + _range*sum/tnm));
   }
 }
 
 
+
+//_____________________________________________________________________________
 void RooIntegrator1D::extrapolate(Int_t n)
 {
+  // Extrapolate result to final value
+
   Double_t *xa= &_h[n-_nPoints];
   Double_t *ya= &_s[n-_nPoints];
   Int_t i,m,ns=1;

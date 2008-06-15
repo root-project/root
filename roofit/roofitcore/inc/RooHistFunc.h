@@ -33,17 +33,37 @@ public:
   virtual TObject* clone(const char* newname) const { return new RooHistFunc(*this,newname); }
   inline virtual ~RooHistFunc() { }
 
-  RooDataHist& dataHist()  { return *_dataHist ; }
-  const RooDataHist& dataHist() const { return *_dataHist ; }
+  RooDataHist& dataHist()  { 
+    // Return RooDataHist that is represented
+    return *_dataHist ; 
+  }
+  const RooDataHist& dataHist() const { 
+    // Return RooDataHist that is represented
+    return *_dataHist ; 
+  }
   
-  void setInterpolationOrder(Int_t order) { _intOrder = order ; }
-  Int_t getInterpolationOrder() const { return _intOrder ; }
+  void setInterpolationOrder(Int_t order) { 
+    // Set histogram interpolation order 
+    _intOrder = order ; 
+  }
+
+  Int_t getInterpolationOrder() const { 
+    // Return histogram interpolation order
+    return _intOrder ; 
+  }
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
   Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
 
-  void setCdfBoundaries(Bool_t flag) { _cdfBoundaries = flag ; }
-  Bool_t getCdfBoundaries() const { return _cdfBoundaries ; }
+  void setCdfBoundaries(Bool_t flag) { 
+    // Set use of special boundary conditions for c.d.f.s
+    _cdfBoundaries = flag ; 
+  }
+
+  Bool_t getCdfBoundaries() const { 
+    // If true, special boundary conditions for c.d.f.s are used
+    return _cdfBoundaries ; 
+  }
 
 
 protected:
@@ -61,7 +81,7 @@ protected:
   mutable Double_t  _totVolume ; //! Total volume of space (product of ranges of observables)
   Bool_t            _unitNorm  ; //! Assume contents is unit normalized (for use as pdf cache)
 
-  ClassDef(RooHistFunc,1) // Histogram based PDF
+  ClassDef(RooHistFunc,1) // Histogram based function
 };
 
 #endif

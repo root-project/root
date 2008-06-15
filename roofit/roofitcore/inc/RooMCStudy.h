@@ -58,7 +58,11 @@ public:
   const RooFitResult* fitResult(Int_t sampleNum) const ;
   const RooDataSet* genData(Int_t sampleNum) const ;
   const RooDataSet& fitParDataSet() ;
-  const RooDataSet* genParDataSet() const { return _genParData ; }
+  const RooDataSet* genParDataSet() const { 
+    // Return dataset with generator parameters for each toy. When constraints are used these
+    // may generally not be the same
+    return _genParData ; 
+  }
 
   // Plot methods
   RooPlot* plotParamOn(RooPlot* frame, const RooCmdArg& arg1=RooCmdArg::none(), const RooCmdArg& arg2=RooCmdArg::none(),
@@ -146,7 +150,7 @@ private:
 
   RooMCStudy(const RooMCStudy&) ;
 	
-  ClassDef(RooMCStudy,0) // Monte Carlo study manager
+  ClassDef(RooMCStudy,0) // A general purpose toy Monte Carlo study manager
 } ;
 
 

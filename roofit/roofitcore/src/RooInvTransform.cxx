@@ -14,8 +14,15 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [AUX] --
-// Lightweight function object that applies a scale factor to a RooAbsFunc implementation.
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
+// Lightweight function binding that returns the inverse of an input function binding
+// Apply the change of variables transformation x -> 1/x to the input
+// function and its range. The function must be one dimensional and its
+// range cannot include zero.
+// END_HTML
+//
 
 
 #include "RooFit.h"
@@ -29,15 +36,11 @@
 ClassImp(RooInvTransform)
 ;
 
+
+//_____________________________________________________________________________
 RooInvTransform::RooInvTransform(const RooAbsFunc &func) :
   RooAbsFunc(func.getDimension()), _func(&func)
 {
-  // Apply the change of variables transformation x -> 1/x to the input
-  // function and its range. The function must be one dimensional and its
-  // range cannot include zero.
+  // Constructor. 
 
-//   if(getDimension() != 1) {
-//     cout << "RooInvTransform: can only be applied to a 1-dim function" << endl;
-//     _valid= kFALSE;
-//   }
 }

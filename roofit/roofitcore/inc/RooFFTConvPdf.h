@@ -30,14 +30,18 @@ public:
   virtual TObject* clone(const char* newname) const { return new RooFFTConvPdf(*this,newname); }
   virtual ~RooFFTConvPdf() ;
 
-  Double_t bufferFraction() const { return _bufFrac ; }
+  Double_t bufferFraction() const { 
+    // Return value of buffer fraction applied in FFT calculation array beyond either
+    // end of the observable domain to reduce cyclical effects
+    return _bufFrac ; 
+  }
   void setBufferFraction(Double_t frac) ;
 
 protected:
 
-  RooRealProxy _x ;
-  RooRealProxy _pdf1 ;
-  RooRealProxy _pdf2 ;
+  RooRealProxy _x ;    // Convolution observable
+  RooRealProxy _pdf1 ; // First input p.d.f
+  RooRealProxy _pdf2 ; // Second input p.d.f
 
   Double_t*  scanPdf(RooRealVar& obs, RooAbsPdf& pdf, const RooDataHist& hist, const RooArgSet& slicePos, Int_t& N, Int_t& N2) const ;
 
@@ -67,7 +71,7 @@ protected:
 
 private:
 
-  ClassDef(RooFFTConvPdf,1) // Abstract base class for cached p.d.f.s
+  ClassDef(RooFFTConvPdf,1) // Convolution operator p.d.f based on numeric Fourier transforms
 };
  
 #endif

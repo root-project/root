@@ -51,7 +51,7 @@ protected:
 
   Bool_t initialize();
 
-  Bool_t _useIntegrandLimits;  
+  Bool_t _useIntegrandLimits;  // Use limits in function binding?
 
   Double_t* xvec(Double_t& xx) { _x[0] = xx ; return _x ; }
   Double_t *_x ; //! do not persist
@@ -59,8 +59,8 @@ protected:
   Double_t _epsAbs ;                   // Absolute precision
   Double_t _epsRel ;                   // Relative precision
 
-  mutable Double_t _xmin;              //! do not persist
-  mutable Double_t _xmax;              //! do not persist
+  mutable Double_t _xmin;              //! Lower integration bound
+  mutable Double_t _xmax;              //! Upper integration bound
 
   ClassDef(RooGaussKronrodIntegrator1D,0) // 1-dimensional Gauss-Kronrod numerical integration engine
 };

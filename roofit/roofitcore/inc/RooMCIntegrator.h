@@ -40,7 +40,7 @@ public:
   enum Stage { AllStages, ReuseGrid, RefineGrid };
   Double_t vegas(Stage stage, UInt_t calls, UInt_t iterations, Double_t *absError= 0);
 
-  Double_t getAlpha() const { return _alpha; }
+  Double_t getAlpha() const { return _alpha;   }
   void setAlpha(Double_t alpha) { _alpha= alpha; }
 
   GeneratorType getGenType() const { return _genType; }
@@ -58,22 +58,21 @@ protected:
   friend class RooNumIntFactory ;
   static void registerIntegrator(RooNumIntFactory& fact) ;	
 
-  mutable RooGrid _grid;
+  mutable RooGrid _grid;  // Sampling grid definition
 
   // control variables
-  Bool_t _verbose;
-  Double_t _alpha;
-  Int_t _mode;
-  GeneratorType _genType;
-  Int_t _nRefineIter ;
-  Int_t _nRefinePerDim ;
-  Int_t _nIntegratePerDim ;
+  Bool_t _verbose;          // Verbosity control
+  Double_t _alpha;          // Grid stiffness parameter
+  Int_t _mode;              // Sampling mode
+  GeneratorType _genType;   // Generator type
+  Int_t _nRefineIter ;      // Number of refinement iterations
+  Int_t _nRefinePerDim ;    // Number of refinement samplings (per dim)
+  Int_t _nIntegratePerDim ; // Number of integration samplings (per dim)
 
-  TStopwatch _timer;
+  TStopwatch _timer;        // Timer
 
-  // scratch variables preserved between calls to vegas1/2/2
-  Double_t _jac,_wtd_int_sum,_sum_wgts,_chi_sum,_chisq,_result,_sigma;
-  UInt_t _it_start,_it_num,_samples,_calls_per_box;
+  Double_t _jac,_wtd_int_sum,_sum_wgts,_chi_sum,_chisq,_result,_sigma; // Scratch variables preserved between calls to vegas1/2/2
+  UInt_t _it_start,_it_num,_samples,_calls_per_box;                    // Scratch variables preserved between calls to vegas1/2/2
 
   ClassDef(RooMCIntegrator,0) // multi-dimensional numerical integration engine
 };

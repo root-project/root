@@ -33,9 +33,11 @@ public:
 
   Bool_t forceAnalyticalInt(const RooAbsArg& /*dep*/) const { return kTRUE ; }
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet, const char* rangeName=0) const {
+    // Forward determination of analytical integration capabilities to input p.d.f
     return ((RooAbsPdf&)_pdf.arg()).getAnalyticalIntegralWN(allVars, analVars, normSet, rangeName) ;
   }
   Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const {
+    // Forward calculation of analytical integrals to input p.d.f
     return ((RooAbsPdf&)_pdf.arg()).analyticalIntegralWN(code, normSet, rangeName) ;
   }
   
@@ -46,12 +48,12 @@ public:
 
 protected:
 
-  RooRealProxy _pdf ;        // PDF used for fractional correction factor
+  RooRealProxy _pdf ;        // Input p.d.f
   RooRealProxy _n ;          // Number of expected events
   const TNamed* _rangeName ; // Name of subset range
 
 
-  ClassDef(RooExtendPdf,1) // Flat PDF introducing an extended likelihood term
+  ClassDef(RooExtendPdf,1) // Wrapper p.d.f adding an extended likelihood term to an existing p.d.f
 };
 
 #endif

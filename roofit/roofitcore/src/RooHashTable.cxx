@@ -27,9 +27,22 @@
 ClassImp(RooHashTable)
 ;
 
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
+// RooHashTable implements a hash table for TObjects. The hashing can be
+// done on the object addresses, object names, or using the objects
+// internal hash method. This is a utility class for RooLinkedList
+// that uses RooHashTable to speed up direct access to large collections.
+// END_HTML
+//
+
+//_____________________________________________________________________________
 RooHashTable::RooHashTable(Int_t capacity, HashMethod hashMethod) :
   _hashMethod(hashMethod)
 {
+  // Construct a hash table with given capacity and hash method
+
   if (capacity <= 0) {
     capacity = TCollection::kInitHashTableCapacity;
   }  
@@ -42,6 +55,8 @@ RooHashTable::RooHashTable(Int_t capacity, HashMethod hashMethod) :
 }
 
 
+
+//_____________________________________________________________________________
 RooHashTable::RooHashTable(const RooHashTable& other) :
   TObject(other),
   _hashMethod(other._hashMethod),
@@ -49,6 +64,8 @@ RooHashTable::RooHashTable(const RooHashTable& other) :
   _entries(other._entries), 
   _size(other._size)
 {
+  // Copy constructor
+
   _arr  = new RooLinkedList* [_size] ;
   memset(_arr, 0, _size*sizeof(RooLinkedList*));  
   Int_t i ;
@@ -60,8 +77,13 @@ RooHashTable::RooHashTable(const RooHashTable& other) :
 }
 
 
+
+//_____________________________________________________________________________
 void RooHashTable::add(TObject* arg, TObject* hashArg) 
 {
+  // Add given object to table. If hashArg is given, hash will be calculation
+  // on that rather than on 'arg'
+
   Int_t slot = hash(hashArg?hashArg:arg) % _size ;
   if (!_arr[slot]) {
     _arr[slot] = new RooLinkedList(0) ;
@@ -73,8 +95,12 @@ void RooHashTable::add(TObject* arg, TObject* hashArg)
 
 
 
+//_____________________________________________________________________________
 Bool_t RooHashTable::remove(TObject* arg, TObject* hashArg)
 {
+  // Remove given object from table. If hashArg is given, hash will be calculation
+  // on that rather than on 'arg'
+
   Int_t slot = hash(hashArg?hashArg:arg) % _size ;
   if (_arr[slot]) {
     if (_arr[slot]->Remove(arg)) {
@@ -92,8 +118,11 @@ Bool_t RooHashTable::remove(TObject* arg, TObject* hashArg)
 
 
 
+//_____________________________________________________________________________
 Double_t RooHashTable::avgCollisions() const 
 {
+  // Calculate the average number of collisions (table slots with >1 filled entry)
+  
   Int_t i,h[20] ;
   for (i=0 ;  i<20 ; i++) h[i]=0 ; 
 
@@ -114,8 +143,13 @@ Double_t RooHashTable::avgCollisions() const
 }
 
 
+
+//_____________________________________________________________________________
 Bool_t RooHashTable::replace(const TObject* oldArg, const TObject* newArg, const TObject* oldHashArg) 
 {
+  // Replace oldArg with newArg in the table. If oldHashArg is given, use that to calculate
+  // the hash associated with oldArg
+
   Int_t slot = hash(oldHashArg?oldHashArg:oldArg) % _size ;
   if (_arr[slot]) {
     return _arr[slot]->Replace(oldArg,newArg) ;
@@ -124,8 +158,12 @@ Bool_t RooHashTable::replace(const TObject* oldArg, const TObject* newArg, const
 }
 
 
+
+//_____________________________________________________________________________
 TObject* RooHashTable::find(const char* name) const 
 {
+  // Return the object with given name from the table.
+
   if (_hashMethod != Name) assert(0) ;
 
   Int_t slot = TMath::Hash(name) % _size ;
@@ -134,8 +172,12 @@ TObject* RooHashTable::find(const char* name) const
 }
 
 
+
+//_____________________________________________________________________________
 TObject* RooHashTable::find(const TObject* hashArg) const 
 {
+  // Return object with the given pointer from the table
+
   if (_hashMethod != Pointer) assert(0) ;
 
   Int_t slot = hash(hashArg) % _size ;
@@ -144,8 +186,12 @@ TObject* RooHashTable::find(const TObject* hashArg) const
 }
 
 
+
+//_____________________________________________________________________________
 RooLinkedListElem* RooHashTable::findLinkTo(const TObject* hashArg) const 
 {
+  // Return RooLinkedList element link to object 'hashArg'
+
   if (_hashMethod != Pointer) assert(0) ;
 
   Int_t slot = hash(hashArg) % _size ;
@@ -161,8 +207,11 @@ RooLinkedListElem* RooHashTable::findLinkTo(const TObject* hashArg) const
 
 
 
+//_____________________________________________________________________________
 RooSetPair* RooHashTable::findSetPair(const RooArgSet* set1, const RooArgSet* set2) const 
 {  
+  // Return RooSetPair with given pointers in table
+
   if (_hashMethod != Intrinsic) assert(0) ;
 
   Int_t slot = RooSetPair(set1,set2).Hash() % _size ;
@@ -182,8 +231,11 @@ RooSetPair* RooHashTable::findSetPair(const RooArgSet* set1, const RooArgSet* se
 
 
 
+//_____________________________________________________________________________
 RooHashTable::~RooHashTable() 
 {  
+  // Destructor
+
   Int_t i ;
   for (i=0 ; i<_size ; i++) {
     if (_arr[i]) delete _arr[i] ;  

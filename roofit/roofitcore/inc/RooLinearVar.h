@@ -61,11 +61,11 @@ protected:
 
   mutable RooLinTransBinning _binning ;
   RooLinkedList _altBinning ; //!
-  RooRealProxy _var ;  
-  RooRealProxy _slope ;
-  RooRealProxy _offset ;
+  RooRealProxy _var ;         // Input observable
+  RooRealProxy _slope ;       // Slope of transformation
+  RooRealProxy _offset ;      // Offset of transformation
 
-  ClassDef(RooLinearVar,1) //  Modifiable linear transformation variable
+  ClassDef(RooLinearVar,1) // Lvalue linear transformation function 
 };
 
 #endif

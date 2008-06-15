@@ -35,8 +35,14 @@ public:
 
   inline Bool_t ok() const { return formula().ok() ; }
 
-  inline RooAbsArg* getParameter(const char* name) const { return _actualVars.find(name) ; }
-  inline RooAbsArg* getParameter(Int_t index) const { return _actualVars.at(index) ; }
+  inline RooAbsArg* getParameter(const char* name) const { 
+    // Return pointer to parameter with given name
+    return _actualVars.find(name) ; 
+  }
+  inline RooAbsArg* getParameter(Int_t index) const { 
+    // Return pointer to parameter at given index
+    return _actualVars.at(index) ; 
+  }
 
   // I/O streaming interface (machine readable)
   virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
@@ -47,11 +53,6 @@ public:
 
   // Debugging
   void dumpFormula() { formula().dump() ; }
-
-  // In general, we cannot be normalized sensibly so pretend that we are always normalized
-//   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& numVars) const ;
-//   Double_t analyticalIntegral(Int_t code) const ;
-  //inline Bool_t selfNormalized() const { return kTRUE; }
 
   virtual Double_t getVal(const RooArgSet* set=0) const ;
 
@@ -68,12 +69,12 @@ protected:
 
   virtual Bool_t isValidReal(Double_t value, Bool_t printError) const ;
 
-  RooListProxy _actualVars ; 
+  RooListProxy _actualVars ;     // Actual parameters used by formula engine
   mutable RooFormula* _formula ; //! Formula engine 
-  mutable RooArgSet* _nset ; //! Normalization set to be passed along to contents
-  TString _formExpr ;
+  mutable RooArgSet* _nset ;     //! Normalization set to be passed along to contents
+  TString _formExpr ;            // Formula expression string
 
-  ClassDef(RooFormulaVar,1) // Real-valued variable, calculated from a string expression formula 
+  ClassDef(RooFormulaVar,1) // Real-valued function of other RooAbsArgs calculated by a TFormula expression
 };
 
 #endif

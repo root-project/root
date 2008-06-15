@@ -33,9 +33,18 @@ public:
   virtual TObject* clone(const char* newname) const { return new RooLinearMorph(*this,newname); }
   inline virtual ~RooLinearMorph() { }
 
-  Bool_t selfNormalized() const { return kTRUE ; }
-  void setCacheAlpha(Bool_t flag) { _cacheMgr.sterilize() ; _cacheAlpha = flag ; }
-  Bool_t cacheAlpha() const { return _cacheAlpha ; }
+  Bool_t selfNormalized() const { 
+    // P.d.f is self normalized
+    return kTRUE ; 
+  }
+  void setCacheAlpha(Bool_t flag) { 
+    // Activate caching of p.d.f. shape for all values of alpha as well
+    _cacheMgr.sterilize() ; _cacheAlpha = flag ; 
+  }
+  Bool_t cacheAlpha() const { 
+    // If true caching of p.d.f for all alpha values is active
+    return _cacheAlpha ; 
+  }
 
   virtual void preferredObservableScanOrder(const RooArgSet& obs, RooArgSet& orderedObs) const ;
 
@@ -85,19 +94,19 @@ protected:
   virtual RooArgSet* actualParameters(const RooArgSet& nset) const ;
   virtual void fillCacheObject(PdfCacheElem& cache) const ;
   
-  RooRealProxy pdf1 ;
-  RooRealProxy pdf2 ;
-  RooRealProxy x ;
-  RooRealProxy alpha ;
-  Bool_t _cacheAlpha ;
-  mutable MorphCacheElem* _cache ;
+  RooRealProxy pdf1 ; // First input shape
+  RooRealProxy pdf2 ; // Second input shape
+  RooRealProxy x ;    // Observable
+  RooRealProxy alpha ; // Interpolation parameter
+  Bool_t _cacheAlpha ; // If true, both (x,alpha) are cached
+  mutable MorphCacheElem* _cache ; // Current morph cache element in use
 
  
   Double_t evaluate() const ;
 
 private:
 
-  ClassDef(RooLinearMorph,1) // Your description goes here...
+  ClassDef(RooLinearMorph,1) // Linear shape interpolation operator p.d.f
 };
  
 #endif

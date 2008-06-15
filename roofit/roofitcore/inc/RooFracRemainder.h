@@ -13,8 +13,8 @@
  * with or without modification, are permitted according to the terms        *
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
-#ifndef ROO_ADDITION
-#define ROO_ADDITION
+#ifndef ROO_FRAC_REMAINDER
+#define ROO_FRAC_REMAINDER
 
 #include "RooAbsReal.h"
 #include "RooListProxy.h"
@@ -34,12 +34,12 @@ public:
 
 protected:
 
-  RooListProxy _set1 ;
-  mutable TIterator* _setIter1 ;  //! do not persist
+  RooListProxy _set1 ;            // Set of input fractions
+  mutable TIterator* _setIter1 ;  //! Iterator over set of input fractions
 
   Double_t evaluate() const;
 
-  ClassDef(RooFracRemainder,1) // Sum of RooAbsReal terms
+  ClassDef(RooFracRemainder,1) // Utility function calculating remainder fraction, i.e. 1-sum_i(a_i)
 };
 
 #endif

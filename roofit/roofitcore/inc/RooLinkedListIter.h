@@ -30,6 +30,7 @@ public:
   RooLinkedListIter(const RooLinkedList* list, Bool_t forward) : 
     TIterator(), _forward(forward), _list(list)
   {
+    // Constructor from list with direction
     _ptr = _list->_first ;
     _cptr = _ptr;
   }
@@ -41,11 +42,14 @@ public:
     _ptr(other._ptr), 
     _list(other._list)
   {
+    // Copy constructor
   }
   
   virtual ~RooLinkedListIter() { ; }
   
   TIterator& operator=(const TIterator& other) {
+
+    // Iterator assignment operator
 
     if (&other==this) return *this ;
     const RooLinkedListIter* iter = dynamic_cast<const RooLinkedListIter*>(&other) ;
@@ -59,10 +63,12 @@ public:
   }
     
   virtual const TCollection *GetCollection() const { 
+    // Dummy
     return 0 ; 
   }
 
   virtual TObject *Next() { 
+    // Return next element in collection
     if (!_ptr) return 0 ;
     _cptr = _ptr;
     TObject* arg = _ptr->_arg ;      
@@ -71,6 +77,7 @@ public:
   }
 
   virtual void Reset() { 
+    // Return iterator to first element in collection
     _ptr = _forward ? _list->_first : _list->_last ;
     _cptr = _ptr;
   }
@@ -93,6 +100,7 @@ public:
   }
 
   virtual TObject *operator*() const {
+    // Return element iterator points to
     return (_cptr ? _cptr->_arg : nullptr);
   }
 

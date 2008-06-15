@@ -52,14 +52,14 @@ protected:
   enum LimitsCase { Invalid, ClosedBothEnds, OpenBothEnds, OpenBelowSpansZero, OpenBelow,
 		    OpenAboveSpansZero, OpenAbove };
   LimitsCase limitsCase() const;
-  LimitsCase _case;
-  mutable Double_t _xmin, _xmax;
-  Bool_t _useIntegrandLimits;
+  LimitsCase _case; // Configuration of limits
+  mutable Double_t _xmin, _xmax;  // Value of limits
+  Bool_t _useIntegrandLimits;  // Use limits in function binding?
 
-  RooAbsFunc*      _origFunc ;
-  RooInvTransform *_function;
-  RooNumIntConfig  _config ;
-  mutable RooIntegrator1D *_integrator1,*_integrator2,*_integrator3;
+  RooAbsFunc*      _origFunc ;  // Original function binding
+  RooInvTransform *_function;   // Binding with inverse of function
+  RooNumIntConfig  _config ;  // Configuration object
+  mutable RooIntegrator1D *_integrator1,*_integrator2,*_integrator3; // Piece integrators
   
   ClassDef(RooImproperIntegrator1D,0) // 1-dimensional improper integration engine
 };

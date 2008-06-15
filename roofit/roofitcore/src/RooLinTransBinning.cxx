@@ -14,10 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [AUX] --
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
 // RooLinTransBinning is a special binning implementation for RooLinearVar
 // that transforms the binning of the RooLinearVar input variable in the same
 // way that RooLinearVar does
+// END_HTML
+//
 
 
 #include "RooFit.h"
@@ -29,41 +33,57 @@ ClassImp(RooLinTransBinning)
 ;
 
 
+
+//_____________________________________________________________________________
 RooLinTransBinning::RooLinTransBinning(const RooAbsBinning& input, Double_t slope, Double_t offset, const char* name) :
   RooAbsBinning(name),
   _array(0) 
 {
-  // Constructor
+  // Constructor with a given input binning and the slope and offset to be applied to
+  // construct the linear transformation
+
   updateInput(input,slope,offset) ;
 }
 
 
 
+//_____________________________________________________________________________
 RooLinTransBinning::RooLinTransBinning(const RooLinTransBinning& other, const char* name) :
   RooAbsBinning(name),
   _array(0)
 {
   // Copy constructor
+
   _input = other._input ;
   _slope = other._slope ;
   _offset = other._offset ;    
 }
 
 
+
+//_____________________________________________________________________________
 RooLinTransBinning::~RooLinTransBinning() 
 {
   // Destructor 
+
   if (_array) delete[] _array ;
 }
 
 
+
+//_____________________________________________________________________________
 void RooLinTransBinning::setRange(Double_t /*xlo*/, Double_t /*xhi*/) 
 {
-  // Change limits
+
+  // Change limits -- not implemented
 }
 
+
+//_____________________________________________________________________________
 Double_t* RooLinTransBinning::array() const 
 {
+  // Return array of bin boundaries
+
   Int_t n = numBoundaries() ;
   // Return array with boundary values
   if (_array) delete[] _array ;
@@ -86,8 +106,12 @@ Double_t* RooLinTransBinning::array() const
 }
 
 
+
+//_____________________________________________________________________________
 void RooLinTransBinning::updateInput(const RooAbsBinning& input, Double_t slope, Double_t offset)
 {
+  // Update the slope and offset parameters and the pointer to the input binning
+
   _input = (RooAbsBinning*) &input ;
   _slope = slope ;
   _offset = offset ;

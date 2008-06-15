@@ -50,9 +50,9 @@ public:
   
 protected:
     
-  RooAbsArg* _owner ;
-  Bool_t _defValueServer ;
-  Bool_t _defShapeServer ;
+  RooAbsArg* _owner ;       // Pointer to owner
+  Bool_t _defValueServer ;  // Propagate value dirty flags?
+  Bool_t _defShapeServer ;  // Propagate shape dirty flags?
   TIterator* _iter ; //! do not persist
 
   virtual Bool_t changePointer(const RooAbsCollection& newServerSet, Bool_t nameChange=kFALSE) ;

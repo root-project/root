@@ -47,7 +47,7 @@ protected:
   RooListProxy _intList ; // Master integrals representing numerator and denominator
   Bool_t _haveD ;         // Do we have a denominator term?
 
-  ClassDef(RooGenProdProj,1) // General form of projected integral of product of PDFs 
+  ClassDef(RooGenProdProj,1) // General form of projected integral of product of PDFs, utility class for RooProdPdf
 };
 
 #endif

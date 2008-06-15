@@ -71,19 +71,19 @@ protected:
 
 protected:
 
-  Bool_t _valid;
-  UInt_t _dim,_bins,_boxes;
-  Double_t _vol;
+  Bool_t _valid;              // Is configuration valid
+  UInt_t _dim,_bins,_boxes;   // Number of dimensions, bins and boxes
+  Double_t _vol;              // Volume
 
-  Double_t *_xl;     //! do not persist
-  Double_t *_xu;     //! do not persist
-  Double_t *_delx;   //! do not persist
-  Double_t *_d;      //! do not persist
-  Double_t *_xi;     //! do not persist
-  Double_t *_xin;    //! do not persist
-  Double_t *_weight; //! do not persist
+  Double_t *_xl;     //! Internal workspace
+  Double_t *_xu;     //! Internal workspace
+  Double_t *_delx;   //! Internal workspace
+  Double_t *_d;      //! Internal workspace
+  Double_t *_xi;     //! Internal workspace
+  Double_t *_xin;    //! Internal workspace
+  Double_t *_weight; //! Internal workspace
 
-  ClassDef(RooGrid,1) // a multi-dimensional grid
+  ClassDef(RooGrid,1) // Utility class for RooMCIntegrator holding a multi-dimensional grid
 };
 
 #endif

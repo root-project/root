@@ -37,7 +37,7 @@ public:
 
 protected:
 
-  Int_t _value ;
+  Int_t _value ; // Payload
   ClassDef(RooInt,1) // Container class for Int_t
 };
 

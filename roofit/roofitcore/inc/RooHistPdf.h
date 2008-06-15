@@ -33,20 +33,44 @@ public:
   virtual TObject* clone(const char* newname) const { return new RooHistPdf(*this,newname); }
   inline virtual ~RooHistPdf() { }
 
-  RooDataHist& dataHist()  { return *_dataHist ; }
-  const RooDataHist& dataHist() const { return *_dataHist ; }
+  RooDataHist& dataHist()  { 
+    // Return RooDataHist that is represented
+    return *_dataHist ; 
+  }
+  const RooDataHist& dataHist() const { 
+    // Return RooDataHist that is represented
+    return *_dataHist ; 
+  }
   
-  void setInterpolationOrder(Int_t order) { _intOrder = order ; }
-  Int_t getInterpolationOrder() const { return _intOrder ; }
+  void setInterpolationOrder(Int_t order) { 
+    // Set histogram interpolation order 
+    _intOrder = order ; 
+  }
+  Int_t getInterpolationOrder() const { 
+    // Return histogram interpolation order
+    return _intOrder ; 
+  }
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
   Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
 
-  void setCdfBoundaries(Bool_t flag) { _cdfBoundaries = flag ; }
-  Bool_t getCdfBoundaries() const { return _cdfBoundaries ; }
+  void setCdfBoundaries(Bool_t flag) { 
+    // Set use of special boundary conditions for c.d.f.s
+    _cdfBoundaries = flag ; 
+  }
+  Bool_t getCdfBoundaries() const { 
+    // If true, special boundary conditions for c.d.f.s are used
+    return _cdfBoundaries ; 
+  }
 
-  void setUnitNorm(Bool_t flag) { _unitNorm = flag ; }
-  Bool_t haveUnitNorm() const { return _unitNorm ; }
+  void setUnitNorm(Bool_t flag) { 
+    // Declare contents to have unit normalization
+    _unitNorm = flag ; 
+  }
+  Bool_t haveUnitNorm() const { 
+    // Return true if contents is declared to be unit normalized
+    return _unitNorm ; 
+  }
 
   virtual Bool_t selfNormalized() const { return _unitNorm ; }
 

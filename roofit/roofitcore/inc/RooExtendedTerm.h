@@ -32,13 +32,16 @@ public:
 
   virtual ExtendMode extendMode() const { return CanBeExtended ; }
   virtual Double_t expectedEvents(const RooArgSet* nset) const ;
-  virtual Double_t expectedEvents(const RooArgSet& nset) const { return expectedEvents(&nset) ; }
+  virtual Double_t expectedEvents(const RooArgSet& nset) const { 
+    // Return number of expected events, i.e. the value of the associated n parameter
+    return expectedEvents(&nset) ; 
+  }
 
 protected:
 
   RooRealProxy _n ;          // Number of expected events
 
-  ClassDef(RooExtendedTerm,1) // Flat PDF introducing an extended likelihood term
+  ClassDef(RooExtendedTerm,1) // Meta-p.d.f flat in all observables introducing only extended ML term
 };
 
 #endif

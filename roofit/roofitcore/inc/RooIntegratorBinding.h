@@ -30,10 +30,10 @@ public:
   inline virtual Double_t getMaxLimit(UInt_t index) const { return _integrator->integrand()->getMaxLimit(index+1); }
 
 protected:
-  RooAbsIntegrator* _integrator ;  
+  RooAbsIntegrator* _integrator ;  // Numeric integrator
+ 
 
-
-  ClassDef(RooIntegratorBinding,0) // RooAbsFunc decorator
+  ClassDef(RooIntegratorBinding,0) // Function binding representing output of numeric integrator
 };
 
 #endif

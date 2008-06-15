@@ -14,7 +14,7 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [PDF] --
+///////////////////////////////////////////////////////////////////////////
 //  RooExtendPdf is a wrappper around an existing PDF that adds a 
 //  parameteric extended likelihood term to the PDF, optionally multiplied by a 
 //  fractional term from a partial normalization of the PDF:
@@ -55,6 +55,7 @@ ClassImp(RooExtendPdf)
 
 RooExtendPdf::RooExtendPdf()
 {
+  // Default constructor
 }
 
 RooExtendPdf::RooExtendPdf(const char *name, const char *title, const RooAbsPdf& pdf,

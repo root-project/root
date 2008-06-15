@@ -56,16 +56,16 @@ protected:
 
   Bool_t initialize();
 
-  Bool_t _useIntegrandLimits;
+  Bool_t _useIntegrandLimits;  // If true limits of function binding are ued
 
   // Integrator configuration
   SummationRule _rule;
-  Int_t _maxSteps ;
-  Int_t _minStepsZero ;
-  Int_t _fixSteps ;
-  Double_t _epsAbs ;
-  Double_t _epsRel ;
-  Bool_t _doExtrap ;
+  Int_t _maxSteps ;      // Maximum number of steps
+  Int_t _minStepsZero ;  // Minimum number of steps to declare convergence to zero
+  Int_t _fixSteps ;      // Fixed number of steps 
+  Double_t _epsAbs ;     // Absolute convergence tolerance
+  Double_t _epsRel ;     // Relative convergence tolerance
+  Bool_t _doExtrap ;     // Apply conversion step?
   enum { _nPoints = 5 };
 
   // Numerical integrator support functions
@@ -74,16 +74,16 @@ protected:
   void extrapolate(Int_t n) ;
   
   // Numerical integrator workspace
-  mutable Double_t _xmin;              //! do not persist
-  mutable Double_t _xmax;              //! do not persist
-  mutable Double_t _range;             //! do not persist
-  Double_t _extrapValue;               //! do not persist
-  Double_t _extrapError;               //! do not persist
-  Double_t *_h ;                       //! do not persist
-  Double_t *_s ;                       //! do not persist
-  Double_t *_c ;                       //! do not persist
-  Double_t *_d ;                       //! do not persist
-  Double_t _savedResult;               //! do not persist
+  mutable Double_t _xmin;              //! Lower integration bound
+  mutable Double_t _xmax;              //! Upper integration bound
+  mutable Double_t _range;             //! Size of integration range
+  Double_t _extrapValue;               //! Extrapolated value
+  Double_t _extrapError;               //! Error on extrapolated value
+  Double_t *_h ;                       //! Integrator workspace
+  Double_t *_s ;                       //! Integrator workspace
+  Double_t *_c ;                       //! Integrator workspace
+  Double_t *_d ;                       //! Integrator workspace
+  Double_t _savedResult;               //! Integrator workspace
 
   Double_t* xvec(Double_t& xx) { _x[0] = xx ; return _x ; }
 

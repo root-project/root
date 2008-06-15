@@ -49,6 +49,7 @@ public:
 
 protected:  
   inline ULong_t hash(const TObject* arg) const {
+    // Return hash value calculated by method chosen in constructor
     switch(_hashMethod) {
       case Pointer:   return TString::Hash((void*)(&arg),sizeof(void*)) ;
       case Name:      return TString::Hash(arg->GetName(),strlen(arg->GetName())) ;
@@ -57,11 +58,11 @@ protected:
     return 0 ;
   }
 
-  HashMethod _hashMethod ;
-  Int_t _usedSlots ;
-  Int_t _entries ;
-  Int_t _size ;
-  RooLinkedList** _arr ; //! do not persist
+  HashMethod _hashMethod ; // Hashing method
+  Int_t _usedSlots ;       // Number of used slots
+  Int_t _entries ;         // Number of entries stored
+  Int_t _size ;            // Total number of slots
+  RooLinkedList** _arr ;   //! Array of linked lists storing elements in each slot
 
   ClassDef(RooHashTable,1) // Hash table
 };
