@@ -115,6 +115,9 @@ public:
   virtual void printClassName(ostream& os) const ;
   virtual void printMultiline(ostream& os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const ;
 
+  virtual Int_t defaultPrintContents(Option_t* opt) const ;
+  virtual StyleOption defaultPrintStyle(Option_t* opt) const ;
+
   inline virtual void Print(Option_t *options= 0) const {
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }

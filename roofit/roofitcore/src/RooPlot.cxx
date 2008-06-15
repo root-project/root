@@ -766,6 +766,31 @@ void RooPlot::SetTitle(const char* title)
 }
 
 
+//_____________________________________________________________________________
+Int_t RooPlot::defaultPrintContents(Option_t* opt) const 
+{
+  // Define default print options, for a given print style
+
+  if (opt && TString(opt)=="I") {
+    return kName|kClassName|kArgs ;
+  }
+  
+  return kName|kClassName|kValue ;
+}
+
+
+
+//_____________________________________________________________________________
+RooPrintable::StyleOption RooPlot::defaultPrintStyle(Option_t* opt) const 
+{
+  // Define mapping between Print() options and RooPrintable styles
+  if (opt && TString(opt).Contains("v")) {
+    return kVerbose ;
+  } 
+  return kStandard ;
+}
+
+
 TAxis* RooPlot::GetXaxis() const { return _hist->GetXaxis() ; }
 TAxis* RooPlot::GetYaxis() const { return _hist->GetYaxis() ; }
 Int_t  RooPlot::GetNbinsX() const { return _hist->GetNbinsX() ; }
