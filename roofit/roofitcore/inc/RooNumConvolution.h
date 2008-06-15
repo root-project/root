@@ -92,7 +92,7 @@ protected:
   Bool_t       _doProf   ;        // Switch to activate profiling option
   TH2*         _callHist ;        //! Histogram recording number of calls per convolution integral calculation
 
-  ClassDef(RooNumConvolution,0)          // Operator PDF implementing numeric convolution of 2 input PDFs
+  ClassDef(RooNumConvolution,0)   // Operator PDF implementing numeric convolution of 2 input functions
 };
 
 #endif

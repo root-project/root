@@ -9,8 +9,22 @@
   * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             * 
   *****************************************************************************/ 
 
- // -- CLASS DESCRIPTION [PDF] -- 
- // Your description goes here... 
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
+// Class RooNumRunningInt is an implementation of RooAbsCachedReal that represents a running integral
+// <pre>
+// RI(f(x)) = Int[x_lo,x] f(x') dx'
+// </pre>
+// that is calculated internally with a numeric technique: The input function
+// is first sampled into a histogram, which is then numerically integrated.
+// The output function is an interpolated version of the integrated histogram.
+// The sampling density is controlled by the binning named "cache" in the observable x.
+// The shape of the p.d.f is always calculated for the entire domain in x and
+// cached in a histogram. The cache histogram is automatically recalculated
+// when any of the parameters of the input p.d.f. has changed.
+// END_HTML
+//
 
 #include "Riostream.h" 
 
@@ -26,6 +40,8 @@ ClassImp(RooNumRunningInt)
   ;
 
 
+
+//_____________________________________________________________________________
 RooNumRunningInt::RooNumRunningInt(const char *name, const char *title, RooAbsReal& _func, RooRealVar& _x, const char* bname) :
    RooAbsCachedReal(name,title), 
    func("func","func",this,_func),
@@ -38,6 +54,7 @@ RooNumRunningInt::RooNumRunningInt(const char *name, const char *title, RooAbsRe
 
 
 
+//_____________________________________________________________________________
 RooNumRunningInt::RooNumRunningInt(const RooNumRunningInt& other, const char* name) :  
    RooAbsCachedReal(other,name), 
    func("func",this,other.func),
@@ -47,10 +64,14 @@ RooNumRunningInt::RooNumRunningInt(const RooNumRunningInt& other, const char* na
  } 
 
 
+
+//_____________________________________________________________________________
 RooNumRunningInt::~RooNumRunningInt() 
 {
 }
 
+
+//_____________________________________________________________________________
 const char* RooNumRunningInt::inputBaseName() const 
 {
   static string ret ;
@@ -60,6 +81,8 @@ const char* RooNumRunningInt::inputBaseName() const
 } ;
 
 
+
+//_____________________________________________________________________________
 RooNumRunningInt::RICacheElem::RICacheElem(const RooNumRunningInt& self, const RooArgSet* nset) : 
   FuncCacheElem(self,nset), _self(&const_cast<RooNumRunningInt&>(self))
 {
@@ -78,6 +101,8 @@ RooNumRunningInt::RICacheElem::RICacheElem(const RooNumRunningInt& self, const R
 
 }
 
+
+//_____________________________________________________________________________
 RooNumRunningInt::RICacheElem::~RICacheElem() 
 {
   // Delete temp arrays 
@@ -85,6 +110,8 @@ RooNumRunningInt::RICacheElem::~RICacheElem()
   delete[] _ay ;    
 }
 
+
+//_____________________________________________________________________________
 RooArgList RooNumRunningInt::RICacheElem::containedArgs(Action action) 
 {
   RooArgList ret ;
@@ -95,6 +122,8 @@ RooArgList RooNumRunningInt::RICacheElem::containedArgs(Action action)
 }
 
 
+
+//_____________________________________________________________________________
 void RooNumRunningInt::RICacheElem::calculate(Bool_t cdfmode) 
 {
   // Update contents of histogram
@@ -134,6 +163,8 @@ void RooNumRunningInt::RICacheElem::calculate(Bool_t cdfmode)
 }
 
 
+
+//_____________________________________________________________________________
 void RooNumRunningInt::RICacheElem::addRange(Int_t ixlo, Int_t ixhi, Int_t nbins) 
 {
   // Add first and last point, if not there already
@@ -177,6 +208,8 @@ void RooNumRunningInt::RICacheElem::addRange(Int_t ixlo, Int_t ixhi, Int_t nbins
 
 }
 
+
+//_____________________________________________________________________________
 void RooNumRunningInt::RICacheElem::addPoint(Int_t ix)
 {
   hist()->get(ix) ;
@@ -186,6 +219,8 @@ void RooNumRunningInt::RICacheElem::addPoint(Int_t ix)
 }
 
 
+
+//_____________________________________________________________________________
 void RooNumRunningInt::fillCacheObject(RooAbsCachedReal::FuncCacheElem& cache) const 
 {
   RICacheElem& riCache = static_cast<RICacheElem&>(cache) ;
@@ -194,6 +229,7 @@ void RooNumRunningInt::fillCacheObject(RooAbsCachedReal::FuncCacheElem& cache) c
 
 
 
+//_____________________________________________________________________________
 RooArgSet* RooNumRunningInt::actualObservables(const RooArgSet& /*nset*/) const 
 {
   RooArgSet* ret = new RooArgSet ;
@@ -203,6 +239,7 @@ RooArgSet* RooNumRunningInt::actualObservables(const RooArgSet& /*nset*/) const
 
 
 
+//_____________________________________________________________________________
 RooArgSet* RooNumRunningInt::actualParameters(const RooArgSet& /*nset*/) const 
 {
   RooArgSet* ret = func.arg().getParameters(RooArgSet()) ;
@@ -210,11 +247,15 @@ RooArgSet* RooNumRunningInt::actualParameters(const RooArgSet& /*nset*/) const
   return ret ;
 }
 
+
+//_____________________________________________________________________________
 RooAbsCachedReal::FuncCacheElem* RooNumRunningInt::createCache(const RooArgSet* nset) const 
 {
   return new RICacheElem(*const_cast<RooNumRunningInt*>(this),nset) ; 
 }
 
+
+//_____________________________________________________________________________
 Double_t RooNumRunningInt::evaluate() const 
 {
   cout << "RooNumRunningInt::evaluate(" << GetName() << ")" << endl ;

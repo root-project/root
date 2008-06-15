@@ -14,9 +14,13 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [AUX] --
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
 // Lightweight interface adaptor that binds a RooAbsReal object to a subset
-// of its servers.
+// of its servers and present it as a simple array oriented interface.
+// END_HTML
+//
 
 
 #include "RooFit.h"
@@ -36,6 +40,8 @@
 ClassImp(RooRealBinding)
 ;
 
+
+//_____________________________________________________________________________
 RooRealBinding::RooRealBinding(const RooAbsReal& func, const RooArgSet &vars, const RooArgSet* nset, Bool_t clipInvalid, const TNamed* rangeName) :
   RooAbsFunc(vars.getSize()), _func(&func), _vars(0), _nset(nset), _clipInvalid(clipInvalid), _xsave(0), _rangeName(rangeName)
 {
@@ -60,12 +66,16 @@ RooRealBinding::RooRealBinding(const RooAbsReal& func, const RooArgSet &vars, co
   delete iter ;
 }
 
+
+//_____________________________________________________________________________
 RooRealBinding::~RooRealBinding() {
   if(0 != _vars) delete[] _vars;
   if (_xsave) delete[] _xsave ;
 }
 
 
+
+//_____________________________________________________________________________
 void RooRealBinding::saveXVec() const
 {
   if (!_xsave) {
@@ -76,6 +86,8 @@ void RooRealBinding::saveXVec() const
   }
 }
 
+
+//_____________________________________________________________________________
 void RooRealBinding::restoreXVec() const
 {
   if (!_xsave) {
@@ -87,6 +99,8 @@ void RooRealBinding::restoreXVec() const
 }
 
 
+
+//_____________________________________________________________________________
 void RooRealBinding::loadValues(const Double_t xvector[]) const {
   _xvecValid = kTRUE ;
   for(UInt_t index= 0; index < _dimension; index++) {
@@ -98,6 +112,8 @@ void RooRealBinding::loadValues(const Double_t xvector[]) const {
   }
 }  
 
+
+//_____________________________________________________________________________
 Double_t RooRealBinding::operator()(const Double_t xvector[]) const {
   assert(isValid());
   _ncall++ ;
@@ -106,16 +122,22 @@ Double_t RooRealBinding::operator()(const Double_t xvector[]) const {
   return _xvecValid ? _func->getVal(_nset) : 0. ;
 }
 
+
+//_____________________________________________________________________________
 Double_t RooRealBinding::getMinLimit(UInt_t index) const {
   assert(isValid());
   return _vars[index]->getMin(RooNameReg::str(_rangeName));
 }
 
+
+//_____________________________________________________________________________
 Double_t RooRealBinding::getMaxLimit(UInt_t index) const {
   assert(isValid());
   return _vars[index]->getMax(RooNameReg::str(_rangeName));
 }
 
+
+//_____________________________________________________________________________
 const char* RooRealBinding::getName() const 
 { 
   return _func->GetName() ; 

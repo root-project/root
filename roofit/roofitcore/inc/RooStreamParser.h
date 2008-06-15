@@ -56,7 +56,7 @@ protected:
   TString _punct ;
 
   
-  ClassDef(RooStreamParser,0) // Utility class that parses istream data into tokens
+  ClassDef(RooStreamParser,0) // Utility class that parses iostream data into tokens
 };
 
 #endif

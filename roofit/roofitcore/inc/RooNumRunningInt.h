@@ -57,7 +57,7 @@ protected:
 
 private:
 
-  ClassDef(RooNumRunningInt,1) // Numeric calculator for running integral given a function
+  ClassDef(RooNumRunningInt,1) // Numeric calculator for running integral of a given function
 
 };
  

@@ -14,7 +14,9 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [CONT] --
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
 // RooSetProxy is the concrete proxy for RooArgSet objects.
 // A RooSetProxy is the general mechanism to store a RooArgSet
 // with RooAbsArgs in a RooAbsArg.
@@ -24,6 +26,8 @@
 // registers itself with the owning class. The latter allows the
 // owning class to update the pointers of RooArgSet contents to reflect
 // the serverRedirect changes.
+// END_HTML
+//
 
 
 #include "RooFit.h"
@@ -38,15 +42,21 @@ ClassImp(RooSetProxy)
 ;
 
 
+
+//_____________________________________________________________________________
 void* RooSetProxy::operator new (size_t bytes)
 {
   return malloc(bytes) ;
 }
 
+
+//_____________________________________________________________________________
 void RooSetProxy::operator delete (void * /*ptr*/)
 {
 }
 
+
+//_____________________________________________________________________________
 RooSetProxy::RooSetProxy(const char* inName, const char* /*desc*/, RooAbsArg* owner, 
 			 Bool_t defValueServer, Bool_t defShapeServer) :
   RooArgSet(inName), _owner(owner), 
@@ -59,6 +69,8 @@ RooSetProxy::RooSetProxy(const char* inName, const char* /*desc*/, RooAbsArg* ow
 }
 
 
+
+//_____________________________________________________________________________
 RooSetProxy::RooSetProxy(const char* inName, RooAbsArg* owner, const RooSetProxy& other) : 
   RooArgSet(other,inName), _owner(owner),  
   _defValueServer(other._defValueServer), 
@@ -69,6 +81,8 @@ RooSetProxy::RooSetProxy(const char* inName, RooAbsArg* owner, const RooSetProxy
 }
 
 
+
+//_____________________________________________________________________________
 RooSetProxy::~RooSetProxy()
 {
   if (_owner) _owner->unRegisterProxy(*this) ;
@@ -76,6 +90,8 @@ RooSetProxy::~RooSetProxy()
 }
 
 
+
+//_____________________________________________________________________________
 Bool_t RooSetProxy::add(const RooAbsArg& var, Bool_t valueServer, Bool_t shapeServer, Bool_t silent)
 {
   Bool_t ret=RooArgSet::add(var,silent) ;
@@ -87,6 +103,7 @@ Bool_t RooSetProxy::add(const RooAbsArg& var, Bool_t valueServer, Bool_t shapeSe
 
 
 
+//_____________________________________________________________________________
 Bool_t RooSetProxy::addOwned(RooAbsArg& var, Bool_t silent)
 {
   Bool_t ret=RooArgSet::addOwned(var,silent) ;
@@ -97,6 +114,8 @@ Bool_t RooSetProxy::addOwned(RooAbsArg& var, Bool_t silent)
 }
 				 
 
+
+//_____________________________________________________________________________
 RooAbsArg* RooSetProxy::addClone(const RooAbsArg& var, Bool_t silent) 
 {
   RooAbsArg* ret=RooArgSet::addClone(var,silent) ;
@@ -108,12 +127,15 @@ RooAbsArg* RooSetProxy::addClone(const RooAbsArg& var, Bool_t silent)
 
 
 
+//_____________________________________________________________________________
 Bool_t RooSetProxy::add(const RooAbsArg& var, Bool_t silent) 
 {
   return add(var,_defValueServer,_defShapeServer,silent) ;
 }
 
 
+
+//_____________________________________________________________________________
 Bool_t RooSetProxy::replace(const RooAbsArg& var1, const RooAbsArg& var2) 
 {
   Bool_t ret=RooArgSet::replace(var1,var2) ;
@@ -126,6 +148,8 @@ Bool_t RooSetProxy::replace(const RooAbsArg& var1, const RooAbsArg& var2)
 }
 
 
+
+//_____________________________________________________________________________
 Bool_t RooSetProxy::remove(const RooAbsArg& var, Bool_t silent, Bool_t matchByNameOnly) 
 {
   Bool_t ret=RooArgSet::remove(var,silent,matchByNameOnly) ;
@@ -136,6 +160,8 @@ Bool_t RooSetProxy::remove(const RooAbsArg& var, Bool_t silent, Bool_t matchByNa
 }
 
 
+
+//_____________________________________________________________________________
 Bool_t RooSetProxy::remove(const RooAbsCollection& list, Bool_t silent, Bool_t matchByNameOnly) 
 {
   // Remove each argument in the input list from our list using remove(const RooAbsArg&).
@@ -156,6 +182,7 @@ Bool_t RooSetProxy::remove(const RooAbsCollection& list, Bool_t silent, Bool_t m
 
 
 
+//_____________________________________________________________________________
 void RooSetProxy::removeAll() 
 {
   if (!isOwning()) {
@@ -175,6 +202,7 @@ void RooSetProxy::removeAll()
 
 
 
+//_____________________________________________________________________________
 RooSetProxy& RooSetProxy::operator=(const RooArgSet& other) 
 {
   RooArgSet::operator=(other) ;
@@ -184,6 +212,7 @@ RooSetProxy& RooSetProxy::operator=(const RooArgSet& other)
 
 
 
+//_____________________________________________________________________________
 Bool_t RooSetProxy::changePointer(const RooAbsCollection& newServerList, Bool_t nameChange) 
 {
   if (getSize()==0) return kTRUE ;
@@ -200,6 +229,8 @@ Bool_t RooSetProxy::changePointer(const RooAbsCollection& newServerList, Bool_t 
 }
 
 
+
+//_____________________________________________________________________________
 void RooSetProxy::print(ostream& os, Bool_t addContents) const 
 { 
   if (!addContents) {

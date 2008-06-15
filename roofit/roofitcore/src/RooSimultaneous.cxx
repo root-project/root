@@ -14,20 +14,23 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [PDF] --
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
 // RooSimultaneous facilitates simultaneous fitting of multiple PDFs
 // to subsets of a given dataset.
-//
+// <p>
 // The class takes an index category, which is interpreted as
 // the data subset indicator, and a list of PDFs, each associated
 // with a state of the index category. RooSimultaneous always returns
 // the value of the PDF that is associated with the current value
 // of the index category
-//
+// <p>
 // Extended likelihood fitting is supported if all components support
-// extended likelihood mode. As for the returned probability density,
-// the expected number of events for the PDF associated with the current
-// state of the index category is returned.
+// extended likelihood mode. The expected number of events by a RooSimultaneous
+// is that of the component p.d.f. selected by the index category
+// END_HTML
+//
 
 #include "RooFit.h"
 #include "Riostream.h"
@@ -55,6 +58,8 @@ ClassImp(RooSimultaneous)
 ;
 
 
+
+//_____________________________________________________________________________
 RooSimultaneous::RooSimultaneous(const char *name, const char *title, 
 				 RooAbsCategoryLValue& inIndexCat) : 
   RooAbsPdf(name,title), 
@@ -76,6 +81,8 @@ RooSimultaneous::RooSimultaneous(const char *name, const char *title,
 }
 
 
+
+//_____________________________________________________________________________
 RooSimultaneous::RooSimultaneous(const char *name, const char *title, 
 				 const RooArgList& inPdfList, RooAbsCategoryLValue& inIndexCat) :
   RooAbsPdf(name,title), 
@@ -118,6 +125,7 @@ RooSimultaneous::RooSimultaneous(const char *name, const char *title,
 
 
 
+//_____________________________________________________________________________
 RooSimultaneous::RooSimultaneous(const RooSimultaneous& other, const char* name) : 
   RooAbsPdf(other,name),
   _plotCoefNormSet("!plotCoefNormSet",this,other._plotCoefNormSet),
@@ -140,6 +148,8 @@ RooSimultaneous::RooSimultaneous(const RooSimultaneous& other, const char* name)
 }
 
 
+
+//_____________________________________________________________________________
 RooSimultaneous::~RooSimultaneous() 
 {
   // Destructor
@@ -148,6 +158,8 @@ RooSimultaneous::~RooSimultaneous()
 }
 
 
+
+//_____________________________________________________________________________
 RooAbsPdf* RooSimultaneous::getPdf(const char* catName) const 
 {
   // Retrieve the proxy by index name
@@ -157,6 +169,7 @@ RooAbsPdf* RooSimultaneous::getPdf(const char* catName) const
 
 
 
+//_____________________________________________________________________________
 Bool_t RooSimultaneous::addPdf(const RooAbsPdf& pdf, const char* catLabel)
 {
   // Associate given PDF with index category state label 'catLabel'.
@@ -197,6 +210,7 @@ Bool_t RooSimultaneous::addPdf(const RooAbsPdf& pdf, const char* catLabel)
 
 
 
+//_____________________________________________________________________________
 Double_t RooSimultaneous::evaluate() const
 {  
   // Return the current value: 
@@ -214,6 +228,7 @@ Double_t RooSimultaneous::evaluate() const
 
 
 
+//_____________________________________________________________________________
 Double_t RooSimultaneous::expectedEvents(const RooArgSet* nset) const 
 {
   // Return the number of expected events:
@@ -248,6 +263,7 @@ Double_t RooSimultaneous::expectedEvents(const RooArgSet* nset) const
 
 
 
+//_____________________________________________________________________________
 Int_t RooSimultaneous::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, 
 					       const RooArgSet* normSet, const char* rangeName) const 
 {
@@ -283,6 +299,8 @@ Int_t RooSimultaneous::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& an
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooSimultaneous::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* /*rangeName*/) const 
 {
   // Return analytical integral defined by given scenario code
@@ -305,6 +323,7 @@ Double_t RooSimultaneous::analyticalIntegralWN(Int_t code, const RooArgSet* norm
 
 
 
+//_____________________________________________________________________________
 RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
 {
   // New experimental plotOn() with varargs...
@@ -649,6 +668,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
 
 
 
+//_____________________________________________________________________________
 RooPlot* RooSimultaneous::plotOn(RooPlot *frame, Option_t* drawOptions, Double_t scaleFactor, 
 				 ScaleType stype, const RooAbsData* projData, const RooArgSet* projSet,
 				 Double_t /*precision*/, Bool_t /*shiftToZero*/, const RooArgSet* /*projDataSet*/,
@@ -673,12 +693,15 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, Option_t* drawOptions, Double_t
 
 
 
+//_____________________________________________________________________________
 void RooSimultaneous::selectNormalization(const RooArgSet* normSet, Bool_t /*force*/) 
 {
   _plotCoefNormSet.removeAll() ;
   if (normSet) _plotCoefNormSet.add(*normSet) ;
 }
 
+
+//_____________________________________________________________________________
 void RooSimultaneous::selectNormalizationRange(const char* normRange, Bool_t /*force*/) 
 {
   _plotCoefNormRange = RooNameReg::ptr(normRange) ;
@@ -687,6 +710,7 @@ void RooSimultaneous::selectNormalizationRange(const char* normRange, Bool_t /*f
 
 
 
+//_____________________________________________________________________________
 RooAbsGenContext* RooSimultaneous::genContext(const RooArgSet &vars, const RooDataSet *prototype, 
 					      const RooArgSet* auxProto, Bool_t verbose) const 
 {

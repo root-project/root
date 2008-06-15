@@ -14,10 +14,12 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [PDF] --
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
 // Numeric 1-dimensional convolution operator PDF. This class can convolve any PDF
 // with any other PDF
-//
+// <p>
 // This class should not be used blindly as numeric convolution is computing
 // intensive and prone to stability fitting problems. If an analytic convolution
 // can be calculated, you should use that or implement it if not available.
@@ -30,9 +32,9 @@
 // for this task. You can override the convolution integration settings via
 // the RooNumIntConfig object reference returned by the convIntConfig() member
 // function
-//
+// <p>
 // By default the numeric convolution is integrated from -infinity to
-// +infinity through a x -> 1/x coordinate transformation of the
+// +infinity through a <pre>x -> 1/x</pre> coordinate transformation of the
 // tails. For convolution with a very small bandwidth it may be
 // advantageous (for both CPU consumption and stability) if the
 // integration domain is limited to a finite range. The function
@@ -47,12 +49,14 @@
 // resolution PDF do setConvolutionWindow(gaussMean,gaussSigma,5)
 // Note that for a 'wide' Gaussian the -inf to +inf integration
 // may converge more quickly than that over a finite range!
-//
+// <p>
 // The default numeric precision is 1e-7, i.e. the global default for
 // numeric integration but you should experiment with this value to
 // see if it is sufficient for example by studying the number of function
 // calls that MINUIT needs to fit your function as function of the
 // convolution precision. 
+// END_HTML
+//
 
 #include "RooFit.h"
 
@@ -75,6 +79,8 @@ ClassImp(RooNumConvolution)
 ;
 
 
+
+//_____________________________________________________________________________
 RooNumConvolution::RooNumConvolution(const char *name, const char *title, RooRealVar& convVar, RooAbsReal& inPdf, RooAbsReal& resmodel, const RooNumConvolution* proto) : 
   RooAbsReal(name,title), 
   _init(kFALSE),
@@ -119,6 +125,7 @@ RooNumConvolution::RooNumConvolution(const char *name, const char *title, RooRea
 
 
 
+//_____________________________________________________________________________
 RooNumConvolution::RooNumConvolution(const RooNumConvolution& other, const char* name) :
   RooAbsReal(other,name),
   _init(kFALSE),
@@ -144,6 +151,8 @@ RooNumConvolution::RooNumConvolution(const RooNumConvolution& other, const char*
 }
 
 
+
+//_____________________________________________________________________________
 void RooNumConvolution::initialize() const
 {
   // Initialization function -- create clone of convVar (x') and deep-copy clones of pdf and
@@ -185,12 +194,15 @@ void RooNumConvolution::initialize() const
 
 
 
+//_____________________________________________________________________________
 RooNumConvolution::~RooNumConvolution() 
 {
   // Destructor
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooNumConvolution::evaluate() const 
 {
   // Calculate convolution integral
@@ -228,6 +240,8 @@ Double_t RooNumConvolution::evaluate() const
 }
 
 
+
+//_____________________________________________________________________________
 Bool_t RooNumConvolution::redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, 
 					      Bool_t /*nameChange*/, Bool_t /*isRecursive*/) 
 {
@@ -237,6 +251,8 @@ Bool_t RooNumConvolution::redirectServersHook(const RooAbsCollection& /*newServe
 }
 
 
+
+//_____________________________________________________________________________
 void RooNumConvolution::clearConvolutionWindow() 
 {
   // Removes previously defined convolution window, reverting to convolution from -inf to +inf
@@ -245,6 +261,8 @@ void RooNumConvolution::clearConvolutionWindow()
 }
 
 
+
+//_____________________________________________________________________________
 void RooNumConvolution::setConvolutionWindow(RooAbsReal& centerParam, RooAbsReal& widthParam, Double_t widthScaleFactor) 
 {
   // Restrict convolution integral to finite range [ x - C - S*W, x - C + S*W ] 
@@ -259,6 +277,8 @@ void RooNumConvolution::setConvolutionWindow(RooAbsReal& centerParam, RooAbsReal
 }
 
 
+
+//_____________________________________________________________________________
 void RooNumConvolution::setCallWarning(Int_t threshold) 
 {
   // Activate warning messages if number of function calls needed for evaluation of convolution integral 
@@ -271,6 +291,8 @@ void RooNumConvolution::setCallWarning(Int_t threshold)
   _verboseThresh = threshold ;
 }
 
+
+//_____________________________________________________________________________
 void RooNumConvolution::setCallProfiling(Bool_t flag, Int_t nbinX, Int_t nbinCall, Int_t nCallHigh) 
 {
   // Activate call profile if flag is set to true. A 2-D histogram is kept that stores the required number
@@ -303,6 +325,8 @@ void RooNumConvolution::setCallProfiling(Bool_t flag, Int_t nbinX, Int_t nbinCal
 }
 
 
+
+//_____________________________________________________________________________
 void RooNumConvolution::printCompactTreeHook(ostream& os, const char* indent) 
 {
   // Hook function to intercept printCompactTree() calls so that it can print out

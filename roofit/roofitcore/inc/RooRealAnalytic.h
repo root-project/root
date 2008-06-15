@@ -29,7 +29,7 @@ public:
 protected:
   Int_t _code;
 
-  ClassDef(RooRealAnalytic,0) // RooAbsFunc decorator
+  ClassDef(RooRealAnalytic,0) // Function binding to an analytical integral of a RooAbsReal
 };
 
 #endif

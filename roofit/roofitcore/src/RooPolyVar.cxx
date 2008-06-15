@@ -14,7 +14,18 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [PDF] --
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
+// Class RooPolyVar is a RooAbsReal implementing a polynomial in terms
+// of a list of RooAbsReal coefficients
+// <pre>
+// f(x) = sum_i a_i * x
+// </pre>
+// Class RooPolyvar implements analytical integrals of all polynomials
+// it can define.
+// END_HTML
+//
 
 #include "RooFit.h"
 
@@ -33,11 +44,15 @@
 ClassImp(RooPolyVar)
 ;
 
+
+//_____________________________________________________________________________
 RooPolyVar::RooPolyVar()
 {
   _coefIter = _coefList.createIterator() ;
 }
 
+
+//_____________________________________________________________________________
 RooPolyVar::RooPolyVar(const char* name, const char* title, 
 			     RooAbsReal& x, const RooArgList& coefList, Int_t lowestOrder) :
   RooAbsReal(name, title),
@@ -70,6 +85,7 @@ RooPolyVar::RooPolyVar(const char* name, const char* title,
 
 
 
+//_____________________________________________________________________________
 RooPolyVar::RooPolyVar(const char* name, const char* title,
                            RooAbsReal& x) :
   RooAbsReal(name, title),
@@ -82,6 +98,7 @@ RooPolyVar::RooPolyVar(const char* name, const char* title,
 
 
 
+//_____________________________________________________________________________
 RooPolyVar::RooPolyVar(const RooPolyVar& other, const char* name) :
   RooAbsReal(other, name), 
   _x("x", this, other._x), 
@@ -95,6 +112,7 @@ RooPolyVar::RooPolyVar(const RooPolyVar& other, const char* name) :
 
 
 
+//_____________________________________________________________________________
 Double_t RooPolyVar::evaluate() const 
 {
   Double_t sum(0) ;
@@ -111,6 +129,8 @@ Double_t RooPolyVar::evaluate() const
 }
 
 
+
+//_____________________________________________________________________________
 Int_t RooPolyVar::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const 
 {
   if (matchArgs(allVars, analVars, _x)) return 1;
@@ -119,6 +139,7 @@ Int_t RooPolyVar::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
 
 
 
+//_____________________________________________________________________________
 Double_t RooPolyVar::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
   assert(code==1) ;

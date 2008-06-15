@@ -14,13 +14,17 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [CAT] --
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
 // RooMultiCategory consolidates several RooAbsCategory objects into
 // a single category. The states of the multi-category consist of all the permutations
 // of the input categories. 
-//
+// <p>
 // RooMultiCategory state are automatically defined and updated whenever an input
 // category modifies its list of states
+// END_HTML
+//
 
 #include "RooFit.h"
 
@@ -39,6 +43,8 @@
 ClassImp(RooMultiCategory)
 ;
 
+
+//_____________________________________________________________________________
 RooMultiCategory::RooMultiCategory(const char *name, const char *title, const RooArgSet& inputCatList2) :
   RooAbsCategory(name, title), _catSet("input","Input category set",this,kTRUE,kTRUE)
 {  
@@ -60,6 +66,8 @@ RooMultiCategory::RooMultiCategory(const char *name, const char *title, const Ro
 }
 
 
+
+//_____________________________________________________________________________
 RooMultiCategory::RooMultiCategory(const RooMultiCategory& other, const char *name) :
   RooAbsCategory(other,name), _catSet("input",this,other._catSet)
 {
@@ -69,6 +77,7 @@ RooMultiCategory::RooMultiCategory(const RooMultiCategory& other, const char *na
 
 
 
+//_____________________________________________________________________________
 RooMultiCategory::~RooMultiCategory() 
 {
   // Destructor
@@ -76,6 +85,7 @@ RooMultiCategory::~RooMultiCategory()
 
 
 
+//_____________________________________________________________________________
 void RooMultiCategory::updateIndexList()
 {
   // Update the list of super-category states 
@@ -96,6 +106,8 @@ void RooMultiCategory::updateIndexList()
 }
 
 
+
+//_____________________________________________________________________________
 TString RooMultiCategory::currentLabel() const
 {
   // Return the name of the current state, 
@@ -120,6 +132,8 @@ TString RooMultiCategory::currentLabel() const
 
 
 RooCatType
+
+//_____________________________________________________________________________
 RooMultiCategory::evaluate() const
 {
   // Calculate the current value 
@@ -129,6 +143,7 @@ RooMultiCategory::evaluate() const
 
 
 
+//_____________________________________________________________________________
 void RooMultiCategory::printMultiline(ostream& os, Int_t content, Bool_t verbose, TString indent) const
 {
   // Print the state of this object to the specified output stream.
@@ -145,6 +160,8 @@ void RooMultiCategory::printMultiline(ostream& os, Int_t content, Bool_t verbose
 }
 
 
+
+//_____________________________________________________________________________
 Bool_t RooMultiCategory::readFromStream(istream& /*is*/, Bool_t /*compact*/, Bool_t /*verbose*/) 
 {
   // Read object contents from given stream
@@ -153,6 +170,7 @@ Bool_t RooMultiCategory::readFromStream(istream& /*is*/, Bool_t /*compact*/, Boo
 
 
 
+//_____________________________________________________________________________
 void RooMultiCategory::writeToStream(ostream& os, Bool_t compact) const
 {
   // Write object contents to given stream

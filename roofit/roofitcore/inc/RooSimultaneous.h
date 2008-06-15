@@ -106,7 +106,7 @@ protected:
   Bool_t   _anyCanExtend ;     // Flag set if all component PDFs are extendable
   Bool_t   _anyMustExtend ;    // Flag set if all component PDFs are extendable
 
-  ClassDef(RooSimultaneous,1)  // Description goes here
+  ClassDef(RooSimultaneous,1)  // Simultaneous operator p.d.f, functions like C++  'switch()' on input p.d.fs operating on index category5A
 };
 
 #endif

@@ -14,11 +14,15 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [MISC] --
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
 // RooNameReg is a registry for 'const char*' name. For each unique
-// name (which is not necessarily a unique pointer in the C++ standard)
+// name (which is not necessarily a unique pointer in the C++ standard),
 // a unique pointer to a TNamed object is return that can be used for
 // fast searches and comparisons.
+// END_HTML
+//
 
 #include "RooFit.h"
 #include "RooSentinel.h"
@@ -32,15 +36,21 @@ ClassImp(RooNameReg)
 RooNameReg* RooNameReg::_instance = 0 ;
 
 
+
+//_____________________________________________________________________________
 RooNameReg::~RooNameReg()
 {
   _list.Delete() ;
 }
 
+
+//_____________________________________________________________________________
 RooNameReg::RooNameReg(const RooNameReg& other) : TNamed(other)
 {
 }
 
+
+//_____________________________________________________________________________
 RooNameReg& RooNameReg::instance()
 {
   if (_instance==0) {
@@ -50,6 +60,8 @@ RooNameReg& RooNameReg::instance()
   return *_instance ;
 }
 
+
+//_____________________________________________________________________________
 void RooNameReg::cleanup()
 {
   if(_instance) {
@@ -59,6 +71,8 @@ void RooNameReg::cleanup()
 }
 
 
+
+//_____________________________________________________________________________
 const TNamed* RooNameReg::constPtr(const char* inStr) {
 
   // Handle null pointer case explicitly
@@ -77,17 +91,23 @@ const TNamed* RooNameReg::constPtr(const char* inStr) {
 }
 
 
+
+//_____________________________________________________________________________
 const char* RooNameReg::constStr(const TNamed* namePtr) 
 {
   if (namePtr) return namePtr->GetName() ;
   return 0 ;  
 }
 
+
+//_____________________________________________________________________________
 const TNamed* RooNameReg::ptr(const char* stringPtr) 
 { 
   return instance().constPtr(stringPtr) ; 
 }
 
+
+//_____________________________________________________________________________
 const char* RooNameReg::str(const TNamed* ptr) 
 { 
   return instance().constStr(ptr) ; 

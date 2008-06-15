@@ -44,7 +44,7 @@ private:
   static const Int_t _primitivePoly[MaxDimension+1][MaxPrimitiveDegree+1];
   static const Int_t _polyDegree[MaxDimension+1];
 
-  ClassDef(RooQuasiRandomGenerator,0) // quasi-random number generator
+  ClassDef(RooQuasiRandomGenerator,0) // Quasi-random number generator
 };
 
 #endif

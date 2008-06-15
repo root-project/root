@@ -14,10 +14,18 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [MISC] --
-// RooNumIntFactory holds the configuration parameters of the various
-// numeric integrators used by RooRealIntegral. RooRealIntegral and RooAbsPdf
-// use this class in the (normalization) integral configuration interface
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
+// RooNumIntFactory is a factory to instantiate numeric integrators
+// from a given function binding and a given configuration. The factory
+// searches for a numeric integrator registered with the factory that
+// has the ability to perform the numeric integration. The choice of
+// method may depend on the number of dimensions integrated,
+// the nature of the integration limits (closed or open ended) and
+// the preference of the caller as encoded in the configuration object.
+// END_HTML
+//
 
 #include "TClass.h"
 #include "Riostream.h"
@@ -50,6 +58,8 @@ ClassImp(RooNumIntFactory)
 RooNumIntFactory* RooNumIntFactory::_instance = 0 ;
 
 
+
+//_____________________________________________________________________________
 RooNumIntFactory::RooNumIntFactory()
 {
   RooIntegrator1D::registerIntegrator(*this) ;
@@ -63,6 +73,8 @@ RooNumIntFactory::RooNumIntFactory()
 }
 
 
+
+//_____________________________________________________________________________
 RooNumIntFactory::~RooNumIntFactory()
 {
   std::map<std::string,pair<RooAbsIntegrator*,std::string> >::iterator iter = _map.begin() ;
@@ -72,11 +84,15 @@ RooNumIntFactory::~RooNumIntFactory()
   }  
 }
 
+
+//_____________________________________________________________________________
 RooNumIntFactory::RooNumIntFactory(const RooNumIntFactory& other) : TObject(other)
 {
 }
 
 
+
+//_____________________________________________________________________________
 RooNumIntFactory& RooNumIntFactory::instance()
 {
   if (_instance==0) {
@@ -86,6 +102,8 @@ RooNumIntFactory& RooNumIntFactory::instance()
   return *_instance ;
 }
 
+
+//_____________________________________________________________________________
 void RooNumIntFactory::cleanup()
 {
   if (_instance) {
@@ -95,6 +113,8 @@ void RooNumIntFactory::cleanup()
 }
 
 
+
+//_____________________________________________________________________________
 Bool_t RooNumIntFactory::storeProtoIntegrator(RooAbsIntegrator* proto, const RooArgSet& defConfig, const char* depName) 
 {
   TString name = proto->IsA()->GetName() ;
@@ -115,6 +135,7 @@ Bool_t RooNumIntFactory::storeProtoIntegrator(RooAbsIntegrator* proto, const Roo
 
 
 
+//_____________________________________________________________________________
 const RooAbsIntegrator* RooNumIntFactory::getProtoIntegrator(const char* name) 
 {
   if (_map.count(name)==0) {
@@ -125,6 +146,8 @@ const RooAbsIntegrator* RooNumIntFactory::getProtoIntegrator(const char* name)
 }
 
 
+
+//_____________________________________________________________________________
 const char* RooNumIntFactory::getDepIntegratorName(const char* name) 
 {
   if (_map.count(name)==0) {
@@ -135,6 +158,8 @@ const char* RooNumIntFactory::getDepIntegratorName(const char* name)
 }
 
 
+
+//_____________________________________________________________________________
 RooAbsIntegrator* RooNumIntFactory::createIntegrator(RooAbsFunc& func, const RooNumIntConfig& config, Int_t ndimPreset) 
 {
   // First determine dimensionality and domain of integrand  

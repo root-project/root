@@ -58,7 +58,7 @@ protected:
   Bool_t _extended ;
   virtual Double_t evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t stepSize) const ;
   
-  ClassDef(RooNLLVar,1) // Abstract real-valued variable
+  ClassDef(RooNLLVar,1) // Function representing (extended) -log(L) of p.d.f and dataset
 };
 
 #endif

@@ -14,9 +14,13 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [AUX] --
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
 // RooSegmentedIntegrator1D implements an adaptive one-dimensional 
 // numerical integration algorithm.
+// END_HTML
+//
 
 
 #include "RooFit.h"
@@ -38,6 +42,8 @@ ClassImp(RooSegmentedIntegrator1D)
 ;
 
 // Register this class with RooNumIntConfig
+
+//_____________________________________________________________________________
 void RooSegmentedIntegrator1D::registerIntegrator(RooNumIntFactory& fact)
 {
   RooRealVar numSeg("numSeg","Number of segments",3) ;
@@ -45,11 +51,15 @@ void RooSegmentedIntegrator1D::registerIntegrator(RooNumIntFactory& fact)
 }
  
 
+
+//_____________________________________________________________________________
 RooSegmentedIntegrator1D::RooSegmentedIntegrator1D()
 {
 }
 
 
+
+//_____________________________________________________________________________
 RooSegmentedIntegrator1D::RooSegmentedIntegrator1D(const RooAbsFunc& function, const RooNumIntConfig& config) :
   RooAbsIntegrator(function), _config(config)
 {
@@ -61,6 +71,8 @@ RooSegmentedIntegrator1D::RooSegmentedIntegrator1D(const RooAbsFunc& function, c
 } 
 
 
+
+//_____________________________________________________________________________
 RooSegmentedIntegrator1D::RooSegmentedIntegrator1D(const RooAbsFunc& function, Double_t xmin, Double_t xmax,
 						   const RooNumIntConfig& config) :
   RooAbsIntegrator(function), _config(config) 
@@ -77,6 +89,7 @@ RooSegmentedIntegrator1D::RooSegmentedIntegrator1D(const RooAbsFunc& function, D
 
 
 
+//_____________________________________________________________________________
 RooAbsIntegrator* RooSegmentedIntegrator1D::clone(const RooAbsFunc& function, const RooNumIntConfig& config) const
 {
   return new RooSegmentedIntegrator1D(function,config) ;
@@ -85,6 +98,8 @@ RooAbsIntegrator* RooSegmentedIntegrator1D::clone(const RooAbsFunc& function, co
 
 
 typedef RooIntegrator1D* pRooIntegrator1D ;
+
+//_____________________________________________________________________________
 Bool_t RooSegmentedIntegrator1D::initialize()
 {
   _array = 0 ;
@@ -111,11 +126,15 @@ Bool_t RooSegmentedIntegrator1D::initialize()
 }
 
 
+
+//_____________________________________________________________________________
 RooSegmentedIntegrator1D::~RooSegmentedIntegrator1D()
 {
 }
 
 
+
+//_____________________________________________________________________________
 Bool_t RooSegmentedIntegrator1D::setLimits(Double_t xmin, Double_t xmax) {
   // Change our integration limits. Return kTRUE if the new limits are
   // ok, or otherwise kFALSE. Always returns kFALSE and does nothing
@@ -132,6 +151,7 @@ Bool_t RooSegmentedIntegrator1D::setLimits(Double_t xmin, Double_t xmax) {
 
 
 
+//_____________________________________________________________________________
 Bool_t RooSegmentedIntegrator1D::checkLimits() const {
   // Check that our integration range is finite and otherwise return kFALSE.
   // Update the limits from the integrand if requested.
@@ -163,6 +183,7 @@ Bool_t RooSegmentedIntegrator1D::checkLimits() const {
 
 
 
+//_____________________________________________________________________________
 Double_t RooSegmentedIntegrator1D::integral(const Double_t *yvec) 
 {
   assert(isValid());

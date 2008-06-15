@@ -47,7 +47,7 @@ protected:
   // Forbidden
   RooSetPair(const RooSetPair&) ;
 
-  ClassDef(RooSetPair,0) // Element of RooLinkedList container class
+  ClassDef(RooSetPair,0) // Utility class holding a pair of RooArgSet pointers
 } ;
 
 

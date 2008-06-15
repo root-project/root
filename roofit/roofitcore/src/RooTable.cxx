@@ -14,10 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [PLOT] --
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
 // RooTable is the abstract interface for table objects.
 // Table objects are the category equivalent of RooPlot objects
 // (which are used for real-valued objects)
+// END_HTML
+//
 
 #include "RooFit.h"
 #include "Riostream.h"
@@ -29,16 +33,22 @@
 ClassImp(RooTable)
 
 
+
+//_____________________________________________________________________________
 RooTable::RooTable(const char *name, const char *title) : TNamed(name,title)
 {
 }
 
 
+
+//_____________________________________________________________________________
 RooTable::RooTable(const RooTable& other) : TNamed(other), RooPrintable(other)
 {
 }
 
 
+
+//_____________________________________________________________________________
 RooTable::~RooTable()
 {
 }

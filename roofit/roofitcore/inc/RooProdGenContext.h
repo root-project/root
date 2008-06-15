@@ -62,7 +62,7 @@ protected:
   TIterator* _gcIter ;           //! Iterator over gcList
   RooArgSet _ownedMultiProds ;   //  Owned auxilary multi-term product PDFs
 
-  ClassDef(RooProdGenContext,0) // Context for generating a dataset from a PDF
+  ClassDef(RooProdGenContext,0) // Context for efficient generation of a a dataset from a RooProdPdf
 };
 
 #endif

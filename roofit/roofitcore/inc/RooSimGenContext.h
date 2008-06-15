@@ -53,7 +53,7 @@ protected:
   Int_t _numPdf ;                 // Number of generated PDFs
   Double_t* _fracThresh ;         //[_numPdf] Fraction threshold array
 
-  ClassDef(RooSimGenContext,0) // Context for generating a dataset from a PDF
+  ClassDef(RooSimGenContext,0) // Context for efficiently generating a dataset from a RooSimultaneous PDF
 };
 
 #endif

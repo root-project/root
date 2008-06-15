@@ -38,7 +38,7 @@ public:
 
 private:
   RooRandom();
-  ClassDef(RooRandom,0) // random number generator interface
+  ClassDef(RooRandom,0) // Random number generator interface
 };
 
 #endif

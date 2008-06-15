@@ -53,7 +53,7 @@ protected:
   virtual Double_t evaluate() const ;
   virtual void changeBasis(RooFormulaVar* basis) ;
 
-  ClassDef(RooTruthModel,1) // Abstract Resolution Model
+  ClassDef(RooTruthModel,1) // Truth resolution model (delta function)
 };
 
 #endif

@@ -48,6 +48,7 @@ ClassImp(RooMCIntegrator)
 
 // Register this class with RooNumIntFactory
 
+
 //_____________________________________________________________________________
 void RooMCIntegrator::registerIntegrator(RooNumIntFactory& fact)
 {
@@ -94,6 +95,7 @@ RooMCIntegrator::RooMCIntegrator()
 }
 
 
+
 //_____________________________________________________________________________
 RooMCIntegrator::RooMCIntegrator(const RooAbsFunc& function, SamplingMode mode,
 				 GeneratorType genType, Bool_t verbose) :
@@ -111,6 +113,7 @@ RooMCIntegrator::RooMCIntegrator(const RooAbsFunc& function, SamplingMode mode,
   if(!(_valid= _grid.isValid())) return;
   if(_verbose) _grid.Print();
 } 
+
 
 
 //_____________________________________________________________________________
@@ -135,6 +138,7 @@ RooMCIntegrator::RooMCIntegrator(const RooAbsFunc& function, const RooNumIntConf
 } 
 
 
+
 //_____________________________________________________________________________
 RooAbsIntegrator* RooMCIntegrator::clone(const RooAbsFunc& function, const RooNumIntConfig& config) const
 {
@@ -153,6 +157,7 @@ RooMCIntegrator::~RooMCIntegrator()
 }
 
 
+
 //_____________________________________________________________________________
 Bool_t RooMCIntegrator::checkLimits() const 
 {
@@ -162,6 +167,7 @@ Bool_t RooMCIntegrator::checkLimits() const
   
   return _grid.initialize(*integrand());
 }
+
 
 
 //_____________________________________________________________________________
@@ -177,6 +183,7 @@ Double_t RooMCIntegrator::integral(const Double_t* /*yvec*/)
   Double_t ret = vegas(ReuseGrid,_nIntegratePerDim*_grid.getDimension(),1);
   return ret ;
 }
+
 
 
 //_____________________________________________________________________________

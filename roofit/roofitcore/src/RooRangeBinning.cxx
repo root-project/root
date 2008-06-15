@@ -14,9 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [AUX] --
-// RooRangeBinning is a single bin binning used to indicate alternative
-// ranges for integration etc...
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
+// RooRangeBinning is binning/range definition that only defines a range
+// but no binning. It it used to store named ranges created by
+// the RooRealVar::setRange() method
+// END_HTML
+//
 
 #include "RooFit.h"
 
@@ -32,6 +37,8 @@ ClassImp(RooRangeBinning)
 ;
 
 
+
+//_____________________________________________________________________________
 RooRangeBinning::RooRangeBinning(const char* name) :
   RooAbsBinning(name)
 {
@@ -41,6 +48,8 @@ RooRangeBinning::RooRangeBinning(const char* name) :
 
 }
 
+
+//_____________________________________________________________________________
 RooRangeBinning::RooRangeBinning(Double_t xmin, Double_t xmax, const char* name) :
   RooAbsBinning(name)
 {
@@ -51,6 +60,7 @@ RooRangeBinning::RooRangeBinning(Double_t xmin, Double_t xmax, const char* name)
 
 
 
+//_____________________________________________________________________________
 RooRangeBinning::RooRangeBinning(const RooRangeBinning& other, const char* name) :
   RooAbsBinning(name)
 {
@@ -61,12 +71,15 @@ RooRangeBinning::RooRangeBinning(const RooRangeBinning& other, const char* name)
 
 
 
+//_____________________________________________________________________________
 RooRangeBinning::~RooRangeBinning() 
 {
   // Destructor 
 }
 
 
+
+//_____________________________________________________________________________
 void RooRangeBinning::setRange(Double_t xlo, Double_t xhi) 
 {
   // Change limits

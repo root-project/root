@@ -14,13 +14,17 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [PDF] --
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
 // Class RooNLLVar implements a a -log(likelihood) calculation from a dataset
 // and a PDF. The NLL is calculated as 
-//
+// <pre>
 //  Sum[data] -log( pdf(x_data) )
-//
+// </pre>
 // In extended mode, a (Nexpect - Nobserved*log(NExpected) term is added
+// END_HTML
+//
 
 #include "RooFit.h"
 #include "Riostream.h"
@@ -38,6 +42,8 @@ ClassImp(RooNLLVar)
 
 RooArgSet RooNLLVar::_emptySet ;
 
+
+//_____________________________________________________________________________
 RooNLLVar::RooNLLVar(const char *name, const char* title, RooAbsPdf& pdf, RooAbsData& data,
 		     const RooCmdArg& arg1, const RooCmdArg& arg2,const RooCmdArg& arg3,
 		     const RooCmdArg& arg4, const RooCmdArg& arg5,const RooCmdArg& arg6,
@@ -75,6 +81,7 @@ RooNLLVar::RooNLLVar(const char *name, const char* title, RooAbsPdf& pdf, RooAbs
 
 
 
+//_____________________________________________________________________________
 RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
 		     Bool_t extended, const char* rangeName, const char* addCoefRangeName,
 		     Int_t nCPU, Bool_t interleave, Bool_t verbose, Bool_t splitRange) : 
@@ -85,6 +92,8 @@ RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbs
 }
 
 
+
+//_____________________________________________________________________________
 RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
 		     const RooArgSet& projDeps, Bool_t extended, const char* rangeName,const char* addCoefRangeName, 
 		     Int_t nCPU,Bool_t interleave,Bool_t verbose, Bool_t splitRange) : 
@@ -95,6 +104,8 @@ RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbs
 }
 
 
+
+//_____________________________________________________________________________
 RooNLLVar::RooNLLVar(const RooNLLVar& other, const char* name) : 
   RooAbsOptTestStatistic(other,name),
   _extended(other._extended)
@@ -102,11 +113,15 @@ RooNLLVar::RooNLLVar(const RooNLLVar& other, const char* name) :
 }
 
 
+
+//_____________________________________________________________________________
 RooNLLVar::~RooNLLVar()
 {
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t stepSize) const 
 {
   Int_t i ;

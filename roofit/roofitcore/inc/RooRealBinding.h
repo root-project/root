@@ -47,7 +47,7 @@ protected:
   mutable Double_t* _xsave ;
   const TNamed* _rangeName ; //!
 
-  ClassDef(RooRealBinding,0) // RooAbsReal interface adaptor
+  ClassDef(RooRealBinding,0) // Function binding to RooAbsReal object
 };
 
 #endif

@@ -14,13 +14,17 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [REAL] --
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
 // RooRealProxy is the concrete proxy for RooAbsReal objects
 // A RooRealProxy is the general mechanism to store references
 // to RooAbsReals inside a RooAbsArg
 //
 // RooRealProxy provides a cast operator to Double_t, allowing
 // the proxy to functions a Double_t on the right hand side of expressions.
+// END_HTML
+//
 
 #include "RooFit.h"
 #include "Riostream.h"
@@ -32,6 +36,8 @@
 ClassImp(RooRealProxy)
 ;
 
+
+//_____________________________________________________________________________
 RooRealProxy::RooRealProxy(const char* inName, const char* desc, RooAbsArg* owner, RooAbsReal& ref,
 			   Bool_t valueServer, Bool_t shapeServer, Bool_t ownArg) : 
   RooArgProxy(inName, desc, owner,ref, valueServer, shapeServer, ownArg)
@@ -40,6 +46,8 @@ RooRealProxy::RooRealProxy(const char* inName, const char* desc, RooAbsArg* owne
 }
 
 
+
+//_____________________________________________________________________________
 RooRealProxy::RooRealProxy(const char* inName, RooAbsArg* owner, const RooRealProxy& other) : 
   RooArgProxy(inName, owner, other) 
 {
@@ -47,12 +55,16 @@ RooRealProxy::RooRealProxy(const char* inName, RooAbsArg* owner, const RooRealPr
 }
 
 
+
+//_____________________________________________________________________________
 RooRealProxy::~RooRealProxy() 
 {
   // Destructor
 }
 
 
+
+//_____________________________________________________________________________
 RooAbsRealLValue* RooRealProxy::lvptr() const 
 {
   // Assert that the held arg is an LValue

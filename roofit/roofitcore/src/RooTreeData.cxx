@@ -14,9 +14,13 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [DATA] --
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
 // RooTreeData is the abstract base class for data collection that
 // use a TTree as internal storage mechanism
+// END_HTML
+//
 
 #include "RooFit.h"
 #include "RooMsgService.h"
@@ -76,7 +80,7 @@ Int_t RooTreeData::_defTreeBufSize = 4096 ;
 //________________________________________________________________
 //   Interface functions to TTree
 
-//________________________________________________________________
+//_____________________________________________________________________________
 Int_t RooTreeData::Scan(const char* varexp, const char* selection, Option_t* option, 
 		    Int_t nentries, Int_t firstentry) 
 {
@@ -84,7 +88,8 @@ Int_t RooTreeData::Scan(const char* varexp, const char* selection, Option_t* opt
    return _tree->Scan(varexp,selection,option,nentries,firstentry) ;
 }
 
-//________________________________________________________________
+
+//_____________________________________________________________________________
 Int_t RooTreeData::ScanCache(const char* varexp, const char* selection, Option_t* option, 
 		    Int_t nentries, Int_t firstentry) 
 {
@@ -92,35 +97,40 @@ Int_t RooTreeData::ScanCache(const char* varexp, const char* selection, Option_t
    return _cacheTree->Scan(varexp,selection,option,nentries,firstentry) ;
 }
  
-//________________________________________________________________
+
+//_____________________________________________________________________________
 Stat_t RooTreeData::GetEntries() const
 {
    // Interface function to TTree::GetEntries
    return _tree->GetEntries() ;
 }
  
-//________________________________________________________________
+
+//_____________________________________________________________________________
 void RooTreeData::Reset(Option_t* option)
 {
    // Interface function to TTree::Reset
    _tree->Reset(option) ;
 }
  
-//________________________________________________________________
+
+//_____________________________________________________________________________
 void RooTreeData::treePrint()
 {
    // Interface function to TTree::Print
    _tree->Print();
 }
  
-//________________________________________________________________
+
+//_____________________________________________________________________________
 Int_t RooTreeData::Fill()
 {
    // Interface function to TTree::Fill
    return _tree->Fill() ;
 }
  
-//________________________________________________________________
+
+//_____________________________________________________________________________
 Int_t RooTreeData::GetEntry(Int_t entry, Int_t getall)
 {
    // Interface function to TTree::GetEntry
@@ -132,11 +142,9 @@ Int_t RooTreeData::GetEntry(Int_t entry, Int_t getall)
 
 //________________________________________________________________
 //   Interface functions to TTree
-//________________________________________________________________
-//   Interface functions to TTree
-//________________________________________________________________
-//   Interface functions to TTree
 
+
+//_____________________________________________________________________________
 RooTreeData::RooTreeData() 
 {
   // Default constructor
@@ -147,6 +155,8 @@ RooTreeData::RooTreeData()
 }
 
 
+
+//_____________________________________________________________________________
 RooTreeData::RooTreeData(const char *name, const char *title, const RooArgSet& vars) :
   RooAbsData(name,title,vars), _defCtor(kFALSE), _truth("Truth")
 {
@@ -162,6 +172,8 @@ RooTreeData::RooTreeData(const char *name, const char *title, const RooArgSet& v
 }
 
 
+
+//_____________________________________________________________________________
 RooTreeData::RooTreeData(const char *name, const char *title, RooTreeData *t, 
                        const RooArgSet& vars, const char *cuts) :
  RooAbsData(name,title,vars), _defCtor(kFALSE), _truth("Truth"), 
@@ -190,6 +202,7 @@ RooTreeData::RooTreeData(const char *name, const char *title, RooTreeData *t,
 
 
 
+//_____________________________________________________________________________
 RooTreeData::RooTreeData(const char *name, const char *title, RooTreeData *t, 
                        const RooArgSet& vars, const RooFormulaVar& cutVar) :
   RooAbsData(name,title,vars), _defCtor(kFALSE), _truth("Truth"), 
@@ -223,6 +236,8 @@ RooTreeData::RooTreeData(const char *name, const char *title, RooTreeData *t,
 }
 
 
+
+//_____________________________________________________________________________
 RooTreeData::RooTreeData(const char *name, const char *title, TTree *t, 
                        const RooArgSet& vars, const RooFormulaVar& cutVar) :
   RooAbsData(name,title,vars), _defCtor(kFALSE), _truth("Truth")
@@ -255,6 +270,7 @@ RooTreeData::RooTreeData(const char *name, const char *title, TTree *t,
 
 
 
+//_____________________________________________________________________________
 RooTreeData::RooTreeData(const char *name, const char *title, RooTreeData *t, 
 			 const RooArgSet& vars, const RooFormulaVar* cutVar, const char* cutRange,
 			 Int_t nStart, Int_t nStop, Bool_t /*copyCache*/) :
@@ -296,6 +312,7 @@ RooTreeData::RooTreeData(const char *name, const char *title, RooTreeData *t,
 
 
 
+//_____________________________________________________________________________
 RooTreeData::RooTreeData(const char *name, const char *title, TTree *t, 
                        const RooArgSet& vars, const char *cuts) :
   RooAbsData(name,title,vars), _defCtor(kFALSE), _truth("Truth")
@@ -323,6 +340,7 @@ RooTreeData::RooTreeData(const char *name, const char *title, TTree *t,
 
 
 
+//_____________________________________________________________________________
 RooTreeData::RooTreeData(const char *name, const char *filename,
 		       const char *treename,
                        const RooArgSet& vars, const char *cuts) :
@@ -350,6 +368,8 @@ RooTreeData::RooTreeData(const char *name, const char *filename,
 }
 
 
+
+//_____________________________________________________________________________
 RooTreeData::RooTreeData(RooTreeData const & other, const char* newName) : 
   RooAbsData(other,newName), _defCtor(other._defCtor), _truth("Truth")
 {
@@ -365,6 +385,8 @@ RooTreeData::RooTreeData(RooTreeData const & other, const char* newName) :
 }
 
 
+
+//_____________________________________________________________________________
 void RooTreeData::createTree(const char* name, const char* title)
 {
   // Create TTree object that lives in memory, independent of current
@@ -389,6 +411,8 @@ void RooTreeData::createTree(const char* name, const char* title)
 }
 
 
+
+//_____________________________________________________________________________
 RooTreeData::~RooTreeData()
 {
   // Destructor
@@ -399,6 +423,8 @@ RooTreeData::~RooTreeData()
 }
 
 
+
+//_____________________________________________________________________________
 void RooTreeData::initialize() {
   // Attach variables of internal ArgSet 
   // to the corresponding TTree branches
@@ -415,6 +441,8 @@ void RooTreeData::initialize() {
 }
 
 
+
+//_____________________________________________________________________________
 void RooTreeData::initCache(const RooArgSet& cachedVars) 
 {
   // Initialize cache of dataset: attach variables of cache ArgSet
@@ -432,6 +460,8 @@ void RooTreeData::initCache(const RooArgSet& cachedVars)
 }
 
 
+
+//_____________________________________________________________________________
 void RooTreeData::loadValues(const char *filename, const char *treename,
 			    RooFormulaVar* cutVar) {
   // Load TTree name 'treename' from file 'filename' and pass call
@@ -450,6 +480,7 @@ void RooTreeData::loadValues(const char *filename, const char *treename,
 
 
 
+//_____________________________________________________________________________
 void RooTreeData::loadValues(const RooTreeData *t, RooFormulaVar* select, 
 			     const char* rangeName, Int_t nStart, Int_t nStop)  
 {
@@ -509,6 +540,8 @@ void RooTreeData::loadValues(const RooTreeData *t, RooFormulaVar* select,
 }
 
 
+
+//_____________________________________________________________________________
 void RooTreeData::loadValues(const TTree *t, RooFormulaVar* select, const char* /*rangeName*/, Int_t /*nStart*/, Int_t /*nStop*/) 
 {
   // Load values from tree 't' into this data collection, optionally
@@ -594,6 +627,8 @@ void RooTreeData::loadValues(const TTree *t, RooFormulaVar* select, const char* 
 }
 
 
+
+//_____________________________________________________________________________
 void RooTreeData::dump() {
   // DEBUG: Dump contents
 
@@ -624,6 +659,8 @@ void RooTreeData::dump() {
 }
 
 
+
+//_____________________________________________________________________________
 void RooTreeData::resetCache() 
 {
   // Reset the cache 
@@ -641,6 +678,7 @@ void RooTreeData::resetCache()
 
 
 
+//_____________________________________________________________________________
 Bool_t RooTreeData::changeObservableName(const char* from, const char* to) 
 {
   // Find observable to be changed
@@ -696,6 +734,7 @@ Bool_t RooTreeData::changeObservableName(const char* from, const char* to)
 
 
 
+//_____________________________________________________________________________
 void RooTreeData::setArgStatus(const RooArgSet& set, Bool_t active) 
 {
   TIterator* iter = set.createIterator() ;
@@ -714,6 +753,7 @@ void RooTreeData::setArgStatus(const RooArgSet& set, Bool_t active)
 
 
 
+//_____________________________________________________________________________
 void RooTreeData::cacheArgs(RooArgSet& newVarSet, const RooArgSet* nset) 
 {
   // Cache given RooAbsArgs with this tree: The tree is
@@ -759,6 +799,7 @@ void RooTreeData::cacheArgs(RooArgSet& newVarSet, const RooArgSet* nset)
 
 
 
+//_____________________________________________________________________________
 const RooArgSet* RooTreeData::get(Int_t index) const 
 {
   // Load the n-th data point (n='index') in memory
@@ -789,6 +830,8 @@ const RooArgSet* RooTreeData::get(Int_t index) const
 }
 
 
+
+//_____________________________________________________________________________
 RooAbsArg* RooTreeData::addColumn(RooAbsArg& newVar)
 {
   // Add a new column to the data set which holds the pre-calculated values
@@ -852,6 +895,7 @@ RooAbsArg* RooTreeData::addColumn(RooAbsArg& newVar)
 
 
 
+//_____________________________________________________________________________
 RooArgSet* RooTreeData::addColumns(const RooArgList& varList)
 {
   TIterator* vIter = varList.createIterator() ;
@@ -923,6 +967,7 @@ RooArgSet* RooTreeData::addColumns(const RooArgList& varList)
 
 
 
+//_____________________________________________________________________________
 TList* RooTreeData::split(const RooAbsCategory& splitCat) const
 {
   // Sanity check
@@ -983,6 +1028,8 @@ TList* RooTreeData::split(const RooAbsCategory& splitCat) const
 }
 
 
+
+//_____________________________________________________________________________
 RooPlot* RooTreeData::plotOn(RooPlot* frame, const RooLinkedList& argList) const
 {
   // Plot dataset on specified frame. By default an unbinned dataset will use the default binning of
@@ -1123,6 +1170,8 @@ RooPlot* RooTreeData::plotOn(RooPlot* frame, const RooLinkedList& argList) const
 }
 
 
+
+//_____________________________________________________________________________
 RooPlot *RooTreeData::plotOn(RooPlot *frame, PlotOpt o) const 
 {
   // Create and fill a histogram of the frame's variable and append it to the frame.
@@ -1239,6 +1288,7 @@ RooPlot *RooTreeData::plotOn(RooPlot *frame, PlotOpt o) const
 
 
 
+//_____________________________________________________________________________
 RooPlot* RooTreeData::plotAsymOn(RooPlot* frame, const RooAbsCategoryLValue& asymCat, PlotOpt o) const 
 {
   // Create and fill a histogram with the asymmetry N[+] - N[-] / ( N[+] + N[-] ),
@@ -1331,6 +1381,7 @@ RooPlot* RooTreeData::plotAsymOn(RooPlot* frame, const RooAbsCategoryLValue& asy
 
 
 
+//_____________________________________________________________________________
 TH1 *RooTreeData::fillHistogram(TH1 *hist, const RooArgList &plotVars, const char *cuts, const char* cutRange) const
 {
   // Loop over columns of our tree data and fill the input histogram. Returns a pointer to the
@@ -1507,6 +1558,7 @@ TH1 *RooTreeData::fillHistogram(TH1 *hist, const RooArgList &plotVars, const cha
 
 
 
+//_____________________________________________________________________________
 Roo1DTable* RooTreeData::table(const RooAbsCategory& cat, const char* cuts, const char* /*opts*/) const
 {
   // Create and fill a 1-dimensional table for given category column
@@ -1576,6 +1628,7 @@ Roo1DTable* RooTreeData::table(const RooAbsCategory& cat, const char* cuts, cons
 
 
 
+//_____________________________________________________________________________
 Double_t RooTreeData::moment(RooRealVar &var, Double_t order, Double_t offset, const char* cutSpec, const char* cutRange) const
 {
   // Lookup variable in dataset
@@ -1619,6 +1672,7 @@ Double_t RooTreeData::moment(RooRealVar &var, Double_t order, Double_t offset, c
 
 
 
+//_____________________________________________________________________________
 RooRealVar* RooTreeData::meanVar(RooRealVar &var, const char* cutSpec, const char* cutRange) const
 {
   // Create a new variable with appropriate strings. The error is calculated as
@@ -1650,6 +1704,7 @@ RooRealVar* RooTreeData::meanVar(RooRealVar &var, const char* cutSpec, const cha
 
 
 
+//_____________________________________________________________________________
 RooRealVar* RooTreeData::rmsVar(RooRealVar &var, const char* cutSpec, const char* cutRange) const
 {
   // Create a new variable with appropriate strings. The error is calculated as
@@ -1678,6 +1733,8 @@ RooRealVar* RooTreeData::rmsVar(RooRealVar &var, const char* cutSpec, const char
 }
 
 
+
+//_____________________________________________________________________________
 Bool_t RooTreeData::getRange(RooRealVar& var, Double_t& lowest, Double_t& highest) const 
 {
   // Lookup variable in dataset
@@ -1717,6 +1774,7 @@ Bool_t RooTreeData::getRange(RooRealVar& var, Double_t& lowest, Double_t& highes
 
 
 
+//_____________________________________________________________________________
 RooPlot* RooTreeData::statOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdArg& arg2, 
 			    const RooCmdArg& arg3, const RooCmdArg& arg4, const RooCmdArg& arg5, 
 			    const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8)
@@ -1794,6 +1852,7 @@ RooPlot* RooTreeData::statOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmd
 
 
 
+//_____________________________________________________________________________
 RooPlot* RooTreeData::statOn(RooPlot* frame, const char* what, const char *label, Int_t sigDigits,
 			     Option_t *options, Double_t xmin, Double_t xmax, Double_t ymax, 
 			     const char* cutSpec, const char* cutRange, const RooCmdArg* formatCmd) 
@@ -1861,12 +1920,16 @@ RooPlot* RooTreeData::statOn(RooPlot* frame, const char* what, const char *label
 }
 
 
+
+//_____________________________________________________________________________
 Int_t RooTreeData::numEntries(Bool_t) const 
 { 
   return (Int_t)GetEntries() ; 
 }
 
 
+
+//_____________________________________________________________________________
 void RooTreeData::printMultiline(ostream& os, Int_t content, Bool_t verbose, TString indent) const {
 
   RooAbsData::printMultiline(os,content,verbose,indent) ;  
@@ -1899,6 +1962,8 @@ void RooTreeData::printMultiline(ostream& os, Int_t content, Bool_t verbose, TSt
 }
 
 
+
+//_____________________________________________________________________________
 void RooTreeData::optimizeReadingWithCaching(RooAbsArg& arg, const RooArgSet& cacheList)
 {
   RooArgSet pruneSet ;
@@ -1928,6 +1993,8 @@ void RooTreeData::optimizeReadingWithCaching(RooAbsArg& arg, const RooArgSet& ca
   
 }
 
+
+//_____________________________________________________________________________
 Bool_t RooTreeData::allClientsCached(RooAbsArg* var, const RooArgSet& cacheList)
 {
   Bool_t ret(kTRUE), anyClient(kFALSE) ;
@@ -1947,6 +2014,8 @@ Bool_t RooTreeData::allClientsCached(RooAbsArg* var, const RooArgSet& cacheList)
 }
 
 
+
+//_____________________________________________________________________________
 void RooTreeData::Draw(Option_t* opt) 
 {
   return _tree->Draw(opt) ;

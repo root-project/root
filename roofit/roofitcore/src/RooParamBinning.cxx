@@ -14,6 +14,18 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
+// Class RooParamBinning is an implementation of RooAbsBinning that constructs
+// a binning with a range definition that depends on external RooAbsReal objects.
+// The external RooAbsReal definitions are explicitly allowed to depend on other
+// observables and parameters, and make it possible to define non-rectangular
+// range definitions in RooFit. Objects of class RooParamBinning are made
+// by the RooRealVar::setRange() that takes RooAbsReal references as arguments
+// END_HTML
+//
+
 #include "RooFit.h"
 
 #include "RooParamBinning.h"
@@ -27,12 +39,15 @@ ClassImp(RooParamBinning)
 ;
 
 
+//_____________________________________________________________________________
 RooParamBinning::RooParamBinning(const char* name) : 
   RooAbsBinning(name), _lp(0), _owner(0)
 {  
   _array = 0 ;
 }
 
+
+//_____________________________________________________________________________
 RooParamBinning::RooParamBinning(RooAbsReal& xloIn, RooAbsReal& xhiIn, Int_t nBins, const char* name) :
   RooAbsBinning(name),
   _array(0), 
@@ -46,6 +61,8 @@ RooParamBinning::RooParamBinning(RooAbsReal& xloIn, RooAbsReal& xhiIn, Int_t nBi
 }
 
 
+
+//_____________________________________________________________________________
 RooParamBinning::~RooParamBinning() 
 {
   //cout << "RooParamBinning::dtor(this = " << this << " xlo = " << &_xlo << " xhi = " << &_xhi << " _lp = " << _lp << " owner = " << _owner << ")" << endl ;
@@ -55,6 +72,8 @@ RooParamBinning::~RooParamBinning()
 }
 
 
+
+//_____________________________________________________________________________
 RooParamBinning::RooParamBinning(const RooParamBinning& other, const char* name) :
   RooAbsBinning(name), _owner(0)
 {
@@ -81,6 +100,8 @@ RooParamBinning::RooParamBinning(const RooParamBinning& other, const char* name)
 }
 
 
+
+//_____________________________________________________________________________
 void RooParamBinning::insertHook(RooAbsRealLValue& owner) const  
 {
   _owner = &owner ;
@@ -103,6 +124,8 @@ void RooParamBinning::insertHook(RooAbsRealLValue& owner) const
 
 }
 
+
+//_____________________________________________________________________________
 void RooParamBinning::removeHook(RooAbsRealLValue& /*owner*/) const  
 {
   _owner = 0 ;
@@ -120,6 +143,8 @@ void RooParamBinning::removeHook(RooAbsRealLValue& /*owner*/) const
 }
 
 
+
+//_____________________________________________________________________________
 void RooParamBinning::setRange(Double_t newxlo, Double_t newxhi) 
 {
   if (newxlo>newxhi) {
@@ -145,6 +170,7 @@ void RooParamBinning::setRange(Double_t newxlo, Double_t newxhi)
 
 
 
+//_____________________________________________________________________________
 Int_t RooParamBinning::binNumber(Double_t x) const  
 {
   // Return the fit bin index for the current value
@@ -155,6 +181,8 @@ Int_t RooParamBinning::binNumber(Double_t x) const
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooParamBinning::binCenter(Int_t i) const 
 {
   // Return the central value of the 'i'-th fit bin
@@ -170,6 +198,7 @@ Double_t RooParamBinning::binCenter(Int_t i) const
 
 
 
+//_____________________________________________________________________________
 Double_t RooParamBinning::binWidth(Int_t /*bin*/) const 
 {
   return (xhi()->getVal()-xlo()->getVal())/_nbins ;
@@ -177,6 +206,7 @@ Double_t RooParamBinning::binWidth(Int_t /*bin*/) const
 
 
 
+//_____________________________________________________________________________
 Double_t RooParamBinning::binLow(Int_t i) const 
 {
   // Return the low edge of the 'i'-th fit bin
@@ -190,6 +220,8 @@ Double_t RooParamBinning::binLow(Int_t i) const
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooParamBinning::binHigh(Int_t i) const 
 {
   // Return the high edge of the 'i'-th fit bin
@@ -204,6 +236,7 @@ Double_t RooParamBinning::binHigh(Int_t i) const
 
 
 
+//_____________________________________________________________________________
 Double_t* RooParamBinning::array() const 
 {
   if (_array) delete[] _array ;
@@ -217,6 +250,8 @@ Double_t* RooParamBinning::array() const
 }
 
 
+
+//_____________________________________________________________________________
 void RooParamBinning::printMultiline(ostream &os, Int_t /*content*/, Bool_t /*verbose*/, TString indent) const
 {
   os << indent << "_xlo = " << _xlo << endl ;

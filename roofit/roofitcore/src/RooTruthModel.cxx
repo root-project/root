@@ -14,12 +14,17 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [PDF] --
-// RooTruthModel is the delta-function resolution model
+//////////////////////////////////////////////////////////////////////////////
 //
-// The truth model supports all basis functions because it evaluates each basis function as  
+// BEGIN_HTML 
+// RooTruthModel is an implementation of RooResolution
+// model that provides a delta-function resolution model
+// <p>
+// The truth model supports <i>all</i> basis functions because it evaluates each basis function as  
 // as a RooFormulaVar.  The 6 basis functions used in B mixing and decay and 2 basis
-// functions used in D mixing have been hand coded for speed.
+// functions used in D mixing have been hand coded for increased execution speed.
+// END_HTML
+//
 
 #include "RooFit.h"
 
@@ -31,6 +36,8 @@ ClassImp(RooTruthModel)
 ;
 
 
+
+//_____________________________________________________________________________
 RooTruthModel::RooTruthModel(const char *name, const char *title, RooRealVar& xIn) : 
   RooResolutionModel(name,title,xIn)
 {  
@@ -39,6 +46,8 @@ RooTruthModel::RooTruthModel(const char *name, const char *title, RooRealVar& xI
 }
 
 
+
+//_____________________________________________________________________________
 RooTruthModel::RooTruthModel(const RooTruthModel& other, const char* name) : 
   RooResolutionModel(other,name)
 {
@@ -46,12 +55,16 @@ RooTruthModel::RooTruthModel(const RooTruthModel& other, const char* name) :
 }
 
 
+
+//_____________________________________________________________________________
 RooTruthModel::~RooTruthModel()
 {
   // Destructor
 }
 
 
+
+//_____________________________________________________________________________
 Int_t RooTruthModel::basisCode(const char* name) const 
 {
   // Check for optimized basis functions
@@ -81,6 +94,7 @@ Int_t RooTruthModel::basisCode(const char* name) const
 
 
 
+//_____________________________________________________________________________
 void RooTruthModel::changeBasis(RooFormulaVar* inBasis) 
 {
   // Process change basis function. Since we actually
@@ -105,6 +119,7 @@ void RooTruthModel::changeBasis(RooFormulaVar* inBasis)
 
 
 
+//_____________________________________________________________________________
 Double_t RooTruthModel::evaluate() const 
 {
   // Evaluate the truth model: a delta function when used as PDF,
@@ -169,6 +184,7 @@ Double_t RooTruthModel::evaluate() const
 
 
 
+//_____________________________________________________________________________
 Int_t RooTruthModel::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const 
 {
   switch(_basisCode) {
@@ -204,6 +220,8 @@ Int_t RooTruthModel::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVa
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooTruthModel::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
   // Code must be 1
@@ -292,6 +310,7 @@ Double_t RooTruthModel::analyticalIntegral(Int_t code, const char* rangeName) co
 
 
 
+//_____________________________________________________________________________
 Int_t RooTruthModel::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t /*staticInitOK*/) const
 {
   if (matchArgs(directVars,generateVars,x)) return 1 ;  
@@ -299,6 +318,8 @@ Int_t RooTruthModel::getGenerator(const RooArgSet& directVars, RooArgSet &genera
 }
 
 
+
+//_____________________________________________________________________________
 void RooTruthModel::generateEvent(Int_t code)
 {
   assert(code==1) ;

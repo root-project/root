@@ -14,25 +14,31 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [PDF] --
-// Numeric 1-dimensional convolution operator PDF. This class can convolve any PDF
-// with any other PDF
+//////////////////////////////////////////////////////////////////////////////
 //
-// This class should not be used blindly as numeric convolution is computing
-// intensive and prone to stability fitting problems. If an analytic convolution
-// can be calculated, you should use that or implement it if not available.
+// BEGIN_HTML
+// Numeric 1-dimensional convolution operator PDF. This class can convolve any PDF
+// with any other PDF using a straightforward numeric calculation of the
+// convolution integral
+// <p>
+// This class should be used as last resort as numeric convolution calculated
+// this way is computationally intensive and prone to stability fitting problems. 
+// <b>The preferred way to compute numeric convolutions is RooFFTConvPdf</b>,
+// which calculates convolutions using Fourier Transforms (requires external free
+// FFTW3 package)
+// <p>
 // RooNumConvPdf implements reasonable defaults that should convolve most
 // functions reasonably well, but results strongly depend on the shape of your
 // input PDFS so always check your result.
-//
+// <p>
 // The default integration engine for the numeric convolution is the
 // adaptive Gauss-Kronrod method, which empirically seems the most robust
 // for this task. You can override the convolution integration settings via
 // the RooNumIntConfig object reference returned by the convIntConfig() member
 // function
-//
+// <p>
 // By default the numeric convolution is integrated from -infinity to
-// +infinity through a x -> 1/x coordinate transformation of the
+// +infinity through a <pre>x -> 1/x</pre> coordinate transformation of the
 // tails. For convolution with a very small bandwidth it may be
 // advantageous (for both CPU consumption and stability) if the
 // integration domain is limited to a finite range. The function
@@ -47,12 +53,14 @@
 // resolution PDF do setConvolutionWindow(gaussMean,gaussSigma,5)
 // Note that for a 'wide' Gaussian the -inf to +inf integration
 // may converge more quickly than that over a finite range!
-//
+// <p>
 // The default numeric precision is 1e-7, i.e. the global default for
 // numeric integration but you should experiment with this value to
 // see if it is sufficient for example by studying the number of function
 // calls that MINUIT needs to fit your function as function of the
 // convolution precision. 
+// END_HTML
+//
 
 #include "RooFit.h"
 
@@ -75,6 +83,8 @@ ClassImp(RooNumConvPdf)
 ;
 
 
+
+//_____________________________________________________________________________
 RooNumConvPdf::RooNumConvPdf(const char *name, const char *title, RooRealVar& convVar, RooAbsPdf& inPdf, RooAbsPdf& resmodel) : 
   RooAbsPdf(name,title), 
   _init(kFALSE),
@@ -95,6 +105,7 @@ RooNumConvPdf::RooNumConvPdf(const char *name, const char *title, RooRealVar& co
 
 
 
+//_____________________________________________________________________________
 RooNumConvPdf::RooNumConvPdf(const RooNumConvPdf& other, const char* name) :
   RooAbsPdf(other,name), 
   _init(kFALSE),
@@ -116,6 +127,7 @@ RooNumConvPdf::RooNumConvPdf(const RooNumConvPdf& other, const char* name) :
 
 
 
+//_____________________________________________________________________________
 RooNumConvPdf::~RooNumConvPdf() 
 {
   // Destructor
@@ -125,6 +137,8 @@ RooNumConvPdf::~RooNumConvPdf()
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooNumConvPdf::evaluate() const
 {
   if (!_init) initialize() ;
@@ -133,6 +147,8 @@ Double_t RooNumConvPdf::evaluate() const
 }
 
 
+
+//_____________________________________________________________________________
 void RooNumConvPdf::initialize() const
 {
   // Save pointer to any prototype convolution object (only present if this object is made through
@@ -152,6 +168,7 @@ void RooNumConvPdf::initialize() const
 
 
 
+//_____________________________________________________________________________
 RooAbsGenContext* RooNumConvPdf::genContext(const RooArgSet &vars, const RooDataSet *prototype, 
 					    const RooArgSet* auxProto, Bool_t verbose) const 
 {

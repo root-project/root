@@ -14,7 +14,16 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [AUX] --
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
+// RooNameSet is a utility class that stores the names the objects
+// in a RooArget. This allows to preserve the contents of a RooArgSet
+// in a specific use contents beyond the lifespan of the object in
+// the RooArgSet. A new RooArgSet can be created from a RooNameSet
+// by offering it a list of new RooAbsArg objects. 
+// END_HTML
+//
 
 #include "RooFit.h"
 #include "Riostream.h"
@@ -30,6 +39,8 @@
 ClassImp(RooNameSet)
 ;
 
+
+//_____________________________________________________________________________
 RooNameSet::RooNameSet()
 {
   _len = 1024 ;
@@ -41,6 +52,7 @@ RooNameSet::RooNameSet()
 
 
 
+//_____________________________________________________________________________
 RooNameSet::RooNameSet(const RooArgSet& argSet)
 {
   _len = 1024 ;
@@ -51,6 +63,7 @@ RooNameSet::RooNameSet(const RooArgSet& argSet)
 
 
 
+//_____________________________________________________________________________
 RooNameSet::RooNameSet(const RooNameSet& other) : TObject(other), RooPrintable(other), _nameList()
 {
   _len = other._len ;
@@ -59,6 +72,8 @@ RooNameSet::RooNameSet(const RooNameSet& other) : TObject(other), RooPrintable(o
 }
 
 
+
+//_____________________________________________________________________________
 void RooNameSet::extendBuffer(Int_t inc)
 {
   char * newbuf = new char[_len+inc] ;
@@ -69,6 +84,8 @@ void RooNameSet::extendBuffer(Int_t inc)
 }
 
 
+
+//_____________________________________________________________________________
 void RooNameSet::refill(const RooArgSet& argSet) 
 {
   RooArgList tmp(argSet) ;
@@ -96,6 +113,8 @@ void RooNameSet::refill(const RooArgSet& argSet)
 }
 
 
+
+//_____________________________________________________________________________
 RooArgSet* RooNameSet::select(const RooArgSet& list) const 
 {
   RooArgSet* output = new RooArgSet ;
@@ -115,12 +134,15 @@ RooArgSet* RooNameSet::select(const RooArgSet& list) const
 
 
 
+//_____________________________________________________________________________
 RooNameSet::~RooNameSet() 
 {
   delete[] _nameList ;
 }
 
 
+
+//_____________________________________________________________________________
 Bool_t RooNameSet::operator==(const RooNameSet& other) 
 {
   // Check comparison against self
@@ -133,6 +155,8 @@ Bool_t RooNameSet::operator==(const RooNameSet& other)
 }
 
 
+
+//_____________________________________________________________________________
 RooNameSet& RooNameSet::operator=(const RooNameSet& other) 
 {
   delete[] _nameList ;
@@ -144,21 +168,29 @@ RooNameSet& RooNameSet::operator=(const RooNameSet& other)
   return *this ;
 }
 
+
+//_____________________________________________________________________________
 void RooNameSet::printName(ostream& os) const 
 {
   os << GetName() ;
 }
 
+
+//_____________________________________________________________________________
 void RooNameSet::printTitle(ostream& os) const 
 {
   os << GetTitle() ;
 }
 
+
+//_____________________________________________________________________________
 void RooNameSet::printClassName(ostream& os) const 
 {
   os << IsA()->GetName() ;
 }
 
+
+//_____________________________________________________________________________
 void RooNameSet::printValue(ostream& os) const 
 {
   os << _nameList ;

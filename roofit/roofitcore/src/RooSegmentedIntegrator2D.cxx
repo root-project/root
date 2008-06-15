@@ -14,9 +14,13 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [AUX] --
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
 // RooSegmentedIntegrator2D implements an adaptive one-dimensional 
 // numerical integration algorithm.
+// END_HTML
+//
 
 
 #include "RooFit.h"
@@ -39,22 +43,30 @@ ClassImp(RooSegmentedIntegrator2D)
 ;
 
 // Register this class with RooNumIntConfig
+
+//_____________________________________________________________________________
 void RooSegmentedIntegrator2D::registerIntegrator(RooNumIntFactory& fact)
 {
   fact.storeProtoIntegrator(new RooSegmentedIntegrator2D(),RooArgSet(),RooSegmentedIntegrator1D::Class()->GetName()) ;
 }
 
 
+
+//_____________________________________________________________________________
 RooSegmentedIntegrator2D::RooSegmentedIntegrator2D() :
   _xIntegrator(0), _xint(0)
 {
 }
 
+
+//_____________________________________________________________________________
 RooSegmentedIntegrator2D::RooSegmentedIntegrator2D(const RooAbsFunc& function, const RooNumIntConfig& config) :
   RooSegmentedIntegrator1D(*(_xint=new RooIntegratorBinding(*(_xIntegrator=new RooSegmentedIntegrator1D(function,config)))),config)
 {
 } 
 
+
+//_____________________________________________________________________________
 RooSegmentedIntegrator2D::RooSegmentedIntegrator2D(const RooAbsFunc& function, Double_t xmin, Double_t xmax,
 				 Double_t ymin, Double_t ymax,
 				 const RooNumIntConfig& config) :
@@ -62,12 +74,16 @@ RooSegmentedIntegrator2D::RooSegmentedIntegrator2D(const RooAbsFunc& function, D
 {
 } 
 
+
+//_____________________________________________________________________________
 RooAbsIntegrator* RooSegmentedIntegrator2D::clone(const RooAbsFunc& function, const RooNumIntConfig& config) const
 {
   return new RooSegmentedIntegrator2D(function,config) ;
 }
 
 
+
+//_____________________________________________________________________________
 RooSegmentedIntegrator2D::~RooSegmentedIntegrator2D() 
 {
   delete _xint ;
@@ -76,6 +92,7 @@ RooSegmentedIntegrator2D::~RooSegmentedIntegrator2D()
 
 
 
+//_____________________________________________________________________________
 Bool_t RooSegmentedIntegrator2D::checkLimits() const {
   // Check that our integration range is finite and otherwise return kFALSE.
   // Update the limits from the integrand if requested.

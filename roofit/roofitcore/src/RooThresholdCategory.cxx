@@ -14,9 +14,13 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [CAT] --
-// RooThresholdCategory provides a real-to-category mapping defined
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
+// Class RooThresholdCategory provides a real-to-category mapping defined
 // by a series of thresholds.
+// END_HTML
+//
 
 
 #include "RooFit.h"
@@ -34,6 +38,8 @@
 ClassImp(RooThresholdCategory)
 
 
+
+//_____________________________________________________________________________
 RooThresholdCategory::RooThresholdCategory(const char *name, const char *title, RooAbsReal& inputVar, 
 					   const char* defOut, Int_t defIdx) :
   RooAbsCategory(name, title), _inputVar("inputVar","Input category",this,inputVar)
@@ -44,6 +50,8 @@ RooThresholdCategory::RooThresholdCategory(const char *name, const char *title, 
 }
 
 
+
+//_____________________________________________________________________________
 RooThresholdCategory::RooThresholdCategory(const RooThresholdCategory& other, const char *name) :
   RooAbsCategory(other,name), _inputVar("inputVar",this,other._inputVar)
 {
@@ -61,6 +69,7 @@ RooThresholdCategory::RooThresholdCategory(const RooThresholdCategory& other, co
 
 
 
+//_____________________________________________________________________________
 RooThresholdCategory::~RooThresholdCategory() 
 {
   // Destructor
@@ -70,6 +79,7 @@ RooThresholdCategory::~RooThresholdCategory()
 
 
 
+//_____________________________________________________________________________
 Bool_t RooThresholdCategory::addThreshold(Double_t upperLimit, const char* catName, Int_t catIdx) 
 {  
   // Check if identical threshold values is not defined yet
@@ -102,6 +112,8 @@ Bool_t RooThresholdCategory::addThreshold(Double_t upperLimit, const char* catNa
 
 
 RooCatType
+
+//_____________________________________________________________________________
 RooThresholdCategory::evaluate() const
 {
   // Scan the threshold list
@@ -117,6 +129,7 @@ RooThresholdCategory::evaluate() const
 
 
 
+//_____________________________________________________________________________
 void RooThresholdCategory::writeToStream(ostream& os, Bool_t compact) const
 {
   // Write object contents to given stream
@@ -137,6 +150,8 @@ void RooThresholdCategory::writeToStream(ostream& os, Bool_t compact) const
 }
 
 
+
+//_____________________________________________________________________________
 void RooThresholdCategory::printMultiline(ostream& os, Int_t content, Bool_t verbose, TString indent) const
 {
   // Print info about this threshold category to the specified stream. In addition to the info

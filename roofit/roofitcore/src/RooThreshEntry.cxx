@@ -14,7 +14,12 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [AUX] --
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
+// Class RooThreshEntry is a utility class for RooThresholdCategory
+// END_HTML
+//
 
 #include "RooFit.h"
 
@@ -25,18 +30,24 @@
 ClassImp(RooThreshEntry)
 ;
 
+
+//_____________________________________________________________________________
 RooThreshEntry::RooThreshEntry(Double_t inThresh, const RooCatType& inCat) : 
   _thresh(inThresh), _cat(inCat) 
 {
 }
 
 
+
+//_____________________________________________________________________________
 RooThreshEntry::RooThreshEntry(const RooThreshEntry& other) : 
   TObject(other), _thresh(other._thresh), _cat(other._cat) 
 {
 }
 
 
+
+//_____________________________________________________________________________
 Int_t RooThreshEntry::Compare(const TObject* other) const 
 {
   // Can only compare objects of same type

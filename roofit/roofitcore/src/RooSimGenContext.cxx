@@ -14,10 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [AUX} --
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
 // RooSimGenContext is an efficient implementation of the generator context
 // specific for RooSimultaneous PDFs when generating more than one of the
 // component pdfs.
+// END_HTML
+//
 
 #include "RooFit.h"
 #include "Riostream.h"
@@ -36,6 +40,8 @@
 ClassImp(RooSimGenContext)
 ;
   
+
+//_____________________________________________________________________________
 RooSimGenContext::RooSimGenContext(const RooSimultaneous &model, const RooArgSet &vars, 
 				   const RooDataSet *prototype, const RooArgSet* auxProto, Bool_t verbose) :
   RooAbsGenContext(model,vars,prototype,auxProto,verbose), _pdf(&model)
@@ -137,6 +143,7 @@ RooSimGenContext::RooSimGenContext(const RooSimultaneous &model, const RooArgSet
 
 
 
+//_____________________________________________________________________________
 RooSimGenContext::~RooSimGenContext()
 {
   // Destructor. Delete all owned subgenerator contexts
@@ -146,6 +153,8 @@ RooSimGenContext::~RooSimGenContext()
 }
 
 
+
+//_____________________________________________________________________________
 void RooSimGenContext::attach(const RooArgSet& args) 
 {
   // Attach the index category clone to the event
@@ -163,6 +172,8 @@ void RooSimGenContext::attach(const RooArgSet& args)
   
 }
 
+
+//_____________________________________________________________________________
 void RooSimGenContext::initGenerator(const RooArgSet &theEvent)
 {
   // Attach the index category clone to the event
@@ -184,6 +195,7 @@ void RooSimGenContext::initGenerator(const RooArgSet &theEvent)
 
 
 
+//_____________________________________________________________________________
 void RooSimGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
 {
   // Generate event appropriate for current index state. 
@@ -219,6 +231,8 @@ void RooSimGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
   }
 }
 
+
+//_____________________________________________________________________________
 void RooSimGenContext::setProtoDataOrder(Int_t* lut)
 {
   RooAbsGenContext::setProtoDataOrder(lut) ;
@@ -231,6 +245,8 @@ void RooSimGenContext::setProtoDataOrder(Int_t* lut)
   delete iter ;
 }
 
+
+//_____________________________________________________________________________
 void RooSimGenContext::printMultiline(ostream &os, Int_t content, Bool_t verbose, TString indent) const 
 {
   RooAbsGenContext::printMultiline(os,content,verbose,indent) ;

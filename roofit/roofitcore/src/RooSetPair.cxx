@@ -14,8 +14,12 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [AUX] ---
-// RooSetPair
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
+// RooSetPair is a utility class that stores a pair of RooArgSets
+// END_HTML
+//
 
 #include "RooFit.h"
 

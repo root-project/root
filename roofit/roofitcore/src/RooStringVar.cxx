@@ -14,8 +14,12 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [MISC] --
-// RooStringVar represents a fundamental string valued object.
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
+// RooStringVar implements a string values RooAbsArg
+// END_HTML
+//
 
 #include "RooFit.h"
 #include "Riostream.h"
@@ -36,6 +40,8 @@ ClassImp(RooStringVar)
 
 
               
+
+//_____________________________________________________________________________
 RooStringVar::RooStringVar(const char *name, const char *title, const char* value, Int_t size) :
   RooAbsString(name, title, size)
 {
@@ -52,6 +58,8 @@ RooStringVar::RooStringVar(const char *name, const char *title, const char* valu
 }  
 
 
+
+//_____________________________________________________________________________
 RooStringVar::RooStringVar(const RooStringVar& other, const char* name) :
   RooAbsString(other, name)
 {
@@ -59,18 +67,24 @@ RooStringVar::RooStringVar(const RooStringVar& other, const char* name) :
 }
 
 
+
+//_____________________________________________________________________________
 RooStringVar::~RooStringVar() 
 {
   // Destructor
 }
 
 
+
+//_____________________________________________________________________________
 RooStringVar::operator TString() {
   // Cast operator to TString
   return TString(_value) ;
 }
 
 
+
+//_____________________________________________________________________________
 void RooStringVar::setVal(const char* value) {
   // Set value to given TString
   if (!isValidString(value)) {    
@@ -86,6 +100,7 @@ void RooStringVar::setVal(const char* value) {
 
 
 
+//_____________________________________________________________________________
 RooAbsArg& RooStringVar::operator=(const char* newValue) 
 {
   // Set value to given TString
@@ -104,6 +119,7 @@ RooAbsArg& RooStringVar::operator=(const char* newValue)
 
 
 
+//_____________________________________________________________________________
 Bool_t RooStringVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose) 
 {
   // Read object contents from given stream
@@ -132,6 +148,8 @@ Bool_t RooStringVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
   return ret ;
 }
 
+
+//_____________________________________________________________________________
 void RooStringVar::writeToStream(ostream& os, Bool_t /*compact*/) const
 {
   // Write object contents to given stream

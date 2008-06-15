@@ -63,7 +63,7 @@ protected:
   
 private:
 
-  ClassDef(RooRealSumPdf,1) // PDF representing a sum of real functions
+  ClassDef(RooRealSumPdf,1) // PDF constructed from a sum of (non-pdf) functions
 };
 
 #endif

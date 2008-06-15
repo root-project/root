@@ -47,7 +47,7 @@ protected:
 
   Double_t evaluate() const;
 
-  ClassDef(RooPolyVar,1) // Polynomial PDF
+  ClassDef(RooPolyVar,1) // Polynomial function
 };
 
 #endif

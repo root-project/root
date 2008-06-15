@@ -117,7 +117,7 @@ public:
     std::map<TString,ClassFiles> _fmap ; // List of contained files
     Bool_t _compiledOK ; //! Flag indicating that classes compiled OK
 
-    ClassDef(CodeRepo,1) ;
+    ClassDef(CodeRepo,1) ; // Code repository for RooWorkspace
   } ;
 
 
@@ -139,7 +139,7 @@ public:
     void InternalAppend(TObject* obj) ;
     RooWorkspace* _wspace ; //! do not persist
 
-    ClassDef(WSDir,1) ;
+    ClassDef(WSDir,1) ; // TDirectory representation of RooWorkspace
   } ;
 
 
@@ -160,7 +160,7 @@ public:
 
   WSDir* _dir ; //! Transient ROOT directory representation of workspace
 
-  ClassDef(RooWorkspace,2)  // The RooFit Project Workspace 
+  ClassDef(RooWorkspace,2)  // Persistable project container for (composite) pdfs, functions, variables and datasets
   
 } ;
 

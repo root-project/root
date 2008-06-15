@@ -34,7 +34,7 @@ protected:
   const RooAbsFunc *_func;
   Double_t _scaleFactor;
 
-  ClassDef(RooScaledFunc,0) // RooAbsFunc decorator
+  ClassDef(RooScaledFunc,0) // Function binding applying scaling to another function binding
 };
 
 #endif

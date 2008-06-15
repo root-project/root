@@ -92,7 +92,7 @@ protected:
   RooNameSet _name2 ;   //!
   TNamed*    _set2RangeName ; //!
 
-  ClassDef(RooNormSetCache,1) // Manager class for a single PDF normalization integral
+  ClassDef(RooNormSetCache,1) // Management tool for tracking sets of similar integration/normalization sets
 } ;
 
 #endif 

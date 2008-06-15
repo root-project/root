@@ -74,7 +74,7 @@ protected:
   Double_t _jac,_wtd_int_sum,_sum_wgts,_chi_sum,_chisq,_result,_sigma; // Scratch variables preserved between calls to vegas1/2/2
   UInt_t _it_start,_it_num,_samples,_calls_per_box;                    // Scratch variables preserved between calls to vegas1/2/2
 
-  ClassDef(RooMCIntegrator,0) // multi-dimensional numerical integration engine
+  ClassDef(RooMCIntegrator,0) // VEGAS based multi-dimensional numerical integration engine
 };
 
 #endif

@@ -14,16 +14,20 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [REAL] --
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
 // RooRealConstant provides static functions to create and keep track
 // of RooRealVar constants. Instead of creating such constants by
 // hand (e.g. RooRealVar one("one","one",1)), simply use
-//
+// <pre>
 //  RooRealConstant::value(1.0)
-//
+// </pre>
 // whenever a reference to RooRealVar with constant value 1.0 is needed.
 // RooRealConstant keeps an internal database of previously created
 // RooRealVar objects and will recycle them as appropriate.
+// END_HTML
+//
 
 #include "RooFit.h"
 
@@ -41,6 +45,8 @@ RooArgList* RooRealConstant::_constDB = 0;
 TIterator* RooRealConstant::_constDBIter = 0;
 
 
+
+//_____________________________________________________________________________
 void RooRealConstant::cleanup() 
 {
   if (_constDB) {
@@ -51,6 +57,8 @@ void RooRealConstant::cleanup()
 }
 
 
+
+//_____________________________________________________________________________
 RooConstVar& RooRealConstant::value(Double_t value) 
 {
   // Lookup existing constant
@@ -72,6 +80,7 @@ RooConstVar& RooRealConstant::value(Double_t value)
 
 
 
+//_____________________________________________________________________________
 void RooRealConstant::init() 
 {
   if (!_constDB) {

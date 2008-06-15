@@ -14,7 +14,13 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [AUX] --
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
+// Class RooSharedPropertiesList maintains the properties of RooRealVars
+// and RooCategories that are clones of each other.
+// END_HTML
+//
 
 #include "RooFit.h"
 #include "RooSharedPropertiesList.h"
@@ -29,25 +35,29 @@ ClassImp(RooSharedPropertiesList)
 ;
 
 
+
+//_____________________________________________________________________________
 RooSharedPropertiesList::RooSharedPropertiesList() 
 {
 } 
 
 
+
+//_____________________________________________________________________________
 RooSharedPropertiesList::~RooSharedPropertiesList() 
 {
-//   cout << "RooSharedPropertiesList::dtor" << endl ;
   // Delete all objects in property list
   TIterator* iter = _propList.MakeIterator() ;
   RooSharedProperties* prop ;
   while((prop=(RooSharedProperties*)iter->Next())) {
-//     cout << "deleting shared prop " << prop << endl ;
     delete prop ;
   }
   delete iter ;
 } 
 
 
+
+//_____________________________________________________________________________
 RooSharedProperties* RooSharedPropertiesList::registerProperties(RooSharedProperties* prop, Bool_t canDeleteIncoming) 
 {
   // Register property into list and take ownership. 
@@ -100,6 +110,8 @@ RooSharedProperties* RooSharedPropertiesList::registerProperties(RooSharedProper
 }
 
 
+
+//_____________________________________________________________________________
 void RooSharedPropertiesList::unregisterProperties(RooSharedProperties* prop) 
 {
   // Decrease reference count

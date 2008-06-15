@@ -14,10 +14,10 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [PDF] --
+//////////////////////////////////////////////////////////////////////////////
 //
 // Class RooRealSumPdf implements a PDF constructed from a sum of
-// real valued objects, i.e.
+// functions:
 //
 //                 Sum(i=1,n-1) coef_i * func_i(x) + [ 1 - (Sum(i=1,n-1) coef_i ] * func_n(x)
 //   pdf(x) =    ------------------------------------------------------------------------------
@@ -25,7 +25,7 @@
 //
 //
 // where coef_i and func_i are RooAbsReal objects, and x is the collection of dependents. 
-// In the present version coef_i may not depend on x, but this limitation will be removed in the future
+// In the present version coef_i may not depend on x, but this limitation may be removed in the future
 //
 
 #include "RooFit.h"
@@ -47,6 +47,8 @@
 ClassImp(RooRealSumPdf)
 ;
 
+
+//_____________________________________________________________________________
 RooRealSumPdf::RooRealSumPdf() :
   _lastFuncIntSet(0),
   _lastFuncNormSet(0),
@@ -58,6 +60,8 @@ RooRealSumPdf::RooRealSumPdf() :
 }
 
 
+
+//_____________________________________________________________________________
 RooRealSumPdf::RooRealSumPdf(const char *name, const char *title) :
   RooAbsPdf(name,title), 
   _codeReg(10),
@@ -75,6 +79,8 @@ RooRealSumPdf::RooRealSumPdf(const char *name, const char *title) :
 }
 
 
+
+//_____________________________________________________________________________
 RooRealSumPdf::RooRealSumPdf(const char *name, const char *title,
 		     RooAbsReal& func1, RooAbsReal& func2, RooAbsReal& coef1) : 
   RooAbsPdf(name,title),
@@ -97,6 +103,8 @@ RooRealSumPdf::RooRealSumPdf(const char *name, const char *title,
 
 }
 
+
+//_____________________________________________________________________________
 RooRealSumPdf::RooRealSumPdf(const char *name, const char *title, const RooArgList& inFuncList, const RooArgList& inCoefList) :
   RooAbsPdf(name,title),
   _codeReg(10),
@@ -162,6 +170,7 @@ RooRealSumPdf::RooRealSumPdf(const char *name, const char *title, const RooArgLi
 
 
 
+//_____________________________________________________________________________
 RooRealSumPdf::RooRealSumPdf(const RooRealSumPdf& other, const char* name) :
   RooAbsPdf(other,name),
   _codeReg(other._codeReg),
@@ -180,6 +189,8 @@ RooRealSumPdf::RooRealSumPdf(const RooRealSumPdf& other, const char* name) :
 }
 
 
+
+//_____________________________________________________________________________
 RooRealSumPdf::~RooRealSumPdf()
 {
   // Destructor
@@ -195,6 +206,7 @@ RooRealSumPdf::~RooRealSumPdf()
 
 
 
+//_____________________________________________________________________________
 Double_t RooRealSumPdf::evaluate() const 
 {
   // Calculate the current value
@@ -240,6 +252,7 @@ Double_t RooRealSumPdf::evaluate() const
 
 
 
+//_____________________________________________________________________________
 Bool_t RooRealSumPdf::checkObservables(const RooArgSet* nset) const 
 {
   // Check if FUNC is valid for given normalization set.
@@ -275,6 +288,7 @@ Bool_t RooRealSumPdf::checkObservables(const RooArgSet* nset) const
 
 
 
+//_____________________________________________________________________________
 Int_t RooRealSumPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, 
 					     const RooArgSet* normSet2, const char* /*rangeName*/) const 
 {
@@ -304,6 +318,7 @@ Int_t RooRealSumPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& anal
 
 
 
+//_____________________________________________________________________________
 Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet2, const char* /*rangeName*/) const 
 {
   // Handle trivial passthrough scenario
@@ -390,6 +405,7 @@ Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSe
 
 
 
+//_____________________________________________________________________________
 void RooRealSumPdf::syncFuncIntList(const RooArgSet* intSet) const
 {
   if (intSet==_lastFuncIntSet) return ;
@@ -412,6 +428,7 @@ void RooRealSumPdf::syncFuncIntList(const RooArgSet* intSet) const
 
 
 
+//_____________________________________________________________________________
 void RooRealSumPdf::syncFuncNormList(const RooArgSet* normSet) const 
 {
   if (normSet==_lastFuncNormSet) return ;

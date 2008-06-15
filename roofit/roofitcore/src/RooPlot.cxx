@@ -14,9 +14,11 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [PLOT] --
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
 // A RooPlot is a plot frame and a container for graphics objects
-// within that frame. As a frame, it provides the TH1 public interface
+// within that frame. As a frame, it provides the TH1-style public interface
 // for settting plot ranges, configuring axes, etc. As a container, it
 // holds an arbitrary set of objects that might be histograms of data,
 // curves representing a fit model, or text labels. Use the Draw()
@@ -25,6 +27,19 @@
 // add...() methods create a private copy of the object you pass them
 // and return a pointer to this copy. The caller owns the input object
 // and this class owns the returned object.
+// <p>
+// All RooAbsReal and RooAbsData derived classes implement plotOn()
+// functions that facilitate to plot themselves on a given RooPlot, e.g.
+// <pre>
+// RooPlot *frame = x.frame() ;
+// data.plotOn(frame) ;
+// pdf.plotOn(frame) ;
+// </pre>
+// These high level functions also take care of any projections
+// or other mappings that need to be made to plot a multi-dimensional
+// object onto a one-dimensional plot.
+// END_HTML
+//
 
 
 #include "RooFit.h"
@@ -55,6 +70,8 @@
 ClassImp(RooPlot)
 ;
 
+
+//_____________________________________________________________________________
 RooPlot::RooPlot() : _hist(0), _plotVarClone(0), _plotVarSet(0), _normVars(0), _normObj(0), _dir(0)
 {
   _iterator= _items.MakeIterator() ;
@@ -65,6 +82,8 @@ RooPlot::RooPlot() : _hist(0), _plotVarClone(0), _plotVarSet(0), _normVars(0), _
   }
 }
 
+
+//_____________________________________________________________________________
 RooPlot::RooPlot(Double_t xmin, Double_t xmax) :
   _hist(0), _items(), _plotVarClone(0), _plotVarSet(0), _normObj(0),
   _defYmin(1e-5), _defYmax(1), _dir(0)
@@ -83,6 +102,8 @@ RooPlot::RooPlot(Double_t xmin, Double_t xmax) :
 }
 
 
+
+//_____________________________________________________________________________
 RooPlot::RooPlot(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax) :
   _hist(0), _items(), _plotVarClone(0), 
   _plotVarSet(0), _normObj(0), _defYmin(1e-5), _defYmax(0), _dir(0)
@@ -98,6 +119,8 @@ RooPlot::RooPlot(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax) :
   initialize();
 }
 
+
+//_____________________________________________________________________________
 RooPlot::RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2) :
   _hist(0), _items(),
   _plotVarClone(0), _plotVarSet(0), _normObj(0), _defYmin(1e-5), _defYmax(0), _dir(0)
@@ -125,6 +148,8 @@ RooPlot::RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2) :
   initialize();
 }
 
+
+//_____________________________________________________________________________
 RooPlot::RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2,
 		 Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax) :
   _hist(0), _items(), _plotVarClone(0), 
@@ -143,6 +168,8 @@ RooPlot::RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2,
   initialize();
 }
 
+
+//_____________________________________________________________________________
 RooPlot::RooPlot(const char* name, const char* title, const RooAbsRealLValue &var, Double_t xmin, Double_t xmax, Int_t nbins) :
   _hist(0), _items(), 
   _plotVarClone(0), _plotVarSet(0), _normObj(0), _defYmin(1e-5), _defYmax(1), _dir(0)
@@ -168,6 +195,8 @@ RooPlot::RooPlot(const char* name, const char* title, const RooAbsRealLValue &va
   _normBinWidth = (xmax-xmin)/nbins ; 
 }
 
+
+//_____________________________________________________________________________
 RooPlot::RooPlot(const RooAbsRealLValue &var, Double_t xmin, Double_t xmax, Int_t nbins) :
   _hist(0), _items(), 
   _plotVarClone(0), _plotVarSet(0), _normObj(0), _defYmin(1e-5), _defYmax(1), _dir(0)
@@ -197,6 +226,8 @@ RooPlot::RooPlot(const RooAbsRealLValue &var, Double_t xmin, Double_t xmax, Int_
   _normBinWidth = (xmax-xmin)/nbins ; 
 }
 
+
+//_____________________________________________________________________________
 void RooPlot::initialize() {
   // Perform initialization that is common to all constructors.
 
@@ -220,11 +251,15 @@ void RooPlot::initialize() {
   assert(0 != _iterator);
 }
 
+
+//_____________________________________________________________________________
 TString RooPlot::histName() const 
 {
   return TString(Form("frame_%08x",this)) ;
 }
 
+
+//_____________________________________________________________________________
 RooPlot::~RooPlot() {
   // Delete the items in our container and our iterator.
 
@@ -240,16 +275,22 @@ RooPlot::~RooPlot() {
   delete _hist ;
 }
 
+
+//_____________________________________________________________________________
 void RooPlot::updateNormVars(const RooArgSet &vars) {
   if(0 == _normVars) _normVars= (RooArgSet*) vars.snapshot(kTRUE);
 }
 
+
+//_____________________________________________________________________________
 Stat_t RooPlot::GetBinContent(Int_t /*i*/) const {
   // A plot object is a frame without any bin contents of its own so this
   // method always returns zero.
   return 0;
 }
 
+
+//_____________________________________________________________________________
 Stat_t RooPlot::GetBinContent(Int_t, Int_t) const
 {
   // A plot object is a frame without any bin contents of its own so this
@@ -257,6 +298,8 @@ Stat_t RooPlot::GetBinContent(Int_t, Int_t) const
   return 0;
 }
 
+
+//_____________________________________________________________________________
 Stat_t RooPlot::GetBinContent(Int_t, Int_t, Int_t) const
 {
   // A plot object is a frame without any bin contents of its own so this
@@ -265,6 +308,8 @@ Stat_t RooPlot::GetBinContent(Int_t, Int_t, Int_t) const
 }
 
 
+
+//_____________________________________________________________________________
 void RooPlot::addObject(TObject *obj, Option_t *drawOptions, Bool_t invisible) {
   // Add a generic object to this plot. The specified options will be
   // used to Draw() this object later. The caller transfers ownership
@@ -280,6 +325,8 @@ void RooPlot::addObject(TObject *obj, Option_t *drawOptions, Bool_t invisible) {
   _items.Add(obj,opt.rawOpt());
 }
 
+
+//_____________________________________________________________________________
 void RooPlot::addTH1(TH1 *hist, Option_t *drawOptions, Bool_t invisible) {
   // Add a TH1 histogram object to this plot. The specified options
   // will be used to Draw() this object later. "SAME" will be added to
@@ -318,6 +365,8 @@ void RooPlot::addTH1(TH1 *hist, Option_t *drawOptions, Bool_t invisible) {
   addObject(hist,options.Data(),invisible);
 }
 
+
+//_____________________________________________________________________________
 void RooPlot::addPlotable(RooPlotable *plotable, Option_t *drawOptions, Bool_t invisible, Bool_t refreshNorm) {
   // Add the specified plotable object to our plot. Increase our y-axis
   // limits to fit this object if necessary. The default lower-limit
@@ -343,6 +392,8 @@ void RooPlot::addPlotable(RooPlotable *plotable, Option_t *drawOptions, Bool_t i
   }
 }
 
+
+//_____________________________________________________________________________
 void RooPlot::updateFitRangeNorm(const TH1* hist) {
   // Update our plot normalization over our plot variable's fit range,
   // which will be determined by the first suitable object added to our plot.
@@ -352,6 +403,8 @@ void RooPlot::updateFitRangeNorm(const TH1* hist) {
   _normNumEvts = hist->GetEntries()/_normBinWidth ;
 }
 
+
+//_____________________________________________________________________________
 void RooPlot::updateFitRangeNorm(const RooPlotable* rp, Bool_t refreshNorm) {
   // Update our plot normalization over our plot variable's fit range,
   // which will be determined by the first suitable object added to our plot.
@@ -390,6 +443,8 @@ void RooPlot::updateFitRangeNorm(const RooPlotable* rp, Bool_t refreshNorm) {
 }
 
 
+
+//_____________________________________________________________________________
 void RooPlot::updateYAxis(Double_t ymin, Double_t ymax, const char *label) {
   // Update our y-axis limits to accomodate an object whose spread
   // in y is (ymin,ymax). Use the specified y-axis label if we don't
@@ -417,6 +472,8 @@ void RooPlot::updateYAxis(Double_t ymin, Double_t ymax, const char *label) {
   if(0 == strlen(_hist->GetYaxis()->GetTitle())) _hist->SetYTitle(label);
 }
 
+
+//_____________________________________________________________________________
 void RooPlot::Draw(Option_t *options) {
   // Draw this plot and all of the elements it contains. The specified options
   // only apply to the drawing of our frame. The options specified in our add...()
@@ -436,22 +493,30 @@ void RooPlot::Draw(Option_t *options) {
 }
 
 
+
+//_____________________________________________________________________________
 void RooPlot::printName(ostream& os) const 
 {
   os << GetName() ;
 }
 
+
+//_____________________________________________________________________________
 void RooPlot::printTitle(ostream& os) const 
 {
   os << GetTitle() ;
 }
 
+
+//_____________________________________________________________________________
 void RooPlot::printClassName(ostream& os) const 
 {
   os << IsA()->GetName() ;
 }
 
 
+
+//_____________________________________________________________________________
 void RooPlot::printMultiline(ostream& os, Int_t /*content*/, Bool_t verbose, TString indent) const {
 
   TString deeper(indent);
@@ -484,6 +549,8 @@ void RooPlot::printMultiline(ostream& os, Int_t /*content*/, Bool_t verbose, TSt
 }
 
 
+
+//_____________________________________________________________________________
 const char* RooPlot::nameOf(Int_t idx) const 
 {
   // Return the name of the object at slot 'idx' in this RooPlot.
@@ -498,6 +565,8 @@ const char* RooPlot::nameOf(Int_t idx) const
 }
 
 
+
+//_____________________________________________________________________________
 TObject* RooPlot::getObject(Int_t idx) const 
 {
   // Return the name of the object at slot 'idx' in this RooPlot.
@@ -513,6 +582,7 @@ TObject* RooPlot::getObject(Int_t idx) const
 
 
 
+//_____________________________________________________________________________
 TAttLine *RooPlot::getAttLine(const char *name) const {
   // Return a pointer to the line attributes of the named object in this plot,
   // or zero if the named object does not exist or does not have line attributes.
@@ -520,6 +590,8 @@ TAttLine *RooPlot::getAttLine(const char *name) const {
   return dynamic_cast<TAttLine*>(findObject(name));
 }
 
+
+//_____________________________________________________________________________
 TAttFill *RooPlot::getAttFill(const char *name) const {
   // Return a pointer to the fill attributes of the named object in this plot,
   // or zero if the named object does not exist or does not have fill attributes.
@@ -527,6 +599,8 @@ TAttFill *RooPlot::getAttFill(const char *name) const {
   return dynamic_cast<TAttFill*>(findObject(name));
 }
 
+
+//_____________________________________________________________________________
 TAttMarker *RooPlot::getAttMarker(const char *name) const {
   // Return a pointer to the marker attributes of the named object in this plot,
   // or zero if the named object does not exist or does not have marker attributes.
@@ -534,6 +608,8 @@ TAttMarker *RooPlot::getAttMarker(const char *name) const {
   return dynamic_cast<TAttMarker*>(findObject(name));
 }
 
+
+//_____________________________________________________________________________
 TAttText *RooPlot::getAttText(const char *name) const {
   // Return a pointer to the text attributes of the named object in this plot,
   // or zero if the named object does not exist or does not have text attributes.
@@ -542,6 +618,8 @@ TAttText *RooPlot::getAttText(const char *name) const {
 }
 
 
+
+//_____________________________________________________________________________
 RooCurve* RooPlot::getCurve(const char* name) const  {
   // Return a RooCurve pointer of the named object in this plot,
   // or zero if the named object does not exist or is not a RooCurve
@@ -549,6 +627,8 @@ RooCurve* RooPlot::getCurve(const char* name) const  {
   return dynamic_cast<RooCurve*>(findObject(name)) ;
 }
 
+
+//_____________________________________________________________________________
 RooHist* RooPlot::getHist(const char* name) const {
   // Return a RooCurve pointer of the named object in this plot,
   // or zero if the named object does not exist or is not a RooCurve
@@ -556,6 +636,8 @@ RooHist* RooPlot::getHist(const char* name) const {
   return dynamic_cast<RooHist*>(findObject(name)) ;
 }
 
+
+//_____________________________________________________________________________
 Bool_t RooPlot::drawBefore(const char *before, const char *target) {
   // Change the order in which our contained objects are drawn so that
   // the target object is drawn just before the specified object.
@@ -564,6 +646,8 @@ Bool_t RooPlot::drawBefore(const char *before, const char *target) {
   return _items.moveBefore(before, target, caller("drawBefore"));
 }
 
+
+//_____________________________________________________________________________
 Bool_t RooPlot::drawAfter(const char *after, const char *target) {
   // Change the order in which our contained objects are drawn so that
   // the target object is drawn just after the specified object.
@@ -572,6 +656,8 @@ Bool_t RooPlot::drawAfter(const char *after, const char *target) {
   return _items.moveAfter(after, target, caller("drawAfter"));
 }
 
+
+//_____________________________________________________________________________
 TObject *RooPlot::findObject(const char *name, const TClass* clas) const {
   // Find the named object in our list of items and return a pointer
   // to it. Return zero and print a warning message if the named
@@ -601,6 +687,8 @@ TObject *RooPlot::findObject(const char *name, const TClass* clas) const {
   return ret ;
 }
 
+
+//_____________________________________________________________________________
 TString RooPlot::getDrawOptions(const char *name) const {
   // Return the Draw() options registered for the named object. Return
   // an empty string if the named object cannot be found.
@@ -610,6 +698,8 @@ TString RooPlot::getDrawOptions(const char *name) const {
   return TString(opt.drawOptions) ;
 }
 
+
+//_____________________________________________________________________________
 Bool_t RooPlot::setDrawOptions(const char *name, TString options) {
   // Register the specified drawing options for the named object.
   // Return kFALSE if the named object cannot be found.
@@ -623,6 +713,8 @@ Bool_t RooPlot::setDrawOptions(const char *name, TString options) {
   return kTRUE;
 }
 
+
+//_____________________________________________________________________________
 Bool_t RooPlot::getInvisible(const char* name) const 
 {
   TObjOptLink *link= _items.findLink(name,caller("getInvisible"));
@@ -631,6 +723,8 @@ Bool_t RooPlot::getInvisible(const char* name) const
   return DrawOpt(link->GetOption()).invisible ;
 }
 
+
+//_____________________________________________________________________________
 void RooPlot::setInvisible(const char* name, Bool_t flag) 
 {
   TObjOptLink *link= _items.findLink(name,caller("getInvisible"));
@@ -646,6 +740,8 @@ void RooPlot::setInvisible(const char* name, Bool_t flag)
 }
 
 
+
+//_____________________________________________________________________________
 TString RooPlot::caller(const char *method) const {
   TString name(fName);
   if(strlen(method)) {
@@ -656,18 +752,24 @@ TString RooPlot::caller(const char *method) const {
 }
 
 
+
+//_____________________________________________________________________________
 void RooPlot::SetMaximum(Double_t maximum) 
 {
   _hist->SetMaximum(maximum==-1111?_defYmax:maximum) ;
 }
 
 
+
+//_____________________________________________________________________________
 void RooPlot::SetMinimum(Double_t minimum) 
 {
   _hist->SetMinimum(minimum==-1111?_defYmin:minimum) ;
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooPlot::chiSquare(const char* curvename, const char* histname, Int_t nFitParam) const 
 {
   // Find curve object
@@ -687,6 +789,8 @@ Double_t RooPlot::chiSquare(const char* curvename, const char* histname, Int_t n
   return curve->chiSquare(*hist,nFitParam) ;
 }
 
+
+//_____________________________________________________________________________
 RooHist* RooPlot::residHist(const char* histname, const char* curvename,bool normalize) const 
 {
   // Find curve object
@@ -707,6 +811,8 @@ RooHist* RooPlot::residHist(const char* histname, const char* curvename,bool nor
 }
 
 
+
+//_____________________________________________________________________________
 void RooPlot::DrawOpt::initialize(const char* inRawOpt) 
 {
   if (!inRawOpt) {
@@ -722,6 +828,8 @@ void RooPlot::DrawOpt::initialize(const char* inRawOpt)
   }
 }
 
+
+//_____________________________________________________________________________
 const char* RooPlot::DrawOpt::rawOpt() const 
 {
   static char buf[128] ;
@@ -733,6 +841,8 @@ const char* RooPlot::DrawOpt::rawOpt() const
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooPlot::getFitRangeNEvt(Double_t xlo, Double_t xhi) const 
 {
   Double_t scaleFactor = 1.0 ;
@@ -745,6 +855,8 @@ Double_t RooPlot::getFitRangeNEvt(Double_t xlo, Double_t xhi) const
   return getFitRangeNEvt()*scaleFactor ;
 }
 
+
+//_____________________________________________________________________________
 void RooPlot::SetName(const char *name) 
 {
   if (_dir) _dir->GetList()->Remove(this);
@@ -752,6 +864,8 @@ void RooPlot::SetName(const char *name)
   if (_dir) _dir->GetList()->Add(this);
 }
 
+
+//_____________________________________________________________________________
 void RooPlot::SetNameTitle(const char *name, const char* title) 
 {
   if (_dir) _dir->GetList()->Remove(this);
@@ -759,12 +873,16 @@ void RooPlot::SetNameTitle(const char *name, const char* title)
   if (_dir) _dir->GetList()->Add(this);
 }
 
+
+//_____________________________________________________________________________
 void RooPlot::SetTitle(const char* title) 
 {
   TNamed::SetTitle(title) ;
   _hist->SetTitle(title) ;
 }
 
+
+//_____________________________________________________________________________
 
 //_____________________________________________________________________________
 Int_t RooPlot::defaultPrintContents(Option_t* opt) const 
@@ -780,6 +898,7 @@ Int_t RooPlot::defaultPrintContents(Option_t* opt) const
 
 
 
+//_____________________________________________________________________________
 //_____________________________________________________________________________
 RooPrintable::StyleOption RooPlot::defaultPrintStyle(Option_t* opt) const 
 {
@@ -833,6 +952,8 @@ void RooPlot::SetYTitle(const char *title) { _hist->SetYTitle(title) ; }
 void RooPlot::SetZTitle(const char *title) { _hist->SetZTitle(title) ; }
 
 
+
+//_____________________________________________________________________________
 void RooPlot::Streamer(TBuffer &R__b)
 {
 

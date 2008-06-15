@@ -47,7 +47,7 @@ protected:
   RooSegmentedIntegrator1D* _xIntegrator ;
   RooAbsFunc* _xint ;
 
-  ClassDef(RooSegmentedIntegrator2D,0) // 1-dimensional numerical integration engine
+  ClassDef(RooSegmentedIntegrator2D,0) // 2-dimensional piece-wise numerical integration engine
 };
 
 #endif

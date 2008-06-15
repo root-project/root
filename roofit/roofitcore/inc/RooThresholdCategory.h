@@ -48,7 +48,7 @@ protected:
 
   virtual RooCatType evaluate() const ; 
 
-  ClassDef(RooThresholdCategory,1) // Index variable, defined by a series of thresholds on a RooAbsReal
+  ClassDef(RooThresholdCategory,1) // Real-to-Category function defined by series of threshold
 };
 
 #endif

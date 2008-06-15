@@ -14,10 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [MISC] --
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
 // RooNumIntConfig holds the configuration parameters of the various
 // numeric integrators used by RooRealIntegral. RooRealIntegral and RooAbsPdf
 // use this class in the (normalization) integral configuration interface
+// END_HTML
+//
 
 #include "RooFit.h"
 #include "Riostream.h"
@@ -37,6 +41,8 @@ ClassImp(RooNumIntConfig)
 
 RooNumIntConfig* RooNumIntConfig::_default = 0 ;
 
+
+//_____________________________________________________________________________
 void RooNumIntConfig::cleanup()
 {
   if (_default) {
@@ -46,6 +52,8 @@ void RooNumIntConfig::cleanup()
 }
 
 
+
+//_____________________________________________________________________________
 RooNumIntConfig& RooNumIntConfig::defaultConfig() 
 {
   // Return reference to instance of default numeric integrator configuration object
@@ -61,6 +69,8 @@ RooNumIntConfig& RooNumIntConfig::defaultConfig()
 }
 
 
+
+//_____________________________________________________________________________
 RooNumIntConfig::RooNumIntConfig() : 
   _epsAbs(1e-7),
   _epsRel(1e-7),
@@ -85,6 +95,8 @@ RooNumIntConfig::RooNumIntConfig() :
   _methodNDOpen.defineType("N/A",0) ;
 }
 
+
+//_____________________________________________________________________________
 RooNumIntConfig::~RooNumIntConfig()
 {
   // Destructor
@@ -93,6 +105,8 @@ RooNumIntConfig::~RooNumIntConfig()
   _configSets.Delete() ;
 }
 
+
+//_____________________________________________________________________________
 RooNumIntConfig::RooNumIntConfig(const RooNumIntConfig& other) :
   TObject(other), RooPrintable(other),
   _epsAbs(other._epsAbs),
@@ -118,6 +132,8 @@ RooNumIntConfig::RooNumIntConfig(const RooNumIntConfig& other) :
   delete iter ;
 }
 
+
+//_____________________________________________________________________________
 RooNumIntConfig& RooNumIntConfig::operator=(const RooNumIntConfig& other) 
 {
   // Prevent self-assignment 
@@ -152,6 +168,8 @@ RooNumIntConfig& RooNumIntConfig::operator=(const RooNumIntConfig& other)
 }
 
 
+
+//_____________________________________________________________________________
 Bool_t RooNumIntConfig::addConfigSection(const RooAbsIntegrator* proto, const RooArgSet& inDefaultConfig)
 {
   // Add a configuration section for a particular integrator. Integrator name and capabilities are
@@ -191,11 +209,15 @@ Bool_t RooNumIntConfig::addConfigSection(const RooAbsIntegrator* proto, const Ro
 }
 
 
+
+//_____________________________________________________________________________
 RooArgSet& RooNumIntConfig::getConfigSection(const char* name)  
 {
   return const_cast<RooArgSet&>((const_cast<const RooNumIntConfig*>(this)->getConfigSection(name))) ;
 }
 
+
+//_____________________________________________________________________________
 const RooArgSet& RooNumIntConfig::getConfigSection(const char* name) const
 {
   // Retrieve configuration information specific to integrator with given name
@@ -210,6 +232,8 @@ const RooArgSet& RooNumIntConfig::getConfigSection(const char* name) const
 }
 
 
+
+//_____________________________________________________________________________
 void RooNumIntConfig::setEpsAbs(Double_t newEpsAbs)
 {
   // Set absolute convergence criteria (convergence if abs(Err)<newEpsAbs)
@@ -221,6 +245,8 @@ void RooNumIntConfig::setEpsAbs(Double_t newEpsAbs)
 }
 
 
+
+//_____________________________________________________________________________
 void RooNumIntConfig::setEpsRel(Double_t newEpsRel) 
 {
   // Set relative convergence criteria (convergence if abs(Err)/abs(Int)<newEpsRel)
@@ -232,6 +258,8 @@ void RooNumIntConfig::setEpsRel(Double_t newEpsRel)
 }
 
 
+
+//_____________________________________________________________________________
 void RooNumIntConfig::printMultiline(ostream &os, Int_t /*content*/, Bool_t verbose, TString indent) const
 {
   os << indent << "Requested precision: " << _epsAbs << " absolute, " << _epsRel << " relative" << endl << endl ;

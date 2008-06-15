@@ -14,6 +14,16 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
+// RooUniformBinning is an implementation of RooAbsBinning that provides
+// a uniform binning in 'n' bins between the range end points. A RooUniformBinning
+// is 'elastic': if the range changes the binning will change accordingly, unlike
+// e.g. the binning of class RooBinning.
+// END_HTML
+//
+
 #include "RooFit.h"
 
 #include "RooUniformBinning.h"
@@ -27,12 +37,16 @@ ClassImp(RooUniformBinning)
 ;
 
 
+
+//_____________________________________________________________________________
 RooUniformBinning::RooUniformBinning(const char* name) : 
   RooAbsBinning(name)
 {  
   _array = 0 ;
 }
 
+
+//_____________________________________________________________________________
 RooUniformBinning::RooUniformBinning(Double_t xlo, Double_t xhi, Int_t nBins, const char* name) :
   RooAbsBinning(name),
   _array(0), 
@@ -42,12 +56,16 @@ RooUniformBinning::RooUniformBinning(Double_t xlo, Double_t xhi, Int_t nBins, co
 }
 
 
+
+//_____________________________________________________________________________
 RooUniformBinning::~RooUniformBinning() 
 {
   if (_array) delete[] _array ;
 }
 
 
+
+//_____________________________________________________________________________
 RooUniformBinning::RooUniformBinning(const RooUniformBinning& other, const char* name) :
   RooAbsBinning(name)
 {
@@ -59,6 +77,8 @@ RooUniformBinning::RooUniformBinning(const RooUniformBinning& other, const char*
 }
 
 
+
+//_____________________________________________________________________________
 void RooUniformBinning::setRange(Double_t xlo, Double_t xhi) 
 {
   if (xlo>xhi) {
@@ -73,6 +93,7 @@ void RooUniformBinning::setRange(Double_t xlo, Double_t xhi)
 
 
 
+//_____________________________________________________________________________
 Int_t RooUniformBinning::binNumber(Double_t x) const  
 {
   // Return the fit bin index for the current value
@@ -83,6 +104,8 @@ Int_t RooUniformBinning::binNumber(Double_t x) const
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooUniformBinning::binCenter(Int_t i) const 
 {
   // Return the central value of the 'i'-th fit bin
@@ -98,6 +121,7 @@ Double_t RooUniformBinning::binCenter(Int_t i) const
 
 
 
+//_____________________________________________________________________________
 Double_t RooUniformBinning::binWidth(Int_t /*bin*/) const 
 {
   return _binw ;
@@ -105,6 +129,7 @@ Double_t RooUniformBinning::binWidth(Int_t /*bin*/) const
 
 
 
+//_____________________________________________________________________________
 Double_t RooUniformBinning::binLow(Int_t i) const 
 {
   // Return the low edge of the 'i'-th fit bin
@@ -118,6 +143,8 @@ Double_t RooUniformBinning::binLow(Int_t i) const
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooUniformBinning::binHigh(Int_t i) const 
 {
   // Return the high edge of the 'i'-th fit bin
@@ -132,6 +159,7 @@ Double_t RooUniformBinning::binHigh(Int_t i) const
 
 
 
+//_____________________________________________________________________________
 Double_t* RooUniformBinning::array() const 
 {
   if (_array) delete[] _array ;

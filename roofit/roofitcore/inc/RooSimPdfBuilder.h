@@ -74,7 +74,7 @@ private:
   RooSimPdfBuilder(const RooSimPdfBuilder&) ; // No copying allowed
 
 protected:
-  ClassDef(RooSimPdfBuilder,0) // RooSimultaneous PDF Builder 
+  ClassDef(RooSimPdfBuilder,0) // RooSimultaneous PDF Builder (obsolete)
 };
 
 #endif

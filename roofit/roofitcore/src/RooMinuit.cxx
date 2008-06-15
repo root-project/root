@@ -14,15 +14,17 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [PDF] --
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
 // RooMinuit is a wrapper class around TFitter/TMinuit that
 // provides a seamless interface between the MINUIT functionality
 // and the native RooFit interface.
-//
+// <p>
 // RooMinuit can minimize any RooAbsReal function with respect to
 // its parameters. Usual choices for minimization are RooNLLVar
 // and RooChi2Var
-//
+// <p>
 // RooMinuit has methods corresponding to MINUIT functions like
 // hesse(), migrad(), minos() etc. In each of these function calls
 // the state of the MINUIT engine is synchronized with the state
@@ -31,9 +33,11 @@
 // execution of the MINUIT call. Afterwards the RooFit objects
 // are resynchronized with the output state of MINUIT: changes
 // parameter values, errors are propagated.
-//
+// <p>
 // Various methods are available to control verbosity, profiling,
 // automatic PDF optimization.
+// END_HTML
+//
 
 #include "RooFit.h"
 #include "Riostream.h"
@@ -72,6 +76,8 @@ ClassImp(RooMinuit)
 TVirtualFitter *RooMinuit::_theFitter = 0 ;
 
 
+
+//_____________________________________________________________________________
 void RooMinuit::cleanup()
 {
   if (_theFitter) {
@@ -81,6 +87,8 @@ void RooMinuit::cleanup()
 }
 
 
+
+//_____________________________________________________________________________
 RooMinuit::RooMinuit(RooAbsReal& function)
 {
   // Constructor
@@ -165,6 +173,8 @@ RooMinuit::RooMinuit(RooAbsReal& function)
 }
 
 
+
+//_____________________________________________________________________________
 RooMinuit::~RooMinuit() 
 {
   // Destructor
@@ -176,6 +186,7 @@ RooMinuit::~RooMinuit()
 
 
 
+//_____________________________________________________________________________
 void RooMinuit::setStrategy(Int_t istrat) 
 {
   // Change MINUIT strategy 
@@ -185,12 +196,15 @@ void RooMinuit::setStrategy(Int_t istrat)
 
 
 
+//_____________________________________________________________________________
 void RooMinuit::setErrorLevel(Double_t level)
 {
   _theFitter->ExecuteCommand("SET ERR",&level,1);
 }
 
 
+
+//_____________________________________________________________________________
 void RooMinuit::setEps(Double_t eps)
 {
   // Change MINUIT epsilon 
@@ -199,6 +213,7 @@ void RooMinuit::setEps(Double_t eps)
 
 
 
+//_____________________________________________________________________________
 RooFitResult* RooMinuit::fit(const char* options)
 {
   // Parse traditional RooAbsPdf::fitTo driver options
@@ -234,6 +249,7 @@ RooFitResult* RooMinuit::fit(const char* options)
 
 
 
+//_____________________________________________________________________________
 Int_t RooMinuit::migrad() 
 {
   // Execute MIGRAD
@@ -254,6 +270,7 @@ Int_t RooMinuit::migrad()
 
 
 
+//_____________________________________________________________________________
 Int_t RooMinuit::hesse() 
 {
   // Execute HESSE
@@ -274,6 +291,7 @@ Int_t RooMinuit::hesse()
 
 
 
+//_____________________________________________________________________________
 Int_t RooMinuit::minos() 
 {
   // Execute MINOS
@@ -293,6 +311,8 @@ Int_t RooMinuit::minos()
 
 
 // added FMV, 08/18/03 
+
+//_____________________________________________________________________________
 Int_t RooMinuit::minos(const RooArgSet& minosParamList) 
 {
   // Execute MINOS for given list of parameters
@@ -327,6 +347,8 @@ Int_t RooMinuit::minos(const RooArgSet& minosParamList)
 }
 
 
+
+//_____________________________________________________________________________
 Int_t RooMinuit::seek() 
 {
   // Execute SEEK
@@ -345,6 +367,8 @@ Int_t RooMinuit::seek()
 }
 
 
+
+//_____________________________________________________________________________
 Int_t RooMinuit::simplex() 
 {
   // Execute SIMPLEX 
@@ -364,6 +388,8 @@ Int_t RooMinuit::simplex()
 }
 
 
+
+//_____________________________________________________________________________
 Int_t RooMinuit::improve()
 {
   // Execute IMPROVE
@@ -383,6 +409,7 @@ Int_t RooMinuit::improve()
 
 
 
+//_____________________________________________________________________________
 Int_t RooMinuit::setPrintLevel(Int_t newLevel) 
 {
   Int_t ret = _printLevel ;
@@ -393,6 +420,8 @@ Int_t RooMinuit::setPrintLevel(Int_t newLevel)
 }
 
 
+
+//_____________________________________________________________________________
 void RooMinuit::setNoWarn() 
 {
   Double_t arg(0) ;
@@ -400,6 +429,8 @@ void RooMinuit::setNoWarn()
 }
 
 
+
+//_____________________________________________________________________________
 Int_t RooMinuit::setWarnLevel(Int_t newLevel) 
 {
   Int_t ret = _warnLevel ;
@@ -410,6 +441,8 @@ Int_t RooMinuit::setWarnLevel(Int_t newLevel)
 }
       
 
+
+//_____________________________________________________________________________
 Bool_t RooMinuit::synchronize(Bool_t verbose)
 {
   Int_t oldPrint = setPrintLevel(-1) ;
@@ -618,6 +651,8 @@ Bool_t RooMinuit::synchronize(Bool_t verbose)
 	
 
 
+
+//_____________________________________________________________________________
 void RooMinuit::optimizeConst(Bool_t flag) 
 {
   if (_optConst && !flag){ 
@@ -636,6 +671,8 @@ void RooMinuit::optimizeConst(Bool_t flag)
 }
 
 
+
+//_____________________________________________________________________________
 RooFitResult* RooMinuit::save(const char* userName, const char* userTitle) 
 {
   // Save snaphot of current minimizer status
@@ -680,6 +717,7 @@ RooFitResult* RooMinuit::save(const char* userName, const char* userTitle)
 
 
 
+//_____________________________________________________________________________
 TH2F* RooMinuit::contour(RooRealVar& var1, RooRealVar& var2, Double_t n1, Double_t n2, Double_t n3, Double_t n4, Double_t n5, Double_t n6) 
 {
   // Verify that both variables are floating parameters of PDF
@@ -820,6 +858,8 @@ TH2F* RooMinuit::contour(RooRealVar& var1, RooRealVar& var2, Double_t n1, Double
 }
 
 
+
+//_____________________________________________________________________________
 Bool_t RooMinuit::setLogFile(const char* inLogfile) 
 {
   if (_logfile) {
@@ -839,6 +879,8 @@ Bool_t RooMinuit::setLogFile(const char* inLogfile)
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooMinuit::getPdfParamVal(Int_t index)
 {
   // Access PDF parameter value by ordinal index (needed by MINUIT)
@@ -846,6 +888,8 @@ Double_t RooMinuit::getPdfParamVal(Int_t index)
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooMinuit::getPdfParamErr(Int_t index)
 {
   // Access PDF parameter error by ordinal index (needed by MINUIT)
@@ -853,6 +897,8 @@ Double_t RooMinuit::getPdfParamErr(Int_t index)
 }
 
 
+
+//_____________________________________________________________________________
 Bool_t RooMinuit::setPdfParamVal(Int_t index, Double_t value, Bool_t verbose)
 {
   // Modify PDF parameter value by ordinal index (needed by MINUIT)
@@ -868,6 +914,8 @@ Bool_t RooMinuit::setPdfParamVal(Int_t index, Double_t value, Bool_t verbose)
 }
 
 
+
+//_____________________________________________________________________________
 void RooMinuit::setPdfParamErr(Int_t index, Double_t value)
 {
   // Modify PDF parameter error by ordinal index (needed by MINUIT)
@@ -875,12 +923,16 @@ void RooMinuit::setPdfParamErr(Int_t index, Double_t value)
 }
 
 
+
+//_____________________________________________________________________________
 void RooMinuit::clearPdfParamAsymErr(Int_t index) 
 {
   // Modify PDF parameter error by ordinal index (needed by MINUIT)
   ((RooRealVar*)_floatParamList->at(index))->removeAsymError() ;      
 }
 
+
+//_____________________________________________________________________________
 void RooMinuit::setPdfParamErr(Int_t index, Double_t loVal, Double_t hiVal) 
 {
   // Modify PDF parameter error by ordinal index (needed by MINUIT)
@@ -888,6 +940,8 @@ void RooMinuit::setPdfParamErr(Int_t index, Double_t loVal, Double_t hiVal)
 }
 
 
+
+//_____________________________________________________________________________
 void RooMinuit::profileStart() 
 {
   if (_profile) {
@@ -899,6 +953,7 @@ void RooMinuit::profileStart()
 
 
 
+//_____________________________________________________________________________
 void RooMinuit::profileStop() 
 {
   if (_profile) {
@@ -913,6 +968,7 @@ void RooMinuit::profileStop()
 
 
 
+//_____________________________________________________________________________
 void RooMinuit::backProp() 
 {
   // Transfer MINUIT fit results back into RooFit objects

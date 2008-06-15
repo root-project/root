@@ -14,8 +14,12 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [AUX] --
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
 // RooInt is a minimal implementation of a TNamed holding a TObject
+// END_HTML
+//
 
 #include "RooFit.h"
 

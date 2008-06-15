@@ -21,15 +21,15 @@
 // such as 'goodness-of-fit' studies, that involve fitting a PDF 
 // to multiple toy Monte Carlo sets generated from the same PDF 
 // or another PDF.
-//
+// <p>
 // Given a fit PDF and a generator PDF, RooMCStudy can produce
 // large numbers of toyMC samples and/or fit these samples
 // and acculumate the final parameters of each fit in a dataset.
-//
+// <p>
 // Additional plotting routines simplify the task of plotting
 // the distribution of the minimized likelihood, each parameters fitted value, 
 // fitted error and pull distribution.
-//
+// <p>
 // Class RooMCStudy provides the option to insert add-in modules
 // that modify the generate and fit cycle and allow to perform
 // extra steps in the cycle. Output of these modules can be stored
@@ -1051,6 +1051,7 @@ RooPlot* RooMCStudy::plotError(const RooRealVar& param, const RooCmdArg& arg1, c
   delete evar ;
   return frame ;
 }
+
 
 
 //_____________________________________________________________________________

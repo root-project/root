@@ -47,7 +47,7 @@ protected:
 
 private:
 
-  ClassDef(RooProfileLL,0) // Profile likelihood 
+  ClassDef(RooProfileLL,0) // Real-valued function representing profile likelihood of external (likelihood) function
 };
  
 #endif

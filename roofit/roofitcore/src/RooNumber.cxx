@@ -14,7 +14,12 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [MISC] --
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
+// Class RooNumber implements numeric constants used by RooFit
+// END_HTML
+//
 
 #include "RooFit.h"
 #include "RooNumber.h"
@@ -34,11 +39,15 @@ Double_t RooNumber::_Infinity= 1.0e30 ;  //1./0.;
 
 #endif
 
+
+//_____________________________________________________________________________
 Double_t RooNumber::infinity() 
 {
   return _Infinity ;
 }
 
+
+//_____________________________________________________________________________
 Int_t RooNumber::isInfinite(Double_t x) 
 {
   return (x >= +_Infinity) ? +1 : ((x <= -_Infinity) ? -1 : 0);

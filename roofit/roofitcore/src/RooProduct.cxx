@@ -14,9 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [REAL] --
+//////////////////////////////////////////////////////////////////////////////
 //
-// RooProduct calculates the product of a set of RooAbsReal terms.
+// BEGIN_HTML
+//
+// RooProduct a RooAbsReal implementation that represent the product
+// of a given set of other RooAbsReal objects
+//
+// END_HTML
 //
 
 
@@ -51,6 +56,8 @@ namespace {
 }
 
 
+
+//_____________________________________________________________________________
 RooProduct::RooProduct() :
   _compRIter( _compRSet.createIterator() ),
   _compCIter( _compCSet.createIterator() )
@@ -58,6 +65,8 @@ RooProduct::RooProduct() :
 }
 
 
+
+//_____________________________________________________________________________
 RooProduct::~RooProduct()
 {
   if (_compRIter) {
@@ -70,6 +79,8 @@ RooProduct::~RooProduct()
 }
 
 
+
+//_____________________________________________________________________________
 RooProduct::RooProduct(const char* name, const char* title, const RooArgSet& prodSet) :
   RooAbsReal(name, title),
   _compRSet("compRSet","Set of real product components",this),
@@ -96,6 +107,7 @@ RooProduct::RooProduct(const char* name, const char* title, const RooArgSet& pro
 
 
 
+//_____________________________________________________________________________
 RooProduct::RooProduct(const RooProduct& other, const char* name) :
   RooAbsReal(other, name), 
   _compRSet("compRSet",this,other._compRSet),
@@ -108,6 +120,8 @@ RooProduct::RooProduct(const RooProduct& other, const char* name) :
 }
 
 
+
+//_____________________________________________________________________________
 Bool_t RooProduct::forceAnalyticalInt(const RooAbsArg& dep) const
 {
   // Force internal handling of integration of given observable
@@ -122,6 +136,8 @@ Bool_t RooProduct::forceAnalyticalInt(const RooAbsArg& dep) const
 }
 
 
+
+//_____________________________________________________________________________
 RooProduct::ProdMap* RooProduct::groupProductTerms(const RooArgSet& allVars) const 
 {
   ProdMap* map = new ProdMap ;
@@ -180,6 +196,8 @@ RooProduct::ProdMap* RooProduct::groupProductTerms(const RooArgSet& allVars) con
 
 
 Int_t
+
+//_____________________________________________________________________________
 RooProduct::getPartIntList(const RooArgSet* iset, const char *isetRange) const
 {
   // check if we already have integrals for this combination of factors
@@ -236,6 +254,8 @@ RooProduct::getPartIntList(const RooArgSet* iset, const char *isetRange) const
   return code;
 }
 
+
+//_____________________________________________________________________________
 Int_t RooProduct::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars,
                                             const RooArgSet* normSet,
                                             const char* rangeName) const
@@ -253,6 +273,8 @@ Int_t RooProduct::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVar
   return code ;
 }
 
+
+//_____________________________________________________________________________
 Double_t RooProduct::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   // note: rangeName implicit encoded in code: see _cacheMgr.setObj in getPartIntList...
@@ -270,6 +292,8 @@ Double_t RooProduct::analyticalIntegral(Int_t code, const char* rangeName) const
   return calculate(cache->_prodList);
 }
 
+
+//_____________________________________________________________________________
 Double_t RooProduct::calculate(const RooArgList& partIntList) const
 {
   RooAbsReal *term(0);
@@ -282,6 +306,8 @@ Double_t RooProduct::calculate(const RooArgList& partIntList) const
   return val;
 }
 
+
+//_____________________________________________________________________________
 const char* RooProduct::makeFPName(const char *pfx,const RooArgSet& terms) const
 {
     static TString pname;
@@ -298,6 +324,8 @@ const char* RooProduct::makeFPName(const char *pfx,const RooArgSet& terms) const
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooProduct::evaluate() const 
 {
   Double_t prod(1) ;
@@ -317,10 +345,14 @@ Double_t RooProduct::evaluate() const
   return prod ;
 }
 
+
+//_____________________________________________________________________________
 RooProduct::CacheElem::~CacheElem() 
 {
 }
 
+
+//_____________________________________________________________________________
 RooArgList RooProduct::CacheElem::containedArgs(Action) 
 {
   RooArgList ret(_ownedList) ;

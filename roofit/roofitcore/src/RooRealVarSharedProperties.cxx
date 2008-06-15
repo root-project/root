@@ -14,7 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [AUX] --
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
+// Class RooRealVarSharedProperties is an implementation of RooSharedProperties
+// that stores the properties of a RooRealVar that are shared among clones.
+// For RooRealVars these are the definitions of the named ranges.
+// END_HTML
+//
 
 #include "RooFit.h"
 #include "RooRealVarSharedProperties.h"
@@ -25,16 +32,22 @@ ClassImp(RooRealVarSharedProperties)
 ;
 
 
+
+//_____________________________________________________________________________
 RooRealVarSharedProperties::RooRealVarSharedProperties() 
 {
 //   cout << "RooRealVarSharedProperties::defctor(" << this << ")" << endl ;
 } 
 
+
+//_____________________________________________________________________________
 RooRealVarSharedProperties::RooRealVarSharedProperties(const char* uuidstr) : RooSharedProperties(uuidstr)
 {
 //   cout << "RooRealVarSharedProperties::ctor(" << this << ")" << endl ;
 } 
 
+
+//_____________________________________________________________________________
 RooRealVarSharedProperties::RooRealVarSharedProperties(const RooRealVarSharedProperties& other) :
   RooSharedProperties(other), 
   _altBinning(other._altBinning)
@@ -44,6 +57,7 @@ RooRealVarSharedProperties::RooRealVarSharedProperties(const RooRealVarSharedPro
 
 
 
+//_____________________________________________________________________________
 RooRealVarSharedProperties::~RooRealVarSharedProperties() 
 {
 //   cout << "RooRealVarSharedProperties::dtor(" << this << ")" << endl ;

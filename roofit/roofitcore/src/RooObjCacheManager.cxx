@@ -14,17 +14,18 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [AUX] --
-// Class RooCacheManager manages a cache for lists of normalization/projection integrals
-// for RooAbsPdf objects. Normalization/projection integrals are always defined by to
-// RooArgSet pointer containing the set of normalization / projection observables respectively.
+//////////////////////////////////////////////////////////////////////////////
 //
-// For efficiency reasons these pointer are derefenced as little as possible. This
-// class contains a lookup table for RooArgSet pointer pairs -> normalization lists.
-// Distinct pointer pairs that represent the same normalization/projection are recognized
-// and will all point to the same normalization list. Lists for up to 'maxSize' different normalization/
-// projection configurations can be cached.
-// 
+// BEGIN_HTML
+// Class RooObjCacheManager is an implementation of class RooCacheManager<RooAbsCacheElement>
+// and specializes in the storage of cache elements that contain RooAbsArg objects.
+// Caches with RooAbsArg derived payload require special care as server redirects
+// cache operation mode changes and constant term optimization calls may need to be
+// forwarded to such cache payload. This cache manager takes are of all these operations
+// by forwarding these calls to the RooAbsCacheElement interface functions, which
+// have a sensible default implementation. 
+// END_HTML
+//
 
 #include "RooFit.h"
 #include "Riostream.h"
@@ -37,6 +38,8 @@ using namespace std ;
 ClassImp(RooObjCacheManager)
    ;
 
+
+//_____________________________________________________________________________
 RooObjCacheManager::RooObjCacheManager(RooAbsArg* owner, Int_t maxSize, Bool_t clearCacheOnServerRedirect) : 
   RooCacheManager<RooAbsCacheElement>(owner,maxSize), 
   _clearOnRedirect(clearCacheOnServerRedirect), 
@@ -45,6 +48,8 @@ RooObjCacheManager::RooObjCacheManager(RooAbsArg* owner, Int_t maxSize, Bool_t c
 {
 }
 
+
+//_____________________________________________________________________________
 RooObjCacheManager::RooObjCacheManager(const RooObjCacheManager& other, RooAbsArg* owner) : 
   RooCacheManager<RooAbsCacheElement>(other,owner),
   _clearOnRedirect(other._clearOnRedirect),
@@ -53,6 +58,8 @@ RooObjCacheManager::RooObjCacheManager(const RooObjCacheManager& other, RooAbsAr
 {
 }
 
+
+//_____________________________________________________________________________
 RooObjCacheManager::~RooObjCacheManager()
 {
   if (_optCacheObservables) {
@@ -66,6 +73,8 @@ RooObjCacheManager::~RooObjCacheManager()
   }
 }
 
+
+//_____________________________________________________________________________
 Bool_t RooObjCacheManager::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) 
 { 
   
@@ -85,6 +94,8 @@ Bool_t RooObjCacheManager::redirectServersHook(const RooAbsCollection& newServer
 } 
 
 
+
+//_____________________________________________________________________________
 void RooObjCacheManager::operModeHook() 
 {
   if (!_owner) {
@@ -99,6 +110,8 @@ void RooObjCacheManager::operModeHook()
 } 
 
 
+
+//_____________________________________________________________________________
 void RooObjCacheManager::optimizeCacheMode(const RooArgSet& obs, RooArgSet& optNodes, RooLinkedList& processedNodes) 
 {
   oocxcoutD(_owner,Caching) << "RooObjCacheManager::optimizeCacheMode(owner=" << _owner->GetName() << ") obs = " << obs << endl ;
@@ -117,6 +130,7 @@ void RooObjCacheManager::optimizeCacheMode(const RooArgSet& obs, RooArgSet& optN
 
 
 
+//_____________________________________________________________________________
 void RooObjCacheManager::insertObjectHook(RooAbsCacheElement& obj) 
 {
   //cout << "RooObjCacheManager::insertObjectHook(owner = " << _owner->GetName() << ")" << endl ;
@@ -138,6 +152,7 @@ void RooObjCacheManager::insertObjectHook(RooAbsCacheElement& obj)
 
 
 
+//_____________________________________________________________________________
 void RooObjCacheManager::printCompactTreeHook(std::ostream& os, const char *indent)
 {
   for (Int_t i=0 ; i<_size ; i++) {
@@ -148,6 +163,8 @@ void RooObjCacheManager::printCompactTreeHook(std::ostream& os, const char *inde
 }
 
 
+
+//_____________________________________________________________________________
 void RooObjCacheManager::findConstantNodes(const RooArgSet& obs, RooArgSet& cacheList, RooLinkedList& processedNodes) 
 {
   // Cache contents cannot be const optimized if it is erased on a server redirect.

@@ -14,7 +14,22 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [AUX] --
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
+// Class RooNormSet cache manage the bookkeeping of multiple instances
+// of sets of integration and normalization observables that effectively
+// have the same definition. In complex function expression many
+// RooArgSets with the same contents may be passed to an object that
+// caches intermediate results dependent on the normalization/integration set
+// To avoid unnecessary cache faulting, This class tracks all instances
+// with the same contents and reports to the owner if the present nset/iset
+// is truely different from the current reference. Class RooNormSet only
+// evaluates each RooArgSet pointer once, it therefore assumes that
+// RooArgSets with normalization and/or integration sets are not changes
+// during their lifetime. 
+// END_HTML
+//
 #include "RooFit.h"
 
 #include "RooNormSetCache.h"
@@ -24,6 +39,8 @@
 ClassImp(RooNormSetCache)
 ;
 
+
+//_____________________________________________________________________________
 RooNormSetCache::RooNormSetCache(Int_t regSize) :
   _htable(0), _regSize(regSize), _nreg(0), _asArr(0), _set2RangeName(0)
 {
@@ -32,6 +49,7 @@ RooNormSetCache::RooNormSetCache(Int_t regSize) :
 
 
 
+//_____________________________________________________________________________
 RooNormSetCache::RooNormSetCache(const RooNormSetCache& other) :
   _htable(0), _regSize(other._regSize), _nreg(0), _asArr(0), _set2RangeName(0)
 {
@@ -40,6 +58,7 @@ RooNormSetCache::RooNormSetCache(const RooNormSetCache& other) :
 
 
 
+//_____________________________________________________________________________
 RooNormSetCache::~RooNormSetCache() 
 {
   delete[] _asArr ;
@@ -48,6 +67,7 @@ RooNormSetCache::~RooNormSetCache()
 
 
 
+//_____________________________________________________________________________
 void RooNormSetCache::clear()
 {
   _nreg = 0 ;  
@@ -58,6 +78,8 @@ void RooNormSetCache::clear()
 }
 
 
+
+//_____________________________________________________________________________
 void RooNormSetCache::initialize(const RooNormSetCache& other) 
 {
   clear() ;
@@ -74,6 +96,7 @@ void RooNormSetCache::initialize(const RooNormSetCache& other)
 
 
 
+//_____________________________________________________________________________
 void RooNormSetCache::add(const RooArgSet* set1, const RooArgSet* set2)
 {
   // If code list array has never been used, allocate and initialize here
@@ -94,6 +117,8 @@ void RooNormSetCache::add(const RooArgSet* set1, const RooArgSet* set2)
 
 }
 
+
+//_____________________________________________________________________________
 void RooNormSetCache::expand()
 {
   Int_t newSize = _regSize*2 ;
@@ -127,6 +152,8 @@ void RooNormSetCache::expand()
 }
 
 
+
+//_____________________________________________________________________________
 Bool_t RooNormSetCache::autoCache(const RooAbsArg* self, const RooArgSet* set1, const RooArgSet* set2, const TNamed* set2RangeName, Bool_t doRefill) 
 {
   // Automated cache management function - Returns kTRUE if cache is invalidated

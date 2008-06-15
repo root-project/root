@@ -103,7 +103,7 @@ protected:
 
   virtual void operModeHook() ; // cache operation mode
 
-  ClassDef(RooRealIntegral,1) // Real-valued variable representing an integral over a RooAbsReal object
+  ClassDef(RooRealIntegral,1) // Real-valued function representing an integral over a RooAbsReal object
 };
 
 #endif

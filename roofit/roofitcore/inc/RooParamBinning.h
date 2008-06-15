@@ -70,7 +70,7 @@ protected:
   RooAbsReal* xlo() const { return _lp ? ((RooAbsReal*)_lp->at(0)) : _xlo ; }
   RooAbsReal* xhi() const { return _lp ? ((RooAbsReal*)_lp->at(1)) : _xhi ; }
 
-  ClassDef(RooParamBinning,1) // Param binning specification
+  ClassDef(RooParamBinning,1) // Binning specification with ranges parameterized by external RooAbsReal functions
 };
 
 #endif

@@ -14,15 +14,19 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [REAL] --
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
 // RooRealIntegral performs hybrid numerical/analytical integrals of RooAbsReal objects
 // The class performs none of the actual integration, but only manages the logic
 // of what variables can be integrated analytically, accounts for eventual jacobian
 // terms and defines what numerical integrations needs to be done to complement the
 // analytical integral.
-//
+// <p>
 // The actual analytical integrations (if any) are done in the PDF themselves, the numerical
 // integration is performed in the various implemenations of the RooAbsIntegrator base class.
+// END_HTML
+//
 
 #include "RooFit.h"
 
@@ -47,6 +51,8 @@ ClassImp(RooRealIntegral)
 ;
 
 
+
+//_____________________________________________________________________________
 RooRealIntegral::RooRealIntegral() : 
   _valid(kFALSE),
   _numIntEngine(0),
@@ -55,6 +61,8 @@ RooRealIntegral::RooRealIntegral() :
 }
 
 
+
+//_____________________________________________________________________________
 RooRealIntegral::RooRealIntegral(const char *name, const char *title, 
 				 const RooAbsReal& function, const RooArgSet& depList,
 				 const RooArgSet* funcNormSet, const RooNumIntConfig* config,
@@ -494,6 +502,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
 
 
 
+//_____________________________________________________________________________
 void RooRealIntegral::autoSelectDirtyMode() 
 {
   // If any of our servers are is forcedDirty or a projectedDependent, then we need to be ADirty
@@ -520,6 +529,8 @@ void RooRealIntegral::autoSelectDirtyMode()
 }
 
 
+
+//_____________________________________________________________________________
 Bool_t RooRealIntegral::servesExclusively(const RooAbsArg* server,const RooArgSet& exclLVBranches) const
 {  
   // Determine if given server serves exclusively exactly one of the given nodes in exclLVBranches
@@ -557,6 +568,7 @@ Bool_t RooRealIntegral::servesExclusively(const RooAbsArg* server,const RooArgSe
 
 
 
+//_____________________________________________________________________________
 Bool_t RooRealIntegral::initNumIntegrator() const
 {
   // (Re)Initialize numerical integration engine if necessary. Return kTRUE if
@@ -612,6 +624,7 @@ Bool_t RooRealIntegral::initNumIntegrator() const
 
 
 
+//_____________________________________________________________________________
 RooRealIntegral::RooRealIntegral(const RooRealIntegral& other, const char* name) : 
   RooAbsReal(other,name), 
   _valid(other._valid),
@@ -651,6 +664,8 @@ RooRealIntegral::RooRealIntegral(const RooRealIntegral& other, const char* name)
 }
 
 
+
+//_____________________________________________________________________________
 RooRealIntegral::~RooRealIntegral()
   // Destructor
 {
@@ -664,6 +679,7 @@ RooRealIntegral::~RooRealIntegral()
 
 
 
+//_____________________________________________________________________________
 Double_t RooRealIntegral::evaluate() const 
 {  
   Double_t retVal(0) ;
@@ -751,6 +767,7 @@ Double_t RooRealIntegral::evaluate() const
 
 
 
+//_____________________________________________________________________________
 Double_t RooRealIntegral::jacobianProduct() const 
 {
   // Return product of jacobian terms originating from analytical integration
@@ -771,6 +788,8 @@ Double_t RooRealIntegral::jacobianProduct() const
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooRealIntegral::sum() const
 {
   // Perform summation of list of category dependents to be integrated
@@ -805,6 +824,7 @@ Double_t RooRealIntegral::sum() const
 
 
 
+//_____________________________________________________________________________
 Double_t RooRealIntegral::integrate() const
 {
   // Perform hybrid numerical/analytical integration over all real-valued dependents
@@ -824,6 +844,8 @@ Double_t RooRealIntegral::integrate() const
 }
 
 
+
+//_____________________________________________________________________________
 Bool_t RooRealIntegral::redirectServersHook(const RooAbsCollection& /*newServerList*/, 
 					    Bool_t /*mustReplaceAll*/, Bool_t /*nameChange*/, Bool_t /*isRecursive*/) 
 {
@@ -842,6 +864,8 @@ Bool_t RooRealIntegral::redirectServersHook(const RooAbsCollection& /*newServerL
 }
 
 
+
+//_____________________________________________________________________________
 void RooRealIntegral::operModeHook()
 {
   if (_operMode==ADirty) {
@@ -851,6 +875,7 @@ void RooRealIntegral::operModeHook()
 
 
 
+//_____________________________________________________________________________
 Bool_t RooRealIntegral::isValidReal(Double_t /*value*/, Bool_t /*printError*/) const 
 {
   // Check if current value is valid
@@ -858,6 +883,8 @@ Bool_t RooRealIntegral::isValidReal(Double_t /*value*/, Bool_t /*printError*/) c
 }
 
 
+
+//_____________________________________________________________________________
 void RooRealIntegral::printMultiline(ostream& os, Int_t contents, Bool_t verbose, TString indent) const
 {
   // Print the state of this object to the specified output stream.

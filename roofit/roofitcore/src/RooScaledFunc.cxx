@@ -14,8 +14,13 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [AUX] --
-// Lightweight function object that applies a scale factor to a RooAbsFunc implementation.
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
+// Lightweight RooAbsFunction implementation that applies a constant scale 
+// factor to another RooAbsFunc.
+// END_HTML
+//
 
 
 #include "RooFit.h"

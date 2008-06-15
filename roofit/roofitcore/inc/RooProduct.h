@@ -75,7 +75,7 @@ protected:
 
 
 
-  ClassDef(RooProduct,1) // Product of RooAbsReal and RooAbsCategory terms
+  ClassDef(RooProduct,1) // Product of RooAbsReal and/or RooAbsCategory terms
 };
 
 #endif

@@ -14,7 +14,8 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [AUX] --
+//////////////////////////////////////////////////////////////////////////////
+//
 // RooStreamParser is a utility class to parse istreams into tokens and optionally
 // convert them into basic types (double,int,string)
 // 
@@ -30,6 +31,7 @@
 // The parser is aware of floating point notation and will assign leading
 // minus signs, decimal points etc to a value token when this is obvious
 // from the context. The definition of what is punctuation can be redefined.
+//
 
 
 #include "RooFit.h"
@@ -50,12 +52,16 @@
 
 ClassImp(RooStreamParser)
 
+
+//_____________________________________________________________________________
 RooStreamParser::RooStreamParser(istream& is) : 
   _is(&is), _atEOF(kFALSE), _prefix(""), _punct("()[]<>|/\\:?.,=+-&^%$#@!`~")
 {
   // Constructor
 }
 
+
+//_____________________________________________________________________________
 RooStreamParser::RooStreamParser(istream& is, const TString& errorPrefix) : 
   _is(&is), _atEOF(kFALSE), _prefix(errorPrefix), _punct("()[]<>|/\\:?.,=+-&^%$#@!`~")
 {
@@ -63,12 +69,16 @@ RooStreamParser::RooStreamParser(istream& is, const TString& errorPrefix) :
 }
 
 
+
+//_____________________________________________________________________________
 RooStreamParser::~RooStreamParser()
 {
   // Destructor
 }
 
 
+
+//_____________________________________________________________________________
 Bool_t RooStreamParser::atEOL() 
 { 
   Int_t nc(_is->peek()) ; 
@@ -76,6 +86,8 @@ Bool_t RooStreamParser::atEOL()
 }
 
 
+
+//_____________________________________________________________________________
 void RooStreamParser::setPunctuation(const TString& punct) 
 {
   // Change list of punctuation characters
@@ -83,6 +95,8 @@ void RooStreamParser::setPunctuation(const TString& punct)
 }
 
 
+
+//_____________________________________________________________________________
 Bool_t RooStreamParser::isPunctChar(char c) const 
 {
   // Check if given char is considered punctuation
@@ -95,6 +109,8 @@ Bool_t RooStreamParser::isPunctChar(char c) const
 }
 
 
+
+//_____________________________________________________________________________
 TString RooStreamParser::readToken() 
 {
   // Read one token
@@ -252,6 +268,8 @@ TString RooStreamParser::readToken()
 }
 
 
+
+//_____________________________________________________________________________
 TString RooStreamParser::readLine() 
 {
   // Read an entire line
@@ -297,6 +315,8 @@ TString RooStreamParser::readLine()
 }
 
 
+
+//_____________________________________________________________________________
 void RooStreamParser::zapToEnd(Bool_t inclContLines) 
 {
   // Skip over everything until the end of the current line
@@ -327,6 +347,8 @@ void RooStreamParser::zapToEnd(Bool_t inclContLines)
 }
 
 
+
+//_____________________________________________________________________________
 Bool_t RooStreamParser::expectToken(const TString& expected, Bool_t zapOnError) 
 {
   // Read a token and check if it matches the given expected value
@@ -342,6 +364,8 @@ Bool_t RooStreamParser::expectToken(const TString& expected, Bool_t zapOnError)
 }
 
 
+
+//_____________________________________________________________________________
 Bool_t RooStreamParser::readDouble(Double_t& value, Bool_t /*zapOnError*/) 
 {
   // Read a token and convert it to a Double_t
@@ -352,6 +376,8 @@ Bool_t RooStreamParser::readDouble(Double_t& value, Bool_t /*zapOnError*/)
 }
 
 
+
+//_____________________________________________________________________________
 Bool_t RooStreamParser::convertToDouble(const TString& token, Double_t& value) 
 {
   // Convert given string to a double
@@ -375,6 +401,8 @@ Bool_t RooStreamParser::convertToDouble(const TString& token, Double_t& value)
 }
 
 
+
+//_____________________________________________________________________________
 Bool_t RooStreamParser::readInteger(Int_t& value, Bool_t /*zapOnError*/) 
 {
   // Read a token and convert it to an Int_t
@@ -384,6 +412,8 @@ Bool_t RooStreamParser::readInteger(Int_t& value, Bool_t /*zapOnError*/)
 }
 
 
+
+//_____________________________________________________________________________
 Bool_t RooStreamParser::convertToInteger(const TString& token, Int_t& value) 
 {
   // Convert given string to an Int_t
@@ -400,6 +430,8 @@ Bool_t RooStreamParser::convertToInteger(const TString& token, Int_t& value)
 }
 
 
+
+//_____________________________________________________________________________
 Bool_t RooStreamParser::readString(TString& value, Bool_t /*zapOnError*/) 
 {
   // Read a string token
@@ -409,6 +441,8 @@ Bool_t RooStreamParser::readString(TString& value, Bool_t /*zapOnError*/)
 }
 
 
+
+//_____________________________________________________________________________
 Bool_t RooStreamParser::convertToString(const TString& token, TString& string) 
 {
   // Convert given token to a string (i.e. remove eventual quotation marks)

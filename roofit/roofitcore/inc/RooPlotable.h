@@ -53,7 +53,7 @@ public:
 protected:
   TString _yAxisLabel;
   Double_t _ymin, _ymax, _normValue;
-  ClassDef(RooPlotable,1) // Abstract interface for plotable objects
+  ClassDef(RooPlotable,1) // Abstract interface for plotable objects in a RooPlot
 };
 
 #endif

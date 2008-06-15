@@ -194,7 +194,7 @@ private:
 
   void initialize();
 
-  ClassDef(RooTreeData,1) // Abstract ttree based data collection
+  ClassDef(RooTreeData,1) // Abstract TTree based data collection
 };
 
 

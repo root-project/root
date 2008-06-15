@@ -14,7 +14,13 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [AUX] --
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
+// Class RooSharedProperties is the base class for shared properties
+// that can be stored in RooSharedPropertiesList.
+// END_HTML
+//
 
 #include "RooFit.h"
 #include "RooSharedProperties.h"
@@ -29,29 +35,39 @@ ClassImp(RooSharedProperties)
 ;
 
 
+
+//_____________________________________________________________________________
 RooSharedProperties::RooSharedProperties() 
 {
   RooTrace::create(this) ;
 } 
 
+
+//_____________________________________________________________________________
 RooSharedProperties::RooSharedProperties(const char* uuidstr) : _uuid(uuidstr) 
 {
   RooTrace::create(this) ;
 } 
 
 
+
+//_____________________________________________________________________________
 RooSharedProperties::~RooSharedProperties() 
 {
   RooTrace::destroy(this) ;
 } 
 
 
+
+//_____________________________________________________________________________
 Bool_t RooSharedProperties::operator==(const RooSharedProperties& other) 
 {
   // Forward comparison to Unique UID component
   return (_uuid==other._uuid) ;
 }
 
+
+//_____________________________________________________________________________
 void RooSharedProperties::Print(Option_t* /*opts*/) const 
 {
   cout << "RooSharedProperties(" << this << ") UUID = " << _uuid.AsString() << endl ;

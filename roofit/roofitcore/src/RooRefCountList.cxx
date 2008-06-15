@@ -14,11 +14,15 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [AUX] --
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
 // A RooRefCountList is a RooLinkedList that keeps a reference counter
 // with each added node. Multiple Add()s of the same object will increase
 // the counter instead of adding multiple copies. Remove() decrements the 
 // reference count until zero, when the object is actually removed.
+// END_HTML
+//
 
 #include "RooFit.h"
 
@@ -32,12 +36,16 @@ ClassImp(RooRefCountList)
   ;
 
 
+
+//_____________________________________________________________________________
 RooRefCountList::RooRefCountList()
   : RooLinkedList(17) 
 { 
 }
 
 
+
+//_____________________________________________________________________________
 void RooRefCountList::Add(TObject* obj, Int_t count) 
 {
   // Check if we already have it
@@ -55,6 +63,8 @@ void RooRefCountList::Add(TObject* obj, Int_t count)
 }
 
 
+
+//_____________________________________________________________________________
 Bool_t RooRefCountList::Remove(TObject* obj) 
 {
   RooLinkedListElem* link = findLink(obj) ;
@@ -71,12 +81,16 @@ Bool_t RooRefCountList::Remove(TObject* obj)
 }
 
 
+
+//_____________________________________________________________________________
 Bool_t RooRefCountList::RemoveAll(TObject* obj)
 {
   return RooLinkedList::Remove(obj) ;
 }
 
 
+
+//_____________________________________________________________________________
 Int_t RooRefCountList::refCount(TObject* obj) 
 {
   RooLinkedListElem* link = findLink(obj) ;

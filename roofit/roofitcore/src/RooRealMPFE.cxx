@@ -14,7 +14,9 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [AUX] --
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
 // RooRealMPFE is the multi-processor front-end for parallel calculation
 // of RooAbsReal objects. Each RooRealMPFE forks a process that calculates
 // the value of the proxies RooAbsReal object. The (re)calculation of
@@ -24,6 +26,8 @@
 // the calling process until the calculation is done.
 // The forked calculation process is terminated when the front-end object
 // is deleted
+// END_HTML
+//
 
 #include "Riostream.h"
 #include "RooFit.h"
@@ -49,6 +53,8 @@ RooMPSentinel RooRealMPFE::_sentinel ;
 ClassImp(RooRealMPFE)
   ;
 
+
+//_____________________________________________________________________________
 RooRealMPFE::RooRealMPFE(const char *name, const char *title, RooAbsReal& arg, Bool_t calcInline) : 
   RooAbsReal(name,title),
   _state(Initialize),
@@ -68,6 +74,8 @@ RooRealMPFE::RooRealMPFE(const char *name, const char *title, RooAbsReal& arg, B
 }
 
 
+
+//_____________________________________________________________________________
 RooRealMPFE::RooRealMPFE(const RooRealMPFE& other, const char* name) : 
   RooAbsReal(other, name),
   _state(other._state),
@@ -86,6 +94,8 @@ RooRealMPFE::RooRealMPFE(const RooRealMPFE& other, const char* name) :
 }
 
 
+
+//_____________________________________________________________________________
 RooRealMPFE::~RooRealMPFE() 
 {
   // Destructor
@@ -97,6 +107,7 @@ RooRealMPFE::~RooRealMPFE()
 
 
 
+//_____________________________________________________________________________
 void RooRealMPFE::initVars()
 {
   // Initialize variable list
@@ -122,6 +133,8 @@ void RooRealMPFE::initVars()
 }
 
 
+
+//_____________________________________________________________________________
 void RooRealMPFE::initialize() {
 
   // Trivial case: Inline mode 
@@ -171,6 +184,7 @@ void RooRealMPFE::initialize() {
 
 
 
+//_____________________________________________________________________________
 void RooRealMPFE::serverLoop() 
 {
 #ifndef _WIN32
@@ -302,6 +316,7 @@ void RooRealMPFE::serverLoop()
 
 
 
+//_____________________________________________________________________________
 void RooRealMPFE::calculate() const 
 {
   // Start asynchronous calculation of arg value
@@ -370,6 +385,7 @@ void RooRealMPFE::calculate() const
 
 
 
+//_____________________________________________________________________________
 Double_t RooRealMPFE::getVal(const RooArgSet* /*nset*/) const 
 {
   if (isValueDirty()) {
@@ -391,6 +407,7 @@ Double_t RooRealMPFE::getVal(const RooArgSet* /*nset*/) const
 
 
 
+//_____________________________________________________________________________
 Double_t RooRealMPFE::evaluate() const
 {
   // Retrieve value of arg
@@ -472,6 +489,8 @@ Double_t RooRealMPFE::evaluate() const
 }
 
 
+
+//_____________________________________________________________________________
 void RooRealMPFE::standby()
 {
 #ifndef _WIN32
@@ -499,6 +518,8 @@ void RooRealMPFE::standby()
 }
 
 
+
+//_____________________________________________________________________________
 void RooRealMPFE::constOptimizeTestStatistic(ConstOpCode opcode) 
 {
 #ifndef _WIN32
@@ -520,6 +541,7 @@ void RooRealMPFE::constOptimizeTestStatistic(ConstOpCode opcode)
 
 
 
+//_____________________________________________________________________________
 void RooRealMPFE::setVerbose(Bool_t clientFlag, Bool_t serverFlag) 
 {
 #ifndef _WIN32

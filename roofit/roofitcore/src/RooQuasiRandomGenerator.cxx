@@ -14,7 +14,9 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [AUX] --
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
 // This class generates the quasi-random (aka "low discrepancy")
 // sequence for dimensions up to 12 using the Niederreiter base 2
 // algorithm described in Bratley, Fox, Niederreiter, ACM Trans.
@@ -22,6 +24,8 @@
 // from the 0.9 beta release of the GNU scientific library.
 // Quasi-random number sequences are useful for improving the
 // convergence of a Monte Carlo integration.
+// END_HTML
+//
 
 #include "RooFit.h"
 
@@ -37,6 +41,8 @@ ClassImp(RooQuasiRandomGenerator)
   ;
 
 
+
+//_____________________________________________________________________________
 RooQuasiRandomGenerator::RooQuasiRandomGenerator() {
   // Perform one-time initialization of our static coefficient array if necessary
   // and initialize our workspace.
@@ -50,10 +56,14 @@ RooQuasiRandomGenerator::RooQuasiRandomGenerator() {
   reset();
 }
 
+
+//_____________________________________________________________________________
 RooQuasiRandomGenerator::~RooQuasiRandomGenerator() {
   delete[] _nextq;
 }
 
+
+//_____________________________________________________________________________
 void RooQuasiRandomGenerator::reset() {
   // Reset the workspace to its initial state.
 
@@ -61,6 +71,8 @@ void RooQuasiRandomGenerator::reset() {
   for(Int_t dim= 0; dim < MaxDimension; dim++) _nextq[dim]= 0;
 }
 
+
+//_____________________________________________________________________________
 Bool_t RooQuasiRandomGenerator::generate(UInt_t dimension, Double_t vector[]) {
   // Generate the next number in the sequence for the specified dimension.
   // The maximum dimension supported is 12.
@@ -99,6 +111,8 @@ Bool_t RooQuasiRandomGenerator::generate(UInt_t dimension, Double_t vector[]) {
   return kTRUE;
 }
 
+
+//_____________________________________________________________________________
 void RooQuasiRandomGenerator::calculateCoefs(UInt_t dimension) {
   int ci[NBits][NBits];
   int v[NBits+MaxDegree+1];
@@ -172,6 +186,8 @@ void RooQuasiRandomGenerator::calculateCoefs(UInt_t dimension) {
   }
 }
 
+
+//_____________________________________________________________________________
 void RooQuasiRandomGenerator::calculateV(const int px[], int px_degree,
 					 int pb[], int * pb_degree, int v[], int maxv) {
   const int nonzero_element = 1;    /* nonzero element of Z_2  */
@@ -259,6 +275,8 @@ void RooQuasiRandomGenerator::calculateV(const int px[], int px_degree,
   }
 }
 
+
+//_____________________________________________________________________________
 void RooQuasiRandomGenerator::polyMultiply(const int pa[], int pa_degree, const int pb[],
 					   int pb_degree, int pc[], int  * pc_degree) {
   int j, k;
@@ -284,11 +302,17 @@ void RooQuasiRandomGenerator::polyMultiply(const int pa[], int pa_degree, const 
   *pc_degree = pt_degree;
 }
 
+
+//_____________________________________________________________________________
 Int_t RooQuasiRandomGenerator::_cj[RooQuasiRandomGenerator::NBits]
 [RooQuasiRandomGenerator::MaxDimension];
 
 /* primitive polynomials in binary encoding */
+
+//_____________________________________________________________________________
 const Int_t RooQuasiRandomGenerator::_primitivePoly[RooQuasiRandomGenerator::MaxDimension+1]
+
+//_____________________________________________________________________________
 [RooQuasiRandomGenerator::MaxPrimitiveDegree+1] =
 {
   { 1, 0, 0, 0, 0, 0 },  /*  1               */
@@ -307,6 +331,8 @@ const Int_t RooQuasiRandomGenerator::_primitivePoly[RooQuasiRandomGenerator::Max
 };
 
 /* degrees of primitive polynomials */
+
+//_____________________________________________________________________________
 const Int_t RooQuasiRandomGenerator::_polyDegree[RooQuasiRandomGenerator::MaxDimension+1] =
 {
   0, 1, 1, 2, 3, 3, 4, 4, 4, 5, 5, 5, 5

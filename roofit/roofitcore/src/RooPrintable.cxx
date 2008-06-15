@@ -14,8 +14,22 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [MISC] --
-// Classes inheriting from this class can be plotted and printed.
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
+// RooPlotable is a 'mix-in' base class that define the standard RooFit plotting and
+// printing methods. Each RooPlotable implementation must define methods that
+// print the objects name, class name, title, value, arguments and extras
+// to a provided stream. The definition of value is class dependent. The definition
+// of arguments is also class dependent, but should always be interpreted as
+// the names (and properties) of any (RooAbsArg) external inputs of a given object.
+// The extras method can be used to print any properties that does not fit in any
+// of the other classes. Each object an also override the definitions made
+// in defaultPrintStyle and defaultPrintContents to determine what is printed
+// (in terms of contents) and how it is printed (inline,single-line or multiline)
+// given a Print() option string. 
+// END_HTML
+//
 
 #include "RooFit.h"
 
@@ -37,12 +51,16 @@ namespace RooFit {
   }
 }
 
+
+//_____________________________________________________________________________
 void RooPrintable::nameFieldLength(Int_t newLen)
 {
   _nameLength = newLen>0 ? newLen : 0 ;
 }
 
 
+
+//_____________________________________________________________________________
 void RooPrintable::printStream(ostream& os, Int_t contents, StyleOption style, TString indent) const 
 {
   // enum ContentsOption { Name=1, Value=2, ValueName=3, ValueNameExtra=4, Structure=5 } ;
@@ -122,50 +140,72 @@ void RooPrintable::printStream(ostream& os, Int_t contents, StyleOption style, T
 
 
 // Virtual hook function for class-specific content implementation
+
+//_____________________________________________________________________________
 void RooPrintable::printValue(ostream& /*os*/) const
 {
 }
 
+
+//_____________________________________________________________________________
 void RooPrintable::printExtras(ostream& /*os*/) const
 {
 }
 
+
+//_____________________________________________________________________________
 void RooPrintable::printMultiline(ostream& /*os*/, Int_t /*contents*/, Bool_t /*verbose*/, TString /*indent*/) const
 {
 }
 
+
+//_____________________________________________________________________________
 void RooPrintable::printTree(ostream& /*os*/, TString /*indent*/) const
 {
 }
 
+
+//_____________________________________________________________________________
 void RooPrintable::printArgs(ostream& /*os*/) const 
 {
 }
 
+
+//_____________________________________________________________________________
 void RooPrintable::printName(ostream& /*os*/) const 
 {
 }
 
+
+//_____________________________________________________________________________
 void RooPrintable::printTitle(ostream& /*os*/) const 
 {
 }
 
+
+//_____________________________________________________________________________
 void RooPrintable::printClassName(ostream& /*os*/) const 
 {
 }
 
 
+
+//_____________________________________________________________________________
 Int_t RooPrintable::defaultPrintContents(Option_t* /*opt*/) const
 { 
   return kName|kValue ; 
 }
 
+
+//_____________________________________________________________________________
 RooPrintable::StyleOption RooPrintable::defaultPrintStyle(Option_t* /*opt*/) const
 { 
   return kSingleLine ; 
 }
 
 
+
+//_____________________________________________________________________________
 ostream &RooPrintable::defaultPrintStream(ostream *os) {
   // Return a reference to the current default stream to use in
   // Print(). Use the optional parameter to specify a new default

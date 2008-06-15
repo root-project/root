@@ -14,7 +14,16 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [AUX] --
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
+// Class RooTrace controls the memory tracing hooks in all RooFit
+// objects. When tracing is active, a table of live RooFit objects
+// is kept that can be queried at any time. In verbose mode, messages
+// are printed in addition at the construction and destruction of
+// each object.
+// END_HTML
+//
 
 #include "RooFit.h"
 
@@ -36,27 +45,37 @@ RooLinkedList RooTrace::_list ;
 RooLinkedList RooTrace::_markList ;
 
 
+
+//_____________________________________________________________________________
 void RooTrace::create(const TObject* obj) 
 { 
   if (_active) create2(obj) ; 
 }
 
+
+//_____________________________________________________________________________
 void RooTrace::destroy(const TObject* obj) 
 { 
   if (_active) destroy2(obj) ; 
 }
 
+
+//_____________________________________________________________________________
 void RooTrace::active(Bool_t flag) 
 { 
   _active = flag ; 
 }
 
+
+//_____________________________________________________________________________
 void RooTrace::verbose(Bool_t flag) 
 { 
   _verbose = flag ; 
 }
 
 
+
+//_____________________________________________________________________________
 void RooTrace::create2(const TObject* obj) {
   
   _list.Add((RooAbsArg*)obj) ;
@@ -68,6 +87,8 @@ void RooTrace::create2(const TObject* obj) {
 
 
   
+
+//_____________________________________________________________________________
 void RooTrace::destroy2(const TObject* obj) {
 
   if (!_list.Remove((RooAbsArg*)obj)) {
@@ -80,16 +101,22 @@ void RooTrace::destroy2(const TObject* obj) {
 }
 
 
+
+//_____________________________________________________________________________
 void RooTrace::mark()
 {
   _markList = _list ;
 }
 
 
+
+//_____________________________________________________________________________
 void RooTrace::dump() {
   dump(cout,kFALSE) ;
 }
 
+
+//_____________________________________________________________________________
 void RooTrace::dump(ostream& os, Bool_t sinceMarked) {
   os << "List of RooFit objects allocated while trace active:" << endl ;
 

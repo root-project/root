@@ -39,7 +39,7 @@ protected:
   Double_t _thresh ;
   RooCatType _cat ;
 	
-  ClassDef(RooThreshEntry,1) // Utility class, holding a threshold/category state pair
+  ClassDef(RooThreshEntry,1) // Utility class for RooThresholdCategory, holding a threshold/category state pair
 } ;
 
 

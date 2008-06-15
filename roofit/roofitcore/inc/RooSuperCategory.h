@@ -59,7 +59,7 @@ protected:
   
   virtual RooCatType evaluate() const ; 
 
-  ClassDef(RooSuperCategory,1) // Derived index variable represening the maximal permutation of a list of indeces
+  ClassDef(RooSuperCategory,1) // Lvalue product operator for catategory lvalues
 };
 
 #endif

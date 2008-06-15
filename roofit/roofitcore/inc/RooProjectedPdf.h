@@ -70,7 +70,7 @@ protected:
 
 private:
 
-  ClassDef(RooProjectedPdf,0) // Your description goes here...
+  ClassDef(RooProjectedPdf,0) // Operator p.d.f calculating projection of another p.d.f
 };
  
 #endif

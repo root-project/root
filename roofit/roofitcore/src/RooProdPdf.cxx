@@ -14,7 +14,9 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [PDF] --
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
 // RooProdPdf is an efficient implementation of a product of PDFs of the form 
 //
 //  PDF_1 * PDF_2 * ... * PDF_N
@@ -36,6 +38,8 @@
 // events from the extendable component PDF. The extendable component does not
 // have to appear in any specific place in the list.
 // 
+// END_HTML
+//
 
 #include "RooFit.h"
 #include "Riostream.h"
@@ -55,6 +59,8 @@ ClassImp(RooProdPdf)
 ;
 
 
+
+//_____________________________________________________________________________
 RooProdPdf::RooProdPdf() :
   _curNormSet(0),
   _cutOff(0),
@@ -66,6 +72,8 @@ RooProdPdf::RooProdPdf() :
 }
 
 
+
+//_____________________________________________________________________________
 RooProdPdf::RooProdPdf(const char *name, const char *title, Double_t cutOff) :
   RooAbsPdf(name,title), 
   _cacheMgr(this,10),
@@ -80,6 +88,8 @@ RooProdPdf::RooProdPdf(const char *name, const char *title, Double_t cutOff) :
 }
 
 
+
+//_____________________________________________________________________________
 RooProdPdf::RooProdPdf(const char *name, const char *title,
 		       RooAbsPdf& pdf1, RooAbsPdf& pdf2, Double_t cutOff) : 
   RooAbsPdf(name,title), 
@@ -133,6 +143,7 @@ RooProdPdf::RooProdPdf(const char *name, const char *title,
 
 
 
+//_____________________________________________________________________________
 RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgList& inPdfList, Double_t cutOff) :
   RooAbsPdf(name,title), 
   _cacheMgr(this,10),
@@ -192,6 +203,8 @@ RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgList& in
 }
 
 
+
+//_____________________________________________________________________________
 RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgSet& fullPdfSet,
 		       const RooCmdArg& arg1, const RooCmdArg& arg2,
 		       const RooCmdArg& arg3, const RooCmdArg& arg4,
@@ -242,6 +255,8 @@ RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgSet& ful
 }
 
 
+
+//_____________________________________________________________________________
 RooProdPdf::RooProdPdf(const char* name, const char* title,
 		       const RooCmdArg& arg1, const RooCmdArg& arg2,
 		       const RooCmdArg& arg3, const RooCmdArg& arg4,
@@ -292,6 +307,8 @@ RooProdPdf::RooProdPdf(const char* name, const char* title,
 }
 
 
+
+//_____________________________________________________________________________
 RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgSet& fullPdfSet, const RooLinkedList& cmdArgList) :
   RooAbsPdf(name,title), 
   _cacheMgr(this,10),
@@ -308,6 +325,8 @@ RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgSet& ful
 }
 
 
+
+//_____________________________________________________________________________
 RooProdPdf::RooProdPdf(const RooProdPdf& other, const char* name) :
   RooAbsPdf(other,name), 
   _cacheMgr(other._cacheMgr,this),
@@ -332,6 +351,7 @@ RooProdPdf::RooProdPdf(const RooProdPdf& other, const char* name) :
 
 
 
+//_____________________________________________________________________________
 void RooProdPdf::initializeFromCmdArgList(const RooArgSet& fullPdfSet, const RooLinkedList& l)
 {
   // Initialize RooProdPdf from a list of RooCmdArg configuration arguments
@@ -395,6 +415,8 @@ void RooProdPdf::initializeFromCmdArgList(const RooArgSet& fullPdfSet, const Roo
 }
 
 
+
+//_____________________________________________________________________________
 RooProdPdf::~RooProdPdf()
 {
   // Destructor
@@ -404,6 +426,8 @@ RooProdPdf::~RooProdPdf()
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooProdPdf::getVal(const RooArgSet* set) const 
 {
   _curNormSet = (RooArgSet*)set ;
@@ -411,6 +435,8 @@ Double_t RooProdPdf::getVal(const RooArgSet* set) const
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooProdPdf::evaluate() const 
 {
   // Calculate current unnormalized value of object
@@ -427,6 +453,7 @@ Double_t RooProdPdf::evaluate() const
 
 
 
+//_____________________________________________________________________________
 Double_t RooProdPdf::calculate(const RooArgList* partIntList, const RooLinkedList* normSetList) const
 {
   // Calculate running product of pdfs, skipping factorized components
@@ -456,6 +483,7 @@ Double_t RooProdPdf::calculate(const RooArgList* partIntList, const RooLinkedLis
 
 
 
+//_____________________________________________________________________________
 void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& intSet,
 				  RooLinkedList& termList, RooLinkedList& normList, 
 				  RooLinkedList& impDepList, RooLinkedList& crossDepList,
@@ -624,6 +652,7 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
 
 
 
+//_____________________________________________________________________________
 void RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset, 
 				pRooArgList& partList, pRooLinkedList& nsetList, 
 				Int_t& code, const char* isetRangeName) const 
@@ -773,6 +802,8 @@ void RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset,
 }
 
 
+
+//_____________________________________________________________________________
 void RooProdPdf::groupProductTerms(RooLinkedList& groupedTerms, RooArgSet& outerIntDeps, 
 				   const RooLinkedList& terms, const RooLinkedList& norms, 
 				   const RooLinkedList& imps, const RooLinkedList& ints, const RooLinkedList& /*cross*/) const
@@ -890,6 +921,7 @@ void RooProdPdf::groupProductTerms(RooLinkedList& groupedTerms, RooArgSet& outer
 
 
 
+//_____________________________________________________________________________
 RooAbsReal* RooProdPdf::processProductTerm(const RooArgSet* nset, const RooArgSet* iset, const char* isetRangeName,
 				           const RooArgSet* term,const RooArgSet& termNSet, const RooArgSet& termISet,
 				           Bool_t& isOwned, Bool_t forceWrap) const
@@ -1002,6 +1034,7 @@ RooAbsReal* RooProdPdf::processProductTerm(const RooArgSet* nset, const RooArgSe
 
 
 
+//_____________________________________________________________________________
 const char* RooProdPdf::makeRGPPName(const char* pfx, const RooArgSet& term, const RooArgSet& iset, const RooArgSet& nset, const char* isetRangeName) const
 {
   // Make an appropriate name for a RooGenProdProj object in getPartIntList() 
@@ -1030,12 +1063,16 @@ const char* RooProdPdf::makeRGPPName(const char* pfx, const RooArgSet& term, con
 }
 
 
+
+//_____________________________________________________________________________
 Bool_t RooProdPdf::forceAnalyticalInt(const RooAbsArg& /*dep*/) const 
 {
   return kTRUE ;
 }
 
 
+
+//_____________________________________________________________________________
 Int_t RooProdPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, 
 					  const RooArgSet* normSet, const char* rangeName) const 
 {
@@ -1070,6 +1107,7 @@ Int_t RooProdPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVar
 
 
 
+//_____________________________________________________________________________
 Double_t RooProdPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName) const 
 {
   // Return analytical integral defined by given scenario code
@@ -1115,6 +1153,7 @@ Double_t RooProdPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, 
 
 
 
+//_____________________________________________________________________________
 Bool_t RooProdPdf::checkObservables(const RooArgSet* /*nset*/) const 
 {
   // Check that none of the PDFs have overlapping dependents
@@ -1142,6 +1181,7 @@ Bool_t RooProdPdf::checkObservables(const RooArgSet* /*nset*/) const
 
 
 
+//_____________________________________________________________________________
 RooAbsPdf::ExtendMode RooProdPdf::extendMode() const
 {
   return (_extendedIndex>=0) ? ((RooAbsPdf*)_pdfList.at(_extendedIndex))->extendMode() : CanNotBeExtended ;
@@ -1149,6 +1189,7 @@ RooAbsPdf::ExtendMode RooProdPdf::extendMode() const
 
 
 
+//_____________________________________________________________________________
 Double_t RooProdPdf::expectedEvents(const RooArgSet* nset) const 
 {
   if (_extendedIndex<=0) {
@@ -1161,6 +1202,7 @@ Double_t RooProdPdf::expectedEvents(const RooArgSet* nset) const
 
 
 
+//_____________________________________________________________________________
 RooAbsGenContext* RooProdPdf::genContext(const RooArgSet &vars, const RooDataSet *prototype, 
 					 const RooArgSet* auxProto, Bool_t verbose) const 
 {
@@ -1170,6 +1212,7 @@ RooAbsGenContext* RooProdPdf::genContext(const RooArgSet &vars, const RooDataSet
 
 
 
+//_____________________________________________________________________________
 Int_t RooProdPdf::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK) const
 {
   if (!_useDefaultGen) return 0 ;
@@ -1208,6 +1251,8 @@ Int_t RooProdPdf::getGenerator(const RooArgSet& directVars, RooArgSet &generateV
 }
 
 
+
+//_____________________________________________________________________________
 void RooProdPdf::initGenerator(Int_t code)
 {
   if (!_useDefaultGen) return ;
@@ -1225,6 +1270,8 @@ void RooProdPdf::initGenerator(Int_t code)
 }
 
 
+
+//_____________________________________________________________________________
 void RooProdPdf::generateEvent(Int_t code)
 {  
   if (!_useDefaultGen) return ;
@@ -1243,12 +1290,16 @@ void RooProdPdf::generateEvent(Int_t code)
 }
 
 
+
+//_____________________________________________________________________________
 RooProdPdf::CacheElem::~CacheElem() 
 {
   _normList.Delete() ;
 }
 
 
+
+//_____________________________________________________________________________
 RooArgList RooProdPdf::CacheElem::containedArgs(Action) 
 {
   RooArgList ret ;
@@ -1258,6 +1309,8 @@ RooArgList RooProdPdf::CacheElem::containedArgs(Action)
 }
 
 
+
+//_____________________________________________________________________________
 void RooProdPdf::CacheElem::printCompactTreeHook(ostream& os, const char* indent, Int_t curElem, Int_t maxElem) 
 {
    if (curElem==0) {
@@ -1280,6 +1333,7 @@ void RooProdPdf::CacheElem::printCompactTreeHook(ostream& os, const char* indent
 
 
 
+//_____________________________________________________________________________
 Bool_t RooProdPdf::isDirectGenSafe(const RooAbsArg& arg) const 
 {
   // Only override base class behaviour if default generator method is enabled
@@ -1305,6 +1359,7 @@ Bool_t RooProdPdf::isDirectGenSafe(const RooAbsArg& arg) const
 
 
 
+//_____________________________________________________________________________
 RooArgSet* RooProdPdf::findPdfNSet(RooAbsPdf& pdf) const 
 {
   // Look up user specified normalization set for given input PDF component
@@ -1315,6 +1370,8 @@ RooArgSet* RooProdPdf::findPdfNSet(RooAbsPdf& pdf) const
 }
 
 
+
+//_____________________________________________________________________________
 RooArgSet* RooProdPdf::getConstraints(const RooArgSet& observables, const RooArgSet& constrainedParams) const
 {
   RooArgSet* ret = new RooArgSet("constraints") ;

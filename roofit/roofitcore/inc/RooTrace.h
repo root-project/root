@@ -49,7 +49,7 @@ protected:
   static RooLinkedList _list ;
   static RooLinkedList _markList ;
 
-  ClassDef(RooTrace,0) // Memory tracer utility for RooFitTools objects
+  ClassDef(RooTrace,0) // Memory tracer utility for RooFit objects
 };
 
 

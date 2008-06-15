@@ -14,8 +14,8 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [PDF] --
-// 
+//////////////////////////////////////////////////////////////////////////////
+//
 //  RooResolutionModel is the base class of for PDFs that represent a
 //  resolution model that can be convoluted with physics a physics model of the form
 //
@@ -57,6 +57,7 @@
 //
 //  The choice of basis returned by basisCode() is guaranteed not to change
 //  of the lifetime of a RooResolutionModel object.
+//
 
 #include "RooFit.h"
 
@@ -73,12 +74,16 @@ ClassImp(RooResolutionModel)
 RooFormulaVar* RooResolutionModel::_identity = 0;
 
 
+
+//_____________________________________________________________________________
 void RooResolutionModel::cleanup()
 {
   delete _identity ;
   _identity = 0 ;
 }
 
+
+//_____________________________________________________________________________
 RooResolutionModel::RooResolutionModel(const char *name, const char *title, RooRealVar& _x) : 
   RooAbsPdf(name,title), 
   x("x","Dependent or convolution variable",this,_x),
@@ -92,6 +97,8 @@ RooResolutionModel::RooResolutionModel(const char *name, const char *title, RooR
 }
 
 
+
+//_____________________________________________________________________________
 RooResolutionModel::RooResolutionModel(const RooResolutionModel& other, const char* name) : 
   RooAbsPdf(other,name), 
   x("x",this,other.x),
@@ -118,6 +125,7 @@ RooResolutionModel::RooResolutionModel(const RooResolutionModel& other, const ch
 
 
 
+//_____________________________________________________________________________
 RooResolutionModel::~RooResolutionModel()
 {
   // Destructor
@@ -129,6 +137,7 @@ RooResolutionModel::~RooResolutionModel()
 
 
 
+//_____________________________________________________________________________
 RooFormulaVar* RooResolutionModel::identity() 
 { 
   // Return identity formula pointer
@@ -141,6 +150,8 @@ RooFormulaVar* RooResolutionModel::identity()
 }
 
 
+
+//_____________________________________________________________________________
 RooResolutionModel* RooResolutionModel::convolution(RooFormulaVar* inBasis, RooAbsArg* owner) const
 {
   // Instantiate a clone of this resolution model representing a convolution with given
@@ -177,6 +188,7 @@ RooResolutionModel* RooResolutionModel::convolution(RooFormulaVar* inBasis, RooA
 
 
 
+//_____________________________________________________________________________
 void RooResolutionModel::changeBasis(RooFormulaVar* inBasis) 
 {
   // Change the basis function we convolute with.
@@ -213,6 +225,7 @@ void RooResolutionModel::changeBasis(RooFormulaVar* inBasis)
 
 
 
+//_____________________________________________________________________________
 const RooRealVar& RooResolutionModel::basisConvVar() const 
 {
   // Return the convolution variable of the selection basis function.
@@ -227,6 +240,8 @@ const RooRealVar& RooResolutionModel::basisConvVar() const
 }
 
 
+
+//_____________________________________________________________________________
 RooRealVar& RooResolutionModel::convVar() const 
 {
   // Return the convolution variable of the resolution model
@@ -235,6 +250,7 @@ RooRealVar& RooResolutionModel::convVar() const
 
 
 
+//_____________________________________________________________________________
 Double_t RooResolutionModel::getVal(const RooArgSet* nset) const
 {
   // Modified version of RooAbsPdf::getVal(). If used as regular PDF, 
@@ -259,6 +275,7 @@ Double_t RooResolutionModel::getVal(const RooArgSet* nset) const
 
 
 
+//_____________________________________________________________________________
 Bool_t RooResolutionModel::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t /*isRecursive*/) 
 {
   // Forward redirectServers call to our basis function, which is not connected to either resolution
@@ -287,6 +304,7 @@ Bool_t RooResolutionModel::redirectServersHook(const RooAbsCollection& newServer
 
 
 
+//_____________________________________________________________________________
 Bool_t RooResolutionModel::traceEvalHook(Double_t value) const 
 {
   // Floating point error checking and tracing for given float value
@@ -297,6 +315,7 @@ Bool_t RooResolutionModel::traceEvalHook(Double_t value) const
 
 
 
+//_____________________________________________________________________________
 void RooResolutionModel::normLeafServerList(RooArgSet& list) const 
 {
   // Return the list of servers used by our normalization integral
@@ -305,6 +324,7 @@ void RooResolutionModel::normLeafServerList(RooArgSet& list) const
 
 
 
+//_____________________________________________________________________________
 Double_t RooResolutionModel::getNorm(const RooArgSet* nset) const
 {
   // Return the integral of this PDF over all elements of 'nset'. 
@@ -321,6 +341,8 @@ Double_t RooResolutionModel::getNorm(const RooArgSet* nset) const
 }
 
 
+
+//_____________________________________________________________________________
 void RooResolutionModel::printMultiline(ostream& os, Int_t content, Bool_t verbose, TString indent) const
 {
   // Print info about this object to the specified stream. In addition to the info

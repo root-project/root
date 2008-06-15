@@ -14,9 +14,13 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [AUX] --
-// Lightweight interface adaptor that binds an analytic integral of a
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
+// Lightweight RooAbsFunc interface adaptor that binds an analytic integral of a
 // RooAbsReal object (specified by a code) to a set of dependent variables.
+// END_HTML
+//
 
 
 #include "RooFit.h"
@@ -30,7 +34,10 @@
 ClassImp(RooRealAnalytic)
 ;
 
-Double_t RooRealAnalytic::operator()(const Double_t xvector[]) const {
+
+//_____________________________________________________________________________
+Double_t RooRealAnalytic::operator()(const Double_t xvector[]) const 
+{
   // Evaluate our analytic integral at the specified values of the dependents.
   assert(isValid());
   loadValues(xvector);  

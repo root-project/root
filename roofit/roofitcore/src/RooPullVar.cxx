@@ -14,12 +14,16 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [REAL] --
+//////////////////////////////////////////////////////////////////////////////
 //
-// RooPullVar calculates the pull of measurement w.r.t to true value
-// using the measurement value and its error. If an asymmetric error
-// is defined on a given measurement the proper side of that asymmetric
-// error will be used
+// BEGIN_HTML
+// Class RooPullVar represents the pull of measurement w.r.t to true value
+// using the measurement value and its error. Both the true value and
+// the measured value (with error) are taken from two user supplied
+// RooRealVars. If an asymmetric error is defined on a given measurement the proper 
+// side of that asymmetric error will be used
+// END_HTML
+//
 
 #include "RooFit.h"
 
@@ -34,11 +38,15 @@
 ClassImp(RooPullVar)
 ;
 
+
+//_____________________________________________________________________________
 RooPullVar::RooPullVar()
 {
 }
 
 
+
+//_____________________________________________________________________________
 RooPullVar::RooPullVar(const char* name, const char* title, RooRealVar& meas, RooAbsReal& truth) :
   RooAbsReal(name, title),
   _meas("meas","Measurement",this,meas),
@@ -50,6 +58,7 @@ RooPullVar::RooPullVar(const char* name, const char* title, RooRealVar& meas, Ro
 
 
 
+//_____________________________________________________________________________
 RooPullVar::RooPullVar(const RooPullVar& other, const char* name) :
   RooAbsReal(other, name), 
   _meas("meas",this,other._meas),
@@ -58,12 +67,15 @@ RooPullVar::RooPullVar(const RooPullVar& other, const char* name) :
 }
 
 
+
+//_____________________________________________________________________________
 RooPullVar::~RooPullVar() 
 {
 }
 
 
 
+//_____________________________________________________________________________
 Double_t RooPullVar::evaluate() const 
 {
   const RooRealVar& meas = static_cast<const RooRealVar&>(_meas.arg()) ;  

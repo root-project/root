@@ -14,7 +14,81 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [MISC] --
+//////////////////////////////////////////////////////////////////////////////
+//
+// Class RooSimWSTool is a tool operating on RooWorkspace objects that
+// can clone p.d.f.s into a series of variations that are joined together
+// into a RooSimultanous p.d.f.
+//
+// The simplest use case to to take a workspace p.d.f as prototype and
+// 'split' a parameter of that p.d.f into two specialized parameters
+// depending on a category in the dataset. 
+// 
+// For example, given a Gaussian
+// p.d.f G(x,m,s) we want to construct a G_a(x,m_a,s) and a G_b(x,m_b,s)
+// with different mean parameters to be fit to a dataset with observables
+// (x,c) where c is a category with states 'a' and 'b'
+//
+// Using RooSimWSTool one can create a simultaneous p.d.f from G_a and G_b
+// from G with the following command
+//
+//   RooSimWSTool wst(wspace) ;
+//   wst.build("G_sim","G",SplitParam("m","c")) ;
+//
+// From this simple example one can go to builds of arbitrary complexity
+// by specifying multiple SplitParam arguments on multiple parameters
+// involving multiple splitting categories. Splits can also be performed
+// in the product multiple categories, e.g. 
+//
+//      SplitParam("m","c,d")) ;
+//
+// splits parameter m in the product of states of c and d. Another possibility
+// is the 'constrained' split which clones the parameter for all but one state
+// and insert a formula specialization in a chosen state that evaluates
+// to 1 - sum_i(a_i) where a_i are all other specializations. For example,
+// given a category c with state "A","B","C","D" the specification
+//
+//     SplitParamConstrained("m","c","D")
+//
+// will result in parameters m_A,m_B,m_C and a formula expression m_D
+// that evaluates to (1-(m_A+m_B+m_C)). Constrained split can also be
+// specified in product of categories. In that case the name of the
+// remainder state follows the syntax "{State1;State2}" where State1 and
+// State2 are the state names of the two spitting categories.
+//
+// The examples so far deal with a single prototype p.d.f. It is also
+// possible to build with multiple prototype p.d.fs by specifying a 
+// mapping between the prototype to use and the names of states of
+// a 'master' splitting category. To specify these configurations
+// an intermediate MultiBuildConfig must be composed with all
+// the necessary specifications. For example, this code
+// 
+//  RooSimWSTool::MultiBuildConfig mbc("mc") ;
+//  mbc.addPdf("I","G",SplitParam("m,s","c")) ;
+//  mbc.addPdf("II,III","F",SplitParam("a","c,d")) ;
+//
+// configures a build with two prototype p.d.f.s G and F.
+// Prototype G is used for state "I" of master split category
+// mc and prototype F is used for states "II" and "III" of
+// master split category mc. Furthermore parameters m,s of prototype G are split
+// in category c while parameter a of prototype F is split in
+// the product of categories c and d. The actual build is then
+// performed by passing the build configuration to RooSimWSTool, e.g.
+//
+//  wst.build("MASTER",mbc) ;
+//
+// By default, a specialization is built for each permutation of
+// states of the spitting categories that are used. It is possible
+// to restrict the building of specialized p.d.f to a subset of states
+// by adding a restriction on the number of states to build as follows
+//
+//  mbc.restrictBuild("c","A,B") ;  
+//
+// The restrictBuild method can be called multiple times, but at most
+// once for each used splitting category. For simple builds with a single
+// prototype, restriction can be specified with a Restrict() argument
+// on the build command line
+//
 
 
 #include "RooFit.h"
@@ -42,28 +116,51 @@ ClassImp(RooSimWSTool::ObjSplitRule)
 
 using namespace std ;
 
+
+//_____________________________________________________________________________
 RooSimWSTool::RooSimWSTool(RooWorkspace& ws) : _ws(&ws) 
 {
+  // Constructor of SimWSTool on given workspace. All input is taken from the workspace
+  // All output is stored in the workspace
 }
 
 
+
+//_____________________________________________________________________________
 RooSimWSTool::~RooSimWSTool() 
 {
   // Destructor
 }
 
 
+
+//_____________________________________________________________________________
 RooSimultaneous* RooSimWSTool::build(const char* simPdfName, const char* protoPdfName, const RooCmdArg& arg1,const RooCmdArg& arg2,
 					const RooCmdArg& arg3,const RooCmdArg& arg4, const RooCmdArg& arg5,const RooCmdArg& arg6)
 {
+  // Build a RooSimultaneous p.d.f with name simPdfName from cloning specializations of protytpe p.d.f protoPdfName.
+  // The following named arguments are supported
+  //
+  // SplitParam(varname, catname)                   -- Split parameter(s) with given name(s) in category(s) with given names
+  // SplitParam(var, cat)                           -- Split given parameter(s) in givem category(s) 
+  // SplitParamConstrained(vname, cname, remainder) -- Make constrained split in parameter(s) with given name(s) in category(s) with given names
+  //                                                   putting remainder fraction formula in state with name "remainder"
+  // SplitParamConstrained(var,cat,remainder)       -- Make constrained split in parameter(s) with given name(s) in category(s) with given names
+  //                                                   putting remainder fraction formula in state with name "remainder"
+  // Restrict(catName,stateNameList)                -- Restrict build by only considered listed state names of category with given name
+
   BuildConfig bc(protoPdfName,arg1,arg2,arg3,arg4,arg5,arg6) ;
   return build(simPdfName,bc) ;
 }
 
 
 
+//_____________________________________________________________________________
 RooSimultaneous* RooSimWSTool::build(const char* simPdfName,BuildConfig& bc) 
 {
+  // Build a RooSimultaneous p.d.f with name simPdfName from cloning specializations of protytpe p.d.f protoPdfName.
+  // Use the provided BuildConfig or MultiBuildConfig object to configure the build
+
   ObjBuildConfig* obc = validateConfig(bc) ;
   if (!obc) return 0 ;
   
@@ -77,8 +174,12 @@ RooSimultaneous* RooSimWSTool::build(const char* simPdfName,BuildConfig& bc)
 
 
 
+//_____________________________________________________________________________
 RooSimWSTool::ObjBuildConfig* RooSimWSTool::validateConfig(BuildConfig& bc)
 {
+  // Validate build configuration. If not syntax errors or missing objects are found,
+  // return an ObjBuildConfig in which all names are replaced with object pointers.
+
   // Create empty object version of build config
   ObjBuildConfig* obc = new ObjBuildConfig ;
 
@@ -243,8 +344,11 @@ RooSimWSTool::ObjBuildConfig* RooSimWSTool::validateConfig(BuildConfig& bc)
 
 
 
+//_____________________________________________________________________________
 RooSimultaneous* RooSimWSTool::executeBuild(const char* simPdfName, ObjBuildConfig& obc)
 {
+  // Internal build driver from validation ObjBuildConfig.
+
   RooArgSet cleanupList ;
 
   RooAbsCategoryLValue* physCat = obc._masterCat ;
@@ -434,8 +538,11 @@ RooSimultaneous* RooSimWSTool::executeBuild(const char* simPdfName, ObjBuildConf
 }
 
 
+
+//_____________________________________________________________________________
 std::string RooSimWSTool::makeSplitName(const RooArgSet& splitCatSet) 
 {
+  // Construct name of composite split
   string name ;
 
   TIterator* iter = splitCatSet.createIterator() ;
@@ -455,11 +562,14 @@ std::string RooSimWSTool::makeSplitName(const RooArgSet& splitCatSet)
 }
 
 
-//----------------
 
 
+//_____________________________________________________________________________
 void RooSimWSTool::SplitRule::splitParameter(const char* paramNameList, const char* categoryNameList) 
 {
+  // Specify that parameters names listed in paramNameList be splitted in (product of) category(s)
+  // listed in categoryNameList
+
   char paramBuf[4096] ;
   char catBuf[4096] ;
   strcpy(paramBuf,paramNameList) ;
@@ -481,8 +591,13 @@ void RooSimWSTool::SplitRule::splitParameter(const char* paramNameList, const ch
   }
 }
 
+
+//_____________________________________________________________________________
 void RooSimWSTool::SplitRule::splitParameterConstrained(const char* paramNameList, const char* categoryNameList, const char* remainderStateName) 
 {
+  // Specify that parameters names listed in paramNameList be splitted in constrained way in (product of) category(s)
+  // listed in categoryNameList and that remainder fraction formula be put in state with name remainderStateName
+
   char paramBuf[4096] ;
   char catBuf[4096] ;
   strcpy(paramBuf,paramNameList) ;
@@ -504,9 +619,14 @@ void RooSimWSTool::SplitRule::splitParameterConstrained(const char* paramNameLis
   }
 }
 
+
+//_____________________________________________________________________________
 void RooSimWSTool::SplitRule::configure(const RooCmdArg& arg1,const RooCmdArg& arg2,const RooCmdArg& arg3,
 					   const RooCmdArg& arg4, const RooCmdArg& arg5,const RooCmdArg& arg6)
 {
+  // Construct the SplitRule object from a list of named arguments past to RooSimWSTool::build
+  // This method parses any SplitParam and SplitParamComstrained argument in the list
+
   list<const RooCmdArg*> cmdList ;  
   cmdList.push_back(&arg1) ;  cmdList.push_back(&arg2) ;
   cmdList.push_back(&arg3) ;  cmdList.push_back(&arg4) ;
@@ -528,17 +648,25 @@ void RooSimWSTool::SplitRule::configure(const RooCmdArg& arg1,const RooCmdArg& a
 }
 
 
-//----------------
 
 
+//_____________________________________________________________________________
 RooSimWSTool::BuildConfig::BuildConfig(const char* pdfName, SplitRule& sr)
 {
+  // Add prototype p.d.f pdfName to build configuration with associated split rules 'sr'
+
   internalAddPdf(pdfName,"",sr) ;
 }
 
+
+//_____________________________________________________________________________
 RooSimWSTool::BuildConfig::BuildConfig(const char* pdfName, const RooCmdArg& arg1,const RooCmdArg& arg2,
 					  const RooCmdArg& arg3,const RooCmdArg& arg4, const RooCmdArg& arg5,const RooCmdArg& arg6)
 {
+  // Construct build configuration from single prototype 'pdfName' and list of arguments
+  // that can be passed to RooSimWSTool::build() method. This routine parses SplitParam()
+  // SplitParamConstrained() and Restrict() arguments.
+
   SplitRule sr(pdfName) ;
   sr.configure(arg1,arg2,arg3,arg4,arg5,arg6) ;
   internalAddPdf(pdfName,"",sr) ;
@@ -562,14 +690,21 @@ RooSimWSTool::BuildConfig::BuildConfig(const char* pdfName, const RooCmdArg& arg
   }
 }
 
+
+//_____________________________________________________________________________
 RooSimWSTool::BuildConfig::BuildConfig(const RooArgSet& /*legacyBuildConfig*/) 
 {
   // Constructor to make BuildConfig from legacy RooSimPdfBuilder configuration
   // Empty for now
 }
 
+
+//_____________________________________________________________________________
 void RooSimWSTool::BuildConfig::internalAddPdf(const char* pdfName, const char* miStateNameList,SplitRule& sr) 
 {
+  // Internal routine to add prototype pdf 'pdfName' with list of associated master states 'miStateNameList
+  // and split rules 'sr' to configuration
+
   char buf[4096] ;
   strcpy(buf,miStateNameList) ;
   
@@ -582,24 +717,36 @@ void RooSimWSTool::BuildConfig::internalAddPdf(const char* pdfName, const char* 
   _pdfmap[pdfName] = sr ;  
 }
 
+
+//_____________________________________________________________________________
 void RooSimWSTool::BuildConfig::restrictBuild(const char* catName, const char* stateList) 
 {
+  // Restrict build by only considering state names in stateList for split in category catName
   _restr[catName] = stateList ;
 }
 
 
-//----------------
 
 
+//_____________________________________________________________________________
 RooSimWSTool::MultiBuildConfig::MultiBuildConfig(const char* masterIndexCat)  
 {
+  // Construct MultiBuildConfig for build configuration with multiple prototype p.d.f.s
+  // masterIndexCat is the name of the master index category that decides which
+  // prototype is used.
+
   _masterCatName = masterIndexCat ;
 }
 
 
+
+//_____________________________________________________________________________
 void RooSimWSTool::MultiBuildConfig::addPdf(const char* miStateList, const char* pdfName, const RooCmdArg& arg1,const RooCmdArg& arg2,
 					       const RooCmdArg& arg3,const RooCmdArg& arg4, const RooCmdArg& arg5,const RooCmdArg& arg6)
 {
+  // Add protytpe p.d.f 'pdfName' to MultiBuildConfig associated with master indes states 'miStateList'. This
+  // method parses the SplitParam() and SplitParamConstrained() arguments
+
   SplitRule sr(pdfName) ;
   sr.configure(arg1,arg2,arg3,arg4,arg5,arg6) ;
   internalAddPdf(pdfName,miStateList,sr) ;
@@ -607,25 +754,31 @@ void RooSimWSTool::MultiBuildConfig::addPdf(const char* miStateList, const char*
 
 
 
+//_____________________________________________________________________________
 void RooSimWSTool::MultiBuildConfig::addPdf(const char* miStateList, const char* pdfName, SplitRule& sr) 
 {
+  // Add protytpe p.d.f 'pdfName' to MultiBuildConfig associated with master indes states 'miStateList'. 
+
   internalAddPdf(pdfName,miStateList,sr) ;
 }
 
 
 
-//--------------------
 
+//_____________________________________________________________________________
 RooSimWSTool::ObjSplitRule::~ObjSplitRule()
 {
+  // Destructor
 }
 
 
-// -----------------------------------------
 
 
+//_____________________________________________________________________________
 void RooSimWSTool::ObjBuildConfig::print()
 {
+  // Print details of a validated build configuration
+
   // --- Dump contents of object build config ---
   map<RooAbsPdf*,ObjSplitRule>::iterator ri ;
   for (ri = _pdfmap.begin() ; ri != _pdfmap.end() ; ++ri ) {    

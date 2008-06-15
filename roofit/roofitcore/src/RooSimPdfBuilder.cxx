@@ -14,7 +14,11 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [PDF] --
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
+//
+// <b>This tool has now been superceded by RooSimWSTool</b>
 // 
 //Begin_Html
 //  </pre>
@@ -410,6 +414,8 @@
 //  <pre>
 //End_Html
 //
+// END_HTML
+//
 
 
 
@@ -480,6 +486,8 @@ ClassImp(RooSimPdfBuilder)
 ;
 
 
+
+//_____________________________________________________________________________
 RooSimPdfBuilder::RooSimPdfBuilder(const RooArgSet& protoPdfSet) :
   _protoPdfSet(protoPdfSet)
 {
@@ -491,6 +499,7 @@ RooSimPdfBuilder::RooSimPdfBuilder(const RooArgSet& protoPdfSet) :
 
 
 
+//_____________________________________________________________________________
 RooArgSet* RooSimPdfBuilder::createProtoBuildConfig()
 {
   // Make RooArgSet of configuration objects
@@ -510,6 +519,7 @@ RooArgSet* RooSimPdfBuilder::createProtoBuildConfig()
 
 
 
+//_____________________________________________________________________________
 void RooSimPdfBuilder::addSpecializations(const RooArgSet& specSet) 
 {
   _splitNodeList.add(specSet) ;
@@ -517,6 +527,7 @@ void RooSimPdfBuilder::addSpecializations(const RooArgSet& specSet)
 
 
 
+//_____________________________________________________________________________
 RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const RooArgSet& dependents,
 					    const RooArgSet* auxSplitCats, Bool_t verbose)
 {
@@ -1106,6 +1117,7 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
 
 
 
+//_____________________________________________________________________________
 RooSimPdfBuilder::~RooSimPdfBuilder() 
 {
   _retiredCustomizerList.Delete() ;

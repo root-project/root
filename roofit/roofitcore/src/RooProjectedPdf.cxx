@@ -9,10 +9,24 @@
   * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             * 
   *****************************************************************************/ 
 
- // -- CLASS DESCRIPTION [PDF] -- 
- // Class RooProjectedPdf represent a projection of a given input p.d.f
- // The actual projection integral for it value and normalization are
- // calculated on the fly
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
+// Class RooProjectedPdf is a RooAbsPdf implementation that represent a projection 
+// of a given input p.d.f and the object returned by RooAbsPdf::createProjection.
+// <p>
+// The actual projection integral for it value and normalization are
+// calculated on the fly in getVal() once the normalization observables are known.
+// Class RooProjectedPdf can cache projected p.d.f.s for multiple normalization
+// observables simultaneously.
+// <p>
+// The createProjection() method of RooProjectedPdf is overloaded and will
+// return a new RooProjectedPdf that performs the projection of itself
+// and the requested additional projections in one integration step
+// The performance of <pre>f->createProjection(x)->createProjection(y)</pre>
+// is therefore identical to that of <pre>f->createProjection(RooArgSet(x,y))</pre>
+// END_HTML
+//
 
 #include "Riostream.h" 
 
@@ -26,11 +40,15 @@
  ClassImp(RooProjectedPdf) 
    ;
 
+
+//_____________________________________________________________________________
 RooProjectedPdf::RooProjectedPdf() : _curNormSet(0)
 {
 }
 
 
+
+//_____________________________________________________________________________
  RooProjectedPdf::RooProjectedPdf(const char *name, const char *title, RooAbsReal& _intpdf, const RooArgSet& intObs) :
    RooAbsPdf(name,title), 
    intpdf("IntegratedPdf","intpdf",this,_intpdf,kFALSE,kFALSE),
@@ -49,6 +67,8 @@ RooProjectedPdf::RooProjectedPdf() : _curNormSet(0)
  } 
 
 
+
+//_____________________________________________________________________________
  RooProjectedPdf::RooProjectedPdf(const RooProjectedPdf& other, const char* name) :  
    RooAbsPdf(other,name), 
    intpdf("IntegratedPdf",this,other.intpdf),
@@ -60,6 +80,8 @@ RooProjectedPdf::RooProjectedPdf() : _curNormSet(0)
  } 
 
 
+
+//_____________________________________________________________________________
 Double_t RooProjectedPdf::getVal(const RooArgSet* set) const 
 {
   // Special version of getVal() overrides RooAbsReal::getVal() to save value of current normalization set
@@ -68,6 +90,8 @@ Double_t RooProjectedPdf::getVal(const RooArgSet* set) const
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooProjectedPdf::evaluate() const 
 {
   // Evaluate projected p.d.f
@@ -79,6 +103,8 @@ Double_t RooProjectedPdf::evaluate() const
 }
 
 
+
+//_____________________________________________________________________________
 const RooAbsReal* RooProjectedPdf::getProjection(const RooArgSet* iset, const RooArgSet* nset, int& code) const
 {
   // Retrieve object representing projection integral of input p.d.f over observables iset, while normalizing
@@ -109,6 +135,8 @@ const RooAbsReal* RooProjectedPdf::getProjection(const RooArgSet* iset, const Ro
 }
 
 
+
+//_____________________________________________________________________________
 RooAbsPdf* RooProjectedPdf::createProjection(const RooArgSet& iset) 
 {
   // Special version of RooAbsReal::createProjection that deals with projections of projections. Instead of integrating
@@ -119,6 +147,8 @@ RooAbsPdf* RooProjectedPdf::createProjection(const RooArgSet& iset)
 }
 
 
+
+//_____________________________________________________________________________
 Bool_t RooProjectedPdf::forceAnalyticalInt(const RooAbsArg& /*dep*/) const 
 {
   // Force RooRealIntegral to relegate integration of all observables to internal logic
@@ -126,6 +156,8 @@ Bool_t RooProjectedPdf::forceAnalyticalInt(const RooAbsArg& /*dep*/) const
 }
 
 
+
+//_____________________________________________________________________________
 Int_t RooProjectedPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet, const char* /*rangeName*/) const 
 { 
   // Mark all requested variables as analytically integrated
@@ -142,6 +174,7 @@ Int_t RooProjectedPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& an
 
 
 
+//_____________________________________________________________________________
 Double_t RooProjectedPdf::analyticalIntegralWN(Int_t code, const RooArgSet* /*normSet*/, const char* /*rangeName*/) const 
  { 
    // Retrieve appropriate projection by code
@@ -152,6 +185,7 @@ Double_t RooProjectedPdf::analyticalIntegralWN(Int_t code, const RooArgSet* /*no
 
 
 
+//_____________________________________________________________________________
 Int_t RooProjectedPdf::getGenerator(const RooArgSet& /*directVars*/, RooArgSet& /*generateVars*/, Bool_t /*staticInitOK*/) const 
  { 
    // No internal generator is implemented
@@ -160,6 +194,7 @@ Int_t RooProjectedPdf::getGenerator(const RooArgSet& /*directVars*/, RooArgSet& 
 
 
 
+//_____________________________________________________________________________
 void RooProjectedPdf::generateEvent(Int_t /*code*/) 
  { 
    return; 
@@ -167,6 +202,7 @@ void RooProjectedPdf::generateEvent(Int_t /*code*/)
 
 
 
+//_____________________________________________________________________________
 Bool_t RooProjectedPdf::redirectServersHook(const RooAbsCollection& newServerList, Bool_t /*mustReplaceAll*/, 
 				       Bool_t /*nameChange*/, Bool_t /*isRecursive*/) 
 {
@@ -200,6 +236,7 @@ Bool_t RooProjectedPdf::redirectServersHook(const RooAbsCollection& newServerLis
 
 
 
+//_____________________________________________________________________________
 RooArgList RooProjectedPdf::CacheElem::containedArgs(Action)
 {
   RooArgList ret(*_projection) ;  
@@ -208,6 +245,7 @@ RooArgList RooProjectedPdf::CacheElem::containedArgs(Action)
 
 
 
+//_____________________________________________________________________________
 void RooProjectedPdf::CacheElem::printCompactTreeHook(ostream& os, const char* indent, Int_t curElem, Int_t maxElem) 
 {
   // Print contents of cache when printing self as part of object tree
