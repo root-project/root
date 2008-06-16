@@ -2876,7 +2876,6 @@ void Cint::Internal::G__define_var(int tagnum, ::Reflex::Type typenum)
                            G__inc_cp_asm(2, 0);
                         }
 #endif // G__ASM
-                        G__globalvarpointer = G__PVOID;
 #ifndef G__OLDIMPLEMENTATION1073
                         if (G__asm_wholefunction && G__no_exec_compile) {
                            // --
@@ -2890,7 +2889,7 @@ void Cint::Internal::G__define_var(int tagnum, ::Reflex::Type typenum)
                            G__inc_cp_asm(2, 0);
                         }
 #endif // G__OLDIMPLEMENTATION1073
-                        // --
+                        G__globalvarpointer = G__PVOID;
                      }
                      else {
                         // -- Interpreted class, memory area was already allocated above.
