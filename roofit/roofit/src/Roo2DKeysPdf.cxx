@@ -14,27 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [PDF] --
+//////////////////////////////////////////////////////////////////////////////
 //
-// Use of the PDF:
-//  If you generate the PDF using the same domain as you fit to, for data populated
-//  near the edges, there will be no compensating 'feed through from the other side 
-//  of the boundary'.  There are the following options available to you to avoid or
-//  reduce edge effects in your fits:
-//	1) enlarge your fit domain to avoid having significant data at the boundaries
-//         of your fit.
-//	2) try using the 'm' option.  This mirrors all gaussuans within the domain at 
-//         the domain boundary.  This will lead to an overestimate of the PDF near the
-//         boundary instead of the previously observed deficit.
-//      3) define the fit domain [the RooRealVars in the ctor] to be smaller than the 
-//         domain which the data set ctor used.  This PDF is construced using the events
-//         in the data set, so if the boundaries are really giving you a problem and 
-//         mirroring is not satisfactory solution to the problem, you have to take a hit 
-//         in using a reduced data set to construct the PDF from.  Recall that you will 
-//         be fitting to data in a different domain [and hence dataset] so there are no 
-//         inconsistencies as a result [unless you are really limited by MC stats and 
-//         use the same MC to generate the PDF and test the PDF's systematics].
-//
+// BEGIN_HTML
+// Two-dimensional kernel estimation p.d.f. 
+// 
+// <b>This function has been superceded by the more general RooNDKeysPdf</b>
+// 
+// END_HTML
 //
 
 #include "RooFit.h"
@@ -52,6 +39,8 @@
 
 ClassImp(Roo2DKeysPdf)
 
+
+//_____________________________________________________________________________
 Roo2DKeysPdf::Roo2DKeysPdf(const char *name, const char *title,
                        RooAbsReal& xx, RooAbsReal & yy, RooDataSet& data,  TString options, Double_t widthScaleFactor):
   RooAbsPdf(name,title),
@@ -62,6 +51,8 @@ Roo2DKeysPdf::Roo2DKeysPdf(const char *name, const char *title,
   loadDataSet(data, options);
 }
 
+
+//_____________________________________________________________________________
 Roo2DKeysPdf::Roo2DKeysPdf(const Roo2DKeysPdf & other, const char* name) :
   RooAbsPdf(other,name),
   x("x", this, other.x),
@@ -109,6 +100,8 @@ Roo2DKeysPdf::Roo2DKeysPdf(const Roo2DKeysPdf & other, const char* name) :
   }
 }
 
+
+//_____________________________________________________________________________
 Roo2DKeysPdf::~Roo2DKeysPdf() {
   if(_verbosedebug) { cout << "Roo2DKeysPdf::Roo2KeysPdf dtor" << endl; }
     delete[] _x;
@@ -122,6 +115,8 @@ Roo2DKeysPdf::~Roo2DKeysPdf() {
 //    return 1                                                             //
 //    return 0 indicates a success                                         //
 /////////////////////////////////////////////////////////////////////////////
+
+//_____________________________________________________________________________
 Int_t Roo2DKeysPdf::loadDataSet(RooDataSet& data, TString options)
 {
   if(_verbosedebug) { cout << "Roo2DKeysPdf::loadDataSet" << endl; }
@@ -214,6 +209,8 @@ Int_t Roo2DKeysPdf::loadDataSet(RooDataSet& data, TString options)
   return calculateBandWidth(_BandWidthType);
 }
 
+
+//_____________________________________________________________________________
 void Roo2DKeysPdf::setOptions(TString options)
 {
   if(_verbosedebug) { cout << "Roo2DKeysPdf::setOptions" << endl; }
@@ -243,6 +240,8 @@ void Roo2DKeysPdf::setOptions(TString options)
   }
 }
 
+
+//_____________________________________________________________________________
 void Roo2DKeysPdf::getOptions(void) const
 {
   cout << "Roo2DKeysPdf::getOptions(void)" << endl;
@@ -257,6 +256,8 @@ void Roo2DKeysPdf::getOptions(void) const
 // calculate the kernal bandwith for x & y             //
 // & Calculate the probability look up table _p[i][j]  //
 //=====================================================//
+
+//_____________________________________________________________________________
 Int_t Roo2DKeysPdf::calculateBandWidth(Int_t kernel)
 {
   if(_verbosedebug) { cout << "Roo2DKeysPdf::calculateBandWidth(Int_t kernel)" << endl; }
@@ -321,6 +322,8 @@ Int_t Roo2DKeysPdf::calculateBandWidth(Int_t kernel)
 //=======================================================================================//
 // evaluate the kernal estimation for x,y, interpolating between the points if necessary //
 //=======================================================================================//
+
+//_____________________________________________________________________________
 Double_t Roo2DKeysPdf::evaluate() const
 {
   // use the cacheing intrinsic in RFC to bypass the grid and remove
@@ -336,6 +339,8 @@ Double_t Roo2DKeysPdf::evaluate() const
 // given the bandwiths _hx[j] and _hy[j]               //
 /////////////////////////////////////////////////////////
 // _n is calculated once in the constructor
+
+//_____________________________________________________________________________
 Double_t Roo2DKeysPdf::evaluateFull(Double_t thisX, Double_t thisY) const
 {
   if( _vverbosedebug ) { cout << "Roo2DKeysPdf::evaluateFull()" << endl; }
@@ -382,6 +387,8 @@ Double_t Roo2DKeysPdf::evaluateFull(Double_t thisX, Double_t thisY) const
 // Apply the mirror at boundary correction to a dimension given the space position to evaluate 
 // at (thisVar), the bandwidth at this position (thisH), the boundary (high/low) and the
 // value of the data kernal that this correction is being applied to  tVar (i.e. the _x[ix] etc.)
+
+//_____________________________________________________________________________
 Double_t Roo2DKeysPdf::highBoundaryCorrection(Double_t thisVar, Double_t thisH, Double_t high, Double_t tVar) const
 {
   if(_vverbosedebug) { cout << "Roo2DKeysPdf::highBoundaryCorrection" << endl; }
@@ -391,6 +398,8 @@ Double_t Roo2DKeysPdf::highBoundaryCorrection(Double_t thisVar, Double_t thisH, 
   return exp(-0.5*correction*correction)/thisH;
 }
 
+
+//_____________________________________________________________________________
 Double_t Roo2DKeysPdf::lowBoundaryCorrection(Double_t thisVar, Double_t thisH, Double_t low, Double_t tVar) const
 {
   if(_vverbosedebug) { cout << "Roo2DKeysPdf::lowBoundaryCorrection" << endl; }
@@ -406,6 +415,8 @@ Double_t Roo2DKeysPdf::lowBoundaryCorrection(Double_t thisVar, Double_t thisH, D
 // g = 1/(Nevt * sigma_j * sqrt2pi)*sum_{all evts}{prod d K[ exp{-(xd - ti)/sigma_jd^2} ]}  //
 //                                                                                          //
 //==========================================================================================//
+
+//_____________________________________________________________________________
 Double_t Roo2DKeysPdf::g(Double_t varMean1, Double_t * _var1, Double_t sigma1, Double_t varMean2, Double_t * _var2, Double_t sigma2) const
 {
   if((_nEvents == 0.0) || (sigma1 == 0.0) || (sigma2 == 0)) return 0.0;
@@ -425,6 +436,8 @@ Double_t Roo2DKeysPdf::g(Double_t varMean1, Double_t * _var1, Double_t sigma1, D
   return z;
 }
 
+
+//_____________________________________________________________________________
 Int_t Roo2DKeysPdf::getBandWidthType() const
 {
   if(_BandWidthType == 1)  cout << "The Bandwidth Type selected is Trivial" << endl;
@@ -433,6 +446,8 @@ Int_t Roo2DKeysPdf::getBandWidthType() const
   return _BandWidthType;
 }
 
+
+//_____________________________________________________________________________
 Double_t Roo2DKeysPdf::getMean(const char * axis) const
 {
   if(!strcmp(axis,x.GetName()) || !strcmp(axis,"x") || !strcmp(axis,"X"))      return _xMean;
@@ -444,6 +459,8 @@ Double_t Roo2DKeysPdf::getMean(const char * axis) const
   return 0.0;
 }
 
+
+//_____________________________________________________________________________
 Double_t Roo2DKeysPdf::getSigma(const char * axis) const
 {
   if(!strcmp(axis,x.GetName()) || !strcmp(axis,"x") || !strcmp(axis,"X"))      return _xSigma;
@@ -456,6 +473,8 @@ Double_t Roo2DKeysPdf::getSigma(const char * axis) const
 }
 
 
+
+//_____________________________________________________________________________
 void Roo2DKeysPdf::writeToFile(char * outputFile, const char * name) const
 {
   TString histName = name;
@@ -469,6 +488,8 @@ void Roo2DKeysPdf::writeToFile(char * outputFile, const char * name) const
 // plot the PDf as a histogram and save to file
 // so that it can be loaded in as a Roo2DHist Pdf in the future to 
 // save on calculation time
+
+//_____________________________________________________________________________
 void Roo2DKeysPdf::writeHistToFile(char * outputFile, const char * histName) const
 {
   TFile * file = 0;
@@ -499,6 +520,8 @@ void Roo2DKeysPdf::writeHistToFile(char * outputFile, const char * histName) con
 // save the data and calculated bandwidths to file
 // as a record of what produced the PDF and to give a reduced
 // data set in order to facilitate re-calculation in the future
+
+//_____________________________________________________________________________
 void Roo2DKeysPdf::writeNTupleToFile(char * outputFile, const char * name) const
 {
   TFile * file = 0;
@@ -547,6 +570,8 @@ void Roo2DKeysPdf::writeNTupleToFile(char * outputFile, const char * name) const
 // print out _p[_nPoints][_nPoints] indicating the //
 // domain limits                                   //
 /////////////////////////////////////////////////////
+
+//_____________________________________________________________________________
 void Roo2DKeysPdf::PrintInfo(ostream & out) const
 {
   out << "Roo2DKeysPDF instance domain information:"<<endl;

@@ -14,8 +14,11 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [PDF] --
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
 // RooNovosibirsk implements the Novosibirsk function 
+// END_HTML
 //
 
 
@@ -30,6 +33,8 @@
 ClassImp(RooNovosibirsk)
 
 
+
+//_____________________________________________________________________________
 RooNovosibirsk::RooNovosibirsk(const char *name, const char *title,
 			     RooAbsReal& _x,     RooAbsReal& _peak,
 			     RooAbsReal& _width, RooAbsReal& _tail) :
@@ -43,6 +48,8 @@ RooNovosibirsk::RooNovosibirsk(const char *name, const char *title,
 {
 }
 
+
+//_____________________________________________________________________________
 RooNovosibirsk::RooNovosibirsk(const RooNovosibirsk& other, const char *name):
   RooAbsPdf(other,name),
   x("x",this,other.x),
@@ -52,6 +59,8 @@ RooNovosibirsk::RooNovosibirsk(const RooNovosibirsk& other, const char *name):
 {
 }
 
+
+//_____________________________________________________________________________
 Double_t RooNovosibirsk::evaluate() const {
   // Put the formula for your PDF's value here. Use the pre-computed
   // value of _norm to normalize the result.

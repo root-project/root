@@ -14,7 +14,18 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [PDF] --
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
+// RooPolynomial implements a polynomial p.d.f of the form
+// <pre>
+// f(x) = sum_i a_i * x^i
+//</pre>
+// By default coefficient a_0 is chosen to be 1, as polynomial
+// probability density functions have one degree of freedome
+// less than polynomial functions due to the normalization condition
+// END_HTML
+//
 
 #include "RooFit.h"
 
@@ -30,11 +41,15 @@
 ClassImp(RooPolynomial)
 ;
 
+
+//_____________________________________________________________________________
 RooPolynomial::RooPolynomial()
 {
   _coefIter = _coefList.createIterator() ;
 }
 
+
+//_____________________________________________________________________________
 RooPolynomial::RooPolynomial(const char* name, const char* title, 
 			     RooAbsReal& x, const RooArgList& coefList, Int_t lowestOrder) :
   RooAbsPdf(name, title),
@@ -67,6 +82,7 @@ RooPolynomial::RooPolynomial(const char* name, const char* title,
 
 
 
+//_____________________________________________________________________________
 RooPolynomial::RooPolynomial(const char* name, const char* title,
                            RooAbsReal& x) :
   RooAbsPdf(name, title),
@@ -79,6 +95,7 @@ RooPolynomial::RooPolynomial(const char* name, const char* title,
 
 
 
+//_____________________________________________________________________________
 RooPolynomial::RooPolynomial(const RooPolynomial& other, const char* name) :
   RooAbsPdf(other, name), 
   _x("x", this, other._x), 
@@ -92,6 +109,7 @@ RooPolynomial::RooPolynomial(const RooPolynomial& other, const char* name) :
 
 
 
+//_____________________________________________________________________________
 RooPolynomial::~RooPolynomial()
 {
   // Destructor
@@ -101,6 +119,7 @@ RooPolynomial::~RooPolynomial()
 
 
 
+//_____________________________________________________________________________
 Double_t RooPolynomial::evaluate() const 
 {
   Double_t sum(1) ;
@@ -117,6 +136,8 @@ Double_t RooPolynomial::evaluate() const
 }
 
 
+
+//_____________________________________________________________________________
 Int_t RooPolynomial::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const 
 {
   if (matchArgs(allVars, analVars, _x)) return 1;
@@ -125,6 +146,7 @@ Int_t RooPolynomial::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVa
 
 
 
+//_____________________________________________________________________________
 Double_t RooPolynomial::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
   assert(code==1) ;

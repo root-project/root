@@ -48,7 +48,7 @@ protected:
   
 private:
   
-  ClassDef(RooDstD0BG,1) // D*-D0 mass difference bg PDF
+  ClassDef(RooDstD0BG,1) // D*-D0 mass difference background PDF
 };
 
 #endif

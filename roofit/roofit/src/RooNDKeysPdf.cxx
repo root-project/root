@@ -23,29 +23,34 @@
 #include "RooHist.h"
 #include "RooMsgService.h"
 
-// -- CLASS DESCRIPTION [PDF] --
+//////////////////////////////////////////////////////////////////////////////
 //
+// BEGIN_HTML
 // Generic N-dimensional implementation of a kernel estimation p.d.f. This p.d.f. models the distribution
 // of an arbitrary input dataset as a superposition of Gaussian kernels, one for each data point,
 // each contributing 1/N to the total integral of the p.d.f.
-//
+// <p>
 // If the 'adaptive mode' is enabled, the width of the Gaussian is adaptively calculated from the
 // local density of events, i.e. narrow for regions with high event density to preserve details and
 // wide for regions with log event density to promote smoothness. The details of the general algorithm
 // are described in the following paper: 
-//
+// <p>
 // Cranmer KS, Kernel Estimation in High-Energy Physics.  
 //             Computer Physics Communications 136:198-207,2001 - e-Print Archive: hep ex/0011057
-// 
+// <p>
 // For multi-dimensional datasets, the kernels are modeled by multidimensional Gaussians. The kernels are 
 // constructed such that they reflect the correlation coefficients between the observables
 // in the input dataset.
+// END_HTML
+//
 
 using namespace std;
 
 ClassImp(RooNDKeysPdf)
 
 
+
+//_____________________________________________________________________________
 RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title,
 			   const RooArgList& varList, RooDataSet& data,
 			   TString options, Double_t rho, Double_t nSigma,
@@ -107,6 +112,8 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title,
 }
 
 
+
+//_____________________________________________________________________________
 RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title,
                            RooAbsReal& x, RooDataSet& data,
                            Mirror mirror, Double_t rho, Double_t nSigma,
@@ -146,6 +153,8 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title,
 }
 
 
+
+//_____________________________________________________________________________
 RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, RooAbsReal& x, RooAbsReal & y,
                            RooDataSet& data, TString options, Double_t rho, Double_t nSigma,
 			   RooAbsReal& weight) :
@@ -179,6 +188,8 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, RooAbsReal& x, R
 }
 
 
+
+//_____________________________________________________________________________
 RooNDKeysPdf::RooNDKeysPdf(const RooNDKeysPdf& other, const char* name) :
   RooAbsPdf(other,name), 
   _varList("varList",this,other._varList),
@@ -258,6 +269,8 @@ RooNDKeysPdf::RooNDKeysPdf(const RooNDKeysPdf& other, const char* name) :
 }
 
 
+
+//_____________________________________________________________________________
 RooNDKeysPdf::~RooNDKeysPdf() 
 {
   if (_varItr)    delete _varItr;
@@ -287,6 +300,8 @@ RooNDKeysPdf::~RooNDKeysPdf()
 
 
 void
+
+//_____________________________________________________________________________
 RooNDKeysPdf::createPdf(Bool_t firstCall) const
 {
   // evaluation order of constructor.
@@ -319,6 +334,8 @@ RooNDKeysPdf::createPdf(Bool_t firstCall) const
 
 
 void 
+
+//_____________________________________________________________________________
 RooNDKeysPdf::setOptions() const
 {
   // set the configuration
@@ -350,6 +367,8 @@ RooNDKeysPdf::setOptions() const
 
 
 void
+
+//_____________________________________________________________________________
 RooNDKeysPdf::initialize() const
 {
   // initialization
@@ -417,6 +436,8 @@ RooNDKeysPdf::initialize() const
 
 
 void
+
+//_____________________________________________________________________________
 RooNDKeysPdf::loadDataSet(Bool_t firstCall) const
 {
   // copy the dataset and calculate some useful variables
@@ -527,6 +548,8 @@ RooNDKeysPdf::loadDataSet(Bool_t firstCall) const
 
 
 void
+
+//_____________________________________________________________________________
 RooNDKeysPdf::mirrorDataSet() const
 {
   // determine mirror dataset.
@@ -616,6 +639,8 @@ RooNDKeysPdf::mirrorDataSet() const
 
 
 void
+
+//_____________________________________________________________________________
 RooNDKeysPdf::loadWeightSet() const
 {
   _wMap.clear();
@@ -638,6 +663,8 @@ RooNDKeysPdf::loadWeightSet() const
 
 
 void
+
+//_____________________________________________________________________________
 RooNDKeysPdf::calculateShell(BoxInfo* bi) const 
 {
   // determine points in +/- nSigma shell around the box determined by the variable
@@ -709,6 +736,8 @@ RooNDKeysPdf::calculateShell(BoxInfo* bi) const
 
 
 void
+
+//_____________________________________________________________________________
 RooNDKeysPdf::calculatePreNorm(BoxInfo* bi) const
 {
   //bi->nEventsBMSW=0.;
@@ -730,6 +759,8 @@ RooNDKeysPdf::calculatePreNorm(BoxInfo* bi) const
 
 
 void
+
+//_____________________________________________________________________________
 RooNDKeysPdf::sortDataIndices(BoxInfo* bi) const
 {
   // sort entries, as needed for loopRange()
@@ -757,6 +788,8 @@ RooNDKeysPdf::sortDataIndices(BoxInfo* bi) const
 
 
 void
+
+//_____________________________________________________________________________
 RooNDKeysPdf::calculateBandWidth() const
 {
   cxcoutD(Eval) << "RooNDKeysPdf::calculateBandWidth()" << endl; 
@@ -797,6 +830,8 @@ RooNDKeysPdf::calculateBandWidth() const
 
 
 Double_t
+
+//_____________________________________________________________________________
 RooNDKeysPdf::gauss(vector<Double_t>& x, vector<vector<Double_t> >& weights) const 
 {
   // loop over all closest point to x, as determined by loopRange()
@@ -845,6 +880,8 @@ RooNDKeysPdf::gauss(vector<Double_t>& x, vector<vector<Double_t> >& weights) con
 
 
 void
+
+//_____________________________________________________________________________
 RooNDKeysPdf::loopRange(vector<Double_t>& x, map<Int_t,Bool_t>& ibMap) const
 {
   // determine closest points to x, to loop over in evaluate()
@@ -889,6 +926,8 @@ RooNDKeysPdf::loopRange(vector<Double_t>& x, map<Int_t,Bool_t>& ibMap) const
 
 
 void
+
+//_____________________________________________________________________________
 RooNDKeysPdf::boxInfoInit(BoxInfo* bi, const char* rangeName, Int_t /*code*/) const
 {
   vector<Bool_t> doInt(_nDim,kTRUE);
@@ -926,6 +965,8 @@ RooNDKeysPdf::boxInfoInit(BoxInfo* bi, const char* rangeName, Int_t /*code*/) co
 
 
 Double_t 
+
+//_____________________________________________________________________________
 RooNDKeysPdf::evaluate() const 
 {
   if (!_weightDep) {
@@ -958,6 +999,8 @@ RooNDKeysPdf::evaluate() const
 
 
 Int_t 
+
+//_____________________________________________________________________________
 RooNDKeysPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const
 {
   Int_t code=0;
@@ -971,6 +1014,8 @@ RooNDKeysPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, con
 
 
 Double_t 
+
+//_____________________________________________________________________________
 RooNDKeysPdf::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   cxcoutD(Eval) << "Calling RooNDKeysPdf::analyticalIntegral(" << GetName() << ") with code " << code 
@@ -1065,6 +1110,8 @@ RooNDKeysPdf::analyticalIntegral(Int_t code, const char* rangeName) const
 }
 
 
+
+//_____________________________________________________________________________
 Bool_t RooNDKeysPdf::redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, 
  					 Bool_t /*nameChange*/, Bool_t /*isRecursive*/) 
 {

@@ -118,7 +118,7 @@ private:
   Int_t      _verbosedebug;
   Int_t      _vverbosedebug;
 
-  ClassDef(Roo2DKeysPdf,0) // Non-Parametric Multi Variate KEYS PDF
+  ClassDef(Roo2DKeysPdf,0) // Two-dimensional kernel estimation p.d.f.
 };
 
 inline void  Roo2DKeysPdf::setWidthScaleFactor(Double_t widthScaleFactor) { _widthScaleFactor = widthScaleFactor; }

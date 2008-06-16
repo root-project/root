@@ -16,7 +16,13 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [PDF] --
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
+// Special p.d.f shape that can be used to model the background of
+// D*-D0 mass difference distributions
+// END_HTML
+//
 
 #include "RooFit.h"
 
@@ -36,6 +42,8 @@ ClassImp(RooDstD0BG)
 static const char rcsid[] =
 "$Id$";
 
+
+//_____________________________________________________________________________
 RooDstD0BG::RooDstD0BG(const char *name, const char *title,
 		       RooAbsReal& _dm, RooAbsReal& _dm0,
 		       RooAbsReal& _c, RooAbsReal& _a, RooAbsReal& _b) :
@@ -48,12 +56,16 @@ RooDstD0BG::RooDstD0BG(const char *name, const char *title,
 {
 }
 
+
+//_____________________________________________________________________________
 RooDstD0BG::RooDstD0BG(const RooDstD0BG& other, const char *name) :
   RooAbsPdf(other,name), dm("dm",this,other.dm), dm0("dm0",this,other.dm0),
   C("C",this,other.C), A("A",this,other.A), B("B",this,other.B)
 {
 }
 
+
+//_____________________________________________________________________________
 Double_t RooDstD0BG::evaluate() const
 {
   Double_t arg= dm- dm0;
@@ -64,12 +76,16 @@ Double_t RooDstD0BG::evaluate() const
   return (val > 0 ? val : 0) ;
 }
 
+
+//_____________________________________________________________________________
 Int_t RooDstD0BG::getAnalyticalIntegral(RooArgSet& /*allVars*/, RooArgSet& /*analVars*/, const char* /*rangeName*/) const 
 {
   // if (matchArgs(allVars,analVars,dm)) return 1 ;
   return 0 ;
 }
 
+
+//_____________________________________________________________________________
 Double_t RooDstD0BG::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
   switch(code) {

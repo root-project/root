@@ -67,7 +67,7 @@ protected:
   Int_t _basisSin ;
   Int_t _basisCos ;
 
-  ClassDef(RooBCPGenDecay,1) 
+  ClassDef(RooBCPGenDecay,1)  // B decay time distribution with CP violation
 };
 
 #endif

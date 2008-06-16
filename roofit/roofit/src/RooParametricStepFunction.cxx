@@ -12,7 +12,7 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [PDF] --
+//////////////////////////////////////////////////////////////////////////////
 //
 // The Parametric Step Function PDF is a binned distribution whose parameters 
 // are the heights of each bin.  This PDF was first used in BaBar's B0->pi0pi0
@@ -38,6 +38,7 @@
 //
 // RooParametricStepFunction  aPdf = ("aPdf","PSF",*x,
 //                                    *list,limits,nbins);
+//
 				
 
 #include "RooFit.h"
@@ -54,6 +55,8 @@
 ClassImp(RooParametricStepFunction)
 ;
 
+
+//_____________________________________________________________________________
 RooParametricStepFunction::RooParametricStepFunction(const char* name, const char* title, 
 			     RooAbsReal& x, const RooArgList& coefList, TArrayD& limits, Int_t nBins) :
   RooAbsPdf(name, title),
@@ -89,6 +92,8 @@ RooParametricStepFunction::RooParametricStepFunction(const char* name, const cha
 }
 
 
+
+//_____________________________________________________________________________
 RooParametricStepFunction::RooParametricStepFunction(const RooParametricStepFunction& other, const char* name) :
   RooAbsPdf(other, name), 
   _x("x", this, other._x), 
@@ -102,6 +107,7 @@ RooParametricStepFunction::RooParametricStepFunction(const RooParametricStepFunc
 
 
 
+//_____________________________________________________________________________
 RooParametricStepFunction::~RooParametricStepFunction()
 {
   // Destructor
@@ -109,6 +115,8 @@ RooParametricStepFunction::~RooParametricStepFunction()
 }
 
 
+
+//_____________________________________________________________________________
 Int_t RooParametricStepFunction::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const 
 {
   if (matchArgs(allVars, analVars, _x)) return 1;
@@ -117,6 +125,7 @@ Int_t RooParametricStepFunction::getAnalyticalIntegral(RooArgSet& allVars, RooAr
 
 
 
+//_____________________________________________________________________________
 Double_t RooParametricStepFunction::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
   assert(code==1) ;
@@ -157,6 +166,8 @@ Double_t RooParametricStepFunction::analyticalIntegral(Int_t code, const char* r
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooParametricStepFunction::lastBinValue() const
 {
   Double_t sum(0.);
@@ -171,6 +182,8 @@ Double_t RooParametricStepFunction::lastBinValue() const
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooParametricStepFunction::evaluate() const 
 {
   Double_t xval(0.);
@@ -211,10 +224,14 @@ Double_t RooParametricStepFunction::evaluate() const
 
 }
 
+
+//_____________________________________________________________________________
 Int_t RooParametricStepFunction::getnBins(){
   return _nBins;
 }
 
+
+//_____________________________________________________________________________
 Double_t* RooParametricStepFunction::getLimits(){
   Double_t* limoutput = _limits.GetArray();
   return limoutput;

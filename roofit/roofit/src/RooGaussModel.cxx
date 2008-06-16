@@ -14,8 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [PDF] --
-// 
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
+// Class RooGaussModel implements a RooResolutionModel that models a Gaussian
+// distribution. Object of class RooGaussModel can be used
+// for analytical convolutions with classes inheriting from RooAbsAnaConvPdf
+// END_HTML
+//
 
 #include "RooFit.h"
 
@@ -30,6 +36,8 @@ ClassImp(RooGaussModel)
 ;
 
 
+
+//_____________________________________________________________________________
 RooGaussModel::RooGaussModel(const char *name, const char *title, RooRealVar& xIn, 
 			     RooAbsReal& _mean, RooAbsReal& _sigma) :
   RooResolutionModel(name,title,xIn), 
@@ -43,6 +51,8 @@ RooGaussModel::RooGaussModel(const char *name, const char *title, RooRealVar& xI
 }
 
 
+
+//_____________________________________________________________________________
 RooGaussModel::RooGaussModel(const char *name, const char *title, RooRealVar& xIn, 
 			     RooAbsReal& _mean, RooAbsReal& _sigma, 
 			     RooAbsReal& _msSF) : 
@@ -57,6 +67,8 @@ RooGaussModel::RooGaussModel(const char *name, const char *title, RooRealVar& xI
 }
 
 
+
+//_____________________________________________________________________________
 RooGaussModel::RooGaussModel(const char *name, const char *title, RooRealVar& xIn, 
 			     RooAbsReal& _mean, RooAbsReal& _sigma, 
 			     RooAbsReal& _meanSF, RooAbsReal& _sigmaSF) : 
@@ -71,6 +83,8 @@ RooGaussModel::RooGaussModel(const char *name, const char *title, RooRealVar& xI
 }
 
 
+
+//_____________________________________________________________________________
 RooGaussModel::RooGaussModel(const RooGaussModel& other, const char* name) : 
   RooResolutionModel(other,name),
   _flatSFInt(other._flatSFInt),
@@ -83,6 +97,8 @@ RooGaussModel::RooGaussModel(const RooGaussModel& other, const char* name) :
 }
 
 
+
+//_____________________________________________________________________________
 RooGaussModel::~RooGaussModel()
 {
   // Destructor
@@ -90,6 +106,7 @@ RooGaussModel::~RooGaussModel()
 
 
 
+//_____________________________________________________________________________
 Int_t RooGaussModel::basisCode(const char* name) const 
 {
   if (!TString("exp(-@0/@1)").CompareTo(name)) return expBasisPlus ;
@@ -114,6 +131,7 @@ return 0 ;
 
 
 
+//_____________________________________________________________________________
 Double_t RooGaussModel::evaluate() const 
 {  
   //cout << "RooGaussModel::evaluate(" << GetName() << ") basisCode = " << _basisCode << endl ;
@@ -280,6 +298,7 @@ Double_t RooGaussModel::evaluate() const
 
 
 
+//_____________________________________________________________________________
 Int_t RooGaussModel::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const 
 {
   switch(_basisCode) {    
@@ -324,6 +343,7 @@ Int_t RooGaussModel::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVa
 
 
 
+//_____________________________________________________________________________
 Double_t RooGaussModel::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
   static Double_t root2 = sqrt(2.) ;
@@ -617,6 +637,7 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code, const char* rangeName) co
 
 
 
+//_____________________________________________________________________________
 RooComplex RooGaussModel::evalCerfApprox(Double_t swt, Double_t u, Double_t c) const
 {
   // use the approximation: erf(z) = exp(-z*z)/(sqrt(pi)*z)
@@ -635,6 +656,7 @@ RooComplex RooGaussModel::evalCerfApprox(Double_t swt, Double_t u, Double_t c) c
 
 
 // added FMV, 07/24/03
+//_____________________________________________________________________________
 RooComplex RooGaussModel::evalCerfInt(Double_t sign, Double_t wt, Double_t tau, Double_t umin, Double_t umax, Double_t c) const
 {
   RooComplex diff;
@@ -646,6 +668,8 @@ RooComplex RooGaussModel::evalCerfInt(Double_t sign, Double_t wt, Double_t tau, 
   return RooComplex(tau/(1.+wt*wt),0)*RooComplex(1,wt)*diff;
 }
 // added FMV, 08/17/03
+
+//_____________________________________________________________________________
 Double_t RooGaussModel::evalCerfInt(Double_t sign, Double_t tau, Double_t umin, Double_t umax, Double_t c) const
 {
   Double_t diff;
@@ -664,6 +688,7 @@ Double_t RooGaussModel::evalCerfInt(Double_t sign, Double_t tau, Double_t umin, 
 
 
 
+//_____________________________________________________________________________
 Int_t RooGaussModel::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t /*staticInitOK*/) const
 {
   if (matchArgs(directVars,generateVars,x)) return 1 ;  
@@ -672,6 +697,7 @@ Int_t RooGaussModel::getGenerator(const RooArgSet& directVars, RooArgSet &genera
 
 
 
+//_____________________________________________________________________________
 void RooGaussModel::generateEvent(Int_t code)
 {
   assert(code==1) ;

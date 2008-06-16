@@ -24,7 +24,9 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [PDF] --
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
 // Time-dependent RooAbsAnaConvPdf for CP violating decays 
 // to Non-CP eigenstates (eg, B0 -> rho+- pi-+).
 // For a description of the physics model see the 
@@ -34,9 +36,13 @@
 // same. Starting from the set in the BaBar Book, in order to 
 // get the parameters used here you have to change the sign of both
 // a_c^+ and a_c^-, and then substitute:
+// <pre>
 //    a_s^Q = S + Q* deltaS
 //    a_c^Q = C + Q*deltaC
+// </pre>
 // where Q denotes the charge of the rho.
+// END_HTML
+//
 
 #include "RooFit.h"
 
@@ -51,6 +57,8 @@ ClassImp(RooNonCPEigenDecay);
 
 #define Debug_RooNonCPEigenDecay 1
 
+
+//_____________________________________________________________________________
 RooNonCPEigenDecay::RooNonCPEigenDecay( const char *name, const char *title, 
 					RooRealVar&     t, 
 					RooAbsCategory& tag,
@@ -108,6 +116,8 @@ RooNonCPEigenDecay::RooNonCPEigenDecay( const char *name, const char *title,
   }
 }
 
+
+//_____________________________________________________________________________
 RooNonCPEigenDecay::RooNonCPEigenDecay( const char *name, const char *title, 
 					RooRealVar&     t, 
 					RooAbsCategory& tag,
@@ -165,6 +175,8 @@ RooNonCPEigenDecay::RooNonCPEigenDecay( const char *name, const char *title,
   }
 }
 
+
+//_____________________________________________________________________________
 RooNonCPEigenDecay::RooNonCPEigenDecay( const RooNonCPEigenDecay& other, const char* name ) 
   : RooAbsAnaConvPdf( other, name ), 
   _acp      ( "acp",      this, other._acp      ),
@@ -191,11 +203,15 @@ RooNonCPEigenDecay::RooNonCPEigenDecay( const RooNonCPEigenDecay& other, const c
   // Copy constructor
 }
 
+
+//_____________________________________________________________________________
 RooNonCPEigenDecay::~RooNonCPEigenDecay( void )
 {
   // Destructor
 }
 
+
+//_____________________________________________________________________________
 Double_t RooNonCPEigenDecay::coefficient( Int_t basisIndex ) const 
 {
   // B0    : _tag  == -1 
@@ -251,6 +267,8 @@ Double_t RooNonCPEigenDecay::coefficient( Int_t basisIndex ) const
 }
 
 // advertise analytical integration
+
+//_____________________________________________________________________________
 Int_t RooNonCPEigenDecay::getCoefAnalyticalIntegral( Int_t /*code*/, RooArgSet& allVars, 
 						     RooArgSet& analVars, const char* rangeName ) const 
 {
@@ -263,6 +281,8 @@ Int_t RooNonCPEigenDecay::getCoefAnalyticalIntegral( Int_t /*code*/, RooArgSet& 
   return 0;
 }
 
+
+//_____________________________________________________________________________
 Double_t RooNonCPEigenDecay::coefAnalyticalIntegral( Int_t basisIndex, 
 						     Int_t code, const char* /*rangeName*/ ) const 
 {
@@ -312,6 +332,8 @@ Double_t RooNonCPEigenDecay::coefAnalyticalIntegral( Int_t basisIndex,
   return 0;
 }
 
+
+//_____________________________________________________________________________
 Int_t RooNonCPEigenDecay::getGenerator( const RooArgSet& directVars, 
 					RooArgSet&       generateVars, Bool_t staticInitOK ) const
 {
@@ -324,6 +346,8 @@ Int_t RooNonCPEigenDecay::getGenerator( const RooArgSet& directVars,
   return 0;
 }
 
+
+//_____________________________________________________________________________
 void RooNonCPEigenDecay::initGenerator( Int_t code )
 {
 
@@ -363,6 +387,8 @@ void RooNonCPEigenDecay::initGenerator( Int_t code )
 }
 
 
+
+//_____________________________________________________________________________
 void RooNonCPEigenDecay::generateEvent( Int_t code )
 {
 

@@ -14,8 +14,13 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [PDF] --
-// 
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
+// Single or double sided decay function that can be analytically convolved
+// with any RooResolutionModel implementation
+// END_HTML
+//
 
 #include "RooFit.h"
 
@@ -29,6 +34,8 @@ ClassImp(RooDecay)
 ;
 
 
+
+//_____________________________________________________________________________
 RooDecay::RooDecay(const char *name, const char *title, 
 		   RooRealVar& t, RooAbsReal& tau, 
 		   const RooResolutionModel& model, DecayType type) :
@@ -52,6 +59,8 @@ RooDecay::RooDecay(const char *name, const char *title,
 }
 
 
+
+//_____________________________________________________________________________
 RooDecay::RooDecay(const RooDecay& other, const char* name) : 
   RooAbsAnaConvPdf(other,name), 
   _t("t",this,other._t),
@@ -64,12 +73,15 @@ RooDecay::RooDecay(const RooDecay& other, const char* name) :
 
 
 
+//_____________________________________________________________________________
 RooDecay::~RooDecay()
 {
   // Destructor
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooDecay::coefficient(Int_t /*basisIndex*/) const 
 {
   return 1 ;
@@ -77,6 +89,7 @@ Double_t RooDecay::coefficient(Int_t /*basisIndex*/) const
 
 
 
+//_____________________________________________________________________________
 Int_t RooDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t /*staticInitOK*/) const
 {
   if (matchArgs(directVars,generateVars,_t)) return 1 ;  
@@ -85,6 +98,7 @@ Int_t RooDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generateVar
 
 
 
+//_____________________________________________________________________________
 void RooDecay::generateEvent(Int_t code)
 {
   assert(code==1) ;

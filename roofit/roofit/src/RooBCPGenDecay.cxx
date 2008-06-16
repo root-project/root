@@ -17,9 +17,13 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [PDF] --
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
 // Implement standard CP physics model with S and C (no mention of lambda)
 // Suitably stolen and modified from RooBCPEffDecay
+// END_HTML
+//
 
 #include "RooFit.h"
 
@@ -33,6 +37,8 @@ ClassImp(RooBCPGenDecay)
 ;
 
 
+
+//_____________________________________________________________________________
 RooBCPGenDecay::RooBCPGenDecay(const char *name, const char *title, 
 			       RooRealVar& t, RooAbsCategory& tag,
 			       RooAbsReal& tau, RooAbsReal& dm,
@@ -75,6 +81,8 @@ RooBCPGenDecay::RooBCPGenDecay(const char *name, const char *title,
 }
 
 
+
+//_____________________________________________________________________________
 RooBCPGenDecay::RooBCPGenDecay(const RooBCPGenDecay& other, const char* name) : 
   RooAbsAnaConvPdf(other,name), 
   _avgC("C",this,other._avgC),
@@ -97,12 +105,15 @@ RooBCPGenDecay::RooBCPGenDecay(const RooBCPGenDecay& other, const char* name) :
 
 
 
+//_____________________________________________________________________________
 RooBCPGenDecay::~RooBCPGenDecay()
 {
   // Destructor
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooBCPGenDecay::coefficient(Int_t basisIndex) const 
 {
   // B0    : _tag = +1 
@@ -131,6 +142,7 @@ Double_t RooBCPGenDecay::coefficient(Int_t basisIndex) const
 
 
 
+//_____________________________________________________________________________
 Int_t RooBCPGenDecay::getCoefAnalyticalIntegral(Int_t /*code*/, RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
 {
   if (rangeName) return 0 ;
@@ -140,6 +152,7 @@ Int_t RooBCPGenDecay::getCoefAnalyticalIntegral(Int_t /*code*/, RooArgSet& allVa
 
 
 
+//_____________________________________________________________________________
 Double_t RooBCPGenDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code, const char* /*rangeName*/) const 
 {
   switch(code) {
@@ -168,6 +181,7 @@ Double_t RooBCPGenDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code, co
 
 
 
+//_____________________________________________________________________________
 Int_t RooBCPGenDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK) const
 {
   if (staticInitOK) {
@@ -179,6 +193,7 @@ Int_t RooBCPGenDecay::getGenerator(const RooArgSet& directVars, RooArgSet &gener
 
 
 
+//_____________________________________________________________________________
 void RooBCPGenDecay::initGenerator(Int_t code)
 {
   if (code==2) {
@@ -192,6 +207,7 @@ void RooBCPGenDecay::initGenerator(Int_t code)
 
 
 
+//_____________________________________________________________________________
 void RooBCPGenDecay::generateEvent(Int_t code)
 {
   // Generate mix-state dependent

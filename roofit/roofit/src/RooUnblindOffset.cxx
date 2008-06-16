@@ -14,8 +14,9 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [REAL] --
+//////////////////////////////////////////////////////////////////////////////
 //
+// BEGIN_HTML
 // Implementation of BlindTools' offset blinding method
 // A RooUnblindOffset object is a real valued function
 // object, constructed from a blind value holder and a 
@@ -26,6 +27,8 @@
 // parameter. The transformation is chosen such that the
 // the error on the blind parameters is indentical to that
 // of the unblind parameter
+// END_HTML
+//
 
 #include "RooFit.h"
 
@@ -38,12 +41,16 @@ ClassImp(RooUnblindOffset)
 ;
 
 
+
+//_____________________________________________________________________________
 RooUnblindOffset::RooUnblindOffset() : _blindEngine("") 
 {
   // Default constructor
 }
 
 
+
+//_____________________________________________________________________________
 RooUnblindOffset::RooUnblindOffset(const char *name, const char *title,
 					 const char *blindString, Double_t scale, RooAbsReal& cpasym)
   : RooAbsHiddenReal(name,title), 
@@ -53,6 +60,8 @@ RooUnblindOffset::RooUnblindOffset(const char *name, const char *title,
   // Constructor from a given RooAbsReal (to hold the blind value) and a set of blinding parameters
 }
 
+
+//_____________________________________________________________________________
 RooUnblindOffset::RooUnblindOffset(const char *name, const char *title,
 				   const char *blindString, Double_t scale, RooAbsReal& cpasym,
 				   RooAbsCategory& blindState)
@@ -64,6 +73,8 @@ RooUnblindOffset::RooUnblindOffset(const char *name, const char *title,
 }
 
 
+
+//_____________________________________________________________________________
 RooUnblindOffset::RooUnblindOffset(const RooUnblindOffset& other, const char* name) : 
   RooAbsHiddenReal(other, name), 
   _value("asym",this,other._value),
@@ -74,12 +85,16 @@ RooUnblindOffset::RooUnblindOffset(const RooUnblindOffset& other, const char* na
 }
 
 
+
+//_____________________________________________________________________________
 RooUnblindOffset::~RooUnblindOffset() 
 {
   // Destructor
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooUnblindOffset::evaluate() const
 {
   // Evaluate RooBlindTools unhide-offset method on blind value

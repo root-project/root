@@ -70,7 +70,7 @@ protected:
   Int_t _basisB;
   DecayType _type;
 
-  ClassDef(RooBDecay, 1) //Abstract Resolution Model
+  ClassDef(RooBDecay, 1) // P.d.f of general description of B decay time distribution
     };
 
 #endif

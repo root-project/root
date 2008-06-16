@@ -117,8 +117,7 @@ protected:
   Int_t            _basisSin;
   Int_t            _basisCos;
 
-  ClassDef(RooNonCPEigenDecay,1) // PDF to model CP-violating decays to final states 
-                                 // which are not CP eigenstates
+  ClassDef(RooNonCPEigenDecay,1) // PDF to model CP-violating decays to final states which are not CP eigenstates
 };
 
 #endif

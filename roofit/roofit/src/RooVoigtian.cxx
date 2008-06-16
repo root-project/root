@@ -13,7 +13,9 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [PDF] --
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
 // RooVoigtian is an efficient implementation of the convolution of a 
 // Breit-Wigner with a Gaussian, making use of the complex error function.
 // RooFitCore provides two algorithms for the evaluation of the complex error 
@@ -21,6 +23,8 @@
 // based method). By default, RooVoigtian employs the default (CERNlib) 
 // algorithm. Select the faster algorithm either in the constructor, or with
 // the selectFastAlgorithm() method.
+// END_HTML
+//
 
 
 #include "RooFit.h"
@@ -37,6 +41,8 @@
 
 ClassImp(RooVoigtian)
 
+
+//_____________________________________________________________________________
 RooVoigtian::RooVoigtian(const char *name, const char *title,
 			 RooAbsReal& _x, RooAbsReal& _mean,
 			 RooAbsReal& _width, RooAbsReal& _sigma,
@@ -52,6 +58,8 @@ RooVoigtian::RooVoigtian(const char *name, const char *title,
 }
 
 
+
+//_____________________________________________________________________________
 RooVoigtian::RooVoigtian(const RooVoigtian& other, const char* name) : 
   RooAbsPdf(other,name), x("x",this,other.x), mean("mean",this,other.mean),
   width("width",this,other.width),sigma("sigma",this,other.sigma),
@@ -61,6 +69,8 @@ RooVoigtian::RooVoigtian(const RooVoigtian& other, const char* name) :
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooVoigtian::evaluate() const
 {
   Double_t s = (sigma>0) ? sigma : -sigma ;

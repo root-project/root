@@ -14,8 +14,12 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [PDF] --
-// Gaussian PDF...
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
+// Plain Gaussian p.d.f
+// END_HTML
+//
 
 #include "RooFit.h"
 
@@ -31,6 +35,8 @@
 
 ClassImp(RooGaussian)
 
+
+//_____________________________________________________________________________
 RooGaussian::RooGaussian(const char *name, const char *title,
 			 RooAbsReal& _x, RooAbsReal& _mean,
 			 RooAbsReal& _sigma) :
@@ -42,6 +48,8 @@ RooGaussian::RooGaussian(const char *name, const char *title,
 }
 
 
+
+//_____________________________________________________________________________
 RooGaussian::RooGaussian(const RooGaussian& other, const char* name) : 
   RooAbsPdf(other,name), x("x",this,other.x), mean("mean",this,other.mean),
   sigma("sigma",this,other.sigma)
@@ -49,6 +57,8 @@ RooGaussian::RooGaussian(const RooGaussian& other, const char* name) :
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooGaussian::evaluate() const
 {
   Double_t arg= x - mean;  
@@ -59,6 +69,7 @@ Double_t RooGaussian::evaluate() const
 
 
 
+//_____________________________________________________________________________
 Int_t RooGaussian::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const 
 {
   if (matchArgs(allVars,analVars,x)) return 1 ;
@@ -67,6 +78,7 @@ Int_t RooGaussian::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars
 
 
 
+//_____________________________________________________________________________
 Double_t RooGaussian::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
   assert(code==1) ;
@@ -86,6 +98,7 @@ Double_t RooGaussian::analyticalIntegral(Int_t code, const char* rangeName) cons
 
 
 
+//_____________________________________________________________________________
 Int_t RooGaussian::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t /*staticInitOK*/) const
 {
   if (matchArgs(directVars,generateVars,x)) return 1 ;  
@@ -93,6 +106,8 @@ Int_t RooGaussian::getGenerator(const RooArgSet& directVars, RooArgSet &generate
 }
 
 
+
+//_____________________________________________________________________________
 void RooGaussian::generateEvent(Int_t code)
 {
   assert(code==1) ;

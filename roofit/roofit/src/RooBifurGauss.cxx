@@ -15,6 +15,15 @@
  *****************************************************************************/
 #include "RooFit.h"
 
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
+// Bifurcated Gaussian p.d.f with different widths on left and right
+// side of maximum value
+// END_HTML
+//
+
+
 #include "Riostream.h"
 #include "TMath.h"
 #include <math.h>
@@ -28,6 +37,8 @@ ClassImp(RooBifurGauss)
 static const char rcsid[] =
 "$Id$";
 
+
+//_____________________________________________________________________________
 RooBifurGauss::RooBifurGauss(const char *name, const char *title,
 			     RooAbsReal& _x, RooAbsReal& _mean,
 			     RooAbsReal& _sigmaL, RooAbsReal& _sigmaR) :
@@ -40,12 +51,16 @@ RooBifurGauss::RooBifurGauss(const char *name, const char *title,
 {
 }
 
+
+//_____________________________________________________________________________
 RooBifurGauss::RooBifurGauss(const RooBifurGauss& other, const char* name) : 
   RooAbsPdf(other,name), x("x",this,other.x), mean("mean",this,other.mean),
   sigmaL("sigmaL",this,other.sigmaL), sigmaR("sigmaR", this, other.sigmaR)
 {
 }
 
+
+//_____________________________________________________________________________
 Double_t RooBifurGauss::evaluate() const {
 
   Double_t arg = x - mean;
@@ -65,12 +80,16 @@ Double_t RooBifurGauss::evaluate() const {
   return exp(coef*arg*arg);
 }
 
+
+//_____________________________________________________________________________
 Int_t RooBifurGauss::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const 
 {
   if (matchArgs(allVars,analVars,x)) return 1 ;
   return 0 ;
 }
 
+
+//_____________________________________________________________________________
 Double_t RooBifurGauss::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
   switch(code) {

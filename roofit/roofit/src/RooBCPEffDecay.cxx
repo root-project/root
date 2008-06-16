@@ -14,8 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [PDF] --
-// 
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
+// P.d.f describing decay time distribution of B meson including
+// effects of standard model CP violation. This function can be analytically 
+// convolved with any RooResolutionModel implementation
+// END_HTML
+//
 
 #include "RooFit.h"
 
@@ -29,6 +35,8 @@ ClassImp(RooBCPEffDecay)
 ;
 
 
+
+//_____________________________________________________________________________
 RooBCPEffDecay::RooBCPEffDecay(const char *name, const char *title, 
 			       RooRealVar& t, RooAbsCategory& tag,
 			       RooAbsReal& tau, RooAbsReal& dm,
@@ -71,6 +79,8 @@ RooBCPEffDecay::RooBCPEffDecay(const char *name, const char *title,
 }
 
 
+
+//_____________________________________________________________________________
 RooBCPEffDecay::RooBCPEffDecay(const RooBCPEffDecay& other, const char* name) : 
   RooAbsAnaConvPdf(other,name), 
   _absLambda("absLambda",this,other._absLambda),
@@ -94,12 +104,15 @@ RooBCPEffDecay::RooBCPEffDecay(const RooBCPEffDecay& other, const char* name) :
 
 
 
+//_____________________________________________________________________________
 RooBCPEffDecay::~RooBCPEffDecay()
 {
   // Destructor
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooBCPEffDecay::coefficient(Int_t basisIndex) const 
 {
   // B0    : _tag = +1 
@@ -128,6 +141,7 @@ Double_t RooBCPEffDecay::coefficient(Int_t basisIndex) const
 
 
 
+//_____________________________________________________________________________
 Int_t RooBCPEffDecay::getCoefAnalyticalIntegral(Int_t /*code*/, RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
 {
   if (rangeName) return 0 ;
@@ -138,6 +152,7 @@ Int_t RooBCPEffDecay::getCoefAnalyticalIntegral(Int_t /*code*/, RooArgSet& allVa
 
 
 
+//_____________________________________________________________________________
 Double_t RooBCPEffDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code, const char* /*rangeName*/) const 
 {
   switch(code) {
@@ -162,6 +177,7 @@ Double_t RooBCPEffDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code, co
 
 
 
+//_____________________________________________________________________________
 Int_t RooBCPEffDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK) const
 {
   if (staticInitOK) {
@@ -173,6 +189,7 @@ Int_t RooBCPEffDecay::getGenerator(const RooArgSet& directVars, RooArgSet &gener
 
 
 
+//_____________________________________________________________________________
 void RooBCPEffDecay::initGenerator(Int_t code)
 {
   if (code==2) {
@@ -186,6 +203,7 @@ void RooBCPEffDecay::initGenerator(Int_t code)
 
 
 
+//_____________________________________________________________________________
 void RooBCPEffDecay::generateEvent(Int_t code)
 {
   // Generate mix-state dependent

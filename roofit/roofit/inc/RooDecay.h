@@ -44,7 +44,7 @@ protected:
   DecayType    _type ;
   Int_t        _basisExp ;
 
-  ClassDef(RooDecay,1) // Abstract Resolution Model
+  ClassDef(RooDecay,1) // General decay function p.d.f 
 };
 
 #endif

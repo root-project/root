@@ -14,8 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [PDF] --
-// 
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
+// Class RooBMixDecay is a RooAbsAnaConvPdf implementation that describes
+// the decay of B mesons with the effects of B0/B0bar mixing. 
+// This function can be analytically convolved with any RooResolutionModel implementation
+// END_HTML
+//
 
 #include "RooFit.h"
 
@@ -29,6 +35,8 @@ ClassImp(RooBMixDecay)
 ;
 
 
+
+//_____________________________________________________________________________
 RooBMixDecay::RooBMixDecay(const char *name, const char *title, 
 			   RooRealVar& t, RooAbsCategory& mixState,
 			   RooAbsCategory& tagFlav,
@@ -64,6 +72,8 @@ RooBMixDecay::RooBMixDecay(const char *name, const char *title,
 }
 
 
+
+//_____________________________________________________________________________
 RooBMixDecay::RooBMixDecay(const RooBMixDecay& other, const char* name) : 
   RooAbsAnaConvPdf(other,name), 
   _type(other._type),
@@ -86,12 +96,15 @@ RooBMixDecay::RooBMixDecay(const RooBMixDecay& other, const char* name) :
 
 
 
+//_____________________________________________________________________________
 RooBMixDecay::~RooBMixDecay()
 {
   // Destructor
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooBMixDecay::coefficient(Int_t basisIndex) const 
 {
   // Comp with tFit MC: must be (1 - tagFlav*...)
@@ -108,6 +121,7 @@ Double_t RooBMixDecay::coefficient(Int_t basisIndex) const
 
 
 
+//_____________________________________________________________________________
 Int_t RooBMixDecay::getCoefAnalyticalIntegral(Int_t /*code*/, RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
 {
 //   cout << "RooBMixDecay::getCoefAI " ; allVars.Print("1") ;
@@ -123,6 +137,7 @@ Int_t RooBMixDecay::getCoefAnalyticalIntegral(Int_t /*code*/, RooArgSet& allVars
 
 
 
+//_____________________________________________________________________________
 Double_t RooBMixDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code, const char* /*rangeName*/) const 
 {  
   switch(code) {
@@ -163,6 +178,8 @@ Double_t RooBMixDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code, cons
 }
 
 
+
+//_____________________________________________________________________________
 Int_t RooBMixDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK) const
 {
   if (staticInitOK) {
@@ -177,6 +194,7 @@ Int_t RooBMixDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generat
 
 
 
+//_____________________________________________________________________________
 void RooBMixDecay::initGenerator(Int_t code)
 {
   switch (code) {
@@ -222,6 +240,7 @@ void RooBMixDecay::initGenerator(Int_t code)
 
 
 
+//_____________________________________________________________________________
 void RooBMixDecay::generateEvent(Int_t code)
 {
   // Generate mix-state dependent

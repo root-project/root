@@ -14,8 +14,9 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [REAL] --
+//////////////////////////////////////////////////////////////////////////////
 //
+// BEGIN_HTML
 // Implementation of BlindTools' CP asymmetry blinding method
 // A RooUnblindCPAsymVar object is a real valued function
 // object, constructed from a blind value holder and a 
@@ -26,6 +27,8 @@
 // parameter. The transformation is chosen such that the
 // the error on the blind parameters is indentical to that
 // of the unblind parameter
+// END_HTML
+//
 
 #include "RooFit.h"
 
@@ -39,12 +42,15 @@ ClassImp(RooUnblindCPAsymVar)
 
 
 
+//_____________________________________________________________________________
 RooUnblindCPAsymVar::RooUnblindCPAsymVar() : _blindEngine("") 
 {
   // Default constructor
 }
 
 
+
+//_____________________________________________________________________________
 RooUnblindCPAsymVar::RooUnblindCPAsymVar(const char *name, const char *title,
 					 const char *blindString, RooAbsReal& cpasym)
   : RooAbsHiddenReal(name,title), 
@@ -55,6 +61,8 @@ RooUnblindCPAsymVar::RooUnblindCPAsymVar(const char *name, const char *title,
 }
 
 
+
+//_____________________________________________________________________________
 RooUnblindCPAsymVar::RooUnblindCPAsymVar(const char *name, const char *title,
 					 const char *blindString, RooAbsReal& cpasym, RooAbsCategory& blindState)
   : RooAbsHiddenReal(name,title,blindState), 
@@ -65,6 +73,8 @@ RooUnblindCPAsymVar::RooUnblindCPAsymVar(const char *name, const char *title,
 }
 
 
+
+//_____________________________________________________________________________
 RooUnblindCPAsymVar::RooUnblindCPAsymVar(const RooUnblindCPAsymVar& other, const char* name) : 
   RooAbsHiddenReal(other, name), 
   _asym("asym",this,other._asym),
@@ -74,12 +84,16 @@ RooUnblindCPAsymVar::RooUnblindCPAsymVar(const RooUnblindCPAsymVar& other, const
 }
 
 
+
+//_____________________________________________________________________________
 RooUnblindCPAsymVar::~RooUnblindCPAsymVar() 
 {
   // Copy constructor
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooUnblindCPAsymVar::evaluate() const
 {
   if (isHidden()) {

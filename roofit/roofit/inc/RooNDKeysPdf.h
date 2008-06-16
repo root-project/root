@@ -204,7 +204,7 @@ protected:
     }
   };
 
-  ClassDef(RooNDKeysPdf,0) // Non-Parametric KEYS PDF
+  ClassDef(RooNDKeysPdf,0) // General N-dimensional non-parametric kernel estimation p.d.f
 };
 
 #endif

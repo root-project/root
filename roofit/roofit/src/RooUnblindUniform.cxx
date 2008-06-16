@@ -13,8 +13,9 @@
  * with or without modification, are permitted according to the terms        *
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
-// -- CLASS DESCRIPTION [REAL] --
+//////////////////////////////////////////////////////////////////////////////
 //
+// BEGIN_HTML
 // Implementation of BlindTools' offset blinding method
 // A RooUnblindUniform object is a real valued function
 // object, constructed from a blind value holder and a 
@@ -25,6 +26,8 @@
 // parameter. The transformation is chosen such that the
 // the error on the blind parameters is indentical to that
 // of the unblind parameter
+// END_HTML
+//
 
 #include "RooFit.h"
 
@@ -37,12 +40,16 @@ ClassImp(RooUnblindUniform)
 ;
 
 
+
+//_____________________________________________________________________________
 RooUnblindUniform::RooUnblindUniform() : _blindEngine("") 
 {
   // Default constructor
 }
 
 
+
+//_____________________________________________________________________________
 RooUnblindUniform::RooUnblindUniform(const char *name, const char *title,
 					 const char *blindString, Double_t scale, RooAbsReal& cpasym)
   : RooAbsHiddenReal(name,title), 
@@ -53,6 +60,8 @@ RooUnblindUniform::RooUnblindUniform(const char *name, const char *title,
 }
 
 
+
+//_____________________________________________________________________________
 RooUnblindUniform::RooUnblindUniform(const RooUnblindUniform& other, const char* name) : 
   RooAbsHiddenReal(other, name), 
   _value("asym",this,other._value),
@@ -63,12 +72,16 @@ RooUnblindUniform::RooUnblindUniform(const RooUnblindUniform& other, const char*
 }
 
 
+
+//_____________________________________________________________________________
 RooUnblindUniform::~RooUnblindUniform() 
 {
   // Destructor
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooUnblindUniform::evaluate() const
 {
   // Evaluate RooBlindTools unhide-offset method on blind value

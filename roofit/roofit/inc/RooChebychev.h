@@ -43,7 +43,7 @@ private:
 
   Double_t evaluate() const;
 
-  ClassDef(RooChebychev,1) // Chebychev PDF
+  ClassDef(RooChebychev,1) // Chebychev polynomial PDF
 };
 
 #endif

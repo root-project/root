@@ -13,8 +13,12 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [PDF] --
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
 // RooBukinPdf implements the NovosibirskA function 
+// END_HTML
+//
 
 // Original Fortran Header below
 /*****************************************************************************
@@ -45,6 +49,8 @@
 ClassImp(RooBukinPdf)
 
 
+
+//_____________________________________________________________________________
 RooBukinPdf::RooBukinPdf(const char *name, const char *title,
 			 RooAbsReal& _x,    RooAbsReal& _Xp,
 			 RooAbsReal& _sigp, RooAbsReal& _xi,
@@ -65,6 +71,7 @@ RooBukinPdf::RooBukinPdf(const char *name, const char *title,
 
 
 
+//_____________________________________________________________________________
 RooBukinPdf::RooBukinPdf(const RooBukinPdf& other, const char *name):
   RooAbsPdf(other,name),
   x("x",this,other.x),
@@ -81,6 +88,7 @@ RooBukinPdf::RooBukinPdf(const RooBukinPdf& other, const char *name):
 
 
 
+//_____________________________________________________________________________
 Double_t RooBukinPdf::evaluate() const 
 {
   // Implementation 

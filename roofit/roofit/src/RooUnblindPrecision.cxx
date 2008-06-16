@@ -14,8 +14,9 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [REAL] --
+//////////////////////////////////////////////////////////////////////////////
 //
+// BEGIN_HTML
 // Implementation of BlindTools' precision blinding method
 // A RooUnblindPrecision object is a real valued function
 // object, constructed from a blind value holder and a 
@@ -26,6 +27,8 @@
 // parameter. The transformation is chosen such that the
 // the error on the blind parameters is indentical to that
 // of the unblind parameter
+// END_HTML
+//
 
 #include "RooFit.h"
 
@@ -38,12 +41,16 @@ ClassImp(RooUnblindPrecision)
 ;
 
 
+
+//_____________________________________________________________________________
 RooUnblindPrecision::RooUnblindPrecision() : _blindEngine("") 
 {
   // Default constructor
 }
 
 
+
+//_____________________________________________________________________________
 RooUnblindPrecision::RooUnblindPrecision(const char *name, const char *title,
 					 const char *blindString, Double_t centralValue, 
 					 Double_t scale, RooAbsReal& value,
@@ -56,6 +63,8 @@ RooUnblindPrecision::RooUnblindPrecision(const char *name, const char *title,
 }
 
 
+
+//_____________________________________________________________________________
 RooUnblindPrecision::RooUnblindPrecision(const char *name, const char *title,
 					 const char *blindString, Double_t centralValue, 
 					 Double_t scale, RooAbsReal& value, RooAbsCategory& blindState,
@@ -68,6 +77,8 @@ RooUnblindPrecision::RooUnblindPrecision(const char *name, const char *title,
 }
 
 
+
+//_____________________________________________________________________________
 RooUnblindPrecision::RooUnblindPrecision(const RooUnblindPrecision& other, const char* name) : 
   RooAbsHiddenReal(other, name), 
   _value("asym",this,other._value),
@@ -77,12 +88,16 @@ RooUnblindPrecision::RooUnblindPrecision(const RooUnblindPrecision& other, const
 }
 
 
+
+//_____________________________________________________________________________
 RooUnblindPrecision::~RooUnblindPrecision() 
 {
   // Destructor
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooUnblindPrecision::evaluate() const
 {
   // Evaluate RooBlindTools unhide-precision method on blind value

@@ -29,10 +29,32 @@
 ClassImp(RooKeysPdf)
 
 
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
+// Class RooKeysPdf implements a one-dimensional kernel estimation p.d.f which model the distribution
+// of an arbitrary input dataset as a superposition of Gaussian kernels, one for each data point,
+// each contributing 1/N to the total integral of the p.d.f.
+// <p>
+// If the 'adaptive mode' is enabled, the width of the Gaussian is adaptively calculated from the
+// local density of events, i.e. narrow for regions with high event density to preserve details and
+// wide for regions with log event density to promote smoothness. The details of the general algorithm
+// are described in the following paper: 
+// <p>
+// Cranmer KS, Kernel Estimation in High-Energy Physics.  
+//             Computer Physics Communications 136:198-207,2001 - e-Print Archive: hep ex/0011057
+// <p>
+// END_HTML
+//
+
+
+//_____________________________________________________________________________
 RooKeysPdf::RooKeysPdf() : _dataPts(0), _weights(0)
 {
 }
 
+
+//_____________________________________________________________________________
 RooKeysPdf::RooKeysPdf(const char *name, const char *title,
                        RooAbsReal& x, RooDataSet& data,
                        Mirror mirror, Double_t rho) :
@@ -59,6 +81,8 @@ RooKeysPdf::RooKeysPdf(const char *name, const char *title,
 }
 
 
+
+//_____________________________________________________________________________
 RooKeysPdf::RooKeysPdf(const RooKeysPdf& other, const char* name):
   RooAbsPdf(other,name), _x("x",this,other._x), _nEvents(other._nEvents),
   _dataPts(0), _weights(0),
@@ -86,6 +110,8 @@ RooKeysPdf::RooKeysPdf(const RooKeysPdf& other, const char* name):
   
 }
 
+
+//_____________________________________________________________________________
 RooKeysPdf::~RooKeysPdf() {
   delete[] _dataPts;
   delete[] _weights;
@@ -93,6 +119,8 @@ RooKeysPdf::~RooKeysPdf() {
 
 
 void
+
+//_____________________________________________________________________________
 RooKeysPdf::LoadDataSet( RooDataSet& data) {
   delete[] _dataPts;
   delete[] _weights;
@@ -148,6 +176,8 @@ RooKeysPdf::LoadDataSet( RooDataSet& data) {
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooKeysPdf::evaluate() const {
   Int_t i = (Int_t)floor((Double_t(_x)-_lo)/_binWidth);
   if (i<0) {
@@ -169,6 +199,8 @@ Double_t RooKeysPdf::evaluate() const {
   return (_lookupTable[i]+dx*(_lookupTable[i+1]-_lookupTable[i]));
 }
 
+
+//_____________________________________________________________________________
 Double_t RooKeysPdf::evaluateFull( Double_t x ) const {
   Double_t y=0;
 
@@ -201,6 +233,8 @@ Double_t RooKeysPdf::evaluateFull( Double_t x ) const {
   return y/(sqrt2pi*_nEvents);
 }
 
+
+//_____________________________________________________________________________
 Double_t RooKeysPdf::g(Double_t x,Double_t sigma) const {
   
   Double_t c=Double_t(1)/(2*sigma*sigma);

@@ -14,7 +14,12 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [PDF] --
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
+// P.d.f implementing the Crystall Ball line shape
+// END_HTML
+//
 
 #include "RooFit.h"
 
@@ -32,6 +37,8 @@ ClassImp(RooCBShape)
 ;
 
   
+
+//_____________________________________________________________________________
 Double_t RooCBShape::ApproxErf(Double_t arg) const 
 {
   static const double erflim = 5.0;
@@ -47,6 +54,8 @@ Double_t RooCBShape::ApproxErf(Double_t arg) const
 static const char rcsid[] =
 "$Id$";
 
+
+//_____________________________________________________________________________
 RooCBShape::RooCBShape(const char *name, const char *title,
 		       RooAbsReal& _m, RooAbsReal& _m0, RooAbsReal& _sigma,
 		       RooAbsReal& _alpha, RooAbsReal& _n) :
@@ -59,6 +68,8 @@ RooCBShape::RooCBShape(const char *name, const char *title,
 {
 }
 
+
+//_____________________________________________________________________________
 RooCBShape::RooCBShape(const RooCBShape& other, const char* name) :
   RooAbsPdf(other, name), m("m", this, other.m), m0("m0", this, other.m0),
   sigma("sigma", this, other.sigma), alpha("alpha", this, other.alpha),
@@ -66,6 +77,8 @@ RooCBShape::RooCBShape(const RooCBShape& other, const char* name) :
 {
 }
 
+
+//_____________________________________________________________________________
 Double_t RooCBShape::evaluate() const {
 
   Double_t t = (m-m0)/sigma;
@@ -84,6 +97,8 @@ Double_t RooCBShape::evaluate() const {
   }
 }
 
+
+//_____________________________________________________________________________
 Int_t RooCBShape::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const
 {
   if( matchArgs(allVars,analVars,m) )
@@ -93,6 +108,8 @@ Int_t RooCBShape::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooCBShape::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   static const double sqrtPiOver2 = 1.2533141373;
@@ -158,6 +175,8 @@ Double_t RooCBShape::analyticalIntegral(Int_t code, const char* rangeName) const
 }
 
 
+
+//_____________________________________________________________________________
 Int_t RooCBShape::getMaxVal(const RooArgSet& vars) const 
 {
   // Advertise that we know the maximum of self for given (m0,alpha,n,sigma)
@@ -170,6 +189,8 @@ Int_t RooCBShape::getMaxVal(const RooArgSet& vars) const
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooCBShape::maxVal(Int_t code) 
 {
   assert(code==1) ;

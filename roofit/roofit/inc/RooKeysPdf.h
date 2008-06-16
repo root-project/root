@@ -64,7 +64,7 @@ private:
   Double_t _lo, _hi, _binWidth;
   Double_t _rho;
   
-  ClassDef(RooKeysPdf,1) // Non-Parametric KEYS PDF
+  ClassDef(RooKeysPdf,1) // One-dimensional non-parametric kernel estimation p.d.f.
 };
 
 #endif

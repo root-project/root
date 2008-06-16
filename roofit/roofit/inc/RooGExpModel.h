@@ -128,7 +128,7 @@ protected:
   Bool_t _flatSFInt ;
   Bool_t _asympInt ;  // added FMV,07/24/03
 
-  ClassDef(RooGExpModel,1) // GExp Resolution Model
+  ClassDef(RooGExpModel,1) // Gauss (x) Expontial resolution model
 };
 
 #endif

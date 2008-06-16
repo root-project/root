@@ -13,8 +13,13 @@
  * with or without modification, are permitted according to the terms        *
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
-// -- CLASS DESCRIPTION [PDF] --
-// Landau Distribution PDF...
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
+// Landau Distribution p.d.f
+// END_HTML
+//
 
 #include "TMath.h"
 #include "RooFit.h"
@@ -25,6 +30,8 @@
 
 ClassImp(RooLandau)
 
+
+//_____________________________________________________________________________
 RooLandau::RooLandau(const char *name, const char *title, RooAbsReal& _x, RooAbsReal& _mean, RooAbsReal& _sigma) :
   RooAbsPdf(name,title),
   x("x","Dependent",this,_x),
@@ -33,6 +40,8 @@ RooLandau::RooLandau(const char *name, const char *title, RooAbsReal& _x, RooAbs
 {
 }
  
+
+//_____________________________________________________________________________
 RooLandau::RooLandau(const RooLandau& other, const char* name) : 
   RooAbsPdf(other,name),
   x("x",this,other.x),
@@ -41,17 +50,23 @@ RooLandau::RooLandau(const RooLandau& other, const char* name) :
 {
 } 
 
+
+//_____________________________________________________________________________
 Double_t RooLandau::evaluate() const
 {
   return TMath::Landau(x, mean, sigma);
 }
 
+
+//_____________________________________________________________________________
 Int_t RooLandau::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t /*staticInitOK*/) const
 {
   if (matchArgs(directVars,generateVars,x)) return 1 ;  
   return 0 ;
 }
 
+
+//_____________________________________________________________________________
 void RooLandau::generateEvent(Int_t code)
 {
   assert(code==1) ;

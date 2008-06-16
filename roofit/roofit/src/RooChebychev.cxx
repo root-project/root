@@ -13,7 +13,12 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [PDF] --
+//////////////////////////////////////////////////////////////////////////////
+//
+// BEGIN_HTML
+// Chebychev polynomial p.d.f. of the first kind
+// END_HTML
+//
 
 #include "RooFit.h"
 
@@ -29,10 +34,14 @@
 ClassImp(RooChebychev)
 ;
 
+
+//_____________________________________________________________________________
 RooChebychev::RooChebychev()
 {
 }
 
+
+//_____________________________________________________________________________
 RooChebychev::RooChebychev(const char* name, const char* title, 
                            RooAbsReal& x, const RooArgList& coefList): 
   RooAbsPdf(name, title),
@@ -54,6 +63,8 @@ RooChebychev::RooChebychev(const char* name, const char* title,
 }
 
 
+
+//_____________________________________________________________________________
 RooChebychev::RooChebychev(const RooChebychev& other, const char* name) :
   RooAbsPdf(other, name), 
   _x("x", this, other._x), 
@@ -67,6 +78,8 @@ inline static double p2(double t,double a,double b,double c) {  return p1(t,p1(t
 inline static double p3(double t,double a,double b,double c,double d) {  return p2(t,p1(t,a,b),c,d); }
 inline static double p4(double t,double a,double b,double c,double d,double e) {  return p3(t,p1(t,a,b),c,d,e); }
 
+
+//_____________________________________________________________________________
 Double_t RooChebychev::evaluate() const 
 {
 
@@ -87,12 +100,16 @@ Double_t RooChebychev::evaluate() const
   return sum;
 }
 
+
+//_____________________________________________________________________________
 Int_t RooChebychev::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const 
 {
   if (matchArgs(allVars, analVars, _x)) return 1;
   return 0;
 }
 
+
+//_____________________________________________________________________________
 Double_t RooChebychev::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
   assert(code==1) ;
