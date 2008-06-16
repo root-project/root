@@ -2174,7 +2174,7 @@ void TUnixSystem::StackTrace()
                if (name[0] != '/') noPath = kTRUE;
                if (name.Contains(".so") || name.Contains(".sl")) noShare = kFALSE;
                if (noShare) offset = addr;
-               if (noPath)  name = "which `" + name + "`";
+               if (noPath)  name = "`which " + name + "`";
                sprintf(buffer, "%s -e %s 0x%016lx", addr2line, name.Data(), offset);
                Bool_t nodebug = kTRUE;
                if (FILE *pf = ::popen(buffer, "r")) {
