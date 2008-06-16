@@ -702,6 +702,8 @@ SplitGLView::SplitGLView(const TGWindow *p, UInt_t w, UInt_t h, Bool_t embed) :
 
    // get top (main) split frame
    frm = fSplitFrame->GetFirst();
+   frm->SetName("Main_View");
+
    // create (embed) a GL viewer inside
    fViewer0 = new TGLEmbeddedViewer(frm, fPad);
    frm->AddFrame(fViewer0->GetFrame(), new TGLayoutHints(kLHintsExpandX | 
@@ -734,6 +736,7 @@ SplitGLView::SplitGLView(const TGWindow *p, UInt_t w, UInt_t h, Bool_t embed) :
 
    // get bottom left split frame
    frm = fSplitFrame->GetSecond()->GetFirst();
+   frm->SetName("Bottom_Left");
 
    dfrm = new TGDockableFrame(frm);
    dfrm->SetFixedSize(kFALSE);
@@ -783,6 +786,8 @@ SplitGLView::SplitGLView(const TGWindow *p, UInt_t w, UInt_t h, Bool_t embed) :
 
    // get bottom center split frame
    frm = fSplitFrame->GetSecond()->GetSecond()->GetFirst();
+   frm->SetName("Bottom_Center");
+
    // create (embed) a GL viewer inside
    dfrm = new TGDockableFrame(frm);
    dfrm->SetFixedSize(kFALSE);
@@ -826,6 +831,7 @@ SplitGLView::SplitGLView(const TGWindow *p, UInt_t w, UInt_t h, Bool_t embed) :
 
    // get bottom right split frame
    frm = fSplitFrame->GetSecond()->GetSecond()->GetSecond();
+   frm->SetName("Bottom_Right");
 
    dfrm = new TGDockableFrame(frm);
    dfrm->SetFixedSize(kFALSE);

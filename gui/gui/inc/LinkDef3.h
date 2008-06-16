@@ -91,6 +91,8 @@
 #pragma link C++ class TRootBrowser;
 
 #pragma link C++ class TGSplitFrame;
+#pragma link C++ class TGSplitTool;
+#pragma link C++ class TGRectMap;
 #pragma link C++ class TGShapedFrame;
 #pragma link C++ class TGEventHandler;
 
