@@ -43,10 +43,11 @@ ClassImp(RooQuasiRandomGenerator)
 
 
 //_____________________________________________________________________________
-RooQuasiRandomGenerator::RooQuasiRandomGenerator() {
+RooQuasiRandomGenerator::RooQuasiRandomGenerator() 
+{
   // Perform one-time initialization of our static coefficient array if necessary
   // and initialize our workspace.
-
+  
   if(!_coefsCalculated) {
     calculateCoefs(MaxDimension);
     _coefsCalculated= kTRUE;
@@ -58,13 +59,17 @@ RooQuasiRandomGenerator::RooQuasiRandomGenerator() {
 
 
 //_____________________________________________________________________________
-RooQuasiRandomGenerator::~RooQuasiRandomGenerator() {
+RooQuasiRandomGenerator::~RooQuasiRandomGenerator() 
+{
+  // Destructor
+
   delete[] _nextq;
 }
 
 
 //_____________________________________________________________________________
-void RooQuasiRandomGenerator::reset() {
+void RooQuasiRandomGenerator::reset() 
+{
   // Reset the workspace to its initial state.
 
   _sequenceCount= 0;
@@ -73,10 +78,11 @@ void RooQuasiRandomGenerator::reset() {
 
 
 //_____________________________________________________________________________
-Bool_t RooQuasiRandomGenerator::generate(UInt_t dimension, Double_t vector[]) {
+Bool_t RooQuasiRandomGenerator::generate(UInt_t dimension, Double_t vector[]) 
+{
   // Generate the next number in the sequence for the specified dimension.
   // The maximum dimension supported is 12.
-
+  
   /* Load the result from the saved state. */
   static const Double_t recip = 1.0/(double)(1U << NBits); /* 2^(-nbits) */
 
@@ -113,7 +119,10 @@ Bool_t RooQuasiRandomGenerator::generate(UInt_t dimension, Double_t vector[]) {
 
 
 //_____________________________________________________________________________
-void RooQuasiRandomGenerator::calculateCoefs(UInt_t dimension) {
+void RooQuasiRandomGenerator::calculateCoefs(UInt_t dimension) 
+{
+  // Calculate the coefficients for the given number of dimensions
+
   int ci[NBits][NBits];
   int v[NBits+MaxDegree+1];
   int r;
@@ -189,7 +198,10 @@ void RooQuasiRandomGenerator::calculateCoefs(UInt_t dimension) {
 
 //_____________________________________________________________________________
 void RooQuasiRandomGenerator::calculateV(const int px[], int px_degree,
-					 int pb[], int * pb_degree, int v[], int maxv) {
+					 int pb[], int * pb_degree, int v[], int maxv) 
+{
+  // Internal function
+  
   const int nonzero_element = 1;    /* nonzero element of Z_2  */
   const int arbitrary_element = 1;  /* arbitray element of Z_2 */
 
@@ -278,7 +290,10 @@ void RooQuasiRandomGenerator::calculateV(const int px[], int px_degree,
 
 //_____________________________________________________________________________
 void RooQuasiRandomGenerator::polyMultiply(const int pa[], int pa_degree, const int pb[],
-					   int pb_degree, int pc[], int  * pc_degree) {
+					   int pb_degree, int pc[], int  * pc_degree) 
+{
+  // Internal function
+
   int j, k;
   int pt[MaxDegree+1];
   int pt_degree = pa_degree + pb_degree;

@@ -45,7 +45,7 @@ Bool_t RooSentinel::_active = kFALSE ;
 
 static void CleanUpRooFitAtExit()
 {
-  // Clean up at program termination before global objects go out of scope.
+  // Clean up function called at program termination before global objects go out of scope.
   RooMinuit::cleanup() ;
   RooMsgService::cleanup() ;
   RooNumIntConfig::cleanup() ;
@@ -62,6 +62,9 @@ static void CleanUpRooFitAtExit()
 //_____________________________________________________________________________
 void RooSentinel::activate()
 {
+  // Install atexit handler that calls CleanupRooFitAtExit()
+  // on program termination
+
   if (!_active) {
     _active = kTRUE ;
     atexit(CleanUpRooFitAtExit) ;

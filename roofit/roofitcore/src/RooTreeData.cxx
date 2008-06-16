@@ -140,6 +140,16 @@ Int_t RooTreeData::GetEntry(Int_t entry, Int_t getall)
    return ret1 ;
 }
 
+
+//_____________________________________________________________________________
+void RooTreeData::Draw(Option_t* opt) 
+{
+   // Interface function to TTree::Draw()
+  return _tree->Draw(opt) ;
+}
+
+
+
 //________________________________________________________________
 //   Interface functions to TTree
 
@@ -374,6 +384,7 @@ RooTreeData::RooTreeData(RooTreeData const & other, const char* newName) :
   RooAbsData(other,newName), _defCtor(other._defCtor), _truth("Truth")
 {
   // Copy constructor
+
   RooTrace::create(this) ;
 
   _tree = 0 ;
@@ -416,6 +427,7 @@ void RooTreeData::createTree(const char* name, const char* title)
 RooTreeData::~RooTreeData()
 {
   // Destructor
+
   RooTrace::destroy(this) ;
 
   delete _tree ;
@@ -425,9 +437,10 @@ RooTreeData::~RooTreeData()
 
 
 //_____________________________________________________________________________
-void RooTreeData::initialize() {
-  // Attach variables of internal ArgSet 
-  // to the corresponding TTree branches
+void RooTreeData::initialize() 
+{
+  // One-time initialization common to all constructor forms.  Attach
+  // variables of internal ArgSet to the corresponding TTree branches
 
   // Recreate (empty) cache tree
   createTree(GetName(),GetTitle()) ;
@@ -463,7 +476,8 @@ void RooTreeData::initCache(const RooArgSet& cachedVars)
 
 //_____________________________________________________________________________
 void RooTreeData::loadValues(const char *filename, const char *treename,
-			    RooFormulaVar* cutVar) {
+			    RooFormulaVar* cutVar) 
+{
   // Load TTree name 'treename' from file 'filename' and pass call
   // to loadValue(TTree*,...)
 
@@ -629,7 +643,8 @@ void RooTreeData::loadValues(const TTree *t, RooFormulaVar* select, const char* 
 
 
 //_____________________________________________________________________________
-void RooTreeData::dump() {
+void RooTreeData::dump() 
+{
   // DEBUG: Dump contents
 
   RooAbsArg* arg ;
@@ -663,7 +678,8 @@ void RooTreeData::dump() {
 //_____________________________________________________________________________
 void RooTreeData::resetCache() 
 {
-  // Reset the cache 
+  // Remove tree with values of cached observables
+  // and clear list of cached observables
 
   // Empty list of cached functions
   _cachedVars.removeAll() ;
@@ -681,6 +697,8 @@ void RooTreeData::resetCache()
 //_____________________________________________________________________________
 Bool_t RooTreeData::changeObservableName(const char* from, const char* to) 
 {
+  // Change name of internal observable named 'from' into 'to'
+
   // Find observable to be changed
   RooAbsArg* var = _vars.find(from) ;
 
@@ -737,6 +755,9 @@ Bool_t RooTreeData::changeObservableName(const char* from, const char* to)
 //_____________________________________________________________________________
 void RooTreeData::setArgStatus(const RooArgSet& set, Bool_t active) 
 {
+  // Activate or deactivate the branch status of the TTree branch associated
+  // with the given set of dataset observables
+
   TIterator* iter = set.createIterator() ;
   RooAbsArg* arg ;
   while ((arg=(RooAbsArg*)iter->Next())) {
@@ -852,8 +873,7 @@ RooAbsArg* RooTreeData::addColumn(RooAbsArg& newVar)
   //       using addColumn(), you may alter the outcome of the fit. 
   //
   //       Only in cases where such a modification of fit behaviour is intentional, 
-  //       this function should be used. (E.g collapsing a continuous B0 flavour
-  //       probability into a 2-state B0/B0bar category)
+  //       this function should be used. 
 
   checkInit() ;
 
@@ -898,6 +918,9 @@ RooAbsArg* RooTreeData::addColumn(RooAbsArg& newVar)
 //_____________________________________________________________________________
 RooArgSet* RooTreeData::addColumns(const RooArgList& varList)
 {
+  // Utility function to add multiple columns in one call
+  // See addColumn() for details
+
   TIterator* vIter = varList.createIterator() ;
   RooAbsArg* var ;
 
@@ -970,6 +993,13 @@ RooArgSet* RooTreeData::addColumns(const RooArgList& varList)
 //_____________________________________________________________________________
 TList* RooTreeData::split(const RooAbsCategory& splitCat) const
 {
+  // Split dataset into subsets based on states of given splitCat in this dataset.
+  // A TList of RooDataSets is returned in which each RooDataSet is named
+  // after the state name of splitCat of which it contains the dataset subset.
+  // The observables splitCat itself is no longer present in the sub datasets.
+  // This method only creates datasets for states which have at least one entry
+  // The caller takes ownership of the returned list and its contents
+
   // Sanity check
   if (!splitCat.dependsOn(*get())) {
     coutE(InputArguments) << "RooTreeData::split(" << GetName() << ") ERROR category " << splitCat.GetName() 
@@ -1631,6 +1661,11 @@ Roo1DTable* RooTreeData::table(const RooAbsCategory& cat, const char* cuts, cons
 //_____________________________________________________________________________
 Double_t RooTreeData::moment(RooRealVar &var, Double_t order, Double_t offset, const char* cutSpec, const char* cutRange) const
 {
+  // Return the 'order'-ed moment of observable 'var' in this dataset. If offset is non-zero it is subtracted
+  // from the values of 'var' prior to the moment calculation. If cutSpec and/or cutRange are specified
+  // the moment is calculated on the subset of the data which pass the C++ cut specification expression 'cutSpec'
+  // and/or are inside the range named 'cutRange'
+
   // Lookup variable in dataset
   RooRealVar *varPtr= (RooRealVar*) _vars.find(var.GetName());
   if(0 == varPtr) {
@@ -1675,6 +1710,12 @@ Double_t RooTreeData::moment(RooRealVar &var, Double_t order, Double_t offset, c
 //_____________________________________________________________________________
 RooRealVar* RooTreeData::meanVar(RooRealVar &var, const char* cutSpec, const char* cutRange) const
 {
+  // Create a RooRealVar containing the mean of observable 'var' in
+  // this dataset.  If cutSpec and/or cutRange are specified the
+  // moment is calculated on the subset of the data which pass the C++
+  // cut specification expression 'cutSpec' and/or are inside the
+  // range named 'cutRange'
+  
   // Create a new variable with appropriate strings. The error is calculated as
   // RMS/Sqrt(N) which is generally valid.
 
@@ -1707,6 +1748,12 @@ RooRealVar* RooTreeData::meanVar(RooRealVar &var, const char* cutSpec, const cha
 //_____________________________________________________________________________
 RooRealVar* RooTreeData::rmsVar(RooRealVar &var, const char* cutSpec, const char* cutRange) const
 {
+  // Create a RooRealVar containing the RMS of observable 'var' in
+  // this dataset.  If cutSpec and/or cutRange are specified the
+  // moment is calculated on the subset of the data which pass the C++
+  // cut specification expression 'cutSpec' and/or are inside the
+  // range named 'cutRange'
+
   // Create a new variable with appropriate strings. The error is calculated as
   // RMS/(2*Sqrt(N)) which is only valid if the variable has a Gaussian distribution.
 
@@ -1737,6 +1784,10 @@ RooRealVar* RooTreeData::rmsVar(RooRealVar &var, const char* cutSpec, const char
 //_____________________________________________________________________________
 Bool_t RooTreeData::getRange(RooRealVar& var, Double_t& lowest, Double_t& highest) const 
 {
+  // Fill Doubles 'lowest' and 'highest' with the lowest and highest value of
+  // observable 'var' in this dataset. If the return value is kTRUE and error
+  // occurred
+
   // Lookup variable in dataset
   RooRealVar *varPtr= (RooRealVar*) _vars.find(var.GetName());
   if(0 == varPtr) {
@@ -1857,6 +1908,7 @@ RooPlot* RooTreeData::statOn(RooPlot* frame, const char* what, const char *label
 			     Option_t *options, Double_t xmin, Double_t xmax, Double_t ymax, 
 			     const char* cutSpec, const char* cutRange, const RooCmdArg* formatCmd) 
 {
+  // Implementation back-end of statOn() mehtod with named arguments
 
   Bool_t showLabel= (label != 0 && strlen(label) > 0);
 
@@ -1924,13 +1976,16 @@ RooPlot* RooTreeData::statOn(RooPlot* frame, const char* what, const char *label
 //_____________________________________________________________________________
 Int_t RooTreeData::numEntries(Bool_t) const 
 { 
+  // Return the number of entries in this dataset
   return (Int_t)GetEntries() ; 
 }
 
 
 
 //_____________________________________________________________________________
-void RooTreeData::printMultiline(ostream& os, Int_t content, Bool_t verbose, TString indent) const {
+void RooTreeData::printMultiline(ostream& os, Int_t content, Bool_t verbose, TString indent) const 
+{
+  // Detailed printing interface
 
   RooAbsData::printMultiline(os,content,verbose,indent) ;  
 
@@ -1966,6 +2021,11 @@ void RooTreeData::printMultiline(ostream& os, Int_t content, Bool_t verbose, TSt
 //_____________________________________________________________________________
 void RooTreeData::optimizeReadingWithCaching(RooAbsArg& arg, const RooArgSet& cacheList)
 {
+  // Prepare dataset for use with cached constant terms listed in
+  // 'cacheList' of expression 'arg'. Deactivate tree branches
+  // for any dataset observable that is either not used at all,
+  // or is used exclusively by cached branch nodes.
+
   RooArgSet pruneSet ;
 
   // Add unused observables in this dataset to pruneSet
@@ -1997,6 +2057,9 @@ void RooTreeData::optimizeReadingWithCaching(RooAbsArg& arg, const RooArgSet& ca
 //_____________________________________________________________________________
 Bool_t RooTreeData::allClientsCached(RooAbsArg* var, const RooArgSet& cacheList)
 {
+  // Utility function that determines if all clients of object 'var'
+  // appear in given list of cached nodes.
+
   Bool_t ret(kTRUE), anyClient(kFALSE) ;
 
   TIterator* cIter = var->valueClientIterator() ;    
@@ -2011,14 +2074,6 @@ Bool_t RooTreeData::allClientsCached(RooAbsArg* var, const RooArgSet& cacheList)
   delete cIter ;
 
   return anyClient?ret:kFALSE ;
-}
-
-
-
-//_____________________________________________________________________________
-void RooTreeData::Draw(Option_t* opt) 
-{
-  return _tree->Draw(opt) ;
 }
 
 

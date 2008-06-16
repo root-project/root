@@ -48,7 +48,9 @@ ClassImp(RooMultiCategory)
 RooMultiCategory::RooMultiCategory(const char *name, const char *title, const RooArgSet& inputCatList2) :
   RooAbsCategory(name, title), _catSet("input","Input category set",this,kTRUE,kTRUE)
 {  
-  // Constructor from list of input categories
+  // Construct a product of the given set of input RooAbsCategories in 'inInputCatList'
+  // The state names of this product category are {S1;S2,S3,...Sn} where Si are the state names
+  // of the input categories. A RooMultiCategory is not an lvalue
 
   // Copy category list
   TIterator* iter = inputCatList2.createIterator() ;
@@ -72,6 +74,7 @@ RooMultiCategory::RooMultiCategory(const RooMultiCategory& other, const char *na
   RooAbsCategory(other,name), _catSet("input",this,other._catSet)
 {
   // Copy constructor
+
   updateIndexList() ;
 }
 
@@ -81,6 +84,7 @@ RooMultiCategory::RooMultiCategory(const RooMultiCategory& other, const char *na
 RooMultiCategory::~RooMultiCategory() 
 {
   // Destructor
+
 }
 
 
@@ -91,7 +95,6 @@ void RooMultiCategory::updateIndexList()
   // Update the list of super-category states 
 
   // WVE broken if used with derived categories!
-
   clearTypes() ;
 
   RooMultiCatIter iter(_catSet) ;
@@ -131,12 +134,12 @@ TString RooMultiCategory::currentLabel() const
 }
 
 
-RooCatType
 
 //_____________________________________________________________________________
-RooMultiCategory::evaluate() const
+RooCatType RooMultiCategory::evaluate() const
 {
   // Calculate the current value 
+
   if (isShapeDirty()) const_cast<RooMultiCategory*>(this)->updateIndexList() ;
   return *lookupType(currentLabel()) ;
 }

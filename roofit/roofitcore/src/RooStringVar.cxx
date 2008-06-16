@@ -45,7 +45,8 @@ ClassImp(RooStringVar)
 RooStringVar::RooStringVar(const char *name, const char *title, const char* value, Int_t size) :
   RooAbsString(name, title, size)
 {
-  // Constructor with initial value
+  // Constructor with initial value and internal buffer size
+
   if(!isValidString(value)) {
     coutW(InputArguments) << "RooStringVar::RooStringVar(" << GetName() 
 	 << "): initial contents too long and ignored" << endl ;
@@ -77,7 +78,9 @@ RooStringVar::~RooStringVar()
 
 
 //_____________________________________________________________________________
-RooStringVar::operator TString() {
+RooStringVar::operator TString() 
+{
+
   // Cast operator to TString
   return TString(_value) ;
 }
@@ -85,8 +88,10 @@ RooStringVar::operator TString() {
 
 
 //_____________________________________________________________________________
-void RooStringVar::setVal(const char* value) {
+void RooStringVar::setVal(const char* value) 
+{
   // Set value to given TString
+
   if (!isValidString(value)) {    
     coutW(InputArguments) << "RooStringVar::setVal(" << GetName() << "): new string too long and ignored" << endl ;
   } else {
@@ -104,6 +109,7 @@ void RooStringVar::setVal(const char* value) {
 RooAbsArg& RooStringVar::operator=(const char* newValue) 
 {
   // Set value to given TString
+
   if (!isValidString(newValue)) {
     coutW(InputArguments) << "RooStringVar::operator=(" << GetName() << "): new string too long and ignored" << endl ;
   } else {
@@ -123,6 +129,7 @@ RooAbsArg& RooStringVar::operator=(const char* newValue)
 Bool_t RooStringVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose) 
 {
   // Read object contents from given stream
+
   TString token,errorPrefix("RooStringVar::readFromStream(") ;
   errorPrefix.Append(GetName()) ;
   errorPrefix.Append(")") ;
@@ -153,6 +160,7 @@ Bool_t RooStringVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
 void RooStringVar::writeToStream(ostream& os, Bool_t /*compact*/) const
 {
   // Write object contents to given stream
+
   os << getVal() ;
 }
 

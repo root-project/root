@@ -46,6 +46,11 @@ RooObjCacheManager::RooObjCacheManager(RooAbsArg* owner, Int_t maxSize, Bool_t c
   _optCacheModeSeen(kFALSE),
   _optCacheObservables(0)
 {
+  // Constructor of object cache manager for given owner. If clearCacheOnServerRedirect is true
+  // all cache elements will be cleared when a server redirect is intercepted by the cache manager.
+  // This is the default strategy and should only be overridden when you really understand
+  // what you're doing as properly implementing server redirect in cache elements can get very
+  // complicated, especially if there are (cyclical) reference back to the owning object
 }
 
 
@@ -56,12 +61,15 @@ RooObjCacheManager::RooObjCacheManager(const RooObjCacheManager& other, RooAbsAr
   _optCacheModeSeen(kFALSE), // cache mode properties are not transferred in copy ctor
   _optCacheObservables(0)
 {
+  // Copy constructor
 }
 
 
 //_____________________________________________________________________________
 RooObjCacheManager::~RooObjCacheManager()
 {
+  // Destructor
+
   if (_optCacheObservables) {
 
     list<RooArgSet*>::iterator iter = _optCacheObsList.begin() ;
@@ -77,6 +85,9 @@ RooObjCacheManager::~RooObjCacheManager()
 //_____________________________________________________________________________
 Bool_t RooObjCacheManager::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) 
 { 
+  // Intercept server redirect calls. If clearOnRedirect was set, sterilize
+  // the cache (i.e. keep the structure but delete all contents). If not
+  // forward serverRedirect to cache elements
   
   if (_clearOnRedirect) {
 
@@ -98,6 +109,8 @@ Bool_t RooObjCacheManager::redirectServersHook(const RooAbsCollection& newServer
 //_____________________________________________________________________________
 void RooObjCacheManager::operModeHook() 
 {
+  // Intercept changes to cache operation mode and forward to cache elements
+
   if (!_owner) {
     return ;
   }
@@ -114,6 +127,11 @@ void RooObjCacheManager::operModeHook()
 //_____________________________________________________________________________
 void RooObjCacheManager::optimizeCacheMode(const RooArgSet& obs, RooArgSet& optNodes, RooLinkedList& processedNodes) 
 {
+  // Intercept calls to perform automatic optimization of cache mode operation. 
+  // Forward calls to existing cache elements and save configuration of
+  // cache mode optimization so that it can be applied on new cache elements
+  // upon insertion 
+
   oocxcoutD(_owner,Caching) << "RooObjCacheManager::optimizeCacheMode(owner=" << _owner->GetName() << ") obs = " << obs << endl ;
 
   _optCacheModeSeen = kTRUE ;
@@ -133,7 +151,10 @@ void RooObjCacheManager::optimizeCacheMode(const RooArgSet& obs, RooArgSet& optN
 //_____________________________________________________________________________
 void RooObjCacheManager::insertObjectHook(RooAbsCacheElement& obj) 
 {
-  //cout << "RooObjCacheManager::insertObjectHook(owner = " << _owner->GetName() << ")" << endl ;
+  // Set owner link on all object inserted into cache.
+  // Also if cache mode optimization was requested, apply
+  // it now to cache element being inserted
+
   obj.setOwner(_owner) ;
 
   // If value caching mode optimization has happened, process it now on object being inserted
@@ -143,10 +164,6 @@ void RooObjCacheManager::insertObjectHook(RooAbsCacheElement& obj)
     obj.optimizeCacheMode(*_optCacheObservables,s,l) ;
   }
 
-  // If oper mode is not default (Auto), then pass it on to element being inserted
-  //   if (_owner->operMode()!=RooAbsArg::Auto) {
-  //     obj.operModeHook(_owner->operMode()) ;
-  //   }
 }
 
 
@@ -155,6 +172,8 @@ void RooObjCacheManager::insertObjectHook(RooAbsCacheElement& obj)
 //_____________________________________________________________________________
 void RooObjCacheManager::printCompactTreeHook(std::ostream& os, const char *indent)
 {
+  // Add details on cache contents when printing in tree mode
+
   for (Int_t i=0 ; i<_size ; i++) {
     if (_object[i]) {
       _object[i]->printCompactTreeHook(os,indent,i,_size-1) ;
@@ -167,7 +186,9 @@ void RooObjCacheManager::printCompactTreeHook(std::ostream& os, const char *inde
 //_____________________________________________________________________________
 void RooObjCacheManager::findConstantNodes(const RooArgSet& obs, RooArgSet& cacheList, RooLinkedList& processedNodes) 
 {
-  // Cache contents cannot be const optimized if it is erased on a server redirect.
+  // If clearOnRedirect is false, forward constant term optimization calls to
+  // cache elements
+
   if (_clearOnRedirect) {
     return ;
   }

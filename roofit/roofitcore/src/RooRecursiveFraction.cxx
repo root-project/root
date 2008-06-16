@@ -47,6 +47,7 @@ ClassImp(RooRecursiveFraction)
 //_____________________________________________________________________________
 RooRecursiveFraction::RooRecursiveFraction()
 {
+  // Default constructor
   _listIter = _list.createIterator() ;
 }
 
@@ -57,7 +58,7 @@ RooRecursiveFraction::RooRecursiveFraction(const char* name, const char* title, 
   RooAbsReal(name, title),
   _list("list","First set of components",this)
 {
-  // Constructor
+  // Constructor of plain RooAddPdf fraction from list of recursive fractions
   _listIter = _list.createIterator() ;
 
   TIterator* inputIter = fracList.createIterator() ;
@@ -81,6 +82,7 @@ RooRecursiveFraction::RooRecursiveFraction(const RooRecursiveFraction& other, co
   _list("list",this,other._list)
 {
   // Copy constructor
+
   _listIter = _list.createIterator() ;
 }
 
@@ -89,6 +91,8 @@ RooRecursiveFraction::RooRecursiveFraction(const RooRecursiveFraction& other, co
 //_____________________________________________________________________________
 RooRecursiveFraction::~RooRecursiveFraction() 
 {
+  // Destructor
+
   if (_listIter) delete _listIter ;
 }
 
@@ -97,6 +101,8 @@ RooRecursiveFraction::~RooRecursiveFraction()
 //_____________________________________________________________________________
 Double_t RooRecursiveFraction::evaluate() const 
 {
+  // Calculate and return value of 1 - prod_i (1 - f_i )
+
   RooAbsReal* comp ;
   const RooArgSet* nset = _list.nset() ;
 

@@ -39,6 +39,7 @@ ClassImp(RooSharedProperties)
 //_____________________________________________________________________________
 RooSharedProperties::RooSharedProperties() 
 {
+  // Default constructor
   RooTrace::create(this) ;
 } 
 
@@ -46,6 +47,7 @@ RooSharedProperties::RooSharedProperties()
 //_____________________________________________________________________________
 RooSharedProperties::RooSharedProperties(const char* uuidstr) : _uuid(uuidstr) 
 {
+  // Constructor with unique-id string
   RooTrace::create(this) ;
 } 
 
@@ -54,6 +56,7 @@ RooSharedProperties::RooSharedProperties(const char* uuidstr) : _uuid(uuidstr)
 //_____________________________________________________________________________
 RooSharedProperties::~RooSharedProperties() 
 {
+  // Destructor
   RooTrace::destroy(this) ;
 } 
 
@@ -62,7 +65,7 @@ RooSharedProperties::~RooSharedProperties()
 //_____________________________________________________________________________
 Bool_t RooSharedProperties::operator==(const RooSharedProperties& other) 
 {
-  // Forward comparison to Unique UID component
+  // Return true of unique id of this property is equal to that of other
   return (_uuid==other._uuid) ;
 }
 
@@ -70,5 +73,6 @@ Bool_t RooSharedProperties::operator==(const RooSharedProperties& other)
 //_____________________________________________________________________________
 void RooSharedProperties::Print(Option_t* /*opts*/) const 
 {
+  // Printing interface
   cout << "RooSharedProperties(" << this << ") UUID = " << _uuid.AsString() << endl ;
 }

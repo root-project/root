@@ -44,6 +44,7 @@ ClassImp(RooNormSetCache)
 RooNormSetCache::RooNormSetCache(Int_t regSize) :
   _htable(0), _regSize(regSize), _nreg(0), _asArr(0), _set2RangeName(0)
 {
+  // Construct normalization set manager with given initial size
   _htable = regSize>16 ? new RooHashTable(regSize,RooHashTable::Intrinsic) : 0 ;
 }
 
@@ -53,6 +54,8 @@ RooNormSetCache::RooNormSetCache(Int_t regSize) :
 RooNormSetCache::RooNormSetCache(const RooNormSetCache& other) :
   _htable(0), _regSize(other._regSize), _nreg(0), _asArr(0), _set2RangeName(0)
 {
+  // Copy constructor
+
   _htable = _regSize>16 ? new RooHashTable(_regSize,RooHashTable::Intrinsic) : 0 ;
 }
 
@@ -61,6 +64,8 @@ RooNormSetCache::RooNormSetCache(const RooNormSetCache& other) :
 //_____________________________________________________________________________
 RooNormSetCache::~RooNormSetCache() 
 {
+  // Destructor
+
   delete[] _asArr ;
   if (_htable) delete _htable ;
 }
@@ -70,6 +75,7 @@ RooNormSetCache::~RooNormSetCache()
 //_____________________________________________________________________________
 void RooNormSetCache::clear()
 {
+  // Clear contents 
   _nreg = 0 ;  
   if (_htable) {
     delete _htable ;
@@ -82,6 +88,7 @@ void RooNormSetCache::clear()
 //_____________________________________________________________________________
 void RooNormSetCache::initialize(const RooNormSetCache& other) 
 {
+  // Initialize cache from contents of given other cache
   clear() ;
 
   Int_t i ;
@@ -99,6 +106,8 @@ void RooNormSetCache::initialize(const RooNormSetCache& other)
 //_____________________________________________________________________________
 void RooNormSetCache::add(const RooArgSet* set1, const RooArgSet* set2)
 {
+  // Add given pair of RooArgSet pointers to our store
+
   // If code list array has never been used, allocate and initialize here
   if (!_asArr) {
     _asArr = new RooSetPair[_regSize] ;
@@ -121,6 +130,8 @@ void RooNormSetCache::add(const RooArgSet* set1, const RooArgSet* set2)
 //_____________________________________________________________________________
 void RooNormSetCache::expand()
 {
+  // Expand registry size by doubling capacity
+
   Int_t newSize = _regSize*2 ;
 
   if (_htable) {
@@ -156,6 +167,12 @@ void RooNormSetCache::expand()
 //_____________________________________________________________________________
 Bool_t RooNormSetCache::autoCache(const RooAbsArg* self, const RooArgSet* set1, const RooArgSet* set2, const TNamed* set2RangeName, Bool_t doRefill) 
 {
+  // If RooArgSets set1 and set2 or sets with similar contents have
+  // been seen by this cache manager before return kFALSE If not,
+  // return kTRUE. If sets have not been seen and doRefill is true,
+  // update cache reference to current input sets.
+  
+
   // Automated cache management function - Returns kTRUE if cache is invalidated
   
   // A - Check if set1/2 are in cache and range name is identical

@@ -48,7 +48,9 @@ RooProfileLL::RooProfileLL(const char *name, const char *title,
   _absMin(0)
 { 
   // Constructor of profile likelihood given input likelihood nll w.r.t
-  // the given set of variables
+  // the given set of variables. The input log likelihood is minimized w.r.t
+  // to all other variables of the likelihood at each evaluation and the
+  // value of the global log likelihood minimum is always subtracted.
 
   // Determine actual parameters and observables
   RooArgSet* actualObs = nll.getObservables(observables) ;
@@ -78,6 +80,7 @@ RooProfileLL::RooProfileLL(const RooProfileLL& other, const char* name) :
   _paramFixed(other._paramFixed)
 { 
   // Copy constructor
+
   _piter = _par.createIterator() ;
   _oiter = _obs.createIterator() ;
 } 
@@ -103,8 +106,9 @@ RooProfileLL::~RooProfileLL()
 //_____________________________________________________________________________
 Double_t RooProfileLL::evaluate() const 
 { 
-  // Evaluate profile likelihood by minimizing likelihood w.r.t. all parameters that are not considered
-  // observables of this profile likelihood object.
+  // Evaluate profile likelihood by minimizing likelihood w.r.t. all
+  // parameters that are not considered observables of this profile
+  // likelihood object.
 
   // Instantiate minuit if we haven't done that already
   if (!_minuit) {

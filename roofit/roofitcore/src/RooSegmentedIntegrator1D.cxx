@@ -46,6 +46,8 @@ ClassImp(RooSegmentedIntegrator1D)
 //_____________________________________________________________________________
 void RooSegmentedIntegrator1D::registerIntegrator(RooNumIntFactory& fact)
 {
+  // Register RooSegmentedIntegrator1D, its parameters, dependencies and capabilities with RooNumIntFactory
+
   RooRealVar numSeg("numSeg","Number of segments",3) ;
   fact.storeProtoIntegrator(new RooSegmentedIntegrator1D(),numSeg,RooIntegrator1D::Class()->GetName()) ;
 }
@@ -55,6 +57,8 @@ void RooSegmentedIntegrator1D::registerIntegrator(RooNumIntFactory& fact)
 //_____________________________________________________________________________
 RooSegmentedIntegrator1D::RooSegmentedIntegrator1D()
 {
+  // Destructor
+
 }
 
 
@@ -63,7 +67,9 @@ RooSegmentedIntegrator1D::RooSegmentedIntegrator1D()
 RooSegmentedIntegrator1D::RooSegmentedIntegrator1D(const RooAbsFunc& function, const RooNumIntConfig& config) :
   RooAbsIntegrator(function), _config(config)
 {
-  // Use this form of the constructor to integrate over the function's default range.
+  // Constructor of integral on given function binding and with given configuration. The
+  // integration limits are taken from the definition in the function binding
+
   _nseg = (Int_t) config.getConfigSection(IsA()->GetName()).getRealValue("numSeg",3) ;
   _useIntegrandLimits= kTRUE;
 
@@ -77,7 +83,8 @@ RooSegmentedIntegrator1D::RooSegmentedIntegrator1D(const RooAbsFunc& function, D
 						   const RooNumIntConfig& config) :
   RooAbsIntegrator(function), _config(config) 
 {
-  // Use this form of the constructor to override the function's default range.
+  // Constructor integral on given function binding, with given configuration and
+  // explicit definition of integration range
 
   _nseg = (Int_t) config.getConfigSection(IsA()->GetName()).getRealValue("numSeg",3) ;
   _useIntegrandLimits= kFALSE;
@@ -92,6 +99,8 @@ RooSegmentedIntegrator1D::RooSegmentedIntegrator1D(const RooAbsFunc& function, D
 //_____________________________________________________________________________
 RooAbsIntegrator* RooSegmentedIntegrator1D::clone(const RooAbsFunc& function, const RooNumIntConfig& config) const
 {
+  // Virtual constructor with given function and configuration. Needed by RooNumIntFactory
+  
   return new RooSegmentedIntegrator1D(function,config) ;
 }
 
@@ -102,6 +111,8 @@ typedef RooIntegrator1D* pRooIntegrator1D ;
 //_____________________________________________________________________________
 Bool_t RooSegmentedIntegrator1D::initialize()
 {
+  // One-time integrator initialization
+
   _array = 0 ;
   
   Bool_t limitsOK = checkLimits(); 
@@ -130,12 +141,14 @@ Bool_t RooSegmentedIntegrator1D::initialize()
 //_____________________________________________________________________________
 RooSegmentedIntegrator1D::~RooSegmentedIntegrator1D()
 {
+  // Destructor
 }
 
 
 
 //_____________________________________________________________________________
-Bool_t RooSegmentedIntegrator1D::setLimits(Double_t xmin, Double_t xmax) {
+Bool_t RooSegmentedIntegrator1D::setLimits(Double_t xmin, Double_t xmax) 
+{
   // Change our integration limits. Return kTRUE if the new limits are
   // ok, or otherwise kFALSE. Always returns kFALSE and does nothing
   // if this object was constructed to always use our integrand's limits.
@@ -152,10 +165,11 @@ Bool_t RooSegmentedIntegrator1D::setLimits(Double_t xmin, Double_t xmax) {
 
 
 //_____________________________________________________________________________
-Bool_t RooSegmentedIntegrator1D::checkLimits() const {
+Bool_t RooSegmentedIntegrator1D::checkLimits() const 
+{
   // Check that our integration range is finite and otherwise return kFALSE.
   // Update the limits from the integrand if requested.
-
+  
   if(_useIntegrandLimits) {
     assert(0 != integrand() && integrand()->isValid());
     _xmin= integrand()->getMinLimit(0);
@@ -186,6 +200,8 @@ Bool_t RooSegmentedIntegrator1D::checkLimits() const {
 //_____________________________________________________________________________
 Double_t RooSegmentedIntegrator1D::integral(const Double_t *yvec) 
 {
+  // Evaluate integral at given function binding parameter values
+
   assert(isValid());
 
   Int_t i ;

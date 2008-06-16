@@ -71,7 +71,7 @@ RooSimultaneous::RooSimultaneous(const char *name, const char *title,
   _anyCanExtend(kFALSE),
   _anyMustExtend(kFALSE)
 {
-  // Constructor from index category. PDFs associated with indexCat
+  // Constructor with index category. PDFs associated with indexCat
   // states can be added after construction with the addPdf() function.
   // 
   // RooSimultaneous can function without having a PDF associated
@@ -99,7 +99,7 @@ RooSimultaneous::RooSimultaneous(const char *name, const char *title,
   // to avoid ambiguities. The PDFS are associated in order with the state of the
   // index category as listed by the index categories type iterator.
   //
-  // PDFs may not overlap (i.e. share any variables) with the index category
+  // PDFs may not overlap (i.e. share any variables) with the index category (function)
 
   if (inPdfList.getSize() != inIndexCat.numTypes()) {
     coutE(InputArguments) << "RooSimultaneous::ctor(" << GetName() 
@@ -162,7 +162,8 @@ RooSimultaneous::~RooSimultaneous()
 //_____________________________________________________________________________
 RooAbsPdf* RooSimultaneous::getPdf(const char* catName) const 
 {
-  // Retrieve the proxy by index name
+  // Return the p.d.f associated with the given index category name
+  
   RooRealProxy* proxy = (RooRealProxy*) _pdfProxyList.FindObject(catName) ;
   return proxy ? ((RooAbsPdf*)proxy->absArg()) : 0 ;
 }
@@ -180,7 +181,7 @@ Bool_t RooSimultaneous::addPdf(const RooAbsPdf& pdf, const char* catLabel)
   // from the number of registered PDFs, but getVal() will assert if
   // when called for an unregistered index state.
   //
-  // PDFs may not overlap (i.e. share any variables) with the index category
+  // PDFs may not overlap (i.e. share any variables) with the index category (function)
 
   // PDFs cannot overlap with the index category
   if (pdf.dependsOn(_indexCat.arg())) {
@@ -231,9 +232,10 @@ Double_t RooSimultaneous::evaluate() const
 //_____________________________________________________________________________
 Double_t RooSimultaneous::expectedEvents(const RooArgSet* nset) const 
 {
-  // Return the number of expected events:
-  // If the index is in nset, then return the sum of the expected events of all components,
-  // otherwise return the number of expected events of the PDF associated with the current index category state
+  // Return the number of expected events: If the index is in nset,
+  // then return the sum of the expected events of all components,
+  // otherwise return the number of expected events of the PDF
+  // associated with the current index category state
 
   if (nset->contains(_indexCat.arg())) {
 
@@ -267,7 +269,9 @@ Double_t RooSimultaneous::expectedEvents(const RooArgSet* nset) const
 Int_t RooSimultaneous::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, 
 					       const RooArgSet* normSet, const char* rangeName) const 
 {
-  // Distributed integration implementation
+  // Forward determination of analytical integration capabilities to component p.d.f.s
+  // A unique code is assigned to the combined integration capabilities of all associated
+  // p.d.f.s
   
   // Declare that we can analytically integrate all requested observables
   analVars.add(allVars) ;
@@ -303,7 +307,7 @@ Int_t RooSimultaneous::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& an
 //_____________________________________________________________________________
 Double_t RooSimultaneous::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* /*rangeName*/) const 
 {
-  // Return analytical integral defined by given scenario code
+  // Return analytical integration defined by given code
 
   // No integration scenario
   if (code==0) {
@@ -326,11 +330,10 @@ Double_t RooSimultaneous::analyticalIntegralWN(Int_t code, const RooArgSet* norm
 //_____________________________________________________________________________
 RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
 {
-  // New experimental plotOn() with varargs...
-
-  // See RooAbsPdf::plotOn() for description. Because a RooSimultaneous PDF cannot project out
-  // its index category via integration, plotOn() will abort if this is requested without 
-  // providing a projection dataset
+  // Back-end for plotOn() implementation on RooSimultaneous which
+  // needs special handling because a RooSimultaneous PDF cannot
+  // project out its index category via integration, plotOn() will
+  // abort if this is requested without providing a projection dataset
 
   // Sanity checks
   if (plotSanityChecks(frame)) return frame ;
@@ -674,7 +677,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, Option_t* drawOptions, Double_t
 				 Double_t /*precision*/, Bool_t /*shiftToZero*/, const RooArgSet* /*projDataSet*/,
 				 Double_t /*rangeLo*/, Double_t /*rangeHi*/, RooCurve::WingMode /*wmode*/) const
 {
-  // Forward to new implementation
+  // OBSOLETE -- Retained for backward compatibility
 
   // Make command list
   RooLinkedList cmdList ;
@@ -696,6 +699,10 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, Option_t* drawOptions, Double_t
 //_____________________________________________________________________________
 void RooSimultaneous::selectNormalization(const RooArgSet* normSet, Bool_t /*force*/) 
 {
+  // Interface function used by test statistics to freeze choice of observables
+  // for interpretation of fraction coefficients. Needed here because a RooSimultaneous
+  // works like a RooAddPdf when plotted
+  
   _plotCoefNormSet.removeAll() ;
   if (normSet) _plotCoefNormSet.add(*normSet) ;
 }
@@ -704,6 +711,10 @@ void RooSimultaneous::selectNormalization(const RooArgSet* normSet, Bool_t /*for
 //_____________________________________________________________________________
 void RooSimultaneous::selectNormalizationRange(const char* normRange, Bool_t /*force*/) 
 {
+  // Interface function used by test statistics to freeze choice of range
+  // for interpretation of fraction coefficients. Needed here because a RooSimultaneous
+  // works like a RooAddPdf when plotted
+
   _plotCoefNormRange = RooNameReg::ptr(normRange) ;
 }
 
@@ -714,6 +725,8 @@ void RooSimultaneous::selectNormalizationRange(const char* normRange, Bool_t /*f
 RooAbsGenContext* RooSimultaneous::genContext(const RooArgSet &vars, const RooDataSet *prototype, 
 					      const RooArgSet* auxProto, Bool_t verbose) const 
 {
+  // Return specialized generator contenxt for simultaneous p.d.f.s
+
   const char* idxCatName = _indexCat.arg().GetName() ;
   const RooArgSet* protoVars = prototype ? prototype->get() : 0 ;
 

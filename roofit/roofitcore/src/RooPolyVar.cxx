@@ -48,6 +48,7 @@ ClassImp(RooPolyVar)
 //_____________________________________________________________________________
 RooPolyVar::RooPolyVar()
 {
+  // Default constructor
   _coefIter = _coefList.createIterator() ;
 }
 
@@ -60,13 +61,18 @@ RooPolyVar::RooPolyVar(const char* name, const char* title,
   _coefList("coefList","List of coefficients",this),
   _lowestOrder(lowestOrder) 
 {
-  // Constructor
+  // Construct polynomial in x with coefficients in coefList. If
+  // lowestOrder is not zero, then the first element in coefList is
+  // interpreted as as the 'lowestOrder' coefficients and all
+  // subsequent coeffient elements are shifted by a similar amount.
+
+
   _coefIter = _coefList.createIterator() ;
 
   // Check lowest order
   if (_lowestOrder<0) {
     coutE(InputArguments) << "RooPolyVar::ctor(" << GetName() 
-			  << ") WARNING: lowestOrder must be >=1, setting value to 1" << endl ;
+			  << ") WARNING: lowestOrder must be >=0, setting value to 0" << endl ;
     _lowestOrder=0 ;
   }
 
@@ -93,6 +99,8 @@ RooPolyVar::RooPolyVar(const char* name, const char* title,
   _coefList("coefList","List of coefficients",this),
   _lowestOrder(1)
 {
+  // Constructor of flat polynomial function
+
   _coefIter = _coefList.createIterator() ;
 }                                                                                                                                 
 
@@ -115,6 +123,8 @@ RooPolyVar::RooPolyVar(const RooPolyVar& other, const char* name) :
 //_____________________________________________________________________________
 Double_t RooPolyVar::evaluate() const 
 {
+  // Calculate and return value of polynomial
+
   Double_t sum(0) ;
   Int_t order(_lowestOrder) ;
   _coefIter->Reset() ;
@@ -133,6 +143,8 @@ Double_t RooPolyVar::evaluate() const
 //_____________________________________________________________________________
 Int_t RooPolyVar::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const 
 {
+  // Advertise that we can internally integrate over x
+
   if (matchArgs(allVars, analVars, _x)) return 1;
   return 0;
 }
@@ -142,6 +154,8 @@ Int_t RooPolyVar::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
 //_____________________________________________________________________________
 Double_t RooPolyVar::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
+  // Calculate and return analytical integral over x
+
   assert(code==1) ;
 
   Double_t sum(0) ;

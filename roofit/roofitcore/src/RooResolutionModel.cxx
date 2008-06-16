@@ -78,6 +78,7 @@ RooFormulaVar* RooResolutionModel::_identity = 0;
 //_____________________________________________________________________________
 void RooResolutionModel::cleanup()
 {
+  // Cleanup hook for RooSentinel atexit handler
   delete _identity ;
   _identity = 0 ;
 }
@@ -91,6 +92,7 @@ RooResolutionModel::RooResolutionModel(const char *name, const char *title, RooR
   _ownBasis(kFALSE)
 {
   // Constructor with convolution variable 'x'
+
   if (!_identity) {
     _identity = identity() ; 
   }
@@ -141,6 +143,7 @@ RooResolutionModel::~RooResolutionModel()
 RooFormulaVar* RooResolutionModel::identity() 
 { 
   // Return identity formula pointer
+
   if (!_identity) {
     _identity = new RooFormulaVar("identity","1",RooArgSet("")) ;  
     RooSentinel::activate() ;
@@ -245,6 +248,7 @@ const RooRealVar& RooResolutionModel::basisConvVar() const
 RooRealVar& RooResolutionModel::convVar() const 
 {
   // Return the convolution variable of the resolution model
+
   return (RooRealVar&) x.arg() ;
 }
 
@@ -319,6 +323,7 @@ Bool_t RooResolutionModel::traceEvalHook(Double_t value) const
 void RooResolutionModel::normLeafServerList(RooArgSet& list) const 
 {
   // Return the list of servers used by our normalization integral
+
   _norm->leafNodeServerList(&list) ;
 }
 
@@ -328,6 +333,7 @@ void RooResolutionModel::normLeafServerList(RooArgSet& list) const
 Double_t RooResolutionModel::getNorm(const RooArgSet* nset) const
 {
   // Return the integral of this PDF over all elements of 'nset'. 
+
   if (!nset) {
     return getVal() ;
   }

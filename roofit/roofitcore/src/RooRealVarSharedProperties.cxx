@@ -36,14 +36,14 @@ ClassImp(RooRealVarSharedProperties)
 //_____________________________________________________________________________
 RooRealVarSharedProperties::RooRealVarSharedProperties() 
 {
-//   cout << "RooRealVarSharedProperties::defctor(" << this << ")" << endl ;
+  // Default constructor
 } 
 
 
 //_____________________________________________________________________________
 RooRealVarSharedProperties::RooRealVarSharedProperties(const char* uuidstr) : RooSharedProperties(uuidstr)
 {
-//   cout << "RooRealVarSharedProperties::ctor(" << this << ")" << endl ;
+  // Constructor with unique-id string
 } 
 
 
@@ -52,7 +52,7 @@ RooRealVarSharedProperties::RooRealVarSharedProperties(const RooRealVarSharedPro
   RooSharedProperties(other), 
   _altBinning(other._altBinning)
 {
-//   cout << "RooRealVarSharedProperties::cctor(" << this << ") other = " << &other << endl ;
+  // Copy constructor
 }
 
 
@@ -60,7 +60,8 @@ RooRealVarSharedProperties::RooRealVarSharedProperties(const RooRealVarSharedPro
 //_____________________________________________________________________________
 RooRealVarSharedProperties::~RooRealVarSharedProperties() 
 {
-//   cout << "RooRealVarSharedProperties::dtor(" << this << ")" << endl ;
+  // Destructor
+
   _altBinning.Delete() ;
 } 
 

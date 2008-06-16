@@ -58,7 +58,7 @@ RooNLLVar::RooNLLVar(const char *name, const char* title, RooAbsPdf& pdf, RooAbs
 			 RooCmdConfig::decodeIntOnTheFly("RooNLLVar::RooNLLVar","Verbose",0,1,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),
 			 RooCmdConfig::decodeIntOnTheFly("RooNLLVar::RooNLLVar","SplitRange",0,0,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9))             
 {
-  // RooNLLVar constructor. Optional arguments taken
+  // Construct likelihood from given p.d.f and (binned or unbinned dataset)
   //
   //  Extended()     -- Include extended term in calculation
   //  NumCPU()       -- Activate parallel processing feature
@@ -88,7 +88,8 @@ RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbs
   RooAbsOptTestStatistic(name,title,pdf,data,RooArgSet(),rangeName,addCoefRangeName,nCPU,interleave,verbose,splitRange),
   _extended(extended)
 {
-  
+  // Construct likelihood from given p.d.f and (binned or unbinned dataset)
+  // For internal use.
 }
 
 
@@ -100,7 +101,8 @@ RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbs
   RooAbsOptTestStatistic(name,title,pdf,data,projDeps,rangeName,addCoefRangeName,nCPU,interleave,verbose,splitRange),
   _extended(extended)
 {
-  
+  // Construct likelihood from given p.d.f and (binned or unbinned dataset)
+  // For internal use.  
 }
 
 
@@ -110,13 +112,16 @@ RooNLLVar::RooNLLVar(const RooNLLVar& other, const char* name) :
   RooAbsOptTestStatistic(other,name),
   _extended(other._extended)
 {
+  // Copy constructor
 }
+
 
 
 
 //_____________________________________________________________________________
 RooNLLVar::~RooNLLVar()
 {
+  // Destructor
 }
 
 
@@ -124,6 +129,11 @@ RooNLLVar::~RooNLLVar()
 //_____________________________________________________________________________
 Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t stepSize) const 
 {
+  // Calculate and return likelihood on subset of data from firstEvent to lastEvent
+  // processed with a step size of 'stepSize'. If this an extended likelihood and
+  // and the zero event is processed the extended term is added to the return
+  // likelihood.
+
   Int_t i ;
   Double_t result(0) ;
   

@@ -49,6 +49,7 @@ TIterator* RooRealConstant::_constDBIter = 0;
 //_____________________________________________________________________________
 void RooRealConstant::cleanup() 
 {
+  // Cleanup function register with RooSentinel for cleanup in atexit()
   if (_constDB) {
     delete _constDB ;
     delete _constDBIter ;
@@ -61,6 +62,10 @@ void RooRealConstant::cleanup()
 //_____________________________________________________________________________
 RooConstVar& RooRealConstant::value(Double_t value) 
 {
+  // Return a constant value object with given value.
+  // Return previously created object if avaliable,
+  // otherwise create a new one on the fly.
+  
   // Lookup existing constant
   init() ;
   RooConstVar* var ;
@@ -83,6 +88,8 @@ RooConstVar& RooRealConstant::value(Double_t value)
 //_____________________________________________________________________________
 void RooRealConstant::init() 
 {
+  // One-time initialization of constants database
+
   if (!_constDB) {
     _constDB = new RooArgList("RooRealVar Constants Database") ;
     _constDBIter = _constDB->createIterator() ;

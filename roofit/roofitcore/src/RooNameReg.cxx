@@ -40,6 +40,8 @@ RooNameReg* RooNameReg::_instance = 0 ;
 //_____________________________________________________________________________
 RooNameReg::~RooNameReg()
 {
+  // Destructor
+
   _list.Delete() ;
 }
 
@@ -47,12 +49,15 @@ RooNameReg::~RooNameReg()
 //_____________________________________________________________________________
 RooNameReg::RooNameReg(const RooNameReg& other) : TNamed(other)
 {
+  // Copy constructor
 }
 
 
 //_____________________________________________________________________________
 RooNameReg& RooNameReg::instance()
 {
+  // Return reference to singleton instance
+
   if (_instance==0) {
     _instance = new RooNameReg ;
     RooSentinel::activate() ;
@@ -64,6 +69,8 @@ RooNameReg& RooNameReg::instance()
 //_____________________________________________________________________________
 void RooNameReg::cleanup()
 {
+  // Cleanup function called by atexit() handler installed by RooSentinel
+  // to delete global objects on heap at end of program
   if(_instance) {
     delete _instance ;
     _instance = 0 ;
@@ -73,7 +80,9 @@ void RooNameReg::cleanup()
 
 
 //_____________________________________________________________________________
-const TNamed* RooNameReg::constPtr(const char* inStr) {
+const TNamed* RooNameReg::constPtr(const char* inStr) 
+{
+  // Return a unique TNamed pointer for given C++ string
 
   // Handle null pointer case explicitly
   if (inStr==0) return 0 ;
@@ -95,6 +104,8 @@ const TNamed* RooNameReg::constPtr(const char* inStr) {
 //_____________________________________________________________________________
 const char* RooNameReg::constStr(const TNamed* namePtr) 
 {
+  // Return C++ string corresponding to given TNamed pointer
+
   if (namePtr) return namePtr->GetName() ;
   return 0 ;  
 }
@@ -103,6 +114,8 @@ const char* RooNameReg::constStr(const TNamed* namePtr)
 //_____________________________________________________________________________
 const TNamed* RooNameReg::ptr(const char* stringPtr) 
 { 
+  // Return a unique TNamed pointer for given C++ string
+
   return instance().constPtr(stringPtr) ; 
 }
 
@@ -110,5 +123,7 @@ const TNamed* RooNameReg::ptr(const char* stringPtr)
 //_____________________________________________________________________________
 const char* RooNameReg::str(const TNamed* ptr) 
 { 
+  // Return C++ string corresponding to given TNamed pointer
+
   return instance().constStr(ptr) ; 
 }

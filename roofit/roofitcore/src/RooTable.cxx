@@ -37,6 +37,7 @@ ClassImp(RooTable)
 //_____________________________________________________________________________
 RooTable::RooTable(const char *name, const char *title) : TNamed(name,title)
 {
+  // Constructor
 }
 
 
@@ -44,6 +45,7 @@ RooTable::RooTable(const char *name, const char *title) : TNamed(name,title)
 //_____________________________________________________________________________
 RooTable::RooTable(const RooTable& other) : TNamed(other), RooPrintable(other)
 {
+  // Copy constructor
 }
 
 
@@ -51,5 +53,6 @@ RooTable::RooTable(const RooTable& other) : TNamed(other), RooPrintable(other)
 //_____________________________________________________________________________
 RooTable::~RooTable()
 {
+  // Destructor
 }
 

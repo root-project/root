@@ -46,7 +46,9 @@ RooSimGenContext::RooSimGenContext(const RooSimultaneous &model, const RooArgSet
 				   const RooDataSet *prototype, const RooArgSet* auxProto, Bool_t verbose) :
   RooAbsGenContext(model,vars,prototype,auxProto,verbose), _pdf(&model)
 {
-  // Constructor. Build an array of generator contexts for each component PDF
+  // Constructor of specialized generator context for RooSimultaneous p.d.f.s. This
+  // context creates a dedicated context for each component p.d.f.s and delegates
+  // generation of events to the appropriate component generator context
 
   // Determine if we are requested to generate the index category
   RooAbsCategory *idxCat = (RooAbsCategory*) model._indexCat.absArg() ;
@@ -147,6 +149,7 @@ RooSimGenContext::RooSimGenContext(const RooSimultaneous &model, const RooArgSet
 RooSimGenContext::~RooSimGenContext()
 {
   // Destructor. Delete all owned subgenerator contexts
+
   delete[] _fracThresh ;
   delete _idxCatSet ;
   _gcList.Delete() ;
@@ -157,7 +160,8 @@ RooSimGenContext::~RooSimGenContext()
 //_____________________________________________________________________________
 void RooSimGenContext::attach(const RooArgSet& args) 
 {
-  // Attach the index category clone to the event
+  // Attach the index category clone to the given event buffer
+
   if (_idxCat->isDerived()) {
     _idxCat->recursiveRedirectServers(args,kTRUE) ;
   }
@@ -176,6 +180,8 @@ void RooSimGenContext::attach(const RooArgSet& args)
 //_____________________________________________________________________________
 void RooSimGenContext::initGenerator(const RooArgSet &theEvent)
 {
+  // Perform one-time initialization of generator context
+
   // Attach the index category clone to the event
   if (_idxCat->isDerived()) {
     _idxCat->recursiveRedirectServers(theEvent,kTRUE) ;
@@ -200,7 +206,7 @@ void RooSimGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
 {
   // Generate event appropriate for current index state. 
   // The index state is taken either from the prototype
-  // or generated from the fraction threshold table.
+  // or is generated from the fraction threshold table.
 
   if (_haveIdxProto) {
 
@@ -235,6 +241,10 @@ void RooSimGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
 //_____________________________________________________________________________
 void RooSimGenContext::setProtoDataOrder(Int_t* lut)
 {
+  // Set the traversal order of the prototype data to that in the
+  // given lookup table. This information is passed to all
+  // component generator contexts
+
   RooAbsGenContext::setProtoDataOrder(lut) ;
 
   TIterator* iter = _gcList.MakeIterator() ;
@@ -249,6 +259,8 @@ void RooSimGenContext::setProtoDataOrder(Int_t* lut)
 //_____________________________________________________________________________
 void RooSimGenContext::printMultiline(ostream &os, Int_t content, Bool_t verbose, TString indent) const 
 {
+  // Detailed printing interface
+
   RooAbsGenContext::printMultiline(os,content,verbose,indent) ;
   os << indent << "--- RooSimGenContext ---" << endl ;
   os << indent << "Using PDF ";

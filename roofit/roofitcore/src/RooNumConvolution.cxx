@@ -155,6 +155,8 @@ RooNumConvolution::RooNumConvolution(const RooNumConvolution& other, const char*
 //_____________________________________________________________________________
 void RooNumConvolution::initialize() const
 {
+  // One-time initialization of object
+
   // Initialization function -- create clone of convVar (x') and deep-copy clones of pdf and
   // model that are connected to x' rather than x (convVar)
 
@@ -246,6 +248,7 @@ Bool_t RooNumConvolution::redirectServersHook(const RooAbsCollection& /*newServe
 					      Bool_t /*nameChange*/, Bool_t /*isRecursive*/) 
 {
   // Intercept server redirects. Throw away cache, as figuring out redirections on the cache is an unsolvable problem.   
+  
   _init = kFALSE ;
   return kFALSE ;
 }
@@ -256,6 +259,7 @@ Bool_t RooNumConvolution::redirectServersHook(const RooAbsCollection& /*newServe
 void RooNumConvolution::clearConvolutionWindow() 
 {
   // Removes previously defined convolution window, reverting to convolution from -inf to +inf
+
   _useWindow = kFALSE ;
   _windowParam.removeAll() ;
 }
@@ -331,6 +335,7 @@ void RooNumConvolution::printCompactTreeHook(ostream& os, const char* indent)
 {
   // Hook function to intercept printCompactTree() calls so that it can print out
   // the content of its private cache in the print sequence
+
   os << indent << "RooNumConvolution begin cache" << endl ;
 
   if (_init) {

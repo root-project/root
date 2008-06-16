@@ -42,6 +42,7 @@ ClassImp(RooPullVar)
 //_____________________________________________________________________________
 RooPullVar::RooPullVar()
 {
+  // Default constructor
 }
 
 
@@ -52,6 +53,8 @@ RooPullVar::RooPullVar(const char* name, const char* title, RooRealVar& meas, Ro
   _meas("meas","Measurement",this,meas),
   _true("true","Truth",this,truth)
 {
+  // Construct RooAbsReal representing the pull of a RooRealVar 'meas' providing the
+  // measured value and its error and a RooAbsReal 'truth' providing the true value
 }
 
 
@@ -64,6 +67,7 @@ RooPullVar::RooPullVar(const RooPullVar& other, const char* name) :
   _meas("meas",this,other._meas),
   _true("true",this,other._true)
 {
+  // Copy constructor
 }
 
 
@@ -71,6 +75,7 @@ RooPullVar::RooPullVar(const RooPullVar& other, const char* name) :
 //_____________________________________________________________________________
 RooPullVar::~RooPullVar() 
 {
+  // Destructor
 }
 
 
@@ -78,6 +83,10 @@ RooPullVar::~RooPullVar()
 //_____________________________________________________________________________
 Double_t RooPullVar::evaluate() const 
 {
+  // Calculate pull. Use asymmetric error if defined in measurement,
+  // otherwise use symmetric error. If measurement has no error
+  // return zero.
+
   const RooRealVar& meas = static_cast<const RooRealVar&>(_meas.arg()) ;  
   if (meas.hasAsymError()) {
     Double_t delta = _meas-_true ;

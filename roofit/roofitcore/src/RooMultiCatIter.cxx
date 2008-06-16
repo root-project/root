@@ -41,7 +41,10 @@ ClassImp(RooMultiCatIter)
 //_____________________________________________________________________________
 RooMultiCatIter::RooMultiCatIter(const RooArgSet& catList, const char* rangeName) : _catList("catList") 
 {
-  // Constructor
+  // Construct iterator over all permutations of states of categories in catList.
+  // If rangeName is not null, iteration is restricted to states that are selected
+  // in the given range name
+
   if (rangeName) {
     _rangeName = rangeName ;
   }
@@ -54,6 +57,7 @@ RooMultiCatIter::RooMultiCatIter(const RooArgSet& catList, const char* rangeName
 RooMultiCatIter::RooMultiCatIter(const RooMultiCatIter& other) : TIterator(other), _catList("catList")
 {
   // Copy constructor
+
   initialize(other._catList) ;
 }
 
@@ -98,6 +102,7 @@ void RooMultiCatIter::initialize(const RooArgSet& catList)
 RooMultiCatIter::~RooMultiCatIter() 
 {
   // Destructor
+
   for (_curIter=0 ; _curIter<_nIter ; _curIter++) {
     delete _iterList[_curIter] ;
   }
@@ -111,7 +116,8 @@ RooMultiCatIter::~RooMultiCatIter()
 //_____________________________________________________________________________
 const TCollection* RooMultiCatIter::GetCollection() const 
 {
-  // Return set of categories iterated over
+  // Dummy implementation, always returns zero
+
   //return &_catList.getCollection() ;
   return 0 ;
 }
@@ -121,6 +127,11 @@ const TCollection* RooMultiCatIter::GetCollection() const
 //_____________________________________________________________________________
 TObjString* RooMultiCatIter::compositeLabel() 
 {
+  // Construct string with composite object
+  // label corresponding to the state name
+  // of a RooMultiCategory or RooSuperCategory
+  // constructed from this set of input categories
+
   TString& str = _compositeLabel.String() ;
 
   str = "{" ;
@@ -197,6 +208,7 @@ void RooMultiCatIter::Reset()
 //_____________________________________________________________________________
 TObject *RooMultiCatIter::operator*() const
 {
+  // Return current item (dummy)
   return _curItem ;
 }
 
@@ -204,10 +216,14 @@ TObject *RooMultiCatIter::operator*() const
 //_____________________________________________________________________________
 bool RooMultiCatIter::operator!=(const TIterator &aIter) const
 {
+  // Comparison operator to other iterator
+  // Returns true if both iterator iterate over the
+  // same set of input categories and are not at the
+  // same sequential position
+
    if (nullptr == &aIter)
       return false;
-
-//_____________________________________________________________________________
+   
    if ((aIter.IsA() == RooMultiCatIter::Class())) {
       const RooMultiCatIter &iter(dynamic_cast<const RooMultiCatIter &>(aIter));
       return (_curItem != iter._curItem);

@@ -39,6 +39,7 @@ ClassImp(RooSharedPropertiesList)
 //_____________________________________________________________________________
 RooSharedPropertiesList::RooSharedPropertiesList() 
 {
+  // Constructor
 } 
 
 
@@ -46,6 +47,8 @@ RooSharedPropertiesList::RooSharedPropertiesList()
 //_____________________________________________________________________________
 RooSharedPropertiesList::~RooSharedPropertiesList() 
 {
+  // Destructor
+
   // Delete all objects in property list
   TIterator* iter = _propList.MakeIterator() ;
   RooSharedProperties* prop ;
@@ -114,14 +117,13 @@ RooSharedProperties* RooSharedPropertiesList::registerProperties(RooSharedProper
 //_____________________________________________________________________________
 void RooSharedPropertiesList::unregisterProperties(RooSharedProperties* prop) 
 {
-  // Decrease reference count
-//   cout << "RooSharedPropertiesList::unreg decreasing ref cout of prop " << prop << endl ;
+  // Decrease reference count of property. If reference count is at zero,
+  // delete the propery
+
   _propList.Remove(prop) ;
 
   // We own object if ref-counted list. If count drops to zero, delete object
   if (_propList.refCount(prop)==0) {
-    //cout << "RooSharedPropertiesList::unregisterProperties: deleting property " << prop << endl ;
-//     cout << "RooSharedPropertiesList::unreg deleting prop with zero ref count " << prop << endl ;
     delete prop ;
   }
 

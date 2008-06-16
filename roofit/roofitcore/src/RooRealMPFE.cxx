@@ -23,9 +23,21 @@
 // the proxied object is started asynchronously with the calculate() option.
 // A subsequent call to getVal() will return the calculated value when available
 // If the calculation is still in progress when getVal() is called it blocks
-// the calling process until the calculation is done.
-// The forked calculation process is terminated when the front-end object
-// is deleted
+// the calling process until the calculation is done. The forked calculation process 
+// is terminated when the front-end object is deleted
+// Simple use demonstration
+//
+// <pre>
+// RooAbsReal* slowFunc ;
+//
+// Double_t val = slowFunc->getVal() // Evaluate slowFunc in current process
+//
+// RooRealMPFE mpfe("mpfe","frontend to slowFunc",*slowFunc) ;
+// mpfe.calculate() ;           // Start calculation of slow-func in remote process
+//                              // .. do other stuff here ..
+// Double_t val = mpfe.getVal() // Wait for remote calculation to finish and retrieve value
+// </pre>
+//
 // END_HTML
 //
 
@@ -66,6 +78,9 @@ RooRealMPFE::RooRealMPFE(const char *name, const char *title, RooAbsReal& arg, B
   _remoteEvalErrorLoggingState(kFALSE),
   _pid(0)
 {  
+  // Construct front-end object for object 'arg' whose evaluation will be calculated
+  // asynchronously in a separate process. If calcInline is true the value of 'arg'
+  // is calculate synchronously in the current process.
 #ifdef _WIN32
   _inlineMode = kTRUE;
 #endif
@@ -89,6 +104,7 @@ RooRealMPFE::RooRealMPFE(const RooRealMPFE& other, const char* name) :
   _pid(other._pid)
 {
   // Copy constructor
+
   _saveVars.addClone(other._saveVars) ;
   _sentinel.add(*this) ;
 }
@@ -99,6 +115,7 @@ RooRealMPFE::RooRealMPFE(const RooRealMPFE& other, const char* name) :
 RooRealMPFE::~RooRealMPFE() 
 {
   // Destructor
+
   if (_state==Client) {
     standby() ;
   }
@@ -110,7 +127,7 @@ RooRealMPFE::~RooRealMPFE()
 //_____________________________________________________________________________
 void RooRealMPFE::initVars()
 {
-  // Initialize variable list
+  // Initialize list of variables of front-end argument 'arg'
 
   // Empty current lists
   _vars.removeAll() ;
@@ -135,7 +152,10 @@ void RooRealMPFE::initVars()
 
 
 //_____________________________________________________________________________
-void RooRealMPFE::initialize() {
+void RooRealMPFE::initialize() 
+{
+  // Initialize the remote process and message passing
+  // pipes between current process and remote process
 
   // Trivial case: Inline mode 
   if (_inlineMode) {
@@ -187,6 +207,9 @@ void RooRealMPFE::initialize() {
 //_____________________________________________________________________________
 void RooRealMPFE::serverLoop() 
 {
+  // Server loop of remote processes. This function will return
+  // only when an incoming TERMINATE message is received.
+
 #ifndef _WIN32
   Bool_t doLoop(kTRUE) ;
   Message msg ;
@@ -319,8 +342,12 @@ void RooRealMPFE::serverLoop()
 //_____________________________________________________________________________
 void RooRealMPFE::calculate() const 
 {
-  // Start asynchronous calculation of arg value
+  // Client-side function that instructs server process to start
+  // asynchronuous (re)calculation of function value. This function
+  // returns immediately. The calculated value can be retrieved
+  // using getVal()
 
+  // Start asynchronous calculation of arg value
   if (_state==Initialize) {
     const_cast<RooRealMPFE*>(this)->initialize() ;
   }
@@ -388,6 +415,11 @@ void RooRealMPFE::calculate() const
 //_____________________________________________________________________________
 Double_t RooRealMPFE::getVal(const RooArgSet* /*nset*/) const 
 {
+  // If value needs recalculation and calculation has not beed started
+  // with a call to calculate() start it now. This function blocks
+  // until remote process has finished calculation and returns
+  // remote value
+
   if (isValueDirty()) {
     // Cache is dirty, no calculation has been started yet
     //cout << "RooRealMPFE::getVal(" << GetName() << ") cache is dirty, caling calculate and evaluate" << endl ;
@@ -410,6 +442,10 @@ Double_t RooRealMPFE::getVal(const RooArgSet* /*nset*/) const
 //_____________________________________________________________________________
 Double_t RooRealMPFE::evaluate() const
 {
+  // Send message to server process to retrieve output value
+  // If error were logged use logEvalError() on remote side
+  // transfer those errors to the local eval error queue.
+
   // Retrieve value of arg
   Double_t return_value = 0;
   if (_state==Inline) {
@@ -493,6 +529,10 @@ Double_t RooRealMPFE::evaluate() const
 //_____________________________________________________________________________
 void RooRealMPFE::standby()
 {
+  // Terminate remote server process and return front-end class
+  // to standby mode. Calls to calculate() or evaluate() after
+  // this call will automatically recreated the server process.
+
 #ifndef _WIN32
   if (_state==Client) {
 
@@ -522,6 +562,9 @@ void RooRealMPFE::standby()
 //_____________________________________________________________________________
 void RooRealMPFE::constOptimizeTestStatistic(ConstOpCode opcode) 
 {
+  // Intercept call to optimize constant term in test statistics
+  // and forward it to object on server side.
+
 #ifndef _WIN32
   if (_state==Client) {
     Message msg = ConstOpt ;
@@ -544,6 +587,9 @@ void RooRealMPFE::constOptimizeTestStatistic(ConstOpCode opcode)
 //_____________________________________________________________________________
 void RooRealMPFE::setVerbose(Bool_t clientFlag, Bool_t serverFlag) 
 {
+  // Control verbose messaging related to inter process communication
+  // on both client and server side
+
 #ifndef _WIN32
   if (_state==Client) {
     Message msg = Verbose ;

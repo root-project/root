@@ -44,7 +44,9 @@ RooThresholdCategory::RooThresholdCategory(const char *name, const char *title, 
 					   const char* defOut, Int_t defIdx) :
   RooAbsCategory(name, title), _inputVar("inputVar","Input category",this,inputVar)
 {
-  // Constructor with input category and name of default (unmapped) output state
+  // Constructor with input function to be mapped and name and index of default
+  // output state of unmapped values
+
   _defCat = (RooCatType*) defineType(defOut,defIdx) ;
   _threshIter = _threshList.MakeIterator() ;
 }
@@ -55,9 +57,10 @@ RooThresholdCategory::RooThresholdCategory(const char *name, const char *title, 
 RooThresholdCategory::RooThresholdCategory(const RooThresholdCategory& other, const char *name) :
   RooAbsCategory(other,name), _inputVar("inputVar",this,other._inputVar)
 {
+  // Copy constructor
+
   _defCat = (RooCatType*) lookupType(other._defCat->GetName()) ;
 
-  // Copy constructor
   other._threshIter->Reset() ;
   RooThreshEntry* te ;
   while((te=(RooThreshEntry*)other._threshIter->Next())) {
@@ -73,6 +76,7 @@ RooThresholdCategory::RooThresholdCategory(const RooThresholdCategory& other, co
 RooThresholdCategory::~RooThresholdCategory() 
 {
   // Destructor
+
   _threshList.Delete() ;
   delete _threshIter ;
 }
@@ -82,6 +86,9 @@ RooThresholdCategory::~RooThresholdCategory()
 //_____________________________________________________________________________
 Bool_t RooThresholdCategory::addThreshold(Double_t upperLimit, const char* catName, Int_t catIdx) 
 {  
+  // Insert threshold at value upperLimit. All values below upper limit (and above any lower
+  // thresholds, if any) will be mapped to a state name 'catName' with index 'catIdx'
+
   // Check if identical threshold values is not defined yet
   _threshIter->Reset() ;
   RooThreshEntry* te ;
@@ -111,11 +118,12 @@ Bool_t RooThresholdCategory::addThreshold(Double_t upperLimit, const char* catNa
 
 
 
-RooCatType
 
 //_____________________________________________________________________________
-RooThresholdCategory::evaluate() const
+RooCatType RooThresholdCategory::evaluate() const
 {
+  // Calculate and return the value of the mapping function
+
   // Scan the threshold list
   _threshIter->Reset() ;
   RooThreshEntry* te ;
@@ -133,6 +141,7 @@ RooThresholdCategory::evaluate() const
 void RooThresholdCategory::writeToStream(ostream& os, Bool_t compact) const
 {
   // Write object contents to given stream
+
   if (compact) {
     // Write value only
     os << getLabel() ;

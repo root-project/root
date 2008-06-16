@@ -44,6 +44,7 @@
 //_____________________________________________________________________________
 RooProjectedPdf::RooProjectedPdf() : _curNormSet(0)
 {
+  // Default constructor
 }
 
 
@@ -56,7 +57,7 @@ RooProjectedPdf::RooProjectedPdf() : _curNormSet(0)
    deps("!Dependents","deps",this,kTRUE,kTRUE),
    _cacheMgr(this,10)
  { 
-   // Constructor of projected of input p.d.f _intpdf over observables intObs
+   // Construct projection of input pdf '_intpdf' over observables 'intObs'
 
    intobs.add(intObs) ;
 
@@ -85,6 +86,7 @@ RooProjectedPdf::RooProjectedPdf() : _curNormSet(0)
 Double_t RooProjectedPdf::getVal(const RooArgSet* set) const 
 {
   // Special version of getVal() overrides RooAbsReal::getVal() to save value of current normalization set
+
   _curNormSet = (RooArgSet*)set ;
   return RooAbsPdf::getVal(set) ;
 }
@@ -107,9 +109,10 @@ Double_t RooProjectedPdf::evaluate() const
 //_____________________________________________________________________________
 const RooAbsReal* RooProjectedPdf::getProjection(const RooArgSet* iset, const RooArgSet* nset, int& code) const
 {
-  // Retrieve object representing projection integral of input p.d.f over observables iset, while normalizing
-  // over observables nset. The code argument returned by reference is the unique code defining this particular
-  // projection configuration
+  // Retrieve object representing projection integral of input p.d.f
+  // over observables iset, while normalizing over observables
+  // nset. The code argument returned by reference is the unique code
+  // defining this particular projection configuration
  
   // Check if this configuration was created before
   Int_t sterileIdx(-1) ;
@@ -139,8 +142,11 @@ const RooAbsReal* RooProjectedPdf::getProjection(const RooArgSet* iset, const Ro
 //_____________________________________________________________________________
 RooAbsPdf* RooProjectedPdf::createProjection(const RooArgSet& iset) 
 {
-  // Special version of RooAbsReal::createProjection that deals with projections of projections. Instead of integrating
-  // twice, a new RooProjectedPdf is returned that is configured to perform the complete integration in one step
+  // Special version of RooAbsReal::createProjection that deals with
+  // projections of projections. Instead of integrating twice, a new
+  // RooProjectedPdf is returned that is configured to perform the
+  // complete integration in one step
+
   RooArgSet combiset(iset) ;
   combiset.add(intobs) ;
   return static_cast<RooAbsPdf&>( const_cast<RooAbsReal&>(intpdf.arg()) ).createProjection(combiset) ;
@@ -152,6 +158,7 @@ RooAbsPdf* RooProjectedPdf::createProjection(const RooArgSet& iset)
 Bool_t RooProjectedPdf::forceAnalyticalInt(const RooAbsArg& /*dep*/) const 
 {
   // Force RooRealIntegral to relegate integration of all observables to internal logic
+
   return kTRUE ;
 }
 
@@ -160,7 +167,8 @@ Bool_t RooProjectedPdf::forceAnalyticalInt(const RooAbsArg& /*dep*/) const
 //_____________________________________________________________________________
 Int_t RooProjectedPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet, const char* /*rangeName*/) const 
 { 
-  // Mark all requested variables as analytically integrated
+  // Mark all requested variables as internally integrated
+
   analVars.add(allVars) ;
   
   // Create the appropriate integral
@@ -177,7 +185,8 @@ Int_t RooProjectedPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& an
 //_____________________________________________________________________________
 Double_t RooProjectedPdf::analyticalIntegralWN(Int_t code, const RooArgSet* /*normSet*/, const char* /*rangeName*/) const 
  { 
-   // Retrieve appropriate projection by code
+   // Return analytical integral represent by appropriate element of projection cache
+
    CacheElem *cache = (CacheElem*) _cacheMgr.getObjByIndex(code-1) ;
    
    return cache->_projection->getVal() ;
@@ -197,6 +206,7 @@ Int_t RooProjectedPdf::getGenerator(const RooArgSet& /*directVars*/, RooArgSet& 
 //_____________________________________________________________________________
 void RooProjectedPdf::generateEvent(Int_t /*code*/) 
  { 
+   // No internal generator is implemented
    return; 
  } 
 
@@ -207,6 +217,8 @@ Bool_t RooProjectedPdf::redirectServersHook(const RooAbsCollection& newServerLis
 				       Bool_t /*nameChange*/, Bool_t /*isRecursive*/) 
 {
   // Intercept a server redirection all and update list of dependents if necessary 
+  // Specifically update the set proxy 'deps' which introduces the dependency
+  // on server value dirty flags of ourselves
 
   // Redetermine explicit list of dependents if intPdf is being replaced
   RooAbsArg* newPdf = newServerList.find(intpdf.arg().GetName()) ;
@@ -239,6 +251,7 @@ Bool_t RooProjectedPdf::redirectServersHook(const RooAbsCollection& newServerLis
 //_____________________________________________________________________________
 RooArgList RooProjectedPdf::CacheElem::containedArgs(Action)
 {
+  // Return RooAbsArg elements contained in projection cache element.
   RooArgList ret(*_projection) ;  
   return ret ;
 }
@@ -249,6 +262,7 @@ RooArgList RooProjectedPdf::CacheElem::containedArgs(Action)
 void RooProjectedPdf::CacheElem::printCompactTreeHook(ostream& os, const char* indent, Int_t curElem, Int_t maxElem) 
 {
   // Print contents of cache when printing self as part of object tree
+  
   if (curElem==0) {
     os << indent << "RooProjectedPdf begin projection cache" << endl ;
   }

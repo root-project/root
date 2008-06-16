@@ -43,6 +43,8 @@ ClassImp(RooParamBinning)
 RooParamBinning::RooParamBinning(const char* name) : 
   RooAbsBinning(name), _lp(0), _owner(0)
 {  
+  // Default constructor
+
   _array = 0 ;
 }
 
@@ -57,7 +59,8 @@ RooParamBinning::RooParamBinning(RooAbsReal& xloIn, RooAbsReal& xhiIn, Int_t nBi
   _lp(0),
   _owner(0)
 {
-  //cout << "RooParamBinning::ctor(this = " << this << " xlo = " << &xloIn << " xhi = " << &xhiIn << " _lp = " << _lp << " owner = " << _owner << ")" << endl ;
+  // Construct binning with 'nBins' bins and with a range
+  // parameterized by external RooAbsReals xloIn and xhiIn.
 }
 
 
@@ -65,7 +68,7 @@ RooParamBinning::RooParamBinning(RooAbsReal& xloIn, RooAbsReal& xhiIn, Int_t nBi
 //_____________________________________________________________________________
 RooParamBinning::~RooParamBinning() 
 {
-  //cout << "RooParamBinning::dtor(this = " << this << " xlo = " << &_xlo << " xhi = " << &_xhi << " _lp = " << _lp << " owner = " << _owner << ")" << endl ;
+  // Destructor
 
   if (_array) delete[] _array ;
   if (_lp) delete _lp ;
@@ -77,6 +80,7 @@ RooParamBinning::~RooParamBinning()
 RooParamBinning::RooParamBinning(const RooParamBinning& other, const char* name) :
   RooAbsBinning(name), _owner(0)
 {
+  // Copy constructor
 
   _array = 0 ;
 
@@ -104,23 +108,27 @@ RooParamBinning::RooParamBinning(const RooParamBinning& other, const char* name)
 //_____________________________________________________________________________
 void RooParamBinning::insertHook(RooAbsRealLValue& owner) const  
 {
+  // Hook function called by RooAbsRealLValue when this binning
+  // is inserted as binning for into given owner. Create
+  // list proxy registered with owner that will track and implement
+  // server directs to external RooAbsReals of this binning
+
   _owner = &owner ;
 
-
+  // If list proxy already exists update pointers from proxy
   if (_lp) {
-    //cout << "RooParamBinning::insertHook(this = " << this << " deleting previous _lp  = " << _lp << endl ;
     _xlo = xlo() ;
     _xhi = xhi() ;
     delete _lp ;
   }
 
-  _lp = new RooListProxy("lp","lp",&owner,kFALSE,kTRUE) ;
+  // If list proxy does not exist, creat it now
+  _lp = new RooListProxy(Form("range::%s",GetName()),"lp",&owner,kFALSE,kTRUE) ;
   _lp->add(*_xlo) ;
   _lp->add(*_xhi) ;
   _xlo = 0 ;
   _xhi = 0 ;
 
-  //cout << "RooParamBinning::insertHook(this = " << this << " xlo = " << &_xlo << " xhi = " << &_xhi << " _lp = " << _lp << " owner = " << _owner << ")" << endl ;
 
 }
 
@@ -128,13 +136,14 @@ void RooParamBinning::insertHook(RooAbsRealLValue& owner) const
 //_____________________________________________________________________________
 void RooParamBinning::removeHook(RooAbsRealLValue& /*owner*/) const  
 {
+  // Hook function called by RooAbsRealLValue when this binning
+  // is removed as binning for into given owner. Delete list
+  // proxy that was inserted in owner
+
   _owner = 0 ;
   
-  //cout << "RooParamBinning::removeHook(this = " << this << " xlo = " << &_xlo << " xhi = " << &_xhi << " _lp = " << _lp << " owner = " << _owner << ")" << endl ;
-
-
+  // Remove list proxy from owner
   if (_lp) {
-    //cout << "RooParamBinning::insertHook(this = " << this << " deleting previous _lp  = " << _lp << endl ;
     _xlo = xlo() ;
     _xhi = xhi() ;
     delete _lp ;
@@ -147,6 +156,9 @@ void RooParamBinning::removeHook(RooAbsRealLValue& /*owner*/) const
 //_____________________________________________________________________________
 void RooParamBinning::setRange(Double_t newxlo, Double_t newxhi) 
 {
+  // Adjust range by adjusting values of external RooAbsReal values
+  // Only functional when external representations are lvalues
+
   if (newxlo>newxhi) {
     coutE(InputArguments) << "RooParamBinning::setRange: ERROR low bound > high bound" << endl ;
     return ;
@@ -174,6 +186,7 @@ void RooParamBinning::setRange(Double_t newxlo, Double_t newxhi)
 Int_t RooParamBinning::binNumber(Double_t x) const  
 {
   // Return the fit bin index for the current value
+
   if (x >= xhi()->getVal()) return _nbins-1 ;
   if (x < xlo()->getVal()) return 0 ;
 
@@ -186,6 +199,7 @@ Int_t RooParamBinning::binNumber(Double_t x) const
 Double_t RooParamBinning::binCenter(Int_t i) const 
 {
   // Return the central value of the 'i'-th fit bin
+
   if (i<0 || i>=_nbins) {
     coutE(InputArguments) << "RooParamBinning::binCenter ERROR: bin index " << i 
 			  << " is out of range (0," << _nbins-1 << ")" << endl ;
@@ -201,6 +215,8 @@ Double_t RooParamBinning::binCenter(Int_t i) const
 //_____________________________________________________________________________
 Double_t RooParamBinning::binWidth(Int_t /*bin*/) const 
 {
+  // Return average bin width
+
   return (xhi()->getVal()-xlo()->getVal())/_nbins ;
 }
 
@@ -210,6 +226,7 @@ Double_t RooParamBinning::binWidth(Int_t /*bin*/) const
 Double_t RooParamBinning::binLow(Int_t i) const 
 {
   // Return the low edge of the 'i'-th fit bin
+
   if (i<0 || i>=_nbins) {
     coutE(InputArguments) << "RooParamBinning::binLow ERROR: bin index " << i 
 			  << " is out of range (0," << _nbins-1 << ")" << endl ;
@@ -225,6 +242,7 @@ Double_t RooParamBinning::binLow(Int_t i) const
 Double_t RooParamBinning::binHigh(Int_t i) const 
 {
   // Return the high edge of the 'i'-th fit bin
+
   if (i<0 || i>=_nbins) {
     coutE(InputArguments) << "RooParamBinning::fitBinHigh ERROR: bin index " << i 
 			  << " is out of range (0," << _nbins-1 << ")" << endl ;
@@ -239,6 +257,8 @@ Double_t RooParamBinning::binHigh(Int_t i) const
 //_____________________________________________________________________________
 Double_t* RooParamBinning::array() const 
 {
+  // Return array of bin boundaries
+
   if (_array) delete[] _array ;
   _array = new Double_t[_nbins+1] ;
 
@@ -254,6 +274,7 @@ Double_t* RooParamBinning::array() const
 //_____________________________________________________________________________
 void RooParamBinning::printMultiline(ostream &os, Int_t /*content*/, Bool_t /*verbose*/, TString indent) const
 {
+  // Print details of binning
   os << indent << "_xlo = " << _xlo << endl ;
   os << indent << "_xhi = " << _xhi << endl ;
   if (_lp) {

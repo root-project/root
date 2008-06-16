@@ -141,6 +141,8 @@ RooNumConvPdf::~RooNumConvPdf()
 //_____________________________________________________________________________
 Double_t RooNumConvPdf::evaluate() const
 {
+  // Calculate and return value of p.d.f
+
   if (!_init) initialize() ;
 
   return _conv->evaluate() ;
@@ -151,6 +153,8 @@ Double_t RooNumConvPdf::evaluate() const
 //_____________________________________________________________________________
 void RooNumConvPdf::initialize() const
 {
+  // One-time initialization of object
+
   // Save pointer to any prototype convolution object (only present if this object is made through
   // a copy constructor) 
   RooNumConvolution* protoConv = _conv ;
@@ -172,6 +176,11 @@ void RooNumConvPdf::initialize() const
 RooAbsGenContext* RooNumConvPdf::genContext(const RooArgSet &vars, const RooDataSet *prototype, 
 					    const RooArgSet* auxProto, Bool_t verbose) const 
 {
+  // Return appropriate generator context for this convolved p.d.f. If both pdf and resolution
+  // model support internal generation return and optimization convolution generation context
+  // that uses a smearing algorithm. Otherwise return a standard accept/reject sampling
+  // context on the convoluted shape.
+
   if (!_init) initialize() ;
 
   // Check if physics PDF and resolution model can both directly generate the convolution variable

@@ -73,5 +73,6 @@ void RooMPSentinel::add(RooRealMPFE& mpfe)
 void RooMPSentinel::remove(RooRealMPFE& mpfe) 
 {
   // Remove given multi-processor front-end object from the sentinel
+
   _mpfeSet.remove(mpfe,kTRUE) ;
 }

@@ -44,9 +44,9 @@ ClassImp(RooPrintable)
 
 Int_t  RooPrintable::_nameLength(0) ;
 
-// Implement ostream operator on RooPrintable in terms of printStream(InLine)  
 namespace RooFit {
   ostream& operator<<(ostream& os, const RooPrintable& rp) { 
+    // Implement ostream operator on RooPrintable in terms of printStream(InLine)  
     rp.printStream(os,rp.defaultPrintContents("I"),RooPrintable::kInline) ; return os ; 
   }
 }
@@ -55,6 +55,8 @@ namespace RooFit {
 //_____________________________________________________________________________
 void RooPrintable::nameFieldLength(Int_t newLen)
 {
+  // Set length of field reserved from printing name of RooAbsArgs in 
+  // multi-line collection printing to given amount. 
   _nameLength = newLen>0 ? newLen : 0 ;
 }
 
@@ -63,8 +65,9 @@ void RooPrintable::nameFieldLength(Int_t newLen)
 //_____________________________________________________________________________
 void RooPrintable::printStream(ostream& os, Int_t contents, StyleOption style, TString indent) const 
 {
-  // enum ContentsOption { Name=1, Value=2, ValueName=3, ValueNameExtra=4, Structure=5 } ;
-  //   enum StyleOption { Inline=1, SingleLine=2, MultiLine=3 } ;
+  // Print description of object on ostream, printing contents set by contents integer,
+  // which is interpreted as an OR of 'enum ContentsOptions' values and in the style
+  // given by 'enum StyleOption'. Each message is prefixed by string 'indent' when printed
 
   // Handling of 'verbose' and 'treestructure' is delegated to dedicated implementation functions
   if (style==kVerbose||style==kStandard) {
@@ -144,48 +147,58 @@ void RooPrintable::printStream(ostream& os, Int_t contents, StyleOption style, T
 //_____________________________________________________________________________
 void RooPrintable::printValue(ostream& /*os*/) const
 {
+  // Interface to print value of object
 }
 
 
 //_____________________________________________________________________________
 void RooPrintable::printExtras(ostream& /*os*/) const
 {
+  // Interface to print extras of object
 }
 
 
 //_____________________________________________________________________________
 void RooPrintable::printMultiline(ostream& /*os*/, Int_t /*contents*/, Bool_t /*verbose*/, TString /*indent*/) const
 {
+  // Interface for detailed printing of object
 }
 
 
 //_____________________________________________________________________________
 void RooPrintable::printTree(ostream& /*os*/, TString /*indent*/) const
 {
+  // Interface for tree structure printing of object
 }
 
 
 //_____________________________________________________________________________
 void RooPrintable::printArgs(ostream& /*os*/) const 
 {
+  // Interface for printing of object arguments. Arguments
+  // are loosely defined as external server objects
+  // in this context
 }
 
 
 //_____________________________________________________________________________
 void RooPrintable::printName(ostream& /*os*/) const 
 {
+  // Print name of object
 }
 
 
 //_____________________________________________________________________________
 void RooPrintable::printTitle(ostream& /*os*/) const 
 {
+  // Print title of object
 }
 
 
 //_____________________________________________________________________________
 void RooPrintable::printClassName(ostream& /*os*/) const 
 {
+  // Print class name of object
 }
 
 
@@ -193,6 +206,7 @@ void RooPrintable::printClassName(ostream& /*os*/) const
 //_____________________________________________________________________________
 Int_t RooPrintable::defaultPrintContents(Option_t* /*opt*/) const
 { 
+  // Default choice of contents to be printed (name and value)
   return kName|kValue ; 
 }
 
@@ -200,13 +214,15 @@ Int_t RooPrintable::defaultPrintContents(Option_t* /*opt*/) const
 //_____________________________________________________________________________
 RooPrintable::StyleOption RooPrintable::defaultPrintStyle(Option_t* /*opt*/) const
 { 
+  // Default printing style (single line)
   return kSingleLine ; 
 }
 
 
 
 //_____________________________________________________________________________
-ostream &RooPrintable::defaultPrintStream(ostream *os) {
+ostream &RooPrintable::defaultPrintStream(ostream *os) 
+{
   // Return a reference to the current default stream to use in
   // Print(). Use the optional parameter to specify a new default
   // stream (a reference to the old one is still returned). This

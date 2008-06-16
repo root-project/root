@@ -88,7 +88,14 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   _numIntegrand(0),
   _rangeName((TNamed*)RooNameReg::ptr(rangeName))
 {
-  // Constructor - Performs structural analysis of the integrand
+  // Construct integral of 'function' over observables in 'depList'
+  // in range 'rangeName'  with normalization observables 'funcNormSet' 
+  // (for p.d.f.s). In the integral is performed to the maximum extent
+  // possible the internal (analytical) integrals advertised by function.
+  // The other integrations are performed numerically. The optional
+  // config object prescribes how these numeric integrations are configured.
+  //
+
 
   //   A) Check that all dependents are lvalues 
   //
@@ -505,6 +512,9 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
 //_____________________________________________________________________________
 void RooRealIntegral::autoSelectDirtyMode() 
 {
+  // Set appropriate cache operation mode for integral depending on cache operation
+  // mode of server objects
+
   // If any of our servers are is forcedDirty or a projectedDependent, then we need to be ADirty
   TIterator* siter = serverIterator() ;  
   RooAbsArg* server ;
@@ -533,6 +543,9 @@ void RooRealIntegral::autoSelectDirtyMode()
 //_____________________________________________________________________________
 Bool_t RooRealIntegral::servesExclusively(const RooAbsArg* server,const RooArgSet& exclLVBranches) const
 {  
+  // Utility function that teturns true if 'object server' is a server
+  // to exactly one of the RooAbsArgs in 'exclLVBranches'
+
   // Determine if given server serves exclusively exactly one of the given nodes in exclLVBranches
 
   // Special case, no LV servers available
@@ -647,6 +660,7 @@ RooRealIntegral::RooRealIntegral(const RooRealIntegral& other, const char* name)
   _rangeName(other._rangeName) 
 {
   // Copy constructor
+
  _funcNormSet = other._funcNormSet ? (RooArgSet*)other._funcNormSet->snapshot(kFALSE) : 0 ;
 
  other._facListIter->Reset() ;
@@ -682,6 +696,8 @@ RooRealIntegral::~RooRealIntegral()
 //_____________________________________________________________________________
 Double_t RooRealIntegral::evaluate() const 
 {  
+  // Perform the integration and return the result
+
   Double_t retVal(0) ;
   switch (_intOperMode) {    
     
@@ -776,7 +792,6 @@ Double_t RooRealIntegral::jacobianProduct() const
     return 1 ;
   }
 
-
   Double_t jacProd(1) ;
   _jacListIter->Reset() ;
   RooAbsRealLValue* arg ;
@@ -791,8 +806,9 @@ Double_t RooRealIntegral::jacobianProduct() const
 
 //_____________________________________________________________________________
 Double_t RooRealIntegral::sum() const
-{
+{  
   // Perform summation of list of category dependents to be integrated
+ 
   if (_sumList.getSize()!=0) {
  
     // Add integrals for all permutations of categories summed over
@@ -849,6 +865,7 @@ Double_t RooRealIntegral::integrate() const
 Bool_t RooRealIntegral::redirectServersHook(const RooAbsCollection& /*newServerList*/, 
 					    Bool_t /*mustReplaceAll*/, Bool_t /*nameChange*/, Bool_t /*isRecursive*/) 
 {
+  // Intercept server redirects and reconfigure internal object accordingly
 
   _restartNumIntEngine = kTRUE ;
 
@@ -868,8 +885,8 @@ Bool_t RooRealIntegral::redirectServersHook(const RooAbsCollection& /*newServerL
 //_____________________________________________________________________________
 void RooRealIntegral::operModeHook()
 {
-  if (_operMode==ADirty) {
-    
+  // Dummy
+  if (_operMode==ADirty) {    
   }
 }
 
@@ -888,6 +905,7 @@ Bool_t RooRealIntegral::isValidReal(Double_t /*value*/, Bool_t /*printError*/) c
 void RooRealIntegral::printMultiline(ostream& os, Int_t contents, Bool_t verbose, TString indent) const
 {
   // Print the state of this object to the specified output stream.
+
   RooAbsReal::printMultiline(os,contents,verbose,indent) ;
   os << indent << "--- RooRealIntegral ---" << endl; 
   os << indent << "  Integrates ";

@@ -46,6 +46,10 @@ ClassImp(RooSetProxy)
 //_____________________________________________________________________________
 void* RooSetProxy::operator new (size_t bytes)
 {
+  // Overload new operator must be implemented because it is overloaded
+  // in the RooArgSet base class. Perform standard memory allocation
+  // here instead of memory pool management performed in RooArgSet
+
   return malloc(bytes) ;
 }
 
@@ -63,6 +67,10 @@ RooSetProxy::RooSetProxy(const char* inName, const char* /*desc*/, RooAbsArg* ow
   _defValueServer(defValueServer), 
   _defShapeServer(defShapeServer)
 {
+  // Construct proxy with given name and description, with given owner
+  // The default value and shape dirty propagation of the set contents
+  // to the set owner is controlled by flags defValueServer and defShapeServer
+
   //SetTitle(desc) ;
   _owner->registerProxy(*this) ;
   _iter = createIterator() ;
@@ -76,6 +84,8 @@ RooSetProxy::RooSetProxy(const char* inName, RooAbsArg* owner, const RooSetProxy
   _defValueServer(other._defValueServer), 
   _defShapeServer(other._defShapeServer)
 {
+  // Copy constructor
+
   _owner->registerProxy(*this) ;
   _iter = createIterator() ;
 }
@@ -85,6 +95,7 @@ RooSetProxy::RooSetProxy(const char* inName, RooAbsArg* owner, const RooSetProxy
 //_____________________________________________________________________________
 RooSetProxy::~RooSetProxy()
 {
+  // Destructor
   if (_owner) _owner->unRegisterProxy(*this) ;
   delete _iter ;
 }
@@ -94,6 +105,10 @@ RooSetProxy::~RooSetProxy()
 //_____________________________________________________________________________
 Bool_t RooSetProxy::add(const RooAbsArg& var, Bool_t valueServer, Bool_t shapeServer, Bool_t silent)
 {
+  // Overloaded RooArgSet::add() method insert object into set 
+  // and registers object as server to owner with given value
+  // and shape dirty flag propagation requests
+
   Bool_t ret=RooArgSet::add(var,silent) ;
   if (ret) {
     _owner->addServer((RooAbsArg&)var,valueServer,shapeServer) ;
@@ -106,6 +121,10 @@ Bool_t RooSetProxy::add(const RooAbsArg& var, Bool_t valueServer, Bool_t shapeSe
 //_____________________________________________________________________________
 Bool_t RooSetProxy::addOwned(RooAbsArg& var, Bool_t silent)
 {
+  // Overloaded RooArgSet::addOwned() method insert object into owning set 
+  // and registers object as server to owner with default value
+  // and shape dirty flag propagation
+
   Bool_t ret=RooArgSet::addOwned(var,silent) ;
   if (ret) {
     _owner->addServer((RooAbsArg&)var,_defValueServer,_defShapeServer) ;
@@ -118,6 +137,10 @@ Bool_t RooSetProxy::addOwned(RooAbsArg& var, Bool_t silent)
 //_____________________________________________________________________________
 RooAbsArg* RooSetProxy::addClone(const RooAbsArg& var, Bool_t silent) 
 {
+  // Overloaded RooArgSet::addClone() method insert clone of object into owning set 
+  // and registers cloned object as server to owner with default value
+  // and shape dirty flag propagation
+
   RooAbsArg* ret=RooArgSet::addClone(var,silent) ;
   if (ret) {
     _owner->addServer((RooAbsArg&)var,_defValueServer,_defShapeServer) ;
@@ -130,6 +153,10 @@ RooAbsArg* RooSetProxy::addClone(const RooAbsArg& var, Bool_t silent)
 //_____________________________________________________________________________
 Bool_t RooSetProxy::add(const RooAbsArg& var, Bool_t silent) 
 {
+  // Overloaded RooArgSet::add() method inserts 'var' into set
+  // and registers 'var' as server to owner with default value
+  // and shape dirty flag propagation
+
   return add(var,_defValueServer,_defShapeServer,silent) ;
 }
 
@@ -138,6 +165,10 @@ Bool_t RooSetProxy::add(const RooAbsArg& var, Bool_t silent)
 //_____________________________________________________________________________
 Bool_t RooSetProxy::replace(const RooAbsArg& var1, const RooAbsArg& var2) 
 {
+  // Replace object 'var1' in set with 'var2'. Deregister var1 as
+  // server from owner and register var2 as server to owner with
+  // default value and shape dirty propagation flags
+
   Bool_t ret=RooArgSet::replace(var1,var2) ;
   if (ret) {
     if (!isOwning()) _owner->removeServer((RooAbsArg&)var1) ;
@@ -152,6 +183,8 @@ Bool_t RooSetProxy::replace(const RooAbsArg& var1, const RooAbsArg& var2)
 //_____________________________________________________________________________
 Bool_t RooSetProxy::remove(const RooAbsArg& var, Bool_t silent, Bool_t matchByNameOnly) 
 {
+  // Remove object 'var' from set and deregister 'var' as server to owner.
+
   Bool_t ret=RooArgSet::remove(var,silent,matchByNameOnly) ;
   if (ret && !isOwning()) {
     _owner->removeServer((RooAbsArg&)var) ;
@@ -165,7 +198,7 @@ Bool_t RooSetProxy::remove(const RooAbsArg& var, Bool_t silent, Bool_t matchByNa
 Bool_t RooSetProxy::remove(const RooAbsCollection& list, Bool_t silent, Bool_t matchByNameOnly) 
 {
   // Remove each argument in the input list from our list using remove(const RooAbsArg&).
-  // Return kFALSE in case of problems.
+  // and remove each argument as server to owner
 
   Bool_t result(false) ;
 
@@ -185,6 +218,9 @@ Bool_t RooSetProxy::remove(const RooAbsCollection& list, Bool_t silent, Bool_t m
 //_____________________________________________________________________________
 void RooSetProxy::removeAll() 
 {
+  // Remove all argument inset using remove(const RooAbsArg&).
+  // and remove each argument as server to owner
+
   if (!isOwning()) {
     TIterator* iter = createIterator() ;
     RooAbsArg* arg ;
@@ -205,6 +241,7 @@ void RooSetProxy::removeAll()
 //_____________________________________________________________________________
 RooSetProxy& RooSetProxy::operator=(const RooArgSet& other) 
 {
+  // Assign values of arguments on other set to arguments in this set
   RooArgSet::operator=(other) ;
   return *this ;
 }
@@ -215,6 +252,9 @@ RooSetProxy& RooSetProxy::operator=(const RooArgSet& other)
 //_____________________________________________________________________________
 Bool_t RooSetProxy::changePointer(const RooAbsCollection& newServerList, Bool_t nameChange) 
 {
+  // Process server change operation on owner. Replace elements in set with equally
+  // named objects in 'newServerList'
+
   if (getSize()==0) return kTRUE ;
 
   _iter->Reset() ;
@@ -233,6 +273,9 @@ Bool_t RooSetProxy::changePointer(const RooAbsCollection& newServerList, Bool_t 
 //_____________________________________________________________________________
 void RooSetProxy::print(ostream& os, Bool_t addContents) const 
 { 
+  // Printing name of proxy on ostream. If addContents is true
+  // also print names of objects in set
+
   if (!addContents) {
     os << name() << "=" ; printStream(os,kValue,kInline) ; 
   } else {

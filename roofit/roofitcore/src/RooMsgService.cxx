@@ -73,6 +73,8 @@ Int_t RooMsgService::_debugCount = 0 ;
 //_____________________________________________________________________________
 void RooMsgService::cleanup() 
 {
+  // Cleanup function called by atexit() handler installed by RooSentinel
+  // to delete all global object upon program termination
   if (_instance) {
     delete _instance ;
     _instance = 0 ;
@@ -84,7 +86,10 @@ void RooMsgService::cleanup()
 //_____________________________________________________________________________
 RooMsgService::RooMsgService() 
 {
-  // Constructor
+  // Constructor. Defines names of message levels
+  // and mapping of topic codes to topic names
+  // Install default message streams.
+
   _silentMode = kFALSE ;
   _showPid = kFALSE ;
   _globMinLevel = DEBUG ;
@@ -128,7 +133,6 @@ RooMsgService::~RooMsgService()
   // Destructor
 
   // Delete all ostreams we own ;
-
   map<string,ostream*>::iterator iter = _files.begin() ;
   for (; iter != _files.end() ; ++iter) {
     delete iter->second ;
@@ -142,6 +146,7 @@ RooMsgService::~RooMsgService()
 //_____________________________________________________________________________
 Bool_t RooMsgService::anyDebug() 
 { 
+  // Returns true if any debug level stream is active
   return instance()._debugCount>0 ; 
 }
 
@@ -327,6 +332,7 @@ Bool_t RooMsgService::getStreamStatus(Int_t id) const
 RooMsgService& RooMsgService::instance() 
 {
   // Return reference to singleton instance 
+
   if (!_instance) {
     new RooMsgService() ;    
     RooSentinel::activate() ;
@@ -340,6 +346,7 @@ RooMsgService& RooMsgService::instance()
 Bool_t RooMsgService::isActive(const RooAbsArg* self, MsgTopic topic, MsgLevel level) 
 {
   // Check if logging is active for given object/topic/MsgLevel combination
+
   return (activeStream(self,topic,level)>=0) ;
 }
 
@@ -348,6 +355,7 @@ Bool_t RooMsgService::isActive(const RooAbsArg* self, MsgTopic topic, MsgLevel l
 Bool_t RooMsgService::isActive(const TObject* self, MsgTopic topic, MsgLevel level) 
 {
   // Check if logging is active for given object/topic/MsgLevel combination
+
   return (activeStream(self,topic,level)>=0) ;
 }
 
@@ -356,6 +364,7 @@ Bool_t RooMsgService::isActive(const TObject* self, MsgTopic topic, MsgLevel lev
 Int_t RooMsgService::activeStream(const RooAbsArg* self, MsgTopic topic, MsgLevel level) 
 {
   // Find appropriate logging stream for message from given object with given topic and message level
+
   if (level<_globMinLevel) return -1 ;
   for (UInt_t i=0 ; i<_streams.size() ; i++) {
     if (_streams[i].match(level,topic,self)) {
@@ -370,6 +379,7 @@ Int_t RooMsgService::activeStream(const RooAbsArg* self, MsgTopic topic, MsgLeve
 Int_t RooMsgService::activeStream(const TObject* self, MsgTopic topic, MsgLevel level) 
 {
   // Find appropriate logging stream for message from given object with given topic and message level
+
   if (level<_globMinLevel) return -1 ;
   for (UInt_t i=0 ; i<_streams.size() ; i++) {
     if (_streams[i].match(level,topic,self)) {
@@ -384,6 +394,7 @@ Int_t RooMsgService::activeStream(const TObject* self, MsgTopic topic, MsgLevel 
 Bool_t RooMsgService::StreamConfig::match(MsgLevel level, MsgTopic top, const RooAbsArg* obj) 
 {
   // Determine if message from given object at given level on given topic is logged
+
   if (!active) return kFALSE ;
   if (level<minLevel) return kFALSE ;
   if (!(topic&top)) return kFALSE ;
@@ -403,6 +414,7 @@ Bool_t RooMsgService::StreamConfig::match(MsgLevel level, MsgTopic top, const Ro
 Bool_t RooMsgService::StreamConfig::match(MsgLevel level, MsgTopic top, const TObject* obj) 
 {
   // Determine if message from given object at given level on given topic is logged
+
   if (!active) return kFALSE ;
   if (level<minLevel) return kFALSE ;
   if (!(topic&top)) return kFALSE ;
@@ -421,6 +433,9 @@ Bool_t RooMsgService::StreamConfig::match(MsgLevel level, MsgTopic top, const TO
 //_____________________________________________________________________________
 ostream& RooMsgService::log(const RooAbsArg* self, MsgLevel level, MsgTopic topic, Bool_t skipPrefix) 
 {
+  // Log error message associated with RooAbsArg object self at given level and topic. If skipPrefix
+  // is true the standard RooMsgService prefix is not added.
+
   if (level>=ERROR) {
     _errorCount++ ;
   }
@@ -448,6 +463,9 @@ ostream& RooMsgService::log(const RooAbsArg* self, MsgLevel level, MsgTopic topi
 //_____________________________________________________________________________
 ostream& RooMsgService::log(const TObject* self, MsgLevel level, MsgTopic topic, Bool_t skipPrefix) 
 {
+  // Log error message associated with TObject object self at given level and topic. If skipPrefix
+  // is true the standard RooMsgService prefix is not added.
+
   if (level>=ERROR) {
     _errorCount++ ;
   }
@@ -477,7 +495,6 @@ void RooMsgService::Print(Option_t *options) const
 {
   // Print configuration of message service. If "v" option is given also
   // inactive streams are listed
-
 
   Bool_t activeOnly = kTRUE ;
   if (TString(options).Contains("V") || TString(options).Contains("v")) {
