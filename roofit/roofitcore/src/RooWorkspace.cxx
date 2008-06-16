@@ -1131,7 +1131,7 @@ void RooWorkspace::CodeRepo::Streamer(TBuffer &R__b)
        _c2fmap[name]._fileBase.Streamer(R__b) ;
      }     
      R__b.CheckByteCount(R__s, R__c, thisClass::IsA());
- 
+
      // Instantiate any classes that are not defined in current session
      _compiledOK = !compileClasses() ;
 
@@ -1152,7 +1152,6 @@ void RooWorkspace::CodeRepo::Streamer(TBuffer &R__b)
 
        ++iter ;
      }
-     R__b.SetByteCount(R__c, kTRUE);
      
      // Stream contents of ClassRelInfo map
      R__b << _c2fmap.size() ;
@@ -1164,6 +1163,7 @@ void RooWorkspace::CodeRepo::Streamer(TBuffer &R__b)
        iter2->second._fileBase.Streamer(R__b);
        ++iter2 ;
      }
+
      R__b.SetByteCount(R__c, kTRUE);
      
    }
