@@ -81,15 +81,6 @@ public:
   inline void removeMax(const char* name=0) { getBinning(name).setMax(RooNumber::infinity()) ; }
   inline void removeRange(const char* name=0) { getBinning(name).setRange(-RooNumber::infinity(),RooNumber::infinity()) ; }
  
-  // Backward compatibility functions
-  void setFitBins(Int_t nBins) ;
-  void setFitMin(Double_t value) ;
-  void setFitMax(Double_t value) ;
-  void setFitRange(Double_t min, Double_t max) ;
-  void removeFitMin() ;
-  void removeFitMax() ;
-  void removeFitRange() ;
-
   // I/O streaming interface (machine readable)
   virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
   virtual void writeToStream(ostream& os, Bool_t compact) const ;
