@@ -31,6 +31,7 @@
 
 ClassImp(TEveCaloData);
 
+//______________________________________________________________________________
 TEveCaloData::TEveCaloData():
    TEveRefBackPtr(),
 
@@ -39,6 +40,60 @@ TEveCaloData::TEveCaloData():
 {
    // Constructor.
 }
+
+//______________________________________________________________________________
+void TEveCaloData::SetSliceThreshold(Int_t slice, Float_t val)
+{
+   // Set threshold for given slice.
+
+   fSliceInfos[slice].fThreshold = val;
+   InvalidateUsersCellIdCache();
+}
+
+//______________________________________________________________________________
+void TEveCaloData::SetSliceColor(Int_t slice, Color_t col)
+{
+   // Set color for given slice.
+   
+   fSliceInfos[slice].fColor = col;
+   StampBackPtrElements(TEveElement::kCBObjProps);
+}
+
+//______________________________________________________________________________
+void TEveCaloData::InvalidateUsersCellIdCache()
+{
+   // Invalidate cell ids cache on back ptr references.
+
+   TEveCaloViz* calo;
+   std::list<TEveElement*>::iterator i = fBackRefs.begin();
+   while (i != fBackRefs.end())
+   {
+      calo = dynamic_cast<TEveCaloViz*>(*i);
+      calo->InvalidateCellIdCache();
+      calo->StampObjProps();
+      ++i;
+   }
+}
+
+//______________________________________________________________________________
+void TEveCaloData::DataChanged()
+{
+   // Tell users (TEveCaloViz instances using this data) that data
+   // has changed and they should update the limits/scales etc.
+   // This is done by calling TEveCaloViz::DataChanged().
+
+   TEveCaloViz* calo;
+   std::list<TEveElement*>::iterator i = fBackRefs.begin();
+   while (i != fBackRefs.end())
+   {
+      calo = dynamic_cast<TEveCaloViz*>(*i);
+      calo->DataChanged();
+      calo->StampObjProps();
+      ++i;
+   }
+}
+
+/**************************************************************************/
 
 //______________________________________________________________________________
 Float_t TEveCaloData::CellData_t::Value(Bool_t isEt) const
@@ -120,7 +175,48 @@ TEveCaloDataHist::TEveCaloDataHist():
 TEveCaloDataHist::~TEveCaloDataHist()
 {
    // Destructor.
+
+   delete fHStack;
 }
+//______________________________________________________________________________
+void TEveCaloDataHist::DataChanged()
+{ 
+   // Update limits and notify data users. 
+
+   using namespace TMath;
+
+   // update max E/Et values
+   fMaxValE = 0;
+   fMaxValEt = 0;
+
+   if (fHStack->GetHists()->First())
+   {  
+      TH2 *ah = (TH2*)fHStack->GetHists()->First();
+      fEtaAxis = ah->GetXaxis();
+      fPhiAxis = ah->GetYaxis();
+
+      Int_t bin;
+      Double_t value, cos, eta;
+      TH2 *stack =  (TH2*)fHStack->GetStack()->Last();
+      for (Int_t ieta=1; ieta<=fEtaAxis->GetNbins(); ieta++) 
+      {
+         eta = fEtaAxis->GetBinCenter(ieta); // conversion E/Et
+         for (Int_t iphi=1; iphi<=fPhiAxis->GetNbins(); iphi++)  
+         {
+            bin = stack->GetBin(ieta, iphi);
+            value = stack->GetBinContent(bin);
+
+            if (value > fMaxValEt ) fMaxValEt = value;
+
+            cos = Cos(2*ATan(Exp( -Abs(eta))));
+            value /= Abs(cos);
+            if (value > fMaxValE) fMaxValE = value;
+         }
+      }
+   }
+
+   TEveCaloData::DataChanged();
+} 
 
 //______________________________________________________________________________
 void TEveCaloDataHist::GetCellList(Float_t eta, Float_t etaD,
@@ -139,7 +235,7 @@ void TEveCaloDataHist::GetCellList(Float_t eta, Float_t etaD,
 
    Int_t nEta = fEtaAxis->GetNbins();
    Int_t nPhi = fPhiAxis->GetNbins();
-   Int_t nSlices = fSliceInfos.size();
+   Int_t nSlices = GetNSlices();
 
    TH2* h0 = fSliceInfos[0].fHist;
    Int_t bin = 0;
@@ -222,68 +318,22 @@ void TEveCaloDataHist::GetCellData(const TEveCaloData::CellId_t &id,
 }
 
 //______________________________________________________________________________
-void TEveCaloDataHist::InvalidateUsersCellIdCache()
-{
-   // Invalidate cell ids cache on back ptr references.
-
-   TEveCaloViz* calo;
-   std::list<TEveElement*>::iterator i = fBackRefs.begin();
-   while (i != fBackRefs.end())
-   {
-      calo = dynamic_cast<TEveCaloViz*>(*i);
-      calo->InvalidateCellIdCache();
-      calo->StampObjProps();
-      ++i;
-   }
-}
-
-//______________________________________________________________________________
 Int_t TEveCaloDataHist::AddHistogram(TH2F* hist)
 {
    // Add new slice to calo tower. Updates cached variables fMaxValE
    // and fMaxValEt
    // Return last index in the vector of slice infos.
 
-   using namespace TMath;
-
    fHStack->Add(hist);
 
-   if (fEtaAxis == 0 || fPhiAxis == 0)
-   {
-      fEtaAxis = hist->GetXaxis();
-      fPhiAxis = hist->GetYaxis();
-   }
-
-   // update max E/Et values
-   fMaxValE = 0;
-   fMaxValEt = 0;
-   TH2 *stack =  (TH2*)fHStack->GetStack()->Last();
-
-   Int_t bin;
-   Double_t value, cos, eta;
-   for (Int_t ieta=1; ieta<=fEtaAxis->GetNbins(); ieta++) 
-   {
-      eta = fEtaAxis->GetBinCenter(ieta); // conversion E/Et
-      for (Int_t iphi=1; iphi<=fPhiAxis->GetNbins(); iphi++)  
-      {
-         bin = stack->GetBin(ieta, iphi);
-         value = stack->GetBinContent(bin);
-
-         if (value > fMaxValEt ) fMaxValEt = value;
-
-         cos = Cos(2*ATan(Exp( -Abs(eta))));
-         value /= Abs(cos);
-         if (value > fMaxValE) fMaxValE = value;
-      }
-   }
-
    Int_t id = fSliceInfos.size();
-
    fSliceInfos.push_back(SliceInfo_t(hist));
    fSliceInfos[id].fName = hist->GetName();
    fSliceInfos[id].fColor = hist->GetLineColor();
    fSliceInfos[id].fID = id;
 
+   DataChanged();
+ 
    return id;
 }
 
@@ -292,7 +342,7 @@ Int_t TEveCaloDataHist::GetNSlices() const
 {
    // Get number of tower slices.
 
-   return fSliceInfos.size();
+   return fHStack->GetHists()->GetSize();
 }
 
 //______________________________________________________________________________

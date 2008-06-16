@@ -74,6 +74,7 @@ public:
 
    TEveCaloData* GetData() const { return fData; }
    virtual void  SetData(TEveCaloData* d);
+   virtual void  DataChanged();
 
    Float_t GetDataSliceThreshold(Int_t slice) const;
    void    SetDataSliceThreshold(Int_t slice, Float_t val);

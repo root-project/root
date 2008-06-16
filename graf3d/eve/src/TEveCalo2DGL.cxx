@@ -275,6 +275,8 @@ void TEveCalo2DGL::DirectDraw(TGLRnrCtx & rnrCtx) const
    if (fM->fCellIdCacheOK == kFALSE)
       fM->BuildCellIdCache();
 
+   fM->AssertPalette();
+
    TEveProjection::EPType_e pt = fM->fManager->GetProjection()->GetType();
    if (pt == TEveProjection::kPT_RhoZ)
       DrawRhoZ(rnrCtx);

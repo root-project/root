@@ -122,7 +122,12 @@ public:
    virtual void GetCellData(const CellId_t &id, CellData_t& data) const = 0;
    virtual void GetCellData(const CellId_t &id, Float_t  phiMin, Float_t phiRng, CellData_t& data) const = 0;
 
-   virtual void  InvalidateUsersCellIdCache() = 0;
+  
+   virtual void SetSliceThreshold(Int_t slice, Float_t threshold);
+   virtual void SetSliceColor(Int_t slice, Color_t col);
+
+   virtual void  InvalidateUsersCellIdCache();
+   virtual void  DataChanged();
 
    virtual Bool_t SupportsEtaBinning(){ return kFALSE; }
    virtual Bool_t SupportsPhiBinning(){ return kFALSE; }
@@ -160,13 +165,14 @@ public:
    TEveCaloDataHist();
    virtual ~TEveCaloDataHist();
 
+   THStack* GetStack() { return fHStack; }  
+   virtual void  DataChanged();
+
    virtual void GetCellList( Float_t etaMin, Float_t etaMax,
                              Float_t phi, Float_t phiRng, vCellId_t &out) const;
 
    virtual void GetCellData(const TEveCaloData::CellId_t &id, TEveCaloData::CellData_t& data) const;
    virtual void GetCellData(const CellId_t &id, Float_t  phiMin, Float_t phiRng, CellData_t& data) const;
-
-   virtual void  InvalidateUsersCellIdCache();
 
    virtual Bool_t SupportsEtaBinning(){ return kTRUE; }
    virtual Bool_t SupportsPhiBinning(){ return kTRUE; }
@@ -174,10 +180,11 @@ public:
    virtual void    GetEtaLimits(Double_t &min, Double_t &max) const;
    virtual void    GetPhiLimits(Double_t &min, Double_t &max) const;
 
-   Int_t    AddHistogram(TH2F* hist);
+   Int_t   AddHistogram(TH2F* hist);
    virtual Float_t GetMaxVal(Bool_t et) const {return (et)? fMaxValEt:fMaxValE;}
 
    virtual Int_t   GetNSlices() const;
+
 
    ClassDef(TEveCaloDataHist, 0); // Manages calorimeter TH2F event data.
 };

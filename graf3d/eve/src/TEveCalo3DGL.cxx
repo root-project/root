@@ -296,6 +296,8 @@ void TEveCalo3DGL::DirectDraw(TGLRnrCtx &rnrCtx) const
    glEnable(GL_NORMALIZE);
    glEnable(GL_LIGHTING);
 
+   fM->AssertPalette();
+
    TEveCaloData::CellData_t cellData;
    Float_t transEta = fM->GetTransitionEta();
    Float_t towerH;

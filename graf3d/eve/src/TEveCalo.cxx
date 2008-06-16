@@ -47,8 +47,8 @@ TEveCaloViz::TEveCaloViz(const Text_t* n, const Text_t* t) :
 
    fData(0),
 
-   fEtaMin(-1),
-   fEtaMax(1),
+   fEtaMin(-10),
+   fEtaMax(10),
 
    fPhi(0.),
    fPhiOffset(TMath::Pi()),
@@ -79,8 +79,8 @@ TEveCaloViz::TEveCaloViz(TEveCaloData* data, const Text_t* n, const Text_t* t) :
 
    fData(0),
 
-   fEtaMin(-1),
-   fEtaMax(1),
+   fEtaMin(-10),
+   fEtaMax(10),
 
    fPhi(0.),
    fPhiOffset(TMath::Pi()),
@@ -127,8 +127,7 @@ void TEveCaloViz::SetDataSliceThreshold(Int_t slice, Float_t val)
 {
    // Set threshold for given slice.
 
-   fData->RefSliceInfo(slice).fThreshold = val;
-   fData->InvalidateUsersCellIdCache();
+   fData->SetSliceThreshold(slice, val);
 }
 
 //______________________________________________________________________________
@@ -144,8 +143,7 @@ void TEveCaloViz::SetDataSliceColor(Int_t slice, Color_t col)
 {
    // Set slice color in data.
   
-   fData->RefSliceInfo(slice).fColor = col;
-   fData->StampBackPtrElements(kCBObjProps);
+   fData->SetSliceColor(slice, col);
 }
 
 //______________________________________________________________________________
@@ -214,30 +212,38 @@ void TEveCaloViz::SetData(TEveCaloData* data)
    fData = data;
    if (fData) fData->IncRefCount(this);
 
-   fData->GetEtaLimits(fEtaMin, fEtaMax);
-   Double_t min, max;
-   fData->GetPhiLimits(min, max);
-   fPhi = (max+min)*0.5;
-   fPhiOffset =(max-min)*0.5;
+   DataChanged();
+}
 
-   Float_t hlimit = fScaleAbs ? fMaxValAbs :data->GetMaxVal(fPlotEt);
-   if (fPalette == 0)
+//______________________________________________________________________________
+void TEveCaloViz::DataChanged()
+{
+   // Update setting and cache on data changed.
+   // Called from TEvecaloData::BroadcastDataChange()
+
+   Double_t min, max, delta;
+
+   fData->GetEtaLimits(min, max);
+   if (fEtaMin < min) fEtaMin = min;
+   if (fEtaMax > max) fEtaMax = max;
+
+   fData->GetPhiLimits(min, max);
+   delta = 0.5*(max - min);
+   if (fPhi < min || fPhi > max) {
+      fPhi       = 0.5*(max + min);
+      fPhiOffset = delta;
+   } else {
+      if (fPhiOffset > delta) fPhiOffset = delta;
+   }
+
+   if (fPalette)
    {
-      AssertPalette();
-      fPalette->SetLimits(0, TMath::CeilNint(hlimit));
-      fPalette->SetMax(fPalette->GetHighLimit());
+      Int_t hlimit = TMath::CeilNint(fScaleAbs ? fMaxValAbs : fData->GetMaxVal(fPlotEt));
+      fPalette->SetLimits(0, hlimit);
+      fPalette->SetMin(0);
+      fPalette->SetMax(hlimit);
    }
-   else 
-   { 
-      if (!fScaleAbs)
-      {   
-         Float_t ratio = Float_t(fPalette->GetMinVal())/fPalette->GetHighLimit();
-        
-         fPalette->SetLimits(0, TMath::CeilNint(data->GetMaxVal(fPlotEt)));
-         fPalette->SetMin(Int_t(ratio*fPalette->GetHighLimit()));
-         fPalette->SetMax(fPalette->GetHighLimit());
-      }
-   }
+
    InvalidateCellIdCache();
 }
 
@@ -252,17 +258,18 @@ void TEveCaloViz::AssignCaloVizParameters(TEveCaloViz* m)
    fEtaMax    = m->fEtaMax;
 
    fPhi       = m->fPhi;
-   fPhiOffset    = m->fPhiOffset;
+   fPhiOffset = m->fPhiOffset;
+
    fBarrelRadius = m->fBarrelRadius;
    fEndCapPos    = m->fEndCapPos;
 
-   TEveRGBAPalette& mp = * m->fPalette;
-   TEveRGBAPalette* p = new TEveRGBAPalette(mp.GetMinVal(), mp.GetMaxVal(),
-                                          mp.GetInterpolate());
-   p->SetDefaultColor(mp.GetDefaultColor());
-   SetPalette(p);
+   if (m->fPalette)
+   {
+      TEveRGBAPalette& mp = * m->fPalette;
+      TEveRGBAPalette* p = new TEveRGBAPalette(mp.GetMinVal(), mp.GetMaxVal(), mp.GetInterpolate());
+      p->SetDefaultColor(mp.GetDefaultColor());
+   }
 }
-
 
 //______________________________________________________________________________
 void TEveCaloViz::SetPalette(TEveRGBAPalette* p)
@@ -299,7 +306,13 @@ TEveRGBAPalette* TEveCaloViz::AssertPalette()
 
    if (fPalette == 0) {
       fPalette = new TEveRGBAPalette;
-      fPalette->SetDefaultColor((Color_t)4);
+      fPalette->SetDefaultColor((Color_t)4); 
+
+      Int_t hlimit = TMath::CeilNint(fScaleAbs ? fMaxValAbs : fData->GetMaxVal(fPlotEt));
+      fPalette->SetLimits(0, hlimit);
+      fPalette->SetMin(0);
+      fPalette->SetMax(hlimit);
+
    }
    return fPalette;
 }
