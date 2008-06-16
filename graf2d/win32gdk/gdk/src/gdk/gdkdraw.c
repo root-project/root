@@ -109,6 +109,8 @@ void gdk_drawable_unref(GdkDrawable * drawable)
 {
    GdkDrawablePrivate *private = (GdkDrawablePrivate *) drawable;
 
+   if ((drawable == NULL) || (private->ref_count <= 0))
+      return;
    g_return_if_fail(drawable != NULL);
    g_return_if_fail(private->ref_count > 0);
 

@@ -338,7 +338,7 @@ void gdk_event_free(GdkEvent * event)
 
    g_assert(event_chunk != NULL);	/* paranoid */
 
-   if (event->any.window)
+   if ((event->any.window) && (event->type != GDK_DESTROY))
       gdk_window_unref(event->any.window);
 
    switch (event->any.type) {

@@ -105,6 +105,10 @@ TGWindow::~TGWindow()
    if (fClient) {
       if (fParent == fClient->GetDefaultRoot())
          DestroyWindow();
+#ifdef WIN32
+      else if (fParent && fClient->GetWindowById(fParent->GetId()))
+         DestroyWindow();
+#endif
       fClient->UnregisterWindow(this);
    }
 }
