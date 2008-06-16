@@ -4437,8 +4437,8 @@ static G__value Cint::Internal::G__allocvariable(G__value result, G__value para[
       case 'Z':
          // ROOT special object.
          G__get_offset(var) = (char*) malloc(2 * G__LONGALLOC);
-         *G__get_offset(var) = 0;
-         *(G__get_offset(var) + G__LONGALLOC) = 0;
+         *((long*) G__get_offset(var)) = 0L;
+         *((long*) (G__get_offset(var) + G__LONGALLOC)) = 0L;
          break;
 #endif // G__ROOT
 #ifndef G__OLDIMPLEMENTATION2191
