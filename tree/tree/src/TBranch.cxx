@@ -981,7 +981,7 @@ TBasket* TBranch::GetBasket(Int_t basketnumber)
       fBasketBytes[basketnumber] = basket->ReadBasketBytes(fBasketSeek[basketnumber],file);
    }
    //add branch to cache (if any)
-   TFileCacheRead *pf = GetFile()->GetCacheRead();
+   TFileCacheRead *pf = file ? file->GetCacheRead() : 0;
    if (pf && pf->InheritsFrom(TTreeCache::Class())){
       TTreeCache *tpf = (TTreeCache*)pf;
       tpf->AddBranch(this);
