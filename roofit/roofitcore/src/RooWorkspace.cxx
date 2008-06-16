@@ -1141,9 +1141,10 @@ void RooWorkspace::CodeRepo::Streamer(TBuffer &R__b)
      R__c = R__b.WriteVersion(thisClass::IsA(), kTRUE);
      
      // Stream contents of ClassFiles map
-     R__b << _fmap.size() ;
+     UInt_t count = _fmap.size() ;
+     R__b << count ;
      map<TString,ClassFiles>::iterator iter = _fmap.begin() ;
-     while(iter!=_fmap.end()) {
+     while(iter!=_fmap.end()) {       
        TString key_copy(iter->first) ;
        key_copy.Streamer(R__b) ;
        iter->second._hext.Streamer(R__b) ;
@@ -1154,7 +1155,8 @@ void RooWorkspace::CodeRepo::Streamer(TBuffer &R__b)
      }
      
      // Stream contents of ClassRelInfo map
-     R__b << _c2fmap.size() ;
+     count = _c2fmap.size() ;
+     R__b << count ;
      map<TString,ClassRelInfo>::iterator iter2 = _c2fmap.begin() ;
      while(iter2!=_c2fmap.end()) {
        TString key_copy(iter2->first) ;
