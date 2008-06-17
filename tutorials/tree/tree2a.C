@@ -1,7 +1,9 @@
+#include "TROOT.h"
 #include "TFile.h"
 #include "TTree.h"
 #include "TBrowser.h"
 #include "TH2.h"
+#include "TMath.h"
 #include "TRandom.h"
 #include "TCanvas.h"
 
