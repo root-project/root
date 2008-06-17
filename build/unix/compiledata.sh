@@ -48,8 +48,8 @@ if [ "$ARCH" = "macosx" ] || [ "$ARCH" = "macosxxlc" ] || \
    SOEXT="so"
    if [ $macosx_minor -ge 5 ]; then
       if [ "x`echo $SOFLAGS | grep -- '-install_name'`" != "x" ]; then
-         # If soname is specified, add the library name.
-         SOFLAGS="$OPT -dynamiclib -single_module -undefined dynamic_lookup -install_name \$LibName.$SOEXT"
+         # If install_name is specified, remove it.
+         SOFLAGS="$OPT -dynamiclib -single_module -undefined dynamic_lookup"
       fi
       MACOSXTARGET="MACOSX_DEPLOYMENT_TARGET=10.$macosx_minor"
    elif [ $macosx_minor -ge 3 ]; then
