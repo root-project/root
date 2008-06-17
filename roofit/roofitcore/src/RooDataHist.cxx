@@ -1338,6 +1338,37 @@ void RooDataHist::SetNameTitle(const char *name, const char* title)
 }
 
 
+//_____________________________________________________________________________
+void RooDataHist::printValue(ostream& os) const 
+{
+  // Print value of the dataset, i.e. the sum of weights contained in the dataset
+  os << numEntries(kFALSE) << " bins (" << sumEntries() << " weights)" ;
+}
+
+
+
+
+//_____________________________________________________________________________
+void RooDataHist::printArgs(ostream& os) const 
+{
+  // Print argument of dataset, i.e. the observable names
+
+  os << "[" ;    
+  _iterator->Reset() ;
+  RooAbsArg* arg ;
+  Bool_t first(kTRUE) ;
+  while((arg=(RooAbsArg*)_iterator->Next())) {
+    if (first) {
+      first=kFALSE ;
+    } else {
+      os << "," ;
+    }
+    os << arg->GetName() ;
+  }
+  os << "]" ;
+}
+
+
 
 //_____________________________________________________________________________
 void RooDataHist::printMultiline(ostream& os, Int_t content, Bool_t verbose, TString indent) const 

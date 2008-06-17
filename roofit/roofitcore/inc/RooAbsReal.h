@@ -229,7 +229,7 @@ protected:
   void makeProjectionSet(const RooAbsArg* plotVar, const RooArgSet* allVars, 
 			 RooArgSet& projectedVars, Bool_t silent) const ;
 
-  TString integralNameSuffix(const RooArgSet& iset, const RooArgSet* nset=0, const char* rangeName=0) const ;
+  TString integralNameSuffix(const RooArgSet& iset, const RooArgSet* nset=0, const char* rangeName=0, Bool_t omitEmpty=kFALSE) const ;
 
  public:
   const RooAbsReal* createPlotProjection(const RooArgSet& depVars, const RooArgSet& projVars) const ;
@@ -309,7 +309,7 @@ protected:
    PlotOpt() : drawOptions("L"), scaleFactor(1.0), stype(Relative), projData(0), binProjData(kFALSE), projSet(0), precision(1e-3), 
                shiftToZero(kFALSE),projDataSet(0),rangeLo(0),rangeHi(0),postRangeFracScale(kFALSE),wmode(RooCurve::Extended),
                projectionRangeName(0),curveInvisible(kFALSE), curveName(0),addToCurveName(0),addToWgtSelf(1.),addToWgtOther(1.),
-               numCPU(1),interleave(kTRUE) {} ;
+               numCPU(1),interleave(kTRUE),curveNameSuffix("") {} ;
    Option_t* drawOptions ;
    Double_t scaleFactor ;	 
    ScaleType stype ;
@@ -331,6 +331,7 @@ protected:
    Double_t addToWgtOther ;
    Int_t    numCPU ;
    Bool_t interleave ;
+   const char* curveNameSuffix ; 
   } ;
 
   // Plot implementation functions

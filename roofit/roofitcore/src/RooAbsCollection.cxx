@@ -753,8 +753,18 @@ string RooAbsCollection::contentsString() const
   // Return comma separated list of contained object names as STL string
 
   string retVal ;
-  ostringstream ostr(retVal) ;
-  ostr << *this ;
+  TIterator* iter = createIterator() ;
+  RooAbsArg* arg ;
+  Bool_t isFirst(kTRUE) ;
+  while((arg=(RooAbsArg*)iter->Next())) {
+    if (isFirst) {
+      isFirst=kFALSE ;
+    } else {
+      retVal += "," ;
+    }
+    retVal += arg->GetName() ;
+  }
+  delete iter ;
   return retVal ;
 }
 
@@ -807,18 +817,6 @@ Int_t RooAbsCollection::defaultPrintContents(Option_t* opt) const
   return kName|kClassName|kValue|kExtras ;
 }
 
-
-
-//_____________________________________________________________________________
-RooPrintable::StyleOption RooAbsCollection::defaultPrintStyle(Option_t* opt) const 
-{
-  // Make Print() options to RooPrintable styles
-
-  if (opt && TString(opt).Contains("v")) {
-    return kVerbose ;
-  } 
-  return kStandard ;
-}
 
 
 

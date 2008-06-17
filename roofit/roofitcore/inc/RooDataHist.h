@@ -105,6 +105,8 @@ public:
   void dump2() ;
 
   virtual void printMultiline(ostream& os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const ;
+  virtual void printArgs(ostream& os) const ;
+  virtual void printValue(ostream& os) const ;
 
   void SetName(const char *name) ;
   void SetNameTitle(const char *name, const char* title) ;

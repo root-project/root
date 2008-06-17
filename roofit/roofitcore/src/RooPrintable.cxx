@@ -38,6 +38,7 @@
 #include "Riostream.h"
 #include <iomanip>
 #include "TNamed.h"
+#include "TClass.h"
 
 ClassImp(RooPrintable)
 ;
@@ -169,6 +170,7 @@ void RooPrintable::printMultiline(ostream& /*os*/, Int_t /*contents*/, Bool_t /*
 void RooPrintable::printTree(ostream& /*os*/, TString /*indent*/) const
 {
   // Interface for tree structure printing of object
+  cout << "Tree structure printing not implement for class " << IsA()->GetName() << endl ;
 }
 
 
@@ -212,10 +214,26 @@ Int_t RooPrintable::defaultPrintContents(Option_t* /*opt*/) const
 
 
 //_____________________________________________________________________________
-RooPrintable::StyleOption RooPrintable::defaultPrintStyle(Option_t* /*opt*/) const
+RooPrintable::StyleOption RooPrintable::defaultPrintStyle(Option_t* opt) const
 { 
-  // Default printing style (single line)
-  return kSingleLine ; 
+  if (!opt) {
+    return kSingleLine ;
+  }
+
+  TString o(opt) ;
+  o.ToLower() ;
+
+  if (o.Contains("v")) {
+    return kVerbose ;
+  } else if (o.Contains("s")) {
+    return kStandard ;
+  } else if (o.Contains("i")) {
+    return kInline ;
+  } else if (o.Contains("t")) {
+    return kTreeStructure ;
+  }
+
+  return kSingleLine ;
 }
 
 

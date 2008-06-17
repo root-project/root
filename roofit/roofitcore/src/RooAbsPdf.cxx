@@ -142,6 +142,7 @@
 #include "RooConstraintSum.h"
 #include "RooParamBinning.h"
 #include "RooNumCdf.h"
+#include <string>
 
 ClassImp(RooAbsPdf) 
 ;
@@ -1382,11 +1383,25 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
   const RooArgSet* compSet = (const RooArgSet*) pc.getObject("compSet") ;
   Bool_t haveCompSel = (strlen(compSpec)>0 || compSet) ;
 
+  // Suffix for curve name
+  TString nameSuffix ;
+  if (compSpec && strlen(compSpec)>0) {
+    nameSuffix.Append("_Comp[") ;
+    nameSuffix.Append(compSpec) ;
+    nameSuffix.Append("]") ;    
+  } else if (compSet) {
+    nameSuffix.Append("_Comp[") ;
+    nameSuffix.Append(compSet->contentsString().c_str()) ;
+    nameSuffix.Append("]") ;    
+  }
+
   // Remove PDF-only commands from command list
   pc.stripCmdList(cmdList,"SelectCompSet,SelectCompSpec") ;
   
   // Adjust normalization, if so requested
   if (asymCat) {
+    RooCmdArg cnsuffix("CurveNameSuffix",0,0,0,0,nameSuffix.Data(),0,0,0) ;
+    cmdList.Add(&cnsuffix);
     return  RooAbsReal::plotOn(frame,cmdList) ;
   }
 
@@ -1481,7 +1496,10 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
 
     delete dirSelNodes ;
   }
-  
+
+  RooCmdArg cnsuffix("CurveNameSuffix",0,0,0,0,nameSuffix.Data(),0,0,0) ;
+  cmdList.Add(&cnsuffix);
+
   RooPlot* ret =  RooAbsReal::plotOn(frame,cmdList) ;
   
   // Restore selection status ;

@@ -106,11 +106,8 @@ public:
   virtual void printName(ostream& os) const ;
   virtual void printTitle(ostream& os) const ;
   virtual void printClassName(ostream& os) const ;
-  virtual void printArgs(ostream& os) const ;
-  virtual void printValue(ostream& os) const ;
 
   virtual Int_t defaultPrintContents(Option_t* opt) const ;
-  virtual StyleOption defaultPrintStyle(Option_t* opt) const ;
 
 protected:
 

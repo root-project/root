@@ -872,7 +872,7 @@ void RooFitResult::printArgs(ostream& os) const
 {
   // Print arguments of fit result, i.e. the parameters of the fit
 
-  os << "[ constPars=" << *_constPars << " floatPars=" << *_finalPars << " ]" ;
+  os << "[constPars=" << *_constPars << ",floatPars=" << *_finalPars << "]" ;
 }
 
 
@@ -882,7 +882,7 @@ void RooFitResult::printValue(ostream& os) const
 {
   // Print the value of the fit result, i.e.g the status, minimized FCN, edm and covariance quality code
 
-  os << "status=" << _status << " FCNmin=" << _minNLL << " EDM=" << _edm << " covQual=" << _covQual ;
+  os << "(status=" << _status << ",FCNmin=" << _minNLL << ",EDM=" << _edm << ",covQual=" << _covQual << ")" ;
 }
 
 
@@ -891,7 +891,7 @@ Int_t RooFitResult::defaultPrintContents(Option_t* /*opt*/) const
 {
   // Configure default contents to be printed
 
-  return kName|kClassName|kValue ;
+  return kName|kClassName|kArgs|kValue ;
 }
 
 
@@ -899,10 +899,9 @@ Int_t RooFitResult::defaultPrintContents(Option_t* /*opt*/) const
 RooPrintable::StyleOption RooFitResult::defaultPrintStyle(Option_t* opt) const 
 {
   // Configure mapping of Print() arguments to RooPrintable print styles
-
-  if (opt && TString(opt).Contains("v")) {
-    return kVerbose ;
-  } 
-  return kStandard ;
+  if (!opt || strlen(opt)==0) {
+    return kStandard ;
+  }
+  return RooPrintable::defaultPrintStyle(opt) ;
 }
 

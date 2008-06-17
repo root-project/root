@@ -48,6 +48,7 @@ public:
   virtual TObject* Clone(const char* newname=0) const { 
     return clone(newname?newname:GetName()) ; 
   }
+  virtual RooAbsArg* cloneTree(const char* newname=0) ;
 
   // Accessors to client-server relation information 
   virtual Bool_t isDerived() const { 
@@ -197,8 +198,6 @@ public:
   virtual void printTree(ostream& os, TString indent="") const ;
 
   virtual Int_t defaultPrintContents(Option_t* opt) const ;
-  virtual StyleOption defaultPrintStyle(Option_t* opt) const ;
-
 
   // Accessors to attributes
   void setAttribute(const Text_t* name, Bool_t value=kTRUE) ;

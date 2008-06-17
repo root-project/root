@@ -1298,8 +1298,17 @@ RooPlot *RooTreeData::plotOn(RooPlot *frame, PlotOpt o) const
   // Rename graph if requested
   if (o.histName) {
     graph->SetName(o.histName) ;
+  } else {
+    TString hname(Form("h_%s",GetName())) ;
+    if (o.cutRange && strlen(o.cutRange)>0) {
+      hname.Append(Form("_CutRange[%s]",o.cutRange)) ;
+    } 
+    if (o.cuts && strlen(o.cuts)>0) {
+      hname.Append(Form("_Cut[%s]",o.cuts)) ;
+    } 
+    graph->SetName(hname.Data()) ;
   }
-
+  
   // initialize the frame's normalization setup, if necessary
   frame->updateNormVars(_vars);
 
@@ -1397,6 +1406,15 @@ RooPlot* RooTreeData::plotAsymOn(RooPlot* frame, const RooAbsCategoryLValue& asy
   // Rename graph if requested
   if (o.histName) {
     graph->SetName(o.histName) ;
+  } else {
+    TString hname(Form("h_%s_Asym[%s]",GetName(),asymCat.GetName())) ;
+    if (o.cutRange && strlen(o.cutRange)>0) {
+      hname.Append(Form("_CutRange[%s]",o.cutRange)) ;
+    } 
+    if (o.cuts && strlen(o.cuts)>0) {
+      hname.Append(Form("_Cut[%s]",o.cuts)) ;
+    } 
+    graph->SetName(hname.Data()) ;
   }
 
   // add the RooHist to the specified plot

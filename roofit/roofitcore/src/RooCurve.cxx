@@ -78,8 +78,7 @@ RooCurve::RooCurve(const RooAbsReal &f, RooAbsRealLValue &x, Double_t xlo, Doubl
   // point in of the curve go through zero.
 
   // grab the function's name and title
-  TString name("curve_");
-  name.Append(f.GetName());
+  TString name(f.GetName());
   SetName(name.Data());
   TString title(f.GetTitle());
   SetTitle(title.Data());

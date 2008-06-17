@@ -1035,6 +1035,43 @@ void RooDataSet::printMultiline(ostream& os, Int_t contents, Bool_t verbose, TSt
 }
 
 
+//_____________________________________________________________________________
+void RooDataSet::printValue(ostream& os) const 
+{
+  // Print value of the dataset, i.e. the sum of weights contained in the dataset
+  os << numEntries(kFALSE) << " entries" ;
+  if (isWeighted()) {
+    os << " (" << sumEntries() << " weighted)" ;
+  }
+}
+
+
+
+//_____________________________________________________________________________
+void RooDataSet::printArgs(ostream& os) const 
+{
+  // Print argument of dataset, i.e. the observable names
+
+  os << "[" ;    
+  TIterator* iter = _varsNoWgt.createIterator() ;
+  RooAbsArg* arg ;
+  Bool_t first(kTRUE) ;
+  while((arg=(RooAbsArg*)iter->Next())) {
+    if (first) {
+      first=kFALSE ;
+    } else {
+      os << "," ;
+    }
+    os << arg->GetName() ;
+  }
+  if (_wgtVar) {
+    os << ",weight:" << _wgtVar->GetName() ;
+  }
+  os << "]" ;
+  delete iter ;
+}
+
+
 
 //_____________________________________________________________________________
 void RooDataSet::SetName(const char *name) 

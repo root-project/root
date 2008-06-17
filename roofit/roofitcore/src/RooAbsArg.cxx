@@ -1265,20 +1265,6 @@ Int_t RooAbsArg::defaultPrintContents(Option_t* /*opt*/) const
 
 
 //_____________________________________________________________________________
-RooPrintable::StyleOption RooAbsArg::defaultPrintStyle(Option_t* opt) const 
-{
-  // Define mapping of RooPrintable styles to Print() option strings
-  if (opt && TString(opt).Contains("t")) {
-    return kTreeStructure ;
-  } 
-  if (opt && TString(opt).Contains("v")) {
-    return kVerbose ;
-  } 
-  return kSingleLine ;
-}
-
-
-//_____________________________________________________________________________
 void RooAbsArg::printMultiline(ostream& os, Int_t /*contents*/, Bool_t /*verbose*/, TString indent) const
 {
   // Implement multi-line detailed printing
@@ -1956,4 +1942,34 @@ Bool_t RooAbsArg::addOwnedComponents(const RooArgSet& comps)
     _ownedComponents = new RooArgSet("owned components") ;
   }
   return _ownedComponents->addOwned(comps) ; 
+}
+
+
+
+//_____________________________________________________________________________
+RooAbsArg* RooAbsArg::cloneTree(const char* newname) 
+{
+  // Clone tree expression of objects. All tree nodes will be owned by
+  // the head node return by cloneTree()
+
+  // Clone tree using snapshot
+  RooArgSet* clonedNodes = (RooArgSet*) RooArgSet(*this).snapshot(kTRUE) ;
+
+  // Find the head node in the cloneSet
+  RooAbsArg* head = clonedNodes->find(GetName()) ;
+
+  // Remove the head node from the cloneSet
+  // To release it from the set ownership
+  clonedNodes->remove(*head) ;
+
+  // Add the set as owned component of the head
+  head->addOwnedComponents(*clonedNodes) ;
+
+  // Adjust name of head node if requested
+  if (newname) {
+    head->SetName(newname) ;
+  }
+
+  // Return the head
+  return head ;  
 }

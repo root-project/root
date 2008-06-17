@@ -613,14 +613,14 @@ void RooAbsReal::findInnerMostIntegration(const RooArgSet& allObs, RooArgSet& in
 
 
 //_____________________________________________________________________________
-TString RooAbsReal::integralNameSuffix(const RooArgSet& iset, const RooArgSet* nset, const char* rangeName) const 
+TString RooAbsReal::integralNameSuffix(const RooArgSet& iset, const RooArgSet* nset, const char* rangeName, Bool_t omitEmpty) const 
 {
   // Construct string with unique suffix name to give to integral object that encodes
   // integrated observables, normalization observables and the integration range name
 
   TString name ;
-  name.Append("_Int[") ;
   if (iset.getSize()>0) {
+    name.Append("_Int[") ;
     TIterator* iter = iset.createIterator() ;
     RooAbsArg* arg ;
     Bool_t first(kTRUE) ;
@@ -633,15 +633,17 @@ TString RooAbsReal::integralNameSuffix(const RooArgSet& iset, const RooArgSet* n
       name.Append(arg->GetName()) ;
     }
     delete iter ;
+    if (rangeName) {
+      name.Append("|") ;
+      name.Append(rangeName) ;
+    }
+    name.Append("]");
+  } else if (!omitEmpty) {
+    name.Append("_Int[]") ;
   }
 
-  if (rangeName) {
-    name.Append("|") ;
-    name.Append(rangeName) ;
-  }
-  
-  if (nset && nset->getSize()>0) {
-    name.Append("]_Norm[") ;
+  if (nset && nset->getSize()>0 ) {
+    name.Append("_Norm[") ;
     Bool_t first(kTRUE); 
     TIterator* iter  = nset->createIterator() ;
     RooAbsArg* arg ;
@@ -654,9 +656,8 @@ TString RooAbsReal::integralNameSuffix(const RooArgSet& iset, const RooArgSet* n
       name.Append(arg->GetName()) ;
     }
     delete iter ;
+    name.Append("]") ;
   }
-
-  name.Append("]") ;
 
   return name ;
 }
@@ -796,8 +797,10 @@ const RooAbsReal *RooAbsReal::createPlotProjection(const RooArgSet &dependentVar
   RooArgSet empty;
   if(0 == projectedVars) projectedVars= &empty;
 
-  TString name(GetName()),title(GetTitle());
-  name.Append("Projected");
+  TString name = GetName() ;
+  name += integralNameSuffix(*projectedVars,&normSet,rangeName,kTRUE) ;
+
+  TString title(GetTitle());  
   title.Prepend("Projection of ");
 
   RooRealIntegral *projected= new RooRealIntegral(name.Data(),title.Data(),*theClone,*projectedVars,&normSet,0,rangeName);
@@ -1196,6 +1199,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
   RooCmdConfig pc(Form("RooAbsReal::plotOn(%s)",GetName())) ;
   pc.defineString("drawOption","DrawOption",0,"L") ;
   pc.defineString("projectionRangeName","ProjectionRange",0,"",kTRUE) ;
+  pc.defineString("curveNameSuffix","CurveNameSuffix",0,"") ;
   pc.defineDouble("scaleFactor","Normalization",0,1.0) ;
   pc.defineObject("sliceSet","SliceVars",0) ;
   pc.defineObject("projSet","Project",0) ;
@@ -1237,6 +1241,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
 
   // Extract values from named arguments
   o.drawOptions = pc.getString("drawOption") ;
+  o.curveNameSuffix = pc.getString("curveNameSuffix") ;
   o.scaleFactor = pc.getDouble("scaleFactor") ;
   o.projData = (const RooAbsData*) pc.getObject("projData") ;
   o.binProjData = pc.getInt("binProjData") ;
@@ -1584,9 +1589,22 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
       o.rangeLo = frame->GetXaxis()->GetXmin() ;
       o.rangeHi = frame->GetXaxis()->GetXmax() ;
     }
-
+    
+    // Construct name of curve for data weighed average
+    TString curveName(projection->GetName()) ;
+    curveName.Append(Form("_DataAvg[%s]",projDataSel->get()->contentsString().c_str())) ;
+    // Append slice set specification if any
+    if (sliceSet.getSize()>0) {
+      curveName.Append(Form("_Slice[%s]",sliceSet.contentsString().c_str())) ;      
+    }
+    // Append any suffixes imported from RooAbsPdf::plotOn
+    if (o.curveNameSuffix) {
+      curveName.Append(o.curveNameSuffix) ;
+    }
+    // Curve constructor for data weighted average
     RooCurve *curve = new RooCurve(projection->GetName(),projection->GetTitle(),scaleBind,
 				   o.rangeLo,o.rangeHi,frame->GetNbinsX(),o.precision,o.precision,o.shiftToZero,o.wmode) ;
+    curve->SetName(curveName.Data()) ;
 
     if (dologW(Eval)) {
       cout << endl ;
@@ -1595,9 +1613,13 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
     // Add self to other curve if requested
     if (o.addToCurveName) {
       RooCurve* otherCurve = static_cast<RooCurve*>(frame->findObject(o.addToCurveName,RooCurve::Class())) ;
+
+      // Curve constructor for sum of curves
       RooCurve* sumCurve = new RooCurve(projection->GetName(),projection->GetTitle(),*curve,*otherCurve,o.addToWgtSelf,o.addToWgtOther) ;
+      sumCurve->SetName(Form("%s_PLUS_%s",curve->GetName(),otherCurve->GetName())) ;
       delete curve ;
       curve = sumCurve ;
+      
     }
 
     if (o.curveName) {
@@ -1628,17 +1650,32 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
     }
 
     // create a new curve of our function using the clone to do the evaluations
+    // Curve constructor for regular projections
     RooCurve *curve = new RooCurve(*projection,*plotVar,o.rangeLo,o.rangeHi,frame->GetNbinsX(),
 				   o.scaleFactor,0,o.precision,o.precision,o.shiftToZero,o.wmode);
+
+    // Set default name of curve
+    TString curveName(projection->GetName()) ;
+    if (sliceSet.getSize()>0) {
+      curveName.Append(Form("_Slice[%s]",sliceSet.contentsString().c_str())) ;      
+    }
+    if (o.curveNameSuffix) {
+      // Append any suffixes imported from RooAbsPdf::plotOn
+      curveName.Append(o.curveNameSuffix) ;
+    }
+    curve->SetName(curveName.Data()) ;
+
 
     // Add self to other curve if requested
     if (o.addToCurveName) {
       RooCurve* otherCurve = static_cast<RooCurve*>(frame->findObject(o.addToCurveName,RooCurve::Class())) ;
       RooCurve* sumCurve = new RooCurve(projection->GetName(),projection->GetTitle(),*curve,*otherCurve,o.addToWgtSelf,o.addToWgtOther) ;
+      sumCurve->SetName(Form("%s_PLUS_%s",curve->GetName(),otherCurve->GetName())) ;
       delete curve ;
       curve = sumCurve ;
     }
 
+    // Override name of curve by user name, if specified
     if (o.curveName) {
       curve->SetName(o.curveName) ;
     }
@@ -1825,7 +1862,7 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
 
   // Create a RooFormulaVar representing the asymmetry
   TString asymName(GetName()) ;
-  asymName.Append("Asymmetry[") ;
+  asymName.Append("_Asym[") ;
   asymName.Append(asymCat.GetName()) ;
   asymName.Append("]") ;
   TString asymTitle(asymCat.GetName()) ;
@@ -1893,6 +1930,19 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
       o.rangeHi = frame->GetXaxis()->GetXmax() ;
     }
 
+    // Construct name of curve for data weighed average
+    TString curveName(funcAsym->GetName()) ;
+    curveName.Append(Form("_DataAvg[%s]",projDataSel->get()->contentsString().c_str())) ;
+    // Append slice set specification if any
+    if (sliceSet.getSize()>0) {
+      curveName.Append(Form("_Slice[%s]",sliceSet.contentsString().c_str())) ;      
+    }
+    // Append any suffixes imported from RooAbsPdf::plotOn
+    if (o.curveNameSuffix) {
+      curveName.Append(o.curveNameSuffix) ;
+    }
+
+
     RooCurve *curve = new RooCurve(funcAsym->GetName(),funcAsym->GetTitle(),scaleBind,
 				   o.rangeLo,o.rangeHi,frame->GetNbinsX(),o.precision,o.precision,kFALSE,o.wmode) ;
     dynamic_cast<TAttLine*>(curve)->SetLineColor(2) ;
@@ -1914,6 +1964,18 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
     RooCurve* curve= new RooCurve(*funcAsym,*plotVar,o.rangeLo,o.rangeHi,frame->GetNbinsX(),
 				  o.scaleFactor,0,o.precision,o.precision,kFALSE,o.wmode);
     dynamic_cast<TAttLine*>(curve)->SetLineColor(2) ;
+
+
+    // Set default name of curve
+    TString curveName(funcAsym->GetName()) ;
+    if (sliceSet.getSize()>0) {
+      curveName.Append(Form("_Slice[%s]",sliceSet.contentsString().c_str())) ;      
+    }
+    if (o.curveNameSuffix) {
+      // Append any suffixes imported from RooAbsPdf::plotOn
+      curveName.Append(o.curveNameSuffix) ;
+    }
+    curve->SetName(curveName.Data()) ;
     
     // add this new curve to the specified plot frame
     frame->addPlotable(curve, o.drawOptions);

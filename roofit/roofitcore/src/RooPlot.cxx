@@ -256,8 +256,11 @@ void RooPlot::initialize()
 TString RooPlot::histName() const 
 {
   // Construct automatic name of internal TH1
-
-  return TString(Form("frame_%08x",this)) ;
+  if (_plotVarClone) {    
+    return TString(Form("frame_%s_%08x",_plotVarClone->GetName(),this)) ;
+  } else {
+    return TString(Form("frame_%08d",this)) ;
+  }
 }
 
 
@@ -532,6 +535,45 @@ void RooPlot::printClassName(ostream& os) const
 
 
 //_____________________________________________________________________________
+void RooPlot::printArgs(ostream& os) const 
+{
+  if (_plotVarClone) {
+    os << "[" ;
+    _plotVarClone->printStream(os,kName,kInline) ;
+    os << "]" ;
+  }
+}
+
+
+
+//_____________________________________________________________________________
+void RooPlot::printValue(ostream& os) const 
+{
+  // Print frame arguments
+  os << "(" ;
+  _iterator->Reset();
+  TObject *obj = 0;
+  Bool_t first(kTRUE) ;
+  while((obj= _iterator->Next())) {
+    if (first) {
+      first=kFALSE ;
+    } else {
+      os << "," ;
+    }
+    if(obj->IsA()->InheritsFrom(RooPrintable::Class())) {
+      RooPrintable* po = dynamic_cast<RooPrintable*>(obj) ;
+      po->printStream(os,kClassName|kName,kInline) ;
+    }
+    // is it a TNamed subclass?
+    else {
+      os << obj->ClassName() << "::" << obj->GetName() ;
+    }
+  }  
+  os << ")" ;
+}
+
+
+//_____________________________________________________________________________
 void RooPlot::printMultiline(ostream& os, Int_t /*content*/, Bool_t verbose, TString indent) const 
 {
   // Frame detailed printing
@@ -539,13 +581,13 @@ void RooPlot::printMultiline(ostream& os, Int_t /*content*/, Bool_t verbose, TSt
   TString deeper(indent);
   deeper.Append("    ");
   if(0 != _plotVarClone) {
-    os << indent << "  Plotting ";
-    _plotVarClone->printStream(os,kName|kTitle,kSingleLine,deeper);
+    os << indent << "RooPlot " << GetName() << " (" << GetTitle() << ") plots variable ";
+    _plotVarClone->printStream(os,kName|kTitle,kSingleLine,"");
   }
   else {
-    os << indent << "  No plot variable specified" << endl;
+    os << indent << "RooPlot " << GetName() << " (" << GetTitle() << ") has no associated plot variable" << endl ;
   }
-  os << indent << "  Plot contains " << _items.GetSize() << " object(s)" << endl;
+  os << indent << "  Plot frame contains " << _items.GetSize() << " object(s):" << endl;
 
   if(verbose) {
     _iterator->Reset();
@@ -555,7 +597,7 @@ void RooPlot::printMultiline(ostream& os, Int_t /*content*/, Bool_t verbose, TSt
       // Is this a printable object?      
       if(obj->IsA()->InheritsFrom(RooPrintable::Class())) {
 	RooPrintable* po = dynamic_cast<RooPrintable*>(obj) ;
-	po->printStream(os,kName|kArgs|kExtras,kSingleLine) ;
+	po->printStream(os,kName|kClassName|kArgs|kExtras,kSingleLine) ;
       }
       // is it a TNamed subclass?
       else {
@@ -944,27 +986,11 @@ void RooPlot::SetTitle(const char* title)
 
 
 //_____________________________________________________________________________
-Int_t RooPlot::defaultPrintContents(Option_t* opt) const 
+Int_t RooPlot::defaultPrintContents(Option_t* /*opt*/) const 
 {
   // Define default print options, for a given print style
 
-  if (opt && TString(opt)=="I") {
-    return kName|kClassName|kArgs ;
-  }
-  
-  return kName|kClassName|kValue ;
-}
-
-
-
-//_____________________________________________________________________________
-RooPrintable::StyleOption RooPlot::defaultPrintStyle(Option_t* opt) const 
-{
-  // Define mapping between Print() options and RooPrintable styles
-  if (opt && TString(opt).Contains("v")) {
-    return kVerbose ;
-  } 
-  return kStandard ;
+  return kName|kArgs|kValue ;
 }
 
 
