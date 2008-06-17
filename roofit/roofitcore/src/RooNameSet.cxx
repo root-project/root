@@ -70,7 +70,7 @@ RooNameSet::RooNameSet(const RooArgSet& argSet)
 //_____________________________________________________________________________
 RooNameSet::RooNameSet(const RooNameSet& other) : TObject(other), RooPrintable(other), _nameList()
 {
-  // Copy constructor\
+  // Copy constructor
 
   _len = other._len ;
   _nameList = new char[_len] ;
