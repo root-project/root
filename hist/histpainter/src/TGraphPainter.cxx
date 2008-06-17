@@ -33,9 +33,10 @@ Double_t *gxwork, *gywork, *gxworkl, *gyworkl;
 ClassImp(TGraphPainter);
 
 //______________________________________________________________________________
-//
-// TGraphPainter paints TGraph
-//
+/* Begin_Html
+<center><h2>The graph painter class</h2></center>
+TGraphPainter paints TGraph
+End_Html */
 
 
 //______________________________________________________________________________
@@ -626,7 +627,7 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
    rwymax   = gPad->GetUymax();
    uxmin    = gPad->PadtoX(rwxmin);
    uxmax    = gPad->PadtoX(rwxmax);
-   if (theGraph->GetHistogram()) {
+   if (theGraph->GetHistogram() && !theGraph->InheritsFrom("TGraphPolar")) {
       maximum = theGraph->GetHistogram()->GetMaximum();
       minimum = theGraph->GetHistogram()->GetMinimum();
    } else {
