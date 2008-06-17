@@ -191,6 +191,11 @@
 #pragma link C++ class TEveProjectable+;
 #pragma link C++ class TEveProjected+;
 #pragma link C++ class TEveProjection+;
+#pragma link C++ class TEveProjection::PreScaleEntry_t+;
+#pragma link C++ class std::vector<TEveProjection::PreScaleEntry_t>;
+#pragma link C++ class std::vector<TEveProjection::PreScaleEntry_t>::iterator;
+#pragma link C++ typedef TEveProjection::vPreScale_t;
+#pragma link C++ typedef TEveProjection::vPreScale_i;
 #pragma link C++ class TEveRhoZProjection+;
 #pragma link C++ class TEveRPhiProjection+;
 

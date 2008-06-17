@@ -17,13 +17,16 @@
 #include "TGComboBox.h"
 #include "TGLabel.h"
 
-//______________________________________________________________________________
+//==============================================================================
 // TEveProjectionManagerEditor
+//==============================================================================
+
+//______________________________________________________________________________
 //
 // GUI editor for TEveProjectionManager class.
 //
 
-ClassImp(TEveProjectionManagerEditor)
+ClassImp(TEveProjectionManagerEditor);
 
 //______________________________________________________________________________
 TEveProjectionManagerEditor::TEveProjectionManagerEditor(const TGWindow *p,
@@ -185,7 +188,7 @@ void TEveProjectionManagerEditor::DoType(Int_t type)
 {
    // Slot for setting of projection type.
 
-   fM->SetProjection((TEveProjection::EPType_e)type, 0.001f * fDistortion->GetValue());
+   fM->SetProjection((TEveProjection::EPType_e)type);
    fM->ProjectChildren();
    Update();
 }

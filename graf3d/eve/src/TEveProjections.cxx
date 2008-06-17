@@ -29,11 +29,12 @@ ClassImp(TEveProjection);
 Float_t TEveProjection::fgEps = 0.005f;
 
 //______________________________________________________________________________
-TEveProjection::TEveProjection(TEveVector& center) :
+TEveProjection::TEveProjection() :
    fType          (kPT_Unknown),
    fGeoMode       (kGM_Unknown),
    fName          (0),
-   fCenter        (center.fX, center.fY, center.fZ),
+   fCenter        (),
+   fUsePreScale   (kFALSE),
    fDistortion    (0.0f),
    fFixR          (300), fFixZ          (400),
    fPastFixRFac   (0),   fPastFixZFac   (0),
@@ -56,6 +57,98 @@ void TEveProjection::ProjectVector(TEveVector& v)
    // Project TEveVector.
 
    ProjectPoint(v.fX, v.fY, v.fZ);
+}
+
+//______________________________________________________________________________
+void TEveProjection::PreScalePoint(Float_t& v0, Float_t& v1)
+{
+   // Pre-scale point (v0, v1) in projected coordinates:
+   //   RhoZ ~ (rho, z)
+   //   RPhi ~ (r, phi), scaling phi doesn't make much sense.
+
+   if (!fPreScales[0].empty())
+   {
+      Bool_t invp = kFALSE;
+      if (v0 < 0) {
+         v0    = -v0;
+         invp = kTRUE;
+      }
+      vPreScale_i i = fPreScales[0].begin();
+      while (v0 > i->fMax)
+         ++i;
+      v0 = i->fOffset + (v0 - i->fMin)*i->fScale;
+      if (invp)
+         v0 = -v0;
+   }
+   if (!fPreScales[1].empty())
+   {
+      Bool_t invp = kFALSE;
+      if (v1 < 0) {
+         v1    = -v1;
+         invp = kTRUE;
+      }
+      vPreScale_i i = fPreScales[1].begin();
+      while (v1 > i->fMax)
+         ++i;
+      v1 = i->fOffset + (v1 - i->fMin)*i->fScale;
+      if (invp)
+         v1 = -v1;
+   }
+}
+
+//______________________________________________________________________________
+void TEveProjection::AddPreScaleEntry(Int_t coord, Float_t value, Float_t scale)
+{
+   // Add new scaling range for given coordinate.
+   // Arguments:
+   //  coord    0 ~ x, 1 ~ y;
+   //  value    value of input coordinate from which to apply this scale;
+   //  scale    the scale to apply from value onwards.
+   //
+   // NOTE: If pre-scaling is combined with center-displaced then
+   // the scale of the central region should be 1. This limitation
+   // can be removed but will cost CPU.
+
+   static const TEveException eh("TEveProjection::AddPreScaleEntry ");
+
+   if (coord < 0 || coord > 1)
+      throw (eh + "coordinate out of range.");
+
+   const Float_t infty  = std::numeric_limits<Float_t>::infinity();
+
+   vPreScale_t& vec = fPreScales[coord];
+
+   if (vec.empty())
+   {
+      if (value == 0)
+      {
+         vec.push_back(PreScaleEntry_t(0, infty, 0, scale));
+      }
+      else
+      {
+         vec.push_back(PreScaleEntry_t(0, value, 0, 1));
+         vec.push_back(PreScaleEntry_t(value, infty, value, scale));
+      }
+   }
+   else
+   {
+      PreScaleEntry_t& prev = vec.back();
+      if (value <= prev.fMin)
+         throw (eh + "minimum value not larger than previous one.");
+
+      prev.fMax = value;
+      Float_t offset =  prev.fOffset + (prev.fMax - prev.fMin)*prev.fScale;
+      vec.push_back(PreScaleEntry_t(value, infty, offset, scale));
+   }
+}
+
+//______________________________________________________________________________
+void TEveProjection::ClearPreScales()
+{
+   // Clear all pre-scaling information.
+
+   fPreScales[0].clear();
+   fPreScales[1].clear();
 }
 
 //______________________________________________________________________________
@@ -219,8 +312,8 @@ Float_t TEveProjection::GetScreenVal(Int_t i, Float_t x)
 ClassImp(TEveRhoZProjection);
 
 //______________________________________________________________________________
-TEveRhoZProjection::TEveRhoZProjection(TEveVector& center) :
-   TEveProjection(center)
+TEveRhoZProjection::TEveRhoZProjection() :
+   TEveProjection()
 {
    // Constructor.
 
@@ -230,7 +323,7 @@ TEveRhoZProjection::TEveRhoZProjection(TEveVector& center) :
 
 //______________________________________________________________________________
 void TEveRhoZProjection::ProjectPoint(Float_t& x, Float_t& y, Float_t& z,
-                                      EPProc_e proc )
+                                      EPProc_e proc)
 {
    // Project point.
 
@@ -244,6 +337,9 @@ void TEveRhoZProjection::ProjectPoint(Float_t& x, Float_t& y, Float_t& z,
    }
    if (proc == kPP_Distort || proc == kPP_Full)
    {
+      if (fUsePreScale)
+         PreScalePoint(y, x);
+
       // move to center
       x -= fProjectedCenter.fX;
       y -= fProjectedCenter.fY;
@@ -352,8 +448,8 @@ Bool_t TEveRhoZProjection::AcceptSegment(TEveVector& v1, TEveVector& v2,
 ClassImp(TEveRPhiProjection);
 
 //______________________________________________________________________________
-TEveRPhiProjection::TEveRPhiProjection(TEveVector& center) :
-   TEveProjection(center)
+TEveRPhiProjection::TEveRPhiProjection() :
+   TEveProjection()
 {
    // Constructor.
 
@@ -372,10 +468,20 @@ void TEveRPhiProjection::ProjectPoint(Float_t& x, Float_t& y, Float_t& z,
 
    if (proc != kPP_Plane)
    {
-      x -= fCenter.fX;
-      y -= fCenter.fY;
-      Float_t phi = (x == 0.0f && y == 0.0f) ? 0.0f : ATan2(y, x);
-      Float_t r   = Sqrt(x*x + y*y);
+      Float_t r, phi;
+      if (fUsePreScale)
+      {
+         r   = Sqrt(x*x + y*y);
+         phi = (x == 0.0f && y == 0.0f) ? 0.0f : ATan2(y, x);
+         PreScalePoint(r, phi);
+         x = r*Cos(phi);
+         y = r*Sin(phi);
+      }
+
+      x  -= fCenter.fX;
+      y  -= fCenter.fY;
+      r   = Sqrt(x*x + y*y);
+      phi = (x == 0.0f && y == 0.0f) ? 0.0f : ATan2(y, x);
 
       if (r > fFixR)
          r =  fFixR + fPastFixRScale*(r - fFixR);

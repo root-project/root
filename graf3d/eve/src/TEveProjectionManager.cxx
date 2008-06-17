@@ -50,8 +50,9 @@ TEveProjectionManager::TEveProjectionManager():
 {
    // Constructor.
 
-   fProjection = new TEveRPhiProjection(fCenter);
-   UpdateName();
+   for (Int_t i = 0; i < TEveProjection::kPT_End; ++i)
+      fProjections[i] = 0;
+   SetProjection(TEveProjection::kPT_RPhi);
 }
 
 //______________________________________________________________________________
@@ -60,7 +61,10 @@ TEveProjectionManager::~TEveProjectionManager()
    // Destructor.
    // Destroys also dependent elements.
 
-   if (fProjection) delete fProjection;
+   for (Int_t i = 0; i < TEveProjection::kPT_End; ++i)
+   {
+      delete fProjections[i];
+   }
    while ( ! fDependentEls.empty())
    {
       fDependentEls.front()->Destroy();
@@ -92,32 +96,33 @@ void TEveProjectionManager::UpdateName()
 }
 
 //______________________________________________________________________________
-void TEveProjectionManager::SetProjection(TEveProjection::EPType_e type, Float_t distort)
+void TEveProjectionManager::SetProjection(TEveProjection::EPType_e type)
 {
    // Set projection type and distortion.
 
    static const TEveException eH("TEveProjectionManager::SetProjection ");
 
-   delete fProjection;
-   fProjection = 0;
-
-   switch (type)
+   if (fProjections[type] == 0)
    {
-      case TEveProjection::kPT_RPhi:
+      switch (type)
       {
-         fProjection  = new TEveRPhiProjection(fCenter);
-         break;
+         case TEveProjection::kPT_RPhi:
+         {
+            fProjections[type] = new TEveRPhiProjection();
+            break;
+         }
+         case TEveProjection::kPT_RhoZ:
+         {
+            fProjections[type] = new TEveRhoZProjection();
+            break;
+         }
+         default:
+            throw(eH + "projection type not valid.");
+            break;
       }
-      case TEveProjection::kPT_RhoZ:
-      {
-         fProjection  = new TEveRhoZProjection(fCenter);
-         break;
-      }
-      default:
-         throw(eH + "projection type not valid.");
-         break;
    }
-   fProjection->SetDistortion(distort);
+   fProjection = fProjections[type];
+   fProjection->SetCenter(fCenter);
    UpdateName();
 }
 

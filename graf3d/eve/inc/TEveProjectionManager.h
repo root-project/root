@@ -26,7 +26,9 @@ private:
    TEveProjectionManager& operator=(const TEveProjectionManager&); // Not implemented
 
 protected:
-   TEveProjection* fProjection;     // projection
+   TEveProjection* fProjections[TEveProjection::kPT_End];
+
+   TEveProjection* fProjection;     // current projection
    TEveVector      fCenter;         // center of distortion
    Float_t         fCurrentDepth;   // z depth of object being projected
 
@@ -44,7 +46,7 @@ public:
    void AddDependent(TEveElement* el);
    void RemoveDependent(TEveElement* el);
 
-   void            SetProjection(TEveProjection::EPType_e type, Float_t distort=0);
+   void            SetProjection(TEveProjection::EPType_e type);
    TEveProjection* GetProjection() { return fProjection; }
 
    virtual void    UpdateName();

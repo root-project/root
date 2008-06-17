@@ -14,6 +14,8 @@
 
 #include "TEveVSDStructs.h"
 
+#include <vector>
+
 ////////////////////////////////////////////////////////////////
 //                                                            //
 // TEveProjection                                             //
@@ -23,9 +25,28 @@
 class TEveProjection
 {
 public:
-   enum EPType_e   { kPT_Unknown, kPT_RPhi, kPT_RhoZ };         // type
+   enum EPType_e   { kPT_Unknown, kPT_RPhi, kPT_RhoZ, kPT_End };// type
    enum EPProc_e   { kPP_Plane, kPP_Distort, kPP_Full };        // procedure
    enum EGeoMode_e { kGM_Unknown, kGM_Polygons, kGM_Segments }; // reconstruction of geometry
+
+   struct PreScaleEntry_t
+   {
+      Float_t fMin, fMax;
+      Float_t fOffset;
+      Float_t fScale;
+
+      PreScaleEntry_t() :
+         fMin(0), fMax(0), fOffset(0), fScale(1) {}
+      PreScaleEntry_t(Float_t min, Float_t max, Float_t off, Float_t scale) :
+         fMin(min), fMax(max), fOffset(off), fScale(scale) {}
+
+      virtual ~PreScaleEntry_t() {}
+
+      ClassDef(PreScaleEntry_t, 0);
+   };
+
+   typedef std::vector<PreScaleEntry_t>           vPreScale_t;
+   typedef std::vector<PreScaleEntry_t>::iterator vPreScale_i;
 
 protected:
    EPType_e            fType;          // type
@@ -34,6 +55,9 @@ protected:
 
    TEveVector          fCenter;        // center of distortion
    TEveVector          fZeroPosVal;    // projected origin (0, 0, 0)
+
+   Bool_t              fUsePreScale;   // use pre-scaling
+   vPreScale_t         fPreScales[2];  // scaling before the distortion
 
    Float_t             fDistortion;    // distortion
    Float_t             fFixR;          // radius from which scaling remains constant
@@ -49,7 +73,7 @@ protected:
    TEveVector          fUpLimit;       // convergence of point -infinity
 
 public:
-   TEveProjection(TEveVector& center);
+   TEveProjection();
    virtual ~TEveProjection() {}
 
    virtual   void      ProjectPoint(Float_t&, Float_t&, Float_t&, EPProc_e p = kPP_Full ) = 0;
@@ -69,6 +93,13 @@ public:
    EGeoMode_e          GetGeoMode() { return fGeoMode; }
 
    virtual void        UpdateLimit();
+
+   Bool_t   GetUsePreScale() const   { return fUsePreScale; }
+   void     SetUsePreScale(Bool_t x) { fUsePreScale = x; }
+
+   void     PreScalePoint(Float_t& x, Float_t& y);
+   void     AddPreScaleEntry(Int_t coord, Float_t max_val, Float_t scale);
+   void     ClearPreScales();
 
    void     SetDistortion(Float_t d);
    Float_t  GetDistortion() const { return fDistortion; }
@@ -107,7 +138,7 @@ private:
    TEveVector   fProjectedCenter; // projected center of distortion.
 
 public:
-   TEveRhoZProjection(TEveVector& center);
+   TEveRhoZProjection();
    virtual ~TEveRhoZProjection() {}
 
    virtual   void      ProjectPoint(Float_t& x, Float_t& y, Float_t& z, EPProc_e proc = kPP_Full);
@@ -133,7 +164,7 @@ public:
 class TEveRPhiProjection : public TEveProjection
 {
 public:
-   TEveRPhiProjection(TEveVector& center);
+   TEveRPhiProjection();
    virtual ~TEveRPhiProjection() {}
 
    virtual void ProjectPoint(Float_t& x, Float_t& y, Float_t& z, EPProc_e proc = kPP_Full);
