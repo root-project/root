@@ -210,6 +210,8 @@ Bool_t RooFitTestUnit::runCompTests()
       
       if (_verb) {
 	cout << "comparing RooPlot " << iter->first << " to benchmark " << iter->second << " = " << bmark << endl ;      
+	cout << "reference: " ; iter->first->Print() ;
+	cout << "benchmark: " ; bmark->Print() ;
       }
       
       Stat_t nItems = iter->first->numItems() ;
@@ -222,8 +224,7 @@ Bool_t RooFitTestUnit::runCompTests()
 	if (!objRef) {
 	  cout << "stressRooFit ERROR: cannot retrieve object " << obj->GetName() << " from reference  RooPlot " << iter->second << ", skipping" << endl ;
 	  ret = kFALSE ;
-	  ++iter ;
-	  continue ;
+	  break ;
 	}
 	
 	// Histogram comparisons
@@ -256,7 +257,6 @@ Bool_t RooFitTestUnit::runCompTests()
 	}	
 	
       }
-      
       // Delete RooPlot when comparison is finished to avoid noise in leak checking
       delete iter->first ;
 
