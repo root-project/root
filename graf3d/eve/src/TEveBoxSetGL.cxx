@@ -152,10 +152,16 @@ void TEveBoxSetGL::MakeDisplayList() const
       {
          static TGLQuadric quad;
          Int_t nt = 15; // number of corners
-         gluCylinder(quad.Get(), 1, 0, 1, nt, 1);
+         gluCylinder(quad.Get(), 0, 1, 1, nt, 1);
 
          if (fM->fDrawConeCap)
+         {
+            glPushMatrix();
+            glTranslatef(0, 0, 1);
             gluDisk(quad.Get(), 0, 1, nt, 1);
+            glPopMatrix();
+
+         }
       }
 
       glEndList();
