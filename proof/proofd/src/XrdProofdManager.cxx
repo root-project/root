@@ -2423,7 +2423,7 @@ int XrdProofdManager::DoDirectiveAllowedGroups(char *val, XrdOucStream *cfg, boo
          // Group name is known to the system: add it to the list
          fAllowedGroups.Add(grp.c_str(), new int(st));
       } else {
-         XPDERR("DoDirectiveAllowedUsers: problems getting info for group: '"<<
+         XPDERR("DoDirectiveAllowedGroups: problems getting info for group: '"<<
                  grp<<"' - errno: "<<-rc);
       }
    }
