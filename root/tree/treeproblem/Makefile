@@ -58,15 +58,7 @@ reader$(ExeSuf) :reader.$(ObjSuf)
 #	-Wl,-rpath,`root-config --libdir`
 
 writer$(ExeSuf):writer.$(ObjSuf) Foo.$(DllSuf) 
-ifeq ($(PLATFORM),win32)
-	$(CMDECHO) $(LD) writer.$(ObjSuf) $(LDFLAGS) $(LIBS) Foo.lib $(OutPutOpt)$@
-else
-ifeq ($(PLATFORM),macosx)
-	$(CMDECHO) $(LD) writer.$(ObjSuf) $(LDFLAGS) $(LIBS) Foo.dylib $(OutPutOpt)$@
-else
-	$(CMDECHO) $(LD) writer.$(ObjSuf) $(LDFLAGS) $(LIBS) Foo.so $(OutPutOpt)$@
-endif
-endif
+	$(CMDECHO) $(LD) writer.$(ObjSuf) $(LDFLAGS) $(LIBS) Foo.$(LibSuf) $(OutPutOpt)$@
 
 write.log:  writer$(ExeSuf) Foo.$(DllSuf)
 	$(CMDECHO) root -b -l -q writer.C > write.log

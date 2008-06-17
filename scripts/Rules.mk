@@ -292,6 +292,7 @@ endif
 ifeq ($(ARCH),macosx)
 
 # MacOSX with cc/g++
+export DYLD_LIBRARY_PATH:=$(ROOTTEST_HOME)/scripts:$(DYLD_LIBRARY_PATH)
 CXX           = g++
 ifeq ($(ROOTBUILD),debug)
 CXXFLAGS      += -g -pipe -Wall -fPIC -Wno-long-double -Woverloaded-virtual
@@ -322,6 +323,7 @@ endif
 ifeq ($(ARCH),macosx64)
 
 # MacOSX 64 bit with cc/g++
+export DYLD_LIBRARY_PATH:=$(ROOTTEST_HOME)/scripts:$(DYLD_LIBRARY_PATH)
 CXX           = g++
 ifeq ($(ROOTBUILD),debug)
 CXXFLAGS      += -m64 -g -pipe -Wall -fPIC -Wno-long-double -Woverloaded-virtual
@@ -347,6 +349,9 @@ LDFLAGS       = -m64
 SOFLAGS       = -m64 -dynamiclib -single_module -undefined $(UNDEFOPT)
 DllSuf        = so
 LibSuf        = dylib
+ifeq ($(subst $(MACOSX_MINOR),,01234),01234)
+LibSuf        = so
+endif
 endif
 
 CALLROOTEXE  ?= root.exe
