@@ -3352,15 +3352,18 @@ Int_t TTree::Fill()
       }
       Int_t nwrite = branch->Fill();
       if (nwrite < 0)  {
-         Error("Fill", "Failed filling branch:%s.%s, nbytes=%d", GetName(), branch->GetName(), nwrite);
          if (nerror < 2) {
-            printf(" This error is symptomatic of a Tree created as a memory-resident Tree\n");
-            printf(" Instead of doing:\n");
-            printf("    TTree *T = new TTree(...)\n");
-            printf("    TFile *f = new TFile(...)\n");
-            printf(" you should do:\n");
-            printf("    TFile *f = new TFile(...)\n");
-            printf("    TTree *T = new TTree(...)\n");
+            Error("Fill", "Failed filling branch:%s.%s, nbytes=%d\n"
+                  " This error is symptomatic of a Tree created as a memory-resident Tree\n"
+                  " Instead of doing:\n"
+                  "    TTree *T = new TTree(...)\n"
+                  "    TFile *f = new TFile(...)\n"
+                  " you should do:\n"
+                  "    TFile *f = new TFile(...)\n"
+                  "    TTree *T = new TTree(...)",
+                  GetName(), branch->GetName(), nwrite);
+         } else {
+            Error("Fill", "Failed filling branch:%s.%s, nbytes=%d", GetName(), branch->GetName(), nwrite);
          }
          ++nerror;
       } else {
