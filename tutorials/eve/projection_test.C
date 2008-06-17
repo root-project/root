@@ -14,16 +14,16 @@ void projection_test()
    cam->SetZoomMinMax(0.2, 20);
 
    TGLCameraMarkupStyle* mup = v->GetCameraMarkup();
-   if(mup) mup->SetShow(kFALSE);
+   if (mup) mup->SetShow(kFALSE);
 
    // projections
    TEveProjectionManager* mng = new TEveProjectionManager();
-   gEve->AddElement(mng, s);
+   s->AddElement(mng);
    TEveProjectionAxes* axes = new TEveProjectionAxes(mng);
    axes->SetText("TEveProjections demo");
    axes->SetFontFile("comicbd");
    axes->SetFontSize(20);
-   gEve->AddGlobalElement(axes);
+   s->AddElement(axes);
    gEve->AddToListTree(axes, kTRUE);
    gEve->AddToListTree(mng, kTRUE);
 
@@ -36,7 +36,8 @@ void projection_test()
    TEveGeoShape* gsre = TEveGeoShape::ImportShapeExtract(gse, 0);
    geom->Close();
    delete geom;
-   // gEve->AddToListTree(gsre);
+   gEve->AddGlobalElement(gsre);
+   gEve->GetGlobalScene()->SetRnrState(kFALSE);
    mng->ImportElements(gsre);
 
    TEveLine* line = new TEveLine;
