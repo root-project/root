@@ -16,6 +16,12 @@ ifeq ($(findstring clean,$(MAKECMDGOALS)),)
 -include EventDict.d
 endif
 
+ifeq ($(PLATFORM),macosx)
+ifeq ($(MACOSX_MINOR),) 
+  export MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
+endif
+endif
+
 Event.d: Event.cxx Event.h
 	@touch Event.dd; rmkdepend -f Event.dd -I$(ROOTSYS)/include Event.cxx 2>/dev/null && \
 	cat Event.dd | sed -e s/Event\\\.o/Event\\\.$(ObjSuf)/g > Event.d; rm Event.dd Event.dd.bak
@@ -43,11 +49,13 @@ ifeq ($(ARCH),aix5)
 		$(CMDECHO) /usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
 else
 ifeq ($(PLATFORM),macosx)
-# We need to make both the .dylib and the .so
 		$(CMDECHO) $(LD) $(SOFLAGS) $(EVENTO) $(OutPutOpt) $(EVENTLIB)
+ifneq ($(subst $(MACOSX_MINOR),,1234),1234)
+# We need to make both the .dylib and the .so for 10.1-10.4
 		$(CMDECHO) $(LD) -bundle -undefined $(UNDEFOPT) \
 		   $(LDFLAGS) $(EVENTO) \
 		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
+endif
 else
 ifeq ($(PLATFORM),win32)
 		$(CMDECHO) bindexplib $* $(EVENTO) > $*.def
