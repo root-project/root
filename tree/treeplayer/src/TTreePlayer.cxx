@@ -1110,7 +1110,7 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
       if (draw) {
          TObject* para = fSelector->GetObject();
          fTree->Draw(">>enlist",selection,"entrylist",nentries,firstentry);
-         gROOT->ProcessLineFast(Form("TParallelCoord::SetEntryList((TParallelCoord*)0x%x,enlist)",para));
+         gROOT->ProcessLineFast(Form("TParallelCoord::SetEntryList((TParallelCoord*)%p,enlist)",para));
       }
    }
 

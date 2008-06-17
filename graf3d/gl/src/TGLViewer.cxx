@@ -411,7 +411,7 @@ void TGLViewer::RequestDraw(Short_t LODInput)
    fLOD = LODInput;
 
    if (!gVirtualX->IsCmdThread())
-      gROOT->ProcessLineFast(Form("((TGLViewer *)0x%x)->DoDraw()", this));
+      gROOT->ProcessLineFast(Form("((TGLViewer *)%p)->DoDraw()", this));
    else
       DoDraw();
 }
@@ -762,7 +762,7 @@ Bool_t TGLViewer::RequestSelect(Int_t x, Int_t y, Bool_t trySecSel)
    }
 
    if (!gVirtualX->IsCmdThread())
-      return Bool_t(gROOT->ProcessLineFast(Form("((TGLViewer *)0x%x)->DoSelect(%d, %d, %s)", this, x, y, trySecSel ? "kTRUE" : "kFALSE")));
+      return Bool_t(gROOT->ProcessLineFast(Form("((TGLViewer *)%p)->DoSelect(%d, %d, %s)", this, x, y, trySecSel ? "kTRUE" : "kFALSE")));
    else
       return DoSelect(x, y, trySecSel);
 }
@@ -912,7 +912,7 @@ Bool_t TGLViewer::RequestOverlaySelect(Int_t x, Int_t y)
    }
 
    if (!gVirtualX->IsCmdThread())
-      return Bool_t(gROOT->ProcessLineFast(Form("((TGLViewer *)0x%x)->DoSelect(%d, %d)", this, x, y)));
+      return Bool_t(gROOT->ProcessLineFast(Form("((TGLViewer *)%p)->DoSelect(%d, %d)", this, x, y)));
    else
       return DoOverlaySelect(x, y);
 }
