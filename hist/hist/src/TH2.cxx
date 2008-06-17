@@ -2209,7 +2209,7 @@ TH1 *TH2::ShowBackground(Int_t niter, Option_t *option)
 //   to be implemented (may be)
 
 
-   return (TH1*)gROOT->ProcessLineFast(Form("TSpectrum2::StaticBackground((TH1*)%p,%d,\"%s\")",this,niter,option));
+   return (TH1*)gROOT->ProcessLineFast(Form("TSpectrum2::StaticBackground((TH1*)0x%lx,%d,\"%s\")",this,niter,option));
 }
 
 //______________________________________________________________________________
@@ -2223,7 +2223,7 @@ Int_t TH2::ShowPeaks(Double_t sigma, Option_t *option, Double_t threshold)
    //option="" by default (instead of "goff")
 
 
-   return (Int_t)gROOT->ProcessLineFast(Form("TSpectrum2::StaticSearch((TH1*)%p,%g,\"%s\",%g)",this,sigma,option,threshold));
+   return (Int_t)gROOT->ProcessLineFast(Form("TSpectrum2::StaticSearch((TH1*)0x%lx,%g,\"%s\",%g)",this,sigma,option,threshold));
 }
 
 

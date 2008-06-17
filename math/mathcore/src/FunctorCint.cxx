@@ -173,7 +173,7 @@ FunctorCintHandler<PF>::FunctorCintHandler(void * p, const char * className , co
                Error("ROOT::Math::FunctorCintHandler","No function found in class %s with the signature %s(double ) ",className,derivMethodName);
          }
       } else {
-         Error("ROOT::Math::FunctorCintHandler","can not find any class with name %s at the address %p",className,fPtr);
+         Error("ROOT::Math::FunctorCintHandler","can not find any class with name %s at the address 0x%lx",className,fPtr);
       }
    }
 }
@@ -199,7 +199,7 @@ FunctorCintHandler<PF>::FunctorCintHandler(void * p1, void * p2 ) :    fDim(1) {
       fMethodCall2->InitWithPrototype(funcname2,"double");
 
    if (! fMethodCall->IsValid() ) {
-      Error("ROOT::Math::FunctorCintHandler","No function %s found with the signature double () ( double ) at the address %p",funcname,fPtr);
+      Error("ROOT::Math::FunctorCintHandler","No function %s found with the signature double () ( double ) at the address 0x%lx",funcname,fPtr);
    }
    if (! fMethodCall2->IsValid() ) {
       Error("ROOT::Math::FunctorCintHandler","No free function %s found with the signature double () ( double )",funcname2);
@@ -248,7 +248,7 @@ FunctorCintHandler<PF>::FunctorCintHandler(void * p, unsigned int ndim, const ch
                Error("ROOT::Math::FunctorCintHandler","No function found in class %s with the signature %s(const double *, unsigned int ) ",className,derivMethodName);
          }
       } else {
-         Error("ROOT::Math::FunctorCintHandler","can not find any class with name %s at the address %p",className,fPtr);
+         Error("ROOT::Math::FunctorCintHandler","can not find any class with name %s at the address 0x%lx",className,fPtr);
       }
    }
 }
@@ -339,7 +339,7 @@ inline double FunctorCintHandler<PF>::DoDerivative (const double *x, unsigned in
    //fMethodCall2->ResetParam();
 //    fArgs[0] = (Long_t)x;
 //    fArgs[1] = (Long_t)&ipar;
-   char * params = Form(" %p ,  %d",x,ipar);
+   char * params = Form(" 0x%lx ,  %d",x,ipar);
    //fMethodCall2->SetParamPtrs(fArgs);
 
    double result = 0; 
