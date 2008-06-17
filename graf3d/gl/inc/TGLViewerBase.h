@@ -112,6 +112,8 @@ public:
    // Low-level methods
    virtual void PreRender();
    virtual void Render();
+   virtual void RenderNonSelected();
+   virtual void RenderSelected();
    virtual void RenderOverlay();
    virtual void PostRender();
 

@@ -349,6 +349,16 @@ void TGLViewerBase::Render()
    // - render opaque selected objects from all scenes (with highlight)
    // - render transparent selected objects from all scenes (with highlight)
 
+   RenderNonSelected();
+   glClear(GL_DEPTH_BUFFER_BIT);
+   RenderSelected();
+}
+
+//______________________________________________________________________
+void TGLViewerBase::RenderNonSelected()
+{
+   // Render non-selected objects from all scenes.
+
    SubRenderScenes(&TGLSceneBase::RenderOpaque);
 
    glDepthMask(GL_FALSE);
@@ -360,7 +370,13 @@ void TGLViewerBase::Render()
    glDepthMask(GL_TRUE);
    glDisable(GL_BLEND);
 
-   glClear(GL_DEPTH_BUFFER_BIT);
+   TGLUtil::CheckError("TGLViewerBase::RenderNonSelected - pre exit check");
+}
+
+//______________________________________________________________________
+void TGLViewerBase::RenderSelected()
+{
+   // Render selected objects from all scenes.
 
    SubRenderScenes(&TGLSceneBase::RenderSelOpaque);
 
@@ -373,7 +389,7 @@ void TGLViewerBase::Render()
    glDepthMask(GL_TRUE);
    glDisable(GL_BLEND);
 
-   TGLUtil::CheckError("TGLViewerBase::Render - pre exit check");
+   TGLUtil::CheckError("TGLViewerBase::RenderSelected - pre exit check");
 }
 
 //______________________________________________________________________

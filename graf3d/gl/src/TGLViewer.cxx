@@ -486,9 +486,11 @@ void TGLViewer::DoDraw()
 
    PreRender();
 
-   Render();
-
+   RenderNonSelected();
    DrawGuides();
+   glClear(GL_DEPTH_BUFFER_BIT);
+   RenderSelected();
+
    glClear(GL_DEPTH_BUFFER_BIT);
    RenderOverlay();
    DrawCameraMarkup();
@@ -606,7 +608,7 @@ void TGLViewer::DrawGuides()
       TGLUtil::DrawSphere(fCamera->GetCenterVec(), radius, rgba);
       disabled = kTRUE;
    }
-   if(fAxesDepthTest && disabled)
+   if (fAxesDepthTest && disabled)
    {
       glEnable(GL_DEPTH_TEST);
       disabled = kFALSE;
@@ -617,7 +619,7 @@ void TGLViewer::DrawGuides()
       disabled = kTRUE;
    }
    TGLUtil::DrawSimpleAxes(*fCamera, fOverallBoundingBox, fAxesType);
-   if(disabled)
+   if (disabled)
       glEnable(GL_DEPTH_TEST);
 }
 
