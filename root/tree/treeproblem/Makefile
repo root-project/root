@@ -10,6 +10,12 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 LIBS = $(ROOTLIBS)
 
+ifeq ($(PLATFORM),macosx)
+ifeq ($(MACOSX_MINOR),)
+  export MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
+endif
+endif
+
 #all:	Foo.$(DllSuf) reader$(ExeSuf) writer$(ExeSuf)
 #test: check
 
@@ -28,11 +34,13 @@ else
 ifeq ($(ARCH),aix5)
                 $(CMDECHO) /usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
 else
-ifeq ($(ARCH),macosx)
-# We need to make both the .dylib and the .so
-	$(CMDECHO) $(LD) $(SOFLAGS) Foo.$(ObjSuf) FooDict.$(ObjSuf) $(OutPutOpt)  $(subst .$(DllSuf),.dylib,$@)
+ifeq ($(PLATFORM),macosx)
+	$(CMDECHO) $(LD) $(SOFLAGS) Foo.$(ObjSuf) FooDict.$(ObjSuf) $(OutPutOpt)  $(subst .$(DllSuf),.$(LibSuf),$@)
+ifneq ($(subst $(MACOSX_MINOR),,1234),1234)
+# We need to make both the .dylib and the .so for 10.1-10.4
 	$(CMDECHO) $(LD) -bundle -undefined  $(UNDEFOPT) -Wl,-x $(LDFLAGS)  Foo.$(ObjSuf) FooDict.$(ObjSuf)  \
-                   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
+                   $(OutPutOpt) $@
+endif
 else
 ifeq ($(PLATFORM),win32)
 	$(CMDECHO) bindexplib Foo Foo.$(ObjSuf) FooDict.$(ObjSuf) > Foo.def

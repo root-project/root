@@ -32,6 +32,12 @@ EVENT         = Event$(ExeSuf)
 EVENTLIB      = libEvent.$(LibSuf)
 EVENT2LIB     = libEvent_2.$(LibSuf)
 
+ifeq ($(PLATFORM),macosx)
+ifeq ($(MACOSX_MINOR),)
+  export MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
+endif
+endif
+
 schemaRun.ref: schemaRun1.C Event.root 
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l schemaRun1.C 2>&1 \
 	| grep -a -v fType | grep -v 'no dictionary for class' | grep -v Processing | grep -v TRefArray | grep -v TH1F \
@@ -80,11 +86,13 @@ else
 ifeq ($(ARCH),aix5)
 		$(CMDECHO)/usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
 else
-ifeq ($(ARCH),macosx)
-# We need to make both the .dylib and the .so
+ifeq ($(PLATFORM),macosx)
 		$(CMDECHO) $(LD) $(SOFLAGS) $(EVENTO) $(OutPutOpt) $(EVENTLIB)
-		$(CMDECHO) $(LD) -bundle -undefined $(UNDEFOPT)  -Wl,-x $(LDFLAGS) $^ \
+ifneq ($(subst $(MACOSX_MINOR),,1234),1234)
+# We need to make both the .dylib and the .so for 10.1-10.4
+		$(CMDECHO) $(LD) -bundle -undefined $(UNDEFOPT) -Wl,-x $(LDFLAGS) $^ \
 		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
+endif
 else
 ifeq ($(ARCH),win32)
 		$(CMDECHO) bindexplib $* $^ > $*.def
