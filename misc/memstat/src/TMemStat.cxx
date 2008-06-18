@@ -562,7 +562,7 @@ void TMemStat::SelectCode(const char *contlib, const char *contfunction, OperTyp
       for (UInt_t i = 0; i < entries; ++i) {
          if (fSelectedCodeBitmap->TestBitNumber(i))
             continue;
-         const TCodeInfo &info = fManager->fCodeInfoArray[i];
+         const TMemStatCodeInfo &info = fManager->fCodeInfoArray[i];
          if (contlib && (!(info.fLib.Contains(contlib))))
             continue;
          if (contfunction && (!(info.fFunction.Contains(contfunction))))
@@ -576,7 +576,7 @@ void TMemStat::SelectCode(const char *contlib, const char *contfunction, OperTyp
       for (UInt_t i = 0; i < entries; i++) {
          if (!(fSelectedCodeBitmap->TestBitNumber(i)))
             continue;
-         const TCodeInfo&info = fManager->fCodeInfoArray[i];
+         const TMemStatCodeInfo&info = fManager->fCodeInfoArray[i];
          fSelectedCodeBitmap->SetBitNumber(i, kFALSE);
          if (contlib && (!(info.fLib.Contains(contlib))))
             continue;
@@ -618,7 +618,7 @@ void TMemStat::SelectStack(OperType oType)
       for (UInt_t i = 0; i < entries; ++i) {
          if (fSelectedStackBitmap->TestBitNumber(i))
             continue;
-         const TStackInfo &info = fManager->fStackVector[i];
+         const TMemStatStackInfo &info = fManager->fStackVector[i];
          for (UInt_t icode = 0; icode < info.fSize; ++icode) {
             if (fSelectedCodeBitmap->TestBitNumber(info.fSymbolIndexes[icode])) {
                fSelectedStackBitmap->SetBitNumber(i, kTRUE);
@@ -630,7 +630,7 @@ void TMemStat::SelectStack(OperType oType)
       for (UInt_t i = 0; i < entries; ++i) {
          if (!(fSelectedStackBitmap->TestBitNumber(i)))
             continue;
-         const TStackInfo &info = fManager->fStackVector[i];
+         const TMemStatStackInfo &info = fManager->fStackVector[i];
          fSelectedStackBitmap->SetBitNumber(i, kFALSE);
          for (UInt_t icode = 0; icode < info.fSize; ++icode) {
             if (fSelectedCodeBitmap->TestBitNumber(info.fSymbolIndexes[icode])) {
@@ -665,7 +665,7 @@ void TMemStat::SortCode(StatType sortType, StampType stampType)
    for (UInt_t icode = 0; icode < entries; ++icode) {
       if (!(fSelectedCodeBitmap->TestBitNumber(icode)))
          continue;
-      TInfoStamp * info = 0;
+      TMemStatInfoStamp * info = 0;
       switch (stampType) {
       case kCurrent:
          info = &(fManager->fCodeInfoArray[icode].fCurrentStamp);
@@ -730,7 +730,7 @@ void TMemStat::SortStack(StatType sortType, StampType stampType)
    for (UInt_t istack = 0; istack < entries; ++istack) {
       if (!(fSelectedStackBitmap->TestBitNumber(istack)))
          continue;
-      TInfoStamp * info(NULL);
+      TMemStatInfoStamp * info(NULL);
       switch (stampType) {
       case kCurrent:
          info = &(fManager->fStackVector[istack].fCurrentStamp);
@@ -826,7 +826,7 @@ void TMemStat::MakeStackArray()
       return;
 
    delete fStackSummary;
-   fStackSummary = new TInfoStamp();
+   fStackSummary = new TMemStatInfoStamp();
 
    fSelectedStackIndex.clear();
 
@@ -834,7 +834,7 @@ void TMemStat::MakeStackArray()
    for (size_t i = 0; i < csize; ++i) {
       if (fSelectedStackBitmap->TestBitNumber(i)) {
          fSelectedStackIndex.push_back(i);
-         const TStackInfo &info = fManager->fStackVector[i];
+         const TMemStatStackInfo &info = fManager->fStackVector[i];
          fStackSummary->fTotalAllocCount += info.fCurrentStamp.fTotalAllocCount;
          fStackSummary->fTotalAllocSize += info.fCurrentStamp.fTotalAllocSize;
          fStackSummary->fAllocCount += info.fCurrentStamp.fAllocCount;
@@ -889,12 +889,12 @@ void TMemStat::PrintStackWithID(UInt_t _id, UInt_t _deep) const
 
    _deep = !_deep ? fStackDeep : _deep;
 
-   const TStackInfo &infoStack = fManager->fStackVector[_id];
+   const TMemStatStackInfo &infoStack = fManager->fStackVector[_id];
    cout << infoStack << endl;
 
    ios::fmtflags old_flags(cout.flags(ios::left));
    for (UInt_t icode = 0, counter = 0; icode < infoStack.fSize; ++icode) {
-      const TCodeInfo &infoCode(fManager->fCodeInfoArray[infoStack.fSymbolIndexes[icode]]);
+      const TMemStatCodeInfo &infoCode(fManager->fCodeInfoArray[infoStack.fSymbolIndexes[icode]]);
       if (!EnabledCode(infoCode))
          continue;
       cout
@@ -908,7 +908,7 @@ void TMemStat::PrintStackWithID(UInt_t _id, UInt_t _deep) const
 }
 
 //______________________________________________________________________________
-Bool_t TMemStat::EnabledCode(const TCodeInfo &info) const
+Bool_t TMemStat::EnabledCode(const TMemStatCodeInfo &info) const
 {
    // Private function
    // disable printing of the predefined code sequence
@@ -959,10 +959,10 @@ TObjArray *TMemStat::MakeGraphCode(StatType statType, Int_t nentries)
    Int_t first = TMath::Max(static_cast<Int_t>(fSelectedCodeIndex.size()) - nentries, 0);
    Double_t cxmax, cymax;
    for (Int_t i = fSelectedCodeIndex.size() - 1; i > first; --i) {
-      TGraph * gr = MakeGraph(statType, fSelectedCodeIndex[i], TInfoStamp::kCode, cxmax, cymax);
+      TGraph * gr = MakeGraph(statType, fSelectedCodeIndex[i], TMemStatInfoStamp::kCode, cxmax, cymax);
       if (!gr)
          continue;
-      TCodeInfo  &cinfo =  fManager->fCodeInfoArray[fSelectedCodeIndex[i]];
+      TMemStatCodeInfo  &cinfo =  fManager->fCodeInfoArray[fSelectedCodeIndex[i]];
       if (cinfo.fFunction.Length() > 0) {
          TString str(cinfo.fFunction);
          if ((UInt_t)(str.Length()) > fMaxStringLength)
@@ -1014,12 +1014,12 @@ TObjArray *TMemStat::MakeGraphStack(StatType statType, Int_t nentries)
    Double_t cxmax(0);
    Double_t cymax(0);
    for (Int_t i = fSelectedStackIndex.size() - 1; i > first; --i) {
-      TGraph * gr = MakeGraph(statType, fSelectedStackIndex[i], TInfoStamp::kStack, cxmax, cymax);
+      TGraph * gr = MakeGraph(statType, fSelectedStackIndex[i], TMemStatInfoStamp::kStack, cxmax, cymax);
       if (!gr)
          continue;
-      TStackInfo &infoStack = fManager->fStackVector[(fSelectedStackIndex[i])];
+      TMemStatStackInfo &infoStack = fManager->fStackVector[(fSelectedStackIndex[i])];
       for (UInt_t icode = 0; icode < infoStack.fSize; icode++) {
-         TCodeInfo &infoCode = fManager->fCodeInfoArray[infoStack.fSymbolIndexes[icode]];
+         TMemStatCodeInfo &infoCode = fManager->fCodeInfoArray[infoStack.fSymbolIndexes[icode]];
          if (EnabledCode(infoCode)) {
             if (infoCode.fFunction) {
                TString str(infoCode.fFunction);

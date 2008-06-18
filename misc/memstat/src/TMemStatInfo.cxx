@@ -13,25 +13,25 @@
 
 /*
       Mem Stat information -
-.     TInfoStamp - counter
+.     TMemStatInfoStamp - counter
                    fTotalAllocCount;  //total number of allocation for stack sequence
                    fTotalAllocSize;   //total size of allocated memory
                    fAllocCount;       //current number of allocation-deallocation
                    fAllocSize;        //current allocated size
-     TCodeInfo
+     TMemStatCodeInfo
      base code inormation - strings - fFunction and fLib (function desription)
                           - stamps  -
-     TInfoStamp  fLastStamp;     // last time stamp info
-     TInfoStamp  fCurrentStamp;  // current  time stamp info
-     TInfoStamp  fMaxStampSize;  // max current size stamp
-     TInfoStamp  fMaxStamp;      // max current size stamp
-     TStackInfo
+     TMemStatInfoStamp  fLastStamp;     // last time stamp info
+     TMemStatInfoStamp  fCurrentStamp;  // current  time stamp info
+     TMemStatInfoStamp  fMaxStampSize;  // max current size stamp
+     TMemStatInfoStamp  fMaxStamp;      // max current size stamp
+     TMemStatStackInfo
      base stack inormation - array of pointers to Code informations
                           - stamps  -
-     TInfoStamp  fLastStamp;     // last time stamp info
-     TInfoStamp  fCurrentStamp;  // current  time stamp info
-     TInfoStamp  fMaxStampSize;  // max current size stamp
-     TInfoStamp  fMaxStamp;      // max current size stamp
+     TMemStatInfoStamp  fLastStamp;     // last time stamp info
+     TMemStatInfoStamp  fCurrentStamp;  // current  time stamp info
+     TMemStatInfoStamp  fMaxStampSize;  // max current size stamp
+     TMemStatInfoStamp  fMaxStamp;      // max current size stamp
 */
 //
 //****************************************************************************//
@@ -44,16 +44,16 @@
 #include "TMemStatDepend.h"
 
 
-ClassImp(TCodeInfo)
-ClassImp(TInfoStamp)
-ClassImp(TStackInfo)
+ClassImp(TMemStatCodeInfo)
+ClassImp(TMemStatInfoStamp)
+ClassImp(TMemStatStackInfo)
 
 //****************************************************************************//
-//                                 TInfoStamp
+//                                 TMemStatInfoStamp
 //****************************************************************************//
 
 //______________________________________________________________________________
-TInfoStamp::TInfoStamp():
+TMemStatInfoStamp::TMemStatInfoStamp():
       fTotalAllocCount(0),  //total number of allocation for stack sequence
       fTotalAllocSize(0),   //total size of allocated memory
       fAllocCount(0),       //current number of allocation-deallocation
@@ -65,18 +65,18 @@ TInfoStamp::TInfoStamp():
 }
 
 //______________________________________________________________________________
-TInfoStamp::~TInfoStamp()
+TMemStatInfoStamp::~TMemStatInfoStamp()
 {
 }
 
 //______________________________________________________________________________
-void TInfoStamp::Print(Option_t* /*option*/) const
+void TMemStatInfoStamp::Print(Option_t* /*option*/) const
 {
    cout << *this << endl;
 }
 
 //______________________________________________________________________________
-std::ostream& operator << (std::ostream &_ostream, const TInfoStamp &_this)
+std::ostream& operator << (std::ostream &_ostream, const TMemStatInfoStamp &_this)
 {
    _ostream
    << std::setw(fields_length[1]) << "ID"
@@ -107,11 +107,11 @@ std::ostream& operator << (std::ostream &_ostream, const TInfoStamp &_this)
 }
 
 //****************************************************************************//
-//                                 TCodeInfo
+//                                 TMemStatCodeInfo
 //****************************************************************************//
 
 //______________________________________________________________________________
-TCodeInfo::TCodeInfo():
+TMemStatCodeInfo::TMemStatCodeInfo():
       fLastStamp(),
       fCurrentStamp(),
       fMaxStampSize(),
@@ -122,14 +122,14 @@ TCodeInfo::TCodeInfo():
       fLib(),
       fCodeID(0)
 {
-   fLastStamp.fStampType    = TInfoStamp::kCode;
-   fCurrentStamp.fStampType = TInfoStamp::kCode;
-   fMaxStampSize.fStampType = TInfoStamp::kCode;
-   fMaxStamp.fStampType     = TInfoStamp::kCode;
+   fLastStamp.fStampType    = TMemStatInfoStamp::kCode;
+   fCurrentStamp.fStampType = TMemStatInfoStamp::kCode;
+   fMaxStampSize.fStampType = TMemStatInfoStamp::kCode;
+   fMaxStamp.fStampType     = TMemStatInfoStamp::kCode;
 }
 
 //______________________________________________________________________________
-void TCodeInfo::Inc(Int_t memSize)
+void TMemStatCodeInfo::Inc(Int_t memSize)
 {
    fCurrentStamp.Inc(memSize);
    if (fCurrentStamp.fAllocCount > fMaxStamp.fAllocCount)
@@ -139,7 +139,7 @@ void TCodeInfo::Inc(Int_t memSize)
 }
 
 //______________________________________________________________________________
-void TCodeInfo::SetInfo(void *info)
+void TMemStatCodeInfo::SetInfo(void *info)
 {
    //  Get function realname from info descriptor
 
@@ -150,7 +150,7 @@ void TCodeInfo::SetInfo(void *info)
 }
 
 //______________________________________________________________________________
-void TCodeInfo::Print(Option_t * /*option*/) const
+void TMemStatCodeInfo::Print(Option_t * /*option*/) const
 {
    StreemCurrAndMax(cout, *this) << endl;
 
@@ -159,21 +159,21 @@ void TCodeInfo::Print(Option_t * /*option*/) const
 }
 
 //______________________________________________________________________________
-void TCodeInfo::MakeStamp(Int_t stampNumber)
+void TMemStatCodeInfo::MakeStamp(Int_t stampNumber)
 {
    // make time stamp - only if change
 
    if (fCurrentStamp.Equal(fLastStamp))
       return;
 
-   TInfoStamp &newStamp = TMemStatManager::GetInstance()->AddStamp();
+   TMemStatInfoStamp &newStamp = TMemStatManager::GetInstance()->AddStamp();
    fCurrentStamp.fStampNumber = stampNumber;
    newStamp = fCurrentStamp;
    fLastStamp = newStamp;
 }
 
 //______________________________________________________________________________
-std::ostream& operator << (std::ostream &_ostream, const TCodeInfo &_this)
+std::ostream& operator << (std::ostream &_ostream, const TMemStatCodeInfo &_this)
 {
    _ostream
    << _this.fFunction.Data()
@@ -188,7 +188,7 @@ std::ostream& operator << (std::ostream &_ostream, const TCodeInfo &_this)
 //****************************************************************************//
 
 //______________________________________________________________________________
-TStackInfo::TStackInfo():
+TMemStatStackInfo::TMemStatStackInfo():
       TObject(),
       fSize(0),
       fLastStamp(),
@@ -200,14 +200,14 @@ TStackInfo::TStackInfo():
       fSymbolIndexes(0),
       fStackID(0)
 {
-   fLastStamp.fStampType    = TInfoStamp::kStack;
-   fCurrentStamp.fStampType = TInfoStamp::kStack;
-   fMaxStampSize.fStampType = TInfoStamp::kStack;
-   fMaxStamp.fStampType     = TInfoStamp::kStack;
+   fLastStamp.fStampType    = TMemStatInfoStamp::kStack;
+   fCurrentStamp.fStampType = TMemStatInfoStamp::kStack;
+   fMaxStampSize.fStampType = TMemStatInfoStamp::kStack;
+   fMaxStamp.fStampType     = TMemStatInfoStamp::kStack;
 }
 
 //______________________________________________________________________________
-void TStackInfo::Init(int stacksize, void **stackptrs, TMemStatManager *manager, Int_t ID)
+void TMemStatStackInfo::Init(int stacksize, void **stackptrs, TMemStatManager *manager, Int_t ID)
 {
    //Initialize the stack
    fStackID = ID;
@@ -220,7 +220,7 @@ void TStackInfo::Init(int stacksize, void **stackptrs, TMemStatManager *manager,
    fSymbolIndexes = new UInt_t[stacksize];
 
    for (Int_t i = 0; i < stacksize; ++i) {
-      TCodeInfo & cinfo =  manager->GetCodeInfo(stackptrs[i]);
+      TMemStatCodeInfo & cinfo =  manager->GetCodeInfo(stackptrs[i]);
       if (cinfo.fCode == 0)
          cinfo.SetInfo(stackptrs[i]);
 
@@ -229,7 +229,7 @@ void TStackInfo::Init(int stacksize, void **stackptrs, TMemStatManager *manager,
 }
 
 //______________________________________________________________________________
-int TStackInfo::Equal(unsigned int size, void **ptr)
+int TMemStatStackInfo::Equal(unsigned int size, void **ptr)
 {
    // Return 0 if stack information not equal otherwise return 1.
 
@@ -242,7 +242,7 @@ int TStackInfo::Equal(unsigned int size, void **ptr)
 }
 
 //______________________________________________________________________________
-Bool_t TInfoStamp::Equal(TInfoStamp&stamp)
+Bool_t TMemStatInfoStamp::Equal(TMemStatInfoStamp&stamp)
 {
    if (fTotalAllocCount != stamp.fTotalAllocCount)
       return kFALSE;
@@ -252,21 +252,21 @@ Bool_t TInfoStamp::Equal(TInfoStamp&stamp)
 }
 
 //______________________________________________________________________________
-void TStackInfo::MakeStamp(Int_t stampNumber)
+void TMemStatStackInfo::MakeStamp(Int_t stampNumber)
 {
    // make time stamp - only if change
 
    if (fCurrentStamp.Equal(fLastStamp))
       return;
 
-   TInfoStamp &newStamp = TMemStatManager::GetInstance()->AddStamp();
+   TMemStatInfoStamp &newStamp = TMemStatManager::GetInstance()->AddStamp();
    fCurrentStamp.fStampNumber = stampNumber;
    newStamp = fCurrentStamp;
    fLastStamp = newStamp;
 }
 
 //______________________________________________________________________________
-void TStackInfo::Inc(Int_t memSize, TMemStatManager *manager)
+void TMemStatStackInfo::Inc(Int_t memSize, TMemStatManager *manager)
 {
    fCurrentStamp.Inc(memSize);
    if (fCurrentStamp.fAllocCount > fMaxStamp.fAllocCount)
@@ -278,7 +278,7 @@ void TStackInfo::Inc(Int_t memSize, TMemStatManager *manager)
 }
 
 //______________________________________________________________________________
-void TStackInfo::Dec(int memSize, TMemStatManager *manager)
+void TMemStatStackInfo::Dec(int memSize, TMemStatManager *manager)
 {
    if (fCurrentStamp.fAllocCount)
       fCurrentStamp.fAllocCount -= 1;
@@ -288,7 +288,7 @@ void TStackInfo::Dec(int memSize, TMemStatManager *manager)
 }
 
 //______________________________________________________________________________
-std::ostream& operator << (std::ostream &_ostream, const TStackInfo &_this)
+std::ostream& operator << (std::ostream &_ostream, const TMemStatStackInfo &_this)
 {
    return StreemCurrAndMax(_ostream, _this);
 }

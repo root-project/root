@@ -39,11 +39,11 @@
 #include "TObjArray.h"
 // Memstat
 #include "TMemStat.h"
-#include "TMemViewerGUI.h"
+#include "TMemStatViewerGUI.h"
 #include "TMemStatResource.h"
 #include "TMemStatDrawDlg.h"
 
-ClassImp(TMemViewerGUI)
+ClassImp(TMemStatViewerGUI)
 
 using namespace std;
 
@@ -78,14 +78,14 @@ struct SFillListBox : public binary_function<TObject*, TGComboBox*, bool> {
 };
 
 //______________________________________________________________________________
-TMemViewerGUI::TMemViewerGUI(const TGWindow *p, UInt_t w, UInt_t h, Option_t* option):
+TMemStatViewerGUI::TMemStatViewerGUI(const TGWindow *p, UInt_t w, UInt_t h, Option_t* option):
       TGCompositeFrame(p, w, h),
       fViewer(NULL),
       fText(NULL),
       fNmbStackDeep(NULL),
       fNmbSortDeep(NULL)
 {
-   // TMemViewerGUI constructor; fileName specifies the ROOT tree used for drawing
+   // TMemStatViewerGUI constructor; fileName specifies the ROOT tree used for drawing
 
    SetCleanup(kDeepCleanup);
 
@@ -137,7 +137,7 @@ TMemViewerGUI::TMemViewerGUI(const TGWindow *p, UInt_t w, UInt_t h, Option_t* op
 }
 
 //______________________________________________________________________________
-TMemViewerGUI::~TMemViewerGUI()
+TMemStatViewerGUI::~TMemStatViewerGUI()
 {
    Cleanup();
    if (fViewer)
@@ -145,7 +145,7 @@ TMemViewerGUI::~TMemViewerGUI()
 }
 
 //______________________________________________________________________________
-void TMemViewerGUI::Initialize(Option_t* option)
+void TMemStatViewerGUI::Initialize(Option_t* option)
 {
    // initializes the GUI with default settings and opens tree for drawing
 
@@ -155,7 +155,7 @@ void TMemViewerGUI::Initialize(Option_t* option)
 }
 
 //______________________________________________________________________________
-void TMemViewerGUI::MakeContSortStat(TGCompositeFrame *frame)
+void TMemStatViewerGUI::MakeContSortStat(TGCompositeFrame *frame)
 {
    // make windows for Sorting *STAT* selection
 
@@ -167,11 +167,11 @@ void TMemViewerGUI::MakeContSortStat(TGCompositeFrame *frame)
    new TGRadioButton(SortStatGroup, "Alloc Count", rbtnAllocCount);
    new TGRadioButton(SortStatGroup, "Alloc Size", rbtnAllocSize);
    SortStatGroup->SetButton(rbtnTotalAllocCount);
-   SortStatGroup->Connect("Pressed(Int_t)", "TMemViewerGUI", this, "HandleButtonsSortStat(Int_t)");
+   SortStatGroup->Connect("Pressed(Int_t)", "TMemStatViewerGUI", this, "HandleButtonsSortStat(Int_t)");
 }
 
 //______________________________________________________________________________
-void TMemViewerGUI::MakeContSortStamp(TGCompositeFrame *frame)
+void TMemStatViewerGUI::MakeContSortStamp(TGCompositeFrame *frame)
 {
    // make windows for Sorting *STAMP* selection
 
@@ -182,11 +182,11 @@ void TMemViewerGUI::MakeContSortStamp(TGCompositeFrame *frame)
    new TGRadioButton(SortStampGroup, "Max Size", rbtnMaxSize);
    new TGRadioButton(SortStampGroup, "Max Count", rbtnMaxCount);
    SortStampGroup->SetButton(rbtnCurrent);
-   SortStampGroup->Connect("Pressed(Int_t)", "TMemViewerGUI", this, "HandleButtonsSortStamp(Int_t)");
+   SortStampGroup->Connect("Pressed(Int_t)", "TMemStatViewerGUI", this, "HandleButtonsSortStamp(Int_t)");
 }
 
 //______________________________________________________________________________
-void TMemViewerGUI::MakeStampList(TGCompositeFrame *frame)
+void TMemStatViewerGUI::MakeStampList(TGCompositeFrame *frame)
 {
    // make STAMPs list box
 
@@ -208,7 +208,7 @@ void TMemViewerGUI::MakeStampList(TGCompositeFrame *frame)
    TGComboBox *StampListBox = new TGComboBox(horz, lstStamps);
    StampListBox->Resize(100, 20);
    horz->AddFrame(StampListBox, new TGLayoutHints(kLHintsExpandX));
-   StampListBox->Connect("Selected(const char*)", "TMemViewerGUI", this, "HandleStampSelect(const char*)");
+   StampListBox->Connect("Selected(const char*)", "TMemStatViewerGUI", this, "HandleStampSelect(const char*)");
 
    // filling Combo box of stamps
    TIter iter(StampList);
@@ -229,14 +229,14 @@ void TMemViewerGUI::MakeStampList(TGCompositeFrame *frame)
 }
 
 //______________________________________________________________________________
-void TMemViewerGUI::HandleStampSelect(const char* value)
+void TMemStatViewerGUI::HandleStampSelect(const char* value)
 {
    fViewer->SetCurrentStamp(value);
    MakePrint();
 }
 
 //______________________________________________________________________________
-void  TMemViewerGUI::MakeContDeep(TGCompositeFrame *frame)
+void  TMemStatViewerGUI::MakeContDeep(TGCompositeFrame *frame)
 {
    // create and layout "Deep" controls
 
@@ -252,7 +252,7 @@ void  TMemViewerGUI::MakeContDeep(TGCompositeFrame *frame)
    fNmbStackDeep = new TGNumberEntry(ContDeep, fViewer->fStackDeep, 1, -1, TGNumberFormat::kNESInteger,
                                      TGNumberFormat::kNEANonNegative, TGNumberFormat::kNELLimitMinMax, 1, 50);
    ContDeep->AddFrame(fNmbStackDeep, 0);
-   fNmbStackDeep->Connect("ValueSet(Long_t)", "TMemViewerGUI", this, "HandleDeep(Long_t)");
+   fNmbStackDeep->Connect("ValueSet(Long_t)", "TMemStatViewerGUI", this, "HandleDeep(Long_t)");
    fNmbStackDeep->Resize(60, 20);
 
    // ------ Sort Deep
@@ -263,12 +263,12 @@ void  TMemViewerGUI::MakeContDeep(TGCompositeFrame *frame)
    fNmbSortDeep = new TGNumberEntry(ContDeep, fViewer->fStackDeep, 1, -1, TGNumberFormat::kNESInteger,
                                     TGNumberFormat::kNEANonNegative, TGNumberFormat::kNELLimitMinMax, 1, 50);
    ContDeep->AddFrame(fNmbSortDeep, 0);
-   fNmbSortDeep->Connect("ValueSet(Long_t)", "TMemViewerGUI", this, "HandleDeep(Long_t)");
+   fNmbSortDeep->Connect("ValueSet(Long_t)", "TMemStatViewerGUI", this, "HandleDeep(Long_t)");
    fNmbSortDeep->Resize(60, 20);
 }
 
 //______________________________________________________________________________
-void TMemViewerGUI::MakeDrawButton(TGCompositeFrame *frame)
+void TMemStatViewerGUI::MakeDrawButton(TGCompositeFrame *frame)
 {
    // Creats a "Draw TMemStat" button
 
@@ -281,17 +281,17 @@ void TMemViewerGUI::MakeDrawButton(TGCompositeFrame *frame)
    btnDraw->SetText("&Draw TMemStat");
    horz->AddFrame(btnDraw,
                   new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 2, 2, 10, 10));
-   btnDraw->Connect("Clicked()", "TMemViewerGUI", this, "HandleDrawMemStat()");
+   btnDraw->Connect("Clicked()", "TMemStatViewerGUI", this, "HandleDrawMemStat()");
 }
 
 //______________________________________________________________________________
-void TMemViewerGUI::HandleDrawMemStat()
+void TMemStatViewerGUI::HandleDrawMemStat()
 {
    new TMemStatDrawDlg(gClient->GetRoot(), this, fViewer);
 }
 
 //______________________________________________________________________________
-void TMemViewerGUI::HandleButtonsSortStat(Int_t id)
+void TMemStatViewerGUI::HandleButtonsSortStat(Int_t id)
 {
    // handles mutual radio button exclusions - set sort stat type
 
@@ -299,7 +299,7 @@ void TMemViewerGUI::HandleButtonsSortStat(Int_t id)
 }
 
 //______________________________________________________________________________
-void TMemViewerGUI::HandleButtonsSortStamp(Int_t id)
+void TMemStatViewerGUI::HandleButtonsSortStamp(Int_t id)
 {
    // handles mutual radio button exclusions - set sort stat type
 
@@ -307,7 +307,7 @@ void TMemViewerGUI::HandleButtonsSortStamp(Int_t id)
 }
 
 //______________________________________________________________________________
-void TMemViewerGUI::HandleDeep(Long_t /*id*/)
+void TMemStatViewerGUI::HandleDeep(Long_t /*id*/)
 {
    // handles stack deep
 
@@ -317,7 +317,7 @@ void TMemViewerGUI::HandleDeep(Long_t /*id*/)
 }
 
 //______________________________________________________________________________
-void TMemViewerGUI::ShowGUI()
+void TMemStatViewerGUI::ShowGUI()
 {
    // initialize and show GUI for presentation
 
@@ -325,7 +325,7 @@ void TMemViewerGUI::ShowGUI()
    frmMain->SetWindowName("TMemStat analysis console");
    frmMain->SetCleanup(kDeepCleanup);
 
-   TMemViewerGUI* calibViewer1 = new TMemViewerGUI(frmMain, 800, 600, "read");
+   TMemStatViewerGUI* calibViewer1 = new TMemStatViewerGUI(frmMain, 800, 600, "read");
    frmMain->AddFrame(calibViewer1, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
 
    frmMain->MapSubwindows();
@@ -334,7 +334,7 @@ void TMemViewerGUI::ShowGUI()
 }
 
 //______________________________________________________________________________
-void TMemViewerGUI::MakePrint()
+void TMemStatViewerGUI::MakePrint()
 {
    // make report and load it to the view
    fViewer->MakeReport( fCurLib.c_str(), fCurFunc.c_str(), 0, "/tmp/memstatprint.txt");
@@ -342,7 +342,7 @@ void TMemViewerGUI::MakePrint()
 }
 
 //______________________________________________________________________________
-void TMemViewerGUI::MakeSelection(TGCompositeFrame *frame)
+void TMemStatViewerGUI::MakeSelection(TGCompositeFrame *frame)
 {
    if (!fViewer)
       return;
@@ -358,7 +358,7 @@ void TMemViewerGUI::MakeSelection(TGCompositeFrame *frame)
    TGComboBox *lboxFunctions = new TGComboBox(grp);
    lboxFunctions->Resize(100, 20);
    grp->AddFrame(lboxFunctions, new TGLayoutHints(kLHintsExpandX ));
-   lboxFunctions->Connect("Selected(const char*)", "TMemViewerGUI", this, "HandleFuncSelect(const char*)");
+   lboxFunctions->Connect("Selected(const char*)", "TMemStatViewerGUI", this, "HandleFuncSelect(const char*)");
 
    // Add default selection - select all
    lboxFunctions->AddEntry("*", 0);
@@ -377,7 +377,7 @@ void TMemViewerGUI::MakeSelection(TGCompositeFrame *frame)
    TGComboBox *lboxLibraries = new TGComboBox(grp);
    lboxLibraries->Resize(100, 20);
    grp->AddFrame(lboxLibraries, new TGLayoutHints(kLHintsExpandX ));
-   lboxLibraries->Connect("Selected(const char*)", "TMemViewerGUI", this, "HandleLibSelect(const char*)");
+   lboxLibraries->Connect("Selected(const char*)", "TMemStatViewerGUI", this, "HandleLibSelect(const char*)");
 
    // Add default selection - select all
    lboxLibraries->AddEntry("*", 0);
@@ -390,7 +390,7 @@ void TMemViewerGUI::MakeSelection(TGCompositeFrame *frame)
 }
 
 //______________________________________________________________________________
-void TMemViewerGUI::HandleFuncSelect(const char* _val)
+void TMemStatViewerGUI::HandleFuncSelect(const char* _val)
 {
    fCurFunc = _val;
    // if _val == "*" then we don't sort
@@ -401,7 +401,7 @@ void TMemViewerGUI::HandleFuncSelect(const char* _val)
 }
 
 //______________________________________________________________________________
-void TMemViewerGUI::HandleLibSelect(const char* _val)
+void TMemStatViewerGUI::HandleLibSelect(const char* _val)
 {
    fCurLib = _val;
    // if _val == "*" then we don't sort

@@ -20,9 +20,9 @@
 #pragma link C++ typedef UIntVector_t;
 #pragma link C++ typedef IntVector_t;
 
-#pragma link C++ class TInfoStamp+;
-#pragma link C++ class TCodeInfo+;
-#pragma link C++ class TStackInfo+;
+#pragma link C++ class TMemStatInfoStamp+;
+#pragma link C++ class TMemStatCodeInfo+;
+#pragma link C++ class TMemStatStackInfo+;
 #pragma link C++ class TMemStatManager+;
 #pragma link C++ class TMemStat;
 #pragma link C++ class TMemStatDepend;

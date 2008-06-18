@@ -26,9 +26,8 @@ class TBits;
 class TTree;
 class TMemStatManager;
 class TGraph;
-class TCodeInfo;
-class TStackInfo;
-class TInfoStamp;
+class TMemStatCodeInfo;
+class TMemStatInfoStamp;
 
 typedef std::vector<UInt_t> UIntVector_t;
 typedef std::vector<Int_t> IntVector_t;
@@ -86,7 +85,7 @@ public:
 
 private :
    Bool_t GetMemStat(const char * fname, Int_t entry);
-   Bool_t EnabledCode(const TCodeInfo &info) const;
+   Bool_t EnabledCode(const TMemStatCodeInfo &info) const;
    void MakeCodeArray();
    void MakeStackArray();
    void ProcessOption(Option_t *option);
@@ -104,7 +103,7 @@ private:
    UIntVector_t fSelectedStackIndex;    // vector of indexes of selected items - stack
    TBits *fSelectedCodeBitmap;          // bitmask   of selected items        - code
    TBits *fSelectedStackBitmap;         // bitmask   of selected items - stack
-   TInfoStamp* fStackSummary;           // summary information for selected stack
+   TMemStatInfoStamp* fStackSummary;           // summary information for selected stack
    TFilePtr fFile;                      // current file with information  - stamps
    TTree *fTree;                        // current tree with inforamtion  - stamps
    TTree *fTreeSys;                     // tree with system information

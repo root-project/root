@@ -37,9 +37,9 @@ MEMSTATGUIDS  := $(MODDIRS)/G__MemstatGui.cxx
 MEMSTATGUIDO  := $(MEMSTATGUIDS:.cxx=.o)
 MEMSTATGUIDH  := $(MEMSTATGUIDS:.cxx=.h)
 
-MEMSTATGUIH   := $(MODDIRI)/TMemStat.h $(MODDIRI)/TMemViewerGUI.h \
+MEMSTATGUIH   := $(MODDIRI)/TMemStat.h $(MODDIRI)/TMemStatViewerGUI.h \
                  $(MODDIRI)/TMemStatDrawDlg.h $(MODDIRI)/TMemStatResource.h
-MEMSTATGUIS   := $(MODDIRS)/TMemViewerGUI.cxx $(MODDIRS)/TMemStatDrawDlg.cxx
+MEMSTATGUIS   := $(MODDIRS)/TMemStatViewerGUI.cxx $(MODDIRS)/TMemStatDrawDlg.cxx
 MEMSTATGUIO   := $(MEMSTATGUIS:.cxx=.o)
 
 MEMSTATGUIDEP := $(MEMSTATGUIO:.o=.d) $(MEMSTATGUIDO:.o=.d)

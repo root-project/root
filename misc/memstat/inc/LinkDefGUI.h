@@ -16,7 +16,7 @@
 
 #pragma link C++ typedef StringVector_t;
 
-#pragma link C++ class TMemViewerGUI+;
+#pragma link C++ class TMemStatViewerGUI+;
 #pragma link C++ class TMemStatDrawDlg+;
 
 #endif

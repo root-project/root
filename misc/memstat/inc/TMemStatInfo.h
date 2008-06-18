@@ -16,9 +16,9 @@
 //
 //
 //  Memory statistic information
-//                   TInfoStamp
-//                   TCodeInfo
-//                   TStackInfo
+//                   TMemStatInfoStamp
+//                   TMemStatCodeInfo
+//                   TMemStatStackInfo
 //****************************************************************************//
 
 // STD
@@ -31,7 +31,7 @@
 // Memstat
 #include "TMemStatHelpers.h"
 
-class TStackInfo;
+class TMemStatStackInfo;
 class TMemStatManager;
 
 
@@ -39,15 +39,15 @@ class TMemStatManager;
 const int fields_length[] = {16, 7, 9, 15, 19, 12, 8};
 
 
-struct TInfoStamp: public TObject {
+struct TMemStatInfoStamp: public TObject {
    enum StampType { kCode, kStack };
-   TInfoStamp();              //stamp of memory usage information
-   virtual ~TInfoStamp();
+   TMemStatInfoStamp();              //stamp of memory usage information
+   virtual ~TMemStatInfoStamp();
    void        Print(Option_t* option = "") const;
-   Bool_t      Equal(TInfoStamp&stamp);
+   Bool_t      Equal(TMemStatInfoStamp&stamp);
    void     Inc(Int_t memSize);  //increment counters -when memory allocated
    void     Dec(Int_t memSize);  //decrement counters -when memory deallocated
-   friend std::ostream& operator<< (std::ostream &_ostream, const TInfoStamp &_this);
+   friend std::ostream& operator<< (std::ostream &_ostream, const TMemStatInfoStamp &_this);
 
    Long64_t    fTotalAllocCount;  //total number of allocation for stack sequence
    Long64_t    fTotalAllocSize;   //total size of allocated memory
@@ -57,63 +57,63 @@ struct TInfoStamp: public TObject {
    Int_t       fID;               //code ID number
    Short_t     fStampType;        //stamp Type
 
-   ClassDef(TInfoStamp, 1) // information about stamps
+   ClassDef(TMemStatInfoStamp, 1) // information about stamps
 };
 
 
-struct TCodeInfo: public TObject {
-   TCodeInfo();              // store information about line of code
+struct TMemStatCodeInfo: public TObject {
+   TMemStatCodeInfo();              // store information about line of code
    void SetInfo(void *info);
-   virtual ~TCodeInfo() {
+   virtual ~TMemStatCodeInfo() {
    }
    void MakeStamp(Int_t stampNumber);
    void Print(Option_t* option = "") const;
    void Inc(Int_t memSize);  //increment counters -when memory allocated
    void Dec(Int_t memSize);  //decrement counters -when memory deallocated
-   friend std::ostream& operator<< (std::ostream &_ostream, const TCodeInfo &_this);
+   friend std::ostream& operator<< (std::ostream &_ostream, const TMemStatCodeInfo &_this);
 
-   TInfoStamp  fLastStamp;     // last time stamp info
-   TInfoStamp  fCurrentStamp;  // current  time stamp info
-   TInfoStamp  fMaxStampSize;  // max current size stamp
-   TInfoStamp  fMaxStamp;      // max current size stamp
+   TMemStatInfoStamp  fLastStamp;     // last time stamp info
+   TMemStatInfoStamp  fCurrentStamp;  // current  time stamp info
+   TMemStatInfoStamp  fMaxStampSize;  // max current size stamp
+   TMemStatInfoStamp  fMaxStamp;      // max current size stamp
    Long64_t    fCode;          //pointer to the code
    TString     fInfo;          //pointer desription
    TString     fFunction;      //function
    TString     fLib;           //library
    UInt_t      fCodeID;        //ID number
 
-   ClassDef(TCodeInfo, 1) // a code information structure
+   ClassDef(TMemStatCodeInfo, 1) // a code information structure
 };
 
 
-struct TStackInfo: public TObject {
+struct TMemStatStackInfo: public TObject {
    enum {kStackHistorySize = 50};
    UInt_t      fSize;               // size of the stack
-   TInfoStamp  fLastStamp;          // last time stamp info
-   TInfoStamp  fCurrentStamp;       // current  time stamp info
-   TInfoStamp  fMaxStampSize;       // max current size stamp
-   TInfoStamp  fMaxStamp;           // max current size stamp
+   TMemStatInfoStamp  fLastStamp;          // last time stamp info
+   TMemStatInfoStamp  fCurrentStamp;       // current  time stamp info
+   TMemStatInfoStamp  fMaxStampSize;       // max current size stamp
+   TMemStatInfoStamp  fMaxStamp;           // max current size stamp
    Int_t       fNextHash;           // index  to the next info for given hash value
    void      **fStackSymbols;       //!Stack Symbols
    UInt_t     *fSymbolIndexes;      //[fSize]symbol indexes
    UInt_t      fStackID;            //ID number
 
-   TStackInfo();
-   virtual ~TStackInfo() {}
+   TMemStatStackInfo();
+   virtual ~TMemStatStackInfo() {}
    void     Init(Int_t stacksize, void **stackptrs,  TMemStatManager *manager, Int_t ID); //initialization
    void     Inc(Int_t memSize, TMemStatManager *manager);  //increment counters -when memory allocated
    void     Dec(Int_t memSize, TMemStatManager *manager);  //decrement counters -when memory deallocated
    ULong_t  Hash() const;
    Int_t    Equal(UInt_t size, void **ptr);
    void    *StackAt(UInt_t i);
-   //   TStackInfo *Next();    //index of the next entries
+   //   TMemStatStackInfo *Next();    //index of the next entries
    void     MakeStamp(Int_t stampNumber);
    static inline ULong_t HashStack(UInt_t size, void **ptr) {
       return  TString::Hash(ptr, size*sizeof(void*));
    }
-   friend std::ostream& operator << (std::ostream &_ostream, const TStackInfo &_this);
+   friend std::ostream& operator << (std::ostream &_ostream, const TMemStatStackInfo &_this);
 
-   ClassDef(TStackInfo, 1) // a stack information structure
+   ClassDef(TMemStatStackInfo, 1) // a stack information structure
 };
 
 
@@ -139,29 +139,29 @@ struct TDeleteTable {
 
 
 
-inline void TInfoStamp::Inc(int memSize)
+inline void TMemStatInfoStamp::Inc(int memSize)
 {
    fTotalAllocCount += 1;
    fTotalAllocSize  += memSize;
    fAllocCount += 1;
    fAllocSize  += memSize;
 }
-inline void TInfoStamp::Dec(int memSize)
+inline void TMemStatInfoStamp::Dec(int memSize)
 {
    fAllocCount -= 1;
    fAllocSize  -= memSize;
 }
-inline void TCodeInfo::Dec(int memSize)
+inline void TMemStatCodeInfo::Dec(int memSize)
 {
    fCurrentStamp.Dec(memSize);
 }
 
-inline ULong_t TStackInfo::Hash() const
+inline ULong_t TMemStatStackInfo::Hash() const
 {
    return HashStack(fSize, fStackSymbols);
 }
 
-inline void *TStackInfo::StackAt(UInt_t i)
+inline void *TMemStatStackInfo::StackAt(UInt_t i)
 {
    return i < fSize ? fStackSymbols[i] : 0;
 }

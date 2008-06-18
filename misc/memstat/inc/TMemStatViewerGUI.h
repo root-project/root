@@ -28,7 +28,7 @@ class TGTextView;
 class TGNumberEntry;
 class TGComboBox;
 
-class TMemViewerGUI : public TGCompositeFrame
+class TMemStatViewerGUI : public TGCompositeFrame
 {
 protected:
    TMemStat *fViewer;                           // CalibViewer object used for drawing
@@ -56,8 +56,8 @@ protected:
    void HandleRButtons(Int_t id, Int_t FirstBtnId, T *ViewerSortType);
 
 public:
-   TMemViewerGUI(const TGWindow *p, UInt_t w, UInt_t h, Option_t* option = "read");
-   virtual ~TMemViewerGUI();
+   TMemStatViewerGUI(const TGWindow *p, UInt_t w, UInt_t h, Option_t* option = "read");
+   virtual ~TMemStatViewerGUI();
 
    static void ShowGUI();                               // initialize and show GUI for presentation
 
@@ -69,12 +69,12 @@ public:
    void HandleFuncSelect(const char*);
    void HandleLibSelect(const char*);
 
-   ClassDef(TMemViewerGUI, 0) // a GUI class of memstat
+   ClassDef(TMemStatViewerGUI, 0) // a GUI class of memstat
 };
 
 //______________________________________________________________________________
 template< class T >
-void TMemViewerGUI::HandleRButtons(Int_t id, Int_t FirstBtnId, T *ViewerSortType)
+void TMemStatViewerGUI::HandleRButtons(Int_t id, Int_t FirstBtnId, T *ViewerSortType)
 {
    // handles mutual radio button exclusions
    *ViewerSortType = static_cast<T>(id - FirstBtnId);

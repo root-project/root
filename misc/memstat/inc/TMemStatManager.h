@@ -31,7 +31,7 @@
 
 
 class TTree;
-class TStackInfo;
+class TMemStatStackInfo;
 
 typedef std::vector<Int_t> IntVector_t;
 typedef std::auto_ptr<TFile> TFilePtr;
@@ -39,7 +39,7 @@ typedef std::auto_ptr<TFile> TFilePtr;
 class TMemStatManager: public TObject
 {
 public:
-   typedef std::vector<TCodeInfo> CodeInfoContainer_t;
+   typedef std::vector<TMemStatCodeInfo> CodeInfoContainer_t;
 
    enum StatusBits {
       kUserDisable = BIT(18),       // user disable-enable switch  switch
@@ -63,8 +63,8 @@ public:
 
    static TMemStatManager* GetInstance();       //get instance of class - ONLY ONE INSTANCE
    static void Close();                         //close MemStatManager
-   TInfoStamp &AddStamp();                   //add one stamp to the list of stamps
-   TCodeInfo &GetCodeInfo(void *address);
+   TMemStatInfoStamp &AddStamp();                   //add one stamp to the list of stamps
+   TMemStatCodeInfo &GetCodeInfo(void *address);
    UInt_t GetCodeInfoIndex(void *address) {
       return fCodeInfoMap[address];
    }
@@ -76,8 +76,8 @@ public:
    IntVector_t fSTHashTable; //!pointer to the hash table
    Int_t fCount;        //!number of entries in table
    Int_t fStampNumber;  //current stamp number
-   std::vector<TStackInfo> fStackVector;            // vector withstack symbols
-   std::vector<TInfoStamp> fStampVector;            // vector of stamp information
+   std::vector<TMemStatStackInfo> fStackVector;            // vector withstack symbols
+   std::vector<TMemStatInfoStamp> fStampVector;            // vector of stamp information
    std::vector<TTimeStamp> fStampTime;              // vector of stamp information
    CodeInfoContainer_t  fCodeInfoArray;          // vector with code info
    std::map<const void*, UInt_t> fCodeInfoMap;      //! map of code information
@@ -91,15 +91,15 @@ protected:
    TMemStatDepend::MallocHookFunc_t fPreviousMallocHook;    //!old malloc function
    TMemStatDepend::FreeHookFunc_t fPreviousFreeHook;        //!old free function
    void Init();
-   TStackInfo *STAddInfo(Int_t size, void **stackptrs);
-   TStackInfo *STFindInfo(Int_t size, void **stackptrs);
+   TMemStatStackInfo *STAddInfo(Int_t size, void **stackptrs);
+   TMemStatStackInfo *STFindInfo(Int_t size, void **stackptrs);
    void RehashLeak(Int_t newSize);                  //rehash leak pointers
    void *AddPointer(size_t size, void *ptr = 0);    //add pointer to the table
    void FreePointer(void *p);                       //free pointer
    static void *AllocHook(size_t size, const void* /*caller*/);
    static void FreeHook(void* ptr, const void* /*caller*/);
-   TInfoStamp fLastStamp;           //last written stamp
-   TInfoStamp fCurrentStamp;        //current stamp
+   TMemStatInfoStamp fLastStamp;           //last written stamp
+   TMemStatInfoStamp fCurrentStamp;        //current stamp
    UInt_t fAutoStampSize;           //change of size invoking STAMP
    UInt_t fAutoStampN;              //change of number of allocation  STAMP
    UInt_t fAutoStampDumpSize;       //

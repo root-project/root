@@ -17,10 +17,10 @@
  The current memory statistic is written to the file
 
  Important information  used for visualization
- std::vector<TStackInfo>       fStackVector;    // vector with stack symbols
- std::vector<TInfoStamp>       fStampVector;    // vector of stamp information
+ std::vector<TMemStatStackInfo>       fStackVector;    // vector with stack symbols
+ std::vector<TMemStatInfoStamp>       fStampVector;    // vector of stamp information
  std::vector<TTimeStamp>       fStampTime;      // vector of stamp information
- std::vector<TCodeInfo>        fCodeInfoArray;  // vector with code info
+ std::vector<TMemStatCodeInfo>        fCodeInfoArray;  // vector with code info
 
 */
 //****************************************************************************//
@@ -216,7 +216,7 @@ void TMemStatManager::FreeHook(void* ptr, const void* /*caller*/)
 }
 
 //______________________________________________________________________________
-TStackInfo *TMemStatManager::STAddInfo(int size, void **stackptrs)
+TMemStatStackInfo *TMemStatManager::STAddInfo(int size, void **stackptrs)
 {
    // Add stack information to table.
    // add next stack to table
@@ -225,15 +225,15 @@ TStackInfo *TMemStatManager::STAddInfo(int size, void **stackptrs)
    if (currentSize >= fStackVector.capacity())
       fStackVector.reserve(2*currentSize + 1);
 
-   fStackVector.push_back(TStackInfo());
-   TStackInfo *info = &(fStackVector[currentSize]);
+   fStackVector.push_back(TMemStatStackInfo());
+   TMemStatStackInfo *info = &(fStackVector[currentSize]);
    info->Init(size, stackptrs, this, currentSize);
    info->fStackID = currentSize;
 
    //add info to hash table
    const int hash = int(info->Hash() % g_STHashSize);
    Int_t hashIndex = fSTHashTable[hash];
-   TStackInfo *info2 = NULL;
+   TMemStatStackInfo *info2 = NULL;
 
    if (-1 == hashIndex) {
       fSTHashTable[hash] = info->fStackID;
@@ -253,17 +253,17 @@ TStackInfo *TMemStatManager::STAddInfo(int size, void **stackptrs)
 }
 
 //______________________________________________________________________________
-TStackInfo *TMemStatManager::STFindInfo(int size, void **stackptrs)
+TMemStatStackInfo *TMemStatManager::STFindInfo(int size, void **stackptrs)
 {
    // Try to find stack info in hash table if doesn't find it will add it.
 
-   const int hash = int(TStackInfo::HashStack(size, (void **)stackptrs) % g_STHashSize);
+   const int hash = int(TMemStatStackInfo::HashStack(size, (void **)stackptrs) % g_STHashSize);
 
    if (fSTHashTable[hash] < 0)
       return STAddInfo(size, stackptrs); // hash value not in hash table
 
    Int_t hashIndex = fSTHashTable[hash];
-   TStackInfo *info = NULL;
+   TMemStatStackInfo *info = NULL;
 
    info = &fStackVector[hashIndex];
    while (hashIndex >= 0) {
@@ -315,29 +315,29 @@ void  TMemStatManager::AddStamps(const char * stampname)
 }
 
 //______________________________________________________________________________
-TInfoStamp &TMemStatManager::AddStamp()
+TMemStatInfoStamp &TMemStatManager::AddStamp()
 {
    // add one stamp to the list of stamps
 
    const UInt_t size = fStampVector.size();
-   fStampVector.push_back(TInfoStamp());
-   TInfoStamp &stamp =  fStampVector[size];
+   fStampVector.push_back(TMemStatInfoStamp());
+   TMemStatInfoStamp &stamp =  fStampVector[size];
    stamp.fStampNumber = fStampNumber;
    return stamp;
 }
 
 //______________________________________________________________________________
-TCodeInfo &TMemStatManager::GetCodeInfo(void *address)
+TMemStatCodeInfo &TMemStatManager::GetCodeInfo(void *address)
 {
    //  to be documented
 
-   TCodeInfo *info(NULL);
+   TMemStatCodeInfo *info(NULL);
    const UInt_t index = fCodeInfoMap[address];
    if (index > 0) {
       info = &(fCodeInfoArray[fCodeInfoMap[address]]);
    } else {
       const UInt_t size = fCodeInfoArray.size();
-      fCodeInfoArray.push_back(TCodeInfo());
+      fCodeInfoArray.push_back(TMemStatCodeInfo());
       info = &(fCodeInfoArray[size]);
       fCodeInfoMap[address] = size;
       info->fCodeID = size;
@@ -463,9 +463,9 @@ void *TMemStatManager::AddPointer(size_t  size, void *ptr)
          if (branch->fLeaks[i].fAddress == 0) {
             branch->fLeaks[i].fAddress = p;
             branch->fLeaks[i].fSize = size;
-            void *stptr[TStackInfo::kStackHistorySize + 1];
-            int stackentries = TMemStatDepend::Backtrace(stptr, TStackInfo::kStackHistorySize, fUseGNUBuildinBacktrace);
-            TStackInfo *info = STFindInfo(stackentries, stptr);
+            void *stptr[TMemStatStackInfo::kStackHistorySize + 1];
+            int stackentries = TMemStatDepend::Backtrace(stptr, TMemStatStackInfo::kStackHistorySize, fUseGNUBuildinBacktrace);
+            TMemStatStackInfo *info = STFindInfo(stackentries, stptr);
             info->Inc(size, this);
             if (info->fCurrentStamp.fStampNumber == 0) {
                info->MakeStamp(fStampNumber);  // add stamp after each addition
@@ -521,7 +521,7 @@ void TMemStatManager::FreePointer(void *p)
          if (i < branch->fFirstFreeSpot)
             branch->fFirstFreeSpot = i;
          free(p);
-         TStackInfo *info =
+         TMemStatStackInfo *info =
             &(fStackVector[branch->fLeaks[i].fStackIndex]);
          info->Dec(branch->fLeaks[i].fSize, this);
          fCurrentStamp.Dec(branch->fLeaks[i].fSize);
@@ -547,9 +547,9 @@ void TMemStatManager::FreePointer(void *p)
 
    fMultDeleteTable.fLeaks[fMultDeleteTable.fTableSize].fAddress = 0;
    //void *sp = 0;
-   void *stptr[TStackInfo::kStackHistorySize + 1];
-   int stackentries = TMemStatDepend::Backtrace(stptr, TStackInfo::kStackHistorySize, fUseGNUBuildinBacktrace);
-   TStackInfo *info = STFindInfo(stackentries/*j*/, stptr);
+   void *stptr[TMemStatStackInfo::kStackHistorySize + 1];
+   int stackentries = TMemStatDepend::Backtrace(stptr, TMemStatStackInfo::kStackHistorySize, fUseGNUBuildinBacktrace);
+   TMemStatStackInfo *info = STFindInfo(stackentries/*j*/, stptr);
    info->Dec(0, this);
    fMultDeleteTable.fLeaks[fMultDeleteTable.fTableSize].fStackIndex =
       info->fStackID;
@@ -588,9 +588,9 @@ void TMemStatManager::DumpTo(EDumpTo _DumpTo, Bool_t _clearStamps, const char *_
    Int_t stampNumber = fStampNumber;
 
    // pass ownership to an auto_ptr
-   TInfoStamp *currentStamp(new TInfoStamp(fCurrentStamp));
+   TMemStatInfoStamp *currentStamp(new TMemStatInfoStamp(fCurrentStamp));
    // pass ownership to an auto_ptr
-   auto_ptr<TInfoStamp> currentStamp_(currentStamp);
+   auto_ptr<TMemStatInfoStamp> currentStamp_(currentStamp);
 
    TTree *pDumpTo(NULL);
    bool bNewTree = false;
@@ -619,7 +619,7 @@ void TMemStatManager::DumpTo(EDumpTo _DumpTo, Bool_t _clearStamps, const char *_
       pDumpTo->Branch("StampTime.", "TTimeStamp", &ptimeStamp);
       pDumpTo->Branch("StampName.", "TObjString", &pnameStamp);
       pDumpTo->Branch("StampNumber", &stampNumber, "StampNumber/I");
-      pDumpTo->Branch("CurrentStamp", "TInfoStamp", &currentStamp);
+      pDumpTo->Branch("CurrentStamp", "TMemStatInfoStamp", &currentStamp);
       pDumpTo->Branch("Mem0", &memUsage[0], "Mem0/F");
       pDumpTo->Branch("Mem1", &memUsage[1], "Mem1/F");
       pDumpTo->Branch("Mem2", &memUsage[2], "Mem2/F");
