@@ -20,21 +20,33 @@ Example:
 End_Html
 Begin_Macro(source)
 {
-   TCanvas * CPol = new TCanvas("CPol","TGraphPolar Examples",500,500);
+   TCanvas * CPol = new TCanvas("CPol","TGraphPolar Example",500,500);
 
-   Double_t rmin=0;
-   Double_t rmax=TMath::Pi()*2;
-   Double_t r[1000];
-   Double_t theta[1000];
-
-   TF1 * fp1 = new TF1("fplot","cos(x)",rmin,rmax);
-   for (Int_t ipt = 0; ipt < 1000; ipt++) {
-      r[ipt] = ipt*(rmax-rmin)/1000+rmin;
-      theta[ipt] = fp1->Eval(r[ipt]);
+   Double_t theta[8];
+   Double_t radius[8];
+   Double_t etheta[8];
+   Double_t eradius[8];
+	          
+   for (int i=0; i<8; i++) {
+      theta[i]   = (i+1)*(TMath::Pi()/4.);
+      radius[i]  = (i+1)*0.05; 
+      etheta[i]  = TMath::Pi()/8.;
+      eradius[i] = 0.05; 
    }
-   TGraphPolar * grP1 = new TGraphPolar(1000,r,theta);
+
+   TGraphPolar * grP1 = new TGraphPolar(8, theta, radius, etheta, eradius);
+   grP1->SetTitle("TGraphPolar Example");
+
+   grP1->SetMarkerStyle(20);
+   grP1->SetMarkerSize(2.);
+   grP1->SetMarkerColor(4);
    grP1->SetLineColor(2);
-   grP1->Draw("AOL");
+   grP1->SetLineWidth(3);
+   grP1->Draw("PE");
+
+   // Update, otherwise GetPolargram returns 0
+   CPol->Update();
+   grP1->GetPolargram()->SetToRadian();
 
    return CPol;
 }
@@ -59,18 +71,18 @@ TGraphPolar::TGraphPolar() : TGraphErrors(),
 
 
 //______________________________________________________________________________
-TGraphPolar::TGraphPolar(Int_t n, const Double_t* r, const Double_t* theta,
-                                  const Double_t *er, const Double_t* etheta)
-  : TGraphErrors(n,r,theta,er,etheta),
+TGraphPolar::TGraphPolar(Int_t n, const Double_t* theta, const Double_t* r,
+                                  const Double_t *etheta, const Double_t* er)
+  : TGraphErrors(n,theta,r,etheta,er),
              fOptionAxis(kFALSE),fPolargram(0),fXpol(0),fYpol(0)
 {
    // TGraphPolar constructor.
    //
    // n      : number of points.
-   // r      : radial values.
    // theta  : angular values.
-   // er     : errors on radial values.
+   // r      : radial values.
    // etheta : errors on angular values.
+   // er     : errors on radial values.
 
    SetEditable(kFALSE);
 }
