@@ -2,7 +2,7 @@
 // Author: M.Ivanov   18/06/2007  -- Anar Manafov (A.Manafov@gsi.de) 28/04/2008
 
 /*************************************************************************
- * Copyright (C) 1995-2001, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2008, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -67,14 +67,44 @@ static void *return_address(int _frame)
 {
    // we have a limit on the depth = 35
    switch (_frame) {
-         _RET_ADDR(0);_RET_ADDR(1);_RET_ADDR(2);_RET_ADDR(3);_RET_ADDR(4);_RET_ADDR(5);_RET_ADDR(6);
-         _RET_ADDR(7);_RET_ADDR(8);_RET_ADDR(9);_RET_ADDR(10);_RET_ADDR(11);_RET_ADDR(12);_RET_ADDR(13);
-         _RET_ADDR(14);_RET_ADDR(15);_RET_ADDR(16);_RET_ADDR(17);_RET_ADDR(18);_RET_ADDR(19);_RET_ADDR(20);
-         _RET_ADDR(21);_RET_ADDR(22);_RET_ADDR(23);_RET_ADDR(24);_RET_ADDR(25);_RET_ADDR(26);_RET_ADDR(27);
-         _RET_ADDR(28);_RET_ADDR(29);_RET_ADDR(30);_RET_ADDR(31);_RET_ADDR(32);_RET_ADDR(33);_RET_ADDR(34);
-         _RET_ADDR(35);
-      default:
-         return NULL;
+      _RET_ADDR(0);
+      _RET_ADDR(1);
+      _RET_ADDR(2);
+      _RET_ADDR(3);
+      _RET_ADDR(4);
+      _RET_ADDR(5);
+      _RET_ADDR(6);
+      _RET_ADDR(7);
+      _RET_ADDR(8);
+      _RET_ADDR(9);
+      _RET_ADDR(10);
+      _RET_ADDR(11);
+      _RET_ADDR(12);
+      _RET_ADDR(13);
+      _RET_ADDR(14);
+      _RET_ADDR(15);
+      _RET_ADDR(16);
+      _RET_ADDR(17);
+      _RET_ADDR(18);
+      _RET_ADDR(19);
+      _RET_ADDR(20);
+      _RET_ADDR(21);
+      _RET_ADDR(22);
+      _RET_ADDR(23);
+      _RET_ADDR(24);
+      _RET_ADDR(25);
+      _RET_ADDR(26);
+      _RET_ADDR(27);
+      _RET_ADDR(28);
+      _RET_ADDR(29);
+      _RET_ADDR(30);
+      _RET_ADDR(31);
+      _RET_ADDR(32);
+      _RET_ADDR(33);
+      _RET_ADDR(34);
+      _RET_ADDR(35);
+   default:
+      return NULL;
    }
 }
 
@@ -84,7 +114,7 @@ size_t builtin_return_address(void **_Container, size_t _limit)
    size_t i(0);
    void *addr;
    for (i = 0; (i < _limit) && (addr = return_address(i)); ++i)
-       _Container[i] = addr;
+      _Container[i] = addr;
    return i;
 }
 
@@ -92,7 +122,7 @@ size_t builtin_return_address(void **_Container, size_t _limit)
 TMemStatDepend::MallocHookFunc_t TMemStatDepend::GetMallocHook()
 {
    //malloc function getter
-  
+
    return __malloc_hook;
 }
 
@@ -117,7 +147,7 @@ void TMemStatDepend::SetFreeHook(FreeHookFunc_t p)
 {
    // Set pointer to function replacing free function
 
-  __free_hook = p;
+   __free_hook = p;
 }
 
 //______________________________________________________________________________
@@ -128,15 +158,15 @@ size_t TMemStatDepend::Backtrace(void **trace, size_t dsize, Bool_t _bUseGNUBuil
    // trace - array of pointers
    // return value =  min(stack deepnes, dsize)
 
-  if( _bUseGNUBuildinBacktrace )
-  {
+   if ( _bUseGNUBuildinBacktrace )
+   {
 #if defined(R__GNU) && (defined(R__LINUX) || defined(R__HURD)) && !defined(__alpha__)
-   // Initialize the stack end variable.
-   return builtin_return_address(trace, dsize);
+      // Initialize the stack end variable.
+      return builtin_return_address(trace, dsize);
 #endif
-   return 0;
-  }
-  return backtrace(trace, dsize);
+      return 0;
+   }
+   return backtrace(trace, dsize);
 }
 
 //______________________________________________________________________________
@@ -150,7 +180,7 @@ char** TMemStatDepend::BacktraceSymbols(void **trace, size_t size)
 
 //______________________________________________________________________________
 void TMemStatDepend::GetSymbols(void *_pFunction,
-      TString &_strInfo, TString &_strLib, TString &_strFun, TString &/*_strLine*/)
+                                TString &_strInfo, TString &_strLib, TString &_strFun, TString &/*_strLine*/)
 {
    // get the name of the function and library
 

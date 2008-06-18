@@ -2,13 +2,12 @@
 // Author: M.Ivanov   18/06/2007 -- Anar Manafov (A.Manafov@gsi.de) 28/04/2008
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2008, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-
 #ifndef ROOT_TMEMSTATDEPEND
 #define ROOT_TMEMSTATDEPEND
 
@@ -30,7 +29,7 @@ public:
    //
    typedef void* (*MallocHookFunc_t)(size_t size, const void *caller);
    typedef void (*FreeHookFunc_t)(void* ptr, const void *caller);
-   
+
    static MallocHookFunc_t GetMallocHook();         // malloc function getter
    static FreeHookFunc_t   GetFreeHook();           // free function getter
    static void SetMallocHook(MallocHookFunc_t p);   // malloc function setter

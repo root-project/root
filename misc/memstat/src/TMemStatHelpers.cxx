@@ -1,6 +1,14 @@
 // @(#)root/memstat:$Name$:$Id$
 // Author: Anar Manafov (A.Manafov@gsi.de) 09/05/2008
 
+/*************************************************************************
+ * Copyright (C) 1995-2008, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 // STD
 #include <iomanip>
 #include <sstream>

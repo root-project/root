@@ -2,7 +2,7 @@
 // Author: D.Bertini and M.Ivanov   10/08/2000  -- Anar Manafov (A.Manafov@gsi.de) 28/04/2008
 
 /*************************************************************************
- * Copyright (C) 1995-2001, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2008, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -79,7 +79,7 @@ TMemStatManager::TMemStatManager():
       fSize(65536),              //!size of hash table
       fLeak(NULL),                  //!pointer to the hash table
       fAllocCount(0),            //!number of memory allocation blocks
-      fMultDeleteTable(),        //!pointer to the table      
+      fMultDeleteTable(),        //!pointer to the table
       fDumpTree(0),              //!tree to dump information
       fDumpSysTree(0),           //!tree to dump information
       fUseGNUBuildinBacktrace(kFALSE)
@@ -88,7 +88,7 @@ TMemStatManager::TMemStatManager():
 
    SetBit(kUserDisable, kTRUE);
    fStampCallBack = TMemStatManager::SAddStamps;         //! call back function
-   
+
 }
 
 //______________________________________________________________________________
@@ -159,8 +159,8 @@ TMemStatManager::~TMemStatManager()
    AddStamps("End");
    DumpTo(Tree, kTRUE, "End");
    DumpTo(SysTree, kTRUE, "End");
-   Disable();   
-  
+   Disable();
+
    free_hashtable();
 }
 
@@ -376,14 +376,14 @@ void TMemStatManager::RehashLeak(int newSize)
                   0 ? 16 : newbranch->fTableSize * 2;
                newbranch->fLeaks =
                   (TMemInfo *) realloc(newbranch->fLeaks,
-                        sizeof(TMemInfo) * newTableSize);
+                                       sizeof(TMemInfo) * newTableSize);
                if (!newbranch->fLeaks) {
                   Error("TMemStatManager::AddPointer", "realloc failure");
                   _exit(1);
                }
                memset(newbranch->fLeaks + newbranch->fTableSize, 0,
                       sizeof(TMemInfo) * (newTableSize -
-                            newbranch->fTableSize));
+                                          newbranch->fTableSize));
                newbranch->fTableSize = newTableSize;
             }
             memcpy(&newbranch->fLeaks[newbranch->fAllocCount],
@@ -462,7 +462,7 @@ void *TMemStatManager::AddPointer(size_t  size, void *ptr)
       for (int i = branch->fFirstFreeSpot; i < branch->fTableSize; ++i)
          if (branch->fLeaks[i].fAddress == 0) {
             branch->fLeaks[i].fAddress = p;
-            branch->fLeaks[i].fSize = size;            
+            branch->fLeaks[i].fSize = size;
             void *stptr[TStackInfo::kStackHistorySize + 1];
             int stackentries = TMemStatDepend::Backtrace(stptr, TStackInfo::kStackHistorySize, fUseGNUBuildinBacktrace);
             TStackInfo *info = STFindInfo(stackentries, stptr);
@@ -480,7 +480,7 @@ void *TMemStatManager::AddPointer(size_t  size, void *ptr)
          branch->fTableSize == 0 ? 16 : branch->fTableSize * 2;
       branch->fLeaks =
          (TMemInfo *) realloc(branch->fLeaks,
-               sizeof(TMemInfo) * newTableSize);
+                              sizeof(TMemInfo) * newTableSize);
       if (!branch->fLeaks) {
          Error("TMemStatManager::AddPointer", "realloc failure (2)");
          _exit(1);
@@ -541,7 +541,7 @@ void TMemStatManager::FreePointer(void *p)
          0 ? 16 : fMultDeleteTable.fTableSize * 2;
       fMultDeleteTable.fLeaks =
          (TMemInfo *) realloc(fMultDeleteTable.fLeaks,
-               sizeof(TMemInfo) * newTableSize);
+                              sizeof(TMemInfo) * newTableSize);
       fMultDeleteTable.fAllocCount = newTableSize;
    }
 
@@ -572,7 +572,7 @@ void TMemStatManager::DumpTo(EDumpTo _DumpTo, Bool_t _clearStamps, const char *_
    gSystem->GetMemInfo(&memInfo);
    gSystem->GetProcInfo(&procInfo);
    Float_t memUsage[4] = { memInfo.fMemUsed, memInfo.fSwapUsed,
-         procInfo.fMemResident*0.001, procInfo.fMemVirtual*0.001
+                           procInfo.fMemResident*0.001, procInfo.fMemVirtual*0.001
                          };
    // No need to delete this pointer
    TTimeStamp *ptimeStamp(new TTimeStamp);
@@ -595,22 +595,22 @@ void TMemStatManager::DumpTo(EDumpTo _DumpTo, Bool_t _clearStamps, const char *_
    TTree *pDumpTo(NULL);
    bool bNewTree = false;
    switch (_DumpTo) {
-      case Tree:
-         if (!fDumpTree) {
-            fDumpTree = new TTree("MemStat", "MemStat");
-            bNewTree = true;
-         }
-         pDumpTo = fDumpTree;
-         break;
-      case SysTree:
-         if (!fDumpSysTree) {
-            fDumpSysTree = new TTree("MemSys", "MemSys");
-            bNewTree = true;
-         }
-         pDumpTo = fDumpSysTree;
-         break;
-      default: // TODO: Log me!
-         return;
+   case Tree:
+      if (!fDumpTree) {
+         fDumpTree = new TTree("MemStat", "MemStat");
+         bNewTree = true;
+      }
+      pDumpTo = fDumpTree;
+      break;
+   case SysTree:
+      if (!fDumpSysTree) {
+         fDumpSysTree = new TTree("MemSys", "MemSys");
+         bNewTree = true;
+      }
+      pDumpTo = fDumpSysTree;
+      break;
+   default: // TODO: Log me!
+      return;
    }
 
    if (bNewTree) {
