@@ -295,9 +295,9 @@ ifeq ($(ARCH),macosx)
 export DYLD_LIBRARY_PATH:=$(ROOTTEST_HOME)/scripts:$(DYLD_LIBRARY_PATH)
 CXX           = g++
 ifeq ($(ROOTBUILD),debug)
-CXXFLAGS      += -g -pipe -Wall -fPIC -Wno-long-double -Woverloaded-virtual
+CXXFLAGS      += -g -pipe -Wall -fPIC -Woverloaded-virtual
 else
-CXXFLAGS      += -O -pipe -Wall -fPIC -Wno-long-double -Woverloaded-virtual
+CXXFLAGS      += -O -pipe -Wall -fPIC -Woverloaded-virtual
 endif
 ifeq ($(MACOSX_MINOR),) 
   export MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
@@ -309,14 +309,19 @@ else
 ifeq ($(MACOSX_MINOR),3)
 UNDEFOPT      = dynamic_lookup
 LD            = MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR) c++
+CXXFLAGS     += -Wno-long-double
 else
 UNDEFOPT      = suppress
 LD            = c++
+CXXFLAGS     += -Wno-long-double
 endif
 endif
 SOFLAGS       = -dynamiclib -single_module -undefined $(UNDEFOPT)
 DllSuf        = so
 LibSuf        = dylib
+ifeq ($(subst $(MACOSX_MINOR),,01234),01234)
+LibSuf        = so
+endif
 endif
 
 
@@ -326,9 +331,9 @@ ifeq ($(ARCH),macosx64)
 export DYLD_LIBRARY_PATH:=$(ROOTTEST_HOME)/scripts:$(DYLD_LIBRARY_PATH)
 CXX           = g++
 ifeq ($(ROOTBUILD),debug)
-CXXFLAGS      += -m64 -g -pipe -Wall -fPIC -Wno-long-double -Woverloaded-virtual
+CXXFLAGS      += -m64 -g -pipe -Wall -fPIC -Woverloaded-virtual
 else
-CXXFLAGS      += -m64 -O -pipe -Wall -fPIC -Wno-long-double -Woverloaded-virtual
+CXXFLAGS      += -m64 -O -pipe -Wall -fPIC -Woverloaded-virtual
 endif
 ifeq ($(MACOSX_MINOR),) 
   export MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
