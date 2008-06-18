@@ -61,6 +61,7 @@ options="                    \
    enable_ldap               \
    enable_genvector          \
    enable_mathmore           \
+   enable_memstat            \
    enable_monalisa           \
    enable_mysql              \
    enable_odbc               \
@@ -155,6 +156,7 @@ ASIMAGE          \
 LDAP             \
 GLOBUS_LOCATION  \
 GLITE            \
+MEMSTAT          \
 MONALISA         \
 SRP              \
 SSL              \
@@ -917,6 +919,7 @@ enable/disable options, prefix with either --enable- or --disable-
   ldap               LDAP support, requires (Open)LDAP libs
   genvector          Build the new libGenVector library
   mathmore           Build the new libMathMore extended math library, requires GSL (vers. >= 1.8)
+  memstat            A memory statistics utility, helps to detect memory leaks in large applications.
   minuit2            Build the new libMinuit2 minimizer library
   monalisa           Monalisa monitoring support, requires libapmoncpp
   mysql              MySQL support, requires libmysqlclient
@@ -2641,6 +2644,22 @@ if test ! "x$enable_chirp" = "xno" ; then
 fi
 check_explicit "$enable_chirp" "$enable_chirp_explicit" \
      "Explicitly required Chirp dependencies not fulfilled"
+ 
+######################################################################
+#
+### echo %%% MemStat
+#
+# 
+#
+# Check for platforms
+if test ! "x$enable_memstat" = "xno" ; then
+	# if test "x$platform" = "xlinux"; then
+        if test "x${arch}" = "xlinux"; then
+  		enable_memstat="yes"
+	else
+   		enable_memstat="no"
+	fi
+fi
 
 ######################################################################
 #

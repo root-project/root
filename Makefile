@@ -133,6 +133,9 @@ endif
 ifeq ($(BUILDCHIRP),yes)
 MODULES      += io/chirp
 endif
+ifeq ($(BUILDMEMSTAT),yes)
+MODULES      += misc/memstat
+endif
 ifeq ($(BUILDASIMAGE),yes)
 MODULES      += graf2d/asimage
 endif
@@ -250,7 +253,7 @@ MODULES      += core/unix core/winnt graf2d/x11 graf2d/x11ttf \
                 sql/oracle io/xmlparser math/mathmore cint/reflex cint/cintex \
                 roofit/roofitcore roofit/roofit \
                 math/minuit2 net/monalisa math/fftw sql/odbc math/unuran \
-                geom/gdml graf3d/eve montecarlo/g4root net/glite
+                geom/gdml graf3d/eve montecarlo/g4root net/glite misc/memstat
 MODULES      := $(sort $(MODULES))   # removes duplicates
 endif
 

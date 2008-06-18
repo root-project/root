@@ -138,6 +138,8 @@ GLITELIBDIR    := @glitelibdir@
 GAWLIB         := @glitelib@
 GAW_CPPFLAGS   := $(filter-out /usr/include, @gaw_cppflags@)
 
+BUILDMEMSTAT   := @buildmemstat@
+
 BUILDCHIRP     := @buildchirp@
 CHIRPLIBDIR    := @chirplibdir@
 CHIRPCLILIB    := @chirplib@
