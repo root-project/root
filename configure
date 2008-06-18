@@ -120,8 +120,8 @@ enable_shadowpw=
 enable_soversion=no
 enable_table=no
 enable_thread=yes        # cannot be disabled (not in above options list)
-no_stubs=no         # Complete Dictionaries by default (All stubs)
-no_stubs_test=no    # Complete Dictionaries by default (All stubs)
+no_stubs=no              # complete Dictionaries by default (All stubs)
+no_stubs_test=no         # complete Dictionaries by default (All stubs)
 enable_unuran=no
 enable_winrtdebug=
 enable_xrootd=           # must be set explicitely via --enable-xrootd
@@ -919,7 +919,7 @@ enable/disable options, prefix with either --enable- or --disable-
   ldap               LDAP support, requires (Open)LDAP libs
   genvector          Build the new libGenVector library
   mathmore           Build the new libMathMore extended math library, requires GSL (vers. >= 1.8)
-  memstat            A memory statistics utility, helps to detect memory leaks in large applications.
+  memstat            A memory statistics utility, helps to detect memory leaks
   minuit2            Build the new libMinuit2 minimizer library
   monalisa           Monalisa monitoring support, requires libapmoncpp
   mysql              MySQL support, requires libmysqlclient
@@ -2644,22 +2644,6 @@ if test ! "x$enable_chirp" = "xno" ; then
 fi
 check_explicit "$enable_chirp" "$enable_chirp_explicit" \
      "Explicitly required Chirp dependencies not fulfilled"
- 
-######################################################################
-#
-### echo %%% MemStat
-#
-# 
-#
-# Check for platforms
-if test ! "x$enable_memstat" = "xno" ; then
-	# if test "x$platform" = "xlinux"; then
-        if test "x${arch}" = "xlinux"; then
-  		enable_memstat="yes"
-	else
-   		enable_memstat="no"
-	fi
-fi
 
 ######################################################################
 #
@@ -4225,6 +4209,23 @@ fi
 
 ######################################################################
 #
+### echo %%% MemStat Library - check for memory leaks in application.
+#
+message "Checking whether to build libMemStat"
+if test "x$enable_memstat" = "xyes" || test ! "x$MEMSTAT" = "x"; then
+    case $platform in
+    linux)
+       enable_memstat="yes" ;;
+    *)
+       enable_memstat="no" ;;
+    esac
+else
+    enable_memstat="no"
+fi
+result $enable_memstat
+
+######################################################################
+#
 ### echo %%% Clarens Support - Third party libraries
 #
 # (See http://clarens.sourceforge.net/)
@@ -4726,6 +4727,7 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@no_stubs@|$no_stubs|"                \
     -e "s|@no_stubs_test@|$no_stubs_test|"      \
     -e "s|@buildtable@|$enable_table|"          \
+    -e "s|@buildmemstat@|$enable_memstat|"      \
     -e "s|@enable_thread@|$enable_thread|"      \
     -e "s|@etcdir@|$etcdir|"                    \
     -e "s|@exceptions@|$enable_exceptions|"     \
