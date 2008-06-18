@@ -21,6 +21,7 @@
 #include "Dict.h"
 #include <cassert>
 #include <string>
+#include <cstring>
 
 //______________________________________________________________________________
 size_t Cint::Internal::GetReflexPropertyID()
