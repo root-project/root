@@ -4844,7 +4844,7 @@ void TProofServ::ErrorHandler(Int_t level, Bool_t abort, const char *location,
    const char *type   = 0;
    ELogLevel loglevel = kLogInfo;
 
-   Int_t ipos = 0;
+   Int_t ipos = (location) ? strlen(location) : 0;
 
    if (level >= kPrint) {
       loglevel = kLogInfo;
@@ -4888,7 +4888,7 @@ void TProofServ::ErrorHandler(Int_t level, Bool_t abort, const char *location,
    TTimeStamp ts;
    TString st(ts.AsString("lc"),19);
 
-   if (!location || strlen(location) == 0 ||
+   if (!location || ipos == 0 ||
        (level >= kPrint && level < kInfo) ||
        (level >= kBreak && level < kSysError)) {
       fprintf(stderr, "%s %5d %s | %s: %s\n", st(11,8).Data(), gSystem->GetPid(),
