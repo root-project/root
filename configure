@@ -4209,9 +4209,9 @@ fi
 
 ######################################################################
 #
-### echo %%% Memstat Library - check for memory leaks in application.
+### echo %%% MemStat Library - check for memory leaks in application.
 #
-message "Checking whether to build libMemstat"
+message "Checking whether to build libMemStat"
 if test "x$enable_memstat" = "xyes" || test ! "x$MEMSTAT" = "x"; then
     case $platform in
     linux)

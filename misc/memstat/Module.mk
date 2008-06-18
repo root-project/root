@@ -12,7 +12,7 @@ MEMSTATDIR    := $(MODDIR)
 MEMSTATDIRS   := $(MEMSTATDIR)/src
 MEMSTATDIRI   := $(MEMSTATDIR)/inc
 
-##### libMemstat #####
+##### libMemStat #####
 MEMSTATL      := $(MODDIRI)/LinkDef.h
 MEMSTATDS     := $(MODDIRS)/G__Memstat.cxx
 MEMSTATDO     := $(MEMSTATDS:.cxx=.o)
@@ -30,7 +30,7 @@ MEMSTATDEP    := $(MEMSTATO:.o=.d) $(MEMSTATDO:.o=.d)
 MEMSTATLIB    := $(LPATH)/libMemStat.$(SOEXT)
 MEMSTATMAP    := $(MEMSTATLIB:.$(SOEXT)=.rootmap)
 
-##### libMemstatGUI #####
+##### libMemStatGui #####
 MEMSTATGUIL   := $(MODDIRI)/LinkDefGUI.h
 MEMSTATGUIDS  := $(MODDIRS)/G__MemstatGui.cxx
 MEMSTATGUIDO  := $(MEMSTATGUIDS:.cxx=.o)
@@ -61,10 +61,10 @@ INCLUDEFILES += $(MEMSTATDEP)
 include/%.h:    $(MEMSTATDIRI)/%.h
 		cp $< $@
 
-##### libMemstat #####
+##### libMemStat #####
 $(MEMSTATLIB):  $(MEMSTATO) $(MEMSTATDO) $(ORDER_) $(MAINLIBS) $(MEMSTATLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
-		   "$(SOFLAGS)" libMemstat.$(SOEXT) $@ \
+		   "$(SOFLAGS)" libMemStat.$(SOEXT) $@ \
 		   "$(MEMSTATO) $(MEMSTATDO)" "$(MEMSTATLIBEXTRA)"
 
 $(MEMSTATDS):   $(MEMSTATH) $(MEMSTATL) $(ROOTCINTTMPEXE)
@@ -75,11 +75,11 @@ $(MEMSTATMAP):  $(RLIBMAP) $(MAKEFILEDEP) $(MEMSTATL)
 		$(RLIBMAP) -o $(MEMSTATMAP) -l $(MEMSTATLIB) \
 		   -d $(MEMSTATLIBDEPM) -c $(MEMSTATL)
 
-##### libMemstatGUI #####
+##### libMemStatGui #####
 $(MEMSTATGUILIB): $(MEMSTATGUIO) $(MEMSTATGUIDO) $(ORDER_) \
                   $(MAINLIBS) $(MEMSTATGUILIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
-		   "$(SOFLAGS)" libMemstatGui.$(SOEXT) $@ \
+		   "$(SOFLAGS)" libMemStatGui.$(SOEXT) $@ \
 		   "$(MEMSTATGUIO) $(MEMSTATGUIDO)" "$(MEMSTATGUILIBEXTRA)"
 
 $(MEMSTATGUIDS): $(MEMSTATGUIH) $(MEMSTATGUIL) $(ROOTCINTTMPEXE)
