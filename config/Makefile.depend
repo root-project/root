@@ -191,9 +191,6 @@ MEMSTATGUILIBDEP       = $(MEMSTATGUILIBDEPM)
 
 ifeq ($(PLATFORM),win32)
 
-HBOOKLIBDEPM           = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
-                         $(TREEPLAYERLIB) $(IOLIB)
-
 NETLIBEXTRA             = lib/libRIO.lib lib/libMathCore.lib
 MATRIXLIBEXTRA          = lib/libMathCore.lib
 HISTLIBEXTRA            = lib/libMatrix.lib lib/libMathCore.lib
@@ -316,6 +313,8 @@ EVELIBEXTRA             = lib/libGeom.lib lib/libGeomPainter.lib \
                           lib/libGed.lib lib/libEG.lib lib/libTree.lib \
                           lib/libTreePlayer.lib lib/libRGL.lib lib/libRIO.lib \
                           lib/libRint.lib lib/libMathCore.lib
+MEMSTATLIBEXTRA         = lib/libTree.lib
+MEMSTATGUILIBEXTRA      = lib/libMemstat.lib lib/libTree.lib lib/libGui.lib
 
 else
 
@@ -405,6 +404,8 @@ THREADLIBEXTRA          = -Llib -lRIO
 EVELIBEXTRA             = -Llib -lGeom -lGeomPainter -lGraf3d -lGui -lGpad \
                           -lGraf -lHist -lPhysics -lGed -lEG -lTree \
                           -lTreePlayer -lRGL -lRIO -lRint -lMathCore
+MEMSTATLIBEXTRA         = -Llib -lTree
+MEMSTATGUILIBEXTRA      = -Llib -lMemstat -lTree -lGui
 
 endif
 
