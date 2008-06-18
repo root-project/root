@@ -22,7 +22,8 @@ MEMSTATH      := $(MODDIRI)/TMemStatHelpers.h $(MODDIRI)/TMemStatDepend.h \
                  $(MODDIRI)/TMemStat.h \
 		 $(MODDIRI)/TMemStatManager.h $(MODDIRI)/TMemStatInfo.h
 MEMSTATS      := $(MODDIRS)/TMemStat.cxx $(MODDIRS)/TMemStatManager.cxx \
-		 $(MODDIRS)/TMemStatDepend.cxx $(MODDIRS)/TMemStatInfo.cxx
+		 $(MODDIRS)/TMemStatDepend.cxx $(MODDIRS)/TMemStatInfo.cxx \
+		 $(MODDIRS)/TMemStatHelpers.cxx
 MEMSTATO      := $(MEMSTATS:.cxx=.o)
 
 MEMSTATDEP    := $(MEMSTATO:.o=.d) $(MEMSTATDO:.o=.d)

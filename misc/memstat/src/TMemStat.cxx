@@ -106,13 +106,13 @@ End_Macro */
 #include "TMath.h"
 #include "TArrayI.h"
 #include "TBits.h"
-#include "TCanvas.h"
-#include "TPad.h"
+//#include "TCanvas.h"
+//#include "TPad.h"
 #include "TAxis.h"
 #include "TGraph.h"
 #include "TLegend.h"
 #include "TText.h"
-#include "TLine.h"
+//#include "TLine.h"
 #include "THStack.h"
 #include "TSystem.h"
 // Memstat
@@ -284,11 +284,12 @@ TObjArray* TMemStat::GetStampList()
 }
 
 //______________________________________________________________________________
-Int_t TMemStat::DistancetoPrimitive(Int_t px, Int_t py)
+Int_t TMemStat::DistancetoPrimitive(Int_t /*px*/, Int_t /*py*/)
 {
    // Return distance of the mouse to the TMemStat object
 
-   const Int_t kMinDist = 10;
+  // TODO: Why we need this method here???
+ /*  const Int_t kMinDist = 10;
    if (!fArray)
       return -1;
 
@@ -321,16 +322,17 @@ Int_t TMemStat::DistancetoPrimitive(Int_t px, Int_t py)
       }
    }
    if (mindist > kMinDist)
-      fSelected = -1;
+      fSelected = -1;*/
    return -1;
 }
 
 //______________________________________________________________________________
-void TMemStat::ExecuteEvent(Int_t event, Int_t /* px*/, Int_t /*py*/)
+void TMemStat::ExecuteEvent(Int_t /*event*/, Int_t /* px*/, Int_t /*py*/)
 {
    // function called when clicking with the mouse on a TMemStat object
 
-   switch (event) {
+  // TODO: this method needs to be revised
+  /* switch (event) {
    case kButton1Down:
       if (fArray && fSelected >= 0) {
          const Int_t uid = fArrayIndexes[fSelected];
@@ -344,7 +346,7 @@ void TMemStat::ExecuteEvent(Int_t event, Int_t /* px*/, Int_t /*py*/)
       break;
    case kButton1Up:
       break;
-   }
+   }*/
 }
 
 //______________________________________________________________________________
@@ -397,12 +399,13 @@ void TMemStat::Report(Option_t* option)
 }
 
 //______________________________________________________________________________
-void TMemStat::Draw(Option_t *option)
+void TMemStat::Draw(Option_t * /*option*/)
 {
    // Draw the memory statistic
    // call ::Report("?") to see possible options and meaning
 
-   if (!gPad) {
+  // TODO: fix the draw method. Don't use the ROOT graphics 
+ /*  if (!gPad) {
       new TCanvas;
       gPad->SetTopMargin(0.2);
       gPad->SetRightMargin(0.3);
@@ -458,7 +461,7 @@ void TMemStat::Draw(Option_t *option)
          }
       }
    }
-   AppendPad();
+   AppendPad();*/
 }
 
 //______________________________________________________________________________
@@ -1127,7 +1130,9 @@ void TMemStat::MakeStampsText()
 {
    // Make a text description of the stamps
    // create a array of TText objects
-   if (!fArrayGraphics)
+ 
+  // TODO: see TMemStat::Draw
+  /*if (!fArrayGraphics)
       fArrayGraphics = new TObjArray();
 
    const Int_t nentries = fTree->GetEntries();
@@ -1152,7 +1157,7 @@ void TMemStat::MakeStampsText()
       fArrayGraphics->AddLast(ptext);
       TLine * pline = new TLine(stampNumber, 0, stampNumber, 1);
       fArrayGraphics->AddLast(pline);
-   }
+   }*/
 }
 
 //______________________________________________________________________________
