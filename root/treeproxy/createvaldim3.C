@@ -2,7 +2,8 @@
 #include <TTree.h>
 #include <TClonesArray.h>
 
-#ifdef R__MACOSX
+#if defined(R__MACOSX) && ( !defined(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__) \
+                            ||  __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050)
 # include "Track.C"
 #else
 # if defined(__CINT__) && !defined(__MAKECINT__)
