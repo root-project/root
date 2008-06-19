@@ -38,17 +38,14 @@ protected:
    std::string fCurLib;
    std::string fCurFunc;
 
-
 protected:
    void MakeContSortStat(TGCompositeFrame *frame);
    void MakeContSortStamp(TGCompositeFrame *frame);
    void MakeContDeep(TGCompositeFrame *frame);
-   void MakeContSelect(TGCompositeFrame *frame);
    void MakeStampList(TGCompositeFrame *frame);
    void MakeDrawButton(TGCompositeFrame *frame);
    void MakeSelection(TGCompositeFrame *frame);
 
-   const Option_t *GetOption() const;                  // get option
    void Initialize(Option_t* option);                  // initializes the GUI with default settings and opens tree for drawing
    void MakePrint();                                   // get print
 
@@ -56,6 +53,7 @@ protected:
    void HandleRButtons(Int_t id, Int_t FirstBtnId, T *ViewerSortType);
 
 public:
+   TMemStatViewerGUI() {;}
    TMemStatViewerGUI(const TGWindow *p, UInt_t w, UInt_t h, Option_t* option = "read");
    virtual ~TMemStatViewerGUI();
 
