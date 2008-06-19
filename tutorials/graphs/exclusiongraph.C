@@ -1,14 +1,8 @@
-void exclusiongraph() {
-   // Draw three graphs with an exclusion zone. This drawing mode is activated
-   // when the absolute value of the graph line width (set thanks to
-   // SetLineWidth) is greater than 99. In that case the line width number is
-   // interpreted as 100*ff+ll = ffll . The two digits number "ll" represent the
-   // normal line width whereas "ff" is the filled area width. The sign of
-   // "ffll" allows to flip the filled area from one side of the line to the
-   // other. The current fill area attributes are used to draw the hatched zone.
+TCanvas *exclusiongraph() {
+   // Draw three graphs with an exclusion zone.
    //Author: Olivier Couet
    
-   TCanvas *c1 = new TCanvas("c1","Exclusion graphs examples",200,10,700,500);
+   TCanvas *c1 = new TCanvas("c1","Exclusion graphs examples",200,10,600,400);
    c1->SetGrid();
 
    TMultiGraph *mg = new TMultiGraph();
@@ -46,4 +40,6 @@ void exclusiongraph() {
    mg->Add(gr2);
    mg->Add(gr3);
    mg->Draw("AC");
+
+   return c1;
 }
