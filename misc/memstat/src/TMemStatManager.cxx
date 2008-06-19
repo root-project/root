@@ -11,7 +11,6 @@
 
 //****************************************************************************//
 /*
-
  TMemStatManager - manager class
 
  The current memory statistic is written to the file
@@ -21,7 +20,6 @@
  std::vector<TMemStatInfoStamp>       fStampVector;    // vector of stamp information
  std::vector<TTimeStamp>       fStampTime;      // vector of stamp information
  std::vector<TMemStatCodeInfo>        fCodeInfoArray;  // vector with code info
-
 */
 //****************************************************************************//
 

@@ -10,7 +10,6 @@
  *************************************************************************/
 
 //****************************************************************************//
-
 /*
       Mem Stat information -
 .     TMemStatInfoStamp - counter
@@ -33,9 +32,9 @@
      TMemStatInfoStamp  fMaxStampSize;  // max current size stamp
      TMemStatInfoStamp  fMaxStamp;      // max current size stamp
 */
-//
 //****************************************************************************//
-// ROOT
+
+   // ROOT
 #include "Riostream.h"
 #include "TObject.h"
 // Memstat

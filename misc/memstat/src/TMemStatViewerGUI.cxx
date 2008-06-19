@@ -13,7 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 //                                                                           //
 //  GUI for the TMemStat                                                     //
-//  used for the memomry checker                                             //
+//  used for the memory checker                                             //
 //  Example usage:                                                           //
 /*
   aliroot
