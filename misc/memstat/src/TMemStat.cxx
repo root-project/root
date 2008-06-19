@@ -8,6 +8,7 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+
 //______________________________________________________________________________
 /* Begin_Html
 <center><h2>Mem stat class</h2></center>
@@ -106,6 +107,7 @@ End_Macro */
 #include "TMath.h"
 #include "TArrayI.h"
 #include "TBits.h"
+#include "TDirectory.h"
 //#include "TCanvas.h"
 //#include "TPad.h"
 #include "TAxis.h"
@@ -187,6 +189,9 @@ TMemStat::TMemStat(Option_t* option):
    // It marks the highest used stack address.
    _GET_TO_STECK;
 
+   //preserve context. When exiting will restore the current directory
+   TDirectory::TContext context(gDirectory);
+   
    string opt(option);
    transform( opt.begin(), opt.end(), opt.begin(),
               Memstat::ToLower_t() );
