@@ -34,26 +34,26 @@ string Memstat::dig2bytes(Long64_t bytes)
       bytes = -bytes;
    }
 
-   static const long kB = 1024l;
-   static const long MB = kB * kB;
-   static const long GB = MB * kB;
+   static const long kB = 1024L;
+   static const long lMB = kB * kB;
+   static const long lGB = lMB * kB;
 
    if (bytes < kB)
       ss << bytes << " B";
-   else if (bytes < (10l * kB))
+   else if (bytes < (10L * kB))
       ss << setprecision(2) << ((double)bytes / (float)kB) << " kB";
-   else if (bytes < (100l * kB))
+   else if (bytes < (100L * kB))
       ss << setprecision(1) << ((double)bytes / (float)kB) << " kB";
-   else if (bytes < MB)
+   else if (bytes < lMB)
       ss << setprecision(0) << ((double)bytes / (float)kB) << " kB";
-   else if (bytes < (10l * MB))
-      ss << setprecision(2) << ((double)bytes / (float)MB) << " MB";
-   else if (bytes < (100l * MB))
-      ss << setprecision(1) << ((double)bytes / (float)MB) << " MB";
-   else if (bytes < GB)
-      ss << setprecision(0) << ((double)bytes / (float)MB) << " MB";
+   else if (bytes < (10L * lMB))
+      ss << setprecision(2) << ((double)bytes / (float)lMB) << " MB";
+   else if (bytes < (100L * lMB))
+      ss << setprecision(1) << ((double)bytes / (float)lMB) << " MB";
+   else if (bytes < lGB)
+      ss << setprecision(0) << ((double)bytes / (float)lMB) << " MB";
    else
-      ss << setprecision(2) << ((double)bytes / (float)GB) << " GB";
+      ss << setprecision(2) << ((double)bytes / (float)lGB) << " GB";
 
    return ss.str();
 }

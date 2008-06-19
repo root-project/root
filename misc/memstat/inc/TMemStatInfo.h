@@ -39,8 +39,10 @@ class TMemStatManager;
 const int fields_length[] = {16, 7, 9, 15, 19, 12, 8};
 
 
-struct TMemStatInfoStamp: public TObject {
-   enum StampType { kCode, kStack };
+class TMemStatInfoStamp: public TObject
+{
+public:
+   enum EStampType { kCode, kStack };
    TMemStatInfoStamp();              //stamp of memory usage information
    virtual ~TMemStatInfoStamp();
    void        Print(Option_t* option = "") const;
@@ -61,7 +63,9 @@ struct TMemStatInfoStamp: public TObject {
 };
 
 
-struct TMemStatCodeInfo: public TObject {
+class TMemStatCodeInfo: public TObject
+{
+public:
    TMemStatCodeInfo();              // store information about line of code
    void SetInfo(void *info);
    virtual ~TMemStatCodeInfo() {
@@ -86,7 +90,9 @@ struct TMemStatCodeInfo: public TObject {
 };
 
 
-struct TMemStatStackInfo: public TObject {
+class TMemStatStackInfo: public TObject
+{
+public:
    enum {kStackHistorySize = 50};
    UInt_t      fSize;               // size of the stack
    TMemStatInfoStamp  fLastStamp;          // last time stamp info
@@ -115,28 +121,6 @@ struct TMemStatStackInfo: public TObject {
 
    ClassDef(TMemStatStackInfo, 1) // a stack information structure
 };
-
-
-struct TMemInfo {
-   void   *fAddress;    //mem address
-   size_t  fSize;       //size of the allocated memory
-   Int_t   fStackIndex; //index of the stack info
-};
-
-struct TMemTable {
-   Int_t     fAllocCount;    //number of memory allocation blocks
-   Int_t     fMemSize;       //total memory allocated size
-   Int_t     fTableSize;     //amount of entries in the below array
-   Int_t     fFirstFreeSpot; //where is the first free spot in the leaks array?
-   TMemInfo *fLeaks;         //leak table
-};
-
-struct TDeleteTable {
-   Int_t     fAllocCount;    //how many memory blocks do we have
-   Int_t     fTableSize;     //amount of entries in the below array
-   TMemInfo *fLeaks;         //leak table
-};
-
 
 
 inline void TMemStatInfoStamp::Inc(int memSize)

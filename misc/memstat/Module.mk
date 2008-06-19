@@ -54,7 +54,7 @@ ALLLIBS     += $(MEMSTATLIB) $(MEMSTATGUILIB)
 ALLMAPS     += $(MEMSTATMAP) $(MEMSTATGUIMAP)
 
 # include all dependency files
-INCLUDEFILES += $(MEMSTATDEP)
+INCLUDEFILES += $(MEMSTATDEP) $(MEMSTATGUIDEP)
 
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)

@@ -27,7 +27,7 @@
 using namespace std;
 
 //______________________________________________________________________________
-struct SFill : public binary_function<string, TGComboBox*, bool>
+struct SFill_t : public binary_function<string, TGComboBox*, bool>
 {
    bool operator()(const string &val, TGComboBox* box) const
    {
@@ -91,6 +91,8 @@ void TMemStatDrawDlg::CloseWindow()
 //______________________________________________________________________________
 void TMemStatDrawDlg::PlaceCtrls(TGCompositeFrame *frame)
 {
+   // TODO: Comment me
+
    TGCompositeFrame *cont = new TGCompositeFrame(frame, 800, 400, kHorizontalFrame | kFitWidth | kFitHeight);
    frame->AddFrame(cont, new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandY | kLHintsExpandX, 2, 2, 2, 2));
 
@@ -133,6 +135,8 @@ void TMemStatDrawDlg::PlaceCtrls(TGCompositeFrame *frame)
 void TMemStatDrawDlg::PlaceLBoxCtrl(TGCompositeFrame *frame, TGComboBox **box,
                                     const string &Label, const StringVector_t &Vealues, Int_t resource)
 {
+   // TODO: Comment me
+
    TGHorizontalFrame *horz = new TGHorizontalFrame(frame);
    frame->AddFrame(horz, new TGLayoutHints(kLHintsExpandX));
    // text description
@@ -146,7 +150,7 @@ void TMemStatDrawDlg::PlaceLBoxCtrl(TGCompositeFrame *frame, TGComboBox **box,
    horz->AddFrame((*box), new TGLayoutHints(kLHintsRight, 2, 2, 2, 2));
 
    // filling Combo box with values
-   for_each(Vealues.begin(), Vealues.end(), bind2nd(SFill(), (*box)));
+   for_each(Vealues.begin(), Vealues.end(), bind2nd(SFill_t(), (*box)));
 
    (*box)->Select(0);
 }
@@ -157,42 +161,42 @@ void TMemStatDrawDlg::PlaceDeepCtrl(TGCompositeFrame *frame)
    // create and layout "Deep" controls
 
    // deep of information
-   TGGroupFrame *ContDeep = new TGGroupFrame(frame, "Deepnes", kVerticalFrame | kFitWidth | kFitHeight);
-   frame->AddFrame(ContDeep, new TGLayoutHints(kLHintsExpandX));
+   TGGroupFrame *contDeep = new TGGroupFrame(frame, "Deepnes", kVerticalFrame | kFitWidth | kFitHeight);
+   frame->AddFrame(contDeep, new TGLayoutHints(kLHintsExpandX));
 
    // A "Deep" frame
-   TGHorizontalFrame *horz0 = new TGHorizontalFrame(ContDeep);
-   ContDeep->AddFrame(horz0, new TGLayoutHints(kLHintsExpandX | kLHintsCenterY));
+   TGHorizontalFrame *horz0 = new TGHorizontalFrame(contDeep);
+   contDeep->AddFrame(horz0, new TGLayoutHints(kLHintsExpandX | kLHintsCenterY));
    // ------ Stack Deep
    // text description
    TGLabel *lblStackDeep = new TGLabel(horz0, "Stack deep:");
    horz0->AddFrame(lblStackDeep, new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
    // number entry box for specifying the stack deepness
-   fNmbStackDeep = new TGNumberEntry(horz0, fMemStat->fStackDeep, 1, resNmbStackDeep, TGNumberFormat::kNESInteger,
+   fNmbStackDeep = new TGNumberEntry(horz0, fMemStat->GetStackDeep(), 1, resNmbStackDeep, TGNumberFormat::kNESInteger,
                                      TGNumberFormat::kNEANonNegative, TGNumberFormat::kNELLimitMinMax, 1, 50);
    horz0->AddFrame(fNmbStackDeep, new TGLayoutHints( kLHintsRight, 2, 2, 2, 2));
    fNmbStackDeep->Resize(100, 20);
 
    // ------ Sort Deep
-   TGHorizontalFrame *horz1 = new TGHorizontalFrame(ContDeep);
-   ContDeep->AddFrame(horz1, new TGLayoutHints(kLHintsExpandX | kLHintsCenterY));
+   TGHorizontalFrame *horz1 = new TGHorizontalFrame(contDeep);
+   contDeep->AddFrame(horz1, new TGLayoutHints(kLHintsExpandX | kLHintsCenterY));
    // text description
-   TGLabel *LabSortDeep = new TGLabel(horz1, "Sort deep:");
-   horz1->AddFrame(LabSortDeep, new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
+   TGLabel *lSortDeep = new TGLabel(horz1, "Sort deep:");
+   horz1->AddFrame(lSortDeep, new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
    // number entry box for specifying the number of stamps
-   fNmbSortDeep = new TGNumberEntry(horz1, fMemStat->fStackDeep, 1, resNmbSortDeep, TGNumberFormat::kNESInteger,
+   fNmbSortDeep = new TGNumberEntry(horz1, fMemStat->GetSortDeep(), 1, resNmbSortDeep, TGNumberFormat::kNESInteger,
                                     TGNumberFormat::kNEANonNegative, TGNumberFormat::kNELLimitMinMax, 1, 50);
    horz1->AddFrame(fNmbSortDeep, new TGLayoutHints( kLHintsRight, 2, 2, 2, 2));
    fNmbSortDeep->Resize(100, 20);
 
    // ------ Max lenthg
-   TGHorizontalFrame *horz2 = new TGHorizontalFrame(ContDeep);
-   ContDeep->AddFrame(horz2, new TGLayoutHints(kLHintsExpandX | kLHintsCenterY));
+   TGHorizontalFrame *horz2 = new TGHorizontalFrame(contDeep);
+   contDeep->AddFrame(horz2, new TGLayoutHints(kLHintsExpandX | kLHintsCenterY));
    // text description
    TGLabel *lbl = new TGLabel(horz2, "Max length:");
    horz2->AddFrame(lbl, new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
    // number entry box for specifying the number of stamps
-   fNmbMaxLength = new TGNumberEntry(horz2, fMemStat->fStackDeep, 1, resNmbMaxLength, TGNumberFormat::kNESInteger,
+   fNmbMaxLength = new TGNumberEntry(horz2, fMemStat->GetMaxStringLength(), 1, resNmbMaxLength, TGNumberFormat::kNESInteger,
                                      TGNumberFormat::kNEANonNegative, TGNumberFormat::kNELLimitMinMax, 1, 500);
    horz2->AddFrame(fNmbMaxLength, new TGLayoutHints(kLHintsRight, 2, 2, 2, 2));
    fNmbMaxLength->Resize(100, 20);
@@ -201,6 +205,8 @@ void TMemStatDrawDlg::PlaceDeepCtrl(TGCompositeFrame *frame)
 //______________________________________________________________________________
 void TMemStatDrawDlg::ReDraw()
 {
+   // TODO: Comment me
+
    if (!fMemStat)
       return;
 
@@ -233,12 +239,14 @@ void TMemStatDrawDlg::ReDraw()
 //______________________________________________________________________________
 void TMemStatDrawDlg::HandleDrawMemStat()
 {
+   // TODO: Comment me
    ReDraw();
 }
 
 //______________________________________________________________________________
 void TMemStatDrawDlg::PlaceEmbeddedCanvas(TGCompositeFrame *frame)
 {
+   // TODO: Comment me
    if (fEc)
       return;
 

@@ -29,7 +29,7 @@ namespace Memstat
 std::string dig2bytes(Long64_t bytes);
 
 //______________________________________________________________________________
-struct SFind : std::binary_function<TObject*, TString, bool> {
+struct SFind_t : std::binary_function<TObject*, TString, bool> {
    bool operator()(TObject *_Obj, const TString &_ToFind) const
    {
       TObjString *str(dynamic_cast<TObjString*>(_Obj));
@@ -50,14 +50,14 @@ Int_t find_string( const T &_Container,  const TString &_ToFind )
 
    iterator_t iter(&_Container);
    iterator_t found(
-      std::find_if(iter.Begin(), iterator_t::End(), bind2nd(SFind(), _ToFind))
+      std::find_if(iter.Begin(), iterator_t::End(), bind2nd(SFind_t(), _ToFind))
    );
    return ( ( !(*found) )? -1: std::distance(iter.Begin(), found) );
 }
 
 //______________________________________________________________________________
 // HACK: because of the bug in gcc 3.3 we need to use this nasty ToLower and ToUpper instead of direct calls of tolower (tolower.. is inline in this version of std lib)...
-struct ToLower
+struct ToLower_t
 {
    char operator() ( char c ) const
    {

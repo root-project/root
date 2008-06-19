@@ -76,7 +76,6 @@ void TMemStatViewerGUI::HandleRButtons(Int_t id, Int_t FirstBtnId, T *ViewerSort
 {
    // handles mutual radio button exclusions
    *ViewerSortType = static_cast<T>(id - FirstBtnId);
-   MakePrint();
 }
 
 

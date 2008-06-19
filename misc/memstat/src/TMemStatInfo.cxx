@@ -72,12 +72,16 @@ TMemStatInfoStamp::~TMemStatInfoStamp()
 //______________________________________________________________________________
 void TMemStatInfoStamp::Print(Option_t* /*option*/) const
 {
+   // TODO: Comment me
+
    cout << *this << endl;
 }
 
 //______________________________________________________________________________
 std::ostream& operator << (std::ostream &_ostream, const TMemStatInfoStamp &_this)
 {
+   // TODO: Comment me
+
    _ostream
    << std::setw(fields_length[1]) << "ID"
    << std::setw(fields_length[2]) << "Sort"
@@ -131,6 +135,8 @@ TMemStatCodeInfo::TMemStatCodeInfo():
 //______________________________________________________________________________
 void TMemStatCodeInfo::Inc(Int_t memSize)
 {
+   // TODO: Comment me
+
    fCurrentStamp.Inc(memSize);
    if (fCurrentStamp.fAllocCount > fMaxStamp.fAllocCount)
       fMaxStamp = fCurrentStamp;
@@ -152,6 +158,8 @@ void TMemStatCodeInfo::SetInfo(void *info)
 //______________________________________________________________________________
 void TMemStatCodeInfo::Print(Option_t * /*option*/) const
 {
+   // TODO: Comment me
+
    StreemCurrAndMax(cout, *this) << endl;
 
    cout << fCodeID << "\t" << fInfo.Data() << endl;
@@ -175,6 +183,7 @@ void TMemStatCodeInfo::MakeStamp(Int_t stampNumber)
 //______________________________________________________________________________
 std::ostream& operator << (std::ostream &_ostream, const TMemStatCodeInfo &_this)
 {
+   // TODO: Comment me
    _ostream
    << _this.fFunction.Data()
    << '\t' << _this.fLib.Data();
@@ -244,6 +253,7 @@ int TMemStatStackInfo::Equal(unsigned int size, void **ptr)
 //______________________________________________________________________________
 Bool_t TMemStatInfoStamp::Equal(TMemStatInfoStamp&stamp)
 {
+   // TODO: Comment me
    if (fTotalAllocCount != stamp.fTotalAllocCount)
       return kFALSE;
    if (fAllocCount != stamp.fAllocCount)
@@ -268,6 +278,7 @@ void TMemStatStackInfo::MakeStamp(Int_t stampNumber)
 //______________________________________________________________________________
 void TMemStatStackInfo::Inc(Int_t memSize, TMemStatManager *manager)
 {
+   // TODO: Comment me
    fCurrentStamp.Inc(memSize);
    if (fCurrentStamp.fAllocCount > fMaxStamp.fAllocCount)
       fMaxStamp = fCurrentStamp;
@@ -280,6 +291,7 @@ void TMemStatStackInfo::Inc(Int_t memSize, TMemStatManager *manager)
 //______________________________________________________________________________
 void TMemStatStackInfo::Dec(int memSize, TMemStatManager *manager)
 {
+   // TODO: Comment me
    if (fCurrentStamp.fAllocCount)
       fCurrentStamp.fAllocCount -= 1;
    fCurrentStamp.fAllocSize  -= memSize;
@@ -290,5 +302,6 @@ void TMemStatStackInfo::Dec(int memSize, TMemStatManager *manager)
 //______________________________________________________________________________
 std::ostream& operator << (std::ostream &_ostream, const TMemStatStackInfo &_this)
 {
+   // TODO: Comment me
    return StreemCurrAndMax(_ostream, _this);
 }

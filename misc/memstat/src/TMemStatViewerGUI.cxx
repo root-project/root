@@ -49,7 +49,7 @@ using namespace std;
 
 
 //______________________________________________________________________________
-struct SStringToListBox : public binary_function<string, TGComboBox*, bool> {
+struct SStringToListBox_t : public binary_function<string, TGComboBox*, bool> {
    bool operator()(string str, TGComboBox* box) const {
       if (!box)
          return false;
@@ -60,17 +60,17 @@ struct SStringToListBox : public binary_function<string, TGComboBox*, bool> {
 };
 
 //______________________________________________________________________________
-struct SFillListBox : public binary_function<TObject*, TGComboBox*, bool> {
+struct SFillListBox_t : public binary_function<TObject*, TGComboBox*, bool> {
    bool operator()(TObject *aObj, TGComboBox* box) const {
       if (!aObj || !box)
-         return false; //TODO: need an assert "SFillListBox: parametr is a NULL pointer"
+         return false; //TODO: need an assert "SFillListBox_t: parametr is a NULL pointer"
 
       if ((aObj->IsA() == TObjString::Class())) {
          TObjString *str(dynamic_cast<TObjString*>(aObj));
          if (!str)
-            return false; // TODO: need an assert "SFillListBox: Container's element is not a TObjString object."
+            return false; // TODO: need an assert "SFillListBox_t: Container's element is not a TObjString object."
 
-         SStringToListBox()(str->String().Data(), box);
+         SStringToListBox_t()(str->String().Data(), box);
       }
 
       return true;
@@ -92,47 +92,47 @@ TMemStatViewerGUI::TMemStatViewerGUI(const TGWindow *p, UInt_t w, UInt_t h, Opti
    // ************************* content of this MainFrame *************************
    // top level container with horizontal layout
    // container for all GUI elements, vertical divided
-   TGCompositeFrame *ContMain = new TGCompositeFrame(this, w, h, kVerticalFrame | kFixedWidth | kFixedHeight);
-   AddFrame(ContMain, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
+   TGCompositeFrame *contMain = new TGCompositeFrame(this, w, h, kVerticalFrame | kFixedWidth | kFixedHeight);
+   AddFrame(contMain, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
 
    // container for all GUI elements, horizontal divided
-   TGCompositeFrame *ContLCR = new TGCompositeFrame(ContMain, w, h, kHorizontalFrame | kFixedWidth | kFixedHeight);
-   ContMain->AddFrame(ContLCR, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
+   TGCompositeFrame *contLCR = new TGCompositeFrame(contMain, w, h, kHorizontalFrame | kFixedWidth | kFixedHeight);
+   contMain->AddFrame(contLCR, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
 
    // ************************* content of ContLCR *************************
    // container for GUI elements on left side
-   TGCompositeFrame *ContLeft = new TGCompositeFrame(ContLCR, 160, 200, kVerticalFrame | kFixedWidth | kFitHeight);
-   ContLCR->AddFrame(ContLeft, new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandY, 5, 3, 3, 3));
+   TGCompositeFrame *contLeft = new TGCompositeFrame(contLCR, 160, 200, kVerticalFrame | kFixedWidth | kFitHeight);
+   contLCR->AddFrame(contLeft, new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandY, 5, 3, 3, 3));
 
    // left vertical splitter
-   TGVSplitter *splitLeft = new TGVSplitter(ContLCR);
-   splitLeft->SetFrame(ContLeft, kTRUE);
-   ContLCR->AddFrame(splitLeft, new TGLayoutHints(kLHintsLeft | kLHintsExpandY));
+   TGVSplitter *splitLeft = new TGVSplitter(contLCR);
+   splitLeft->SetFrame(contLeft, kTRUE);
+   contLCR->AddFrame(splitLeft, new TGLayoutHints(kLHintsLeft | kLHintsExpandY));
 
    // container for GUI elements at the center
-   TGCompositeFrame *ContCenter = new TGCompositeFrame(ContLCR, 150, 200, kVerticalFrame | kFixedWidth | kFitHeight);
-   ContLCR->AddFrame(ContCenter, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
+   TGCompositeFrame *contCenter = new TGCompositeFrame(contLCR, 150, 200, kVerticalFrame | kFixedWidth | kFitHeight);
+   contLCR->AddFrame(contCenter, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
 
-   fText = new TGTextView(ContCenter);
-   ContCenter->AddFrame(fText, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
+   fText = new TGTextView(contCenter);
+   contCenter->AddFrame(fText, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
 
    // Display everything
    Initialize(option);
 
-   MakeStampList(ContLeft);
-   MakeSelection(ContLeft);
-   MakeContSortStat(ContLeft);   // Make content for Sort Statistic
-   MakeContSortStamp(ContLeft);  // make constent for sort Stamps
-   MakeContDeep(ContLeft);       // make constent for sort Stamps
-   MakeDrawButton(ContLeft);
+   MakeStampList(contLeft);
+   MakeSelection(contLeft);
+   MakeContSortStat(contLeft);   // Make content for Sort Statistic
+   MakeContSortStamp(contLeft);  // make constent for sort Stamps
+   MakeContDeep(contLeft);       // make constent for sort Stamps
+   MakeDrawButton(contLeft);
 
    MapSubwindows();
    Resize(GetDefaultSize());
    MapWindow();
 
    // Default View
-   fViewer->fSortStat = TMemStat::kTotalAllocCount;
-   fViewer->fSortStamp = TMemStat::kCurrent;
+   fViewer->SetSortStat( TMemStat::kTotalAllocCount );
+   fViewer->SetSortStamp( TMemStat::kCurrent );
    MakePrint();
 }
 
@@ -160,14 +160,14 @@ void TMemStatViewerGUI::MakeContSortStat(TGCompositeFrame *frame)
    // make windows for Sorting *STAT* selection
 
    // sorting statistic option
-   TGVButtonGroup *SortStatGroup = new TGVButtonGroup(frame, "Statistic type");
-   frame->AddFrame(SortStatGroup, new TGLayoutHints(kLHintsExpandX));
-   new TGRadioButton(SortStatGroup, "Total Alloc Count", rbtnTotalAllocCount);
-   new TGRadioButton(SortStatGroup, "Total Alloc Size", rbtnTotalAllocSize);
-   new TGRadioButton(SortStatGroup, "Alloc Count", rbtnAllocCount);
-   new TGRadioButton(SortStatGroup, "Alloc Size", rbtnAllocSize);
-   SortStatGroup->SetButton(rbtnTotalAllocCount);
-   SortStatGroup->Connect("Pressed(Int_t)", "TMemStatViewerGUI", this, "HandleButtonsSortStat(Int_t)");
+   TGVButtonGroup *sortStatGroup = new TGVButtonGroup(frame, "Statistic type");
+   frame->AddFrame(sortStatGroup, new TGLayoutHints(kLHintsExpandX));
+   new TGRadioButton(sortStatGroup, "Total Alloc Count", rbtnTotalAllocCount);
+   new TGRadioButton(sortStatGroup, "Total Alloc Size", rbtnTotalAllocSize);
+   new TGRadioButton(sortStatGroup, "Alloc Count", rbtnAllocCount);
+   new TGRadioButton(sortStatGroup, "Alloc Size", rbtnAllocSize);
+   sortStatGroup->SetButton(rbtnTotalAllocCount);
+   sortStatGroup->Connect("Pressed(Int_t)", "TMemStatViewerGUI", this, "HandleButtonsSortStat(Int_t)");
 }
 
 //______________________________________________________________________________
@@ -176,13 +176,13 @@ void TMemStatViewerGUI::MakeContSortStamp(TGCompositeFrame *frame)
    // make windows for Sorting *STAMP* selection
 
    // sorting stamp option
-   TGVButtonGroup *SortStampGroup = new TGVButtonGroup(frame, "Sorting stamp");
-   frame->AddFrame(SortStampGroup, new TGLayoutHints(kLHintsExpandX));
-   new TGRadioButton(SortStampGroup, "Current", rbtnCurrent);
-   new TGRadioButton(SortStampGroup, "Max Size", rbtnMaxSize);
-   new TGRadioButton(SortStampGroup, "Max Count", rbtnMaxCount);
-   SortStampGroup->SetButton(rbtnCurrent);
-   SortStampGroup->Connect("Pressed(Int_t)", "TMemStatViewerGUI", this, "HandleButtonsSortStamp(Int_t)");
+   TGVButtonGroup *sortStampGroup = new TGVButtonGroup(frame, "Sorting stamp");
+   frame->AddFrame(sortStampGroup, new TGLayoutHints(kLHintsExpandX));
+   new TGRadioButton(sortStampGroup, "Current", rbtnCurrent);
+   new TGRadioButton(sortStampGroup, "Max Size", rbtnMaxSize);
+   new TGRadioButton(sortStampGroup, "Max Count", rbtnMaxCount);
+   sortStampGroup->SetButton(rbtnCurrent);
+   sortStampGroup->Connect("Pressed(Int_t)", "TMemStatViewerGUI", this, "HandleButtonsSortStamp(Int_t)");
 }
 
 //______________________________________________________________________________
@@ -193,8 +193,8 @@ void TMemStatViewerGUI::MakeStampList(TGCompositeFrame *frame)
    if (!fViewer)
       return;
 
-   const TObjArray *StampList = fViewer->GetStampList();
-   if (!StampList)
+   const TObjArray *stampList = fViewer->GetStampList();
+   if (!stampList)
       return;
 
    TGHorizontalFrame *horz = new TGHorizontalFrame(frame);
@@ -205,23 +205,23 @@ void TMemStatViewerGUI::MakeStampList(TGCompositeFrame *frame)
                   new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 2, 2, 2, 2));
 
    // a list box of stamps
-   TGComboBox *StampListBox = new TGComboBox(horz, lstStamps);
-   StampListBox->Resize(100, 20);
-   horz->AddFrame(StampListBox, new TGLayoutHints(kLHintsExpandX));
-   StampListBox->Connect("Selected(const char*)", "TMemStatViewerGUI", this, "HandleStampSelect(const char*)");
+   TGComboBox *stampListBox = new TGComboBox(horz, lstStamps);
+   stampListBox->Resize(100, 20);
+   horz->AddFrame(stampListBox, new TGLayoutHints(kLHintsExpandX));
+   stampListBox->Connect("Selected(const char*)", "TMemStatViewerGUI", this, "HandleStampSelect(const char*)");
 
    // filling Combo box of stamps
-   TIter iter(StampList);
+   TIter iter(stampList);
    for_each(iter.Begin(), TIter::End(),
-            bind2nd(SFillListBox(), StampListBox));
+            bind2nd(SFillListBox_t(), stampListBox));
 
-   const Int_t count(StampListBox->GetNumberOfEntries());
+   const Int_t count(stampListBox->GetNumberOfEntries());
    if (count <= 0)
       return;
    // Selecting the last stamp
-   StampListBox->Select(count - 1);
+   stampListBox->Select(count - 1);
 
-   TObjString *str(dynamic_cast<TObjString*>(StampList->At(StampListBox->GetSelected())));
+   TObjString *str(dynamic_cast<TObjString*>(stampList->At(stampListBox->GetSelected())));
    if (!str)
       return;
 
@@ -231,6 +231,8 @@ void TMemStatViewerGUI::MakeStampList(TGCompositeFrame *frame)
 //______________________________________________________________________________
 void TMemStatViewerGUI::HandleStampSelect(const char* value)
 {
+   // TODO: Comment me
+
    fViewer->SetCurrentStamp(value);
    MakePrint();
 }
@@ -240,29 +242,29 @@ void  TMemStatViewerGUI::MakeContDeep(TGCompositeFrame *frame)
 {
    // create and layout "Deep" controls
 
-   TGGroupFrame *ContDeep = new TGGroupFrame(frame, "Deepnes");
-   ContDeep->SetLayoutManager(new TGMatrixLayout(ContDeep, 0, 2, 5));
-   frame->AddFrame(ContDeep, new TGLayoutHints(kLHintsExpandX));
+   TGGroupFrame *contDeep = new TGGroupFrame(frame, "Deepnes");
+   contDeep->SetLayoutManager(new TGMatrixLayout(contDeep, 0, 2, 5));
+   frame->AddFrame(contDeep, new TGLayoutHints(kLHintsExpandX));
 
    // ------ Stack Deep
    // text description
-   TGLabel *lblStackDeep = new TGLabel(ContDeep, "Stack Deep:");
-   ContDeep->AddFrame(lblStackDeep, 0);
+   TGLabel *lblStackDeep = new TGLabel(contDeep, "Stack Deep:");
+   contDeep->AddFrame(lblStackDeep, 0);
    // number entry box for specifying the stack deepness
-   fNmbStackDeep = new TGNumberEntry(ContDeep, fViewer->fStackDeep, 1, -1, TGNumberFormat::kNESInteger,
+   fNmbStackDeep = new TGNumberEntry(contDeep, fViewer->GetStackDeep(), 1, -1, TGNumberFormat::kNESInteger,
                                      TGNumberFormat::kNEANonNegative, TGNumberFormat::kNELLimitMinMax, 1, 50);
-   ContDeep->AddFrame(fNmbStackDeep, 0);
+   contDeep->AddFrame(fNmbStackDeep, 0);
    fNmbStackDeep->Connect("ValueSet(Long_t)", "TMemStatViewerGUI", this, "HandleDeep(Long_t)");
    fNmbStackDeep->Resize(60, 20);
 
    // ------ Sort Deep
    // text description
-   TGLabel *LabSortDeep = new TGLabel(ContDeep, "Sort Deep:");
-   ContDeep->AddFrame(LabSortDeep, 0);
+   TGLabel *lSortDeep = new TGLabel(contDeep, "Sort Deep:");
+   contDeep->AddFrame(lSortDeep, 0);
    // number entry box for specifying the number of stamps
-   fNmbSortDeep = new TGNumberEntry(ContDeep, fViewer->fStackDeep, 1, -1, TGNumberFormat::kNESInteger,
+   fNmbSortDeep = new TGNumberEntry(contDeep, fViewer->GetSortDeep(), 1, -1, TGNumberFormat::kNESInteger,
                                     TGNumberFormat::kNEANonNegative, TGNumberFormat::kNELLimitMinMax, 1, 50);
-   ContDeep->AddFrame(fNmbSortDeep, 0);
+   contDeep->AddFrame(fNmbSortDeep, 0);
    fNmbSortDeep->Connect("ValueSet(Long_t)", "TMemStatViewerGUI", this, "HandleDeep(Long_t)");
    fNmbSortDeep->Resize(60, 20);
 }
@@ -287,6 +289,7 @@ void TMemStatViewerGUI::MakeDrawButton(TGCompositeFrame *frame)
 //______________________________________________________________________________
 void TMemStatViewerGUI::HandleDrawMemStat()
 {
+   // TODO: Comment me
    new TMemStatDrawDlg(gClient->GetRoot(), this, fViewer);
 }
 
@@ -294,16 +297,20 @@ void TMemStatViewerGUI::HandleDrawMemStat()
 void TMemStatViewerGUI::HandleButtonsSortStat(Int_t id)
 {
    // handles mutual radio button exclusions - set sort stat type
-
-   HandleRButtons(id, rbtnTotalAllocCount, &fViewer->fSortStat);
+   TMemStat::StatType val;
+   HandleRButtons(id, rbtnTotalAllocCount, &val);
+   fViewer->SetSortStat(val);
+   MakePrint();
 }
 
-//______________________________________________________________________________
+//___________________________l___________________________________________________
 void TMemStatViewerGUI::HandleButtonsSortStamp(Int_t id)
 {
    // handles mutual radio button exclusions - set sort stat type
-
-   HandleRButtons(id, rbtnCurrent, &fViewer->fSortStamp);
+   TMemStat::StampType val;
+   HandleRButtons(id, rbtnCurrent, &val);
+   fViewer->SetSortStamp(val);
+   MakePrint();
 }
 
 //______________________________________________________________________________
@@ -311,8 +318,8 @@ void TMemStatViewerGUI::HandleDeep(Long_t /*id*/)
 {
    // handles stack deep
 
-   fViewer->fStackDeep = fNmbStackDeep->GetIntNumber();
-   fViewer->fSortDeep = fNmbSortDeep->GetIntNumber();
+   fViewer->SetStackDeep( fNmbStackDeep->GetIntNumber() );
+   fViewer->SetSortDeep( fNmbSortDeep->GetIntNumber() );
    MakePrint();
 }
 
@@ -344,6 +351,7 @@ void TMemStatViewerGUI::MakePrint()
 //______________________________________________________________________________
 void TMemStatViewerGUI::MakeSelection(TGCompositeFrame *frame)
 {
+   // TODO: Comment me
    if (!fViewer)
       return;
 
@@ -366,7 +374,7 @@ void TMemStatViewerGUI::MakeSelection(TGCompositeFrame *frame)
    TMemStat::Selection_t container;
    fViewer->GetFillSelection( &container, TMemStat::kFunction );
    for_each(container.begin(), container.end(),
-            bind2nd(SStringToListBox(), lboxFunctions));
+            bind2nd(SStringToListBox_t(), lboxFunctions));
    lboxFunctions->Select(0);
 
    // ----- Library
@@ -385,13 +393,14 @@ void TMemStatViewerGUI::MakeSelection(TGCompositeFrame *frame)
    container.clear();
    fViewer->GetFillSelection( &container, TMemStat::kLibrary );
    for_each(container.begin(), container.end(),
-            bind2nd(SStringToListBox(), lboxLibraries));
+            bind2nd(SStringToListBox_t(), lboxLibraries));
    lboxLibraries->Select(0);
 }
 
 //______________________________________________________________________________
 void TMemStatViewerGUI::HandleFuncSelect(const char* _val)
 {
+   // TODO: Comment me
    fCurFunc = _val;
    // if _val == "*" then we don't sort
    if ( fCurFunc.find("*") != string::npos )
@@ -403,6 +412,7 @@ void TMemStatViewerGUI::HandleFuncSelect(const char* _val)
 //______________________________________________________________________________
 void TMemStatViewerGUI::HandleLibSelect(const char* _val)
 {
+   // TODO: Comment me
    fCurLib = _val;
    // if _val == "*" then we don't sort
    if ( fCurLib.find("*") != string::npos )

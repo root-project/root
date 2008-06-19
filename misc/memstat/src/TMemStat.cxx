@@ -161,19 +161,19 @@ TMemStat::TMemStat(Option_t* option):
       fSortStamp(kCurrent),
       fSortDeep(10),
       fStackDeep(20),
+      fMaxStringLength(50),
       fSelected(0),
       fIsActive(kFALSE),
+      fOrder(kFALSE),
       fSelectedCodeBitmap(NULL),
       fSelectedStackBitmap(NULL),
-      fStackSummary(NULL),
-      fTree(NULL),
-      fTreeSys(NULL),
       fStampArray(NULL),
-      fManager(NULL),
       fArray(NULL),
       fArrayGraphics(NULL),
-      fMaxStringLength(50),
-      fOrder(kFALSE)
+      fTree(NULL),
+      fTreeSys(NULL),
+      fStackSummary(NULL),
+      fManager(NULL)
 {
    // Supported options:
    //    "new" - start to collect memory allocations stamps
@@ -189,7 +189,7 @@ TMemStat::TMemStat(Option_t* option):
 
    string opt(option);
    transform( opt.begin(), opt.end(), opt.begin(),
-              Memstat::ToLower() );
+              Memstat::ToLower_t() );
 
    if ( opt.find("new") != string::npos) // Processing "NEW"
    {
@@ -236,36 +236,97 @@ TMemStat::~TMemStat()
 }
 
 //______________________________________________________________________________
-void TMemStat::SetAutoStamp(Int_t autoStampSize, Int_t autoStampAlloc)
+void TMemStat::AddStamp(const char*stampName)
 {
-   // Change default values of the auto stamping
-   //   autoStampSize  [in] - size of invoking STAMPs
-   //   autoStampAlloc [in] - a number of allocations
+   // Add named stamp to the file
 
-   if (autoStampSize > 0)
-      TMemStatManager::GetInstance()->SetAutoStamp(autoStampSize, autoStampAlloc, 10000);
+   TMemStatManager::GetInstance()->AddStamps(stampName);
 }
 
 //______________________________________________________________________________
-void TMemStat::SetCurrentStamp(const char *stampName)
+void TMemStat::Draw(Option_t * /*option*/)
 {
-   // Getvalues for iven stamp
+   // Draw the memory statistic
+   // call ::Report("?") to see possible options and meaning
 
-   GetStampList();
+   // TODO: fix the draw method. Don't use the ROOT graphics
+   /*  if (!gPad) {
+        new TCanvas;
+        gPad->SetTopMargin(0.2);
+        gPad->SetRightMargin(0.3);
+        gPad->SetLeftMargin(0.10);
+     } else {
+        gPad->Clear();
+     }
 
-   const Int_t entry = find_string(*fStampArray, stampName);
-   GetMemStat(0, entry);
+     ProcessOption(option);
+     TString opt(option);
+     opt.ToLower();
+     if (opt.Contains("?"))
+        return;
+
+     RefreshSelect();
+
+     if (!opt.Contains("code")) {
+        SortStack(fSortStat, fSortStamp);
+        fArray = MakeGraphStack(fSortStat, fSortDeep);
+     } else {
+        SortCode(fSortStat, fSortStamp);
+        fArray = MakeGraphCode(fSortStat, fSortDeep);
+     }
+
+     MakeStampsText();
+     if (gPad) {
+        fArray->At(0)->Draw("alp");
+        gPad->Update();
+
+        TLegend * legend = new TLegend(0.75, 0.1, 0.99, 0.9, "Memory statistic");
+        for (Int_t i = 0;i < fArray->GetEntries();i++) {
+           fArray->At(i)->Draw("lp");
+           cout << i << '\t' << fArray->At(i)->GetName() << endl;
+           legend->AddEntry(fArray->At(i), fArray->At(i)->GetName());
+           gPad->Update();
+        }
+        legend->Draw();
+        fArray->AddLast(legend);
+        for (Int_t i = 0; i < fArrayGraphics->GetEntries(); i++) {
+           TText *ptext = dynamic_cast<TText*>(fArrayGraphics->At(i));
+           if (ptext) {
+              ptext->SetY(gPad->GetUymax());
+              ptext->SetTextAngle(45);
+              ptext->SetTextSizePixels(12);
+              ptext->SetTextAlign(13);
+              ptext->Draw("");
+           }
+           TLine *pline = dynamic_cast<TLine*>(fArrayGraphics->At(i));
+           if (pline) {
+              pline->SetY2(gPad->GetUymax());
+              pline->SetLineStyle(2);
+              pline->Draw("");
+           }
+        }
+     }
+     AppendPad();*/
 }
 
 //______________________________________________________________________________
-void TMemStat::SetCurrentStamp(const TObjString &stampName)
+void TMemStat::GetFillSelection(Selection_t *_Container, ESelection _Selection) const
 {
-   SetCurrentStamp(stampName.GetString());
+   // TODO: Comment me
+
+   if ( !_Container || !fManager)
+      return;
+
+   transform( fManager->fCodeInfoArray.begin(),
+              fManager->fCodeInfoArray.end(),
+              inserter(*_Container, _Container->begin()),
+              bind2nd(SFillSelection(), _Selection) );
 }
 
 //______________________________________________________________________________
 TObjArray* TMemStat::GetStampList()
 {
+   // TODO: Comment me
    if (fStampArray)
       return fStampArray;
 
@@ -284,87 +345,166 @@ TObjArray* TMemStat::GetStampList()
 }
 
 //______________________________________________________________________________
-Int_t TMemStat::DistancetoPrimitive(Int_t /*px*/, Int_t /*py*/)
+void TMemStat::MakeReport(const char * lib, const char *fun, Option_t* option, const char *fileName)
 {
-   // Return distance of the mouse to the TMemStat object
+   // make report for library
 
-  // TODO: Why we need this method here???
- /*  const Int_t kMinDist = 10;
-   if (!fArray)
-      return -1;
+   // reset selection
+   SelectCode(NULL, NULL, TMemStat::kOR);
+   SelectStack(TMemStat::kOR);
+   //
+   SelectCode(lib, fun, TMemStat::kAND);
+   SelectStack(TMemStat::kAND);
+   if (option)
+      ProcessOption(option);
+   SortCode(fSortStat, fSortStamp);
+   SortStack(fSortStat, fSortStamp);
 
-   const Int_t big = 9999;
-   const Int_t kBoundary = 6;
-   Int_t puxmin = gPad->XtoAbsPixel(gPad->GetUxmin());
-   Int_t puymin = gPad->YtoAbsPixel(gPad->GetUymin());
-   Int_t puxmax = gPad->XtoAbsPixel(gPad->GetUxmax());
-   Int_t puymax = gPad->YtoAbsPixel(gPad->GetUymax());
+   // Redirecting the output if needed
+   if (strlen(fileName) > 0)
+      gSystem->RedirectOutput(fileName, "w");
 
-   // return if point is not in the graph area
-   if (px <= puxmin + kBoundary)
-      return big;
-   if (py >= puymin - kBoundary)
-      return big;
-   if (px >= puxmax - kBoundary)
-      return big;
-   if (py <= puymax + kBoundary)
-      return big;
+   Report();
 
-   fSelected = -1;
-   Int_t mindist = 9999;
-   for (Int_t i = 0; i < fArray->GetSize(); ++i) {
-      if (!fArray->At(i))
-         continue;
-      const Int_t dist = fArray->At(i)->DistancetoPrimitive(px, py);
-      if (dist < mindist) {
-         mindist = dist;
-         fSelected = i;
-      }
+   if (strlen(fileName) > 0)
+      gSystem->RedirectOutput(0);
+}
+
+//______________________________________________________________________________
+void TMemStat::MakeHisMemoryStamp(Int_t /*topDiff*/)
+{
+   //draw histogram of memory usage as function of stamp name
+   // NOT IMPLEMENTED YET
+
+   const Int_t entries = fTreeSys->Draw("Mem3", "Mem3>0", "");
+   DoubleVector_t diff(entries - 1);
+   for (Int_t i = 0; i < entries - 1; ++i) {
+      diff[i] = fTreeSys->GetV1()[i+1] - fTreeSys->GetV1()[i];
    }
-   if (mindist > kMinDist)
-      fSelected = -1;*/
-   return -1;
+   IntVector_t indexes(entries - 1);
+   TMath::Sort(entries - 1, &diff[0], &indexes[0], kFALSE);
 }
 
 //______________________________________________________________________________
-void TMemStat::ExecuteEvent(Int_t /*event*/, Int_t /* px*/, Int_t /*py*/)
+void TMemStat::MakeHisMemoryTime()
 {
-   // function called when clicking with the mouse on a TMemStat object
+   // Make dump of memory usage versus time
 
-  // TODO: this method needs to be revised
-  /* switch (event) {
-   case kButton1Down:
-      if (fArray && fSelected >= 0) {
-         const Int_t uid = fArrayIndexes[fSelected];
-         cout << endl;
-         (uid >= 0) ? PrintStackWithID(uid) : PrintCodeWithID(-uid);
-      }
-      break;
-   case kMouseMotion:
-      break;
-   case kButton1Motion:
-      break;
-   case kButton1Up:
-      break;
-   }*/
+   fTreeSys->Draw("Mem3:StampTime.fSec>>hhh", "", "goff*");
+   if (!gROOT->FindObject("hhh"))
+      return ;
+
+   TH1* his3 = (TH1*)gROOT->FindObject("hhh")->Clone("Virtual Memory");
+   his3->SetDirectory(0);
+   delete gROOT->FindObject("hhh");
+
+   fTreeSys->Draw("Mem2:StampTime.fSec>>hhh", "", "goff*");
+   if (!gROOT->FindObject("hhh"))
+      return ;
+
+   TH1* his2 = (TH1*)gROOT->FindObject("hhh")->Clone("Residual Memory");
+   his2->SetDirectory(0);
+   delete gROOT->FindObject("hhh");
+
+   fTreeSys->Draw("CurrentStamp.fAllocSize/1000000.:StampTime.fSec>>hhh", "", "goff*");
+   if (!gROOT->FindObject("hhh"))
+      return ;
+
+   TH1* hism = (TH1*)gROOT->FindObject("hhh")->Clone("Allocated Memory");
+   hism->SetDirectory(0);
+   delete gROOT->FindObject("hhh");
+
+   his3->GetXaxis()->SetTimeDisplay(1);
+   his3->SetMarkerColor(2);
+   his2->SetMarkerColor(3);
+   hism->SetMarkerColor(4);
+   his3->Draw();
+   his2->Draw("same");
+   hism->Draw("same");
 }
 
 //______________________________________________________________________________
-void TMemStat::AddStamp(const char*stampName)
+void TMemStat::Paint(Option_t * /* option */)
 {
-   // Add named stamp to the file
-
-   TMemStatManager::GetInstance()->AddStamps(stampName);
+   // Paint function
 }
 
 //______________________________________________________________________________
-void TMemStat::RefreshSelect()
+void TMemStat::PrintCode(Int_t nentries) const
 {
-   if (fSelectedCodeIndex.empty())
-      SelectCode(NULL, NULL, TMemStat::kOR);
+   // Print information about n selected functions
+   // If the number of function selected is bigger than number n
+   // the only top (sorted accoring some creteria,) n are displayed
+   // e.g draw.SortCode(TMemStat::kAllocSize,TMemStat::kCurrent);
+   if (fSelectedCodeIndex.empty() || !fManager)
+      return;
 
+   UIntVector_t::const_iterator iter = max((fSelectedCodeIndex.end() - nentries), fSelectedCodeIndex.begin());
+   UIntVector_t::const_iterator iter_end = fSelectedCodeIndex.end();
+   for (; iter != iter_end; ++iter)
+      fManager->fCodeInfoArray[*iter].Print();
+}
+
+//______________________________________________________________________________
+void TMemStat::PrintCodeWithID(UInt_t id) const
+{
+   // print information for code with ID
+
+   if (!fManager)
+      return;
+   if (id > fManager->fCodeInfoArray.size())
+      return;
+   fManager->fCodeInfoArray[id].Print();
+}
+
+//______________________________________________________________________________
+void TMemStat::PrintStack(Int_t nentries, UInt_t deep) const
+{
+   // Print information about n selected stack traces
+   // If the number of function selected is bigger than number n
+   // the only top (sorted accoring some creteria,) n are displayed
+   // e.g draw.SortCode(TMemStat::kAllocSize,TMemStat::kCurrent);
    if (fSelectedStackIndex.empty())
-      SelectStack(TMemStat::kOR);
+      return;
+
+   UIntVector_t::const_iterator iter = max((fSelectedStackIndex.end() - nentries), fSelectedStackIndex.begin());
+   UIntVector_t::const_iterator iter_end = fSelectedStackIndex.end();
+   for (; iter != iter_end; ++iter)
+      PrintStackWithID(*iter, deep);
+
+   cout << "Summary for selected:" << endl;
+   ios::fmtflags old_flags(cout.flags(ios::left));
+   fStackSummary->Print();
+   cout.flags(old_flags);
+}
+
+
+//______________________________________________________________________________
+void TMemStat::PrintStackWithID(UInt_t _id, UInt_t _deep) const
+{
+   // print stack information for code with ID
+   // NOTE: if _deep is 0, then we use fStackDeep
+   if (!fManager)
+      return;
+
+   _deep = !_deep ? fStackDeep : _deep;
+
+   const TMemStatStackInfo &infoStack = fManager->fStackVector[_id];
+   cout << infoStack << endl;
+
+   ios::fmtflags old_flags(cout.flags(ios::left));
+   for (UInt_t icode = 0, counter = 0; icode < infoStack.fSize; ++icode) {
+      const TMemStatCodeInfo &infoCode(fManager->fCodeInfoArray[infoStack.fSymbolIndexes[icode]]);
+      if (!EnabledCode(infoCode))
+         continue;
+      cout
+      << setw(5) << icode
+      << infoCode << endl;
+      ++counter;
+      if (counter >= _deep)
+         break;
+   }
+   cout.flags(old_flags);
 }
 
 //______________________________________________________________________________
@@ -399,78 +539,6 @@ void TMemStat::Report(Option_t* option)
 }
 
 //______________________________________________________________________________
-void TMemStat::Draw(Option_t * /*option*/)
-{
-   // Draw the memory statistic
-   // call ::Report("?") to see possible options and meaning
-
-  // TODO: fix the draw method. Don't use the ROOT graphics 
- /*  if (!gPad) {
-      new TCanvas;
-      gPad->SetTopMargin(0.2);
-      gPad->SetRightMargin(0.3);
-      gPad->SetLeftMargin(0.10);
-   } else {
-      gPad->Clear();
-   }
-
-   ProcessOption(option);
-   TString opt(option);
-   opt.ToLower();
-   if (opt.Contains("?"))
-      return;
-
-   RefreshSelect();
-
-   if (!opt.Contains("code")) {
-      SortStack(fSortStat, fSortStamp);
-      fArray = MakeGraphStack(fSortStat, fSortDeep);
-   } else {
-      SortCode(fSortStat, fSortStamp);
-      fArray = MakeGraphCode(fSortStat, fSortDeep);
-   }
-
-   MakeStampsText();
-   if (gPad) {
-      fArray->At(0)->Draw("alp");
-      gPad->Update();
-
-      TLegend * legend = new TLegend(0.75, 0.1, 0.99, 0.9, "Memory statistic");
-      for (Int_t i = 0;i < fArray->GetEntries();i++) {
-         fArray->At(i)->Draw("lp");
-         cout << i << '\t' << fArray->At(i)->GetName() << endl;
-         legend->AddEntry(fArray->At(i), fArray->At(i)->GetName());
-         gPad->Update();
-      }
-      legend->Draw();
-      fArray->AddLast(legend);
-      for (Int_t i = 0; i < fArrayGraphics->GetEntries(); i++) {
-         TText *ptext = dynamic_cast<TText*>(fArrayGraphics->At(i));
-         if (ptext) {
-            ptext->SetY(gPad->GetUymax());
-            ptext->SetTextAngle(45);
-            ptext->SetTextSizePixels(12);
-            ptext->SetTextAlign(13);
-            ptext->Draw("");
-         }
-         TLine *pline = dynamic_cast<TLine*>(fArrayGraphics->At(i));
-         if (pline) {
-            pline->SetY2(gPad->GetUymax());
-            pline->SetLineStyle(2);
-            pline->Draw("");
-         }
-      }
-   }
-   AppendPad();*/
-}
-
-//______________________________________________________________________________
-void TMemStat::Paint(Option_t * /* option */)
-{
-   // Paint function
-}
-
-//______________________________________________________________________________
 void TMemStat::ResetSelection()
 {
    // reset all selections
@@ -487,50 +555,32 @@ void TMemStat::ResetSelection()
 }
 
 //______________________________________________________________________________
-Bool_t TMemStat::GetMemStat(const char * fname, Int_t entry)
+void TMemStat::SetAutoStamp(Int_t autoStampSize, Int_t autoStampAlloc)
 {
-   // Get memstat from tree
+   // Change default values of the auto stamping
+   //   autoStampSize  [in] - size of invoking STAMPs
+   //   autoStampAlloc [in] - a number of allocations
 
-   if (fname != 0) {
-      fFile.reset(TFile::Open(fname));
-      if (!fFile.get() || fFile->IsZombie())
-         return kFALSE;
-
-      fTree = dynamic_cast<TTree*>(fFile->Get("MemStat"));
-      if (!fTree)
-         return kFALSE;
-
-      fTreeSys = dynamic_cast<TTree*>(fFile->Get("MemSys"));
-      if (!fTreeSys)
-         return kFALSE;
-   }
-
-   TMemStatManager *man(NULL);
-   // TODO: needs to be investigated.
-   // There was a crash, happens when user reselect stamps list after TMemStat Draw has been called.
-   // The crash (SEGFAULT) happens in fTree->GetEntry(entry) in access of its buffer.
-   // ResetBranchAddresses helped, but it is not clear whether this fix correct or not.
-   fTree->ResetBranchAddresses();
-   fTree->SetBranchAddress("Manager", &man);
-
-   if ( (entry < 0) || (entry >= fTree->GetEntries()) )
-      entry = fTree->GetEntries() - 1;
-
-   fTree->GetEntry(entry);
-   fManager = man;
-   return kTRUE;
+   if (autoStampSize > 0)
+      TMemStatManager::GetInstance()->SetAutoStamp(autoStampSize, autoStampAlloc, 10000);
 }
 
 //______________________________________________________________________________
-void TMemStat::PrintCodeWithID(UInt_t id) const
+void TMemStat::SetCurrentStamp(const char *stampName)
 {
-   // print information for code with ID
+   // Getvalues for iven stamp
 
-   if (!fManager)
-      return;
-   if (id > fManager->fCodeInfoArray.size())
-      return;
-   fManager->fCodeInfoArray[id].Print();
+   GetStampList();
+
+   const Int_t entry = find_string(*fStampArray, stampName);
+   GetMemStat(0, entry);
+}
+
+//______________________________________________________________________________
+void TMemStat::SetCurrentStamp(const TObjString &stampName)
+{
+   // TODO: Comment me
+   SetCurrentStamp(stampName.GetString());
 }
 
 //______________________________________________________________________________
@@ -795,6 +845,140 @@ void TMemStat::SortStack(StatType sortType, StampType stampType)
 }
 
 //______________________________________________________________________________
+Int_t TMemStat::DistancetoPrimitive(Int_t /*px*/, Int_t /*py*/)
+{
+   // Return distance of the mouse to the TMemStat object
+
+   // TODO: Why we need this method here???
+   /*  const Int_t kMinDist = 10;
+     if (!fArray)
+        return -1;
+
+     const Int_t big = 9999;
+     const Int_t kBoundary = 6;
+     Int_t puxmin = gPad->XtoAbsPixel(gPad->GetUxmin());
+     Int_t puymin = gPad->YtoAbsPixel(gPad->GetUymin());
+     Int_t puxmax = gPad->XtoAbsPixel(gPad->GetUxmax());
+     Int_t puymax = gPad->YtoAbsPixel(gPad->GetUymax());
+
+     // return if point is not in the graph area
+     if (px <= puxmin + kBoundary)
+        return big;
+     if (py >= puymin - kBoundary)
+        return big;
+     if (px >= puxmax - kBoundary)
+        return big;
+     if (py <= puymax + kBoundary)
+        return big;
+
+     fSelected = -1;
+     Int_t mindist = 9999;
+     for (Int_t i = 0; i < fArray->GetSize(); ++i) {
+        if (!fArray->At(i))
+           continue;
+        const Int_t dist = fArray->At(i)->DistancetoPrimitive(px, py);
+        if (dist < mindist) {
+           mindist = dist;
+           fSelected = i;
+        }
+     }
+     if (mindist > kMinDist)
+        fSelected = -1;*/
+   return -1;
+}
+
+//______________________________________________________________________________
+Bool_t TMemStat::GetMemStat(const char * fname, Int_t entry)
+{
+   // Get memstat from tree
+
+   if (fname != 0) {
+      fFile.reset(TFile::Open(fname));
+      if (!fFile.get() || fFile->IsZombie())
+         return kFALSE;
+
+      fTree = dynamic_cast<TTree*>(fFile->Get("MemStat"));
+      if (!fTree)
+         return kFALSE;
+
+      fTreeSys = dynamic_cast<TTree*>(fFile->Get("MemSys"));
+      if (!fTreeSys)
+         return kFALSE;
+   }
+
+   TMemStatManager *man(NULL);
+   // TODO: needs to be investigated.
+   // There was a crash, happens when user reselect stamps list after TMemStat Draw has been called.
+   // The crash (SEGFAULT) happens in fTree->GetEntry(entry) in access of its buffer.
+   // ResetBranchAddresses helped, but it is not clear whether this fix correct or not.
+   fTree->ResetBranchAddresses();
+   fTree->SetBranchAddress("Manager", &man);
+
+   if ( (entry < 0) || (entry >= fTree->GetEntries()) )
+      entry = fTree->GetEntries() - 1;
+
+   fTree->GetEntry(entry);
+   fManager = man;
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TMemStat::EnabledCode(const TMemStatCodeInfo &info) const
+{
+   // Private function
+   // disable printing of the predefined code sequence
+   if (info.fLib.Contains("libMemStat.so"))
+      return kFALSE;
+   if (info.fFunction.Contains("operator new"))
+      return kFALSE;
+   if (info.fFunction.Contains("TMethodCall::Execute"))
+      return kFALSE;
+   if (info.fFunction.Contains("Cint::G__CallFunc::Exec"))
+      return kFALSE;
+   if (info.fFunction.Contains("Cint::G__ExceptionWrapper"))
+      return kFALSE;
+   if (info.fFunction.Sizeof() <= 1)
+      return kFALSE;
+
+   for (Int_t i = 0; i < fDisablePrintLib.GetEntries(); ++i) {
+      TObjString * str = (TObjString*)fDisablePrintLib.At(i);
+      if (str && info.fLib.Contains(str->String().Data()))
+         return kFALSE;
+   }
+
+   for (Int_t i = 0; i < fDisablePrintCode.GetEntries(); ++i) {
+      TObjString * str = (TObjString*)fDisablePrintCode.At(i);
+      if (str && info.fFunction.Contains(str->String().Data()))
+         return kFALSE;
+   }
+
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+void TMemStat::ExecuteEvent(Int_t /*event*/, Int_t /* px*/, Int_t /*py*/)
+{
+   // function called when clicking with the mouse on a TMemStat object
+
+   // TODO: this method needs to be revised
+   /* switch (event) {
+    case kButton1Down:
+       if (fArray && fSelected >= 0) {
+          const Int_t uid = fArrayIndexes[fSelected];
+          cout << endl;
+          (uid >= 0) ? PrintStackWithID(uid) : PrintCodeWithID(-uid);
+       }
+       break;
+    case kMouseMotion:
+       break;
+    case kButton1Motion:
+       break;
+    case kButton1Up:
+       break;
+    }*/
+}
+
+//______________________________________________________________________________
 void TMemStat::MakeCodeArray()
 {
    //   PRIVATE: make code index accoring tbit mask
@@ -843,102 +1027,7 @@ void TMemStat::MakeStackArray()
    }
 }
 
-//______________________________________________________________________________
-void TMemStat::PrintCode(Int_t nentries) const
-{
-   // Print information about n selected functions
-   // If the number of function selected is bigger than number n
-   // the only top (sorted accoring some creteria,) n are displayed
-   // e.g draw.SortCode(TMemStat::kAllocSize,TMemStat::kCurrent);
-   if (fSelectedCodeIndex.empty() || !fManager)
-      return;
 
-   UIntVector_t::const_iterator iter = max((fSelectedCodeIndex.end() - nentries), fSelectedCodeIndex.begin());
-   UIntVector_t::const_iterator iter_end = fSelectedCodeIndex.end();
-   for (; iter != iter_end; ++iter)
-      fManager->fCodeInfoArray[*iter].Print();
-}
-
-//______________________________________________________________________________
-void TMemStat::PrintStack(Int_t nentries, UInt_t deep) const
-{
-   // Print information about n selected stack traces
-   // If the number of function selected is bigger than number n
-   // the only top (sorted accoring some creteria,) n are displayed
-   // e.g draw.SortCode(TMemStat::kAllocSize,TMemStat::kCurrent);
-   if (fSelectedStackIndex.empty())
-      return;
-
-   UIntVector_t::const_iterator iter = max((fSelectedStackIndex.end() - nentries), fSelectedStackIndex.begin());
-   UIntVector_t::const_iterator iter_end = fSelectedStackIndex.end();
-   for (; iter != iter_end; ++iter)
-      PrintStackWithID(*iter, deep);
-
-   cout << "Summary for selected:" << endl;
-   ios::fmtflags old_flags(cout.flags(ios::left));
-   fStackSummary->Print();
-   cout.flags(old_flags);
-}
-
-//______________________________________________________________________________
-void TMemStat::PrintStackWithID(UInt_t _id, UInt_t _deep) const
-{
-   // print stack information for code with ID
-   if (!fManager)
-      return;
-
-   _deep = !_deep ? fStackDeep : _deep;
-
-   const TMemStatStackInfo &infoStack = fManager->fStackVector[_id];
-   cout << infoStack << endl;
-
-   ios::fmtflags old_flags(cout.flags(ios::left));
-   for (UInt_t icode = 0, counter = 0; icode < infoStack.fSize; ++icode) {
-      const TMemStatCodeInfo &infoCode(fManager->fCodeInfoArray[infoStack.fSymbolIndexes[icode]]);
-      if (!EnabledCode(infoCode))
-         continue;
-      cout
-      << setw(5) << icode
-      << infoCode << endl;
-      ++counter;
-      if (counter >= _deep)
-         break;
-   }
-   cout.flags(old_flags);
-}
-
-//______________________________________________________________________________
-Bool_t TMemStat::EnabledCode(const TMemStatCodeInfo &info) const
-{
-   // Private function
-   // disable printing of the predefined code sequence
-   if (info.fLib.Contains("libMemStat.so"))
-      return kFALSE;
-   if (info.fFunction.Contains("operator new"))
-      return kFALSE;
-   if (info.fFunction.Contains("TMethodCall::Execute"))
-      return kFALSE;
-   if (info.fFunction.Contains("Cint::G__CallFunc::Exec"))
-      return kFALSE;
-   if (info.fFunction.Contains("Cint::G__ExceptionWrapper"))
-      return kFALSE;
-   if (info.fFunction.Sizeof() <= 1)
-      return kFALSE;
-
-   for (Int_t i = 0; i < fDisablePrintLib.GetEntries(); ++i) {
-      TObjString * str = (TObjString*)fDisablePrintLib.At(i);
-      if (str && info.fLib.Contains(str->String().Data()))
-         return kFALSE;
-   }
-
-   for (Int_t i = 0; i < fDisablePrintCode.GetEntries(); ++i) {
-      TObjString * str = (TObjString*)fDisablePrintCode.At(i);
-      if (str && info.fFunction.Contains(str->String().Data()))
-         return kFALSE;
-   }
-
-   return kTRUE;
-}
 
 //______________________________________________________________________________
 TObjArray *TMemStat::MakeGraphCode(StatType statType, Int_t nentries)
@@ -1130,34 +1219,34 @@ void TMemStat::MakeStampsText()
 {
    // Make a text description of the stamps
    // create a array of TText objects
- 
-  // TODO: see TMemStat::Draw
-  /*if (!fArrayGraphics)
-      fArrayGraphics = new TObjArray();
 
-   const Int_t nentries = fTree->GetEntries();
-   Int_t stampNumber(0);
-   TObjString *pnameStamp(NULL);
-   TTimeStamp *ptimeStamp(NULL);
-   fTree->SetBranchAddress("StampTime.", &ptimeStamp);
-   fTree->SetBranchAddress("StampName.", &pnameStamp);
-   fTree->SetBranchAddress("StampNumber", &stampNumber);
+   // TODO: see TMemStat::Draw
+   /*if (!fArrayGraphics)
+       fArrayGraphics = new TObjArray();
 
-   for (Int_t i = 0; i < nentries; ++i) {
-      fTree->GetBranch("StampTime.")->GetEntry(i);
-      fTree->GetBranch("StampName.")->GetEntry(i);
-      fTree->GetBranch("StampNumber")->GetEntry(i);
-      char chname[1000];
-      if (pnameStamp->GetString().Contains("autoStamp")) {
-         sprintf(chname, " ");
-      } else {
-         sprintf(chname, "%s  %d", pnameStamp->GetString().Data(), ptimeStamp->GetTime());
-      }
-      TText *ptext = new TText(stampNumber, 0, chname);
-      fArrayGraphics->AddLast(ptext);
-      TLine * pline = new TLine(stampNumber, 0, stampNumber, 1);
-      fArrayGraphics->AddLast(pline);
-   }*/
+    const Int_t nentries = fTree->GetEntries();
+    Int_t stampNumber(0);
+    TObjString *pnameStamp(NULL);
+    TTimeStamp *ptimeStamp(NULL);
+    fTree->SetBranchAddress("StampTime.", &ptimeStamp);
+    fTree->SetBranchAddress("StampName.", &pnameStamp);
+    fTree->SetBranchAddress("StampNumber", &stampNumber);
+
+    for (Int_t i = 0; i < nentries; ++i) {
+       fTree->GetBranch("StampTime.")->GetEntry(i);
+       fTree->GetBranch("StampName.")->GetEntry(i);
+       fTree->GetBranch("StampNumber")->GetEntry(i);
+       char chname[1000];
+       if (pnameStamp->GetString().Contains("autoStamp")) {
+          sprintf(chname, " ");
+       } else {
+          sprintf(chname, "%s  %d", pnameStamp->GetString().Data(), ptimeStamp->GetTime());
+       }
+       TText *ptext = new TText(stampNumber, 0, chname);
+       fArrayGraphics->AddLast(ptext);
+       TLine * pline = new TLine(stampNumber, 0, stampNumber, 1);
+       fArrayGraphics->AddLast(pline);
+    }*/
 }
 
 //______________________________________________________________________________
@@ -1228,91 +1317,12 @@ void TMemStat::ProcessOption(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TMemStat::MakeReport(const char * lib, const char *fun, Option_t* option, const char *fileName)
+void TMemStat::RefreshSelect()
 {
-   // make report for library
+   // TODO: Comment me
+   if (fSelectedCodeIndex.empty())
+      SelectCode(NULL, NULL, TMemStat::kOR);
 
-   // reset selection
-   SelectCode(NULL, NULL, TMemStat::kOR);
-   SelectStack(TMemStat::kOR);
-   //
-   SelectCode(lib, fun, TMemStat::kAND);
-   SelectStack(TMemStat::kAND);
-   if (option)
-      ProcessOption(option);
-   SortCode(fSortStat, fSortStamp);
-   SortStack(fSortStat, fSortStamp);
-
-   // Redirecting the output if needed
-   if (strlen(fileName) > 0)
-      gSystem->RedirectOutput(fileName, "w");
-
-   Report();
-
-   if (strlen(fileName) > 0)
-      gSystem->RedirectOutput(0);
-}
-
-//______________________________________________________________________________
-void TMemStat::MakeHisMemoryTime()
-{
-   // Make dump of memory usage versus time
-
-   fTreeSys->Draw("Mem3:StampTime.fSec>>hhh", "", "goff*");
-   if (!gROOT->FindObject("hhh"))
-      return ;
-
-   TH1* his3 = (TH1*)gROOT->FindObject("hhh")->Clone("Virtual Memory");
-   his3->SetDirectory(0);
-   delete gROOT->FindObject("hhh");
-
-   fTreeSys->Draw("Mem2:StampTime.fSec>>hhh", "", "goff*");
-   if (!gROOT->FindObject("hhh"))
-      return ;
-
-   TH1* his2 = (TH1*)gROOT->FindObject("hhh")->Clone("Residual Memory");
-   his2->SetDirectory(0);
-   delete gROOT->FindObject("hhh");
-
-   fTreeSys->Draw("CurrentStamp.fAllocSize/1000000.:StampTime.fSec>>hhh", "", "goff*");
-   if (!gROOT->FindObject("hhh"))
-      return ;
-
-   TH1* hism = (TH1*)gROOT->FindObject("hhh")->Clone("Allocated Memory");
-   hism->SetDirectory(0);
-   delete gROOT->FindObject("hhh");
-
-   his3->GetXaxis()->SetTimeDisplay(1);
-   his3->SetMarkerColor(2);
-   his2->SetMarkerColor(3);
-   hism->SetMarkerColor(4);
-   his3->Draw();
-   his2->Draw("same");
-   hism->Draw("same");
-}
-
-//______________________________________________________________________________
-void TMemStat::MakeHisMemoryStamp(Int_t /*topDiff*/)
-{
-   //draw histogram of memory usage as function of stamp name
-   // NOT IMPLEMENTED YET
-   const Int_t entries = fTreeSys->Draw("Mem3", "Mem3>0", "");
-   DoubleVector_t diff(entries - 1);
-   for (Int_t i = 0; i < entries - 1; ++i) {
-      diff[i] = fTreeSys->GetV1()[i+1] - fTreeSys->GetV1()[i];
-   }
-   IntVector_t indexes(entries - 1);
-   TMath::Sort(entries - 1, &diff[0], &indexes[0], kFALSE);
-}
-
-//______________________________________________________________________________
-void TMemStat::GetFillSelection(Selection_t *_Container, ESelection _Selection) const
-{
-   if ( !_Container || !fManager)
-      return;
-
-   transform( fManager->fCodeInfoArray.begin(),
-              fManager->fCodeInfoArray.end(),
-              inserter(*_Container, _Container->begin()),
-              bind2nd(SFillSelection(), _Selection) );
+   if (fSelectedStackIndex.empty())
+      SelectStack(TMemStat::kOR);
 }

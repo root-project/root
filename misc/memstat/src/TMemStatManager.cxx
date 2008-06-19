@@ -100,8 +100,8 @@ void TMemStatManager::Init()
 
    fStampNumber = 0;
    fAllocCount = 0;
-   free_hashtable();
-   fLeak = (TMemTable **) malloc(sizeof(void *) * fSize);
+   FreeHashtable();
+   fLeak = (TMemTable_t **) malloc(sizeof(void *) * fSize);
    fMultDeleteTable.fLeaks = 0;
    fMultDeleteTable.fAllocCount = 0;
    fMultDeleteTable.fTableSize = 0;
@@ -111,7 +111,7 @@ void TMemStatManager::Init()
    fStampTime.reserve(fSize);
    fStampTime[0] = TTimeStamp();
    for (int i = 0; i < fSize; ++i) {
-      fLeak[i] = (TMemTable *) malloc(sizeof(TMemTable));
+      fLeak[i] = (TMemTable_t *) malloc(sizeof(TMemTable_t));
       fLeak[i]->fAllocCount = 0;
       fLeak[i]->fMemSize = 0;
       fLeak[i]->fFirstFreeSpot = 0;
@@ -157,11 +157,11 @@ TMemStatManager::~TMemStatManager()
    SetBit(kStatDisable);
    Disable();
    AddStamps("End");
-   DumpTo(Tree, kTRUE, "End");
-   DumpTo(SysTree, kTRUE, "End");
+   DumpTo(kTree, kTRUE, "End");
+   DumpTo(kSysTree, kTRUE, "End");
    Disable();
 
-   free_hashtable();
+   FreeHashtable();
 }
 
 //______________________________________________________________________________
@@ -308,8 +308,8 @@ void  TMemStatManager::AddStamps(const char * stampname)
 
    fStampTime[fStampNumber] = TTimeStamp();
    if (fStampVector.size() >= fAutoStampDumpSize || stampname) {
-      DumpTo(Tree, kTRUE, stampname);
-      DumpTo(SysTree, kTRUE, stampname);
+      DumpTo(kTree, kTRUE, stampname);
+      DumpTo(kSysTree, kTRUE, stampname);
    }
    ++fStampNumber;
 }
@@ -354,10 +354,10 @@ void TMemStatManager::RehashLeak(int newSize)
 
    if (newSize <= fSize)
       return;
-   TMemTable **newLeak = (TMemTable **) malloc(sizeof(void *) * newSize);
+   TMemTable_t **newLeak = (TMemTable_t **) malloc(sizeof(void *) * newSize);
    for (int i = 0; i < newSize; ++i) {
       //build new branches
-      newLeak[i] = (TMemTable *) malloc(sizeof(TMemTable));
+      newLeak[i] = (TMemTable_t *) malloc(sizeof(TMemTable_t));
       newLeak[i]->fAllocCount = 0;
       newLeak[i]->fMemSize = 0;
       newLeak[i]->fFirstFreeSpot = 0;
@@ -365,29 +365,29 @@ void TMemStatManager::RehashLeak(int newSize)
       newLeak[i]->fLeaks = 0;
    }
    for (int ib = 0; ib < fSize; ++ib) {
-      TMemTable *branch = fLeak[ib];
+      TMemTable_t *branch = fLeak[ib];
       for (int i = 0; i < branch->fTableSize; i++)
          if (branch->fLeaks[i].fAddress != 0) {
             int hash = int(TString::Hash(&branch->fLeaks[i].fAddress, sizeof(void*)) % newSize);
-            TMemTable *newbranch = newLeak[hash];
+            TMemTable_t *newbranch = newLeak[hash];
             if (newbranch->fAllocCount >= newbranch->fTableSize) {
                int newTableSize =
                   newbranch->fTableSize ==
                   0 ? 16 : newbranch->fTableSize * 2;
                newbranch->fLeaks =
-                  (TMemInfo *) realloc(newbranch->fLeaks,
-                                       sizeof(TMemInfo) * newTableSize);
+                  (TMemInfo_t *) realloc(newbranch->fLeaks,
+                                         sizeof(TMemInfo_t) * newTableSize);
                if (!newbranch->fLeaks) {
                   Error("TMemStatManager::AddPointer", "realloc failure");
                   _exit(1);
                }
                memset(newbranch->fLeaks + newbranch->fTableSize, 0,
-                      sizeof(TMemInfo) * (newTableSize -
-                                          newbranch->fTableSize));
+                      sizeof(TMemInfo_t) * (newTableSize -
+                                            newbranch->fTableSize));
                newbranch->fTableSize = newTableSize;
             }
             memcpy(&newbranch->fLeaks[newbranch->fAllocCount],
-                   &branch->fLeaks[i], sizeof(TMemInfo));
+                   &branch->fLeaks[i], sizeof(TMemInfo_t));
             newbranch->fAllocCount++;
             newbranch->fMemSize += branch->fLeaks[i].fSize;
          }
@@ -443,7 +443,7 @@ void *TMemStatManager::AddPointer(size_t  size, void *ptr)
    if ((fAllocCount / fSize) > 128)
       RehashLeak(fSize * 2);
    int hash = int(TString::Hash(&p, sizeof(void*)) % fSize);
-   TMemTable *branch = fLeak[hash];
+   TMemTable_t *branch = fLeak[hash];
    branch->fAllocCount++;
    branch->fMemSize += size;
 
@@ -479,13 +479,13 @@ void *TMemStatManager::AddPointer(size_t  size, void *ptr)
       int newTableSize =
          branch->fTableSize == 0 ? 16 : branch->fTableSize * 2;
       branch->fLeaks =
-         (TMemInfo *) realloc(branch->fLeaks,
-                              sizeof(TMemInfo) * newTableSize);
+         (TMemInfo_t *) realloc(branch->fLeaks,
+                                sizeof(TMemInfo_t) * newTableSize);
       if (!branch->fLeaks) {
          Error("TMemStatManager::AddPointer", "realloc failure (2)");
          _exit(1);
       }
-      memset(branch->fLeaks + branch->fTableSize, 0, sizeof(TMemInfo) *
+      memset(branch->fLeaks + branch->fTableSize, 0, sizeof(TMemInfo_t) *
              (newTableSize - branch->fTableSize));
       branch->fTableSize = newTableSize;
    }
@@ -513,7 +513,7 @@ void TMemStatManager::FreePointer(void *p)
 
    const int hash = static_cast<int>(TString::Hash(&p, sizeof(void*)) % fSize);
    --fAllocCount;
-   TMemTable *branch = fLeak[hash];
+   TMemTable_t *branch = fLeak[hash];
    for (int i = 0; i < branch->fTableSize; i++) {
       if (branch->fLeaks[i].fAddress == p) {
          branch->fLeaks[i].fAddress = 0;
@@ -540,8 +540,8 @@ void TMemStatManager::FreePointer(void *p)
          fMultDeleteTable.fTableSize ==
          0 ? 16 : fMultDeleteTable.fTableSize * 2;
       fMultDeleteTable.fLeaks =
-         (TMemInfo *) realloc(fMultDeleteTable.fLeaks,
-                              sizeof(TMemInfo) * newTableSize);
+         (TMemInfo_t *) realloc(fMultDeleteTable.fLeaks,
+                                sizeof(TMemInfo_t) * newTableSize);
       fMultDeleteTable.fAllocCount = newTableSize;
    }
 
@@ -572,8 +572,7 @@ void TMemStatManager::DumpTo(EDumpTo _DumpTo, Bool_t _clearStamps, const char *_
    gSystem->GetMemInfo(&memInfo);
    gSystem->GetProcInfo(&procInfo);
    Float_t memUsage[4] = { memInfo.fMemUsed, memInfo.fSwapUsed,
-                           procInfo.fMemResident*0.001, procInfo.fMemVirtual*0.001
-                         };
+                           procInfo.fMemResident*0.001, procInfo.fMemVirtual*0.001};
    // No need to delete this pointer
    TTimeStamp *ptimeStamp(new TTimeStamp);
    // pass ownership to an auto_ptr
@@ -595,14 +594,14 @@ void TMemStatManager::DumpTo(EDumpTo _DumpTo, Bool_t _clearStamps, const char *_
    TTree *pDumpTo(NULL);
    bool bNewTree = false;
    switch (_DumpTo) {
-   case Tree:
+   case kTree:
       if (!fDumpTree) {
          fDumpTree = new TTree("MemStat", "MemStat");
          bNewTree = true;
       }
       pDumpTo = fDumpTree;
       break;
-   case SysTree:
+   case kSysTree:
       if (!fDumpSysTree) {
          fDumpSysTree = new TTree("MemSys", "MemSys");
          bNewTree = true;
@@ -614,7 +613,7 @@ void TMemStatManager::DumpTo(EDumpTo _DumpTo, Bool_t _clearStamps, const char *_
    }
 
    if (bNewTree) {
-      if (Tree == _DumpTo)
+      if (kTree == _DumpTo)
          pDumpTo->Branch("Manager", "TMemStatManager", &pmanager);
       pDumpTo->Branch("StampTime.", "TTimeStamp", &ptimeStamp);
       pDumpTo->Branch("StampName.", "TObjString", &pnameStamp);
@@ -625,7 +624,7 @@ void TMemStatManager::DumpTo(EDumpTo _DumpTo, Bool_t _clearStamps, const char *_
       pDumpTo->Branch("Mem2", &memUsage[2], "Mem2/F");
       pDumpTo->Branch("Mem3", &memUsage[3], "Mem3/F");
    } else {
-      if (Tree == _DumpTo)
+      if (kTree == _DumpTo)
          pDumpTo->SetBranchAddress("Manager", &pmanager);
       pDumpTo->SetBranchAddress("StampTime.", &ptimeStamp);
       pDumpTo->SetBranchAddress("StampName.", &pnameStamp);

@@ -34,19 +34,39 @@ class TTree;
 class TMemStatStackInfo;
 
 typedef std::vector<Int_t> IntVector_t;
-typedef std::auto_ptr<TFile> TFilePtr;
+typedef std::auto_ptr<TFile> TFilePtr_t;
 
 class TMemStatManager: public TObject
 {
+   struct TMemInfo_t {
+      void   *fAddress;    //mem address
+      size_t  fSize;       //size of the allocated memory
+      Int_t   fStackIndex; //index of the stack info
+   };
+
+   struct TMemTable_t {
+      Int_t     fAllocCount;    //number of memory allocation blocks
+      Int_t     fMemSize;       //total memory allocated size
+      Int_t     fTableSize;     //amount of entries in the below array
+      Int_t     fFirstFreeSpot; //where is the first free spot in the leaks array?
+      TMemInfo_t *fLeaks;         //leak table
+   };
+
+   struct TDeleteTable_t {
+      Int_t     fAllocCount;    //how many memory blocks do we have
+      Int_t     fTableSize;     //amount of entries in the below array
+      TMemInfo_t *fLeaks;         //leak table
+   };
+
 public:
    typedef std::vector<TMemStatCodeInfo> CodeInfoContainer_t;
 
-   enum StatusBits {
+   enum EStatusBits {
       kUserDisable = BIT(18),       // user disable-enable switch  switch
       kStatDisable = BIT(16),       // true if disable statistic
       kStatRoutine = BIT(17)        // indicator inside of stat routine  (AddPointer or FreePointer)
    };
-   enum EDumpTo { Tree, SysTree };
+   enum EDumpTo { kTree, kSysTree };
 
    TMemStatManager();
    virtual ~TMemStatManager();
@@ -106,16 +126,16 @@ protected:
    Int_t fMinStampSize;             // the minimal size to be dumped to tree
    //  memory infomation
    Int_t fSize;                     //!size of hash table
-   TMemTable **fLeak;               //!pointer to the hash table
+   TMemTable_t **fLeak;               //!pointer to the hash table
    Int_t fAllocCount;               //!number of memory allocation blocks
-   TDeleteTable fMultDeleteTable;   //!pointer to the table
-   TFilePtr fDumpFile;              //!file to dump current information
+   TDeleteTable_t fMultDeleteTable;   //!pointer to the table
+   TFilePtr_t fDumpFile;              //!file to dump current information
    TTree *fDumpTree;                //!tree to dump information
    TTree *fDumpSysTree;             //!tree to dump information
    static TMemStatManager *fgInstance; // pointer to instance
    static void *fgStackTop;             // stack top pointer
 
-   void free_hashtable() {
+   void FreeHashtable() {
       if (!fLeak)
          return;
 

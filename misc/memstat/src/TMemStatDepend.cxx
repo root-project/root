@@ -67,42 +67,11 @@ static void *return_address(int _frame)
 {
    // we have a limit on the depth = 35
    switch (_frame) {
-      _RET_ADDR(0);
-      _RET_ADDR(1);
-      _RET_ADDR(2);
-      _RET_ADDR(3);
-      _RET_ADDR(4);
-      _RET_ADDR(5);
-      _RET_ADDR(6);
-      _RET_ADDR(7);
-      _RET_ADDR(8);
-      _RET_ADDR(9);
-      _RET_ADDR(10);
-      _RET_ADDR(11);
-      _RET_ADDR(12);
-      _RET_ADDR(13);
-      _RET_ADDR(14);
-      _RET_ADDR(15);
-      _RET_ADDR(16);
-      _RET_ADDR(17);
-      _RET_ADDR(18);
-      _RET_ADDR(19);
-      _RET_ADDR(20);
-      _RET_ADDR(21);
-      _RET_ADDR(22);
-      _RET_ADDR(23);
-      _RET_ADDR(24);
-      _RET_ADDR(25);
-      _RET_ADDR(26);
-      _RET_ADDR(27);
-      _RET_ADDR(28);
-      _RET_ADDR(29);
-      _RET_ADDR(30);
-      _RET_ADDR(31);
-      _RET_ADDR(32);
-      _RET_ADDR(33);
-      _RET_ADDR(34);
-      _RET_ADDR(35);
+      _RET_ADDR(0);_RET_ADDR(1);_RET_ADDR(2);_RET_ADDR(3);_RET_ADDR(4);_RET_ADDR(5);_RET_ADDR(6);_RET_ADDR(7);
+      _RET_ADDR(8);_RET_ADDR(9);_RET_ADDR(10);_RET_ADDR(11);_RET_ADDR(12);_RET_ADDR(13);_RET_ADDR(14);
+      _RET_ADDR(15);_RET_ADDR(16);_RET_ADDR(17);_RET_ADDR(18);_RET_ADDR(19);_RET_ADDR(20);_RET_ADDR(21);
+      _RET_ADDR(22);_RET_ADDR(23);_RET_ADDR(24);_RET_ADDR(25);_RET_ADDR(26);_RET_ADDR(27);_RET_ADDR(28);
+      _RET_ADDR(29);_RET_ADDR(30);_RET_ADDR(31);_RET_ADDR(32);_RET_ADDR(33);_RET_ADDR(34);_RET_ADDR(35);
    default:
       return NULL;
    }
@@ -172,6 +141,8 @@ size_t TMemStatDepend::Backtrace(void **trace, size_t dsize, Bool_t _bUseGNUBuil
 //______________________________________________________________________________
 char** TMemStatDepend::BacktraceSymbols(void **trace, size_t size)
 {
+   // TODO: Comment me
+
 #if defined(R__GNU) && (defined(R__LINUX) || defined(R__HURD)) && !defined(__alpha__)
    return backtrace_symbols(trace, size);
 #endif
