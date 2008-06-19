@@ -71,7 +71,7 @@ Begin_Macro(source)
 {
    TCanvas *c1 = new TCanvas("c1","A Simple MemStat Example",200,10,700,1000);
 
-   TMemStat *memstat = new TMemStat(30000,10000);
+   TMemStat *memstat = new TMemStat("new");
    for (Int_t i=0;i<11000;i++) {
       TObjString * object = new TObjString(Form("Object%d",i));
       if (i%2) delete object;
@@ -85,7 +85,7 @@ Begin_Macro(source)
       //array.ExpandCreatFast(i);
    }
    delete memstat;
-   memstat = new TMemStat("memstat.root");
+   memstat = new TMemStat();
    c1->Divide(1,2);
    c1->cd(1);
    memstat->Report("order 0 sortstat 2 sortstamp 1 sortdeep 10 stackdeep 5 maxlength 50");
