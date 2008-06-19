@@ -123,7 +123,7 @@ TMemStatViewerGUI::TMemStatViewerGUI(const TGWindow *p, UInt_t w, UInt_t h, Opti
 
    // Display everything
    Initialize(option);
-   
+
    // Graphics View
    // TMemStat must be initialized first
    new TMemStatDrawDlg(graphics, fViewer);
@@ -133,7 +133,6 @@ TMemStatViewerGUI::TMemStatViewerGUI(const TGWindow *p, UInt_t w, UInt_t h, Opti
    MakeContSortStat(contLeft);   // Make content for Sort Statistic
    MakeContSortStamp(contLeft);  // make constent for sort Stamps
    MakeContDeep(contLeft);       // make constent for sort Stamps
-   MakeDrawButton(contLeft);
 
    MapSubwindows();
    Resize(GetDefaultSize());
@@ -276,30 +275,6 @@ void  TMemStatViewerGUI::MakeContDeep(TGCompositeFrame *frame)
    contDeep->AddFrame(fNmbSortDeep, 0);
    fNmbSortDeep->Connect("ValueSet(Long_t)", "TMemStatViewerGUI", this, "HandleDeep(Long_t)");
    fNmbSortDeep->Resize(60, 20);
-}
-
-//______________________________________________________________________________
-void TMemStatViewerGUI::MakeDrawButton(TGCompositeFrame *frame)
-{
-   // Creats a "Draw TMemStat" button
-
-   // TODO: Move this to Menu. Make it a main menu item instead of a button
-
-   TGHorizontalFrame *horz = new TGHorizontalFrame(frame);
-   frame->AddFrame(horz, new TGLayoutHints(kLHintsExpandX));
-   // text description
-   TGTextButton *btnDraw = new TGTextButton(horz);
-   btnDraw->SetText("&Draw TMemStat");
-   horz->AddFrame(btnDraw,
-                  new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 2, 2, 10, 10));
-   btnDraw->Connect("Clicked()", "TMemStatViewerGUI", this, "HandleDrawMemStat()");
-}
-
-//______________________________________________________________________________
-void TMemStatViewerGUI::HandleDrawMemStat()
-{
-   // TODO: Comment me
-   //new TMemStatDrawDlg(gClient->GetRoot(), this, fViewer);
 }
 
 //______________________________________________________________________________

@@ -43,7 +43,6 @@ protected:
    void MakeContSortStamp(TGCompositeFrame *frame);
    void MakeContDeep(TGCompositeFrame *frame);
    void MakeStampList(TGCompositeFrame *frame);
-   void MakeDrawButton(TGCompositeFrame *frame);
    void MakeSelection(TGCompositeFrame *frame);
 
    void Initialize(Option_t* option);                  // initializes the GUI with default settings and opens tree for drawing
@@ -63,7 +62,6 @@ public:
    void HandleButtonsSortStamp(Int_t id = -1);          // handles mutual radio buuton for sort stamp
    void HandleDeep(Long_t id);                          // handles stack deep and nrows
    void HandleStampSelect(const char*);
-   void HandleDrawMemStat();
    void HandleFuncSelect(const char*);
    void HandleLibSelect(const char*);
 
