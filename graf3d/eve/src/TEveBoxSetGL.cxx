@@ -344,13 +344,13 @@ void TEveBoxSetGL::DirectDraw(TGLRnrCtx & rnrCtx) const
             {
                if (rnrCtx.SecSelection()) glLoadName(bi.index());
                h = b.fDir.Mag();
-               theta = ACos(b.fDir.fZ/h)*RadToDeg();
-               phi   = ACos(b.fDir.fX/b.fR)*RadToDeg();
+               phi   = ATan2(b.fDir.fY, b.fDir.fX)*RadToDeg();
+               theta = ATan(b.fDir.fZ / Sqrt(b.fDir.fX*b.fDir.fX + b.fDir.fY*b.fDir.fY))*RadToDeg();
                glPushMatrix();
                glTranslatef(b.fPos.fX, b.fPos.fY, b.fPos.fZ);
-               glRotatef(theta, 1, 0, 0);
                glRotatef(phi,   0, 0, 1);
-               glScalef    (b.fR, b.fR, h);
+               glRotatef(90 - theta, 0, 1, 0);
+               glScalef (b.fR, b.fR, h);
                glCallList(fBoxDL);
                glPopMatrix();
             }
