@@ -30,12 +30,11 @@ class TMemStatDrawDlg
    RQ_OBJECT("TMemStatDrawDlg")
 
 public:
-   TMemStatDrawDlg(const TGWindow *p, const TGWindow *main, TMemStat *MemStat);
+   TMemStatDrawDlg(TGCompositeFrame *parent, TMemStat *MemStat);
    virtual ~TMemStatDrawDlg();
 
    // slots
    void HandleDrawMemStat();
-   void CloseWindow();
 
 private:
    void PlaceCtrls(TGCompositeFrame *frame);
@@ -46,7 +45,6 @@ private:
    void ReDraw();
 
 private:
-   TGTransientFrame *fMain;
    TMemStat *fMemStat;
    TGComboBox *fboxOrder;
    TGComboBox *fboxSortStat;

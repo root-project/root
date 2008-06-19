@@ -40,8 +40,7 @@ struct SFill_t : public binary_function<string, TGComboBox*, bool>
 };
 
 //______________________________________________________________________________
-TMemStatDrawDlg::TMemStatDrawDlg(const TGWindow *p, const TGWindow *main, TMemStat *MemStat):
-      fMain(NULL),
+TMemStatDrawDlg::TMemStatDrawDlg(TGCompositeFrame *parent, TMemStat *MemStat):
       fMemStat(MemStat),
       fboxOrder(NULL),
       fboxSortStat(NULL),
@@ -51,41 +50,12 @@ TMemStatDrawDlg::TMemStatDrawDlg(const TGWindow *p, const TGWindow *main, TMemSt
       fNmbMaxLength(NULL),
       fEc(NULL)
 {
-   // Create a dialog window. A dialog window pops up with respect to its
-   // "main" window.
-
-   fMain = new TGTransientFrame(p, main, 800, 400, kVerticalFrame | kFixedSize);
-   // use hierarchical cleaning
-   fMain->SetCleanup(kDeepCleanup);
-   fMain->Connect("CloseWindow()", "TMemStatDrawDlg", this, "CloseWindow()");
-   fMain->DontCallClose(); // to avoid double deletions.
-   PlaceCtrls(fMain);
-
-   // position relative to the parent's window
-   fMain->CenterOnParent();
-
-   fMain->MapSubwindows();
-   fMain->Resize();
-
-   //TODO: Change the title of the dialog
-   fMain->SetWindowName("Draw TMemStat");
-   fMain->MapWindow();
+   PlaceCtrls(parent);
 }
 
 //______________________________________________________________________________
 TMemStatDrawDlg::~TMemStatDrawDlg()
 {
-   // Delete test dialog widgets.
-
-   fMain->DeleteWindow();  // deletes fMain
-}
-
-//______________________________________________________________________________
-void TMemStatDrawDlg::CloseWindow()
-{
-   // Called when window is closed via the window manager.
-
-   delete this;
 }
 
 //______________________________________________________________________________

@@ -113,11 +113,20 @@ TMemStatViewerGUI::TMemStatViewerGUI(const TGWindow *p, UInt_t w, UInt_t h, Opti
    TGCompositeFrame *contCenter = new TGCompositeFrame(contLCR, 150, 200, kVerticalFrame | kFixedWidth | kFitHeight);
    contLCR->AddFrame(contCenter, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
 
-   fText = new TGTextView(contCenter);
-   contCenter->AddFrame(fText, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
+   TGTab *tab = new TGTab(contCenter, 150, 200);
+   contCenter->AddFrame(tab, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
+   TGCompositeFrame *text = tab->AddTab("Text");
+   TGCompositeFrame *graphics = tab->AddTab("Graphics");
+
+   fText = new TGTextView(text);
+   text->AddFrame(fText, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
 
    // Display everything
    Initialize(option);
+   
+   // Graphics View
+   // TMemStat must be initialized first
+   new TMemStatDrawDlg(graphics, fViewer);
 
    MakeStampList(contLeft);
    MakeSelection(contLeft);
@@ -290,7 +299,7 @@ void TMemStatViewerGUI::MakeDrawButton(TGCompositeFrame *frame)
 void TMemStatViewerGUI::HandleDrawMemStat()
 {
    // TODO: Comment me
-   new TMemStatDrawDlg(gClient->GetRoot(), this, fViewer);
+   //new TMemStatDrawDlg(gClient->GetRoot(), this, fViewer);
 }
 
 //______________________________________________________________________________
@@ -328,13 +337,15 @@ void TMemStatViewerGUI::ShowGUI()
 {
    // initialize and show GUI for presentation
 
-   TGMainFrame* frmMain = new TGMainFrame(gClient->GetRoot(), 800, 600);
+   TGMainFrame* frmMain = new TGMainFrame(gClient->GetRoot(), 950, 600);
    frmMain->SetWindowName("TMemStat analysis console");
    frmMain->SetCleanup(kDeepCleanup);
 
-   TMemStatViewerGUI* calibViewer1 = new TMemStatViewerGUI(frmMain, 800, 600, "read");
+   TMemStatViewerGUI* calibViewer1 = new TMemStatViewerGUI(frmMain, 950, 600, "read");
    frmMain->AddFrame(calibViewer1, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
 
+   // position relative to the parent's window
+   //frmMain->CenterOnParent();
    frmMain->MapSubwindows();
    frmMain->Resize();
    frmMain->MapWindow();
