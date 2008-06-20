@@ -112,6 +112,7 @@
 #include "TVirtualFFT.h"
 #include "RooGenContext.h"
 #include "RooConvGenContext.h"
+#include "RooBinning.h"
 
 using namespace std ;
 
@@ -151,12 +152,6 @@ RooFFTConvPdf::RooFFTConvPdf(const RooFFTConvPdf& other, const char* name) :
 RooFFTConvPdf::~RooFFTConvPdf() 
 {
   // Destructor 
-
-  // Delete FFT engines 
-  map<const RooHistPdf*,CacheAuxInfo*>::iterator iter =  _cacheAuxInfo.begin() ;
-  for (; iter!=_cacheAuxInfo.end() ; ++iter) {
-    delete iter->second ;
-  }
 }
 
 
@@ -175,13 +170,44 @@ const char* RooFFTConvPdf::inputBaseName() const
 
 
 
+
+//_____________________________________________________________________________
+RooFFTConvPdf::PdfCacheElem* RooFFTConvPdf::createCache(const RooArgSet* nset) const 
+{
+  // Return specialized cache subclass for FFT calculations
+  return new FFTCacheElem(*this,nset) ;
+}
+
+
+
+
+//_____________________________________________________________________________
+RooFFTConvPdf::FFTCacheElem::FFTCacheElem(const RooFFTConvPdf& self, const RooArgSet* nsetIn) : 
+  PdfCacheElem(self,nsetIn),
+  fftr2c1(0),fftr2c2(0),fftc2r(0) 
+{
+} 
+
+
+
+
+//_____________________________________________________________________________
+RooFFTConvPdf::FFTCacheElem::~FFTCacheElem() 
+{ 
+  delete fftr2c1 ; 
+  delete fftr2c2 ; 
+  delete fftc2r ; 
+}
+
+
+
+
 //_____________________________________________________________________________
 void RooFFTConvPdf::fillCacheObject(RooAbsCachedPdf::PdfCacheElem& cache) const 
 {
   // Fill the contents of the cache the FFT convolution output
 
   RooDataHist& cacheHist = *cache.hist() ;
-  RooHistPdf& cachePdf = *cache.pdf() ;
   
   // Determine if there other observables than the convolution observable in the cache
   RooArgSet otherObs ;
@@ -190,7 +216,7 @@ void RooFFTConvPdf::fillCacheObject(RooAbsCachedPdf::PdfCacheElem& cache) const
 
   // Handle trivial scenario -- no other observables
   if (otherObs.getSize()==0) {
-    fillCacheSlice(cachePdf,RooArgSet()) ;
+    fillCacheSlice((FFTCacheElem&)cache,RooArgSet()) ;
     return ;
   }
 
@@ -199,8 +225,8 @@ void RooFFTConvPdf::fillCacheObject(RooAbsCachedPdf::PdfCacheElem& cache) const
 
   // Determine number of bins for each slice position observable
   Int_t n = otherObs.getSize() ;
-  Int_t* binCur = new Int_t[n] ;
-  Int_t* binMax = new Int_t[n] ;
+  Int_t* binCur = new Int_t[n+1] ;
+  Int_t* binMax = new Int_t[n+1] ;
   Int_t curObs = 0 ;
 
   RooAbsLValue** obsLV = new RooAbsLValue*[n] ;
@@ -211,7 +237,7 @@ void RooFFTConvPdf::fillCacheObject(RooAbsCachedPdf::PdfCacheElem& cache) const
     RooAbsLValue* lvarg = dynamic_cast<RooAbsLValue*>(arg) ;
     obsLV[i] = lvarg ;
     binCur[i] = 0 ;
-    binMax[i] = lvarg->numBins()-1 ;    
+    binMax[i] = lvarg->numBins(binningName())-1 ;    
     i++ ;
   }
   delete iter ;
@@ -219,10 +245,10 @@ void RooFFTConvPdf::fillCacheObject(RooAbsCachedPdf::PdfCacheElem& cache) const
   Bool_t loop(kTRUE) ;
   while(loop) {
     // Set current slice position
-    for (Int_t j=0 ; j<n ; j++) { obsLV[j]->setBin(binCur[j]) ; }
+    for (Int_t j=0 ; j<n ; j++) { obsLV[j]->setBin(binCur[j],binningName()) ; }
 
     // Fill current slice
-    fillCacheSlice(cachePdf,otherObs) ;
+    fillCacheSlice((FFTCacheElem&)cache,otherObs) ;
 
     // Determine which iterator to increment
     while(binCur[curObs]==binMax[curObs]) {
@@ -249,12 +275,12 @@ void RooFFTConvPdf::fillCacheObject(RooAbsCachedPdf::PdfCacheElem& cache) const
 
 
 //_____________________________________________________________________________
-void RooFFTConvPdf::fillCacheSlice(RooHistPdf& cachePdf, const RooArgSet& slicePos) const 
+void RooFFTConvPdf::fillCacheSlice(FFTCacheElem& aux, const RooArgSet& slicePos) const 
 {
   // Fill a slice of cachePdf with the output of the FFT convolution calculation
 
   // Extract histogram that is the basis of the RooHistPdf
-  RooDataHist& cacheHist = cachePdf.dataHist() ;
+  RooDataHist& cacheHist = *aux.hist() ;
 
   RooAbsPdf& pdf1 = (RooAbsPdf&)_pdf1.arg() ;
   RooAbsPdf& pdf2 = (RooAbsPdf&)_pdf2.arg() ;
@@ -275,43 +301,39 @@ void RooFFTConvPdf::fillCacheSlice(RooHistPdf& cachePdf, const RooArgSet& sliceP
   Double_t* input2 = scanPdf((RooRealVar&)_x.arg(),pdf2,cacheHist,slicePos,N,N2) ;
 
   // Retrieve previously defined FFT transformation plans
-  CacheAuxInfo* aux = _cacheAuxInfo[&cachePdf] ;
-  if (!aux) {
-    // If they do not exist make them now and keep in cache
-    aux = new CacheAuxInfo ;
-    _cacheAuxInfo[&cachePdf] = aux ;
-    aux->fftr2c1 = TVirtualFFT::FFT(1, &N2, "R2CK");
-    aux->fftr2c2 = TVirtualFFT::FFT(1, &N2, "R2CK");
-    aux->fftc2r  = TVirtualFFT::FFT(1, &N2, "C2RK");
+  if (!aux.fftr2c1) {
+    aux.fftr2c1 = TVirtualFFT::FFT(1, &N2, "R2CK");
+    aux.fftr2c2 = TVirtualFFT::FFT(1, &N2, "R2CK");
+    aux.fftc2r  = TVirtualFFT::FFT(1, &N2, "C2RK");
   }
   
   // Real->Complex FFT Transform on p.d.f. 1 sampling
-  aux->fftr2c1->SetPoints(input1);
-  aux->fftr2c1->Transform();
+  aux.fftr2c1->SetPoints(input1);
+  aux.fftr2c1->Transform();
 
   // Real->Complex FFT Transform on p.d.f 2 sampling
-  aux->fftr2c2->SetPoints(input2);
-  aux->fftr2c2->Transform();
+  aux.fftr2c2->SetPoints(input2);
+  aux.fftr2c2->Transform();
 
   // Loop over first half +1 of complex output results, multiply 
   // and set as input of reverse transform
   for (Int_t i=0 ; i<N2/2+1 ; i++) {
     Double_t re1,re2,im1,im2 ;
-    aux->fftr2c1->GetPointComplex(i,re1,im1) ;
-    aux->fftr2c2->GetPointComplex(i,re2,im2) ;
+    aux.fftr2c1->GetPointComplex(i,re1,im1) ;
+    aux.fftr2c2->GetPointComplex(i,re2,im2) ;
     Double_t re = re1*re2 - im1*im2 ;
     Double_t im = re1*im2 + re2*im1 ;
     TComplex t(re,im) ;
-    aux->fftc2r->SetPointComplex(i,t) ;
+    aux.fftc2r->SetPointComplex(i,t) ;
   }
 
   // Reverse Complex->Real FFT transform product
-  aux->fftc2r->Transform() ;
+  aux.fftc2r->Transform() ;
 
   // Find bin ID that contains zero value
   Int_t zeroBin = 0 ;
   if (_x.min()<0 && _x.max()>0) {
-    zeroBin = ((RooAbsRealLValue&)_x.arg()).getBinning().binNumber(0.)+1 ;
+    zeroBin = ((RooAbsRealLValue&)_x.arg()).getBinning(binningName()).binNumber(0.)+1 ;
   }
 
   // Store FFT result in cache
@@ -327,7 +349,7 @@ void RooFFTConvPdf::fillCacheSlice(RooHistPdf& cachePdf, const RooArgSet& sliceP
     }
 
     iter->Next() ;
-    cacheHist.set(aux->fftc2r->GetPointReal(j)) ;    
+    cacheHist.set(aux.fftc2r->GetPointReal(j)) ;    
   }
   
   // cacheHist.dump2() ;
@@ -352,8 +374,13 @@ Double_t*  RooFFTConvPdf::scanPdf(RooRealVar& obs, RooAbsPdf& pdf, const RooData
   RooAbsPdf* theClone = (RooAbsPdf*) cloneSet->find(pdf.GetName()) ;
   theClone->attachDataSet(hist) ;
 
+  // Store current range of convolution observable 
+  RooArgSet* tmpSet = theClone->getObservables(obs) ;
+  RooRealVar* histObs = (RooRealVar*) tmpSet->first() ;
+  delete tmpSet ;
+
   RooRealVar* histX = (RooRealVar*) hist.get()->find(obs.GetName()) ;
-  N = histX->numBins() ;
+  N = histX->numBins(binningName()) ;
   
   // Calculate number of buffer bins on each size to avoid cyclical flow
   Int_t Nbuf = static_cast<Int_t>((N*bufferFraction())/2 + 0.5) ;
@@ -365,7 +392,7 @@ Double_t*  RooFFTConvPdf::scanPdf(RooRealVar& obs, RooAbsPdf& pdf, const RooData
   // Find bin ID that contains zero value
   Int_t zeroBin = -1 ;
   if (histX->getMin()<0 && histX->getMax()>0) {
-    zeroBin = histX->getBinning().binNumber(0.)+1 ;
+    zeroBin = histX->getBinning(binningName()).binNumber(0.)+1 ;
   }
 
   // First scan hist into temp array 
@@ -419,7 +446,9 @@ Double_t*  RooFFTConvPdf::scanPdf(RooRealVar& obs, RooAbsPdf& pdf, const RooData
 
   }
 
-
+  // Restore the reference ranges as default range in the observable
+  histObs->setRange(histObs->getMin("FFTRef"),histObs->getMax("FFTRef")) ;
+  
   // Cleanup 
   delete cloneSet ;
   delete[] tmp ;

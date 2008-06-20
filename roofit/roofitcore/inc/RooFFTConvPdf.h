@@ -45,23 +45,27 @@ protected:
 
   Double_t*  scanPdf(RooRealVar& obs, RooAbsPdf& pdf, const RooDataHist& hist, const RooArgSet& slicePos, Int_t& N, Int_t& N2) const ;
 
-  virtual Double_t evaluate() const { RooArgSet dummy(_x.arg()) ; return getVal(&dummy) ; } ; // dummy
-  virtual const char* inputBaseName() const ;
-  virtual RooArgSet* actualObservables(const RooArgSet& nset) const ;
-  virtual RooArgSet* actualParameters(const RooArgSet& nset) const ;
-  virtual void fillCacheObject(PdfCacheElem& cache) const ;
-  void fillCacheSlice(RooHistPdf& cachePdf, const RooArgSet& slicePosition) const ;
-
-  class CacheAuxInfo {
+  class FFTCacheElem : public PdfCacheElem {
   public:
-    CacheAuxInfo() : fftr2c1(0),fftr2c2(0),fftc2r(0) {} 
-    ~CacheAuxInfo() { delete fftr2c1 ; delete fftr2c2 ; delete fftc2r ; }
+    FFTCacheElem(const RooFFTConvPdf& self, const RooArgSet* nset) ;
+    ~FFTCacheElem() ;
     TVirtualFFT* fftr2c1 ;
     TVirtualFFT* fftr2c2 ;
     TVirtualFFT* fftc2r ;
   };
 
-  mutable std::map<const RooHistPdf*,CacheAuxInfo*> _cacheAuxInfo ; //! Auxilary Cache information (do not persist)
+  friend class FFTCacheElem ;  
+
+  virtual Double_t evaluate() const { RooArgSet dummy(_x.arg()) ; return getVal(&dummy) ; } ; // dummy
+  virtual const char* inputBaseName() const ;
+  virtual RooArgSet* actualObservables(const RooArgSet& nset) const ;
+  virtual RooArgSet* actualParameters(const RooArgSet& nset) const ;
+  virtual void fillCacheObject(PdfCacheElem& cache) const ;
+  void fillCacheSlice(FFTCacheElem& cache, const RooArgSet& slicePosition) const ;
+
+  virtual PdfCacheElem* createCache(const RooArgSet* nset) const ;
+
+  // mutable std::map<const RooHistPdf*,CacheAuxInfo*> _cacheAuxInfo ; //! Auxilary Cache information (do not persist)
   Double_t _bufFrac ; // Sampling buffer size as fraction of domain size 
 
   virtual RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=0, 
