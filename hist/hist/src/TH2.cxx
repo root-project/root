@@ -1922,7 +1922,7 @@ TH1D *TH2::DoProjection(const char *name, bool onX, Int_t firstbin, Int_t lastbi
    // internal (protected) method for performing projection on the X or Y axis
    // called by ProjectionX or ProjectionY
 
-   char *expectedName = 0;
+   const char *expectedName = 0;
    Int_t outNbin, inNbin;
    TAxis* outAxis;
 
