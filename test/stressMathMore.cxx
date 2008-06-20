@@ -548,7 +548,7 @@ int stressMathMore(double nscale = 1) {
    bm.Stop("stressMathMore");
    std::cout <<"******************************************************************************\n";
    bm.Print("stressMathMore");
-   const double reftime = 6.5; //to be updated  // ref time on  pcbrun4
+   const double reftime = 7.24; //to be updated  // ref time on  pcbrun4
    double rootmarks = 860 * reftime / bm.GetCpuTime("stressMathMore");
    std::cout << " ROOTMARKS = " << rootmarks << " ROOT version: " << gROOT->GetVersion() << "\t" 
              << gROOT->GetSvnBranch() << "@" << gROOT->GetSvnRevision() << std::endl;
