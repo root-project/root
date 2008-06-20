@@ -82,6 +82,7 @@
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
 #include "TMath.h"
+#include "TRandom.h"
 
 ClassImp(TGeoBBox)
    
@@ -519,6 +520,99 @@ void TGeoBBox::GetBoundingCylinder(Double_t *param) const
    param[3] = 360.;                // Phi2
 }
 
+//_____________________________________________________________________________
+Double_t TGeoBBox::GetFacetArea(Int_t index) const
+{
+// Get area in internal units of the facet with a given index. 
+// Possible index values:
+//    0 - all facets togeather
+//    1 to 6 - facet index from bottom to top Z
+   Double_t area = 0.;
+   switch (index) {
+      case 0:
+         area = 8.*(fDX*fDY + fDX*fDZ + fDY*fDZ);
+         return area;
+      case 1:
+      case 6:
+         area = 4.*fDX*fDY;
+         return area;
+      case 2:
+      case 4:
+         area = 4.*fDX*fDZ;
+         return area;
+      case 3:
+      case 5:
+         area = 4.*fDY*fDZ;
+         return area;
+   }
+   return area;
+}         
+
+//_____________________________________________________________________________
+Bool_t TGeoBBox::GetPointsOnFacet(Int_t index, Int_t npoints, Double_t *array) const
+{
+// Fills array with n random points located on the surface of indexed facet.
+// The output array must be provided with a length of minimum 3*npoints. Returns
+// true if operation succeeded.
+// Possible index values:
+//    0 - all facets togeather
+//    1 to 6 - facet index from bottom to top Z
+   if (index<0 || index>6) return kFALSE;
+   Double_t surf[6];
+   Double_t area = 0.;
+   if (index==0) {
+      for (Int_t isurf=0; isurf<6; isurf++) {
+         surf[isurf] = TGeoBBox::GetFacetArea(isurf+1);
+         if (isurf>0) surf[isurf] += surf[isurf-1];
+      }   
+      area = surf[5];
+   }
+   
+   for (Int_t i=0; i<npoints; i++) {
+   // Generate randomly a surface index if needed.
+      Double_t *point = &array[3*i];
+      Int_t surfindex = index;
+      if (surfindex==0) {
+         Double_t val = area*gRandom->Rndm();
+         surfindex = 2+TMath::BinarySearch(6, surf, val);
+         if (surfindex>6) surfindex=6;
+      } 
+      switch (surfindex) {
+         case 1:
+            point[0] = -fDX + 2*fDX*gRandom->Rndm();
+            point[1] = -fDY + 2*fDY*gRandom->Rndm();
+            point[2] = -fDZ;
+            break;
+         case 2:
+            point[0] = -fDX + 2*fDX*gRandom->Rndm();
+            point[1] = -fDY;
+            point[2] = -fDZ + 2*fDZ*gRandom->Rndm();
+            break;
+         case 3:
+            point[0] = -fDX;
+            point[1] = -fDY + 2*fDY*gRandom->Rndm();
+            point[2] = -fDZ + 2*fDZ*gRandom->Rndm();
+            break;
+         case 4:
+            point[0] = -fDX + 2*fDX*gRandom->Rndm();
+            point[1] = fDY;
+            point[2] = -fDZ + 2*fDZ*gRandom->Rndm();
+            break;
+         case 5:
+            point[0] = fDX;
+            point[1] = -fDY + 2*fDY*gRandom->Rndm();
+            point[2] = -fDZ + 2*fDZ*gRandom->Rndm();
+            break;
+         case 6:
+            point[0] = -fDX + 2*fDX*gRandom->Rndm();
+            point[1] = -fDY + 2*fDY*gRandom->Rndm();
+            point[2] = fDZ;
+            break;
+      }
+   }
+   return kTRUE;
+}      
+            
 //_____________________________________________________________________________
 Int_t TGeoBBox::GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_t &dx, Double_t &dy, Double_t &dz) const
 {

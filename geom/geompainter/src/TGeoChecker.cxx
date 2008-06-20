@@ -224,7 +224,6 @@ void TGeoChecker::CheckGeometryFull(Bool_t checkoverlaps, Bool_t checkcrossings,
 //  transportation from geometry point of view. Another plot of the timing per 
 //  volume vs. number of daughters is produced. 
 // All histos are saved in the file statistics.root
-   Int_t nvol = fGeoManager->GetListOfVolumes()->GetEntries();
    Int_t nuid = fGeoManager->GetListOfUVolumes()->GetEntries();
    fTimer = new TStopwatch();
    Int_t i;
@@ -233,31 +232,20 @@ void TGeoChecker::CheckGeometryFull(Bool_t checkoverlaps, Bool_t checkcrossings,
    memset(fFlags, 0, nuid*sizeof(Bool_t));
    TGeoVolume *vol;
    TCanvas *c = new TCanvas("overlaps", "Overlaps by sampling", 800,800);
+   new TRandom3();
 
 // STAGE 1: Overlap checking by sampling per volume
    if (checkoverlaps) {
       printf("====================================================================\n");
-      printf("STAGE 1: Overlap checking by sampling per volume\n");
+      printf("STAGE 1: Overlap checking by sampling within 10 microns\n");
       printf("====================================================================\n");
-      fTimer->Reset();
-      fTimer->Start();
-      for (i=0; i<nvol; i++) {
-         vol = (TGeoVolume*)fGeoManager->GetListOfVolumes()->At(i);
-         Int_t uid = vol->GetNumber();
-         if (fFlags[uid]) continue;
-         fFlags[uid] = kTRUE;
-         if (!vol->GetNdaughters()) continue;
-         vol->CheckOverlaps(0.01, "s"); 
-         OpProgress("Sampling overlaps",i, nvol, fTimer);
-      }
-      fTimer->Stop();
-      OpProgress("Sampling overlaps",nvol, nvol, fTimer, kTRUE);
+      fGeoManager->CheckOverlaps(0.001, "s"); 
 
    // STAGE 2: Global overlap/extrusion checking
       printf("====================================================================\n");
-      printf("STAGE 2: Global overlap/extrusion checking within 100 microns\n");
+      printf("STAGE 2: Global overlap/extrusion checking within 10 microns\n");
       printf("====================================================================\n");
-      fGeoManager->CheckOverlaps(0.01);
+      fGeoManager->CheckOverlaps(0.001);
    }   
    
    if (!checkcrossings) {
@@ -285,8 +273,6 @@ void TGeoChecker::CheckGeometryFull(Bool_t checkoverlaps, Bool_t checkcrossings,
    memset(point, 0, 3*sizeof(Double_t));
    if (vertex) memcpy(point, vertex, 3*sizeof(Double_t));
    
-   new TRandom3();
-
    fTimer->Reset();
    fTimer->Start();
    for (i=0; i<ntracks; i++) {
@@ -1003,8 +989,12 @@ void TGeoChecker::CheckOverlapsBySampling(TGeoVolume *vol, Double_t /* ovlp */, 
    Int_t id=0, id0=0, id1=0;
    Bool_t in, incrt;
    Double_t safe;
+   TString name1 = "";
+   TString name2 = "";
    TGeoOverlap **flags = 0;
+   TGeoNode *node1, *node2;
    Int_t novlps = 0;
+   TGeoHMatrix mat1, mat2;
    if (!gRandom) new TRandom3();
    while (ipoint < npoints) {
    // Shoot randomly in the bounding box.
@@ -1050,10 +1040,29 @@ void TGeoChecker::CheckOverlapsBySampling(TGeoVolume *vol, Double_t /* ovlp */, 
          TGeoOverlap *nodeovlp = flags[nd*id1+id0];
          if (!nodeovlp) {
             novlps++;
+            node1 = vol->GetNode(id1);
+            name1 = node1->GetName();
+            mat1 = node1->GetMatrix();
+            Int_t cindex = node1->GetVolume()->GetCurrentNodeIndex();
+            while (cindex >= 0) {
+               node1 = node1->GetVolume()->GetNode(cindex);
+               name1 += Form("/%s", node1->GetName());
+               mat1.Multiply(node1->GetMatrix());
+               cindex = node1->GetVolume()->GetCurrentNodeIndex();
+            }   
+            node2 = vol->GetNode(id0);
+            name2 = node2->GetName();
+            mat2 = node2->GetMatrix();
+            cindex = node2->GetVolume()->GetCurrentNodeIndex();
+            while (cindex >= 0) {
+               node2 = node2->GetVolume()->GetNode(cindex);
+               name2 += Form("/%s", node2->GetName());
+               mat2.Multiply(node2->GetMatrix());
+               cindex = node2->GetVolume()->GetCurrentNodeIndex();
+            }   
             nodeovlp = new TGeoOverlap(Form("Volume %s: node %s overlapping %s", 
-               vol->GetName(), vol->GetNode(id1)->GetName(), vol->GetNode(id0)->GetName()),
-               vol->GetNode(id1)->GetVolume(),vol->GetNode(id0)->GetVolume(),
-               vol->GetNode(id1)->GetMatrix(),vol->GetNode(id0)->GetMatrix(), kTRUE, safe);
+               vol->GetName(), name1.Data(), name2.Data()), node1->GetVolume(),node2->GetVolume(),
+               &mat1,&mat2, kTRUE, safe);
             flags[nd*id1+id0] = nodeovlp;
             fGeoManager->AddOverlap(nodeovlp);
          } 

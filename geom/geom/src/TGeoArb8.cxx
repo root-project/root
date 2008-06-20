@@ -702,6 +702,65 @@ void TGeoArb8::GetPlaneNormal(Double_t *p1, Double_t *p2, Double_t *p3, Double_t
 }   
 
 //_____________________________________________________________________________
+Bool_t TGeoArb8::GetPointsOnFacet(Int_t /*index*/, Int_t /*npoints*/, Double_t */*array*/) const
+{
+// Fills array with n random points located on the surface of indexed facet.
+// The output array must be provided with a length of minimum 3*npoints. Returns
+// true if operation succeeded.
+// Possible index values:
+//    0 - all facets togeather
+//    1 to 6 - facet index from bottom to top Z
+   return kFALSE;
+/*
+   if (index<0 || index>6) return kFALSE;
+   if (index==0) {
+   // Just generate same number of points on each facet
+      Int_t npts = npoints/6.;
+      Int_t count = 0;
+      for (Int_t ifacet=0; ifacet<6; ifacet++) {
+         if (GetPointsOnFacet(ifacet+1, npts, &array[3*count])) count += npts;
+         if (ifacet<5) npts = (npoints-count)/(5.-ifacet);
+      }   
+      if (count>0) return kTRUE;
+      return kFALSE;
+   }   
+   Double_t z, cf;
+   Double_t xmin=TGeoShape::Big();
+   Double_t xmax=-xmin;
+   Double_t ymin=TGeoShape::Big();
+   Double_t ymax=-ymin;
+   Double_t dy=0.;
+   Double_t poly[8];
+   Double_t point[2];
+   Int_t i;
+   if (index==1 || index==6) {
+      z = (index==1)?-fDz:fDz;
+      cf = 0.5*(fDz-z)/fDz;
+      for (i=0; i<4; i++) {
+         poly[2*i]   = fXY[i+4][0]+cf*(fXY[i][0]-fXY[i+4][0]);
+         poly[2*i+1] = fXY[i+4][1]+cf*(fXY[i][1]-fXY[i+4][1]);
+         xmin = TMath::Min(xmin, poly[2*i]);
+         xmax = TMath::Max(xmax, poly[2*i]);
+         ymin = TMath::Min(ymin, poly[2*i]);
+         ymax = TMath::Max(ymax, poly[2*i]);
+      }
+   }      
+   Int_t nshoot = 0;
+   Int_t nmiss = 0;
+   for (i=0; i<npoints; i++) {
+      Double_t *point = &array[3*i];
+      switch (surfindex) {
+         case 1:
+         case 6:
+            while (nmiss<1000) {
+               point[0] = xmin + (xmax-xmin)*gRandom->Rndm();
+               point[1] = ymin + (ymax-ymin)*gRandom->Rndm();
+
+   return InsidePolygon(point[0],point[1],poly);
+*/
+}   
+
+//_____________________________________________________________________________
 Bool_t TGeoArb8::InsidePolygon(Double_t x, Double_t y, Double_t *pts)
 {
 // Finds if a point in XY plane is inside the polygon defines by PTS.
