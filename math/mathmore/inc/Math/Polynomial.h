@@ -35,6 +35,10 @@
 
 #include "Math/ParamFunction.h"
 
+#ifdef _WIN32
+#pragma warning(disable : 4250)
+#endif
+
 namespace ROOT {
 namespace Math {
 
