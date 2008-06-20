@@ -3,16 +3,21 @@
 <hr>
 <a name="cint"></a>
 <p>CINT's directory structure has been re-arranged; the top-most <tt>cint</tt> directory now contains CINT, Reflex, and Cintex.
-All packages were ported to GCC 4.3.</p>
+CINT's headers can now alternatively be included as <tt>#include "cint/<i>header.h</i>"</tt>, i.e. from the <tt>cint/</tt> subdirectory.
+This will become the default location in a coming release.</p>
+<p>In view of future changes and because we want to further decouple ROOT from CINT we <b>strongly</b> recommend to not include any CINT headers directly.
+Instead please use <a href="http://root.cern.ch/root/html/TInterpreter">TInterpreter</a> as a virtual interface; it has been updated to satisfy most of ROOT's use cases of CINT.
+If you still need to include CINT headers directly because functionality is missing from TInterpreter then please let us know!</p>
+<p>CINT, Reflex, and Cintex have been ported to GCC 4.3.</p>
 <h3>CINT</h3>
 <ul><li><em>Core.</em>
-<p>Several small fixes, e.g. for the loading of CINT vs. Cintex base dictionaries, and auto-loading of templated classes, CINT's representation of size_t, char* vs. const char* in CINT's C API, function overload resolution involving emuns, increase the supported number of loaded shared libraries, remove unused long.dll, don't automatically use <tt>/tmp</tt> directory for temporary files but rely on CINTTMPDIR, TMP, or TEMP environment variables, fix the FreeBSD port, fix treatment of <tt>break</tt> in loops.</p>
+<p>Several small fixes, e.g. for the loading of CINT vs. Cintex base dictionaries, and auto-loading of templated classes, CINT's representation of size_t, char* vs. const char* in CINT's C API, function overload resolution involving enums, increase the supported number of loaded shared libraries, remove unused long.dll, don't automatically use <tt>/tmp</tt> directory for temporary files but rely on CINTTMPDIR, TMP, or TEMP environment variables, fix the FreeBSD port, fix treatment of <tt>break</tt> in loops.</p>
 <p>A change in CINT does not trigger a rebuild all of ROOT's dictionaries anymore; they now depend on cintdictversion.h.</p>
-<p>An area of major new development, newly introduced in this version, concernes reduced dictionary sizes.
+<p>An area of major new development, newly introduced in this version, concerns reduced dictionary sizes.
 When calling compiled functions, CINT can use the functions' symbols instead of generating function wrappers.
 The symbol-based call significantly reduces the dictionary sizes; up to 50% are possible.
 It is implemented in a way that does not affect performance nor memory usage; it even fixes a few long standing issues with CINT's function overload resolution and default parameter resolution. 
-This is an optional feature disabled by defult; see <a href="http://root.cern.ch/twiki/bin/view/ROOT/CINTnostub">the CINT web pages</a> for how to enable it.</p>
+This is an optional feature disabled by default; see <a href="http://root.cern.ch/twiki/bin/view/ROOT/CINTnostub">the CINT web pages</a> for how to enable it.</p>
 <p>As part of the directory restructuring, CINT's files have been renamed (the "v6_" prefix is removed), its dictionary files are now moved to a new subdirectory of src called "dict", and both CINT5 ( the current default) and CINT7 are available in the main cint/ subdirectory.
 The previous CINT stand-alone CVS / SVN repositories are now abandoned; CINT stand-alone can be checked out as <tt>svn co http://root.cern.ch/svn/root/trunk/cint</tt>. CINT's stand-alone build system is thus now included in ROOT's cint module.</p>
 </li>
