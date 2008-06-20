@@ -15,12 +15,7 @@ FINK_ROOT := $(shell which fink | sed -e 's?/bin/fink??')
 # The compilers
 CXX   	  = g++ 
 CC	  = gcc
-
-ifeq (g95,$(findstring g95,$(ROOTBUILD)))
-F77	      = g95
-else
-F77	      = gfortran
-endif
+F77       = gfortran
 
 # Global optimisation
 OPT   = -g #-O
@@ -47,11 +42,7 @@ else
 CLIBDEFS      = $(CLIBDEFS_TMP) -DCERNLIB_PPC
 endif
 
-ifeq (g95,$(findstring g95,$(ROOTBUILD)))
-CLIBDEFS     += -DCERNLIB_G95
-else
 CLIBDEFS     += -DCERNLIB_GFORTRAN
-endif
 
 CLIBCXXOPTS   = $(CLIBDEFS)
 CLIBCOPT      = $(CLIBDEFS)
@@ -66,10 +57,6 @@ LDFLAGS       = $(OPT) -bind_at_load
 SHLD	      = $(LD)
 SOFLAGS       = -dynamiclib -undefined dynamic_lookup -single_module
 
-ifeq (g95,$(findstring g95,$(ROOTBUILD)))
-SHLIB += -L$(shell g95 --print-search-dirs | sed -n -e 's/install: //p') -lf95
-else
 SHLIB := $(shell gfortran -print-file-name=libgfortran.dylib)
 SHLIB += $(shell gfortran -print-file-name=libgfortranbegin.a)
 SHLIB += -ldl
-endif
