@@ -210,15 +210,17 @@ void TProfile::BuildOptions(Double_t ymin, Double_t ymax, Option_t *option)
 //    uncertainty is +-0.5, with the assumption that the probability that Y
 //    takes any value between Y-0.5 and Y+0.5 is uniform (the same argument
 //    goes for Y uniformly distributed between Y and Y+1); this would be
-//    useful if Y is an ADC measurement, for example. Other, fancier options
+//    useful if Y is an ADC measurement, for example. 
+//     Other, fancier options
 //    would be possible, at the cost of adding one more parameter to the PROFILE
 //    command. For example, if all Y variables are distributed according to some
-//    known Gaussian of standard deviation Sigma, then:
-//     'G'            Errors are Spread/SQRT(N) for Spread.ne.0. ,
-//                      "     "  Sigma/SQRT(N) for Spread.eq.0,N.gt.0 ,
-//                      "     "  0.  for N.eq.0
+//    known Gaussian of standard deviation Sigma (which can be different for each measurement), 
+//    and the profile has been filled  with a weight equal to 1/Sigma**2, 
+//    then one cam use the following option: 
+// 
+//     'G'            Errors are 1./SQRT(Sum(1/sigma**2)) 
 //    For example, this would be useful when all Y's are experimental quantities
-//    measured with the same instrument with precision Sigma.
+//    measured with different precision Sigma_Y.
 //
 //
 
@@ -925,7 +927,8 @@ Double_t TProfile::GetBinError(Int_t bin) const
       return 1/TMath::Sqrt(12*sum);
    }
    else if (fErrorMode == kERRORSPREADG) {
-      return eprim/TMath::Sqrt(sum);
+      // it is supposed the values y are gaussian distributed y +/- dy
+      return 1./TMath::Sqrt(sum);
    }
    else return eprim;
 }
@@ -1438,10 +1441,8 @@ TH1D *TProfile::ProjectionX(const char *name, Option_t *option) const
 //       product of the bin content of the profile and the entries. 
 //       With this option the returned histogram will be equivalent to the one obtained by 
 //       filling directly a TH1D using the 2-nd value as a weight. 
-//       This option makes sense only for profile filled with all weights =1. 
-//       When the profile is weighted (filled with weights different than 1) the  
-//       bin error of the projected histogram (obtained using this option "W") cannot be 
-//       correctly computed from the information stored in the profile. 
+//       This makes sense only for profile filled with weights =1. If not, the error of the 
+//        projected histogram obtained with this option will not be correct.
 
 
    TString opt = option;
@@ -1487,7 +1488,7 @@ TH1D *TProfile::ProjectionX(const char *name, Option_t *option) const
       // if option E projected histogram errors are same as profile
       if (computeErrors ) h1->SetBinError(bin , GetBinError(bin) );
       // in case of option W bin error is deduced from bin sum of z**2 values of profile
-      // this is correct only if the profile is unweighted 
+      // this is correct only if the profile was filled with weights = 1. 
       if (binWeight)      h1->SetBinError(bin , TMath::Sqrt(fSumw2.fArray[bin] ) );
 
    }
@@ -1850,6 +1851,12 @@ void TProfile::SetErrorOption(Option_t *option)
 //     'i'            Errors are Spread/SQRT(N) for Spread.ne.0. ,
 //                      "     "  1./SQRT(12.*N) for Spread.eq.0,N.gt.0 ,
 //                      "     "  0.  for N.eq.0
+//     'g'            Errors are 1./SQRT(W) for Spread.ne.0. , 
+//                      "     "  0.  for N.eq.0
+//                    W is the sum of wights of the profile. 
+//                    This option is for measurements y +/ dy and  the profile is filled with 
+//                    weights w = 1/dy**2
+//
 //   See TProfile::BuildOptions for explanation of all options
 
    TString opt = option;
