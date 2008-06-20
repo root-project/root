@@ -1264,7 +1264,6 @@ void TXNetFile::SynchronizeCacheSize()
    Int_t size;
    Long64_t bytessubmitted, byteshit, misscount, readreqcnt;
    Float_t  missrate, bytesusefulness;
-   Int_t bytes = 0;
    int newbsz = -1;
    if (fClient && fClient->GetCacheInfo(size, bytessubmitted,
                                         byteshit, misscount,
