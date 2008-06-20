@@ -43,7 +43,7 @@ $(G__CFG_CONF): config/Makefile.$(ARCH) config/Makefile.comp $(G__CFG_CONFMK)
 	    echo '#define G__CFG_PLATFORMO ""' >> $@__ && \
 	    echo '#define G__CFG_AR "ar qcs"' >> $@__ ;; \
 	esac && \
-	echo '#define G__CFG_COREVERSION "cint"' >> $@__ && \
+	echo '#define G__CFG_COREVERSION "$(patsubst cint/%/inc/,%,$(dir $@))"' >> $@__ && \
 	echo '#define G__CFG_CC "$(CC)"' >> $@__ && \
 	echo '#define G__CFG_CFLAGS "$(G__CFG_CFLAGS)"' >> $@__ && \
 	echo '#define G__CFG_CMACROS "$(filter -D%,$(G__CFG_CFLAGS))"' >> $@__ && \

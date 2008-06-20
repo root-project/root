@@ -4111,6 +4111,14 @@ if test ! "x$enable_cint7" = "xno"; then
     enable_cint7="yes"
     enable_reflex="yes"
     result "yes"
+    # remove CINT5's include/G__ci.h etc
+    if test -d include/cint; then
+        for f in `cd include/cint/; ls`; do
+            if test -f include/$f; then
+                rm include/$f
+            fi
+        done
+    fi
 else
     enable_cint7=""
     result "no"
