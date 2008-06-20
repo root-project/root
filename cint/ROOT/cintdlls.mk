@@ -93,7 +93,7 @@ INCLUDEFILES += $(addsuffix .d,$(addprefix core/metautils/src/stlLoader_,$(CINTS
 
 cintdlls: $(ALLCINTDLLS)
 
-CINTCPPDEP := $(ORDER_) $(CINTDLLCINTTMP) $(CINTDLLIOSENUM)
+CINTCPPDEP := $(CINTDLLDICTVER) $(ORDER_) $(CINTDLLCINTTMP) $(CINTDLLIOSENUM)
 
 $(CINTDLLDIRDLLSTL)/G__cpp_string.cxx:	$(CINTDLLDIRL)/dll_stl/str.h $(CINTCPPDEP)
 $(CINTDLLDIRDLLSTL)/G__cpp_vector.cxx:	$(CINTDLLDIRL)/dll_stl/vec.h $(CINTCPPDEP)
