@@ -57,12 +57,12 @@ namespace Math {
      */
 
     // enumerations for the type of interpolations
-    enum Type {  LINEAR, 
-		 POLYNOMIAL, 
- 		 CSPLINE, 
- 		 CSPLINE_PERIODIC,  
-		 AKIMA, 
-		 AKIMA_PERIODIC
+    enum Type {  kLINEAR, 
+		 kPOLYNOMIAL, 
+ 		 kCSPLINE, 
+ 		 kCSPLINE_PERIODIC,  
+		 kAKIMA, 
+		 kAKIMA_PERIODIC
     };
   }
 

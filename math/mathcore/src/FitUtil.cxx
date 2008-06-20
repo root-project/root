@@ -48,32 +48,37 @@ namespace ROOT {
          // and this is a dummy class
          struct IntegralEvaluator { 
 
-            IntegralEvaluator(const ROOT::Math::IMultiGenFunction & f, bool useIntegral = true) : 
-               fDim(f.NDim()),
+            IntegralEvaluator(const ROOT::Math::IParamMultiFunction & func, const double * p, bool useIntegral = true) : 
+               fFunc(0),
                fIg1Dim(0), 
                fIgNDim(0) 
             { 
                if (useIntegral) { 
-                  if (fDim == 1) { 
+                  // copy the function object to be able to modify the parameters 
+                  unsigned int dim = func.NDim(); 
+                  fFunc = dynamic_cast<ROOT::Math::IParamMultiFunction *>( func.Clone() ); 
+                  assert(fFunc != 0); 
+                  // set parameters in function
+                  fFunc->SetParameters(p); 
+                  if (dim == 1) { 
                      fIg1Dim = new ROOT::Math::IntegratorOneDim(); 
-                     fIg1Dim->SetFunction(f);
+                     fIg1Dim->SetFunction( static_cast<const ROOT::Math::IMultiGenFunction & >(*fFunc),false);
                   } 
-                  else if (fDim > 1) 
-                     fIgNDim = new ROOT::Math::IntegratorMultiDim(f);
+                  else if (dim > 1) {
+                     fIgNDim = new ROOT::Math::IntegratorMultiDim();
+                     fIgNDim->SetFunction(*fFunc);
+                  }
                   else
-                     assert(fDim > 0); 
+                     assert(dim > 0); 
                }
             }
 
             ~IntegralEvaluator() { 
                if (fIg1Dim) delete fIg1Dim; 
                if (fIgNDim) delete fIgNDim; 
+               if (fFunc) delete fFunc; 
             }
 
-            void SetFunction(const ROOT::Math::IMultiGenFunction & f) { 
-               if (fIg1Dim) fIg1Dim->SetFunction(f);
-               else if (fIgNDim) fIgNDim->SetFunction(f); 
-            }
 
             double operator()(const double *x1, const double * x2) { 
                // return normalized integral, divided by bin volume (dx1*dx...*dxn) 
@@ -93,6 +98,7 @@ namespace ROOT {
             }
 
             unsigned int fDim; 
+            ROOT::Math::IParamMultiFunction * fFunc;  // copy of function in order to be able to change parameters    
             ROOT::Math::IntegratorOneDim * fIg1Dim; 
             ROOT::Math::IntegratorMultiDim * fIgNDim; 
          }; 
@@ -107,11 +113,24 @@ namespace ROOT {
             // construct from function and gradient dimension gdim
             // gdim = npar for parameter gradient
             // gdim = ndim for coordinate gradients
-            SimpleGradientCalculator(IModelFunction & func, unsigned int gdim) : 
+
+            // construct for parameter gradient calculation (the param values will be passed later)
+            // dimension is npar
+            SimpleGradientCalculator(const IModelFunction & func) : 
                fEps(1.0E-4),
-               fN(gdim),
+               fN(func.NPar() ),
                fFunc(func),
-               fVec(std::vector<double>(gdim) )
+               fVec(std::vector<double>(fN) )
+            {}
+
+            // construct for coordinate gradient calculator
+            // dimension is ndim
+            SimpleGradientCalculator(const IModelFunction & func, const double * par) : 
+               fEps(1.0E-4),
+               fN(func.NDim() ),
+               fFunc(func),
+               fVec(std::vector<double>(fN) ), 
+               fPar(std::vector<double>(par, par + func.NPar() ) ) 
             {}
 
             // calculate gradient at point (x,p) knnowing already value f0 (we gain a function eval.)
@@ -129,6 +148,7 @@ namespace ROOT {
                }
             }
 
+            // calculate gradient w.r coordinate values
             void Gradient(const double * x, double f0, double * g) { 
                // fVec are the cached coordinate values
                std::copy(x, x+fN, fVec.begin()); 
@@ -136,7 +156,7 @@ namespace ROOT {
                   fVec[k] += fEps;
                   // t.b.d : treat case of infinities 
                   //if (fval > - std::numeric_limits<double>::max() && fval < std::numeric_limits<double>::max() ) 
-                  double f2 = fFunc( &fVec.front() );
+                  double f2 = fFunc( &fVec.front(), &fPar.front() );
                   g[k] = ( f2 - f0 )/fEps;
                   fVec[k] = x[k]; // restore original x value
                }
@@ -145,9 +165,10 @@ namespace ROOT {
          private:
 
             double fEps; 
-            unsigned int fN; 
-            IModelFunction & fFunc; 
-            std::vector<double> fVec; 
+            unsigned int fN; // gradient dimension
+            const IModelFunction & fFunc; 
+            std::vector<double> fVec; // cached coordinates (or parameter values in case of gradientpar)
+            std::vector<double> fPar; // cached parameter values  
          };
 
 
@@ -185,7 +206,7 @@ namespace ROOT {
 // for chi2 functions
 //___________________________________________________________________________________________________________________________
 
-double FitUtil::EvaluateChi2(IModelFunction & func, const BinData & data, const double * p, unsigned int & nPoints) {  
+double FitUtil::EvaluateChi2(const IModelFunction & func, const BinData & data, const double * p, unsigned int & nPoints) {  
    // evaluate the chi2 given a  function reference  , the data and returns the value and also in nPoints 
    // the actual number of used points
    // normal chi2 using only error on values (from fitting histogram)
@@ -202,12 +223,13 @@ double FitUtil::EvaluateChi2(IModelFunction & func, const BinData & data, const 
    double chi2 = 0;
    int nRejected = 0; 
    
+   // do not cache parameter values (it is not thread safe)
+   //func.SetParameters(p); 
 
-   func.SetParameters(p); 
-
+   
    // get fit option and check case if using integral of bins
    const DataOptions & fitOpt = data.Opt();
-   IntegralEvaluator igEval( func, fitOpt.fIntegral); 
+   IntegralEvaluator igEval( func, p, fitOpt.fIntegral); 
 
 
    for (unsigned int i = 0; i < n; ++ i) { 
@@ -233,10 +255,11 @@ double FitUtil::EvaluateChi2(IModelFunction & func, const BinData & data, const 
 
       double fval = 0;
 
-      if (!fitOpt.fIntegral )
-         fval = func ( x ); 
+      if (!fitOpt.fIntegral ) 
+         fval = func ( x, p ); 
       else { 
          // calculate normalized integral (divided by bin volume)
+         // need to set function and parameters here in case loop is parallelized 
          fval = igEval( x, data.Coords(i+1) ) ; 
       }
 
@@ -273,7 +296,7 @@ double FitUtil::EvaluateChi2(IModelFunction & func, const BinData & data, const 
 
 //___________________________________________________________________________________________________________________________
 
-double FitUtil::EvaluateChi2Effective(IModelFunction & func, const BinData & data, const double * p, unsigned int & nPoints) {  
+double FitUtil::EvaluateChi2Effective(const IModelFunction & func, const BinData & data, const double * p, unsigned int & nPoints) {  
    // evaluate the chi2 given a  function reference  , the data and returns the value and also in nPoints 
    // the actual number of used points
    // method using the error in the coordinates
@@ -292,10 +315,10 @@ double FitUtil::EvaluateChi2Effective(IModelFunction & func, const BinData & dat
    int nRejected = 0; 
    
 
-   func.SetParameters(p); 
+   //func.SetParameters(p); 
 
    unsigned int ndim = func.NDim();
-   SimpleGradientCalculator gradCalc(func, ndim );  
+   SimpleGradientCalculator gradCalc(func, p );  
    std::vector<double> grad( ndim ); 
 
 
@@ -305,7 +328,7 @@ double FitUtil::EvaluateChi2Effective(IModelFunction & func, const BinData & dat
       double y = 0; 
       const double * x = data.GetPoint(i,y);
 
-      double fval = func( x );
+      double fval = func( x, p );
 
       double delta_y_func = y - fval; 
 
@@ -324,9 +347,10 @@ double FitUtil::EvaluateChi2Effective(IModelFunction & func, const BinData & dat
       }
       double e2 = ey * ey; 
       // before calculating the gradient check that all error in x are not zero
-      unsigned int icoord = 0; 
-      while ( icoord < ndim && ex[icoord] == 0.)  { icoord++; } 
-      if (icoord < ndim) { 
+      unsigned int j = 0; 
+      while ( j < ndim && ex[j] == 0.)  { j++; } 
+      // if j is less ndim some elements are not zero
+      if (j < ndim) { 
          for (unsigned int icoord = 0; icoord < ndim; ++icoord) { 
             if (ex[icoord] != 0) 
                gradCalc.Gradient(x, fval, &grad[0]);
@@ -366,7 +390,7 @@ double FitUtil::EvaluateChi2Effective(IModelFunction & func, const BinData & dat
 
 
 //___________________________________________________________________________________________________________________________
-double FitUtil::EvaluateChi2Residual(IModelFunction & func, const BinData & data, const double * p, unsigned int i, double * g) {  
+double FitUtil::EvaluateChi2Residual(const IModelFunction & func, const BinData & data, const double * p, unsigned int i, double * g) {  
    // evaluate the chi2 contribution (residual term) only for data with no coord-errors
    // This function is used in the specialized least square algorithms like FUMILI or L.M.
    // if we have error on the coordinates method is not implemented 
@@ -380,12 +404,12 @@ double FitUtil::EvaluateChi2Residual(IModelFunction & func, const BinData & data
       MATH_WARN_MSG("FitUtil::EvaluateChi2Residual","Bin integral is not used in calculating Chi2 residual");
 
 
-   func.SetParameters(p);
+   //func.SetParameters(p);
 
    double y, invError = 0; 
    const double * x = data.GetPoint(i,y, invError);
 
-   double fval = func ( x ); 
+   double fval = func ( x , p); 
 
 //       // calculate normalized integral (divided by bin volume)
 //       IntegralEvaluator igEval( func, fitOpt.fIntegral); 
@@ -400,14 +424,14 @@ double FitUtil::EvaluateChi2Residual(IModelFunction & func, const BinData & data
    if (g == 0) return resval; 
 
    unsigned int npar = func.NPar(); 
-   IGradModelFunction * gfunc = dynamic_cast<IGradModelFunction *>( &func); 
+   const IGradModelFunction * gfunc = dynamic_cast<const IGradModelFunction *>( &func); 
 
    if (gfunc != 0) { 
       //case function provides gradient
-      gfunc->ParameterGradient(  x , g );  
+      gfunc->ParameterGradient(  x , p, g );  
    }
    else { 
-      SimpleGradientCalculator  gc(func, npar); 
+      SimpleGradientCalculator  gc(func); 
       gc.ParameterGradient(x, p, fval, g); 
    }
    // mutiply by - 1 * weihgt
@@ -421,7 +445,7 @@ double FitUtil::EvaluateChi2Residual(IModelFunction & func, const BinData & data
 }
 
 
-void FitUtil::EvaluateChi2Gradient(IModelFunction & f, const BinData & data, const double * p, double * grad, unsigned int & nPoints) { 
+void FitUtil::EvaluateChi2Gradient(const IModelFunction & f, const BinData & data, const double * p, double * grad, unsigned int & nPoints) { 
    // evaluate gradient of chi2
    // this function is used when the model function knows how to calculate the derivative and we can  
    // avoid that the minimizer re-computes them 
@@ -436,10 +460,10 @@ void FitUtil::EvaluateChi2Gradient(IModelFunction & f, const BinData & data, con
 
    unsigned int nRejected = 0; 
 
-   IGradModelFunction * fg = dynamic_cast<IGradModelFunction *>( &f); 
+   const IGradModelFunction * fg = dynamic_cast<const IGradModelFunction *>( &f); 
    assert (fg != 0); // must be called by a gradient function
 
-   IGradModelFunction & func = *fg; 
+   const IGradModelFunction & func = *fg; 
    unsigned int n = data.Size();
 
 
@@ -450,7 +474,7 @@ void FitUtil::EvaluateChi2Gradient(IModelFunction & f, const BinData & data, con
 
    //int nRejected = 0; 
    // set values of parameters 
-   func.SetParameters(p); 
+   //func.SetParameters(p); 
    unsigned int npar = func.NPar(); 
 //   assert (npar == NDim() );  // npar MUST be  Chi2 dimension
    std::vector<double> gradFunc( npar ); 
@@ -464,7 +488,7 @@ void FitUtil::EvaluateChi2Gradient(IModelFunction & f, const BinData & data, con
       const double * x = data.GetPoint(i,y, invError);
 
       double fval = func ( x ); 
-      func.ParameterGradient(  x , &gradFunc[0] );  
+      func.ParameterGradient(  x , p, &gradFunc[0] );  
 
 #ifdef DEBUG      
       std::cout << x[0] << "  " << y << "  " << 1./invError << " params : "; 
@@ -525,26 +549,26 @@ inline double EvalLogF(double fval) {
 
 // for LogLikelihood functions
 
-double FitUtil::EvaluatePdf(IModelFunction & func, const UnBinData & data, const double * p, unsigned int i, double * g) {  
+double FitUtil::EvaluatePdf(const IModelFunction & func, const UnBinData & data, const double * p, unsigned int i, double * g) {  
    // evaluate the pdf contribution to the logl
 
-   func.SetParameters(p);
+   //func.SetParameters(p);
+
    const double * x = data.Coords(i);
    double fval = func ( x ); 
    //return EvalLogF(fval);
    if (g == 0) return fval;
 
-   unsigned int npar = func.NPar(); 
-   IGradModelFunction * gfunc = dynamic_cast<IGradModelFunction *>( &func); 
+   const IGradModelFunction * gfunc = dynamic_cast<const IGradModelFunction *>( &func); 
 
    // gradient  calculation
    if (gfunc != 0) { 
       //case function provides gradient
-      gfunc->ParameterGradient(  x , g );  
+      gfunc->ParameterGradient(  x , p, g );  
    }
    else { 
       // estimate gradieant numerically with simple 2 point rule 
-      SimpleGradientCalculator gc(func, npar); 
+      SimpleGradientCalculator gc(func); 
       gc.ParameterGradient(x, p, fval, g ); 
    }       
 
@@ -564,7 +588,7 @@ double FitUtil::EvaluatePdf(IModelFunction & func, const UnBinData & data, const
    return fval;
 }
 
-double FitUtil::EvaluateLogL(IModelFunction & func, const UnBinData & data, const double * p, unsigned int &nPoints) {  
+double FitUtil::EvaluateLogL(const IModelFunction & func, const UnBinData & data, const double * p, unsigned int &nPoints) {  
    // evaluate the LogLikelihood 
 
    unsigned int n = data.Size();
@@ -576,10 +600,10 @@ double FitUtil::EvaluateLogL(IModelFunction & func, const UnBinData & data, cons
 
    double logl = 0;
    int nRejected = 0; 
-   func.SetParameters(p); 
+
    for (unsigned int i = 0; i < n; ++ i) { 
       const double * x = data.Coords(i);
-      double fval = func ( x ); 
+      double fval = func ( x, p ); 
 
 #ifdef DEBUG      
       std::cout << "x [ " << data.PointSize() << " ] = "; 
@@ -608,25 +632,25 @@ double FitUtil::EvaluateLogL(IModelFunction & func, const UnBinData & data, cons
    return -logl;
 }
 
-void FitUtil::EvaluateLogLGradient(IModelFunction & f, const UnBinData & data, const double * p, double * grad, unsigned int & ) { 
+void FitUtil::EvaluateLogLGradient(const IModelFunction & f, const UnBinData & data, const double * p, double * grad, unsigned int & ) { 
    // evaluate the gradient of the log likelihood function
 
-   IGradModelFunction * fg = dynamic_cast<IGradModelFunction *>( &f); 
+   const IGradModelFunction * fg = dynamic_cast<const IGradModelFunction *>( &f); 
    assert (fg != 0); // must be called by a grad function
-   IGradModelFunction & func = *fg; 
+   const IGradModelFunction & func = *fg; 
 
    unsigned int n = data.Size();
    //int nRejected = 0; 
-   func.SetParameters(p); 
+
    unsigned int npar = func.NPar(); 
    std::vector<double> gradFunc( npar ); 
    std::vector<double> g( npar); 
 
    for (unsigned int i = 0; i < n; ++ i) { 
       const double * x = data.Coords(i);
-      double fval = func ( x ); 
+      double fval = func ( x , p); 
       if (fval > 0) { 
-         func.ParameterGradient( x, &gradFunc[0] );
+         func.ParameterGradient( x, p, &gradFunc[0] );
          for (unsigned int kpar = 0; kpar < npar; ++ kpar) { 
             g[kpar] -= 1./fval * gradFunc[ kpar ]; 
          }
@@ -639,11 +663,10 @@ void FitUtil::EvaluateLogLGradient(IModelFunction & f, const UnBinData & data, c
 //_________________________________________________________________________________________________
 // for binned log likelihood functions      
 //------------------------------------------------------------------------------------------------
-double FitUtil::EvaluatePoissonBinPdf(IModelFunction & func, const BinData & data, const double * p, unsigned int i, double * g ) {  
+double FitUtil::EvaluatePoissonBinPdf(const IModelFunction & func, const BinData & data, const double * p, unsigned int i, double * g ) {  
    // evaluate the pdf contribution to the logl
    // t.b.d. implement integral option
 
-   func.SetParameters(p);
 
    if (data.Opt().fIntegral )
       MATH_WARN_MSG("FitUtil::EvaluatePoissonBinPdf","Bin integral is not used in calculating pdf for Poisson pdf for the bin");
@@ -653,7 +676,7 @@ double FitUtil::EvaluatePoissonBinPdf(IModelFunction & func, const BinData & dat
    const double * x = data.GetPoint(i,y);
 
 
-   double fval = func ( x ); 
+   double fval = func ( x , p); 
 
    // remove constant term depending on N
    double logPdf =   y * EvalLogF( fval) - fval;  
@@ -664,12 +687,12 @@ double FitUtil::EvaluatePoissonBinPdf(IModelFunction & func, const BinData & dat
    if (g == 0) return pdfval; 
 
    unsigned int npar = func.NPar(); 
-   IGradModelFunction * gfunc = dynamic_cast<IGradModelFunction *>( &func); 
+   const IGradModelFunction * gfunc = dynamic_cast<const IGradModelFunction *>( &func); 
 
    // gradient  calculation
    if (gfunc != 0) { 
       //case function provides gradient
-      gfunc->ParameterGradient(  x , g );  
+      gfunc->ParameterGradient(  x , p, g );  
       // correct g[] do be derivative of poisson term 
       for (unsigned int k = 0; k < npar; ++k) {
          g[k] *= ( y/fval - 1.) * pdfval; 
@@ -695,7 +718,7 @@ double FitUtil::EvaluatePoissonBinPdf(IModelFunction & func, const BinData & dat
    return pdfval;
 }
 
-double FitUtil::EvaluatePoissonLogL(IModelFunction & func, const BinData & data, const double * p, unsigned int &nPoints) {  
+double FitUtil::EvaluatePoissonLogL(const IModelFunction & func, const BinData & data, const double * p, unsigned int &nPoints) {  
    // evaluate the Poisson Log Likelihood
    // for binned likelihood fits
 
@@ -704,11 +727,10 @@ double FitUtil::EvaluatePoissonLogL(IModelFunction & func, const BinData & data,
    
    double loglike = 0;
    int nRejected = 0; 
-   func.SetParameters(p); 
 
    // get fit option and check case of using integral of bins
    const DataOptions & fitOpt = data.Opt();
-   IntegralEvaluator igEval( func, fitOpt.fIntegral); 
+   IntegralEvaluator igEval( func, p, fitOpt.fIntegral); 
 
    for (unsigned int i = 0; i < n; ++ i) { 
       const double * x = data.Coords(i);
@@ -716,7 +738,7 @@ double FitUtil::EvaluatePoissonLogL(IModelFunction & func, const BinData & data,
 
       double fval = 0;   
       if (!fitOpt.fIntegral )
-         fval = func ( x ); 
+         fval = func ( x, p ); 
       else { 
          // calculate normalized integral (divided by bin volume)
          fval = igEval( x, data.Coords(i+1) ) ; 
@@ -738,17 +760,16 @@ double FitUtil::EvaluatePoissonLogL(IModelFunction & func, const BinData & data,
    return loglike;  
 }
 
-void FitUtil::EvaluatePoissonLogLGradient(IModelFunction & f, const BinData & data, const double * p, double * grad ) { 
+void FitUtil::EvaluatePoissonLogLGradient(const IModelFunction & f, const BinData & data, const double * p, double * grad ) { 
    // evaluate the gradient of the log likelihood function
    // t.b.d. add integral option
 
-   IGradModelFunction * fg = dynamic_cast<IGradModelFunction *>( &f); 
+   const IGradModelFunction * fg = dynamic_cast<const IGradModelFunction *>( &f); 
    assert (fg != 0); // must be called by a grad function
-   IGradModelFunction & func = *fg; 
+   const IGradModelFunction & func = *fg; 
 
    unsigned int n = data.Size();
 
-   func.SetParameters(p); 
    unsigned int npar = func.NPar(); 
    std::vector<double> gradFunc( npar ); 
    std::vector<double> g( npar); 
@@ -756,9 +777,9 @@ void FitUtil::EvaluatePoissonLogLGradient(IModelFunction & f, const BinData & da
    for (unsigned int i = 0; i < n; ++ i) { 
       const double * x = data.Coords(i);
       double y = data.Value(i);
-      double fval = func ( x ); 
+      double fval = func ( x, p ); 
       if (fval > 0) { 
-         func.ParameterGradient( x, &gradFunc[0] );
+         func.ParameterGradient( x, p, &gradFunc[0] );
          for (unsigned int kpar = 0; kpar < npar; ++ kpar) { 
             // df/dp * (1.  - y/f )
             g[kpar] += gradFunc[ kpar ] * ( 1. - y/fval ); 

@@ -66,7 +66,7 @@ public:
        @param size maximum number of sub-intervals
     */
    explicit 
-   IntegratorMultiDim(IntegrationMultiDim::Type type = IntegrationMultiDim::ADAPTIVE, double absTol = 1.E-9, double relTol = 1E-6, unsigned int ncall = 100000) { 
+   IntegratorMultiDim(IntegrationMultiDim::Type type = IntegrationMultiDim::kADAPTIVE, double absTol = 1.E-9, double relTol = 1E-6, unsigned int ncall = 100000) { 
        fIntegrator = CreateIntegrator(type, absTol, relTol, ncall); 
    }
    
@@ -79,7 +79,7 @@ public:
        @param ncall  number of function calls (apply only to MC integratioon methods)
     */
    explicit
-   IntegratorMultiDim(const IMultiGenFunction &f, IntegrationMultiDim::Type type = IntegrationMultiDim::ADAPTIVE, double absTol = 1.E-9, double relTol = 1E-6, unsigned int ncall = 100000) { 
+   IntegratorMultiDim(const IMultiGenFunction &f, IntegrationMultiDim::Type type = IntegrationMultiDim::kADAPTIVE, double absTol = 1.E-9, double relTol = 1E-6, unsigned int ncall = 100000) { 
       fIntegrator = CreateIntegrator(type, absTol, relTol, ncall); 
       SetFunction(f);            
    }
@@ -95,7 +95,7 @@ public:
     */
 #ifdef LATER
    template<class Function>
-   IntegratorMultiDim(Function &f, unsigned int dim, IntegrationMultiDim::Type type = IntegrationMultiDim::ADAPTIVE, double absTol = 1.E-9, double relTol = 1E-6, unsigned int ncall = 100000) { 
+   IntegratorMultiDim(Function &f, unsigned int dim, IntegrationMultiDim::Type type = IntegrationMultiDim::kADAPTIVE, double absTol = 1.E-9, double relTol = 1E-6, unsigned int ncall = 100000) { 
       fIntegrator = CreateIntegrator(type, absTol, relTol, ncall); 
       SetFunction(f, dim); 
    }

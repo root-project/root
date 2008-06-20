@@ -43,10 +43,13 @@ public:
 
    using  ROOT::Math::IParamMultiGradFunction::operator();
 
-   void ParameterGradient(const double *x, double * g) const { 
-      double y = (x[0]-mean())/sigma();
+   void ParameterGradient(const double *x, const double * p, double * g) const { 
+      double a = p[0]; 
+      double m = p[1]; 
+      double s = p[2]; 
+      double y = (x[0]- m )/s;
       g[0] = std::exp(-0.5*y*y);
-      g[1] =  amp()*g[0]*y/sigma();
+      g[1] =  a *g[0]*y/s;
       g[2] = g[1]*y; 
    }
 
@@ -54,9 +57,12 @@ public:
 private: 
 
 
-   double DoEval(const double * x) const { 
-      double y = (x[0]-mean())/sigma();
-      return amp()*std::exp(-0.5*y*y);
+   double DoEvalPar(const double * x, const double * p) const { 
+      double a = p[0]; 
+      double m = p[1]; 
+      double s = p[2]; 
+      double y = (x[0]-m)/s;
+      return a*std::exp(-0.5*y*y);
    }
 
    double DoDerivative(const double *x, unsigned int icoord) const { 
@@ -65,9 +71,9 @@ private:
       return dGdx; 
    }
 
-   double DoParameterDerivative(const double *x, unsigned int ipar) const { 
+   double DoParameterDerivative(const double *x, const double * p, unsigned int ipar) const { 
       double grad[3];
-      ParameterGradient(x, &grad[0] ); 
+      ParameterGradient(x, p, &grad[0] ); 
       return grad[ipar]; 
    }
 

@@ -46,23 +46,23 @@ GSLInterpolator::GSLInterpolator (unsigned int size, Interpolation::Type type) :
 
    switch ( type )  
    {
-      case ROOT::Math::Interpolation::LINEAR          : 
+      case ROOT::Math::Interpolation::kLINEAR          : 
          fInterpType = gsl_interp_linear; 
          break ;
-      case ROOT::Math::Interpolation::POLYNOMIAL       :
+      case ROOT::Math::Interpolation::kPOLYNOMIAL       :
          fInterpType = gsl_interp_polynomial; 
          break ;
          // depened on GSL linear algebra
-      case ROOT::Math::Interpolation::CSPLINE         :
+      case ROOT::Math::Interpolation::kCSPLINE         :
          fInterpType = gsl_interp_cspline ;          
          break ;
-      case ROOT::Math::Interpolation::CSPLINE_PERIODIC :
+      case ROOT::Math::Interpolation::kCSPLINE_PERIODIC :
          fInterpType = gsl_interp_cspline_periodic  ; 
          break ;
-      case ROOT::Math::Interpolation::AKIMA            :
+      case ROOT::Math::Interpolation::kAKIMA            :
          fInterpType = gsl_interp_akima; 
          break ;
-      case ROOT::Math::Interpolation::AKIMA_PERIODIC   :
+      case ROOT::Math::Interpolation::kAKIMA_PERIODIC   :
          fInterpType = gsl_interp_akima_periodic; 
          break ;
       default :

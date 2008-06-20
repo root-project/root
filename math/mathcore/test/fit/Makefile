@@ -68,6 +68,7 @@ $(TESTFIT): $(TESTFITOBJ)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		@echo "$@ done"
 
+$(TESTPERFOBJ): GaussFunction.h
 $(TESTPERF): $(TESTPERFOBJ)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(ROOFITLIBS) $(OutPutOpt)$@
 		@echo "$@ done"
@@ -76,6 +77,7 @@ $(TESTMINIM): $(TESTMINIMOBJ)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		@echo "$@ done"
 
+$(TESTROOFITOBJ): WrapperRooPdf.h
 $(TESTROOFIT): $(TESTROOFITOBJ)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(ROOFITLIBS) $(OutPutOpt)$@
 		@echo "$@ done"

@@ -54,10 +54,10 @@ GSLMinimizer1D::GSLMinimizer1D(Minim1D::Type type) :
    const gsl_min_fminimizer_type* T = 0 ;
    switch ( type )
    {
-   case Minim1D::GOLDENSECTION          : 
+   case Minim1D::kGOLDENSECTION          : 
       T = gsl_min_fminimizer_goldensection; 
       break ;
-   case Minim1D::BRENT       :
+   case Minim1D::kBRENT       :
       T = gsl_min_fminimizer_brent; 
       break ;
    default :

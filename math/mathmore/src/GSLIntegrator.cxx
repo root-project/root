@@ -59,7 +59,7 @@ GSLIntegrator::GSLIntegrator(const Integration::Type type , const Integration::G
 {
    // constructor for all types of integrations 
    // allocate workspace (only if not adaptive algorithm)
-   if (type !=  Integration::NONADAPTIVE)
+   if (type !=  Integration::kNONADAPTIVE)
       fWorkspace = new GSLIntegrationWorkspace( fSize);
       
       
@@ -68,8 +68,8 @@ GSLIntegrator::GSLIntegrator(const Integration::Type type , const Integration::G
 
 
 GSLIntegrator::GSLIntegrator(double absTol, double relTol, size_t size) :
-   fType(Integration::ADAPTIVESINGULAR),
-   fRule(Integration::GAUSS31),
+   fType(Integration::kADAPTIVESINGULAR),
+   fRule(Integration::kGAUSS31),
    fAbsTol(absTol),
    fRelTol(relTol),
    fSize(size),
@@ -86,7 +86,7 @@ GSLIntegrator::GSLIntegrator(double absTol, double relTol, size_t size) :
 
 GSLIntegrator::GSLIntegrator(const Integration::Type type , double absTol, double relTol, size_t size) :
    fType(type),
-   fRule(Integration::GAUSS31),
+   fRule(Integration::kGAUSS31),
    fAbsTol(absTol),
    fRelTol(relTol),
    fSize(size),
@@ -97,13 +97,13 @@ GSLIntegrator::GSLIntegrator(const Integration::Type type , double absTol, doubl
 
    // constructor with default rule (gauss31) passing the type
    // allocate workspace (only if not adaptive algorithm)
-   if (type !=  Integration::NONADAPTIVE)
+   if (type !=  Integration::kNONADAPTIVE)
       fWorkspace = new GSLIntegrationWorkspace( fSize);
    
 }
 
    GSLIntegrator::GSLIntegrator(const char * type , int rule, double absTol, double relTol, size_t size) :
-   fRule(Integration::GAUSS31),
+   fRule(Integration::kGAUSS31),
    fAbsTol(absTol),
    fRelTol(relTol),
    fSize(size),
@@ -115,17 +115,17 @@ GSLIntegrator::GSLIntegrator(const Integration::Type type , double absTol, doubl
 
    std::string typeName(type); 
    if (typeName == "NONADAPTIVE")
-      fType =  Integration::ADAPTIVE;
+      fType =  Integration::kADAPTIVE;
    else if (typeName == "ADAPTIVESINGULAR")
-      fType =  Integration::ADAPTIVESINGULAR;
+      fType =  Integration::kADAPTIVESINGULAR;
    else 
-      fType =  Integration::ADAPTIVE;  // default
+      fType =  Integration::kADAPTIVE;  // default
 
 
 
    // constructor with default rule (gauss31) passing the type
    // allocate workspace (only if not adaptive algorithm)
-   if (fType !=  Integration::NONADAPTIVE)
+   if (fType !=  Integration::kNONADAPTIVE)
       fWorkspace = new GSLIntegrationWorkspace( fSize);
 
    SetIntegrationRule((Integration::GKRule) rule);
@@ -182,14 +182,14 @@ double  GSLIntegrator::Integral(double a, double b) {
 
    if (!CheckFunction()) return 0;  
    
-   if ( fType == Integration::NONADAPTIVE) {
+   if ( fType == Integration::kNONADAPTIVE) {
       size_t neval = 0; // need to export  this ?
       fStatus = gsl_integration_qng( fFunction->GetFunc(), a, b , fAbsTol, fRelTol, &fResult, &fError, &neval);
    }
-   else if (fType ==  Integration::ADAPTIVE) {
+   else if (fType ==  Integration::kADAPTIVE) {
       fStatus = gsl_integration_qag( fFunction->GetFunc(), a, b , fAbsTol, fRelTol, fMaxIntervals, fRule, fWorkspace->GetWS(), &fResult, &fError);
    }
-   else if (fType ==  Integration::ADAPTIVESINGULAR) {
+   else if (fType ==  Integration::kADAPTIVESINGULAR) {
       
       // singular integration - look if we know about singular points
       
@@ -236,7 +236,7 @@ double  GSLIntegrator::Integral( const std::vector<double> & pts) {
 
    if (!CheckFunction()) return 0;  
 
-   if (fType == Integration::ADAPTIVESINGULAR && pts.size() >= 2 ) {
+   if (fType == Integration::kADAPTIVESINGULAR && pts.size() >= 2 ) {
       // remove constness ( should be const in GSL ? )
       double * p = const_cast<double *>(&pts.front() );
       fStatus = gsl_integration_qagp( fFunction->GetFunc(), p, pts.size() , fAbsTol, fRelTol, fMaxIntervals,  fWorkspace->GetWS(), &fResult, &fError);

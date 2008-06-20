@@ -116,7 +116,7 @@ int FitResult::Index(const std::string & name) const {
    return -1; // case name is not found
 } 
 
-void FitResult::Print(std::ostream & os) const { 
+      void FitResult::Print(std::ostream & os, bool doCovMatrix) const { 
    // print the result in the given stream 
    if (!fValid) { 
       os << "\n****************************************\n";
@@ -138,6 +138,30 @@ void FitResult::Print(std::ostream & os) const {
    assert(fFitFunc != 0); 
    for (unsigned int i = 0; i < npar; ++i) { 
       os << fFitFunc->ParameterName(i) << "\t\t =\t" << fParams[i] << " \t+/-\t" << fErrors[i] << std::endl; 
+   }
+
+   if (doCovMatrix) PrintCovMatrix(os); 
+}
+
+void FitResult::PrintCovMatrix(std::ostream &os) const { 
+   if (!fValid) return;
+   os << "\n****************************************\n";
+   os << "\n            Covariance Matrix            \n\n";
+   unsigned int npar = fParams.size(); 
+   const int kPrec = 8; 
+   const int kWidth = 12; 
+   for (unsigned int i = 0; i < npar; ++i) {
+      for (unsigned int j = 0; j <= i; ++j) {
+         os.precision(kPrec); os.width(kWidth);  os << CovMatrix(i,j); 
+      }
+      os << std::endl;
+   }
+   os << "\n            Correlation Matrix         \n\n";
+   for (unsigned int i = 0; i < npar; ++i) {
+      for (unsigned int j = 0; j <= i; ++j) {
+         os.precision(kPrec); os.width(kWidth);  os << Correlation(i,j); 
+      }
+      os << std::endl;
    }
 }
 

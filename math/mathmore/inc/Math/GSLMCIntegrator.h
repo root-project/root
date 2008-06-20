@@ -109,7 +109,7 @@ namespace Math {
       */
       
       explicit 
-      GSLMCIntegrator(MCIntegration::Type type = MCIntegration::VEGAS, double absTol = 1.E-6, double relTol = 1E-4, unsigned int calls = 500000);
+      GSLMCIntegrator(MCIntegration::Type type = MCIntegration::kVEGAS, double absTol = 1.E-6, double relTol = 1E-4, unsigned int calls = 500000);
 
       /** constructor of GSL MCIntegrator. VEGAS MC is set as default integration type 
          

@@ -61,11 +61,11 @@ GSLMCIntegrator::GSLMCIntegrator(const char * type, double absTol, double relTol
    // constructor of GSL MCIntegrator. Vegas MC is set as default integration type
    std::string typeName(type); 
    if (typeName == "PLAIN")
-      fType =  MCIntegration::PLAIN;
+      fType =  MCIntegration::kPLAIN;
    else if (typeName == "MISER")
-      fType =  MCIntegration::MISER;
+      fType =  MCIntegration::kMISER;
    else 
-      fType =  MCIntegration::VEGAS;  // default
+      fType =  MCIntegration::kVEGAS;  // default
    
    //set random number generator
    fRng = new GSLRngWrapper();      
@@ -134,23 +134,23 @@ double GSLMCIntegrator::Integral(const double* a, const double* b)
    // (if dimension and type are different than previous calculation)
    DoInitialize(); 
 
-   if ( fType == MCIntegration::VEGAS) 
+   if ( fType == MCIntegration::kVEGAS) 
    {
       GSLVegasIntegrationWorkspace * ws = dynamic_cast<GSLVegasIntegrationWorkspace *>(fWorkspace); 
       assert(ws != 0);
-      if(fMode == MCIntegration::IMPORTANCE) ws->GetWS()->mode = 0;
-      else if(fMode == MCIntegration::STRATIFIED) ws->GetWS()->mode = 1;
-      else if(fMode == MCIntegration::IMPORTANCE_ONLY) ws->GetWS()->mode = 2;
+      if(fMode == MCIntegration::kIMPORTANCE) ws->GetWS()->mode = 0;
+      else if(fMode == MCIntegration::kSTRATIFIED) ws->GetWS()->mode = 1;
+      else if(fMode == MCIntegration::kIMPORTANCE_ONLY) ws->GetWS()->mode = 2;
 
       fStatus = gsl_monte_vegas_integrate( fFunction->GetFunc(), (double *) a, (double*) b , fDim, fCalls, fr, ws->GetWS(),  &fResult, &fError);
    }
-   else if (fType ==  MCIntegration::MISER) 
+   else if (fType ==  MCIntegration::kMISER) 
    {
       GSLMiserIntegrationWorkspace * ws = dynamic_cast<GSLMiserIntegrationWorkspace *>(fWorkspace); 
       assert(ws != 0); 
       fStatus = gsl_monte_miser_integrate( fFunction->GetFunc(), (double *) a, (double *) b , fDim, fCalls, fr, ws->GetWS(),  &fResult, &fError);
    }
-   else if (fType ==  MCIntegration::PLAIN) 
+   else if (fType ==  MCIntegration::kPLAIN) 
    {
       GSLPlainIntegrationWorkspace * ws = dynamic_cast<GSLPlainIntegrationWorkspace *>(fWorkspace); 
       assert(ws != 0); 
@@ -238,19 +238,19 @@ void GSLMCIntegrator::DoInitialize ( )
       delete fWorkspace; 
    }
  
-   if(fType  ==  ROOT::Math::MCIntegration::VEGAS)
+   if(fType  ==  ROOT::Math::MCIntegration::kVEGAS)
    {
       
       fWorkspace = new GSLVegasIntegrationWorkspace(fDim);
 	  
    }
 
-   else if (fType ==  ROOT::Math::MCIntegration::MISER) 
+   else if (fType ==  ROOT::Math::MCIntegration::kMISER) 
    {
 
       fWorkspace = new GSLMiserIntegrationWorkspace(fDim);
    }
-   else if (fType ==  ROOT::Math::MCIntegration::PLAIN)   
+   else if (fType ==  ROOT::Math::MCIntegration::kPLAIN)   
    {
 
       fWorkspace = new GSLPlainIntegrationWorkspace(fDim);
@@ -266,7 +266,7 @@ void GSLMCIntegrator::DoInitialize ( )
 void GSLMCIntegrator::SetMode(MCIntegration::Mode mode)
 {
    //   set integration mode for VEGAS method
-   if(fType ==  ROOT::Math::MCIntegration::VEGAS)
+   if(fType ==  ROOT::Math::MCIntegration::kVEGAS)
    {  fMode = mode; }
 
    else std::cerr << "Mode not matching integration type";
@@ -277,7 +277,7 @@ void GSLMCIntegrator::SetMode(MCIntegration::Mode mode)
 void GSLMCIntegrator::SetParameters(const VegasParameters &p)
 {
    // set method parameters
-   if (fType ==  MCIntegration::VEGAS) 
+   if (fType ==  MCIntegration::kVEGAS) 
    {
       GSLVegasIntegrationWorkspace * ws = dynamic_cast<GSLVegasIntegrationWorkspace *>(fWorkspace); 
       assert(ws != 0);
@@ -290,7 +290,7 @@ void GSLMCIntegrator::SetParameters(const VegasParameters &p)
 void GSLMCIntegrator::SetParameters(const MiserParameters &p)
 {
    // set method parameters
-   if (fType ==  MCIntegration::MISER) 
+   if (fType ==  MCIntegration::kMISER) 
    {
       GSLMiserIntegrationWorkspace * ws = dynamic_cast<GSLMiserIntegrationWorkspace *>(fWorkspace); 
       assert(ws != 0); 
@@ -308,7 +308,7 @@ void GSLMCIntegrator::SetParameters(const MiserParameters &p)
 double GSLMCIntegrator::Sigma()
 {
    // returns the error sigma from the last iteration of the VEGAS algorithm
-   if(fType == MCIntegration::VEGAS)
+   if(fType == MCIntegration::kVEGAS)
    {
       GSLVegasIntegrationWorkspace * ws = dynamic_cast<GSLVegasIntegrationWorkspace *>(fWorkspace);
       return ws->GetWS()->sigma;
@@ -327,7 +327,7 @@ double GSLMCIntegrator::Sigma()
 double GSLMCIntegrator::ChiSqr()
 {
    //   returns chi-squared per degree of freedom for the estimate of the integral
-   if(fType == MCIntegration::VEGAS)
+   if(fType == MCIntegration::kVEGAS)
    {
       GSLVegasIntegrationWorkspace * ws = dynamic_cast<GSLVegasIntegrationWorkspace *>(fWorkspace);
       return ws->GetWS()->chisq;

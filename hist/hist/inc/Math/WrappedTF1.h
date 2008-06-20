@@ -141,26 +141,21 @@ public:
       return std::string(fFunc->GetParName(i)); 
    } 
 
-   /// evaluate function passing coordinates x and vector of parameters
-   double operator() (const double * x, const double * p ) { 
-      if (fFunc->GetMethodCall() ) fFunc->InitArgs(x,p);  // needed for interpreted functions 
-      return fFunc->EvalPar(x,p); 
-   }
-
 
    using BaseGradFunc::operator();
 
    /// evaluate the derivative of the function with respect to the parameters
-   void  ParameterGradient(double x, double * grad ) const { 
+   void  ParameterGradient(double x, const double * par, double * grad ) const { 
       if (!fLinear) { 
-         fFunc->SetParameters(&fParams.front() );
+         // need to set parameter values
+         fFunc->SetParameters( par );
          static const double kEps = 0.001;
          fFunc->GradientPar(&x,grad,kEps);
       }
       else { 
          unsigned int np = NPar();
          for (unsigned int i = 0; i < np; ++i) 
-            grad[i] = DoParameterDerivative(x, i);
+            grad[i] = DoParameterDerivative(x, par, i);
       }
    }
 
@@ -168,11 +163,19 @@ public:
 private: 
 
 
+   /// evaluate function passing coordinates x and vector of parameters
+   double DoEvalPar (double x, const double * p ) const { 
+      fX[0] = x;  
+      if (fFunc->GetMethodCall() ) fFunc->InitArgs(fX,p);  // needed for interpreted functions 
+      return fFunc->EvalPar(fX,p); 
+   }
+
    /// evaluate function using the cached parameter values of this class (not of TF1)
+   /// re-implement for better efficiency
    double DoEval (double x) const { 
       // no need to call InitArg for interpreted functions (done in ctor)
       // use EvalPar since it is much more efficient than Eval
-      fX[0] = x; 
+      fX[0] = x;  
       return fFunc->EvalPar(fX,&fParams.front()); 
    }
 
@@ -185,15 +188,15 @@ private:
    }
 
    /// evaluate the derivative of the function with respect to the parameters
-   double  DoParameterDerivative(double x, unsigned int ipar ) const { 
+   double  DoParameterDerivative(double x, const double * p, unsigned int ipar ) const { 
       // not very efficient - use ParameterGradient
       if (! fLinear ) {  
          std::vector<double> grad(NPar());
-         ParameterGradient(x, &grad[0] ); 
+         ParameterGradient(x, p, &grad[0] ); 
          return grad[ipar]; 
       }
       else if (fPolynomial) { 
-         // case of polynomial function 
+         // case of polynomial function (no parameter dependency)  
          return std::pow(x, static_cast<int>(ipar) );  
       }
       else { 
@@ -211,8 +214,8 @@ private:
    bool fLinear;                 // flag for linear functions 
    bool fPolynomial;             // flag for polynomial functions 
    TF1 * fFunc;                  // pointer to ROOT function
-   mutable double fX[1];         // cached vector for x value (needed for TF1::EvalPar signature) 
-   std::vector<double> fParams;  // cached vector with parameter values
+   mutable double fX[1];         //! cached vector for x value (needed for TF1::EvalPar signature) 
+   std::vector<double> fParams;  //  cached vector with parameter values
 }; 
 
    } // end namespace Fit

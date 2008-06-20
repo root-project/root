@@ -85,7 +85,7 @@ namespace Math {
       void SetParameters(const struct VegasParameters &p);
       double Sigma() const;
 
-      MCIntegration::Type Type() const { return MCIntegration::VEGAS; }
+      MCIntegration::Type Type() const { return MCIntegration::kVEGAS; }
       
    private: 
       gsl_monte_vegas_state * fWs; 
@@ -119,7 +119,7 @@ namespace Math {
       void SetParameters();
       void SetParameters(const struct MiserParameters &p);
 
-      MCIntegration::Type Type() const { return MCIntegration::MISER; }
+      MCIntegration::Type Type() const { return MCIntegration::kMISER; }
     
    private: 
       gsl_monte_miser_state * fWs; 
@@ -155,7 +155,7 @@ namespace Math {
       //void SetParameters();
       //void SetParameters(const struct PlainParameters &p);
 
-      MCIntegration::Type Type() const { return MCIntegration::PLAIN; }
+      MCIntegration::Type Type() const { return MCIntegration::kPLAIN; }
 
    private: 
       gsl_monte_plain_state * fWs; 

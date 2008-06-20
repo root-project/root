@@ -266,8 +266,8 @@ public:
    };
    unsigned int NPar() const { return 3; }
 private:
-   double DoEval( double x) const { 
-      return fp[0]*x*x + fp[1]*x + fp[2]; 
+   double DoEvalPar( double x, const double *p) const { 
+      return p[0]*x*x + p[1]*x + p[2]; 
    }
    double fp[3];
    
@@ -286,7 +286,7 @@ public:
    unsigned int NDim() const { return 2; }
    unsigned int NPar() const { return 5; }
 
-   void ParameterGradient( const double * x, double * grad) const { 
+   void ParameterGradient( const double * x, const double * , double * grad) const { 
       grad[0] = x[0]*x[0]; 
       grad[1] = x[0];
       grad[2] = x[1]*x[1]; 
@@ -295,19 +295,19 @@ public:
    }
 
 private:
-   double DoEval( const double *x) const { 
-      return fp[0]*x[0]*x[0] + fp[1]*x[0] + fp[2]*x[1]*x[1] + fp[3]*x[1] + fp[4]; 
+   double DoEvalPar( const double *x, const double * p) const { 
+      return p[0]*x[0]*x[0] + p[1]*x[0] + p[2]*x[1]*x[1] + p[3]*x[1] + p[4]; 
    }
-   double DoDerivative(const double *x, unsigned int icoord = 0) const { 
+   double DoDerivative(const double *x,  unsigned int icoord = 0) const { 
       assert(icoord <= 1); 
       if (icoord == 0) 
          return 2. * fp[0] * x[0] + fp[1];
       else 
          return 2. * fp[2] * x[1] + fp[3];
    }
-   double DoParameterDerivative(const double * x, unsigned int ipar) const { 
+   double DoParameterDerivative(const double * x, const double * p, unsigned int ipar) const { 
       std::vector<double> grad(NPar());
-      ParameterGradient(x, &grad[0] ); 
+      ParameterGradient(x, p, &grad[0] ); 
       return grad[ipar]; 
    }
 
@@ -354,7 +354,7 @@ int testHisto1DPolFit() {
    ROOT::Fit::Fitter fitter; 
    bool ret = fitter.Fit(d, f);
    if (ret)  
-      fitter.Result().Print(std::cout); 
+      fitter.Result().Print(std::cout,true); 
    else {
       std::cout << " Fit Failed " << std::endl;
       return -1; 
@@ -373,8 +373,10 @@ int testHisto1DPolFit() {
 
    fitter.Config().SetMinimizer("Linear");
    ret = fitter.Fit(d, pf);
-   if (ret)  
+   if (ret)  {
       fitter.Result().Print(std::cout); 
+      fitter.Result().PrintCovMatrix(std::cout); 
+   }
    else {
       std::cout << " Fit Failed " << std::endl;
       return -1; 

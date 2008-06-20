@@ -43,50 +43,50 @@ namespace FitUtil {
        evaluate the Chi2 given a model function and the data at the point x. 
        return also nPoints as the effective number of used points in the Chi2 evaluation
    */ 
-   double EvaluateChi2(IModelFunction & func, const BinData & data, const double * x, unsigned int & nPoints);  
+   double EvaluateChi2(const IModelFunction & func, const BinData & data, const double * x, unsigned int & nPoints);  
 
    /** 
        evaluate the effective Chi2 given a model function and the data at the point x. 
        The effective chi2 uses the errors on the coordinates : W = 1/(sigma_y**2 + ( sigma_x_i * df/dx_i )**2 )
        return also nPoints as the effective number of used points in the Chi2 evaluation
    */ 
-   double EvaluateChi2Effective(IModelFunction & func, const BinData & data, const double * x, unsigned int & nPoints);  
+   double EvaluateChi2Effective(const IModelFunction & func, const BinData & data, const double * x, unsigned int & nPoints);  
 
    /** 
        evaluate the Chi2 gradient given a model function and the data at the point x. 
        return also nPoints as the effective number of used points in the Chi2 evaluation
    */ 
-   void EvaluateChi2Gradient(IModelFunction & func, const BinData & data, const double * x, double * grad, unsigned int & nPoints);  
+   void EvaluateChi2Gradient(const IModelFunction & func, const BinData & data, const double * x, double * grad, unsigned int & nPoints);  
 
    /** 
        evaluate the LogL given a model function and the data at the point x. 
        return also nPoints as the effective number of used points in the LogL evaluation
    */ 
-   double EvaluateLogL(IModelFunction & func, const UnBinData & data, const double * x, unsigned int & nPoints);  
+   double EvaluateLogL(const IModelFunction & func, const UnBinData & data, const double * x, unsigned int & nPoints);  
 
    /** 
        evaluate the LogL gradient given a model function and the data at the point x. 
        return also nPoints as the effective number of used points in the LogL evaluation
    */ 
-   void EvaluateLogLGradient(IModelFunction & func, const UnBinData & data, const double * x, double * grad, unsigned int & nPoints);  
+   void EvaluateLogLGradient(const IModelFunction & func, const UnBinData & data, const double * x, double * grad, unsigned int & nPoints);  
 
    /** 
        evaluate the Poisson LogL given a model function and the data at the point x. 
        return also nPoints as the effective number of used points in the LogL evaluation
    */ 
-   double EvaluatePoissonLogL(IModelFunction & func, const BinData & data, const double * x, unsigned int & nPoints);  
+   double EvaluatePoissonLogL(const IModelFunction & func, const BinData & data, const double * x, unsigned int & nPoints);  
 
    /** 
        evaluate the Poisson LogL given a model function and the data at the point x. 
        return also nPoints as the effective number of used points in the LogL evaluation
    */ 
-   void EvaluatePoissonLogLGradient(IModelFunction & func, const BinData & data, const double * x, double * grad);  
+   void EvaluatePoissonLogLGradient(const IModelFunction & func, const BinData & data, const double * x, double * grad);  
 
-   /** 
-       Parallel evaluate the Chi2 given a model function and the data at the point x. 
-       return also nPoints as the effective number of used points in the Chi2 evaluation
-   */ 
-   double ParallelEvalChi2(IModelFunction & func, const BinData & data, const double * x, unsigned int & nPoints);  
+//    /** 
+//        Parallel evaluate the Chi2 given a model function and the data at the point x. 
+//        return also nPoints as the effective number of used points in the Chi2 evaluation
+//    */ 
+//    double ParallelEvalChi2(const IModelFunction & func, const BinData & data, const double * x, unsigned int & nPoints);  
 
    // methods required by dedicate minimizer like Fumili 
  
@@ -96,7 +96,7 @@ namespace FitUtil {
        If the function provides parameter derivatives they are used otherwise a simple derivative calculation 
        is used       
    */ 
-   double EvaluateChi2Residual(IModelFunction & func, const BinData & data, const double * x, unsigned int ipoint, double *g = 0);  
+   double EvaluateChi2Residual(const IModelFunction & func, const BinData & data, const double * x, unsigned int ipoint, double *g = 0);  
 
    /** 
        evaluate the pdf contribution to the LogL given a model function and the BinPoint data.
@@ -104,7 +104,7 @@ namespace FitUtil {
        If the function provides parameter derivatives they are used otherwise a simple derivative calculation 
        is used 
    */ 
-   double EvaluatePdf(IModelFunction & func, const UnBinData & data, const double * x, unsigned int ipoint, double * g = 0); 
+   double EvaluatePdf(const IModelFunction & func, const UnBinData & data, const double * x, unsigned int ipoint, double * g = 0); 
 
    /** 
        evaluate the pdf contribution to the Poisson LogL given a model function and the BinPoint data. 
@@ -112,7 +112,7 @@ namespace FitUtil {
        If the function provides parameter derivatives they are used otherwise a simple derivative calculation 
        is used 
    */ 
-   double EvaluatePoissonBinPdf(IModelFunction & func, const BinData & data, const double * x, unsigned int ipoint, double * g = 0);  
+   double EvaluatePoissonBinPdf(const IModelFunction & func, const BinData & data, const double * x, unsigned int ipoint, double * g = 0);  
 
 
    

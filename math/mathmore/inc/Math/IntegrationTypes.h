@@ -57,12 +57,12 @@ namespace Math {
     */
     // Gauss KronRod Adaptive rule
 
-    enum GKRule { GAUSS15 = 1,
-		  GAUSS21 = 2,
-		  GAUSS31 = 3,
-		  GAUSS41 = 4,
-		  GAUSS51 = 5,
-		  GAUSS61 = 6
+    enum GKRule { kGAUSS15 = 1,
+		  kGAUSS21 = 2,
+		  kGAUSS31 = 3,
+		  kGAUSS41 = 4,
+		  kGAUSS51 = 5,
+		  kGAUSS61 = 6
     };
 
 

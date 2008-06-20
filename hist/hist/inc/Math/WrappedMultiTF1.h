@@ -117,24 +117,13 @@ public:
       return std::string(fFunc->GetParName(i)); 
    } 
 
-   /// evaluate function passing coordinates x and vector of parameters
-   double operator() (const double * x, const double * p ) { 
-      if (fFunc->GetMethodCall() )  fFunc->InitArgs(x,p);  // needed for interpreted functions 
-      return fFunc->EvalPar(x,p); 
-   }
-
-
-   using BaseFunc::operator();
-
-
 
 private: 
 
-
-   /// evaluate function using the cached parameter values of this class (not of TF1)
-   double DoEval (const double * x) const { 
-      if (fFunc->GetMethodCall() ) fFunc->InitArgs(x, &fParams.front() );
-      return fFunc->EvalPar(x,&fParams.front()); 
+   /// evaluate function passing coordinates x and vector of parameters
+   double DoEvalPar (const double * x, const double * p ) const { 
+      if (fFunc->GetMethodCall() )  fFunc->InitArgs(x,p);  // needed for interpreted functions 
+      return fFunc->EvalPar(x,p); 
    }
 
 

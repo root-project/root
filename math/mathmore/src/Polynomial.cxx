@@ -49,7 +49,7 @@ namespace Math {
 
 Polynomial::Polynomial(unsigned int n) : 
   // number of par is order + 1
-  ParamFunction( n+1, true, true), 
+  ParFunc( n+1 ), 
   fOrder(n), 
   fDerived_params(std::vector<double>(n) )
 {
@@ -57,7 +57,7 @@ Polynomial::Polynomial(unsigned int n) :
 
   //order 1
 Polynomial::Polynomial(double a, double b) : 
-  ParamFunction( 2, true, true), 
+  ParFunc( 2 ), 
   fOrder(1), 
   fDerived_params(std::vector<double>(1) )
 {
@@ -67,7 +67,7 @@ Polynomial::Polynomial(double a, double b) :
 
 // order 2
 Polynomial::Polynomial(double a, double b, double c) : 
-  ParamFunction( 3, true, true), 
+  ParFunc( 3 ), 
   fOrder(2), 
   fDerived_params(std::vector<double>(2) )
 {
@@ -79,7 +79,7 @@ Polynomial::Polynomial(double a, double b, double c) :
 // order 3 (cubic)
 Polynomial::Polynomial(double a, double b, double c, double d) : 
   // number of par is order + 1
-  ParamFunction( 4, true, true), 
+  ParFunc( 4 ), 
   fOrder(3), 
   fDerived_params(std::vector<double>(3) )
 {
@@ -92,7 +92,7 @@ Polynomial::Polynomial(double a, double b, double c, double d) :
 // order 3 (quartic)
 Polynomial::Polynomial(double a, double b, double c, double d, double e) : 
   // number of par is order + 1
-  ParamFunction( 5, true, true), 
+  ParFunc( 5 ), 
   fOrder(4), 
   fDerived_params(std::vector<double>(4) )
 {
@@ -117,18 +117,12 @@ Polynomial::Polynomial(double a, double b, double c, double d, double e) :
 // }
 
 
-double  Polynomial::DoEval (double x) const { 
-  
-    return gsl_poly_eval( &fParams.front(), fOrder + 1, x); 
-
-}
-
-
-double  Polynomial::operator() (double x, const double *  p) { 
+double  Polynomial::DoEvalPar (double x, const double * p) const { 
   
     return gsl_poly_eval( p, fOrder + 1, x); 
 
 }
+
 
 
 double  Polynomial::DoDerivative(double x) const{ 
@@ -140,7 +134,7 @@ double  Polynomial::DoDerivative(double x) const{
 
 }
 
-double Polynomial::DoParameterDerivative (double x, unsigned int ipar) const { 
+double Polynomial::DoParameterDerivative (double x, const double *, unsigned int ipar) const { 
 
       return gsl_pow_int(x, ipar); 
 }

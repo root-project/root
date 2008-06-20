@@ -1122,19 +1122,27 @@ Double_t TF1::Derivative(Double_t x, Double_t *params, Double_t eps) const
    //
    // Author: Anna Kreshuk
 
-   // I didn't do it! To change EvalPar to const!!! or remove const from
-   // this method!
-   ROOT::Math::WrappedTF1 wf1(*( const_cast<TF1 *> (this) )); 
-   if ( params )
-      wf1.SetParameters( params );
-
    ROOT::Math::RichardsonDerivator rd;
    double xmin, xmax;
    GetRange(xmin, xmax);
-   rd.SetFunction(wf1, xmin, xmax);
-   rd.SetRelTolerance(eps);
+   // this is not optimal (should be used the average x instead of the range) 
+   double h = eps* std::abs(xmax-xmin);
+   if ( h <= 0 ) h = 0.001;  
+   double der = 0; 
+   if (params) { 
+      ROOT::Math::WrappedTF1 wtf(*( const_cast<TF1 *> (this) )); 
+      wtf.SetParameters(params);
+      der = rd.Derivative1(wtf,x,h);   
+   }                                            
+   else { 
+      // no need to set parameters used a non-parametric wrapper to avoid allocating 
+      // an array with parameter values
+      ROOT::Math::WrappedFunction<const TF1 & > wf( *this);
+      der = rd.Derivative1(wf,x,h);   
+   }
+
    gErrorTF1 = rd.Error();
-   return rd.Derivative1(x);
+   return der;
 
 }
 
@@ -1173,19 +1181,29 @@ Double_t TF1::Derivative2(Double_t x, Double_t *params, Double_t eps) const
    //
    // Author: Anna Kreshuk
 
-   // I didn't do it! To change EvalPar to const!!! or remove const from
-   // this method!
-   ROOT::Math::WrappedTF1 wf1(*( const_cast<TF1 *> (this) )); 
-   if ( params )
-      wf1.SetParameters( params );
 
    ROOT::Math::RichardsonDerivator rd;
    double xmin, xmax;
    GetRange(xmin, xmax);
-   rd.SetFunction(wf1, xmin, xmax);
-   rd.SetRelTolerance(eps);
+   // this is not optimal (should be used the average x instead of the range) 
+   double h = eps* std::abs(xmax-xmin);
+   if ( h <= 0 ) h = 0.001;  
+   double der = 0; 
+   if (params) { 
+      ROOT::Math::WrappedTF1 wtf(*( const_cast<TF1 *> (this) )); 
+      wtf.SetParameters(params);
+      der = rd.Derivative2(wtf,x,h);   
+   }                                            
+   else { 
+      // no need to set parameters used a non-parametric wrapper to avoid allocating 
+      // an array with parameter values
+      ROOT::Math::WrappedFunction<const TF1 & > wf( *this);
+      der = rd.Derivative2(wf,x,h);   
+   }
+
    gErrorTF1 = rd.Error();
-   return rd.Derivative2(x);
+
+   return der;
 }
 
 
@@ -1223,19 +1241,28 @@ Double_t TF1::Derivative3(Double_t x, Double_t *params, Double_t eps) const
    //
    // Author: Anna Kreshuk
 
-   // I didn't do it! To change EvalPar to const!!! or remove const from
-   // this method!
-   ROOT::Math::WrappedTF1 wf1(*( const_cast<TF1 *> (this) )); 
-   if ( params )
-      wf1.SetParameters( params );
-
    ROOT::Math::RichardsonDerivator rd;
    double xmin, xmax;
    GetRange(xmin, xmax);
-   rd.SetFunction(wf1, xmin, xmax);
-   rd.SetRelTolerance(eps);
+   // this is not optimal (should be used the average x instead of the range) 
+   double h = eps* std::abs(xmax-xmin);
+   if ( h <= 0 ) h = 0.001;  
+   double der = 0; 
+   if (params) { 
+      ROOT::Math::WrappedTF1 wtf(*( const_cast<TF1 *> (this) )); 
+      wtf.SetParameters(params);
+      der = rd.Derivative3(wtf,x,h);   
+   }                                            
+   else { 
+      // no need to set parameters used a non-parametric wrapper to avoid allocating 
+      // an array with parameter values
+      ROOT::Math::WrappedFunction<const TF1 & > wf( *this);
+      der = rd.Derivative3(wf,x,h);   
+   }
+
    gErrorTF1 = rd.Error();
-   return rd.Derivative3(x);
+   return der; 
+
 }
 
 

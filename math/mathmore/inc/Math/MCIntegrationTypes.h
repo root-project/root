@@ -48,7 +48,7 @@ namespace Math {
 
     //enum Type { PLAIN, MISER, VEGAS};
 
-    enum Mode{IMPORTANCE, STRATIFIED, IMPORTANCE_ONLY };
+    enum Mode{kIMPORTANCE, kSTRATIFIED, kIMPORTANCE_ONLY };
  
   }    // end namespace mcIntegration
 

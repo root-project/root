@@ -99,7 +99,8 @@ int testUnuran(TUnuran & unr, const std::string & method, const TUnuranMultiCont
    cout << "Time using Unuran  " << unr.MethodName() << "   \t=\t " << time << "\tns/call\t";
    if (href != 0)  { 
       double prob = href->Chi2Test(h1,"UU");
-      std::cout << "\tChi2 Prob = "<< prob << endl;
+      double ksprob = href->KolmogorovTest(h1);
+      std::cout << "\tChi2 Prob = "<< prob << "\tKS Prob = " << ksprob << std::endl;
       // use lower value since hitro is not very precise 
       if (prob < 1.E-12) { 
          std::cout << "\nChi2 Test failed ! " << std::endl;
@@ -133,7 +134,9 @@ int testGetRandom(TF3 * f, TH3 * h1, const TH3 * href = 0) {
 
    if (href != 0) { 
       double prob = href->Chi2Test(h1,"UU");
-      std::cout << "Time using TF1::GetRandom()    \t=\t " << time << "\tns/call \t\tChi2 Prob = "<< prob << std::endl;
+      double ksprob = href->KolmogorovTest(h1);
+      std::cout << "Time using TF1::GetRandom()    \t=\t " << time << "\tns/call \t\tChi2 Prob = "<< prob 
+                << "\tKS Prob = " << ksprob << std::endl;
       if (prob < 1E-06) { 
          std::cout << "\tChi2 Test failed ! " << std::endl;
          href->Chi2Test(h1,"UUP"); // print all chi2 test info

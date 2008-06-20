@@ -22,6 +22,7 @@
 #include <string> 
 
 #include <limits> 
+#include <cmath>
 
 //#define DEBUG
 #ifdef DEBUG
@@ -219,6 +220,16 @@ public:
        The ordering of the variables is the same as in errors
    */ 
    virtual double CovMatrix(unsigned int i, unsigned int j) const = 0;  
+
+   /**
+      return correlation coefficient between variable i and j.
+      If the variable is fixed or const the return value is zero
+    */
+   virtual double Correlation(unsigned int i, unsigned int j ) const { 
+      double tmp = CovMatrix(i,i) * CovMatrix(j,j);
+      return ( tmp < 0) ? 0 : CovMatrix(i,j) / std::sqrt( tmp );  
+   }
+
 
    /// minos error for variable i, return false if Minos failed or not supported 
    virtual bool GetMinosError(unsigned int /* i */, double & errLow, double & errUp) { 

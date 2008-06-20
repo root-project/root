@@ -60,7 +60,7 @@ void IntegratorOneDim::SetFunction(const IMultiGenFunction &f, unsigned int icoo
    VirtualIntegratorOneDim * IntegratorOneDim::CreateIntegrator(IntegrationOneDim::Type type , double absTol, double relTol, unsigned int size, int rule) { 
    // create the concrete class for one-dimensional integration. Use the plug-in manager if needed 
 
-   if (type == IntegrationOneDim::GAUSS)
+   if (type == IntegrationOneDim::kGAUSS)
       return new GaussIntegrator();
 
    VirtualIntegratorOneDim * ig = 0; 
@@ -85,9 +85,9 @@ void IntegratorOneDim::SetFunction(const IMultiGenFunction &f, unsigned int icoo
       }
 
       std::string typeName = "ADAPTIVE";
-      if (type == IntegrationOneDim::ADAPTIVESINGULAR) 
+      if (type == IntegrationOneDim::kADAPTIVESINGULAR) 
          typeName = "ADAPTIVESINGULAR";
-      if (type == IntegrationOneDim::NONADAPTIVE) 
+      if (type == IntegrationOneDim::kNONADAPTIVE) 
          typeName = "NONADAPTIVE";
 
             
@@ -110,7 +110,7 @@ VirtualIntegratorMultiDim * IntegratorMultiDim::CreateIntegrator(IntegrationMult
    // create concrete class for multidimensional integration 
 
    // no need for PM in the adaptive  case using Genz method (class is in MathCore)
-   if (type == IntegrationMultiDim::ADAPTIVE)
+   if (type == IntegrationMultiDim::kADAPTIVE)
       return new AdaptiveIntegratorMultiDim(absTol, relTol, ncall);
       
    VirtualIntegratorMultiDim * ig = 0; 
@@ -134,9 +134,9 @@ VirtualIntegratorMultiDim * IntegratorMultiDim::CreateIntegrator(IntegrationMult
 
 
       std::string typeName = "VEGAS";
-      if (type == IntegrationMultiDim::MISER) 
+      if (type == IntegrationMultiDim::kMISER) 
          typeName = "MISER";
-      if (type == IntegrationMultiDim::PLAIN) 
+      if (type == IntegrationMultiDim::kPLAIN) 
          typeName = "PLAIN";
 
       

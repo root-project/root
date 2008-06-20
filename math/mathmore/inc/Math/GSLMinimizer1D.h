@@ -59,8 +59,8 @@ namespace Math {
           @ingroup Min1D
       */
       
-      enum Type { GOLDENSECTION, 
-                  BRENT
+      enum Type {kGOLDENSECTION, 
+                 kBRENT
       };
    }
    
@@ -92,7 +92,7 @@ This class does not support copying
          Construct the minimizer passing the minimizer type using the Minim1D::Algorithm enumeration
       */
       
-      explicit GSLMinimizer1D(Minim1D::Type type=Minim1D::BRENT);
+      explicit GSLMinimizer1D(Minim1D::Type type=Minim1D::kBRENT);
  
       /**
          Destructor: free allocated resources

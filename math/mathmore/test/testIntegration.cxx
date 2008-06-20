@@ -81,7 +81,7 @@ int testIntegration() {
 
   
   // integrate again ADAPTIve, with different rule 
-  ROOT::Math::GSLIntegrator ig2(ROOT::Math::Integration::ADAPTIVE, ROOT::Math::Integration::GAUSS61, 0.001, 0.01, 100 );
+  ROOT::Math::GSLIntegrator ig2(ROOT::Math::Integration::kADAPTIVE, ROOT::Math::Integration::kGAUSS61, 0.001, 0.01, 100 );
   ig2.SetFunction(func);
   value = ig2.Integral(0, 3); 
   // or ig2.Integral(*f, 0, 10); if different function

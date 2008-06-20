@@ -12,7 +12,8 @@ using namespace std;
 
 const double XMIN = 0, XMAX = 2*TMath::Pi();
 const Int_t NB = 100;
-const Int_t REP = 1000;
+const Int_t REP = 100000;
+const double TNORM = REP / 1000000.; 
 
 double sumTime = 0; 
 
@@ -64,7 +65,7 @@ int PrintStatus(const char* begin, double result, double expected, double time)
    cout.width(12);
    cout << difference << " Time: ";
    cout.width(12);
-   cout << time << " .............." << passed
+   cout << time << " (micros/call) .............." << passed
         <<  endl;
 
    return passed != "OK";
@@ -86,24 +87,24 @@ int TestRoot(TF1* f1)
       x = f1->GetX(0, XMIN, 1);
    w.Stop();
    root = 0;
-   status += PrintStatus("Root", x, root, w.RealTime()/REP * 1000 );
-   totalTime += w.RealTime()/REP * 1000;
+   status += PrintStatus("Root", x, root, w.RealTime()/TNORM );
+   totalTime += w.RealTime() ;
 
    w.Start(kTRUE);
    for ( int j = 0; j < REP; ++j )
       x = f1->GetX(0, 2.5, 3.5);
    w.Stop();
    root = TMath::Pi();
-   status += PrintStatus("Root", x, root, w.RealTime()/REP * 1000 );
-   totalTime += w.RealTime()/REP * 1000;
+   status += PrintStatus("Root", x, root, w.RealTime()/TNORM );
+   totalTime += w.RealTime();
 
    w.Start(kTRUE);
    for ( int j = 0; j < REP; ++j )
       x = f1->GetX(0, 6, XMAX);
    w.Stop();
    root = TMath::Pi() * 2;
-   status += PrintStatus("Root", x, root, w.RealTime()/REP * 1000 );
-   totalTime += w.RealTime()/REP * 1000;
+   status += PrintStatus("Root", x, root, w.RealTime()/ TNORM );
+   totalTime += w.RealTime();
 
    cout << "Total Time: " << totalTime << endl;
 
@@ -128,16 +129,16 @@ int TestMaxMin(TF1* f1)
       x = f1->GetMaximumX(XMIN, TMath::Pi());
    w.Stop();
    maxmin = TMath::Pi() / 2;
-   status += PrintStatus("Maximum", x, maxmin, w.RealTime()/REP * 1000 );
-   totalTime += w.RealTime()/REP * 1000;
+   status += PrintStatus("Maximum", x, maxmin, w.RealTime()/ TNORM );
+   totalTime += w.RealTime();
 
    w.Start(kTRUE);
    for ( int j = 0; j < REP; ++j )
       x = f1->GetMinimumX(TMath::Pi(), XMAX);
    w.Stop();
    maxmin = TMath::Pi() * 1.5;
-   status += PrintStatus("Minimum", x, maxmin, w.RealTime()/REP * 1000 );
-   totalTime += w.RealTime()/REP * 1000;
+   status += PrintStatus("Minimum", x, maxmin, w.RealTime()/ TNORM );
+   totalTime += w.RealTime();
 
    cout << "Total Time: " << totalTime << endl;
 
@@ -164,8 +165,8 @@ int TestDerivative(TF1* f1)
          x = f1->Derivative(i);
       w.Stop();
       derivative = TMath::Cos(i);
-      status += PrintStatus("Derivative", x, derivative, w.RealTime()/REP * 1000 );
-      totalTime += w.RealTime()/REP * 1000;
+      status += PrintStatus("Derivative", x, derivative, w.RealTime()/ TNORM );
+      totalTime += w.RealTime();
    }
 
    cout << "Total Time: " << totalTime << endl;
@@ -193,23 +194,32 @@ int TestIntegral(TF1* f1)
          x = f1->Integral(0, i);
       w.Stop();
       integral = - TMath::Cos(i) + 1;
-      status += PrintStatus("Integral", x, integral, w.RealTime()/REP * 1000 );
-      totalTime += w.RealTime()/REP * 1000;
+      status += PrintStatus("Integral", x, integral, w.RealTime()/ TNORM );
+      totalTime += w.RealTime();
    }
 
-   cout << "Total Time: " << totalTime << endl;
+   cout << "Total Time: " << totalTime  << endl;
 
    sumTime += totalTime;
 
    return status;
 }
 
+double func(double * x, double * ) { 
+   double xx = *x; 
+   return sin(xx)*cos(xx)+ sin(2.*xx)*cos(2.*xx); 
+   //return sin(xx); 
+}
 int stressTF1() 
 {
    int status = 0;
+   sumTime = 0;
 
-   TF1* f1 = new TF1("f1", "sin(x)", XMIN, XMAX);
+   TF1* f1 = new TF1("f1", "[0]*sin(x)+[1]", XMIN, XMAX);
+   //TF1* f1 = new TF1("f1", func, XMIN, XMAX);
    //DrawFunction(f1);
+   double par[2] = {1.,0.};
+   f1->SetParameters(par); 
 
    cout << "Starting Tests..." << endl;
 

@@ -132,15 +132,7 @@ public:
     */
 
    void SetParameters(const double * p) { 
-      // iterate on parameters and set values 
-      TIterator* itr = fParams->createIterator() ;
-      RooRealVar* var = 0;
-      while( ( var = dynamic_cast<RooRealVar*>(itr->Next() ) ) ) {
-         assert(var != 0);
-         var->setVal(*p++);
-      }
-      // debug
-      //fParams->Print("v");
+      DoSetParameters(p); 
    }
 
 //    double operator() (double *x, double * p = 0)  { 
@@ -164,7 +156,10 @@ public:
 
 private: 
 
-   double DoEval(const double * x) const {
+   double DoEvalPar(const double * x, const double * p) const {
+
+      // should maybe be optimized ???
+      DoSetParameters(p); 
 
       // iterate on observables
       TIterator* itr = fX->createIterator() ;
@@ -184,6 +179,19 @@ private:
       else 
          return fPdf->getVal();  // get unnormalized value 
      
+   }
+
+
+   void DoSetParameters(const double * p) const { 
+      // iterate on parameters and set values 
+      TIterator* itr = fParams->createIterator() ;
+      RooRealVar* var = 0;
+      while( ( var = dynamic_cast<RooRealVar*>(itr->Next() ) ) ) {
+         assert(var != 0);
+         var->setVal(*p++);
+      }
+      // debug
+      //fParams->Print("v");
    }
 
 

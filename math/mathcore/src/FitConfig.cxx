@@ -149,6 +149,7 @@ ROOT::Math::Minimizer * FitConfig::CreateMinimizer() {
    min->SetMaxIterations( fMinimizerOpts.MaxIterations() ); 
    min->SetTolerance( fMinimizerOpts.Tolerance() ); 
    min->SetValidError( fMinimizerOpts.ParabErrors() );
+   min->SetStrategy( fMinimizerOpts.Strategy() );
 
 
    return min; 

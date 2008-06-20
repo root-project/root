@@ -45,54 +45,50 @@ namespace Math {
 
 //_____________________________________________________________________________________
    /** 
-      Base class for 1 Dimensional Parametric Functions.
+      Base template class for all Parametric Functions.
+      The template argument is the type of parameteric funciton interface is implementing like
+      Parameteric 1D, Multi-Dim or gradient parametric. 
+
       A parameteric function is a Generic Function with parameters, so 
       it is a function object which carries a state, the parameters. 
       The parameters are described with a standard vector of doubles.
 
       This class contains the default implementations for the methods defined in the 
-      IParamFunction interface.
+      IParamFunction interface for dealing with parameters 
       Specific parameteric function classes should derive from this class if they want to profit from 
       default implementations for the abstract methods. 
-      The derived classes need to implement only the ParamFunction::operator(double x) and ParamFunction::Clone() methods. 
+      The derived classes need to implement only the DoEvalPar( x, p) and Clone() methods for non-gradient 
+      parameteric functions or DoParameterDerivative(x,p,ipar) for gradient par functions
+      
 
       @ingroup CppFunctions
    */
 
 
-   
-class ParamFunction : virtual public IParamGradFunction {
+template <class IPFType>    
+class ParamFunction : public IPFType  {
 
 public: 
 
-   typedef IParamGradFunction           BaseParFunc; 
-   typedef IParamGradFunction::BaseFunc BaseFunc; 
+   typedef IPFType           BaseParFunc; 
+   typedef typename IPFType::BaseFunc BaseFunc; 
 
    /**
       Construct a parameteric function with npar parameters
       @param npar number of parameters (default is zero)
-      @param providesGrad flag to specify if function implements the calculation of the derivative
-      @param providesParamGrad flag to specify if function implements the calculation of the derivatives with respect to the Parameters 
    */
-   ParamFunction(unsigned int npar = 0, bool providesGrad = false, bool providesParamGrad = false);  
+   ParamFunction(unsigned int npar = 0) : 
+      fNpar(npar),  
+      fParams( std::vector<double>(npar) ) 
+   {  }
+
     
    // destructor
    virtual ~ParamFunction() {}
 
 
-   // copying constructors
+   // copying constructors (can use default ones) 
 
-   // need to implement it
-   ParamFunction(const ParamFunction & pf);  
-   
-   ParamFunction & operator = (const ParamFunction &); 
-
-
-   // cloning
-   /**
-      Deep copy of function (to be implemented by the derived classes)
-   */
-   //virtual ParamFunction *  Clone() const = 0; 
 
 
     
@@ -128,24 +124,13 @@ public:
    /**
       Return \a true if the calculation of derivatives with respect to the Parameters is implemented
    */
-   bool ProvidesParameterGradient() const {  return fProvParGrad; } 
+   //bool ProvidesParameterGradient() const {  return fProvParGrad; } 
 
-   const std::vector<double> & GetParGradient( double x) { 
-      BaseParFunc::ParameterGradient(x,&fParGradient[0]);
-      return fParGradient; 
-   } 
+//    const std::vector<double> & GetParGradient( double x) { 
+//       BaseParFunc::ParameterGradient(x,&fParGradient[0]);
+//       return fParGradient; 
+//    } 
 
-
-public: 
-
-
-protected: 
-  
-   // Parameters (make protected to be accessible directly by derived classes) 
-   std::vector<double> fParams;
-
-   // cache paramGradient for better efficiency (to be used by derived classes) 
-   mutable std::vector<double> fParGradient; 
 
 
 private: 
@@ -153,8 +138,10 @@ private:
    // cache number of Parameters for speed efficiency
    unsigned int fNpar; 
 
-   bool fProvGrad; 
-   bool fProvParGrad;
+protected: 
+  
+   // Parameters (make protected to be accessible directly by derived classes) 
+   std::vector<double> fParams;
 
 }; 
 

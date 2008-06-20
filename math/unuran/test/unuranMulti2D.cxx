@@ -88,7 +88,9 @@ int testUnuran(TUnuran & unr, const std::string & method, const TUnuranMultiCont
    double time = w.CpuTime()*1.E9/n; 
 
    double prob = href->Chi2Test(h1,"UU");
-   cout << "Time using Unuran  " << unr.MethodName() << "   \t=\t " << time << "\tns/call \t\tChi2 Prob = "<< prob << endl;
+   double ksprob = href->KolmogorovTest(h1);
+   cout << "Time using Unuran  " << unr.MethodName() << "   \t=\t " << time << "\tns/call \t\tChi2 Prob = "
+        << prob << "\tKS Prob = " << ksprob << std::endl;
    if (prob < 1E-06) { 
       std::cout << "Chi2 Test failed ! " << std::endl;
       href->Chi2Test(h1,"UUP"); // print all chi2 test info

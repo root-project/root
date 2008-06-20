@@ -33,13 +33,14 @@ namespace Math {
     /**
 	 enumeration specifying the integration types.
 	 <ul>
-	 <li>NONADAPTIVE : to be used for smooth functions
-	 <li>ADAPTIVE : to be used for general functions without singularities.
-	 <li>ADAPTIVESINGULAR: default adaptive integration type which can be used in the case of the presence of singularities.
+         <li>kGAUSS: simple Gauss integration method with fixed rule
+	 <li>kNONADAPTIVE : to be used for smooth functions
+	 <li>kADAPTIVE : to be used for general functions without singularities.
+	 <li>kADAPTIVESINGULAR: default adaptive integration type which can be used in the case of the presence of singularities.
 	 </ul>
 	 @ingroup Integration
     */
-     enum Type {GAUSS, ADAPTIVE, ADAPTIVESINGULAR, NONADAPTIVE};
+     enum Type { kGAUSS, kADAPTIVE, kADAPTIVESINGULAR, kNONADAPTIVE};
 
   }
 
@@ -58,7 +59,7 @@ namespace Math {
 	 @ingroup MCIntegration
     */
 
-     enum Type {ADAPTIVE, VEGAS, MISER, PLAIN};
+     enum Type {kADAPTIVE, kVEGAS, kMISER, kPLAIN};
 
   }  
 

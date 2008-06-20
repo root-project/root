@@ -38,18 +38,30 @@ public:
    /** Destructor: Removes function if needed. */
    ~RichardsonDerivator();
 
-   /** Default Constructor. */
-   RichardsonDerivator();
+   /** Default Constructor.
+       Give optionally the step size for derivation. By default is 0.001, which is fine for x ~ 1  
+       Increase if x is in averga larger or decrease if x is smaller 
+    */
+   RichardsonDerivator(double h = 0.001);
    
-   // Implementing VirtualIntegrator Interface
+   /** Construct from function and step size 
+    */
+   RichardsonDerivator(const ROOT::Math::IGenFunction & f, double h = 0.001, bool copyFunc = false);
 
-   /** Set the desired relative Error. */
-   void SetRelTolerance (double);
+   /**
+      Copy constructor
+    */
+   RichardsonDerivator(const RichardsonDerivator & rhs);
+
+   /**
+      Assignment operator
+    */
+   RichardsonDerivator & operator= ( const RichardsonDerivator & rhs);
+
 
    /** Returns the estimate of the absolute Error of the last derivative calculation. */
-   double Error () const;
+   double Error () const {  return fLastError; }
 
-   // Implementing VirtualIntegratorOneDim Interface
 
    /**
       Returns the first derivative of the function at point x,
@@ -79,6 +91,16 @@ public:
       interpolation error is decreased by making the step size h smaller.
    */
    double Derivative1 (double x);
+   double operator() (double x) { return Derivative1(x); }
+
+   /**
+      First Derivative calculation passing function and step-size 
+    */
+   double Derivative1(const IGenFunction & f, double x, double h) { 
+      fFunction = &f; 
+      fStepSize = h; 
+      return Derivative1(x);
+   }
 
    /**
       Returns the second derivative of the function at point x,
@@ -110,6 +132,15 @@ public:
    double Derivative2 (double x);
 
    /**
+      Second Derivative calculation passing function and step-size 
+    */
+   double Derivative2(const IGenFunction & f, double x, double h) { 
+      fFunction = &f; 
+      fStepSize = h; 
+      return Derivative2(x);
+   }
+
+   /**
       Returns the third derivative of the function at point x,
       computed by Richardson's extrapolation method (use 2 derivative estimates
       to compute a third, more accurate estimation)
@@ -138,20 +169,33 @@ public:
    */
    double Derivative3 (double x);
 
-   /** Set function to solve and the interval in where to look for the root. 
+   /**
+      Third Derivative calculation passing function and step-size 
+    */
+   double Derivative3(const IGenFunction & f, double x, double h) { 
+      fFunction = &f; 
+      fStepSize = h; 
+      return Derivative3(x);
+   }
 
-       \@param f Function to be minimized.
-       \@param xlow Lower bound of the search interval.
-       \@param xup Upper bound of the search interval.
+   /** Set function for derivative calculation (function is not copied in)
+
+       \@param f Function to be differentiated
    */
-   void SetFunction (const IGenFunction &, double xmin, double xmax);
+   void SetFunction (const IGenFunction & f) { fFunction = &f; }
+
+   /** Set step size for derivative calculation
+
+       \@param h step size for calculation
+   */
+   void SetStepSize (double h) { fStepSize = h; }
 
 protected:
-   double fEpsilon;
-   double fLastError;
-   const IGenFunction* fFunction;
-   bool fFunctionCopied;
-   double fXMin, fXMax;
+
+   bool fFunctionCopied;     // flag to control if function is copied in the class
+   double fStepSize;         // step size used for derivative calculation
+   double fLastError;        //  error estimate of last derivative calculation
+   const IGenFunction* fFunction;  // pointer to function
 
 };
 

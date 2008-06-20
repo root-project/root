@@ -127,18 +127,12 @@ public:
 
    unsigned int NDim() const { return 1; }
 
-   // re-implement this since can be implemented  more efficient in the one dim function
-   double operator() (const double * x, const double * p) { 
-      return (*fFunc)( *x, p );
-   }
-
-   using IParamMultiFunction::BaseFunc::operator();
 
 private: 
 
    /// needed by the interface
-   double DoEval(const double * x) const { 
-      return (*fFunc)(*x);
+   double DoEvalPar(const double * x, const double * p) const { 
+      return (*fFunc)(*x, p);
    }
 
 
@@ -247,34 +241,29 @@ public:
 
    unsigned int NDim() const { return 1; }
 
-   // re-implement this since can be implemented  more efficient in the one dim function
-   double operator() (const double * x, const double * p) { 
-      return (*fFunc)( *x, p );
-   }
+//    void Gradient(const double *x, double * grad) const { 
+//       grad[0] = fFunc->Derivative( *x);  
+//    }
 
-   void Gradient(const double *x, double * grad) const { 
-      grad[0] = fFunc->Derivative( *x);  
-   }
-
-   void ParameterGradient(const double *x, double * grad) const { 
-      fFunc->ParameterGradient(*x, grad); 
+   void ParameterGradient(const double *x, const double * p, double * grad) const { 
+      fFunc->ParameterGradient(*x, p, grad); 
    } 
 
-   using IParamMultiGradFunction::BaseFunc::operator();
+   //  using IParamMultiGradFunction::BaseFunc::operator();
 
 private: 
 
    /// functions needed by interface
-   double DoEval(const double * x) const { 
-      return (*fFunc)(*x);
+   double DoEvalPar(const double * x, const double * p) const { 
+      return (*fFunc)(*x, p);
    }
 
-   double DoDerivative(const double * x, unsigned int ) const { 
-      return fFunc->Derivative(*x); 
-   } 
+//    double DoDerivative(const double * x, unsigned int ) const { 
+//       return fFunc->Derivative(*x); 
+//    } 
 
-   double DoParameterDerivative(const double * x, unsigned int ipar ) const { 
-      return fFunc->ParameterDerivative(*x, ipar); 
+   double DoParameterDerivative(const double * x, const double * p, unsigned int ipar ) const { 
+      return fFunc->ParameterDerivative(*x, p, ipar); 
    } 
 
 private: 

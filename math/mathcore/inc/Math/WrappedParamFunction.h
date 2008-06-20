@@ -31,9 +31,10 @@ namespace ROOT {
 typedef double( * FreeParamMultiFunctionPtr ) (const double *, const double * ); 
 
 /** 
-   WrappedParamFunction class to wrap any multi-dimensional parameteric function 
-   implementing an operator()(const double * , const double *) 
-   in an interface-like IParamFunction
+   WrappedParamFunction class to wrap any multi-dimensional function pbject
+   implementing the operator()(const double * x, const double * p) 
+   in an interface-like IParamFunction with a vector storing and caching internally the 
+   parameter values
 
    @ingroup  CppFunctions
 
@@ -47,7 +48,7 @@ public:
       Constructor a wrapped function from a pointer to a callable object, the function dimension and number of parameters
       which are set to zero by default
    */ 
-   WrappedParamFunction (const FuncPtr & func, unsigned int dim = 1, unsigned int npar = 0, double * par = 0) : 
+   WrappedParamFunction (FuncPtr  func, unsigned int dim = 1, unsigned int npar = 0, double * par = 0) : 
       fFunc(func),
       fDim(dim),
       fParams(std::vector<double>(npar) )
@@ -55,40 +56,40 @@ public:
       if (par != 0) std::copy(par,par+npar,fParams.begin() );
    }
 
-   /** 
-      Constructor a wrapped function from a non-const pointer to a callable object, the function dimension and number of parameters
-      which are set to zero by default
-      This constructor is needed in the case FuncPtr is a std::auto_ptr which has a copy ctor taking non const objects
-   */ 
-   WrappedParamFunction (FuncPtr & func, unsigned int dim = 1, unsigned int npar = 0, double * par = 0) : 
-      fFunc(func),
-      fDim(dim),
-      fParams(std::vector<double>(npar) )
-   {
-      if (par != 0) std::copy(par,par+npar,fParams.begin() );
-   }
+//    /** 
+//       Constructor a wrapped function from a non-const pointer to a callable object, the function dimension and number of parameters
+//       which are set to zero by default
+//       This constructor is needed in the case FuncPtr is a std::auto_ptr which has a copy ctor taking non const objects
+//    */ 
+//    WrappedParamFunction (FuncPtr & func, unsigned int dim = 1, unsigned int npar = 0, double * par = 0) : 
+//       fFunc(func),
+//       fDim(dim),
+//       fParams(std::vector<double>(npar) )
+//    {
+//       if (par != 0) std::copy(par,par+npar,fParams.begin() );
+//    }
 
    /** 
       Constructor a wrapped function from a pointer to a callable object, the function dimension and an iterator specifying begin and end 
       of parameters
    */ 
    template<class Iterator> 
-   WrappedParamFunction (const FuncPtr & func, unsigned int dim, Iterator begin, Iterator end) : 
+   WrappedParamFunction (FuncPtr func, unsigned int dim, Iterator begin, Iterator end) : 
       fFunc(func),
       fDim(dim),
       fParams(std::vector<double>(begin,end) )
    {}
 
-   /** 
-      Constructor a wrapped function from a non - const pointer to a callable object, the function dimension and an iterator specifying begin and end of parameters. 
-      This constructor is needed in the case FuncPtr is a std::auto_ptr which has a copy ctor taking non const objects
-   */ 
-   template<class Iterator> 
-   WrappedParamFunction (FuncPtr & func, unsigned int dim, Iterator begin, Iterator end) : 
-      fFunc(func),
-      fDim(dim),
-      fParams(std::vector<double>(begin,end) )
-   {}
+//    /** 
+//       Constructor a wrapped function from a non - const pointer to a callable object, the function dimension and an iterator specifying begin and end of parameters. 
+//       This constructor is needed in the case FuncPtr is a std::auto_ptr which has a copy ctor taking non const objects
+//    */ 
+//    template<class Iterator> 
+//    WrappedParamFunction (FuncPtr func, unsigned int dim, Iterator begin, Iterator end) : 
+//       fFunc(func),
+//       fDim(dim),
+//       fParams(std::vector<double>(begin,end) )
+//    {}
 
    /// clone the function
    IMultiGenFunction * Clone() const { 
@@ -107,23 +108,16 @@ public:
 
    unsigned int NDim() const { return fDim; }
 
-   // re-implement this since is more efficient
-   double operator() (const double * x, const double * p) { 
-      return (*fFunc)( x, p );
-   }
-
-   using IParamMultiFunction::BaseFunc::operator();
 
 private: 
    
-   /// evaluate the function
-   double DoEval(const double * x) const { 
-//      std::cout << x << "  " << *x << "   " << fParams.size() << "  " << &fParams[0] << "  " << fParams[0] << std::endl; 
-      return (*fFunc)( x, &(fParams.front()) );
+   /// evaluate the function given values and parameters (requested interface)
+   double DoEvalPar(const double * x, const double * p) const { 
+      return (*fFunc)( x, p );
    }
 
 
-   mutable FuncPtr fFunc; 
+   FuncPtr fFunc; 
    unsigned int fDim; 
    std::vector<double> fParams; 
       
@@ -150,7 +144,8 @@ class WrappedParamFunctionGen : public IParamMultiFunction {
 public: 
 
    /** 
-      Constructor a wrapped function from a pointer to a generic callable object implemention operator()(const double), the new function dimension, the number of parameters (number of fixed variables) and an array specifying the index of the fixed variables. 
+      Constructor a wrapped function from a pointer to a generic callable object implemention operator()(const double *), the new function dimension, the number of parameters (number of fixed variables) and an array specifying the index of the fixed variables which becames 
+      parameters in the new API
    */ 
  
    WrappedParamFunctionGen (const FuncPtr & func, unsigned int dim, unsigned int npar, const double * par, const unsigned int * idx) : 
@@ -194,13 +189,9 @@ public:
    }
 
    void SetParameters(const double * p)  { 
-      std::copy(p, p+NPar(), fParams.begin() );
       unsigned int npar = NPar();
-      for (unsigned int i = 0; i < npar; ++i) { 
-         unsigned int j = fParIndices[i]; 
-         assert ( j  < npar + fDim);
-         fX[j] = fParams[i];
-      } 
+      std::copy(p, p+ npar, fParams.begin() );
+      SetParValues(npar, p); 
    }
 
    unsigned int NPar() const { return fParams.size(); }
@@ -217,7 +208,7 @@ public:
 
 private: 
    
-   /// evaluate the function
+   /// evaluate the function (re-implement for being more efficient) 
    double DoEval(const double * x) const { 
 
       unsigned int npar = NPar();
@@ -241,6 +232,15 @@ private:
 //       std::cout << std::endl;
 
       return (*fFunc)( &fX.front() );
+   }
+
+
+   /** 
+       implement the required IParamFunction interface
+   */
+   double DoEvalPar(const double * x, const double * p ) const { 
+      SetParValues(NPar(), p); 
+      return DoEval(x); 
    }
 
 
@@ -268,12 +268,23 @@ private:
 //       std::cout << this << std::endl;
 
       // set parameter values in fX
+      SetParValues(npar, &fParams.front() );
       for (unsigned int i = 0; i < npar; ++i) { 
          unsigned int j = fParIndices[i]; 
          assert ( j  < npar + fDim);
          fX[j] = fParams[i];
       } 
 
+   }
+
+   // set the parameter values in the cached fX vector
+   // makme const because it might be called from const methods
+   void SetParValues(unsigned int npar, const double * p) const { 
+      for (unsigned int i = 0; i < npar; ++i) { 
+         unsigned int j = fParIndices[i]; 
+         assert ( j  < npar + fDim);
+         fX[j] = p[i];
+      } 
    }
 
 

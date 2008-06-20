@@ -35,7 +35,7 @@ void testMinimization1D() {
   }
   {
      // Golden Section
-     ROOT::Math::GSLMinimizer1D min(ROOT::Math::Minim1D::GOLDENSECTION);
+     ROOT::Math::GSLMinimizer1D min(ROOT::Math::Minim1D::kGOLDENSECTION);
      min.SetFunction(func,1,-10,10); 
      int status = min.Minimize(100,0.01,0.01); 
      std::cout << "test Min1D " << min.Name() << "  Return code " << status << std::endl; 

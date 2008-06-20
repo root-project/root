@@ -128,9 +128,9 @@ double integral_MC(unsigned int dim, double* a, double* b, double* p)
   ROOT::Math::WrappedParamFunction<> funptr(&SimpleFun, dim, p, p+1);
 
   ROOT::Math::GSLMCIntegrator ig1;
-  ig1.SetType(ROOT::Math::MCIntegration::VEGAS);
+  ig1.SetType(ROOT::Math::MCIntegration::kVEGAS);
   ig1.SetFunction(funptr);
-  //ig1.SetMode(ROOT::Math::MCIntegration::IMPORTANCE_ONLY);
+  //ig1.SetMode(ROOT::Math::MCIntegration::kIMPORTANCE_ONLY);
 
   /*
   VegasParameters param;
@@ -155,7 +155,7 @@ double integral_MC(unsigned int dim, double* a, double* b, double* p)
   timeVegas = timer.RealTime();
 
   timer.Start();
-  ROOT::Math::GSLMCIntegrator ig2(ROOT::Math::MCIntegration::MISER);
+  ROOT::Math::GSLMCIntegrator ig2(ROOT::Math::MCIntegration::kMISER);
  
   ig2.SetFunction(funptr);
 
@@ -177,7 +177,7 @@ double integral_MC(unsigned int dim, double* a, double* b, double* p)
   std::cout << "\t PLAIN.. " << std::endl;
   timer.Start();
   std::cout << "" << std::endl;
-  ROOT::Math::GSLMCIntegrator ig3(ROOT::Math::MCIntegration::PLAIN);
+  ROOT::Math::GSLMCIntegrator ig3(ROOT::Math::MCIntegration::kPLAIN);
   ig3.SetFunction(funptr);
   ig3.Integral(a, b);
   timer.Stop();

@@ -77,8 +77,8 @@ void testInterpolation() {
    grorig->GetYaxis()->SetRange(0,40);
    grorig->Draw("AP"); 
 
-   //ROOT::Math::Interpolator itp1(x, y, ROOT::Math::Interpolation::LINEAR); 
-   ROOT::Math::Interpolator itp1(x.size(), ROOT::Math::Interpolation::LINEAR); 
+   //ROOT::Math::Interpolator itp1(x, y, ROOT::Math::Interpolation::kLINEAR); 
+   ROOT::Math::Interpolator itp1(x.size(), ROOT::Math::Interpolation::kLINEAR); 
    itp1.SetData(x,y);
    interpolate(itp1);
 
@@ -86,7 +86,7 @@ void testInterpolation() {
    c1->cd(2);
    grorig->Draw("AP"); 
 
-   ROOT::Math::Interpolator itp2(x, y, ROOT::Math::Interpolation::POLYNOMIAL); 
+   ROOT::Math::Interpolator itp2(x, y, ROOT::Math::Interpolation::kPOLYNOMIAL); 
    interpolate(itp2);
 
 
@@ -94,7 +94,7 @@ void testInterpolation() {
    grorig->Draw("AP"); 
 
    //std::cout << "Cubic Spline Interpolation: " << std::endl;
-   ROOT::Math::Interpolator itp3( 2*x.size(), ROOT::Math::Interpolation::CSPLINE); 
+   ROOT::Math::Interpolator itp3( 2*x.size(), ROOT::Math::Interpolation::kCSPLINE); 
    itp3.SetData(x.size(), &x[0], &y[0]);
    interpolate(itp3);
 
@@ -102,14 +102,14 @@ void testInterpolation() {
    grorig->Draw("AP"); 
 
    //std::cout << "Akima  Interpolation: " << std::endl;
-   ROOT::Math::Interpolator itp4(x, y, ROOT::Math::Interpolation::AKIMA); 
+   ROOT::Math::Interpolator itp4(x, y, ROOT::Math::Interpolation::kAKIMA); 
    interpolate(itp4);
 
    c1->cd(5);
    grorig->Draw("AP"); 
 
    //std::cout << "Cubic Spline Periodic Interpolation: " << std::endl;
-   ROOT::Math::Interpolator itp5(x, y, ROOT::Math::Interpolation::CSPLINE_PERIODIC); 
+   ROOT::Math::Interpolator itp5(x, y, ROOT::Math::Interpolation::kCSPLINE_PERIODIC); 
    interpolate(itp5);
 
 
@@ -118,7 +118,7 @@ void testInterpolation() {
    grorig->Draw("AP"); 
 
    //std::cout << "Akima Periodic Interpolation: " << std::endl;
-   ROOT::Math::Interpolator itp6(x, y, ROOT::Math::Interpolation::AKIMA_PERIODIC); 
+   ROOT::Math::Interpolator itp6(x, y, ROOT::Math::Interpolation::kAKIMA_PERIODIC); 
    interpolate(itp6);
 
    std::cout << "\n***********************************" << std::endl;

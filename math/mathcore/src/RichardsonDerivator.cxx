@@ -10,6 +10,7 @@
 
 #include "Math/RichardsonDerivator.h"
 #include <cmath>
+#include <limits>
 
 #ifndef ROOT_Math_Error
 #include "Math/Error.h"
@@ -18,58 +19,59 @@
 namespace ROOT {
 namespace Math {
 
-RichardsonDerivator::RichardsonDerivator()
+RichardsonDerivator::RichardsonDerivator(double h) : 
+   fFunctionCopied(false),
+   fStepSize(h),
+   fLastError(0),
+   fFunction(0)
 {
    // Default Constructor.
-
-   fEpsilon = 0.001;
-   fLastError = 0;
-   fFunctionCopied = false;
-   fFunction = 0;
+}
+RichardsonDerivator::RichardsonDerivator(const ROOT::Math::IGenFunction & f, double h, bool copyFunc) : 
+   fFunctionCopied(false),
+   fStepSize(h),
+   fLastError(0),
+   fFunction(0)
+{
+   // Constructor from a function and step size
+   if (copyFunc) fFunction = f.Clone(); 
+   else fFunction = &f;
 }
 
 RichardsonDerivator::~RichardsonDerivator()
 {
+   // destructor
    if ( fFunction != 0 && fFunctionCopied )
       delete fFunction;
 }
 
-void RichardsonDerivator::SetRelTolerance (double eps)
+RichardsonDerivator::RichardsonDerivator(const RichardsonDerivator & rhs) 
 {
-   if(eps< 1e-10 || eps > 1e-2) {
-      MATH_WARN_MSG("RichardsonDerivator::SetRelTolerance","parameter esp out of allowed range[1e-10,1e-2], reset to 0.001");
-      eps = 0.001;
-   }
+    // copy constructor
+    *this = rhs;
+ }
 
-   fEpsilon = eps;
-}
-
-double RichardsonDerivator::Error() const
-{   return fLastError;  }
-
-void RichardsonDerivator::SetFunction (const IGenFunction & function, double xlow, double xup)
+RichardsonDerivator &  RichardsonDerivator::operator= ( const RichardsonDerivator & rhs) 
 {
-   fFunction = &function;
-
-   if (xlow >= xup) 
-   {
-      double tmp = xlow;
-      xlow = xup; 
-      xup = tmp;
-   }
-   fXMin = xlow;
-   fXMax = xup;
+   // Assignment operator
+   fFunctionCopied = rhs.fFunctionCopied;
+   fStepSize = rhs.fStepSize;
+   fLastError = rhs.fLastError;
+   fFunction = rhs.fFunction;
+   if (fFunctionCopied && fFunction != 0) 
+      fFunction = fFunction->Clone();
+   return *this;
 }
 
 double RichardsonDerivator::Derivative1 (double x)
 {
-   const double kC1 = 1e-15;
+   const double kC1 = 1.E-15;
 
-   double h = fEpsilon*(fXMax-fXMin);
+   double h = fStepSize; 
 
    double xx[1];
    xx[0] = x+h;     double f1 = (*fFunction)(xx);
-   xx[0] = x;       double fx = (*fFunction)(xx);
+   //xx[0] = x;       double fx = (*fFunction)(xx); // not needed
    xx[0] = x-h;     double f2 = (*fFunction)(xx);
    
    xx[0] = x+h/2;   double g1 = (*fFunction)(xx);
@@ -78,9 +80,11 @@ double RichardsonDerivator::Derivative1 (double x)
    //compute the central differences
    double h2    = 1/(2.*h);
    double d0    = f1 - f2;
-   double d2    = 2*(g1 - g2);
-   fLastError   = kC1*h2*fx;  //compute the error
-   double deriv = h2*(4*d2 - d0)/3.;
+   double d2    = g1 - g2;
+   double deriv = h2*(8*d2 - d0)/3.;
+   // compute the error ( to be improved ) this is just a simple truncation error
+   fLastError   = kC1*h2*0.5*(f1+f2);  //compute the error
+
    return deriv;
 }
 
@@ -88,7 +92,7 @@ double RichardsonDerivator::Derivative2 (double x)
 {
    const double kC1 = 2*1e-15;
 
-   double h = fEpsilon*(fXMax-fXMin);
+   double h = fStepSize;
 
    double xx[1];
    xx[0] = x+h;     double f1 = (*fFunction)(xx);
@@ -111,7 +115,7 @@ double RichardsonDerivator::Derivative3 (double x)
 {
    const double kC1 = 1e-15;
 
-   double h = fEpsilon*(fXMax-fXMin);
+   double h = fStepSize;
 
    double xx[1];
    xx[0] = x+2*h;   double f1 = (*fFunction)(xx);
