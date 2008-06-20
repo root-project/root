@@ -32,6 +32,7 @@ protected:
    Int_t            fFile;   // free-type file name
    EMode            fMode;   // free-type FTGL class id
 
+   mutable Int_t    fTrashCount;
 public:
    TGLFont();
    TGLFont(Int_t size, Int_t font, EMode mode, FTFont *f=0, TGLFontManager *mng=0);
@@ -40,10 +41,13 @@ public:
 
    void CopyAttributes(const TGLFont &o);
 
-
    Int_t GetSize() const { return fSize;}
    Int_t GetFile() const { return fFile;}
    EMode GetMode() const { return fMode;}
+
+   Int_t GetTrashCount()        const { return fTrashCount;   }
+   void  SetTrashCount(Int_t c) const { fTrashCount = c;      }
+   Int_t IncTrashCount()        const { return ++fTrashCount; }
 
    void  SetFont(FTFont *f) { fFont =f;}
    const FTFont* GetFont() const { return fFont; }
@@ -91,8 +95,16 @@ private:
    TGLFontManager(const TGLFontManager&);            // Not implemented
    TGLFontManager& operator=(const TGLFontManager&); // Not implemented
 
-   std::map<TGLFont, Int_t>  fFontMap;        // map of created fonts
-   std::list<const FTFont*>  fFontTrash;      // fonts to purge
+protected:
+   typedef std::map<TGLFont, Int_t>           FontMap_t;
+   typedef std::map<TGLFont, Int_t>::iterator FontMap_i;
+
+   typedef std::list<const TGLFont*>                  FontList_t;
+   typedef std::list<const TGLFont*>::iterator        FontList_i;
+   typedef std::list<const TGLFont*>::const_iterator  FontList_ci;
+
+   FontMap_t            fFontMap;        // map of created fonts
+   FontList_t           fFontTrash;      // fonts to purge
 
    static TObjArray     fgFontFileArray;      // map font-id to ttf-font-file
    static FontSizeVec_t fgFontSizeArray;      // map of valid font-size

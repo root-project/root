@@ -25,21 +25,25 @@ ClassImp(TGLFont);
 
 //______________________________________________________________________________
 TGLFont::TGLFont():
-   fFont(0), fManager(0), fDepth(0), fSize(0), fFile(0), fMode(kUndef)
+   fFont(0), fManager(0), fDepth(0),
+   fSize(0), fFile(0), fMode(kUndef),
+   fTrashCount(0)
 {
    // Constructor.
 }
 
 //______________________________________________________________________________
 TGLFont::TGLFont(Int_t size, Int_t font, EMode mode, FTFont* f, TGLFontManager* mng):
-  fFont(f), fManager(mng), fDepth(0), fSize(size), fFile(font), fMode(mode)
+   fFont(f), fManager(mng), fDepth(0),
+   fSize(size), fFile(font), fMode(mode),
+   fTrashCount(0)
 {
    // Constructor.
 }
 
 //______________________________________________________________________________
 TGLFont::TGLFont(const TGLFont &o):
-   fFont(0), fManager(0), fDepth(0)
+   fFont(0), fManager(0), fDepth(0), fTrashCount(0)
 {
    // Assignment operator.
    fFont = (FTFont*)o.GetFont();
@@ -47,6 +51,8 @@ TGLFont::TGLFont(const TGLFont &o):
    fSize  = o.fSize;
    fFile  = o.fFile;
    fMode  = o.fMode;
+
+   fTrashCount = o.fTrashCount;
 }
 
 //______________________________________________________________________________
@@ -69,6 +75,8 @@ void TGLFont::CopyAttributes(const TGLFont &o)
    fSize  = o.fSize;
    fFile  = o.fFile;
    fMode  = o.fMode;
+
+   fTrashCount = o.fTrashCount;
 }
 
 
@@ -173,7 +181,7 @@ TGLFontManager::~TGLFontManager()
 {
    // Destructor.
 
-   std::map<TGLFont, Int_t>::iterator it = fFontMap.begin();
+   FontMap_i it = fFontMap.begin();
    while (it != fFontMap.end()) {
       delete it->first.GetFont();
       it++;
@@ -188,7 +196,7 @@ void TGLFontManager::RegisterFont(Int_t size, Int_t fileID, TGLFont::EMode mode,
 
    if (fgStaticInitDone == kFALSE) InitStatics();
 
-   std::map<TGLFont, Int_t>::iterator it = fFontMap.find(TGLFont(size, fileID, mode));
+   FontMap_i it = fFontMap.find(TGLFont(size, fileID, mode));
    if (it == fFontMap.end())
    {
       TString ttpath;
@@ -232,7 +240,11 @@ void TGLFontManager::RegisterFont(Int_t size, Int_t fileID, TGLFont::EMode mode,
    }
    else
    {
-      it->second ++;
+      if (it->first.GetTrashCount() > 0) {
+         fFontTrash.remove(&(it->first));
+         it->first.SetTrashCount(0);
+      }
+      ++(it->second);
       out.CopyAttributes(it->first);
    }
    out.SetManager(this);
@@ -264,17 +276,18 @@ void TGLFontManager::ReleaseFont(TGLFont& font)
    // Release font with given attributes. Returns false if font has
    // not been found in the managers font set.
 
-   std::map<TGLFont, Int_t>::iterator it = fFontMap.find(font);
+   FontMap_i it = fFontMap.find(font);
 
-   if (it != fFontMap.end()) {
-      it->second = it->second -1;
-      if (it->second == 0) {
-         fFontTrash.push_back(it->first.GetFont());
-         fFontMap.erase(it);
+   if (it != fFontMap.end())
+   {
+      --(it->second);
+      if (it->second == 0)
+      {
+         assert(it->first.GetTrashCount() == 0);
+         it->first.IncTrashCount();
+         fFontTrash.push_back(&it->first);
       }
-      return;
    }
-   return;
 }
 
 //______________________________________________________________________________
@@ -361,11 +374,24 @@ void TGLFontManager::InitStatics()
 //______________________________________________________________________________
 void TGLFontManager::ClearFontTrash()
 {
-  // Delete FTFFont objects registered for destruction.
+   // Delete FTFFont objects registered for destruction.
 
-  for(std::list<const FTFont*>::iterator it=fFontTrash.begin(); it!=fFontTrash.end(); it++)
-  {
-     delete *it;
-  }
-  fFontTrash.clear();
+   FontList_i it = fFontTrash.begin();
+   while (it != fFontTrash.end())
+   {
+      if ((*it)->IncTrashCount() > 10000)
+      {
+         FontMap_i mi = fFontMap.find(**it);
+         assert(mi != fFontMap.end());
+         fFontMap.erase(mi);
+         delete (*it)->GetFont();
+
+         FontList_i li = it++;
+         fFontTrash.erase(li);
+      }
+      else
+      {
+         ++it;
+      }
+   }
 }
