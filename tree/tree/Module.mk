@@ -43,6 +43,8 @@ ALLMAPS     += $(TREEMAP)
 INCLUDEFILES += $(TREEDEP)
 
 ##### local rules #####
+$(TREEDO2): CXXFLAGS += -Iinclude/cint
+
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
 include/%.h:    $(TREEDIRI)/%.h

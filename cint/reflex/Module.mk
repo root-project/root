@@ -25,8 +25,6 @@ REFLEXAPIH   := $(filter-out $(MODDIRI)/Reflex/Builder/ReflexBuilder.h,\
 	        $(filter-out $(MODDIRI)/Reflex/SharedLibrary.h,\
 	        $(filter-out $(MODDIRI)/Reflex/DictionaryGenerator.h,\
 		$(REFLEXAH) $(REFLEXBH)))))
-REFLEXS      := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-REFLEXO      := $(REFLEXS:.cxx=.o)
 
 REFLEXDEP    := $(REFLEXO:.o=.d) $(REFLEXDO:.o=.d)
 

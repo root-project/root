@@ -94,7 +94,7 @@
 #include "TBrowser.h"
 #include "TSystemDirectory.h"
 #include "TApplication.h"
-#include "TCint.h"
+#include "TInterpreter.h"
 #include "TGuiFactory.h"
 #include "TMessageHandler.h"
 #include "TFolder.h"
@@ -105,6 +105,10 @@
 #include "TObjString.h"
 #include "TVirtualMutex.h"
 
+#ifndef R__BUILDCINT7
+#include "TCint.h"
+#endif
+
 #include <string>
 namespace std {} using namespace std;
 
@@ -114,8 +118,22 @@ namespace std {} using namespace std;
 #include "TWinNTSystem.h"
 #endif
 
+#ifdef R__BUILDCINT7
+#ifdef _WIN32
+extern "C" void* LoadLibrary( const char* lpFileName);
+#else
+#define R__DLOPEN_NOW 2
+extern "C" void* dlopen(const char*, int);
+extern "C" char* dlerror();
+#endif
+#endif
+
+extern "C" const char *G__cint_version();
+
 // Mutex for protection of concurrent gROOT access
 TVirtualMutex* gROOTMutex = 0;
+
+TInterpreter* (*gInterpreterFactory)(const char* name, const char* title);
 
 //-------- Names of next three routines are a small homage to CMZ --------------
 //______________________________________________________________________________
@@ -160,6 +178,40 @@ static Int_t ITIMQQ(const char *time)
 }
 //------------------------------------------------------------------------------
 
+#ifdef R__BUILDCINT7
+namespace {
+   static void* OpenTCintLibrary() {
+      TString libMetaTCint("libMetaTCint");
+      TString libMetaTCintDir(gSystem->Getenv("ROOTSYS"));
+      const char* cintVersion = G__cint_version();
+      if (cintVersion && cintVersion[0] == '7')
+         libMetaTCint += "_7";
+
+      void* hLibMetaTCint = 0;
+#ifdef _WIN32
+      libMetaTCint += ".dll";
+      libMetaTCintDir += "\\bin\\";
+      hLibMetaTCint = (void*) ::LoadLibrary((libMetaTCintDir + libMetaTCint).Data());
+#else
+      libMetaTCintDir += "/lib/";
+# if defined (R__MACOSX)
+      hLibMetaTCint = (void*) dlopen((libMetaTCintDir + libMetaTCint + ".dylib").Data(), R__DLOPEN_NOW);
+      // continue below if failed
+# endif
+      if (!hLibMetaTCint) {
+         libMetaTCint += ".so";
+         hLibMetaTCint = (void*) dlopen((libMetaTCintDir + libMetaTCint).Data(), R__DLOPEN_NOW);
+         if (!hLibMetaTCint) {
+            const char* err = dlerror();
+            if (err)
+               printf("Fatal in <TROOT::TROOT>: %s\n", err);
+         }
+      }
+#endif
+      return hLibMetaTCint;
+   }
+}
+#endif
 
 //______________________________________________________________________________
 static void CleanUpROOTAtExit()
@@ -267,7 +319,21 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    // Initialize interface to CINT C++ interpreter
    fVersionInt      = 0;  // check in TROOT dtor in case TCint fails
    fClasses         = 0;  // might be checked via TCint ctor
+
+#ifdef R__BUILDCINT7
+   if (!gInterpreterFactory) {
+      // Open the library containing TCint
+      if (!OpenTCintLibrary() || !gInterpreterFactory) {
+         fprintf(stderr, "Fatal in <TROOT::TROOT>: Cannot load TCint library!\n");
+         exit(1);
+      }
+   }
+
+   // Let the factory create the TInterpreter object
+   fInterpreter     = gInterpreterFactory("C/C++", "CINT C/C++ Interpreter");
+#else
    fInterpreter     = new TCint("C/C++", "CINT C/C++ Interpreter");
+#endif
 
    fConfigOptions   = R__CONFIGUREOPTIONS;
    fVersion         = ROOT_RELEASE;

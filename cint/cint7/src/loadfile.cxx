@@ -456,7 +456,7 @@ int Cint::Internal::G__getcintsysdir()
       sprintf(G__cintsysdir, "%s", CINTINCDIR);
 #  else
       if(G__UseCINTSYSDIR) strcpy(G__cintsysdir,env);
-      else                 sprintf(G__cintsysdir, "%s/%s", env, "cint");
+      else                 sprintf(G__cintsysdir, "%s/cint", env);
 #  endif
 # endif /* ROOTBUILD */
 

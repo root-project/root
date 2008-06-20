@@ -180,7 +180,7 @@ ifeq ($(BUILDUNURAN),yes)
 MODULES      += math/unuran
 endif
 ifeq ($(BUILDCINT7),yes)
-MODULES      := $(subst cint/cint,cint/cint7,$(MODULES))
+MODULES      := $(subst cint/cint,cint/cint cint/cint7,$(MODULES))
 endif
 ifeq ($(BUILDCINTEX),yes)
 MODULES      += cint/cintex
@@ -251,7 +251,7 @@ MODULES      += core/unix core/winnt graf2d/x11 graf2d/x11ttf \
                 graf2d/qt gui/qtroot gui/qtgsi net/xrootd net/netx net/alien \
                 proof/proofd proof/proofx proof/clarens proof/peac \
                 sql/oracle io/xmlparser math/mathmore cint/reflex cint/cintex \
-                roofit/roofitcore roofit/roofit \
+                cint/cint7 roofit/roofitcore roofit/roofit \
                 math/minuit2 net/monalisa math/fftw sql/odbc math/unuran \
                 geom/gdml graf3d/eve montecarlo/g4root net/glite misc/memstat
 MODULES      := $(sort $(MODULES))   # removes duplicates
@@ -266,7 +266,7 @@ LPATH         = lib
 ifneq ($(PLATFORM),win32)
 RPATH        := -L$(LPATH)
 CINTLIBS     := -lCint
-CINT7LIBS    := -lCint -lReflex
+CINT7LIBS    := -lCint7 -lReflex
 NEWLIBS      := -lNew
 ROOTLIBS     := -lCore -lCint -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad \
                 -lTree -lMatrix -lMathCore -lThread
@@ -278,7 +278,7 @@ endif
 RINTLIBS     := -lRint
 else
 CINTLIBS     := $(LPATH)/libCint.lib
-CINT7LIBS    := $(LPATH)/libCint.lib $(LPATH)/libReflex.lib
+CINT7LIBS    := $(LPATH)/libCint7.lib $(LPATH)/libReflex.lib
 NEWLIBS      := $(LPATH)/libNew.lib
 ROOTLIBS     := $(LPATH)/libCore.lib $(LPATH)/libCint.lib \
                 $(LPATH)/libRIO.lib $(LPATH)/libNet.lib \
@@ -411,8 +411,12 @@ endif
 
 ##### Store SVN revision number #####
 
+ifeq ($(findstring $(MAKECMDGOALS),clean distclean maintainer-clean dist),)
+ifeq ($(findstring clean-,$(MAKECMDGOALS)),)
 ifeq ($(shell which svn 2>&1 | sed -ne "s@.*/svn@svn@p"),svn)
 SVNREV  := $(shell build/unix/svninfo.sh)
+endif
+endif
 endif
 
 ##### Utilities #####
@@ -427,7 +431,6 @@ MAKECHANGELOG = build/unix/makechangelog.sh
 MAKEHTML      = build/unix/makehtml.sh
 MAKELOGHTML   = build/unix/makeloghtml.sh
 MAKERELNOTES  = build/unix/makereleasenotes.sh
-MAKECINTDLL   = build/unix/makecintdll.sh
 MAKESTATIC    = build/unix/makestatic.sh
 RECONFIGURE   = build/unix/reconfigure.sh
 ifeq ($(PLATFORM),win32)
@@ -490,24 +493,30 @@ INCLUDEFILES :=
 G__%.o: G__%.cxx
 	$(MAKEDEP) -R -f$(patsubst %.o,%.d,$@) -Y -w 1000 -- \
 	   $(CXXFLAGS) -D__cplusplus -I$(CINTDIR)/lib/prec_stl \
-	   -I$(CINTDIR)/stl -- $<
-	$(CXX) $(NOOPT) $(CXXFLAGS) -I. $(CXXOUT)$@ -c $<
+	   -I$(CINTDIR)/stl -I$(CINTDIR)/inc -- $<
+	$(CXX) $(NOOPT) $(CXXFLAGS) -I. -I$(CINTDIR)/inc  $(CXXOUT)$@ -c $<
+
+G__c_%.o: G__c_%.c
+	$(MAKEDEP) -R -f$(patsubst %.o,%.d,$@) -Y -w 1000 -- \
+	   $(CFLAGS) -I$(CINTDIR)/lib/prec_stl \
+	   -I$(CINTDIR)/stl -I$(CINTDIR)/inc -- $<
+	$(CC) $(NOOPT) $(CFLAGS) -I. -I$(CINTDIR)/inc  $(CXXOUT)$@ -c $<
 
 cint/cint/%.o: cint/cint/%.cxx
-	$(MAKEDEP) -R -fcint/cint/$*.d -Y -w 1000 -- $(CINTCXXFLAGS) -D__cplusplus -- $<
-	$(CXX) $(OPT) $(CINTCXXFLAGS) $(CXXOUT)$@ -c $<
+	$(MAKEDEP) -R -fcint/cint/$*.d -Y -w 1000 -- $(CINTCXXFLAGS) -I. -D__cplusplus -- $<
+	$(CXX) $(OPT) $(CINTCXXFLAGS) -I. $(CXXOUT)$@ -c $<
 
 cint/cint/%.o: cint/cint/%.c
-	$(MAKEDEP) -R -fcint/cint/$*.d -Y -w 1000 -- $(CINTCFLAGS) -- $<
-	$(CC) $(OPT) $(CINTCFLAGS) $(CXXOUT)$@ -c $<
+	$(MAKEDEP) -R -fcint/cint/$*.d -Y -w 1000 -- $(CINTCFLAGS) -I. -- $<
+	$(CC) $(OPT) $(CINTCFLAGS) -I. $(CXXOUT)$@ -c $<
 
 cint/cint7/%.o: cint/cint7/%.cxx
-	$(MAKEDEP) -R -fcint/cint7/$*.d -Y -w 1000 -- $(CINTCXXFLAGS) -D__cplusplus -- $<
-	$(CXX) $(OPT) $(CINTCXXFLAGS) $(CXXOUT)$@ -c $<
+	$(MAKEDEP) -R -fcint/cint7/$*.d -Y -w 1000 -- $(CINT7CXXFLAGS) -I. -D__cplusplus -- $<
+	$(CXX) $(OPT) $(CINT7CXXFLAGS) -I. $(CXXOUT)$@ -c $<
 
 cint/cint7/%.o: cint/cint7/%.c
-	$(MAKEDEP) -R -fcint/cint7/$*.d -Y -w 1000 -- $(CINTCFLAGS) -- $<
-	$(CC) $(OPT) $(CINTCFLAGS) $(CXXOUT)$@ -c $<
+	$(MAKEDEP) -R -fcint/cint7/$*.d -Y -w 1000 -- $(CINT7CFLAGS) -I. -- $<
+	$(CC) $(OPT) $(CINT7CFLAGS) -I. $(CXXOUT)$@ -c $<
 
 build/%.o: build/%.cxx
 	$(CXX) $(OPT) $(CXXFLAGS) $(CXXOUT)$@ -c $<
@@ -550,7 +559,6 @@ skip:
 
 -include $(patsubst %,%/ModuleVars.mk,$(MODULES))
 include $(patsubst %,%/Module.mk,$(MODULES))
-include cint/ROOT/cintdlls.mk
 
 -include MyRules.mk            # allow local rules
 

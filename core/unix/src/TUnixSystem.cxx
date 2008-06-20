@@ -4145,11 +4145,7 @@ static const char *DynamicPath(const char *newpath = 0, Bool_t reset = kFALSE)
          dynpath += ":"; dynpath += gRootDir; dynpath += "/lib";
       }
 #endif
-#ifdef CINTINCDIR
-      dynpath += ":"; dynpath += CINTINCDIR; dynpath += "/cint/stl";
-#else
-      dynpath += ":"; dynpath += gRootDir; dynpath += "/cint/cint/stl";
-#endif
+      dynpath += ":"; dynpath += gInterpreter->GetSTLIncludePath();
    }
    return dynpath;
 }

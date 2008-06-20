@@ -7505,6 +7505,13 @@ void G__alloc_tempobject(int tagnum, int typenum)
 }
 
 //______________________________________________________________________________
+void G__alloc_tempobject_val(G__value* val)
+{
+   // CINT7 compatible wrapper of G__alloc_tempobject, used from dictionaries
+   G__alloc_tempobject(val->tagnum, val->typenum);
+}
+
+//______________________________________________________________________________
 void G__free_tempobject()
 {
    // -- FIXME: Describe this function!

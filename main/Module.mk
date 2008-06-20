@@ -22,6 +22,9 @@ ROOTEXE      := bin/root_exe.exe
 else
 ROOTEXE      := bin/root.exe
 endif
+ifneq ($(BUILDCINT7),)
+ROOT7EXE     := $(subst root,root7,$(ROOTEXE))
+endif
 ifneq ($(PLATFORM),win32)
 ROOTNEXE     := bin/rootn.exe
 endif
@@ -104,7 +107,7 @@ SSH2RPD         :=
 endif
 
 # used in the main Makefile
-ALLEXECS     += $(ROOTEXE) $(ROOTNEXE) $(PROOFSERVEXE) $(PROOFSERVSH) \
+ALLEXECS     += $(ROOTEXE) $(ROOT7EXE) $(ROOTNEXE) $(PROOFSERVEXE) $(PROOFSERVSH) \
                 $(HADD) $(SSH2RPD) $(ROOTSEXE) $(ROOTSSH)
 ifneq ($(F77),)
 ALLEXECS     += $(H2ROOT) $(G2ROOT)
@@ -120,6 +123,12 @@ INCLUDEFILES += $(ROOTEXEDEP) $(PROOFSERVDEP) $(HADDDEP) $(H2ROOTDEP) \
 $(ROOTEXE):     $(ROOTEXEO) $(BOOTLIBSDEP) $(RINTLIB)
 		$(LD) $(LDFLAGS) -o $@ $(ROOTEXEO) $(ROOTICON) $(BOOTULIBS) \
 		   $(RPATH) $(BOOTLIBS) $(RINTLIBS) $(SYSLIBS)
+
+ifneq ($(BUILDCINT7),)
+$(ROOT7EXE):    $(ROOTEXEO) $(subst Cint,Cint7,$(BOOTLIBSDEP)) $(RINTLIB)
+		$(LD) $(LDFLAGS) -o $@ $(ROOTEXEO) $(ROOTICON) $(BOOTULIBS) \
+		   $(RPATH) $(subst Cint,Cint7,$(BOOTLIBS)) $(RINTLIBS) $(SYSLIBS)
+endif
 
 ifneq ($(PLATFORM),win32)
 $(ROOTNEXE):    $(ROOTEXEO) $(NEWLIB) $(BOOTLIBSDEP) $(RINTLIB)

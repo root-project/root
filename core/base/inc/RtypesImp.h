@@ -16,7 +16,7 @@
 #error RtypesImp.h should only be included by ROOT dictionaries.
 #endif
 
-#include "Api.h"
+#include "cint/Api.h"
 #include "TClassEdit.h"
 
 namespace ROOT {

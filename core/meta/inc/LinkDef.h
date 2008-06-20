@@ -31,7 +31,6 @@
 #pragma link C++ class TMethod;
 #pragma link C++ class TMethodArg;
 #pragma link C++ class TMethodCall;
-#pragma link C++ class TCint;
 #pragma link C++ class TInterpreter;
 #pragma link C++ class TClassMenuItem;
 #pragma link C++ class TVirtualIsAProxy;

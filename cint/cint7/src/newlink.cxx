@@ -854,6 +854,8 @@ void Cint::Internal::G__clink_header(FILE* fp)
 #if defined(__hpux) && !defined(G__ROOT)
    G__getcintsysdir();
    fprintf(fp, "#include \"%s/%s/inc/G__ci.h\"\n", G__cintsysdir, G__CFG_COREVERSION);
+#elif defined(G__ROOT)
+  fprintf(fp,"#include \"cint7/G__ci.h\"\n");
 #else
    fprintf(fp, "#include \"G__ci.h\"\n");
 #endif
@@ -906,6 +908,8 @@ void Cint::Internal::G__cpplink_header(FILE* fp)
 #if defined(__hpux) && !defined(G__ROOT)
    G__getcintsysdir();
    fprintf(fp, "#include \"%s/%s/inc/G__ci.h\"\n", G__cintsysdir, G__CFG_COREVERSION);
+#elif defined(G__ROOT)
+  fprintf(fp,"#include \"cint7/G__ci.h\"\n");
 #else
    fprintf(fp, "#include \"G__ci.h\"\n");
 #endif
@@ -1507,7 +1511,7 @@ static void G__write_windef_header()
    fprintf(fp, "        _G__stubrestoreenv=%s.G__stubrestoreenv\n", G__CINTLIBNAME);
    fprintf(fp, "        _G__getstream=%s.G__getstream\n", G__CINTLIBNAME);
    fprintf(fp, "        _G__type2string=%s.G__type2string\n", G__CINTLIBNAME);
-   fprintf(fp, "        _G__alloc_tempobject=%s.G__alloc_tempobject\n", G__CINTLIBNAME);
+   fprintf(fp, "        _G__alloc_tempobject_val=%s.G__alloc_tempobject_val\n", G__CINTLIBNAME);
    fprintf(fp, "        _G__set_p2fsetup=%s.G__set_p2fsetup\n", G__CINTLIBNAME);
    fprintf(fp, "        _G__free_p2fsetup=%s.G__free_p2fsetup\n", G__CINTLIBNAME);
    fprintf(fp, "        _G__search_typename2=%s.G__search_typename2\n", G__CINTLIBNAME);
@@ -2930,7 +2934,7 @@ void Cint::Internal::G__cppif_genconstructor(FILE* fp, FILE* /*hfp*/, int tagnum
                fprintf(fp,       "       G__genericerror(\"Error: Array construction with private/protected destructor is illegal\");\n");
             }
             else {
-               fprintf(fp,       "       if ((gvp == G__PVOID) || (gvp == 0)) {\n");
+               fprintf(fp,       "       if ((gvp == (char*)G__PVOID) || (gvp == 0)) {\n");
                if (!has_a_new) {
                   fprintf(fp,     "         p = new %s[n];\n", buf);
                }
@@ -2954,7 +2958,7 @@ void Cint::Internal::G__cppif_genconstructor(FILE* fp, FILE* /*hfp*/, int tagnum
             }
             fprintf(fp,         "     } else {\n");
             // Handle regular new.
-            fprintf(fp,         "       if ((gvp == G__PVOID) || (gvp == 0)) {\n");
+            fprintf(fp,         "       if ((gvp == (char*)G__PVOID) || (gvp == 0)) {\n");
             if (!has_a_new) {
                fprintf(fp,         "         p = new %s;\n", buf);
             }
@@ -2983,7 +2987,7 @@ void Cint::Internal::G__cppif_genconstructor(FILE* fp, FILE* /*hfp*/, int tagnum
             // Note: We do not have to handle array new here because there
             //       can be no initializer in an array new.
             fprintf(fp,         "     //m: %d\n", m);
-            fprintf(fp,         "     if ((gvp == G__PVOID) || (gvp == 0)) {\n");
+            fprintf(fp,         "     if ((gvp == (char*)G__PVOID) || (gvp == 0)) {\n");
             if (!has_a_new) {
                fprintf(fp,         "       p = new %s(", buf);
             }
@@ -3079,7 +3083,7 @@ void Cint::Internal::G__cppif_genconstructor(FILE* fp, FILE* /*hfp*/, int tagnum
       // Note: We do not have to handle an array new here because initializers
       //       are not allowed for array new.
       fprintf(fp,             "   //m: %d\n", m);
-      fprintf(fp,             "   if ((gvp == G__PVOID) || (gvp == 0)) {\n");
+      fprintf(fp,             "   if ((gvp == (char*) G__PVOID) || (gvp == 0)) {\n");
       if (!has_a_new) {
          fprintf(fp,             "     p = new %s(", buf);
       }
@@ -3172,7 +3176,7 @@ void Cint::Internal::G__cppif_genconstructor(FILE* fp, FILE* /*hfp*/, int tagnum
          fprintf(fp,           "     G__genericerror(\"Error: Array construction with private/protected destructor is illegal\");\n");
       }
       else {
-         fprintf(fp,           "     if ((gvp == G__PVOID) || (gvp == 0)) {\n");
+         fprintf(fp,           "     if ((gvp == (char*) G__PVOID) || (gvp == 0)) {\n");
          if (!has_a_new) {
             fprintf(fp,         "       p = new %s[n];\n", buf);
          }
@@ -3197,7 +3201,7 @@ void Cint::Internal::G__cppif_genconstructor(FILE* fp, FILE* /*hfp*/, int tagnum
       fprintf(fp,             "   } else {\n");
       //
       // Handle regular new.
-      fprintf(fp,             "     if ((gvp == G__PVOID) || (gvp == 0)) {\n");
+      fprintf(fp,             "     if ((gvp == (char*) G__PVOID) || (gvp == 0)) {\n");
       if (!has_a_new) {
          fprintf(fp,             "       p = new %s;\n", buf);
       }
@@ -3652,7 +3656,7 @@ void Cint::Internal::G__cppif_gendefault(FILE* fp, FILE* /*hfp*/, int tagnum, in
       fprintf(fp,         "\n{\n");
       fprintf(fp,         "   %s *p;\n", G__fulltagname(tagnum, 1));
 
-      fprintf(fp,         "   char *gvp = (char*)G__getgvp();\n");
+      fprintf(fp,         "   char* gvp = (char*)G__getgvp();\n");
 
       bool has_a_new = G__struct.funcs[tagnum] & (G__HAS_OPERATORNEW1ARG | G__HAS_OPERATORNEW2ARG);
       bool has_a_new1arg = G__struct.funcs[tagnum] & G__HAS_OPERATORNEW1ARG;
@@ -3689,7 +3693,7 @@ void Cint::Internal::G__cppif_gendefault(FILE* fp, FILE* /*hfp*/, int tagnum, in
          fprintf(fp,       "     G__genericerror(\"Error: Array construction with private/protected destructor is illegal\");\n");
       }
       else {
-         fprintf(fp,       "     if ((gvp == G__PVOID) || (gvp == 0)) {\n");
+         fprintf(fp,       "     if ((gvp == (char*) G__PVOID) || (gvp == 0)) {\n");
          if (!has_a_new) {
             fprintf(fp,     "       p = new %s[n];\n", buf);
          }
@@ -3714,7 +3718,7 @@ void Cint::Internal::G__cppif_gendefault(FILE* fp, FILE* /*hfp*/, int tagnum, in
       fprintf(fp,         "   } else {\n");
       //
       // Handle regular new.
-      fprintf(fp,         "     if ((gvp == G__PVOID) || (gvp == 0)) {\n");
+      fprintf(fp,         "     if ((gvp == (char*) G__PVOID) || (gvp == 0)) {\n");
       if (!has_a_new) {
          fprintf(fp,       "       p = new %s;\n", buf);
       }
@@ -3840,7 +3844,7 @@ void Cint::Internal::G__cppif_gendefault(FILE* fp, FILE* /*hfp*/, int tagnum, in
 #endif /* G__CPPIF_STATIC */
 
       fprintf(fp,   "\n{\n");
-      fprintf(fp,   "   char *gvp = (char*)G__getgvp();\n");
+      fprintf(fp,   "   char* gvp = (char*) G__getgvp();\n");
       fprintf(fp,   "   long soff = G__getstructoffset();\n");
       fprintf(fp,   "   int n = G__getaryconstruct();\n");
 
@@ -3855,7 +3859,7 @@ void Cint::Internal::G__cppif_gendefault(FILE* fp, FILE* /*hfp*/, int tagnum, in
       fprintf(fp,   "   }\n");
 
       fprintf(fp,   "   if (n) {\n");
-      fprintf(fp,   "     if (gvp == G__PVOID) {\n");
+      fprintf(fp,   "     if (gvp == (char*) G__PVOID) {\n");
       fprintf(fp,   "       delete[] (%s*) soff;\n", buf);
       fprintf(fp,   "     } else {\n");
       fprintf(fp,   "       G__setgvp((long)G__PVOID);\n");
@@ -3865,7 +3869,7 @@ void Cint::Internal::G__cppif_gendefault(FILE* fp, FILE* /*hfp*/, int tagnum, in
       fprintf(fp,   "       G__setgvp((long)gvp);\n");
       fprintf(fp,   "     }\n");
       fprintf(fp,   "   } else {\n");
-      fprintf(fp,   "     if (gvp == G__PVOID) {\n");
+      fprintf(fp,   "     if (gvp == (char*) G__PVOID) {\n");
       //fprintf(fp, "       G__operator_delete((void*) soff);\n");
       fprintf(fp,   "       delete (%s*) soff;\n", buf);
       fprintf(fp,   "     } else {\n");

@@ -3,8 +3,9 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIRBASE   := cint
-MODDIR       := $(MODDIRBASE)/cint7
+MODNAME       := cint7
+MODDIRBASE    := cint
+MODDIR        := $(MODDIRBASE)/$(MODNAME)
 MODDIRS       := $(MODDIR)/src
 MODDIRI       := $(MODDIR)/inc
 
@@ -19,20 +20,10 @@ CINT7DIRSTL   := $(CINT7DIR)/stl
 CINT7DIRDLLSTL:= $(CINT7DIRL)/dll_stl
 CINT7DIRSD    := $(CINT7DIRS)/dict
 
-# for configcint:
-CINTDIR       := $(CINT7DIR)
-# for cintdlls:
-CINTDIRSTL    := $(CINT7DIRSTL)
-CINTDIRDLLS   := $(CINT7DIRDLLS)
-CINTDIRDLLSTL := $(CINT7DIRDLLSTL)
-CINTDIRL      := $(CINT7DIRL)
-
-
-##### libCint #####
+##### libCint7 #####
 CINT7CONF     := $(CINT7DIRI)/configcint.h
-CINTCONF      := $(CINT7CONF)
 CINT7H        := $(filter-out $(CINT7CONF),$(wildcard $(CINT7DIRI)/*.h))
-CINT7HT       := $(patsubst $(CINT7DIRI)/%.h,include/%.h,$(CINT7H))
+CINT7HT       := $(sort $(patsubst $(CINT7DIRI)/%.h,include/cint7/%.h,$(CINT7H) $(CINT7CONF)))
 CINT7S1       := $(wildcard $(MODDIRS)/*.c)
 CINT7S2       := $(wildcard $(CINT7DIRS)/*.cxx) $(CINT7DIRSD)/longif.cxx $(CINT7DIRSD)/Apiif.cxx $(CINT7DIRSD)/stdstrct.o
 
@@ -42,7 +33,6 @@ CINT7ALLO     := $(CINT7S1:.c=.o) $(CINT7S2:.cxx=.o)
 CINT7ALLDEP   := $(CINT7ALLO:.o=.d)
 
 CINT7CONFMK   := $(MODDIRBASE)/ROOT/configcint.mk
-CINTCONFMK    := $(CINT7CONFMK)
 
 CINT7S1       := $(filter-out $(MODDIRS)/dlfcn.%,$(CINT7S1))
 
@@ -185,25 +175,21 @@ CINT7S        := $(CINT7S1) $(CINT7S2)
 CINT7O        := $(CINT7S1:.c=.o) $(CINT7S2:.cxx=.o)
 CINT7TMPO     := $(subst loadfile.o,loadfile_tmp.o,$(CINT7O))
 CINT7TMPO     := $(subst pragma.o,pragma_tmp.o,$(CINT7TMPO))
-CINTTMPO       = $(CINT7TMPO) $(REFLEXO)
 CINT7TMPINC   := -I$(MODDIR)/inc -I$(MODDIR)/include -I$(MODDIR)/stl -I$(MODDIR)/lib -Iinclude
 CINT7DEP      := $(CINT7O:.o=.d)
 CINT7DEP      += $(CINT7DIRS)/loadfile_tmp.d
-CINT7DEP      += $(CINT7DIRS)/loadfile_tmp.d
-CINT7ALLDEP   += $(CINT7DIRS)/pragma_tmp.d
+CINT7DEP      += $(CINT7DIRS)/pragma_tmp.d
+CINT7ALLDEP   += $(CINT7DIRS)/loadfile_tmp.d
 CINT7ALLDEP   += $(CINT7DIRS)/pragma_tmp.d
 
-CINT7LIB      := $(LPATH)/libCint.$(SOEXT)
-CINTLIB       := $(CINT7LIB)
+CINT7LIB      := $(LPATH)/libCint7.$(SOEXT)
 
 ##### cint #####
 CINT7EXES     := $(CINT7DIRM)/cppmain.cxx
 CINT7EXEO     := $(CINT7EXES:.cxx=.o)
 CINT7EXEDEP   := $(CINT7EXEO:.o=.d)
 CINT7TMP      := $(CINT7DIRM)/cint_tmp$(EXEEXT)
-CINTTMP       :=  $(CINT7TMP)
-CINT7         := bin/cint$(EXEEXT)
-CINT          := $(CINT7)
+CINT7         := bin/cint7$(EXEEXT)
 
 ##### makecint #####
 MAKECINT7S    := $(CINT7DIRT)/makecint.cxx
@@ -230,7 +216,6 @@ CINT7_MKINCLDO := $(MODDIR)/include/mkincld.o
 
 # used in the main Makefile
 ALLHDRS     += $(CINT7HT)
-ALLHDRS     += $(CINT7CONF)
 
 ALLLIBS      += $(CINT7LIB)
 ALLEXECS     += $(CINT7) $(MAKECINT7) $(CINT7TMP)
@@ -238,48 +223,48 @@ ALLEXECS     += $(CINT7) $(MAKECINT7) $(CINT7TMP)
 # include all dependency files
 INCLUDEFILES += $(CINT7DEP) $(CINT7EXEDEP)
 
-CINT7CXXFLAGS := $(filter-out -Iinclude ,$(CINTCXXFLAGS))
-CINT7CFLAGS   := $(filter-out -Iinclude ,$(CINTCFLAGS))
+CINT7CXXFLAGS = $(patsubst -Icint/cint/%,,$(CINTCXXFLAGS))
+CINT7CFLAGS   = $(patsubst -Icint/cint/%,,$(CINTCFLAGS))
 
 CINT7CXXFLAGS += -DG__CINTBODY -DG__HAVE_CONFIG -DG__NOMAKEINFO
 CINT7CFLAGS   += -DG__CINTBODY -DG__HAVE_CONFIG -DG__NOMAKEINFO
 
-CINT7CXXFLAGS += -I$(CINT7DIRI) -I$(CINT7DIRS) -I$(CINT7DIRSD) -I$(CINT7DIR)/reflex/inc -Iinclude
-CINT7CFLAGS   += -I$(CINT7DIRI) -I$(CINT7DIRS) -I$(CINT7DIRSD) -I$(CINT7DIR)/reflex/inc -Iinclude
+CINT7CXXFLAGS += -I$(CINT7DIRI) -I$(CINT7DIRS) -I$(CINT7DIRSD)
+CINT7CFLAGS   += -I$(CINT7DIRI) -I$(CINT7DIRS) -I$(CINT7DIRSD)
 
-CINTCXXFLAGS   = $(CINT7CXXFLAGS)
-CINTCFLAGS     = $(CINT7CFLAGS)
+##### used by configcint.mk #####
+G__CFG_CXXFLAGS := $(CINT7CXXFLAGS)
+G__CFG_CFLAGS   := $(CINT7CFLAGS)
+G__CFG_DIR      := $(CINT7DIR)
+G__CFG_CONF     := $(CINT7CONF)
+G__CFG_CONFMK   := $(CINT7CONFMK)
 
-CINTLIBS      := $(CINT7LIBS)
-
-ifeq ($(PLATFORM),win32)
-REFLEXLL := lib/libReflex.lib
-else
-REFLEXLL := -Llib -lReflex
-ifneq ($(PLATFORM),fbsd) 
-ifneq ($(PLATFORM),obsd)
-REFLEXLL   += -ldl 
-endif 
-endif
-endif
+##### used by cintdlls.mk #####
+CINTDLLDIRSTL    := $(CINT7DIRSTL)
+CINTDLLDIRDLLS   := $(CINT7DIRDLLS)
+CINTDLLDIRDLLSTL := $(CINT7DIRDLLSTL)
+CINTDLLDIRL      := $(CINT7DIRL)
+CINTDLLCINTTMP   := $(CINT7TMP)
+# the ROOT-specific cintdll dictionary part is currently built with
+# CINT5's rootcint because it's protected with a ifeq(BUILDINGCINT,5).
+# Nevertheless, this is what it will look like for CINT7
+CINTDLLROOTCINTTMPDEP = $(ROOTCINT7TMPDEP)
 
 ##### local rules #####
-include/%.h:    $(CINT7DIRI)/%.h
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
+include/cint7/%.h:    $(CINT7DIRI)/%.h
+	@(if [ ! -d "include/cint7" ]; then    \
+	   mkdir -p include/cint7;             \
+	fi)
 	cp $< $@
 
 $(CINT7LIB): $(CINT7O) $(CINT7LIBDEP) $(REFLEXLIB)
 	$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" \
-	   libCint.$(SOEXT) $@ "$(CINT7O)" "$(CINT7LIBEXTRA) $(REFLEXLL)"
+	   libCint7.$(SOEXT) $@ "$(CINT7O)" "$(CINT7LIBEXTRA) $(REFLEXLL)"
 
 $(CINT7): $(CINT7EXEO) $(CINT7LIB) $(REFLEXLIB)
 	$(LD) $(LDFLAGS) -o $@ $(CINT7EXEO) $(RPATH) $(CINT7LIBS) $(CILIBS)
-
-#From cint7:
-#$(CINTTMP): $(SETUPO) $(MAINO) $(G__CFG_READLINELIB) $(CINTTMPOBJ) $(REFLEXLIBDEP)
-#        @echo "Linking $@"
-#        $(CMDECHO)$(G__CFG_LD) $(G__CFG_LDFLAGS) $(G__CFG_LDOUT)$@ \
-#          $(SETUPO) $(MAINO) $(CINTTMPOBJ) $(REFLEXLINK) \
-#          $(G__CFG_READLINELIB) $(G__CFG_CURSESLIB) $(G__CFG_DEFAULTLIBS)
 
 $(CINT7TMP) : $(CINT7EXEO) $(CINT7TMPO) $(REFLEXLIB)
 	$(LD) $(LDFLAGS) -o $@ $(CINT7EXEO) $(CINT7TMPO) $(RPATH) \
@@ -308,22 +293,22 @@ $(CINT7_STDIOH) : $(CINT7_MKINCLDS)
 	$(LD) $(LDFLAGS) -o $(CINT7_MKINCLD) $(CINT7_MKINCLDO)
 	cd $(dir $(CINT7_MKINCLD)) ; ./mkincld
 
-all-cint  : all-cint7
-all-cint7 : $(CINT7LIB) $(CINT7) $(CINT7TMP) $(MAKECINT7) $(IOSENUM7)
+all-$(MODNAME) : $(CINT7LIB) $(CINT7) $(CINT7TMP) $(MAKECINT7) $(IOSENUM7)
 
-clean-cint7 :
+clean-$(MODNAME) :
 	@rm -f $(CINT7TMPO) $(CINT7ALLO) $(CINT7EXEO) $(MAKECINT7O)
 
-clean :: clean-cint7
+clean :: clean-$(MODNAME)
 
-distclean-cint7 : clean-cint7
+distclean-$(MODNAME) : clean-$(MODNAME)
 	@rm -rf $(CINT7ALLDEP) $(CINT7LIB) $(IOSENUM7) $(CINT7EXEDEP) \
           $(CINT7) $(CINT7TMP) $(MAKECINT7) $(CINT7DIRM)/*.exp \
           $(CINT7DIRM)/*.lib $(CINT7DIRS)/loadfile_tmp.cxx \
 	  $(CINT7DIRS)/pragma_tmp.cxx \
-	  $(CINT7HT) $(CINTCONF)
+	  $(CINT7HT) $(CINT7CONF)
+	@rm -rf include/cint7
 
-distclean :: distclean-cint7
+distclean :: distclean-$(MODNAME)
 
 ##### extra rules ######
 $(CINT7DIRS)/libstrm.o :  CINT7CXXFLAGS += -I$(CINT7DIRL)/stream
@@ -352,3 +337,6 @@ ifeq ($(CPPPREP),)
 endif
 include $(CINT7CONFMK)
 ##### configcint.h - END
+
+##### cintdlls #####
+include cint/ROOT/cintdlls.mk

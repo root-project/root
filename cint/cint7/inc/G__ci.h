@@ -826,7 +826,9 @@ struct G__DUMMY_FOR_CINT5 {
    // Stuff we removed from Cint5
    int type;
    int tagnum;
+#ifndef G__OLDIMPLEMENTATION1259
    G__SIGNEDCHAR_T isconst;
+#endif
 };
 typedef struct {
   union {
@@ -849,7 +851,7 @@ typedef struct {
   long ref;
 #endif
   struct G__REFLEXTYPE_C_PLACEHOLDER buf_typenum;
-   char dummyForCint5[sizeof(struct G__DUMMY_FOR_CINT5)];  
+  struct G__DUMMY_FOR_CINT5 dummyFotCint5;
 } G__value;
 
 /**************************************************************************

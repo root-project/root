@@ -14,11 +14,11 @@ namespace Cint {
 /* templated read and write access to G__value */
 
 template <typename T>
-static T G__getvalue_raw(const G__value& val)
+inline T G__getvalue_raw(const G__value& val)
 { return (T) val.obj.i; }
 
 template <>
-static bool G__getvalue_raw<bool>(const G__value& val)
+inline bool G__getvalue_raw<bool>(const G__value& val)
 { 
 #ifdef G__BOOL4BYTE
    return (bool)val.obj.i; 
@@ -28,36 +28,36 @@ static bool G__getvalue_raw<bool>(const G__value& val)
 }
 
 template <>
-static unsigned char G__getvalue_raw<unsigned char>(const G__value& val)
+inline unsigned char G__getvalue_raw<unsigned char>(const G__value& val)
 { return (unsigned char)val.obj.ulo; }
 
 template <>
-static unsigned short G__getvalue_raw<unsigned short>(const G__value& val)
+inline unsigned short G__getvalue_raw<unsigned short>(const G__value& val)
 { return (unsigned short)val.obj.ulo; }
 
 template <>
-static unsigned int G__getvalue_raw<unsigned int>(const G__value& val)
+inline unsigned int G__getvalue_raw<unsigned int>(const G__value& val)
 { return (unsigned int)val.obj.ulo; }
 
 template <>
-static unsigned long G__getvalue_raw<unsigned long>(const G__value& val)
+inline unsigned long G__getvalue_raw<unsigned long>(const G__value& val)
 { return (unsigned long)val.obj.ulo; }
 
 template <>
-static G__int64 G__getvalue_raw<G__int64>(const G__value& val)
+inline G__int64 G__getvalue_raw<G__int64>(const G__value& val)
 { return val.obj.ll; }
 template <>
-static G__uint64 G__getvalue_raw<G__uint64>(const G__value& val)
+inline G__uint64 G__getvalue_raw<G__uint64>(const G__value& val)
 { return val.obj.ull; }
 
 template <>
-static long double G__getvalue_raw<long double>(const G__value& val)
+inline long double G__getvalue_raw<long double>(const G__value& val)
 { return val.obj.ld; }
 template <>
-static double G__getvalue_raw<double>(const G__value& val)
+inline double G__getvalue_raw<double>(const G__value& val)
 { return val.obj.d; }
 template <>
-static float G__getvalue_raw<float>(const G__value& val)
+inline float G__getvalue_raw<float>(const G__value& val)
 { return (float)val.obj.d; }
 
 

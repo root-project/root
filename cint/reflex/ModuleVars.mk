@@ -14,6 +14,9 @@ REFLEXDIRI   := $(REFLEXDIR)/inc
 
 REFLEXLIB    := $(LPATH)/libReflex.$(SOEXT)
 
+REFLEXS      := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
+REFLEXO      := $(REFLEXS:.cxx=.o)
+
 # genreflex
 ifeq ($(PLATFORM),win32)
 RFLX_REFLEXLL   = lib/libReflex.lib

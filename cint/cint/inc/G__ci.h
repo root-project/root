@@ -935,13 +935,13 @@ typedef struct {
   int type;
   int tagnum;
   int typenum;
-  char dummyForCint7[sizeof(struct G__DUMMY_FOR_CINT7) - sizeof(int)];
 #ifdef G__REFERENCETYPE2
   long ref;
 #endif
 #ifndef G__OLDIMPLEMENTATION1259
   G__SIGNEDCHAR_T isconst;
 #endif
+  struct G__DUMMY_FOR_CINT7 dummyForCint7;
 } G__value ;
 
 
@@ -1201,11 +1201,7 @@ struct G__param {
 #endif
   G__value para[G__MAXFUNCPARA];
 #ifndef G__OLDIMPLEMENTATION1530
-#ifdef G__DICTIONARY
-  char parameter[G__MAXFUNCPARA][G__ONELINEDICT];
-#else
   char parameter[G__MAXFUNCPARA][G__ONELINE];
-#endif
 #endif
 };
 
@@ -1377,7 +1373,7 @@ extern void (*G__aterror)();
 * Bug fix for struct allocation
 *
 **************************************************************************/
-#define G__PVOID (-1)
+#define G__PVOID ((long)(-1))
 #define G__PINVALID 0
 
 /**********************************************************************
@@ -1751,6 +1747,9 @@ extern G__EXPORT int G__tag_memvar_setup G__P((int tagnum));
 extern G__EXPORT int G__memvar_setup G__P((void *p,int type,int reftype,int constvar,int tagnum,int typenum,int statictype,int access,G__CONST char *expr,int definemacro,G__CONST char *comment));
 extern G__EXPORT int G__tag_memvar_reset G__P((void));
 extern G__EXPORT int G__tag_memfunc_setup G__P((int tagnum));
+extern G__EXPORT void G__set_tagnum(G__value* val, int tagnum);
+extern G__EXPORT void G__set_typenum(G__value* val, const char* type);
+extern G__EXPORT void G__set_type(G__value* val, char* type);
 
 #ifdef G__TRUEP2F
 extern G__EXPORT int G__memfunc_setup G__P((G__CONST char *funcname,int hash,G__InterfaceMethod funcp,int type
@@ -1797,6 +1796,7 @@ extern G__EXPORT void G__stubrestoreenv G__P((struct G__StoreEnv *env));
 extern G__EXPORT int G__getstream G__P((const char *source,int *isrc,char *string,const char *endmark));
 extern G__EXPORT char *G__type2string G__P((int type,int tagnum,int typenum,int reftype,int isconst));
 extern G__EXPORT void G__alloc_tempobject G__P((int tagnum,int typenum));
+extern G__EXPORT void G__alloc_tempobject_val G__P((G__value* val));
 extern G__EXPORT void G__set_p2fsetup G__P((void (*p2f)()));
 extern G__EXPORT void G__free_p2fsetup G__P((void));
 extern G__EXPORT int G__genericerror G__P((G__CONST char *message));
@@ -2014,6 +2014,7 @@ static void (*G__stubrestoreenv) G__P((struct G__StoreEnv *env));
 static int (*G__getstream) G__P((char *source,int *isrc,char *string,char *endmark));
 static char* (*G__type2string) G__P((int type,int tagnum,int typenum,int reftype,int isconst));
 static void (*G__alloc_tempobject) G__P((int tagnum,int typenum));
+static void (*G__alloc_tempobject_val) G__P((G__value* val));
 static void (*G__set_p2fsetup) G__P((void (*p2f)()));
 static void (*G__free_p2fsetup) G__P((void));
 static int (*G__genericerror) G__P((G__CONST char *message));
@@ -2316,6 +2317,7 @@ G__EXPORT void G__SetCppCintApiPointers(
   G__getstream = (int (*) G__P((char *source,int *isrc,char *string,char *endmark)) ) a49;
   G__type2string = (char* (*) G__P((int type,int tagnum,int typenum,int reftype,int isconst)) ) a50;
   G__alloc_tempobject = (void (*) G__P((int tagnum,int typenum)) ) a51;
+  G__alloc_tempobject_val = (void (*) G__P((G__value* val)) ) a51;
   G__set_p2fsetup = (void (*) G__P((void (*p2f)())) ) a52;
   G__free_p2fsetup = (void (*) G__P((void)) ) a53;
   G__genericerror = (int (*) G__P((G__CONST char *message)) ) a54;

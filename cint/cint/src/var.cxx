@@ -3132,7 +3132,7 @@ inline void G__alloc_var_ref(int SIZE, CONVFUNC f, char* item, G__var_array* var
          /* Note: If this is a static, no memory is allocated, a copy of the global var pointer is returned. */
          var->p[ig15] = (long) G__malloc(1, G__LONGALLOC, item);
          if (
-            (G__globalvarpointer == G__PVOID) && /* variable was *not* preallocated, nor a func ref param */
+             (G__globalvarpointer == G__PVOID) && /* variable was *not* preallocated, nor a func ref param */
             var->p[ig15] && /* We have a pointer, and */
             !G__def_struct_member && /* We are not defining a member variable (the pointer is an offset), and */
             (G__asm_wholefunction == G__ASM_FUNC_NOP) && /* We are not bytecode compiling a function (the pointer is an offset), and */

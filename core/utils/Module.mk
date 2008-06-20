@@ -11,11 +11,10 @@ MODDIRI      := $(MODDIR)/inc
 # see also ModuleVars.mk
 
 ##### rootcint #####
-ROOTCINTS    := $(MODDIRS)/rootcint.cxx \
-                $(filter-out %_tmp.cxx,$(wildcard $(MODDIRS)/R*.cxx))
 ROOTCINTO    := $(ROOTCINTS:.cxx=.o)
-ROOTCINTTMPO := $(ROOTCINTS:.cxx=_tmp.o)
-ROOTCINTDEP  := $(ROOTCINTO:.o=.d) $(ROOTCINTTMPO:.o=.d) 
+ROOTCINT7O   := $(ROOTCINT7S:.cxx=.o)
+ROOTCINTDEP  := $(ROOTCINTO:.o=.d) $(ROOTCINT7O:.o=.d) \
+                $(ROOTCINTTMPO:.o=.d) $(ROOTCINT7TMPO:.o=.d) 
 
 ##### rlibmap #####
 RLIBMAPS     := $(MODDIRS)/rlibmap.cxx
@@ -36,6 +35,20 @@ $(ROOTCINTTMPEXE): $(CINTTMPO) $(ROOTCINTTMPO) $(METAUTILSO) $(IOSENUM)
 		$(LD) $(LDFLAGS) -o $@ \
 		   $(ROOTCINTTMPO) $(METAUTILSO) $(CINTTMPO) $(CILIBS)
 
+ifneq ($(BUILDCINT7),)
+$(UTILSDIRS)/rootcint7.cxx: $(UTILSDIRS)/rootcint.cxx
+		@cp $< $@
+
+$(ROOTCINT7EXE): $(CINT7LIB) $(ROOTCINT7O) $(METAUTILSO) $(IOSENUM)
+		$(LD) $(LDFLAGS) -o $@ $(ROOTCINT7O) $(METAUTILSO) \
+		   $(RPATH) $(CINT7LIBS) $(CILIBS)
+
+$(ROOTCINT7TMPEXE): $(CINT7TMPO) $(ROOTCINT7TMPO) $(METAUTILSO) \
+                    $(IOSENUM) $(REFLEXO)
+		$(LD) $(LDFLAGS) -o $@ \
+		   $(ROOTCINT7TMPO) $(METAUTILSO) $(CINT7TMPO) $(REFLEXO) $(CILIBS)
+endif
+
 $(RLIBMAP):     $(RLIBMAPO)
 ifneq ($(PLATFORM),win32)
 		$(LD) $(LDFLAGS) -o $@ $<
@@ -43,15 +56,19 @@ else
 		$(LD) $(LDFLAGS) -o $@ $< imagehlp.lib
 endif
 
-all-$(MODNAME): $(ROOTCINTTMPEXE) $(ROOTCINTEXE) $(RLIBMAP)
+all-$(MODNAME): $(ROOTCINTTMPEXE) $(ROOTCINTEXE) \
+                $(ROOTCINT7TMPEXE) $(ROOTCINT7EXE) \
+                $(RLIBMAP)
 
 clean-$(MODNAME):
-		@rm -f $(ROOTCINTTMPO) $(ROOTCINTO) $(RLIBMAPO)
+		@rm -f $(ROOTCINTTMPO) $(ROOTCINT7TMPO) $(ROOTCINTO) $(ROOTCINT7O) \
+		  $(RLIBMAPO) 
 
 clean::         clean-$(MODNAME)
 
 distclean-$(MODNAME): clean-$(MODNAME)
-		@rm -f $(ROOTCINTDEP) $(ROOTCINTTMPEXE) $(ROOTCINTEXE) \
+		@rm -f $(ROOTCINTDEP) $(ROOTCINTTMPEXE) $(ROOTCINT7TMPEXE) \
+		   $(ROOTCINTEXE) $(ROOTCINT7EXE) \
 		   $(RLIBMAPDEP) $(RLIBMAP) \
 		   $(UTILSDIRS)/*.exp $(UTILSDIRS)/*.lib $(UTILSDIRS)/*_tmp.cxx
 
@@ -59,9 +76,13 @@ distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(UTILSDIRS)%_tmp.cxx: $(UTILSDIRS)%.cxx
-	cp -f $< $@
+	cp $< $@
 
-$(ROOTCINTTMPO): CXXFLAGS += -UR__HAVE_CONFIG -DROOTBUILD
-$(ROOTCINTTMPO): PCHCXXFLAGS =
-$(ROOTCINTO):    PCHCXXFLAGS =
-$(RLIBMAPO):     PCHCXXFLAGS =
+$(ROOTCINTTMPO):  CXXFLAGS += -UR__HAVE_CONFIG -DROOTBUILD
+$(ROOTCINTTMPO):  PCHCXXFLAGS =
+$(ROOTCINTO):     PCHCXXFLAGS =
+$(RLIBMAPO):      PCHCXXFLAGS =
+$(ROOTCINT7TMPO): CXXFLAGS += -UR__HAVE_CONFIG -DROOTBUILD -DR__BUILDING_CINT7
+$(ROOTCINT7TMPO): PCHCXXFLAGS =
+$(ROOTCINT7O):    PCHCXXFLAGS =
+$(ROOTCINT7O):    CXXFLAGS += -DR__BUILDING_CINT7

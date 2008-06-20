@@ -112,7 +112,7 @@ distclean::     distclean-$(MODNAME)
 ##### extra rules ######
 # Require Reflex support?
 ifeq ($(BUILDREFLEX),yes)
-$(PYROOTO): CXXFLAGS += -DPYROOT_USE_REFLEX $(PYTHONINCDIR:%=-I%)
+$(PYROOTO): CXXFLAGS += -DPYROOT_USE_REFLEX $(PYTHONINCDIR:%=-I%) -Iinclude/cint
 $(PYROOTLIB): ROOTLIBS += $(RFLX_REFLEXLL)
 $(PYROOTLIB): $(REFLEXLIB)
 else

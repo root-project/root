@@ -2175,7 +2175,7 @@ int G__stub_method_calling(G__value *result7, G__param *libp,
          for(int idx = 0; idx < arity; idx++){
          
             if ((gvp != G__PVOID) && (gvp != 0))
-               G__setgvp(G__PVOID);
+               G__setgvp((long) G__PVOID);
 
 #ifdef __x86_64__
             G__stub_method_asm_x86_64(ifunc, ifn, ((void*)((long)soff + (idx*osize))), libp, result7);     
@@ -2428,8 +2428,8 @@ int G__call_cppfunc(G__value *result7,G__param *libp,G__ifunc_table_internal *if
 
 #ifdef G__ASM
   if(G__no_exec_compile) {
-    if(isupper(ifunc->type[ifn])) result7->obj.i=G__PVOID;
-    else                          result7->obj.i=0;
+    if(isupper(ifunc->type[ifn])) result7->obj.i = G__PVOID;
+    else                          result7->obj.i = 0;
     result7->ref = ifunc->reftype[ifn];
     if('u'==ifunc->type[ifn]&&0==result7->ref&&-1!=result7->tagnum) {
       G__store_tempobject(*result7); /* To free tempobject in pcode */
@@ -2862,6 +2862,8 @@ void G__clink_header(FILE *fp)
 #if defined(__hpux) && !defined(G__ROOT)
   G__getcintsysdir();
   fprintf(fp,"#include \"%s/%s/inc/G__ci.h\"\n",G__cintsysdir, G__CFG_COREVERSION);
+#elif defined(G__ROOT)
+  fprintf(fp,"#include \"cint/G__ci.h\"\n");
 #else
   fprintf(fp,"#include \"G__ci.h\"\n");
 #endif
@@ -2952,6 +2954,8 @@ void G__cpplink_header(FILE *fp)
 #if defined(__hpux) && !defined(G__ROOT)
   G__getcintsysdir();
   fprintf(fp,"#include \"%s/%s/inc/G__ci.h\"\n",G__cintsysdir, G__CFG_COREVERSION);
+#elif defined(G__ROOT)
+  fprintf(fp,"#include \"cint/G__ci.h\"\n");
 #else
   fprintf(fp,"#include \"G__ci.h\"\n");
 #endif
@@ -3587,7 +3591,7 @@ static void G__write_windef_header()
   fprintf(fp,"        _G__stubrestoreenv=%s.G__stubrestoreenv\n",G__CINTLIBNAME);
   fprintf(fp,"        _G__getstream=%s.G__getstream\n",G__CINTLIBNAME);
   fprintf(fp,"        _G__type2string=%s.G__type2string\n",G__CINTLIBNAME);
-  fprintf(fp,"        _G__alloc_tempobject=%s.G__alloc_tempobject\n",G__CINTLIBNAME);
+  fprintf(fp,"        _G__alloc_tempobject_val=%s.G__alloc_tempobject_val\n",G__CINTLIBNAME);
   fprintf(fp,"        _G__set_p2fsetup=%s.G__set_p2fsetup\n",G__CINTLIBNAME);
   fprintf(fp,"        _G__free_p2fsetup=%s.G__free_p2fsetup\n",G__CINTLIBNAME);
   fprintf(fp,"        _G__search_typename2=%s.G__search_typename2\n",G__CINTLIBNAME);
@@ -6130,7 +6134,7 @@ void G__cppif_genconstructor(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G_
 
   G__if_ary_union(fp, ifn, ifunc);
 
-  fprintf(fp,               "   long gvp = G__getgvp();\n");
+  fprintf(fp,               "   char* gvp = (char*) G__getgvp();\n");
 
   bool has_a_new = G__struct.funcs[tagnum] & (G__HAS_OPERATORNEW1ARG | G__HAS_OPERATORNEW2ARG);
   bool has_a_new1arg = G__struct.funcs[tagnum] & G__HAS_OPERATORNEW1ARG;
@@ -6177,7 +6181,7 @@ void G__cppif_genconstructor(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G_
           fprintf(fp,       "       p = 0;\n");
           fprintf(fp,       "       G__genericerror(\"Error: Array construction with private/protected destructor is illegal\");\n");
         } else {
-          fprintf(fp,       "       if ((gvp == G__PVOID) || (gvp == 0)) {\n");
+          fprintf(fp,       "       if ((gvp == (char*)G__PVOID) || (gvp == 0)) {\n");
           if (!has_a_new) {
             fprintf(fp,     "         p = new %s[n];\n", buf);
           } else if (has_a_new1arg && (has_own_new1arg || !has_own_new2arg)) {
@@ -6197,7 +6201,7 @@ void G__cppif_genconstructor(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G_
         }
         fprintf(fp,         "     } else {\n");
         // Handle regular new.
-        fprintf(fp,         "       if ((gvp == G__PVOID) || (gvp == 0)) {\n");
+        fprintf(fp,         "       if ((gvp == (char*)G__PVOID) || (gvp == 0)) {\n");
         if (!has_a_new) {
         fprintf(fp,         "         p = new %s;\n", buf);
         } else if (has_a_new1arg && (has_own_new1arg || !has_own_new2arg)) {
@@ -6221,7 +6225,7 @@ void G__cppif_genconstructor(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G_
         // Note: We do not have to handle array new here because there
         //       can be no initializer in an array new.
         fprintf(fp,         "     //m: %d\n", m);
-        fprintf(fp,         "     if ((gvp == G__PVOID) || (gvp == 0)) {\n");
+        fprintf(fp,         "     if ((gvp == (char*)G__PVOID) || (gvp == 0)) {\n");
         if (!has_a_new) {
         fprintf(fp,         "       p = new %s(", buf);
         } else if (has_a_new1arg && (has_own_new1arg || !has_own_new2arg)) {
@@ -6311,7 +6315,7 @@ void G__cppif_genconstructor(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G_
     // Note: We do not have to handle an array new here because initializers
     //       are not allowed for array new.
     fprintf(fp,             "   //m: %d\n", m);
-    fprintf(fp,             "   if ((gvp == G__PVOID) || (gvp == 0)) {\n");
+    fprintf(fp,             "   if ((gvp == (char*)G__PVOID) || (gvp == 0)) {\n");
     if (!has_a_new) {
     fprintf(fp,             "     p = new %s(", buf);
     } else if (has_a_new1arg && (has_own_new1arg || !has_own_new2arg)) {
@@ -6398,7 +6402,7 @@ void G__cppif_genconstructor(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G_
       fprintf(fp,           "     p = 0;\n");
       fprintf(fp,           "     G__genericerror(\"Error: Array construction with private/protected destructor is illegal\");\n");
     } else {
-      fprintf(fp,           "     if ((gvp == G__PVOID) || (gvp == 0)) {\n");
+      fprintf(fp,           "     if ((gvp == (char*)G__PVOID) || (gvp == 0)) {\n");
       if (!has_a_new) {
         fprintf(fp,         "       p = new %s[n];\n", buf);
       } else if (has_a_new1arg && (has_own_new1arg || !has_own_new2arg)) {
@@ -6419,7 +6423,7 @@ void G__cppif_genconstructor(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G_
     fprintf(fp,             "   } else {\n");
     //
     // Handle regular new.
-    fprintf(fp,             "     if ((gvp == G__PVOID) || (gvp == 0)) {\n");
+    fprintf(fp,             "     if ((gvp == (char*)G__PVOID) || (gvp == 0)) {\n");
     if (!has_a_new) {
     fprintf(fp,             "       p = new %s;\n", buf);
     } else if (has_a_new1arg && (has_own_new1arg || !has_own_new2arg)) {
@@ -6959,7 +6963,7 @@ void G__cppif_gendefault(FILE *fp, FILE* /*hfp*/, int tagnum,
       fprintf(fp,         "\n{\n");
       fprintf(fp,         "   %s *p;\n", G__fulltagname(tagnum, 1));
 
-      fprintf(fp,         "   long gvp = G__getgvp();\n");
+      fprintf(fp,         "   char* gvp = (char*) G__getgvp();\n");
 
       bool has_a_new = G__struct.funcs[tagnum] & (G__HAS_OPERATORNEW1ARG | G__HAS_OPERATORNEW2ARG);
       bool has_a_new1arg = G__struct.funcs[tagnum] & G__HAS_OPERATORNEW1ARG;
@@ -6995,7 +6999,7 @@ void G__cppif_gendefault(FILE *fp, FILE* /*hfp*/, int tagnum,
         fprintf(fp,       "     p = 0;\n");
         fprintf(fp,       "     G__genericerror(\"Error: Array construction with private/protected destructor is illegal\");\n");
       } else {
-        fprintf(fp,       "     if ((gvp == G__PVOID) || (gvp == 0)) {\n");
+        fprintf(fp,       "     if ((gvp == (char*)G__PVOID) || (gvp == 0)) {\n");
         if (!has_a_new) {
           fprintf(fp,     "       p = new %s[n];\n", buf);
         } else if (has_a_new1arg && (has_own_new1arg || !has_own_new2arg)) {
@@ -7016,7 +7020,7 @@ void G__cppif_gendefault(FILE *fp, FILE* /*hfp*/, int tagnum,
       fprintf(fp,         "   } else {\n");
       //
       // Handle regular new.
-      fprintf(fp,         "     if ((gvp == G__PVOID) || (gvp == 0)) {\n");
+      fprintf(fp,         "     if ((gvp == (char*)G__PVOID) || (gvp == 0)) {\n");
       if (!has_a_new) {
         fprintf(fp,       "       p = new %s;\n", buf);
       } else if (has_a_new1arg && (has_own_new1arg || !has_own_new2arg)) {
@@ -7248,7 +7252,7 @@ void G__cppif_gendefault(FILE *fp, FILE* /*hfp*/, int tagnum,
 #endif /* G__CPPIF_STATIC */
 
       fprintf(fp,   "\n{\n");
-      fprintf(fp,   "   long gvp = G__getgvp();\n");
+      fprintf(fp,   "   char* gvp = (char*) G__getgvp();\n");
       fprintf(fp,   "   long soff = G__getstructoffset();\n");
       fprintf(fp,   "   int n = G__getaryconstruct();\n");
 
@@ -7263,23 +7267,23 @@ void G__cppif_gendefault(FILE *fp, FILE* /*hfp*/, int tagnum,
       fprintf(fp,   "   }\n");
 
       fprintf(fp,   "   if (n) {\n");
-      fprintf(fp,   "     if (gvp == G__PVOID) {\n");
+      fprintf(fp,   "     if (gvp == (char*)G__PVOID) {\n");
       fprintf(fp,   "       delete[] (%s*) soff;\n", buf);
       fprintf(fp,   "     } else {\n");
-      fprintf(fp,   "       G__setgvp(G__PVOID);\n");
+      fprintf(fp,   "       G__setgvp((long) G__PVOID);\n");
       fprintf(fp,   "       for (int i = n - 1; i >= 0; --i) {\n");
       fprintf(fp,   "         ((%s*) (soff+(sizeof(%s)*i)))->~%s();\n", buf, buf, dtorname);
       fprintf(fp,   "       }\n");
-      fprintf(fp,   "       G__setgvp(gvp);\n");
+      fprintf(fp,   "       G__setgvp((long)gvp);\n");
       fprintf(fp,   "     }\n");
       fprintf(fp,   "   } else {\n");
-      fprintf(fp,   "     if (gvp == G__PVOID) {\n");
+      fprintf(fp,   "     if (gvp == (char*)G__PVOID) {\n");
       //fprintf(fp, "       G__operator_delete((void*) soff);\n");
       fprintf(fp,   "       delete (%s*) soff;\n", buf);
       fprintf(fp,   "     } else {\n");
-      fprintf(fp,   "       G__setgvp(G__PVOID);\n");
+      fprintf(fp,   "       G__setgvp((long) G__PVOID);\n");
       fprintf(fp,   "       ((%s*) (soff))->~%s();\n", buf, dtorname);
-      fprintf(fp,   "       G__setgvp(gvp);\n");
+      fprintf(fp,   "       G__setgvp((long)gvp);\n");
       fprintf(fp,   "     }\n");
       fprintf(fp,   "   }\n");
 
@@ -7969,7 +7973,7 @@ int G__cppif_returntype(FILE *fp, int ifn, G__ifunc_table_internal *ifunc, char 
 				 "%s   G__store_tempobject(*result7);\n"
 				 "%s}", indent, G__type2string('u', tagnum, deftyp, 0, 0), indent, indent, indent, indent);
 	    } else {
-	      fprintf(fp, "%sG__alloc_tempobject(result7->tagnum, result7->typenum);\n", indent);
+	      fprintf(fp, "%sG__alloc_tempobject_val(result7);\n", indent);
 	      fprintf(fp, "%sresult7->obj.i = G__gettempbufpointer();\n", indent);
 	      fprintf(fp, "%sresult7->ref = G__gettempbufpointer();\n", indent);
 	      fprintf(fp, "%s*((%s *) result7->obj.i) = ", indent, G__type2string(type, tagnum, typenum, reftype, 0));

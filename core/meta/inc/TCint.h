@@ -29,8 +29,13 @@
 #endif
 
 #ifndef __CINT__
-#include "G__ci.h"
-#include "Api.h"
+# ifdef R__BUILDING_CINT7
+#  include "cint7/G__ci.h"
+#  include "cint7/Api.h"
+# else
+#  include "cint/G__ci.h"
+#  include "cint/Api.h"
+# endif
 #else
 struct G__dictposition;
 #endif
@@ -91,6 +96,7 @@ public:
    const char *GetClassSharedLibs(const char *cls);
    const char *GetSharedLibDeps(const char *lib);
    const char *GetIncludePath();
+   virtual const char *GetSTLIncludePath() const;
    TObjArray  *GetRootMapFiles() const { return fRootmapFiles; }
    Int_t   InitializeDictionaries();
    Bool_t  IsLoaded(const char *filename) const;

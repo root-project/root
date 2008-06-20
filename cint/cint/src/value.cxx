@@ -729,6 +729,24 @@ G__value G__letvalue(G__value *p,G__value result)
   return(result);
 }
 
+void G__set_tagnum(G__value* val, int tagnum)
+{
+   val->tagnum = tagnum;
+}
+
+void G__set_typenum(G__value* val, const char* type)
+{
+   val->typenum = G__defined_typename(type);
+}
+
+void G__set_type(G__value* val, char* type)
+{
+   G__value vtype = G__string2type_body(type, 1);
+   val->type    = vtype.type;
+   val->tagnum  = vtype.tagnum;
+   val->typenum = vtype.typenum;
+}
+
 } /* extern "C" */
 
 /*

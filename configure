@@ -902,7 +902,7 @@ enable/disable options, prefix with either --enable- or --disable-
   builtin-zlib       Built included libz, or use system libz
   castor             CASTOR support, requires libshift from CASTOR >= 1.5.2
   chirp              Chirp support (Condor remote I/O), requires libchirp_client
-  cint7              Build the *experimental* new Cint library
+  cint7              Build the *experimental* new CINT library
   cintex             Build the libCintex Reflex interface library
   clarens            Clarens RPC support, optionally used by PROOF
   dcache             dCache support, requires libdcap from DESY
@@ -4104,7 +4104,7 @@ check_explicit "$enable_genvector" "$enable_genvector_explicit" \
 
 ######################################################################
 #
-### echo %%% Experimental Cint7 Library
+### echo %%% Experimental CINT7 Library
 #
 message "Checking whether to build CINT7"
 if test ! "x$enable_cint7" = "xno"; then
@@ -4300,7 +4300,6 @@ check_explicit "$enable_peac" "$enable_peac_explicit" \
 #
 ### echo %%% Check for Stub removal support
 #
-
 if test "x$no_stubs" = "xyes" || test "x$no_stubs_test" = "xyes"; then
     message "Checking for CINT support of function calls via symbols"
     no_stubs="yes"
@@ -4326,12 +4325,11 @@ if test "x$no_stubs" = "xyes" || test "x$no_stubs_test" = "xyes"; then
     fi
 fi
 
-
 ######################################################################
 #
 ### echo %%% What dictionaries to build
 #
-# Can be either cint (default), reflex, or gccxml.
+# Can be either CINT (default), reflex, or gccxml.
 # Option will be passed to rootcint(_tmp),
 # and root-config --libs will have -lReflex if needed.
 #
@@ -4341,7 +4339,7 @@ if test "x$dicttype" = "x" ; then
     dicttype="$ROOTDICTTYPE"
 fi
 
-# set default to cint
+# set default to CINT
 if test "x$dicttype" = "x"; then
     dicttype=cint
 fi

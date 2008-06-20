@@ -65,3 +65,5 @@ distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(TABLEDEP) $(TABLEDS) $(TABLEDH) $(TABLELIB) $(TABLEMAP)
 
 distclean::     distclean-$(MODNAME)
+
+$(TABLEO) $(TABLEDO): CXXFLAGS += -Iinclude/cint

@@ -13,7 +13,7 @@
 #ifndef ROOT_TGWin32ProxyDefs
 #define ROOT_TGWin32ProxyDefs
 
-#include "Api.h"  // CINT headers
+#include "Rtypes.h"  // CINT headers
 
 
 #define _NAME4_(name1,name2,name3,name4) _NAME3_(name1,name2,name3)name4
@@ -47,7 +47,7 @@ static double total_time = 0;
    int gDebugValue = 0;\
    int debug = 0;\
    if (gDebugProxy) {\
-      gDebugValue = G__int(G__calc("gDebug"));\
+      gDebugValue = gDebug;\
       debug = (gDebugValue==kDebugProfile) || (gDebugValue==kDebugTrace);\
       if (debug) {\
          start = GetMilliSeconds();\

@@ -42,8 +42,6 @@
 #include "THashTable.h"
 #include "RConfigure.h"
 
-#include "Api.h"
-
 #include <vector>
 #include <set>
 #include <string>
@@ -51,7 +49,7 @@
 using namespace std;
 
 R__EXTERN int optind;
-
+R__EXTERN TInterpreter* (*gInterpreterFactory)(const char* name, const char* title);
 
 extern "C" int ScriptCompiler(const char *filename, const char *opt) {
    return gSystem->CompileMacro(filename, opt);
@@ -77,6 +75,20 @@ extern "C" int TCint_AutoLoadCallback(char *c, char *l) {
 extern "C" void *TCint_FindSpecialObject(char *c, G__ClassInfo *ci, void **p1, void **p2) {
    return TCint::FindSpecialObject(c, ci, p1, p2);
 }
+
+TInterpreter* TCint_Factory(const char* name, const char* title) {
+   return new TCint(name, title);
+}
+
+namespace {
+   static class InitCintFactory {
+   public:
+      InitCintFactory() {
+         gInterpreterFactory = TCint_Factory;
+      }
+   } gInitCintFactory;
+}
+
 
 // It is a "fantom" method to synchronize user keyboard input
 // and ROOT prompt line (for WIN32)
@@ -1884,7 +1896,27 @@ const char *TCint::GetIncludePath()
    return fIncludePath;
 }
 
-
+//______________________________________________________________________________
+const char *TCint::GetSTLIncludePath() const
+{
+   // Return the directory containing CINT's stl cintdlls.
+   static TString stldir;
+   if (!stldir.Length()) {
+#ifdef CINTINCDIR
+      stldir = CINTINCDIR;
+#else
+      stldir = gRootDir; stldir += "/cint";
+#endif
+      if (!stldir.EndsWith("/"))
+         stldir += '/';
+#ifdef R__BUILDING_CINT7
+      stldir += "cint7/stl";
+#else
+      stldir += "cint/stl";
+#endif
+   }
+   return stldir;
+}
 
 //______________________________________________________________________________
 //                      M I S C

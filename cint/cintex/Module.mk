@@ -132,6 +132,7 @@ $(CINTEXTESTDICTS): $(CINTEXTESTDICTH) $(CINTEXTESTDICTD)/selection.xml
 		cd $(CINTEXTESTDICTD); $(GENREFLEX_CMD2) CintexTest.h -s selection.xml --rootmap=$(PWD)/$(CINTEXTESTDICT).rootmap --rootmap-lib=$(CINTEXTESTDICT) --quiet --comments
 
 ##### extra rules ######
+$(CINTEXO): CXXFLAGS += -Iinclude/cint
 ifeq ($(PLATFORM),macosx)
 ifeq ($(ICC_MAJOR),9)
 ifeq ($(ICC_MINOR),1)
