@@ -1546,7 +1546,7 @@ int stressMathCore(double nscale = 1) {
 
    const int ntest = 10000; 
    int n = int(nscale*ntest);
-   std::cout << "StressMathCore: test number  n = " << n << std::endl;
+   //std::cout << "StressMathCore: test number  n = " << n << std::endl;
   
    iret |= testStatFunctions(n/10);
 

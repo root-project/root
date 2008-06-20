@@ -540,7 +540,7 @@ int stressMathMore(double nscale = 1) {
    
    const int ntest = 10000; 
    int n = int(nscale*ntest);
-   std::cout << "StressMathMore: test number  n = " << n << std::endl;
+   //std::cout << "StressMathMore: test number  n = " << n << std::endl;
 
    iret |= testGammaFunction(n);
    iret |= testBetaFunction(n);
