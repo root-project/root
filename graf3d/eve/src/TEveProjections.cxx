@@ -143,6 +143,36 @@ void TEveProjection::AddPreScaleEntry(Int_t coord, Float_t value, Float_t scale)
 }
 
 //______________________________________________________________________________
+void TEveProjection::ChangePreScaleEntry(Int_t   coord, Int_t entry,
+                                         Float_t new_scale)
+{
+   // Change scale for given entry and coordinate.
+   //
+   // NOTE: If the first entry you created used other value than 0,
+   // one entry (covering range from 0 to this value) was created
+   // automatically.
+
+   static const TEveException eh("TEveProjection::ChangePreScaleEntry ");
+
+   if (coord < 0 || coord > 1)
+      throw (eh + "coordinate out of range.");
+
+   vPreScale_t& vec = fPreScales[coord];
+   Int_t        vs  = vec.size();
+   if (entry < 0 || entry >= vs)
+      throw (eh + "entry out of range.");
+
+   vec[entry].fScale = new_scale;
+   Int_t i0 = entry, i1 = entry + 1;
+   while (i1 < vs)
+   {
+      PreScaleEntry_t e0 = vec[i0];
+      vec[i1].fOffset = e0.fOffset + (e0.fMax - e0.fMin)*e0.fScale;
+      i0 = i1++;
+   }
+}
+
+//______________________________________________________________________________
 void TEveProjection::ClearPreScales()
 {
    // Clear all pre-scaling information.
