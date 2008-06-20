@@ -38,19 +38,19 @@ const MinuitParameter& MnUserParameters::Parameter(unsigned int n) const {
    return fTransformation.Parameter(n);
 }
 
-bool MnUserParameters::Add(const char* name, double val, double err) {
+bool MnUserParameters::Add(const std::string & name, double val, double err) {
    // add a new unlimited parameter giving name, value and err (step size)
    // return false if parameter already exists
    return fTransformation.Add(name, val, err);
 }
 
-bool  MnUserParameters::Add(const char* name, double val, double err, double low, double up) {
+bool  MnUserParameters::Add(const std::string & name, double val, double err, double low, double up) {
    // add a new limited parameter giving name, value, err (step size) and lower/upper limits
    // return false if parameter already exists
    return fTransformation.Add(name, val, err, low, up);
 }
 
-bool  MnUserParameters::Add(const char* name, double val) {
+bool  MnUserParameters::Add(const std::string & name, double val) {
    // add a new unlimited parameter giving name and value
    // return false if parameter already exists
    return fTransformation.Add(name, val);
@@ -108,61 +108,65 @@ double MnUserParameters::Error(unsigned int n) const {
 
 // interface using  parameter name
 
-void MnUserParameters::Fix(const char* name) {
+void MnUserParameters::Fix(const std::string & name) {
    // fix parameter 
    Fix(Index(name));
 }
 
-void MnUserParameters::Release(const char* name) {
+void MnUserParameters::Release(const std::string & name) {
    // release parameter 
    Release(Index(name));
 }
 
-void MnUserParameters::SetValue(const char* name, double val) {
+void MnUserParameters::SetValue(const std::string & name, double val) {
    // set value for parameter 
    SetValue(Index(name), val);
 }
 
-void MnUserParameters::SetError(const char* name, double err) {
+void MnUserParameters::SetError(const std::string & name, double err) {
    // set error
    SetError(Index(name), err);
 }
 
-void MnUserParameters::SetLimits(const char* name, double low, double up) {
+void MnUserParameters::SetLimits(const std::string & name, double low, double up) {
    // set lower/upper limits
    SetLimits(Index(name), low, up);
 }
 
-void MnUserParameters::SetUpperLimit(const char* name, double up) {
+void MnUserParameters::SetUpperLimit(const std::string & name, double up) {
    // set upper limit
    fTransformation.SetUpperLimit(Index(name), up);
 }
 
-void MnUserParameters::SetLowerLimit(const char* name, double low) {
+void MnUserParameters::SetLowerLimit(const std::string & name, double low) {
    // set lower limit
    fTransformation.SetLowerLimit(Index(name), low);
 }
 
-void MnUserParameters::RemoveLimits(const char* name) {
+void MnUserParameters::RemoveLimits(const std::string & name) {
    // remove limits
    RemoveLimits(Index(name));
 }
 
-double MnUserParameters::Value(const char* name) const {
+double MnUserParameters::Value(const std::string & name) const {
    // get parameter value
    return Value(Index(name));
 }
 
-double MnUserParameters::Error(const char* name) const {
+double MnUserParameters::Error(const std::string & name) const {
    // get parameter error
    return Error(Index(name));
 }
 
-unsigned int MnUserParameters::Index(const char* name) const {
+unsigned int MnUserParameters::Index(const std::string & name) const {
    // get index (external) corresponding to name
    return fTransformation.Index(name);
 }
 
+const std::string & MnUserParameters::GetName(unsigned int n) const {
+   // get name corresponding to index (external)
+   return fTransformation.GetName(n);
+}
 const char* MnUserParameters::Name(unsigned int n) const {
    // get name corresponding to index (external)
    return fTransformation.Name(n);

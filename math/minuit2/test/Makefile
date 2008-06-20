@@ -18,6 +18,12 @@ EXTRALIBS        = -lMinuit2
 CXXFLAGS += -g      
 endif
 
+# for using with MPI
+ifneq ($(USE_OPENMPI),)
+CXX=mpic++
+LD=mpic++
+endif
+
 USERFUNCOBJ      = testUserFunc.$(ObjSuf)
 USERFUNCSRC      = testUserFunc.$(SrcSuf)
 USERFUNC         = testUserFunc$(ExeSuf)
@@ -35,10 +41,18 @@ NEWMINIMIZEROBJ      = testNewMinimizer.$(ObjSuf)
 NEWMINIMIZERSRC      = testNewMinimizer.$(SrcSuf)
 NEWMINIMIZER         = testNewMinimizer$(ExeSuf)
 
+NDIMFITOBJ      = testNdimFit.$(ObjSuf)
+NDIMFITSRC      = testNdimFit.$(SrcSuf)
+NDIMFIT         = testNdimFit$(ExeSuf)
 
-OBJS          = $(USERFUNCOBJ)  $(GRAPHOBJ) $(MINIMIZEOBJ) $(NEWMINIMIZEROBJ)
+GAUSFITOBJ      = testUnbinGausFit.$(ObjSuf)
+GAUSFITSRC      = testUnbinGausFit.$(SrcSuf)
+GAUSFIT         = testUnbinGausFit$(ExeSuf)
 
-PROGRAMS      = $(USERFUNC)  $(GRAPH) $(MINIMIZE) $(NEWMINIMIZER)
+
+OBJS          = $(USERFUNCOBJ)  $(GRAPHOBJ) $(MINIMIZEOBJ) $(NEWMINIMIZEROBJ) $(NDIMFITOBJ) $(GAUSFITOBJ)
+
+PROGRAMS      = $(USERFUNC)  $(GRAPH) $(MINIMIZE) $(NEWMINIMIZER) $(NDIMFIT) $(GAUSFIT)
 
 .SUFFIXES: .$(SrcSuf) .$(ObjSuf) $(ExeSuf)
 
@@ -61,10 +75,17 @@ $(NEWMINIMIZER): 	$(NEWMINIMIZEROBJ)
 ifeq ($(PLATFORM),win32)
 		$(LD) $(LDFLAGS) $^ $(LIBS)  "$(ROOTSYS)/lib/libMinuit2.lib" $(OutPutOpt)$@
 else
-		$(LD) $(LDFLAGS) $^ $(LIBS) -lMathCore $(OutPutOpt)$@
+		$(LD) $(LDFLAGS) $^ $(LIBS) -lMathCore  $(OutPutOpt)$@
 endif
 		@echo "$@ done"
 
+$(NDIMFIT): 	$(NDIMFITOBJ)
+		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
+		@echo "$@ done"
+
+$(GAUSFIT): 	$(GAUSFITOBJ)
+		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
+		@echo "$@ done"
 
 
 clean:

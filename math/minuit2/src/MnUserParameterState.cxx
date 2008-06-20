@@ -94,32 +94,32 @@ MnUserParameterState::MnUserParameterState(const MinimumState& st, double up, co
    //
    for(std::vector<MinuitParameter>::const_iterator ipar = trafo.Parameters().begin(); ipar != trafo.Parameters().end(); ipar++) {
       if((*ipar).IsConst()) {
-         Add((*ipar).Name(), (*ipar).Value());
+         Add((*ipar).GetName(), (*ipar).Value());
       } else if((*ipar).IsFixed()) {
-         Add((*ipar).Name(), (*ipar).Value(), (*ipar).Error());
+         Add((*ipar).GetName(), (*ipar).Value(), (*ipar).Error());
          if((*ipar).HasLimits()) {
             if((*ipar).HasLowerLimit() && (*ipar).HasUpperLimit())
-               SetLimits((*ipar).Name(), (*ipar).LowerLimit(),(*ipar).UpperLimit());
+               SetLimits((*ipar).GetName(), (*ipar).LowerLimit(),(*ipar).UpperLimit());
             else if((*ipar).HasLowerLimit() && !(*ipar).HasUpperLimit())
-               SetLowerLimit((*ipar).Name(), (*ipar).LowerLimit());
+               SetLowerLimit((*ipar).GetName(), (*ipar).LowerLimit());
             else
-               SetUpperLimit((*ipar).Name(), (*ipar).UpperLimit());
+               SetUpperLimit((*ipar).GetName(), (*ipar).UpperLimit());
          }
-         Fix((*ipar).Name());
+         Fix((*ipar).GetName());
       } else if((*ipar).HasLimits()) {
          unsigned int i = trafo.IntOfExt((*ipar).Number());
          double err = st.HasCovariance() ? sqrt(2.*up*st.Error().InvHessian()(i,i)) : st.Parameters().Dirin()(i);
-         Add((*ipar).Name(), trafo.Int2ext(i, st.Vec()(i)), trafo.Int2extError(i, st.Vec()(i), err));
+         Add((*ipar).GetName(), trafo.Int2ext(i, st.Vec()(i)), trafo.Int2extError(i, st.Vec()(i), err));
          if((*ipar).HasLowerLimit() && (*ipar).HasUpperLimit())
-            SetLimits((*ipar).Name(), (*ipar).LowerLimit(), (*ipar).UpperLimit());
+            SetLimits((*ipar).GetName(), (*ipar).LowerLimit(), (*ipar).UpperLimit());
          else if((*ipar).HasLowerLimit() && !(*ipar).HasUpperLimit())
-            SetLowerLimit((*ipar).Name(), (*ipar).LowerLimit());
+            SetLowerLimit((*ipar).GetName(), (*ipar).LowerLimit());
          else
-            SetUpperLimit((*ipar).Name(), (*ipar).UpperLimit());
+            SetUpperLimit((*ipar).GetName(), (*ipar).UpperLimit());
       } else {
          unsigned int i = trafo.IntOfExt((*ipar).Number());
          double err = st.HasCovariance() ? sqrt(2.*up*st.Error().InvHessian()(i,i)) : st.Parameters().Dirin()(i);
-         Add((*ipar).Name(), st.Vec()(i), err);
+         Add((*ipar).GetName(), st.Vec()(i), err);
       }
    }
    
@@ -159,7 +159,7 @@ const MinuitParameter& MnUserParameterState::Parameter(unsigned int i) const {
    return fParameters.Parameter(i);
 }
 
-void MnUserParameterState::Add(const char* name, double val, double err) {
+void MnUserParameterState::Add(const std::string & name, double val, double err) {
    //add free Parameter
    if ( fParameters.Add(name, val, err) ) { 
       fIntParameters.push_back(val);
@@ -175,7 +175,7 @@ void MnUserParameterState::Add(const char* name, double val, double err) {
    
 }
 
-void MnUserParameterState::Add(const char* name, double val, double err, double low, double up) {
+void MnUserParameterState::Add(const std::string & name, double val, double err, double low, double up) {
    //add limited Parameter
    if ( fParameters.Add(name, val, err, low, up) ) {  
       fCovarianceValid = false;
@@ -193,7 +193,7 @@ void MnUserParameterState::Add(const char* name, double val, double err, double 
    
 }
 
-void MnUserParameterState::Add(const char* name, double val) {
+void MnUserParameterState::Add(const std::string & name, double val) {
    //add const Parameter
    if ( fParameters.Add(name, val) ) 
       fValid = true;
@@ -306,35 +306,39 @@ double MnUserParameterState::Error(unsigned int i) const {
 
 //interaction via name of Parameter
 
-void MnUserParameterState::Fix(const char* name) { Fix(Index(name));}
+void MnUserParameterState::Fix(const std::string & name) { Fix(Index(name));}
 
-void MnUserParameterState::Release(const char* name) {Release(Index(name));}
+void MnUserParameterState::Release(const std::string & name) {Release(Index(name));}
 
-void MnUserParameterState::SetValue(const char* name, double val) {SetValue(Index(name), val);}
+void MnUserParameterState::SetValue(const std::string & name, double val) {SetValue(Index(name), val);}
 
-void MnUserParameterState::SetError(const char* name, double val) { SetError(Index(name), val);}
+void MnUserParameterState::SetError(const std::string & name, double val) { SetError(Index(name), val);}
 
-void MnUserParameterState::SetLimits(const char* name, double low, double up) {SetLimits(Index(name), low, up);}
+void MnUserParameterState::SetLimits(const std::string & name, double low, double up) {SetLimits(Index(name), low, up);}
 
-void MnUserParameterState::SetUpperLimit(const char* name, double up) { SetUpperLimit(Index(name), up);}
+void MnUserParameterState::SetUpperLimit(const std::string & name, double up) { SetUpperLimit(Index(name), up);}
 
-void MnUserParameterState::SetLowerLimit(const char* name, double low) {SetLowerLimit(Index(name), low);}
+void MnUserParameterState::SetLowerLimit(const std::string & name, double low) {SetLowerLimit(Index(name), low);}
 
-void MnUserParameterState::RemoveLimits(const char* name) {RemoveLimits(Index(name));}
+void MnUserParameterState::RemoveLimits(const std::string & name) {RemoveLimits(Index(name));}
 
-double MnUserParameterState::Value(const char* name) const {return Value(Index(name));}
+double MnUserParameterState::Value(const std::string & name) const {return Value(Index(name));}
 
-double MnUserParameterState::Error(const char* name) const {return Error(Index(name));}
+double MnUserParameterState::Error(const std::string & name) const {return Error(Index(name));}
 
 
-unsigned int MnUserParameterState::Index(const char* name) const {
+unsigned int MnUserParameterState::Index(const std::string & name) const {
    //convert name into external number of Parameter
    return fParameters.Index(name);
 }
 
 const char* MnUserParameterState::Name(unsigned int i) const {
-   //convert external number into name of Parameter
+   //convert external number into name of Parameter (API returing a const char *)
    return fParameters.Name(i);
+}
+const std::string & MnUserParameterState::GetName(unsigned int i) const {
+   //convert external number into name of Parameter (new interface returning a string) 
+   return fParameters.GetName(i);
 }
 
 // transformation internal <-> external (forward to transformation class)

@@ -10,6 +10,7 @@
 #include "Quad4F.h"
 #include "Minuit2/FunctionMinimum.h"
 #include "Minuit2/MnMigrad.h"
+#include "Minuit2/MnHesse.h"
 #include "Minuit2/MnUserParameters.h"
 #include "Minuit2/MnPrint.h"
 // #include "TimingUtilities/PentiumTimer.h"
@@ -53,7 +54,12 @@ int main() {
 
      MnMigrad migrad(gfcn, upar);
      FunctionMinimum min = migrad();
-     std::cout<<"minimum: "<<min<<std::endl;
+     std::cout<<"minimum with grad calculation : "<<min<<std::endl;
+
+     // try to run hesse 
+     MnHesse hesse; 
+     hesse( gfcn, min); 
+     std::cout<<"minimum after hesse: "<<min<<std::endl;
   }
 
 //   stop = stopwatch.lap().ticks();

@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <memory>
 #include <cassert>
+#include <string> 
 
 namespace ROOT {
 
@@ -24,6 +25,9 @@ namespace ROOT {
     contains the input numbers for the minimization or the output result
     from minimization;
     possible interactions: Fix/release, set/remove limits, set Value/error; 
+
+    From version 5.20: use string to store the name to avoid limitation of 
+    name length of 20 characters 
  */
 
 class MinuitParameter {
@@ -31,30 +35,31 @@ class MinuitParameter {
 public:
   
    //constructor for constant Parameter
-   MinuitParameter(unsigned int num, const char* name, double val) : 
+   MinuitParameter(unsigned int num, const std::string & name, double val) : 
       fNum(num), fValue(val), fError(0.), fConst(true), fFix(false), 
-      fLoLimit(0.), fUpLimit(0.), fLoLimValid(false), fUpLimValid(false){
-      SetName(name);
-   }
+      fLoLimit(0.), fUpLimit(0.), fLoLimValid(false), fUpLimValid(false),
+      fName(name)
+   {}
   
    //constructor for standard Parameter
-   MinuitParameter(unsigned int num, const char* name, double val, double err) :
+   MinuitParameter(unsigned int num, const std::string & name, double val, double err) :
       fNum(num), fValue(val), fError(err), fConst(false), fFix(false), 
-      fLoLimit(0.), fUpLimit(0.), fLoLimValid(false), fUpLimValid(false){
-      SetName(name);
-   }
+      fLoLimit(0.), fUpLimit(0.), fLoLimValid(false), fUpLimValid(false),
+      fName(name)
+   {}
   
    //constructor for limited Parameter
-   MinuitParameter(unsigned int num, const char* name, double val, double err, 
+   MinuitParameter(unsigned int num, const std::string & name, double val, double err, 
                    double min, double max) : 
       fNum(num),fValue(val), fError(err), fConst(false), fFix(false), 
-      fLoLimit(min), fUpLimit(max), fLoLimValid(true), fUpLimValid(true){
+      fLoLimit(min), fUpLimit(max), fLoLimValid(true), fUpLimValid(true), 
+      fName(name)    
+   {
       assert(min != max);
       if(min > max) {
          fLoLimit = max;
          fUpLimit = min;
       }
-      SetName(name);    
    }
 
    ~MinuitParameter() {}
@@ -63,13 +68,13 @@ public:
       fNum(par.fNum), fValue(par.fValue), fError(par.fError),
       fConst(par.fConst), fFix(par.fFix), fLoLimit(par.fLoLimit), 
       fUpLimit(par.fUpLimit), fLoLimValid(par.fLoLimValid), 
-      fUpLimValid(par.fUpLimValid) {
-      memcpy(fName, par.Name(), 11*sizeof(char));
-   }
+      fUpLimValid(par.fUpLimValid), 
+      fName(par.fName ) 
+   {}
   
    MinuitParameter& operator=(const MinuitParameter& par) {
       fNum = par.fNum;
-      memcpy(fName, par.fName, 11*sizeof(char));
+      fName = par.fName;
       fValue = par.fValue;
       fError = par.fError;
       fConst = par.fConst;
@@ -83,7 +88,11 @@ public:
 
    //access methods
    unsigned int Number() const {return fNum;}
-   const char* Name() const {return fName;}
+   // new API returning a string 
+   const std::string & GetName() const { return fName; }
+   // return const char * for mantaining backward compatibility
+   const char * Name() const {return fName.c_str();}
+ 
    double Value() const {return fValue;}
    double Error() const {return fError;}
 
@@ -139,7 +148,6 @@ public:
 private:
 
    unsigned int fNum;
-   char fName[11];
    double fValue;
    double fError;
    bool fConst;
@@ -148,15 +156,17 @@ private:
    double fUpLimit;
    bool fLoLimValid; 
    bool fUpLimValid;
+   std::string fName;
 
 private:
 
-   void SetName(const char* name) {
-      int l = std::min(int(strlen(name)), 11);
-      memset(fName, 0, 11*sizeof(char));
-      memcpy(fName, name, l*sizeof(char));
-      fName[10] = '\0';
-   }
+//    void SetName(const std::string & name) {
+//       int l = std::min(int(strlen(name)), 11);
+//       memset(fName, 0, 11*sizeof(char));
+//       memcpy(fName, name, l*sizeof(char));
+//       fName[10] = '\0';
+//    }
+
 };
 
   }  // namespace Minuit2

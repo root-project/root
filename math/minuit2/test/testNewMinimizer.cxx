@@ -862,11 +862,10 @@ int main() {
    int iret = 0; 
 
 #ifdef DEBUG 
-   gVerbose = 3; 
+   gVerbose = 4; 
    gNmin = 1; 
 #endif
    
-   //gVerbose = 3; 
 
    iret |=  testRosenBrock();
    iret |=  testChebyQuad();

@@ -155,15 +155,33 @@ public:
       return  &fErrors.front(); 
    }
 
-   /** return covariance matrices elements 
-       if the variable is fixed the matrix is zero
-       The ordering of the variables is the same as in errors
+   /** 
+       return covariance matrices elements 
+       if the variable is fixed or const the value is zero
+       The ordering of the variables is the same as in errors and parameter value. 
+       This is different from the direct interface of Minuit2 or TMinuit where the 
+       values were obtained only to variable parameters
    */ 
    virtual double CovMatrix(unsigned int i, unsigned int j) const;  
 
-   /// minos error for variable i, return false if Minos failed
+   /**
+      return correlation coefficient between variable i and j.
+      If the variable is fixed or const the return value is zero
+    */
+   virtual double Correlation(unsigned int i, unsigned int j ) const; 
+
+   /**
+      get global correlation coefficient for the variable i. This is a number between zero and one which gives 
+      the correlation between the i-th variable  and that linear combination of all other variables which 
+      is most strongly correlated with i.
+      If the variable is fixed or const the return value is zero
+    */
+   virtual double GlobalCC(unsigned int i) const;
+
+   /// minos error for parameter i, return false if Minos failed
    virtual bool GetMinosError(unsigned int i, double & errLow, double & errUp); 
 
+   
    /// return reference to the objective function
    ///virtual const ROOT::Math::IGenFunction & Function() const; 
 

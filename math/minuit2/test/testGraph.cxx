@@ -21,6 +21,7 @@
 
 #include <vector>
 #include <iterator>
+#include <cassert>
 
 double fitFunc( double *x , double * p) { 
 

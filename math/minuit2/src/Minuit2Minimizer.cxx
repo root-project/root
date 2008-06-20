@@ -355,14 +355,42 @@ bool  Minuit2Minimizer::ExamineMinimum(const ROOT::Minuit2::FunctionMinimum & mi
 
 double Minuit2Minimizer::CovMatrix(unsigned int i, unsigned int j) const { 
    // get value of covariance matrices (transform from external to internal indices)
-   if ( fErrorCode < 0 ) return 0; // no info available when minimization failes
    if ( i >= fDim || i >= fDim) return 0;  
+   if ( fErrorCode < 0 || !fState.HasCovariance()    ) return 0; // no info available when minimization has failed
    if (fState.Parameter(i).IsFixed() || fState.Parameter(i).IsConst() ) return 0; 
    if (fState.Parameter(j).IsFixed() || fState.Parameter(j).IsConst() ) return 0; 
    unsigned int k = fState.IntOfExt(i); 
    unsigned int l = fState.IntOfExt(j); 
    return fState.Covariance()(k,l); 
 }
+
+double Minuit2Minimizer::Correlation(unsigned int i, unsigned int j) const { 
+   // get correlation between parameter i and j 
+   if ( i >= fDim || i >= fDim) return 0;  
+   if ( fErrorCode < 0 || !fState.HasCovariance()    ) return 0; // no info available when minimization has failed
+   if (fState.Parameter(i).IsFixed() || fState.Parameter(i).IsConst() ) return 0; 
+   if (fState.Parameter(j).IsFixed() || fState.Parameter(j).IsConst() ) return 0; 
+   unsigned int k = fState.IntOfExt(i); 
+   unsigned int l = fState.IntOfExt(j); 
+   double cij =  fState.IntCovariance()(k,l); 
+   double tmp =  std::sqrt( std::abs ( fState.IntCovariance()(k,k) * fState.IntCovariance()(l,l) ) );
+   if (tmp > 0 ) return cij/tmp; 
+   return 0; 
+}
+
+double Minuit2Minimizer::GlobalCC(unsigned int i) const { 
+   // get global correlation coefficient for the parameter i. This is a number between zero and one which gives 
+   // the correlation between the i-th parameter  and that linear combination of all other parameters which 
+   // is most strongly correlated with i.
+
+   if ( i >= fDim || i >= fDim) return 0;  
+    // no info available when minimization has failed or has some problems
+   if ( fErrorCode < 0 || !fState.HasGlobalCC()    ) return 0; 
+   if (fState.Parameter(i).IsFixed() || fState.Parameter(i).IsConst() ) return 0; 
+   unsigned int k = fState.IntOfExt(i); 
+   return fState.GlobalCC().GlobalCC()[k]; 
+}
+
 
 bool Minuit2Minimizer::GetMinosError(unsigned int i, double & errLow, double & errUp) { 
 
