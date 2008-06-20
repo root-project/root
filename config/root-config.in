@@ -5,18 +5,16 @@
 #
 # Author: Fons Rademakers, 06/06/99
 
-if [ "x$ROOTSYS" = "x" ]; then
-   progdir=`dirname $0`
-   runningdir=`pwd`
-   if echo $progdir | grep -q -s ^/ || echo $progdir | grep -q -s ^~ ; then
-      # absolute path
-      fullpath=$progdir
-   else
-      # relative path
-      fullpath=$runningdir/$progdir
-   fi
-   ROOTSYS=`dirname $fullpath`
+progdir=`dirname $0`
+runningdir=`pwd`
+if echo $progdir | grep -q -s ^/ || echo $progdir | grep -q -s ^~ ; then
+   # absolute path
+   fullpath=$progdir
+else
+   # relative path
+   fullpath=$runningdir/$progdir
 fi
+ROOTSYS=`dirname $fullpath`
 
 arch=@architecture@
 platform=@platform@
