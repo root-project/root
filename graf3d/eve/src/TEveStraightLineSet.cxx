@@ -92,6 +92,20 @@ void TEveStraightLineSet::CopyVizParams(const TEveElement* el)
    TEveElement::CopyVizParams(el);
 }
 
+//______________________________________________________________________________
+void TEveStraightLineSet::WriteVizParams(ostream& out, const TString& var)
+{
+   // Write visualization parameters.
+
+   TEveElement::WriteVizParams(out, var);
+
+   TString t = "   " + var + "->";
+   TAttMarker::SaveMarkerAttributes(out, var);
+   TAttLine  ::SaveLineAttributes  (out, var);
+   out << t << "SetRnrMarkers(" << fRnrMarkers << ");\n";
+   out << t << "SetRnrLines("   << fRnrLines   << ");\n";
+}
+
 /******************************************************************************/
 
 //______________________________________________________________________________

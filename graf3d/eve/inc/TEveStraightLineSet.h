@@ -98,6 +98,7 @@ public:
    virtual void SetRnrLines(Bool_t x)   { fRnrLines   = x; }
 
    virtual void CopyVizParams(const TEveElement* el);
+   virtual void WriteVizParams(ostream& out, const TString& var);
 
    virtual TClass* ProjectedClass() const;
 

@@ -77,7 +77,11 @@ public:
 
 private:
    TExceptionHandler        *fExcHandler;
+
    TMap                     *fVizDB;
+   Bool_t                    fVizDBReplace;
+   Bool_t                    fVizDBUpdate;
+
    TMap                     *fGeometries;
    TMap                     *fGeometryAliases;
 
@@ -193,8 +197,19 @@ public:
 
    // VizDB - Visualization-parameter data-base.
    Bool_t       InsertVizDBEntry(const TString& tag, TEveElement* model,
-                                 Bool_t replace=kTRUE, Bool_t update=kTRUE);
+                                 Bool_t replace, Bool_t update);
+   Bool_t       InsertVizDBEntry(const TString& tag, TEveElement* model);
    TEveElement* FindVizDBEntry  (const TString& tag);
+
+   void         LoadVizDB(const TString& filename, Bool_t replace, Bool_t update);
+   void         LoadVizDB(const TString& filename);
+   void         SaveVizDB(const TString& filename);
+
+   Bool_t GetVizDBReplace()   const { return fVizDBReplace; }
+   Bool_t GetVizDBUpdate ()   const { return fVizDBUpdate;  }
+   void   SetVizDBReplace(Bool_t r) { fVizDBReplace = r; }
+   void   SetVizDBUpdate (Bool_t u) { fVizDBUpdate  = u; }
+
 
    // Geometry management.
    TGeoManager* GetGeometry(const TString& filename);
@@ -203,6 +218,7 @@ public:
    void         RegisterGeometryAlias(const TString& alias, const TString& filename);
 
    void SetStatusLine(const char* text);
+   void ClearROOTClassSaved();
 
    static TEveManager* Create(Bool_t map_window=kTRUE);
 

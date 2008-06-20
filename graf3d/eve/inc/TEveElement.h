@@ -122,6 +122,8 @@ public:
    virtual void PropagateVizParamsToElements(TEveElement* el=0);
    virtual void CopyVizParams(const TEveElement* el);
    virtual void CopyVizParamsFromDB();
+   void         SaveVizParams (ostream& out, const TString& tag, const TString& var);
+   virtual void WriteVizParams(ostream& out, const TString& var);
 
    TEveElement*  GetMaster();
    TEveCompound* GetCompound()                { return fCompound; }
@@ -320,6 +322,13 @@ public:
 
    virtual const TGPicture* GetListTreeIcon(Bool_t open=kFALSE);
    virtual const TGPicture* GetListTreeCheckBoxIcon();
+
+   // Menu entries for VizDB communication (here so they are last in the menu).
+
+   void VizDB_Apply(const char* tag);           // *MENU*
+   void VizDB_Reapply();                        // *MENU*
+   void VizDB_UpdateModel(Bool_t update=kTRUE); // *MENU*
+   void VizDB_Insert(const char* tag, Bool_t replace=kTRUE, Bool_t update=kTRUE); // *MENU*
 
    ClassDef(TEveElement, 0); // Base class for TEveUtil visualization elements, providing hierarchy management, rendering control and list-tree item management.
 };

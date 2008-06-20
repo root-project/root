@@ -85,6 +85,7 @@ public:
    virtual const TGPicture* GetListTreeIcon(Bool_t open=kFALSE);
 
    virtual void CopyVizParams(const TEveElement* el);
+   virtual void WriteVizParams(ostream& out, const TString& var);
 
    virtual TClass* ProjectedClass() const;
 

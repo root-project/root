@@ -41,8 +41,10 @@
 #include "TColor.h"
 #include "TVirtualGL.h"
 #include "TPluginManager.h"
+#include "TPRegexp.h"
+#include "TClass.h"
 
-#include <iostream>
+#include "Riostream.h"
 
 TEveManager* gEve = 0;
 
@@ -57,7 +59,7 @@ ClassImp(TEveManager);
 //______________________________________________________________________________
 TEveManager::TEveManager(UInt_t w, UInt_t h, Bool_t map_window) :
    fExcHandler  (0),
-   fVizDB       (0),
+   fVizDB       (0), fVizDBReplace(kTRUE), fVizDBUpdate(kTRUE),
    fGeometries  (0),
    fGeometryAliases (0),
    fBrowser     (0),
@@ -579,12 +581,92 @@ Bool_t TEveManager::InsertVizDBEntry(const TString& tag, TEveElement* model,
 }
 
 //______________________________________________________________________________
+Bool_t TEveManager::InsertVizDBEntry(const TString& tag, TEveElement* model)
+{
+   // Insert a new visualization-parameter database entry with the default
+   // parameters for replace and update, as specified by members
+   // fVizDBReplace(default=kTRUE) and fVizDBUpdate(default=kTRUE).
+   // See docs of the above function.
+
+   return InsertVizDBEntry(tag, model, fVizDBReplace, fVizDBUpdate);
+}
+
+//______________________________________________________________________________
 TEveElement* TEveManager::FindVizDBEntry(const TString& tag)
 {
    // Find a visualization-parameter database entry corresponding to tag.
    // If the entry is not found 0 is returned.
 
    return dynamic_cast<TEveElement*>(fVizDB->GetValue(tag));
+}
+
+//______________________________________________________________________________
+void TEveManager::LoadVizDB(const TString& filename, Bool_t replace, Bool_t update)
+{
+   // Load visualization-parameter database from file filename. The
+   // replace, update arguments replace the values of fVizDBReplace
+   // and fVizDBUpdate members for the duration of the macro
+   // execution.
+
+   Bool_t ex_replace = fVizDBReplace;
+   Bool_t ex_update  = fVizDBUpdate;
+   fVizDBReplace = replace;
+   fVizDBUpdate  = update;
+
+   LoadVizDB(filename);
+
+   fVizDBReplace = ex_replace;
+   fVizDBUpdate  = ex_update;
+}
+
+//______________________________________________________________________________
+void TEveManager::LoadVizDB(const TString& filename)
+{
+   // Load visualization-parameter database from file filename.
+   // State of data-members fVizDBReplace and fVizDBUpdate determine
+   // how the registered entries are handled.
+
+   TEveUtil::Macro(filename);
+}
+
+//______________________________________________________________________________
+void TEveManager::SaveVizDB(const TString& filename)
+{
+   // Save visualization-parameter database to file filename.
+
+   TPMERegexp re("(.+)\\.\\w+");
+   if (re.Match(filename) != 2) {
+      Error("SaveVizDB", "filename does not match required format '(.+)\\.\\w+'.");
+      return;
+   }
+
+   ofstream out(filename, ios::out | ios::trunc);
+   out << "void " << re[1] << "()\n";
+   out << "{\n";
+   out << "   TEveManager::Create();\n";
+
+   ClearROOTClassSaved();
+
+   Int_t       var_id = 0;
+   TString     var_name;
+   TIter       next(fVizDB);
+   TObjString *key;
+   while ((key = (TObjString*)next()))
+   {
+      TEveElement* mdl = dynamic_cast<TEveElement*>(fVizDB->GetValue(key));
+      if (mdl)
+      {
+         var_name.Form("x%03d", var_id++);
+         mdl->SaveVizParams(out, key->String(), var_name);
+      }
+      else
+      {
+         Warning("SaveVizDB", "Saving failed for key '%s'.", key->String().Data());
+      }
+   }
+
+   out << "}\n";
+   out.close();
 }
 
 //==============================================================================
@@ -689,6 +771,19 @@ void TEveManager::SetStatusLine(const char* text)
    // Set the text in the right side of browser's status bar.
 
    fBrowser->SetStatusText(text, 1);
+}
+
+//______________________________________________________________________________
+void TEveManager::ClearROOTClassSaved()
+{
+   // Work-around uber ugly hack used in SavePrimitive and co.
+
+   TIter   nextcl(gROOT->GetListOfClasses());
+   TClass *cls;
+   while((cls = (TClass *)nextcl()))
+   {
+      cls->ResetBit(TClass::kClassSaved);
+   }
 }
 
 /******************************************************************************/

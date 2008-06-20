@@ -379,6 +379,16 @@ void TEveTrack::CopyVizParams(const TEveElement* el)
 }
 
 //______________________________________________________________________________
+void TEveTrack::WriteVizParams(ostream& out, const TString& var)
+{
+   // Write visualization parameters.
+
+   TEveLine::WriteVizParams(out, var);
+   
+   TAttMarker::SaveMarkerAttributes(out, var);
+}
+
+//______________________________________________________________________________
 TClass* TEveTrack::ProjectedClass() const
 {
    // Virtual from TEveProjectable, return TEveTrackProjected class.
@@ -1171,6 +1181,26 @@ void TEveTrackList::CopyVizParams(const TEveElement* el)
    }
 
    TEveElement::CopyVizParams(el);
+}
+
+//______________________________________________________________________________
+void TEveTrackList::WriteVizParams(ostream& out, const TString& var)
+{
+   // Write visualization parameters.
+
+   TEveElement::WriteVizParams(out, var);
+
+   TString t = "   " + var + "->";
+   TAttMarker::SaveMarkerAttributes(out, var);
+   TAttLine  ::SaveLineAttributes  (out, var);
+   out << t << "SetRecurse(" << fRecurse << ");\n";
+   out << t << "SetRnrLine(" << fRnrLine << ");\n";
+   out << t << "SetMinPt("   << fMinPt   << ");\n";
+   out << t << "SetMaxPt("   << fMaxPt   << ");\n";
+   out << t << "SetLimPt("   << fLimPt   << ");\n";
+   out << t << "SetMinP("    << fMinP    << ");\n";
+   out << t << "SetMaxP("    << fMaxP    << ");\n";
+   out << t << "SetLimP("    << fLimP    << ");\n";
 }
 
 //______________________________________________________________________________

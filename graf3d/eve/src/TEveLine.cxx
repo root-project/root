@@ -67,6 +67,20 @@ void TEveLine::CopyVizParams(const TEveElement* el)
 }
 
 //______________________________________________________________________________
+void TEveLine::WriteVizParams(ostream& out, const TString& var)
+{
+   // Write visualization parameters.
+
+   TEvePointSet::WriteVizParams(out, var);
+
+   TString t = "   " + var + "->";
+   TAttLine::SaveLineAttributes(out, var);
+   out << t << "SetRnrLine("   << fRnrLine   << ");\n";
+   out << t << "SetRnrPoints(" << fRnrPoints << ");\n";
+   out << t << "SetSmooth("    << fSmooth    << ");\n";
+}
+
+//______________________________________________________________________________
 TClass* TEveLine::ProjectedClass() const
 {
    // Virtual from TEveProjectable, returns TEvePointSetProjected class.

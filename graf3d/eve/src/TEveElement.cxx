@@ -336,6 +336,107 @@ void TEveElement::CopyVizParamsFromDB()
    }
 }
 
+//______________________________________________________________________________
+void TEveElement::SaveVizParams(ostream& out, const TString& tag, const TString& var)
+{
+   // Save visualization parameters for this element with given tag.
+   //
+   // This function creates the instantiation code, calls virtual
+   // WriteVizParams() and, at the end, writes out the code for
+   // registration of the model into the VizDB.
+
+   TString t = "   ";
+   TString cls(GetObject()->ClassName());
+
+   out << "\n";
+
+   TString intro = " TAG='" + tag + "', CLASS='" + cls + "'";
+   out << "   //" << intro << "\n";
+   out << "   //" << TString('-', intro.Length()) << "\n";
+   out << t << cls << "* " << var <<" = new " << cls << ";\n";
+
+   WriteVizParams(out, var);
+
+   out << t << "gEve->InsertVizDBEntry(\"" << tag << "\", "<< var <<");\n";
+}
+
+//______________________________________________________________________________
+void TEveElement::WriteVizParams(ostream& out, const TString& var)
+{
+   // Write-out visual parameters for this object.
+   // This is a virtual function and all sub-classes are required to
+   // first call the base-element version.
+   // The name of the element pointer is 'x%03d', due to cint limitations.
+   // Three spaces should be used for indentation, same as in
+   // SavePrimitive() methods.
+
+   TString t = "   " + var + "->";
+
+   out << t << "SetElementName(\""  << GetElementName()  << "\");\n";
+   out << t << "SetElementTitle(\"" << GetElementTitle() << "\");\n";
+}
+
+//______________________________________________________________________________
+void TEveElement::VizDB_Apply(const char* tag)
+{
+   // Set visual parameters for this object for given tag.
+
+   ApplyVizTag(tag);
+   gEve->Redraw3D();
+}
+
+//______________________________________________________________________________
+void TEveElement::VizDB_Reapply()
+{
+   // Reset visual parameters for this object from VizDB.
+   // The model object must be already set.
+
+   CopyVizParamsFromDB();
+   gEve->Redraw3D();
+}
+
+//______________________________________________________________________________
+void TEveElement::VizDB_UpdateModel(Bool_t update)
+{
+   // Copy visual parameters from this element to viz-db model.
+   // If update is set, all clients of the model will be updated to
+   // the new value.
+   // A warning is printed if the model-element fVizModel is not set.
+
+   if (fVizModel)
+   {
+      fVizModel->CopyVizParams(this);
+      if (update)
+      {
+         fVizModel->PropagateVizParamsToElements(fVizModel);
+         gEve->Redraw3D();
+      }
+   }
+   else
+   {
+      Warning("VizDB_UpdateModel", "VizModel has not been set.");
+   }
+}
+
+//______________________________________________________________________________
+void TEveElement::VizDB_Insert(const char* tag, Bool_t replace, Bool_t update)
+{
+   // Create a replica of element and insert it into VizDB with given tag.
+   // If replace is true an existing element with the same tag will be replaced.
+   // If update is true, existing client of tag will be updated.
+
+   TClass* cls = GetObject()->IsA();
+   TEveElement* el = reinterpret_cast<TEveElement*>(cls->New());
+   if (el == 0) {
+      Error("VizDB_Insert", "Creation of replica failed.");
+      return;
+   }
+   el->CopyVizParams(this);
+   Bool_t succ = gEve->InsertVizDBEntry(tag, el, replace, update);
+   if (succ && update)
+      gEve->Redraw3D();
+}
+
 //******************************************************************************
 
 //______________________________________________________________________________

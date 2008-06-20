@@ -331,6 +331,17 @@ void TEvePointSet::CopyVizParams(const TEveElement* el)
    TEveElement::CopyVizParams(el);
 }
 
+//______________________________________________________________________________
+void TEvePointSet::WriteVizParams(ostream& out, const TString& var)
+{
+   // Write visualization parameters.
+
+   TEveElement::WriteVizParams(out, var);
+
+   TAttMarker::SaveMarkerAttributes(out, var);
+}
+
+//******************************************************************************
 
 //______________________________________________________________________________
 TClass* TEvePointSet::ProjectedClass() const

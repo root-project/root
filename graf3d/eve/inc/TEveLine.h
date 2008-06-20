@@ -56,6 +56,7 @@ public:
    void SetSmooth(Bool_t r)    { fSmooth = r;       }
 
    virtual void CopyVizParams(const TEveElement* el);
+   virtual void WriteVizParams(ostream& out, const TString& var);
 
    virtual TClass* ProjectedClass() const;
 
