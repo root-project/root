@@ -60,7 +60,7 @@ TMessage::TMessage(UInt_t what) : TBufferFile(TBuffer::kWrite)
    fBufCompCur = 0;
    fCompPos    = 0;
    fInfos      = 0;
-   
+   fEvolution  = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -79,6 +79,7 @@ TMessage::TMessage(void *buf, Int_t bufsize) : TBufferFile(TBuffer::kRead, bufsi
    fBufCompCur = 0;
    fCompPos    = 0;
    fInfos      = 0;
+   fEvolution  = kFALSE;
 
    if (fWhat & kMESS_ZIP) {
       // if buffer has kMESS_ZIP set, move it to fBufComp and uncompress
@@ -108,19 +109,27 @@ TMessage::~TMessage()
 }
 
 //______________________________________________________________________________
-void TMessage::EnableSchemaEvolution(Bool_t enable)
+void TMessage::EnableSchemaEvolutionForAll(Bool_t enable)
 {
-   //static function enabling or disabling the automatic schema evolution
-   //by default schema evolution support is off
-   
+   // Static function enabling or disabling the automatic schema evolution.
+   // By default schema evolution support is off.
+
    fgEvolution = enable;
+}
+
+//______________________________________________________________________________
+Bool_t TMessage::UsesSchemaEvolutionForAll()
+{
+   // Static function returning status of global schema evolution.
+
+   return fgEvolution;
 }
 
 //______________________________________________________________________________
 void TMessage::ForceWriteInfo(TVirtualStreamerInfo *info, Bool_t /* force */)
 {
    // force writing the TStreamerInfo to the message
-   
+
    if (fgEvolution) fInfos->Add(info);
 }
 
@@ -146,7 +155,7 @@ void TMessage::IncrementLevel(TVirtualStreamerInfo* info)
    // Increment level.
 
    TBufferFile::IncrementLevel(info);
-  
+
    if (fgEvolution) fInfos->Add(info);
 }
 

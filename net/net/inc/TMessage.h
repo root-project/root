@@ -44,16 +44,17 @@ friend class TXSocket;
 
 private:
    TList   *fInfos;       //Array of TStreamerInfo used in WriteObject
-   TBits    fBitsPIDs;    //Array of bits to mark the TProcessIDs uids written to the mesasge
+   TBits    fBitsPIDs;    //Array of bits to mark the TProcessIDs uids written to the message
    UInt_t   fWhat;        //Message type
    TClass  *fClass;       //If message is kMESS_OBJECT pointer to object's class
    Int_t    fCompress;    //Compression level from 0 (not compressed) to 9 (max compression)
    char    *fBufComp;     //Compressed buffer
    char    *fBufCompCur;  //Current position in compressed buffer
    char    *fCompPos;     //Position of fBufCur when message was compressed
-   
-   static Bool_t   fgEvolution;  //True if support for schema evolution required
-   
+   Bool_t   fEvolution;   //True if support for schema evolution required
+
+   static Bool_t fgEvolution;  //True if global support for schema evolution required
+
    // TMessage objects cannot be copied or assigned
    TMessage(const TMessage &);           // not implemented
    void operator=(const TMessage &);     // not implemented
@@ -66,17 +67,17 @@ public:
    TMessage(UInt_t what = kMESS_ANY);
    virtual ~TMessage();
 
-   static void EnableSchemaEvolution(Bool_t enable=kTRUE);
-   
    void     ForceWriteInfo(TVirtualStreamerInfo *info, Bool_t force);
    void     Forward();
-   TClass  *GetClass() const { return fClass;} 
+   TClass  *GetClass() const { return fClass;}
    void     IncrementLevel(TVirtualStreamerInfo* info);
    void     Reset();
    void     Reset(UInt_t what) { SetWhat(what); Reset(); }
    UInt_t   What() const { return fWhat; }
    void     SetWhat(UInt_t what);
 
+   void     EnableSchemaEvolution(Bool_t enable = kTRUE) { fEvolution = enable; }
+   Bool_t   UsesSchemaEvolution() const { return fEvolution; }
    void     SetCompressionLevel(Int_t level = 1);
    Int_t    GetCompressionLevel() const { return fCompress; }
    Int_t    Compress();
@@ -86,6 +87,9 @@ public:
    Bool_t   TestBitNumber(UInt_t bitnumber) const {return fBitsPIDs.TestBitNumber(bitnumber);}
    void     WriteObject(const TObject *obj);
    UShort_t WriteProcessID(TProcessID *pid);
+
+   static void   EnableSchemaEvolutionForAll(Bool_t enable = kTRUE);
+   static Bool_t UsesSchemaEvolutionForAll();
 
    ClassDef(TMessage,0)  // Message buffer class
 };
