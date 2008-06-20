@@ -52,24 +52,9 @@ TEveLegoOverlay::TEveLegoOverlay() :
 {
    // Constructor.
 
-}
-
-
-/******************************************************************************/
-void TEveLegoOverlay::RenderText(const char* txt,Float_t y)
-{
-   // Render pixmap text at given y.
-
-   glPushMatrix();
-   glTranslatef(0, y, 0);
-
-   Float_t llx, lly, llz, urx, ury, urz;
-   fNumFont.BBox(txt, llx, lly, llz, urx, ury, urz);
-   glRasterPos2i(0, 0);
-
-   glBitmap(0, 0, 0, 0, -urx, -ury*0.5f, 0);
-   fNumFont.Render(txt);
-   glPopMatrix();
+   fAxisAtt.RefDir().Set(0, 1, 0);
+   fAxisAtt.SetTextAlign(TGLAxisAttrib::kLeft);
+   fAxisAtt.SetLabelSize(0.06);
 }
 
 /******************************************************************************/
@@ -77,51 +62,13 @@ void TEveLegoOverlay::DrawSlider(TGLRnrCtx& rnrCtx)
 {
    // Draw slider and calorimeter Z scale on left side of screen.
 
-   TGLUtil::Color(fCalo->GetFontColor());
-   Float_t off = -0.01; 
+   glTranslatef(0, fSliderPosY, 0.5);
 
-   // font
-   TGLRect& wprt = rnrCtx.RefCamera().RefViewport();
-   Float_t cfs =   wprt.Height()*fSliderH*0.07;
-   Int_t fs = TGLFontManager::GetFontSize(cfs);
-   if (fNumFont.GetMode() == TGLFont::kUndef)
-   {
-      rnrCtx.RegisterFont(fs, "arial",  TGLFont::kPixmap, fNumFont);
-   }
-   else if (fNumFont.GetSize() != fs)
-   {
-      rnrCtx.ReleaseFont(fNumFont);
-      rnrCtx.RegisterFont(fs, "arial",  TGLFont::kPixmap, fNumFont);
-   }
-
-   // optimize binning
-   Float_t w = fButtonW*fMenuW*0.5f;
-   glTranslatef(0, fSliderPosY, 0);
-   Int_t nsteps, ndiv;
-   Double_t omin, omax, zmax, tickval;
-   THLimitsFinder::Optimize(0, fCalo->GetData()->GetMaxVal(fCalo->GetPlotEt()), fCalo->GetNZSteps(), omin, omax, ndiv, tickval);
-   nsteps = ndiv+1;
-   zmax = nsteps*tickval;
-   
-   // labels
-   fNumFont.PreRender(kFALSE);
-   glPushMatrix();
-   glTranslatef(3*off, 0, 0);
-   glScalef(1, fSliderH/zmax , 1.);
-   Double_t val = 0;
-   for(Int_t i=0; i<=nsteps; i++)
-   {
-      RenderText(TEveUtil::FormAxisValue(val), val);
-      val+= tickval;
-   }
-   glPopMatrix();
-   fNumFont.PostRender();
-
-
-  // event handling
+   // event handling
    if (rnrCtx.Selection())
    {
       glLoadName(2);
+      Float_t w = fButtonW*fMenuW*0.5f;
       glBegin(GL_QUADS);
       glVertex2f(-w, 0);
       glVertex2f( w, 0);
@@ -130,50 +77,25 @@ void TEveLegoOverlay::DrawSlider(TGLRnrCtx& rnrCtx)
       glEnd();
    }
 
+   // draw axis
+   Double_t maxVal = fCalo->GetMaxVal();
+   TGLRect& wprt = rnrCtx.RefCamera().RefViewport();
+   Int_t fs = Int_t(wprt.Height()*fSliderH* fAxisAtt.GetLabelSize());
+   fAxisAtt.SetRng(0, maxVal);
+   fAxisAtt.RefTMOff(0).X() = -maxVal*0.03;
+   fAxisAtt.SetAbsLabelFontSize(fs);
 
    glPushMatrix();
-   glScalef(1, fSliderH/zmax , 1.);
-
-   // body
-   glLineWidth(1);
-   glBegin(GL_LINES);
-   glVertex2f(0, 0);
-   glVertex2f(0, zmax);
-   // primary tick-marks
-   Double_t tv1= 0;
-   for (Int_t i = 0; i <= nsteps; ++i)
-   {
-      glVertex2d(0,  tv1);
-      glVertex2d(2*off , tv1);
-      tv1+= tickval;
-   }
-
-   // secondary tick-marks
-   Double_t omin2, zmax2, tickval2;
-   Int_t nsteps2;
-   THLimitsFinder::Optimize(0, tickval, fCalo->GetNZSteps(), omin2, zmax2, nsteps2, tickval2);
-   Int_t nt2 = Int_t(zmax/tickval2);
-   Float_t step2 = zmax/nt2;
-
-   Double_t tv2= 0;
-   for (Int_t i = 0; i <= nt2; ++i)
-   {
-      glVertex2d(0,  tv2);
-      glVertex2d(off , tv2);
-      tv2+= step2;
-   }
-   glEnd();
-
+   glScalef( fSliderH/maxVal, fSliderH/maxVal, 1.);
+   fAxisPainter.Paint(rnrCtx, fAxisAtt);
    glPopMatrix();
-   
 
    // marker
    TGLUtil::Color((fActiveID == 2) ? fActiveCol : 3);
    glPointSize(8);
    glBegin(GL_POINTS);
    glVertex3f(0, fSliderVal*fSliderH, -0.1);
-   glEnd(); 
-
+   glEnd();
 }
 
 /******************************************************************************/

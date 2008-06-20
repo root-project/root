@@ -15,7 +15,7 @@
 #include "TGLObject.h"
 #include "TEveCaloData.h"
 #include "TGLIncludes.h"
-#include "TGLFontManager.h"
+#include "TGLAxisPainter.h"
 #include <map>
 
 class TEveCaloLego;
@@ -29,22 +29,22 @@ private:
    // cached variables
    mutable Float_t   fDataMax;
    mutable Double_t  fZAxisStep;
-   mutable Double_t  fZAxisMax;
 
    mutable TAxis*    fEtaAxis;
    mutable TAxis*    fPhiAxis;
 
+   mutable TGLAxisAttrib    fXAxisAtt;
+   mutable TGLAxisAttrib    fYAxisAtt;
+   mutable TGLAxisAttrib    fZAxisAtt;
+
+   mutable TGLAxisPainter   fAxisPainter;
+
 protected:
    Int_t   GetGridStep(Int_t axId, TGLRnrCtx &rnrCtx) const;
-
-   void    SetFont(Float_t axis_len, TGLRnrCtx &rnrCtx) const;
-   void    RnrText(const char* txt, Float_t x, Float_t y, Float_t z,
-                   const TGLFont &font, Int_t mode) const;
 
    void    DrawZScales3D(TGLRnrCtx &rnrCtx, Float_t x0, Float_t x1, Float_t y0, Float_t y1) const;
    void    DrawZAxis(TGLRnrCtx &rnrCtx, Float_t azX, Float_t azY) const;
 
-   void    DrawZScales2D(TGLRnrCtx &rnrCtx, Float_t x0, Float_t y0) const;
    void    DrawXYScales(TGLRnrCtx &rnrCtx, Float_t x0, Float_t x1, Float_t y0, Float_t y1) const;
    void    DrawHistBase(TGLRnrCtx &rnrCtx) const;
 
@@ -63,9 +63,6 @@ protected:
    mutable SliceDLMap_t     fDLMap;
 
    TEveCaloLego            *fM;  // Model object.
-
-   mutable TGLFont          fNumFont;
-   mutable TGLFont          fSymbolFont;
 
    // grid density modes
    Int_t                    fNBinSteps;

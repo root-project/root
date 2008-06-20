@@ -172,6 +172,19 @@ void TEveCaloViz::SetPlotEt(Bool_t isEt)
 }
 
 //______________________________________________________________________________
+Float_t TEveCaloViz::GetMaxVal() const
+{
+
+   // Get maximum plotted value.
+
+   if (fScaleAbs)
+      return fMaxValAbs;
+   else
+      return fData->GetMaxVal(fPlotEt);
+
+}
+
+//______________________________________________________________________________
 void TEveCaloViz::SetPhiWithRng(Float_t phi, Float_t rng)
 {
    // Set phi range.

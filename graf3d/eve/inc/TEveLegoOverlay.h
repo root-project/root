@@ -13,11 +13,10 @@
 #define ROOT_TEveLegoOverlay
 
 #include "TGLOverlay.h"
-#include "TGLFontManager.h"
 #include "TEveElement.h"
+#include "TGLAxisPainter.h"
 
 class TEveCaloLego;
-class TGLAxis;
 
 class TEveLegoOverlay : public TGLOverlayElement,
                         public TEveElementList
@@ -27,7 +26,6 @@ private:
    TEveLegoOverlay& operator=(const TEveLegoOverlay&); // Not implemented
 
    void DrawSlider(TGLRnrCtx& rnrCtx);
-   void RenderText(const char* txt,Float_t z);
 
    Bool_t SetSliderVal(Event_t* event,TGLRnrCtx& rnrCtx );
 
@@ -45,11 +43,12 @@ protected:
    Bool_t         fShowSlider;
    Float_t        fSliderVal;
 
-   mutable TGLFont  fNumFont;
+   TGLAxisPainter fAxisPainter;
+   TGLAxisAttrib fAxisAtt;
 
 public:
    TEveLegoOverlay();
-   virtual ~TEveLegoOverlay() {}
+   virtual ~TEveLegoOverlay(){}
 
    virtual  Bool_t MouseEnter(TGLOvlSelectRecord& selRec);
    virtual  Bool_t Handle(TGLRnrCtx& rnrCtx, TGLOvlSelectRecord& selRec, Event_t* event);

@@ -96,6 +96,8 @@ public:
    void    SetMaxValAbs(Float_t x) { fMaxValAbs = x; }
    Float_t GetMaxValAbs() const    { return fMaxValAbs; }
 
+   Float_t GetMaxVal() const;
+
    Float_t GetTransitionEta() const;
    Float_t GetTransitionTheta() const;
 
