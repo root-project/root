@@ -71,11 +71,13 @@ $(DEMOFUMILI): 	$(DEMOFUMILIOBJ)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
 		@echo "$@ done"
 
-$(PTEST): 	$(PTESTOBJ) GaussFcn.h
+$(PTESTOBJ): 	GaussFcn.h
+$(PTEST): 	$(PTESTOBJ) 
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
 		@echo "$@ done"
 
-$(PTEST2): 	$(PTESTOBJ) GaussFcn.h
+$(PTEST2OBJ): 	GaussFcn.h
+$(PTEST2): 	$(PTEST2OBJ) 
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
 		@echo "$@ done"
 
