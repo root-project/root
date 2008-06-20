@@ -1098,9 +1098,16 @@ Double_t TH2::KolmogorovTest(const TH1 *h2, Option_t *option) const
    //         "O" include Overflows
    //         "N" include comparison of normalizations
    //         "D" Put out a line of "Debug" printout
+   //         "M" Return the Maximum Kolmogorov distance instead of prob
    //
    //   The returned function value is the probability of test
    //       (much less than one means NOT compatible)
+   //
+   //   The KS test uses the distance between the pseudo-CDF's obtained 
+   //   from the histogram. Since in 2D the order for generating the pseudo-CDF is 
+   //   arbitrary, two pairs of pseudo-CDF are used, one starting from the x axis the 
+   //   other from the y axis and the maximum distance is the average of the two maximum 
+   //   distances obtained. 
    //
    //  Code adapted by Rene Brun from original HBOOK routine HDIFF
 
@@ -1159,25 +1166,31 @@ Double_t TH2::KolmogorovTest(const TH1 *h2, Option_t *option) const
    if (opt.Contains("O")) {iend = ncx1+1; jend = ncy1+1;}
 
    Int_t i,j;
-   Double_t hsav;
    Double_t sum1  = 0;
-   Double_t tsum1 = 0;
-   for (i=0;i<=ncx1+1;i++) {
-      for (j=0;j<=ncy1+1;j++) {
-         hsav = h1->GetCellContent(i,j);
-         tsum1 += hsav;
-         if (i >= ibeg && i <= iend && j >= jbeg && j <= jend) sum1 += hsav;
-      }
-   }
    Double_t sum2  = 0;
-   Double_t tsum2 = 0;
-   for (i=0;i<=ncx1+1;i++) {
-      for (j=0;j<=ncy1+1;j++) {
-         hsav = h2->GetCellContent(i,j);
-         tsum2 += hsav;
-         if (i >= ibeg && i <= iend && j >= jbeg && j <= jend) sum2 += hsav;
+   Double_t w1    = 0;
+   Double_t w2    = 0;
+   for (i = ibeg; i <= iend; i++) {
+      for (j = jbeg; j <= jend; j++) {
+         sum1 += h1->GetBinContent(i,j);
+         sum2 += h2->GetBinContent(i,j);
+         Double_t ew1   = h1->GetBinError(i,j);
+         Double_t ew2   = h2->GetBinError(i,j);
+         w1   += ew1*ew1;
+         w2   += ew2*ew2;
+
       }
    }
+
+//    Double_t sum2  = 0;
+//    Double_t tsum2 = 0;
+//    for (i=0;i<=ncx1+1;i++) {
+//       for (j=0;j<=ncy1+1;j++) {
+//          hsav = h2->GetCellContent(i,j);
+//          tsum2 += hsav;
+//          if (i >= ibeg && i <= iend && j >= jbeg && j <= jend) sum2 += hsav;
+//       }
+//    }
 
    //    Check that both scatterplots contain events
    if (sum1 == 0) {
@@ -1188,27 +1201,47 @@ Double_t TH2::KolmogorovTest(const TH1 *h2, Option_t *option) const
       Error("KolmogorovTest","Integral is zero for h2=%s\n",h2->GetName());
       return 0;
    }
+   // calculate the effective entries.  
+   // the case when errors are zero (w1 == 0 or w2 ==0) are equivalent to 
+   // compare to a function. In that case the rescaling is done only on sqrt(esum2) or sqrt(esum1) 
+   Double_t esum1 = 0, esum2 = 0; 
+   if (w1 > 0) 
+      esum1 = sum1 * sum1 / w1; 
+   else 
+      afunc1 = kTRUE;    // use later for calculating z
+   
+   if (w2 > 0) 
+      esum2 = sum2 * sum2 / w2; 
+   else 
+      afunc2 = kTRUE;    // use later for calculating z
+   
+   if (afunc2 && afunc1) { 
+      Error("KolmogorovTest","Errors are zero for both histograms\n");
+      return 0;
+   }
+
+
 
    //    Check that scatterplots are not weighted or saturated
-   Double_t num1 = h1->GetEntries();
-   Double_t num2 = h2->GetEntries();
-   if (num1 != tsum1) {
-      Warning("KolmogorovTest","Saturation or weighted events for h1=%s, num1=%g, tsum1=%g\n",h1->GetName(),num1,tsum1);
-   }
-   if (num2 != tsum2) {
-      Warning("KolmogorovTest","Saturation or weighted events for h2=%s, num2=%g, tsum2=%g\n",h2->GetName(),num2,tsum2);
-   }
+//    Double_t num1 = h1->GetEntries();
+//    Double_t num2 = h2->GetEntries();
+//    if (num1 != tsum1) {
+//       Warning("KolmogorovTest","Saturation or weighted events for h1=%s, num1=%g, tsum1=%g\n",h1->GetName(),num1,tsum1);
+//    }
+//    if (num2 != tsum2) {
+//       Warning("KolmogorovTest","Saturation or weighted events for h2=%s, num2=%g, tsum2=%g\n",h2->GetName(),num2,tsum2);
+//    }
 
    //   Find first Kolmogorov distance
    Double_t s1 = 1/sum1;
    Double_t s2 = 1/sum2;
-   Double_t dfmax = 0;
+   Double_t dfmax1 = 0;
    Double_t rsum1=0, rsum2=0;
    for (i=ibeg;i<=iend;i++) {
       for (j=jbeg;j<=jend;j++) {
          rsum1 += s1*h1->GetCellContent(i,j);
          rsum2 += s2*h2->GetCellContent(i,j);
-         dfmax  = TMath::Max(dfmax, TMath::Abs(rsum1-rsum2));
+         dfmax1  = TMath::Max(dfmax1, TMath::Abs(rsum1-rsum2));
       }
    }
 
@@ -1223,24 +1256,25 @@ Double_t TH2::KolmogorovTest(const TH1 *h2, Option_t *option) const
       }
    }
 
-   //    Get Kolmogorov probability
+   //    Get Kolmogorov probability: use effective entries, esum1 or esum2,  for normalizing it 
    Double_t factnm;
-   if (afunc1)      factnm = TMath::Sqrt(sum2);
-   else if (afunc2) factnm = TMath::Sqrt(sum1);
-   else             factnm = TMath::Sqrt(sum1*sum2/(sum1+sum2));
+   if (afunc1)      factnm = TMath::Sqrt(esum2);
+   else if (afunc2) factnm = TMath::Sqrt(esum1);
+   else             factnm = TMath::Sqrt(esum1*sum2/(esum1+esum2));
+
+   // take average of the two distances 
+   Double_t dfmax = 0.5*(dfmax1+dfmax2);
    Double_t z  = dfmax*factnm;
-   Double_t z2 = dfmax2*factnm;
 
-   prb = TMath::KolmogorovProb(0.5*(z+z2));
+   prb = TMath::KolmogorovProb(z);
 
-   Double_t prb1=0, prb2=0;
-   Double_t resum1, resum2, chi2, d12;
-   if (opt.Contains("N")) { //Combine probabilities for shape and normalization,
+   Double_t prb1 = 0, prb2 = 0; 
+   // option N to combine normalization makes sense if both afunc1 and afunc2 are false
+   if (opt.Contains("N")  && !(afunc1 || afunc2 ) ) { 
+      // Combine probabilities for shape and normalization
       prb1   = prb;
-      resum1 = sum1; if (afunc1) resum1 = 0;
-      resum2 = sum2; if (afunc2) resum2 = 0;
-      d12    = sum1-sum2;
-      chi2   = d12*d12/(resum1+resum2);
+      Double_t d12    = esum1-esum2;
+      Double_t chi2   = d12*d12/(esum1+esum2);
       prb2   = TMath::Prob(chi2,1);
       //     see Eadie et al., section 11.6.2
       if (prb > 0 && prb2 > 0) prb = prb*prb2*(1-TMath::Log(prb*prb2));
@@ -1258,6 +1292,8 @@ Double_t TH2::KolmogorovTest(const TH1 *h2, Option_t *option) const
    // This numerical error condition should never occur:
    if (TMath::Abs(rsum1-1) > 0.002) Warning("KolmogorovTest","Numerical problems with h1=%s\n",h1->GetName());
    if (TMath::Abs(rsum2-1) > 0.002) Warning("KolmogorovTest","Numerical problems with h2=%s\n",h2->GetName());
+
+   if(opt.Contains("M"))      return dfmax;  // return avergae of max distance
 
    return prb;
 }
@@ -1881,6 +1917,134 @@ TProfile *TH2::ProfileY(const char *name, Int_t firstxbin, Int_t lastxbin, Optio
 }
 
 //______________________________________________________________________________
+TH1D *TH2::DoProjection(const char *name, bool onX, Int_t firstbin, Int_t lastbin, Option_t *option) const
+{
+   // internal (protected) method for performing projection on the X or Y axis
+   // called by ProjectionX or ProjectionY
+
+   char *expectedName = 0;
+   Int_t outNbin, inNbin;
+   TAxis* outAxis;
+
+   if ( onX )
+   {
+      expectedName = "_px";
+      outNbin = fXaxis.GetNbins();
+      inNbin = fYaxis.GetNbins();
+      outAxis = GetXaxis();
+   }
+   else
+   {
+      expectedName = "_py";
+      outNbin = fYaxis.GetNbins();
+      inNbin = fXaxis.GetNbins();
+      outAxis = GetYaxis();
+   }
+
+   TString opt = option;
+   if (firstbin < 0) firstbin = 0;
+   if (lastbin  < 0) lastbin  = inNbin + 1;
+   if (lastbin  > inNbin+1) lastbin  = inNbin + 1;
+
+   // Create the projection histogram
+   char *pname = (char*)name;
+   if (name && strcmp(name,expectedName) == 0) {
+      Int_t nch = strlen(GetName()) + 4;
+      pname = new char[nch];
+      sprintf(pname,"%s%s",GetName(),name);
+   }
+   TH1D *h1=0;
+   //check if histogram with identical name exist
+   TObject *h1obj = gROOT->FindObject(pname);
+   if (h1obj && h1obj->InheritsFrom("TH1D")) {
+      h1 = (TH1D*)h1obj;
+      h1->Reset();
+   }
+
+   Int_t ncuts = 0;
+   if (opt.Contains("[")) {
+      ((TH2 *)this)->GetPainter();
+      if (fPainter) ncuts = fPainter->MakeCuts((char*)opt.Data());
+   }
+   opt.ToLower();  //must be called after MakeCuts
+
+   if (!h1) {
+      const TArrayD *bins = outAxis->GetXbins();
+      if (bins->fN == 0) {
+         h1 = new TH1D(pname,GetTitle(),outNbin,outAxis->GetXmin(),outAxis->GetXmax());
+      } else {
+         h1 = new TH1D(pname,GetTitle(),outNbin,bins->fArray);
+      }
+      if (opt.Contains("e") || GetSumw2N() ) h1->Sumw2();
+   }
+   if (pname != name)  delete [] pname;
+
+   // Copy the axis attributes and the axis labels if needed.
+   h1->GetXaxis()->ImportAttributes(outAxis);
+   THashList* labels=outAxis->GetLabels();
+   if (labels) {
+      TIter iL(labels);
+      TObjString* lb;
+      Int_t i = 1;
+      while ((lb=(TObjString*)iL())) {
+         h1->GetXaxis()->SetBinLabel(i,lb->String().Data());
+         i++;
+      }
+   }
+
+   h1->SetLineColor(this->GetLineColor());
+   h1->SetFillColor(this->GetFillColor());
+   h1->SetMarkerColor(this->GetMarkerColor());
+   h1->SetMarkerStyle(this->GetMarkerStyle());
+
+   // Fill the projected histogram
+   Double_t cont,err2;
+   Double_t entries = 0;
+   for (Int_t binOut =0;binOut<=outNbin+1;binOut++) {
+      err2 = 0;
+      cont = 0;
+      for (Int_t binIn=firstbin;binIn<=lastbin;binIn++) {
+         Int_t binx, biny;
+         if ( onX ) { binx = binOut; biny = binIn;  }
+         else       { binx = binIn;  biny = binOut; }
+
+         if (ncuts) {
+            if (!fPainter->IsInside(binx,biny)) continue;
+         }
+         Double_t cxy = GetCellContent(binx,biny);
+         Double_t exy = GetCellError(binx,biny);
+         Double_t exy2 = exy*exy;
+         cont  += cxy;
+         err2 += exy2;
+         // count all effective entries bin by bin
+         if (cxy && exy2 > 0) entries += cxy*cxy/exy2;
+      }
+      h1->SetBinContent(binOut,cont);
+      if (h1->GetSumw2N()) h1->SetBinError(binOut,TMath::Sqrt(err2));
+   }
+   h1->SetEntries(Long64_t(entries + 0.5));
+
+   if (opt.Contains("d")) {
+      TVirtualPad *padsav = gPad;
+      TVirtualPad *pad = gROOT->GetSelectedPad();
+      if (pad) pad->cd();
+      char optin[100];
+      strcpy(optin,opt.Data());
+      char *d = (char*)strstr(optin,"d"); if (d) {*d = ' '; if (*(d+1) == 0) *d=0;}
+      char *e = (char*)strstr(optin,"e"); if (e) {*e = ' '; if (*(e+1) == 0) *e=0;}
+      if (!gPad->FindObject(h1)) {
+         h1->Draw(optin);
+      } else {
+         h1->Paint(optin);
+      }
+      if (padsav) padsav->cd();
+   }
+
+   return h1;
+}
+
+
+//______________________________________________________________________________
 TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option_t *option) const
 {
    //*-*-*-*-*Project a 2-D histogram into a 1-D histogram along X*-*-*-*-*-*-*
@@ -1913,104 +2077,7 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
    //   the histogram is reset and filled again with the current contents of the TH2.
    //   The X axis attributes of the TH2 are copied to the X axis of the projection.
 
-   TString opt = option;
-   Int_t nx = fXaxis.GetNbins();
-   Int_t ny = fYaxis.GetNbins();
-   if (firstybin < 0) firstybin = 0;
-   if (lastybin  < 0) lastybin  = ny + 1;
-   if (lastybin  > ny+1) lastybin  = ny + 1;
-
-   // Create the projection histogram
-   char *pname = (char*)name;
-   if (name && strcmp(name,"_px") == 0) {
-      Int_t nch = strlen(GetName()) + 4;
-      pname = new char[nch];
-      sprintf(pname,"%s%s",GetName(),name);
-   }
-   TH1D *h1=0;
-   //check if histogram with identical name exist
-   TObject *h1obj = gROOT->FindObject(pname);
-   if (h1obj && h1obj->InheritsFrom("TH1D")) {
-      h1 = (TH1D*)h1obj;
-      h1->Reset();
-   }
-
-   Int_t ncuts = 0;
-   if (opt.Contains("[")) {
-      ((TH2 *)this)->GetPainter();
-      if (fPainter) ncuts = fPainter->MakeCuts((char*)opt.Data());
-   }
-   opt.ToLower();  //must be called after MakeCuts
-
-   if (!h1) {
-      const TArrayD *bins = fXaxis.GetXbins();
-      if (bins->fN == 0) {
-         h1 = new TH1D(pname,GetTitle(),nx,fXaxis.GetXmin(),fXaxis.GetXmax());
-      } else {
-         h1 = new TH1D(pname,GetTitle(),nx,bins->fArray);
-      }
-      if (opt.Contains("e") || GetSumw2N() ) h1->Sumw2();
-   }
-   if (pname != name)  delete [] pname;
-
-   // Copy the axis attributes and the axis labels if needed.
-   h1->GetXaxis()->ImportAttributes(this->GetXaxis());
-   THashList* labels=GetXaxis()->GetLabels();
-   if (labels) {
-      TIter iL(labels);
-      TObjString* lb;
-      Int_t i = 1;
-      while ((lb=(TObjString*)iL())) {
-         h1->GetXaxis()->SetBinLabel(i,lb->String().Data());
-         i++;
-      }
-   }
-
-   h1->SetLineColor(this->GetLineColor());
-   h1->SetFillColor(this->GetFillColor());
-   h1->SetMarkerColor(this->GetMarkerColor());
-   h1->SetMarkerStyle(this->GetMarkerStyle());
-
-   // Fill the projected histogram
-   Double_t cont,err2;
-   Double_t entries = 0;
-   for (Int_t binx =0;binx<=nx+1;binx++) {
-      err2 = 0;
-      cont = 0;
-      for (Int_t biny=firstybin;biny<=lastybin;biny++) {
-         if (ncuts) {
-            if (!fPainter->IsInside(binx,biny)) continue;
-         }
-         Double_t cxy = GetCellContent(binx,biny);
-         Double_t exy = GetCellError(binx,biny);
-         Double_t exy2 = exy*exy;
-         cont  += cxy;
-         err2 += exy2;
-         // count all effective entries bin by bin
-         if (cxy && exy2 > 0) entries += cxy*cxy/exy2;
-      }
-      h1->SetBinContent(binx,cont);
-      if (h1->GetSumw2N()) h1->SetBinError(binx,TMath::Sqrt(err2));
-   }
-   h1->SetEntries(Long64_t(entries + 0.5));
-
-   if (opt.Contains("d")) {
-      TVirtualPad *padsav = gPad;
-      TVirtualPad *pad = gROOT->GetSelectedPad();
-      if (pad) pad->cd();
-      char optin[100];
-      strcpy(optin,opt.Data());
-      char *d = (char*)strstr(optin,"d"); if (d) {*d = ' '; if (*(d+1) == 0) *d=0;}
-      char *e = (char*)strstr(optin,"e"); if (e) {*e = ' '; if (*(e+1) == 0) *e=0;}
-      if (!gPad->FindObject(h1)) {
-         h1->Draw(optin);
-      } else {
-         h1->Paint(optin);
-      }
-      if (padsav) padsav->cd();
-   }
-
-   return h1;
+      return DoProjection(name, true, firstybin, lastybin, option);
 }
 
 //______________________________________________________________________________
@@ -2046,104 +2113,7 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
    //   the histogram is reset and filled again with the current contents of the TH2.
    //   The Y axis attributes of the TH2 are copied to the X axis of the projection.
 
-   TString opt = option;
-   Int_t nx = fXaxis.GetNbins();
-   Int_t ny = fYaxis.GetNbins();
-   if (firstxbin < 0) firstxbin = 0;
-   if (lastxbin  < 0) lastxbin  = nx + 1;
-   if (lastxbin  > nx + 1) lastxbin  = nx + 1;
-
-   // Create the projection histogram
-   char *pname = (char*)name;
-   if (name && strcmp(name,"_py") == 0) {
-      Int_t nch = strlen(GetName()) + 4;
-      pname = new char[nch];
-      sprintf(pname,"%s%s",GetName(),name);
-   }
-   TH1D *h1=0;
-   //check if histogram with identical name exist
-   TObject *h1obj = gROOT->FindObject(pname);
-   if (h1obj && h1obj->InheritsFrom("TH1D")) {
-      h1 = (TH1D*)h1obj;
-      h1->Reset();
-   }
-
-   Int_t ncuts = 0;
-   if (opt.Contains("[")) {
-      ((TH2 *)this)->GetPainter();
-      if (fPainter) ncuts = fPainter->MakeCuts((char*)opt.Data());
-   }
-   opt.ToLower();  //must be called after MakeCuts
-
-   if (!h1) {
-      const TArrayD *bins = fYaxis.GetXbins();
-      if (bins->fN == 0) {
-         h1 = new TH1D(pname,GetTitle(),ny,fYaxis.GetXmin(),fYaxis.GetXmax());
-      } else {
-         h1 = new TH1D(pname,GetTitle(),ny,bins->fArray);
-      }
-      if (opt.Contains("e") || GetSumw2N() ) h1->Sumw2();
-   }
-   if (pname != name)  delete [] pname;
-
-   // Copy the axis attributes and the axis labels if needed.
-   h1->GetXaxis()->ImportAttributes(this->GetYaxis());
-   THashList* labels=GetYaxis()->GetLabels();
-   if (labels) {
-      TIter iL(labels);
-      TObjString* lb;
-      Int_t i = 1;
-      while ((lb=(TObjString*)iL())) {
-         h1->GetXaxis()->SetBinLabel(i,lb->String().Data());
-         i++;
-      }
-   }
-
-   h1->SetLineColor(this->GetLineColor());
-   h1->SetFillColor(this->GetFillColor());
-   h1->SetMarkerColor(this->GetMarkerColor());
-   h1->SetMarkerStyle(this->GetMarkerStyle());
-
-   // Fill the projected histogram
-   Double_t cont,err2;
-   Double_t entries  = 0;
-   for (Int_t biny =0;biny<=ny+1;biny++) {
-      err2 = 0;
-      cont = 0;
-      for (Int_t binx=firstxbin;binx<=lastxbin;binx++) {
-         if (ncuts) {
-            if (!fPainter->IsInside(binx,biny)) continue;
-         }
-         Double_t cxy = GetCellContent(binx,biny);
-         Double_t exy = GetCellError(binx,biny);
-         Double_t exy2 = exy*exy;
-         cont  += cxy;
-         err2 += exy2;
-         // count all effective entries bin by bin
-         if (cxy && exy2 > 0) entries += cxy*cxy/exy2;
-      }
-      h1->SetBinContent(biny,cont);
-      if (h1->GetSumw2N()) h1->SetBinError(biny,TMath::Sqrt(err2));
-   }
-   h1->SetEntries(Long64_t(entries + 0.5));
-
-   if (opt.Contains("d")) {
-      TVirtualPad *padsav = gPad;
-      TVirtualPad *pad = gROOT->GetSelectedPad();
-      if (pad) pad->cd();
-      char optin[100];
-      strcpy(optin,opt.Data());
-      char *d = (char*)strstr(optin,"d"); if (d) {*d = ' '; if (*(d+1) == 0) *d=0;}
-      char *e = (char*)strstr(optin,"e"); if (e) {*e = ' '; if (*(e+1) == 0) *e=0;}
-      if (!gPad->FindObject(h1)) {
-         h1->Draw(optin);
-      } else {
-         h1->Paint(optin);
-      }
-      if (padsav) padsav->cd();
-   }
-
-   return h1;
+      return DoProjection(name, false, firstxbin, lastxbin, option);
 }
 
 //______________________________________________________________________________

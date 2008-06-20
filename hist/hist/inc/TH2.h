@@ -43,6 +43,7 @@ protected:
 
    virtual Int_t    BufferFill(Double_t, Double_t) {return -2;} //may not use
    virtual Int_t    BufferFill(Double_t x, Double_t y, Double_t w);
+   virtual TH1D    *DoProjection(const char *name, bool onX, Int_t firstbin, Int_t lastbin, Option_t *option) const;
 
 public:
    TH2();
