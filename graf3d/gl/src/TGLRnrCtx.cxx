@@ -74,9 +74,8 @@ TGLRnrCtx::TGLRnrCtx(TGLViewerBase* viewer) :
    fIsRunning    (kFALSE),
    fHasTimedOut  (kFALSE),
 
-   fHighlight    (kFALSE),
-   fSelection    (kFALSE),
-   fSecSelection (kFALSE),
+   fHighlight    (kFALSE),  fHighlightOutline (kFALSE),
+   fSelection    (kFALSE),  fSecSelection     (kFALSE),
    fPickRadius   (0),
    fPickRectangle(0),
    fSelectBuffer (0),

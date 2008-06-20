@@ -104,7 +104,8 @@ protected:
    Bool_t          fHasTimedOut;
 
    // Highlight / Selection stuff
-   Bool_t          fHighlight;
+   Bool_t          fHighlight;        // True when in highlight.
+   Bool_t          fHighlightOutline; // True when in highlight-outline.
    Bool_t          fSelection;
    Bool_t          fSecSelection;
    Int_t           fPickRadius;
@@ -186,6 +187,9 @@ public:
    // Highlight / Selection stuff
    Bool_t  Highlight()    const           { return fHighlight;      }
    void    SetHighlight(Bool_t hil)       { fHighlight = hil;       }
+   Bool_t  HighlightOutline() const       { return fHighlightOutline; }
+   void    SetHighlightOutline(Bool_t ho) { fHighlightOutline = ho;   }
+
    Bool_t  Selection()    const           { return fSelection;      }
    void    SetSelection(Bool_t sel)       { fSelection = sel;       }
    Bool_t  SecSelection() const           { return fSecSelection;   }

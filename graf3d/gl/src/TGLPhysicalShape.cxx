@@ -382,6 +382,7 @@ void TGLPhysicalShape::Draw(TGLRnrCtx & rnrCtx) const
       // TGLCapabilitySwitch bs(GL_BLEND, kTRUE), lss(GL_LINE_SMOOTH, kTRUE);
 
       rnrCtx.SetHighlight(kTRUE);
+      rnrCtx.SetHighlightOutline(kTRUE);
       TGLUtil::LockColor();
       Int_t first_outer = (rnrCtx.CombiLOD() == TGLRnrCtx::kLODHigh) ? 0 : 4;
       for (int i = first_outer; i < 8; ++i)
@@ -391,7 +392,7 @@ void TGLPhysicalShape::Draw(TGLRnrCtx & rnrCtx) const
          fLogicalShape->Draw(rnrCtx);
       }
       TGLUtil::UnlockColor();
-      rnrCtx.SetHighlight(kFALSE);
+      rnrCtx.SetHighlightOutline(kFALSE);
 
       SetupGLColors(rnrCtx);
       for (int i = 0; i < 4; ++i)
@@ -401,6 +402,7 @@ void TGLPhysicalShape::Draw(TGLRnrCtx & rnrCtx) const
          fLogicalShape->Draw(rnrCtx);
       }
       glViewport(vp.X(), vp.Y(), vp.Width(), vp.Height());
+      rnrCtx.SetHighlight(kFALSE);
 
       SetupGLColors(rnrCtx);
       Float_t dr[2];
