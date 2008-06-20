@@ -1111,6 +1111,7 @@ int testVector(int ngen, bool testio=false) {
    s1 = a.testOperations(v1);  a.print(VecType<V1>::name()+" operations");
    scale = Dim*20; 
    if (Dim==3 && VecType<V2>::name() == "RhoEtaPhiVector") scale *= 10; // for problem with RhoEtaPhi
+   if (Dim==4 && VecType<V2>::name() == "PtEtaPhiMVector") scale *= 10; 
    // for problem with PtEtaPhiE
    if (Dim==4 && VecType<V2>::name() == "PtEtaPhiEVector") scale = 0.01/(std::numeric_limits<double>::epsilon()); 
    s2 = a.testOperations(v2);  iret |= a.check(VecType<V2>::name()+" operations",s2,s1,scale);
