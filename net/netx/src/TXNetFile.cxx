@@ -1276,7 +1276,23 @@ void TXNetFile::SynchronizeCacheSize()
 
    fClient->UseCache(TRUE);
 #ifndef OLDXRDLOCATE
-   fClient->SetCacheParameters(-1, 0, XrdClientReadCache::kRmBlk_FIFO);
+   Int_t size;
+   Long64_t bytessubmitted, byteshit, misscount, readreqcnt;
+   Float_t  missrate, bytesusefulness;
+   int newbsz = -1;
+   if (fClient && fClient->GetCacheInfo(size, bytessubmitted,
+                                        byteshit, misscount,
+                                        missrate, readreqcnt,
+                                        bytesusefulness) ) {
+
+      // To allow for some space for outstanding data
+      newbsz = GetCacheRead()->GetBufferSize() / 2 * 3;
+      newbsz = TMath::Max(newbsz, size);
+
+   }
+
+   fClient->SetCacheParameters(newbsz, 0, XrdClientReadCache::kRmBlk_FIFO);
+
 #else
    EnvPutInt(NAME_READAHEADSIZE, 0);
 #endif
@@ -1304,7 +1320,7 @@ Int_t TXNetFile::GetBytesToPrefetch() const
                                         byteshit, misscount,
                                         missrate, readreqcnt,
                                         bytesusefulness) )
-   bytes = size/2;
+   bytes = size;
 #else
    Int_t bytes = gEnv->GetValue("XNet.ReadCacheSize", 0)/2;
 #endif
