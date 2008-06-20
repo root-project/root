@@ -34,7 +34,7 @@
 */
 //****************************************************************************//
 
-   // ROOT
+// ROOT
 #include "Riostream.h"
 #include "TObject.h"
 // Memstat
@@ -125,6 +125,8 @@ TMemStatCodeInfo::TMemStatCodeInfo():
       fLib(),
       fCodeID(0)
 {
+   // a ctor
+
    fLastStamp.fStampType    = TMemStatInfoStamp::kCode;
    fCurrentStamp.fStampType = TMemStatInfoStamp::kCode;
    fMaxStampSize.fStampType = TMemStatInfoStamp::kCode;
@@ -208,6 +210,8 @@ TMemStatStackInfo::TMemStatStackInfo():
       fSymbolIndexes(0),
       fStackID(0)
 {
+   // ctor
+  
    fLastStamp.fStampType    = TMemStatInfoStamp::kStack;
    fCurrentStamp.fStampType = TMemStatInfoStamp::kStack;
    fMaxStampSize.fStampType = TMemStatInfoStamp::kStack;

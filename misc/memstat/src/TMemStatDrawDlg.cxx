@@ -50,12 +50,14 @@ TMemStatDrawDlg::TMemStatDrawDlg(TGCompositeFrame *parent, TMemStat *MemStat):
       fNmbMaxLength(NULL),
       fEc(NULL)
 {
+  // a ctor
    PlaceCtrls(parent);
 }
 
 //______________________________________________________________________________
 TMemStatDrawDlg::~TMemStatDrawDlg()
 {
+  // a dtor
 }
 
 //______________________________________________________________________________

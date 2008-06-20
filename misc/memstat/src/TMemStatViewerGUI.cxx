@@ -147,6 +147,8 @@ TMemStatViewerGUI::TMemStatViewerGUI(const TGWindow *p, UInt_t w, UInt_t h, Opti
 //______________________________________________________________________________
 TMemStatViewerGUI::~TMemStatViewerGUI()
 {
+   // a dtor
+  
    Cleanup();
    if (fViewer)
       fViewer->Delete();
