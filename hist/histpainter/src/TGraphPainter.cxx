@@ -35,34 +35,222 @@ ClassImp(TGraphPainter);
 //______________________________________________________________________________
 /* Begin_Html
 <center><h2>The graph painter class</h2></center>
-TGraphPainter paints TGraph
+TGraphPainter paints TGraph, TGraphAsymmErrors, TGraphBentErrors, TGraphErrors,
+TGraphPolar.
+
+<h3>TGraph options</h3>
+
+
+End_Html
+Begin_Macro(source)
+{
+   TCanvas *c1 = new TCanvas("c1","c1",200,10,600,400);
+
+   c1->SetFillColor(42);
+   c1->SetGrid();
+
+   const Int_t n = 20;
+   Double_t x[n], y[n];
+   for (Int_t i=0;i<n;i++) {
+      x[i] = i*0.1;
+      y[i] = 10*sin(x[i]+0.2);
+   }
+   gr = new TGraph(n,x,y);
+   gr->SetLineColor(2);
+   gr->SetLineWidth(4);
+   gr->SetMarkerColor(4);
+   gr->SetMarkerStyle(21);
+   gr->SetTitle("A simple graph");
+   gr->GetXaxis()->SetTitle("X title");
+   gr->GetYaxis()->SetTitle("Y title");
+   gr->Draw("ACP");
+
+   // TCanvas::Update() draws the frame, after which one can change it
+   c1->Update();
+   c1->GetFrame()->SetFillColor(21);
+   c1->GetFrame()->SetBorderSize(12);
+   c1->Modified();
+   return c1;
+}
+End_Macro
+Begin_Html
+
+
+<h3>Exclusion graphs</h3>
+
+
+When a graph is painted with the option "C" or "L" it is possible to draw
+a filled area on one side of the line. This is useful to show exclusion
+zones. This drawing mode is activated when the absolute value of the
+graph line width (set thanks to SetLineWidth) is greater than 99. In that
+case the line width number is interpreted as 100*ff+ll = ffll . The two
+digits number "ll" represent the normal line width whereas "ff" is the
+filled area width. The sign of "ffll" allows to flip the filled area
+from one side of the line to the other. The current fill area attributes
+are used to draw the hatched zone.
+
+End_Html
+Begin_Macro(source)
+../../../tutorials/graphs/exclusiongraph.C
+End_Macro
+Begin_Html
+
+
+<h3>TGraphErrors options</h3>
+
+
+<h3>TGraphAsymmErrors options</h3>
+
+
+End_Html
+Begin_Macro(source)
+{
+   TCanvas *c2 = new TCanvas("c2","c2",200,10,600,400);
+   double ax[] = {0, 1, 2, 3, 4};
+   double ay[] = {0, 2, 4, 1, 3};
+   double aexl[] = {0.1, 0.2, 0.3, 0.4, 0.5};
+   double aexh[] = {0.5, 0.4, 0.3, 0.2, 0.1};
+   double aeyl[] = {1, 0.5, 1, 0.5, 1};
+   double aeyh[] = {0.5, 1, 0.5, 1, 0.5};
+   TGraphAsymmErrors* gae = new TGraphAsymmErrors(5, ax, ay, aexl, aexh, aeyl, aeyh);
+   gae->SetFillColor(2);
+   gae->SetFillStyle(3001);
+   gae->Draw("a2");
+   gae->Draw("p");
+   return c2;
+}
+End_Macro
+Begin_Html
+
+
+<h3>TGraphBentErrors options</h3>
+
+
+End_Html
+Begin_Macro(source)
+{
+   TCanvas *c3 = new TCanvas("c3","c3",200,10,600,400);
+   const Int_t n = 10;
+   Double_t x[n]  = {-0.22, 0.05, 0.25, 0.35, 0.5, 0.61,0.7,0.85,0.89,0.95};
+   Double_t y[n]  = {1,2.9,5.6,7.4,9,9.6,8.7,6.3,4.5,1};
+   Double_t exl[n] = {.05,.1,.07,.07,.04,.05,.06,.07,.08,.05};
+   Double_t eyl[n] = {.8,.7,.6,.5,.4,.4,.5,.6,.7,.8};
+   Double_t exh[n] = {.02,.08,.05,.05,.03,.03,.04,.05,.06,.03};
+   Double_t eyh[n] = {.6,.5,.4,.3,.2,.2,.3,.4,.5,.6};
+   Double_t exld[n] = {.0,.0,.0,.0,.0,.0,.0,.0,.0,.0};
+   Double_t eyld[n] = {.0,.0,.05,.0,.0,.0,.0,.0,.0,.0};
+   Double_t exhd[n] = {.0,.0,.0,.0,.0,.0,.0,.0,.0,.0};
+   Double_t eyhd[n] = {.0,.0,.0,.0,.0,.0,.0,.0,.05,.0};
+   TGraphBentErrors *gr = new TGraphBentErrors(n,x,y,exl,exh,eyl,eyh,exld,exhd,eyld,eyhd);
+   gr->SetTitle("TGraphBentErrors Example");
+   gr->SetMarkerColor(4);
+   gr->SetMarkerStyle(21);
+   gr->Draw("ALP");
+   return c3;
+}
+End_Macro
+Begin_Html
+
+
+<h3>TGraphPolar options</h3>
+
+
+The drawing options for the polar graphs are the following values:
+
+<table border=0>
+
+<tr><th valign=top>"O"</th><td>
+Polar labels are paint orthogonally to the polargram radius.
+</td></tr>
+
+<tr><th valign=top>"P"</th><td>
+Polymarker are paint at each point position.
+</td></tr>
+
+<tr><th valign=top>"E"</th><td>
+Paint error bars.
+</td></tr>
+
+<tr><th valign=top>"F"</th><td>
+Paint fill area (closed polygon).
+</td></tr>
+
+<tr><th valign=top>"A"</th><td>
+Force axis redrawing even if a polargram already exists.
+</td></tr>
+
+<tr><th valign=top>"N"</th><td>
+Disable the display of the polar labels.
+</td></tr>
+
+</table>
+
+End_Html  
+Begin_Macro(source)
+{
+   TCanvas *c1 = new TCanvas("c1","c1",500,500);
+   TGraphPolar * grP1 = new TGraphPolar();
+   grP1->SetTitle("TGraphPolar example");
+
+   grP1->SetPoint(0, (1*TMath::Pi())/4., 0.05);
+   grP1->SetPoint(1, (2*TMath::Pi())/4., 0.10);
+   grP1->SetPoint(2, (3*TMath::Pi())/4., 0.15);
+   grP1->SetPoint(3, (4*TMath::Pi())/4., 0.20);
+   grP1->SetPoint(4, (5*TMath::Pi())/4., 0.25);
+   grP1->SetPoint(5, (6*TMath::Pi())/4., 0.30);
+   grP1->SetPoint(6, (7*TMath::Pi())/4., 0.35);
+   grP1->SetPoint(7, (8*TMath::Pi())/4., 0.40);
+
+   grP1->SetMarkerStyle(20);
+   grP1->SetMarkerSize(1.);
+   grP1->SetMarkerColor(4);
+   grP1->SetLineColor(4);
+   grP1->Draw("ALP");
+
+   // Update, otherwise GetPolargram returns 0
+   c1->Update();
+   grP1->GetPolargram()->SetToRadian();
+
+   return c1;
+}  
+End_Macro
+Begin_Html
+
 End_Html */
 
 
 //______________________________________________________________________________
 TGraphPainter::TGraphPainter()
 {
-   // TGraphPainter default constructor
+   /* Begin_Html
+   Default constructor
+   End_Html */
 }
 
 
 //______________________________________________________________________________
 TGraphPainter::~TGraphPainter()
 {
-   // TGraphPainter destructor.
+   /* Begin_Html
+   Destructor.
+   End_Html */
 }
 
 
 //______________________________________________________________________________
 void TGraphPainter::ComputeLogs(Int_t npoints, Int_t opt)
 {
-   // Convert WC from Log scales.
-   //
-   //   Take the LOG10 of gxwork and gywork according to the value of Options
-   //   and put it in gxworkl and gyworkl.
-   //
-   //  npoints : Number of points in gxwork and in gywork.
-   //
+   /* Begin_Html
+   Compute the lorarithm of global variables <tt>gxwork</tt> and <tt>gywork</tt> 
+   according to the value of Options and put the results in the global 
+   variables <tt>gxworkl</tt> and <tt>gyworkl</tt>.
+   <p>
+   npoints : Number of points in gxwork and in gywork.
+   <ul>
+   <li> opt = 1 CompulteLogs is called from PaintGrapHist
+   <li> opt = 0 CompulteLogs is called from PaintGraph
+   </ul>
+   End_Html */
 
    Int_t i;
    memcpy(gxworkl,gxwork,npoints*8);
@@ -85,10 +273,12 @@ void TGraphPainter::ComputeLogs(Int_t npoints, Int_t opt)
 //______________________________________________________________________________
 Int_t TGraphPainter::DistancetoPrimitiveHelper(TGraph *theGraph, Int_t px, Int_t py)
 {
-   // Compute distance from point px,py to a graph.
-   //
-   //  Compute the closest distance of approach from point px,py to this line.
-   //  The distance is computed in pixels units.
+   /* Begin_Html
+   Compute distance from point px,py to a graph.
+   <p> 
+   Compute the closest distance of approach from point px,py to this line.
+   The distance is computed in pixels units.
+   End_Html */
 
    // Are we on the axis?
    Int_t distance;
@@ -170,15 +360,17 @@ Int_t TGraphPainter::DistancetoPrimitiveHelper(TGraph *theGraph, Int_t px, Int_t
 //______________________________________________________________________________
 void TGraphPainter::ExecuteEventHelper(TGraph *theGraph, Int_t event, Int_t px, Int_t py)
 {
-   // Execute action corresponding to one event.
-   //
-   //  This member function is called when a graph is clicked with the locator
-   //
-   //  If Left button clicked on one of the line end points, this point
-   //     follows the cursor until button is released.
-   //
-   //  if Middle button clicked, the line is moved parallel to itself
-   //     until the button is released.
+   /* Begin_Html
+   Execute action corresponding to one event.
+   <p>
+   This member function is called when a graph is clicked with the locator.
+   <p>
+   If the left mouse button is clicked on one of the line end points, this point
+   follows the cursor until button is released.
+   <p>
+   If the middle mouse button clicked, the line is moved parallel to itself
+   until the button is released.
+   End_Html */
 
    Int_t i, d;
    Double_t xmin, xmax, ymin, ymax, dx, dy, dxr, dyr;
@@ -2462,7 +2654,7 @@ void TGraphPainter::PaintGraphPolar(TGraph *theGraph, Option_t* options)
             eymax = (theY[i]+theEY[i]-rwrmin)/radiusNDC*
                      TMath::Sin((theX[i]-rwtmin)/thetaNDC);
             theGraphPolar->TAttLine::Modify();
-            gPad->PaintLine(exmin,eymin,exmax,eymax);
+	    if (exmin != exmax || eymin != eymax) gPad->PaintLine(exmin,eymin,exmax,eymax);
          }
       }
       if (theEX) {
@@ -2471,7 +2663,7 @@ void TGraphPainter::PaintGraphPolar(TGraph *theGraph, Option_t* options)
             Double_t phimin = (theX[i]-theEX[i]-rwtmin)/thetaNDC*180/TMath::Pi();
             Double_t phimax = (theX[i]+theEX[i]-rwtmin)/thetaNDC*180/TMath::Pi();
             theGraphPolar->TAttLine::Modify();
-            thePolargram->PaintCircle(0,0,rad,phimin,phimax,0);
+            if (phimin != phimax) thePolargram->PaintCircle(0,0,rad,phimin,phimax,0);
          }
       }
    }
@@ -2567,7 +2759,7 @@ void TGraphPainter::PaintGraphPolar(TGraph *theGraph, Option_t* options)
    // Paint the title.
 
    if (TestBit(TH1::kNoTitle)) return;
-   Int_t nt = strlen(GetTitle());
+   Int_t nt = strlen(theGraph->GetTitle());
    TPaveText *title = 0;
    TObject *obj;
    TIter next(gPad->GetListOfPrimitives());
@@ -2588,7 +2780,7 @@ void TGraphPainter::PaintGraphPolar(TGraph *theGraph, Option_t* options)
    if (wt <= 0) {
       TLatex l;
       l.SetTextSize(ht);
-      l.SetTitle(GetTitle());
+      l.SetTitle(theGraph->GetTitle());
       // Adjustment in case the title has several lines (#splitline)
       ht = TMath::Max(ht, 1.2*l.GetYsize()/(gPad->GetY2() - gPad->GetY1()));
       Double_t wndc = l.GetXsize()/(gPad->GetX2() - gPad->GetX1());
@@ -2597,29 +2789,29 @@ void TGraphPainter::PaintGraphPolar(TGraph *theGraph, Option_t* options)
    if (title) {
       TText *t0 = (TText*)title->GetLine(0);
       if (t0) {
-         if (!strcmp(t0->GetTitle(),GetTitle())) return;
-         t0->SetTitle(GetTitle());
+         if (!strcmp(t0->GetTitle(),theGraph->GetTitle())) return;
+         t0->SetTitle(theGraph->GetTitle());
          if (wt > 0) title->SetX2NDC(title->GetX1NDC()+wt);
       }
       return;
    }
-
+   
    Int_t talh = gStyle->GetTitleAlign()/10;
    if (talh < 1) talh = 1; if (talh > 3) talh = 3;
    Int_t talv = gStyle->GetTitleAlign()%10;
    if (talv < 1) talv = 1; if (talv > 3) talv = 3;
-
+   
    Double_t xpos, ypos;
    xpos = gStyle->GetTitleX();
    ypos = gStyle->GetTitleY();
-
+   
    if (talh == 2) xpos = xpos-wt/2.;
    if (talh == 3) xpos = xpos-wt;
    if (talv == 2) ypos = ypos+ht/2.;
    if (talv == 1) ypos = ypos+ht;
-
+   
    TPaveText *ptitle = new TPaveText(xpos, ypos-ht, xpos+wt, ypos,"blNDC");
-
+   
    // Box with the histogram title.
    ptitle->SetFillColor(gStyle->GetTitleFillColor());
    ptitle->SetFillStyle(gStyle->GetTitleStyle());
@@ -2629,7 +2821,7 @@ void TGraphPainter::PaintGraphPolar(TGraph *theGraph, Option_t* options)
    ptitle->SetTextFont(gStyle->GetTitleFont(""));
    if (gStyle->GetTitleFont("")%10 > 2)
    ptitle->SetTextSize(gStyle->GetTitleFontSize());
-   ptitle->AddText(GetTitle());
+   ptitle->AddText(theGraph->GetTitle());
    ptitle->SetBit(kCanDelete);
    ptitle->Draw();
    ptitle->Paint();
@@ -2672,12 +2864,14 @@ void TGraphPainter::PaintGraphSimple(TGraph *theGraph, Option_t *option)
 //______________________________________________________________________________
 void TGraphPainter::PaintPolyLineHatches(TGraph *theGraph, Int_t n, const Double_t *x, const Double_t *y)
 {
-   // Draws a polyline with hatches on one side showing an exclusion
-   // zone. x and y are the the vectors holding the polyline and n the
-   // number of points in the polyline and w the width of the hatches.
-   // w can be negative.
-   // This method is not meant to be used directly. It is called
-   // automatically according to the line style convention.
+   /* Begin_Html
+   Paint a polyline with hatches on one side showing an exclusion
+   zone. x and y are the the vectors holding the polyline and n the
+   number of points in the polyline and w the width of the hatches.
+   w can be negative.
+   This method is not meant to be used directly. It is called
+   automatically according to the line style convention.
+   End_Html */
 
    Int_t i,j,nf;
    Double_t w = (theGraph->GetLineWidth()/100)*0.005;
@@ -2974,7 +3168,7 @@ void TGraphPainter::Smooth(TGraph *theGraph, Int_t npoints, Double_t *x, Double_
 {
    // Smooth a curve given by N points.
    //
-   //   Underlaying routine for Draw based on the CERN GD3 routine TVIPTE
+   // Underlaying routine for Draw based on the CERN GD3 routine TVIPTE
    //
    //     Author - Marlow etc.   Modified by - P. Ward     Date -  3.10.1973
    //
@@ -2988,16 +3182,9 @@ void TGraphPainter::Smooth(TGraph *theGraph, Int_t npoints, Double_t *x, Double_
    // Reference Marlow and Powell,Harwell report No.R.7092.1972
    // MCCONALOGUE,Computer Journal VOL.13,NO4,NOV1970Pp392 6
    //
-   // _Input parameters:
-   //
    //  npoints   : Number of data points.
    //  x         : Abscissa
    //  y         : Ordinate
-   //
-   //
-   // delta is the accuracy required in constructing the curve.
-   // if it is zero then the routine calculates a value other-
-   // wise it uses this value. (default is 0.0)
 
    Int_t i, k, kp, km, npointsMax, banksize, n2, npt;
    Int_t maxiterations, finished;
@@ -3052,8 +3239,12 @@ void TGraphPainter::Smooth(TGraph *theGraph, Int_t npoints, Double_t *x, Double_
       yorg = TMath::Min(TMath::Max((Double_t)0,ruymin),gPad->GetUymax());
    }
 
-   maxiterations = 20;
+   // delta is the accuracy required in constructing the curve.
+   // If it is zero then the routine calculates a value otherwise
+   // it uses this value. (default is 0.0)
+
    delta         = 0.00055;
+   maxiterations = 20;
 
    //       Scale data to the range 0-ratio_signs in X, 0-1 in Y
    //       where ratio_signs is the ratio between the number of changes
