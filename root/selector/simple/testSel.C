@@ -1,5 +1,5 @@
 #if !defined(__MAKECINT__)
-#include "Api.h"
+#include "cint/Api.h"
 #endif
 
 bool runtest() {
