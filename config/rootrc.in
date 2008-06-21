@@ -416,8 +416,8 @@ Url.Special:         file: rfio: hpss: castor: gfal: dcache:
 +Url.Special:        /alien/- /castor/
 
 # PROOF XRD client variables
-# Debug level (<=0 : none, 1 : low, 2 : medium, 3 : high)
-XProof.Debug:  0
+# Debug level (<0 : errors, 0 : minimal, 1 : low, 2 : medium, 3 : high) [-1]
+# XProof.Debug:  0
 # Socket read timeout [in secs: default 10 secs]
 # XProof.ReadTimeout: 10
 
