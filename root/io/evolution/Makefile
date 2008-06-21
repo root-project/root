@@ -1,4 +1,4 @@
-CLEAN_TARGETS += *.so Class*.root typedef*.root $(ALL_LIBRARIES) *.clog *.log *.tmp *.xml arr.root FixedArray*.root boolUpdate.root  data.root  skiptestfile.root $(FILES) *.rootmap *.success
+CLEAN_TARGETS += *.so Class*.root typedef*.root $(ALL_LIBRARIES) *.clog *.log *.tmp *.xml arr.root FixedArray*.root boolUpdate.root  data.root  skiptestfile.root $(FILES) *.rootmap *.success $(STL_FILES)
 TEST_TARGETS += foreign310 boolUpdate skip ClassConv ConvArray typedef Missing FixedArrayLengthChange ClonesArrayEvo NumericalTypeEvolution
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -118,24 +118,56 @@ FILES := int.root float16.root double32.root regular.root char.root  \
 
 LIBS := $(patsubst %.root,lib%.$(DllSuf),$(FILES))
 
+LOGS = $(patsubst %.root,check.%.log,$(FILES))
+
+SUCCESSES = $(patsubst %.root,check%.success,$(FILES))
+
 .PHONY: files
-
-files: $(FILES)
-
-logs: $(patsubst %.root,check.%.log,$(FILES))
-
-NumericalTypeEvolution: $(patsubst %.root,check%.success,$(FILES))
 
 .PRECIOUS: lib%.$(DllSuf) %.root
 
-$(LIBS): lib%.$(DllSuf): rootalias.C float16.cxx float16.h
-	$(CMDECHO) root.exe -b -l -q 'compile.C("$*")' > $*.log 2>&1
+files: $(FILES)
 
-%.root: lib%.$(DllSuf) rootalias.C
+logs: $(LOGS)
+
+NumericalTypeEvolution: $(SUCCESSES)
+
+$(LIBS): lib%.$(DllSuf): rootalias.C float16.cxx float16.h compile.C
+	$(CMDECHO) root.exe -b -l -q 'compile.C(0, "$*")' > $*.log 2>&1
+
+%.root: lib%.$(DllSuf) rootalias.C run.C
 	$(CMDECHO) root.exe -b -l -q 'run.C("$*")' > lib$*.log 2>&1 
 
-check.%.log: %.root $(FILES)
-	$(CMDECHO) root.exe -b -l -q 'read.C("$*")' 2>&1 | grep -v Processing > $@
+$(LOGS) : check.%.log: %.root $(FILES) read.C
+	$(CMDECHO) root.exe -b -l -q 'read.C(0, "$*")' 2>&1 | grep -v Processing > $@
 
-check%.success: check.%.log
+$(SUCCESSES) : check%.success: check.%.log
 	$(CMDECHO) diff -b check.ref $< && touch $@
+
+STL_FILES := map.root vector.root multimap.root list.root
+
+STL_LIBS := $(patsubst %.root,lib%.$(DllSuf),$(STL_FILES))
+
+STL_LOGS = $(patsubst %.root,check.%.log,$(STL_FILES))
+
+STL_SUCCESSES = $(patsubst %.root,check%.success,$(STL_FILES))
+
+.PHONY: stl_files
+
+stl_files: $(STL_FILES)
+
+stl_logs: $(STL_LOGS)
+
+StlTypeEvolution: $(patsubst %.root,check%.success,$(STL_FILES))
+
+$(STL_LIBS): lib%.$(DllSuf): rootalias.C maptovector.cxx maptovector.h compile.C
+	$(CMDECHO) root.exe -b -l -q 'compile.C(1, "$*")' > $*.log 2>&1
+
+$(STL_LOGS) : check.%.log: %.root $(STL_FILES) read.C
+	$(CMDECHO) root.exe -b -l -q 'read.C(1, "$*")' 2>&1 | grep -v Processing > $@
+
+$(STL_SUCCESSES) : check%.success: check.%.log
+	$(CMDECHO) diff -b check.stl.ref $< && touch $@
+
+
+

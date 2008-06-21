@@ -1,10 +1,5 @@
-int compile(const char *what)
+int compile(int type, const char *what)
 {
-   //static const TString make( gSystem->GetMakeSharedLib() );
-   //TString work( make );
-   //work.ReplaceAll("$Opt","$Opt -Dregular");
-   //gSystem->SetMakeSharedLib( work );
-
    static const TString incs( gSystem->GetIncludePath() );
    TString work( incs );
    TString mytype( what );
@@ -15,7 +10,24 @@ int compile(const char *what)
    work.Append( Form(" -DCASE_%s \"-DMYTYPE=%s\" -DWHAT=\\\"%s\\\" ",what,mytype.Data(),what) ); 
    gSystem->SetIncludePath( work );
    TString lib( Form("lib%s",what) );
-   return !gSystem->CompileMacro("float16.cxx","k",lib);
+
+   if (type==0) {
+      return !gSystem->CompileMacro("float16.cxx","k",lib);
+   } else if (type==1) {
+      return !gSystem->CompileMacro("maptovector.cxx","k",lib);
+   }
+}
+
+int compile(const char *what)
+{
+   const char *stltypes[] = { "vec", "list", "map", "multimap" };
+   for( int i = 0; i < sizeof(stltypes)/sizeof(char*); ++i ) {
+      if (strcmp(what,stltypes[i])==0) {
+         compile(1,what);
+         return;
+      }
+   }
+   compile(0,what);
 }
 
 void run(const char *what) {

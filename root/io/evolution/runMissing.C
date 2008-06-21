@@ -4,6 +4,7 @@
    f1->cd(); rootTree->Draw("Bpsi.mjpi>>h1","","",10);
    f2->cd(); rootTree->Draw("Bpsi.mjpi>>h2","","same",100);
    f1->cd(); rootTree->Draw("Bpsi.ctaujpi>>h3","","",10);
+   f2->cd(); rootTree->SetBranchStatus("Bpsi.ctau",1);
    f2->cd(); rootTree->Draw("Bpsi.ctau>>h4","","same",100);
 
    f1->cd();
