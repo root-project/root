@@ -7,7 +7,7 @@
 
 progdir=`dirname $0`
 runningdir=`pwd`
-if echo $progdir | grep -q -s ^/ || echo $progdir | grep -q -s ^~ ; then
+if echo $progdir | grep -q -s "^/" || echo $progdir | grep -q -s "^~" ; then
    # absolute path
    fullpath=$progdir
 else
