@@ -210,7 +210,7 @@ TMemStatStackInfo::TMemStatStackInfo():
       fSymbolIndexes(0),
       fStackID(0)
 {
-   // ctor
+   // default ctor
   
    fLastStamp.fStampType    = TMemStatInfoStamp::kStack;
    fCurrentStamp.fStampType = TMemStatInfoStamp::kStack;
