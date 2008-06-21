@@ -12,9 +12,11 @@ public:
 
 #ifdef __MAKECINT__
 #pragma link C++ class vector<vector<double> >+;
-#pragma link C++ class vector<vector<vector<double> > >+;
+//NOTYET #pragma link C++ class vector<vector<vector<double> > >+;
 #pragma link C++ class Track+;
 #endif
+
+namespace std {} using namespace std;
 
 class Top {
 public:
@@ -42,14 +44,18 @@ void createvec(const char *filename = "vec.root")
    i->push_back(3);
    i->push_back(6);
 
+#ifdef NOTYET
    std::vector<std::vector<std::vector<double> > > *tvec = new std::vector<std::vector<std::vector<double> > >;
    tvec->push_back( *dvec );
+#endif
 
    Top *top = new Top;
    t->Branch("myvec.",&d);
    t->Branch("myvecvec.",&dvec);
    t->Branch("myint.someodd.name",&i);
+#ifdef NOTYET
    t->Branch("myvecvecvec.",&tvec);
+#endif
    t->Branch("top.",&top);
    t->Fill();
    f->Write();
