@@ -4,30 +4,30 @@ Warning in <TClass::TClass>: no dictionary for class Wrapper is available
 Warning in <TClass::TClass>: no dictionary for class MyClass is available
 ******************************************************************************
 *Tree    :T         : T                                                      *
-*        :          : Tree compression factor =   1.00                       *
+*        :          : Tree compression factor =   1.10                       *
 ******************************************************************************
 *Branch  :obj                                                                *
 *Entries :        2 : BranchElement (see below)                              *
 *............................................................................*
 *Br    0 :myvar     :                                                        *
-*Entries :        2 : Total  Size=        640 bytes  One basket in memory    *
-*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*Entries :        2 : Total  Size=        555 bytes  File Size  =         77 *
+*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br    1 :arr       : arr_                                                   *
-*Entries :        2 : Total  Size=       3432 bytes  One basket in memory    *
-*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*Entries :        2 : Total  Size=       2707 bytes  File Size  =         91 *
+*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br    2 :arr.fUniqueID : fUniqueID[arr_]                                    *
-*Entries :        2 : Total  Size=        780 bytes  One basket in memory    *
-*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*Entries :        2 : Total  Size=        691 bytes  File Size  =        106 *
+*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.03     *
 *............................................................................*
 *Br    3 :arr.fBits : fBits[arr_]                                            *
-*Entries :        2 : Total  Size=        756 bytes  One basket in memory    *
-*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*Entries :        2 : Total  Size=        671 bytes  File Size  =        104 *
+*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.01     *
 *............................................................................*
 *Br    4 :arr.chunk : chunk[arr_]                                            *
-*Entries :        2 : Total  Size=        844 bytes  One basket in memory    *
-*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*Entries :        2 : Total  Size=        759 bytes  File Size  =        147 *
+*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.31     *
 *............................................................................*
 ************************
 *    Row   *     myvar *
