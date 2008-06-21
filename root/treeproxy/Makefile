@@ -130,7 +130,7 @@ vectorintEmuSel.h: dude.h dude.cxx $(CORELIBS) runvectorintEmu_C.$(DllSuf) vec.r
 #vectorintEmuSel_h.$(DllSuf): dude.h dude.cxx
 	
 vectorintEmu.clog: vectorintEmuSel_h.$(DllSuf) $(CORELIBS) runvectorintEmu_C.$(DllSuf) vec.root dude.cxx vectorintEmuSel.h
-	$(CMDECHO) root.exe -b -q -l 'runvectorintEmu.C+(5)' > vectorintEmu.clog 2>&1
+	$(CMDECHO) root.exe -b -q -l 'runvectorintEmu.C+(5)' | grep -v 'Warning in <TClass::TClass>: no dictionary for class' > vectorintEmu.clog 2>&1
 
 vectorintEmu: vectorintEmu.clog
 	$(TestDiff)
