@@ -145,6 +145,7 @@ public:
    virtual Int_t         Recv(char *mess, Int_t max);
    virtual Int_t         Recv(char *mess, Int_t max, Int_t &kind);
    virtual Int_t         RecvRaw(void *buffer, Int_t length, ESendRecvOptions opt = kDefault);
+   virtual Int_t         Reconnect() { return -1; }
    virtual Int_t         Select(Int_t interest = kRead, Long_t timeout = -1);
    virtual Int_t         Send(const TMessage &mess);
    virtual Int_t         Send(Int_t kind);
