@@ -34,7 +34,7 @@ template <class T> bool IsEquiv(const std::string &test, const T& orig, const T&
 
    if (orig.size() != copy.size()) {
       TestError(test,Form("For %s, wrong size! Wrote %d and read %d\n",classname,orig.size(),copy.size()));
-      return false;
+      // return false;
    }
 
    bool result = true;

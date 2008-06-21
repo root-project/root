@@ -151,8 +151,11 @@ public:
 
 
    bool SetOrVerifyScalarPtr(Int_t entryNumber, bool reset, const std::string &testname, int /*splitlevel*/) {
+      static int count = 0;
       Int_t seed = 4 * (entryNumber+1);
-      return utility::SetOrVerify("fScalarPtr",fScalarPtr,seed,entryNumber,reset,testname);
+      bool res = utility::SetOrVerify("fScalarPtr",fScalarPtr,seed,entryNumber,reset,testname);
+      ++count;
+      return res;
    }
    VERIFY(ScalarPtr);
 
