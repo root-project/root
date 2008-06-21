@@ -81,9 +81,9 @@ TInterpreter* TCint_Factory(const char* name, const char* title) {
 }
 
 namespace {
-   static class InitCintFactory {
+   static class TInitCintFactory {
    public:
-      InitCintFactory() {
+      TInitCintFactory() {
          gInterpreterFactory = TCint_Factory;
       }
    } gInitCintFactory;
