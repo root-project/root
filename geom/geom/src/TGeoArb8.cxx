@@ -702,7 +702,7 @@ void TGeoArb8::GetPlaneNormal(Double_t *p1, Double_t *p2, Double_t *p3, Double_t
 }   
 
 //_____________________________________________________________________________
-Bool_t TGeoArb8::GetPointsOnFacet(Int_t /*index*/, Int_t /*npoints*/, Double_t */*array*/) const
+Bool_t TGeoArb8::GetPointsOnFacet(Int_t /*index*/, Int_t /*npoints*/, Double_t * /* array */) const
 {
 // Fills array with n random points located on the surface of indexed facet.
 // The output array must be provided with a length of minimum 3*npoints. Returns
