@@ -247,6 +247,7 @@ public:
    virtual TBranch        *FindBranch(const char* name);
    virtual TLeaf          *FindLeaf(const char* name);
    virtual Int_t           Fit(const char* funcname, const char* varexp, const char* selection = "", Option_t* option = "", Option_t* goption = "", Long64_t nentries = 1000000000, Long64_t firstentry = 0); // *MENU*
+   virtual Int_t           FlushBaskets() const;
    virtual const char     *GetAlias(const char* aliasName) const;
    virtual TBranch        *GetBranch(const char* name);
    virtual TBranchRef     *GetBranchRef() const { return fBranchRef; };
@@ -400,6 +401,8 @@ public:
    virtual void            StartViewer(); // *MENU*
    virtual Int_t           UnbinnedFit(const char* funcname, const char* varexp, const char* selection = "", Option_t* option = "", Long64_t nentries = 1000000000, Long64_t firstentry = 0);
    void                    UseCurrentStyle();
+   virtual Int_t           Write(const char *name=0, Int_t option=0, Int_t bufsize=0);
+   virtual Int_t           Write(const char *name=0, Int_t option=0, Int_t bufsize=0) const;
 
    ClassDef(TTree,16)  //Tree descriptor (the main ROOT I/O class)
 };

@@ -123,9 +123,6 @@ void TBranchClones::Init(TTree *tree, TBranch *parent, const char* name, void* p
    fDirectory = fTree->GetDirectory();
    fFileName = "";
 
-   // Create the first basket.
-   TBasket* basket = new TBasket(branchcount, fTree->GetName(), this);
-   fBaskets.Add(basket);
    // Loop on all public data members of the class and its base classes.
    const char* itype = 0;
    TRealData* rd = 0;

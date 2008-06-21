@@ -78,9 +78,6 @@ TBranchRef::TBranchRef(TTree *tree)
    fDirectory  = fTree->GetDirectory();
    fFileName   = "";
 
-  //  Create the first basket
-   TBasket *basket = new TBasket("TRefTable",fTree->GetName(),this);
-   fBaskets.Add(basket);
 }
 
 

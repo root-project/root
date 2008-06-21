@@ -75,11 +75,6 @@ TBranchSTL::TBranchSTL( TTree *tree, const char *name,
       fBasketSeek[i] = 0;
    } 
 
-   //---------------------------------------------------------------------------
-   // Create a basket for the branch.
-   //---------------------------------------------------------------------------
-   TBasket* basket = new TBasket(name, fTree->GetName(), this);
-   fBaskets.Add(basket);
 }
 
 //------------------------------------------------------------------------------
@@ -123,11 +118,6 @@ TBranchSTL::TBranchSTL( TBranch* parent, const char* name,
       fBasketSeek[i] = 0;
    } 
 
-   //---------------------------------------------------------------------------
-   // Create a basket for the branch.
-   //---------------------------------------------------------------------------
-   TBasket* basket = new TBasket(name, fTree->GetName(), this);
-   fBaskets.Add(basket);
 }
 
 //------------------------------------------------------------------------------

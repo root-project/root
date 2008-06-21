@@ -899,6 +899,9 @@ Long64_t TTree::AutoSave(Option_t* option)
    //   if option contains "SaveSelf", gDirectory->SaveSelf() is called.
    //   This allows another process to analyze the Tree while the Tree is being filled.
    //
+   //   if option contains "FlushBaskets", TTree::FlushBaskets is called and all
+   //   the current basket are closed-out and written to disk individually.
+   //
    //   By default the previous header is deleted after having written the new header.
    //   if option contains "Overwrite", the previous Tree header is deleted
    //   before written the new header. This option is slightly faster, but
@@ -950,6 +953,9 @@ Long64_t TTree::AutoSave(Option_t* option)
    }
    TString opt = option;
    opt.ToLower();
+
+   if (opt.Contains("flushbaskets")) FlushBaskets();
+
    fSavedBytes = fTotBytes;
 
    TKey *key = (TKey*)fDirectory->GetListOfKeys()->FindObject(GetName());
@@ -3652,6 +3658,35 @@ Int_t TTree::Fit(const char* funcname, const char* varexp, const char* selection
 }
 
 //______________________________________________________________________________
+Int_t TTree::FlushBaskets() const
+{
+   // Write to disk all the basket that have not yet been individually written.
+   //
+   // Return the number of bytes written or -1 in case of write error.
+   
+   Int_t nbytes = 0;
+   Int_t nerror = 0;
+   TObjArray *lb = const_cast<TTree*>(this)->GetListOfBranches();
+   Int_t nb = lb->GetEntriesFast();
+   for (Int_t j = 0; j < nb; j++) {
+      TBranch* branch = (TBranch*) lb->UncheckedAt(j);
+      if (branch) {
+         Int_t nwrite = branch->FlushBaskets();
+         if (nwrite<0) {
+            ++nerror;
+         } else {
+            nbytes += nwrite;
+         }
+      }
+   }
+   if (nerror) {
+      return -1;
+   } else {
+      return nbytes;
+   }
+}
+
+//______________________________________________________________________________
 const char* TTree::GetAlias(const char* aliasName) const
 {
    // Returns the expanded value of the alias.  Search in the friends if any.
@@ -6325,6 +6360,25 @@ void TTree::UseCurrentStyle()
       gStyle->SetMarkerStyle(GetMarkerStyle());
       gStyle->SetMarkerSize(GetMarkerSize());
    }
+}
+
+//______________________________________________________________________________
+Int_t TTree::Write(const char *name, Int_t option, Int_t bufsize) const 
+{
+   // Write this object to the current directory. For more see TObject::Write
+   // Write calls TTree::FlushBaskets before writing the tree.
+
+   FlushBaskets();
+   return TObject::Write(name, option, bufsize);
+}
+
+//______________________________________________________________________________
+Int_t TTree::Write(const char *name, Int_t option, Int_t bufsize)
+{
+   // Write this object to the current directory. For more see TObject::Write
+   // If option & kFlushBasket, call FlushBasket before writing the tree.
+
+   return ((const TTree*)this)->Write(name, option, bufsize);
 }
 
 //////////////////////////////////////////////////////////////////////////

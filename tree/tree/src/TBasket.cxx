@@ -53,7 +53,7 @@ TBasket::TBasket()
 //_______________________________________________________________________
 TBasket::TBasket(TDirectory *motherDir) : TKey(motherDir)
 {
-   // Simple Constructor.
+   // Constructor used during reading.
 
    fDisplacement  = 0;
    fEntryOffset   = 0;
@@ -71,7 +71,7 @@ TBasket::TBasket(TDirectory *motherDir) : TKey(motherDir)
 TBasket::TBasket(const char *name, const char *title, TBranch *branch) : 
    TKey(branch->GetDirectory())
 {
-   // Basket normal constructor.
+   // Basket normal constructor, used during writing.
 
    SetName(name);
    SetTitle(title);

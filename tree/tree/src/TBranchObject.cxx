@@ -142,11 +142,6 @@ void TBranchObject::Init(TTree *tree, TBranch *parent, const char* name, const c
    fDirectory = fTree->GetDirectory();
    fFileName = "";
 
-   // Create the first basket.
-   if (!splitlevel) {
-      TBasket* basket = new TBasket(name, fTree->GetName(), this);
-      fBaskets.Add(basket);
-   }
 }
 
 //______________________________________________________________________________

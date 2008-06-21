@@ -262,10 +262,6 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
       fBasketSeek[i] = 0;
    }
 
-   // Create a basket for the branch.
-   TBasket* basket = new TBasket(name, fTree->GetName(), this);
-   fBaskets.Add(basket);
-
    // We need to keep track of the counter branch if we have
    // one, since we cannot set it until we have created our
    // leaf, which we do last.
@@ -393,7 +389,7 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
             } else {
                clones = (TClonesArray*)pointer;
             }
-            basket->DeleteEntryOffset(); //entryoffset not required for the clonesarray counter
+//             basket->DeleteEntryOffset(); //entryoffset not required for the clonesarray counter
             fEntryOffsetLen = 0;
             // ===> Create a leafcount
             TLeaf* leaf = new TLeafElement(this, name, fID, fStreamerType);
@@ -603,10 +599,6 @@ void TBranchElement::Init(TTree *tree, TBranch *parent, const char* bname, TClon
       fBasketSeek[i]  = 0;
    }
 
-   // Create a basket for the terminal branch
-   TBasket *basket = new TBasket(name, fTree->GetName(), this);
-   fBaskets.Add(basket);
-
    // Reset the bit kAutoDelete to specify that when reading
    // the object should not be deleted before calling the streamer.
    SetAutoDelete(kFALSE);
@@ -734,10 +726,7 @@ void TBranchElement::Init(TTree *tree, TBranch *parent, const char* bname, TVirt
 
    fBasketEntry[0] = fEntryNumber;
    fBasketBytes[0] = 0;
-
-   // Create a basket for the terminal branch
-   TBasket* basket = new TBasket(name, fTree->GetName(), this);
-   fBaskets.Add(basket);
+   fBasketSeek[0] = 0;
 
    // Reset the bit kAutoDelete to specify that, when reading,
    // the object should not be deleted before calling the streamer.

@@ -93,6 +93,8 @@ protected:
    void     SetSkipZip(Bool_t skip = kTRUE) { fSkipZip = skip; }
    void     Init(const char *name, const char *leaflist, Int_t compress);
 
+   Int_t    WriteBasket(TBasket* basket, Int_t where);
+
 private:
    TBranch(const TBranch&);             // not implemented
    TBranch& operator=(const TBranch&);  // not implemented
@@ -104,6 +106,7 @@ public:
    virtual ~TBranch();
 
    virtual void      AddBasket(TBasket &b, Bool_t ondisk, Long64_t startEntry);
+   virtual void      AddLastBasket(Long64_t startEntry);
    virtual void      Browse(TBrowser *b);
    virtual void      DeleteBaskets(Option_t* option="");
    virtual void      DropBaskets(Option_t *option = "");
@@ -112,6 +115,9 @@ public:
    virtual void      FillLeaves(TBuffer &b);
    virtual TBranch  *FindBranch(const char *name);
    virtual TLeaf    *FindLeaf(const char *name);
+           Int_t     FlushBaskets();
+           Int_t     FlushOneBasket(UInt_t which);
+
    virtual char     *GetAddress() const {return fAddress;}
    virtual Int_t     GetBasketSize() const {return fBasketSize;}
    virtual const char* GetClassName() const { return ""; }
@@ -175,7 +181,6 @@ public:
    virtual void      SetOffset(Int_t offset=0) {fOffset=offset;}
    virtual void      SetTree(TTree *tree) { fTree = tree;}
    virtual void      UpdateAddress() {;}
-           void      WriteBasket(TBasket* basket);
 
    static  void      ResetCount();
 

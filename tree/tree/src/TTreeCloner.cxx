@@ -136,29 +136,7 @@ void TTreeCloner::CloseOutWriteBaskets()
 
    for(Int_t i=0; i<fToBranches.GetEntries(); ++i) {
       TBranch *to = (TBranch*)fToBranches.UncheckedAt(i);
-
-      TObjArray *array = to->GetListOfBaskets();
-      if (array->GetEntries()) {
-         TBasket *basket = to->GetBasket(to->GetWriteBasket());
-         if (basket) {
-            if (basket->GetNevBuf()) {
-               // If the basket already contains entry we need to close it
-               // out. (This is because we can only transfer full compressed
-               // buffer)
-
-               if (basket->GetBufferRef()->IsReading()) {
-                  basket->SetWriteMode();
-               }
-               to->WriteBasket(basket);
-               basket = to->GetBasket(to->GetWriteBasket()); // WriteBasket create an empty basket
-            }
-            if (basket) {
-               basket->DropBuffers();
-               to->GetListOfBaskets()->RemoveAt(to->GetWriteBasket());
-               delete basket;
-            }
-         }
-      }
+      to->FlushOneBasket(to->GetWriteBasket());
    }
 }
 
@@ -352,10 +330,12 @@ void TTreeCloner::CopyMemoryBaskets()
          basket = (TBasket*)basket->Clone();
          basket->SetBranch(to);
          to->AddBasket(*basket, kFALSE, fToStartEntries+from->GetBasketEntry()[from->GetWriteBasket()]);
+      } else {
+         to->AddLastBasket(  fToStartEntries+from->GetBasketEntry()[from->GetWriteBasket()] );
       }
-      // If the branch is a TBranchElement non-terminal 'object' branch, it's basket will contain 0
-      // events.
-      if (from->GetEntries()!=0 && from->GetWriteBasket()==0 && basket->GetNevBuf()==0) {
+      // In older files, if the branch is a TBranchElement non-terminal 'object' branch, it's basket will contain 0
+      // events, in newer file in the same case, the write basket will be missing.
+      if (from->GetEntries()!=0 && from->GetWriteBasket()==0 && (basket==0 || basket->GetNevBuf()==0)) {
          to->SetEntries(to->GetEntries()+from->GetEntries());
       }
    }
@@ -449,22 +429,25 @@ void TTreeCloner::WriteBaskets()
       Int_t index = fBasketNum[ fBasketIndex[j] ];
 
       Long64_t pos = from->GetBasketSeek(index);
-      if (from->GetBasketBytes()[index] == 0) {
-         from->GetBasketBytes()[index] = basket->ReadBasketBytes(pos, fromfile);
-      }
-      Int_t len = from->GetBasketBytes()[index];
-      Long64_t entryInBasket;
-      if (index == from->GetWriteBasket()) {
-         entryInBasket = from->GetEntries() - from->GetBasketEntry()[index];
+      if (pos!=0) {
+         if (from->GetBasketBytes()[index] == 0) {
+            from->GetBasketBytes()[index] = basket->ReadBasketBytes(pos, fromfile);
+         }
+         Int_t len = from->GetBasketBytes()[index];
+
+         basket->LoadBasketBuffers(pos,len,fromfile);
+         basket->IncrementPidOffset(fPidOffset);
+         basket->CopyTo(tofile);
+         to->AddBasket(*basket,kTRUE,fToStartEntries + from->GetBasketEntry()[index]);
       } else {
-         entryInBasket = from->GetBasketEntry()[index+1] - from->GetBasketEntry()[index];
+         TBasket *frombasket = from->GetBasket( index );
+         if (frombasket->GetNevBuf()>0) {
+            TBasket *tobasket = (TBasket*)frombasket->Clone();
+            tobasket->SetBranch(to);
+            to->AddBasket(*tobasket, kFALSE, fToStartEntries+from->GetBasketEntry()[index]);
+            to->FlushOneBasket(to->GetWriteBasket());
+         }
       }
-
-      basket->LoadBasketBuffers(pos,len,fromfile);
-      basket->IncrementPidOffset(fPidOffset);
-      basket->CopyTo(tofile);
-      to->AddBasket(*basket,kTRUE,fToStartEntries + from->GetBasketEntry()[index]);
-
    }
    delete basket;
 }

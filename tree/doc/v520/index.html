@@ -129,6 +129,7 @@ where reco_ee_et is a vector&lt;vector&lt;double&gt; &gt;  See http://root.cern.
 <li>Insure that the formula that are used as indices or as argument to special functions have their branch(es) loaded once.  This fixes http://root.cern.ch/phpBB2/viewtopic.php?p=27080#27080
 <li>Correct the drawing of "X[1]:X[5]" when X is a vector&lt; vector&lt;float&gt; &gt;
 and X[1].size()!=X[5].size().  (reported at http://root.cern.ch/phpBB2/viewtopic.php?p=27070)
+<li>Correct the passing of NaN to function being called by TTree::Draw.</li>
 </ul>
 
 <h4>Splitting STL collections of  pointers</h4>
@@ -156,8 +157,37 @@ The size of this unzipping cache is 20% the size of the TTreeCache and can be mo
 This experimental feature is disabled by default, to activate it use the static function <pre>TTreeCache::SetParallelUnzip(TTreeCacheUnzip::EParUnzipMode option = TTreeCacheUnzip::kEnable).</pre> The possible values to pass are: <ul><li>TTreeCacheUnzip::kEnable to enable it</li><li>TTreeCacheUnzip::kDisable to disable it</li><li>TTreeCacheUnzip::kForce to force it.</li></ul>The TTreeCacheUnzip is actived 
 only if you have more than one core.  To activate it with only one core useTTreeCacheUnzip::kForce option (for example to measure the overhead).
 
+<h4>Disk and Memory Space Gain</h4>
+
+In ROOT older than v5.20/00, the branches' last basket, also known as the <i>write basket</i>, was always saved in the same "key" as the TTree object and was always present in memory when reading or writing.  
+When reading this write basket was always present in memory even if the branch was never accessed.
+<p>
+Starting in v5.20/00, TTree::Write closes out, compresses (when requested) and writes to disk in their own file record the <i>write baskets</i> of all the branches.
+(This is implemented via the new function TTree::FlushBaskets, TBranch::FlushBaskets, TBranch::FlushOneBaskets)
+<p>
+TTree::AutoSave supports a new option "FlushBaskets" which will call FlushBaskets before saving the TTree object.
+
+<h5><b><u>Benefits</u></b></h5>
+
+Flushing the write baskets has several advantages:
+<ul>
+<li>Reduce the file size of the TTree object (it not longer contains the last basket), improving read time of the TTree object</li>
+<li>Reduce memory footprint of the TTree object.
+<ul><li>In a TTree which "flushed" buffer, there is now usually only zero or one buffer in memory.</li>
+<li>Previously each branch always had at least one basket in memory and usually 2 (the write basket and one read basket).</li>
+<li>Now only the basket of the branches actually read are loaded in memory.</li>
+</ul>
+</li>
+<li>allow for the basket to be compressed and stored separated, increasing the compression factor.</li>
+</ul>
+
+Note: Calling FlushBaskets too often (either directly of via AutoSave("FlushBaskets")) can lead to unnecessary fragmentation of the ROOT file, 
+since it write the baskets to disk (and a new basket will be started at the next fill) whether or not the content was close to filling the basket or not.
+
 <h4>Others</h4>
 <ul>
+<li>The fast tree cloning (TTreeCloner) was enhanced to support copying in-memory TTrees (that have been save as a single key on file).  This issue was preventing <b>hadd</b> to fast clone files containing any 'in-memory' tree.
+</li>
 <li>Re-enabled the splitting of TVector3 and of any classes starting by TVector
 that is not a TVectorT.</li>
 <li>Fix the list of StreamerInfo stored in the TFile in the case of a slow
@@ -193,5 +223,6 @@ This omission meant that slow CloneTree was (fataly) missing in
 some cases the copy of the TStreamerInfo for class that are part 
 part of the TTree but had only a base and no member or in 
 some cases where it had only object data members.</li>
+<li>Fix the return value of the lookup in TChainIndex 
+when the value searched for does not exist.</li>
 </ul>
-
