@@ -44,7 +44,7 @@ void hclient(Bool_t evol=kFALSE)
       hpx = new TH2F("hpxpy","py vs px",40,-4,4,40,-4,4);
    }
 
-   TMessage::EnableSchemaEvolution(evol);
+   TMessage::EnableSchemaEvolutionForAll(evol);
    TMessage mess(kMESS_OBJECT);
    //TMessage mess(kMESS_OBJECT | kMESS_ACK);
 
