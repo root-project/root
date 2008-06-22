@@ -2245,13 +2245,22 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
 //______________________________________________________________________________
 TObject *TPad::FindObject(const char *name) const
 {
-  // Search if object named name is inside this pad.
-  //
-  //  note that the pads inside this pad are not searched.
-  //   see other prototype below
+   // Search if object named name is inside this pad or in pads inside this pad.
+   //
+   //  In case name is in several subpads the first one is returned.
 
-   if (fPrimitives) return fPrimitives->FindObject(name);
-   return 0;
+   if (!fPrimitives) return 0;
+   TObject *found = fPrimitives->FindObject(name);
+   if (found) return found;
+   TObject *cur;
+   TIter    next(GetListOfPrimitives());
+   while ((cur = next())) {
+      if (cur->InheritsFrom(TPad::Class())) {
+         found = ((TPad*)cur)->FindObject(name);
+         if (found) return found;
+      }
+   }
+    return 0;
 }
 
 
