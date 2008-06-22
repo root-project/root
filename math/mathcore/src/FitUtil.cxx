@@ -48,28 +48,28 @@ namespace ROOT {
          // and this is a dummy class
          struct IntegralEvaluator { 
 
-            IntegralEvaluator(const ROOT::Math::IParamMultiFunction & func, const double * p, bool useIntegral = true) : 
+            IntegralEvaluator(const ROOT::Math::IParamMultiFunction & func, const double * p, bool useIntegral = true) :
                fFunc(0),
                fIg1Dim(0), 
                fIgNDim(0) 
             { 
                if (useIntegral) { 
                   // copy the function object to be able to modify the parameters 
-                  unsigned int dim = func.NDim(); 
+                  fDim = func.NDim(); 
                   fFunc = dynamic_cast<ROOT::Math::IParamMultiFunction *>( func.Clone() ); 
                   assert(fFunc != 0); 
                   // set parameters in function
                   fFunc->SetParameters(p); 
-                  if (dim == 1) { 
+                  if (fDim == 1) { 
                      fIg1Dim = new ROOT::Math::IntegratorOneDim(); 
                      fIg1Dim->SetFunction( static_cast<const ROOT::Math::IMultiGenFunction & >(*fFunc),false);
                   } 
-                  else if (dim > 1) {
+                  else if (fDim > 1) {
                      fIgNDim = new ROOT::Math::IntegratorMultiDim();
                      fIgNDim->SetFunction(*fFunc);
                   }
                   else
-                     assert(dim > 0); 
+                     assert(fDim > 0); 
                }
             }
 
