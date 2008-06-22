@@ -44,7 +44,8 @@ prompt_rootrepository="ftp://root.cern.ch/root/"
 prog=`basename $0`
 progdir=`dirname $0`
 runningdir=`pwd`
-if echo $progdir | grep -q -s ^/ || echo $progdir | grep -q -s ^~ ; then
+if echo $progdir | grep "^/" > /dev/null 2>& 1 || \
+   echo $progdir | grep "^~" > /dev/null 2>& 1; then
    # absolute path
    fullpath=$progdir
 else
