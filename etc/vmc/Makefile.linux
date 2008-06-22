@@ -5,12 +5,7 @@
 # The compilers
 CXX       = g++ 
 CC	  = gcc
-
-ifneq (,$(findstring gfortran,$(ROOTBUILD)))
-F77	  = gfortran
-else
-F77	  = g77
-endif
+F77	  = $(shell root-config --f77)
 
 # Global optimisation
 OPT   = -O2 -g
@@ -29,10 +24,14 @@ AWK	  = awk
 CXXOPTS       = $(OPT) -Wall -W -fPIC -pipe -Woverloaded-virtual
 COPT	      = $(OPT)
 
-ifneq (,$(findstring gfortran,$(ROOTBUILD)))
+ifeq (g95,$(F77))
+FOPT	      = $(OPT) -fno-second-underscore
+else
+ifeq (gfortran,$(F77))
 FOPT	      = $(OPT) -fno-second-underscore
 else
 FOPT	      = $(OPT) -fno-second-underscore
+endif
 endif
 
 GCC_MAJOR    := $(shell $(CXX) -v 2>&1 | \
@@ -48,8 +47,14 @@ CLIBCXXOPTS   = $(CLIBDEFS)
 CLIBCOPT      = $(CLIBDEFS)
 CLIBFOPT      = $(CLIBDEFS)
 
-ifneq (,$(findstring gfortran,$(ROOTBUILD)))
+ifeq (g95,$(F77))
+CLIBDEFS     += -DCERNLIB_G95
+else
+ifeq (gfortran,$(F77))
 CLIBDEFS     += -DCERNLIB_GFORTRAN
+else
+
+endif
 endif
 
 LD            = g++
@@ -58,11 +63,15 @@ LDFLAGS       = $(OPT)
 SHLD	      = $(LD)
 SOFLAGS       = -Wl,-soname,$(notdir $@) -shared 
 
-ifneq (,$(findstring gfortran,$(ROOTBUILD)))
+ifeq (g95,$(F77))
+SHLIB += -L$(shell g95 --print-search-dirs | sed -n -e 's/install: //p') -lf95
+else
+ifeq (gfortran,$(F77))
 SHLIB := $(shell gfortran -print-file-name=libgfortran.so)
 SHLIB += $(shell gfortran -print-file-name=libgfortranbegin.a)
 else
 SHLIB         = -lg2c
+endif
 endif
 
 # Graphics
