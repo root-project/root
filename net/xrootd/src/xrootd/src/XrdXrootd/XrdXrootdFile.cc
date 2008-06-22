@@ -37,6 +37,7 @@ extern XrdOucTrace      *XrdXrootdTrace;
 
        XrdXrootdFileLock *XrdXrootdFile::Locker;
 
+       int              XrdXrootdFile::sfOK         = 1;
        const char      *XrdXrootdFile::TraceID      = "File";
        const char      *XrdXrootdFileTable::TraceID = "FileTable";
 
@@ -47,15 +48,16 @@ extern XrdOucTrace      *XrdXrootdTrace;
 /*                           C o n s t r u c t o r                            */
 /******************************************************************************/
   
-XrdXrootdFile::XrdXrootdFile(char *id, XrdSfsFile *fp, char mode, char async)
+XrdXrootdFile::XrdXrootdFile(char *id, XrdSfsFile *fp, char mode, char async,
+                             int sfok, struct stat *sP)
 {
     static XrdSysMutex seqMutex;
     struct stat buf;
+    off_t mmSize;
     int i;
 
     XrdSfsp  = fp;
     mmAddr   = 0;
-    mmSize   = 0;
     FileMode = mode;
     AsyncMode= async;
     ID       = id;
@@ -63,11 +65,39 @@ XrdXrootdFile::XrdXrootdFile(char *id, XrdSfsFile *fp, char mode, char async)
     readCnt  = 0;
     writeCnt = 0;
 
-// Develop a unique hash for this file
+// Get the file descriptor number (none if not a regular file)
 //
-   fp->stat(&buf);
-   i = bin2hex((char *)FileKey,    (char *)&buf.st_dev, sizeof(buf.st_dev));
-   i = bin2hex((char *)&FileKey[i],(char *)&buf.st_ino, sizeof(buf.st_ino));
+   if (fp->fctl(SFS_FCTL_GETFD, 0, fp->error) != SFS_OK) fdNum = -1;
+      else fdNum = fp->error.getErrInfo();
+   sfEnabled = (sfOK && sfok && fdNum >= 0 ? 1 : 0);
+
+// Determine if file is memory mapped
+//
+   if (fp->getMmap((void **)&mmAddr, mmSize) != SFS_OK) isMMapped = 0;
+      else {isMMapped = (mmSize ? 1 : 0);
+            fSize = static_cast<long long>(mmSize);
+           }
+
+// Get file status information (we need it) and optionally return it to caller
+//
+   if (!sP) sP = &buf;
+   fp->stat(sP);
+   if (!isMMapped) fSize = static_cast<long long>(sP->st_size);
+
+// Develop a unique hash for this file. The key will not be longer than 33 bytes
+// including the null character.
+//
+        if (sP->st_dev != 0 || sP->st_ino != 0)
+           {i = bin2hex( FileKey,   (char *)&sP->st_dev, sizeof(sP->st_dev));
+            i = bin2hex(&FileKey[i],(char *)&sP->st_ino, sizeof(sP->st_ino));
+           }
+   else if (fdNum > 0) 
+           {strcpy(  FileKey, "fdno");
+            bin2hex(&FileKey[4], (char *)&fdNum,   sizeof(fdNum));
+           }
+   else    {strcpy(  FileKey, "sfsp");
+            bin2hex(&FileKey[4], (char *)&XrdSfsp, sizeof(XrdSfsp));
+           }
 }
   
 /******************************************************************************/

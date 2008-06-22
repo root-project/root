@@ -82,6 +82,11 @@ XrdMonDecPacketDecoder::operator()(const XrdMonHeader& header,
             decodeUserPacket(packet+HDRLEN, len, senderId);
             break;
         }
+        case PACKET_TYPE_STAGE : {
+            decodeStagePacket(packet+HDRLEN, len, senderId);
+            break;
+        }
+        
         default: {
             cerr << "Unsupported packet type: " << header.packetType() << endl;
         }
@@ -176,7 +181,21 @@ XrdMonDecPacketDecoder::decodeUserPacket(const char* packet,
                     senderId);
 }
 
+// packet should point to data after header
+void
+XrdMonDecPacketDecoder::decodeStagePacket(const char* packet, 
+                                          int len, 
+                                          senderid_t senderId)
+{
+    kXR_int32 x32;
+    memcpy(&x32, packet, sizeof(kXR_int32));
+    dictid_t dictId = ntohl(x32);
 
+    _sink.addStageInfo(dictId, 
+                       packet+sizeof(kXR_int32), 
+                       len-sizeof(kXR_int32),
+                       senderId);
+}
 
 XrdMonDecPacketDecoder::TimePair
 XrdMonDecPacketDecoder::decodeTime(const char* packet)

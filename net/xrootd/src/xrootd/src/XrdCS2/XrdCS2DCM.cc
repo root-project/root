@@ -14,7 +14,6 @@ const char *XrdCS2DCM2csCVSID = "$Id$";
 
 #include <unistd.h>
 #include <fcntl.h>
-#include <iostream.h>
 #include <string.h>
 #include <stdio.h>
 #include <sys/types.h>
@@ -28,6 +27,7 @@ const char *XrdCS2DCM2csCVSID = "$Id$";
 #include "XrdNet/XrdNetPeer.hh"
 
 #include "XrdSys/XrdSysError.hh"
+#include "XrdSys/XrdSysHeaders.hh"
 #include "XrdOuc/XrdOucTokenizer.hh"
 #include "XrdOuc/XrdOucUtils.hh"
 

@@ -146,9 +146,9 @@ int XrdOlbCache::AddFile(const char    *path,
 
 // Find if this server can handle the file in r/w mode
 //
-   if (isrw < 0)
-      if (!Paths.Find(path, pinfo)) isrw = 0;
-         else isrw = (pinfo.rwvec & mask) != 0;
+   if (isrw < 0) {if (!Paths.Find(path, pinfo)) isrw = 0;
+                     else isrw = (pinfo.rwvec & mask) != 0;
+                 }
 
 // Lock the hash table
 //

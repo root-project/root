@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-#  $Id: StopXRD,v 1.5 2004/12/15 02:55:30 abh Exp $
+#  $Id: StopXRD,v 1.7 2008/05/19 23:53:43 abh Exp $
 #
 # (C) 2003 by the Board of Trustees of the Leland Stanford, Jr., University
 #                          All Rights Reserved
@@ -10,11 +10,11 @@
 
 # The following snippet is from the StartXRD.cf file.
 #
-MYOS=`/bin/uname | /bin/awk '{print $1}'`
+MYOS=`uname | awk '{print $1}'`
 if [ "$MYOS" = "SunOS" ]; then
 MYNAME=`/usr/ucb/whoami`
 else
-MYNAME=`/usr/bin/whoami`
+MYNAME=`whoami`
 fi
 
 CONDCHK=0
@@ -25,12 +25,12 @@ CONDCHK=0
 
 Debug () {
     if test $VERBOSE -eq 1; then
-       /bin/echo $1
+       echo $1
     fi
     }
 
 Emsg () {
-    /bin/echo StopXRD: $1
+    echo StopXRD: $1
     exit 4
     }
 
@@ -40,7 +40,7 @@ Terminate() {
     # Verify that we can kill this process
     #
       if [ $MYNAME != root ]; then
-         set -- `/bin/ps -p $xrdpid -o user`
+         set -- `ps -p $xrdpid -o user`
          if [ $2 != $MYNAME ]; then
             Emsg "User $MYNAME can't kill process $xrdpid started by $2."
          fi
@@ -48,7 +48,7 @@ Terminate() {
 
     # Now kill the process
     #
-      set -- `/bin/kill -9 $xrdpid 2>&1`
+      set -- `kill -9 $xrdpid 2>&1`
       if [ $? -ne 0 ]; then
          shift 2
          Emsg "Unable to kill process $xrdpid; $*."
@@ -60,13 +60,13 @@ Check(){
 
     # Check if the process is indeed dead
     #
-      FOO=`/bin/ps -p $xrdpid`
+      FOO=`ps -p $xrdpid`
       if [ $? -eq 0 ]; then
          sleep 1
-         FOO=`/bin/ps -p $xrdpid`
+         FOO=`ps -p $xrdpid`
          if [ $? -eq 0 ]; then
-         /bin/echo "pid $xrdpid is still alive..."
-         /bin/echo $FOO
+         echo "pid $xrdpid is still alive..."
+         echo $FOO
          fi
       fi
 
@@ -91,14 +91,14 @@ while test -n "$1"; do
 
 # find the process number assigned to the XRD
 #
-  set -- `/bin/ps -e -o pid -o args | /bin/grep /opt/xrootd/ | /bin/grep /bin/xrootd | /bin/grep -v grep | /bin/awk '{print $1}'`
+  set -- `ps -e -o pid -o comm | grep '.*xrootd$' | awk '{print $1}'`
 
   if [ -z "$1" ]; then
      msg="Unable to find XRD process number"
      if [ $CONDCHK -ne 1 ]; then
         Emsg "$msg; is it running?"
      fi
-     /bin/echo StopXRD: $msg\; continuing.
+     echo StopXRD: $msg\; continuing.
      exit 0
   fi
 
@@ -115,4 +115,4 @@ while test -n "$1"; do
       Check $xrdpid
       done
 
-  /bin/echo StopXRD: XRD stopped.
+  echo StopXRD: XRD stopped.

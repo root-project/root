@@ -19,9 +19,9 @@
 #include "XrdMon/XrdMonCtrDebug.hh"
 #include "XrdMon/XrdMonCtrCollector.hh"
 #include "XProtocol/XPtypes.hh"
+#include "XrdSys/XrdSysHeaders.hh"
 
 #include <iomanip>
-#include <iostream>
 using std::cerr;
 using std::cout;
 using std::endl;

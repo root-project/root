@@ -75,6 +75,15 @@ class XrdClientAdmin : public XrdClientAbs {
                                         long &flags,
                                         long &modtime);
 
+
+   bool                            Stat_vfs(const char *fname,
+					    int &rwservers,
+					    long long &rwfree,
+					    int &rwutil,
+					    int &stagingservers,
+					    long long &stagingfree,
+					    int &stagingutil);
+
    bool                            DirList(const char *dir,
                                            vecString &);
 
@@ -131,6 +140,9 @@ class XrdClientAdmin : public XrdClientAbs {
    bool                            Locate(kXR_char *path,
 					  XrdClientVector<XrdClientLocate_Info> &hosts);
 
+
+   bool                            Truncate(const char *path, long long newsize);
+   
    UnsolRespProcResult             ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *sender,
                                                          XrdClientMessage *unsolmsg);
 

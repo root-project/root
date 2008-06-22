@@ -1,5 +1,6 @@
 Summary: An eXtended Root Daemon (xrootd)
 Name: xrootd
+#  note: "-" is not allowed in version string!
 Version: @VERSION@
 Release: 1
 Prefix: /opt/xrootd
@@ -16,7 +17,6 @@ root files. An optional load balancer is also included.
 
 %prep
 
-# TODO: change this explicit path
 %setup -n @PACKAGE_TARNAME@-@PACKAGE_VERSION@
 
 %build
@@ -27,11 +27,12 @@ make
 
 %install
 make install DESTDIR=$RPM_BUILD_ROOT
+find $RPM_BUILD_ROOT \( -type f -o -type l \) -print \
+    | sed "s#^$RPM_BUILD_ROOT/*#/#" > RPM-FILE-LIST
 
-
-%files
-/opt/xrootd/*
+%files -f RPM-FILE-LIST
 
 
 %clean
 rm -rf $RPM_BUILD_ROOT
+

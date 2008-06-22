@@ -7,12 +7,13 @@
 ##              DE-AC03-76-SFO0515 with the Department of Energy
 ##
 ##
-## Version info: $Id: Makefile.am,v 1.5 2007/06/07 10:44:26 dfeich Exp $
+## Version info: $Id: Makefile.am,v 1.11 2008/05/17 13:34:07 dfeich Exp $
 ## Checked in by $Author: dfeich $
 ################################################################################
 
 
-noinst_HEADERS = XrdVersion.hh XProtocol/XProtocol.hh  XProtocol/XPtypes.hh
+noinst_HEADERS = XrdVersion.hh XProtocol/YProtocol.hh XProtocol/XProtocol.hh \
+                 XProtocol/XPtypes.hh
 
 #######################################################################
 ## Option conditionals
@@ -53,6 +54,11 @@ if ENABLE_CASTOR
 CASTOR = XrdCS2
 endif
 
+if ENABLE_POSIX
+XRDPOSIX = XrdPosix
+XRDPSS = XrdPss
+endif
+
 
 #######################################################################
 
@@ -66,18 +72,21 @@ SUBDIRS = XrdSys \
           $(XRDSECKRB4) \
           $(XRDSECKRB5) \
           $(XRDSECGSI) \
+          XrdSecunix \
           XrdSfs \
           XrdAcc \
+          XrdBwm \
           XrdOdc \
           XrdOss \
-          XrdOfs \
           Xrd \
+          XrdCms \
+          XrdOfs \
           XrdOlb \
           XrdRootd \
           XrdXrootd \
           XrdClient \
-          XrdPosix \
-          XrdPss \
+          $(XRDPOSIX) \
+          $(XRDPSS) \
           $(XRDMON) \
           $(CASTOR) \
           $(TOKENAUTHZ)

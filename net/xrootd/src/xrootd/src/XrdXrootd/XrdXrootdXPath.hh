@@ -22,23 +22,23 @@ class XrdXrootdXPath
 {
 public:
 
-inline XrdXrootdXPath *First() {return first;}
 inline XrdXrootdXPath *Next()  {return next;}
+inline int             Opts()  {return pathopt;}
 inline char           *Path()  {return path;}
 
-static void            Insert(const char *pd, int popt=0)
-                             {XrdXrootdXPath *pp = 0, *p = first;
-                              XrdXrootdXPath *newp = new XrdXrootdXPath(pd,popt);
+       void            Insert(const char *pd, int popt=0, int flags=XROOTDXP_OK)
+                             {XrdXrootdXPath *pp = 0, *p = next;
+                              XrdXrootdXPath *newp = new XrdXrootdXPath(pd,popt,flags);
                               while(p && newp->pathlen >= p->pathlen)
                                    {pp = p; p = p->next;}
                               newp->next = p;
                               if (pp) pp->next = newp;
-                                 else first    = newp;
+                                 else     next = newp;
                              }
 
 inline int             Validate(const char *pd, const int pl=0)
                                {int plen = (pl ? pl : strlen(pd));
-                                XrdXrootdXPath *p = first;
+                                XrdXrootdXPath *p = next;
                                 while(p && plen >= p->pathlen)
                                      {if (!strncmp(pd, p->path, p->pathlen))
                                          return p->pathopt;
@@ -47,9 +47,9 @@ inline int             Validate(const char *pd, const int pl=0)
                                 return 0;
                                }
 
-       XrdXrootdXPath(const char *pathdata="", int popt=0)
+       XrdXrootdXPath(const char *pathdata="",int popt=0,int flags=XROOTDXP_OK)
                      {next = 0;
-                      pathopt = popt | XROOTDXP_OK;
+                      pathopt = popt | flags;
                       pathlen = strlen(pathdata);
                       path    = strdup(pathdata);
                      }
@@ -58,7 +58,6 @@ inline int             Validate(const char *pd, const int pl=0)
 
 private:
 
-static XrdXrootdXPath *first;
        XrdXrootdXPath *next;
        int             pathlen;
        int             pathopt;

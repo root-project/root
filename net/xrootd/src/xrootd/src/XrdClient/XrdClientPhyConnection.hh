@@ -21,6 +21,7 @@
 #include "XrdClient/XrdClientInputBuffer.hh"
 #include "XrdClient/XrdClientUrlInfo.hh"
 #include "XrdClient/XrdClientThread.hh"
+#include "XrdSys/XrdSysPthread.hh"
 #include "XrdSys/XrdSysSemWait.hh"
 
 #include <time.h> // for time_t data type
@@ -99,6 +100,8 @@ public:
 
     bool           ExpiredTTL();
     short          GetLogConnCnt() const { return fLogConnCnt; }
+    int            GetReaderThreadsCnt() { XrdSysMutexHelper l(fMutex); return fReaderthreadrunning; }
+
     long           GetTTL() { return fTTLsec; }
 
     XrdSecProtocol *GetSecProtocol() const { return fSecProtocol; }
@@ -118,10 +121,13 @@ public:
 		 (fServer.HostAddr == addr) );
     }
 
-    ELoginState    IsLogged() const { return fLogged; }
+    ELoginState    IsLogged();
+
     bool           IsPort(int port) { return (fServer.Port == port); };
     bool           IsUser(const XrdOucString &usr) { return (fServer.User == usr); };
-    bool           IsValid() const { return ( (fSocket != 0) && fSocket->IsConnected());}
+    bool           IsValid();
+    
+
     void           LockChannel();
 
     // see XrdClientSock for the meaning of the parameters
@@ -137,9 +143,9 @@ public:
     void           UnlockChannel();
     int            WriteRaw(const void *buffer, int BufferLength, int substreamid = 0);
 
-    int TryConnectParallelStream(int port, int windowsz) { return ( fSocket ? fSocket->TryConnectParallelSock(port, windowsz) : -1); }
-    int EstablishPendingParallelStream(int newid) { return ( fSocket ? fSocket->EstablishParallelSock(newid) : -1); }
-    void RemoveParallelStream(int substream) { if (fSocket) fSocket->RemoveParallelSock(substream); }
+    int TryConnectParallelStream(int port, int windowsz, int sockid) { return ( fSocket ? fSocket->TryConnectParallelSock(port, windowsz, sockid) : -1); }
+    int EstablishPendingParallelStream(int tmpid, int newid) { return ( fSocket ? fSocket->EstablishParallelSock(tmpid, newid) : -1); }
+    void RemoveParallelStream(int substreamid) { if (fSocket) fSocket->RemoveParallelSock(substreamid); }
     // Tells if the attempt to establish the parallel streams is ongoing or was done
     //  and mark it as ongoing or done
     bool TestAndSetMStreamsGoing();
@@ -148,6 +154,11 @@ public:
     int GetSockIdCount() {return ( fSocket ? fSocket->GetSockIdCount() : 0); }
     void PauseSelectOnSubstream(int substreamid) { if (fSocket) fSocket->PauseSelectOnSubstream(substreamid); }
     void RestartSelectOnSubstream(int substreamid) { if (fSocket) fSocket->RestartSelectOnSubstream(substreamid); }
+
+    // To prohibit/re-enable a socket descriptor from being looked at by the reader threads
+    virtual void BanSockDescr(int sockdescr, int sockid) { if (fSocket) fSocket->BanSockDescr(sockdescr, sockid); }
+    virtual void UnBanSockDescr(int sockdescr) { if (fSocket) fSocket->UnBanSockDescr(sockdescr); }
+
     void ReadLock() { fMultireadMutex.Lock(); }
     void ReadUnLock() { fMultireadMutex.UnLock(); }
 };

@@ -16,6 +16,7 @@
 #include "XrdMon/XrdMonDecDictInfo.hh"
 #include "XrdMon/XrdMonDecTraceInfo.hh"
 #include "XrdMon/XrdMonDecUserInfo.hh"
+#include "XrdMon/XrdMonDecStageInfo.hh"
 #include "XrdMon/XrdMonBufferedOutput.hh"
 #include "XrdSys/XrdSysPthread.hh"
 #include <algorithm>
@@ -46,6 +47,10 @@ public:
                    const char* theString, 
                    int len,
                    senderid_t senderId);
+    void addStageInfo(dictid_t xrdId, 
+                      const char* theString, 
+                      int len,
+                      senderid_t senderId);
     void addUserId(dictid_t xrdId,
                    const char* theString,
                    int len,
@@ -106,10 +111,11 @@ private:
 
     kXR_unt16 _verFreqCount;
 
-    // one map for one senderId (one xrootd host)
+
     vector< dmap_t* > _dCache;
     vector< umap_t* > _uCache;
-    // The mutexes guard access to dCache and uCache respectively.
+    
+    // The mutexes guard access to dCache, uCache respectively.
     // _dCache and _uCache can be accessed from different threads
     // (periodic data flushing inside dedicated thread)
     XrdSysMutex    _dMutex;

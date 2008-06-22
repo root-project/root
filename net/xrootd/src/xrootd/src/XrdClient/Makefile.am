@@ -4,7 +4,7 @@
 ##
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id: Makefile.am,v 1.24 2007/11/01 09:38:18 dfeich Exp $
+## Version info: $Id: Makefile.am,v 1.29 2008/05/27 12:50:16 dfeich Exp $
 ## Checked in by $Author: dfeich $
 #######################################################################
 
@@ -19,7 +19,7 @@ xrootdclientincdir = $(includedir)/xrootd/XrdClient
 
 #############################################################################
 ## deliverables
-bin_PROGRAMS = xrdcp TestXrdClient TestXrdClient_read xrd
+bin_PROGRAMS = xrdcp TestXrdClient TestXrdClient_read xrd xprep xrdstagetool
 
 ## old automake does not know += operator, so we have to do this
 ## very awkwardly using the EXTRA_ definition
@@ -40,10 +40,12 @@ xrootdclientinc_HEADERS = XrdClient.hh XrdClientAdmin.hh \
                XrdClientInputBuffer.hh XrdClientEnv.hh XrdClientThread.hh \
                XrdClientPhyConnection.hh XrdClientLogConnection.hh \
                XrdClientDebug.hh XrdClientReadV.hh XrdClientPSock.hh \
-               XrdCpMthrQueue.hh XrdCpWorkLst.hh
+               XrdCpMthrQueue.hh XrdCpWorkLst.hh XrdClientAbsMonIntf.hh
 
 #############################################################################
 # Build rules
+
+# the following source may be built during the build itself
 BUILT_SOURCES=XrdClientAdmin_c_wrap.cc
 
 libXrdClient_la_SOURCES = \
@@ -74,6 +76,7 @@ libXrdClient_la_SOURCES = \
 libXrdClient_la_LIBADD = $(LIBSUNMATH) \
               ../XrdSys/libXrdSys.la \
 	      ../XrdCrypto/libXrdCrypto.la \
+              ../XrdSut/libXrdSut.la \
               ../XrdNet/libXrdNet.la \
               ../XrdOuc/libXrdOuc.la \
               ../XrdSys/libXrdSys.la
@@ -87,20 +90,37 @@ xrdcp_SOURCES = Xrdcp.cc
 xrdcp_LDFLAGS = -static -export-dynamic
 xrdcp_LDADD = $(clientlibs)
 
+
+
 xrd_SOURCES = XrdCommandLine.cc
 xrd_LDADD = $(clientlibs) $(READLINE_LIBS)
+
+
 
 TestXrdClient_SOURCES = XrdClientAdmin_c.cc XrdClientAdmin_c.hh \
                         TestXrdClient.cc
 TestXrdClient_LDADD =  $(clientlibs)
 
+
+
 TestXrdClient_read_SOURCES = TestXrdClient_read.cc
 TestXrdClient_read_LDADD =  $(clientlibs)
+
+
+xprep_SOURCES = XrdClientPrep.cc
+xprep_LDADD = $(clientlibs)
+
+$(OBJECT_XPREP) $(BINLIBS) $(LIBM) $(LIBS)
+
+
+xrdstagetool_SOURCES = XrdStageTool.cc
+xrdstagetool_LDADD = $(clientlibs)
+
+$(OBJECT_STAGETOOL) $(BINLIBS) $(LIBM) $(LIBS)
 
 if ENABLE_JAVAINT
 libXrdClientAdminJNI_la_SOURCES = XrdClientAdminJNI.cc
 libXrdClientAdminJNI_la_LIBADD = $(clientlibs)                                                        
-
 all-local: XrdClientAdminJNI.class
 XrdClientAdminJNI.class: XrdClientAdminJNI.java
 	$(JAVAC) -d ./ $(srcdir)/XrdClientAdminJNI.java
@@ -111,6 +131,8 @@ uninstall-local:
 	rm -f $(javaclassdir)/xrootdadmin/XrdClientAdminJNI.class
 endif
 
+
+
 clean-local:
 	rm -f xrootdadmin/XrdClientAdminJNI.class XrdClientAdmin_c_wrap.cc
 
@@ -120,23 +142,34 @@ clean-local:
 # suitable swig is available, we instead create it anew
 # This needs to be done outside the ENABLE_PERLINT clause, to get a working
 # "make dist" target
-
+SWIG_TARGETS = XrdClientAdmin_c_wrap.cc XrdClientAdmin.pm
 if REBUILD_SWIGFILE
-XrdClientAdmin_c_wrap.cc: XrdClientAdmin_c.hh
+# This creates both the .cc file and the .pm perl module
+$(SWIG_TARGETS): XrdClientAdmin_c.hh
 	echo Creating swig perl interface
 	$(SWIG) -perl -o $@ $(srcdir)/XrdClientAdmin_c.hh
 else
 XrdClientAdmin_c_wrap.cc: XrdClientAdmin_c_wrap.c
 	cp $(srcdir)/XrdClientAdmin_c_wrap.c XrdClientAdmin_c_wrap.cc
+XrdClientAdmin.pm:
+	@if test -e $(srcdir)/XrdClientAdmin.pm; then \
+           cp $(srcdir)/XrdClientAdmin.pm XrdClientAdmin.pm; \
+        else \
+           echo "ERROR: You lost distribution's original $@. Refetch it."; \
+           exit 1; \
+        fi         
 endif
 
 if ENABLE_PERLINT
 
 libXrdClientAdmin_la_SOURCES = XrdClientAdmin_c.cc \
                                XrdClientAdmin_c_wrap.cc
+libXrdClientAdmin_la_LIBADD = $(clientlibs)                                                        
 
 libXrdClientAdmin_la_CXXFLAGS = $(PERL_CCOPTS)
+install-exec-local: libXrdClientAdmin.la XrdClientAdmin.pm
+	$(INSTALL) -m 644 XrdClientAdmin.pm  $(DESTDIR)/$(libdir)/XrdClientAdmin.pm
 endif
 
-# we need to include the pregenerated swig file in the disribution
+# we need to include the pregenerated swig file in the distribution
 EXTRA_DIST = XrdClientAdmin_c_wrap.c XrdClientAdmin.pm

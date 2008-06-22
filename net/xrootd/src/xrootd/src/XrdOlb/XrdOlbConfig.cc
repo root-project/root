@@ -33,8 +33,6 @@ const char *XrdOlbConfigCVSID = "$Id$";
 #include <sys/types.h>
 #include <sys/un.h>
 #include <dirent.h>
-#include <iostream>
-using namespace std;
 
 #include "../XrdVersion.hh"
 #include "Xrd/XrdJob.hh"
@@ -66,6 +64,7 @@ using namespace std;
 #include "XrdOuc/XrdOucProg.hh"
 #include "XrdOuc/XrdOucTList.hh"
 #include "XrdOuc/XrdOucUtils.hh"
+#include "XrdSys/XrdSysHeaders.hh"
 #include "XrdSys/XrdSysPlatform.hh"
 #include "XrdSys/XrdSysPlugin.hh"
 #include "XrdSys/XrdSysPthread.hh"
@@ -215,7 +214,7 @@ int XrdOlbConfig::Configure1(int argc, char **argv, char *cfn)
 // Bail if no configuration file specified
 //
    inArgv = argv; inArgc = argc;
-   if (!(ConfigFN = cfn) && !(ConfigFN = getenv("XrdOlbCONFIGFN")) || !*ConfigFN)
+   if ((!(ConfigFN = cfn) && !(ConfigFN = getenv("XrdOlbCONFIGFN"))) || !*ConfigFN)
       {Say.Emsg("Config", "Required config file not specified.");
        Usage(1);
       }
@@ -267,11 +266,12 @@ int XrdOlbConfig::Configure1(int argc, char **argv, char *cfn)
 // For servers or supervisors, force an ephemeral port to be used.
 //
    if (!NoGo)
-      if ((isManager && !isServer) || isPeer)
-         {if (PortTCP < 0)
-             {Say.Emsg("Config", myRole, "port not specified."); NoGo = 1;}
-         }
-         else PortTCP = 0;
+      {if ((isManager && !isServer) || isPeer)
+          {if (PortTCP < 0)
+              {Say.Emsg("Config", myRole, "port not specified."); NoGo = 1;}
+          }
+          else PortTCP = 0;
+      }
 
 // Determine how we ended and return status
 //
@@ -1274,10 +1274,11 @@ int XrdOlbConfig::xapath(XrdSysError *eDest, XrdOucStream &CFile)
 // Get the optional access rights
 //
    if ((val = CFile.GetWord()) && val[0])
-      if (!strcmp("group", val)) mode |= S_IRWXG;
-         else {eDest->Emsg("Config", "invalid admin path modifier -", val);
-               free(pval); return 1;
-              }
+      {if (!strcmp("group", val)) mode |= S_IRWXG;
+          else {eDest->Emsg("Config", "invalid admin path modifier -", val);
+                free(pval); return 1;
+               }
+      }
 
 // Record the path
 //
@@ -1711,10 +1712,11 @@ int XrdOlbConfig::xmang(XrdSysError *eDest, XrdOucStream &CFile)
 //  Process the optional "peer" or "proxy"
 //
     if ((val = CFile.GetWord()))
-       if ((xPeer = !strcmp("peer", val)) || (xProxy = !strcmp("proxy", val)))
-          {if (xProxy || (xPeer && !isPeer)) return 0;
-           val = CFile.GetWord();
-          } else if (isPeer) return 0;
+       {if ((xPeer = !strcmp("peer", val)) || (xProxy = !strcmp("proxy", val)))
+           {if (xProxy || (xPeer && !isPeer)) return 0;
+            val = CFile.GetWord();
+           } else if (isPeer) return 0;
+       }
 
 //  We can accept this manager. Skip the optional "all" or "any"
 //
@@ -1940,9 +1942,9 @@ int XrdOlbConfig::xperf(XrdSysError *eDest, XrdOucStream &CFile)
 // Make sure that the perf program is here
 //
    if (perfpgm) {free(perfpgm); perfpgm = 0;}
-   if (pgm)
-      if (!isExec(eDest, "perf", pgm)) return 1;
-         else perfpgm = strdup(pgm);
+   if (pgm) {if (!isExec(eDest, "perf", pgm)) return 1;
+                else perfpgm = strdup(pgm);
+            }
 
 // Set remaining values
 //
@@ -2136,9 +2138,9 @@ int XrdOlbConfig::xprep(XrdSysError *eDest, XrdOucStream &CFile)
 //
    if (scrub) pendplife = scrub;
    if (doset) PrepQ.setParms(reset, scrub, echo);
-   if (prepif) 
-      if (!isExec(eDest, "prep", prepif)) return 1;
-         else return PrepQ.setParms(prepif);
+   if (prepif) {if (!isExec(eDest, "prep", prepif)) return 1;
+                   else return PrepQ.setParms(prepif);
+               }
    return 0;
 }
 
@@ -2324,7 +2326,7 @@ int XrdOlbConfig::xrole(XrdSysError *eDest, XrdOucStream &CFile)
 
 // Scan for invalid roles: peer proxy | peer server | peer supervisor
 //
-   if ((xPeer && xProxy) && !(xMan || xServ)
+   if (((xPeer && xProxy) && !(xMan || xServ))
    ||  (xPeer && xServ)
    ||  (xPeer && xSup))
       {eDest->Emsg("Config", "invalid role -", role); return 1;}

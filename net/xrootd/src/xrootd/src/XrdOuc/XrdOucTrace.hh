@@ -12,9 +12,7 @@
 
 //         $Id$
 
-#include <iostream>
-using namespace std;
-
+#include "XrdSys/XrdSysHeaders.hh"
 #include "XrdSys/XrdSysError.hh"
 
 class XrdOucTrace

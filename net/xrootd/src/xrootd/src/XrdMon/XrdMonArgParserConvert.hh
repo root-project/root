@@ -13,6 +13,7 @@
 #include "XrdMon/XrdMonException.hh"
 #include "XrdMon/XrdMonErrors.hh"
 #include <stdlib.h> /* atoi */
+#include <string.h>
 
 namespace XrdMonArgParserConvert 
 {

@@ -1,8 +1,8 @@
 #!/usr/bin/perl
 #
-#   $Id: mps_MigrPurg,v 1.13 2007/11/02 01:26:19 wilko Exp $
+#   $Id: mps_MigrPurg,v 1.14 2008/01/23 02:52:44 abh Exp $
 #
-# mps_MigrPurg
+# ooss_MigrPurg
 #	-M			do migrate function
 #	-O			one time only flag for purge
 #	-P			do purge function
@@ -114,6 +114,7 @@ $max_retry_wait = 600;                  # maximum sleep time for pftp retries
 
 # OS-dependent commands
 #
+$CMDdf       = '/bin/df';
 $CMDecho     = '/bin/echo';
 $CMDfuser    = (-x '/usr/sbin/fuser' ? '/usr/sbin/fuser' : '/sbin/fuser');
 $CMDls       = '/bin/ls';
@@ -123,16 +124,13 @@ $CMDtail     = '/usr/bin/tail';
 $CMDtouch    = '/bin/touch';
 $CMDuname    = '/bin/uname';
 
-chop($systyp = `$CMDuname`);  # used for processing df command
-$DFop = ($systyp eq 'Linux' ? '-P' : '');
-$CMDdf       = "/bin/df $DFop";
-
 # Initialize global variables
 $globalfh = 'FILE0000';
 $logfn = '-';
 $myname = ($0 =~ m|([^/]*)$|)[0];
 $num_migr_proc = 0;			# number of active migration processes
 $ppid = $$;				# save parent pid
+chop($systyp = `$CMDuname`);		# used for processing df command
 chop($host = `$CMDhostname`);
 
 $ERR   = 0;				# set debug levels
@@ -142,6 +140,7 @@ $PROC  = 3;
 $DEBUG = 4;
 
 # %ErrType tracks the type of error err found
+
 $LOCK_SH = 1;				# values for flock
 $LOCK_EX = 2;
 $LOCK_NB = 4;
@@ -1060,7 +1059,7 @@ sub scan {
   
    $curtime = time();
    for $file (@files) {
-      stat "$file";
+      stat "$base/$file";
       if (-d _ ) {		# have a directory or a link to a directory
          scan("$base/$file");
          }

@@ -3,7 +3,9 @@
 #define __CRYPTO_AUX_H__
 
 #include <stdio.h>
-#include <iostream>
+#ifndef WIN32
+#include "XrdSys/XrdSysHeaders.hh"
+#endif
 #include <XProtocol/XProtocol.hh>
 
 /******************************************************************************/

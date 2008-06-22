@@ -640,8 +640,9 @@ void *XrdOlbManager::MonRefs()
 // Compute snooze interval
 //
    if ((loopmax = Config.RefReset / snooze_interval) <= 1)
-      if (!Config.RefReset) loopmax = 0;
-         else {loopmax = 1; snooze_interval = Config.RefReset;}
+      {if (!Config.RefReset) loopmax = 0;
+          else {loopmax = 1; snooze_interval = Config.RefReset;}
+      }
 
 // Sleep for the snooze interval. If a reset was requested then do a selective
 // reset unless we reached our snooze maximum and enough selections have gone
@@ -964,10 +965,11 @@ int XrdOlbManager::SelServer(int isrw, SMask_t pmask, char *hbuff)
           else if (!Config.sched_RR
                && (sp->myLoad > Config.MaxLoad))                 sp = 0;
        if (sp)
-          if (isrw)
-             if (sp->isNoStage || sp->DiskFree < Config.DiskMin) sp = 0;
-                else {SelAcnt++; sp->Lock();}
-            else     {SelRcnt++; sp->Lock();}
+          {if (isrw)
+              if (sp->isNoStage || sp->DiskFree < Config.DiskMin) sp = 0;
+                 else {SelAcnt++; sp->Lock();}
+              else     {SelRcnt++; sp->Lock();}
+          }
       }
    STMutex.UnLock();
 
@@ -1243,22 +1245,23 @@ XrdOlbServer *XrdOlbManager::AddServer(XrdNetLink *lp, int port,
 // Check if server is already logged in or is a relogin
 //
    if (i < STMax)
-      if (ServTab[i] && ServTab[i]->isBound)
-         {STMutex.UnLock();
-          Say.Emsg("Manager", "Server", hnp, "already logged in.");
-          return 0;
-         } else { // Rehook server to previous entry
-          sp = ServBat[i];
-          if (sp->Link) sp->Link->Recycle();
-          sp->Link      = lp;
-          sp->isOffline = 0;
-          sp->isBusy    = 1;
-          sp->Instance++;
-          sp->setName(lp, port);  // Just in case it changed
-          ServTab[i] = sp;
-          j = i;
-          act = "Re-added ";
-         }
+      {if (ServTab[i] && ServTab[i]->isBound)
+          {STMutex.UnLock();
+           Say.Emsg("Manager", "Server", hnp, "already logged in.");
+           return 0;
+          } else { // Rehook server to previous entry
+           sp = ServBat[i];
+           if (sp->Link) sp->Link->Recycle();
+           sp->Link      = lp;
+           sp->isOffline = 0;
+           sp->isBusy    = 1;
+           sp->Instance++;
+           sp->setName(lp, port);  // Just in case it changed
+           ServTab[i] = sp;
+           j = i;
+           act = "Re-added ";
+          }
+      }
 
 // Reuse an old ID if we must
 //

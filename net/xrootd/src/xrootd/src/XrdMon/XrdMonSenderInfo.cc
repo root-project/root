@@ -13,10 +13,11 @@
 #include "XrdMon/XrdMonException.hh"
 #include "XrdMon/XrdMonErrors.hh"
 #include "XrdMon/XrdMonSenderInfo.hh"
+#include "XrdSys/XrdSysHeaders.hh"
 
 #include <sys/socket.h>
+#include <string.h>
 #include <netdb.h>
-#include <iostream>
 using std::cout;
 using std::endl;
 

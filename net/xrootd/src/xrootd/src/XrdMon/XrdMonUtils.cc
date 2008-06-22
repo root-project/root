@@ -13,6 +13,7 @@
 #include "XrdMon/XrdMonException.hh"
 #include "XrdMon/XrdMonErrors.hh"
 #include "XrdMon/XrdMonUtils.hh"
+#include "XrdSys/XrdSysHeaders.hh"
 
 #include <errno.h>
 #include <string.h>     /* strerror */
@@ -22,7 +23,6 @@
 #include <sys/types.h>  /* mkdir  */
 #include <unistd.h>     /* access */
 
-#include <iostream>
 using std::cout;
 using std::endl;
 

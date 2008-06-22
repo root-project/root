@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# $Id: mps_Stage,v 1.11 2006/10/03 01:10:14 abh Exp $
+# $Id: mps_Stage,v 1.13 2008/01/23 02:53:14 abh Exp $
 
 # (C) 1999 by the Board of Trustees of the Leland Stanford, Jr., University
 #                          All Rights Reserved
@@ -15,7 +15,9 @@
 
 # [-a cgrp] [-c cfn] [-d] [-e] [-f fpath] [-i] [-F] [-k] [-L locks] [-m] [-n]
 
-# [-o [usr][:grp]] [-p mode] [-r] [-u user] [-s size] [-v bytes] [-x xeq] [-z]
+# [-o [usr][:grp]] [-p mode] [-r] [-s size] [-u user] [-U mid]
+
+# [-v bytes] [-x xeq] [-z]
 
 # -a specifies the cache group where allocation is to occur.
 
@@ -62,6 +64,9 @@
 # -u The username that is to be used for the pftp login. The corresponding
 #    keyfile will be appended with ".<user>".
 
+# -U The monitor record username (typically, the user who actually requested
+#    the stagein operation).
+
 # -v verify that the specified number of bytes have been staged in. The size
 #    can be specified in bytes or as a number suffixed by K, M, or G. If size
 #    is specified as a dot then the actual size of the file. If the staged file
@@ -96,7 +101,10 @@ if ($ppath) {eval 'use lib $ppath;';}
 eval 'use ooss_CAlloc';  die "'use ooss_CAlloc' failed: $@\n" if ($@);
 eval 'use ooss_Lock';    die "'use ooss_Lock' failed: $@\n" if ($@);
 eval 'use XrdOlbNotify'; die "'use XrdOlbNotify' failed: $@\n" if ($@);
+eval 'use mps_monStage'; die "'use mps_monStage' failed: $@\n" if ($@);
+eval 'use ooss_name2name'; die "'use ooss_name2name' failed: $@\n" if ($@);
 use Socket;
+use Sys::Hostname;
 
 # Global variables:
 #
@@ -130,6 +138,8 @@ $Force   = 0;      # Force staging
 $Immed   = 0;      # Default use prestage
 $User    = '';     # Alternate username
 $pnomsg  = 1;
+
+$monUser = scalar(getpwuid($<)).":$$.0@".hostname(); # Monitored user
 
 # These are commands that we use which may or may not differ by os-type
 #
@@ -176,6 +186,7 @@ $SIG{TERM} = 'THandler';
 			     else {$DOSTAGE=$MinSZ=&GetVal('staging size','Q')}}
      elsif ($op eq '-u') {$User = &GetVal('user name');
                           $Immed = 1 if $User ne $Config{xfruser}}
+     elsif ($op eq '-U') {$monUser = &GetVal('monitored user name');}
      elsif ($op eq '-v') {$Immed = 1;
                           if ($ARGV[0] eq '.') {$VerSZ = -1; shift;}
                              else {$VerSZ = &GetVal('verify size', 'Q')}}
@@ -192,7 +203,12 @@ $SIG{TERM} = 'THandler';
   &Emsg('Source file not specified.') if (!($src_fn = $ARGV[0]));
   &Emsg('Target file not specified.') if (!($trg_fn = $ARGV[1]));
   &Emsg("Extraneous parameter, $ARGV[2].") if ($ARGV[2]);
-  while ($src_fn =~ s|//|/|g) {}           # remove double slashes
+
+  # Remove double slashes only if src_fn does not look like an url
+  if (!($src_fn =~ "\:\/\/")) {
+    while ($src_fn =~ s|//|/|g) {}           # remove double slashes
+  }
+
   while ($trg_fn =~ s|//|/|g) {}           # remove double slashes
   $Immed = 1 if ("$src_fn" ne "$trg_fn");  # prestage cannot handle names being different
 
@@ -420,6 +436,7 @@ sub Get_File {my($src, $trg, $cfn, $sz) = @_;
 	    my($filesize) = (stat($trg))[7];
 	    update_ctrs(1,$filesize,$elap,0);
             unlink($cfn);
+            &monStage($monUser, $src, $filesize, $elap) if $Config{mondest};
             return '';
            }
 	if ($resp =~ /Login failed./) {

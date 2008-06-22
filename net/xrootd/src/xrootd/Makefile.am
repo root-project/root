@@ -11,8 +11,8 @@
 ## Makefile/configure Author: Derek Feichtinger <derek.feichtinger@cern.ch>
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id: Makefile.am,v 1.9 2007/06/04 15:53:02 dfeich Exp $
-## Checked in by $Author: dfeich $
+## Version info: $Id: Makefile.am,v 1.12 2008/05/28 12:39:32 furano Exp $
+## Checked in by $Author: furano $
 ################################################################################
 
 # Tell GNU make >=3.79 not to run the top level in parallel since
@@ -95,20 +95,22 @@ utils/mps_Stage \
 utils/mps_Xeq \
 utils/mps_prep \
 utils/xrdcksum \
-utils/xrdmd5sum
+utils/xrdmd5sum \
+utils/XrdCmsNotify.pm
 
 dist_xrootdutils_DATA = utils/ooss_CAlloc.pm \
 utils/ooss_Lock.pm \
 utils/ooss_MonP.pm \
-utils/ooss_name2name.pm
+utils/ooss_name2name.pm \
+utils/mps_monStage.pm
 
 # Extra files/directories to go into the distribution tarball
 EXTRA_DIST = Doxyfile README.Maintainer bootstrap.sh config pthreads-win32 \
-             test/test1.sh test/testconfig.sh.in \
+             test/test1.sh test/test2.sh test/testconfig.sh.in \
              getAutotools.sh
 
 
-TESTS = test/test1.sh
+TESTS = test/test1.sh test/test2.sh
 
 
 

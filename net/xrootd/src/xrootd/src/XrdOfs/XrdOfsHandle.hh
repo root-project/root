@@ -18,188 +18,140 @@
 
 #include <stdlib.h>
 
-#include "XrdOss/XrdOss.hh"
-#include "XrdOuc/XrdOucDLlist.hh"
-#include "XrdOuc/XrdOucHash.hh"
+#include "XrdOuc/XrdOucCRC.hh"
 #include "XrdSys/XrdSysPthread.hh"
+  
+/******************************************************************************/
+/*                    C l a s s   X r d O f s H a n K e y                     */
+/******************************************************************************/
+  
+class XrdOfsHanKey
+{
+public:
+
+const char          *Val;
+unsigned int         Hash;
+short                Len;
+unsigned short       Links;
+
+inline XrdOfsHanKey& operator=(const XrdOfsHanKey &rhs)
+                                 {Val = strdup(rhs.Val); Hash = rhs.Hash;
+                                  Len = rhs.Len;
+                                  return *this;
+                                 }
+
+inline int           operator==(const XrdOfsHanKey &oth)
+                                 {return Hash == oth.Hash && Len == oth.Len
+                                      && !strcmp(Val, oth.Val);
+                                 }
+
+inline int           operator!=(const XrdOfsHanKey &oth)
+                                 {return Hash != oth.Hash || Len != oth.Len
+                                      || strcmp(Val, oth.Val);
+                                 }
+
+                    XrdOfsHanKey(const char *key=0, int kln=0)
+                                : Val(key), Len(kln), Links(0)
+                    {Hash = (key && kln ?
+                          XrdOucCRC::CRC32((const unsigned char *)key,kln) : 0);
+                    }
+
+                   ~XrdOfsHanKey() {};
+};
 
 /******************************************************************************/
-/*                     X r d O f s H a n d l e _ A r g s                      */
-/******************************************************************************/
-  
-class XrdOfsHandle_Args
-      {public:
-       unsigned long hval;
-       const char   *name;
-       XrdOfsHandle_Args(unsigned long a1, const char *a2)
-                        {hval = a1; name = a2;}
-      ~XrdOfsHandle_Args() {}
-      };
-
-/******************************************************************************/
-/*                    X r d O f s H a n d l e   F l a g s                     */
-/******************************************************************************/
-  
-#define OFS_TCLOSE   0x0001
-#define OFS_EOF      0x0002
-#define OFS_INPROG   0x0010
-#define OFS_PENDIO   0x0020
-#define OFS_CHANGED  0x4000
-#define OFS_RETIRED  0x8000
-  
-/******************************************************************************/
-/*             C l a s s   X r d O f s H a n d l e _ C o m m o n              */
+/*                    C l a s s   X r d O f s H a n T a b                     */
 /******************************************************************************/
 
 class XrdOfsHandle;
-
-// Define items that are in common between a handle achor and an actual handle.
-//
-class XrdOfsHandle_Common
-{
-public:
-
-unsigned long       Hash() {return hash;}
-const char         *Name() {return name;}
-unsigned int        PHID() {return pathid;}
-
-void                Lock() {mutex.Lock();}
-int             CondLock() {return mutex.CondLock();}
-void              UnLock() {mutex.UnLock();}
-int             WaitLock();
-
-void                 Zap() {hash = 0;}
-
-protected:
-
-XrdOucDLlist<XrdOfsHandle> fullList;
-XrdOucDLlist<XrdOfsHandle> openList;
-
-unsigned long            hash;         // Hash value for the name
-const    char           *name;
-unsigned int           pathid;         // ID to uniquely distinguish handles
-
-private:
-
-XrdSysMutex   mutex;
-};
   
-/******************************************************************************/
-/*              C l a s s   X r d O f s H a n d l e A n c h o r               */
-/******************************************************************************/
-
-class XrdOfsHandleAnchor : public XrdOfsHandle_Common
+class XrdOfsHanTab
 {
 public:
+void           Add(XrdOfsHandle *hP);
 
-time_t         IdleDeadline;
+XrdOfsHandle  *Find(XrdOfsHanKey &Key);
 
-void           Add2Open(XrdOfsHandle &);
+int            Remove(XrdOfsHandle *rip);
 
-XrdOfsHandle  *Apply2Full(int (*func)(XrdOfsHandle *, void *), void *arg)
-                   {return Apply(fullList, func, arg);}
-
-XrdOfsHandle  *Apply2Open(int (*func)(XrdOfsHandle *, void *), void *arg)
-                       {return Apply(openList, func, arg);}
-
-XrdOfsHandle  *Attach(const char *path);
-
-void           Detach(const char *path);
-
-XrdOfsHandle  *Find(unsigned int a1, const char *a2)
-                  {extern int XrdOfsHandle_Match(XrdOfsHandle *, void *);
-                   return Apply(fullList, XrdOfsHandle_Match, a1, a2);
-                  }
-
-void           Hide(unsigned long a1, const char *a2)
-                  {extern int XrdOfsHandle_Zap(XrdOfsHandle *, void *);
-                   Apply(fullList, XrdOfsHandle_Zap, a1, a2);
-                  }
-
-unsigned int   Insert(XrdOfsHandle &);
-
-     XrdOfsHandleAnchor(const char *type="???", unsigned int pid=0)
-                 {name = type; hash = 0; IdleDeadline = 0; pathid = pid;}
-    ~XrdOfsHandleAnchor() {}
-
-/******************************************************************************/
-
-friend int XrdOfsHandle_Match(XrdOfsHandle *, void *);
-friend int XrdOfsHandle_Zap(XrdOfsHandle *, void *);
-
-/******************************************************************************/
+// When allocateing a new nash, specify the required starting size. Make
+// sure that the previous number is the correct Fibonocci antecedent. The
+// series is simply n[j] = n[j-1] + n[j-2].
+//
+    XrdOfsHanTab(int psize = 987, int size = 1597);
+   ~XrdOfsHanTab() {} // Never gets deleted
 
 private:
 
-XrdOucHash<XrdOfsHandle> fhtab;
+static const int LoadMax = 80;
 
-XrdOfsHandle *Apply(XrdOucDLlist<XrdOfsHandle> &List,
-                   int (*func)(XrdOfsHandle *, void *),
-                   unsigned long a1, const char *a2);
+void             Expand();
 
-XrdOfsHandle *Apply(XrdOucDLlist<XrdOfsHandle> &List,
-                   int (*func)(XrdOfsHandle *, void *), void *args);
+XrdOfsHandle   **nashtable;
+int              prevtablesize;
+int              nashtablesize;
+int              nashnum;
+int              Threshold;
 };
 
 /******************************************************************************/
 /*                    C l a s s   X r d O f s H a n d l e                     */
 /******************************************************************************/
-
+  
 class XrdOssDF;
 
-class XrdOfsHandle : public XrdOfsHandle_Common
+class XrdOfsHandle
 {
-friend class XrdOfsHandleAnchor;
-
+friend class XrdOfsHanTab;
 public:
-int                 flags;       // General    flags
-int                 oflag;       // Open       flags
-int                 links;       // Number of users for this handle (see note)
-int                 activ;       // Number of active ops
-int                 ecode;       // INPROG error code, if any
-time_t              optod;       // TOD of last operation
-int                 cxrsz;       // Compression region size
-char                cxid[4];     // Compression Algorithm
 
-void                Activate() {flags &= ~(OFS_TCLOSE|OFS_INPROG);
-                                anchor->Add2Open(*this);
-                               }
+char                isPending;    // 1-> File  is pending sync()
+char                isChanged;    // 1-> File was modified
+char                isCompressed; // 1-> File  is compressed
+char                isRW;         // 1-> File  is open in r/w mode
 
-XrdOfsHandleAnchor &Anchor() {return *anchor;}
+void                Activate(XrdOssDF *ssP) {ssi = ssP;}
 
-void                 Deactivate(int GetLock=1);
+static int          Alloc(const char *thePath,int isrw,XrdOfsHandle **Handle);
+static int          Alloc(                             XrdOfsHandle **Handle);
 
-void                 Retire(int GetLock=1);
+static void         Hide(const char *thePath);
 
-XrdOssDF            &Select(void) {return *ssi;}   // To allow for mt interfaces
+int                 Inactive();
 
-const char          *Qname() {return anchor->Name();}
+inline const char  *Name() {return Path.Val;}
 
-void                 LockAnchor() {anchor->Lock();}
-void               UnLockAnchor() {anchor->UnLock();}
+int                 Retire(long long *retsz=0, char *buff=0, int blen=0);
 
-          XrdOfsHandle(unsigned long        hval,
-                       const char          *oname,
-                       int                  opn_mode,
-                       time_t               opn_time,
-                       XrdOfsHandleAnchor  *origin,
-                       XrdOssDF            *oossdf);
+XrdOssDF           &Select(void) {return *ssi;}   // To allow for mt interfaces
 
-         ~XrdOfsHandle()
-               {Retire();
-                if (name) free((void *)name);
-                if (ssi) delete ssi;
-               }
+int                 Usage() {return Path.Links;}
+
+inline void         Lock()   {hMutex.Lock();}
+inline void         UnLock() {hMutex.UnLock();}
+
+          XrdOfsHandle() : Path(0,0) {}
+
+         ~XrdOfsHandle() {Retire();}
 
 private:
-XrdOfsHandleAnchor *anchor;     // Pointer to anchor node
-XrdOssDF           *ssi;        // Storage System Interface
-};
+static int           Alloc(XrdOfsHanKey, int isrw, XrdOfsHandle **Handle);
+       int           WaitLock(void);
 
-// Note: The links field is protected under the anchor lock; *not* the
-//       the handle lock. This means this field can only be modified and
-//       reliably inspected while holding the anchor lock. This poses problems
-//       when deleting this object since the destructor needs the anchor lock
-//       and the caller may or may not have it. The anchorLocked variable is
-//       used to indicate the state of the lock during object deletion.
+static const int     LockTries =   3; // Times to try for a lock
+static const int     LockWait  = 333; // Mills to wait between tries
+static const int     nolokDelay=   3; // Secs to delay client when lock failed
+static const int     nomemDelay=  15; // Secs to delay client when ENOMEM
+
+static XrdSysMutex   myMutex;
+static XrdOfsHanTab  roTable;    // File handles open r/o
+static XrdOfsHanTab  rwTable;    // File Handles open r/w
+static XrdOssDF     *ossDF;      // Dummy storage sysem
+static XrdOfsHandle *Free;       // List of free handles
+
+       XrdSysMutex   hMutex;
+       XrdOssDF     *ssi;        // Storage System Interface
+       XrdOfsHandle *Next;
+       XrdOfsHanKey  Path;       // Path for this handle
+};
 #endif

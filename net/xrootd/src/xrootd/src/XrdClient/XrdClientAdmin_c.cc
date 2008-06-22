@@ -154,7 +154,7 @@ extern "C" {
   
       vecString *vs = Tokenize(filepaths, '\n');
 
-      if (res = adminst->ExistFiles(*vs, vb)) {
+      if ((res = adminst->ExistFiles(*vs, vb))) {
 	 BuildBoolAnswer(vb);
       }
       else SharedBufRealloc(16);
@@ -171,7 +171,7 @@ extern "C" {
 
       vecString *vs = Tokenize(filepaths, '\n');
 
-      if (res = adminst->ExistDirs(*vs, vb)) {
+      if ((res = adminst->ExistDirs(*vs, vb))) {
 	 BuildBoolAnswer(vb);
       }
       else SharedBufRealloc(16);
@@ -188,7 +188,7 @@ extern "C" {
 
       vecString *vs = Tokenize(filepaths, '\n');
 
-      if (res = adminst->IsFileOnline(*vs, vb)) {
+      if ((res = adminst->IsFileOnline(*vs, vb))) {
 	 BuildBoolAnswer(vb);
       }
       else SharedBufRealloc(16);

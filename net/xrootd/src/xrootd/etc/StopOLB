@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-#  $Id: StopOLB,v 1.5 2007/05/18 01:26:11 abh Exp $
+#  $Id: StopOLB,v 1.6 2008/05/19 23:53:42 abh Exp $
 #
 # (C) 2003 by the Board of Trustees of the Leland Stanford, Jr., University
 #                          All Rights Reserved
@@ -29,6 +29,7 @@ Emsg () {
 
 Terminate() {
     olbpid=$1
+    killpid=$2
 
     # Verify that we can kill this process
     #
@@ -41,7 +42,7 @@ Terminate() {
 
     # Now kill the process
     #
-      set -- `/bin/kill -9 $olbpid 2>&1`
+      set -- `/bin/kill -9 $killpid 2>&1`
       if [ $? -ne 0 ]; then
          shift 2
          Emsg "Unable to kill process $olbpid; $*."
@@ -84,21 +85,21 @@ while test -n "$1"; do
 
 # find the process number assigned to the OLB
 #
-  set -- `/bin/ps -e -o pid -o args | /bin/grep /opt/xrootd/ | /bin/grep /bin/olbd | /bin/grep -v grep | /bin/awk '{print $1}'`
+  set -- `ps -e -o pid -o comm | grep '.*olbd$' | awk '{print $1}'`
 
   if [ -z "$1" ]; then
      msg="Unable to find OLB process number"
      if [ $CONDCHK -ne 1 ]; then
         Emsg "$msg; is it running?"
      fi
-     /bin/echo StopXRD: $msg\; continuing.
+     /bin/echo StopOLB: $msg\; continuing.
      exit 0
   fi
 
 # Kill each process that we have found
 #
   for olbpid do
-      Terminate $olbpid
+      Terminate $olbpid $olbpid
       done
 
 # Make Sure they are dead
@@ -111,11 +112,11 @@ while test -n "$1"; do
 # find and kill the process numbers assigned to the performance monitor
 #
   set --  ''
-  set -- `/bin/ps -e -o pid -o args | /bin/grep '/opt/olbd/bin/.../XrdOlbMonPerf' | /bin/grep -v grep | /bin/awk '{print $1}'`
+  set -- `ps -e -o pid -o args | grep 'XrdOlbMonPerf' | grep -v grep | awk '{print $1}'`
 
   if [ ! -z "$1" ]; then
      for olbpid do
-         Terminate $olbpid
+         Terminate $olbpid -$olbpid
      done
   fi
 

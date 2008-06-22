@@ -150,6 +150,11 @@ static int IP2String(unsigned int ipaddr, int port, char *buff, int blen);
 //
 static unsigned int IPAddr(struct sockaddr *InetAddr);
 
+// isDomain() returns true if the domain portion of the hostname matches
+//            the specified domain name.
+//
+static int isDomain(const char *Hostname, const char *Domname, int Domlen);
+
 // isLoopback() returns true if the address in InetAddr is the loopback address.
 //              This test is used to discover IP address spoofing in UDP packets.
 //

@@ -22,13 +22,12 @@ const char *XrdPssConfigCVSID = "$Id$";
 #include <sys/stat.h>
 #include <sys/un.h>
 #include <fcntl.h>
-#include <iostream>
-using namespace std;
 
 #include "XrdPss/XrdPss.hh"
 #include "XrdOuc/XrdOuca2x.hh"
 #include "XrdOuc/XrdOucEnv.hh"
 #include "XrdSys/XrdSysError.hh"
+#include "XrdSys/XrdSysHeaders.hh"
 #include "XrdSys/XrdSysPlatform.hh"
 #include "XrdOuc/XrdOucStream.hh"
 #include "XrdOuc/XrdOucTList.hh"
@@ -87,6 +86,12 @@ int XrdPssSys::Configure(const char *cfn)
    myName = getenv("XRDNAME");
    if (!myName || !*myName) myName = (char *)"anon";
 
+// Set the default read cache size value and parallel streams
+//
+   if (rdAheadSz >= 0) XrdPosixXrootd::setEnv("ReadAheadSize",       rdAheadSz);
+   if (rdCacheSz >= 0) XrdPosixXrootd::setEnv("ReadCacheSize",       rdCacheSz);
+   if (numStream >= 0) XrdPosixXrootd::setEnv("ParStreamsPerPhyConn",numStream);
+
 // Process the configuration file
 //
    if ((NoGo = ConfigProc(cfn))) return NoGo;
@@ -102,12 +107,6 @@ int XrdPssSys::Configure(const char *cfn)
 // Allocate an Xroot proxy object (only one needed here)
 //
    Xroot = new XrdPosixXrootd(32768, 16384);
-
-// Set the read cache size value and parallel streams
-//
-   if (rdAheadSz >= 0) XrdPosixXrootd::setEnv("ReadAheadSize",       rdAheadSz);
-   if (rdCacheSz >= 0) XrdPosixXrootd::setEnv("ReadCacheSize",       rdCacheSz);
-   if (numStream >= 0) XrdPosixXrootd::setEnv("ParStreamsPerPhyConn",numStream);
    return 0;
 }
 
@@ -282,15 +281,15 @@ int XrdPssSys::xmang(XrdSysError *errp, XrdOucStream &Config)
        else {*val = '\0'; val++;}
 
     if (val)
-       if (isdigit(*val))
-           {if (XrdOuca2x::a2i(*errp,"manager port",val,&port,1,65535))
-               port = 0;
-           }
-           else if (!(port = XrdNetDNS::getPort(val, "tcp")))
-                   {errp->Emsg("Config", "unable to find tcp service", val);
-                    port = 0;
-                   }
-       else errp->Emsg("Config","manager port not specified for",mval);
+       {if (isdigit(*val))
+            {if (XrdOuca2x::a2i(*errp,"manager port",val,&port,1,65535))
+                port = 0;
+            }
+            else if (!(port = XrdNetDNS::getPort(val, "tcp")))
+                    {errp->Emsg("Config", "unable to find tcp service", val);
+                     port = 0;
+                    }
+       } else errp->Emsg("Config","manager port not specified for",mval);
 
     if (!port) {free(mval); return 1;}
 
@@ -348,13 +347,20 @@ int XrdPssSys::xsopt(XrdSysError *Eroute, XrdOucStream &Config)
 {
     char  kword[256], *val, *kvp;
     long  kval;
-    static struct setopts {const char *opname; long *opdest;} Sopts[] =
+    static const char *Sopts[] =
        {
-        {"ReadAheadSize",        &rdAheadSz},
-        {"ReadCacheSize",        &rdCacheSz},
-        {"ParStreamsPerPhyConn", &numStream}
+         "DataServerConn_ttl",
+         "DebugLevel",
+         "DfltTcpWindowSize",
+         "LBServerConn_ttl"
+         "ParStreamsPerPhyConn",
+         "ParStreamsPerPhyConn",
+         "ReadAheadSize",
+         "ReadCacheBlk",
+         "ReadCacheSize",
+         "RemoveUsedCacheBlocks"
        };
-    int i, numopts = sizeof(Sopts)/sizeof(struct setopts);
+    int i, numopts = sizeof(Sopts)/sizeof(const char *);
 
     if (!(val = Config.GetWord()))
        {Eroute->Emsg("config", "setopt keyword not specified"); return 1;}
@@ -363,21 +369,20 @@ int XrdPssSys::xsopt(XrdSysError *Eroute, XrdOucStream &Config)
        {Eroute->Emsg("config", "setopt", kword, "value not specified"); 
         return 1;
        }
+
     kval = strtol(val, &kvp, 10);
+    if (*kvp)
+       {Eroute->Emsg("config", kword, "setopt keyword value is invalid -", val);
+        return 1;
+       }
 
     for (i = 0; i < numopts; i++)
-        if (!strcmp(Sopts[i].opname, kword))
-           {if (*kvp)
-               {sprintf(kword,"invalid setopt %s value -", Sopts[i].opname);
-                Eroute->Emsg("config",kword,val);
-                return 1;
-               }
-            *Sopts[i].opdest = kval;
+        if (!strcmp(Sopts[i], kword))
+           {XrdPosixXrootd::setEnv(kword, kval);
             return 0;
            }
 
-    if (*kvp) XrdPosixXrootd::setEnv(kword,  val);
-       else   XrdPosixXrootd::setEnv(kword, kval);
+    Eroute->Say("Config warning: ignoring unknown setopt '",kword,"'.");
     return 0;
 }
   

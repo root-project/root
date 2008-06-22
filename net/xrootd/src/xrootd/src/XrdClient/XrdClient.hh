@@ -44,6 +44,7 @@
 #include "XrdOuc/XrdOucString.hh"
 #include "XrdClient/XrdClientThread.hh"
 #include "XrdSys/XrdSysSemWait.hh"
+#include "XrdVersion.hh"
 
 struct XrdClientOpenInfo {
     bool      inprogress;
@@ -65,9 +66,6 @@ class XrdClient : public XrdClientAbs {
     
 
 private:
-
-    char                        fHandle[4];  // The file handle returned by the server,
-    // to use for successive requests
 
     struct XrdClientOpenInfo    fOpenPars;   // Just a container for the last parameters
     // passed to a Open method
@@ -141,6 +139,7 @@ protected:
       return !IsOpenedForWrite();
 
     }
+
 
 public:
 
@@ -227,8 +226,9 @@ public:
     //  (if any!!)
     XReqErrorType               Read_Async(long long offset, int len);
 
-    // Get stat info about the file
-    bool                        Stat(struct XrdClientStatInfo *stinfo);
+    // Get stat info about the file. Normally it tries to guess the file size variations
+    // unless force==true
+    bool                        Stat(struct XrdClientStatInfo *stinfo, bool force = false);
 
     // On-the-fly enabling/disabling of the cache
     bool                        UseCache(bool u = TRUE);
@@ -251,6 +251,8 @@ public:
 	if (ReadAheadSize >= 0) fReadAheadSize = ReadAheadSize;
     }
     
+    // Truncates the open file at a specified length
+    bool                        Truncate(long long len);
 
     // Write data to the file. If the multistream support is enabled, it will
     //  make sure about the arrival of the outstanding data if docheckppoint==true

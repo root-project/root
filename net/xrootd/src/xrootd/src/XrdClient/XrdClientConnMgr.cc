@@ -56,7 +56,6 @@ void * GarbageCollectorThread(void *arg, XrdClientThread *thr)
    if (thr->MaskSignal(0) != 0)
       Error("GarbageCollectorThread", "Warning: problems masking signals");
 
-   int i;
    XrdClientConnectionMgr *thisObj = (XrdClientConnectionMgr *)arg;
 
    thr->SetCancelDeferred();
@@ -67,11 +66,10 @@ void * GarbageCollectorThread(void *arg, XrdClientThread *thr)
 
       thisObj->GarbageCollect();
 
-      for (i = 0; i < 10; i++) {
-	 thr->CancelPoint();
+      thr->CancelPoint();
 
-         usleep(200000);
-      }
+      sleep(30);
+
    }
 
    return 0;
@@ -95,7 +93,11 @@ int DisconnectElapsedPhyConn(const char *key,
       }
       
       if (!p->IsValid()) {
-	  
+
+        // Make sure that we kill the socket in the case of conns killed by the server
+        p->Touch();
+        p->Disconnect();
+
 	// And then add the instance to the trashed list
 	cmgr->fPhyTrash.Push_back(p);
 
@@ -155,6 +157,7 @@ XrdClientConnectionMgr::XrdClientConnectionMgr() : fSidManager(0),
    // Creates a Connection Manager object.
    // Starts the garbage collector thread.
 
+   fLastLogIdUsed = 0;
 
    // Garbage collector thread creation
    if (EnvGetLong(NAME_STARTGARBAGECOLLECTORTHREAD)) {
@@ -239,7 +242,14 @@ void XrdClientConnectionMgr::GarbageCollect()
 
      if ( !fPhyTrash[i] || 
 	  ((fPhyTrash[i]->GetLogConnCnt() <= 0) && (fPhyTrash[i]->ExpiredTTL())) ) {
-       if (fPhyTrash[i]) delete fPhyTrash[i];
+
+        if (fPhyTrash[i] && (fPhyTrash[i]->GetReaderThreadsCnt() <= 0)) {
+           delete fPhyTrash[i];
+           
+
+        }
+
+
        fPhyTrash.Erase(i);
      }
    }
@@ -426,29 +436,29 @@ int XrdClientConnectionMgr::Connect(XrdClientUrlInfo RemoteServ)
   	 fPhyHash.Rep(key1.c_str(), phyconn, 0, Hash_keepdata);
       }
 
-//
-//  Fix for serious bug affecting cases with more of 32767 logical connections
-//  (> 16284 in case of redirections). G. Ganis, 5 Aug 2006 .
-//
-      // Its ID is its position inside the vector, we must return it later.
-      // Get the first free slot, if any
-      newid = -1;
-      for (int i = 0; i < fLogVec.GetSize(); i++) {
-         if (!fLogVec[i]) {
-            fLogVec[i] = logconn;
-            newid = i;
-            break;
-         }
-      }
-      if (newid == -1) {
-         if (fLogVec.GetSize() < XRC_MAXVECTSIZE) {
-            // Then we push the logical connection into its vector
+      if (fLogVec.GetSize() < XRC_MAXVECTSIZE) {
+            // Then we push the logical connection into its vector, up to a max size
             fLogVec.Push_back(logconn);
             // and the new position is the ID
             newid = fLogVec.GetSize()-1;
-         } else {
-            Error("Connect", "Out of allocated resources:"
+      }
+      else {
+         // The array is too big, get a free slot, if any
+         newid = -1;
+         for (int i = 0; i < fLogVec.GetSize(); i++) {
+            int idx = (fLastLogIdUsed + i) % fLogVec.GetSize();
+            if (!fLogVec[idx]) {
+               fLogVec[idx] = logconn;
+               newid = idx;
+               fLastLogIdUsed = idx;
+               break;
+            }
+         }
+         if (newid == -1) {
+            delete logconn;
+            Error("Connect", "Critical error - Out of allocated resources:"
                   " max number allowed of logical connection reached ("<<XRC_MAXVECTSIZE<<")");
+            return -1;
          }
       }
 

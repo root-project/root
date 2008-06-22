@@ -22,8 +22,6 @@ const char *XrdOlbProtocolCVSID = "$Id$";
 #include <strings.h>
 #include <stdio.h>
 #include <sys/param.h>
-#include <iostream>
-using namespace std;
 
 #include "Xrd/XrdInet.hh"
 #include "Xrd/XrdLink.hh"
@@ -34,6 +32,7 @@ using namespace std;
 #include "XrdOlb/XrdOlbProtocol.hh"
 #include "XrdOlb/XrdOlbTrace.hh"
 #include "XrdSys/XrdSysError.hh"
+#include "XrdSys/XrdSysHeaders.hh"
 #include "XrdSys/XrdSysLogger.hh"
 
 using namespace XrdOlb;

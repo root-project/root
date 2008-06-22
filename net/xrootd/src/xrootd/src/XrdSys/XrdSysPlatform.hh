@@ -28,6 +28,9 @@
 #ifndef dirent64
 #  define dirent64 dirent
 #endif
+#ifndef off64_t
+#define off64_t int64_t
+#endif
 #if (!defined(MAC_OS_X_VERSION_10_5) || \
      MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_5)
 #ifndef stat64

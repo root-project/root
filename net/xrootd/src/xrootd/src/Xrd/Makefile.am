@@ -4,7 +4,7 @@
 ##
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id: Makefile.am,v 1.6 2007/11/01 09:38:16 dfeich Exp $
+## Version info: $Id: Makefile.am,v 1.7 2008/05/26 13:36:50 dfeich Exp $
 ## Checked in by $Author: dfeich $
 #######################################################################
 
@@ -20,7 +20,8 @@ xrootdxrdinc_HEADERS = \
     XrdInfo.hh    XrdPollDev.hh    XrdTrace.hh \
     XrdJob.hh     XrdPollPoll.hh \
     XrdLink.hh    XrdProtLoad.hh \
-    XrdObject.icc XrdPollDev.icc XrdPollPoll.icc
+    XrdObject.icc XrdPollDev.icc XrdPollPoll.icc \
+    XrdPollE.hh   XrdPollE.icc
 
 lib_LTLIBRARIES = libXrd.la
 

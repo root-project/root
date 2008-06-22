@@ -52,8 +52,6 @@ Where:
 #include <strings.h>
 #include <stdio.h>
 #include <sys/param.h>
-#include <iostream>
-using namespace std;
 
 #include "Xrd/XrdBuffer.hh"
 #include "Xrd/XrdConfig.hh"
@@ -65,6 +63,7 @@ using namespace std;
 #include "Xrd/XrdTrace.hh"
 
 #include "XrdSys/XrdSysError.hh"
+#include "XrdSys/XrdSysHeaders.hh"
 #include "XrdSys/XrdSysLogger.hh"
 #include "XrdSys/XrdSysPthread.hh"
   

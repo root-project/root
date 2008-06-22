@@ -13,7 +13,8 @@
 #include "XrdMon/XrdMonArgParserConvert.hh"
 #include "XrdMon/XrdMonArgParser.hh"
 #include "XrdMon/XrdMonException.hh"
-#include <iostream>
+#include "XrdSys/XrdSysHeaders.hh"
+
 using std::cout;
 using std::endl;
 using namespace XrdMonArgParserConvert;

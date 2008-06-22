@@ -18,6 +18,7 @@
 #include "XrdMon/XrdMonTypes.hh"
 #include "XrdMon/XrdMonSndTraceEntry.hh"
 #include "XrdMon/XrdMonSndDictEntry.hh"
+#include "XrdMon/XrdMonSndStageEntry.hh"
 using std::vector;
 using std::string;
 
@@ -33,6 +34,7 @@ public:
 
     int initialize(const char* pathFile);
     XrdMonSndDictEntry newXrdMonSndDictEntry();
+    XrdMonSndStageEntry newXrdMonSndStageEntry();
     XrdMonSndTraceEntry newXrdMonSndTraceEntry();
     kXR_int32 closeOneFile();
     void closeFiles(vector<kXR_int32>& closedFiles);

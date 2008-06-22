@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-#  $Id: StartXRD.cf.example,v 1.2 2005/03/25 08:19:33 abh Exp $
+#  $Id: StartXRD.cf.example,v 1.5 2008/01/08 15:23:04 furano Exp $
 #
 
 # Set 'time' to be number of seconds to wait for a required file to appear
@@ -15,64 +15,58 @@ count=30
 
 # Set XRDUSER to be the username to "su" to if the script is run as root
 #
-XRDUSER=bbdatsrv
+XRDUSER=fabrizio
 
-# Set XRDBASE to be the base directory where xrootd version directories have
-# been installed. They all must be in the same base directory.
+# Set XRDBASE to be the base directory where xrootd has
+# been installed or compiled.
+# The default is the upper dir with respect to where this script resides
 #
-XRDBASE=/opt/xrootd
+parent=`dirname $0`
+parent=`cd $parent ; pwd`
+XRDBASE=`dirname $parent`
 
-# Set XRDVER to be the name of the default version directory. This directory
-# must be installed in the XRDBASE directory. It contains bin, etc, and lib.
-#
-XRDVER=prod
+# In the case where configure.classic has not been invoked with the
+# option --no-arch-subdirs, we have arch subdirs.
+# Set XRDARCH to the architecture you want to start xrootd on
+# This default behavior takes the default architecture if it detects such a schema
+XRDARCH=
+if test -x $XRDBASE/bin/arch ; then  
+  XRDARCH=arch
+  else
+  if test -x $XRDBASE/bin/arch_dbg ; then
+    XRDARCH=arch_dbg
+  fi
+fi
 
-# Set XRDPROG to be the name of the executable in the "bin" directory. The
-# start script uses '$XRDBASE/$XRDVER/bin/$XRDPROG' as the executable.
-#
-XRDPROG=xrootd
+# Set XRDCFG to be the name of the default directory where config data and
+# scripts are to be found
+XRDCFG=$XRDBASE/etc
 
 # Set XRDCONFIG the default config file name. The start script uses
-# '$XRDBASE/$XRDVER/etc/$XRDCONFIGN' as the configuration file.
+# '$XRDCFG/$XRDCONFIG' as the configuration file.
 #
 XRDCONFIG=xrootd.cf
 
 # Set 'XRDHOMEDIR' to be the working directory when xrootd is started
+# Set 'CMSHOMEDIR' to be the working directory when cmsd   is started
 #
-XRDHOMEDIR=/var/adm/xrootd/core
+XRDHOMEDIR=$XRDBASE/core
+CMSHOMEDIR=$XRDBASE/core
 
 # Set 'XRDLOGDIR' to be the directory where log files are placed and
-# Set 'XRDLOGFN'  to be the base log file name.
+# Set 'XRDLOGFN'  to be the base log file name for xrootd.
+# Set 'CMSLOGFN'  to be the base log file name for cmsd.
+# ---> If you want to use the automatic logfile rotation sheme, set each LOGFN
+#      variable to '<cfile> -k num | sz[k|m|g]'. For example, a 7 day rotation
+#      for cmslog: CMSLOGFN='cmslog -k 7'. The -k option is documented in the
+#      XRD/Xrootd and cmsd configuration reference under command line options.
 #
-XRDLOGDIR=/var/adm/xrootd/logs
+XRDLOGDIR=$XRDBASE/logs
 XRDLOGFN=xrdlog
-
-#  The following logic tries to determine whether or not xrootd is to run
-#  in redirecting mode. Use whatever logic you need to use. Set
-#  XRDMODE - '-r'    for manager    redirecting  mode.
-#  XRDMODE - '-t'    for server     target       mode.
-#  XRDMODE - '-r -t' for supervisor redirecting  mode.
-#  XRDTYPE = the mode word to appear in messages (e.g., 'redirecting' if '-r')
-#
-XRDMODE=
-XRDTYPE=
-RESP=`/usr/local/bin/taylor -q opts | grep '^olbd=.*super'`
-if [ $? -eq 0 ]; then
-XRDMODE='-r -t'
-XRDTYPE='supervisor'
-fi
-RESP=`/usr/local/bin/taylor -q opts | grep '^olbd=.*server'`
-if [ $? -eq 0 ]; then
-XRDMODE='-t'
-XRDTYPE='target'
-fi
-RESP=`/usr/local/bin/taylor -q opts | grep '^olbd=.*manager'`
-if [ $? -eq 0 ]; then
-XRDMODE='-r'
-XRDTYPE='manager'
-fi
+CMSLOGFN=cmslog
 
 #-#-#-#-#-#-#-#-#   E N D   O F   C O N F I G U R A T I O N   #-#-#-#-#-#-#-#-#
+
 
 # The following logic tries to set variables as follows:
 
@@ -81,17 +75,27 @@ fi
 # MYNAME  - the current username
 # PROGRAM - the name of the start script
 #
-MYOS=`/bin/uname | /bin/awk '{print $1}'`
+MYOS=`uname | awk '{print $1}'`
 if [ "$MYOS" = "SunOS" ]; then
+
 MAXFD=`ulimit -H -n`
 MYNAME=`/usr/ucb/whoami`
 else
-MAXFD=`ulimit -H -n | /bin/grep files | /bin/awk '{print $3}'`
+
+if [ "$MYOS" = "Darwin" ]; then
+MAXFD=1024
+else
+
+MAXFD=`ulimit -H -n | grep files | awk '{print $3}'`
 if [ "$MAXFD" = "" ]; then
 MAXFD=`ulimit -H -n`
 fi
-MYNAME=`/usr/bin/whoami`
+
+fi
+
+MYNAME=`whoami`
 fi
 
 ############################################
-PROGRAM=`echo $0 | /bin/awk '{n=split($0,x,"/"); print x[n]}'`
+PROGRAM=`echo $0 | awk '{n=split($0,x,"/"); print x[n]}'`
+

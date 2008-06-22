@@ -79,7 +79,7 @@ bool XrdClientMessage::CreateData()
   // Allocate data
 
   if (!fAllocated) {
-    if (fHdr.dlen) {
+    if (fHdr.dlen > 0) {
 
       long pgsz = sysconf(_SC_PAGESIZE);
       int memtrbl = 0;
@@ -89,10 +89,11 @@ bool XrdClientMessage::CreateData()
 	fData = malloc(fHdr.dlen+1);
 
       if (!fData || memtrbl) {
-	Error("XrdClientMessage::CreateData","Fatal ERROR *** malloc of " <<
-	      fHdr.dlen+1 << " bytes failed."
-	      " Probable system resources exhausted.");
-	abort();
+         Error("XrdClientMessage::CreateData",
+               "Fatal ERROR *** memory allocation alloc of " <<
+               fHdr.dlen+1 << " bytes failed."
+               " Probable system resources exhausted.");
+         return FALSE;
       }
       char *tmpPtr = (char *)fData;
 
@@ -173,14 +174,23 @@ int XrdClientMessage::ReadRaw(XrdClientPhyConnection *phy)
        ", IsAttn: " << IsAttn() <<
        ", substreamid: " << usedsubstreamid);
 
-  if (fHdr.dlen) {
+  if (fHdr.dlen > 0) {
 
     Info(XrdClientDebug::kDUMPDEBUG,
 	 "XrdClientMessage::ReadRaw",
 	 "Reading data (" << fHdr.dlen << " bytes) from substream " << usedsubstreamid);
 
-    CreateData();
-    if (phy->ReadRaw(fData, fHdr.dlen, usedsubstreamid) != fHdr.dlen) {
+    if (!CreateData()) {
+
+      Info(XrdClientDebug::kNODEBUG,"XrdClientMessage::ReadRaw",
+	   "Failed to create data (" << fHdr.dlen << " bytes) from substream " <<
+	   usedsubstreamid << ".");
+
+      SetStatusCode(kXrdMSC_timeout);
+
+      memset(&fHdr, 0, sizeof(fHdr));
+
+    } else if (phy->ReadRaw(fData, fHdr.dlen, usedsubstreamid) != fHdr.dlen) {
 
       Info(XrdClientDebug::kNODEBUG,"XrdClientMessage::ReadRaw",
 	   "Failed to read data (" << fHdr.dlen << " bytes) from substream " <<

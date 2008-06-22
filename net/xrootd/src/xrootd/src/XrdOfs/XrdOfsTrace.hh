@@ -14,7 +14,7 @@
 
 #ifndef NODEBUG
 
-#include <iostream>
+#include "XrdSys/XrdSysHeaders.hh"
 #include "XrdOfs/XrdOfs.hh"
 
 #define GTRACE(act)         OfsTrace.What & TRACE_ ## act
@@ -24,7 +24,7 @@
 
 #define FTRACE(act, x) \
    if (GTRACE(act)) \
-      TRACES(x <<" pi=" <<(oh->PHID()) <<" fn=" << (oh->Name()))
+      TRACES(x <<" fn=" << (oh->Name()))
 
 #define XTRACE(act, target, x) \
    if (GTRACE(act)) TRACES(x <<" fn=" <<target)
@@ -33,7 +33,7 @@
 
 #define DEBUG(x) if (GTRACE(debug)) TRACES(x)
 
-#define EPNAME(x) const char *epname = x;
+#define EPNAME(x) static const char *epname = x;
 
 #else
 

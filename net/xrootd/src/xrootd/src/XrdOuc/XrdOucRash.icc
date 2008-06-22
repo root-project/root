@@ -8,7 +8,7 @@
 /*              DE-AC03-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
-//          $Id: XrdOucRash.icc,v 1.3 2006/04/14 01:55:55 abh Exp $
+//          $Id: XrdOucRash.icc,v 1.4 2008/06/10 02:01:12 abh Exp $
 
 #include <errno.h>
 
@@ -205,8 +205,9 @@ void XrdOucRash<K,V>::Insert(K theKey, XrdOucRash_Item<K,V> *theItem)
 //
    do {j = kVal & 0x0f;
        if ((kVal = kVal >> 4))
-          if (tab[j].Table) tab = tab[j].Table;
-             else tab = tab[j].Table = new XrdOucRash_Tent<K,V>[16]();
+          {if (tab[j].Table) tab = tab[j].Table;
+              else tab = tab[j].Table = new XrdOucRash_Tent<K,V>[16]();
+          }
       } while(kVal);
 
 // Insert the entry

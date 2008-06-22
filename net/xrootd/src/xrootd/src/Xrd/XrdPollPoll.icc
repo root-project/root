@@ -8,9 +8,9 @@
 /*              DE-AC03-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
-//        $Id: XrdPollPoll.icc,v 1.16 2007/07/31 02:23:37 abh Exp $
+//        $Id: XrdPollPoll.icc,v 1.17 2008/05/18 01:30:18 abh Exp $
 
-const char *XrdPollPollCVSID = "cvsid: $Id: XrdPollPoll.icc,v 1.16 2007/07/31 02:23:37 abh Exp $";
+const char *XrdPollPollCVSID = "cvsid: $Id: XrdPollPoll.icc,v 1.17 2008/05/18 01:30:18 abh Exp $";
 
 #ifndef __macos__
 #include <malloc.h>
@@ -34,21 +34,6 @@ extern XrdSysError    XrdLog;
 extern XrdScheduler   XrdSched;
 
 extern XrdOucTrace    XrdTrace;
- 
-/******************************************************************************/
-/*                         L o c a l   D e f i n e s                          */
-/******************************************************************************/
-  
-// We turn on ComPollTab for all platform. Though compressing the poll table
-// is a platform-specific optimization, not compressing the poll table may
-// actually cause poll attach failure on those platforms that do not share the
-// poll table between user space and kernel space. The reason is that in those
-// cases, the kernel actually wipes out any changes to the table made while
-// the poll() was active on the table. This optimization is quickly becomming
-// moot since many platform provide the '/dev/poll' alternative which will be
-// preferentially used.
-//
-#define __CompPollTab__
 
 /******************************************************************************/
 /*                         L o c a l   C l a s s e s                          */
@@ -134,12 +119,8 @@ int XrdPollPoll::Include(XrdLink *lp)
 
 // Get the next entry to be used
 //
-#ifdef __CompPollTab__
-   ptnum = PollTNum;
-#else
    ptnum = 0;
    while((ptnum < PollTNum) && (PollTab[ptnum].fd != -1)) ptnum++;
-#endif
 
 // Make sure we have enough table entries to add this link
 //
@@ -387,10 +368,6 @@ void XrdPollPoll::Start(XrdSysSemaphore *syncsem, int &retcode)
 
 void XrdPollPoll::doDetach(int pti)
 {
-#ifdef __CompPollTab__
-   struct pollfd *dent = &PollTab[pti];
-   XrdLink   *lastlp;
-#endif
    int lastent;
 
 // Get some starting values
@@ -399,25 +376,8 @@ void XrdPollPoll::doDetach(int pti)
    if ((lastent = PollTNum-1) < 0)
       {XrdLog.Emsg("Poll","Underflow during detach"); abort();}
 
-// Try to compress the poll table. This is platform specific since compressing
-// the table leads to much worse performance (e.g., Solaris).
-//
-#ifdef __CompPollTab__
-  if (dent != &PollTab[lastent])
-     {if ((lastlp = XrdLink::fd2link(PollTab[lastent].fd)))
-         {memcpy((void *)dent,(const void *)lastlp->PollEnt,sizeof(struct pollfd));
-          lastlp->PollEnt = dent;
-         }
-         else {char buff[128];
-               sprintf(buff,"%d fd=%d poller=%d",lastent,PollTab[lastent].fd,PID);
-               XrdLog.Emsg("Poll", "Orphaned entry", buff);
-              }
-     }
-  PollTNum--;
-#else
-  if (pti == lastent) 
-     do {PollTNum--;} while(PollTNum && PollTab[PollTNum-1].fd == -1);
-#endif
+   if (pti == lastent)
+      do {PollTNum--;} while(PollTNum && PollTab[PollTNum-1].fd == -1);
   PollMutex.UnLock();
 }
 

@@ -8,7 +8,7 @@
 /*              DE-AC03-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
-//          $Id: XrdOucHash.icc,v 1.8.6.1 2007/11/20 09:54:48 ganis Exp $
+//          $Id: XrdOucHash.icc,v 1.10 2008/06/11 21:41:35 abh Exp $
 
 #include <errno.h>
 #include <string.h>
@@ -66,7 +66,7 @@ T *XrdOucHash<T>::Add(const char *KeyVal, T *KeyData, const int LifeTime,
        } else {
        // Check if we should expand the table
        //
-       if (++hashnum > hashmax) {Expand(); hent = khash % hashtablesize;}
+       if (hashnum >= hashmax) {Expand(); hent = khash % hashtablesize;}
        }
 
     // Add the entry
@@ -75,6 +75,7 @@ T *XrdOucHash<T>::Add(const char *KeyVal, T *KeyData, const int LifeTime,
     if ( !(newhip = new XrdOucHash_Item<T>(khash, KeyVal, KeyData, KeyTime, 
                              hashtable[hent], opt)) ) throw ENOMEM;
     hashtable[hent] = newhip;
+    hashnum++;
     return (T *)0;
 }
 

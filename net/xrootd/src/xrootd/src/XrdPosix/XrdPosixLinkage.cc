@@ -25,12 +25,17 @@
 #if !defined(__macos__) && !defined(__CYGWIN__)
 #include <link.h>
 #endif
-#include <iostream>
-using namespace std;
 
 #include <errno.h>
-#include "XrdPosix/XrdPosixLinkage.hh"
 
+#include "XrdSys/XrdSysHeaders.hh"
+#include "XrdPosix/XrdPosixLinkage.hh"
+ 
+/******************************************************************************/
+/*                   G l o b a l   D e c l a r a t i o n s                    */
+/******************************************************************************/
+  
+XrdPosixLinkage Xunix;
  
 /******************************************************************************/
 /*                          M a c r o   L o a d e r                           */
@@ -38,15 +43,8 @@ using namespace std;
   
 #define LOOKUP_UNIX(symb) symb = (Retv_ ## symb (*)(Args_ ## symb)) \
                                  dlsym(RTLD_NEXT, Symb_ ## symb); \
-                          if (!symb) symb = Xrd_U_ ## symb;
- 
-/******************************************************************************/
-/*                   G l o b a l   D e c l a r a t i o n s                    */
-/******************************************************************************/
-  
-XrdPosixLinkage Xunix;
-
-XrdPosixRootVec xinuX;
+                          if (!symb) {symb = Xrd_U_ ## symb; \
+                                      Missing(Symb_ ## symb);}
  
 /******************************************************************************/
 /*          U n r e s o l v e d   R e f e r e n c e   L i n k a g e           */
@@ -54,6 +52,8 @@ XrdPosixRootVec xinuX;
 
       Retv_Access      Xrd_U_Access(Args_Access)
                          {return (Retv_Access)Xunix.Load_Error("access");}
+      Retv_Acl         Xrd_U_Acl(Args_Acl)
+                         {return (Retv_Acl)Xunix.Load_Error("acl");}
       Retv_Chdir       Xrd_U_Chdir(Args_Chdir) 
                          {return (Retv_Chdir)Xunix.Load_Error("chdir");}
       Retv_Close       Xrd_U_Close(Args_Close) 
@@ -78,6 +78,10 @@ XrdPosixRootVec xinuX;
                          {return (Retv_Fstat64)Xunix.Load_Error("fstat");}
       Retv_Fsync       Xrd_U_Fsync(Args_Fsync) 
                          {return (Retv_Fsync)Xunix.Load_Error("fsync");}
+      Retv_Ftruncate   Xrd_U_Ftruncate(Args_Ftruncate)
+                         {return (Retv_Ftruncate)Xunix.Load_Error("ftruncate");}
+      Retv_Ftruncate64 Xrd_U_Ftruncate64(Args_Ftruncate64)
+                         {return (Retv_Ftruncate64)Xunix.Load_Error("ftruncate64");}
       Retv_Fgetxattr   Xrd_U_Fgetxattr(Args_Fgetxattr)
                          {return (Retv_Fgetxattr)Xunix.Load_Error("fgetxattr");}
       Retv_Getxattr    Xrd_U_Getxattr(Args_Getxattr)
@@ -100,10 +104,16 @@ XrdPosixRootVec xinuX;
                          {return (Retv_Open64)Xunix.Load_Error("open");}
       Retv_Opendir     Xrd_U_Opendir(Args_Opendir) 
                          {Xunix.Load_Error("opendir"); return (Retv_Opendir)0;}
+      Retv_Pathconf    Xrd_U_Pathconf(Args_Pathconf)
+                         {return (Retv_Pathconf)Xunix.Load_Error("pathconf");}
       Retv_Pread       Xrd_U_Pread(Args_Pread)
                          {return (Retv_Pread)Xunix.Load_Error("pread");}
       Retv_Pread64     Xrd_U_Pread64(Args_Pread64)
                          {return (Retv_Pread64)Xunix.Load_Error("pread");}
+      Retv_Pwrite      Xrd_U_Pwrite(Args_Pwrite) 
+                         {return (Retv_Pwrite)Xunix.Load_Error("pwrite");}
+      Retv_Pwrite64    Xrd_U_Pwrite64(Args_Pwrite64)
+                         {return (Retv_Pwrite64)Xunix.Load_Error("pwrite");}
       Retv_Read        Xrd_U_Read(Args_Read) 
                          {return (Retv_Read)Xunix.Load_Error("read");}
       Retv_Readv       Xrd_U_Readv(Args_Readv) 
@@ -128,12 +138,20 @@ XrdPosixRootVec xinuX;
                          {return (Retv_Stat)Xunix.Load_Error("stat");}
       Retv_Stat64      Xrd_U_Stat64(Args_Stat64)
                          {return (Retv_Stat64)Xunix.Load_Error("stat");}
-      Retv_Pwrite      Xrd_U_Pwrite(Args_Pwrite) 
-                         {return (Retv_Pwrite)Xunix.Load_Error("pwrite");}
-      Retv_Pwrite64    Xrd_U_Pwrite64(Args_Pwrite64)
-                         {return (Retv_Pwrite64)Xunix.Load_Error("pwrite");}
+      Retv_Statfs      Xrd_U_Statfs(Args_Statfs)
+                         {return (Retv_Statfs)Xunix.Load_Error("statfs");}
+      Retv_Statfs64    Xrd_U_Statfs64(Args_Statfs64)
+                         {return (Retv_Statfs64)Xunix.Load_Error("statfs64");}
+      Retv_Statvfs     Xrd_U_Statvfs(Args_Statvfs)
+                         {return (Retv_Statvfs)Xunix.Load_Error("statvfs");}
+      Retv_Statvfs64   Xrd_U_Statvfs64(Args_Statvfs64)
+                         {return (Retv_Statvfs64)Xunix.Load_Error("statvfs64");}
       Retv_Telldir     Xrd_U_Telldir(Args_Telldir) 
                          {return (Retv_Telldir)Xunix.Load_Error("telldir");}
+      Retv_Truncate    Xrd_U_Truncate(Args_Truncate)
+                         {return (Retv_Truncate)Xunix.Load_Error("truncate");}
+      Retv_Truncate64  Xrd_U_Truncate64(Args_Truncate64)
+                         {return (Retv_Truncate64)Xunix.Load_Error("truncate64");}
       Retv_Unlink      Xrd_U_Unlink(Args_Unlink) 
                          {return (Retv_Unlink)Xunix.Load_Error("unlink");}
       Retv_Write       Xrd_U_Write(Args_Write) 
@@ -148,6 +166,7 @@ XrdPosixRootVec xinuX;
 int XrdPosixLinkage::Resolve()
 {
   LOOKUP_UNIX(Access)
+  LOOKUP_UNIX(Acl)
   LOOKUP_UNIX(Chdir)
   LOOKUP_UNIX(Close)
   LOOKUP_UNIX(Closedir)
@@ -160,6 +179,8 @@ int XrdPosixLinkage::Resolve()
   LOOKUP_UNIX(Fstat)
   LOOKUP_UNIX(Fstat64)
   LOOKUP_UNIX(Fsync)
+  LOOKUP_UNIX(Ftruncate)
+  LOOKUP_UNIX(Ftruncate64)
   LOOKUP_UNIX(Fgetxattr)
   LOOKUP_UNIX(Getxattr)
   LOOKUP_UNIX(Lgetxattr)
@@ -172,8 +193,11 @@ int XrdPosixLinkage::Resolve()
   LOOKUP_UNIX(Open)
   LOOKUP_UNIX(Open64)
   LOOKUP_UNIX(Opendir)
+  LOOKUP_UNIX(Pathconf)
   LOOKUP_UNIX(Pread)
   LOOKUP_UNIX(Pread64)
+  LOOKUP_UNIX(Pwrite)
+  LOOKUP_UNIX(Pwrite64)
   LOOKUP_UNIX(Read)
   LOOKUP_UNIX(Readv)
   LOOKUP_UNIX(Readdir)
@@ -186,13 +210,17 @@ int XrdPosixLinkage::Resolve()
   LOOKUP_UNIX(Seekdir)
   LOOKUP_UNIX(Stat)
   LOOKUP_UNIX(Stat64)
-  LOOKUP_UNIX(Pwrite)
-  LOOKUP_UNIX(Pwrite64)
+  LOOKUP_UNIX(Statfs)
+  LOOKUP_UNIX(Statfs64)
+  LOOKUP_UNIX(Statvfs)
+  LOOKUP_UNIX(Statvfs64)
   LOOKUP_UNIX(Telldir)
+  LOOKUP_UNIX(Truncate)
+  LOOKUP_UNIX(Truncate64)
   LOOKUP_UNIX(Unlink)
   LOOKUP_UNIX(Write)
   LOOKUP_UNIX(Writev)
-  Done = 1;
+  if (getenv("XRDPOSIX_REPORT")) Missing(0);
   return 1;
 }
 
@@ -207,54 +235,28 @@ int XrdPosixLinkage::Load_Error(const char *epname, int retv)
     errno = ELIBACC;
     return retv;
 }
- 
+
 /******************************************************************************/
-/*                 X r d P o s i x R o o t V e c   C l a s s                  */
-/******************************************************************************/
-/******************************************************************************/
-/*                          M a c r o   L o a d e r                           */
+/*                               M i s s i n g                                */
 /******************************************************************************/
   
-#define LOOKUP_XROOT(symb) \
-        extern XRD_Retv_ ## symb XrdPosix_ ## symb(XRD_Args_ ## symb);\
-        symb = &XrdPosix_ ## symb;
-  
-/******************************************************************************/
-/*           X r d P o s i x R o o t V e c   C o n s t r u c t o r            */
-/******************************************************************************/
-  
-int XrdPosixRootVec::Resolve()
+void XrdPosixLinkage::Missing(const char *epname)
 {
-  LOOKUP_XROOT(Access)
-  LOOKUP_XROOT(Chdir)
-  LOOKUP_XROOT(Close)
-  LOOKUP_XROOT(Closedir)
-  LOOKUP_XROOT(Fcntl)
-  LOOKUP_XROOT(Fstat)
-  LOOKUP_XROOT(Fsync)
-  LOOKUP_XROOT(Lseek)
-  LOOKUP_XROOT(Lstat)
-  LOOKUP_XROOT(Mkdir)
-  LOOKUP_XROOT(Open)
-  LOOKUP_XROOT(Opendir)
-  LOOKUP_XROOT(Pread)
-  LOOKUP_XROOT(Read)
-  LOOKUP_XROOT(Readv)
-  LOOKUP_XROOT(Readdir)
-  LOOKUP_XROOT(Readdir64)
-  LOOKUP_XROOT(Readdir_r)
-  LOOKUP_XROOT(Readdir64_r)
-  LOOKUP_XROOT(Rename)
-  LOOKUP_XROOT(Rewinddir)
-  LOOKUP_XROOT(Rmdir)
-  LOOKUP_XROOT(Seekdir)
-  LOOKUP_XROOT(Stat)
-  LOOKUP_XROOT(Pwrite)
-  LOOKUP_XROOT(Telldir)
-  LOOKUP_XROOT(Unlink)
-  LOOKUP_XROOT(Write)
-  LOOKUP_XROOT(Writev)
-  LOOKUP_XROOT(isMyPath)
-  Done = 1;
-  return 1;
+   struct Missing
+         {struct Missing *Next;
+          const char     *What;
+
+                          Missing(Missing *Prev, const char *That)
+                                 : Next(Prev), What(That) {}
+                         ~Missing() {}
+         };
+
+   static Missing *epList = 0;
+
+   if (epname) epList = new Missing(epList, epname);
+      else {Missing *np = epList;
+            while(np) cerr << "PosixPreload: Unable to resolve Unix '" 
+                           <<epname <<"()'" <<endl;
+            np = np->Next;
+           }
 }

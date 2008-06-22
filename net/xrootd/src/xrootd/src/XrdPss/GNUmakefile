@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.3 2007/07/31 02:44:03 abh Exp $
+#              $Id: GNUmakefile,v 1.4 2008/03/25 23:19:28 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -21,6 +21,7 @@ OBJECTS  = \
         $(OBJDIR)/XrdPssConfig.o
 
 OBJECTT  = \
+        $(OBJDIR)/XrdPosixLinkage.o \
         $(OBJDIR)/XrdPosixXrootd.o
 
 OBJECTU  = $(LIBDIR)/libXrdClient.a

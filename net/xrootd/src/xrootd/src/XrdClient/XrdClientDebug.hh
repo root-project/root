@@ -16,11 +16,11 @@
 #ifndef XRC_DEBUG_H
 #define XRC_DEBUG_H
 
-#include <iostream>
 #include <sstream>
 #include "XrdClient/XrdClientConst.hh"
 #include "XrdSys/XrdSysPthread.hh"
 #include "XrdClient/XrdClientEnv.hh"
+#include "XrdSys/XrdSysHeaders.hh"
 #include "XrdSys/XrdSysLogger.hh"
 #include "XrdSys/XrdSysError.hh"
 

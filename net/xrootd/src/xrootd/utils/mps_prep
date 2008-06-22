@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-#   $Id: mps_prep,v 1.11 2007/08/29 00:54:53 abh Exp $
+#   $Id: mps_prep,v 1.14 2008/02/21 17:57:35 furano Exp $
 
 #
 # mps_prep [add|del|list|ll] [reqid [usrid prty func fn [fn...]]]
@@ -59,8 +59,10 @@ $LOCK_UN = 8;
 $LOCKNOERR = 0;				# ignore errors in getlock
 $LOCKERR   = 1;				# report errors in getlock
 
+$pstgpid = 0;
+
 # Process parameters
-if (! &Getopts('c:f:l:wx:')) {
+if (! &Getopts('c:f:l:wx:p:')) {
    logerr("Missing or invalid argument"); 
    exit 1;
    }
@@ -78,10 +80,27 @@ if (defined($opt_f)) {			# filename for priority stage-ins
 if (defined($opt_x)) {			# debug level
    $debug = "$opt_x";
    }
+if (defined($opt_p)) {
+   $discardpfx = "$opt_p";
+   }
 
 $parm = shift;
 if ("$parm" eq '') {
+    # This is the pipe-oriented way of functioning
+    # Time to start the PreStage process, looking
+    # at the same config file
+    # We assume that mps_PreStage lies in the same dir as mps_prep
+    my (@thispath) = split(/\//, $0);
+    pop @thispath;
+    push @thispath, "mps_PreStage";
+    my ($mypstpath) = join("/", @thispath);
+    
+    @pstgargs = ($mypstpath, "-c", $cfgfn);
+    fork_prestage(@pstgargs);
+
     do_input();
+
+    kill 15, $pstgpid;
 }
 elsif ("$parm" eq 'add') {
     $cflg = 1;
@@ -102,6 +121,24 @@ else {
     exit 1;
 }
 
+#===================================================================
+# Subroutine to fork an mps_PreStage process
+#===================================================================
+sub fork_prestage {
+my(@cmdline) = @_;
+
+# Fork a process to stage-in file.
+if ($pstgpid = fork) {		# parent
+   return;
+   }
+elsif (defined $pstgpid) {		# child
+    exec(@cmdline);
+   exit 0;
+   }
+else {
+   logit("fork_stagein: fork failed for $action: $!\n") if $debug >= $ERR;
+   }
+}
 #===================================================================
 sub add_queue {
     my($data) = @_;
@@ -138,14 +175,16 @@ sub add_queue {
 	    close(FILE);
 	    foreach $fn (@temp) {
 		$tmpid = ($usrid =~ m|^file://|) ? "$usrid"."?lfn=$fn" : $usrid;
+		$fn =~ s/^$discardpfx//;
 		$fn = none2mss($fn);
-		print $fh "$reqid $tmpid $func $fn";
+		print $fh "$reqid $tmpid $func $fn\n";
 	    }
 	}
 	else {
 	    $tmpid = ($usrid =~ m|^file://|) ? "$usrid"."?lfn=$fn" : $usrid;
-	    $fn = none2mss($fn);
-	    print $fh "$reqid $tmpid $func $fn\n";
+		$fn =~ s/^$discardpfx//;
+		$fn = none2mss($fn);
+		print $fh "$reqid $tmpid $func $fn\n";
 	}
     }
     unlock($fh, "$file");
@@ -226,6 +265,8 @@ sub do_input {
 	}
     }
 }
+
+
 #===================================================================
 sub do_list {
     my($lflg) = @_;

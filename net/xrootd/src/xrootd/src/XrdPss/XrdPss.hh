@@ -14,7 +14,7 @@
 
 #include <sys/types.h>
 #include <errno.h>
-#include <iostream>
+#include "XrdSys/XrdSysHeaders.hh"
 
 #include "XrdOss/XrdOss.hh"
 
@@ -25,7 +25,7 @@
 class XrdPssDir : public XrdOssDF
 {
 public:
-int     Close();
+int     Close(long long *retsz=0);
 int     Opendir(const char *);
 int     Readdir(char *buff, int blen);
 
@@ -52,7 +52,7 @@ public:
 // The following two are virtual functions to allow for upcasting derivations
 // of this implementation
 //
-virtual int     Close();
+virtual int     Close(long long *retsz=0);
 virtual int     Open(const char *, int, mode_t, XrdOucEnv &);
 
 int     Fstat(struct stat *);
@@ -105,6 +105,7 @@ int       Mkdir(const char *, mode_t mode, int mkpath=0);
 int       Remdir(const char *);
 int       Rename(const char *, const char *);
 int       Stat(const char *, struct stat *, int resonly=0);
+int       Truncate(const char *, unsigned long long);
 int       Unlink(const char *);
 
 static int P2URL(char *pbuff,int pblen,const char *path,XrdOucEnv *env=0);

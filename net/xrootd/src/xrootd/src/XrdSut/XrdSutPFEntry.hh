@@ -42,7 +42,7 @@ public:
    XrdSutPFBuf(char *b = 0, kXR_int32 l = 0);
    XrdSutPFBuf(const XrdSutPFBuf &b);
 
-   virtual ~XrdSutPFBuf() { if (buf) delete[] buf; }
+   virtual ~XrdSutPFBuf() { if (len > 0 && buf) delete[] buf; }
 
    void SetBuf(const char *b = 0, kXR_int32 l = 0);
 };

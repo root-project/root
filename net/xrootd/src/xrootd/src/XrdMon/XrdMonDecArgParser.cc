@@ -14,6 +14,7 @@
 #include "XrdMon/XrdMonException.hh"
 #include "XrdMon/XrdMonErrors.hh"
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h> /* access */
 
 bool    XrdMonDecArgParser::_forceCloseOnly(false);

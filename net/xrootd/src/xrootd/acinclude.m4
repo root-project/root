@@ -7,7 +7,7 @@ dnl    the path-list is available as acx_searchpath
 dnl
 dnl    Author: Derek Feichtinger <derek.feichtinger@cern.ch>
 dnl    
-dnl    Version info: $Id: acinclude.m4,v 1.5 2007/06/02 23:46:01 dfeich Exp $
+dnl    Version info: $Id: acinclude.m4,v 1.6 2008/05/19 11:36:17 dfeich Exp $
 dnl    Checked in by $Author: dfeich $
 dnl ========================================================================
 AC_DEFUN([ACX_LOCATEFILE],[
@@ -166,4 +166,97 @@ AC_DEFUN([ACX_LOAD_DEFAULTS],[
   else
      AC_MSG_RESULT([NOT FOUND])
   fi
+])
+
+
+dnl AX_HAVE_EPOLL([ACTION-IF-FOUND], [ACTION-IF-NOT-FOUND])
+dnl AX_HAVE_EPOLL_PWAIT([ACTION-IF-FOUND], [ACTION-IF-NOT-FOUND])
+dnl (c) 2008 Peter Simons <simons@cryp.to>
+dnl http://autoconf-archive.cryp.to/ax_have_epoll.html
+dnl
+dnl modified the acceptable Unix version for AX_HAVE_EPOLL
+dnl to be 2,6,12 (original macro had 2.5.45)
+AC_DEFUN([AX_HAVE_EPOLL], [dnl
+  ax_have_epoll_cppflags="${CPPFLAGS}"
+  AC_CHECK_HEADER([linux/version.h], [CPPFLAGS="${CPPFLAGS} -DHAVE_LINUX_VERSION_H"])
+  AC_MSG_CHECKING([for Linux epoll(7) interface])
+  AC_CACHE_VAL([ax_cv_have_epoll], [dnl
+    AC_LINK_IFELSE([dnl
+      AC_LANG_PROGRAM([dnl
+#include <sys/epoll.h>
+#ifdef HAVE_LINUX_VERSION_H
+#  include <linux/version.h>
+#  if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,12)
+#    error linux kernel version is too old to have epoll
+#  endif
+#endif
+], [dnl
+int fd, rc;
+struct epoll_event ev;
+fd = epoll_create(128);
+rc = epoll_wait(fd, &ev, 1, 0);])],
+      [ax_cv_have_epoll=yes],
+      [ax_cv_have_epoll=no])])
+  CPPFLAGS="${ax_have_epoll_cppflags}"
+  AS_IF([test "${ax_cv_have_epoll}" = "yes"],
+    [AC_MSG_RESULT([yes])
+$1],[AC_MSG_RESULT([no])
+$2])
+])dnl
+
+AC_DEFUN([AX_HAVE_EPOLL_PWAIT], [dnl
+  ax_have_epoll_cppflags="${CPPFLAGS}"
+  AC_CHECK_HEADER([linux/version.h],
+    [CPPFLAGS="${CPPFLAGS} -DHAVE_LINUX_VERSION_H"])
+  AC_MSG_CHECKING([for Linux epoll(7) interface with signals extension])
+  AC_CACHE_VAL([ax_cv_have_epoll_pwait], [dnl
+    AC_LINK_IFELSE([dnl
+      AC_LANG_PROGRAM([dnl
+#ifdef HAVE_LINUX_VERSION_H
+#  include <linux/version.h>
+#  if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,19)
+#    error linux kernel version is too old to have epoll_pwait
+#  endif
+#endif
+#include <sys/epoll.h>
+#include <signal.h>
+], [dnl
+int fd, rc;
+struct epoll_event ev;
+fd = epoll_create(128);
+rc = epoll_wait(fd, &ev, 1, 0);
+rc = epoll_pwait(fd, &ev, 1, 0, (sigset_t const *)(0));])],
+      [ax_cv_have_epoll_pwait=yes],
+      [ax_cv_have_epoll_pwait=no])])
+  CPPFLAGS="${ax_have_epoll_cppflags}"
+  AS_IF([test "${ax_cv_have_epoll_pwait}" = "yes"],
+    [AC_MSG_RESULT([yes])
+$1],[AC_MSG_RESULT([no])
+$2])
+])dnl
+
+
+dnl AC_SYS_DEV_POLL([ACTION-IF-FOUND], [ACTION-IF-NOT-FOUND])
+dnl Dave Benson <daveb@ffem.org> 2008-04-12
+dnl from http://autoconf-archive.cryp.to/ac_sys_dev_poll.html
+dnl
+AC_DEFUN([AC_SYS_DEV_POLL], [AC_CACHE_CHECK(for /dev/poll support, ac_cv_dev_poll,
+    AC_TRY_COMPILE([#include <sys/ioctl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/poll.h>
+#include <sys/devpoll.h>],
+[
+  struct dvpoll p;
+  p.dp_timeout = 0;
+  p.dp_nfds = 0;
+  p.dp_fds = (struct pollfd *) 0;
+  return 0;
+],
+    ac_cv_dev_poll=yes
+    [$1],
+    ac_cv_dev_poll=no
+    [$2]
+    )
+  )
 ])

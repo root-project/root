@@ -28,9 +28,17 @@
 
 #define lseek(a,b,c)     XrdPosix_Lseek(a,b,c)
 
+#define fopen(a,b)       XrdPosix_Fopen(a,b)
+
+#define fread(b,s,n,f)   read(fileno(f), b, s*n)/s
+
 #define fstat(a,b)       XrdPosix_Fstat(a,b)
 
 #define fsync(a)         XrdPosix_Fsync(a)
+
+#define ftuncate(a,b)    XrdPosix_Ftruncate(a,b)
+
+#define fwrite(b,s,n,f)  write(fileno(f), b, s*n)/s
 
 #define mkdir(a,b)       XrdPosix_Mkdir(a,b)
 
@@ -60,9 +68,15 @@
 
 #define stat(a,b)        XrdPosix_Stat(a,b)
 
+#define statfs(a,b)      XrdPosix_Statfs(a,b)
+
+#define statvfs(a,b)     XrdPosix_Statvfs(a,b)
+
 #define pwrite(a,b,c,d)  XrdPosix_Pwrite(a,b,c,d)
 
 #define telldir(a)       XrdPosix_Telldir(a)
+
+#define tuncate(a,b)     XrdPosix_Truncate(a,b)
 
 #define unlink(a)        XrdPosix_Unlink(a)
 

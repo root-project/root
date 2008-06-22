@@ -9,8 +9,8 @@
 const char *XrdOucStringCVSID = "$Id$";
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
+#include <climits>
 
 #include <XrdOuc/XrdOucString.hh>
 
@@ -21,6 +21,29 @@ const char *XrdOucStringCVSID = "$Id$";
 /******************************************************************************/
 
 #define kMAXINT64LEN   25
+
+#if !defined(WINDOWS)
+//
+// Macro for 'form'-like operations
+#define XOSINTFORM(f,b) \
+   int buf_len = 256; \
+   va_list ap; \
+   va_start(ap, f); \
+again: \
+   b = (char *)realloc(b, buf_len); \
+   int n = vsnprintf(b, buf_len, f, ap); \
+   if (n == -1 || n >= buf_len) { \
+      if (n == -1) \
+         buf_len *= 2; \
+      else \
+         buf_len = n+1; \
+      va_end(ap); \
+      va_start(ap, f); \
+      goto again; \
+   } \
+   va_end(ap);
+// End-Of-Macro for 'form'-like operations
+#endif
 
 // Default blksize for (re-)allocations; active if > 0.
 // Use XrdOucString::setblksize() to activate
@@ -163,6 +186,56 @@ XrdOucString::~XrdOucString()
 
    if (str) free(str);
 }
+
+//___________________________________________________________________________
+void XrdOucString::setbuffer(char *buf)
+{
+   // Adopt buffer 'buf'
+
+   if (str) free(str);
+   init();
+   if (buf) {
+      str = buf;
+      len = strlen(buf);
+      siz = len + 1;
+      str = (char *)realloc(str, siz);
+   }
+}
+
+#if !defined(WINDOWS)
+//______________________________________________________________________________
+int XrdOucString::form(const char *fmt, ...)
+{
+   // Recreate the string according to 'fmt' and the arguments
+   // Return -1 in case of failure, or the new length.
+
+   // Decode the arguments
+   XOSINTFORM(fmt, str);
+
+   // Re-adjust the length
+   len = strlen(str);
+   str = bufalloc(len+1);
+
+   // Return the new length (in n)
+   return n;
+}
+
+//______________________________________________________________________________
+int XrdOucString::form(XrdOucString &str, const char *fmt, ...)
+{
+   // Format a string in 'str' according to 'fmt' and the arguments
+
+   // Decode the arguments
+   char *buf = 0;
+   XOSINTFORM(fmt, buf);
+
+   // Adopt the new formatted buffer in the string
+   str.setbuffer(buf);
+
+   // Done
+   return n;
+}
+#endif
 
 //______________________________________________________________________________
 int XrdOucString::find(const char c, int start, bool forward)
@@ -1170,4 +1243,46 @@ int XrdOucString::tokenize(XrdOucString &tok, int from, char del)
 
    // return
    return next;
+}
+
+//______________________________________________________________________________
+bool XrdOucString::isdigit(int from, int to)
+{
+   // Return true is all chars between from and to (included) are digits
+
+   // Make sure inputs make sense
+   if (len <= 0) return 0;
+
+   // Adjust range
+   if (from < 0 || from > (len-1)) from = 0;
+   if (to < from) to = len - 1;
+
+   char *c = str + from;
+   while (c <= str + to) {
+      if (*c < 48 || *c > 57) return 0;
+      c++;
+   }
+
+   return 1;
+}
+
+//______________________________________________________________________________
+long XrdOucString::atoi(int from, int to)
+{
+   // Return the long integer corresponding to the number between from and to
+   // (included), assuming they are digits (check with 'isdigit()').
+   // Return LONG_MAX in case they are not digits
+
+   if (!isdigit(from, to)) return LONG_MAX;
+
+   // Adjust range
+   if (from < 0 || from > (len-1)) from = 0;
+   if (to < from) to = len - 1;
+
+   // Save end char
+   char e = str[to+1];
+   str[to+1] = '\0';
+   long out = strtol(&str[from], 0, 10);
+   str[to+1] = e;
+   return out;
 }

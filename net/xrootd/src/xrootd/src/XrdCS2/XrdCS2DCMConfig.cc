@@ -15,7 +15,6 @@ const char *XrdCS2DCMConfigCVSID = "$Id$";
 #include <dirent.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <iostream.h>
 #include <string.h>
 #include <stdio.h>
 #include <sys/types.h>
@@ -30,6 +29,7 @@ const char *XrdCS2DCMConfigCVSID = "$Id$";
 #include "XrdNet/XrdNetWork.hh"
 
 #include "XrdSys/XrdSysError.hh"
+#include "XrdSys/XrdSysHeaders.hh"
 #include "XrdSys/XrdSysLogger.hh"
 #include "XrdSys/XrdSysTimer.hh"
 #include "XrdOuc/XrdOucUtils.hh"

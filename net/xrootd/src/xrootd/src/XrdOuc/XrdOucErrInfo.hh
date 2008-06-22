@@ -24,7 +24,7 @@
 
 struct XrdOucEI      // Err information structure
 { 
- static const size_t Max_Error_Len = 1280;
+ static const size_t Max_Error_Len = 2048;
 
 const      char *user;
            int   code;
@@ -52,47 +52,54 @@ class XrdSysSemaphore;
 class XrdOucErrInfo
 {
 public:
-      void  clear() {ErrInfo.clear();}
+       void  clear() {ErrInfo.clear();}
 
-      void  setErrCB(XrdOucEICB *cb, unsigned long long cbarg=0)
-                    {ErrCB = cb; ErrCBarg = cbarg;}
-      int   setErrCode(int code)
-               {return ErrInfo.code = code;}
-      int   setErrInfo(int code, const char *message)
-               {strlcpy(ErrInfo.message, message, sizeof(ErrInfo.message));
-                return ErrInfo.code = code;
-               }
-      int   setErrInfo(int code, const char *txtlist[], int n)
-               {int i, j = 0, k = sizeof(ErrInfo.message), l;
-                for (i = 0; i < n && k > 1; i++)
-                    {l = strlcpy(&ErrInfo.message[j], txtlist[i], k);
-                     j += l; k -= l;
-                    }
-                return ErrInfo.code = code;
-               }
-      void  setErrUser(const char *user) {ErrInfo.user = (user ? user : "?");}
+inline void  setErrArg(unsigned long long cbarg=0) {ErrCBarg = cbarg;}
+inline void  setErrCB(XrdOucEICB *cb, unsigned long long cbarg=0)
+                     {ErrCB = cb; ErrCBarg = cbarg;}
+inline int   setErrCode(int code) {return ErrInfo.code = code;}
+inline int   setErrInfo(int code, const char *message)
+                {strlcpy(ErrInfo.message, message, sizeof(ErrInfo.message));
+                 return ErrInfo.code = code;
+                }
+inline int   setErrInfo(int code, const char *txtlist[], int n)
+                {int i, j = 0, k = sizeof(ErrInfo.message), l;
+                 for (i = 0; i < n && k > 1; i++)
+                     {l = strlcpy(&ErrInfo.message[j], txtlist[i], k);
+                      j += l; k -= l;
+                     }
+                 return ErrInfo.code = code;
+                }
+inline void  setErrUser(const char *user) {ErrInfo.user = (user ? user : "?");}
 
-XrdOucEICB *getErrCB() {return ErrCB;}
-XrdOucEICB *getErrCB(unsigned long long &ap) {ap = ErrCBarg; return ErrCB;}
-      int   getErrInfo() {return ErrInfo.code;}
-      int   getErrInfo(XrdOucEI &errorParm)
-               {errorParm = ErrInfo; return ErrInfo.code;}
-const char *getErrText() 
-               {return (const char *)ErrInfo.message;}
-const char *getErrText(int &ecode)
-               {ecode = ErrInfo.code; return (const char *)ErrInfo.message;}
-const char *getErrUser()
-               {return ErrInfo.user;}
+inline unsigned long long  getErrArg() {return ErrCBarg;}
 
-      XrdOucErrInfo &operator =(const XrdOucErrInfo &rhs)
-               {ErrInfo = rhs.ErrInfo; 
-                ErrCB   = rhs.ErrCB;
-                ErrCBarg= rhs.ErrCBarg;
-                return *this;
-               }
+inline char               *getMsgBuff(int &mblen)
+                                   {mblen = sizeof(ErrInfo.message);
+                                    return ErrInfo.message;
+                                   }
+inline XrdOucEICB         *getErrCB() {return ErrCB;}
+inline XrdOucEICB         *getErrCB(unsigned long long &ap) 
+                                   {ap = ErrCBarg; return ErrCB;}
+inline int                 getErrInfo() {return ErrInfo.code;}
+inline int                 getErrInfo(XrdOucEI &errorParm)
+                                   {errorParm = ErrInfo; return ErrInfo.code;}
+inline const char         *getErrText()
+                                   {return (const char *)ErrInfo.message;}
+inline const char         *getErrText(int &ecode)
+                                   {ecode = ErrInfo.code; 
+                                    return (const char *)ErrInfo.message;}
+inline const char         *getErrUser() {return ErrInfo.user;}
 
-      XrdOucErrInfo(const char *user=0,XrdOucEICB *cb=0,unsigned long long ca=0)
-                   : ErrInfo(user) {ErrCB = cb; ErrCBarg = ca;}
+         XrdOucErrInfo &operator =(const XrdOucErrInfo &rhs)
+                        {ErrInfo = rhs.ErrInfo;
+                         ErrCB   = rhs.ErrCB;
+                         ErrCBarg= rhs.ErrCBarg;
+                         return *this;
+                        }
+
+         XrdOucErrInfo(const char *user=0,XrdOucEICB *cb=0,unsigned long long ca=0)
+                    : ErrInfo(user) {ErrCB = cb; ErrCBarg = ca;}
 
 virtual ~XrdOucErrInfo() {}
 

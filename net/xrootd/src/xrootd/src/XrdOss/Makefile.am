@@ -4,8 +4,8 @@
 ##
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id: Makefile.am,v 1.3 2007/06/07 10:44:48 dfeich Exp $
-## Checked in by $Author: dfeich $
+## Version info: $Id: Makefile.am,v 1.4 2008/03/24 06:30:12 abh Exp $
+## Checked in by $Author: abh $
 #######################################################################
 
 noinst_HEADERS = XrdOss.hh
@@ -19,7 +19,8 @@ xrootdossincdir = $(includedir)/xrootd/XrdOss
 xrootdossinc_HEADERS = \
     XrdOss.hh        XrdOssError.hh    XrdOssOpaque.hh \
     XrdOssApi.hh     XrdOssLock.hh     XrdOssTrace.hh \
-    XrdOssCache.hh   XrdOssMio.hh \
+    XrdOssCache.hh   XrdOssMio.hh      XrdOssPath.hh \
+    XrdOssSpace.hh   XrdOssStage.hh \
     XrdOssConfig.hh  XrdOssMioFile.hh
 
 
@@ -32,7 +33,10 @@ libXrdOss_la_SOURCES = \
         XrdOssLock.cc XrdOssLock.hh   \
         XrdOssMio.cc XrdOssMio.hh XrdOssMioFile.hh   \
         XrdOssMSS.cc    \
+        XrdOssPath.cc XrdOssPath.hh \
         XrdOssRename.cc \
         XrdOssStage.cc  \
+        XrdOssSpace.cc XrdOssSpace.hh \
+        XrdOssStat.cc \
         XrdOssUnlink.cc
 libXrdOss_la_LIBADD = $(LIBRT)

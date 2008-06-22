@@ -17,6 +17,10 @@
 #include "XrdClient/XrdClientEnv.hh"
 #include "XrdClient/XrdClientDebug.hh"
 
+// This has to be a socket id pool which the server will never assign by itself
+// Moreover, socketids are local to an instance of XrdClientPSock
+#define XRDCLI_PSOCKTEMP -1000
+
 int XrdClientMStream::EstablishParallelStreams(XrdClientConn *cliconn) {
     int mx = EnvGetLong(NAME_MULTISTREAMCNT);
     int i, res;
@@ -59,12 +63,15 @@ int XrdClientMStream::EstablishParallelStreams(XrdClientConn *cliconn) {
 	   "XrdClientMStream::EstablishParallelStreams", "Server WAN parameters: port=" << wan_port << " windowsize=" << wan_window );
     }
 
+    // Start the whole bunch of asynchronous connection requests
+    // By starting one thread for each, calling AddParallelStream once
+    // If no more threads are available, wait and retry
 
     for (i = 0; i < mx; i++) {
 	Info(XrdClientDebug::kHIDEBUG,
 	     "XrdClientMStream::EstablishParallelStreams", "Trying to establish " << i+1 << "th substream." );
 	// If something goes wrong, stop adding new streams
-	if (AddParallelStream(cliconn, wan_port, wan_window))
+	if (AddParallelStream(cliconn, wan_port, wan_window, XRDCLI_PSOCKTEMP - i))
 	    break;
 
     }
@@ -75,8 +82,7 @@ int XrdClientMStream::EstablishParallelStreams(XrdClientConn *cliconn) {
 
 // Add a parallel stream to the pool used by the given client inst
 // Returns 0 if ok
-int XrdClientMStream::AddParallelStream(XrdClientConn *cliconn, int port, int windowsz) {
-
+int XrdClientMStream::AddParallelStream(XrdClientConn *cliconn, int port, int windowsz, int tempid) {
     // Get the XrdClientPhyconn to be used
     XrdClientPhyConnection *phyconn = XrdClientConn::GetPhyConn(cliconn->GetLogConnID());
 
@@ -84,36 +90,42 @@ int XrdClientMStream::AddParallelStream(XrdClientConn *cliconn, int port, int wi
     // If the phyconn already has all the needed streams... exit
     if (phyconn->GetSockIdCount() > EnvGetLong(NAME_MULTISTREAMCNT)) return 0;
 
-    // Connect a new connection, get the socket fd
-    if (phyconn->TryConnectParallelStream(port, windowsz) < 0) return -1;
+    // Connect a new connection, set the temp socket id and get the descriptor
+    // Temporary means that we need one to communicate, but its final id
+    // will be given by the server
+    int sockdescr = phyconn->TryConnectParallelStream(port, windowsz, tempid);
 
-    // The connection now is here with a temp id XRDCLI_PSOCKTEMP
+    if (sockdescr < 0) return -1;
+
+    // The connection now is here but has not yet to be considered by the reader threads
+    // before having handshaked it, and this has to be sync man
     // Do the handshake
     ServerInitHandShake xbody;
-    if (phyconn->DoHandShake(xbody, XRDCLI_PSOCKTEMP) == kSTError) return -1;
+    if (phyconn->DoHandShake(xbody, tempid) == kSTError) return -1;
 
     // After the handshake make the reader thread aware of the new stream
+    phyconn->UnBanSockDescr(sockdescr);
     phyconn->ReinitFDTable();
 
-    // Send the kxr_bind req to get a new substream id
+    // Send the kxr_bind req to get a new substream id, going to be the final one
     int newid = -1;
     int res = -1;
-    if (BindPendingStream(cliconn, XRDCLI_PSOCKTEMP, newid) &&
+    if (BindPendingStream(cliconn, tempid, newid) &&
 	phyconn->IsValid() ) {
       
 	// Everything ok, Establish the new connection with the new id
-	res = phyconn->EstablishPendingParallelStream(newid);
+        res = phyconn->EstablishPendingParallelStream(tempid, newid);
     
 	if (res) {
 	    // If the establish failed we have to remove the pending stream
-	    RemoveParallelStream(cliconn, XRDCLI_PSOCKTEMP);
+	    RemoveParallelStream(cliconn, tempid);
 	    return res;
 	}
 
     }
     else {
 	// If the bind failed we have to remove the pending stream
-	RemoveParallelStream(cliconn, XRDCLI_PSOCKTEMP);
+	RemoveParallelStream(cliconn, tempid);
 	return -1;
     }
 
@@ -194,13 +206,13 @@ void XrdClientMStream::GetGoodSplitParameters(XrdClientConn *cliconn,
     // We start seeing which length we get trying to fill all the
     // available slots ( per stream)
     int candlen = xrdmax(DFLT_MULTISTREAMSPLITSIZE,
-			 len / (reqsperstream * (cliconn->GetParallelStreamCount()-1)) + 1);
+			 len / (reqsperstream * (cliconn->GetParallelStreamCount()-1)) + 1 );
     
     // We don't want blocks smaller than a min value
     // If this is the case we consider only one slot per stream
     if (candlen < DFLT_MULTISTREAMSPLITSIZE) {
       spltsize = xrdmax(DFLT_MULTISTREAMSPLITSIZE,
-			len / (cliconn->GetParallelStreamCount()-1) + 1);
+			len / (cliconn->GetParallelStreamCount()-1) + 1 );
       reqsperstream = 1;
     }
     else spltsize = candlen;

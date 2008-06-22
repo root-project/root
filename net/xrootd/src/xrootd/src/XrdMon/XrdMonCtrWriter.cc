@@ -18,6 +18,7 @@
 #include "XrdMon/XrdMonCtrDebug.hh"
 #include "XrdMon/XrdMonErrors.hh"
 #include "XrdMon/XrdMonCtrWriter.hh"
+#include "XrdSys/XrdSysHeaders.hh"
 
 #include <assert.h>
 #include <netinet/in.h> /* ntohs  */
@@ -25,7 +26,6 @@
 #include <unistd.h>     /* F_OK   */
 
 #include <iomanip>
-#include <iostream>
 using std::cout;
 using std::endl;
 using std::ios;

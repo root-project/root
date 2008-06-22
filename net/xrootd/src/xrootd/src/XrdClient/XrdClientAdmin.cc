@@ -296,6 +296,63 @@ bool XrdClientAdmin::Stat(const char *fname, long &id, long long &size, long &fl
 
 
 
+//_____________________________________________________________________________
+bool XrdClientAdmin::Stat_vfs(const char *fname,
+			      int &rwservers,
+			      long long &rwfree,
+			      int &rwutil,
+			      int &stagingservers,
+			      long long &stagingfree,
+			      int &stagingutil)
+{
+   // Return information for a virtual file system
+
+   bool ok;
+
+   // asks the server for stat file informations
+   ClientRequest statFileRequest;
+
+   memset( &statFileRequest, 0, sizeof(ClientRequest) );
+
+   fConnModule->SetSID(statFileRequest.header.streamid);
+
+   statFileRequest.stat.requestid = kXR_stat;
+
+   memset(statFileRequest.stat.reserved, 0,
+	  sizeof(statFileRequest.stat.reserved));
+
+   statFileRequest.stat.options = kXR_vfs;
+
+   statFileRequest.header.dlen = strlen(fname);
+
+   char fStats[2048];
+   rwservers = 0;
+   rwfree = 0;
+   rwutil = 0;
+   stagingservers = 0;
+   stagingfree = 0;
+   stagingutil = 0;
+
+
+   ok = fConnModule->SendGenCommand(&statFileRequest, (const char*)fname,
+				    NULL, fStats , FALSE, (char *)"Stat_vfs");
+
+
+   if (ok && (fConnModule->LastServerResp.status == 0)) {
+      if (fConnModule->LastServerResp.dlen >= 0)
+         fStats[fConnModule->LastServerResp.dlen] = 0;
+      else
+         fStats[0] = 0;
+      Info(XrdClientDebug::kHIDEBUG,
+	   "Stat_vfs", "Returned stats=" << fStats);
+
+      sscanf(fStats, "%d %lld %d %d %lld %d", &rwservers, &rwfree, &rwutil,
+	     &stagingservers, &stagingfree, &stagingutil);
+
+   }
+
+   return ok;
+}
 
 
 //_____________________________________________________________________________
@@ -1170,6 +1227,29 @@ bool XrdClientAdmin::Locate(kXR_char *path, XrdClientVector<XrdClientLocate_Info
    fConnModule->GoBackToRedirector();
 
    return (hosts.GetSize() > 0);
+}
+
+bool XrdClientAdmin::Truncate(const char *path, long long newsize) {
+
+   ClientRequest truncateRequest;
+   int l = strlen(path);
+   if (!l) return false;
+
+   memset( &truncateRequest, 0, sizeof(truncateRequest) );
+
+   fConnModule->SetSID(truncateRequest.header.streamid);
+
+   truncateRequest.header.requestid     = kXR_truncate;
+   truncateRequest.truncate.offset      = newsize;
+
+   truncateRequest.header.dlen = l;
+
+   bool ret = fConnModule->SendGenCommand(&truncateRequest, path,
+                                          NULL, NULL , FALSE, (char *)"Truncate");
+
+   return ret;
+
+
 }
 
 

@@ -45,6 +45,7 @@ friend class XrdLinkScan;
 friend class XrdPoll;
 friend class XrdPollPoll;
 friend class XrdPollDev;
+friend class XrdPollE;
 
 static XrdLink *Alloc(XrdNetPeer &Peer, int opts=0);
 
@@ -99,7 +100,10 @@ const char   *Name(sockaddr *ipaddr=0)
                       return (const char *)Lname;
                      }
 
-const char   *Host() {return (const char *)HostName;}
+const char   *Host(sockaddr *ipaddr=0)
+                     {if (ipaddr) memcpy(ipaddr, &InetAddr, sizeof(sockaddr));
+                      return (const char *)HostName;
+                     }
 
 int           Peek(char *buff, int blen, int timeout=-1);
 
@@ -110,6 +114,18 @@ int           RecvAll(char *buff, int blen);
 
 int           Send(const char *buff, int blen);
 int           Send(const struct iovec *iov, int iocnt, int bytes=0);
+
+struct sfVec {union {char *buffer;    // ->Data if fdnum < 0
+                     off_t offset;    // File offset      of data
+                    };
+              int   sendsz;           // Length of data at offset
+              int   fdnum;            // File descriptor for data
+             };
+static const int sfMax = 8;
+
+static int    sfOK;                   // True if Send(sfVec) enabled
+
+int           Send(const struct sfVec *sdP, int sdn); // Iff sfOK > 0
 
 int           setEtext(const char *text);
 
@@ -139,6 +155,7 @@ int           UseCnt() {return InUse;}
 private:
 
 void   Reset();
+int    sendData(const char *Buff, int Blen);
 
 static XrdSysMutex   LTMutex;    // For the LinkTab only LTMutex->IOMutex allowed
 static XrdLink     **LinkTab;

@@ -16,10 +16,10 @@ const char *XrdClientUrlSetCVSID = "$Id$";
 #include <XrdClient/XrdClientUrlSet.hh>
 #include "XrdClient/XrdClientUrlInfo.hh"
 #include <XrdNet/XrdNetDNS.hh>
+#include "XrdSys/XrdSysHeaders.hh"
 
 #include <math.h>
 #include <stdio.h>
-#include <iostream>
 #include <ctype.h>               // needed by isdigit()
 #ifndef WIN32
 #include <netdb.h>               // needed by getservbyname()

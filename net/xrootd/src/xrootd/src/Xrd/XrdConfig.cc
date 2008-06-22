@@ -28,8 +28,7 @@ const char *XrdConfigCVSID = "$Id$";
 #include <sys/resource.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <iostream>
-using namespace std;
+
 #include "Xrd/XrdBuffer.hh"
 #include "Xrd/XrdConfig.hh"
 #include "Xrd/XrdInet.hh"
@@ -47,6 +46,7 @@ using namespace std;
 #include "XrdOuc/XrdOuca2x.hh"
 #include "XrdOuc/XrdOucEnv.hh"
 #include "XrdSys/XrdSysError.hh"
+#include "XrdSys/XrdSysHeaders.hh"
 #include "XrdSys/XrdSysLogger.hh"
 #include "XrdOuc/XrdOucStream.hh"
 #include "XrdSys/XrdSysTimer.hh"
@@ -362,18 +362,18 @@ int XrdConfig::Configure(int argc, char **argv)
 
 // Process the configuration file, if one is present
 //
+   XrdLog.Say("++++++ ", myInstance, " initialization started.");
    if (ConfigFN && *ConfigFN)
       {XrdLog.Say("Config using configuration file ", ConfigFN);
-       XrdLog.Say("++++++ ", myInstance, " initialization started.");
        ProtInfo.ConfigFN = ConfigFN;
        NoGo = ConfigProc();
-      }else  XrdLog.Say("++++++ ", myInstance, " initialization started.");
+      }
    if (clPort >= 0) PortTCP = clPort;
-   if (!NoGo) NoGo = Setup(dfltProt);
    if (ProtInfo.DebugON) 
       {XrdTrace.What = TRACE_ALL;
        XrdSysThread::setDebug(&XrdLog);
       }
+   if (!NoGo) NoGo = Setup(dfltProt);
    ProtInfo.Threads = XrdThread;
 
 // If we hae a net name change the working directory
@@ -603,6 +603,7 @@ int XrdConfig::Setup(char *dfltp)
 // Establish the FD limit
 //
    if (setFDL()) return 1;
+   TRACE(NET,"sendfile " <<(XrdLink::sfOK ? "enabled." : "disabled!"));
 
 // Initialize the buffer manager
 //
@@ -634,8 +635,9 @@ int XrdConfig::Setup(char *dfltp)
 // Determine the default port number (only for xrootd) if not specified.
 //
    if (PortTCP < 0)  
-      if ((PortTCP = XrdNetDNS::getPort(dfltp, "tcp"))) PortUDP = PortTCP;
-         else PortTCP = -1;
+      {if ((PortTCP = XrdNetDNS::getPort(dfltp, "tcp"))) PortUDP = PortTCP;
+          else PortTCP = -1;
+      }
 
 // We now go through all of the protocols and get each respective port
 // number and arrange them in descending port number order.
@@ -664,7 +666,8 @@ int XrdConfig::Setup(char *dfltp)
        if (NetWAN->Bind(0, "tcp")) return 1;
        PortWAN  = NetWAN->Port();
        wsz      = NetWAN->WSize();
-       Wan_Blen = (wsz < Wan_Blen ? wsz : Wan_Blen);
+       Wan_Blen = (wsz < Wan_Blen || !Wan_Blen ? wsz : Wan_Blen);
+       TRACE(NET,"WAN port " <<PortWAN <<" wsz=" <<Wan_Blen <<" (" <<wsz <<')');
        XrdNetTCP[XrdProtLoad::ProtoMax] = NetWAN;
       } else {PortWAN = 0; Wan_Blen = 0;}
 
@@ -682,7 +685,9 @@ int XrdConfig::Setup(char *dfltp)
              ProtInfo.Port   = XrdNetTCP[XrdNetTCPlep]->Port();
              ProtInfo.NetTCP = XrdNetTCP[XrdNetTCPlep];
              wsz             = XrdNetTCP[XrdNetTCPlep]->WSize();
-             ProtInfo.WSize  = (wsz < Net_Blen ? wsz : Net_Blen);
+             ProtInfo.WSize  = (wsz < Net_Blen || !Net_Blen ? wsz : Net_Blen);
+             TRACE(NET,"LCL port " <<ProtInfo.Port <<" wsz=" <<ProtInfo.WSize
+                       <<" (" <<wsz <<')');
              if (cp->wanopt)
                 {ProtInfo.WANPort = PortWAN;
                  ProtInfo.WANWSize= Wan_Blen;
@@ -810,10 +815,11 @@ int XrdConfig::xapath(XrdSysError *eDest, XrdOucStream &Config)
 // Get the optional access rights
 //
    if ((val = Config.GetWord()) && val[0])
-      if (!strcmp("group", val)) mode |= S_IRWXG;
-         else {eDest->Emsg("Config", "invalid admin path modifier -", val);
-               return 1;
-              }
+      {if (!strcmp("group", val)) mode |= S_IRWXG;
+          else {eDest->Emsg("Config", "invalid admin path modifier -", val);
+                return 1;
+               }
+      }
    AdminMode = ProtInfo.AdmMode = mode;
    return 0;
 }
@@ -1056,8 +1062,9 @@ int XrdConfig::xprot(XrdSysError *eDest, XrdOucStream &Config)
        else parms = 0;
 
     if ((val = index(proname, ':')))
-       if ((portnum = yport(&XrdLog, "tcp", val+1)) < 0) return 1;
-          else *val = '\0';
+       {if ((portnum = yport(&XrdLog, "tcp", val+1)) < 0) return 1;
+           else *val = '\0';
+       }
 
     if (wanopt && !PortWAN) PortWAN = 1;
 

@@ -15,7 +15,8 @@
 
 #include "XrdMon/XrdMonCommon.hh"
 
-#include <iostream>
+#include "XrdSys/XrdSysHeaders.hh"
+
 using std::ostream;
 
 class XrdMonDecTraceInfo {

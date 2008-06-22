@@ -78,6 +78,10 @@ public:
 
         int            close();
 
+        int            fctl(const int               cmd,
+                            const char             *args,
+                                  XrdOucErrInfo    &out_error);
+
         const char    *FName() {return fname;}
 
         int            getMmap(void **Addr, off_t &Size)
@@ -200,6 +204,12 @@ const   char          *getVersion();
                         if (!rc) mode = bfr.st_mode;
                         return rc;
                        }
+
+        int            truncate(const char             *Name,
+                                      XrdSfsFileOffset fileOffset,
+                                      XrdOucErrInfo    &out_error,
+                                const XrdSecEntity     *client = 0,
+                                const char             *opaque = 0);
 
 // Common functions
 //

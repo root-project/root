@@ -35,6 +35,7 @@ XrdOucMsubs::XrdOucMsubs(XrdSysError *errp)
 
    if (vName[0] == 0)
       {vName[0]     = "$";
+       vName[vCGI]  = "$CGI";
        vName[vLFN]  = "$LFN";
        vName[vPFN]  = "$PFN";
        vName[vRFN]  = "$RFN";
@@ -148,6 +149,7 @@ char *XrdOucMsubs::getVal(XrdOucMsubsInfo &Info, int vNum)
 {
    char buff[1024];
    char *op;
+   int  n;
 
    switch(vNum)
      {case vLFN:  return (char *)Info.lfn;
@@ -209,6 +211,9 @@ char *XrdOucMsubs::getVal(XrdOucMsubsInfo &Info, int vNum)
 
       case vRID:
       case vTID:  return (char *)Info.Tid;
+
+      case vCGI:  if (!(op = Info.Env->Env(n))) op = (char *)"";
+                  return op;
 
       default:    return (char *)"$";
      }

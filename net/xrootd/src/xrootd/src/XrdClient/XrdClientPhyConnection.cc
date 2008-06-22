@@ -19,7 +19,6 @@
 #include "XrdClient/XrdClientMessage.hh"
 #include "XrdClient/XrdClientEnv.hh"
 #include "XrdClient/XrdClientSid.hh"
-#include "XrdSys/XrdSysPthread.hh"
 #include "XrdSec/XrdSecInterface.hh"
 #ifndef WIN32
 #include <sys/socket.h>
@@ -121,6 +120,7 @@ XrdClientPhyConnection::~XrdClientPhyConnection()
       for (int i = 0; i < READERCOUNT; i++)
 	if (fReaderthreadhandler[i]) {
 	  fReaderthreadhandler[i]->Cancel();
+	  fReaderthreadhandler[i]->Join();
 	  delete fReaderthreadhandler[i];
 	}
 
@@ -220,14 +220,14 @@ void XrdClientPhyConnection::StartReader() {
 	 Error("PhyConnection",
 	       "Can't create reader thread: out of system resources");
 // HELP: what do we do here
-         ::exit(-1);
+         exit(-1);
       }
 
       if (fReaderthreadhandler[i]->Run(this)) {
          Error("PhyConnection",
                "Can't run reader thread: out of system resources. Critical error.");
 // HELP: what do we do here
-         ::exit(-1);
+         exit(-1);
       }
 
       if (fReaderthreadhandler[i]->Detach())
@@ -804,4 +804,14 @@ bool XrdClientPhyConnection::TestAndSetMStreamsGoing() {
   bool retval = fMStreamsGoing;
   fMStreamsGoing = true;
   return retval;
+}
+
+bool XrdClientPhyConnection::IsValid() {
+  XrdSysMutexHelper l(fMutex);
+  return ( (fSocket != 0) && fSocket->IsConnected());
+}
+
+ELoginState XrdClientPhyConnection::IsLogged() {
+  const XrdSysMutexHelper l(fMutex);
+  return fLogged;
 }

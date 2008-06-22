@@ -11,8 +11,8 @@
 // $Id$
 
 #include "XrdMon/XrdMonUtils.hh"
+#include "XrdSys/XrdSysHeaders.hh"
 #include <stdio.h>
-#include <iostream>
 #include <string>
 using std::cerr;
 using std::cout;

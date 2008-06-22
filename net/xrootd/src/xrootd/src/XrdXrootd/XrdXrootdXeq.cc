@@ -273,7 +273,7 @@ int XrdXrootdProtocol::do_Chmod()
 // Preform the actual function
 //
    rc = osFS->chmod(argp->buff, (XrdSfsMode)mode, myError, CRED, opaque);
-   TRACEP(FS, "rc=" <<rc <<" chmod " <<std::oct <<mode <<std::dec <<' ' <<argp->buff);
+   TRACEP(FS, "chmod rc=" <<rc <<" mode=" <<std::oct <<mode <<std::dec <<' ' <<argp->buff);
    if (SFS_OK == rc) return Response.Send();
 
 // An error occured
@@ -449,10 +449,6 @@ int XrdXrootdProtocol::do_Endsess()
    memcpy((void *)&sessID.FD,   &sp->FD,   sizeof(sessID.FD));
    memcpy((void *)&sessID.Inst, &sp->Inst, sizeof(sessID.Inst));
 
-// Trace this request
-//
-   TRACEP(DEBUG, "endsess " <<sessID.Pid <<':' <<sessID.FD <<'.' <<sessID.Inst);
-
 // If this session id does not refer to us, ignore the request
 //
    if (sessID.Pid != myPID) return Response.Send();
@@ -461,6 +457,11 @@ int XrdXrootdProtocol::do_Endsess()
 //
    if ((sessID.FD == 0 && sessID.Inst == 0) 
    ||  !(rc = Link->Terminate(Link, sessID.FD, sessID.Inst))) return -1;
+
+// Trace this request
+//
+   TRACEP(LOGIN, "endsess " <<sessID.Pid <<':' <<sessID.FD <<'.' <<sessID.Inst
+          <<" rc=" <<rc <<" (" <<strerror(rc) <<")");
 
 // Return result
 //
@@ -588,7 +589,7 @@ int XrdXrootdProtocol::do_Login()
 // authentication. We can then optimize of each case.
 //
    if (CIA)
-      {const char *pp=CIA->getParms(i, Link->Name());
+      {const char *pp=CIA->getParms(i, Link->Host());
        if (pp && i ) {if (!sendSID) rc = Response.Send((void *)pp, i);
                          else {struct iovec iov[3];
                                iov[1].iov_base = (char *)&sessID;
@@ -856,7 +857,6 @@ int XrdXrootdProtocol::do_Open()
    struct stat statbuf;
    struct ServerResponseBody_Open myResp;
    int resplen = sizeof(myResp.fhandle);
-   off_t mmSize;
    struct iovec IOResp[3];  // Note that IOResp[0] is completed by Response
 
 // Keep Statistics
@@ -904,6 +904,14 @@ int XrdXrootdProtocol::do_Open()
 // Check if opaque data has been provided
 //
    if (rpCheck(fn, &opaque)) return rpEmsg("Opening", fn);
+
+// Check if static redirection applies
+//
+   if (Route[RD_open1].Host && (popt = RPList.Validate(fn)))
+      return Response.Send(kXR_redirect,Route[popt].Port,Route[popt].Host);
+
+// Validate the path
+//
    if (!(popt = Squash(fn))) return vpEmsg("Opening", fn);
 
 // Get a file object
@@ -926,7 +934,7 @@ int XrdXrootdProtocol::do_Open()
 
 // Obtain a hyper file object
 //
-   if (!(xp = new XrdXrootdFile(Link->ID, fp, usage, isAsync)))
+   if (!(xp=new XrdXrootdFile(Link->ID,fp,usage,isAsync,Link->sfOK,&statbuf)))
       {delete fp;
        snprintf(ebuff, sizeof(ebuff)-1, "Insufficient memory to open %s", fn);
        eDest.Emsg("Xeq", ebuff);
@@ -993,19 +1001,10 @@ int XrdXrootdProtocol::do_Open()
                         } else myResp.cpsize = 0;
            }
 
-// Determine if file is memory mapped
-//
-   if (fp->getMmap((void **)&xp->mmAddr, mmSize) == SFS_OK) 
-      xp->mmSize = static_cast<long long>(mmSize);
-
-// Determine file size of we will need to send it back
+// If client wants a stat in open, return the stat information
 //
    if (retStat)
-      {if (!fp->stat(&statbuf)) retStat = StatGen(statbuf, ebuff);
-          else {statbuf.st_size = 1; 
-                strcpy(ebuff, "0 1 0 0"); 
-                retStat = strlen(ebuff)+1;
-               }
+      {retStat = StatGen(statbuf, ebuff);
        IOResp[1].iov_base = (char *)&myResp; IOResp[1].iov_len = sizeof(myResp);
        IOResp[2].iov_base =         ebuff;   IOResp[2].iov_len = retStat;
        resplen = sizeof(myResp) + retStat;
@@ -1015,7 +1014,6 @@ int XrdXrootdProtocol::do_Open()
 //
    if (monFILE && Monitor) 
       {xp->FileID = Monitor->Map(XROOTD_MON_MAPPATH, Link->ID, fn);
-       if (!retStat && fp->stat(&statbuf)) statbuf.st_size = 0;
        Monitor->Open(xp->FileID, statbuf.st_size);
       }
 
@@ -1075,15 +1073,15 @@ int XrdXrootdProtocol::do_Prepare()
 // Get a request ID for this prepare and check for static routine
 //
    if (opts & kXR_stage && !(opts & kXR_cancel)) 
-      XrdOucReqID::ID(reqid, sizeof(reqid));
-      else {reqid[0] = '*'; reqid[1] = '\0';}
+      {XrdOucReqID::ID(reqid, sizeof(reqid)); fsprep.opts = Prep_STAGE;}
+      else {reqid[0] = '*'; reqid[1] = '\0';  fsprep.opts = 0;}
 
 // Initialize the fsile system prepare arg list
 //
    fsprep.reqid   = reqid;
    fsprep.paths   = 0;
    fsprep.oinfo   = 0;
-   fsprep.opts    = Prep_PRTY0;
+   fsprep.opts   |= Prep_PRTY0;
    fsprep.notify  = 0;
 
 // Check if this is a cancel request
@@ -1251,6 +1249,86 @@ int XrdXrootdProtocol::do_Qconf()
 //
    return Response.Send(buff, sizeof(buff) - bleft);
 }
+  
+/******************************************************************************/
+/*                                d o _ Q f h                                 */
+/******************************************************************************/
+
+int XrdXrootdProtocol::do_Qfh()
+{
+   static const int fsctl_cmd1 = SFS_FCTL_STATV;
+   static XrdXrootdCallBack qryCB("query");
+   XrdOucErrInfo myError(Link->ID, &qryCB, ReqID.getID());
+   XrdXrootdFHandle fh(Request.query.fhandle);
+   XrdXrootdFile *fp;
+   short qopt = (short)ntohs(Request.query.infotype);
+   int rc, fsctl_cmd;
+
+// Update misc stats count
+//
+   UPSTATS(miscCnt);
+
+// Perform the appropriate query
+//
+   switch(qopt)
+         {case kXR_Qvisa:   fsctl_cmd = fsctl_cmd1;
+                            break;
+          default:          return Response.Send(kXR_ArgMissing, 
+                                   "Required query argument not present");
+         }
+
+// Find the file object
+//
+   if (!FTab || !(fp = FTab->Get(fh.handle)))
+      return Response.Send(kXR_FileNotOpen,
+                           "query does not refer to an open file");
+
+// Preform the actual function
+//
+   rc = fp->XrdSfsp->fctl(fsctl_cmd, 0, myError);
+   TRACEP(FS, "query rc=" <<rc <<" fh=" <<fh.handle);
+
+// Return appropriately
+//
+   if (SFS_OK != rc) return fsError(rc, myError);
+   return Response.Send();
+}
+  
+/******************************************************************************/
+/*                             d o _ Q s p a c e                              */
+/******************************************************************************/
+  
+int XrdXrootdProtocol::do_Qspace()
+{
+   static const int fsctl_cmd = SFS_FSCTL_STATLS;
+   XrdOucErrInfo myError(Link->ID);
+   const char *opaque;
+   int n, rc;
+
+// Check for static routing
+//
+   if (Route[RD_stat].Port) 
+      return Response.Send(kXR_redirect,Route[RD_stat].Port,Route[RD_stat].Host);
+
+// Prescreen the path
+//
+   if (rpCheck(argp->buff, &opaque)) return rpEmsg("Stating", argp->buff);
+   if (!Squash(argp->buff))          return vpEmsg("Stating", argp->buff);
+
+// Add back the opaque info
+//
+   if (opaque)
+      {n = strlen(argp->buff); argp->buff[n] = '?';
+       if ((argp->buff)+n != opaque-1) strcpy(&argp->buff[n+1], opaque);
+      }
+
+// Preform the actual function using the supplied logical FS name
+//
+   rc = osFS->fsctl(fsctl_cmd, argp->buff, myError, CRED);
+   TRACEP(FS, "rc=" <<rc <<" qspace '" <<argp->buff <<"'");
+   if (rc == SFS_OK) Response.Send("");
+   return fsError(rc, myError);
+}
 
 /******************************************************************************/
 /*                              d o _ Q u e r y                               */
@@ -1268,6 +1346,8 @@ int XrdXrootdProtocol::do_Query()
           case kXR_Qcksum:  return do_CKsum(0);
           case kXR_Qckscan: return do_CKsum(1);
           case kXR_Qconfig: return do_Qconf();
+          case kXR_Qspace:  return do_Qspace();
+          case kXR_Qxattr:  return do_Qxattr();
           default:          break;
          }
 
@@ -1277,6 +1357,35 @@ int XrdXrootdProtocol::do_Query()
                         "Invalid information query type code");
 }
 
+/******************************************************************************/
+/*                             d o _ Q x a t t r                              */
+/******************************************************************************/
+  
+int XrdXrootdProtocol::do_Qxattr()
+{
+   static XrdXrootdCallBack statCB("stat");
+   static const int fsctl_cmd = SFS_FSCTL_STATXA;
+   int rc;
+   const char *opaque;
+   XrdOucErrInfo myError(Link->ID, &statCB, ReqID.getID());
+
+// Check for static routing
+//
+   if (Route[RD_stat].Port) 
+      return Response.Send(kXR_redirect,Route[RD_stat].Port,Route[RD_stat].Host);
+
+// Prescreen the path
+//
+   if (rpCheck(argp->buff, &opaque)) return rpEmsg("Stating", argp->buff);
+   if (!Squash(argp->buff))          return vpEmsg("Stating", argp->buff);
+
+// Preform the actual function
+//
+   rc = osFS->fsctl(fsctl_cmd, argp->buff, myError, CRED);
+   TRACEP(FS, "rc=" <<rc <<" qxattr " <<argp->buff);
+   return fsError(rc, myError);
+}
+  
 /******************************************************************************/
 /*                               d o _ R e a d                                */
 /******************************************************************************/
@@ -1315,23 +1424,26 @@ int XrdXrootdProtocol::do_Read()
    if (monIO && Monitor) Monitor->Add_rd(myFile->FileID, Request.read.rlen,
                                          Request.read.offset);
 
-// See if an alternate path is required
+// See if an alternate path is required, offload the read
 //
    if (pathID) return do_Offload(pathID, 0);
 
 // If this file is memory mapped, short ciruit all the logic and immediately
 // transfer the requested data to minimize latency.
 //
-   if (myFile->mmSize)
-           if (myOffset >= myFile->mmSize) return Response.Send();
-      else if (myOffset+myIOLen <= myFile->mmSize)
-              return Response.Send(myFile->mmAddr+myOffset, myIOLen);
-      else    return Response.Send(myFile->mmAddr+myOffset, 
-                                   myFile->mmSize - myOffset);
+   if (myFile->isMMapped)
+      {     if (myOffset >= myFile->fSize) return Response.Send();
+       else if (myOffset+myIOLen <= myFile->fSize)
+               return Response.Send(myFile->mmAddr+myOffset, myIOLen);
+       else    return Response.Send(myFile->mmAddr+myOffset,
+                                    myFile->fSize -myOffset);
+      }
 
-// If an alternate path was specified, offload this read
+// If we are sendfile enabled, then just send the file if possible
 //
-   if (pathID) return do_Offload(pathID, 1);
+   if (myFile->sfEnabled && myIOLen >= as_minsfsz
+   &&  myOffset+myIOLen <= myFile->fSize)
+      return Response.Send(myFile->fdNum, myOffset, myIOLen);
 
 // If we are in async mode, schedule the read to ocur asynchronously
 //
@@ -1510,10 +1622,11 @@ int XrdXrootdProtocol::do_ReadV()
         //
         currFH.Set(rdVec[i].fhandle);
         if (currFH.handle != lastFH.handle)
-           if (!(myFile = FTab->Get(currFH.handle)))
-              return Response.Send(kXR_FileNotOpen,
-                              "readv does not refer to an open file");
-              else lastFH.handle = currFH.handle;
+           {if (!(myFile = FTab->Get(currFH.handle)))
+               return Response.Send(kXR_FileNotOpen,
+                               "readv does not refer to an open file");
+               else lastFH.handle = currFH.handle;
+           }
       
         // Read in the vector, segmenting as needed. Note that we gaurantee
         // that a single readv element will never need to be segmented.
@@ -1706,8 +1819,9 @@ int XrdXrootdProtocol::do_Set_Mon(XrdOucTokenizer &setargs)
   
 int XrdXrootdProtocol::do_Stat()
 {
-   int rc;
    static XrdXrootdCallBack statCB("stat");
+   static const int fsctl_cmd = SFS_FSCTL_STATFS;
+   int rc;
    const char *opaque;
    char xxBuff[256];
    struct stat buf;
@@ -1725,10 +1839,16 @@ int XrdXrootdProtocol::do_Stat()
 
 // Preform the actual function
 //
-   rc = osFS->stat(argp->buff, &buf, myError, CRED, opaque);
-   TRACEP(FS, "rc=" <<rc <<" stat " <<argp->buff);
-   if (rc != SFS_OK) return fsError(rc, myError);
-   return Response.Send(xxBuff, StatGen(buf, xxBuff));
+   if (Request.stat.options & kXR_vfs)
+      {rc = osFS->fsctl(fsctl_cmd, argp->buff, myError, CRED);
+       TRACEP(FS, "rc=" <<rc <<" statfs " <<argp->buff);
+       if (rc == SFS_OK) Response.Send("");
+      } else {
+       rc = osFS->stat(argp->buff, &buf, myError, CRED, opaque);
+       TRACEP(FS, "rc=" <<rc <<" stat " <<argp->buff);
+       if (rc == SFS_OK) return Response.Send(xxBuff, StatGen(buf, xxBuff));
+      }
+   return fsError(rc, myError);
 }
 
 /******************************************************************************/
@@ -1797,6 +1917,65 @@ int XrdXrootdProtocol::do_Sync()
 }
 
 /******************************************************************************/
+/*                           d o _ T r u n c a t e                            */
+/******************************************************************************/
+  
+int XrdXrootdProtocol::do_Truncate()
+{
+   XrdXrootdFile *fp;
+   XrdXrootdFHandle fh(Request.truncate.fhandle);
+   long long theOffset;
+   int rc;
+
+// Unmarshall the data
+//
+   n2hll(Request.truncate.offset, theOffset);
+
+// Check if this is a truncate for an open file (no path given)
+//
+   if (!Request.header.dlen)
+      {
+       // Update misc stats count
+       //
+          UPSTATS(miscCnt);
+
+      // Find the file object
+      //
+         if (!FTab || !(fp = FTab->Get(fh.handle)))
+            return Response.Send(kXR_FileNotOpen,
+                                     "trunc does not refer to an open file");
+
+     // Truncate the file
+     //
+        rc = fp->XrdSfsp->truncate(theOffset);
+        TRACEP(FS, "trunc rc=" <<rc <<" sz=" <<theOffset <<" fh=" <<fh.handle);
+        if (SFS_OK != rc)
+           return Response.Send(kXR_FSError, fp->XrdSfsp->error.getErrText());
+
+   } else {
+
+       XrdOucErrInfo myError(Link->ID);
+       const char *opaque;
+
+    // Verify the path and extract out the opaque information
+    //
+       if (rpCheck(argp->buff,&opaque)) return rpEmsg("Truncating",argp->buff);
+       if (!Squash(argp->buff))         return vpEmsg("Truncating",argp->buff);
+
+    // Preform the actual function
+    //
+       rc = osFS->truncate(argp->buff, (XrdSfsFileOffset)theOffset, myError,
+                           CRED, opaque);
+       TRACEP(FS, "rc=" <<rc <<" trunc " <<theOffset <<' ' <<argp->buff);
+       if (SFS_OK != rc) return fsError(rc, myError);
+   }
+
+// Respond that all went well
+//
+   return Response.Send();
+}
+  
+/******************************************************************************/
 /*                              d o _ W r i t e                               */
 /******************************************************************************/
   
@@ -1838,9 +2017,11 @@ int XrdXrootdProtocol::do_Write()
    if (myFile->AsyncMode && !as_syncw)
       {if (myStalls > as_maxstalls) myStalls--;
           else if (myIOLen >= as_miniosz && Link->UseCnt() < as_maxperlnk)
-                  if ((retc = aio_Write()) != -EAGAIN)
-                     if (retc == -EIO) return do_WriteNone();
-                        else return retc;
+                  {if ((retc = aio_Write()) != -EAGAIN)
+                      {if (retc == -EIO) return do_WriteNone();
+                          else return retc;
+                      }
+                  }
        SI->AsyncRej++;
       }
 
@@ -1992,8 +2173,9 @@ int XrdXrootdProtocol::fsError(int rc, XrdOucErrInfo &myError)
 // Process the data response
 //
    if (rc == SFS_DATA)
-      if (ecode) return Response.Send((void *)eMsg, ecode);
-         else    return Response.Send();
+      {if (ecode) return Response.Send((void *)eMsg, ecode);
+          else    return Response.Send();
+      }
 
 // Process the deferal
 //

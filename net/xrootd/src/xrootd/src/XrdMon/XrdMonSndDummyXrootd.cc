@@ -12,10 +12,11 @@
 
 #include "XrdMon/XrdMonSndDummyXrootd.hh"
 #include "XrdMon/XrdMonSndDebug.hh"
+#include "XrdSys/XrdSysHeaders.hh"
 
+#include "sys/time.h"
 #include <fstream>
 #include <iomanip>
-#include <iostream>
 #include <sstream>
 using std::cerr;
 using std::cout;
@@ -78,6 +79,29 @@ XrdMonSndDummyXrootd::newXrdMonSndDictEntry()
                 _firstAvailId++);
     _noTracesPerDict.push_back(0);
     _openFiles.push_back(true);
+    
+    return e;
+}
+
+XrdMonSndStageEntry
+XrdMonSndDummyXrootd::newXrdMonSndStageEntry()
+{
+    User& user     = _users[_activeUser];
+    User::HostAndPid& hp = user.myProcesses[_activeProcess];
+    PathData& pd   = _paths[ hp.myFiles[_activeFile] ];
+
+    struct timeval tv;
+    gettimeofday(&tv, 0);
+
+    XrdMonSndStageEntry e(generateUserName(user.uid), 
+                          hp.pid, 
+                          pd.fd, 
+                          hp.name, 
+                          pd.path, 
+                          rand() % 20000, // bytes
+                          rand() % 90,    // seconds
+                          tv.tv_sec,      // tod
+                         _firstAvailId++);
     
     return e;
 }

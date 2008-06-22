@@ -26,7 +26,7 @@
 
 #ifndef NODEBUG
 
-#include <iostream>
+#include "XrdSys/XrdSysHeaders.hh"
 #include "XrdOuc/XrdOucTrace.hh"
 
 #ifndef XRD_TRACE

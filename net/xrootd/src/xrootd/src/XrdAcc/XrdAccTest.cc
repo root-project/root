@@ -35,14 +35,13 @@ const char *XrdAccTestCVSID = "$Id$";
 #include <arpa/inet.h>
 #include <sys/param.h>
 #include <sys/socket.h>
-#include <iostream>
-using namespace std;
 
 #include "XrdAcc/XrdAccAuthorize.hh"
 #include "XrdAcc/XrdAccConfig.hh"
 #include "XrdAcc/XrdAccGroups.hh"
 #include "XrdAcc/XrdAccPrivs.hh"
 #include "XrdSys/XrdSysError.hh"
+#include "XrdSys/XrdSysHeaders.hh"
 #include "XrdSys/XrdSysLogger.hh"
 #include "XrdOuc/XrdOucStream.hh"
 

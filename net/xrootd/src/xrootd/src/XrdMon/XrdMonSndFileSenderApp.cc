@@ -21,7 +21,7 @@
 #include <sys/time.h>
 #include <fstream>
 #include <iomanip>
-#include <iostream>
+#include "XrdSys/XrdSysHeaders.hh"
 #include <strings.h>
 #include <sstream>
 using std::cerr;

@@ -14,6 +14,7 @@
 #include "XrdMon/XrdMonUtils.hh"
 #include "XrdMon/XrdMonSndDebug.hh"
 #include "XrdMon/XrdMonSndTransmitter.hh"
+#include "XrdSys/XrdSysHeaders.hh"
 
 #include <netdb.h>
 #include <netinet/in.h>
@@ -21,8 +22,8 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <string.h>
 
-#include <iostream>
 #include <string>
 using std::cerr;
 using std::cout;

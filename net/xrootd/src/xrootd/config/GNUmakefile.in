@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile.in,v 1.21.6.1 2008/01/12 12:42:21 ganis Exp $
+#              $Id: GNUmakefile.in,v 1.27 2008/05/17 02:44:14 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                             C o m p o n e n t s                              #
@@ -14,11 +14,13 @@
 XRDSEC  = XrdSys XrdOuc XrdNet @xrdsec@
 
 SERVER  = XrdSfs XrdAcc XrdOdc Xrd \
-          XrdOlb XrdOss XrdOfs XrdRootd   XrdXrootd
+          XrdCms XrdOlb XrdOss XrdOfs XrdBwm XrdRootd XrdXrootd
 
-XRDCLIENT = XrdClient XrdPosix XrdPss
+XRDCLIENT = XrdClient
 
 XRDMON    = XrdMon
+
+XRDPOSIX  = XrdPosix XrdPss
 
 TARGETS = @targets@
 
@@ -85,6 +87,11 @@ XrdAcc: FORCE
 	$(ECHO)cd src/XrdAcc;\
 	$(MAKE) $(MAKEXEQ) ARCH=$(ARCH) --no-print-directory
 
+XrdBwm: FORCE
+	@echo $(XMSG) bwm $(XDBG) component...
+	$(ECHO)cd src/XrdBwm;\
+	$(MAKE) $(MAKEXEQ) ARCH=$(ARCH) --no-print-directory
+
 XrdClient: FORCE
 	@echo $(XMSG) client $(XDBG) component...
 	@cd src/XrdClient;\
@@ -94,6 +101,11 @@ XrdClientPerl: FORCE
 	@echo $(XMSG) admin client perl wrapper $(XDBG) component...
 	@cd src/XrdClient;\
 	$(MAKE) perlmod ARCH=$(ARCH) --no-print-directory
+
+XrdCms: FORCE
+	@echo $(XMSG) cms $(XDBG) component...
+	$(ECHO)cd src/XrdCms;\
+	$(MAKE) $(MAKEXEQ) ARCH=$(ARCH) --no-print-directory
 
 XrdCrypto: FORCE
 	@echo $(XMSG) crypto $(XDBG) component...

@@ -46,6 +46,8 @@ private:
    XrdClientVector<XrdClientLogConnection*> fLogVec;
    XrdOucHash<XrdClientPhyConnection> fPhyHash;
 
+   // To try not to reuse too much the same array ids
+   int fLastLogIdUsed;
    // Phyconns are inserted here when they have to be destroyed later
    // All the phyconns here are disconnected.
    XrdClientVector<XrdClientPhyConnection *> fPhyTrash;

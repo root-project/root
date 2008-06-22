@@ -241,8 +241,9 @@ XrdOdcResp *XrdOdcRespQ::Rem(int msgid)
 
 // Remove the entry if we found it
 //
-   if (rp) if (pp) pp->next = rp->next;
-              else mqTab[i] = rp->next;
+   if (rp) {if (pp) pp->next = rp->next;
+               else mqTab[i] = rp->next;
+           }
 
 // Return what we found
 //

@@ -14,11 +14,11 @@
 #include "XrdMon/XrdMonDecDictInfo.hh"
 #include "XrdMon/XrdMonDecUserInfo.hh"
 #include "XrdMon/XrdMonHeader.hh"
+#include "XrdSys/XrdSysHeaders.hh"
 #include "XrdSys/XrdSysPlatform.hh"
 #include "XrdXrootd/XrdXrootdMonData.hh"
 #include <fstream>
 #include <iomanip>
-#include <iostream>
 #include <netinet/in.h>
 #include <unistd.h>
 
@@ -200,6 +200,12 @@ debugDisconnect(const char* packet, int len)
 }
 
 void
+debugStagePacket(const char* packet, int)
+{
+    cerr << "DebugStagePacket() not implemented" << endl;
+}
+
+void
 debugTracePacket(const char* packet, int len)
 {
     if ( static_cast<kXR_char>(*packet) != XROOTD_MON_WINDOW ) {
@@ -282,6 +288,7 @@ int main(int argc, char* argv[])
     switch (header.packetType() ) {
         case PACKET_TYPE_TRACE: { debugTracePacket(packet, len); break; }
         case PACKET_TYPE_DICT:  { debugDictPacket(packet, len);  break; }
+        case PACKET_TYPE_STAGE: { debugStagePacket(packet, len); break; }
         case PACKET_TYPE_USER:  { debugUserPacket(packet, len);  break; }
         default: {
             cerr << "Invalid packet type " << header.packetType() << endl;

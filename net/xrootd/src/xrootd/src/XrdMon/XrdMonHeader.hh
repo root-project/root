@@ -16,8 +16,8 @@
 #include "XrdMon/XrdMonCommon.hh"
 #include "XrdMon/XrdMonTypes.hh"
 #include "XrdXrootd/XrdXrootdMonData.hh"
+#include "XrdSys/XrdSysHeaders.hh"
 
-#include <iostream>
 #include <sys/time.h>
 #include <vector>
 using std::ostream;

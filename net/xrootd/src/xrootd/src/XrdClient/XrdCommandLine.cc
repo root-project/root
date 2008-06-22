@@ -17,9 +17,9 @@
 #include "XrdClient/XrdClientDebug.hh"
 #include "XrdClient/XrdClientEnv.hh"
 #include "XrdOuc/XrdOucTokenizer.hh"
+#include "XrdSys/XrdSysHeaders.hh"
 
 #include <stdio.h>
-#include <iostream>
 #include <unistd.h>
 #include <stdarg.h>
 #include <sstream>
@@ -69,9 +69,7 @@ extern "C" {
 
 
 
-
-
-#define XRDCLI_VERSION            "(C) 2004 SLAC INFN xrd 0.1 beta"
+#define XRDCLI_VERSION            "(C) 2004 SLAC INFN $Revision: 1.21 $ - Xrootd version: "XrdVSTRING
 
 
 ///////////////////////////////////////////////////////////////////////
@@ -139,23 +137,32 @@ void PrintHelp() {
    cout << endl <<
       XRDCLI_VERSION << endl << endl <<
       "List of available commands:" << endl <<
+      " cat <filename> [xrdcp parameters]" << endl <<
+      "  outputs a file on standard output using xrdcp. <filename> can be a root:// URL." << endl <<
       " cd <dir name>" << endl <<
       "  changes the current directory" << endl <<
       "  Note: no existence check is performed." << endl <<
+      " chmod <fileordirname> <user> <group> <other>" << endl <<
+      "  modifies file permissions." << endl <<
+      " connect [hostname[:port]]" << endl <<
+      "  connects to the specified host." << endl <<
+      " cp <fileordirname> <fileordirname> [xrdcp parameters]" << endl <<
+      "  copies a file using xrdcp. <fileordirname> are always relative to the" << endl <<
+      "  current remote path. Also, they can be root:// URLs specifying any other host." << endl <<
+      " dirlist [dirname]" << endl <<
+      "  gets the requested directory listing." << endl <<
       " envputint <varname> <intval>" << endl <<
       "  puts an integer in the internal environment." << endl <<
       " envputstring <varname> <stringval>" << endl <<
       "  puts a string in the internal environment." << endl <<
-      " help" << endl <<
-      "  this help screen." << endl <<
       " exit" << endl <<
       "  exits from the program." << endl <<
-      " connect [hostname[:port]]" << endl <<
-      "  connects to the specified host." << endl <<
-      " dirlist [dirname]" << endl <<
-      "  gets the requested directory listing." << endl <<
+      " help" << endl <<
+      "  this help screen." << endl <<
       " stat [fileordirname]" << endl <<
       "  gets info about the given file or directory path." << endl <<
+      " statvfs [vfilesystempath]" << endl <<
+      "  gets info about a virtual file system." << endl <<
       " existfile <filename>" << endl <<
       "  tells if the specified file exists." << endl <<
       " existdir <dirname>" << endl <<
@@ -175,19 +182,14 @@ void PrintHelp() {
       "  moves filename1 to filename2 locally to the same server." << endl <<
       " mkdir <dirname> [user] [group] [other]" << endl <<
       "  creates a directory." << endl <<
-      " chmod <fileordirname> <user> <group> <other>" << endl <<
-      "  modifies file permissions." << endl <<
       " rm <filename>" << endl <<
       "  removes a file." << endl <<
       " rmdir <dirname>" << endl <<
       "  removes a directory." << endl <<
       " prepare <filename> <options> <priority>" << endl <<
       "  stages a file in." << endl <<
-      " cat <filename> [xrdcp parameters]" << endl <<
-      "  outputs a file on standard output using xrdcp. <filename> can be a root:// URL." << endl <<
-      " cp <fileordirname> <fileordirname> [xrdcp parameters]" << endl <<
-      "  copies a file using xrdcp. <fileordirname> are always relative to the" << endl <<
-      "  current remote path. Also, they can be root:// URLs specifying any other host." << endl <<
+      " query <reqcode> <parms>" << endl <<
+      "  obtain server information" << endl <<
       endl <<
       "For further information, please read the xrootd protocol documentation." << endl <<
       endl;
@@ -474,6 +476,11 @@ int main(int argc, char**argv) {
 	 }
 	 else path = currentpath;
 
+	 if (!path.length()) {
+	    cout << "The current path is empty." << endl;
+	    continue;
+	 }
+
 	 // Now try to issue the request
 	 vecString vs;
 	 genadmin->DirList(path.c_str(), vs);
@@ -599,6 +606,52 @@ int main(int argc, char**argv) {
 	    continue;
       
 	 cout << "Id: " << id << " Size: " << size << " Flags: " << flags << " Modtime: " << modtime << endl;
+
+	 cout << endl;
+	 continue;
+      }
+
+      // -------------------------- statvfs ---------------------------
+      if (!strcmp(cmd, "statvfs")) {
+
+	 if (!genadmin) {
+	    cout << "Not connected to any server." << endl;
+	    continue;
+	 }
+
+	 char *fname = tkzer.GetToken(0, 0);
+	 XrdOucString pathname;
+
+	 if (fname) {
+	    if (fname[0] == '/')
+	       pathname = fname;
+	    else
+	       pathname = currentpath + "/" + fname;
+	 }
+	 else pathname = currentpath;
+
+	 // Now try to issue the request
+	 int rwservers = 0;
+	 long long rwfree = 0;
+	 int rwutil = 0;
+	 int stagingservers = 0;
+	 long long stagingfree = 0;
+	 int stagingutil = 0;
+
+
+	 genadmin->Stat_vfs(pathname.c_str(), rwservers, rwfree, rwutil,
+			    stagingservers, stagingfree, stagingutil);
+
+	 // Now check the answer
+	 if (!CheckAnswer(genadmin))
+	    continue;
+      
+	 cout << "r/w nodes: " << rwservers <<
+	   " r/w free space: " << rwfree <<
+	   " r/w utilization: " << rwutil <<
+	   " staging nodes: " << rwservers <<
+	   " staging free space: " << rwfree <<
+	   " staging utilization: " << rwutil << endl;
 
 	 cout << endl;
 	 continue;
@@ -891,6 +944,53 @@ int main(int argc, char**argv) {
 	 continue;
       }
 
+      // -------------------------- truncate ---------------------------
+      if (!strcmp(cmd, "truncate")) {
+
+	 if (!genadmin) {
+	    cout << "Not connected to any server." << endl;
+	    continue;
+	 }
+
+	 char *fname = tkzer.GetToken(0, 0);
+	 char *slen = tkzer.GetToken(0, 0);
+
+	 long long len = 0;
+	 if (slen) len = atoll(slen);
+         else {
+	    cout << "Missing parameter." << endl;
+	    continue;
+	 }
+
+         if (len <= 0) {
+	    cout << "Bad length." << endl;
+	    continue;
+	 }
+
+	 XrdOucString pathname1;
+
+	 if (fname) {
+	    if (fname[0] == '/')
+	       pathname1 = fname;
+	    else
+	       pathname1 = currentpath + "/" + fname;
+	 }
+	 else {
+	    cout << "Missing parameter." << endl;
+	    continue;
+	 }
+
+
+	 // Now try to issue the request
+	 genadmin->Truncate(pathname1.c_str(), len);
+
+	 // Now check the answer
+	 if (!CheckAnswer(genadmin))
+	    continue;
+
+	 cout << endl;
+	 continue;
+      }
 
       // -------------------------- rm ---------------------------
       if (!strcmp(cmd, "rm")) {
@@ -1140,6 +1240,30 @@ int main(int argc, char**argv) {
 	 int rt = system(cmd.c_str());
 
 	 cout << "cp returned " << rt << endl;
+
+	 cout << endl;
+	 continue;
+      }
+
+      // -------------------------- query ---------------------------
+      if (!strcmp(cmd, "query")) {
+
+	 if (!genadmin) {
+	    cout << "Not connected to any server." << endl;
+	    continue;
+	 }
+
+	 char *reqcode = tkzer.GetToken(0, 0);
+         const kXR_char *args = (const kXR_char *)tkzer.GetToken(0, 0);
+         kXR_char Resp[1024];
+
+	 genadmin->Query(atoi(reqcode), args, Resp, 1024);
+
+	 // Now check the answer
+	 if (!CheckAnswer(genadmin))
+	    continue;
+      
+	 cout << Resp << endl;
 
 	 cout << endl;
 	 continue;

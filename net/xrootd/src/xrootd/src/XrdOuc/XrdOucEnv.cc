@@ -52,7 +52,7 @@ XrdOucEnv::XrdOucEnv(const char *vardata, int varlen) : env_Hash(8,13)
          varsave = *vdp; *vdp = '\0';
 
          if (*varname && *varvalu)
-            env_Hash.Rep(strdup(varname), strdup(varvalu), 0, Hash_dofree);
+            env_Hash.Rep(varname, strdup(varvalu), 0, Hash_dofree);
 
          *vdp = varsave; *(--varvalu) = '=';
         }

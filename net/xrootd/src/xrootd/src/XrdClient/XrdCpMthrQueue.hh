@@ -13,8 +13,8 @@
 #include "XrdSys/XrdSysPthread.hh"
 #include "XrdClient/XrdClientVector.hh"
 #include "XrdSys/XrdSysSemWait.hh"
+#include "XrdSys/XrdSysHeaders.hh"
 
-#include <iostream>
 using namespace std;
 
 struct XrdCpMessage {

@@ -16,7 +16,7 @@
 
 #ifndef NODEBUG
 
-#include <iostream>
+#include "XrdSys/XrdSysHeaders.hh"
 
 #define QTRACE(act) (cryptoTrace && (cryptoTrace->What & cryptoTRACE_ ## act))
 #define PRINT(y)    {if (cryptoTrace) {cryptoTrace->Beg(epname); \

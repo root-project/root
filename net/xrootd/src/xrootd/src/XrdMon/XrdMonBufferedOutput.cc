@@ -11,11 +11,11 @@
 // $Id$
 
 #include "XrdMonBufferedOutput.hh"
+#include "XrdSys/XrdSysHeaders.hh"
 #include <fcntl.h>
 #include <strings.h> /* bcopy */
 #include <sys/stat.h>
 #include <fstream>
-#include <iostream>
 #include <stdio.h>
 using std::cout;
 using std::endl;

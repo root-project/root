@@ -18,7 +18,7 @@
 #include "XrdOuc/XrdOucRash.hh"
 #include "XrdSys/XrdSysPthread.hh"
 
-#define XRDCLI_PSOCKTEMP -2
+
 
 struct fdinfo {
   fd_set fdset;
@@ -30,15 +30,14 @@ class XrdClientPSock: public XrdClientSock {
 friend class XrdClientPhyConnection;
 
 private:
-    typedef int       Sockid;
-    typedef int       Sockdescr;
+
 
     XrdSysRecMutex fMutex;
 
     // The set of interesting sock descriptors
     fdinfo globalfdinfo;
 
-    int lastsidhint;
+    Sockid lastsidhint;
 
     // To have a pool of the ids in use,
     // e.g. to select a random stream from the set of possible streams
@@ -47,6 +46,11 @@ private:
     // To translate from socket id to socket descriptor
     XrdOucRash<Sockid, Sockdescr> fSocketPool;
 
+    // To keep track of the sockets which have to be 
+    // temporarily ignored in the global fd
+    // because they have not yet been handshaked
+    XrdOucRash<Sockdescr, Sockid> fSocketNYHandshakedIdPool;
+
     Sockdescr GetSock(Sockid id) {
         XrdSysMutexHelper mtx(fMutex);
 
@@ -54,14 +58,15 @@ private:
 	if (fd) return *fd;
 	else return -1;
     }
-    int GetMainSock() {
+
+    Sockdescr GetMainSock() {
 	return GetSock(0);
     }
 
     // To translate from socket descriptor to socket id
     XrdOucRash<Sockdescr, Sockid> fSocketIdPool;
 
-
+    // From a socket descriptor, we get its id
     Sockid GetSockId(Sockdescr sock) {
         XrdSysMutexHelper mtx(fMutex);
 
@@ -76,7 +81,7 @@ protected:
         XrdSysMutexHelper mtx(fMutex);
 
 	// this overwrites the main stream
-	int *fd = fSocketPool.Find(0);
+	Sockdescr *fd = fSocketPool.Find(0);
 
 	fSocketIdPool.Del(*fd);
 	fSocketPool.Del(0);
@@ -90,33 +95,35 @@ protected:
     }
 
 public:
-   XrdClientPSock(XrdClientUrlInfo host, int windowsize = 0);
-   virtual ~XrdClientPSock();
+    XrdClientPSock(XrdClientUrlInfo host, int windowsize = 0);
+    virtual ~XrdClientPSock();
+   
+    void BanSockDescr(Sockdescr s, Sockid newid) { fSocketNYHandshakedIdPool.Rep(s, newid); }
+    void UnBanSockDescr(Sockdescr s) { fSocketNYHandshakedIdPool.Del(s); }
 
     // Gets length bytes from the parsockid socket
     // If substreamid = -1 then
     //  gets length bytes from any par socket, and returns the usedsubstreamid
     //   where it got the bytes from
-    virtual int    RecvRaw(void* buffer, int length, int substreamid = -1,
-			   int *usedsubstreamid = 0);
-
+    virtual int    RecvRaw(void* buffer, int length, Sockid substreamid = -1,
+			   Sockid *usedsubstreamid = 0);
 
     // Send the buffer to the specified substream
     // if substreamid == 0 then use the main socket
-    virtual int    SendRaw(const void* buffer, int length, int substreamid = 0);
+    virtual int    SendRaw(const void* buffer, int length, Sockid substreamid = 0);
 
     virtual void   TryConnect(bool isUnix = 0);
 
-    virtual int TryConnectParallelSock(int port = 0, int windowsz = 0);
+    virtual Sockdescr TryConnectParallelSock(int port, int windowsz, Sockid &tmpid);
 
-    virtual int EstablishParallelSock(int sockid);
+    virtual int EstablishParallelSock(Sockid tmpsockid, Sockid newsockid);
 
     virtual void   Disconnect();
 
-    virtual int RemoveParallelSock(int sockid);
+    virtual int RemoveParallelSock(Sockid sockid);
 
     // Suggests a sockid to be used for a req
-    virtual int GetSockIdHint(int reqsperstream);
+    virtual Sockid GetSockIdHint(int reqsperstream);
 
     // And this is the total stream count
     virtual int GetSockIdCount() { 
@@ -125,8 +132,8 @@ public:
         return fSocketPool.Num();
     }
 
-    virtual void PauseSelectOnSubstream(int substreamid);
-    virtual void RestartSelectOnSubstream(int substreamid);
+    virtual void PauseSelectOnSubstream(Sockid substreamid);
+    virtual void RestartSelectOnSubstream(Sockid substreamid);
 
 };
 

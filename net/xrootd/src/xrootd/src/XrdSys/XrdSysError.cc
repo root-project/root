@@ -29,10 +29,9 @@ const char *XrdSysErrorCVSID = "$Id$";
 #include <sys/types.h>
 #include "XrdSys/XrdWin32.hh"
 #endif
-#include <iostream>
-using namespace std;
 
 #include "XrdSys/XrdSysError.hh"
+#include "XrdSys/XrdSysHeaders.hh"
 #include "XrdSys/XrdSysLogger.hh"
 #include "XrdSys/XrdSysPlatform.hh"
 

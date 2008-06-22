@@ -1,26 +1,36 @@
 
-  $Id: README,v 1.3 2004/08/17 15:02:53 elmer Exp $
+  $Id: README,v 1.5 2008/01/07 08:41:15 abh Exp $
 
-This directory contains start and stop scripts for the olbd and xrootd, as well
-as a monitoring script for the olbd when you wish to use load based balancing.
+This directory contains start and stop scripts for the cmsd, olbd (deprecated)
+and xrootd, as well as a monitoring script for the cmsd when you wish to use
+load balanced clustering. Please note that the cmsd and olbd provide the same
+services but you must use one or the other everywhere. You may not mix them. The
+cmsd is the prefered daemon (the olbd is provided for backward compatability).
 
 The documentation for each script is contained within the script itself. Please
 read the header comments in each script before using the script!
 
-The StartOLB script starts the olbd and must have a StartOLB.cf file installed
-in the same directory as the start script. This distribution includes a
-StartOLB.cf.example file to guide you through setting the various variables
-to the appropriate values. Please create your own StartOLB.cf file from this
-example file.
+The StartCMS script starts the cmsd and the StartXRD script starts xrootd. Both
+scripts must have a StartXRD.cf file installed in the same directory as the 
+start script. This distribution includes a StartXRD.cf.example file to guide you
+through setting the various variables to the appropriate values. Please create 
+your own StartXRD.cf file from this example file.
 
-The StartXRD script starts the xrootd and must have a StartXRD.cf file installed
-in the same directory as the start script. This distribution includes a
-StartXRD.cf.example file to guide you through setting the various variables
-to the appropriate values. Please create your own StartXRD.cf file from this
-example file.
+The StartXRD.cf.example and the xrootd.cf.example files provided here use simple
+defaults, which allow the xrootd daemon to start locally. They are useful to 
+have something to start with and to get inspiration about the envvar usage.
+
+To start a cmsd daemon, all you need to do is to is to fill in the name of the
+manager host in the places where it should go inside the xrootd.cf file. The
+default configuration files is provided as an easy way to have something trivial
+which starts immediately after having compiled the package. These scripts can
+also be used to set up a full cluster, but may be not adequate for particularily
+complex installations. In this case, please refer to the example scripts and to
+the documentation for support.
 
 You need not use the provided start/stop scripts. However, they are provided
-here as a helpful aid in managing the servers.
+here as a helpful aid in managing the servers. The StartXrd.cf.example is the
+simple one that shoud be good enough to get you going in less that 15 minutes!
 
 Don't forget to modify your init scripts to start the servers at boot time!
 

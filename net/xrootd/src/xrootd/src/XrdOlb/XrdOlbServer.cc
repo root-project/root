@@ -429,8 +429,9 @@ void XrdOlbServer::setName(XrdNetLink *lnkp, int port)
    const char *hnick = lnkp->Nick();
 
    if (myName)
-      if (!strcmp(myName, hname) && port == Port) return;
-         else free(myName);
+      {if (!strcmp(myName, hname) && port == Port) return;
+          else free(myName);
+      }
 
    if (!port) myName = strdup(hname);
       else {sprintf(buff, "%s:%d", hname, port); myName = strdup(buff);}
@@ -463,13 +464,14 @@ int XrdOlbServer::do_AvKb(char *rid)
       return 1;
    DiskFree = fdsk;
    if ((tp = Link->GetToken()))
-      if (XrdOuca2x::a2i(Say, "util value",  tp, &udsk, 0)) return 1;
-         else {if (udsk > 100)
-                  {long long Fdsk = static_cast<long long>(fdsk);
-                   if ((udsk = 100-(Fdsk*100/udsk)) > 100) udsk=100;
-                  }
-               DiskTotu = udsk;
-              }
+      {if (XrdOuca2x::a2i(Say, "util value",  tp, &udsk, 0)) return 1;
+          else {if (udsk > 100)
+                   {long long Fdsk = static_cast<long long>(fdsk);
+                    if ((udsk = 100-(Fdsk*100/udsk)) > 100) udsk=100;
+                   }
+                DiskTotu = udsk;
+               }
+      }
    return 0;
 }
   
@@ -527,8 +529,9 @@ int XrdOlbServer::do_Chmod(char *rid, int do4real)
 // Generate the true local path
 //
    if (Config.lcl_N2N)
-      if (Config.lcl_N2N->lfn2pfn(tp,lclpath,sizeof(lclpath))) return 0;
-         else tp = lclpath;
+      {if (Config.lcl_N2N->lfn2pfn(tp,lclpath,sizeof(lclpath))) return 0;
+          else tp = lclpath;
+      }
 
 // Attempt to change the mode
 //
@@ -857,8 +860,9 @@ int XrdOlbServer::do_Mkdir(char *rid, int do4real)
 // Generate the true local path
 //
    if (Config.lcl_N2N)
-      if (Config.lcl_N2N->lfn2pfn(tp,lclpath,sizeof(lclpath))) return 0;
-         else tp = lclpath;
+      {if (Config.lcl_N2N->lfn2pfn(tp,lclpath,sizeof(lclpath))) return 0;
+          else tp = lclpath;
+      }
 
 // Attempt to create the directory
 //
@@ -925,8 +929,9 @@ int XrdOlbServer::do_Mkpath(char *rid, int do4real)
 // Generate the true local path
 //
    if (Config.lcl_N2N)
-      if (Config.lcl_N2N->lfn2pfn(tp,lclpath,sizeof(lclpath))) return 0;
-         else tp = lclpath;
+      {if (Config.lcl_N2N->lfn2pfn(tp,lclpath,sizeof(lclpath))) return 0;
+          else tp = lclpath;
+      }
 
 // Attempt to create the directory path
 //
@@ -1008,9 +1013,10 @@ int XrdOlbServer::do_Mv(char *rid, int do4real)
 // Generate the true local path for new name
 //
    if (Config.lcl_N2N)
-      if (Config.lcl_N2N->lfn2pfn(tp,new_lclpath,sizeof(new_lclpath))) 
-         return 0;
-         else tp = new_lclpath;
+      {if (Config.lcl_N2N->lfn2pfn(tp,new_lclpath,sizeof(new_lclpath)))
+          return 0;
+          else tp = new_lclpath;
+      }
 
 // Attempt to rename the file
 //
@@ -1312,8 +1318,9 @@ int XrdOlbServer::do_Rm(char *rid, int do4real)
 // Generate the true local path for name
 //
    if (Config.lcl_N2N)
-      if (Config.lcl_N2N->lfn2pfn(tp,lclpath,sizeof(lclpath))) return 0;
-         else tp = lclpath;
+      {if (Config.lcl_N2N->lfn2pfn(tp,lclpath,sizeof(lclpath))) return 0;
+          else tp = lclpath;
+      }
 
 // Attempt to remove the file
 //
@@ -1367,8 +1374,9 @@ int XrdOlbServer::do_Rmdir(char *rid, int do4real)
 // Generate the true local path for name
 //
    if (Config.lcl_N2N)
-      if (Config.lcl_N2N->lfn2pfn(tp,lclpath,sizeof(lclpath))) return 0;
-         else tp = lclpath;
+      {if (Config.lcl_N2N->lfn2pfn(tp,lclpath,sizeof(lclpath))) return 0;
+          else tp = lclpath;
+      }
 
 // Attempt to remove the directory
 //
@@ -1526,8 +1534,9 @@ int XrdOlbServer::do_Select(char *rid, int refresh)
                               "%s state %s\n", Config.MsgGID, tp));
           }
        if (cinfo.deadline) 
-          if (InfoP && Info.Key) return 0; // Placed in pending queue
-             else dowt = 1;                // Query  in progress, full wait
+          {if (InfoP && Info.Key) return 0; // Placed in pending queue
+              else dowt = 1;                // Query  in progress, full wait
+          }
       }
 
 // If the client has to wait now, delay the client and return
@@ -1907,14 +1916,16 @@ int XrdOlbServer::isOnline(char *path, int upt, XrdNetLink *myLink) // Static!!!
 //
    lclpath = path;
    if (Config.lcl_N2N)
-      if (Config.lcl_N2N->lfn2pfn(lclpath,lclbuff,sizeof(lclbuff))) return 0;
-         else lclpath = lclbuff;
+      {if (Config.lcl_N2N->lfn2pfn(lclpath,lclbuff,sizeof(lclbuff))) return 0;
+          else lclpath = lclbuff;
+      }
 
 // Do a stat
 //
    if (stat(lclpath, &buf))
-      if (Config.DiskSS && PrepQ.Exists(path)) return 1;
-         else return 0;
+      {if (Config.DiskSS && PrepQ.Exists(path)) return 1;
+          else return 0;
+      }
 
 // Update access time if so requested but only if this is a file
 //

@@ -13,8 +13,7 @@
 #ifndef XRD_READCACHE_H
 #define XRD_READCACHE_H
 
-#include <iostream>
-
+#include "XrdSys/XrdSysHeaders.hh"
 #include "XrdClient/XrdClientInputBuffer.hh"
 #include "XrdClient/XrdClientMessage.hh"
 #include "XrdClient/XrdClientVector.hh"

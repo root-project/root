@@ -14,7 +14,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "XrdOdc/XrdOdcFinder.hh"
+#include "XrdCms/XrdCmsClient.hh"
 #include "XrdOfs/XrdOfsEvr.hh"
 #include "XrdOfs/XrdOfsTrace.hh"
 #include "XrdSys/XrdSysError.hh"
@@ -107,7 +107,7 @@ void XrdOfsEvr::flushEvents()
 /*                                  I n i t                                   */
 /******************************************************************************/
   
-int XrdOfsEvr::Init(XrdSysError *eobj, XrdOdcFinderTRG *trgp)
+int XrdOfsEvr::Init(XrdSysError *eobj, XrdCmsClient *trgp)
 {
    XrdNetSocket *msgSock;
    pthread_t     tid;

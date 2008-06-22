@@ -21,8 +21,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sys/times.h>
-#include <iostream>
-using namespace std;
 
 // AFS support
 #ifdef R__AFS
@@ -45,6 +43,7 @@ void      ka_StringToKey(char *str, char *cell,
 }
 #endif
 
+#include "XrdSys/XrdSysHeaders.hh"
 #include <XrdSys/XrdSysLogger.hh>
 #include <XrdSys/XrdSysError.hh>
 #include <XrdOuc/XrdOucStream.hh>
@@ -1579,10 +1578,6 @@ char *XrdSecProtocolpwdInit(const char mode,
    char *rc = (char *)"";
    char *cenv = 0;
 
-   // Take into account xrootd debug flag
-   cenv = getenv("XRDDEBUG");
-   if (cenv && !strcmp(cenv,"1")) opts.debug = 1;
-   
    //
    // Clients first
    if (mode == 'c') {
@@ -1643,6 +1638,10 @@ char *XrdSecProtocolpwdInit(const char mode,
       // We are done
       return rc;
    }
+
+   // Take into account xrootd debug flag
+   cenv = getenv("XRDDEBUG");
+   if (cenv && !strcmp(cenv,"1")) opts.debug = 1;
 
    //
    // Server initialization

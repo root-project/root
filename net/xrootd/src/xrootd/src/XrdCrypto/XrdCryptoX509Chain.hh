@@ -90,6 +90,8 @@ public:
    ECAStatus           StatusCA() const { return statusCA; }
    const char         *CAname();
    const char         *EECname();
+   const char         *CAhash();
+   const char         *EEChash();
 
    // Modifiers
    void                InsertAfter(XrdCryptoX509 *c, XrdCryptoX509 *cp);
@@ -130,6 +132,8 @@ private:
    XrdOucString            lastError;
    XrdOucString            caname;
    XrdOucString            eecname;
+   XrdOucString            cahash;
+   XrdOucString            eechash;
    ECAStatus               statusCA;
 
    XrdCryptoX509ChainNode *Find(XrdCryptoX509 *c);

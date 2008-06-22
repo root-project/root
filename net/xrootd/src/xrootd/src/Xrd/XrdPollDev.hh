@@ -38,6 +38,7 @@ private:
 
 void doRequests(int maxreq);
 void LogEvent(struct pollfd *pp);
+int  sendCmd(char *cmdbuff, int cmdblen);
 
 struct pollfd *PollTab;
        int     PollDfd;

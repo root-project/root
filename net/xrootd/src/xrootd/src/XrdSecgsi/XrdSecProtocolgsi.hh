@@ -117,6 +117,9 @@ enum kgsiErrors {
 #define SafeDelArray(x) { if (x) delete [] x ; x = 0; }
 #define SafeFree(x) { if (x) free(x) ; x = 0; }
 
+// External function for DN-username mapping
+typedef char *(*XrdSecgsiGMAP_t)(const char *, int);
+
 //
 // This a small class to set the relevant options in one go
 //
@@ -141,6 +144,8 @@ public:
    int    deplen; // [c] depth of signature path for proxies [0] 
    int    bits;   // [c] bits in PKI for proxies [512] 
    char  *gridmap;// [s] gridmap file [/etc/grid-security/gridmap]
+   char  *gmapfun;// [s] file with the function to map DN to usernames [0]
+   char  *gmapfunparms;// [s] parameters for the function to map DN to usernames [0]
    int    ogmap;  // [s] gridmap file checking option 
    int    dlgpxy; // [c] explicitely ask the creation of a delegated proxy 
                   // [s] ask client for proxies
@@ -150,7 +155,8 @@ public:
                   certdir = 0; crldir = 0; crlext = 0; cert = 0; key = 0;
                   cipher = 0; md = 0; ca = 1 ; crl = 1;
                   proxy = 0; valid = 0; deplen = 0; bits = 512;
-                  gridmap = 0; ogmap = 1; dlgpxy = 0; sigpxy = 1;}
+                  gridmap = 0; gmapfun = 0; gmapfunparms = 0; ogmap = 1;
+                  dlgpxy = 0; sigpxy = 1;}
    virtual ~gsiOptions() { } // Cleanup inside XrdSecProtocolgsiInit
 };
 
@@ -271,6 +277,8 @@ private:
    static String           DefError;
    static String           GMAPFile;
    static int              GMAPOpt;
+   static XrdSysPlugin    *GMAPPlugin;
+   static XrdSecgsiGMAP_t  GMAPFun;
    static int              PxyReqOpts;
    //
    // Crypto related info
@@ -285,6 +293,7 @@ private:
    static XrdSutCache      cacheCert; // Cache for available server certs
    static XrdSutCache      cachePxy;  // Cache for client proxies
    static XrdSutCache      cacheGMAP; // Cache for gridmap entries
+   static XrdSutCache      cacheGMAPFun; // Cache for entries mapped by GMAPFun
    //
    // Running options / settings
    static int              Debug;          // [CS] Debug level
@@ -377,5 +386,7 @@ private:
                                 kXR_int32 type, XrdCryptoCipher *cip);
    // Grid map cache handling
    static int     LoadGMAP(int now); // Init or refresh the cache
-   static char   *QueryGMAP(const char *dn, int now); //Lookup info for DN
+   static XrdSecgsiGMAP_t            // Load alternative function for mapping
+                  LoadGMAPFun(const char *plugin, const char *parms);
+   static String  QueryGMAP(const char *dn, int now); //Lookup info for DN
 };

@@ -14,14 +14,15 @@
 #define XRDMONSNDTRACEENTRY_HH
 
 #include "XrdMon/XrdMonTypes.hh"
-#include <iostream>
+#include "XrdSys/XrdSysHeaders.hh"
+
 using std::ostream;
 
 class XrdMonSndTraceEntry {
 public:
     XrdMonSndTraceEntry(kXR_int64 offset,
-               kXR_int32  length,
-               kXR_int32 id);
+                        kXR_int32  length,
+                        kXR_int32 id);
 
     kXR_int64 offset() const  { return _offset; }
     kXR_int32 length() const  { return _length; }

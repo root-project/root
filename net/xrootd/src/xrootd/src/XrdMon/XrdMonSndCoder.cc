@@ -233,6 +233,25 @@ XrdMonSndCoder::prepare2Transfer(const XrdMonSndDictEntry::CompactEntry& ce)
     return 0;
 }
 
+
+int
+XrdMonSndCoder::prepare2Transfer(const XrdMonSndStageEntry::CompactEntry& ce)
+{
+    kXR_int32 packetSize = HDRLEN + ce.size();
+
+    int ret = reinitXrdMonSndPacket(packetSize, PACKET_TYPE_STAGE);
+    if ( 0 != ret ) {
+        return ret;
+    }
+
+    add_kXR_int32(ce.id);
+    add_string  (ce.others);
+
+    ++_noDict;
+    
+    return 0;
+}
+
 int
 XrdMonSndCoder::reinitXrdMonSndPacket(packetlen_t newSize, char packetCode)
 {

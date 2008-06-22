@@ -599,7 +599,7 @@ int XrdCryptosslRSA::DecryptPublic(const char *in, int lin, char *out, int loutm
                                      fEVP->pkey.rsa, RSA_PKCS1_PADDING)) < 0) {
          char serr[120];
          ERR_error_string(ERR_get_error(), serr);
-         DEBUG("error: " <<serr);
+         PRINT("error: " <<serr);
          return -1;
       }
       kk += lcmax;

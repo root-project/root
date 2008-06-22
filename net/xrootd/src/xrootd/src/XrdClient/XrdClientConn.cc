@@ -551,21 +551,25 @@ bool XrdClientConn::SendGenCommand(ClientRequest *req, const void *reqMoreData,
 			// Let's sleep!
 			kXR_int32 *maxwait = (kXR_int32 *)cmdrespMex->GetData();
 			kXR_int32 mw;
-			mw = ntohl(*maxwait);
+
+			if (maxwait)
+			  mw = ntohl(*maxwait);
+			else mw = 30;
 
 			if (!WaitResp(mw)) {
 			    // we did not time out, so the response is here
 		  
 			    memcpy(&LastServerResp, &fREQWaitRespData->resphdr,
 				   sizeof(struct ServerResponseHeader));
-		  
-		   
+		  		   
 			    // Let's fake a regular answer
 
 			    // Note: kXR_wait can be a fake response used to make the client retry!
-			    if (LastServerResp.status == kXR_wait) {
+			    if (fREQWaitRespData->resphdr.status == kXR_wait) {
 				cmdrespMex->fHdr.status = kXR_wait;
-				memcpy(cmdrespMex->GetData(), fREQWaitRespData->respdata, sizeof(kXR_int32));
+				if (fREQWaitRespData->resphdr.dlen) 
+				  memcpy(cmdrespMex->GetData(), fREQWaitRespData->respdata, sizeof(kXR_int32));
+				else memset(cmdrespMex->GetData(), 0, sizeof(kXR_int32));
 
 				CheckErrorStatus(cmdrespMex, retry, CmdName);
 				// This causes a retry
@@ -1390,8 +1394,18 @@ bool XrdClientConn::DoLogin()
 	 "Logging into the server [" << fUrl.Host << ":" << fUrl.Port <<
 	 "]. pid=" << reqhdr.login.pid << " uid=" << reqhdr.login.username);
 
-    ConnectionManager->GetConnection(fLogConnID)->GetPhyConnection()
-	->SetLogged(kNo);
+    {
+       XrdClientLogConnection *l = ConnectionManager->GetConnection(fLogConnID);
+       XrdClientPhyConnection *p = 0;
+       if (l) p = l->GetPhyConnection();
+       if (p) p->SetLogged(kNo);
+       else {
+          Error("DoLogin",
+                "Logical connection disappeared before request?!? Srv: [" << fUrl.Host << ":" << fUrl.Port <<
+                "]. Exiting.");
+          return false;
+       }
+    }
 
 
     char *plist = 0;
@@ -1532,11 +1546,22 @@ bool XrdClientConn::DoLogin()
     }
 
     // Flag success if everything went ok
-    if (resp) {
-	ConnectionManager->GetConnection(fLogConnID)->GetPhyConnection()
-	    ->SetLogged(kYes);
-	ConnectionManager->GetConnection(fLogConnID)->GetPhyConnection()
-	    ->SetSecProtocol(secp);
+    {
+       XrdClientLogConnection *l = ConnectionManager->GetConnection(fLogConnID);
+       XrdClientPhyConnection *p = 0;
+       if (l) p = l->GetPhyConnection();
+       if (!p) {
+          Error("DoLogin",
+                "Logical connection disappeared after request?!? Srv: [" << fUrl.Host << ":" << fUrl.Port <<
+                "]. Exiting.");
+          return false;
+       }
+
+       if (resp) {
+          p->SetLogged(kYes);
+          p->SetSecProtocol(secp);
+       }
+       else Disconnect(true);
     }
 
     if (plist)
@@ -1737,8 +1762,7 @@ XrdClientConn::HandleServerError(XReqErrorType &errorType, XrdClientMessage *xms
     int newport; 	
     XrdOucString newhost; 	
   
-    bool noRedirError =
-       (fMaxGlobalRedirCnt == 1 && xmsg && isRedir(&xmsg->fHdr)) ? 1 : 0;
+    bool noRedirError = (fMaxGlobalRedirCnt == 1 && xmsg && isRedir(&xmsg->fHdr));
 
     // Close the log connection at this point the fLogConnID is no longer valid.
     // On read/write error the physical channel may be not OK, so it's a good
@@ -2160,9 +2184,11 @@ bool XrdClientConn::SubmitRawDataToCache(const void *buffer,
 					 long long end_offs) {
 
 
-    if (fMainReadCache)
-      fMainReadCache->SubmitRawData(buffer, begin_offs, end_offs);
-
+    if (fMainReadCache) {
+      if (!fMainReadCache->SubmitRawData(buffer, begin_offs, end_offs))
+         free(const_cast<void *>(buffer));
+    }
+      
     return true;
 
 }

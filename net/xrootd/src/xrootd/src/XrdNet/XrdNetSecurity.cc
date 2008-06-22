@@ -184,7 +184,7 @@ char *XrdNetSecurity::hostOK(char *hname, const char *ipname, const char *why)
 // Add host to valid host table and return true. Note that the okHMutex must
 // be locked upon entry and it will be unlocked upon exit.
 //
-   OKHosts.Add(strdup(ipname), strdup(hname), lifetime, Hash_dofree);
+   OKHosts.Add(ipname, strdup(hname), lifetime, Hash_dofree);
    okHMutex.UnLock();
    DEBUG(hname <<" authorized via " <<why);
    return hname;

@@ -19,11 +19,11 @@
 #include "XrdMon/XrdMonException.hh"
 #include "XrdMon/XrdMonHeader.hh"
 #include "XrdMon/XrdMonTimer.hh"
+#include "XrdSys/XrdSysHeaders.hh"
 
 #include <unistd.h>   /* access */
 #include <fstream>
 #include <iomanip>
-#include <iostream>
 using std::cout;
 using std::ios;
 using std::setw;

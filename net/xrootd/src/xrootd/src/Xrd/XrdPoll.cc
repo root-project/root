@@ -24,8 +24,10 @@ const char *XrdPollCVSID = "$Id$";
 #define  TRACELINK lp
 #include "Xrd/XrdTrace.hh"
 
-#ifdef _DEVPOLL
+#if   defined(_DEVPOLL)
 #include "Xrd/XrdPollDev.hh"
+#elif defined(_EPOLL) && defined(__linux__)
+#include "Xrd/XrdPollE.hh"
 #else
 #include "Xrd/XrdPollPoll.hh"
 #endif
@@ -286,8 +288,10 @@ int XrdPoll::Stats(char *buff, int blen, int do_sync)
 /*              I m p l e m e n t a t i o n   S p e c i f i c s               */
 /******************************************************************************/
   
-#ifdef _DEVPOLL
+#if   defined(_DEVPOLL)
 #include "Xrd/XrdPollDev.icc"
+#elif defined(_EPOLL) && defined(__linux__)
+#include "Xrd/XrdPollE.icc"
 #else
 #include "Xrd/XrdPollPoll.icc"
 #endif

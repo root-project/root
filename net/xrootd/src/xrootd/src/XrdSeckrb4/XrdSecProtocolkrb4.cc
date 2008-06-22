@@ -15,13 +15,13 @@ const char *XrdSecProtocolkrb4CVSID = "$Id$";
 #include <unistd.h>
 #include <ctype.h>
 #include <errno.h>
-#include <iostream.h>
 #include <stdlib.h>
 #include <strings.h>
 #include <stdio.h>
 #include <sys/param.h>
 
 #include "XrdOuc/XrdOucErrInfo.hh"
+#include "XrdSys/XrdSysHeaders.hh"
 #include "XrdSys/XrdSysPthread.hh"
 #include "XrdOuc/XrdOucTokenizer.hh"
 #include "XrdSec/XrdSecInterface.hh"

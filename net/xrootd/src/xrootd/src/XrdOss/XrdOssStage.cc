@@ -31,14 +31,13 @@ const char *XrdOssStageCVSID = "$Id$";
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
-#include <iostream>
-using namespace std;
 
+#include "XrdSys/XrdSysHeaders.hh"
 #include "XrdOss/XrdOssApi.hh"
-#include "XrdOss/XrdOssCache.hh"
 #include "XrdOss/XrdOssError.hh"
 #include "XrdOss/XrdOssLock.hh"
 #include "XrdOss/XrdOssOpaque.hh"
+#include "XrdOss/XrdOssStage.hh"
 #include "XrdOuc/XrdOuca2x.hh"
 #include "XrdOuc/XrdOucEnv.hh"
 #include "XrdOuc/XrdOucMsubs.hh"
@@ -47,22 +46,44 @@ using namespace std;
 #include "XrdOuc/XrdOucReqID.hh"
 
 /******************************************************************************/
-/*           G l o b a l   E r r o r   R o u t i n g   O b j e c t            */
+/*            G l o b a l s   a n d   S t a t i c   O b j e c t s             */
 /******************************************************************************/
 
 extern XrdSysError OssEroute;
  
+XrdSysMutex          XrdOssStage_Req::StageMutex;
+XrdSysSemaphore      XrdOssStage_Req::ReadyRequest;
+XrdOssStage_Req      XrdOssStage_Req::StageQ((XrdOssStage_Req *)0);
+
+#define XRDOSS_FAIL_FILE (char *)".fail"
+
 /******************************************************************************/
-/*             H a s h   C o m p u t a t i o n   F u n c t i o n              */
+/*                    E x t e r n a l   F u n c t i o n s                     */
 /******************************************************************************/
   
 extern unsigned long XrdOucHashVal(const char *KeyVal);
 
+int XrdOssScrubScan(const char *key, char *cip, void *xargp) {return 0;}
+
 /******************************************************************************/
-/*              O t h e r   E x t e r n a l   F u n c t i o n s               */
+/*                        o o s s _ F i n d _ P r t y                         */
 /******************************************************************************/
   
-int XrdOssScrubScan(const char *key, char *cip, void *xargp) {return 0;}
+int XrdOssFind_Prty(XrdOssStage_Req *req, void *carg)
+{
+    int prty = *(int *)carg;
+    return (req->prty >= prty);
+}
+  
+/******************************************************************************/
+/*                         o o s s _ F i n d _ R e q                          */
+/******************************************************************************/
+
+int XrdOssFind_Req(XrdOssStage_Req *req, void *carg)
+{
+    XrdOssStage_Req *xreq = (XrdOssStage_Req *)carg;
+    return (req->hash == xreq->hash) && !strcmp(req->path, xreq->path);
+}
 
 /******************************************************************************/
 /*                                 S t a g e                                  */
@@ -153,14 +174,18 @@ int XrdOssSys::Stage_QT(const char *Tid, const char *fn, XrdOucEnv &env,
   
 int XrdOssSys::Stage_RT(const char *Tid, const char *fn, XrdOucEnv &env)
 {
-    extern int XrdOssFind_Prty(XrdOssCache_Req *req, void *carg);
-    XrdOssCache_Req req, *newreq, *oldreq;
-    XrdOssCache_Lock CacheAccess; // Obtains & releases the cache lock
+    extern int XrdOssFind_Prty(XrdOssStage_Req *req, void *carg);
+    XrdSysMutexHelper StageAccess(XrdOssStage_Req::StageMutex);
+    XrdOssStage_Req req, *newreq, *oldreq;
     struct stat statbuff;
-    extern int XrdOssFind_Req(XrdOssCache_Req *req, void *carg);
+    extern int XrdOssFind_Req(XrdOssStage_Req *req, void *carg);
     char actual_path[XrdOssMAX_PATH_LEN+1], *remote_path;
     char *val;
     int rc, prty;
+
+// If there is no stagecmd then return an error
+//
+   if (!StageCmd) return -XRDOSS_E8006;
 
 // Set up the minimal new request structure
 //
@@ -173,7 +198,7 @@ int XrdOssSys::Stage_RT(const char *Tid, const char *fn, XrdOucEnv &env)
 // doesn't exist or if the window has expired, delete the error element and
 // retry the request. This keeps us from getting into tight loops.
 //
-   if ((oldreq = StageQ.fullList.Apply(XrdOssFind_Req, (void *)&req)))
+   if ((oldreq = XrdOssStage_Req::StageQ.fullList.Apply(XrdOssFind_Req,(void *)&req)))
       {if (!(oldreq->flags & XRDOSS_REQ_FAIL)) return CalcTime(oldreq);
        if (oldreq->sigtod > time(0) && HasFile(fn, XRDOSS_FAIL_FILE))
           return -XRDOSS_E8009;
@@ -192,18 +217,18 @@ int XrdOssSys::Stage_RT(const char *Tid, const char *fn, XrdOucEnv &env)
 // that a request for the file may come in again before we have the size. This
 // is ok, it just means that we'll be off in our time estimate
 //
-   CacheAccess.UnLock();
+   StageAccess.UnLock();
    if ((rc = MSS_Stat(remote_path, &statbuff))) return rc;
-   CacheAccess.Lock();
+   StageAccess.Lock(&XrdOssStage_Req::StageMutex);
 
 // Create a new request
 //
-   if (!(newreq = new XrdOssCache_Req(req.hash, fn)))
+   if (!(newreq = new XrdOssStage_Req(req.hash, fn)))
        return OssEroute.Emsg("XrdOssStage",-ENOMEM,"create req for",fn);
 
 // Add this request to the list of requests
 //
-   StageQ.fullList.Insert(&(newreq->fullList));
+   XrdOssStage_Req::StageQ.fullList.Insert(&(newreq->fullList));
 
 // Recalculate the cumalitive pending stage queue and
 //
@@ -220,17 +245,18 @@ int XrdOssSys::Stage_RT(const char *Tid, const char *fn, XrdOucEnv &env)
 // Calculate the user priority
 //
    if (OptFlags & XrdOss_USRPRTY)
-      if ((val = env.Get(OSS_USRPRTY))
-      && (XrdOuca2x::a2i(OssEroute,"user prty",val,&rc,0)
-          || rc > OSS_MAX_PRTY)) return -XRDOSS_E8010;
-         else prty |= rc;
+      {if ((val = env.Get(OSS_USRPRTY))
+       && (XrdOuca2x::a2i(OssEroute,"user prty",val,&rc,0)
+           || rc > OSS_MAX_PRTY)) return -XRDOSS_E8010;
+          else prty |= rc;
+      }
 
 // Queue the request at the right position and signal an xfr thread
 //
-   if ((oldreq = StageQ.pendList.Apply(XrdOssFind_Prty, (void *)&prty)))
-          oldreq->pendList.Insert(&newreq->pendList);
-      else StageQ.pendList.Insert(&newreq->pendList);
-   ReadyRequest.Post();
+   if ((oldreq = XrdOssStage_Req::StageQ.pendList.Apply(XrdOssFind_Prty,(void *)&prty)))
+                           oldreq->pendList.Insert(&newreq->pendList);
+      else XrdOssStage_Req::StageQ.pendList.Insert(&newreq->pendList);
+   XrdOssStage_Req::ReadyRequest.Post();
 
 // Return the estimated time to arrival
 //
@@ -243,29 +269,29 @@ int XrdOssSys::Stage_RT(const char *Tid, const char *fn, XrdOucEnv &env)
   
 void *XrdOssSys::Stage_In(void *carg)
 {
-    XrdOucDLlist<XrdOssCache_Req> *rnode;
-    XrdOssCache_Req              *req;
+    XrdOucDLlist<XrdOssStage_Req> *rnode;
+    XrdOssStage_Req              *req;
     int rc, alldone = 0;
     time_t etime;
 
       // Wait until something shows up in the ready queue and process
       //
-   do   {ReadyRequest.Wait();
+   do   {XrdOssStage_Req::ReadyRequest.Wait();
 
       // Obtain exclusive control over the queues
       //
-         CacheContext.Lock();
+         XrdOssStage_Req::StageMutex.Lock();
 
       // Check if we really have something in the queue
       //
-         if (StageQ.pendList.Singleton())
-            {CacheContext.UnLock();
+         if (XrdOssStage_Req::StageQ.pendList.Singleton())
+            {XrdOssStage_Req::StageMutex.UnLock();
              continue;
             }
 
       // Remove the last entry in the queue
       //
-         rnode = StageQ.pendList.Prev();
+         rnode = XrdOssStage_Req::StageQ.pendList.Prev();
          req   = rnode->Item();
          rnode->Remove();
          req->flags |= XRDOSS_REQ_ACTV;
@@ -275,13 +301,13 @@ void *XrdOssSys::Stage_In(void *carg)
          pndbytes -= req->size;
          stgbytes += req->size;
 
-      // Bring in the file (don't hold the cache lock while doing so)
+      // Bring in the file (don't hold the stage lock while doing so)
       //
-         CacheContext.UnLock();
+         XrdOssStage_Req::StageMutex.UnLock();
          etime = time(0);
          rc = GetFile(req);
          etime = time(0) - etime;
-         CacheContext.Lock();
+         XrdOssStage_Req::StageMutex.Lock();
 
       // Account for resources and adjust xfr rate
       //
@@ -301,11 +327,11 @@ void *XrdOssSys::Stage_In(void *carg)
                   badreqs++;
                  }
 
-      // Check if we should continue or be terminated and unlock the cache
+      // Check if we should continue or be terminated and unlock staging
       //
          if ((alldone = (xfrthreads < xfrtcount)))
             xfrtcount--;
-         CacheContext.UnLock();
+         XrdOssStage_Req::StageMutex.UnLock();
 
          } while (!alldone);
 
@@ -332,12 +358,12 @@ int XrdOssSys::CalcTime()
    return (StageAsync ? -EINPROGRESS : 60);
 }
 
-int XrdOssSys::CalcTime(XrdOssCache_Req *req) // CacheContext lock held!
+int XrdOssSys::CalcTime(XrdOssStage_Req *req) // StageMutex lock held!
 {
     unsigned long long tbytes = req->size + stgbytes/2;
     int xfrtime, numq = 1;
     time_t now;
-    XrdOssCache_Req *rqp = req;
+    XrdOssStage_Req *rqp = req;
 
 // Return an EINP{ROG if we are doing async staging
 //
@@ -346,8 +372,9 @@ int XrdOssSys::CalcTime(XrdOssCache_Req *req) // CacheContext lock held!
 // If the request is active, recalculate the time based on previous estimate
 //
    if (req->flags & XRDOSS_REQ_ACTV) 
-      if ((xfrtime = req->sigtod - time(0)) > xfrovhd) return xfrtime;
-         else return (xfrovhd < 4 ? 2 : xfrovhd / 2);
+      {if ((xfrtime = req->sigtod - time(0)) > xfrovhd) return xfrtime;
+          else return (xfrovhd < 4 ? 2 : xfrovhd / 2);
+      }
 
 // Calculate the number of pending bytes being transfered plus 1/2 of the
 // current number of bytes being transfered
@@ -359,7 +386,7 @@ int XrdOssSys::CalcTime(XrdOssCache_Req *req) // CacheContext lock held!
     now = time(0);
     req->sigtod = tbytes / xfrspeed + numq * xfrovhd + now;
 
-// Calculate the time it will take to get this file into the cache
+// Calculate the time it will take to get this file
 //
    if ((xfrtime = req->sigtod - now) <= xfrovhd) return xfrovhd+3;
    return xfrtime;
@@ -369,7 +396,7 @@ int XrdOssSys::CalcTime(XrdOssCache_Req *req) // CacheContext lock held!
 /*                               G e t F i l e                                */
 /******************************************************************************/
 
-int XrdOssSys::GetFile(XrdOssCache_Req *req)
+int XrdOssSys::GetFile(XrdOssStage_Req *req)
 {
    char rfs_fn[XrdOssMAX_PATH_LEN+1];
    char lfs_fn[XrdOssMAX_PATH_LEN+1];

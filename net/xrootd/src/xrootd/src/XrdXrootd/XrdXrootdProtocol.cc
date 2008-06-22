@@ -36,8 +36,8 @@ const char *XrdXrootdProtocolCVSID = "$Id$";
 
 XrdOucTrace          *XrdXrootdTrace;
 
+XrdXrootdXPath        XrdXrootdProtocol::RPList;
 XrdXrootdXPath        XrdXrootdProtocol::XPList;
-XrdXrootdXPath       *XrdXrootdXPath::first = 0;
 XrdSfsFileSystem     *XrdXrootdProtocol::osFS;
 char                 *XrdXrootdProtocol::FSLib    = 0;
 XrdXrootdFileLock    *XrdXrootdProtocol::Locker;
@@ -68,16 +68,22 @@ int                   XrdXrootdProtocol::as_maxperreq = 8;   // Max ops per requ
 int                   XrdXrootdProtocol::as_maxpersrv = 4096;// Max ops per server
 int                   XrdXrootdProtocol::as_segsize   = 131072;
 int                   XrdXrootdProtocol::as_miniosz   = 32768;
+#ifdef __solaris__
+int                   XrdXrootdProtocol::as_minsfsz   = 1;
+#else
+int                   XrdXrootdProtocol::as_minsfsz   = 8192;
+#endif
 int                   XrdXrootdProtocol::as_maxstalls = 5;
 int                   XrdXrootdProtocol::as_force     = 0;
 int                   XrdXrootdProtocol::as_noaio     = 0;
+int                   XrdXrootdProtocol::as_nosf      = 0;
 int                   XrdXrootdProtocol::as_syncw     = 0;
 
 const char           *XrdXrootdProtocol::myInst  = 0;
 const char           *XrdXrootdProtocol::TraceID = "Protocol";
 int                   XrdXrootdProtocol::myPID = static_cast<int>(getpid());
 
-struct XrdXrootdProtocol::RD_Table XrdXrootdProtocol::Route[10] = {{0,0}};
+struct XrdXrootdProtocol::RD_Table XrdXrootdProtocol::Route[RD_Num] = {{0,0}};
 
 /******************************************************************************/
 /*            P r o t o c o l   M a n a g e m e n t   S t a c k s             */
@@ -271,12 +277,13 @@ int XrdXrootdProtocol::Process(XrdLink *lp) // We ignore the argument here
 // Check if we are servicing a slow link
 //
    if (Resume)
-      if (myBlen && (rc = getData("data", myBuff, myBlen)) != 0) 
-         {if (rc < 0 && myAioReq) myAioReq->Recycle(-1);
-          return rc;
-         }
-         else if ((rc = (*this.*Resume)()) != 0) return rc;
-                 else {Resume = 0; return 0;}
+      {if (myBlen && (rc = getData("data", myBuff, myBlen)) != 0)
+          {if (rc < 0 && myAioReq) myAioReq->Recycle(-1);
+           return rc;
+          }
+          else if ((rc = (*this.*Resume)()) != 0) return rc;
+                  else {Resume = 0; return 0;}
+      }
 
 // Read the next request header
 //
@@ -347,6 +354,8 @@ int XrdXrootdProtocol::Process2()
           case kXR_write:    return do_Write();
           case kXR_sync:     return do_Sync();
           case kXR_close:    return do_Close();
+          case kXR_truncate: if (!Request.header.dlen) return do_Truncate();
+          case kXR_query:    if (!Request.header.dlen) return do_Qfh();
           default:           break;
          }
 
@@ -361,13 +370,14 @@ int XrdXrootdProtocol::Process2()
 // Force authentication at this point, if need be
 //
    if (Status & XRD_NEED_AUTH)
-      if (Request.header.requestid == kXR_auth) return do_Auth();
-         else {Response.Send(kXR_InvalidRequest,
-                             "Invalid request; user not logged in");
-               return -1;
-              }
+      {if (Request.header.requestid == kXR_auth) return do_Auth();
+          else {Response.Send(kXR_InvalidRequest,
+                              "Invalid request; user not authenticated");
+                return -1;
+               }
+      }
 
-// Process items that don't need arguments
+// Process items that don't need arguments but may have them
 //
    switch(Request.header.requestid)
          {case kXR_endsess:   return do_Endsess();
@@ -415,6 +425,7 @@ int XrdXrootdProtocol::Process2()
           case kXR_set:       return do_Set();
           case kXR_stat:      return do_Stat();
           case kXR_statx:     return do_Statx();
+          case kXR_truncate:  return do_Truncate();
           default:            break;
          }
 
@@ -564,8 +575,9 @@ int XrdXrootdProtocol::getData(const char *dtype, char *buff, int blen)
 //
    rlen = Link->Recv(buff, blen, readWait);
    if (rlen  < 0)
-      if (rlen != -ENOMSG) return Link->setEtext("link read error");
-         else return -1;
+      {if (rlen != -ENOMSG) return Link->setEtext("link read error");
+          else return -1;
+      }
    if (rlen < blen)
       {myBuff = buff+rlen; myBlen = blen-rlen;
        TRACEP(REQ, dtype <<" timeout; read " <<rlen <<" of " <<blen <<" bytes");

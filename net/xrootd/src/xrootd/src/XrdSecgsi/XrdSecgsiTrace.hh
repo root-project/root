@@ -13,7 +13,7 @@
 
 #ifndef NODEBUG
 
-#include <iostream.h>
+#include "XrdSys/XrdSysHeaders.hh"
 
 #define QTRACE(act) (gsiTrace && (gsiTrace->What & TRACE_ ## act))
 #define PRINT(y)    {if (gsiTrace) {gsiTrace->Beg(epname); \

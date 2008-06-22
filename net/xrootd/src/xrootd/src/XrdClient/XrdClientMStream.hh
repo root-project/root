@@ -32,10 +32,10 @@ public:
     static int EstablishParallelStreams(XrdClientConn *cliconn);
 
     // Add a parallel stream to the pool used by the given client inst
-    static int AddParallelStream(XrdClientConn *cliconn, int port, int windowsz);
+   static int AddParallelStream(XrdClientConn *cliconn, int port, int windowsz, int tempid);
 
     // Remove a parallel stream to the pool used by the given client inst
-    static int RemoveParallelStream(XrdClientConn *cliconn, int substream = -1);
+    static int RemoveParallelStream(XrdClientConn *cliconn, int substream);
 
     // Binds the pending temporary parallel stream to the current session
     // Returns into newid the substreamid assigned by the server

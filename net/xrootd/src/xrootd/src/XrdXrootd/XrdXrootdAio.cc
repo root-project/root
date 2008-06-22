@@ -71,12 +71,13 @@ XrdXrootdAio *XrdXrootdAio::Alloc(XrdXrootdAioReq *arp, int bsize)
 // Allocate a buffer for this object
 //
    if (aiop)
-      if (bsize && (aiop->buffp = BPool->Obtain(bsize)))
-         {aiop->sfsAio.aio_buf = (void *)(aiop->buffp->buff);
-          aiop->aioReq = arp;
-          aiop->TIdent = arp->Link->ID;
-         }
-         else {aiop->Recycle(); aiop = 0;}
+      {if (bsize && (aiop->buffp = BPool->Obtain(bsize)))
+          {aiop->sfsAio.aio_buf = (void *)(aiop->buffp->buff);
+           aiop->aioReq = arp;
+           aiop->TIdent = arp->Link->ID;
+          }
+          else {aiop->Recycle(); aiop = 0;}
+      }
 
 // Return what we have
 //

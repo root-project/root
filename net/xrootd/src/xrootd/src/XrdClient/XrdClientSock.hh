@@ -36,6 +36,9 @@ private:
     int fSocket;
 
 protected:
+    typedef int       Sockid;
+    typedef int       Sockdescr;
+
     int                       fRequestTimeout;
     XrdClientSockConnectParms fHost;
 
@@ -57,10 +60,13 @@ protected:
     int   TryConnect_low(bool isUnix = 0, int altport = 0, int windowsz = 0);
 
     // Send the buffer to the specified socket
-    virtual int    SendRaw_sock(const void* buffer, int length, int sock);
+    virtual int    SendRaw_sock(const void* buffer, int length, Sockdescr sock);
 public:
     XrdClientSock(XrdClientUrlInfo host, int windowsize = 0);
     virtual ~XrdClientSock();
+
+    virtual void BanSockDescr(Sockdescr, Sockid) {}
+    virtual void UnBanSockDescr(Sockdescr) { }
 
     // Makes a pending recvraw to rebuild the list of interesting selectors
     void           ReinitFDTable() { fReinit_fd = true; }
@@ -72,44 +78,44 @@ public:
     //  and return its id in usedsubstreamid
     // Note that in this base class only the multistream intf is provided
     //  but the implementation is monostream
-    virtual int    RecvRaw(void* buffer, int length, int substreamid = -1,
-			   int *usedsubstreamid = 0);
+    virtual int    RecvRaw(void* buffer, int length, Sockid substreamid = -1,
+			   Sockid *usedsubstreamid = 0);
 
     // Send the buffer to the specified substream
     // if substreamid <= 0 then use the main one
-    virtual int    SendRaw(const void* buffer, int length, int substreamid = 0);
+    virtual int    SendRaw(const void* buffer, int length, Sockid substreamid = 0);
 
     void   SetRequestTimeout(int timeout = -1);
 
     // Performs a SOCKS4 handshake in a given stream
     // Returns the handshake result
     // If successful, we are connected through a socks4 proxy
-    virtual int Socks4Handshake(int sockid);
+    virtual int Socks4Handshake(Sockid sockid);
 
     virtual void   TryConnect(bool isUnix = 0);
 
     // Returns a temporary socket id or -1
-    // The temporary sock id XRDCLI_PSOCKTEMP is to be used to send the kxr_bind_request
+    // The temporary given sock id is to be used to send the kxr_bind_request
     // If all this goes ok, then the caller must call EstablishParallelSock, otherwise the
     //  creation of parallel streams should be aborted (but the already created streams are OK)
-    virtual int TryConnectParallelSock(int /*port*/ = 0, int /*windowsz*/ = 0) { return -1; }
+    virtual Sockdescr TryConnectParallelSock(int /*port*/, int /*windowsz*/, Sockid &/*tmpid*/) { return -1; }
 
-    // Attach the pending (and hidden) sock associated to the substreamid XRDCLI_PSOCKTEMP
+    // Attach the pending (and hidden) sock
     //  to the given substreamid
     // the given substreamid could be an integer suggested by the server
-    virtual int EstablishParallelSock(int /*sockid*/) { return -1; }
+    virtual int EstablishParallelSock(Sockid /*tmpsockid*/, Sockid /*newsockid*/) { return -1; }
 
-    virtual int RemoveParallelSock(int /* sockid */) { return -1; };
+    virtual int RemoveParallelSock(Sockid /* sockid */) { return -1; };
 
     // Suggests a sockid to be used for a req
-    virtual int GetSockIdHint(int /* reqsperstream */ ) { return 0; }
+    virtual Sockid GetSockIdHint(int /* reqsperstream */ ) { return 0; }
 
     virtual void   Disconnect();
 
     bool   IsConnected() {return fConnected;}
     virtual int GetSockIdCount() { return 1; }
-    virtual void PauseSelectOnSubstream(int /* substreamid */) {  }
-    virtual void RestartSelectOnSubstream(int /*substreamid */) {  }
+    virtual void PauseSelectOnSubstream(Sockid /* substreamid */) {  }
+    virtual void RestartSelectOnSubstream(Sockid /*substreamid */) {  }
 };
 
 #endif

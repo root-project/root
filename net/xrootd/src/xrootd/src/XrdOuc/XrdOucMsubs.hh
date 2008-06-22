@@ -81,9 +81,9 @@ char *getVal(XrdOucMsubsInfo &Info, int vNum);
 
 enum vNum {vLFN =  1, vPFN =  2, vRFN =  3, vLFN2 =  4, vPFN2 =  5, vRFN2 =  6,
            vFM  =  7, vOFL =  8, vUSR =  9, vHST  = 10, vTID  = 11,
-           vNFY = 12, vOPT = 13, vPTY = 14, vRID  = 15};
+           vNFY = 12, vOPT = 13, vPTY = 14, vRID  = 15, vCGI  = 16};
 
-static const int   vMax = 16;
+static const int   vMax = 17;
 static const char *vName[vMax];
 
 XrdSysError *eDest;

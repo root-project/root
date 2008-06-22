@@ -12,8 +12,9 @@ const char *XrdMonCtrBufferCVSID = "$Id$";
 
 #include "XrdMon/XrdMonCtrBuffer.hh"
 #include "XrdMon/XrdMonCtrDebug.hh"
+#include "XrdSys/XrdSysHeaders.hh"
+
 #include <iomanip>
-#include <iostream>
 using std::cout;
 using std::endl;
 using std::setw;

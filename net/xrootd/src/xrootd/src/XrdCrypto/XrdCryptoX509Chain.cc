@@ -54,6 +54,8 @@ XrdCryptoX509Chain::XrdCryptoX509Chain(XrdCryptoX509 *c)
    lastError = "";
    caname = "";
    eecname = "";
+   cahash = "";
+   eechash = "";
    statusCA = kUnknown;
 
    if (c) {
@@ -64,6 +66,7 @@ XrdCryptoX509Chain::XrdCryptoX509Chain(XrdCryptoX509 *c)
       // If CA verify it and save result
       if (c->type == XrdCryptoX509::kCA) {
          caname = c->Subject();
+         cahash = c->SubjectHash();
          EX509ChainErr ecode = kNone;
          if (!Verify(ecode, "CA: ",XrdCryptoX509::kCA, 0, c, c))
             statusCA = kInvalid;
@@ -86,6 +89,8 @@ XrdCryptoX509Chain::XrdCryptoX509Chain(XrdCryptoX509Chain *ch)
    lastError = ch->LastError();
    caname = ch->CAname();
    eecname = ch->EECname();
+   cahash = ch->CAhash();
+   eechash = ch->EEChash();
    statusCA = ch->StatusCA(); 
 
    XrdCryptoX509 *c = ch->Begin();
@@ -142,6 +147,8 @@ void XrdCryptoX509Chain::Cleanup(bool keepCA)
    lastError = "";
    caname = "";
    eecname = "";
+   cahash = "";
+   eechash = "";
    statusCA = kUnknown;
 }
 
@@ -165,6 +172,7 @@ bool XrdCryptoX509Chain::CheckCA(bool checkselfsigned)
       xc = c->Cert();
       if (xc->type == XrdCryptoX509::kCA) {
          caname = xc->Subject();
+         cahash = xc->SubjectHash();
          EX509ChainErr ecode = kNone;
          bool CAok = Verify(ecode, "CA: ",XrdCryptoX509::kCA, 0, xc, xc);
          if (!CAok && (ecode != kVerifyFail || checkselfsigned)) {
@@ -299,6 +307,7 @@ void XrdCryptoX509Chain::Remove(XrdCryptoX509 *c)
       // check when needed
       statusCA = kUnknown;
       caname = "";
+      cahash = "";
    }
 
    // Now we have all the information to remove
@@ -537,6 +546,7 @@ int XrdCryptoX509Chain::Reorder()
          statusCA = kAbsent;
       } else {
          caname = nr->Cert()->Subject();
+         cahash = nr->Cert()->SubjectHash();
          statusCA = kUnknown;
       }
    }
@@ -546,8 +556,10 @@ int XrdCryptoX509Chain::Reorder()
    while (np) {
       const char *pi = np->Cert()->Subject();
       // Set the EEC name, if not yet done
-      if (np->Cert()->type == XrdCryptoX509::kEEC && eecname.length() <= 0)
+      if (np->Cert()->type == XrdCryptoX509::kEEC && eecname.length() <= 0) {
          eecname = pi;
+         eechash = np->Cert()->SubjectHash();
+      }
       npp = np;
       nc = np->Next();
       while (nc) {
@@ -790,4 +802,50 @@ const char *XrdCryptoX509Chain::EECname()
 
    // return what we have
    return (eecname.length() > 0) ? eecname.c_str() : (const char *)0;
+}
+
+//_____________________________________________________________________________
+const char *XrdCryptoX509Chain::CAhash()
+{
+   // Return the subject name hash of the CA in the chain
+   EPNAME("X509Chain::CAhash");
+
+   // If we do not have it already, try extraction
+   if (cahash.length() <= 0 && statusCA == kUnknown) {
+
+      if (!CheckCA()) {
+         DEBUG("CA not found in chain");
+         return (const char *)0;
+      }
+   }
+
+   // return what we have
+   return (cahash.length() > 0) ? cahash.c_str() : (const char *)0;
+}
+
+//_____________________________________________________________________________
+const char *XrdCryptoX509Chain::EEChash()
+{
+   // Return the subject name hash of the EEC in the chain
+   EPNAME("X509Chain::EEChash");
+
+   // If we do not have it already, try extraction
+   if (eechash.length() <= 0) {
+
+      XrdCryptoX509ChainNode *c = begin;
+      while (c) {
+         if (c->Cert()->type == XrdCryptoX509::kEEC) {
+            eechash = c->Cert()->SubjectHash();
+            break;
+         }
+         c = c->Next();
+      }
+      if (eechash.length() <= 0) {
+         DEBUG("EEC not found in chain");
+         return (const char *)0;
+      }
+   }
+
+   // return what we have
+   return (eechash.length() > 0) ? eechash.c_str() : (const char *)0;
 }

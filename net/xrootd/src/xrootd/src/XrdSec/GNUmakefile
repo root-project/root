@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.21.6.1 2007/11/20 09:54:50 ganis Exp $
+#              $Id: GNUmakefile,v 1.25 2008/06/09 10:44:23 ganis Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -50,6 +50,7 @@ TARGETS = $(LIBARCH) $(LIBRARY) $(TSTBINA) $(TSTBINB)
 #                           S e a r c h   P a t h s                            #
 #------------------------------------------------------------------------------#
 
+vpath XrdNet% ../XrdNet
 vpath XrdOuc% ../XrdOuc
 vpath XrdSys% ../XrdSys
 
@@ -82,7 +83,7 @@ $(LIBARCH): $(OBJSLIB)
 
 $(LIBRARY): $(OBJSLIB) $(LIBDEPS)
 	@echo Creating shared library $(LIBRARY) 
-	$(ECHO)$(CC) $(OBJSLIB) $(LDSO) $(MORELIBS) $(LIBS) -o $(LIBRARY); \
+	$(ECHO)$(CC) $(OBJSLIB) $(LDSO) $(MORELIBS) $(LIBS) -o $(LIBRARY);
 
 $(TSTBINA): $(OBJECTA) $(LIBDEPS)
 	@echo Creating executable $(TSTBINA) 
@@ -102,13 +103,14 @@ $(OBJDIR)/XrdSecPManager.o: XrdSecInterface.hh XrdSecPManager.hh \
                             XrdOucErrInfo.hh   XrdSysPthread.hh \
                             XrdSecPManager.cc
 	@echo Compiling XrdSecPManager.cc 
-	$(ECHO)$(CC) -c $(CFLAGS32) $(INCLUDE) -o $(OBJDIR)/XrdSecPManager.o XrdSecPManager.cc
+	$(ECHO)$(CC) -c $(CFLAGS32) $(CFUSENEWHDRS) $(INCLUDE) -o $(OBJDIR)/XrdSecPManager.o XrdSecPManager.cc
 
 $(OBJDIR)/XrdSecProtocolhost.o: XrdSecProtocolhost.cc XrdSecProtocolhost.hh \
                                 XrdSecInterface.hh    XrdSecEntity.hh
 	@echo Compiling XrdSecProtocolhost.cc
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdSecProtocolhost.o XrdSecProtocolhost.cc
 $(OBJDIR)/XrdSecServer.o: XrdSecServer.cc       XrdSecServer.hh \
+                          XrdNetDNS.hh \
                           XrdOucErrInfo.hh      XrdSysError.hh \
                           XrdSysLogger.hh       XrdOucStream.hh \
                           XrdSecInterface.hh    XrdSecPManager.hh \

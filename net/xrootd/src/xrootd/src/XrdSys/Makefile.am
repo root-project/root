@@ -4,8 +4,8 @@
 ##
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id: Makefile.am,v 1.9 2007/08/08 14:23:19 dfeich Exp $
-## Checked in by $Author: dfeich $
+## Version info: $Id: Makefile.am,v 1.10 2008/06/13 13:19:39 furano Exp $
+## Checked in by $Author: furano $
 #######################################################################
 
 xrootdsysincdir = $(includedir)/xrootd/XrdSys
@@ -14,7 +14,7 @@ xrootdsysinc_HEADERS = \
      XrdSysDir.hh    XrdSysLogger.hh    XrdSysPlugin.hh \
      XrdSysPthread.hh  XrdSysTimer.hh   XrdWin32.hh \
      XrdSysError.hh  XrdSysPlatform.hh  XrdSysPriv.hh \
-     XrdSysSemWait.hh  XrdSysXSLock.hh
+     XrdSysSemWait.hh  XrdSysXSLock.hh  XrdSysHeaders.hh
 
 lib_LTLIBRARIES = libXrdSys.la
 

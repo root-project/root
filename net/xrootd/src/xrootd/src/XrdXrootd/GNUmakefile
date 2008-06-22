@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.26.6.1 2008/01/12 12:42:11 ganis Exp $
+#              $Id: GNUmakefile,v 1.29 2008/06/03 01:50:37 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -6,7 +6,8 @@
   
 include ../GNUmake.env
 
-BINLIBS = -L$(LIBDIR) -lXrd -lXrdNet -lXrdOuc -lXrdSys $(OBJDIR)/XrdSfsNative.o
+BINLIBS = -L$(LIBDIR) -lXrd -lXrdNet -lXrdOuc -lXrdSys $(TYPELIBSF) \
+                      $(OBJDIR)/XrdSfsNative.o
 
 #------------------------------------------------------------------------------#
 #                             C o m p o n e n t s                              #
@@ -143,7 +144,7 @@ $(OBJDIR)/XrdXrootdFile.o:   XrdSfsInterface.hh   XrdXrootdFile.hh \
                              XrdSysError.hh       XrdOucTrace.hh \
                              XrdSysPthread.hh     XPtypes.hh
 	@echo Compiling XrdXrootdFile.cc 
-	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdXrootdFile.o XrdXrootdFile.cc
+	$(ECHO)$(CC) -c $(CFLAGS) $(CFNOSTRICTALIAS) $(INCLUDE) -o $(OBJDIR)/XrdXrootdFile.o XrdXrootdFile.cc
 
 $(OBJDIR)/XrdXrootdFileLock1.o: XrdXrootdFile.hh XrdXrootdFileLock1.hh \
                                  XrdOucHash.hh   XrdOucHash.icc XrdSysPthread.hh \
@@ -200,7 +201,8 @@ $(OBJDIR)/XrdXrootdProtocol.o: XrdXrootdFile.hh       XrdXrootdFileLock.hh \
                                XrdSecEntity.hh \
                                XrdSysError.hh         XrdSysPthread.hh   \
                                XrdSysTimer.hh         XrdOucTrace.hh \
-                               XrdXrootdPio.hh        XrdXrootdProtocol.cc
+                               XrdXrootdPio.hh        \
+                               XrdXrootdProtocol.hh   XrdXrootdProtocol.cc
 	@echo Compiling XrdXrootdProtocol.cc 
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdXrootdProtocol.o XrdXrootdProtocol.cc
 

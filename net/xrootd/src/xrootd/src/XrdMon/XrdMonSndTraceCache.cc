@@ -13,7 +13,7 @@
 #include "XrdMon/XrdMonSndTraceCache.hh"
 #include "XrdMon/XrdMonSndTraceEntry.hh"
 
-#include <iostream>
+#include "XrdSys/XrdSysHeaders.hh"
 using std::cerr;
 using std::cout;
 using std::endl;

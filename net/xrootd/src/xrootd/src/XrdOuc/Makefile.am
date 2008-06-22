@@ -4,8 +4,8 @@
 ##
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id: Makefile.am,v 1.10 2007/07/31 16:35:58 ganis Exp $
-## Checked in by $Author: ganis $
+## Version info: $Id: Makefile.am,v 1.13 2008/03/18 13:48:00 furano Exp $
+## Checked in by $Author: furano $
 #######################################################################
 
 EXTRA_DIST = XrdOucRash.hh XrdOucRash.icc
@@ -20,7 +20,8 @@ xrootdoucinc_HEADERS = \
     XrdOucPList.hh  XrdOucRash.hh       XrdOucRash.icc \
     XrdOucReqID.hh  XrdOucStream.hh     XrdOucString.hh \
     XrdOucTable.hh  XrdOucTList.hh      XrdOucTokenizer.hh \
-    XrdOucTrace.hh  XrdOucUtils.hh      XrdOucProg.hh
+    XrdOucTrace.hh  XrdOucUtils.hh      XrdOucProg.hh \
+    XrdOucPup.hh    XrdOucCRC.hh
 
 lib_LTLIBRARIES = libXrdOuc.la
 
@@ -34,6 +35,7 @@ libXrdOuc_la_SOURCES = \
         XrdOucMsubs.cc XrdOucMsubs.hh \
         XrdOucNList.cc XrdOucNList.hh      \
         XrdOucProg.cc XrdOucProg.hh \
+        XrdOucPup.cc XrdOucPup.hh \
         XrdOucReqID.cc XrdOucReqID.hh      \
         XrdOucStream.cc XrdOucStream.hh     \
         XrdOucString.cc XrdOucString.hh     \
@@ -41,6 +43,7 @@ libXrdOuc_la_SOURCES = \
         XrdOucTrace.cc XrdOucTrace.hh      \
         XrdOucUtils.cc XrdOucUtils.hh      \
 	XrdOucExport.cc XrdOucExport.hh \
+        XrdOucCRC.cc XrdOucCRC.hh \
         XrdOucHash.icc
 
 libXrdOuc_la_LIBADD = $(LIBPTHREAD) $(SEM_LIBRT) $(LIBNSL)

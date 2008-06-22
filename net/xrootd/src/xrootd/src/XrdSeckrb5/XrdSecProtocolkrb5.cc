@@ -25,8 +25,6 @@ const char *XrdSecProtocolkrb5CVSID = "$Id$";
 #include <pwd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <iostream>
-using namespace std;
 
 extern "C" {
 #include "krb5.h"
@@ -35,6 +33,7 @@ extern "C" {
 
 #include "XrdNet/XrdNetDNS.hh"
 #include "XrdOuc/XrdOucErrInfo.hh"
+#include "XrdSys/XrdSysHeaders.hh"
 #include "XrdSys/XrdSysPthread.hh"
 #include "XrdOuc/XrdOucTokenizer.hh"
 #include "XrdSec/XrdSecInterface.hh"
@@ -393,14 +392,15 @@ int XrdSecProtocolkrb5::Authenticate(XrdSecCredentials *cred,
    {  XrdSysPrivGuard pGuard(krb_kt_uid, krb_kt_gid);
       if (pGuard.Valid())
          {if (!rc)
-             if ((rc = krb5_rd_req(krb_context, &AuthContext, &inbuf,
+             {if ((rc = krb5_rd_req(krb_context, &AuthContext, &inbuf,
                                   (krb5_const_principal)krb_principal,
                                    krb_keytab, NULL, &Ticket)))
-                iferror = (char *)"Unable to authenticate credentials;";
-             else if ((rc = krb5_aname_to_localname(krb_context,
+                 iferror = (char *)"Unable to authenticate credentials;";
+              else if ((rc = krb5_aname_to_localname(krb_context,
                                           Ticket->enc_part2->client,
                                           sizeof(CName)-1, CName)))
                      iferror = (char *)"Unable to extract client name;";
+             }
       } else
          iferror = (char *)"Unable to acquire privileges to read the keytab;";
    }
@@ -696,6 +696,7 @@ int XrdSecProtocolkrb5::exp_krbTkn(XrdSecCredentials *cred, XrdOucErrInfo *erp)
 
 // Point the received creds
 //
+    krbContext.Lock();
     krb5_data forwardCreds;
     forwardCreds.data = &cred->buffer[XrdSecPROTOIDLEN];
     forwardCreds.length = cred->size -XrdSecPROTOIDLEN;
@@ -727,6 +728,12 @@ int XrdSecProtocolkrb5::exp_krbTkn(XrdSecCredentials *cred, XrdOucErrInfo *erp)
     if ((rc = krb5_cc_resolve(krb_context, ccfile, &cache)))
        return rc;
 
+// Need privileges from now on
+//
+    XrdSysPrivGuard pGuard((uid_t)0, (gid_t)0);
+    if (!pGuard.Valid())
+       return Fatal(erp, EINVAL, "Unable to acquire privileges;", ccfile, 0);
+
 // Init cache
 //
     if ((rc = krb5_cc_initialize(krb_context, cache,
@@ -744,9 +751,6 @@ int XrdSecProtocolkrb5::exp_krbTkn(XrdSecCredentials *cred, XrdOucErrInfo *erp)
 
 // Change permission and ownership of the file
 //
-    XrdSysPrivGuard pGuard((uid_t)0, (gid_t)0);
-    if (!pGuard.Valid())
-       return Fatal(erp, EINVAL, "Unable to acquire privileges;", ccfile, 0);
     if (chown(ccfile, pw->pw_uid, pw->pw_gid) == -1)
        return Fatal(erp, errno, "Unable to change file ownership;", ccfile, 0);
     if (chmod(ccfile, 0600) == -1)

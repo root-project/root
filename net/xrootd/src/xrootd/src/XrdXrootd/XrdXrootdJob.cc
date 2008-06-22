@@ -335,10 +335,12 @@ void XrdXrootdJob2Do::Redrive()
    while ((jp = theJob->JobTable.Apply(XrdXrootdJobWaiting, (void *)0)))
          if (jp->verClient(jp->JobMark > 0)) break;
 
-// Schedule this job
+// Schedule this job if we really have one here
 //
-   jp->Status = Job_Active;
-   theJob->Sched->Schedule((XrdJob *)jp);
+   if (jp)
+      {jp->Status = Job_Active;
+       theJob->Sched->Schedule((XrdJob *)jp);
+      }
 }
 
 /******************************************************************************/
@@ -498,8 +500,9 @@ void XrdXrootdJob::DoIt()
    while((jNum = JobTable.Next(jNext)) >= 0)
         {myMutex.Lock();
          if ((jp = JobTable.Item(jNum)))
-            if (jp->JobMark) {if (!jp->verClient()) CleanUp(jp);}
-               else jp->JobMark = 1;
+            {if (jp->JobMark) {if (!jp->verClient()) CleanUp(jp);}
+                else jp->JobMark = 1;
+            }
          myMutex.UnLock();
         }
 

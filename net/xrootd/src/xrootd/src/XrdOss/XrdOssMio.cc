@@ -160,17 +160,18 @@ XrdOssMioFile *XrdOssMio::Map(char *path, int fd, int opts)
 // Lock the file, if need be. Turn off locking if we don't have privs
 //
    if (MM_okmlock && (opts & OSSMIO_MLOK))
-      if (mlock((char *)thefile, statb.st_size))
-      {     if (errno == ENOSYS)
-               {OssEroute.Emsg("Mio","mlock() not supported; feature disabled.");
-                MM_okmlock = 0;
-               }
-       else if (errno == EPERM)
-               {OssEroute.Emsg("Mio","Not privileged for mlock(); feature disabled.");
-                MM_okmlock = 0;
-               }
-       else  OssEroute.Emsg("Mio", errno, "mlock file", path);
-      } else {DEBUG("Locked " <<statb.st_size <<" bytes for " <<path);}
+      {if (mlock((char *)thefile, statb.st_size))
+          {     if (errno == ENOSYS)
+                   {OssEroute.Emsg("Mio","mlock() not supported; feature disabled.");
+                    MM_okmlock = 0;
+                   }
+           else if (errno == EPERM)
+                   {OssEroute.Emsg("Mio","Not privileged for mlock(); feature disabled.");
+                    MM_okmlock = 0;
+                   }
+           else  OssEroute.Emsg("Mio", errno, "mlock file", path);
+          } else {DEBUG("Locked " <<statb.st_size <<" bytes for " <<path);}
+      }
 
 // get a new file object
 //

@@ -17,9 +17,9 @@
 
 #include "XrdMon/XrdMonBufferedOutput.hh"
 #include "XProtocol/XPtypes.hh"
+#include "XrdSys/XrdSysHeaders.hh"
 #include <unistd.h> /* access */
 #include <assert.h>
-#include <iostream>
 using namespace std;
 
 int flushFreq = 30; // in seconds

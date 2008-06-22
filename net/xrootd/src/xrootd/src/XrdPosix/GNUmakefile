@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.12.6.3 2008/01/27 13:08:37 ganis Exp $
+#              $Id: GNUmakefile,v 1.19 2008/06/09 10:44:20 ganis Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -17,8 +17,7 @@ SOURCES  = \
 
 SOURCET = \
         XrdPosixPreload.cc \
-        XrdPosixPreload32.cc \
-        XrdPosixStream.cc
+        XrdPosixPreload32.cc
 
 OBJECTS  = \
         $(OBJDIR)/XrdPosix.o  \
@@ -27,10 +26,10 @@ OBJECTS  = \
 
 OBJECTT = \
         $(OBJDIR)/XrdPosixPreload.o  \
-        $(OBJDIR)/XrdPosixPreload32.o \
-        $(OBJDIR)/XrdPosixStream.o
+        $(OBJDIR)/XrdPosixPreload32.o
 
-OBJECTU = $(LIBDIR)/libXrdClient.a
+OBJECTU = \
+        $(LIBDIR)/libXrdClient.a
 
 MORELIBS = -L$(LIBDIR) $(LIBM) -lXrdNet -lXrdOuc -lXrdSys
 
@@ -84,7 +83,7 @@ $(LIBARCH): $(OBJECTP) $(OBJECTS) $(OBJECTT) $(LIBDEP)
 
 $(LIBPLDR): $(OBJECTP) $(OBJECTS) $(OBJECTT) $(LIBDEP)
 	@echo Creating shared library $(LIBPLDR)
-	$(ECHO)$(CC) $(CFLAGS) $(OBJECTT) $(OBJECTS) $(OBJECTU) $(LDSO) $(MORELIBS) $(LIBS) -o $(LIBPLDR)
+	$(ECHO)$(CC) $(CFLAGS) $(OBJECTS) $(OBJECTT) $(OBJECTU) $(LDSO) $(MORELIBS) $(LIBS) -o $(LIBPLDR)
 
 $(LIBRARY): $(OBJECTP) $(OBJECTS) $(OBJECTT) $(LIBDEP)
 	@echo Creating shared library $(LIBRARY) 
@@ -102,29 +101,25 @@ $(OBJDIR)/XrdPosix.o:  XrdPosix.cc XrdPosix.hh XrdPosixXrootd.hh  \
 	@echo Compiling XrdPosix.cc
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdPosix.o XrdPosix.cc
 
-$(OBJDIR)/XrdPosixLinkage.o:  XrdPosixLinkage.cc   XrdPosixLinkage.hh
+$(OBJDIR)/XrdPosixLinkage.o:  XrdPosixLinkage.cc   XrdPosixLinkage.hh \
+                              XrdPosixOsDep.hh     XrdSysPlatform.hh
 	@echo Compiling XrdPosixLinkage.cc 
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdPosixLinkage.o XrdPosixLinkage.cc
 
 $(OBJDIR)/XrdPosixPreload.o:  XrdPosixPreload.cc   XrdPosixLinkage.hh \
-                              XrdPosixExtern.hh    XrdPosixStream.hh \
+                              XrdPosixExtern.hh    XrdPosixOsDep.hh \
                               XrdPosixXrootd.hh
 	@echo Compiling XrdPosixPreload.cc 
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdPosixPreload.o XrdPosixPreload.cc
 
 $(OBJDIR)/XrdPosixPreload32.o:  XrdPosixPreload32.cc   XrdPosixLinkage.hh \
-                                XrdPosixExtern.hh      XrdPosixStream.hh \
-                                XrdPosixXrootd.hh      XrdSysPlatform.hh
+                                XrdPosixExtern.hh      XrdPosixXrootd.hh \
+                                XrdPosixOsDep.hh       XrdSysPlatform.hh
 	@echo Compiling XrdPosixPreload32.cc
-	$(ECHO)$(CC) -c $(CFLAGS32) $(CFNOSTRICTALIAS) $(INCLUDE) -o $(OBJDIR)/XrdPosixPreload32.o XrdPosixPreload32.cc
-
-$(OBJDIR)/XrdPosixStream.o:  XrdPosixStream.cc   XrdPosixStream.hh \
-                             XrdSysPthread.hh    XrdPosixLinkage.hh \
-                             XrdPosixExtern.hh   XrdPosixXrootd.hh
-	@echo Compiling XrdPosixStream.cc
-	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdPosixStream.o XrdPosixStream.cc
+	$(ECHO)$(CC) -c $(CFLAGS32) $(CFUSENEWHDRS) $(CFNOSTRICTALIAS) $(INCLUDE) -o $(OBJDIR)/XrdPosixPreload32.o XrdPosixPreload32.cc
 
 $(OBJDIR)/XrdPosixXrootd.o:  XrdPosixXrootd.cc   XrdPosixXrootd.hh \
-                             XrdClient.hh        XrdPosixExtern.hh
+                             XrdClient.hh        XrdPosixExtern.hh \
+                             XrdPosixOsDep.hh
 	@echo Compiling XrdPosixXrootd.cc 
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdPosixXrootd.o XrdPosixXrootd.cc

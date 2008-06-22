@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.29.6.1 2007/11/20 09:54:46 ganis Exp $
+#              $Id: GNUmakefile,v 1.32 2008/04/11 01:20:38 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -19,8 +19,11 @@ SOURCES = \
         XrdOssLock.cc   \
         XrdOssMio.cc    \
         XrdOssMSS.cc    \
+        XrdOssPath.cc \
         XrdOssRename.cc \
+        XrdOssSpace.cc  \
         XrdOssStage.cc  \
+        XrdOssStat.cc  \
         XrdOssUnlink.cc
 
 OBJECTS = \
@@ -32,8 +35,11 @@ OBJECTS = \
         $(OBJDIR)/XrdOssLock.o   \
         $(OBJDIR)/XrdOssMio.o    \
         $(OBJDIR)/XrdOssMSS.o    \
+        $(OBJDIR)/XrdOssPath.o   \
         $(OBJDIR)/XrdOssRename.o \
+        $(OBJDIR)/XrdOssSpace.o  \
         $(OBJDIR)/XrdOssStage.o  \
+        $(OBJDIR)/XrdOssStat.o  \
         $(OBJDIR)/XrdOssUnlink.o
 
 LIBRARY = $(LIBDIR)/libXrdOss.a
@@ -94,6 +100,7 @@ $(OBJDIR)/XrdOssApi.o: XrdOss.hh XrdOssApi.hh XrdOssCache.hh XrdOssConfig.hh \
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdOssApi.o XrdOssApi.cc
 
 $(OBJDIR)/XrdOssCache.o: XrdOssApi.hh XrdOssCache.hh XrdOssTrace.hh \
+                         XrdOssPath.hh XrdOssSpace.hh \
                          XrdOucDLlist.hh XrdSysError.hh \
                          XrdOssCache.cc
 	@echo Compiling XrdOssCache.cc 
@@ -104,13 +111,14 @@ $(OBJDIR)/XrdOssConfig.o: XrdOssApi.hh  XrdOssConfig.hh XrdOssError.hh \
                           XrdOssMio.hh  XrdOssOpaque.hh XrdOucEnv.hh \
                           XrdOucProg.hh XrdOssConfig.cc XrdOuca2x.hh  \
                           XrdOucMsubs.hh XrdOucName2Name.hh XrdSysPlugin.hh \
-                          XrdOucExport.hh XrdSysPlatform.hh
+                          XrdOucExport.hh XrdSysPlatform.hh XrdOssCache.hh
 	@echo Compiling XrdOssConfig.cc 
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdOssConfig.o XrdOssConfig.cc
 
-$(OBJDIR)/XrdOssCreate.o: XrdOssApi.hh XrdOssConfig.hh  XrdOssError.hh \
-                          XrdOssLock.hh XrdOssTrace.hh  XrdOssOpaque.hh \
-                          XrdOucEnv.hh  XrdSysError.hh  XrdOuca2x.hh  \
+$(OBJDIR)/XrdOssCreate.o: XrdOssApi.hh   XrdOssConfig.hh XrdOssError.hh \
+                          XrdOssLock.hh  XrdOssTrace.hh  XrdOssOpaque.hh \
+                          XrdOssCache.hh XrdOssPath.hh   XrdOucMsubs.hh \
+                          XrdOucEnv.hh   XrdSysError.hh  XrdOuca2x.hh  \
                           XrdOucExport.hh \
                           XrdSysPlatform.hh XrdOssCreate.cc
 	@echo Compiling XrdOssCreate.cc 
@@ -136,22 +144,45 @@ $(OBJDIR)/XrdOssMSS.o:    XrdOssApi.hh   XrdOssConfig.hh XrdOssError.hh \
 	@echo Compiling XrdOssMSS.cc 
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdOssMSS.o XrdOssMSS.cc
 
-$(OBJDIR)/XrdOssRename.o: XrdOssApi.hh XrdOssError.hh XrdOssLock.hh \
-                          XrdOssTrace.hh XrdOucExport.hh \
+$(OBJDIR)/XrdOssPath.o:   XrdOssPath.hh \
+                          XrdSysPthread.hh \
+                          XrdOssPath.cc
+	@echo Compiling XrdOssPath.cc 
+	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdOssPath.o XrdOssPath.cc
+
+$(OBJDIR)/XrdOssRename.o: XrdOssApi.hh  XrdOssError.hh XrdOssLock.hh \
+                          XrdOssPath.hh XrdOssTrace.hh XrdOucExport.hh \
+                          XrdOucUtils.hh \
                           XrdOssRename.cc
 	@echo Compiling XrdOssRename.cc 
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdOssRename.o XrdOssRename.cc
 
-$(OBJDIR)/XrdOssStage.o: XrdOssApi.hh   XrdOssCache.hh  XrdOssError.hh \
+$(OBJDIR)/XrdOssSpace.o: XrdOssSpace.hh XrdOssSpace.cc \
+                         XrdOssCache.hh \
+                         XrdOuca2x.hh   XrdOucStream.hh \
+                         XrdSysError.hh
+	@echo Compiling XrdOssSpace.cc 
+	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdOssSpace.o XrdOssSpace.cc
+
+$(OBJDIR)/XrdOssStage.o: XrdOssApi.hh   XrdOssStage.hh  XrdOssError.hh \
                          XrdOssLock.hh  XrdOssOpaque.hh XrdOucEnv.hh \
                          XrdOuca2x.hh   XrdOucHash.hh   XrdOucHash.icc \
                          XrdSysPthread.hh XrdOucMsubs.hh XrdOucName2Name.hh \
-                         XrdOucProg.hh  XrdOucReqID.hh  XrdOssStage.cc
+                         XrdOucDLlist.hh  XrdOucProg.hh  XrdOucReqID.hh \
+                         XrdOssStage.cc
 	@echo Compiling XrdOssStage.cc 
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdOssStage.o XrdOssStage.cc
 
+$(OBJDIR)/XrdOssStat.o: XrdOssApi.hh       XrdOssCache.hh  XrdOssConfig.hh \
+                        XrdOssOpaque.hh    XrdOssPath.hh \
+                        XrdOucName2Name.hh XrdOucEnv.hh \
+                        XrdOssStat.cc
+	@echo Compiling XrdOssStat.cc 
+	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdOssStat.o XrdOssStat.cc
+
 $(OBJDIR)/XrdOssUnlink.o: XrdOssApi.hh XrdOssError.hh XrdOssLock.hh \
-                          XrdOssTrace.hh XrdOucExport.hh \
+                          XrdOssOpaque.hh XrdOssPath.hh XrdOssTrace.hh \
+                          XrdOucExport.hh \
                           XrdOssUnlink.cc
 	@echo Compiling XrdOssUnlink.cc 
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdOssUnlink.o XrdOssUnlink.cc

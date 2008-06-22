@@ -28,8 +28,6 @@ const char *XrdOssMSSCVSID = "$Id$";
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <sys/wait.h>
-#include <iostream>
-using namespace std;
 
 #include "XrdNet/XrdNetOpts.hh"
 #include "XrdNet/XrdNetSocket.hh"
@@ -40,6 +38,7 @@ using namespace std;
 #include "XrdOuc/XrdOucProg.hh"
 #include "XrdOuc/XrdOucStream.hh"
 #include "XrdSys/XrdSysError.hh"
+#include "XrdSys/XrdSysHeaders.hh"
 #include "XrdSys/XrdSysLogger.hh"
 #include "XrdSys/XrdSysPlatform.hh"
 

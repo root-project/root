@@ -25,6 +25,8 @@ const char *XrdOucReqIDCVSID = "$Id$";
   
 #include "XrdOucReqID.hh"
 
+#include "XrdOuc/XrdOucCRC.hh"
+
 /******************************************************************************/
 /*                      S t a t i c   V a r i a b l e s                       */
 /******************************************************************************/
@@ -116,36 +118,12 @@ char *XrdOucReqID::ID(char *buff, int blen)
 /******************************************************************************/
   
 int XrdOucReqID::Index(int KeyMax, const char *KeyVal, int KeyLen)
-{  int j;
-   unsigned int *ip, iword, ival = 0;
-   const int il = sizeof(ival);
+{
+   unsigned int pHash;
 
-// Get actual key length
+// Get hash value for the key and return modulo of the KeyMax value
 //
-   if (KeyLen == 0) KeyLen = strlen(KeyVal);
-
-// If name is shorter than the hash length, use the key.
-//
-   if (KeyLen <= il)
-      {memcpy(&ival, KeyVal, (size_t)KeyLen);
-       return (int)((ival & INT_MAX) % KeyMax);
-      }
-
-// Compute the length of the name and develop starting hash.
-//
-   ival = KeyLen;
-   j = KeyLen % il; KeyLen /= il;
-   if (j) 
-      {memcpy(&iword, KeyVal, (size_t)il);
-       ival ^= iword;
-      }
-   ip = (unsigned int *)&KeyVal[j];
-
-// Compute and return the index.
-//
-   while(KeyLen--)
-        {memcpy(&iword, ip++, (size_t)il);
-         ival ^= iword;
-        }
-   return (int)((ival & INT_MAX) % KeyMax);
+   pHash = XrdOucCRC::CRC32((const unsigned char *)KeyVal,
+                            (KeyLen ? KeyLen : strlen(KeyVal)));
+   return (int)(pHash % KeyMax);
 }

@@ -158,8 +158,8 @@ void *XrdOlbAdmin::Start(XrdNetSocket *AdminSock)
 
 // If we are in independent mode then let the caller continue
 //
-   if (Config.doWait && Config.asServer() || Config.asSolo())
-      Say.Emsg(epname, "Waiting for primary server to login.");
+   if ((Config.doWait && Config.asServer()) || Config.asSolo())
+      {Say.Emsg(epname, "Waiting for primary server to login.");}
       else if (SyncUp) {SyncUp->Post(); SyncUp = 0;}
 
 // Accept connections in an endless loop
@@ -325,10 +325,11 @@ void XrdOlbAdmin::do_RmDid(int isPfn)
 // If we have a pfn then we must get the lfn to inform our manager about the file
 //
    if (isPfn && Config.lcl_N2N)
-      if ((rc = Config.lcl_N2N->pfn2lfn(tp, apath, sizeof(apath))))
-         {Say.Emsg(epname, rc, "determine lfn for removed path", tp);
-          return;
-         } else tp = apath;
+      {if ((rc = Config.lcl_N2N->pfn2lfn(tp, apath, sizeof(apath))))
+          {Say.Emsg(epname, rc, "determine lfn for removed path", tp);
+           return;
+          } else tp = apath;
+      }
 
    DEBUG("Sending managers " <<cmd <<tp);
    Manager.Inform(cmd, cmdl, tp, 0);
@@ -352,10 +353,11 @@ void XrdOlbAdmin::do_RmDud(int isPfn)
       }
 
    if (isPfn && Config.lcl_N2N)
-      if ((rc = Config.lcl_N2N->pfn2lfn(tp, apath, sizeof(apath))))
-         {Say.Emsg(epname, rc, "determine lfn for added path", tp);
-          return;
-         } else tp = apath;
+      {if ((rc = Config.lcl_N2N->pfn2lfn(tp, apath, sizeof(apath))))
+          {Say.Emsg(epname, rc, "determine lfn for added path", tp);
+           return;
+          } else tp = apath;
+      }
 
    DEBUG("Sending managers " <<cmd <<tp);
    Manager.Inform(cmd, cmdl, tp, 0);

@@ -111,8 +111,9 @@ XrdOlbPrepArgs *XrdOlbPrepArgs::Request()
    do {PAReady.Wait();
        PAQueue.Lock();
        if ((parg = First))
-          if (parg == Last) First = Last = 0;
-             else           First = parg->Next;
+          {if (parg == Last) First = Last = 0;
+              else           First = parg->Next;
+          }
        PAQueue.UnLock();
       } while(parg == 0);
    return parg;

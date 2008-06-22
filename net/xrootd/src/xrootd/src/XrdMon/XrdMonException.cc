@@ -11,7 +11,7 @@
 // $Id$
 
 #include "XrdMon/XrdMonException.hh"
-#include <iostream>
+#include "XrdSys/XrdSysHeaders.hh"
 using std::cerr;
 using std::cout;
 using std::endl;

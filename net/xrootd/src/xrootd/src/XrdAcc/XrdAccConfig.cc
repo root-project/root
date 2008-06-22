@@ -29,12 +29,11 @@ const char *XrdAccConfigCVSID = "$Id$";
 #include <sys/param.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <iostream>
-using namespace std;
 
 #include "XrdOuc/XrdOucLock.hh"
 #include "XrdOuc/XrdOucEnv.hh"
 #include "XrdSys/XrdSysError.hh"
+#include "XrdSys/XrdSysHeaders.hh"
 #include "XrdOuc/XrdOucStream.hh"
 #include "XrdAcc/XrdAccAccess.hh"
 #include "XrdAcc/XrdAccAudit.hh"

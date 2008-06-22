@@ -12,9 +12,7 @@
 
 const char *XrdSysXSLockCVSID = "$Id$";
   
-#include <iostream>
-using namespace std;
-
+#include "XrdSys/XrdSysHeaders.hh"
 #include "XrdSys/XrdSysXSLock.hh"
 
 /******************************************************************************/

@@ -14,11 +14,15 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/statvfs.h>
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <unistd.h>
+
+#include "XrdPosix/XrdPosixOsDep.hh"
+#include "XrdSys/XrdSysPlatform.hh"
 
 /******************************************************************************/
 /*                Posix Symbols vs Return Valus and Arguments                 */
@@ -30,14 +34,13 @@
 #define UNIX_PFX
 //#endif
 
-#ifdef __macos__
-#define off64_t int64_t
-#define ELIBACC ESHLIBVERS
-#endif
-  
 #define Symb_Access UNIX_PFX "access"
 #define Retv_Access int
 #define Args_Access const char *path, int amode
+  
+#define Symb_Acl UNIX_PFX "acl"
+#define Retv_Acl int
+#define Args_Acl const char *, int, int, void *
   
 #define Symb_Chdir UNIX_PFX "chdir"
 #define Retv_Chdir int
@@ -99,6 +102,14 @@
 #define Retv_Fsync int
 #define Args_Fsync int
 
+#define Symb_Ftruncate UNIX_PFX "ftruncate"
+#define Retv_Ftruncate int
+#define Args_Ftruncate int, off_t
+
+#define Symb_Ftruncate64 UNIX_PFX "ftruncate64"
+#define Retv_Ftruncate64 int
+#define Args_Ftruncate64 int, off64_t
+
 #define Symb_Fgetxattr UNIX_PFX "fgetxattr"
 #define Retv_Fgetxattr ssize_t
 #define Args_Fgetxattr int, const char *, const void *, size_t
@@ -155,6 +166,10 @@
 #define Retv_Opendir DIR *
 #define Args_Opendir const char *
   
+#define Symb_Pathconf UNIX_PFX "pathconf"
+#define Retv_Pathconf long
+#define Args_Pathconf const char *, int
+
 #define Symb_Pread UNIX_PFX "pread"
 #define Retv_Pread ssize_t
 #define Args_Pread int, void *, size_t, off_t
@@ -162,6 +177,14 @@
 #define Symb_Pread64 UNIX_PFX "pread64"
 #define Retv_Pread64 ssize_t
 #define Args_Pread64 int, void *, size_t, off64_t
+
+#define Symb_Pwrite UNIX_PFX "pwrite"
+#define Retv_Pwrite ssize_t
+#define Args_Pwrite int, const void *, size_t, off_t
+
+#define Symb_Pwrite64 UNIX_PFX "pwrite64"
+#define Retv_Pwrite64 ssize_t
+#define Args_Pwrite64 int, const void *, size_t, off64_t
 
 #define Symb_Read UNIX_PFX "read"
 #define Retv_Read ssize_t
@@ -223,17 +246,33 @@
 #define Args_Stat64 const char *, struct stat64 *
 #endif
 
-#define Symb_Pwrite UNIX_PFX "pwrite"
-#define Retv_Pwrite ssize_t
-#define Args_Pwrite int, const void *, size_t, off_t
+#define Symb_Statfs    UNIX_PFX "statfs"
+#define Retv_Statfs    int
+#define Args_Statfs    const char *, struct statfs *
 
-#define Symb_Pwrite64 UNIX_PFX "pwrite64"
-#define Retv_Pwrite64 ssize_t
-#define Args_Pwrite64 int, const void *, size_t, off64_t
+#define Symb_Statfs64  UNIX_PFX "statfs64"
+#define Retv_Statfs64  int
+#define Args_Statfs64  const char *, struct statfs64 *
+
+#define Symb_Statvfs UNIX_PFX "statvfs"
+#define Retv_Statvfs int
+#define Args_Statvfs const char *, struct statvfs *
+
+#define Symb_Statvfs64 UNIX_PFX "statvfs64"
+#define Retv_Statvfs64 int
+#define Args_Statvfs64 const char *, struct statvfs64 *
 
 #define Symb_Telldir UNIX_PFX "telldir"
 #define Retv_Telldir long
 #define Args_Telldir DIR *
+
+#define Symb_Truncate UNIX_PFX "truncate"
+#define Retv_Truncate int
+#define Args_Truncate const char *, off_t
+
+#define Symb_Truncate64 UNIX_PFX "truncate64"
+#define Retv_Truncate64 int
+#define Args_Truncate64 const char *, off64_t
 
 #define Symb_Unlink UNIX_PFX "unlink"
 #define Retv_Unlink int
@@ -253,9 +292,10 @@
   
 class XrdPosixLinkage
 {public:
-      int              Init(int *x) {return (Done ? 0 : Resolve());}
+      int              Init(int *X=0) {if (!Done) Done = Resolve(); return 0;}
 
       Retv_Access      (*Access)(Args_Access);
+      Retv_Acl         (*Acl)(Args_Acl);
       Retv_Chdir       (*Chdir)(Args_Chdir);
       Retv_Close       (*Close)(Args_Close);
       Retv_Closedir    (*Closedir)(Args_Closedir);
@@ -268,6 +308,8 @@ class XrdPosixLinkage
       Retv_Fstat       (*Fstat)(Args_Fstat);
       Retv_Fstat64     (*Fstat64)(Args_Fstat64);
       Retv_Fsync       (*Fsync)(Args_Fsync);
+      Retv_Ftruncate   (*Ftruncate)(Args_Ftruncate);
+      Retv_Ftruncate64 (*Ftruncate64)(Args_Ftruncate64);
       Retv_Fgetxattr   (*Fgetxattr)(Args_Fgetxattr);
       Retv_Lgetxattr   (*Lgetxattr)(Args_Lgetxattr);
       Retv_Getxattr    (*Getxattr)(Args_Getxattr);
@@ -279,8 +321,11 @@ class XrdPosixLinkage
       Retv_Open        (*Open)(Args_Open);
       Retv_Open64      (*Open64)(Args_Open64);
       Retv_Opendir     (*Opendir)(Args_Opendir);
+      Retv_Pathconf    (*Pathconf)(Args_Pathconf);
       Retv_Pread       (*Pread)(Args_Pread);
       Retv_Pread64     (*Pread64)(Args_Pread64);
+      Retv_Pwrite      (*Pwrite)(Args_Pwrite);
+      Retv_Pwrite64    (*Pwrite64)(Args_Pwrite64);
       Retv_Read        (*Read)(Args_Read);
       Retv_Readv       (*Readv)(Args_Readv);
       Retv_Readdir     (*Readdir)(Args_Readdir);
@@ -293,162 +338,26 @@ class XrdPosixLinkage
       Retv_Seekdir     (*Seekdir)(Args_Seekdir);
       Retv_Stat        (*Stat)(Args_Stat);
       Retv_Stat64      (*Stat64)(Args_Stat64);
-      Retv_Pwrite      (*Pwrite)(Args_Pwrite);
-      Retv_Pwrite64    (*Pwrite64)(Args_Pwrite64);
+      Retv_Statfs      (*Statfs)(Args_Statfs);
+      Retv_Statfs64    (*Statfs64)(Args_Statfs64);
+      Retv_Statvfs     (*Statvfs)(Args_Statvfs);
+      Retv_Statvfs64   (*Statvfs64)(Args_Statvfs64);
       Retv_Telldir     (*Telldir)(Args_Telldir);
+      Retv_Truncate    (*Truncate)(Args_Truncate);
+      Retv_Truncate64  (*Truncate64)(Args_Truncate64);
       Retv_Unlink      (*Unlink)(Args_Unlink);
       Retv_Write       (*Write)(Args_Write);
       Retv_Writev      (*Writev)(Args_Writev);
 
       int              Load_Error(const char *epname, int retv=-1);
 
-      XrdPosixLinkage() {Init(0);}
+      XrdPosixLinkage() : Done(0) {Init();}
      ~XrdPosixLinkage() {}
 
 private:
-int Done;
-int Resolve();
-};
-
-/******************************************************************************/
-/*          X r d P o s i x   L i n k a g e   D e f i n i t i o n s           */
-/******************************************************************************/
-  
-#define XRD_Retv_Access int
-#define XRD_Args_Access const char *path, int amode
-  
-#define XRD_Retv_Chdir int
-#define XRD_Args_Chdir const char *path
-  
-#define XRD_Retv_Close int
-#define XRD_Args_Close int
-
-#define XRD_Retv_Closedir int
-#define XRD_Args_Closedir DIR *
-
-#define XRD_Retv_Lseek off64_t
-#define XRD_Args_Lseek int, off64_t, int
-
-#define XRD_Retv_Fcntl int
-#define XRD_Args_Fcntl int, int, ...
-
-#define XRD_Retv_Fstat int
-#define XRD_Args_Fstat int, struct stat *
-
-#define XRD_Retv_Fsync int
-#define XRD_Args_Fsync int
-
-#define XRD_Retv_Lstat int
-#define XRD_Args_Lstat const char *, struct stat *
-
-#define XRD_Retv_Mkdir int
-#define XRD_Args_Mkdir const char *, mode_t
-
-#define XRD_Retv_Open int
-#define XRD_Args_Open const char *, int, ...
-
-#define XRD_Retv_Opendir DIR *
-#define XRD_Args_Opendir const char *
-  
-#define XRD_Retv_Pread ssize_t
-#define XRD_Args_Pread int, void *, size_t, off64_t
-
-#define XRD_Retv_Read ssize_t
-#define XRD_Args_Read int, void *, size_t
-  
-#define XRD_Retv_Readv ssize_t
-#define XRD_Args_Readv int, const struct iovec *, int
-
-#define XRD_Retv_Readdir     struct dirent *
-#define XRD_Args_Readdir     DIR *
-
-#define XRD_Retv_Readdir64   struct dirent64 *
-#define XRD_Args_Readdir64   DIR *
-
-#define XRD_Retv_Readdir_r   int
-#define XRD_Args_Readdir_r   DIR *, struct dirent   *, struct dirent   **
-
-#define XRD_Retv_Readdir64_r int
-#define XRD_Args_Readdir64_r DIR *, struct dirent64 *, struct dirent64 **
-
-#define XRD_Retv_Rename int
-#define XRD_Args_Rename const char *, const char *
-
-#define XRD_Retv_Rewinddir void
-#define XRD_Args_Rewinddir DIR *
-
-#define XRD_Retv_Rmdir int
-#define XRD_Args_Rmdir const char *
-
-#define XRD_Retv_Seekdir void
-#define XRD_Args_Seekdir DIR *, long
-
-#define XRD_Retv_Stat int
-#define XRD_Args_Stat const char *, struct stat *
-
-#define XRD_Retv_Pwrite ssize_t
-#define XRD_Args_Pwrite int, const void *, size_t, off64_t
-
-#define XRD_Retv_Telldir long
-#define XRD_Args_Telldir DIR *
-
-#define XRD_Retv_Unlink int
-#define XRD_Args_Unlink const char *
-
-#define XRD_Retv_Write ssize_t
-#define XRD_Args_Write int, const void *, size_t
-
-#define XRD_Retv_Writev ssize_t
-#define XRD_Args_Writev int, const struct iovec *, int
-
-#define XRD_Retv_isMyPath int
-#define XRD_Args_isMyPath const char *
-
-/******************************************************************************/
-/*                       X r d P o s i x R o o t V e c                        */
-/******************************************************************************/
-  
-class XrdPosixRootVec
-{public:
-      int                  Init(int *x) {return (Done ? 0 : Resolve());}
-
-      XRD_Retv_Access      (*Access)(XRD_Args_Access);
-      XRD_Retv_Chdir       (*Chdir)(XRD_Args_Chdir);
-      XRD_Retv_Close       (*Close)(XRD_Args_Close);
-      XRD_Retv_Closedir    (*Closedir)(XRD_Args_Closedir);
-      XRD_Retv_Lseek       (*Lseek)(XRD_Args_Lseek);
-      XRD_Retv_Fcntl       (*Fcntl)(XRD_Args_Fcntl);
-      XRD_Retv_Fstat       (*Fstat)(XRD_Args_Fstat);
-      XRD_Retv_Fsync       (*Fsync)(XRD_Args_Fsync);
-      XRD_Retv_Lstat       (*Lstat)(XRD_Args_Lstat);
-      XRD_Retv_Mkdir       (*Mkdir)(XRD_Args_Mkdir);
-      XRD_Retv_Open        (*Open)(XRD_Args_Open);
-      XRD_Retv_Opendir     (*Opendir)(XRD_Args_Opendir);
-      XRD_Retv_Pread       (*Pread)(XRD_Args_Pread);
-      XRD_Retv_Read        (*Read)(XRD_Args_Read);
-      XRD_Retv_Readv       (*Readv)(XRD_Args_Readv);
-      XRD_Retv_Readdir     (*Readdir)(XRD_Args_Readdir);
-      XRD_Retv_Readdir64   (*Readdir64)(XRD_Args_Readdir64);
-      XRD_Retv_Readdir_r   (*Readdir_r)(XRD_Args_Readdir_r);
-      XRD_Retv_Readdir64_r (*Readdir64_r)(XRD_Args_Readdir64_r);
-      XRD_Retv_Rename      (*Rename)(XRD_Args_Rename);
-      XRD_Retv_Rewinddir   (*Rewinddir)(XRD_Args_Rewinddir);
-      XRD_Retv_Rmdir       (*Rmdir)(XRD_Args_Rmdir);
-      XRD_Retv_Seekdir     (*Seekdir)(XRD_Args_Seekdir);
-      XRD_Retv_Stat        (*Stat)(XRD_Args_Stat);
-      XRD_Retv_Pwrite      (*Pwrite)(XRD_Args_Pwrite);
-      XRD_Retv_Telldir     (*Telldir)(XRD_Args_Telldir);
-      XRD_Retv_Unlink      (*Unlink)(XRD_Args_Unlink);
-      XRD_Retv_Write       (*Write)(XRD_Args_Write);
-      XRD_Retv_Writev      (*Writev)(XRD_Args_Writev);
-      XRD_Retv_isMyPath    (*isMyPath)(XRD_Args_isMyPath);
-
-      XrdPosixRootVec() {Init(0);}
-     ~XrdPosixRootVec() {}
-
-private:
-int Done;
-int Resolve();
+int  Done;
+void Missing(const char *);
+int  Resolve();
 };
 // Warning! This class is meant to be defined as a static object.
 #endif

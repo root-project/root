@@ -27,18 +27,20 @@ const char *XrdOssCreateCVSID = "$Id$";
 #if defined(__solaris__) || defined(AIX)
 #include <sys/vnode.h>
 #endif
-#include <iostream>
-using namespace std;
 
 #include "XrdOss/XrdOssApi.hh"
+#include "XrdOss/XrdOssCache.hh"
 #include "XrdOss/XrdOssConfig.hh"
 #include "XrdOss/XrdOssError.hh"
 #include "XrdOss/XrdOssLock.hh"
 #include "XrdOss/XrdOssOpaque.hh"
+#include "XrdOss/XrdOssPath.hh"
 #include "XrdOss/XrdOssTrace.hh"
 #include "XrdOuc/XrdOuca2x.hh"
 #include "XrdOuc/XrdOucEnv.hh"
+#include "XrdOuc/XrdOucMsubs.hh"
 #include "XrdSys/XrdSysError.hh"
+#include "XrdSys/XrdSysHeaders.hh"
 #include "XrdOuc/XrdOucExport.hh"
 #include "XrdSys/XrdSysPlatform.hh"
 
@@ -98,8 +100,9 @@ int XrdOssSys::Create(const char *tident, const char *path, mode_t access_mode,
    if (StageCreate)
       {struct stat buf;
        if (lstat(local_path, &buf))
-          if (errno != ENOENT) return -errno;
-             else return XrdOssSS->Stage(tident,path,env,Opts>>8,access_mode);
+          {if (errno != ENOENT) return -errno;
+              else return XrdOssSS->Stage(tident,path,env,Opts>>8,access_mode);
+          }
        return 0;
       }
 
@@ -113,6 +116,10 @@ int XrdOssSys::Create(const char *tident, const char *path, mode_t access_mode,
                    while(datfd < 0 && errno == EINTR);
            if (datfd < 0) return -errno;
        close(datfd);
+       if (Opts>>8 & O_TRUNC && buf.st_size)
+          {off_t theSize = buf.st_size;
+           if (!lstat(local_path, &buf)) Adjust(local_path, -theSize, &buf);
+          }
        return 0;
       }
 
@@ -191,13 +198,14 @@ int XrdOssSys::Alloc_Cache(const char *path, int Oflag, mode_t amode,
                            XrdOucEnv &env)
 {
    EPNAME("Alloc_Cache")
+   static const mode_t theMode = S_IRWXU | S_IRWXG;
    double fuzz, diffree;
    int datfd, rc;
+   XrdOssPath::fnInfo Info;
    XrdOssCache_FS *fsp, *fspend, *fsp_sel;
    XrdOssCache_Group *cgp = 0;
-   XrdOssCache_Lock Dummy; // Obtains & releases the lock
    long long size, maxfree, curfree;
-   char pbuff[XrdOssMAX_PATH_LEN+1], *pbp, *pap, *cgroup, *vardata;
+   char pbuff[XrdOssMAX_PATH_LEN+1], *cgroup, *vardata, *pfnSfx;
 
 // Grab the suggested size from the environment
 //
@@ -205,63 +213,87 @@ int XrdOssSys::Alloc_Cache(const char *path, int Oflag, mode_t amode,
       else if (!XrdOuca2x::a2ll(OssEroute,"invalid asize",vardata,&size,0))
               return -XRDOSS_E8018;
 
-// Get the correct cache group
+// Get the correct cache group and user
 //
    if (!(cgroup = env.Get(OSS_CGROUP))) cgroup = OSS_CGROUP_DEFAULT;
+   Info.User  = env.Get(SEC_USER);
 
-// Compute appropriate allocation size
+// Compute appropriate allocation size and fuzz factor
 //
-   if ( (size = size * ovhalloc / 100 + size) < minalloc)
-      size = minalloc;
+   if ( (size = size * ovhalloc / 100 + size) < minalloc) size = minalloc;
+   fuzz = static_cast<double>(fuzalloc)/100.0;
 
-// Select correct cursor and fuzz amount
+// Find the corresponding cache group
 //
-   cgp = fsgroups;
+   cgp = XrdOssCache_Group::fsgroups;
    while(cgp && strcmp(cgroup, cgp->group)) cgp = cgp->next;
    if (!cgp) return -XRDOSS_E8019;
+
+// Get the cache lock and select correct cursor and fuzz amount
+//
+   CacheContext.Lock();
    fsp = cgp->curr;
-   fuzz = ((double)fuzalloc)/100.0;
 
 // Find a cache that will fit this allocation request
 //
-   maxfree = fsp->fsdata->frsz; fspend = fsp; fsp_sel = fsp; fsp = fsp->next;
+   maxfree = fsp->fsdata->frsz; fsp_sel = 0; fspend = fsp = fsp->next;
    do {
        if (strcmp(cgroup, fsp->group)) continue;
        curfree = fsp->fsdata->frsz;
        if (size > curfree) continue;
 
-       if (!fuzz) {if (curfree > maxfree) {fsp_sel = fsp; maxfree = curfree;}}
-          else {if (!(curfree + maxfree)) diffree = 0.0;
-                   else diffree = (double)(curfree - maxfree)/
-                                  (double)(curfree + maxfree);
-                if (diffree > fuzz) {fsp_sel = fsp; maxfree = curfree;}
-               }
+             if (!fsp_sel)       {fsp_sel = fsp; maxfree = curfree;}
+       else  if (!fuzz) {if (curfree > maxfree) 
+                                 {fsp_sel = fsp; maxfree = curfree;}}
+       else {diffree = (!(curfree + maxfree) ? 0.0
+                     : static_cast<double>(::llabs(maxfree - curfree)) /
+                       static_cast<double>(        maxfree + curfree));
+             if (diffree > fuzz) {fsp_sel = fsp; maxfree = curfree;}
+            }
       } while((fsp = fsp->next) != fspend);
 
 // Check if we can realy fit this file
 //
-   if (size > maxfree) return -XRDOSS_E8020;
+   if (!fsp_sel) {CacheContext.UnLock(); return -XRDOSS_E8020;}
 
 // Construct the target filename
 //
-   if ((fsp_sel->plen + strlen(path)) >= sizeof(pbuff))
-      return -ENAMETOOLONG;
-   strcpy(pbuff, fsp_sel->path);
-   pbp = &pbuff[fsp_sel->plen];
-   pap = (char *)path;
-   XrdOssTAMP(pbp, pap);
+   Info.Path = fsp_sel->path; Info.Plen = fsp_sel->plen; 
+   Info.Sfx  = fsp_sel->suffix;
+   pfnSfx = XrdOssPath::genPFN(Info, pbuff, sizeof(pbuff),
+                              (fsp->opts & XrdOssCache_FS::isXA ? 0 : path));
+   if (!(*pbuff)) return -ENAMETOOLONG;
 
 // Simply open the file in the local filesystem, creating it if need be.
 //
-   do {datfd = open(pbuff, Oflag, amode);}
-               while(datfd < 0 && errno == EINTR);
+   rc = 0;
+   do {do {datfd = open(pbuff, Oflag, amode);}
+          while(datfd < 0 && errno == EINTR);
+       if (datfd < 0 && (errno != ENOENT || pfnSfx == 0)) rc = 1;
+          else {*Info.Slash = '\0';
+                rc = mkdir(pbuff, theMode);
+                *Info.Slash = '/';
+               }
+      } while(!rc);
+
+// Now create a symlink from the cache pfn to the actual path (xa only)
+//
+   if (datfd >= 0 && pfnSfx)
+      {strcpy(pfnSfx, ".pfn");
+       if ((symlink(path, pbuff) && errno != EEXIST)
+          || unlink(pbuff) || symlink(path, pbuff))
+          {close(datfd); *pfnSfx = '\0'; unlink(pbuff); datfd = -1;}
+          else *pfnSfx = '\0';
+      }
 
 // Now create a symbolic link to the target and adjust free space
 //
    if (datfd < 0) datfd = -errno;
       else if ((symlink(pbuff, path) && errno != EEXIST)
            || unlink(path) || symlink(pbuff, path))
-              {rc = -errno; close(datfd); unlink(pbuff); datfd = rc;}
+              {rc = -errno; close(datfd); datfd = rc; unlink(pbuff);
+               if (pfnSfx) {*pfnSfx = '.'; unlink(pbuff); *pfnSfx = '\0';}
+              }
               else fsp_sel->fsdata->frsz -= size;
 
 // Update the cursor address
@@ -271,6 +303,7 @@ int XrdOssSys::Alloc_Cache(const char *path, int Oflag, mode_t amode,
 
 // All done
 //
+   CacheContext.UnLock();
    DEBUG(cgroup <<" cache as " <<pbuff);
    return datfd;
 }

@@ -28,8 +28,8 @@ using namespace XrdMonArgParserConvert;
 
 // known problems with 2 and 4
 //const kXR_int64 NOCALLS = 8640000;   24h worth
-const kXR_int64 NOCALLS = 1000000000;
-const kXR_int16 maxNoXrdMonSndPackets = 5;
+const kXR_int64 NOCALLS = 1000000;
+const kXR_int16 maxNoXrdMonSndPackets = 50;
 
 void
 printHelp()
@@ -55,6 +55,24 @@ doDictionaryXrdMonSndPacket(XrdMonSndDummyXrootd& xrootd,
     cout << m << endl;
 
     XrdMonSndDictEntry::CompactEntry ce = m.code();
+    
+    if ( 0 == coder.prepare2Transfer(ce) ) {
+        transmitter(coder.packet());
+        coder.reset();
+        ++noP;
+    }
+}
+
+void
+doStageXrdMonSndPacket(XrdMonSndDummyXrootd& xrootd, 
+                       XrdMonSndCoder& coder,
+                       XrdMonSndTransmitter& transmitter,
+                       kXR_int64& noP)
+{
+    XrdMonSndStageEntry m = xrootd.newXrdMonSndStageEntry();
+    cout << "about to send this stage package:"  << m << endl;
+
+    XrdMonSndStageEntry::CompactEntry ce = m.code();
     
     if ( 0 == coder.prepare2Transfer(ce) ) {
         transmitter(coder.packet());
@@ -174,6 +192,7 @@ int main(int argc, char* argv[])
         for ( kXR_int64 i=0 ; i<NOCALLS ; i++ ) {
             calls2NewXrdMonSndDictEntry = NEWDICTENTRYFREQUENCY;
             doDictionaryXrdMonSndPacket(xrootd, coder, transmitter, noP);
+            doStageXrdMonSndPacket(xrootd, coder, transmitter, noP);
             if ( i % 3 ) { // every 3 opens, close one file...
                 closeFiles(xrootd, coder, transmitter, noP, true);
             }

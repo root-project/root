@@ -16,7 +16,7 @@
 
 #ifndef NODEBUG
 
-#include <iostream>
+#include "XrdSys/XrdSysHeaders.hh"
 
 #define QTRACE(act) SecTrace->What & TRACE_ ## act
 

@@ -20,9 +20,11 @@
 #include "XrdMon/XrdMonErrors.hh"
 #include "XrdMon/XrdMonException.hh"
 #include "XrdMon/XrdMonSenderInfo.hh"
+
+#include "XrdSys/XrdSysHeaders.hh"
+
 #include <sys/time.h>
 
-#include <iostream>
 using std::cout;
 using std::endl;
 

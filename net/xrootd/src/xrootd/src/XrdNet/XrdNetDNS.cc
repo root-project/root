@@ -25,10 +25,9 @@ const char *XrdNetDNSCVSID = "$Id$";
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #endif
-#include <iostream>
-using namespace std;
 
 #include "XrdNet/XrdNetDNS.hh"
+#include "XrdSys/XrdSysHeaders.hh"
 #include "XrdSys/XrdSysPlatform.hh"
 #include "XrdSys/XrdSysPthread.hh"
   
@@ -532,6 +531,17 @@ int XrdNetDNS::IP2String(unsigned int ipaddr, int port, char *buff, int blen)
       else 
       sz = snprintf(buff,blen,"%s:%d",inet_ntoa((const struct in_addr)in),port);
    return (sz > blen ? blen : sz);
+}
+
+/******************************************************************************/
+/*                              i s D o m a i n                               */
+/******************************************************************************/
+  
+int XrdNetDNS::isDomain(const char *Hostname, const char *Domname, int Domlen)
+{
+   int hlen = strlen(Hostname);
+
+   return (hlen >= Domlen && !strcmp(Hostname+(hlen-Domlen), Domname));
 }
 
 /******************************************************************************/

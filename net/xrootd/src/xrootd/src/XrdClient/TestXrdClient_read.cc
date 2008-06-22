@@ -1,6 +1,6 @@
 #include "XrdClient/XrdClient.hh"
 #include "XrdClient/XrdClientEnv.hh"
-#include <iostream>
+#include "XrdSys/XrdSysHeaders.hh"
 #include <fstream>
 #include <vector>
 #include <string>

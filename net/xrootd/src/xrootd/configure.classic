@@ -1,7 +1,7 @@
 #! /bin/sh
 ################################################################################
 #
-#          $Id: configure.classic,v 1.58.2.2 2008/01/12 13:23:38 ganis Exp $
+#          $Id: configure.classic,v 1.70 2008/06/19 14:02:20 ganis Exp $
 #                                                                              #
 #                     c o n f i g u r e . c l a s s i c                        #
 #                       (previously called configure)                          #
@@ -61,7 +61,9 @@ options="                 \
    enable_shared          \
    enable_ssl             \
    enable_trace           \
-   enable_javaint
+   enable_posix           \
+   enable_javaint         \
+   enable_usenewhdrs
 "
 
 #
@@ -79,6 +81,7 @@ enable_shared=yes
 enable_ssl=
 enable_thread=yes
 enable_javaint=no
+enable_usenewhdrs=yes
 
 #
 # ./configure arguments and defaults set via supported env vars
@@ -448,6 +451,9 @@ guess_architecture () {
           ;;
     esac
     if [ "$platform" = "macosx" ]; then
+       # the default for macosx is NOT to build xrdposix unless required
+       enable_posix=no
+
        if [ `sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2` = 5 ]; then
           if `sysctl machdep.cpu.extfeatures | grep "64" > /dev/null  2>&1` ; then
              ccflv=macos64
@@ -520,12 +526,15 @@ enable/disable options, prefix with either --enable- or --disable-
    krb5            Kerberos5 support, requires Kerberos libs
    mon             Enable/disable building of monitoring services
    perlint         Enable/disable building of the perl admin interface
+   posix           Enable/disable building of the posix preload lib
    pwd             Password-based authentication support
    sec             Sets gsi krb4 krb5 pwd and ssl together
    shadowpw        Force support for shadow passwords
    shared          Use shared 3rd party libraries if possible
    ssl             Build OpenSSL implementation of crypto interfaces
    trace           Support for trace statements via the "-d" flag
+   usenewhdrs      Enable/disable usage of std headers in form of <name>
+                   instead of <name>.h, e.g. <iostream>
 
 with options, prefix with --with-, enables corresponding support
 
@@ -804,8 +813,7 @@ fi
 echo "Configuring for $arch and compiler $ccflv"
 
 # For gcc on opteron force checking for 64-bit libs
-if test "x$ccflv" = "xgccx8664" || test "x$ccflv" = "xgccppc64" || \
-   test "x$ccflv" = "xiccx8664"; then
+if test "x$ccflv" = "xgccx8664" || test "x$ccflv" = "xgccppc64" ; then
    checklib64="yes"
 fi
 
@@ -815,6 +823,15 @@ if test "x$enable_trace" = "xyes" ; then
    tracedbg=""
 else
    echo "Support for trace statements disabled"
+fi
+
+# Check if it is required to use old header format
+usenewhdrs="-DUSENEWHDRS"
+if test "x$enable_newheaders" = "xno" ; then
+   usenewhdrs=""
+   echo "Using old format (<name>.h) for standard headers"
+else
+   echo "Using new format (<name>) for standard headers"
 fi
 
 # Which targets to build
@@ -830,6 +847,10 @@ fi
 if test "x$enable_mon" = "xyes" ; then
    echo "Building monitor module ..."
    targets="$targets \$(XRDMON)"
+fi
+if test "x$enable_posix" = "xyes" ; then
+   echo "Building posix module and related ones..."
+   targets="$targets \$(XRDPOSIX)"
 fi
 
 ######################################################################
@@ -964,6 +985,37 @@ message "Checking for /dev/poll support"
 if test -f /usr/include/sys/devpoll.h -a  -c /dev/poll ; then
    echo "yes"
    hasdevpoll="-D_DEVPOLL"
+else
+   echo "no"
+fi
+
+######################################################################
+#
+### echo %%% Flag for epoll
+#
+hasepoll=""
+message "Checking for epoll support"
+if test -f /usr/include/sys/epoll.h ; then
+   eprel=`uname -r | cut -d '.' -f 1-2 | tr '.' '0'`
+   if [ $eprel -gt 205 ]; then
+      echo "yes"
+      hasepoll="-D_EPOLL"
+   else
+      echo "not really"
+   fi
+else
+   echo "no"
+fi
+
+######################################################################
+#
+### echo %%% Flag for sendfile
+#
+hassendfile=""
+message "Checking for sendfile support"
+if test -f /usr/include/sys/sendfile.h ; then
+      echo "yes"
+      hassendfile="-DHAS_SENDFILE"
 else
    echo "no"
 fi
@@ -1568,6 +1620,7 @@ fi
 #
 if test ! "x$enable_afs" = "xno" ; then
 
+
     afs_shared=$enable_shared
     afslibdirs="/usr/lib /usr/local/lib /opt/lib $finkdir/lib"
     afslibs="libafsrpc libafsauthent"
@@ -2045,6 +2098,8 @@ sed -e "s|@arch@|$arch|"                 \
     -e "s|@libssl@|$libssl|"           \
     -e "s|@sslextracflags@|$sslextracflags|" \
     -e "s|@hasdevpoll@|$hasdevpoll|" \
+    -e "s|@hasepoll@|$hasepoll|" \
+    -e "s|@hassendfile@|$hassendfile|" \
     -e "s|@hassigwti@|$hassigwti|" \
     -e "s|@hassetresuid@|$hassetresuid|" \
     -e "s|@hasgethbyxr@|$hasgethbyxr|" \
@@ -2060,6 +2115,7 @@ sed -e "s|@arch@|$arch|"                 \
     -e "s|@perlincdir@|$perlincdir|" \
     -e "s|@perlccflags@|$perlccflags|" \
     -e "s|@nostrictalias@|$nostrictalias|" \
+    -e "s|@usenewhdrs@|$usenewhdrs|" \
     < GNUmake.env.tmp > $ENVOUT
 rm -f GNUmake.env.tmp
 

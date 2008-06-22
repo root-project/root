@@ -11,7 +11,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+
 //       $Id$
+
 
 #ifndef _XRC_CONST_H
 #define _XRC_CONST_H
@@ -57,7 +59,7 @@
 
 // The minimum size to use to split big single requests
 //  through multiple streams
-#define DFLT_MULTISTREAMSPLITSIZE (32*1024)
+#define DFLT_MULTISTREAMSPLITSIZE (128*1024)
 
 // keep/dont-keep the socket open (required by optimized rootd fallback)
 #define DFLT_KEEPSOCKOPENIFNOTXRD 0
@@ -112,11 +114,11 @@
 #define NAME_DFLTTCPWINDOWSIZE     (char *)"DfltTcpWindowSize"
 
 // A connection towards a data server timeouts quickly
-#define DFLT_DATASERVERCONN_TTL    30
+#define DFLT_DATASERVERCONN_TTL    300
 #define NAME_DATASERVERCONN_TTL    (char *)"DataServerConn_ttl"
 
 // A connection towards a Load Balancer timeouts after many seconds of no use
-#define DFLT_LBSERVERCONN_TTL      600
+#define DFLT_LBSERVERCONN_TTL      1200
 #define NAME_LBSERVERCONN_TTL      (char *)"LBServerConn_ttl"
 
 #define TRUE  1

@@ -125,6 +125,8 @@ void XrdXrootdCBJob::DoIt()
 
 // Recycle ourselves before returning
 //
+   delete eInfo;
+   eInfo = 0;
    Recycle();
 }
   

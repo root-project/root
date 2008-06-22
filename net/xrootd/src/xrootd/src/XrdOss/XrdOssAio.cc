@@ -95,7 +95,7 @@ int XrdOssFile::Fsync(XrdSfsAio *aiop)
       // that the handling of the counter is sloppy because we do not lock it.
       //
          {int fcnt = AioFailure++;
-          if (fcnt & 0x3ff == 1) OssEroute.Emsg("aio", errno, "fsync async");
+          if ((fcnt & 0x3ff) == 1) OssEroute.Emsg("aio", errno, "fsync async");
          }
      }
 #endif
@@ -151,7 +151,7 @@ int XrdOssFile::Read(XrdSfsAio *aiop)
       // that the handling of the counter is sloppy because we do not lock it.
       //
          {int fcnt = AioFailure++;
-          if (fcnt & 0x3ff == 1) OssEroute.Emsg("aio", errno, "read async");
+          if ((fcnt & 0x3ff) == 1) OssEroute.Emsg("aio", errno, "read async");
          }
      }
 #endif
@@ -208,7 +208,7 @@ int XrdOssFile::Write(XrdSfsAio *aiop)
        // that the handling of the counter is sloppy because we do not lock it.
        //
           {int fcnt = AioFailure++;
-           if (fcnt & 0x3ff == 1) OssEroute.Emsg("Write", errno, "write async");
+           if ((fcnt & 0x3ff) == 1) OssEroute.Emsg("Write",errno,"write async");
           }
       }
 #endif

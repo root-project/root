@@ -25,7 +25,7 @@
 #include "XrdMon/XrdMonSenderInfo.hh"
 
 #include <iomanip>
-#include <iostream>
+#include "XrdSys/XrdSysHeaders.hh"
 using std::cout;
 
 namespace XrdMonCtrCollector {

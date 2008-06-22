@@ -286,12 +286,13 @@ void XrdScheduler::Run()
                waiting = --idl_Workers;
                DispatchMutex.UnLock();
                if (!waiting)
-                  if (num_Workers < max_Workers) hireWorker();
-                     else {num_Limited++;
-                           if ((num_Limited & 4095) == 1)
-                              XrdLog.Emsg("Scheduler",
-                                           "Thread limit has been reached!");
-                          }
+                  {if (num_Workers < max_Workers) hireWorker();
+                      else {num_Limited++;
+                            if ((num_Limited & 4095) == 1)
+                               XrdLog.Emsg("Scheduler",
+                                            "Thread limit has been reached!");
+                           }
+                  }
               } else if (num_JobsinQ)
                         {XrdLog.Emsg("Scheduler","More jobs scheduled than could be run");
                          num_JobsinQ = 0;

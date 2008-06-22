@@ -4,8 +4,8 @@
 ##
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id: Makefile.am,v 1.2 2007/06/07 10:44:37 dfeich Exp $
-## Checked in by $Author: dfeich $
+## Version info: $Id: Makefile.am,v 1.3 2007/11/16 01:07:38 abh Exp $
+## Checked in by $Author: abh $
 #######################################################################
 
 lib_LTLIBRARIES = libXrdNet.la
@@ -25,6 +25,7 @@ libXrdNet_la_SOURCES = \
         XrdNetConnect.cc XrdNetConnect.hh    \
         XrdNetDNS.cc XrdNetDNS.hh        \
         XrdNetLink.cc XrdNetLink.hh       \
+        XrdNetMsg.cc XrdNetMsg.hh        \
         XrdNetSecurity.cc XrdNetSecurity.hh   \
         XrdNetSocket.cc XrdNetSocket.hh     \
         XrdNetWork.cc XrdNetWork.hh

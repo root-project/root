@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.22.6.1 2007/11/20 09:54:47 ganis Exp $
+#              $Id: GNUmakefile,v 1.26 2008/01/04 05:20:14 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -22,6 +22,7 @@ SOURCES = \
         XrdOucName2Name.cc   \
         XrdOucNList.cc       \
         XrdOucProg.cc        \
+        XrdOucPup.cc         \
         XrdOucReqID.cc       \
         XrdOucStream.cc      \
         XrdOucString.cc      \
@@ -31,7 +32,6 @@ SOURCES = \
 
 OBJECTS = \
         $(OBJDIR)/XrdOuca2x.o          \
-        $(OBJDIR)/XrdOucCRC.o          \
         $(OBJDIR)/XrdOucEnv.o          \
         $(OBJDIR)/XrdSysError.o        \
         $(OBJDIR)/XrdOucExport.o       \
@@ -41,12 +41,14 @@ OBJECTS = \
         $(OBJDIR)/XrdOucName2Name.o    \
         $(OBJDIR)/XrdOucNList.o        \
         $(OBJDIR)/XrdOucProg.o         \
+        $(OBJDIR)/XrdOucPup.o          \
         $(OBJDIR)/XrdOucReqID.o        \
         $(OBJDIR)/XrdOucStream.o       \
         $(OBJDIR)/XrdOucString.o       \
         $(OBJDIR)/XrdOucTokenizer.o    \
         $(OBJDIR)/XrdOucTrace.o        \
-        $(OBJDIR)/XrdOucUtils.o
+        $(OBJDIR)/XrdOucUtils.o        \
+        $(OBJDIR)/XrdOucCRC.o
 
 LIBRARY = $(LIBDIR)/libXrdOuc.a
 
@@ -57,6 +59,7 @@ TARGETS = $(LIBRARY)
 #------------------------------------------------------------------------------#
 
 vpath XrdNet% ../XrdNet
+vpath XrdOuc% ../XrdOuc
 vpath XrdSys% ../XrdSys
 
 #------------------------------------------------------------------------------#
@@ -127,7 +130,13 @@ $(OBJDIR)/XrdOucProg.o: XrdOucProg.cc  XrdOucProg.hh \
 	@echo Compiling XrdOucProg.cc
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) XrdOucProg.cc -o $(OBJDIR)/XrdOucProg.o
 
-$(OBJDIR)/XrdOucReqID.o: XrdOucReqID.cc XrdOucReqID.hh XrdSysPthread.hh
+$(OBJDIR)/XrdOucPup.o: XrdOucPup.cc  XrdOucPup.hh
+	@echo Compiling XrdOucPup.cc
+	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) XrdOucPup.cc -o $(OBJDIR)/XrdOucPup.o
+
+
+$(OBJDIR)/XrdOucReqID.o: XrdOucReqID.cc XrdOucReqID.hh \
+                         XrdOucCRC.hh   XrdSysPthread.hh
 	@echo Compiling XrdOucReqID.cc
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) XrdOucReqID.cc -o $(OBJDIR)/XrdOucReqID.o
 

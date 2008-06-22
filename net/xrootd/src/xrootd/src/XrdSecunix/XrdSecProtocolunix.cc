@@ -20,10 +20,9 @@ const char *XrdSecProtocolunixCVSID = "$Id$";
 #include <grp.h>
 #include <pwd.h>
 #include <sys/types.h>
-#include <iostream>
-using namespace std;
 
 #include "XrdOuc/XrdOucErrInfo.hh"
+#include "XrdSys/XrdSysHeaders.hh"
 #include "XrdSys/XrdSysPthread.hh"
 #include "XrdSec/XrdSecInterface.hh"
 
@@ -48,6 +47,7 @@ friend class XrdSecProtocolDummy; // Avoid stupid gcc warnings about destructor
                            const struct sockaddr     *ipadd)
                           {Entity.host = strdup(hname);
                            Entity.name = (char *)"?";
+                           credBuff    = 0;
                           }
 
         void              Delete() {delete this;}

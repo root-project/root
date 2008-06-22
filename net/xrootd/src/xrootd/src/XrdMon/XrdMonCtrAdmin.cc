@@ -13,9 +13,12 @@
 #include "XrdMon/XrdMonCtrAdmin.hh"
 #include "XrdMon/XrdMonErrors.hh"
 #include "XrdMon/XrdMonException.hh"
-#include <netinet/in.h> /* ntohs */
 
-#include <iostream>
+#include "XrdSys/XrdSysHeaders.hh"
+
+#include <netinet/in.h> /* ntohs */
+#include <string.h>
+
 using std::cout;
 using std::endl;
 

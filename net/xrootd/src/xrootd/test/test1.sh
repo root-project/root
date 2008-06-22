@@ -35,15 +35,19 @@ fi
 ##################################################################
 # CONFIGURATION SETTINGS
 
+testname=test1
+testdescr="test of a minimally configured xrootd"
 xrdport=22000
 testdir=$top_srcdir/test
 workdir=$top_builddir/test/work
 exportdir=$workdir/exportdir
 
-logfile=$workdir/test1-xrootd.log
-# name of the xrootd to avoid clashes with other runnin instances
+logfile=$workdir/${testname}-xrootd.log
+# name of the xrootd to avoid clashes with other running instances
 # Warning: this strangely also affects the name of the logfile 
 name=testxrootd$$
+# logfile's true name is
+reallogfile=$workdir/$name/test2-xrootd.log
 ##################################################################
 
 cleanup() {
@@ -66,8 +70,8 @@ cleanup_workarea() {
     files="$exportdir/testfile_r 
 $exportdir/testfile_w
 $workdir/testfile_r
-$workdir/test1-xrootd.cfg
-$workdir/$name/test1-xrootd.log"
+$workdir/${testname}-xrootd.cfg
+$workdir/$name/${testname}-xrootd.log"
 
     rm -f $files
     test -d $exportdir && rmdir $exportdir
@@ -78,28 +82,35 @@ $workdir/$name/test1-xrootd.log"
 
     test -d $workdir && rmdir $workdir
     test -d $workdir && echo "Warning: Failed to clean up $workdir" >&2
+
+    # why does this dir get produced?
+    test -d $testdir/$name && rmdir $testdir/$name
 }
 
+##############################################################
 
+echo "--------------------------------------------------------"
+echo "TEST: $testname"
+echo "Test description: $testdescr"
 cd $testdir
 cleanup_workarea
 mkdir -p $workdir
 mkdir -p $exportdir
-cp $testdir/test1.sh $exportdir/testfile_r
+cp $testdir/${testname}.sh $exportdir/testfile_r
 
 # Create simple xrootd config file
 echo "writing $workdir/test1-xrootd.cfg"
-cat <<EOF > $workdir/test1-xrootd.cfg
+cat <<EOF > $workdir/${testname}-xrootd.cfg
 xrootd.export $exportdir
 xrd.port $xrdport
 EOF
 
 # start up xrootd
-rm -rf $logfile
-echo -n "Starting up a test xrootd (port $xrdport)..."
-#echo $top_builddir/src/XrdXrootd/xrootd -c $workdir/test1-xrootd.cfg \
+rm -rf $reallogfile
+echo -n "Starting up a test xrootd (port $xrdport)... "
+#echo $top_builddir/src/XrdXrootd/xrootd -c $workdir/${testname}-xrootd.cfg \
 #      -n $name -l $logfile
-$top_builddir/src/XrdXrootd/xrootd -c $workdir/test1-xrootd.cfg \
+$top_builddir/src/XrdXrootd/xrootd -c $workdir/${testname}-xrootd.cfg \
       -n $name -l $logfile &
 PID=$!
 
@@ -115,7 +126,7 @@ kill -0 $PID
 status=$?
 if test 0"$status" -ne 0; then
     echo "[FAILED]"
-    echo "Error: Failed to start up test xrootd. Look at $logfile" >&2
+    echo "Error: Failed to start up test xrootd. Look at $reallogfile" >&2
     exit 1
 fi
 echo "[OK]"
@@ -151,7 +162,7 @@ status=$?
 if test 0"$status" -ne 0; then
     echo "[FAILED]"
     echo "Error: Failed to kill process ($PID)" >&2
-    return 1
+    exit 1
 fi
 echo "[OK]"
 

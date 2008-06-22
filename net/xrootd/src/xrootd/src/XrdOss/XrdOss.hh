@@ -46,6 +46,7 @@ virtual int     Fstat(struct stat *)                         {return -EISDIR;}
 virtual int     Fsync()                                      {return -EISDIR;}
 virtual int     Fsync(XrdSfsAio *aiop)                       {return -EISDIR;}
 virtual int     Ftruncate(unsigned long long)                {return -EISDIR;}
+virtual int     getFD()                                      {return -1;}
 virtual off_t   getMmap(void **addr)                         {return 0;}
 virtual int     isCompressed(char *cxidp=0)                  {return -EISDIR;}
 virtual int     Open(const char *, int, mode_t, XrdOucEnv &) {return -EISDIR;}
@@ -57,7 +58,7 @@ virtual ssize_t Write(const void *, off_t, size_t)           {return (ssize_t)-E
 virtual int     Write(XrdSfsAio *aiop)                       {return (ssize_t)-EISDIR;}
 
                 // Methods common to both
-virtual int     Close()=0;
+virtual int     Close(long long *retsz=0)=0;
 inline  int     Handle() {return fd;}
 
                 XrdOssDF() {fd = -1;}
@@ -91,6 +92,13 @@ virtual int     Mkdir(const char *, mode_t mode, int mkpath=0)=0;
 virtual int     Remdir(const char *)=0;
 virtual int     Rename(const char *, const char *)=0;
 virtual int     Stat(const char *, struct stat *, int resonly=0)=0;
+virtual int     StatFS(const char *path, char *buff, int &blen) 
+                      {return -ENOTSUP;}
+virtual int     StatLS(XrdOucEnv &env, const char *cgrp, char *buff, int &blen)
+                      {return -ENOTSUP;}
+virtual int     StatXA(const char *path, char *buff, int &blen)
+                      {return -ENOTSUP;}
+virtual int     Truncate(const char *, unsigned long long)=0;
 virtual int     Unlink(const char *)=0;
 
                 XrdOss() {}

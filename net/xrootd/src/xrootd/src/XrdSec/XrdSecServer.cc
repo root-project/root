@@ -21,13 +21,13 @@ const char *XrdSecServerCVSID = "$Id$";
 #include <strings.h>
 #include <stdio.h>
 #include <sys/param.h>
-#include <iostream>
-using namespace std;
 
+#include "XrdNet/XrdNetDNS.hh"
 #include "XrdOuc/XrdOucEnv.hh"
 #include "XrdSys/XrdSysError.hh"
 #include "XrdOuc/XrdOucErrInfo.hh"
 #include "XrdSys/XrdSysLogger.hh"
+#include "XrdSys/XrdSysHeaders.hh"
 
 #include "XrdSec/XrdSecInterface.hh"
 #include "XrdSec/XrdSecServer.hh"
@@ -71,7 +71,7 @@ XrdSecProtBind::XrdSecProtBind(char *th, char *st, XrdSecPMask_t pmask)
    if (!(starp = index(thost, '*')))
       {tsfxlen = -1;
        thostsfx = (char *)0;
-       tpfxlen = tsfxlen = 0;
+       tpfxlen = 0;
       } else {
        *starp = '\0';
        tpfxlen = strlen(thost);
@@ -257,7 +257,7 @@ const char *XrdSecServer::getParms(int &size, const char *hname)
 // Try to find a specific token binding for a host or return default binding
 //
    if (!hname) bp = 0;
-      else if ((bp = bpFirst)) while(!bp->Match(hname)) bp = bp->next;
+      else if ((bp = bpFirst)) while(bp && !bp->Match(hname)) bp = bp->next;
 
 // If we have a binding, return that else return the default
 //
@@ -552,6 +552,11 @@ int XrdSecServer::xpbind(XrdOucStream &Config, XrdSysError &Eroute)
        *sectoken = '\0';
       }
 
+// Translate "localhost" to our local hostname
+//
+   if (!strcmp("localhost", thost))
+      {free(thost); thost = XrdNetDNS::getHostName();}
+
 // Create new bind object
 //
    bnow = new XrdSecProtBind(thost,(noprot ? 0:sectoken),(only ? PMask:0));
@@ -636,9 +641,10 @@ int XrdSecServer::xprot(XrdOucStream &Config, XrdSysError &Eroute)
    strcpy(pid, val);
    while((args = Config.GetWord())) if (!myParms.Cat(args)) return 1;
    if ((pp = myParms.Find(pid, 1)))
-      if ((*myParms.Result(psize) && !myParms.Insert('\n'))
-      ||  !myParms.Cat(pp->Result(psize))) return 1;
-         else delete pp;
+      {if ((*myParms.Result(psize) && !myParms.Insert('\n'))
+       ||  !myParms.Cat(pp->Result(psize))) return 1;
+          else delete pp;
+      }
 
 // Load this protocol
 //

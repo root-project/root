@@ -12,11 +12,11 @@
 
 #include "XrdMon/XrdMonCtrDebug.hh"
 #include "XrdMon/XrdMonCommon.hh"
+#include "XrdSys/XrdSysHeaders.hh"
 
 #include <stdlib.h> /* getenv */
 
 #include <fstream>
-#include <iostream>
 #include <string>
 
 XrdMonCtrDebug::Verbosity XrdMonCtrDebug::_verbose = XrdMonCtrDebug::Receiving;

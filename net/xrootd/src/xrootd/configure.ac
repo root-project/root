@@ -12,12 +12,16 @@
 ## Author: Derek Feichtinger <derek.feichtinger@cern.ch>
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id: configure.ac,v 1.24 2007/11/01 09:38:14 dfeich Exp $
-## Checked in by $Author: dfeich $
+## Version info: $Id: configure.ac,v 1.35 2008/06/03 01:45:44 abh Exp $
+## Checked in by $Author: abh $
 #######################################################################
 
+# Note: All macros with the prefix ACX_ are custom macros. Their usage
+# information and the source code can be found in acinclude.m4
+
+
 AC_PREREQ(2.57)
-AC_INIT(xrootd,20071028-1219-rcand2,xrootd-l@slac.stanford.edu)
+AC_INIT(xrootd,CVS20080517,xrootd-l@slac.stanford.edu)
 AC_CONFIG_SRCDIR([src/XrdVersion.hh])
 
 # use C++ for the compilation of tests
@@ -45,10 +49,10 @@ CXX_PREFERENCE="g++ c++"
 
 # Note:
 # adding wildly to CFLAGS, CXXFLAGS, LDFLAGS, etc is not good
-# style, because the user should have the possibility to use
-# the provided --with-FEATURE-DIR options to specify locations.
-# The separately specified LDFLAGS (like -Lpath) will be put
-# in front of the usual options and override them!
+# style. The user should have the possibility to use
+# the more specific --with-FEATURE-DIR options to specify locations.
+# Any explicitely specified LDFLAGS (e.g. LDFLAGS="-Lpath") will be put
+# in front of other options and therefore may override them!
 
 ###############################################################
 
@@ -83,6 +87,7 @@ case "$target_os" in
    linux*)
      AC_DEFINE(__linux__)
      if test -r /etc/redhat-release; then
+        # load the redhat linux default option settings
         ACX_LOAD_DEFAULTS(config/ac_default_linux_rh)
      fi
      ;;
@@ -156,9 +161,11 @@ for name in $extra_lib_path_default ; do
    fi
 done
 
-# this extension allows the definition of a base dir where dependencies are found
+
+# this extension allows the definition of a base dir for finding dependencies
 # in basedir/lib, basedir/etc, ...
-# easier then specifying multiple options or using CPPFLAGS/LDFLAGS
+# This is easier for the user than forcing him to specify multiple
+# --with-FEATURE-DIR options or having him set CPPFLAGS/LDFLAGS
 ACX_WITH_BASEDIR
 
 extra_inc_path="$acx_base_incdir $extra_inc_path"
@@ -233,8 +240,20 @@ if test x"$GCC" = xyes ; then
    AC_GNU_SOURCE
 fi
 
-# invoke large file support (Defines _FILE_OFFSET_BITS and _LARGE_FILES if necessary)
-AC_SYS_LARGEFILE
+# Need to find a cleaner solution for the large file support settings
+# The standard autoconf macro AC_SYS_LARGEFILE is not enough for xrootd which
+# explicitely tests for a number of compilation flags in XrdPosixExtern.hh
+# For now, we set the flags explicitely based on the architecture
+case "$target_os" in
+   solaris*)
+     AC_SYS_LARGEFILE
+     ;;
+   *)
+     AC_DEFINE(_LARGEFILE_SOURCE)
+     AC_DEFINE(_LARGEFILE64_SOURCE)
+     AC_DEFINE(_FILE_OFFSET_BITS,64)
+     ;;
+esac
 
 AM_INIT_AUTOMAKE(1.6 subdir-objects)
 
@@ -410,6 +429,21 @@ fi
 
 AM_CONDITIONAL(ENABLE_OPENSSL,test x"$activate_openssl" = xyes -o x"$activate_openssl" = xdefault_yes)
 AM_CONDITIONAL(ENABLE_GSI,test x"$activate_gsi" = xyes -o x"$activate_gsi" = xdefault_yes)
+
+####################################################################
+# Posix I/O compatibility libraries
+# There are some problems with compiling XrdPosix/XrdPss under MacOs
+# Leopard (10.5). Therefore the build of these components was made
+# optional
+if test x"$activate_posix" = x; then
+   activate_posix=default_yes
+fi
+AC_ARG_ENABLE(posix,
+              [  --enable-posix     Enable/disable building of the posix preload library [[default=yes]] ],
+              [],[enable_posix=$activate_posix]
+             )
+ACX_COLLECT_OPTION(posix,$enable_posix)
+AM_CONDITIONAL(ENABLE_POSIX,test x"$activate_posix" = xyes -o x"$activate_posix" = xdefault_yes)
 
 
 ####################################################################
@@ -726,6 +760,8 @@ AC_CHECK_FUNC([getprotobyname_r],[AC_DEFINE(HAS_PROTOR)],
 
 AC_CHECK_FUNC([strlcpy],[AC_DEFINE(HAS_STRLCPY)])
 
+AC_CHECK_FUNC([sendfile],[AC_DEFINE(HAS_SENDFILE)])
+
 #   note: needed for solaris
 AC_CHECK_LIB([rt],[sem_post],
              [AC_SUBST(SEM_LIBRT,[-lrt])]
@@ -753,6 +789,9 @@ case "$target_os" in
                     )
       ;;
 esac
+
+AX_HAVE_EPOLL(AC_DEFINE(_EPOLL),[])
+AC_SYS_DEV_POLL(AC_DEFINE(_DEVPOLL),[])
 
 ###########################################
 # GNU Readline checks
@@ -868,13 +907,16 @@ AC_OUTPUT(Makefile
 	  src/XrdSeckrb4/Makefile
 	  src/XrdSeckrb5/Makefile
 	  src/XrdSecgsi/Makefile
+	  src/XrdSecunix/Makefile
 	  src/XrdSfs/Makefile
           src/XrdAcc/Makefile
+          src/XrdBwm/Makefile
           src/XrdOdc/Makefile
           src/XrdOss/Makefile
           src/XrdOfs/Makefile
           src/XrdOlb/Makefile
           src/Xrd/Makefile
+          src/XrdCms/Makefile
           src/XrdRootd/Makefile
           src/XrdXrootd/Makefile
           src/XrdClient/Makefile

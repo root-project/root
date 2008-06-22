@@ -20,10 +20,10 @@
 /*             M a s k s  f o r   A S C I I  c h a r a c t e r s              */
 /******************************************************************************/
 static kXR_int32 XrdSutCharMsk[4][4] =
-   { {0x0, 0xffffff08, 0xafffffff, 0x2ffffffe}, // any printable char
-     {0x0, 0x3ff0000, 0x7fffffe, 0x7fffffe},    // letters/numbers  (up/low case)
-     {0x0, 0x3ff0000, 0x7e, 0x7e},              // hex characters   (up/low case)
-     {0x0, 0x3ffc000, 0x7fffffe, 0x7fffffe} };  // crypt like [a-zA-Z0-9./]
+   { {0x00000000, 0xffffffff, 0xffffffff, 0xfffffffe},   // any printable char
+     {0x00000000, 0x0000ffc0, 0x7fffffe0, 0x7fffffe0},   // letters/numbers  (up/low case)
+     {0x00000000, 0x0000ffc0, 0x7e000000, 0x7e000000},   // hex characters   (up/low case)
+     {0x00000000, 0x03ffc000, 0x07fffffe, 0x07fffffe} }; // crypt like [a-zA-Z0-9./]
 
 /******************************************************************************/
 /*                                                                            */
@@ -159,47 +159,61 @@ void XrdSutBucket::Dump(int opt)
    EPNAME("Bucket::Dump");
 
    if (opt == 1) {
-      PRINT("//-------------------------------------------------//");
-      PRINT("//                                                 //");
-      PRINT("//             XrdSutBucket DUMP                   //");
-      PRINT("//                                                 //");
+      PRINT("//-----------------------------------------------------//");
+      PRINT("//                                                     //");
+      PRINT("//             XrdSutBucket DUMP                       //");
+      PRINT("//                                                     //");
    }
 
    PRINT("//  addr: " <<this);
    PRINT("//  type: " <<type<<" ("<<XrdSutBuckStr(type)<<")");
    PRINT("//  size: " <<size <<" bytes");
    PRINT("//  content:");
-   char btmp[XrdSutPRINTLEN] = {0};
+   char bhex[XrdSutPRINTLEN] = {0};
+   char bpri[XrdSutPRINTLEN] = {0};
    unsigned int nby = size;
-   unsigned int k = 0, cur = 0;
+   unsigned int k = 0, curhex = 0, curpri = 0;
    unsigned char i = 0, j = 0, l = 0;
-   for (k = 0; k < nby && cur < sizeof(btmp) - 6; k++) {
-      i = (int)buffer[k];
-      j = i / 32;
-      l = i - j * 32;
-      if ((XrdSutCharMsk[3][j] & (1 << l)) || i == 0x20) {
-         btmp[cur] = i;
-         cur++;
-      } else {
-         char chex[8];
-         sprintf(chex,"'0x%x'",(int)(i & 0x7F));
-         sprintf(btmp,"%s%s",btmp,chex);
-         cur += strlen(chex);
+   for (k = 0; k < nby; k++) {
+      i = (unsigned char)buffer[k];
+      bool isascii = (i > 127) ? 0 : 1;
+      if (isascii) {
+         j = i / 32;
+         l = i - j * 32;
       }
-      if (cur > XrdSutPRINTLEN - 10) {
-         btmp[cur] = 0;
-         PRINT("//    " <<btmp);
-         memset(btmp,0,sizeof(btmp));
-         cur = 0;
+      char chex[8];
+      sprintf(chex," 0x%02x",(int)(i & 0xFF));
+      sprintf(bhex,"%s%s",bhex,chex);
+      curhex += strlen(chex);
+      if (isascii && ((XrdSutCharMsk[0][j] & (1 << (31-l+1))) || i == 0x20)) {
+         bpri[curpri] = i;
+      } else {
+         bpri[curpri] = '.';
+      }
+      curpri++;
+      if (curpri > 7) {
+         bhex[curhex] = 0;
+         bpri[curpri] = 0;
+         PRINT("// " <<bhex<<"    "<<bpri);
+         memset(bhex,0,sizeof(bhex));
+         memset(bpri,0,sizeof(bpri));
+         curhex = 0;
+         curpri = 0;
       }
    }
-   PRINT("//    " <<btmp);
+   bpri[curpri] = 0;
+   if (curpri > 0) { 
+      while (curpri++ < 8) {
+         sprintf(bhex,"%s     ",bhex);
+         curhex += 5;
+      }
+   }
+   bhex[curhex] = 0;
+   PRINT("// " <<bhex<<"    "<<bpri);
 
    if (opt == 1) {
-      PRINT("//                                                 //");
-      PRINT("//  NB: '0x..' is the hex of non-printable chars   //");
-      PRINT("//                                                 //");
-      PRINT("//-------------------------------------------------//");
+      PRINT("//                                                     //");
+      PRINT("//-----------------------------------------------------//");
    }
 }
 

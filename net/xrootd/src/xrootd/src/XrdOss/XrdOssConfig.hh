@@ -27,6 +27,8 @@
   
 #define XrdOssMAXDNAME           MAXNAMLEN
 
+#define XrdOssMAXGNAME           15
+
 /* Minimum amount of free space required on selected filesystem
 */
 #define XrdOssMINALLOC 0

@@ -19,7 +19,7 @@
 
 #ifndef NODEBUG
 
-#include <iostream>
+#include "XrdSys/XrdSysHeaders.hh"
 
 #define QTRACE(act) (sutTrace && (sutTrace->What & sutTRACE_ ## act))
 #define PRINT(y)    {if (sutTrace) {sutTrace->Beg(epname); \

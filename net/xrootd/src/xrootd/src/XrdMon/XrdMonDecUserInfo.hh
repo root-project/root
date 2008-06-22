@@ -15,9 +15,11 @@
 
 #include "XrdMon/XrdMonCommon.hh"
 #include "XrdMon/XrdMonTypes.hh"
-#include <iostream>
+#include "XrdSys/XrdSysHeaders.hh"
+
 #include <string>
 #include <strings.h>
+#include <string.h>
 
 using std::ostream;
 using std::string;

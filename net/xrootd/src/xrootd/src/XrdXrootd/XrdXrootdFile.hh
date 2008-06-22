@@ -29,23 +29,29 @@ public:
 
 XrdSfsFile  *XrdSfsp;           // -> Actual file object
 char        *mmAddr;            // Memory mapped location, if any
-long long    mmSize;            // Memory mapped size or zero
+long long    fSize;             // File size at time of object creation
+int          fdNum;             // File descriptor number if regular file
 kXR_unt32    FileID;            // Unique file id used for monitoring
-char         FileKey[38];       // -> Unique hash name for the file
+char         FileKey[34];       // -> Unique hash name for the file
+char         Reserved[2];
 char         FileMode;          // 'r' or 'w'
 char         AsyncMode;         // 1 -> if file in async r/w mode
+char         isMMapped;         // 1 -> file is memory mapped
+char         sfEnabled;         // 1 -> file is sendfile enabled
 char        *ID;                // File user
 long long    readCnt;
 long long    writeCnt;
 
-static void Init(XrdXrootdFileLock *lp) {Locker = lp;}
+static void Init(XrdXrootdFileLock *lp, int sfok) {Locker = lp; sfOK = sfok;}
 
-           XrdXrootdFile(char *id, XrdSfsFile *fp, char mode='r', char async='\0');
+           XrdXrootdFile(char *id, XrdSfsFile *fp, char mode='r', 
+                         char async='\0', int sfOK=0, struct stat *sP=0);
           ~XrdXrootdFile();
 
 private:
 int bin2hex(char *outbuff, char *inbuff, int inlen);
 static XrdXrootdFileLock *Locker;
+static int                sfOK;
 static const char        *TraceID;
 };
  

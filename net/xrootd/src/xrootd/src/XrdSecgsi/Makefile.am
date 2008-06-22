@@ -4,8 +4,8 @@
 ##
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id: Makefile.am,v 1.6 2007/08/02 15:35:23 dfeich Exp $
-## Checked in by $Author: dfeich $
+## Version info: $Id: Makefile.am,v 1.7 2008/06/17 10:07:34 ganis Exp $
+## Checked in by $Author: ganis $
 #######################################################################
 
 lib_LTLIBRARIES = libXrdSecgsi.la
@@ -23,6 +23,10 @@ libXrdSecgsi_la_LDFLAGS = -module
 libXrdSecgsi_la_LIBADD = ../XrdCrypto/libXrdCrypto.la
 # following line disabled. Look for reason in XrdSec/Makefile.am
 #libXrdSecgsi_la_LIBTOOLFLAGS = --tag=disable-static
+
+# GridMAP function looking up an LDAP database
+libXrdSecgsiGMAPLADP_la_SOURCES = XrdSecgsiGMAPFunLDAP.cc
+libXrdSecgsiGMAPLADP_la_LDFLAGS = -module
 
 xrdgsiproxy_SOURCES = XrdSecgsiProxy.cc
 xrdgsiproxy_LDFLAGS =  -static

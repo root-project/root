@@ -18,7 +18,7 @@
 #include "XrdMon/XrdMonUtils.hh"
 
 #include <iomanip>
-#include <iostream>
+#include "XrdSys/XrdSysHeaders.hh"
 #include <sstream>
 using std::cout;
 using std::cerr;

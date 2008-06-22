@@ -68,7 +68,8 @@ enum XRequestTypes {
    kXR_bind,    // 3024
    kXR_readv,   // 3025
    kXR_verifyw, // 3026
-   kXR_locate   // 3027
+   kXR_locate,  // 3027
+   kXR_truncate // 3028
 };
 
 // OPEN MODE FOR A REMOTE FILE
@@ -102,6 +103,10 @@ enum XLoginVersion {
    kXR_ver000 = 0,  // Old clients predating history
    kXR_ver001 = 1,  // Generally implemented 2005 protocol
    kXR_ver002 = 2   // Same as 1 but adds asyncresp recognition
+};
+
+enum XStatRequestOption {
+   kXR_vfs    = 1
 };
 
 enum XStatRespFlags {
@@ -139,10 +144,11 @@ enum XQueryType {
    kXR_QStats = 1,
    kXR_QPrep  = 2,
    kXR_Qcksum = 3,
-   kXR_Qolbd  = 4,
-   kXR_Qmaxs  = 5,
+   kXR_Qxattr = 4,
+   kXR_Qspace = 5,
    kXR_Qckscan= 6,
-   kXR_Qconfig= 7
+   kXR_Qconfig= 7,
+   kXR_Qvisa  = 8
 };
 
 enum XVerifyType {
@@ -221,6 +227,7 @@ enum XErrorCode {
    kXR_Cancelled,
    kXR_ChkLenErr,
    kXR_ChkSumErr,
+   kXR_inProgress,
    kXR_noErrorYet = 10000
 };
 
@@ -364,8 +371,10 @@ struct ClientQueryRequest {
    kXR_char  streamid[2];
    kXR_unt16 requestid;
    kXR_unt16 infotype;
-   kXR_char reserved[14];
-   kXR_int32  dlen;
+   kXR_char  reserved1[2];
+   kXR_char  fhandle[4];
+   kXR_char  reserved2[8];
+   kXR_int32 dlen;
 };
 struct ClientReadRequest {
    kXR_char  streamid[2];
@@ -402,7 +411,8 @@ struct ClientSetRequest {
 struct ClientStatRequest {
    kXR_char  streamid[2];
    kXR_unt16 requestid;
-   kXR_char reserved[16];
+   kXR_char  options;
+   kXR_char reserved[15];
    kXR_int32  dlen;
 };
 struct ClientSyncRequest {
@@ -410,6 +420,14 @@ struct ClientSyncRequest {
    kXR_unt16 requestid;
    kXR_char fhandle[4];
    kXR_char reserved[12];
+   kXR_int32  dlen;
+};
+struct ClientTruncateRequest {
+   kXR_char  streamid[2];
+   kXR_unt16 requestid;
+   kXR_char fhandle[4];
+   kXR_int64 offset;
+   kXR_char reserved[4];
    kXR_int32  dlen;
 };
 struct ClientWriteRequest {
@@ -466,6 +484,7 @@ typedef union {
    struct ClientSetRequest set;
    struct ClientStatRequest stat;
    struct ClientSyncRequest sync;
+   struct ClientTruncateRequest truncate;
    struct ClientWriteRequest write;
 } ClientRequest;
 

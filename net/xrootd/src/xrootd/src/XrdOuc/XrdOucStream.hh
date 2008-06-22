@@ -137,6 +137,10 @@ inline int   LastError() {int n = ecode; ecode = 0; return n;}
 //
 char        *LastLine() {return recp;}
 
+// Suppress echoing the previous line when the next line is fetched.
+//
+int          noEcho() {llBok = 0; return 0;}
+
 // Write a record to a stream, if a length is not given, then the buffer must
 // be null terminated and this defines the length (the null is not written).
 //

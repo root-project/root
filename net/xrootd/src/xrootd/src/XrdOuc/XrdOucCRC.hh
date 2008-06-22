@@ -16,7 +16,7 @@ class XrdOucCRC
 {
 public:
 
-static unsigned int CRC32(unsigned char *rec, int reclen);
+static unsigned int CRC32(const unsigned char *rec, int reclen);
 
                     XrdOucCRC() {}
                    ~XrdOucCRC() {}

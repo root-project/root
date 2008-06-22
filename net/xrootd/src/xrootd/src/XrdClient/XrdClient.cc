@@ -68,7 +68,7 @@ XrdClient::XrdClient(const char *url) {
     if (!ConnectionManager)
 	Info(XrdClientDebug::kNODEBUG,
 	     "Create",
-	     "(C) 2004 SLAC INFN XrdClient " << XRD_CLIENT_VERSION);
+	     "(C) 2004 SLAC INFN XrdClient $Revision: 1.119 $ - Xrootd version: " << XrdVSTRING);
 
 #ifndef WIN32
     signal(SIGPIPE, SIG_IGN);
@@ -96,25 +96,25 @@ XrdClient::XrdClient(const char *url) {
 //_____________________________________________________________________________
 XrdClient::~XrdClient()
 {
-    // Terminate the opener thread
 
-    fOpenProgCnd->Lock();
+   if (IsOpen_wait()) Close();
 
-    if (fOpenerTh) {
-	delete fOpenerTh;
-	fOpenerTh = 0;
-    }
+   // Terminate the opener thread
+   fOpenProgCnd->Lock();
 
-    fOpenProgCnd->UnLock();
+   if (fOpenerTh) {
+      delete fOpenerTh;
+      fOpenerTh = 0;
+   }
+
+   fOpenProgCnd->UnLock(); 
 
 
-    Close();
-
-    if (fConnModule)
+   if (fConnModule)
       delete fConnModule;
 
-    delete fReadWaitData;
-    delete fOpenProgCnd;
+   delete fReadWaitData;
+   delete fOpenProgCnd;
 }
 
 //_____________________________________________________________________________
@@ -246,8 +246,16 @@ bool XrdClient::Open(kXR_unt16 mode, kXR_unt16 options, bool doitparallel) {
 	    Info(XrdClientDebug::kHIDEBUG, "Open", "Working url is " << thisUrl->GetUrl());
         
 	    // after connection deal with server
-	    if (!fConnModule->GetAccessToSrv())
-           
+	    if (!fConnModule->GetAccessToSrv()) {
+               
+               if (fConnModule->GetRedirCnt() >= fConnModule->GetMaxRedirCnt()) {
+                  // We have been so unlucky.
+                  // The max number of redirections was exceeded while logging in
+                  fConnModule->Disconnect(TRUE);
+                  Error("Open", "Access to server failed: Max redirections exceeded. This means typically 'too many errors'.");
+                  break;
+               }
+
 		if (fConnModule->LastServerError.errnum == kXR_NotAuthorized) {
 		    if (urlstried == urlArray.Size()) {
 			// Authentication error: we tried all the indicated URLs:
@@ -264,10 +272,12 @@ bool XrdClient::Open(kXR_unt16 mode, kXR_unt16 options, bool doitparallel) {
 			     "Authentication failure: " << msg);
 		    }
 		} else {
+                   fConnModule->Disconnect(TRUE);
 		    Error("Open", "Access to server failed: error: " <<
 			  fConnModule->LastServerError.errnum << " (" << 
 			  fConnModule->LastServerError.errmsg << ") - retrying.");
 		}
+            }
 	    else {
 		Info(XrdClientDebug::kUSERDEBUG, "Open", "Access to server granted.");
 		break;
@@ -357,6 +367,7 @@ int XrdClient::Read(void *buf, long long offset, int len) {
 	return 0;
     }
 
+
     int cachesize = 0;
     long long cachebytessubmitted = 0;
     long long cachebyteshit = 0;
@@ -365,17 +376,17 @@ int XrdClient::Read(void *buf, long long offset, int len) {
     long long cachereadreqcnt = 0;
     float cachebytesusefulness = 0.0;
     bool cachegood = fConnModule->GetCacheInfo(cachesize, cachebytessubmitted,
-                                               cachebyteshit, cachemisscount,
-                                               cachemissrate, cachereadreqcnt,
-                                               cachebytesusefulness);
+					       cachebyteshit, cachemisscount,
+					       cachemissrate, cachereadreqcnt,
+					       cachebytesusefulness);
 
 
     // Note: old servers do not support unsolicited responses for reads
     // We also use the plain sync reading if the size of the block is excessive
     // or no cache at all is used
     if (!fUseCache || !cachegood ||
-        (cachesize < len) ||
-        (fConnModule->GetServerProtocol() < 0x00000270) ) {
+	(cachesize < len) ||
+	(fConnModule->GetServerProtocol() < 0x00000270) ) {
 	// Without caching
 
 	// Prepare a request header 
@@ -706,6 +717,7 @@ bool XrdClient::Write(const void *buf, long long offset, int len, bool docheckpo
     XrdClientVector<XrdClientMStream::ReadChunk> rl;
     XrdClientMStream::SplitReadRequest(fConnModule, offset, len, rl);
     kXR_char *cbuf = (kXR_char *)buf;
+    int writtenok = 0;
 
     // Prepare request
     ClientRequest writeFileRequest;
@@ -714,6 +726,7 @@ bool XrdClient::Write(const void *buf, long long offset, int len, bool docheckpo
     writeFileRequest.write.requestid = kXR_write;
     memcpy( writeFileRequest.write.fhandle, fHandle, sizeof(fHandle) );
 
+    bool ret = false;
     for (int i = 0; i < rl.GetSize(); i++) {
 
       writeFileRequest.write.offset = rl[i].offset;
@@ -722,25 +735,44 @@ bool XrdClient::Write(const void *buf, long long offset, int len, bool docheckpo
    
       if (i < rl.GetSize()-1) {
 	XReqErrorType b = fConnModule->WriteToServer_Async(&writeFileRequest, cbuf, rl[i].streamtosend);
-	if (b != kOK) return false;
+	if (b != kOK) {
+           // Try again the write op, but in sync mode
+           ret = fConnModule->SendGenCommand(&writeFileRequest, (void *)cbuf, 0, 0,
+					     FALSE, (char *)"Write");
+           if (!ret) break;
+        }
+        writtenok += rl[i].len;
       }
       else
 	
 	if (docheckpoint || (rl.GetSize() == 1)) {
 	  writeFileRequest.write.pathid = 0;
 	  //	  if (!Sync()) return false;
-	  return fConnModule->SendGenCommand(&writeFileRequest, (void *)cbuf, 0, 0,
+	  ret = fConnModule->SendGenCommand(&writeFileRequest, (void *)cbuf, 0, 0,
 					     FALSE, (char *)"Write");
+          if (ret) writtenok += rl[i].len;
+          else break;
 	}
-	else
-	  return (fConnModule->WriteToServer_Async(&writeFileRequest, cbuf, rl[i].streamtosend) == kOK);
+	else {
+	  ret = (fConnModule->WriteToServer_Async(&writeFileRequest, cbuf, rl[i].streamtosend) == kOK);
+
+          if (!ret)
+             ret = fConnModule->SendGenCommand(&writeFileRequest, (void *)cbuf, 0, 0,
+                                               FALSE, (char *)"Write");
+
+          if (ret) writtenok += rl[i].len;
+          else break;
+        }
       
 
 
       cbuf += rl[i].len;
     }
 
-    return true;
+    if (ret && fStatInfo.stated)
+       fStatInfo.size = xrdmax(fStatInfo.size, offset + writtenok);
+
+    return ret;
 }
 
 
@@ -822,14 +854,16 @@ bool XrdClient::TryOpen(kXR_unt16 mode, kXR_unt16 options, bool doitparallel) {
 
 	// And here we fire up the needed parallel streams
 	XrdClientMStream::EstablishParallelStreams(fConnModule);
-	TerminateOpenAttempt();
+        int retc;
 
-	if (!fConnModule->IsConnected()) {
-	    fOpenPars.opened = false;
-	    return false;
-	}
+        if (!fConnModule->IsConnected()) {
+           fOpenPars.opened = false;
+           retc = false;
+        } else retc = true;
+        
+        TerminateOpenAttempt();
+        return retc; 
 
-	return TRUE;
     }
 
     // If the open request failed for the error "file not found" proceed, 
@@ -960,19 +994,21 @@ bool XrdClient::LowOpen(const char *file, kXR_unt16 mode, kXR_unt16 options,
 }
 
 //_____________________________________________________________________________
-bool XrdClient::Stat(struct XrdClientStatInfo *stinfo) {
+bool XrdClient::Stat(struct XrdClientStatInfo *stinfo, bool force) {
 
-    if (!IsOpen_wait()) {
-	Error("Stat", "File not opened.");
-	return FALSE;
-    }
-
-    if (fStatInfo.stated) {
+    if (!force && fStatInfo.stated) {
 	if (stinfo)
 	    memcpy(stinfo, &fStatInfo, sizeof(fStatInfo));
 	return TRUE;
     }
-   
+
+    if (!IsOpen_wait()) {
+       Error("Stat", "File not opened.");
+       return FALSE;
+    }
+
+    if (force && !Sync()) return false;
+
     // asks the server for stat file informations
     ClientRequest statFileRequest;
    
@@ -1255,10 +1291,10 @@ UnsolRespProcResult XrdClient::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *se
     else
 	// Let's see if the message is a communication error message
        if (unsolmsg->GetStatusCode() != XrdClientMessage::kXrdMSC_ok){
-	 // This is a low level error. The outstanding things have to be terminated
-	 // Awaken all the waiting threads, some of them may be interested
-	 fReadWaitData->Broadcast();
-	 TerminateOpenAttempt();
+          // This is a low level error. The outstanding things have to be terminated
+          // Awaken all the waiting threads, some of them may be interested
+          fReadWaitData->Broadcast();
+          TerminateOpenAttempt();
 	 
 	  return fConnModule->ProcessAsynResp(unsolmsg);
 	}
@@ -1356,6 +1392,7 @@ XReqErrorType XrdClient::Read_Async(long long offset, int len) {
 
     if (fUseCache)
 	fConnModule->SubmitPlaceholderToCache(offset, offset+len-1);
+    else return kOK;
 
     // Prepare request
     ClientRequest readFileRequest;
@@ -1396,16 +1433,17 @@ XReqErrorType XrdClient::Read_Async(long long offset, int len) {
 	    readFileRequest.read.offset = c->offset;
 	    readFileRequest.read.rlen = c->len;
 
-            if (args.pathid != 0) {
-              readFileRequest.read.dlen = sizeof(read_args);
-              ok = fConnModule->WriteToServer_Async(&readFileRequest, &args,
-                                                    0);
-            }
-            else {
-              readFileRequest.read.dlen = 0;
-              ok = fConnModule->WriteToServer_Async(&readFileRequest, 0,
-                                                    0);
-            }
+	    if (args.pathid != 0) {
+	      readFileRequest.read.dlen = sizeof(read_args);
+	      ok = fConnModule->WriteToServer_Async(&readFileRequest, &args,
+						    0);
+	    }
+	    else {
+	      readFileRequest.read.dlen = 0;
+	      ok = fConnModule->WriteToServer_Async(&readFileRequest, 0,
+						    0);
+	    }
+
 
 	    if (ok != kOK) break;
 	}
@@ -1421,19 +1459,25 @@ XReqErrorType XrdClient::Read_Async(long long offset, int len) {
 bool XrdClient::TrimReadRequest(kXR_int64 &offs, kXR_int32 &len, kXR_int32 rasize) {
 
     kXR_int64 newoffs;
-    kXR_int32 newlen, minlen, blksz;
+    kXR_int32 newlen, blksz;
 
     if (!fUseCache ) return false;
 
-    blksz = xrdmax(rasize, 16384);
+//    blksz = xrdmax(rasize, 16384);
 
-    newoffs = offs / blksz * blksz;
+//     kXR_int64 minlen;
+//     newoffs = offs / blksz * blksz;
+//     minlen = (offs + len - newoffs);
+//     newlen = ((minlen / blksz + 1) * blksz);
+//     newlen = xrdmax(rasize, newlen);
 
-    minlen = (offs + len - newoffs);
-    newlen = ((minlen / blksz + 1) * blksz);
-
-
-    newlen = xrdmax(rasize, newlen);
+    blksz = 128*1024;
+    kXR_int64 lastbyte;
+    newoffs = offs;
+    lastbyte = offs+len+blksz-1;
+    lastbyte = (lastbyte / blksz) * blksz - 1;
+    
+    newlen = lastbyte-newoffs+1;
 
     if (fConnModule->CacheWillFit(newlen)) {
 	offs = newoffs;
@@ -1444,6 +1488,36 @@ bool XrdClient::TrimReadRequest(kXR_int64 &offs, kXR_int32 &len, kXR_int32 rasiz
     return false;
 
 }
+
+//_____________________________________________________________________________
+// Truncates the open file at a specified length
+bool XrdClient::Truncate(long long len) {
+
+    if (!IsOpen_wait()) {
+	Info(XrdClientDebug::kUSERDEBUG, "Truncate", "File not opened.");
+	return true;
+    }
+
+    ClientRequest truncFileRequest;
+  
+    memset(&truncFileRequest, 0, sizeof(truncFileRequest) );
+
+    fConnModule->SetSID(truncFileRequest.header.streamid);
+
+    truncFileRequest.truncate.requestid = kXR_truncate;
+    memcpy(truncFileRequest.truncate.fhandle, fHandle, sizeof(fHandle) );
+    truncFileRequest.truncate.offset = len;
+
+    bool ok = fConnModule->SendGenCommand(&truncFileRequest,
+                                          0,
+                                          0, 0 , FALSE, (char *)"Truncate");
+
+    if (ok && fStatInfo.stated) fStatInfo.size = len;
+
+    return ok;
+}
+
+
 
 //_____________________________________________________________________________
 // Sleeps on a condvar which is signalled when a new async block arrives

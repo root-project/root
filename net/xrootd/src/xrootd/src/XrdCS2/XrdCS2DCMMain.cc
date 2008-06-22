@@ -38,7 +38,6 @@ Where:
 #include <unistd.h>
 #include <ctype.h>
 #include <errno.h>
-#include <iostream.h>
 #include <signal.h>
 #include <stdlib.h>
 #include <string.h>
@@ -50,6 +49,7 @@ Where:
 #include "Xrd/XrdTrace.hh"
 
 #include "XrdSys/XrdSysError.hh"
+#include "XrdSys/XrdSysHeaders.hh"
 #include "XrdSys/XrdSysLogger.hh"
 #include "XrdSys/XrdSysPthread.hh"
 

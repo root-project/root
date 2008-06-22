@@ -59,7 +59,7 @@ XrdLink *XrdInet::Accept(int opts, int timeout)
        if (!ismyfd) close(myPeer.fd);
       } else {
        myPeer.InetBuff = 0; // Keep buffer after object goes away
-       TRACE(NET, "Accepted connection from " <<myPeer.InetName);
+       TRACE(NET, "Accepted connection from " <<myPeer.fd <<'@' <<myPeer.InetName);
       }
 
 // All done

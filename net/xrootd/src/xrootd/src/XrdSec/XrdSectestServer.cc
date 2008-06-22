@@ -22,10 +22,9 @@ const char *XrdSectestServerCVSID = "$Id$";
 #include <arpa/inet.h>
 #include <sys/param.h>
 #include <sys/socket.h>
-#include <iostream>
-using namespace std;
 
 #include "XrdOuc/XrdOucErrInfo.hh"
+#include "XrdSys/XrdSysHeaders.hh"
 #include "XrdSys/XrdSysLogger.hh"
 #include "XrdSec/XrdSecInterface.hh"
   

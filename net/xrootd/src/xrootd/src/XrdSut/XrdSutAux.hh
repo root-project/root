@@ -11,7 +11,9 @@
 /*              DE-AC03-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
-#include <iostream>
+#ifndef WIN32
+#include "XrdSys/XrdSysHeaders.hh"
+#endif
 #ifndef __XPROTOCOL_H
 #include <XProtocol/XProtocol.hh>
 #endif
@@ -30,7 +32,7 @@ class XrdSutBuffer;
 #define XrdSutMAXPPT      512
 #define XrdSutMAXBUCKS    10
 #define XrdSutMAXINT64LEN 25
-#define XrdSutPRINTLEN    50
+#define XrdSutPRINTLEN    100
 
 enum kXRSBucketTypes {
    kXRS_none     =     0,      // end-of-vector

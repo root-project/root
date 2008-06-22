@@ -72,14 +72,13 @@ const char *XrdOssLockCVSID = "$Id$";
 #include <limits.h>
 #include <strings.h>
 #include <utime.h>
-#include <iostream>
-using namespace std;
 
 #include "XrdOss/XrdOssApi.hh"
 #include "XrdOss/XrdOssConfig.hh"
 #include "XrdOss/XrdOssError.hh"
 #include "XrdOss/XrdOssLock.hh"
 #include "XrdSys/XrdSysError.hh"
+#include "XrdSys/XrdSysHeaders.hh"
 #include "XrdSys/XrdSysPlatform.hh"
 
 /******************************************************************************/

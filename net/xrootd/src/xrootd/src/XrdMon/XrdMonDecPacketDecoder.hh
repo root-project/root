@@ -69,6 +69,10 @@ private:
     void decodeUserPacket(const char* packet,
                           int packetLen,
                           senderid_t senderId);
+    void decodeStagePacket(const char* packet,
+                           int packetLen,
+                           senderid_t senderId);
+
     TimePair decodeTime(const char* packet);
     void decodeRWRequest(const char* packet,
                          kXR_int32 timestamp,

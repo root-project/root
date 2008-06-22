@@ -11,15 +11,21 @@
   
 //         $Id$
 
+#include <ctype.h>
+#include <stdarg.h>
+#include <stddef.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/stat.h>
 
 #include "XrdOfs/XrdOfsEvs.hh"
 #include "XrdSys/XrdSysError.hh"
 #include "XrdOuc/XrdOucProg.hh"
+#include "XrdOuc/XrdOucStream.hh"
 #include "XrdNet/XrdNetOpts.hh"
 #include "XrdNet/XrdNetSocket.hh"
+#include "XrdSys/XrdSysPlatform.hh"
 
 /******************************************************************************/
 /*                         L o c a l   C l a s s e s                          */
@@ -51,6 +57,126 @@ void *XrdOfsEvsSend(void *pp)
      return (void *)0;
 }
   
+/******************************************************************************/
+/*                    S t a t i c   D e f i n i t i o n s                     */
+/******************************************************************************/
+
+XrdOfsEvsFormat XrdOfsEvs::MsgFmt[XrdOfsEvs::nCount];
+
+const int       XrdOfsEvs::minMsgSize;
+const int       XrdOfsEvs::maxMsgSize;
+
+/******************************************************************************/
+/*                     X r d E v s F o r m a t : : D e f                      */
+/******************************************************************************/
+  
+void XrdOfsEvsFormat::Def(evFlags theFlags, const char *Fmt, ...)
+{
+   va_list ap;
+   int theVal, i = 0;
+
+// Return if already defined
+//
+   if (Format) return;
+
+// Set flags and format. Prepare the arg vector
+//
+   Flags = theFlags; 
+   Format = Fmt;
+   memset(Args, 0, sizeof(Args));
+
+// Pick up all arguments
+//
+   va_start(ap, Fmt);
+   while((theVal = va_arg(ap, int)) >= 0) 
+        Args[i++] = static_cast<XrdOfsEvsInfo::evArg>(theVal);
+   va_end(ap);
+}
+
+/******************************************************************************/
+/*                           C o n s t r u c t o r                            */
+/******************************************************************************/
+  
+XrdOfsEvs::XrdOfsEvs(Event theEvents, const char *Target, int minq, int maxq)
+{
+
+// Set common variables
+//
+   enEvents = static_cast<Event>(theEvents & enMask);
+   endIT = 0;
+   theTarget = strdup(Target);
+   eDest = 0; 
+   theProg = 0;
+   maxMin = minq; maxMax = maxq;
+   msgFirst = msgLast = msgFreeMax = msgFreeMin = 0;
+   numMax = numMin = 0; 
+   tid = 0;
+   msgFD = -1;
+
+// Initialize all static format entries that have not been initialized yet.
+// Note that format may be specified prior to this object being created!
+//
+// <tid> chmod  <mode> <path>
+//
+   MsgFmt[Chmod  & Mask].Def(XrdOfsEvsFormat::cvtMode, "%s chmod %s %s\n",
+                             XrdOfsEvsInfo::evTID,
+                             XrdOfsEvsInfo::evFMODE, XrdOfsEvsInfo::evLFN1, -1);
+// <tid> closer <path>
+//
+   MsgFmt[Closer & Mask].Def(XrdOfsEvsFormat::Null,    "%s closer %s\n",
+                             XrdOfsEvsInfo::evTID,   XrdOfsEvsInfo::evLFN1, -1);
+                                              
+// <tid> closew <path>
+//
+   MsgFmt[Closew & Mask].Def(XrdOfsEvsFormat::Null,    "%s closew %s\n",
+                             XrdOfsEvsInfo::evTID,   XrdOfsEvsInfo::evLFN1, -1);
+                                              
+// <tid> create <mode> <path>
+//
+   MsgFmt[Create & Mask].Def(XrdOfsEvsFormat::cvtMode, "%s create %s %s\n",
+                             XrdOfsEvsInfo::evTID,
+                             XrdOfsEvsInfo::evFMODE, XrdOfsEvsInfo::evLFN1, -1);
+// <tid> mkdir  <mode> <path>
+//
+   MsgFmt[Mkdir  & Mask].Def(XrdOfsEvsFormat::cvtMode, "%s mkdir %s %s\n",
+                             XrdOfsEvsInfo::evTID,
+                             XrdOfsEvsInfo::evFMODE, XrdOfsEvsInfo::evLFN1, -1);
+// <tid> mv     <path> <path>
+//
+   MsgFmt[Mv     & Mask].Def(XrdOfsEvsFormat::Null,    "%s mv %s %s\n",
+                             XrdOfsEvsInfo::evTID,
+                             XrdOfsEvsInfo::evLFN1,  XrdOfsEvsInfo::evLFN2, -1);
+// <tid> openr  <path>
+//
+   MsgFmt[Openr  & Mask].Def(XrdOfsEvsFormat::Null,    "%s openr %s\n",
+                             XrdOfsEvsInfo::evTID,   XrdOfsEvsInfo::evLFN1, -1);
+                                              
+// <tid> openw  <path>
+//
+   MsgFmt[Openw  & Mask].Def(XrdOfsEvsFormat::Null,    "%s openw %s\n",
+                             XrdOfsEvsInfo::evTID,   XrdOfsEvsInfo::evLFN1, -1);
+                                              
+// <tid> rm     <path>
+//
+   MsgFmt[Rm     & Mask].Def(XrdOfsEvsFormat::Null,    "%s rm %s\n",
+                             XrdOfsEvsInfo::evTID,   XrdOfsEvsInfo::evLFN1, -1);
+                                              
+// <tid> rmdir  <path>
+//
+   MsgFmt[Rmdir  & Mask].Def(XrdOfsEvsFormat::Null,    "%s rmdir %s\n",
+                             XrdOfsEvsInfo::evTID,   XrdOfsEvsInfo::evLFN1, -1);
+                                              
+// <tid> trunc  <size>
+//
+   MsgFmt[Trunc  & Mask].Def(XrdOfsEvsFormat::cvtFSize,"%s trunc %s\n",
+                             XrdOfsEvsInfo::evTID,   XrdOfsEvsInfo::evFSIZE,-1);
+                                              
+// <tid> fwrite <path>
+//
+   MsgFmt[Fwrite & Mask].Def(XrdOfsEvsFormat::Null,    "%s fwrite %s\n",
+                             XrdOfsEvsInfo::evTID,   XrdOfsEvsInfo::evLFN1, -1);
+}
+
 /******************************************************************************/
 /*                            D e s t r u c t o r                             */
 /******************************************************************************/
@@ -87,47 +213,43 @@ XrdOfsEvs::~XrdOfsEvs()
 /*                                N o t i f y                                 */
 /******************************************************************************/
   
-void XrdOfsEvs::Notify(Event theEvent, const char *tident,
-                                       const char *arg1, const char *arg2)
+void XrdOfsEvs::Notify(Event eID, XrdOfsEvsInfo &Info)
 {
    static int warnings = 0;
+   XrdOfsEvsFormat *fP;
    XrdOfsEvsMsg *tp;
-   const char *evName;
-   int isBig = 0;
+   char modebuff[8], sizebuff[16];
+   int eNum, isBig = (eID & Mv), msgSize = (isBig ? maxMsgSize : minMsgSize);
 
-// Get the character event name
+// Validate event number and set event name
 //
-   switch(theEvent)
-        {case XrdOfsEvs::Chmod:  evName = "chmod";  break;
-         case XrdOfsEvs::Closer: evName = "closer"; break;
-         case XrdOfsEvs::Closew: evName = "closew"; break;
-         case XrdOfsEvs::Create: evName = "create"; break;
-         case XrdOfsEvs::Mkdir:  evName = "mkdir";  break;
-         case XrdOfsEvs::Mv:     evName = "mv";
-                                 isBig  = 1;        break;
-         case XrdOfsEvs::Openr:  evName = "openr";  break;
-         case XrdOfsEvs::Openw:  evName = "openw";  break;
-         case XrdOfsEvs::Rm:     evName = "rm";     break;
-         case XrdOfsEvs::Rmdir:  evName = "rmdir";  break;
-         case XrdOfsEvs::Fwrite: evName = "fwrite"; break;
-         default: return;
-        }
+   eNum = eID & Mask;
+   if (eNum < 0 || eNum >= nCount) return;
+
+// Check if we need to do any conversions
+//
+   fP = &MsgFmt[eNum];
+   if (fP->Flags & XrdOfsEvsFormat::cvtMode)
+      {sprintf(modebuff, "%o", (Info.FMode() & S_IAMB));
+       Info.Set(XrdOfsEvsInfo::evFMODE, modebuff);
+      } else Info.Set(XrdOfsEvsInfo::evFMODE, "$FMODE");
+   if (fP->Flags & XrdOfsEvsFormat::cvtFSize)
+      {sprintf(sizebuff, "%lld", Info.FSize());
+       Info.Set(XrdOfsEvsInfo::evFSIZE, sizebuff);
+      } else Info.Set(XrdOfsEvsInfo::evFSIZE, "$FSIZE");
 
 // Get a message block
 //
    if (!(tp = getMsg(isBig)))
       {if ((++warnings & 0xff) == 1)
-          eDest->Emsg("Notify", "Ran out of message objects;", evName,
+          eDest->Emsg("Notify", "Ran out of message objects;", eName(eNum),
                                 "event notification not sent.");
           return;
       }
 
 // Format the message
 //
-   if (arg2) tp->tlen = snprintf(tp->text, maxMsgSize, "%s %s %s %s\n",
-                                           tident, evName, arg1, arg2);
-      else   tp->tlen = snprintf(tp->text, maxMsgSize, "%s %s %s\n",
-                                           tident, evName, arg1);
+   tp->tlen = fP->SNP(Info, tp->text, msgSize);
 
 // Put the message on the queue and return
 //
@@ -137,6 +259,82 @@ void XrdOfsEvs::Notify(Event theEvent, const char *tident,
       else msgFirst = msgLast = tp;
    qMut.UnLock();
    qSem.Post();
+}
+
+/******************************************************************************/
+/*                                 P a r s e                                  */
+/******************************************************************************/
+  
+int XrdOfsEvs::Parse(XrdSysError &Eroute, XrdOfsEvs::Event eNum, char *mText)
+{
+    static struct valVar {const char              *vname;
+                          XrdOfsEvsInfo::evArg     vnum;
+                          XrdOfsEvsFormat::evFlags vopt;}
+        Vars[] = {
+        {"TID",     XrdOfsEvsInfo::evTID,   XrdOfsEvsFormat::Null},
+        {"LFN",     XrdOfsEvsInfo::evLFN1,  XrdOfsEvsFormat::Null},
+        {"LFN1",    XrdOfsEvsInfo::evLFN1,  XrdOfsEvsFormat::Null},
+        {"CGI",     XrdOfsEvsInfo::evCGI1,  XrdOfsEvsFormat::Null},
+        {"CGI1",    XrdOfsEvsInfo::evCGI1,  XrdOfsEvsFormat::Null},
+        {"LFN2",    XrdOfsEvsInfo::evLFN2,  XrdOfsEvsFormat::Null},
+        {"CGI2",    XrdOfsEvsInfo::evCGI2,  XrdOfsEvsFormat::Null},
+        {"FMODE",   XrdOfsEvsInfo::evFMODE, XrdOfsEvsFormat::cvtMode},
+        {"FSIZE",   XrdOfsEvsInfo::evFSIZE, XrdOfsEvsFormat::cvtFSize}
+       };
+   int numvars = sizeof(Vars)/sizeof(struct valVar);
+   char parms[1024], *pP = parms;
+   char *pE = parms+sizeof(parms)-((XrdOfsEvsInfo::evARGS*2)-8);
+   char varbuff[16], *bVar, *eVar;
+   int  i, j, aNum = 0, Args[XrdOfsEvsInfo::evARGS] = {0};
+   XrdOfsEvsFormat::evFlags ArgOpts = XrdOfsEvsFormat::freeFmt;
+
+// Parse the text
+//
+   parms[0] = '\0';
+   while(*mText && pP < pE)
+        {if (*mText == '\\' && *(mText+1) == '$')
+            {*pP++ = '$'; mText += 2; continue;}
+            else if (*mText != '$') {*pP++ = *mText++; continue;}
+         bVar = mText+1;
+              if (*mText == '{') {eVar = index(mText, '}'); j = 1;}
+         else if (*mText == '[') {eVar = index(mText, ']'); j = 1;}
+         else {eVar = bVar; while(isalpha(*eVar)) eVar++;   j = 0;}
+         i = eVar - bVar;
+         if (i < 1 || i >= (int)sizeof(varbuff))
+            {Eroute.Emsg("Parse","Invalid notifymsg variable starting at",mText);
+             return 1;
+            }
+         strncpy(varbuff, bVar, i); varbuff[i] = '\0';
+         for (i = 0; i < numvars; i++)
+             if (!strcmp(varbuff, Vars[i].vname)) break;
+         if (i >= numvars)
+            {Eroute.Emsg("Parse", "Unknown notifymsg variable -",varbuff);
+             return 1;
+            }
+         if (aNum >= XrdOfsEvsInfo::evARGS)
+            {Eroute.Say("Parse", "Too many notifymsg variables"); return 1;}
+         strcpy(pP, "%s"); pP += 2;
+         Args[aNum++] = Vars[i].vnum; 
+         ArgOpts = static_cast<XrdOfsEvsFormat::evFlags>(ArgOpts|Vars[i].vopt);
+         mText = eVar+j;
+        }
+
+// Check if we overran the buffer or didn't have any text
+//
+   if (pP >= pE)
+      {Eroute.Emsg("Parse","notifymsg text too long");return 1;}
+   if (!parms[0])
+      {Eroute.Emsg("Parse","notifymsg text not specified");return 1;}
+
+// Set the format
+//
+   strcpy(pP, "\n");
+   eNum = static_cast<Event>(eNum & Mask);
+   MsgFmt[eNum].Set(ArgOpts, strdup(parms), Args);
+
+// All done
+//
+   return 0;
 }
 
 /******************************************************************************/
@@ -222,6 +420,20 @@ int XrdOfsEvs::Start(XrdSysError *eobj)
 /*                       P r i v a t e   M e t h o d s                        */
 /******************************************************************************/
 /******************************************************************************/
+/*                                 e N a m e                                  */
+/******************************************************************************/
+  
+const char *XrdOfsEvs::eName(int eNum)
+{
+  static const char *eventName[] = {"Chmod",  "closer", "closew", "create",
+                                    "fwrite", "mkdir",  "mv",     "openr",
+                                    "opnw",   "rm",     "rmdir"};
+
+  eNum = (eNum & Mask);
+  return (eNum < 0 || eNum > nCount ? "?" : eventName[eNum]);
+}
+
+/******************************************************************************/
 /*                                  F e e d                                   */
 /******************************************************************************/
   
@@ -267,10 +479,12 @@ XrdOfsEvsMsg *XrdOfsEvs::getMsg(int bigmsg)
 // Check if we have to allocate a new item
 //
    if (!tp && (numMax + numMin) < (maxMax + maxMin))
-      if ((tp = new XrdOfsEvsMsg((char *)malloc(msz), bigmsg)))
-         if (!(tp->text)) {delete tp; tp = 0;}
-            else if (bigmsg) numMax++;
-                    else     numMin++;
+      {if ((tp = new XrdOfsEvsMsg((char *)malloc(msz), bigmsg)))
+          {if (!(tp->text)) {delete tp; tp = 0;}
+              else if (bigmsg) numMax++;
+                      else     numMin++;
+          }
+      }
 
 // Unlock and return result
 //

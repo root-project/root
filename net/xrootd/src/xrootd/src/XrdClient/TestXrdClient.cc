@@ -5,7 +5,7 @@
 #include "XrdClient/XrdClient.hh"
 #include "XrdClient/XrdClientAdmin.hh"
 #include "XrdClient/XrdClientEnv.hh"
-#include <iostream>
+#include "XrdSys/XrdSysHeaders.hh"
 
 int main(int argc, char **argv) {
 

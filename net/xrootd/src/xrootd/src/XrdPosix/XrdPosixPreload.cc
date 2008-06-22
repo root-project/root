@@ -10,43 +10,25 @@
 
 //           $Id$
 
-#include <dirent.h>
-#include <stdarg.h>
-#include <sys/stat.h>
 #include <sys/types.h>
+#include <stdarg.h>
 #include <unistd.h>
-#include <iostream>
-using namespace std;
+
+#include "XrdPosix/XrdPosixLinkage.hh"
+#include "XrdPosix/XrdPosixOsDep.hh"
+
+/******************************************************************************/
+/*                      P r e - D e c l a r a t i o n s                       */
+/******************************************************************************/
 
 #include "XrdPosix/XrdPosixExtern.hh"
-#include "XrdPosix/XrdPosixLinkage.hh"
-#include "XrdPosix/XrdPosixStream.hh"
-#include "XrdPosix/XrdPosixXrootd.hh"
  
-/******************************************************************************/
-/*                         L o c a l   C l a s s e s                          */
-/******************************************************************************/
-  
-class XrdPosixPreloadEnv
-{
-public:
-      XrdPosixPreloadEnv()
-              {if (!getenv("XRDPOSIX_DEBUG")) XrdPosixXrootd::setDebug(-1);}
-     ~XrdPosixPreloadEnv() {}
-};
-
 /******************************************************************************/
 /*                   G l o b a l   D e c l a r a t i o n s                    */
 /******************************************************************************/
   
-extern XrdPosixLinkage    Xunix;
-
-extern XrdPosixStream     streamX;
- 
-extern XrdPosixRootVec    xinuX;
-
-       XrdPosixPreloadEnv dummyENV;
-
+extern XrdPosixLinkage Xunix;
+  
 /******************************************************************************/
 /*                                a c c e s s                                 */
 /******************************************************************************/
@@ -55,12 +37,28 @@ extern "C"
 {
 int access(const char *path, int amode)
 {
-   static int init1 = xinuX.Init(&init1), init2 = Xunix.Init(&init2);
+   static int Init = Xunix.Init(&Init);
 
-   return xinuX.Access(path, amode);
+   return XrdPosix_Access(path, amode);
 }
 }
 
+/******************************************************************************/
+/*                                   a c l                                    */
+/******************************************************************************/
+
+// This is a required addition for Solaris 10+ systems
+
+extern "C"
+{
+int acl(const char *path, int cmd, int nentries, void *aclbufp)
+{
+   static int Init = Xunix.Init(&Init);
+
+   return XrdPosix_Acl(path, cmd, nentries, aclbufp);
+}
+}
+  
 /******************************************************************************/
 /*                                 c h d i r                                  */
 /******************************************************************************/
@@ -69,9 +67,9 @@ extern "C"
 {
 int     chdir(const char *path)
 {
-   static int init1 = xinuX.Init(&init1), init2 = Xunix.Init(&init2);
+   static int Init = Xunix.Init(&Init);
 
-   return xinuX.Chdir(path);
+   return XrdPosix_Chdir(path);
 }
 }
 
@@ -83,9 +81,9 @@ extern "C"
 {
 int     close(int fildes)
 {
-   static int init1 = xinuX.Init(&init1), init2 = Xunix.Init(&init2);
+   static int Init = Xunix.Init(&Init);
 
-   return (fildes >= XrdPosixFD) ? xinuX.Close(fildes) : Xunix.Close(fildes);
+   return XrdPosix_Close(fildes);
 }
 }
 
@@ -97,9 +95,9 @@ extern "C"
 {
 int     closedir(DIR *dirp)
 {
-   static int init1 = xinuX.Init(&init1), init2 = Xunix.Init(&init2);
+   static int Init = Xunix.Init(&Init);
 
-   return xinuX.Closedir(dirp);
+   return XrdPosix_Closedir(dirp);
 }
 }
 
@@ -111,9 +109,9 @@ extern "C"
 {
 int     creat64(const char *path, mode_t mode)
 {
-   static int init1 = xinuX.Init(&init1), init2 = Xunix.Init(&init2);
+   static int Init = Xunix.Init(&Init);
 
-   return xinuX.Open(path, O_WRONLY | O_CREAT | O_TRUNC, mode);
+   return XrdPosix_Creat(path, mode);
 }
 }
   
@@ -125,9 +123,9 @@ extern "C"
 {
 int fclose(FILE *stream)
 {
-   static int init1 = xinuX.Init(&init1), init2 = Xunix.Init(&init2);
+   static int Init = Xunix.Init(&Init);
 
-   return streamX.Fclose(stream);
+   return XrdPosix_Fclose(stream);
 }
 }
 
@@ -139,15 +137,14 @@ extern "C"
 {
 int     fcntl64(int fd, int cmd, ...)
 {
-   static int init1 = xinuX.Init(&init1), init2 = Xunix.Init(&init2);
+   static int Init = Xunix.Init(&Init);
    va_list ap;
    void *theArg;
 
-   if (fd >= XrdPosixFD) return 0;
    va_start(ap, cmd);
    theArg = va_arg(ap, void *);
    va_end(ap);
-   return Xunix.Fcntl64(fd, cmd, theArg);
+   return XrdPosix_Fcntl(fd, cmd, theArg);
 }
 }
 
@@ -159,9 +156,9 @@ extern "C"
 {
 int     fdatasync(int fildes)
 {
-   static int init1 = xinuX.Init(&init1), init2 = Xunix.Init(&init2);
+   static int Init = Xunix.Init(&Init);
 
-   return (fildes >= XrdPosixFD) ? xinuX.Fsync(fildes):Xunix.Fdatasync(fildes);
+   return XrdPosix_Fdatasync(fildes);
 }
 }
 
@@ -173,11 +170,9 @@ extern "C"
 {
 FILE  *fopen64(const char *path, const char *mode)
 {
-   static int init1 = xinuX.Init(&init1), init2 = Xunix.Init(&init2);
+   static int Init = Xunix.Init(&Init);
 
-   return xinuX.isMyPath(path)
-          ? streamX.Fopen  (path, mode)
-          :   Xunix.Fopen64(path, mode);
+   return XrdPosix_Fopen(path, mode);
 }
 }
   
@@ -193,14 +188,12 @@ int  __fxstat64(int ver, int fildes, struct stat64 *buf)
 int     fstat64(         int fildes, struct stat64 *buf)
 #endif
 {
-   static int init1 = xinuX.Init(&init1), init2 = Xunix.Init(&init2);
+   static int Init = Xunix.Init(&Init);
 
-   return (fildes >= XrdPosixFD)
-          ? xinuX.Fstat  (     fildes, (struct stat *)buf)
 #ifdef __linux__
-          : Xunix.Fstat64(ver, fildes,                buf);
+   return XrdPosix_FstatV(ver, fildes, (struct stat *)buf);
 #else
-          : Xunix.Fstat64(     fildes,                buf);
+   return XrdPosix_Fstat (     fildes, (struct stat *)buf);
 #endif
 }
 }
@@ -213,9 +206,23 @@ extern "C"
 {
 int     fsync(int fildes)
 {
-   static int init1 = xinuX.Init(&init1), init2 = Xunix.Init(&init2);
+   static int Init = Xunix.Init(&Init);
 
-   return (fildes >= XrdPosixFD) ? xinuX.Fsync(fildes) : Xunix.Fsync(fildes);
+   return XrdPosix_Fsync(fildes);
+}
+}
+  
+/******************************************************************************/
+/*                             f t r u n c a t e                              */
+/******************************************************************************/
+  
+extern "C"
+{
+int ftruncate64(int fildes, off_t offset)
+{
+   static int Init = Xunix.Init(&Init);
+
+   return XrdPosix_Ftruncate(fildes, offset);
 }
 }
   
@@ -228,10 +235,9 @@ extern "C"
 {
 ssize_t fgetxattr (int fd, const char *name, void *value, size_t size)
 {
-   static int init1 = xinuX.Init(&init1), init2 = Xunix.Init(&init2);
+   static int Init = Xunix.Init(&Init);
 
-   if (fd >= XrdPosixFD) {errno = ENOTSUP; return -1;}
-   return Xunix.Fgetxattr(fd, name, value, size);
+   return XrdPosix_Fgetxattr(fd, name, value, size);
 }
 }
 #endif
@@ -245,10 +251,9 @@ extern "C"
 {
 ssize_t getxattr (const char *path, const char *name, void *value, size_t size)
 {
-   static int init1 = xinuX.Init(&init1), init2 = Xunix.Init(&init2);
+   static int Init = Xunix.Init(&Init);
 
-   if (xinuX.isMyPath(path)) {errno = ENOTSUP; return -1;}
-   return Xunix.Getxattr(path, name, value, size);
+   return XrdPosix_Getxattr(path, name, value, size);
 }
 }
 #endif
@@ -262,10 +267,9 @@ extern "C"
 {
 ssize_t lgetxattr (const char *path, const char *name, void *value, size_t size)
 {
-   static int init1 = xinuX.Init(&init1), init2 = Xunix.Init(&init2);
+   static int Init = Xunix.Init(&Init);
 
-   if (xinuX.isMyPath(path)) {errno = ENOTSUP; return -1;}
-   return Xunix.Lgetxattr(path, name, value, size);
+   return XrdPosix_Lgetxattr(path, name, value, size);
 }
 }
 #endif
@@ -276,13 +280,11 @@ ssize_t lgetxattr (const char *path, const char *name, void *value, size_t size)
   
 extern "C"
 {
-off64_t   lseek64(int fildes, off64_t offset, int whence)
+off64_t lseek64(int fildes, off64_t offset, int whence)
 {
-   static int init1 = xinuX.Init(&init1), init2 = Xunix.Init(&init2);
+   static int Init = Xunix.Init(&Init);
 
-   return (fildes >= XrdPosixFD)
-          ? xinuX.Lseek  (fildes, offset, whence)
-          : Xunix.Lseek64(fildes, offset, whence);
+   return XrdPosix_Lseek(fildes, offset, whence);
 }
 }
 
@@ -298,9 +300,9 @@ off_t      llseek(int fildes, off_t    offset, int whence)
 offset_t   llseek(int fildes, offset_t offset, int whence)
 #endif
 {
-   static int init1 = xinuX.Init(&init1), init2 = Xunix.Init(&init2);
+   static int Init = Xunix.Init(&Init);
 
-   return lseek64(fildes, offset, whence);
+   return XrdPosix_Lseek(fildes, offset, whence);
 }
 }
 
@@ -316,9 +318,9 @@ int     __lxstat64(int ver, const char *path, struct stat64 *buf)
 int        lstat64(         const char *path, struct stat64 *buf)
 #endif
 {
-   static int init1 = xinuX.Init(&init1), init2 = Xunix.Init(&init2);
+   static int Init = Xunix.Init(&Init);
 
-   return xinuX.Lstat(path, (struct stat *)buf);
+   return XrdPosix_Lstat(path, (struct stat *)buf);
 }
 }
 
@@ -330,9 +332,9 @@ extern "C"
 {
 int     mkdir(const char *path, mode_t mode)
 {
-   static int init1 = xinuX.Init(&init1), init2 = Xunix.Init(&init2);
+   static int Init = Xunix.Init(&Init);
 
-   return xinuX.Mkdir(path, mode);
+   return XrdPosix_Mkdir(path, mode);
 }
 }
 
@@ -344,14 +346,14 @@ extern "C"
 {
 int     open64(const char *path, int oflag, ...)
 {
-   static int init1 = xinuX.Init(&init1), init2 = Xunix.Init(&init2);
+   static int Init = Xunix.Init(&Init);
    va_list ap;
    int mode;
 
    va_start(ap, oflag);
    mode = va_arg(ap, int);
    va_end(ap);
-   return xinuX.Open(path, oflag, mode);
+   return XrdPosix_Open(path, oflag, mode);
 }
 }
 
@@ -363,12 +365,28 @@ extern "C"
 {
 DIR*    opendir(const char *path)
 {
-   static int init1 = xinuX.Init(&init1), init2 = Xunix.Init(&init2);
+   static int Init = Xunix.Init(&Init);
 
-   return xinuX.Opendir(path);
+   return XrdPosix_Opendir(path);
 }
 }
   
+/******************************************************************************/
+/*                              p a t h c o n f                               */
+/******************************************************************************/
+
+// This is a required addition for Solaris 10+ systems
+
+extern "C"
+{
+long pathconf(const char *path, int name)
+{
+   static int Init = Xunix.Init(&Init);
+
+   return XrdPosix_Pathconf(path, name);
+}
+}
+
 /******************************************************************************/
 /*                                 p r e a d                                  */
 /******************************************************************************/
@@ -377,11 +395,23 @@ extern "C"
 {
 ssize_t pread64(int fildes, void *buf, size_t nbyte, off_t offset)
 {
-   static int init1 = xinuX.Init(&init1), init2 = Xunix.Init(&init2);
+   static int Init = Xunix.Init(&Init);
 
-   return (fildes >= XrdPosixFD)
-          ? xinuX.Pread  (fildes, buf, nbyte, offset)
-          : Xunix.Pread64(fildes, buf, nbyte, offset);
+   return XrdPosix_Pread  (fildes, buf, nbyte, offset);
+}
+}
+
+/******************************************************************************/
+/*                                p w r i t e                                 */
+/******************************************************************************/
+  
+extern "C"
+{
+ssize_t pwrite64(int fildes, const void *buf, size_t nbyte, off_t offset)
+{
+   static int Init = Xunix.Init(&Init);
+
+   return XrdPosix_Pwrite(fildes, buf, nbyte, offset);
 }
 }
 
@@ -393,11 +423,9 @@ extern "C"
 {
 ssize_t read(int fildes, void *buf, size_t nbyte)
 {
-   static int init1 = xinuX.Init(&init1), init2 = Xunix.Init(&init2);
+   static int Init = Xunix.Init(&Init);
 
-   return fildes >= XrdPosixFD || (fildes = streamX.myFD(fildes)) >= XrdPosixFD
-        ? xinuX.Read(fildes, buf, nbyte)
-        : Xunix.Read(fildes, buf, nbyte);
+   return XrdPosix_Read(fildes, buf, nbyte);
 }
 }
   
@@ -409,11 +437,9 @@ extern "C"
 {
 ssize_t readv(int fildes, const struct iovec *iov, int iovcnt)
 {
-   static int init1 = xinuX.Init(&init1), init2 = Xunix.Init(&init2);
+   static int Init = Xunix.Init(&Init);
 
-   return (fildes >= XrdPosixFD)
-          ? xinuX.Readv(fildes, iov, iovcnt)
-          : Xunix.Readv(fildes, iov, iovcnt);
+   return XrdPosix_Readv(fildes, iov, iovcnt);
 }
 }
 
@@ -425,9 +451,9 @@ extern "C"
 {
 struct dirent64* readdir64(DIR *dirp)
 {
-   static int init1 = xinuX.Init(&init1), init2 = Xunix.Init(&init2);
+   static int Init = Xunix.Init(&Init);
 
-   return xinuX.Readdir64(dirp);
+   return XrdPosix_Readdir64(dirp);
 }
 }
 
@@ -439,9 +465,9 @@ extern "C"
 {
 int     readdir64_r(DIR *dirp, struct dirent64 *entry, struct dirent64 **result)
 {
-   static int init1 = xinuX.Init(&init1), init2 = Xunix.Init(&init2);
+   static int Init = Xunix.Init(&Init);
 
-   return xinuX.Readdir64_r(dirp, entry, result);
+   return XrdPosix_Readdir64_r(dirp, entry, result);
 }
 }
 
@@ -453,9 +479,9 @@ extern "C"
 {
 int     rename(const char *oldpath, const char *newpath)
 {
-   static int init1 = xinuX.Init(&init1), init2 = Xunix.Init(&init2);
+   static int Init = Xunix.Init(&Init);
 
-   return xinuX.Rename(oldpath, newpath);
+   return XrdPosix_Rename(oldpath, newpath);
 }
 }
 
@@ -468,9 +494,9 @@ extern "C"
 {
 void    rewinddir(DIR *dirp)
 {
-   static int init1 = xinuX.Init(&init1), init2 = Xunix.Init(&init2);
+   static int Init = Xunix.Init(&Init);
 
-   xinuX.Rewinddir(dirp);
+   XrdPosix_Rewinddir(dirp);
 }
 }
 #endif
@@ -483,9 +509,9 @@ extern "C"
 {
 int     rmdir(const char *path)
 {
-   static int init1 = xinuX.Init(&init1), init2 = Xunix.Init(&init2);
+   static int Init = Xunix.Init(&Init);
 
-   return xinuX.Rmdir(path);
+   return XrdPosix_Rmdir(path);
 }
 }
 
@@ -497,9 +523,9 @@ extern "C"
 {
 void    seekdir(DIR *dirp, long loc)
 {
-   static int init1 = xinuX.Init(&init1), init2 = Xunix.Init(&init2);
+   static int Init = Xunix.Init(&Init);
 
-   xinuX.Seekdir(dirp, loc);
+   XrdPosix_Seekdir(dirp, loc);
 }
 }
 
@@ -515,25 +541,39 @@ int     __xstat64(int ver, const char *path, struct stat64 *buf)
 int        stat64(         const char *path, struct stat64 *buf)
 #endif
 {
-   static int init1 = xinuX.Init(&init1), init2 = Xunix.Init(&init2);
+   static int Init = Xunix.Init(&Init);
 
-   return xinuX.Stat(path, (struct stat *)buf);
+   return XrdPosix_Stat(path, (struct stat *)buf);
 }
 }
 
 /******************************************************************************/
-/*                                p w r i t e                                 */
+/*                                s t a t f s                                 */
 /******************************************************************************/
-  
+
+#if !defined(__solaris__)
 extern "C"
 {
-ssize_t pwrite64(int fildes, const void *buf, size_t nbyte, off_t offset)
+int        statfs64(       const char *path, struct statfs64 *buf)
 {
-   static int init1 = xinuX.Init(&init1), init2 = Xunix.Init(&init2);
+   static int Init = Xunix.Init(&Init);
 
-   return (fildes >= XrdPosixFD)
-          ? xinuX.Pwrite(fildes, buf, nbyte, offset)
-          : Xunix.Pwrite(fildes, buf, nbyte, offset);
+   return XrdPosix_Statfs(path, (struct statfs *)buf);
+}
+}
+#endif
+
+/******************************************************************************/
+/*                               s t a t v f s                                */
+/******************************************************************************/
+
+extern "C"
+{
+int        statvfs64(         const char *path, struct statvfs64 *buf)
+{
+   static int Init = Xunix.Init(&Init);
+
+   return XrdPosix_Statvfs(path, (struct statvfs *)buf);
 }
 }
 
@@ -545,9 +585,23 @@ extern "C"
 {
 long    telldir(DIR *dirp)
 {
-   static int init1 = xinuX.Init(&init1), init2 = Xunix.Init(&init2);
+   static int Init = Xunix.Init(&Init);
 
-   return xinuX.Telldir(dirp);
+   return XrdPosix_Telldir(dirp);
+}
+}
+  
+/******************************************************************************/
+/*                              t r u n c a t e                               */
+/******************************************************************************/
+  
+extern "C"
+{
+int truncate64(const char *path, off_t offset)
+{
+   static int Init = Xunix.Init(&Init);
+
+   return XrdPosix_Truncate(path, offset);
 }
 }
 
@@ -559,9 +613,9 @@ extern "C"
 {
 int     unlink(const char *path)
 {
-   static int init1 = xinuX.Init(&init1), init2 = Xunix.Init(&init2);
+   static int Init = Xunix.Init(&Init);
 
-   return xinuX.Unlink(path);
+   return XrdPosix_Unlink(path);
 }
 }
 
@@ -573,11 +627,9 @@ extern "C"
 {
 ssize_t write(int fildes, const void *buf, size_t nbyte)
 {
-   static int init1 = xinuX.Init(&init1), init2 = Xunix.Init(&init2);
+   static int Init = Xunix.Init(&Init);
 
-   return (fildes >= XrdPosixFD)
-          ? xinuX.Write(fildes, buf, nbyte)
-          : Xunix.Write(fildes, buf, nbyte);
+   return XrdPosix_Write(fildes, buf, nbyte);
 }
 }
 
@@ -589,10 +641,8 @@ extern "C"
 {
 ssize_t writev(int fildes, const struct iovec *iov, int iovcnt)
 {
-   static int init1 = xinuX.Init(&init1), init2 = Xunix.Init(&init2);
+   static int Init = Xunix.Init(&Init);
 
-   return (fildes >= XrdPosixFD)
-          ? xinuX.Writev(fildes, iov, iovcnt)
-          : Xunix.Writev(fildes, iov, iovcnt);
+   return XrdPosix_Writev(fildes, iov, iovcnt);
 }
 }

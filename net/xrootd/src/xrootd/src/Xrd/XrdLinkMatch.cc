@@ -67,10 +67,11 @@ void XrdLinkMatch::Set(const char *target)
 //
    if (!(HnameL = index(Uname, '@')))
       {if ((Unamelen = strlen(Uname)))
-          if (Uname[Unamelen-1] == '*') Unamelen--;
-             else if (index(Uname, ':')) Uname[Unamelen++] = '@';
-                     else if (index(Uname, '.')) Uname[Unamelen++] = ':';
-                          else Uname[Unamelen++] = '.';
+          {if (Uname[Unamelen-1] == '*') Unamelen--;
+              else if (index(Uname, ':')) Uname[Unamelen++] = '@';
+                      else if (index(Uname, '.')) Uname[Unamelen++] = ':';
+                           else Uname[Unamelen++] = '.';
+          }
        HnameR = 0;
        return;
       }
@@ -79,10 +80,11 @@ void XrdLinkMatch::Set(const char *target)
 //
    *HnameL++ = '\0';
    if ((Unamelen = strlen(Uname)))
-      if (Uname[Unamelen-1] == '*') Unamelen--;
-         else if (index(Uname, ':')) Uname[Unamelen++] = '@';
-                 else if (index(Uname, '.')) Uname[Unamelen++] = ':';
-                      else Uname[Unamelen++] = '.';
+      {if (Uname[Unamelen-1] == '*') Unamelen--;
+          else if (index(Uname, ':')) Uname[Unamelen++] = '@';
+                  else if (index(Uname, '.')) Uname[Unamelen++] = ':';
+                       else Uname[Unamelen++] = '.';
+      }
 
 // The post string may have an asterisk.
 //

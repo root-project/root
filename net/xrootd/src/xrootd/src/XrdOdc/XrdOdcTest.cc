@@ -35,7 +35,6 @@ Notes:
   
 #include <unistd.h>
 #include <ctype.h>
-#include <iostream.h>
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
@@ -47,6 +46,7 @@ Notes:
 
 #include "XrdOdc/XrdOdcFinder.hh"
 #include "XrdSys/XrdSysError.hh"
+#include "XrdSys/XrdSysHeaders.hh"
 #include "XrdSys/XrdSysLogger.hh"
 #include "XrdOuc/XrdOucStream.hh"
 #include "XrdOuc/XrdOucErrInfo.hh"

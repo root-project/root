@@ -14,6 +14,7 @@
 #include "XrdMon/XrdMonException.hh"
 #include "XrdMon/XrdMonDecSink.hh"
 #include "XrdMon/XrdMonDecTraceInfo.hh"
+#include "XrdMon/XrdMonDecStageInfo.hh"
 #include "XrdMon/XrdMonSenderInfo.hh"
 #include "XrdMon/XrdMonUtils.hh"
 
@@ -88,7 +89,8 @@ XrdMonDecSink::~XrdMonDecSink()
 
     reportLostPackets();
     _lost.clear();
-    
+
+
     if ( 0 == _rtLogger ) {
         flushTCache();
         checkpoint();
@@ -111,6 +113,8 @@ XrdMonDecSink::~XrdMonDecSink()
             _uCache[i] = 0;
         }
     }
+
+
     _rtLogger->flush();
     delete _rtLogger;
 
@@ -233,6 +237,35 @@ XrdMonDecSink::addDictId(dictid_t xrdId,
     // FIXME: remove this line when xrootd supports openFile
     // struct timeval tv; gettimeofday(&tv, 0); openFile(xrdId, tv.tv_sec-8640000);
 }
+
+
+void
+XrdMonDecSink::addStageInfo(dictid_t xrdId, 
+                            const char* theString, 
+                            int len,
+                            senderid_t senderId)
+{
+    // FIXME: simplify code below once the dictId 
+    // is properlysent from xrootd
+    dictid_t uniqueId2use = 0;
+    if ( xrdId > 0 ) {
+        uniqueId2use = _uniqueDictId++;
+    }
+
+    XrdMonDecStageInfo* si;
+    si = new XrdMonDecStageInfo(xrdId, uniqueId2use, 
+                                theString, len, senderId);
+
+    if ( 0 != _rtLogger ) {
+        _rtLogger->add( si->writeRT2Buffer() );
+        if ( --_verFreqCount < 1 ) {
+            addVersion();
+            _verFreqCount = VER_FREQ;
+        }
+    }
+    delete si;
+}
+
 
 void
 XrdMonDecSink::addUserId(dictid_t usrId, 

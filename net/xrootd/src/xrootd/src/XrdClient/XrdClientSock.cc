@@ -68,12 +68,18 @@ void XrdClientSock::SetRequestTimeout(int timeout)
 void XrdClientSock::Disconnect()
 {
     // Close the connection
-
-    if (fConnected && fSocket >= 0) {
+//     if (fConnected && fSocket >= 0) {
+// 	::close(fSocket);
+// 	fConnected = FALSE;
+// 	fSocket = -1;
+//     }
+    if (fSocket >= 0) {
 	::close(fSocket);
-	fConnected = FALSE;
-	fSocket = -1;
     }
+
+    fConnected = false;
+    fSocket = -1;
+
 }
 
 //_____________________________________________________________________________
@@ -162,8 +168,10 @@ int XrdClientSock::RecvRaw(void* buffer, int length, int substreamid,
 
          // If we read nothing, the connection has been closed by the other side
          if (n <= 0) {
-            Error("XrdClientSock::RecvRaw", "Error reading from socket: " <<
-            ::strerror(errno));
+	    if (errno > 0) {
+	       Error("XrdClientSock::RecvRaw", "Error reading from socket: " <<
+                                               ::strerror(errno));
+	    }
             return TXSOCK_ERR;
          }
          bytesread += n;

@@ -1,4 +1,4 @@
-#              $Id: GNUmake.rules.sunCC,v 1.7 2007/01/27 03:08:36 abh Exp $
+#              $Id: GNUmake.rules.sunCC,v 1.8 2008/06/03 01:46:24 abh Exp $
 
 #------------------------------------------------------------------------------#
 #              R u l e s   f o r   g e n e r i c   s u n C C                   #
@@ -16,5 +16,6 @@ TYPEDBG    = $(TYPEMISC) $(SUNMT) -g -xs
 TYPELDSO   = -G
 TYPESHLIB  = so
 
-TYPELIBS   =  -lposix4 -lsocket -lnsl $(PTHREAD) -ldl -lCstd
+TYPELIBS   =  -lposix4 -lsocket -lnsl $(PTHREAD) -ldl -lCstd 
+TYPELIBSF  =  -lsendfile
 TYPELIBSM  =  -lsunmath

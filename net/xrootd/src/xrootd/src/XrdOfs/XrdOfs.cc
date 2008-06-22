@@ -41,27 +41,28 @@ const char *XrdOfsCVSID = "$Id$";
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
-#include <iostream>
-using namespace std;
 
 #include "XrdVersion.hh"
 
 #include "XrdOfs/XrdOfs.hh"
-#include "XrdOfs/XrdOfsConfig.hh"
 #include "XrdOfs/XrdOfsEvs.hh"
 #include "XrdOfs/XrdOfsTrace.hh"
 #include "XrdOfs/XrdOfsSecurity.hh"
+
+#include "XrdCms/XrdCmsClient.hh"
 
 #include "XrdOss/XrdOss.hh"
 
 #include "XrdNet/XrdNetDNS.hh"
 
+#include "XrdSys/XrdSysHeaders.hh"
 #include "XrdOuc/XrdOuca2x.hh"
 #include "XrdOuc/XrdOucEnv.hh"
 #include "XrdSys/XrdSysError.hh"
 #include "XrdOuc/XrdOucLock.hh"
 #include "XrdSys/XrdSysLogger.hh"
 #include "XrdOuc/XrdOucMsubs.hh"
+#include "XrdSys/XrdSysPlatform.hh"
 #include "XrdSys/XrdSysPthread.hh"
 #include "XrdOuc/XrdOucTList.hh"
 #include "XrdOuc/XrdOucTrace.hh"
@@ -71,15 +72,6 @@ using namespace std;
 
 #ifdef AIX
 #include <sys/mode.h>
-#endif
-// IOS_USING_DECLARATION_MARKER - BaBar iostreams migration, do not touch this line!
-
-/******************************************************************************/
-/*                       C u r i o u s   D e f i n e s                        */
-/******************************************************************************/
-  
-#ifndef S_IAMB
-#define S_IAMB  0x1FF
 #endif
 
 /******************************************************************************/
@@ -91,10 +83,16 @@ XrdSysError      OfsEroute(0);
 XrdOucTrace      OfsTrace(&OfsEroute);
 
 /******************************************************************************/
+/*                        S t a t i c   O b j e c t s                         */
+/******************************************************************************/
+  
+XrdOfsHandle     *XrdOfs::dummyHandle;
+
+/******************************************************************************/
 /*                    F i l e   S y s t e m   O b j e c t                     */
 /******************************************************************************/
   
-#include "XrdOfs/XrdOfs.icc"
+extern XrdOfs XrdOfsFS;
 
 /******************************************************************************/
 /*                 S t o r a g e   S y s t e m   O b j e c t                  */
@@ -103,52 +101,7 @@ XrdOucTrace      OfsTrace(&OfsEroute);
 XrdOss *XrdOfsOss;
 
 /******************************************************************************/
-/*                    E x t e r n a l   F u n c t i o n s                     */
-/******************************************************************************/
-  
-extern unsigned long XrdOucHashVal(const char *);
-
-/******************************************************************************/
-/*           F i l e   H a n d l e   M a n a g e m e n t   A r e a            */
-/******************************************************************************/
-
-// The following are anchors for filehandles.
-//
-XrdOfsHandleAnchor XrdOfsOrigin_RO("r/o",0);          // Files open r/o.
-XrdOfsHandleAnchor XrdOfsOrigin_RW("r/w",1);          // Files open r/w.
-
-// The following mutexes are used to serialize open processing
-//
-XrdSysMutex XrdOfsOpen_RO;
-XrdSysMutex XrdOfsOpen_RW;
-
-// Functions that manage idle file handles
-//
-void         *XrdOfsIdleScan(void *);
-void          XrdOfsIdleCheck(XrdOfsHandleAnchor &);
-int           XrdOfsIdleXeq(XrdOfsHandle *, void *);
-
-/******************************************************************************/
-/*                               d e f i n e s                                */
-/******************************************************************************/
-
-#define LOCK(x) \
-        if (!x) return XrdOfsFS.Emsg(epname,error,XrdOfsENOTOPEN, "");x->Lock()
-
-#define UNLOCK(x) x->UnLock()
-
-#define UNLK_RETURN(x,y) {UNLOCK(x); return y;}
-
-#define Max(a,b) (a >= b ? a : b)
-
-#define REOPENandHOLD(x) if (x->flags & OFS_TCLOSE && !Unclose()) \
-                            UNLK_RETURN(x,SFS_ERROR); \
-                         TimeStamp(); x->optod = tod.tv_sec; x->activ++;
-
-#define RELEASE(x) x->Lock(); x->activ--; x->UnLock();
-
-/******************************************************************************/
-/*                           C o n s t r u c t o r                            */
+/*                    X r d O f s   C o n s t r u c t o r                     */
 /******************************************************************************/
 
 XrdOfs::XrdOfs()
@@ -159,24 +112,11 @@ XrdOfs::XrdOfs()
 
 // Establish defaults
 //
-   FDConn        = 0;
-   FDOpen        = 0;
-   FDOpenMax     = XrdOfsFDOPENMAX;
-   FDMinIdle     = XrdOfsFDMINIDLE;
-   FDMaxIdle     = XrdOfsFDMAXIDLE;
-   LockTries     = XrdOfsLOCKTRIES;
-   LockWait      = XrdOfsLOCKWAIT;
    MaxDelay      = 60;
    Authorization = 0;
    Finder        = 0;
    Balancer      = 0;
    evsObject     = 0;
-   fwdCHMOD      = 0;
-   fwdMKDIR      = 0;
-   fwdMKPATH     = 0;
-   fwdMV         = 0;
-   fwdRM         = 0;
-   fwdRMDIR      = 0;
    myRole        = strdup("server");
 
 // Obtain port number we will be using
@@ -197,16 +137,26 @@ XrdOfs::XrdOfs()
    HostPref = strdup(HostName);
    HostName[i] = '.';
 
-// Set the configuration file name.
+// Set the configuration file name abd dummy handle
 //
    ConfigFN = 0;
+   XrdOfsHandle::Alloc(&dummyHandle);
+}
+  
+/******************************************************************************/
+/*                X r d O f s F i l e   C o n s t r u c t o r                 */
+/******************************************************************************/
+
+XrdOfsFile::XrdOfsFile(const char *user) : XrdSfsFile(user)
+{
+   oh = XrdOfs::dummyHandle; 
+   dorawio = 0;
+   tident = (user ? user : "");
 }
   
 /******************************************************************************/
 /*                         G e t F i l e S y s t e m                          */
 /******************************************************************************/
-
-extern XrdOss    *XrdOssGetSS(XrdSysLogger *, const char *, const char *);
   
 extern "C"
 {
@@ -214,28 +164,16 @@ XrdSfsFileSystem *XrdSfsGetFileSystem(XrdSfsFileSystem *native_fs,
                                       XrdSysLogger     *lp,
                                       const char       *configfn)
 {
-   pthread_t tid;
-   int retc;
-
 // Do the herald thing
 //
    OfsEroute.SetPrefix("ofs_");
    OfsEroute.logger(lp);
-   OfsEroute.Say("Copr.  2007 Stanford University, Ofs Version " XrdVSTRING);
+   OfsEroute.Say("Copr.  2008 Stanford University, Ofs Version " XrdVSTRING);
 
 // Initialize the subsystems
 //
    XrdOfsFS.ConfigFN = (configfn && *configfn ? strdup(configfn) : 0);
    if ( XrdOfsFS.Configure(OfsEroute) ) return 0;
-
-// Initialize the target storage system
-//
-   if (!(XrdOfsOss = XrdOssGetSS(lp, configfn, XrdOfsFS.OssLib))) return 0;
-
-// Start a thread to periodically scan for idle file handles
-//
-   if ((retc = XrdSysThread::Run(&tid, XrdOfsIdleScan, (void *)0)))
-      OfsEroute.Emsg("XrdOfsinit", retc, "create idle scan thread");
 
 // All done, we can return the callout vector to these routines.
 //
@@ -270,7 +208,7 @@ int XrdOfsDirectory::open(const char              *dir_path, // In
             very short durations.
 */
 {
-   static const char *epname = "opendir";
+   EPNAME("opendir");
    XrdOucEnv Open_Env(info);
    int retc;
 
@@ -326,12 +264,12 @@ const char *XrdOfsDirectory::nextEntry()
             very short durations.
 */
 {
-   static const char *epname = "readdir";
+   EPNAME("readdir");
    int retc;
 
 // Check if this directory is actually open
 //
-   if (!dp) {XrdOfsFS.Emsg(epname, error, XrdOfsENOTOPEN, "read directory");
+   if (!dp) {XrdOfsFS.Emsg(epname, error, EBADF, "read directory");
              return 0;
             }
 
@@ -379,7 +317,7 @@ int XrdOfsDirectory::close()
             very short durations.
 */
 {
-   static const char *epname = "closedir";
+   EPNAME("closedir");
    int retc;
 
 // Check if this directory is actually open
@@ -440,12 +378,10 @@ int XrdOfsFile::open(const char          *path,      // In
   Output:   Returns SFS_OK upon success, otherwise SFS_ERROR is returned.
 */
 {
-   static const char *epname = "open";
-   int retc, find_flag, open_flag = 0;
+   EPNAME("open");
+   XrdOfsHandle *hP;
+   int retc, isRW, find_flag, open_flag = 0;
    int crOpts = (Mode & SFS_O_MKPTH ? XRDOSS_mkpath : 0);
-   unsigned long hval = XrdOucHashVal(path);
-   XrdSysMutex        *mp;
-   XrdOfsHandleAnchor *ap;
    XrdOssDF           *fp;
    XrdOucEnv Open_Env(info);
 
@@ -455,7 +391,12 @@ int XrdOfsFile::open(const char          *path,      // In
 
 // Verify that this object is not already associated with an open file
 //
-   if (oh) return XrdOfsFS.Emsg(epname,error,EADDRINUSE,"open file",path);
+   XrdOfsFS.ocMutex.Lock();
+   if (oh != XrdOfs::dummyHandle)
+      {XrdOfsFS.ocMutex.UnLock();
+       return XrdOfsFS.Emsg(epname,error,EADDRINUSE,"open file",path);
+      }
+   XrdOfsFS.ocMutex.UnLock();
 
 // Set the actual open mode and find mode
 //
@@ -466,22 +407,26 @@ int XrdOfsFile::open(const char          *path,      // In
    switch(open_mode & (SFS_O_RDONLY | SFS_O_WRONLY | SFS_O_RDWR |
                        SFS_O_CREAT  | SFS_O_TRUNC))
    {
-   case SFS_O_CREAT:  open_flag   = O_EXCL; crOpts |= XRDOSS_new;
+   case SFS_O_CREAT:  open_flag   = O_RDWR     | O_CREAT  | O_EXCL;
+                      find_flag  |= SFS_O_RDWR | SFS_O_CREAT;
+                      crOpts     |= XRDOSS_new;
+                      isRW = 1;
+                      break;
    case SFS_O_TRUNC:  open_flag  |= O_RDWR     | O_CREAT     | O_TRUNC;
-                      find_flag  |= SFS_O_RDWR | SFS_O_CREAT | SFS_O_TRUNC;
-                      ap = &XrdOfsOrigin_RW; mp = &XrdOfsOpen_RW;
+                      find_flag  |= SFS_O_RDWR | SFS_O_TRUNC;
+                      isRW = 1;
                       break;
    case SFS_O_RDONLY: open_flag = O_RDONLY; find_flag |= SFS_O_RDONLY;
-                      ap = &XrdOfsOrigin_RO; mp = &XrdOfsOpen_RO;
+                      isRW = 0;
                       break;
    case SFS_O_WRONLY: open_flag = O_WRONLY; find_flag |= SFS_O_WRONLY;
-                      ap = &XrdOfsOrigin_RW; mp = &XrdOfsOpen_RW;
+                      isRW = 1;
                       break;
    case SFS_O_RDWR:   open_flag = O_RDWR;   find_flag |= SFS_O_RDWR;
-                      ap = &XrdOfsOrigin_RW; mp = &XrdOfsOpen_RW;
+                      isRW = 1;
                       break;
    default:           open_flag = O_RDONLY; find_flag |= SFS_O_RDONLY;
-                      ap = &XrdOfsOrigin_RO; mp = &XrdOfsOpen_RO;
+                      isRW = 0;
                       break;
    }
 
@@ -518,75 +463,78 @@ int XrdOfsFile::open(const char          *path,      // In
             open_flag  = O_RDWR|O_TRUNC;
             if (XrdOfsFS.evsObject 
             &&  XrdOfsFS.evsObject->Enabled(XrdOfsEvs::Create))
-               {char buff[16];
-                sprintf(buff, "%o", (Mode & S_IAMB));
-                XrdOfsFS.evsObject->Notify(XrdOfsEvs::Create,tident,buff,path);
+               {XrdOfsEvsInfo evInfo(tident,path,info,&Open_Env,Mode);
+                XrdOfsFS.evsObject->Notify(XrdOfsEvs::Create, evInfo);
                }
           }
-       mp->Lock();
 
       } else {
 
        // Apply security, as needed
        //
-       AUTHORIZE(client,&Open_Env,(open_flag == O_RDONLY ? AOP_Read:AOP_Update),
-                         "open", path, error);
+       AUTHORIZE(client,&Open_Env,(isRW?AOP_Update:AOP_Read),"open",path,error);
        OOIDENTENV(client, Open_Env);
+      }
 
-       // First try to attach the file
-       //
-       mp->Lock();
-       if ((oh = ap->Attach(path)))
-          {ZTRACE(open, "attach lnk=" <<oh->links <<" pi=" <<(oh->PHID()) <<" fn=" << (oh->Name()));
-           mp->UnLock();
-           oh->Lock();  // links > 1 -> handle cannot be deleted; hp is valid
-           if (oh->flags & OFS_INPROG)
-              {retc = (oh->ecode ? oh->ecode : -ENOMSG);
-               XrdOfsFS.Close(oh, tident); oh = 0;
-               if (retc > 0) return XrdOfsFS.Stall(error, retc, path);
-               return XrdOfsFS.Emsg(epname, error, retc, "attach", path);
-              }
-           if (oh->cxrsz) setCXinfo(open_mode);
-           oh->UnLock();
-           return SFS_OK;
+// Get a handle for this file.
+//
+   if ((retc = XrdOfsHandle::Alloc(path, isRW, &hP)))
+      {if (retc > 0) return XrdOfsFS.Stall(error, retc, path);
+       return XrdOfsFS.Emsg(epname, error, retc, "attach", path);
+      }
+
+// If this is a previously existing handle, we are done
+//
+   if (!(hP->Inactive()))
+      {dorawio = (oh->isCompressed && open_mode & SFS_O_RAWIO ? 1 : 0);
+       XrdOfsFS.ocMutex.Lock(); oh = hP; XrdOfsFS.ocMutex.UnLock();
+       FTRACE(open, "attach use=" <<oh->Usage());
+       hP->UnLock();
+       return SFS_OK;
+      }
+
+// Get a storage system object
+//
+   if (!(fp = XrdOfsOss->newFile(tident)))
+      {hP->Retire();
+       return XrdOfsFS.Emsg(epname, error, ENOMEM, "open", path);
+      }
+
+// Open the file
+//
+   if ((retc = fp->Open(path, open_flag, Mode, Open_Env)))
+      {hP->Retire(); delete fp;
+       if (retc > 0) return XrdOfsFS.Stall(error, retc, path);
+       if (retc == -EINPROGRESS)
+          {XrdOfsFS.evrObject.Wait4Event(path,&error);
+           return XrdOfsFS.fsError(error, retc);
+          }
+       return XrdOfsFS.Emsg(epname, error, retc, "open", path);
+      }
+
+// Set compression values and activate the handle
+//
+   if (fp->isCompressed()) 
+      {hP->isCompressed = 1;
+       dorawio = (open_mode & SFS_O_RAWIO ? 1 : 0);
+      }
+   hP->Activate(fp);
+   hP->UnLock();
+
+// Send an open event if we must
+//
+   if (XrdOfsFS.evsObject)
+      {XrdOfsEvs::Event theEvent = (hP->isRW?XrdOfsEvs::Openw:XrdOfsEvs::Openr);
+       if (XrdOfsFS.evsObject->Enabled(theEvent))
+          {XrdOfsEvsInfo evInfo(tident, path, info, &Open_Env);
+           XrdOfsFS.evsObject->Notify(theEvent, evInfo);
           }
       }
 
-// Open the file and allocate a handle for it. Insert into the full chain
-// prior to opening, which may take quite a bit of time.
+// All done
 //
-   fp = XrdOfsOss->newFile(tident);
-
-   if ( fp && (oh = new XrdOfsHandle(hval,path,open_flag,tod.tv_sec,ap,fp)) )
-      {mp->UnLock();  // Handle is now locked so allow new opens
-       if ((retc = fp->Open(path, open_flag, Mode, Open_Env)))
-          {oh->ecode = retc; XrdOfsFS.Close(oh); oh = 0;
-           if (retc > 0) return XrdOfsFS.Stall(error, retc, path);
-           if (retc == -EINPROGRESS) 
-              {XrdOfsFS.evrObject.Wait4Event(path,&error);
-               return XrdOfsFS.fsError(error, retc);
-              }
-          } else {
-           if ((oh->cxrsz = fp->isCompressed(oh->cxid))) setCXinfo(open_mode);
-           oh->Activate(); 
-           if (XrdOfsFS.evsObject)
-              {XrdOfsEvs::Event theEvent = oh->oflag & (O_RDWR | O_WRONLY)
-                            ? XrdOfsEvs::Openw : XrdOfsEvs::Openr;
-               if (XrdOfsFS.evsObject->Enabled(theEvent))
-                   XrdOfsFS.evsObject->Notify(theEvent, tident, oh->Name());
-              }
-           oh->UnLock();
-           return SFS_OK;
-          }
-      } else {
-       mp->UnLock();
-       if (fp) delete fp;
-       retc = ENOMEM;
-      }
-
-// Return an error
-//
-   return XrdOfsFS.Emsg(epname, error, retc, "open", path);
+   XrdOfsFS.ocMutex.Lock(); oh = hP; XrdOfsFS.ocMutex.UnLock();
+   return SFS_OK;
 }
 
 /******************************************************************************/
@@ -602,20 +550,70 @@ int XrdOfsFile::close()  // In
   Output:   Returns SFS_OK upon success and SFS_ERROR upon failure.
 */
 {
-   static const char *epname = "close";
-   XrdOfsHandle *myoh;
+   EPNAME("close");
+   XrdOfsHandle *hP;
 
-// Lock the handle and perform required tracing
+// Trace the call
 //
-    LOCK(oh);
-    FTRACE(close, "lnks=" <<oh->links); // Unreliable trace, no origin lock
+    FTRACE(close, "use=" <<oh->Usage()); // Unreliable trace, no origin lock
 
-// Release the handle and return
+// Verify the handle (we briefly maintain a global lock)
 //
-    myoh = oh;
-    oh = (XrdOfsHandle *)0;
-    if (XrdOfsFS.Close(myoh, tident)) {oh = myoh; return SFS_ERROR;}
+    XrdOfsFS.ocMutex.Lock();
+    if (oh == XrdOfs::dummyHandle)
+       {XrdOfsFS.ocMutex.UnLock(); return SFS_OK;}
+    if ((oh->Inactive()))
+       {XrdOfsFS.ocMutex.UnLock();
+        return XrdOfsFS.Emsg(epname, error, EBADF, "close file");
+       }
+    hP = oh; oh = XrdOfs::dummyHandle;
+    XrdOfsFS.ocMutex.UnLock();
+    hP->Lock();
+
+// We need to handle the cunudrum that an event may have to be sent upon
+// the final close. However, that would cause the path name to be destroyed.
+// So, we have two modes of logic where we copy out the pathname if a final
+// close actually occurs. The path is not copied if it's not final and we
+// don't bother with any of it if we need not generate an event.
+//
+   if (XrdOfsFS.evsObject && tident
+   &&  XrdOfsFS.evsObject->Enabled(hP->isRW ? XrdOfsEvs::Closew
+                                            : XrdOfsEvs::Closer))
+      {long long FSize, *retsz;
+       char pathbuff[MAXPATHLEN+8];
+       XrdOfsEvs::Event theEvent;
+       if (hP->isRW) {theEvent = XrdOfsEvs::Closew; retsz = &FSize;}
+          else {      theEvent = XrdOfsEvs::Closer; retsz = 0; FSize=0;}
+       if (!(hP->Retire(retsz, pathbuff, sizeof(pathbuff))))
+          {XrdOfsEvsInfo evInfo(tident, pathbuff, "" , 0, 0, FSize);
+           XrdOfsFS.evsObject->Notify(theEvent, evInfo);
+          } else hP->Retire();
+      } else     hP->Retire();
+
+// All done
+//
     return SFS_OK;
+}
+
+/******************************************************************************/
+/*                                  f c t l                                   */
+/******************************************************************************/
+  
+int            XrdOfsFile::fctl(const int               cmd,
+                                const char             *args,
+                                      XrdOucErrInfo    &out_error)
+{
+// See if we can do this
+//
+   if (cmd == SFS_FCTL_GETFD)
+      {out_error.setErrCode(oh->Select().getFD());
+       return SFS_OK;
+      }
+
+// We don't support this
+//
+   out_error.setErrInfo(EEXIST, "fctl operation not supported");
+   return SFS_ERROR;
 }
 
 /******************************************************************************/
@@ -633,7 +631,7 @@ int            XrdOfsFile::read(XrdSfsFileOffset  offset,    // In
   Output:   Returns SFS_OK upon success and SFS_ERROR o/w.
 */
 {
-   static const char *epname = "read";
+   EPNAME("read");
    int retc;
 
 // Perform required tracing
@@ -647,17 +645,9 @@ int            XrdOfsFile::read(XrdSfsFileOffset  offset,    // In
       return  XrdOfsFS.Emsg(epname, error, EFBIG, "read", oh->Name());
 #endif
 
-// Reopen the handle if it has been closed
-//
-   LOCK(oh);
-   REOPENandHOLD(oh);
-   UNLOCK(oh);
-
 // Now preread the actual number of bytes
 //
-   retc   = oh->Select().Read((off_t)offset, (size_t)blen);
-   RELEASE(oh);
-   if (retc < 0)
+   if ((retc = oh->Select().Read((off_t)offset, (size_t)blen)) < 0)
       return XrdOfsFS.Emsg(epname, error, (int)retc, "preread", oh->Name());
 
 // Return number of bytes read
@@ -684,7 +674,7 @@ XrdSfsXferSize XrdOfsFile::read(XrdSfsFileOffset  offset,    // In
   Output:   Returns the number of bytes read upon success and SFS_ERROR o/w.
 */
 {
-   static const char *epname = "read";
+   EPNAME("read");
    XrdSfsXferSize nbytes;
 
 // Perform required tracing
@@ -698,12 +688,6 @@ XrdSfsXferSize XrdOfsFile::read(XrdSfsFileOffset  offset,    // In
       return  XrdOfsFS.Emsg(epname, error, EFBIG, "read", oh->Name());
 #endif
 
-// Reopen the handle if it has been closed
-//
-   LOCK(oh);
-   REOPENandHOLD(oh);
-   UNLOCK(oh);
-
 // Now read the actual number of bytes
 //
    nbytes = (dorawio ?
@@ -711,7 +695,6 @@ XrdSfsXferSize XrdOfsFile::read(XrdSfsFileOffset  offset,    // In
                             (off_t)offset, (size_t)blen))
           : (XrdSfsXferSize)(oh->Select().Read((void *)buff,
                             (off_t)offset, (size_t)blen)));
-   RELEASE(oh);
    if (nbytes < 0)
       return XrdOfsFS.Emsg(epname, error, (int)nbytes, "read", oh->Name());
 
@@ -735,12 +718,12 @@ XrdSfsXferSize XrdOfsFile::read(XrdSfsFileOffset  offset,    // In
 
 int XrdOfsFile::read(XrdSfsAio *aiop)
 {
-   static const char *epname = "read";
+   EPNAME("aioread");
    int rc;
 
 // Async mode for compressed files is not supported.
 //
-   if (oh && oh->cxrsz)
+   if (oh->isCompressed)
       {aiop->Result = this->read((XrdSfsFileOffset)aiop->sfsAio.aio_offset,
                                            (char *)aiop->sfsAio.aio_buf,
                                    (XrdSfsXferSize)aiop->sfsAio.aio_nbytes);
@@ -750,8 +733,7 @@ int XrdOfsFile::read(XrdSfsAio *aiop)
 
 // Perform required tracing
 //
-   FTRACE(aio, "aio " <<aiop->sfsAio.aio_nbytes <<"@"
-               <<aiop->sfsAio.aio_offset);
+   FTRACE(aio, aiop->sfsAio.aio_nbytes <<"@" <<aiop->sfsAio.aio_offset);
 
 // Make sure the offset is not too large
 //
@@ -760,17 +742,9 @@ int XrdOfsFile::read(XrdSfsAio *aiop)
       return  XrdOfsFS.Emsg(epname, error, EFBIG, "read", oh->Name());
 #endif
 
-// Reopen the handle if it has been closed
-//
-   LOCK(oh);
-   REOPENandHOLD(oh);
-   UNLOCK(oh);
-
 // Issue the read. Only true errors are returned here.
 //
-   rc = oh->Select().Read(aiop);
-   RELEASE(oh);
-   if (rc < 0)
+   if ((rc = oh->Select().Read(aiop)) < 0)
       return XrdOfsFS.Emsg(epname, error, rc, "read", oh->Name());
 
 // All done
@@ -800,9 +774,8 @@ XrdSfsXferSize XrdOfsFile::write(XrdSfsFileOffset  offset,    // In
             sync() call.
 */
 {
-   static const char *epname = "write";
+   EPNAME("write");
    XrdSfsXferSize nbytes;
-   int first_write;
 
 // Perform any required tracing
 //
@@ -815,27 +788,16 @@ XrdSfsXferSize XrdOfsFile::write(XrdSfsFileOffset  offset,    // In
       return  XrdOfsFS.Emsg(epname, error, EFBIG, "read", oh->Name());
 #endif
 
-// Reopen the file handle if it has been closed
+// Silly Castor stuff
 //
-   LOCK(oh);
-   REOPENandHOLD(oh);
-   oh->flags |= OFS_PENDIO;
-   if (!XrdOfsFS.evsObject) first_write = 0;
-      else if ((first_write = !(oh->flags & OFS_CHANGED)))
-              oh->flags |= OFS_CHANGED;
-   UNLOCK(oh);
-
-// Check if we should generate an event
-//
-   if (XrdOfsFS.evsObject && first_write 
-   &&  XrdOfsFS.evsObject->Enabled(XrdOfsEvs::Fwrite))
-       XrdOfsFS.evsObject->Notify(XrdOfsEvs::Fwrite, tident, oh->Name());
+   if (XrdOfsFS.evsObject && !(oh->isChanged)
+   &&  XrdOfsFS.evsObject->Enabled(XrdOfsEvs::Fwrite)) GenFWEvent();
 
 // Write the requested bytes
 //
+   oh->isPending = 1;
    nbytes = (XrdSfsXferSize)(oh->Select().Write((const void *)buff,
                             (off_t)offset, (size_t)blen));
-   RELEASE(oh);
    if (nbytes < 0)
       return XrdOfsFS.Emsg(epname, error, (int)nbytes, "write", oh->Name());
 
@@ -852,13 +814,12 @@ XrdSfsXferSize XrdOfsFile::write(XrdSfsFileOffset  offset,    // In
 //
 int XrdOfsFile::write(XrdSfsAio *aiop)
 {
-   static const char *epname = "write";
-   int first_write, rc;
+   EPNAME("aiowrite");
+   int rc;
 
 // Perform any required tracing
 //
-   FTRACE(aio, "aio " <<aiop->sfsAio.aio_nbytes <<"@"
-               <<aiop->sfsAio.aio_offset);
+   FTRACE(aio, aiop->sfsAio.aio_nbytes <<"@" <<aiop->sfsAio.aio_offset);
 
 // Make sure the offset is not too large
 //
@@ -867,27 +828,15 @@ int XrdOfsFile::write(XrdSfsAio *aiop)
       return  XrdOfsFS.Emsg(epname, error, EFBIG, "read", oh->Name());
 #endif
 
-// Reopen the file handle if it has been closed
+// Silly Castor stuff
 //
-   LOCK(oh);
-   REOPENandHOLD(oh);
-   oh->flags |= OFS_PENDIO;
-   if (!XrdOfsFS.evsObject) first_write = 0;
-      else if ((first_write = !(oh->flags & OFS_CHANGED)))
-              oh->flags |= OFS_CHANGED;
-   UNLOCK(oh);
-
-// Check if we should generate an event
-//
-   if (XrdOfsFS.evsObject && first_write 
-   &&  XrdOfsFS.evsObject->Enabled(XrdOfsEvs::Fwrite))
-       XrdOfsFS.evsObject->Notify(XrdOfsEvs::Fwrite, tident, oh->Name());
+   if (XrdOfsFS.evsObject && !(oh->isChanged)
+   &&  XrdOfsFS.evsObject->Enabled(XrdOfsEvs::Fwrite)) GenFWEvent();
 
 // Write the requested bytes
 //
-   rc = oh->Select().Write(aiop);
-   RELEASE(oh);
-   if (rc < 0)
+   oh->isPending = 1;
+   if ((rc = oh->Select().Write(aiop)) < 0)
       return XrdOfsFS.Emsg(epname, error, rc, "write", oh->Name());
 
 // All done
@@ -908,18 +857,10 @@ int XrdOfsFile::getMmap(void **Addr, off_t &Size)         // Out
             Returns SFS_OK upon success and SFS_ERROR upon failure.
 */
 {
-   const char *epname = "getMmap";
-
-// Reopen the handle if it has been closed
-//
-   LOCK(oh);
-   REOPENandHOLD(oh);
-   UNLOCK(oh);
 
 // Perform the function
 //
    Size = oh->Select().getMmap(Addr);
-   RELEASE(oh);
 
    return SFS_OK;
 }
@@ -937,24 +878,16 @@ int XrdOfsFile::stat(struct stat     *buf)         // Out
   Output:   Returns SFS_OK upon success and SFS_ERROR upon failure.
 */
 {
-   static const char *epname = "stat";
+   EPNAME("fstat");
    int retc;
 
 // Lock the handle and perform any required tracing
 //
    FTRACE(stat, "");
 
-// Reopen the handle if it has been closed
-//
-   LOCK(oh);
-   REOPENandHOLD(oh);
-   UNLOCK(oh);
-
 // Perform the function
 //
-   retc = oh->Select().Fstat(buf);
-   RELEASE(oh);
-   if (retc)
+   if ((retc = oh->Select().Fstat(buf)) < 0)
       return XrdOfsFS.Emsg(epname,error,retc,"get state for",oh->Name());
 
    return SFS_OK;
@@ -973,7 +906,7 @@ int XrdOfsFile::sync()  // In
   Output:   Returns SFS_OK upon success and SFS_ERROR upon failure.
 */
 {
-   static const char *epname = "sync";
+   EPNAME("sync");
    int retc;
 
 // Perform any required tracing
@@ -983,29 +916,24 @@ int XrdOfsFile::sync()  // In
 // We can test the pendio flag w/o a lock because the person doing this
 // sync must have done the previous write. Causality is the synchronizer.
 //
-   if (!(oh->flags & OFS_PENDIO)) return SFS_OK;
-   TimeStamp();
+   if (!(oh->isPending)) return SFS_OK;
 
 // We can also skip the sync if the file is closed. However, we need a file
 // object lock in order to test the flag. We can also reset the PENDIO flag.
 //
-   LOCK(oh);
-   if(!(retc = (oh->flags & OFS_TCLOSE))) oh->activ++;
-   oh->flags &= ~OFS_PENDIO;
-   oh->optod = tod.tv_sec;
-   UNLOCK(oh);
-   if (retc) return SFS_OK;
+   oh->Lock();
+   oh->isPending = 0;
+   oh->UnLock();
 
 // Perform the function
 //
    if ((retc = oh->Select().Fsync()))
-      {LOCK(oh);  oh->flags |= OFS_PENDIO; oh->activ--; UNLOCK(oh);
+      {oh->isPending = 1;
        return XrdOfsFS.Emsg(epname, error, retc, "synchronize", oh->Name());
       }
 
-// Unlock the file handle and indicate all went well
+// Indicate all went well
 //
-   RELEASE(oh);
    return SFS_OK;
 }
 
@@ -1022,6 +950,7 @@ int XrdOfsFile::sync(XrdSfsAio *aiop)
    aiop->doneWrite();
    return 0;
 }
+
 /******************************************************************************/
 /*                              t r u n c a t e                               */
 /******************************************************************************/
@@ -1041,8 +970,8 @@ int XrdOfsFile::truncate(XrdSfsFileOffset  flen)  // In
             with zeroes).
 */
 {
-   static const char *epname = "trunc";
-   int first_write, retc;
+   EPNAME("trunc");
+   int retc;
 
 // Lock the file handle and perform any tracing
 //
@@ -1050,35 +979,21 @@ int XrdOfsFile::truncate(XrdSfsFileOffset  flen)  // In
 
 // Make sure the offset is not too large
 //
-#if _FILE_OFFSET_BITS!=64
-   if (flen >  0x000000007fffffff)
-      return  XrdOfsFS.Emsg(epname, error, EFBIG, "read", oh->Name());
-#endif
+   if (sizeof(off_t) < sizeof(flen) && flen >  0x000000007fffffff)
+      return  XrdOfsFS.Emsg(epname, error, EFBIG, "truncate", oh->Name());
 
-// Check if we should reopen this handle
+// Silly Castor stuff
 //
-   LOCK(oh);
-   REOPENandHOLD(oh);
-   oh->flags |= OFS_PENDIO;
-   if (!XrdOfsFS.evsObject) first_write = 0;
-      else if ((first_write = !(oh->flags & OFS_CHANGED)))
-              oh->flags |= OFS_CHANGED;
-   UNLOCK(oh);
-
-// Check if we should generate an event
-//
-   if (XrdOfsFS.evsObject && first_write 
-   &&  XrdOfsFS.evsObject->Enabled(XrdOfsEvs::Fwrite))
-       XrdOfsFS.evsObject->Notify(XrdOfsEvs::Fwrite, tident, oh->Name());
+   if (XrdOfsFS.evsObject && !(oh->isChanged)
+   &&  XrdOfsFS.evsObject->Enabled(XrdOfsEvs::Fwrite)) GenFWEvent();
 
 // Perform the function
 //
-   retc = oh->Select().Ftruncate(flen);
-   RELEASE(oh);
-   if (retc)
+   oh->isPending = 1;
+   if ((retc = oh->Select().Ftruncate(flen)))
       return XrdOfsFS.Emsg(epname, error, retc, "truncate", oh->Name());
 
-// Unlock the file and indicate success
+// Indicate Success
 //
    return SFS_OK;
 }
@@ -1099,69 +1014,34 @@ int XrdOfsFile::getCXinfo(char cxtype[4], int &cxrsz)
             Returns SFS_OK upon success and SFS_ERROR upon failure.
 */
 {
-   const char *epname = "getCXinfo";
-
-// Lock the handle to make sure we have an open file
-//
-   LOCK(oh);
 
 // Copy out the info
 //
-   cxtype[0] = oh->cxid[0]; cxtype[1] = oh->cxid[1];
-   cxtype[2] = oh->cxid[2]; cxtype[3] = oh->cxid[3];
-   cxrsz = oh->cxrsz;
-
-// All done
-//
-   UNLOCK(oh);
+   cxrsz = oh->Select().isCompressed(cxtype);
    return SFS_OK;
 }
 
 /******************************************************************************/
-/*            P r i v a t e   X r d O f s F i l e   M e t h o d s             */
+/*                  P r i v a t e   F i l e   M e t h o d s                   */
 /******************************************************************************/
 /******************************************************************************/
-/*                             s e t C X I n f o                              */
+/* protected                  G e n F W E v e n t                             */
 /******************************************************************************/
   
-void XrdOfsFile::setCXinfo(XrdSfsFileOpenMode mode)
+void XrdOfsFile::GenFWEvent()
 {
-    EPNAME("setCXinfo")
-    if (mode & SFS_O_RAWIO)
-       {char cxtype[5], buffer[XrdOucEI::Max_Error_Len];
-        dorawio = 1;
-        strncpy(cxtype, oh->cxid, sizeof(cxtype)-1);
-        cxtype[4] = '\0';
-        sprintf(buffer,"!attn C=%s R=%d", cxtype, oh->cxrsz);
-        error.setErrInfo(0, buffer);
-        FTRACE(open, "raw i/o on; resp=" <<buffer);
-       } else FTRACE(open, "raw i/o off");
-}
+   int first_write;
 
-/******************************************************************************/
-/*                               U n c l o s e                                */
-/******************************************************************************/
-
-int XrdOfsFile::Unclose()
-{   int retc;
-    static const char *epname = "unclose";
-    XrdOucEnv dummyenv;
-
-// Reopen the file object as needed
+// This silly code is to generate a 1st write event which slows things down
+// but is needed by the one and only Castor. What a big sigh!
 //
-   if ((retc = oh->Select().Open(oh->Name(),oh->oflag,(mode_t)0,dummyenv))<0)
-      {XrdOfsFS.Emsg(epname,*new XrdOucErrInfo,retc,"open",oh->Name());
-       return 0;
+   oh->Lock();
+   if ((first_write = !(oh->isChanged))) oh->isChanged = 1;
+   oh->UnLock();
+   if (first_write)
+      {XrdOfsEvsInfo evInfo(tident, oh->Name());
+       XrdOfsFS.evsObject->Notify(XrdOfsEvs::Fwrite, evInfo);
       }
-
-// Insert file handle into open chain
-//
-   oh->Activate();
-
-// Trace the unclose
-//
-   FTRACE(open, "unclose n=" <<XrdOfsFS.FDOpen);
-   return 1;
 }
 
 /******************************************************************************/
@@ -1189,7 +1069,7 @@ int XrdOfs::chmod(const char             *path,    // In
   Output:   Returns SFS_OK upon success and SFS_ERROR upon failure.
 */
 {
-   static const char *epname = "chmod";
+   EPNAME("chmod");
    mode_t acc_mode = Mode & S_IAMB;
    const char *tident = einfo.getErrUser();
    XrdOucEnv chmod_Env(info);
@@ -1203,22 +1083,21 @@ int XrdOfs::chmod(const char             *path,    // In
 // Find out where we should chmod this file
 //
    if (Finder && Finder->isRemote())
-      if (fwdCHMOD)
-         {char buff[8];
-          sprintf(buff, "%o", acc_mode);
-          if ((retc = Finder->Forward(einfo, fwdCHMOD, buff, path)))
-             return fsError(einfo, retc);
-         }
-      else if ((retc = Finder->Locate(einfo,path,SFS_O_RDWR)))
-              return fsError(einfo, retc);
+      {if (fwdCHMOD.Cmd)
+          {char buff[8];
+           sprintf(buff, "%o", acc_mode);
+           if (Forward(retc, einfo, fwdCHMOD, path, buff, info)) return retc;
+          }
+          else if ((retc = Finder->Locate(einfo,path,SFS_O_RDWR|SFS_O_META)))
+                  return fsError(einfo, retc);
+      }
 
 // Check if we should generate an event
 //
    if (evsObject && evsObject->Enabled(XrdOfsEvs::Chmod))
-         {char buff[8];
-          sprintf(buff, "%o", acc_mode);
-          evsObject->Notify(XrdOfsEvs::Chmod, tident, buff, path);
-         }
+      {XrdOfsEvsInfo evInfo(tident, path, info, &chmod_Env, acc_mode);
+       evsObject->Notify(XrdOfsEvs::Chmod, evInfo);
+      }
 
 // Now try to find the file or directory
 //
@@ -1256,7 +1135,7 @@ int XrdOfs::exists(const char                *path,        // In
   Notes:    When failure occurs, 'file_exists' is not modified.
 */
 {
-   static const char *epname = "exists";
+   EPNAME("exists");
    struct stat fstat;
    int retc;
    const char *tident = einfo.getErrUser();
@@ -1305,6 +1184,9 @@ int XrdOfs::fsctl(const int               cmd,
 
   Input:    cmd       - Operation command (currently supported):
                         SFS_FSCTL_LOCATE - locate file
+                        SFS_FSCTL_STATFS - return file system info (physical)
+                        SFS_FSCTL_STATLS - return file system info (logical)
+                        SFS_FSCTL_STATXA - return file extended attributes
             arg       - Command dependent argument:
                       - Locate: The path whose location is wanted
             buf       - The stat structure to hold the results
@@ -1314,13 +1196,24 @@ int XrdOfs::fsctl(const int               cmd,
   Output:   Returns SFS_OK upon success and SFS_ERROR upon failure.
 */
 {
-   static const char *epname = "fsctl";
+   EPNAME("fsctl");
+   static int PrivTab[]     = {XrdAccPriv_Delete, XrdAccPriv_Insert,
+                               XrdAccPriv_Lock,   XrdAccPriv_Lookup,
+                               XrdAccPriv_Rename, XrdAccPriv_Read,
+                               XrdAccPriv_Write};
+   static char PrivLet[]    = {'d',               'i',
+                               'k',               'l',
+                               'n',               'r',
+                               'w'};
+   static const int PrivNum = sizeof(PrivLet);
+
    int retc, find_flag = SFS_O_LOCATE | (cmd & (SFS_O_NOWAIT | SFS_O_RESET));
-   int opcode = cmd & SFS_FSCTL_CMD;
+   int i, blen, privs, opcode = cmd & SFS_FSCTL_CMD;
    const char *tident = einfo.getErrUser();
+   char *bP, *cP;
    XTRACE(fsctl, args, "");
 
-// Screen for commands we support (each has it's own security and implentation)
+// Process the LOCATE request
 //
    if (opcode == SFS_FSCTL_LOCATE)
       {struct stat fstat;
@@ -1331,10 +1224,68 @@ int XrdOfs::fsctl(const int               cmd,
           return fsError(einfo, retc);
        if ((retc = XrdOfsOss->Stat(args, &fstat)))
           return XrdOfsFS.Emsg(epname, einfo, retc, "locate", args);
-       rType[0] = (fstat.st_mode & S_IFBLK == S_IFBLK ? 's' : 'S');
+       rType[0] = ((fstat.st_mode & S_IFBLK) == S_IFBLK ? 's' : 'S');
        rType[1] = (fstat.st_mode & S_IWUSR            ? 'w' : 'r');
        rType[2] = '\0';
        einfo.setErrInfo(locRlen+3, (const char **)Resp, 2);
+       return SFS_DATA;
+      }
+
+// Process the STATFS request
+//
+   if (opcode == SFS_FSCTL_STATFS)
+      {AUTHORIZE(client,0,AOP_Stat,"statfs",args,einfo);
+       if (Finder && Finder->isRemote()
+       &&  (retc = Finder->Space(einfo, args))) return fsError(einfo, retc);
+       bP = einfo.getMsgBuff(blen);
+       if ((retc = XrdOfsOss->StatFS(args, bP, blen)))
+          return XrdOfsFS.Emsg(epname, einfo, retc, "statfs", args);
+       einfo.setErrCode(blen+1);
+       return SFS_DATA;
+      }
+
+// Process the STATLS request
+//
+   if (opcode == SFS_FSCTL_STATLS)
+      {const char *path;
+       char pbuff[1024], *opq = index(args, '?');
+       XrdOucEnv statls_Env(opq ? opq+1 : 0);
+       if (!opq) path = args;
+          else {int plen = opq-args;
+                if (plen >= (int)sizeof(pbuff)) plen = sizeof(pbuff)-1;
+                strncpy(pbuff, args, plen);
+                path = pbuff;
+               }
+       AUTHORIZE(client,0,AOP_Stat,"statfs",path,einfo);
+       if (Finder && Finder->isRemote()
+       &&  (retc = Finder->Space(einfo, path))) return fsError(einfo, retc);
+       bP = einfo.getMsgBuff(blen);
+       if ((retc = XrdOfsOss->StatLS(statls_Env, path, bP, blen)))
+          return XrdOfsFS.Emsg(epname, einfo, retc, "statls", path);
+       einfo.setErrCode(blen+1);
+       return SFS_DATA;
+      }
+
+// Process the STATXA request
+//
+   if (opcode == SFS_FSCTL_STATXA)
+      {AUTHORIZE(client,0,AOP_Stat,"statxa",args,einfo);
+       if (Finder && Finder->isRemote()
+       && (retc = Finder->Locate(einfo, args, SFS_O_RDONLY|SFS_O_STAT)))
+          return fsError(einfo, retc);
+       bP = einfo.getMsgBuff(blen);
+       if ((retc = XrdOfsOss->StatXA(args, bP, blen)))
+          return XrdOfsFS.Emsg(epname, einfo, retc, "statxa", args);
+       if (!client || !XrdOfsFS.Authorization) privs = XrdAccPriv_All;
+          else privs = XrdOfsFS.Authorization->Access(client, args, AOP_Any);
+       cP = bP + blen; strcpy(cP, "&ofs.ap="); cP += 8;
+       if (privs == XrdAccPriv_All) *cP++ = 'a';
+          else {for (i = 0; i < PrivNum; i++)
+                    if (PrivTab[i] & privs) *cP++ = PrivLet[i];
+                if (cP == (bP + blen + 1)) *cP++ = '?';
+               }
+       *cP++ = '\0';
+       einfo.setErrCode(cP-bP+1);
        return SFS_DATA;
       }
 
@@ -1373,7 +1324,8 @@ int XrdOfs::mkdir(const char             *path,    // In
   Output:   Returns SFS_OK upon success and SFS_ERROR upon failure.
 */
 {
-   static const char *epname = "mkdir";
+   EPNAME("mkdir");
+   static const int LocOpts = SFS_O_RDWR | SFS_O_CREAT | SFS_O_META;
    mode_t acc_mode = Mode & S_IAMB;
    int retc, mkpath = Mode & SFS_O_MKPTH;
    const char *tident = einfo.getErrUser();
@@ -1387,14 +1339,15 @@ int XrdOfs::mkdir(const char             *path,    // In
 // Find out where we should remove this file
 //
    if (Finder && Finder->isRemote())
-      if (fwdMKDIR)
-         {char buff[8];
-          sprintf(buff, "%o", acc_mode);
-          return ((retc = Finder->Forward(einfo, (mkpath ? fwdMKPATH : fwdMKDIR),
-                                  buff, path)) ? fsError(einfo, retc) : SFS_OK);
-         }
-         else if ((retc = Finder->Locate(einfo,path,SFS_O_RDWR | SFS_O_CREAT)))
-                 return fsError(einfo, retc);
+      {if (fwdMKDIR.Cmd)
+          {char buff[8];
+           sprintf(buff, "%o", acc_mode);
+           if (Forward(retc, einfo, (mkpath ? fwdMKPATH:fwdMKDIR),
+                       path, buff, info)) return retc;
+          }
+          else if ((retc = Finder->Locate(einfo,path,LocOpts)))
+                  return fsError(einfo, retc);
+      }
 
 // Perform the actual operation
 //
@@ -1404,10 +1357,9 @@ int XrdOfs::mkdir(const char             *path,    // In
 // Check if we should generate an event
 //
    if (evsObject && evsObject->Enabled(XrdOfsEvs::Mkdir))
-         {char buff[8];
-          sprintf(buff, "%o", acc_mode);
-          evsObject->Notify(XrdOfsEvs::Mkdir, tident, buff, path);
-         }
+      {XrdOfsEvsInfo evInfo(tident, path, info, &mkdir_Env, acc_mode);
+       evsObject->Notify(XrdOfsEvs::Mkdir, evInfo);
+      }
 
     return SFS_OK;
 }
@@ -1420,7 +1372,7 @@ int XrdOfs::prepare(      XrdSfsPrep       &pargs,      // In
                           XrdOucErrInfo    &out_error,  // Out
                     const XrdSecEntity     *client)     // In
 {
-   static const char *epname = "prepare";
+   EPNAME("prepare");
    XrdOucTList *tp = pargs.paths;
    int retc;
 
@@ -1460,10 +1412,9 @@ int XrdOfs::remove(const char              type,    // In
   Output:   Returns SFS_OK upon success and SFS_ERROR upon failure.
 */
 {
+   EPNAME("remove");
    int retc;
-   static const char *epname = "remove";
    const char *tident = einfo.getErrUser();
-   const char *fSpec;
    XrdOucEnv rem_Env(info);
    XTRACE(remove, path, type);
 
@@ -1474,26 +1425,29 @@ int XrdOfs::remove(const char              type,    // In
 // Find out where we should remove this file
 //
    if (Finder && Finder->isRemote())
-      if ((fSpec = (type == 'd' ? fwdRMDIR : fwdRM)))
-         return ((retc = Finder->Forward(einfo, fSpec, path)) 
-                       ? fsError(einfo, retc) : SFS_OK);
-         else if ((retc = Finder->Locate(einfo,path,SFS_O_WRONLY)))
-                 return fsError(einfo, retc);
+      {struct fwdOpt *fSpec = (type == 'd' ? &fwdRMDIR : &fwdRM);
+       if (fSpec->Cmd)
+          {if (Forward(retc, einfo, *fSpec, path, 0, info)) return retc;}
+          else if ((retc = Finder->Locate(einfo,path,SFS_O_WRONLY|SFS_O_META)))
+                  return fsError(einfo, retc);
+      }
 
 // Check if we should generate an event
 //
    if (evsObject)
       {XrdOfsEvs::Event theEvent=(type == 'd' ? XrdOfsEvs::Rmdir:XrdOfsEvs::Rm);
        if (evsObject->Enabled(theEvent))
-          evsObject->Notify(theEvent, tident, path);
+          {XrdOfsEvsInfo evInfo(tident, path, info, &rem_Env);
+           evsObject->Notify(theEvent, evInfo);
+          }
       }
 
 // Perform the actual deletion
 //
-    if ((retc = XrdOfsOss->Unlink(path)))
-       return XrdOfsFS.Emsg(epname, einfo, retc, "remove", path);
+    retc = (type == 'd' ? XrdOfsOss->Remdir(path) : XrdOfsOss->Unlink(path));
+    if (retc) return XrdOfsFS.Emsg(epname, einfo, retc, "remove", path);
     if (type == 'f')
-       {XrdOfsFS.Detach_Name(path);
+       {XrdOfsHandle::Hide(path);
         if (Balancer) Balancer->Removed(path);
        }
     return SFS_OK;
@@ -1522,7 +1476,7 @@ int XrdOfs::rename(const char             *old_name,  // In
   Output:   Returns SFS_OK upon success and SFS_ERROR upon failure.
 */
 {
-   static const char *epname = "rename";
+   EPNAME("rename");
    int retc;
    const char *tident = einfo.getErrUser();
    XrdOucEnv old_Env(infoO);
@@ -1538,22 +1492,27 @@ int XrdOfs::rename(const char             *old_name,  // In
 // Find out where we should rename this file
 //
    if (Finder && Finder->isRemote())
-      if (fwdMV)
-         return ((retc = Finder->Forward(einfo, fwdMV, old_name, new_name))
-                ? fsError(einfo, retc) : SFS_OK);
-         else if ((retc = Finder->Locate(einfo,old_name,SFS_O_RDWR)))
-                 return fsError(einfo, retc);
+      {if (fwdMV.Cmd)
+          {if (Forward(retc, einfo, fwdMV, old_name, new_name, infoO, infoN))
+              return retc;
+          }
+          else if ((retc = Finder->Locate(einfo,old_name,SFS_O_RDWR|SFS_O_META)))
+                  return fsError(einfo, retc);
+      }
 
 // Check if we should generate an event
 //
    if (evsObject && evsObject->Enabled(XrdOfsEvs::Mv))
-      evsObject->Notify(XrdOfsEvs::Mv, tident, old_name, new_name);
+      {XrdOfsEvsInfo evInfo(tident, old_name, infoO, &old_Env, 0, 0,
+                                    new_name, infoN, &new_Env);
+       evsObject->Notify(XrdOfsEvs::Mv, evInfo);
+      }
 
 // Perform actual rename operation
 //
    if ((retc = XrdOfsOss->Rename(old_name, new_name)))
       return XrdOfsFS.Emsg(epname, einfo, retc, "rename", old_name);
-   XrdOfsFS.Detach_Name(old_name);
+   XrdOfsHandle::Hide(old_name);
    if (Balancer) {Balancer->Removed(old_name);
                   Balancer->Added(new_name);
                  }
@@ -1581,7 +1540,7 @@ int XrdOfs::stat(const char             *path,        // In
   Output:   Returns SFS_OK upon success and SFS_ERROR upon failure.
 */
 {
-   static const char *epname = "stat";
+   EPNAME("stat");
    int retc;
    const char *tident = einfo.getErrUser();
    XrdOucEnv stat_Env(info);
@@ -1625,7 +1584,7 @@ int XrdOfs::stat(const char             *path,        // In
             If file residency cannot be determined, mode is set to -1.
 */
 {
-   static const char *epname = "stat";
+   EPNAME("stat");
    struct stat buf;
    int retc;
    const char *tident = einfo.getErrUser();
@@ -1652,81 +1611,62 @@ int XrdOfs::stat(const char             *path,        // In
 }
 
 /******************************************************************************/
-/*                                 C l o s e                                  */
+/*                              t r u n c a t e                               */
 /******************************************************************************/
 
-// Warning: The caller must have the object but *not* the anchor locked. This
-//          method returns with the object deleted (hence unlocked).
-//
-int XrdOfs::Close(XrdOfsHandle *oh, const char *trid)
+int XrdOfs::truncate(const char             *path,    // In
+                           XrdSfsFileOffset  Size,    // In
+                           XrdOucErrInfo    &einfo,   // Out
+                     const XrdSecEntity     *client,  // In
+                     const char             *info)    // In
+/*
+  Function: Change the mode on a file or directory.
+
+  Input:    path      - Is the fully qualified name of the file to be removed.
+            Size      - the size the file should have.
+            einfo     - Error information object to hold error details.
+            client    - Authentication credentials, if any.
+            info      - Opaque information to be used as seen fit.
+
+  Output:   Returns SFS_OK upon success and SFS_ERROR upon failure.
+*/
 {
+   EPNAME("truncate");
+   const char *tident = einfo.getErrUser();
+   XrdOucEnv trunc_Env(info);
+   int retc;
+   XTRACE(truncate, path, "");
 
-// If this is a real close, then decrement link count. However, we need to
-// obtain the anchor lock before touching the links field.
+// Apply security, as needed
 //
-    oh->LockAnchor();
-    oh->links--;
+   AUTHORIZE(client,&trunc_Env,AOP_Update,"truncate",path,einfo);
 
-// Return if there are still active links to this object
+// Find out where we should chmod this file
 //
-    if (oh->links) {oh->UnLockAnchor(); oh->UnLock(); return 0;}
-
-// Send notification, if need be
-//
-   if (evsObject && trid)
-      {XrdOfsEvs::Event theEvent = oh->oflag & (O_RDWR | O_WRONLY)
-                                 ? XrdOfsEvs::Closew : XrdOfsEvs::Closer;
-       if (evsObject->Enabled(theEvent))
-          evsObject->Notify(theEvent, trid, oh->Name());
+   if (Finder && Finder->isRemote())
+      {if (fwdTRUNC.Cmd)
+          {char xSz[32];
+           sprintf(xSz, "%lld", static_cast<long long>(Size));
+           if (Forward(retc, einfo, fwdTRUNC, path, xSz, info)) return retc;
+          }
+          else if ((retc = Finder->Locate(einfo,path,SFS_O_RDWR)))
+                  return fsError(einfo, retc);
       }
 
-// Close the file appropriately if it's really open
+// Check if we should generate an event
 //
-    Unopen(oh);
+   if (evsObject && evsObject->Enabled(XrdOfsEvs::Trunc))
+      {XrdOfsEvsInfo evInfo(tident, path, info, &trunc_Env, 0, Size);
+       evsObject->Notify(XrdOfsEvs::Trunc, evInfo);
+      }
 
-// Remove the object from all chains and release the anchor and object locks
+// Now try to find the file or directory
 //
-   oh->Retire(0);
-   oh->UnLockAnchor();
-   oh->UnLock();
+   if (!(retc = XrdOfsOss->Truncate(path, Size))) return SFS_OK;
 
-// Free up the storage and return
+// An error occured, return the error info
 //
-   delete oh;
-   return 0;  // We ignore errors here since they are immaterial
-}
-
-/******************************************************************************/
-/*                                U n o p e n                                 */
-/******************************************************************************/
-  
-// Warning: The caller must have both the object and the anchor locked.
-//          This method returns with the object *still* locked.
-//
-int XrdOfs::Unopen(XrdOfsHandle *oh)
-{
-    static const char *epname = "Unopen";
-#ifndef NODEBUG
-    static const char *tident = "";
-#endif
-    int retc = 0;
-
-// Close the file appropriately if it's really open
-//
-    if (!(oh->flags & OFS_TCLOSE))
-       {if (oh->Select().Close()) retc = XrdOfsFS.Emsg(epname, 
-                             *new XrdOucErrInfo, retc, "close", oh->Name());
-           else retc = SFS_OK;
-
-        // Unchain this filehandle from the active chain
-        //
-        oh->Deactivate(0);
-        FTRACE(open, "numfd=" <<FDOpen);
-       }
-
-// Simply return, the caller must unlock the object
-//
-   return retc;
+   return XrdOfsFS.Emsg(epname, einfo, retc, "trunc", path);
 }
 
 /******************************************************************************/
@@ -1772,20 +1712,6 @@ int XrdOfs::Emsg(const char    *pfx,    // Message prefix value
 /*                     P R I V A T E    S E C T I O N                         */
 /******************************************************************************/
 /******************************************************************************/
-/*                           D e t a c h _ N a m e                            */
-/******************************************************************************/
-
-void XrdOfs::Detach_Name(const char *fname)
-{
-     const unsigned long hval = XrdOucHashVal(fname);
-
-// Hide all matches in r/o and r/w queues to prevent future attaches
-//
-   XrdOfsOrigin_RO.Hide(hval, fname);
-   XrdOfsOrigin_RW.Hide(hval, fname);
-}
-
-/******************************************************************************/
 /*                                 F n a m e                                  */
 /******************************************************************************/
 
@@ -1795,6 +1721,31 @@ const char *XrdOfs::Fname(const char *path)
    while(i) if (path[i] == '/') return &path[i+1];
                else i--;
    return path;
+}
+
+/******************************************************************************/
+/*                               F o r w a r d                                */
+/******************************************************************************/
+  
+int XrdOfs::Forward(int &Result, XrdOucErrInfo &Resp, struct fwdOpt &Fwd,
+                    const char *arg1, const char *arg2,
+                    const char *arg3, const char *arg4)
+{
+   int retc;
+
+   if ((retc = Finder->Forward(Resp, Fwd.Cmd, arg1, arg2, arg3, arg4)))
+      {Result = fsError(Resp, retc);
+       return 1;
+      }
+
+   if (Fwd.Port <= 0)
+      {Result = SFS_OK;
+       return (Fwd.Port ? 0 : 1);
+      }
+
+   Resp.setErrInfo(Fwd.Port, Fwd.Host);
+   Result = SFS_REDIRECT;
+   return 1;
 }
 
 /******************************************************************************/
@@ -1880,120 +1831,4 @@ char *XrdOfs::WaitTime(int stime, char *buff, int blen)
 //
    buff[blen-1] = '\0';
    return buff;
-}
-  
-/******************************************************************************/
-/*                      I d l e   F D   H a n d l i n g                       */
-/******************************************************************************/
-/******************************************************************************/
-/*                        X r d O f s I d l e S c a n                         */
-/******************************************************************************/
-  
-void *XrdOfsIdleScan(void *noargs)
-{
-   EPNAME("IdleScan")
-#ifndef NODEBUG
-   const char *tident = "";
-#endif
-   int num_closed;
-   struct timeval tod;
-   struct timespec naptime = {XrdOfsFS.FDMinIdle, 0};
-
-// This thread never stops unless we are not supposed to do this
-//
-   if (XrdOfsFS.FDMinIdle) while(1) {
-
-   // Wait until the right time
-   //
-      do {nanosleep(&naptime, 0);} while(XrdOfsFS.FDOpen <= XrdOfsFS.FDOpenMax);
-
-   // Process each queue for idle handles. Do NOT process the directory queue!
-   //
-      num_closed = XrdOfsFS.FDOpen;
-      XrdOfsIdleCheck(XrdOfsOrigin_RO);
-      XrdOfsIdleCheck(XrdOfsOrigin_RW);
-      num_closed = num_closed - XrdOfsFS.FDOpen;
-
-   // Get absolute minimum wait time for the next scan
-   //
-      gettimeofday(&tod, 0);
-      naptime.tv_sec =
-              (XrdOfsOrigin_RO.IdleDeadline < XrdOfsOrigin_RW.IdleDeadline
-              ? XrdOfsOrigin_RO.IdleDeadline : XrdOfsOrigin_RW.IdleDeadline)
-              - tod.tv_sec;
-
-   // Perform ending trace
-   //
-      ZTRACE(qscan, "closed " <<num_closed <<" active " <<XrdOfsFS.FDOpen
-                    <<" rescan " <<naptime.tv_sec
-                    <<" r/o=" <<(XrdOfsOrigin_RO.IdleDeadline-tod.tv_sec)
-                    <<" r/w=" <<(XrdOfsOrigin_RW.IdleDeadline-tod.tv_sec));
-      }
-
-// Exit normally if we should ever get here (rather unlikely)
-//
-   return (void *)0;
-}
-
-/******************************************************************************/
-/*                       X r d O f s I d l e C h e c k                        */
-/******************************************************************************/
-
-void XrdOfsIdleCheck(XrdOfsHandleAnchor &anchor)
-{
-   struct timeval tod;
-   time_t NextTime;
-
-   // Get current time of day
-   //
-      gettimeofday(&tod, 0);
-
-   // Check if we should scan this queue for idle handles
-   //
-     if (tod.tv_sec >= anchor.IdleDeadline)
-        {anchor.IdleDeadline = 0;
-         anchor.Apply2Open(XrdOfsIdleXeq, (void *)tod.tv_sec);
-
-         // Caclculate the next time we really need to do a queue scan
-         //
-         NextTime = XrdOfsFS.FDMaxIdle - anchor.IdleDeadline;
-         if (NextTime > XrdOfsFS.FDMinIdle) anchor.IdleDeadline=NextTime+tod.tv_sec;
-            else anchor.IdleDeadline = XrdOfsFS.FDMinIdle+tod.tv_sec;
-        }
-}
-  
-/******************************************************************************/
-/*                         X r d O f s I d l e X e q                          */
-/******************************************************************************/
-
-int XrdOfsIdleXeq(XrdOfsHandle *op, void *tsecarg)
-{
-    EPNAME("IdleXeq")
-#ifndef NODEBUG
-    const char *tident = "";
-#endif
-    time_t tsec = (time_t)tsecarg;
-    XrdOfsHandleAnchor *anchor = &(op->Anchor());
-    time_t IdleTime;
-    const char *act = " ";
-
- // Ceck if this handle is past the idle deadline, if so, close it. Note
- // that we already have the anchor locked so we don't ask for it to be locked.
- // However, we need to lock the file handle which may cause a deadlock. So,
- // we skip processing this handle is we can't get the lock immediately or
- // if the file has a memory mapping.
- //
-    IdleTime = tsec - op->optod;
-    if (IdleTime <= XrdOfsFS.FDMaxIdle)
-       anchor->IdleDeadline = Max(IdleTime, anchor->IdleDeadline);
-       else {if (op->CondLock())
-                {if (op->activ) act = " active ";
-                    else if (op->Select().getMmap(0)) act = " mmaped ";
-                            else XrdOfsFS.Unopen(op);
-                 op->UnLock();
-                }
-                else act = " unlockable ";
-             XTRACE(qscan,op->Name(),"idle=" <<IdleTime <<act <<op->Qname());
-            }
-    return 0;
 }

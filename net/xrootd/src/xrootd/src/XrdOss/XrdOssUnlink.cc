@@ -19,12 +19,13 @@ const char *XrdOssUnlinkCVSID = "$Id$";
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <iostream>
-using namespace std;
 
+#include "XrdSys/XrdSysHeaders.hh"
 #include "XrdOss/XrdOssApi.hh"
 #include "XrdOss/XrdOssError.hh"
 #include "XrdOss/XrdOssLock.hh"
+#include "XrdOss/XrdOssOpaque.hh"
+#include "XrdOss/XrdOssPath.hh"
 #include "XrdOss/XrdOssTrace.hh"
 
 /******************************************************************************/
@@ -35,6 +36,42 @@ extern XrdSysError OssEroute;
 
 extern XrdOucTrace OssTrace;
   
+/******************************************************************************/
+/*                                R e m d i r                                 */
+/******************************************************************************/
+  
+/*
+  Function: Delete a directory from the namespace.
+
+  Input:    path      - Is the fully qualified name of the dir to be removed.
+
+  Output:   Returns XrdOssOK upon success and -errno upon failure.
+*/
+int XrdOssSys::Remdir(const char *path)
+{
+    unsigned long long opts;
+    int retc;
+    struct stat statbuff;
+    char  local_path[XrdOssMAX_PATH_LEN+1+8];
+
+// Determine whether we can actually unlink a dir on this server.
+//
+   retc = Check_RO(Unlink, opts, path, "deleting ");
+
+// Build the right local and remote paths.
+//
+   if ( (retc = GenLocalPath( path,  local_path))) return retc;
+
+// Check if this path is really a directory
+//
+    if (lstat(local_path, &statbuff)) return (errno == ENOENT ? 0 : -errno);
+    if ((statbuff.st_mode & S_IFMT) != S_IFDIR) return -ENOTDIR;
+
+// Complete by calling Unlink()
+//
+    return Unlink(path);
+}
+
 /******************************************************************************/
 /*                                U n l i n k                                 */
 /******************************************************************************/
@@ -50,7 +87,7 @@ int XrdOssSys::Unlink(const char *path)
 {
     EPNAME("Unlink")
     unsigned long long ismig, remotefs;
-    int i, retc2, retc = XrdOssOK;
+    int i, retc2, doAdjust = 0, retc = XrdOssOK;
     XrdOssLock un_file;
     struct stat statbuff;
     char *fnp;
@@ -78,31 +115,31 @@ int XrdOssSys::Unlink(const char *path)
        else if ((statbuff.st_mode & S_IFMT) == S_IFLNK)
                retc = BreakLink(local_path, statbuff);
                else if ((statbuff.st_mode & S_IFMT) == S_IFDIR)
-                       {if (remotefs) 
-                           {un_file.UnSerialize(0);
-                            un_file.NoSerialize(local_path, XrdOssDIR);
-                           }
-                        if (rmdir(local_path)) retc = -errno;
+                       {if (remotefs) un_file.UnSerialize(0);
+                        un_file.NoSerialize(local_path, XrdOssDIR);
+                        if ((retc = rmdir(local_path))) retc = -errno;
                         DEBUG("dir rc=" <<retc <<" path=" <<local_path);
                         return retc;
-                       }
+                       } else doAdjust = 1;
 
 // Delete the local copy and every valid suffix variation
 //
    if (!retc)
-      if (unlink(local_path)) retc = -errno;
-         else {i = strlen(local_path); fnp = &local_path[i];
-               Adjust(statbuff.st_dev, statbuff.st_size);
-               if (ismig) for (i = 0; sfx[i]; i++)
-                  {strcpy(fnp, sfx[i]);
-                   if (unlink(local_path))
-                      if (errno == ENOENT) continue;
-                         else retc2 = errno;
-                      else retc2 = 0;
-                   DEBUG("sfx retc=" <<retc2 <<' ' <<local_path);
-                  }
-              }
-      DEBUG("lcl rc=" <<retc <<" path=" <<local_path);
+      {if (unlink(local_path)) retc = -errno;
+          else {i = strlen(local_path); fnp = &local_path[i];
+                if (doAdjust && statbuff.st_size)
+                   Adjust(statbuff.st_dev, -statbuff.st_size);
+                if (ismig) for (i = 0; sfx[i]; i++)
+                   {strcpy(fnp, sfx[i]);
+                    if (unlink(local_path))
+                       if (errno == ENOENT) continue;
+                          else retc2 = errno;
+                       else retc2 = 0;
+                    DEBUG("sfx retc=" <<retc2 <<' ' <<local_path);
+                   }
+               }
+       DEBUG("lcl rc=" <<retc <<" path=" <<local_path);
+      }
 
 // If local copy effectively deleted. delete the remote copy if need be
 //
@@ -127,7 +164,7 @@ int XrdOssSys::Unlink(const char *path)
 int XrdOssSys::BreakLink(const char *local_path, struct stat &statbuff)
 {
     EPNAME("BreakLink")
-    char lnkbuff[PATH_MAX+1];
+    char *lP, lnkbuff[PATH_MAX+64];
     int lnklen, retc = 0;
 
 // Read the contents of the link
@@ -138,20 +175,25 @@ int XrdOssSys::BreakLink(const char *local_path, struct stat &statbuff)
 // Return the actual stat information on the target (which might not exist
 //
    lnkbuff[lnklen] = '\0';
-   if (stat(lnkbuff, &statbuff)) 
-      {statbuff.st_size = 0;
-       if (errno == ENOENT) return 0;
-      }
+   if (stat(lnkbuff, &statbuff)) statbuff.st_size = 0;
+      else if (unlink(lnkbuff) && errno != ENOENT)
+              {retc = -errno;
+               OssEroute.Emsg("BreakLink",retc,"unlink symlink target",lnkbuff);
+              } else {DEBUG("broke link " <<local_path <<"->" <<lnkbuff);}
 
-// Now unlink the target
+// If this is a new-style cache, then we must also remove the pfn file.
+// In any case, return the appropriate cache group.
 //
-   if (unlink(lnkbuff) && errno != ENOENT)
-      {retc = -errno;
-       OssEroute.Emsg("XrdOssBreakLink",retc,"unlink symlink target",lnkbuff);
-      }
+   lP = lnkbuff+lnklen-1;
+   if (*lP == XrdOssPath::xChar)
+      {strcpy(lP+1, ".pfn"); unlink(lnkbuff);
+       if (statbuff.st_size)
+          {XrdOssPath::Trim2Base(lP);
+           Adjust(lnkbuff, -statbuff.st_size);
+          }
+      } else if (statbuff.st_size) Adjust(statbuff.st_dev, -statbuff.st_size);
 
 // All done
 //
-   DEBUG("broke link " <<local_path <<"->" <<lnkbuff);
    return retc;
 }

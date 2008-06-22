@@ -87,8 +87,9 @@ void                 SetNext(XrdOucHash_Item<T> *item) {next = item;}
           {if (!(entopts & Hash_keep))
               {if (keydata && keydata != (T *)keyval 
                && !(entopts & Hash_keepdata))
-                  if (entopts & Hash_dofree) free(keydata);
-                     else delete keydata;
+                  {if (entopts & Hash_dofree) free(keydata);
+                      else delete keydata;
+                  }
                if (keyval)  free((void *)keyval);
               }
            keydata = 0; keyval = 0; keycount = 0;

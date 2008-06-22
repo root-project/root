@@ -1,10 +1,10 @@
-# $Id: GNUmakefile,v 1.7.6.1 2008/01/12 12:42:13 ganis Exp $
+# $Id: GNUmakefile,v 1.7 2007/07/31 02:26:26 abh Exp $
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
 #------------------------------------------------------------------------------#
 include ../GNUmake.env
 
-BINLIBS  = $(CRYPTLIB) -L$(LIBDIR) -lXrdCrypto -lXrdSut -lXrdOuc -lXrdSys
+BINLIBS  = $(CRYPTLIB) $(LIBAFS) -L$(LIBDIR) -lXrdCrypto -lXrdSut -lXrdOuc -lXrdSys
 
 LIBDEPS = $(LIBDIR)/libXrdCrypto.a $(LIBDIR)/libXrdSut.a \
           $(LIBDIR)/libXrdOuc.a $(LIBDIR)/libXrdSys.a
@@ -65,7 +65,7 @@ anything: $(TARGETS)
 
 $(LIBRARY): $(OBJECTS) $(LIBDEPS)
 	@echo Creating shared library $(LIBRARY) 
-	$(ECHO)$(CC) $(OBJECTS) $(LDSO) $(BINLIBS) $(LIBAFS) $(LIBS) -lresolv -o $(LIBRARY)
+	$(ECHO)$(CC) $(OBJECTS) $(LDSO) $(BINLIBS) $(LIBS) -lresolv -o $(LIBRARY)
 
 $(SRVADMIN): $(OBJECTA) $(LIBDEPS)
 	@echo Creating executable $(SRVADMIN) 

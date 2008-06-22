@@ -31,6 +31,7 @@ extern const int   DEFAULT_PORT;
 const kXR_char PACKET_TYPE_ADMIN = 'A';
 const kXR_char PACKET_TYPE_DICT  = 'd';
 const kXR_char PACKET_TYPE_INFO  = 'i';
+const kXR_char PACKET_TYPE_STAGE = 's';
 const kXR_char PACKET_TYPE_TRACE = 't';
 const kXR_char PACKET_TYPE_USER  = 'u';
 
@@ -45,7 +46,8 @@ const char XROOTD_MON_RWREQUESTMASK = 0x80;
 //     sent from xrootd. Also, all timestamps in GMT instead
 //     of localtime
 // 3 = added current time to the "u" entries at the end
-const kXR_int16 XRDMON_VERSION = 3;
+// 4 = added support for staging information ("s" entries)
+const kXR_int16 XRDMON_VERSION = 4;
 
 enum AdminCommand {
     c_shutdown = 1000

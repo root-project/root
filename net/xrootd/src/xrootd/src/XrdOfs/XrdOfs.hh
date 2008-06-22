@@ -14,18 +14,18 @@
 
 #include <string.h>
 #include <dirent.h>
-#include <sys/time.h>
 #include <sys/types.h>
   
 #include "XrdOfs/XrdOfsEvr.hh"
 #include "XrdOfs/XrdOfsHandle.hh"
-#include "XrdOdc/XrdOdcFinder.hh"
 #include "XrdOss/XrdOss.hh"
 #include "XrdSys/XrdSysPthread.hh"
 #include "XrdOuc/XrdOucPList.hh"
 #include "XrdSfs/XrdSfsInterface.hh"
+#include "XrdCms/XrdCmsClient.hh"
 
 class XrdOfsEvs;
+class XrdOss;
 class XrdOssDir;
 class XrdOucEnv;
 class XrdSysError;
@@ -86,6 +86,10 @@ public:
 
         int          close();
 
+virtual int          fctl(const int               cmd,
+                          const char             *args,
+                                XrdOucErrInfo    &out_error);
+
         const char  *FName() {return (oh ? oh->Name() : "?");}
 
         int          getMmap(void **Addr, off_t &Size);
@@ -115,26 +119,19 @@ public:
 
         int            getCXinfo(char cxtype[4], int &cxrsz);
 
-                       XrdOfsFile(const char *user) : XrdSfsFile(user)
-                                 {oh = (XrdOfsHandle *)0; dorawio = 0;
-                                  tident = (user ? user : "");
-                                  gettimeofday(&tod, 0);
-                                 }
+                       XrdOfsFile(const char *user);
 
 virtual               ~XrdOfsFile() {if (oh) close();}
 
 protected:
-const char    *tident;
+       const char   *tident;
 
 private:
 
-       void         setCXinfo(XrdSfsFileOpenMode mode);
-       void         TimeStamp() {gettimeofday(&tod, 0);}
-        int         Unclose();
+void           GenFWEvent();
 
 XrdOfsHandle  *oh;
 int            dorawio;
-struct timeval tod;
 };
 
 /******************************************************************************/
@@ -142,6 +139,7 @@ struct timeval tod;
 /******************************************************************************/
 
 class XrdAccAuthorize;
+class XrdCmsClient;
   
 class XrdOfs : public XrdSfsFileSystem
 {
@@ -222,13 +220,18 @@ const   char          *getVersion();
                             const XrdSecEntity     *client,
                             const char             *opaque = 0);
 
+        int            truncate(const char             *Name,
+                                      XrdSfsFileOffset fileOffset,
+                                      XrdOucErrInfo    &out_error,
+                                const XrdSecEntity     *client = 0,
+                                const char             *opaque = 0);
 // Management functions
 //
 virtual int            Configure(XrdSysError &);
 
-        void           Config_Display(XrdSysError &);
+        void           Config_Cluster(XrdOss *);
 
-virtual int            Unopen(XrdOfsHandle *);
+        void           Config_Display(XrdSysError &);
 
                        XrdOfs();
 virtual               ~XrdOfs() {}  // Too complicate to delete :-)
@@ -239,28 +242,42 @@ virtual               ~XrdOfs() {}  // Too complicate to delete :-)
   
 // Configuration values for this filesystem
 //
-int   Options;        //    Various options
-int   myPort;         //    Port number being used
+enum {Authorize = 0x0001,    // Authorization wanted
+      isPeer    = 0x0050,    // Role peer
+      isProxy   = 0x0020,    // Role proxy
+      isManager = 0x0040,    // Role manager
+      isServer  = 0x0080,    // Role server
+      isSuper   = 0x00C0,    // Role supervisor
+      isMeta    = 0x0100,    // Role meta + above
+      haveRole  = 0x01F0,    // A role is present
+      Forwarding= 0x1000     // Fowarding wanted
+     };                      // These are set in Options below
+
+int   Options;               // Various options
+int   myPort;                // Port number being used
 
 // Forward options
 //
-const char *fwdCHMOD;
-const char *fwdMKDIR;
-const char *fwdMKPATH;
-const char *fwdMV;
-const char *fwdRM;
-const char *fwdRMDIR;
+struct fwdOpt
+      {const char *Cmd;
+             char *Host;
+             int   Port;
+             void  Reset() {Cmd = 0; Port = 0;
+                            if (Host) {free(Host); Host = 0;}
+                           }
+                   fwdOpt() : Cmd(0), Host(0), Port(0) {}
+                  ~fwdOpt() {}
+      };
 
-int   FDConn;         //    Number of conn file descriptors
-int   FDOpen;         //    Number of open file descriptors
-int   FDOpenMax;      //    Max open FD's before we do scan
-int   FDMinIdle;      //    Min idle time in seconds
-int   FDMaxIdle;      //    Max idle time before close
+struct fwdOpt fwdCHMOD;
+struct fwdOpt fwdMKDIR;
+struct fwdOpt fwdMKPATH;
+struct fwdOpt fwdMV;
+struct fwdOpt fwdRM;
+struct fwdOpt fwdRMDIR;
+struct fwdOpt fwdTRUNC;
 
 int   MaxDelay;       //    Max delay imposed during staging
-
-int   LockTries;      //    Number of times to try for a lock
-int   LockWait;       //    Number of milliseconds to wait for lock
 
 char *HostName;       //    ->Our hostname
 char *HostPref;       //    ->Our hostname with domain removed
@@ -273,19 +290,12 @@ char *OssLib;         //    ->Oss Library
 
 protected:
 
-// The following structure defines an anchor for the valid file list. There is
-// one entry in the list for each validpath directive. When a request comes in,
-// the named path is compared with entries in the VFlist. If no prefix match is
-// found, the request is treated as being invalid (i.e., EACCES).
-//
-XrdOucPListAnchor VPlist;     // -> Valid file list
-
-XrdOfsEvr         evrObject;  // Event receiver
+XrdOfsEvr     evrObject;      // Event receiver
+XrdCmsClient *Finder;         // ->Cluster Management Service
 
 virtual int   ConfigXeq(char *var, XrdOucStream &, XrdSysError &);
 static  int   Emsg(const char *, XrdOucErrInfo  &, int, const char *x,
                    const char *y="");
-XrdOdcFinder     *Finder;         //    ->Distrib Cluster Service
 static  int   fsError(XrdOucErrInfo &myError, int rc);
         int   Stall(XrdOucErrInfo  &, int, const char *);
         char *WaitTime(int, char *, int);
@@ -300,10 +310,13 @@ char             *AuthLib;        //    ->Authorization   Library
 char             *AuthParm;       //    ->Authorization   Parameters
 char             *myRole;
 XrdAccAuthorize  *Authorization;  //    ->Authorization   Service
-XrdOdcFinderTRG  *Balancer;       //    ->Server Balancer Interface
+XrdCmsClient     *Balancer;       //    ->Cluster Local   Interface
 XrdOfsEvs        *evsObject;      //    ->Event Notifier
 char             *locResp;        //    ->Locate Response
 int               locRlen;        //      Length of locResp;
+
+static XrdOfsHandle     *dummyHandle;
+XrdSysMutex              ocMutex; // Global mutex for open/close
 
 /******************************************************************************/
 /*                            O t h e r   D a t a                             */
@@ -311,24 +324,24 @@ int               locRlen;        //      Length of locResp;
 
 // Common functions
 //
-        int   Close(XrdOfsHandle *, const char *trid=0);
-        void  Detach_Name(const char *);
         int   remove(const char type, const char *path,
                      XrdOucErrInfo &out_error, const XrdSecEntity     *client,
                      const char *opaque);
 
 // Function used during Configuration
 //
+int           ConfigDispFwd(char *buff, struct fwdOpt &Fwd);
 int           ConfigRedir(XrdSysError &Eroute);
 const char   *Fname(const char *);
+int           Forward(int &Result, XrdOucErrInfo &Resp, struct fwdOpt &Fwd,
+                      const char *arg1=0, const char *arg2=0,
+                      const char *arg3=0, const char *arg4=0);
 int           setupAuth(XrdSysError &);
 const char   *theRole(int opts);
-void          List_VPlist(char *, XrdOucPListAnchor &, XrdSysError &);
 int           xalib(XrdOucStream &, XrdSysError &);
-int           xfdscan(XrdOucStream &, XrdSysError &);
 int           xforward(XrdOucStream &, XrdSysError &);
-int           xlocktry(XrdOucStream &, XrdSysError &);
 int           xmaxd(XrdOucStream &, XrdSysError &);
+int           xnmsg(XrdOucStream &, XrdSysError &);
 int           xnot(XrdOucStream &, XrdSysError &);
 int           xolib(XrdOucStream &, XrdSysError &);
 int           xred(XrdOucStream &, XrdSysError &);

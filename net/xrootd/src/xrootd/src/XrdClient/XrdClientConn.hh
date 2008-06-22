@@ -296,6 +296,7 @@ public:
 
     short                      GetMaxRedirCnt() const { return fMaxGlobalRedirCnt; }
     void                       SetMaxRedirCnt(short mx) {fMaxGlobalRedirCnt = mx; }
+    short                      GetRedirCnt() const { return fGlobalRedirCnt; }
 
 protected:
     void                       SetLogConnID(int cid) { fLogConnID = cid; }

@@ -142,7 +142,7 @@ unsigned int XrdOucCRC::crctable[256] =
      Use unsigned int instead of long to insure 32 bit values.
      Make this a C++ class.
 */
-unsigned int XrdOucCRC::CRC32(unsigned char *p, int reclen)
+unsigned int XrdOucCRC::CRC32(const unsigned char *p, int reclen)
 {
    const unsigned int CRC32_XINIT = 0xffffffff;
    const unsigned int CRC32_XOROT = 0xffffffff;

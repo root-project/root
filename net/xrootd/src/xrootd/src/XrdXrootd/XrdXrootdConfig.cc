@@ -21,8 +21,6 @@ const char *XrdXrootdConfigCVSID = "$Id$";
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/un.h>
-#include <iostream>
-using namespace std;
 
 #include "XrdVersion.hh"
 
@@ -38,6 +36,7 @@ using namespace std;
 #include "XrdOuc/XrdOucTrace.hh"
 #include "XrdOuc/XrdOucUtils.hh"
 #include "XrdSys/XrdSysError.hh"
+#include "XrdSys/XrdSysHeaders.hh"
 #include "XrdSys/XrdSysLogger.hh"
 
 #include "XrdXrootd/XrdXrootdAdmin.hh"
@@ -89,6 +88,12 @@ extern          XrdOucTrace       *XrdXrootdTrace;
 
                 XrdOucReqID       *XrdXrootdReqID;
 
+                const char        *XrdXrootdInstance;
+
+                XrdInet           *XrdXrootdNetwork;
+
+                int                XrdXrootdPort;
+
 /******************************************************************************/
 /*                             C o n f i g u r e                              */
 /******************************************************************************/
@@ -126,6 +131,12 @@ int XrdXrootdProtocol::Configure(char *parms, XrdProtocol_Config *pi)
    Window       = pi->WSize;
    WANPort      = pi->WANPort;
    WANWindow    = pi->WANWSize;
+
+// Record globally accessible values
+//
+   XrdXrootdInstance = pi->myInst;
+   XrdXrootdNetwork  = pi->NetTCP;
+   XrdXrootdPort     = pi->Port;
 
 // Set the callback object static areas now!
 //
@@ -180,9 +191,7 @@ int XrdXrootdProtocol::Configure(char *parms, XrdProtocol_Config *pi)
 // Initialiaze for AIO
 //
    if (!as_noaio) XrdXrootdAioReq::Init(as_segsize, as_maxperreq, as_maxpersrv);
-      else {eDest.Say("Config warining: asynchronous I/O has been disabled!");
-            as_noaio = 1;
-           }
+      else eDest.Say("Config warning: asynchronous I/O has been disabled!");
 
 // Initialize the security system if this is wanted
 //
@@ -221,7 +230,8 @@ int XrdXrootdProtocol::Configure(char *parms, XrdProtocol_Config *pi)
 // Create the file lock manager
 //
    Locker = (XrdXrootdFileLock *)new XrdXrootdFileLock1();
-   XrdXrootdFile::Init(Locker);
+   XrdXrootdFile::Init(Locker, as_nosf == 0);
+   if (as_nosf) eDest.Say("Config warning: sendfile I/O has been disabled!");
 
 // Schedule protocol object cleanup
 //
@@ -239,9 +249,21 @@ int XrdXrootdProtocol::Configure(char *parms, XrdProtocol_Config *pi)
    sprintf(buff, "udp://%s:%d/&L=%%d&U=%%s", pi->myName, pi->Port);
    Notify = strdup(buff);
 
+// Check if we are redirecting anything
+//
+   if ((xp = RPList.Next()))
+      {int k;
+       char buff[512];
+       do {k = xp->Opts();
+           sprintf(buff, " to %s:%d", Route[k].Host, Route[k].Port);
+           eDest.Say("Config redirecting ", xp->Path(), buff);
+           xp = xp->Next();
+          } while(xp);
+      }
+
 // Check if we are exporting anything
 //
-   if (!(xp = XPList.First()))
+   if (!(xp = XPList.Next()))
       {XPList.Insert("/tmp");
        eDest.Say("Config warning: only '/tmp' will be exported.");
       } else while(xp)
@@ -299,8 +321,10 @@ int XrdXrootdProtocol::Config(const char *ConfigFN)
    // Process items
    //
    while((var = Config.GetMyFirstWord()))
-        {if ((ismine = !strncmp("xrootd.", var, 7)) && var[7]) var += 7;
-            else if ((ismine = !strcmp("all.export", var)))    var += 4;
+        {     if ((ismine = !strncmp("xrootd.", var, 7)) && var[7]) var += 7;
+         else if ((ismine = !strcmp("all.export", var)))    var += 4;
+         else if ((ismine = !strcmp("all.seclib", var)))    var += 4;
+
          if (ismine)
             {     if TS_Xeq("async",         xasync);
              else if TS_Xeq("chksum",        xcksum);
@@ -334,7 +358,7 @@ int XrdXrootdProtocol::Config(const char *ConfigFN)
    Purpose:  To parse directive: async [limit <aiopl>] [maxsegs <msegs>]
                                        [maxtot <mtot>] [segsize <segsz>]
                                        [minsize <iosz>] [maxstalls <cnt>]
-                                       [force] [syncw] [off]
+                                       [force] [syncw] [off] [nosf]
 
              <aiopl>  maximum number of async ops per link. Default 8.
              <msegs>  maximum number of async ops per request. Default 8.
@@ -352,6 +376,7 @@ int XrdXrootdProtocol::Config(const char *ConfigFN)
                       requested (this is compatible with synchronous clients).
              syncw    Use synchronous i/o for write requests.
              off      Disables async i/o
+             nosf     Disables use of sendfile to send data to the client.
 
    Output: 0 upon success or 1 upon failure.
 */
@@ -360,20 +385,23 @@ int XrdXrootdProtocol::xasync(XrdOucStream &Config)
 {
     char *val;
     int  i, ppp;
-    int  V_force=-1, V_syncw = -1, V_off = -1, V_mstall = -1;
+    int  V_force=-1, V_syncw = -1, V_off = -1, V_mstall = -1, V_nosf = -1;
     int  V_limit=-1, V_msegs=-1, V_mtot=-1, V_minsz=-1, V_segsz=-1;
+    int  V_minsf=-1;
     long long llp;
     static struct asyncopts {const char *opname; int minv; int *oploc;
                              const char *opmsg;} asopts[] =
        {
         {"force",     -1, &V_force, ""},
         {"off",       -1, &V_off,   ""},
+        {"nosf",      -1, &V_nosf,  ""},
         {"syncw",     -1, &V_syncw, ""},
         {"limit",      0, &V_limit, "async limit"},
         {"segsize", 4096, &V_segsz, "async segsize"},
         {"maxsegs",    0, &V_msegs, "async maxsegs"},
         {"maxstalls",  0, &V_mstall,"async maxstalls"},
         {"maxtot",     0, &V_mtot,  "async maxtot"},
+        {"minsfsz",    1, &V_minsf, "async minsfsz"},
         {"minsize", 4096, &V_minsz, "async minsize"}};
     int numopts = sizeof(asopts)/sizeof(struct asyncopts);
 
@@ -435,6 +463,8 @@ int XrdXrootdProtocol::xasync(XrdOucStream &Config)
    if (V_force > 0) as_force     = 1;
    if (V_off   > 0) as_noaio     = 1;
    if (V_syncw > 0) as_syncw     = 1;
+   if (V_nosf  > 0) as_nosf      = 1;
+   if (V_minsf > 0) as_minsfsz   = V_minsf;
 
    return 0;
 }
@@ -520,8 +550,9 @@ int XrdXrootdProtocol::xexp(XrdOucStream &Config)
 // Get export lock option
 //
    if ((val = Config.GetWord()))
-      if (!strcmp("nolock", val)) popt = XROOTDXP_NOLK;
-         else if (strcmp("lock", val)) Config.RetToken();
+      {if (!strcmp("nolock", val)) popt = XROOTDXP_NOLK;
+          else if (strcmp("lock", val)) Config.RetToken();
+      }
 
 // Add path to configuration
 //
@@ -703,9 +734,10 @@ int XrdXrootdProtocol::xmon(XrdOucStream &Config)
         }
 
     if (val)
-       if (!strcmp("dest", val))
-          eDest.Emsg("Config", "Warning, a maximum of two dest values allowed.");
-          else eDest.Emsg("Config", "Warning, invalid monitor option", val);
+       {if (!strcmp("dest", val))
+           eDest.Emsg("Config", "Warning, a maximum of two dest values allowed.");
+           else eDest.Emsg("Config", "Warning, invalid monitor option", val);
+       }
 
 // Make sure dests differ
 //
@@ -787,13 +819,17 @@ int XrdXrootdProtocol::xprep(XrdOucStream &Config)
   
 /* Function: xred
 
-   Purpose:  To parse the directive: redirect <host>:<port> <funcs>
+   Purpose:  To parse the directive: redirect <host>:<port> {<funcs>|<path>}
 
              <funcs>   are one or more of the following functions that will
                        be immediately redirected to <host>:<port>. Each function
                        may be prefixed by a minus sign to disable redirection.
 
                        chmod dirlist locate mkdir mv prepare rm rmdir stat
+
+             <paths>   redirects the client when an attempt is made to open
+                       one of absolute <paths>. Up to 4 different redirect
+                       combinations may be specified.
 
   Output: 0 upon success or !0 upon failure.
 */
@@ -814,7 +850,7 @@ int XrdXrootdProtocol::xred(XrdOucStream &Config)
         {"stat",     RD_stat}
        };
     char rHost[512], *val, *pp;
-    int i, neg, rPort, numopts = sizeof(rdopts)/sizeof(struct rediropts);
+    int i, k, neg, rPort, numopts = sizeof(rdopts)/sizeof(struct rediropts);
 
 // Get the host and port
 //
@@ -832,6 +868,23 @@ int XrdXrootdProtocol::xred(XrdOucStream &Config)
 //
     if (!(val = Config.GetWord()))
        {eDest.Emsg("config", "redirect option not specified"); return 1;}
+
+    if (*val == '/')
+       {for (k = static_cast<int>(RD_open1); k < RD_Num; k++)
+            if (!Route[k].Host
+            || (strcmp(Route[k].Host, rHost) && Route[k].Port == rPort)) break;
+        if (k >= RD_Num)
+           {eDest.Emsg("Config", "too many diffrent path redirects"); return 1;}
+        xred_set(RD_func(k), rHost, rPort);
+        do {RPList.Insert(val, k, 0);
+            if ((val = Config.GetWord()) && *val != '/')
+               {eDest.Emsg("Config", "non-absolute redirect path -", val);
+                return 1;
+               }
+           } while(val);
+        return 0;
+       }
+
     while (val)
           {if (!strcmp(val, "all"))
               {for (i = 0; i < numopts; i++)

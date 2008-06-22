@@ -293,11 +293,12 @@ void XrdXrootdMonitor::Defaults(char *dest1, int mode1, char *dest2, int mode2)
 
 // Check where user information should go
 //
-   if ((mode1 & XROOTD_MON_IO && mode1 & XROOTD_MON_USER)
-   ||  (mode2 & XROOTD_MON_IO && mode2 & XROOTD_MON_USER))
-      if ((!(mode1 & XROOTD_MON_IO) && mode1 & XROOTD_MON_USER)
-      ||  (!(mode2 & XROOTD_MON_IO) && mode2 & XROOTD_MON_USER)) monUSER = 3;
-         else monUSER = 2;
+   if (((mode1 & XROOTD_MON_IO) && (mode1 & XROOTD_MON_USER))
+   ||  ((mode2 & XROOTD_MON_IO) && (mode2 & XROOTD_MON_USER)))
+      {if ((!(mode1 & XROOTD_MON_IO) && (mode1 & XROOTD_MON_USER))
+       ||  (!(mode2 & XROOTD_MON_IO) && (mode2 & XROOTD_MON_USER))) monUSER = 3;
+          else monUSER = 2;
+      }
 
 // Do final check
 //
@@ -381,8 +382,8 @@ int XrdXrootdMonitor::Init(XrdScheduler *sp, XrdSysError *errp)
 // If there is a destination that is only collecting file events, then
 // allocate a global monitor object but don't start the timer just yet.
 //
-   if ((monMode1 & XROOTD_MON_FILE) && !(monMode1 & XROOTD_MON_IO)
-   ||  (monMode2 & XROOTD_MON_FILE) && !(monMode2 & XROOTD_MON_IO))
+   if (((monMode1 & XROOTD_MON_FILE) && !(monMode1 & XROOTD_MON_IO))
+   ||  ((monMode2 & XROOTD_MON_FILE) && !(monMode2 & XROOTD_MON_IO)))
        if (!(altMon = new XrdXrootdMonitor()) || !altMon->monBuff)
           {if (altMon) {delete altMon; altMon = 0;}
            eDest->Emsg("Monitor","allocate monitor; insufficient storage.");
@@ -484,8 +485,9 @@ time_t XrdXrootdMonitor::Tick()
    if (altMon && currWindow >= FlushTime)
       {XrdXrootdMonitorLock::Lock();
        if (currWindow >= FlushTime)
-          if (altMon->nextEnt > 1) altMon->Flush();
-             else FlushTime = currWindow + autoFlush;
+          {if (altMon->nextEnt > 1) altMon->Flush();
+              else FlushTime = currWindow + autoFlush;
+          }
        XrdXrootdMonitorLock::UnLock();
       }
 

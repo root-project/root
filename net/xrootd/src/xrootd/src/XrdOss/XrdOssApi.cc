@@ -33,8 +33,6 @@ const char *XrdOssApiCVSID = "$Id$";
 #ifdef __solaris__
 #include <sys/vnode.h>
 #endif
-#include <iostream>
-using namespace std;
 
 #include "XrdVersion.hh"
 
@@ -44,8 +42,9 @@ using namespace std;
 #include "XrdOss/XrdOssLock.hh"
 #include "XrdOss/XrdOssMio.hh"
 #include "XrdOss/XrdOssTrace.hh"
-#include "XrdSys/XrdSysError.hh"
 #include "XrdOuc/XrdOucName2Name.hh"
+#include "XrdSys/XrdSysError.hh"
+#include "XrdSys/XrdSysHeaders.hh"
 #include "XrdSys/XrdSysPlatform.hh"
 #include "XrdSys/XrdSysPlugin.hh"
 
@@ -90,9 +89,9 @@ XrdOss *XrdOssGetSS(XrdSysLogger *Logger, const char   *config_fn,
 
 // If no library has been specified, return the default object
 //
-   if (!OssLib)
-      if (myOssSys.Init(Logger, config_fn)) return 0;
-         else return (XrdOss *)&myOssSys;
+   if (!OssLib) {if (myOssSys.Init(Logger, config_fn)) return 0;
+                    else return (XrdOss *)&myOssSys;
+                }
 
 // Find the parms (ignore the constness of the variable)
 //
@@ -140,7 +139,7 @@ int XrdOssSys::Init(XrdSysLogger *lp, const char *configfn)
 // Do the herald thing
 //
    OssEroute.logger(lp);
-   OssEroute.Say("Copr.  2007, Stanford University, oss Version " XrdVSTRING);
+   OssEroute.Say("Copr.  2008, Stanford University, oss Version " XrdVSTRING);
 
 // Initialize the subsystems
 //
@@ -215,8 +214,7 @@ int XrdOssSys::Chmod(const char *path, mode_t mode)
 
 // Change the file only in the local filesystem.
 //
-   if (!chmod(local_path, mode)) return XrdOssOK;
-   return -errno;
+   return (chmod(local_path, mode) ? -errno : XrdOssOK);
 }
 
 /******************************************************************************/
@@ -296,31 +294,28 @@ int XrdOssSys::Mkpath(const char *path, mode_t mode)
    if (mkdir(local_path, mode) && errno != EEXIST) return -errno;
    return XrdOssOK;
 }
-
+  
 /******************************************************************************/
-/*                                 s t a t                                    */
+/*                              T r u n c a t e                               */
 /******************************************************************************/
 
 /*
-  Function: Determine if file 'path' actually exists.
+  Function: Truncate a file.
 
-  Input:    path        - Is the fully qualified name of the file to be tested.
-            buff        - pointer to a 'stat' structure to hold the attributes
-                          of the file.
+  Input:    path        - Is the fully qualified name of the target file.
+            size        - The new size that the file is to have.
 
   Output:   Returns XrdOssOK upon success and -errno upon failure.
+
+  Notes:    Files are only changed in the local disk cache.
 */
 
-int XrdOssSys::Stat(const char *path, struct stat *buff, int resonly)
+int XrdOssSys::Truncate(const char *path, unsigned long long size)
 {
-     const int ro_Mode = ~(S_IWUSR | S_IWGRP | S_IWOTH);
-    char actual_path[XrdOssMAX_PATH_LEN+1], *local_path, *remote_path;
-    unsigned long long popts;
+    struct stat statbuff;
+    char actual_path[XrdOssMAX_PATH_LEN+1], *local_path;
+    long long oldsz;
     int retc;
-
-// Construct the processing options for this path
-//
-   popts = PathOpts(path);
 
 // Generate local path
 //
@@ -330,31 +325,22 @@ int XrdOssSys::Stat(const char *path, struct stat *buff, int resonly)
          else local_path = actual_path;
       else local_path = (char *)path;
 
-// Stat the file in the local filesystem first.
+// Get file info to do the correct adjustment
 //
-   if (!stat(local_path, buff)) 
-      {if (popts & XRDEXP_NOTRW) buff->st_mode &= ro_Mode;
-       return XrdOssOK;
-      }
-   if (!IsRemote(path)) return -errno;
-   if (resonly) return -ENOMSG;
+   if (lstat(local_path, &statbuff)) return -errno;
+       else if ((statbuff.st_mode & S_IFMT) == S_IFLNK)
+               {struct stat buff;
+                if (stat(local_path, &buff)) return -errno;
+                oldsz = buff.st_size;
+               } else oldsz = statbuff.st_size;
 
-// Generate remote path
+// Change the file only in the local filesystem and make space adjustemt
 //
-   if (rmt_N2N)
-      if ((retc = rmt_N2N->lfn2pfn(path, actual_path, sizeof(actual_path))))
-         return retc;
-         else remote_path = actual_path;
-      else remote_path = (char *)path;
-
-// Now stat the file in the remote system (it doesn't exist locally)
-//
-   if ((retc = MSS_Stat(remote_path, buff))) return retc;
-   if (popts & XRDEXP_NOTRW) buff->st_mode &= ro_Mode;
-   buff->st_mode |= S_IFBLK;
+   if (truncate(local_path, size)) return -errno;
+   Adjust(local_path, static_cast<long long>(size) - oldsz, &statbuff);
    return XrdOssOK;
 }
-
+  
 /******************************************************************************/
 /*                       P r i v a t e   M e t h o d s                        */
 /******************************************************************************/
@@ -500,7 +486,7 @@ int XrdOssDir::Readdir(char *buff, int blen)
 
   Output:   Returns XrdOssOK upon success and (errno) upon failure.
 */
-int XrdOssDir::Close(void)
+int XrdOssDir::Close(long long *retsz)
 {
     int retc;
 
@@ -564,8 +550,9 @@ int XrdOssFile::Open(const char *path, int Oflag, mode_t Mode, XrdOucEnv &Env)
 // Check if this is a read/only filesystem
 //
    if ((Oflag & (O_WRONLY | O_RDWR)) && (popts & XRDEXP_NOTRW))
-      if (popts & XRDEXP_FORCERO) Oflag = O_RDONLY;
-         else return OssEroute.Emsg("XrdOssOpen",-XRDOSS_E8005,"open r/w",path);
+      {if (popts & XRDEXP_FORCERO) Oflag = O_RDONLY;
+          else return OssEroute.Emsg("XrdOssOpen",-XRDOSS_E8005,"open r/w",path);
+      }
 
 // If we can open the local copy. If not found, try to stage it in if possible.
 // Note that stage will regenerate the right local and remote paths.
@@ -584,6 +571,9 @@ int XrdOssFile::Open(const char *path, int Oflag, mode_t Mode, XrdOucEnv &Env)
       {do {retc = fstat(fd, &buf);} while(retc && errno == EINTR);
        if (!retc && !(buf.st_mode & S_IFREG))
           {close(fd); fd = (buf.st_mode & S_IFDIR ? -EISDIR : -ENOTBLK);}
+       if (Oflag & (O_WRONLY | O_RDWR))
+          {FSize = buf.st_size; cacheP = XrdOssSS->Find_Cache(local_path);}
+          else {FSize = -1; cacheP = 0;}
       } else if (fd == -EEXIST)
                 {do {retc = stat(local_path,&buf);} while(retc && errno==EINTR);
                  if (!retc && (buf.st_mode & S_IFDIR)) fd = -EISDIR;
@@ -616,15 +606,23 @@ int XrdOssFile::Open(const char *path, int Oflag, mode_t Mode, XrdOucEnv &Env)
 
   Output:   Returns XrdOssOK upon success and -1 upon failure.
 */
-int XrdOssFile::Close(void) 
+int XrdOssFile::Close(long long *retsz)
 {
     if (fd < 0) return -XRDOSS_E8004;
+    if (retsz || cacheP)
+       {struct stat buf;
+        int retc;
+        do {retc = fstat(fd, &buf);} while(retc && errno == EINTR);
+        if (cacheP && FSize != buf.st_size)
+           XrdOssSS->Adjust(cacheP, buf.st_size - FSize);
+        if (retsz) *retsz = buf.st_size;
+       }
     if (close(fd)) return -errno;
     if (mmFile) {XrdOssMio::Recycle(mmFile); mmFile = 0;}
 #ifdef XRDOSSCX
     if (cxobj) {delete cxobj; cxobj = 0;}
 #endif
-    fd = -1;
+    fd = -1; FSize = -1; cacheP = 0;
     return XrdOssOK;
 }
 
@@ -849,10 +847,10 @@ int XrdOssFile::isCompressed(char *cxidp)
 int XrdOssFile::Ftruncate(unsigned long long flen) {
     off_t newlen = flen;
 
-#if _FILE_OFFSET_BITS!=64
-    if (flen>>31) return -XRDOSS_E8008;
-#endif
+    if (sizeof(newlen) < sizeof(flen) && (flen>>31)) return -XRDOSS_E8008;
 
+// Note that space adjustment will occur when the file is closed, not here
+//
     return (ftruncate(fd, newlen) ?  -errno : XrdOssOK);
     }
 
@@ -900,9 +898,10 @@ int XrdOssFile::Open_ufs(const char *path, int Oflag, int Mode,
 //
     if (myfd >= 0)
        {if (myfd < XrdOssSS->FDFence)
-           if ((newfd = fcntl(myfd, F_DUPFD, XrdOssSS->FDFence)) < 0)
-              OssEroute.Emsg("XrdOssOpen_ufs",errno,"reloc FD",path);
-              else {close(myfd); myfd = newfd;}
+           {if ((newfd = fcntl(myfd, F_DUPFD, XrdOssSS->FDFence)) < 0)
+               OssEroute.Emsg("XrdOssOpen_ufs",errno,"reloc FD",path);
+               else {close(myfd); myfd = newfd;}
+           }
         fcntl(myfd, F_SETFD, FD_CLOEXEC);
 #ifdef XRDOSSCX
         // If the file is compressed get a CXFile object and attach the FD to it

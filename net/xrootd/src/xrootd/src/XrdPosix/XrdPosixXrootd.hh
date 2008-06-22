@@ -16,11 +16,18 @@
 #include <dirent.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <sys/statvfs.h>
 #include <sys/types.h>
 
-#include "XrdSys/XrdSysPthread.hh"
+#ifdef __macos__
+#include <sys/param.h>
+#include <sys/mount.h>
+#else
+#include <sys/statfs.h>
+#endif
 
-const int XrdPosixFD = 16384;
+#include "XrdPosix/XrdPosixOsDep.hh"
+#include "XrdSys/XrdSysPthread.hh"
 
 class XrdPosixFile;
 class XrdPosixDir;
@@ -31,7 +38,7 @@ public:
 
 // POSIX methods
 //
-static int     Close(int fildes);
+static int     Close(int fildes, int Stream=0);
 
 static int     Closedir(DIR *dirp);
 
@@ -41,9 +48,14 @@ static int     Fstat(int fildes, struct stat *buf);
 
 static int     Fsync(int fildes);
 
+static int     Ftruncate(int fildes, off_t offset);
+
+static long long Getxattr (const char *path, const char *name,
+                           void *value, unsigned long long size);
+
 static int     Mkdir(const char *path, mode_t mode);
 
-static int     Open(const char *path, int oflag, mode_t mode=0);
+static int     Open(const char *path, int oflag, mode_t mode=0, int Stream=0);
 
 static DIR*    Opendir(const char *path);
   
@@ -69,9 +81,15 @@ static void    Seekdir(DIR *dirp, long loc);
 
 static int     Stat(const char *path, struct stat *buf);
 
+static int     Statfs(const char *path, struct statfs *buf);
+
+static int     Statvfs(const char *path, struct statvfs *buf);
+
 static ssize_t Pwrite(int fildes, const void *buf, size_t nbyte, off_t offset);
 
 static long    Telldir(DIR *dirp);
+
+static int     Truncate(const char *path, off_t offset);
 
 static int     Unlink(const char *path);
 
@@ -89,15 +107,18 @@ static bool    isXrootdDir(DIR *dirp);
 
 static int     mapError(int rc);
 
+static
+inline bool    myFD(int fd) {return fd <= highFD && myFiles && myFiles[fd];}
+
 static void    setDebug(int val);
 
 static void    setEnv(const char *var, const char *val);
 
 static void    setEnv(const char *var, long val);
 
-static long    Debug;
+static int     Debug;
 
-               XrdPosixXrootd(int maxfd=64, int maxdir=64);
+               XrdPosixXrootd(int maxfd=255, int maxdir=255);
               ~XrdPosixXrootd();
 
 private:
@@ -111,14 +132,13 @@ static int                   mapFlags(int flags);
 static int                   mapMode(mode_t Mode);
 
 static XrdSysMutex    myMutex;
-static const  int     FDMask;
-static const  int     FDOffs;
-static const  int     FDLeft;
 static XrdPosixFile **myFiles;
 static XrdPosixDir  **myDirs;
 static int            lastFD;
 static int            highFD;
 static int            lastDir;
 static int            highDir;
+static int            devNull;
+static int            pllOpen;
 };
 #endif

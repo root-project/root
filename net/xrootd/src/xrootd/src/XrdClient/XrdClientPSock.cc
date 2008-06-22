@@ -38,6 +38,7 @@ XrdClientPSock::XrdClientPSock(XrdClientUrlInfo Host, int windowsize):
 
     lastsidhint = 0;
     fReinit_fd = true;
+    
 }
 
 //_____________________________________________________________________________
@@ -162,7 +163,9 @@ int XrdClientPSock::RecvRaw(void* buffer, int length, int substreamid,
 	       return TXSOCK_ERR;
 	     else {
 	       XrdSysMutexHelper mtx(fMutex);
-	       FD_CLR(sock, &globalfdinfo.fdset);
+               if (sock >= 0)
+                  FD_CLR(sock, &globalfdinfo.fdset);
+
 	       RemoveParallelSock(substreamid);
 	       //ReinitFDTable();
 	       return TXSOCK_ERR_TIMEOUT;
@@ -301,15 +304,22 @@ void XrdClientPSock::TryConnect(bool isUnix) {
     }
 
 }
-int XrdClientPSock::TryConnectParallelSock(int port, int windowsz) {
+
+XrdClientSock::Sockdescr XrdClientPSock::TryConnectParallelSock(int port, int windowsz, Sockid &newid) {
 
     int s = TryConnect_low(false, port, windowsz);
 
     if (s >= 0) {
         XrdSysMutexHelper mtx(fMutex);
-	int tmp = XRDCLI_PSOCKTEMP;
-	fSocketPool.Rep(XRDCLI_PSOCKTEMP, s);
-	fSocketIdPool.Rep(s, tmp);
+
+        // Now we have a good connection, valid from the TCP point of view
+
+        // We put the descriptor and the id in the tables
+	fSocketPool.Rep(newid, s);
+	fSocketIdPool.Rep(s, newid);
+
+        // But we prevent the socket from appearing in the global fd table for now
+        BanSockDescr(s, newid);
     }
 
     return s;
@@ -335,27 +345,27 @@ int XrdClientPSock::RemoveParallelSock(int sockid) {
     return 0;
 }
 
-int XrdClientPSock::EstablishParallelSock(int sockid) {
+int XrdClientPSock::EstablishParallelSock(Sockid tmpsockid, Sockid newsockid) {
+    XrdSysMutexHelper mtx(fMutex);
 
-    int s = GetSock(XRDCLI_PSOCKTEMP);
-
+    Sockdescr s = GetSock(tmpsockid);
     if (s >= 0) {
-        XrdSysMutexHelper mtx(fMutex);
+  
+        fSocketPool.Del(tmpsockid);
+        fSocketIdPool.Del(s);
 
-	fSocketPool.Del(XRDCLI_PSOCKTEMP);
-	fSocketIdPool.Del(s);
+        fSocketPool.Rep(newsockid, s);
+        fSocketIdPool.Rep(s, newsockid);
+        fSocketIdRepo.Push_back(newsockid);
 
-	fSocketPool.Rep(sockid, s);
-	fSocketIdPool.Rep(s, sockid);
-	fSocketIdRepo.Push_back(sockid);
+        Info(XrdClientDebug::kUSERDEBUG,
+             "XrdClientSock::EstablishParallelSock", "Sockid " << newsockid << " established.");
 
-	Info(XrdClientDebug::kUSERDEBUG,
-	     "XrdClientSock::EstablishParallelSock", "Sockid " << sockid << " established.");
-
-	return 0;
+        return 0;
     }
 
     return -1;
+
 }
 
 int XrdClientPSock::GetSockIdHint(int reqsperstream) {
@@ -367,7 +377,7 @@ int XrdClientPSock::GetSockIdHint(int reqsperstream) {
   }
   else lastsidhint = 0;
 
-  return lastsidhint / reqsperstream + 1;
+  return fSocketIdRepo[lastsidhint / reqsperstream];
   //return (random() % (fSocketIdRepo.GetSize()+1));
 
 }

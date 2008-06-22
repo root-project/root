@@ -19,7 +19,6 @@
 
 #include <XrdCrypto/XrdCryptoAux.hh>
 #include <XrdCrypto/XrdCryptoCipher.hh>
-using namespace std;
 
 //_____________________________________________________________________________
 bool XrdCryptoCipher::Finalize(char *, int, const char *)

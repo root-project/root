@@ -154,7 +154,7 @@ XrdClientMessage *XrdClientInputBuffer::GetMsg(int streamid, int secstimeout)
 
    int to = secstimeout;
    int dt = (to > 2) ? 2 : to;  // 2 secs steps
-   while (to) {
+   while (to > 0) {
      int rc = sem->Wait(dt);
      if (!rc) {
        // make sure is not a spurious signal ...

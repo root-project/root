@@ -28,8 +28,6 @@ const char *XrdPssCVSID = "$Id$";
 #ifdef __solaris__
 #include <sys/vnode.h>
 #endif
-#include <iostream>
-using namespace std;
 
 #include "XrdVersion.hh"
 
@@ -39,6 +37,7 @@ using namespace std;
 #include "XrdOss/XrdOssError.hh"
 #include "XrdOuc/XrdOucEnv.hh"
 #include "XrdSys/XrdSysError.hh"
+#include "XrdSys/XrdSysHeaders.hh"
 #include "XrdSys/XrdSysPlatform.hh"
 
 /******************************************************************************/
@@ -122,7 +121,7 @@ int XrdPssSys::Init(XrdSysLogger *lp, const char *configfn)
 
   Output:   Returns XrdOssOK upon success and -errno upon failure.
 
-  Notes:    This function is currently unsupported, we always return success.
+  Notes:    This function is currently unsupported.
 */
 
 int XrdPssSys::Chmod(const char *path, mode_t mode)
@@ -254,6 +253,33 @@ int XrdPssSys::Stat(const char *path, struct stat *buff, int resonly)
 //
    return (XrdPosixXrootd::Stat(pbuff, buff) ? -errno : XrdOssOK);
 }
+
+/******************************************************************************/
+/*                              T r u n c a t e                               */
+/******************************************************************************/
+/*
+  Function: Truncate a file.
+
+  Input:    path        - Is the fully qualified name of the target file.
+            flen        - The new size that the file is to have.
+
+  Output:   Returns XrdOssOK upon success and -errno upon failure.
+
+  Notes:    This function is currently unsupported.
+*/
+
+int XrdPssSys::Truncate(const char *path, unsigned long long flen)
+{
+   char pbuff[PBsz];
+
+// Convert path to URL
+//
+   if (!P2URL(pbuff, PBsz, path)) return -ENAMETOOLONG;
+
+// Return proxied truncate
+//
+   return (XrdPosixXrootd::Truncate(pbuff, flen) ? -errno : XrdOssOK);
+}
   
 /******************************************************************************/
 /*                                U n l i n k                                 */
@@ -360,7 +386,7 @@ int XrdPssDir::Readdir(char *buff, int blen)
 
   Output:   Returns XrdOssOK upon success and (errno) upon failure.
 */
-int XrdPssDir::Close(void)
+int XrdPssDir::Close(long long *retsz)
 {
 
 // Make sure this object is open
@@ -403,8 +429,9 @@ int XrdPssFile::Open(const char *path, int Oflag, mode_t Mode, XrdOucEnv &Env)
 // was to create the file. For now we ignore the special create flags.
 //
    if (fd >= 0)
-      if (fd != 17 || crPath != path) return -XRDOSS_E8003;
-         else {fd = 0; crPath = 0; Oflag = crOpts >> 8 | (Oflag & ~O_TRUNC);}
+      {if (fd != 17 || crPath != path) return -XRDOSS_E8003;
+          else {fd = 0; crPath = 0; Oflag = crOpts >> 8 | (Oflag & ~O_TRUNC);}
+      }
 
 // Return the result of this open
 //
@@ -422,9 +449,10 @@ int XrdPssFile::Open(const char *path, int Oflag, mode_t Mode, XrdOucEnv &Env)
 
   Output:   Returns XrdOssOK upon success aud -errno upon failure.
 */
-int XrdPssFile::Close(void) 
+int XrdPssFile::Close(long long *retsz)
 {
     if (fd < 0) return -XRDOSS_E8004;
+    if (retsz) *retsz = 0;
     return XrdPosixXrootd::Close(fd) ? -errno : XrdOssOK;
 }
 
@@ -535,7 +563,7 @@ ssize_t XrdPssFile::Write(const void *buff, off_t offset, size_t blen)
 
 int XrdPssFile::Fstat(struct stat *buff)
 {
-    if (fd < 0) return (ssize_t)-XRDOSS_E8004;
+    if (fd < 0) return -XRDOSS_E8004;
 
     return (XrdPosixXrootd::Fstat(fd, buff) ? -errno : XrdOssOK);
 }
@@ -553,9 +581,38 @@ int XrdPssFile::Fstat(struct stat *buff)
 */
 int XrdPssFile::Fsync(void)
 {
-    if (fd < 0) return (ssize_t)-XRDOSS_E8004;
+    if (fd < 0) return -XRDOSS_E8004;
 
     return (XrdPosixXrootd::Fsync(fd) ? -errno : XrdOssOK);
+}
+
+/******************************************************************************/
+/*                             f t r u n c a t e                              */
+/******************************************************************************/
+
+/*
+  Function: Set the length of associated file to 'flen'.
+
+  Input:    flen      - The new size of the file.
+
+  Output:   Returns XrdOssOK upon success and -errno upon failure.
+
+  Notes:    If 'flen' is smaller than the current size of the file, the file
+            is made smaller and the data past 'flen' is discarded. If 'flen'
+            is larger than the current size of the file, a hole is created
+            (i.e., the file is logically extended by filling the extra bytes 
+            with zeroes).
+
+            If compiled w/o large file support, only lower 32 bits are used.
+            used.
+
+            Currently not supported for proxies.
+*/
+int XrdPssFile::Ftruncate(unsigned long long flen)
+{
+    if (fd < 0) return -XRDOSS_E8004;
+
+    return (XrdPosixXrootd::Ftruncate(fd, flen) ?  -errno : XrdOssOK);
 }
 
 /******************************************************************************/
@@ -595,40 +652,6 @@ off_t XrdPssFile::getMmap(void **addr)   // Not Supported for proxies
 int XrdPssFile::isCompressed(char *cxidp)  // Not supported for proxies
 {
     return 0;
-}
-
-/******************************************************************************/
-/*                              t r u n c a t e                               */
-/******************************************************************************/
-
-/*
-  Function: Set the length of associated file to 'flen'.
-
-  Input:    flen      - The new size of the file.
-
-  Output:   Returns XrdOssOK upon success and -errno upon failure.
-
-  Notes:    If 'flen' is smaller than the current size of the file, the file
-            is made smaller and the data past 'flen' is discarded. If 'flen'
-            is larger than the current size of the file, a hole is created
-            (i.e., the file is logically extended by filling the extra bytes 
-            with zeroes).
-
-            If compiled w/o large file support, only lower 32 bits are used.
-            used.
-
-            Currently not supported for proxies.
-*/
-int XrdPssFile::Ftruncate(unsigned long long flen) {
-//  off_t newlen = flen;
-
-#if _FILE_OFFSET_BITS!=64
-//  if (flen>>31) return -XRDOSS_E8008;
-#endif
-
-//  return (XrdPosixXrootd::Ftruncate(fd, newlen) ?  -errno : XrdOssOK);
-
-    return (ssize_t)-ENOTSUP;
 }
 
 /******************************************************************************/

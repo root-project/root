@@ -16,6 +16,7 @@
 #include "XrdMon/XrdMonHeader.hh"
 #include <netinet/in.h>
 #include <stdio.h>
+#include <string.h>
 #include <iomanip>
 using std::setw;
 
@@ -46,6 +47,7 @@ XrdMonHeader::decode(const char* packet)
     if (packetType() != PACKET_TYPE_TRACE &&
         packetType() != PACKET_TYPE_DICT  &&
         packetType() != PACKET_TYPE_ADMIN &&
+        packetType() != PACKET_TYPE_STAGE &&
         packetType() != PACKET_TYPE_USER     ) {
         char buf[64];
         sprintf(buf, "Invalid packet type %c", packetType());

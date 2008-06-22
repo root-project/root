@@ -32,11 +32,8 @@ const char *XrdOfsConfigCVSID = "$Id$";
 #include <stdio.h>
 #include <netinet/in.h>
 #include <sys/param.h>
-#include <iostream>
-using namespace std;
 
 #include "XrdOfs/XrdOfs.hh"
-#include "XrdOfs/XrdOfsConfig.hh"
 #include "XrdOfs/XrdOfsEvs.hh"
 #include "XrdOfs/XrdOfsTrace.hh"
 
@@ -45,12 +42,15 @@ using namespace std;
 #include "XrdOuc/XrdOuca2x.hh"
 #include "XrdOuc/XrdOucEnv.hh"
 #include "XrdSys/XrdSysError.hh"
+#include "XrdSys/XrdSysHeaders.hh"
 #include "XrdSys/XrdSysPlugin.hh"
 #include "XrdOuc/XrdOucStream.hh"
 #include "XrdOuc/XrdOucTrace.hh"
 #include "XrdOuc/XrdOucUtils.hh"
 
-#include "XrdOdc/XrdOdcFinder.hh"
+#include "XrdCms/XrdCmsClient.hh"
+#include "XrdCms/XrdCmsFinder.hh"
+
 #include "XrdAcc/XrdAccAuthorize.hh"
 
 /******************************************************************************/
@@ -58,6 +58,9 @@ using namespace std;
 /******************************************************************************/
 
 extern XrdOucTrace OfsTrace;
+  
+class  XrdOss;
+extern XrdOss     *XrdOfsOss;
 
 /******************************************************************************/
 /*                               d e f i n e s                                */
@@ -88,6 +91,7 @@ int XrdOfs::Configure(XrdSysError &Eroute) {
 
   Output:   0 upon success or !0 otherwise.
 */
+   extern XrdOss *XrdOssGetSS(XrdSysLogger *, const char *, const char *);
    char *var;
    const char *tmp;
    int  i, j, cfgFD, retc, NoGo = 0;
@@ -133,51 +137,72 @@ int XrdOfs::Configure(XrdSysError &Eroute) {
 
 // Determine whether we should initialize authorization
 //
-   if (Options & XrdOfsAUTHORIZE) NoGo |= setupAuth(Eroute);
+   if (Options & Authorize) NoGo |= setupAuth(Eroute);
 
 // Check if redirection wanted
 //
-   if (getenv("XRDREDIRECT")) i  = XrdOfsREDIRRMT;
+   if (getenv("XRDREDIRECT")) i  = isManager;
       else i = 0;
-   if (getenv("XRDRETARGET")) i |= XrdOfsREDIRTRG;
-   if (getenv("XRDREDPROXY")) i |= XrdOfsREDIROXY;
+   if (getenv("XRDRETARGET")) i |= isServer;
+   if (getenv("XRDREDPROXY")) i |= isProxy;
    if (i)
-      {if ((j = Options & XrdOfsREDIRECT) && (i ^ j))
+      {if ((j = Options & haveRole) && (i ^ j))
           {free(myRole); myRole = strdup(theRole(i));
            Eroute.Say("Config warning: command line role options override "
                        "config file; 'ofs.role", myRole, "' in effect.");
           }
-       Options &= ~(XrdOfsREDIRECT);
+       Options &= ~(haveRole);
        Options |= i;
       }
 
-// Set the redirect option for upper layers
+// Set the redirect option for other layers
 //
-   if (Options & XrdOfsREDIRRMT)
+   if (Options & isManager)
            putenv((char *)"XRDREDIRECT=R");
       else putenv((char *)"XRDREDIRECT=0");
 
+// Configure the storage system at this point. This must be done prior to
+// configuring cluster processing. First check if we will be proxying.
+//
+   if (Options & isProxy)
+      {char buff[2048], *bp, *libofs = getenv("XRDOFSLIB");
+       if (OssLib) Eroute.Say("Config warning: ",
+                   "specified osslib overrides default proxy lib.");
+          else {if (!libofs) bp = buff;
+                   else {strcpy(buff, libofs); bp = buff+strlen(buff)-1;
+                         while(bp != buff && *(bp-1) != '/') bp--;
+                        }
+                strcpy(bp, "libXrdProxy.so");
+                OssLib = strdup(buff);
+               }
+      }
+
+// Now configure the storage system
+//
+   if (!(XrdOfsOss = XrdOssGetSS(Eroute.logger(), ConfigFN, OssLib))) NoGo = 1;
+
 // Initialize redirection.  We type te herald here to minimize confusion
 //
-   if (Options & XrdOfsREDIRECT)
+   if (Options & haveRole)
       {Eroute.Say("++++++ Configuring ", myRole, " role. . .");
        NoGo |= ConfigRedir(Eroute);
       }
 
 // Turn off forwarding if we are not a pure remote redirector or a peer
 //
-   if (Options & XrdOfsFWD)
-      if (!(Options & XrdOfsREDIREER)
-      && (Options & (XrdOfsREDIRTRG | XrdOfsREDIROXY)))
+   if (Options & Forwarding)
+      if (!(Options & isPeer)
+      && (Options & (isServer | isProxy)))
          {Eroute.Say("Config warning: forwarding turned off; not a pure manager");
-          Options &= ~(XrdOfsFWD);
-          fwdCHMOD      = 0; fwdMKDIR      = 0; fwdMKPATH     = 0;
-          fwdMV         = 0; fwdRM         = 0; fwdRMDIR      = 0;
+          Options &= ~(Forwarding);
+          fwdCHMOD.Reset(); fwdMKDIR.Reset(); fwdMKPATH.Reset();
+          fwdMV.Reset();    fwdRM.Reset();    fwdRMDIR.Reset();
+          fwdTRUNC.Reset();
          }
 
 // Initialize th Evr object if we are an actual server
 //
-   if (!(Options & XrdOfsREDIRRMT) 
+   if (!(Options & isManager) 
    && !evrObject.Init(&Eroute, Balancer)) NoGo = 1;
 
 // If we need to send notifications, initialize the interface
@@ -204,19 +229,8 @@ int XrdOfs::Configure(XrdSysError &Eroute) {
 void XrdOfs::Config_Display(XrdSysError &Eroute)
 {
      const char *cloc;
-     char buff[8192], fwbuff[256], *bp;
+     char buff[8192], fwbuff[512], *bp;
      int i;
-
-     if (!(Options &  XrdOfsFWD)) fwbuff[0] = '\0';
-        else {bp = fwbuff;
-              setBuff("       ofs.forward", 11);
-              if (fwdCHMOD) setBuff(" chmod", 6);
-              if (fwdMKDIR) setBuff(" mkdir", 6);
-              if (fwdMV   ) setBuff(" mv"   , 3);
-              if (fwdRM   ) setBuff(" rm"   , 3);
-              if (fwdRMDIR) setBuff(" rmdir", 6);
-              setBuff("\n", 1);
-             }
 
      if (!ConfigFN || !ConfigFN[0]) cloc = "default";
         else cloc = ConfigFN;
@@ -224,23 +238,28 @@ void XrdOfs::Config_Display(XrdSysError &Eroute)
                                   "       ofs.role %s\n"
                                   "%s"
                                   "%s%s%s"
-                                  "%s"
-                                  "       ofs.fdscan     %d %d %d\n"
-                                  "%s"
                                   "       ofs.maxdelay   %d\n"
                                   "%s%s%s"
                                   "       ofs.trace      %x",
               cloc, myRole,
-              (Options & XrdOfsAUTHORIZE ? "       ofs.authorize\n" : ""),
+              (Options & Authorize ? "       ofs.authorize\n" : ""),
               (AuthLib                   ? "       ofs.authlib " : ""),
               (AuthLib ? AuthLib : ""), (AuthLib ? "\n" : ""),
-              (Options & XrdOfsFDNOSHARE ? "       ofs.fdnoshare\n" : ""),
-              FDOpenMax, FDMinIdle, FDMaxIdle, fwbuff, MaxDelay,
+               MaxDelay,
               (OssLib                    ? "       ofs.osslib " : ""),
               (OssLib ? OssLib : ""), (OssLib ? "\n" : ""),
               OfsTrace.What);
 
      Eroute.Say(buff);
+
+     if (Options & Forwarding)
+        {if (ConfigDispFwd(buff, fwdCHMOD)) Eroute.Say(buff);
+         if (ConfigDispFwd(buff, fwdMKDIR)) Eroute.Say(buff);
+         if (ConfigDispFwd(buff, fwdMV))    Eroute.Say(buff);
+         if (ConfigDispFwd(buff, fwdRM))    Eroute.Say(buff);
+         if (ConfigDispFwd(buff, fwdRMDIR)) Eroute.Say(buff);
+         if (ConfigDispFwd(buff, fwdTRUNC)) Eroute.Say(buff);
+        }
 
      if (evsObject)
         {bp = buff;
@@ -255,6 +274,7 @@ void XrdOfs::Config_Display(XrdSysError &Eroute)
          if (evsObject->Enabled(XrdOfsEvs::Openw))  setBuff("openw ",  6);
          if (evsObject->Enabled(XrdOfsEvs::Rm))     setBuff("rm ",     3);
          if (evsObject->Enabled(XrdOfsEvs::Rmdir))  setBuff("rmdir ",  6);
+         if (evsObject->Enabled(XrdOfsEvs::Trunc))  setBuff("trunc ",  6);
          if (evsObject->Enabled(XrdOfsEvs::Fwrite)) setBuff("fwrite ", 7);
          setBuff("msgs ", 5);
          i=sprintf(fwbuff,"%d %d ",evsObject->maxSmsg(),evsObject->maxLmsg());
@@ -262,59 +282,76 @@ void XrdOfs::Config_Display(XrdSysError &Eroute)
          cloc = evsObject->Prog();
          if (*cloc != '>') setBuff("|",1);
          setBuff(cloc, strlen(cloc));
-         setBuff("\n", 1);
+         setBuff("\0", 1);
          Eroute.Say(buff);
         }
-
-     List_VPlist((char *)"       ofs.validpath  ", VPlist, Eroute);
 }
 
 /******************************************************************************/
 /*                     p r i v a t e   f u n c t i o n s                      */
 /******************************************************************************/
 /******************************************************************************/
+/*                         C o n f i g D i s p F w d                          */
+/******************************************************************************/
+  
+int XrdOfs::ConfigDispFwd(char *buff, struct fwdOpt &Fwd)
+{
+   const char *cP;
+   char pbuff[16], *bp;
+
+// Return if this is not being forwarded
+//
+   if (!(cP = Fwd.Cmd)) return 0;
+   bp = buff;
+   setBuff("       ofs.forward ", 19);
+
+// Chck which way this is being forwarded
+//
+         if (*Fwd.Cmd == '+'){setBuff("2way ",5); cP++;}
+   else  if (!Fwd.Port)      {setBuff("1way ",5);}
+   else {                     setBuff("3way ",5);
+         if (Fwd.Port < 0)   {setBuff("local ",6);}
+            else {int n = sprintf(pbuff, ":%d ", Fwd.Port);
+                  setBuff(Fwd.Host, strlen(Fwd.Host));
+                  setBuff(pbuff, n);
+                 }
+        }
+   setBuff(cP, strlen(cP));
+   return 1;
+}
+
+/******************************************************************************/
 /*                           C o n f i g R e d i r                            */
 /******************************************************************************/
   
 int XrdOfs::ConfigRedir(XrdSysError &Eroute) 
 {
-   int isRedir = Options & XrdOfsREDIRRMT;
+   int isRedir = Options & isManager;
+   int RMTopts = (Options & isServer ? XrdCms::IsTarget : 0)
+               | (Options & isMeta   ? XrdCms::IsMeta   : 0);
 
 // For manager roles, we simply do a standard config
 //
-   if (isRedir) {Finder=(XrdOdcFinder *)new XrdOdcFinderRMT(Eroute.logger(),
-                           (Options & XrdOfsREDIRTRG  ? XrdOdcIsTarget : 0));
+   if (isRedir) 
+      {Finder = (XrdCmsClient *)new XrdCmsFinderRMT(Eroute.logger(),
+                                                    RMTopts,myPort);
        if (!Finder->Configure(ConfigFN))
           {delete Finder; Finder = 0; return 1;}
       }
 
-// For proxy roles, we specify the proxy oss library if possible
-//
-   if (Options & XrdOfsREDIROXY)
-      {char buff[2048], *bp, *libofs = getenv("XRDOFSLIB");
-       if (OssLib) Eroute.Say("Config warning: ",
-                   "specified osslib overrides default proxy lib.");
-          else {if (!libofs) bp = buff;
-                   else {strcpy(buff, libofs); bp = buff+strlen(buff)-1;
-                         while(bp != buff && *(bp-1) != '/') bp--;
-                        }
-                strcpy(bp, "libXrdProxy.so");
-                OssLib = strdup(buff);
-               }
-      }
-
 // For server roles find the port number and create the object
 //
-   if (Options & (XrdOfsREDIRTRG | (XrdOfsREDIREER & ~ XrdOfsREDIRRMT)))
+   if (Options & (isServer | (isPeer & ~isManager)))
       {if (!myPort)
           {Eroute.Emsg("Config", "Unable to determine server's port number.");
            return 1;
           }
-       Balancer = new XrdOdcFinderTRG(Eroute.logger(), 
-                         (isRedir ? XrdOdcIsRedir : 0), myPort);
-       if (!Balancer->Configure(ConfigFN)) 
+       Balancer = new XrdCmsFinderTRG(Eroute.logger(),
+                         (isRedir ? XrdCms::IsRedir : 0), myPort, 
+                         (Options & isProxy ? 0 : XrdOfsOss));
+       if (!Balancer->Configure(ConfigFN))
           {delete Balancer; Balancer = 0; return 1;}
-       if (Options & XrdOfsREDIROXY) Balancer = 0; // No chatting for proxies
+       if (Options & isProxy) Balancer = 0; // No chatting for proxies
       }
 
 // All done
@@ -333,14 +370,12 @@ int XrdOfs::ConfigXeq(char *var, XrdOucStream &Config,
 
     // Now assign the appropriate global variable
     //
-    TS_Bit("authorize",     Options, XrdOfsAUTHORIZE);
+    TS_Bit("authorize",     Options, Authorize);
     TS_Xeq("authlib",       xalib);
-    TS_Bit("fdnoshare",     Options, XrdOfsFDNOSHARE);
-    TS_Xeq("fdscan",        xfdscan);
     TS_Xeq("forward",       xforward);
-    TS_Xeq("locktry",       xlocktry); // Deprecated
     TS_Xeq("maxdelay",      xmaxd);
     TS_Xeq("notify",        xnot);
+    TS_Xeq("notifymsg",     xnmsg);
     TS_Xeq("osslib",        xolib);
     TS_Xeq("redirect",      xred);     // Deprecated
     TS_Xeq("role",          xrole);
@@ -351,10 +386,6 @@ int XrdOfs::ConfigXeq(char *var, XrdOucStream &Config,
     strlcpy(vBuff, var, sizeof(vBuff)); var = vBuff;
     if (!(val = Config.GetWord()))
        {Eroute.Emsg("Config", "value not specified for", var); return 1;}
-
-    // Process simple directives
-    //
-    TS_PList("validpath",   VPlist);
 
     // No match found, complain.
     //
@@ -401,55 +432,18 @@ int XrdOfs::xalib(XrdOucStream &Config, XrdSysError &Eroute)
 }
 
 /******************************************************************************/
-/*                               x f d s c a n                                */
-/******************************************************************************/
-
-/* Function: xfdscan
-
-   Purpose:  To parse the directive: fdscan <numopen> <minidle> <maxidle>
-
-             <numopen> number of fd's that must be open for scan to commence.
-             <minidle> minimum number of seconds between scans.
-             <maxidle> maximum number of seconds a file can be idle before
-                       it is closed.
-
-   Output: 0 upon success or !0 upon failure.
-*/
-
-int XrdOfs::xfdscan(XrdOucStream &Config, XrdSysError &Eroute)
-{
-    char *val;
-    int numf, minidle, maxidle;
-
-      if (!(val = Config.GetWord()))
-         {Eroute.Emsg("Config","fdscan numfiles value not specified");return 1;}
-      if (XrdOuca2x::a2i(Eroute, "fdscan numfiles", val, &numf, 0)) return 1;
-
-      if (!(val = Config.GetWord()))
-         {Eroute.Emsg("Config","fdscan minidle value not specified"); return 1;}
-      if (XrdOuca2x::a2tm(Eroute, "fdscan minidle",val, &minidle,0)) return 1;
-
-      if (!(val = Config.GetWord()))
-         {Eroute.Emsg("Config","fdscan maxidle value not specified"); return 1;}
-      if (XrdOuca2x::a2tm(Eroute,"fdscan maxidle", val, &maxidle, minidle))
-         return 1;
-
-      FDOpenMax = numf;
-      FDMinIdle = minidle;
-      FDMaxIdle = maxidle;
-      return 0;
-}
-
-/******************************************************************************/
 /*                              x f o r w a r d                               */
 /******************************************************************************/
   
 /* Function: xforward
 
-   Purpose:  To parse the directive: forward [1way | 2way] <metaops>
+   Purpose:  To parse the directive: forward [<handling>] <metaops>
+
+             handling: 1way | 2way | 3way {local | <host>:<port>}
 
              1way      forward does not respond (the default)
              2way      forward responds; relay response back.
+             3way      forward 1way and execute locally or redirect to <host>
              <metaops> list of meta-file operations to forward to manager
 
    Output: 0 upon success or !0 upon failure.
@@ -457,9 +451,9 @@ int XrdOfs::xfdscan(XrdOucStream &Config, XrdSysError &Eroute)
 
 int XrdOfs::xforward(XrdOucStream &Config, XrdSysError &Eroute)
 {
-    enum fwdType {OfsFWDALL = 0x1f, OfsFWDCHMOD = 0x01, OfsFWDMKDIR = 0x02,
+    enum fwdType {OfsFWDALL = 0x3f, OfsFWDCHMOD = 0x01, OfsFWDMKDIR = 0x02,
                   OfsFWDMV  = 0x04, OfsFWDRM    = 0x08, OfsFWDRMDIR = 0x10,
-                  OfsFWDREM = 0x18, OfsFWDNONE  = 0};
+                  OfsFWDREM = 0x18, OfsFWDTRUNC = 0x20, OfsFWDNONE  = 0};
 
     static struct fwdopts {const char *opname; fwdType opval;} fwopts[] =
        {
@@ -469,18 +463,37 @@ int XrdOfs::xforward(XrdOucStream &Config, XrdSysError &Eroute)
         {"mv",       OfsFWDMV},
         {"rm",       OfsFWDRM},
         {"rmdir",    OfsFWDRMDIR},
-        {"remove",   OfsFWDREM}
+        {"remove",   OfsFWDREM},
+        {"trunc",    OfsFWDTRUNC}
        };
     int fwval = OfsFWDNONE, fwspec = OfsFWDNONE;
     int numopts = sizeof(fwopts)/sizeof(struct fwdopts);
-    int i, neg, is2way = 0;
-    char *val;
+    int i, neg, rPort = 0, is2way = 0, is3way = 0;
+    char *val, *pp, rHost[512];
 
+    *rHost = '\0';
     if (!(val = Config.GetWord()))
        {Eroute.Emsg("Config", "foward option not specified"); return 1;}
-    if ((is2way = !strcmp("2way", val)) || !strcmp("1way", val))
+    if ((is2way = !strcmp("2way", val)) || !strcmp("1way", val)
+    ||  (is3way = !strcmp("3way", val)))
        if (!(val = Config.GetWord()))
           {Eroute.Emsg("Config", "foward operation not specified"); return 1;}
+
+    if (is3way)
+       {if (!strcmp("local", val)) rPort = -1;
+        else
+       {if (*val == ':')
+           {Eroute.Emsg("Config", "redirect host not specified"); return 1;}
+        if (!(pp = index(val, ':')))
+           {Eroute.Emsg("Config", "redirect port not specified"); return 1;}
+        if ((rPort = atoi(pp+1)) <= 0)
+           {Eroute.Emsg("Config", "redirect port is invalid");    return 1;}
+        *pp = '\0';
+        strlcpy(rHost, val, sizeof(rHost));
+       }
+        if (!(val = Config.GetWord()))
+           {Eroute.Emsg("Config", "foward operation not specified"); return 1;}
+       }
 
     while (val)
          {if (!strcmp(val, "off")) {fwval = OfsFWDNONE; fwspec = OfsFWDALL;}
@@ -500,55 +513,43 @@ int XrdOfs::xforward(XrdOucStream &Config, XrdSysError &Eroute)
          }
 
     if (fwspec & OfsFWDCHMOD) 
-        fwdCHMOD = (fwval & OfsFWDCHMOD ? (is2way ? "+chmod"  : "chmod")  : 0);
-    if (fwspec & OfsFWDMKDIR) 
-        fwdMKDIR = (fwval & OfsFWDMKDIR ? (is2way ? "+mkdir"  : "mkdir")  : 0);
-        fwdMKPATH= (fwval & OfsFWDMKDIR ? (is2way ? "+mkpath" : "mkpath") : 0);
-    if (fwspec & OfsFWDMV)    
-        fwdMV    = (fwval & OfsFWDMV    ? (is2way ? "+mv"     : "mv")     : 0);
-    if (fwspec & OfsFWDRM)    
-        fwdRM    = (fwval & OfsFWDRM    ? (is2way ? "+rm"     : "rm")     : 0);
-    if (fwspec & OfsFWDRMDIR) 
-        fwdRMDIR = (fwval & OfsFWDRMDIR ? (is2way ? "+rmdir"  : "rmdir")  : 0);
+       {fwdCHMOD.Cmd = (fwval&OfsFWDCHMOD ? (is2way ? "+chmod" :"chmod")  : 0);
+        if (fwdCHMOD.Host) free(fwdCHMOD.Host);
+        fwdCHMOD.Host = strdup(rHost); fwdCHMOD.Port = rPort;
+       }
+    if (fwspec&OfsFWDMKDIR) 
+       {fwdMKDIR.Cmd = (fwval&OfsFWDMKDIR ? (is2way ? "+mkdir" :"mkdir")  : 0);
+        if (fwdMKDIR.Host) free(fwdMKDIR.Host);
+        fwdMKDIR.Host = strdup(rHost); fwdMKDIR.Port = rPort;
+        fwdMKPATH.Cmd= (fwval&OfsFWDMKDIR ? (is2way ? "+mkpath":"mkpath") : 0);
+        if (fwdMKPATH.Host) free(fwdMKPATH.Host);
+        fwdMKPATH.Host = strdup(rHost); fwdMKPATH.Port = rPort;
+       }
+    if (fwspec&OfsFWDMV)    
+       {fwdMV   .Cmd = (fwval&OfsFWDMV    ? (is2way ? "+mv"    :"mv")     : 0);
+        if (fwdMV.Host) free(fwdMV.Host);
+        fwdMV.Host = strdup(rHost); fwdMV.Port = rPort;
+       }
+    if (fwspec&OfsFWDRM)    
+       {fwdRM   .Cmd = (fwval&OfsFWDRM    ? (is2way ? "+rm"    :"rm")     : 0);
+        if (fwdRM.Host) free(fwdRM.Host);
+        fwdRM.Host = strdup(rHost); fwdRM.Port = rPort;
+       }
+    if (fwspec&OfsFWDRMDIR) 
+       {fwdRMDIR.Cmd = (fwval&OfsFWDRMDIR ? (is2way ? "+rmdir" :"rmdir")  : 0);
+        if (fwdRMDIR.Host) free(fwdRMDIR.Host);
+        fwdRMDIR.Host = strdup(rHost); fwdRMDIR.Port = rPort;
+       }
+    if (fwspec&OfsFWDTRUNC) 
+       {fwdTRUNC.Cmd = (fwval&OfsFWDTRUNC ? (is2way ? "+trunc" :"trunc")  : 0);
+        if (fwdTRUNC.Host) free(fwdTRUNC.Host);
+        fwdTRUNC.Host = strdup(rHost); fwdTRUNC.Port = rPort;
+       }
 
 // All done
 //
-   if (fwdCHMOD || fwdMKDIR || fwdMV || fwdRM || fwdRMDIR)
-           Options |=   XrdOfsFWD;
-      else Options &= ~(XrdOfsFWD);
+   Options |= Forwarding;
    return 0;
-}
-
-/******************************************************************************/
-/*                              x l o c k t r y                               */
-/******************************************************************************/
-  
-/* Function: locktry
-
-   Purpose:  To parse the directive: locktry <times> <wait>
-
-             <times>   number of times to try to get a lock.
-             <wait>    number of milliseconds to wait between tries.
-
-   Output: 0 upon success or !0 upon failure.
-*/
-
-int XrdOfs::xlocktry(XrdOucStream &Config, XrdSysError &Eroute)
-{
-    char *val;
-    int numt, mswt;
-
-      if (!(val = Config.GetWord()))
-         {Eroute.Emsg("Config","locktry count not specified"); return 1;}
-      if (XrdOuca2x::a2i(Eroute, "locktry count", val, &numt, 0)) return 1;
-
-      if (!(val = Config.GetWord()))
-         {Eroute.Emsg("Config","locktry wait interval not specified");return 1;}
-      if (XrdOuca2x::a2i(Eroute, "locktry wait",val, &mswt,0)) return 1;
-
-      LockTries = numt;
-      LockWait  = mswt;
-      return 0;
 }
   
 /******************************************************************************/
@@ -578,6 +579,78 @@ int XrdOfs::xmaxd(XrdOucStream &Config, XrdSysError &Eroute)
 }
 
 /******************************************************************************/
+/*                                 x n m s g                                  */
+/******************************************************************************/
+
+/* Function: xnmsg
+
+   Purpose:  To parse the directive: notifymsg <event> <msg>
+
+   Args:     <events> - one or more of: all chmod closer closew close mkdir mv
+                                        openr openw open rm rmdir fwrite
+             <msg>      the notification message to be sent (see notify).
+
+   Type: Manager only, non-dynamic.
+
+   Output: 0 upon success or !0 upon failure.
+*/
+
+int XrdOfs::xnmsg(XrdOucStream &Config, XrdSysError &Eroute)
+{
+    static struct notopts {const char *opname; XrdOfsEvs::Event opval;}
+        noopts[] = {
+        {"chmod",    XrdOfsEvs::Chmod},
+        {"closer",   XrdOfsEvs::Closer},
+        {"closew",   XrdOfsEvs::Closew},
+        {"create",   XrdOfsEvs::Create},
+        {"mkdir",    XrdOfsEvs::Mkdir},
+        {"mv",       XrdOfsEvs::Mv},
+        {"openr",    XrdOfsEvs::Openr},
+        {"openw",    XrdOfsEvs::Openw},
+        {"rm",       XrdOfsEvs::Rm},
+        {"rmdir",    XrdOfsEvs::Rmdir},
+        {"trunc",    XrdOfsEvs::Trunc},
+        {"fwrite",   XrdOfsEvs::Fwrite}
+       };
+    XrdOfsEvs::Event noval;
+    int numopts = sizeof(noopts)/sizeof(struct notopts);
+    char *val, buff[1024];
+    XrdOucEnv *myEnv;
+    int i;
+
+   // At this point, make sure we have a value
+   //
+   if (!(val = Config.GetWord()))
+      {Eroute.Emsg("Config", "notifymsg event not specified");
+       return 1;
+      }
+
+   // Get the evant number
+   //
+   for (i = 0; i < numopts; i++) if (!strcmp(val, noopts[i].opname)) break;
+   if (i >= numopts)
+      {Eroute.Say("Config warning: ignoring invalid notify event '",val,"'.");
+       return 1;
+      }
+   noval = noopts[i].opval;
+
+   // We need to suck all the tokens to the end of the line for remaining
+   // options. Do so, until we run out of space in the buffer.
+   //
+   myEnv = Config.SetEnv(0);
+   if (!Config.GetRest(buff, sizeof(buff)))
+      {Eroute.Emsg("Config", "notifymsg arguments too long");
+       Config.SetEnv(myEnv);
+       return 1;
+      }
+
+   // Restore substitutions and parse the message
+   //
+   Config.SetEnv(myEnv);
+   return XrdOfsEvs::Parse(Eroute, noval, buff);
+}
+  
+/******************************************************************************/
 /*                                  x n o t                                   */
 /* Based on code developed by Derek Feichtinger, CERN.                        */
 /******************************************************************************/
@@ -589,6 +662,7 @@ int XrdOfs::xmaxd(XrdOucStream &Config, XrdSysError &Eroute)
 
    Args:     <events> - one or more of: all chmod closer closew close mkdir mv
                                         openr openw open rm rmdir fwrite
+                        opaque and other possible information to be sent.
              msgs     - Maximum number of messages to keep and queue. The
                         <min> if for small messages (default 90) and <max> is
                         for big messages (default 10).
@@ -601,7 +675,7 @@ int XrdOfs::xmaxd(XrdOucStream &Config, XrdSysError &Eroute)
 */
 int XrdOfs::xnot(XrdOucStream &Config, XrdSysError &Eroute)
 {
-    static struct notopts {const char *opname; XrdOfsEvs::Event opval;} 
+    static struct notopts {const char *opname; XrdOfsEvs::Event opval;}
         noopts[] = {
         {"all",      XrdOfsEvs::All},
         {"chmod",    XrdOfsEvs::Chmod},
@@ -616,6 +690,7 @@ int XrdOfs::xnot(XrdOucStream &Config, XrdSysError &Eroute)
         {"openw",    XrdOfsEvs::Openw},
         {"rm",       XrdOfsEvs::Rm},
         {"rmdir",    XrdOfsEvs::Rmdir},
+        {"trunc",    XrdOfsEvs::Trunc},
         {"fwrite",   XrdOfsEvs::Fwrite}
        };
     XrdOfsEvs::Event noval = XrdOfsEvs::None;
@@ -639,10 +714,11 @@ int XrdOfs::xnot(XrdOucStream &Config, XrdSysError &Eroute)
               continue;
              }
           if ((neg = (val[0] == '-' && val[1]))) val++;
+          i = strlen(val);
           for (i = 0; i < numopts; i++)
               {if (!strcmp(val, noopts[i].opname))
-                  {if (neg) noval = static_cast<XrdOfsEvs::Event>(~noopts[i].opval & noval);
-                      else  noval = static_cast<XrdOfsEvs::Event>(noopts[i].opval|noval);
+                  {if (neg) noval = static_cast<XrdOfsEvs::Event>(~noopts[i].opval&noval);
+                      else  noval = static_cast<XrdOfsEvs::Event>( noopts[i].opval|noval);
                    break;
                   }
               }
@@ -660,10 +736,8 @@ int XrdOfs::xnot(XrdOucStream &Config, XrdSysError &Eroute)
 //
    Config.RetToken();
    if (!Config.GetRest(parms, sizeof(parms)))
-      {Eroute.Emsg("Config", "authlib parameters too long"); return 1;}
+      {Eroute.Emsg("Config", "notify parameters too long"); return 1;}
    val = (*parms == '|' ? parms+1 : parms);
-
-// Get the remaining
 
 // Create an notification object
 //
@@ -675,7 +749,6 @@ int XrdOfs::xnot(XrdOucStream &Config, XrdSysError &Eroute)
    return 0;
 }
   
-
 /******************************************************************************/
 /*                                 x o l i b                                  */
 /******************************************************************************/
@@ -741,16 +814,16 @@ int XrdOfs::xred(XrdOucStream &Config, XrdSysError &Eroute)
     Eroute.Say("Config warning: redirect directive is deprecated; use 'all.role'.");
 
     if ((val = Config.GetWord()))
-       {     if (!strcmp("proxy",  val)) {ropt = XrdOfsREDIROXY;
+       {     if (!strcmp("proxy",  val)) {ropt = isProxy;
                                           mode = "proxy";
                                          }
-        else if (!strcmp("remote", val))  ropt = XrdOfsREDIRRMT;
-        else if (!strcmp("target", val)) {ropt = XrdOfsREDIRTRG;
+        else if (!strcmp("remote", val))  ropt = isManager;
+        else if (!strcmp("target", val)) {ropt = isServer;
                                           mode = "target";
                                          }
        }
 
-    if (!ropt) ropt = XrdOfsREDIRRMT;
+    if (!ropt) ropt = isManager;
        else if (val) val = Config.GetWord();
 
     if (val)
@@ -770,13 +843,18 @@ int XrdOfs::xred(XrdOucStream &Config, XrdSysError &Eroute)
 
 /* Function: xrole
 
-   Purpose:  Parse: role {[peer] [proxy] manager | peer | proxy | [proxy] server
-                          | [proxy] supervisor} [if ...]
+   Purpose:  Parse: role { {[meta] | [peer] [proxy]} manager
+                           | peer | proxy | [proxy]  server
+                           |                [proxy]  supervisor
+                         } [if ...]
 
-             manager    xrootd: act as a manager (redirecting server). Prefix
-                                modifications are ignored.
-                        olbd:   accept server subscribes and redirectors. Prefix
+             manager    xrootd: act as a manager (redirecting server). Prefixes:
+                                meta  - connect only to manager meta's
+                                peer  - ignored
+                                proxy - ignored
+                        cmsd:   accept server subscribes and redirectors. Prefix
                                 modifiers do the following:
+                                meta  - No other managers apply
                                 peer  - subscribe to other managers as a peer
                                 proxy - manage a cluster of proxy servers
 
@@ -803,14 +881,7 @@ int XrdOfs::xred(XrdOucStream &Config, XrdSysError &Eroute)
              if         Apply the manager directive if "if" is true. See
                         XrdOucUtils:doIf() for "if" syntax.
 
-   Notes: 1. This directive superceeds the redirect directive. There is no
-             equivalent for "peer" designation. For other possibilities:
-             manager    -> redirect remote
-             proxy      -> redirect proxy
-             server     -> redirect target
-             supervisor -> redirect remote + target
-
-          2. The peer designation only affects how the olbd communicates.
+   Notes  1. The peer designation only affects how the olbd communicates.
 
    Type: Server only, non-dynamic.
 
@@ -819,55 +890,55 @@ int XrdOfs::xred(XrdOucStream &Config, XrdSysError &Eroute)
 
 int XrdOfs::xrole(XrdOucStream &Config, XrdSysError &Eroute)
 {
-   const int resetit = ~XrdOfsREDIRECT;
+   const int resetit = ~haveRole;
    char role[64];
    char *val;
-   int rc, qopt = 0, ropt = 0, sopt = 0;
+   int rc, mopt = 0, qopt = 0, ropt = 0, sopt = 0;
 
    *role = '\0';
    if (!(val = Config.GetWord()))
       {Eroute.Emsg("Config", "role not specified"); return 1;}
 
-// First screen for "peer"
-//
-   if (!strcmp("peer", val))
-      {qopt = XrdOfsREDIREER;
-       strcpy(role, val);
-       val = Config.GetWord();
-      }
 
-// Now scan for "proxy"
+// Scan for "meta" o/w "peer" or "proxy"
 //
-   if (val && !strcmp("proxy", val))
-      {ropt = XrdOfsREDIROXY;
-       if (qopt) strcat(role, " ");
-       strcat(role, val);
-       val = Config.GetWord();
-      }
+   if (!strcmp("meta", val))
+      {mopt = isMeta; strcpy(role, val); val = Config.GetWord();}
+      else {if (!strcmp("peer", val))
+               {qopt = isPeer; strcpy(role, val);
+                val = Config.GetWord();
+               }
+            if (val && !strcmp("proxy", val))
+               {ropt = isProxy;
+                if (qopt) strcat(role, " ");
+                strcat(role, val);
+                val = Config.GetWord();
+               }
+           }
 
 // Scan for other possible alternatives
 //
    if (val && strcmp("if", val))
-      {     if (!strcmp("manager",    val)) sopt = XrdOfsREDIRRMT;
-       else if (!strcmp("server",     val)) sopt = XrdOfsREDIRTRG;
-       else if (!strcmp("supervisor", val)) sopt = XrdOfsREDIRVER;
+      {     if (!strcmp("manager",    val)) sopt = isManager;
+       else if (!strcmp("server",     val)) sopt = isServer;
+       else if (!strcmp("supervisor", val)) sopt = isSuper;
        else    {Eroute.Emsg("Config", "invalid role -", val); return 1;}
 
-       if (qopt || ropt) strcat(role, " ");
+       if (mopt || qopt || ropt) strcat(role, " ");
        strcat(role, val);
        val = Config.GetWord();
       }
 
 // Scan for invalid roles: peer proxy | peer server | {peer} supervisor
 //
-   if ((qopt && ropt && !sopt) 
-   ||  (qopt && sopt == XrdOfsREDIRTRG)
-   ||  (qopt && sopt == XrdOfsREDIRVER))
+   if (((mopt || (qopt && ropt)) && !sopt)
+   ||  ((mopt || qopt) && sopt == isServer)
+   ||  ((mopt || qopt) && sopt == isSuper))
       {Eroute.Emsg("Config", "invalid role -", role); return 1;}
 
 // Make sure a role was specified
 //
-    if (!(ropt = qopt | ropt | sopt))
+    if (!(ropt = mopt | qopt | ropt | sopt))
        {Eroute.Emsg("Config", "role not specified"); return 1;}
 
 // Pick up optional "if"
@@ -994,23 +1065,10 @@ int XrdOfs::setupAuth(XrdSysError &Eroute)
   
 const char *XrdOfs::theRole(int opts)
 {
-          if (opts & XrdOfsREDIREER) return "peer";
-     else if (opts & XrdOfsREDIRRMT
-          &&  opts & XrdOfsREDIRTRG) return "supervisor";
-     else if (opts & XrdOfsREDIRRMT) return "manager";
-     else if (opts & XrdOfsREDIROXY) return "proxy";
-                                     return "server";
-}
-
-/******************************************************************************/
-/*                           L i s t _ V P l i s t                            */
-/******************************************************************************/
-  
-void XrdOfs::List_VPlist(char *lname, 
-                      XrdOucPListAnchor &plist, XrdSysError &Eroute)
-{
-     XrdOucPList *fp;
-
-     fp = plist.Next();
-     while(fp) {Eroute.Say(lname, fp->Path()); fp = fp->Next();}
+          if (opts & isPeer)    return "peer";
+     else if (opts & isManager
+          &&  opts & isServer)  return "supervisor";
+     else if (opts & isManager) return "manager";
+     else if (opts & isProxy)   return "proxy";
+                                return "server";
 }

@@ -222,10 +222,10 @@ void XrdSutBuffer::Dump(const char *stepstr)
    // Dump content of buffer
    EPNAME("Buffer::Dump");
 
-   PRINT("//-------------------------------------------------//")
-   PRINT("//                                                 //")
-   PRINT("//            XrdSutBuffer DUMP                    //")
-   PRINT("//                                                 //")
+   PRINT("//-----------------------------------------------------//");
+   PRINT("//                                                     //")
+   PRINT("//            XrdSutBuffer DUMP                        //")
+   PRINT("//                                                     //")
 
    int nbuck = fBuckets.Size();
 
@@ -254,10 +254,8 @@ void XrdSutBuffer::Dump(const char *stepstr)
       // Get next
       bp = fBuckets.Next();
    }
-   PRINT("//                                                 //")
-   PRINT("//  NB: '0x..' is the hex of non-printable chars   //")
-   PRINT("//                                                 //")
-   PRINT("//-------------------------------------------------//")
+   PRINT("//                                                     //")
+   PRINT("//-----------------------------------------------------//");
 }
 
 //_____________________________________________________________________________

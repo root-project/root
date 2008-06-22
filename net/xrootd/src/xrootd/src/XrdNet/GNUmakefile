@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.9.6.1 2007/11/20 09:54:44 ganis Exp $
+#              $Id: GNUmakefile,v 1.12 2007/11/23 13:35:02 furano Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -16,6 +16,7 @@ SOURCES = \
         XrdNetConnect.cc     \
         XrdNetDNS.cc         \
         XrdNetLink.cc        \
+        XrdNetMsg.cc         \
         XrdNetSecurity.cc    \
         XrdNetSocket.cc      \
         XrdNetWork.cc
@@ -26,6 +27,7 @@ OBJECTS = \
         $(OBJDIR)/XrdNetConnect.o      \
         $(OBJDIR)/XrdNetDNS.o          \
         $(OBJDIR)/XrdNetLink.o         \
+        $(OBJDIR)/XrdNetMsg.o          \
         $(OBJDIR)/XrdNetSecurity.o     \
         $(OBJDIR)/XrdNetSocket.o       \
         $(OBJDIR)/XrdNetWork.o
@@ -94,6 +96,10 @@ $(OBJDIR)/XrdNetLink.o: XrdNetLink.cc XrdNetLink.hh          XrdNet.hh \
                         XrdSysPlatform.hh XrdOucStream.hh    XrdOucTokenizer.hh
 	@echo Compiling XrdNetLink.cc
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) XrdNetLink.cc -o $(OBJDIR)/XrdNetLink.o
+
+$(OBJDIR)/XrdNetMsg.o: XrdNetMsg.cc XrdNetMsg.hh
+	@echo Compiling XrdNetMsg.cc
+	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) XrdNetMsg.cc -o $(OBJDIR)/XrdNetMsg.o
 
 $(OBJDIR)/XrdNetSecurity.o: XrdNetSecurity.cc XrdNetSecurity.hh \
                             XrdOucHash.hh     XrdOucHash.icc \

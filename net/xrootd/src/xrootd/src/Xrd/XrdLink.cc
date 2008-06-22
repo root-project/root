@@ -19,6 +19,17 @@ const char *XrdLinkCVSID = "$Id$";
 #include <sys/socket.h>
 #include <sys/uio.h>
 
+#ifdef __linux__
+#include <netinet/tcp.h>
+#if !defined(TCP_CORK)
+#undef HAS_SENDFILE
+#endif
+#endif
+
+#ifdef HAS_SENDFILE
+#include <sys/sendfile.h>
+#endif
+
 #include "XrdNet/XrdNetDNS.hh"
 #include "XrdNet/XrdNetPeer.hh"
 #include "XrdSys/XrdSysError.hh"
@@ -70,6 +81,12 @@ extern XrdScheduler    XrdSched;
 
 extern XrdInet        *XrdNetTCP;
 extern XrdOucTrace     XrdTrace;
+
+#if defined(HAS_SENDFILE)
+       int             XrdLink::sfOK = 1;
+#else
+       int             XrdLink::sfOK = 0;
+#endif
 
        XrdLink       **XrdLink::LinkTab;
        char           *XrdLink::LinkBat;
@@ -257,9 +274,8 @@ int XrdLink::Close(int defer)
    if (defer)
       {TRACE(DEBUG, "Defered close " <<ID <<" FD=" <<FD);
        if (FD > 1)
-          {if (!KeepFD) dup2(devNull, FD);
-           FD = -FD;
-           Instance = 0;
+          {fd = FD; FD = -FD; Instance = 0;
+           if (!KeepFD) dup2(devNull, fd);
           }
        opMutex.UnLock();
        return 0;
@@ -308,9 +324,9 @@ int XrdLink::Close(int defer)
 // Close the file descriptor if it isn't being shared. Do it as the last
 // thing because closes and accepts and not interlocked.
 //
-   if (fd >= 2)
-      if (KeepFD) rc = 0;
-         else rc = (close(fd) < 0 ? errno : 0);
+   if (fd >= 2) {if (KeepFD) rc = 0;
+                    else rc = (close(fd) < 0 ? errno : 0);
+                }
    if (rc) XrdLog.Emsg("Link", rc, "close", ID);
    return rc;
 }
@@ -489,7 +505,7 @@ int XrdLink::Recv(char *Buff, int Blen)
    if (LockReads) rdMutex.UnLock();
 
    if (rlen >= 0) return int(rlen);
-   XrdLog.Emsg("Link", errno, "receive from", ID);
+   if (FD >= 0) XrdLog.Emsg("Link", errno, "receive from", ID);
    return -1;
 }
 
@@ -515,10 +531,10 @@ int XrdLink::Recv(char *Buff, int Blen, int timeout)
             {if (retc == 0)
                 {tardyCnt++;
                  if (totlen  && (++stallCnt & 0xff) == 1)
-                    XrdLog.Emsg("Link", ID, "read timed out");
+                    TRACE(DEBUG, ID << " read timed out");
                  return int(totlen);
                 }
-             return XrdLog.Emsg("Link", -errno, "poll", ID);
+             return (FD >= 0 ? XrdLog.Emsg("Link", -errno, "poll", ID) : -1);
             }
 
          // Verify it is safe to read now
@@ -535,7 +551,7 @@ int XrdLink::Recv(char *Buff, int Blen, int timeout)
          do {rlen = recv(FD, Buff, Blen, 0);} while(rlen < 0 && errno == EINTR);
          if (rlen <= 0)
             {if (!rlen) return -ENOMSG;
-             return XrdLog.Emsg("Link", -errno, "receive from", ID);
+             return (FD<0 ? -1 : XrdLog.Emsg("Link",-errno,"receive from",ID));
             }
          BytesIn += rlen; totlen += rlen; Blen -= rlen; Buff += rlen;
         }
@@ -560,8 +576,9 @@ int XrdLink::RecvAll(char *Buff, int Blen)
    if (LockReads) rdMutex.UnLock();
 
    if (int(rlen) == Blen) return Blen;
-   if (rlen < 0) XrdLog.Emsg("Link", errno, "recieve from", Lname);
-      else       XrdLog.Emsg("Link", "Premature end of recv().");
+   if (!rlen) {TRACE(DEBUG, "No RecvAll() data from " <<Lname <<" FD=" <<FD);}
+      else if (rlen > 0) XrdLog.Emsg("RecvAll","Premature end from", Lname);
+              else if (FD >= 0) XrdLog.Emsg("Link",errno,"recieve from",Lname);
    return -1;
 }
 
@@ -582,8 +599,9 @@ int XrdLink::Send(const char *Buff, int Blen)
 //
    while(bytesleft)
         {if ((retc = write(FD, Buff, bytesleft)) < 0)
-            if (errno == EINTR) continue;
-               else break;
+            {if (errno == EINTR) continue;
+                else break;
+            }
          BytesOut += retc; bytesleft -= retc; Buff += retc;
         }
 
@@ -629,8 +647,9 @@ int XrdLink::Send(const struct iovec *iov, int iocnt, int bytes)
               {retc -= n; iov++; iocnt--;}
          Buff = (const char *)iov->iov_base + retc; n -= retc; iov++; iocnt--;
          while(n) {if ((retc = write(FD, Buff, n)) < 0)
-                      if (errno == EINTR) continue;
-                         else break;
+                      {if (errno == EINTR) continue;
+                          else break;
+                      }
                    n -= retc; Buff += retc;
                   }
          if (retc < 0 || iocnt < 1) break;
@@ -644,6 +663,140 @@ int XrdLink::Send(const struct iovec *iov, int iocnt, int bytes)
    return -1;
 }
  
+/******************************************************************************/
+int XrdLink::Send(const struct sfVec *sfP, int sfN)
+{
+#if !defined(HAS_SENDFILE)
+   return -1;
+#else
+// Make sure we have valid vector count
+//
+   if (sfN < 1 || sfN > sfMax)
+      {XrdLog.Emsg("Link", EINVAL, "send file to", ID);
+       return -1;
+      }
+
+#ifdef __solaris__
+    sendfilevec_t vecSF[sfMax];
+    size_t xframt, bytes = 0;
+    ssize_t retc;
+    int i = 0;
+
+// Construct the sendfilev() vector
+//
+   for (i = 0; i < sfN; sfP++, i++)
+       {if (sfP->fdnum < 0)
+           {vecSF[i].sfv_fd  = SFV_FD_SELF;
+            vecSF[i].sfv_off = (off_t)sfP->buffer;
+           } else {
+            vecSF[i].sfv_fd  = sfP->fdnum;
+            vecSF[i].sfv_off = sfP->offset;
+           }
+        vecSF[i].sfv_flag = 0;
+        vecSF[i].sfv_len  = sfP->sendsz;
+        bytes += sfP->sendsz;
+       }
+
+// Lock the link, issue sendfilev(), and unlock the link
+//
+   wrMutex.Lock();
+   isIdle = 0;
+   retc = sendfilev(FD, vecSF, sfN, &xframt);
+
+// Check if all went well and return if so (usual case)
+//
+   if (retc == bytes)
+      {BytesOut += bytes;
+       wrMutex.UnLock();
+       return bytes;
+      }
+
+// See if we can recover without destroying the connection
+//
+   wrMutex.UnLock();
+   if (retc >= 0) errno = ECANCELED;
+   XrdLog.Emsg("Link", errno, "send file to", ID);
+   return -1;
+
+#elif defined(__linux__)
+
+   static const int setON = 1, setOFF = 0;
+   ssize_t retc = 0, bytesleft;
+   off_t myOffset;
+   int i, xfrbytes = 0, uncork = 1;
+
+// lock the link
+//
+   wrMutex.Lock();
+   isIdle = 0;
+
+// In linux we need to cork the socket. On permanent errors we do not uncork
+// the socket because it will be closed in short order.
+//
+   if (setsockopt(FD, SOL_TCP, TCP_CORK, &setON, sizeof(setON)) < 0)
+      {XrdLog.Emsg("Link", errno, "cork socket for", ID); 
+       uncork = 0; sfOK = 0;
+      }
+
+// Send the header first
+//
+   for (i = 0; i < sfN; sfP++, i++)
+       {if (sfP->fdnum < 0) retc = sendData(sfP->buffer, sfP->sendsz);
+           else {myOffset = sfP->offset; bytesleft = sfP->sendsz;
+                 while(bytesleft
+                    && (retc=sendfile(FD,sfP->fdnum,&myOffset,bytesleft)) > 0)
+                      {myOffset += retc; bytesleft -= retc;}
+                }
+        if (retc <= 0) break;
+        xfrbytes += sfP->sendsz;
+       }
+
+// Diagnose any sendfile errors
+//
+   if (retc <= 0)
+      {if (retc == 0) errno = ECANCELED;
+       wrMutex.UnLock();
+       XrdLog.Emsg("Link", errno, "send file to", ID);
+       return -1;
+      }
+
+// Now uncork the socket
+//
+   if (uncork && setsockopt(FD, SOL_TCP, TCP_CORK, &setOFF, sizeof(setOFF)) < 0)
+      XrdLog.Emsg("Link", errno, "uncork socket for", ID);
+
+// All done
+//
+   BytesOut += xfrbytes;
+   wrMutex.UnLock();
+   return xfrbytes;
+#endif
+#endif
+}
+
+/******************************************************************************/
+/* private                      s e n d D a t a                               */
+/******************************************************************************/
+  
+int XrdLink::sendData(const char *Buff, int Blen)
+{
+   ssize_t retc = 0, bytesleft = Blen;
+
+// Write the data out
+//
+   while(bytesleft)
+        {if ((retc = write(FD, Buff, bytesleft)) < 0)
+            {if (errno == EINTR) continue;
+                else break;
+            }
+         bytesleft -= retc; Buff += retc;
+        }
+
+// All done
+//
+   return retc;
+}
+
 /******************************************************************************/
 /*                              s e t E t e x t                               */
 /******************************************************************************/

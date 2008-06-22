@@ -22,9 +22,8 @@ const char *XrdOdcConfigCVSID = "$Id$";
 #include <sys/stat.h>
 #include <sys/un.h>
 #include <fcntl.h>
-#include <iostream>
-using namespace std;
 
+#include "XrdSys/XrdSysHeaders.hh"
 #include "XrdOdc/XrdOdcConfig.hh"
 #include "XrdOdc/XrdOdcMsg.hh"
 #include "XrdOdc/XrdOdcTrace.hh"
@@ -83,12 +82,13 @@ int XrdOdcConfig::Configure(char *cfn, const char *mode, int isBoth)
 // Process the configuration file
 //
    if (!(NoGo = ConfigProc(cfn)))
-           if (*mode == 'P')
-              {if (!PanList)
-                  {eDest->Emsg("Config", "Proxy manager not specified.");
-                   NoGo=1;
-                  }
-              }
+           {if (*mode == 'P')
+               {if (!PanList)
+                   {eDest->Emsg("Config", "Proxy manager not specified.");
+                    NoGo=1;
+                   }
+               }
+           }
       else if (*mode == 'R' && !isBoth)
               {if (!ManList)
                   {eDest->Emsg("Config", "Manager not specified.");
@@ -362,15 +362,15 @@ int XrdOdcConfig::xmang(XrdSysError *errp, XrdOucStream &Config)
        else {*val = '\0'; val++;}
 
     if (val)
-       if (isdigit(*val))
-           {if (XrdOuca2x::a2i(*errp,"manager port",val,&port,1,65535))
-               port = 0;
-           }
-           else if (!(port = XrdNetDNS::getPort(val, "tcp")))
-                   {errp->Emsg("Config", "unable to find tcp service", val);
-                    port = 0;
-                   }
-       else errp->Emsg("Config","manager port not specified for",mval);
+       {if (isdigit(*val))
+            {if (XrdOuca2x::a2i(*errp,"manager port",val,&port,1,65535))
+                port = 0;
+            }
+            else if (!(port = XrdNetDNS::getPort(val, "tcp")))
+                    {errp->Emsg("Config", "unable to find tcp service", val);
+                     port = 0;
+                    }
+       } else errp->Emsg("Config","manager port not specified for",mval);
 
     if (!port) {free(mval); return 1;}
 
