@@ -1316,7 +1316,7 @@ void TGTable::SetDefaultColors()
 }
 
 //______________________________________________________________________________
-void TGTable::MoveTable(const Int_t rows, const Int_t columns)
+void TGTable::MoveTable(Int_t rows, Int_t columns)
 {
    // Move and layout the table to the specified range. 
 
