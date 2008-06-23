@@ -1,4 +1,3 @@
-
 /* /% C %/ */
 /***********************************************************************
  * cint (C/C++ interpreter)
@@ -25,11 +24,10 @@
 #include <cctype>
 #include <cstring>
 
+using namespace std;
 using namespace Cint::Internal;
 
-/******************************************************************
-* G__check_semicolumn_after_classdef
-******************************************************************/
+//______________________________________________________________________________
 static int G__check_semicolumn_after_classdef(int isclassdef)
 {
    G__StrBuf checkbuf_sb(G__ONELINE);
@@ -59,17 +57,17 @@ static int G__check_semicolumn_after_classdef(int isclassdef)
    return(0);
 }
 
-/******************************************************************
-* int G__using_namespace()
-*
-*  using  namespace [ns_name];  using directive   -> inheritance
-*  using  [scope]::[member];    using declaration -> reference object
-*        ^
-*
-* Note: using directive appears in global scope is not implemented yet
-******************************************************************/
+//______________________________________________________________________________
 int Cint::Internal::G__using_namespace()
 {
+   // Parse using a using directive or a using declaration.
+   //
+   // using  namespace [ns_name];  using directive   -> inheritance
+   // using  [scope]::[member];    using declaration -> reference object
+   //       ^
+   // 
+   // Note: using directive appears in global scope is not implemented yet
+   //
    int result = 0;
    G__StrBuf buf_sb(G__ONELINE);
    char *buf = buf_sb;
@@ -194,9 +192,7 @@ int Cint::Internal::G__using_namespace()
    return(result);
 }
 
-/******************************************************************
-* int G__get_envtagnum()
-******************************************************************/
+//______________________________________________________________________________
 ::Reflex::Scope Cint::Internal::G__get_envtagnum()
 {
    if (G__def_tagnum && !G__def_tagnum.IsTopScope()) {
@@ -212,10 +208,8 @@ int Cint::Internal::G__using_namespace()
    return ::Reflex::Scope::GlobalScope();
 }
 
-/******************************************************************
-* int G__isenclosingclass()
-******************************************************************/
-int Cint::Internal::G__isenclosingclass(const ::Reflex::Scope& enclosingtagnum, const ::Reflex::Scope& env_tagnum)
+//______________________________________________________________________________
+int Cint::Internal::G__isenclosingclass(const ::Reflex::Scope enclosingtagnum, const ::Reflex::Scope env_tagnum)
 {
    if (!env_tagnum || !enclosingtagnum
          || env_tagnum.IsTopScope() || enclosingtagnum.IsTopScope()) return(0);
@@ -227,10 +221,8 @@ int Cint::Internal::G__isenclosingclass(const ::Reflex::Scope& enclosingtagnum, 
    return(0);
 }
 
-/******************************************************************
-* int G__isenclosingclassbase()
-******************************************************************/
-int Cint::Internal::G__isenclosingclassbase(const ::Reflex::Scope& enclosingtagnum, const ::Reflex::Scope& env_tagnum)
+//______________________________________________________________________________
+int Cint::Internal::G__isenclosingclassbase(const ::Reflex::Scope enclosingtagnum, const ::Reflex::Scope env_tagnum)
 {
    // --
 #ifdef __GNUC__
@@ -251,7 +243,7 @@ int Cint::Internal::G__isenclosingclassbase(const ::Reflex::Scope& enclosingtagn
    return G__isenclosingclassbase(G__get_tagnum(enclosingtagnum), G__get_tagnum(env_tagnum));
 }
 
-/*******************************************************************/
+//______________________________________________________________________________
 int Cint::Internal::G__isenclosingclassbase(int enclosingtagnum, int env_tagnum)
 {
    int tagnum;
@@ -266,14 +258,11 @@ int Cint::Internal::G__isenclosingclassbase(int enclosingtagnum, int env_tagnum)
    return(0);
 }
 
-/******************************************************************
-* char* G__find_first_scope_operator(name) by Scott Snyder 1997/10/17
-*
-* Return a pointer to the first scope operator in name.
-* Only those at the outermost level of template nesting are considered.
-******************************************************************/
-char* Cint::Internal::G__find_first_scope_operator(char *name)
+//______________________________________________________________________________
+char* Cint::Internal::G__find_first_scope_operator(char* name)
 {
+   // Return a pointer to the first scope operator in name.
+   // Only those at the outermost level of template nesting are considered.
    char* p = name;
    int single_quote = 0;
    int double_quote = 0;
@@ -303,14 +292,11 @@ char* Cint::Internal::G__find_first_scope_operator(char *name)
    return 0;
 }
 
-/******************************************************************
-* char* G__find_last_scope_operator(name)   by Scott Snyder 1997/10/17
-*
-* Return a pointer to the last scope operator in name.
-* Only those at the outermost level of template nesting are considered.
-******************************************************************/
-char* Cint::Internal::G__find_last_scope_operator(char *name)
+//______________________________________________________________________________
+char* Cint::Internal::G__find_last_scope_operator(char* name)
 {
+   // Return a pointer to the last scope operator in name.
+   // Only those at the outermost level of template nesting are considered.
    char* p = name + strlen(name) - 1;
    int single_quote = 0;
    int double_quote = 0;
@@ -340,16 +326,12 @@ char* Cint::Internal::G__find_last_scope_operator(char *name)
    return 0;
 }
 
-/******************************************************************
- * G__set_class_autoloading
- ******************************************************************/
+//______________________________________________________________________________
 static const char G__CLASS_AUTOLOAD = 'a';
-static int G__enable_autoloading=1;
-int (*G__p_class_autoloading)(char*,char*);
+static int G__enable_autoloading = 1;
+int (*G__p_class_autoloading)(char*, char*);
 
-/************************************************************************
-* G__set_class_autloading
-************************************************************************/
+//______________________________________________________________________________
 extern "C" int G__set_class_autoloading(int newvalue)
 {
    int oldvalue =  G__enable_autoloading;
@@ -357,17 +339,13 @@ extern "C" int G__set_class_autoloading(int newvalue)
    return oldvalue;
 }
 
-/************************************************************************
-* G__set_class_autoloading_callback
-************************************************************************/
+//______________________________________________________________________________
 extern "C" void G__set_class_autoloading_callback(int (*p2f)(char*, char*))
 {
    G__p_class_autoloading = p2f;
 }
 
-/******************************************************************
- * G__get_class_autoloading_table
- ******************************************************************/
+//______________________________________________________________________________
 extern "C" char* G__get_class_autoloading_table(char* classname)
 {
    // Return the autoload entries for the class called classname.
@@ -376,10 +354,8 @@ extern "C" char* G__get_class_autoloading_table(char* classname)
    return G__struct.libname[tagnum];
 }
 
-/******************************************************************
- * G__set_class_autoloading_table
- ******************************************************************/
-extern "C" void G__set_class_autoloading_table(char *classname, char *libname)
+//______________________________________________________________________________
+extern "C" void G__set_class_autoloading_table(char* classname, char* libname)
 {
    ::Reflex::Scope tagnum;
    G__enable_autoloading = 0;
@@ -422,9 +398,7 @@ extern "C" void G__set_class_autoloading_table(char *classname, char *libname)
    }
 }
 
-/******************************************************************
- * G__class_autoloading
- ******************************************************************/
+//______________________________________________________________________________
 int Cint::Internal::G__class_autoloading(int tagnum)
 {
    if (!G__enable_autoloading || (tagnum < 0)) {
@@ -432,9 +406,9 @@ int Cint::Internal::G__class_autoloading(int tagnum)
    }
    // Note: We also autoload classes that were only forward declared.
    if (
-       (G__struct.type[tagnum] == G__CLASS_AUTOLOAD) ||
-       ((G__struct.filenum[tagnum] == -1) && (G__struct.size[tagnum] == 0))
-       ) {
+      (G__struct.type[tagnum] == G__CLASS_AUTOLOAD) ||
+      ((G__struct.filenum[tagnum] == -1) && (G__struct.size[tagnum] == 0))
+   ) {
       char* libname = G__struct.libname[tagnum];
       if (!libname || !libname[0]) {
          return 0;
@@ -451,20 +425,20 @@ int Cint::Internal::G__class_autoloading(int tagnum)
          // -- We have a callback, use that.
          G__enable_autoloading = 0;
          // reset the def tagnums to not collide with dict setup
-         ::Reflex::Scope store_def_tagnum = G__def_tagnum; 
-         ::Reflex::Scope store_tagdefining = G__tagdefining; 
+         ::Reflex::Scope store_def_tagnum = G__def_tagnum;
+         ::Reflex::Scope store_tagdefining = G__tagdefining;
          G__def_tagnum = Reflex::Scope();
          G__tagdefining = Reflex::Scope();
          int res = (*G__p_class_autoloading)(G__fulltagname(tagnum, 1), copyLibname);
          G__def_tagnum = store_def_tagnum;
          G__tagdefining = store_tagdefining;
          if (G__struct.type[tagnum] == G__CLASS_AUTOLOAD) {
-            if (strstr(G__struct.name[tagnum],"<") != 0) {
+            if (strstr(G__struct.name[tagnum], "<") != 0) {
                // Kill this entry.
-               store_def_tagnum = G__def_tagnum; 
-               store_tagdefining = G__tagdefining; 
+               store_def_tagnum = G__def_tagnum;
+               store_tagdefining = G__tagdefining;
                G__tagdefining = G__def_tagnum = G__Dict::GetDict().GetScope(G__struct.parent_tagnum[tagnum]);
-               int found_tagnum = G__defined_tagname(G__struct.name[tagnum],3);
+               int found_tagnum = G__defined_tagname(G__struct.name[tagnum], 3);
                G__def_tagnum = store_def_tagnum;
                G__tagdefining = store_tagdefining;
                if (found_tagnum != tagnum) {
@@ -475,9 +449,9 @@ int Cint::Internal::G__class_autoloading(int tagnum)
                   // stl containers with or without their (default) allocators.
                   char *old = G__struct.name[tagnum];
 
-                  G__struct.name[tagnum] = (char*)malloc(strlen(old)+50);
-                  strcpy(G__struct.name[tagnum],"@@ ex autload entry @@");
-                  strcat(G__struct.name[tagnum],old);
+                  G__struct.name[tagnum] = (char*)malloc(strlen(old) + 50);
+                  strcpy(G__struct.name[tagnum], "@@ ex autload entry @@");
+                  strcat(G__struct.name[tagnum], old);
                   G__struct.type[tagnum] = 0;
                   free(old);
                }
@@ -509,8 +483,8 @@ int Cint::Internal::G__class_autoloading(int tagnum)
    return 0;
 }
 
-/******************************************************************/
-::Reflex::Type Cint::Internal::G__find_type(const char *type_name, int /*errorflag*/, int /*templateflag*/)
+//______________________________________________________________________________
+::Reflex::Type Cint::Internal::G__find_type(const char* type_name, int /*errorflag*/, int /*templateflag*/)
 {
    int ispointer = 0;
    std::string temp = type_name;
@@ -559,30 +533,35 @@ int Cint::Internal::G__class_autoloading(int tagnum)
    return result;
 }
 
-/******************************************************************
-* int G__defined_tagname(tagname,noerror)
-*
-* Description:
-*   Scan tagname table and return tagnum. If not match, error message
-*  is shown and -1 will be returned.
-*  If non zero value is given to second argument 'noerror', error
-*  message will be suppressed.
-*
-*  noerror = 0   if not found try to instantiate template class
-*                if template is not found, display error
-*          = 1   if not found try to instantiate template class
-*                no error messages if template is not found
-*          = 2   if not found just return without trying template
-*          = 3   like 2, and no autoloading
-*
-* CAUTION:
-*  If template class with constant argument is given to this function,
-* tagname argument may be modified like below.
-*    A<int,5*2> => A<int,10>
-* This may cause unexpected side-effect.
-******************************************************************/
-extern "C" int G__defined_tagname(const char *tagname, int noerror)
+//______________________________________________________________________________
+extern "C" int G__defined_tagname(const char* tagname, int noerror)
 {
+   // Scan tagname table and return tagnum.
+   //
+   // If no match, error message is shown and -1 will be returned.
+   //
+   // If non zero value is given to second argument 'noerror',
+   // the error message is suppressed.
+   // 
+   // noerror = 0   if not found try to instantiate template class
+   //               if template is not found, display error
+   // 
+   //         = 1   if not found try to instantiate template class
+   //               no error messages if template is not found
+   // 
+   //         = 2   if not found just return without trying template
+   // 
+   //         = 3   like 2, and no autoloading
+   // 
+   // CAUTION:
+   // 
+   //   If template class with constant argument is given to this function,
+   //   tagname argument may be modified like below.
+   // 
+   //        A<int,5*2> => A<int,10>
+   // 
+   //   This may cause unexpected side-effect.
+   //
    static ::Reflex::NamespaceBuilder stdnp("std");
    int i;
    int len;
@@ -802,7 +781,7 @@ extern "C" int G__defined_tagname(const char *tagname, int noerror)
    return -1;
 }
 
-/******************************************************************/
+//______________________________________________________________________________
 static void G__create_global_namespace()
 {
    // add global scope as namespace
@@ -866,21 +845,16 @@ static void G__create_global_namespace()
    G__struct.alltag++;
 }
 
-/******************************************************************
-* int G__search_tagname(tagname,type)
-*
-* Description:
-*   Scan tagname table and return tagnum. If not match, create
-*  new tag type.
-* if type > 0xff, create new G__struct entry if not found;
-* autoload if !isupper(type&0xff). type==0xff means ptr but type==0
-* (see v6_newlink.cxx:G__parse_parameter_link)
-*
-******************************************************************/
-extern "C" int G__search_tagname(const char *tagname, int type)
+//______________________________________________________________________________
+extern "C" int G__search_tagname(const char* tagname, int type)
 {
-   int i , len;
-   char *p;
+   // Scan tagname table and return tagnum. If not match, create
+   // new tag type.  If type > 0xff, create new G__struct entry if not found.
+   // autoload if !isupper(type & 0xff).  If type == 0xff means ptr but type == 0
+   // (see G__parse_parameter_link).
+   int i;
+   int len;
+   char* p;
 #ifndef G__OLDIMPLEMENTATION1823
    G__StrBuf buf_sb(G__BUFLEN*2);
    char *buf = buf_sb;
@@ -1020,63 +994,63 @@ extern "C" int G__search_tagname(const char *tagname, int type)
                   // Note: When called from G__parse_parameter_link
                   //       for a function parameter with a type for
                   //       which we have not yet seen a declaration.
-               {
-                  ::Reflex::ClassBuilder *b = new ::Reflex::ClassBuilder(fullname.c_str(), typeid(::Reflex::UnknownType), 0, ::Reflex::CLASS);
-                  cl =  b->ToType();
-                  G__get_properties(cl)->builder.Set(b);
-                  break;
-               }
+                  {
+                     ::Reflex::ClassBuilder *b = new ::Reflex::ClassBuilder(fullname.c_str(), typeid(::Reflex::UnknownType), 0, ::Reflex::CLASS);
+                     cl =  b->ToType();
+                     G__get_properties(cl)->builder.Set(b);
+                     break;
+                  }
                case 'a':
                   // -- Autoloading.
-               {
-                  ::Reflex::ClassBuilder *b = new ::Reflex::ClassBuilder(fullname.c_str(), typeid(::Reflex::UnknownType), 0, ::Reflex::CLASS);
-                  cl =  b->ToType();
-                  G__get_properties(cl)->builder.Set(b);
-                  break;
-               }
+                  {
+                     ::Reflex::ClassBuilder *b = new ::Reflex::ClassBuilder(fullname.c_str(), typeid(::Reflex::UnknownType), 0, ::Reflex::CLASS);
+                     cl =  b->ToType();
+                     G__get_properties(cl)->builder.Set(b);
+                     break;
+                  }
                case 'c':
                   // -- Class.
-               {
-                  ::Reflex::ClassBuilder *b = new ::Reflex::ClassBuilder(fullname.c_str(), typeid(::Reflex::UnknownType), 0, ::Reflex::CLASS);   // Should also add the privacy with the containing class.
-                  cl =  b->ToType();
-                  G__get_properties(cl)->builder.Set(b);
-                  break;
-               }
+                  {
+                     ::Reflex::ClassBuilder *b = new ::Reflex::ClassBuilder(fullname.c_str(), typeid(::Reflex::UnknownType), 0, ::Reflex::CLASS);   // Should also add the privacy with the containing class.
+                     cl =  b->ToType();
+                     G__get_properties(cl)->builder.Set(b);
+                     break;
+                  }
                case 's':
                   // -- Struct.
-               {
-                  ::Reflex::ClassBuilder *b = new ::Reflex::ClassBuilder(fullname.c_str(), typeid(::Reflex::UnknownType), 0, ::Reflex::STRUCT);   // Should also add the privacy with the containing class.
-                  cl =  b->ToType();
-                  G__get_properties(cl)->builder.Set(b);
-                  break;
-               }
+                  {
+                     ::Reflex::ClassBuilder *b = new ::Reflex::ClassBuilder(fullname.c_str(), typeid(::Reflex::UnknownType), 0, ::Reflex::STRUCT);   // Should also add the privacy with the containing class.
+                     cl =  b->ToType();
+                     G__get_properties(cl)->builder.Set(b);
+                     break;
+                  }
                case 'n':
                   // -- Namespace.
-               {
-                  ::Reflex::NamespaceBuilder *b = new ::Reflex::NamespaceBuilder(fullname.c_str());
-                  newscope =  b->ToScope();
-                  G__get_properties(newscope)->builder.Set(b);
-                  break;
-               }
+                  {
+                     ::Reflex::NamespaceBuilder *b = new ::Reflex::NamespaceBuilder(fullname.c_str());
+                     newscope =  b->ToScope();
+                     G__get_properties(newscope)->builder.Set(b);
+                     break;
+                  }
                case 'e':
                   // -- Enum.
-               {
-                  //::Reflex::EnumBuilder *b = new ::Reflex::EnumBuilder( fullname.c_str() );
-                  //fprintf(stderr, "G__search_tagname: Building enum '%s'\n", fullname.c_str());
-                  cl = ::Reflex::EnumTypeBuilder(fullname.c_str());
-                  //G__get_properties(cl)->builder.Set(b);
-                  break;
-               }
+                  {
+                     //::Reflex::EnumBuilder *b = new ::Reflex::EnumBuilder( fullname.c_str() );
+                     //fprintf(stderr, "G__search_tagname: Building enum '%s'\n", fullname.c_str());
+                     cl = ::Reflex::EnumTypeBuilder(fullname.c_str());
+                     //G__get_properties(cl)->builder.Set(b);
+                     break;
+                  }
                case 'u':
                   // -- Union.
                   // Note: We must have the space after the '<' here because
                   // '<:' is the alternative token for '[', see ISO/IEC 14882 (1998) [lex.digraph].
-               {
-                  ::Reflex::UnionBuilder* b = new ::Reflex::UnionBuilder(fullname.c_str(), typeid(::Reflex::UnknownType), 0, ::Reflex::UNION);
-                  cl = b->ToType();
-                  G__get_properties(cl)->builder.Set(b);
-                  break;
-               }
+                  {
+                     ::Reflex::UnionBuilder* b = new ::Reflex::UnionBuilder(fullname.c_str(), typeid(::Reflex::UnknownType), 0, ::Reflex::UNION);
+                     cl = b->ToType();
+                     G__get_properties(cl)->builder.Set(b);
+                     break;
+                  }
                default:
                   // -- Must not happen.
                   assert(false);
@@ -1244,10 +1218,8 @@ extern "C" int G__search_tagname(const char *tagname, int type)
    return(i);
 }
 
-/******************************************************************
-* G__add_scopemember()
-******************************************************************/
-::Reflex::Member Cint::Internal::G__add_scopemember(::Reflex::Scope &envvar, const char *varname, const ::Reflex::Type &type, int reflex_modifiers, size_t reflex_offset, char *offset, int var_access, int var_statictype)
+//______________________________________________________________________________
+::Reflex::Member Cint::Internal::G__add_scopemember(::Reflex::Scope envvar, const char* varname, const ::Reflex::Type type, int reflex_modifiers, size_t reflex_offset, char* offset, int var_access, int var_statictype)
 {
    // Create the Variable!
    int modifiers = reflex_modifiers;
@@ -1280,10 +1252,8 @@ extern "C" int G__search_tagname(const char *tagname, int type)
    return d;
 }
 
-/******************************************************************
-* G__add_anonymousunion()
-******************************************************************/
-static void G__add_anonymousunion(const ::Reflex::Type &uniontype, int def_struct_member, ::Reflex::Scope &envtagnum)
+//______________________________________________________________________________
+static void G__add_anonymousunion(const ::Reflex::Type uniontype, int def_struct_member, ::Reflex::Scope envtagnum)
 {
    ::Reflex::Scope envvar;
    int statictype = G__AUTO;
@@ -1335,21 +1305,20 @@ static void G__add_anonymousunion(const ::Reflex::Type &uniontype, int def_struc
    }
 }
 
-/******************************************************************
-* G__define_struct(type)
-*
-* [struct|union|enum] tagname { member } item ;
-* [struct|union|enum]         { member } item ;
-* [struct|union|enum] tagname            item ;
-* [struct|union|enum] tagname { member }      ;
-*
-******************************************************************/
-void G__dumpreflex_atlevel(const ::Reflex::Scope& scope, int level);
+//______________________________________________________________________________
+void G__dumpreflex_atlevel(const ::Reflex::Scope scope, int level);
+
+//______________________________________________________________________________
 void Cint::Internal::G__define_struct(char type)
 {
+   // Parse a class, enum, struct, or union declaration or definition.
+   //
+   // [struct|union|enum] tagname { member } item ;
+   // [struct|union|enum]         { member } item ;
+   // [struct|union|enum] tagname            item ;
+   // [struct|union|enum] tagname { member }      ;
+   //
    //fprintf(stderr, "G__define_struct: Begin.\n");
-   // struct G__input_file *fin;
-   // fpos_t rewind_fpos;
    int c;
    G__StrBuf tagname_sb(G__LONGLINE);
    char *tagname = tagname_sb;
@@ -2147,10 +2116,8 @@ void Cint::Internal::G__define_struct(char type)
 }
 
 #ifndef G__OLDIMPLEMENTATION2030
-/******************************************************************
- * G__callfunc0()
- ******************************************************************/
-int Cint::Internal::G__callfunc0(G__value *result, const ::Reflex::Member &ifunc, G__param *libp, void *p, int funcmatch)
+//______________________________________________________________________________
+int Cint::Internal::G__callfunc0(G__value* result, const ::Reflex::Member ifunc, G__param* libp, void* p, int funcmatch)
 {
    int stat = 0;
    char *store_struct_offset;
@@ -2209,11 +2176,11 @@ int Cint::Internal::G__callfunc0(G__value *result, const ::Reflex::Member &ifunc
 
    return stat;
 }
+#endif // G__OLDIMPLEMENTATION2030
 
-/******************************************************************
- * G__calldtor
- ******************************************************************/
-int Cint::Internal::G__calldtor(void *p, const Reflex::Scope& tagnum, int isheap)
+#ifndef G__OLDIMPLEMENTATION2030
+//______________________________________________________________________________
+int Cint::Internal::G__calldtor(void* p, const Reflex::Scope tagnum, int isheap)
 {
    int stat;
    G__value result;
@@ -2255,17 +2222,5 @@ int Cint::Internal::G__calldtor(void *p, const Reflex::Scope& tagnum, int isheap
 
    return(stat);
 }
-#endif
+#endif // G__OLDIMPLEMENTATION2030
 
-/*
- * Local Variables:
- * c-tab-always-indent:nil
- * c-indent-level:3
- * c-continued-statement-offset:3
- * c-brace-offset:-3
- * c-brace-imaginary-offset:0
- * c-argdecl-indent:0
- * c-label-offset:-3
- * compile-command:"make -k"
- * End:
- */
