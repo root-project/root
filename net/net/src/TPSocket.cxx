@@ -497,6 +497,12 @@ Int_t TPSocket::Send(const TMessage &mess)
       return -1;
    }
 
+   // send streamer infos in case schema evolution is enabled in the TMessage
+   SendStreamerInfos(mess);
+
+   // send the process id's so TRefs work
+   SendProcessIDs(mess);
+
    mess.SetLength();   //write length in first word of buffer
 
    if (fCompress > 0 && mess.GetCompressionLevel() == 0)
@@ -628,6 +634,7 @@ Int_t TPSocket::Recv(TMessage *&mess)
       return -1;
    }
 
+oncemore:
    Int_t  n;
    UInt_t len;
    if ((n = RecvRaw(&len, sizeof(UInt_t), kDefault)) <= 0) {
@@ -644,6 +651,14 @@ Int_t TPSocket::Recv(TMessage *&mess)
    }
 
    mess = new TMessage(buf, len+sizeof(UInt_t));
+
+   // receive any streamer infos
+   if (RecvStreamerInfos(mess))
+      goto oncemore;
+
+   // receive any process ids
+   if (RecvProcessIDs(mess))
+      goto oncemore;
 
    if (mess->What() & kMESS_ACK) {
       char ok[2] = { 'o', 'k' };

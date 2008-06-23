@@ -1411,6 +1411,12 @@ Int_t TXSocket::Send(const TMessage &mess)
       return -1;
    }
 
+   // send streamer infos in case schema evolution is enabled in the TMessage
+   SendStreamerInfos(mess);
+
+   // send the process id's so TRefs work
+   SendProcessIDs(mess);
+
    mess.SetLength();   //write length in first word of buffer
 
    if (fCompress > 0 && mess.GetCompressionLevel() == 0)
@@ -1486,6 +1492,7 @@ Int_t TXSocket::Recv(TMessage *&mess)
       return -1;
    }
 
+oncemore:
    Int_t  n;
    UInt_t len;
    if ((n = RecvRaw(&len, sizeof(UInt_t))) <= 0) {
@@ -1505,6 +1512,14 @@ Int_t TXSocket::Recv(TMessage *&mess)
    fgBytesRecv += n + sizeof(UInt_t);
 
    mess = new TMessage(buf, len+sizeof(UInt_t));
+
+   // receive any streamer infos
+   if (RecvStreamerInfos(mess))
+      goto oncemore;
+
+   // receive any process ids
+   if (RecvProcessIDs(mess))
+      goto oncemore;
 
    return n;
 }
@@ -1806,34 +1821,34 @@ void TXSocket::InitEnvs()
 
 //_____________________________________________________________________________
 TXSockBuf::TXSockBuf(Char_t *bp, Int_t sz, Bool_t own)
-{ 
+{
    //constructor
-   fBuf = fMem = bp; 
-   fSiz = fLen = sz; 
-   fOwn = own; 
-   fCid = -1; 
-   fgBuffMem += sz; 
+   fBuf = fMem = bp;
+   fSiz = fLen = sz;
+   fOwn = own;
+   fCid = -1;
+   fgBuffMem += sz;
 }
 
 //_____________________________________________________________________________
-TXSockBuf::~TXSockBuf() 
+TXSockBuf::~TXSockBuf()
 {
    //destructor
-   if (fOwn && fMem) { 
-      free(fMem); 
-      fgBuffMem -= fSiz; 
+   if (fOwn && fMem) {
+      free(fMem);
+      fgBuffMem -= fSiz;
    }
 }
 
 //_____________________________________________________________________________
-void TXSockBuf::Resize(Int_t sz) 
-{ 
+void TXSockBuf::Resize(Int_t sz)
+{
    //resize socket buffer
    if (sz > fSiz) {
-      if ((fMem = (Char_t *)realloc(fMem, sz))) { 
+      if ((fMem = (Char_t *)realloc(fMem, sz))) {
          fgBuffMem += (sz - fSiz);
-         fBuf = fMem; 
-         fSiz = sz; 
+         fBuf = fMem;
+         fSiz = sz;
          fLen = 0;
       }
    }
@@ -1867,5 +1882,3 @@ void TXSockBuf::SetMemMax(Long64_t memmax)
 
    fgMemMax = memmax > 0 ? memmax : fgMemMax;
 }
-
-

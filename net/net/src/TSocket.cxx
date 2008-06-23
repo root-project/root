@@ -95,7 +95,7 @@ TSocket::TSocket(TInetAddress addr, const char *service, Int_t tcpwindowsize)
    fCompress  = 0;
    fTcpWindowSize = tcpwindowsize;
    fUUIDs     = 0;
-   
+
    if (fAddress.GetPort() != -1) {
       fSocket = gSystem->OpenConnection(addr.GetHostName(), fAddress.GetPort(),
                                         tcpwindowsize);
@@ -284,7 +284,7 @@ TSocket::TSocket(const TSocket &s) : TNamed(s)
    fRemoteProtocol = s.fRemoteProtocol;
    fServType       = s.fServType;
    fUUIDs     = 0;
-   
+
    if (fSocket != -1) {
       R__LOCKGUARD2(gROOTMutex);
       gROOT->GetListOfSockets()->Add(this);
@@ -427,7 +427,7 @@ Int_t TSocket::Send(const TMessage &mess)
    // Returns -5 if pipe broken or reset by peer (EPIPE || ECONNRESET).
    // support for streaming TStreamerInfo added by Rene Brun May 2008
    // support for streaming TProcessID added by Rene Brun June 2008
-   
+
    TSystem::ResetErrno();
 
    if (fSocket == -1) return -1;
@@ -436,63 +436,12 @@ Int_t TSocket::Send(const TMessage &mess)
       Error("Send", "cannot send a message used for reading");
       return -1;
    }
-   
-   //check if TStreamerInfo must be sent. The list of TStreamerInfo of classes
-   //in the object in the message is in the fInfos list of the message.
-   //We send only the TStreamerInfos not yet send on this socket.
-   if (mess.fInfos && mess.fInfos->GetEntries()) {
-      TIter next(mess.fInfos);
-      TStreamerInfo *info;
-      TList *minilist =0;
-      while ((info=(TStreamerInfo*)next())) {
-         Int_t uid = info->GetNumber();
-         if (fBitsInfo.TestBitNumber(uid)) continue; //TStreamerInfo had already been sent
-         fBitsInfo.SetBitNumber(uid);
-         if (!minilist) minilist = new TList();
-         minilist->Add(info);
-      }
-      if (minilist) {
-         TMessage messinfo(kMESS_STREAMERINFO);
-         messinfo.WriteObject(minilist);
-         delete minilist;
-         messinfo.fInfos->Clear();
-         Send(messinfo);
-      }
-   }  
-          
-   //check if TProcessID must be sent. The list of TProcessID
-   //in the object in the message is found by looking in the TMessage bits.
-   //We send only the TProcessIDs not yet send on this socket.
-   if (mess.TestBitNumber(0)) {
-      TObjArray *pids = TProcessID::GetPIDs();
-      Int_t npids = pids->GetEntries();
-      TProcessID *pid;
-      TList *minilist =0;
-      for (Int_t ipid = 0;ipid<npids;ipid++) {
-         pid = (TProcessID*)pids->At(ipid);
-         if (!pid) continue;
-         if (!mess.TestBitNumber(pid->GetUniqueID()+1)) continue;
-         //check if a pid with this title has already been sent through the socket
-         //if not add it to the fUUIDs list
-         if (!fUUIDs) {
-            fUUIDs = new TList();
-         } else {
-            if (fUUIDs->FindObject(pid->GetTitle())) continue;
-         }                     
-         fUUIDs->Add(new TObjString(pid->GetTitle()));
-         if (!minilist) minilist = new TList();
-         if (gDebug > 0) {
-            printf("sending TProcessID = %s\n",pid->GetTitle());
-         }
-         minilist->Add(pid);
-      }
-      if (minilist) {
-         TMessage messpid(kMESS_PROCESSID);
-         messpid.WriteObject(minilist);
-         delete minilist;
-         Send(messpid);
-      }
-   }         
+
+   // send streamer infos in case schema evolution is enabled in the TMessage
+   SendStreamerInfos(mess);
+
+   // send the process id's so TRefs work
+   SendProcessIDs(mess);
 
    mess.SetLength();   //write length in first word of buffer
 
@@ -594,6 +543,79 @@ Int_t TSocket::SendRaw(const void *buffer, Int_t length, ESendRecvOptions opt)
 }
 
 //______________________________________________________________________________
+void TSocket::SendStreamerInfos(const TMessage &mess)
+{
+   // Check if TStreamerInfo must be sent. The list of TStreamerInfo of classes
+   // in the object in the message is in the fInfos list of the message.
+   // We send only the TStreamerInfos not yet sent on this socket.
+
+   if (mess.fInfos && mess.fInfos->GetEntries()) {
+      TIter next(mess.fInfos);
+      TStreamerInfo *info;
+      TList *minilist = 0;
+      while ((info = (TStreamerInfo*)next())) {
+         Int_t uid = info->GetNumber();
+         if (fBitsInfo.TestBitNumber(uid))
+            continue; //TStreamerInfo had already been sent
+         fBitsInfo.SetBitNumber(uid);
+         if (!minilist)
+            minilist = new TList();
+         if (gDebug > 0)
+            Info("SendStreamerInfos", "sending TStreamerInfo: %s, version = %d",
+                 info->GetName(),info->GetClassVersion());
+         minilist->Add(info);
+      }
+      if (minilist) {
+         TMessage messinfo(kMESS_STREAMERINFO);
+         messinfo.WriteObject(minilist);
+         delete minilist;
+         messinfo.fInfos->Clear();
+         Send(messinfo);
+      }
+   }
+}
+
+//______________________________________________________________________________
+void TSocket::SendProcessIDs(const TMessage &mess)
+{
+   // Check if TProcessIDs must be sent. The list of TProcessIDs
+   // in the object in the message is found by looking in the TMessage bits.
+   // We send only the TProcessIDs not yet send on this socket.
+
+   if (mess.TestBitNumber(0)) {
+      TObjArray *pids = TProcessID::GetPIDs();
+      Int_t npids = pids->GetEntries();
+      TProcessID *pid;
+      TList *minilist = 0;
+      for (Int_t ipid = 0; ipid < npids; ipid++) {
+         pid = (TProcessID*)pids->At(ipid);
+         if (!pid || !mess.TestBitNumber(pid->GetUniqueID()+1))
+            continue;
+         //check if a pid with this title has already been sent through the socket
+         //if not add it to the fUUIDs list
+         if (!fUUIDs) {
+            fUUIDs = new TList();
+         } else {
+            if (fUUIDs->FindObject(pid->GetTitle()))
+               continue;
+         }
+         fUUIDs->Add(new TObjString(pid->GetTitle()));
+         if (!minilist)
+            minilist = new TList();
+         if (gDebug > 0)
+            Info("SendProcessIDs", "sending TProcessID: %s", pid->GetTitle());
+         minilist->Add(pid);
+      }
+      if (minilist) {
+         TMessage messpid(kMESS_PROCESSID);
+         messpid.WriteObject(minilist);
+         delete minilist;
+         Send(messpid);
+      }
+   }
+}
+
+//______________________________________________________________________________
 Int_t TSocket::Recv(char *str, Int_t max)
 {
    // Receive a character string message of maximum max length. The expected
@@ -689,8 +711,7 @@ Int_t TSocket::Recv(TMessage *&mess)
       return -1;
    }
 
-   oncemore:
-      
+oncemore:
    Int_t  n;
    UInt_t len;
    if ((n = gSystem->RecvRaw(fSocket, &len, sizeof(UInt_t), 0)) <= 0) {
@@ -719,58 +740,14 @@ Int_t TSocket::Recv(TMessage *&mess)
 
    mess = new TMessage(buf, len+sizeof(UInt_t));
 
-   if (mess->What() == kMESS_STREAMERINFO) {
-      TList *list = (TList*)mess->ReadObject(TList::Class());
-      TIter next(list);
-      TStreamerInfo *info;
-      while ((info = (TStreamerInfo*)next())) {
-         Int_t oldc = info->GetClassVersion();
-         TClass *cl = TClass::GetClass(info->GetName());
-         cl->GetStreamerInfo();
-         if (cl && cl->GetStreamerInfos()->At(oldc)) {
-            continue;
-         }
-         info->BuildCheck();
-         if (gDebug > 0) {
-            printf("importing TStreamerInfo: %s, version=%d\n",info->GetName(),info->GetClassVersion());
-         }         
-      }
-      delete list;
-      delete mess;
+   // receive any streamer infos
+   if (RecvStreamerInfos(mess))
       goto oncemore;
-   }
-   
-   if (mess->What() == kMESS_PROCESSID) {
-      TList *list = (TList*)mess->ReadObject(TList::Class());
-      TIter next(list);
-      TProcessID *pid;
-      while ((pid = (TProcessID*)next())) {
-         if (gDebug > 0) {
-            printf("importing TProcessID: %s\n",pid->GetTitle());
-         }
-         //check that a similar pid is not already registered in fgPIDs
-         TObjArray *pidslist = TProcessID::GetPIDs();
-         TIter nextpid(pidslist);
-         TProcessID *p;
-         while ((p = (TProcessID*)nextpid())) {
-            if (!strcmp(p->GetTitle(),pid->GetTitle())) {
-               delete pid;
-               pid = 0;
-               break;
-            }
-         }
-         if (pid) {
-            pid->IncrementCount();
-            pidslist->Add(pid);
-            Int_t ind = pidslist->IndexOf(pid);
-            pid->SetUniqueID((UInt_t)ind);
-         }
-      }
-      delete list;
-      delete mess;
+
+   // receive any process ids
+   if (RecvProcessIDs(mess))
       goto oncemore;
-   }
-   
+
    if (mess->What() & kMESS_ACK) {
       char ok[2] = { 'o', 'k' };
       Int_t n2 = 0;
@@ -820,6 +797,77 @@ Int_t TSocket::RecvRaw(void *buffer, Int_t length, ESendRecvOptions opt)
    fgBytesRecv += n;
 
    return n;
+}
+
+//______________________________________________________________________________
+Bool_t TSocket::RecvStreamerInfos(TMessage *mess)
+{
+   // Receive a message containing streamer infos. In case the message contains
+   // streamer infos they are imported, the message will be deleted and the
+   // method returns kTRUE.
+
+   if (mess->What() == kMESS_STREAMERINFO) {
+      TList *list = (TList*)mess->ReadObject(TList::Class());
+      TIter next(list);
+      TStreamerInfo *info;
+      while ((info = (TStreamerInfo*)next())) {
+         Int_t oldc = info->GetClassVersion();
+         TClass *cl = TClass::GetClass(info->GetName());
+         cl->GetStreamerInfo();
+         if (cl && cl->GetStreamerInfos()->At(oldc)) {
+            continue;
+         }
+         info->BuildCheck();
+         if (gDebug > 0)
+            Info("RecvStreamerInfos", "importing TStreamerInfo: %s, version = %d",
+                 info->GetName(), info->GetClassVersion());
+      }
+      delete list;
+      delete mess;
+
+      return kTRUE;
+   }
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t TSocket::RecvProcessIDs(TMessage *mess)
+{
+   // Receive a message containing process ids. In case the message contains
+   // process ids they are imported, the message will be deleted and the
+   // method returns kTRUE.
+
+   if (mess->What() == kMESS_PROCESSID) {
+      TList *list = (TList*)mess->ReadObject(TList::Class());
+      TIter next(list);
+      TProcessID *pid;
+      while ((pid = (TProcessID*)next())) {
+         // check that a similar pid is not already registered in fgPIDs
+         TObjArray *pidslist = TProcessID::GetPIDs();
+         TIter nextpid(pidslist);
+         TProcessID *p;
+         while ((p = (TProcessID*)nextpid())) {
+            if (!strcmp(p->GetTitle(), pid->GetTitle())) {
+               delete pid;
+               pid = 0;
+               break;
+            }
+         }
+         if (pid) {
+            if (gDebug > 0)
+               Info("RecvProcessIDs", "importing TProcessID: %s", pid->GetTitle());
+            pid->IncrementCount();
+            pidslist->Add(pid);
+            Int_t ind = pidslist->IndexOf(pid);
+            pid->SetUniqueID((UInt_t)ind);
+         }
+      }
+      delete list;
+      delete mess;
+
+      return kTRUE;
+   }
+   return kFALSE;
 }
 
 //______________________________________________________________________________

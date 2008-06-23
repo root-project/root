@@ -94,7 +94,7 @@ protected:
    TString       fUrl;            // needs this for special authentication options
    TBits         fBitsInfo;       // bits array to mark TStreamerInfo classes already sent
    TList        *fUUIDs;          // list of TProcessIDs already sent through the socket
-      
+
    static ULong64_t fgBytesRecv;  // total bytes received by all socket objects
    static ULong64_t fgBytesSent;  // total bytes sent by all socket objects
 
@@ -107,6 +107,10 @@ protected:
 
    Bool_t       Authenticate(const char *user);
    void         SetDescriptor(Int_t desc) { fSocket = desc; }
+   void         SendStreamerInfos(const TMessage &mess);
+   Bool_t       RecvStreamerInfos(TMessage *mess);
+   void         SendProcessIDs(const TMessage &mess);
+   Bool_t       RecvProcessIDs(TMessage *mess);
 
 private:
    TSocket&      operator=(const TSocket &);  // not implemented
