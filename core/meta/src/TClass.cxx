@@ -4323,6 +4323,8 @@ Int_t TClass::WriteBuffer(TBuffer &b, void *pointer, const char * /*info*/)
 //______________________________________________________________________________
 void TClass::Streamer(void *object, TBuffer &b)
 {
+   // Stream object of this class to or from buffer.
+
    switch (fStreamerType) {
 
       case kExternal:
@@ -4347,7 +4349,7 @@ void TClass::Streamer(void *object, TBuffer &b)
       }
       return;
 
-      case kInstrumented: /* Instrumented class with a library */
+      case kInstrumented: // Instrumented class with a library
       {
          CallFunc_t *func = (CallFunc_t*)fInterStreamer;
 

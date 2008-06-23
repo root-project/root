@@ -2112,7 +2112,7 @@ TObject *TBufferFile::ReadObject(const TClass * /*clReq*/)
    // the object. Note that if the actual class of the object does not
    // inherit first from TObject, the type of the pointer is NOT 'TObject*'.
    // [More accurately, the class needs to start with the TObject part, for
-   // the pointer to be a real TOject*].
+   // the pointer to be a real TObject*].
    // We recommend using ReadObjectAny instead of ReadObject
 
    return (TObject*) ReadObjectAny(0);
