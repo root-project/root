@@ -361,8 +361,8 @@ void XrdProofConn::SetAsync(XrdClientAbsUnsolMsgHandler *uh)
 {
    // Set handler of unsolicited responses
 
-   if (fgConnMgr)
-      fgConnMgr->GetConnection(fLogConnID)->UnsolicitedMsgHandler = uh;
+   if (fgConnMgr && (fLogConnID > -1) && fgConnMgr->GetConnection(fLogConnID))
+       fgConnMgr->GetConnection(fLogConnID)->UnsolicitedMsgHandler = uh;
 }
 
 //_____________________________________________________________________________
@@ -1215,6 +1215,8 @@ XrdSecProtocol *XrdProofConn::Authenticate(char *plist, int plsiz)
             // Print error msg, if any
             if (GetLastErr())
                XPDPRT(fHost << ": "<< GetLastErr());
+            protocol->Delete();
+            protocol = 0;
          }
          // Cleanup message
          SafeDelete(xrsp);

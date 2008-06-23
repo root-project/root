@@ -1607,16 +1607,50 @@ int XrdProofdProtocol::Auth()
    }
 
    // Now try to authenticate the client using the current protocol
+   XrdOucString namsg;
    if (!(rc = fAuthProt->Authenticate(&cred, &parm, &eMsg))) {
-      const char *msg = (fStatus & XPD_ADMINUSER ? "admin login as" : "login as");
-      rc = fResponse.Send();
-      fStatus &= ~XPD_NEED_AUTH;
-      fClient = &fAuthProt->Entity;
-      if (fClient->name)
-         fgEDest.Log(XPD_LOG_01, ":Auth", fLink->ID, msg, fClient->name);
-      else
-         fgEDest.Log(XPD_LOG_01, ":Auth", fLink->ID, msg, " nobody");
-      return rc;
+
+      // Make sure that the user name that we want is allowed
+      if (fAuthProt->Entity.name && strlen(fAuthProt->Entity.name) > 0) {
+         rc  = -1;
+         if (fClientID && strlen(fClientID) > 0) {
+            XrdOucString usrs(fAuthProt->Entity.name);
+            XrdOucString usr;
+            int from = 0;
+            while ((from = usrs.tokenize(usr, from, ',')) != STR_NPOS) {
+               if ((usr == (const char *)fClientID)) {
+                  free(fAuthProt->Entity.name);
+                  fAuthProt->Entity.name = strdup(usr.c_str());
+                  rc = 0;
+                  break;
+               }
+            }
+            if (rc != 0) {
+               namsg = "user ";
+               namsg += fClientID;
+               namsg += " not authorized to connect";
+               TRACEP(XERR, namsg.c_str());
+            }
+         } else {
+            TRACEP(XERR, "user name is empty: protocol error?");
+         }
+      } else {
+         TRACEP(XERR, "name of the authenticated entity is empty: protocol error?");
+         rc = -1;
+      }
+
+      if (rc == 0) {
+         const char *msg = (fStatus & XPD_ADMINUSER) ? " admin login as " : " login as ";
+         rc = fResponse.Send();
+         fStatus &= ~XPD_NEED_AUTH;
+         fClient = &fAuthProt->Entity;
+         if (fClient->name) {
+            TRACEP(LOGIN, fLink->ID << msg << fClient->name);
+         } else {
+            TRACEP(LOGIN, fLink->ID << msg << " nobody");
+         }
+         return rc;
+      }
    }
 
    // If we need to continue authentication, tell the client as much
@@ -1641,7 +1675,7 @@ int XrdProofdProtocol::Auth()
       fAuthProt->Delete();
       fAuthProt = 0;
    }
-   eText = eMsg.getErrText(rc);
+   eText = (namsg.length() > 0) ? namsg.c_str() : eMsg.getErrText(rc);
    TRACEP(XERR, "Auth: user authentication failed; "<<eText);
    fResponse.Send(kXR_NotAuthorized, eText);
    return -EACCES;
