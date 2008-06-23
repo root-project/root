@@ -422,9 +422,9 @@ long G__get_classinfo(char *item,int tagnum);
 long G__get_variableinfo(char *item,long *phandle,long *pindex,int tagnum);
 long G__get_functioninfo(char *item,long *phandle,long *pindex,int tagnum);
 ::Reflex::Scope G__get_envtagnum(void);
-int G__isenclosingclass(const ::Reflex::Scope& enclosingtagnum, const ::Reflex::Scope& env_tagnum);
-int G__isenclosingclassbase(int enclosingtagnum,int env_tagnum);
-int G__isenclosingclassbase(const ::Reflex::Scope& enclosingtagnum, const ::Reflex::Scope& env_tagnum);
+int G__isenclosingclass(const ::Reflex::Scope enclosingtagnum, const ::Reflex::Scope env_tagnum);
+int G__isenclosingclassbase(int enclosingtagnum, int env_tagnum);
+int G__isenclosingclassbase(const ::Reflex::Scope enclosingtagnum, const ::Reflex::Scope env_tagnum);
 char* G__find_first_scope_operator(char* name);
 char* G__find_last_scope_operator(char* name);
 #ifndef G__OLDIMPLEMENTATION1560
@@ -505,13 +505,7 @@ void G__returnvartype(G__value* presult,const ::Reflex::Member &var,int paran);
 int G__getthis(G__value *result7,char *varname,char *item);
 void G__letpointer2memfunc(const ::Reflex::Member &var,int paran,char *item,int p_inc,G__value *presult,char *G__struct_offset);
 void G__letautomatic(const ::Reflex::Member &var,char *G__struct_offset,int p_inc,G__value result);
-::Reflex::Member G__add_scopemember(::Reflex::Scope &envvar, const char *varname
-                        ,const ::Reflex::Type &type
-                        ,int reflex_modifiers
-                        ,size_t reflex_offset
-                        ,char *offset
-                        ,int access
-                        ,int statictype);
+::Reflex::Member G__add_scopemember(::Reflex::Scope envvar, const char* varname, const ::Reflex::Type type, int reflex_modifiers, size_t reflex_offset, char* offset, int access, int statictype);
 void G__display_classkeyword(FILE *fout,char *classnamein,char *keyword,int base);
 void G__display_tempobject(const char* action);
 #ifdef G__FRIEND
@@ -627,9 +621,9 @@ int G__loadfile_tmpfile(FILE *fp);
 int G__class_autoloading(int tagnum);
 
 #ifndef G__OLDIMPLEMENTATION2030
-int G__callfunc0(G__value *result,const Reflex::Member& func,struct G__param* libp,void* p,int funcmatch);
-int G__calldtor(void* p,const Reflex::Scope& tagnum,int isheap);
-#endif
+int G__callfunc0(G__value* result, const Reflex::Member func, struct G__param* libp, void* p, int funcmatch);
+int G__calldtor(void* p, const Reflex::Scope tagnum, int isheap);
+#endif // G__OLDIMPLEMENTATION2030
 
 void G__init_replacesymbol();
 void G__add_replacesymbol(const char* s1,const char* s2);
