@@ -30,7 +30,10 @@ namespace ROOT {
    
 
 /** 
-   FitUtil namespace defining free functions using in Fit 
+   namespace defining utility free functions using in Fit for evaluating the various fit method 
+   functions (chi2, likelihood, etc..)  given the data and the model function 
+
+   @ingroup FitMain
 */ 
 namespace FitUtil {
 

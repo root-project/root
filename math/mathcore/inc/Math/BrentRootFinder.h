@@ -43,7 +43,7 @@ namespace Math {
    It will use the Brent Method for finding function roots in a given interval. 
    This class is implemented from TF1::GetX() method.
 
-   @ingroup RootFind
+   @ingroup RootFinders
   
  */
 

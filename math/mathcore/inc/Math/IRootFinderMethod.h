@@ -27,9 +27,9 @@ namespace Math {
 
 //___________________________________________________________________________________________
 /**
-   Interface for finding function roots.
+   Interface for finding function roots of one-dimensional functions
 
-   @ingroup RootFind
+   @ingroup RootFinders
   
  */
 

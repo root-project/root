@@ -40,17 +40,17 @@ Classes for describing the input data for fitting
 #include <cassert>
 #include <iostream> 
 
-/**
-   Base class for all the fit data
-
-   @ingroup FitData
- */
 
 namespace ROOT { 
 
    namespace Fit { 
 
 
+/**
+   Base class for all the fit data types
+
+   @ingroup FitData
+ */
 
 class FitData { 
   

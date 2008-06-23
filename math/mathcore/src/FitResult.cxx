@@ -116,7 +116,7 @@ int FitResult::Index(const std::string & name) const {
    return -1; // case name is not found
 } 
 
-      void FitResult::Print(std::ostream & os, bool doCovMatrix) const { 
+void FitResult::Print(std::ostream & os, bool doCovMatrix) const { 
    // print the result in the given stream 
    if (!fValid) { 
       os << "\n****************************************\n";
@@ -144,6 +144,7 @@ int FitResult::Index(const std::string & name) const {
 }
 
 void FitResult::PrintCovMatrix(std::ostream &os) const { 
+   // print the covariance and correlation matrix 
    if (!fValid) return;
    os << "\n****************************************\n";
    os << "\n            Covariance Matrix            \n\n";

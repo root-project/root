@@ -22,6 +22,8 @@ namespace ROOT {
 //___________________________________________________________________________________
 /** 
    DataOptions : simple structure holding the options on how the data are filled 
+
+   @ingroup FitData
 */ 
 struct DataOptions {
 

@@ -22,11 +22,13 @@ namespace ROOT {
 
 //___________________________________________________________________________________
 /** 
-   ParameterSettings class, describing value, limits and step size of the parameters 
+   Class, describing value, limits and step size of the parameters 
    Provides functionality also to set/retrieve values, step sizes, limits and fix the 
    parameters. 
 
    To be done: add constraints (equality and inequality) as functions of the parameters
+
+   @ingroup FitMain
 */ 
 class ParameterSettings {
 

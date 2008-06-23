@@ -60,7 +60,7 @@
 /**
 
 @defgroup MCIntegration Numerical Monte Carlo Integration
-@ingroup NumAlgo
+@ingroup Integration
 
 */
 

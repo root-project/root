@@ -49,6 +49,7 @@ namespace ROOT {
          struct IntegralEvaluator { 
 
             IntegralEvaluator(const ROOT::Math::IParamMultiFunction & func, const double * p, bool useIntegral = true) :
+               fDim(0),
                fFunc(0),
                fIg1Dim(0), 
                fIgNDim(0) 

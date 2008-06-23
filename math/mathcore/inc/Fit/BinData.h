@@ -35,7 +35,7 @@ namespace ROOT {
 
 //___________________________________________________________________________________
 /** 
-   BinData : class describing the binned data : 
+   Class describing the binned data sets : 
               vectors of  x coordinates, y values and optionally error on y values and error on coordinates 
               The dimension of the coordinate is free
               There are 4 different options: 

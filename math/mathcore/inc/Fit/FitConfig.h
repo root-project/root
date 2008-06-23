@@ -40,8 +40,10 @@ namespace ROOT {
 
 //___________________________________________________________________________________
 /** 
-   FitConfig class describing the configuration of the fit, options and parameter settings
+   Class describing the configuration of the fit, options and parameter settings
    using the ROOT::Fit::ParameterSettings class 
+
+   @ingroup FitMain
 */ 
 class FitConfig {
 

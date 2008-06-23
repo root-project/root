@@ -30,7 +30,8 @@
 #define ROOT_Math_IMinimizer1D
 
 /**
-   @defgroup Min1D One-dimensional Minimization Interface
+
+   @defgroup Min1D One-dimensional Minimization 
    @ingroup NumAlgo
  */
 
@@ -39,7 +40,7 @@ namespace Math {
 
 //___________________________________________________________________________________________
 /**
-   Interface for performing function minimization in one dimension.
+   Interface class for numerical methods for one-dimensional minimization
 
    @ingroup Minimization
   

@@ -30,7 +30,7 @@ namespace Math {
 
 //___________________________________________________________________
 /**
-   VirtualIntegrator abstract class. 
+   Abstract class for all numerical integration methods (1D and multi-dim) 
    Interface defining the common methods for the 
    numerical integrator classes of one and multi dimensions 
    The derived class VirtualIntegratorOneDim defines the methods 
@@ -39,7 +39,10 @@ namespace Math {
    multi-dimensional integration. 
    The concrete classes for one dimension (e.g. GSLIntegrator) or 
    multi-dimension (e.g. GSLMCIntegrator) can be created using the 
-   plug-in manager
+   plug-in manager. 
+   Users should not use directly this class but the concrete classes ROOT::Math::IntegratorOneDim or 
+   ROOT::Math::IntegratorMultiDim
+   
 
    @ingroup  Integration
 
@@ -84,7 +87,9 @@ public:
    It must be implemented by the concrate Integrator classes like
    ROOT::Math::GSLIntegrator. 
    Plug-in's exist in ROOT to be able to instantiate the derived classes via the 
-   plug-in manager
+   plug-in manager. 
+   Users should not use directly this class but the concrete classes ROOT::Math::IntegratorOneDim.
+
 
    @ingroup  Integration
 
@@ -125,7 +130,9 @@ public:
    It must be implemented by the concrete Integrator classes like
    ROOT::Math::GSLMCIntegrator. 
    Plug-in's exist in ROOT to be able to instantiate the derived classes via the 
-   plug-in manager
+   plug-in manager.
+   Users should not use directly this class but the concrete classes ROOT::Math::IntegratorMultiDim.
+
 
    @ingroup  Integration
 

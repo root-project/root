@@ -41,7 +41,7 @@
 #endif
 
 /**
-   @defgroup RootFinders Root-Finding algorithms
+   @defgroup RootFinders One-dimensional Root-Finding algorithms 
    @ingroup NumAlgo
 */
 

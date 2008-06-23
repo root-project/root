@@ -46,14 +46,6 @@
 #include <string> 
 
 
-/**
-   @defgroup MultiMin Multi-dimensional Minimization
-   @ingroup NumAlgo
-
-   Classes implementing algorithms for multi-dimensional minimization 
- */
-
-
 
 namespace ROOT { 
 
@@ -62,7 +54,7 @@ namespace Math {
 
    /**
       enumeration specifying the types of GSL minimizers
-      @ingroup Min1D
+      @ingroup MultiMin
    */
    enum EGSLMinimizerType { 
       kConjugateFR, 

@@ -27,7 +27,7 @@ namespace ROOT {
 
 //___________________________________________________________________________________
 /** 
-   UnBinData : class describing the unbinned data (just x coordinates values) of any dimensions
+   Class describing the unbinned data sets (just x coordinates values) of any dimensions
 
               There is the option to construct UnBindata copying the data in (using the DataVector class) 
               or using pointer to external data (DataWrapper) class. 

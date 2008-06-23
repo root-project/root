@@ -34,12 +34,6 @@
 #include "Math/IMinimizer1D.h"
 #include "Math/GSLFunctionAdapter.h"
 
-/**
-   @defgroup Min1D One-dimensional Minimization
-   @ingroup NumAlgo
- */
-
-
 
 namespace ROOT { 
 namespace Math { 

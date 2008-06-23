@@ -50,7 +50,7 @@ namespace Math {
 
    If another minimization is to be performed, repeat the last two steps.
 
-   @ingroup Minimization
+   @ingroup Min1D
   
  */
 

@@ -37,9 +37,12 @@ namespace ROOT {
 
 //___________________________________________________________________________________
 /** 
-   FitResult class containg the result of the fit.  
-   Contains a reference to the fitted function. 
-   When the fit is valid it is constraucted from a  Minimizer and a Model function pointer 
+   class containg the result of the fit and all the related information 
+   (fitted parameter values, error, covariance matrix and minimizer result information)
+   Contains a pointer also to the fitted (model) function, modified with the fit parameter values.  
+   When the fit is valid, it is constructed from a  Minimizer and a model function pointer 
+
+   @ingroup FitMain
 */ 
 class FitResult {
 

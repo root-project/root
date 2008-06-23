@@ -39,7 +39,11 @@ namespace ROOT {
    
 
 /** 
-   FitUtil namespace defining free functions using in Fit parallel mode 
+   namespace defining free functions for Fitting parallel mode 
+
+   Status: functions are not not completed and are still preliminary
+
+   @ingroup FitMain
 */ 
 namespace FitUtilParallel {
 

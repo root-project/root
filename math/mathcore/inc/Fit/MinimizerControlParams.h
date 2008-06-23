@@ -20,7 +20,9 @@ namespace ROOT {
 
 
 /** 
-   Minimizer Control Parameters  
+   class holding the Minimizer Control Parameters
+
+   @ingroup FitMain
 */ 
 class MinimizerControlParams {
 
