@@ -3,9 +3,17 @@
 <a name="roofit"></a>
 <h3>RooFit</h3>
 
+ <h4>Update of class documentation</h4>
+  
+      The documentation in the code itself that is extracted by <tt>THtml</tt> to construct
+      the online class documentation has been updated for all classes. Now <i>all</i> classes
+      have (again) a short class description, as well as a (short) description of each member function
+      and most data members. An update to the users manual is foreseen shortly after the 5.20
+      release.
+
  <h4>RooWorkspace</h4>
 
-      New feature that allows to persist source code of RooFit classes that
+      A new feature has been added that allows to persist source code of RooFit classes that
       are not in ROOT distribution inside a <tt>RooWorkspace</tt> to facilitate sharing
       of custom code with others. To import code of custom classes call
 <pre>
@@ -26,7 +34,10 @@
       The code repository of <tt>RooWorkspace</tt> is designed to handle classes that
       have either their own implementation and header file, or are part of a group
       of classes that share a common header and implementation file. More complicated
-      structuring of source code into files is not supported. 
+      structuring of source code into files is not supported. <br><br>
+  
+      Also new accessors have been added for discrete-valued functions <tt>catfunc()</tt>
+      and stored category functions are now also printed under their own heading in <tt>Print()</tt>    
 
   <h4>Parameterized ranges</h4>
 
@@ -60,16 +71,31 @@
       have parameterized ranges plus those that have parameterized ranges but are not involved in the
       parameterization of others (e.g. x and y in the example above)
 
-  <h4>Cumulative distribution functions</h4>
+<h4>Running integrals and Cumulative distribution functions</h4>
 
-      You can create an <tt>RooAbsReal</tt> derived object representing the <i>cumulative distribution function</i>
-      (=<tt>Int[-inf : x] F(x') dx'</tt>) of any <tt>RooAbsPdf</tt> using the new <tt>RooAbsPdf::createCdf</tt> function.
+     It is now possible to create running integrals from any <tt>RooAbsReal</tt> function and
+     to create cumulative distribution functions from any <tt>RooAbsPdf</tt> using the following
+     methods:
 <pre>
-         RooAbsReal* myCdf = myPdf->createCdf(observables,normobs) ;
+        // Create int[xlo,x] f(x') dx' from f(x)
+        RooAbsReal* runInt = func.createRunningIntegral(x) ;
+
+        // Create int[xlo,x] f(x') dx' from p.d.f f(x) normalized over x
+        RooAbsReal* cdf = pdf.createCdf(x) ;
+
+        // Create int[xlo,x] f(x',y) dx' from p.d.f f(x,y) normalized over (x,y)
+        RooAbsReal* cdf = pdf.createCdf(x,y) ;
 </pre>
-      where <tt>observables</tt> is the <tt>RooArgSet</tt> with the observables for which to create the CDF and <tt>normobs</tt>
-      is the (optional) set of observables over which the p.d.f should be normalized <i>in addition</i>
-      to <tt>observables</tt>. The <tt>createCdf()</tt> function can create one-dimensional as well as higher dimensional c.d.f.s.
+  
+     As with the similarly styled function <tt>createIntegral</tt> running integrals and c.d.f. can be created
+     over any number of observables, e.g <tt>createCdf(RooArgSet(x,y,z))</tt> will create a three-dimensional
+     cumulative distribution function. C.d.f and running integrals that are calculated from p.d.fs that have
+     support for analytical integration are constructed from an appropriately reconnected <tt>RooRealIntegral</tt>.
+     If numeric integration is required, the c.d.f or running integral is calculated by a dedicated class
+     <tt>RooRunningIntegral</tt> that precalculates results for all observable values, which is more efficient
+     in most use cases. Cumulative distributions functions that are calculated numerically are handled slightly differently
+     that standard running integrals: their values is constructed to converge to exactly zero at the lower bound
+     and exactly 1 at the upper bound so that algorithms that make use of that property of c.d.f can do so reliably.
 
  <h4>Constraints management</h4>
 
@@ -115,22 +141,167 @@
       be (a set of) constraint p.d.f(s), rather than (a set of) parameters for which internal constraint p.d.f.s should
       be picked up.
 
+
+<h4>New operator class <tt>RooLinearMorph</tt></h4>
+
+    A new numeric operator class <tt>RooLinearMorph</tt> has been added that provides a continuous
+    transformation between two p.d.f.s shapes in terms of a linear parameter alpha. The algorithm 
+    for histograms is described in the paper by Alex Read in NUM A 425 (1999) 357-369 
+    'Linear interpolation of histograms'. The implementation in <tt>RooLinearMorph</tt> is for
+    continuous functions. 
+
+<pre>
+        // Observable and sampling binning to be used by RooLinearMorph ("cache")
+        RooRealVar x("x","x",-20,20) ;
+        x.setBins(1000,"cache") ;
+
+        // End point shapes : a gaussian on one end, a polynomial on the other
+        RooGaussian f1("f1","f1",x,RooConst(-10),RooConst(2)) ;
+        RooPolynomial f2("f2","f2",x,RooArgSet(RooConst(-0.03),RooConst(-0.001))) ;
+
+        // Interpolation parameter: rlm=f1 at alpha=0, rlm=f2 at alpha=1
+        RooRealVar alpha("alpha","alpha",0,1.0) ;
+        RooLinearMorph rlm("rlm","rlm",g1,g2,x,alpha) ;
+
+        // Plot halfway shape
+        alpha=0.5
+        RooPlot* frame = x.frame() ;
+        rlm.plotOn(frame) ;
+</pre>
+
+    In short the algorithm works as follows: for both f1(x) and f2(x), the cumulative distribution
+    functions F1(x) and F2(x) are calculated. One finds takes a value 'y' of both c.d.fs and 
+    determines the corresponding x values x1,x2 at which F1(x1)=F2(x2)=y. The value of the interpolated 
+    p.d.f fbar(x) is then calculated as fbar(alpha*x1+(1-alpha)*x2) = f1(x1)*f2(x2) / ( alpha*f2(x2) + 
+    (1-alpha)*f1(x1) ). Given that it is not easily possible to calculate the value of RooLinearMorph
+    at a given value of x, the value for all values of x are calculated in one by (through a scan over y)
+    and stored in a cache. NB: The range of the interpolation paramater does not need to be [0,1], it can
+    be anything.
+
+
+<h4>New workspace tool <tt>RooSimWSTool</tt></h4>
+
+    A new tool to clone and customize p.d.f.s into a <tt>RooSimultaneous</tt> p.d.f has been added. This new
+    tool succeeds the original <tt>RooSimPdfBuilder</tt> tool which had a similar functionality but
+    has a much cleaner interface, partly thanks to its use of the <tt>RooWorkspace</tt> class for both input
+    of prototype p.d.fs and output of built p.d.f.s<br><br>
+
+    The simplest use case to to take a workspace p.d.f as prototype and 'split' a parameter of that p.d.f 
+    into two specialized parameters  depending on a category in the dataset. 
+     For example, given a Gaussian p.d.f <tt>G(x,m,s)</tt> we want to construct a <tt>G_a(x,m_a,s)</tt> and a <tt>G_b(x,m_b,s)</tt>
+    with different mean parameters to be fit to a dataset with observables
+    <tt>(x,c)</tt> where c is a category with states <tt>'a'</tt> and <tt>'b'</tt>.
+    Using <tt>RooSimWSTool</tt> one can create a simultaneous p.d.f from <tt>G_a</tt> and <tt>G_b</tt>
+    from <tt>G</tt> with the following command
+
+<pre>
+        RooSimWSTool wst(wspace) ;
+        wst.build("G_sim","G",SplitParam("m","c")) ;
+</pre>
+
+    From this simple example one can go to builds of arbitrary complexity
+    by specifying multiple <tt>SplitParam</tt> arguments on multiple parameters
+    involving multiple splitting categories. Splits can also be performed
+    in the product multiple categories, e.g. 
+
+<pre>
+        SplitParam("m","c,d")) ;
+</pre>
+
+ splits parameter m in the product of states of c and d. Another possibility
+ is the 'constrained' split which clones the parameter for all but one state
+ and insert a formula specialization in a chosen state that evaluates
+ to <tt>1 - sum_i(a_i)</tt> where a_i are all other specializations. For example,
+ given a category c with state "A","B","C","D" the specification
+
+<pre>
+     SplitParamConstrained("m","c","D")
+</pre>
+
+ will result in parameters <tt>m_A,m_B,m_C</tt> and a formula expression <tt>m_D</tt>
+ that evaluates to (1-(m_A+m_B+m_C)). Constrained split can also be
+ specified in product of categories. In that case the name of the
+ remainder state follows the syntax <tt>{State1;State2}</tt> where <tt>State1</tt>
+ and <tt>State2</tt> are the state names of the two spitting categories. Additional
+ functionality exists to work with multiple prototype p.d.f.s simultaneously.
+
+      
+<h4>Improved infrastructure for caching p.d.f and functions</h4>
+
+ The infrastructure that exists for caching p.d.f.s, i.e. p.d.f that precalculate their value
+ for all observable values at one and cache those in a histogram that is returned as p.d.f shape
+ (with optional interpolation), has been expanded. This infrastructure comprises <tt>RooAbsCached</tt>
+ the base class for all caching p.d.fs, <tt>RooAbsSelfCachedPdf</tt> a base class for end-user
+ caching p.d.f implementations that simply cache the result of <tt>evaluate()</tt> and <tt>RooCachedPdf</tt>
+ that can wrap and cache any input p.d.f specified in its constructor.<br><br> 
+
+ By default a p.d.f is sampled and cached in all observables in any
+ given use context, with no need to specify what those are in advance.
+ The internal code has also been changed such that all cache
+ histograms now store pre-normalized p.d.f, which is more efficient
+ than 'raw' p.d.f histograms that are explicitly post-normalized
+ through integration.  Multiple different use cases (e.g. definitions
+ of what are observables vs parameters) can be cached
+ simultaneously. Now it is also possible to specify that p.d.f.s
+ should be sampled and cached in one or more parameter dimensionsal
+ <i>in addition</i> to the automatically determined set of observables.
+ as well.
+<br><br>
+ Also a complete new line of classes with similar functionality has been added inheriting from RooAbsReal.
+ These are <tt>RooAbsCachedReal</tt>,<tt>RooAbsSelfCachedReal</tt> and <tt>RooCachedReal</tt>. A newly
+ added class <tt>RooHistFunc</tt> presents these shapes and is capable of handling negative entries.
+
  <h4>New PDF error handling structure</h4>
 
       New infrastructure has been put into place to propagate and process p.d.f evaluation errors during fitting.
       Previously evaluation errors were marked with a zero p.d.f value and propagated as a special condition
       in <tt>RooAddPdf</tt>, <tt>RooProdPdf</tt> etc to result in a zero top-level p.d.f value that was caught by the RooFit minuit
       interface as a special condition. Summary information on the value of the parameters and the observables
-      was printed for the first 10 occurrences of such conditions. Now, each p.d.f component that generates an error
+      was printed for the first 10 occurrences of such conditions. <br><br>
+
+      Now, each p.d.f component that generates an error
       in its evaluation logs the error into a separate facility during fitting and the the RooFit minuit interface
       polls this error logging facility for problems. This allows much more detailed and accurate warning messages
       during the minimization phase. The level of verbosity of this new error facility can be controlled with
-      a new <tt>PrintEvalErrors(Int_t code)</tt> argument to <tt>fitTo()</tt>. With code of -1, no errors are printed at all. With a
-      code of zero, one line is printed for each p.d.f component with problems summarizing the number of times
-      problems occured during the likelihood evaluation. A code greater than zero will generate even more detail and
+      a new 
+<pre>
+        PrintEvalErrors(Int_t code)
+</pre>
+      argument to <tt>fitTo()</tt>. <br><br>
+      <ul>
+      <li>With code of -1, no errors are printed at all.
+      <li>With a
+      code of zero, <i>one line</i> is printed for each p.d.f component with problems summarizing the number of times
+      problems occured during the likelihood evaluation. 
+
+<pre>
+        [#0] WARNING:Minization -- RooFitGlue: Minimized function has error status. 
+        Returning maximum FCN so far (-1e+30) to force MIGRAD to back out of this region. Error log follows
+        Parameter values: m=-7.397
+        RooGaussian::gx[ x=x mean=m sigma=sx ] has 3 errors
+</pre>
+
+      <li>A code greater than zero will generate even more detail and
       print the details of each evaluation error as provided by the p.d.f (zero value, not-a-number, normalization zero etc..)
       and show the observable values at which this error occurred. At most N detailed messages per p.d.f component
-      are shown where N is the integral value of the 'code' argument.
+      are shown where N is the integral value of the 'code' argument. 
+
+<pre>
+        [#0] WARNING:Minization -- RooFitGlue: Minimized function has error status.
+        Returning maximum FCN so far (-1e+30) to force MIGRAD to back out of this region. Error log follows
+        Parameter values: m=-7.397
+        RooGaussian::gx[ x=x mean=m sigma=sx ]
+             getLogVal() top-level p.d.f evaluates to zero or negative number @ x=x=9.09989, mean=m=-7.39713, sigma=sx=0.1
+             getLogVal() top-level p.d.f evaluates to zero or negative number @ x=x=6.04652, mean=m=-7.39713, sigma=sx=0.1
+             getLogVal() top-level p.d.f evaluates to zero or negative number @ x=x=2.48563, mean=m=-7.39713, sigma=sx=0.1
+</pre>
+
+
+
+      </ul>
+      The new-style error logging is active whenever MINUIT is operating on such a p.d.f. The default value for N is 3.
+      Outside the MINUIT context the evaluation error each evualuation error will generate a separate message through
+      <tt>RooMsgService</tt>
 
   <h4> Other new features</h4>
   <ul>
@@ -145,14 +316,52 @@
       without resulting in configuration where the sum of all fractions exceeds 1.<br><br>
      
   <li>The low-level object printing interface <tt>printToStream()</tt> has been deprecated in favor of a new
-      <tt>printStream()</tt> method which allows much greater control over the information printed. <br><br>
+      <tt>printStream()</tt> method which allows much greater control over the information printed. 
+      The printing of almost all RooFit objects has been reworked to present a more uniform look and feel.
+      The standard one-line result of the high-level <tt>Print()</tt> method without option now looks like
+
+<pre>
+        // Variable
+        x.Print() ;
+        RooRealVar::x = 0 L(-10 - 10) 
+
+        // Function or p.d.f
+        gx.Print() ;
+        RooGaussian::gx[ x=x mean=m sigma=sx ] = 1
+
+        // Dataset
+        d.Print() ;
+        RooDataSet::gData[x,y] = 1000 entries
+
+        // RooPlot
+        frame.Print() ;
+        framex[x] = (RooHist::h_gData,RooCurve::g_Int[y]_Norm[x,y]_Comp[g])
+</pre>
+
+      Inside class <tt>RooPlot</tt> the default name of contained curves and histograms has been 
+      reworked in something more self descriptive as is shown in the above example. A usual,
+      a user supplied name can always be set by supplying the <tt>Name(const char*)</tt> argument
+      to <tt>plotOn()</tt>
+
+      Verbose printing with "v" options is mostly unchanged except for <tt>RooPlot</tt>. In addition
+      printing with the "s" option will show the 'old' standard printing mode, option "t" will show
+      tree structure printing (only for RooAbsArg), and option "1" will invoke inline printing, i.e
+      a one-line description without a trailing <tt>endl</tt>.<br><br>
+
 
   <li>Data weighted projections of p.d.fs using the <tt>ProjWData()</tt> argument in <tt>RooAbsPdf::plotOn()</tt> are now calculated
       with a new classes that derives from <tt>RooAbsOptTestStatistic</tt> and can thus implement the same evaluation
-      optimizations as are done for <tt>RooNLLVar</tt> and <tt>RooChi2Var</tt>. Specifically it is now possible to calculate projections
-      involving <tt>ProjWData()</tt> in parallel on multi-core hosts by adding the <tt>NumCPU(Int_t)</tt> argument to <tt>plotOn()</tt>.
+      optimizations as are done for <tt>RooNLLVar</tt> and <tt>RooChi2Var</tt>. <b>Specifically it is now possible to calculate projections
+      involving <tt>ProjWData()</tt> in parallel on multi-core hosts </b>by adding the <tt>NumCPU(Int_t)</tt> argument to <tt>plotOn()</tt>.
       <br><br>
+
+  <li> A new utility function has been added to allow cloning of entire tree expressions of
+       <tt>RooAbsArg</tt> objects, such as a composite p.d.f including component p.d.fs and
+       all its variables:
+<pre>
+       RooAbsArg* clonedTree = pdf.cloneTree() ;
+</pre>
+       All cloned leaf and branch nodes are owned by the returned head node of the expression.<br><br>
 
   <li>Assorted minor fixes
   </ul>
-
