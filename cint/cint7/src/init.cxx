@@ -1814,7 +1814,7 @@ int Cint::Internal::G__init_globals()
   //G__default.isconst = G__CONSTVAR;
 #endif
 
-  ::Reflex::TypedefTypeBuilder("codeBreak$",::Reflex::Type::ByName("int"));  // 'Z' type
+  // in platform macro: ::Reflex::TypedefTypeBuilder("codeBreak$",::Reflex::Type::ByName("int"));  // 'Z' type
   G__letint(&G__block_break,'Z',G__BLOCK_BREAK); /* set default value */
   G__block_break.ref = 0;
 #ifndef G__OLDIMPLEMENTATION1259
@@ -2043,6 +2043,8 @@ static void G__platformMacro()
   ::Reflex::TypedefTypeBuilder("autoDouble$",::Reflex::Type::ByName("double"));
   ::Reflex::TypedefTypeBuilder("macroChar*$",::Reflex::PointerBuilder(::Reflex::ConstBuilder(::Reflex::Type::ByName("char")))); 
   ::Reflex::TypedefTypeBuilder("macro$",::Reflex::PointerBuilder(::Reflex::ConstBuilder(::Reflex::Type::ByName("char")))); 
+
+  ::Reflex::TypedefTypeBuilder("codeBreak$",::Reflex::Type::ByName("int"));  // 'Z' type
 
   G__StrBuf temp_sb(G__ONELINE);
   char *temp = temp_sb;
