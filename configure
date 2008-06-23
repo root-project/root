@@ -4220,8 +4220,8 @@ fi
 #
 message "Checking whether to build libMemStat"
 if test "x$enable_memstat" = "xyes" || test ! "x$MEMSTAT" = "x"; then
-    case $platform in
-    linux)
+    case $arch in
+    linux*)
        enable_memstat="yes" ;;
     *)
        enable_memstat="no" ;;
