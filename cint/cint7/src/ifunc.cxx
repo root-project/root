@@ -1329,7 +1329,7 @@ static int Cint::Internal::G__readansiproto(std::vector<Reflex::Type>& i_params_
       int isunsigned = 0; // unsigned seen flag and offset for type code
       // Process first keyword of type specifier (most type specifiers have only one keyword).
       {
-         // Partially handle unsigned and sigend keywords here.  Also do some integral promotions.
+         // Partially handle unsigned and signed keywords here.  Also do some integral promotions.
          if (!strcmp(buf, "unsigned") || !strcmp(buf, "signed")) {
             if (buf[0] == 'u') {
                isunsigned = -1;
@@ -1692,11 +1692,19 @@ static int Cint::Internal::G__readansiproto(std::vector<Reflex::Type>& i_params_
                   param_name[0] = c;
                   c = G__fgetstream(param_name + 1, "[=,)& \t");
                   if (!strcmp(param_name, "const")) { // handle const keyword
-                     isconst |= G__PCONSTVAR; // FIXME: This is intentionally wrong!  Fix the code that depends on this!
+                     if (ptrcnt) {
+                        isconst |= G__PCONSTVAR; // FIXME: This is intentionally wrong!  Fix the code that depends on this!
+                     } else {
+                        isconst |= G__CONSTVAR;
+                     }
                      param_name[0] = 0;
                   }
-                  if (!strcmp(param_name, "const*")) { // handle const keyword and a single pointer spec
-                     isconst |= G__CONSTVAR; // FIXME: This is intentionally wrong!  Fix the code that depends on this!
+                  else if (!strcmp(param_name, "const*")) { // handle const keyword and a single pointer spec
+                     if (ptrcnt) {
+                       isconst |= G__PCONSTVAR; // FIXME: This is intentionally wrong!  Fix the code that depends on this!
+                     } else {
+                       isconst |= G__CONSTVAR;
+                     }
                      ++ptrcnt;
                      param_name[0] = 0;
                   }
