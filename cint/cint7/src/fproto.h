@@ -103,7 +103,7 @@ int G__display_files(FILE *fout);
 int G__pr(FILE *fout,struct G__input_file view);
 int G__dump_tracecoverage(FILE *fout);
 int G__objectmonitor(FILE *fout,char *pobject,const ::Reflex::Type &tagnum,char *addspace);
-int G__varmonitor(FILE *fout,const ::Reflex::Scope&,char *index,char *addspace,long offset);
+int G__varmonitor(FILE* fout, const ::Reflex::Scope scope, const char* mbrname, const char* addspace, long offset);
 int G__pushdumpinput(FILE *fp,int exflag);
 int G__popdumpinput(void);
 int G__dumpinput(char *line);
