@@ -748,7 +748,7 @@ void TFile::Close(Option_t *option)
 
    opt.ToLower();
 
-   if (!IsOpen()) return;
+   if (!TFile::IsOpen()) return;
 
 
    if (fIsArchive || !fIsRootFile) {
