@@ -687,7 +687,12 @@ void TH2::FitSlicesX(TF1 *f1, Int_t firstybin, Int_t lastybin, Int_t cut, Option
    }
    sprintf(name,"%s_chi2",GetName());
    delete gDirectory->FindObject(name);
-   TH1D *hchi2 = new TH1D(name,"chisquare", nbins, fYaxis.GetXmin(), fYaxis.GetXmax());
+   TH1D *hchi2 = 0;
+   if (bins->fN == 0) {
+      hchi2 = new TH1D(name,"chisquare", nbins, fYaxis.GetXmin(), fYaxis.GetXmax());
+   } else {
+      hchi2 = new TH1D(name,"chisquare", nbins, bins->fArray);
+   }
    hchi2->GetXaxis()->SetTitle(fYaxis.GetTitle());
    if (arr)
       (*arr)[npar] = hchi2;
