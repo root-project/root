@@ -1039,7 +1039,7 @@ Reflex::Type Cint::Internal::G__deref(const Reflex::Type typein)
    reftype = G__PLVL(reftype);
    ::Reflex::Type result = typein;
    if (isconst & G__CONSTVAR) {
-      result = ::Reflex::Type(result, ::Reflex::CONST, Reflex::Type::APPEND);
+     result = G__replace_rawtype( result,  ::Reflex::Type(result.RawType(), ::Reflex::CONST, Reflex::Type::APPEND) );
    }
    if (ispointer) {
       result = ::Reflex::PointerBuilder(result);
@@ -1315,7 +1315,7 @@ bool Cint::Internal::G__test_static(const ::Reflex::Member var, int what_static,
          }
          return false;
       case G__AUTOARYDISCRETEOBJ:
-         return !var.IsStatic() && var.TypeOf().FinalType().IsArray();
+         return G__get_properties(var)->statictype == G__AUTOARYDISCRETEOBJ;
       case G__COMPILEDGLOBAL:
          return G__get_properties(var)->isCompiledGlobal;
    }
