@@ -43,7 +43,7 @@ namespace Math {
    This class differs from WrappedParamFunction in the fact that the parameters are not stored in 
    the adapter class and optionally it keeps a cloned and managed copy of the adapter class.
 
-   @ingroup  CppFunctions
+   @ingroup  ParamFunc
    
 */ 
 class MultiDimParamFunctionAdapter : public IParamMultiFunction  {
@@ -159,7 +159,7 @@ private:
    This class differs from WrappedParamFunction in the fact that the parameters are not stored in 
    the adapter class and optionally it keeps a cloned and managed copy of the adapter class.
 
-   @ingroup  CppFunctions
+   @ingroup  ParamFunc
    
 */ 
 class MultiDimParamGradFunctionAdapter : public IParamMultiGradFunction  {

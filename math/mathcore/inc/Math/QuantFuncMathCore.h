@@ -67,7 +67,7 @@ namespace Math {
    * their usage is deprecated.
    */
 
-   /** @name Quantile Functions from MathMore 
+   /** @name Quantile Functions from MathCore 
    * The implementation used is that of 
    * <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Random-Number-Distributions.html">GSL</A>.
    */ 
@@ -215,7 +215,7 @@ namespace Math {
       It is implemented using  chisquared_quantile_c, therefore is not very precise for small z. 
       It is reccomended to use the MathMore function implemented using GSL
 
-      @ingroup QuantFunc
+      @ingroup QuantFunc_def_in_MathMore
 
    */
 
@@ -321,7 +321,7 @@ namespace Math {
       It is implemented using  chisquared_quantile_c, therefore is not very precise for small z. 
       It is reccomended to use the MathMore function implemented using GSL
   
-      @ingroup QuantFunc
+      @ingroup QuantFunc_def_in_MathMore
 
    */
 

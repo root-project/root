@@ -57,7 +57,7 @@ namespace Math {
      since it provides the analytical gradient with respect to x
      
 
-     @ingroup CppFunctions
+     @ingroup ParamFunc
   */
 
 class Polynomial : public ParamFunction<IParamGradFunction>,  

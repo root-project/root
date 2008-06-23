@@ -28,6 +28,11 @@
 
 #include <cassert> 
 
+/**
+   @defgroup ParamFunc Interfaces for parametric functions 
+   @ingroup CppFunctions
+*/
+
 
 namespace ROOT { 
 
@@ -42,7 +47,7 @@ namespace Math {
     for the one and the multi-dim functions. 
     Concrete class should derive from ROOT::Math::IParamFunction and not from this class.  
     
-    @ingroup  CppFunctions
+    @ingroup  ParamFunc
 */ 
 
 class IBaseParam  {
@@ -96,7 +101,7 @@ public:
 
    Provides the interface for evaluating a function passing a coordinate vector and a parameter vector.  
 
-   @ingroup  CppFunctions
+   @ingroup  ParamFunc
 */ 
 
 class IParametricFunctionMultiDim : 
@@ -146,7 +151,7 @@ private:
    It is a derived class from ROOT::Math::IBaseFunctionOneDim and 
    ROOT::Math::IBaseParam
 
-   @ingroup  CppFunctions
+   @ingroup  ParamFunc
 */ 
 
 class IParametricFunctionOneDim : 
@@ -213,7 +218,7 @@ private:
    The pure private virtual method DoParameterGradient must be implemented by the derived classes 
    in addition to those inherited by the base abstract classes. 
 
-   @ingroup  CppFunctions
+   @ingroup  ParamFunc
 */ 
 
 class IParametricGradFunctionMultiDim : 
@@ -292,7 +297,7 @@ private:
    The pure private virtual method DoParameterGradient must be implemented by the derived classes 
    in addition to those inherited by the base abstract classes. 
 
-   @ingroup  CppFunctions
+   @ingroup  ParamFunc
 */ 
 
 class IParametricGradFunctionOneDim : 

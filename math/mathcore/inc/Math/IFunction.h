@@ -21,8 +21,11 @@
 /** 
 @defgroup CppFunctions Function Classes and Interfaces
 
- Interfaces (abstract classes) and Base classes used in MathCore and MathMore numerical algorithms. 
- Included are also adapter classes, such as  functors, to wrap any generic callable C++ objects 
+ Interfaces (abstract classes) and Base classes used in MathCore and MathMore numerical methods 
+ for describing function classes. They define function and gradient evaluation and as well the 
+ functionality for dealing with parameters in the case of parametric functions which are used for 
+ fitting and data modeling. 
+ Included are also adapter classes, such as  functors, to wrap generic callable C++ objects 
  in the desired interface. 
 */
 
@@ -35,6 +38,10 @@
 namespace ROOT {
 namespace Math {
 
+/**
+   @defgroup GenFunc Interfaces for generic function evaluation
+   @ingroup CppFunctions
+*/
 
 //___________________________________________________________________________________
    /** 
@@ -47,7 +54,7 @@ namespace Math {
        Derived classes must implement the pure private virtual method DoEval(const double *) for the 
        function evaluation in addition to NDim() and Clone(). 
         
-       @ingroup  CppFunctions
+       @ingroup  GenFunc
    */
 
    class IBaseFunctionMultiDim {
@@ -118,7 +125,7 @@ namespace Math {
        An interface for evaluating the function passing a vector (like for multidim functions) is also 
        provided
         
-       @ingroup  CppFunctions
+       @ingroup  GenFunc
    */
    class IBaseFunctionOneDim { 
 
@@ -180,7 +187,7 @@ namespace Math {
 
       Concrete classes should derive from ROOT::Math::IGradientFunctionMultiDim and not from this class.  
 
-      @ingroup  CppFunctions
+      @ingroup  GenFunc
     */
 
    class IGradientMultiDim { 
@@ -232,7 +239,7 @@ namespace Math {
 
       Concrete classes should derive from ROOT::Math::IGradientFunctionOneDim and not from this class.  
 
-      @ingroup  CppFunctions
+      @ingroup  GenFunc
     */
    class IGradientOneDim { 
 
@@ -305,7 +312,7 @@ namespace Math {
    Gradient and FdF are by default implemented using DoDerivative, butthey  can be overloaded by the 
    derived classes to improve the efficiency in the derivative calculation. 
 
-   @ingroup  CppFunctions
+   @ingroup  GenFunc
 */ 
 
    class IGradientFunctionMultiDim : 
@@ -365,7 +372,7 @@ namespace Math {
    derived classes to improve the efficiency in the derivative calculation. 
 
 
-   @ingroup  CppFunctions
+   @ingroup  GenFunc
 */ 
    //template <>
    class IGradientFunctionOneDim : 

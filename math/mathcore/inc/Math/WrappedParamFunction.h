@@ -36,7 +36,7 @@ typedef double( * FreeParamMultiFunctionPtr ) (const double *, const double * );
    in an interface-like IParamFunction with a vector storing and caching internally the 
    parameter values
 
-   @ingroup  CppFunctions
+   @ingroup  ParamFunc
 
 */ 
 template< typename FuncPtr =  FreeParamMultiFunctionPtr   >
@@ -135,7 +135,7 @@ typedef double( * FreeMultiFunctionPtr ) (const double *);
    parameters. 
    i.e. transform any multi-dim function in a parametric function 
 
-   @ingroup  CppFunctions
+   @ingroup  ParamFunc
 
 */ 
 template< typename FuncPtr =  FreeMultiFunctionPtr   >

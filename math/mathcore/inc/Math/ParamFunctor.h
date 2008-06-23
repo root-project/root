@@ -33,9 +33,9 @@ namespace ROOT {
 namespace Math { 
 
 
-/** class defining the signature for multi-dim param function 
+/** class defining the signature for multi-dim parametric functions 
 
-   @ingroup  CppFunctions
+   @ingroup  ParamFunctor_int
  */
 
 class ParamFunctionBase { 
@@ -54,7 +54,7 @@ class ParamFunctionBase {
    It can be created from any function implementing the correct signature 
    corresponding to the requested type
 
-   @ingroup  CppFunctions
+   @ingroup  ParamFunctor_int
 
 */ 
 #ifndef __CINT__
@@ -141,7 +141,7 @@ public:
 /**
    ParamFunctor Handler to Wrap pointers to member functions 
 
-   @ingroup  CppFunctions
+   @ingroup  ParamFunctor_int
 */
 template <class ParentFunctor, typename PointerToObj,
           typename PointerToMemFn>
@@ -199,7 +199,7 @@ private :
    or a member function with the correct signature, 
    like Foo::EvalPar(const double *, const double *)
 
-   @ingroup  CppFunctions
+   @ingroup  ParamFunc
 
  */
 

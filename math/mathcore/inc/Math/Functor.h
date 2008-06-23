@@ -44,7 +44,7 @@ namespace Math {
    double Derivative(const double *x, int icoord) 
    can be used to create a Gradient function type.
 
-   @ingroup  CppFunctions
+   @ingroup  Functor_int
 
 */ 
 template<class ParentFunctor, class Func >
@@ -112,7 +112,7 @@ private :
    double operator() (const double * x) and the gradient function object must implement 
    double operator() (const double * x, int icoord) 
 
-   @ingroup  CppFunctions
+   @ingroup  Functor_int
 */ 
 template<class ParentFunctor, class Func, class GradFunc  >
 class FunctorGradHandler : public ParentFunctor::Impl { 
@@ -179,7 +179,7 @@ private :
    and 
    double XXXX (const double *x) for multi-dimensional functions
 
-   @ingroup  CppFunctions
+   @ingroup  Functor_int
 */
 template <class ParentFunctor, typename PointerToObj,
           typename PointerToMemFn>
@@ -234,7 +234,7 @@ private :
    double XXX (const double *x) for multi-dimensional function evaluation and 
    double XXX (cost double *x, int icoord) for partial derivatives evaluation
 
-   @ingroup  CppFunctions
+   @ingroup  Functor_int
 
 */
 template <class ParentFunctor, typename PointerToObj,
@@ -334,7 +334,7 @@ public:
    </ul>
    The function dimension is required when constructing the functor.  
 
-   @ingroup  CppFunctions
+   @ingroup  GenFunc
 
  */
 class Functor : public IBaseFunctionMultiDim  { 
@@ -440,7 +440,7 @@ private :
    </ul>
 
 
-   @ingroup  CppFunctions
+   @ingroup  GenFunc
 
  */
 
@@ -548,7 +548,7 @@ private :
    </ol>
    The function dimension is required when constructing the functor.  
 
-   @ingroup  CppFunctions
+   @ingroup  GenFunc
 
  */
 class GradFunctor : public IGradientFunctionMultiDim  { 
@@ -670,7 +670,7 @@ private :
         double operator()( double ) . One object provides the function evaluation, the other the derivative.
    </ol>
 
-   @ingroup  CppFunctions
+   @ingroup  GenFunc
 
  */
 

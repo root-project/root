@@ -1,9 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
-<html> <head>
-<title>ROOT Math Release Notes</title>
-</head>
-
-<body>
+<!------<html> <head><title>ROOT Math Release Notes</title></head><body>!---->
 
 <br>
 <hr>
@@ -29,7 +24,7 @@ Some of the basic special mathematical functions of TMath, like the error functi
   <li> <tt>TMath::Sort</tt> is re-implemented using <tt>std::sort</tt>.</li>
   <li><tt>TMath::BinarySearch</tt> is re-implemented using the STL algorithm <tt>std::lower_bound</tt></li>
   </ul>
- The STL algorithms have been found for these cases to be more performant in term of CPU time. For some other algorithms like  <tt>TMath::LocMin</tt>, <tt>TMath::LocMax</tt> or <tt>TMath::Permute</tt> the original implementation is faster than STL and has been mantained.
+ The STL algorithms have been found for these cases to be perform better in term of CPU time. For some other algorithms like  <tt>TMath::LocMin</tt>, <tt>TMath::LocMax</tt> or <tt>TMath::Permute</tt> the original implementation is faster than STL and has been maintained.
   </li>
   <li>Add a generic iterator interface, similar to the STL algorithm interface, to the following TMath functions:
 	<tt>MinElement, MaxElemen, LocMin, LocMax, Mean, GeomMean, RMS,
@@ -84,40 +79,32 @@ In detail, the new classes containing implementations present previously in <tt>
 New template methods have been also included in the common Integration class in order to be able to integrate automatically any C++ callable object.
 </li>
 <li><tt>ROOT::Math::RichardsonDerivator</tt> implementing numerical derivation using the Richardson's extrapolation formula (use 2 derivative estimates to compute a third, more accurate estimation). This is used by the <tt>TD1::Derivative</tt> method. </li>
-<li><tt>BrentRootFinder</tt> for finding the root of one-dimensional function using the Brent algorithm. The class inherits from a virtual interface, which is also implemented by the MathMore root finder methods. The user can istantiate, via the common  <tt>ROOT::Math::RootFinder</tt> class, all the various root finder algorithms.  The <tt>BrentRootFinder</tt> class is used by <tt>TF1::GetX</tt> . </li>
+<li><tt>BrentRootFinder</tt> for finding the root of one-dimensional function using the Brent algorithm. The class inherits from a virtual interface, which is also implemented by the MathMore root finder methods. The user can instantiate, via the common  <tt>ROOT::Math::RootFinder</tt> class, all the various root finder algorithms.  The <tt>BrentRootFinder</tt> class is used by <tt>TF1::GetX</tt> . </li>
 <li>A similar class, <tt>BrentMinimizer1D</tt>, provides the possibility to find the minimum of one-dimensional functions using  the Brent algorithm. This class is used by <tt>TF1::GetMinimum</tt> or <tt>TF1::GetMaximum</tt> </li>
 Use ROOT convention for all enumeration names defining the type of numerical algorithms (start with k, like kADAPTIVE for the integration type). This affects both MathCore and MathMore.
  </li>
 
 </ul>
- <li>
-In addition we use now the ROOT convention for all enumeration names defining the type of numerical algorithms. The names start with <tt>k</tt>, like <tt>kADAPTIVE</tt> for the integration type. This change affects both MathCore and MathMore and it breaks bacward compatibility. 
+ 
+In addition we use now the ROOT convention for all enumeration names defining the type of numerical algorithms. The names start with <tt>k</tt>, like <tt>kADAPTIVE</tt> for the integration type. This change affects both MathCore and MathMore and it breaks backward compatibility. 
 
 <p>  
 <h4>MathCore Function interfaces</h4>
-Mathcore provides as well interfaces for the evaluation of mathematical and parametric functios to be used in the the numerical methods. This release contains the following changes:
+Mathcore provides as well interfaces for the evaluation of mathematical and parametric functions to be used in the the numerical methods. This release contains the following changes:
 <ul>
 <li>The <tt>ROOT::Math::IParamFunction</tt>, <tt>ROOT::Math::IParamMultiFunction</tt> interfaces (used mainly for fitting) require now a pointer to the parameters (type <tt>const double *</tt>), when evaluating the function. The derived classes must implement now the const
 method <tt>DoEvalPar</tt> (and not <tt>DoEval</tt> as before). In addition the method
-<tt>operator()(x, p)</tt> is now const. This change makes the caching of parameter not hidden and the interface is now 
+<tt>operator()(const double * x, const double * p)</tt> is now const. This change makes the caching of parameter not hidden and the interface is now 
  thread-safe. </li>
- <li>A similar change in the <tt>ROOT::Math::IParamGradFunction</tt>, <tt>ROOT::Math::IParamMultiGradFunction</tt> interfaces, where the parameter values are required for calculating the derivative. This changes the signature of the pure abstract method, <tt>DoParameterDerivative</tt>, which takes also a pointer (type <tt>const double *</tt>) to the parameters.
+ <li>A similar change in the <tt>ROOT::Math::IParamGradFunction</tt>, <tt>ROOT::Math::IParamMultiGradFunction</tt> interfaces, where the parameter values are now required for calculating the partial derivatives with respect to the parameters.
+This changes the signature of the pure abstract method, <tt>DoParameterDerivative(const double *x, const double * p, </tt>, which takes also a pointer (type <tt>const double *</tt>) to the parameters.
 In addition, these classes do not inherit anymore from the function gradient interface (<tt>ROOT::Math::IGradFunction</tt> and <tt>ROOT::Math::IMultiGradFunction</tt>). They define only the parameter gradient which is needed for fitting and not the coordinate gradient. A derived class, like <tt>ROOT::Math::Polynomial</tt>, implementing both functionality (coordinate and parameter gradient) inherits then from both interfaces. 
  </li>
  <li>
+ </ul>
 
 <p>More detailed description of the current MathCore release can be found at this <a href="http://www.cern.ch/mathlibs/sw/5_20_00/html/MathCore.html">location</a>.</p>
 
-  <br>
-
- <h3>GenVector</h3>
-  The new physics vector classes have been moved out from the MathCore library in a new library, <em>libGenVector</em>.  The library contains as well the CINT dictionary including main instantiations for the template classes.
-<br>
-In addition the setter methods for the 2D,3D and 4D vector classes have been extended following a suggestion by G. Raven. Functions like <tt>SetX</tt> instead of returning a <tt>void</tt> return now a reference to the vector class itself (<tt>*this</tt>).
-
-<h3>SMatrix</h3>
-Fix a bug discovered by Harals Soleng in the addition of two matrix expressions. Remove also some compilation warning found on Windows when compiling matrices instantiated using float types.  
-<br>
 <hr>
 <h3>MathMore</h3>
 <p>This new release contains: </p>
@@ -128,11 +115,32 @@ Fix a bug discovered by Harals Soleng in the addition of two matrix expressions.
   </li>
 </ul>
 
-<p>More detailed description of the current MathMore release can be found at this <a href="http://www.cern.ch/mathlibs/sw/5_19_02/html/MathMore.html">location</a>.</p>
+<p>More detailed description of the current MathMore release can be found at this <a href="http://www.cern.ch/mathlibs/sw/5_20_00/html/MathMore.html">location</a>.
+</p>
 
-  <p>&nbsp;</p>
+<hr>
 
+
+ <h3>GenVector</h3>
+  The new physics vector classes have been moved out from the MathCore library in a new library, <em>libGenVector</em>.  The library contains as well the CINT dictionary including main instantiations for the template classes. For this release the instantiation of some extra methods, in particular of the class <tt>ROOT::Math::TRansform3D</tt> have been added in the dictionary library.
+Due to a CINT limitation, the dictionary for explicit template constructors of the Rotation classes, taking as input any other type
+of rotation are missing. Therefore code like the following one will now work in CINT (or Python):  
+<pre>
+ROOT::Math::Rotation3D r; 
+ROOT::Math::EulerAngles eulerRot(r);
+</pre>
+A possible solution is to use the operator=:
+<pre>
+ROOT::Math::EulerAngles eulerRot; eulerRot = r;
+</pre>
 <br>
+In addition the setter methods for the 2D,3D and 4D vector classes have been extended following a suggestion by G. Raven. Functions like <tt>SetX</tt> instead of returning a <tt>void</tt> return now a reference to the vector class itself (<tt>*this</tt>).
+
+<hr>
+<h3>SMatrix</h3>
+Fix a bug discovered by Harals Soleng in the addition of two matrix expressions. Remove also some compilation warning found on Windows when compiling matrices instantiated using float types.  
+
+
 <hr>
 <h3>Minuit</h3>
   Two new classes have been added:
@@ -157,15 +165,19 @@ In addition, the method <tt>TLinearFitter::SetBasisFunction(TObjArray  * f)</tt>
 </li>
 <li>Add support in <tt>MnMigrad</tt> and <tt>MnMinimize</tt> for user provided analytical gradient of the FCN function. One needs to pass an instance of a function implementing the <tt>ROOT::Minuit2::FcnGradientBase</tt> interface. 
 </li>
+<li>Use now <tt>std::string</tt> for storing parameter names. This removes the un-necessary limitation on the length of parameter name (10 characters) existing before. The method <tt>Name()</tt> of <tt>MinuitParameter</tt> (and of <tt>MnUserParameterState</tt> and <tt>MnUserParameters</tt>) still returns a <tt>const char *</tt> (for backward compatibility). A new method, <tt>GetName()</tt> has been added to return a <tt>std::string</tt>
+</li>
+
 
 <li>
-The<tt> Minuit2Minimizer</tt> class has been improved by having an option to always run Hesse if it was not done before during the minimization.
+The<tt> Minuit2Minimizer</tt> class has been improved by having an option to always run Hesse if it was not done before during the minimization. Method to retrieve the correlation coefficients have been also added. 
 </li>
 </ul>
 
+<p>More detailed description of the current MathMore release can be found at this <a href="http://www.cern.ch/mathlibs/sw/5_20_00/html/Minuit2.html">location</a>.
+</p>
   
 
-<br>
 <hr>
 
  <h3>Unuran</h3>
@@ -175,6 +187,6 @@ A new version, 1.2.4, has been added to fix mainly some problems found in gcc 4.
 <br>
 
 <hr>
-<address></address>
-<!-- hhmts start --> Last modified: Mon Jun 23 12:04:43 CEST 2008 <!-- hhmts end -->
-</body> </html>
+
+<!-- hhmts start --> Last modified: Mon Jun 23 17:27:20 CEST 2008 <!-- hhmts end -->
+<!--- </body> </html> -->

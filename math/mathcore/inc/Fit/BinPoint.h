@@ -24,10 +24,11 @@ namespace ROOT {
       class DataRange; 
 
 /** 
-   BinPoint : class describing the point with bins ( x coordinates, y and error on y ) 
-              but not error in X . For the Error in x one should use onother class
+    Obsolete class, no more in use.
+    class describing the point with bins ( x coordinates, y and error on y ) 
+     but not error in X . For the Error in x one should use onother class
 
-             @ingroup  FitData  
+              
 */ 
 class BinPoint {
 

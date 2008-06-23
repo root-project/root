@@ -28,7 +28,7 @@ namespace ROOT {
    In addition to normal function interface provide interface for calculating each 
    data contrinution to the function which is required by some algorithm (like Fumili)
 
-   @ingroup  CppFunctions
+   @ingroup  FitMethodFunc
 */ 
 template<class FunctionType>
 class BasicFitMethodFunction : public FunctionType {

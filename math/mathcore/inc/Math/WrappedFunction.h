@@ -51,7 +51,7 @@ typedef double( * FreeMultiFunctionPtr ) (const double *);
    i.e. implementing operator() (double x) in a One-dimensional function interface.
    It provides a ROOT::Math::IGenFunction-like signature
 
-   @ingroup  CppFunctions
+   @ingroup  GenFunc
 
  */
 template< typename Func =  FreeFunctionPtr   >
@@ -100,7 +100,7 @@ private:
    WrappedMemFunction<X, double ( X::* ) (double) > f; 
 
 
-   @ingroup  CppFunctions
+   @ingroup  GenFunc
 
  */
 
@@ -145,7 +145,7 @@ private:
    implementing operator() (const double * x) in a multi-dimensional function interface.
    It provides a ROOT::Math::IGenMultiFunction-like signature
 
-   @ingroup  CppFunctions
+   @ingroup  GenFunc
 
  */
 template< typename Func =  FreeMultiFunctionPtr   >

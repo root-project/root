@@ -61,7 +61,7 @@ namespace Math {
       parameteric functions or DoParameterDerivative(x,p,ipar) for gradient par functions
       
 
-      @ingroup CppFunctions
+      @ingroup ParamFunc
    */
 
 

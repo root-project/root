@@ -23,12 +23,25 @@ namespace Math {
 
 //___________________________________________________________________________________________
 /**
-   User class for performing function integration. 
+   User class for calculating the derivatives of a function. It can calculate first (method Derivative1),
+   second (method Derivative2) and third (method Derivative3) of a function.  
+   
+   It uses the Richardson extrapolation method for function derivation in a given interval. 
+   The method use 2 derivative estimates (one computed with step h and one computed with step h/2) 
+   to compute a third, more accurate estimation. It is equivalent to the 
+   <a href = http://en.wikipedia.org/wiki/Five-point_stencil>5-point method</a>,
+   which can be obtained with a Taylor expansion. 
+   A step size should be given, depending on x and f(x). 
+   An optimal step size value minimizes the truncation error of the expansion and the rounding  
+   error in evaluating x+h and f(x+h). A too small h will yield a too large rounding error while a too large 
+   h will give a large truncation error in the derivative approximation. 
+   A good discussion can be found in discussed in 
+   <a href=http://www.nrbook.com/a/bookcpdf/c5-7.pdf>Chapter 5.7</a>  of Numerical Recipes in C.
+   By default a value of 0.001 is uses, acceptable in many cases.
 
-   It will use the Richards Method for function derivation in a given interval. 
-   This class is implemented from TF1::Derivate{,2,3}().
+   This class is implemented using code previosuly in  TF1::Derivate{,2,3}(). Now TF1 uses this class.
 
-   @ingroup Derivation
+   @ingroup Deriv
   
  */
 

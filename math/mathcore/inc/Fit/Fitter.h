@@ -18,10 +18,6 @@
 
 Classes used for fitting (regression analysis) and estimation of parameter values given a data sample. 
 */
-/*
-   @defgroup FitMain Main fitting classes
-   @ingroup Fit
-*/
 
 #ifndef ROOT_Fit_DataVectorfwd
 #include "Fit/DataVectorfwd.h"
@@ -54,6 +50,11 @@ namespace ROOT {
     */
 
    namespace Fit { 
+
+/**
+   @defgroup FitMain Main fitting classes
+   @ingroup Fit
+*/
 
 //___________________________________________________________________________________
 /** 

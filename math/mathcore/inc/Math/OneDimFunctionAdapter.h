@@ -35,7 +35,7 @@ namespace Math {
    It provides the possibility to copy and own the data array of the coordinates or to maintain internally a pointer to an external array 
    for being more efficient. In this last case the user must garantee the life of the given passed pointer 
 
-   @ingroup  CppFunctions
+   @ingroup  GenFunc
    
 */ 
 template <class MultiFuncType = const ROOT::Math::IMultiGenFunction &> 
@@ -150,7 +150,7 @@ private:
    but re-uses the given pointer for  the p[] vector. 
    The ParamFuncType reference by default is not const because the operator()(x,p) is not a const method
 
-   @ingroup  CppFunctions
+   @ingroup  GenFunc
    
 */ 
 template <class ParamFuncType = ROOT::Math::IParamMultiFunction &> 
