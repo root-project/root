@@ -52,7 +52,9 @@ namespace ROOT {
    namespace Fit { 
 
 /**
-   @defgroup FitMain Main fitting classes
+   @defgroup FitMain User Fitting classes
+
+   Main Classes used for fitting a given data set
    @ingroup Fit
 */
 

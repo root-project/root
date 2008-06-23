@@ -40,7 +40,10 @@
 #endif
 
 /** 
-@defgroup FitMethodFunc Fit Method Function Classes 
+@defgroup FitMethodFunc Fit Method Classes 
+
+Classes describing Fit Method functions
+@ingroup Fit
 */
 
 
