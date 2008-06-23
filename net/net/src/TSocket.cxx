@@ -724,15 +724,15 @@ Int_t TSocket::Recv(TMessage *&mess)
       TIter next(list);
       TStreamerInfo *info;
       while ((info = (TStreamerInfo*)next())) {
+         Int_t oldc = info->GetClassVersion();
          TClass *cl = TClass::GetClass(info->GetName());
-         if (cl && cl->GetStreamerInfo(info->GetOldVersion())) {
-            //delete
-            //printf("TStreamerInfo: %s, version=%d already there\n",info->GetName(),info->GetOldVersion());
+         cl->GetStreamerInfo();
+         if (cl && cl->GetStreamerInfos()->At(oldc)) {
             continue;
          }
          info->BuildCheck();
          if (gDebug > 0) {
-            printf("importing TStreamerInfo: %s, version=%d\n",info->GetName(),info->GetOldVersion());
+            printf("importing TStreamerInfo: %s, version=%d\n",info->GetName(),info->GetClassVersion());
          }         
       }
       delete list;
