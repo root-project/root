@@ -2914,7 +2914,7 @@ Long64_t TProof::Process(TFileCollection *fc, const char *selector,
 
    // We include the TFileCollection to the input list and we create a
    // fake TDSet with infor about it
-   TDSet *dset = new TDSet(Form("TFileCollection:%s", fc->GetName()));
+   TDSet *dset = new TDSet(Form("TFileCollection:%s", fc->GetName()), 0, 0, "");
    fPlayer->AddInput(fc);
    rv = fPlayer->Process(dset, selector, option, nentries, first);
 

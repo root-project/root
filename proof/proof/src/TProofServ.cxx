@@ -3347,7 +3347,7 @@ void TProofServ::HandleProcess(TMessage *mess)
             // Isolate the real name
             dsname.ReplaceAll("TFileCollection:", "");
             // Get the object
-            dataset = (TFileCollection *) input->FindObject(dset->GetName());
+            dataset = (TFileCollection *) input->FindObject(dsname);
             if (!dataset) {
                SendAsynMessage(Form("HandleProcess on %s: TFileCollection %s not"
                                     " found in input list",
@@ -3356,6 +3356,7 @@ void TProofServ::HandleProcess(TMessage *mess)
                                       dset->GetName());
                return;
             }
+            input->Remove(dataset);
             dsTree = dataset->GetDefaultTreeName();
             // Make sure we lookup everything (unless the client or the administartor
             // required something else)
@@ -3368,28 +3369,30 @@ void TProofServ::HandleProcess(TMessage *mess)
          // The received message included an empty dataset, with only the name
          // defined: assume that a dataset, stored on the PROOF master by that
          // name, should be processed.
-         if (!dataset && fDataSetManager) {
-            dataset = fDataSetManager->GetDataSet(dset->GetName());
-            if (!dataset) {
-               SendAsynMessage(Form("HandleProcess on %s: no such dataset: %s",
-                                    fPrefix.Data(), dset->GetName()));
-               Error("HandleProcess", "no such dataset on the master: %s",
-                     dset->GetName());
+         if (!dataset) {
+            if (fDataSetManager) {
+               dataset = fDataSetManager->GetDataSet(dset->GetName());
+               if (!dataset) {
+                  SendAsynMessage(Form("HandleProcess on %s: no such dataset: %s",
+                                       fPrefix.Data(), dset->GetName()));
+                  Error("HandleProcess", "no such dataset on the master: %s",
+                        dset->GetName());
+                  return;
+               }
+               if (!(fDataSetManager->ParseUri(dset->GetName(), 0, 0, 0, &dsTree)))
+                  dsTree = "";
+   
+               // Apply the lookup option requested by the client or the administartor
+               // (by default we trust the information in the dataset)
+               if (TProof::GetParameter(input, "PROOF_LookupOpt", lookupopt) != 0) {
+                  lookupopt = gEnv->GetValue("Proof.LookupOpt", "stagedOnly");
+                  input->Add(new TNamed("PROOF_LookupOpt", lookupopt.Data()));
+               }
+            } else {
+               SendAsynMessage(Form("HandleProcess on %s: no dataset manager!", fPrefix.Data()));
+               Error("HandleProcess", "no dataset manager: cannot proceed");
                return;
             }
-            if (!(fDataSetManager->ParseUri(dset->GetName(), 0, 0, 0, &dsTree)))
-               dsTree = "";
-
-            // Apply the lookup option requested by the client or the administartor
-            // (by default we trust the information in the dataset)
-            if (TProof::GetParameter(input, "PROOF_LookupOpt", lookupopt) != 0) {
-               lookupopt = gEnv->GetValue("Proof.LookupOpt", "stagedOnly");
-               input->Add(new TNamed("PROOF_LookupOpt", lookupopt.Data()));
-            }
-         } else {
-            SendAsynMessage(Form("HandleProcess on %s: no dataset manager!", fPrefix.Data()));
-            Error("HandleProcess", "no dataset manager: cannot proceed");
-            return;
          }
 
          // Transfer the list now
