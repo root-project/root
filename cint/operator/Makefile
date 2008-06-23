@@ -34,13 +34,13 @@ EqualTest: EqualTest.log
 	$(TestDiff)
 
 t01.log: t01.C
-	$(CMDECHO) root.exe -q -b -l t01.C > t01.log
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l t01.C > t01.log
 
 ParanTest: t01.log
 	$(CMDECHO) diff -b t01.log t01.ref
 
 ConversionOp.log : runConversionOp.C ConversionOp.C ConversionOp_h.$(DllSuf)
-	$(CMDECHO) root.exe -q -l -b  runConversionOp.C | \
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b  runConversionOp.C | \
 	        $(RemoveLeadingDirs) -e 's?FILE:.*[/\]?FILE:?' -e 's/.dll/.so/g' \
 	        | grep -v -e tagnum -e 'int c' > $@ 2>&1
 
