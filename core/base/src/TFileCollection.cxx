@@ -63,32 +63,38 @@ TFileCollection::~TFileCollection()
 }
 
 //______________________________________________________________________________
-void TFileCollection::Add(TFileInfo *info)
+Int_t TFileCollection::Add(TFileInfo *info)
 {
    // Add TFileInfo to the collection.
 
-   if (fList)
-     fList->Add(info);
+   if (fList && info) {
+      fList->Add(info);
+      return 1;
+   } else {
+      return 0;
+   }
 }
 
 //______________________________________________________________________________
-void TFileCollection::AddFromFile(const char *textfile, Int_t nfiles, Int_t firstfile)
+Int_t TFileCollection::AddFromFile(const char *textfile, Int_t nfiles, Int_t firstfile)
 {
    // Add file names contained in the specified text file.
    // The file should contain one url per line; empty lines or lines starting with '#'
    // (commented lines) are ignored.
    // If nfiles > 0 only nfiles files are added, starting from file 'firstfile' (>= 1).
+   // The method returns the number of added files.
 
    if (!fList)
-     return;
+     return 0;
 
+   Int_t nf = 0;
    if (textfile && *textfile) {
       ifstream f;
       f.open(gSystem->ExpandPathName(textfile), ifstream::out);
       if (f.is_open()) {
          Bool_t all = (nfiles <= 0) ? kTRUE : kFALSE;
          Int_t ff = (!all && (firstfile < 1)) ? 1 : firstfile;
-         Int_t nn = 0, nf = 0;
+         Int_t nn = 0;
          while (f.good() && (all || nf < nfiles)) {
             TString line;
             line.ReadToDelim(f);
@@ -106,34 +112,43 @@ void TFileCollection::AddFromFile(const char *textfile, Int_t nfiles, Int_t firs
       } else
          Error("AddFromFile", "unable to open file %s", textfile);
    }
+   return nf;
 }
 
 //______________________________________________________________________________
-void TFileCollection::AddFromDirectory(const char *dir)
+Int_t TFileCollection::Add(const char *dir)
 {
-   // Add all files in the specified directory to the collection. The dir can
-   // can include wildcards after the last slash, causing all matching files
-   // in that directory to be added. If dir is the full path of a file, only
-   // one element is added.
+   // Add all files matching the specified pattern to the collection.
+   // 'dir' can include wildcards after the last slash, which causes all
+   // matching files in that directory to be added.
+   // If dir is the full path of a file, only one element is added.
+   // Return value is the number of added files.
+
+   Int_t nf = 0;
 
    if (!fList)
-     return;
+      return nf;
 
    if (!dir || !*dir) {
       Error("AddFromDirectory", "input dir undefined");
-      return;
+      return nf;
    }
 
    FileStat_t st;
-   // If 'dir' points to a single file, add to the list and exit
-   if (gSystem->GetPathInfo(dir, st) == 0) {
+   FileStat_t tmp;
+   TString baseDir = gSystem->DirName(dir);
+   // if the 'dir' or its base dir exist
+   if (gSystem->GetPathInfo(dir, st) == 0 ||
+       gSystem->GetPathInfo(baseDir, tmp) == 0) {
+      // If 'dir' points to a single file, add to the list and exit
       if (R_ISREG(st.fMode)) {
          // regular, single file
          TFileInfo *info = new TFileInfo(dir);
          info->SetBit(TFileInfo::kStaged);
          Add(info);
+         nf++;
          Update();
-         return;
+         return nf;
       } else {
          void *dataSetDir = gSystem->OpenDirectory(gSystem->DirName(dir));
          if (!dataSetDir) {
@@ -158,6 +173,7 @@ void TFileCollection::AddFromDirectory(const char *dir)
                      TFileInfo *info = new TFileInfo(fn);
                      info->SetBit(TFileInfo::kStaged);
                      Add(info);
+                     nf++;
                   }
                }
             }
@@ -167,6 +183,7 @@ void TFileCollection::AddFromDirectory(const char *dir)
          }
       }
    }
+   return nf;
 }
 
 //______________________________________________________________________________

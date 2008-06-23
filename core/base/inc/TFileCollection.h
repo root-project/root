@@ -57,9 +57,9 @@ public:
                    const char *file = 0, Int_t nfiles = -1, Int_t firstfile = 1);
    virtual ~TFileCollection();
 
-   void            Add(TFileInfo *info);
-   void            AddFromFile(const char *file, Int_t nfiles = -1, Int_t firstfile = 1);
-   void            AddFromDirectory(const char *dir);
+   Int_t           Add(TFileInfo *info);
+   Int_t           AddFromFile(const char *file, Int_t nfiles = -1, Int_t firstfile = 1);
+   Int_t           Add(const char *path);
    THashList      *GetList() { return fList; }
    void            SetList(THashList* list) { fList = list; }
 
