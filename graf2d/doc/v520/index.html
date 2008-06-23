@@ -76,6 +76,9 @@
 <li> Change the Page numbering to make it appear nicer in postcript viewers
      like &quot;gv&quot;. It is compliant with the Adobe Postscript Document
      Structuring Conventions (easily found on the web).
+<li> The fonts encoding has been simplified (use ISOLatin1Encoding). The new
+     way allows to print any character with accent etc.. like on the screen.
+     The new encoding was done by Pierre Juillot.
 </ul>
 
 
@@ -149,12 +152,25 @@
 <ul>
 <li>Protection added in <tt>PaintPolyLineHatches</tt> (division by zero in some
     cases).
+<li>All the graphical code has been moved from the <tt>TGraph</tt> classes to
+    <tt>TGraphPainter</tt>.
+</ul>
+
+<h4>TGraphPolar</h4>
+<ul>
+<li>Protection added in case a <tt>GraphPolar</tt> is plotted with option
+    &quot;E&quot; but has no errors defined.
+<t>The markers clipping (in <tt>TGraphPainter</tt>) was wrong in case of TGraphPolar.
+<li>The constructor's parameters naming was wrong.
+<li>Documentation: better example (easier to understand).
+<li>In the constructors some data members were not initialized.
 </ul>
 
 <h4>TPie</h4>
 <ul>
 <li> Add the <tt>TPie::GetEntries()</tt> method that return the number slices.
-     (Guido Volpi)
+     (Guido Volpi).
+<li> Implement Editors for TPie and TPieSlice (Guido Volpi).
 </ul>
 
 <h4>TPaletteAxis</h4>
@@ -175,6 +191,7 @@
 <li> Option &quot;FUNC&quot; was not documented in THistPainter..
 <li> Update the help for animated gif generation in TPad.
 <li> Update TAttMarker documentation about the non scalable markers.
+<li> Re-writting of the THistPainter documentation.
 </ul>
 
 <h4>TCutG</h4>
