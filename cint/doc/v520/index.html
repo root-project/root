@@ -2,6 +2,7 @@
 <br>
 <hr>
 <a name="cint"></a>
+<h3>CINT</h3>
 <p>CINT's directory structure has been re-arranged; the top-most <tt>cint</tt> directory now contains CINT, Reflex, and Cintex.
 CINT's headers can now alternatively be included as <tt>#include "cint/<i>header.h</i>"</tt>, i.e. from the <tt>cint/</tt> subdirectory.
 This will become the default location in a coming release.</p>
@@ -9,7 +10,6 @@ This will become the default location in a coming release.</p>
 Instead please use <a href="http://root.cern.ch/root/html/TInterpreter">TInterpreter</a> as a virtual interface; it has been updated to satisfy most of ROOT's use cases of CINT.
 If you still need to include CINT headers directly because functionality is missing from TInterpreter then please let us know!</p>
 <p>CINT, Reflex, and Cintex have been ported to GCC 4.3.</p>
-<h3>CINT</h3>
 <ul><li><em>Core.</em>
 <p>Several small fixes, e.g. for the loading of CINT vs. Cintex base dictionaries, and auto-loading of templated classes, CINT's representation of size_t, char* vs. const char* in CINT's C API, function overload resolution involving enums, increase the supported number of loaded shared libraries, remove unused long.dll, don't automatically use <tt>/tmp</tt> directory for temporary files but rely on CINTTMPDIR, TMP, or TEMP environment variables, fix the FreeBSD port, fix treatment of <tt>break</tt> in loops.</p>
 <p>A change in CINT does not trigger a rebuild all of ROOT's dictionaries anymore; they now depend on cintdictversion.h.</p>
