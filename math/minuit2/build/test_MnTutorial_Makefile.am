@@ -42,17 +42,17 @@ INCLUDES =				\
 
 
 test_Minuit2_Quad4FMain_LDADD =				\
-	$(top_builddir)/src/libMinuit2Base.la
+	$(top_builddir)/src/libMinuit2.la
 
 test_Minuit2_Quad1FMain_LDADD =				\
-	$(top_builddir)/src/libMinuit2Base.la
+	$(top_builddir)/src/libMinuit2.la
 
 
 test_Minuit2_Quad8FMain_LDADD =				\
-	$(top_builddir)/src/libMinuit2Base.la
+	$(top_builddir)/src/libMinuit2.la
 
 test_Minuit2_Quad12FMain_LDADD =				\
-	$(top_builddir)/src/libMinuit2Base.la
+	$(top_builddir)/src/libMinuit2.la
 
 
 test_Minuit2_Quad4FMain_LDFLAGS =				\

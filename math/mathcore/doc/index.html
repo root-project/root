@@ -16,7 +16,7 @@ The current set includes classes and functions for: <ul>
 <li>
 <a class="el" href="http://www.cern.ch/mathlibs/sw/html/group__StatFunc.html">Statistical functions</a> : mathematical functions used in statistics, such as the probability density functions, the cumulative distributions functions (lower and upper integral of the pdf's) and their inverses (quantile functions) for continuous and discrete distributions. </li>
 <li>
-<a class="el" href="http://www.cern.ch/mathlibs/sw/html/group__CppFunctions.html">Function Classes and Interfaces</a> : Interfaces for generic functions in one and multi dimensions, including helper class to wrap free (static) and non-static member functions.<p>
+<a class="el" href="http://www.cern.ch/mathlibs/sw/html/group__CppFunctions.html">Function Classes and Interfaces</a> : Interfaces for generic functions in one and multi dimensions, including helper class to wrap free (static) and non-static member functions.
 </li>
 <li>Numerical algorithms: user classes with (in some cases) basic implementations for:
 <ul>
@@ -34,7 +34,15 @@ Classes and functions are provided in the namespace <em>ROOT::Math</em> or <em>R
 From the release 5.20, the <a class="el" href="http://www.cern.ch/mathlibs/sw/html/Vector.html">GenVector</a>
 (physics and geometry vector) package
  is not anymore part of MathCore, but it belongs to a separate library (<em>libGenVector</em>).
-<p>
+<br>
+MathCore contains instead now classes which were originally part of <em>libCore</em>. These include:
+<ul>
+  <li>  <a href="http://root.cern.ch/root/htmldoc/mathcore/TMath.html"><tt>TMath</tt></a>: namespace with mathematical functions and basic function algorithms. 
+  <li> <a href="http://root.cern.ch/root/htmldoc/TComplex.html"><tt>TComplex</tt></a>: class for complex numbers.
+  <li> Random classes: base class <a href="http://root.cern.ch/root/htmldoc/TRandom.html"><tt>TRandom</tt></a> and the derived classes <a href="http://root.cern.ch/root/htmldoc/TRandom1.html"><tt>TRandom1</tt></a>, <a href="http://root.cern.ch/root/htmldoc/TRandom2.html"><tt>TRandom2</tt></a> and <a href="http://root.cern.ch/root/htmldoc/TRandom.html"><tt>TRandom3</tt></a>), implementing the pseudo-random number generators.
+  </li>
+  </ul>
+  <p>
 See also:
 <ul>
 <li><a href="http://www.cern.ch/mathlibs/sw/html/MathCore.html">Online doc for MathCore</a>.</li>
@@ -45,10 +53,10 @@ See also:
 <hr>
 <p>
 <strong>N.B.</strong>: For consulting the reference MathCore documentation it is <strong>strongly recommended</strong> 
-to look  at <a href="http://www.cern.ch/mathlibs/sw/html/MathCore.html">these online doc</a></strong>. The class documentation shown from the class links below is not complete, it is missing ROOT::Math functions, template methods and in same case the class descriptions are not appropriate. 
+to look  at <a href="http://www.cern.ch/mathlibs/sw/html/MathCore.html">these online doc</a></strong>. The class documentation shown from the class links below is not complete, it is missing some template methods. 
 <hr> 
 <p>
 
-<!-- hhmts start --> Last modified: Mon Jun 23 23:52:52 CEST 2008 <!-- hhmts end -->
+<!-- hhmts start --> Last modified: Tue Jun 24 11:02:04 CEST 2008 <!-- hhmts end -->
 </body> </html>
 

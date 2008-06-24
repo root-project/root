@@ -28,12 +28,23 @@ The current set includes classes and functions for:
 
 </ul>
 
-Note that in this latest release the \ref Vector "GenVector" (physics and geometry vectors for 2,3 and 4 dimensions with their transformations) is not anymore part of MathCore, but is built as a separate library. 
+Note that in this latest release the \ref Vector "GenVector" (physics and geometry vectors for 2,3 and 4 dimensions with their transformations) is not anymore part of MathCore, but is built as a separate library.
+<br>
+MathCore contains instead now classes which were originally part of <em>libCore</em>. These include:
+<ul>
+  <li>  <a href="http://root.cern.ch/root/htmldoc/mathcore/TMath.html"><tt>TMath</tt></a>: namespace with mathematical functions and basic function algorithms. 
+  <li> <a href="http://root.cern.ch/root/htmldoc/TComplex.html"><tt>TComplex</tt></a>: class for complex numbers.
+  <li> Random classes: base class <a href="http://root.cern.ch/root/htmldoc/TRandom.html"><tt>TRandom</tt></a> and the derived classes <a href="http://root.cern.ch/root/htmldoc/TRandom1.html"><tt>TRandom1</tt></a>, <a href="http://root.cern.ch/root/htmldoc/TRandom2.html"><tt>TRandom2</tt></a> and <a href="http://root.cern.ch/root/htmldoc/TRandom.html"><tt>TRandom3</tt></a>), implementing the pseudo-random number generators.
+  </li>
+  </ul>
+  <p>
 
-MathCore and its CINT dictionary is normally built by default in %ROOT. Alternatively MathCore can be built as a stand-alone library, downloading the current version from <A HREF="../MathCore.tar.gz">here</A>. 
+
+MathCore and its CINT dictionary is normally built by default in %ROOT. Alternatively MathCore can be built as a stand-alone library (excluding classes like <tt>TComplex</tt> or <tt>TRandom</tt>  having
+ a direct dependency of %ROOT <em>libCore</em>), downloading the current version from <A HREF="../MathCore.tar.gz">here</A>. 
 Note, that the stand-alone library, in contrast to the one distributed by %ROOT,  <strong>does not</strong> contain the dictionary information and therefore cannot be used interactivly.
 
-To build the stand-alone MathCore library run first the <em>configure</em> script and then <em>make</em>. Do <em>configure --help</em> to see options available in configuring, like defining the installation directory. Run also <em>make install</em> to install the library and include files and <em>make check</em> to build the tests.  
+ To build the stand-alone MathCore library run first the <em>configure</em> script and then <em>make</em>. Do <em>configure --help</em> to see options available in configuring, like defining the installation directory. Run also <em>make install</em> to install the library and include files and <em>make check</em> to build the tests.  
 <br>
 
 
