@@ -40,7 +40,6 @@ CILIBS        = -lm -ltermcap
 # Fortran:
 F77LIBS       = /usr/shlib/libfor.so -lg2c
 F77           = g77
-F77LD         = g77
 
 # Extras
 

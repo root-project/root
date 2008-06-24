@@ -384,8 +384,8 @@ endif
 
 ##### f77 options #####
 
-ifeq ($(F77LD),)
-F77LD        := $(LD)
+ifneq ($(F77),)
+F77LD        := $(F77)
 endif
 ifeq ($(F77OPT),)
 F77OPT       := $(OPT)

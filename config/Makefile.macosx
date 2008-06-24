@@ -117,10 +117,6 @@ F77LIBS      := -L$(FINK_DIR)/lib -lg2c
 endif
 endif
 
-ifneq ($(F77),)
-F77LD        := $(F77)
-endif
-
 # Override default in Makefile.config
 INSTALL      := /bin/cp -pPR
 INSTALLDATA  := /bin/cp -pPR
