@@ -2078,7 +2078,7 @@ if test ! "x$enable_qt" = "xno" || \
         /usr/include /usr/include/qt4
     fi
     qtvers=0
-    if ! test "x$found_hdr" = "x"; then
+    if test ! "x$found_hdr" = "x"; then
 	qtvers=4
         qt4="yes"
         qtinc=$found_hdr
@@ -2143,7 +2143,7 @@ if test ! "x$enable_qt" = "xno" || \
         fi
 	qtinc=$found_hdr
 	qtincdir=$found_dir
-	if ! test "x$found_hdr" = "x" ; then
+	if test ! "x$found_hdr" = "x" ; then
 	    qtverneed="3.3.0"
 	    qttoonew="4.0.0"
 	    qttestdir=$qtincdir
@@ -2174,7 +2174,7 @@ if test ! "x$enable_qt" = "xno" || \
 	    if test -x $j ; then
 		moc_vers=`$j -v >/dev/stdout 2>&1 | \
 		    sed -e 's/.*(Qt //' -e 's/\.[0-9]*\.[0-9]*)//'`
-		if test $moc_vers -ne $qtvers ; then
+                if test ! "$moc_vers" = "$qtvers" ; then
 		    # Moc version does not match Qt version
 		    continue
 		fi
@@ -2183,7 +2183,7 @@ if test ! "x$enable_qt" = "xno" || \
 		break
 	    fi
 	done
-	if ! test "x$qtmocexe" = "x" ; then break ; fi
+	if test ! "x$qtmocexe" = "x" ; then break ; fi
     done
 
     # Correct path for win32
