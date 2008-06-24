@@ -15,7 +15,7 @@ Linking with <em>libMathCore</em> is therefore required for running any major RO
 Together with the libraries merge, many changes have been applied to both TMath and the other mathcore classes.
 <h4>TMath</h4>
 A major clean-up and re-structuring has been done for the functions present in <tt>TMath</tt>. Some functions have been implemented  using the STL algorithms, which have better performances in term of CPU time and a template interface has been also added.
-Some of the basic special mathematical functions of TMath, like the error function or the gamma and beta functions use now the  <a href="#" target="http:://www.netlib.org/cephes">Cephes</a> implementation from Stephen L. Moshier, which is used as well by the  <tt>ROOT::Math</tt> functions. This implementation  has been found to be more accurate and in some cases more efficient in term of CPU time. More detailed information on the new mathematical functions can be found in <a href="http://project-mathlibs.web.cern.ch/project-mathlibs/documents/slawinska.pdf">this</a> presentation from M. Slawinska.
+Some of the basic special mathematical functions of TMath, like the error function or the gamma and beta functions use now the  <a href="#" target="http:://www.netlib.org/cephes">Cephes</a> implementation from Stephen L. Moshier, which is used as well by the  <tt>ROOT::Math</tt> functions. This implementation  has been found to be more accurate and in some cases more efficient in term of CPU time. More detailed information on the new mathematical functions can be found in <a href="http://project-mathlibs.web.cern.ch/project-mathlibs/documents/slawinska.pdf">this presentation</a> from M. Slawinska at a ROOT team meeting.
    
 <ul>
   <li>define the functions as template functions instead of having the same re-definition for all the various basic types. This is done for <tt>TMath::Mean</tt>,<tt>TMath::GeomMean</tt>, <tt>TMath::Median</tt>, <tt>TMath::KOrdStat</tt>
@@ -135,10 +135,12 @@ ROOT::Math::EulerAngles eulerRot; eulerRot = r;
 </pre>
 <br>
 In addition the setter methods for the 2D,3D and 4D vector classes have been extended following a suggestion by G. Raven. Functions like <tt>SetX</tt> instead of returning a <tt>void</tt> return now a reference to the vector class itself (<tt>*this</tt>).
+<br>Detailed description of the current GenVector release can be found at this <a href="http://www.cern.ch/mathlibs/sw/5_20_00/html/Vector.html">location</a>.</p>
 
 <hr>
 <h3>SMatrix</h3>
 Fix a bug discovered by Harals Soleng in the addition of two matrix expressions. Remove also some compilation warning found on Windows when compiling matrices instantiated using float types.  
+<br>Detailed description of the current SMatrix release can be found at this <a href="http://www.cern.ch/mathlibs/sw/5_20_00/html/SMatrix.html">location</a>.</p>
 
 
 <hr>
@@ -174,7 +176,7 @@ The<tt> Minuit2Minimizer</tt> class has been improved by having an option to alw
 </li>
 </ul>
 
-<p>More detailed description of the current MathMore release can be found at this <a href="http://www.cern.ch/mathlibs/sw/5_20_00/html/Minuit2.html">location</a>.
+<p>More detailed description of the current Minuit2 release can be found at this <a href="http://www.cern.ch/mathlibs/sw/5_20_00/Minuit2/html/index.html">location</a>.
 </p>
   
 
@@ -188,5 +190,5 @@ A new version, 1.2.4, has been added to fix mainly some problems found in gcc 4.
 
 <hr>
 
-<!-- hhmts start --> Last modified: Mon Jun 23 17:27:20 CEST 2008 <!-- hhmts end -->
+<!-- hhmts start --> Last modified: Tue Jun 24 17:22:42 CEST 2008 <!-- hhmts end -->
 <!-- </body> </html> -->
