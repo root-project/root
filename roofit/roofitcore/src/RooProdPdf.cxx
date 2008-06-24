@@ -855,7 +855,7 @@ void RooProdPdf::groupProductTerms(RooLinkedList& groupedTerms, RooArgSet& outer
 	
 	// Add terms of this group to new term      
 	tIter2->Reset() ;
-	while((term2=(RooArgSet*)tIter->Next())) {
+	while((term2=(RooArgSet*)tIter2->Next())) {
 	  newGroup->Add(term2) ;	  
 	}
 
@@ -863,7 +863,7 @@ void RooProdPdf::groupProductTerms(RooLinkedList& groupedTerms, RooArgSet& outer
 	groupedTerms.Remove(group) ;
 	delete group ;
       }
-      delete tIter ;
+      delete tIter2 ;
     }
     // If a new group has been created to merge terms dependent on current outerIntDep, add it to group list
     if (newGroup) {
