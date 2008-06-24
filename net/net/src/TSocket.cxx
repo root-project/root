@@ -812,9 +812,13 @@ Bool_t TSocket::RecvStreamerInfos(TMessage *mess)
       TStreamerInfo *info;
       while ((info = (TStreamerInfo*)next())) {
          Int_t oldc = info->GetClassVersion();
-         TClass *cl = TClass::GetClass(info->GetName());
+         TClass *cl = TClass::GetClass(info->GetName(),kTRUE);
+         if (!cl) {
+            info->BuildCheck();
+            continue;
+         }
          cl->GetStreamerInfo();
-         if (cl && cl->GetStreamerInfos()->At(oldc)) {
+         if (cl->GetStreamerInfos()->At(oldc)) {
             continue;
          }
          info->BuildCheck();
