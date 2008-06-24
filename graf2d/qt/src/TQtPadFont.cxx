@@ -50,7 +50,7 @@ static float CalibrateFont()
           long  bold   = 5;
           QString fontName =
 #if QT_VERSION < 0x40000
-            RomanFontName();
+            "Nimbus Roman No9 L"; //RomanFontName();
 #else
             "Nimbus Roman No9 L";
 #endif
