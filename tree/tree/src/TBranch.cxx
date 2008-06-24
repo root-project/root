@@ -1002,7 +1002,7 @@ Int_t TBranch::FlushOneBasket(UInt_t ibasket)
    // Return the number of bytes written;
    
    Int_t nbytes = 0;
-   if (fBaskets.GetEntries()) {
+   if (fDirectory && fBaskets.GetEntries()) {
       TBasket *basket = (TBasket*)fBaskets.UncheckedAt(ibasket);
 
       if (basket) {

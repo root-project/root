@@ -3664,6 +3664,7 @@ Int_t TTree::FlushBaskets() const
    //
    // Return the number of bytes written or -1 in case of write error.
    
+   if (!fDirectory) return 0;
    Int_t nbytes = 0;
    Int_t nerror = 0;
    TObjArray *lb = const_cast<TTree*>(this)->GetListOfBranches();
