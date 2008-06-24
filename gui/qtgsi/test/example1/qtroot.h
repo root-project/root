@@ -3,11 +3,23 @@
 
 #include "Riostream.h"
 using namespace std;
-#include "qmainwindow.h"
+
 #include "qprinter.h"
 #include "qstring.h"
 #include "qthread.h"
 #include "qtabwidget.h"
+
+#if QT_VERSION >= 0x40000
+//Added by qt3to4:
+#include <QPaintEvent>
+#include <QResizeEvent>
+#include <QMouseEvent>
+#include <QCloseEvent>
+#include "q3mainwindow.h"
+#else
+#include "qmainwindow.h"
+typedef QMainWindow Q3MainWindow;
+#endif
 
 #include "TObject.h"
 #include "TCanvas.h"
@@ -57,7 +69,7 @@ class QPaintEvent;
 */
 
 
-class ApplicationWindow: public QMainWindow
+class ApplicationWindow: public Q3MainWindow
 {
     Q_OBJECT
 public:

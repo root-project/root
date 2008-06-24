@@ -14,13 +14,13 @@ LD            = link
 ifdef is_debug
 # Debugging:
 OPTIMIZE  := -Zi -MDd
-LINKDEBUG := -debug
+LINKDEBUG := -debug -nodefaultlib:msvcrt.lib
 else
 # Full optimization:
 OPTIMIZE  := -Ox -MD
 endif
 
-QTCXXFLAGS   := -GR $(OPTIMIZE) -W3 -nologo $(shell root-config --cflags) -D_CRT_SECURE_NO_DEPRECATE -DQT_DLL -DQT_THREAD_SUPPORT
+QTCXXFLAGS   := -GR $(OPTIMIZE) -W3 -nologo $(shell root-config --cflags) -FIw32pragma.h -D_CRT_SECURE_NO_DEPRECATE -DQT_DLL -DQT_THREAD_SUPPORT -DQT3_SUPPORT $(QTINCDIR:%=-I%)
 LFLAGS       := -nologo -machine:ix86 $(LINKDEBUG)
 ROOTGLIBS    := $(shell root-config --glibs)
 QTGSILIBS    := $(QTLIB) $(ROOTGLIBS) '$(ROOTSYS)\lib\libqtgsi.lib'

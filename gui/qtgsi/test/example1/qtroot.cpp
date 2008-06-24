@@ -3,40 +3,64 @@
 *****************************************************************************/
 
 #include "qtroot.h"
+
+#if QT_VERSION >= 0x40000
+//Added by qt3to4:
+#include <QCloseEvent>
+#include "q3toolbar.h"
+#include "q3filedialog.h"
+#include "q3strlist.h"
+#include "q3popupmenu.h"
+#include "q3intdict.h"
+#include "q3action.h"
+#include "q3toolbar.h"
+#include "qnamespace.h"
+#include "q3filedialog.h"
+#include "q3whatsthis.h"
+#include "Q3MimeSourceFactory"
+#else
+#include "qfiledialog.h"
+#include "qstrlist.h"
+#include "qpopupmenu.h"
+#include "qintdict.h"
+#include "qaction.h"
+#include "qtoolbar.h"
+#include "qnamespace.h"
+#include "qfiledialog.h"
+#include "qwhatsthis.h"
+#include "qkeycode.h"
+typedef QToolBar Q3ToolBar;
+typedef QPopupMenu Q3PopupMenu;
+typedef QAction Q3Action;
+typedef QWhatsThis Q3WhatsThis;
+typedef QFileDialog Q3FileDialog;
+typedef QMimeSourceFactory Q3MimeSourceFactory;
+#endif
+
 #include "stdlib.h"
 #include "qevent.h"
 #include "qpainter.h"
 #include "qprinter.h"
-#include "qtoolbar.h"
 #include "qtoolbutton.h"
 #include "qspinbox.h"
 #include "qtooltip.h"
 #include "qrect.h"
 #include "qpoint.h"
 #include "qcolordialog.h"
-#include "qfiledialog.h"
 #include "qcursor.h"
 #include "qimage.h"
-#include "qstrlist.h"
-#include "qpopupmenu.h"
-#include "qintdict.h"
 #include "qpushbutton.h"
-#include "qaction.h"
 #include "Riostream.h"
 using namespace std;
 #include "qdial.h"
 #include "qapplication.h"
 #include "qimage.h"
 #include "qpixmap.h"
-#include "qtoolbar.h"
 #include "qtoolbutton.h"
 #include "qmenubar.h"
-#include "qkeycode.h"
 #include "qfile.h"
-#include "qfiledialog.h"
 #include "qstatusbar.h"
 #include "qmessagebox.h"
-#include "qwhatsthis.h"
 #include "qdialog.h"
 #include "qlabel.h"
 
@@ -46,8 +70,6 @@ using namespace std;
 #include "fileprint.xpm"
 #include "qtbuttonsupdate.xpm"
 #include "qtbuttonsclear.xpm"
-
-
 
 #include "TPad.h"
 #include "TList.h"
@@ -92,67 +114,62 @@ const char* clearHisto = " clear histograms ";
 
 
 ApplicationWindow::ApplicationWindow()
-    : QMainWindow( 0, "example application main window", WDestructiveClose )
+    : Q3MainWindow( 0, "example application main window", Qt::WDestructiveClose )
 {
    // create a printer
    printer = new QPrinter;
    // create user interface actions
-   QAction *fileNewAction, *fileOpenAction, *fileSaveAction,
-           *fileSaveAsAction, *filePrintAction, *fileCloseAction,
-           *fileQuitAction;
 
-   fileNewAction = new QAction( "New", "&New", CTRL+Key_N, this, "new" );
+   Q3Action *fileNewAction = new Q3Action( "New", "&New", Qt::CTRL+Qt::Key_N, this, "new" );
+
    connect( fileNewAction, SIGNAL( activated() ) , this, SLOT( newDoc() ) );
 
-   fileOpenAction = new QAction( "Open File", QPixmap( fileopen ), "&Open", CTRL+Key_O, this, "open" );
+   Q3Action *fileOpenAction = new Q3Action( "Open File", QPixmap( fileopen ), "&Open", Qt::CTRL+Qt::Key_O, this, "open" );
    connect( fileOpenAction, SIGNAL( activated() ) , this, SLOT( load() ) );
-   QMimeSourceFactory::defaultFactory()->setPixmap( "fileopen", QPixmap( fileopen ) );
+   Q3MimeSourceFactory::defaultFactory()->setPixmap( "fileopen", QPixmap( fileopen ) );
    fileOpenAction->setWhatsThis( fileOpenText );
 
-   fileSaveAction = new QAction( "Save File", QPixmap( filesave ), "&Save", CTRL+Key_S, this, "save" );
+   Q3Action *fileSaveAction = new Q3Action( "Save File", QPixmap( filesave ), "&Save", Qt::CTRL+Qt::Key_S, this, "save" );
    connect( fileSaveAction, SIGNAL( activated() ) , this, SLOT( save() ) );
    fileSaveAction->setWhatsThis( fileSaveText );
 
-   fileSaveAsAction = new QAction( "Save File As", "Save &as", 0,  this, "save as" );
+   Q3Action *fileSaveAsAction = new Q3Action( "Save File As", "Save &as", 0,  this, "save as" );
    connect( fileSaveAsAction, SIGNAL( activated() ) , this, SLOT( saveAs() ) );
    fileSaveAsAction->setWhatsThis( fileSaveText );
 
-   filePrintAction = new QAction( "Print File", QPixmap( fileprint ), "&Print", CTRL+Key_P, this, "print" );
+   Q3Action *filePrintAction = new Q3Action( "Print File", QPixmap( fileprint ), "&Print", Qt::CTRL+Qt::Key_P, this, "print" );
    connect( filePrintAction, SIGNAL( activated() ) , this, SLOT( print() ) );
    filePrintAction->setWhatsThis( filePrintText );
 
-   fileCloseAction = new QAction( "Close", "&Close", CTRL+Key_W, this, "close" );
+   Q3Action *fileCloseAction = new Q3Action( "Close", "&Close", Qt::CTRL+Qt::Key_W, this, "close" );
    connect( fileCloseAction, SIGNAL( activated() ) , this, SLOT( close() ) );
 
-   fileQuitAction = new QAction( "Quit", "&Quit", CTRL+Key_Q, this, "quit" );
+   Q3Action *fileQuitAction = new Q3Action( "Quit", "&Quit", Qt::CTRL+Qt::Key_Q, this, "quit" );
    connect( fileQuitAction, SIGNAL( activated() ) , qApp, SLOT( quit() ) );
 
    // create button for histo handling
-   QAction *Update_histo, *clear_histo;
-   Update_histo = new QAction("Update Histo",QPixmap("qtbuttonsupdate.xpm"),"&Update", CTRL+Key_0, this, "update");
+   Q3Action *Update_histo = new Q3Action("Update Histo",QPixmap("qtbuttonsupdate.xpm"),"&Update", Qt::CTRL+Qt::Key_0, this, "update");
    connect( Update_histo, SIGNAL( activated() ) , this, SLOT( execute() ) );
-   QMimeSourceFactory::defaultFactory()->setPixmap( "update", QPixmap("qtbuttonsupdate.xpm" ) );
+   Q3MimeSourceFactory::defaultFactory()->setPixmap( "update", QPixmap("qtbuttonsupdate.xpm" ) );
    Update_histo->setWhatsThis( updateHisto );
 
-   clear_histo = new QAction("Clear Histo",QPixmap("qtbuttonsclear.xpm"),"&Clear", CTRL+Key_0, this, "clear");
-   connect( clear_histo, SIGNAL( activated() ) , this, SLOT( clear_histo() ) );
-   QMimeSourceFactory::defaultFactory()->setPixmap( "clear", QPixmap("qtbuttonsclear.xpm" ) );
+   Q3Action *clear_histo = new Q3Action("Clear Histo",QPixmap("qtbuttonsclear.xpm"),"&Clear", Qt::CTRL+Qt::Key_0, this, "clear");   connect( clear_histo, SIGNAL( activated() ) , this, SLOT( clear_histo() ) );
+   Q3MimeSourceFactory::defaultFactory()->setPixmap( "clear", QPixmap("qtbuttonsclear.xpm" ) );
    clear_histo->setWhatsThis( clearHisto );
 
    // populate a tool bar with some actions
 
-   QToolBar* fileTools = new QToolBar( this, "file operations" );
+   Q3ToolBar* fileTools = new Q3ToolBar( this, "file operations" );
    fileTools->setLabel( tr( "File Operations" ) );
    fileOpenAction->addTo( fileTools );
    fileSaveAction->addTo( fileTools );
    filePrintAction->addTo( fileTools );
    Update_histo->addTo ( fileTools );
    clear_histo->addTo ( fileTools );
-   (void)QWhatsThis::whatsThisButton( fileTools );
-
+   (void)Q3WhatsThis::whatsThisButton( fileTools );
    // popuplate a menu with all actions
 
-   QPopupMenu * file = new QPopupMenu( this );
+   Q3PopupMenu * file = new Q3PopupMenu( this );
    menuBar()->insertItem( "&File", file );
    fileNewAction->addTo( file );
    fileOpenAction->addTo( file );
@@ -166,21 +183,21 @@ ApplicationWindow::ApplicationWindow()
 
    // add a help menu
 
-   QPopupMenu * help = new QPopupMenu( this );
+   Q3PopupMenu * help = new Q3PopupMenu( this );
    menuBar()->insertSeparator();
    menuBar()->insertItem( "&Help", help );
-   help->insertItem( "&About", this, SLOT(about()), Key_F1 );
+   help->insertItem( "&About", this, SLOT(about()), Qt::Key_F1 );
    help->insertItem( "About &Qt", this, SLOT(aboutQt()) );
    help->insertSeparator();
-   help->insertItem( "What's &This", this, SLOT(whatsThis()), SHIFT+Key_F1 );
+   help->insertItem( "What's &This", this, SLOT(whatsThis()), Qt::SHIFT+Qt::Key_F1 );
 
    // create and define the ROOT Canvas central widget
    tab = new QTabWidget(this);
    tab->show();
    setCentralWidget( tab );
 
-   QMainWindow *win1 = new QMainWindow( 0, "tab1 main window", WDestructiveClose );
-   QMainWindow *win2 = new QMainWindow( 0, "tab2 main window", WDestructiveClose );
+   Q3MainWindow *win1 = new Q3MainWindow( 0, "tab1 main window", Qt::WDestructiveClose );
+   Q3MainWindow *win2 = new Q3MainWindow( 0, "tab2 main window", Qt::WDestructiveClose );
    aCanvas = new TQRootCanvas(this, win1,"Qt&Root");
    aCanvas2 = new TQRootCanvas(this, win2,"Qt&Root");
 
@@ -317,7 +334,7 @@ void ApplicationWindow::newDoc()
 
 void ApplicationWindow::load()
 {
-   QString fn = QFileDialog::getOpenFileName(QString::null, QString::null, this);
+   QString fn = Q3FileDialog::getOpenFileName(QString::null, QString::null, this);
    if ( !fn.isEmpty() )
       load( fn );
    else
