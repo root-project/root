@@ -683,7 +683,7 @@ static VALUE drr_as(VALUE self, VALUE klass)
 static VALUE drr_init(int argc, VALUE argv[], VALUE self)
 {
     VALUE inargs;
-    char *classname = rb_obj_classname(self);
+    char *classname = (char*) rb_obj_classname(self);
     char cproto[1024] = "";
     long addr = 0, offset;
 
@@ -724,7 +724,7 @@ static VALUE drr_const_missing(VALUE self, VALUE klass)
     if (NIL_P(self))
         return Qnil;
 
-    char *name = rb_id2name (rb_to_id(klass));
+    char *name = (char*) rb_id2name (rb_to_id(klass));
 
     /* Check if there is a ROOT dict. available.  */
     TClass *c = new TClass(name);
@@ -755,7 +755,7 @@ static VALUE drr_method_missing(int argc, VALUE argv[], VALUE self)
     int nargs;
 
     /* Grab method, class and the instance pointer.  */
-    methname = rb_id2name (rb_to_id(argv[0]));
+    methname = (char*) rb_id2name (rb_to_id(argv[0]));
     classname = STR2CSTR(rb_iv_get (self, "__rr_class__"));
     TObject *caller = drr_grab_object (self);
 
@@ -864,7 +864,7 @@ static VALUE drr_generic_method(int argc, VALUE argv[], VALUE self)
 
     /* Grab class, method name and instance pointer.  */
     rklass = rb_class_of (self);
-    char *methname = rb_id2name (rb_frame_this_func());
+    char *methname = (char*) rb_id2name (rb_frame_this_func());
     TObject *caller = drr_grab_object (self);
 
     rb_scan_args (argc, argv, "0*", &inargs);
