@@ -29,12 +29,16 @@
 #ifndef ROOT_TNamed
 #include "TNamed.h"
 #endif
+#ifndef ROOT_TMap
+#include "TMap.h"
+#endif
 
 
 class TAlienDirectoryEntry : public TNamed {
 
 private:
-   TString fLfn;	// logical file name
+   TString fLfn;             // logical file name
+   TMap    fBrowserObjects;  // objects shown in browser
 
 public:
    TAlienDirectoryEntry(const char *lfn, const char *name) : TNamed(name,name) { fLfn = lfn; }
@@ -49,12 +53,13 @@ public:
 class TAlienDirectory : public TNamed {
 
 private:
-   TList fEntries;   // directory entries
+   TList fEntries;          // directory entries
+   TMap  fBrowserObjects;   // objects shown in browser
 
 public:
    TAlienDirectory(const char *ldn, const char *name=0);
    virtual ~TAlienDirectory();
-
+   void   Fill();
    Bool_t IsFolder() const { return kTRUE; }
    void   Browse(TBrowser *b);
 

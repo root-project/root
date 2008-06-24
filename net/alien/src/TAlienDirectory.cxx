@@ -24,6 +24,7 @@
 #include "TAlienFile.h"
 #include "TSystem.h"
 #include "TFile.h"
+#include "TObjString.h"
 
 
 ClassImp(TAlienDirectoryEntry)
@@ -31,10 +32,17 @@ ClassImp(TAlienDirectoryEntry)
 //______________________________________________________________________________
 void TAlienDirectoryEntry::Browse(TBrowser* b)
 {
-   //browse an Alien directory
+   // Browse an Alien directory.
+
    if (b) {
-      TAlienFile* newfile  = new TAlienFile(fLfn);
-      b->Add(newfile);
+      TString alienname = "alien://";
+      alienname += fLfn;
+      TObject *bobj;
+      if (!(bobj = fBrowserObjects.FindObject(alienname.Data()))) {
+         TFile *newfile = TFile::Open(alienname.Data());
+         b->Add(newfile);
+         fBrowserObjects.Add(new TObjString(alienname.Data()), (TObject*) newfile);
+      }
    }
 }
 
@@ -44,7 +52,8 @@ ClassImp(TAlienDirectory)
 //______________________________________________________________________________
 TAlienDirectory::TAlienDirectory(const char *ldn, const char *name)
 {
-   //constructor
+   // Constructor.
+
    if (!gGrid->Cd(ldn)) {
       MakeZombie();
       return;
@@ -57,8 +66,20 @@ TAlienDirectory::TAlienDirectory(const char *ldn, const char *name)
    }
 
    SetTitle(ldn);
+};
 
-   TGridResult *dirlist = gGrid->Ls(ldn, "-la");
+//______________________________________________________________________________
+void TAlienDirectory::Fill()
+{
+   // Fill directory entry list.
+
+   if (!gGrid->Cd(GetTitle())) {
+      MakeZombie();
+      return;
+   }
+
+   fEntries.Clear();
+   TGridResult *dirlist = gGrid->Ls(GetTitle(), "-la");
    if (dirlist) {
       dirlist->Sort();
       Int_t i = 0;
@@ -89,10 +110,17 @@ void TAlienDirectory::Browse(TBrowser *b)
    // Browser interface to ob status.
 
    if (b) {
+      Fill();
       TIter next(&fEntries);
       TObject *obj = 0;
+      TObject *bobj = 0;
       while ((obj = next())) {
-         b->Add(obj);
+         if (!(bobj = fBrowserObjects.FindObject(obj->GetName()))) {
+            b->Add(obj, obj->GetName());
+            fBrowserObjects.Add(new TObjString(obj->GetName()), (TObject*) obj);
+         } else {
+            b->Add(bobj, bobj->GetName());
+         }
       }
    }
 }
@@ -100,6 +128,7 @@ void TAlienDirectory::Browse(TBrowser *b)
 //______________________________________________________________________________
 TAlienDirectory::~TAlienDirectory()
 {
-   //destructor
+   // Destructor.
+
    fEntries.Clear();
 }
