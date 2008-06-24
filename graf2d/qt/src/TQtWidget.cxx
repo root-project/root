@@ -289,7 +289,10 @@ TApplication *TQtWidget::InitRint( Bool_t /*prompt*/, const char *appClassName, 
 #endif
        if (!guiFactory.BeginsWith("qt",TString::kIgnoreCase )){
          // Check for the extention
-         char *extLib = gSystem->DynamicPathName("libQtGui",kTRUE);
+         char *extLib = 0;
+#if QT_VERSION < 0x40000
+         extLib = gSystem->DynamicPathName("libQtGui",kTRUE);
+#endif         
          if (!extLib) extLib = gSystem->DynamicPathName("libQtRootGui",kTRUE);
          if (extLib) {
             gEnv->SetValue("Gui.Factory", "qtgui");
@@ -379,6 +382,14 @@ void TQtWidget::Refresh()
    }
    update();
 }
+//_____________________________________________________________________________
+void TQtWidget::SetCanvas(TCanvas *c) 
+{ 
+   //  remember my host TCanvas and adopt its name
+   fCanvas = c;
+   setName(fCanvas->GetName());
+}
+
 //_____________________________________________________________________________
 void TQtWidget::resize (int w, int h)
 {
@@ -488,7 +499,7 @@ void TQtWidget::mousePressEvent (QMouseEvent *e)
 
    EEventType rootButton = kNoEvent;
    TCanvas *c = Canvas();
-   if (c || !fWrapper ){
+   if (c && !fWrapper ){
       switch (e->button ())
       {
       case Qt::LeftButton:  rootButton = kButton1Down; break;
@@ -521,7 +532,7 @@ void TQtWidget::mouseMoveEvent (QMouseEvent * e)
    //  kButton1Motion = 21, kButton2Motion = 22, kButton3Motion = 23, kKeyPress = 24
    EEventType rootButton = kMouseMotion;
    TCanvas *c = Canvas();
-   if (c || !fWrapper){
+   if (c && !fWrapper){
       if (e->state() & Qt::LeftButton) { rootButton = kButton1Motion; }
       c->HandleInput(rootButton, e->x(), e->y());
       e->accept();
@@ -551,7 +562,7 @@ void TQtWidget::mouseReleaseEvent(QMouseEvent * e)
    }   
    EEventType rootButton = kNoEvent;
    TCanvas *c = Canvas();
-   if (c || !fWrapper){
+   if (c && !fWrapper){
       switch (e->button())
       {
       case Qt::LeftButton:  rootButton = kButton1Up; break;
@@ -578,7 +589,7 @@ void TQtWidget::mouseDoubleClickEvent(QMouseEvent * e)
    //  kButton1Double = 61, kButton2Double = 62, kButton3Double = 63
    EEventType rootButton = kNoEvent;
    TCanvas *c = Canvas();
-   if (c || !fWrapper){
+   if (c && !fWrapper){
       switch (e->button())
       {
       case Qt::LeftButton:  rootButton = kButton1Double; break;
@@ -601,7 +612,7 @@ void TQtWidget::keyPressEvent(QKeyEvent * e)
    //  Map the Qt key press event to the ROOT TCanvas events
    // kKeyDown  =  4
    TCanvas *c = Canvas();
-   if (c || !fWrapper){
+   if (c && !fWrapper){
       c->HandleInput(kKeyPress, e->ascii(), e->key());
       EmitSignal(kKeyPressEvent);
    } else {
@@ -622,7 +633,7 @@ void TQtWidget::enterEvent(QEvent *e)
    // Map the Qt mouse enters widget event to the ROOT TCanvas events
    // kMouseEnter    = 52
    TCanvas *c = Canvas();
-   if (c || !fWrapper){
+   if (c && !fWrapper){
       c->HandleInput(kMouseEnter, 0, 0);
       EmitSignal(kEnterEvent);
    }
@@ -634,7 +645,7 @@ void TQtWidget::leaveEvent (QEvent *e)
    //  Map the Qt mouse leaves widget event to the ROOT TCanvas events
    // kMouseLeave    = 53
    TCanvas *c = Canvas();
-   if (c || !fWrapper){
+   if (c && !fWrapper){
       c->HandleInput(kMouseLeave, 0, 0);
       EmitSignal(kLeaveEvent);
    }

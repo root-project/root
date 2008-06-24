@@ -8,8 +8,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TQtRConfig
-#define ROOT_TQtRConfig
+#ifndef ROOT_TQTRCONFIG
+#define ROOT_TQTRCONFIG
 #include "RConfig.h"
 #ifndef __CINT__
 #  include "qglobal.h"
@@ -32,11 +32,15 @@
 #undef  R__QTGUITHREAD
 #endif /*R__QTGUITHREAD*/
 
-#if defined(R__UNIX) && !defined(R__MACOSX)
+#ifdef Q_WS_X11
 # define R__QTX11
 #endif
 
-#if defined(R__WIN32)
+#if !defined(R__QTX11) && defined(R__UNIX) && !defined(R__MACOSX)
+# define R__QTX11
+#endif
+
+#if !defined(R__QTX11) &&  defined(R__WIN32)
 # define R__QTWIN32
 #endif
 

@@ -138,7 +138,7 @@ static uchar *patter_bits[]= { p1_bits, p2_bits,   p3_bits,  p4_bits,  p5_bits,
 ClassImp(TQtBrush)
 //______________________________________________________________________________
 TQtBrush::TQtBrush(): QBrush(),fStyle(0),fFasi(0)
-#ifdef R__WIN32
+#if defined(R__WIN32) &&  (QT_VERSION < 0x40000)
    , fCustomPixmap(16,16)
 #endif
 {}
@@ -172,7 +172,7 @@ void TQtBrush::SetStyle(int style, int fasi)
         int pattern = 1;
         if (fasi > 0 && fasi < 26 ) pattern = fasi-1;
         QBitmap bm(16,16,patter_bits[pattern],TRUE);
-#ifndef R__WIN32
+#if !defined(R__WIN32) ||  (QT_VERSION >= 0x40000)
         setPixmap(bm);
 #else
         fCustomPixmap.fill(Qt::color0);

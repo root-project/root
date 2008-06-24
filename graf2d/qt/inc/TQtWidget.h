@@ -109,7 +109,7 @@ public:
   TQtWidget( QWidget* parent=0);
 #endif  
   virtual ~TQtWidget();
-  void SetCanvas(TCanvas *c)                 { fCanvas = c;}
+  void SetCanvas(TCanvas *c);
 //  inline TCanvas  *GetCanvas() const         { return fCanvas;}
   inline TCanvas  *GetCanvas() const         { return (!fIsShadow) ? fCanvas : ((TQtWidget *)parentWidget())->GetCanvas(); }
   inline QPixmap  &GetBuffer()               { return fPixmapID;}

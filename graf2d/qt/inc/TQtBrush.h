@@ -33,8 +33,8 @@ protected:
   QColor fBackground;
   int fStyle;
   int fFasi;
-#ifdef R__WIN32
-  QPixmap fCustomPixmap; // shadow transparent pixmap fro WIN32
+#if defined(R__WIN32) &&  (QT_VERSION < 0x40000)
+  QPixmap fCustomPixmap; // shadow transparent pixmap for WIN32
 #endif
 public:
    TQtBrush();

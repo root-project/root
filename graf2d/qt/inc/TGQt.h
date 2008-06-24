@@ -60,7 +60,7 @@
 
 class  QPen;
 class  QMarker;
-class  QFont;
+//class  QFont;
 class  QPaintDevice;
 class  QTextCodec;
 
@@ -77,6 +77,7 @@ class TFileHandler;
 class TQtApplication;
 class TQtClientFilter;
 class TQtEventQueue;
+class TQtPadFont;
 
 
 //#define TRACE_TGQt() fprintf(stdout, "TGQt::%s() %d\n", __FUNCTION__, __LINE__)
@@ -128,7 +129,7 @@ protected:
    TQtBrush  *fQBrush;
    QPen      *fQPen;
    TQtMarker *fQtMarker;
-   QFont     *fQFont;
+   TQtPadFont *fQFont;
 #if (QT_VERSION <0x40000)
    Qt::RasterOp fDrawMode;
 #else
@@ -162,7 +163,7 @@ protected:
 
    //Qt::AlignmentFlags fTextAlign;
 
-   void  SetTextFont(const char *fontname, Int_t italic, Int_t bold);
+   // void  SetTextFont(const char *fontname, Int_t italic, Int_t bold);
    Int_t CreatROOTThread();
    void  DeleteSelectedObj();
 

@@ -1,0 +1,50 @@
+// @(#)root/qt:$Name:  $:$Id$
+// Author: Valeri Fine   21/01/2002
+/****************************************************************************
+**
+** Copyright (C) 2002 by Valeri Fine.  All rights reserved.
+**
+** This file may be distributed under the terms of the Q Public License
+** as defined by Trolltech AS of Norway and appearing in the file
+** LICENSE.QPL included in the packaging of this file.
+*****************************************************************************/
+
+#ifndef ROOT_TQtPadFont
+#define ROOT_TQtPadFont
+
+#include "TAttText.h"
+
+#ifndef __CINT__
+#  include <qfont.h>
+#else
+   class  QFont;
+#endif
+   //
+   // TQtPadFont creates the QFort object to map to ROOT  TAttText attributes
+   //
+class TQtPadFont : public QFont, public TAttText
+{
+private:
+   static const char *fgRomanFontName;
+   static const char *fgArialFontName;
+   static const char *fgCourierFontName;
+   static const char *fgSymbolFontFamily;
+
+public:
+   TQtPadFont();
+   TQtPadFont(const TQtPadFont &src):QFont(src),TAttText(src) {}
+   virtual ~TQtPadFont(){;}
+   void  SetTextFont(const char *fontname, int italic, int bold);
+   void  SetTextFont(Font_t fontnumber=62);
+   void  SetTextSize(Float_t textsize=1);
+   void  SetTextSizePixels(Int_t npixels);
+   void  SetTextMaginfy(Float_t mgn);
+   static const char *RomanFontName();
+   static const char *ArialFontName();
+   static const char *CourierFontName();
+   static const char *SymbolFontFamily();
+   static void SetSymbolFontFamily(const char *symbolFnName="Symbol");
+
+};
+
+#endif

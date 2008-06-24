@@ -76,6 +76,7 @@
 #include "TQtEventQueue.h"
 #include "TQtSymbolCodec.h"
 #include "TQtLock.h"
+#include "TQtPadFont.h"
 #include "TStyle.h"
 #include "TObjString.h"
 #include "TObjArray.h"
@@ -419,73 +420,6 @@ void TGQt::PrintEvent(Event_t &ev)
    fprintf(stderr,"----- Window %p %s\n", TGQt::wid(ev.fWindow),(const char *)TGQt::wid(ev.fWindow)->name());
    fprintf(stderr,"event type =  %x, key or button code %d \n", ev.fType, ev.fCode);
    fprintf(stderr,"fX, fY, fXRoot, fYRoot = %d %d  :: %d %d\n", ev.fX, ev.fY,ev.fXRoot, ev.fYRoot);
-}
-
-//______________________________________________________________________________
-static float CalibrateFont()
-{
-    // Use the ROOT font with ID=1 to calibrate the current font on fly;
-    // Environment variable ROOTFONTFACTOR allows to set the factor manually
-    static float fontCalibFactor = -1;
-    if (fontCalibFactor  < 0 ) {
-
-       const char * envFactor = gSystem->Getenv("ROOTFONTFACTOR");
-       bool ok=false;
-       if (envFactor && envFactor[0])
-          fontCalibFactor= QString(envFactor).toFloat(&ok);
-       if (!ok) {
-
-          bool  italic = TRUE;
-          long  bold   = 5;
-          QString fontName =
-#if QT_VERSION < 0x40000
-            romanFontName;
-#else
-            "Nimbus Roman No9 L";
-#endif
-
-          QFont pattern;
-
-          pattern.setWeight(bold*10);
-          pattern.setItalic(italic);
-          pattern.setFamily(fontName);
-          pattern.setPixelSize(12);
-
-          int w,h;
-          QFontMetrics metrics(pattern);
-          w = metrics.width("This is a PX distribution");
-          h = metrics.height();
-
-// I found 0.94 matches well what Rene thinks it should be
-// for TTF and XFT and it should be 1.1 for X Fonts
-//
-//  X11 returns         h = 12
-//  XFT returns         h = 14
-// WIN32 TTF returns    h = 16
-// Nimbus Roman returns h = 18
-
-         // printf(" Font metric w = %d , h = %d\n", w,h);
-          float f;
-          switch (h) {
-             case 12: f = 1.10;  break;// it was  f = 1.13 :-(;
-             case 14: f = 0.915; break;// it was f = 0.94  :-(;
-             case 16: f = 0.94;  break;// to be tested yet
-             case 18: f = 0.92;  break;// to be tested yet
-             default: f = 1.10;  break;
-          }
-          fontCalibFactor = f;
-       }
-    }
-    return fontCalibFactor;
-}
-
-//______________________________________________________________________________
-static inline float FontMagicFactor(float size)
-{
-   // Adjust the font size to match that for Postscipt format
-   static float calibration =0;
-   if (calibration == 0) calibration = CalibrateFont();
-   return TMath::Max(calibration*size,Float_t(1.0));
 }
 
 int TGQt::fgCoinFlag = 0; // no current coin viewer;
@@ -878,7 +812,7 @@ Bool_t TGQt::Init(void* /*display*/)
    fQPen     = new QPen;
    fQBrush   = new TQtBrush;
    fQtMarker = new TQtMarker;
-   fQFont    = new QFont();
+   fQFont    = new TQtPadFont();
    // ((TGQt *)TGQt::GetVirtualX())->SetQClientFilter(
    fQClientFilter = new TQtClientFilter();
 
@@ -890,7 +824,8 @@ Bool_t TGQt::Init(void* /*display*/)
    //  define the font code page
    QString fontName(default_font);
    fFontTextCode = fontName.section('-',13).upper();
-   if  ( fFontTextCode.isEmpty() ) fFontTextCode = "ISO8859-1";
+   if  ( fFontTextCode.isEmpty() ) fFontTextCode = "ISO8859-5";
+#ifndef R__QTWIN32
    // Check whether "Symbol" font is available
     QFontDatabase fdb;
     QStringList families = fdb.families();
@@ -908,10 +843,11 @@ Bool_t TGQt::Init(void* /*display*/)
         {
            symbolFontFound = kTRUE;
            fSymbolFontFamily = *f;
+           TQtPadFont::SetSymbolFontFamily(*f);
 #if QT_VERSION < 0x40000
 //              fprintf(stderr, "Symbol font family found %s\n", fSymbolFontFamily);
 #else
-//              qDebug() << "Symbol font family found:" << fSymbolFontFamily;
+              qDebug() << "Symbol font family found:" << fSymbolFontFamily;
 #endif
            break;
         }
@@ -945,6 +881,7 @@ Bool_t TGQt::Init(void* /*display*/)
         // create a custom codec
         new QSymbolCodec();
     }
+#endif
    //  printf(" TGQt::Init finsihed\n");
    // Install filter for the desktop
    // QApplication::desktop()->installEventFilter(QClientFilter());
@@ -1367,7 +1304,7 @@ void  TGQt::DrawBox(int x1, int y1, int x2, int y2, EBoxMode mode)
       } else {
          if (fQBrush->style() != Qt::SolidPattern)
             fQPainter->setPen(fQBrush->GetColor());
-#ifdef R__WIN32
+#if defined(R__WIN32) &&  (QT_VERSION < 0x40000)
          if ( 3000 <= fQBrush->GetStyle() && fQBrush->GetStyle() < 4000) {
             QPixmap &px = *fQBrush->pixmap();
             px.fill(fQBrush->GetColor());
@@ -1464,7 +1401,7 @@ void  TGQt::DrawFillArea(int n, TPoint *xy)
       TPoint *rootPoint = xy;
       for (int i =0;i<n;i++,rootPoint++)
          qtPoints.setPoint(i,rootPoint->fX,rootPoint->fY);
-#ifdef R__WIN32
+#if defined(R__WIN32) &&  (QT_VERSION < 0x40000)
       if ( 3000 <= fQBrush->GetStyle() && fQBrush->GetStyle() < 4000) {
             QPixmap &px = *fQBrush->pixmap();
             px.fill(fQBrush->GetColor());
@@ -1637,8 +1574,7 @@ void  TGQt::DrawText(int x, int y, float angle, float mgn, const char *text, TVi
    // fprintf(stderr,"TGQt::DrawText: %s\n", text);
    if (text && text[0]) {
       TQtLock lock;
-      Int_t tsize = (Int_t)(fTextSize+0.5);
-      if (TMath::Abs(mgn-1) >0.05)  fQFont->setPixelSizeFloat(mgn*FontMagicFactor(tsize));
+      fQFont->SetTextMaginfy(mgn);
       UpdateFont();
       fQPainter->save();
       fQPainter->setPen(ColorIndex(fTextColor));
@@ -2743,7 +2679,7 @@ Int_t  TGQt::SetTextFont(char* /*fontname*/, TVirtualX::ETextSetMode /*mode*/)
    // Qt takes care to make sure the proper font is loaded and scaled.
    return 0;
 }
-
+#if 0
 //______________________________________________________________________________
 void  TGQt::SetTextFont(const char *fontname, int italic, int bold)
 {
@@ -2755,30 +2691,11 @@ void  TGQt::SetTextFont(const char *fontname, int italic, int bold)
    //*-*
    //*-*    Set text font to specified name. This function returns 0 if
    //*-*    the specified font is found, 1 if not.
-
-   fQFont->setWeight((long) bold*10);
-   fQFont->setItalic((Bool_t)italic);
-   fQFont->setFamily(fontname);
-#if QT_VERSION >= 0x40000
-   if (!strcmp(fontname,romanFontName)) {
-      fQFont->setStyleHint(QFont::Serif);
-   } else if (!strcmp(fontname,arialFontName)) {
-      fQFont->setStyleHint(QFont::SansSerif);
-   } else if (!strcmp(fontname,courierFontName)){
-      fQFont->setStyleHint(QFont::TypeWriter);
-   }
-   fQFont->setStyleStrategy(QFont::PreferDevice);
-#if 0
-   qDebug() << "TGQt::SetTextFont:" << fontname
-         << fQFont->lastResortFamily ()
-         << fQFont->lastResortFont ()
-         << fQFont->substitute (fontname);
-#endif
-#endif
-   fTextFontModified = 1;
+    fQFont->SetTextFont(fontname, italic, bold);
+    fTextFontModified = 1;
    // fprintf(stderr, "TGQt::SetTextFont font: <%s> bold=%d italic=%d\n",fontname,bold,italic);
 }
-
+#endif
 //______________________________________________________________________________
 void  TGQt::SetTextFont(Font_t fontnumber)
 {
@@ -2808,89 +2725,8 @@ void  TGQt::SetTextFont(Font_t fontnumber)
       fTextFontModified = 1;
       return;
    }
-   int italic, bold;
-   const char *fontName = romanFontName;
-
-   switch(fontnumber/10) {
-
-   case  1:
-      italic = 1;
-      bold   = 5;
-      fontName = romanFontName;
-      break;
-   case  2:
-      italic = 0;
-      bold   = 8;
-      fontName = romanFontName;
-      break;
-   case  3:
-      italic = 1;
-      bold   = 8;
-      fontName = romanFontName;
-      break;
-   case  4:
-      italic = 0;
-      bold   = 5;
-      fontName = arialFontName;
-      break;
-   case  5:
-      italic = 1;
-      bold   = 5;
-      fontName = arialFontName;
-      break;
-   case  6:
-      italic = 0;
-      bold   = 8;
-      fontName = arialFontName;
-      break;
-   case  7:
-      italic = 1;
-      bold   = 8;
-      fontName = arialFontName;
-      break;
-   case  8:
-      italic = 0;
-      bold   = 5;
-      fontName = courierFontName;
-      break;
-   case  9:
-      italic = 1;
-      bold   = 5;
-      fontName = courierFontName;
-      break;
-   case 10:
-      italic = 0;
-      bold   = 8;
-      fontName = courierFontName;
-      break;
-   case 11:
-      italic = 1;
-      bold   = 8;
-      fontName = courierFontName;
-      break;
-   case 12:
-      italic = 0;
-      bold   = 5;
-      fontName = fSymbolFontFamily;
-      break;
-   case 13:
-      italic = 0;
-      bold   = 5;
-      fontName = romanFontName;
-      break;
-   case 14:
-      italic = 0;
-      bold   = 5;
-      fontName = "Wingdings";
-      break;
-   default:
-      italic = 0;
-      bold   = 5;
-      fontName = romanFontName;
-      break;
-
-   }
-   SetTextFont(fontName, italic, bold);
+   fQFont->SetTextFont(fontnumber);
+   fTextFontModified = 1;
 }
 
 //______________________________________________________________________________
@@ -2901,8 +2737,7 @@ void  TGQt::SetTextSize(Float_t textsize)
    if ( fTextSize != textsize ) {
       fTextSize = textsize;
       if (fTextSize > 0) {
-         Int_t   tsize =(Int_t)( textsize+0.5);
-         fQFont->setPixelSize(int(FontMagicFactor(tsize)));
+         fQFont->SetTextSize(textsize);
          fTextFontModified = 1;
       }
    }
