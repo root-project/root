@@ -193,6 +193,7 @@ TChain::~TChain()
 Int_t TChain::Add(TChain* chain)
 {
    // -- Add all files referenced by the passed chain to this chain.
+   // The function returns the total number of files connected.
 
    // Check for enough space in fTreeOffset.
    if ((fNtrees + chain->GetNtrees()) >= fTreeOffsetLen) {
@@ -276,6 +277,8 @@ Int_t TChain::Add(const char* name, Long64_t nentries /* = kBigNumber */)
    //            TFile f(chEl->GetTitle());
    //            ... do something with f ...
    //         }
+   //
+   // The function returns the total number of files connected.
 
    // case with one single file
    if (!TString(name).MaybeWildcard()) {
@@ -381,6 +384,8 @@ Int_t TChain::AddFile(const char* name, Long64_t nentries /* = kBigNumber */, co
    //         TFile f(chEl->GetTitle());
    //         ... do something with f ...
    //      }
+   //
+   // The function returns 1 if the file is successfully connected, 0 otherwise.
    
 
    const char *treename = GetName();
@@ -483,7 +488,7 @@ Int_t TChain::AddFileInfoList(TCollection* filelist, Long64_t nfiles /* = kBigNu
 {
    // Add all files referenced in the list to the chain. The object type in the
    // list must be either TFileInfo or TObjString or TUrl .
-
+   // The function return 1 if successful, 0 otherwise.
    if (!filelist)
       return 0;
    TIter next(filelist);
