@@ -1,4 +1,4 @@
-<!------<html> <head><title>ROOT Math Release Notes</title></head><body>!---->
+<!---- <html> <head><title>ROOT Math Release Notes</title></head><body> ---->
 
 <br>
 <hr>
@@ -80,7 +80,7 @@ New template methods have been also included in the common Integration class in 
 </li>
 <li><tt>ROOT::Math::RichardsonDerivator</tt> implementing numerical derivation using the Richardson's extrapolation formula (use 2 derivative estimates to compute a third, more accurate estimation). This is used by the <tt>TD1::Derivative</tt> method. </li>
 <li><tt>BrentRootFinder</tt> for finding the root of one-dimensional function using the Brent algorithm. The class inherits from a virtual interface, which is also implemented by the MathMore root finder methods. The user can instantiate, via the common  <tt>ROOT::Math::RootFinder</tt> class, all the various root finder algorithms.  The <tt>BrentRootFinder</tt> class is used by <tt>TF1::GetX</tt> . </li>
-<li>A similar class, <tt>BrentMinimizer1D</tt>, provides the possibility to find the minimum of one-dimensional functions using  the Brent algorithm. This class is used by <tt>TF1::GetMinimum</tt> or <tt>TF1::GetMaximum</tt> </li>
+<li>A similar class, <tt>BrentMinimizer1D</tt>, provides the possibility to find the minimum of one-dimensional functions using  the Brent algorithm. This class is used by <tt>TF1::GetMinimum</tt> or <tt>TF1::GetMaximum</tt>
 Use ROOT convention for all enumeration names defining the type of numerical algorithms (start with k, like kADAPTIVE for the integration type). This affects both MathCore and MathMore.
  </li>
 
@@ -189,4 +189,4 @@ A new version, 1.2.4, has been added to fix mainly some problems found in gcc 4.
 <hr>
 
 <!-- hhmts start --> Last modified: Mon Jun 23 17:27:20 CEST 2008 <!-- hhmts end -->
-<!--- </body> </html> -->
+<!-- </body> </html> -->
