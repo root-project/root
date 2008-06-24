@@ -16,6 +16,22 @@ This new structure also facilitates the maintaining of the release notes
 and other documentation items per meta package.
 </li>
 <li>
+On Linux, MacOS X and Windows, there is no need anymore to define the
+environment variable ROOTSYS. Internally ROOTSYS is set depending on the
+location of the ROOT libraries. ROOTSYS was never needed when ROOT was
+configured using --prefix.
+</li>
+<li>
+On MacOS X when configure'ing with --enable-rpath (and not specifying
+--prefix) the installation does not need (DY)LD_LIBRARY_PATH to be set
+anymore. The installation is completely relocatable. The (DY)LD_LIBRARY_PATH
+is determined relative to the location of the root executable.
+</li>
+<li>
+On Windows .root files are now associated with the most recently executed
+ROOT installation, i.e. run ROOT once and .root files open with ROOT.
+</li>
+<li>
 Class TMessageHandler derives now from TQObject and does emit signals.
 This allows for easier usage of this class.
 </li>
@@ -34,7 +50,7 @@ except for people who do directly use svn. You will get the message:
 </pre>
 </li>
 <li>
-Port to gcc 4.3.0 This version of gcc is much stricker with respect to
+Port to gcc 4.3.1. This version of gcc is much stricker with respect to
 implicit header files so in many source files &lt;stdlib.h&gt; and &lt;string.h&gt;
 had to be added.
 </li>
