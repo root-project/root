@@ -99,9 +99,10 @@ void         *XrdProofConn::fgSecGetProtocol = 0;  // Sec protocol getter
 //_____________________________________________________________________________
 XrdProofConn::XrdProofConn(const char *url, char m, int psid, char capver,
                            XrdClientAbsUnsolMsgHandler *uh, const char *logbuf)
-   : fMode(m), fConnected(0), fSessionID(psid), fLastErr(kXR_Unsupported),
-     fCapVer(capver), fLoginBuffer(logbuf), fMutex(0), fPhyConn(0),
-     fUnsolMsgHandler(uh)
+   : fMode(m), fConnected(0), fLogConnID(-1), fStreamid(0), fRemoteProtocol(-1),
+     fServerProto(-1), fServerType(kSTNone), fSessionID(psid),
+     fLastErr(kXR_Unsupported), fCapVer(capver), fLoginBuffer(logbuf), fMutex(0),
+     fPhyConn(0), fUnsolMsgHandler(uh)
 {
    // Constructor. Open the connection to a remote XrdProofd instance.
    // The mode 'm' indicates the role of this connection:

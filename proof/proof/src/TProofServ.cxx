@@ -3639,7 +3639,11 @@ void TProofServ::HandleProcess(TMessage *mess)
                   fQueries->Add(pqr);
                // Remove from the fQueries list
                fQueries->Remove(pq);
-               SafeDelete(pq);
+               // These removes 'pq' from the internal player list and
+               // deletes it; in this way we do not attempt a double delete
+               // when destroying the player
+               fPlayer->RemoveQueryResult(Form("%s:%s",
+                                          pq->GetTitle(), pq->GetName()));
             }
          }
 

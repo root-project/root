@@ -103,7 +103,7 @@ protected:
    TSocket() : fAddress(), fBytesRecv(0), fBytesSent(0), fCompress(0),
       fLocalAddress(), fRemoteProtocol(), fSecContext(0), fService(),
      fServType(kSOCKD), fSocket(-1), fTcpWindowSize(0), fUrl(),
-     fBitsInfo () { }
+     fBitsInfo(), fUUIDs(0) { }
 
    Bool_t       Authenticate(const char *user);
    void         SetDescriptor(Int_t desc) { fSocket = desc; }
