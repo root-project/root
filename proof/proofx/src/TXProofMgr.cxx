@@ -108,6 +108,14 @@ TXProofMgr::~TXProofMgr()
 {
    // Destructor: close the connection
 
+   SetInvalid();
+}
+
+//______________________________________________________________________________
+void TXProofMgr::SetInvalid()
+{
+   // Invalidate this manager by closing the connection
+
    if (fSocket)
       fSocket->Close("P");
    SafeDelete(fSocket);

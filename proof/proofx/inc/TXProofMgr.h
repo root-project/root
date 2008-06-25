@@ -57,6 +57,7 @@ public:
    Bool_t      HandleError(const void *in = 0);
 
    Bool_t      IsValid() const { return fSocket; }
+   void        SetInvalid();
 
    TProof     *AttachSession(Int_t id, Bool_t gui = kFALSE);
    void        DetachSession(Int_t, Option_t * = "");

@@ -555,6 +555,9 @@ Bool_t TXSlave::HandleError(const void *)
          if (mgr)
             mgr->ShutdownSession(fProof);
          Close("P");
+         // The physical connection is closed: set the manager invalid
+         if (mgr)
+            mgr->SetInvalid();
          SafeDelete(fSocket);
          fValid = kFALSE;
       }

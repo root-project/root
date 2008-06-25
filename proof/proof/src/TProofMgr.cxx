@@ -404,14 +404,12 @@ TProofMgr *TProofMgr::Create(const char *uin, Int_t loglevel,
    if (lm) {
       TIter nxm(lm);
       while ((m = (TProofMgr *)nxm())) {
-         if (m->MatchUrl(url)) {
-            if (m->IsValid()) {
-               return m;
-            } else {
-               fgListOfManagers.Remove(m);
-               SafeDelete(m);
-               break;
-            }
+         if (m->IsValid()) {
+            if (m->MatchUrl(url)) return m;
+         } else {
+            fgListOfManagers.Remove(m);
+            SafeDelete(m);
+            break;
          }
       }
    }
