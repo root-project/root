@@ -5195,26 +5195,22 @@ char *XrdProofdProtocol::ReadBufferLocal(const char *file,
    }
    off_t ltot = st.st_size;
 
-   // Open the file in read mode
-   FILE *fp = fopen(file, "r");
+   XrdOucString cmd("grep ");
+   if (pat && strlen(pat) > 0) {
+      if (opt == 2) cmd += " -v ";
+      cmd += pat;
+      cmd += " ";
+   } else {
+      cmd = "cat ";
+   }
+   cmd += file;
+   TRACEI(ACT, "ReadBufferLocal: cmd: "<<cmd);
+
+   // Execute the command in a pipe
+   FILE *fp = popen(cmd.c_str(), "r");
    if (!fp) {
       emsg = "ReadBufferLocal: could not open ";
       emsg += file;
-      TRACEI(XERR, emsg);
-      return (char *)0;
-   }
-
-   // Check pattern
-   bool keepall = (pat && strlen(pat) > 0) ? 0 : 1; 
-
-   // Fill option
-   bool keep = 1;
-   if (opt == 2) {
-      // '-v' functionality
-      keep = 0;
-   } else if (opt != 1 ) {
-      emsg = "ReadBufferLocal: unknown option: ";
-      emsg += opt;
       TRACEI(XERR, emsg);
       return (char *)0;
    }
@@ -5225,14 +5221,9 @@ char *XrdProofdProtocol::ReadBufferLocal(const char *file,
    char line[2048];
    int bufsiz = 0, left = 0, lines = 0;
    while ((ltot > 0) && fgets(line, sizeof(line), fp)) {
+      // Parse the line
       int llen = strlen(line);
       ltot -= llen;
-      // Filter out
-      bool haspattern = (strstr(line, pat)) ? 1 : 0;
-      if (!keepall && ((keep && !haspattern) || (!keep && haspattern)))
-         // Skip
-         continue;
-      // Good line
       lines++;
       // (Re-)allocate the buffer
       if (!buf || (llen > left)) {
@@ -5246,7 +5237,7 @@ char *XrdProofdProtocol::ReadBufferLocal(const char *file,
          emsg = "ReadBufferLocal: could not allocate enough memory on the heap: errno: ";
          emsg += (int)errno;
          XPDERR(emsg);
-         fclose(fp);
+         pclose(fp);
          return (char *)0;
       }
       // Add line to the buffer
@@ -5267,9 +5258,8 @@ char *XrdProofdProtocol::ReadBufferLocal(const char *file,
       }
    }
 
-   // Close file
-   fclose(fp);
-
+   // Close the pipe
+   pclose(fp);
    // Done
    return buf;
 }
