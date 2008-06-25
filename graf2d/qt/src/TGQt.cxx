@@ -102,16 +102,16 @@ TGQt *gQt=0;
 TVirtualX *TGQt::fgTQt = 0; // to remember the pointer foolishing ROOT PluginManager later.
 #if 1
 // #if QT_VERSION < 0x40000
-   static const char *romanFontName   = "Times New Roman";
-   static const char *arialFontName   = "Arial";
-   static const char *courierFontName = "Courier New";
+   //static const char *romanFontName   = "Times New Roman";
+   //static const char *arialFontName   = "Arial";
+   //static const char *courierFontName = "Courier New";
 //   static const char *symbolFontName  = "Symbol"; // "Symbol";
 //   static const char *symbolFontName  = "Standard Symbols L"; // "Symbol";
 #else
-   static const char *romanFontName   = "Nimbus Roman No9 L";
-   static const char *arialFontName   = "Nimbus Sans L";
-   static const char *courierFontName = "Nimbus Mono L ";
-   static const char *symbolFontName  = "Standard Symbols L";
+   //static const char *romanFontName   = "Nimbus Roman No9 L";
+   //static const char *arialFontName   = "Nimbus Sans L";
+   //static const char *courierFontName = "Nimbus Mono L ";
+   //static const char *symbolFontName  = "Standard Symbols L";
 #endif
 
 // static const int kDefault=2;
