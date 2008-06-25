@@ -55,7 +55,10 @@ TProofProgressLog::TProofProgressLog(TProofProgressDialog *d, Int_t w, Int_t h) 
    TGLabel *label1 = new TGLabel(vworkers,"Choose workers:");
 
    //The list of workers
-   fLogList = BuildLogList(vworkers);
+   if (!(fLogList = BuildLogList(vworkers))) {
+      SetBit(TObject::kInvalidObject);
+      return;
+   }
    fLogList->Resize(102,52);
    fLogList->SetMultipleSelections(kTRUE); 
 
@@ -118,7 +121,7 @@ TProofProgressLog::TProofProgressLog(TProofProgressDialog *d, Int_t w, Int_t h) 
    vlines_buttons->AddFrame(label11, new TGLayoutHints(kLHintsCenterY | kLHintsLeft, 2, 2, 2, 2));
 
    fLinesFrom = new TGNumberEntry(vlines_buttons, 0, 5, -1, TGNumberFormat::kNESInteger);
-   fLinesFrom->SetIntNumber(-10);
+   fLinesFrom->SetIntNumber(-100);
    fLinesFrom->GetNumberEntry()->SetToolTipText("Negative values indicate \"tail\" action");
 
 
@@ -169,7 +172,10 @@ TProofProgressLog::TProofProgressLog(TProofProgressDialog *d, Int_t w, Int_t h) 
 //____________________________________________________________________________
 TProofProgressLog::~TProofProgressLog()
 {
-   // Delete log window.
+   // Destructor
+
+   // Cleanup the log object
+   SafeDelete(fProofLog);
 
    // Detach from owner dialog
    fDialog->fLogWindow = 0;
@@ -238,10 +244,26 @@ TGListBox* TProofProgressLog::BuildLogList(TGFrame *parent)
    // Build the list of workers. For this, extract the logs and take the names
    // of TProofLogElements
 
-   TGListBox *c = new TGListBox(parent);
-   // c->AddEntry("all", 0);
+   TGListBox *c = 0;
    char buf[150];
-   fProofLog = TProof::Mgr(fDialog->fSessionUrl.Data())->GetSessionLogs();
+   if (!fDialog) {
+      Warning("BuildLogList", "dialog instance undefined - do nothing");
+      return c;
+   }
+   TProofMgr *mgr = TProof::Mgr(fDialog->fSessionUrl.Data());
+   if (!mgr || !mgr->IsValid()) {
+      Warning("BuildLogList", "unable open a manager connection to %s",
+                              fDialog->fSessionUrl.Data());
+      return c;
+   }
+   if (!(fProofLog = mgr->GetSessionLogs())) {
+      Warning("BuildLogList", "unable to get logs from %s",
+                              fDialog->fSessionUrl.Data());
+      return c;
+   }
+   // Create the list-box now
+   c = new TGListBox(parent);
+
    TList *elem = fProofLog->GetListOfLogs();
    TIter next(elem);
    TProofLogElem *pe = 0;
@@ -273,37 +295,50 @@ void TProofProgressLog::DoLog(Bool_t grep)
       from = fLinesFrom->GetIntNumber();
       to = fLinesTo->GetIntNumber();
    }
+
+   TProofMgr *mgr = 0;
    if (!grep) {
       if (!fProofLog || !fFullText || fDialog->fStatus==TProofProgressDialog::kRunning){
-         fProofLog = TProof::Mgr(fDialog->fSessionUrl.Data())->GetSessionLogs();
-         fFullText = kTRUE;
+         SafeDelete(fProofLog);
+         if ((mgr = TProof::Mgr(fDialog->fSessionUrl.Data()))) {
+            fProofLog = mgr->GetSessionLogs();
+         } else {
+            Warning("DoLog", "unable to instantiate a TProofMgr for %s",
+                             fDialog->fSessionUrl.Data());
+         }
+         if (!fDialog->fStatus==TProofProgressDialog::kRunning)
+            fFullText = kTRUE;
       }
    } else {
-      fProofLog = TProof::Mgr(fDialog->fSessionUrl.Data())->GetSessionLogs(0, 0, greptext.Data());
+      SafeDelete(fProofLog);
+      if ((mgr = TProof::Mgr(fDialog->fSessionUrl.Data()))) {
+         fProofLog = mgr->GetSessionLogs(0, 0, greptext.Data());
+      } else {
+         Warning("DoLog", "unable to instantiate a TProofMgr for %s",
+                          fDialog->fSessionUrl.Data());
+      }
       fFullText = kFALSE;
    }
-   TList *selected = new TList;
-   fLogList->GetSelectedEntries(selected);
-   TIter next(selected);
-   TString ord;
-   TGTextLBEntry *selentry;
-   Bool_t logonly = fProofLog->LogToBox();
-   fProofLog->SetLogToBox(kTRUE);
+   if (fProofLog) {
+      TList *selected = new TList;
+      fLogList->GetSelectedEntries(selected);
+      TIter next(selected);
+      TGTextLBEntry *selentry;
+      Bool_t logonly = fProofLog->LogToBox();
+      fProofLog->SetLogToBox(kTRUE);
 
-   fProofLog->Connect("Prt(const char*)", "TProofProgressLog",
-                         this, "LogMessage(const char*, Bool_t)");
-   while ((selentry=(TGTextLBEntry*)next())){
-      const char *name = selentry->GetText()->GetString();
-      Int_t i=0;
-      while (name[i]!=' ') i++;
-      ord.Append(name, i);
-      fProofLog->Display(ord.Data(), from, to);
-      ord="";
+      fProofLog->Connect("Prt(const char*)", "TProofProgressLog",
+                           this, "LogMessage(const char*, Bool_t)");
+      while ((selentry=(TGTextLBEntry*)next())){
+         TString ord = selentry->GetText()->GetString();
+         Int_t is = ord.Index(" ");
+         if (is != kNPOS) ord.Remove(is);
+         fProofLog->Display(ord.Data(), from, to);
+      }
+      fProofLog->SetLogToBox(logonly);
+      fProofLog->Disconnect("Prt(const char*)", this, "LogMessage(const char*, Bool_t)");
+      delete selected;
    }
-   fProofLog->SetLogToBox(logonly);
-   fProofLog->Disconnect("Prt(const char*)", this, "LogMessage(const char*, Bool_t)");
-   delete selected;
-
 }
 
 //______________________________________________________________________________

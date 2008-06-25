@@ -760,11 +760,14 @@ void TProofProgressDialog::DoLog()
    if (fProof) {
       if (!fLogWindow) {
          fLogWindow = new TProofProgressLog(this);
-         fLogWindow->DoLog();
+         if (!fLogWindow->TestBit(TObject::kInvalidObject))
+            fLogWindow->DoLog();
       } else {
          // Clear window
-         fLogWindow->Clear();
-         fLogWindow->DoLog();
+         if (!fLogWindow->TestBit(TObject::kInvalidObject)) {
+            fLogWindow->Clear();
+            fLogWindow->DoLog();
+         }
       }
    }
 }
