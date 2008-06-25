@@ -8,9 +8,9 @@
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
-//         $Id: XrdPollE.icc,v 1.3 2008/06/18 06:38:45 abh Exp $
+//         $Id: XrdPollE.icc,v 1.3.2.1 2008/06/25 09:34:30 ganis Exp $
 
-const char *XrdPollECVSID = "cvsid: $Id: XrdPollE.icc,v 1.3 2008/06/18 06:38:45 abh Exp $";
+const char *XrdPollECVSID = "cvsid: $Id: XrdPollE.icc,v 1.3.2.1 2008/06/25 09:34:30 ganis Exp $";
 
 #ifndef __macos__
 #include <malloc.h>
@@ -111,7 +111,6 @@ void XrdPollE::Disable(XrdLink *lp, const char *etxt)
 // Simply return if the link is already disabled
 //
    if (!lp->isEnabled) return;
-   lp->isEnabled = 0;
 
 // If Linux 2.6.9 we use EPOLLONESHOT to automatically disable a polled fd.
 // So, the Disable() method need not do anything. Prior kernels did not have
@@ -129,6 +128,7 @@ void XrdPollE::Disable(XrdLink *lp, const char *etxt)
 
 // Trace this event
 //
+   lp->isEnabled = 0;
    TRACEI(POLL, "Poller " <<PID <<" async disabling link " <<lp->FD);
 
 // Check if this link needs to be rescheduled (This really doesn't work!)
@@ -158,14 +158,17 @@ int XrdPollE::Enable(XrdLink *lp)
 // Enable this fd. Unlike solaris, epoll_ctl() does not block when the pollfd
 // is being waited upon by another thread.
 //
+   lp->isEnabled = 1;
    if (epoll_ctl(PollDfd, EPOLL_CTL_MOD, lp->FDnum(), &myEvents))
-      {XrdLog.Emsg("Poll", errno, "enable link", lp->ID); return 0;}
+      {XrdLog.Emsg("Poll", errno, "enable link", lp->ID); 
+       lp->isEnabled = 0;
+       return 0;
+      }
 
 // Do final processing
 //
    TRACE(POLL, "Poller " <<PID <<" enabled " <<lp->ID);
    numEnabled++;
-   lp->isEnabled = 1;
    return 1;
 }
 
@@ -209,7 +212,7 @@ int XrdPollE::Include(XrdLink *lp)
   
 void XrdPollE::remFD(XrdLink *lp, unsigned int events)
 {
-   struct epoll_event myEvents = {0, {(void *)lp}};
+   struct epoll_event myEvents = {0, (void *)lp};
    static const char *why;
 
 // It works out that ONESHOT mode or even CTL_MOD requests do not necessarily
