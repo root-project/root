@@ -25,85 +25,13 @@
 #include <string>
 #include <vector>
 
+namespace std {}
 using namespace std;
 using namespace Cint::Internal;
 
-// File static functions.
 static Cint::G__DataMemberInfo GetDataMemberFromAll(G__ClassInfo& cl, const char* varname);
 static int IsInt(G__DataMemberInfo& member);
 static Cint::G__DataMemberInfo GetDataMemberFromAllParents(G__ClassInfo& cl, const char* varname);
-
-//______________________________________________________________________________
-//
-//  Static functions.
-//
-
-//______________________________________________________________________________
-static Cint::G__DataMemberInfo GetDataMemberFromAll(G__ClassInfo& cl, const char* varname)
-{
-   // Find the data member whose name exactly match varname
-   // If this is 'augmented' to be able to interpret specified variable name
-   // (for example *fN)
-   // the function IsInt need to be changed to take that in consideration.
-   G__DataMemberInfo member(cl);
-   while (member.Next()) {
-      if (!strcmp(varname, member.Name())) {
-         return member;
-      }
-   }
-   // after the last Next member is now invalid.
-   return member;
-}
-
-//______________________________________________________________________________
-static int IsInt(G__DataMemberInfo& member)
-{
-   int type = member.Type()->Type();
-   if (member.Property() & G__BIT_ISARRAY) {
-      return 0;
-   }
-   switch (type) {
-      // -- A lower case indicated that it is NOT a pointer to that type.
-      case 'b': // unsigned char
-      case 'c': // char
-      case 'r': // unsigned short
-      case 's': // short
-      case 'h': // unsigned int
-      case 'i': // int
-      case 'k': // unsigned long
-      case 'l': // long
-         return 1;
-         break;
-   }
-   return 0;
-}
-
-//______________________________________________________________________________
-static Cint::G__DataMemberInfo GetDataMemberFromAllParents(G__ClassInfo& cl, const char* varname)
-{
-   //
-   // Recurse through all the bases classes to find a
-   // data member.
-   //
-   G__DataMemberInfo index;
-   G__BaseClassInfo b(cl);
-   while (b.Next()) {
-      index = GetDataMemberFromAll(b, varname);
-      if (index.IsValid()) {
-         return index;
-      }
-      index = GetDataMemberFromAllParents(b, varname);
-      if (index.IsValid()) {
-         return index;
-      }
-   }
-   return G__DataMemberInfo();
-}
-
-//______________________________________________________________________________
-//
-//  Class Member Functions.
-//
 
 //______________________________________________________________________________
 Cint::G__DataMemberInfo::~G__DataMemberInfo()
@@ -113,122 +41,54 @@ Cint::G__DataMemberInfo::~G__DataMemberInfo()
 }
 
 //______________________________________________________________________________
-Cint::G__DataMemberInfo::G__DataMemberInfo()
-: m_memberiter(-1)
-, m_typeinfo(0) // we own, cache object
-, m_memberof(0) // we own, cache object
-{
-}
-
-//______________________________________________________________________________
-Cint::G__DataMemberInfo::G__DataMemberInfo(class G__ClassInfo& class_info)
-: m_memberiter(-1)
-, m_typeinfo(0) // we own, cache object
-, m_memberof(0) // we own, cache object
-{
-   Init(class_info);
-}
-
-//______________________________________________________________________________
-Cint::G__DataMemberInfo::G__DataMemberInfo(const ::Reflex::Member mbr)
-: m_scope(mbr.DeclaringScope())
-, m_datambr(mbr)
-, m_memberiter(-1)
-, m_typeinfo(0) // we own, cache object
-, m_memberof(0) // we own, cache object
-{
-}
-
-//______________________________________________________________________________
-Cint::G__DataMemberInfo::G__DataMemberInfo(const G__DataMemberInfo& rhs)
-: m_scope(rhs.m_scope)
-, m_datambr(rhs.m_datambr)
-, m_memberiter(rhs.m_memberiter)
-, m_typeinfo(0) // we own, cache object
-, m_memberof(0) // we own, cache object
-{
-}
-
-//______________________________________________________________________________
-G__DataMemberInfo& Cint::G__DataMemberInfo::operator=(const G__DataMemberInfo& rhs)
-{
-   if (this != &rhs) {
-      m_scope = rhs.m_scope;
-      m_datambr = rhs.m_datambr;
-      m_memberiter = rhs.m_memberiter;
-      delete m_typeinfo; // we own, cache object
-      m_typeinfo = 0; // we own, cache object
-      delete m_memberof; // we own, cache object
-      m_memberof =  0; // we own, cache object
-   }
-   return *this;
-}
-
-//______________________________________________________________________________
 void Cint::G__DataMemberInfo::Init()
 {
-   m_scope = ::Reflex::Scope();
    m_datambr = ::Reflex::Member();
+   m_scope = ::Reflex::Scope();
    m_memberiter = -1;
-   delete m_typeinfo;
-   m_typeinfo = 0; // we own, cache object
-   delete m_memberof;
-   m_memberof = 0; // we own, cache object
 }
 
 //______________________________________________________________________________
 void Cint::G__DataMemberInfo::Init(class G__ClassInfo& a)
 {
+   m_name = "";
    if (a.IsValid()) {
       m_scope = a.ReflexType();
       m_datambr = ::Reflex::Member();
       m_memberiter = -1;
-      delete m_typeinfo; // we own, cache object
-      m_typeinfo = 0; // we own, cache object
-      delete m_memberof; // we own, cache object
-      m_memberof = 0; // we own, cache object
-      G__incsetup_memvar((int) a.Tagnum());
+      G__incsetup_memvar((int)a.Tagnum());
    }
    else {
       m_scope = ::Reflex::Scope();
       m_datambr = ::Reflex::Member();
       m_memberiter = -1;
-      delete m_typeinfo; // we own, cache object
-      m_typeinfo = 0; // we own, cache object
-      delete m_memberof; // we own, cache object
-      m_memberof = 0; // we own, cache object
    }
 }
 
 //______________________________________________________________________________
-void Cint::G__DataMemberInfo::Init(const ::Reflex::Scope a)
+void Cint::G__DataMemberInfo::Init(const ::Reflex::Scope &a)
 {
-   m_memberiter = -1;
-   delete m_typeinfo; // we own, cache object
-   m_typeinfo = 0; // we own, cache object
-   delete m_memberof; // we own, cache object
-   m_memberof = 0; // we own, cache object
-   if (!a) {
-      m_scope = ::Reflex::Scope();
-      m_datambr = ::Reflex::Member();
-   }
-   else {
+   m_name = "";
+   if (a) {
       m_scope = a;
       m_datambr = ::Reflex::Member();
+      m_memberiter = -1;
       G__incsetup_memvar(G__get_tagnum(a));
+   }
+   else {
+      m_scope = ::Reflex::Scope();
+      m_datambr = ::Reflex::Member();
+      m_memberiter = -1;
    }
 }
 
 //______________________________________________________________________________
 void Cint::G__DataMemberInfo::Init(long handlein, long indexin, G__ClassInfo* belongingclassin)
 {
+   m_name = "";
    if (handlein) {
-      m_memberiter = -1;
-      delete m_typeinfo; // we own, cache object
-      m_typeinfo = 0; // we own, cache object
       m_datambr = G__Dict::GetDict().GetDataMember(handlein);
-      delete m_memberof; // we own, cache object
-      m_memberof = 0; // we own, cache object
+      m_memberiter = -1;
       if (belongingclassin && belongingclassin->IsValid()) {
          m_scope = belongingclassin->ReflexType();
       }
@@ -237,32 +97,21 @@ void Cint::G__DataMemberInfo::Init(long handlein, long indexin, G__ClassInfo* be
       }
    }
    else {
-      m_memberiter = -1;
-      delete m_typeinfo; // we own, cache object
-      m_typeinfo = 0; // we own, cache object
       m_datambr = ::Reflex::Member();
+      m_memberiter = -1;
    }
-}
-
-//______________________________________________________________________________
-size_t Cint::G__DataMemberInfo::Handle()
-{
-   return (size_t) m_datambr.Id();
-}
-
-//______________________________________________________________________________
-int Cint::G__DataMemberInfo::Index()
-{
-   return 0;
 }
 
 //______________________________________________________________________________
 const char* Cint::G__DataMemberInfo::Name()
 {
-   if (!IsValid()) {
-      return 0;
+   if (IsValid()) {
+      if (m_name.length()==0) {
+         m_name = m_datambr.Name();
+      }
+      return m_name.c_str();
    }
-   return m_datambr.Name().c_str();
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -278,158 +127,93 @@ const char* Cint::G__DataMemberInfo::Title()
 }
 
 //______________________________________________________________________________
-::Reflex::Type Cint::G__DataMemberInfo::ReflexType()
-{
-   // Return the data member type as a Reflex Type object.
-   return m_datambr.TypeOf();
-}
-
-//______________________________________________________________________________
-G__TypeInfo* Cint::G__DataMemberInfo::Type()
-{
-   // Return the data member type as a Cint TypeInfo object.
-   // Note this is slow use ReflexType instead.
-   if (m_typeinfo) {
-      return m_typeinfo;
-   }
-   m_typeinfo = new G__TypeInfo(m_datambr.TypeOf());
-   return m_typeinfo;
-}
-
-//______________________________________________________________________________
 long Cint::G__DataMemberInfo::Property()
 {
-   if (!IsValid()) {
-      return 0;
-   }
-   long property = 0;
-   switch (G__get_access(m_datambr)) {
-      case G__PUBLIC:
-         property |= G__BIT_ISPUBLIC;
-         break;
-      case G__PROTECTED:
-         property |= G__BIT_ISPROTECTED;
-         break;
-      case G__PRIVATE:
-         property |= G__BIT_ISPRIVATE;
-         break;
-   }
-   if (G__test_static(m_datambr, G__LOCALSTATIC)) {
-      property |= G__BIT_ISSTATIC;
-   }
-   if (m_datambr.TypeOf().FinalType().IsReference()) {
-      property |= G__BIT_ISREFERENCE;
-   }
-   if (isupper(G__get_type(m_datambr.TypeOf()))) {
-      property |= G__BIT_ISPOINTER;
-   }
-   if (G__test_const(m_datambr, G__CONSTVAR)) {
-      property |= G__BIT_ISCONSTANT;
-   }
-   if (G__test_const(m_datambr, G__PCONSTVAR)) {
-      property |= G__BIT_ISPCONSTANT;
-   }
-   if (G__get_paran(m_datambr)) {
-      property |= G__BIT_ISARRAY;
-   }
-   if (m_datambr.TypeOf().IsTypedef()) {
-      property |= G__BIT_ISTYPEDEF;
-   }
-   if (m_datambr.TypeOf().RawType().IsFundamental()) {
-      property |= G__BIT_ISFUNDAMENTAL;
-   }
-   else {
-      std::string cname(m_datambr.TypeOf().RawType().Name());
-      if ((cname == "G__longlong") || (cname == "G__ulonglong") || (cname == "G__longdouble")) {
-         property |= G__BIT_ISFUNDAMENTAL;
-         cname = m_datambr.TypeOf().FinalType().Name(Reflex::FINAL);
-         if (
-            (property & G__BIT_ISTYPEDEF) &&
-            ((cname == "long long") || (cname == "unsigned long long") || (cname == "long double"))
-         ) {
-            property &= (~G__BIT_ISTYPEDEF);
-         }
+   if (IsValid()) {
+      long property = 0;
+      switch (G__get_access(m_datambr)) {
+         case G__PUBLIC: property |= G__BIT_ISPUBLIC; break;
+         case G__PROTECTED: property |= G__BIT_ISPROTECTED; break;
+         case G__PRIVATE: property |= G__BIT_ISPRIVATE; break;
       }
+      if (G__test_static(m_datambr, G__LOCALSTATIC)) property |= G__BIT_ISSTATIC;
+      if (m_datambr.TypeOf().FinalType().IsReference()) property |= G__BIT_ISREFERENCE;
+      if (isupper(G__get_type(m_datambr.TypeOf()))) property |= G__BIT_ISPOINTER;
+      if (G__test_const(m_datambr, G__CONSTVAR)) property |= G__BIT_ISCONSTANT;
+      if (G__test_const(m_datambr, G__PCONSTVAR)) property |= G__BIT_ISPCONSTANT;
+      if (G__get_paran(m_datambr)) property |= G__BIT_ISARRAY;
+      if (m_datambr.TypeOf().IsTypedef()) property |= G__BIT_ISTYPEDEF;
+      if (m_datambr.TypeOf().RawType().IsFundamental()) property |= G__BIT_ISFUNDAMENTAL;
       else {
-         switch (G__get_tagtype(m_datambr.TypeOf().RawType())) {
-            case 'c':
-               property |= G__BIT_ISCLASS;
-               break;
-            case 'e':
-               property |= G__BIT_ISENUM;
-               break;
-            case 'n':
-               property |= G__BIT_ISNAMESPACE;
-               break;
-            case 's':
-               property |= G__BIT_ISSTRUCT;
-               break;
-            case 'u':
-               property |= G__BIT_ISUNION;
-               break;
+         std::string cname(m_datambr.TypeOf().RawType().Name());
+         if ((cname == "G__longlong") || (cname == "G__ulonglong") || (cname == "G__longdouble")) {
+            property |= G__BIT_ISFUNDAMENTAL;
+            cname = m_datambr.TypeOf().FinalType().Name(Reflex::FINAL);
+            if (
+               (property & G__BIT_ISTYPEDEF) &&
+               ((cname == "long long") || (cname == "unsigned long long") || (cname == "long double"))
+            ) {
+               property &= (~G__BIT_ISTYPEDEF);
+            }
+         }
+         else {
+            switch (G__get_tagtype(m_datambr.TypeOf().RawType())) {
+               case 'c': property |= G__BIT_ISCLASS; break;
+               case 's': property |= G__BIT_ISSTRUCT; break;
+               case 'u': property |= G__BIT_ISUNION; break;
+               case 'e': property |= G__BIT_ISENUM; break;
+               case 'n': property |= G__BIT_ISNAMESPACE; break;
+               default:  break;
+            }
          }
       }
+      return property;
    }
-   return property;
+   return 0;
 }
 
 //______________________________________________________________________________
 long Cint::G__DataMemberInfo::Offset()
 {
-   if (!IsValid()) {
-      return -1;
+   if (IsValid()) {
+      return (long) G__get_properties(m_datambr)->addressOffset;
    }
-   return (long) G__get_properties(m_datambr)->addressOffset;
+   return -1;
 }
 
 //______________________________________________________________________________
 int Cint::G__DataMemberInfo::Bitfield()
 {
-   if (!IsValid()) {
-      return -1;
+   if (IsValid()) {
+      return G__get_bitfield_width(m_datambr);
    }
-   return G__get_bitfield_width(m_datambr);
+   return -1;
 }
 
 //______________________________________________________________________________
 int Cint::G__DataMemberInfo::ArrayDim()
 {
-   if (!IsValid()) {
-      return -1;
+   if (IsValid()) {
+      return G__get_paran(m_datambr);
    }
-   return G__get_paran(m_datambr);
+   return -1;
 }
 
 //______________________________________________________________________________
 int Cint::G__DataMemberInfo::MaxIndex(int dim)
 {
-   if (!IsValid() || (dim < 0) || (dim >= G__get_paran(m_datambr))) {
-      return -1;
+   if (IsValid() && (dim > -1) && (dim < G__get_paran(m_datambr))) {
+      if (dim) {
+         // -- Stored directly for second and greater dimensions.
+         return G__get_varlabel(m_datambr, dim + 1);
+      }
+      else {
+         // -- For first dimension divide number of elements by stride.
+         // Note: This may be zero, if this is not an array!
+         return G__get_varlabel(m_datambr, 1) /* num of elements */ / G__get_varlabel(m_datambr, 0) /* stride */;
+      }
    }
-   if (dim) {
-      // -- Stored directly for second and greater dimensions.
-      return G__get_varlabel(m_datambr, dim + 1);
-   }
-   // -- For first dimension divide number of elements by stride.
-   // Note: This may be zero, if this is not an array!
-   return G__get_varlabel(m_datambr, 1) /* num of elements */ / G__get_varlabel(m_datambr, 0) /* stride */;
-}
-
-//______________________________________________________________________________
-::Reflex::Scope Cint::G__DataMemberInfo::DeclaringScope()
-{
-   // Return the scope to which the member belongs.
-   return m_scope;
-}
-
-//______________________________________________________________________________
-G__ClassInfo* Cint::G__DataMemberInfo::MemberOf()
-{
-   // Return the scope to which the member belongs as a legacy Cint object.
-   // Note: this is slow use DeclaringScope instead.
-   delete m_memberof;
-   m_memberof = new G__ClassInfo(m_scope.Name(::Reflex::SCOPED).c_str());
-   return m_memberof;
+   return -1;
 }
 
 //______________________________________________________________________________
@@ -437,6 +221,9 @@ void Cint::G__DataMemberInfo::SetGlobalcomp(int globalcomp)
 {
    if (IsValid()) {
       G__get_properties(m_datambr)->globalcomp = globalcomp;
+      //NOTE: Why do the following (and how in Reflex?)
+      //if (G__NOLINK==globalcomp) var->access[index]=G__PRIVATE;
+      //else                      var->access[index]=G__PUBLIC;
    }
 }
 
@@ -454,10 +241,6 @@ int Cint::G__DataMemberInfo::SetFilePos(const char* fname)
    if (!dict) {
       return 0;
    }
-   delete m_typeinfo;
-   m_typeinfo = 0;
-   delete m_memberof;
-   m_memberof = 0;
    m_scope = dict->var;
    m_memberiter = dict->ig15 - 1;
    m_datambr = m_scope.DataMemberAt(m_memberiter);
@@ -467,43 +250,118 @@ int Cint::G__DataMemberInfo::SetFilePos(const char* fname)
 //______________________________________________________________________________
 int Cint::G__DataMemberInfo::Next()
 {
-   if (!m_scope) {
-      return 0;
+   if (m_scope) {
+      m_name = "";
+      ++m_memberiter;
+      if (m_memberiter < (int)m_scope.DataMemberSize()) {
+         m_datambr = m_scope.DataMemberAt(m_memberiter);
+      } else {
+         m_datambr = ::Reflex::Member();
+         m_memberiter = -1;
+      }
+      return (bool) m_datambr;
    }
-   ++m_memberiter;
-   delete m_typeinfo;
-   m_typeinfo = 0;
-   if (m_memberiter < (int) m_scope.DataMemberSize()) {
-      m_datambr = m_scope.DataMemberAt(m_memberiter);
-   } else {
-      m_memberiter = -1;
-      m_datambr = ::Reflex::Member();
-   }
-   return (bool) m_datambr;
+   return 0;
 }
 
 //______________________________________________________________________________
 int Cint::G__DataMemberInfo::Prev()
 {
-   if (!m_scope) {
-      return 0;
+   // FIXME: This is not thread safe!
+   static std::vector<void*> prevbuf;
+   static int prevbufindex;
+   struct G__var_array* var = 0;
+   if (m_scope) {
+      m_name = "";
+      if (m_memberiter == -1) {
+         m_memberiter = m_scope.DataMemberSize();
+      }
+      --m_memberiter;
+      if (m_memberiter > -1) {
+         m_datambr = m_scope.DataMemberAt(m_memberiter);
+         return 1;
+      } else {
+         m_datambr = ::Reflex::Member();
+         return 0;
+      }
    }
-   delete m_typeinfo;
-   m_typeinfo = 0;
-   if (m_memberiter == -1) {
-      m_memberiter = m_scope.DataMemberSize();
-   }
-   --m_memberiter;
-   if (m_memberiter < 0) {
-      m_datambr = ::Reflex::Member();
-      return 0;
-   }
-   m_datambr = m_scope.DataMemberAt(m_memberiter);
-   return 1;
+   return 0;
 }
 
 //______________________________________________________________________________
-const char* Cint::G__DataMemberInfo::ValidArrayIndex(int* errnum /*= 0*/, char** errstr /*= 0*/)
+const char* Cint::G__DataMemberInfo::FileName()
+{
+#ifdef G__VARIABLEFPOS
+   if (IsValid()) {
+      if (G__get_properties(m_datambr)->filenum >= 0) {
+         return G__srcfile[G__get_properties(m_datambr)->filenum].filename;
+      }
+      else {
+         return "(compiled)";
+      }
+   }
+   return 0;
+#else
+   G__fprinterr("Warning: Cint::G__DataMemberInfo::Filename() not supported in this configuration. define G__VARIABLEFPOS macro in platform dependency file and recompile cint");
+   G__printlinenum();
+   return 0;
+#endif
+}
+
+//______________________________________________________________________________
+int Cint::G__DataMemberInfo::LineNumber()
+{
+#ifdef G__VARIABLEFPOS
+   if (IsValid()&& (G__get_properties(m_datambr)->filenum >= 0)) {
+      return G__get_properties(m_datambr)->linenum;
+   }
+   return -1;
+#else
+   G__fprinterr("Warning: Cint::G__DataMemberInfo::LineNumber() not supported in this configuration. define G__VARIABLEFPOS macro in platform dependency file and recompile cint");
+   G__printlinenum();
+   return -1;
+#endif
+}
+
+//______________________________________________________________________________
+::Reflex::Type Cint::G__DataMemberInfo::ReflexType()
+{
+   // Return the data member type as a Reflex Type object.
+
+   return m_datambr.TypeOf();
+}
+
+//______________________________________________________________________________
+G__TypeInfo *Cint::G__DataMemberInfo::Type()
+{
+   // Return the data member type as a Cint TypeInfo object.
+   // Note this is slow use ReflexType instead.
+
+   delete m_typeinfo;
+   m_typeinfo = new G__TypeInfo( m_datambr.TypeOf() );
+   return m_typeinfo;
+}
+
+//______________________________________________________________________________
+::Reflex::Scope Cint::G__DataMemberInfo::DeclaringScope()
+{
+   // Return the scope to which the member belongs.
+   return m_scope;
+}
+
+//______________________________________________________________________________
+G__ClassInfo *Cint::G__DataMemberInfo::MemberOf()
+{
+   // Return the scope to which the member belongs as a legacy Cint object.
+   // Note: this is slow use DeclaringScope instead.
+   
+   delete m_memberof;
+   m_memberof = new G__ClassInfo( m_scope.Name( ::Reflex::SCOPED ).c_str() );
+   return m_memberof;
+}
+
+//______________________________________________________________________________
+const char* Cint::G__DataMemberInfo::ValidArrayIndex(int* errnum, char** errstr)
 {
    // ValidArrayIndex return a static string (so use it or copy it immediatly, do not
    // call GrabIndex twice in the same expression) containing the size of the
@@ -673,42 +531,69 @@ const char* Cint::G__DataMemberInfo::ValidArrayIndex(int* errnum /*= 0*/, char**
 }
 
 //______________________________________________________________________________
-const char* Cint::G__DataMemberInfo::FileName()
+//
+// File static functions.
+//______________________________________________________________________________
+
+//______________________________________________________________________________
+static Cint::G__DataMemberInfo GetDataMemberFromAll(G__ClassInfo& cl, const char* varname)
 {
-   // --
-#ifdef G__VARIABLEFPOS
-   if (!IsValid()) {
-      return 0;
+   // Find the data member whose name exactly match varname
+   // If this is 'augmented' to be able to interpret specified variable name
+   // (for example *fN)
+   // the function IsInt need to be changed to take that in consideration.
+   G__DataMemberInfo member(cl);
+   while (member.Next()) {
+      if (!strcmp(varname, member.Name())) {
+         return member;
+      }
    }
-   if (G__get_properties(m_datambr)->filenum >= 0) {
-      return G__srcfile[G__get_properties(m_datambr)->filenum].filename;
-   }
-   return "(compiled)";
-#else // G__VARIABLEFPOS
-   G__fprinterr("Warning: Cint::G__DataMemberInfo::Filename() not supported in this configuration. define G__VARIABLEFPOS macro in platform dependency file and recompile cint");
-   G__printlinenum();
-   return 0;
-#endif // G__VARIABLEFPOS
-   // --
+   // after the last Next member is now invalid.
+   return member;
 }
 
 //______________________________________________________________________________
-int Cint::G__DataMemberInfo::LineNumber()
+static int IsInt(G__DataMemberInfo& member)
 {
-   // --
-#ifdef G__VARIABLEFPOS
-   if (!IsValid()) {
-      return -1;
+   int type = member.Type()->Type();
+   if (member.Property() & G__BIT_ISARRAY) {
+      return 0;
    }
-   if (G__get_properties(m_datambr)->filenum >= 0) { // interpreted code
-      return G__get_properties(m_datambr)->linenum;
+   switch (type) {
+      // -- A lower case indicated that it is NOT a pointer to that type.
+      case 'b': // unsigned char
+      case 'c': // char
+      case 'r': // unsigned short
+      case 's': // short
+      case 'h': // unsigned int
+      case 'i': // int
+      case 'k': // unsigned long
+      case 'l': // long
+         return 1;
+         break;
    }
-   return -1; // compiled code
-#else // G__VARIABLEFPOS
-   G__fprinterr("Warning: Cint::G__DataMemberInfo::LineNumber() not supported in this configuration. define G__VARIABLEFPOS macro in platform dependency file and recompile cint");
-   G__printlinenum();
-   return -1;
-#endif // G__VARIABLEFPOS
-   // --
+   return 0;
+}
+
+//______________________________________________________________________________
+static Cint::G__DataMemberInfo GetDataMemberFromAllParents(G__ClassInfo& cl, const char* varname)
+{
+   //
+   // Recurse through all the bases classes to find a
+   // data member.
+   //
+   G__DataMemberInfo index;
+   G__BaseClassInfo b(cl);
+   while (b.Next()) {
+      index = GetDataMemberFromAll(b, varname);
+      if (index.IsValid()) {
+         return index;
+      }
+      index = GetDataMemberFromAllParents(b, varname);
+      if (index.IsValid()) {
+         return index;
+      }
+   }
+   return G__DataMemberInfo();
 }
 
