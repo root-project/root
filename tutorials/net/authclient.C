@@ -5,17 +5,21 @@
 // This macro should be run together with authserv.C to test
 // authentication between two remote ROOT sessions. 
 // Run first the authserv.C within a ROOT session on the server
-// machine, eg. "srv.machi.ne"; authserv accepts as argument
-// the port wher it starts listening (default 3000).
+// machine, eg. "srv.machi.ne":
+//
+//          root[] .x authserv.C(3000)
+//
+// authserv accepts as argument the port wher it starts listening
+// (default 3000).
 // You can then run authclient.c in a ROOT session on the client
 // machine:
-//          root[] .x tutorials.C("srv.machi.ne:3000")
+//          root[] .x authclient.C("srv.machi.ne:3000")
 //
 // and you should get prompted for the credentials, if the case.
 // To start a parallel socket of size, for example, 5, enter the
 // size as second argument, ie
 //
-//          root[] .x tutorials.C("srv.machi.ne:3000",5)
+//          root[] .x authclient.C("srv.machi.ne:3000",5)
 //
 
 int authclient(const char *host = "up://localhost:3000", int sz = 0)
