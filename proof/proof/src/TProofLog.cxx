@@ -454,8 +454,13 @@ void TProofLogElem::Display(Int_t from, Int_t to)
    // Write lines
    for ( ; i < ie; i++) {
       TObjString *os = (TObjString *) fMacro->GetListOfLines()->At(i);
-      if (os)
-         Prt(Form("%s\n", os->GetName()));
+      if (os) {
+         if (os->GetString().EndsWith("\n")) {
+            Prt(Form("%s", os->GetName()));
+         } else {
+            Prt(Form("%s\n", os->GetName()));
+         }
+      }
    }
    // Write tail
    Prt(Form("// --------- End of element log -------------------\n\n"));
