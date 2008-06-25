@@ -7067,16 +7067,14 @@ void Cint::Internal::G__returnvartype(G__value* presult, const ::Reflex::Member&
          isbase = 0;
          basen = 0;
       }
-      // Search for variable name and access rule match. 
-      static const Reflex::Type ZType = Reflex::Type::ByName("codeBreak$");
+      // Search for variable name and access rule match.
       do {
          next_base:
          ::Reflex::Member var = varscope.DataMemberByName(varname);
          if (
-             var && 
-             var.TypeOf() != ZType && // This is to exclude the 'Z' type coming from a SpecialObject lookup
-             G__test_static(var, 0, G__ifile.filenum) &&
-             G__test_access(var, accesslimit)
+            var &&
+            G__test_static(var, 0, G__ifile.filenum) &&
+            G__test_access(var, accesslimit)
           ) {
             return var;
          }
@@ -7360,14 +7358,10 @@ void Cint::Internal::G__get_stack_varname(std::string& output, const char* varna
             }
             //--
 */
-            static const Reflex::Type ZType = ::Reflex::PointerBuilder(Reflex::Type::ByName("codeBreak$"));
             if (*iter && !strcmp(iter->Name().c_str(), varname.c_str())) {
                if (
-                  iter->TypeOf() != ZType && // This is to exclude the 'Z' type coming from a SpecialObject lookup
-                  (
-                   (G__get_properties(*iter)->statictype < 0) || // Not file scope, or
-                    G__filescopeaccess(G__ifile.filenum, G__get_properties(*iter)->filenum) // File scope access match.
-                  )
+                  (G__get_properties(*iter)->statictype < 0) || // Not file scope, or
+                  G__filescopeaccess(G__ifile.filenum, G__get_properties(*iter)->filenum) // File scope access match.
                ) {
                   if (G__test_access(*iter, accesslimit)) { // Access limit match.
                      if (pig15) {
