@@ -1496,6 +1496,14 @@ int Cint::Internal::G__varmonitor(FILE* fout, const ::Reflex::Scope scope, const
       fprintf(fout, "No variable table\n");
       return 0;
    }
+   //fprintf(stderr, "G__varmonitor: scope: '::%s'\n", scope.Name(::Reflex::SCOPED).c_str());
+   //{
+   //   int len = scope.DataMemberSize();
+   //   for (int i = 0; i < len; ++i) {
+   //      ::Reflex::Member mbr = scope.DataMemberAt(i);
+   //      fprintf(stderr, "G__varmonitor: scope: '::%s' i: %03d member: '::%s'\n", scope.Name(::Reflex::SCOPED).c_str(), i, mbr.Name(::Reflex::SCOPED).c_str());
+   //   }
+   //}
    unsigned int start_index = 0;
    unsigned int stop_index = 0;
    if (!mbrname[0]) {
@@ -1640,8 +1648,8 @@ int Cint::Internal::G__varmonitor(FILE* fout, const ::Reflex::Scope scope, const
       //
       {
          ::Reflex::Type ty = mbr.TypeOf();
-         //sprintf(msg, "%s", G__type2string(G__get_type(ty), G__get_tagnum(ty), G__get_typenum(ty), G__get_reftype(ty), G__get_isconst(ty)));
-         sprintf(msg, "%s::%s", ty.DeclaringScope().Name(::Reflex::SCOPED).c_str(), ty.Name(::Reflex::SCOPED).c_str());
+         sprintf(msg, "%s", G__type2string(G__get_type(ty), G__get_tagnum(ty), G__get_typenum(ty), G__get_reftype(ty), G__get_isconst(ty)));
+         //sprintf(msg, "%s::%s", ty.DeclaringScope().Name(::Reflex::SCOPED).c_str(), ty.Name(::Reflex::SCOPED).c_str());
       }
       if (G__more(fout, msg)) {
          return 1;
@@ -1653,7 +1661,8 @@ int Cint::Internal::G__varmonitor(FILE* fout, const ::Reflex::Scope scope, const
       //
       //  Print member name.
       //
-      sprintf(msg, "%s", mbr.Name(::Reflex::SCOPED).c_str());
+      sprintf(msg, "%s", mbr.Name().c_str());
+      //sprintf(msg, "%s", mbr.Name(::Reflex::SCOPED).c_str());
       if (G__more(fout, msg)) {
          return 1;
       }
@@ -1927,7 +1936,9 @@ int Cint::Internal::G__varmonitor(FILE* fout, const ::Reflex::Scope scope, const
             //
             //  Print size of member's class.
             //
-            sprintf(msg, " , size=%ld", mbr.TypeOf().RawType().SizeOf());
+            ::Reflex::Type mbr_class = mbr.TypeOf().RawType();
+            sprintf(msg, " , size=%ld", mbr_class.SizeOf());
+            //sprintf(msg, " , size=%ld  ::%s", mbr_class.SizeOf(), mbr_class.Name(::Reflex::SCOPED).c_str());
             if (G__more(fout, msg)) {
                return 1;
             }
@@ -1949,11 +1960,11 @@ int Cint::Internal::G__varmonitor(FILE* fout, const ::Reflex::Scope scope, const
                return 1;
             }
             // Make sure the dictionary info for the member's class data members is loaded.
-            G__incsetup_memvar(G__get_tagnum(mbr.TypeOf().RawType()));
+            G__incsetup_memvar(G__get_tagnum(mbr_class));
             //
             //  Print out the data members of the member's class.
             //
-            if (G__varmonitor(fout, mbr.TypeOf().RawType(), "", space, offset)) {
+            if (G__varmonitor(fout, mbr_class, "", space, offset)) {
                return 1;
             }
          }
