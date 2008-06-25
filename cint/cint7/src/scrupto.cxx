@@ -810,11 +810,39 @@ int Cint::Internal::G__destroy_upto(::Reflex::Scope& scope, int global, int inde
             if (G__struct.iscpplink[G__get_tagnum(G__tagnum)] == G__CPPLINK) {
                // -- The class is precompiled.
                cpplink = 1;
-               G__store_struct_offset = G__get_offset(var);
-               G__cpp_aryconstruct = G__get_varlabel(var, 1) /* number of elements */;
-               int done = 0;
-               G__getfunction((char*) temp.c_str(), &done, G__TRYDESTRUCTOR);
-               G__cpp_aryconstruct = 0;
+               if (G__test_static(var, G__AUTOARYDISCRETEOBJ)) {
+                  // -- The variable is an array with auto storage duration.
+                  //
+                  // Note: We allocated the memory for this variable using
+                  //       G__malloc() and the element count is not stored
+                  //       in the allocated block.
+                  char* store_globalvarpointer = G__globalvarpointer;
+                  int size = ((::Reflex::Type) G__tagnum).SizeOf();
+                  int num_of_elements = G__get_varlabel(var, 1) /* number of elements */;
+                  if (!num_of_elements) {
+                     num_of_elements = 1;
+                  }
+                  for (int i = num_of_elements - 1; i >= 0; --i) {
+                     G__store_struct_offset = G__get_offset(var) + (i * size);
+                     G__globalvarpointer = G__store_struct_offset;
+                     int done = 0;
+                     G__getfunction((char*) temp.c_str(), &done, G__TRYDESTRUCTOR);
+                     if (!done) {
+                        break;
+                     }
+                  }
+                  G__globalvarpointer = store_globalvarpointer;
+                  free(G__get_offset(var)); // Note: Was allocated by G__malloc().
+                  G__get_offset(var) = 0;
+               }
+               else {
+                  // -- The variable is *not* an array with auto storage duration.
+                  G__store_struct_offset = G__get_offset(var);
+                  G__cpp_aryconstruct = G__get_varlabel(var, 1) /* number of elements */;
+                  int done = 0;
+                  G__getfunction((char*) temp.c_str(), &done, G__TRYDESTRUCTOR);
+                  G__cpp_aryconstruct = 0;
+               }
             }
             else {
                // -- The class is interpreted.
