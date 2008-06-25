@@ -163,18 +163,14 @@ int Cint::Internal::G__using_namespace()
 #else
 #pragma message (FIXME("namespace FOO{using std::endl; didn't work in CINT5 - does this take care of it?"))
 #endif
-      ::Reflex::Member member = G__find_variable(buf, hash, G__p_local,::Reflex::Scope::GlobalScope()
-                                , &struct_offset, &store_struct_offset, &ig15, 1);
+      ::Reflex::Member member = G__find_variable(buf, hash, G__p_local,::Reflex::Scope::GlobalScope(), &struct_offset, &store_struct_offset, &ig15, 1);
       if (member) {
-
          std::string varname(member.Name());
          ::Reflex::Scope varscope = ::Reflex::Scope::GlobalScope();
-         if (G__p_local) varscope = G__p_local;
-
-         ::Reflex::Member avar =
-            G__add_scopemember(varscope, varname.c_str(), member.TypeOf()
-                               , 0 /* should be member.Modifiers() */, member.Offset()
-                               , G__get_offset(member), G__access, G__get_static(member));
+         if (G__p_local) {
+            varscope = G__p_local;
+         }
+         ::Reflex::Member avar = G__add_scopemember(varscope, varname.c_str(), member.TypeOf(), 0 /* should be member.Modifiers() */, member.Offset(), G__get_offset(member), G__access, G__get_static(member));
          *G__get_properties(avar) = *G__get_properties(member);
          G__get_properties(avar)->isFromUsing = true;
 
@@ -195,17 +191,24 @@ int Cint::Internal::G__using_namespace()
 //______________________________________________________________________________
 ::Reflex::Scope Cint::Internal::G__get_envtagnum()
 {
-   if (G__def_tagnum && !G__def_tagnum.IsTopScope()) {
-      /* In case of enclosed class definition, G__tagdefining remains
-       * as enclosing class identity, while G__def_tagnum changes to
-       * enclosed class identity. For finding environment scope, we
-       * must use G__tagdefining */
-      if (G__tagdefining != G__def_tagnum) return G__tagdefining;
-      else                              return G__def_tagnum;
+   // Return our enclosing scope.
+   if (G__def_tagnum && !G__def_tagnum.IsTopScope()) { // We are enclosed, and not in the global namespace.
+      // -- We are enclosed, and not in the global namespace.
+      //
+      //  In case of enclosed class definition, G__tagdefining remains
+      //  as enclosing class identity, while G__def_tagnum changes to
+      //  enclosed class identity. For finding environment scope, we
+      //  must use G__tagdefining.
+      //
+      if (G__def_tagnum != G__tagdefining) {
+         return G__tagdefining;
+      }
+      return G__def_tagnum;
    }
-   else if (G__exec_memberfunc) return G__memberfunc_tagnum;
-   /* else if(-1!=G__func_now)    env_tagnum = -2-G__func_now; */
-   return ::Reflex::Scope::GlobalScope();
+   if (G__exec_memberfunc) { // We are in a member function.
+      return G__memberfunc_tagnum;
+   }
+   return ::Reflex::Scope::GlobalScope(); // We are in the global namespace.
 }
 
 //______________________________________________________________________________
@@ -536,7 +539,7 @@ int Cint::Internal::G__class_autoloading(int tagnum)
 //______________________________________________________________________________
 extern "C" int G__defined_tagname(const char* tagname, int noerror)
 {
-   // Scan tagname table and return tagnum.
+   // Scan tagname table and return tagnum.  WARNING: tagname may be modified if there is a template instantiation.
    //
    // If no match, error message is shown and -1 will be returned.
    //
@@ -568,8 +571,6 @@ extern "C" int G__defined_tagname(const char* tagname, int noerror)
    char *p;
    char temp[G__LONGLINE];
    char atom_tagname[G__LONGLINE];
-   ::Reflex::Scope env_tagnum;
-
    switch (tagname[0]) {
       case '"':
       case '\'':
@@ -578,7 +579,6 @@ extern "C" int G__defined_tagname(const char* tagname, int noerror)
          // -- Global namespace.
          return 0;
    }
-
    if (strchr(tagname, '>')) {
       /* handles X<X<int>> as X<X<int> > */
       while ((char*)NULL != (p = (char*)strstr(tagname, ">>"))) {
@@ -632,8 +632,7 @@ extern "C" int G__defined_tagname(const char* tagname, int noerror)
          ++p;
       }
    }
-
-   /* handle X<const const Y> */
+   // handle X<const const Y>
    p = (char*)strstr(tagname, "const const ");
    while (p) {
       char *p1 = (p += 6);
@@ -642,11 +641,17 @@ extern "C" int G__defined_tagname(const char* tagname, int noerror)
       *p1 = 0;
       p = strstr(p, "const const ");
    }
-
-   if (isspace(tagname[0])) strcpy(temp, tagname + 1);
-   else strcpy(temp, tagname);
-
-   // Now set env_tagnum and atom_tagname.
+   if (isspace(tagname[0])) {
+      strcpy(temp, tagname + 1);
+   }
+   else {
+      strcpy(temp, tagname);
+   }
+   //
+   //  Now get the name to lookup and
+   //  the scope to look it up in.
+   //
+   ::Reflex::Scope env_tagnum;
    p = G__find_last_scope_operator(temp);
    if (!p) {
       // -- An unqualified name, use the current scope.
@@ -696,33 +701,53 @@ extern "C" int G__defined_tagname(const char* tagname, int noerror)
          }
       }
    }
-   try_again:
-   // Now that we have the containing scope we can search it.
-   len = std::strlen(atom_tagname);
-
-   ::Reflex::Scope scope = env_tagnum.LookupScope(atom_tagname);
-   if (scope) {
-      // -- Success, we found the class/struct/union/enum/namespace.
-      // Now try to autoload the class library, if requested.
-      long tagnum = G__get_tagnum(scope);
-      if (noerror < 3) G__class_autoloading(tagnum);
-      // And return the final result.
-      return tagnum;
+   //
+   //  Now that we have the containing scope we can search it.
+   //
+   {
+      ::Reflex::Scope scope = env_tagnum.LookupScope(atom_tagname);
+      if (p && (scope.DeclaringScope() != env_tagnum)) { // We found something, but not where we asked for it.
+         scope = ::Reflex::Scope(); // Flag not found.
+      }
+      if (scope) {
+         // -- Success, we found the class/struct/union/enum/namespace.
+         // Now try to autoload the class library, if requested.
+         long tagnum = G__get_tagnum(scope);
+         if (noerror < 3) {
+            G__class_autoloading(tagnum);
+         }
+         // And return the final result.
+         return tagnum;
+      }
    }
-
-   if (!len) {
-      // If we searched for the empty string and failed,
-      // search for a dollar sign, which stands for an
-      // unnamed type, such as:
-      //      struct { ... } abc;
-      // FIXME: Do we still need to do this?  Does anybody
-      //        actually search for the empty string?
+   if (!std::strlen(atom_tagname)) {
+      //  If we searched for the empty string and failed,
+      //  search for a dollar sign, which stands for an
+      //  unnamed type, such as:
+      //
+      //       struct { ... } abc;
+      //
+      //  TODO: Do we still need to do this?  Does anybody actually search for the empty string?
+      //
       std::strcpy(atom_tagname, "$");
-
-      goto try_again;
+      ::Reflex::Scope scope = env_tagnum.LookupScope(atom_tagname);
+      if (p && (scope.DeclaringScope() != env_tagnum)) { // We found something, but not where we asked for it.
+         scope = ::Reflex::Scope(); // Flag not found.
+      }
+      if (scope) {
+         // -- Success, we found the class/struct/union/enum/namespace.
+         // Now try to autoload the class library, if requested.
+         long tagnum = G__get_tagnum(scope);
+         if (noerror < 3) {
+            G__class_autoloading(tagnum);
+         }
+         // And return the final result.
+         return tagnum;
+      }
    }
-
-   /* if tagname not found, try instantiating class template */
+   //
+   //  Not found, try instantiating a class template.
+   //
    len = std::strlen(tagname);
    if ((tagname[len-1] == '>') && (noerror < 2) && ((len < 2) || (tagname[len-2] != '-'))) {
       if (G__loadingDLL) {
@@ -746,38 +771,47 @@ extern "C" int G__defined_tagname(const char* tagname, int noerror)
          return i;
       }
    }
-
-   // Search for a typedef now.
-
+   //
+   //  Not found, try a typedef.
+   //
    ::Reflex::Type tp = env_tagnum.LookupType(atom_tagname);
-   if (tp && tp.IsTypedef()) {
+   if (tp && tp.IsTypedef() && (!p || (tp.DeclaringScope() == env_tagnum))) {
       i = G__get_tagnum(tp);
       if (i != -1) {
          // -- Found a typedef.
          // Now autoload the class library, if requested.
-         if (noerror < 3) G__class_autoloading(i);
+         if (noerror < 3) {
+            G__class_autoloading(i);
+         }
          return i;
       }
    }
-
-   // Definitely not found at this point.
-   // A hack, no error message if there is an
-   // operator character in the name.
-   // FIXME: Why do we allow this?
+   //
+   //  Definitely not found at this point.
+   //
+   //  A hack, no error message if there is an
+   //  operator character in the name.
+   //
+   // TODO: Why do we allow this?
+   //
    {
       int i2 = 0;
       int cx;
-      while ((cx = tagname[i2++]))
-         if (G__isoperator(cx))
+      while ((cx = tagname[i2++])) {
+         if (G__isoperator(cx)) {
             return -1;
+         }
+      }
    }
-   // Not found.
-   if (noerror == 0) {
+   //
+   //  Not found, give error message if allowed.
+   //
+   if (!noerror) {
       //G__dumpreflex();
       G__fprinterr(G__serr, "G__defined_tagname: Error: class, struct, union or type '%s' is not defined  %s:%d ", tagname, __FILE__, __LINE__);
       G__genericerror(0);
    }
-   // We failed, return an error code.
+   // We failed, return the invalid tagnum.
    return -1;
 }
 
@@ -856,138 +890,126 @@ extern "C" int G__search_tagname(const char* tagname, int type)
    int len;
    char* p;
 #ifndef G__OLDIMPLEMENTATION1823
-   G__StrBuf buf_sb(G__BUFLEN*2);
-   char *buf = buf_sb;
-   G__StrBuf buf2_sb(G__BUFLEN*2);
-   char *buf2 = buf2_sb;
-   char *temp = buf;
-   char *atom_tagname = buf2;
-#else
+   G__StrBuf buf_sb(2 * G__BUFLEN);
+   char* buf = buf_sb;
+   G__StrBuf buf2_sb(2 * G__BUFLEN);
+   char* buf2 = buf2_sb;
+   char* temp = buf;
+   char* atom_tagname = buf2;
+#else // G__OLDIMPLEMENTATION1823
    G__StrBuf temp_sb(G__LONGLINE);
-   char *temp = temp_sb;
+   char* temp = temp_sb;
    G__StrBuf atom_tagname_sb(G__LONGLINE);
-   char *atom_tagname = atom_tagname_sb;
-#endif
+   char* atom_tagname = atom_tagname_sb;
+#endif // G__OLDIMPLEMENTATION1823
    int noerror = 0;
    if (type == G__CLASS_AUTOLOAD) {
-      /* no need to issue error message while uploading
-      the autoloader information */
+      // no need to issue error message while uploading the autoloader information
       noerror = 2;
    }
-   /* int parent_tagnum; */
    ::Reflex::Scope envtagnum;
    int isstructdecl = type > 0xff;
    type &= 0xff;
    bool isPointer = (type == 0xff) || isupper(type);
-   if (type == 0xff) type = 0;
-   type = tolower(type);
-
-   // Search for old tagname
-   // Only auto-load struct if not ref / ptr
-   i = G__defined_tagname(tagname, isPointer ? 3 : 2);
-
-#ifndef G__OLDIMPLEMENTATION1823
-   if (strlen(tagname) > G__BUFLEN*2 - 10) {
-      temp = (char*)malloc(strlen(tagname) + 10);
-      atom_tagname = (char*)malloc(strlen(tagname) + 10);
+   if (type == 0xff) {
+      type = 0;
    }
-#endif
-
-
-   p = G__strrstr((char*)tagname, "::");
-   if (p
-         && !strchr(p, '>')
-      ) {
+   type = tolower(type);
+   // Search for tagname, autoload class if not ref or ptr.
+   i = G__defined_tagname(tagname, isPointer ? 3 : 2); // Note: The tagname can be changed in this call.
+#ifndef G__OLDIMPLEMENTATION1823
+   if (strlen(tagname) > ((G__BUFLEN * 2) - 10)) {
+      temp = (char*) malloc(strlen(tagname) + 10);
+      atom_tagname = (char*) malloc(strlen(tagname) + 10);
+   }
+#endif // G__OLDIMPLEMENTATION1823
+   p = G__strrstr((char*) tagname, "::");
+   if (p && !strchr(p, '>')) {
       strcpy(atom_tagname, tagname);
       p = G__strrstr(atom_tagname, "::");
       *p = 0;
-      envtagnum = G__Dict::GetDict().GetScope(G__defined_tagname(atom_tagname, 1));
+      envtagnum = G__Dict::GetDict().GetScope(G__defined_tagname(atom_tagname, 1)); // Note: atom_tagname can be modified during this call.
    }
    else {
       envtagnum = G__get_envtagnum();
    }
-
-   /* if new tagname, initialize tag table */
-   if (-1 == i
-         || (envtagnum != G__Dict::GetDict().GetScope(G__struct.parent_tagnum[i]) && isstructdecl)
-      ) {
-
+   if ( // if new tagname, initialize tag table
+      (i == -1) ||
+      (
+         isstructdecl &&
+         (envtagnum != G__Dict::GetDict().GetScope(G__struct.parent_tagnum[i]))
+      )
+   ) {
       // Make sure first entry is the global namespace.
-      if (G__struct.alltag == 0) {
+      if (!G__struct.alltag) {
          G__create_global_namespace();
       }
-
       i = G__struct.alltag;
-
       if (i == G__MAXSTRUCT) {
-         G__fprinterr(G__serr,
-                      "Limitation: Number of struct/union tag exceed %d FILE:%s LINE:%d\nFatal error, exit program. Increase G__MAXSTRUCT in G__ci.h and recompile %s\n"
-                      , G__MAXSTRUCT
-                      , G__ifile.name
-                      , G__ifile.line_number
-                      , G__nam);
-
+         G__fprinterr(G__serr, "Limitation: Number of struct/union tag exceed %d FILE:%s LINE:%d\nFatal error, exit program. Increase G__MAXSTRUCT in G__ci.h and recompile %s\n", G__MAXSTRUCT, G__ifile.name, G__ifile.line_number, G__nam);
          G__eof = 1;
 #ifndef G__OLDIMPLEMENTATION1823
-         if (buf != temp) free((void*)temp);
-         if (buf2 != atom_tagname) free((void*)atom_tagname);
-#endif
-         return(-1);
+         if (buf != temp) {
+            free(temp);
+         }
+         if (buf2 != atom_tagname) {
+            free(atom_tagname);
+         }
+#endif // G__OLDIMPLEMENTATION1823
+         return -1;
       }
-
       strcpy(temp, tagname);
       p = G__find_last_scope_operator(temp);
       if (p) {
          strcpy(atom_tagname, p + 2);
          *p = '\0';
-#ifndef G__STD_NAMESPACE /* ON667 */
-         if (strcmp(temp, "std") == 0
-               && G__ignore_stdnamespace
-            ) G__struct.parent_tagnum[i] = -1;
-         else G__struct.parent_tagnum[i] = G__defined_tagname(temp, noerror);
-#else
+#ifndef G__STD_NAMESPACE
+         if (G__ignore_stdnamespace && !strcmp(temp, "std")) {
+            G__struct.parent_tagnum[i] = -1;
+         }
+         else {
+            G__struct.parent_tagnum[i] = G__defined_tagname(temp, noerror);
+         }
+#else // G__STD_NAMESPACE
          G__struct.parent_tagnum[i] = G__defined_tagname(temp, noerror);
-#endif
+#endif // G__STD_NAMESPACE
+         // --
       }
       else {
          ::Reflex::Scope env_tagnum;
          if (!G__def_tagnum.IsTopScope()) {
-            if (G__tagdefining != G__def_tagnum) env_tagnum = G__tagdefining;
-            else                              env_tagnum = G__def_tagnum;
+            if (G__def_tagnum != G__tagdefining) {
+               env_tagnum = G__tagdefining;
+            }
+            else {
+               env_tagnum = G__def_tagnum;
+            }
          }
-         else env_tagnum = ::Reflex::Scope();
          G__struct.parent_tagnum[i] = G__get_tagnum(env_tagnum);
          strcpy(atom_tagname, temp);
       }
-
-      if (strncmp("$G__NONAME", atom_tagname, 10) == 0) {
-         //atom_tagname[0]='\0';
-         //len=0;
+      if (!strncmp("$G__NONAME", atom_tagname, 10)) {
          len = strlen(atom_tagname);
       }
       else {
          len = strlen(atom_tagname);
       }
-
-      {
-         // REFLEX_NOT_COMPLETE
-         // Create (if necessary) a place holder for this
-         // class/namespace in the Reflex database.
+      { // Do the Reflex part of the work.
          ::Reflex::Scope scope = G__Dict::GetDict().GetScope(G__struct.parent_tagnum[i]);
          ::Reflex::Type cl;
          ::Reflex::Scope newscope;
-
-         if (atom_tagname[0]) cl = G__findInScope(scope, atom_tagname);
-
+         if (atom_tagname[0]) {
+            cl = G__findInScope(scope, atom_tagname);
+         }
          if (!cl) {
             std::string fullname;
             if (G__struct.parent_tagnum[i] != -1) {
                fullname = G__fulltagname(G__struct.parent_tagnum[i], 0); // parentScope.Name(SCOPED);
-               if (fullname.length())
+               if (fullname.length()) {
                   fullname += "::";
+               }
             }
             fullname += atom_tagname;
-
             switch (type) {
                case   0:
                   // -- Unknown type.
@@ -995,6 +1017,7 @@ extern "C" int G__search_tagname(const char* tagname, int type)
                   //       for a function parameter with a type for
                   //       which we have not yet seen a declaration.
                   {
+                     //fprintf(stderr, "G__search_tagname: New unknown type: '%s'\n", fullname.c_str());
                      ::Reflex::ClassBuilder *b = new ::Reflex::ClassBuilder(fullname.c_str(), typeid(::Reflex::UnknownType), 0, ::Reflex::CLASS);
                      cl =  b->ToType();
                      G__get_properties(cl)->builder.Set(b);
@@ -1003,6 +1026,7 @@ extern "C" int G__search_tagname(const char* tagname, int type)
                case 'a':
                   // -- Autoloading.
                   {
+                     //fprintf(stderr, "G__search_tagname: New autoloading type: '%s'\n", fullname.c_str());
                      ::Reflex::ClassBuilder *b = new ::Reflex::ClassBuilder(fullname.c_str(), typeid(::Reflex::UnknownType), 0, ::Reflex::CLASS);
                      cl =  b->ToType();
                      G__get_properties(cl)->builder.Set(b);
@@ -1011,6 +1035,7 @@ extern "C" int G__search_tagname(const char* tagname, int type)
                case 'c':
                   // -- Class.
                   {
+                     //fprintf(stderr, "G__search_tagname: New class type: '%s'\n", fullname.c_str());
                      ::Reflex::ClassBuilder *b = new ::Reflex::ClassBuilder(fullname.c_str(), typeid(::Reflex::UnknownType), 0, ::Reflex::CLASS);   // Should also add the privacy with the containing class.
                      cl =  b->ToType();
                      G__get_properties(cl)->builder.Set(b);
@@ -1019,6 +1044,7 @@ extern "C" int G__search_tagname(const char* tagname, int type)
                case 's':
                   // -- Struct.
                   {
+                     //fprintf(stderr, "G__search_tagname: New struct type: '%s'\n", fullname.c_str());
                      ::Reflex::ClassBuilder *b = new ::Reflex::ClassBuilder(fullname.c_str(), typeid(::Reflex::UnknownType), 0, ::Reflex::STRUCT);   // Should also add the privacy with the containing class.
                      cl =  b->ToType();
                      G__get_properties(cl)->builder.Set(b);
@@ -1027,6 +1053,7 @@ extern "C" int G__search_tagname(const char* tagname, int type)
                case 'n':
                   // -- Namespace.
                   {
+                     //fprintf(stderr, "G__search_tagname: New namespace scope: '%s'\n", fullname.c_str());
                      ::Reflex::NamespaceBuilder *b = new ::Reflex::NamespaceBuilder(fullname.c_str());
                      newscope =  b->ToScope();
                      G__get_properties(newscope)->builder.Set(b);
@@ -1035,8 +1062,7 @@ extern "C" int G__search_tagname(const char* tagname, int type)
                case 'e':
                   // -- Enum.
                   {
-                     //::Reflex::EnumBuilder *b = new ::Reflex::EnumBuilder( fullname.c_str() );
-                     //fprintf(stderr, "G__search_tagname: Building enum '%s'\n", fullname.c_str());
+                     //fprintf(stderr, "G__search_tagname: New enum type: '%s'\n", fullname.c_str());
                      cl = ::Reflex::EnumTypeBuilder(fullname.c_str());
                      //G__get_properties(cl)->builder.Set(b);
                      break;
@@ -1046,6 +1072,7 @@ extern "C" int G__search_tagname(const char* tagname, int type)
                   // Note: We must have the space after the '<' here because
                   // '<:' is the alternative token for '[', see ISO/IEC 14882 (1998) [lex.digraph].
                   {
+                     //fprintf(stderr, "G__search_tagname: New union type: '%s'\n", fullname.c_str());
                      ::Reflex::UnionBuilder* b = new ::Reflex::UnionBuilder(fullname.c_str(), typeid(::Reflex::UnknownType), 0, ::Reflex::UNION);
                      cl = b->ToType();
                      G__get_properties(cl)->builder.Set(b);
@@ -1056,166 +1083,69 @@ extern "C" int G__search_tagname(const char* tagname, int type)
                   assert(false);
             }
          }
-
          G__RflxProperties* prop = 0;
-         if (cl) prop = G__get_properties(cl);
-         else prop = G__get_properties(newscope);
+         if (cl) {
+            prop = G__get_properties(cl);
+         }
+         else {
+            prop = G__get_properties(newscope);
+         }
          if (prop) {
             prop->typenum = -1;
             prop->tagnum = i;
             prop->globalcomp = G__default_link ? G__globalcomp : G__NOLINK;
             prop->autoload = (type == 'a');
          }
-      } // end REFLEX_NOT_COMPLETE block
-
+      }
       G__struct.userparam[i] = 0;
-      G__struct.name[i] = (char*)malloc((size_t)(len + 1));
+      G__struct.name[i] = (char*) malloc((size_t)(len + 1));
       strcpy(G__struct.name[i], atom_tagname);
       G__struct.hash[i] = len;
-
       G__struct.size[i] = 0;
-      G__struct.type[i] = type; /* 's' struct ,'u' union ,'e' enum , 'c' class */
-
-      //          /***********************************************************
-      //          * Allocate and initialize member variable table
-      //          ************************************************************/
-      //          G__struct.memvar[i] = (struct G__var_array *)malloc(sizeof(struct G__var_array));
-      // #ifdef G__OLDIMPLEMENTATION1776_YET
-      //          memset(G__struct.memvar[i],0,sizeof(struct G__var_array));
-      // #endif
-      //          G__struct.memvar[i]->ifunc = (struct G__ifunc_table*)NULL;
-      //          G__struct.memvar[i]->varlabel[0][0]=0;
-      //          G__struct.memvar[i]->paran[0]=0;
-      //          G__struct.memvar[i]->allvar=0;
-      //          G__struct.memvar[i]->next = NULL;
-      //          G__struct.memvar[i]->tagnum = i;
-      //          {
-      //             int ix;
-      //             for(ix=0;ix<G__MEMDEPTH;ix++) {
-      //                G__struct.memvar[i]->varnamebuf[ix]=(char*)NULL;
-      //                G__struct.memvar[i]->p[ix] = 0;
-      //             }
-      //          }
-
-      /***********************************************************
-      * Allocate and initialize member function table list
-      ***********************************************************/
-      //          G__struct.memfunc[i] = (struct G__ifunc_table *)malloc(sizeof(struct G__ifunc_table));
-      //          G__struct.memfunc[i]->allifunc = 0;
-      //          G__struct.memfunc[i]->next = (struct G__ifunc_table *)NULL;
-      //          G__struct.memfunc[i]->page = 0;
-      // #ifdef G__NEWINHERIT
-      //          G__struct.memfunc[i]->tagnum = i;
-      // #endif
-      //          {
-      //             int ix;
-      //             for(ix=0;ix<G__MAXIFUNC;ix++) {
-      //                G__struct.memfunc[i]->funcname[ix]=(char*)NULL;
-      //             }
-      //          }
-      // #ifndef G__OLDIMPLEMENTATION2027
-      //          /* reserve the first entry for dtor */
-      //          G__struct.memfunc[i]->hash[0]=0;
-      //          G__struct.memfunc[i]->funcname[0]=(char*)malloc(2);
-      //          G__struct.memfunc[i]->funcname[0][0]=0;
-      //          G__struct.memfunc[i]->para_nu[0]=0;
-      //          G__struct.memfunc[i]->pentry[0] = &G__struct.memfunc[i]->entry[0];
-      //          G__struct.memfunc[i]->pentry[0]->bytecode=(struct G__bytecodefunc*)NULL;
-      //          G__struct.memfunc[i]->friendtag[0]=(struct G__friendtag*)NULL;
-      // #ifndef G__OLDIMPLEMENTATION2039
-      //          G__struct.memfunc[i]->pentry[0]->size = 0;
-      //          G__struct.memfunc[i]->pentry[0]->filenum = 0;
-      //          G__struct.memfunc[i]->pentry[0]->line_number = 0;
-      //          G__struct.memfunc[i]->pentry[0]->bytecodestatus = G__BYTECODE_NOTYET;
-      //          G__struct.memfunc[i]->ispurevirtual[0] = 0;
-      //          G__struct.memfunc[i]->access[0] = G__PUBLIC;
-      //          G__struct.memfunc[i]->ansi[0] = 1;
-      //          G__struct.memfunc[i]->isconst[0] = 0;
-      //          G__struct.memfunc[i]->reftype[0] = 0;
-      //          G__struct.memfunc[i]->type[0] = 0;
-      //          G__struct.memfunc[i]->p_tagtable[0] = -1;
-      //          // G__struct.memfunc[i]->p_typetable[0] = -1;
-      //          G__struct.memfunc[i]->staticalloc[0] = 0;
-      //          G__struct.memfunc[i]->busy[0] = 0;
-      //          G__struct.memfunc[i]->isvirtual[0] = 0;
-      //          G__struct.memfunc[i]->globalcomp[0] = G__NOLINK;
-      // #endif
-
-      //          G__struct.memfunc[i]->comment[0].filenum = -1;
-
-      //          G__struct.memfunc[i]->comment[0].filenum = -1;
-
-      //          {
-      //             struct G__ifunc_table *store_ifunc;
-      //             store_ifunc = G__p_ifunc;
-      //             G__p_ifunc = G__struct.memfunc[i];
-      //             G__memfunc_next();
-      //             G__p_ifunc = store_ifunc;
-      //          }
-      // #endif
-
-      /***********************************************************
-      * Allocate and initialize class inheritance table
-      ***********************************************************/
-      G__struct.baseclass[i] = (struct G__inheritance *)malloc(sizeof(struct G__inheritance));
+      G__struct.type[i] = type; // 'c' class, 'e' enum, 'n', namespace, 's' struct, 'u' union
+      G__struct.baseclass[i] = (struct G__inheritance*) malloc(sizeof(struct G__inheritance));
       G__struct.baseclass[i]->basen = 0;
-
-      /***********************************************************
-      * Initialize iden information for virtual function
-      ***********************************************************/
-      G__struct.virtual_offset[i] = G__PVOID; /* -1 means no virtual function */
-
+      G__struct.virtual_offset[i] = G__PVOID; // -1 means no virtual function
       G__struct.isabstract[i] = 0;
-
       G__struct.globalcomp[i] = G__default_link ? G__globalcomp : G__NOLINK;
       G__struct.iscpplink[i] = 0;
       G__struct.protectedaccess[i] = 0;
-
       G__struct.line_number[i] = -1;
       G__struct.filenum[i] = -1;
-
       G__struct.istypedefed[i] = 0;
-
       G__struct.funcs[i] = 0;
-
       G__struct.istrace[i] = 0;
       G__struct.isbreak[i] = 0;
-
 #ifdef G__FRIEND
-      G__struct.friendtag[i] = (struct G__friendtag*)NULL;
-#endif
-
-      G__struct.comment[i].p.com = (char*)NULL;
+      G__struct.friendtag[i] = 0;
+#endif // G__FRIEND
+      G__struct.comment[i].p.com = 0;
       G__struct.comment[i].filenum = -1;
-
-      // G__setup_memfunc and G__setup_memvar pointers list initialisation
+      // G__setup_memfunc and G__setup_memvar pointers list initialization.
       G__struct.incsetup_memvar[i] = new std::list<G__incsetup>();
       G__struct.incsetup_memfunc[i] = new std::list<G__incsetup>();
-
       G__struct.rootflag[i] = 0;
-      G__struct.rootspecial[i] = (struct G__RootSpecial*)NULL;
-
+      G__struct.rootspecial[i] = 0;
       G__struct.isctor[i] = 0;
-
 #ifndef G__OLDIMPLEMENTATION1503
       G__struct.defaulttypenum[i] = ::Reflex::Type();
-#endif
-      G__struct.vtable[i] = (void*)NULL;
-
-      G__struct.alltag++;
+#endif // G__OLDIMPLEMENTATION1503
+      G__struct.vtable[i] =  0;
+      ++G__struct.alltag;
    }
-   else if (0 == G__struct.type[i]
-            || 'a' == G__struct.type[i]
-           ) {
+   else if (!G__struct.type[i] || (G__struct.type[i] == 'a')) {
       G__struct.type[i] = type;
    }
-
-   /* return tag table number */
 #ifndef G__OLDIMPLEMENTATION1823
-   if (buf != temp) free((void*)temp);
-   if (buf2 != atom_tagname) free((void*)atom_tagname);
-#endif
-   return(i);
+   if (buf != temp) {
+      free(temp);
+   }
+   if (buf2 != atom_tagname) {
+      free(atom_tagname);
+   }
+#endif // G__OLDIMPLEMENTATION1823
+   // Return tagnum.
+   return i;
 }
 
 //______________________________________________________________________________
@@ -1224,7 +1154,7 @@ extern "C" int G__search_tagname(const char* tagname, int type)
    // Create the Variable!
    int modifiers = reflex_modifiers;
    if (var_access) {
-      modifiers &= ~(::Reflex::PUBLIC |::Reflex::PROTECTED |::Reflex::PRIVATE);
+      modifiers &= ~(::Reflex::PUBLIC | ::Reflex::PROTECTED | ::Reflex::PRIVATE);
       switch (var_access) {
          case G__PUBLIC:
             modifiers |= ::Reflex::PUBLIC;
@@ -1241,14 +1171,35 @@ extern "C" int G__search_tagname(const char* tagname, int type)
    if (var_statictype == G__LOCALSTATIC) {
       modifiers |= ::Reflex::STATIC;
    }
-
+   //fprintf(stderr, "G__add_scopemember: Creating '::%s::%s' type: '::%s' addr: %016lx reflex_offset: %d modifiers: %08x var_statictype: %d\n", envvar.Name(::Reflex::SCOPED).c_str(), varname, type.Name(::Reflex::SCOPED | ::Reflex::QUALIFIED).c_str(), (long) offset, reflex_offset, modifiers, var_statictype);
    envvar.AddDataMember(varname, type, reflex_offset, modifiers);
    ::Reflex::Member d = envvar.DataMemberByName(varname);
-
+   //fprintf(stderr, "G__add_scopemember: new member is: '::%s'\n", d.Name(::Reflex::SCOPED).c_str());
+   //if (d.Name(::Reflex::SCOPED) == "N::B::fB") {
+   //   fprintf(stderr, "G__add_scopemember: printing members of scope 'B'\n");
+   //   ::Reflex::Scope scope = ::Reflex::Scope::ByName("::B");
+   //   if (!scope.IsTopScope()) {
+   //      int len = scope.DataMemberSize();
+   //      for (int i = 0; i < len; ++i) {
+   //         ::Reflex::Member mbr = scope.DataMemberAt(i);
+   //         fprintf(stderr, "G__add_scopemember: scope: '::%s' i: %03d member: '::%s'\n", scope.Name(::Reflex::SCOPED).c_str(), i, mbr.Name(::Reflex::SCOPED).c_str());
+   //      }
+   //   }
+   //}
+   //{
+   //   ::Reflex::Scope scope(d.DeclaringScope());
+   //   if (!scope.IsTopScope()) {
+   //      int len = scope.DataMemberSize();
+   //      for (int i = 0; i < len; ++i) {
+   //         ::Reflex::Member mbr = scope.DataMemberAt(i);
+   //         fprintf(stderr, "G__add_scopemember: scope: '::%s' i: %03d member: '::%s'\n", scope.Name(::Reflex::SCOPED).c_str(), i, mbr.Name(::Reflex::SCOPED).c_str());
+   //      }
+   //   }
+   //}
    G__get_offset(d) = offset;
    G__get_properties(d)->isCompiledGlobal = (var_statictype == G__COMPILEDGLOBAL);
    G__get_properties(d)->statictype = var_statictype; // We need this to distinguish file-static variables.
-
+   //fprintf(stderr, "G__add_scopemember: Finished adding member '::%s::%s'\n", envvar.Name(::Reflex::SCOPED).c_str(), varname);
    return d;
 }
 
@@ -1319,26 +1270,38 @@ void Cint::Internal::G__define_struct(char type)
    // [struct|union|enum] tagname { member }      ;
    //
    //fprintf(stderr, "G__define_struct: Begin.\n");
+   //
+   //  Validate type.
+   //
+   switch (type) {
+      case 'c':
+      case 'e':
+      case 'n':
+      case 's':
+      case 'u':
+         break;
+      default:
+         G__genericerror("Error: Illegal tagtype. struct,union,enum expected");
+         break;
+   }
    int c;
    G__StrBuf tagname_sb(G__LONGLINE);
-   char *tagname = tagname_sb;
-   char category[10];
+   char* tagname = tagname_sb;
    G__StrBuf memname_sb(G__ONELINE);
-   char *memname = memname_sb;
+   char* memname = memname_sb;
    G__StrBuf val_sb(G__ONELINE);
-   char *val = val_sb;
+   char* val = val_sb;
    ::Reflex::Scope store_tagnum;
    int store_def_struct_member = 0;
    ::Reflex::Scope store_local;
    G__value enumval;
    int store_access;
    G__StrBuf basename_sb(G__LONGLINE);
-   char *basename = basename_sb;
+   char* basename = basename_sb;
    int* pbasen;
    struct G__inheritance* baseclass;
    int baseaccess;
    int newdecl;
-   /* int lenheader; */
    int store_static_alloc;
    int len;
    int ispointer = 0;
@@ -1346,67 +1309,70 @@ void Cint::Internal::G__define_struct(char type)
    ::Reflex::Scope store_def_tagnum;
    int isvirtualbase = 0;
    int isclassdef = 0;
-
 #ifdef G__ASM
 #ifdef G__ASM_DBG
-   if (G__asm_dbg && G__asm_noverflow)
-      G__fprinterr(G__serr, "LOOP COMPILE ABORTED FILE:%s LINE:%d\n"
-                   , G__ifile.name
-                   , G__ifile.line_number);
-#endif
+   if (G__asm_dbg && G__asm_noverflow) {
+      G__fprinterr(G__serr, "LOOP COMPILE ABORTED FILE:%s LINE:%d\n", G__ifile.name, G__ifile.line_number);
+   }
+#endif // G__ASM_DBG
    G__abortbytecode();
-#endif
-
-   /*
-    * [struct|union|enum]   tagname  { member }  item ;
-    *                    ^
-    * read tagname
-    */
-
+#endif // G__ASM
+   //
+   // [class|enum|struct|union] tagname { member } item;
+   //                          ^
+   //
+   //  Read tagname.
+   //
    c = G__fgetname_template(tagname, "{:;=&");
-
    if (strlen(tagname) >= G__LONGLINE) {
-      G__fprinterr(G__serr, "Limitation: class name too long. Must be < %d"
-                   , G__LONGLINE);
-      G__genericerror((char*)NULL);
+      G__fprinterr(G__serr, "Limitation: class name too long. Must be < %d", G__LONGLINE);
+      G__genericerror(0);
    }
    doitagain:
-   /*
-    * [struct|union|enum]   tagname{ member }  item ;
-    *                               ^
-    *                     OR
-    * [struct|union|enum]          { member }  item ;
-    *                               ^
-    * push back before '{' and fgetpos
-    */
-   if (c == '{') {
+   //
+   // [class|enum|struct|union] tagname { member } item;
+   //                                    ^
+   //                     OR
+   //
+   // [class|enum|struct|union] { member } item;
+   //                            ^
+   //
+   //  Now check for [:;=,)&], open curly brace, or whitespace.
+   //
+   if (c == '{') { //  Backup to open curly brace.
       fseek(G__ifile.fp, -1, SEEK_CUR);
-      if (G__dispsource) G__disp_mask = 1;
+      if (G__dispsource) {
+         G__disp_mask = 1;
+      }
    }
-
-   /*
-    * [struct|union|enum]   tagname   { member }  item ;
-    *                               ^
-    *                     OR
-    * [struct|union|enum]   tagname     item ;
-    *                               ^
-    *                     OR
-    * [struct|union|enum]   tagname      ;
-    *                               ^
-    * skip space and push back
-    */
    else if (isspace(c)) {
-      c = G__fgetspace(); /* '{' , 'a-zA-Z' or ';' are expected */
-      /* if(c==';') return; */
-      if (c != ':') {
+      //
+      // [class|enum|struct|union] tagname { member } item;
+      //                                  ^
+      //                     OR
+      //
+      // [class|enum|struct|union] tagname item;
+      //                                  ^
+      //                     OR
+      //
+      // [class|enum|struct|union] tagname ;
+      //                                  ^
+      //
+      //  Look ahead for a base class specifier,
+      //  and backup if not found.
+      //
+      c = G__fgetspace(); // Look ahead for base class spec.
+      if (c != ':') { // If no base class spec, backup.
          fseek(G__ifile.fp, -1, SEEK_CUR);
-         if (G__dispsource) G__disp_mask = 1;
+         if (G__dispsource) {
+            G__disp_mask = 1;
+         }
       }
    }
    else if (c == ':') {
-      /* inheritance or nested class */
+      // -- Inheritance or nested class.
       c = G__fgetc();
-      if (':' == c) {
+      if (c == ':') {
          strcat(tagname, "::");
          len = strlen(tagname);
          c = G__fgetname_template(tagname + len, "{:;=&");
@@ -1414,52 +1380,52 @@ void Cint::Internal::G__define_struct(char type)
       }
       else {
          fseek(G__ifile.fp, -1, SEEK_CUR);
-         if (G__dispsource) G__disp_mask = 1;
+         if (G__dispsource) {
+            G__disp_mask = 1;
+         }
          c = ':';
       }
    }
    else if (c == ';') {
-      /* tagname declaration */
+      // -- Elaborated type specifier.
    }
-   else if (c == '=' && 'n' == type) {
-      /* namespace alias=nsn; treat as typedef */
+   else if ((c == '=') && (type == 'n')) {
+      // -- namespace alias = nsn; treat as typedef
       c = G__fgetstream_template(basename, ";");
       int tagdefining = G__defined_tagname(basename, 0);
-      if (-1 != tagdefining) {
-         G__declare_typedef(tagname, 'u', tagdefining, 0,
-                            0, G__default_link ? G__globalcomp : G__NOLINK,
-                            G__get_tagnum(G__get_envtagnum()), true);
+      if (tagdefining != -1) {
+         G__declare_typedef(tagname, 'u', tagdefining, 0, 0, G__default_link ? G__globalcomp : G__NOLINK, G__get_tagnum(G__get_envtagnum()), true);
       }
       G__var_type = 'p';
       return;
    }
-   else if (G__ansiheader && (',' == c || ')' == c)) {
-      /* dummy argument for func overloading f(class A*) { } */
+   else if (G__ansiheader && ((c == ',') || (c == ')'))) {
+      // -- Dummy argument for func overloading f(class A*) {}
       G__var_type = 'p';
-      if (')' == c) G__ansiheader = 0;
+      if (c == ')') {
+         G__ansiheader = 0;
+      }
       return;
    }
-   else if ('&' == c) {
+   else if (c == '&') {
       fseek(G__ifile.fp, -1, SEEK_CUR);
-      if (G__dispsource) G__disp_mask = 1;
+      if (G__dispsource) {
+         G__disp_mask = 1;
+      }
       c = ' ';
    }
    else {
       G__genericerror("Syntax error in class/struct definition");
    }
-
-   /*
-    * set default tagname if tagname is omitted
-    */
-   if (tagname[0] == '\0') {
-      if ('n' == type) {
-#ifdef __GNUC__
-#else
-#pragma message (FIXME("What's an unnamed namespace in Reflex?"))
-#endif
-         /* unnamed namespace, treat as global scope, namespace has no effect.
-          * This implementation may be wrong.
-          * Should fix later with using directive in global scope */
+   //
+   //  Set default tagname if tagname is omitted.
+   //
+   if (!tagname[0]) {
+      if (type == 'n') {
+         // FIXME: What should an unnamed namespace be in Reflex?
+         // unnamed namespace, treat as global scope, namespace has no effect.
+         // This implementation may be wrong.
+         // Should fix later with using directive in global scope.
          G__var_type = 'p';
          int brace_level = 0;
          G__exec_statement(&brace_level);
@@ -1469,100 +1435,117 @@ void Cint::Internal::G__define_struct(char type)
          sprintf(tagname, "$G__NONAME%d_%s(%d)$", G__struct.alltag, G__ifile.name ? G__ifile.name : "<unknown file>", G__ifile.line_number);
       }
    }
-#ifndef G__STD_NAMESPACE /* ON667 */
-   else if ('n' == type && strcmp(tagname, "std") == 0
-            && (G__ignore_stdnamespace
-                || (G__def_tagnum && !G__def_tagnum.IsTopScope())
-               )
-           ) {
-#ifdef __GNUC__
-#else
-#pragma message (FIXME("Fix treatment of namespace std!"))
-#endif
-      /* namespace std, treat as global scope, namespace has no effect. */
+#ifndef G__STD_NAMESPACE
+   else if (
+      (type == 'n') && // namespace, and
+      !strcmp(tagname, "std") && // name is "std", and
+      (
+         G__ignore_stdnamespace || // we are ignoring the std namespace, or
+         (
+            G__def_tagnum && // we are nested in something, and
+            !G__def_tagnum.IsTopScope() // that something is not the global namespace
+         )
+      )
+   ) {
+      // -- Namespace "std::", treat as global scope, namespace has no effect.
+      // FIXME: Fix treatment of namespace std!
       G__var_type = 'p';
       int brace_level = 0;
       G__exec_statement(&brace_level);
       return;
    }
-#endif
-
-   /* BUG FIX, 17 Nov 1992
-    *  tagnum wasn't saved
-    */
+#endif // G__STD_NAMESPACE
    store_tagnum = G__tagnum;
    store_def_tagnum = G__def_tagnum;
-   /*
-    * Get tagnum, new tagtable is allocated if new
-    */
+   //
+   //  Check if tagname, ends with "*",
+   //  if so consume it and remember it was there.
+   //
    len = strlen(tagname);
-   if (len && '*' == tagname[len-1]) {
+   if (len && (tagname[len-1] == '*')) {
       ispointer = 1;
       tagname[len-1] = '\0';
    }
+   //
+   //  Now find the tag, and create a
+   //  new entry if it is not found.
+   //
    switch (c) {
       case '{':
       case ':':
       case ';':
-         // 0x100: define struct if not found
-         //fprintf(stderr, "G__define_struct: Creating scope '%s'\n", tagname);
-         G__tagnum = G__Dict::GetDict().GetScope(G__search_tagname(tagname, type + 0x100));
-         //G__dumpreflex_atlevel(G__tagnum, 0);
+         {
+            //fprintf(stderr, "G__define_struct: Creating scope '%s'\n", tagname);
+            int tagnum = G__search_tagname(tagname, type + 0x100); // 0x100: define struct if not found
+            G__tagnum = G__Dict::GetDict().GetScope(tagnum);
+            //fprintf(stderr, "G__define_struct: Created scope '::%s'\n", G__tagnum.Name(::Reflex::SCOPED).c_str());
+            //G__dumpreflex_atlevel(G__tagnum, 0);
+         }
          break;
       default:
-         G__tagnum = G__Dict::GetDict().GetScope(G__search_tagname(tagname, type));
+         {
+            int tagnum = G__search_tagname(tagname, type);
+            G__tagnum = G__Dict::GetDict().GetScope(tagnum);
+         }
          break;
    }
-
-   if (';' == c) {
-      /* in case of class name declaration 'class A;' */
+   //
+   //  If this was an elaborated type specifier, we are done.
+   //
+   if (c == ';') {
+      // -- Elaborated type specifier.
       G__tagnum = store_tagnum;
       return;
    }
-   if (!G__tagnum || G__tagnum.IsTopScope()) {
-#ifdef __GNUC__
-#else
-#pragma message(FIXME("Shouldn't we warn the user that we cannot find the underlying type? Or can we register a typedef to uninitialized type?"))
-#endif
-      /* This case might not happen */
+   //
+   //  Handle any error.
+   //
+   if (!G__tagnum || G__tagnum.IsTopScope()) { // ERROR, we could not get a tagnum.
+      // FIXME: Shouldn't we warn the user that we
+      // FIXME: cannot find the underlying type?
+      // FIXME: Or can we register a typedef to uninitialized type?
+      // This case might not happen.
       G__fignorestream(";");
       G__tagnum = store_tagnum;
       return;
    }
-   G__def_tagnum = G__tagnum;
-
-   /*
-    * judge if new declaration by size
-    */
-   if (G__struct.size[G__get_tagnum(G__tagnum)] == 0) {
+   //
+   //  Initialize the definer prior to processing
+   //  any member declarations.
+   //
+   G__def_tagnum = G__tagnum; // Initialize the enclosing class, enum, namespace, struct, or union.
+   //
+   //  Judge if new declaration by size.
+   //
+   newdecl = 0;
+   if (!G__struct.size[G__get_tagnum(G__tagnum)]) {
       newdecl = 1;
    }
-   else {
-      newdecl = 0;
-   }
-
-   /* typenum is -1 for struct,union,enum without typedef */
+   //
+   //  Initialize that this is not a typedef.
+   //
    G__typenum = ::Reflex::Type();
-
-   /* Now came to
-    * [struct|union|enum]   tagname   { member }  item ;
-    *                                 ^
-    *                     OR
-    * [struct|union|enum]             { member }  item ;
-    *                                 ^
-    *                     OR
-    * [struct|union|enum]   tagname     item ;
-    *                                   ^
-    * member declaration if exist
-    */
-
-   /**************************************************************
-    * base class declaration
-    **************************************************************/
-   if (c == ':') {
+   //
+   // [struct|union|enum]   tagname   { member }  item ;
+   //                                 ^
+   //                     OR
+   // [struct|union|enum]             { member }  item ;
+   //                                 ^
+   //                     OR
+   // [struct|union|enum]   tagname     item ;
+   //                                   ^
+   // member declaration if exist
+   //
+   //
+   // base class declaration
+   //
+   if (c == ':') { // We have the beginning of the base class specifiers.
       c = ',';
    }
-   while (c == ',') {
+   //
+   //  Process any base class specifiers.
+   //
+   while (c == ',') { // We have another base class specifier.
       /* [struct|class] <tagname> : <private|public> base_class
        *                           ^                                */
 
@@ -1793,16 +1776,14 @@ void Cint::Internal::G__define_struct(char type)
          fseek(G__ifile.fp, -1, SEEK_CUR);
          if (G__dispsource) G__disp_mask = 1;
       }
-   } // End of loop over each base class.
-
-
-   /**************************************************************
-    * virtual base class isabstract count duplication check
-    **************************************************************/
+   }
+   //
+   // virtual base class isabstract count duplication check
+   //
    baseclass = G__struct.baseclass[G__get_tagnum(G__tagnum)];
-   /* When it is not a new declaration, updating purecount is going to
-      make us fail because the rest of the code is not going to be run.
-      Anyway we already checked once. */
+   // When it is not a new declaration, updating purecount is going to
+   // make us fail because the rest of the code is not going to be run.
+   // Anyway we already checked once.
    if (newdecl) {
       int purecount = 0;
       int lastdirect = 0;
@@ -1869,66 +1850,52 @@ void Cint::Internal::G__define_struct(char type)
       //fprintf(stderr, "G__define_struct: Setting abstract cnt for '%s' to: %d\n", G__tagnum.Name(Reflex::SCOPED).c_str(), purecount);
       G__struct.isabstract[G__get_tagnum(G__tagnum)] = purecount;
    }
-
-   // fsetpos(G__ifile.fp,&rewind_fpos);
+   //
+   //  Process any member declarations.
+   //
    if (c == '{') {
-      // Member declarations.
-
+      // -- Member declarations.
       isclassdef = 1;
-
-      if (newdecl || 'n' == type) {
-
+      if (!newdecl && (type != 'n')) { // Do not add members to a pre-existing class, enum, struct, or union.
+         G__fgetc();
+         c = G__fignorestream("}");
+      }
+      else { // A new declaration, or we are extending a namespace.
+         // -- A new declaration, or we are extending a namespace.
+         //
+         //  Remember the file number and line number of the declaration.
+         //
          G__struct.line_number[G__get_tagnum(G__tagnum)] = G__ifile.line_number;
          G__struct.filenum[G__get_tagnum(G__tagnum)] = G__ifile.filenum;
          G__get_properties(G__tagnum)->filenum = G__ifile.filenum;
          G__get_properties(G__tagnum)->linenum = G__ifile.line_number;
-
+         // Save state.
          store_access = G__access;
+         //
+         //  Set default access for members.
+         //
          G__access = G__PUBLIC;
-         switch (type) {
-            case 's':
-               sprintf(category, "struct");
-               break;
-            case 'c':
-               sprintf(category, "class");
-               G__access = G__PRIVATE;
-               break;
-            case 'u':
-               sprintf(category, "union");
-               break;
-            case 'e':
-               sprintf(category, "enum");
-               break;
-            case 'n':
-               sprintf(category, "namespace");
-               break;
-            default:
-               G__genericerror("Error: Illegal tagtype. struct,union,enum expected");
-               break;
+         if (type == 'c') {
+            G__access = G__PRIVATE;
          }
-
-         if (type == 'e') { /* enum */
-
+         if (type == 'e') { // enum
+            // -- Process enumerator declarations.
 #ifdef G__OLDIMPLEMENTATION1386_YET
             G__struct.size[G__def_tagnum] = G__INTALLOC;
-#endif
-            G__fgetc(); /* skip '{' */
-            /* Change by Philippe Canal, 1999/8/26 */
+#endif // G__OLDIMPLEMENTATION1386_YET
+            G__fgetc(); // skip '{'
             enumval.ref = 0;
             enumval.obj.i = -1;
-
-            //FIXME Should the type be int or the enum?
-            //enumval.type = 'i' ;
-            //enumval.tagnum = G__get_tagnum(G__tagnum);
-            //G__value_typenum(enumval) = G__get_from_type('i', 0);
             G__value_typenum(enumval) = G__tagnum;
-
             G__constvar = G__CONSTVAR;
             G__enumdef = 1;
             do {
                int store_decl = 0 ;
                c = G__fgetstream(memname, "=,}");
-               if (c == '=') {
+               if (c != '=') {
+                  ++enumval.obj.i;
+               }
+               else {
                   char store_var_typeX = G__var_type;
                   ::Reflex::Scope store_tagnumX = G__tagnum;
                   ::Reflex::Scope store_def_tagnumX = G__def_tagnum;
@@ -1943,9 +1910,6 @@ void Cint::Internal::G__define_struct(char type)
                   G__var_type = store_var_typeX;
                   G__tagnum = store_tagnumX;
                   G__def_tagnum = store_def_tagnumX;
-               }
-               else {
-                  enumval.obj.i++;
                }
                G__constvar = G__CONSTVAR;
                G__enumdef = 1;
@@ -1966,153 +1930,151 @@ void Cint::Internal::G__define_struct(char type)
                   G__decl = store_decl;
                }
             }
-            while (c != '}') ;
+            while (c != '}');
             G__constvar = 0;
             G__enumdef = 0;
-            G__access = store_access;
          }
-
-         else { /* class, struct or union */
-            /********************************************
-             * Parsing member declaration
-             ********************************************/
+         else { // class, namespace, struct or union
+            // -- Process member declaration for class, namespace, struct, or union.
+            //
+            //  Save state.
+            //
+            store_prerun = G__prerun; // TODO: Why do we save this, we don't change it?
             store_local = G__p_local;
-            G__p_local = G__tagnum;
-
             store_def_struct_member = G__def_struct_member;
-            G__def_struct_member = 1;
-            G__switch = 0; /* redundant */
-            store_static_alloc = G__static_alloc;
-            G__static_alloc = 0;
-            store_prerun = G__prerun;
             ::Reflex::Scope store_tagdefining = G__tagdefining;
-            G__tagdefining = G__tagnum;
-
-            // Tell the parser to process the entire struct block.
-            int brace_level = 0;
-            // And call the parser.
-            G__exec_statement(&brace_level);
-
-            G__tagnum = G__tagdefining;
-            G__access = store_access;
-            G__prerun = store_prerun;
+            store_static_alloc = G__static_alloc;
+            //
+            //  Initialize state for parsing
+            //  the member declarations.
+            //
+            G__p_local = G__tagnum; // The scope to put the members in is the class we are parsing.
+            G__def_struct_member = 1; // Tell the parser we are declaring members.
+            // G__def_tagnum was set ealier, so the enclosing class is the class we are parsing.
+            G__tagdefining = G__tagnum; // The enclosed class is the class we are parsing.
+            G__static_alloc = 0;
+            //
+            //  Now parse the member declarations all at once.
+            //
+            //fprintf(stderr, "G__define_struct: Starting parse of member declarations.\n");
+            //fprintf(stderr, "G__define_struct:      G__tagnum: '::%s'\n", G__tagnum.Name(Reflex::SCOPED).c_str());
+            //fprintf(stderr, "G__define_struct:  G__def_tagnum: '::%s'\n", G__def_tagnum.Name(Reflex::SCOPED).c_str());
+            //fprintf(stderr, "G__define_struct: G__tagdefining: '::%s'\n", G__tagdefining.Name(Reflex::SCOPED).c_str());
+            G__switch = 0; // TODO: Can this be removed?  We don't restore it.
+            int brace_level = 0; // Tell the parser to process the entire struct block.
+            G__exec_statement(&brace_level); // And call the parser.
+            //fprintf(stderr, "G__define_struct: Finished parse of member declarations.\n");
+            //
+            //  Restore state.
+            //
             G__static_alloc = store_static_alloc;
-
-            /********************************************
-             * Padding for PA-RISC, Spark, etc
-             * If struct size can not be divided by G__DOUBLEALLOC
-             * the size is aligned.
-             ********************************************/
-            if (1 == G__tagnum.DataMemberSize()
-                  && 0 == G__struct.baseclass[G__get_tagnum(G__tagnum)]->basen
-               ) {
-               /* this is still questionable, inherit0.c */
-               ::Reflex::Type var_type = G__tagnum.DataMemberAt(0).TypeOf();
-               if ('c' == G__get_type(var_type)) {
-                  if (isupper(G__get_type(var_type))) {
+            G__tagnum = G__tagdefining; // TODO: Could this have been changed by the parse?
+            G__tagdefining = store_tagdefining;
+            G__def_struct_member = store_def_struct_member;
+            G__p_local = store_local;
+            G__prerun = store_prerun; // TODO: Why did we save this, we don't change it?
+            //
+            //  We have now processed all member
+            //  declarations, decide on final padding.
+            //
+            if ( // We have only one data member and no base classes.
+               (G__tagnum.DataMemberSize() == 1) && // We have only one data member, and
+               !G__struct.baseclass[G__get_tagnum(G__tagnum)]->basen // no base classes.
+            ) {
+               // TODO: this is still questionable, inherit0.c
+               ::Reflex::Type var_type = G__tagnum.DataMemberAt(0).TypeOf(); // Get our only data member.
+               if (G__get_type(var_type) == 'c') { // Our only data member is of type char or char*.
+                  if (isupper(G__get_type(var_type))) { // First member is char*.
                      G__struct.size[G__get_tagnum(G__tagnum)] = G__get_varlabel(G__tagnum.DataMemberAt(0), 1) /* number of elements */ * G__LONGALLOC;
                   }
-                  else {
+                  else { // First member is char.
                      G__value buf;
                      G__value_typenum(buf) = var_type;
                      G__struct.size[G__get_tagnum(G__tagnum)] = G__get_varlabel(G__tagnum.DataMemberAt(0), 1) /* number of elements */ * G__sizeof(&buf);
                   }
                }
             }
-            else
-               if (G__struct.size[G__get_tagnum(G__tagnum)] % G__DOUBLEALLOC) {
-                  G__struct.size[G__get_tagnum(G__tagnum)]
-                  += G__DOUBLEALLOC - G__struct.size[G__get_tagnum(G__tagnum)] % G__DOUBLEALLOC;
-               }
-            if (0 == G__struct.size[G__get_tagnum(G__tagnum)]) {
+            else if (G__struct.size[G__get_tagnum(G__tagnum)] % G__DOUBLEALLOC) { // Not double aligned.
+               // -- Padding for PA-RISC, Spark, etc.
+               // If struct size can not be divided by G__DOUBLEALLOC the size is aligned.
+               G__struct.size[G__get_tagnum(G__tagnum)] += G__DOUBLEALLOC - G__struct.size[G__get_tagnum(G__tagnum)] % G__DOUBLEALLOC;
+            }
+            //
+            //  Force an empty class to have a size of one byte.
+            //
+            if (!G__struct.size[G__get_tagnum(G__tagnum)]) {
                G__struct.size[G__get_tagnum(G__tagnum)] = G__CHARALLOC;
             }
-
-            // We now have the complete class in memory and the above code corrected the
-            // size of for some special case, let's store it in Reflex.
-
+            //
+            //  We now have the complete class in memory
+            //  and the above code corrected the size for
+            //  some special cases, so remember the new size.
+            //
             if (G__tagnum.IsClass() || G__tagnum.IsUnion()) {
                G__get_properties(G__tagnum)->builder.Class().SetSizeOf(G__struct.size[G__get_tagnum(G__tagnum)]);
             }
-
-            G__tagdefining = store_tagdefining;
-
-            G__def_struct_member = store_def_struct_member;
-            G__p_local = store_local;
+            //G__tagdefining = store_tagdefining;
+            //G__def_struct_member = store_def_struct_member;
+            //G__p_local = store_local;
          }
-      }
-      else { /* of newdecl */
-         G__fgetc();
-         c = G__fignorestream("}");
+         // Restore state.
+         G__access = store_access;
       }
    }
-
-
-   /*
-    * Now came to
-    * [struct|union|enum]   tagname   { member }  item ;
-    *                                           ^
-    *                     OR
-    * [struct|union|enum]             { member }  item ;
-    *                                           ^
-    *                     OR
-    * [struct|union|enum]   tagname     item ;
-    *                                   ^
-    * item declaration
-    */
-
+   //
+   // [struct|union|enum]   tagname   { member }  item ;
+   //                                           ^
+   //                     OR
+   // [struct|union|enum]             { member }  item ;
+   //                                           ^
+   //                     OR
+   // [struct|union|enum]   tagname     item ;
+   //                                   ^
+   // item declaration
+   //
    G__var_type = 'u';
-
-   /* Need to think about this */
-   if (type == 'e') G__var_type = 'i';
-
-   if (ispointer) G__var_type = toupper(G__var_type);
-
-   if (G__return > G__RETURN_NORMAL) return;
-
-   if ('u' == type) { /* union */
+   if (type == 'e') {
+      G__var_type = 'i';
+   }
+   if (ispointer) {
+      G__var_type = toupper(G__var_type);
+   }
+   if (G__return > G__RETURN_NORMAL) {
+      return;
+   }
+   if (type == 'u') { // union
       fpos_t pos;
-      int linenum;
       fgetpos(G__ifile.fp, &pos);
-      linenum = G__ifile.line_number;
-
+      int linenum = G__ifile.line_number;
       c = G__fgetstream(basename, ";");
       if (basename[0]) {
          fsetpos(G__ifile.fp, &pos);
          G__ifile.line_number = linenum;
-         if (G__dispsource) G__disp_mask = 1000;
-         G__define_var(G__get_tagnum(G__tagnum),::Reflex::Type());
+         if (G__dispsource) {
+            G__disp_mask = 1000;
+         }
+         G__define_var(G__get_tagnum(G__tagnum), ::Reflex::Type());
          G__disp_mask = 0;
       }
       else if (!strncmp(G__struct.name[G__get_tagnum(G__tagnum)], "$G__NONAME", 10)) {
-         /* anonymous union */
+         // -- anonymous union
          G__add_anonymousunion(G__tagnum, G__def_struct_member, store_def_tagnum);
       }
    }
-   else if ('n' == type) { /* namespace */
-      /* no instance object for namespace, do nothing */
+   else if (type == 'n') { // namespace
+      // do nothing
    }
-   else { /* struct or class instance */
+   else { // class or struct
       if (G__check_semicolumn_after_classdef(isclassdef)) {
          G__tagnum = store_tagnum;
          G__def_tagnum = store_def_tagnum;
          return;
       }
       G__def_tagnum = store_def_tagnum;
-      G__define_var(G__get_tagnum(G__tagnum),::Reflex::Type());
+      G__define_var(G__get_tagnum(G__tagnum), ::Reflex::Type());
    }
-
    G__tagnum = store_tagnum;
    G__def_tagnum = store_def_tagnum;
-
-#ifdef G__DEBUG
-   if (G__asm_dbg) {
-      G__fprinterr(G__serr, "G__tagnum=%d G__def_tagnum=%d G__def_struct_member=%d\n"
-                   , G__tagnum, G__def_tagnum, G__def_struct_member);
-      G__printlinenum();
-   }
-#endif
-   // --
 }
 
 #ifndef G__OLDIMPLEMENTATION2030
