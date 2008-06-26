@@ -1,4 +1,4 @@
-# Module.mk for cint module
+# Module.mk for cint7 module
 # Copyright (c) 2000 Rene Brun and Fons Rademakers
 #
 # Author: Fons Rademakers, 29/2/2000
@@ -19,6 +19,7 @@ CINT7DIRDLLS  := $(CINT7DIR)/include
 CINT7DIRSTL   := $(CINT7DIR)/stl
 CINT7DIRDLLSTL:= $(CINT7DIRL)/dll_stl
 CINT7DIRSD    := $(CINT7DIRS)/dict
+CINT7DIRIOSEN := $(MODDIRBASE)/iosenum
 
 ##### libCint7 #####
 CINT7CONF     := $(CINT7DIRI)/configcint.h
@@ -200,12 +201,12 @@ MAKECINT7     := bin/makecint7$(EXEEXT)
 IOSENUM7      := $(MODDIR)/include/iosenum.h
 IOSENUM7C     := $(MODDIR)/include/iosenum.cxx
 ifeq ($(GCC_MAJOR),4)
-IOSENUM7A     := $(MODDIR)/include/iosenum.$(ARCH)3
+IOSENUM7A     := $(CINT7DIRIOSEN)/iosenum.$(ARCH)3
 else
 ifeq ($(GCC_MAJOR),3)
-IOSENUM7A     := $(MODDIR)/include/iosenum.$(ARCH)3
+IOSENUM7A     := $(CINT7DIRIOSEN)/iosenum.$(ARCH)3
 else
-IOSENUM7A     := $(MODDIR)/include/iosenum.$(ARCH)
+IOSENUM7A     := $(CINT7DIRIOSEN)/iosenum.$(ARCH)
 endif
 endif
 
@@ -255,87 +256,86 @@ CINTDLLROOTCINTTMPDEP = $(ROOTCINT7TMPDEP)
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
-include/cint7/%.h:    $(CINT7DIRI)/%.h
-	@(if [ ! -d "include/cint7" ]; then    \
-	   mkdir -p include/cint7;             \
-	fi)
-	cp $< $@
+include/cint7/%.h: $(CINT7DIRI)/%.h
+		@(if [ ! -d "include/cint7" ]; then    \
+			mkdir -p include/cint7;             \
+		fi)
+		cp $< $@
 
-$(CINT7LIB): $(CINT7O) $(CINT7LIBDEP) $(REFLEXLIB)
-	$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" \
-	   libCint7.$(SOEXT) $@ "$(CINT7O)" "$(CINT7LIBEXTRA) $(REFLEXLL)"
+$(CINT7LIB):    $(CINT7O) $(CINT7LIBDEP) $(REFLEXLIB)
+		$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" \
+		   libCint7.$(SOEXT) $@ "$(CINT7O)" "$(CINT7LIBEXTRA) $(REFLEXLL)"
 
-$(CINT7): $(CINT7EXEO) $(CINT7LIB) $(REFLEXLIB)
-	$(LD) $(LDFLAGS) -o $@ $(CINT7EXEO) $(RPATH) $(CINT7LIBS) $(CILIBS)
+$(CINT7):       $(CINT7EXEO) $(CINT7LIB) $(REFLEXLIB)
+		$(LD) $(LDFLAGS) -o $@ $(CINT7EXEO) $(RPATH) $(CINT7LIBS) $(CILIBS)
 
-$(CINT7TMP) : $(CINT7EXEO) $(CINT7TMPO) $(REFLEXLIB)
-	$(LD) $(LDFLAGS) -o $@ $(CINT7EXEO) $(CINT7TMPO) $(RPATH) \
-	   $(REFLEXO) $(CILIBS)
+$(CINT7TMP):    $(CINT7EXEO) $(CINT7TMPO) $(REFLEXLIB)
+		$(LD) $(LDFLAGS) -o $@ $(CINT7EXEO) $(CINT7TMPO) $(RPATH) \
+		   $(REFLEXO) $(CILIBS)
 
-$(MAKECINT7) : $(MAKECINT7O)
-	$(LD) $(LDFLAGS) -o $@ $(MAKECINT7O)
+$(MAKECINT7):   $(MAKECINT7O)
+		$(LD) $(LDFLAGS) -o $@ $(MAKECINT7O)
 
-$(IOSENUM7) : $(IOSENUM7A)
-	cp $< $@
+$(IOSENUM7):    $(IOSENUM7A)
+		cp $< $@
 
-$(IOSENUM7A) : $(CINT7TMP) $(CINT7_STDIOH)
-	@(if test ! -r $@ ; \
-	  then \
-	    PATH=$PWD/bin:$$PATH \
-	    LD_LIBRARY_PATH=$$PWD/lib:$$LD_LIBRARY_PATH \
-	    DYLD_LIBRARY_PATH=$$PWD/lib:$$DYLD_LIBRARY_PATH \
-	    $(CINT7TMP) $(CINT7TMPINC) $(IOSENUM7C) > /dev/null ; \
-	    mv iosenum.h $@ ; \
-	  else \
-	    touch $@ ; \
-	  fi)
+# Duplicate rule of the one in cint/Module.mk
+#$(IOSENUM7A):   $(CINT7TMP) $(CINT7_STDIOH)
+#		@(if [ ! -r $@ ]; then \
+#			echo "Making $@..."; \
+#			$(CINT7TMP) $(CINT7TMPINC) $(IOSENUM7C) > /dev/null ; \
+#			mv iosenum.h $@ ; \
+#		else \
+#			touch $@ ; \
+#		fi)
 
-$(CINT7_STDIOH) : $(CINT7_MKINCLDS)
-	$(CC) $(OPT) $(CINT7CFLAGS) $(CXXOUT)$(CINT7_MKINCLDO) -c $<
-	$(LD) $(LDFLAGS) -o $(CINT7_MKINCLD) $(CINT7_MKINCLDO)
-	cd $(dir $(CINT7_MKINCLD)) ; ./mkincld
+$(CINT7_STDIOH): $(CINT7_MKINCLDS)
+		$(CC) $(OPT) $(CINT7CFLAGS) $(CXXOUT)$(CINT7_MKINCLDO) -c $<
+		$(LD) $(LDFLAGS) -o $(CINT7_MKINCLD) $(CINT7_MKINCLDO)
+		cd $(dir $(CINT7_MKINCLD)) ; ./mkincld
 
-all-$(MODNAME) : $(CINT7LIB) $(CINT7) $(CINT7TMP) $(MAKECINT7) $(IOSENUM7)
+all-$(MODNAME): $(CINT7LIB) $(CINT7) $(CINT7TMP) $(MAKECINT7) $(IOSENUM7)
 
-clean-$(MODNAME) :
-	@rm -f $(CINT7TMPO) $(CINT7ALLO) $(CINT7EXEO) $(MAKECINT7O)
+clean-$(MODNAME):
+		@rm -f $(CINT7TMPO) $(CINT7ALLO) $(CINT7EXEO) $(MAKECINT7O)
 
-clean :: clean-$(MODNAME)
+clean:: clean-$(MODNAME)
 
-distclean-$(MODNAME) : clean-$(MODNAME)
-	@rm -rf $(CINT7ALLDEP) $(CINT7LIB) $(IOSENUM7) $(CINT7EXEDEP) \
-          $(CINT7) $(CINT7TMP) $(MAKECINT7) $(CINT7DIRM)/*.exp \
-          $(CINT7DIRM)/*.lib $(CINT7DIRS)/loadfile_tmp.cxx \
-	  $(CINT7DIRS)/pragma_tmp.cxx \
-	  $(CINT7HT) $(CINT7CONF)
-	@rm -rf include/cint7
+distclean-$(MODNAME): clean-$(MODNAME)
+		@rm -rf $(CINT7ALLDEP) $(CINT7LIB) $(IOSENUM7) $(CINT7EXEDEP) \
+		   $(CINT7) $(CINT7TMP) $(MAKECINT7) $(CINT7DIRM)/*.exp \
+         $(CINT7DIRM)/*.lib $(CINT7DIRS)/loadfile_tmp.cxx \
+		   $(CINT7DIRDLLS)/sys/types.h $(CINT7DIRDLLS)/systypes.h \
+		   $(CINT7DIRS)/pragma_tmp.cxx \
+		   $(CINT7HT) $(CINT7CONF)
+		   @rm -rf include/cint7
 
-distclean :: distclean-$(MODNAME)
+distclean:: distclean-$(MODNAME)
 
 ##### extra rules ######
-$(CINT7DIRS)/libstrm.o :  CINT7CXXFLAGS += -I$(CINT7DIRL)/stream
-$(CINT7DIRS)/sunstrm.o :  CINT7CXXFLAGS += -I$(CINT7DIRL)/snstream
-$(CINT7DIRS)/sun5strm.o : CINT7CXXFLAGS += -I$(CINT7DIRL)/snstream
-$(CINT7DIRS)/vcstrm.o :   CINT7CXXFLAGS += -I$(CINT7DIRL)/vcstream
-$(CINT7DIRS)/%strm.o :    CINT7CXXFLAGS += -I$(CINT7DIRL)/$(notdir $(basename $@))
+$(CINT7DIRS)/libstrm.o:  CINT7CXXFLAGS += -I$(CINT7DIRL)/stream
+$(CINT7DIRS)/sunstrm.o:  CINT7CXXFLAGS += -I$(CINT7DIRL)/snstream
+$(CINT7DIRS)/sun5strm.o: CINT7CXXFLAGS += -I$(CINT7DIRL)/snstream
+$(CINT7DIRS)/vcstrm.o:   CINT7CXXFLAGS += -I$(CINT7DIRL)/vcstream
+$(CINT7DIRS)/%strm.o:    CINT7CXXFLAGS += -I$(CINT7DIRL)/$(notdir $(basename $@))
 
-$(MAKECINT7O) $(CINT7ALLO) : $(CINT7CONF)
+$(MAKECINT7O) $(CINT7ALLO): $(CINT7CONF)
 
-$(MAKECINT7O): CXXFLAGS := $(CINT7CXXFLAGS)
-$(CINT7DIRSD)/stdstrct.o :    CINT7CXXFLAGS += -I$(CINT7DIRL)/stdstrct
-$(CINT7DIRS)/loadfile_tmp.o : CINT7CXXFLAGS += -UHAVE_CONFIG -DROOTBUILD -DG__BUILDING_CINTTMP
-$(CINT7DIRS)/pragma_tmp.o :   CINT7CXXFLAGS += -UHAVE_CONFIG -DROOTBUILD -DG__BUILDING_CINTTMP
+$(MAKECINT7O):               CXXFLAGS := $(CINT7CXXFLAGS)
+$(CINT7DIRSD)/stdstrct.o:    CINT7CXXFLAGS += -I$(CINT7DIRL)/stdstrct
+$(CINT7DIRS)/loadfile_tmp.o: CINT7CXXFLAGS += -UHAVE_CONFIG -DROOTBUILD -DG__BUILDING_CINTTMP
+$(CINT7DIRS)/pragma_tmp.o:   CINT7CXXFLAGS += -UHAVE_CONFIG -DROOTBUILD -DG__BUILDING_CINTTMP
 
-$(CINT7DIRS)/loadfile_tmp.cxx : $(CINT7DIRS)/loadfile.cxx
-	cp -f $< $@
+$(CINT7DIRS)/loadfile_tmp.cxx: $(CINT7DIRS)/loadfile.cxx
+		cp -f $< $@
 
-$(CINT7DIRS)/pragma_tmp.cxx : $(CINT7DIRS)/pragma.cxx
-	cp -f $< $@
+$(CINT7DIRS)/pragma_tmp.cxx: $(CINT7DIRS)/pragma.cxx
+		cp -f $< $@
 
 ##### configcint.h
 ifeq ($(CPPPREP),)
 # cannot use "CPPPREP?=", as someone might set "CPPPREP="
-  CPPPREP = $(CXX) -E -C
+   CPPPREP = $(CXX) -E -C
 endif
 include $(CINT7CONFMK)
 ##### configcint.h - END
