@@ -212,7 +212,7 @@ int XrdPollE::Include(XrdLink *lp)
   
 void XrdPollE::remFD(XrdLink *lp, unsigned int events)
 {
-   struct epoll_event myEvents = {0, (void *)lp};
+   struct epoll_event myEvents = {0, {(void *)lp}};
    static const char *why;
 
 // It works out that ONESHOT mode or even CTL_MOD requests do not necessarily
