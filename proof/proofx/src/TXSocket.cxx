@@ -723,6 +723,56 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
 }
 
 //_______________________________________________________________________
+void TXSocket::PostFatal()
+{
+   // Post a kPROOF_FATAL message to force the main thread to mark this
+   // socket as bad. This is needed to avoid race condition when a worker
+   // dies while in processing state.
+
+   // Create the message
+   TMessage m(kPROOF_FATAL);
+
+   // Get pointer to the message buffer
+   char *mbuf = m.Buffer();
+   Int_t mlen = m.Length();
+   if (m.CompBuffer()) {
+      mbuf = m.CompBuffer();
+      mlen = m.CompLength();
+   }
+
+   //
+   // Data message
+   R__LOCKGUARD(fAMtx);
+
+   // Get a spare buffer
+   TXSockBuf *b = PopUpSpare(mlen);
+   if (!b) {
+      Error("PostFatal", "could allocate spare buffer");
+      return;
+   }
+
+   // Fill the pipe buffer
+   memcpy(b->fBuf, mbuf, mlen);
+   b->fLen = mlen;
+
+   // Update counters
+   fBytesRecv += mlen;
+
+   // Produce the message
+   fAQue.push_back(b);
+
+   // Post the global pipe
+   PostPipe(this);
+
+   // Signal it and release the mutex
+   Info("PostFatal","%p: posting semaphore: %p (%d bytes)", this, &fASem, mlen);
+   fASem.Post();
+
+   // Done
+   return;
+}
+
+//_______________________________________________________________________
 Int_t TXSocket::GetPipeRead()
 {
    // Get read descriptor of the global pipe used for monitoring of the

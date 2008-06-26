@@ -125,6 +125,9 @@ private:
    TXSockBuf          *PopUpSpare(Int_t sz);
    void                PushBackSpare();
 
+   // Post kPROOF_FATAL to remove this socket
+   void                PostFatal();
+
    // Auxilliary
    Int_t               GetLowSocket() const { return (fConn ? fConn->GetLowSocket() : -1); }
 
