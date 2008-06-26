@@ -44,12 +44,11 @@
 #include "TRegexp.h"
 #include "TVirtualMutex.h"
 
-#if defined(R__UNIX)
+#if defined(R__UNIX) || defined(R__MACOSX)
 #define HAVE_MMAP
 #endif
 
 #ifdef HAVE_MMAP
-#   include <unistd.h>
 #   include <sys/mman.h>
 #ifndef MAP_FILE
 #define MAP_FILE 0           /* compatability flag */
@@ -72,7 +71,7 @@ TFTP::TFTP(const char *url, Int_t par, Int_t wsize, TSocket *sock)
    // Using wsize one can specify the tcp window size. Normally this is not
    // needed when using parallel sockets.
    // An existing connection (TSocket *sock) can also be used to establish
-   // the FTP session. 
+   // the FTP session.
 
    fSocket = sock;
 
