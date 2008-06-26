@@ -2,73 +2,111 @@
 <html>
 <head>
 
+
+  
   <title>PROOF release notes</title>
 </head>
 
 
 <body>
 
+
 <br>
+
 
 <hr>
 <a name="proof"></a>
 <h3>PROOF</h3>
 
+
 <ul>
+
 
   <li>New functionality</li>
 
+
+  
   <ul>
 
+
+  
   </ul>
+
 
   <li>Improvements:</li>
 
+
+  
   <ul>
+
 
     <li>
 Log retrieval:</li>
 
+
+    
     <ul>
+
 
       <li>
 for 'grep' operations, use the system 'grep' command via 'popen'
-instead of a handmade filtering</li>
+instead of a handmade filtering; this implies that the full grep functionality is now available</li>
+
 
       <li>
-set the default number of displayed lines to 100 instead of 10
-      </li>
+set the default number of displayed lines to 100 instead of 10</li>
 
+
+    
     </ul>
-
+    <li>Improve diagnostic in case of worker death: clients will now
+receive a message containing the low level reason for the failure and a
+hint for getting more information</li>
   </ul>
 
+
+  
   <ul>
 
+
+  
   </ul>
+
 
   <li>Fixes</li>
 
+
+  
   <ul>
+
 
     <li>
 Invalidate the TProofMgr when the physical connection is closed; avoids
 crashing when trying to get the logs after a failure.
     </li>
 
+
     <li>
 Fix a memory leak in log retrieval (the TProofLog object was never
 deleted)</li>
 
+
     <li>
-Add protections for the cases the manager cannot be initialized
-    </li>
+Add protections for the cases the manager cannot be initialized</li>
+    <li>Fix a race condition possibly affecting the handling of workers death</li>
+    <li>Avoid duplicating worker logs in the master log file unless
+when explicitely needed by the request (Exec(...), Print(...)) or when
+an error occured</li>
 
-    <br>
 
+    
+
+  
   </ul>
 
+
 </ul>
+
 
 </body>
 </html>
