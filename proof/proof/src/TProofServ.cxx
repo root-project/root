@@ -96,6 +96,7 @@
 TProofServ *gProofServ = 0;
 
 Bool_t TProofServ::fgLogToSysLog = kFALSE;      //true if logs should be sent to syslog too
+Bool_t TProofServ::fgSendLogToMaster = kFALSE; // On workers, controls logs sending to master
 
 // debug hook
 static volatile Int_t gProofServDebug = 1;
@@ -477,6 +478,7 @@ Int_t TProofServ::CreateServer()
 
    if (Setup() != 0) {
       // Setup failure
+      fgSendLogToMaster = kTRUE;
       SendLogFile();
       Terminate(0);
       return -1;
@@ -494,6 +496,7 @@ Int_t TProofServ::CreateServer()
       // If for some reason we failed setting a redirection fole for the logs
       // we cannot continue
       if (!fLogFile || (fLogFileDes = fileno(fLogFile)) < 0) {
+         fgSendLogToMaster = kTRUE;
          SendLogFile(-98);
          Terminate(0);
          return -1;
@@ -501,6 +504,7 @@ Int_t TProofServ::CreateServer()
    } else {
       // Use the file already open by pmain
       if ((fLogFileDes = fileno(fLogFile)) < 0) {
+         fgSendLogToMaster = kTRUE;
          SendLogFile(-98);
          Terminate(0);
          return -1;
@@ -510,6 +514,7 @@ Int_t TProofServ::CreateServer()
    // Send message of the day to the client
    if (IsMaster()) {
       if (CatMotd() == -1) {
+         fgSendLogToMaster = kTRUE;
          SendLogFile(-99);
          Terminate(0);
          return -1;
@@ -602,8 +607,7 @@ Int_t TProofServ::CreateServer()
                                                           fLogLevel, 0));
       if (!fProof || !fProof->IsValid()) {
          Error("CreateServer", "plugin for TProof could not be executed");
-         delete fProof;
-         fProof = 0;
+         SafeDelete(fProof);
          SendLogFile(-99);
          Terminate(0);
          return -1;
@@ -905,6 +909,7 @@ void TProofServ::HandleSocketInput()
                Info("HandleSocketInput:kMESS_CINT", "processing: %s...", str);
             ProcessLine(str);
          }
+         fgSendLogToMaster = kTRUE;
          SendLogFile();
          break;
 
@@ -942,6 +947,7 @@ void TProofServ::HandleSocketInput()
       case kPROOF_PRINT:
          mess->ReadString(str, sizeof(str));
          Print(str);
+         fgSendLogToMaster = kTRUE;
          SendLogFile();
          break;
 
@@ -1123,6 +1129,7 @@ void TProofServ::HandleSocketInput()
                Info("HandleSocketInput:kPROOF_LOGFILE",
                     "Logfile request - byte range: %d - %d", start, end);
 
+            fgSendLogToMaster = kTRUE;
             SendLogFile(0, start, end);
          }
          break;
@@ -1363,6 +1370,7 @@ void TProofServ::HandleSocketInputDuringProcess()
                Info("HandleSocketInputDuringProcess:kPROOF_LOGFILE",
                     "Logfile request - byte range: %d - %d", start, end);
 
+            fgSendLogToMaster = kTRUE;
             SendLogFile(0, start, end);
          }
          break;
@@ -1803,6 +1811,17 @@ void TProofServ::SendLogFile(Int_t status, Int_t start, Int_t end)
 
    // Determine the number of bytes left to be read from the log file.
    fflush(stdout);
+
+   // On workers we do not send the logs to masters (to avoid duplication of
+   // text) unless asked explicitely, e.g. after an Exec(...) request.
+   if (!IsMaster()) {
+      if (!fgSendLogToMaster) {
+         FlushLogFile();
+      } else {
+         // Decide case by case 
+         fgSendLogToMaster = kFALSE;
+      }
+   }
 
    off_t ltot=0, lnow=0;
    Int_t left = -1;
@@ -4846,6 +4865,10 @@ void TProofServ::ErrorHandler(Int_t level, Bool_t abort, const char *location,
 
    if (level < gErrorIgnoreLevel)
       return;
+
+   // Always communicate errors via SendLogFile
+   if (level >= kError)
+      fgSendLogToMaster = kTRUE;
 
    static TString syslogService;
 

@@ -137,6 +137,7 @@ private:
    Long64_t      fHWMBoxSize;       //High-Water-Mark on the sandbox size
 
    static Bool_t fgLogToSysLog;     //true if logs should be sent to syslog too
+   static Bool_t fgSendLogToMaster; // On workers, controls logs sending to master
 
    void          RedirectOutput();
    Int_t         CatMotd();

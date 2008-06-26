@@ -285,8 +285,9 @@ Int_t TXProofServ::CreateServer()
 
    if (Setup() == -1) {
       // Setup failure
-      Terminate(0);
+      fgSendLogToMaster = kTRUE;
       SendLogFile();
+      Terminate(0);
       return -1;
    }
 
@@ -295,8 +296,9 @@ Int_t TXProofServ::CreateServer()
       // If for some reason we failed setting a redirection file for the logs
       // we cannot continue
       if (!fLogFile || (fLogFileDes = fileno(fLogFile)) < 0) {
-         Terminate(0);
+         fgSendLogToMaster = kTRUE;
          SendLogFile(-98);
+         Terminate(0);
          return -1;
       }
    }
@@ -304,8 +306,9 @@ Int_t TXProofServ::CreateServer()
    // Send message of the day to the client
    if (IsMaster()) {
       if (CatMotd() == -1) {
-         Terminate(0);
+         fgSendLogToMaster = kTRUE;
          SendLogFile(-99);
+         Terminate(0);
          return -1;
       }
    }
@@ -653,80 +656,6 @@ Int_t TXProofServ::Setup()
 
    // Done
    return 0;
-}
-
-//______________________________________________________________________________
-void TXProofServ::SendLogFile(Int_t status, Int_t start, Int_t end)
-{
-   // Send log file to master.
-   // If start > -1 send only bytes in the range from start to end,
-   // if end <= start send everything from start.
-
-   // Determine the number of bytes left to be read from the log file.
-   fflush(stdout);
-
-   off_t ltot, lnow;
-   Int_t left;
-
-   ltot = lseek(fileno(stdout),   (off_t) 0, SEEK_END);
-   lnow = lseek(fLogFileDes, (off_t) 0, SEEK_CUR);
-
-   Bool_t adhoc = kFALSE;
-   if (start > -1) {
-      lseek(fLogFileDes, (off_t) start, SEEK_SET);
-      if (end <= start || end > ltot)
-         end = ltot;
-      left = (Int_t)(end - start);
-      if (end < ltot)
-         left++;
-      adhoc = kTRUE;
-   } else {
-      left = (Int_t)(ltot - lnow);
-   }
-
-   if (left > 0) {
-      fSocket->Send(left, kPROOF_LOGFILE);
-
-      const Int_t kMAXBUF = 32768;  //16384  //65536;
-      char buf[kMAXBUF];
-      Int_t wanted = (left > kMAXBUF) ? kMAXBUF : left;
-      Int_t len;
-      do {
-         while ((len = read(fLogFileDes, buf, wanted)) < 0 &&
-                TSystem::GetErrno() == EINTR)
-            TSystem::ResetErrno();
-
-         if (len < 0) {
-            SysError("SendLogFile", "error reading log file");
-            break;
-         }
-
-         if (end == ltot && len == wanted)
-            buf[len-1] = '\n';
-
-         if (fSocket->SendRaw(buf, len, kDontBlock) < 0) {
-            SysError("SendLogFile", "error sending log file");
-            break;
-         }
-
-         // Update counters
-         left -= len;
-         wanted = (left > kMAXBUF) ? kMAXBUF : left;
-
-      } while (len > 0 && left > 0);
-   }
-
-   // Restore initial position if partial send
-   if (adhoc)
-      lseek(fLogFileDes, lnow, SEEK_SET);
-
-   TMessage mess(kPROOF_LOGDONE);
-   if (IsMaster())
-      mess << status << (fProof ? fProof->GetParallel() : 0);
-   else
-      mess << status << (Int_t) 1;
-
-   fSocket->Send(mess);
 }
 
 //______________________________________________________________________________

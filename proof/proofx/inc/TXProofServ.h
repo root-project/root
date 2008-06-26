@@ -42,7 +42,6 @@ private:
 
    Int_t         LockSession(const char *sessiontag, TProofLockPath **lck);
 
-   void          SendLogFile(Int_t status = 0, Int_t start = -1, Int_t end = -1);
    void          SetShutdownTimer(Bool_t on = kTRUE, Int_t delay = 0);
    Int_t         Setup();
 
