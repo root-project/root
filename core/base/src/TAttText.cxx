@@ -153,13 +153,17 @@ in the <tt>.rootrc</tt> file:
 <pre>
    Unix.*.Root.UseTTFonts:     true
 </pre>
-It is possible to check the TTF are in use in a Root session.
-When the TTF is active, the following message is displayed at
-the start of the session:
+It is possible to check the TTF are in use in a Root session
+with the command:
 <pre>
-   "FreeType Engine vX.X.X used to render TrueType fonts."
+   gEnv->Print();
 </pre>
- It is also possible to check it with the command <tt>gEnv->Print()</tt>.
+if the TTF are is use the following line will appear at the beginning of the
+printout given by this command:
+<pre>
+   Unix.*.Root.UseTTFonts:   true                           [Global]
+</pre>
+
 
 <a name="T53"></a><h4>List of the currently supported fonts</h4>
 <pre>
