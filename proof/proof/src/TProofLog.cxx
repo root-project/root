@@ -169,7 +169,7 @@ void TProofLog::Prt(const char *what)
          EmitVA("Prt(const char*)", 2, what, kFALSE);
       } else {
          FILE *where = (fFILE) ? (FILE *)fFILE : stderr;
-         fprintf(where, "%s", what);
+         fprintf(where, "%s\n", what);
       }
    }
 }
@@ -454,13 +454,8 @@ void TProofLogElem::Display(Int_t from, Int_t to)
    // Write lines
    for ( ; i < ie; i++) {
       TObjString *os = (TObjString *) fMacro->GetListOfLines()->At(i);
-      if (os) {
-         if (os->GetString().EndsWith("\n")) {
-            Prt(Form("%s", os->GetName()));
-         } else {
-            Prt(Form("%s\n", os->GetName()));
-         }
-      }
+      if (os)
+         Prt(Form("%s", os->GetName()));
    }
    // Write tail
    Prt(Form("// --------- End of element log -------------------\n\n"));
