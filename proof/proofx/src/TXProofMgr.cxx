@@ -519,28 +519,16 @@ TObjString *TXProofMgr::ReadBuffer(const char *fin, const char *pattern)
       return (TObjString *)0;
    }
 
-   // Grep option
-   Int_t k = 0;
-   Int_t opt = 1;
-   if (!strncmp(pattern,"-v ",3)) {
-      opt = 2;
-      k = 3;
-   }
-
    // Prepare the buffer
-   Int_t i = k;
    Int_t plen = strlen(pattern);
-
-   Int_t len = strlen(fin) + plen - k;
-   char *buf = new char[len + 1];
-   memcpy(buf, fin, strlen(fin));
-   Int_t j = strlen(fin);
-   for (i = k; i < plen; i++)
-      buf[j++] = pattern[i];
-   buf[len] = 0;
+   Int_t lfi = strlen(fin);
+   char *buf = new char[lfi + plen + 1];
+   memcpy(buf, fin, lfi);
+   memcpy(buf+lfi, pattern, plen);
+   buf[lfi+plen] = 0;
 
    // Send the request
-   return fSocket->SendCoordinator(TXSocket::kReadBuffer, buf, plen - k, 0, opt);
+   return fSocket->SendCoordinator(TXSocket::kReadBuffer, buf, plen, 0, 1);
 }
 
 //______________________________________________________________________________

@@ -5057,7 +5057,7 @@ int XrdProofdProtocol::ReadBuffer()
          // Just got an empty buffer
          if (TRACING(DBG)) {
             emsg = "ReadBuffer: nothing found in ";
-            emsg += file;
+            emsg += (grep > 0) ? filen : file;
             TRACEP(DBG, emsg);
          }
       }
@@ -5195,25 +5195,35 @@ char *XrdProofdProtocol::ReadBufferLocal(const char *file,
    }
    off_t ltot = st.st_size;
 
-   XrdOucString cmd("grep ");
+   // The grep command
+   char *cmd = 0;
+   int lcmd = 0;
    if (pat && strlen(pat) > 0) {
-      if (opt == 2) cmd += " -v ";
-      cmd += pat;
-      cmd += " ";
+      lcmd = strlen(pat) + strlen(file) + 20;
+      cmd = new char[lcmd];
+      if (opt == 2) {
+         sprintf(cmd, "grep -v %s %s", pat, file);
+      } else {
+         sprintf(cmd, "grep %s %s", pat, file);
+      }
    } else {
-      cmd = "cat ";
+      lcmd = strlen(file) + 10;
+      cmd = new char[lcmd];
+      sprintf(cmd, "cat %s", file);
    }
-   cmd += file;
    TRACEI(ACT, "ReadBufferLocal: cmd: "<<cmd);
 
    // Execute the command in a pipe
-   FILE *fp = popen(cmd.c_str(), "r");
+   FILE *fp = popen(cmd, "r");
    if (!fp) {
-      emsg = "ReadBufferLocal: could not open ";
-      emsg += file;
+      emsg = "ReadBufferLocal: could not run '";
+      emsg += cmd;
+      emsg += "'";
       TRACEI(XERR, emsg);
+      delete[] cmd;
       return (char *)0;
    }
+   delete[] cmd;
 
    // Read line by line
    len = 0;
@@ -5238,6 +5248,7 @@ char *XrdProofdProtocol::ReadBufferLocal(const char *file,
          emsg += (int)errno;
          XPDERR(emsg);
          pclose(fp);
+         free(buf);
          return (char *)0;
       }
       // Add line to the buffer
