@@ -122,6 +122,7 @@ const char* const kPROOF_DataSetDir      = "datasets";    // dataset dir, under 
 const char* const kPROOF_CacheLockFile   = "proof-cache-lock-";   // cache lock file
 const char* const kPROOF_PackageLockFile = "proof-package-lock-"; // package lock file
 const char* const kPROOF_QueryLockFile   = "proof-query-lock-";   // query lock file
+const char* const kPROOF_TerminateWorker = "+++ terminating +++"; // signal worker termination in MarkBad
 
 #ifndef R__WIN32
 const char* const kCP     = "/bin/cp -fp";

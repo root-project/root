@@ -2685,7 +2685,7 @@ void TProof::MarkBad(TSlave *wrk, const char *reason)
                            : TUrl(gSystem->HostName()).GetHostFQDN();
    }
 
-   if (!reason || strcmp(reason, "+++ terminating +++")) {
+   if (!reason || strcmp(reason, kPROOF_TerminateWorker)) {
       // Message for notification
       const char *mastertype = (gProofServ && gProofServ->IsTopMaster()) ? "top master" : "master";
       TString src = IsMaster() ? Form("%s at %s", mastertype, thisurl.Data()) : "local session";
@@ -2767,7 +2767,7 @@ void TProof::TerminateWorker(TSlave *wrk)
    }
 
    // This is a bad worker from now on
-   MarkBad(wrk, "+++ terminating +++");
+   MarkBad(wrk, kPROOF_TerminateWorker);
 }
 
 //______________________________________________________________________________
