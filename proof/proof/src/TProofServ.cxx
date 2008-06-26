@@ -965,7 +965,18 @@ void TProofServ::HandleSocketInput()
          break;
 
       case kPROOF_STOP:
-         Terminate(0);
+         {  if (IsMaster()) {
+               TString ord;
+               *mess >> ord;
+               PDB(kGlobal, 1)
+                  Info("HandleSocketInput:kPROOF_STOP", "request for worker %s", ord.Data());
+               if (fProof) fProof->TerminateWorker(ord);
+            } else {
+               PDB(kGlobal, 1)
+                  Info("HandleSocketInput:kPROOF_STOP", "got request to terminate");
+               Terminate(0);
+            }
+         }
          break;
 
       case kPROOF_STOPPROCESS:

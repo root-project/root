@@ -2685,25 +2685,32 @@ void TProof::MarkBad(TSlave *wrk, const char *reason)
                            : TUrl(gSystem->HostName()).GetHostFQDN();
    }
 
-   // Message for notification
-   const char *mastertype = (gProofServ && gProofServ->IsTopMaster()) ? "top master" : "master";
-   TString src = IsMaster() ? Form("%s at %s", mastertype, thisurl.Data()) : "local session";
-   TString msg(Form("\n +++ Message from %s : ", src.Data()));
-   msg += Form("marking %s:%d (%s) as bad\n +++ Reason: %s",
-               wrk->GetName(), wrk->GetPort(), wrk->GetOrdinal(),
-               (reason && strlen(reason)) ? reason : "unknown");
-   Info("MarkBad", "%s", msg.Data());
-   // Notify one level up, if the case
-   if (gProofServ) {
-      // Add some hint for diagnostics
-      msg += Form("\n\n +++ Most likely your code crashed on worker %s at %s:%d.\n",
-                  wrk->GetOrdinal(), wrk->GetName(), wrk->GetPort());
-      msg += Form(" +++ Please check the session logs for error messages either using\n");
-      msg += Form(" +++ the 'Show logs' button or executing\n");
-      msg += Form(" +++\n");
-      msg += Form(" +++ root [] TProof::Mgr(\"%s\")->GetSessionLogs()->Display(\"%s\",0)\n\n",
-                  thisurl.Data(), wrk->GetOrdinal());
-      gProofServ->SendAsynMessage(msg, kTRUE);
+   if (!reason || strcmp(reason, "+++ terminating +++")) {
+      // Message for notification
+      const char *mastertype = (gProofServ && gProofServ->IsTopMaster()) ? "top master" : "master";
+      TString src = IsMaster() ? Form("%s at %s", mastertype, thisurl.Data()) : "local session";
+      TString msg(Form("\n +++ Message from %s : ", src.Data()));
+      msg += Form("marking %s:%d (%s) as bad\n +++ Reason: %s",
+                  wrk->GetName(), wrk->GetPort(), wrk->GetOrdinal(),
+                  (reason && strlen(reason)) ? reason : "unknown");
+      Info("MarkBad", "%s", msg.Data());
+      // Notify one level up, if the case
+      if (gProofServ) {
+         // Add some hint for diagnostics
+         msg += Form("\n\n +++ Most likely your code crashed on worker %s at %s:%d.\n",
+                     wrk->GetOrdinal(), wrk->GetName(), wrk->GetPort());
+         msg += Form(" +++ Please check the session logs for error messages either using\n");
+         msg += Form(" +++ the 'Show logs' button or executing\n");
+         msg += Form(" +++\n");
+         msg += Form(" +++ root [] TProof::Mgr(\"%s\")->GetSessionLogs()->Display(\"%s\",0)\n\n",
+                     thisurl.Data(), wrk->GetOrdinal());
+         gProofServ->SendAsynMessage(msg, kTRUE);
+      }
+   } else if (reason) {
+      if (gDebug > 0) {
+         Info("MarkBad", "worker %s at %s:%d asked to terminate",
+                         wrk->GetOrdinal(), wrk->GetName(), wrk->GetPort());
+      }
    }
 
    fActiveSlaves->Remove(wrk);
@@ -2737,6 +2744,54 @@ void TProof::MarkBad(TSocket *s, const char *reason)
 
    TSlave *wrk = FindSlave(s);
    MarkBad(wrk, reason);
+}
+
+//______________________________________________________________________________
+void TProof::TerminateWorker(TSlave *wrk)
+{
+   // Ask an active worker 'wrk' to terminate, i.e. to shutdown
+
+   if (!wrk) {
+      Warning("TerminateWorker", "worker instance undefined: protocol error? ");
+      return;
+   }
+
+   // Send stop message
+   if (wrk->GetSocket() && wrk->GetSocket()->IsValid()) {
+      TMessage mess(kPROOF_STOP);
+      wrk->GetSocket()->Send(mess);
+   } else {
+      if (gDebug > 0)
+         Info("TerminateWorker", "connection to worker is already down: cannot"
+                                 " send termination message");
+   }
+
+   // This is a bad worker from now on
+   MarkBad(wrk, "+++ terminating +++");
+}
+
+//______________________________________________________________________________
+void TProof::TerminateWorker(const char *ord)
+{
+   // Ask an active worker 'ord' to terminate, i.e. to shutdown
+
+   if (ord && strlen(ord) > 0) {
+      Bool_t all = (ord[0] == '*') ? kTRUE : kFALSE;
+      if (IsMaster()) {
+         TIter nxw(fSlaves);
+         TSlave *wrk = 0;
+         while ((wrk = (TSlave *)nxw())) {
+            if (all || !strcmp(wrk->GetOrdinal(), ord)) {
+               TerminateWorker(wrk);
+               if (!all) break;
+            }
+         }
+      } else {
+         TMessage mess(kPROOF_STOP);
+         mess << TString(ord);
+         Broadcast(mess);
+      }
+   }
 }
 
 //______________________________________________________________________________

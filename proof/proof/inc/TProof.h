@@ -535,8 +535,10 @@ private:
 
    void     SetRunStatus(ERunStatus rst) { fRunStatus = rst; }
 
-   void     MarkBad(TSlave *sl, const char *reason = 0);
+   void     MarkBad(TSlave *wrk, const char *reason = 0);
    void     MarkBad(TSocket *s, const char *reason = 0);
+   void     TerminateWorker(TSlave *wrk);
+   void     TerminateWorker(const char *ord);
 
    void     ActivateAsyncInput();
    void     DeActivateAsyncInput();
