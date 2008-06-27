@@ -245,7 +245,6 @@ TGListBox* TProofProgressLog::BuildLogList(TGFrame *parent)
    // of TProofLogElements
 
    TGListBox *c = 0;
-   char buf[150];
    if (!fDialog) {
       Warning("BuildLogList", "dialog instance undefined - do nothing");
       return c;
@@ -268,11 +267,11 @@ TGListBox* TProofProgressLog::BuildLogList(TGFrame *parent)
    TIter next(elem);
    TProofLogElem *pe = 0;
 
-   Int_t is=0; 
+   Int_t is = 0;
    while ((pe=(TProofLogElem*)next())){
       TUrl url(pe->GetTitle());
-      sprintf(buf,"%s %s",pe->GetName(), url.GetHost());     
-      c->AddEntry(buf, is);
+      TString buf = Form("%s %s", pe->GetName(), url.GetHost());
+      c->AddEntry(buf.Data(), is);
       is++;
    }
    return c;
