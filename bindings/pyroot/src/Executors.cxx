@@ -225,6 +225,31 @@ PyObject* PyROOT::TRootObjectByValueExecutor::Execute( G__CallFunc* func, void* 
 }
 
 //____________________________________________________________________________
+PyObject* PyROOT::TRootObjectRefExecutor::Execute( G__CallFunc* func, void* self )
+{
+   PyObject* result = BindRootObject( (void*)func->ExecInt( self ), fClass );
+   if ( ! result || ! fAssignable )
+      return result;
+   else {
+   // this generic code is quite slow compared to its C++ equivalent ...
+      PyObject* res2 = PyObject_CallMethod( result,
+         const_cast< char* >( "__assign__" ), const_cast< char* >( "O" ), fAssignable );
+
+      Py_DECREF( result );
+      Py_DECREF( fAssignable );
+      fAssignable = 0;
+
+      if ( res2 ) {
+         Py_DECREF( res2 );             // typically, *this from operator=()
+         Py_INCREF( Py_None );
+         return Py_None;
+      }
+
+      return 0;
+   }
+}
+
+//____________________________________________________________________________
 PyObject* PyROOT::TConstructorExecutor::Execute( G__CallFunc* func, void* klass )
 {
 // package return address in PyObject* for caller to handle appropriately
@@ -273,8 +298,12 @@ PyROOT::TExecutor* PyROOT::CreateExecutor( const std::string& fullType )
 // ROOT classes and special cases (enum)
    TExecutor* result = 0;
    if ( TClass* klass = TClass::GetClass( realType.c_str() ) ) {
-      result = cpd != ""  ? \
-         new TRootObjectExecutor( klass ) : new TRootObjectByValueExecutor( klass );
+      if ( cpd == "" )
+         result = new TRootObjectByValueExecutor( klass );
+      else if ( cpd == "&" )
+         result = new TRootObjectRefExecutor( klass );
+      else
+         result = new TRootObjectExecutor( klass );
    } else {
    // could still be an enum ...
       if ( ti.Property() & G__BIT_ISENUM )

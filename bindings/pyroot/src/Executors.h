@@ -107,6 +107,16 @@ namespace PyROOT {
    PYROOT_DECLARE_BASIC_REFEXECUTOR( Double );
    PYROOT_DECLARE_BASIC_REFEXECUTOR( STLString );
 
+// special cases
+   class TRootObjectRefExecutor : public TRefExecutor {
+   public:
+      TRootObjectRefExecutor( const TClassRef& klass ) : fClass( klass ) {}
+      virtual PyObject* Execute( G__CallFunc*, void* );
+
+   protected:
+      TClassRef fClass;
+   };
+
 // factories
    typedef TExecutor* (*ExecutorFactory_t) ();
    typedef std::map< std::string, ExecutorFactory_t > ExecFactories_t;

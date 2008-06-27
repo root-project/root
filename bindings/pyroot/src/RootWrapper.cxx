@@ -232,11 +232,6 @@ int PyROOT::BuildRootClassDict( const T& klass, PyObject* pyclass ) {
          while ( start < end && isspace( op[ end-1 ] ) ) --end;
          op = op.substr( start, end - start );
 
-      // filter assignment operator for later use
-         if ( op == "=" ) {
-            continue;
-         }
-
       // map C++ operator to python equivalent, or made up name if no equivalent exists
          Utility::TC2POperatorMapping_t::iterator pop = Utility::gC2POperatorMapping.find( op );
          if ( pop != Utility::gC2POperatorMapping.end() ) {

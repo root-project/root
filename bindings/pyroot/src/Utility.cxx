@@ -77,6 +77,8 @@ namespace {
          gC2POperatorMapping[ ">=" ]  = "__ge__";
          gC2POperatorMapping[ "<=" ]  = "__le__";
 
+         gC2POperatorMapping[ "=" ]  = "__assign__";        // not an actual python operator
+
          gC2POperatorMapping[ "bool" ] = "__nonzero__";
       }
    } initOperatorMapping_;
