@@ -771,10 +771,10 @@ int RpdUpdateAuthTab(int opt, const char *line, char **token, int ilck)
       // Now scan over entries
       int pr = 0, pw = 0;
       int lsec, act, oldofs = 0, bytesread = 0;
-      char line[kMAXPATHLEN], dumm[kMAXPATHLEN];
+      char ln[kMAXPATHLEN], dumm[kMAXPATHLEN];
       bool fwr = 0;
 
-      while ((bytesread = reads(itab, line, sizeof(line)))) {
+      while ((bytesread = reads(itab, ln, sizeof(ln)))) {
 
          // Current position
          pr = lseek(itab,0,SEEK_CUR);
@@ -790,7 +790,7 @@ int RpdUpdateAuthTab(int opt, const char *line, char **token, int ilck)
          }
          if (ok) {
             // Check file corruption: number of items
-            int ns = sscanf(line, "%d %d %s", &lsec, &act, dumm);
+            int ns = sscanf(ln, "%d %d %s", &lsec, &act, dumm);
             if (ns < 3 ) {
                ErrorInfo("RpdUpdateAuthTab: opt=%d: file %s seems corrupted"
                          " (ns: %d)", opt, gRpdAuthTab.c_str(), ns);
@@ -807,23 +807,23 @@ int RpdUpdateAuthTab(int opt, const char *line, char **token, int ilck)
                   // Write the entry at new position
                   lseek(itab, pw, SEEK_SET);
 
-                  if (line[slen-1] != '\n') {
+                  if (ln[slen-1] != '\n') {
                      if (slen >= kMAXPATHLEN -1)
-                        line[slen-1] = '\n';
+                        ln[slen-1] = '\n';
                      else {
-                        line[slen] = '\n';
-                        line[slen+1] = '\0';
+                        ln[slen] = '\n';
+                        ln[slen+1] = '\0';
                      }
                   }
-                  while (write(itab, line, strlen(line)) < 0
+                  while (write(itab, ln, strlen(ln)) < 0
                          && GetErrno() == EINTR)
                      ResetErrno();
-                  pw += strlen(line);
+                  pw += strlen(ln);
                } else
                   RpdDeleteKeyFile(oldofs);
                lseek(itab, pr, SEEK_SET);
             } else
-               pw += strlen(line);
+               pw += strlen(ln);
          } else {
             fwr = 1;
          }
@@ -1909,9 +1909,9 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
                          tmet, gHaveMeth[tmet]);
             if (tmet >= 0 && tmet <= kMAXSEC) {
                if (gHaveMeth[tmet] == 1) {
-                  int i;
-                  for (i = 0; i < nmet; i++) {
-                     if (mth[i] == tmet) {
+                  int ii;
+                  for (ii = 0; ii < nmet; ii++) {
+                     if (mth[ii] == tmet) {
                         jm = i;
                      }
                   }
@@ -4462,14 +4462,12 @@ int RpdCheckSshd(int opt)
       localAddr.sin_family = AF_INET;
       localAddr.sin_addr.s_addr = htonl(INADDR_ANY);
       localAddr.sin_port = htons(0);
-      int rc = bind(sd, (struct sockaddr *) &localAddr, sizeof(localAddr));
-      if (rc < 0) {
+      if (bind(sd, (struct sockaddr *) &localAddr, sizeof(localAddr)) < 0) {
          ErrorInfo("RpdCheckSshd: cannot bind to local port %u", gSshdPort);
          return 0;
       }
       // connect to server
-      rc = connect(sd, (struct sockaddr *) &servAddr, sizeof(servAddr));
-      if (rc < 0) {
+      if (connect(sd, (struct sockaddr *) &servAddr, sizeof(servAddr)) < 0) {
          ErrorInfo("RpdCheckSshd: cannot connect to local port %u",
                    gSshdPort);
          return 0;
