@@ -98,20 +98,37 @@ TProofMgr::~TProofMgr()
 }
 
 //______________________________________________________________________________
-TProof *TProofMgr::AttachSession(Int_t id, Bool_t)
+TProof *TProofMgr::AttachSession(Int_t id, Bool_t gui)
+{
+   // Dummy version provided for completeness. Just returns a pointer to
+   // existing session 'id' (as shown by TProof::QuerySessions) or 0 if 'id' is
+   // not valid. The boolena 'gui' should be kTRUE when invoked from the GUI.
+
+   TProofDesc *d = GetProofDesc(id);
+   if (d)
+      return AttachSession(d, gui);
+
+   Info("AttachSession","invalid proofserv id (%d)", id);
+   return 0;
+}
+
+//______________________________________________________________________________
+TProof *TProofMgr::AttachSession(TProofDesc *d, Bool_t)
 {
    // Dummy version provided for completeness. Just returns a pointer to
    // existing session 'id' (as shown by TProof::QuerySessions) or 0 if 'id' is
    // not valid.
 
-   TProofDesc *d = GetProofDesc(id);
-   if (d) {
-      if (d->GetProof())
-         // Nothing to do if already in contact with proofserv
-         return d->GetProof();
+   if (!d) {
+      Warning("AttachSession","invalid description object - do nothing");
+      return 0;
    }
 
-   Info("AttachSession","invalid proofserv id (%d)", id);
+   if (d->GetProof())
+      // Nothing to do if already in contact with proofserv
+      return d->GetProof();
+
+   Warning("AttachSession","session not available - do nothing");
    return 0;
 }
 
@@ -205,7 +222,7 @@ Int_t TProofMgr::SendMsgToUsers(const char *, const char *)
 }
 
 //______________________________________________________________________________
-Int_t TProofMgr::Reset(const char *)
+Int_t TProofMgr::Reset(Bool_t, const char *)
 {
    // Send a cleanup request for the sessions associated with the current
    // user.

@@ -107,7 +107,7 @@ class TMap;
 // 13 -> 14: new proofserv environment setting
 // 14 -> 15: add support for entry lists; new version of TFileInfo
 // 15 -> 16: add support for generic non-data based processing
-// 16 -> 17: new dataset handling system; support for TFileCollection processing 
+// 16 -> 17: new dataset handling system; support for TFileCollection processing
 
 // PROOF magic constants
 const Int_t       kPROOF_Protocol        = 17;            // protocol version number
@@ -798,7 +798,7 @@ public:
    static TProof       *Open(const char *url = 0, const char *conffile = 0,
                              const char *confdir = 0, Int_t loglevel = 0);
    static TProofMgr    *Mgr(const char *url);
-   static void          Reset(const char *url);
+   static void          Reset(const char *url, Bool_t hard = kFALSE);
 
    static void          AddEnvVar(const char *name, const char *value);
    static void          DelEnvVar(const char *name);

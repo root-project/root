@@ -127,7 +127,7 @@ void TXProofMgr::SetInvalid()
 }
 
 //______________________________________________________________________________
-TProof *TXProofMgr::AttachSession(Int_t id, Bool_t gui)
+TProof *TXProofMgr::AttachSession(TProofDesc *d, Bool_t gui)
 {
    // Dummy version provided for completeness. Just returns a pointer to
    // existing session 'id' (as shown by TProof::QuerySessions) or 0 if 'id' is
@@ -137,46 +137,44 @@ TProof *TXProofMgr::AttachSession(Int_t id, Bool_t gui)
       Warning("AttachSession","invalid TXProofMgr - do nothing");
       return 0;
    }
-
-   TProofDesc *d = GetProofDesc(id);
-   if (d) {
-      if (d->GetProof())
-         // Nothing to do if already in contact with proofserv
-         return d->GetProof();
-
-      // Re-compose url
-      TString u(Form("%s/?%d", fUrl.GetUrl(kTRUE), d->GetRemoteId()));
-
-      // We need this to set correctly the kUsingSessionGui bit before the first
-      // feedback messages arrive
-      if (gui)
-         u += "GUI";
-
-      // Attach
-      TProof *p = new TProof(u);
-      if (p && p->IsValid()) {
-
-         // Set reference manager
-         p->SetManager(this);
-
-         // Save record about this session
-         Int_t st = (p->IsIdle()) ? TProofDesc::kIdle
-                                  : TProofDesc::kRunning;
-         d->SetStatus(st);
-         d->SetProof(p);
-
-         // Set session tag
-         p->SetName(d->GetName());
-
-      } else {
-         // Session creation failed
-         Error("AttachSession", "attaching to PROOF session");
-      }
-      return p;
+   if (!d) {
+      Warning("AttachSession","invalid description object - do nothing");
+      return 0;
    }
 
-   Info("AttachSession","invalid proofserv id (%d)", id);
-   return 0;
+   if (d->GetProof())
+      // Nothing to do if already in contact with proofserv
+      return d->GetProof();
+
+   // Re-compose url
+   TString u(Form("%s/?%d", fUrl.GetUrl(kTRUE), d->GetRemoteId()));
+
+   // We need this to set correctly the kUsingSessionGui bit before the first
+   // feedback messages arrive
+   if (gui)
+      u += "GUI";
+
+   // Attach
+   TProof *p = new TProof(u);
+   if (p && p->IsValid()) {
+
+      // Set reference manager
+      p->SetManager(this);
+
+      // Save record about this session
+      Int_t st = (p->IsIdle()) ? TProofDesc::kIdle
+                                 : TProofDesc::kRunning;
+      d->SetStatus(st);
+      d->SetProof(p);
+
+      // Set session tag
+      p->SetName(d->GetName());
+
+   } else {
+      // Session creation failed
+      Error("AttachSession", "attaching to PROOF session");
+   }
+   return p;
 }
 
 //______________________________________________________________________________
@@ -360,7 +358,7 @@ TList *TXProofMgr::QuerySessions(Option_t *opt)
 }
 
 //_____________________________________________________________________________
-Bool_t TXProofMgr::HandleError(const void *)
+Bool_t TXProofMgr::HandleError(const void *in)
 {
    // Handle error on the input socket
 
@@ -384,10 +382,14 @@ Bool_t TXProofMgr::HandleError(const void *)
 }
 
 //______________________________________________________________________________
-Int_t TXProofMgr::Reset(const char *usr)
+Int_t TXProofMgr::Reset(Bool_t hard, const char *usr)
 {
-   // Send a cleanup request for the sessions associated with the current
-   // user.
+   // Send a cleanup request for the sessions associated with the current user.
+   // If 'hard' is true sessions are signalled for termination and moved to
+   // terminate at all stages (top master, sub-master, workers). Otherwise
+   // (default) only top-master sessions are asked to terminate, triggering
+   // a gentle session termination. In all cases all sessions should be gone
+   // after a few (2 or 3) session checking cycles.
    // A user with superuser privileges can also asks cleaning for an different
    // user, specified by 'usr', or for all users (usr = *)
    // Return 0 on success, -1 in case of error.
@@ -398,7 +400,8 @@ Int_t TXProofMgr::Reset(const char *usr)
       return -1;
    }
 
-   fSocket->SendCoordinator(TXSocket::kCleanupSessions, usr);
+   Int_t h = (hard) ? 1 : 0;
+   fSocket->SendCoordinator(TXSocket::kCleanupSessions, usr, h);
 
    return 0;
 }
