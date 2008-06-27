@@ -525,7 +525,7 @@ int G__main(int argc, char** argv)
    const char* linkfilename = 0;
    int linkflag = 0;
    char* dllid = 0;
-   char clnull[1]; clnull[0]=0;
+   static char clnull[1] = "";
    struct G__dictposition stubbegin;
    char* icom = 0;
    stubbegin.ptype = (char*) G__PVOID;
@@ -1916,9 +1916,8 @@ int G__init_globals()
 
    G__precomp_private = 0;
 
-   /* The first entry in the const string is a blank string
-    * which is never used */
-   char clnull[1]; clnull[0]=0;
+   /* The first entry in the const string is a blank string */
+   static char clnull[1] = ""; 
    G__conststringlist.string = clnull;
    G__conststringlist.hash = 0;
    G__conststringlist.prev = 0;
