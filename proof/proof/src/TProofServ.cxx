@@ -342,8 +342,10 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
    // overloading.
 
    // Read session specific rootrc file
-   if (!gSystem->AccessPathName("session.rootrc", kReadPermission))
-      gEnv->ReadFile("session.rootrc", kEnvChange);
+   TString rcfile = gSystem->Getenv("ROOTRCFILE") ? gSystem->Getenv("ROOTRCFILE")
+                                                  : "session.rootrc";
+   if (!gSystem->AccessPathName(rcfile, kReadPermission))
+      gEnv->ReadFile(rcfile, kEnvChange);
 
    // Wait (loop) to allow debugger to connect
    Bool_t test = (*argc >= 4 && !strcmp(argv[3], "test")) ? kTRUE : kFALSE;
@@ -892,6 +894,8 @@ void TProofServ::HandleSocketInput()
    }
 
    what = mess->What();
+   PDB(kGlobal, 1)
+      Info("HandleSocketInput", "got type %d from '%s'", what, fSocket->GetTitle());
 
    timer.Start();
    fNcmd++;
@@ -2104,6 +2108,7 @@ Int_t TProofServ::Setup()
    // Session tag
    fSessionTag = Form("%s-%s-%d-%d", fOrdinal.Data(), host.Data(),
                       TTimeStamp().GetSec(),gSystem->GetPid());
+   fTopSessionTag = fSessionTag;
 
    // create session directory and make it the working directory
    fSessionDir = fWorkDir;
@@ -2251,7 +2256,7 @@ Int_t TProofServ::SetupCommon()
       fQueryDir += TString("/") + kPROOF_QueryDir;
       if (gSystem->AccessPathName(fQueryDir))
          gSystem->MakeDirectory(fQueryDir);
-      fQueryDir += TString("/session-") + fSessionTag;
+      fQueryDir += TString("/session-") + fTopSessionTag;
       if (gSystem->AccessPathName(fQueryDir))
          gSystem->MakeDirectory(fQueryDir);
       if (gProofDebugLevel > 0)
@@ -2260,13 +2265,13 @@ Int_t TProofServ::SetupCommon()
       // Create 'queries' locker instance and lock it
       fQueryLock = new TProofLockPath(Form("%s/%s%s-%s",
                        gSystem->TempDirectory(),
-                       kPROOF_QueryLockFile, fSessionTag.Data(),
+                       kPROOF_QueryLockFile, fTopSessionTag.Data(),
                        TString(fQueryDir).ReplaceAll("/","%").Data()));
       fQueryLock->Lock();
 
       // Send session tag to client
       TMessage m(kPROOF_SESSIONTAG);
-      m << fSessionTag;
+      m << fTopSessionTag;
       fSocket->Send(m);
    }
 
@@ -2765,7 +2770,7 @@ Int_t TProofServ::CleanupQueriesDir()
          continue;
 
       // We do not want this session at this level
-      if (strstr(sess, fSessionTag))
+      if (strstr(sess, fTopSessionTag))
          continue;
 
       // Remove the directory
@@ -2802,7 +2807,7 @@ void TProofServ::ScanPreviousQueries(const char *dir)
          continue;
 
       // We do not want this session at this level
-      if (strstr(sess, fSessionTag))
+      if (strstr(sess, fTopSessionTag))
          continue;
 
       // Loop over query dirs
@@ -2889,7 +2894,7 @@ Int_t TProofServ::ApplyMaxQueries()
          continue;
 
       // We do not want this session at this level
-      if (strstr(sess, fSessionTag))
+      if (strstr(sess, fTopSessionTag))
          continue;
 
       // Loop over query dirs
@@ -2972,7 +2977,7 @@ Int_t TProofServ::LockSession(const char *sessiontag, TProofLockPath **lck)
    // unlocked via UnlockQueryFile(fid).
 
    // We do not need to lock our own session
-   if (strstr(sessiontag, fSessionTag))
+   if (strstr(sessiontag, fTopSessionTag))
       return 0;
 
    if (!lck) {
@@ -3007,7 +3012,7 @@ Int_t TProofServ::LockSession(const char *sessiontag, TProofLockPath **lck)
 
    // Lock the query lock file
    TString qlock = fQueryLock->GetName();
-   qlock.ReplaceAll(fSessionTag, stag);
+   qlock.ReplaceAll(fTopSessionTag, stag);
 
    if (!gSystem->AccessPathName(qlock)) {
       *lck = new TProofLockPath(qlock);
@@ -3034,7 +3039,7 @@ Int_t TProofServ::CleanupSession(const char *sessiontag)
 
    // Query dir
    TString qdir = fQueryDir;
-   qdir.ReplaceAll(Form("session-%s", fSessionTag.Data()), sessiontag);
+   qdir.ReplaceAll(Form("session-%s", fTopSessionTag.Data()), sessiontag);
    Int_t idx = qdir.Index(":q");
    if (idx != kNPOS)
       qdir.Remove(idx);
@@ -3174,7 +3179,7 @@ TProofQueryResult *TProofServ::LocateQuery(TString queryref, Int_t &qry, TString
    qry = -1;
    if (queryref.IsDigit()) {
       qry = queryref.Atoi();
-   } else if (queryref.Contains(fSessionTag)) {
+   } else if (queryref.Contains(fTopSessionTag)) {
       Int_t i1 = queryref.Index(":q");
       if (i1 != kNPOS) {
          queryref.Remove(0,i1+2);
@@ -3258,7 +3263,7 @@ void TProofServ::HandleArchive(TMessage *mess)
       }
       if (qry > 0) {
          path = Form("%s/session-%s-%d.root",
-                     fArchivePath.Data(), fSessionTag.Data(), qry);
+                     fArchivePath.Data(), fTopSessionTag.Data(), qry);
       } else {
          path = queryref;
          path.ReplaceAll(":q","-");
