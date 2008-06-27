@@ -2,8 +2,10 @@
   File: roottest/python/cpp/AdvancedCpp.C
   Author: WLavrijsen@lbl.gov
   Created: 06/04/05
-  Last: 01/03/08
+  Last: 06/27/08
 */
+
+#include <vector>
 
 class A {
 public:
@@ -87,3 +89,26 @@ class MyConcreteClass : public MyAbstractClass {
 public:
    virtual void MyVirtualMethod() {}
 };
+
+
+// helpers for assignment by-ref
+class RefTester {
+public:
+   RefTester() : m_i( -99 ) {}
+   RefTester( int i ) : m_i( i ) {}
+   RefTester( const RefTester& s ) : m_i( s.m_i ) {}
+   RefTester& operator=( const RefTester& s ) {
+      if ( &s != this ) m_i = s.m_i;
+      return *this;
+   }
+   ~RefTester() {}
+
+public:
+   int m_i;
+};
+
+#ifdef __CINT__
+#pragma link C++ class std::vector< RefTester >;
+#endif
+
+template class std::vector< RefTester >;

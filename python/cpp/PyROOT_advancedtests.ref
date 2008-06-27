@@ -8,6 +8,7 @@ Test usage of Long/Double place holders ... ok
 Test parameter passing of builtins through non-const reference ... ok
 Test abstract class in a hierarchy ... ok
 Test non-instatiatability of abstract classes ... ok
+Test assignment to an instance returned by reference ... ok
 
 ----------------------------------------------------------------------
 

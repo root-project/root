@@ -1,7 +1,7 @@
 # File: roottest/python/cpp/PyROOT_advancedtests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 06/04/05
-# Last: 01/25/08
+# Last: 06/27/08
 
 """C++ advanced language interface unit tests for PyROOT package."""
 
@@ -12,7 +12,8 @@ __all__ = [
    'Cpp1VirtualInheritenceTestCase',
    'Cpp2TemplateLookupTestCase',
    'Cpp3PassByNonConstRefTestCase',
-   'Cpp4HandlingAbstractClassesTestCase'
+   'Cpp4HandlingAbstractClassesTestCase',
+   'Cpp5AssignToRefArbitraryClassTestCase'
 ]
 
 gROOT.LoadMacro( "AdvancedCpp.C+" )
@@ -220,6 +221,22 @@ class Cpp4HandlingAbstractClassesTestCase( unittest.TestCase ):
       """Test non-instatiatability of abstract classes"""
 
       self.assertRaises( TypeError, MyAbstractClass )
+
+
+### Return by reference should call assignment operator ======================
+class Cpp5AssignToRefArbitraryClassTestCase( unittest.TestCase ):
+   def test1AssignToReturnByRef( self ):
+      """Test assignment to an instance returned by reference"""
+
+      a = std.vector( RefTester )()
+      a.push_back( RefTester( 42 ) )
+
+      self.assertEqual( len(a), 1 )
+      self.assertEqual( a[0].m_i, 42 )
+
+      a[0] = RefTester( 33 )
+      self.assertEqual( len(a), 1 )
+      self.assertEqual( a[0].m_i, 33 )
 
 
 ## actual test run
