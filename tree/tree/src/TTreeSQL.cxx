@@ -179,7 +179,12 @@ void TTreeSQL::CheckBasket(TBranch *branch)
 {
    // Check if the basket is properly setup
 
-   TBasketSQL * basket = (TBasketSQL *)branch->GetBasket(0);
+   TBasketSQL* basket = (TBasketSQL *)branch->GetBasket(0);
+
+   if (basket==0) {
+      basket = (TBasketSQL*)CreateBasket(branch);
+      branch->GetListOfBaskets()->AddAtAndExpand(basket,0);
+   }
    TBuffer * buffer = basket->GetBufferRef();
 
    if(buffer == 0){
@@ -398,6 +403,8 @@ TString TTreeSQL::CreateBranches(TSQLResult * rs)
             (br->GetBasketEntry())[1] = fEntries;
 
             br->SetEntries(fEntries);
+
+            br->GetListOfBaskets()->AddAtAndExpand(CreateBasket(br),0);
 
             prevBranch = branchName;
             decl = "";
