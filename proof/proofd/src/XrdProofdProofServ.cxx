@@ -20,7 +20,7 @@
 
 #include "XrdNet/XrdNet.hh"
 #include "XrdSys/XrdSysPriv.hh"
-#include "XrdProofServProxy.h"
+#include "XrdProofdProofServ.h"
 #include "XrdProofWorker.h"
 
 // Tracing utils
@@ -35,7 +35,7 @@ static const char *TraceID = " ";
 #endif
 
 //__________________________________________________________________________
-XrdProofServProxy::XrdProofServProxy()
+XrdProofdProofServ::XrdProofdProofServ()
 {
    // Constructor
 
@@ -70,7 +70,7 @@ XrdProofServProxy::XrdProofServProxy()
 }
 
 //__________________________________________________________________________
-XrdProofServProxy::~XrdProofServProxy()
+XrdProofdProofServ::~XrdProofdProofServ()
 {
    // Destructor
 
@@ -98,7 +98,7 @@ XrdProofServProxy::~XrdProofServProxy()
 }
 
 //__________________________________________________________________________
-void XrdProofServProxy::ClearWorkers()
+void XrdProofdProofServ::ClearWorkers()
 {
    // Decrease worker counters and clean-up the list
 
@@ -113,7 +113,7 @@ void XrdProofServProxy::ClearWorkers()
 }
 
 //__________________________________________________________________________
-void XrdProofServProxy::Reset()
+void XrdProofdProofServ::Reset()
 {
    // Reset this instance
    XrdSysMutexHelper mhp(fMutex);
@@ -150,7 +150,7 @@ void XrdProofServProxy::Reset()
 }
 
 //__________________________________________________________________________
-XrdClientID *XrdProofServProxy::GetClientID(int cid)
+XrdClientID *XrdProofdProofServ::GetClientID(int cid)
 {
    // Get instance corresponding to cid
    //
@@ -158,11 +158,11 @@ XrdClientID *XrdProofServProxy::GetClientID(int cid)
    XrdSysMutexHelper mhp(fMutex);
 
    XrdClientID *csid = 0;
-   TRACE(ACT,"XrdProofServProxy::GetClientID: cid: "<<cid<<
+   TRACE(ACT,"XrdProofdProofServ::GetClientID: cid: "<<cid<<
              ", size: "<<fClients.size());
 
    if (cid < 0) {
-      TRACE(XERR,"XrdProofServProxy::GetClientID: negative ID: protocol error!");
+      TRACE(XERR,"XrdProofdProofServ::GetClientID: negative ID: protocol error!");
       return csid;
    }
 
@@ -183,7 +183,7 @@ XrdClientID *XrdProofServProxy::GetClientID(int cid)
    for (; ic <= cid; ic++)
       fClients.push_back((csid = new XrdClientID()));
 
-   TRACE(DBG,"XrdProofServProxy::GetClientID: cid: "<<cid<<
+   TRACE(DBG,"XrdProofdProofServ::GetClientID: cid: "<<cid<<
              ", new size: "<<fClients.size());
 
    // We are done
@@ -191,7 +191,7 @@ XrdClientID *XrdProofServProxy::GetClientID(int cid)
 }
 
 //__________________________________________________________________________
-int XrdProofServProxy::GetFreeID()
+int XrdProofdProofServ::GetFreeID()
 {
    // Get next free client ID. If none is found, increase the vector size
    // and get the first new one
@@ -217,7 +217,7 @@ int XrdProofServProxy::GetFreeID()
 }
 
 //__________________________________________________________________________
-int XrdProofServProxy::GetNClients()
+int XrdProofdProofServ::GetNClients()
 {
    // Get number of attached clients.
 
@@ -235,7 +235,7 @@ int XrdProofServProxy::GetNClients()
 }
 
 //__________________________________________________________________________
-const char *XrdProofServProxy::StatusAsString() const
+const char *XrdProofdProofServ::StatusAsString() const
 {
    // Return a string describing the status
 
@@ -253,7 +253,7 @@ const char *XrdProofServProxy::StatusAsString() const
 }
 
 //__________________________________________________________________________
-void XrdProofServProxy::SetCharValue(char **carr, const char *v, int l)
+void XrdProofdProofServ::SetCharValue(char **carr, const char *v, int l)
 {
    // Store null-terminated string at v in *carr
 
@@ -271,13 +271,13 @@ void XrdProofServProxy::SetCharValue(char **carr, const char *v, int l)
 }
 
 //______________________________________________________________________________
-int XrdProofServProxy::SetShutdownTimer(int opt, int delay, bool on)
+int XrdProofdProofServ::SetShutdownTimer(int opt, int delay, bool on)
 {
    // Start (on = TRUE) or stop (on = FALSE) the shutdown timer for the session.
    // Return 0 on success, -1 in case of error.
    int rc = -1;
 
-   TRACE(ACT, "XrdProofServProxy::SetShutdownTimer: enter: on/off: "<<on);
+   TRACE(ACT, "XrdProofdProofServ::SetShutdownTimer: enter: on/off: "<<on);
 
    // Prepare buffer
    int len = 2 *sizeof(kXR_int32);
@@ -292,11 +292,11 @@ int XrdProofServProxy::SetShutdownTimer(int opt, int delay, bool on)
    memcpy(buf + sizeof(kXR_int32), &itmp, sizeof(kXR_int32));
    // Send over
    if (ProofSrv()->Send(kXR_attn, kXPD_timer, buf, len) != 0) {
-      TRACE(XERR, "XrdProofServProxy::SetShutdownTimer: "
+      TRACE(XERR, "XrdProofdProofServ::SetShutdownTimer: "
                   "could not send shutdown info to proofsrv");
    } else {
       rc = 0;
-      XrdOucString msg = "XrdProofServProxy::SetShutdownTimer: ";
+      XrdOucString msg = "XrdProofdProofServ::SetShutdownTimer: ";
       if (on) {
          if (delay > 0) {
             msg += "delayed (";
@@ -325,7 +325,7 @@ int XrdProofServProxy::SetShutdownTimer(int opt, int delay, bool on)
 }
 
 //______________________________________________________________________________
-int XrdProofServProxy::TerminateProofServ()
+int XrdProofdProofServ::TerminateProofServ()
 {
    // Terminate the associated process.
    // A shutdown interrupt message is forwarded.
@@ -334,7 +334,7 @@ int XrdProofServProxy::TerminateProofServ()
    // Return the pid of tyhe terminated process on success, -1 if not allowed
    // or other errors occured.
 
-   TRACE(ACT, "XrdProofServProxy::TerminateProofServ: enter: " << Ordinal());
+   TRACE(ACT, "XrdProofdProofServ::TerminateProofServ: enter: " << Ordinal());
 
    // Send a terminate signal to the proofserv
    int pid = SrvID();
@@ -353,7 +353,7 @@ int XrdProofServProxy::TerminateProofServ()
 }
 
 //______________________________________________________________________________
-int XrdProofServProxy::VerifyProofServ(int timeout)
+int XrdProofdProofServ::VerifyProofServ(int timeout)
 {
    // Check if the associated proofserv process is alive.
    // A ping message is sent and the reply waited for the internal timeout.
@@ -361,14 +361,14 @@ int XrdProofServProxy::VerifyProofServ(int timeout)
    // internal timeout, -1 in case of error.
    int rc = -1;
 
-   TRACE(ACT, "XrdProofServProxy::VerifyProofServ: enter");
+   TRACE(ACT, "XrdProofdProofServ::VerifyProofServ: enter");
 
    // Create semaphore
    CreatePingSem();
 
    // Propagate the ping request
    if (ProofSrv()->Send(kXR_attn, kXPD_ping, 0, 0) != 0) {
-      TRACE(XERR, "XrdProofServProxy::VerifyProofServ: could not propagate ping to proofsrv");
+      TRACE(XERR, "XrdProofdProofServ::VerifyProofServ: could not propagate ping to proofsrv");
       DeletePingSem();
       return rc;
    }
@@ -376,7 +376,7 @@ int XrdProofServProxy::VerifyProofServ(int timeout)
    // Wait for reply
    rc = 1;
    if (PingSem()->Wait(timeout) != 0) {
-      XrdOucString msg = "XrdProofServProxy::VerifyProofServ: did not receive ping reply after ";
+      XrdOucString msg = "XrdProofdProofServ::VerifyProofServ: did not receive ping reply after ";
       msg += timeout;
       msg += " secs";
       TRACE(XERR, msg.c_str());
@@ -391,7 +391,7 @@ int XrdProofServProxy::VerifyProofServ(int timeout)
 }
 
 //__________________________________________________________________________
-int XrdProofServProxy::GetDefaultProcessPriority()
+int XrdProofdProofServ::GetDefaultProcessPriority()
 {
    // Get the default nice value for a process
 
@@ -401,7 +401,7 @@ int XrdProofServProxy::GetDefaultProcessPriority()
 }
 
 //__________________________________________________________________________
-int XrdProofServProxy::SetProcessPriority(int priority)
+int XrdProofdProofServ::SetProcessPriority(int priority)
 {
    // Set priority of the server process to priority (positive or negative)
    // If 'priority' is -99999 restore the default value.
@@ -457,7 +457,7 @@ int XrdProofServProxy::SetProcessPriority(int priority)
 }
 
 //__________________________________________________________________________
-int XrdProofServProxy::SetInflate(int inflate, bool sendover)
+int XrdProofdProofServ::SetInflate(int inflate, bool sendover)
 {
    // Set the inflate factor for this session; this factor is used to
    // artificially inflate the processing time (by delaying new packet
@@ -478,17 +478,17 @@ int XrdProofServProxy::SetInflate(int inflate, bool sendover)
       // Send over
       if (fProofSrv.Send(kXR_attn, kXPD_inflate, buf, len) != 0) {
          // Failure
-         TRACE(XERR,"XrdProofServProxy::SetInflate: problems telling proofserv");
+         TRACE(XERR,"XrdProofdProofServ::SetInflate: problems telling proofserv");
          return -1;
       }
-      TRACE(DBG,"XrdProofServProxy::SetInflate: inflate factor set to "<<inflate);
+      TRACE(DBG,"XrdProofdProofServ::SetInflate: inflate factor set to "<<inflate);
    }
    // Done
    return 0;
 }
 
 //__________________________________________________________________________
-int XrdProofServProxy::BroadcastPriority(int priority)
+int XrdProofdProofServ::BroadcastPriority(int priority)
 {
    // Broadcast a new group priority value to the worker servers.
    // Called by masters.
@@ -504,16 +504,16 @@ int XrdProofServProxy::BroadcastPriority(int priority)
    // Send over
    if (fProofSrv.Send(kXR_attn, kXPD_priority, buf, len) != 0) {
       // Failure
-      TRACE(XERR,"XrdProofServProxy::BroadcastPriorities: problems telling proofserv");
+      TRACE(XERR,"XrdProofdProofServ::BroadcastPriorities: problems telling proofserv");
       return -1;
    }
-   TRACE(DBG,"XrdProofServProxy::BroadcastPriorities: priority "<<priority<<" sent over");
+   TRACE(DBG,"XrdProofdProofServ::BroadcastPriorities: priority "<<priority<<" sent over");
    // Done
    return 0;
 }
 
 //__________________________________________________________________________
-void XrdProofServProxy::SetSrv(int pid)
+void XrdProofdProofServ::SetSrv(int pid)
 {
    // Set the server PID. Also find the scheduling policy
 
@@ -533,7 +533,7 @@ void XrdProofServProxy::SetSrv(int pid)
 }
 
 //__________________________________________________________________________
-int XrdProofServProxy::SetSchedRoundRobin(bool on)
+int XrdProofdProofServ::SetSchedRoundRobin(bool on)
 {
    // Set the scheduling policy for process 'pid' to SCHED_RR (Round Robin)
    // if on is TRUE, or to the original one if on is FALSE.

@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_XrdProofServProxy
-#define ROOT_XrdProofServProxy
+#ifndef ROOT_XrdProofdProofServ
+#define ROOT_XrdProofdProofServ
 
 #include <string.h>
 #include <unistd.h>
@@ -103,7 +103,7 @@ public:
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// XrdProofServProxy                                                    //
+// XrdProofdProofServ                                                    //
 //                                                                      //
 // Authors: G. Ganis, CERN, 2005                                        //
 //                                                                      //
@@ -118,14 +118,14 @@ class XrdProofWorker;
 class XrdNet;
 class XrdSysSemWait;
 
-class XrdProofServProxy
+class XrdProofdProofServ
 {
 
 // friend class XrdProofdProtocol;
 
 public:
-   XrdProofServProxy();
-   ~XrdProofServProxy();
+   XrdProofdProofServ();
+   ~XrdProofdProofServ();
 
    inline const char  *Alias() const { XrdSysMutexHelper mhp(fMutex); return fAlias; }
    inline const char  *Client() const { XrdSysMutexHelper mhp(fMutex); return fClient; }

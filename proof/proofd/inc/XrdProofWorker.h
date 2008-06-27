@@ -27,7 +27,7 @@
 
 #include "XrdOuc/XrdOucString.hh"
 
-class XrdProofServProxy;
+class XrdProofdProofServ;
 
 class XrdProofWorker {
 
@@ -50,7 +50,7 @@ class XrdProofWorker {
    int                     fActive;      // number of active sessions
    int                     fSuspended;   // number of suspended sessions 
 
-   std::list<XrdProofServProxy *> fProofServs; // ProofServ sessions using
+   std::list<XrdProofdProofServ *> fProofServs; // ProofServ sessions using
                                                // this worker
 
    // Worker definitions

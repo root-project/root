@@ -71,7 +71,7 @@ class XrdOucTrace;
 class XrdProofdClient;
 class XrdProofdPInfo;
 class XrdProofdPriority;
-class XrdProofServProxy;
+class XrdProofdProofServ;
 class XrdProofWorker;
 class XrdScheduler;
 class XrdSrvBuffer;
@@ -112,7 +112,7 @@ public:
    int           Detach();
    int           GetBuff(int quantum);
    int           GetData(const char *dtype, char *buff, int blen);
-   XrdProofServProxy *GetServer(int psid);
+   XrdProofdProofServ *GetServer(int psid);
    int           Interrupt();
    int           Login();
    int           MapClient(bool all = 1);
@@ -126,7 +126,7 @@ public:
    char         *ReadLogPaths(const char *url, const char *stag, int isess);
    void          Reset();
    int           SendData(XrdProofdResponse *resp, kXR_int32 sid = -1, XrdSrvBuffer **buf = 0);
-   int           SendDataN(XrdProofServProxy *xps, XrdSrvBuffer **buf = 0);
+   int           SendDataN(XrdProofdProofServ *xps, XrdSrvBuffer **buf = 0);
    int           SendMsg();
    int           SetUserEnvironment();
    int           Urgent();

@@ -40,7 +40,7 @@
 class XrdNet;
 class XrdProofdProtocol;
 class XrdProofGroup;
-class XrdProofServProxy;
+class XrdProofdProofServ;
 class XrdROOT;
 
 class XrdProofdClient {
@@ -65,8 +65,8 @@ class XrdProofdClient {
    inline short            Version() const { return fClientVers; }
    inline const char      *Workdir() const { return fUI.fWorkDir.c_str(); }
    inline XrdProofUI       UI() const { return fUI; }
-   inline std::vector<XrdProofServProxy *> *ProofServs()
-                           { return (std::vector<XrdProofServProxy *> *)&fProofServs; }
+   inline std::vector<XrdProofdProofServ *> *ProofServs()
+                           { return (std::vector<XrdProofdProofServ *> *)&fProofServs; }
    inline std::vector<XrdProofdProtocol *> *Clients()
                            { return (std::vector<XrdProofdProtocol *> *)&fClients; }
    void                    ResetClient(int i) { fClients[i] = 0; }
@@ -117,7 +117,7 @@ class XrdProofdClient {
 
    XrdProofGroup          *fGroup;       // Group of the client, if any
 
-   std::vector<XrdProofServProxy *> fProofServs; // Allocated ProofServ sessions
+   std::vector<XrdProofdProofServ *> fProofServs; // Allocated ProofServ sessions
    std::vector<XrdProofdProtocol *> fClients;    // Attached Client sessions
 
    int                     fWorkerProofServ; // Number of active (non idle) ProofServ worker sessions

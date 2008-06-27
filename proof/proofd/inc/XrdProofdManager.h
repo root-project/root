@@ -45,7 +45,7 @@ class XrdClientMessage;
 class XrdProofdClient;
 class XrdProofWorker;
 class XrdProofdResponse;
-class XrdProofServProxy;
+class XrdProofdProofServ;
 class XrdROOT;
 class XrdProofSched;
 
@@ -66,16 +66,16 @@ class XrdProofdManager {
    // List of available and unique workers (on master only)
    std::list<XrdProofWorker *> *GetActiveWorkers();
    std::list<XrdProofWorker *> *GetNodes();
-   int               GetWorkers(XrdOucString &workers, XrdProofServProxy *);
+   int               GetWorkers(XrdOucString &workers, XrdProofdProofServ *);
 
    // Keeping track of active sessions
-   void              AddActiveSession(XrdProofServProxy *p) { XrdSysMutexHelper mhp(&fMutex);
+   void              AddActiveSession(XrdProofdProofServ *p) { XrdSysMutexHelper mhp(&fMutex);
                                                               fActiveSessions.push_back(p); }
-   XrdProofServProxy *GetActiveSession(int pid);
-   std::list<XrdProofServProxy *> *GetActiveSessions() { XrdSysMutexHelper mhp(&fMutex);
+   XrdProofdProofServ *GetActiveSession(int pid);
+   std::list<XrdProofdProofServ *> *GetActiveSessions() { XrdSysMutexHelper mhp(&fMutex);
                                                          return &fActiveSessions; }
    std::list<XrdProofdClient *> *ProofdClients() { return &fProofdClients; }
-   void              RemoveActiveSession(XrdProofServProxy *p) { XrdSysMutexHelper mhp(&fMutex);
+   void              RemoveActiveSession(XrdProofdProofServ *p) { XrdSysMutexHelper mhp(&fMutex);
                                                                  fActiveSessions.remove(p); }
 
    // Running
@@ -204,7 +204,7 @@ class XrdProofdManager {
    std::list<XrdProofdPInfo *> fTerminatedProcess;     // List of pids of processes terminating
    std::list<XrdProofWorker *> fWorkers;               // List of possible workers
    std::list<XrdProofWorker *> fNodes;                 // List of worker unique nodes
-   std::list<XrdProofServProxy *> fActiveSessions;     // List of active sessions (non-idle)
+   std::list<XrdProofdProofServ *> fActiveSessions;     // List of active sessions (non-idle)
    std::list<XrdOucString *> fMastersAllowed;          // list of master (domains) allowed
    std::list<XrdProofdPriority *> fPriorities;         // list of {users, priority change}
    std::list<XrdROOT *> fROOT;                         // ROOT versions; the first is the default

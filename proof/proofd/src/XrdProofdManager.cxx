@@ -49,7 +49,7 @@
 #include "XrdProofdProtocol.h"
 #include "XrdProofdResponse.h"
 #include "XrdProofSched.h"
-#include "XrdProofServProxy.h"
+#include "XrdProofdProofServ.h"
 #include "XrdProofWorker.h"
 #include "XrdROOT.h"
 
@@ -849,15 +849,15 @@ void XrdProofdManager::CreateDefaultPROOFcfg()
 }
 
 //__________________________________________________________________________
-XrdProofServProxy *XrdProofdManager::GetActiveSession(int pid)
+XrdProofdProofServ *XrdProofdManager::GetActiveSession(int pid)
 {
    // Return active session with process ID pid, if any.
 
    XrdSysMutexHelper mhp(fMutex);
 
-   XrdProofServProxy *srv = 0;
+   XrdProofdProofServ *srv = 0;
 
-   std::list<XrdProofServProxy *>::iterator svi;
+   std::list<XrdProofdProofServ *>::iterator svi;
    for (svi = fActiveSessions.begin(); svi != fActiveSessions.end(); svi++) {
       if ((*svi)->IsValid() && ((*svi)->SrvID() == pid)) {
          srv = *svi;
@@ -1607,7 +1607,7 @@ char *XrdProofdManager::FilterSecConfig(int &nd)
 }
 
 //__________________________________________________________________________
-int XrdProofdManager::GetWorkers(XrdOucString &lw, XrdProofServProxy *xps)
+int XrdProofdManager::GetWorkers(XrdOucString &lw, XrdProofdProofServ *xps)
 {
    // Get a list of workers from the available resource broker
    int rc = 0;
@@ -1775,7 +1775,7 @@ int XrdProofdManager::SetInflateFactors()
    if (nact <= 1) {
       // Reset inflate
       if (nact == 1) {
-         XrdProofServProxy *srv = fActiveSessions.front();
+         XrdProofdProofServ *srv = fActiveSessions.front();
          srv->SetInflate(1000,1);
       }
       // Nothing else to do
@@ -1798,8 +1798,8 @@ int XrdProofdManager::SetInflateFactors()
    // Now create a list of active sessions sorted by decreasing effective fraction
    TRACE(SCHED,"--> creating a list of active sessions sorted by decreasing effective fraction ");
    float tf = 0.;
-   std::list<XrdProofServProxy *>::iterator asvi, ssvi;
-   std::list<XrdProofServProxy *> sorted;
+   std::list<XrdProofdProofServ *>::iterator asvi, ssvi;
+   std::list<XrdProofdProofServ *> sorted;
    for (asvi = fActiveSessions.begin();
         asvi != fActiveSessions.end(); asvi++) {
       if ((*asvi)->IsValid() && ((*asvi)->Status() == kXPD_running)) {
@@ -1923,7 +1923,7 @@ int XrdProofdManager::SetNiceValues(int opt)
    if (nact <= 1) {
       // Restore default values
       if (nact == 1) {
-         XrdProofServProxy *srv = fActiveSessions.front();
+         XrdProofdProofServ *srv = fActiveSessions.front();
          srv->SetProcessPriority();
       }
       // Nothing else to do
@@ -1945,8 +1945,8 @@ int XrdProofdManager::SetNiceValues(int opt)
    // Now create a list of active sessions sorted by decreasing effective fraction
    TRACE(SCHED,"--> creating a list of active sessions sorted by decreasing effective fraction ");
    float tf = 0.;
-   std::list<XrdProofServProxy *>::iterator asvi, ssvi;
-   std::list<XrdProofServProxy *> sorted;
+   std::list<XrdProofdProofServ *>::iterator asvi, ssvi;
+   std::list<XrdProofdProofServ *> sorted;
    for (asvi = fActiveSessions.begin();
         asvi != fActiveSessions.end(); asvi++) {
       bool act = (opt == 0) || (opt == 1 && !((*asvi)->SrvType() == kXPD_WorkerServer))
@@ -2056,7 +2056,7 @@ int XrdProofdManager::UpdatePriorities(bool forceupdate)
    if (nact <= 1) {
       // Restore default values
       if (nact == 1) {
-         XrdProofServProxy *srv = fActiveSessions.front();
+         XrdProofdProofServ *srv = fActiveSessions.front();
          srv->SetProcessPriority();
       }
       // Nothing else to do
@@ -2076,7 +2076,7 @@ int XrdProofdManager::UpdatePriorities(bool forceupdate)
 
    if (fSchedOpt == kXPD_sched_central) {
       // Communicate them to the sessions
-      std::list<XrdProofServProxy *>::iterator asvi, ssvi;
+      std::list<XrdProofdProofServ *>::iterator asvi, ssvi;
       for (asvi = fActiveSessions.begin();
            asvi != fActiveSessions.end(); asvi++) {
             TRACE(SCHED,"UpdatePriorities: server type: "<<(*asvi)->SrvType());

@@ -25,7 +25,7 @@
 
 #include "XrdProofdAux.h"
 #include "XrdProofWorker.h"
-#include "XrdProofServProxy.h"
+#include "XrdProofdProofServ.h"
 #include "XrdClient/XrdClientUrlInfo.hh"
 #include "XrdNet/XrdNetDNS.hh"
 #include "XProofProtocol.h"
@@ -223,7 +223,7 @@ int XrdProofWorker::GetNActiveSessions()
    // TODO: optimally, one could contact the packetizer and count the
    // opened files.
    int myRunning = 0;
-   std::list<XrdProofServProxy *>::iterator iter;
+   std::list<XrdProofdProofServ *>::iterator iter;
    for (iter = fProofServs.begin(); iter != fProofServs.end(); ++iter) {
       if (*iter) {
          if ((*iter)->Status() == kXPD_running)

@@ -31,7 +31,7 @@
 #include "XrdProofdPlatform.h"
 #include "XrdProofdProtocol.h"
 #include "XrdProofGroup.h"
-#include "XrdProofServProxy.h"
+#include "XrdProofdProofServ.h"
 
 #include "XrdProofdTrace.h"
 static const char *gTraceID = " ";
@@ -825,7 +825,7 @@ int XrdProofdClient::GetFreeServID()
    }
 
    // Allocate new element
-   fProofServs.push_back(new XrdProofServProxy());
+   fProofServs.push_back(new XrdProofdProofServ());
 
    TRACE(DBG,"GetFreeServID: size = "<<fProofServs.size()<<
               "; new capacity = "<<fProofServs.capacity()<<"; ic = "<<ic);
@@ -843,8 +843,8 @@ void XrdProofdClient::EraseServer(int psid)
 
    XrdSysMutexHelper mh(fMutex);
 
-   XrdProofServProxy *xps = 0;
-   std::vector<XrdProofServProxy *>::iterator ip;
+   XrdProofdProofServ *xps = 0;
+   std::vector<XrdProofdProofServ *>::iterator ip;
    for (ip = fProofServs.begin(); ip != fProofServs.end(); ++ip) {
       xps = *ip;
       if (xps && xps->Match(psid)) {

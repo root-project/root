@@ -42,7 +42,7 @@
 #include "XrdProofSched.h"
 #include "XrdProofdManager.h"
 #include "XrdProofWorker.h"
-#include "XrdProofServProxy.h"
+#include "XrdProofdProofServ.h"
 #include "XrdProofGroup.h"
 
 #include "XrdOuc/XrdOucString.hh"
@@ -198,7 +198,7 @@ int XrdProofSched::Config(const char *cfn)
 }
 
 //______________________________________________________________________________
-int XrdProofSched::GetNumWorkers(XrdProofServProxy *xps)
+int XrdProofSched::GetNumWorkers(XrdProofdProofServ *xps)
 {
    // Calculate the number of workers to be used given the state of the cluster
 
@@ -216,8 +216,8 @@ int XrdProofSched::GetNumWorkers(XrdProofServProxy *xps)
 
    float priority = 1;
    if (xps->Group()) {
-      std::list<XrdProofServProxy *> *sessions = fMgr->GetActiveSessions();
-      std::list<XrdProofServProxy *>::iterator sesIter;
+      std::list<XrdProofdProofServ *> *sessions = fMgr->GetActiveSessions();
+      std::list<XrdProofdProofServ *>::iterator sesIter;
       float summedPriority = 0;
       for (sesIter = sessions->begin(); sesIter != sessions->end(); ++sesIter) {
          if ((*sesIter)->Group())
@@ -235,7 +235,7 @@ int XrdProofSched::GetNumWorkers(XrdProofServProxy *xps)
 }
 
 //______________________________________________________________________________
-int XrdProofSched::GetWorkers(XrdProofServProxy *xps,
+int XrdProofSched::GetWorkers(XrdProofdProofServ *xps,
                               std::list<XrdProofWorker *> *wrks)
 {
    // Get a list of workers that can be used by session 'xps'.

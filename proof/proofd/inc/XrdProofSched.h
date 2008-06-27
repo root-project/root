@@ -53,7 +53,7 @@
 
 class XrdProofdManager;
 class XrdProofGroupMgr;
-class XrdProofServProxy;
+class XrdProofdProofServ;
 class XrdProofWorker;
 class XrdSysError;
 class XrdOucStream;
@@ -67,7 +67,7 @@ public:
    virtual ~XrdProofSched() { }
 
    // Returns list of workers to be used by session 'xps'
-   virtual int GetWorkers(XrdProofServProxy *xps,
+   virtual int GetWorkers(XrdProofdProofServ *xps,
                           std::list<XrdProofWorker *> */*wrks*/);
 
    // Update group properties according to the current state
@@ -104,7 +104,7 @@ protected:
    virtual int       Config(const char *cfn);
    virtual int       DoDirectiveSchedParam(char *, XrdOucStream *, bool);
    virtual int       DoDirectiveResource(char *, XrdOucStream *, bool);
-   virtual int       GetNumWorkers(XrdProofServProxy *xps);
+   virtual int       GetNumWorkers(XrdProofdProofServ *xps);
    virtual void      ResetParameters();
 };
 
