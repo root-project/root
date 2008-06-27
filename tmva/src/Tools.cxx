@@ -603,6 +603,9 @@ const TString& TMVA::Tools::Color( const TString& c )
 
    static TString gClr_reset  = "\033[0m";     // reset
 
+#ifdef R__WIN32
+   return gClr_none;
+#endif
    if (!gConfig().UseColor()) return gClr_none;
 
    if (c == "white" )         return gClr_white; 

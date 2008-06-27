@@ -191,7 +191,11 @@ void TMVA::MsgLogger::WriteMsg( EMsgType type, const std::string& line ) const
          // no text for INFO
          if (type == kINFO) std::cout << fPrefix << line << std::endl; // no color for info
          else               std::cout << fColorMap.find( type )->second << fPrefix << "<" 
+#ifdef R__WIN32
+                                      << stype->second << "> " << line  << std::endl;
+#else
                                       << stype->second << "> " << line  << "\033[0m" << std::endl;
+#endif
       } 
       else {
          if (type == kINFO) std::cout << fPrefix << line << std::endl;
@@ -225,6 +229,15 @@ void TMVA::MsgLogger::InitMaps()
    fTypeMap[kFATAL]    = std::string("FATAL");
    fTypeMap[kSILENT]   = std::string("SILENT");
 
+#ifdef R__WIN32
+   fColorMap[kVERBOSE] = std::string("");
+   fColorMap[kDEBUG]   = std::string("");
+   fColorMap[kINFO]    = std::string("");
+   fColorMap[kWARNING] = std::string("");
+   fColorMap[kERROR]   = std::string("");
+   fColorMap[kFATAL]   = std::string("");
+   fColorMap[kSILENT]  = std::string("");
+#else
    fColorMap[kVERBOSE] = std::string("\033[1;34m");
    fColorMap[kDEBUG]   = std::string("\033[34m");
    fColorMap[kINFO]    = std::string("");
@@ -232,4 +245,5 @@ void TMVA::MsgLogger::InitMaps()
    fColorMap[kERROR]   = std::string("\033[31m");
    fColorMap[kFATAL]   = std::string("\033[37;41;1m");
    fColorMap[kSILENT]  = std::string("\033[30m");
+#endif
 }
