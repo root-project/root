@@ -165,6 +165,7 @@ public:
    Int_t        GetNanoSec() const { return fNanoSec; }
 
    Double_t     AsDouble() const { return fSec + 1e-9 * fNanoSec; }
+   Double_t     AsJulianDate() const { return (AsDouble()/86400.0 + 2440587.5); }
    const char  *AsString(const Option_t *option="") const;
 
    void         Copy(TTimeStamp &ts) const;
