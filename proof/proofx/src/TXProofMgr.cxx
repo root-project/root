@@ -358,7 +358,7 @@ TList *TXProofMgr::QuerySessions(Option_t *opt)
 }
 
 //_____________________________________________________________________________
-Bool_t TXProofMgr::HandleError(const void *in)
+Bool_t TXProofMgr::HandleError(const void * /*in*/)
 {
    // Handle error on the input socket
 
