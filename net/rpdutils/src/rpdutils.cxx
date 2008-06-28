@@ -1798,7 +1798,7 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
 
       int cont = 0, jm = -1;
       while (ftab && fgets(line, sizeof(line), ftab)) {
-         int rc = 0, i;
+         int rc = 0, i ;
          if (line[0] == '#')
             continue;           // skip comment lines
          if (line[strlen(line) - 1] == '\n')
@@ -1912,7 +1912,7 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
                   int ii;
                   for (ii = 0; ii < nmet; ii++) {
                      if (mth[ii] == tmet) {
-                        jm = i;
+                        jm = ii;
                      }
                   }
                } else
