@@ -2166,7 +2166,20 @@ static void R__FixLink(TString &cmd)
    // Replace the call to 'link' by a full path name call based on where cl.exe is.
    // This prevents us from using inadvertently the link.exe provided by cygwin.
 
-   TString res = R__Exec("which cl.exe 2>&1|grep cl|sed 's,cl\\.exe$,link\\.exe,' 2>&1");
+   // check if link is the microsoft one...
+   TString res = R__Exec("link 2>&1");
+   if (res.Length()) {
+      if (res.Contains("Microsoft (R) Incremental Linker"))
+         return;
+   }
+   // else check availability of cygpath...
+   res = R__Exec("cygpath . 2>&1");
+   if (res.Length()) {
+      if (res != ".")
+         return;
+   }
+
+   res = R__Exec("which cl.exe 2>&1|grep cl|sed 's,cl\\.exe$,link\\.exe,' 2>&1");
    if (res.Length()) {
       res = R__Exec(Form("cygpath -w '%s' 2>&1",res.Data()));
       if (res.Length()) {
