@@ -23,6 +23,9 @@ if [ "x$verbose" = "xx" ] ; then
    set -x
 fi
 
+# No sub-process should ever used up more than one hour of CPU time.
+ulimit -t 3600
+
 MAKE=gmake
 ROOT_MAKEFLAGS=
 ROOTTEST_MAKEFLAGS=
