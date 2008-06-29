@@ -573,7 +573,7 @@ void TStreamerInfo::BuildCheck()
       // In case a class (eg Event.h) has a TClonesArray of Tracks, it could be
       // that the old info does not have the class name (Track) in the data
       // member title. Set old title to new title
-      if (info) {
+      if (info && fClassVersion!=0) {
          // We found an existing TStreamerInfo for our ClassVersion
          Bool_t match = kTRUE;
          Bool_t done = kFALSE;
@@ -695,6 +695,7 @@ void TStreamerInfo::BuildCheck()
       // loaded version of the class
       if (fClass->IsLoaded() 
           && fClass->GetListOfDataMembers() 
+          && (fClassVersion != 0) // We don't care about transient classes
           && (fClassVersion == fClass->GetClassVersion()) 
           && (fCheckSum != fClass->GetCheckSum()) 
           && (fClass->GetClassInfo())) {
