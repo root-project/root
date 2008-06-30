@@ -289,7 +289,20 @@ Int_t TChain::Add(const char* name, Long64_t nentries /* = kBigNumber */)
    Int_t nf = 0;
    TString basename(name);
 
-   Int_t dotslashpos = basename.Index(".root/");
+   Int_t dotslashpos = -1;
+   {
+      Int_t next_dot = basename.Index(".root");
+      while(next_dot>=0) {
+         dotslashpos = next_dot;
+         next_dot = basename.Index(".root",dotslashpos+1);
+      }
+      if (basename[dotslashpos+5]!='/') {
+         // We found the 'last' .root in the name and it is not followed by 
+         // a '/', so the tree name is _not_ specified in the name.
+         dotslashpos = -1;
+      }
+   }
+   //Int_t dotslashpos = basename.Index(".root/");
    TString behind_dot_root;
    if (dotslashpos>=0) {
       // Copy the tree name specification
@@ -390,7 +403,14 @@ Int_t TChain::AddFile(const char* name, Long64_t nentries /* = kBigNumber */, co
 
    const char *treename = GetName();
    if (tname && strlen(tname) > 0) treename = tname;
-   char *dot = (char*)strstr(name,".root");
+   char *dot = 0;
+   {
+      char *nextdot =  (char*)strstr(name,".root");
+      while (nextdot) {
+         dot = nextdot;
+         nextdot = (char*)strstr(dot+1,".root");
+      }
+   }    
    //the ".root" is mandatory only if one wants to specify a treename
    //if (!dot) {
    //   Error("AddFile","a chain element name must contain the string .root");
@@ -411,7 +431,7 @@ Int_t TChain::AddFile(const char* name, Long64_t nentries /* = kBigNumber */, co
    char *filename = new char[nch+1];
    strcpy(filename,name);
    if (dot) {
-      char *pos = (char*)strstr(filename,".root") + 5;
+      char *pos = filename + (dot-name) + 5;
       while (*pos) {
          if (*pos == '/') {
             treename = pos+1;
