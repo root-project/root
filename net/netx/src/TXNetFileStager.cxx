@@ -31,6 +31,7 @@ TXNetFileStager::TXNetFileStager(const char *url) : TFileStager("xrd")
    fSystem = 0;
    if (url && strlen(url) > 0) {
       GetPrefix(url, fPrefix);
+
       fSystem = new TXNetSystem(fPrefix);
    }
 }
@@ -66,6 +67,49 @@ Bool_t TXNetFileStager::IsStaged(const char *path)
    // Failure
    Warning("IsStaged","TXNetSystem not initialized");
    return kFALSE;
+}
+
+//_____________________________________________________________________________
+Bool_t TXNetFileStager::Stage(TCollection *paths, Option_t *opt)
+{
+   // Issue a stage request for file defined by 'path'. The string 'opt'
+   // defines 'option' and 'priority' for 'Prepare': the format is
+   //    opt = "option=o priority=p".
+
+   if (IsValid()) {
+      UChar_t o = 8;
+      UChar_t p = 0;
+      // Parse options, if any
+      if (opt && strlen(opt) > 0) {
+         TString xo(opt), io;
+         Ssiz_t from = 0;
+         while (xo.Tokenize(io, from, "[ ,|]")) {
+            if (io.Contains("option=")) {
+               io.ReplaceAll("option=","");
+               if (io.IsDigit()) {
+                  Int_t i = io.Atoi();
+                  if (i >= 0 && i <= 255)
+                     o = (UChar_t) i;
+               }
+            }
+            if (io.Contains("priority=")) {
+               io.ReplaceAll("priority=","");
+               if (io.IsDigit()) {
+                  Int_t i = io.Atoi();
+                  if (i >= 0 && i <= 255)
+                     p = (UChar_t) i;
+               }
+            }
+         }
+      }
+      // Run prepare
+      return fSystem->Prepare(paths, o, p);
+   }
+
+   // Failure
+   Warning("Stage","TXNetSystem not initialized");
+   return kFALSE;
+
 }
 
 //_____________________________________________________________________________
