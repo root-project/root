@@ -84,13 +84,15 @@ else
 			FREECC="cc"; \
 		fi; \
 		if [ $(ARCH) = "linux" ]; then \
-			FREECC="gcc -m32"; \
+			FREECC="$$FREECC -m32"; \
+			FREE_CFLAGS="-m32"; \
 		fi; \
 		if [ $(ARCH) = "linuxx8664gcc" ]; then \
-			FREECC="gcc -m64"; \
+			FREECC="$$FREECC -m64"; \
+			FREE_CFLAGS="-m64"; \
 		fi; \
 		if [ $(ARCH) = "macosx64" ]; then \
-			FREECC="gcc -m64"; \
+			FREECC="$$FREECC -m64"; \
 			FREE_CFLAGS="-m64"; \
 		fi; \
 		if [ $(ARCH) = "sgicc64" ]; then \
@@ -98,7 +100,7 @@ else
 			FREE_CFLAGS="-64"; \
 		fi; \
 		if [ $(ARCH) = "linuxppc64gcc" ]; then \
-			FREECC="gcc -m64"; \
+			FREECC="$$FREECC -m64"; \
 			FREE_CFLAGS="-m64"; \
 		fi; \
 		if [ $(ARCH) = "hpuxia64acc" ]; then \

@@ -75,12 +75,13 @@ else
 		if [ $(ARCH) = "alphacxx6" ]; then \
 			PCRECC="cc"; \
 		fi; \
+		if [ $(ARCH) = "linux" ]; then \
+			PCRE_CFLAGS="-m32"; \
+		fi; \
 		if [ $(ARCH) = "linuxx8664gcc" ]; then \
-			PCRECC="gcc"; \
 			PCRE_CFLAGS="-m64"; \
 		fi; \
 		if [ $(ARCH) = "macosx64" ]; then \
-			PCRECC="gcc"; \
 			PCRE_CFLAGS="-m64"; \
 		fi; \
 		if [ $(ARCH) = "sgicc64" ]; then \
@@ -88,7 +89,6 @@ else
 			PCRE_CFLAGS="-64"; \
 		fi; \
 		if [ $(ARCH) = "linuxppc64gcc" ]; then \
-			PCRECC="gcc"; \
 			PCRE_CFLAGS="-m64"; \
 		fi; \
 		if [ $(ARCH) = "hpuxia64acc" ]; then \
