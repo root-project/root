@@ -691,6 +691,7 @@ int main(int argc, char** argv)
    ret += mkci(kLangCXX,"simple25.cxx","simple25.h",difffile);
    int cpp[] = { 0, 1, 2, 3, 4, 5, 6, 8, -1 };
    ret += testn(kLangCXX, "cpp", cpp, ".cxx", difffile);
+   ret += ci(kLangCXX, "bool01.cxx", difffile);
    ret += ci(kLangCXX, "switch.cxx", difffile);
    ret += ci(kLangCXX, "refassign.cxx", difffile);
    ret += ci(kLangCXX, "ostream.cxx", difffile);  // cout << pointer
