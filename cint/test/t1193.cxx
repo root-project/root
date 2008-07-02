@@ -40,7 +40,7 @@ namespace testscript0002
   public :
     Noise() : EditorScript("Noise", "NoiseObject")
     {
-      const int Size = 1;
+      const int Size = 3;
       unsigned short *Map = new unsigned short[Size];
       for(int i=0; i<Size; i++)
         Map[i]=Math::rand()%1024;
