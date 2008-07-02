@@ -1850,7 +1850,11 @@ extern G__EXPORT short* G__Shortref G__P((G__value *buf));
 extern G__EXPORT int* G__Intref G__P((G__value *buf));
 extern G__EXPORT long* G__Longref G__P((G__value *buf));
 extern G__EXPORT unsigned char* G__UCharref G__P((G__value *buf));
+#ifdef G__BOOL4BYTE
+extern G__EXPORT int* G__Boolref G__P((G__value *buf));
+#else // G__BOOL4BYTE
 extern G__EXPORT unsigned char* G__Boolref G__P((G__value *buf));
+#endif // G__BOOL4BYTE
 extern G__EXPORT unsigned short* G__UShortref G__P((G__value *buf));
 extern G__EXPORT unsigned int* G__UIntref G__P((G__value *buf));
 extern G__EXPORT unsigned long* G__ULongref G__P((G__value *buf));

@@ -9375,7 +9375,11 @@ short* G__Shortref(G__value *buf) {return G__refT<short>(buf);}
 int* G__Intref(G__value *buf) {return G__refT<int>(buf);}
 long* G__Longref(G__value *buf) {return G__refT<long>(buf);}
 unsigned char* G__UCharref(G__value *buf) {return G__refT<unsigned char>(buf);}
+#ifdef G__BOOL4BYTE
+int* G__Boolref(G__value *buf) {return (int*)G__refT<bool>(buf);}
+#else // G__BOOL4BYTE
 unsigned char* G__Boolref(G__value *buf) {return (unsigned char*)G__refT<bool>(buf);}
+#endif // G__BOOL4BYTE
 unsigned short* G__UShortref(G__value *buf) {return G__refT<unsigned short>(buf);}
 unsigned int* G__UIntref(G__value *buf) {return G__refT<unsigned int>(buf);}
 unsigned long* G__ULongref(G__value *buf) {return G__refT<unsigned long>(buf);}
