@@ -974,6 +974,9 @@ void TXNetFile::Close(const Option_t *opt)
    TFile::Close(opt);
 
    fIsRootd = kFALSE;
+
+   if (IsOpen())
+      fClient->Close();
 }
 
 //_____________________________________________________________________________
