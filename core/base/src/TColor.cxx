@@ -307,6 +307,7 @@ void TColor::InitializeColors()
    }
    // If fgPalette.fN !=0 SetPalette has been called already
    // (from rootlogon.C for instance)
+
    if (!fgPalette.fN) SetPalette(0,0);
 }
 
@@ -1213,6 +1214,8 @@ Int_t TColor::CreateGradientColorTable(UInt_t Number, Double_t* Length,
   // 0.79 - 0.62 => 17 % of the total palette area between these colors
   //
   //  Original code by Andreas Zoglauer <zog@mpe.mpg.de>
+
+   TColor::InitializeColors();
 
    UInt_t g, c;
    UInt_t nPalette = 0;
