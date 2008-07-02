@@ -154,7 +154,8 @@ void ProofSimple::Terminate()
    for (Int_t i=0; i < fNhist; i++) {
       fHist[i] = dynamic_cast<TH1F *>(fOutput->FindObject(Form("h%d",i)));
       c1->cd(i+1);
-      fHist[i]->Draw();
+      if (fHist[i])
+         fHist[i]->Draw();
    }
 
    // Final update
