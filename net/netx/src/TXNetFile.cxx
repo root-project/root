@@ -862,7 +862,7 @@ void TXNetFile::Init(Bool_t create)
    if (fIsRootd) {
       if (gDebug > 1)
          Info("Init","rootd: calling directly TFile::Init");
-      return TFile::Init(create);
+      return TNetFile::Init(create);
    }
 
    if (fClient) {
