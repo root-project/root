@@ -112,7 +112,7 @@ EVENTDIR = $(ROOTTEST_LOC)/root/io/event
 $(EVENTDIR)/$(SUCCESS_FILE): $(ROOTCORELIBS)  
 	$(CMDECHO) (cd $(EVENTDIR); $(MAKE) CURRENTDIR=$(EVENTDIR) --no-print-directory $(TESTGOAL); )
 
-$(TEST_TARGETS_DIR): %.test:  $(EVENTDIR)/$(SUCCESS_FILE)
+$(TEST_TARGETS_DIR): %.test:  $(EVENTDIR)/$(SUCCESS_FILE) utils
 	@(echo Running test in $(CALLDIR)/$*)
 	@(cd $*; $(TESTTIMEPRE) $(MAKE) CURRENTDIR=$* --no-print-directory $(TESTGOAL) $(TESTTIMEPOST); \
      result=$$?; \
