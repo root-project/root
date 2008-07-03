@@ -118,6 +118,7 @@ String XrdSecProtocolgsi::DefError = "invalid credentials ";
 int    XrdSecProtocolgsi::PxyReqOpts = 0;
 XrdSysPlugin   *XrdSecProtocolgsi::GMAPPlugin = 0;
 XrdSecgsiGMAP_t XrdSecProtocolgsi::GMAPFun = 0;
+int    XrdSecProtocolgsi::GMAPCacheTimeOut = -1;
 //
 // Crypto related info
 int  XrdSecProtocolgsi::ncrypt    = 0;                 // Number of factories
@@ -713,6 +714,12 @@ char *XrdSecProtocolgsi::Init(gsiOptions opt, XrdOucErrInfo *erp)
                }
             }
          }
+      }
+      //
+      // Expiration of GRIDMAP related cache entries
+      if (GMAPOpt > 0 && opt.gmapto > 0) {
+         GMAPCacheTimeOut = opt.gmapto;
+         DEBUG("grid-map cache entries expire after "<<GMAPCacheTimeOut<<" secs");
       }
 
       //
@@ -1799,6 +1806,7 @@ char *XrdSecProtocolgsiInit(const char mode,
       //              [-gridmap:<grid_map_file>]
       //              [-gmapfun:<grid_map_function>]
       //              [-gmapfunparms:<grid_map_function_init_parameters>]
+      //              [-gmapto:<grid_map_cache_entry_validity_in_secs>]
       //              [-gmapopt:<grid_map_check_option>]
       //              [-dlgpxy:<proxy_req_option>]
       //
@@ -1817,6 +1825,7 @@ char *XrdSecProtocolgsiInit(const char mode,
       int ca = 1;
       int crl = 1;
       int ogmap = 1;
+      int gmapto = -1;
       int dlgpxy = 0;
       char *op = 0;
       while (inParms.GetLine()) { 
@@ -1851,6 +1860,8 @@ char *XrdSecProtocolgsiInit(const char mode,
                gmapfun = (const char *)(op+9);
             } else if (!strncmp(op, "-gmapfunparms:",14)) {
                gmapfunparms = (const char *)(op+14);
+            } else if (!strncmp(op, "-gmapto:",8)) {
+               gmapto = atoi(op+8);
             } else if (!strncmp(op, "-dlgpxy:",8)) {
                dlgpxy = atoi(op+8);
             }
@@ -1864,6 +1875,7 @@ char *XrdSecProtocolgsiInit(const char mode,
       opts.ca = ca;
       opts.crl = crl;
       opts.ogmap = ogmap;
+      opts.gmapto = gmapto;
       opts.dlgpxy = dlgpxy;
       if (clist.length() > 0)
          opts.clist = (char *)clist.c_str();
@@ -4038,23 +4050,38 @@ XrdOucString XrdSecProtocolgsi::QueryGMAP(const char *dn, int now)
    // We set the client name from the map function first, if any
    if (GMAPFun) {
       // We may have it in the cache
-      if (!(cent = cacheGMAPFun.Get(dn))) {
+      cent = cacheGMAPFun.Get(dn);
+      // Check expiration, if required
+      if (GMAPCacheTimeOut > 0 &&
+         (cent && (now - cent->mtime) > GMAPCacheTimeOut)) {
+         // Invalidate the entry
+         cacheGMAPFun.Remove(dn);
+         cent = 0;
+      }
+      // Run the search via the external function
+      if (!cent) {
          char *name = (*GMAPFun)(dn, now);
-         if (name) {
-            cent = cacheGMAPFun.Add(dn);
-            if (cent) {
+         if ((cent = cacheGMAPFun.Add(dn))) {
+            if (name) {
                cent->status = kPFE_ok;
-               cent->cnt = 0;
-               cent->mtime = now; // creation time
                // Add username
                SafeFree(cent->buf1.buf);
                cent->buf1.buf = name;
                cent->buf1.len = strlen(name);
-               // Rehash cache
-               cacheGMAPFun.Rehash(1);
+            } else {
+               // We cache the resul to avoid repeating the search
+               cent->status = kPFE_allowed;
             }
+            // Fill up the rest
+            cent->cnt = 0;
+            cent->mtime = now; // creation time
+            // Rehash cache
+            cacheGMAPFun.Rehash(1);
          }
       }
+      // This means that the previous search did not return success
+      if (cent && (cent->status != kPFE_ok))
+         cent = 0;
    }
 
    // Save the result, if any
