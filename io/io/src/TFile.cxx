@@ -750,7 +750,6 @@ void TFile::Close(Option_t *option)
 
    if (!IsOpen()) return;
 
-
    if (fIsArchive || !fIsRootFile) {
       FlushWriteCache();
       SysClose(fD);
@@ -792,7 +791,7 @@ void TFile::Close(Option_t *option)
       fFree->Delete();
    }
 
-   if (IsOpen() && fD > 0) {
+   if (IsOpen()) {
       SysClose(fD);
       fD = -1;
    }
@@ -815,7 +814,6 @@ void TFile::Close(Option_t *option)
    R__LOCKGUARD2(gROOTMutex);
    gROOT->GetListOfFiles()->Remove(this);
    gROOT->GetListOfBrowsers()->RecursiveRemove(this);
-
 }
 
 //____________________________________________________________________________________
