@@ -10,7 +10,7 @@ CLEAN_TARGETS += configtest.root
 TEST_TARGETS += ursula inheritAndOwn BadBaseAddresses treeBranch iobug \
 	merging headerTest clonesATest EmbeddedTest inheritTest \
 	relationsTest suetest Jantest deepnesT baseString prova \
-	augertest longlong
+	augertest longlong memleak
 
 # adjust the location of Rules.mk as needed.
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -85,30 +85,30 @@ endif
 merging.log: merging.C
 
 merging: merging.log
-	$(Testdiff)
+	$(TestDiff)
 
 iobug.log : iobug_C.$(DllSuf)
 
 iobug: iobug.log
-	$(Testdiff)
+	$(TestDiff)
 
 treeBranch.log: userClass_C.$(DllSuf) treeBranch_C.$(DllSuf)
 
 treeBranch: treeBranch.log
-	$(Testdiff)
+	$(TestDiff)
 
 inheritAndOwn.log: test_Persistency0_C.$(DllSuf)  test_Persistency3_C.$(DllSuf)
 
 inheritAndOwn: inheritAndOwn.log
-	$(Testdiff)
+	$(TestDiff)
 
 BadBaseAddresses.log: test_Persistency1_C.$(DllSuf)
 
 BadBaseAddresses: BadBaseAddresses.log
-	$(Testdiff)
+	$(TestDiff)
 
 ursula: ursula.log
-	$(Testdiff)
+	$(TestDiff)
 
 ConfigRecord_cxx.$(DllSuf): ConfigRecord.cxx ConfigRecord.h sueloader_C.$(DllSuf)
 	$(BuildWithLib)	
@@ -121,24 +121,28 @@ suetest.log: configtest.root
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l suetestrd.C > suetest.log 2>&1
 
 suetest: suetest.log
-	$(Testdiff)
+	$(TestDiff)
 
 Jantest.log: JansEvent_C.$(DllSuf)
 
 Jantest: Jantest.log
-	$(Testdiff)
+	$(TestDiff)
 
 deepnest: deepnest.clog
-	$(Testdiff)
+	$(TestDiff)
 
 baseString: baseString.clog
-	$(Testdiff)
+	$(TestDiff)
 
 prova: prova.log
-	$(Testdiff)
+	$(TestDiff)
 
 augertest: augertest.log
-	$(Testdiff)
+	$(TestDiff)
 
 longlong: longlong.clog
-	$(Testdiff)
+	$(TestDiff)
+
+memleak: memleak.clog
+	$(TestDiff)
+        
