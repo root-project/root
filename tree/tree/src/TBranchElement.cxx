@@ -1636,6 +1636,10 @@ Int_t TBranchElement::GetEntry(Long64_t entry, Int_t getall)
 
    Int_t nbytes = 0;
 
+   if (IsAutoDelete()) {
+      SetBit(kDeleteObject);
+      SetAddress(fAddress);
+   }
    SetupAddresses();
 
    Int_t nbranches = fBranches.GetEntriesFast();
@@ -2935,6 +2939,9 @@ void TBranchElement::ReleaseObject()
    // -- Delete any object we may have allocated on a previous call to SetAddress.
 
    if (fObject && TestBit(kDeleteObject)) {
+      if (IsAutoDelete() && fAddress != (char*)&fObject) {
+         *((char**) fAddress) = 0;
+      }
       ResetBit(kDeleteObject);
       if (fType == 3) {
          // -- We are a TClonesArray master branch.
@@ -3152,6 +3159,11 @@ void TBranchElement::SetAddress(void* addr)
    //    event = 0;
    //    delete f;
    //    f = 0;
+   //
+   // If AutoDelete is on (see TBranch::SetAutoDelete), 
+   // the top level objet will be deleted and recreate
+   // each time an entry is read, whether or not the
+   // TTree owns the object.
    //
 
    //
