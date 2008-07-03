@@ -39,6 +39,8 @@
 #include "TSystem.h"
 #include "TUrl.h"
 #include "TFileInfo.h"
+// STD
+#include <cstdlib>
 
 ClassImp(TGLiteResult)
 

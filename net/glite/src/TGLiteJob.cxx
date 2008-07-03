@@ -11,7 +11,7 @@
 
 /************************************************************************/
 /*! \file TGLiteJob.cxx
-gLite implentation of TGridJob*//*
+gLite implementation of TGridJob*//*
 
          version number:    $LastChangedRevision: 1678 $
          created by:        Anar Manafov
@@ -30,7 +30,7 @@ gLite implentation of TGridJob*//*
 //////////////////////////////////////////////////////////////////////////
 //
 // The TGLiteJob class is a part of RGLite plug-in and
-// represents a Grid job and offers a posibility to
+// represents a Grid job and offers a possibility to
 // query the job status and retrieve its output sandbox.
 //
 // Related classes are TGLite.
@@ -104,7 +104,7 @@ Bool_t TGLiteJob::Cancel()
 {
    // The Cancel() method cancels a gLite job, which was assigned to the class.
    // RETURN:
-   //      kTRUE if succeded and kFALSE otherwise.
+   //      kTRUE if succeeded and kFALSE otherwise.
 
    try {
       CGLiteAPIWrapper::Instance().GetJobManager().JobCancel(string(fJobID));

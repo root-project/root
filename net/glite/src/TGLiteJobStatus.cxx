@@ -55,7 +55,7 @@ TGLiteJobStatus::TGLiteJobStatus(TString _jobID): m_sJobID(_jobID)
 //______________________________________________________________________________
 TGridJobStatus::EGridJobStatus TGLiteJobStatus::GetStatus() const
 {
-   // The GetStat() method retrievs a gLite job status and
+   // The GetStat() method retrieves a gLite job status and
    // translates it to a TGridJobStatus::EGridJobStatus type.
    // RETURN:
    //      a TGridJobStatus::EGridJobStatus status value.

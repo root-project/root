@@ -54,7 +54,7 @@ public:
    virtual TGridResult* Query(const char *_path, const char *_pattern = NULL, const char* /*conditions*/ = "", const char* /*options*/ = "");
    virtual TGridResult* LocateSites();
 
-   //--- Catalogue Interface
+   //--- Catalog Interface
    virtual TGridResult* Ls(const char *_ldn = "", Option_t* /*options*/ = "", Bool_t /*verbose*/ = kFALSE);
    virtual const char* Pwd(Bool_t /*verbose*/ = kFALSE);
    virtual Bool_t Cd(const char *_ldn = "", Bool_t /*verbose*/ = kFALSE);

@@ -39,7 +39,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 /* BEGIN_HTML
 The TGLite class defines an interface to <A href="http://glite.web.cern.ch/glite/" name="gLite GRID services">gLite GRID services</A>. This class is a part of RGlite plug-in developed at <A href="http://www.gsi.de" name="GSI, Darmstadt">GSI, Darmstadt</A>.<br>
-The RGLite plug-in uses <A href="https://subversion.gsi.de/trac/dgrid/wiki">glite-api-wrapper library (GAW)</A> to perform Grid operations and provides the following featurs:
+The RGLite plug-in uses <A href="https://subversion.gsi.de/trac/dgrid/wiki">glite-api-wrapper library (GAW)</A> to perform Grid operations and provides the following features:
 <ul>
 <li>Workload Management System operations:
 <ul>
@@ -65,7 +65,7 @@ The RGLite plug-in uses <A href="https://subversion.gsi.de/trac/dgrid/wiki">glit
 
 <h3>Content</h3>
 <ol style="list-style-type: upper-roman;">
-    <li><a href="#requarements">Requirements</a></li>
+    <li><a href="#requirements">Requirements</a></li>
     <li><a href="#conf">Configuration</a></li>
     <li><a href="#usage">Usage</a>
         <ol>
@@ -76,7 +76,7 @@ The RGLite plug-in uses <A href="https://subversion.gsi.de/trac/dgrid/wiki">glit
 </ol>
 <br>
 
-<h3><a name="requarements">Requirements</a></h3>
+<h3><a name="requirements">Requirements</a></h3>
 <ol>
     <li><A href="http://glite.web.cern.ch/glite/packages/userInterface.asp">gLite UI 3.1</A></li>
     <li><A href="https://subversion.gsi.de/trac/dgrid/wiki">glite-api-wrapper library</A></li>
@@ -126,7 +126,7 @@ Be advised that the call of <em>TGrid::Connect("glite")</em> should be the very 
     <font color="Green">// listing only file names</font><br>
     TGridResult * res = gGrid->Ls();<br>
     Int_t i = 0;<br>
-         while ( res-&gt;GetFileName( i ) ) 
+         while ( res-&gt;GetFileName( i ) )
         <br>
          &nbsp;&nbsp; cout &lt;&lt; &quot;File: &quot; &lt;&lt; res-&gt;GetFileName( i++ ) &lt;&lt; endl;
         <br>
@@ -287,9 +287,9 @@ TGridResult* TGLite::Command(const char* /*command*/, Bool_t /*interactive*/, UI
 //______________________________________________________________________________
 TGridResult* TGLite::Query(const char *_path, const char *_pattern /*= NULL*/, const char* /*conditions*/, const char* /*options*/)
 {
-   // A File Catalog method. Quering a File Catalog.
+   // A File Catalog method. Querying a File Catalog.
    // INPUT:
-   //      _path       [in] - a File Catalog directory which queary will be executed on.
+   //      _path       [in] - a File Catalog directory which query will be executed on.
    //      _pattern    [in] - a POSIX regular expression pattern.
    //                          If a NULL value provided the default pattern will be used,
    //                          which is ".*" - match any.
@@ -336,7 +336,7 @@ TGridResult* TGLite::LocateSites()
 }
 
 //______________________________________________________________________________
-//--- Catalogue Interface
+//--- Catalog Interface
 TGridResult* TGLite::Ls(const char *_ldn, Option_t* /*options*/, Bool_t /*verbose*/)
 {
    // A File Catalog method. Listing content of the current working directory.
@@ -346,7 +346,7 @@ TGridResult* TGLite::Ls(const char *_ldn, Option_t* /*options*/, Bool_t /*verbos
    //      The other parameters are unsupported.
    // RETURN:
    //      A TGridResult object, which holds the result of the listing.
-   //      The method returns NULL in case of if an error occured.
+   //      The method returns NULL in case of if an error occurred.
 
    if (!_ldn)
       return NULL; // TODO: report error
@@ -410,7 +410,7 @@ Bool_t TGLite::Cd(const char *_ldn, Bool_t /*verbose*/)
    // NOTE:
    //      The other parameter is unsupported.
    // RETURN:
-   //      kTRUE if succeded and kFALSE otherwise.
+   //      kTRUE if succeeded and kFALSE otherwise.
 
 
    if (!_ldn)
@@ -443,7 +443,7 @@ Bool_t TGLite::Mkdir(const char *_ldn, Option_t* /*options*/, Bool_t /*verbose*/
    // NOTE:
    //      The other parameters are unsupported.
    // RETURN:
-   //      kTRUE if succeded and kFALSE otherwise.
+   //      kTRUE if succeeded and kFALSE otherwise.
 
    if (!_ldn)
       return kFALSE;
@@ -476,7 +476,7 @@ Bool_t TGLite::Rmdir(const char *_ldn, Option_t* /*options*/, Bool_t /*verbose*/
    // NOTE:
    //      The other parameters are unsupported.
    // RETURN:
-   //      kTRUE if succeded and kFALSE otherwise.
+   //      kTRUE if succeeded and kFALSE otherwise.
 
    if (!_ldn)
       return kFALSE;
@@ -512,7 +512,7 @@ Bool_t TGLite::Register(const char *_lfn, const char *_turl , Long_t /*size*/, c
    // NOTE:
    //      The other parameters are unsupported.
    // RETURN:
-   //      kTRUE if succeded and kFALSE otherwise.
+   //      kTRUE if succeeded and kFALSE otherwise.
 
    // Call for a Catalog manager
    CCatalogManager *pCatalog(&CGLiteAPIWrapper::Instance().GetCatalogManager());
@@ -539,13 +539,13 @@ Bool_t TGLite::Register(const char *_lfn, const char *_turl , Long_t /*size*/, c
 Bool_t TGLite::Rm(const char *_lfn, Option_t* /*option*/, Bool_t /*verbose*/)
 {
    // A File Catalog method, it removes an LFC file entry from the name server.
-   // The methods delets all replicas from the file.
+   // The methods deletes all replicas from the file.
    // INPUT:
    //      _lfn    [in] - a logical name of the file to remove.
    // NOTE:
    //      The other parameters are unsupported.
    // RETURN:
-   //      kTRUE if succeded and kFALSE otherwise.
+   //      kTRUE if succeeded and kFALSE otherwise.
 
    if (!_lfn)
       return kFALSE;
@@ -579,8 +579,8 @@ TGridJob* TGLite::Submit(const char *_jdl)
    // INPUT:
    //      _jdl    [in] - a name of the job description file (JDL). The JDL file path can contain environment variables and a "~" (home) symbol.
    // RETURN:
-   //      a TGridJob object, which represents the newly submited job.
-   //      The method returns NULL in case if an error occured.
+   //      a TGridJob object, which represents the newly submitted job.
+   //      The method returns NULL in case if an error occurred.
 
    if (!_jdl)
       return NULL; // TODO: msg me!
@@ -621,7 +621,7 @@ Bool_t  TGLite::Kill(TGridJob *_gridjob)
    // INPUT:
    //      _gridjob    [in] - a TGridJob object.
    // RETURN:
-   //      kTRUE if succeded and kFALSE otherwise.
+   //      kTRUE if succeeded and kFALSE otherwise.
 
    if (!_gridjob)
       return kFALSE;
@@ -637,7 +637,7 @@ Bool_t  TGLite::KillById(TString _id)
    // INPUT:
    //      _id    [in] - a gLite job ID.
    // RETURN:
-   //      kTRUE if succeded and kFALSE otherwise.
+   //      kTRUE if succeeded and kFALSE otherwise.
 
    TGLiteJob gridjob(_id);
    return gridjob.Cancel();

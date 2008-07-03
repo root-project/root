@@ -11,7 +11,7 @@
 
 /************************************************************************/
 /*! \file TGLiteJob.h
-gLite implentation of TGridJob*//*
+gLite implementation of TGridJob*//*
 
          version number:    $LastChangedRevision: 1678 $
          created by:        Anar Manafov
