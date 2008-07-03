@@ -748,7 +748,7 @@ void TFile::Close(Option_t *option)
 
    opt.ToLower();
 
-   if (!TFile::IsOpen()) return;
+   if (!IsOpen()) return;
 
 
    if (fIsArchive || !fIsRootFile) {
@@ -1558,7 +1558,8 @@ Int_t TFile::Recover()
       for (i = 0;i < nwhc; i++) frombuf(buffer, &classname[i]);
       classname[nwhci] = '\0';
       TDatime::GetDateTime(datime, date, time);
-      if (seekpdir == fSeekDir && strcmp(classname,"TFile") && strcmp(classname,"TBasket")) {
+      if (seekpdir == fSeekDir && !TClass::GetClass(classname)->InheritsFrom("TFile")
+                               && strcmp(classname,"TBasket")) {
          key = new TKey(this);
          key->ReadKeyBuffer(bufread);
          if (!strcmp(key->GetName(),"StreamerInfo")) {
