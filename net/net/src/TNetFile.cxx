@@ -223,7 +223,7 @@ void TNetFile::Close(Option_t *opt)
 
    SafeDelete(fSocket);
 
-   fD = -1;  // so TFile::IsOpen() returns false
+   fD = -1;  // so TFile::IsOpen() returns false when in TFile::~TFile
 }
 
 //______________________________________________________________________________
