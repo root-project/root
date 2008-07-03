@@ -79,6 +79,7 @@ $(XROOTDMAKE):
 		freebsd*:*)      xopt="--ccflavour=gcc";; \
 		linuxicc:*)      xopt="--ccflavour=icc --use-xrd-strlcpy";; \
 		linuxia64ecc:*)  xopt="--ccflavour=icc --use-xrd-strlcpy";; \
+		linuxia64gcc:*)  xopt="--ccflavour=gcc --use-xrd-strlcpy";; \
 		linuxx8664gcc:*) xopt="--ccflavour=gccx8664 --use-xrd-strlcpy";; \
 		linuxx8664icc:*) xopt="--ccflavour=iccx8664 --use-xrd-strlcpy";; \
 		linuxppc64gcc:*) xopt="--ccflavour=gccppc64 --use-xrd-strlcpy";; \
