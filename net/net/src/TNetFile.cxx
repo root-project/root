@@ -116,27 +116,33 @@ Int_t TNetFile::SysOpen(const char * /*file*/, Int_t /*flags*/, UInt_t /*mode*/)
 {
    // Open a remote file. Requires fOption to be set correctly.
 
-   if (!fSocket) return -1;
+   if (!fSocket) {
 
-   if (fProtocol > 15) {
-      fSocket->Send(Form("%s %s", fUrl.GetFile(), ToLower(fOption).Data()),
-                    kROOTD_OPEN);
+      Create(fUrl.GetUrl(), fOption, -1);
+      if (!fSocket) return -1;
+
    } else {
-      // Old daemon versions expect an additional slash at beginning
-      fSocket->Send(Form("/%s %s", fUrl.GetFile(), ToLower(fOption).Data()),
-                    kROOTD_OPEN);
+
+      if (fProtocol > 15) {
+         fSocket->Send(Form("%s %s", fUrl.GetFile(), ToLower(fOption).Data()),
+                       kROOTD_OPEN);
+      } else {
+         // Old daemon versions expect an additional slash at beginning
+         fSocket->Send(Form("/%s %s", fUrl.GetFile(), ToLower(fOption).Data()),
+                       kROOTD_OPEN);
+      }
+
+      EMessageTypes kind;
+      int stat;
+      Recv(stat, kind);
+
+      if (kind == kROOTD_ERR) {
+         PrintError("SysOpen", stat);
+         return -1;
+      }
    }
 
-   EMessageTypes kind;
-   int stat;
-   Recv(stat, kind);
-
-   if (kind == kROOTD_ERR) {
-      PrintError("SysOpen", stat);
-      return -1;
-   }
-
-   return -2;
+   return -2;  // set as fD in ReOpen
 }
 
 //______________________________________________________________________________
@@ -216,6 +222,8 @@ void TNetFile::Close(Option_t *opt)
       fSocket->Send(kROOTD_BYE);
 
    SafeDelete(fSocket);
+
+   fD = -1;  // so TFile::IsOpen() returns false
 }
 
 //______________________________________________________________________________
@@ -237,7 +245,7 @@ void TNetFile::Init(Bool_t create)
    Seek(0);
 
    TFile::Init(create);
-   fD = -2;   // so TFile::IsOpen() will return true when in TFile::~TFile
+   fD = -2;   // so TFile::IsOpen() returns true when in TFile::~TFile
 }
 
 //______________________________________________________________________________
