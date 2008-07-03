@@ -214,10 +214,10 @@ bool XrdProofConn::Init(const char *url)
                   Close("P");
                   XrdOucString msg = fLastErrMsg;
                   msg.erase(msg.rfind(":"));
-                  TRACE(REQ,"XrdProofConn::Init: failure: " << msg);
+                  TRACE(XERR,"XrdProofConn::Init: failure: " << msg);
                   return fConnected;
                } else {
-                  TRACE(REQ,"XrdProofConn::Init: access to server failed (" << fLastErrMsg << ")");
+                  TRACE(XERR,"XrdProofConn::Init: access to server failed (" << fLastErrMsg << ")");
                }
                continue;
             } else {
@@ -240,7 +240,7 @@ bool XrdProofConn::Init(const char *url)
 
       // And we wait a bit before retrying
       if (i < maxTry - 1) {
-         TRACE(REQ,"XrdProofConn::Init: connection attempt failed: sleep " << timeWait << " secs");
+         TRACE(XERR,"XrdProofConn::Init: connection attempt failed: sleep " << timeWait << " secs");
          sleep(timeWait);
       }
 

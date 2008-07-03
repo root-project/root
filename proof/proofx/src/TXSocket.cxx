@@ -1737,11 +1737,17 @@ void TXSocket::InitEnvs()
    // Init environment variables for XrdClient
 
    // Set debug level
-   EnvPutInt(NAME_DEBUG, gEnv->GetValue("XProof.Debug", 0));
-   if (gEnv->GetValue("XProof.Debug", 0) > 0)
-      XrdProofdTrace->What = TRACE_REQ;
-      if (gEnv->GetValue("XProof.Debug", 0) > 1)
-         XrdProofdTrace->What = TRACE_ALL;
+   Int_t deb = gEnv->GetValue("XProof.Debug", -1);
+   EnvPutInt(NAME_DEBUG, deb);
+   XrdProofdTrace->What = TRACE_XERR;
+   if (deb > 0) {
+      XrdProofdTrace->What |= TRACE_REQ;
+      if (deb > 1) {
+         XrdProofdTrace->What |= TRACE_DBG;
+         if (deb > 2)
+            XrdProofdTrace->What |= TRACE_ALL;
+      }
+   }
 
    // List of domains where connection is allowed
    TString allowCO = gEnv->GetValue("XProof.ConnectDomainAllowRE", "");
