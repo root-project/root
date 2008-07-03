@@ -859,9 +859,12 @@ void TPad::Close(Option_t *)
       }
 
       // remove from the mother's list of primitives
-      if (fMother->GetListOfPrimitives()) fMother->GetListOfPrimitives()->Remove(this);
+      if (fMother) {
+         if (fMother->GetListOfPrimitives())
+            fMother->GetListOfPrimitives()->Remove(this);
 
-      if (gPad == this) fMother->cd();
+         if (gPad == this) fMother->cd();
+      }
 
       if (fCanvas->GetPadSave() == this)
          fCanvas->ClearPadSave();
@@ -3055,8 +3058,10 @@ void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
                int px, py;
                XYtoAbsPixel(fX1, fY2, px, py);
 
-               fMother->CopyBackgroundPixmap(px, py);
-               CopyBackgroundPixmaps(fMother, this, px, py);
+               if (fMother) {
+                  fMother->CopyBackgroundPixmap(px, py);
+                  CopyBackgroundPixmaps(fMother, this, px, py);
+               }
 
                gVirtualX->SetOpacity(style-4000);
             }
@@ -4061,6 +4066,7 @@ void TPad::Pop()
 {
    // Pop pad to the top of the stack.
 
+   if (!fMother) return;
    if (!fPrimitives) fPrimitives = new TList;
    if (this == fMother->GetListOfPrimitives()->Last()) return;
 
