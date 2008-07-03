@@ -49,6 +49,7 @@
 #include "TUrl.h"
 #include "TVirtualMutex.h"
 #include "compiledata.h"
+#include "RConfigure.h"
 
 const char *gRootDir;
 const char *gProgName;
