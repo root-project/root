@@ -157,7 +157,6 @@ TXNetFile::~TXNetFile()
       Close(0);
 
    SafeDelete(fInitMtx);
-   SafeDelete(fClient);
 }
 
 //_____________________________________________________________________________
@@ -977,6 +976,7 @@ void TXNetFile::Close(const Option_t *opt)
 
    if (IsOpen())
       fClient->Close();
+   SafeDelete(fClient);
 }
 
 //_____________________________________________________________________________
@@ -1097,9 +1097,17 @@ Int_t TXNetFile::SysOpen(const char* pathname, Int_t flags, UInt_t mode)
       return TNetFile::SysOpen(pathname, flags, mode);
    }
 
-   // url is not needed because already stored
-   // fOption is set in TFile::ReOpen
-   Open(fOption.Data(), kFALSE);
+   if (!fClient) {
+
+      // Create an instance of XrdClient
+      CreateXClient(fUrl.GetUrl(), fOption, -1, kFALSE);
+
+   } else {
+
+      // url is not needed because already stored
+      // fOption is set in TFile::ReOpen
+      Open(fOption.Data(), kFALSE);
+   }
 
    // If not successful, flag it
    if (!IsOpen())
