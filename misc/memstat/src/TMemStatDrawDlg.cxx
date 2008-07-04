@@ -32,7 +32,7 @@ struct SFill_t : public binary_function<string, TGComboBox*, bool>
    bool operator()(const string &val, TGComboBox* box) const
    {
       if (!box)
-         return false;//parametr is a NULL pointer"
+         return false;//Parameter is a NULL pointer"
 
       box->AddEntry(val.c_str(), box->GetNumberOfEntries());
       return true;
@@ -161,7 +161,7 @@ void TMemStatDrawDlg::PlaceDeepCtrl(TGCompositeFrame *frame)
    horz1->AddFrame(fNmbSortDeep, new TGLayoutHints( kLHintsRight, 2, 2, 2, 2));
    fNmbSortDeep->Resize(100, 20);
 
-   // ------ Max lenthg
+   // ------ Max length
    TGHorizontalFrame *horz2 = new TGHorizontalFrame(contDeep);
    contDeep->AddFrame(horz2, new TGLayoutHints(kLHintsExpandX | kLHintsCenterY));
    // text description

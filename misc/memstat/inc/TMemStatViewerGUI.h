@@ -58,8 +58,8 @@ public:
 
    static void ShowGUI();                               // initialize and show GUI for presentation
 
-   void HandleButtonsSortStat(Int_t id = -1);           // handles mutual radio buuton for sort stat
-   void HandleButtonsSortStamp(Int_t id = -1);          // handles mutual radio buuton for sort stamp
+   void HandleButtonsSortStat(Int_t id = -1);           // handles mutual radio button for sort stat
+   void HandleButtonsSortStamp(Int_t id = -1);          // handles mutual radio button for sort stamp
    void HandleDeep(Long_t id);                          // handles stack deep and nrows
    void HandleStampSelect(const char*);
    void HandleFuncSelect(const char*);

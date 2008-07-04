@@ -59,7 +59,7 @@ TMemStatManager::TMemStatManager():
       fSTHashTable(g_STHashSize, -1),           //!pointer to the hash table
       fCount(0),                 //!number of entries in table
       fStampNumber(0),           //current stamp number
-      fStackVector(),            // vector withstack symbols
+      fStackVector(),            // vector with stack symbols
       fStampVector(),            // vector of stamp information
       fStampTime(),              // vector of stamp information
       fCodeInfoArray()        ,  // vector with code info
@@ -73,9 +73,9 @@ TMemStatManager::TMemStatManager():
       fAutoStampSize(2000000),   //change of size invoking STAMP
       fAutoStampN(200000),       //change of number of allocation  STAMP
       fAutoStampDumpSize(50000), //change of number of allocation  STAMP
-      fMinStampSize(100),        //minimal cut what will be dumeped  to the tree
+      fMinStampSize(100),        //minimal cut what will be dumped  to the tree
       fSize(65536),              //!size of hash table
-      fLeak(NULL),                  //!pointer to the hash table
+      fLeak(NULL),               //!pointer to the hash table
       fAllocCount(0),            //!number of memory allocation blocks
       fMultDeleteTable(),        //!pointer to the table
       fDumpTree(0),              //!tree to dump information
@@ -103,7 +103,7 @@ void TMemStatManager::Init()
    fMultDeleteTable.fLeaks = 0;
    fMultDeleteTable.fAllocCount = 0;
    fMultDeleteTable.fTableSize = 0;
-   fStackVector.reserve(fSize);             // vector withstack symbols
+   fStackVector.reserve(fSize);             // vector with stack symbols
    fStampVector.reserve(fSize*10);          // vector of stamp information
    fCodeInfoArray.reserve(fSize);           // vector with code info
    fStampTime.reserve(fSize);

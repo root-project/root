@@ -25,7 +25,7 @@ class TMemStatDepend
 {
 public:
    //
-   // Memory managment HOOK functions
+   // Memory management HOOK functions
    //
    typedef void* (*MallocHookFunc_t)(size_t size, const void *caller);
    typedef void (*FreeHookFunc_t)(void* ptr, const void *caller);

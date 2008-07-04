@@ -36,7 +36,7 @@ class TMemStatManager;
 
 
 
-const int fields_length[] = {16, 7, 9, 15, 19, 12, 8};
+const int fields_length[] = {18, 15, 19, 12, 8};
 
 
 class TMemStatInfoStamp: public TObject
@@ -81,7 +81,7 @@ public:
    TMemStatInfoStamp  fMaxStampSize;  // max current size stamp
    TMemStatInfoStamp  fMaxStamp;      // max current size stamp
    Long64_t    fCode;          //pointer to the code
-   TString     fInfo;          //pointer desription
+   TString     fInfo;          //pointer description
    TString     fFunction;      //function
    TString     fLib;           //library
    UInt_t      fCodeID;        //ID number
@@ -159,12 +159,10 @@ std::ostream& StreemCurrAndMax(std::ostream &_ostream, const T &_this)
 
    _ostream << "\n"
    << std::setw(fields_length[0]) << ""
-   << std::setw(fields_length[1]) << "ID"
-   << std::setw(fields_length[2]) << "Sort"
-   << std::setw(fields_length[3]) << "TotalCount"
-   << std::setw(fields_length[4]) << "TotalSize"
-   << std::setw(fields_length[5]) << "Count"
-   << std::setw(fields_length[6]) << "Size" << std::endl;
+   << std::setw(fields_length[1]) << "TotalCount"
+   << std::setw(fields_length[2]) << "TotalSize"
+   << std::setw(fields_length[3]) << "Count"
+   << std::setw(fields_length[4]) << "Size" << std::endl;
 
    // Setting a bit nicer formating
    // example: instead of 20600000 print 20,600,000
@@ -175,30 +173,24 @@ std::ostream& StreemCurrAndMax(std::ostream &_ostream, const T &_this)
 
    _ostream << std::setw(fields_length[0]) << "Current stamp";
    _ostream
-   << std::setw(fields_length[1]) << _this.fCurrentStamp.fStampNumber
-   << std::setw(fields_length[2]) << _this.fCurrentStamp.fID
-   << std::setw(fields_length[3]) << _this.fCurrentStamp.fTotalAllocCount
-   << std::setw(fields_length[4]) << Memstat::dig2bytes(_this.fCurrentStamp.fTotalAllocSize)
-   << std::setw(fields_length[5]) << _this.fCurrentStamp.fAllocCount
-   << std::setw(fields_length[6]) << Memstat::dig2bytes(_this.fCurrentStamp.fAllocSize) << std::endl;
+   << std::setw(fields_length[1]) << _this.fCurrentStamp.fTotalAllocCount
+   << std::setw(fields_length[2]) << Memstat::dig2bytes(_this.fCurrentStamp.fTotalAllocSize)
+   << std::setw(fields_length[3]) << _this.fCurrentStamp.fAllocCount
+   << std::setw(fields_length[4]) << Memstat::dig2bytes(_this.fCurrentStamp.fAllocSize) << std::endl;
 
    _ostream << std::setw(fields_length[0]) << "Max Alloc stamp";
    _ostream
-   << std::setw(fields_length[1]) << _this.fMaxStamp.fStampNumber
-   << std::setw(fields_length[2]) << _this.fMaxStamp.fID
-   << std::setw(fields_length[3]) << _this.fMaxStamp.fTotalAllocCount
-   << std::setw(fields_length[4]) << Memstat::dig2bytes(_this.fMaxStamp.fTotalAllocSize)
-   << std::setw(fields_length[5]) << _this.fMaxStamp.fAllocCount
-   << std::setw(fields_length[6]) << Memstat::dig2bytes(_this.fMaxStamp.fAllocSize) << std::endl;
+   << std::setw(fields_length[1]) << _this.fMaxStamp.fTotalAllocCount
+   << std::setw(fields_length[2]) << Memstat::dig2bytes(_this.fMaxStamp.fTotalAllocSize)
+   << std::setw(fields_length[3]) << _this.fMaxStamp.fAllocCount
+   << std::setw(fields_length[4]) << Memstat::dig2bytes(_this.fMaxStamp.fAllocSize) << std::endl;
 
    _ostream << std::setw(fields_length[0]) << "Max Size stamp";
    _ostream
-   << std::setw(fields_length[1]) << _this.fMaxStampSize.fStampNumber
-   << std::setw(fields_length[2]) << _this.fMaxStampSize.fID
-   << std::setw(fields_length[3]) << _this.fMaxStampSize.fTotalAllocCount
-   << std::setw(fields_length[4]) << Memstat::dig2bytes(_this.fMaxStampSize.fTotalAllocSize)
-   << std::setw(fields_length[5]) << _this.fMaxStampSize.fAllocCount
-   << std::setw(fields_length[6]) << Memstat::dig2bytes(_this.fMaxStampSize.fAllocSize);
+   << std::setw(fields_length[1]) << _this.fMaxStampSize.fTotalAllocCount
+   << std::setw(fields_length[2]) << Memstat::dig2bytes(_this.fMaxStampSize.fTotalAllocSize)
+   << std::setw(fields_length[3]) << _this.fMaxStampSize.fAllocCount
+   << std::setw(fields_length[4]) << Memstat::dig2bytes(_this.fMaxStampSize.fAllocSize);
 
    _ostream.imbue(loc_previous);
    _ostream.flags(old_flags);

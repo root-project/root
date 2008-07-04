@@ -63,7 +63,7 @@ struct SStringToListBox_t : public binary_function<string, TGComboBox*, bool> {
 struct SFillListBox_t : public binary_function<TObject*, TGComboBox*, bool> {
    bool operator()(TObject *aObj, TGComboBox* box) const {
       if (!aObj || !box)
-         return false; //TODO: need an assert "SFillListBox_t: parametr is a NULL pointer"
+         return false; //TODO: need an assert "SFillListBox_t: parameter is a NULL pointer"
 
       if ((aObj->IsA() == TObjString::Class())) {
          TObjString *str(dynamic_cast<TObjString*>(aObj));
@@ -131,8 +131,8 @@ TMemStatViewerGUI::TMemStatViewerGUI(const TGWindow *p, UInt_t w, UInt_t h, Opti
    MakeStampList(contLeft);
    MakeSelection(contLeft);
    MakeContSortStat(contLeft);   // Make content for Sort Statistic
-   MakeContSortStamp(contLeft);  // make constent for sort Stamps
-   MakeContDeep(contLeft);       // make constent for sort Stamps
+   MakeContSortStamp(contLeft);  // make content for sort Stamps
+   MakeContDeep(contLeft);       // make content for sort Stamps
 
    MapSubwindows();
    Resize(GetDefaultSize());
@@ -148,7 +148,7 @@ TMemStatViewerGUI::TMemStatViewerGUI(const TGWindow *p, UInt_t w, UInt_t h, Opti
 TMemStatViewerGUI::~TMemStatViewerGUI()
 {
    // a dtor
-  
+
    Cleanup();
    if (fViewer)
       fViewer->Delete();

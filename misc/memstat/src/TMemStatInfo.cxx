@@ -18,14 +18,14 @@
                    fAllocCount;       //current number of allocation-deallocation
                    fAllocSize;        //current allocated size
      TMemStatCodeInfo
-     base code inormation - strings - fFunction and fLib (function desription)
+     base code information - strings - fFunction and fLib (function description)
                           - stamps  -
      TMemStatInfoStamp  fLastStamp;     // last time stamp info
      TMemStatInfoStamp  fCurrentStamp;  // current  time stamp info
      TMemStatInfoStamp  fMaxStampSize;  // max current size stamp
      TMemStatInfoStamp  fMaxStamp;      // max current size stamp
      TMemStatStackInfo
-     base stack inormation - array of pointers to Code informations
+     base stack information - array of pointers to Code informations
                           - stamps  -
      TMemStatInfoStamp  fLastStamp;     // last time stamp info
      TMemStatInfoStamp  fCurrentStamp;  // current  time stamp info
@@ -82,12 +82,10 @@ std::ostream& operator << (std::ostream &_ostream, const TMemStatInfoStamp &_thi
    // TODO: Comment me
 
    _ostream
-   << std::setw(fields_length[1]) << "ID"
-   << std::setw(fields_length[2]) << "Sort"
-   << std::setw(fields_length[3]) << "TotalCount"
-   << std::setw(fields_length[4]) << "TotalSize"
-   << std::setw(fields_length[5]) << "Count"
-   << std::setw(fields_length[6]) << "Size" << std::endl;
+   << std::setw(fields_length[1]) << "TotalCount"
+   << std::setw(fields_length[2]) << "TotalSize"
+   << std::setw(fields_length[3]) << "Count"
+   << std::setw(fields_length[4]) << "Size" << std::endl;
 
    // Setting a bit nicer formating
    // example: instead of 20600000 print 20,600,000
@@ -97,12 +95,10 @@ std::ostream& operator << (std::ostream &_ostream, const TMemStatInfoStamp &_thi
    _ostream << std::fixed;
 
    _ostream
-   << std::setw(fields_length[1]) << _this.fStampNumber
-   << std::setw(fields_length[2]) << _this.fID
-   << std::setw(fields_length[3]) << _this.fTotalAllocCount
-   << std::setw(fields_length[4]) << Memstat::dig2bytes(_this.fTotalAllocSize)
-   << std::setw(fields_length[5]) << _this.fAllocCount
-   << std::setw(fields_length[6]) << Memstat::dig2bytes(_this.fAllocSize);
+   << std::setw(fields_length[1]) << _this.fTotalAllocCount
+   << std::setw(fields_length[2]) << Memstat::dig2bytes(_this.fTotalAllocSize)
+   << std::setw(fields_length[3]) << _this.fAllocCount
+   << std::setw(fields_length[4]) << Memstat::dig2bytes(_this.fAllocSize);
 
    _ostream.imbue(loc_previous);
 
@@ -148,7 +144,7 @@ void TMemStatCodeInfo::Inc(Int_t memSize)
 //______________________________________________________________________________
 void TMemStatCodeInfo::SetInfo(void *info)
 {
-   //  Get function realname from info descriptor
+   //  Get function's real name from info descriptor
 
    char *zero = 0;
    fCode = (Long64_t)((char*)info - zero);
@@ -211,7 +207,7 @@ TMemStatStackInfo::TMemStatStackInfo():
       fStackID(0)
 {
    // default ctor
-  
+
    fLastStamp.fStampType    = TMemStatInfoStamp::kStack;
    fCurrentStamp.fStampType = TMemStatInfoStamp::kStack;
    fMaxStampSize.fStampType = TMemStatInfoStamp::kStack;

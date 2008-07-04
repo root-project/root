@@ -123,9 +123,9 @@ void TMemStatDepend::SetFreeHook(FreeHookFunc_t p)
 size_t TMemStatDepend::Backtrace(void **trace, size_t dsize, Bool_t _bUseGNUBuildinBacktrace)
 {
    // Get the backtrace
-   // dsize - maximal deepnes of stack information
+   // dsize - maximal deepness of stack information
    // trace - array of pointers
-   // return value =  min(stack deepnes, dsize)
+   // return value =  min(stack deepness, dsize)
 
    if ( _bUseGNUBuildinBacktrace )
    {
@@ -166,7 +166,7 @@ void TMemStatDepend::GetSymbols(void *_pFunction,
    // information about the call
    _strInfo = codeInfo.c_str();
 
-   // Resolving a libary name
+   // Resolving a library name
    const string::size_type pos_begin = codeInfo.find('(');
    if (string::npos == pos_begin) {
       _strLib = codeInfo;

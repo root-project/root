@@ -46,8 +46,8 @@ public:
 private:
    StatType           fSortStat;              // sorting statistic type
    StampType          fSortStamp;             // sorting stamp type
-   UInt_t             fSortDeep;              // deepnes of the information to be print - draw
-   UInt_t             fStackDeep;             // deepnes of the stack information
+   UInt_t             fSortDeep;              // Deepness of the information to be print - draw
+   UInt_t             fStackDeep;             // Deepness of the stack information
    UInt_t             fMaxStringLength;       // max length of information string
    Int_t              fSelected;              // index of selected object
    Bool_t             fIsActive;              // is object attached to MemStat
@@ -64,7 +64,7 @@ private:
    TObjArray          fDisablePrintLib;       // disable printing for libraries
    TObjArray          fDisablePrintCode;      // disable printing for libraries
    TString            fOption;                // current options
-   TTree*             fTree;                  // current tree with inforamtion  - stamps
+   TTree*             fTree;                  // current tree with information  - stamps
    TTree*             fTreeSys;               // tree with system information
    TMemStatInfoStamp* fStackSummary;          // summary information for selected stack
    TMemStatManager*   fManager;               // current MemStatManager

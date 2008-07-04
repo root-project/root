@@ -72,7 +72,7 @@ public:
    virtual ~TMemStatManager();
 
    void Enable();                              //enable memory statistic
-   void Disable();                             //dissable memory statisic
+   void Disable();                             //Disable memory statistic
    void SetAutoStamp(UInt_t sizeMem, UInt_t n, UInt_t max) {
       fAutoStampSize = sizeMem;
       fAutoStampN = n;
@@ -96,7 +96,7 @@ public:
    IntVector_t fSTHashTable; //!pointer to the hash table
    Int_t fCount;        //!number of entries in table
    Int_t fStampNumber;  //current stamp number
-   std::vector<TMemStatStackInfo> fStackVector;            // vector withstack symbols
+   std::vector<TMemStatStackInfo> fStackVector;            // vector with stack symbols
    std::vector<TMemStatInfoStamp> fStampVector;            // vector of stamp information
    std::vector<TTimeStamp> fStampTime;              // vector of stamp information
    CodeInfoContainer_t  fCodeInfoArray;          // vector with code info
@@ -124,7 +124,7 @@ protected:
    UInt_t fAutoStampN;              //change of number of allocation  STAMP
    UInt_t fAutoStampDumpSize;       //
    Int_t fMinStampSize;             // the minimal size to be dumped to tree
-   //  memory infomation
+   //  memory information
    Int_t fSize;                     //!size of hash table
    TMemTable_t **fLeak;               //!pointer to the hash table
    Int_t fAllocCount;               //!number of memory allocation blocks
@@ -146,7 +146,7 @@ protected:
 
    Bool_t fUseGNUBuildinBacktrace;
 
-   ClassDef(TMemStatManager, 1) // a manager of memstat sassions.
+   ClassDef(TMemStatManager, 1) // a manager of memstat sessions.
 };
 
 #endif

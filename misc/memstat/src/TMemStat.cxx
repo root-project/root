@@ -32,7 +32,7 @@ To create a memstat object use the following:
 </pre>
 Possible options:
 <ul>
-    <li> "new" - Start new data collection. In the current release a hard-codded "memstat.root" file will be created or overwritten if exists.</li>
+    <li> "new" - Start new data collection. In the current release a hard-coded "memstat.root" file will be created or overwritten if exists.</li>
     <li> "read" - "read" - analyze previously collected data.</li>
     <li>"gnubuildin" - if declared, then TMemStat will use gcc build-in function, otherwise glibc backtrace will be used.</li>
 </ul>
@@ -60,7 +60,7 @@ Supported options for TMemStat::Report:
     <li> sortstat  : 0 - TotalAllocCount 1 -  TotalAlocSize  2 - AllocCount 3 - AllocSize</li>
     <li> sortstamp : 0 - Current 1 -  MaxSize  2 - MaxCount</li>
     <li> sortdeep  : (0-inf) number of info to print</li>
-    <li> stackdeep : (0-inf) deepnes of stack</li>
+    <li> stackdeep : (0-inf) deepness of stack</li>
     <li> Example   : order 0 sortstat 3 sortstamp 0 sortdeep 10 stackdeep 5 maxlength 50 </li>
 </ul>
 
@@ -142,7 +142,7 @@ struct SFillSelection: public binary_function<
       case TMemStat::kFunction:
          return _code_info.fFunction.Data();
       case TMemStat::kLibrary:
-         // we need only names of libraies
+         // we need only names of libraries
          return gSystem->BaseName(_code_info.fLib.Data());
       default:
          return string();
@@ -460,7 +460,7 @@ void TMemStat::PrintStack(Int_t nentries, UInt_t deep) const
 {
    // Print information about n selected stack traces
    // If the number of function selected is bigger than number n
-   // the only top (sorted accoring some creteria,) n are displayed
+   // the only top (sorted according some criteria) n are displayed
    // e.g draw.SortCode(TMemStat::kAllocSize,TMemStat::kCurrent);
    if (fSelectedStackIndex.empty())
       return;
@@ -515,7 +515,7 @@ void TMemStat::Report(Option_t* option)
    // sortstat  : 0 - TotalAllocCount 1 -  TotalAlocSize  2 - AllocCount 3 - AllocSize
    // sortstamp : 0 - Current 1 -  MaxSize  2 - MaxCount
    // sortdeep  : (0-inf) number of info to print
-   // stackdeep : (0-inf) deepnes of stack
+   // stackdeep : (0-inf) deepness of stack
    // Example   : order 0 sortstat 3 sortstamp 0 sortdeep 10 stackdeep 5 maxlength 50
 
    ProcessOption(option);
@@ -587,7 +587,7 @@ void TMemStat::SelectCode(const char *contlib, const char *contfunction, OperTyp
    // select code with given mask
    // contlib       - select only code containing contlib in library path
    // contfunction  - select only code with function name containing contfunction
-   // oType         - logiacal operation - AND and Or is suported
+   // oType         - logical operation - AND and Or is supported
    // By default all code is enabled
 
    if (!fManager) {
@@ -645,7 +645,7 @@ void TMemStat::SelectCode(const char *contlib, const char *contfunction, OperTyp
 //______________________________________________________________________________
 void TMemStat::SelectStack(OperType oType)
 {
-   // select stack containig the selected code
+   // select stack containing the selected code
    // oType - And and OR is supported (AND, OR in respect with previous selection)
 
    if (!fSelectedCodeBitmap || !fManager)
@@ -1002,7 +1002,7 @@ void TMemStat::MakeCodeArray()
 //______________________________________________________________________________
 void TMemStat::MakeStackArray()
 {
-   //   PRIVATE: make code index accoring tbit mask
+   //   PRIVATE: make code index according tbit mask
 
    if (!fManager)
       return;
@@ -1174,7 +1174,7 @@ TGraph *TMemStat::MakeGraph(StatType statType, Int_t id, Int_t type, Double_t &x
       sWhatName = "AllocSize (MBy)";
       break;
    case kUndef:
-      // TODO: check this case; in originalk code it wasn't handled
+      // TODO: check this case; in original code it wasn't handled
       break;
    }
    ostringstream ssWhere;
