@@ -219,6 +219,13 @@ void TPythia8::ReadString(char* string) const
 
 
 //___________________________________________________________________________
+ void  TPythia8::ReadConfigFile(char* string) const
+{
+  // Configuration
+  fPythia->readFile(string);
+}
+
+//___________________________________________________________________________
 void TPythia8::PrintStatistics() const
 {
    // Print end of run statistics

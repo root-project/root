@@ -94,6 +94,7 @@ public:
 
    // Others
    void                    ReadString(char* string) const;
+   void                    ReadConfigFile(char* string)const;
    Bool_t                  Initialize(Int_t  idAin, Int_t idBin, Double_t ecms);
    void                    PrintStatistics()        const;
    void                    EventListing()           const;
