@@ -1202,7 +1202,7 @@ TClass* TDocParser::IsDirective(const TString& line, Ssiz_t pos,
    tag.Prepend("TDoc");
    tag += "Directive";
 
-   TClass* clDirective = fHtml->GetClass(tag);
+   TClass* clDirective = TClass::GetClass(tag, kFALSE);
 
    if (gDebug > 0 && !clDirective)
       Warning("IsDirective", "Unknown THtml directive %s in line %d!", word.Data(), fLineNo);
