@@ -2780,6 +2780,7 @@ void TF1::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    }
    if (GetChisquare() != 0) {
       out<<"   "<<GetName()<<"->SetChisquare("<<GetChisquare()<<");"<<endl;
+      out<<"   "<<GetName()<<"->SetNDF("<<GetNDF()<<");"<<endl;
    }
 
    GetXaxis()->SaveAttributes(out,GetName(),"->GetXaxis()");
