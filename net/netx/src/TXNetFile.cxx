@@ -880,6 +880,8 @@ void TXNetFile::Init(Bool_t create)
          bool usecachesave = fClient->UseCache(0);
          // Note that Init will trigger recursive calls
          TFile::Init(create);
+         // so TFile::IsOpen() returns true when in TFile::~TFile
+         fD = -2;
          // Restore requested behaviour
          fClient->UseCache(usecachesave);
 
@@ -970,6 +972,8 @@ void TXNetFile::Close(const Option_t *opt)
       return;
    }
 
+   if (!fClient) return;
+
    TFile::Close(opt);
 
    fIsRootd = kFALSE;
@@ -977,6 +981,8 @@ void TXNetFile::Close(const Option_t *opt)
    if (IsOpen())
       fClient->Close();
    SafeDelete(fClient);
+
+   fD = -1;  // so TFile::IsOpen() returns false when in TFile::~TFile
 }
 
 //_____________________________________________________________________________
@@ -1114,7 +1120,7 @@ Int_t TXNetFile::SysOpen(const char* pathname, Int_t flags, UInt_t mode)
       return -1;
 
    // This means ok for net files
-   return -2;
+   return -2;  // set as fD in ReOpen
 }
 
 //_____________________________________________________________________________
