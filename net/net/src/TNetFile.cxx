@@ -142,6 +142,7 @@ Int_t TNetFile::SysOpen(const char * /*file*/, Int_t /*flags*/, UInt_t /*mode*/)
       }
    }
 
+   // This means ok for net files
    return -2;  // set as fD in ReOpen
 }
 
