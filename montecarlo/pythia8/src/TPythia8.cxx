@@ -67,6 +67,7 @@
 
 #include "TClonesArray.h"
 #include <TParticle.h>
+#include <TLorentzVector.h>
 
 ClassImp(TPythia8)
 
@@ -132,8 +133,11 @@ Int_t TPythia8::ImportParticles(TClonesArray *particles, Option_t *option)
    clonesParticles.Clear();
    Int_t nparts=0;
    Int_t i;
+   fNumberOfParticles  = fPythia->event.size() - 1;
+
    if (!strcmp(option,"") || !strcmp(option,"Final")) {
-      for (i = 1; i <= fNumberOfParticles; i++) {
+      for (i = 0; i <= fNumberOfParticles; i++) {
+	if (fPythia->event[i].id() == 90) continue;
          if (fPythia->event[i].isFinal()) {
             new(clonesParticles[nparts]) TParticle(
                 fPythia->event[i].id(),
@@ -154,7 +158,8 @@ Int_t TPythia8::ImportParticles(TClonesArray *particles, Option_t *option)
 	    } // final state partice
 	} // particle loop
     } else if (!strcmp(option,"All")) {
-	for (i = 1; i <= fNumberOfParticles; i++) {
+	for (i = 0; i <= fNumberOfParticles; i++) {
+	  if (fPythia->event[i].id() == 90) continue;
 	    new(clonesParticles[nparts]) TParticle(
 		fPythia->event[i].id(),
 		fPythia->event[i].isFinal(),
@@ -225,6 +230,7 @@ void TPythia8::ReadString(char* string) const
   fPythia->readFile(string);
 }
 
+
 //___________________________________________________________________________
 void TPythia8::PrintStatistics() const
 {
@@ -263,3 +269,4 @@ void TPythia8::AddParticlesToPdgDataBase()
    pdgDB->AddParticle("p_diffr+","p_diffr+", 0, kTRUE,
                       0, 1, "QCD diffr. state", 9902210);
 }
+

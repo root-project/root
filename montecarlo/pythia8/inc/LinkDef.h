@@ -5,4 +5,5 @@
 #pragma link off all functions;
  
 #pragma link C++ class TPythia8+;
+#pragma link C++ class TPythia8Decayer+;
 #endif
