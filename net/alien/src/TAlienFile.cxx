@@ -50,11 +50,11 @@ ClassImp(TAlienFile)
 #define MAX_FILE_IMAGES 16
 
 //______________________________________________________________________________
-TAlienFile::TAlienFile(const char *purl, Option_t * option,
+TAlienFile::TAlienFile(const char *purl, Option_t *option,
                        const char *ftitle, Int_t compress,
                        Bool_t parallelopen, const char *lurl,
                        const char *authz) :
-   TXNetFile(purl, option, ftitle, -1, compress, parallelopen, lurl)
+   TXNetFile(purl, option, ftitle, compress, 0, parallelopen, lurl)
 {
    // Create an Alien File Object. An AliEn File is the same as a TFile
    // except that its real tranfer URL is resolved via an Alien service. The url
@@ -90,11 +90,13 @@ TAlienFile::TAlienFile(const char *purl, Option_t * option,
 }
 
 //______________________________________________________________________________
-TAlienFile *TAlienFile::Open(const char *url, Option_t * option,
+TAlienFile *TAlienFile::Open(const char *url, Option_t *option,
                              const char *ftitle, Int_t compress,
                              Bool_t parallelopen)
 {
-   // main constructor
+   // Static method used to create a TAlienFile object. For options see
+   // TAlienFile ctor.
+
    if (!gGrid) {
       ::Error("TAlienFileAccess", "No GRID connection available!");
       return 0;
@@ -503,7 +505,8 @@ TAlienFile::~TAlienFile()
 //______________________________________________________________________________
 void TAlienFile::Close(Option_t * option)
 {
-   //close a file 
+   // Close the file.
+
    if (!IsOpen()) return;
 
    // Close file.
@@ -517,7 +520,6 @@ void TAlienFile::Close(Option_t * option)
 
    // commit the envelope
    TString command("commit ");
-   
 
    if (!GetSize()) Error("Close", "The reported size of the written file is 0");
    command += (Long_t) GetSize();
@@ -557,15 +559,16 @@ void TAlienFile::Close(Option_t * option)
    }
 
    gSystem->Unsetenv("GCLIENT_EXTRA_ARG");
-
 }
 
 //______________________________________________________________________________
-TString TAlienFile::SUrl(const char* lfn)
+TString TAlienFile::SUrl(const char *lfn)
 {
-   //what is this function doing ? !!
-   TString command="";
-   TString surl="";
+   // Get surl from lfn by asking AliEn catalog.
+
+   TString command;
+   TString surl;
+
    if (!lfn) {
       return surl;
    }
@@ -577,17 +580,17 @@ TString TAlienFile::SUrl(const char* lfn)
    TGridResult* result;
 
    if (!gGrid) {
-      ::Error("SUrl","No grid connection");
+      ::Error("TAlienFile::SUrl","no grid connection");
       return surl;
    }
 
-   result = gGrid->Command(command.Data(),kFALSE,TAlien::kOUTPUT);
+   result = gGrid->Command(command.Data(), kFALSE, TAlien::kOUTPUT);
    if (!result) {
-      ::Error("SUrl","Couldn't get access URL for alien file %s",lfn);
+      ::Error("TAlienFile::SUrl","couldn't get access URL for alien file %s", lfn);
       return surl;
    }
 
-   TIterator* iter = result->MakeIterator();
+   TIterator *iter = result->MakeIterator();
    TObject *object=0;
    TObjString *urlStr=0;
 
@@ -604,7 +607,6 @@ TString TAlienFile::SUrl(const char* lfn)
       }
    }
 
-   ::Error("TAlienFIle","Couldn't get surl for alien file %s",lfn);
+   ::Error("TAlienFile::SUrl","couldn't get surl for alien file %s", lfn);
    return surl;
 }
-
