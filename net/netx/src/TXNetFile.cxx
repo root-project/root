@@ -245,6 +245,7 @@ void TXNetFile::CreateXClient(const char *url, Option_t *option, Int_t netopt,
 #endif
 
    fClient = 0;
+   fNetopt = netopt;
 
    // Set the timeout (default 999999999 secs, i.e. far, far in the future)
    gSystem->Setenv("XRDCLIENTMAXWAIT", Form("%d",TFile::GetOpenTimeout()));
@@ -1106,7 +1107,7 @@ Int_t TXNetFile::SysOpen(const char* pathname, Int_t flags, UInt_t mode)
    if (!fClient) {
 
       // Create an instance of XrdClient
-      CreateXClient(fUrl.GetUrl(), fOption, -1, kFALSE);
+      CreateXClient(fUrl.GetUrl(), fOption, fNetopt, kFALSE);
 
    } else {
 

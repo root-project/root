@@ -100,7 +100,10 @@ TNetFile::TNetFile(const char *url, const char *ftitle, Int_t compress, Bool_t)
    // to initialize the TFile base class but not open a connection at this
    // moment.
 
-   fSocket = 0;
+   fSocket    = 0;
+   fProtocol  = 0;
+   fErrorCode = 0;
+   fNetopt    = 0;
 }
 
 //______________________________________________________________________________
@@ -118,7 +121,7 @@ Int_t TNetFile::SysOpen(const char * /*file*/, Int_t /*flags*/, UInt_t /*mode*/)
 
    if (!fSocket) {
 
-      Create(fUrl.GetUrl(), fOption, -1);
+      Create(fUrl.GetUrl(), fOption, fNetopt);
       if (!fSocket) return -1;
 
    } else {
@@ -675,8 +678,8 @@ void TNetFile::Create(const char * /*url*/, Option_t *option, Int_t netopt)
    Int_t tcpwindowsize = 65535;
 
    fErrorCode = -1;
-
-   fOption = option;
+   fNetopt    = netopt;
+   fOption    = option;
 
    Bool_t forceOpen = kFALSE;
    if (option[0] == '-') {

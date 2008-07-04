@@ -102,10 +102,9 @@ private:
    static void SetEnv();
 
 public:
-   TXNetFile() : TNetFile(), fClient(0), fIsRootd(0),
-                              fInitMtx(0) {}
-   TXNetFile(const char *url, Option_t *option = "", const char* fTitle = "",
-             Int_t compress = 1, Int_t netopt = -1, Bool_t parallelopen = kFALSE,
+   TXNetFile() : TNetFile(), fClient(0), fIsRootd(0), fInitMtx(0) {}
+   TXNetFile(const char *url, Option_t *option = "", const char *fTitle = "",
+             Int_t compress = 1, Int_t netopt = 0, Bool_t parallelopen = kFALSE,
              const char *logicalurl = 0);
 
    virtual ~TXNetFile();

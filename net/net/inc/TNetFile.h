@@ -49,6 +49,7 @@ protected:
    TSocket  *fSocket;      //connection to rootd server
    Int_t     fProtocol;    //rootd protocol level
    Int_t     fErrorCode;   //error code returned by rootd (matching gRootdErrStr)
+   Int_t     fNetopt;      //initial network options (used for ReOpen())
 
    TNetFile(const TNetFile&);             // NetFile cannot be copied
    TNetFile& operator=(const TNetFile&);  // NetFile cannot be copied
@@ -70,7 +71,7 @@ protected:
 public:
    TNetFile(const char *url, Option_t *option = "", const char *ftitle = "",
             Int_t compress = 1, Int_t netopt = 0);
-   TNetFile() : fEndpointUrl(), fUser(), fSocket(0), fProtocol(0), fErrorCode(0) { }
+   TNetFile() : fEndpointUrl(), fUser(), fSocket(0), fProtocol(0), fErrorCode(0), fNetopt(0) { }
    virtual ~TNetFile();
 
    void    Close(Option_t *option="");  // *MENU*
