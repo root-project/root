@@ -75,9 +75,9 @@ TProofProgressDialog::TProofProgressDialog(TProof *proof,
    fAvgRate       = 0.;
    fAvgMBRate     = 0.;
 
-   //have to save this information here, in case gProof is dead when
-   //the logs are requested
-   fSessionUrl = proof->GetManager()->GetUrl();
+   // Have to save this information here, in case gProof is dead when
+   // the logs are requested
+   fSessionUrl = (proof && proof->GetManager()) ? proof->GetManager()->GetUrl() : "";
 
    if (PPD_SRV_NEWER(11))
       fRatePoints = new TNtuple("RateNtuple","Rate progress info","tm:evr:mbr");
