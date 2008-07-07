@@ -836,6 +836,32 @@ Begin_Macro(source)
 End_Macro
 Begin_Html
 
+The options "E3" and "E4" draw an error band through the end points of the
+vertical error bars. With "E4" the error band is smoothed. Because of the
+smoothing algorithm used some artefacts may appear at the end of the band
+like in the following example. In such cases "E3" should be used instead
+of "E4".
+
+End_Html
+Begin_Macro(source)
+{
+   TCanvas *ce4 = new TCanvas("ce4","ce4",600,400);
+   ce4->Divide(2,1);
+   TH1F *he4 = new TH1F("he4","Distribution drawn with option E4",100,-3,3);
+   Int_t i;
+   for (i=0;i<10000;i++) he4->Fill(gRandom->Gaus(0,1));
+   he4->SetFillColor(kRed);
+   he4->GetXaxis()->SetRange(40,48);
+   ce4->cd(1);
+   he4->Draw("E4");
+   ce4->cd(2);
+   TH1F *he3 = he4->DrawClone("E3");
+   he3->SetTitle("Distribution drawn option E3");
+   return ce4;
+}
+End_Macro
+Begin_Html
+
 
 <a name="HP10"></a><h3>The "BAR" and "HBAR" options</h3>
 
