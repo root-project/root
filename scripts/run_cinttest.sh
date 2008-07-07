@@ -23,6 +23,9 @@ if [ "x$verbose" = "xx" ] ; then
    set -x
 fi 
 
+# No sub-process should ever used up more than one hour of CPU time.
+ulimit -t 3600
+
 MAKE=gmake
 REALTIME=n/a
 USERTIME=n/a
@@ -41,7 +44,7 @@ error_handling() {
 
     echo "Found an error on \"$host\" ("`uname`") in $ROOTLOC"
     echo "Error: $2"
-    echo "See full log file at http://www-root.fnal.gov/roottest/cint_summary.shtml"
+    echo "See full log file at http://www-root.fnal.gov/roottest/${CORE}cint_summary.shtml"
 
     if [ "x$mail" = "xx" ] ; then
 	mail -s "root $OSNAME test" $mailto <<EOF
