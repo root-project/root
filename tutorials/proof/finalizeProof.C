@@ -117,6 +117,8 @@ void finalizeProof(const char *what = "simple",
       sel = "ProofSimple";
    } else if (act == "h1") {
       sel = "h1analysis";
+   } else if (act == "pythia8") {
+      sel = "ProofPythia";
    } else {
       // Do not know what to run
       Printf("runProof: unknown tutorial: %s", what);
