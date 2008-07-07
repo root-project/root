@@ -1038,8 +1038,15 @@ Int_t TXNetFile::SysStat(Int_t fd, Long_t *id, Long64_t *size, Long_t *flags,
 
    if (fIsRootd) {
       if (gDebug > 1)
-         Info("SysStat","Calling TNetFile::SysStat");
+         Info("SysStat", "calling TNetFile::SysStat");
       return TNetFile::SysStat(fd, id, size, flags, modtime);
+   }
+
+   if (!IsOpen()) {
+      if (gDebug > 1)
+         Info("SysStat", "could not stat remote file, file not open");
+      *id = -1;
+      return 1;
    }
 
    // Return file stat information. The interface and return value is
@@ -1054,13 +1061,8 @@ Int_t TXNetFile::SysStat(Int_t fd, Long_t *id, Long64_t *size, Long_t *flags,
          Info("SysStat", "got stats = %ld %lld %ld %ld",
                          *id, *size, *flags, *modtime);
    } else {
-      if (gDebug > 1) {
-         if (!IsOpen())
-            Info("SysStat", "could not stat remote file. File not open.");
-         else
-            Info("SysStat", "could not stat remote file");
-      }
-
+      if (gDebug > 1)
+         Info("SysStat", "could not stat remote file");
       *id = -1;
       return 1;
    }
@@ -1329,6 +1331,7 @@ void TXNetFile::ResetCache()
 Int_t TXNetFile::GetBytesToPrefetch() const
 {
    // Max number of bytes to prefetch.
+
 #ifndef OLDXRDLOCATE
    Int_t size;
    Long64_t bytessubmitted, byteshit, misscount, readreqcnt;
@@ -1349,7 +1352,8 @@ Int_t TXNetFile::GetBytesToPrefetch() const
 //______________________________________________________________________________
 void TXNetFile::Print(Option_t *option) const
 {
-   // Print the local statistics
+   // Print the local statistics.
+
 #ifndef OLDXRDLOCATE
   Printf("TXNetFile caching information:\n");
 
