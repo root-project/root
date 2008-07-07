@@ -56,14 +56,13 @@ XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lXext -lX11
 CILIBS        = -lm -ltermcap -ldl
 
 # Fortran:
-F77           =
-ifeq ($(shell which f77 2>&1 | sed -ne "s/.*\/f77/f77/p"),f77)
-#F77          := /opt/SUNWspro/bin/f77
-F77          := f77
+ifeq ($(F77),f77)
+#F77           = /opt/SUNWspro/bin/f77
+F77           = f77
 ifeq ($(SOLCPU),i386)
-F77LIBS      := -lfui -lfsu -lmtsk -lsunmath
+F77LIBS       = -lfui -lfsu -lmtsk -lsunmath
 else
-F77LIBS      := -lf77compat -lfui -lfsu -lmtsk -lsunmath
+F77LIBS       = -lf77compat -lfui -lfsu -lmtsk -lsunmath
 endif
 # Use this on Solaris 10 with F90 compiler
 #F77LIBS      := -lf77compat -lfui -lfsu -lmtsk -lsunperf -lsunmath

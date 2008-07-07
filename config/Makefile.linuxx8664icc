@@ -67,10 +67,9 @@ CILIBS        = -lm -ldl -rdynamic
 CRYPTLIBS     = -lcrypt
 
 # Fortran:
-F77           =
-ifeq ($(shell which ifort 2>&1 | sed -ne "s/.*\/ifort/ifort/p"),ifort)
-F77          := ifort
-F77FLAGS     := -fPIC
+ifeq ($(F77),ifort)
+F77           = ifort
+F77FLAGS      = -fPIC
 F77LIBS      := -L$(shell which ifort | sed -e 's|bin/ifort|lib|') \
                 -lifcore
 endif

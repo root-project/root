@@ -49,9 +49,11 @@ CILIBS        = -lm
 CRYPTLIBS     = -lcrypt
 
 # Fortran:
+ifeq ($(F77),g77)
 F77           = g77
 F77FLAGS      =
 F77LIBS       = -lg2c
+endif
 
 # transform cygwin version 1.2.3-4 into integer
 # each of the four version parts but the first gets two digits,

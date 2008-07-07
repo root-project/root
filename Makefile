@@ -25,6 +25,19 @@ ORDER_ := $(shell test $(MAKE_VERSION_MAJOR) -gt 3 || \
                   test $(MAKE_VERSION_MAJOR) -eq 3 && \
                   test $(MAKE_VERSION_MINOR) -ge 80 && echo '|')
 
+##### Include compiler overrides specified via ./configure #####
+##### However, if we are building packages or cleaning, we #####
+##### don't include this file since it may screw up things #####
+##### Included before Makefile.$ARCH only because of f77   #####
+##### if case has to be processed                          #####
+
+ifeq ($(findstring $(MAKECMDGOALS), maintainer-clean debian redhat),)
+include config/Makefile.comp
+endif
+ifeq ($(MAKECMDGOALS),clean)
+include config/Makefile.comp
+endif
+
 ##### Include machine dependent macros                     #####
 ##### However, if we are building packages or cleaning, we #####
 ##### don't include this file since it may screw up things #####

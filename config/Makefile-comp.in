@@ -4,23 +4,7 @@
 # Used to override the compilers specified in the architecture
 # specific Makefiles.
 
-ALTCC    := @altcc@
-ALTCXX   := @altcxx@
-ALTF77   := @altf77@
-ALTLD    := @altld@
-
-ifneq ($(ALTCC),)
-CC         = $(ALTCC)
-endif
-
-ifneq ($(ALTCXX),)
-CXX        = $(ALTCXX)
-endif
-
-ifneq ($(ALTF77),)
-F77        = $(ALTF77)
-endif
-
-ifneq ($(ALTLD),)
-LD         = $(ALTLD)
-endif
+CC    = @altcc@
+CXX   = @altcxx@
+F77   = @altf77@
+LD    = @altld@

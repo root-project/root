@@ -98,9 +98,7 @@ CILIBS        =
 CRYPTLIBS     =
 
 # Fortran:
-ifeq ($(shell fl32 -ver 2>/dev/null),)
-F77           = 
-else
+ifeq ($(F77),build/win/f77.sh)
 F77           = build/win/f77.sh
 F77FLAGS      = -nologo -4Nportlib $(BLDF77FLAGS) -recursive
 F77LDFLAGS    = $(F77FLAGS) $(F77OPT) -link $(LDFLAGS)

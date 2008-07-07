@@ -101,20 +101,15 @@ XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lXext -lX11
 CILIBS        = -lm $(EXTRA_LDFLAGS) $(FINK_LDFLAGS) -ldl
 
 # Fortran:
-F77           =
-ifeq ($(subst $(MACOSX_MINOR),,123),123)
-ifeq ($(shell which gfortran 2>&1 | sed -ne "s/.*\/gfortran/gfortran/p"),gfortran)
-F77          := gfortran
+ifeq ($(F77),gfortran)
+F77           = gfortran
 F77LIBS      := $(shell $(F77) -print-file-name=libgfortran.dylib)
 F77LIBS      += $(shell $(F77) -print-file-name=libgfortranbegin.a)
 endif
-endif
 
-ifeq ($(F77),)
-ifeq ($(shell which g77 2>&1 | sed -ne "s/.*\/g77/g77/p"),g77)
-F77          := g77
-F77LIBS      := -L$(FINK_DIR)/lib -lg2c
-endif
+ifeq ($(F77),g77)
+F77           = g77
+F77LIBS       = -L$(FINK_DIR)/lib -lg2c
 endif
 
 # Override default in Makefile.config
