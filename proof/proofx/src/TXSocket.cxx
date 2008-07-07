@@ -732,6 +732,9 @@ void TXSocket::PostFatal()
    // Create the message
    TMessage m(kPROOF_FATAL);
 
+   // Write length in first word of buffer
+   m.SetLength();
+
    // Get pointer to the message buffer
    char *mbuf = m.Buffer();
    Int_t mlen = m.Length();
