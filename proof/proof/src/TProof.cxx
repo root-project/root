@@ -6466,8 +6466,8 @@ void TProof::Detach(Option_t *opt)
 
    // Get worker and socket instances
    TSlave *sl = (TSlave *) fActiveSlaves->First();
-   TSocket *s = sl->GetSocket();
-   if (!sl || !(sl->IsValid()) || !s) {
+   TSocket *s = 0;
+   if (!sl || !(sl->IsValid()) || !(s = sl->GetSocket())) {
       Error("Detach","corrupted worker instance: wrk:%p, sock:%p", sl, s);
       return;
    }
