@@ -221,7 +221,7 @@ public:
 
    void           FlushLogFile();
 
-   Int_t          CopyFromCache(const char *name);
+   Int_t          CopyFromCache(const char *name, Bool_t cpbin);
    Int_t          CopyToCache(const char *name, Int_t opt = 0);
 
    virtual EQueryAction GetWorkers(TList *workers, Int_t &prioritychange);

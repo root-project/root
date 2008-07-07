@@ -4240,7 +4240,8 @@ void TProofServ::HandleCheckFile(TMessage *mess)
       TMD5 *md5local = TMD5::FileChecksum(cachef);
       if (md5local && md5 == (*md5local)) {
          // copy file from cache to working directory
-         CopyFromCache(filenam);
+         Bool_t cpbin = (!IsMaster() || !IsParallel()) ? kTRUE : kFALSE;
+         CopyFromCache(filenam, cpbin);
          fSocket->Send(kPROOF_CHECKFILE);
          PDB(kPackage, 1)
             Info("HandleCheckFile", "file %s already on node", filenam.Data());
@@ -4684,7 +4685,7 @@ Int_t TProofServ::HandleCache(TMessage *mess)
 
          // Load locally; the implementation and header files (and perhaps
          // the binaries) are already in the cache
-         CopyFromCache(package);
+         CopyFromCache(package, kTRUE);
 
          {  TProofServLogHandlerGuard hg(fLogFile, fSocket);
             PDB(kGlobal, 1) Info("HandleCache:kLoadMacro", "enter");
@@ -4975,10 +4976,10 @@ void TProofServ::ErrorHandler(Int_t level, Bool_t abort, const char *location,
 }
 
 //______________________________________________________________________________
-Int_t TProofServ::CopyFromCache(const char *macro)
+Int_t TProofServ::CopyFromCache(const char *macro, Bool_t cpbin)
 {
-   // Retrieve any files (source and binaries) related to 'macro' from the cache
-   // directory.
+   // Retrieve any files related to 'macro' from the cache directory.
+   // If 'cpbin' is true, the associated binaries are retrieved as well.
    // Returns 0 on success, -1 otherwise
 
    if (!macro || strlen(macro) <= 0)
@@ -5001,6 +5002,13 @@ Int_t TProofServ::CopyFromCache(const char *macro)
       Info("CopyFromCache",
            "retrieving %s/%s from cache", fCacheDir.Data(), name.Data());
    gSystem->Exec(Form("%s %s/%s .", kCP, fCacheDir.Data(), name.Data()));
+
+   // Check if we are done
+   if (!cpbin) {
+      // End of atomicity
+      fCacheLock->Unlock();
+      return 0;
+   }
 
    // Create binary name template
    TString binname = name;
