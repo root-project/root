@@ -24,6 +24,7 @@ cpp4.cxx
 cpp5.cxx 
 cpp6.cxx 
 cpp8.cxx 
+bool01.cxx 
 switch.cxx 
 refassign.cxx 
 ostream.cxx 
