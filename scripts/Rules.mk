@@ -154,10 +154,10 @@ logs.tar.gz:
 
 ifeq ($(MAKECMDGOALS),cleantest)
   ifeq ($(VERBOSE),) 
-     ForceRemoveFiles := $(shell rm -rf main *Dict\.* Event.root *~ $(CLEAN_TARGETS) )
+     ForceRemoveFiles := $(shell rm -rf main *Dict\.* Event.root .*~ *~ $(CLEAN_TARGETS) )
   else 
-     ForceRemoveFilesVerbose := $(shell echo rm -rf main *Dict\.* Event.root *~ $(CLEAN_TARGETS) 1>&2 )
-     ForceRemoveFiles := $(shell rm -rf main *Dict\.* Event.root *~ $(CLEAN_TARGETS) )
+     ForceRemoveFilesVerbose := $(shell echo rm -rf 'main *Dict\.* Event.root .*~ *~ $(CLEAN_TARGETS)' 1>&2 )
+     ForceRemoveFiles := $(shell rm -rf main *Dict\.* Event.root .*~ *~ $(CLEAN_TARGETS) )
   endif
 endif
 
