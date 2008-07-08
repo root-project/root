@@ -1,9 +1,0 @@
-from glob import glob
-from os import sep, walk
-
-Import('env')
-
-dest_dir = env['prefix']+sep+'include'
-
-for root,d,f in walk('.'): map( lambda x: env.Install(dest_dir+sep+root, x), glob(root+sep+'*.h'))
-
