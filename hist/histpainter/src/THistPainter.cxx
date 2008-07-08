@@ -76,6 +76,10 @@
 <li><a href="#HP03">Setting line, fill, marker, and text attributes</li></a>
 <li><a href="#HP04">Setting Tick marks on the histogram axis</li></a>
 <li><a href="#HP05">Giving titles to the X, Y and Z axis</li></a>
+<li><a href="#HP060">The option "SAME"</li></a>
+<ul>
+<li><a href="#HP060a">Limitations</li></a>
+</ul>
 <li><a href="#HP06">Superimposing two histograms with different scales in the same pad</li></a>
 <li><a href="#HP07">Statistics Display</li></a>
 <li><a href="#HP08">Fit Statistics</li></a>
@@ -148,7 +152,7 @@ pointer to this "painter" as a data member of the histogram. The
 <tt>THistPainter</tt> class specializes in the drawing of histograms. It is
 separated from the histogram so that one can have histograms without the
 graphics overhead, for example in a batch program. Each histogram have its own
-painter rather than a central singleton painter painting all historgams, allows
+painter rather than a central singleton painter painting all histograms, allows
 two histograms to be drawn in two threads without overwriting the painter's
 values.
 
@@ -192,7 +196,7 @@ The options are not case sensitive:
 The default drawing option can be set with <tt>TH1::SetOption</tt> and retrieve
 using <tt>TH1::GetOption</tt>:
 <pre>
-      root [0] h->Draw();          // Draw "h" using the standart histogram representation.
+      root [0] h->Draw();          // Draw "h" using the standard histogram representation.
       root [1] h->Draw("E");       // Draw "h" using error bars
       root [3] h->SetOption("E");  // Change the default drawing option for "h"
       root [4] h->Draw();          // Draw "h" using error bars
@@ -283,7 +287,7 @@ Draw a surface using Gouraud shading.
 <tr><th valign=top>"SURF5"</th><td>
 Same as SURF3 but only the colored contour is drawn. Used with option CYL, SPH
 or PSR it allows to draw colored contours on a sphere, a cylinder or a in
-pseudo rapidy space. In cartesian or polar coordinates, option SURF3 is used.
+pseudo rapidity space. In cartesian or polar coordinates, option SURF3 is used.
 </td></tr>
 
 <tr><th valign=top>"TEXT"</th><td>
@@ -327,7 +331,7 @@ Bar chart option.
 </td></tr>
 
 <tr><th valign=top>"C"</th><td>
-Draw a smooth Curve througth the histogram bins.
+Draw a smooth Curve through the histogram bins.
 </td></tr>
 
 <tr><th valign=top>"E"</th><td>
@@ -347,7 +351,7 @@ Draw error bars with rectangles.
 </td></tr>
 
 <tr><th valign=top>"E3"</th><td>
-Draw a fill area througth the end points of the vertical error bars.
+Draw a fill area through the end points of the vertical error bars.
 </td></tr>
 
 <tr><th valign=top>"E4"</th><td>
@@ -368,7 +372,7 @@ X as <tt>gStyle->SetErrorX(0)</tt> would do.
 </td></tr>
 
 <tr><th valign=top>"L"</th><td>
-Draw a line througth the bin contents.
+Draw a line through the bin contents.
 </td></tr>
 
 <tr><th valign=top>"P"</th><td>
@@ -389,7 +393,7 @@ Draw histogram with a * at each bin.
 
 <tr><th valign=top>"LF2"</th><td>
 Draw histogram like with option "L" but with a fill area. Note that "L" draws
-also a fill area if the hist fillcolor is set but the fill area corresponds to
+also a fill area if the hist fill color is set but the fill area corresponds to
 the histogram contour.
 </td></tr>
 
@@ -541,9 +545,11 @@ style and would like to propagate the changes to the histogram,
 <tt>TH1::UseCurrentStyle</tt> should be called. Call <tt>UseCurrentStyle</tt> on
 each histogram is needed.
 <br>
-To force all the histogram to use the current style, <tt>gROOT::ForceStyle</tt>
-should be used. All this histograms read after this call will use the current
-style.
+To force all the histogram to use the current style use:
+<pre>
+      gROOT->ForceStyle();
+</pre>
+All the histograms read after this call will use the current style.
 
 
 <a name="HP03"></a><h3>Setting line, fill, marker, and text attributes</h3>
@@ -571,7 +577,7 @@ By default only the left Y axis and X bottom axis are drawn
 <p><tt>TPad::SetTicks(tx,ty)</tt> allows to set these options.
 See also The <tt>TAxis</tt> functions to set specific axis attributes.
 
-<p>In case multiple collor filled histograms are drawn on the same pad, the fill
+<p>In case multiple color filled histograms are drawn on the same pad, the fill
 area may hide the axis tick marks. One can force a redraw of the axis over all
 the histograms by calling:
 <pre>
@@ -589,6 +595,26 @@ the histograms by calling:
 The histogram title and the axis titles can be any <tt>TLatex</tt> string.
 The titles are part of the persistent histogram.
 
+
+<a name="HP060"></a><h3>The option "SAME"</h3>
+
+
+By default, when an histogram is drawn, the current pad is cleared before 
+drawing. In order to keep the previous drawing and draw on top of it the
+option <tt>"SAME"</tt> should be use. The histogram drawn with the option
+<tt>"SAME"</tt> uses the coordinates system available in the current pad.
+<p>
+This option can be used alone or combined with any valid drawing option but
+some combinations must be use with care. 
+
+<a name="HP060a"></a><h4><u>Limitations</u></h4>
+<ul>
+<li>It does not work when
+combined with the <tt>"LEGO"</tt> and <tt>"SURF"</tt> options unless the
+histogram plotted with the option <tt>"SAME"</tt> has <u>exactly</u> the same
+ranges on the X, Y and Z axis as the currently drawn histogram. To superimpose
+lego plots <a href="#HP26">histograms' stacks</a> should be used.</li>
+</ul>
 
 <a name="HP06"></a><h3>Superimposing two histograms with different scales in the same pad</h3>
 
@@ -770,7 +796,7 @@ box can be selected via the parameter mode. The parameter mode can be
 <tt>= pcev</tt>  (default <tt>= 0111</tt>)
 <pre>
       p = 1;  print Probability
-      c = 1;  print Chisquare/Number of degress of freedom
+      c = 1;  print Chisquare/Number of degrees of freedom
       e = 1;  print errors (if e=1, v must be 1)
       v = 1;  print name/values of parameters
 </pre>
@@ -899,7 +925,7 @@ To control the bar offset (default is 0) <tt>TH1::SetBarOffset()</tt> should
 be used.
 <br>
 These two parameters are useful when several histograms are plotted using
-the option <tt>SAME</tt>. They allow to plot the histograms next to eachother.
+the option <tt>SAME</tt>. They allow to plot the histograms next to each other.
 
 
 <a name="HP11"></a><h3>The SCATter plot option (default for 2D histograms)</h3>
@@ -1057,7 +1083,7 @@ some bins have a negative content because in that case the null bins
 might be not empty.
 
 <p>Combined with the option <tt>"COL"</tt>, the option <tt>"Z"</tt> allows to
-display the color pallette defined by <tt>gStyle->SePalette()</tt>.
+display the color palette defined by <tt>gStyle->SePalette()</tt>.
 
 <p>In the following example, the histogram has only positive bins; the empty
 bins (containing 0) <u>are not drawn</u>.
@@ -1185,7 +1211,7 @@ Draw a contour plot using Delaunay triangles.
 The following example shows a 2D histogram plotted with the option
 <tt>"CONTZ"</tt>. The option <tt>"CONT"</tt> draws a contour plot using surface
 colors to distinguish contours.  Combined with the option <tt>"CONT"</tt> (or
-<tt>"CONT0"</tt>), the option <tt>"Z"</tt> allows to display the color pallette
+<tt>"CONT0"</tt>), the option <tt>"Z"</tt> allows to display the color palette
 defined by <tt>gStyle->SePalette()</tt>.
 
 End_Html
@@ -1209,7 +1235,7 @@ Begin_Html
 The following example shows a 2D histogram plotted with the option
 <tt>"CONT1Z"</tt>. The option <tt>"CONT1"</tt> draws a contour plot using the
 line colors to distinguish contours. Combined with the option <tt>"CONT1"</tt>,
-the option <tt>"Z"</tt> allows to display the color pallette defined by
+the option <tt>"Z"</tt> allows to display the color palette defined by
 <tt>gStyle->SePalette()</tt>.
 
 End_Html
@@ -1276,7 +1302,7 @@ The following example shows a 2D histogram plotted with the option
 <tt>"CONT4"</tt>. The option <tt>"CONT4"</tt> draws a contour plot using surface
 colors to distinguish contours (<tt>"SURF"</tt> option at theta = 0). Combined
 with the option <tt>"CONT"</tt> (or <tt>"CONT0"</tt>), the option <tt>"Z"</tt>
-allows to display the color pallette defined by <tt>gStyle->SePalette()</tt>.
+allows to display the color palette defined by <tt>gStyle->SePalette()</tt>.
 
 End_Html
 Begin_Macro(source)
@@ -1310,7 +1336,7 @@ with <tt>TH1::SetContour()</tt> or <tt>TStyle::SetNumberContours()</tt>.
 Where <tt>i</tt> is a contour number, and list contains a list of
 <tt>TGraph</tt> objects.
 For one given contour, more than one disjoint polyline may be generated.
-The number of TGraphs per countour is given by:
+The number of TGraphs per contour is given by:
 <pre>
       list->GetSize();
 </pre>
@@ -1319,7 +1345,7 @@ To access the first graph in the list one should do:
       TGraph *gr1 = (TGraph*)list->First();
 </pre>
 
-The following example shows how to use this functionnality.
+The following example shows how to use this functionality.
 
 End_Html
 Begin_Macro(source)
@@ -1327,8 +1353,8 @@ Begin_Macro(source)
 End_Macro
 Begin_Html
 
-The following options select the <tt>"CONT4"</tt> option and are usefull for
-skymaps or exposure maps.
+The following options select the <tt>"CONT4"</tt> option and are useful for
+sky maps or exposure maps.
 
 <table border=0>
 
@@ -1383,7 +1409,8 @@ When used with any LEGO option, the empty bins are not drawn.
 </td></tr>
 
 </table>
-
+See the limitations with <a href="#HP060a">the option "SAME"</a>.
+<p>
 The following example shows a 2D histogram plotted with the option
 <tt>"LEGO"</tt>. The option <tt>"LEGO"</tt> draws a lego plot using the hidden
 lines removal technique.
@@ -1432,7 +1459,7 @@ Begin_Html
 The following example shows a 2D histogram plotted with the option
 <tt>"LEGO2"</tt>. The option <tt>"LEGO2"</tt> draws a lego plot using colors to
 show the cell contents.  Combined with the option <tt>"LEGO2"</tt>, the option
-<tt>"Z"</tt> allows to display the color pallette defined by
+<tt>"Z"</tt> allows to display the color palette defined by
 <tt>gStyle->SePalette()</tt>.
 
 End_Html
@@ -1485,6 +1512,8 @@ Draw a surface using the Gouraud shading technique.
 
 </table>
 
+See the limitations with <a href="#HP060a">the option "SAME"</a>.
+<p>
 The following example shows a 2D histogram plotted with the option
 <tt>"SURF"</tt>. The option <tt>"SURF"</tt> draws a lego plot using the hidden
 lines removal technique.
@@ -1509,7 +1538,7 @@ Begin_Html
 The following example shows a 2D histogram plotted with the option
 <tt>"SURF1"</tt>. The option <tt>"SURF1"</tt> draws a surface plot using the
 hidden surface removal technique.  Combined with the option <tt>"SURF1"</tt>,
-the option <tt>"Z"</tt> allows to display the color pallette defined by
+the option <tt>"Z"</tt> allows to display the color palette defined by
 <tt>gStyle->SePalette()</tt>.
 
 End_Html
@@ -1532,7 +1561,7 @@ Begin_Html
 The following example shows a 2D histogram plotted with the option
 <tt>"SURF2"</tt>. The option <tt>"SURF2"</tt> draws a surface plot using colors
 to show the cell contents. Combined with the option <tt>"SURF2"</tt>, the option
-<tt>"Z"</tt> allows to display the color pallette defined by
+<tt>"Z"</tt> allows to display the color palette defined by
 <tt>gStyle->SePalette()</tt>.
 
 End_Html
@@ -1556,7 +1585,7 @@ The following example shows a 2D histogram plotted with the option
 <tt>"SURF3"</tt>. The option <tt>"SURF3"</tt> draws a surface plot using the
 hidden line removal technique with, in addition, a contour view drawn on the
 top.  Combined with the option <tt>"SURF3"</tt>, the option <tt>"Z"</tt> allows
-to display the color pallette defined by <tt>gStyle->SePalette()</tt>.
+to display the color palette defined by <tt>gStyle->SePalette()</tt>.
 
 End_Html
 Begin_Macro(source)
@@ -1813,7 +1842,7 @@ with a maximum of ncolors.
 <li> index 40  to 49 : basic colors
 </ul>
 The color numbers specified in the palette can be viewed by selecting
-the item <tt>"colors"</tt> in the <tt>"VIEW"</tt> menu of the canvas toolbar.
+the item <tt>"colors"</tt> in the <tt>"VIEW"</tt> menu of the canvas tool bar.
 The red, green, and blue components of a color can be changed thanks to
 <tt>TColor::SetRGB()</tt>.
 
@@ -1945,7 +1974,7 @@ same pad as if the option <tt>"SAME"</tt> had been specified.
 into a number of pads equal to the number of histograms and each histogram
 is paint into a separate pad.
 
-<p>The follwoing example shows various types of stacks.
+<p>The following example shows various types of stacks.
 
 End_Html
 Begin_Macro(source)
@@ -1957,7 +1986,7 @@ Begin_Html
 <a name="HP27"></a><h3>Drawing of 3D implicit functions</h3>
 
 
-3D implicit functions (<tt>TF3</tt>) can be drawn the follwing way:
+3D implicit functions (<tt>TF3</tt>) can be drawn the following way:
 
 End_Html
 Begin_Macro(source)
@@ -2152,7 +2181,7 @@ highlighted in red, if the dynamic slicing is not supported.
 <li> The plot itself:
 On surfaces, the selected surface is outlined in red. (TF3 and
 ISO are not outlined). On lego plots, the selected bin is
-highlihted. The bin number and content are displayed in pad's
+highlighted. The bin number and content are displayed in pad's
 status bar. In box plots, the box or sphere is highlighted and
 the bin info is displayed in pad's status bar.
 </ul>
