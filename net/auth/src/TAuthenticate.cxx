@@ -2565,8 +2565,8 @@ Int_t TAuthenticate::ClearAuth(TString &user, TString &passwd, Bool_t &pwdhash)
          if (prompt == 1 || pashash.Length() == 0) {
 
             if (passwd == "") {
-               TString prompt(Form("%s@%s password: ", user.Data(),fRemote.Data()));
-               char *pwd = PromptPasswd(prompt);
+               TString xp(Form("%s@%s password: ", user.Data(),fRemote.Data()));
+               char *pwd = PromptPasswd(xp);
                passwd = TString(pwd);
                delete [] pwd;
                if (passwd == "") {
@@ -2781,8 +2781,8 @@ Int_t TAuthenticate::ClearAuth(TString &user, TString &passwd, Bool_t &pwdhash)
       // Prepare passwd to send
    badpass1:
       if (passwd == "") {
-         TString prompt(Form("%s@%s password: ", user.Data(),fRemote.Data()));
-         passwd = PromptPasswd(prompt);
+         TString xp(Form("%s@%s password: ", user.Data(),fRemote.Data()));
+         passwd = PromptPasswd(xp);
          if (passwd == "")
             Error("ClearAuth", "password not set");
       }
