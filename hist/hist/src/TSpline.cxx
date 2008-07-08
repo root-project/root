@@ -479,7 +479,7 @@ TSpline3::TSpline3(const char *title,
    // them with node information
    fPoly = new TSplinePoly3[n];
    //when func is null we return. In this case it is assumed that the spline
-   //points will be given later via SetPoint followed by a call to BuildCoeff.
+   //points will be given later via SetPoint and SetPointCoeff
    if (!func) {fKstep = kFALSE; fDelta = -1; return;}
    for (Int_t i=0; i<n; ++i) {
       Double_t x=fXmin+i*fDelta;
@@ -1000,11 +1000,12 @@ void TSpline3::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    SaveFillAttributes(out,"spline3",0,1001);
    SaveLineAttributes(out,"spline3",1,1,1);
    SaveMarkerAttributes(out,"spline3",1,1,1);
+   if (fNpx != 100) out<<"   spline3->SetNpx("<<fNpx<<");"<<endl;
 
    for (Int_t i=0;i<fNp;i++) {
       out<<"   spline3->SetPoint("<<i<<","<<fPoly[i].X()<<","<<fPoly[i].Y()<<");"<<endl;
+      out<<"   spline3->SetPointCoeff("<<i<<","<<fPoly[i].B()<<","<<fPoly[i].C()<<","<<fPoly[i].D()<<");"<<endl;
    }
-   out<<"   spline3->BuildCoeff();"<<endl;
    out<<"   spline3->Draw("<<quote<<option<<quote<<");"<<endl;
 }
 
@@ -1012,11 +1013,22 @@ void TSpline3::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 //______________________________________________________________________________
 void TSpline3::SetPoint(Int_t i, Double_t x, Double_t y)
 {
-   //set point number i. Note that BuildCoeff must be called once all points are set.
+   //set point number i.
    
    if (i < 0 || i >= fNp) return;
    fPoly[i].X()= x;
    fPoly[i].Y()= y;
+}
+
+//______________________________________________________________________________
+void TSpline3::SetPointCoeff(Int_t i, Double_t b, Double_t c, Double_t d)
+{
+   // set point coefficient number i
+ 
+   if (i < 0 || i >= fNp) return;
+   fPoly[i].B()= b;
+   fPoly[i].C()= c;
+   fPoly[i].D()= d;
 }
 
 //______________________________________________________________________________
@@ -1813,11 +1825,12 @@ void TSpline5::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    SaveFillAttributes(out,"spline5",0,1001);
    SaveLineAttributes(out,"spline5",1,1,1);
    SaveMarkerAttributes(out,"spline5",1,1,1);
+   if (fNpx != 100) out<<"   spline5->SetNpx("<<fNpx<<");"<<endl;
 
    for (Int_t i=0;i<fNp;i++) {
       out<<"   spline5->SetPoint("<<i<<","<<fPoly[i].X()<<","<<fPoly[i].Y()<<");"<<endl;
+      out<<"   spline5->SetPointCoeff("<<i<<","<<fPoly[i].B()<<","<<fPoly[i].C()<<","<<fPoly[i].D()<<","<<fPoly[i].E()<<","<<fPoly[i].F()<<");"<<endl;
    }
-   out<<"   spline5->BuildCoeff();"<<endl;
    out<<"   spline5->Draw("<<quote<<option<<quote<<");"<<endl;
 }
 
@@ -1825,12 +1838,26 @@ void TSpline5::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 //______________________________________________________________________________
 void TSpline5::SetPoint(Int_t i, Double_t x, Double_t y)
 {
-   //set point number i. Note that BuildCoeff must be called once all points are set.
+   //set point number i.
    
    
    if (i < 0 || i >= fNp) return;
    fPoly[i].X()= x;
    fPoly[i].Y()= y;
+}
+
+//______________________________________________________________________________
+void TSpline5::SetPointCoeff(Int_t i, Double_t b, Double_t c, Double_t d,
+			     Double_t e, Double_t f)
+{
+   // set point coefficient number i
+   
+   if (i < 0 || i >= fNp) return;
+   fPoly[i].B()= b;
+   fPoly[i].C()= c;
+   fPoly[i].D()= d;
+   fPoly[i].E()= e;
+   fPoly[i].F()= f;
 }
 
 
