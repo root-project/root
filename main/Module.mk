@@ -125,9 +125,9 @@ $(ROOTEXE):     $(ROOTEXEO) $(BOOTLIBSDEP) $(RINTLIB)
 		   $(RPATH) $(BOOTLIBS) $(RINTLIBS) $(SYSLIBS)
 
 ifneq ($(BUILDCINT7),)
-$(ROOT7EXE):    $(ROOTEXEO) $(subst Cint,Cint7,$(BOOTLIBSDEP)) $(RINTLIB)
+$(ROOT7EXE):    $(ROOTEXEO) $(subst Cint,Cint7,$(BOOTLIBSDEP)) $(RINTLIB) $(REFLEXLIB)
 		$(LD) $(LDFLAGS) -o $@ $(ROOTEXEO) $(ROOTICON) $(BOOTULIBS) \
-		   $(RPATH) $(subst Cint,Cint7,$(BOOTLIBS)) $(RINTLIBS) $(SYSLIBS)
+		   $(RPATH) $(subst Cint,Cint7,$(BOOTLIBS)) $(RINTLIBS) $(RFLX_REFLEXLL) $(SYSLIBS)
 endif
 
 ifneq ($(PLATFORM),win32)
