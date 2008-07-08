@@ -1740,11 +1740,11 @@ int XrdProofdProtocol::GetData(const char *dtype, char *buff, int blen)
    }
    if (rlen < blen) {
       fBuff = buff+rlen; fBlen = blen-rlen;
-      TRACEI(XERR, "GetData: " << dtype <<
-                  " timeout; read " <<rlen <<" of " <<blen <<" bytes");
+      TRACEI(HDBG, "GetData: " << dtype <<
+                  " timeout ("<<fgReadWait<<" millisecs); read " <<rlen <<" of " <<blen <<" bytes");
       return 1;
    }
-   TRACEI(DBG, "GetData: rlen: "<<rlen);
+   TRACEI(HDBG, "GetData: rlen: "<<rlen);
 
    return 0;
 }
