@@ -32,7 +32,6 @@
 #include "TSystem.h"
 #include "TUrl.h"
 #include "TVirtualAuth.h"
-#include "TVirtualMutex.h"
 #include "TStreamerInfo.h"
 #include "TProcessID.h"
 
@@ -92,9 +91,10 @@ TSocket::TSocket(TInetAddress addr, const char *service, Int_t tcpwindowsize)
    fAddress.fPort = gSystem->GetServiceByName(service);
    fBytesSent = 0;
    fBytesRecv = 0;
-   fCompress  = 0;
+   fCompress = 0;
    fTcpWindowSize = tcpwindowsize;
-   fUUIDs     = 0;
+   fUUIDs = 0;
+   fLastUsageMtx = 0;
 
    if (fAddress.GetPort() != -1) {
       fSocket = gSystem->OpenConnection(addr.GetHostName(), fAddress.GetPort(),
@@ -138,9 +138,10 @@ TSocket::TSocket(TInetAddress addr, Int_t port, Int_t tcpwindowsize)
    SetTitle(fService);
    fBytesSent = 0;
    fBytesRecv = 0;
-   fCompress  = 0;
+   fCompress = 0;
    fTcpWindowSize = tcpwindowsize;
-   fUUIDs     = 0;
+   fUUIDs = 0;
+   fLastUsageMtx = 0;
 
    fSocket = gSystem->OpenConnection(addr.GetHostName(), fAddress.GetPort(),
                                      tcpwindowsize);
@@ -181,9 +182,10 @@ TSocket::TSocket(const char *host, const char *service, Int_t tcpwindowsize)
    SetName(fAddress.GetHostName());
    fBytesSent = 0;
    fBytesRecv = 0;
-   fCompress  = 0;
+   fCompress = 0;
    fTcpWindowSize = tcpwindowsize;
-   fUUIDs     = 0;
+   fUUIDs = 0;
+   fLastUsageMtx = 0;
 
    if (fAddress.GetPort() != -1) {
       fSocket = gSystem->OpenConnection(host, fAddress.GetPort(), tcpwindowsize);
@@ -230,9 +232,10 @@ TSocket::TSocket(const char *url, Int_t port, Int_t tcpwindowsize)
    SetTitle(fService);
    fBytesSent = 0;
    fBytesRecv = 0;
-   fCompress  = 0;
+   fCompress = 0;
    fTcpWindowSize = tcpwindowsize;
-   fUUIDs     = 0;
+   fUUIDs = 0;
+   fLastUsageMtx = 0;
 
    fSocket = gSystem->OpenConnection(host, fAddress.GetPort(), tcpwindowsize);
    if (fSocket == -1) {
@@ -251,13 +254,14 @@ TSocket::TSocket(Int_t desc) : TNamed("", "")
    R__ASSERT(gROOT);
    R__ASSERT(gSystem);
 
-   fSecContext = 0;
-   fRemoteProtocol= 0;
-   fService = (char *)kSOCKD;
-   fBytesSent = 0;
-   fBytesRecv = 0;
-   fCompress  = 0;
-   fUUIDs     = 0;
+   fSecContext     = 0;
+   fRemoteProtocol = 0;
+   fService        = (char *)kSOCKD;
+   fBytesSent      = 0;
+   fBytesRecv      = 0;
+   fCompress       = 0;
+   fUUIDs          = 0;
+   fLastUsageMtx   = 0;
 
    if (desc >= 0) {
       fSocket  = desc;
@@ -283,7 +287,8 @@ TSocket::TSocket(const TSocket &s) : TNamed(s)
    fSecContext     = s.fSecContext;
    fRemoteProtocol = s.fRemoteProtocol;
    fServType       = s.fServType;
-   fUUIDs     = 0;
+   fUUIDs          = 0;
+   fLastUsageMtx   = 0;
 
    if (fSocket != -1) {
       R__LOCKGUARD2(gROOTMutex);
@@ -307,6 +312,9 @@ void TSocket::Close(Option_t *option)
       gROOT->GetListOfSockets()->Remove(this);
    }
    fSocket = -1;
+
+   SafeDelete(fUUIDs);
+   SafeDelete(fLastUsageMtx);
 }
 
 //______________________________________________________________________________
@@ -538,6 +546,8 @@ Int_t TSocket::SendRaw(const void *buffer, Int_t length, ESendRecvOptions opt)
 
    fBytesSent  += nsent;
    fgBytesSent += nsent;
+
+   Touch();  // update usage timestamp
 
    return nsent;
 }
@@ -795,6 +805,8 @@ Int_t TSocket::RecvRaw(void *buffer, Int_t length, ESendRecvOptions opt)
 
    fBytesRecv  += n;
    fgBytesRecv += n;
+
+   Touch();  // update usage timestamp
 
    return n;
 }

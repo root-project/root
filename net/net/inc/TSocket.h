@@ -42,6 +42,12 @@
 #ifndef ROOT_TSecContext
 #include "TSecContext.h"
 #endif
+#ifndef ROOT_TTimeStamp
+#include "TTimeStamp.h"
+#endif
+#ifndef ROOT_TVirtualMutex
+#include "TVirtualMutex.h"
+#endif
 
 enum ESockOptions {
    kSendBuffer,        // size of send buffer
@@ -95,15 +101,18 @@ protected:
    TBits         fBitsInfo;       // bits array to mark TStreamerInfo classes already sent
    TList        *fUUIDs;          // list of TProcessIDs already sent through the socket
 
+   TVirtualMutex *fLastUsageMtx;   // Protect last usage setting / reading
+   TTimeStamp    fLastUsage;      // Time stamp of last usage
+
    static ULong64_t fgBytesRecv;  // total bytes received by all socket objects
    static ULong64_t fgBytesSent;  // total bytes sent by all socket objects
 
    static Int_t  fgClientProtocol; // client "protocol" version
 
    TSocket() : fAddress(), fBytesRecv(0), fBytesSent(0), fCompress(0),
-      fLocalAddress(), fRemoteProtocol(), fSecContext(0), fService(),
-     fServType(kSOCKD), fSocket(-1), fTcpWindowSize(0), fUrl(),
-     fBitsInfo(), fUUIDs(0) { }
+               fLocalAddress(), fRemoteProtocol(), fSecContext(0), fService(),
+               fServType(kSOCKD), fSocket(-1), fTcpWindowSize(0), fUrl(),
+               fBitsInfo(), fUUIDs(0), fLastUsageMtx(0) { }
 
    Bool_t       Authenticate(const char *user);
    void         SetDescriptor(Int_t desc) { fSocket = desc; }
@@ -141,6 +150,7 @@ public:
    Int_t                 GetRemoteProtocol() const { return fRemoteProtocol; }
    TSecContext          *GetSecContext() const { return fSecContext; }
    Int_t                 GetTcpWindowSize() const { return fTcpWindowSize; }
+   TTimeStamp            GetLastUsage() { R__LOCKGUARD2(fLastUsageMtx); return fLastUsage; }
    const char           *GetUrl() const { return fUrl; }
    virtual Bool_t        IsAuthenticated() const { return fSecContext ? kTRUE : kFALSE; }
    virtual Bool_t        IsValid() const { return fSocket < 0 ? kFALSE : kTRUE; }
@@ -165,6 +175,8 @@ public:
    void                  SetService(const char *service) { fService = service; }
    void                  SetServType(Int_t st) { fServType = (EServiceType)st; }
    void                  SetUrl(const char *url) { fUrl = url; }
+
+   void                  Touch() { R__LOCKGUARD2(fLastUsageMtx); fLastUsage.Set(); }
 
    static Int_t          GetClientProtocol();
 

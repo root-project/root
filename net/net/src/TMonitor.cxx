@@ -387,10 +387,43 @@ void TMonitor::SetReady(TSocket *sock)
 }
 
 //______________________________________________________________________________
-Int_t TMonitor::GetActive() const
+Int_t TMonitor::GetActive(Long_t timeout) const
 {
-   // Return number of sockets in the active list.
+   // Return number of sockets in the active list. If timeout > 0, remove from
+   // the list those sockets which did not have any activity since timeout
+   // millisecs. If timeout = 0, then reset activity timestamp on all active
+   // sockets. This time out is typically used if GetActive() is used to see
+   // how many remotes still need to send something. If they pass the timeout
+   // they will be skipped and GetActive() will return 0 and the loop can be
+   // exited.
 
+   if (timeout >= 0) {
+      TIter next(fActive);
+      TSocketHandler *s;
+      if (timeout > 0) {
+         TTimeStamp now;
+         while ((s = (TSocketHandler *) next())) {
+            TSocket *xs = s->GetSocket();
+            TTimeStamp ls = xs->GetLastUsage();
+            Long_t dt = (Long_t)(now.GetSec() - ls.GetSec()) * 1000 +
+                        (Long_t)(now.GetNanoSec() - ls.GetNanoSec()) / 1000000 ;
+            if (dt > timeout) {
+               Info("GetActive", "socket: %p: %s:%d did not show any activity"
+                                 " during the last %ld millisecs: deactivating",
+                                 xs, xs->GetInetAddress().GetHostName(),
+                                 xs->GetInetAddress().GetPort(), timeout);
+               fActive->Remove(s);
+               fDeActive->Add(s);
+               s->Remove();
+            }
+         }
+      } else if (timeout == 0) {
+         // Reset time stamps
+         while ((s = (TSocketHandler *) next())) {
+            s->GetSocket()->Touch();
+         }
+      }
+   }
    return fActive->GetSize();
 }
 

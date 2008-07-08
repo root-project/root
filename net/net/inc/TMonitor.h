@@ -78,7 +78,7 @@ public:
    TSocket *Select(Long_t timeout);
    Int_t    Select(TList *rdready, TList *wrready, Long_t timeout);
 
-   Int_t  GetActive() const;
+   Int_t  GetActive(Long_t timeout = -1) const;
    Int_t  GetDeActive() const;
    TList *GetListOfActives() const;
    TList *GetListOfDeActives() const;
