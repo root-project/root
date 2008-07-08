@@ -35,7 +35,6 @@
 #pragma link C++ class TGraphDelaunay+;
 #pragma link C++ class TGraphSmooth+;
 #pragma link C++ class TGraphPolar+;
-#pragma link C++ class TGraphPolargram+;
 #pragma link C++ class TH1-;
 #pragma link C++ class TH1C+;
 #pragma link C++ class TH1D+;
