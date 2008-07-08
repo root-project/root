@@ -1,0 +1,2 @@
+INCLUDE(MacroEnsureOutOfSourceBuild)
+INCLUDE(MacroGenreflex)

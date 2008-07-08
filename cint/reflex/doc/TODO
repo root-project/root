@@ -1,0 +1,10 @@
+CMake:
+Test on all platforms with all permutations
+
+Nice to have:
+Figure out a way to stop generating pyc files in source dir
+make test should make if not already done
+Determine which FIND_PACKAGE statements are unneeded and move to more restricted scope when possible
+Add a feature to PosixFeatures.cmake stating that it 'needs dl' and test that when linking with dl
+GCCXML and PythonInterp are currently optional, they should be enforced
+create a FindReflex module for use by others
