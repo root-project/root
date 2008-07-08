@@ -4243,11 +4243,11 @@ void TProofServ::HandleCheckFile(TMessage *mess)
          Bool_t cpbin = (!IsMaster() || !IsParallel()) ? kTRUE : kFALSE;
          CopyFromCache(filenam, cpbin);
          fSocket->Send(kPROOF_CHECKFILE);
-         PDB(kPackage, 1)
+         PDB(kCache, 1)
             Info("HandleCheckFile", "file %s already on node", filenam.Data());
       } else {
          fSocket->Send(kPROOF_FATAL);
-         PDB(kPackage, 1)
+         PDB(kCache, 1)
             Info("HandleCheckFile", "file %s not yet on node", filenam.Data());
       }
       delete md5local;
@@ -4281,13 +4281,17 @@ Int_t TProofServ::HandleCache(TMessage *mess)
          printf("*** File cache %s:%s ***\n", gSystem->HostName(),
                 fCacheDir.Data());
          fflush(stdout);
-         gSystem->Exec(Form("%s %s", kLS, fCacheDir.Data()));
+         PDB(kCache, 1) {
+            gSystem->Exec(Form("%s -a %s", kLS, fCacheDir.Data()));
+         } else {
+            gSystem->Exec(Form("%s %s", kLS, fCacheDir.Data()));
+         }
          if (IsMaster() && all)
             fProof->ShowCache(all);
          break;
       case TProof::kClearCache:
          fCacheLock->Lock();
-         gSystem->Exec(Form("%s %s/*", kRM, fCacheDir.Data()));
+         gSystem->Exec(Form("%s %s/* %s/.*.binversion", kRM, fCacheDir.Data(), fCacheDir.Data()));
          fCacheLock->Unlock();
          if (IsMaster())
             fProof->ClearCache();
@@ -4998,7 +5002,7 @@ Int_t TProofServ::CopyFromCache(const char *macro, Bool_t cpbin)
    fCacheLock->Lock();
 
    // Get source from the cache
-   PDB(kGlobal,2)
+   PDB(kCache,1)
       Info("CopyFromCache",
            "retrieving %s/%s from cache", fCacheDir.Data(), name.Data());
    gSystem->Exec(Form("%s %s/%s .", kCP, fCacheDir.Data(), name.Data()));
@@ -5017,7 +5021,7 @@ Int_t TProofServ::CopyFromCache(const char *macro, Bool_t cpbin)
       binname.Replace(dot,1,"_");
       binname += ".";
    } else {
-      PDB(kGlobal,2)
+      PDB(kCache,1)
          Info("CopyFromCache",
               "non-standard name structure: %s ('.' missing)", name.Data());
       // Done
@@ -5044,8 +5048,13 @@ Int_t TProofServ::CopyFromCache(const char *macro, Bool_t cpbin)
       fclose(f);
    }
 
-   if (!f || v != gROOT->GetVersion() ||
-      (gROOT->GetSvnRevision() > 0 && rev != gROOT->GetSvnRevision())) {
+   Bool_t okver = (v != gROOT->GetVersion()) ? kFALSE : kTRUE;
+   Bool_t okrev = (gROOT->GetSvnRevision() > 0 && rev != gROOT->GetSvnRevision()) ? kFALSE : kTRUE;
+   if (!f || !okver || !okrev) {
+   PDB(kCache,1)
+      Info("CopyFromCache",
+           "removing binaries: 'f': %p, 'ROOT version': %s, 'ROOT revision': %s",
+           f, (okver ? "OK" : "not OK"), (okrev ? "OK" : "not OK") );
       // Remove all existing binaries
       binname += "*";
       gSystem->Exec(Form("%s %s/%s", kRM, fCacheDir.Data(), binname.Data()));
@@ -5072,7 +5081,7 @@ Int_t TProofServ::CopyFromCache(const char *macro, Bool_t cpbin)
                // Copy the file, if needed
                if (docp) {
                   gSystem->Exec(Form("%s %s", kRM, e));
-                  PDB(kGlobal,2)
+                  PDB(kCache,1)
                      Info("CopyFromCache",
                           "retrieving %s from cache", fncache.Data());
                   gSystem->Exec(Form("%s %s %s", kCP, fncache.Data(), e));
@@ -5135,13 +5144,15 @@ Int_t TProofServ::CopyToCache(const char *macro, Int_t opt)
    // Action depends on 'opt'
    if (opt == 0) {
       // Save name to cache
-      PDB(kGlobal,2)
-         Info("CopyFromCache",
+      PDB(kCache,1)
+         Info("CopyToCache",
               "caching %s/%s ...", fCacheDir.Data(), name.Data());
       gSystem->Exec(Form("%s %s %s", kCP, name.Data(), fCacheDir.Data()));
       // If needed, remove from the cache any existing binary related to 'name'
       if (dot != kNPOS) {
          binname += ".*";
+         PDB(kCache,1)
+            Info("CopyToCache", "opt = 0: removing binaries '%s'", binname.Data());
          gSystem->Exec(Form("%s %s/%s", kRM, fCacheDir.Data(), binname.Data()));
          gSystem->Exec(Form("%s %s/%s", kRM, fCacheDir.Data(), vername.Data()));
       }
@@ -5164,7 +5175,7 @@ Int_t TProofServ::CopyToCache(const char *macro, Int_t opt)
                      // Copy the file, if needed
                      if (docp) {
                         gSystem->Exec(Form("%s %s", kRM, fncache.Data()));
-                        PDB(kGlobal,2)
+                        PDB(kCache,1)
                            Info("CopyToCache","caching %s ...", e);
                         gSystem->Exec(Form("%s %s %s", kCP, e, fncache.Data()));
                         savever = kTRUE;
@@ -5176,6 +5187,8 @@ Int_t TProofServ::CopyToCache(const char *macro, Int_t opt)
          }
          // Save binary version if requested
          if (savever) {
+            PDB(kCache,1)
+               Info("CopyToCache","updating version file %s ...", vername.Data());
             FILE *f = fopen(Form("%s/%s", fCacheDir.Data(), vername.Data()), "w");
             if (f) {
                fputs(gROOT->GetVersion(), f);

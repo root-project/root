@@ -40,6 +40,7 @@ public:
       kCondor        = 256,
       kDraw          = 512,
       kAsyn          = 1024,
+      kCache         = 2048,
 
       kAll           = 0xFFFFFFFF
    };
