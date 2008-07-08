@@ -30,6 +30,10 @@
 #pragma link C++ class TEllipse-;
 #pragma link C++ class TFrame+;
 #pragma link C++ class TGaxis-;
+#pragma link C++ class TGraphPolar+;
+#pragma link C++ class TGraphPolargram+;
+#pragma link C++ class TGraphQQ+;
+#pragma link C++ class TGaxis-;
 #pragma link C++ class TImage;
 #pragma link C++ class TImagePlugin;
 #pragma link C++ class TImagePalette;

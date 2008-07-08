@@ -29,12 +29,10 @@
 #pragma link C++ class TGraphErrors-;
 #pragma link C++ class TGraphAsymmErrors-;
 #pragma link C++ class TGraphBentErrors+;
-#pragma link C++ class TGraphQQ+;
 #pragma link C++ class TGraph2D-;
 #pragma link C++ class TGraph2DErrors-;
 #pragma link C++ class TGraphDelaunay+;
 #pragma link C++ class TGraphSmooth+;
-#pragma link C++ class TGraphPolar+;
 #pragma link C++ class TH1-;
 #pragma link C++ class TH1C+;
 #pragma link C++ class TH1D+;

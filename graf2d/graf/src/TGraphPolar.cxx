@@ -1,4 +1,4 @@
-// @(#)root/hist:$Id$
+// @(#)root/graf:$Id$
 // Author: Sebastian Boser, Mathieu Demaret 02/02/06
 
 /*************************************************************************
