@@ -738,30 +738,46 @@ check_comp() {
     LD)
         if test "x$altld" = "x" ; then
             altld=`grep '^LD ' config/Makefile.$arch | awk '{ if (NF==3) {print $3; nextfile} }'`
+            if test "x$arch" = "xwin32" ; then
+                altldorg="link"
+                altldtmp="$altld"
+                altld="$altldorg"
+            fi
+            if test "x$arch" = "xwin32gcc" ; then
+                altldorg="g++"
+                altldtmp="$altld"
+                altld="$altldorg"
+            fi
         fi
         if `$cwhich $altld > /dev/null 2>&1` ; then
             found_comp=1
+            if test ! "x$altldtmp" = "x" ; then
+                altld="$altldtmp"
+            fi
             result "$altld"
         else
             nocomp="$altld"
+            altldorg=""
         fi
         ;;
     F77)
         if test "x$altf77" = "x" ; then
             altf77=`grep '^F77 ' config/Makefile.$arch | awk '{ if (NF==3) {print $3; nextfile} }'`
             if test "x$arch" = "xwin32" ; then
-                altf77org="$altf77"
-                altf77="fl32"
+                altf77org="fl32"
+                altf77tmp="$altf77"
+                altf77="$altf77org"
             fi
         fi
         if `$cwhich $altf77 > /dev/null 2>&1` ; then
             found_comp=1
-            if test ! "x$altf77org" = "x" ; then
-                altf77="$altf77org"
+            if test ! "x$altf77tmp" = "x" ; then
+                altf77="$altf77tmp"
             fi
             result "$altf77"
         else
             nocomp="$altf77"
+            altf77org=""
         fi
         ;;
     esac
@@ -2975,9 +2991,11 @@ if test ! "x$enable_python" = "xno" ; then
     pythoninc=$found_hdr
     pythonincdir=$found_dir
     if test "x$platform" = "xwin32"; then
-       pythonvers=`python -c 'import sys; print sys.version[:3].replace(".","")' | tr -d '\r'`
-       if test ! "x$pythonincdir" = "x" ; then
-          pythonincdir=`cygpath -m $pythonincdir`
+       if test ! "x$mypython" = "x" && test -x "$mypython" ; then
+          pythonvers=`python -c 'import sys; print sys.version[:3].replace(".","")' | tr -d '\r'`
+          if test ! "x$pythonincdir" = "x" ; then
+             pythonincdir=`cygpath -m $pythonincdir`
+          fi
        fi
     fi
 
@@ -4144,14 +4162,16 @@ if test ! "x$enable_mathmore" = "xno"; then
     fi
     # skip cygwin gsl-config when in pure Win32 mode
     if test "x$platform" = "xwin32"; then
-        case `$cwhich gsl-config` in
-            /bin/*|/usr/bin/*)
-	        if (test "x$gslincdir" = "x" || test "x$gsllibs" = "x"); then
-                    gslskip="skip"
-                    enable_mathmore="no"
-                fi
-                ;;
-        esac
+	if `$cwhich gsl-config > /dev/null 2>&1` ; then
+            case `$cwhich gsl-config` in
+                /bin/*|/usr/bin/*)
+	            if (test "x$gslincdir" = "x" || test "x$gsllibs" = "x"); then
+                        gslskip="skip"
+                        enable_mathmore="no"
+                    fi
+                    ;;
+            esac
+        fi
     fi
     if (test "x$gslincdir" = "x" || test "x$gsllibs" = "x") && \
         test ! "x$gslskip" = "xskip"; then
@@ -5108,6 +5128,17 @@ if test "$prefix2" = "\$(ROOTSYS)" ; then
     mandir2=\$ROOTSYS/man/man1
 fi
 
+if test ! "x$altf77org" = "x" ; then
+    altf772="$altf77org"
+else
+    altf772="$altf77"
+fi
+if test ! "x$altldorg" = "x" ; then
+    altld2="$altldorg"
+else
+    altld2="$altld"
+fi
+
 features=""
 for f in $options ; do
     bar="$`echo $f`"
@@ -5133,8 +5164,8 @@ sed -e "s|@architecture@|$arch|"           \
     -e "s|@pythonvers@|$pythonvers|"       \
     -e "s|@altcc@|$altcc|"                 \
     -e "s|@altcxx@|$altcxx|"               \
-    -e "s|@altf77@|$altf77|"               \
-    -e "s|@altld@|$altld|"                 \
+    -e "s|@altf77@|$altf772|"              \
+    -e "s|@altld@|$altld2|"                \
     -e "s|@no_stubs@|$no_stubs|"           \
     -e "s|@no_stubs_test@|$no_stubs_test|" \
    < root-config.tmp > $RCONFOUT
