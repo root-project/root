@@ -324,7 +324,7 @@ ifeq ($(PLATFORM),aix5)
 ROOTULIBS    := -Wl,-u,.G__cpp_setupG__Net      \
                 -Wl,-u,.G__cpp_setupG__IO       \
                 -Wl,-u,.G__cpp_setupG__Hist     \
-                -Wl,-u,.G__cpp_setupG__Graf1    \
+                -Wl,-u,.G__cpp_setupG__Graf     \
                 -Wl,-u,.G__cpp_setupG__G3D      \
                 -Wl,-u,.G__cpp_setupG__GPad     \
                 -Wl,-u,.G__cpp_setupG__Tree     \
@@ -335,7 +335,7 @@ else
 ROOTULIBS    := -Wl,-u,_G__cpp_setupG__Net      \
                 -Wl,-u,_G__cpp_setupG__IO       \
                 -Wl,-u,_G__cpp_setupG__Hist     \
-                -Wl,-u,_G__cpp_setupG__Graf1    \
+                -Wl,-u,_G__cpp_setupG__Graf     \
                 -Wl,-u,_G__cpp_setupG__G3D      \
                 -Wl,-u,_G__cpp_setupG__GPad     \
                 -Wl,-u,_G__cpp_setupG__Tree     \
@@ -348,7 +348,7 @@ ifeq ($(PLATFORM),win32)
 ROOTULIBS    := -include:_G__cpp_setupG__Net    \
                 -include:_G__cpp_setupG__IO     \
                 -include:_G__cpp_setupG__Hist   \
-                -include:_G__cpp_setupG__Graf1  \
+                -include:_G__cpp_setupG__Graf   \
                 -include:_G__cpp_setupG__G3D    \
                 -include:_G__cpp_setupG__GPad   \
                 -include:_G__cpp_setupG__Tree   \
