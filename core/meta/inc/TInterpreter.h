@@ -216,7 +216,7 @@ public:
    // G__DataMemberInfo interface            
    virtual int    DataMemberInfo_ArrayDim(DataMemberInfo_t * /* dminfo */) const {return 0;}
    virtual void   DataMemberInfo_Delete(DataMemberInfo_t * /* dminfo */) const {;}
-   virtual void  *DataMemberInfo_Factory() const {return 0;}
+   virtual void  *DataMemberInfo_Factory(ClassInfo_t * /* clinfo */ = 0) const {return 0;}
    virtual void  *DataMemberInfo_FactoryCopy(DataMemberInfo_t * /* dminfo */) const {return 0;}
    virtual bool   DataMemberInfo_IsValid(DataMemberInfo_t * /* dminfo */) const {return 0;}
    virtual int    DataMemberInfo_MaxIndex(DataMemberInfo_t * /* dminfo */, Int_t  /* dim */) const {return 0;}

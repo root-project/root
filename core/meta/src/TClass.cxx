@@ -500,7 +500,7 @@ void TAutoInspector::Inspect(TClass *cl, const char *tit, const char *name,
    if (!classInfo)               return;
 
    //              Browse data members
-   DataMemberInfo_t *m = gCint->DataMemberInfo_FactoryCopy(classInfo);
+   DataMemberInfo_t *m = gCint->DataMemberInfo_Factory(classInfo);
    TString mname;
 
    int found=0;

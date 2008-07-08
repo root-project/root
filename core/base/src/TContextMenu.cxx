@@ -62,6 +62,7 @@ TContextMenu::TContextMenu(const char *name, const char *title)
    // Create a context menu.
 
    fSelectedObject   = 0;
+   fCalledObject     = 0;
    fSelectedMethod   = 0;
    fBrowser          = 0;
    fSelectedPad      = 0;
@@ -112,6 +113,7 @@ TContextMenu::~TContextMenu()
    delete fContextMenuImp;
 
    fSelectedMethod   = 0;
+   fCalledObject     = 0;
    fSelectedObject   = 0;
    fSelectedMenuItem = 0;
    fContextMenuImp   = 0;

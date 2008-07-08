@@ -2600,12 +2600,13 @@ void  TCint::DataMemberInfo_Delete(DataMemberInfo_t *dminfo) const
    delete info;
 }
 //______________________________________________________________________________
-void *TCint::DataMemberInfo_Factory() const
+void *TCint::DataMemberInfo_Factory(ClassInfo_t* clinfo /* = 0 */) const
 {
    // Interface to CINT function 
-   
-   G__DataMemberInfo *info = new G__DataMemberInfo();
-   return info;
+   G__ClassInfo* clinfo1 = (G__ClassInfo*) clinfo;
+   if (clinfo1)
+      return new G__DataMemberInfo(*clinfo1);
+   return new G__DataMemberInfo();
 }
 //______________________________________________________________________________
 void *TCint::DataMemberInfo_FactoryCopy(DataMemberInfo_t *dminfo) const
