@@ -25,9 +25,17 @@
 #pragma link C++ class TF12+;
 #pragma link C++ class TF2-;
 #pragma link C++ class TF3-;
+#pragma link C++ class TGraph-;
+#pragma link C++ class TGraphErrors-;
+#pragma link C++ class TGraphAsymmErrors-;
+#pragma link C++ class TGraphBentErrors+;
+#pragma link C++ class TGraphQQ+;
 #pragma link C++ class TGraph2D-;
 #pragma link C++ class TGraph2DErrors-;
 #pragma link C++ class TGraphDelaunay+;
+#pragma link C++ class TGraphSmooth+;
+#pragma link C++ class TGraphPolar+;
+#pragma link C++ class TGraphPolargram+;
 #pragma link C++ class TH1-;
 #pragma link C++ class TH1C+;
 #pragma link C++ class TH1D+;
@@ -60,12 +68,19 @@
 #pragma link C++ class TLimit+;
 #pragma link C++ class TLimitDataSource+;
 #pragma link C++ class TConfidenceLevel+;
+#pragma link C++ class TMultiGraph+;
 #pragma link C++ class TMultiDimFit+;
 #pragma link C++ class TPolyMarker-;
 #pragma link C++ class TPrincipal+;
 #pragma link C++ class TProfile-;
 #pragma link C++ class TProfile2D-;
 #pragma link C++ class TProfile3D+;
+#pragma link C++ class TSpline-;
+#pragma link C++ class TSpline5-;
+#pragma link C++ class TSpline3-;
+#pragma link C++ class TSplinePoly+;
+#pragma link C++ class TSplinePoly5+;
+#pragma link C++ class TSplinePoly3+;
 #pragma link C++ class TVirtualHistPainter+;
 #pragma link C++ class TVirtualGraphPainter+;
 
@@ -191,6 +206,10 @@
 #pragma link C++ namespace ROOT::Fit; 
 #pragma link C++ function ROOT::Fit::FillData(ROOT::Fit::BinData &, const TH1 *, TF1 * );
 #pragma link C++ function ROOT::Fit::FillData(ROOT::Fit::BinData &, const TGraph2D *, TF1 * );
+
+#pragma link C++ namespace ROOT::Fit; 
+#pragma link C++ function ROOT::Fit::FillData(ROOT::Fit::BinData &, const TGraph *,  TF1 * );
+#pragma link C++ function ROOT::Fit::FillData(ROOT::Fit::BinData &, const TMultiGraph *,  TF1 * );
 
 
 

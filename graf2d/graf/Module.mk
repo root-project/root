@@ -13,20 +13,12 @@ GRAFDIRS     := $(GRAFDIR)/src
 GRAFDIRI     := $(GRAFDIR)/inc
 
 ##### libGraf #####
-GRAFL1       := $(MODDIRI)/LinkDef1.h
-GRAFL2       := $(MODDIRI)/LinkDef2.h
-GRAFDS1      := $(MODDIRS)/G__Graf1.cxx
-GRAFDS2      := $(MODDIRS)/G__Graf2.cxx
-GRAFDO1      := $(GRAFDS1:.cxx=.o)
-GRAFDO2      := $(GRAFDS2:.cxx=.o)
-GRAFDS       := $(GRAFDS1) $(GRAFDS2)
-GRAFDO       := $(GRAFDO1) $(GRAFDO2)
+GRAFL        := $(MODDIRI)/LinkDef.h
+GRAFDS       := $(MODDIRS)/G__Graf.cxx
+GRAFDO       := $(GRAFDS:.cxx=.o)
 GRAFDH       := $(GRAFDS:.cxx=.h)
 
 GRAFH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
-GRAFHD       := $(filter-out $(MODDIRI)/TTF.h,$(GRAFH))
-GRAFHD       := $(filter-out $(MODDIRI)/TText.h,$(GRAFHD))
-GRAFHD       := $(filter-out $(MODDIRI)/TLatex.h,$(GRAFHD))
 GRAFS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 GRAFO        := $(GRAFS:.cxx=.o)
 
@@ -55,16 +47,13 @@ $(GRAFLIB):     $(GRAFO) $(GRAFDO) $(FREETYPEDEP) $(ORDER_) $(MAINLIBS) $(GRAFLI
 		   "$(GRAFO) $(GRAFDO)" \
 		   "$(FREETYPELDFLAGS) $(FREETYPELIB) $(GRAFLIBEXTRA)"
 
-$(GRAFDS1):     $(GRAFHD) $(GRAFL1) $(ROOTCINTTMPDEP)
+$(GRAFDS):      $(GRAFH) $(GRAFL) $(ROOTCINTTMPDEP)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(GRAFHD) $(GRAFL1)
-$(GRAFDS2):     $(GRAFH) $(GRAFL2) $(ROOTCINTTMPDEP)
-		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(FREETYPEINC) $(GRAFH) $(GRAFL2)
+		$(ROOTCINTTMP) -f $@ -c $(GRAFH) $(GRAFL)
 
-$(GRAFMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(GRAFL1) $(GRAFL2)
+$(GRAFMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(GRAFL)
 		$(RLIBMAP) -o $(GRAFMAP) -l $(GRAFLIB) \
-		   -d $(GRAFLIBDEPM) -c $(GRAFL1) $(GRAFL2)
+		   -d $(GRAFLIBDEPM) -c $(GRAFL)
 
 all-$(MODNAME): $(GRAFLIB) $(GRAFMAP)
 
@@ -79,9 +68,9 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
-$(GRAFDO2):     $(FREETYPEDEP)
-$(GRAFDO2):     OPT = $(NOOPT)
-$(GRAFDO2):     CXXFLAGS += $(FREETYPEINC)
+$(GRAFDO):     $(FREETYPEDEP)
+$(GRAFDO):     OPT = $(NOOPT)
+$(GRAFDO):     CXXFLAGS += $(FREETYPEINC)
 
 $(GRAFDIRS)/TTF.o $(GRAFDIRS)/TText.o $(GRAFDIRS)/TLatex.o: \
                 $(FREETYPEDEP)

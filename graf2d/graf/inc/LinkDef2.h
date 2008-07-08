@@ -14,18 +14,11 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
-#pragma link C++ class TGraphSmooth+;
 #pragma link C++ class TLatex+;
 #pragma link C++ class TLegend+;
 #pragma link C++ class TLegendEntry+;
 #pragma link C++ class TLink+;
 #pragma link C++ class TPoints+;
-#pragma link C++ class TSpline-;
-#pragma link C++ class TSpline5-;
-#pragma link C++ class TSpline3-;
-#pragma link C++ class TSplinePoly+;
-#pragma link C++ class TSplinePoly5+;
-#pragma link C++ class TSplinePoly3+;
 #pragma link C++ class TImage;
 #pragma link C++ class TAttImage;
 #pragma link C++ class TImagePlugin;
@@ -33,8 +26,6 @@
 #pragma link C++ class TPaletteEditor;
 #pragma link C++ class TText-;
 #pragma link C++ class TTF;
-#pragma link C++ class TGraphPolar+;
-#pragma link C++ class TGraphPolargram+;
 #pragma link C++ class TPie+;
 #pragma link C++ class TPieSlice+;
 

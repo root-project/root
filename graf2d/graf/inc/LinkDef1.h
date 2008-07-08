@@ -26,14 +26,8 @@
 #pragma link C++ class TEllipse-;
 #pragma link C++ class TFrame+;
 #pragma link C++ class TGaxis-;
-#pragma link C++ class TGraph-;
-#pragma link C++ class TGraphErrors-;
-#pragma link C++ class TGraphAsymmErrors-;
-#pragma link C++ class TGraphBentErrors+;
-#pragma link C++ class TGraphQQ+;
 #pragma link C++ class TLine-;
 #pragma link C++ class TMarker-;
-#pragma link C++ class TMultiGraph+;
 #pragma link C++ class TPave-;
 #pragma link C++ class TPaveLabel+;
 #pragma link C++ class TPaveStats-;
@@ -41,10 +35,6 @@
 #pragma link C++ class TPavesText+;
 #pragma link C++ class TPolyLine-;
 #pragma link C++ class TWbox+;
-
-#pragma link C++ namespace ROOT::Fit; 
-#pragma link C++ function ROOT::Fit::FillData(ROOT::Fit::BinData &, const TGraph *,  TF1 * );
-#pragma link C++ function ROOT::Fit::FillData(ROOT::Fit::BinData &, const TMultiGraph *,  TF1 * );
 
 
 #endif
