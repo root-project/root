@@ -404,9 +404,9 @@ Int_t TMonitor::GetActive(Long_t timeout) const
          TTimeStamp now;
          while ((s = (TSocketHandler *) next())) {
             TSocket *xs = s->GetSocket();
-            TTimeStamp ls = xs->GetLastUsage();
-            Long_t dt = (Long_t)(now.GetSec() - ls.GetSec()) * 1000 +
-                        (Long_t)(now.GetNanoSec() - ls.GetNanoSec()) / 1000000 ;
+            TTimeStamp ts = xs->GetLastUsage();
+            Long_t dt = (Long_t)(now.GetSec() - ts.GetSec()) * 1000 +
+                        (Long_t)(now.GetNanoSec() - ts.GetNanoSec()) / 1000000 ;
             if (dt > timeout) {
                Info("GetActive", "socket: %p: %s:%d did not show any activity"
                                  " during the last %ld millisecs: deactivating",
