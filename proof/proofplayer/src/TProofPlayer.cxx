@@ -1288,7 +1288,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
          fExitStatus = kAborted;
          return -1;
       }
-      // Add invalid elemnets to the list of missing elements
+      // Add invalid elements to the list of missing elements
       TDSetElement *elem = 0;
       if (!noData && dset->TestBit(TDSet::kSomeInvalid)) {
          TIter nxe(dset->GetListOfElements());
