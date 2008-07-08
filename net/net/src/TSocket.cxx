@@ -499,6 +499,8 @@ Int_t TSocket::Send(const TMessage &mess)
       fgBytesRecv += 2;
    }
 
+   Touch();  // update usage timestamp
+
    return nsent - sizeof(UInt_t);  //length - length header
 }
 
@@ -675,6 +677,7 @@ Int_t TSocket::Recv(char *str, Int_t max, Int_t &kind)
       else
          str[0] = 0;
    }
+
    delete mess;
 
    return n;   // number of bytes read (len of str + sizeof(kind)
@@ -775,6 +778,8 @@ oncemore:
       fBytesSent  += 2;
       fgBytesSent += 2;
    }
+
+   Touch();  // update usage timestamp
 
    return n;
 }
