@@ -34,7 +34,6 @@ protected:
 
    TSpline(const TSpline&);
    TSpline& operator=(const TSpline&);
-   virtual void BuildCoeff()=0;
 
 public:
    TSpline() : fDelta(-1), fXmin(0), fXmax(0),
@@ -47,6 +46,7 @@ public:
       fHistogram(0), fGraph(0), fNpx(100) {}
    virtual ~TSpline();
 
+   virtual void     BuildCoeff()=0;
    virtual void     GetKnot(Int_t i, Double_t &x, Double_t &y) const =0;
    virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
    virtual void     Draw(Option_t *option="");
@@ -198,7 +198,6 @@ private:
    Int_t          fBegCond;    // 0=no beg cond, 1=first derivative, 2=second derivative
    Int_t          fEndCond;    // 0=no end cond, 1=first derivative, 2=second derivative
 
-   void BuildCoeff();
    void SetCond(const char *opt);
 
 public:
@@ -225,6 +224,7 @@ public:
             Double_t valbeg=0, Double_t valend=0);
    TSpline3(const TSpline3&);
    TSpline3& operator=(const TSpline3&);
+   void     BuildCoeff();
    Int_t    FindX(Double_t x) const;
    Double_t Eval(Double_t x) const;
    Double_t Derivative(Double_t x) const;
@@ -235,6 +235,8 @@ public:
    void GetKnot(Int_t i, Double_t &x, Double_t &y) const
       {x=fPoly[i].X(); y=fPoly[i].Y();}
    virtual  void     SaveAs(const char *filename,Option_t *option="") const;
+   virtual  void     SavePrimitive(ostream &out, Option_t *option = "");
+   virtual  void     SetPoint(Int_t i, Double_t x, Double_t y);
    static void Test();
 
    ClassDef (TSpline3,2)  // Class to create third natural splines
@@ -247,7 +249,6 @@ class TSpline5 : public TSpline
 private:
    TSplinePoly5  *fPoly;     //[fNp] Array of polynomial terms
 
-   void BuildCoeff();
    void BoundaryConditions(const char *opt, Int_t &beg, Int_t &end,
                            const char *&cb1, const char *&ce1, const char *&cb2,
                            const char *&ce2);
@@ -294,7 +295,10 @@ public:
       e=fPoly[i].E();f=fPoly[i].F();}
    void GetKnot(Int_t i, Double_t &x, Double_t &y) const
       {x=fPoly[i].X(); y=fPoly[i].Y();}
+   void              BuildCoeff();
    virtual  void     SaveAs(const char *filename,Option_t *option="") const;
+   virtual  void     SavePrimitive(ostream &out, Option_t *option = "");
+   virtual  void     SetPoint(Int_t i, Double_t x, Double_t y);
    static void Test();
 
    ClassDef (TSpline5,2) // Class to create quintic natural splines

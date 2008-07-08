@@ -18,6 +18,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "TROOT.h"
 #include "TSpline.h"
 #include "TVirtualPad.h"
 #include "TH1.h"
@@ -477,6 +478,9 @@ TSpline3::TSpline3(const char *title,
    // Create the plynomial terms and fill
    // them with node information
    fPoly = new TSplinePoly3[n];
+   //when func is null we return. In this case it is assumed that the spline
+   //points will be given later via SetPoint followed by a call to BuildCoeff.
+   if (!func) {fKstep = kFALSE; fDelta = -1; return;}
    for (Int_t i=0; i<n; ++i) {
       Double_t x=fXmin+i*fDelta;
       fPoly[i].X() = x;
@@ -977,6 +981,45 @@ void TSpline3::SaveAs(const char *filename, Option_t * /*option*/) const
 
 
 //______________________________________________________________________________
+void TSpline3::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+{
+    // Save primitive as a C++ statement(s) on output stream out
+
+   char quote = '"';
+   out<<"   "<<endl;
+   if (gROOT->ClassSaved(TSpline3::Class())) {
+      out<<"   ";
+   } else {
+      out<<"   TSpline3 *";
+   }
+   out<<"spline3 = new TSpline3("<<quote<<GetTitle()<<quote<<","
+      <<fXmin<<","<<fXmax<<",(TF1*)0,"<<fNp<<","<<quote<<quote<<","
+      <<fValBeg<<","<<fValEnd<<");"<<endl;
+   out<<"   spline3->SetName("<<quote<<GetName()<<quote<<");"<<endl;
+
+   SaveFillAttributes(out,"spline3",0,1001);
+   SaveLineAttributes(out,"spline3",1,1,1);
+   SaveMarkerAttributes(out,"spline3",1,1,1);
+
+   for (Int_t i=0;i<fNp;i++) {
+      out<<"   spline3->SetPoint("<<i<<","<<fPoly[i].X()<<","<<fPoly[i].Y()<<");"<<endl;
+   }
+   out<<"   spline3->BuildCoeff();"<<endl;
+   out<<"   spline3->Draw("<<quote<<option<<quote<<");"<<endl;
+}
+
+
+//______________________________________________________________________________
+void TSpline3::SetPoint(Int_t i, Double_t x, Double_t y)
+{
+   //set point number i. Note that BuildCoeff must be called once all points are set.
+   
+   if (i < 0 || i >= fNp) return;
+   fPoly[i].X()= x;
+   fPoly[i].Y()= y;
+}
+
+//______________________________________________________________________________
 void TSpline3::BuildCoeff()
 {
    //      subroutine cubspl ( tau, c, n, ibcbeg, ibcend )
@@ -1301,14 +1344,15 @@ TSpline5::TSpline5(const char *title,
    for (Int_t i=0; i<n; ++i) {
       Double_t x=fXmin+i*fDelta;
       fPoly[i+beg].X() = x;
-      fPoly[i+beg].Y() = ((TF1*)func)->Eval(x);
+      if (func) fPoly[i+beg].Y() = ((TF1*)func)->Eval(x);
    }
+   if (!func) {fDelta = -1; fKstep = kFALSE;}
 
    // Set the double knots at boundaries
    SetBoundaries(b1,e1,b2,e2,cb1,ce1,cb2,ce2);
 
    // Build the spline coefficients
-   BuildCoeff();
+   if (func) BuildCoeff();
 }
 
 
@@ -1743,6 +1787,52 @@ void TSpline5::SaveAs(const char *filename, Option_t * /*option*/) const
 
    if (f) { f->close(); delete f;}
 }
+
+
+//______________________________________________________________________________
+void TSpline5::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+{
+    // Save primitive as a C++ statement(s) on output stream out
+
+   char quote = '"';
+   out<<"   "<<endl;
+   if (gROOT->ClassSaved(TSpline5::Class())) {
+      out<<"   ";
+   } else {
+      out<<"   TSpline5 *";
+   }
+   Double_t b1 = fPoly[1].Y();
+   Double_t e1 = fPoly[fNp-1].Y();
+   Double_t b2 = fPoly[2].Y();
+   Double_t e2 = fPoly[fNp-1].Y();
+   out<<"spline5 = new TSpline5("<<quote<<GetTitle()<<quote<<","
+      <<fXmin<<","<<fXmax<<",(TF1*)0,"<<fNp<<","<<quote<<quote<<","
+      <<b1<<","<<e1<<","<<b2<<","<<e2<<");"<<endl;
+   out<<"   spline5->SetName("<<quote<<GetName()<<quote<<");"<<endl;
+
+   SaveFillAttributes(out,"spline5",0,1001);
+   SaveLineAttributes(out,"spline5",1,1,1);
+   SaveMarkerAttributes(out,"spline5",1,1,1);
+
+   for (Int_t i=0;i<fNp;i++) {
+      out<<"   spline5->SetPoint("<<i<<","<<fPoly[i].X()<<","<<fPoly[i].Y()<<");"<<endl;
+   }
+   out<<"   spline5->BuildCoeff();"<<endl;
+   out<<"   spline5->Draw("<<quote<<option<<quote<<");"<<endl;
+}
+
+
+//______________________________________________________________________________
+void TSpline5::SetPoint(Int_t i, Double_t x, Double_t y)
+{
+   //set point number i. Note that BuildCoeff must be called once all points are set.
+   
+   
+   if (i < 0 || i >= fNp) return;
+   fPoly[i].X()= x;
+   fPoly[i].Y()= y;
+}
+
 
 
 //______________________________________________________________________________
