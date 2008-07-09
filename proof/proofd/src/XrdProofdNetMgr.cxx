@@ -129,7 +129,7 @@ int XrdProofdNetMgr::Config(bool rcf)
                return 0;
             }
          }
-      } else if (fResourceType == kRTNone && fWorkers.size() <= 0) {
+      } else if (fResourceType == kRTNone && fWorkers.size() <= 1) {
          // Nothing defined: use default
          CreateDefaultPROOFcfg();
       }
