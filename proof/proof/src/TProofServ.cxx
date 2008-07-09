@@ -310,11 +310,11 @@ TProofServLogHandlerGuard::~TProofServLogHandlerGuard()
 //______________________________________________________________________________
 Bool_t TShutdownTimer::Notify()
 {
-   // Handle expiration of the shutdown timer. The Terminate() method is called
-   // which will exit the main loop.
+   // Handle expiration of the shutdown timer. In the case of low activity the
+   // process will be aborted.
 
    if (gDebug > 0)
-      Info ("Notify","called!");
+      Info ("Notify","checking activity on the input socket");
 
    // Check activity on the socket
    TSocket *xs = 0;
@@ -325,9 +325,11 @@ Bool_t TShutdownTimer::Notify()
                   (Long_t)(now.GetNanoSec() - ts.GetNanoSec()) / 1000000 ;
       Int_t to = gEnv->GetValue("ProofServ.ShutdonwTimeout", 20);
       if (dt > to * 60000) {
-         Info("Notify", "input socket: %p: did not show any activity"
-                        " during the last %d mins: shutting down", xs, to);
-         fProofServ->HandleTermination();
+         Fatal("Notify", "input socket: %p: did not show any activity"
+                         " during the last %d mins: aborting", xs, to);
+         // At this point we lost our controller: we need to abort to avoid
+         // hidden timeouts or loops
+         gSystem->Abort();
       } else {
          if (gDebug > 0)
             Info("Notify", "input socket: %p: show activity"
