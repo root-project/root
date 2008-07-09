@@ -605,7 +605,7 @@ XrdClientLogConnection *XrdClientConnectionMgr::GetConnection( int LogConnection
    // Return a logical connection object that has LogConnectionID as its ID.
    XrdSysMutexHelper mtx(fMutex);
  
-   return fLogVec[LogConnectionID];
+   return (LogConnectionID > -1) ? fLogVec[LogConnectionID] : (XrdClientLogConnection *)0;
 
 }
 
