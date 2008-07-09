@@ -1529,12 +1529,11 @@ G__value G__letvariable(char* item, G__value expression, G__var_array* varglobal
 #endif // G__OLDIMPLEMENTATION2191
          case 'G':
             // bool pointer
-            // FIXME: This probably doesn't work on a ppc mac where G__BOOL4BYTE is true!
-#ifdef BOOL4BYTE
+#ifdef G__BOOL4BYTE
             G__ASSIGN_PVAR(int, G__int, result.obj.i);
-#else // BOOL4BYTE
+#else // G__BOOL4BYTE
             G__ASSIGN_PVAR(unsigned char, G__int, result.obj.i);
-#endif // BOOL4BYTE
+#endif // G__BOOL4BYTE
             break;
          case 'B':
             // unsigned char pointer
