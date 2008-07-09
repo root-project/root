@@ -4307,6 +4307,7 @@ Int_t TProofServ::HandleCache(TMessage *mess)
          }
          if (IsMaster() && all)
             fProof->ShowCache(all);
+         fgSendLogToMaster = kTRUE;
          break;
       case TProof::kClearCache:
          fCacheLock->Lock();
@@ -4336,6 +4337,7 @@ Int_t TProofServ::HandleCache(TMessage *mess)
          gSystem->Exec(Form("%s %s", kLS, fPackageDir.Data()));
          if (IsMaster() && all)
             fProof->ShowPackages(all);
+         fgSendLogToMaster = kTRUE;
          break;
       case TProof::kClearPackages:
          status = UnloadPackages();
@@ -4613,11 +4615,13 @@ Int_t TProofServ::HandleCache(TMessage *mess)
          }
          if (IsMaster() && all)
             fProof->ShowEnabledPackages(all);
+         fgSendLogToMaster = kTRUE;
          break;
       case TProof::kShowSubCache:
          (*mess) >> all;
          if (IsMaster() && all)
             fProof->ShowCache(all);
+         fgSendLogToMaster = kTRUE;
          break;
       case TProof::kClearSubCache:
          if (IsMaster())
@@ -4627,6 +4631,7 @@ Int_t TProofServ::HandleCache(TMessage *mess)
          (*mess) >> all;
          if (IsMaster() && all)
             fProof->ShowPackages(all);
+         fgSendLogToMaster = kTRUE;
          break;
       case TProof::kDisableSubPackages:
          if (IsMaster())
