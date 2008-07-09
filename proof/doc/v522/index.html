@@ -1,112 +1,136 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
 <head>
-
-
-  
   <title>PROOF release notes</title>
+
+
 </head>
 
 
 <body>
 
-
 <br>
-
 
 <hr>
 <a name="proof"></a>
 <h3>PROOF</h3>
 
-
 <ul>
-
 
   <li>New functionality</li>
 
-
-  
   <ul>
 
+    <li>XrdProofd plug-in</li>
 
-  
+    <ul>
+
+      <li>Possibility to define the list worker directly in the
+xrootd config file (new directive xpd.worker, see Wiki reference pages)</li>
+
+      <li>Support for automatic reconnections in the case xrootd
+is restarted</li>
+
+      <li>Dedicated admin area (under <span style="font-style: italic;">xrd.admin</span>/.xproof.<span style="font-style: italic;">port</span>) to
+keep information about active and terminated sessions, and active
+clients. This is used to reguraly check the client and session
+activity, to cleanup orphalin sessions and to shutdown inactive client
+connections.&nbsp;</li>
+
+      <li>domain + level control of printout message</li>
+
+    </ul>
+
+
   </ul>
 
+  <ul>
+
+  </ul>
 
   <li>Improvements:</li>
 
-
-  
   <ul>
 
+    <li>XrdProofd plug-in</li>
 
-    <li>
-Log retrieval:</li>
-
-
-    
     <ul>
 
+      <li>Overall refactorization&nbsp;for easier
+maintainance and improved solidity</li>
 
-      <li>
-for 'grep' operations, use the system 'grep' command via 'popen'
-instead of a handmade filtering; this implies that the full grep functionality is now available</li>
+      <li>Improved format of printout messages: all information
+messages contain now the tag 'xpd-I' and all error messages the
+tag&nbsp;'xpd-E', so that they can easily be grepped out from the
+log file.
+      </li>
 
-
-      <li>
-set the default number of displayed lines to 100 instead of 10</li>
-
-
-    
     </ul>
-    <li>Improve diagnostic in case of worker death: clients will now
+
+    <li>Log sending</li>
+
+    <ul>
+
+      <li>
+Implement selective sending of logs from workers to master to avoid duplicating
+ too many text lines on the master log. Logs are now sent only after Exec, Print
+requests and in case an error (level &gt;= kError) occured. Of course, the full
+ logs can always be retrieved via TProofMgr::GetSessionLogs
+      </li>
+
+    </ul>
+
+    <li>Log retrieval:</li>
+
+    <ul>
+
+      <li>for 'grep' operations, use the system 'grep' command
+via 'popen'
+instead of a handmade filtering; this implies that the full grep
+functionality is now available</li>
+
+      <li>set the default number of displayed lines to 100
+instead of 10</li>
+
+    </ul>
+
+    <li>Improve diagnostic in case of worker death: clients will
+now
 receive a message containing the low level reason for the failure and a
 hint for getting more information</li>
+
   </ul>
 
-
-  
   <ul>
 
-
-  
   </ul>
-
 
   <li>Fixes</li>
 
-
-  
   <ul>
 
+    <li>Invalidate the TProofMgr when the physical connection is
+closed; avoids
+crashing when trying to get the logs after a failure. </li>
 
-    <li>
-Invalidate the TProofMgr when the physical connection is closed; avoids
-crashing when trying to get the logs after a failure.
-    </li>
-
-
-    <li>
-Fix a memory leak in log retrieval (the TProofLog object was never
+    <li>Fix a memory leak in log retrieval (the TProofLog object
+was never
 deleted)</li>
 
+    <li>Add protections for the cases the manager cannot be
+initialized</li>
 
-    <li>
-Add protections for the cases the manager cannot be initialized</li>
-    <li>Fix a race condition possibly affecting the handling of workers death</li>
-    <li>Avoid duplicating worker logs in the master log file unless
+    <li>Fix a race condition possibly affecting the handling of
+workers death</li>
+
+    <li>Avoid duplicating worker logs in the master log file
+unless
 when explicitely needed by the request (Exec(...), Print(...)) or when
 an error occured</li>
 
-
-    
-
-  
   </ul>
 
-
 </ul>
-
 
 </body>
 </html>
