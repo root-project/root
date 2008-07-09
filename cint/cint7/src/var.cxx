@@ -1476,15 +1476,7 @@ G__value Cint::Internal::G__letvariable(char* item, G__value expression, const :
          case 'g':
             // bool
             {
-               switch (G__get_type(G__value_typenum(result))) {
-                  case 'd':
-                  case 'f':
-                     result.obj.d = result.obj.d ? 1 : 0;
-                     break;
-                  default:
-                     result.obj.i = result.obj.i ? 1 : 0;
-                     break;
-               }
+               result.obj.i = G__int(result) ? 1 : 0;
 #ifdef G__BOOL4BYTE
                G__ASSIGN_VAR(G__INTALLOC, int, G__int, result.obj.i)
 #else // G__BOOL4BYTE
@@ -1594,7 +1586,13 @@ G__value Cint::Internal::G__letvariable(char* item, G__value expression, const :
             break;
 #endif // G__OLDIMPLEMENTATION2191
          case 'G':
-            // bool
+            // bool pointer
+#ifdef G__BOOL4BYTE
+            G__ASSIGN_PVAR(int, G__int, result.obj.i)
+#else // G__BOOL4BYTE
+            G__ASSIGN_PVAR(unsigned char, G__int, result.obj.i)
+#endif // G__BOOL4BYTE
+            break;
          case 'B':
             // unsigned char pointer
             G__ASSIGN_PVAR(unsigned char, G__int, result.obj.i)
@@ -4554,14 +4552,20 @@ static G__value Cint::Internal::G__allocvariable(G__value result, G__value para[
 #endif // G__OLDIMPLEMENTATION2191
       case 'g':
          // bool
-         result.obj.i = result.obj.i ? 1 : 0;
+         result.obj.i = G__int(result) ? 1 : 0;
 #ifdef G__BOOL4BYTE
          G__alloc_var_ref<int>(G__INTALLOC, G__int, item, var, result);
-         break;
-#endif // G__BOOL4BYTE
-      case 'G':
-         // bool
+#else // G__BOOL4BYTE
          G__alloc_var_ref<unsigned char>(G__CHARALLOC, G__int, item, var, result);
+#endif // G__BOOL4BYTE
+         break;
+      case 'G':
+         // bool pointer
+#ifdef G__BOOL4BYTE
+         G__alloc_var_ref<int>(G__INTALLOC, G__int, item, var, result);
+#else // G__BOOL4BYTE
+         G__alloc_var_ref<unsigned char>(G__CHARALLOC, G__int, item, var, result);
+#endif // G__BOOL4BYTE
          break;
       case 'b':
          // unsigned char
@@ -5967,8 +5971,8 @@ G__value Cint::Internal::G__getvariable(char* item, int* known, const ::Reflex::
 #endif // G__OLDIMPLEMENTATION2191
          case 'G':
             // bool pointer
-            //G__GET_PVAR(unsigned char, G__letint, long, 'b', 'B')
-            G__get_pvar<unsigned char, long>(G__letint, 'b', 'B', variable, local_G__struct_offset, paran, para, linear_index, secondary_linear_index, &result);
+            //G__GET_PVAR(unsigned char, G__letint, long, 'g', 'G')
+            G__get_pvar<unsigned char, long>(G__letint, 'g', 'G', variable, local_G__struct_offset, paran, para, linear_index, secondary_linear_index, &result);
             break;
          case 'B':
             // unsigned char pointer

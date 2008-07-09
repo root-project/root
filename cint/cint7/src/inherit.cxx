@@ -578,7 +578,11 @@ int Cint::Internal::G__baseconstructor(int n, G__baseparam *pbaseparamin)
                     break;
                  case 'g':
                     lval = G__int(G__getexpr(pbaseparam->param))?1:0;
+#ifdef G__BOOL4BYTE
+                    *(int*)addr = (int)lval;
+#else // G__BOOL4BYTE
                     *(unsigned char*)addr = (unsigned char)lval;
+#endif // G__BOOL4BYTE
                     break;
                  case 'n':
                     llval = G__Longlong(G__getexpr(pbaseparam->param));

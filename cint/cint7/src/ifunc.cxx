@@ -85,11 +85,7 @@ static void G__reftypeparam(const ::Reflex::Member &ifunc, G__param *libp)
                libp->para[itemp].ref = (long)G__Doubleref(&libp->para[itemp]);
                break;
             case 'g':
-#ifdef G__BOOL4BYTE
-               libp->para[itemp].ref = (long)G__Intref(&libp->para[itemp]);
-#else
-               libp->para[itemp].ref = (long)G__UCharref(&libp->para[itemp]);
-#endif
+               libp->para[itemp].ref = (long) G__Boolref(&libp->para[itemp]);
                break;
             case 'n':
                libp->para[itemp].ref = (long)G__Longlongref(&libp->para[itemp]);

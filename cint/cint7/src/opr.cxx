@@ -164,7 +164,12 @@ void Cint::Internal::G__doubleassignbyref(G__value* defined, double val)
          G__setvalue(defined, (long double)val);
          break;
       case 'g': /* bool */
+         // --
+#ifdef G__BOOL4BYTE
+         *(int*)defined->ref = (int)(val ? 1 : 0);
+#else // G__BOOL4BYTE
          *(unsigned char*)defined->ref = (unsigned char)(val ? 1 : 0);
+#endif // G__BOOL4BYTE
          G__setvalue(defined, (bool)val);
          break;
       default:
@@ -229,7 +234,12 @@ void Cint::Internal::G__intassignbyref(G__value* defined, G__int64 val)
          G__setvalue(defined, (long double)val);
          break;
       case 'g': /* bool */
+         // --
+#ifdef G__BOOL4BYTE
+         if (defined->ref) *(int*)defined->ref = (int)(val ? 1 : 0);
+#else // G__BOOL4BYTE
          if (defined->ref) *(unsigned char*)defined->ref = (unsigned char)(val ? 1 : 0);
+#endif // G__BOOL4BYTE
          G__setvalue(defined, (bool)val);
          break;
       case 'd': /* double */
