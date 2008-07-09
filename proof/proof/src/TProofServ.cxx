@@ -95,9 +95,6 @@
 // global proofserv handle
 TProofServ *gProofServ = 0;
 
-Bool_t TProofServ::fgLogToSysLog = kFALSE;      //true if logs should be sent to syslog too
-Bool_t TProofServ::fgSendLogToMaster = kFALSE; // On workers, controls logs sending to master
-
 // debug hook
 static volatile Int_t gProofServDebug = 1;
 
@@ -384,6 +381,13 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
       exit(1);
    }
 
+   // Set global to this instance
+   gProofServ = this;
+
+   // Log vontrol flags
+   fLogToSysLog     = (gEnv->GetValue("ProofServ.LogToSysLog", 0) != 0) ? kTRUE : kFALSE;
+   fSendLogToMaster = kFALSE;
+
    // abort on higher than kSysError's and set error handler
    gErrorAbortLevel = kSysError + 1;
    SetErrorHandler(ErrorHandler);
@@ -407,7 +411,6 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
 
    fLogFile         = flog;
    fLogFileDes      = -1;
-   fgLogToSysLog    = (gEnv->GetValue("ProofServ.LogToSysLog", 0) != 0) ? kTRUE : kFALSE;
 
    fArchivePath     = "";
 
@@ -452,9 +455,6 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
    if (fOrdinal != "-1")
       fPrefix += fOrdinal;
    TProofServLogHandler::SetDefaultPrefix(fPrefix);
-
-   // Set global to this instance
-   gProofServ = this;
 }
 
 //______________________________________________________________________________
@@ -496,7 +496,7 @@ Int_t TProofServ::CreateServer()
 
    if (Setup() != 0) {
       // Setup failure
-      fgSendLogToMaster = kTRUE;
+      SendLogToMaster();
       SendLogFile();
       Terminate(0);
       return -1;
@@ -514,7 +514,7 @@ Int_t TProofServ::CreateServer()
       // If for some reason we failed setting a redirection fole for the logs
       // we cannot continue
       if (!fLogFile || (fLogFileDes = fileno(fLogFile)) < 0) {
-         fgSendLogToMaster = kTRUE;
+         SendLogToMaster();
          SendLogFile(-98);
          Terminate(0);
          return -1;
@@ -522,7 +522,7 @@ Int_t TProofServ::CreateServer()
    } else {
       // Use the file already open by pmain
       if ((fLogFileDes = fileno(fLogFile)) < 0) {
-         fgSendLogToMaster = kTRUE;
+         SendLogToMaster();
          SendLogFile(-98);
          Terminate(0);
          return -1;
@@ -532,7 +532,7 @@ Int_t TProofServ::CreateServer()
    // Send message of the day to the client
    if (IsMaster()) {
       if (CatMotd() == -1) {
-         fgSendLogToMaster = kTRUE;
+         SendLogToMaster();
          SendLogFile(-99);
          Terminate(0);
          return -1;
@@ -936,7 +936,7 @@ void TProofServ::HandleSocketInput()
                Info("HandleSocketInput:kMESS_CINT", "processing: %s...", str);
             ProcessLine(str);
          }
-         fgSendLogToMaster = kTRUE;
+         SendLogToMaster();
          SendLogFile();
          break;
 
@@ -974,7 +974,7 @@ void TProofServ::HandleSocketInput()
       case kPROOF_PRINT:
          mess->ReadString(str, sizeof(str));
          Print(str);
-         fgSendLogToMaster = kTRUE;
+         SendLogToMaster();
          SendLogFile();
          break;
 
@@ -1156,7 +1156,7 @@ void TProofServ::HandleSocketInput()
                Info("HandleSocketInput:kPROOF_LOGFILE",
                     "Logfile request - byte range: %d - %d", start, end);
 
-            fgSendLogToMaster = kTRUE;
+            SendLogToMaster();
             SendLogFile(0, start, end);
          }
          break;
@@ -1393,7 +1393,7 @@ void TProofServ::HandleSocketInputDuringProcess()
                Info("HandleSocketInputDuringProcess:kPROOF_LOGFILE",
                     "Logfile request - byte range: %d - %d", start, end);
 
-            fgSendLogToMaster = kTRUE;
+            SendLogToMaster();
             SendLogFile(0, start, end);
          }
          break;
@@ -1838,11 +1838,11 @@ void TProofServ::SendLogFile(Int_t status, Int_t start, Int_t end)
    // On workers we do not send the logs to masters (to avoid duplication of
    // text) unless asked explicitely, e.g. after an Exec(...) request.
    if (!IsMaster()) {
-      if (!fgSendLogToMaster) {
+      if (!fSendLogToMaster) {
          FlushLogFile();
       } else {
          // Decide case by case 
-         fgSendLogToMaster = kFALSE;
+         SendLogToMaster(kFALSE);
       }
    }
 
@@ -4307,7 +4307,7 @@ Int_t TProofServ::HandleCache(TMessage *mess)
          }
          if (IsMaster() && all)
             fProof->ShowCache(all);
-         fgSendLogToMaster = kTRUE;
+         SendLogToMaster();
          break;
       case TProof::kClearCache:
          fCacheLock->Lock();
@@ -4337,7 +4337,7 @@ Int_t TProofServ::HandleCache(TMessage *mess)
          gSystem->Exec(Form("%s %s", kLS, fPackageDir.Data()));
          if (IsMaster() && all)
             fProof->ShowPackages(all);
-         fgSendLogToMaster = kTRUE;
+         SendLogToMaster();
          break;
       case TProof::kClearPackages:
          status = UnloadPackages();
@@ -4615,13 +4615,13 @@ Int_t TProofServ::HandleCache(TMessage *mess)
          }
          if (IsMaster() && all)
             fProof->ShowEnabledPackages(all);
-         fgSendLogToMaster = kTRUE;
+         SendLogToMaster();
          break;
       case TProof::kShowSubCache:
          (*mess) >> all;
          if (IsMaster() && all)
             fProof->ShowCache(all);
-         fgSendLogToMaster = kTRUE;
+         SendLogToMaster();
          break;
       case TProof::kClearSubCache:
          if (IsMaster())
@@ -4631,7 +4631,7 @@ Int_t TProofServ::HandleCache(TMessage *mess)
          (*mess) >> all;
          if (IsMaster() && all)
             fProof->ShowPackages(all);
-         fgSendLogToMaster = kTRUE;
+         SendLogToMaster();
          break;
       case TProof::kDisableSubPackages:
          if (IsMaster())
@@ -4901,19 +4901,22 @@ void TProofServ::ErrorHandler(Int_t level, Bool_t abort, const char *location,
       return;
 
    // Always communicate errors via SendLogFile
-   if (level >= kError)
-      fgSendLogToMaster = kTRUE;
+   if (level >= kError && gProofServ)
+      gProofServ->SendLogToMaster();
 
    static TString syslogService;
 
-   if (syslogService.IsNull()) {
-      syslogService = gProofServ != 0 ? gProofServ->GetService() : "proof";
-      gSystem->Openlog(syslogService, kLogPid | kLogCons, kLogLocal5);
+   Bool_t tosyslog = (gProofServ && gProofServ->LogToSysLog()) ? kTRUE : kFALSE;
 
-   } else if (gProofServ != 0 && syslogService != gProofServ->GetService()) {
-      // re-initialize if proper service is now know
-      syslogService = gProofServ->GetService();
-      gSystem->Openlog(syslogService, kLogPid | kLogCons, kLogLocal5);
+   if (tosyslog) {
+      if (syslogService.IsNull()) {
+         syslogService = gProofServ != 0 ? gProofServ->GetService() : "proof";
+         gSystem->Openlog(syslogService, kLogPid | kLogCons, kLogLocal5);
+      } else if (gProofServ != 0 && syslogService != gProofServ->GetService()) {
+         // re-initialize if proper service is now know
+         syslogService = gProofServ->GetService();
+         gSystem->Openlog(syslogService, kLogPid | kLogCons, kLogLocal5);
+      }
    }
 
    const char *type   = 0;
@@ -4968,7 +4971,7 @@ void TProofServ::ErrorHandler(Int_t level, Bool_t abort, const char *location,
        (level >= kBreak && level < kSysError)) {
       fprintf(stderr, "%s %5d %s | %s: %s\n", st(11,8).Data(), gSystem->GetPid(),
                      (gProofServ ? gProofServ->GetPrefix() : "proof"), type, msg);
-      if (fgLogToSysLog)
+      if (tosyslog)
          buf.Form("%s:%s:%s:%s", (gProofServ ? gProofServ->GetUser() : "unknown"),
                                  (gProofServ ? gProofServ->GetPrefix() : "proof"),
                                  type, msg);
@@ -4976,14 +4979,14 @@ void TProofServ::ErrorHandler(Int_t level, Bool_t abort, const char *location,
       fprintf(stderr, "%s %5d %s | %s in <%.*s>: %s\n", st(11,8).Data(), gSystem->GetPid(),
                       (gProofServ ? gProofServ->GetPrefix() : "proof"),
                       type, ipos, location, msg);
-      if (fgLogToSysLog)
+      if (tosyslog)
          buf.Form("%s:%s:%s:<%.*s>:%s", (gProofServ ? gProofServ->GetUser() : "unknown"),
                                         (gProofServ ? gProofServ->GetPrefix() : "proof"),
                                         type, ipos, location, msg);
    }
    fflush(stderr);
 
-   if (fgLogToSysLog)
+   if (tosyslog)
      gSystem->Syslog(loglevel, buf);
 
    if (abort) {

@@ -131,13 +131,13 @@ private:
 
    TProofDataSetManager* fDataSetManager; // dataset manager
 
+   Bool_t        fLogToSysLog;     //true if logs should be sent to syslog too
+   Bool_t        fSendLogToMaster; // On workers, controls logs sending to master
+
    // Quotas (-1 to disable)
    Int_t         fMaxQueries;       //Max number of queries fully kept
    Long64_t      fMaxBoxSize;       //Max size of the sandbox
    Long64_t      fHWMBoxSize;       //High-Water-Mark on the sandbox size
-
-   static Bool_t fgLogToSysLog;     //true if logs should be sent to syslog too
-   static Bool_t fgSendLogToMaster; // On workers, controls logs sending to master
 
    void          RedirectOutput();
    Int_t         CatMotd();
@@ -251,6 +251,10 @@ public:
    virtual void   EnableTimeout() { }
 
    virtual void   Terminate(Int_t status);
+
+   // Log control
+   Bool_t         LogToSysLog() { return fLogToSysLog; }
+   void           SendLogToMaster(Bool_t on = kTRUE) { fSendLogToMaster = on; }
 
    static Bool_t      IsActive();
    static TProofServ *This();
