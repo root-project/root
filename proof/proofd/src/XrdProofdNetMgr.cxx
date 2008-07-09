@@ -936,7 +936,7 @@ void XrdProofdNetMgr::CreateDefaultPROOFcfg()
    // workers fNumLocalWrks.
    XPDLOC(NMGR, "NetMgr::CreateDefaultPROOFcfg")
 
-   TRACE(REQ, "enter");
+   TRACE(DBG, "enter: local workers: "<< fNumLocalWrks);
 
    XrdOucString mm;
 
