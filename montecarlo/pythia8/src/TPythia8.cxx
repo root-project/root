@@ -66,8 +66,8 @@
 #include "TPythia8.h"
 
 #include "TClonesArray.h"
-#include <TParticle.h>
-#include <TLorentzVector.h>
+#include "TParticle.h"
+#include "TLorentzVector.h"
 
 ClassImp(TPythia8)
 
@@ -102,13 +102,14 @@ TPythia8::~TPythia8()
 }
 
 //___________________________________________________________________________
-TPythia8* TPythia8::Instance() {
+TPythia8* TPythia8::Instance()
+{
    // Return an instance of TPythia8
    return fgInstance ? fgInstance : (fgInstance = new TPythia8()) ;
 }
 
 //___________________________________________________________________________
-Bool_t TPythia8::Initialize(Int_t  idAin, Int_t idBin, Double_t ecms)
+Bool_t TPythia8::Initialize(Int_t idAin, Int_t idBin, Double_t ecms)
 {
    // Initialization
    AddParticlesToPdgDataBase();
@@ -216,20 +217,18 @@ Int_t TPythia8::GetN() const
 }
 
 //___________________________________________________________________________
-void TPythia8::ReadString(char* string) const
+void TPythia8::ReadString(const char* string) const
 {
    // Configuration
    fPythia->readString(string);
 }
 
-
 //___________________________________________________________________________
- void  TPythia8::ReadConfigFile(char* string) const
+void  TPythia8::ReadConfigFile(const char* string) const
 {
   // Configuration
   fPythia->readFile(string);
 }
-
 
 //___________________________________________________________________________
 void TPythia8::PrintStatistics() const
@@ -244,7 +243,6 @@ void TPythia8::EventListing() const
    // Event listing
    fPythia->event.list();
 }
-
 
 //___________________________________________________________________________
 void TPythia8::AddParticlesToPdgDataBase()

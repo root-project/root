@@ -93,12 +93,12 @@ public:
    virtual TObjArray      *ImportParticles(Option_t *option="");
 
    // Others
-   void                    ReadString(char* string) const;
-   void                    ReadConfigFile(char* string)const;
-   Bool_t                  Initialize(Int_t  idAin, Int_t idBin, Double_t ecms);
-   void                    PrintStatistics()        const;
-   void                    EventListing()           const;
-   Int_t                   GetN()                   const;
+   void                    ReadString(const char* string) const;
+   void                    ReadConfigFile(const char* string) const;
+   Bool_t                  Initialize(Int_t idAin, Int_t idBin, Double_t ecms);
+   void                    PrintStatistics() const;
+   void                    EventListing() const;
+   Int_t                   GetN() const;
 
    ClassDef(TPythia8, 1)   // Interface class of Pythia8
 };
