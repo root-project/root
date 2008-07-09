@@ -29,7 +29,8 @@ CINTHT       := $(sort $(patsubst $(CINTDIRI)/%.h,include/cint/%.h,$(CINTH) $(CI
 CINTBWHT     := $(patsubst include/cint/%,include/%,$(CINTHT))
 CINTS1       := $(wildcard $(MODDIRS)/*.c)
 CINTS2       := $(wildcard $(MODDIRS)/*.cxx) \
-	$(MODDIRSD)/longif.cxx $(MODDIRSD)/Apiif.cxx $(MODDIRSD)/stdstrct.cxx
+                $(MODDIRSD)/longif.cxx $(MODDIRSD)/Apiif.cxx \
+                $(MODDIRSD)/stdstrct.cxx
 
 CINTS1       += $(CINTDIRM)/G__setup.c
 
