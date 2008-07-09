@@ -1,4 +1,4 @@
-FIND_PACKAGE(DL)
+FIND_PACKAGE_IF(DL UNIX REQUIRED)
 
 # collect headers and sources to create a library
 FILE(GLOB Reflex_SRCS *.cxx *.h)

@@ -24,7 +24,7 @@ MACRO_ENSURE_OUT_OF_SOURCE_BUILD("${PROJECT_NAME} requires an out of source buil
 #####################   options   ####################
 
 OPTION(BUILD_SHARED_LIBS "inhibits building of the static version of the Reflex lib" OFF)
-OPTION(BUILD_TESTS "builds and runs the unit test suite" OFF)
+OPTION(BUILD_TESTS "builds and runs the unit test suite" ON)
 
 #####################   config    ####################
 
