@@ -42,15 +42,14 @@ CILIBS        = -lm -ldl
 CRYPTLIBS     = -lcrypt
 
 # Fortran:
-F77           =
-ifeq ($(shell which gfortran 2>&1 | sed -ne "s/.*\/gfortran/gfortran/p"),gfortran)
+ifneq ($(findstring gfortran, $(F77)),)
 F77           = gfortran
 F77FLAGS      = -fPIC -std=legacy
 F77LIBS      := $(shell $(F77) -print-file-name=libgfortran.$(SOEXT))
 F77LIBS      += $(shell $(F77) -print-file-name=libgfortranbegin.a) -lnsl
 endif
 
-ifneq ($(F77),gfortran)
+ifneq ($(findstring g77, $(F77)),)
 F77           = g77
 F77FLAGS      = -fPIC
 ifneq ($(shell $(F77) -print-file-name=libg2c.so),libg2c.so)
