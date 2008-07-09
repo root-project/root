@@ -67,6 +67,7 @@ extern "C" void G__add_setup_func(const char *libname,G__incsetup func)
      }
      G__memsetup_init=1;
      G__init_globals();
+     G__platformMacro();
   }
 
    if (!G__setup_func_list) {
