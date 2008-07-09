@@ -274,7 +274,7 @@ Int_t TXProofServ::CreateServer()
 
    if (Setup() == -1) {
       // Setup failure
-      SendLogToMaster();
+      LogToMaster();
       SendLogFile();
       Terminate(0);
       return -1;
@@ -285,7 +285,7 @@ Int_t TXProofServ::CreateServer()
       // If for some reason we failed setting a redirection file for the logs
       // we cannot continue
       if (!fLogFile || (fLogFileDes = fileno(fLogFile)) < 0) {
-         SendLogToMaster();
+         LogToMaster();
          SendLogFile(-98);
          Terminate(0);
          return -1;
@@ -295,7 +295,7 @@ Int_t TXProofServ::CreateServer()
    // Send message of the day to the client
    if (IsMaster()) {
       if (CatMotd() == -1) {
-         SendLogToMaster();
+         LogToMaster();
          SendLogFile(-99);
          Terminate(0);
          return -1;

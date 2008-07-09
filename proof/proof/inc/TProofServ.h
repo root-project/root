@@ -254,7 +254,7 @@ public:
 
    // Log control
    Bool_t         LogToSysLog() { return fLogToSysLog; }
-   void           SendLogToMaster(Bool_t on = kTRUE) { fSendLogToMaster = on; }
+   void           LogToMaster(Bool_t on = kTRUE) { fSendLogToMaster = on; }
 
    static Bool_t      IsActive();
    static TProofServ *This();

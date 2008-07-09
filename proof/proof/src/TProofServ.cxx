@@ -498,7 +498,7 @@ Int_t TProofServ::CreateServer()
 
    if (Setup() != 0) {
       // Setup failure
-      SendLogToMaster();
+      LogToMaster();
       SendLogFile();
       Terminate(0);
       return -1;
@@ -516,7 +516,7 @@ Int_t TProofServ::CreateServer()
       // If for some reason we failed setting a redirection fole for the logs
       // we cannot continue
       if (!fLogFile || (fLogFileDes = fileno(fLogFile)) < 0) {
-         SendLogToMaster();
+         LogToMaster();
          SendLogFile(-98);
          Terminate(0);
          return -1;
@@ -524,7 +524,7 @@ Int_t TProofServ::CreateServer()
    } else {
       // Use the file already open by pmain
       if ((fLogFileDes = fileno(fLogFile)) < 0) {
-         SendLogToMaster();
+         LogToMaster();
          SendLogFile(-98);
          Terminate(0);
          return -1;
@@ -534,7 +534,7 @@ Int_t TProofServ::CreateServer()
    // Send message of the day to the client
    if (IsMaster()) {
       if (CatMotd() == -1) {
-         SendLogToMaster();
+         LogToMaster();
          SendLogFile(-99);
          Terminate(0);
          return -1;
@@ -938,7 +938,7 @@ void TProofServ::HandleSocketInput()
                Info("HandleSocketInput:kMESS_CINT", "processing: %s...", str);
             ProcessLine(str);
          }
-         SendLogToMaster();
+         LogToMaster();
          SendLogFile();
          break;
 
@@ -976,7 +976,7 @@ void TProofServ::HandleSocketInput()
       case kPROOF_PRINT:
          mess->ReadString(str, sizeof(str));
          Print(str);
-         SendLogToMaster();
+         LogToMaster();
          SendLogFile();
          break;
 
@@ -1158,7 +1158,7 @@ void TProofServ::HandleSocketInput()
                Info("HandleSocketInput:kPROOF_LOGFILE",
                     "Logfile request - byte range: %d - %d", start, end);
 
-            SendLogToMaster();
+            LogToMaster();
             SendLogFile(0, start, end);
          }
          break;
@@ -1395,7 +1395,7 @@ void TProofServ::HandleSocketInputDuringProcess()
                Info("HandleSocketInputDuringProcess:kPROOF_LOGFILE",
                     "Logfile request - byte range: %d - %d", start, end);
 
-            SendLogToMaster();
+            LogToMaster();
             SendLogFile(0, start, end);
          }
          break;
@@ -1844,7 +1844,7 @@ void TProofServ::SendLogFile(Int_t status, Int_t start, Int_t end)
          FlushLogFile();
       } else {
          // Decide case by case 
-         SendLogToMaster(kFALSE);
+         LogToMaster(kFALSE);
       }
    }
 
@@ -4309,7 +4309,7 @@ Int_t TProofServ::HandleCache(TMessage *mess)
          }
          if (IsMaster() && all)
             fProof->ShowCache(all);
-         SendLogToMaster();
+         LogToMaster();
          break;
       case TProof::kClearCache:
          fCacheLock->Lock();
@@ -4339,7 +4339,7 @@ Int_t TProofServ::HandleCache(TMessage *mess)
          gSystem->Exec(Form("%s %s", kLS, fPackageDir.Data()));
          if (IsMaster() && all)
             fProof->ShowPackages(all);
-         SendLogToMaster();
+         LogToMaster();
          break;
       case TProof::kClearPackages:
          status = UnloadPackages();
@@ -4617,13 +4617,13 @@ Int_t TProofServ::HandleCache(TMessage *mess)
          }
          if (IsMaster() && all)
             fProof->ShowEnabledPackages(all);
-         SendLogToMaster();
+         LogToMaster();
          break;
       case TProof::kShowSubCache:
          (*mess) >> all;
          if (IsMaster() && all)
             fProof->ShowCache(all);
-         SendLogToMaster();
+         LogToMaster();
          break;
       case TProof::kClearSubCache:
          if (IsMaster())
@@ -4633,7 +4633,7 @@ Int_t TProofServ::HandleCache(TMessage *mess)
          (*mess) >> all;
          if (IsMaster() && all)
             fProof->ShowPackages(all);
-         SendLogToMaster();
+         LogToMaster();
          break;
       case TProof::kDisableSubPackages:
          if (IsMaster())
@@ -4904,7 +4904,7 @@ void TProofServ::ErrorHandler(Int_t level, Bool_t abort, const char *location,
 
    // Always communicate errors via SendLogFile
    if (level >= kError && gProofServ)
-      gProofServ->SendLogToMaster();
+      gProofServ->LogToMaster();
 
    static TString syslogService;
 
