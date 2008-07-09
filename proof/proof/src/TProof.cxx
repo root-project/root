@@ -1799,7 +1799,9 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout)
    fStatus = 0;
    fRecvMessages->Clear();
 
-   if (!mon->GetActive()) return 0;
+   Long_t actto = (Long_t)(gEnv->GetValue("Proof.SocketActivityTimeout", 600) * 1000);
+
+   if (!mon->GetActive(actto)) return 0;
 
    DeActivateAsyncInput();
 
@@ -1827,7 +1829,10 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout)
    if (fIntHandler)
       fIntHandler->Add();
 
-   while (mon->GetActive() && (nto < 0 || nto > 0)) {
+   // Sockets w/o activity during the last 'sto' millisecs are deactivated
+   Long_t sto = -1;
+   Int_t nsto = 60;
+   while (mon->GetActive(sto) && (nto < 0 || nto > 0)) {
 
       // Wait for a ready socket
       TSocket *s = mon->Select(1000);
@@ -1856,6 +1861,12 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout)
          // Decrease the timeout counter if requested
          if (s == (TSocket *)(-1) && nto > 0)
             nto--;
+      }
+      // Check if we need to check the socket activity (we do it every 10 cycles ~ 10 sec)
+      sto = -1;
+      if (--nsto <= 0) {
+         sto = (Long_t) actto;
+         nsto = 60;
       }
    }
 
@@ -1969,6 +1980,13 @@ Int_t TProof::CollectInputFrom(TSocket *s)
 
       case kPROOF_FATAL:
          MarkBad(s, "received kPROOF_FATAL");
+         break;
+
+      case kPROOF_TOUCH:
+         // send a request for touching the remote admin file
+         {  sl = FindSlave(s);
+            sl->Touch();
+         }
          break;
 
       case kPROOF_GETOBJECT:
@@ -2843,6 +2861,27 @@ Int_t TProof::Ping(ESlaves list)
    }
 
    return nsent;
+}
+
+//______________________________________________________________________________
+void TProof::Touch()
+{
+   // Ping PROOF slaves. Returns the number of slaves that responded.
+
+   TList *slaves = fSlaves;
+
+   if (slaves->GetSize() == 0) return;
+
+   TIter next(slaves);
+
+   TSlave *sl;
+   while ((sl = (TSlave *)next())) {
+      if (sl->IsValid()) {
+         sl->Touch();
+      }
+   }
+
+   return;
 }
 
 //______________________________________________________________________________

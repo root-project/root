@@ -234,6 +234,9 @@ void TXSlave::Init(const char *host, Int_t stype)
       return;
    }
 
+   // Set the ordinal in the title for debugging
+   fSocket->SetTitle(fOrdinal);
+
    // Check if the remote server supports user envs setting
    if (!fProof->GetManager() && !envlist.IsNull() &&
       ((TXSocket *)fSocket)->GetXrdProofdVersion() <= 1001) {
@@ -347,11 +350,22 @@ void TXSlave::Close(Option_t *opt)
 Int_t TXSlave::Ping()
 {
    // Ping the remote master or slave servers.
-   // Returns 0 if ok, -1 in case of error
+   // Returns 0 if ok, -1 if it did not ping or in case of error
 
    if (!IsValid()) return -1;
 
-   return ((TXSocket *)fSocket)->Ping();
+   return (((TXSocket *)fSocket)->Ping(GetOrdinal()) ? 0 : -1);
+}
+
+//______________________________________________________________________________
+void TXSlave::Touch()
+{
+   // Touch the client admin file to proof we are alive.
+
+   if (!IsValid()) return;
+
+   ((TXSocket *)fSocket)->RemoteTouch();
+   return;
 }
 
 //______________________________________________________________________________
@@ -502,16 +516,37 @@ Int_t TXSlave::SendGroupPriority(const char *grp, Int_t priority)
 }
 
 //_____________________________________________________________________________
-Bool_t TXSlave::HandleError(const void *)
+Bool_t TXSlave::HandleError(const void *in)
 {
    // Handle error on the input socket
+
+   XHandleErr_t *herr = in ? (XHandleErr_t *)in : 0;
+
+   // Try reconnection
+   if (fSocket && herr && (herr->fOpt == 1)) {
+
+      ((TXSocket *)fSocket)->Reconnect();
+      if (fSocket && fSocket->IsValid()) {
+         if (gDebug > 0) {
+            if (!strcmp(GetOrdinal(), "0")) {
+               Printf("Proof: connection to master at %s:%d re-established",
+                     GetName(), GetPort());
+            } else {
+               Printf("Proof: connection to node '%s' at %s:%d re-established",
+                     GetOrdinal(), GetName(), GetPort());
+            }
+         }
+         return kFALSE;
+      }
+   }
 
    // This seems a real error: notify the interested parties
    Info("HandleError", "%p:%s:%s got called ... fProof: %p, fSocket: %p (valid: %d)",
                        this, fName.Data(), fOrdinal.Data(), fProof, fSocket,
                        fSocket->IsValid());
 
-   // Remove signal handler
+   // Remove interrupt handler (avoid affecting other clients of the underlying physical
+   // connection)
    SetInterruptHandler(kFALSE);
 
    if (fProof) {
@@ -527,12 +562,11 @@ Bool_t TXSlave::HandleError(const void *)
          ((TXSocket *)fSocket)->SetSessionID(-1);
          // Synchronous collection in TProof: post fatal message; this will
          // mark the worker as bad and update the internal lists accordingly
-         ((TXSocket *)fSocket)->PostFatal();
+         ((TXSocket *)fSocket)->PostMessage(kPROOF_FATAL);
       }
 
-      // Update lists:
+      // On masters we notify clients of the problem occured
       if (fProof->IsMaster()) {
-         // On masters we have to update the lists
          TString msg(Form("Worker '%s-%s' has been removed from the active list",
                           fName.Data(), fOrdinal.Data()));
          TMessage m(kPROOF_MESSAGE);

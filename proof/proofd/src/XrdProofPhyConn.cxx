@@ -40,8 +40,6 @@
 
 // Tracing utils
 #include "XrdProofdTrace.h"
-static const char *gTraceID = " ";
-#define TRACEID gTraceID
 
 #define URLTAG "["<<fUrl.Host<<":"<<fUrl.Port<<"]"
 
@@ -52,13 +50,17 @@ XrdProofPhyConn::XrdProofPhyConn(const char *url, int psid, char capver,
 {
    // Constructor. Open a direct connection (Unix or Tcp) to a remote
    // XrdProofd instance. Does not use the connection manager.
+   XPDLOC(ALL, "PhyConn")
 
    fTcp = tcp;
 
+   // Mutex
+   fMutex = new XrdSysRecMutex();
+
    // Initialization
    if (url && !Init(url)) {
-      TRACE(REQ, "XrdProofPhyConn: severe error occurred while"
-                 " opening a connection" << " to server "<<URLTAG);
+      TRACE(XERR, "severe error occurred while"
+                  " opening a connection" << " to server "<<URLTAG);
       return;
    }
 }
@@ -67,9 +69,7 @@ XrdProofPhyConn::XrdProofPhyConn(const char *url, int psid, char capver,
 bool XrdProofPhyConn::Init(const char *url)
 {
    // Initialization
-
-   // Mutex
-   fMutex = new XrdSysRecMutex();
+   XPDLOC(ALL, "PhyConn::Init")
 
    // Save url
    fUrl.TakeUrl(XrdOucString(url));
@@ -104,36 +104,51 @@ bool XrdProofPhyConn::Init(const char *url)
       if (fPort <= 0) {
          struct servent *sent = getservbyname("rootd", "tcp");
          if (!sent) {
-            TRACE(ALL,"XrdProofPhyConn::Init: service 'rootd' not found by getservbyname" <<
-                  ": using default IANA assigned tcp port 1094");
+            TRACE(XERR, "service 'rootd' not found by getservbyname" <<
+                        ": using default IANA assigned tcp port 1094");
             fPort = 1094;
          } else {
             fPort = (int)ntohs(sent->s_port);
             // Update port in url
             fUrl.Port = fPort;
-            TRACE(REQ,"XrdProofPhyConn::Init: getservbyname found tcp port " << fPort <<
-                  " for service 'rootd'");
+            TRACE(XERR, "getservbyname found tcp port " << fPort <<
+                        " for service 'rootd'");
          }
       }
    }
 
-   // Max number of tries and timeout
-   int maxTry = EnvGetLong(NAME_FIRSTCONNECTMAXCNT);
-   int timeOut = EnvGetLong(NAME_CONNECTTIMEOUT);
+   // Run the connection attempts: the result is stored in fConnected
+   Connect();
+
+   // We are done
+   return fConnected;
+}
+
+//_____________________________________________________________________________
+void XrdProofPhyConn::Connect()
+{
+   // Run the connection attempts: the result is stored in fConnected
+   XPDLOC(ALL, "PhyConn::Connect")
+
+   int maxTry = -1, timeWait = -1;
+   // Max number of tries and timeout; use current settings, if any
+   XrdProofConn::GetRetryParam(maxTry, timeWait);
+   maxTry = (maxTry > -1) ? maxTry : EnvGetLong(NAME_FIRSTCONNECTMAXCNT);
+   timeWait = (timeWait > -1) ? timeWait : EnvGetLong(NAME_CONNECTTIMEOUT);
 
    int logid = -1;
    int i = 0;
    for (; (i < maxTry) && (!fConnected); i++) {
 
       // Try connection
-      logid = Connect();
+      logid = TryConnect();
 
       // We are connected to a host. Let's handshake with it.
       if (fConnected) {
 
          // Now the have the logical Connection ID, that we can use as streamid for
          // communications with the server
-         TRACE(REQ,"XrdProofPhyConn::Init: new logical connection ID: "<<logid);
+         TRACE(DBG, "new logical connection ID: "<<logid);
 
          // Get access to server
          if (!GetAccessToSrv()) {
@@ -142,43 +157,41 @@ bool XrdProofPhyConn::Init(const char *url)
                Close("P");
                XrdOucString msg = fLastErrMsg;
                msg.erase(msg.rfind(":"));
-               TRACE(REQ,"XrdProofPhyConn::Init: authentication failure: " << msg);
-               return 0;
+               TRACE(XERR, "authentication failure: " << msg);
+               return;
             } else {
-               TRACE(REQ,"XrdProofPhyConn::Init: access to server failed (" <<
-                         fLastErrMsg << ")");
+               TRACE(XERR, "access to server failed (" << fLastErrMsg << ")");
             }
             continue;
          } else {
 
             // Manager call in client: no need to create or attach: just notify
-            TRACE(REQ,"XrdProofPhyConn::Init: access to server granted.");
+            TRACE(DBG, "access to server granted.");
             break;
          }
       }
 
       // We force a physical disconnection in this special case
-      TRACE(REQ,"XrdProofPhyConn::Init: disconnecting.");
+      TRACE(DBG, "disconnecting");
       Close("P");
 
       // And we wait a bit before retrying
-      TRACE(REQ,"XrdProofPhyConn::Init: connection attempt failed: sleep " << timeOut << " secs");
+      TRACE(DBG, "connection attempt failed: sleep " << timeWait << " secs");
 #ifndef WIN32
-      sleep(timeOut);
+      sleep(timeWait);
 #else
-      Sleep(timeOut * 1000);
+      Sleep(timeWait * 1000);
 #endif
 
    } //for connect try
-
-   // We are done
-   return fConnected;
 }
 
 //_____________________________________________________________________________
-int XrdProofPhyConn::Connect()
+int XrdProofPhyConn::TryConnect()
 {
    // Connect to remote server
+   XPDLOC(ALL, "PhyConn::TryConnect")
+
    const char *ctype[2] = {"UNIX", "TCP"};
 
    // Create physical connection
@@ -191,13 +204,12 @@ int XrdProofPhyConn::Connect()
    // Connect
    bool isUnix = (fTcp) ? 0 : 1;
    if (!(fPhyConn->Connect(fUrl, isUnix))) {
-      TRACE(REQ,"XrdProofPhyConn::Connect: creating "<<ctype[fTcp]<<
-                " connection to "<<URLTAG);
+      TRACE(XERR, "creating "<<ctype[fTcp]<<" connection to "<<URLTAG);
       fLogConnID = -1;
       fConnected = 0;
       return -1;
    }
-   TRACE(REQ,"XrdProofPhyConn::Connect: "<<ctype[fTcp]<<"-connected to "<<URLTAG);
+   TRACE(DBG, ctype[fTcp]<<"-connected to "<<URLTAG);
 
    // Set some vars
    fLogConnID = 0;
@@ -253,6 +265,7 @@ bool XrdProofPhyConn::GetAccessToSrv()
 {
    // Gets access to the connected server.
    // The login and authorization steps are performed here.
+   XPDLOC(ALL, "PhyConn::GetAccessToSrv")
 
    // Now we are connected and we ask for the kind of the server
    { XrdClientPhyConnLocker pcl(fPhyConn);
@@ -262,7 +275,7 @@ bool XrdProofPhyConn::GetAccessToSrv()
    switch (fServerType) {
 
    case kSTXProofd:
-      TRACE(REQ,"XrdProofPhyConn::GetAccessToSrv: found server at "<<URLTAG);
+      TRACE(DBG, "found server at "<<URLTAG);
 
       // Now we can start the reader thread in the physical connection, if needed
       fPhyConn->StartReader();
@@ -270,23 +283,21 @@ bool XrdProofPhyConn::GetAccessToSrv()
       break;
 
    case kSTError:
-      TRACE(REQ,"XrdProofPhyConn::GetAccessToSrv: handShake failed with server "<<URLTAG);
+      TRACE(XERR, "handShake failed with server "<<URLTAG);
       Close();
       return 0;
 
    case kSTProofd:
    case kSTNone:
    default:
-      TRACE(REQ,"XrdProofPhyConn::GetAccessToSrv: server at "<<URLTAG<<
-            " is unknown : protocol error");
+      TRACE(XERR, "server at "<<URLTAG<< " is unknown : protocol error");
       Close();
       return 0;
    }
 
    // Execute a login
    if (fPhyConn->IsLogged() != kNo) {
-      TRACE(REQ,"XrdProofPhyConn::GetAccessToSrv: client already logged-in"
-            " at "<<URLTAG<<" (!): protocol error!");
+      TRACE(XERR, "client already logged-in at "<<URLTAG<<" (!): protocol error!");
       return 0;
    }
 

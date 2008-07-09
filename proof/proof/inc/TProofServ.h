@@ -125,9 +125,7 @@ private:
 
    Bool_t        fRealTimeLog;      //TRUE if log messages should be send back in real-time
 
-   Bool_t        fShutdownWhenIdle; // If TRUE, start shutdown delay countdown when idle
-   TTimer       *fShutdownTimer;    // Timer used for delayed session shutdown
-   TMutex       *fShutdownTimerMtx; // Actions on the timer must be atomic
+   TTimer       *fShutdownTimer;    // Timer used to shutdown out-of-control sessions
 
    Int_t         fInflateFactor;    // Factor in 1/1000 to inflate the CPU time
 
@@ -183,8 +181,6 @@ protected:
    Int_t         SetupCommon();
    virtual void  MakePlayer();
    virtual void  DeletePlayer();
-
-   virtual void  SetShutdownTimer(Bool_t, Int_t) { }
 
    static void   ErrorHandler(Int_t level, Bool_t abort, const char *location,
                               const char *msg);
@@ -326,7 +322,7 @@ public:
    virtual ~TProofServLogHandlerGuard();
 };
 
-//--- Special timer to constrol delayed shutdowns
+//--- Special timer to control delayed shutdowns
 //______________________________________________________________________________
 class TShutdownTimer : public TTimer {
 private:

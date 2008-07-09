@@ -54,6 +54,7 @@ public:
    TXProofMgr(const char *url, Int_t loglevel = -1, const char *alias = "");
    virtual ~TXProofMgr();
 
+   Bool_t      HandleInput(const void *);
    Bool_t      HandleError(const void *in = 0);
 
    Bool_t      IsValid() const { return fSocket; }

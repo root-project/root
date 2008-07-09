@@ -1018,6 +1018,23 @@ void TPacketizerAdaptive::ValidateFiles(TDSet *dset, TList *slaves)
          PDB(kPacketizer,3) Info("ValidateFiles", "got logdone");
          mon.Activate(sock);
          continue;
+      } else if (reply->What() == kPROOF_TOUCH) {
+         PDB(kPacketizer,3) Info("ValidateFiles", "got logdone");
+         slave->Touch();
+         mon.Activate(sock);
+         continue;
+      } else if ( reply->What() == kPROOF_MESSAGE ) {
+         // Send one level up
+         TString s;
+         (*reply) >> s;
+         Bool_t lfeed = kTRUE;
+         if ((reply->BufferSize() > reply->Length()))
+            (*reply) >> lfeed;
+         TMessage m(kPROOF_MESSAGE);
+         m << s << lfeed;
+         gProofServ->GetSocket()->Send(m);
+         mon.Activate(sock);
+         continue;
       } else if (reply->What() != kPROOF_GETENTRIES) {
          // Help! unexpected message type
          Error("ValidateFiles",

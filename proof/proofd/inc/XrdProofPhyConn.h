@@ -36,7 +36,8 @@ private:
 
    bool        fTcp;   // TRUE for TCP sockets
 
-   int         Connect();
+   void        Connect();
+   int         TryConnect();
    bool        GetAccessToSrv();
    bool        Init(const char *url);
    void        SetAsync(XrdClientAbsUnsolMsgHandler *uh);

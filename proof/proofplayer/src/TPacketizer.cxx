@@ -842,6 +842,11 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
          PDB(kPacketizer,3) Info("ValidateFiles", "got kPROOF_LOGDONE");
          mon.Activate(sock);
          continue;
+      } else if (reply->What() == kPROOF_TOUCH) {
+         PDB(kPacketizer,3) Info("ValidateFiles", "got logdone");
+         slave->Touch();
+         mon.Activate(sock);
+         continue;
       } else if ( reply->What() == kPROOF_MESSAGE ) {
          // Send one level up
          TString s;

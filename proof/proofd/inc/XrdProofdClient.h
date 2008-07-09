@@ -34,96 +34,133 @@
 #include "XrdOuc/XrdOucString.hh"
 
 #include "XrdProofdAux.h"
+#include "XrdProofdSandbox.h"
+#include "XrdProofdProtocol.h"
+#include "XrdProofdResponse.h"
 
 #define XPC_DEFMAXOLDLOGS 10
 
 class XrdNet;
-class XrdProofdProtocol;
-class XrdProofGroup;
-class XrdProofdProofServ;
+class XrdClientID;
 class XrdROOT;
 
 class XrdProofdClient {
 
  public:
-   XrdProofdClient(const char *cid,
-                   short int clientvers, XrdProofUI ui);
+   XrdProofdClient(XrdProofUI ui,
+                   bool master, bool changeown, XrdSysError *edest, const char *tmp);
 
    virtual ~XrdProofdClient();
 
-   inline int              MasterProofServ() const { return fMasterProofServ; }
-   inline int              WorkerProofServ() const { return fWorkerProofServ; }
-   void                    CountSession(int n = 1, bool worker =1);
-   inline XrdProofGroup   *Group() const { return fGroup; }
-   inline const char      *ID() const
-                              { return (const char *)fClientID; }
+   inline const char      *Group() const { return fUI.fGroup.c_str(); }
+   inline const char      *User() const { return fUI.fUser.c_str(); }
    inline bool             IsValid() const { return fIsValid; }
-   bool                    Match(const char *id, const char *grp = 0);
+   bool                    Match(const char *usr, const char *grp = 0);
    inline XrdSysRecMutex  *Mutex() const { return (XrdSysRecMutex *)&fMutex; }
+#if 0
    inline unsigned short   RefSid() const { return fRefSid; }
+#endif
    inline XrdROOT         *ROOT() const { return fROOT; }
-   inline short            Version() const { return fClientVers; }
-   inline const char      *Workdir() const { return fUI.fWorkDir.c_str(); }
+   inline XrdProofdSandbox *Sandbox() const { return (XrdProofdSandbox *)&fSandbox; }
    inline XrdProofUI       UI() const { return fUI; }
-   inline std::vector<XrdProofdProofServ *> *ProofServs()
-                           { return (std::vector<XrdProofdProofServ *> *)&fProofServs; }
-   inline std::vector<XrdProofdProtocol *> *Clients()
-                           { return (std::vector<XrdProofdProtocol *> *)&fClients; }
-   void                    ResetClient(int i) { fClients[i] = 0; }
 
+   XrdProofdProofServ     *GetServer(int psid);
+   XrdProofdProofServ     *GetServer(XrdProofdProtocol *p);
    void                    EraseServer(int psid);
+   XrdProofdProofServ     *GetProofServ(int psid);
+
+   int                     ResetClientSlot(int ic);
+   XrdProofdProtocol      *GetProtocol(int ic);
+
    int                     GetClientID(XrdProofdProtocol *p);
-   int                     GetFreeServID();
+   int                     ReserveClientID(int cid);
+   int                     SetClientID(int cid, XrdProofdProtocol *p);
+   XrdProofdProofServ     *GetFreeServObj();
+   XrdProofdProofServ     *GetServObj(int id);
 
-   void                    SetClientVers(short int cv) { fClientVers = cv; }
+   void                    Broadcast(const char *msg);
 
-   void                    SetGroup(XrdProofGroup *g) { fGroup = g; }
+   XrdOucString            ExportSessions();
+   void                    SkipSessionsCheck(std::list<XrdProofdProofServ *> *active = 0);
+   void                    TerminateSessions(int srvtype, XrdProofdProofServ *ref,
+                                             const char *msg, XrdProofdPipe *pipe, bool changeown);
+
+   void                    SetGroup(const char *g) { fUI.fGroup = g; }
    void                    SetROOT(XrdROOT *r) { fROOT = r; }
 
+#if 0
    void                    SetRefSid(unsigned short sid) { fRefSid = sid; }
+#endif
    void                    SetValid(bool valid = 1) { fIsValid = valid; }
-   void                    SetWorkdir(const char *wrk) { fUI.fWorkDir = wrk; }
 
-   int                     CreateUNIXSock(XrdSysError *edest, const char *tmpdir);
+   int                     Size() const { return fClients.size(); }
+
+   void                    Touch();
+
+   int                     CreateUNIXSock(XrdSysError *edest);
    XrdNet                 *UNIXSock() const { return fUNIXSock; }
-   char                   *UNIXSockPath() const { return fUNIXSockPath; }
+   const char             *UNIXSockPath() const { return fUNIXSockPath.c_str(); }
    void                    SaveUNIXPath(); // Save path in the sandbox
    void                    SetUNIXSockSaved() { fUNIXSockSaved = 1;}
 
-   int                     AddNewSession(const char *tag);
-   int                     GetSessionDirs(int opt, std::list<XrdOucString *> *sdirs,
-                                          XrdOucString *tag = 0);
-   int                     GuessTag(XrdOucString &tag, int ridx = 1, bool notify = 1);
-   int                     MvOldSession(const char *tag, bool notify = 1);
-
-   static void             SetMaxOldLogs(int mx) { fgMaxOldLogs = mx; }
+   const char             *AdminPath() const { return fAdminPath.c_str(); }
 
  private:
 
    XrdSysRecMutex          fMutex; // Local mutex
 
+   bool                    fChangeOwn; // TRUE if ownership must be changed where relevant
    bool                    fIsValid; // TRUE if the instance is complete
 
-   char                   *fClientID;   // String identifying this client
-   short int               fClientVers; // PROOF version run by client
+#if 0
    unsigned short          fRefSid;     // Reference stream ID for this client
+#endif
    XrdProofUI              fUI;         // user info
-
-   XrdNet                 *fUNIXSock;     // UNIX server socket for internal connections
-   char                   *fUNIXSockPath; // UNIX server socket path
-   bool                    fUNIXSockSaved; // TRUE if the socket path has been saved
-
    XrdROOT                *fROOT;        // ROOT vers instance to be used for proofserv
 
-   XrdProofGroup          *fGroup;       // Group of the client, if any
+   XrdProofdSandbox        fSandbox;     // Clients sandbox
+
+   XrdNet                 *fUNIXSock;     // UNIX server socket for internal connections
+   XrdOucString            fUNIXSockPath; // UNIX server socket path
+   bool                    fUNIXSockSaved; // TRUE if the socket path has been saved
+
+   XrdOucString            fAdminPath;    // Admin path for this client
 
    std::vector<XrdProofdProofServ *> fProofServs; // Allocated ProofServ sessions
-   std::vector<XrdProofdProtocol *> fClients;    // Attached Client sessions
+   std::vector<XrdClientID *> fClients;    // Attached Client sessions
 
-   int                     fWorkerProofServ; // Number of active (non idle) ProofServ worker sessions
-   int                     fMasterProofServ; // Number of active (non idle) ProofServ master sessions
+   void                    PostSessionRemoval(int fd, int pid);
+};
 
-   static int              fgMaxOldLogs; // max number of old sessions workdirs per client
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// XrdClientID                                                          //
+//                                                                      //
+// Authors: G. Ganis, CERN, 2005                                        //
+//                                                                      //
+// Mapping of clients and stream IDs                                    //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+class XrdClientID {
+private:
+   XrdProofdProtocol *fP;
+   XrdProofdResponse *fR;
+   unsigned short     fSid;
+
+   void               SetR() { fR = (fP && fSid > 0) ? fP->Response(fSid) : 0;}
+public:
+   XrdClientID(XrdProofdProtocol *pt = 0, unsigned short id = 0)
+            { fP = pt; fSid = id; SetR();}
+   ~XrdClientID() { }
+
+   XrdProofdClient   *C() const { return fP->Client(); }
+   bool               IsValid() const { return (fP != 0); }
+   XrdProofdProtocol *P() const { return fP; }
+   XrdProofdResponse *R() const { return fR; }
+   void               Reset() { fP = 0; fSid = 0; }
+   void               SetP(XrdProofdProtocol *p) { fP = p; SetR();}
+   void               SetSid(unsigned short sid) { fSid = sid; SetR();}
+   unsigned short     Sid() const { return fSid; }
 };
 
 #endif

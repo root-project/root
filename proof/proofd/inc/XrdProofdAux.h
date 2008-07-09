@@ -21,6 +21,16 @@
 // Small auxilliary classes used in XrdProof                            //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+#include <list>
+#include <map>
+#include <stdarg.h>
+
+#ifdef OLDXRDOUC
+#  include "XrdSysToOuc.h"
+#  include "XrdOuc/XrdOucSemWait.hh"
+#else
+#  include "XrdSys/XrdSysSemWait.hh"
+#endif
 
 #include "Xrd/XrdProtocol.hh"
 #include "XProofProtocol.h"
@@ -32,20 +42,20 @@
 //
 class XrdProofUI {
 public:
-   XrdOucString fUser;
-   XrdOucString fHomeDir;
-   XrdOucString fWorkDir;
-   int          fUid;
-   int          fGid;
+   XrdOucString fUser;       // User name
+   XrdOucString fGroup;      // PROOF group name
+   XrdOucString fHomeDir;    // Unix home
+   int          fUid;        // Unix user ID
+   int          fGid;        // Unix group ID
 
    XrdProofUI() { fUid = -1; fGid = -1; }
    XrdProofUI(const XrdProofUI &ui) { fUser = ui.fUser;
+                                      fGroup = ui.fGroup;
                                       fHomeDir = ui.fHomeDir;
-                                      fWorkDir = ui.fWorkDir;
                                       fUid = ui.fUid; fGid = ui.fGid; }
    ~XrdProofUI() { }
 
-   void Reset() { fUser = ""; fHomeDir = ""; fWorkDir = ""; fUid = -1; fGid = -1; }
+   void Reset() { fUser = ""; fHomeDir = ""; fGroup = ""; fUid = -1; fGid = -1; }
 };
 
 //
@@ -105,19 +115,111 @@ public:
    void              *fVal;
    XrdOucString       fName;
    XrdFunDirective_t  fFun;
+   bool               fRcf;
    const char        *fHost; // needed to support old 'if' construct
 
-   XrdProofdDirective(const char *n, void *v, XrdFunDirective_t f) :
-                      fVal(v), fName(n), fFun(f) { }
+   XrdProofdDirective(const char *n, void *v, XrdFunDirective_t f, bool rcf = 1) :
+                      fVal(v), fName(n), fFun(f), fRcf(rcf) { }
 
    int DoDirective(char *val, XrdOucStream *cfg, bool reconfig)
                       { return (*fFun)(this, val, cfg, reconfig); }
 };
 // Function of general interest
+int DoDirectiveClass(XrdProofdDirective *, char *val, XrdOucStream *cfg, bool rcf);
 int DoDirectiveInt(XrdProofdDirective *, char *val, XrdOucStream *cfg, bool rcf);
 int DoDirectiveString(XrdProofdDirective *, char *val, XrdOucStream *cfg, bool rcf);
 // To set the host field in a loop over the hash list
 int SetHostInDirectives(const char *, XrdProofdDirective *d, void *h);
+
+//
+// Class to handle condensed multi-string specification, e.g <head>[01-25]<tail>
+//
+class XrdProofdMultiStrToken {
+private:
+   long         fIa;
+   long         fIb;
+   XrdOucString fA;
+   XrdOucString fB;
+   int          fType;
+   int          fN;     // Number of combinations
+
+   void Init(const char *s);
+public:
+   enum ETokenType { kUndef, kSimple, kLetter, kDigit, kDigits };
+
+   XrdProofdMultiStrToken(const char *s = 0) { Init(s); }
+   virtual ~XrdProofdMultiStrToken() { }
+
+   XrdOucString Export(int &next);
+   bool IsValid() const { return (fType == kUndef) ? 0 : 1; }
+   bool Matches(const char *s);
+   int  N() const { return fN; }
+};
+
+class XrdProofdMultiStr {
+private:
+   XrdOucString fHead;
+   XrdOucString fTail;
+   std::list<XrdProofdMultiStrToken> fTokens;
+   int          fN;     // Number of combinations
+
+   void Init(const char *s);
+public:
+   XrdProofdMultiStr(const char *s) { Init(s); }
+   virtual ~XrdProofdMultiStr() { }
+
+   XrdOucString Get(int i);
+   bool IsValid() const { return (fTokens.size() > 0 ? 1 : 0); }
+   bool Matches(const char *s);
+   int  N() const { return fN; }
+
+   XrdOucString Export();
+};
+
+//
+// Class to handle message buffers received via a pipe
+//
+class XpdMsg {
+   int          fType;
+   XrdOucString fBuf;
+   int          fFrom;
+public:
+   XpdMsg(const char *buf = 0) { Init(buf); }
+   virtual ~XpdMsg() { }
+
+   const char *Buf() const {return fBuf.c_str(); }
+
+   int Init(const char *buf);
+   void Reset() { fFrom = 0; }
+
+   int Get(int &i);
+   int Get(XrdOucString &s);
+   int Get(void **p);
+
+   int Type() const { return fType; }
+};
+
+//
+// Class describing a pipe
+//
+class XrdProofdPipe {
+   XrdSysRecMutex fRdMtx;   // Mutex for read operations
+   XrdSysRecMutex fWrMtx;   // Mutex for write operations
+   int            fPipe[2]; // pipe descriptors
+public:
+   XrdProofdPipe();
+   virtual ~XrdProofdPipe();
+
+   bool IsValid() const { return (fPipe[0] > 0 && fPipe[1] > 0) ? 1 : 0; }
+
+   int Poll(int to = -1);
+
+   int Post(int type, const char *msg);
+   int Recv(XpdMsg &msg);
+
+   void SetFd(void *fds);
+};
+
 
 //
 // Static methods
@@ -127,14 +229,17 @@ typedef struct kinfo_proc kinfo_proc;
 #endif
 class XrdOucStream;
 class XrdProofdAux {
+   static XrdSysRecMutex fgFormMutex;
 public:
    XrdProofdAux() { }
 
+   static const char *AdminMsgType(int type);
    static int AssertDir(const char *path, XrdProofUI ui, bool changeown);
    static int ChangeToDir(const char *dir, XrdProofUI ui, bool changeown);
    static int CheckIf(XrdOucStream *s, const char *h);
    static char *Expand(char *p);
    static void Expand(XrdOucString &path);
+   static int GetIDFromPath(const char *path, XrdOucString &emsg);
    static long int GetLong(char *str);
 #if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__APPLE__)
    static int GetMacProcList(kinfo_proc **plist, int &nproc);
@@ -142,9 +247,19 @@ public:
    static int GetNumCPUs();
    static int GetGroupInfo(const char *grp, XrdProofGI &gi);
    static int GetGroupInfo(int gid, XrdProofGI &gi);
+   static int GetProcesses(const char *pn, std::map<int,XrdOucString> *plist);
    static int GetUserInfo(const char *usr, XrdProofUI &ui);
    static int GetUserInfo(int uid, XrdProofUI &ui);
+   static int KillProcess(int pid, bool forcekill, XrdProofUI ui, bool changeown);
+   static int MvDir(const char *oldpath, const char *newpath);
+   static int ParsePidPath(const char *path, XrdOucString &rest);
+   static int ParseUsrGrp(const char *path, XrdOucString &usr, XrdOucString &grp);
+   static const char *ProofRequestTypes(int type);
+   static int ReadMsg(int fd, XrdOucString &msg);
+   static int RmDir(const char *path);
    static int SymLink(const char *path, const char *link);
+   static int Touch(const char *path, int opt = 0);
+   static int VerifyProcessByID(int pid, const char *pname = "proofserv");
    static int Write(int fd, const void *buf, size_t nb);
 };
 
@@ -165,6 +280,17 @@ public:
 
 #ifndef DIGIT
 #define DIGIT(x) (x >= 48 && x <= 57)
+#endif
+
+#ifndef LETTOIDX
+#define LETTOIDX(x, ilet) \
+        if (x >= 97 && x <= 122) ilet = x - 96; \
+        if (x >= 65 && x <= 90) ilet = x - 38;
+#endif
+#ifndef IDXTOLET
+#define IDXTOLET(ilet, x) \
+        if ((ilet) >= 1 && (ilet) <= 26) x = (ilet) + 96; \
+        if ((ilet) >= 27 && (ilet) <= 52) x = (ilet) + 38;
 #endif
 
 #ifndef XPDSWAP

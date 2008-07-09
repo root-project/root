@@ -23,7 +23,9 @@
 //
 // These are used by TXProofMgr to interact with its image on
 // the server side and the sessions
-//
+// Changes should be propagated to the related strings
+// for notification in XrdProofdAux::ProofRequestTypes(...) and
+// in XProofProtUtils.cxx
 //______________________________________________
 //
 enum XProofRequestTypes {
@@ -39,19 +41,27 @@ enum XProofRequestTypes {
    kXP_interrupt    = 3114,    // urgent message
    kXP_ping         = 3115,    // ping request
    kXP_cleanup      = 3116,    // clean-up a session-ctx or a client section
-   kXP_readbuf      = 3117     // read a buffer from a file
+   kXP_readbuf      = 3117,    // read a buffer from a file
+   kXP_touch        = 3118,    // touch the client admin path
+//
+   kXP_Undef        = 3119    // This should always be last: do not touch it
 };
 
-// XPROOFD VERSION  (0xMMmnpp : MM major, mm minor, pp patch)
-#define XPD_VERSION  0x010000
+// XPROOFD VERSION  (0xMMmmpp : MM major, mm minor, pp patch)
+#define XPD_VERSION  0x010500
 
-// KINDS of SERVERS (modes)
+// KINDS of connections (modes)
 #define kXPD_Admin        4
 #define kXPD_Internal     3
+#define kXPD_ClientMaster 2
+#define kXPD_MasterMaster 1
+#define kXPD_MasterWorker 0
+#define kXPD_AnyConnect  -1
+
+// KINDS of servers
 #define kXPD_TopMaster    2
-#define kXPD_MasterServer 1
-#define kXPD_SlaveServer  0
-#define kXPD_WorkerServer 0
+#define kXPD_Master       1
+#define kXPD_Worker       0
 #define kXPD_AnyServer   -1
 
 // Operations modes
@@ -60,8 +70,9 @@ enum XProofRequestTypes {
 
 // Type of resources
 enum EResourceType {
-   kRTStatic,
-   kRTDynamic
+   kRTNone    = -1,
+   kRTStatic  = 0,
+   kRTDynamic = 1
 };
 
 // Worker selection options
@@ -71,7 +82,8 @@ enum EStaticSelOpt {
    kSSOLoadBased  = 2
 };
 
-// Should be the same as in proofx/inc/TXSocket.h
+// Should be the same as in proofx/inc/TXSocket.h and consistent with the related strings
+// for notification in XrdProofdAux::AdminMsgType(...)
 enum EAdminMsgType {
    kQuerySessions     = 1000,
    kSessionTag        = 1001,
@@ -84,7 +96,9 @@ enum EAdminMsgType {
    kQueryROOTVersions = 1008,
    kROOTVersion       = 1009,
    kGroupProperties   = 1010,
-   kSendMsgToUser     = 1011
+   kSendMsgToUser     = 1011,
+//
+   kUndef             = 1012    // This should always be last: do not touch it
 };
 
 // XPROOFD Worker CPU load sharing options
@@ -140,7 +154,9 @@ enum XProofActionCode {
    kXPD_urgent,    // 5108     // Urgent message to be processed in the reader thread
    kXPD_flush,     // 5109     // Server request to flush stdout (before retrieving logs)
    kXPD_inflate,   // 5110     // Server request to inflate processing times
-   kXPD_priority   // 5111     // Server request to propagate a group priority
+   kXPD_priority,  // 5111     // Server request to propagate a group priority
+   kXPD_wrkmortem, // 5112     // A worker just died or terminated
+   kXPD_touch      // 5113     // Touch the connection and schedul an asynchronous remote touch
 };
 
 //_______________________________________________
@@ -172,7 +188,8 @@ enum XPErrorCode {
    kXP_Unsupported,
    kXP_noserver,
    kXP_nosession,
-   kXP_nomanager
+   kXP_nomanager,
+   kXP_reconnecting
 };
 
 

@@ -155,7 +155,7 @@ TProof *TXProofMgr::AttachSession(TProofDesc *d, Bool_t gui)
       u += "GUI";
 
    // Attach
-   TProof *p = new TProof(u);
+   TProof *p = new TProof(u, 0, 0, gDebug, 0, this);
    if (p && p->IsValid()) {
 
       // Set reference manager
@@ -358,10 +358,50 @@ TList *TXProofMgr::QuerySessions(Option_t *opt)
 }
 
 //_____________________________________________________________________________
-Bool_t TXProofMgr::HandleError(const void * /*in*/)
+Bool_t TXProofMgr::HandleInput(const void *)
+{
+   // Handle asynchronous input on the socket
+
+   if (fSocket && fSocket->IsValid()) {
+      TMessage *mess;
+      if (fSocket->Recv(mess) >= 0) {
+         Int_t what = mess->What();
+         if (gDebug > 0)
+            Info("HandleInput", "%p: got message type: %d", this, what);
+         switch (what) {
+            case kPROOF_TOUCH:
+               fSocket->RemoteTouch();
+               break;
+            default:
+               Warning("HandleInput", "%p: got unknown message type: %d", what);
+               break;
+         }
+      }
+   } else {
+      Warning("HandleInput", "%p: got message but socket is invalid!");
+   }
+
+   // We are done
+   return kTRUE;
+}
+
+//_____________________________________________________________________________
+Bool_t TXProofMgr::HandleError(const void *in)
 {
    // Handle error on the input socket
 
+   XHandleErr_t *herr = in ? (XHandleErr_t *)in : 0;
+
+   // Try reconnection
+   if (fSocket && herr && (herr->fOpt == 1)) {
+      fSocket->Reconnect();
+      if (fSocket && fSocket->IsValid()) {
+         if (gDebug > 0)
+            Printf("ProofMgr: connection to coordinator at %s re-established",
+                   fUrl.GetUrl());
+         return kFALSE;
+      }
+   }
    Printf("TXProofMgr::HandleError: %p: got called ...", this);
 
    // Interrupt any PROOF session in Collect

@@ -39,11 +39,13 @@
 #include <list>
 
 #include "XProofProtocol.h"
-#include "XrdProofSched.h"
 #include "XrdProofdManager.h"
-#include "XrdProofWorker.h"
-#include "XrdProofdProofServ.h"
+#include "XrdProofdNetMgr.h"
+#include "XrdProofdProofServMgr.h"
 #include "XrdProofGroup.h"
+#include "XrdProofSched.h"
+#include "XrdProofdProofServ.h"
+#include "XrdProofWorker.h"
 
 #include "XrdOuc/XrdOucString.hh"
 #include "XrdOuc/XrdOucStream.hh"
@@ -56,9 +58,6 @@
 
 // Tracing
 #include "XrdProofdTrace.h"
-static const char *gTraceID = " ";
-extern XrdOucTrace *XrdProofdTrace;
-#define TRACEID gTraceID
 
 //
 // Example of scheduler loader for an implementation called XrdProofSchedDyn
@@ -80,7 +79,7 @@ extern XrdOucTrace *XrdProofdTrace;
 //   return (XrdProofSched *)0;
 // }}
 
-//______________________________________________________________________________
+//__________________________________________________________________________
 static bool XpdWrkComp(XrdProofWorker *&lhs, XrdProofWorker *&rhs)
 {
    // COmpare two workers for sorting
@@ -144,12 +143,13 @@ void XrdProofSched::ResetParameters()
    fNodesFraction = 0.5;
 }
 
-//______________________________________________________________________________
+//_________________________________________________________________________________
 int XrdProofSched::Config(const char *cfn)
 {
    // Configure this instance using the content of file 'cfn'.
    // Return 0 on success, -1 in case of failure (file does not exists
    // or containing incoherent information).
+   XPDLOC(SCHED, "Sched::Config")
 
    int rc = 0;
 
@@ -157,14 +157,15 @@ int XrdProofSched::Config(const char *cfn)
    if (!cfn || strlen(cfn) <= 0)
       return rc;
 
+   XrdOucString msg;
+
    XrdOucStream cfg(fEDest, getenv("XRDINSTANCE"));
 
    // Open and attach the config file
    int cfgFD = 0;
    if ((cfgFD = open(cfn, O_RDONLY, 0)) < 0) {
-      XrdOucString msg("XrdProofSched::Config: error open config file: ");
-      msg += cfn;
-      TRACE(XERR, msg.c_str());
+      msg.form("error open config file: %s", cfn);
+      TRACE(XERR, msg);
       return -1;
    }
    cfg.Attach(cfgFD);
@@ -188,10 +189,8 @@ int XrdProofSched::Config(const char *cfn)
    }
 
    // Notify
-   XrdOucString msg("XrdProofSched::Config: maxsess: ") ; msg += fMaxSessions;
-   msg += ", maxwrks: " ; msg += fWorkerMax;
-   msg += ", selopt: " ; msg += fWorkerSel;
-   TRACE(DBG, msg.c_str());
+   msg.form("maxsess: %d, maxwrks: %d, selopt: %d", fMaxSessions, fWorkerMax, fWorkerSel);
+   TRACE(DBG, msg);
 
    // Done
    return rc;
@@ -201,55 +200,64 @@ int XrdProofSched::Config(const char *cfn)
 int XrdProofSched::GetNumWorkers(XrdProofdProofServ *xps)
 {
    // Calculate the number of workers to be used given the state of the cluster
+   XPDLOC(SCHED, "Sched::GetNumWorkers")
 
    // Go through the list of hosts and see how many CPUs are not used.
    int nFreeCPUs = 0;
-   std::list<XrdProofWorker *> *wrks = fMgr->GetActiveWorkers();
+   std::list<XrdProofWorker *> *wrks = fMgr->NetMgr()->GetActiveWorkers();
    std::list<XrdProofWorker *>::iterator iter;
    for (iter = wrks->begin(); iter != wrks->end(); ++iter) {
-      TRACE(DBG, "GetNumWorkers: "<< (*iter)->fImage<<
-                 " : # act: "<<(*iter)->fProofServs.size());
+      TRACE(DBG, (*iter)->fImage<<" : # act: "<<(*iter)->fProofServs.size());
       if ((*iter)->fType != 'M'
-         && (int)((*iter)->fProofServs.size()) < fOptWrksPerUnit)
+         && (int) (*iter)->fProofServs.size() < fOptWrksPerUnit)
          nFreeCPUs++;
    }
 
    float priority = 1;
-   if (xps->Group()) {
-      std::list<XrdProofdProofServ *> *sessions = fMgr->GetActiveSessions();
+   XrdProofGroup *grp = 0;
+   if (xps->Group())
+      grp = fGrpMgr->GetGroup(xps->Group());
+   if (grp) {
+      std::list<XrdProofdProofServ *> *sessions = fMgr->SessionMgr()->ActiveSessions();
       std::list<XrdProofdProofServ *>::iterator sesIter;
       float summedPriority = 0;
       for (sesIter = sessions->begin(); sesIter != sessions->end(); ++sesIter) {
-         if ((*sesIter)->Group())
-            summedPriority += (*sesIter)->Group()->Priority();
+         if ((*sesIter)->Group()) {
+            XrdProofGroup *g = fGrpMgr->GetGroup((*sesIter)->Group());
+            if (grp)
+               summedPriority += g->Priority();
+         }
       }
       if (summedPriority > 0)
-         priority = (xps->Group()->Priority() * sessions->size()) / summedPriority;
-
+         priority = (grp->Priority() * sessions->size()) / summedPriority;
    }
-   int nWrks = min((int)(nFreeCPUs * fNodesFraction * priority), fMinForQuery);
+
+   int nWrks = (int)(nFreeCPUs * fNodesFraction * priority);
+   nWrks = (fMinForQuery < nWrks) ? fMinForQuery : nWrks;
    nWrks = (nWrks >= (int) wrks->size()) ? wrks->size() - 1 : nWrks;
-   TRACE(DBG,"GetNumWorkers: "<< nFreeCPUs<<" : "<< nWrks);
+   TRACE(DBG, nFreeCPUs<<" : "<< nWrks);
 
    return nWrks;
 }
 
-//______________________________________________________________________________
+//__________________________________________________________________________
 int XrdProofSched::GetWorkers(XrdProofdProofServ *xps,
                               std::list<XrdProofWorker *> *wrks)
 {
    // Get a list of workers that can be used by session 'xps'.
+   XPDLOC(SCHED, "Sched::GetWorkers")
+
    int rc = 0;
 
    // The caller must provide a list where to store the result
    if (!wrks)
       return -1;
 
-   if (!fMgr || !(fMgr->GetActiveWorkers()))
+   if (!fMgr || !(fMgr->NetMgr()->GetActiveWorkers()))
       return -1;
 
    // The current, full list
-   std::list<XrdProofWorker *> *acws = fMgr->GetActiveWorkers();
+   std::list<XrdProofWorker *> *acws = fMgr->NetMgr()->GetActiveWorkers();
 
    // Point to the master element
    XrdProofWorker *mst = acws->front();
@@ -352,7 +360,7 @@ int XrdProofSched::GetWorkers(XrdProofdProofServ *xps,
                wrks->push_back(vwrk[iw]);
             } else {
                // Unable to generate the right number
-               TRACE(XERR, "XrdProofSched::GetWorkers: random generation failed");
+               TRACE(XERR, "random generation failed");
                rc = -1;
                break;
             }
@@ -394,7 +402,7 @@ int XrdProofSched::GetWorkers(XrdProofdProofServ *xps,
 
    // Make sure that something has been found
    if (acws->size() <= 1) {
-      TRACE(XERR, "XrdProofSched::GetWorkers: no worker found: do nothing");
+      TRACE(XERR, "no worker found: do nothing");
       rc = -1;
    }
 
@@ -417,7 +425,7 @@ int XrdProofSched::ExportInfo(XrdOucString &sbuf)
    }
 
    // The full list
-   std::list<XrdProofWorker *> *acws = fMgr->GetActiveWorkers();
+   std::list<XrdProofWorker *> *acws = fMgr->NetMgr()->GetActiveWorkers();
    std::list<XrdProofWorker *>::iterator iw;
    for (iw = acws->begin(); iw != acws->end(); ++iw) {
       sbuf += (*iw)->fType;
@@ -439,6 +447,7 @@ int XrdProofSched::ProcessDirective(XrdProofdDirective *d,
                                     char *val, XrdOucStream *cfg, bool rcf)
 {
    // Update the priorities of the active sessions.
+   XPDLOC(SCHED, "Sched::ProcessDirective")
 
    if (!d)
       // undefined inputs
@@ -449,7 +458,7 @@ int XrdProofSched::ProcessDirective(XrdProofdDirective *d,
    } else if (d->fName == "resource") {
       return DoDirectiveResource(val, cfg, rcf);
    }
-   TRACE(XERR,"ProcessDirective: unknown directive: "<<d->fName);
+   TRACE(XERR, "unknown directive: "<<d->fName);
    return -1;
 }
 

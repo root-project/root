@@ -23,6 +23,17 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+// 32 or 64 bits
+#if ((defined(__hpux) && defined(__LP64__)) || \
+     (defined(__alpha) && !defined(linux) && !defined(__VMS)) || \
+     (defined(__sgi) && (defined(__mips64) || defined(_ABI64))) || \
+     (defined(linux) && (defined(__ia64__) || defined(__x86_64__) || defined(__alpha__))) || \
+     (defined(__linux) && defined(__mips__) && (_MIPS_SIM == _ABI64)) || \
+     (defined(linux) && defined(__powerpc__) && defined(R__ppc64)) || \
+     (defined(__APPLE__) && (defined(__ppc64__) || defined(__x86_64__))))
+#  define XPD__B64
+#endif
+
 #ifdef __APPLE__
 #   ifndef __macos__
 #      define __macos__
@@ -34,6 +45,7 @@
 #   endif
 #endif
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -46,6 +58,7 @@
 #include <sys/resource.h>
 #include <sys/file.h>
 #include <dirent.h>
+#include <libgen.h>
 
 // Bypass Solaris ELF madness
 //
@@ -78,7 +91,6 @@
     defined(_AIX) || defined(__FreeBSD__) || defined(__OpenBSD__) || \
     defined(__APPLE__) || defined(__MACH__) || defined(cygwingcc)
 #include <grp.h>
-#include <sys/types.h>
 #endif
 
 // For process info
@@ -100,6 +112,17 @@
 #define XPD_LIBPATH "DYLD_LIBRARY_PATH"
 #else
 #define XPD_LIBPATH "LD_LIBRARY_PATH"
+#endif
+
+// Time related
+#include <sys/time.h>
+#include <utime.h>
+
+// Macros to check ranges
+#ifdef XPD__B64
+#  define XPD_LONGOK(x) (1)
+#else
+#  define XPD_LONGOK(x) (x > LONG_MIN && x < LONG_MAX)
 #endif
 
 #endif

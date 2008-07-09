@@ -46,6 +46,9 @@ public:
    void  RemoveClientID() { if (fClientIDs.size() > 1) fClientIDs.pop_front(); }
    void  SetClientID(Int_t cid) { fClientIDs.push_front(cid); }
 
+   // Try reconnection after error
+   Int_t Reconnect();
+
    ClassDef(TXUnixSocket, 0) //Connection class for Xrd PROOF using UNIX sockets
 };
 

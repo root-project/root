@@ -22,19 +22,32 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+//
 // Trace flags
-#define TRACE_ALL       0x0fff
-#define TRACE_REQ       0x0001
-#define TRACE_LOGIN     0x0002
-#define TRACE_ACT       0x0004
-#define TRACE_RSP       0x0008
-#define TRACE_MEM       0x0010
-#define TRACE_DBG       0x0020
-#define TRACE_XERR      0x0040
-#define TRACE_FORK      0x0080
-#define TRACE_HDBG      0x0100
-#define TRACE_SCHED     0x0200
-#define TRACE_ADMIN     0x0400
+//
+// Global mask
+#define TRACE_ALL       0xff7f
+
+// Levels
+#define TRACE_XERR      0x0001
+#define TRACE_REQ       0x0002
+#define TRACE_DBG       0x0004
+#define TRACE_LOGIN     0x0008
+#define TRACE_FORK      0x0010
+#define TRACE_MEM       0x0020
+#define TRACE_HDBG      0x0040
+// Bit 0x0080 reserved for future usage
+
+// Domains
+#define TRACE_DOMAINS   0xFF00
+#define TRACE_RSP       0x0100
+#define TRACE_AUX       0x0200
+#define TRACE_CMGR      0x0400
+#define TRACE_SMGR      0x0800
+#define TRACE_NMGR      0x1000
+#define TRACE_PMGR      0x2000
+#define TRACE_GMGR      0x4000
+#define TRACE_SCHED     0x8000
 
 #ifndef NODEBUG
 
@@ -48,8 +61,18 @@
 
 R__EXTERN XrdOucTrace *XrdProofdTrace;
 
-// Auxilliary macro
-#define TRACING(x) (XrdProofdTrace && (XrdProofdTrace->What & TRACE_ ## x))
+//
+// Auxilliary macros
+//
+#define XPDLOC(d,x) unsigned int xpdtracingdomain = (unsigned int)(TRACE_ ## d & TRACE_ALL); \
+                    const char *xpdloc = x;
+
+#define TRACINGALL(x) (TRACE_ALL == TRACE_ ## x)
+#define TRACINGERR(x) (TRACE_XERR == TRACE_ ## x)
+#define TRACINGACT(x) (XrdProofdTrace && (XrdProofdTrace->What & TRACE_ ## x))
+#define TRACINGDOM    (XrdProofdTrace && (XrdProofdTrace->What & xpdtracingdomain))
+#define TRACING(x) (TRACINGALL(x) || TRACINGERR(x) || (TRACINGACT(x) && TRACINGDOM))
+
 #define TRACESET(act,on) \
         if (on) { \
            XrdProofdTrace->What |= TRACE_ ## act; \
@@ -57,59 +80,74 @@ R__EXTERN XrdOucTrace *XrdProofdTrace;
            XrdProofdTrace->What &= ~(TRACE_ ## act & TRACE_ALL); \
         }
 
-//
-// "Full-tracing" macros (pid, time, ...)
-//
 #define XPDPRT(x) \
-   {XrdProofdTrace->Beg(TRACEID);   cerr <<x; XrdProofdTrace->End();}
+   {XrdProofdTrace->Beg("-I");   cerr << xpdloc <<": "<< x; XrdProofdTrace->End();}
 
 #define XPDERR(x) \
-   {XrdProofdTrace->Beg(TRACEID);   cerr << ">>> ERROR: "<<x; XrdProofdTrace->End();}
+   {XrdProofdTrace->Beg("-E");   cerr << xpdloc <<": "<< x; XrdProofdTrace->End();}
 
-#define TRACE(act, x) if (TRACING(act)) XPDPRT(x)
+#define TRACE(act, x) \
+   if (TRACING(act)) { \
+      if (TRACINGERR(act)) { \
+         XPDERR(x); \
+      } else { \
+         XPDPRT(x); \
+      } \
+   }
 
-#define TRACEI(act, x) \
-   if (TRACING(act)) \
-      {XrdProofdTrace->Beg(TRACEID,TRACELINK->ID); cerr <<x; XrdProofdTrace->End();}
+#define TRACEP(p, act, x) \
+   if (TRACING(act)) { \
+      if (TRACINGERR(act)) { \
+         if (p) {\
+            XrdProofdTrace->Beg("-E", 0, p->TraceID()); cerr << xpdloc <<": "<< x; XrdProofdTrace->End(); \
+         } else {XPDERR(x);}\
+      } else { \
+         if (p) {\
+            XrdProofdTrace->Beg("-I", 0, p->TraceID()); cerr << xpdloc <<": "<< x; XrdProofdTrace->End(); \
+         } else {XPDPRT(x);}\
+      } \
+   }
 
-#define TRACEP(act, x) \
-   if (TRACING(act)) \
-      {XrdProofdTrace->Beg(TRACEID,TRACELINK->ID,RESPONSE.ID()); cerr <<x; \
-       XrdProofdTrace->End();}
+#define TRACEI(id, act, x) \
+   if (TRACING(act)) { \
+      if (TRACINGERR(act)) { \
+         if (id) {\
+            XrdProofdTrace->Beg("-E", 0, id); cerr << xpdloc <<": "<< x; XrdProofdTrace->End(); \
+         } else { XPDERR(x); }\
+      } else { \
+         if (id) {\
+            XrdProofdTrace->Beg("-I", 0, id); cerr << xpdloc <<": "<< x; XrdProofdTrace->End(); \
+         } else { XPDPRT(x); }\
+      } \
+   }
 
-#define TRACES(act, x) \
-   if (TRACING(act)) \
-      {XrdProofdTrace->Beg(TRACEID,TRACELINK->ID,TRSID); cerr <<x; \
-       XrdProofdTrace->End();}
-
-#define TRACESTR(act, x) \
-   if (TRACING(act)) \
-      {XrdProofdTrace->Beg(TRACEID,TRACELINK->ID,RESPONSE.STRID()); cerr <<x; \
-       XrdProofdTrace->End();}
-
-//
-// "Minimal-tracing" macros (no pid, time, ... but avoid mutex locking)
-//
-#define MPRINT(h,x) {cerr << h << ": " << x << endl;}
-#define MERROR(h,x) {cerr << ">>> ERROR: " << h << ": " << x << endl;}
-#define MTRACE(act, h, x) if (TRACING(act)) MPRINT(h, x)
+#define TRACER(r, act, x) \
+   if (TRACING(act)) { \
+      if (TRACINGERR(act)) { \
+         if (r) {\
+            XrdProofdTrace->Beg("-E", 0, r->TraceID()); cerr << xpdloc <<": "<< x; XrdProofdTrace->End(); \
+         } else { XPDERR(x); }\
+      } else { \
+         if (r) {\
+            XrdProofdTrace->Beg("-I", 0, r->TraceID()); cerr << xpdloc <<": "<< x; XrdProofdTrace->End(); \
+         } else { XPDPRT(x); }\
+      } \
+   }
 
 #else
 
 // Dummy versions
 
 #define TRACING(x) 0
-
+#define TRACINGERR(x) (0)
+#define TRACESET(act,on)
+#define XPDLOC(x)
 #define XPDPRT(x)
-#define XPDERR(x) \
-#define TRACE(act,x)
-#define TRACEI(act,x)
-#define TRACEP(act,x)
-#define TRACES(act,x)
-
-#define MPRINT(h,x)
-#define MERROR(h,x)
-#define MTRACE(act,h,x)
+#define XPDERR(x)
+#define TRACE(act, x)
+#define TRACEP(p, act, x)
+#define TRACEI(id, act, x)
+#define TRACER(r, act, x)
 
 #endif
 

@@ -66,7 +66,6 @@ public:
 private:
 
    char                fMode;          // Type of client
-   bool                fGetAsync;      // Switch ON/OFF receipt of async messages
    bool                fConnected;
    int                 fLogConnID;     // Logical connection ID of current object
    kXR_unt16           fStreamid;      // Streamid used for normal communications
@@ -103,10 +102,13 @@ private:
    static void         *fgSecGetProtocol;  // Sec protocol getter
 
    XrdSecProtocol     *Authenticate(char *plist, int lsiz);
-   bool                CheckErrorStatus(XrdClientMessage *, int &, const char *);
+   bool                CheckErrorStatus(XrdClientMessage *, int &, const char *, bool);
    bool                CheckResp(struct ServerResponseHeader *resp,
-                                 const char *met);
-   virtual int         Connect();
+                                 const char *met, bool);
+   virtual void        Connect();
+   void                ReConnect();
+   virtual int         TryConnect();
+
    ESrvType            DoHandShake();
    virtual bool        GetAccessToSrv();
    virtual bool        Init(const char *url = 0);
@@ -140,7 +142,8 @@ public:
    virtual int         ReadRaw(void *buf, int len);
    virtual XrdClientMessage *ReadMsg();
    XrdClientMessage   *SendReq(XPClientRequest *req, const void *reqData,
-                               char **answData, const char *CmdName);
+                               char **answData, const char *CmdName,
+                               bool notifyerr = 1);
    void                SetSID(kXR_char *sid);
    virtual int         WriteRaw(const void *buf, int len);
 

@@ -156,6 +156,8 @@ public:
 
    static void    SetTXSlaveHook(TSlave_t xslavehook);
 
+   virtual void   Touch() { }
+
    ClassDef(TSlave,0)  //PROOF slave server
 };
 

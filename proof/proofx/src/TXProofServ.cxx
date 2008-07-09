@@ -28,6 +28,7 @@
 #endif
 #include <sys/types.h>
 #include <netinet/in.h>
+#include <utime.h>
 
 #include "TXProofServ.h"
 #include "TObjString.h"
@@ -151,7 +152,6 @@ TXProofServ::TXProofServ(Int_t *argc, char **argv, FILE *flog)
    fInterruptHandler = 0;
    fInputHandler = 0;
    fTerminated = kFALSE;
-   fShutdownTimerMtx = new TMutex(kTRUE);
 }
 
 //______________________________________________________________________________
@@ -402,6 +402,13 @@ Int_t TXProofServ::CreateServer()
       SendLogFile();
    }
 
+   // Setup the shutdown timer
+   if (!fShutdownTimer) {
+      // Check activity on socket every 5 mins
+      fShutdownTimer = new TShutdownTimer(this, 300000);
+      fShutdownTimer->Start(-1, kFALSE);
+   }
+
    // Done
    return 0;
 }
@@ -424,7 +431,8 @@ void TXProofServ::HandleUrgentData()
    TProofServLogHandlerGuard hg(fLogFile, fSocket, "", fRealTimeLog);
 
    // Get interrupt
-   Int_t iLev = ((TXSocket *)fSocket)->GetInterrupt();
+   Bool_t fw = kFALSE;
+   Int_t iLev = ((TXSocket *)fSocket)->GetInterrupt(fw);
    if (iLev < 0) {
       Error("HandleUrgentData", "error receiving interrupt");
       return;
@@ -443,19 +451,28 @@ void TXProofServ::HandleUrgentData()
             Info("HandleUrgentData", "*** Ping");
 
          // If master server, propagate interrupt to slaves
-         if (IsMaster()) {
-            Int_t nbad = fProof->fActiveSlaves->GetSize()-fProof->Ping();
+         if (fw && IsMaster()) {
+            Int_t nbad = fProof->fActiveSlaves->GetSize() - fProof->Ping();
             if (nbad > 0) {
                Info("HandleUrgentData","%d slaves did not reply to ping",nbad);
             }
          }
 
-         // Reply to ping
-         ((TXSocket *)fSocket)->Ping();
+         // Touch the admin path to show we are alive
+         if (fAdminPath.IsNull()) {
+            fAdminPath = gEnv->GetValue("ProofServ.AdminPath", "");
+            TString spid = Form(".%d", getpid());
+            if (!fAdminPath.IsNull() && !fAdminPath.EndsWith(spid))
+               fAdminPath += spid;
+         }
 
-         // Send log with result of ping
-         if (IsMaster())
-            SendLogFile();
+         if (!fAdminPath.IsNull()) {
+            // Update file time stamps
+            if (utime(fAdminPath.Data(), 0) != 0)
+               Info("HandleUrgentData", "problems touching path: %s", fAdminPath.Data());
+         } else {
+            Info("HandleUrgentData", "admin path undefined");
+         }
 
          break;
 
@@ -463,7 +480,7 @@ void TXProofServ::HandleUrgentData()
          Info("HandleUrgentData", "*** Hard Interrupt");
 
          // If master server, propagate interrupt to slaves
-         if (IsMaster())
+         if (fw && IsMaster())
             fProof->Interrupt(TProof::kHardInterrupt);
 
          // Flush input socket
@@ -478,7 +495,7 @@ void TXProofServ::HandleUrgentData()
          Info("HandleUrgentData", "Soft Interrupt");
 
          // If master server, propagate interrupt to slaves
-         if (IsMaster())
+         if (fw && IsMaster())
             fProof->Interrupt(TProof::kSoftInterrupt);
 
          Interrupt();
@@ -492,13 +509,13 @@ void TXProofServ::HandleUrgentData()
       case TProof::kShutdownInterrupt:
          Info("HandleUrgentData", "Shutdown Interrupt");
 
-         // When retuning for here connection are closed
+         // When returning for here connection are closed
          HandleTermination();
 
          break;
 
       default:
-         Error("HandleUrgentData", "unexpected type");
+         Error("HandleUrgentData", "unexpected type: %d", iLev);
          break;
    }
 
@@ -512,14 +529,8 @@ void TXProofServ::HandleSigPipe()
    // Called when the client is not alive anymore; terminate the session.
 
    // Real-time notification of messages
-   TProofServLogHandlerGuard hg(fLogFile, fSocket, "", fRealTimeLog);
 
-   // If master server, propagate interrupt to slaves
-   // (shutdown interrupt send internally).
-   if (IsMaster())
-      fProof->Close("S");
-
-   Terminate(0);  // will not return from here....
+   Info("HandleSigPipe","got sigpipe ... do nothing");
 }
 
 //______________________________________________________________________________
@@ -722,6 +733,17 @@ Bool_t TXProofServ::HandleError(const void *)
 {
    // Handle error on the input socket
 
+   // Try reconnection
+   if (fSocket && !fSocket->IsValid()) {
+
+      fSocket->Reconnect();
+      if (fSocket && fSocket->IsValid()) {
+         if (gDebug > 0)
+            Info("HandleError",
+               "%p: connection to local coordinator re-established", this);
+         return kFALSE;
+      }
+   }
    Printf("TXProofServ::HandleError: %p: got called ...", this);
 
    // If master server, propagate interrupt to slaves
@@ -755,16 +777,6 @@ Bool_t TXProofServ::HandleInput(const void *in)
    if (acod == kXPD_ping || acod == kXPD_interrupt) {
       // Interrupt or Ping
       HandleUrgentData();
-
-   } else if (acod == kXPD_timer) {
-      // Shutdown option
-      fShutdownWhenIdle = (hin->fInt2 == 2) ? kFALSE : kTRUE;
-      if (hin->fInt2 > 0)
-         // Setup Shutdown timer
-         SetShutdownTimer(kTRUE, hin->fInt3);
-      else
-         // Stop Shutdown timer, if any
-         SetShutdownTimer(kFALSE);
 
    } else if (acod == kXPD_flush) {
       // Flush stdout, so that we can access the full log file
@@ -900,9 +912,6 @@ void TXProofServ::Terminate(Int_t status)
    // eventually exit the loop.
    TXSocket::PostPipe((TXSocket *)fSocket);
 
-   // Avoid communicating back anything to the coordinator (it is gone)
-   ((TXSocket *)fSocket)->SetSessionID(-1);
-
    // Notify
    Printf("Terminate: termination operations ended: quitting!");
 }
@@ -964,56 +973,3 @@ Int_t TXProofServ::LockSession(const char *sessiontag, TProofLockPath **lck)
    // We are done
    return 0;
 }
-
-//______________________________________________________________________________
-void TXProofServ::SetShutdownTimer(Bool_t on, Int_t delay)
-{
-   // Enable/disable the timer for delayed shutdown; the delay will be 'delay'
-   // seconds; depending on fShutdownWhenIdle, the countdown will start
-   // immediately or when the session is idle.
-
-   R__LOCKGUARD(fShutdownTimerMtx);
-
-   if (delay < 0 && !fShutdownTimer)
-      // No shutdown request, nothing to do
-      return;
-
-   // Make sure that 'delay' make sense, i.e. not larger than 10 days
-   if (delay > 864000) {
-      Warning("SetShutdownTimer",
-              "abnormous delay value (%d): corruption? setting to 0", delay);
-      delay = 1;
-   }
-   // Set a minimum value (0 does not seem to start the timer ...)
-   Int_t del = (delay <= 0) ? 10 : delay * 1000;
-
-   if (on) {
-      if (!fShutdownTimer) {
-         // First setup call: create timer
-         fShutdownTimer = new TShutdownTimer(this, del);
-         // Start the countdown if requested
-         if (!fShutdownWhenIdle || fIdle)
-            fShutdownTimer->Start(-1, kTRUE);
-      } else {
-         // Start the countdown
-         fShutdownTimer->Start(-1, kTRUE);
-      }
-      // Notify
-      Info("SetShutdownTimer",
-              "session will be shutdown in %d seconds (%d millisec)", delay, del);
-   } else {
-      if (fShutdownTimer) {
-         // Stop and Clean-up the timer
-         SafeDelete(fShutdownTimer);
-         // Notify
-         Info("SetShutdownTimer", "shutdown countdown timer stopped: resuming session");
-      } else {
-         // Notify
-         Info("SetShutdownTimer", "shutdown countdown timer never started - do nothing");
-      }
-   }
-
-   // To avoid having the client notified about this at reconnection
-   FlushLogFile();
-}
-

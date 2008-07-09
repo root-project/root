@@ -319,7 +319,25 @@ Bool_t TShutdownTimer::Notify()
    if (gDebug > 0)
       Info ("Notify","called!");
 
-   fProofServ->HandleTermination();
+   // Check activity on the socket
+   TSocket *xs = 0;
+   if (fProofServ && (xs = fProofServ->GetSocket())) {
+      TTimeStamp now;
+      TTimeStamp ts = xs->GetLastUsage();
+      Long_t dt = (Long_t)(now.GetSec() - ts.GetSec()) * 1000 +
+                  (Long_t)(now.GetNanoSec() - ts.GetNanoSec()) / 1000000 ;
+      Int_t to = gEnv->GetValue("ProofServ.ShutdonwTimeout", 20);
+      if (dt > to * 60000) {
+         Info("Notify", "input socket: %p: did not show any activity"
+                        " during the last %d mins: shutting down", xs, to);
+         fProofServ->HandleTermination();
+      } else {
+         if (gDebug > 0)
+            Info("Notify", "input socket: %p: show activity"
+                           " %ld secs ago", xs, dt / 60000);
+      }
+   }
+   Start(-1, kFALSE);
    return kTRUE;
 }
 
@@ -408,9 +426,7 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
 
    fRealTimeLog     = kFALSE;
 
-   fShutdownWhenIdle = kTRUE;
    fShutdownTimer   = 0;
-   fShutdownTimerMtx = 0;
 
    fInflateFactor   = 1000;
 
@@ -618,6 +634,13 @@ Int_t TProofServ::CreateServer()
       fEndMaster = fProof->IsEndMaster();
 
       SendLogFile();
+   }
+
+   // Setup the shutdown timer
+   if (!fShutdownTimer) {
+      // Check activity on socket every 5 mins
+      fShutdownTimer = new TShutdownTimer(this, 300000);
+      fShutdownTimer->Start(-1, kFALSE);
    }
 
    // Done
@@ -1318,10 +1341,6 @@ void TProofServ::HandleSocketInput()
 
    fRealTime += (Float_t)timer.RealTime();
    fCpuTime  += (Float_t)timer.CpuTime();
-
-   // Check if we have been asked to shutdown
-   // (we will do nothing if not set)
-   SetShutdownTimer(kTRUE, -1);
 
    delete mess;
 }

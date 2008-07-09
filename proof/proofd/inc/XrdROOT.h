@@ -21,11 +21,19 @@
 // Class describing a ROOT version                                      //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+#include <list>
+
 #include "Xrd/XrdProtocol.hh"
 #include "XProofProtocol.h"
 #include "XrdOuc/XrdOucString.hh"
 
+#include "XrdProofdConfig.h"
+
+class XrdProofdManager;
+class XrdScheduler;
+
 class XrdROOT {
+friend class XrdROOTMgr;
 private:
    int          fStatus;
    XrdOucString fDir;
@@ -35,7 +43,6 @@ private:
    kXR_int16    fSrvProtVers;
 
    int          GetROOTVersion(const char *dir, XrdOucString &version);
-   int          ValidatePrgmSrv();
 
 public:
    XrdROOT(const char *dir, const char *tag);
@@ -51,10 +58,38 @@ public:
    bool        MatchTag(const char *tag) { return ((fTag == tag) ? 1 : 0); }
    void        Park() { fStatus = 2; }
    const char *PrgmSrv() const { return fPrgmSrv.c_str(); }
-   void        SetValid() { fStatus = 1; }
+   void        SetValid(kXR_int16 vers = -1);
    kXR_int16   SrvProtVers() const { return fSrvProtVers; }
    const char *Tag() const { return fTag.c_str(); }
-   bool        Validate();
 };
+
+//
+// Manage XrdROOT instances
+
+class XrdROOTMgr : public XrdProofdConfig {
+
+   XrdProofdManager  *fMgr;
+   XrdScheduler      *fSched;     // System scheduler
+
+   std::list<XrdROOT *> fROOT;    // ROOT versions; the first is the default
+
+   int               Validate(XrdROOT *r, XrdScheduler *sched);
+
+   void              RegisterDirectives();
+   int               DoDirectiveRootSys(char *, XrdOucStream *, bool);
+
+public:
+   XrdROOTMgr(XrdProofdManager *mgr, XrdProtocol_Config *pi, XrdSysError *e);
+   virtual ~XrdROOTMgr() { }
+
+   int               Config(bool rcf = 0);
+   int               DoDirective(XrdProofdDirective *d,
+                                 char *val, XrdOucStream *cfg, bool rcf);
+
+   XrdROOT          *DefaultVersion() const { return fROOT.front(); }
+   XrdOucString      ExportVersions(XrdROOT *def);
+   XrdROOT          *GetVersion(const char *tag);
+};
+
 
 #endif

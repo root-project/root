@@ -74,6 +74,8 @@ public:
 
    Int_t  SetupServ(Int_t stype, const char *conffile);
 
+   void   Touch();
+
    ClassDef(TXSlave,0)  //Xrd PROOF slave server
 };
 

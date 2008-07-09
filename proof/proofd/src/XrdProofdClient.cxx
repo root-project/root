@@ -19,133 +19,51 @@
 // Used by XrdProofdProtocol.                                           //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <sys/stat.h>
 
 #include "XrdNet/XrdNet.hh"
+#include "XrdSys/XrdSysPriv.hh"
 
-#include "XrdProofdAux.h"
 #include "XrdProofdClient.h"
-#include "XrdProofdManager.h"
-#include "XrdProofdPlatform.h"
 #include "XrdProofdProtocol.h"
-#include "XrdProofGroup.h"
 #include "XrdProofdProofServ.h"
+#include "XrdProofdProofServMgr.h"
 
 #include "XrdProofdTrace.h"
-static const char *gTraceID = " ";
-extern XrdOucTrace *XrdProofdTrace;
-#define TRACEID gTraceID
-
-int XrdProofdClient::fgMaxOldLogs = XPC_DEFMAXOLDLOGS;
 
 //__________________________________________________________________________
-bool XpdSessionTagComp(XrdOucString *&lhs, XrdOucString *&rhs)
-{
-   // Compare times from session tag strings
-
-   if (!lhs || !rhs)
-      return 1;
-
-   // Left hand side
-   XrdOucString ll(*lhs);
-   ll.erase(ll.rfind('-'));
-   ll.erase(0, ll.rfind('-')+1);
-   int tl = strtol(ll.c_str(), 0, 10);
-
-   // Right hand side
-   XrdOucString rr(*rhs);
-   rr.erase(rr.rfind('-'));
-   rr.erase(0, rr.rfind('-')+1);
-   int tr = strtol(rr.c_str(), 0, 10);
-
-   // Done
-   return ((tl < tr) ? 0 : 1);
-}
-
-#if defined(__sun)
-//__________________________________________________________________________
-static void Sort(std::list<XrdOucString *> *lst)
-{
-   // Sort ascendingly the list.
-   // Function used on Solaris where std::list::sort() does not support an
-   // alternative comparison algorithm.
-
-   // Check argument
-   if (!lst)
-      return;
-
-   // If empty or just one element, nothing to do
-   if (lst->size() < 2)
-      return;
-
-   // Fill a temp array with the current status
-   XrdOucString **ta = new XrdOucString *[lst->size()];
-   std::list<XrdOucString *>::iterator i;
-   int n = 0;
-   for (i = lst->begin(); i != lst->end(); ++i)
-      ta[n++] = *i;
-
-   // Now start the loops
-   XrdOucString *tmp = 0;
-   bool notyet = 1;
-   int jold = 0;
-   while (notyet) {
-      int j = jold;
-      while (j < n - 1) {
-         if (XpdSessionTagComp(ta[j], ta[j+1]))
-            break;
-         j++;
-      }
-      if (j >= n - 1) {
-         notyet = 0;
-      } else {
-         jold = j + 1;
-         XPDSWAP(ta[j], ta[j+1], tmp);
-         int k = j;
-         while (k > 0) {
-            if (!XpdSessionTagComp(ta[k], ta[k-1])) {
-               XPDSWAP(ta[k], ta[k-1], tmp);
-            } else {
-               break;
-            }
-            k--;
-         }
-      }
-   }
-
-   // Empty the original list
-   lst->clear();
-
-   // Fill it again
-   while (n--)
-      lst->push_back(ta[n]);
-
-   // Clean up
-   delete[] ta;
-}
-#endif
-
-//__________________________________________________________________________
-XrdProofdClient::XrdProofdClient(const char *cid,
-                                 short int clientvers, XrdProofUI ui)
+XrdProofdClient::XrdProofdClient(XrdProofUI ui, bool master, bool changeown,
+                                 XrdSysError *edest, const char *adminpath)
+                : fSandbox(ui, master, changeown)
 {
    // Constructor
 
-   fClientID = (cid) ? strdup(cid) : 0;
-   fClientVers = clientvers;
-   fProofServs.reserve(10);
-   fClients.reserve(10);
+   fProofServs.clear();
+   fClients.clear();
    fUI = ui;
    fUNIXSock = 0;
-   fUNIXSockPath = 0;
    fUNIXSockSaved = 0;
    fROOT = 0;
-   fGroup = 0;
-   fWorkerProofServ = 0;
-   fMasterProofServ = 0;
    fIsValid = 0;
+#if 0
+   fRefSid = 0;
+#endif
+   fChangeOwn = changeown;
+
+   // Make sure the admin path exists
+   fAdminPath.form("%s/%s.%s", adminpath, ui.fUser.c_str(), ui.fGroup.c_str());
+   struct stat st;
+   if (stat(adminpath, &st) != 0)
+      return;
+   XrdProofUI effui;
+   XrdProofdAux::GetUserInfo(st.st_uid, effui);
+   if (XrdProofdAux::AssertDir(fAdminPath.c_str(), effui, 1) != 0)
+      return;
+
+   // Create the UNIX socket
+   if (fSandbox.IsValid())
+      if (CreateUNIXSock(edest) == 0)
+         fIsValid = 1;
 }
 
 //__________________________________________________________________________
@@ -153,37 +71,18 @@ XrdProofdClient::~XrdProofdClient()
 {
    // Destructor
 
-   SafeFree(fClientID);
-
    // Unix socket
    SafeDel(fUNIXSock);
-   SafeDelArray(fUNIXSockPath);
 }
 
 //__________________________________________________________________________
-void XrdProofdClient::CountSession(int n, bool worker)
-{
-   // Count session of type srvtype
-
-   if (worker)
-      fWorkerProofServ += n;
-   else
-      fMasterProofServ += n;
-
-   TRACE(SCHED, "XrdProofdClient::CountSession:"<<fClientID<<
-                " {n,worker}: {"<<n<<","<<worker<<"} "<<
-                " fWorker: "<<fWorkerProofServ<<
-                ", fMaster: "<<fMasterProofServ);
-}
-
-//__________________________________________________________________________
-bool XrdProofdClient::Match(const char *id, const char *grp)
+bool XrdProofdClient::Match(const char *usr, const char *grp)
 {
    // return TRUE if this instance matches 'id' (and 'grp', if defined) 
 
-   bool rc = (id && !strcmp(id, fClientID)) ? 1 : 0;
+   bool rc = (usr && !strcmp(usr, User())) ? 1 : 0;
    if (rc && grp && strlen(grp) > 0)
-      rc = (fGroup && !strcmp(grp, fGroup->Name())) ? 1 : 0;
+      rc = (grp && Group() && !strcmp(grp, Group())) ? 1 : 0;
 
    return rc;
 }
@@ -193,78 +92,162 @@ int XrdProofdClient::GetClientID(XrdProofdProtocol *p)
 {
    // Get next free client ID. If none is found, increase the vector size
    // and get the first new one
+   XPDLOC(CMGR, "Client::GetClientID")
 
-   XrdSysMutexHelper mh(fMutex);
+   XrdClientID *cid = 0;
+   int ic = 0, sz = 0;
+   {  XrdSysMutexHelper mh(fMutex);
+      // Search for free places in the existing vector
+      for (ic = 0; ic < (int)fClients.size() ; ic++) {
+         if (!fClients[ic]) {
+            cid = fClients[ic];
+            cid->Reset();
+            break;
+         }
+      }
 
-   int ic = 0;
-   // Search for free places in the existing vector
-   for (ic = 0; ic < (int)fClients.size() ; ic++) {
-      if (!fClients[ic]) {
-         fClients[ic] = p;
-         return ic;
+      if (!cid) {
+         // We need to resize (double it)
+         if (ic >= (int)fClients.capacity())
+            fClients.reserve(2*fClients.capacity());
+ 
+         // Fill in new element
+         cid = new XrdClientID();
+         fClients.push_back(cid);
+         sz = fClients.size();
       }
    }
+   // Re-init for this protocol
+   if (cid) {
+      cid->SetP(p);
+      // Reference Stream ID
+      unsigned short sid;
+      memcpy((void *)&sid, (const void *)&(p->Request()->header.streamid[0]), 2);
+      cid->SetSid(sid);
+   }
 
-   // We need to resize (double it)
-   if (ic >= (int)fClients.capacity())
-      fClients.reserve(2*fClients.capacity());
-
-   // Fill in new element
-   fClients.push_back(p);
-
-   TRACE(DBG, "XrdProofdClient::GetClientID: size: "<<fClients.size());
+   TRACE(DBG, "size = "<<sz<<", ic = "<<ic);
 
    // We are done
    return ic;
 }
 
 //__________________________________________________________________________
-int XrdProofdClient::CreateUNIXSock(XrdSysError *edest, const char *tmpdir)
+int XrdProofdClient::ReserveClientID(int cid)
+{
+   // Reserve a client ID. If none is found, increase the vector size
+   // and performe the needed initializations
+   XPDLOC(CMGR, "Client::ReserveClientID")
+
+   if (cid < 0)
+      return -1;
+
+   int sz = 0, newsz = 0;
+   {  XrdSysMutexHelper mh(fMutex);
+      if (cid >= (int)fClients.size()) {
+
+         // We need to resize (double it)
+         newsz = fClients.capacity();
+         if (cid >= (int)fClients.capacity()) {
+            newsz = 2 * fClients.capacity();
+            newsz = (cid < newsz) ? newsz : cid + 1;
+            fClients.reserve(newsz);
+         }
+
+         // Fill in new elements
+         while (cid >= (int)fClients.size())
+            fClients.push_back(new XrdClientID());
+      }
+      sz = fClients.size();
+   }
+
+   TRACE(DBG, "cid = "<<cid<<", size = "<<sz<<", capacity = "<<newsz);
+
+   // We are done
+   return 0;
+}
+
+//__________________________________________________________________________
+int XrdProofdClient::CreateUNIXSock(XrdSysError *edest)
 {
    // Create UNIX socket for internal connections
+   XPDLOC(CMGR, "Client::CreateUNIXSock")
 
-   TRACE(ACT, "CreateUNIXSock: enter");
+   TRACE(DBG, "enter");
+
 
    // Make sure we do not have already a socket
-   if (fUNIXSock && fUNIXSockPath) {
-       TRACE(DBG,"CreateUNIXSock: UNIX socket exists already! (" <<
+   if (fUNIXSock) {
+       TRACE(DBG,"UNIX socket exists already! (" <<
              fUNIXSockPath<<")");
        return 0;
    }
 
-   // Make sure we do not have inconsistencies
-   if (fUNIXSock || fUNIXSockPath) {
-       TRACE(XERR,"CreateUNIXSock: inconsistent values: corruption? (sock: " <<
-                 fUNIXSock<<", path: "<< fUNIXSockPath);
-       return -1;
-   }
-
    // Inputs must make sense
-   if (!edest || !tmpdir) {
-       TRACE(XERR,"CreateUNIXSock: invalid inputs: edest: " <<
-                 (int *)edest <<", tmpdir: "<< (int *)tmpdir);
+   if (!edest) {
+       TRACE(XERR,"invalid input: edest: " << (int *)edest);
        return -1;
    }
 
    // Create socket
    fUNIXSock = new XrdNet(edest);
 
-   // Create path
-   fUNIXSockPath = new char[strlen(tmpdir)+strlen("/xpdsock_XXXXXX")+2];
-   sprintf(fUNIXSockPath,"%s/xpdsock_XXXXXX", tmpdir);
-   int fd = mkstemp(fUNIXSockPath);
-   if (fd > -1) {
+   // Create path if needed
+   fUNIXSockPath.form("%s/xpdsock", fAdminPath.c_str());
+   fUNIXSockPath.replace("//", "/");
+   bool rm = 0, ok = 0;
+   struct stat st;
+   if (stat(fUNIXSockPath.c_str(), &st) == 0) {
+      if (!S_ISSOCK(st.st_mode))
+         rm = 1;
+      else
+         ok = 1;
+   } else {
+      if (errno != ENOENT)
+         rm = 1;
+   }
+   if (rm  && unlink(fUNIXSockPath.c_str()) != 0) {
+      TRACE(XERR, "non-socket path exists: unable to delete it: " <<fUNIXSockPath);
+      return -1;
+   }
+
+   // Create the path
+   int fd = 0;
+   if (!ok) {
+      if ((fd = open(fUNIXSockPath.c_str(), O_EXCL | O_RDWR | O_CREAT)) < 0) {
+         TRACE(XERR, "unable to create path: " <<fUNIXSockPath);
+         return -1;
+      }
       close(fd);
-      if (fUNIXSock->Bind(fUNIXSockPath)) {
-         TRACE(XERR,"CreateUNIXSock: warning:"
-                   " problems binding to UNIX socket; path: " <<fUNIXSockPath);
+   }
+   if (fd > -1) {
+      if (fUNIXSock->Bind((char *)fUNIXSockPath.c_str())) {
+         TRACE(XERR, " problems binding to UNIX socket; path: " <<fUNIXSockPath);
          return -1;
       } else
-         TRACE(DBG, "CreateUNIXSock: path for UNIX for socket is " <<fUNIXSockPath);
+         TRACE(DBG, "path for UNIX for socket is " <<fUNIXSockPath);
    } else {
-      TRACE(XERR,"CreateUNIXSock: unable to generate unique"
-            " path for UNIX socket; tried path " << fUNIXSockPath);
+      TRACE(XERR, "unable to open / create path for UNIX socket; tried path "<< fUNIXSockPath);
       return -1;
+   }
+
+   // Set ownership of the socket file to the client
+   XrdSysPrivGuard pGuard((uid_t)0, (gid_t)0);
+   if (XpdBadPGuard(pGuard, fUI.fUid) && fChangeOwn) {
+      TRACE(XERR, "could not get privileges");
+      return -1;
+   }
+   if (fChangeOwn) {
+      if (chown(fUNIXSockPath.c_str(), fUI.fUid, fUI.fGid) == -1) {
+         TRACE(XERR, "cannot set user ownership on UNIX socket (errno: "<<errno<<")");
+         return -1;
+      }
+      // Make sure that it worked out
+      if ((stat(fUNIXSockPath.c_str(), &st) != 0) || 
+            (int) st.st_uid != fUI.fUid || (int) st.st_gid != fUI.fGid) {
+         TRACE(XERR, "problems setting user ownership on UNIX socket");
+         return -1;
+      }
    }
 
    // We are done
@@ -275,38 +258,37 @@ int XrdProofdClient::CreateUNIXSock(XrdSysError *edest, const char *tmpdir)
 void XrdProofdClient::SaveUNIXPath()
 {
    // Save UNIX path in <SandBox>/.unixpath
+   XPDLOC(CMGR, "Client::SaveUNIXPath")
 
-   TRACE(ACT,"SaveUNIXPath: enter: saved? "<<fUNIXSockSaved);
+   TRACE(DBG, "saved? "<<fUNIXSockSaved);
 
    // Make sure we do not have already a socket
    if (fUNIXSockSaved) {
-      TRACE(DBG,"SaveUNIXPath: UNIX path saved already");
+      TRACE(DBG, "UNIX path saved already");
       return;
    }
 
    // Make sure we do not have already a socket
-   if (!fUNIXSockPath) {
-       TRACE(XERR,"SaveUNIXPath: UNIX path undefined!");
+   if (fUNIXSockPath.length() <= 0) {
+       TRACE(XERR, "UNIX path undefined!");
        return;
    }
 
    // File name
-   XrdOucString fn = fUI.fWorkDir;
+   XrdOucString fn = fSandbox.Dir();
    fn += "/.unixpath";
 
    // Open the file for appending
    FILE *fup = fopen(fn.c_str(), "a+");
    if (!fup) {
-      TRACE(XERR, "SaveUNIXPath: cannot open file "<<fn<<
-            " for appending (errno: "<<errno<<")");
+      TRACE(XERR, "cannot open file "<<fn<<" for appending (errno: "<<errno<<")");
       return;
    }
 
    // Lock the file
    lseek(fileno(fup), 0, SEEK_SET);
    if (lockf(fileno(fup), F_LOCK, 0) == -1) {
-      TRACE(XERR, "SaveUNIXPath: cannot lock file "<<fn<<
-            " (errno: "<<errno<<")");
+      TRACE(XERR, "cannot lock file "<<fn<<" (errno: "<<errno<<")");
       fclose(fup);
       return;
    }
@@ -326,23 +308,15 @@ void XrdProofdClient::SaveUNIXPath()
       sscanf(ln, "%d %s", &pid, path);
       // Verify if still running
       int vrc = -1;
-      if ((vrc = XrdProofdProtocol::Mgr()->VerifyProcessByID(pid, "xrootd")) != 0) {
+      if ((vrc = XrdProofdAux::VerifyProcessByID(pid, "xrootd")) != 0) {
          // Still there
          actln.push_back(new XrdOucString(ln));
-      } else if (vrc == 0) {
-         // Not running: remove the socket path
-         TRACE(DBG, "SaveUNIXPath: unlinking socket path "<< path);
-         if (unlink(path) != 0 && errno != ENOENT) {
-            TRACE(XERR, "SaveUNIXPath: problems unlinking socket path "<< path<<
-                    " (errno: "<<errno<<")");
-         }
       }
    }
 
    // Truncate the file
    if (ftruncate(fileno(fup), 0) == -1) {
-      TRACE(XERR, "SaveUNIXPath: cannot truncate file "<<fn<<
-                 " (errno: "<<errno<<")");
+      TRACE(XERR, "cannot truncate file "<<fn<<" (errno: "<<errno<<")");
       lseek(fileno(fup), 0, SEEK_SET);
       lockf(fileno(fup), F_ULOCK, 0);
       fclose(fup);
@@ -360,13 +334,12 @@ void XrdProofdClient::SaveUNIXPath()
 
    // Append the path and our process ID
    lseek(fileno(fup), 0, SEEK_END);
-   fprintf(fup, "%d %s\n", getppid(), fUNIXSockPath);
+   fprintf(fup, "%d %s\n", getppid(), fUNIXSockPath.c_str());
 
    // Unlock the file
    lseek(fileno(fup), 0, SEEK_SET);
    if (lockf(fileno(fup), F_ULOCK, 0) == -1)
-      TRACE(XERR, "SaveUNIXPath: cannot unlock file "<<fn<<
-                 " (errno: "<<errno<<")");
+      TRACE(XERR, "cannot unlock file "<<fn<<" (errno: "<<errno<<")");
 
    // Close the file
    fclose(fup);
@@ -374,472 +347,168 @@ void XrdProofdClient::SaveUNIXPath()
    // Path saved
    fUNIXSockSaved = 1;
 }
-//______________________________________________________________________________
-int XrdProofdClient::GuessTag(XrdOucString &tag, int ridx, bool notify)
-{
-   // Guess session tag completing 'tag' (typically "-<pid>") by scanning the
-   // active session file or the session dir.
-   // In case of success, tag is filled with the full tag and 0 is returned.
-   // In case of failure, -1 is returned.
 
-   if (notify)
-      TRACE(ACT, "GuessTag: enter: tag: "<<tag);
-
-   bool found = 0;
-   bool last = (tag == "last") ? 1 : 0;
-
-   if (!last && tag.length() > 0) {
-      // Scan the sessions file
-      XrdOucString fn = Workdir();
-      fn += "/.sessions";
-
-      // Open the file for reading
-      FILE *fact = fopen(fn.c_str(), "a+");
-      if (fact) {
-         // Lock the file
-         if (lockf(fileno(fact), F_LOCK, 0) == 0) {
-            // Read content, if already existing
-            char ln[1024];
-            while (fgets(ln, sizeof(ln), fact)) {
-               // Get rid of '\n'
-               if (ln[strlen(ln)-1] == '\n')
-                  ln[strlen(ln)-1] = '\0';
-               // Skip empty or comment lines
-               if (strlen(ln) <= 0 || ln[0] == '#')
-                  continue;
-               // Count if not the one we want to remove
-               if (!strstr(ln, tag.c_str())) {
-                  tag = ln;
-                  found = 1;
-                  break;
-               }
-            }
-            // Unlock the file
-            lseek(fileno(fact), 0, SEEK_SET);
-            if (lockf(fileno(fact), F_ULOCK, 0) == -1)
-               if (notify)
-                  TRACE(DBG, "GuessTag: cannot unlock file "<<fn<<" ; fact: "<<fact<<
-                             ", fd: "<< fileno(fact) << " (errno: "<<errno<<")");
-
-         } else {
-            if (notify)
-               TRACE(DBG, "GuessTag: cannot lock file: "<<fn<<" ; fact: "<<fact<<
-                          ", fd: "<< fileno(fact) << " (errno: "<<errno<<")");
-         }
-         // Close the file
-         fclose(fact);
-
-      } else {
-         if (notify)
-            TRACE(DBG, "GuessTag: cannot open file "<<fn<<
-                       " for reading (errno: "<<errno<<")");
-      }
-   }
-
-   if (!found) {
-
-      // Search the tag in the dirs
-      std::list<XrdOucString *> staglst;
-      staglst.clear();
-      int rc = GetSessionDirs(3, &staglst, &tag);
-      if (rc < 0) {
-         if (notify)
-            TRACE(XERR, "GuessTag: cannot scan dir "<<Workdir());
-         return -1;
-      }
-      found = (rc == 1) ? 1 : 0;
-
-      if (!found && staglst.size() > 0) {
-         // Take last one, if required
-         if (last) {
-            tag = staglst.front()->c_str();
-            found = 1;
-         } else {
-            if (ridx < 0) {
-               int itag = ridx;
-               // Reiterate back
-               std::list<XrdOucString *>::iterator i;
-               for (i = staglst.end(); i != staglst.begin(); --i) {
-                  if (itag == 0) {
-                     tag = (*i)->c_str();
-                     found = 1;
-                     break;
-                  }
-                  itag++;
-               }
-            }
-         }
-      }
-      // Cleanup
-      staglst.clear();
-      // Correct the tag
-      if (found) {
-         tag.replace("session-", "");
-      } else {
-         if (notify)
-            TRACE(DBG, "GuessTag: tag "<<tag<<" not found in dir");
-      }
-   }
-
-   // We are done
-   return ((found) ? 0 : -1);
-}
-
-//______________________________________________________________________________
-int XrdProofdClient::AddNewSession(const char *tag)
-{
-   // Record entry for new proofserv session tagged 'tag' in the active
-   // sessions file (<SandBox>/.sessions). The file is created if needed.
-   // Return 0 on success, -1 on error. 
-
-
-   // Check inputs
-   if (!tag) {
-      XPDPRT("XrdProofdProtocol::AddNewSession: invalid input");
-      return -1;
-   }
-   TRACE(ACT, "AddNewSession: enter: tag:"<<tag);
-
-   // File name
-   XrdOucString fn = Workdir();
-   fn += "/.sessions";
-
-   // Open the file for appending
-   FILE *fact = fopen(fn.c_str(), "a+");
-   if (!fact) {
-      TRACE(XERR, "AddNewSession: cannot open file "<<fn<<
-                 " for appending (errno: "<<errno<<")");
-      return -1;
-   }
-
-   // Lock the file
-   lseek(fileno(fact), 0, SEEK_SET);
-   if (lockf(fileno(fact), F_LOCK, 0) == -1) {
-      TRACE(XERR, "AddNewSession: cannot lock file "<<fn<<
-                 " (errno: "<<errno<<")");
-      fclose(fact);
-      return -1;
-   }
-
-   bool writeout = 1;
-
-   // Check if already there
-   std::list<XrdOucString *> actln;
-   char ln[1024];
-   while (fgets(ln, sizeof(ln), fact)) {
-      // Get rid of '\n'
-      if (ln[strlen(ln)-1] == '\n')
-         ln[strlen(ln)-1] = '\0';
-      // Skip empty or comment lines
-      if (strlen(ln) <= 0 || ln[0] == '#')
-         continue;
-      // Count if not the one we want to remove
-      if (strstr(ln, tag))
-         writeout = 0;
-   }
-
-   // Append the session unique tag
-   if (writeout) {
-      lseek(fileno(fact), 0, SEEK_END);
-      fprintf(fact, "%s\n", tag);
-   }
-
-   // Unlock the file
-   lseek(fileno(fact), 0, SEEK_SET);
-   if (lockf(fileno(fact), F_ULOCK, 0) == -1)
-      TRACE(XERR, "AddNewSession: cannot unlock file "<<fn<<
-                 " (errno: "<<errno<<")");
-
-   // Close the file
-   fclose(fact);
-
-   // We are done
-   return 0;
-}
-
-//______________________________________________________________________________
-int XrdProofdClient::MvOldSession(const char *tag, bool notify)
-{
-   // Move record for tag from the active sessions file to the old 
-   // sessions file (<SandBox>/.sessions). The active file is removed if
-   // empty after the operation. The old sessions file is created if needed.
-   // If the static fgMaxOldLogs > 0, logs for a fgMaxOldLogs number of sessions
-   // are kept in the sandbox; working dirs for sessions in excess are removed.
-   // By default logs for the last 10 sessions are kept; the limit can be changed
-   // via the static method XrdProofdClient::SetMaxOldLogs.
-   // Return 0 on success, -1 on error.
-
-   char ln[1024];
-
-   // Check inputs
-   if (!tag) {
-      if (notify)
-         TRACE(XERR, "MvOldSession: invalid input");
-      return -1;
-   }
-   if (notify)
-      TRACE(ACT, "MvOldSession: enter: tag:"<<tag<<", maxold:"<<fgMaxOldLogs);
-
-   // Update of the active file
-   XrdOucString fna = Workdir();
-   fna += "/.sessions";
-
-   // Open the file
-   FILE *fact = fopen(fna.c_str(), "a+");
-   if (!fact) {
-      if (notify)
-         TRACE(XERR, "MvOldSession: cannot open file "<<fna<<
-                     " (errno: "<<errno<<")");
-      return -1;
-   }
-
-   // Lock the file
-   if (lockf(fileno(fact), F_LOCK, 0) == -1) {
-      if (notify)
-         TRACE(XERR, "MvOldSession: cannot lock file "<<fna<<
-                     " (errno: "<<errno<<")");
-      fclose(fact);
-      return -1;
-   }
-
-   // Read content, if already existing
-   std::list<XrdOucString *> actln;
-   while (fgets(ln, sizeof(ln), fact)) {
-      // Get rid of '\n'
-      if (ln[strlen(ln)-1] == '\n')
-         ln[strlen(ln)-1] = '\0';
-      // Skip empty or comment lines
-      if (strlen(ln) <= 0 || ln[0] == '#')
-         continue;
-      // Count if not the one we want to remove
-      if (!strstr(ln, tag))
-         actln.push_back(new XrdOucString(ln));
-   }
-
-   // Truncate the file
-   if (ftruncate(fileno(fact), 0) == -1) {
-      if (notify)
-         TRACE(XERR, "MvOldSession: cannot truncate file "<<fna<<
-                     " (errno: "<<errno<<")");
-      lseek(fileno(fact), 0, SEEK_SET);
-      lockf(fileno(fact), F_ULOCK, 0);
-      fclose(fact);
-      return -1;
-   }
-
-   // If active sessions still exist, write out new composition
-   bool unlk = 1;
-   if (actln.size() > 0) {
-      unlk = 0;
-      std::list<XrdOucString *>::iterator i;
-      for (i = actln.begin(); i != actln.end(); ++i) {
-         fprintf(fact, "%s\n", (*i)->c_str());
-         delete (*i);
-      }
-   }
-
-   // Unlock the file
-   lseek(fileno(fact), 0, SEEK_SET);
-   if (lockf(fileno(fact), F_ULOCK, 0) == -1)
-      if (notify)
-         TRACE(XERR, "MvOldSession: cannot unlock file "<<fna<<
-                     " (errno: "<<errno<<")");
-
-   // Close the file
-   fclose(fact);
-
-   // Unlink the file if empty
-   if (unlk)
-      if (unlink(fna.c_str()) == -1) 
-         if (notify)
-            TRACE(XERR, "MvOldSession: cannot unlink file "<<fna<<
-                        " (errno: "<<errno<<")");
-
-   // Flag the session as closed
-   XrdOucString fterm = Workdir();
-   fterm += (strstr(tag,"session-")) ? "/" : "/session-";
-   fterm += tag;
-   fterm += "/.terminated";
-   // Create the file
-   FILE *ft = fopen(fterm.c_str(), "w");
-   if (!ft) {
-      if (notify)
-         TRACE(XERR, "MvOldSession: cannot open file "<<fterm<<
-                     " (errno: "<<errno<<")");
-      return -1;
-   }
-   fclose(ft);
-
-   // If a limit on the number of sessions dirs is set, apply it
-   if (fgMaxOldLogs > 0) {
-
-      // Get list of terminated session working dirs
-      std::list<XrdOucString *> staglst;
-      staglst.clear();
-      if (GetSessionDirs(2, &staglst) != 0) {
-         if (notify)
-            TRACE(XERR, "MvOldSession: cannot get list of dirs ");
-         return -1;
-      }
-      if (notify)
-         TRACE(DBG, "MvOldSession: number of working dirs: "<<staglst.size());
-
-      if (notify) {
-         std::list<XrdOucString *>::iterator i;
-         for (i = staglst.begin(); i != staglst.end(); ++i) {
-            TRACE(HDBG, "MvOldSession: found "<<(*i)->c_str());
-         }
-      }
-
-      // Remove the oldest, if needed
-      while ((int)staglst.size() > fgMaxOldLogs) {
-         XrdOucString *s = staglst.back();
-         if (s) {
-            if (notify)
-               TRACE(HDBG, "MvOldSession: removing "<<s->c_str());
-            // Remove associated workdir
-            XrdOucString rmcmd = "/bin/rm -rf ";
-            rmcmd += Workdir();
-            rmcmd += '/';
-            rmcmd += s->c_str();
-            system(rmcmd.c_str());
-            // Delete the string
-            delete s;
-         }
-         // Remove the last element
-         staglst.pop_back();
-      }
-
-      // Clear the list
-      staglst.clear();
-   }
-
-   // Done
-   return 0;
-}
-
-//______________________________________________________________________________
-int XrdProofdClient::GetSessionDirs(int opt, std::list<XrdOucString *> *sdirs,
-                                    XrdOucString *tag)
-{
-   // Scan the sandbox for sessions working dirs and return their
-   // sorted (according to creation time, first is the newest) list
-   // in 'sdirs'.
-   // The option 'opt' may have 3 values:
-   //    0        all working dirs are kept
-   //    1        active sessions only
-   //    2        terminated sessions only
-   //    3        search entry containing 'tag' and fill tag with
-   //             the full entry name; if defined, sdirs is filled
-   // Returns -1 otherwise in case of failure.
-   // In case of success returns 0 for opt < 3, 1 if found or 0 if not
-   // found for opt == 3.
-
-   // If unknown take all
-   opt = (opt >= 0 && opt <= 3) ? opt : 0;
-
-   // Check inputs
-   if ((opt < 3 && !sdirs) || (opt == 3 && !tag)) {
-      TRACE(XERR, "GetSessionDirs: invalid inputs");
-      return -1;
-   }
-
-   TRACE(ACT, "GetSessionDirs: enter: opt: "<<opt<<", dir: "<<Workdir());
-
-   // Open dir
-   DIR *dir = opendir(Workdir());
-   if (!dir) {
-      TRACE(XERR, "GetSessionDirs: cannot open dir "<<Workdir()<<
-            " (errno: "<<errno<<")");
-      return -1;
-   }
-
-   // Scan the directory, and save the paths for terminated sessions
-   // into a list
-   bool found = 0;
-   struct dirent *ent = 0;
-   while ((ent = (struct dirent *)readdir(dir))) {
-      if (!strncmp(ent->d_name, "session-", 8)) {
-         bool keep = 1;
-         if (opt == 3 && tag->length() > 0) {
-            if (strstr(ent->d_name, tag->c_str())) {
-               *tag = ent->d_name;
-               found = 1;
-            }
-         } else {
-            if (opt > 0) {
-               XrdOucString fterm(Workdir());
-               fterm += '/';
-               fterm += ent->d_name;
-               fterm += "/.terminated";
-               int rc = access(fterm.c_str(), F_OK);
-               if ((opt == 1 && rc == 0) || (opt == 2 && rc != 0))
-                  keep = 0;
-            }
-         }
-         TRACE(HDBG, "GetSessionDirs: found entry "<<ent->d_name<<", keep: "<<keep);
-         if (sdirs && keep)
-            sdirs->push_back(new XrdOucString(ent->d_name));
-      }
-   }
-
-   // Close the directory
-   closedir(dir);
-
-   // Sort the list
-   if (sdirs)
-#if !defined(__sun)
-      sdirs->sort(&XpdSessionTagComp);
-#else
-      Sort(sdirs);
-#endif
-
-   // Done
-   return ((opt == 3 && found) ? 1 : 0);
-}
 //__________________________________________________________________________
-int XrdProofdClient::GetFreeServID()
+XrdProofdProofServ *XrdProofdClient::GetFreeServObj()
 {
    // Get next free server ID. If none is found, increase the vector size
    // and get the first new one
+   XPDLOC(CMGR, "Client::GetFreeServObj")
 
-   TRACE(ACT,"GetFreeServID: enter");
+   int ic = 0, newsz = 0, sz = 0;
+   XrdProofdProofServ *xps = 0;
+   XrdOucString msg;
+   {  XrdSysMutexHelper mh(fMutex);
+
+      // Search for free places in the existing vector
+      for (ic = 0; ic < (int)fProofServs.size() ; ic++) {
+         if (fProofServs[ic] && !(fProofServs[ic]->IsValid())) {
+            fProofServs[ic]->SetValid();
+            break;
+         }
+      }
+
+      // If we did not find it, we resize the vector (double it)
+      if (ic >= (int)fProofServs.capacity()) {
+         newsz = 2 * fProofServs.capacity();
+         fProofServs.reserve(newsz);
+      }
+
+      // Allocate new element
+      fProofServs.push_back(new XrdProofdProofServ());
+      sz = fProofServs.size();
+
+      xps = fProofServs[ic];
+      xps->SetValid();
+      xps->SetID(ic);
+   }
+
+   // Notify
+   if (TRACING(DBG)) {
+      if (newsz > 0) {
+         msg.form("new capacity = %d, size = %d, ic = %d, xps = %p",
+                   newsz, sz, ic, xps);
+      } else {
+         msg.form("size = %d, ic = %d, xps = %p", sz, ic, xps);
+      }
+      XPDPRT(msg);
+   }
+
+   // We are done
+   return xps;
+}
+
+//__________________________________________________________________________
+XrdProofdProofServ *XrdProofdClient::GetServObj(int id)
+{
+   // Get server at 'id'. If needed, increase the vector size
+   XPDLOC(CMGR, "Client::GetServObj")
+
+   TRACE(DBG, "id: "<< id);
+
+   if (id < 0) {
+      TRACE(XERR, "invalid input: id: "<< id);
+      return (XrdProofdProofServ *)0;
+   }
 
    XrdSysMutexHelper mh(fMutex);
 
-   TRACE(DBG,"GetFreeServID: size = "<<fProofServs.size()<<
-              "; capacity = "<<fProofServs.capacity());
-   int ic = 0;
-   // Search for free places in the existing vector
-   for (ic = 0; ic < (int)fProofServs.size() ; ic++) {
-      if (fProofServs[ic] && !(fProofServs[ic]->IsValid())) {
-         fProofServs[ic]->SetValid();
-         return ic;
+   TRACE(DBG, "size = "<<fProofServs.size()<<"; capacity = "<<fProofServs.capacity());
+
+   if (id < (int)fProofServs.size()) {
+      if (fProofServs[id]) {
+         fProofServs[id]->SetValid();
+         return fProofServs[id];
+      } else {
+         TRACE(XERR, "instance in use or undefined! protocol error");
+         return (XrdProofdProofServ *)0;
       }
    }
 
-   // We may need to resize (double it)
-   if (ic >= (int)fProofServs.capacity()) {
+   // If we did not find it, we first resize the vector if needed (double it)
+   if (id >= (int)fProofServs.capacity()) {
       int newsz = 2 * fProofServs.capacity();
+      newsz = (id < newsz) ? newsz : id+1;
       fProofServs.reserve(newsz);
+      TRACE(DBG, "new capacity = "<<fProofServs.capacity());
    }
+   int nnew = id - fProofServs.size() + 1;
+   while (nnew--)
+      fProofServs.push_back(new XrdProofdProofServ());
 
-   // Allocate new element
-   fProofServs.push_back(new XrdProofdProofServ());
+   XrdProofdProofServ *xps = fProofServs[id];
+   xps->SetValid();
+   xps->SetID(id);
 
-   TRACE(DBG,"GetFreeServID: size = "<<fProofServs.size()<<
-              "; new capacity = "<<fProofServs.capacity()<<"; ic = "<<ic);
+   TRACE(DBG, "size = "<<fProofServs.size()<<"; id = "<<id);
 
    // We are done
-   return ic;
+   return xps;
+}
+
+//______________________________________________________________________________
+XrdProofdProofServ *XrdProofdClient::GetServer(int psid)
+{
+   // Get from the vector server instance with id psid
+   XPDLOC(CMGR, "Client::GetServer")
+
+   TRACE(DBG, "psid: " << psid);
+
+   XrdSysMutexHelper mh(fMutex);
+
+   XrdProofdProofServ *xps = 0;
+   std::vector<XrdProofdProofServ *>::iterator ip;
+   for (ip = fProofServs.begin(); ip != fProofServs.end(); ++ip) {
+      xps = *ip;
+      if (xps && xps->Match(psid))
+         break;
+      xps = 0;
+   }
+   // Done
+   return xps;
+}
+
+//______________________________________________________________________________
+XrdProofdProofServ *XrdProofdClient::GetServer(XrdProofdProtocol *p)
+{
+   // Get server instance connected via 'p'
+   XPDLOC(CMGR, "Client::GetServer")
+
+   TRACE(DBG, "enter: p: " << p);
+
+   XrdSysMutexHelper mh(fMutex);
+
+   XrdProofdProofServ *xps = 0;
+   std::vector<XrdProofdProofServ *>::iterator ip;
+   for (ip = fProofServs.begin(); ip != fProofServs.end(); ++ip) {
+      xps = (*ip);
+      if (xps->SrvPID() == p->Pid())
+         break;
+      xps = 0;
+   }
+   // Done
+   return xps;
+}
+
+//______________________________________________________________________________
+XrdProofdProofServ *XrdProofdClient::GetProofServ(int psid)
+{
+   // Get from the vector server instance with ID psid
+
+   XrdSysMutexHelper mh(fMutex);
+   if (psid > -1 && psid < (int) fProofServs.size())
+      return fProofServs.at(psid);
+   // Done
+   return (XrdProofdProofServ *)0;
 }
 
 //______________________________________________________________________________
 void XrdProofdClient::EraseServer(int psid)
 {
    // Erase server with id psid from the list
+   XPDLOC(CMGR, "Client::EraseServer")
 
-   TRACE(ACT,"EraseServer: enter: psid: " << psid);
+   TRACE(DBG, "enter: psid: " << psid);
 
    XrdSysMutexHelper mh(fMutex);
 
@@ -853,3 +522,245 @@ void XrdProofdClient::EraseServer(int psid)
       }
    }
 }
+
+//______________________________________________________________________________
+int XrdProofdClient::ResetClientSlot(int ic)
+{
+   // Reset slot at 'ic'
+   XPDLOC(CMGR, "Client::ResetClientSlot")
+
+   TRACE(DBG, "enter: ic: " << ic);
+
+   XrdSysMutexHelper mh(fMutex);
+
+   if (ic >= 0 && ic < (int) fClients.size()) {
+      fClients[ic]->Reset();
+      return 0;
+   }
+   // Done
+   return -1;
+}
+
+//______________________________________________________________________________
+XrdProofdProtocol *XrdProofdClient::GetProtocol(int ic)
+{
+   // Reset slot at 'ic'
+   XPDLOC(CMGR, "Client::GetProtocol")
+
+   TRACE(DBG, "enter: ic: " << ic);
+
+   XrdProofdProtocol *p = 0;
+
+   XrdSysMutexHelper mh(fMutex);
+
+   if (ic >= 0 && ic < (int) fClients.size()) {
+      p = fClients[ic]->P();
+   }
+   // Done
+   return p;
+}
+
+//______________________________________________________________________________
+int XrdProofdClient::SetClientID(int cid, XrdProofdProtocol *p)
+{
+   // Set slot cid to instance 'p'
+   XPDLOC(CMGR, "Client::SetClientID")
+
+   TRACE(DBG, "cid: "<< cid <<", p: " << p);
+
+   XrdSysMutexHelper mh(fMutex);
+
+   if (cid >= 0 && cid < (int) fClients.size()) {
+      if (fClients[cid] && (fClients[cid]->P() != p))
+         fClients[cid]->Reset();
+      fClients[cid]->SetP(p);
+      // Reference Stream ID
+      unsigned short sid;
+      memcpy((void *)&sid, (const void *)&(p->Request()->header.streamid[0]), 2);
+      fClients[cid]->SetSid(sid);
+      return 0;
+   }
+
+   // Not found
+   return -1;
+}
+
+//______________________________________________________________________________
+void XrdProofdClient::Broadcast(const char *msg)
+{
+   // Broadcast message 'msg' to the connected clients
+
+   int len = 0;
+   if (msg && (len = strlen(msg)) > 0) {
+
+      // Notify the attached clients
+      int ic = 0;
+      XrdClientID *cid = 0;
+      XrdSysMutexHelper mh(fMutex);
+      for (ic = 0; ic < (int) fClients.size(); ic++) {
+         if ((cid = fClients.at(ic)) && cid->P() && cid->P()->ConnType() == kXPD_ClientMaster) {
+            XrdProofdResponse *response = cid->R();
+            if (response)
+               response->Send(kXR_attn, kXPD_srvmsg, (char *) msg, len);
+         }
+      }
+   }
+}
+
+//______________________________________________________________________________
+void XrdProofdClient::Touch()
+{
+   // Send a touch the connected clients: this will remotely touch the associated
+   // TSocket instance and schedule an asynchronous touch of the client admin file
+
+   // Notify the attached clients
+   int ic = 0;
+   XrdClientID *cid = 0;
+   XrdSysMutexHelper mh(fMutex);
+   for (ic = 0; ic < (int) fClients.size(); ic++) {
+      // Do not send to old clients
+      if ((cid = fClients.at(ic)) && cid->P() && cid->P()->ProofProtocol() > 17) {
+         if (cid->P()->ConnType() != kXPD_Internal) {
+            XrdProofdResponse *response = cid->R();
+            if (response) response->Send(kXR_attn, kXPD_touch, (char *)0, 0);
+         }
+      }
+   }
+}
+
+//______________________________________________________________________________
+void XrdProofdClient::SkipSessionsCheck(std::list<XrdProofdProofServ *> *active)
+{
+   // Skip the next sessions status check. This is used, for example, when
+   // somebody has shown interest in these sessions to give more time for the
+   // reconnection.
+   // If active is defined, the list of active sessions is filled.
+   XPDLOC(CMGR, "Client::SkipSessionsCheck")
+
+   XrdProofdProofServ *xps = 0;
+   std::vector<XrdProofdProofServ *>::iterator ip;
+   for (ip = fProofServs.begin(); ip != fProofServs.end(); ++ip) {
+      if ((xps = *ip) && xps->IsValid() && (xps->SrvType() == kXPD_TopMaster)) {
+         xps->SetSkipCheck(); // Skip next validity check
+         if (active) active->push_back(xps);
+      }
+   }
+   if (active)
+      TRACE(HDBG, "found: " << active->size() << " sessions");
+
+   // Over
+   return;
+}
+
+//______________________________________________________________________________
+XrdOucString XrdProofdClient::ExportSessions()
+{
+   // Return a string describing the existing sessions
+#if 0
+   XPDLOC(CMGR, "Client::ExportSessions")
+#endif
+
+   XrdOucString out, buf;
+#if 0
+   XrdProofdProofServ *xps = 0;
+   std::list<XrdProofdProofServ *> active; // temp list of actives
+   std::vector<XrdProofdProofServ *>::iterator ip;
+   for (ip = fProofServs.begin(); ip != fProofServs.end(); ++ip) {
+      if ((xps = *ip) && xps->IsValid() && (xps->SrvType() == kXPD_TopMaster)) {
+         xps->SetSkipCheck(); // Skip next validity check
+         active.push_back(xps);
+      }
+   }
+   TRACE(HDBG, "found: " << active.size() << " sessions");
+
+   // Fill info
+#else
+   // Protect from next session check and get the list of actives
+   std::list<XrdProofdProofServ *> active;
+   SkipSessionsCheck(&active);
+
+   // Fill info
+   XrdProofdProofServ *xps = 0;
+#endif
+   out.form("%d", active.size());
+   std::list<XrdProofdProofServ *>::iterator ia;
+   for (ia = active.begin(); ia != active.end(); ++ia) {
+      if ((xps = *ia) && xps->IsValid()) {
+         xps->ExportBuf(buf);
+         out += buf;
+      }
+   }
+
+   // Over
+   return out;
+}
+
+//______________________________________________________________________________
+void XrdProofdClient::TerminateSessions(int srvtype, XrdProofdProofServ *ref,
+                                        const char *msg, XrdProofdPipe *pipe,
+                                        bool changeown)
+{
+   // Terminate client sessions; IDs of signalled processes are added to sigpid.
+   XPDLOC(CMGR, "Client::TerminateSessions")
+
+   // Loop over client sessions and terminated them
+   int is = 0;
+   XrdProofdProofServ *s = 0;
+   for (is = 0; is < (int) fProofServs.size(); is++) {
+      if ((s = fProofServs.at(is)) && s->IsValid() && (!ref || ref == s) &&
+          (s->SrvType() == srvtype || (srvtype == kXPD_AnyServer))) {
+         TRACE(DBG, "terminating " << s->SrvPID());
+
+         if (msg && strlen(msg) > 0)
+            // Tell other attached clients, if any, that this session is gone
+            Broadcast(msg);
+
+         // Sendout a termination signal
+         s->TerminateProofServ(changeown);
+
+         // Record this session in the sandbox as old session
+         XrdOucString tag = "-";
+         tag += s->SrvPID();
+         if (fSandbox.GuessTag(tag, 1) == 0)
+            fSandbox.RemoveSession(tag.c_str());
+
+         // Tell the session manager that the session is gone
+         if (pipe) {
+            int rc = 0;
+            XrdOucString buf(s->AdminPath());
+            buf.erase(0, buf.rfind('/') + 1);
+            TRACE(DBG,"posting kSessionRemoval with: '"<<buf<<"'");
+            if ((rc = pipe->Post(XrdProofdProofServMgr::kSessionRemoval, buf.c_str())) != 0) {
+               TRACE(XERR, "problem posting the pipe; errno: "<<-rc);
+            }
+         }
+
+         // Reset this session
+         s->Reset();
+      }
+   }
+}
+
+//___________________________________________________________________________
+void XrdProofdClient::PostSessionRemoval(int fd, int pid)
+{
+   // Post removal of session 'pid'
+   XPDLOC(CMGR, "Client::PostSessionRemoval")
+
+   TRACE(DBG, "posting session removal to socket "<<fd);
+
+   if (fd > 0) {
+      int type = 0;
+      if (write(fd, &type, sizeof(type)) !=  sizeof(type)) {
+         TRACE(XERR, "problem sending message type on the pipe");
+         return;
+      }
+      if (write(fd, &pid, sizeof(pid)) !=  sizeof(pid)) {
+         TRACE(XERR, "problem sending pid on the pipe: "<<pid);
+         return;
+      }
+   }
+   // Done
+   return;
+}
+

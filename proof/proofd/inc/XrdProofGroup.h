@@ -32,15 +32,31 @@
 #include "XrdOuc/XrdOucString.hh"
 #include "XrdProofdAux.h"
 
+//
+// Group Member class
+//
+class XrdProofGroupMember {
+private:
+   XrdOucString  fName;    // Name of the member
+   int           fActive;  // Number of member's active sessions
+
+public:
+   XrdProofGroupMember(const char *n) : fName(n) { fActive = 0; }
+   virtual ~XrdProofGroupMember() { }
+
+   int           Active() const { return fActive; }
+   void          Count(int n) { fActive += n; }
+   const char   *Name() const { return fName.c_str(); }
+};
+
 class XrdProofGroup {
 friend class XrdProofGroupMgr;
 private:
    XrdOucString  fName;    // group name
 
    XrdOucString  fMembers; // comma-separated list of members
-   XrdOucString  fActives; // comma-separated list of active (i.e. non-idle) members
    int           fSize;    // Number of members
-   int           fActive;  // Number of active (i.e. non-idle) members
+   XrdOucHash<XrdProofGroupMember> fActives;  // Keeps track of members having active sessions
 
    // Properties
    float         fPriority; // Arbitrary number indicating the priority of this group
@@ -56,7 +72,7 @@ private:
 public:
    ~XrdProofGroup();
 
-   inline int    Active() const { XrdSysMutexHelper mhp(fMutex); return fActive; }
+   int           Active(const char *usr = 0);
    bool          HasMember(const char *usr);
 
    inline const char *Members() const { XrdSysMutexHelper mhp(fMutex); return fMembers.c_str(); }
@@ -92,7 +108,9 @@ public:
    ~XrdProofGroupMgr() { }
 
    int            Config(const char *fn);
+
    int            ReadPriorities();
+   int            SetEffectiveFractions(bool optprio);
 
    XrdProofGroup *Apply(int (*f)(const char *, XrdProofGroup *, void *), void *arg);
 

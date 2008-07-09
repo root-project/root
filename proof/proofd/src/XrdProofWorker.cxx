@@ -32,9 +32,6 @@
 
 // Tracing utilities
 #include "XrdProofdTrace.h"
-static const char *gTraceID = " ";
-extern XrdOucTrace *XrdProofdTrace;
-#define TRACEID gTraceID
 
 //__________________________________________________________________________
 XrdProofWorker::XrdProofWorker(const char *str)
@@ -55,6 +52,7 @@ XrdProofWorker::XrdProofWorker(const char *str)
 void XrdProofWorker::Reset(const char *str)
 {
    // Set content from a config file-like string
+   XPDLOC(NMGR, "Worker::Reset")
 
    // Reinit vars
    fActive = 0;
@@ -96,7 +94,7 @@ void XrdProofWorker::Reset(const char *str)
    char *err;
    char *fullHostName = XrdNetDNS::getHostName((char *)ui.Host.c_str(), &err);
    if (!fullHostName || !strcmp(fullHostName, "0.0.0.0")) {
-      TRACE(XERR, "XrdProofWorker::Reset: DNS could not resolve '"<<ui.Host<<"'");
+      TRACE(XERR, "DNS could not resolve '"<<ui.Host<<"'");
       return;
    }
    fHost = fullHostName;
@@ -128,7 +126,7 @@ void XrdProofWorker::Reset(const char *str)
          fPerfIdx = strtol(tok.c_str(), (char **)0, 10);
       } else {
          // Unknown
-         TRACE(DBG, "XrdProofWorker::Reset: ignoring unknown option '"<<tok<<"'");
+         TRACE(XERR, "ignoring unknown option '"<<tok<<"'");
       }
    }
 }
@@ -170,6 +168,7 @@ const char *XrdProofWorker::Export()
    // Export current content in a form understood by parsing algorithms
    // inside the PROOF session, i.e.
    // <type>|<user@host>|<port>|-|-|<perfidx>|<img>|<workdir>|<msd>
+   XPDLOC(NMGR, "Worker::Export")
 
    fExport = fType;
 
@@ -211,7 +210,7 @@ const char *XrdProofWorker::Export()
       fExport += "|-";
 
    // We are done
-   TRACE(DBG, "XrdProofWorker::Export: sending: "<<fExport);
+   TRACE(DBG, "sending: "<<fExport);
    return fExport.c_str();
 }
 

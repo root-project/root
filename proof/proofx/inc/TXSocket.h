@@ -62,6 +62,10 @@ typedef struct {
    Int_t   fInt3;
    Int_t   fInt4;
 } XHandleIn_t;
+typedef struct {
+   Int_t   fOpt;
+   const char *fMsg;
+} XHandleErr_t;
 
 class TXSocket  : public TSocket, public XrdClientAbsUnsolMsgHandler {
 
@@ -98,6 +102,7 @@ private:
    // Interrupts
    TMutex             *fIMtx;          // To protect interrupt queue
    kXR_int32           fILev;          // Highest received interrupt
+   Bool_t              fIForward;      // Wheter the interrupt should be propagated
 
    // Process ID of the instatiating process (to signal interrupts)
    Int_t               fPid;
@@ -125,8 +130,8 @@ private:
    TXSockBuf          *PopUpSpare(Int_t sz);
    void                PushBackSpare();
 
-   // Post kPROOF_FATAL to remove this socket
-   void                PostFatal();
+   // Post a message into the queue for asynchronous processing
+   void                PostMessage(Int_t type);
 
    // Auxilliary
    Int_t               GetLowSocket() const { return (fConn ? fConn->GetLowSocket() : -1); }
@@ -161,7 +166,7 @@ public:
    virtual ~TXSocket();
 
    virtual void        Close(Option_t *opt = "");
-   Bool_t              Create();
+   Bool_t              Create(Bool_t attach = kFALSE);
    void                DisconnectSession(Int_t id, Option_t *opt = "");
 
    void                DoError(int level,
@@ -212,7 +217,7 @@ public:
 
    // Interrupts
    Int_t               SendInterrupt(Int_t type);
-   Int_t               GetInterrupt();
+   Int_t               GetInterrupt(Bool_t &forward);
 
    // Urgent message
    void                SendUrgent(Int_t type, Int_t int1, Int_t int2);
@@ -225,7 +230,10 @@ public:
    Int_t               Flush();
 
    // Ping the counterpart
-   Bool_t              Ping(Bool_t cleanpipe = kFALSE);
+   Bool_t              Ping(const char *ord = 0);
+
+   // Request remote touch of the admin file associated with this connection
+   void                RemoteTouch();
 
    // Standard options cannot be set
    Int_t               SetOption(ESockOptions, Int_t) { return 0; }
@@ -233,6 +241,9 @@ public:
    // Disable / Enable read timeout
    void                DisableTimeout() { fDontTimeout = kTRUE; }
    void                EnableTimeout() { fDontTimeout = kFALSE; }
+
+   // Try reconnection after error
+   virtual Int_t       Reconnect();
 
    ClassDef(TXSocket, 0) //A high level connection class for PROOF
 };
