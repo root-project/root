@@ -1470,6 +1470,16 @@ fi
 
 ######################################################################
 #
+### echo %%% On MacOS X >=10.5 always enable_rpath in case of non-prefix install
+#
+if test ! "x$macosx105" = "x"; then
+    if test "x$enable_rpath" = "xno" && test "x$haveconfig" = "x" ; then
+        enable_rpath="yes"
+    fi
+fi
+
+######################################################################
+#
 ### echo %%% check for GNU make >= 3.79.1 - Mandatory version of make
 #
 # Mandatory test, must succeed
@@ -5351,7 +5361,7 @@ fi
 if test "x$enable_reflex" = "xyes"; then
     message "Writing $GENREFLEXSHOUT"
     libdirreflex=$libdir
-    if test "$prefix" = "\$(ROOTSYS)" ; then
+    if test "x$haveconfig" = "x" ; then
         libdirreflex='`dirname $0`/../lib'
     fi
 
@@ -5374,7 +5384,7 @@ if test "x$enable_reflex" = "xyes"; then
 
     if test "x$platform" = "xwin32"; then
         message "Writing $GENREFLEXBATOUT"
-        if test "$prefix" = "\$(ROOTSYS)" ; then
+        if test "x$haveconfig" = "x" ; then
             libdirreflex='%~d0%~p0\\..\\lib'
         else
             libdirreflex=`cygpath -m $libdir`
@@ -5387,7 +5397,7 @@ if test "x$enable_reflex" = "xyes"; then
 
     message "Writing $GENREFLEXROOTCINTSHOUT"
     libdirreflex=$libdir
-    if test "$prefix" = "\$(ROOTSYS)" ; then
+    if test "x$haveconfig" = "x" ; then
         libdirreflex='`dirname $0`/../lib'
     fi
     cat $GENREFLEXROOTCINTSHIN | sed -e "s|@libdir@|$libdirreflex|g" $GCCXML06SED > $GENREFLEXROOTCINTSHOUT
@@ -5396,7 +5406,7 @@ if test "x$enable_reflex" = "xyes"; then
 
     if test "x$platform" = "xwin32"; then
         message "Writing $GENREFLEXROOTCINTBATOUT"
-        if test "$prefix" = "\$(ROOTSYS)" ; then
+        if test "x$haveconfig" = "x" ; then
             libdirreflex='%~d0%~p0\\..\\lib'
         else
             libdirreflex=`cygpath -m $libdir`

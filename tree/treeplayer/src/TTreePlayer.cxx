@@ -1251,6 +1251,7 @@ static TString R__GetBranchPointerName(TLeaf *leaf)
    if (twodim) *twodim = 0;
    while (*bname) {
       if (*bname == '.') *bname='_';
+      if (*bname == ',') *bname='_';
       if (*bname == ':') *bname='_';
       if (*bname == '<') *bname='_';
       if (*bname == '>') *bname='_';

@@ -41,14 +41,14 @@ CILIBS        = -lm -ldl -rdynamic
 CRYPTLIBS     = -lcrypt
 
 # Fortran:
-ifeq ($(F77),gfortran)
+ifneq ($(findstring gfortran, $(F77)),)
 F77           = gfortran
 F77FLAGS      = -fPIC -std=legacy
 F77LIBS      := $(shell $(F77) -print-file-name=libgfortran.$(SOEXT))
 F77LIBS      += $(shell $(F77) -print-file-name=libgfortranbegin.a) -lnsl
 endif
 
-ifeq ($(F77),g77)
+ifneq ($(findstring g77, $(F77)),)
 F77           = g77
 F77FLAGS      = -fPIC
 ifneq ($(shell $(F77) -print-file-name=libg2c.so),libg2c.so)
