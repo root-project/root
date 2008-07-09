@@ -16,15 +16,15 @@ ENDIF (CPPUNIT_INCLUDE_DIR AND CPPUNIT_LIBRARY)
 IF (CPPUNIT_FOUND)
 
    # show which CppUnit was found only if not quiet
-   IF (NOT CPPUNIT_FIND_QUIETLY)
+   IF (NOT CppUnit_FIND_QUIETLY)
       MESSAGE(STATUS "Found CppUnit: ${CPPUNIT_LIBRARY}")
-   ENDIF (NOT CPPUNIT_FIND_QUIETLY)
+   ENDIF (NOT CppUnit_FIND_QUIETLY)
 
 ELSE (CPPUNIT_FOUND)
 
    # fatal error if CppUnit is required but not found
-   IF (CPPUNIT_FIND_REQUIRED)
+   IF (CppUnit_FIND_REQUIRED)
       MESSAGE(FATAL_ERROR "Could not find CppUnit")
-   ENDIF (CPPUNIT_FIND_REQUIRED)
+   ENDIF (CppUnit_FIND_REQUIRED)
 
 ENDIF (CPPUNIT_FOUND)
