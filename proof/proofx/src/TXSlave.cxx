@@ -562,7 +562,7 @@ Bool_t TXSlave::HandleError(const void *in)
          ((TXSocket *)fSocket)->SetSessionID(-1);
          // Synchronous collection in TProof: post fatal message; this will
          // mark the worker as bad and update the internal lists accordingly
-         ((TXSocket *)fSocket)->PostMessage(kPROOF_FATAL);
+         ((TXSocket *)fSocket)->PostMsg(kPROOF_FATAL);
       }
 
       // On masters we notify clients of the problem occured

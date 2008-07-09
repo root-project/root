@@ -131,7 +131,7 @@ private:
    void                PushBackSpare();
 
    // Post a message into the queue for asynchronous processing
-   void                PostMessage(Int_t type);
+   void                PostMsg(Int_t type);
 
    // Auxilliary
    Int_t               GetLowSocket() const { return (fConn ? fConn->GetLowSocket() : -1); }

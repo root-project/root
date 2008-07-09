@@ -768,7 +768,7 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
       case kXPD_touch:
          //
          // Request for remote touch: post a message to do that
-         PostMessage(kPROOF_TOUCH);
+         PostMsg(kPROOF_TOUCH);
          break;
      default:
          Error("ProcessUnsolicitedMsg","unknown action code: %d", acod);
@@ -779,7 +779,7 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
 }
 
 //_______________________________________________________________________
-void TXSocket::PostMessage(Int_t type)
+void TXSocket::PostMsg(Int_t type)
 {
    // Post a message of type 'type' into the read messages queue.
    // This is used, for example, with kPROOF_FATAL to force the main thread
@@ -807,7 +807,7 @@ void TXSocket::PostMessage(Int_t type)
    // Get a spare buffer
    TXSockBuf *b = PopUpSpare(mlen);
    if (!b) {
-      Error("PostMessage", "could allocate spare buffer");
+      Error("PostMsg", "could allocate spare buffer");
       return;
    }
 
@@ -826,7 +826,7 @@ void TXSocket::PostMessage(Int_t type)
 
    // Signal it and release the mutex
    if (gDebug > 0)
-      Info("PostMessage", "%p: posting semaphore: %p (%d bytes)",
+      Info("PostMsg", "%p: posting semaphore: %p (%d bytes)",
                           this, &fASem, mlen);
    fASem.Post();
 
