@@ -861,14 +861,14 @@ char  *XrdSecProtocolkrb5Init(const char     mode,
        int lpars = strlen(XrdSecProtocolkrb5::getPrincipal());
        if (options & XrdSecEXPTKN)
           lpars += strlen(",fwd");
-       char *parms = (char *)malloc(lpars+1);
-       if (parms)
-          {memset(parms,0,lpars+1);
-           strcpy(parms,XrdSecProtocolkrb5::getPrincipal());
+       char *params = (char *)malloc(lpars+1);
+       if (params)
+          {memset(params,0,lpars+1);
+           strcpy(params,XrdSecProtocolkrb5::getPrincipal());
            if (options & XrdSecEXPTKN)
-              strcat(parms,",fwd");
-           XrdSecProtocolkrb5::setParms(parms);
-           return parms;
+              strcat(params,",fwd");
+           XrdSecProtocolkrb5::setParms(params);
+           return params;
           }
       }
 

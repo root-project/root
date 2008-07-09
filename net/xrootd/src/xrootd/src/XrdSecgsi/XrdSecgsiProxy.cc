@@ -432,7 +432,6 @@ int ParseArguments(int argc, char **argv)
    //
    // The following applies in 'init' mode only
    if (Mode == kM_init) {
-      struct stat st;
       //
       // Check certificate file
       if (EEcert.length()) {

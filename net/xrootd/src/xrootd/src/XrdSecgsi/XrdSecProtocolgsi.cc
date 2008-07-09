@@ -559,7 +559,6 @@ char *XrdSecProtocolgsi::Init(gsiOptions opt, XrdOucErrInfo *erp)
       bool getpriv = 0;
       uid_t gsi_uid = geteuid();
       gid_t gsi_gid = getegid();
-      struct stat st;
       if (!stat(SrvKey.c_str(), &st)) {
          if (st.st_uid != gsi_uid || st.st_gid != gsi_gid) {
             getpriv = 1;
@@ -1684,7 +1683,7 @@ char *XrdSecProtocolgsiInit(const char mode,
       //
       opts.mode = mode;
       // debug
-      char *cenv = getenv("XrdSecDEBUG");
+      cenv = getenv("XrdSecDEBUG");
       if (cenv)
          if (cenv[0] >= 49 && cenv[0] <= 51) opts.debug = atoi(cenv);
 

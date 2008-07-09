@@ -2320,7 +2320,7 @@ XrdSutBucket *XrdSecProtocolpwd::QueryCreds(XrdSutBuffer *bm,
                hs->Pent->buf2.SetBuf(cf, len);
                // Tell the server
                if (afspwd) {
-                  String afsInfo = "c";
+                  afsInfo = "c";
                   if (bm->UpdateBucket(afsInfo, kXRS_afsinfo) != 0)
                      PRINT("Warning: problems updating bucket with AFS info");
                }
@@ -2862,7 +2862,6 @@ int XrdSecProtocolpwd::AddSerialized(char opt, kXR_int32 step, String ID,
       XrdSutRndm::GetRndmTag(RndmTag);
       //
       // Get bucket
-      XrdSutBucket *brt = 0;
       if (!(brt = new XrdSutBucket(RndmTag,kXRS_rtag))) {
          DEBUG("error creating random tag bucket");
          return -1;

@@ -408,15 +408,15 @@ int XrdCryptosslX509ParseFile(const char *fname,
             while (cert->Opaque()) {
                if (cert->type != XrdCryptoX509::kCA) {
                   // Get the public key
-                  EVP_PKEY *rsap = X509_get_pubkey((X509 *)(cert->Opaque()));
-                  if (rsap) {
-                     if (PEM_read_bio_PrivateKey(bkey,&rsap,0,0)) {
+                  EVP_PKEY *evpp = X509_get_pubkey((X509 *)(cert->Opaque()));
+                  if (evpp) {
+                     if (PEM_read_bio_PrivateKey(bkey,&evpp,0,0)) {
                         DEBUG("RSA key completed ");
                         // Test consistency
-                        int rc = RSA_check_key(rsap->pkey.rsa);
+                        int rc = RSA_check_key(evpp->pkey.rsa);
                         if (rc != 0) {
                            // Update PKI in certificate
-                           cert->SetPKI((XrdCryptoX509data)rsap);
+                           cert->SetPKI((XrdCryptoX509data)evpp);
                            // Update status
                            cert->PKI()->status = XrdCryptoRSA::kComplete;
                            break;
@@ -526,15 +526,15 @@ int XrdCryptosslX509ParseBucket(XrdSutBucket *b, XrdCryptoX509Chain *chain)
             while (cert->Opaque()) {
                if (cert->type != XrdCryptoX509::kCA) {
                   // Get the public key
-                  EVP_PKEY *rsap = X509_get_pubkey((X509 *)(cert->Opaque()));
-                  if (rsap) {
-                     if (PEM_read_bio_PrivateKey(bkey,&rsap,0,0)) {
+                  EVP_PKEY *evpp = X509_get_pubkey((X509 *)(cert->Opaque()));
+                  if (evpp) {
+                     if (PEM_read_bio_PrivateKey(bkey,&evpp,0,0)) {
                         DEBUG("RSA key completed ");
                         // Test consistency
-                        int rc = RSA_check_key(rsap->pkey.rsa);
+                        int rc = RSA_check_key(evpp->pkey.rsa);
                         if (rc != 0) {
                            // Update PKI in certificate
-                           cert->SetPKI((XrdCryptoX509data)rsap);
+                           cert->SetPKI((XrdCryptoX509data)evpp);
                            // Update status
                            cert->PKI()->status = XrdCryptoRSA::kComplete;
                            break;

@@ -290,7 +290,7 @@ int main( int argc, char **argv )
                if (RefCip[i]) {
                   //
                   // Build tag
-                  XrdOucString tag = PukTag + '_';
+                  tag = PukTag + '_';
                   tag += CF[i]->ID();
                   //
                   // Serialize in a buffer
@@ -340,13 +340,13 @@ int main( int argc, char **argv )
                bck.SetBuf(ent.buf1.buf,ent.buf1.len);
                // Locate factory ID
                int id = 0;
-               int i = LocateFactoryIndex(ent.name, id);
-               if (i < 0) {
+               int ii = LocateFactoryIndex(ent.name, id);
+               if (ii < 0) {
                   PRT("// Factory ID not found: corruption ?");
                   exit(1);
                }
-               if (!(RefCip[i] = CF[i]->Cipher(&bck))) {
-                  PRT("// Could not instantiate cipher for factory "<<CF[i]->Name());
+               if (!(RefCip[i] = CF[ii]->Cipher(&bck))) {
+                  PRT("// Could not instantiate cipher for factory "<<CF[ii]->Name());
                   exit(1);
                }
             }
@@ -1624,11 +1624,11 @@ bool AddPassword(XrdSutPFEntry &ent, XrdOucString salt, XrdOucString &ranpwd,
    // Save salt
    ent.buf1.SetBuf(salt.c_str(),salt.length());
    //
-   // Prepare to get passwrod
+   // Prepare to get password
    XrdOucString passwd = "";
    if (newpw || !pwdref.length()) {
       newpw = 1;
-      XrdOucString pwdref = "";
+      pwdref = "";
    }
    char *pwhash = 0;
    int pwhlen = 0;
@@ -1732,7 +1732,7 @@ bool AddPassword(XrdSutPFEntry &ent, bool &newpw, const char *pwd)
    XrdOucString passwd = "";
    if (newpw || !pwdref.length()) {
       newpw = 1;
-      XrdOucString pwdref = "";
+      pwdref = "";
    }
    //
    // If we are given a password, use it

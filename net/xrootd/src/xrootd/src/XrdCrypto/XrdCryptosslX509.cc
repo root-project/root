@@ -101,7 +101,6 @@ XrdCryptosslX509::XrdCryptosslX509(const char *cf, const char *kf)
    if (evpp) {
       // Read the private key file, if specified
       if (kf) {
-         struct stat st;
          if (stat(kf, &st) == -1) {
             DEBUG("cannot stat private key file "<<kf<<" (errno:"<<errno<<")");
             return;
