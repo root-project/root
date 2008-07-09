@@ -211,6 +211,7 @@ int XrdOucString::form(const char *fmt, ...)
 
    // Decode the arguments
    XOSINTFORM(fmt, str);
+   siz = buf_len;
 
    // Re-adjust the length
    len = strlen(str);
@@ -1258,10 +1259,6 @@ bool XrdOucString::isdigit(int from, int to)
    if (to < from) to = len - 1;
 
    char *c = str + from;
-
-   // Skip initial '-'
-   if (*c == '-') c++;
-
    while (c <= str + to) {
       if (*c < 48 || *c > 57) return 0;
       c++;
