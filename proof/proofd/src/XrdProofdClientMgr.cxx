@@ -207,7 +207,7 @@ int XrdProofdClientMgr::DoDirectiveClientMgr(char *val, XrdOucStream *cfg, bool)
 {
    // Process 'clientmgr' directive
    // eg: xpd.clientmgr checkfq:120 activityto:600
-   XPDLOC(SMGR, "ProofServMgr::DoDirectiveClientMgr")
+   XPDLOC(SMGR, "ClientMgr::DoDirectiveClientMgr")
 
    if (!val || !cfg)
       // undefined inputs
@@ -238,11 +238,9 @@ int XrdProofdClientMgr::DoDirectiveClientMgr(char *val, XrdOucStream *cfg, bool)
    fCheckFrequency = (XPD_LONGOK(checkfq) && checkfq > 0) ? checkfq : fCheckFrequency;
    fActivityTimeOut = (XPD_LONGOK(activityto) && activityto > 0) ? activityto : fActivityTimeOut;
 
-   if (TRACING(DBG)) {
-      XrdOucString msg;
-      msg.form("checkfq: %d s, activityto: %d s", fCheckFrequency, fActivityTimeOut);
-      TRACE(DBG, msg);
-   }
+   XrdOucString msg;
+   msg.form("checkfq: %d s, activityto: %d s", fCheckFrequency, fActivityTimeOut);
+   TRACE(ALL, msg);
 
    return 0;
 }
