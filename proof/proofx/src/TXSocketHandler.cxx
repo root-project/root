@@ -45,7 +45,8 @@ Bool_t TXSocketHandler::Notify()
    {  R__LOCKGUARD(&TXSocket::fgReadyMtx);
       s = (TXSocket *) TXSocket::fgReadySock.Last();
       if (gDebug > 2)
-         Info("Notify", "ready socket %p (input socket: %p)", s, fInputSock);
+         Info("Notify", "ready socket %p (%s) (input socket: %p)",
+                        s, (s ? s->GetTitle() : "***undef***"), fInputSock);
    }
 
    // If empty, nothing to do

@@ -826,8 +826,8 @@ void TXSocket::PostMsg(Int_t type)
 
    // Signal it and release the mutex
    if (gDebug > 0)
-      Info("PostMsg", "%p: posting semaphore: %p (%d bytes)",
-                          this, &fASem, mlen);
+      Info("PostMsg", "%p: posting type %d to semaphore: %p (%d bytes)",
+                          this, type, &fASem, mlen);
    fASem.Post();
 
    // Done
@@ -1225,7 +1225,7 @@ Int_t TXSocket::SendRaw(const void *buffer, Int_t length, ESendRecvOptions opt)
 
    // Failure notification (avoid using the handler: we may be exiting)
    Error("SendRaw", "%s: problems sending %d bytes to server",
-                    fHost.Data(), Request.sendrcv.dlen);
+                    fHost.Data(), length);
    return -1;
 }
 
