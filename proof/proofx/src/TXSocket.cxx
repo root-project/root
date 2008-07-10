@@ -771,7 +771,8 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
          PostMsg(kPROOF_TOUCH);
          break;
      default:
-         Error("ProcessUnsolicitedMsg","unknown action code: %d", acod);
+         Error("ProcessUnsolicitedMsg","%p: unknown action code: %d received from '%s'",
+                                       this, acod, GetTitle());
    }
 
    // We are done
