@@ -74,7 +74,7 @@ XrdProofdManager::XrdProofdManager(XrdProtocol_Config *pi, XrdSysError *edest)
 
    // Proof admin path
    fAdminPath = pi->AdmPath;
-   fAdminPath += "/.xprood.";
+   fAdminPath += "/.xproofd.";
 
    // Services
    fAdmin = 0;
