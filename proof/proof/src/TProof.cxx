@@ -2715,9 +2715,13 @@ void TProof::MarkBad(TSlave *wrk, const char *reason)
    // Local URL
    static TString thisurl;
    if (thisurl.IsNull()) {
-      Int_t port = gEnv->GetValue("ProofServ.XpdPort",-1);
-      thisurl = (port > 0) ? Form("%s:%d", TUrl(gSystem->HostName()).GetHostFQDN(), port)
-                           : TUrl(gSystem->HostName()).GetHostFQDN();
+      if (IsMaster()) {
+         Int_t port = gEnv->GetValue("ProofServ.XpdPort",-1);
+         thisurl = (port > 0) ? Form("%s:%d", TUrl(gSystem->HostName()).GetHostFQDN(), port)
+                              : TUrl(gSystem->HostName()).GetHostFQDN();
+      } else {
+         thisurl = Form("%s@%s:%d", fUrl.GetUser(), fUrl.GetHost(), fUrl.GetPort());
+      }
    }
 
    if (!reason || strcmp(reason, kPROOF_TerminateWorker)) {
@@ -2730,16 +2734,24 @@ void TProof::MarkBad(TSlave *wrk, const char *reason)
                   (reason && strlen(reason)) ? reason : "unknown");
       Info("MarkBad", "%s", msg.Data());
       // Notify one level up, if the case
+      // Add some hint for diagnostics
       if (gProofServ) {
-         // Add some hint for diagnostics
          msg += Form("\n\n +++ Most likely your code crashed on worker %s at %s:%d.\n",
                      wrk->GetOrdinal(), wrk->GetName(), wrk->GetPort());
-         msg += Form(" +++ Please check the session logs for error messages either using\n");
-         msg += Form(" +++ the 'Show logs' button or executing\n");
-         msg += Form(" +++\n");
+      } else {
+         msg = Form("\n\n +++ Most likely your code crashed\n");
+      }
+      msg += Form(" +++ Please check the session logs for error messages either using\n");
+      msg += Form(" +++ the 'Show logs' button or executing\n");
+      msg += Form(" +++\n");
+      if (gProofServ) {
          msg += Form(" +++ root [] TProof::Mgr(\"%s\")->GetSessionLogs()->Display(\"%s\",0)\n\n",
                      thisurl.Data(), wrk->GetOrdinal());
          gProofServ->SendAsynMessage(msg, kTRUE);
+      } else {
+         msg += Form(" +++ root [] TProof::Mgr(\"%s\")->GetSessionLogs()->Display(\"*\")\n\n",
+                     thisurl.Data());
+         Printf("%s", msg.Data());
       }
    } else if (reason) {
       if (gDebug > 0) {
