@@ -569,7 +569,7 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed,
          sprintf(stm, "%d sec", ss);
       fProcessed->SetText("Processed:");
       sprintf(buf, "%lld events (%.2f MBs) in %s %s",
-              total, fAvgMBRate*fProcTime, stm, st.Data());
+              std::max(fPrevProcessed, processed), fAvgMBRate*fProcTime, stm, st.Data());
       fTotal->SetText(buf);
       sprintf(buf, "%.1f evts/sec (%.1f MBs/sec)", fAvgRate, fAvgMBRate);
       fRate->SetText(buf);
