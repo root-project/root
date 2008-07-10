@@ -521,6 +521,27 @@ void XrdProofdClient::EraseServer(int psid)
 }
 
 //______________________________________________________________________________
+int XrdProofdClient::GetTopProofServ()
+{
+   // Return the number of valid proofserv topmaster sessions in the list
+   XPDLOC(CMGR, "Client::GetTopProofServ")
+
+   int nv = 0;
+
+   XrdProofdProofServ *xps = 0;
+   std::vector<XrdProofdProofServ *>::iterator ip;
+   for (ip = fProofServs.begin(); ip != fProofServs.end(); ++ip) {
+      if ((xps = *ip) && xps->IsValid() && (xps->SrvType() == kXPD_TopMaster)) {
+         TRACE(DBG,"found potentially valid topmaster session: pid "<<xps->SrvPID());
+         nv++;
+      }
+   }
+
+   // Done
+   return nv;
+}
+
+//______________________________________________________________________________
 int XrdProofdClient::ResetClientSlot(int ic)
 {
    // Reset slot at 'ic'
@@ -586,6 +607,7 @@ int XrdProofdClient::SetClientID(int cid, XrdProofdProtocol *p)
 void XrdProofdClient::Broadcast(const char *msg)
 {
    // Broadcast message 'msg' to the connected clients
+   XPDLOC(CMGR, "Client::Broadcast")
 
    int len = 0;
    if (msg && (len = strlen(msg)) > 0) {
@@ -596,6 +618,8 @@ void XrdProofdClient::Broadcast(const char *msg)
       XrdSysMutexHelper mh(fMutex);
       for (ic = 0; ic < (int) fClients.size(); ic++) {
          if ((cid = fClients.at(ic)) && cid->P() && cid->P()->ConnType() == kXPD_ClientMaster) {
+
+            TRACE(ALL," sending to: "<<cid->P()->Link()->ID);
             XrdProofdResponse *response = cid->R();
             if (response)
                response->Send(kXR_attn, kXPD_srvmsg, (char *) msg, len);
@@ -626,7 +650,65 @@ void XrdProofdClient::Touch()
 }
 
 //______________________________________________________________________________
-void XrdProofdClient::SkipSessionsCheck(std::list<XrdProofdProofServ *> *active)
+bool XrdProofdClient::VerifySession(XrdProofdProofServ *xps)
+{
+   // Quick verification of session 'xps' to avoid attaching clients to
+   // non responding sessions. We do here a sort of loose ping.
+   // Return true is responding, false otherwise.
+   XPDLOC(CMGR, "Client::VerifySession")
+
+   if (!xps || !(xps->IsValid())) {
+      TRACE(XERR, " session undefined or invalid");
+      return 0;
+   }
+
+   // Admin path
+   XrdOucString path(xps->AdminPath());
+   if (path.length() <= 0) {
+      TRACE(XERR, "admin path is empty! - protocol error");
+      return 0;
+   }
+
+   // Stat the admin file
+   struct stat st0;
+   if (stat(path.c_str(), &st0) != 0) {
+      TRACE(XERR, "cannot stat admin path: "<<path);
+      return 0;
+   }
+
+   // Take the pid
+   int pid = xps->SrvPID();
+   // If the session is alive ...
+   if (XrdProofdAux::VerifyProcessByID(pid) != 0) {
+      // Send the request (no further propagation)
+      if (xps->VerifyProofServ(0) != 0) {
+         TRACE(XERR, "could not send verify request to proofsrv");
+         return 0;
+      }
+      // Wait for the action for fgMgr->SessionMgr()->VerifyTimeOut() secs,
+      // checking every 1 sec
+      struct stat st1;
+      int ns = 10;
+      while (ns--) {
+         if (stat(path.c_str(), &st1) == 0) {
+            if (st1.st_mtime > st0.st_mtime) {
+               return 1;
+            }
+         }
+         // Wait 1 sec
+         TRACE(HDBG, "waiting "<<ns<<" secs for session "<<pid<<
+                     " to touch the admin path");
+         sleep(1);
+      }
+   }
+
+   // Verification Failed
+   return 0;
+}
+
+//______________________________________________________________________________
+void XrdProofdClient::SkipSessionsCheck(std::list<XrdProofdProofServ *> *active,
+                                        XrdOucString &emsg)
 {
    // Skip the next sessions status check. This is used, for example, when
    // somebody has shown interest in these sessions to give more time for the
@@ -638,8 +720,19 @@ void XrdProofdClient::SkipSessionsCheck(std::list<XrdProofdProofServ *> *active)
    std::vector<XrdProofdProofServ *>::iterator ip;
    for (ip = fProofServs.begin(); ip != fProofServs.end(); ++ip) {
       if ((xps = *ip) && xps->IsValid() && (xps->SrvType() == kXPD_TopMaster)) {
-         xps->SetSkipCheck(); // Skip next validity check
-         if (active) active->push_back(xps);
+         if (VerifySession(xps)) {
+            xps->SetSkipCheck(); // Skip next validity check
+            if (active) active->push_back(xps);
+         } else {
+            if (xps->SrvPID() > 0) {
+               if (emsg.length() <= 0)
+                  emsg = "ignoring (apparently) non-responding session(s): ";
+               else
+                  emsg += " ";
+               emsg += xps->SrvPID();
+            }
+            TRACE(ALL,"session "<<xps->SrvPID()<<" does not react: dead?");
+         }
       }
    }
    if (active)
@@ -650,7 +743,7 @@ void XrdProofdClient::SkipSessionsCheck(std::list<XrdProofdProofServ *> *active)
 }
 
 //______________________________________________________________________________
-XrdOucString XrdProofdClient::ExportSessions()
+XrdOucString XrdProofdClient::ExportSessions(XrdOucString &emsg)
 {
    // Return a string describing the existing sessions
 
@@ -658,7 +751,7 @@ XrdOucString XrdProofdClient::ExportSessions()
 
    // Protect from next session check and get the list of actives
    std::list<XrdProofdProofServ *> active;
-   SkipSessionsCheck(&active);
+   SkipSessionsCheck(&active, emsg);
 
    // Fill info
    XrdProofdProofServ *xps = 0;
