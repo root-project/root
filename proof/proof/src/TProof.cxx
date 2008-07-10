@@ -2583,7 +2583,11 @@ Int_t TProof::CollectInputFrom(TSocket *s)
          break;
 
       default:
-         Error("Collect", "unknown command received from slave (what = %d)", what);
+         {
+            sl = FindSlave(s);
+            Error("Collect", "unknown command received from '%s' (what = %d)",
+                            (sl ? sl->GetOrdinal() : "undef"), what);
+         }
          break;
    }
 
