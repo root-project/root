@@ -130,11 +130,8 @@ void THostAuth::Create(const char *host, const char *user, Int_t nmeth,
    // Check and save the host FQDN ...
    if (fHost != "default" && !fHost.Contains("*")) {
       TInetAddress addr = gSystem->GetHostByName(fHost);
-      if (addr.IsValid()) {
+      if (addr.IsValid())
          fHost = addr.GetHostName();
-         if (fHost == "UnNamedHost")
-            fHost = addr.GetHostAddress();
-      }
    }
 
    // User
@@ -752,4 +749,3 @@ void THostAuth::AsString(TString &Out) const
    }
 
 }
-

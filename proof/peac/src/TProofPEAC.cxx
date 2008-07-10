@@ -163,12 +163,9 @@ Bool_t TProofPEAC::StartSlaves(Bool_t,Bool_t)
       while ((cs = (TCondorSlave*)next()) != 0) {
          // Get slave FQDN ...
          TString SlaveFqdn;
-         TInetAddress SlaveAddr = gSystem->GetHostByName((const char *)cs->fHostname);
-         if (SlaveAddr.IsValid()) {
+         TInetAddress SlaveAddr = gSystem->GetHostByName((cs->fHostname);
+         if (SlaveAddr.IsValid())
             SlaveFqdn = SlaveAddr.GetHostName();
-            if (SlaveFqdn == "UnNamedHost")
-            SlaveFqdn = SlaveAddr.GetHostAddress();
-         }
 
          // who do we believe for perf & img, Condor for the moment
          TString fullord = TString(gProofServ->GetOrdinal()) + "." + ((Long_t) ord);

@@ -420,8 +420,6 @@ const char *TUrl::GetHostFQDN() const
          TInetAddress adr(gSystem->GetHostByName(fHost));
          if (adr.IsValid()) {
             fHostFQ = adr.GetHostName();
-            if (fHostFQ == "UnNamedHost")
-               fHostFQ = adr.GetHostAddress();
          } else
             fHostFQ = "-";
          if (!fgHostFQDNs) {

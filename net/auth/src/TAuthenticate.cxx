@@ -241,11 +241,8 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
    // Check and save the host FQDN ...
    TString fqdn;
    TInetAddress addr = gSystem->GetHostByName(fRemote);
-   if (addr.IsValid()) {
+   if (addr.IsValid())
       fqdn = addr.GetHostName();
-      if (fqdn == "UnNamedHost")
-         fqdn = addr.GetHostAddress();
-   }
    TString fqdnsrv(Form("%s:%d",fqdn.Data(),servtype));
 
    // Read directives from files; re-read if files have changed
@@ -1181,11 +1178,8 @@ Bool_t TAuthenticate::CheckNetrc(TString &user, TString &passwd,
 
    // Determine FQDN of the host ...
    TInetAddress addr = gSystem->GetHostByName(fRemote);
-   if (addr.IsValid()) {
+   if (addr.IsValid())
       remote = addr.GetHostName();
-      if (remote == "UnNamedHost")
-         remote = addr.GetHostAddress();
-   }
 
 again:
    // Only use file when its access rights are 0600
@@ -2547,11 +2541,8 @@ Int_t TAuthenticate::ClearAuth(TString &user, TString &passwd, Bool_t &pwdhash)
             static TString localFQDN;
             if (localFQDN == "") {
                TInetAddress addr = gSystem->GetHostByName(gSystem->HostName());
-               if (addr.IsValid()) {
+               if (addr.IsValid())
                   localFQDN = addr.GetHostName();
-                  if (localFQDN == "UnNamedHost")
-                     localFQDN = addr.GetHostAddress();
-               }
             }
             passwd = Form("%s@%s", localuser.Data(), localFQDN.Data());
             if (gDebug > 2)
@@ -2856,11 +2847,8 @@ THostAuth *TAuthenticate::GetHostAuth(const char *host, const char *user,
    TString hostFQDN = hostname;
    if (strncmp(host,"default",7) && !hostFQDN.Contains("*")) {
       TInetAddress addr = gSystem->GetHostByName(hostFQDN);
-      if (addr.IsValid()) {
+      if (addr.IsValid())
          hostFQDN = addr.GetHostName();
-         if (hostFQDN == "UnNamedHost")
-            hostFQDN = addr.GetHostAddress();
-      }
    }
    TString usr = user;
    if (!usr.Length())
@@ -2932,11 +2920,8 @@ THostAuth *TAuthenticate::HasHostAuth(const char *host, const char *user,
    }
    if (strncmp(host,"default",7) && !hostFQDN.Contains("*")) {
       TInetAddress addr = gSystem->GetHostByName(hostFQDN);
-      if (addr.IsValid()) {
+      if (addr.IsValid())
          hostFQDN = addr.GetHostName();
-         if (hostFQDN == "UnNamedHost")
-            hostFQDN = addr.GetHostAddress();
-      }
    }
 
    TIter *next = new TIter(GetAuthInfo());

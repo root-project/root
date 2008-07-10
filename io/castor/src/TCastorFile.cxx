@@ -357,8 +357,6 @@ void TCastorFile::FindServerAndPath()
          TInetAddress addr = gSystem->GetHostByName(fDiskServer);
          if (addr.IsValid()) {
             fqdn = addr.GetHostName();
-            if (fqdn == "UnNamedHost")
-               fqdn = addr.GetHostAddress();
             if (fqdn.EndsWith(".cern.ch") || fqdn.BeginsWith("137.138."))
                r = "rootug://";
             else
