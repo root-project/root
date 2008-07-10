@@ -392,10 +392,6 @@ int XrdProofdProtocol::Process(XrdLink *)
       response->Set(fLink);
    }
 
-#if 0
-   unsigned short sid;
-   memcpy((void *)&sid, (const void *)&(fRequest.header.streamid[0]), 2);
-#endif
    TRACEP(this, REQ, "sid: " << sid << ", req id: " << fRequest.header.requestid <<
                 " (" << XrdProofdAux::ProofRequestTypes(fRequest.header.requestid)<<
                 ")" << ", dlen: " <<fRequest.header.dlen);
@@ -750,6 +746,9 @@ int XrdProofdProtocol::SendMsg()
    int rc = 0;
 
    XPD_SETRESP(this, "SendMsg");
+
+   XrdSysMutexHelper mhc(Client()->Mutex());
+   XrdSysMutexHelper mh(response->fMutex);
 
    // Unmarshall the data
    int psid = ntohl(fRequest.sendrcv.sid);
