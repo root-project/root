@@ -516,12 +516,6 @@ int XrdProofdClientMgr::Login(XrdProofdProtocol *p)
       if (c->IsValid()) {
          // Set the group, if any
          c->SetGroup(g->Name());
-#if 0
-         // Reference Stream ID
-         unsigned short sid;
-         memcpy((void *)&sid, (const void *)&(p->Request()->header.streamid[0]), 2);
-         c->SetRefSid(sid);
-#endif
       }
    } else {
       emsg = "unable to instantiate object for client ";

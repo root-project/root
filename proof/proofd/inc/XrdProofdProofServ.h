@@ -35,10 +35,6 @@
 
 #include "XProofProtocol.h"
 #include "XrdProofdClient.h"
-#if 0
-#include "XrdProofdProtocol.h"
-#include "XrdProofdResponse.h"
-#endif
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -76,42 +72,9 @@ private:
 
 class XrdROOT;
 
-#if 0
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// XrdClientID                                                          //
-//                                                                      //
-// Authors: G. Ganis, CERN, 2005                                        //
-//                                                                      //
-// Mapping of clients and stream IDs                                    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-class XrdClientID {
-private:
-   XrdProofdProtocol *fP;
-   XrdProofdResponse *fR;
-   unsigned short     fSid;
-
-   void               SetR() { fR = (fP && fSid > 0) ? fP->Response(fSid) : 0;}
-public:
-   XrdClientID(XrdProofdProtocol *pt = 0, unsigned short id = 0)
-            { fP = pt; fSid = id; SetR();}
-   ~XrdClientID() { }
-
-   XrdProofdClient   *C() const { return fP->Client(); }
-   bool               IsValid() const { return (fP != 0); }
-   XrdProofdProtocol *P() const { return fP; }
-   XrdProofdResponse *R() const { return fR; }
-   void               Reset() { fP = 0; fSid = 0; }
-   void               SetP(XrdProofdProtocol *p) { fP = p; SetR();}
-   void               SetSid(unsigned short sid) { fSid = sid; SetR();}
-   unsigned short     Sid() const { return fSid; }
-};
-#endif
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// XrdProofdProofServ                                                    //
+// XrdProofdProofServ                                                   //
 //                                                                      //
 // Authors: G. Ganis, CERN, 2005                                        //
 //                                                                      //

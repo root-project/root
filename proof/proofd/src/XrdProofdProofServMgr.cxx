@@ -1467,11 +1467,6 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
 
       char *argvv[6] = {0};
 
-#if 0
-      // We add our PID to be able to identify processes coming from us
-      char spid[10] = {0};
-      sprintf(spid, "%d", getppid());
-#else
       char *sxpd = 0;
       if (fMgr && fMgr->AdminPath()) {
          // We add our admin path to be able to identify processes coming from us
@@ -1482,7 +1477,6 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
          sxpd = new char[10];
          sprintf(sxpd, "%d", getppid());
       }
-#endif
 
       // Log level
       char slog[10] = {0};
@@ -1693,10 +1687,6 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
    if (!xps->IsValid()) {
       // Notify
       TRACEP(p, XERR, "PROOF session is invalid: protocol error? " <<emsg);
-#if 0
-      response->Send(kXR_attn, kXPD_errmsg, (char *) emsg.c_str(), emsg.length());
-      return 0;
-#endif
    }
 
    // Over
@@ -1840,11 +1830,7 @@ XrdProofdProofServ *XrdProofdProofServMgr::Accept(XrdProofdClient *c,
    XrdNetPeer peerpsrv;
    XrdLink   *linkpsrv = 0;
    XrdProtocol *xp = 0;
-#if 0
-   int lnkopts = 0;
-#else
    int lnkopts = XRDLINK_RDLOCK;
-#endif
    bool go = 1;
 
    // Check inputs

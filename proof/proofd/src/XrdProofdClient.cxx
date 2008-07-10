@@ -45,9 +45,6 @@ XrdProofdClient::XrdProofdClient(XrdProofUI ui, bool master, bool changeown,
    fUNIXSockSaved = 0;
    fROOT = 0;
    fIsValid = 0;
-#if 0
-   fRefSid = 0;
-#endif
    fChangeOwn = changeown;
 
    // Make sure the admin path exists
@@ -656,32 +653,15 @@ void XrdProofdClient::SkipSessionsCheck(std::list<XrdProofdProofServ *> *active)
 XrdOucString XrdProofdClient::ExportSessions()
 {
    // Return a string describing the existing sessions
-#if 0
-   XPDLOC(CMGR, "Client::ExportSessions")
-#endif
 
    XrdOucString out, buf;
-#if 0
-   XrdProofdProofServ *xps = 0;
-   std::list<XrdProofdProofServ *> active; // temp list of actives
-   std::vector<XrdProofdProofServ *>::iterator ip;
-   for (ip = fProofServs.begin(); ip != fProofServs.end(); ++ip) {
-      if ((xps = *ip) && xps->IsValid() && (xps->SrvType() == kXPD_TopMaster)) {
-         xps->SetSkipCheck(); // Skip next validity check
-         active.push_back(xps);
-      }
-   }
-   TRACE(HDBG, "found: " << active.size() << " sessions");
 
-   // Fill info
-#else
    // Protect from next session check and get the list of actives
    std::list<XrdProofdProofServ *> active;
    SkipSessionsCheck(&active);
 
    // Fill info
    XrdProofdProofServ *xps = 0;
-#endif
    out.form("%d", active.size());
    std::list<XrdProofdProofServ *>::iterator ia;
    for (ia = active.begin(); ia != active.end(); ++ia) {

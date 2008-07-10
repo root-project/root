@@ -68,10 +68,6 @@ XrdProofdManager::XrdProofdManager(XrdProtocol_Config *pi, XrdSysError *edest)
    fSuperMst = 0;
    fNamespace = "/proofpool";
    fMastersAllowed.clear();
-#if 0
-   fCron = 1;
-   fCronFrequency = 60;
-#endif
    fOperationMode = kXPD_OpModeOpen;
    fMultiUser = 0;
    fChangeOwn = 0;
@@ -1044,28 +1040,6 @@ int XrdProofdManager::DoDirectiveMultiUser(char *val, XrdOucStream *cfg, bool)
    fMultiUser = (mu == 1) ? 1 : fMultiUser;
    return 0;
 }
-
-#if 0
-//______________________________________________________________________________
-int XrdProofdManager::DoDirectiveCron(char *val, XrdOucStream *, bool)
-{
-   // Process 'cron' directive
-   XPDLOC(ALL, "Manager::DoDirectiveCron")
-
-   if (!val)
-      // undefined inputs
-      return -1;
-
-   // Cron frequency
-   int freq = strtol(val, 0, 10);
-   if (freq > 0) {
-      TRACE(ALL, "setting frequency to "<<freq<<" sec");
-      fCronFrequency = freq;
-   }
-
-   return 0;
-}
-#endif
 
 //______________________________________________________________________________
 int XrdProofdManager::Process(XrdProofdProtocol *p)

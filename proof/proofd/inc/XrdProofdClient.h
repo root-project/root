@@ -57,9 +57,6 @@ class XrdProofdClient {
    inline bool             IsValid() const { return fIsValid; }
    bool                    Match(const char *usr, const char *grp = 0);
    inline XrdSysRecMutex  *Mutex() const { return (XrdSysRecMutex *)&fMutex; }
-#if 0
-   inline unsigned short   RefSid() const { return fRefSid; }
-#endif
    inline XrdROOT         *ROOT() const { return fROOT; }
    inline XrdProofdSandbox *Sandbox() const { return (XrdProofdSandbox *)&fSandbox; }
    inline XrdProofUI       UI() const { return fUI; }
@@ -88,9 +85,6 @@ class XrdProofdClient {
    void                    SetGroup(const char *g) { fUI.fGroup = g; }
    void                    SetROOT(XrdROOT *r) { fROOT = r; }
 
-#if 0
-   void                    SetRefSid(unsigned short sid) { fRefSid = sid; }
-#endif
    void                    SetValid(bool valid = 1) { fIsValid = valid; }
 
    int                     Size() const { return fClients.size(); }
@@ -112,9 +106,6 @@ class XrdProofdClient {
    bool                    fChangeOwn; // TRUE if ownership must be changed where relevant
    bool                    fIsValid; // TRUE if the instance is complete
 
-#if 0
-   unsigned short          fRefSid;     // Reference stream ID for this client
-#endif
    XrdProofUI              fUI;         // user info
    XrdROOT                *fROOT;        // ROOT vers instance to be used for proofserv
 
