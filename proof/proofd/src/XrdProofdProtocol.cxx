@@ -569,9 +569,10 @@ XrdBuffer *XrdProofdProtocol::GetBuff(int quantum, XrdBuffer *argp)
    if ((argp = fgBPool->Obtain(quantum)) == 0) {
       TRACEP(this, XERR, "could not get requested buffer (size: "<<quantum<<
                          ") = insufficient memory");
+   } else {
+      TRACEP(this, HDBG, "quantum: "<<quantum<<
+                         ", buff: "<<(void *)(argp->buff)<<", bsize:"<<argp->bsize);
    }
-   TRACEP(this, HDBG, "quantum: "<<quantum<<
-                      ", buff: "<<(void *)(argp->buff)<<", bsize:"<<argp->bsize);
 
    // Done
    return argp;
