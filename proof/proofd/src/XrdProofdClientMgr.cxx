@@ -584,6 +584,9 @@ int XrdProofdClientMgr::MapClient(XrdProofdProtocol *p, bool all)
       return 0;
    }
 
+   // Only one instance of this client can map at a time
+   XrdSysMutexHelper mhc(p->Client()->Mutex());
+
    // Flag for internal connections
    bool proofsrv = ((p->ConnType() == kXPD_Internal) && all) ? 1 : 0;
 
@@ -972,7 +975,7 @@ int XrdProofdClientMgr::CheckClients()
                      if (p && p->Link()) {
                         // This client will try to reconnect, if alive, so give it
                         // some time by skipping the next sessions check
-                        c->SkipSessionsCheck();
+                        c->SkipSessionsCheck(0, emsg);
                         // Close the associated link; Recycle is called from there
                         p->Link()->Close();
                      } else {

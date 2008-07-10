@@ -428,7 +428,20 @@ int XrdProofdAdmin::QuerySessions(XrdProofdProtocol *p)
    int rc = 0;
    XPD_SETRESP(p, "QuerySessions");
 
-   XrdOucString msg = p->Client()->ExportSessions();
+   XrdOucString notmsg;
+   if (p->Client()->GetTopProofServ() > 0) {
+      // Notify that we verify existing sessions
+      notmsg = "verifying existing sessions (can take a few seconds)...";
+      response->Send(kXR_attn, kXPD_srvmsg, 0, (char *) notmsg.c_str(), notmsg.length());
+   }
+
+   notmsg = "";
+   XrdOucString msg = p->Client()->ExportSessions(notmsg);
+
+   if (notmsg.length() > 0) {
+      // Some sessions seem non-responding: notify the client
+      response->Send(kXR_attn, kXPD_srvmsg, 0, (char *) notmsg.c_str(), notmsg.length());
+   }
 
    TRACEP(p, DBG, "sending: "<<msg);
 

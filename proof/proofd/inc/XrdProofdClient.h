@@ -65,6 +65,7 @@ class XrdProofdClient {
    XrdProofdProofServ     *GetServer(XrdProofdProtocol *p);
    void                    EraseServer(int psid);
    XrdProofdProofServ     *GetProofServ(int psid);
+   int                     GetTopProofServ();
 
    int                     ResetClientSlot(int ic);
    XrdProofdProtocol      *GetProtocol(int ic);
@@ -77,10 +78,12 @@ class XrdProofdClient {
 
    void                    Broadcast(const char *msg);
 
-   XrdOucString            ExportSessions();
-   void                    SkipSessionsCheck(std::list<XrdProofdProofServ *> *active = 0);
+   XrdOucString            ExportSessions(XrdOucString &emsg);
+   void                    SkipSessionsCheck(std::list<XrdProofdProofServ *> *active,
+                                             XrdOucString &emsg);
    void                    TerminateSessions(int srvtype, XrdProofdProofServ *ref,
                                              const char *msg, XrdProofdPipe *pipe, bool changeown);
+   bool                    VerifySession(XrdProofdProofServ *xps);
 
    void                    SetGroup(const char *g) { fUI.fGroup = g; }
    void                    SetROOT(XrdROOT *r) { fROOT = r; }

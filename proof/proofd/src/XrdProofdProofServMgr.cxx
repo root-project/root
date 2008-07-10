@@ -1968,7 +1968,6 @@ int XrdProofdProofServMgr::Destroy(XrdProofdProtocol *p)
    // Terminate the servers
    XrdOucString msg;
    msg.form("session %d destroyed by %s", xpsref->SrvPID(), p->Link()->ID);
-   p->Client()->Broadcast(msg.c_str());
    p->Client()->TerminateSessions(kXPD_AnyServer, xpsref,
                                   msg.c_str(), Pipe(), fMgr->ChangeOwn());
 
