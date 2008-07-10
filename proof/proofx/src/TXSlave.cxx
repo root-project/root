@@ -600,17 +600,23 @@ Bool_t TXSlave::HandleInput(const void *)
          Info("HandleInput", "%p: %s: proof: %p, mon: %p",
                              this, GetOrdinal(), fProof, mon);
 
-      if (mon) {
-         if (mon->IsActive(fSocket)) {
-            // Synchronous collection in TProof
-            if (gDebug > 2)
-               Info("HandleInput","%p: %s: posting monitor %p", this, GetOrdinal(), mon);
-            mon->SetReady(fSocket);
-         }
+      if (mon && mon->IsActive(fSocket)) {
+         // Synchronous collection in TProof
+         if (gDebug > 2)
+            Info("HandleInput","%p: %s: posting monitor %p", this, GetOrdinal(), mon);
+         mon->SetReady(fSocket);
       } else {
          // Asynchronous collection in TProof
-         if (gDebug > 2)
-            Info("HandleInput","%p: %s: calling TProof::CollectInputFrom", this, GetOrdinal());
+         if (gDebug > 2) {
+            if (mon) {
+               Info("HandleInput", "%p: %s: not active in current monitor"
+                                   " - calling TProof::CollectInputFrom",
+                                   this, GetOrdinal());
+            } else {
+               Info("HandleInput", "%p: %s: calling TProof::CollectInputFrom",
+                                   this, GetOrdinal());
+            }
+         }
          fProof->CollectInputFrom(fSocket);
       }
    } else {
