@@ -590,7 +590,7 @@ int XrdProofdNetMgr::ReadBuffer(XrdProofdProtocol *p)
          // Just got an empty buffer
          if (TRACING(DBG)) {
             emsg = "nothing found in ";
-            emsg += file;
+            emsg += (grep > 0) ? filen : file;
             TRACEP(p, DBG, emsg);
          }
       }
@@ -729,29 +729,35 @@ char *XrdProofdNetMgr::ReadBufferLocal(const char *file,
    }
    off_t ltot = st.st_size;
 
-   // Open the file in read mode
-   FILE *fp = fopen(file, "r");
+   // The grep command
+   char *cmd = 0;
+   int lcmd = 0;
+   if (pat && strlen(pat) > 0) {
+      lcmd = strlen(pat) + strlen(file) + 20;
+      cmd = new char[lcmd];
+      if (opt == 2) {
+         sprintf(cmd, "grep -v %s %s", pat, file);
+      } else {
+         sprintf(cmd, "grep %s %s", pat, file);
+      }
+   } else {
+      lcmd = strlen(file) + 10;
+      cmd = new char[lcmd];
+      sprintf(cmd, "cat %s", file);
+   }
+   TRACE(DBG, "cmd: "<<cmd);
+
+   // Execute the command in a pipe
+   FILE *fp = popen(cmd, "r");
    if (!fp) {
-      emsg = "could not open ";
-      emsg += file;
+      emsg = "could not run '";
+      emsg += cmd;
+      emsg += "'";
       TRACE(XERR, emsg);
+      delete[] cmd;
       return (char *)0;
    }
-
-   // Check pattern
-   bool keepall = (pat && strlen(pat) > 0) ? 0 : 1; 
-
-   // Fill option
-   bool keep = 1;
-   if (opt == 2) {
-      // '-v' functionality
-      keep = 0;
-   } else if (opt != 1 ) {
-      emsg = "unknown option: ";
-      emsg += opt;
-      TRACE(XERR, emsg);
-      return (char *)0;
-   }
+   delete[] cmd;
 
    // Read line by line
    len = 0;
@@ -759,14 +765,9 @@ char *XrdProofdNetMgr::ReadBufferLocal(const char *file,
    char line[2048];
    int bufsiz = 0, left = 0, lines = 0;
    while ((ltot > 0) && fgets(line, sizeof(line), fp)) {
+      // Parse the line
       int llen = strlen(line);
       ltot -= llen;
-      // Filter out
-      bool haspattern = (strstr(line, pat)) ? 1 : 0;
-      if (!keepall && ((keep && !haspattern) || (!keep && haspattern)))
-         // Skip
-         continue;
-      // Good line
       lines++;
       // (Re-)allocate the buffer
       if (!buf || (llen > left)) {
@@ -779,8 +780,8 @@ char *XrdProofdNetMgr::ReadBufferLocal(const char *file,
       if (!buf) {
          emsg = "could not allocate enough memory on the heap: errno: ";
          emsg += (int)errno;
-         XPDERR(emsg);
-         fclose(fp);
+         TRACE(XERR, emsg);
+         pclose(fp);
          return (char *)0;
       }
       // Add line to the buffer
@@ -802,7 +803,7 @@ char *XrdProofdNetMgr::ReadBufferLocal(const char *file,
    }
 
    // Close file
-   fclose(fp);
+   pclose(fp);
 
    // Done
    return buf;
