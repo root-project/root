@@ -1980,6 +1980,10 @@ Int_t TProof::CollectInputFrom(TSocket *s)
 
       case kPROOF_FATAL:
          MarkBad(s, "received kPROOF_FATAL");
+         if (fProgressDialogStarted) {
+            // Finalize the progress dialog
+            Emit("StopProcess(Bool_t)", kTRUE);
+         }
          break;
 
       case kPROOF_TOUCH:

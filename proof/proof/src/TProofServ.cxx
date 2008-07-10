@@ -918,6 +918,9 @@ void TProofServ::HandleSocketInput()
       return;
    }
 
+   // We use to check in the end if something wrong went on during processing
+   Bool_t parallel = IsParallel();
+
    what = mess->What();
    PDB(kGlobal, 1)
       Info("HandleSocketInput", "got type %d from '%s'", what, fSocket->GetTitle());
@@ -1336,6 +1339,12 @@ void TProofServ::HandleSocketInput()
    recursive--;
 
    if (fProof) {
+      // If something wrong went on during processing and we do not have
+      // any worker anymore, we shutdown this session
+      if (parallel != IsParallel()) {
+         SendAsynMessage(" *** No workers left: cannot continue! Terminating ... *** ");
+         Terminate(0);
+      }
       fProof->SetActive(kFALSE);
       // Reset PROOF to running state
       fProof->SetRunStatus(TProof::kRunning);
