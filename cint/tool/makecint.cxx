@@ -498,25 +498,48 @@ void G__outputmakefile(int argc,char **argv)
   /***************************************************************************
    * Print out variables
    ***************************************************************************/
+  char *builddir = getenv("__CINT_BUILDDIR");
+
   out << "# Set variables ############################################" << std::endl
       << "CXX         := " << G__CFG_CXX << std::endl
       << "CC          := " << G__CFG_CC << std::endl
       << "LD          := " << G__CFG_LD << std::endl
       << "CINT        := $(shell which cint" << G__CFG_EXEEXT << ")" << std::endl
       << "CINTSYSDIRU := $(patsubst %/bin/,%/,$(dir $(CINT)))" << std::endl
-      << "CINTSYSDIRW := $(shell " << G__CFG_MANGLEPATHS << " $(CINTSYSDIRU) )" << std::endl
+      << "CINTSYSDIRW := $(shell " << G__CFG_MANGLEPATHS << " $(CINTSYSDIRU) )" << std::endl;
 #ifdef G__CFG_INCLUDEDIRCINT
-      << "CINTINCDIRU := " << G__CFG_INCLUDEDIRCINT << std::endl
-      << "CINTINCDIRW := " << G__CFG_INCLUDEDIRCINT << std::endl
+  if(builddir)
+  {
+      out << "CINTINCDIRU := " << builddir << "/" << G__EXTRA_TOPDIR << "/"
+	  << G__CFG_COREVERSION << "/inc" << std::endl
+	  << "CINTINCDIRW := " << builddir << "/" << G__EXTRA_TOPDIR << "/"
+	  << G__CFG_COREVERSION << "/inc" << std::endl;
+  }
+  else
+  {
+      out << "CINTINCDIRU := " << G__CFG_INCLUDEDIRCINT << std::endl
+	  << "CINTINCDIRW := " << G__CFG_INCLUDEDIRCINT << std::endl;
+  }
 #else
-      << "CINTINCDIRU := $(CINTSYSDIRU)" << G__EXTRA_TOPDIR << "/" << G__CFG_COREVERSION << "/inc" << std::endl
-      << "CINTINCDIRW := $(CINTSYSDIRW)" << G__EXTRA_TOPDIR << "/" << G__CFG_COREVERSION << "/inc" << std::endl
+  out << "CINTINCDIRU := $(CINTSYSDIRU)" << G__EXTRA_TOPDIR << "/"
+      << G__CFG_COREVERSION << "/inc" << std::endl
+      << "CINTINCDIRW := $(CINTSYSDIRW)" << G__EXTRA_TOPDIR << "/"
+      << G__CFG_COREVERSION << "/inc" << std::endl;
 #endif // G__CFG_INCLUDEDIRCINT
+
 #ifdef G__CFG_LIBDIR
-      << "CINTLIB     := " << G__CFG_LIBDIR << "/lib" << G__CINT_LIBNAME << G__CFG_SOEXT << std::endl;
+  if(builddir)
+  {
+      out << "CINTLIB     := " << builddir << "/lib/lib" << G__CINT_LIBNAME << G__CFG_SOEXT << std::endl;
+  }
+  else
+  {
+      out << "CINTLIB     := " << G__CFG_LIBDIR << "/lib" << G__CINT_LIBNAME << G__CFG_SOEXT << std::endl;
+  }
 #else
-      << "CINTLIB     := $(CINTSYSDIRU)/lib/lib" << G__CINT_LIBNAME << G__CFG_SOEXT << std::endl;
+  out << "CINTLIB     := $(CINTSYSDIRU)/lib/lib" << G__CINT_LIBNAME << G__CFG_SOEXT << std::endl;
 #endif
+
   if (!strcmp(G__CFG_COREVERSION,"cint7"))
     out << "CINTLIB     := $(CINTLIB) $(subst lib" << G__CINT_LIBNAME << ",libReflex,$(CINTLIB))" << std::endl;
   out << "IPATH       := " << G__IPATH;

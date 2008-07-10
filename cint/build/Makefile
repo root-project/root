@@ -17,6 +17,8 @@ ifeq ($(strip $(CINTSYSDIR)),)
 endif
 CINTSYSDIR := $(shell echo $(G__CFG_MANGLEPATHS) "${CINTSYSDIR}")
 export CINTSYSDIR
+__CINT_BUILDDIR :=  ${PWD}
+export __CINT_BUILDDIR
 
 include Makefile.conf
 
