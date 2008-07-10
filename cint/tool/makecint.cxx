@@ -498,7 +498,9 @@ void G__outputmakefile(int argc,char **argv)
   /***************************************************************************
    * Print out variables
    ***************************************************************************/
+#if defined(G__CFG_INCLUDEDIRCINT) || defined(G__CFG_LIBDIR)
   char *builddir = getenv("__CINT_BUILDDIR");
+#endif
 
   out << "# Set variables ############################################" << std::endl
       << "CXX         := " << G__CFG_CXX << std::endl
