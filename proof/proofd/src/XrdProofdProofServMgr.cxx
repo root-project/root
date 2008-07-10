@@ -1079,12 +1079,10 @@ int XrdProofdProofServMgr::DoDirectiveProofServMgr(char *val, XrdOucStream *cfg,
                   ? verifyto : fVerifyTimeOut;
    fRecoverTimeOut = (XPD_LONGOK(recoverto) && recoverto > 0) ? recoverto : fRecoverTimeOut;
 
-   if (TRACING(DBG)) {
-      XrdOucString msg;
-      msg.form("checkfq: %d s, termto: %d s, verifyto: %d s, recoverto: %d s",
-               fCheckFrequency, fTerminationTimeOut, fVerifyTimeOut, fRecoverTimeOut);
-      TRACE(DBG, msg);
-   }
+   XrdOucString msg;
+   msg.form("checkfq: %d s, termto: %d s, verifyto: %d s, recoverto: %d s",
+            fCheckFrequency, fTerminationTimeOut, fVerifyTimeOut, fRecoverTimeOut);
+   TRACE(ALL, msg);
 
    return 0;
 }
@@ -2773,6 +2771,7 @@ int XrdProofdProofServMgr::CleanupLostProofServ()
          }
          // If the process is not controlled we have to kill it
          if (!ok) {
+            TRACE(ALL,"process: "<<pid<<" lost its controller: killing");
             if (XrdProofdAux::KillProcess(pid, 1, ui, fMgr->ChangeOwn()) == 0)
                nk++;
          }
