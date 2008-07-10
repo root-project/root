@@ -41,7 +41,7 @@ TInetAddress::TInetAddress(const char *host, UInt_t addr, Int_t family, Int_t po
    // Use the IsValid() method to check the validity of a TInetAddress.
 
    AddAddress(addr);
-   if (!strcmp(host, "????"))
+   if (!strcmp(host, "????") || !strcmp(host, "UnNamedHost"))
       fHostname = GetHostAddress();
    else
       fHostname = host;
