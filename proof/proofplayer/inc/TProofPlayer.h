@@ -109,7 +109,7 @@ protected:
       TProofPlayer *fPlayer;
    public:
       TCleanup(TProofPlayer *p) : fPlayer(p) { }
-      ~TCleanup() { gSystem->Syslog(kLogErr, "!!!cleanup!!!"); fPlayer->StopFeedback(); }
+      ~TCleanup() { fPlayer->StopFeedback(); }
    };
 
 public:
