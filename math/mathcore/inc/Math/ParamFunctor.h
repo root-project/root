@@ -8,8 +8,8 @@
  *                                                                    *
  **********************************************************************/
 
-// Heaer file for Functor classes. 
-// designed is inspired by the Loki Functor
+// Header file for Functor classes. 
+// design is inspired by the Loki Functor
 
 #ifndef ROOT_Math_ParamFunctor
 #define ROOT_Math_ParamFunctor
