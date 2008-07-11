@@ -2464,8 +2464,6 @@ Int_t TProof::CollectInputFrom(TSocket *s)
                (*mess) >> events;
             if (!abort) {
                fPlayer->AddEventsProcessed(events);
-            } else if (IsMaster()) {
-               fPlayer->StopProcess(kTRUE);
             }
             if (!IsMaster())
                Emit("StopProcess(Bool_t)", abort);

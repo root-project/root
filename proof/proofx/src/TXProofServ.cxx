@@ -895,8 +895,9 @@ void TXProofServ::Terminate(Int_t status)
          fQueryLock->Unlock();
    } else {
       // Try to stop processing if any
+      Bool_t abort = (status == 0) ? kFALSE : kTRUE;
       if (!fIdle && fPlayer)
-         fPlayer->StopProcess(kTRUE,1);
+         fPlayer->StopProcess(abort,1);
       gSystem->Sleep(2000);
    }
 
