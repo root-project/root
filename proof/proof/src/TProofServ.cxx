@@ -1681,7 +1681,7 @@ Bool_t TProofServ::IsParallel() const
 {
    // True if in parallel mode.
 
-   if (IsMaster())
+   if (IsMaster() && fProof)
       return fProof->IsParallel();
 
    // false in case we are a slave
@@ -1693,10 +1693,10 @@ void TProofServ::Print(Option_t *option) const
 {
    // Print status of slave server.
 
-   if (IsMaster())
+   if (IsMaster() && fProof)
       fProof->Print(option);
    else
-      Printf("This is slave %s", gSystem->HostName());
+      Printf("This is worker %s", gSystem->HostName());
 }
 
 //______________________________________________________________________________
