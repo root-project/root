@@ -1,4 +1,4 @@
-# -*- sh -*-
+#!/bin/sh
 ##############################################################
 #
 # Copyright(c) 1995~2008  Masaharu Goto (cint@pcroot.cern.ch)
@@ -32,12 +32,12 @@ ARCHS=(linux linuxicc macos macosx64 djgpp cygwin mingw mwerks hpux aix msvc7 ms
 # These are the variables that can be set by the different architectures.
 # They are prepended by "G__CFG_" when writing out to Makefile.conf and $COREVERSION/inc/configcint.h.
 
-EXPORTS=(ARCH COREVERSION CC CFLAGS CMACROS COMP CPP COUT COUTEXE INCP CXX CXXFLAGS CXXMACROS \
+EXPORTS=(CINTVERSION ARCH COREVERSION CC CFLAGS CMACROS COMP CPP COUT COUTEXE INCP CXX CXXFLAGS CXXMACROS \
     LD LDFLAGS LDOUT LIBP LIBL SOFLAGS SOOUT OBJEXT EXEEXT \
     SOEXT LIBEXT IMPLIBEXT DEBUG DEFAULTLIBS \
     MANGLEPATHS STREAMDIR PLATFORMO EXPLLINK \
     READLINELIB CURSESLIB LINK_READLINELIB LINK_CURSESLIB READLINELIB4SHLIB CURSESLIB4SHLIB RM MV WITHPREFIX \
-    INPUTMODE INPUTMODELOCK AR EXTRACTSYMBOLS MAKEIMPLIB )
+    INPUTMODE INPUTMODELOCK AR EXTRACTSYMBOLS MAKEIMPLIB)
 unset ${EXPORTS[*]}
 
 # Lines demonstrating the use of the available variables. 
@@ -48,6 +48,8 @@ unset ${EXPORTS[*]}
 # $CXX $CXXFLAGS $CXXMACROS $CXXOPTFLAGS $CXXDBGFLAGS ${COMP}@source@ ${COUT}@object@$OBJEXT ${INCP}@inclpath@ @header@
 # $LD $LDFLAGS $LDOPTFLAGS $LDDBGFLAGS ${LDOUT}@exe@$EXEEXT ${OBJ}@obj@$OBJEXT ${LIBP}@libpath@ $(subst @lib@,$LIBEXT,${LIBL}) $DEFAULTLIBS
 # $LD $SOFLAGS $LDOPTFLAGS $LDDBGFLAGS ${SOOUT}@so@$SOEXT ${OBJ}@obj@$OBJEXT ${LIBP}@libpath@ $(subst @lib@,$LIBEXT,${LIBL}) $DEFAULTLIBS
+
+INPUTMODE=cint
 
 function config_GCC_defaults {
     CC=gcc
@@ -95,8 +97,6 @@ function config_GCC_defaults {
     else
         STREAMDIR=stream
     fi
-
-    INPUTMODE=cint
     INPUTMODELOCK=off
 }
 
@@ -259,7 +259,6 @@ function config_msvc7 {
     PLATFORMO=v6_winnt
     RM="rm -f"
     MV="mv -f"
-    INPUTMODE=cint
     INPUTMODELOCK=off
 
     AR="lib /OUT:"
@@ -357,6 +356,8 @@ add_opt "--psdir=" 'ignored'
 add_opt "--readlinelib=" "Readline library "$'\n\t'"(defaults to /usr/(local)/lib/libreadline.a if it exists)"
 add_opt "--debug" "Build non-optimized Cint with debug symbols"
 add_opt "--pedantic" "Warn on everything that the compielr allows (only supported for GCC)"
+
+add_opt "--inputmode=" "Define the inputmode (C++|cint|root)"
 
 function processflag_help {
     echo CINT configure options:
@@ -529,6 +530,15 @@ function processflag_readlinelib {
     READLINELIB=$1
 }
 
+function processflag_inputmode {
+    INPUTMODE=$1
+    if [ "x$INPUTMODE" != "xC++" ] \
+        && [ "x$INPUTMODE" != "xcint" ] \
+        && [ "x$INPUTMODE" != "xroot" ]; then
+        echo WARNING: unknown INPUTMODE \"$INPUTMODE\" specified\!
+    fi
+}
+
 # process options
 ALLOPTIONS=(${*:1})
 
@@ -667,6 +677,21 @@ if [ "x$PREFIX" != "x" ]; then
         INCLUDEDIR INCLUDEDIRCINT DATADIR DATADIRCINT)
 fi
 
+# get actual cint version from int/G__ci.h
+if [ "x${COREVERSION}" = "xcint" ]; then
+  CINTVERSIONTAG=G__CINTVERSIONSTR_V5
+else
+  CINTVERSIONTAG=G__CINTVERSIONSTR
+fi
+CINTVERSION=`grep '#define *'${CINTVERSIONTAG}' ' ${COREVERSION}/inc/G__ci.h | sed 's/^.*"\([^,]\+\),.*$/\1/'`
+
+
+#############################################################
+###
+###        Generate Output
+###
+#############################################################
+
 echo ""
 echo Creating build dirs...
 [ -d bin ] || mkdir -p bin
@@ -702,13 +727,6 @@ done
 
 # now write the cint-config script
 
-# get actual cint version from int/G__ci.h
-if [ "x${COREVERSION}" = "xcint" ]; then
-  CINTVERSIONTAG=G__CINTVERSIONSTR_V5
-else
-  CINTVERSIONTAG=G__CINTVERSIONSTR
-fi
-CINTVERSION=`grep '#define *'${CINTVERSIONTAG}' ' ${COREVERSION}/inc/G__ci.h | sed 's/^.*"\([^,]\+\),.*$/\1/'`
 
 $RM bin/cint-config
 echo Writing bin/cint-config...
@@ -766,3 +784,4 @@ echo Run \"make\" to build cint.
 echo Run \"make help\" to see the available build targets.
 
 # -*- mode:sh -*-
+# -*- sh -*-
