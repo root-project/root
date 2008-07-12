@@ -1313,7 +1313,7 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
    XPD_SETRESP(p, "Create");
 
    TRACEP(p, DBG, "enter");
-   XrdSysMutexHelper mh(p->Client()->Mutex());
+   XrdSysMutexHelper mhc(p->Client()->Mutex());
 
    // Allocate next free server ID and fill in the basic stuff
    XrdProofdProofServ *xps = p->Client()->GetFreeServObj();
