@@ -44,17 +44,23 @@
          } \
       } \
    }
+// Check link macro
+#define CHECKLINK \
+   if (!fLink) { \
+      TRACE(XERR, "link is undefined! "); \
+      return 0; \
+   } else if (fLink->FDnum() <= 0) { \
+      TRACE(XERR, "link descriptor invalid! " << fLink->FDnum()); \
+      return 0; \
+   }
 
 //______________________________________________________________________________
 int XrdProofdResponse::Send()
 {
    // Auxilliary Send method
-   XPDLOC(RSP, "Response::Send")
+   XPDLOC(RSP, "Response::Send:1")
 
-   if (!fLink || (fLink->FDnum() <= 0)) {
-      TRACE(XERR, "send: link is undefined! ");
-      return 0;
-   }
+   CHECKLINK;
 
    int rc = 0;
    XrdOucString tmsg, emsg;
@@ -75,12 +81,9 @@ int XrdProofdResponse::Send()
 int XrdProofdResponse::Send(XResponseType rcode)
 {
    // Auxilliary Send method
-   XPDLOC(RSP, "Response::Send")
+   XPDLOC(RSP, "Response::Send:2")
 
-   if (!fLink || (fLink->FDnum() <= 0)) {
-      TRACE(XERR, "link is undefined! ");
-      return 0;
-   }
+   CHECKLINK;
 
    int rc = 0;
    XrdOucString tmsg, emsg;
@@ -101,12 +104,9 @@ int XrdProofdResponse::Send(XResponseType rcode)
 int XrdProofdResponse::Send(const char *msg)
 {
    // Auxilliary Send method
-   XPDLOC(RSP, "Response::Send")
+   XPDLOC(RSP, "Response::Send:3")
 
-   if (!fLink || (fLink->FDnum() <= 0)) {
-      TRACE(XERR, "link is undefined! ");
-      return 0;
-   }
+   CHECKLINK;
 
    int rc = 0;
    XrdOucString tmsg, emsg;
@@ -129,12 +129,9 @@ int XrdProofdResponse::Send(const char *msg)
 int XrdProofdResponse::Send(XResponseType rcode, void *data, int dlen)
 {
    // Auxilliary Send method
-   XPDLOC(RSP, "Response::Send")
+   XPDLOC(RSP, "Response::Send:4")
 
-   if (!fLink || (fLink->FDnum() <= 0)) {
-      TRACE(XERR, "link is undefined! ");
-      return 0;
-   }
+   CHECKLINK;
 
    int rc = 0;
    XrdOucString tmsg, emsg;
@@ -157,12 +154,9 @@ int XrdProofdResponse::Send(XResponseType rcode, void *data, int dlen)
 int XrdProofdResponse::Send(XResponseType rcode, int info, char *data)
 {
    // Auxilliary Send method
-   XPDLOC(RSP, "Response::Send")
+   XPDLOC(RSP, "Response::Send:5")
 
-   if (!fLink || (fLink->FDnum() <= 0)) {
-      TRACE(XERR, "link is undefined! ");
-      return 0;
-   }
+   CHECKLINK;
 
    int rc = 0;
    XrdOucString tmsg, emsg;
@@ -198,12 +192,9 @@ int XrdProofdResponse::Send(XResponseType rcode, XProofActionCode acode,
                             void *data, int dlen )
 {
    // Auxilliary Send method
-   XPDLOC(RSP, "Response::Send")
+   XPDLOC(RSP, "Response::Send:6")
 
-   if (!fLink || (fLink->FDnum() <= 0)) {
-      TRACE(XERR, "link is undefined! ");
-      return 0;
-   }
+   CHECKLINK;
 
    int rc = 0;
    XrdOucString tmsg, emsg;
@@ -238,12 +229,9 @@ int XrdProofdResponse::Send(XResponseType rcode, XProofActionCode acode,
                             kXR_int32 cid, void *data, int dlen )
 {
    // Auxilliary Send method
-   XPDLOC(RSP, "Response::Send")
+   XPDLOC(RSP, "Response::Send:7")
 
-   if (!fLink || (fLink->FDnum() <= 0)) {
-      TRACE(XERR, "link is undefined! ");
-      return 0;
-   }
+   CHECKLINK;
 
    int rc = 0;
    XrdOucString tmsg, emsg;
@@ -282,12 +270,9 @@ int XrdProofdResponse::Send(XResponseType rcode, XProofActionCode acode,
                             int info )
 {
    // Auxilliary Send method
-   XPDLOC(RSP, "Response::Send")
+   XPDLOC(RSP, "Response::Send:8")
 
-   if (!fLink || (fLink->FDnum() <= 0)) {
-      TRACE(XERR, "link is undefined! ");
-      return 0;
-   }
+   CHECKLINK;
 
    int rc = 0;
    XrdOucString tmsg, emsg;
@@ -317,12 +302,9 @@ int XrdProofdResponse::SendI(kXR_int32 int1, kXR_int16 int2, kXR_int16 int3,
                             void *data, int dlen )
 {
    // Auxilliary Send method
-   XPDLOC(RSP, "Response::SendI")
+   XPDLOC(RSP, "Response::SendI:1")
 
-   if (!fLink || (fLink->FDnum() <= 0)) {
-      TRACE(XERR, "link is undefined! ");
-      return 0;
-   }
+   CHECKLINK;
 
    int rc = 0;
    XrdOucString tmsg, emsg;
@@ -363,12 +345,9 @@ int XrdProofdResponse::SendI(kXR_int32 int1, kXR_int16 int2, kXR_int16 int3,
 int XrdProofdResponse::SendI(kXR_int32 int1, kXR_int32 int2, void *data, int dlen )
 {
    // Auxilliary Send method
-   XPDLOC(RSP, "Response::SendI")
+   XPDLOC(RSP, "Response::SendI:2")
 
-   if (!fLink || (fLink->FDnum() <= 0)) {
-      TRACE(XERR, "link is undefined! ");
-      return 0;
-   }
+   CHECKLINK;
 
    int rc = 0;
    XrdOucString tmsg, emsg;
@@ -406,12 +385,9 @@ int XrdProofdResponse::SendI(kXR_int32 int1, kXR_int32 int2, void *data, int dle
 int XrdProofdResponse::SendI(kXR_int32 int1, void *data, int dlen )
 {
    // Auxilliary Send method
-   XPDLOC(RSP, "Response::SendI")
+   XPDLOC(RSP, "Response::SendI:3")
 
-   if (!fLink || (fLink->FDnum() <= 0)) {
-      TRACE(XERR, "link is undefined! ");
-      return 0;
-   }
+   CHECKLINK;
 
    int rc = 0;
    XrdOucString tmsg, emsg;
@@ -445,12 +421,9 @@ int XrdProofdResponse::SendI(kXR_int32 int1, void *data, int dlen )
 int XrdProofdResponse::Send(void *data, int dlen)
 {
    // Auxilliary Send method
-   XPDLOC(RSP, "Response::Send")
+   XPDLOC(RSP, "Response::Send:9")
 
-   if (!fLink || (fLink->FDnum() <= 0)) {
-      TRACE(XERR, "link is undefined! ");
-      return 0;
-   }
+   CHECKLINK;
 
    int rc = 0;
    XrdOucString tmsg, emsg;
@@ -473,12 +446,9 @@ int XrdProofdResponse::Send(void *data, int dlen)
 int XrdProofdResponse::Send(struct iovec *IOResp, int iornum, int iolen)
 {
    // Auxilliary Send method
-   XPDLOC(RSP, "Response::Send")
+   XPDLOC(RSP, "Response::Send:10")
 
-   if (!fLink || (fLink->FDnum() <= 0)) {
-      TRACE(XERR, "link is undefined! ");
-      return 0;
-   }
+   CHECKLINK;
 
    int rc = 0;
    XrdOucString tmsg, emsg;
@@ -509,12 +479,9 @@ int XrdProofdResponse::Send(struct iovec *IOResp, int iornum, int iolen)
 int XrdProofdResponse::Send(XErrorCode ecode, const char *msg)
 {
    // Auxilliary Send method
-   XPDLOC(RSP, "Response::Send")
+   XPDLOC(RSP, "Response::Send:11")
 
-   if (!fLink || (fLink->FDnum() <= 0)) {
-      TRACE(XERR, "link is undefined! ");
-      return 0;
-   }
+   CHECKLINK;
 
    int rc = 0;
    XrdOucString tmsg, emsg;
@@ -543,12 +510,9 @@ int XrdProofdResponse::Send(XErrorCode ecode, const char *msg)
 int XrdProofdResponse::Send(XPErrorCode ecode, const char *msg)
 {
    // Auxilliary Send method
-   XPDLOC(RSP, "Response::Send")
+   XPDLOC(RSP, "Response::Send:12")
 
-   if (!fLink || (fLink->FDnum() <= 0)) {
-      TRACE(XERR, "link is undefined! ");
-      return 0;
-   }
+   CHECKLINK;
 
    int rc = 0;
    XrdOucString tmsg, emsg;
