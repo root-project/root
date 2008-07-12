@@ -192,7 +192,7 @@ void *XrdProofdProofServCron(void *p)
             // Notify
             TRACE(ALL, "next sessions check in "<<mgr->CheckFrequency()<<" secs");
          } else {
-            TRACE(DBG, "nothing to do; "<<mgr->NextSessionsCheck()-now<<" secs to full check");
+            TRACE(HDBG, "nothing to do; "<<mgr->NextSessionsCheck()-now<<" secs to full check");
          }
       }
    }
