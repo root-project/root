@@ -6100,12 +6100,18 @@ void TH1::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    Bool_t nonEqiY = kFALSE;
    Bool_t nonEqiZ = kFALSE;
    Int_t i;
-
+   static Int_t nxaxis = 0;
+   static Int_t nyaxis = 0;
+   static Int_t nzaxis = 0;
+   TString sxaxis="xAxis",syaxis="yAxis",szaxis="zAxis";
+   
    // Check if the histogram has equidistant X bins or not.  If not, we
    // create an array holding the bins.
    if (GetXaxis()->GetXbins()->fN && GetXaxis()->GetXbins()->fArray) {
       nonEqiX = kTRUE;
-      out << "   Double_t xAxis[" << GetXaxis()->GetXbins()->fN
+      nxaxis++;
+      sxaxis += nxaxis;
+      out << "   Double_t "<<sxaxis<<"[" << GetXaxis()->GetXbins()->fN
          << "] = {";
       for (i = 0; i < GetXaxis()->GetXbins()->fN; i++) {
          if (i != 0) out << ", ";
@@ -6119,7 +6125,9 @@ void TH1::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    if (fDimension > 1 && GetYaxis()->GetXbins()->fN &&
       GetYaxis()->GetXbins()->fArray) {
          nonEqiY = kTRUE;
-         out << "   Double_t yAxis[" << GetYaxis()->GetXbins()->fN
+         nyaxis++;
+         syaxis += nyaxis;
+         out << "   Double_t "<<syaxis<<"[" << GetYaxis()->GetXbins()->fN
             << "] = {";
          for (i = 0; i < GetYaxis()->GetXbins()->fN; i++) {
             if (i != 0) out << ", ";
@@ -6133,7 +6141,9 @@ void TH1::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    if (fDimension > 2 && GetZaxis()->GetXbins()->fN &&
       GetZaxis()->GetXbins()->fArray) {
          nonEqiZ = kTRUE;
-         out << "   Double_t zAxis[" << GetZaxis()->GetXbins()->fN
+         nzaxis++;
+         szaxis += nzaxis;
+         out << "   Double_t "<<szaxis<<"[" << GetZaxis()->GetXbins()->fN
             << "] = {";
          for (i = 0; i < GetZaxis()->GetXbins()->fN; i++) {
             if (i != 0) out << ", ";
@@ -6150,14 +6160,14 @@ void TH1::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       << GetName() << quote << "," << quote<< GetTitle() << quote
       << "," << GetXaxis()->GetNbins();
    if (nonEqiX)
-      out << ", xAxis";
+      out << ", "<<sxaxis;
    else
       out << "," << GetXaxis()->GetXmin()
       << "," << GetXaxis()->GetXmax();
    if (fDimension > 1) {
       out << "," << GetYaxis()->GetNbins();
       if (nonEqiY)
-         out << ", yAxis";
+         out << ", "<<syaxis;
       else
          out << "," << GetYaxis()->GetXmin()
          << "," << GetYaxis()->GetXmax();
@@ -6165,7 +6175,7 @@ void TH1::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    if (fDimension > 2) {
       out << "," << GetZaxis()->GetNbins();
       if (nonEqiZ)
-         out << ", zAxis";
+         out << ", "<<szaxis;
       else
          out << "," << GetZaxis()->GetXmin()
          << "," << GetZaxis()->GetXmax();
