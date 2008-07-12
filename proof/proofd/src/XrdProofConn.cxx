@@ -156,7 +156,7 @@ bool XrdProofConn::Init(const char *url)
 
    // Init connection manager (only once)
    if (!fgConnMgr) {
-      if (!(fgConnMgr = new XrdClientConnectionMgr())) {
+      if (!(fgConnMgr = new XrdClientConnectionMgr(0))) {
          TRACE(XERR,"error initializing connection manager");
          return 0;
       }

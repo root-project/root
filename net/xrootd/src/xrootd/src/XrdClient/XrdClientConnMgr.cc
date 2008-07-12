@@ -150,8 +150,9 @@ int DestroyPhyConn(const char *key,
 
 
 //_____________________________________________________________________________
-XrdClientConnectionMgr::XrdClientConnectionMgr() : fSidManager(0),
-						   fGarbageColl(0)
+XrdClientConnectionMgr::XrdClientConnectionMgr(bool sequential) : fSidManager(0),
+						                  fGarbageColl(0),
+                                                                  fSequential(sequential)
 {
    // XrdClientConnectionMgr constructor.
    // Creates a Connection Manager object.
@@ -672,16 +673,31 @@ UnsolRespProcResult XrdClientConnectionMgr::ProcessUnsolicitedMsg(XrdClientUnsol
    {
       // Find an interested logid
       XrdSysMutexHelper mtx(fMutex);
-      
-      for (int i = 0; i < fLogVec.GetSize(); i++) {
-      
-	 if ( fLogVec[i] && (fLogVec[i]->GetPhyConnection() == sender) ) {
-	    fMutex.UnLock();
-	    res = fLogVec[i]->ProcessUnsolicitedMsg(sender, unsolmsg);
-            fMutex.Lock();
 
-	    if (res != kUNSOL_CONTINUE) break;
-	 }
+      if (fSequential) {
+         for (int i = 0; i < fLogVec.GetSize(); i++) {
+       
+	    if ( fLogVec[i] && (fLogVec[i]->GetPhyConnection() == sender) ) {
+	       fMutex.UnLock();
+	       res = fLogVec[i]->ProcessUnsolicitedMsg(sender, unsolmsg);
+               fMutex.Lock();
+
+	       if (res != kUNSOL_CONTINUE) break;
+	    }
+         }
+      } else {
+         if (unsolmsg) {
+            int i = unsolmsg->HeaderSID() - 1;
+            if (i >= 0 && i < fLogVec.GetSize()) {
+	       fMutex.UnLock();
+	       res = fLogVec[i]->ProcessUnsolicitedMsg(sender, unsolmsg);
+               fMutex.Lock();
+            } else {
+               Error("ProcessUnsolicitedMessage", "message id out of range! " <<  unsolmsg->HeaderSID());
+            }
+         } else {
+            Error("ProcessUnsolicitedMessage", "message undefined! ");
+         }
       }
    }
    return res;
