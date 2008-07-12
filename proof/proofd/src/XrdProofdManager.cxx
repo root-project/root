@@ -748,7 +748,7 @@ int XrdProofdManager::DoDirectiveTrace(char *val, XrdOucStream *cfg, bool)
    //   mem            trace mem buffer manager            [off]
    //
    // Valid keyword domains are:
-   //   rsp            server replies                      [on]
+   //   rsp            server replies                      [off]
    //   aux            aux functions                       [on]
    //   cmgr           client manager                      [on]
    //   smgr           session manager                     [on]

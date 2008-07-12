@@ -36,11 +36,11 @@
    if (rc != 0) { \
       TRACER(this, XERR, m << ": " << e); \
    } else { \
-      if (TRACING(DBG)) { \
+      if (TRACING(RSP)) { \
          if (e.length() > 0) { \
-            TRACER(this, DBG, m << " (" << e <<")"); \
+            TRACER(this, RSP, m << " (" << e <<")"); \
          } else { \
-            TRACER(this, DBG, m); \
+            TRACER(this, RSP, m); \
          } \
       } \
    }
