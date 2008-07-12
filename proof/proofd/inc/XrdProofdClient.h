@@ -93,7 +93,7 @@ class XrdProofdClient {
 
    int                     Size() const { return fClients.size(); }
 
-   void                    Touch();
+   int                     Touch(bool reset = 0);
 
    int                     CreateUNIXSock(XrdSysError *edest);
    XrdNet                 *UNIXSock() const { return fUNIXSock; }
@@ -109,6 +109,7 @@ class XrdProofdClient {
 
    bool                    fChangeOwn; // TRUE if ownership must be changed where relevant
    bool                    fIsValid; // TRUE if the instance is complete
+   bool                    fAskedToTouch; // TRUE if a touch request has already been sent for this client
 
    XrdProofUI              fUI;         // user info
    XrdROOT                *fROOT;        // ROOT vers instance to be used for proofserv

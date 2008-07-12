@@ -338,6 +338,7 @@ int XrdProofdProtocol::Configure(char *, XrdProtocol_Config *pi)
    XrdProofdTrace->What = TRACE_DOMAINS;
    TRACESET(XERR, 1);
    TRACESET(LOGIN, 1);
+   TRACESET(RSP, 0);
    if (pi->DebugON)
       XrdProofdTrace->What |= (TRACE_REQ | TRACE_FORK);
 
@@ -446,6 +447,8 @@ int XrdProofdProtocol::Process2()
       bool formgr = 0;
       switch(fRequest.header.requestid) {
          case kXP_touch:
+            // Reset the asked-to-touch flag, if it was never set
+            fPClient->Touch(1);
             break;
          case kXP_interrupt:
             rc = Interrupt();

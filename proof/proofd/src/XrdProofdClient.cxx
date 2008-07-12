@@ -45,6 +45,7 @@ XrdProofdClient::XrdProofdClient(XrdProofUI ui, bool master, bool changeown,
    fUNIXSockSaved = 0;
    fROOT = 0;
    fIsValid = 0;
+   fAskedToTouch = 0;
    fChangeOwn = changeown;
 
    // Make sure the admin path exists
@@ -649,11 +650,25 @@ void XrdProofdClient::Broadcast(const char *msg)
 }
 
 //______________________________________________________________________________
-void XrdProofdClient::Touch()
+int XrdProofdClient::Touch(bool reset)
 {
    // Send a touch the connected clients: this will remotely touch the associated
-   // TSocket instance and schedule an asynchronous touch of the client admin file
+   // TSocket instance and schedule an asynchronous touch of the client admin file.
+   // This request is only sent once per client: this is controlled by the flag
+   // fAskedToTouch, whcih can reset to FALSE by calling this function with reset
+   // TRUE.
+   // Return 0 if the request is sent or if asked to reset.
+   // Retunn 1 if the request was already sent.
 
+   // If we are asked to reset, just do that and return
+   if (reset) {
+      fAskedToTouch = 0;
+      return 0;
+   }
+
+   // If already asked to touch say it by return 1
+   if (fAskedToTouch) return 1;
+   
    // Notify the attached clients
    int ic = 0;
    XrdClientID *cid = 0;
@@ -667,6 +682,10 @@ void XrdProofdClient::Touch()
          }
       }
    }
+   // Do it only once a time
+   fAskedToTouch = 1;
+   // Done 
+   return 0;
 }
 
 //______________________________________________________________________________

@@ -582,9 +582,6 @@ int XrdProofdClientMgr::MapClient(XrdProofdProtocol *p, bool all)
       return 0;
    }
 
-   // Only one instance of this client can map at a time
-   XrdSysMutexHelper mhc(p->Client()->Mutex());
-
    // Flag for internal connections
    bool proofsrv = ((p->ConnType() == kXPD_Internal) && all) ? 1 : 0;
 
@@ -633,6 +630,9 @@ int XrdProofdClientMgr::MapClient(XrdProofdProtocol *p, bool all)
          TRACEI(resp->TraceID(), DBG, "proofsrv callback: link assigned to target session "<<psid);
       }
    } else {
+
+      // Only one instance of this client can map at a time
+      XrdSysMutexHelper mhc(p->Client()->Mutex());
 
       // Make sure that the version is filled correctly (if an admin operation
       // was run before this may still be -1 on workers)
@@ -938,17 +938,23 @@ int XrdProofdClientMgr::CheckClients()
                         xrm = 1;
                      }
                   } else {
-                     // If required, check the recent activity; close the link
-                     // if inactive since too long
+                     // If required, check the recent activity; if inactive since too long
+                     // we ask the client to proof its vitality; but only once: next time
+                     // we close the link
                      if (fActivityTimeOut > 0 &&
                          (int)(time(0) - st.st_atime) > fActivityTimeOut) {
-                        xclose = 1;
-                        // This clients looks like disconnected
-                        FILE *fd = fopen(discpath.c_str(), "w");
-                        if (!fd) {
-                           TRACE(XERR, "unable to create path: " <<discpath);
-                        } else {
-                           fclose(fd);
+                        if (c->Touch() == 1) {
+                           // The client was aredy asked to proof its vitality
+                           // during last cycle and it did not do it, so we close
+                           // the link
+                           xclose = 1;
+                           // This clients looks like disconnected
+                           FILE *fd = fopen(discpath.c_str(), "w");
+                           if (!fd) {
+                              TRACE(XERR, "unable to create path: " <<discpath);
+                           } else {
+                              fclose(fd);
+                           }
                         }
                      }
                   }
@@ -1004,9 +1010,6 @@ int XrdProofdClientMgr::CheckClients()
          if ((rc = XrdProofdAux::RmDir(usrpath.c_str())) != 0) {
             TRACE(XERR, "problems removing "<<usrpath<<"; error: "<<-rc);
          }
-      } else {
-         // Send touch request to connected instances
-         if (c) c->Touch();
       }
    }
    // Close the directory
