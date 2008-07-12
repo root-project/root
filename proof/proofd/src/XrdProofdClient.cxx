@@ -96,7 +96,7 @@ int XrdProofdClient::GetClientID(XrdProofdProtocol *p)
    {  XrdSysMutexHelper mh(fMutex);
       // Search for free places in the existing vector
       for (ic = 0; ic < (int)fClients.size() ; ic++) {
-         if (!fClients[ic]) {
+         if (fClients[ic] && !fClients[ic]->IsValid()) {
             cid = fClients[ic];
             cid->Reset();
             break;
@@ -370,9 +370,10 @@ XrdProofdProofServ *XrdProofdClient::GetFreeServObj()
          newsz = 2 * fProofServs.capacity();
          fProofServs.reserve(newsz);
       }
-
-      // Allocate new element
-      fProofServs.push_back(new XrdProofdProofServ());
+      if (ic >= (int)fProofServs.size()) {
+         // Allocate new element
+         fProofServs.push_back(new XrdProofdProofServ());
+      }
       sz = fProofServs.size();
 
       xps = fProofServs[ic];
@@ -519,6 +520,25 @@ void XrdProofdClient::EraseServer(int psid)
       }
    }
 }
+
+//______________________________________________________________________________
+void XrdProofdClient::CheckServerSlots()
+{
+   // Free slots corresponding to invalid server instances
+   XPDLOC(CMGR, "Client::CheckServerSlots")
+
+   XrdSysMutexHelper mh(fMutex);
+
+   std::vector<XrdProofdProofServ *>::iterator ip;
+   for (ip = fProofServs.begin(); ip != fProofServs.end(); ++ip) {
+      TRACE(DBG, "found: " << *ip);
+      if (*ip && !(*ip)->IsValid()) {
+         fProofServs.erase(ip);
+         break;
+      }
+   }
+}
+
 
 //______________________________________________________________________________
 int XrdProofdClient::GetTopProofServ()

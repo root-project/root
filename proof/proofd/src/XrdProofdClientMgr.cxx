@@ -603,6 +603,8 @@ int XrdProofdClientMgr::MapClient(XrdProofdProtocol *p, bool all)
       protver = p->Request()->login.capver[0];
       TRACEP(p, DBG, "proofsrv callback for session: " <<psid);
    } else {
+      // Cleanup the server vector
+      p->Client()->CheckServerSlots();
       // Get PROOF version run by client
       memcpy(&clientvers, (const void *)&(p->Request()->login.reserved[0]), 2);
       TRACEP(p, DBG, "PROOF version run by client: " <<clientvers);
