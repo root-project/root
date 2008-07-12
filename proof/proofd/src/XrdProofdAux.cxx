@@ -855,7 +855,7 @@ int XrdProofdAux::GetProcesses(const char *pn, std::map<int,XrdOucString> *pmap)
    while (ii--) {
       if (strstr(pl[ii].kp_proc.p_comm, pn)) {
          // Good one: take the pid
-         pmap->insert(std::make_pair(pl[np].kp_proc.p_pid, XrdOucString(pl[ii].kp_proc.p_comm)));
+         pmap->insert(std::make_pair(pl[ii].kp_proc.p_pid, XrdOucString(pl[ii].kp_proc.p_comm)));
          np++;
       }
    }
