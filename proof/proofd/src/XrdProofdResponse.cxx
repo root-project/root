@@ -49,8 +49,8 @@
    if (!fLink) { \
       TRACE(XERR, "link is undefined! "); \
       return 0; \
-   } else if (fLink->FDnum() <= 0) { \
-      TRACE(XERR, "link descriptor invalid! " << fLink->FDnum()); \
+   } else if (fLink->FDnum() < 0) { \
+      TRACE(XERR, "link descriptor invalid for link "<<fLink<<"! ("<< fLink->FDnum()<<")"); \
       return 0; \
    }
 
@@ -621,11 +621,21 @@ void XrdProofdResponse::GetSID(unsigned short &sid)
 void XrdProofdResponse::Set(XrdLink *l)
 {
    // Set the link to be used by this response
+   XPDLOC(RSP, "Response::Set")
 
    {  XrdSysMutexHelper mh(fMutex);
       fLink = l;
    }
    GetSID(fSID);
+   if (fLink) {
+      if (fLink->FDnum() < 0) {
+         TRACE(XERR, "link descriptor invalid for link "<<fLink<<"! ("<< fLink->FDnum()<<")");
+      } else {
+         TRACE(DBG,"using link "<<fLink<<", descriptor:"<<fLink->FDnum());
+      }
+   } else {
+      TRACE(XERR,"link is undefined!");
+   }
 }
 
 //______________________________________________________________________________
