@@ -844,7 +844,7 @@ int XrdProofdAux::GetProcesses(const char *pn, std::map<int,XrdOucString> *pmap)
    kinfo_proc *pl = 0;
    int ern = 0;
    if ((ern = XrdProofdAux::GetMacProcList(&pl, np)) != 0) {
-      XrdOucString emsg("cannot get the process list: errno: ");
+      emsg = "cannot get the process list: errno: ";
       emsg += ern;
       TRACE(XERR, emsg);
       return -1;
