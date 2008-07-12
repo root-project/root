@@ -108,7 +108,7 @@ public:
    inline const char  *Fileout() const { XrdSysMutexHelper mhp(fMutex); return fFileout.c_str(); }
    int                 FreeClientID(int pid);
    XrdClientID        *GetClientID(int cid);
-   inline int          GetNClients() { XrdSysMutexHelper mhp(fMutex); return fNClients;}
+   int                 GetNClients(bool check);
    inline const char  *Group() const { XrdSysMutexHelper mhp(fMutex); return fGroup.c_str(); }
    int                 IdleTime();
    inline short int    ID() const { XrdSysMutexHelper mhp(fMutex); return fID; }

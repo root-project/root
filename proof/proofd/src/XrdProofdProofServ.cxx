@@ -239,6 +239,29 @@ int XrdProofdProofServ::FreeClientID(int pid)
 }
 
 //__________________________________________________________________________
+int XrdProofdProofServ::GetNClients(bool check)
+{
+   // Get the number of connected clients. If check is true check that
+   // they are still valid ones and free the slots for the invalid ones
+
+   XrdSysMutexHelper mhp(fMutex);
+
+   if (check) {
+      // Remove this from the list of clients
+      std::vector<XrdClientID *>::iterator i;
+      for (i = fClients.begin(); i != fClients.end(); ++i) {
+         if ((*i) && (*i)->P() && !(*i)->P()->Link()) {
+            (*i)->Reset();
+            fNClients--;
+         }
+      }
+   }
+
+   // Done
+   return fNClients;
+}
+
+//__________________________________________________________________________
 int XrdProofdProofServ::DisconnectTime()
 {
    // Return the time (in secs) all clients have been disconnected.

@@ -61,7 +61,7 @@ typedef struct {
 
 // Aux structure for session set env inputs
 typedef struct {
-   int          fPsid;
+   XrdProofdProofServ *fPS;
    int          fLogLevel;
    XrdOucString fCfg;
    XrdOucString fLogFile;
@@ -96,7 +96,6 @@ void *XrdProofdProofServCron(void *p)
 
    // Quicj checks for client disconnections: frequency (5 secs) and
    // flag for disconnections effectively occuring
-   bool clientdisc = 0;
    int quickcheckfreq = 5;
    int clnlostscale = 0;
 
@@ -151,8 +150,9 @@ void *XrdProofdProofServCron(void *p)
             TRACE(REQ, "kClientDisconnect: a client just disconnected: "<<pid);
             // Free slots in the proof serv instances
             mgr->DisconnectFromProofServ(pid);
-            // Flag this case
-            clientdisc = 1;
+            TRACE(DBG, "quick check of active sessions");
+            // Quick check of active sessions in case of disconnections
+            mgr->CheckActiveSessions(0);
         } else if (msg.Type() == XrdProofdProofServMgr::kCleanSessions) {
             // Request for cleanup all sessions of a client (or all clients) 
             XrdOucString usr;
@@ -191,15 +191,9 @@ void *XrdProofdProofServCron(void *p)
             mgr->SetNextSessionsCheck(lastcheck + mgr->CheckFrequency());
             // Notify
             TRACE(ALL, "next sessions check in "<<mgr->CheckFrequency()<<" secs");
-         } else if (clientdisc) {
-            TRACE(DBG, "quick check of active sessions; "<<now-lastcheck<<" secs to full check");
-            // Quick check of active sessions in case of disconnections
-            mgr->CheckActiveSessions(0);
          } else {
-            TRACE(DBG, "nothing to do; "<<now-lastcheck<<" secs to full check");
+            TRACE(DBG, "nothing to do; "<<mgr->NextSessionsCheck()-now<<" secs to full check");
          }
-         // Reset the client disconnection flag
-         clientdisc = 0;
       }
    }
 
@@ -795,7 +789,7 @@ int XrdProofdProofServMgr::CheckActiveSessions(bool verify)
          // Check if we need to shutdown it
          if (!rmsession) {
             XrdSysMutexHelper mh(xps->Mutex());
-            if ((nc = xps->GetNClients()) <= 0 && (!IsReconnecting() || oldvers)) {
+            if ((nc = xps->GetNClients(1)) <= 0 && (!IsReconnecting() || oldvers)) {
                if ((fShutdownOpt == 1 && (xps->IdleTime() >= fShutdownDelay)) ||
                   (fShutdownOpt == 2 && (xps->DisconnectTime() >= fShutdownDelay))) {
                   xps->TerminateProofServ(fMgr->ChangeOwn());
@@ -1434,10 +1428,10 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
       p->Client()->Mutex()->UnLock();
 
       // Get unique tag and relevant dirs for this session
-      ProofServEnv_t in = {psid, loglevel, cffile.c_str(), "", "", "", "", ""};
+      ProofServEnv_t in = {xps, loglevel, cffile.c_str(), "", "", "", "", ""};
       GetTagDirs(p, xps, in.fSessionTag, in.fTopSessionTag, in.fSessionDir, in.fWrkDir);
       in.fLogFile.form("%s.log", in.fWrkDir.c_str());
-      TRACE(DBG, "log file: "<<in.fLogFile);
+      TRACE(FORK, "log file: "<<in.fLogFile);
 
       // Path
       XrdOucString path;
@@ -1543,6 +1537,8 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
       return 0;
    }
 
+   TRACEP(p, FORK,"Parent process: child is "<<pid);
+
    // Read status-of-setup from pipe
    XrdOucString emsg;
    int setupOK = 0;
@@ -1608,8 +1604,6 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
    close(fp[0]);
    close(fp[1]);
 
-   TRACEP(p, FORK,"Parent process: child is "<<pid);
-
    // Notify to user
    if (setupOK > 0) {
       if (p->ConnType() == kXPD_ClientMaster) {
@@ -1667,7 +1661,7 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
    }
 
    XrdClientID *cid = xps->Parent();
-   TRACEP(p, DBG, "xps: "<<xps<<", ClientID: "<<(int *)cid<<" (sid: "<<sid<<")");
+   TRACEP(p, FORK, "xps: "<<xps<<", ClientID: "<<(int *)cid<<" (sid: "<<sid<<")");
 
    // Record this session in the client sandbox
    if (p->Client()->Sandbox()->AddSession(xps->Tag()) == -1)
@@ -1991,21 +1985,22 @@ int XrdProofdProofServMgr::SetProofServEnvOld(XrdProofdProtocol *p, void *input)
       return -1;
    }
 
-   ProofServEnv_t *in = (ProofServEnv_t *)input;
-   TRACE(REQ,  "psid: "<<in->fPsid<<", log: "<<in->fLogLevel);
-
    // Set basic environment for proofserv
    if (SetProofServEnv(fMgr, p->Client()->ROOT()) != 0) {
       TRACE(XERR, "problems setting basic environment - exit");
       return -1;
    }
 
+   ProofServEnv_t *in = (ProofServEnv_t *)input;
+
    // Session proxy
-   XrdProofdProofServ *xps = p->Client()->GetProofServ(in->fPsid);
+   XrdProofdProofServ *xps = in->fPS;
    if (!xps) {
       TRACE(XERR, "unable to get instance of proofserv proxy");
       return -1;
    }
+   int psid = xps->ID();   
+   TRACE(REQ,  "psid: "<<psid<<", log: "<<in->fLogLevel);
 
    // Work directory
    XrdOucString udir = p->Client()->Sandbox()->Dir();
@@ -2131,7 +2126,7 @@ int XrdProofdProofServMgr::SetProofServEnvOld(XrdProofdProtocol *p, void *input)
    fprintf(fenv, "ROOTENTITY=%s@%s\n", p->Client()->User(), p->Link()->Host());
 
    // Session ID
-   fprintf(fenv, "ROOTSESSIONID=%d\n", in->fPsid);
+   fprintf(fenv, "ROOTSESSIONID=%d\n", psid);
 
    // Client ID
    fprintf(fenv, "ROOTCLIENTID=%d\n", p->CID());
@@ -2331,21 +2326,22 @@ int XrdProofdProofServMgr::SetProofServEnv(XrdProofdProtocol *p, void *input)
       return -1;
    }
 
-   ProofServEnv_t *in = (ProofServEnv_t *)input;
-   TRACE(REQ,  "psid: "<<in->fPsid<<", log: "<<in->fLogLevel);
-
    // Old proofservs expect different settings
    int rootvers = p->Client()->ROOT() ? p->Client()->ROOT()->SrvProtVers() : -1;
    TRACE(DBG, "rootvers: "<< rootvers);
    if (rootvers < 14 && rootvers > -1)
       return SetProofServEnvOld(p, input);
 
+   ProofServEnv_t *in = (ProofServEnv_t *)input;
+
    // Session proxy
-   XrdProofdProofServ *xps = p->Client()->GetProofServ(in->fPsid);
+   XrdProofdProofServ *xps = in->fPS;
    if (!xps) {
       TRACE(XERR, "unable to get instance of proofserv proxy");
       return -1;
    }
+   int psid = xps->ID();   
+   TRACE(REQ,  "psid: "<<psid<<", log: "<<in->fLogLevel);
 
    // Client sandbox
    XrdOucString udir = p->Client()->Sandbox()->Dir();
@@ -2467,7 +2463,7 @@ int XrdProofdProofServMgr::SetProofServEnv(XrdProofdProtocol *p, void *input)
 
    // Session ID
    fprintf(frc, "# Session ID\n");
-   fprintf(frc, "ProofServ.SessionID: %d\n", in->fPsid);
+   fprintf(frc, "ProofServ.SessionID: %d\n", psid);
 
    // Client ID
    fprintf(frc, "# Client ID\n");
