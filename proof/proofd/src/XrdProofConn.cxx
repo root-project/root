@@ -156,7 +156,12 @@ bool XrdProofConn::Init(const char *url)
 
    // Init connection manager (only once)
    if (!fgConnMgr) {
-      if (!(fgConnMgr = new XrdClientConnectionMgr(0))) {
+      // We would like to use direct access to the logconn vector for
+      // unsolicited message propagation, but it still does not work in
+      // case of reconnections; we stick to sequential for the time being.
+      // Optimization to be provided.
+      bool sequential = 1
+      if (!(fgConnMgr = new XrdClientConnectionMgr(sequential))) {
          TRACE(XERR,"error initializing connection manager");
          return 0;
       }
@@ -339,13 +344,14 @@ int XrdProofConn::TryConnect()
       fConnected = 0;
       return -1;
    }
-   TRACE(DBG, "connect to "<<URLTAG<<" returned "<<logid );
 
    // Set some vars
    fLogConnID = logid;
    fStreamid = fgConnMgr->GetConnection(fLogConnID)->Streamid();
    fPhyConn = fgConnMgr->GetConnection(fLogConnID)->GetPhyConnection();
    fConnected = 1;
+
+   TRACE(DBG, "connect to "<<URLTAG<<" returned {"<<fLogConnID<<", "<< fStreamid<<"}");
 
    // Fill in the remote protocol: either it was received during handshake
    // or it was saved in the underlying physical connection

@@ -475,7 +475,6 @@ int XrdClientConnectionMgr::Connect(XrdClientUrlInfo RemoteServ)
               "LogConn: size:" << fLogVec.GetSize() << " count: " << logCnt <<
               "PhyConn: size:" << fPhyHash.Num());
       }
-   
 
 
       // The connection attempt went ok, so we signal all the threads waiting for a result, if we can still find the corresponding condvar
@@ -689,9 +688,13 @@ UnsolRespProcResult XrdClientConnectionMgr::ProcessUnsolicitedMsg(XrdClientUnsol
          if (unsolmsg) {
             int i = unsolmsg->HeaderSID() - 1;
             if (i >= 0 && i < fLogVec.GetSize()) {
-	       fMutex.UnLock();
-	       res = fLogVec[i]->ProcessUnsolicitedMsg(sender, unsolmsg);
-               fMutex.Lock();
+               if (fLogVec[i] && (fLogVec[i]->GetPhyConnection() == sender)) {
+	          fMutex.UnLock();
+	          res = fLogVec[i]->ProcessUnsolicitedMsg(sender, unsolmsg);
+                  fMutex.Lock();
+               } else {
+                  Error("ProcessUnsolicitedMessage", "logconn not found " << fLogVec[i] );
+               }
             } else {
                Error("ProcessUnsolicitedMessage", "message id out of range! " <<  unsolmsg->HeaderSID());
             }
