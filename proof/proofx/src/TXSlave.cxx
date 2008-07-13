@@ -543,7 +543,7 @@ Bool_t TXSlave::HandleError(const void *in)
    // This seems a real error: notify the interested parties
    Info("HandleError", "%p:%s:%s got called ... fProof: %p, fSocket: %p (valid: %d)",
                        this, fName.Data(), fOrdinal.Data(), fProof, fSocket,
-                       fSocket->IsValid());
+                       (fSocket ? (Int_t)fSocket->IsValid() : -1));
 
    // Remove interrupt handler (avoid affecting other clients of the underlying physical
    // connection)
