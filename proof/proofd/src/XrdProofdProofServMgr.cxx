@@ -256,7 +256,7 @@ XrdProofdProofServMgr::XrdProofdProofServMgr(XrdProofdManager *mgr,
    fReconnectTimeOut = 300;
    fNextSessionsCheck = -1;
    // Defaults can be changed via 'proofservmgr'
-   fCheckFrequency = 60;
+   fCheckFrequency = 30;
    fTerminationTimeOut = fCheckFrequency - 10;
    fVerifyTimeOut = 3 * fCheckFrequency;
    fRecoverTimeOut = 10;

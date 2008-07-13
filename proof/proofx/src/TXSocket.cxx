@@ -1911,7 +1911,7 @@ void TXSocket::InitEnvs()
    EnvPutInt(NAME_RECONNECTTIMEOUT, recoTO);
 
    // Request Timeout
-   Int_t requTO = gEnv->GetValue("XProof.RequestTimeout", 30);
+   Int_t requTO = gEnv->GetValue("XProof.RequestTimeout", 40);
    EnvPutInt(NAME_REQUESTTIMEOUT, requTO);
 
    // Whether to use a separate thread for garbage collection
