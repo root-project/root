@@ -689,7 +689,7 @@ int XrdProofdClient::Touch(bool reset)
 }
 
 //______________________________________________________________________________
-bool XrdProofdClient::VerifySession(XrdProofdProofServ *xps)
+bool XrdProofdClient::VerifySession(XrdProofdProofServ *xps, XrdProofdResponse *r)
 {
    // Quick verification of session 'xps' to avoid attaching clients to
    // non responding sessions. We do here a sort of loose ping.
@@ -726,6 +726,7 @@ bool XrdProofdClient::VerifySession(XrdProofdProofServ *xps)
       }
       // Wait for the action for fgMgr->SessionMgr()->VerifyTimeOut() secs,
       // checking every 1 sec
+      XrdOucString notmsg;
       struct stat st1;
       int ns = 10;
       while (ns--) {
@@ -737,6 +738,10 @@ bool XrdProofdClient::VerifySession(XrdProofdProofServ *xps)
          // Wait 1 sec
          TRACE(HDBG, "waiting "<<ns<<" secs for session "<<pid<<
                      " to touch the admin path");
+         if (r && ns == 5) {
+            notmsg.form("verifying existing sessions, %d seconds ...", ns);
+            r->Send(kXR_attn, kXPD_srvmsg, 0, (char *) notmsg.c_str(), notmsg.length());
+         }
          sleep(1);
       }
    }
@@ -747,7 +752,7 @@ bool XrdProofdClient::VerifySession(XrdProofdProofServ *xps)
 
 //______________________________________________________________________________
 void XrdProofdClient::SkipSessionsCheck(std::list<XrdProofdProofServ *> *active,
-                                        XrdOucString &emsg)
+                                        XrdOucString &emsg, XrdProofdResponse *r)
 {
    // Skip the next sessions status check. This is used, for example, when
    // somebody has shown interest in these sessions to give more time for the
@@ -759,7 +764,7 @@ void XrdProofdClient::SkipSessionsCheck(std::list<XrdProofdProofServ *> *active,
    std::vector<XrdProofdProofServ *>::iterator ip;
    for (ip = fProofServs.begin(); ip != fProofServs.end(); ++ip) {
       if ((xps = *ip) && xps->IsValid() && (xps->SrvType() == kXPD_TopMaster)) {
-         if (VerifySession(xps)) {
+         if (VerifySession(xps, r)) {
             xps->SetSkipCheck(); // Skip next validity check
             if (active) active->push_back(xps);
          } else {
@@ -782,7 +787,8 @@ void XrdProofdClient::SkipSessionsCheck(std::list<XrdProofdProofServ *> *active,
 }
 
 //______________________________________________________________________________
-XrdOucString XrdProofdClient::ExportSessions(XrdOucString &emsg)
+XrdOucString XrdProofdClient::ExportSessions(XrdOucString &emsg,
+                                             XrdProofdResponse *r)
 {
    // Return a string describing the existing sessions
 
@@ -790,7 +796,7 @@ XrdOucString XrdProofdClient::ExportSessions(XrdOucString &emsg)
 
    // Protect from next session check and get the list of actives
    std::list<XrdProofdProofServ *> active;
-   SkipSessionsCheck(&active, emsg);
+   SkipSessionsCheck(&active, emsg, r);
 
    // Fill info
    XrdProofdProofServ *xps = 0;

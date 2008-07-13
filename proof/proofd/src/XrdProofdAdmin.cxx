@@ -429,14 +429,7 @@ int XrdProofdAdmin::QuerySessions(XrdProofdProtocol *p)
    XPD_SETRESP(p, "QuerySessions");
 
    XrdOucString notmsg;
-   if (p->Client()->GetTopProofServ() > 0) {
-      // Notify that we verify existing sessions
-      notmsg = "verifying existing sessions (can take a few seconds)...";
-      response->Send(kXR_attn, kXPD_srvmsg, 0, (char *) notmsg.c_str(), notmsg.length());
-   }
-
-   notmsg = "";
-   XrdOucString msg = p->Client()->ExportSessions(notmsg);
+   XrdOucString msg = p->Client()->ExportSessions(notmsg, response);
 
    if (notmsg.length() > 0) {
       // Some sessions seem non-responding: notify the client

@@ -79,12 +79,12 @@ class XrdProofdClient {
 
    void                    Broadcast(const char *msg);
 
-   XrdOucString            ExportSessions(XrdOucString &emsg);
+   XrdOucString            ExportSessions(XrdOucString &emsg, XrdProofdResponse *r = 0);
    void                    SkipSessionsCheck(std::list<XrdProofdProofServ *> *active,
-                                             XrdOucString &emsg);
+                                             XrdOucString &emsg, XrdProofdResponse *r = 0);
    void                    TerminateSessions(int srvtype, XrdProofdProofServ *ref,
                                              const char *msg, XrdProofdPipe *pipe, bool changeown);
-   bool                    VerifySession(XrdProofdProofServ *xps);
+   bool                    VerifySession(XrdProofdProofServ *xps, XrdProofdResponse *r = 0);
 
    void                    SetGroup(const char *g) { fUI.fGroup = g; }
    void                    SetROOT(XrdROOT *r) { fROOT = r; }
