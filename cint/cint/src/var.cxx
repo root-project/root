@@ -4086,7 +4086,7 @@ static G__value G__allocvariable(G__value result, G__value para[], G__var_array*
                // LD_FUNC now has 6 parameters 06-06-07
                G__inc_cp_asm(-7, 0);
                for (int ix = 6; ix > -1; --ix) {
-                  G__asm_inst[G__asm_cp+ix+6] = G__asm_inst[G__asm_cp+ix];
+                  G__asm_inst[G__asm_cp+ix+4] = G__asm_inst[G__asm_cp+ix];
                }
 #ifdef G__ASM_DBG
                if (G__asm_dbg) {
