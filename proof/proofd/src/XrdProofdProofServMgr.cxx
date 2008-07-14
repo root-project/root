@@ -168,6 +168,8 @@ void *XrdProofdProofServCron(void *p)
             TRACE(REQ, "kCleanSessions: request for user: '"<<usr<<"', server type: "<<svrtype);
             // Clean sessions
             mgr->CleanClientSessions(usr.c_str(), svrtype);
+            // Check if there is any orphalin sessions and clean them up
+            mgr->CleanupLostProofServ();
          } else {
             TRACE(XERR, "unknown type: "<<msg.Type());
             continue;
