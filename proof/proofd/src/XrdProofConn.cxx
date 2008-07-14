@@ -156,12 +156,7 @@ bool XrdProofConn::Init(const char *url)
 
    // Init connection manager (only once)
    if (!fgConnMgr) {
-      // We would like to use direct access to the logconn vector for
-      // unsolicited message propagation, but it still does not work in
-      // case of reconnections; we stick to sequential for the time being.
-      // Optimization to be provided.
-      bool sequential = 1;
-      if (!(fgConnMgr = new XrdClientConnectionMgr(sequential))) {
+      if (!(fgConnMgr = new XrdClientConnectionMgr())) {
          TRACE(XERR,"error initializing connection manager");
          return 0;
       }
