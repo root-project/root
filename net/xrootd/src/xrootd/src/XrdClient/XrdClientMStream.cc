@@ -21,6 +21,30 @@
 // Moreover, socketids are local to an instance of XrdClientPSock
 #define XRDCLI_PSOCKTEMP -1000
 
+struct ParStreamOpenerArgs {
+   XrdClientThread *thr;
+   XrdClientConn *cliconn;
+   int wan_port, wan_window;
+   int tmpid;
+};
+
+//_____________________________________________________________________________
+void *ParStreamOpenerThread(void *arg, XrdClientThread *thr)
+{
+   // This one just opens a new stream
+
+   // Mask all allowed signals
+   if (thr->MaskSignal(0) != 0)
+      Error("ParStreamOpenerThread", "Warning: problems masking signals");
+
+   ParStreamOpenerArgs *parms = (ParStreamOpenerArgs *)arg;
+
+   XrdClientMStream::AddParallelStream(parms->cliconn, parms->wan_port, parms->wan_window, parms->tmpid);
+
+   return 0;
+}
+
+
 int XrdClientMStream::EstablishParallelStreams(XrdClientConn *cliconn) {
     int mx = EnvGetLong(NAME_MULTISTREAMCNT);
     int i, res;
@@ -67,15 +91,47 @@ int XrdClientMStream::EstablishParallelStreams(XrdClientConn *cliconn) {
     // By starting one thread for each, calling AddParallelStream once
     // If no more threads are available, wait and retry
 
+    ParStreamOpenerArgs paropeners[16];
+    for (i = 0; i < mx; i++) {
+       paropeners[i].thr = 0;
+       paropeners[i].cliconn = cliconn;
+       paropeners[i].wan_port = wan_port;
+       paropeners[i].wan_window = wan_window;
+       paropeners[i].tmpid = 0;
+    }
+
     for (i = 0; i < mx; i++) {
 	Info(XrdClientDebug::kHIDEBUG,
 	     "XrdClientMStream::EstablishParallelStreams", "Trying to establish " << i+1 << "th substream." );
-	// If something goes wrong, stop adding new streams
-	if (AddParallelStream(cliconn, wan_port, wan_window, XRDCLI_PSOCKTEMP - i))
-	    break;
+
+        paropeners[i].thr = new XrdClientThread(ParStreamOpenerThread);
+        if (paropeners[i].thr) {
+           paropeners[i].tmpid = XRDCLI_PSOCKTEMP - i;
+           if (paropeners[i].thr->Run(&paropeners[i])) {
+              Error("XrdClientMStream::EstablishParallelStreams", "Error establishing " << i+1 << "th substream. Thread start failed.");
+              delete paropeners[i].thr;
+              paropeners[i].thr = 0;
+              break; 
+           }
+        }
 
     }
 
+    for (i = 0; i < mx; i++)
+       if (paropeners[i].thr) {
+          Info(XrdClientDebug::kHIDEBUG,
+             "XrdClientMStream::EstablishParallelStreams", "Waiting for substream " << i+1 << "." );
+          paropeners[i].thr->Join(0);
+          delete paropeners[i].thr;
+       }
+
+	// If something goes wrong, stop adding new streams
+	//if (AddParallelStream(cliconn, wan_port, wan_window, XRDCLI_PSOCKTEMP - i))
+	//    break;
+
+
+    Info(XrdClientDebug::kHIDEBUG,
+         "XrdClientMStream::EstablishParallelStreams", "Parallel streams establishment finished." );
 
     return i;
 }
@@ -103,10 +159,6 @@ int XrdClientMStream::AddParallelStream(XrdClientConn *cliconn, int port, int wi
     ServerInitHandShake xbody;
     if (phyconn->DoHandShake(xbody, tempid) == kSTError) return -1;
 
-    // After the handshake make the reader thread aware of the new stream
-    phyconn->UnBanSockDescr(sockdescr);
-    phyconn->ReinitFDTable();
-
     // Send the kxr_bind req to get a new substream id, going to be the final one
     int newid = -1;
     int res = -1;
@@ -122,6 +174,10 @@ int XrdClientMStream::AddParallelStream(XrdClientConn *cliconn, int port, int wi
 	    return res;
 	}
 
+        // After everything make the reader thread aware of the new stream
+        phyconn->UnBanSockDescr(sockdescr);
+        phyconn->ReinitFDTable();
+    
     }
     else {
 	// If the bind failed we have to remove the pending stream
@@ -163,14 +219,9 @@ bool XrdClientMStream::BindPendingStream(XrdClientConn *cliconn, int substreamid
     XrdClientConn::SessionIDInfo sess;
     ServerResponseBody_Bind bndresp;
 
-    // Note: this phase has not to overwrite XrdClientConn::LastServerresp
-    struct ServerResponseHeader
-	LastServerResptmp = cliconn->LastServerResp;
-
     // Get the XrdClientPhyconn to be used
     XrdClientPhyConnection *phyconn =
 	ConnectionManager->GetConnection(cliconn->GetLogConnID())->GetPhyConnection();
-    phyconn->ReinitFDTable();
 
     cliconn->GetSessionID(sess);
 
@@ -178,15 +229,47 @@ bool XrdClientMStream::BindPendingStream(XrdClientConn *cliconn, int substreamid
     cliconn->SetSID(bindFileRequest.header.streamid);
     bindFileRequest.bind.requestid = kXR_bind;
     memcpy( bindFileRequest.bind.sessid, sess.id, sizeof(sess.id) );
-   
 
     // The request has to be sent through the stream which has to be bound!
-    res =  cliconn->SendGenCommand(&bindFileRequest, 0, 0, (void *)&bndresp,
-				   FALSE, (char *)"Bind", substreamid);
+    clientMarshall(&bindFileRequest);
+    res = phyconn->WriteRaw(&bindFileRequest, sizeof(bindFileRequest), substreamid);
 
-    if (res && (cliconn->LastServerResp.status == kXR_ok)) newid = bndresp.substreamid;
+    if (!res) return false;
 
-    cliconn->LastServerResp = LastServerResptmp;
+    ServerResponseHeader hdr;
+    int rdres = 0;
+
+    // Now wait for the header, on the same substream
+    rdres = phyconn->ReadRaw(&hdr, sizeof(ServerResponseHeader), substreamid);
+
+    if (rdres < (int)sizeof(ServerResponseHeader)) {
+       Error("BindPendingStream", "Error reading bind response header for substream " << substreamid << ".");
+       return false;
+    }
+
+    clientUnmarshall(&hdr);
+
+    // Now wait for the response data, if any
+    // This code is specialized.
+    // If the answer is not what we were expecting, just return false,
+    //  expecting that this connection will be shut down
+    if (hdr.status != kXR_ok) {
+       Error("BindPendingStream", "Server denied binding for substream " << substreamid << ".");
+       return false;
+    }
+
+    if (hdr.dlen != sizeof(bndresp)) {
+       Error("BindPendingStream", "Unrecognized response datalen binding substream " << substreamid << ".");
+       return false;
+    }
+
+    rdres = phyconn->ReadRaw(&bndresp, sizeof(bndresp), substreamid);
+    if (rdres != sizeof(bndresp)) {
+       Error("BindPendingStream", "Error reading response binding substream " << substreamid << ".");
+       return false;
+    }
+
+    newid = bndresp.substreamid;
 
     return res;
 

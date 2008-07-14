@@ -28,6 +28,9 @@ struct XrdClientSockConnectParms {
 };
 
 class XrdClientSock {
+public:
+    typedef int       Sockid;
+    typedef int       Sockdescr;
 
     friend class XrdClientPhyConnection;
 
@@ -36,8 +39,7 @@ private:
     int fSocket;
 
 protected:
-    typedef int       Sockid;
-    typedef int       Sockdescr;
+
 
     int                       fRequestTimeout;
     XrdClientSockConnectParms fHost;
@@ -62,6 +64,7 @@ protected:
     // Send the buffer to the specified socket
     virtual int    SendRaw_sock(const void* buffer, int length, Sockdescr sock);
 public:
+
     XrdClientSock(XrdClientUrlInfo host, int windowsize = 0);
     virtual ~XrdClientSock();
 

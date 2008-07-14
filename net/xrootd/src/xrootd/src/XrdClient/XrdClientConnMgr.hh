@@ -71,14 +71,12 @@ private:
 
    XrdClientThread            *fGarbageColl;
 
-   bool                        fSequential; // Way unsolicited messages are processed
-
    friend void * GarbageCollectorThread(void *, XrdClientThread *thr);
    UnsolRespProcResult
                  ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *sender,
                                        XrdClientMessage *unsolmsg);
 public:
-   XrdClientConnectionMgr(bool sequential = 1);
+   XrdClientConnectionMgr();
 
    virtual ~XrdClientConnectionMgr();
 

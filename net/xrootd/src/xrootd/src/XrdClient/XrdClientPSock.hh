@@ -25,6 +25,8 @@ struct fdinfo {
   int maxfd;
 };
 
+
+
 class XrdClientPSock: public XrdClientSock {
 
 friend class XrdClientPhyConnection;
@@ -98,8 +100,8 @@ public:
     XrdClientPSock(XrdClientUrlInfo host, int windowsize = 0);
     virtual ~XrdClientPSock();
    
-    void BanSockDescr(Sockdescr s, Sockid newid) { fSocketNYHandshakedIdPool.Rep(s, newid); }
-    void UnBanSockDescr(Sockdescr s) { fSocketNYHandshakedIdPool.Del(s); }
+    void BanSockDescr(Sockdescr s, Sockid newid) { XrdSysMutexHelper mtx(fMutex); fSocketNYHandshakedIdPool.Rep(s, newid); }
+    void UnBanSockDescr(Sockdescr s) { XrdSysMutexHelper mtx(fMutex); fSocketNYHandshakedIdPool.Del(s); }
 
     // Gets length bytes from the parsockid socket
     // If substreamid = -1 then

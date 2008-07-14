@@ -163,8 +163,12 @@ int XrdClientSock::RecvRaw(void* buffer, int length, int substreamid,
 
       // First of all, we check if there is something to read
       if (fds_r.revents & (POLLIN | POLLPRI)) {
-         int n = ::recv(fSocket, static_cast<char *>(buffer) + bytesread,
+         int n = 0;
+
+         do {
+         n = ::recv(fSocket, static_cast<char *>(buffer) + bytesread,
                         length - bytesread, 0);
+         } while(n < 0 && (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR));
 
          // If we read nothing, the connection has been closed by the other side
          if (n <= 0) {
@@ -255,7 +259,7 @@ int XrdClientSock::SendRaw_sock(const void* buffer, int length, int sock)
          while (n <= 0 && timeleft--) {
             if ((n = send(sock, static_cast<const char *>(buffer) + byteswritten,
                           length - byteswritten, 0)) <= 0) {
-               if (timeleft <= 0 || (errno != EAGAIN && errno != EWOULDBLOCK)) {
+               if (timeleft <= 0 || (errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR)) {
                   // Real error: nothing more to do!
                   // If we wrote nothing, the connection has been closed by the other
                   Error("ClientSock::SendRaw", "Error writing to a socket: " <<

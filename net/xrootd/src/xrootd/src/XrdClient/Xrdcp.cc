@@ -79,9 +79,9 @@ struct XrdCpInfo {
    XrdClientAbsMonIntf          *mon;
 } cpnfo;
 
-#define XRDCP_BLOCKSIZE          (1024*1024)
-#define XRDCP_XRDRASIZE          (20*XRDCP_BLOCKSIZE)
-#define XRDCP_VERSION            "(C) 2004 SLAC INFN $Revision: 1.83 $ - Xrootd version: "XrdVSTRING
+#define XRDCP_BLOCKSIZE          (4*1024*1024)
+#define XRDCP_XRDRASIZE          (10*XRDCP_BLOCKSIZE)
+#define XRDCP_VERSION            "(C) 2004 SLAC INFN $Revision: 1.83.2.1 $ - Xrootd version: "XrdVSTRING
 
 ///////////////////////////////////////////////////////////////////////
 // Coming from parameters on the cmd line
@@ -917,8 +917,8 @@ int main(int argc, char**argv) {
    EnvPutString( NAME_CONNECTDOMAINDENY_RE, "" );
 
    EnvPutInt( NAME_READAHEADSIZE, XRDCP_XRDRASIZE);
-   EnvPutInt( NAME_READCACHESIZE, 20*XRDCP_XRDRASIZE );
-   EnvPutInt(NAME_REMUSEDCACHEBLKS, 1);
+   EnvPutInt( NAME_READCACHESIZE, 2*XRDCP_XRDRASIZE );
+//   EnvPutInt(NAME_REMUSEDCACHEBLKS, 1);
 
    EnvPutInt( NAME_DEBUG, -1);
 

@@ -71,18 +71,33 @@ void XrdClientPSock::Disconnect()
 
 }
 
-//_____________________________________________________________________________
-int FdSetSockFunc(int sockid, int sockdescr, void *arg) {
-    struct fdinfo *fds = (struct fdinfo *)arg;
-    
-    if ( (sockdescr >= 0) ) {
-	FD_SET(sockdescr, &fds->fdset);
-	fds->maxfd = xrdmax(fds->maxfd, sockdescr);
-    }
 
-    // And we continue
-    return 0;
+
+//_____________________________________________________________________________
+
+struct FdSetSockFuncPars {
+   struct fdinfo *fdnfo;
+   XrdOucRash<XrdClientSock::Sockdescr, XrdClientSock::Sockid> *banned;
+};
+
+int FdSetSockFunc(int sockid, int sockdescr, void *arg) {
+   struct FdSetSockFuncPars *pars = (struct FdSetSockFuncPars *)arg;
+   struct fdinfo *fds = pars->fdnfo;
+   
+
+   // There could some sockets in the "banned" state
+   // I.e. still in the process of being handshaked, but present in the tables
+   // Those sockets must not be taken into acct by the global selecting mechanism
+   if ( (sockdescr >= 0) && (!pars->banned->Find(sockdescr)) ) {
+      FD_SET(sockdescr, &fds->fdset);
+      fds->maxfd = xrdmax(fds->maxfd, sockdescr);
+   }
+
+
+   // And we continue
+   return 0;
 }
+
 //_____________________________________________________________________________
 int XrdClientPSock::RecvRaw(void* buffer, int length, int substreamid,
 			   int *usedsubstreamid)
@@ -127,8 +142,12 @@ int XrdClientPSock::RecvRaw(void* buffer, int length, int substreamid,
          FD_ZERO(&globalfdinfo.fdset);
 	 globalfdinfo.maxfd = 0;
 
-         // We are interested in any sock
-         fSocketPool.Apply( FdSetSockFunc, (void *)&globalfdinfo );
+         // We are interested in any sock, except for the banned ones
+         struct FdSetSockFuncPars fdpars;
+         fdpars.fdnfo = &globalfdinfo;
+         fdpars.banned = &fSocketNYHandshakedIdPool;
+
+         fSocketPool.Apply( FdSetSockFunc, (void *)&fdpars );
          fReinit_fd = false;
        }
 
@@ -144,6 +163,8 @@ int XrdClientPSock::RecvRaw(void* buffer, int length, int substreamid,
 	   
 	 } else {
 	   // we are using a single specified sock
+	   XrdSysMutexHelper mtx(fMutex);
+
 	   FD_ZERO(&locfdinfo.fdset);
 	   locfdinfo.maxfd = 0;
 	   
@@ -220,9 +241,11 @@ int XrdClientPSock::RecvRaw(void* buffer, int length, int substreamid,
 
 	  if (FD_ISSET(ii, &locfdinfo.fdset)) {
 	      int n = 0;
-	      
-	      n = ::recv(ii, static_cast<char *>(buffer) + bytesread,
-			     length - bytesread, 0);
+
+	      do {
+                 n = ::recv(ii, static_cast<char *>(buffer) + bytesread,
+                            length - bytesread, 0);
+              } while(n < 0 && errno == EINTR);
 
 	      // If we read nothing, the connection has been closed by the other side
 	      if ((n <= 0)  && (errno != EINTR)) {
@@ -310,16 +333,18 @@ XrdClientSock::Sockdescr XrdClientPSock::TryConnectParallelSock(int port, int wi
     int s = TryConnect_low(false, port, windowsz);
 
     if (s >= 0) {
+
         XrdSysMutexHelper mtx(fMutex);
 
         // Now we have a good connection, valid from the TCP point of view
+
+        // But we prevent the socket from appearing in the global fd table for now
+        BanSockDescr(s, newid);
 
         // We put the descriptor and the id in the tables
 	fSocketPool.Rep(newid, s);
 	fSocketIdPool.Rep(s, newid);
 
-        // But we prevent the socket from appearing in the global fd table for now
-        BanSockDescr(s, newid);
     }
 
     return s;
@@ -369,6 +394,8 @@ int XrdClientPSock::EstablishParallelSock(Sockid tmpsockid, Sockid newsockid) {
 }
 
 int XrdClientPSock::GetSockIdHint(int reqsperstream) {
+
+  XrdSysMutexHelper mtx(fMutex);
 
   // A round robin through the secondary streams. We avoid
   // requesting data through the main one because it can become a bottleneck
