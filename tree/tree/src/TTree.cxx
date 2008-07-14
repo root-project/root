@@ -4807,13 +4807,15 @@ Int_t TTree::MakeSelector(const char* selector)
    //    - The following class functions:
    //       - constructor and destructor
    //       - void    Begin(TTree *tree)
+   //       - void    SlaveBegin(TTree *tree)
    //       - void    Init(TTree *tree)
    //       - Bool_t  Notify()
    //       - Bool_t  Process(Long64_t entry)
-   //       - void    Terminate
+   //       - void    Terminate()
+   //       - void    SlaveTerminate()
    //
    // The class selector derives from TSelector.
-   // The generated code in selector.C includes empty functions defined above:
+   // The generated code in selector.C includes empty functions defined above.
    //
    // To use this function:
    //    - connect your Tree file (eg: TFile f("myfile.root");)
@@ -5065,38 +5067,31 @@ void TTree::Print(Option_t* option) const
 //______________________________________________________________________________
 Long64_t TTree::Process(const char* filename, Option_t* option, Long64_t nentries, Long64_t firstentry)
 {
-   // Process this tree executing the code in filename.
+   // Process this tree executing the TSelector code in the specified filename.
    // The return value is -1 in case of error and TSelector::GetStatus() in
    // in case of success.
    //
-   // The code in filename is loaded (interpreted or compiled , see below)
-   // filename must contain a valid class implementation derived from TSelector.
+   // The code in filename is loaded (interpreted or compiled, see below),
+   // filename must contain a valid class implementation derived from TSelector,
    // where TSelector has the following member functions:
    //
-   //     void TSelector::Begin(). This function is called before looping on the
-   //          events in the Tree. The user can create his histograms in this function.
+   //    Begin():        called everytime a loop on the tree starts,
+   //                    a convenient place to create your histograms.
+   //    SlaveBegin():   called after Begin(), when on PROOF called only on the
+   //                    slave servers.
+   //    Process():      called for each event, in this function you decide what
+   //                    to read and fill your histograms.
+   //    SlaveTerminate: called at the end of the loop on the tree, when on PROOF
+   //                    called only on the slave servers.
+   //    Terminate():    called at the end of the loop on the tree,
+   //                    a convenient place to draw/fit your histograms.
    //
-   //     Bool_t TSelector::ProcessCut(Long64_t entry). This function is called
-   //          before processing entry. It is the user's responsability to read
-   //          the corresponding entry in memory (may be just a partial read).
-   //          The function returns kTRUE if the entry must be processed,
-   //          kFALSE otherwise.
-   //     void TSelector::ProcessFill(Long64_t entry). This function is called for
-   //          all selected events. User fills histograms in this function.
-   //     void TSelector::Terminate(). This function is called at the end of
-   //          the loop on all events.
-   //     void TTreeProcess::Begin(). This function is called before looping on the
-   //          events in the Tree. The user can create his histograms in this function.
-   //
-   //   if filename is of the form file.C, the file will be interpreted.
-   //   if filename is of the form file.C++, the file file.C will be compiled
-   //      and dynamically loaded.
-   //   if filename is of the form file.C+, the file file.C will be compiled
-   //      and dynamically loaded. At next call, if file.C is older than file.o
-   //      and file.so, the file.C is not compiled, only file.so is loaded.
-   //
-   //   The function returns the number of processed entries. It returns -1
-   //   in case of an error.
+   // If filename is of the form file.C, the file will be interpreted.
+   // If filename is of the form file.C++, the file file.C will be compiled
+   // and dynamically loaded.
+   // If filename is of the form file.C+, the file file.C will be compiled
+   // and dynamically loaded. At next call, if file.C is older than file.o
+   // and file.so, the file.C is not compiled, only file.so is loaded.
    //
    //  NOTE1
    //  It may be more interesting to invoke directly the other Process function
@@ -5142,26 +5137,26 @@ Long64_t TTree::Process(const char* filename, Option_t* option, Long64_t nentrie
 //______________________________________________________________________________
 Long64_t TTree::Process(TSelector* selector, Option_t* option, Long64_t nentries, Long64_t firstentry)
 {
-   // Process this tree executing the code in selector.
+   // Process this tree executing the code in the specified selector.
    // The return value is -1 in case of error and TSelector::GetStatus() in
    // in case of success.
    //
-   // The TSelector class has the following member functions:
+   //   The TSelector class has the following member functions:
    //
-   //   void TSelector::Begin(). This function is called before looping on the
-   //        events in the Tree. The user can create his histograms in this function.
+   //    Begin():        called everytime a loop on the tree starts,
+   //                    a convenient place to create your histograms.
+   //    SlaveBegin():   called after Begin(), when on PROOF called only on the
+   //                    slave servers.
+   //    Process():      called for each event, in this function you decide what
+   //                    to read and fill your histograms.
+   //    SlaveTerminate: called at the end of the loop on the tree, when on PROOF
+   //                    called only on the slave servers.
+   //    Terminate():    called at the end of the loop on the tree,
+   //                    a convenient place to draw/fit your histograms.
    //
-   //   Bool_t TSelector::ProcessCut(Long64_t entry). This function is called
-   //        before processing entry. It is the user's responsability to read
-   //        the corresponding entry in memory (may be just a partial read).
-   //        The function returns kTRUE if the entry must be processed,
-   //        kFALSE otherwise.
-   //   void TSelector::ProcessFill(Long64_t entry). This function is called for
-   //        all selected events. User fills histograms in this function.
-   //   void TSelector::Terminate(). This function is called at the end of
-   //        the loop on all events.
-   //   void TTreeProcess::Begin(). This function is called before looping on the
-   //        events in the Tree. The user can create his histograms in this function.
+   //  If the Tree (Chain) has an associated EventList, the loop is on the nentries
+   //  of the EventList, starting at firstentry, otherwise the loop is on the
+   //  specified Tree entries.
 
    GetPlayer();
    if (fPlayer) {
