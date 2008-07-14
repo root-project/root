@@ -11,26 +11,47 @@
 #else
 #include "t980.h"
 #endif
-#include <stdio.h>
 
-int main(int,char**) {
-  A b ;
-  b = A("A part") + " of a whole";
-  A a = A("A part") + " of a whole";
-  printf("%s. %s.\n",a.val(),b.val());
+#include <cstdio>
+#include <cstring>
 
-  f(a,"A part of a whole");
-  f("A part of a whole",a);
+using namespace std;
 
-  if(strcmp(a,"A part of a whole")==0) printf("true\n");
-  else printf("false\n");
-  if(strcmp(a,"a part of a whole")==0) printf("true\n");
-  else printf("false\n");
+int main(int, char**)
+{
+   A b;
+   b = A("A part") + " of a whole";
+   A a = A("A part") + " of a whole";
+   printf("%s. %s.\n", a.val(), b.val());
 
-  if(strcmp(a.val(),"A part of a whole")==0) printf("true\n");
-  else printf("false\n");
-  if(strcmp(a.val(),"a part of a whole")==0) printf("true\n");
-  else printf("false\n");
-  return 0;
+   f(a, "A part of a whole");
+   f("A part of a whole", a);
+
+   if (!strcmp(a, "A part of a whole")) {
+      printf("true\n");
+   }
+   else {
+      printf("false\n");
+   }
+   if (!strcmp(a, "a part of a whole")) {
+      printf("true\n");
+   }
+   else {
+      printf("false\n");
+   }
+
+   if (!strcmp(a.val(), "A part of a whole")) {
+      printf("true\n");
+   }
+   else {
+      printf("false\n");
+   }
+   if (!strcmp(a.val(), "a part of a whole")) {
+      printf("true\n");
+   }
+   else {
+      printf("false\n");
+   }
+   return 0;
 }
 
