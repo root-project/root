@@ -1292,8 +1292,6 @@ XrdSecProtocol *XrdProofConn::Authenticate(char *plist, int plsiz)
                TRACE(XERR, fHost << ": "<< GetLastErr());
             protocol->Delete();
             protocol = 0;
-            protocol->Delete();
-            protocol = 0;
          }
          // Cleanup message
          SafeDelete(xrsp);
