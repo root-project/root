@@ -1308,14 +1308,14 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    thead.Form("%s.h", classname);
    FILE *fp = fopen(thead, "w");
    if (!fp) {
-      Info("MakeClass","cannot open output file:%s", thead.Data());
+      Error("MakeClass","cannot open output file %s", thead.Data());
       return 3;
    }
    TString tcimp;
    tcimp.Form("%s.C", classname);
    FILE *fpc = fopen(tcimp, "w");
    if (!fpc) {
-      Info("MakeClass","cannot open output file:%s", tcimp.Data());
+      Error("MakeClass","cannot open output file %s", tcimp.Data());
       fclose(fp);
       return 3;
    }
