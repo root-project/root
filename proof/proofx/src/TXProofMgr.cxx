@@ -79,6 +79,7 @@ Int_t TXProofMgr::Init(Int_t)
    // even when it matches the default value
    TString u = fUrl.GetUrl(kTRUE);
 
+   fSocket = 0;
    if (!(fSocket = new TXSocket(u, 'C', kPROOF_Protocol,
                                 kXPROOF_Protocol, 0, -1, this)) ||
        !(fSocket->IsValid())) {
