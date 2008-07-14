@@ -4477,7 +4477,7 @@ TVirtualStreamerInfo *TClass::FindStreamerInfo(UInt_t checksum) const
       TVirtualStreamerInfo *info = (TVirtualStreamerInfo*)GetStreamerInfos()->At(i);
       if (!info) continue;
       if (info->GetCheckSum() == checksum) {
-         R__ASSERT(i==info->GetClassVersion() || (i==-1&&info->GetClassVersion()==1));
+         //R__ASSERT(i==info->GetClassVersion() || (i==-1&&info->GetClassVersion()==1));
          return info;
       }
    }
