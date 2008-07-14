@@ -4196,7 +4196,7 @@ static G__value Cint::Internal::G__allocvariable(G__value result, G__value para[
                // Move LD_FUNC instruction
                G__inc_cp_asm(-6, 0);
                for (int i = 5; i > -1; --i) {
-                  G__asm_inst[G__asm_cp+i+5] = G__asm_inst[G__asm_cp+i];
+                  G__asm_inst[G__asm_cp+i+4] = G__asm_inst[G__asm_cp+i];
                }
 #ifdef G__ASM_DBG
                if (G__asm_dbg) {
