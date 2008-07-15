@@ -1609,9 +1609,9 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
    // Warning: Unlike most others "XYZ::PaintXYZ" methods, PaintLatex modifies
    //          the TLatex data members.
 
-   TAttText::Modify();  //Change text attributes only if necessary
+   TAttText::Modify();  // Change text attributes only if necessary.
 
-   // do not use Latex if font is low precision
+   // Do not use Latex if font is low precision.
    if (fTextFont%10 < 2) {
       gPad->PaintText(x,y,text1);
       return;
@@ -1656,7 +1656,7 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
 
    fOriginSize = size;
 
-   //get current line attributes
+   // Get current line attributes.
    Short_t lineW = GetLineWidth();
    Int_t lineC = GetLineColor();
 
@@ -1673,18 +1673,17 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
       cout<<"==> "<<text<<endl;
    } else {
       fShow = kTRUE;
-      Double_t mul = 1;
-      newSpec.fSize = mul*size;
+      newSpec.fSize = size;
 
       switch (valign) {
-         case 0: y -= fs.Under()*mul; break;
+         case 0: y -= fs.Under() ; break;
          case 1: break;
-         case 2: y += (fs.Over()-fs.Under())*mul/1.5; break;
-         case 3: y += fs.Over()*mul;  break;
+         case 2: y += fs.Height()*0.5-fs.Under(); break;
+         case 3: y += fs.Over() ; break;
       }
       switch (halign) {
-         case 2: x -= fs.Width()*mul/2  ; break;
-         case 3: x -= fs.Width()*mul    ;   break;
+         case 2: x -= fs.Width()/2  ; break;
+         case 3: x -= fs.Width()    ; break;
       }
       Analyse(x,y,newSpec,text,length);
    }
