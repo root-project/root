@@ -2,3 +2,11 @@
 <hr> 
 <a name="hist"></a> 
 <h3>Histogram package</h3>
+
+<h4>TF1</h4>
+
+<ul>
+  <li>
+    Fixed a bug in the calculation of the integral of multi-dimensional interpreted functions. The method <tt>TF1::operator() (const double *x, const double *p)</tt> calls now <tt>TF1::InitArgs</tt> in the case of CINT functions. 
+
+</ul>
