@@ -4177,14 +4177,7 @@ void TProofServ::HandleCheckFile(TMessage *mess)
             // store md5 in package/PROOF-INF/md5.txt
             TString md5f = fPackageDir + "/" + packnam + "/PROOF-INF/md5.txt";
             TMD5::WriteChecksum(md5f, md5local);
-            // remove any previous building information
-            TString vrsf = Form("%s/%s/PROOF-INF/proofvers.txt",
-                                fPackageDir.Data(), packnam.Data());
-            if (!gSystem->AccessPathName(vrsf)) {
-               if ((st = gSystem->Exec(Form("%s %s", kRM, vrsf.Data()))))
-                  Error("HandleCheckFile",
-                        "failure removing proofvers.txt for package %s", packnam.Data());
-            }
+            // Notify the client
             fSocket->Send(kPROOF_CHECKFILE);
             PDB(kPackage, 1)
                Info("HandleCheckFile",
