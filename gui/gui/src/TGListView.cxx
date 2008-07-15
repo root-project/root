@@ -1405,6 +1405,7 @@ void TGListView::Layout()
    TGCanvas::Layout();
  
    if (fViewMode == kLVDetails) {
+      container->Resize(container->GetWidth(), container->GetHeight()+h);
       if (fJustChanged) {
          fVport->MoveResize(fBorderWidth, fBorderWidth, fVport->GetWidth(), 
                             fVport->GetHeight());
@@ -1417,8 +1418,8 @@ void TGListView::Layout()
       fColHeader[i]->MoveResize(xl, 0, fVport->GetWidth()-xl, h);
       fColHeader[i]->MapWindow();
    } else {
-      fVport->MoveResize(fBorderWidth, fBorderWidth, 
-      fVport->GetWidth(), fVport->GetHeight());
+      fVport->MoveResize(fBorderWidth, fBorderWidth, fVport->GetWidth(), 
+                         fVport->GetHeight());
       container->Move(0, 0);
    }
 
