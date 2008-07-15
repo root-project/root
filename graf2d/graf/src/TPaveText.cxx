@@ -413,7 +413,7 @@ void TPaveText::PaintPrimitives(Int_t mode)
 
    // Evaluate text size as a function of the number of lines
 
-   Double_t x1,y1,x2,y2,y;
+   Double_t x1,y1,x2,y2;
    y1       = gPad->GetY1();
    y2       = gPad->GetY2();
    Float_t margin  = fMargin*dx;
@@ -453,7 +453,7 @@ void TPaveText::PaintPrimitives(Int_t mode)
       yfont = textsize*dy;
    Double_t ytext = fY2 + 0.5*yspace;
    Double_t xtext = 0;
-   Int_t halign, valign;
+   Int_t halign;
 
    // Iterate over all lines
    // Copy pavetext attributes to line attributes if line attributes not set
@@ -489,8 +489,8 @@ void TPaveText::PaintPrimitives(Int_t mode)
       if (line->IsA() == TText::Class()) {
          linet = (TText*)line;
          ytext -= yspace;
-         Double_t xl     = linet->GetX();
-         Double_t yl     = linet->GetY();
+         Double_t xl    = linet->GetX();
+         Double_t yl    = linet->GetY();
          Short_t talign = linet->GetTextAlign();
          Color_t tcolor = linet->GetTextColor();
          Style_t tfont  = linet->GetTextFont();
@@ -507,15 +507,8 @@ void TPaveText::PaintPrimitives(Int_t mode)
             if (halign == 2) xtext = 0.5*(fX1+fX2);
             if (halign == 3) xtext = fX2 - margin;
          }
-         if (yl > 0 && yl <1) {
-            ytext = fY1 + yl*dy;
-         }
-         valign = linet->GetTextAlign()%10;
-         y = ytext;
-         if (valign == 1) y = ytext -0.5*yspace;
-         if (valign == 3) y = ytext +0.5*yspace;
-
-         linet->PaintText(xtext,y,linet->GetTitle());
+         if (yl > 0 && yl <1) ytext = fY1 + yl*dy;
+         linet->PaintText(xtext,ytext,linet->GetTitle());
          linet->SetTextAlign(talign);
          linet->SetTextColor(tcolor);
          linet->SetTextFont(tfont);
@@ -525,8 +518,8 @@ void TPaveText::PaintPrimitives(Int_t mode)
       if (line->IsA() == TLatex::Class()) {
          latex = (TLatex*)line;
          ytext -= yspace;
-         Double_t xl     = latex->GetX();
-         Double_t yl     = latex->GetY();
+         Double_t xl    = latex->GetX();
+         Double_t yl    = latex->GetY();
          Short_t talign = latex->GetTextAlign();
          Color_t tcolor = latex->GetTextColor();
          Style_t tfont  = latex->GetTextFont();
@@ -543,21 +536,15 @@ void TPaveText::PaintPrimitives(Int_t mode)
             if (halign == 2) xtext = 0.5*(fX1+fX2);
             if (halign == 3) xtext = fX2 - margin;
          }
-         if (yl > 0 && yl <1) {
-            ytext = fY1 + yl*dy;
-         }
-         valign = latex->GetTextAlign()%10;
-         y = ytext-0.5*yfont;
-         if (valign == 1) y = ytext -0.5*yspace;
-         if (valign == 3) y = ytext +0.5*yspace;
-         latex->PaintLatex(xtext,y,latex->GetTextAngle(),
-                                   latex->GetTextSize(),
-                                   latex->GetTitle());
+         if (yl > 0 && yl <1) ytext = fY1 + yl*dy;
+         latex->PaintLatex(xtext,ytext,latex->GetTextAngle(),
+                           latex->GetTextSize(),
+                           latex->GetTitle());
          latex->SetTextAlign(talign);
          latex->SetTextColor(tcolor);
          latex->SetTextFont(tfont);
          latex->SetTextSize(tsize);
-         latex->SetX(xl);  //paintlatex modifies fX and fY
+         latex->SetX(xl);  // PaintLatex modifies fX and fY
          latex->SetY(yl);
       }
    }
