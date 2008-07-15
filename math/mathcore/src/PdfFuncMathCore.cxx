@@ -187,7 +187,7 @@ namespace Math {
          u   = 1/(v-v*std::log(v)/(v+1));
          denlan = u*u*(1+(a2[0]+a2[1]*u)*u);
       }
-      return denlan;
+      return denlan/sigma;
 }
 
       

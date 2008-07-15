@@ -262,7 +262,7 @@ namespace Math {
    
    */
 
-   double landau_pdf(double x, double sigma = 1, double x0 = 0.); 
+   double landau_pdf(double x, double s = 1, double x0 = 0.); 
 
 
   /**
@@ -274,7 +274,8 @@ namespace Math {
   for x>0. For detailed description see 
   <A HREF="http://mathworld.wolfram.com/LogNormalDistribution.html">
   Mathworld</A>. 
-
+  @param s scale parameter (not the sigma of the distribution which is not even defined)
+  @param x0  location parameter, corresponds approximatly to the most probable value. For x0 = 0, sigma = 1, the x_mpv = -0.22278
   
   @ingroup PdfFunc
 
