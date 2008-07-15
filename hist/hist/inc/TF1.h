@@ -201,8 +201,8 @@ public:
    virtual Double_t Eval(Double_t x, Double_t y=0, Double_t z=0, Double_t t=0) const;
    virtual Double_t EvalPar(const Double_t *x, const Double_t *params=0);
    // for using TF1 as a callable object (functor)
-   virtual Double_t operator()(Double_t x, Double_t y=0, Double_t z = 0, Double_t t = 0) const { return Eval(x,y,z,t); }
-   virtual Double_t operator()(const Double_t *x, const Double_t *params=0) { return EvalPar(x,params); }
+   virtual Double_t operator()(Double_t x, Double_t y=0, Double_t z = 0, Double_t t = 0) const; 
+   virtual Double_t operator()(const Double_t *x, const Double_t *params=0);  
    virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual void     FixParameter(Int_t ipar, Double_t value);
        Double_t     GetChisquare() const {return fChisquare;}
@@ -293,6 +293,15 @@ public:
 
    ClassDef(TF1,7)  //The Parametric 1-D function
 };
+
+inline Double_t TF1::operator()(Double_t x, Double_t y, Double_t z, Double_t t) const  
+   { return Eval(x,y,z,t); }
+inline Double_t TF1::operator()(const Double_t *x, const Double_t *params)
+   { 
+      if (fMethodCall) InitArgs(x,params);
+      return EvalPar(x,params); 
+   }
+
 
 inline void TF1::SetRange(Double_t xmin, Double_t,  Double_t xmax, Double_t)
    { TF1::SetRange(xmin, xmax); }
