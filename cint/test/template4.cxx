@@ -27,7 +27,7 @@ template<class T,class E> void f(A<T,E>& x)
 
 int main() {
   A<char,int> y('a',3229);
-  A<double,char*> z(3.14,"abcdef");
+  A<double,const char*> z(3.14,"abcdef");
   f(y);
   f(z);
   return 0;
