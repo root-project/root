@@ -2032,7 +2032,7 @@ TH1D *TH2::DoProjection(const char *name, bool onX, Int_t firstbin, Int_t lastbi
       h1->SetBinContent(binOut,cont);
       if (h1->GetSumw2N()) h1->SetBinError(binOut,TMath::Sqrt(err2));
    }
-   h1->SetEntries(Long64_t(entries + 0.5));
+   h1->SetEntries(entries);
 
    if (opt.Contains("d")) {
       TVirtualPad *padsav = gPad;

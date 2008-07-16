@@ -1556,9 +1556,8 @@ TH1 *TH3::Project3D(Option_t *option) const
    //    h->Project3D("xy2");
    //  will generate two TH2D histograms named "myhist_xy" and "myhist_xy2"
    //
-   //  NOTE 2: The number of entries in the projected histogram is set to the
-   //  number of entries of the parent histogram if all bins are selected,
-   //  otherwise it is set to the sum of the bin contents.
+   //  NOTE 2: The number of entries in the projected histogram is estimated from the number of 
+   //  effective entries for all the cells included in the projection. 
 
    TString opt = option; opt.ToLower();
    Int_t ixmin = fXaxis.GetFirst();
@@ -2037,7 +2036,7 @@ TH1 *TH3::Project3D(Option_t *option) const
          }
       }
    }
-   h->SetEntries(Long64_t(entries + 0.5));
+   h->SetEntries(entries);
    return h;
 }
 
@@ -2067,9 +2066,8 @@ TProfile2D *TH3::Project3DProfile(Option_t *option) const
    //    h->Project3DProfile("xy2");
    //  will generate two TProfile2D histograms named "myhist_pxy" and "myhist_pxy2"
    //
-   //  NOTE 2: The number of entries in the projected profile is set to the
-   //  number of entries of the parent histogram if all bins are selected,
-   //  otherwise it is set to the effective entries in the selected bins.
+   //  NOTE 2: The number of entries in the projected profile is estimated from the number of 
+   //  effective entries for all the cells included in the projection. 
 
    TString opt = option; opt.ToLower();
    Int_t ixmin = fXaxis.GetFirst();
@@ -2278,7 +2276,7 @@ TProfile2D *TH3::Project3DProfile(Option_t *option) const
          }
       }
    }
-   p2->SetEntries(Long64_t(entries + 0.5));
+   p2->SetEntries(entries);
    return p2;
 }
 
