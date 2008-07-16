@@ -42,7 +42,7 @@ test2<tp2>::test2(tp2 stm)
 int main(void) {
   test *Test=new test;
   delete Test;
-  test2<char *> *Test2=new test2<char *>("This is another long string");
+  test2<const char*>* Test2=new test2<const char*>("This is another long string");
   delete Test2;
   return 0;
 }
