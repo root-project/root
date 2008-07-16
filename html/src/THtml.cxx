@@ -265,6 +265,13 @@ bool THtml::TFileDefinition::GetFileName(const TClass* cl, bool decl, TString& o
       // check that clfile doesn't start with one of the include paths;
       // that's not what we want (include/TObject.h), we want the actual file
       // if it exists (core/base/inc/TObject.h)
+
+      // special case for TMath namespace:
+      if (clfile == "include/TMathBase.h") {
+         clfile = "math/mathcore/inc/TMath.h";
+         out_filename = clfile;
+      }
+
       TString inclDir;
       TString inclPath(GetOwner()->GetPathInfo().fIncludePath);
       Ssiz_t pos = 0;
@@ -342,6 +349,7 @@ bool THtml::TFileDefinition::GetFileName(const TClass* cl, bool decl, TString& o
             // of course there are exceptions from the exceptions:
             // TComplex and TRandom, TRandom1,...
             if (strcmp(cl->GetName(), "TComplex")
+                && strcmp(cl->GetName(), "TMath")
                 && strncmp(cl->GetName(), "TRandom", 7)) {
                out_filename = "";
                return false;
