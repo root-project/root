@@ -27,7 +27,7 @@ class TFoamVect;
 class TFoamCell;
 
 class TFoam : public TObject {
-private:
+protected:
   // COMPONENTS //
     //-------------- Input parameters
    TString fName;             // Name of a given instance of the FOAM class
@@ -66,7 +66,7 @@ private:
    Double_t  fMCwt;           // MC weight
    Double_t *fRvec;           // [fRNmax] random number vector from r.n. generator fDim+1 maximum elements
    //----------- Procedures
-   TFoamIntegrand *fRho;      // Pointer to the user-defined integrand function/distribution
+   TFoamIntegrand *fRho;      //! Pointer to the user-defined integrand function/distribution
    TMethodCall *fMethodCall;  //! ROOT's pointer to user-defined global distribution function
    TRandom         *fPseRan;  // Pointer to user-defined generator of pseudorandom numbers
    //----------- Statistics and MC results
@@ -90,62 +90,62 @@ public:
    virtual ~TFoam();                 // Default destructor
    TFoam(const TFoam&);              // Copy Constructor  NOT USED
    // Initialization
-   void Initialize();                // Initialization of the FOAM (grid, cells, etc), mandatory!
-   void Initialize(TRandom *, TFoamIntegrand *); // Alternative initialization method, backward compatibility
-   void InitCells();                 // Initializes first cells inside original cube
-   Int_t  CellFill(Int_t, TFoamCell*);  // Allocates new empty cell and return its index
-   void Explore(TFoamCell *Cell);       // Exploration of the new cell, determine <wt>, wtMax etc.
-   void Carver(Int_t&,Double_t&,Double_t&);// Determines the best edge, wt_max reduction
-   void Varedu(Double_t [], Int_t&, Double_t&,Double_t&); // Determines the best edge, variace reduction
-   void MakeAlpha();                 // Provides random point inside hyperrectangle
-   void Grow();                      // Adds new cells to FOAM object until buffer is full
-   Long_t PeekMax();                 // Choose one active cell, used by Grow and also in MC generation
-   Int_t  Divide(TFoamCell *);       // Divide iCell into two daughters; iCell retained, taged as inactive
-   void MakeActiveList();            // Creates table of active cells
-   void GenerCel2(TFoamCell *&);     // Chose an active cell the with probability ~ Primary integral
+   virtual void Initialize();                // Initialization of the FOAM (grid, cells, etc), mandatory!
+   virtual void Initialize(TRandom *, TFoamIntegrand *); // Alternative initialization method, backward compatibility
+   virtual void InitCells();                 // Initializes first cells inside original cube
+   virtual Int_t  CellFill(Int_t, TFoamCell*);  // Allocates new empty cell and return its index
+   virtual void Explore(TFoamCell *Cell);       // Exploration of the new cell, determine <wt>, wtMax etc.
+   virtual void Carver(Int_t&,Double_t&,Double_t&);// Determines the best edge, wt_max reduction
+   virtual void Varedu(Double_t [], Int_t&, Double_t&,Double_t&); // Determines the best edge, variace reduction
+   virtual void MakeAlpha();                 // Provides random point inside hyperrectangle
+   virtual void Grow();                      // Adds new cells to FOAM object until buffer is full
+   virtual Long_t PeekMax();                 // Choose one active cell, used by Grow and also in MC generation
+   virtual Int_t  Divide(TFoamCell *);       // Divide iCell into two daughters; iCell retained, taged as inactive
+   virtual void MakeActiveList();            // Creates table of active cells
+   virtual void GenerCel2(TFoamCell *&);     // Chose an active cell the with probability ~ Primary integral
    // Generation
-   Double_t Eval(Double_t *);        // Evaluates value of the distribution function
-   void     MakeEvent();             // Makes (generates) single MC event
-   void     GetMCvect(Double_t *);   // Provides generated randomly MC vector
-   void     GetMCwt(Double_t &);     // Provides generated MC weight
-   Double_t GetMCwt();               // Provides generates MC weight
-   Double_t MCgenerate(Double_t *MCvect);// All three above function in one
+   virtual Double_t Eval(Double_t *);        // Evaluates value of the distribution function
+   virtual void     MakeEvent();             // Makes (generates) single MC event
+   virtual void     GetMCvect(Double_t *);   // Provides generated randomly MC vector
+   virtual void     GetMCwt(Double_t &);     // Provides generated MC weight
+   virtual Double_t GetMCwt();               // Provides generates MC weight
+   virtual Double_t MCgenerate(Double_t *MCvect);// All three above function in one
    // Finalization
-   void GetIntegMC(Double_t&, Double_t&);// Provides Integrand and abs. error from MC run
-   void GetIntNorm(Double_t&, Double_t&);// Provides normalization Inegrand
-   void GetWtParams(Double_t, Double_t&, Double_t&, Double_t&);// Provides MC weight parameters
-   void Finalize(  Double_t&, Double_t&);  // Prints summary of MC integration
-   TFoamIntegrand  *GetRho(){return fRho;} // Gets pointer of the distribut. (after restoring from disk)
-   TRandom *GetPseRan() const {return fPseRan;}   // Gets pointer of r.n. generator (after restoring from disk)
-   void SetRhoInt(void *Rho);              // Set new integrand distr. in interactive mode
-   void SetRho(TFoamIntegrand *Rho);       // Set new integrand distr. in compiled mode
-   void ResetRho(TFoamIntegrand *Rho);                // Set new distribution, delete old
-   void SetPseRan(TRandom *PseRan){fPseRan=PseRan;}   // Set new r.n. generator
-   void ResetPseRan(TRandom *PseRan);                 // Set new r.n.g, delete old
+   virtual void GetIntegMC(Double_t&, Double_t&);// Provides Integrand and abs. error from MC run
+   virtual void GetIntNorm(Double_t&, Double_t&);// Provides normalization Inegrand
+   virtual void GetWtParams(Double_t, Double_t&, Double_t&, Double_t&);// Provides MC weight parameters
+   virtual void Finalize(  Double_t&, Double_t&);  // Prints summary of MC integration
+   virtual TFoamIntegrand  *GetRho(){return fRho;} // Gets pointer of the distribut. (after restoring from disk)
+   virtual TRandom *GetPseRan() const {return fPseRan;}   // Gets pointer of r.n. generator (after restoring from disk)
+   virtual void SetRhoInt(void *Rho);              // Set new integrand distr. in interactive mode
+   virtual void SetRho(TFoamIntegrand *Rho);       // Set new integrand distr. in compiled mode
+   virtual void ResetRho(TFoamIntegrand *Rho);                // Set new distribution, delete old
+   virtual void SetPseRan(TRandom *PseRan){fPseRan=PseRan;}   // Set new r.n. generator
+   virtual void ResetPseRan(TRandom *PseRan);                 // Set new r.n.g, delete old
    // Getters and Setters
-   void SetkDim(Int_t kDim){fDim = kDim;}            // Sets dimension of cubical space
-   void SetnCells(Long_t nCells){fNCells =nCells;}  // Sets maximum number of cells
-   void SetnSampl(Long_t nSampl){fNSampl =nSampl;}  // Sets no of MC events in cell exploration
-   void SetnBin(Int_t nBin){fNBin = nBin;}          // Sets no of bins in histogs in cell exploration
-   void SetChat(Int_t Chat){fChat = Chat;}          // Sets option Chat, chat level
-   void SetOptRej(Int_t OptRej){fOptRej =OptRej;}   // Sets option for MC rejection
-   void SetOptDrive(Int_t OptDrive){fOptDrive =OptDrive;}  // Sets optimization switch
-   void SetEvPerBin(Int_t EvPerBin){fEvPerBin =EvPerBin;}  // Sets max. no. of effective events per bin
-   void SetMaxWtRej(Double_t MaxWtRej){fMaxWtRej=MaxWtRej;}  // Sets max. weight for rejection
-   void SetInhiDiv(Int_t, Int_t );            // Set inhibition of cell division along certain edge
-   void SetXdivPRD(Int_t, Int_t, Double_t[]); // Set predefined division points
+   virtual void SetkDim(Int_t kDim){fDim = kDim;}            // Sets dimension of cubical space
+   virtual void SetnCells(Long_t nCells){fNCells =nCells;}  // Sets maximum number of cells
+   virtual void SetnSampl(Long_t nSampl){fNSampl =nSampl;}  // Sets no of MC events in cell exploration
+   virtual void SetnBin(Int_t nBin){fNBin = nBin;}          // Sets no of bins in histogs in cell exploration
+   virtual void SetChat(Int_t Chat){fChat = Chat;}          // Sets option Chat, chat level
+   virtual void SetOptRej(Int_t OptRej){fOptRej =OptRej;}   // Sets option for MC rejection
+   virtual void SetOptDrive(Int_t OptDrive){fOptDrive =OptDrive;}  // Sets optimization switch
+   virtual void SetEvPerBin(Int_t EvPerBin){fEvPerBin =EvPerBin;}  // Sets max. no. of effective events per bin
+   virtual void SetMaxWtRej(Double_t MaxWtRej){fMaxWtRej=MaxWtRej;}  // Sets max. weight for rejection
+   virtual void SetInhiDiv(Int_t, Int_t );            // Set inhibition of cell division along certain edge
+   virtual void SetXdivPRD(Int_t, Int_t, Double_t[]); // Set predefined division points
    // Getters and Setters
-   const char *GetVersion() const {return fVersion.Data();}// Get version of the FOAM
-   Int_t    GetTotDim() const { return fDim;}              // Get total dimension
-   Double_t GetPrimary() const {return fPrime;}            // Get value of primary integral R'
-   void GetPrimary(Double_t &prime) {prime = fPrime;}      // Get value of primary integral R'
-   Long_t GetnCalls() const {return fNCalls;}            // Get total no. of the function calls
-   Long_t GetnEffev() const {return fNEffev;}            // Get total no. of effective wt=1 events
+   virtual const char *GetVersion() const {return fVersion.Data();}// Get version of the FOAM
+   virtual Int_t    GetTotDim() const { return fDim;}              // Get total dimension
+   virtual Double_t GetPrimary() const {return fPrime;}            // Get value of primary integral R'
+   virtual void GetPrimary(Double_t &prime) {prime = fPrime;}      // Get value of primary integral R'
+   virtual Long_t GetnCalls() const {return fNCalls;}            // Get total no. of the function calls
+   virtual Long_t GetnEffev() const {return fNEffev;}            // Get total no. of effective wt=1 events
    // Debug
-   void CheckAll(Int_t);     // Checks correctness of the entire data structure in the FOAM object
-   void PrintCells();        // Prints content of all cells
-   void RootPlot2dim(Char_t*);   // Generates C++ code for drawing foam
-   void LinkCells(void);         // Void function for backward compatibility
+   virtual void CheckAll(Int_t);     // Checks correctness of the entire data structure in the FOAM object
+   virtual void PrintCells();        // Prints content of all cells
+   virtual void RootPlot2dim(Char_t*);   // Generates C++ code for drawing foam
+   virtual void LinkCells(void);         // Void function for backward compatibility
    // Inline
 private:
    Double_t Sqr(Double_t x) const { return x*x;}      // Square function
