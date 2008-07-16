@@ -944,7 +944,7 @@ long Cint::Internal::G__getvirtualbaseoffset(void *i_pobject,int tagnum
 {
    char *pobject = (char*)i_pobject;
   long (*f)(long);
-  if(pobject==G__STATICRESOLUTION) return(0);
+  if(pobject==(char*)G__STATICRESOLUTION) return(0);
   if(!pobject || G__no_exec_compile
      || G__PVOID==pobject || ((char*)1)==pobject
      ) {

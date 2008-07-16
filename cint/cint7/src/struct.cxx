@@ -1856,7 +1856,33 @@ extern "C" int G__defined_tagname(const char* tagname, int noerror)
    {
       ::Reflex::Scope scope = env_tagnum.LookupScope(atom_tagname);
       if (p && (scope.DeclaringScope() != env_tagnum)) { // We found something, but not where we asked for it.
-         scope = ::Reflex::Scope(); // Flag not found.
+         ::Reflex::Scope decl_scope(scope.DeclaringScope());
+         int dtagnum = G__get_tagnum(decl_scope);
+         int etagnum = G__get_tagnum(env_tagnum);
+         int tmpltagnum = G__get_tagnum(G__tmplt_def_tagnum);
+         if (
+            // --
+#ifdef G__VIRTUALBASE
+            (G__isanybase(dtagnum, etagnum, G__STATICRESOLUTION) != -1) ||
+#else // G__VIRTUALBASE
+            (G__isanybase(dtagnum, etagnum) != -1) ||
+#endif // G__VIRTUALBASE
+            G__isenclosingclass(decl_scope, env_tagnum) ||
+            G__isenclosingclassbase(decl_scope, env_tagnum) ||
+            (!p && (G__tmplt_def_tagnum == decl_scope)) ||
+#ifdef G__VIRTUALBASE
+            (G__isanybase(dtagnum, tmpltagnum, G__STATICRESOLUTION) != -1) ||
+#else // G__VIRTUALBASE
+            (G__isanybase(dtagnum, tmpltagnum) != -1) ||
+#endif // G__VIRTUALBASE
+            G__isenclosingclass(decl_scope, G__tmplt_def_tagnum) ||
+            G__isenclosingclassbase(decl_scope, G__tmplt_def_tagnum)
+         ) {
+            // -- We have found something in a base class, or an enclosing class.
+         }
+         else {
+            scope = ::Reflex::Scope(); // Flag not found.
+         }
       }
       if (scope) {
          // -- Success, we found the class/struct/union/enum/namespace.
@@ -1881,7 +1907,33 @@ extern "C" int G__defined_tagname(const char* tagname, int noerror)
       std::strcpy(atom_tagname, "$");
       ::Reflex::Scope scope = env_tagnum.LookupScope(atom_tagname);
       if (p && (scope.DeclaringScope() != env_tagnum)) { // We found something, but not where we asked for it.
-         scope = ::Reflex::Scope(); // Flag not found.
+         ::Reflex::Scope decl_scope(scope.DeclaringScope());
+         int dtagnum = G__get_tagnum(decl_scope);
+         int etagnum = G__get_tagnum(env_tagnum);
+         int tmpltagnum = G__get_tagnum(G__tmplt_def_tagnum);
+         if (
+            // --
+#ifdef G__VIRTUALBASE
+            (G__isanybase(dtagnum, etagnum, G__STATICRESOLUTION) != -1) ||
+#else // G__VIRTUALBASE
+            (G__isanybase(dtagnum, etagnum) != -1) ||
+#endif // G__VIRTUALBASE
+            G__isenclosingclass(decl_scope, env_tagnum) ||
+            G__isenclosingclassbase(decl_scope, env_tagnum) ||
+            (!p && (G__tmplt_def_tagnum == decl_scope)) ||
+#ifdef G__VIRTUALBASE
+            (G__isanybase(dtagnum, tmpltagnum, G__STATICRESOLUTION) != -1) ||
+#else // G__VIRTUALBASE
+            (G__isanybase(dtagnum, tmpltagnum) != -1) ||
+#endif // G__VIRTUALBASE
+            G__isenclosingclass(decl_scope, G__tmplt_def_tagnum) ||
+            G__isenclosingclassbase(decl_scope, G__tmplt_def_tagnum)
+         ) {
+            // -- We have found something in a base class, or an enclosing class.
+         }
+         else {
+            scope = ::Reflex::Scope(); // Flag not found.
+         }
       }
       if (scope) {
          // -- Success, we found the class/struct/union/enum/namespace.

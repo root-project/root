@@ -695,8 +695,8 @@ struct G__Definetemplatefunc {
 /*********************************************************************
 * G__isanybase, G__ispublicbase static resolution
 *********************************************************************/
-#define G__STATICRESOLUTION   (char*)2  /* for G__isanybase */
-#define G__STATICRESOLUTION2  (char*)2  /* for G__ispublicbase */
+#define G__STATICRESOLUTION   2  /* for G__isanybase */
+#define G__STATICRESOLUTION2  2  /* for G__ispublicbase */
 
 /*********************************************************************
 * x
