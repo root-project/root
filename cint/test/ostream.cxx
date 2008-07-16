@@ -34,7 +34,7 @@ int main()
 {
 	char c='a';
 	unsigned short b=255;
-	char *pc="hijklmn";
+	const char *pc="hijklmn";
 	//unsigned char *pb=(unsigned char*)255;
 
 	short s=0xffff;
