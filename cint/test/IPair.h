@@ -12,6 +12,7 @@
 #include <cassert>
 #include <climits>
 #include <cmath>
+#include <cstdlib>
 
 /*!
 ICoordinate provides an abstract integer type for IPair.  Currently
@@ -395,7 +396,7 @@ inline ICoordinate IPair::Max() const
 */
 inline IPair IPair::Abs() const
 {
-	return IPair( abs( v[0] ), abs( v[1] ) );
+	return IPair( std::abs( v[0] ), std::abs( v[1] ) );
 }
 
 /*!
@@ -453,8 +454,8 @@ inline double IPair::MagSq() const
 */
 inline double IPair::Mag() const
 {
-	if ( v[0] == 0 ) return abs( v[1] );
-	if ( v[1] == 0 ) return abs( v[0] );
+	if ( v[0] == 0 ) return std::abs( v[1] );
+	if ( v[1] == 0 ) return std::abs( v[0] );
 	
 	return sqrt( MagSq() );
 }
