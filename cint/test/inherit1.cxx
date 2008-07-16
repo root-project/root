@@ -67,7 +67,7 @@ public:
   String name;
   int age;
   person(void);
-  person(char *adr,char *nm,int ag,char *setgender);
+  person(const char *adr,const char *nm,int ag,const char *setgender);
 };
 
 person::person(void) : gender("MALE"),address("SAITAMA"),name("MASAHARU")
@@ -76,7 +76,7 @@ person::person(void) : gender("MALE"),address("SAITAMA"),name("MASAHARU")
   cout << "construct person(" << age << ")\n";
 }
 
-person::person(char *adr,char *nm,int ag,char *setgender) 
+person::person(const char *adr,const char *nm,int ag,const char *setgender) 
   : gender(setgender),address(adr) , name(nm) 
 {
   cout << "construct person(" << ag << ")\n";
