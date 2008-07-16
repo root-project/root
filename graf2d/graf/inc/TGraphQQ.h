@@ -47,7 +47,11 @@ public:
    virtual ~TGraphQQ();
 
    void SetFunction(TF1 *f);
-   void Paint(Option_t *opt="");
+   Double_t  GetXq1() const {return fXq1;}
+   Double_t  GetXq2() const {return fXq2;}
+   Double_t  GetYq1() const {return fYq1;}
+   Double_t  GetYq2() const {return fYq2;}
+   TF1      *GetF()   const {return fF;}
 
    ClassDef(TGraphQQ, 1); // to create and to draw quantile-quantile plots
 };

@@ -179,6 +179,7 @@ TGraphQQ::TGraphQQ(Int_t nx, Double_t *x, Int_t ny, Double_t *y)
    delete [] index;
 }
 
+
 //______________________________________________________________________________
 TGraphQQ::~TGraphQQ()
 {
@@ -189,6 +190,7 @@ TGraphQQ::~TGraphQQ()
    if (fF)
       fF = 0;
 }
+
 
 //______________________________________________________________________________
 void TGraphQQ::MakeFunctionQuantiles()
@@ -221,6 +223,7 @@ void TGraphQQ::MakeFunctionQuantiles()
    Quartiles();
 }
 
+
 //______________________________________________________________________________
 
 void TGraphQQ::MakeQuantiles()
@@ -242,6 +245,7 @@ void TGraphQQ::MakeQuantiles()
 
    Quartiles();
 }
+
 
 //______________________________________________________________________________
 void TGraphQQ::Quartiles()
@@ -269,55 +273,6 @@ void TGraphQQ::Quartiles()
    fXq1=x[0]; fXq2=x[1]; fYq1=y[0]; fYq2=y[1];
 }
 
-//______________________________________________________________________________
-void TGraphQQ::Paint(Option_t *opt)
-{
-   // paint this graphQQ. No options for the time being
-   
-   if (!fX){
-      Error("TGraphQQ::Paint", "2nd dataset or theoretical function not specified");
-      return;
-   }
-
-   if (fF){
-      GetXaxis()->SetTitle("theoretical quantiles");
-      GetYaxis()->SetTitle("data quantiles");
-   } 
-
-   TGraph::Paint(opt);
-
-   Double_t xmin = gPad->GetUxmin();
-   Double_t xmax = gPad->GetUxmax();
-   Double_t ymin = gPad->GetUymin();
-   Double_t ymax = gPad->GetUymax();
-   Double_t yxmin, xymin, yxmax, xymax;
-   Double_t xqmin = TMath::Max(xmin, fXq1);
-   Double_t xqmax = TMath::Min(xmax, fXq2);
-   Double_t yqmin = TMath::Max(ymin, fYq1);
-   Double_t yqmax = TMath::Min(ymax, fYq2);
-
-   TLine line1, line2, line3;
-   line1.SetLineStyle(2);
-   line3.SetLineStyle(2);
-   yxmin = (fYq2-fYq1)*(xmin-fXq1)/(fXq2-fXq1) + fYq1;
-   if (yxmin < ymin){
-      xymin = (fXq2-fXq1)*(ymin-fYq1)/(fYq2-fYq1) + fXq1;
-      line1.PaintLine(xymin, ymin, xqmin, yqmin);
-   }
-   else 
-      line1.PaintLine(xmin, yxmin, xqmin, yqmin);
-
-   line2.PaintLine(xqmin, yqmin, xqmax, yqmax);
-
-   yxmax = (fYq2-fYq1)*(xmax-fXq1)/(fXq2-fXq1) + fYq1;
-   if (yxmax > ymax){
-      xymax = (fXq2-fXq1)*(ymax-fYq1)/(fYq2-fYq1) + fXq1;
-      line3.PaintLine(xqmax, yqmax, xymax, ymax);
-   }      
-   else
-      line3.PaintLine(xqmax, yqmax, xmax, yxmax);
-
-}
 
 //______________________________________________________________________________
 void TGraphQQ::SetFunction(TF1 *f)
@@ -328,9 +283,3 @@ void TGraphQQ::SetFunction(TF1 *f)
    fF = f;
    MakeFunctionQuantiles();
 }
-
-
-
-
-
-

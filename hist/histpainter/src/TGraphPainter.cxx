@@ -24,6 +24,7 @@
 #include "TGaxis.h"
 #include "TGraphPolargram.h"
 #include "TGraphPolar.h"
+#include "TGraphQQ.h"
 #include "TLatex.h"
 #include "TArrow.h"
 #include "TFrame.h"
@@ -35,8 +36,11 @@ ClassImp(TGraphPainter);
 //______________________________________________________________________________
 /* Begin_Html
 <center><h2>The graph painter class</h2></center>
-TGraphPainter paints TGraph, TGraphAsymmErrors, TGraphBentErrors, TGraphErrors,
-TGraphPolar.
+
+
+<tt>TGraphPainter</tt> paints <tt>TGraph</tt>, <tt>TGraphAsymmErrors</tt>,
+<tt>TGraphBentErrors</tt>, <tt>TGraphErrors</tt> and <tt>TGraphPolar</tt>.
+
 
 <h3>TGraph options</h3>
 
@@ -79,15 +83,23 @@ Begin_Html
 <h3>Exclusion graphs</h3>
 
 
-When a graph is painted with the option "C" or "L" it is possible to draw
-a filled area on one side of the line. This is useful to show exclusion
-zones. This drawing mode is activated when the absolute value of the
-graph line width (set thanks to SetLineWidth) is greater than 99. In that
-case the line width number is interpreted as 100*ff+ll = ffll . The two
-digits number "ll" represent the normal line width whereas "ff" is the
-filled area width. The sign of "ffll" allows to flip the filled area
-from one side of the line to the other. The current fill area attributes
-are used to draw the hatched zone.
+When a graph is painted with the option <tt>"C"</tt> or <tt>"L"</tt> it is 
+possible to draw a filled area on one side of the line. This is useful to show
+exclusion zones. 
+
+<p>This drawing mode is activated when the absolute value of the graph line
+width (set thanks to <tt>SetLineWidth()</tt>) is greater than 99. In that
+case the line width number is interpreted as:
+<pre>
+      100*ff+ll = ffll
+</pre>
+<ul>
+<li> The two digits number <tt>"ll"</tt> represent the normal line width 
+<li> The two digits number  <tt>"ff"</tt> is the filled area width.
+<li> The sign of "ffll" allows to flip the filled area from one side of the line to
+     the other.
+</ul>
+The current fill area attributes are used to draw the hatched zone.
 
 End_Html
 Begin_Macro(source)
@@ -603,6 +615,8 @@ void TGraphPainter::PaintHelper(TGraph *theGraph, Option_t *option)
       SetBit(TGraph::kClipFrame, theGraph->TestBit(TGraph::kClipFrame));
       if (theGraph->InheritsFrom("TGraphBentErrors")) {
          PaintGraphBentErrors(theGraph,option);
+      } else if (theGraph->InheritsFrom("TGraphQQ")) {
+	PaintGraphQQ(theGraph,option);
       } else if (theGraph->InheritsFrom("TGraphAsymmErrors")) {
          PaintGraphAsymmErrors(theGraph,option);
       } else if (theGraph->InheritsFrom("TGraphErrors")) {
@@ -2825,6 +2839,65 @@ void TGraphPainter::PaintGraphPolar(TGraph *theGraph, Option_t* options)
    ptitle->SetBit(kCanDelete);
    ptitle->Draw();
    ptitle->Paint();
+}
+
+
+//______________________________________________________________________________
+void TGraphPainter::PaintGraphQQ(TGraph *theGraph, Option_t *option)
+{
+   // paint this graphQQ. No options for the time being
+
+   TGraphQQ *theGraphQQ = (TGraphQQ*) theGraph;
+
+   Double_t *theX    = theGraphQQ->GetX();
+   Double_t  theXq1  = theGraphQQ->GetXq1();
+   Double_t  theXq2  = theGraphQQ->GetXq2();
+   Double_t  theYq1  = theGraphQQ->GetYq1();
+   Double_t  theYq2  = theGraphQQ->GetYq2();
+   TF1      *theF    = theGraphQQ->GetF();
+
+   if (!theX){
+      Error("TGraphQQ::Paint", "2nd dataset or theoretical function not specified");
+      return;
+   }
+
+   if (theF){
+      theGraphQQ->GetXaxis()->SetTitle("theoretical quantiles");
+      theGraphQQ->GetYaxis()->SetTitle("data quantiles");
+   }
+
+   PaintGraphSimple(theGraph,option);
+
+   Double_t xmin = gPad->GetUxmin();
+   Double_t xmax = gPad->GetUxmax();
+   Double_t ymin = gPad->GetUymin();
+   Double_t ymax = gPad->GetUymax();
+   Double_t yxmin, xymin, yxmax, xymax;
+   Double_t xqmin = TMath::Max(xmin, theXq1);
+   Double_t xqmax = TMath::Min(xmax, theXq2);
+   Double_t yqmin = TMath::Max(ymin, theYq1);
+   Double_t yqmax = TMath::Min(ymax, theYq2);
+
+   TLine line1, line2, line3;
+   line1.SetLineStyle(2);
+   line3.SetLineStyle(2);
+   yxmin = (theYq2-theYq1)*(xmin-theXq1)/(theXq2-theXq1) + theYq1;
+   if (yxmin < ymin){
+      xymin = (theXq2-theXq1)*(ymin-theYq1)/(theYq2-theYq1) + theXq1;
+      line1.PaintLine(xymin, ymin, xqmin, yqmin);
+   }
+   else
+      line1.PaintLine(xmin, yxmin, xqmin, yqmin);
+
+   line2.PaintLine(xqmin, yqmin, xqmax, yqmax);
+
+   yxmax = (theYq2-theYq1)*(xmax-theXq1)/(theXq2-theXq1) + theYq1;
+   if (yxmax > ymax){
+      xymax = (theXq2-theXq1)*(ymax-theYq1)/(theYq2-theYq1) + theXq1;
+      line3.PaintLine(xqmax, yqmax, xymax, ymax);
+   }
+   else
+      line3.PaintLine(xqmax, yqmax, xmax, yxmax);
 }
 
 
