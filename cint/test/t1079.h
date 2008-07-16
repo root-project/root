@@ -15,13 +15,14 @@ class smart_ptr {
   T* operator->() { return ptr; }  
 };
 
+#include <cstring>
 #include <string>
 using namespace std;
 
 class String {
   char buf[100];
  public:
-  String(const char* x="") { strcpy(buf,x); }
+  String(const char* x="") { std::strcpy(buf,x); }
   const char* c_str() const { return(buf); }
 };
 
