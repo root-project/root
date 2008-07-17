@@ -5,21 +5,28 @@
  * For the licensing terms see the file COPYING
  *
  ************************************************************************/
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstring>
 
-void assign(char *a, char **b)
+using namespace std;
+
+void do_assign(char* a, char** b)
 {
-  *b = a;
+   *b = a;
 }
 
-int main() {
-  char *a = "test";
-  char *b = NULL; 
-    
-  assign(a,&b);
-  puts(a);
-  puts(b);
-  return 0;
+int main()
+{
+   char buf[2048];
+   buf[0] = '\0';
+   char* a = buf;
+   strcpy(a, "test");
+   char* b = 0;
+
+   do_assign(a, &b);
+   printf("%s\n", a);
+   printf("%s\n", b);
+
+   return 0;
 }
 
