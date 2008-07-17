@@ -301,7 +301,10 @@ void TTreeCloner::CopyStreamerInfos()
          if (oldInfo->GetClassVersion()==1) {
             // We may have a Foreign class let's look using the
             // checksum:
-            curInfo = (TStreamerInfo*)cl->FindStreamerInfo(oldInfo->GetCheckSum());
+            TStreamerInfo *matchInfo = (TStreamerInfo*)cl->FindStreamerInfo(oldInfo->GetCheckSum());
+            if (matchInfo) {
+               curInfo = matchInfo;
+            }
          }
          curInfo->TagFile(toFile);
       } else {
