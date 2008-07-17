@@ -5,47 +5,44 @@
  * For the licensing terms see the file COPYING
  *
  ************************************************************************/
-/***********************************************************************
-* VArray.h , C++
-*
-************************************************************************
-* Description:
-*
-***********************************************************************/
 
 #ifndef VARRAY_H
 #define VARRAY_H
 
-#include "VType.h"
 #include "VObject.h"
+#include "VType.h"
 
 #define INVALIDINDEX -1
 
-/**********************************************************
-* Polymorphic Array object
-**********************************************************/
+class VArray : public VObject
+{
+   // Polymorphic Array object
+public:
 
-class VArray : public VObject {
- public:
+   VArray();
+   VArray(const VArray& obj);
+   VArray& operator=(const VArray& obj);
+   ~VArray();
 
-  VArray();
-  VArray(VArray& obj);
-  VArray& operator=(VArray& obj); 
-  ~VArray();
-  // Int_t operator==(VArray& x);
+   int SetNumElements(int numin);
+   int Add(VObject* obj, int index = INVALIDINDEX);
+   VObject* Delete(int index = INVALIDINDEX, int flag = 0);
 
-  Int_t SetNumElements(Int_t numin);
-  Int_t Add(VObject* obj,Int_t index=INVALIDINDEX);
-  VObject* Delete(Int_t index=INVALIDINDEX,Int_t flag=0);
+   int GetNumElements() const
+   {
+      return numElements;
+   }
 
-  Int_t GetNumElements() { return numElements;}
-  VObject* GetElement(Int_t index);
-  VObject& operator[](Int_t index) { return(*GetElement(index)); }
+   VObject* GetElement(int index);
 
- private:
-  Int_t numElements;  
-  VObject**    adrAry;
+   VObject& operator[](int index)
+   {
+      return *GetElement(index);
+   }
+
+private:
+   int numElements;
+   VObject** adrAry;
 };
 
-#endif
-
+#endif // VARRAY_H

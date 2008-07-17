@@ -6,24 +6,38 @@
  *
  ************************************************************************/
 
-//#pragma includepath "\mpn\ke\proto3"
-#include "VString.h"
-#include "VObject.h"
+#ifndef VCOMPANY_H
+#define VCOMPANY_H
 
-class VCompany : public VObject {
- public:
-  VCompany();
-  VCompany(VCompany& x);
-  VCompany(Char_t* nameIn,Char_t* countryIn);
-  VCompany(Char_t* nameIn,Int_t num);
-  VCompany& operator=(VCompany& x);
-  ~VCompany();
-  void set(Char_t* nameIn,Char_t* countryIn);
-  Char_t* Name() { return(name.String()); }
-  Char_t* Syozoku() { return(country.String()); }
-  void disp();
- private:
-  VString name;
-  VString country;
+#include "VObject.h"
+#include "VString.h"
+
+class VCompany : public VObject
+{
+public:
+   VCompany();
+   VCompany(const VCompany& x);
+   VCompany(const char* nameIn, const char* countryIn);
+   VCompany(const char* nameIn, int num);
+   VCompany& operator=(const VCompany& x);
+   ~VCompany();
+   void set(const char* nameIn, const char* countryIn);
+
+   const char* Name()
+   {
+      return name.String();
+   }
+
+   const char* Syozoku()
+   {
+      return country.String();
+   }
+
+   void disp();
+
+private:
+   VString name;
+   VString country;
 };
 
+#endif // VCOMPANY_H

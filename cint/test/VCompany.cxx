@@ -6,51 +6,61 @@
  *
  ************************************************************************/
 
-
-#ifdef __hpux
-#include <iostream.h>
-#else
-#include <iostream>
-using namespace std;
-#endif
 #include "VCompany.h"
 
-VCompany::VCompany() : VObject() , name() , country()
+#include <iostream>
+
+using namespace std;
+
+VCompany::VCompany()
+      : VObject()
 {
 }
 
-VCompany::VCompany(VCompany& x) : VObject() , name(x.name) , country(x.country)
+VCompany::VCompany(const VCompany& x)
+: VObject()
+, name(x.name)
+, country(x.country)
 {
 }
 
-VCompany::VCompany(Char_t* nameIn,Char_t* countryIn) : VObject() , name(nameIn) , country(countryIn)
+VCompany::VCompany(const char* nameIn, const char* countryIn)
+: VObject()
+, name(nameIn)
+, country(countryIn)
 {
 }
 
-VCompany::VCompany(Char_t* nameIn,Int_t num) : VObject(), name(nameIn), country()
+VCompany::VCompany(const char* nameIn, int num)
+: VObject()
+, name(nameIn)
 {
-  char buf[10];
-  sprintf(buf,"country%d",num);
-  country = buf;
+   char buf[256];
+   sprintf(buf, "country%d", num);
+   country = buf;
 }
 
-VCompany& VCompany::operator=(VCompany& x) 
+VCompany& VCompany::operator=(const VCompany& x)
 {
-  name = x.name;
-  country = x.country;
-  return x;
+   if (this != &x) {
+      name = x.name;
+      country = x.country;
+   }
+   return *this;
 }
 
-VCompany::~VCompany() 
+VCompany::~VCompany()
 {
 }
 
-void VCompany::set(Char_t* nameIn,Char_t* countryIn)
+void VCompany::set(const char* nameIn, const char* countryIn)
 {
-  name = nameIn;
-  country = countryIn;
+   name = nameIn;
+   country = countryIn;
 }
 
-void VCompany::disp() {
-  cout << name.String() << " " << country.String() << endl;  
+void VCompany::disp()
+{
+   cout << name.String() << " " << country.String() << endl;
 }
+

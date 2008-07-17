@@ -5,29 +5,24 @@
  * For the licensing terms see the file COPYING
  *
  ************************************************************************/
-/***********************************************************************
-* VObject.h , C++
-*
-************************************************************************
-* Description:
-*
-***********************************************************************/
-
 #ifndef VOBJECT_H
 #define VOBJECT_H
 
 #include "VType.h"
 
-class VObject {
- public:
-  VObject();
-  VObject(VObject& x);
-  virtual VObject& operator=(VObject& x);
-  virtual ~VObject();
-  virtual void disp() { 
-    cout << "(VObject)" << endl;  
-  }
+#include <iostream>
+
+class VObject
+{
+public:
+   VObject();
+   VObject(const VObject& x);
+   virtual VObject& operator=(const VObject& x);
+   virtual ~VObject();
+   virtual void disp()
+   {
+      std::cout << "(VObject)" << std::endl;
+   }
 };
 
-#endif
-
+#endif // VOBJECT_H

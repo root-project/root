@@ -5,52 +5,28 @@
  * For the licensing terms see the file COPYING
  *
  ************************************************************************/
-/***********************************************************************
-* VObject.cxx , C++
-*
-************************************************************************
-* Description:
-*
-***********************************************************************/
 
-#ifdef __hpux
-#include <iostream.h>
-#else
-#include <iostream>
-using namespace std;
-#endif
 #include "VObject.h"
 
-///////////////////////////////////////////////////////////
-// 
-///////////////////////////////////////////////////////////
+#include <iostream>
+
+using namespace std;
+
 VObject::VObject()
 {
 }
 
-///////////////////////////////////////////////////////////
-// 
-///////////////////////////////////////////////////////////
-VObject::VObject(VObject& x)
+VObject::VObject(const VObject& x)
 {
 }
 
-///////////////////////////////////////////////////////////
-// 
-///////////////////////////////////////////////////////////
-VObject& VObject::operator=(VObject& x)
+VObject& VObject::operator=(const VObject& x)
 {
-  cerr << "VObject::operator=() must be overridden" << endl;  
-  return x;
+   cerr << "VObject::operator=() must be overridden" << endl;
+   return *this;
 }
 
-///////////////////////////////////////////////////////////
-// 
-///////////////////////////////////////////////////////////
 VObject::~VObject()
 {
-  //cerr << "VObject::~VObject() must be overridden" << endl;  
 }
-
-
 

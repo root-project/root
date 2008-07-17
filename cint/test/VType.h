@@ -5,21 +5,14 @@
  * For the licensing terms see the file COPYING
  *
  ************************************************************************/
-/***********************************************************************
-* VType.h , C++
-*
-************************************************************************
-* Description:
-*
-***********************************************************************/
 
 #ifndef VTYPE_H
 #define VTYPE_H
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <assert.h>
+#include <cassert>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
 #define SUCCESS 0
 #define FAILURE 1
@@ -45,4 +38,4 @@ typedef char Char_t;
 #define MATCH 1
 #define UNMATCH 0
 
-#endif
+#endif // VTYPE_H

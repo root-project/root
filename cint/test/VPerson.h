@@ -6,24 +6,38 @@
  *
  ************************************************************************/
 
-//#pragma includepath "\mpn\ke\proto3"
+#ifndef VPERSON_H
+#define VPERSON_H
+
 #include "VString.h"
 #include "VObject.h"
 
-class VPerson : public VObject {
- public:
-  VPerson();
-  VPerson(VPerson& x);
-  VPerson(Char_t* nameIn,Char_t* syozokuIn);
-  VPerson(Char_t* nameIn,Int_t num);
-  VPerson& operator=(VPerson& x);
-  ~VPerson();
-  void set(Char_t* nameIn,Char_t* shozokuIn);
-  Char_t* Name() { return(name.String()); }
-  Char_t* Syozoku() { return(syozoku.String()); }
-  void disp();
- private:
-  VString name;
-  VString syozoku;
+class VPerson : public VObject
+{
+public:
+   VPerson();
+   VPerson(const VPerson& x);
+   VPerson(const char* nameIn, const char* syozokuIn);
+   VPerson(const char* nameIn, int num);
+   VPerson& operator=(const VPerson& x);
+   ~VPerson();
+   void set(const char* nameIn, const char* shozokuIn);
+
+   const char* Name()
+   {
+      return name.String();
+   }
+
+   const char* Syozoku()
+   {
+      return syozoku.String();
+   }
+
+   void disp();
+
+private:
+   VString name;
+   VString syozoku;
 };
 
+#endif // VPERSON_H
