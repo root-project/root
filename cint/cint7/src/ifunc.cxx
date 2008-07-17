@@ -1201,7 +1201,7 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
       G__exec_statement(&brace_level);
       G__def_struct_member = store_def_struct_member;
 #ifdef G__ASM_FUNC
-      G__get_funcproperties(newFunction)->entry.size = G__ifile.line_number - G__get_funcproperties(newFunction)->linenum + 1;
+      G__get_funcproperties(newFunction)->entry.size = G__ifile.line_number - G__get_funcproperties(newFunction)->entry.line_number + 1;
 #endif // G__ASM_FUNC
       // --
 #ifdef G__ASM_WHOLEFUNC
