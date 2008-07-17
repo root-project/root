@@ -1,13 +1,13 @@
 # This is a template for all makefiles.
 
 #Set the list of files to be deleted by clean (Targets can also be specified).:
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog *.rootmap
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog *.rootmap result.root
 
 # Set the list of target to make while testing.  By default, mytest is the
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += AddVersion
+TEST_TARGETS += AddVersion attmarker
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME:=$(shell expr $(PWD) : '\(.*/roottest/\)')
@@ -81,4 +81,10 @@ AddVersion.log: $(FILES) $(LIBS)
 AddVersion: AddVersion.log AddVersion.ref
 	$(TestDiff)
 
+
+attmarker.log: hsimple14.root hsimple20.root
+	$(CMDECHO) hadd -f result.root hsimple14.root hsimple20.root > attmarker.log 2>&1
+
+attmarker: attmarker.log
+	$(TestDiff)
 

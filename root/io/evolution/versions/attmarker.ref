@@ -1,0 +1,6 @@
+Target file: result.root
+Source file 1: hsimple14.root
+Source file 2: hsimple20.root
+Target path: result.root:/
+hsimple14.root tree:ntuple entries=1234567890
+hsimple20.root tree:ntuple entries=1234567890
