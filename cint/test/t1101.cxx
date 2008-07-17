@@ -6,29 +6,42 @@
  *
  ************************************************************************/
 
-#include <stdio.h>
-#include <string.h>
+#include <cstdio>
+#include <cstring>
+
+using namespace std;
 
 // badinit.c
-char *system = "WinNT";
+const char* system = "WinNT";
+
 //______________________________________________________________________________
-void ls(char *path=0)
+void ls(const char* path = 0)
 {
+   // --
+   char s[256];
+   s[0] = '\0';
 #ifdef __CINT__
-   char s[256] = (!strcmp(system, "WinNT")) ? "dir /w " : "ls ";
-#else
-   char s[256] = "dir /w ";
-#endif
-   if (path) strcat(s,path);
-   // gSystem.Exec(s);
-   printf("%s\n",s);
+   if (!strcmp(system, "WinNT")) {
+      strcpy(s, "dir /w ");
+   }
+   else {
+      strcpy(s, "ls ");
+   }
+#else // __CINT__
+   strcpy(s, "dir /w ");
+#endif // __CINT__
+   if (path) {
+      strcat(s, path);
+   }
+   //gSystem.Exec(s);
+   printf("%s\n", s);
 }
 
-int main() {
-  for(int i=0;i<2;i++) ls();
-  return 0;
+int main()
+{
+   for (int i = 0; i < 2; ++i) {
+      ls();
+   }
+   return 0;
 }
-
-
-
 
