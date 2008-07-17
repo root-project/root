@@ -73,6 +73,7 @@ public:
    Int_t                 GetNedges() const   {return fNedges;}
    virtual Int_t         GetNmeshVertices() const;
    virtual Int_t         GetNsegments() const {return fNedges;}     
+   virtual Bool_t        GetPointsOnSegments(Int_t npoints, Double_t *array) const {return TGeoBBox::GetPointsOnSegments(npoints,array);}
    virtual void          InspectShape() const;
    virtual TBuffer3D    *MakeBuffer3D() const;
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;

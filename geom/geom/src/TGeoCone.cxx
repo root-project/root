@@ -667,6 +667,54 @@ TGeoShape *TGeoCone::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/
 }
 
 //_____________________________________________________________________________
+Bool_t TGeoCone::GetPointsOnSegments(Int_t npoints, Double_t *array) const
+{
+// Fills array with n random points located on the line segments of the shape mesh.
+// The output array must be provided with a length of minimum 3*npoints. Returns
+// true if operation is implemented.
+   if (npoints > (npoints/2)*2) {
+      Error("GetPointsOnSegments","Npoints must be even number");
+      return kFALSE;
+   }   
+   Bool_t hasrmin = (fRmin1>0 || fRmin2>0)?kTRUE:kFALSE;
+   Int_t nc = 0;
+   if (hasrmin)   nc = (Int_t)TMath::Sqrt(0.5*npoints);
+   else           nc = (Int_t)TMath::Sqrt(1.*npoints);
+   Double_t dphi = TMath::TwoPi()/nc;
+   Double_t phi = 0;
+   Int_t ntop = 0;
+   if (hasrmin)   ntop = npoints/2 - nc*(nc-1);
+   else           ntop = npoints - nc*(nc-1);
+   Double_t dz = 2*fDz/(nc-1);
+   Double_t z = 0;
+   Int_t icrt = 0;
+   Int_t nphi = nc;
+   Double_t rmin = 0.;
+   Double_t rmax = 0.;
+   // loop z sections
+   for (Int_t i=0; i<nc; i++) {
+      if (i == (nc-1)) nphi = ntop;
+      z = -fDz + i*dz;
+      if (hasrmin) rmin = 0.5*(fRmin1+fRmin2) + 0.5*(fRmin2-fRmin1)*z/fDz;
+      rmax = 0.5*(fRmax1+fRmax2) + 0.5*(fRmax2-fRmax1)*z/fDz; 
+      // loop points on circle sections
+      for (Int_t j=0; j<nphi; j++) {
+         phi = j*dphi;
+         if (hasrmin) {
+            array[icrt++] = rmin * TMath::Cos(phi);
+            array[icrt++] = rmin * TMath::Sin(phi);
+            array[icrt++] = z;
+         }
+         array[icrt++] = rmax * TMath::Cos(phi);
+         array[icrt++] = rmax * TMath::Sin(phi);
+         array[icrt++] = z;
+      }
+   }
+   return kTRUE;
+}                    
+
+
+//_____________________________________________________________________________
 void TGeoCone::InspectShape() const
 {
 // print shape parameters
@@ -2294,3 +2342,47 @@ const TBuffer3D & TGeoConeSeg::GetBuffer3D(Int_t reqSections, Bool_t localFrame)
       
    return buffer;
 }
+
+//_____________________________________________________________________________
+Bool_t TGeoConeSeg::GetPointsOnSegments(Int_t npoints, Double_t *array) const
+{
+// Fills array with n random points located on the line segments of the shape mesh.
+// The output array must be provided with a length of minimum 3*npoints. Returns
+// true if operation is implemented.
+   if (npoints > (npoints/2)*2) {
+      Error("GetPointsOnSegments","Npoints must be even number");
+      return kFALSE;
+   }   
+   Int_t nc = (Int_t)TMath::Sqrt(0.5*npoints);
+   Double_t dphi = (fPhi2-fPhi1)*TMath::DegToRad()/(nc-1);
+   Double_t phi = 0;
+   Double_t phi1 = fPhi1 * TMath::DegToRad();
+   Int_t ntop = npoints/2 - nc*(nc-1);
+   Double_t dz = 2*fDz/(nc-1);
+   Double_t z = 0;
+   Double_t rmin = 0.;
+   Double_t rmax = 0.;
+   Int_t icrt = 0;
+   Int_t nphi = nc;
+   // loop z sections
+   for (Int_t i=0; i<nc; i++) {
+      if (i == (nc-1)) {
+         nphi = ntop;
+         dphi = (fPhi2-fPhi1)*TMath::DegToRad()/(nphi-1);
+      }   
+      z = -fDz + i*dz;
+      rmin = 0.5*(fRmin1+fRmin2) + 0.5*(fRmin2-fRmin1)*z/fDz;
+      rmax = 0.5*(fRmax1+fRmax2) + 0.5*(fRmax2-fRmax1)*z/fDz; 
+      // loop points on circle sections
+      for (Int_t j=0; j<nphi; j++) {
+         phi = phi1 + j*dphi;
+         array[icrt++] = rmin * TMath::Cos(phi);
+         array[icrt++] = rmin * TMath::Sin(phi);
+         array[icrt++] = z;
+         array[icrt++] = rmax * TMath::Cos(phi);
+         array[icrt++] = rmax * TMath::Sin(phi);
+         array[icrt++] = z;
+      }
+   }
+   return kTRUE;
+}                    

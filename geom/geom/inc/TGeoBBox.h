@@ -70,6 +70,7 @@ public:
    virtual Int_t         GetByteCount() const {return 36;}
    virtual Double_t      GetFacetArea(Int_t index=0) const;
    virtual Bool_t        GetPointsOnFacet(Int_t index, Int_t npoints, Double_t *array) const;
+   virtual Bool_t        GetPointsOnSegments(Int_t npoints, Double_t *array) const;
    virtual Int_t         GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_t &dx, Double_t &dy, Double_t &dz) const;
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const;
    virtual void          GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const;

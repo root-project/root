@@ -72,6 +72,7 @@ public:
    virtual void          GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const;
    virtual Int_t         GetNmeshVertices() const;
    Int_t                 GetNumberOfDivisions() const {return fNseg;}
+   virtual Bool_t        GetPointsOnSegments(Int_t /*npoints*/, Double_t */*array*/) const {return kFALSE;}
    Int_t                 GetNz() const   {return fNz;}
    virtual Double_t      GetRmin() const {return fRmin;}
    virtual Double_t      GetRmax() const {return fRmax;}

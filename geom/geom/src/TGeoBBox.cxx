@@ -612,6 +612,44 @@ Bool_t TGeoBBox::GetPointsOnFacet(Int_t index, Int_t npoints, Double_t *array) c
    }
    return kTRUE;
 }      
+
+//_____________________________________________________________________________
+Bool_t TGeoBBox::GetPointsOnSegments(Int_t npoints, Double_t *array) const
+{
+// Fills array with n random points located on the line segments of the shape mesh.
+// The output array must be provided with a length of minimum 3*npoints. Returns
+// true if operation is implemented.
+   if (npoints<GetNmeshVertices()) {
+      Error("GetPointsOnSegments", "You should require at least %d points", GetNmeshVertices());
+      return kFALSE;
+   }
+   TBuffer3D &buff = (TBuffer3D &)GetBuffer3D(TBuffer3D::kRawSizes | TBuffer3D::kRaw, kTRUE);
+   Int_t npnts = buff.NbPnts();
+   Int_t nsegs = buff.NbSegs();
+   // Copy buffered points  in the array
+   memcpy(array, buff.fPnts, 3*npnts*sizeof(Double_t));
+   Int_t ipoints = npoints - npnts;
+   Int_t icrt = 3*npnts;
+   Int_t nperseg = (Int_t)(Double_t(ipoints)/nsegs);
+   Double_t *p0, *p1;
+   Double_t x,y,z, dx,dy,dz;
+   for (Int_t i=0; i<nsegs; i++) {
+      p0 = &array[3*buff.fSegs[3*i+1]];
+      p1 = &array[3*buff.fSegs[3*i+2]];
+      if (i==(nsegs-1)) nperseg = ipoints;
+      dx = (p1[0]-p0[0])/(nperseg+1);
+      dy = (p1[1]-p0[1])/(nperseg+1);
+      dz = (p1[2]-p0[2])/(nperseg+1);
+      for (Int_t j=0; j<nperseg; j++) {
+         x = p0[0] + (j+1)*dx;
+         y = p0[1] + (j+1)*dy;
+         z = p0[2] + (j+1)*dz;
+         array[icrt++] = x; array[icrt++] = y; array[icrt++] = z;
+         ipoints--;
+      }
+   }
+   return kTRUE;
+}      
             
 //_____________________________________________________________________________
 Int_t TGeoBBox::GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_t &dx, Double_t &dy, Double_t &dz) const

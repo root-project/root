@@ -66,6 +66,7 @@ public:
    virtual void          GetBoundingCylinder(Double_t *param) const;
    virtual const TBuffer3D &GetBuffer3D(Int_t reqSections, Bool_t localFrame) const;
    virtual Int_t         GetByteCount() const {return 48;}
+   virtual Bool_t        GetPointsOnSegments(Int_t npoints, Double_t *array) const;
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const;
    virtual void          GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const;
    virtual Int_t         GetNmeshVertices() const;
@@ -140,6 +141,7 @@ public:
    virtual void          GetBoundingCylinder(Double_t *param) const;
    virtual const TBuffer3D &GetBuffer3D(Int_t reqSections, Bool_t localFrame) const;
    virtual Int_t         GetByteCount() const {return 56;}
+   virtual Bool_t        GetPointsOnSegments(Int_t npoints, Double_t *array) const;
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const;
    virtual Int_t         GetNmeshVertices() const;
    virtual void          GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const;
@@ -204,6 +206,7 @@ public:
    virtual Double_t      GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const;
    virtual const TBuffer3D &GetBuffer3D(Int_t reqSections, Bool_t localFrame) const;
    virtual Int_t         GetByteCount() const {return 98;}
+   virtual Bool_t        GetPointsOnSegments(Int_t npoints, Double_t *array) const;
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const;
    virtual void          GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const;
    virtual Int_t         GetNmeshVertices() const;

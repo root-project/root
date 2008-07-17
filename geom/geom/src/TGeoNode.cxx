@@ -213,7 +213,7 @@ void TGeoNode::CheckOverlaps(Double_t ovlp, Option_t *option)
    }   
    msg[19] = '\0';
    timer->Start();
-   geom->GetGeomPainter()->OpProgress("START",icheck,ncheck,timer,kFALSE);
+   geom->GetGeomPainter()->OpProgress(Form("%s          ",fVolume->GetName()),icheck,ncheck,timer,kFALSE);
    fVolume->CheckOverlaps(ovlp,option);
    icheck++;
    TGeoIterator next(fVolume);
@@ -242,8 +242,8 @@ void TGeoNode::CheckOverlaps(Double_t ovlp, Option_t *option)
       obj = (TNamed*)overlaps->At(i);
       obj->SetName(Form("ov%05d",i));
    }
-   Info("CheckOverlaps", "Number of illegal overlaps/extrusions : %d\n", novlps);
    geom->GetGeomPainter()->OpProgress("Check overlaps:",icheck,ncheck,timer,kTRUE);
+   Info("CheckOverlaps", "Number of illegal overlaps/extrusions : %d\n", novlps);
    delete timer;
 }      
 

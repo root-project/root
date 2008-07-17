@@ -744,7 +744,7 @@ Bool_t TGeoArb8::GetPointsOnFacet(Int_t /*index*/, Int_t /*npoints*/, Double_t *
          ymin = TMath::Min(ymin, poly[2*i]);
          ymax = TMath::Max(ymax, poly[2*i]);
       }
-   }      
+   }
    Int_t nshoot = 0;
    Int_t nmiss = 0;
    for (i=0; i<npoints; i++) {
@@ -755,6 +755,7 @@ Bool_t TGeoArb8::GetPointsOnFacet(Int_t /*index*/, Int_t /*npoints*/, Double_t *
             while (nmiss<1000) {
                point[0] = xmin + (xmax-xmin)*gRandom->Rndm();
                point[1] = ymin + (ymax-ymin)*gRandom->Rndm();
+            }   
 
    return InsidePolygon(point[0],point[1],poly);
 */
