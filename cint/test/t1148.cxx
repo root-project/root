@@ -6,68 +6,42 @@
  *
  ************************************************************************/
 
-#ifndef FOO
-#define FOO
+#include <cstdio>
 
-#include <stdio.h>
+using namespace std;
 
-#ifdef __cplusplus 
-extern "C" {
-  void fff(char *foobar) { printf("fff(%s)\n",foobar); } 
+void fff(const char* foobar)
+{
+   printf("fff(%s)\n", foobar);
 }
-#endif
 
-#ifdef __cplusplus 
-extern "C" {  int xxx; }
-#endif
-
-#ifdef __cplusplus 
-extern "C" { 
-#endif   
-
-  void aaa(char *foobar) { printf("aaa(%s)\n",foobar); } 
-
-#ifdef __cplusplus 
-extern "C" { 
-#endif   
-
-  void foo(char *foobar); 
-
-#ifdef __cplusplus
+void aaa(const char* foobar)
+{
+   printf("aaa(%s)\n", foobar);
 }
-#endif
 
-  void ccc(char *foobar) { printf("ccc(%s)\n",foobar); } 
-
-#ifdef __cplusplus
+void ccc(const char* foobar)
+{
+   printf("ccc(%s)\n", foobar);
 }
-#endif
 
-  void ddd(char *foobar) { printf("ddd(%s)\n",foobar); } 
-
-#endif
-
-#if defined(__cplusplus)
-extern "C" { 
-#endif   
-#if defined(__cplusplus)
-extern "C" { 
-#endif   
-
-  void foo(char *foobar) {printf("foo(%s)\n",foobar);}
-
-#if defined(__cplusplus)
+void ddd(const char* foobar)
+{
+   printf("ddd(%s)\n", foobar);
 }
-#endif
-#if defined(__cplusplus)
-}
-#endif
 
-int main() {
-  foo("abc");
-  aaa("abc");
-  ccc("abc");
-  ddd("abc");
-  fff("abc");
-  return 0;
+void foo(const char* foobar)
+{
+   printf("foo(%s)\n", foobar);
 }
+
+int main()
+{
+   foo("abc");
+   aaa("abc");
+   ccc("abc");
+   ddd("abc");
+   fff("abc");
+   return 0;
+}
+
