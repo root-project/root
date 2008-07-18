@@ -49,15 +49,17 @@ unset ${EXPORTS[*]}
 # $LD $LDFLAGS $LDOPTFLAGS $LDDBGFLAGS ${LDOUT}@exe@$EXEEXT ${OBJ}@obj@$OBJEXT ${LIBP}@libpath@ $(subst @lib@,$LIBEXT,${LIBL}) $DEFAULTLIBS
 # $LD $SOFLAGS $LDOPTFLAGS $LDDBGFLAGS ${SOOUT}@so@$SOEXT ${OBJ}@obj@$OBJEXT ${LIBP}@libpath@ $(subst @lib@,$LIBEXT,${LIBL}) $DEFAULTLIBS
 
+# common defaults:
+INPUTMODELOCK=off
 INPUTMODE=cint
+COMP=-c
+INCP=-I
 
 function config_GCC_defaults {
     CC=gcc
-    COMP=-c
     CPP="gcc -E -C"
     COUT="-o "
     COUTEXE="-o "
-    INCP=-I
     CDBGFLAGS=-g
     COPTFLAGS=-O2
     CMACROS="$CMACROS -DG__SHAREDLIB -DG__OSFDLL -DG__ANSI -DG__ERRORCALLBACK -DG__SIGNEDCHAR -DG__NEWSTDHEADER -DG__CINT_VER6 -DG__NATIVELONGLONG -DG__P2FCAST -DG__STD_EXCEPTION"
@@ -97,7 +99,6 @@ function config_GCC_defaults {
     else
         STREAMDIR=stream
     fi
-    INPUTMODELOCK=off
 }
 
 function config_linux {
@@ -224,11 +225,9 @@ function config_msvc7 {
     CC=cl
     CFLAGS="-G5 -nologo -wd4996 -GX"
     CMACROS="-DG__REDIRECTIO -DG__SHAREDLIB -DG__UNIX -DG__WIN32 -DWIN32 -D_WIN32 -DG__NEWSTDHEADER"
-    COMP=-c
     CPP="cl -E -C -nologo"
     COUT=-Fo
     COUTEXE=-Fe
-    INCP=-I
     COPTFLAGS="-O2 -MD"
     CDBGFLAGS="-Zi -MDd"
 
@@ -259,8 +258,6 @@ function config_msvc7 {
     PLATFORMO=v6_winnt
     RM="rm -f"
     MV="mv -f"
-    INPUTMODELOCK=off
-
     AR="lib /OUT:"
 }
 
