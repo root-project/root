@@ -103,6 +103,8 @@ protected:
 
 private:  
 
+  virtual Bool_t processEmptyDataSets() const { return kTRUE ; }
+
   Bool_t initialize() ;
   void initSimMode(RooSimultaneous* pdf, RooAbsData* data, const RooArgSet* projDeps, const char* rangeName, const char* addCoefRangeName) ;    
   void initMPMode(RooAbsReal* real, RooAbsData* data, const RooArgSet* projDeps, const char* rangeName, const char* addCoefRangeName) ;
