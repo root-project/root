@@ -258,7 +258,7 @@ void TGeoArb8::ComputeTwist()
          continue;
       }
       twist[i] = dy1*dx2 - dx1*dy2;
-      if (TMath::Abs(twist[i])<1E-3) {
+      if (TMath::Abs(twist[i])<TGeoShape::Tolerance()) {
          twist[i] = 0;
          continue;
       }
@@ -801,7 +801,6 @@ Double_t TGeoArb8::Safety(Double_t *point, Bool_t in) const
    Double_t safz = fDz-TMath::Abs(point[2]);
    if (!in) safz = -safz;
    Int_t iseg;
-   Double_t safmin = TGeoShape::Big();
    Double_t safe = TGeoShape::Big();
    Double_t lsq, ssq, dx, dy, dpx, dpy, u;
    if (IsTwisted()) {
@@ -860,22 +859,14 @@ Double_t TGeoArb8::Safety(Double_t *point, Bool_t in) const
       return safe;   
    }  
       
+   Double_t saf[5];
+   saf[0] = safz;
       
-   for (iseg=0; iseg<4; iseg++) {
-      safe = SafetyToFace(point,iseg,in);
-      if (safe>0) {
-         if (in && safe<safmin) {
-            safmin = safe;
-            continue;
-         }
-         if (!in && safe<1E10) {
-            if (safmin<1E10) safe = TMath::Max(safe,safmin);
-            else safmin=safe;
-         }
-      }           
-   }
-   if (in) return TMath::Min(safmin, safz);
-   return TMath::Max(safmin, safz);   
+   for (iseg=0; iseg<4; iseg++) saf[iseg+1] = SafetyToFace(point,iseg,in);
+   if (in) safe = saf[TMath::LocMin(5, saf)];
+   else    safe = saf[TMath::LocMax(5, saf)];   
+   if (safe<0) return 0.;
+   return safe;
 }
 
 //_____________________________________________________________________________
@@ -901,25 +892,20 @@ Double_t TGeoArb8::SafetyToFace(Double_t *point, Int_t iseg, Bool_t in) const
    vertices[9] = fXY[iseg+4][0];
    vertices[10] = fXY[iseg+4][1];
    vertices[11] = fDz;
-   Double_t twist = GetTwist(iseg);
    Double_t safe;
    Double_t norm[3];
    Double_t *p1, *p2, *p3;
-   if (twist ==0) {
-      p1 = &vertices[0];
-      p2 = &vertices[9];
-      p3 = &vertices[6];
-      if (IsSamePoint(p2,p3)) {
-         p3 = &vertices[3];
-         if (IsSamePoint(p1,p3)) return TGeoShape::Big(); // skip single segment
-      }
-      GetPlaneNormal(p1,p2,p3,norm);
-      safe = (point[0]-p1[0])*norm[0]+(point[1]-p1[1])*norm[1]+(point[2]-p1[2])*norm[2];
-      if (in) return (-safe);
-      return safe;
+   p1 = &vertices[0];
+   p2 = &vertices[9];
+   p3 = &vertices[6];
+   if (IsSamePoint(p2,p3)) {
+      p3 = &vertices[3];
+      if (IsSamePoint(p1,p3)) return -TGeoShape::Big(); // skip single segment
    }
-   // The face is twisted
-   return TGeoShape::Big();
+   GetPlaneNormal(p1,p2,p3,norm);
+   safe = (point[0]-p1[0])*norm[0]+(point[1]-p1[1])*norm[1]+(point[2]-p1[2])*norm[2];
+   if (in) return (-safe);
+   return safe;
 }
    
 //_____________________________________________________________________________

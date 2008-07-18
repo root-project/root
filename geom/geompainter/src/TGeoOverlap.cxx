@@ -223,3 +223,29 @@ void TGeoOverlap::Sizeof3D() const
    fVolume1->GetShape()->Sizeof3D();
    fVolume2->GetShape()->Sizeof3D();
 }
+
+//______________________________________________________________________________
+void TGeoOverlap::Validate() const
+{
+// Validate this overlap.
+   Double_t point[3];
+   Double_t local[3];
+   Double_t safe1,safe2;
+   Int_t npoints = fMarker->GetN();
+   for (Int_t i=0; i<npoints; i++) {
+      fMarker->GetPoint(i, point[0], point[1], point[2]);
+      if (IsExtrusion()) {
+         fMatrix1->MasterToLocal(point,local);
+         safe1 = fVolume1->GetShape()->Safety(local, kFALSE);
+         printf("point %d: safe1=%f\n", i, safe1);
+      } else {
+         fMatrix1->MasterToLocal(point,local);  
+         safe1 = fVolume1->GetShape()->Safety(local, kTRUE);
+         fMatrix2->MasterToLocal(point,local);  
+         safe2 = fVolume2->GetShape()->Safety(local, kTRUE);
+         printf("point %d: safe1=%f safe2=%f\n", i, safe1,safe2);
+      }
+   }
+}
+         
+         

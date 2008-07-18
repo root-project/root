@@ -102,6 +102,7 @@ public:
    void              SetFirstMatrix(TGeoMatrix *matrix) {*fMatrix1 = matrix;}
    void              SetSecondMatrix(TGeoMatrix *matrix) {*fMatrix2 = matrix;}
    void              SetOverlap(Double_t ovlp)  {fOverlap=ovlp;}
+   void              Validate() const; // *MENU*
    
    ClassDef(TGeoOverlap, 2)         // base class for geometical overlaps
 };
