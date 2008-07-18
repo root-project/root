@@ -1937,9 +1937,10 @@ static char *Format(const char *format, va_list ap)
 char *Form(const char *va_(fmt), ...)
 {
    // Formats a string in a circular formatting buffer. Removes the need to
-   // create and delete short lived strings. Avoid passing Form() pointers
-   // from user programs down to ROOT functions as the circular buffer may
-   // be overwritten downstream by the ROOT internals.
+   // create and delete short lived strings. Don't pass Form() pointers
+   // from user code down to ROOT functions as the circular buffer may
+   // be overwritten downstream. Use Form() results immediately or use
+   // TString::Format() instead.
 
    va_list ap;
    va_start(ap,va_(fmt));
