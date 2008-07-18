@@ -87,7 +87,7 @@ public:
    virtual void          GetBoundingCylinder(Double_t *param) const;
    virtual const TBuffer3D &GetBuffer3D(Int_t reqSections, Bool_t localFrame) const;
    virtual Int_t         GetByteCount() const {return 64;}
-   virtual Bool_t        GetPointsOnSegments(Int_t /*npoints*/, Double_t */*array*/) const {return kFALSE;}
+   virtual Bool_t        GetPointsOnSegments(Int_t /*npoints*/, Double_t * /*array*/) const {return kFALSE;}
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const;
    virtual void          GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const;
    virtual Int_t         GetNmeshVertices() const;

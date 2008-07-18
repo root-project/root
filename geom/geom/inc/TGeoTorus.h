@@ -74,7 +74,7 @@ public:
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const;
    virtual void          GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const;
    virtual Int_t         GetNmeshVertices() const;
-   virtual Bool_t        GetPointsOnSegments(Int_t /*npoints*/, Double_t */*array*/) const {return kFALSE;}
+   virtual Bool_t        GetPointsOnSegments(Int_t /*npoints*/, Double_t * /*array*/) const {return kFALSE;}
    Double_t              GetR() const    {return fR;}
    Double_t              GetRmin() const {return fRmin;}
    Double_t              GetRmax() const {return fRmax;}

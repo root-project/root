@@ -54,7 +54,7 @@ public:
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const;
    virtual void          GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const;
    virtual Int_t         GetNmeshVertices() const;
-   virtual Bool_t        GetPointsOnSegments(Int_t /*npoints*/, Double_t */*array*/) const {return kFALSE;}
+   virtual Bool_t        GetPointsOnSegments(Int_t /*npoints*/, Double_t * /*array*/) const {return kFALSE;}
    virtual void          InspectShape() const;
    virtual Bool_t        IsCylType() const {return kTRUE;}
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;

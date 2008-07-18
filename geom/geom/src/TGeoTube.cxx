@@ -2863,7 +2863,7 @@ void TGeoCtub::SetDimensions(Double_t *param)
 }
 
 //_____________________________________________________________________________
-Bool_t TGeoCtub::GetPointsOnSegments(Int_t /*npoints*/, Double_t */*array*/) const
+Bool_t TGeoCtub::GetPointsOnSegments(Int_t /*npoints*/, Double_t * /*array*/) const
 {
 // Fills array with n random points located on the line segments of the shape mesh.
 // The output array must be provided with a length of minimum 3*npoints. Returns
