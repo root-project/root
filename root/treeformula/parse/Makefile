@@ -6,7 +6,7 @@ CLEAN_TARGETS +=  *.log generatedSel* $(ALL_LIBRARIES) cmake* test.root *.clog  
 #Set the list of target to make while testing
 TEST_TARGETS += QEvent functca cscan gaus aliases templateName BoolOrder \
 				testStringFormula testBoolOpt expotest NonFormulaMean \
-				templateBase strings base
+				templateBase strings base form
 
 # adjust the location of Rules.mk as needed.
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -87,4 +87,7 @@ speedtest.root: runbase_C.$(DllSuf)
 base.clog: speedtest.root
 
 base: base.clog 
+	$(TestDiff)
+
+form: form.log
 	$(TestDiff)
