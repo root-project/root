@@ -778,11 +778,14 @@ Long_t TApplication::ProcessLine(const char *line, Bool_t sync, Int_t *err)
                TROOT::GetMacroPath());
       else {
          char cmd = line[1];
-         if (sync)
-            retval = gInterpreter->ProcessLineSynch(Form(".%c %s%s%s", cmd, mac, aclicMode.Data(),io.Data()),
+         static TString tempbuf;
+         if (sync) {
+            tempbuf.Form(".%c %s%s%s", cmd, mac, aclicMode.Data(),io.Data());
+            retval = gInterpreter->ProcessLineSynch(tempbuf,
                                                    (TInterpreter::EErrorCode*)err);
-         else {
-            retval = gInterpreter->ProcessLine(Form(".%c %s%s%s", cmd, mac, aclicMode.Data(),io.Data()),
+         } else {
+            tempbuf.Form(".%c %s%s%s", cmd, mac, aclicMode.Data(),io.Data());
+            retval = gInterpreter->ProcessLine(tempbuf,
                                               (TInterpreter::EErrorCode*)err);
          }
       }
@@ -931,12 +934,13 @@ again:
       exname += arguments;
       exname += io;
 
+      static TString tempbuf;
       if (tempfile) {
-         retval = gInterpreter->ProcessLineSynch(Form(".x %s", exname.Data()),
-                                        (TInterpreter::EErrorCode*)error);
-      } else
-         retval = gInterpreter->ProcessLineSynch(Form(".X %s", exname.Data()),
-                                        (TInterpreter::EErrorCode*)error);
+         tempbuf.Form(".x %s", exname.Data());
+      } else {
+         tempbuf.Form(".X %s", exname.Data());
+      }
+      retval = gInterpreter->ProcessLineSynch(tempbuf,(TInterpreter::EErrorCode*)error);
    }
 
    delete [] exnam;

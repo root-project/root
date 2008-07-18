@@ -319,13 +319,20 @@ const char *TColor::AsHexString() const
    // to, for example, TGClient::GetColorByName(). String will be reused so
    // copy immediately if needed.
 
+   static TString tempbuf;
+
    Int_t r, g, b, a;
    r = Int_t(GetRed()   * 255);
    g = Int_t(GetGreen() * 255);
    b = Int_t(GetBlue()  * 255);
    a = Int_t(fAlpha     * 255);
 
-   return (a != 255) ? Form("#%02x%02x%02x%02x", a, r, g, b) : Form("#%02x%02x%02x", r, g, b);
+   if (a != 255) {
+      tempbuf.Form("#%02x%02x%02x%02x", a, r, g, b);
+   } else {
+      tempbuf.Form("#%02x%02x%02x", r, g, b);
+   }
+   return tempbuf;
 }
 
 
@@ -368,15 +375,17 @@ void TColor::CreateColorsCircle(Int_t offset, const char *name, UChar_t *rgb)
 {
    // Create the "circle" colors in the Color Wheel
 
+   TString colorname;
    for (Int_t n=0;n<15;n++) {
       Int_t colorn = offset+n-10;
       TColor *color = gROOT->GetColor(colorn);
       if (!color) {
          color = new TColor(colorn,rgb[3*n]/255.,rgb[3*n+1]/255.,rgb[3*n+2]/255.);
          color->SetTitle(color->AsHexString());
-         if      (n>10) color->SetName(Form("%s+%d",name,n-10));
-         else if (n<10) color->SetName(Form("%s-%d",name,10-n));
-         else           color->SetName(Form("%s",name));
+         if      (n>10) colorname.Form("%s+%d",name,n-10);
+         else if (n<10) colorname.Form("%s-%d",name,10-n);
+         else           colorname.Form("%s",name);
+         color->SetName(colorname);
       }
    }
 }
@@ -387,15 +396,17 @@ void TColor::CreateColorsRectangle(Int_t offset, const char *name, UChar_t *rgb)
 {
    // Create the "rectangular" colors in the Color Wheel
 
+   TString colorname;
    for (Int_t n=0;n<20;n++) {
       Int_t colorn = offset+n-9;
       TColor *color = gROOT->GetColor(colorn);
       if (!color) {
          color = new TColor(colorn,rgb[3*n]/255.,rgb[3*n+1]/255.,rgb[3*n+2]/255.);
          color->SetTitle(color->AsHexString());
-         if      (n>9) color->SetName(Form("%s+%d",name,n-9));
-         else if (n<9) color->SetName(Form("%s-%d",name,9-n));
-         else          color->SetName(Form("%s",name));
+         if      (n>9) colorname.Form("%s+%d",name,n-9);
+         else if (n<9) colorname.Form("%s-%d",name,9-n);
+         else          colorname.Form("%s",name);
+         color->SetName(colorname);
       }
    }
 }
@@ -1132,9 +1143,11 @@ const char *TColor::PixelAsHexString(ULong_t pixel)
    // TGClient::GetColorByName(). String will be reused so copy immediately
    // if needed.
 
+   static TString tempbuf;
    Int_t r, g, b;
    Pixel2RGB(pixel, r, g, b);
-   return Form("#%02x%02x%02x", r, g, b);
+   tempbuf.Form("#%02x%02x%02x", r, g, b);
+   return tempbuf;
 }
 
 
