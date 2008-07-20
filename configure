@@ -803,7 +803,7 @@ check_explicit()
 }
 
 #_____________________________________________________________________
-guess_architecture () {
+guess_architecture() {
     # Try to guess the architecture of the host system
     # Note, that there's no attempt at guessing the compiler.
     # The `native' compiler is used in all cases.
@@ -927,6 +927,9 @@ GENREFLEXROOTCINTBATIN=config/genreflex-rootcint.bat.in
 GENREFLEXROOTCINTBATOUT=bin/genreflex-rootcint.bat
 ROOTCINTSTUBSHIN=utils/src/rootcint_nostubs.sh
 ROOTCINTSTUBSHOUT=bin/rootcint_nostubs.sh
+
+# unset global command options that can cause havoc
+unset GREP_OPTIONS
 
 ######################################################################
 #
