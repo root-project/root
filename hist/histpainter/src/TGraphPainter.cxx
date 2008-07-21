@@ -1943,8 +1943,8 @@ void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
    //
    // if option "2" is specified error rectangles are drawn.
    //
-   // if option "3" is specified a filled area is drawn through the end points >
-   // the vertical error bars.
+   // if option "3" is specified a filled area is drawn through the end points
+   // of the vertical error bars.
    //
    // if option "4" is specified a smoothed filled area is drawn through the end
    // points of the vertical error bars.
@@ -2142,8 +2142,8 @@ void TGraphPainter::PaintGraphBentErrors(TGraph *theGraph, Option_t *option)
    // systematic errors on top of a graph with statistical errors.
    // if option "2" is specified error rectangles are drawn.
    //
-   // if option "3" is specified a filled area is drawn through the end points >
-   // the vertical error bars.
+   // if option "3" is specified a filled area is drawn through the end points
+   // of the vertical error bars.
    //
    // if option "4" is specified a smoothed filled area is drawn through the end
    // points of the vertical error bars.
@@ -2350,8 +2350,8 @@ void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
    //
    // if option "2" is specified error rectangles are drawn.
    //
-   // if option "3" is specified a filled area is drawn through the end points of
-   // the vertical error bars.
+   // if option "3" is specified a filled area is drawn through the end points
+   // of the vertical error bars.
    //
    // if option "4" is specified a smoothed filled area is drawn through the end
    // points of the vertical error bars.
