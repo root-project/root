@@ -1124,8 +1124,8 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
    //
    //  chopt='9' :  Force graph to be drawn in high resolution mode.
    //               By default, the graph is drawn in low resolution
-   //               in case the number of points is greater than the number of pixels
-   //               in the current pad.
+   //               in case the number of points is greater than the number of
+   //               pixels in the current pad.
    //
    //  chopt='][' : "Cutoff" style. When this option is selected together with
    //               H option, the first and last vertical lines of the histogram
@@ -1924,29 +1924,32 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
 //______________________________________________________________________________
 void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
 {
-   // Paint this TGraphAsymmErrors with its current attributes
+   // Paint this TGraphAsymmErrors with its current attributes.
    //
-   // by default horizonthal and vertical small lines are drawn at
+   // By default horizonthal and vertical small lines are drawn at
    // the end of the error bars. if option "z" or "Z" is specified,
    // these lines are not drawn.
    //
-   // if option contains ">" an arrow is drawn at the end of the error bars
+   // If option contains ">" an arrow is drawn at the end of the error bars
    // if option contains "|>" a full arrow is drawn at the end of the error bars
    // the size of the arrow is set to 2/3 of the marker size.
    //
    // By default, error bars are drawn. If option "X" is specified,
    // the errors are not drawn (TGraph::Paint equivalent).
    //
-   // if option "[]" is specified only the end vertical/horizonthal lines
+   // If option "||" is specified only the end vertical/horizonthal lines
    // of the error bars are drawn. This option is interesting to superimpose
-   // systematic errors on top of a graph with statistical errors.
+   // systematic errors on top of a graph with statistical errors. The option
+   // "[]" does the same except that it draws additionnal tick marks at the
+   // end of the vertical/horizonthal lines. This makes less ambiguous plots
+   // in case several graphs are drawn on the same picture.
    //
-   // if option "2" is specified error rectangles are drawn.
+   // If option "2" is specified error rectangles are drawn.
    //
-   // if option "3" is specified a filled area is drawn through the end points
+   // If option "3" is specified a filled area is drawn through the end points
    // of the vertical error bars.
    //
-   // if option "4" is specified a smoothed filled area is drawn through the end
+   // If option "4" is specified a smoothed filled area is drawn through the end
    // points of the vertical error bars.
 
    Double_t *xline = 0;
@@ -1969,7 +1972,11 @@ void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
 
    if (strchr(option,'X') || strchr(option,'x')) {PaintGraphSimple(theGraph, option); return;}
    Bool_t brackets = kFALSE;
-   if (strstr(option,"[]")) brackets = kTRUE;
+   Bool_t braticks = kFALSE;
+   if (strstr(option,"||") || strstr(option,"[]")) {
+      brackets = kTRUE;
+      if (strstr(option,"[]")) braticks = kTRUE;
+   }
    Bool_t endLines = kTRUE;
    if (strchr(option,'z')) endLines = kFALSE;
    if (strchr(option,'Z')) endLines = kFALSE;
@@ -2067,7 +2074,13 @@ void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
             arrow.PaintArrow(xl1,y,xl2,y,asize,arrowOpt);
          } else {
             if (!brackets) gPad->PaintLine(xl1,y,xl2,y);
-            if (endLines)  gPad->PaintLine(xl2,y-ty,xl2,y+ty);
+            if (endLines) {
+               gPad->PaintLine(xl2,y-ty,xl2,y+ty);
+               if (braticks) {
+                  gPad->PaintLine(xl2,y-ty,xl2+tx,y-ty);
+                  gPad->PaintLine(xl2,y+ty,xl2+tx,y+ty);
+               }
+            }
          }
       }
       xr1 = x + s2x*cx;
@@ -2077,7 +2090,13 @@ void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
             arrow.PaintArrow(xr1,y,xr2,y,asize,arrowOpt);
          } else {
             if (!brackets) gPad->PaintLine(xr1,y,xr2,y);
-            if (endLines)  gPad->PaintLine(xr2,y-ty,xr2,y+ty);
+            if (endLines) {
+               gPad->PaintLine(xr2,y-ty,xr2,y+ty);
+               if (braticks) {
+                  gPad->PaintLine(xr2,y-ty,xr2-tx,y-ty);
+                  gPad->PaintLine(xr2,y+ty,xr2-tx,y+ty);
+               }
+            }
          }
       }
       yup1 = y + s2y*cy;
@@ -2088,7 +2107,13 @@ void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
             arrow.PaintArrow(x,yup1,x,yup2,asize,arrowOpt);
          } else {
             if (!brackets) gPad->PaintLine(x,yup1,x,yup2);
-            if (endLines)  gPad->PaintLine(x-tx,yup2,x+tx,yup2);
+            if (endLines) {
+               gPad->PaintLine(x-tx,yup2,x+tx,yup2);
+               if (braticks) {
+                  gPad->PaintLine(x-tx,yup2,x-tx,yup2-ty);
+                  gPad->PaintLine(x+tx,yup2,x+tx,yup2-ty);
+               }
+            }
          }
       }
       ylow1 = y - s2y*cy;
@@ -2099,7 +2124,13 @@ void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
             arrow.PaintArrow(x,ylow1,x,ylow2,asize,arrowOpt);
          } else {
             if (!brackets) gPad->PaintLine(x,ylow1,x,ylow2);
-            if (endLines)  gPad->PaintLine(x-tx,ylow2,x+tx,ylow2);
+            if (endLines) {
+               gPad->PaintLine(x-tx,ylow2,x+tx,ylow2);
+               if (braticks) {
+                  gPad->PaintLine(x-tx,ylow2,x-tx,ylow2+ty);
+                  gPad->PaintLine(x+tx,ylow2,x+tx,ylow2+ty);
+               }
+            }
          }
       }
    }
@@ -2124,28 +2155,30 @@ void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
 //_____________________________________________________________________________
 void TGraphPainter::PaintGraphBentErrors(TGraph *theGraph, Option_t *option)
 {
-   // Paint this TGraphBentErrors with its current attributes
+   // Paint this TGraphBentErrors with its current attributes.
    //
-   // by default horizonthal and vertical small lines are drawn at
+   // By default horizonthal and vertical small lines are drawn at
    // the end of the error bars. if option "z" or "Z" is specified,
    // these lines are not drawn.
    //
-   // if option contains ">" an arrow is drawn at the end of the error bars
+   // If option contains ">" an arrow is drawn at the end of the error bars
    // if option contains "|>" a full arrow is drawn at the end of the error bars
    // the size of the arrow is set to 2/3 of the marker size.
    //
    // By default, error bars are drawn. If option "X" is specified,
    // the errors are not drawn (TGraph::Paint equivalent).
    //
-   // if option "[]" is specified only the end vertical/horizonthal lines
+   // If option "||" is specified only the end vertical/horizonthal lines
    // of the error bars are drawn. This option is interesting to superimpose
-   // systematic errors on top of a graph with statistical errors.
-   // if option "2" is specified error rectangles are drawn.
+   // systematic errors on top of a graph with statistical errors. The option
+   // "[]" does the same except that it draws additionnal tick marks at the
+   // end of the vertical/horizonthal lines. This makes less ambiguous plots
+   // in case several graphs are drawn on the same picture.
    //
-   // if option "3" is specified a filled area is drawn through the end points
+   // If option "3" is specified a filled area is drawn through the end points
    // of the vertical error bars.
    //
-   // if option "4" is specified a smoothed filled area is drawn through the end
+   // If option "4" is specified a smoothed filled area is drawn through the end
    // points of the vertical error bars.
 
    Double_t *xline = 0;
@@ -2173,7 +2206,11 @@ void TGraphPainter::PaintGraphBentErrors(TGraph *theGraph, Option_t *option)
 
    if (strchr(option,'X') || strchr(option,'x')) {PaintGraphSimple(theGraph, option); return;}
    Bool_t brackets = kFALSE;
-   if (strstr(option,"[]")) brackets = kTRUE;
+   Bool_t braticks = kFALSE;
+   if (strstr(option,"||") || strstr(option,"[]")) {
+      brackets = kTRUE;
+      if (strstr(option,"[]")) braticks = kTRUE;
+   }
    Bool_t endLines = kTRUE;
    if (strchr(option,'z')) endLines = kFALSE;
    if (strchr(option,'Z')) endLines = kFALSE;
@@ -2274,7 +2311,13 @@ void TGraphPainter::PaintGraphBentErrors(TGraph *theGraph, Option_t *option)
             arrow.PaintArrow(xl1,y,xl2,bxl,asize,arrowOpt);
          } else {
             if (!brackets) gPad->PaintLine(xl1,y,xl2,bxl);
-            if (endLines)  gPad->PaintLine(xl2,bxl-ty,xl2,bxl+ty);
+            if (endLines) {
+               gPad->PaintLine(xl2,bxl-ty,xl2,bxl+ty);
+               if (braticks) {
+                  gPad->PaintLine(xl2,bxl-ty,xl2+tx,bxl-ty);
+                  gPad->PaintLine(xl2,bxl+ty,xl2+tx,bxl+ty);
+               }
+            }
          }
       }
       xr1 = x + s2x*cx;
@@ -2284,7 +2327,13 @@ void TGraphPainter::PaintGraphBentErrors(TGraph *theGraph, Option_t *option)
             arrow.PaintArrow(xr1,y,xr2,bxh,asize,arrowOpt);
          } else {
             if (!brackets) gPad->PaintLine(xr1,y,xr2,bxh);
-            if (endLines)  gPad->PaintLine(xr2,bxh-ty,xr2,bxh+ty);
+            if (endLines) {
+               gPad->PaintLine(xr2,bxh-ty,xr2,bxh+ty);
+               if (braticks) {
+                  gPad->PaintLine(xr2,bxh-ty,xr2-tx,bxh-ty);
+                  gPad->PaintLine(xr2,bxh+ty,xr2-tx,bxh+ty);
+               }
+            }
          }
       }
       yup1 = y + s2y*cy;
@@ -2295,7 +2344,13 @@ void TGraphPainter::PaintGraphBentErrors(TGraph *theGraph, Option_t *option)
             arrow.PaintArrow(x,yup1,byh,yup2,asize,arrowOpt);
          } else {
             if (!brackets) gPad->PaintLine(x,yup1,byh,yup2);
-            if (endLines)  gPad->PaintLine(byh-tx,yup2,byh+tx,yup2);
+            if (endLines) {
+               gPad->PaintLine(byh-tx,yup2,byh+tx,yup2);
+               if (braticks) {
+                  gPad->PaintLine(byh-tx,yup2,byh-tx,yup2-ty);
+                  gPad->PaintLine(byh+tx,yup2,byh+tx,yup2-ty);
+               }
+            }
          }
       }
       ylow1 = y - s2y*cy;
@@ -2306,7 +2361,13 @@ void TGraphPainter::PaintGraphBentErrors(TGraph *theGraph, Option_t *option)
             arrow.PaintArrow(x,ylow1,byl,ylow2,asize,arrowOpt);
          } else {
             if (!brackets) gPad->PaintLine(x,ylow1,byl,ylow2);
-            if (endLines)  gPad->PaintLine(byl-tx,ylow2,byl+tx,ylow2);
+            if (endLines) {
+               gPad->PaintLine(byl-tx,ylow2,byl+tx,ylow2);
+               if (braticks) {
+                  gPad->PaintLine(byl-tx,ylow2,byl-tx,ylow2+ty);
+                  gPad->PaintLine(byl+tx,ylow2,byl+tx,ylow2+ty);
+               }
+            }
          }
       }
    }
@@ -2331,29 +2392,32 @@ void TGraphPainter::PaintGraphBentErrors(TGraph *theGraph, Option_t *option)
 //______________________________________________________________________________
 void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
 {
-   // Paint this TGraphErrors with its current attributes
+   // Paint this TGraphErrors with its current attributes.
    //
-   // by default horizonthal and vertical small lines are drawn at
+   // By default horizonthal and vertical small lines are drawn at
    // the end of the error bars. if option "z" or "Z" is specified,
    // these lines are not drawn.
    //
-   // if option contains ">" an arrow is drawn at the end of the error bars
+   // If option contains ">" an arrow is drawn at the end of the error bars
    // if option contains "|>" a full arrow is drawn at the end of the error bars
    // the size of the arrow is set to 2/3 of the marker size.
    //
    // By default, error bars are drawn. If option "X" is specified,
    // the errors are not drawn (TGraph::Paint equivalent).
    //
-   // if option "[]" is specified only the end vertical/horizonthal lines
+   // If option "||" is specified only the end vertical/horizonthal lines
    // of the error bars are drawn. This option is interesting to superimpose
-   // systematic errors on top of a graph with statistical errors.
+   // systematic errors on top of a graph with statistical errors. The option
+   // "[]" does the same except that it draws additionnal tick marks at the
+   // end of the vertical/horizonthal lines. This makes less ambiguous plots
+   // in case several graphs are drawn on the same picture.
    //
-   // if option "2" is specified error rectangles are drawn.
+   // If option "2" is specified error rectangles are drawn.
    //
-   // if option "3" is specified a filled area is drawn through the end points
+   // If option "3" is specified a filled area is drawn through the end points
    // of the vertical error bars.
    //
-   // if option "4" is specified a smoothed filled area is drawn through the end
+   // If option "4" is specified a smoothed filled area is drawn through the end
    // points of the vertical error bars.
    //
    // Use gStyle->SetErrorX(dx) to control the size of the error along x.
@@ -2381,7 +2445,11 @@ void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
 
    if (strchr(option,'X') || strchr(option,'x')) {PaintGraphSimple(theGraph, option); return;}
    Bool_t brackets = kFALSE;
-   if (strstr(option,"[]")) brackets = kTRUE;
+   Bool_t braticks = kFALSE;
+   if (strstr(option,"||") || strstr(option,"[]")) {
+      brackets = kTRUE;
+      if (strstr(option,"[]")) braticks = kTRUE;
+   }
    Bool_t endLines = kTRUE;
    if (strchr(option,'z')) endLines = kFALSE;
    if (strchr(option,'Z')) endLines = kFALSE;
@@ -2488,7 +2556,13 @@ void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
             arrow.PaintArrow(xl1,y,xl2,y,asize,arrowOpt);
          } else {
             if (!brackets) gPad->PaintLine(xl1,y,xl2,y);
-            if (endLines)  gPad->PaintLine(xl2,y-ty,xl2,y+ty);
+            if (endLines) {
+               gPad->PaintLine(xl2,y-ty,xl2,y+ty);
+               if (braticks) {
+                  gPad->PaintLine(xl2,y-ty,xl2+tx,y-ty);
+                  gPad->PaintLine(xl2,y+ty,xl2+tx,y+ty);
+               }
+            }
          }
       }
       xr1 = x + s2x*cx;
@@ -2498,7 +2572,13 @@ void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
             arrow.PaintArrow(xr1,y,xr2,y,asize,arrowOpt);
          } else {
             if (!brackets) gPad->PaintLine(xr1,y,xr2,y);
-            if (endLines)  gPad->PaintLine(xr2,y-ty,xr2,y+ty);
+            if (endLines) {
+               gPad->PaintLine(xr2,y-ty,xr2,y+ty);
+               if (braticks) {
+                  gPad->PaintLine(xr2,y-ty,xr2-tx,y-ty);
+                  gPad->PaintLine(xr2,y+ty,xr2-tx,y+ty);
+               }
+            }
          }
       }
       yup1 = y + s2y*cy;
@@ -2509,7 +2589,13 @@ void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
             arrow.PaintArrow(x,yup1,x,yup2,asize,arrowOpt);
          } else {
             if (!brackets) gPad->PaintLine(x,yup1,x,yup2);
-            if (endLines)  gPad->PaintLine(x-tx,yup2,x+tx,yup2);
+            if (endLines) {
+               gPad->PaintLine(x-tx,yup2,x+tx,yup2);
+               if (braticks) {
+                  gPad->PaintLine(x-tx,yup2,x-tx,yup2-ty);
+                  gPad->PaintLine(x+tx,yup2,x+tx,yup2-ty);
+               }
+            }
          }
       }
       ylow1 = y - s2y*cy;
@@ -2520,7 +2606,13 @@ void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
             arrow.PaintArrow(x,ylow1,x,ylow2,asize,arrowOpt);
          } else {
             if (!brackets) gPad->PaintLine(x,ylow1,x,ylow2);
-            if (endLines)  gPad->PaintLine(x-tx,ylow2,x+tx,ylow2);
+            if (endLines) {
+               gPad->PaintLine(x-tx,ylow2,x+tx,ylow2);
+               if (braticks) {
+                  gPad->PaintLine(x-tx,ylow2,x-tx,ylow2+ty);
+                  gPad->PaintLine(x+tx,ylow2,x+tx,ylow2+ty);
+               }
+            }
          }
       }
    }
@@ -2845,7 +2937,7 @@ void TGraphPainter::PaintGraphPolar(TGraph *theGraph, Option_t* options)
 //______________________________________________________________________________
 void TGraphPainter::PaintGraphQQ(TGraph *theGraph, Option_t *option)
 {
-   // paint this graphQQ. No options for the time being
+   // Paint this graphQQ. No options for the time being.
 
    TGraphQQ *theGraphQQ = (TGraphQQ*) theGraph;
 
@@ -3147,7 +3239,7 @@ void TGraphPainter::PaintPolyLineHatches(TGraph *theGraph, Int_t n, const Double
 //______________________________________________________________________________
 void TGraphPainter::PaintStats(TGraph *theGraph, TF1 *fit)
 {
-   //  Paint "stats" box with the fit info
+   //  Paint "stats" box with the fit info.
 
    Int_t dofit;
    TPaveStats *stats  = 0;
