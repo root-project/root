@@ -3213,7 +3213,8 @@ void TGeoManager::PrintOverlaps() const
    if (!fOverlaps) return;
    Int_t novlp = fOverlaps->GetEntriesFast();
    if (!novlp) return;
-   fPainter->PrintOverlaps();
+   TGeoManager *geom = (TGeoManager*)this;
+   geom->GetGeomPainter()->PrintOverlaps();
 }
 
 //_____________________________________________________________________________
