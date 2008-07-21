@@ -1794,8 +1794,12 @@ Double_t TBranchElement::GetValue(Int_t j, Int_t len, Bool_t subarr) const
 
    if (!j && fBranchCount) {
       Int_t entry = fTree->GetReadEntry();
-      fBranchCount->TBranch::GetEntry(entry);
-      if (fBranchCount2) {
+      // Since reloading the index, will reset the ClonesArray, let's 
+      // skip the load if we already read this entry.
+      if (entry != fBranchCount->GetReadEntry()) {
+         fBranchCount->TBranch::GetEntry(entry);
+      }
+      if (fBranchCount2 && entry != fBranchCount2->GetReadEntry()) {
          fBranchCount2->TBranch::GetEntry(entry);
       }
    }
