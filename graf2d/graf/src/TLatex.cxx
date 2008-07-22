@@ -1678,7 +1678,7 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
       switch (valign) {
          case 0: y -= fs.Under() ; break;
          case 1: break;
-         case 2: y += fs.Height()*0.5-fs.Under(); break;
+         case 2: y += fs.Height()*0.5-fs.Under(); y++; break;
          case 3: y += fs.Over() ; break;
       }
       switch (halign) {
