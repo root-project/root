@@ -33,7 +33,8 @@ MATHCOREDH1  := $(MODDIRI)/TComplex.h \
                 $(MODDIRI)/TRandom.h \
                 $(MODDIRI)/TRandom1.h \
                 $(MODDIRI)/TRandom2.h \
-                $(MODDIRI)/TRandom3.h
+                $(MODDIRI)/TRandom3.h \
+                $(MODDIRI)/TKDTree.h
 MATHCOREDH2  := $(MODDIRI)/Math/SpecFuncMathCore.h \
                 $(MODDIRI)/Math/DistFuncMathCore.h \
                 $(MODDIRI)/Math/IParamFunction.h \
