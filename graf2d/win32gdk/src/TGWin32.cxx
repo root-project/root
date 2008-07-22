@@ -818,7 +818,7 @@ TGWin32::TGWin32(const char *name, const char *title) : TVirtualX(name,title), f
    // initialize GUI thread and proxy objects
    if (!gROOT->IsBatch() && !gMainThread) {
       gMainThread = new TGWin32MainThread();
-      TGWin32ProxyBase::fgMainThreadId = gMainThread->fId;
+      TGWin32ProxyBase::fgMainThreadId = ::GetCurrentThreadId(); // gMainThread->fId;
       TGWin32VirtualXProxy::fgRealObject = this;
       gPtr2VirtualX = &TGWin32VirtualXProxy::ProxyObject;
       gPtr2Interpreter = &TGWin32InterpreterProxy::ProxyObject;
