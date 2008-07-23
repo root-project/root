@@ -283,33 +283,33 @@ void Cylindrical3D<T>::SetXYZ(Scalar xx, Scalar yy, Scalar zz) {
 template <class T>  
 void Cylindrical3D<T>::SetX(Scalar xx) {  
    GenVector_exception e("Cylindrical3D::SetX() is not supposed to be called");
-   Throw(e);
+   throw e;
    Cartesian3D<Scalar> v(*this); v.SetX(xx); *this = Cylindrical3D<Scalar>(v);
 }
 template <class T>  
 void Cylindrical3D<T>::SetY(Scalar yy) {  
    GenVector_exception e("Cylindrical3D::SetY() is not supposed to be called");
-   Throw(e);
+   throw e;
    Cartesian3D<Scalar> v(*this); v.SetY(yy); *this = Cylindrical3D<Scalar>(v);
 }
 template <class T>  
 void Cylindrical3D<T>::SetR(Scalar r) {  
    GenVector_exception e("Cylindrical3D::SetR() is not supposed to be called");
-   Throw(e);
+   throw e;
    Polar3D<Scalar> v(*this); v.SetR(r); 
    *this = Cylindrical3D<Scalar>(v);
 }
 template <class T>  
 void Cylindrical3D<T>::SetTheta(Scalar theta) {  
    GenVector_exception e("Cylindrical3D::SetTheta() is not supposed to be called");
-   Throw(e);
+   throw e;
    Polar3D<Scalar> v(*this); v.SetTheta(theta); 
    *this = Cylindrical3D<Scalar>(v);
 }
 template <class T>  
 void Cylindrical3D<T>::SetEta(Scalar eta) {  
    GenVector_exception e("Cylindrical3D::SetEta() is not supposed to be called");
-   Throw(e);
+   throw e;
    CylindricalEta3D<Scalar> v(*this); v.SetEta(eta); 
    *this = Cylindrical3D<Scalar>(v);
 }

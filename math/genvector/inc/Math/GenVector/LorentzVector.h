@@ -490,7 +490,7 @@ namespace ROOT {
           Rapidity in the direction of travel: atanh (|P|/E)=.5 log[(E+P)/(E-P)]
        */
        Scalar ColinearRapidity() const {
-          // TODO - It would be good to check that E > Pz and use the Throw()
+          // TODO - It would be good to check that E > P and use the Throw()
           //        mechanism or at least load a NAN if not.
           Scalar ee = E();
           Scalar pp = P();
@@ -577,14 +577,12 @@ namespace ROOT {
                 // to avoid Nan 
                 return 0; 
              else { 
-                GenVector_exception ex ("LorentzVector::Beta() - beta computed for LorentzVector with t = 0. Return an Infinite result");
-                Throw(ex); 
+                GenVector::Throw ("LorentzVector::Beta() - beta computed for LorentzVector with t = 0. Return an Infinite result");
                 return 1./E();
              }	  
           }
           if ( M2() <= 0 ) {     
-             GenVector_exception ex ("LorentzVector::Beta() - beta computed for non-timelike LorentzVector . Result is physically meaningless" );
-             Throw(ex); 
+             GenVector::Throw ("LorentzVector::Beta() - beta computed for non-timelike LorentzVector . Result is physically meaningless" );
           }	  
           return P() / E();
        }  
@@ -598,19 +596,16 @@ namespace ROOT {
              if ( P2() == 0) {
                 return 1;
              } else {
-                GenVector_exception ex ("LorentzVector::Gamma() - gamma computed for LorentzVector with t = 0. Return a zero result");
-                Throw(ex); 
-                return 0;
+                GenVector::Throw ("LorentzVector::Gamma() - gamma computed for LorentzVector with t = 0. Return a zero result");
+
              }
           }
           if ( t2 < v2 ) { 
-             GenVector_exception ex ("LorentzVector::Gamma() - gamma computed for a spacelike LorentzVector. Imaginary result");
-             Throw(ex); 
+             GenVector::Throw ("LorentzVector::Gamma() - gamma computed for a spacelike LorentzVector. Imaginary result");
              return 0;
           }
           else if ( t2 == v2 ) {
-             GenVector_exception ex ("LorentzVector::Gamma() - gamma computed for a lightlike LorentzVector. Infinite result");
-             Throw(ex); 
+             GenVector::Throw ("LorentzVector::Gamma() - gamma computed for a lightlike LorentzVector. Infinite result");
           }
           return 1./std::sqrt(1. - v2/t2 );
        } /* gamma */

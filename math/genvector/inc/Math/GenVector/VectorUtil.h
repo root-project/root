@@ -312,15 +312,13 @@ namespace ROOT {
       */
       template <class LVector, class BoostVector> 
       LVector boost(const LVector & v, const BoostVector & b) { 
-	register double bx = b.X();
-	register double by = b.Y();
-	register double bz = b.Z();
+        register double bx = b.X();
+        register double by = b.Y();
+        register double bz = b.Z();
 	double b2 = bx*bx + by*by + bz*bz;
 	if (b2 >= 1) {
-	  GenVector_exception e ( 
-				 "Beta Vector supplied to set Boost represents speed >= c");
-	  Throw(e);
-	  return LVector();
+           GenVector::Throw ( "Beta Vector supplied to set Boost represents speed >= c");
+           return LVector();
 	}    
 	register double gamma = 1.0 / std::sqrt(1.0 - b2);
 	register double bp = bx*v.X() + by*v.Y() + bz*v.Z();
@@ -343,12 +341,10 @@ namespace ROOT {
       */
       template <class LVector> 
       LVector boostX(const LVector & v, double beta) { 
-	if (beta >= 1) {
-	  GenVector_exception e ( 
-				 "Beta Vector supplied to set Boost represents speed >= c");
-	  Throw(e);
-	  return LVector();
-	}    
+         if (beta >= 1) {
+            GenVector::Throw ("Beta Vector supplied to set Boost represents speed >= c");
+            return LVector();
+         }    
 	register double gamma = 1.0/ std::sqrt(1.0 - beta*beta); 
 	double x2 = gamma * v.X() + gamma * beta * v.T();
 	double t2 = gamma * beta * v.X() + gamma * v.T(); 
@@ -366,10 +362,8 @@ namespace ROOT {
       template <class LVector> 
       LVector boostY(const LVector & v, double beta) { 
 	if (beta >= 1) {
-	  GenVector_exception e ( 
-				 "Beta Vector supplied to set Boost represents speed >= c");
-	  Throw(e);
-	  return LVector();
+           GenVector::Throw ("Beta Vector supplied to set Boost represents speed >= c");
+           return LVector();
 	}    
 	register double gamma = 1.0/ std::sqrt(1.0 - beta*beta); 
 	double y2 = gamma * v.Y() + gamma * beta * v.T();
@@ -388,10 +382,8 @@ namespace ROOT {
       template <class LVector> 
       LVector boostZ(const LVector & v, double beta) {
 	if (beta >= 1) {
-	  GenVector_exception e ( 
-				 "Beta Vector supplied to set Boost represents speed >= c");
-	  Throw(e);
-	  return LVector();
+           GenVector::Throw ( "Beta Vector supplied to set Boost represents speed >= c");
+           return LVector();
 	}    
 	register double gamma = 1.0/ std::sqrt(1.0 - beta*beta); 
 	double z2 = gamma * v.Z() + gamma * beta * v.T();

@@ -253,13 +253,13 @@ void Polar2D<T>::SetXY(Scalar a, Scalar b) {
       template <class T>  
       void Polar2D<T>::SetX(Scalar a) {  
          GenVector_exception e("Polar2D::SetX() is not supposed to be called");
-         Throw(e);
+         throw e;
          Cartesian2D<Scalar> v(*this); v.SetX(a); *this = Polar2D<Scalar>(v);
       }
       template <class T>  
       void Polar2D<T>::SetY(Scalar a) {  
          GenVector_exception e("Polar2D::SetY() is not supposed to be called");
-         Throw(e);
+         throw e;
          Cartesian2D<Scalar> v(*this); v.SetY(a); *this = Polar2D<Scalar>(v);
       }
 

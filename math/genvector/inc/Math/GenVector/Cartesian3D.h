@@ -266,28 +266,28 @@ namespace ROOT {
 template <class T>  
 void Cartesian3D<T>::SetR(Scalar r) {  
    GenVector_exception e("Cartesian3D::SetR() is not supposed to be called");
-   Throw(e);
+   throw e;
    Polar3D<Scalar> v(*this); v.SetR(r); *this = Cartesian3D<Scalar>(v);
 }
 
 template <class T>  
 void Cartesian3D<T>::SetTheta(Scalar theta) {  
    GenVector_exception e("Cartesian3D::SetTheta() is not supposed to be called");
-   Throw(e);
+   throw e;
    Polar3D<Scalar> v(*this); v.SetTheta(theta); *this = Cartesian3D<Scalar>(v);
 }
 
 template <class T>  
 void Cartesian3D<T>::SetPhi(Scalar phi) {  
    GenVector_exception e("Cartesian3D::SetPhi() is not supposed to be called");
-   Throw(e);
+   throw e;
    Polar3D<Scalar> v(*this); v.SetPhi(phi); *this = Cartesian3D<Scalar>(v);
 }
 
 template <class T>  
 void Cartesian3D<T>::SetRho(Scalar rho) {  
    GenVector_exception e("Cartesian3D::SetRho() is not supposed to be called");
-   Throw(e);
+   throw e;
    CylindricalEta3D<Scalar> v(*this); v.SetRho(rho); 
    *this = Cartesian3D<Scalar>(v);
 }
@@ -295,7 +295,7 @@ void Cartesian3D<T>::SetRho(Scalar rho) {
 template <class T>  
 void Cartesian3D<T>::SetEta(Scalar eta) {  
    GenVector_exception e("Cartesian3D::SetEta() is not supposed to be called");
-   Throw(e);
+   throw e;
    CylindricalEta3D<Scalar> v(*this); v.SetEta(eta); 
     *this = Cartesian3D<Scalar>(v);
 }

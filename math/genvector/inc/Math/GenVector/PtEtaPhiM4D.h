@@ -226,9 +226,8 @@ public :
       if (mm >= 0) {
          return std::sqrt(mm);
       } else {
-         GenVector_exception e ("PtEtaPhiM4D::Mt() - Tachyonic:\n"
-                                "    Pz^2 > E^2 so the transverse mass would be imaginary");
-         Throw(e);  
+         GenVector::Throw  ("PtEtaPhiM4D::Mt() - Tachyonic:\n"
+                            "    Pz^2 > E^2 so the transverse mass would be imaginary");
          return -std::sqrt(-mm);
       }
    } 
@@ -260,8 +259,7 @@ private:
    inline void RestrictNegMass() {
       if ( fM >=0 ) return;
       if ( P2() - fM*fM  < 0 ) { 
-         GenVector_exception e("PxPyPzM4D::unphysical value of mass, set to closest physical value");
-         Throw(e);
+         GenVector::Throw ("PxPyPzM4D::unphysical value of mass, set to closest physical value");
          fM = - P();
       }
       return;
@@ -416,25 +414,25 @@ inline void PtEtaPhiM4D<ScalarType>::SetPxPyPzE(Scalar px, Scalar py, Scalar pz,
 template <class ScalarType>  
 void PtEtaPhiM4D<ScalarType>::SetPx(Scalar px) {  
    GenVector_exception e("PtEtaPhiM4D::SetPx() is not supposed to be called");
-   Throw(e);
+   throw e;
    PxPyPzE4D<Scalar> v(*this); v.SetPx(px); *this = PtEtaPhiM4D<Scalar>(v);
 }
 template <class ScalarType>  
 void PtEtaPhiM4D<ScalarType>::SetPy(Scalar py) {  
    GenVector_exception e("PtEtaPhiM4D::SetPx() is not supposed to be called");
-   Throw(e);
+   throw e;
    PxPyPzE4D<Scalar> v(*this); v.SetPy(py); *this = PtEtaPhiM4D<Scalar>(v);
 }
 template <class ScalarType>  
 void PtEtaPhiM4D<ScalarType>::SetPz(Scalar pz) {  
    GenVector_exception e("PtEtaPhiM4D::SetPx() is not supposed to be called");
-   Throw(e);
+   throw e;
    PxPyPzE4D<Scalar> v(*this); v.SetPz(pz); *this = PtEtaPhiM4D<Scalar>(v);
 }
 template <class ScalarType>  
 void PtEtaPhiM4D<ScalarType>::SetE(Scalar energy) {  
    GenVector_exception e("PtEtaPhiM4D::SetE() is not supposed to be called");
-   Throw(e);
+   throw e;
    PxPyPzE4D<Scalar> v(*this); v.SetE(energy);   *this = PtEtaPhiM4D<Scalar>(v);
 }
 

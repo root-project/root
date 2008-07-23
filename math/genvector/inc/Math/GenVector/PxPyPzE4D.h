@@ -156,9 +156,8 @@ public :
       if (mm >= 0) {
          return std::sqrt(mm);
       } else {
-         GenVector_exception e ("PxPyPzE4D::M() - Tachyonic:\n"
-                                "    P^2 > E^2 so the mass would be imaginary");
-         Throw(e);  
+         GenVector::Throw ("PxPyPzE4D::M() - Tachyonic:\n"
+                   "    P^2 > E^2 so the mass would be imaginary");
          return -std::sqrt(-mm);
       }
    }
@@ -190,9 +189,8 @@ public :
       if (mm >= 0) {
          return std::sqrt(mm);
       } else {
-         GenVector_exception e ("PxPyPzE4D::Mt() - Tachyonic:\n"
-                                "    Pz^2 > E^2 so the transverse mass would be imaginary");
-         Throw(e);  
+         GenVector::Throw ("PxPyPzE4D::Mt() - Tachyonic:\n"
+                           "    Pz^2 > E^2 so the transverse mass would be imaginary");
          return -std::sqrt(-mm);
       }
    } 
@@ -369,30 +367,31 @@ namespace Math {
 
     
     // ====== Set member functions for coordinates in other systems =======
+    // throw always exceptions  in this case
 
 template <class ScalarType>  
 void PxPyPzE4D<ScalarType>::SetPt(Scalar pt) {      
    GenVector_exception e("PxPyPzE4D::SetPt() is not supposed to be called");
-   Throw(e);
+   throw e;
    PtEtaPhiE4D<Scalar> v(*this); v.SetPt(pt); *this = PxPyPzE4D<Scalar>(v);
 }
 template <class ScalarType>  
 void PxPyPzE4D<ScalarType>::SetEta(Scalar eta) {  
    GenVector_exception e("PxPyPzE4D::SetEta() is not supposed to be called");
-   Throw(e);
+   throw e; 
    PtEtaPhiE4D<Scalar> v(*this); v.SetEta(eta); *this = PxPyPzE4D<Scalar>(v);
 }
 template <class ScalarType>  
 void PxPyPzE4D<ScalarType>::SetPhi(Scalar phi) {  
    GenVector_exception e("PxPyPzE4D::SetPhi() is not supposed to be called");
-   Throw(e);
+   throw e;
    PtEtaPhiE4D<Scalar> v(*this); v.SetPhi(phi); *this = PxPyPzE4D<Scalar>(v);
 }
 
 template <class ScalarType>  
 void PxPyPzE4D<ScalarType>::SetM(Scalar m) {  
    GenVector_exception e("PxPyPzE4D::SetM() is not supposed to be called");
-   Throw(e);
+   throw e;
    PtEtaPhiM4D<Scalar> v(*this); v.SetM(m); 
    *this = PxPyPzE4D<Scalar>(v);
 }

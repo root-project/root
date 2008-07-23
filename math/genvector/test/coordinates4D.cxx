@@ -55,7 +55,7 @@ struct LessPreciseType<T1, T2, false> {
 
 template <typename Scalar1, typename Scalar2> 
 int
-closeEnough ( Scalar1 s1, Scalar2 s2, std::string const & coord, int ticks ) {
+closeEnough ( Scalar1 s1, Scalar2 s2, std::string const & coord, double ticks ) {
   int ret = 0;
   int pr = std::cout.precision(18);
   Scalar1 eps1 = std::numeric_limits<Scalar1>::epsilon();
@@ -99,7 +99,7 @@ closeEnough ( Scalar1 s1, Scalar2 s2, std::string const & coord, int ticks ) {
 
 
 template <class V1, class V2>
-int compare4D (const V1 & v1, const V2 & v2, int ticks) {
+int compare4D (const V1 & v1, const V2 & v2, double ticks) {
   int ret =0;  
   typedef typename V1::CoordinateType CoordType1;
   typedef typename V2::CoordinateType CoordType2;
@@ -139,10 +139,10 @@ int compare4D (const V1 & v1, const V2 & v2, int ticks) {
 
 
 template <class C>
-int test4D ( const LorentzVector<C> & v, int ticks ) {
+int test4D ( const LorentzVector<C> & v, double ticks ) {
 
 #ifdef DEBUG
-  std::cout <<"\n>>>>> Testing LorentzVector from " << v << " ticks = " << ticks << "\t: ";
+   std::cout <<"\n>>>>> Testing LorentzVector from " << XYZTVector(v) << " ticks = " << ticks << "\t: ";
 #endif
 
   int ret = 0;
@@ -224,6 +224,16 @@ int main () {
   // for z < 0 precision in eta is worse since theta is close to Pi 
   ret |= test4D (XYZTVector ( 1.E-8, 1.E-8, -10.0, 100.0 )   ,1000000000 );
 
+  // test cases with zero mass
+
+  // tick should be p /sqrt(eps) ~ 4 /sqrt(eps)
+  ret |= test4D (PxPyPzMVector ( 1., 2., 3., 0.)  ,  4./std::sqrt(std::numeric_limits<double>::epsilon()) );
+  // take a factor 1.5 in ticks to be conservative
+  ret |= test4D (PxPyPzMVector ( 1., 1., 100., 0.)  ,  150./std::sqrt(std::numeric_limits<double>::epsilon()) );
+  // need a larger  a factor here
+  ret |= test4D (PxPyPzMVector ( 1.E8, 1.E8, 1.E8, 0.)  ,  1.E9/std::sqrt(std::numeric_limits<double>::epsilon()) );
+  // if use 1 here fails
+  ret |= test4D (PxPyPzMVector ( 1.E-8, 1.E-8, 1.E-8, 0.)  ,  2.E-8/std::sqrt(std::numeric_limits<double>::epsilon()) );
 
   return ret;
 }

@@ -185,9 +185,8 @@ public :
       if (mm >= 0) {
          return std::sqrt(mm);
       } else {
-         GenVector_exception e ("PtEtaPhiE4D::M() - Tachyonic:\n"
-                                "    Pt and Eta give P such that P^2 > E^2, so the mass would be imaginary");
-         Throw(e);  
+         GenVector::Throw ("PtEtaPhiE4D::M() - Tachyonic:\n"
+                           "    Pt and Eta give P such that P^2 > E^2, so the mass would be imaginary");
          return -std::sqrt(-mm);
       }
    }
@@ -212,9 +211,8 @@ public :
       if (mm >= 0) {
          return std::sqrt(mm);
       } else {
-         GenVector_exception e ("PtEtaPhiE4D::Mt() - Tachyonic:\n"
-                                "    Pt and Eta give Pz such that Pz^2 > E^2, so the mass would be imaginary");
-         Throw(e);  
+         GenVector::Throw ("PtEtaPhiE4D::Mt() - Tachyonic:\n"
+                           "    Pt and Eta give Pz such that Pz^2 > E^2, so the mass would be imaginary");
          return -std::sqrt(-mm);
       }
    } 
@@ -390,25 +388,25 @@ inline void PtEtaPhiE4D<ScalarType>::SetPxPyPzE(Scalar px, Scalar py, Scalar pz,
 template <class ScalarType>  
 inline void PtEtaPhiE4D<ScalarType>::SetPx(Scalar px) {  
    GenVector_exception e("PtEtaPhiE4D::SetPx() is not supposed to be called");
-   Throw(e);
+   throw e;
    PxPyPzE4D<Scalar> v(*this); v.SetPx(px); *this = PtEtaPhiE4D<Scalar>(v);
 }
 template <class ScalarType>  
 inline void PtEtaPhiE4D<ScalarType>::SetPy(Scalar py) {  
    GenVector_exception e("PtEtaPhiE4D::SetPx() is not supposed to be called");
-   Throw(e);
+   throw e;
    PxPyPzE4D<Scalar> v(*this); v.SetPy(py); *this = PtEtaPhiE4D<Scalar>(v);
 }
 template <class ScalarType>  
 inline void PtEtaPhiE4D<ScalarType>::SetPz(Scalar pz) {  
    GenVector_exception e("PtEtaPhiE4D::SetPx() is not supposed to be called");
-   Throw(e);
+   throw e;
    PxPyPzE4D<Scalar> v(*this); v.SetPz(pz); *this = PtEtaPhiE4D<Scalar>(v);
 }
 template <class ScalarType>  
 inline void PtEtaPhiE4D<ScalarType>::SetM(Scalar m) {  
    GenVector_exception e("PtEtaPhiE4D::SetM() is not supposed to be called");
-   Throw(e);
+   throw e;
    PtEtaPhiM4D<Scalar> v(*this); v.SetM(m); 
    *this = PtEtaPhiE4D<Scalar>(v);
 }

@@ -34,9 +34,8 @@ void BoostX::SetComponents (Scalar bx ) {
    // set component
    Scalar bp2 = bx*bx;
    if (bp2 >= 1) {
-      GenVector_exception e ( 
+      GenVector::Throw ( 
                               "Beta Vector supplied to set BoostX represents speed >= c");
-      Throw(e);
       return;
    }    
    fBeta = bx;
@@ -69,9 +68,8 @@ void BoostX::Rectify() {
    // again.
    
    if (fGamma <= 0) {	
-      GenVector_exception e ( 
+      GenVector::Throw ( 
                               "Attempt to rectify a boost with non-positive gamma");
-      Throw(e);
       return;
    }    
    Scalar beta = fBeta;

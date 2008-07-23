@@ -101,6 +101,19 @@ public :
 
 
    /**
+      construct from any 4D  coordinate system class 
+      implementing X(), Y(), X() and M()
+   */
+   template <class AnyCoordSystem> 
+   PxPyPzM4D & operator = (const AnyCoordSystem & v) { 
+      fX = v.X();  
+      fY = v.Y();  
+      fZ = v.Z();  
+      fM = v.M();
+      return *this;
+   }
+
+   /**
       Set internal data based on an array of 4 Scalar numbers
    */ 
    void SetCoordinates( const Scalar src[] ) { 
@@ -206,9 +219,8 @@ public :
       if (mm >= 0) {
          return std::sqrt(mm);
       } else {
-         GenVector_exception e ("PxPyPzM4D::Mt() - Tachyonic:\n"
-                                "    Pz^2 > E^2 so the transverse mass would be imaginary");
-         Throw(e);  
+         GenVector::Throw ("PxPyPzM4D::Mt() - Tachyonic:\n"
+                           "    Pz^2 > E^2 so the transverse mass would be imaginary");
          return -std::sqrt(-mm);
       }
    } 
@@ -302,18 +314,6 @@ public :
       fM *= a; 
    }
  
-   /**
-      Assignment from a generic coordinate system implementing 
-      x(), y(), z() and t()
-   */
-   template <class AnyCoordSystem> 
-   PxPyPzM4D & operator = (const AnyCoordSystem & v) { 
-      fX = v.x();  
-      fY = v.y();  
-      fZ = v.z();  
-      fM = std::sqrt ( v.t()*v.t() - P2() );
-      return *this;
-   }
 
    /**
       Exact equality
@@ -356,8 +356,7 @@ private:
    inline void RestrictNegMass() {
       if ( fM >=0 ) return;
       if ( P2() - fM*fM  < 0 ) { 
-         GenVector_exception e("PxPyPzM4D::unphysical value of mass, set to closest physical value");
-         Throw(e);
+         GenVector::Throw("PxPyPzM4D::unphysical value of mass, set to closest physical value");
          fM = - P();
       }
       return;
@@ -403,25 +402,25 @@ inline void PxPyPzM4D<ScalarType>::SetPxPyPzE(Scalar px, Scalar py, Scalar pz, S
 template <class ScalarType>  
 inline void PxPyPzM4D<ScalarType>::SetPt(ScalarType pt) {  
    GenVector_exception e("PxPyPzM4D::SetPt() is not supposed to be called");
-   Throw(e);
+   throw e;
    PtEtaPhiE4D<ScalarType> v(*this); v.SetPt(pt); *this = PxPyPzM4D<ScalarType>(v);
 }
 template <class ScalarType>  
 inline void PxPyPzM4D<ScalarType>::SetEta(ScalarType eta) {  
    GenVector_exception e("PxPyPzM4D::SetEta() is not supposed to be called");
-   Throw(e);
+   throw e;
    PtEtaPhiE4D<ScalarType> v(*this); v.SetEta(eta); *this = PxPyPzM4D<ScalarType>(v);
 }
 template <class ScalarType>  
 inline void PxPyPzM4D<ScalarType>::SetPhi(ScalarType phi) {  
    GenVector_exception e("PxPyPzM4D::SetPhi() is not supposed to be called");
-   Throw(e);
+   throw e;
    PtEtaPhiE4D<ScalarType> v(*this); v.SetPhi(phi); *this = PxPyPzM4D<ScalarType>(v);
 }
 template <class ScalarType>  
 inline void PxPyPzM4D<ScalarType>::SetE(ScalarType energy) {  
    GenVector_exception e("PxPyPzM4D::SetE() is not supposed to be called");
-   Throw(e);
+   throw e;
    PxPyPzE4D<ScalarType> v(*this); v.SetE(energy); 
    *this = PxPyPzM4D<ScalarType>(v);
 }

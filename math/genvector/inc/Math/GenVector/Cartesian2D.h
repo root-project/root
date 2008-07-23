@@ -230,7 +230,7 @@ namespace ROOT {
       template <class T>  
       void Cartesian2D<T>::SetR(Scalar r) {  
          GenVector_exception e("Cartesian2D::SetR() is not supposed to be called");
-         Throw(e);
+         throw e;
          Polar2D<Scalar> v(*this); v.SetR(r); *this = Cartesian2D<Scalar>(v);
       }
 
@@ -238,7 +238,7 @@ namespace ROOT {
       template <class T>  
       void Cartesian2D<T>::SetPhi(Scalar phi) {  
          GenVector_exception e("Cartesian2D::SetPhi() is not supposed to be called");
-         Throw(e);
+         throw e;
          Polar2D<Scalar> v(*this); v.SetPhi(phi); *this = Cartesian2D<Scalar>(v);
       }
 

@@ -33,9 +33,8 @@ void BoostY::SetComponents (Scalar by) {
    // set component
    Scalar bp2 = by*by;
    if (bp2 >= 1) {
-      GenVector_exception e ( 
+      GenVector::Throw( 
                               "Beta Vector supplied to set BoostY represents speed >= c");
-      Throw(e);
       return;
    }    
    fBeta = by;
@@ -68,9 +67,8 @@ void BoostY::Rectify() {
    // again.
    
    if (fGamma <= 0) {	
-      GenVector_exception e ( 
+      GenVector::Throw ( 
                               "Attempt to rectify a boost with non-positive gamma");
-      Throw(e);
       return;
    }    
    Scalar beta = fBeta;
