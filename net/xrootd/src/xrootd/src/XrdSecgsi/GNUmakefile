@@ -28,7 +28,7 @@ else
 ifneq ($(LIBSSL),)
 
 LIBUTIL = $(LIBDIR)/libXrdCryptossl.a \
-	$(LIBDIR)/libXrdCrypto.a $(LIBDIR)/libXrdSut.a $(LIBDIR)/libXrdOuc.a
+	$(LIBDIR)/libXrdCrypto.a $(LIBDIR)/libXrdSut.a $(LIBDIR)/libXrdOuc.a $(LIBDIR)/libXrdSys.a
 
 BINLIBS = $(LIBSSL) $(LIBUTIL)
 
@@ -36,7 +36,7 @@ LIBLIBS = $(LIBSSL) $(LIBUTIL)
 
 else
 
-LIBUTIL = $(LIBDIR)/libXrdCrypto.a $(LIBDIR)/libXrdSut.a $(LIBDIR)/libXrdOuc.a
+LIBUTIL = $(LIBDIR)/libXrdCrypto.a $(LIBDIR)/libXrdSut.a $(LIBDIR)/libXrdOuc.a $(LIBDIR)/libXrdSys.a
 
 BINLIBS = $(LIBUTIL)
 
