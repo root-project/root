@@ -21,42 +21,77 @@
 
 ClassImp(TPaletteAxis)
 
+
 //______________________________________________________________________________
-//
-// a TPaletteAxis object is used to display the color palette when
-// drawing 2-d histograms.
-// The object is automatically created when drawing a 2-D histogram
-// when the option "z" is specified.
-// The object is added to the histogram list of functions and can be retrieved
-// and its attributes changed with:
-//  TPaletteAxis *palette = (TPaletteAxis*)h->GetListOfFunctions()->FindObject("palette");
-//
-// The palette can be interactively moved and resized. The context menu
-// can be used to set the axis attributes.
-//
-// It is possible to select a range on the axis to set the min/max in z
-//
-//Begin_Html
-/*
-<img src="gif/palette.gif">
-*/
-//End_Html
-//
+/* Begin_Html
+<center><h2>The palette painting class</h2></center>
+
+A <tt>TPaletteAxis</tt> object is used to display the color palette when
+drawing 2-d histograms.
+<p>
+The <tt>TPaletteAxis</tt> is automatically created drawn when drawing a 2-D
+histogram when the option "Z" is specified.
+<p>
+A <tt>TPaletteAxis</tt> object is added to the histogram list of functions and
+can be retrieved doing:
+<pre>
+   TPaletteAxis *palette = (TPaletteAxis*)h->GetListOfFunctions()->FindObject("palette");
+</pre>
+then the pointer <tt>palette</tt> can be used to change the pallette attributes.
+<p>
+Because the palette is created at painting time only, one must issue a:
+<pre>
+   gPad->Update();
+</pre>
+before retrieving the palette pointer in order to create the palette. The following
+macro gives an example.
+
+End_Html
+Begin_Macro(source)
+{
+   TCanvas *c1 = new TCanvas("c1","c1",600,400);
+   TH2F *h2 = new TH2F("h2","Example of a resized palette ",40,-4,4,40,-20,20);
+   Float_t px, py;
+   for (Int_t i = 0; i < 25000; i++) {
+      gRandom->Rannor(px,py);
+      h2->Fill(px,5*py);
+   }
+   gStyle->SetPalette(1);
+   h2->Draw("COLZ");
+   gPad->Update();
+   TPaletteAxis *palette = (TPaletteAxis*)h2->GetListOfFunctions()->FindObject("palette");
+   palette->SetY2NDC(0.7);
+   return c1;
+}
+End_Macro
+Begin_Html
+
+<tt>TPaletteAxis</tt> inherits from <tt>TBox</tt> and <tt>TPave</tt>. The methods
+allowing to specify the palette position are inherited from these two classes.
+<p>
+The palette can be interactively moved and resized. The context menu
+can be used to set the axis attributes.
+<p>
+It is possible to select a range on the axis to set the min/max in z
+
+End_Html */
+
 
 //______________________________________________________________________________
 TPaletteAxis::TPaletteAxis(): TPave()
 {
-// palette default constructor
+   // Palette default constructor.
 
    fH  = 0;
    SetName("");
 }
 
+
 //______________________________________________________________________________
 TPaletteAxis::TPaletteAxis(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, TH1 *h)
        :TPave(x1,y1,x2,y2)
 {
-// palette normal constructor
+   // Palette normal constructor.
 
    fH = h;
    SetName("palette");
@@ -65,35 +100,41 @@ TPaletteAxis::TPaletteAxis(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, T
    if (gPad->GetView()) SetBit(kHasView);
 }
 
+
 //______________________________________________________________________________
 TPaletteAxis::~TPaletteAxis()
 {
-// palette destructor
+   // Palette destructor.
+
    if (fH) fH->GetListOfFunctions()->Remove(this);
 }
+
 
 //______________________________________________________________________________
 TPaletteAxis::TPaletteAxis(const TPaletteAxis &palette) : TPave(palette)
 {
-// palette copy constructor
+   // Palette copy constructor.
+
    ((TPaletteAxis&)palette).Copy(*this);
 }
+
 
 //______________________________________________________________________________
 void TPaletteAxis::Copy(TObject &obj) const
 {
-//*-*-*-*-*-*-*-*-*-*-*Copy this pave to pave*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ======================
+   // Copy a palette to a palette.
 
    TPave::Copy(obj);
    ((TPaletteAxis&)obj).fH    = fH;
    ((TPaletteAxis&)obj).fName = fName;
 }
 
+
 //______________________________________________________________________________
 Int_t TPaletteAxis::DistancetoPrimitive(Int_t px, Int_t py)
 {
-   //check if mouse on the axis region
+   // Check if mouse on the axis region.
+
    Int_t plxmax = gPad->XtoAbsPixel(fX2);
    Int_t plymin = gPad->YtoAbsPixel(fY1);
    Int_t plymax = gPad->YtoAbsPixel(fY2);
@@ -103,10 +144,12 @@ Int_t TPaletteAxis::DistancetoPrimitive(Int_t px, Int_t py)
    return TPave::DistancetoPrimitive(px,py);
 }
 
+
 //______________________________________________________________________________
 void TPaletteAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-   //check if mouse on the axis region
+   // Check if mouse on the axis region.
+
    static Int_t kmode = 0;
    Int_t plxmin = gPad->XtoAbsPixel(fX1);
    Int_t plxmax = gPad->XtoAbsPixel(fX2);
@@ -114,7 +157,7 @@ void TPaletteAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       if (event == kButton1Down) kmode = 1;
       TBox::ExecuteEvent(event,px,py);
       if (event == kButton1Up) kmode = 0;
-//*-* In case pave coordinates have been modified, recompute NDC coordinates
+      // In case palette coordinates have been modified, recompute NDC coordinates
       Double_t dpx  = gPad->GetX2() - gPad->GetX1();
       Double_t dpy  = gPad->GetY2() - gPad->GetY1();
       Double_t xp1  = gPad->GetX1();
@@ -196,12 +239,12 @@ void TPaletteAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    }
 }
 
+
 //______________________________________________________________________________
 char *TPaletteAxis::GetObjectInfo(Int_t /* px */, Int_t py) const
 {
-//   Redefines TObject::GetObjectInfo.
-//   Displays the z value corresponding to cursor position py
-// 
+   // Displays the z value corresponding to cursor position py.
+
    Double_t z;
    static char info[64];
 
@@ -230,7 +273,7 @@ char *TPaletteAxis::GetObjectInfo(Int_t /* px */, Int_t py) const
 //______________________________________________________________________________
 void TPaletteAxis::Paint(Option_t *)
 {
-// Paint the palette
+   // Paint the palette.
 
    ConvertNDCtoPad();
 
@@ -302,6 +345,7 @@ void TPaletteAxis::Paint(Option_t *)
    fAxis.PaintAxis(xmax,ymin,xmax,ymax,wmin,wmax,ndiv,chopt);
 }
 
+
 //______________________________________________________________________________
 void TPaletteAxis::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
@@ -330,6 +374,7 @@ void TPaletteAxis::SavePrimitive(ostream &out, Option_t * /*= ""*/)
    SaveFillAttributes(out,"palette",-1,-1);
    SaveLineAttributes(out,"palette",1,1,1);
 }
+
 
 //______________________________________________________________________________
 void TPaletteAxis::UnZoom()
