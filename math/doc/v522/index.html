@@ -2,3 +2,18 @@
 <hr> 
 <a name="math"></a> 
 <h3>Math Libraries</h3>
+<hr>
+<h4>MathCore</h4>
+<ul>
+ <li><bf><tt>TKDTree</tt></bf>: new class for represeting a kd-tree (a k-dimensional tree). See the <a href="http://root.cern.ch/root/htmldoc/TKDTree.html">TKDTree class documentation</a> for a detailed description of the method.
+  </li>
+  <li>
+  Fixed a bug in the <tt>ROOT::Math::landau_pdf</tt> function. Now it evaluates to the correct normalized distribution when the scale factor is different than 1.</li>
+  </ul>
+
+  <h4>GenVector</h4>
+<ul>
+  <li>Change the way the exception are thrown in the package (class <tt>GenVector_exception</tt>). Now, the GenVector_exception class is created only when the throwing of exception is enabled. This avoids the allocation of an un-needed <tt>std::string</tt>. This problem was observed in CMS when converting from 4D-vectors based on mass  to standard (x,y,z,t) vectors, when the mass is zero. In this case, a numerical error creates artifically small negative masses returned by the (x,y,z,t) vector. Eventually a protection could be added when calcuting M2(), to avoid negative values due to numerical rounding.<li>  
+ <li>Fix a problem in the assignment operator of the <tt>ROOT::Math::PxPyPzM4D</tt> class. Avoid having nan when converting for example from PxPyPzME4D to PxPyPzM4D when the mass is negative. </li> 
+<li>Throw always exception in the non-supported setters (i.e. SetPt on a PxPyPzEVector) methods, which are generated only for the CINT dictionary. These methods flag a compiled-error when running in C++ mode.</li>
+</ul>
