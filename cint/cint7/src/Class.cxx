@@ -196,17 +196,21 @@ long Cint::G__ClassInfo::Property()
 int Cint::G__ClassInfo::NDataMembers()
 {
 
-  if (IsValid())
-    return G__Dict::GetDict().GetScope(tagnum).DataMemberSize();
-  return -1;
+   if (IsValid()) {
+      G__incsetup_memvar((int)tagnum);
+      return G__Dict::GetDict().GetScope(tagnum).DataMemberSize();
+   }
+   return -1;
 }
 
 ///////////////////////////////////////////////////////////////////////////
 int Cint::G__ClassInfo::NMethods()
 {
-  if (IsValid())
-    return G__Dict::GetDict().GetScope(tagnum).FunctionMemberSize();
-  return -1;
+   if (IsValid()) {
+      G__incsetup_memfunc((int)tagnum);
+      return G__Dict::GetDict().GetScope(tagnum).FunctionMemberSize();
+   }
+   return -1;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -782,15 +786,21 @@ int Cint::G__ClassInfo::HasDefaultConstructor()
 ///////////////////////////////////////////////////////////////////////////
 int Cint::G__ClassInfo::HasMethod(const char* fname)
 {
-  if (G__Dict::GetDict().GetScope(tagnum).FunctionMemberByName(std::string(fname))) return 1;
-  return 0;
+   if (IsValid()) {
+      G__incsetup_memfunc((int)tagnum);
+      if (G__Dict::GetDict().GetScope(tagnum).FunctionMemberByName(std::string(fname))) return 1;
+   }
+   return 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////
 int Cint::G__ClassInfo::HasDataMember(const char* name)
 {
-  if (G__Dict::GetDict().GetScope(tagnum).DataMemberByName(std::string(name))) return 1;
-  return 0;
+   if (IsValid()) {
+      G__incsetup_memvar((int)tagnum);
+      if (G__Dict::GetDict().GetScope(tagnum).DataMemberByName(std::string(name))) return 1;
+   }
+   return 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////
