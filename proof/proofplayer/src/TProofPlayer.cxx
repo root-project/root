@@ -721,6 +721,8 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
    fExitStatus = kFinished;
    fOutput = 0;
 
+   TCleanup clean(this);
+
    SafeDelete(fSelector);
    fSelectorClass = 0;
    Int_t version = -1;
@@ -743,7 +745,6 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
       fSelStatus = new TStatus;
       fOutput->Add(fSelStatus);
 
-      TCleanup clean(this);
       SetupFeedback();
 
       fSelector->SetOption(option);
