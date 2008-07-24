@@ -36,7 +36,10 @@ public:
    Index   GetNPoints() { return fNPoints; }
    Index   GetNDim()    { return fNDim; }
 
+#ifndef __CINT__  // dictionary gives a warning with gcc4   and m32
    Bool_t  FindNearestNeighbors(const Value *point, const Int_t kNN, Index *&i, Value *&d);
+#endif
+
    Index   FindNode(const Value * point);
    void    FindPoint(Value * point, Index &index, Int_t &iter);
    void    FindInRangeA(Value * point, Value * delta, Index *res , Index &npoints,Index & iter, Int_t bnode);
