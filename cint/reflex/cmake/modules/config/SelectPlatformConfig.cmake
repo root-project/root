@@ -6,7 +6,7 @@ ELSEIF (CMAKE_SYSTEM_NAME MATCHES "AIX")
    SET(REFLEX_PLATFORM_CONFIG "config/platform/AIX")
 ELSEIF (CMAKE_SYSTEM_NAME MATCHES "SunOS")
    # Solaris
-   SET(MUREX_PLATFORM_CONFIG "config/platform/Solaris")
+   SET(REFLEX_PLATFORM_CONFIG "config/platform/Solaris")
 ELSEIF (CYGWIN)
    # cygwin is not win32:
    SET(REFLEX_PLATFORM_CONFIG "config/platform/Cygwin")
