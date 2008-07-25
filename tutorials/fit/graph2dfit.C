@@ -9,7 +9,7 @@
 #include <TF2.h>
 #include <TH1.h>
 
-void graph2dfit()
+TCanvas* graph2dfit()
 {
    gStyle->SetOptStat(0);
    gStyle->SetOptFit();
@@ -88,4 +88,5 @@ void graph2dfit()
    c->cd(4); h2->Fit("gaus","Q") ; h2->Draw();
    c->cd(6); h3->Fit("gaus","Q") ; h3->Draw();
    c->cd();
+   return c;
 }
