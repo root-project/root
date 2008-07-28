@@ -133,14 +133,14 @@ distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(MATHCOREDEP) $(MATHCOREDS) $(MATHCOREDH) \
 		   $(MATHCORELIB) $(MATHCOREMAP)
 		@rm -rf include/Math include/Fit
-		@cd $(MATHCOREDIR)/test; make distclean
-		@cd $(MATHCOREDIR)/test/fit; make distclean
+		@cd $(MATHCOREDIR)/test; $(MAKE) distclean
+		@cd $(MATHCOREDIR)/test/fit; $(MAKE) distclean
 
 distclean::     distclean-$(MODNAME)
 
 test-$(MODNAME): all-$(MODNAME)
-		@cd $(MATHCOREDIR)/test; make
-		@cd $(MATHCOREDIR)/test/fit; make
+		@cd $(MATHCOREDIR)/test; $(MAKE)
+		@cd $(MATHCOREDIR)/test/fit; $(MAKE)
 
 ##### extra rules ######
 $(MATHCOREO): CXXFLAGS += -DUSE_ROOT_ERROR

@@ -74,11 +74,11 @@ $(QTGSIMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(QTGSIL)
 all-$(MODNAME): $(QTGSILIB) $(QTGSIMAP)
 
 test-$(MODNAME): $(QTGSILIB)
-		cd $(QTGSIDIR)/test; make $(QTTESTOPTS)
+		cd $(QTGSIDIR)/test; $(MAKE) $(QTTESTOPTS)
 
 clean-$(MODNAME):
 		@rm -f $(QTGSIO) $(QTGSIMOCO)
-		-@cd $(QTGSIDIR)/test; make clean
+		-@cd $(QTGSIDIR)/test; $(MAKE) clean
 
 clean::         clean-$(MODNAME)
 
