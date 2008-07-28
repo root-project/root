@@ -134,6 +134,8 @@ void TObjArray::AddFirst(TObject *obj)
    // use either a TList or a TOrdCollection.
 
    fCont[0] = obj;
+   if (fLast == -1)
+      fLast = 0;
    Changed();
 }
 
@@ -635,16 +637,16 @@ void TObjArray::SetLast(Int_t last)
 //______________________________________________________________________________
 void TObjArray::Randomize(Int_t ntimes)
 {
-   //Randomize objects inside the array, ie permute randomly objects.
-   //fLast being the index of the last entry in the array, the following
-   //algorithm is applied to the array.
-   // -for each entry j between 0 and fLast, another entry k is chosen randomly
-   //  between 0 and fLast.
-   // -the objects at j and k are swapped.
-   // -this process is repeated ntimes (ntimes=1 by default)
+   // Randomize objects inside the array, i.e. permute randomly objects.
+   // With fLast being the index of the last entry in the array, the following
+   // algorithm is applied to the array:
+   //   - for each entry j between 0 and fLast, another entry k is chosen
+   //     randomly between 0 and fLast.
+   //   - the objects at j and k are swapped.
+   //   - this process is repeated ntimes (ntimes = 1 by default).
 
-   for (Int_t i=0;i<ntimes;i++) {
-      for (Int_t j=0;j<fLast;j++) {
+   for (Int_t i = 0; i < ntimes; i++) {
+      for (Int_t j = 0; j < fLast; j++) {
 #ifdef R__WIN32
          Int_t k = (Int_t)(fLast*rand()/(RAND_MAX+1.0));
 #else
