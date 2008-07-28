@@ -2161,7 +2161,8 @@ Int_t TGeoManager::Parse(const char *expr, TString &expr1, TString &expr2, TStri
          level--;
          continue;
       }
-      if (level<levmin) {
+      // Take LAST operator at lowest level (revision 28/07/08)
+      if (level<=levmin) {
          if (e0(i)=='+') {
             boolop = 1; // union
             levmin = level;

@@ -89,6 +89,7 @@ TGeoXtru::TGeoXtru(Int_t nz)
    SetShapeBit(TGeoShape::kGeoXtru);
    if (nz<2) {
       Error("ctor", "Cannot create TGeoXtru %s with less than 2 Z planes", GetName());
+      SetShapeBit(TGeoShape::kGeoBad);
       return;
    }
    fNvert = 0;
@@ -226,6 +227,7 @@ void TGeoXtru::ComputeBBox()
 // compute bounding box of the pcon
    if (!fX || !fZ || !fNvert) {
       Error("ComputeBBox", "In shape %s polygon not defined", GetName());
+      SetShapeBit(TGeoShape::kGeoBad);
       return;
    }   
    Double_t zmin = fZ[0];
@@ -584,7 +586,18 @@ Bool_t TGeoXtru::DefinePolygon(Int_t nvert, const Double_t *xv, const Double_t *
 // *NOTE* should be called before DefineSection or ctor with 'param'
    if (nvert<3) {
       Error("DefinePolygon","In shape %s cannot create polygon with less than 3 vertices", GetName());
+      SetShapeBit(TGeoShape::kGeoBad);
       return kFALSE;
+   }
+   for (Int_t i=0; i<nvert-1; i++) {
+      for (Int_t j=i+1; j<nvert; j++) {
+         if (TMath::Abs(xv[i]-xv[j])<TGeoShape::Tolerance() &&
+             TMath::Abs(yv[i]-yv[j])<TGeoShape::Tolerance()) {
+             Error("DefinePolygon","In shape %s 2 vertices cannot be identical",GetName());
+             SetShapeBit(TGeoShape::kGeoBad);
+//             return kFALSE;
+          }   
+      }
    }
    fNvert = nvert;
    if (fX) delete [] fX;
@@ -604,6 +617,7 @@ Bool_t TGeoXtru::DefinePolygon(Int_t nvert, const Double_t *xv, const Double_t *
    fPoly = new TGeoPolygon(nvert);
    fPoly->SetXY(fXc,fYc); // initialize with current coordinates
    fPoly->FinishPolygon();
+   if (TestShapeBit(TGeoShape::kGeoBad)) InspectShape();
    return kTRUE;
 }
 
@@ -1014,6 +1028,7 @@ void TGeoXtru::SetDimensions(Double_t *param)
    fNz = (Int_t)param[0];   
    if (fNz<2) {
       Error("SetDimensions","Cannot create TGeoXtru %s with less than 2 Z planes",GetName());
+      SetShapeBit(TGeoShape::kGeoBad);
       return;
    }
    if (fZ) delete [] fZ;

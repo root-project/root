@@ -48,8 +48,10 @@ private :
    Double_t        *fVal2;            //! Array of timing per volume.
    Bool_t          *fFlags;           //! Array of flags per volume.
    TStopwatch      *fTimer;           //! Timer
+   Int_t            fNchecks;         //! Number of checks for current volume
 // methods
    void             CleanPoints(Double_t *points, Int_t &numPoints) const;
+   Int_t            NChecksPerVolume(TGeoVolume *vol);
    Int_t            PropagateInGeom(Double_t *, Double_t *);
    void             Score(TGeoVolume *, Int_t, Double_t);
    Double_t         TimingPerVolume(TGeoVolume *);

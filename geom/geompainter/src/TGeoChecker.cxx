@@ -106,7 +106,8 @@ TGeoChecker::TGeoChecker()
              fVal1(NULL),
              fVal2(NULL),
              fFlags(NULL),
-             fTimer(NULL)
+             fTimer(NULL),
+             fNchecks(0)
 {
 // Default constructor
 }
@@ -122,7 +123,8 @@ TGeoChecker::TGeoChecker(TGeoManager *geom)
              fVal1(NULL),
              fVal2(NULL),
              fFlags(NULL),
-             fTimer(NULL)
+             fTimer(NULL),
+             fNchecks(0)
 {
 // Constructor for a given geometry
    fBuff1 = new TBuffer3D(TBuffer3DTypes::kGeneric,500,3*500,0,0,0,0);
@@ -190,7 +192,8 @@ void TGeoChecker::OpProgress(const char *opname, Long64_t current, Long64_t size
    }
    if (refresh && oneoftwo) {
       nname = oname;
-      oname = Form("done %d",nrefresh);
+      Int_t pctdone = (Int_t)(100.*nrefresh/fNchecks);
+      oname = Form("== %d%% ==", pctdone);
       Int_t ntimes = nname.Length()-oname.Length();
       if (ntimes>0) oname.Append(' ',ntimes);
    }         
@@ -1013,12 +1016,101 @@ void TGeoChecker::CheckOverlapsBySampling(TGeoVolume *vol, Double_t /* ovlp */, 
 }   
 
 //______________________________________________________________________________
+Int_t TGeoChecker::NChecksPerVolume(TGeoVolume *vol)
+{
+// Compute number of overlaps combinations to check per volume
+   if (vol->GetFinder()) return 0;
+   UInt_t nd = vol->GetNdaughters();
+   if (!nd) return 0;
+   Bool_t is_assembly = vol->IsAssembly();
+   TGeoIterator next1(vol);
+   TGeoIterator next2(vol);
+   Int_t nchecks = 0;
+   TGeoNode *node;
+   UInt_t id;
+   if (!is_assembly) {      
+      while ((node=next1())) {
+         if (node->IsOverlapping()) {
+            next1.Skip();
+            continue;
+         }   
+         if (!node->GetVolume()->IsAssembly()) {
+            nchecks++;
+            next1.Skip();
+         }
+      }            
+   }
+   // now check if the daughters overlap with each other
+   if (nd<2) return nchecks;
+   TGeoVoxelFinder *vox = vol->GetVoxels();
+   if (!vox) return nchecks;
+
+
+   TGeoNode *node1, *node01, *node02;
+   Int_t novlp;
+   Int_t *ovlps;
+   Int_t ko;
+   UInt_t io;
+   for (id=0; id<nd; id++) {  
+      node01 = vol->GetNode(id);
+      if (node01->IsOverlapping()) continue;
+      vox->FindOverlaps(id);
+      ovlps = node01->GetOverlaps(novlp);
+      if (!ovlps) continue;
+      for (ko=0; ko<novlp; ko++) { // loop all possible overlapping candidates
+         io = ovlps[ko];           // (node1, shaped, matrix1, points, fBuff1)
+         if (io<=id) continue;
+         node02 = vol->GetNode(io);
+         if (node02->IsOverlapping()) continue;        
+        
+         // We have to check node against node1, but they may be assemblies
+         if (node01->GetVolume()->IsAssembly()) {
+            next1.Reset(node01->GetVolume());
+            while ((node=next1())) {
+               if (!node->GetVolume()->IsAssembly()) {
+                  if (node02->GetVolume()->IsAssembly()) {
+                     next2.Reset(node02->GetVolume());
+                     while ((node1=next2())) {
+                        if (!node1->GetVolume()->IsAssembly()) {
+                           nchecks++;
+                           next2.Skip();
+                        }
+                     }
+                  } else {
+                     nchecks++;
+                  }
+                  next1.Skip();
+               }
+            }
+         } else {
+            // node not assembly         
+            if (node02->GetVolume()->IsAssembly()) { 
+               next2.Reset(node02->GetVolume());
+               while ((node1=next2())) {
+                  if (!node1->GetVolume()->IsAssembly()) {
+                     nchecks++;
+                     next2.Skip();
+                  }
+               }
+            } else {
+               // node1 also not assembly
+               nchecks++;
+            }
+         }                         
+      }                
+      node01->SetOverlaps(0,0);
+   }   
+   return nchecks;
+}      
+
+//______________________________________________________________________________
 void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *option)
 {
 // Check illegal overlaps for volume VOL within a limit OVLP.
    if (vol->GetFinder()) return;
    UInt_t nd = vol->GetNdaughters();
    if (!nd) return;
+   fNchecks = NChecksPerVolume((TGeoVolume*)vol);
    Bool_t sampling = kFALSE;
    TString opt(option);
    opt.ToLower();
@@ -1087,8 +1179,8 @@ void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *
          node02 = vol->GetNode(io);
          if (node02->IsOverlapping()) continue;        
          // Try to fasten-up things...
-         if (!TGeoBBox::AreOverlapping((TGeoBBox*)node01->GetVolume()->GetShape(), node01->GetMatrix(),
-                                       (TGeoBBox*)node02->GetVolume()->GetShape(), node02->GetMatrix())) continue;
+//         if (!TGeoBBox::AreOverlapping((TGeoBBox*)node01->GetVolume()->GetShape(), node01->GetMatrix(),
+//                                       (TGeoBBox*)node02->GetVolume()->GetShape(), node02->GetMatrix())) continue;
          next2.SetTopName(node02->GetName());
          path1 = node02->GetName();
         
