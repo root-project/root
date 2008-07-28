@@ -32,4 +32,5 @@
 #pragma link C++ class RooUnblindPrecision+ ;
 #pragma link C++ class RooUnblindUniform+ ;
 #pragma link C++ class RooVoigtian+ ;
+#pragma link C++ class RooPoisson+ ;
 #endif 
