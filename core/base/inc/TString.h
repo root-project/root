@@ -459,10 +459,10 @@ inline TString &TString::operator+=(char c)
 { return Append(c); }
 
 inline TString &TString::operator+=(Long_t i)
-{ return operator+=(::Form("%ld", i)); }
+{ char s[32]; sprintf(s, "%ld", i); return operator+=(s); }
 
 inline TString &TString::operator+=(ULong_t i)
-{ return operator+=(::Form("%lu", i)); }
+{ char s[32]; sprintf(s, "%lu", i); return operator+=(s); }
 
 inline TString &TString::operator+=(Short_t i)
 { return operator+=((Long_t) i); }
@@ -477,16 +477,16 @@ inline TString &TString::operator+=(UInt_t i)
 { return operator+=((ULong_t) i); }
 
 inline TString &TString::operator+=(Double_t f)
-{ return operator+=(::Form("%9.9g", f)); }
+{ char s[32]; sprintf(s, "%9.9g", f); return operator+=(s); }
 
 inline TString &TString::operator+=(Float_t f)
 { return operator+=((Double_t) f); }
 
 inline TString &TString::operator+=(Long64_t l)
-{ return operator+=(::Form("%lld", l)); }
+{ char s[32]; sprintf(s, "%lld", l); return operator+=(s); }
 
 inline TString &TString::operator+=(ULong64_t ul)
-{ return operator+=(::Form("%llu", ul)); }
+{ char s[32]; sprintf(s, "%llu", ul); return operator+=(s); }
 
 inline Bool_t TString::BeginsWith(const char *s, ECaseCompare cmp) const
 { return Index(s, s ? strlen(s) : (Ssiz_t)0, (Ssiz_t)0, cmp) == 0; }

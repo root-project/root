@@ -1208,7 +1208,8 @@ TString operator+(const TString &s, Long_t i)
 {
    // Add integer to string.
 
-   const char *si = ::Form("%ld", i);
+   char si[32];
+   sprintf(si, "%ld", i);
    return TString(s.Data(), s.Length(), si, strlen(si));
 }
 
@@ -1217,7 +1218,8 @@ TString operator+(const TString &s, ULong_t i)
 {
    // Add integer to string.
 
-   const char *si = ::Form("%lu", i);
+   char si[32];
+   sprintf(si, "%lu", i);
    return TString(s.Data(), s.Length(), si, strlen(si));
 }
 
@@ -1226,7 +1228,8 @@ TString operator+(const TString &s, Long64_t i)
 {
    // Add integer to string.
 
-   const char *si = ::Form("%lld", i);
+   char si[32];
+   sprintf(si, "%lld", i);
    return TString(s.Data(), s.Length(), si, strlen(si));
 }
 
@@ -1235,7 +1238,8 @@ TString operator+(const TString &s, ULong64_t i)
 {
    // Add integer to string.
 
-   const char *si = ::Form("%llu", i);
+   char si[32];
+   sprintf(si, "%llu", i);
    return TString(s.Data(), s.Length(), si, strlen(si));
 }
 
@@ -1252,7 +1256,8 @@ TString operator+(Long_t i, const TString &s)
 {
    // Add string to integer.
 
-   const char *si = ::Form("%ld", i);
+   char si[32];
+   sprintf(si, "%ld", i);
    return TString(si, strlen(si), s.Data(), s.Length());
 }
 
@@ -1261,7 +1266,8 @@ TString operator+(ULong_t i, const TString &s)
 {
    // Add string to integer.
 
-   const char *si = ::Form("%lu", i);
+   char si[32];
+   sprintf(si, "%lu", i);
    return TString(si, strlen(si), s.Data(), s.Length());
 }
 
@@ -1270,7 +1276,8 @@ TString operator+(Long64_t i, const TString &s)
 {
    // Add string to integer.
 
-   const char *si = ::Form("%lld", i);
+   char si[32];
+   sprintf(si, "%lld", i);
    return TString(si, strlen(si), s.Data(), s.Length());
 }
 
@@ -1279,7 +1286,8 @@ TString operator+(ULong64_t i, const TString &s)
 {
    // Add string to integer.
 
-   const char *si = ::Form("%llu", i);
+   char si[32];
+   sprintf(si, "%llu", i);
    return TString(si, strlen(si), s.Data(), s.Length());
 }
 
