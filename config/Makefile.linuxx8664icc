@@ -52,6 +52,9 @@ CINTCFLAGS   += -wd1572
 USE_PCH       = -pch-use
 CREATE_PCH    = -pch-create
 ICC_GE_9      = 10
+ifneq ($(ICC_MINOR),0)
+ICC_GE_101    = 101
+endif
 endif
 
 # Linker:
