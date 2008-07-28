@@ -22,6 +22,7 @@ platform=@platform@
 bindir=@bindir@
 libdir=@libdir@
 incdir=@incdir@
+etcdir=@etcdir@
 features="@features@"
 configargs="@configargs@"
 altcc="@altcc@"
@@ -40,6 +41,7 @@ if test "$platform" = "win32"; then
    bindir=$unixROOTSYS/bin
    libdir=$unixROOTSYS/lib
    incdir=$unixROOTSYS/include
+   etcdir=$unixROOTSYS/etc
 fi
 
 ### ROOT libraries ###
@@ -502,7 +504,7 @@ noldflags=no
 usage="\
 Usage: root-config [--prefix[=DIR]] [--exec-prefix[=DIR]] [--version]\
  [--cflags] [--auxcflags] [--ldflags] [--new] [--nonew] [--libs]\
- [--glibs] [--bindir] [--libdir] [--incdir] [--noauxcflags] [--noauxlibs]\
+ [--glibs] [--bindir] [--libdir] [--incdir] [--etcdir] [--noauxcflags] [--noauxlibs]\
  [--noldflags] [--has-<feature>] [--arch] [--platform] [--dicttype]\
  [--config] [--features] [--svn-revision] [--python-version]\
  [--cc] [--cxx] [--f77] [--ld ] [--nostubs] [--nostubstest] [--help]"
@@ -730,6 +732,10 @@ while test $# -gt 0; do
     --incdir)
       ### output the header directory
       out="$out $incdir"
+      ;;
+    --etcdir)
+      ### output the etc directory
+      out="$out $etcdir"
       ;;
     --config)
       ### output the configure arguments

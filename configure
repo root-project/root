@@ -5132,12 +5132,14 @@ prefix2=$prefix
 bindir2=$bindir
 libdir2=$libdir
 incdir2=$incdir
+etcdir2=$etcdir
 mandir2=$mandir
 if test "$prefix2" = "\$(ROOTSYS)" ; then
     prefix2=\$ROOTSYS
     bindir2=\$ROOTSYS/bin
     libdir2=\$ROOTSYS/lib
     incdir2=\$ROOTSYS/include
+    etcdir2=\$ROOTSYS/etc
     mandir2=\$ROOTSYS/man/man1
 fi
 
@@ -5169,6 +5171,7 @@ sed -e "s|@architecture@|$arch|"           \
     -e "s|@bindir@|$bindir2|"              \
     -e "s|@libdir@|$libdir2|"              \
     -e "s|@incdir@|$incdir2|"              \
+    -e "s|@etcdir@|$etcdir2|"              \
     -e "s|@features@|$features|"           \
     -e "s|@winrtdebug@|$enable_winrtdebug|"\
     -e "s|@configargs@|$configargs|"       \
