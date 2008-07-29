@@ -41,9 +41,11 @@ INCLUDEFILES += $(SPECTRUMDEP)
 include/%.h:    $(SPECTRUMDIRI)/%.h
 		cp $< $@
 
-$(SPECTRUMLIB): $(SPECTRUMO) $(SPECTRUMDO) $(ORDER_) $(MAINLIBS) $(SPECTRUMLIBDEP)
+$(SPECTRUMLIB): $(SPECTRUMO) $(SPECTRUMDO) $(ORDER_) $(MAINLIBS) \
+                $(SPECTRUMLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
-		   "$(SOFLAGS)" libSpectrum.$(SOEXT) $@ "$(SPECTRUMO) $(SPECTRUMDO)" \
+		   "$(SOFLAGS)" libSpectrum.$(SOEXT) $@ \
+		   "$(SPECTRUMO) $(SPECTRUMDO)" \
 		   "$(SPECTRUMLIBEXTRA)"
 
 $(SPECTRUMDS):  $(SPECTRUMH) $(SPECTRUML) $(ROOTCINTTMPDEP)
@@ -62,6 +64,7 @@ clean-$(MODNAME):
 clean::         clean-$(MODNAME)
 
 distclean-$(MODNAME): clean-$(MODNAME)
-		@rm -f $(SPECTRUMDEP) $(SPECTRUMDS) $(SPECTRUMDH) $(SPECTRUMLIB) $(SPECTRUMMAP)
+		@rm -f $(SPECTRUMDEP) $(SPECTRUMLIB) $(SPECTRUMMAP) \
+		   $(SPECTRUMDS) $(SPECTRUMDH)
 
 distclean::     distclean-$(MODNAME)
