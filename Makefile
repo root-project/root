@@ -199,7 +199,7 @@ ifeq ($(BUILDCINTEX),yes)
 MODULES      += cint/cintex
 endif
 ifeq ($(BUILDROOFIT),yes)
-MODULES      += roofit/roofitcore roofit/roofit
+MODULES      += roofit/roofitcore roofit/roofit roofit/roostats
 endif
 ifeq ($(BUILDGDML),yes)
 MODULES      += geom/gdml
@@ -264,7 +264,7 @@ MODULES      += core/unix core/winnt graf2d/x11 graf2d/x11ttf \
                 graf2d/qt gui/qtroot gui/qtgsi net/xrootd net/netx net/alien \
                 proof/proofd proof/proofx proof/clarens proof/peac \
                 sql/oracle io/xmlparser math/mathmore cint/reflex cint/cintex \
-                cint/cint7 roofit/roofitcore roofit/roofit \
+                cint/cint7 roofit/roofitcore roofit/roofit roofit/roostats \
                 math/minuit2 net/monalisa math/fftw sql/odbc math/unuran \
                 geom/gdml graf3d/eve montecarlo/g4root net/glite misc/memstat
 MODULES      := $(sort $(MODULES))   # removes duplicates
