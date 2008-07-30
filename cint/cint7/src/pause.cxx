@@ -1487,7 +1487,8 @@ int Cint::Internal::G__ReadInputMode()
   if(inputmodeflag==0) {
     char *inputmodebuf;
     inputmodeflag=1;
-    inputmodebuf=G__getmakeinfo1("INPUTMODE");
+    inputmodebuf=getenv("INPUTMODE");
+    if(inputmodebuf==0) inputmodebuf=G__getmakeinfo1("INPUTMODE");
     if(inputmodebuf && inputmodebuf[0]) {
       if(strstr(inputmodebuf,"c++")||strstr(inputmodebuf,"C++")) 
         G__rootmode=G__INPUTCXXMODE;
