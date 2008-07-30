@@ -2131,3 +2131,17 @@ void TPDF::WriteCompressedBuffer()
    delete [] out;
    fCompress = kFALSE;
 }
+
+//______________________________________________________________________________
+void TPDF::WriteReal(Float_t z)
+{
+   // Write a Real number to the file.
+   // This method overwrites TVirtualPS::WriteReal. Some PDF reader like
+   // Acrobat do not work when a PDF file contain read with exponent. This
+   // method writes the real number using the format "%f" instead of the
+   // format "%g" as TVirtualPS::WriteReal does.
+
+   char str[15];
+   sprintf(str," %f", z);     
+   PrintStr(str);
+}

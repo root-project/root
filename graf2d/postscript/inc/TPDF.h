@@ -93,6 +93,7 @@ public:
    void     Text(Double_t x, Double_t y, const char *string);
    void     TextNDC(Double_t u, Double_t v, const char *string);
    void     WriteCompressedBuffer();
+   virtual  void  WriteReal(Float_t r);
    Double_t UtoPDF(Double_t u);
    Double_t VtoPDF(Double_t v);
    Double_t XtoPDF(Double_t x);
