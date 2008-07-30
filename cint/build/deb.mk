@@ -1,3 +1,14 @@
+# Makefile to create all the files debian/* necessary for
+# debian package creation, and the package itself.
+# It uses the alternatives system of debian to make 
+# it possible to co-install standalone CINT with that cominb
+# from ROOT. It sets the ALTERNATIVENAME=.cint variable for the 
+# main Makefile, which will then install executables with this
+# appended to the filenames, i.e. /usr/bin/cint.cint and
+# /usr/bin/makecint.cint (to make the difference from ROOT's
+# filenames /usr/bin/cint.root and /usr/bin/makecint.root)
+
+
 .PHONY : deb debinstall
 
 ECHO = echo
@@ -30,7 +41,7 @@ arch = $(shell dpkg-architecture -qDEB_HOST_ARCH)
 pkgfilename=cint_$(G__CFG_CINTVERSION)-1_$(arch).deb 
 pkg  = debian/package-files/$(pkgfilename)
 
-CONFIGCMD = ./configure   --with-prefix --prefix=/usr --mandir=\$$$${prefix}/share/man --infodir=\$$$${prefix}/share/info 
+CONFIGCMD = ./configure  --with-prefix --prefix=/usr 
 #--host=$$(DEB_HOST_GNU_TYPE) --build=$$(DEB_BUILD_GNU_TYPE)
 
 # make deb          -- creates the .deb package in the parent directory
@@ -46,9 +57,9 @@ origtgz_deb = $(shell pwd | sed 's|/[^/]*$$||g')/cint_${G__CFG_CINTVERSION}.orig
 # This is the default value for the -i option of dpkg-source, + some other extensions
 # (.png, .o, .exe, .a, 
 
-ignore = '(?:^|/).*~$$|(?:^|/)\.\#.*$$|(?:^|/)\..*\.swp$$|(?:^|/),,.*(?:$$|/.*$$)|(?:^|/)(?:DEADJOE|\.cvsignore|\.arch-inventory|\.bzrignore|\.gitignore)$$|(?:^|/)(?:CVS|RCS|\.deps|\{arch\}|\.arch-ids|\.svn|\.hg|_darcs|\.git|\.shelf|\.bzr(?:\.backup|tags)?)(?:$$|/.*$$)|.*\.png$$|.*\.o$$|.*\.exe$$|.*\.a$$|/config\..*$$|.*\.dvi$$|.*\.gz$$|.*\.deb$$|.*\.rpm$$|.*build-stamp$$|.*\.ps$$'
+ignore = '(?:^|/).*~$$|(?:^|/)\.\#.*$$|(?:^|/)\..*\.swp$$|(?:^|/),,.*(?:$$|/.*$$)|(?:^|/)(?:DEADJOE|\.cvsignore|\.arch-inventory|\.bzrignore|\.gitignore)$$|(?:^|/)(?:CVS|RCS|\.deps|\{arch\}|\.arch-ids|\.svn|\.hg|_darcs|\.git|\.shelf|\.bzr(?:\.backup|tags)?)(?:$$|/.*$$)|.*\.png$$|.*\.o$$|.*\.exe$$|.*\.a$$|/config\..*$$|.*\.dvi$$|.*\.gz$$|.*\.deb$$|.*\.rpm$$|.*build-stamp$$|.*\.ps$$|rmkdepend|mktypes|.*\.dll$$|.*\.d'
 
-$(pkg) : $(origtgz_deb) debian/control debian/copyright debian/dirs debian/docs debian/changelog debian/rules debian/compat
+$(pkg) : $(origtgz_deb) debian/control debian/copyright debian/cint.dirs debian/cint.docs debian/changelog debian/rules debian/compat debian/cint.postinst debian/cint.prerm
 	@$(ECHO) '###  Creating the package files'
 	rm -f config.status
 	make distclean
@@ -94,6 +105,43 @@ $(origtgz_deb) :
 	  cd ..; tar cvzf $@ cint-${G__CFG_CINTVERSION}; \
 	  rm -rf $${tmp}
 
+debian/cint.prerm : build/deb.mk
+	@$(ECHO) '#! /bin/sh' > $@
+	@$(ECHO) '# prerm script for root-cint' >> $@
+	@$(ECHO) 'set -e' >> $@
+	@$(ECHO) 'if [ "$$1" != "upgrade" ] ; then' >> $@
+	@$(ECHO) '  update-alternatives --remove cint $(G__CFG_BINDIR)/cint.cint' >> $@
+	@$(ECHO) '  update-alternatives --remove makecint $(G__CFG_BINDIR)/makecint.cint' >> $@
+	@$(ECHO) 'fi' >> $@
+	@$(ECHO) 'exit 0' >> $@
+	chmod +x $@
+
+debian/cint.postinst : build/deb.mk
+	@$(ECHO) '#! /bin/sh' > $@
+	@$(ECHO) 'set -e' >> $@
+	@$(ECHO) 'case "$$1" in' >> $@
+	@$(ECHO) 'configure)' >> $@
+	@$(ECHO) '# Alternatives update ' >> $@
+	@$(ECHO) 'update-alternatives --install /usr/bin/cint cint \' >> $@
+	@$(ECHO) '  $(G__CFG_BINDIR)/cint.cint 31 \' >> $@
+	@$(ECHO) '  --slave $(G__CFG_PREFIX)/share/man/man1/cint.1.gz \'  >> $@
+	@$(ECHO) '  cint.1.gz $(G__CFG_PREFIX)/share/man/man1/cint.cint.1.gz ' >> $@
+	@$(ECHO) 'update-alternatives --install /usr/bin/makecint makecint \'>>$@
+	@$(ECHO) '  $(G__CFG_BINDIR)/makecint.cint 31 \'>>$@
+	@$(ECHO) '  --slave $(G__CFG_PREFIX)/share/man/man1/makecint.1.gz \' >> $@
+	@$(ECHO) '  makecint.1.gz $(G__CFG_PREFIX)/share/man/man1/makecint.cint.1.gz' >> $@
+	@$(ECHO) ';;' >> $@
+	@$(ECHO) 'abort-upgrade|abort-remove|abort-deconfigure)' >> $@
+	@$(ECHO) '# Nothing to be done here' >> $@
+	@$(ECHO) ';;' >> $@
+	@$(ECHO) '*)' >> $@
+	@$(ECHO) 'echo "postinst called with unknown argument \"$$1\"" >&2' >> $@
+	@$(ECHO) 'exit 0' >> $@
+	@$(ECHO) ';;' >> $@
+	@$(ECHO) 'esac' >> $@
+	@$(ECHO) 'exit 0' >> $@
+	chmod +x $@
+
 debian/compat : build/deb.mk
 	@if [ ! -d debian ] ; then mkdir debian; fi
 	@$(ECHO) '###  Creating $@'
@@ -138,15 +186,16 @@ debian/copyright : $(cint_signature_file) build/deb.mk
 	@$(ECHO) 'The Debian packaging is (C) 2006, $(cint_signature) and' >> $@
 	@$(ECHO) "is licensed under the GPL, see '/usr/share/common-licenses/GPL'." >> $@
 
-debian/dirs : build/deb.mk
+debian/cint.dirs : build/deb.mk
 	@if [ ! -d debian ] ; then mkdir debian; fi
 	@$(ECHO) '###  Creating $@'
 	@$(ECHO) usr/bin > $@
 	@$(ECHO) usr/include >> $@
 	@$(ECHO) usr/lib >> $@
 	@$(ECHO) usr/share/cint >> $@
+	@$(ECHO) usr/share/man/man1 >> $@
 
-debian/docs : build/deb.mk
+debian/cint.docs : build/deb.mk
 	@if [ ! -d debian ] ; then mkdir debian; fi
 	@$(ECHO) '###  Creating $@'
 	@$(ECHO) README.txt > $@
@@ -163,25 +212,6 @@ debian/changelog : $(cint_signature_file) build/deb.mk
 	@$(ECHO) '' >> $@
 	@$(ECHO) " -- $(cint_signature)  `date -R`" >> $@
 
-debian/postinst : build/deb.mk
-	@if [ ! -d debian ] ; then mkdir debian; fi
-	@$(ECHO) '###  Creating $@'
-	@$(ECHO) '#!/bin/sh' > $@
-	@$(ECHO) '# postinst script for cint' >> $@
-	@$(ECHO) '# see dh_installdeb(1)' >> $@
-	@$(ECHO) 'set -e' >> $@
-	@$(ECHO) 'case "$$1" in' >> $@
-	@$(ECHO) '  configure)' >> $@
-	@$(ECHO) '    ;;' >> $@
-	@$(ECHO) '  abort-upgrade|abort-remove|abort-deconfigure)' >> $@
-	@$(ECHO) '    ;;' >> $@
-	@$(ECHO) '  *)' >> $@
-	@$(ECHO) '    $(ECHO) "postinst called with unknown argument: $$1" >&2' >> $@
-	@$(ECHO) '    exit 1' >> $@
-	@$(ECHO) '    ;;' >> $@
-	@$(ECHO) 'esac' >> $@
-	@$(ECHO) 'exit 0' >> $@
-	@chmod +x $@
 
 debian/rules : build/deb.mk
 	@if [ ! -d debian ] ; then mkdir debian; fi
@@ -231,33 +261,16 @@ debian/rules : build/deb.mk
 	@$(ECHO) -e '\tdh_testroot' >> $@
 	@$(ECHO) -e '\tdh_clean -k' >> $@
 	@$(ECHO) -e '\tdh_installdirs' >> $@
-	@$(ECHO) -e '\t$$(MAKE) install DESTDIR=$$(CURDIR)/debian/cint' >> $@
+	@$(ECHO) -e '\t$$(MAKE) install DESTDIR=$$(CURDIR)/debian/cint ALTERNATIVENAME=.cint' >> $@
 	@$(ECHO) '' >> $@
 	@$(ECHO) 'binary-indep: build install' >> $@
 	@$(ECHO) 'binary-arch: build install' >> $@
 	@$(ECHO) -e '\tdh_testdir' >> $@
 	@$(ECHO) -e '\tdh_testroot' >> $@
 	@$(ECHO) -e '\tdh_installchangelogs' >> $@
-	@$(ECHO) -e '\tdh_installdocs' >> $@
-	@$(ECHO) -e '\tdh_installexamples' >> $@
-	@$(ECHO) '#       dh_install' >> $@
-	@$(ECHO) '#       dh_installmenu' >> $@
-	@$(ECHO) '#       dh_installdebconf' >> $@
-	@$(ECHO) '#       dh_installlogrotate' >> $@
-	@$(ECHO) '#       dh_installemacsen' >> $@
-	@$(ECHO) '#       dh_installpam' >> $@
-	@$(ECHO) '#       dh_installmime' >> $@
-	@$(ECHO) '#       dh_python' >> $@
-	@$(ECHO) '#       dh_installinit' >> $@
-	@$(ECHO) '#       dh_installcron' >> $@
-	@$(ECHO) '#       dh_installinfo' >> $@
-	@$(ECHO) -e '\tdh_installman' >> $@
 	@$(ECHO) -e '\tdh_link' >> $@
-	@$(ECHO) -e '\tdh_strip' >> $@
 	@$(ECHO) -e '\tdh_compress' >> $@
 	@$(ECHO) -e '\tdh_fixperms' >> $@
-	@$(ECHO) '#       dh_perl' >> $@
-	@$(ECHO) '#       dh_makeshlibs' >> $@
 	@$(ECHO) -e '\tdh_installdeb' >> $@
 	@$(ECHO) -e '\tdh_shlibdeps' >> $@
 	@$(ECHO) -e '\tdh_gencontrol' >> $@

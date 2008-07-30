@@ -333,6 +333,7 @@ add_opt "--bindir=" 'where to put user executables [$EPREFIX/bin]'
 add_opt "--libdir=" 'where to put object code libraries [$EPREFIX/lib]'
 add_opt "--includedir=" 'where to put header files [$PREFIX/include]'
 add_opt "--datadir=" 'read-only architecture-independent data [$PREFIX/share]'
+add_opt "--mandir=" 'location of manual files [$PREFIX/share/man]'
 
 add_opt "--sbindir=" 'ignored'
 add_opt "--libexecdir=" 'ignored'
@@ -343,7 +344,6 @@ add_opt "--oldincludedir=" 'ignored'
 add_opt "--datarootdir=" 'ignored'
 add_opt "--infodir=" 'ignored'
 add_opt "--localedir=" 'ignored'
-add_opt "--mandir=" 'ignored'
 add_opt "--docdir=" 'ignored'
 add_opt "--htmldir=" 'ignored'
 add_opt "--dvidir=" 'ignored'
@@ -512,6 +512,11 @@ function processflag_datadir {
     DATADIRCINT=$ABSPATH/cint
 }
 
+function processflag_datadir {
+    pathtoabs $1
+    MANDIR=$ABSPATH
+}
+
 function processflag_debug {
     DEBUG=1
 }
@@ -670,8 +675,9 @@ if [ "x$PREFIX" != "x" ]; then
     [ "$LIBDIR" = "" ]  && LIBDIR=$EPREFIX/lib
     [ "$INCLUDEDIR" = "" ] && INCLUDEDIR=$PREFIX/include && INCLUDEDIRCINT=$PREFIX/include/cint
     [ "$DATADIR" = "" ] && DATADIR=$PREFIX/share && DATADIRCINT=$PREFIX/share/cint
+    [ "$MANDIR" = "" ]  && MANDIR=$PREFIX/share/man
     EXPORTS=(${EXPORTS[*]} PREFIX EPREFIX BINDIR LIBDIR \
-        INCLUDEDIR INCLUDEDIRCINT DATADIR DATADIRCINT)
+        INCLUDEDIR INCLUDEDIRCINT DATADIR DATADIRCINT MANDIR)
 fi
 
 # get actual cint version from int/G__ci.h

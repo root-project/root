@@ -161,8 +161,15 @@ FINDALLBUTSVN=-type f \! -path '*/.svn/*' \! -name SConscript \! -name Makefile.
 
 install:
 	if [ ! -d $(DESTDIR)$(G__CFG_BINDIR) ]; then mkdir -p $(DESTDIR)$(G__CFG_BINDIR); fi
-	cp $(CINT) $(MAKECINT) $(DESTDIR)$(G__CFG_BINDIR)/
+	cp $(CINT)     $(DESTDIR)$(G__CFG_BINDIR)/$(notdir $(CINT))$(ALTERNATIVENAME)
+	cp $(MAKECINT) $(DESTDIR)$(G__CFG_BINDIR)/$(notdir $(MAKECINT))$(ALTERNATIVENAME)
 	if [ -f bin/cint-config ] ; then cp bin/cint-config $(DESTDIR)$(G__CFG_BINDIR)/ ; fi
+# install manual pages
+	if [ ! -d $(DESTDIR)$(G__CFG_MANDIR)/man1 ] ; then \
+	  mkdir -p $(DESTDIR)$(G__CFG_MANDIR)/man1; \
+	fi
+	cp doc/man1/cint.1 $(DESTDIR)$(G__CFG_MANDIR)/man1/cint$(ALTERNATIVENAME).1
+	cp doc/man1/makecint.1 $(DESTDIR)$(G__CFG_MANDIR)/man1/makecint$(ALTERNATIVENAME).1
 
 	if [ ! -d $(DESTDIR)$(G__CFG_LIBDIR) ]; then mkdir -p $(DESTDIR)$(G__CFG_LIBDIR); fi
 	cp $(CINTLIBSHARED) $(DESTDIR)$(G__CFG_LIBDIR)/
