@@ -1008,6 +1008,18 @@ void TGeoArb8::Sizeof3D() const
    TGeoBBox::Sizeof3D();
 }
 
+//_____________________________________________________________________________
+void TGeoArb8::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class TGeoManager.
+   if (R__b.IsReading()) {
+      R__b.ReadClassBuffer(TGeoArb8::Class(), this);
+      ComputeTwist();
+   } else {
+      R__b.WriteClassBuffer(TGeoArb8::Class(), this);
+   }
+}   
+
 ClassImp(TGeoTrap)
 
 //_____________________________________________________________________________

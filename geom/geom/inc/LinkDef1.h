@@ -57,7 +57,7 @@
 #pragma link C++ class TGeoParaboloid+;
 #pragma link C++ class TGeoPcon+;
 #pragma link C++ class TGeoPgon+;
-#pragma link C++ class TGeoArb8+;
+#pragma link C++ class TGeoArb8-;
 #pragma link C++ class TGeoTrap+;
 #pragma link C++ class TGeoGtra+;
 #pragma link C++ class TGeoTrd1+;
