@@ -1456,7 +1456,7 @@ void TPDF::PatternEncode()
    PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 100/YStep 100/Length 93/Filter/FlateDecode>>");
    PrintStr("@");
    fStream->write("stream",6); fNByte += 6;
-   fStream->write("\r\nH\211*\3442T\310T\3402P0P04\200\340\242T\256p\205<\240\220\027P0K\301D\241\034(\254\340\253\020\035k\240\220\002\02465P\310\345\002)\0042r\200\332\r\241\\C \017dN.\027L\312\0\302\205\2535\205j6\205X\224\303\025\314\025\310\005\020`\0\2127\031\t\n", 95); 
+   fStream->write("\r\nH\211*\3442T\310T\3402P0P04\200\340\242T\256p\205<\240\220\027P0K\301D\241\034(\254\340\253\020\035k\240\220\002\02465P\310\345\002)\0042r\200\332\r\241\\C \017dN.\027L\312\0\302\205\2535\205j6\205X\224\303\025\314\025\310\005\020`\0\2127\031\t\n", 95);
    fNByte += 95;
    PrintStr("endstream@");
    PrintStr("endobj@");
@@ -2137,11 +2137,12 @@ void TPDF::WriteReal(Float_t z)
 {
    // Write a Real number to the file.
    // This method overwrites TVirtualPS::WriteReal. Some PDF reader like
-   // Acrobat do not work when a PDF file contain read with exponent. This
-   // method writes the real number using the format "%f" instead of the
-   // format "%g" as TVirtualPS::WriteReal does.
+   // Acrobat do not work when a PDF file contains reals with exponent. This
+   // method writes the real number "z" using the format "%f" instead of the
+   // format "%g" when writing it with "%g" generates a number with exponent.
 
    char str[15];
-   sprintf(str," %f", z);     
+   sprintf(str," %g", z);
+   if (strstr(str,"e") || strstr(str,"E")) sprintf(str," %10.8f", z);
    PrintStr(str);
 }
