@@ -585,7 +585,8 @@ Bool_t TGMenuBar::HandleMotion(Event_t *event)
    Window_t     wtarget;
    TGMenuTitle *target = 0;
 
-   fStick = kFALSE; // use some threshold!
+   if (!(event->fState & kButton1Mask))
+      fStick = kFALSE; // use some threshold!
 
    gVirtualX->TranslateCoordinates(fId, fId, event->fX, event->fY,
                                    dummy, dummy, wtarget);
