@@ -148,8 +148,7 @@ TBranch::TBranch(TTree *tree, const char* name, void* address, const char* leafl
    //*-*-*-*-*-*-*-*-*-*-*-*-*Create a Branch*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                =====================
    //
-   //       * address is the address of the first item of a structure
-   //         or the address of a pointer to an object (see example).
+   //       * address is the address of the first item of a structure.
    //       * leaflist is the concatenation of all the variable names and types
    //         separated by a colon character :
    //         The variable name and the variable type are separated by a slash (/).
