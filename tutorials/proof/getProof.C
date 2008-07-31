@@ -66,6 +66,7 @@ TProof *getProof(const char *url, Int_t nwrks, const char *dir, const char *opt 
    TString workarea = Form("%s/proof", tutdir.Data());
    TString xpdcf(Form("%s/xpd.cf",tutdir.Data()));
    TString xpdlog(Form("%s/xpd.log",tutdir.Data()));
+   TString xpdlogprt(Form("%s/xpd-tutorial/xpd.log",tutdir.Data()));
    TString xpdpid(Form("%s/xpd.pid",tutdir.Data()));
    TString proofsessions(Form("%s/sessions",tutdir.Data()));
    TString cmd;
@@ -140,7 +141,7 @@ TProof *getProof(const char *url, Int_t nwrks, const char *dir, const char *opt 
       Printf("getProof: xrootd config file at %s", xpdcf.Data());
 
       // Start xrootd in the background
-      Printf("getProof: xrootd log file at %s", xpdlog.Data());
+      Printf("getProof: xrootd log file at %s", xpdlogprt.Data());
       cmd = Form("%s -c %s -b -l %s -n xpd-tutorial -p %d",
                xrootd, xpdcf.Data(), xpdlog.Data(), lportx);
       Printf("(NB: any error line from XrdClientSock::RecvRaw and XrdClientMessage::ReadRaw should be ignored)");
