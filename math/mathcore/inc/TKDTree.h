@@ -26,32 +26,38 @@ public:
    //  
    // Other getters
    Index*  GetPointsIndexes(Int_t node) const;
-   UChar_t GetNodeAxis(Int_t id) const {return (id < 0 || id >= fNnodes) ? 0 : fAxis[id];}
-   Value   GetNodeValue(Int_t id) const {return (id < 0 || id >= fNnodes) ? 0 : fValue[id];}
-   Int_t   GetNNodes() const {return fNnodes;}
+   UChar_t GetNodeAxis(Int_t id) const {return (id < 0 || id >= fNNodes) ? 0 : fAxis[id];}
+   Value   GetNodeValue(Int_t id) const {return (id < 0 || id >= fNNodes) ? 0 : fValue[id];}
+   Int_t   GetNNodes() const {return fNNodes;}
    Value*  GetBoundaries();
+   Value*  GetBoundariesExact();
    Value*  GetBoundary(const Int_t node);
-   static  Int_t   GetIndex(Int_t row, Int_t column){return column+(1<<row);}
-   static  void    GetCoord(Int_t index, Int_t &row, Int_t &column){for (row=0; index>=(16<<row);row+=4); for (; index>=(2<<row);row++);column= index-(1<<row);};
+   Value*  GetBoundaryExact(const Int_t node);
    Index   GetNPoints() { return fNPoints; }
    Index   GetNDim()    { return fNDim; }
+   Index   GetNPointsNode(Int_t node) const;
 
-#ifndef __CINT__  // dictionary gives a warning with gcc4   and m32
+   //Getters for internal variables.
+   Int_t   GetRowT0() {return fRowT0;}      //! smallest terminal row
+   Int_t   GetCrossNode() {return fCrossNode;}  //! cross node
+   Int_t   GetOffset() {return fOffset;}     //! offset in fIndPoints
+   Index*  GetIndPoints() {return fIndPoints;}
+   Index   GetBucketSize() {return fBucketSize;}
+
    Bool_t  FindNearestNeighbors(const Value *point, const Int_t kNN, Index *&i, Value *&d);
-#endif
-
    Index   FindNode(const Value * point);
    void    FindPoint(Value * point, Index &index, Int_t &iter);
    void    FindInRangeA(Value * point, Value * delta, Index *res , Index &npoints,Index & iter, Int_t bnode);
    void    FindInRangeB(Value * point, Value * delta, Index *res , Index &npoints,Index & iter, Int_t bnode);
    void    FindBNodeA(Value * point, Value * delta, Int_t &inode);
-   Bool_t  IsTerminal(Index inode) const {return (inode>=fNnodes);}
-   Int_t  IsOwner() { return fDataOwner; }
+   Bool_t  IsTerminal(Index inode) const {return (inode>=fNNodes);}
+   Int_t   IsOwner() { return fDataOwner; }
    Value   KOrdStat(Index ntotal, Value *a, Index k, Index *index) const;
    void    MakeBoundaries(Value *range = 0x0);
+   void    MakeBoundariesExact();
    void    SetData(Index npoints, Index ndim, UInt_t bsize, Value **data);
-   void    SetData(Index idim, Value *data);
-   void    SetOwner(Int_t IsOwner) { fDataOwner = IsOwner; }
+   Int_t   SetData(Index idim, Value *data);
+   void    SetOwner(Int_t owner) { fDataOwner = owner; }
    void    Spread(Index ntotal, Value *a, Index *index, Value &min, Value &max) const;
    
  private:
@@ -61,14 +67,14 @@ public:
    
    
  protected:
-   Int_t  fDataOwner;  //! 0 - not owner, 2 - owner of the pointer array, 1 - owner of the whole 2-d array
-   Int_t   fNnodes;     // size of node array
+   Int_t   fDataOwner;  //! 0 - not owner, 2 - owner of the pointer array, 1 - owner of the whole 2-d array
+   Int_t   fNNodes;     // size of node array
    Index   fNDim;       // number of dimensions
    Index   fNDimm;      // dummy 2*fNDim
    Index   fNPoints;    // number of multidimensional points
    Index   fBucketSize; // size of the terminal nodes
-   UChar_t *fAxis;      //[fNnodes] nodes cutting axis
-   Value   *fValue;     //[fNnodes] nodes cutting value
+   UChar_t *fAxis;      //[fNNodes] nodes cutting axis
+   Value   *fValue;     //[fNNodes] nodes cutting value
    //
    Value   *fRange;     //[fNDimm] range of data for each dimension
    Value   **fData;     //! data points
@@ -76,9 +82,11 @@ public:
 
 
    Index   *fIndPoints; //! array of points indexes
-   Int_t   fRowT0;      //! smallest terminal row
-   Int_t   fCrossNode;  //! cross node
-   Int_t   fOffset;     //! offset in fIndPoints
+   Int_t   fRowT0;      //! smallest terminal row - first row that contains terminal nodes
+   Int_t   fCrossNode;  //! cross node - node that begins the last row (with terminal nodes only)
+   Int_t   fOffset;     //! offset in fIndPoints - if there are 2 rows, that contain terminal nodes
+                        //  fOffset returns the index in the fIndPoints array of the first point
+                        //  that belongs to the first node on the second row.
 
    // kNN related data
    Int_t   fkNNdim;     //! current kNN arrays allocated dimension
@@ -96,39 +104,6 @@ typedef TKDTree<Int_t, Float_t> TKDTreeIF;
 
 // Test functions:
 TKDTreeIF *  TKDTreeTestBuild();
-
-
-
-//_________________________________________________________________
-template <typename  Index, typename Value>
-   void TKDTree<Index, Value>::FindBNodeA(Value *point, Value *delta, Int_t &inode){
-   //
-   // find the smallest node covering the full range - start
-   //
-   inode =0; 
-   for (;inode<fNnodes;){
-      if (TMath::Abs(point[fAxis[inode]] - fValue[inode])<delta[fAxis[inode]]) break;
-      inode = (point[fAxis[inode]] < fValue[inode]) ? (inode*2)+1: (inode*2)+2;
-   }
-}
-
-//_________________________________________________________________
-template <typename  Index, typename Value>
-   Value* TKDTree<Index, Value>::GetBoundaries()
-{
-   // Get the boundaries
-   if(!fBoundaries) MakeBoundaries();
-   return fBoundaries;
-}
-
-//_________________________________________________________________
-template <typename  Index, typename Value>
-   Value* TKDTree<Index, Value>::GetBoundary(const Int_t node)
-{
-   // Get a boundary
-   if(!fBoundaries) MakeBoundaries();
-   return &fBoundaries[node*2*fNDim];
-}
 
 #endif
 

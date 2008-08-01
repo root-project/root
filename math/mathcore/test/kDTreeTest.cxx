@@ -21,7 +21,7 @@
 
 void TestBuild(const Int_t npoints = 1000000, const Int_t bsize = 100);
 void TestConstr(const Int_t npoints = 1000000, const Int_t bsize = 100);
-void TestSpeed(const Int_t npower2 = 20, const Int_t bsize = 10);
+void TestSpeed(Int_t npower2 = 20, Int_t bsize = 10);
 
 void TestkdtreeIF(Int_t npoints=1000, Int_t bsize=9, Int_t nloop=1000, Int_t mode = 2);
 void TestSizeIF(Int_t nsec=36, Int_t nrows=159, Int_t npoints=1000,  Int_t bsize=10, Int_t mode=1);
@@ -63,6 +63,7 @@ void TestBuild(const Int_t npoints, const Int_t bsize){
    }
    Float_t before =Mem();
    TKDTreeIF *kdtree = new TKDTreeIF(npoints, 2, bsize, data);
+   kdtree->Build();
    Float_t after = Mem();
    printf("Memory usage %f KB\n",after-before);
    delete kdtree;
@@ -71,6 +72,103 @@ void TestBuild(const Int_t npoints, const Int_t bsize){
    return;	
 }
 
+//______________________________________________________________________
+void TestMembers()
+{
+   //This is not really a test, it's a function that illustrates the internal
+   //behaviour of the kd-tree.
+   //
+   //Print out the internal kd-tree data-members, like fCrossNode, for 
+   //better understading
+ 
+
+   TKDTreeIF *kdtree = 0x0;
+   Int_t npoints = 33; 
+   Int_t bsize = 10;
+   Float_t *data0 =  new Float_t[200]; //not to reallocate each time
+   Float_t *data1 = new Float_t[200];
+   for (Int_t i=0;i<npoints;i++) {
+      data0[i]= gRandom->Rndm();
+      data1[i]= gRandom->Rndm();
+   }
+   
+   kdtree = new TKDTreeIF(npoints, 2, bsize);
+   kdtree->SetData(0, data0);
+   kdtree->SetData(1, data1);
+   kdtree->Build();
+
+   printf("fNNodes %d, fRowT0 %d, fCrossNode %d, fOffset %d\n",kdtree->GetNNodes(), kdtree->GetRowT0(), kdtree->GetCrossNode(), kdtree->GetOffset());
+   delete kdtree;
+   npoints = 44;
+   for (Int_t i=0;i<npoints;i++) {
+      data0[i]= gRandom->Rndm();
+      data1[i]= gRandom->Rndm();
+   }
+      kdtree = new TKDTreeIF(npoints, 2, bsize);
+   kdtree->SetData(0, data0);
+   kdtree->SetData(1, data1);
+   kdtree->Build();
+
+   printf("fNNodes %d, fRowT0 %d, fCrossNode %d, fOffset %d\n",kdtree->GetNNodes(), kdtree->GetRowT0(), kdtree->GetCrossNode(), kdtree->GetOffset());
+   delete kdtree;
+   npoints = 55;
+   for (Int_t i=0;i<npoints;i++) {
+      data0[i]= gRandom->Rndm();
+      data1[i]= gRandom->Rndm();
+   }
+   kdtree = new TKDTreeIF(npoints, 2, bsize);
+   kdtree->SetData(0, data0);
+   kdtree->SetData(1, data1);
+   kdtree->Build();
+
+   printf("fNNodes %d, fRowT0 %d, fCrossNode %d, fOffset %d\n",kdtree->GetNNodes(), kdtree->GetRowT0(), kdtree->GetCrossNode(), kdtree->GetOffset());
+   delete kdtree;
+   npoints = 66;
+   for (Int_t i=0;i<npoints;i++) {
+      data0[i]= gRandom->Rndm();
+      data1[i]= gRandom->Rndm();
+   }
+      kdtree = new TKDTreeIF(npoints, 2, bsize);
+   kdtree->SetData(0, data0);
+   kdtree->SetData(1, data1);
+   kdtree->Build();
+
+   printf("fNNodes %d, fRowT0 %d, fCrossNode %d, fOffset %d\n",kdtree->GetNNodes(), kdtree->GetRowT0(), kdtree->GetCrossNode(), kdtree->GetOffset());
+   delete kdtree;
+   npoints = 77;
+   for (Int_t i=0;i<npoints;i++) {
+      data0[i]= gRandom->Rndm();
+      data1[i]= gRandom->Rndm();
+   }
+   kdtree = new TKDTreeIF(npoints, 2, bsize);
+   kdtree->SetData(0, data0);
+   kdtree->SetData(1, data1);
+   kdtree->Build();
+
+   printf("fNNodes %d, fRowT0 %d, fCrossNode %d, fOffset %d\n",kdtree->GetNNodes(), kdtree->GetRowT0(), kdtree->GetCrossNode(), kdtree->GetOffset());
+   delete kdtree;
+   npoints = 88;
+   for (Int_t i=0;i<npoints;i++) {
+      data0[i]= gRandom->Rndm();
+      data1[i]= gRandom->Rndm();
+   }
+   kdtree = new TKDTreeIF(npoints, 2, bsize);
+   kdtree->SetData(0, data0);
+   kdtree->SetData(1, data1);
+   kdtree->Build();
+
+   printf("fNNodes %d, fRowT0 %d, fCrossNode %d, fOffset %d\n",kdtree->GetNNodes(), kdtree->GetRowT0(), kdtree->GetCrossNode(), kdtree->GetOffset());
+   delete kdtree;
+
+
+
+   delete data0;
+   delete data1;
+}
+
+
+
+//______________________________________________________________________
 void TestConstr(const Int_t npoints, const Int_t bsize)
 {
 //
@@ -87,6 +185,7 @@ void TestConstr(const Int_t npoints, const Int_t bsize)
    }
    Float_t before =Mem();
    TKDTreeIF *kdtree1 = new TKDTreeIF(npoints, 2, bsize, data);
+   kdtree1->Build();
    TKDTreeIF *kdtree2 = new TKDTreeIF(npoints, 2, bsize);
    kdtree2->SetData(0, data[0]);
    kdtree2->SetData(1, data[1]);
@@ -112,7 +211,7 @@ void TestConstr(const Int_t npoints, const Int_t bsize)
 
 
 //______________________________________________________________________
-void TestSpeed(const Int_t npower2, const Int_t bsize)
+void TestSpeed(Int_t npower2, Int_t bsize)
 {
   //
   // Test of building time of kdTree
@@ -141,6 +240,7 @@ void TestSpeed(const Int_t npower2, const Int_t bsize)
     tpoints = Int_t(pow(2., i))*bsize;
     timer.Start(kTRUE);
     kdtree = new TKDTreeIF(tpoints, 2, bsize, data);
+    kdtree->Build();
     timer.Stop();
     g->SetPoint(i-10, i, timer.CpuTime());
     printf("npoints [%d] nodes [%d] cpu time %f [s]\n", tpoints, kdtree->GetNNodes(), timer.CpuTime());
@@ -192,8 +292,8 @@ void  TestkdtreeIF(Int_t npoints, Int_t bsize, Int_t nloop, Int_t mode)
   Float_t *data[2];
   data[0] = &data0[0];
   data[1] = &data0[npoints];
-  Int_t i;   
-  for (i=0; i<npoints; i++){
+  //Int_t i;   
+  for (Int_t i=0; i<npoints; i++){
     data[0][i]          = gRandom->Uniform(-rangey, rangey);
     data[1][i]          = gRandom->Uniform(-rangez, rangez);
   }
@@ -203,6 +303,7 @@ void  TestkdtreeIF(Int_t npoints, Int_t bsize, Int_t nloop, Int_t mode)
   printf("building kdTree ...\n");
   timer.Start(kTRUE);
   TKDTreeIF *kdtree = new TKDTreeIF(npoints, 2, bsize, data);
+  kdtree->Build();
   timer.Stop();
   timer.Print();
   if(mode == 0) return;
@@ -257,7 +358,8 @@ void  TestkdtreeIF(Int_t npoints, Int_t bsize, Int_t nloop, Int_t mode)
   counterfound/=npoints;
   if (nloop) printf("Find nearest point:\t%f\t%f\t%f\n",countern, counteriter, counterfound);
 }
+
 int main() { 
-   kDTreeTest(); 
+   kDTreeTest();
    return 0; 
 }
