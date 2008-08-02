@@ -127,6 +127,8 @@ TProof *getProof(const char *url, Int_t nwrks, const char *dir, const char *opt 
          Printf("getProof: could not create config file for XPD (%s)", xpdcf.Data());
          return p;
       }
+      fprintf(fcf,"### Use admin path at %s/admin to avoid interferences with other users\n", tutdir.Data());
+      fprintf(fcf,"xrd.adminpath %s/admin\n", tutdir.Data());
       fprintf(fcf,"### Load the XrdProofd protocol on port %d\n", lportp);
       fprintf(fcf,"xrd.protocol xproofd:%d libXrdProofd.so\n", lportp);
       if (nwrks > 0) {
