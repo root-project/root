@@ -38,7 +38,7 @@ MyEvent::MyEvent()
    // class static variables fgParticles and fgTracks is 0 and
    // the TClonesArray fgParticles is created.
 
-   if (!fgParticles) fgParticles = new TClonesArray("MyParticle", 100000);
+   if (!fgParticles) fgParticles = new TClonesArray("MyParticle", 1000);
    fgParticles->BypassStreamer(kFALSE);
    fParticles = fgParticles;
    fNparticles = 0;
@@ -48,6 +48,7 @@ MyEvent::MyEvent()
 MyEvent::~MyEvent()
 {
    // Destructor
+
    Clear();
 }
 
@@ -71,7 +72,7 @@ void MyEvent::Init(Int_t id, Int_t first_particle, Double_t E_0, Double_t B_0)
    Clear();
    Reset();
 
-   if (!fgParticles) fgParticles = new TClonesArray("MyParticle", 100000);
+   if (!fgParticles) fgParticles = new TClonesArray("MyParticle", 1000);
    fParticles = fgParticles;
    fNparticles = 0;
 
@@ -100,15 +101,19 @@ void MyEvent::Init(Int_t id, Int_t first_particle, Double_t E_0, Double_t B_0)
 void MyEvent::Clear(Option_t *option)
 {
    // Clear tracks and particles arrays
+
    fgParticles->Delete(option);
+   fNparticles = 0;
    fMatter = 0;
 }
 
 //______________________________________________________________________________
-void MyEvent::Reset(Option_t * /*option*/)
+void MyEvent::Reset(Option_t *option)
 {
    // Static function to reset all static objects for this event
-   delete fgParticles; fgParticles = 0;
+
+   fgParticles->Delete(option);
+   fNparticles = 0;
    fMatter = 0;
 }
 
@@ -117,6 +122,7 @@ void MyEvent::SetHeader(Int_t i, Int_t run, TDatime date, Int_t primary,
                         Double_t energy)
 {
    // set event header with event identification and startup parameters
+   
    fEvtHdr.Set(i, run, date, primary, energy);
 }
 
@@ -129,6 +135,7 @@ MyParticle *MyEvent::AddParticle(Int_t id, Int_t pdg_code, const TVector3 &pos,
    // the standard but not well know C++ operator "new with placement"
    // is called. If particle[i] is 0, a new MyParticle object will be created
    // otherwise the previous particle[i] will be overwritten.
+   
    TClonesArray &parts = *fParticles;
    MyParticle *part = new(parts[fNparticles++])
                           MyParticle(id, pdg_code, CREATED, UNDEFINE, pos, mom);
@@ -142,6 +149,7 @@ MyParticle *MyEvent::AddParticle(Int_t id, Int_t pdg_code, const TVector3 &pos,
 Int_t MyEvent::Action(Int_t id)
 {
    // main event's action
+   
    Int_t  nchild;
    CheckMatter(id);
    if (GetParticle(id)->GetDecayType() == UNDEFINE)
@@ -196,12 +204,16 @@ Int_t MyEvent::Action(Int_t id)
       else {
          // check energy loss, and if too much energy loss
          // ( particle at rest ) set its status as dead
-         if (DEDX(id) == DEAD) DeleteParticle(id);
+         if (DEDX(id) == DEAD) {
+            DeleteParticle(id);
+         }
          else {
             // if at end of particle's life time, decay it
             if (CheckDecayTime(id) == 1) {
                // if no child found
-               if ((nchild = Decay(id)) == -1) return(DEAD);
+               if ((nchild = Decay(id)) == -1) {
+                  return(DEAD);
+               }
                else {
                   // else increment total alive particles by amount
                   // of particle's children
@@ -215,7 +227,7 @@ Int_t MyEvent::Action(Int_t id)
             // increment total alive particles by the two created children,
             // then set the particle status as dead
             else if (GetParticle(id)->GetPassed() >=
-                    GetParticle(id)->GetDecayLength()) {
+                     GetParticle(id)->GetDecayLength()) {
                switch (GetParticle(id)->GetDecayType()) {
                   case BREMS:
                      if (Bremsstrahlung(id) == DEAD) return(DEAD);
@@ -245,6 +257,7 @@ Double_t MyEvent::BremsProb(Int_t id)
    // Check if bremsstrahlung is allowed and generate
    // a random decay length related to detector's material
    // radiation length (X0)
+   
    Double_t p, retval;
 
    if (GetParticle(id)->Energy() > GetParticle(id)->GetMass()) {
@@ -259,65 +272,68 @@ Double_t MyEvent::BremsProb(Int_t id)
 Int_t MyEvent::Bremsstrahlung(Int_t id)
 {
     // compute bremsstrahlung for particle "id"
-    Double_t  ratio;
-    Int_t     d_num1,d_num2;
-    Char_t    strtmp[80];
-    MyParticle *part;
+    
+   Double_t  ratio;
+   Int_t     d_num1,d_num2;
+   Char_t    strtmp[80];
+   MyParticle *part;
 
-    // find two ids for children particles
-    if ((FindFreeId(&d_num1) != DEAD) && (FindFreeId(&d_num2) != DEAD)) {
-        // compute the particle's energy ratio...
-        ratio = (GetParticle(id)->Energy() - GetParticle(id)->GetMass()) /
-                (2 * GetParticle(id)->P());
-        // create first child if fact, electron continues with less energy
-        // and in a different direction. To that end the electron is added
-        // to its own list of children, because otherwise it would vanish.
-        part = AddParticle(d_num1, GetParticle(id)->GetPdgCode(),
-                           GetParticle(id)->GetvLocation(),
-                           GetParticle(id)->GetvMoment() * ratio);
-        part->SetFirstMother(id);
-        // as its first child is in fact the same particle,
-        // keep the same decay time
-        part->SetTimeOfDecay(GetParticle(id)->GetTimeOfDecay());
-        GetParticle(id)->SetChild(0, d_num1);
-        // add a track related to this particle
+   // find two ids for children particles
+   if ((FindFreeId(&d_num1) != DEAD) && (FindFreeId(&d_num2) != DEAD)) {
+      // compute the particle's energy ratio...
+      ratio = (GetParticle(id)->Energy() - GetParticle(id)->GetMass()) /
+              (2 * GetParticle(id)->P());
+      // create first child if fact, electron continues with less energy
+      // and in a different direction. To that end the electron is added
+      // to its own list of children, because otherwise it would vanish.
+      part = AddParticle(d_num1, GetParticle(id)->GetPdgCode(),
+                         GetParticle(id)->GetvLocation(),
+                         GetParticle(id)->GetvMoment() * ratio);
+      part->SetFirstMother(id);
+      // as its first child is in fact the same particle,
+      // keep the same decay time
+      part->SetTimeOfDecay(GetParticle(id)->GetTimeOfDecay());
+      GetParticle(id)->SetChild(0, d_num1);
+      // add a track related to this particle
 
-        // add a particle related list tree item to the event list tree
-        gTmpLTI = gEventListTree->AddItem(gLTI[id], part->GetName());
-        gTmpLTI->SetUserData(part);
-        sprintf(strtmp,"%1.2e GeV",part->Energy());
-        gEventListTree->SetToolTipItem(gTmpLTI, strtmp);
-        gLTI[d_num1] = gTmpLTI;
+      // add a particle related list tree item to the event list tree
+      gTmpLTI = gEventListTree->AddItem(gLTI[id], part->GetName());
+      gTmpLTI->SetUserData(part);
+      sprintf(strtmp,"%1.2e GeV",part->Energy());
+      gEventListTree->SetToolTipItem(gTmpLTI, strtmp);
+      gLTI[d_num1] = gTmpLTI;
 
-        // create second child
-        part = AddParticle(d_num2,PHOTON, GetParticle(id)->GetvLocation(),
-                    GetParticle(id)->GetvMoment() * ratio);
-        part->SetFirstMother(id);
-        // generate time of decay (not used in this case, as it is a photon,
-        // but to keep the same philosophy in every case...
-        part->GenerateTimeOfDecay();
-        GetParticle(id)->SetChild(1, d_num2);
+      // create second child
+      part = AddParticle(d_num2,PHOTON, GetParticle(id)->GetvLocation(),
+                         GetParticle(id)->GetvMoment() * ratio);
+      part->SetFirstMother(id);
+      // generate time of decay (not used in this case, as it is a photon,
+      // but to keep the same philosophy in every case...
+      part->GenerateTimeOfDecay();
+      GetParticle(id)->SetChild(1, d_num2);
 
-        // add a track related to this particle
+      // add a track related to this particle
 
-        // add a particle related list tree item to the event list tree
-        gTmpLTI = gEventListTree->AddItem(gLTI[id], part->GetName());
-        gTmpLTI->SetUserData(part);
-        sprintf(strtmp,"%1.2e GeV",part->Energy());
-        gEventListTree->SetToolTipItem(gTmpLTI, strtmp);
-        gLTI[d_num2] = gTmpLTI;
+      // add a particle related list tree item to the event list tree
+      gTmpLTI = gEventListTree->AddItem(gLTI[id], part->GetName());
+      gTmpLTI->SetUserData(part);
+      sprintf(strtmp,"%1.2e GeV",part->Energy());
+      gEventListTree->SetToolTipItem(gTmpLTI, strtmp);
+      gLTI[d_num2] = gTmpLTI;
 
-        // increment number of children by the two created particles
-        GetParticle(id)->SetNChildren(2);
+      // increment number of children by the two created particles
+      GetParticle(id)->SetNChildren(2);
 
-        return(ALIVE);
-    }
-    else return(DEAD);
+      return(ALIVE);
+   }
+   else return(DEAD);
 }
 
 //______________________________________________________________________________
 Int_t MyEvent::CheckDecayTime(Int_t id)
 {
+   // Check decay time for particle "id".
+
    if ( (GetParticle(id)->GetPdgCode() == PHOTON) ||
         (GetParticle(id)->GetPdgCode() == ELECTRON) ||
         (GetParticle(id)->GetPdgCode() == POSITRON ))
@@ -335,6 +351,8 @@ Int_t MyEvent::CheckDecayTime(Int_t id)
 //______________________________________________________________________________
 void MyEvent::CheckMatter(Int_t id)
 {
+   // Check material into which the particle "id" is. 
+
    TGeoNode *Node = gGeoManager->FindNode(
              GetParticle(id)->GetvLocation().x(),
              GetParticle(id)->GetvLocation().y(),
@@ -345,6 +363,8 @@ void MyEvent::CheckMatter(Int_t id)
 //______________________________________________________________________________
 Int_t MyEvent::Decay(Int_t id)
 {
+   // Decay the particle "id".
+
    Char_t   strtmp[80];
    Int_t    d_num[5];
    Int_t    n_daughters;
@@ -538,7 +558,8 @@ Int_t MyEvent::DEDX(Int_t id)
 //______________________________________________________________________________
 Int_t MyEvent::FindFreeId(Int_t *FreeId)
 {
-   // give next available particle's id
+   // Give next available particle's id.
+   
    fTotalParticles++;
    *FreeId = fTotalParticles;
    if (fTotalParticles > fLast) fLast = fTotalParticles;
@@ -548,8 +569,9 @@ Int_t MyEvent::FindFreeId(Int_t *FreeId)
 //______________________________________________________________________________
 void MyEvent::MagneticField(Int_t id)
 {
-   // extrapolate track in a constant field oriented along X axis
-   // translated to C++ from GEANT3 routine GHELX3
+   // Extrapolate track in a constant field oriented along X axis
+   // translated to C++ from GEANT3 routine GHELX3.
+   
    Double_t sint, sintt, tsint, cos1t, sin2;
    Double_t f1, f2, f3, v1, v2, v3;
    Double_t pol = GetParticle(id)->GetPDG()->Charge() > 0.0 ? 1.0 : -1.0;
@@ -584,8 +606,20 @@ void MyEvent::MagneticField(Int_t id)
 Int_t MyEvent::Move(Int_t id, TVector3 &dist)
 {
    // Move particle "id" by step dist, update the distance covered
-   // then check if out of detector's bounds
+   // then check if out of detector's bounds.
 
+/*
+   gGeoManager->InitTrack(GetParticle(id)->GetvLocation().x(),
+                          GetParticle(id)->GetvLocation().y(),
+                          GetParticle(id)->GetvLocation().z(),
+                          GetParticle(id)->Px(), GetParticle(id)->Py(),
+                          GetParticle(id)->Pz());
+   gGeoManager->FindNextBoundaryAndStep();
+   Double_t step = gGeoManager->GetStep();
+   if (step < dist.Mag()) {
+      dist.SetMag(step);
+   }
+*/
    GetParticle(id)->SetLocation(GetParticle(id)->GetvLocation() + dist);
    GetParticle(id)->SetPassed(GetParticle(id)->GetPassed() + dist.Mag());
 
@@ -599,6 +633,7 @@ Int_t MyEvent::Move(Int_t id, TVector3 &dist)
    }
    // If not out of bounds, set related Track's next point
    else {
+      CheckMatter(id);
       if ((GetParticle(id)->GetPdgCode() != PHOTON) &&
          (GetParticle(id)->GetPdgCode() != NEUTRINO_E) &&
          (GetParticle(id)->GetPdgCode() != NEUTRINO_MUON) &&
@@ -615,9 +650,10 @@ Int_t MyEvent::Move(Int_t id, TVector3 &dist)
 //______________________________________________________________________________
 Double_t MyEvent::PairProb(Int_t id)
 {
-   // check if pair production is allowed and generate
+   // Check if pair production is allowed and generate
    // a random decay length related to detector's material
-   // radiation length (X0)
+   // radiation length (X0).
+
    Double_t p;
 
    if (GetParticle(id)->Energy() > 2.0 * EMass) {
@@ -630,7 +666,8 @@ Double_t MyEvent::PairProb(Int_t id)
 //______________________________________________________________________________
 Int_t MyEvent::PairCreation(Int_t id)
 {
-   // compute the pair production for particle "id"
+   // Compute the pair production for particle "id"
+
    Int_t    d_num1, d_num2;
    Char_t   strtmp[80];
    MyParticle *part;
@@ -702,24 +739,25 @@ Int_t MyEvent::PairCreation(Int_t id)
 //______________________________________________________________________________
 Int_t MyEvent::ParticleColor(Int_t id)
 {
-   // return color index related to particle's energy
+   // Return color index related to particle's energy.
    //Int_t ctable[11] = {2,50,46,45,44,43,42,41,21,19,5};
+
    Int_t i;
    for (i=0;i<16;i++)
       if (GetParticle(id)->Energy() > fEThreshold[i]) break;
    if (i > 16) i = 16;
    return(gColIndex + i);
-   //return ctable[i];
 }
 
 //______________________________________________________________________________
 void MyEvent::ScatterAngle(Int_t id)
 {
-   // compute scatter angle into the detector's material
+   // Compute scatter angle into the detector's material
    // for the current particle
    // for more infos, please refer to the particle data booklet
    // from which the formulas has been extracted :
-   // Multiple scattering through small angles
+   // Multiple scattering through small angles.
+   
    Double_t alpha,beta;
    Double_t abs_p,p1,p2,r_2;
    Double_t fact1,fact2;
