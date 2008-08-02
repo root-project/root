@@ -163,7 +163,7 @@ Double_t NumberCountingUtils::BinomialObsZ(Double_t mainObs, Double_t background
 
 Double_t NumberCountingUtils::BinomialWithTauObsZ(Double_t mainObs, Double_t auxiliaryObs, Double_t tau){
   // See BinomialWithTauObsZ
-  return Statistics::PValueToSignificance( BinomialWithTauObsZ(mainObs,auxiliaryObs,tau) ) ;  
+  return Statistics::PValueToSignificance( BinomialWithTauObsP(mainObs,auxiliaryObs,tau) ) ;  
 }
 
 /////////////////////////////////////////////////////////////
@@ -172,22 +172,22 @@ Double_t NumberCountingUtils::BinomialWithTauObsZ(Double_t mainObs, Double_t aux
 //
 /////////////////////////////////////////////////////////////
 #include "RooRealVar.h"
-#include "RooConstVar.h"
 #include "RooAddition.h"
 #include "RooProduct.h"
 #include "RooDataSet.h"
 #include "RooProdPdf.h"
-#include "RooPlot.h"
-#include "TMath.h"
-#include "TCanvas.h"
 #include "RooFitResult.h"
-#include "RooNLLVar.h"
 #include "RooPoisson.h"
-#include "RooGaussian.h"
-#include "RooMinuit.h"
 #include "RooGlobalFunc.h"
 #include "RooCmdArg.h"
-#include "TH2F.h"
+//#include "RooConstVar.h"
+//#include "RooPlot.h"
+//#include "TMath.h"
+//#include "TCanvas.h"
+//#include "RooNLLVar.h"
+//#include "RooGaussian.h"
+//#include "RooMinuit.h"
+//#include "TH2F.h"
 #include "TTree.h"
 #include <sstream>
 
