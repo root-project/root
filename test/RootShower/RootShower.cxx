@@ -948,7 +948,6 @@ void RootShower::produce()
     old_num = -1;
     // loop events until user interrupt or until all particles are dead
     while ((!IsInterrupted()) && (fEvent->GetNAlives() > 0)) {
-        //gSystem->ProcessEvents();  // handle GUI events
         if (first_pass && fEvent->GetTotal() > 1) {
             fEventListTree->OpenItem(gBaseLTI);
             fEventListTree->OpenItem(gLTI[0]);
@@ -967,7 +966,6 @@ void RootShower::produce()
         local_num = 0;
         local_end = kFALSE;
         while ((!IsInterrupted()) && (local_end == kFALSE) && (local_num < (local_last + 1))) {
-            //gSystem->ProcessEvents();  // handle GUI events
             // Update display here if fast machine...
             if (fEvent->GetParticle(local_num)->GetStatus() != DEAD) {
                 gSystem->ProcessEvents();
