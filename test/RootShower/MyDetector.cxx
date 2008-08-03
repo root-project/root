@@ -154,7 +154,7 @@ void MyDetector::Init()
       fX0[i] = material->GetRadLen();
 
       // Time step dT in ms about 0.015 times X_0/c
-      fdT[i] = 0.015 * (fX0[i] / CSpeed);
+      fdT[i] = 0.005 * (fX0[i] / CSpeed);
 
       // Scatter angle 
       x = fdT[i] * CSpeed;

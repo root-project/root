@@ -194,7 +194,7 @@ Int_t MyEvent::Action(Int_t id)
       if ((fB != 0) && (GetParticle(id)->GetPDG()->Charge() != 0))
          MagneticField(id);
       // compute the step delta x to be covered by the particle
-      TVector3 delta_x(GetParticle(id)->GetvMoment() *  (CSpeed *
+      TVector3 delta_x(GetParticle(id)->GetvMoment() * (CSpeed *
                        fDetector.GetdT(fMatter) / GetParticle(id)->Energy()));
       // check if moved too far (out of detector's bouds)
       if (Move(id, delta_x) == DEAD) {
@@ -506,7 +506,9 @@ Int_t MyEvent::DEDX(Int_t id)
 
    // if particle's energy is equal to its mass, it is at rest,
    // so set its status as dead
-   if (GetParticle(id)->Energy() <= GetParticle(id)->GetMass()) return(DEAD);
+   if (GetParticle(id)->Energy() <= GetParticle(id)->GetMass()) {
+      return(DEAD);
+   }
    else {
       // absolute value of momentum
       abs_p = GetParticle(id)->P();
@@ -550,8 +552,12 @@ Int_t MyEvent::DEDX(Int_t id)
             GetParticle(id)->AddELoss(abs_loss);
          }
       }
-      if (GetParticle(id)->Energy() > GetParticle(id)->GetMass()) return(ALIVE);
-      else return(DEAD);
+      if (GetParticle(id)->Energy() > GetParticle(id)->GetMass()) {
+         return(ALIVE);
+      }
+      else {
+         return(DEAD);
+      }
    }
 }
 
@@ -592,7 +598,7 @@ void MyEvent::MagneticField(Int_t id)
    }
    f1 = -tet * cos1t;
    f2 = sint;
-   f3 = tet * cos1t * GetParticle(id)->Pz();
+   f3 = tet * cos1t * GetParticle(id)->Px();
    v1 = GetParticle(id)->Px() + (f1 * GetParticle(id)->Px() + f3);
    v2 = GetParticle(id)->Py() + (f1 * GetParticle(id)->Py() + f2 *
         GetParticle(id)->Pz());
@@ -608,18 +614,6 @@ Int_t MyEvent::Move(Int_t id, TVector3 &dist)
    // Move particle "id" by step dist, update the distance covered
    // then check if out of detector's bounds.
 
-/*
-   gGeoManager->InitTrack(GetParticle(id)->GetvLocation().x(),
-                          GetParticle(id)->GetvLocation().y(),
-                          GetParticle(id)->GetvLocation().z(),
-                          GetParticle(id)->Px(), GetParticle(id)->Py(),
-                          GetParticle(id)->Pz());
-   gGeoManager->FindNextBoundaryAndStep();
-   Double_t step = gGeoManager->GetStep();
-   if (step < dist.Mag()) {
-      dist.SetMag(step);
-   }
-*/
    GetParticle(id)->SetLocation(GetParticle(id)->GetvLocation() + dist);
    GetParticle(id)->SetPassed(GetParticle(id)->GetPassed() + dist.Mag());
 
@@ -633,7 +627,6 @@ Int_t MyEvent::Move(Int_t id, TVector3 &dist)
    }
    // If not out of bounds, set related Track's next point
    else {
-      CheckMatter(id);
       if ((GetParticle(id)->GetPdgCode() != PHOTON) &&
          (GetParticle(id)->GetPdgCode() != NEUTRINO_E) &&
          (GetParticle(id)->GetPdgCode() != NEUTRINO_MUON) &&
