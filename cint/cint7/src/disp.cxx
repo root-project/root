@@ -752,7 +752,7 @@ static int G__display_membervariable(FILE *fout, int tagnum, int base)
    }
 
    G__incsetup_memvar(tagnum);
-   ::Reflex::Type var = G__Dict::G__Dict().GetType(tagnum);
+   ::Reflex::Scope var = G__Dict::G__Dict().GetScope(tagnum);
    /* member variable */
    if (var) {
       fprintf(fout, "Defined in %s\n", var.Name().c_str());
