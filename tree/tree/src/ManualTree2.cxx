@@ -147,10 +147,10 @@ static void G__setup_memfuncTTree(void) {
       "n - 'Long64_t' 0 '1000000000' nentries n - 'Long64_t' 0 '0' firstentry", (char*)NULL, (void*) NULL, 1);
    G__memfunc_setup("Branch",590,G__ManualTree2_126_0_187, 85, G__get_linked_tagnum(&G__ManualTree2LN_TBranch), -1, 0, 5, 1, 1, 0, 
       "C - - 10 - name C - - 10 - classname "
-      "Y - - 3 - addobj i - 'Int_t' 0 '32000' bufsize "
+      "Y - - 0 - addobj i - 'Int_t' 0 '32000' bufsize "
       "i - 'Int_t' 0 '99' splitlevel", (char*)NULL, (void*) NULL, 0);
    G__memfunc_setup("Branch",590,G__ManualTree2_126_0_188, 85, G__get_linked_tagnum(&G__ManualTree2LN_TBranch), -1, 0, 4, 1, 1, 0, 
-      "C - - 10 - name Y - - 3 - addobj "
+      "C - - 10 - name Y - - 0 - addobj "
       "i - 'Int_t' 0 '32000' bufsize i - 'Int_t' 0 '99' splitlevel", (char*)NULL, (void*) NULL, 0);
    G__memfunc_setup("SetBranchAddress",1600,G__ManualTree2_126_0_190, 121, -1, -1, 0, 3, 1, 1, 0, 
       "C - - 10 - bname Y - - 2 - add "
