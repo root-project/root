@@ -4148,15 +4148,21 @@ void Cint::Internal::G__cppif_genfunc(FILE* fp, FILE* /*hfp*/, int tagnum, const
          else {
             // we need to convert A::operator T() to A::operator ::T, or
             // the context will be the one of tagnum, i.e. A::T instead of ::T
-            if (tolower(G__get_type(ifunc.TypeOf().ReturnType())) == 'u'
-               && !strncmp(ifunc.Name().c_str(), "operator ", 8)
-               && (isalpha(ifunc.Name().c_str()[9]) || ifunc.Name().c_str()[9] == '_')) {
-                  if (!strncmp(ifunc.Name().c_str() + 9, "const ", 6))
-                     fprintf(fp, "operator const ::%s(", ifunc.Name().c_str() + 15);
-                  else
-                     fprintf(fp, "operator ::%s(", ifunc.Name().c_str() + 9);
-            } else
+            if (
+               (tolower(G__get_type(ifunc.TypeOf().ReturnType())) == 'u') &&
+               !strncmp(ifunc.Name().c_str(), "operator ", 9) &&
+               (isalpha(ifunc.Name().c_str()[9]) || ifunc.Name().c_str()[9] == '_')
+            ) {
+               if (!strncmp(ifunc.Name().c_str() + 9, "const ", 6)) {
+                  fprintf(fp, "operator const ::%s(", ifunc.Name().c_str() + 15);
+               }
+               else {
+                  fprintf(fp, "operator ::%s(", ifunc.Name().c_str() + 9);
+               }
+            }
+            else {
                fprintf(fp, "%s(", ifunc.Name().c_str());
+            }
          }
          //
          // Output the parameters.
