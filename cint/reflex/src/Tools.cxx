@@ -48,24 +48,43 @@ namespace FTypes {
 }
 
 //-------------------------------------------------------------------------------
-static std::string splitScopedName( const std::string & nam, 
-                                    bool returnScope,
-                                    bool startFromLeft = false ) {
-//-------------------------------------------------------------------------------
-// Split a scoped name. If returnScope is true return the scope part otherwise
-// the base part. If startFromLeft is true, parse from left otherwise from the end.
+static std::string splitScopedName(const std::string& nam, bool returnScope, bool startFromLeft = false)
+{
+   // Split a scoped name. If returnScope is true return the scope part otherwise
+   // the base part. If startFromLeft is true, parse from left otherwise from the end.
    size_t pos = 0;
-   if ( startFromLeft ) pos = Tools::GetFirstScopePosition( nam );
-   else                 pos = Tools::GetBasePosition( nam ); 
-   if ( pos != 0 ) {
-      if ( returnScope )  return nam.substr(0,pos-2);
-      else                return nam.substr(pos);
+   if (startFromLeft) {
+      pos = Tools::GetFirstScopePosition(nam);
    }
    else {
-      if ( returnScope )  return "";
-      else                return nam;
+      pos = Tools::GetBasePosition(nam);
    }
+   if (pos == 0) { // There is no scope in the name.
+      if (returnScope) {
+         return "";
+      }
+      return nam;
+   }
+   if (returnScope) {
+      return nam.substr(0, pos - 2);
+   }
+   return nam.substr(pos);
+}
 
+
+//-------------------------------------------------------------------------------
+std::string Tools::GetScopeName(const std::string& name, bool startFromLeft /*= false*/)
+{
+   // Get the scope of a name. Start either from the beginning (startfFromLeft=true) or end.
+   return splitScopedName(name, true, startFromLeft);
+}
+
+
+//-------------------------------------------------------------------------------
+std::string Tools::GetBaseName(const std::string& name, bool startFromLeft /*= false*/)
+{
+   // Get the base of a name. Start either from the beginning (startFromLeft=true) or end.
+   return splitScopedName(name, false, startFromLeft);
 }
 
 
@@ -129,52 +148,234 @@ std::vector<std::string> Tools::GenTemplateArgVec( const std::string & Name ) {
    return vec;
 }
 
-void Tools::GetTemplateComponents( const std::string & Name, std::string &templatename, std::vector<std::string> &args) {
 
+//-------------------------------------------------------------------------------
+void Tools::GetTemplateComponents(const std::string& name, std::string& templatename, std::vector<std::string>& args)
+{
    // Return the template name and a vector of template arguments.
-
-   size_t basepos = Tools::GetBasePosition( Name );
-   const char *argpos = strstr( Name.c_str()+basepos, "<" );
-
-   if (!argpos) return;
-
-   size_t pos1 = argpos - Name.c_str();
-
-   templatename = Name.substr(0, pos1);
-   
-   size_t pos2 = Name.rfind(">");
-
-   if ( pos2 == std::string::npos ) return; 
-
-   std::string tpl = Name.substr(pos1+1, pos2-pos1-1);
-   if (tpl[tpl.size()-1] == ' ') {
-      tpl = tpl.substr(0,tpl.size()-1);
-   }
-   unsigned int par = 0;
-   std::string argName;
-   char c = 0;
-   for (std::string::size_type i = 0; i < tpl.length(); ++i) {
-      c = tpl[i];
-      if ( c == ',' ) {
-         if ( ! par ) {
-            StringStrip(argName);
-            args.push_back(argName);
-            argName = "";
+   //
+   // Note:  We must be careful of:
+   //
+   //       operator<,   operator>,
+   //       operator<=,  operator>=,
+   //       operator<<,  operator>>,
+   //       operator<<=, operator>>=
+   //       operator->,  operator->*,
+   //       operator()
+   //
+   int pos = GetBasePosition(name);
+   int bracket_depth = 0;
+   int paren_depth = 0;
+   int args_pos = 0;
+   bool have_template = false;
+   int len = name.size();
+   for (int i = pos; !have_template && (i < len); ++i) {
+      char c = name[i];
+      if (c == '(') { // check for operator()
+         if (i > 7) { // there is room for "operator"
+            int j = i - 1;
+            while (j && isspace(name[j])) {
+               --j;
+            }
+            if ((j > 6) && (name.substr(j - 7, 8) == "operator")) { // possibly found operator()
+               j = i + 1;
+               while ((j < len) && isspace(name[j])) {
+                  ++j;
+               }
+               if (j < len) {
+                  if (name[j] == ')') {
+                     i = j;
+                     continue; // skip changing depth
+                  }
+               }
+            }
          }
-         else {
-            argName += c;
+         ++paren_depth;
+      }
+      else if (c == ')') {
+         --paren_depth;
+      }
+      else if (c == '<') { // check for operator<, operator<=, operator<<, and operator<<=
+         if (i > 7) { // there is room for "operator"
+            int j = i - 1;
+            while (j && isspace(name[j])) {
+               --j;
+            }
+            if ((j > 6) && (name.substr(j - 7, 8) == "operator")) { // found at least operator<
+               j = i + 1;
+               if (j < len) { // check for operator<=, operator<<, or operator<<=
+                  if (name[j] == '=') { // operator<=
+                     i = j;
+                  }
+                  else if (name[j] == '<') { // we have operator<<, or operator<<=
+                     i = j;
+                     ++j;
+                     if (j < len) {
+                        if (name[j] == '=') { // we have operator<<=
+                           i = j;
+                        }
+                     }
+                  }
+               }
+               continue; // skip changing depth
+            }
+         }
+         if (!paren_depth && !bracket_depth) { // We found the opening '<' of a set of template arguments.
+            templatename = name.substr(0, i);
+            have_template = true;
+            args_pos = i;
+            continue;
+         }
+         ++bracket_depth;
+      }
+      else if (c == '>') { // check for operator>, operator>=, operator>>, operator>>=, operator->, or operator->*
+         if (i > 7) { // there is room for "operator"
+            int j = i - 1;
+            bool have_arrow = false;
+            if (name[j] == '-') { // allow for operator->, or operator->*
+               have_arrow = true;
+               --j;
+            }
+            while (j && isspace(name[j])) {
+               --j;
+            }
+            if ((j > 6) && (name.substr(j - 7, 8) == "operator")) { // found at least operator> or operator->
+               j = i + 1;
+               if (j < len) { // check for operator->*, operator>=, operator>>, or operator>>=
+                  if (have_arrow && (name[j] == '*')) { // we have operator->*
+                     i = j;
+                  }
+                  else if (!have_arrow) {
+                     if (name[j] == '=') { // we have operator>=
+                        i = j;
+                     }
+                     else if (name[j] == '>') { // we have operator>>, or operator>>=
+                        i = j;
+                        ++j;
+                        if (j < len) {
+                           if (name[j] == '=') { // we have operator>>=
+                              i = j;
+                           }
+                        }
+                     }
+                  }
+               }
+               continue; // skip changing depth
+            }
+         }
+         --bracket_depth;
+      }
+   }
+   if (!have_template) {
+      return;
+   }
+   int begin_arg = args_pos + 1;
+   for (int i = args_pos; i < len; ++i) {
+      char c = name[i];
+      if (c == '(') { // check for operator()
+         if (i > 7) { // there is room for "operator"
+            int j = i - 1;
+            while (j && isspace(name[j])) {
+               --j;
+            }
+            if ((j > 6) && (name.substr(j - 7, 8) == "operator")) { // possibly found operator()
+               j = i + 1;
+               while ((j < len) && isspace(name[j])) {
+                  ++j;
+               }
+               if (j < len) {
+                  if (name[j] == ')') {
+                     i = j;
+                     continue; // skip changing depth
+                  }
+               }
+            }
+         }
+         ++paren_depth;
+      }
+      else if (c == ')') {
+         --paren_depth;
+      }
+      else if (c == '<') { // check for operator<, operator<=, operator<<, and operator<<=
+         if (i > 7) { // there is room for "operator"
+            int j = i - 1;
+            while (j && isspace(name[j])) {
+               --j;
+            }
+            if ((j > 6) && (name.substr(j - 7, 8) == "operator")) { // found at least operator<
+               j = i + 1;
+               if (j < len) { // check for operator<=, operator<<, or operator<<=
+                  if (name[j] == '=') { // operator<=
+                     i = j;
+                  }
+                  else if (name[j] == '<') { // we have operator<<, or operator<<=
+                     i = j;
+                     ++j;
+                     if (j < len) {
+                        if (name[j] == '=') { // we have operator<<=
+                           i = j;
+                        }
+                     }
+                  }
+               }
+               continue; // skip changing depth
+            }
+         }
+         ++bracket_depth;
+      }
+      else if (c == '>') { // check for operator>, operator>=, operator>>, operator>>=, operator->, or operator->*
+         if (i > 7) { // there is room for "operator"
+            int j = i - 1;
+            bool have_arrow = false;
+            if (name[j] == '-') { // allow for operator->, or operator->*
+               have_arrow = true;
+               --j;
+            }
+            while (j && isspace(name[j])) {
+               --j;
+            }
+            if ((j > 6) && (name.substr(j - 7, 8) == "operator")) { // found at least operator> or operator->
+               j = i + 1;
+               if (j < len) { // check for operator->*, operator>=, operator>>, or operator>>=
+                  if (have_arrow && (name[j] == '*')) { // we have operator->*
+                     i = j;
+                  }
+                  else if (!have_arrow) {
+                     if (name[j] == '=') { // we have operator>=
+                        i = j;
+                     }
+                     else if (name[j] == '>') { // we have operator>>, or operator>>=
+                        i = j;
+                        ++j;
+                        if (j < len) {
+                           if (name[j] == '=') { // we have operator>>=
+                              i = j;
+                           }
+                        }
+                     }
+                  }
+               }
+               continue; // skip changing depth
+            }
+         }
+         --bracket_depth;
+         if (!bracket_depth) { // We have reached the end of the template arguments;
+            if (i - begin_arg) { // Be careful of MyTempl<>
+               std::string tmp(name.substr(begin_arg, i - begin_arg));
+               StringStrip(tmp);
+               args.push_back(tmp);
+            }
+            return;
          }
       }
-      else {
-         argName += c;
-         if ( c == '<' ) ++par;
-         else if ( c == '>' ) --par;
+      else if (!paren_depth && (bracket_depth == 1) && (c == ',')) { // We have reached the end of an argument
+         std::string tmp(name.substr(begin_arg, i - begin_arg));
+         StringStrip(tmp);
+         args.push_back(tmp);
+         begin_arg = i + 1;
       }
    }
-   if ( argName.length() ) {
-      StringStrip(argName);
-      args.push_back(argName);
-   }
+   // We cannot get here.
    return;
 }
 
@@ -194,8 +395,8 @@ size_t Tools::GetBasePosition(const std::string& name) {
    //       operator->,  operator->*,
    //       operator()
    //
-   int ab = 0;
-   int rb = 0;
+   int ab = 0; // angle brace depth
+   int rb = 0; // right brace depth, actually parenthesis depth
    size_t pos = 0;
    for (int i = name.size() - 1; (i >= 0) && !pos; --i) {
       switch (name[i]) {
@@ -211,7 +412,7 @@ size_t Tools::GetBasePosition(const std::string& name) {
                if ((j > -1) && (name[j] == 'r') && ((j - 7) > -1)) {
                   // -- We may have an operator name.
                   if (name.substr(j - 7, 8) == "operator") {
-                     i = j - 8;
+                     i = j - 7;
                      break;
                   }
                }
@@ -230,7 +431,7 @@ size_t Tools::GetBasePosition(const std::string& name) {
                if ((j > -1) && (name[j] == 'r') && ((j - 7) > -1)) {
                   // -- We may have an operator name.
                   if (name.substr(j - 7, 8) == "operator") {
-                     i = j - 8;
+                     i = j - 7;
                      break;
                   }
                }
@@ -248,7 +449,7 @@ size_t Tools::GetBasePosition(const std::string& name) {
                      if ((j > -1) && (name[j] == 'r') && ((j - 7) > -1)) {
                         // -- We may have an operator name.
                         if (name.substr(j - 7, 8) == "operator") {
-                           i = j - 8;
+                           i = j - 7;
                            break;
                         }
                      }
@@ -264,7 +465,7 @@ size_t Tools::GetBasePosition(const std::string& name) {
                if ((j > -1) && (name[j] == 'r') && ((j - 7) > -1)) {
                   // -- We may have an operator name.
                   if (name.substr(j - 7, 8) == "operator") {
-                     i = j - 8;
+                     i = j - 7;
                      break;
                   }
                }
@@ -283,111 +484,233 @@ size_t Tools::GetBasePosition(const std::string& name) {
 
 
 //-------------------------------------------------------------------------------
-size_t Tools::GetFirstScopePosition( const std::string & name ) {
-//-------------------------------------------------------------------------------
-// Get the position of the first scope of a scoped name.
-   int b = 0;
-   size_t pos = 0;
-   unsigned int i = 0;
-
-   for ( i = 0; i < name.size(); ++i ) {
-      switch (name[i]) {
-      case '<':
-      case '(':
-         b++; break;
-      case '>':
-      case ')':
-         b--; break;
-      case ':':
-         if ( b == 0 && name[i+1] == ':' ) {
-            pos = i + 2;
-            break;
-         }
-      default: continue;
-      }
-      if ( pos ) break;
-   }
-   return pos;
-}
-
-
-//-------------------------------------------------------------------------------
-std::string Tools::GetScopeName( const std::string & name,
-                                 bool startFromLeft ){
-//-------------------------------------------------------------------------------
-// Get the scope of a name. Start either from the beginning (startfFromLeft=true) or end.
-   return splitScopedName( name, true, startFromLeft );
-}
-
-
-//-------------------------------------------------------------------------------
-std::string Tools::GetBaseName( const std::string & name,
-                                bool startFromLeft ) {
-//-------------------------------------------------------------------------------
-// Get the base of a name. Start either from the beginning (startFromLeft=true) or end.
-   return splitScopedName( name, false, startFromLeft );
-}
-
-
-//-------------------------------------------------------------------------------
-bool Tools::IsTemplated(const char * name ) {
-//-------------------------------------------------------------------------------
-// Check if a type name is templated.
-// Only check the current scope, i.e. IsTemplated("A<T>::B") will return false!
-// Functions are treated as templated if they have an explicit template argument
-// in front of their argument list, e.g. both "operator A<T>()" and "int f<T>()"
-// are determined to be templated.
-
-   // Watch out for A<T>::op>() - which we treat as non templated!
-   // So a trailing '>' is not sufficient, even if there is a '<' in
-   // the type name.
-
-   // level of nested parantheses, e.g. for the _not_ templated
-   // f(A<int>(*)(B<float>))
-   unsigned int paraLevel = 0;
-
-   size_t len = strlen(name);
-
-   if (len==0) return false;
-
-   for (size_t i = len - 1; i > 0; --i) {
-      if (name[i] == ')')
-         ++paraLevel;
-      else if (name[i] == '(') {
-         if (paraLevel)
-            --paraLevel;
-         else
-            std::cerr << "Reflex::Tool::IsTemplated(): ERROR: level of parantheses < 0 for "
-                      << name << std::endl;
-      } else if (!paraLevel) {
-         if (name[i] == ':' && name[i - 1] == ':')
-            // Reached the first scope that is not in a template arg.
-            // Only the last scope is tested here, so this type name
-            // is not templated.
-            return false;
-         if (name[i] == '>') {
-            // check for operator> or operator>> or operator->
-            if (i > 7) {
-               int j = i;
-               if (name[i - 1] == '>' || name[i - 1] == '-') --j;
-               while (j && isspace(name[j]))
-                  --j;
-               if (j > 7 && !strncmp(name + j - 8, "operator", 8))
-                  // it's the operator!
-                  return false;
+size_t Tools::GetFirstScopePosition(const std::string& name)
+{
+   // Get the position of the first scope of a scoped name.
+   //
+   // Note:  We must be careful of:
+   //
+   //       operator<,   operator>,
+   //       operator<=,  operator>=,
+   //       operator<<,  operator>>,
+   //       operator<<=, operator>>=
+   //       operator->,  operator->*,
+   //       operator()
+   //
+   int bracket_depth = 0;
+   int paren_depth = 0;
+   int len = name.size();
+   for (int i = 0; i < len; ++i) {
+      char c = name[i];
+      if (c == '(') { // check for operator()
+         if (i > 7) { // there is room for "operator"
+            int j = i - 1;
+            while (j && isspace(name[j])) {
+               --j;
             }
-            // not the operator> or operator>>
-            return true;
+            if ((j > 6) && (name.substr(j - 7, 8) == "operator")) { // possibly found operator()
+               j = i + 1;
+               while ((j < len) && isspace(name[j])) {
+                  ++j;
+               }
+               if (j < len) {
+                  if (name[j] == ')') {
+                     i = j;
+                     continue; // skip changing depth
+                  }
+               }
+            }
          }
+         ++paren_depth;
+      }
+      else if (c == ')') {
+         --paren_depth;
+      }
+      else if (c == '<') { // check for operator<, operator<=, operator<<, and operator<<=
+         if (i > 7) { // there is room for "operator"
+            int j = i - 1;
+            while (j && isspace(name[j])) {
+               --j;
+            }
+            if ((j > 6) && (name.substr(j - 7, 8) == "operator")) { // found at least operator<
+               j = i + 1;
+               if (j < len) { // check for operator<=, operator<<, or operator<<=
+                  if (name[j] == '=') { // operator<=
+                     i = j;
+                  }
+                  else if (name[j] == '<') { // we have operator<<, or operator<<=
+                     i = j;
+                     ++j;
+                     if (j < len) {
+                        if (name[j] == '=') { // we have operator<<=
+                           i = j;
+                        }
+                     }
+                  }
+               }
+               continue; // skip changing depth
+            }
+         }
+         ++bracket_depth;
+      }
+      else if (c == '>') { // check for operator>, operator>=, operator>>, operator>>=, operator->, or operator->*
+         if (i > 7) { // there is room for "operator"
+            int j = i - 1;
+            bool have_arrow = false;
+            if (name[j] == '-') { // allow for operator->, or operator->*
+               have_arrow = true;
+               --j;
+            }
+            while (j && isspace(name[j])) {
+               --j;
+            }
+            if ((j > 6) && (name.substr(j - 7, 8) == "operator")) { // found at least operator> or operator->
+               j = i + 1;
+               if (j < len) { // check for operator->*, operator>=, operator>>, or operator>>=
+                  if (have_arrow && (name[j] == '*')) { // we have operator->*
+                     i = j;
+                  }
+                  else if (!have_arrow) {
+                     if (name[j] == '=') { // we have operator>=
+                        i = j;
+                     }
+                     else if (name[j] == '>') { // we have operator>>, or operator>>=
+                        i = j;
+                        ++j;
+                        if (j < len) {
+                           if (name[j] == '=') { // we have operator>>=
+                              i = j;
+                           }
+                        }
+                     }
+                  }
+               }
+               continue; // skip changing depth
+            }
+         }
+         --bracket_depth;
+      }
+      else if (!paren_depth && !bracket_depth && (c == ':') && ((i + 1) < len) && (name[i+1] == ':')) {
+         return i + 2;
+      }
+   }
+   return 0;
+}
+
+
+//-------------------------------------------------------------------------------
+bool Tools::IsTemplated(const char* name)
+{
+   // Check if the final component of a qualified-id has template arguments.
+   //
+   // Note:  We must be careful of:
+   //
+   //       operator<,   operator>,
+   //       operator<=,  operator>=,
+   //       operator<<,  operator>>,
+   //       operator<<=, operator>>=
+   //       operator->,  operator->*,
+   //       operator()
+   //
+   int pos = GetBasePosition(std::string(name));
+   int bracket_depth = 0;
+   int paren_depth = 0;
+   int len = std::strlen(name);
+   for (int i = pos; i < len; ++i) {
+      char c = name[i];
+      if (c == '(') { // check for operator()
+         if (i > 7) { // there is room for "operator"
+            int j = i - 1;
+            while (j && isspace(name[j])) {
+               --j;
+            }
+            if ((j > 6) && !strncmp(name + j - 7, "operator", 8)) { // possibly found operator()
+               j = i + 1;
+               while ((j < len) && isspace(name[j])) {
+                  ++j;
+               }
+               if (j < len) {
+                  if (name[j] == ')') {
+                     i = j;
+                     continue; // skip changing depth
+                  }
+               }
+            }
+         }
+         ++paren_depth;
+      }
+      else if (c == ')') {
+         --paren_depth;
+      }
+      else if (c == '<') { // check for operator<, operator<=, operator<<, and operator<<=
+         if (i > 7) { // there is room for "operator"
+            int j = i - 1;
+            while (j && isspace(name[j])) {
+               --j;
+            }
+            if ((j > 6) && !strncmp(name + j - 7, "operator", 8)) { // found at least operator<
+               j = i + 1;
+               if (j < len) { // check for operator<=, operator<<, or operator<<=
+                  if (name[j] == '=') { // operator<=
+                     i = j;
+                  }
+                  else if (name[j] == '<') { // we have operator<<, or operator<<=
+                     i = j;
+                     ++j;
+                     if (j < len) {
+                        if (name[j] == '=') { // we have operator<<=
+                           i = j;
+                        }
+                     }
+                  }
+               }
+               continue; // skip changing depth
+            }
+         }
+         if (!paren_depth && !bracket_depth) {
+            return true; // We found the opening '<' of a set of template arguments.
+         }
+         ++bracket_depth;
+      }
+      else if (c == '>') { // check for operator>, operator>=, operator>>, operator>>=, operator->, or operator->*
+         if (i > 7) { // there is room for "operator"
+            int j = i - 1;
+            bool have_arrow = false;
+            if (name[j] == '-') { // allow for operator->, or operator->*
+               have_arrow = true;
+               --j;
+            }
+            while (j && isspace(name[j])) {
+               --j;
+            }
+            if ((j > 6) && !strncmp(name + j - 7, "operator", 8)) { // found at least operator> or operator->
+               j = i + 1;
+               if (j < len) { // check for operator->*, operator>=, operator>>, or operator>>=
+                  if (have_arrow && (name[j] == '*')) { // we have operator->*
+                     i = j;
+                  }
+                  else if (!have_arrow) {
+                     if (name[j] == '=') { // we have operator>=
+                        i = j;
+                     }
+                     else if (name[j] == '>') { // we have operator>>, or operator>>=
+                        i = j;
+                        ++j;
+                        if (j < len) {
+                           if (name[j] == '=') { // we have operator>>=
+                              i = j;
+                           }
+                        }
+                     }
+                  }
+               }
+               continue; // skip changing depth
+            }
+         }
+         --bracket_depth;
       }
    }
    return false;
-   /* alpha 
-      size_t i = strlen(name)-1;
-      while (name[i] == ' ') --i;
-      if (( name[i] == '>' ) && ( strchr(name,'<') != 0 )) return true;
-      return false;
-   */
 }
 
 
@@ -592,24 +915,239 @@ void Tools::StringStrip( std::string & str ) {
 
 
 //-------------------------------------------------------------------------------
-std::string Tools::GetTemplateArguments( const char * name ) {
-//-------------------------------------------------------------------------------
-// Return the template arguments part of a templated type name.
-   std::string baseName = GetBaseName(name);
-   return baseName.substr(baseName.find('<'));
+std::string Tools::GetTemplateArguments(const char* name)
+{
+   // Return the template arguments part of a templated type name.
+   //
+   // Note:  We must be careful of:
+   //
+   //       operator<,   operator>,
+   //       operator<=,  operator>=,
+   //       operator<<,  operator>>,
+   //       operator<<=, operator>>=
+   //       operator->,  operator->*,
+   //       operator()
+   //
+   int pos = GetBasePosition(std::string(name));
+   int bracket_depth = 0;
+   int paren_depth = 0;
+   int len = std::strlen(name);
+   for (int i = pos; i < len; ++i) {
+      char c = name[i];
+      if (c == '(') { // check for operator()
+         if (i > 7) { // there is room for "operator"
+            int j = i - 1;
+            while (j && isspace(name[j])) {
+               --j;
+            }
+            if ((j > 6) && !strncmp(name + j - 7, "operator", 8)) { // possibly found operator()
+               j = i + 1;
+               while ((j < len) && isspace(name[j])) {
+                  ++j;
+               }
+               if (j < len) {
+                  if (name[j] == ')') {
+                     i = j;
+                     continue; // skip changing depth
+                  }
+               }
+            }
+         }
+         ++paren_depth;
+      }
+      else if (c == ')') {
+         --paren_depth;
+      }
+      else if (c == '<') { // check for operator<, operator<=, operator<<, and operator<<=
+         if (i > 7) { // there is room for "operator"
+            int j = i - 1;
+            while (j && isspace(name[j])) {
+               --j;
+            }
+            if ((j > 6) && !strncmp(name + j - 7, "operator", 8)) { // found at least operator<
+               j = i + 1;
+               if (j < len) { // check for operator<=, operator<<, or operator<<=
+                  if (name[j] == '=') { // operator<=
+                     i = j;
+                  }
+                  else if (name[j] == '<') { // we have operator<<, or operator<<=
+                     i = j;
+                     ++j;
+                     if (j < len) {
+                        if (name[j] == '=') { // we have operator<<=
+                           i = j;
+                        }
+                     }
+                  }
+               }
+               continue; // skip changing depth
+            }
+         }
+         if (!paren_depth && !bracket_depth) { // We found the opening '<' of a set of template arguments.
+            return name + i;
+         }
+         ++bracket_depth;
+      }
+      else if (c == '>') { // check for operator>, operator>=, operator>>, operator>>=, operator->, or operator->*
+         if (i > 7) { // there is room for "operator"
+            int j = i - 1;
+            bool have_arrow = false;
+            if (name[j] == '-') { // allow for operator->, or operator->*
+               have_arrow = true;
+               --j;
+            }
+            while (j && isspace(name[j])) {
+               --j;
+            }
+            if ((j > 6) && !strncmp(name + j - 7, "operator", 8)) { // found at least operator> or operator->
+               j = i + 1;
+               if (j < len) { // check for operator->*, operator>=, operator>>, or operator>>=
+                  if (have_arrow && (name[j] == '*')) { // we have operator->*
+                     i = j;
+                  }
+                  else if (!have_arrow) {
+                     if (name[j] == '=') { // we have operator>=
+                        i = j;
+                     }
+                     else if (name[j] == '>') { // we have operator>>, or operator>>=
+                        i = j;
+                        ++j;
+                        if (j < len) {
+                           if (name[j] == '=') { // we have operator>>=
+                              i = j;
+                           }
+                        }
+                     }
+                  }
+               }
+               continue; // skip changing depth
+            }
+         }
+         --bracket_depth;
+      }
+   }
+   return std::string();
 }
 
 
 //-------------------------------------------------------------------------------
-std::string Tools::GetTemplateName( const char * name ) {
-//-------------------------------------------------------------------------------
-// Return the fully qualified scope name without template arguments.
-   std::string scopeName = GetScopeName( name );
-   std::string baseName = GetBaseName( name );
-   std::string templateName = baseName.substr(0, baseName.find('<'));
-   if ( scopeName.length()) return scopeName + "::" + templateName;
-  
-   return templateName;
+std::string Tools::GetTemplateName(const char* name)
+{
+   // Return the fully qualified scope name without template arguments.
+   //
+   // Note:  We must be careful of:
+   //
+   //       operator<,   operator>,
+   //       operator<=,  operator>=,
+   //       operator<<,  operator>>,
+   //       operator<<=, operator>>=
+   //       operator->,  operator->*,
+   //       operator()
+   //
+   int base_pos = GetBasePosition(std::string(name));
+   int bracket_depth = 0;
+   int paren_depth = 0;
+   int len = std::strlen(name);
+   for (int i = base_pos; i < len; ++i) {
+      char c = name[i];
+      if (c == '(') { // check for operator()
+         if (i > 7) { // there is room for "operator"
+            int j = i - 1;
+            while (j && isspace(name[j])) {
+               --j;
+            }
+            if ((j > 6) && !strncmp(name + j - 7, "operator", 8)) { // possibly found operator()
+               j = i + 1;
+               while ((j < len) && isspace(name[j])) {
+                  ++j;
+               }
+               if (j < len) {
+                  if (name[j] == ')') {
+                     i = j;
+                     continue; // skip changing depth
+                  }
+               }
+            }
+         }
+         ++paren_depth;
+      }
+      else if (c == ')') {
+         --paren_depth;
+      }
+      else if (c == '<') { // check for operator<, operator<=, operator<<, and operator<<=
+         if (i > 7) { // there is room for "operator"
+            int j = i - 1;
+            while (j && isspace(name[j])) {
+               --j;
+            }
+            if ((j > 6) && !strncmp(name + j - 7, "operator", 8)) { // found at least operator<
+               j = i + 1;
+               if (j < len) { // check for operator<=, operator<<, or operator<<=
+                  if (name[j] == '=') { // operator<=
+                     i = j;
+                  }
+                  else if (name[j] == '<') { // we have operator<<, or operator<<=
+                     i = j;
+                     ++j;
+                     if (j < len) {
+                        if (name[j] == '=') { // we have operator<<=
+                           i = j;
+                        }
+                     }
+                  }
+               }
+               continue; // skip changing depth
+            }
+         }
+         if (!paren_depth && !bracket_depth) { // We found the opening '<' of a set of template arguments.
+            // Remove any trailing spaces, we might be operator<< <int>
+            int j = i - 1;
+            while ((j >= base_pos) && isspace(name[j])) {
+               --j;
+            }
+            return std::string(name, j + 1);
+         }
+         ++bracket_depth;
+      }
+      else if (c == '>') { // check for operator>, operator>=, operator>>, operator>>=, operator->, or operator->*
+         if (i > 7) { // there is room for "operator"
+            int j = i - 1;
+            bool have_arrow = false;
+            if (name[j] == '-') { // allow for operator->, or operator->*
+               have_arrow = true;
+               --j;
+            }
+            while (j && isspace(name[j])) {
+               --j;
+            }
+            if ((j > 6) && !strncmp(name + j - 7, "operator", 8)) { // found at least operator> or operator->
+               j = i + 1;
+               if (j < len) { // check for operator->*, operator>=, operator>>, or operator>>=
+                  if (have_arrow && (name[j] == '*')) { // we have operator->*
+                     i = j;
+                  }
+                  else if (!have_arrow) {
+                     if (name[j] == '=') { // we have operator>=
+                        i = j;
+                     }
+                     else if (name[j] == '>') { // we have operator>>, or operator>>=
+                        i = j;
+                        ++j;
+                        if (j < len) {
+                           if (name[j] == '=') { // we have operator>>=
+                              i = j;
+                           }
+                        }
+                     }
+                  }
+               }
+               continue; // skip changing depth
+            }
+         }
+         --bracket_depth;
+      }
+   }
+   return name;
 }
 
 
