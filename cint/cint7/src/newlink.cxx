@@ -3859,10 +3859,10 @@ void Cint::Internal::G__cppif_gendefault(FILE* fp, FILE* /*hfp*/, int tagnum, in
       fprintf(fp,   "   }\n");
 
       fprintf(fp,   "   if (n) {\n");
-      fprintf(fp,   "     if (gvp == (char*) G__PVOID) {\n");
+      fprintf(fp,   "     if (gvp == (char*)G__PVOID) {\n");
       fprintf(fp,   "       delete[] (%s*) soff;\n", buf);
       fprintf(fp,   "     } else {\n");
-      fprintf(fp,   "       G__setgvp((long)G__PVOID);\n");
+      fprintf(fp,   "       G__setgvp((long) G__PVOID);\n");
       fprintf(fp,   "       for (int i = n - 1; i >= 0; --i) {\n");
       fprintf(fp,   "         ((%s*) (soff+(sizeof(%s)*i)))->~%s();\n", buf, buf, dtorname);
       fprintf(fp,   "       }\n");
@@ -3873,7 +3873,7 @@ void Cint::Internal::G__cppif_gendefault(FILE* fp, FILE* /*hfp*/, int tagnum, in
       //fprintf(fp, "       G__operator_delete((void*) soff);\n");
       fprintf(fp,   "       delete (%s*) soff;\n", buf);
       fprintf(fp,   "     } else {\n");
-      fprintf(fp,   "       G__setgvp((long)G__PVOID);\n");
+      fprintf(fp,   "       G__setgvp((long) G__PVOID);\n");
       fprintf(fp,   "       ((%s*) (soff))->~%s();\n", buf, dtorname);
       fprintf(fp,   "       G__setgvp((long)gvp);\n");
       fprintf(fp,   "     }\n");
