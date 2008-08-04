@@ -2340,7 +2340,19 @@ int Cint::Internal::G__instantiate_templateclass(char *tagnamein, int noerror)
             typedef_fullname += "::";
          }
          typedef_fullname += tagname;
-         Reflex::TypedefTypeBuilder(typedef_fullname.c_str(), origType);
+         //fprintf(stderr, "G__instantiate_templateclass: calling Reflex::TypedefTypeBuilder for '%s'\n", typedef_fullname.c_str());
+         ::Reflex::Type result = ::Reflex::TypedefTypeBuilder(typedef_fullname.c_str(), origType);
+         G__RflxProperties* prop = G__get_properties(result);
+         if (prop) {
+            prop->globalcomp = G__NOLINK;
+            //fprintf(stderr, "G__instantiate_templateclass: registering typedef '%s'\n", result.Name().c_str());
+            prop->typenum = G__Dict::GetDict().Register(result);
+#ifdef G__TYPEDEFFPOS
+            prop->filenum = G__ifile.filenum;
+            prop->linenum = G__ifile.line_number;
+#endif // G__TYPEDEFFPOS
+            prop->tagnum = G__get_tagnum(origType.RawType()); // FIXME: I think this is wrong, I think it should be -1 always.
+         }
       }
     } else // no "else" in the old days, but:
      // we won't find it back with tagname, as it's now a typedef called "tagname".
