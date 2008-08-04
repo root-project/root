@@ -38,6 +38,14 @@ Reflex::Instance::Instance() {
 //-------------------------------------------------------------------------------
 // Initialisation of Reflex.Setup of global scope, fundamental types.
 
+   static bool initialized = false;
+
+   if (initialized) {
+      return;
+   }
+
+   initialized = true;
+
    /** initialisation of the global namespace */
    Namespace::GlobalScope();
 
