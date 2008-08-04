@@ -51,7 +51,7 @@
 #include <TGToolBar.h>
 #include <TGSplitter.h>
 #include <TColor.h>
-
+#include <TGLViewer.h>
 #include <THtml.h>
 
 #ifndef _CONSTANTS_H_
@@ -817,9 +817,15 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         break;
 
                     case M_SHOW_3D:
+                        {
                         if (fIsRunning) break;
                         fCA->cd();
-                        fCA->GetViewer3D("ogl");
+                        TVirtualViewer3D *viewer3D = fCA->GetViewer3D("ogl");
+                        TGLViewer *glviewer = (TGLViewer *)viewer3D;
+                        glviewer->SetCurrentCamera(TGLViewer::kCameraPerspXOY);
+                        glviewer->CurrentCamera().RotateRad(0.0, TMath::Pi());
+                        glviewer->CurrentCamera().Dolly(-100, 0, 0);
+                        }
                         break;
 
                     case M_SHOW_TRACK:

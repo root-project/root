@@ -57,7 +57,7 @@ void MyDetector::Init()
 
    fTotalELoss = 0.0;
    fDimX = 40.0;
-   fDimY = 42.0;
+   fDimY = 62.0;
    fDimZ = 40.0;
    fMaxX = fDimX / 2.;
    fMinX = -fMaxX;
@@ -74,8 +74,8 @@ void MyDetector::Init()
    trans[1] = new TGeoTranslation(0., 5.0, 0.);
    trans[2] = new TGeoTranslation(0., 8.0, 0.);
    trans[3] = new TGeoTranslation(0., 12.0, 0.);
-   trans[4] = new TGeoTranslation(0., 26.0, 0.);
-   trans[5] = new TGeoTranslation(0., 40.0, 0.);
+   trans[4] = new TGeoTranslation(0., 36.0, 0.);
+   trans[5] = new TGeoTranslation(0., 60.0, 0.);
     
    iron = new TGeoMaterial("Iron",55.85f,26,7.87f,1.76f,131.9f);
    lead = new TGeoMaterial("Lead",207.2f,82,11.35f,0.56f,194.0f);
@@ -121,7 +121,7 @@ void MyDetector::Init()
    volume[4]->SetLineWidth(1);
    volume[0]->AddNode(volume[4],3,trans[3]);
 
-   volume[5] = gGeoManager->MakeBox("BOX4",calorimeter, 20.0,12.00,20.0);
+   volume[5] = gGeoManager->MakeBox("BOX4",calorimeter, 20.0,22.00,20.0);
    volume[5]->SetLineColor(38);
    volume[5]->SetTransparency(50);
    volume[5]->SetLineWidth(1);
