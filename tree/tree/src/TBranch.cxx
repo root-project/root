@@ -1641,12 +1641,14 @@ void TBranch::Refresh(TBranch* b)
    fBaskets.Delete();
    Int_t nbaskets = b->fBaskets.GetSize();
    fBaskets.Expand(nbaskets);
-   //The current fWritebasket must always be in memory.
-   //Take it (just swap) from the Tree being read
+   // If the current fWritebasket is in memory, take it (just swap)
+   // from the Tree being read
    TBasket *basket = (TBasket*)b->fBaskets.UncheckedAt(fWriteBasket);
    fBaskets.AddAt(basket,fWriteBasket);
-   b->fBaskets.RemoveAt(fWriteBasket);
-   basket->SetBranch(this);
+   if (basket) {
+      b->fBaskets.RemoveAt(fWriteBasket);
+      basket->SetBranch(this);
+   }
 }
 
 //______________________________________________________________________________

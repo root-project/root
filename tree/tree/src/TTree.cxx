@@ -5329,7 +5329,7 @@ void TTree::Refresh()
    }
    fDirectory->ReadKeys();
    fDirectory->Remove(this);
-   TTree* tree = (TTree*) fDirectory->Get(GetName());
+   TTree* tree; fDirectory->GetObject(GetName(),tree);
    if (!tree) {
       return;
    }
