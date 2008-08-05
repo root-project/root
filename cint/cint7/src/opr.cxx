@@ -2357,16 +2357,7 @@ int Cint::Internal::G__overloadopr(int operatortag, G__value expressionin, G__va
          switch (operatortag) {
             case G__OPR_POSTFIXINC:
             case G__OPR_POSTFIXDEC:
-#ifndef G__OLDIMPLEMENTATION1825
                sprintf(expr, "%s(%s,1)", opr , G__setiparseobject(&expressionin, arg1));
-#else // G__OLDIMPLEMENTATION1825
-               if (expressionin.obj.i < 0) {
-                  sprintf(expr, "%s((%s)(%ld),1)", opr , G__fulltagname(expressionin.tagnum, 1), expressionin.obj.i);
-               }
-               else {
-                  sprintf(expr, "%s((%s)%ld,1)", opr , G__fulltagname(expressionin.tagnum, 1), expressionin.obj.i);
-               }
-#endif // G__OLDIMPLEMENTATION1825
 #ifdef G__ASM
                if (G__asm_noverflow) {
                   // -- We are generating bytecode.
@@ -2383,17 +2374,7 @@ int Cint::Internal::G__overloadopr(int operatortag, G__value expressionin, G__va
 #endif // G__ASM
                break;
             default:
-               // --
-#ifndef G__OLDIMPLEMENTATION1825
                sprintf(expr, "%s(%s)", opr , G__setiparseobject(&expressionin, arg1));
-#else // G__OLDIMPLEMENTATION1825
-               if (expressionin.obj.i < 0) {
-                  sprintf(expr, "%s((%s)(%ld))", opr , G__fulltagname(expressionin.tagnum, 1), expressionin.obj.i);
-               }
-               else {
-                  sprintf(expr, "%s((%s)%ld)" , opr , G__fulltagname(expressionin.tagnum, 1), expressionin.obj.i);
-               }
-#endif // G__OLDIMPLEMENTATION1825
                break;
          }
          buffer = G__getfunction(expr, &ig2, G__TRYNORMAL);
@@ -2452,18 +2433,7 @@ int Cint::Internal::G__overloadopr(int operatortag, G__value expressionin, G__va
       //
       ig2 = 0;
       if (G__get_type(G__value_typenum(expressionin)) == 'u') {
-         // --
-#ifndef G__OLDIMPLEMENTATION1825
          G__setiparseobject(&expressionin, arg2);
-#else // G__OLDIMPLEMENTATION1825
-         if (expressionin.obj.i < 0) {
-            sprintf(arg2, "(%s)(%ld)" , G__fulltagname(expressionin.tagnum, 1), expressionin.obj.i);
-         }
-         else {
-            sprintf(arg2, "(%s)%ld" , G__fulltagname(expressionin.tagnum, 1), expressionin.obj.i);
-         }
-#endif // G__OLDIMPLEMENTATION1825
-         // --
       }
       else {
          G__valuemonitor(expressionin, arg2);
@@ -2514,18 +2484,7 @@ int Cint::Internal::G__overloadopr(int operatortag, G__value expressionin, G__va
          }
 #endif // G__ASM
          if (G__get_type(G__value_typenum(*defined)) == 'u') {
-            // --
-#ifndef G__OLDIMPLEMENTATION1825
             G__setiparseobject(defined, arg1);
-#else // G__OLDIMPLEMENTATION1825
-            if (defined->obj.i < 0) {
-               sprintf(arg1, "(%s)(%ld)", G__fulltagname(defined->tagnum, 1), defined->obj.i);
-            }
-            else {
-               sprintf(arg1, "(%s)%ld", G__fulltagname(defined->tagnum, 1), defined->obj.i);
-            }
-#endif // G__OLDIMPLEMENTATION1825
-            // --
          }
          else {
             G__valuemonitor(*defined, arg1);
@@ -2930,17 +2889,7 @@ int Cint::Internal::G__tryindexopr(G__value* result7, G__value* para, int paran,
          G__StrBuf arg2_sb(G__MAXNAME);
          char *arg2 = arg2_sb;
          if (G__get_type(para[ig25]) == 'u') {
-            // --
-#ifndef G__OLDIMPLEMENTATION1825
             G__setiparseobject(&para[ig25], arg2);
-#else // G__OLDIMPLEMENTATION1825
-            if (para[ig25].obj.i < 0) {
-               sprintf(arg2, "(%s)(%ld)", G__struct.name[para[ig25].tagnum], para[ig25].obj.i);
-            }
-            else {
-               sprintf(arg2, "(%s)%ld", G__struct.name[para[ig25].tagnum], para[ig25].obj.i);
-            }
-#endif // G__OLDIMPLEMENTATION1825
          }
          else {
             G__valuemonitor(para[ig25], arg2);

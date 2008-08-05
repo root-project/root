@@ -1127,11 +1127,7 @@ G__value Cint::Internal::G__getexpr(char* expression)
    if (!length) {
       return G__null;
    }
-#ifndef G__OLDIMPLEMENTATION1802
    G__StrBuf ebuf_sb(length + 6);
-#else
-   G__StrBuf ebuf_sb(G__LONGLINE);
-#endif
    char *ebuf = ebuf_sb;
    int c; /* temp char */
    int ig1 = 0;  /* input expression pointer */
@@ -1740,21 +1736,21 @@ G__value Cint::Internal::G__getitem(char* item)
    int c;
    char store_var_typeB;
    G__value reg;
-   /* char name[G__MAXNAME], *p; */ /* to handle $xxx.yyy $xxx->yyy */
-   /* to prevent recursive calling of G__GetSpecialObject() */
-
-
    switch (item[0]) {
-         /* constant */
       case '0':
-         c = item[1];
-         if ((c != '\0') && (c != '.') &&
-               ((c = tolower(c)) != 'f') && (c != 'e') &&
-               (c != 'l') && (c != 'u') && (c != 's')) {
+         c = tolower(item[1]);
+         if (
+            (c != '\0') &&
+            (c != '.') &&
+            (c != 'f') &&
+            (c != 'e') &&
+            (c != 'l') &&
+            (c != 'u') &&
+            (c != 's')
+         ) {
             result3 = G__checkBase(item, &known);
 #ifdef G__ASM
-            if (G__asm_noverflow) {
-               // -- We are generating bytecode.
+            if (G__asm_noverflow) { // -- We are generating bytecode.
                /**************************************
                 * G__LD instruction
                 * 0 LD
@@ -1772,11 +1768,15 @@ G__value Cint::Internal::G__getitem(char* item)
                G__inc_cp_asm(2, 1);
             }
 #endif // G__ASM
-#pragma message(FIXME("The code use to the set the variable 'static const', G__modify_type can not handle it yet"))
+#ifdef __GNUC__
+#else // __GNUC__
+#pragma message(FIXME("The code used to the set the variable 'static const', G__modify_type can not handle it yet"))
+#endif // __GNUC
             G__value_typenum(result3) = G__modify_type(G__value_typenum(result3), 0, 0, G__CONSTVAR + G__STATICCONST, 0, 0);
             // result3.isconst = G__CONSTVAR + G__STATICCONST;
-            return(result3);
+            return result3;
          }
+         // Intentional dropthrough.
       case '1':
       case '2':
       case '3':
@@ -1789,36 +1789,26 @@ G__value Cint::Internal::G__getitem(char* item)
       case '.':
          if (G__isfloat(item, &c)) {
             G__letdouble(&result3, c, atof(item));
-            /* G__letdouble(&result3,c,G__atodouble(item)); */
          }
          else {
             switch (c) {
-               case 'n': G__letLonglong(&result3,c,G__expr_strtoll(item,NULL,10)); break;
-               case 'm': G__letULonglong(&result3,c,G__expr_strtoull(item,NULL,10)); break;
-               default: G__letint(&result3,c,strtoul(item,NULL,10));
+               case 'n':
+                  G__letLonglong(&result3, c, G__expr_strtoll(item, 0, 10));
+                  break;
+               case 'm':
+                  G__letULonglong(&result3, c, G__expr_strtoull(item, 0, 10));
+                  break;
+               default:
+                  G__letint(&result3, c, strtoul(item, 0, 10));
+                  break;
             }
          }
-         if ('u' != c) {
+         if (c != 'u') {
             result3.ref = 0;
          }
-#if 0 /* Thoses fixes should no longer be needed. */
-#if  !defined(G__OLDIMPLEMENTATION1874)
-         if ('u' != c) {
-            result3.tagnum = -1;
-            //G__value_typenum(result3) = ::Reflex::Type();
-            result3.ref = 0;
-         }
-#else
-         result3.tagnum = -1;
-         G__value_typenum(result3) = -1;
-         result3.ref = 0;
-#endif
-#endif
          G__value_typenum(result3) = G__modify_type(G__value_typenum(result3), 0, 0, G__CONSTVAR + G__STATICCONST, 0, 0);
-         // result3.isconst = G__CONSTVAR + G__STATICCONST;
-
 #ifdef G__ASM
-         if (G__asm_noverflow) {
+         if (G__asm_noverflow) { // We are generating bytecode.
             /**************************************
              * G__LD instruction
              * 0 LD
@@ -1826,22 +1816,22 @@ G__value Cint::Internal::G__getitem(char* item)
              * put result3
              **************************************/
 #ifdef G__ASM_DBG
-            if (G__asm_dbg) G__fprinterr(G__serr, "%3x,%3x: LD %g from %x  %s:%d\n", G__asm_cp, G__asm_dt, G__double(result3), G__asm_dt, __FILE__, __LINE__);
-#endif
+            if (G__asm_dbg) {
+               G__fprinterr(G__serr, "%3x,%3x: LD %g from %x  %s:%d\n", G__asm_cp, G__asm_dt, G__double(result3), G__asm_dt, __FILE__, __LINE__);
+            }
+#endif // G__ASM_DBG
             G__asm_inst[G__asm_cp] = G__LD;
             G__asm_inst[G__asm_cp+1] = G__asm_dt;
             G__asm_stack[G__asm_dt] = result3;
             G__inc_cp_asm(2, 1);
          }
-#endif
-
+#endif // G__ASM
          break;
       case '\'':
          result3 = G__strip_singlequotation(item);
          G__value_typenum(result3) = G__modify_type(G__value_typenum(result3), 0, 0, G__CONSTVAR, 0, 0);
-
 #ifdef G__ASM
-         if (G__asm_noverflow) {
+         if (G__asm_noverflow) { // We are generating bytecode.
             /**************************************
              * G__LD instruction
              * 0 LD
@@ -1849,140 +1839,137 @@ G__value Cint::Internal::G__getitem(char* item)
              * put result3
              **************************************/
 #ifdef G__ASM_DBG
-            if (G__asm_dbg) G__fprinterr(G__serr, "%3x,%3x: LD '%c' from %x  %s:%d\n", G__asm_cp, G__asm_dt, (char) G__int(result3), G__asm_dt, __FILE__, __LINE__);
-#endif
+            if (G__asm_dbg) {
+               G__fprinterr(G__serr, "%3x,%3x: LD '%c' from %x  %s:%d\n", G__asm_cp, G__asm_dt, (char) G__int(result3), G__asm_dt, __FILE__, __LINE__);
+            }
+#endif // G__ASM_DBG
             G__asm_inst[G__asm_cp] = G__LD;
             G__asm_inst[G__asm_cp+1] = G__asm_dt;
             G__asm_stack[G__asm_dt] = result3;
             G__inc_cp_asm(2, 1);
          }
-#endif
-
+#endif // G__ASM
          break;
-
       case '"':
          result3 = G__strip_quotation(item);
-   // The following seem to already be set correctly in G__strip_quotation
-   //    result3.tagnum = -1;
-   //    G__value_typenum(result3) = ::Reflex::Type();
-   //    result3.ref = 0;
-   //#ifndef G__OLDIMPLEMENTATION1259
-   //    result3.isconst = G__CONSTVAR;
-   //#endif
-
 #ifdef G__ASM
-         if (G__asm_noverflow) G__asm_gen_strip_quotation(&result3);
-#endif /* G__ASM */
-         return(result3);
-
+         if (G__asm_noverflow) { // We are generating bytecode.
+            G__asm_gen_strip_quotation(&result3);
+         }
+#endif // G__ASM
+         return result3;
       case '-':
          reg = G__getitem(item + 1);
          result3 = G__null;
          G__bstore('-', reg, &result3);
-         return(result3);
-
-#ifndef G__OLDIMPLEMENTATION1825
+         return result3;
       case '_':
-         if ('$' == item[1]) {
+         if (item[1] == '$') { // We have _$xxxxxxx.
             G__getiparseobject(&result3, item);
-            return(result3);
+            return result3;
          }
-#endif
-
+         // Intentional dropthrough.
       default:
          store_var_typeB = G__var_type;
          known = 0;
          G__var_type = 'p';
-         /* variable */
-         //fprintf(stderr, "G__get_item: Lookup up variable '%s' in scope '%s'\n", item, G__p_local.Name(Reflex::SCOPED | Reflex::QUALIFIED).c_str());
-         result3 = G__getvariable(item, &known,::Reflex::Scope::GlobalScope(), G__p_local);
-         if (!known && G__get_tagnum(G__value_typenum(result3)) != -1 && result3.obj.i == 0) {
-            // this is "a.b", we know "a", but it has no "b" - there is no use
-            // in looking at other places.
-            if (G__noerr_defined == 0 && G__definemacro == 0)
-               return G__interactivereturn();
-            else
-               return(G__null);
+         //
+         //  Try a variable.
+         //
+         //fprintf(stderr, "G__get_item: Lookup up variable '%s' in scope '%s'\n", item, G__p_local.Name(Reflex::SCOPED).c_str());
+         result3 = G__getvariable(item, &known, ::Reflex::Scope::GlobalScope(), G__p_local);
+         if (known) {
+            G__var_typeB = 'p';
+            return result3;
          }
-
-         /* function */
-         if (known == 0) {
-            G__var_typeB = store_var_typeB;
-            result3 = G__getfunction(item, &known, G__TRYNORMAL);
-            if (known) {
-               result3 = G__toXvalue(result3, store_var_typeB);
-               if (G__initval_eval) G__dynconst = G__DYNCONST;
+         if ( // this is "a.b", we know "a", but it has no "b", give up
+            (G__get_tagnum(G__value_typenum(result3)) != -1) && // we have a class part, and
+            !result3.obj.i // no pointer
+         ) {
+            // this is "a.b", we know "a", but it has no "b", give up
+            if (!G__noerr_defined && !G__definemacro) {
+               return G__interactivereturn();
+            }
+            return G__null;
+         }
+         //
+         //  Try a function.
+         //
+         G__var_typeB = store_var_typeB;
+         result3 = G__getfunction(item, &known, G__TRYNORMAL);
+         if (known) { // We have the function, call it.
+            result3 = G__toXvalue(result3, store_var_typeB);
+            if (G__initval_eval) { // Flag that getting the value involved a function call, and so cannot be used to initialize a static const variable.
+               G__dynconst = G__DYNCONST;
             }
             G__var_typeB = 'p';
+            return result3;
          }
+         G__var_typeB = 'p';
 #ifdef G__PTR2MEMFUNC
-         if (known == 0 && result3.obj.i == 0) {
+         if (!result3.obj.i) { // Still not found, try a pointer to a member function.
             known = G__getpointer2memberfunc(item, &result3);
-         }
-#endif
-         /* undefined */
-         if (known == 0) {
-            if (strncmp(item, "__", 2) == 0) {
-               result3 = G__getreserved(item + 1, (void**)NULL, (void**)NULL);
-               if (G__get_type(result3)) known = 1;
+            if (known) {
+               return result3;
             }
-            else
-               if (
+         }
+#endif // G__PTR2MEMFUNC
+         //
+         //  Not a variable or a function.  Try specials.
+         //
+         if (!strncmp(item, "__", 2)) { // We have __xxxxxxxx, try reserved.
+            result3 = G__getreserved(item + 1, 0, 0);
+            int type = G__get_type(result3);
+            if (type) {
+               return result3;
+            }
+         }
+         else if ( // Try a ROOT special if we are allowed, and if so, return unconditionally.
+            // --
 #ifdef G__ROOT
-                  G__dispmsg < G__DISPROOTSTRICT &&
-#endif
-                  G__GetSpecialObject && G__GetSpecialObject != G__getreserved) {
-                  /* append $ to object and try to find it again */
-                  if (!G__gettingspecial && item[0] != '$') {
-#ifndef G__OLDIMPLEMENTATION1802
-                     char *sbuf;
-#else
-                     G__StrBuf sbuf_sb(G__LONGLINE);
-                     char *sbuf = sbuf_sb;
-#endif
-                     int store_return = G__return;
-                     int store_security_error = G__security_error;
-                     /* This fix should be verified very carefully */
-                     if (G__no_exec_compile && G__asm_noverflow) G__abortbytecode();
-#ifndef G__OLDIMPLEMENTATION1802
-                     sbuf = (char*)malloc(strlen(item) + 2);
-                     if (!sbuf) {
-                        G__genericerror("Internal error: malloc in G__getitem(),sbuf");
-                        return(G__null);
-                     }
-#endif
-                     sprintf(sbuf, "$%s", item);
-                     G__gettingspecial = 1;
-                     G__var_type = store_var_typeB; /* BUG FIX ROOT Special object */
-                     result3 = G__getitem(sbuf);
-#ifndef G__OLDIMPLEMENTATION1802
-                     free((void*)sbuf);
-#endif
-                     G__gettingspecial = 0;
-                     if (G__const_noerror) {
-                        G__return = store_return;
-                        G__security_error = store_security_error;
-                     }
-                     return result3;
-                  }
-               }
-            if (known == 0 && result3.obj.i == 0) {
-               result3 = G__null;
-               if (G__noerr_defined == 0) {
-
-                  if (G__definemacro == 0) {
-                     G__warnundefined(item);
-                     result3 = G__interactivereturn();
-                  }
-                  else {
-                     /*
-                     G__genericerror("Limitation: This form of macro may not be expanded. Use +P or -p option");
-                     */
-                     return(G__null);
-                  }
-               }
+            (G__dispmsg < G__DISPROOTSTRICT) &&
+#endif // G__ROOT
+            G__GetSpecialObject &&
+            (G__GetSpecialObject != G__getreserved) &&
+            !G__gettingspecial &&
+            (item[0] != '$')
+         ) {
+            // Prepend '$' to object and try to find it again.
+            int store_return = G__return;
+            int store_security_error = G__security_error;
+            if (G__asm_noverflow && G__no_exec_compile) {
+               G__abortbytecode();
             }
+            char* sbuf = (char*) malloc(strlen(item) + 2);
+            if (!sbuf) {
+               G__genericerror("Internal error: malloc in G__getitem(),sbuf");
+               return G__null;
+            }
+            sprintf(sbuf, "$%s", item);
+            G__gettingspecial = 1;
+            G__var_type = store_var_typeB;
+            result3 = G__getitem(sbuf);
+            free(sbuf);
+            G__gettingspecial = 0;
+            if (G__const_noerror) {
+               G__return = store_return;
+               G__security_error = store_security_error;
+            }
+            return result3;
          }
+         if (!result3.obj.i) {
+            if (G__noerr_defined) {
+               return G__null;
+            }
+            if (G__definemacro) {
+               //G__genericerror("Limitation: This form of macro may not be expanded. Use +P or -p option");
+               return G__null;
+            }
+            G__warnundefined(item);
+            result3 = G__interactivereturn();
+            return result3;
+         }
+         break;
    }
    return result3;
 }

@@ -590,9 +590,7 @@ void G__DeleteConstStringList(struct G__ConstStringList* current);
 
 int G__ReadInputMode(void);
 
-#ifndef G__OLDIMPLEMENTATION1825
 char* G__setiparseobject(G__value* result,char *str);
-#endif
 
 #ifdef G__SHMGLOBAL
 void* G__shmmalloc(int size);
