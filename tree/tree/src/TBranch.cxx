@@ -2072,7 +2072,8 @@ Int_t TBranch::WriteBasket(TBasket* basket, Int_t where)
    fBasketBytes[where]  = basket->GetNbytes();
    fBasketSeek[where]   = basket->GetSeekKey();
    Int_t addbytes = basket->GetObjlen() + basket->GetKeylen() ;
-   if (fDirectory && (fDirectory != gROOT) && fDirectory->IsWritable()) {
+   if (nout>0) {
+      // The Basket was written so we can now safely drop it.
       basket->DropBuffers();
       delete basket;
       fBaskets[where] = 0;
