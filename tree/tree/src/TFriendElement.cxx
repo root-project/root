@@ -89,6 +89,12 @@ TFriendElement::TFriendElement(TTree *tree, const char *treename, TFile *file)
    fOwnFile    = kFALSE;
    fParentTree = tree;
    fTreeName   = treename;
+   if (fParentTree && fParentTree->GetDirectory() 
+       && fTree->GetDirectory()->GetFile() == fFile) {
+      // The friend and the TTree are in the same file, let's not record
+      // the filename.
+      SetTitle("");
+   }
    if (strchr(treename,'=')) {
       char *temp = Compress(treename);
       char *equal = strchr(temp,'=');
@@ -117,12 +123,18 @@ TFriendElement::TFriendElement(TTree *tree, TTree* friendtree, const char *alias
    fTree       = friendtree;
    fTreeName   = "";
    fFile       = 0;
+   fOwnFile    = kFALSE;
+   fParentTree = tree;
    if (fTree) {
       fTreeName   = fTree->GetName();
       if (fTree->GetDirectory()) fFile = fTree->GetDirectory()->GetFile();
+      if (fParentTree && fParentTree->GetDirectory() 
+          && fTree->GetDirectory()->GetFile() == fFile) {
+         // The friend and the TTree are in the same file, let's not record
+         // the filename.
+         SetTitle("");
+      }
    }
-   fOwnFile    = kFALSE;
-   fParentTree = tree;
    if (alias && strlen(alias)) {
       char *temp = Compress(alias);
       SetName(temp);
