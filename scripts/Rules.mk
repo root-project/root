@@ -362,6 +362,10 @@ endif
 CALLROOTEXE  ?= root.exe
 export CALLROOTEXE
 
+ifeq ($(CINT_VERSION),)
+   export CINT_VERSION := Cint$(shell $(CALLROOTEXE) -q -b | grep CINT | sed -e 's/.*\([57]\).*/\1/' )
+endif
+
 # Track the version of ROOT we are runing with
 
 ROOTV=$(ROOTTEST_LOC)/root_version
@@ -490,6 +494,18 @@ endif
 
 define WarnFailTest
 	$(CMDECHO)echo Warning $@ has some known skipped failures "(in ./$(CURRENTDIR))"
+endef
+
+define TestDiffCintSpecific
+	$(CMDECHO) if [ -f $@.ref$(ROOTBITS)-$(CINT_VERSION) ]; then \
+	   diff -u -b $@.ref$(ROOTBITS)-$(CINT_VERSION) $< ; \
+	elif  [ -f $@.ref-$(CINT_VERSION) ]; then \
+	   diff -u -b $@.ref-$(CINT_VERSION) $< ; \
+	elif [ -f $@.ref$(ROOTBITS) ]; then \
+	   diff -u -b $@.ref$(ROOTBITS) $< ; \
+	else \
+	   diff -u -b $@.ref $< ; \
+	fi
 endef
 
 define TestDiff

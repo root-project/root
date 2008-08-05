@@ -45,7 +45,7 @@ ConversionOp.log : runConversionOp.C ConversionOp.C ConversionOp_h.$(DllSuf)
 	        | grep -v -e tagnum -e 'int c' -e 'public: void ~' > $@ 2>&1
 
 ConversionOp: ConversionOp.log
-	$(TestDiff)
+	$(TestDiffCintSpecific)
 	$(WarnFailTest) # see ConversionOp.C for the skipped, failing tests
 
 dicttest: dicttest_h.$(DllSuf)
