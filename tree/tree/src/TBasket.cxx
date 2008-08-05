@@ -612,13 +612,10 @@ Int_t TBasket::WriteBuffer()
    TDirectory::TContext ctxt(0);
    TFile *file = fBranch->GetFile(kWrite);
    if (!file) return 0;
-
-   fBranch->GetDirectory()->cd();
    if (!file->IsWritable()) { 
       return -1;
    }
-   
-   fMotherDir = fBranch->GetDirectory();
+   fMotherDir = file; // fBranch->GetDirectory();
    
    if (fBufferRef->TestBit(TBufferFile::kNotDecompressed)) {
       // Read the basket information that was saved inside the buffer.
@@ -632,7 +629,7 @@ Int_t TBasket::WriteBuffer()
 
       fBuffer = fBufferRef->Buffer();
 
-      Create(nout);
+      Create(nout,file);
       fBufferRef->SetBufferOffset(0);
       fHeaderOnly = kTRUE;
 
@@ -683,7 +680,7 @@ Int_t TBasket::WriteBuffer()
             nout = fObjlen;
             delete [] fBuffer;
             fBuffer = fBufferRef->Buffer();
-            Create(fObjlen);
+            Create(fObjlen,file);
             fBufferRef->SetBufferOffset(0);
 
             Streamer(*fBufferRef);         //write key itself again
@@ -699,7 +696,7 @@ Int_t TBasket::WriteBuffer()
          nzip   += kMAXBUF;
       }
       nout = noutot;
-      Create(noutot);
+      Create(noutot,file);
       fBufferRef->SetBufferOffset(0);
 
       Streamer(*fBufferRef);         //write key itself again
@@ -707,7 +704,7 @@ Int_t TBasket::WriteBuffer()
       delete fBufferRef; fBufferRef = 0;
    } else {
       fBuffer = fBufferRef->Buffer();
-      Create(fObjlen);
+      Create(fObjlen,file);
       fBufferRef->SetBufferOffset(0);
 
       Streamer(*fBufferRef);         //write key itself again
