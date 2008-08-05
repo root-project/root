@@ -599,7 +599,7 @@ const char* Cint::G__DataMemberInfo::ValidArrayIndex(int* errnum /*= 0*/, char**
                // streamer.
                G__DataMemberInfo m_local(belongingclass);
                while (m_local.Next()) {
-                  if (!strcmp(m_local.Name(), Name())) {
+                  if (m_local.m_datambr.Name() == m_datambr.Name()) {
                      // we reached the current data member before
                      // reaching the index so we have not wrote it yet!
                      //NOTE: *** Need to print an error;
