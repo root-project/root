@@ -118,7 +118,6 @@ ConversionOp_h.so  -1     0xffffffffffffffff private: B fT , size=1
 ConversionOp_h.so  -1   0xffffffffffffffff private: B fB , size=1
 List of member function---------------------------------------------------
 filename       line:size busy function type and name  (in A<C>)
-ConversionOp_h.so  -1:-1   0 public: void ~A<C>(void);
 ConversionOp_h.so  -1:-1   0 public: A<C> A<C>(void);
 ConversionOp_h.so  -1:-1   0 public: A<C> A<C>(const C& t);
 ConversionOp_h.so  -1:-1   0 public: C* operator C*(void);
@@ -137,7 +136,6 @@ List of member variable---------------------------------------------------
 Defined in B
 List of member function---------------------------------------------------
 filename       line:size busy function type and name  (in B)
-ConversionOp_h.so  -1:-1   0 public: void ~B(void);
 ConversionOp_h.so  -1:-1   0 public: B B(void);
 ConversionOp_h.so  -1:-1   0 public: B B(const B&);
 ConversionOp_h.so  -1:-1   0 public: B& operator=(const B&);
@@ -150,7 +148,6 @@ Defined in B
 ConversionOp_h.so  -1 0xffffffffffffffff private: B fB , size=1
 List of member function---------------------------------------------------
 filename       line:size busy function type and name  (in B)
-ConversionOp_h.so  -1:-1   0 public: void ~B(void);
 ConversionOp_h.so  -1:-1   0 public: N::B B(const N::B& b);
 ConversionOp_h.so  -1:-1   0 public: B operator B(void) const;
 ConversionOp_h.so  -1:-1   0 public: N::B B(const N::B&);
@@ -166,7 +163,6 @@ ConversionOp_h.so  -1   0xffffffffffffffff private: B fT , size=1
 ConversionOp_h.so  -1 0xffffffffffffffff private: B fB , size=1
 List of member function---------------------------------------------------
 filename       line:size busy function type and name  (in C)
-ConversionOp_h.so  -1:-1   0 public: void ~C(void);
 ConversionOp_h.so  -1:-1   0 public: C C(void);
 ConversionOp_h.so  -1:-1   0 public: A<C> operator A<C>(void);
 ConversionOp_h.so  -1:-1   0 public: A<B> operator A<B>(void);
@@ -188,7 +184,6 @@ List of member variable---------------------------------------------------
 Defined in D
 List of member function---------------------------------------------------
 filename       line:size busy function type and name  (in D)
-ConversionOp_h.so  -1:-1   0 public: void ~D(void);
 ConversionOp_h.so  -1:-1   0 public: A<B> operator+(A<B> a);
 ConversionOp_h.so  -1:-1   0 public: A<B>* operator-(A<B> a);
 ConversionOp_h.so  -1:-1   0 public: D D(void);
