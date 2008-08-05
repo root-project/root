@@ -42,7 +42,7 @@ $(ROOTSHOWER):  $(ROOTSHOWERO) $(ROOTSHOWERRES)
 		$(MT_EXE)
 else
 $(ROOTSHOWER):  $(ROOTSHOWERO)
-		$(LD) $(LDFLAGS) $^ $(GLIBS) -lEG -lRGL -lHtml -lThread -lGeom $(OutPutOpt)$@
+		$(LD) $(LDFLAGS) $^ $(GLIBS) -lEG -lRGL -lGed -lHtml -lThread -lGeom $(OutPutOpt)$@
 endif
 		@echo "$@ done"
 
