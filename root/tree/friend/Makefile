@@ -1,6 +1,6 @@
 CLEAN_TARGETS += copiedEvent* libEvent.* Event.h Event.root Event2.root main *Dict* *~ createfile.out run.out unevenFriend.out \
-     treeChainFriend.log $(ALL_LIBRARIES) [a-f][0-4].root treeparent.root treefriend.root *.log
-TEST_TARGETS += friendInChain treefriend ChainFriend unevenFriend treeChainFriend ChainFriendStatus FriendOfFriends FriendsIndices chainBranchStatus
+     treeChainFriend.log $(ALL_LIBRARIES) [a-f][0-4].root treeparent.root treefriend.root *.log localfriend.root
+TEST_TARGETS += friendInChain treefriend ChainFriend unevenFriend treeChainFriend ChainFriendStatus FriendOfFriends FriendsIndices chainBranchStatus localfriend
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME := $(shell expr $(PWD) : '\(.*/roottest/\)')
@@ -61,4 +61,7 @@ friendInChain: friendInChain.log
 	$(TestDiff)
 
 chainBranchStatus: chainBranchStatus.log
+	$(TestDiff)
+
+localfriend: localfriend.log
 	$(TestDiff)
