@@ -8,8 +8,8 @@ ROOTSHOWER_ICON              ICON                    "rootshower.ico"
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 3,01,0,1
- PRODUCTVERSION 3,01,0,1
+ FILEVERSION 4,00,0,1
+ PRODUCTVERSION 4,00,0,1
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -27,12 +27,12 @@ BEGIN
             VALUE "Comments", "Root Shower\0"
             VALUE "CompanyName", "CERN\0"
             VALUE "FileDescription", "Root Shower Monte-Carlo / Event Display\0"
-            VALUE "FileVersion", "3.01/01\0"
+            VALUE "FileVersion", "4.00/00\0"
             VALUE "InternalName", "RootShower\0"
-            VALUE "LegalCopyright", "Copyright © Bertrand Bellenot 2000-2004\0"
+            VALUE "LegalCopyright", "Copyright © Bertrand Bellenot 2000-2008\0"
             VALUE "OriginalFilename", "RootShower.exe\0"
             VALUE "ProductName", "ROOT - Event MC / Viewer\0"
-            VALUE "ProductVersion", "3.01/01\0"
+            VALUE "ProductVersion", "4.00/00\0"
         END
     END
     BLOCK "VarFileInfo"

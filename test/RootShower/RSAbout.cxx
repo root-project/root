@@ -53,7 +53,7 @@ RootShowerAbout::RootShowerAbout(const TGWindow *p, const TGWindow *main,
    sprintf(message1,"   Compiled with Root version %s, release date : %s   ",
            root_version, root_date);
    fLabel2 = new TGLabel(fVFrame, message1);
-   fLabel4 = new TGLabel(fVFrame, "   (c) Bertrand Bellenot 1994 - 2002   ");
+   fLabel4 = new TGLabel(fVFrame, "   (c) Bertrand Bellenot 1994 - 2008   ");
 
    fBly  = new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandX, 0, 0, 5, 5);
    fBfly = new TGLayoutHints(kLHintsTop | kLHintsRight| kLHintsExpandX, 0, 0, 5, 5);
