@@ -842,7 +842,7 @@ Int_t TProofDataSetManagerFile::ScanDataSet(TFileCollection *dataset,
       Bool_t result = kFALSE;
       if (stager) {
          result = stager->IsStaged(url.GetUrl());
-         if (notify)
+         if (notify && gDebug > 0)
             Info("ScanDataSet", "IsStaged: %s: %d", url.GetUrl(), result);
          if (createStager)
             SafeDelete(stager);
@@ -883,25 +883,19 @@ Int_t TProofDataSetManagerFile::ScanDataSet(TFileCollection *dataset,
 
       // To determine the size we have to open the file without the anchor
       // (otherwise we get the size of the contained file - in case of a zip archive)
-      Bool_t zipFile = kFALSE;
-      if (strlen(url->GetAnchor()) > 0) {
-         zipFile = kTRUE;
-         TUrl urlNoAnchor(*url);
-         urlNoAnchor.SetAnchor("");
-         urlNoAnchor.SetOptions("filetype=raw");
-
-         file = TFile::Open(urlNoAnchor.GetUrl());
-      } else
-         file = TFile::Open(url->GetUrl());
-
-      if (!file)
+      // We open in raw mode which makes sure that the opening succeeds, even if
+      // the file is corrupted
+      TUrl urlNoAnchor(*url);
+      urlNoAnchor.SetAnchor("");
+      urlNoAnchor.SetOptions("filetype=raw");
+      if (!(file = TFile::Open(urlNoAnchor.GetUrl())))
          continue;
 
+      // OK, set the relevant flags
       changed = kTRUE;
-
       fileInfo->SetBit(TFileInfo::kStaged);
 
-      // add url of the disk server in front of the list
+      // Add url of the disk server in front of the list
       TUrl urlDiskServer(*url);
       urlDiskServer.SetHost(file->GetEndpointUrl()->GetHost());
       fileInfo->AddUrl(urlDiskServer.GetUrl(), kTRUE);
@@ -910,19 +904,15 @@ Int_t TProofDataSetManagerFile::ScanDataSet(TFileCollection *dataset,
 
       if (file->GetSize() > 0)
           fileInfo->SetSize(file->GetSize());
+      file->Close();
+      delete file;
 
-      if (zipFile) {
-         file->Close();
-         delete file;
-
-         file = TFile::Open(url->GetUrl());
-         if (!file) {
-            // if the file could be opened before, but fails now it is corrupt...
-            if (notify)
-               Info("ScanDataSet", "marking %s as corrupt", url->GetUrl());
-            fileInfo->SetBit(TFileInfo::kCorrupted);
-            continue;
-         }
+      if (!(file = TFile::Open(url->GetUrl()))) {
+         // If the file could be opened before, but fails now it is corrupt...
+         if (notify)
+            Info("ScanDataSet", "marking %s as corrupt", url->GetUrl());
+         fileInfo->SetBit(TFileInfo::kCorrupted);
+         continue;
       }
 
       // disable warnings when reading a tree without loading the corresponding library
