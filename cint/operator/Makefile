@@ -28,7 +28,7 @@ endif
 EqualTest.log : runEqualTest.C equal_C.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -q -l -b  runEqualTest.C | \
 	$(RemoveLeadingDirs) -e 's?FILE:.*[/\]?FILE:?' -e 's/.dll/.so/g' \
-	| grep -v -e tagnum -e 'int c' > $@ 2>&1
+	| grep -v -e tagnum -e 'int c' -e '~privateOp2' > $@ 2>&1
 
 EqualTest: EqualTest.log
 	$(TestDiff)
