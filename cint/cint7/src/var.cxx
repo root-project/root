@@ -6330,7 +6330,12 @@ G__value Cint::Internal::G__getvariable(char* item, int* known, const ::Reflex::
             // root special
             if (G__GetSpecialObject) {
                store_var_type = G__var_type;
-               result = (*G__GetSpecialObject)((char*)variable.Name().c_str(), (void**)G__get_offset(variable), (void**)(G__get_offset(variable) + G__LONGALLOC));
+               if (variable.Name()[0] == '$') { // FIXME: I assume the name is not the empty string!
+                  result = (*G__GetSpecialObject)(const_cast<char*>(variable.Name().c_str() + 1), (void**)G__get_offset(variable), (void**)(G__get_offset(variable) + G__LONGALLOC));
+               }
+               else {
+                  result = (*G__GetSpecialObject)(const_cast<char*>(variable.Name().c_str()), (void**)G__get_offset(variable), (void**)(G__get_offset(variable) + G__LONGALLOC));
+               }
                // G__var_type was stored in store_var_type just before the
                // call to G__GetSpecialObject which might have recursive
                // calls to G__getvariable() or G__getexpr()
@@ -6342,13 +6347,12 @@ G__value Cint::Internal::G__getvariable(char* item, int* known, const ::Reflex::
                else {
                   Reflex::Scope varscope = variable.DeclaringScope();
                   std::string name = variable.Name();
-                  char *offset = G__get_offset(variable);
+                  char* offset = G__get_offset(variable);
                   varscope.RemoveDataMember(variable);
                   if (G__var_type == 'v') {
                      G__value_typenum(result) = G__deref(G__value_typenum(result));
                   }
-                  G__add_scopemember(varscope, name.c_str(), G__value_typenum(result), 0, (size_t)offset, 
-                                     offset, G__PUBLIC, 0);
+                  G__add_scopemember(varscope, name.c_str(), G__value_typenum(result), 0, (size_t)offset, offset, G__PUBLIC, 0);
                }
                switch (G__var_type) {
                   case 'p':
@@ -7078,7 +7082,7 @@ void Cint::Internal::G__returnvartype(G__value* presult, const ::Reflex::Member&
          ::Reflex::Member var = varscope.DataMemberByName(varname);
          if (
              var && 
-             var.TypeOf() != ZType && // This is to exclude the 'Z' type coming from a SpecialObject lookup
+             //var.TypeOf() != ZType && // This is to exclude the 'Z' type coming from a SpecialObject lookup
              G__test_static(var, 0, G__ifile.filenum) &&
              G__test_access(var, accesslimit)
           ) {
@@ -7227,7 +7231,7 @@ void Cint::Internal::G__get_stack_varname(std::string& output, const char* varna
    varname = (char*) varname_in;
 #ifdef G__ROOT
    if ((varname[0] == '$') && G__GetSpecialObject && (G__GetSpecialObject != G__getreserved)) {
-      varname = ((char*) varname_in) + 1;
+      //varname = ((char*) varname_in) + 1;
       //--
       //--
       specialflag = 1;
@@ -7342,32 +7346,14 @@ void Cint::Internal::G__get_stack_varname(std::string& output, const char* varna
          }
       }
       // Search for variable name and access rule match.
+      const Reflex::Type ZType = ::Reflex::PointerBuilder(Reflex::Type::ByName("codeBreak$"));
       do {
          next_base:
          ig15 = 0;
          for (::Reflex::Member_Iterator iter = var.DataMember_Begin(); iter != var.DataMember_End(); ++iter, ++ig15) {
-            // --
-/*
-            if (
-               *iter && // member has a name, and
-               !strcmp(iter->Name().c_str(), varname.c_str()) && // Names match, and FIXME: need to use strcmp because varname.c_str() was manipulated directly (G__scopeoperator)
-               (G__test_static(*iter, 0, G__ifile.filenum)) && // File scope access match, and
-               //--
-               //--
-               //--
-               G__test_access(*iter, accesslimit) // Access limit match
-            ) {
-               if (pig15) {
-                  *pig15 = ig15;
-               }
-               return *iter;
-            }
-            //--
-*/
-            const Reflex::Type ZType = ::Reflex::PointerBuilder(Reflex::Type::ByName("codeBreak$"));
             if (*iter && !strcmp(iter->Name().c_str(), varname.c_str())) {
                if (
-                  iter->TypeOf() != ZType && // This is to exclude the 'Z' type coming from a SpecialObject lookup
+                  //iter->TypeOf() != ZType && // This is to exclude the 'Z' type coming from a SpecialObject lookup
                   (
                    (G__get_properties(*iter)->statictype < 0) || // Not file scope, or
                     G__filescopeaccess(G__ifile.filenum, G__get_properties(*iter)->filenum) // File scope access match.
