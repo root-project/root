@@ -3927,7 +3927,7 @@ Double_t TFormula::EvalParFast(const Double_t *x, const Double_t *uparams)
          case kFDM       : tab[pos] = (fPredefined[i]->fFuncG)(&x[fOperOffset[i].fType0],&params[fOperOffset[i].fOffset0]); pos++;continue;
          case kFD1       : tab[pos-1]   =(fPredefined[i]->fFunc10)(tab[pos-1]); continue;
          case kFD2       :    pos--; tab[pos-1]   = (fPredefined[i]->fFunc110)(tab[pos-1],tab[pos]); continue;
-         case kFD3       :    pos-=2; tab[pos-1]   = (fPredefined[i]->fFunc1110)(tab[pos-2],tab[pos-1],tab[pos]); continue;
+         case kFD3       :    pos-=2; tab[pos-1]   = (fPredefined[i]->fFunc1110)(tab[pos-1],tab[pos],tab[pos+1]); continue;
       }
       //
       switch(opcode) {
