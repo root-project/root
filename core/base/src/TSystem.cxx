@@ -1707,6 +1707,19 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
 
    ret = -1;
    if (path) {
+      // Mark the library in $ROOTSYS/lib as system.
+      const char *dirname = DirName(path);
+#ifdef ROOTLIBDIR
+      TString rootlibdir = ROOTLIBDIR;
+#else
+      const char *libdirname = ConcatFileName(gRootDir,"lib");
+      TString rootlibdir = libdirname;
+      delete [] libdirname;
+#endif
+      if (rootlibdir == dirname) {
+         system = kTRUE;
+      }
+
       gLibraryVersionIdx++;
       if (gLibraryVersionIdx == gLibraryVersionMax) {
          gLibraryVersionMax *= 2;
