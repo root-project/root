@@ -90,7 +90,7 @@ TFriendElement::TFriendElement(TTree *tree, const char *treename, TFile *file)
    fParentTree = tree;
    fTreeName   = treename;
    if (fParentTree && fParentTree->GetDirectory() 
-       && fTree->GetDirectory()->GetFile() == fFile) {
+       && fParentTree->GetDirectory()->GetFile() == fFile) {
       // The friend and the TTree are in the same file, let's not record
       // the filename.
       SetTitle("");
@@ -129,7 +129,7 @@ TFriendElement::TFriendElement(TTree *tree, TTree* friendtree, const char *alias
       fTreeName   = fTree->GetName();
       if (fTree->GetDirectory()) fFile = fTree->GetDirectory()->GetFile();
       if (fParentTree && fParentTree->GetDirectory() 
-          && fTree->GetDirectory()->GetFile() == fFile) {
+          && fParentTree->GetDirectory()->GetFile() == fFile) {
          // The friend and the TTree are in the same file, let's not record
          // the filename.
          SetTitle("");
