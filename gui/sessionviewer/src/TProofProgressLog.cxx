@@ -22,12 +22,16 @@
 #include "TGListBox.h"
 #include "TGMenu.h"
 #include "TGButton.h"
-//_____________________________________________________________________________
-//
-// TProofProgressLog
-//
-// Dialog used to display Proof session logs from the Proof progress dialog
-//_____________________________________________________________________________
+
+///////////////////////////////////////////////////////////////////////////
+//                                                                       //
+// TProofProgressLog                                                     //
+//                                                                       //
+// Dialog used to display Proof session logs from the Proof progress     //
+// dialog.                                                               //
+// It uses TProofMgr::GetSessionLogs() mechanism internally              //
+//                                                                       //
+///////////////////////////////////////////////////////////////////////////
 
 ClassImp(TProofProgressLog)
 
