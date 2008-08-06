@@ -19,6 +19,7 @@
 
 #include "TProofProgressDialog.h"
 #include "TProofProgressLog.h"
+#include "TProofProgressMemoryPlot.h"
 #include "TEnv.h"
 #include "TError.h"
 #include "TGLabel.h"
@@ -27,6 +28,7 @@
 #include "TGTextEntry.h"
 #include "TGProgressBar.h"
 #include "TProof.h"
+#include "TSlave.h"
 #include "TSystem.h"
 #include "TTimer.h"
 #include "TGraph.h"
@@ -41,12 +43,17 @@
 #ifdef PPD_SRV_NEWER
 #undef PPD_SRV_NEWER
 #endif
-#define PPD_SRV_NEWER(v) (fProof->GetRemoteProtocol() > v)
+#define PPD_SRV_NEWER(v) (fProof && fProof->GetRemoteProtocol() > v)
+#ifdef PPD_SRV_NEWER_REV
+#undef PPD_SRV_NEWER_REV
+#endif
+#define PPD_SRV_NEWER_REV(r) (fSVNRev > r)
 
 Bool_t TProofProgressDialog::fgKeepDefault = kTRUE;
 Bool_t TProofProgressDialog::fgLogQueryDefault = kFALSE;
 TString TProofProgressDialog::fgTextQueryDefault = "last";
 
+static const Int_t gSVNMemPlot = 25050;
 
 ClassImp(TProofProgressDialog)
 
@@ -66,6 +73,7 @@ TProofProgressDialog::TProofProgressDialog(TProof *proof,
    fPrevProcessed = 0;
    fPrevTotal     = 0;
    fLogWindow     = 0;
+   fMemWindow     = 0;
    fStatus        = kRunning;
    fKeep          = fgKeepDefault;
    fLogQuery      = fgLogQueryDefault;
@@ -74,10 +82,37 @@ TProofProgressDialog::TProofProgressDialog(TProof *proof,
    fProcTime      = 0.;
    fAvgRate       = 0.;
    fAvgMBRate     = 0.;
+   fSVNRev        = -1;
+
+   // Make sure we are attached to a good instance
+   if (!proof || !(proof->IsValid())) {
+      Error("TProofProgressDialog", "proof instance is invalid (%p, %s): protocol error?",
+                                    proof, (proof && !(proof->IsValid())) ? "invalid" : "undef");
+      return;
+   }
 
    // Have to save this information here, in case gProof is dead when
    // the logs are requested
    fSessionUrl = (proof && proof->GetManager()) ? proof->GetManager()->GetUrl() : "";
+
+   // SVN version run by the master
+   TSlave *mst = (TSlave *) proof->GetListOfActiveSlaves()->First();
+   if (mst) {
+      TString vrs = mst->GetROOTVersion();
+      Ssiz_t ib = vrs.Index("|"), from = ib + 2;
+      if (ib != kNPOS) {
+         TString svnr;
+         // Strip of also the 'r' in front of the number
+         vrs.Tokenize(svnr, from, "|");
+         if (svnr.IsDigit()) {
+            if (gDebug)
+               Info("TProofProgressDialog", "svn revision run by the master: %s", svnr.Data());
+            fSVNRev = svnr.Atoi();
+         } else {
+            Info("TProofProgressDialog", "could not find svn revision run by the master");
+         }
+      }
+   }
 
    if (PPD_SRV_NEWER(11))
       fRatePoints = new TNtuple("RateNtuple","Rate progress info","tm:evr:mbr");
@@ -86,7 +121,7 @@ TProofProgressDialog::TProofProgressDialog(TProof *proof,
    fDialog->Connect("CloseWindow()", "TProofProgressDialog", this, "DoClose()");
    fDialog->DontCallClose();
 
-   // title label
+   // Title label
    char buf[256];
    sprintf(buf, "Executing on PROOF cluster \"%s\" with %d parallel workers:",
            fProof ? fProof->GetMaster() : "<dummy>",
@@ -103,13 +138,13 @@ TProofProgressDialog::TProofProgressDialog(TProof *proof,
    fFilesEvents = new TGLabel(fDialog, buf);
    fDialog->AddFrame(fFilesEvents, new TGLayoutHints(kLHintsNormal, 10, 10, 5, 0));
 
-   // progress bar
+   // Progress bar
    fBar = new TGHProgressBar(fDialog, TGProgressBar::kFancy, 450);
    fBar->SetBarColor("green");
    fDialog->AddFrame(fBar, new TGLayoutHints(kLHintsTop | kLHintsLeft |
                      kLHintsExpandX, 10, 10, 20, 20));
 
-   // status labels
+   // Status labels
    if (PPD_SRV_NEWER(11)) {
       TGHorizontalFrame *hf0 = new TGHorizontalFrame(fDialog, 0, 0);
       TGCompositeFrame *cf0 = new TGCompositeFrame(hf0, 110, 0, kFixedWidth);
@@ -145,78 +180,81 @@ TProofProgressDialog::TProofProgressDialog(TProof *proof,
                         "TProofProgressDialog", this, "DoKeep(Bool_t)");
    fDialog->AddFrame(fKeepToggle, new TGLayoutHints(kLHintsNormal, 10, 10, 20, 0));
 
-   // logs-from-given-query-only toggle button
-   TGHorizontalFrame *hflog = new TGHorizontalFrame(fDialog, 200, 20, kFixedWidth);
-   fLogQueryToggle = new TGCheckButton(hflog,
-                        new TGHotString("Show only logs from query"));
-   if (!fLogQuery) fLogQueryToggle->SetState(kButtonUp);
-   fLogQueryToggle->Connect("Toggled(Bool_t)",
-                            "TProofProgressDialog", this, "DoSetLogQuery(Bool_t)");
-   hflog->AddFrame(fLogQueryToggle,
-                   new TGLayoutHints(kLHintsCenterY | kLHintsLeft, 0, 0, 0, 0));
-   // text entry for logs-from-given-query-only toggle button
-   fTextQuery = new TGTextBuffer();
-   fTextQuery->AddText(0, fgTextQueryDefault);
-   fEntry = new TGTextEntry(hflog, fTextQuery);
-   if (fLogQuery)
-      fEntry->SetToolTipText("Enter the query number ('last' for the last query)",50);
-   fEntry->SetEnabled(fLogQuery);
-   hflog->AddFrame(fEntry, new TGLayoutHints(kLHintsCenterY |
-                                             kLHintsExpandX, 2, 0, 0, 0));
-
-   fDialog->AddFrame(hflog, new TGLayoutHints(kLHintsNormal, 10, 10, 5, 0));
-
-   // stop, cancel and close buttons
+   // Stop, cancel and close buttons
    TGHorizontalFrame *hf3 = new TGHorizontalFrame(fDialog, 60, 20, kFixedWidth);
 
-   UInt_t  nb = 0, width = 0, height = 0;
+   UInt_t  nb1 = 0, width1 = 0, height1 = 0;
 
    fStop = new TGTextButton(hf3, "&Stop");
    fStop->SetToolTipText("Stop processing, Terminate() will be executed");
    fStop->Connect("Clicked()", "TProofProgressDialog", this, "DoStop()");
    hf3->AddFrame(fStop, new TGLayoutHints(kLHintsCenterY | kLHintsExpandX, 7, 7, 0, 0));
-   height = TMath::Max(height, fStop->GetDefaultHeight());
-   width  = TMath::Max(width, fStop->GetDefaultWidth()); ++nb;
+   height1 = TMath::Max(height1, fStop->GetDefaultHeight());
+   width1  = TMath::Max(width1, fStop->GetDefaultWidth()); ++nb1;
 
    fAbort = new TGTextButton(hf3, "&Cancel");
    fAbort->SetToolTipText("Cancel processing, Terminate() will NOT be executed");
    fAbort->Connect("Clicked()", "TProofProgressDialog", this, "DoAbort()");
    hf3->AddFrame(fAbort, new TGLayoutHints(kLHintsCenterY | kLHintsExpandX, 7, 7, 0, 0));
-   height = TMath::Max(height, fAbort->GetDefaultHeight());
-   width  = TMath::Max(width, fAbort->GetDefaultWidth()); ++nb;
+   height1 = TMath::Max(height1, fAbort->GetDefaultHeight());
+   width1  = TMath::Max(width1, fAbort->GetDefaultWidth()); ++nb1;
 
    fClose = new TGTextButton(hf3, "&Close");
    fClose->SetToolTipText("Close this dialog");
    fClose->SetState(kButtonDisabled);
    fClose->Connect("Clicked()", "TProofProgressDialog", this, "DoClose()");
    hf3->AddFrame(fClose, new TGLayoutHints(kLHintsCenterY | kLHintsExpandX, 7, 7, 0, 0));
-   height = TMath::Max(height, fClose->GetDefaultHeight());
-   width  = TMath::Max(width, fClose->GetDefaultWidth()); ++nb;
+   height1 = TMath::Max(height1, fClose->GetDefaultHeight());
+   width1  = TMath::Max(width1, fClose->GetDefaultWidth()); ++nb1;
 
-   fLog = new TGTextButton(hf3, "&Show Logs");
+   fDialog->AddFrame(hf3, new TGLayoutHints(kLHintsBottom | kLHintsCenterX | kLHintsExpandX, 5, 5, 10, 5));
+
+   UInt_t  nb2 = 0, width2 = 0, height2 = 0;
+   TGHorizontalFrame *hf5 = new TGHorizontalFrame(fDialog, 60, 20, kFixedWidth);
+
+   fLog = new TGTextButton(hf5, "&Show Logs");
    fLog->SetToolTipText("Show query log messages");
    fLog->Connect("Clicked()", "TProofProgressDialog", this, "DoLog()");
-   hf3->AddFrame(fLog, new TGLayoutHints(kLHintsCenterY | kLHintsExpandX, 7, 7, 0, 0));
-   height = TMath::Max(height, fLog->GetDefaultHeight());
-   width  = TMath::Max(width, fLog->GetDefaultWidth()); ++nb;
+   hf5->AddFrame(fLog, new TGLayoutHints(kLHintsCenterY | kLHintsExpandX, 7, 7, 0, 0));
+   height2 = TMath::Max(height2, fLog->GetDefaultHeight());
+   width2  = TMath::Max(width2, fLog->GetDefaultWidth()); ++nb2;
 
    if (PPD_SRV_NEWER(11)) {
-      fRatePlot = new TGTextButton(hf3, "&Rate plot");
+      fRatePlot = new TGTextButton(hf5, "&Rate plot");
       fRatePlot->SetToolTipText("Show processing rate vs time");
       fRatePlot->SetState(kButtonDisabled);
       fRatePlot->Connect("Clicked()", "TProofProgressDialog", this, "DoPlotRateGraph()");
-      hf3->AddFrame(fRatePlot, new TGLayoutHints(kLHintsCenterY | kLHintsExpandX, 7, 7, 0, 0));
-      height = TMath::Max(height, fRatePlot->GetDefaultHeight());
-      width  = TMath::Max(width, fRatePlot->GetDefaultWidth()); ++nb;
+      hf5->AddFrame(fRatePlot, new TGLayoutHints(kLHintsCenterY | kLHintsExpandX, 7, 7, 0, 0));
+      height2 = TMath::Max(height2, fRatePlot->GetDefaultHeight());
+      width2  = TMath::Max(width2, fRatePlot->GetDefaultWidth()); ++nb2;
    }
 
-   // place button frame (hf3) at the bottom
-   fDialog->AddFrame(hf3, new TGLayoutHints(kLHintsBottom | kLHintsCenterX, 10, 10, 20, 10));
+   fMemPlot = new TGTextButton(hf5, "Memory Plot");
+   fMemPlot->Connect("Clicked()", "TProofProgressDialog", this, "DoMemoryPlot()");
+   fMemPlot->SetToolTipText("Show memory consumption vs entry / merging phase");
+   hf5->AddFrame(fMemPlot, new TGLayoutHints(kLHintsCenterY | kLHintsExpandX, 10, 10, 0, 0));
+   height2 = TMath::Max(height2, fMemPlot->GetDefaultHeight());
+   width2  = TMath::Max(width2, fMemPlot->GetDefaultWidth()); ++nb2;
 
-   // keep buttons centered and with the same width
-   hf3->Resize((width + 40) * nb, height);
+   fDialog->AddFrame(hf5, new TGLayoutHints(kLHintsBottom | kLHintsCenterX | kLHintsExpandX, 5, 5, 10, 5));
 
-   // connect slot to proof progress signal
+   // Only enable if master supports it
+   if (!PPD_SRV_NEWER_REV(gSVNMemPlot)) {
+      fMemPlot->SetState(kButtonDisabled);
+      TString tip = Form("Not supported by the master: required SVN revision %d > %d",
+                         gSVNMemPlot, fSVNRev);
+      fMemPlot->SetToolTipText(tip.Data());
+   } else {
+      fMemPlot->SetToolTipText("Show memory consumption vs entry / merging phase");
+   }
+
+   // Keep buttons centered and with the same width
+   UInt_t width, height, nb;
+   width = TMath::Max(width1, width2);
+   height = TMath::Max(height1, height2);
+   nb = TMath::Max(nb1, nb2);
+
+   // Connect slot to proof progress signal
    if (fProof) {
       fProof->Connect("Progress(Long64_t,Long64_t)", "TProofProgressDialog",
                       this, "Progress(Long64_t,Long64_t)");
@@ -231,7 +269,7 @@ TProofProgressDialog::TProofProgressDialog(TProof *proof,
       fProof->Connect("CloseProgressDialog()", "TProofProgressDialog", this, "DoClose()");
    }
 
-   // set dialog title
+   // Set dialog title
    if (fProof) {
       if (strlen(fProof->GetUser()) > 0) 
          fDialog->SetWindowName(Form("PROOF Query Progress: %s@%s",
@@ -241,16 +279,18 @@ TProofProgressDialog::TProofProgressDialog(TProof *proof,
    } else
       fDialog->SetWindowName("PROOF Query Progress: <dummy>");
 
-   // map all widgets and calculate size of dialog
+   // Map all widgets and calculate size of dialog
    fDialog->MapSubwindows();
 
    width  = fDialog->GetDefaultWidth();
    height = fDialog->GetDefaultHeight();
 
+   // To allow for lengthening of lines when the number are displayed
+   width += 100;
    fDialog->Resize(width, height);
 
    const TGWindow *main = gClient->GetRoot();
-   // position relative to the parent window (which is the root window)
+   // Position relative to the parent window (which is the root window)
    Window_t wdum;
    int      ax, ay;
    Int_t    mw = ((TGFrame *) main)->GetWidth();
@@ -261,7 +301,7 @@ TProofProgressDialog::TProofProgressDialog(TProof *proof,
    fDialog->Move(ax-5, ay - mh/4);
    fDialog->SetWMPosition(ax-5, ay - mh/4);
 
-   // make the message box non-resizable
+   // Make the message box non-resizable
    fDialog->SetWMSize(width, height);
    fDialog->SetWMSizeHints(width, height, width, height, 0, 0);
 
@@ -271,7 +311,7 @@ TProofProgressDialog::TProofProgressDialog(TProof *proof,
                                        kMWMFuncMinimize,
                         kMWMInputModeless);
 
-   // popup dialog and wait till user replies
+   // Popup dialog and wait till user replies
    fDialog->MapWindow();
 
    fStartTime = gSystem->Now();
@@ -654,6 +694,9 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed,
          fStop->SetState(kButtonDisabled);
          fAbort->SetState(kButtonDisabled);
          fClose->SetState(kButtonUp);
+
+         // Set the status to done
+         fStatus = kDone;
       }
    }
    fPrevProcessed = evproc;
@@ -687,6 +730,8 @@ TProofProgressDialog::~TProofProgressDialog()
    }
    if (fLogWindow)
       delete fLogWindow;
+   if (fMemWindow)
+      delete fMemWindow;
    fDialog->Cleanup();
    delete fDialog;
 }
@@ -895,4 +940,19 @@ void TProofProgressDialog::DoPlotRateGraph()
    pt->Draw();
 
    c1->Modified();
+}
+
+//______________________________________________________________________________
+void TProofProgressDialog::DoMemoryPlot()
+{
+   // Do a memory plot
+
+   if (!fMemWindow) {
+      fMemWindow = new TProofProgressMemoryPlot(this, 500, 300);
+      fMemWindow->DoPlot();
+   } else {
+      // Clear window
+      fMemWindow->Clear();
+      fMemWindow->DoPlot();
+   }
 }

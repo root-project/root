@@ -37,13 +37,15 @@ class TGTextBuffer;
 class TGTextEntry;
 class TProof;
 class TProofProgressLog;
+class TProofProgressMemoryPlot;
 class TNtuple;
 class TGraph;
 
 
 class TProofProgressDialog {
 
-friend class TProofProgressLog;
+   friend class TProofProgressLog;
+   friend class TProofProgressMemoryPlot;
 
 private:
    enum EQueryStatus { kRunning = 0, kDone, kStopped, kAborted, kIncomplete };
@@ -55,6 +57,7 @@ private:
    TGTextButton       *fAbort;
    TGTextButton       *fLog;
    TGTextButton       *fRatePlot;
+   TGTextButton       *fMemPlot;
    TGCheckButton      *fKeepToggle;
    TGCheckButton      *fLogQueryToggle;
    TGTextBuffer       *fTextQuery;
@@ -67,6 +70,7 @@ private:
    TGLabel            *fInit;
    TGLabel            *fSelector;
    TProofProgressLog  *fLogWindow;       // transient frame for logs
+   TProofProgressMemoryPlot *fMemWindow;  // transient frame for memory plots
    TProof             *fProof;
    TTime               fStartTime;
    TTime               fEndTime;
@@ -83,6 +87,7 @@ private:
    Float_t             fProcTime;
    Double_t            fAvgRate;
    Double_t            fAvgMBRate;
+   Int_t               fSVNRev;
 
    TString             fSessionUrl;
 
@@ -111,6 +116,7 @@ public:
    void DoStop();
    void DoAbort();
    void DoPlotRateGraph();
+   void DoMemoryPlot();
 
    ClassDef(TProofProgressDialog,0)  //PROOF progress dialog
 };

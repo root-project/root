@@ -18,6 +18,7 @@
 
 #pragma link C++ class TProofProgressDialog+;
 #pragma link C++ class TProofProgressLog+;
+#pragma link C++ class TProofProgressMemoryPlot+;
 #pragma link C++ class TSessionLogView+;
 #pragma link C++ class TSessionServerFrame+;
 #pragma link C++ class TSessionFrame+;
