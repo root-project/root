@@ -552,9 +552,10 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
          ) {
             // we might have "operator< <>" or "operator< <double>" or "operator<< <>" or "operator<< <double>"
             // with the space missing
-            std::string::size_type pos = funcname.find("<<<");
+            std::string::size_type pos = funcname.find("<<");
             if (pos != std::string::npos) {
-               funcname.insert(pos + 2, 1, ' ');
+               if (funcname[pos+2]=='<') ++pos; // case "operator<< <double>"
+               funcname.insert(pos + 1, 1, ' ');
             }
          }
          // Find the first ">>" after the initial "operator>>" or "operator<<".
