@@ -16,6 +16,7 @@
 #include "common.h"
 #include "dllrev.h"
 #include "Dict.h"
+#include <vector>
 
 using namespace Cint::Internal;
 
@@ -87,7 +88,7 @@ typedef void* G__SHLHANDLE;
 #define G__DLL_REVISION  "G__dll_revision"
 
 #define G__CALL_SETUP(setupfunc)  \
-    sharedlib_func=(int (*)())G__shl_findsym(&G__sl_handle[allsl],setupfunc,TYPE_PROCEDURE);   \
+    sharedlib_func=(int (*)())G__shl_findsym(&G__sl_handle[allsl].handle,setupfunc,TYPE_PROCEDURE);   \
     if(sharedlib_func!=NULL) (*sharedlib_func)()
 
 #else /* G__SHAREDLIB */
@@ -96,8 +97,15 @@ typedef void* G__SHLHANDLE;
 
 #endif /* G__SHAREDLIB */
 
-static G__SHLHANDLE G__sl_handle[G__MAX_SL];
 short Cint::Internal::G__allsl=0;
+struct G__CintSlHandle {
+    G__CintSlHandle(G__SHLHANDLE h = 0, bool p = false) : handle(h),ispermanent(p) {}
+    G__SHLHANDLE handle;
+ 
+    bool ispermanent;
+ };
+ 
+static std::vector<G__CintSlHandle> G__sl_handle;
 
 #ifdef G__DLL_SYM_UNDERSCORE
 static int G__sym_underscore=1;
@@ -492,11 +500,11 @@ TYPE_PROCEDURE);
 ***********************************************************************/
 void Cint::Internal::G__smart_shl_unload(int allsl)
 {
-  if(G__sl_handle[allsl]) {
-    if(G__dlclose(G__sl_handle[allsl]) == -1) {
+  if(G__sl_handle[allsl].handle) {
+    if(G__dlclose(G__sl_handle[allsl].handle) == -1) {
       G__fprinterr(G__serr,"Error: Dynamic link library unloading error\n");
     }
-    G__sl_handle[allsl]=0;
+    G__sl_handle[allsl].handle=0;
   }
 }
 
@@ -512,16 +520,40 @@ int Cint::Internal::G__free_shl_upto(int allsl)
   /*************************************************************
    * Unload shared library
    *************************************************************/
-  while((--G__allsl)>=allsl) {
-    if(G__dlclose(G__sl_handle[G__allsl]) == -1) {
-      G__fprinterr(G__serr,"Error: Dynamic link library unloading error\n");
-    }
-    else {
-      G__sl_handle[G__allsl]=0;
-    }
-  }
-  G__allsl=allsl;
-  return(0);
+   int index = G__allsl;
+
+   while((--index)>=allsl) {
+      if (!G__sl_handle[index].ispermanent) {
+         if(G__dlclose(G__sl_handle[index].handle) == -1) {
+            G__fprinterr(G__serr,"Error: Dynamic link library unloading error\n");
+         }
+         else {
+            G__sl_handle[index].handle=0;
+         }
+      }
+   }
+   // Now remove the holes
+   int offset = 0;
+   for(index=allsl;index<G__allsl;++index) {
+      if (G__sl_handle[index].handle==0) {
+         ++offset;
+      } else if (offset) {
+         G__sl_handle[index-offset]=G__sl_handle[index];
+         G__sl_handle[index].handle = 0;
+         G__sl_handle[index].ispermanent = false;
+         for(int f=0;f<G__nfile;++f) {
+            if (G__srcfile[f].slindex == index) {
+               G__srcfile[f].slindex = index-offset;
+            }
+         }  
+      }
+   }
+   int removed = offset;
+   for(index=0;index<removed;++index) {
+      G__sl_handle.pop_back();
+   }
+   G__allsl -= removed;
+   return(0);
 }
 
 #endif
@@ -534,8 +566,8 @@ extern "C" void* G__findsym(const char *fname)
 #ifdef G__SHAREDLIB
   int i;
   void *p;
-  for(i=0;i<G__allsl;i++) {
-    p = (void*)G__shl_findsym(&G__sl_handle[i],(char*)fname,TYPE_PROCEDURE);
+  for(i=0;i<G__allsl;++i) {
+    p = (void*)G__shl_findsym(&G__sl_handle[i].handle,(char*)fname,TYPE_PROCEDURE);
     if(p) return(p);
   }
 #endif
@@ -623,13 +655,6 @@ int Cint::Internal::G__shl_load(char *shlfile)
   int error=0,cintdll=0;
   G__StrBuf dllidheader_sb(G__ONELINE);
   char *dllidheader = dllidheader_sb;
-  int allsl=G__allsl;
-
-  if(G__allsl==G__MAX_SL) {
-    G__shl_load_error(shlfile ,"Too many DLL");
-    return(-1);
-  }
-  else ++G__allsl;
 
 #ifdef G__ROOT
   /* this pointer must be set before calling dlopen! */
@@ -637,18 +662,20 @@ int Cint::Internal::G__shl_load(char *shlfile)
   else G__initpermanentsl->clear();
 #endif
 
-  G__sl_handle[allsl] = G__dlopen(shlfile);
+  G__sl_handle.push_back( G__CintSlHandle(G__dlopen(shlfile)) );
+  int allsl = G__allsl;
+  ++G__allsl;
 
   if(G__sym_underscore) {
-    G__SetCintApiPointers(&G__sl_handle[allsl],"_G__SetCCintApiPointers");
-    G__SetCintApiPointers(&G__sl_handle[allsl],"_G__SetCppCintApiPointers");
+    G__SetCintApiPointers(&G__sl_handle[allsl].handle,"_G__SetCCintApiPointers");
+    G__SetCintApiPointers(&G__sl_handle[allsl].handle,"_G__SetCppCintApiPointers");
   }
   else {
-    G__SetCintApiPointers(&G__sl_handle[allsl],"G__SetCCintApiPointers");
-    G__SetCintApiPointers(&G__sl_handle[allsl],"G__SetCppCintApiPointers");
+    G__SetCintApiPointers(&G__sl_handle[allsl].handle,"G__SetCCintApiPointers");
+    G__SetCintApiPointers(&G__sl_handle[allsl].handle,"G__SetCppCintApiPointers");
   }
 
-  if(NULL==G__sl_handle[allsl]) {
+  if(NULL==G__sl_handle[allsl].handle) {
     if(G__ispragmainclude) {
       if(G__dispmsg>=G__DISPWARN) {
         G__fprinterr(G__serr,"Warning: Can not load Dynamic Link Library %s",shlfile);
@@ -707,7 +734,7 @@ int Cint::Internal::G__shl_load(char *shlfile)
 
   sprintf(dllid,"G__cpp_dllrev");
   sharedlib_func=
-    (int (*)())G__shl_findsym(&G__sl_handle[allsl],dllid,TYPE_PROCEDURE);
+    (int (*)())G__shl_findsym(&G__sl_handle[allsl].handle,dllid,TYPE_PROCEDURE);
   if(sharedlib_func && ((*sharedlib_func)()>G__ACCEPTDLLREV_UPTO
      || (*sharedlib_func)()<G__ACCEPTDLLREV_FROM)) {
     G__check_setup_version((*sharedlib_func)(),shlfile);
@@ -720,7 +747,7 @@ int Cint::Internal::G__shl_load(char *shlfile)
 
   sprintf(dllid,"G__cpp_dllrev%s",dllidheader);
   sharedlib_func=
-    (int (*)())G__shl_findsym(&G__sl_handle[allsl],dllid,TYPE_PROCEDURE);
+    (int (*)())G__shl_findsym(&G__sl_handle[allsl].handle,dllid,TYPE_PROCEDURE);
   if(sharedlib_func && ((*sharedlib_func)()>G__ACCEPTDLLREV_UPTO 
      || (*sharedlib_func)()<G__ACCEPTDLLREV_FROM)) {
     G__check_setup_version((*sharedlib_func)(),shlfile);
@@ -733,7 +760,7 @@ int Cint::Internal::G__shl_load(char *shlfile)
 
   sprintf(dllid,"G__c_dllrev");
   sharedlib_func=
-    (int (*)())G__shl_findsym(&G__sl_handle[allsl],dllid,TYPE_PROCEDURE);
+    (int (*)())G__shl_findsym(&G__sl_handle[allsl].handle,dllid,TYPE_PROCEDURE);
   if(sharedlib_func && ((*sharedlib_func)()>G__ACCEPTDLLREV_UPTO
      || (*sharedlib_func)()<G__ACCEPTDLLREV_FROM)) {
     G__check_setup_version((*sharedlib_func)(),shlfile);
@@ -746,7 +773,7 @@ int Cint::Internal::G__shl_load(char *shlfile)
 
   sprintf(dllid,"G__c_dllrev%s",dllidheader);
   sharedlib_func=
-    (int (*)())G__shl_findsym(&G__sl_handle[allsl],dllid,TYPE_PROCEDURE);
+    (int (*)())G__shl_findsym(&G__sl_handle[allsl].handle,dllid,TYPE_PROCEDURE);
   if(sharedlib_func && ((*sharedlib_func)()>G__ACCEPTDLLREV_UPTO
      || (*sharedlib_func)()<G__ACCEPTDLLREV_FROM)) {
     G__check_setup_version((*sharedlib_func)(),shlfile);
@@ -814,7 +841,7 @@ int Cint::Internal::G__shl_load(char *shlfile)
   }
 
   sharedlib_func=
-    (int (*)())G__shl_findsym(&G__sl_handle[allsl],G__GLOBALSETUP,TYPE_PROCEDURE);
+    (int (*)())G__shl_findsym(&G__sl_handle[allsl].handle,G__GLOBALSETUP,TYPE_PROCEDURE);
   if(sharedlib_func!=NULL) {
     (*sharedlib_func)();
   }
@@ -827,15 +854,15 @@ int Cint::Internal::G__shl_load(char *shlfile)
     G__DLLINIT initsl = 0;
     //if(!G__initpermanentsl)
       initsl =
-        (void (*)())G__shl_findsym(&G__sl_handle[allsl],"G__cpp_setup"
+        (void (*)())G__shl_findsym(&G__sl_handle[allsl].handle,"G__cpp_setup"
                                    ,TYPE_PROCEDURE); 
     if(!initsl) {
       sprintf(dllid,"G__cpp_setup%s",dllidheader);
       initsl =
-        (void (*)())G__shl_findsym(&G__sl_handle[allsl],dllid,TYPE_PROCEDURE); 
+        (void (*)())G__shl_findsym(&G__sl_handle[allsl].handle,dllid,TYPE_PROCEDURE); 
     }
     if (initsl) G__initpermanentsl->push_back(initsl);
-    --G__allsl;
+    G__sl_handle[allsl].ispermanent = true;
   }
   else {
     G__initpermanentsl->clear();
@@ -1489,7 +1516,7 @@ char *Cint::Internal::G__search_next_member(char *text,int state)
             name = completionlist[list_index].name;
             if(name==NULL) {
                if(isl<G__allsl) {
-                  completionlist=(G__COMPLETIONLIST*)G__shl_findsym(&G__sl_handle[isl]
+                  completionlist=(G__COMPLETIONLIST*)G__shl_findsym(&G__sl_handle[isl].handle
                                                                     ,G__COMPLETION
                                                                     ,TYPE_DATA);
                   list_index = -1;
@@ -1666,7 +1693,7 @@ void* Cint::Internal::G__SetShlHandle(char *filename)
       isl = G__srcfile[i].slindex;
       if(-1!=isl) {
         G__Shlfilenum = i;
-        G__ShlHandle = G__sl_handle[isl];
+        G__ShlHandle = G__sl_handle[isl].handle;
         return((void*)G__ShlHandle);
       }
       else {
