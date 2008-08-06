@@ -440,9 +440,16 @@ G__SIGNEDCHAR_T Cint::Internal::G__get_isconst(const ::Reflex::Type in)
 {
    // -- Is data type const qualified?
    ::Reflex::Type current = in; // .FinalType(); is currently buggy
+
    bool seen_first_pointer = false;
    bool last_const = false;
    char isconst = '\0';
+
+   if (in.IsFunction()) {
+      isconst = in.IsConst() * G__CONSTFUNC;
+      current = in.ReturnType();
+   }
+
    do {
       if ((current.IsPointer())) { //  || current.IsReference())) {
          if (!seen_first_pointer) {
@@ -458,10 +465,6 @@ G__SIGNEDCHAR_T Cint::Internal::G__get_isconst(const ::Reflex::Type in)
 
    if (last_const) isconst |= last_const * G__CONSTVAR;
 
-   if (in.IsFunction()) {
-      isconst  = in.ReturnType().IsConst() * G__CONSTVAR;
-      isconst |= in.IsConst() * G__CONSTFUNC;
-   }
    return isconst;
 }
 
