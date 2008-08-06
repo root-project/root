@@ -444,7 +444,7 @@ G__SIGNEDCHAR_T Cint::Internal::G__get_isconst(const ::Reflex::Type in)
    bool last_const = false;
    char isconst = '\0';
    do {
-      if ((current.IsPointer() || current.IsReference())) {
+      if ((current.IsPointer())) { //  || current.IsReference())) {
          if (!seen_first_pointer) {
             isconst |= current.IsConst() * G__PCONSTVAR;
             seen_first_pointer = true;
@@ -1652,7 +1652,10 @@ void Cint::Internal::G__BuilderInfo::ParseParameterLink(const char* paras)
       else {
          // -- We have a tagname.
          // save G__p_ifunc, G__search_tagname might change it when autoloading
-         ::Reflex::Scope &current_G__p_ifunc = G__p_ifunc;
+         ::Reflex::Scope current_G__p_ifunc = G__p_ifunc;
+         // Let's make sure that the lookup in done in the global scope.
+         ::Reflex::Scope store_def_tagnum = G__def_tagnum;
+         G__def_tagnum = Reflex::Scope::GlobalScope();
          if (type == 'i') {
             // -- A parameter of type 'i' with a tagname is an enum.
             // Note: We must have this case because the reflex
@@ -1670,6 +1673,7 @@ void Cint::Internal::G__BuilderInfo::ParseParameterLink(const char* paras)
             //        is called with a type of zero.
             tagnum = G__search_tagname(tagname, isupper(type) ? 0xff : 0);
          }
+         G__def_tagnum = store_def_tagnum;
          G__p_ifunc = current_G__p_ifunc;
       }
       G__separate_parameter(paras, &os, type_name);
@@ -1712,7 +1716,7 @@ void Cint::Internal::G__BuilderInfo::ParseParameterLink(const char* paras)
 }
 
 //______________________________________________________________________________
-void Cint::Internal::G__BuilderInfo::AddParameter(int ifn, int type, int numerical_tagnum, int numerical_typenum, int reftype_const, G__value* para_default, char* para_def, char* para_name)
+void Cint::Internal::G__BuilderInfo::AddParameter(int /* ifn */, int type, int numerical_tagnum, int numerical_typenum, int reftype_const, G__value* para_default, char* para_def, char* para_name)
 {
    // -- Internal, called only by G__BuilderInfo::ParseParameterLink().
    ::Reflex::Type paramType;
