@@ -53,7 +53,7 @@ Bool_t TProofProgressDialog::fgKeepDefault = kTRUE;
 Bool_t TProofProgressDialog::fgLogQueryDefault = kFALSE;
 TString TProofProgressDialog::fgTextQueryDefault = "last";
 
-static const Int_t gSVNMemPlot = 25050;
+static const Int_t gSVNMemPlot = 25071;
 
 ClassImp(TProofProgressDialog)
 
