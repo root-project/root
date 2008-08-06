@@ -937,7 +937,7 @@ void TProfile3D::GetStats(Double_t *stats) const
       Double_t x,y,z;
       for (bin=0;bin<kNstat;bin++) stats[bin] = 0;
       if (!fBinEntries.fArray) return;
-      for (binz=fZaxis.GetFirst();binz<=fZaxis.GetLast();biny++) {
+      for (binz=fZaxis.GetFirst();binz<=fZaxis.GetLast();binz++) {
          z = fZaxis.GetBinCenter(binz);
          for (biny=fYaxis.GetFirst();biny<=fYaxis.GetLast();biny++) {
             y = fYaxis.GetBinCenter(biny);
