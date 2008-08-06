@@ -384,10 +384,6 @@ static int G__get_newname(char* new_name)
             }
             return cin;
          }
-         int tmp_len = strlen(new_name);
-         if ((tmp_len > 8) && !strncmp(new_name + tmp_len - 9, "operator<", 9)) {
-            strcat(new_name, " "); // Put the space back in case of "operator< <int>(", don't combine the '<' tokens.
-         }
          int store_len = strlen(new_name);
          do {
             cin = G__fgetstream(new_name + strlen(new_name), ",;=():");
@@ -1718,8 +1714,6 @@ void Cint::Internal::G__define_var(int tagnum, ::Reflex::Type typenum)
    //
    // Read variable name.
    //
-   //extern char G__peekbuf[2048];
-   //G__fgetstream_peek(G__peekbuf, 80);
    cin = G__get_newname(new_name);
    //fprintf(stderr, "G__define_var: G__getnewname returned: '%s'\n", new_name);
    G__unsigned = 0;
