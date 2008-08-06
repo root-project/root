@@ -392,6 +392,17 @@ Int_t TProofLogElem::Retrieve(TProofLog::ERetrieveOpt opt, const char *pattern)
       delete os;
    }
 
+   //Note the role here, don't redo at each call of Display()
+   if (strstr(GetTitle(), "worker-")) {
+      fRole = "worker";
+   } else {
+      if (strchr(GetName(), '.')) {
+         fRole = "submaster";
+      } else {
+         fRole = "master";
+      }
+   }
+
    // Done
    return 0;
 }
@@ -409,16 +420,6 @@ void TProofLogElem::Display(Int_t from, Int_t to)
 
    Int_t nls = (fMacro->GetListOfLines()) ?
                 fMacro->GetListOfLines()->GetSize() : 0;
-   const char *role = 0;
-   if (strstr(GetTitle(), "worker-")) {
-      role = "worker";
-   } else {
-      if (strchr(GetName(), '.')) {
-         role = "submaster";
-      } else {
-         role = "master";
-      }
-   }
 
    // Starting line
    Int_t i = 0;
@@ -434,7 +435,7 @@ void TProofLogElem::Display(Int_t from, Int_t to)
    }
    // Write header
    Prt(Form("// --------- Start of element log -----------------\n"));
-   Prt(Form("// Ordinal: %s (role: %s)\n", GetName(), role));
+   Prt(Form("// Ordinal: %s (role: %s)\n", GetName(), fRole.Data()));
    // Separate out the submaster path, if any
    TString path(GetTitle());
    Int_t ic = path.Index(",");

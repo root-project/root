@@ -84,8 +84,12 @@ private:
    Long64_t   fSize;    // best knowledge of the log file size
    Long64_t   fFrom;    // starting offset of the current content
    Long64_t   fTo;      // end offset of the current content
+   TString    fRole;    // role (master-submaster-worker)
 
    static Long64_t fgMaxTransferSize;
+
+   //the name of TProofLogElem is the ordinal number of the corresp. worker
+   //the title is the url
 
 public:
    TProofLogElem(const char *ord, const char *url,
@@ -94,6 +98,7 @@ public:
 
    void    Display(Int_t from = 0, Int_t to = -1);
    TMacro *GetMacro() const { return fMacro; }
+   const char *    GetRole() { return fRole.Data(); }
    Int_t   Grep(const char *txt, TString &res, Int_t from = 0);
    void    Print(Option_t *opt = 0) const;
    void    Prt(const char *what);
