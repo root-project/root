@@ -670,8 +670,8 @@ void TClonesArray::Streamer(TBuffer &b)
                if (!fKeep->fCont[i])
                   fKeep->fCont[i] = (TObject*)fClass->New();
                else if (!fKeep->fCont[i]->TestBit(kNotDeleted)) {
-		 // The object has been delete (or never initilized)
-		 fClass->New(fKeep->fCont[i]);
+                  // The object has been deleted (or never initiliazed)
+                  fClass->New(fKeep->fCont[i]);
 	       }
 
                fCont[i] = fKeep->fCont[i];
