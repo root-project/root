@@ -731,7 +731,8 @@ int G__basedestructrc(G__var_array *mem)
       !mem->isinherit[i] &&
 #endif
       (G__struct.type[mem->p_tagtable[i]] != 'e') &&
-      (mem->statictype[i] != G__LOCALSTATIC)
+      (mem->statictype[i] != G__LOCALSTATIC) &&
+      (G__PARAREFERENCE != mem->reftype[i])
     ) {
       G__tagnum = mem->p_tagtable[i];
       G__store_struct_offset = store_struct_offset + mem->p[i];
