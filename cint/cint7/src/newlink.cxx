@@ -850,6 +850,7 @@ void Cint::Internal::G__clink_header(FILE* fp)
    fprintf(fp, "#define G__ANSIHEADER\n");
 #if defined(G__VAARG_COPYFUNC) || !defined(G__OLDIMPLEMENTATION1530)
    fprintf(fp, "#define G__DICTIONARY\n");
+   fprintf(fp,"#define G__PRIVATE_GVALUE\n");
 #endif
 #if defined(__hpux) && !defined(G__ROOT)
    G__getcintsysdir();
@@ -4303,7 +4304,6 @@ int Cint::Internal::G__cppif_returntype(FILE* fp, const ::Reflex::Member& ifunc,
          fprintf(fp, "%s   %s obj = ", indent, typestring);
       }
       if (ret_type.IsTypedef() && ret_type.ToType().FinalType().IsArray()) {
-         //sprintf(endoffunc, ";\n%s   result7->ref = (long) (&obj);\n%s   result7->obj.i = (long) (obj);\n%s   result7->type = %d;\n%s}", indent, indent, indent, toupper(type), indent);
          sprintf(endoffunc, ";\n%s   result7->ref = (long) (&obj);\n%s   result7->obj.i = (long) (obj);\n%s}", indent, indent, indent);
          return 0;
       }
@@ -4321,7 +4321,7 @@ int Cint::Internal::G__cppif_returntype(FILE* fp, const ::Reflex::Member& ifunc,
             }
             break;
          default:
-            sprintf(endoffunc, ";\n%s   result7->ref = (long) (&obj);\n%s   result7->obj.i = (long) (obj);\n%s}", indent, indent, indent);
+            sprintf(endoffunc, ";\n%s   result7->ref = (long) (&obj);\n%s   G__letint(result7, '%c', (long)obj);\n%s}", indent, indent, type, indent);
             break;
       }
       return 0;
@@ -4330,12 +4330,7 @@ int Cint::Internal::G__cppif_returntype(FILE* fp, const ::Reflex::Member& ifunc,
    // Function return type is a pointer, handle and return.
    if (isupper(type) || (ret_type.IsTypedef() && ret_type.FinalType().IsPointer())) {
       fprintf(fp, "%sG__letint(result7, %d, (long) ", indent, type);
-      // type is now set in G__cpp_callfunc
-      //if (reftype) {
-      //  sprintf(endoffunc, ");\n%sresult7->obj.reftype.reftype = %d;", indent, reftype);
-      //} else {
       sprintf(endoffunc, ");");
-      //}
       return(0);
    }
 

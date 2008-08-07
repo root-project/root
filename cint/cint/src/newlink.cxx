@@ -2322,6 +2322,21 @@ int G__execute_call(G__value *result7,G__param *libp,G__ifunc_table_internal *if
       return -1;
     }
     
+    // Restore the correct type
+//     fprintf(stderr,"%c:%c %d:%d %d:%d %d:%d\n",
+//             result7->type, ifunc->type[ifn],
+//             result7->tagnum, ifunc->p_tagtable[ifn],
+//             result7->typenum, ifunc->p_typetable[ifn],
+//             result7->obj.reftype.reftype, ifunc->reftype[ifn]);
+            
+    if (ifunc->type[ifn]!='y'
+        && !(result7->type=='u' && ifunc->type[ifn]=='i' /* constructor */) ) {
+       result7->type = ifunc->type[ifn];
+    }
+    result7->tagnum = ifunc->p_tagtable[ifn];
+    result7->typenum = ifunc->p_typetable[ifn];
+    result7->obj.reftype.reftype = ifunc->reftype[ifn];
+
     return 1;
 
 }
@@ -2950,6 +2965,7 @@ void G__cpplink_header(FILE *fp)
   fprintf(fp,"#define G__ANSIHEADER\n");
 #if defined(G__VAARG_COPYFUNC) || !defined(G__OLDIMPLEMENTATION1530)
   fprintf(fp,"#define G__DICTIONARY\n");
+  fprintf(fp,"#define G__PRIVATE_GVALUE\n");
 #endif
 #if defined(__hpux) && !defined(G__ROOT)
   G__getcintsysdir();
@@ -5816,7 +5832,7 @@ static void G__x8664_vararg(FILE *fp, int ifn, G__ifunc_table_internal *ifunc,
       fprintf(fp, "  lval[icnt] = G__getstructoffset(); icnt++;  // this pointer\n");
 
    fprintf(fp, "  for (i = 0; i < libp->paran; i++) {\n");
-   fprintf(fp, "    type = libp->para[i].type;\n");
+   fprintf(fp, "    type = G__value_get_type(&libp->para[i]);\n");
    fprintf(fp, "    pval = &libp->para[i];\n");
    fprintf(fp, "    if (isupper(type))\n");
    fprintf(fp, "      objsize = G__LONGALLOC;\n");
@@ -6445,8 +6461,7 @@ void G__cppif_genconstructor(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G_
 
   fprintf(fp,               "   result7->obj.i = (long) p;\n");
   fprintf(fp,               "   result7->ref = (long) p;\n");
-  fprintf(fp,               "   result7->type = 'u';\n");
-  fprintf(fp,               "   result7->tagnum = G__get_linked_tagnum(&%s);\n", G__mark_linked_tagnum(tagnum));
+  fprintf(fp,               "   G__set_tagnum(result7,G__get_linked_tagnum(&%s));\n", G__mark_linked_tagnum(tagnum));
 
   G__if_ary_union_reset(ifn, ifunc);
   G__cppif_dummyfuncname(fp);
@@ -7041,9 +7056,8 @@ void G__cppif_gendefault(FILE *fp, FILE* /*hfp*/, int tagnum,
 
       fprintf(fp,         "   result7->obj.i = (long) p;\n");
       fprintf(fp,         "   result7->ref = (long) p;\n");
-      fprintf(fp,         "   result7->type = 'u';\n");
-      fprintf(fp,         "   result7->tagnum = G__get_linked_tagnum(&%s);\n", G__mark_linked_tagnum(tagnum));
-
+      fprintf(fp,         "   G__set_tagnum(result7,G__get_linked_tagnum(&%s));\n", G__mark_linked_tagnum(tagnum));
+ 
       G__cppif_dummyfuncname(fp);
 
       fprintf(fp,         "}\n\n");
@@ -7148,8 +7162,7 @@ void G__cppif_gendefault(FILE *fp, FILE* /*hfp*/, int tagnum,
 
       fprintf(fp,     "   result7->obj.i = (long) p;\n");
       fprintf(fp,     "   result7->ref = (long) p;\n");
-      fprintf(fp,     "   result7->type = 'u';\n");
-      fprintf(fp,     "   result7->tagnum = G__get_linked_tagnum(&%s);\n", G__mark_linked_tagnum(tagnum));
+      fprintf(fp,     "   G__set_tagnum(result7,G__get_linked_tagnum(&%s));\n", G__mark_linked_tagnum(tagnum));
 
       G__cppif_dummyfuncname(fp);
 
@@ -7863,7 +7876,7 @@ int G__cppif_returntype(FILE *fp, int ifn, G__ifunc_table_internal *ifunc, char 
       fprintf(fp, "%s   %s obj = ", indent, typestring);
     }
     if ((typenum != -1) && G__newtype.nindex[typenum]) {
-      sprintf(endoffunc, ";\n%s   result7->ref = (long) (&obj);\n%s   result7->obj.i = (long) (obj);\n%s   result7->type = %d;\n%s}", indent, indent, indent, toupper(type), indent);
+       sprintf(endoffunc, ";\n%s   result7->ref = (long) (&obj);\n%s   result7->obj.i = (long) (obj);\n%s}", indent, indent, indent);
       return 0;
     }
     switch (type) {
@@ -7879,7 +7892,7 @@ int G__cppif_returntype(FILE *fp, int ifn, G__ifunc_table_internal *ifunc, char 
         }
         break;
       default:
-        sprintf(endoffunc, ";\n%s   result7->ref = (long) (&obj);\n%s   G__letint(result7, result7->type, (long)obj);\n%s}", indent, indent, indent);
+        sprintf(endoffunc, ";\n%s   result7->ref = (long) (&obj);\n%s   G__letint(result7, '%c', (long)obj);\n%s}", indent, indent, type, indent);
         break;
     }
     return 0;
@@ -7888,11 +7901,7 @@ int G__cppif_returntype(FILE *fp, int ifn, G__ifunc_table_internal *ifunc, char 
   // Function return type is a pointer, handle and return.
   if (isupper(type)) {
     fprintf(fp, "%sG__letint(result7, %d, (long) ", indent, type);
-    if (reftype) {
-      sprintf(endoffunc, ");\n%sresult7->obj.reftype.reftype = %d;", indent, reftype);
-    } else {
-      sprintf(endoffunc, ");");
-    }
+    sprintf(endoffunc, ");");
     return(0);
   }
 

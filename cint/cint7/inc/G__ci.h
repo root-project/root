@@ -850,8 +850,8 @@ typedef struct {
 #ifdef G__REFERENCETYPE2
   long ref;
 #endif
-  struct G__REFLEXTYPE_C_PLACEHOLDER buf_typenum;
   struct G__DUMMY_FOR_CINT5 dummyFotCint5;
+  struct G__REFLEXTYPE_C_PLACEHOLDER buf_typenum;
 } G__value;
 
 /**************************************************************************

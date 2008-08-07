@@ -731,6 +731,7 @@ G__value G__letvalue(G__value *p,G__value result)
 
 void G__set_tagnum(G__value* val, int tagnum)
 {
+   val->type = 'u';
    val->tagnum = tagnum;
 }
 
@@ -745,6 +746,29 @@ void G__set_type(G__value* val, char* type)
    val->type    = vtype.type;
    val->tagnum  = vtype.tagnum;
    val->typenum = vtype.typenum;
+}
+
+void G__letref_int(G__value* val, long p)
+{
+   val->obj.i = p;
+   val->ref = p;
+}
+
+void G__letref_intaddr(G__value* val, long p, long addr)
+{
+   val->obj.i = p;
+   val->ref = addr;
+}
+
+void G__letref_doubleaddr(G__value* val, double d, long addr)
+{
+   val->obj.d = d;
+   val->ref = addr;
+}
+
+int G__value_get_type(G__value* val) 
+{
+   return val->type;
 }
 
 } /* extern "C" */

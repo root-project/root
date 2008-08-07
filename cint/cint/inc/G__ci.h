@@ -919,7 +919,17 @@ typedef struct {
   union {
     double d;
     long    i; /* used to be int */
+#ifdef G__PRIVATE_GVALUE
+#if defined(private) && defined(ROOT_RVersion)
+#define G__alt_private private
+#undef private
+#endif
+private:
+#endif
     struct G__p2p reftype;
+#ifdef G__PRIVATE_GVALUE
+public:
+#endif
     char ch;
     short sh;
     int in;
@@ -932,12 +942,18 @@ typedef struct {
     G__uint64 ull;
     long double ld;
   } obj;
-  int type;
-  int tagnum;
-  int typenum;
 #ifdef G__REFERENCETYPE2
   long ref;
 #endif
+#ifdef G__PRIVATE_GVALUE
+private:
+#if defined(G__alt_private) && defined(ROOT_RVersion)
+#define private public
+#endif
+#endif
+  int type;
+  int tagnum;
+  int typenum;
 #ifndef G__OLDIMPLEMENTATION1259
   G__SIGNEDCHAR_T isconst;
 #endif
@@ -1772,6 +1788,7 @@ extern G__EXPORT int G__memfunc_para_setup G__P((int ifn,int type,int tagnum,int
 extern G__EXPORT int G__tag_memfunc_reset G__P((void));
 extern G__EXPORT void G__letint G__P((G__value *buf,int type,long value));
 extern G__EXPORT void G__letdouble G__P((G__value *buf,int type,double value));
+extern G__EXPORT int G__value_get_type G__P((G__value* buf));
 extern G__EXPORT void G__store_tempobject G__P((G__value reg));
 extern G__EXPORT int G__inheritance_setup G__P((int tagnum,int basetagnum,long baseoffset,int baseaccess,int property));
 extern G__EXPORT void G__add_compiledheader G__P((G__CONST char *headerfile));
