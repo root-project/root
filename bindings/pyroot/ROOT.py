@@ -144,7 +144,17 @@ class Template:
             arg = pystring.join(
                map( lambda x: pystring.strip(x), pystring.split(arg,',') ), ',' )
          newargs.append( arg )
-      return _root.MakeRootTemplateClass( *newargs )
+      result = _root.MakeRootTemplateClass( *newargs )
+
+    # special case pythonization (builtin_map is not available from the C-API)
+      if hasattr( result, 'push_back' ):
+         def iadd( self, ll ):
+            map( self.push_back, ll )
+            return self
+
+         result.__iadd__ = iadd
+
+      return result
 
 _root.Template = Template
 

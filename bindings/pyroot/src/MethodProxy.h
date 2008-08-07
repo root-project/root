@@ -30,14 +30,19 @@ namespace PyROOT {
       typedef std::vector< PyCallable* > Methods_t;
 
       struct MethodInfo_t {
-         MethodInfo_t() : fIsSorted( kFALSE ) { fRefCount = new int(1); }
+         MethodInfo_t() : fFlags( kNone ) { fRefCount = new int(1); }
          ~MethodInfo_t();
+
+         enum EMethodInfoFlags {
+            kNone            = 0,
+            kIsSorted        = 1,       // if method overload priority determined
+            kIsCreator       = 2        // if method creates new objects
+         };
 
          std::string                 fName;
          MethodProxy::DispatchMap_t  fDispatchMap;
          MethodProxy::Methods_t      fMethods;
-         std::string                 fDoc;
-         Bool_t                      fIsSorted;
+         UInt_t                      fFlags;
 
          int* fRefCount;
       };
@@ -47,7 +52,9 @@ namespace PyROOT {
 
       const std::string& GetName() const { return fMethodInfo->fName; }
       void AddMethod( PyCallable* pc ) {
-         fMethodInfo->fIsSorted = kFALSE; fMethodInfo->fMethods.push_back( pc ); }
+         fMethodInfo->fFlags &= ~MethodInfo_t::kIsSorted;
+         fMethodInfo->fMethods.push_back( pc );
+      }
 
    public:               // public, as the python C-API works with C structs
       PyObject_HEAD

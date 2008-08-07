@@ -132,13 +132,13 @@ namespace {
       if ( idx == (Py_ssize_t)-1 && PyErr_Occurred() )
          return 0;
 
-      PyObject* pyindex = 0;
       Py_ssize_t size = PySequence_Size( self );
       if ( idx >= size || ( idx < 0 && idx <= -size ) ) {
          PyErr_SetString( PyExc_IndexError, "index out of range" );
          return 0;
       }
 
+      PyObject* pyindex = 0;
       if ( idx >= 0 ) {
          Py_INCREF( index );
          pyindex = index;
@@ -797,19 +797,25 @@ namespace {
 //- safe indexing for STL-like vector w/o iterator dictionaries ---------------
    PyObject* CheckedGetItem( PyObject*, PyObject* args )
    {
-      PyObject* pyindex = 0;
-      if ( PyTuple_GET_SIZE( args ) == 2 )
-         pyindex = PyStyleIndex( PyTuple_GET_ITEM( args, 0 ), PyTuple_GET_ITEM( args, 1 ) );
-
-      if ( pyindex != 0 ) {
-         return CallPySelfObjMethod( args, "_getitem__unchecked", "OO:__getitem__" );
-      } else if ( ! PyErr_ExceptionMatches( PyExc_IndexError ) ) {
-         if ( PyErr_Occurred() )
-            PyErr_Clear();
-         return CallPySelfObjMethod( args, "_getitem__unchecked", "OO:__getitem__" );
+      Bool_t inbounds = kFALSE;
+      if ( PyTuple_GET_SIZE( args ) == 2 ) {
+         Py_ssize_t size = PySequence_Size( PyTuple_GET_ITEM( args, 0 ) );
+         Py_ssize_t idx  = PyInt_AsSsize_t( PyTuple_GET_ITEM( args, 1 ) );
+         if ( 0 <= idx && 0 <= size && idx < size )
+            inbounds = kTRUE;
       }
 
-      return 0;   // to make compiler happy; never get here
+      if ( inbounds ) {
+         return CallPySelfObjMethod( args, "_getitem__unchecked", "OO:__getitem__" );
+      } else if ( PyErr_Occurred() ) {
+      // argument conversion problem: let method itself resolve anew and report
+         PyErr_Clear();
+         return CallPySelfObjMethod( args, "_getitem__unchecked", "OO:__getitem__" );
+      } else {
+         PyErr_SetString( PyExc_IndexError, "index out of range" );
+      }
+
+      return 0;
    }
 
 //- pair as sequence to allow tuple unpacking ---------------------------------

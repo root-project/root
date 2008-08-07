@@ -54,6 +54,22 @@ namespace {
       return left->GetPriority() > right->GetPriority();
    }
 
+// helper to factor out return logic of mp_call
+   inline PyObject* HandleReturn( MethodProxy* meth, PyObject* result ) {
+
+   // special case for python exceptions, propagated through C++ layer
+      if ( result == (PyObject*)TPyExceptionMagic )
+         return 0;              // exception info was already set
+
+   // if this is creates new objects, always take ownership
+      if ( ( meth->fMethodInfo->fFlags & MethodProxy::MethodInfo_t::kIsCreator ) &&
+           ObjectProxy_Check( result ) )
+         ((ObjectProxy*)result)->HoldOn();
+
+      return result;
+   }
+
+
 //= PyROOT method proxy object behaviour =====================================
    PyObject* mp_name( MethodProxy* meth, void* )
    {
@@ -85,9 +101,35 @@ namespace {
    }
 
 //____________________________________________________________________________
+   PyObject* mp_getcreates( MethodProxy* meth, void* )
+   {
+      return PyInt_FromLong(
+         (Bool_t)(meth->fMethodInfo->fFlags & MethodProxy::MethodInfo_t::kIsCreator ) );
+   }
+
+//____________________________________________________________________________
+   int mp_setcreates( MethodProxy* meth, PyObject* value, void* )
+   {
+      Long_t iscreator = PyLong_AsLong( value );
+      if ( iscreator == -1 && PyErr_Occurred() ) {
+         PyErr_SetString( PyExc_ValueError, "a boolean 1 or 0 is required for _creates" );
+         return -1;
+      }
+
+      if ( iscreator )
+         meth->fMethodInfo->fFlags |= MethodProxy::MethodInfo_t::kIsCreator;
+      else
+         meth->fMethodInfo->fFlags &= ~MethodProxy::MethodInfo_t::kIsCreator;
+
+      return 0;
+   }
+
+//____________________________________________________________________________
    PyGetSetDef mp_getset[] = {
       { (char*)"__name__", (getter)mp_name, NULL, NULL, NULL },
       { (char*)"__doc__", (getter)mp_doc, NULL, NULL, NULL },
+      { (char*)"_creates", (getter)mp_getcreates, (setter)mp_setcreates,
+            (char*)"For ownership rules of result: if true, objects are python-owned", NULL },
       { (char*)NULL, NULL, NULL, NULL, NULL }
    };
 
@@ -101,27 +143,17 @@ namespace {
       Int_t nMethods = methods.size();
 
    // simple case
-      if ( nMethods == 1 ) {
-         PyObject* result = (*methods[0])( meth->fSelf, args, kwds );
+      if ( nMethods == 1 )
+         return HandleReturn( meth, (*methods[0])( meth->fSelf, args, kwds ) );
 
-         if ( result == (PyObject*)TPyExceptionMagic )
-            return 0;              // exception info was already set
-
-         return result;
-      }
-
-   // handle overloading
+   // otherwise, handle overloading
       Long_t sighash = HashSignature( args );
 
    // look for known signatures ...
       MethodProxy::DispatchMap_t::iterator m = dispatchMap.find( sighash );
       if ( m != dispatchMap.end() ) {
          Int_t index = m->second;
-         PyObject* result = (*methods[ index ])( meth->fSelf, args, kwds );
-
-         if ( result == (PyObject*)TPyExceptionMagic )
-            return 0;              // exception info was already set
-
+         PyObject* result = HandleReturn( meth, (*methods[ index ])( meth->fSelf, args, kwds ) );
          if ( result != 0 )
             return result;
 
@@ -130,9 +162,9 @@ namespace {
       }
 
    // ... otherwise loop over all methods and find the one that does not fail
-      if ( ! meth->fMethodInfo->fIsSorted ) {
+      if ( ! ( meth->fMethodInfo->fFlags & MethodProxy::MethodInfo_t::kIsSorted ) ) {
          std::stable_sort( methods.begin(), methods.end(), PriorityCmp );
-         meth->fMethodInfo->fIsSorted = kTRUE;
+         meth->fMethodInfo->fFlags |= MethodProxy::MethodInfo_t::kIsSorted;
       }
 
       std::vector< PyError_t > errors;
@@ -148,7 +180,7 @@ namespace {
          // success: update the dispatch map for subsequent calls
             dispatchMap[ sighash ] = i;
             std::for_each( errors.begin(), errors.end(), PyError_t::Clear );
-            return result;
+            return HandleReturn( meth, result );
          }
 
       // failure: collect error message/trace (automatically clears exception, too)
@@ -349,7 +381,7 @@ void PyROOT::MethodProxy::Set( const std::string& name, std::vector< PyCallable*
 // set method data
    fMethodInfo->fName = name;
    fMethodInfo->fMethods.swap( methods );
-   fMethodInfo->fIsSorted = kFALSE;
+   fMethodInfo->fFlags &= ~MethodInfo_t::kIsSorted;
 }
 
 //____________________________________________________________________________

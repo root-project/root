@@ -11,6 +11,7 @@
 #include "TPython.h"
 #include "TString.h"
 
+#include <iostream>
 
 //______________________________________________________________________________
 //                      Python equivalent PROOF base class
@@ -32,7 +33,7 @@ void TPySelector::SetupPySelf()
 
 // use TPython to ensure that the interpreter is initialized
    if ( ! TPython::Exec( (const char*)impst ) ) {
-      Abort( "failed to load provided script" );  // Exec already printed the real error
+      Abort( "failed to load provided python module" );  // Exec already printed error trace
       return;
    }
 

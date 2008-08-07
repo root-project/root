@@ -259,8 +259,6 @@ int PyROOT::BuildRootClassDict( const T& klass, PyObject* pyclass ) {
          } else if ( op == "--" ) {
          // prefix v.s. postfix decrement
             mtName = method.FunctionParameterSize() ? "__postdec__" : "__predec__";
-         } else if ( op == "->" ) {                      // class member access
-             mtName = "__follow__";
          } else {
             continue;                                    // not handled (new, delete, etc.)
          }
