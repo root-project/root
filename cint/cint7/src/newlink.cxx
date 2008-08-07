@@ -4289,11 +4289,7 @@ int Cint::Internal::G__cppif_returntype(FILE* fp, const ::Reflex::Member& ifunc,
 #endif
       //
       // Output the left-hand side of the assignment.
-      if (1) {
-         // Reference 
-         // Note:  The type string already has the ampersand in it.
-         fprintf(fp, "%s   %s obj = ", indent, rettypestring.c_str());
-      } else if (islower(type) && !isconst) {
+      if (islower(type) && !isconst) {
          // Reference to a non-const object.
          // Note:  The type string already has the ampersand in it.
          fprintf(fp, "%s   const %s obj = ", indent, typestring);
