@@ -672,7 +672,7 @@ void TClonesArray::Streamer(TBuffer &b)
                else if (!fKeep->fCont[i]->TestBit(kNotDeleted)) {
                   // The object has been deleted (or never initiliazed)
                   fClass->New(fKeep->fCont[i]);
-	       }
+               }
 
                fCont[i] = fKeep->fCont[i];
                b.StreamObject(fKeep->fCont[i]);
