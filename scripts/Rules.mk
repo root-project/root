@@ -161,8 +161,9 @@ ifeq ($(MAKECMDGOALS),cleantest)
   endif
 endif
 
+ifneq ($(MAKECMDGOALS),clean)
 ifeq ($(ROOTBITS),)
-   export ROOTBITS := $(shell root -b -q -n $(ROOTTEST_HOME)/scripts/Bits.C | grep Bits_in_long | awk '{print $$2;}' )
+   export ROOTBITS := $(shell root.exe -b -q -n $(ROOTTEST_HOME)/scripts/Bits.C | grep Bits_in_long | awk '{print $$2;}' )
 endif
 
 ifeq ($(CXXFLAGS),)
@@ -173,6 +174,7 @@ ifeq ($(ROOTLIBS),)
 endif
 ifeq ($(ROOTGLIBS),)
    export ROOTGLIBS    := $(shell root-config --nonew --glibs)
+endif
 endif
 
 ObjSuf   = o
@@ -362,8 +364,10 @@ endif
 CALLROOTEXE  ?= root.exe
 export CALLROOTEXE
 
+ifneq ($(MAKECMDGOALS),clean)
 ifeq ($(CINT_VERSION),)
    export CINT_VERSION := Cint$(shell $(CALLROOTEXE) -q -b | grep CINT | sed -e 's/.*\([57]\).*/\1/' )
+endif
 endif
 
 # Track the version of ROOT we are runing with
