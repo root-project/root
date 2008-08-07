@@ -228,11 +228,11 @@ static void G__getindexedvalue(G__value* result3, char* cindex)
    }
    int len = strlen(sindex);
    sindex[len-1] = '\0';
-#pragma message(FIXME("type=='u', but isClass() should be sufficient?"))
+   ::Reflex::Type valtype( G__value_typenum(*result3).FinalType() );
    if (
-      G__value_typenum(*result3).IsClass() ||
-      G__value_typenum(*result3).IsUnion() ||
-      G__value_typenum(*result3).IsEnum()
+      valtype.IsClass() ||
+      valtype.IsUnion() ||
+      valtype.IsEnum()
    ) {
       struct G__param fpara;
 #ifdef G__ASM
