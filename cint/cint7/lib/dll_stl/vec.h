@@ -30,7 +30,9 @@ using namespace std;
 
 #pragma link C++ class vector<char>;
 #pragma link C++ class vector<short>;
+#ifndef G__ROOT
 #pragma link C++ class vector<int>;
+#endif
 #pragma link C++ class vector<long>;
 
 #pragma link C++ class vector<unsigned char>;
