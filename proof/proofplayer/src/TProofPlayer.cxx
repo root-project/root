@@ -733,14 +733,16 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
       }
 
       // Save binaries to cache, if any
-      gProofServ->CopyToCache(selector_file, 1);
+      if (gProofServ)
+         gProofServ->CopyToCache(selector_file, 1);
 
       fSelectorClass = fSelector->IsA();
       version = fSelector->Version();
 
       fOutput = fSelector->GetOutputList();
 
-      TPerfStats::Start(fInput, fOutput);
+      if (gProofServ)
+         TPerfStats::Start(fInput, fOutput);
 
       fSelStatus = new TStatus;
       fOutput->Add(fSelStatus);
@@ -811,7 +813,11 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
    fEventsProcessed = 0;
 
    // Signal the master that we start processing
-   gProofServ->GetSocket()->Send(kPROOF_ENDINIT);
+   if (gProofServ)
+      gProofServ->GetSocket()->Send(kPROOF_ENDINIT);
+
+   // Get the frequency for logging memory consumption information
+   Int_t memlogfreq = ((TParameter<Long_t>*)fInput->FindObject("PROOF_MemLogFreq"))->GetVal();
 
    TRY {
 
@@ -841,6 +847,14 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
             if (gMonitoringWriter)
                gMonitoringWriter->SendProcessingProgress(fEventsProcessed,
                        TFile::GetFileBytesRead()-readbytesatstart, kFALSE);
+            if (fEventsProcessed%memlogfreq == 0){
+               // Record the memory information
+               ProcInfo_t pi;
+               if (!gSystem->GetProcInfo(&pi)){
+                  Info("Process|Svc", "Memory %ld virtual %ld resident event %d",
+                                      pi.fMemVirtual, pi.fMemResident, fEventsProcessed);
+               }
+            }
          }
 
          if (TestBit(TProofPlayer::kDispatchOneEvent)) {
@@ -922,7 +936,8 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
       }
    }
 
-   TPerfStats::Stop();
+   if (gProofServ)
+      TPerfStats::Stop();
 
    return 0;
 }
@@ -1347,9 +1362,13 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
          // Cleanup
          SafeDelete(listOfMissingFiles);
       }
-      // reset start, this is now managed by the packetizer
+      // Reset start, this is now managed by the packetizer
       first = 0;
-
+      // Try to have 100 messages about memory, unless a different number is given by the user
+      if (!fProof->GetParameter("PROOF_MemLogFreq")){
+         Long64_t memlogfreq = fPacketizer->GetTotalEntries()/(fProof->GetParallel()*100);
+         fProof->SetParameter("PROOF_MemLogFreq", memlogfreq);
+      }
    } else {
 
       // For a new query clients should make sure that the temporary
@@ -1421,6 +1440,11 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
    // Redirect logs from master to special log frame
    if (IsClient())
       fProof->fRedirLog = kTRUE;
+
+   if (!IsClient()){
+      // Signal the start of finalize for the memory log grepping
+      Info("Process|Svc", "Start merging Memory information");
+   }
 
    if (!sync) {
       if (IsClient()) {
@@ -1964,7 +1988,13 @@ Int_t TProofPlayerRemote::AddOutputObject(TObject *obj)
 
    // For other objects we just run the incorporation procedure
    Incorporate(obj, fOutput, merged);
-
+   if (!IsClient()){
+      ProcInfo_t pi;
+      if (!gSystem->GetProcInfo(&pi)){
+         Info("AddOutputObject|Svc", "Memory %ld virtual %ld resident after merging object %s",
+                                     pi.fMemVirtual, pi.fMemResident, obj->GetName());
+      }
+   }
    // We are done
    return (merged ? 1 : 0);
 }

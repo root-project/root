@@ -53,7 +53,7 @@ Bool_t TProofProgressDialog::fgKeepDefault = kTRUE;
 Bool_t TProofProgressDialog::fgLogQueryDefault = kFALSE;
 TString TProofProgressDialog::fgTextQueryDefault = "last";
 
-static const Int_t gSVNMemPlot = 25071;
+static const Int_t gSVNMemPlot = 25090;
 
 ClassImp(TProofProgressDialog)
 
@@ -245,7 +245,7 @@ TProofProgressDialog::TProofProgressDialog(TProof *proof,
                          gSVNMemPlot, fSVNRev);
       fMemPlot->SetToolTipText(tip.Data());
    } else {
-      fMemPlot->SetToolTipText("Show memory consumption vs entry / merging phase");
+      fMemPlot->SetToolTipText("Show memory consumption");
    }
 
    // Keep buttons centered and with the same width
