@@ -1229,7 +1229,7 @@ void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
          hP[i]            = new TH1F(Form("%s_p%03d", name, i),
             Form("Feature space, variable %d", i),
             pbins,plowb,phighb);
-         hX[i]->SetXTitle(Form("p_{%d}",i));
+         hP[i]->SetXTitle(Form("p_{%d}",i));
          fHistograms->Add(hP[i]);
       }
 
