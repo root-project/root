@@ -178,11 +178,7 @@ void TShape::Streamer(TBuffer &R__b)
       TNamed::Streamer(R__b);
       TAttLine::Streamer(R__b);
       TAttFill::Streamer(R__b);
-      if (R__b.GetVersionOwner() > 22300) {
-         TAtt3D::Streamer(R__b);
-      } else {
-         TAtt3D::Streamer(R__b);
-      }
+      TAtt3D::Streamer(R__b);
       R__b >> fNumber;
       R__b >> fVisibility;
       R__b >> fMaterial;
