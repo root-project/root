@@ -919,7 +919,7 @@ typedef struct {
   union {
     double d;
     long    i; /* used to be int */
-#ifdef G__PRIVATE_GVALUE
+#if defined(G__PRIVATE_GVALUE) && !defined(_WINDOWS)
 #if defined(private) && defined(ROOT_RVersion)
 #define G__alt_private private
 #undef private
@@ -927,7 +927,7 @@ typedef struct {
 private:
 #endif
     struct G__p2p reftype;
-#ifdef G__PRIVATE_GVALUE
+#if defined(G__PRIVATE_GVALUE) && !defined(_WINDOWS)
 public:
 #endif
     char ch;
@@ -945,7 +945,7 @@ public:
 #ifdef G__REFERENCETYPE2
   long ref;
 #endif
-#ifdef G__PRIVATE_GVALUE
+#if defined(G__PRIVATE_GVALUE) && !defined(_WINDOWS)
 private:
 #if defined(G__alt_private) && defined(ROOT_RVersion)
 #define private public
