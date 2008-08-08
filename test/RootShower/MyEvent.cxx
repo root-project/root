@@ -580,7 +580,7 @@ void MyEvent::MagneticField(Int_t id)
    
    Double_t sint, sintt, tsint, cos1t, sin2;
    Double_t f1, f2, f3, v1, v2, v3;
-   Double_t pol = GetParticle(id)->GetPDG()->Charge() > 0.0 ? 1.0 : -1.0;
+   Double_t pol = GetParticle(id)->GetPDG()->Charge() / 3.0;
    Double_t h4  = pol * 2.9979251e-04 * fB;
    Double_t tet = -h4 * CSpeed * fDetector.GetdT(fMatter) /
                   GetParticle(id)->P();
