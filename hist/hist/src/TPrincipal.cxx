@@ -1223,7 +1223,9 @@ void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
          // For some reason, the trace of the none-scaled matrix
          // (see TPrincipal::MakeNormalised) should enter here. Taken
          // from LINTRA code.
-         Double_t plowb   = -10 * TMath::Sqrt(fEigenValues(i) * fTrace);
+         Double_t et = fEigenValues(i) * fTrace;
+         Double_t plowb   = -1;
+         if (et > 0) plowb = -10 * TMath::Sqrt(et);
          Double_t phighb  = -plowb;
          Int_t    pbins   = 100;
          hP[i]            = new TH1F(Form("%s_p%03d", name, i),
