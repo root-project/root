@@ -69,7 +69,7 @@ namespace {
    }
 
 //= PyROOT template proxy callable behavior ==================================
-   PyObject* tpp_call( TemplateProxy* pytmpl, PyObject* args, PyObject* )
+   PyObject* tpp_call( TemplateProxy* pytmpl, PyObject* args, PyObject* kwds )
    {
    // dispatcher to the actual member method, args is self object + template arguments
    // (as in a function call); build full instantiation
@@ -89,13 +89,17 @@ namespace {
 
       }
 
-   // if the method lookup fails, try to locate the "generic" version of the template
-      if ( ! pymeth ) {
-         PyErr_Clear();
-         pymeth = PyObject_GetAttrString( pytmpl->fSelf,
-            (std::string( "__generic_" ) + PyString_AS_STRING( pytmpl->fPyName )).c_str() );
-      }
+      if ( pymeth )
+         return pymeth;       // templated, now called by the user
 
+   // if the method lookup fails, try to locate the "generic" version of the template
+      PyErr_Clear();
+      pymeth = PyObject_GetAttrString( pytmpl->fSelf,
+         (std::string( "__generic_" ) + PyString_AS_STRING( pytmpl->fPyName )).c_str() );
+
+      if ( pymeth )
+         return PyObject_Call( pymeth, args, kwds );   // non-templated, executed as-is
+      
       return pymeth;
    }
 
