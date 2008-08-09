@@ -7,6 +7,7 @@
 #include "MethodProxy.h"
 #include "ObjectProxy.h"
 #include "TPyException.h"
+#include "Utility.h"
 
 // Standard
 #include <algorithm>
@@ -382,6 +383,10 @@ void PyROOT::MethodProxy::Set( const std::string& name, std::vector< PyCallable*
    fMethodInfo->fName = name;
    fMethodInfo->fMethods.swap( methods );
    fMethodInfo->fFlags &= ~MethodInfo_t::kIsSorted;
+
+// special case, in heuristics mode also tag *Clone* methods as creators
+   if ( Utility::gMemoryPolicy == Utility::kHeuristics && name.find( "Clone" ) != std::string::npos )
+      fMethodInfo->fFlags |= MethodInfo_t::kIsCreator;
 }
 
 //____________________________________________________________________________
