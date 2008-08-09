@@ -11,7 +11,6 @@
 #include "TPython.h"
 #include "TString.h"
 
-#include <iostream>
 
 //______________________________________________________________________________
 //                      Python equivalent PROOF base class
