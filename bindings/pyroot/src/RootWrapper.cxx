@@ -271,11 +271,15 @@ int PyROOT::BuildRootClassDict( const T& klass, PyObject* pyclass ) {
    // template members; handled by adding a dispatcher to the class
       if ( ! isStatic && mtName[mtName.size()-1] == '>' ) {
          std::string tmplname = mtName.substr( 0, mtName.find('<') );
-         TemplateProxy* pytmpl = TemplateProxy_New( tmplname, pyclass );
-         PyObject_SetAttrString(
-            pyclass, const_cast< char* >( tmplname.c_str() ), (PyObject*)pytmpl );
-         Py_DECREF( pytmpl );
-
+         PyObject* attr = PyObject_GetAttrString( pyclass, const_cast< char* >( tmplname.c_str() ) );
+         if ( ! TemplateProxy_Check( attr ) ) {
+            PyErr_Clear();
+            TemplateProxy* pytmpl = TemplateProxy_New( tmplname, pyclass );
+            PyObject_SetAttrString(
+               pyclass, const_cast< char* >( tmplname.c_str() ), (PyObject*)pytmpl );
+            Py_DECREF( pytmpl );
+         }
+         Py_XDECREF( attr );
       // note: need to continue here to actually add the method ...
       }
 
@@ -319,7 +323,20 @@ int PyROOT::BuildRootClassDict( const T& klass, PyObject* pyclass ) {
 
 // add the methods to the class dictionary
    for ( CallableCache_t::iterator imd = cache.begin(); imd != cache.end(); ++imd ) {
-      MethodProxy* method = MethodProxy_New( imd->first, imd->second );
+   // in order to prevent removing templated editions of this method (which were set earlier,
+   // above, as a different proxy object, we'll check and add this method flagged as a generic
+   // one (to be picked up by the templated one as appropriate) if a template exists
+      PyObject* attr = PyObject_GetAttrString( pyclass, const_cast< char* >( imd->first.c_str() ) );
+      MethodProxy* method = 0;
+      if ( ! TemplateProxy_Check( attr ) ) {
+      // normal case: no template
+         PyErr_Clear();
+         method = MethodProxy_New( imd->first, imd->second );
+      } else {
+      // template exists, supply it with the generic edition
+         Py_XDECREF( attr );
+         method = MethodProxy_New( "__generic_" + imd->first, imd->second );
+      }
       PyObject_SetAttrString(
          pyclass, const_cast< char* >( method->GetName().c_str() ), (PyObject*)method );
       Py_DECREF( method );
