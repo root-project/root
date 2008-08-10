@@ -194,9 +194,18 @@ public:
 
 class TProofPlayerLocal : public TProofPlayer {
 
+private:
+   Bool_t   fIsClient;
+
+protected:
+   void SetupFeedback() { }
+   void StopFeedback() { }
+
 public:
-   TProofPlayerLocal(TProof *) { }
+   TProofPlayerLocal(Bool_t client = kTRUE) : fIsClient(client) { }
    virtual ~TProofPlayerLocal() { }
+
+   Bool_t         IsClient() const { return fIsClient; }
 
    ClassDef(TProofPlayerLocal,0)  // PROOF player running on client
 };
