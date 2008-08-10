@@ -37,10 +37,6 @@ void arrayfunc() {
    float f = arrayret(1)[1];
 
    fprintf(stdout,"the printed value should equal to 22: %f\n",f);
-   //#ifndef __CINT
-   // this does not work either 
-   std::cout << "should also be 11: " << arrayret(1)[1] << std::endl;
-   //#endif
-
+   std::cout << "should also be 22: " << arrayret(1)[1] << std::endl;
 }
 
