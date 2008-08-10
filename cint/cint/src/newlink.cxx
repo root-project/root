@@ -2335,6 +2335,9 @@ int G__execute_call(G__value *result7,G__param *libp,G__ifunc_table_internal *if
     }
     result7->tagnum = ifunc->p_tagtable[ifn];
     result7->typenum = ifunc->p_typetable[ifn];
+    if ((result7->typenum != -1) && G__newtype.nindex[result7->typenum]) {
+       result7->type = toupper(result7->type);
+    }
     if (isupper(ifunc->type[ifn]) && ifunc->reftype[ifn]) {
        result7->obj.reftype.reftype = ifunc->reftype[ifn];
     }
