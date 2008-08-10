@@ -406,7 +406,7 @@ int XrdProofdProofServ::VerifyProofServ(bool forward)
 
    {  XrdSysMutexHelper mhp(fMutex);
       // Propagate the ping request
-      if (Response()->Send(kXR_attn, kXPD_ping, buf, len) != 0) {
+      if (!fResponse || fResponse->Send(kXR_attn, kXPD_ping, buf, len) != 0) {
          msg = "could not propagate ping to proofsrv";
          rc = -1;
       }
@@ -438,7 +438,7 @@ int XrdProofdProofServ::BroadcastPriority(int priority)
    itmp = static_cast<kXR_int32>(htonl(itmp));
    memcpy(buf, &itmp, sizeof(kXR_int32));
    // Send over
-   if (Response()->Send(kXR_attn, kXPD_priority, buf, len) != 0) {
+   if (!fResponse || fResponse->Send(kXR_attn, kXPD_priority, buf, len) != 0) {
       // Failure
       TRACE(XERR,"problems telling proofserv");
       return -1;
