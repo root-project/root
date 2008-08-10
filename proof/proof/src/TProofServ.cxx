@@ -325,7 +325,7 @@ Bool_t TShutdownTimer::Notify()
                   (Long_t)(now.GetNanoSec() - ts.GetNanoSec()) / 1000000 ;
       Int_t to = gEnv->GetValue("ProofServ.ShutdonwTimeout", 20);
       if (dt > to * 60000) {
-         Fatal("Notify", "input socket: %p: did not show any activity"
+         Printf("TShutdownTimer::Notify: input socket: %p: did not show any activity"
                          " during the last %d mins: aborting", xs, to);
          // At this point we lost our controller: we need to abort to avoid
          // hidden timeouts or loops
