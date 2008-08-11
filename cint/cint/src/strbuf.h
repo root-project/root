@@ -49,10 +49,11 @@ namespace Cint {
          operator const char*() const { return fBuf; }
          const char* operator()() const { return fBuf; }
 
-         char& operator[](int i) { return fBuf[i]; }
-         char operator[](int i) const { return fBuf[i]; }
-         char* operator+(int i) { return fBuf + i; }
-         const char* operator+(int i) const { return fBuf + i; }
+         // DON'T: these create ambiguities with ::op[char*, int] etc
+         //char& operator[](int i) { return fBuf[i]; }
+         //char operator[](int i) const { return fBuf[i]; }
+         //char* operator+(int i) { return fBuf + i; }
+         //const char* operator+(int i) const { return fBuf + i; }
 
          const char* data() const { return fBuf; }
 

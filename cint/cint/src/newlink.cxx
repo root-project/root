@@ -11038,15 +11038,72 @@ int G__memfunc_setup_imp(const char *funcname,int hash
     }
   }
 #else // G__OLDIMPLEMENTATION1702
+ {
+   const char* isTemplate = strchr(funcname, '<');
+   if (isTemplate
+       // no op <()
+       && ( !strncmp(funcname, "operator", 8)
+            // no A<int>()
+            || (tagnum != -1 && !strcmp(funcname, G__struct.name[tagnum]))))
+      isTemplate = 0;
 
-  if(dtorflag) {
-    G__func_now = store_func_now;
-    G__p_ifunc = store_p_ifunc;
-  }
-  else {
-    G__memfunc_next();
-  }
+   if (isTemplate) {
+      G__StrBuf funcname_notmplt(strlen(funcname));
+      strcpy(funcname_notmplt, funcname);
+      *(funcname_notmplt + (isTemplate - funcname)) = 0; // cut at template arg
+      isTemplate = funcname_notmplt;
+      int tmplthash = 0;
+      while (*isTemplate) {
+         tmplthash += *isTemplate;
+         ++isTemplate;
+      }
 
+      struct G__ifunc_table_internal *ifunc;
+      int iexist;
+      char *oldname = G__p_ifunc->funcname[G__func_now];
+      G__p_ifunc->funcname[G__func_now] = funcname_notmplt;
+      G__p_ifunc->hash[G__func_now] = tmplthash;
+
+      if(-1==G__p_ifunc->tagnum)
+         ifunc = G__ifunc_exist(G__p_ifunc,G__func_now
+                                ,&G__ifunc,&iexist,0xffff);
+      else
+         ifunc = G__ifunc_exist(G__p_ifunc,G__func_now
+                                ,G__struct.memfunc[G__p_ifunc->tagnum],&iexist
+                                ,0xffff);
+
+      G__p_ifunc->funcname[G__func_now] = oldname;
+      G__p_ifunc->hash[G__func_now] = hash;
+
+      if(dtorflag) {
+         G__func_now = store_func_now;
+         G__p_ifunc = store_p_ifunc;
+      }
+      else {
+         G__memfunc_next();
+      }
+
+      if (!ifunc) {
+         // create a copy of this function, name without template arguments, if
+         // that function doesn't exist yet.
+         G__memfunc_setup_imp(funcname_notmplt, tmplthash, funcp, type, tagnum, typenum, reftype
+                         , para_nu, ansi, accessin, isconst , paras,  comment
+#ifdef G__TRUEP2F
+                         ,truep2f
+                         ,isvirtual
+#endif // G__TRUEP2F
+                           );
+      }
+   } else {
+      if(dtorflag) {
+         G__func_now = store_func_now;
+         G__p_ifunc = store_p_ifunc;
+      }
+      else {
+         G__memfunc_next();
+      }
+   }
+ }
 #endif // G__OLDIMPLEMENTATION1702
 
 
