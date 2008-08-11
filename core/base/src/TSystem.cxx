@@ -2558,6 +2558,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
             builddep += includes;
             builddep += defines;
             builddep += " -- ";
+            builddep += " cintdictversion.h ";
             builddep += filename;
             builddep += " > ";
             builddep += stderrfile;
