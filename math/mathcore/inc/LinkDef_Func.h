@@ -10,7 +10,7 @@
 #ifdef __CINT__
 
 
-// define header gurad symbols to avoid CINT re-including the file 
+// define header guard symbols to avoid CINT re-including the file 
 #pragma link C++ global ROOT_Math_SpecFuncMathCore;
 #pragma link C++ global ROOT_Math_PdfFuncMathCore;
 #pragma link C++ global ROOT_Math_ProbFuncMathCore;

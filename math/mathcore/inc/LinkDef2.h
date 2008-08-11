@@ -26,6 +26,19 @@
 //#pragma link C++ class ROOT::Math;
 #endif
 
+#pragma link C++ global gRandom;
+
+#pragma link C++ class TRandom+;
+#pragma link C++ class TRandom1+;
+#pragma link C++ class TRandom2+;
+#pragma link C++ class TRandom3-;
+
+#pragma link C++ class TKDTree<Int_t, Double_t>+;
+#pragma link C++ class TKDTree<Int_t, Float_t>+;
+#pragma link C++ typedef TKDTreeID;
+#pragma link C++ typedef TKDTreeIF;
+
+
 // ROOT::Math namespace
 #pragma link C++ typedef ROOT::Math::IGenFunction;
 #pragma link C++ typedef ROOT::Math::IMultiGenFunction;
