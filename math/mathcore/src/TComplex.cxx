@@ -27,6 +27,10 @@ TComplex::TComplex(Double_t re, Double_t im, Bool_t polar) : fRe(re), fIm(im)
    // Standard constructor
 
    if (polar) {
+      if(re<0) {
+         ::Warning("TComplex::ctor","Modulo of a complex number should be >=0, taking the abs");
+         re=-re;
+      }
       fRe=re*TMath::Cos(im);
       fIm=re*TMath::Sin(im);
    }
