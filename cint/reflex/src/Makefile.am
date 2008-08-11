@@ -31,10 +31,11 @@ libReflex_la_SOURCES =               \
   MemberTemplate.cxx                 \
   MemberTemplateImpl.cxx             \
   MemberTemplateName.cxx             \
-  NameLookup.cxx                      \
+  NameLookup.cxx                     \
   Namespace.cxx                      \
   NamespaceBuilder.cxx               \
   Object.cxx                         \
+  OwnedPropertyList.cxx              \
   Pointer.cxx                        \
   PointerToMember.cxx                \
   PropertyList.cxx                   \
