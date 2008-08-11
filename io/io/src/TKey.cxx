@@ -350,6 +350,7 @@ void TKey::Build(TDirectory* motherDir, const char* classname, Long64_t filepos)
    fCycle      = 0;
    fSeekPdir   = 0;
    fSeekKey    = 0;
+   fLeft       = 0;
 
    fClassName = classname;
    //the following test required for forward and backward compatibility
