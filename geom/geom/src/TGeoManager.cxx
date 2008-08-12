@@ -1970,6 +1970,20 @@ void TGeoManager::SetTopVisible(Bool_t vis) {
    GetGeomPainter();
    fPainter->SetTopVisible(vis);
 }
+
+//_____________________________________________________________________________
+void TGeoManager::SetCheckedNode(TGeoNode *node) {
+// Assign a given node to be checked for ovelaps. Any other overlaps will be ignored.
+   GetGeomPainter()->SetCheckedNode(node);
+}   
+//_____________________________________________________________________________
+void TGeoManager::SetNmeshPoints(Int_t npoints)
+{
+// Set the number of points to be generated on the shape outline when checking
+// for overlaps.
+   GetGeomPainter()->SetNmeshPoints(npoints);
+}
+   
 //_____________________________________________________________________________
 void TGeoManager::SetVisOption(Int_t option) {
 // set drawing mode :

@@ -150,7 +150,9 @@ public:
    virtual void       SetClippingShape(TGeoShape *shape) {fClippingShape = shape;}
    virtual void       SetExplodedView(Int_t iopt=0);
    virtual void       SetNsegments(Int_t nseg=20);
+   virtual void       SetNmeshPoints(Int_t npoints);
    virtual void       SetGeoManager(TGeoManager *geom) {fGeoManager=geom;}
+   virtual void       SetCheckedNode(TGeoNode *node);
    virtual void       SetRaytracing(Bool_t flag=kTRUE) {fIsRaytracing = flag;}
    virtual void       SetTopVisible(Bool_t vis=kTRUE);
    virtual void       SetTopVolume(TGeoVolume *vol) {fTopVolume = vol;}

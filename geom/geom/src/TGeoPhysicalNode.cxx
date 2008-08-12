@@ -133,7 +133,7 @@ TGeoPhysicalNode::~TGeoPhysicalNode()
 }
 
 //_____________________________________________________________________________
-void TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t check)
+void TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t check, Double_t ovlp)
 {
    // Align a physical node with a new relative matrix/shape.
    // Example: /TOP_1/A_1/B_1/C_1
@@ -221,7 +221,32 @@ void TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t che
    TGeoVoxelFinder *voxels = vm->GetVoxels();
    if (voxels) voxels->SetNeedRebuild();
    // Eventually check for overlaps
-   if (check) vm->CheckOverlaps();
+   if (check) {
+      if (voxels) {
+         voxels->Voxelize();
+         vm->FindOverlaps();
+      }   
+      if (node->IsOverlapping()) {
+         Info("Align", "The check for overlaps for node: \n%s\n cannot be performed since the node is declared possibly overlapping", 
+              GetName());
+      } else {        
+         i = fLevel;
+         node = GetNode(i);
+         gGeoManager->SetCheckedNode(node);
+         while (node && node->GetVolume()->IsAssembly()) {
+            i--;
+            node = GetNode(i);
+            if (!node->GetVolume()->IsAssembly() && node->IsOverlapping()) {
+               Info("Align", "The check for overlaps for assembly node: \n%s\n cannot be performed since the parent %s is declared possibly overlapping",
+               GetName(), node->GetName());
+               node = 0;
+               break;
+            }
+         }      
+         if (node) node->CheckOverlaps(ovlp);
+         gGeoManager->SetCheckedNode(0);
+      }
+   }      
    // Clean current matrices from cache
    gGeoManager->CdTop();
    SetAligned(kTRUE);

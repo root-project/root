@@ -1694,6 +1694,19 @@ void TGeoPainter::SetNsegments(Int_t nseg)
 }
 
 //______________________________________________________________________________
+void TGeoPainter::SetNmeshPoints(Int_t npoints) {
+// Set number of points to be generated on the shape outline when checking for overlaps.
+   fChecker->SetNmeshPoints(npoints);
+}   
+
+//______________________________________________________________________________
+void TGeoPainter::SetCheckedNode(TGeoNode *node) {
+// Select a node to be checked for overlaps. All overlaps not involving it will
+// be ignored.
+   fChecker->SetSelectedNode(node);
+}   
+
+//______________________________________________________________________________
 void TGeoPainter::SetVisLevel(Int_t level) {
 // Set default level down to which visualization is performed
    if (level==fVisLevel && fLastVolume==fTopVolume) return;

@@ -48,7 +48,9 @@ private :
    Double_t        *fVal2;            //! Array of timing per volume.
    Bool_t          *fFlags;           //! Array of flags per volume.
    TStopwatch      *fTimer;           //! Timer
+   TGeoNode        *fSelectedNode;    //! Selected node for overlap checking
    Int_t            fNchecks;         //! Number of checks for current volume
+   Int_t            fNmeshPoints;     //! Number of points on mesh to be checked
 // methods
    void             CleanPoints(Double_t *points, Int_t &numPoints) const;
    Int_t            NChecksPerVolume(TGeoVolume *vol);
@@ -78,7 +80,8 @@ public:
    void             OpProgress(const char *opname, Long64_t current, Long64_t size, TStopwatch *watch=0, Bool_t last=kFALSE, Bool_t refresh=kFALSE);
    TGeoNode        *SamplePoints(Int_t npoints, Double_t &dist, Double_t epsil, const char* g3path);
    void             ShootRay(Double_t *start, Double_t dirx, Double_t diry, Double_t dirz, Double_t *array, Int_t &nelem, Int_t &dim, Double_t *enpoint=0) const;
-   //void             ShowPoints(Option_t *option="");
+   void             SetSelectedNode(TGeoNode *node) {fSelectedNode=node;}
+   void             SetNmeshPoints(Int_t npoints=1000);
    void             Test(Int_t npoints, Option_t *option);
    void             TestOverlaps(const char *path);
    Bool_t           TestVoxels(TGeoVolume *vol, Int_t npoints=1000000);

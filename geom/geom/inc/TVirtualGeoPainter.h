@@ -127,7 +127,9 @@ public:
    virtual void       SetClippingShape(TGeoShape *shape) = 0;
    virtual void       SetExplodedView(Int_t iopt=0) = 0;
    virtual void       SetGeoManager(TGeoManager *geom) = 0;
+   virtual void       SetCheckedNode(TGeoNode *node) = 0;
    virtual void       SetNsegments(Int_t nseg=20) = 0;    
+   virtual void       SetNmeshPoints(Int_t npoints) = 0;
    virtual void       SetRaytracing(Bool_t flag=kTRUE) = 0;
    static  TVirtualGeoPainter *GeoPainter();
    static void        SetPainter(const TVirtualGeoPainter *painter);

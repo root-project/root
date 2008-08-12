@@ -226,6 +226,8 @@ public:
    void                   RandomRays(Int_t nrays=1000, Double_t startx=0, Double_t starty=0, Double_t startz=0);
    TGeoNode              *SamplePoints(Int_t npoints, Double_t &dist, Double_t epsil=1E-5,
                                        const char *g3path="");
+   void                   SetNmeshPoints(Int_t npoints=1000);
+   void                   SetCheckedNode(TGeoNode *node);                                    
    void                   Test(Int_t npoints=1000000, Option_t *option=""); // *MENU*
    void                   TestOverlaps(const char* path=""); // *MENU*
    Double_t               Weight(Double_t precision=0.01, Option_t *option="va"); // *MENU*
