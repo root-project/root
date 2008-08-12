@@ -63,6 +63,10 @@ protected:
 
    TCollection() : fName(), fSize(0) { }
 
+   virtual void        PrintCollectionHeader(Option_t* option) const;
+   virtual const char* GetCollectionEntryName(TObject* entry) const;
+   virtual void        PrintCollectionEntry(TObject* entry, Option_t* option, Int_t recurse) const;
+
 public:
    enum { kInitCapacity = 16, kInitHashTableCapacity = 17 };
 
@@ -98,8 +102,10 @@ public:
    virtual TIterator *MakeIterator(Bool_t dir = kIterForward) const = 0;
    virtual TIterator *MakeReverseIterator() const { return MakeIterator(kIterBackward); }
    virtual void       Paint(Option_t *option="");
-   virtual void       Print(Option_t *wildcard="") const;
-   virtual void       Print(Option_t *wildcard, Option_t *option) const;
+   virtual void       Print(Option_t *option="") const;
+   virtual void       Print(Option_t *option, Int_t recurse) const;
+   virtual void       Print(Option_t *option, const char* wildcard, Int_t recurse=1) const;
+   virtual void       Print(Option_t *option, TPRegexp& regexp, Int_t recurse=1) const;
    virtual void       RecursiveRemove(TObject *obj);
    virtual TObject   *Remove(TObject *obj) = 0;
    virtual void       RemoveAll(TCollection *col);

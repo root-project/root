@@ -481,11 +481,12 @@ void TPolyMarker3D::Print(Option_t *option) const
 {
    // Print 3-D polymarker with its attributes on stdout.
 
-   printf("    TPolyMarker3D N=%d, Option=%s\n",fN,option);
+   printf("TPolyMarker3D N=%d, Option=%s\n",fN,option);
    TString opt = option;
    opt.ToLower();
    if (opt.Contains("all")) {
       for (Int_t i=0;i<Size();i++) {
+         TROOT::IndentLevel();
          printf(" x[%d]=%g, y[%d]=%g, z[%d]=%g\n",i,fP[3*i],i,fP[3*i+1],i,fP[3*i+2]);
       }
    }

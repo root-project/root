@@ -44,8 +44,8 @@ public:
    virtual const char       *GetKey(UInt_t i, const char *key) const; // returns the key value of list item i
    virtual Bool_t            SetKey(UInt_t i, const char *key, const char *value); // set the key value of list item i
    virtual TList            *GetFileInfoList() const;                 // returns a new allocated List of TFileInfo Objects
-   void                      Print(Option_t *option = "") const;
-   void                      Print(Option_t *wildcard, Option_t *option) const;
+   using                     TCollection::Print;
+   virtual void              Print(Option_t *option = "") const;
 
    ClassDef(TAlienResult,0)  // Alien query result set
 };

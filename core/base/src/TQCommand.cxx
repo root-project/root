@@ -913,11 +913,12 @@ void TQCommand::ls(Option_t *) const
 }
 
 //______________________________________________________________________________
-void TQCommand::Print(Option_t *option) const
+void TQCommand::PrintCollectionHeader(Option_t* /*option*/) const
 {
-   // print this command and all merged commands
+   // Print collection header.
 
-   ls(option);
+   TROOT::IndentLevel();
+   printf("%d %s\n", fStatus, GetName()); 
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -966,11 +967,19 @@ void TQUndoManager::ls(Option_t *option) const
 }
 
 //______________________________________________________________________________
-void TQUndoManager::Print(Option_t *option) const
+void TQUndoManager::PrintCollectionEntry(TObject* entry, Option_t* option,
+                                         Int_t /*recurse*/) const
 {
-   // Prints all commands in history stack
+   // Print collection entry.
 
-   ls(option);
+   TQCommand *com = (TQCommand*) entry;
+   TROOT::IndentLevel();
+   if (fCursor && fCursor->GetObject() == entry) {
+      printf("->");
+   } else {
+      printf("  ");
+   }
+   com->ls(option);
 }
 
 //______________________________________________________________________________

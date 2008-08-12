@@ -54,6 +54,8 @@ private:
 protected:
    enum { kIsOwnerValue = BIT(15) };
 
+   virtual void        PrintCollectionEntry(TObject* entry, Option_t* option, Int_t recurse) const;
+
 public:
    typedef TMapIter Iterator_t;
 
@@ -81,8 +83,6 @@ public:
    TObject          *operator()(const char *keyname) const { return GetValue(keyname); }
    TObject          *operator()(const TObject *key) const { return GetValue(key); }
    TIterator        *MakeIterator(Bool_t dir = kIterForward) const;
-   void              Print(Option_t *wildcard="") const;
-   void              Print(Option_t *wildcard, Option_t *option) const;
    void              Rehash(Int_t newCapacity, Bool_t checkObjValidity = kTRUE);
    TObject          *Remove(TObject *key);
    TPair            *RemoveEntry(TObject *key);

@@ -47,6 +47,8 @@ protected:
    void    *fReceiver;   // ptr to object to which slot is applied
    TString  fClassName;  // class name of the receiver
 
+   virtual void PrintCollectionHeader(Option_t* option) const;
+
 public:
    TQConnection();
    TQConnection(TClass* cl, void *receiver, const char *method_name);
@@ -67,8 +69,6 @@ public:
    void ExecuteMethod(Long_t *params, Int_t nparam = -1);
    void ExecuteMethod(const char *params);
    void ls(Option_t *option="") const;
-   void Print(Option_t *option="") const;
-   void Print(Option_t *, Option_t *option) const{ Print(option); }
 
    ClassDef(TQConnection,0) // Internal class used in the object communication mechanism
 };

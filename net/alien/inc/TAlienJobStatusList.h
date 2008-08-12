@@ -31,11 +31,11 @@ class TAlienJobStatusList : public TGridJobStatusList {
 protected:
    TString  fJobID;  // the job's ID
 
+   virtual void PrintCollectionEntry(TObject* entry, Option_t* option, Int_t recurse) const;
+
 public:
    TAlienJobStatusList() { gGridJobStatusList = this; }
    virtual ~TAlienJobStatusList() { if (gGridJobStatusList == this) gGridJobStatusList=0; }
-   virtual void Print(Option_t *options) const;
-   virtual void Print(Option_t *wildcard, Option_t *option) const { TCollection::Print(wildcard, option); }
 
    ClassDef(TAlienJobStatusList,1)  // ABC defining interface to a list of AliEn GRID jobs
 };

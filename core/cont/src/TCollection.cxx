@@ -44,6 +44,7 @@
 #include "TBrowser.h"
 #include "TObjectTable.h"
 #include "TRegexp.h"
+#include "TPRegexp.h"
 #include "TVirtualMutex.h"
 
 TVirtualMutex *gCollectionMutex = 0;
@@ -242,12 +243,15 @@ void TCollection::ls(Option_t *option) const
    // Wildcarding supported, eg option="xxx*" lists only objects
    // with names xxx*.
 
+   TObject::ls(option);
+
    TRegexp re(option,kTRUE);
    TIter next(this);
    TObject *object;
    char *star = 0;
    if (option) star = (char*)strchr(option,'*');
 
+   TROOT::IncreaseDirLevel();
    while ((object = next())) {
       if (star) {
          TString s = object->GetName();
@@ -255,6 +259,7 @@ void TCollection::ls(Option_t *option) const
       }
       object->ls(option);
    }
+   TROOT::DecreaseDirLevel();
 }
 
 //______________________________________________________________________________
@@ -266,43 +271,146 @@ void TCollection::Paint(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TCollection::Print(Option_t *wildcard) const
+void TCollection::PrintCollectionHeader(Option_t*) const
 {
-   // Print all objects in this collection.
-   // Wildcarding is supported, e.g. wildcard="xxx*" prints only objects
-   // with names matching xxx*.
+   // Print the collection header.
 
-   if (!wildcard) wildcard = "";
-   TRegexp re(wildcard, kTRUE);
-   Int_t nch = strlen(wildcard);
-   TIter next(this);
-   TObject *object;
+   TROOT::IndentLevel();
+   printf("Collection name='%s', class='%s', size=%d\n",
+          GetName(), ClassName(), GetSize());
+}
 
-   while ((object = next())) {
-      TString s = object->GetName();
-      if (nch && s != wildcard && s.Index(re) == kNPOS) continue;
-      object->Print();
+//______________________________________________________________________________
+const char* TCollection::GetCollectionEntryName(TObject* entry) const
+{
+   // For given collection entry return the string that is used to
+   // identify the object and, potentially, perform wildcard/regexp
+   // filtering on.
+
+   return entry->GetName();
+}
+
+//______________________________________________________________________________
+void TCollection::PrintCollectionEntry(TObject* entry, Option_t* option, Int_t recurse) const
+{
+   // Print the collection entry.
+
+   TCollection* coll = dynamic_cast<TCollection*>(entry);
+   if (coll) {
+      coll->Print(option, recurse);
+   } else {
+      TROOT::IndentLevel();
+      entry->Print(option);
    }
 }
 
 //______________________________________________________________________________
-void TCollection::Print(Option_t *wildcard, Option_t *option) const
+void TCollection::Print(Option_t *option) const
 {
-   // Print all objects in this collection, passing option to the
-   // objects Print() method.
-   // Wildcarding is supported, e.g. wildcard="xxx*" prints only objects
-   // with names matching xxx*.
+   // Defualt print for collections, calls Print(option, 1).
+   // This will print the collection header and Print() methods of
+   // all the collection entries.
+   //
+   // If you want to override Print() for a collection class, first
+   // see if you can accomplish it by overriding the following protected
+   // methods:
+   //   void        PrintCollectionHeader(Option_t* option) const;
+   //   const char* GetCollectionEntryName(TObject* entry) const;
+   //   void        PrintCollectionEntry(TObject* entry, Option_t* option, Int_t recurse) const;
+   // Otherwise override the Print(Option_t *option, Int_t)
+   // variant. Remember to declare:
+   //   using TCollection::Print;
+   // somewhere close to the method declaration.
 
-   if (!wildcard) wildcard = "";
-   TRegexp re(wildcard, kTRUE);
-   Int_t nch = strlen(wildcard);
-   TIter next(this);
-   TObject *object;
+   Print(option, 1);
+}
 
-   while ((object = next())) {
-      TString s = object->GetName();
-      if (nch && s != wildcard && s.Index(re) == kNPOS) continue;
-      object->Print(option);
+//______________________________________________________________________________
+void TCollection::Print(Option_t *option, Int_t recurse) const
+{
+   // Print the collection header and its elements.
+   //
+   // If recurse is non-zero, descend into printing of
+   // collection-entries with recurse - 1.
+   // This means, if recurse is negative, the recursion is infinite.
+   //
+   // Option is passed recursively.
+
+   PrintCollectionHeader(option);
+
+   if (recurse != 0)
+   {
+      TIter next(this);
+      TObject *object;
+      
+      TROOT::IncreaseDirLevel();
+      while ((object = next())) {
+         PrintCollectionEntry(object, option, recurse - 1);
+      }
+      TROOT::DecreaseDirLevel();
+   }
+}
+
+//______________________________________________________________________________
+void TCollection::Print(Option_t *option, const char* wildcard, Int_t recurse) const
+{
+   // Print the collection header and its elements that match the wildcard.
+   //
+   // If recurse is non-zero, descend into printing of
+   // collection-entries with recurse - 1.
+   // This means, if recurse is negative, the recursion is infinite.
+   //
+   // Option is passed recursively, but wildcard is only used on the
+   // first level.
+
+   PrintCollectionHeader(option);
+
+   if (recurse != 0)
+   {
+      if (!wildcard) wildcard = "";
+      TRegexp re(wildcard, kTRUE);
+      Int_t nch = strlen(wildcard);
+      TIter next(this);
+      TObject *object;
+
+      TROOT::IncreaseDirLevel();
+      while ((object = next())) {
+         TString s = GetCollectionEntryName(object);
+         if (nch == 0 || s == wildcard || s.Index(re) != kNPOS) {
+            PrintCollectionEntry(object, option, recurse - 1);
+         }
+      }
+      TROOT::DecreaseDirLevel();
+   }
+}
+
+//______________________________________________________________________________
+void TCollection::Print(Option_t *option, TPRegexp& regexp, Int_t recurse) const
+{
+   // Print the collection header and its elements that match the regexp.
+   //
+   // If recurse is non-zero, descend into printing of
+   // collection-entries with recurse - 1.
+   // This means, if recurse is negative, the recursion is infinite.
+   //
+   // Option is passed recursively, but regexp is only used on the
+   // first level.
+
+   PrintCollectionHeader(option);
+
+   if (recurse != 0)
+   {
+      TIter next(this);
+      TObject *object;
+
+      TROOT::IncreaseDirLevel();
+      while ((object = next())) {
+         TString s = GetCollectionEntryName(object);
+         if (regexp.MatchB(s)) {
+            PrintCollectionEntry(object, option, recurse - 1);
+         }
+      }
+      TROOT::DecreaseDirLevel();
    }
 }
 

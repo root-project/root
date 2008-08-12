@@ -395,8 +395,6 @@ public:
    Bool_t Disconnect(void *receiver=0, const char *slot_name=0);
    Int_t  GetNargs() const { return fSignalArgs; }
    void   ls(Option_t *option = "") const;
-   void   Print(Option_t *option = "") const;
-   void   Print(Option_t *, Option_t *option) const { Print(option); }
 };
 
 //______________________________________________________________________________
@@ -457,14 +455,6 @@ void TQConnectionList::ls(Option_t *option) const
 
    cout <<  "TQConnectionList:" << "\t" << GetName() << endl;
    ((TQConnectionList*)this)->R__FOR_EACH(TQConnection,Print)(option);
-}
-
-//______________________________________________________________________________
-void TQConnectionList::Print(Option_t *) const
-{
-   // Print signal name.
-
-   cout << "TQConnectionList:" << "\t" << GetName() << endl;
 }
 
 

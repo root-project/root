@@ -19,22 +19,19 @@
 
 #include "TAlienJobStatusList.h"
 #include "TAlienJobStatus.h"
+#include "TROOT.h"
 
 ClassImp(TAlienJobStatusList)
 
 //______________________________________________________________________________
-void TAlienJobStatusList::Print(Option_t *) const
+void TAlienJobStatusList::PrintCollectionEntry(TObject* entry, Option_t* /*option*/,
+                                               Int_t /*recurse*/) const
 {
-  // Extract the master jobs.
+   // Print information about jobs.
 
-   TIter next(this);
-   TAlienJobStatus* jobstatus=0;
-
-   while ( ( jobstatus = (TAlienJobStatus*) next() ) ) {
-      TString split;
-      TString queueid;
-      queueid = jobstatus->GetKey("queueId");
-      split = jobstatus->GetKey("split");
-      printf("JobId = %s Split = %s\n",queueid.Data(),split.Data());
-   }
+   TAlienJobStatus* jobstatus = (TAlienJobStatus*) entry;
+   TString split(jobstatus->GetKey("split"));
+   TString queueid(jobstatus->GetKey("queueId"));
+   TROOT::IndentLevel();
+   printf("JobId = %s Split = %s\n", queueid.Data(), split.Data());
 }

@@ -604,13 +604,13 @@ void TQConnection::ls(Option_t *option) const
 }
 
 //______________________________________________________________________________
-void TQConnection::Print(Option_t *) const
+void TQConnection::PrintCollectionHeader(Option_t *) const
 {
    // Print TQConnection full method name and print all
    // signals connected to this connection.
 
-   cout <<  "\t\t\t" << IsA()->GetName() << "\t" << fReceiver <<
-            "\t" << GetName() << endl;
+   TROOT::IndentLevel();
+   cout << IsA()->GetName() << "\t" << fReceiver << "\t" << GetName() << endl;
 }
 
 //______________________________________________________________________________

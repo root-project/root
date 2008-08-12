@@ -211,7 +211,7 @@ TList *TAlienResult::GetFileInfoList() const
 }
 
 //______________________________________________________________________________
-void TAlienResult::Print(Option_t * /*wildcard */ , Option_t * option) const
+void TAlienResult::Print(Option_t * option) const
 {
    // Print the AlienResult info.
 
@@ -258,12 +258,4 @@ void TAlienResult::Print(Option_t * /*wildcard */ , Option_t * option) const
          i++;
       }
    }
-}
-
-//______________________________________________________________________________
-void TAlienResult::Print(Option_t * option) const
-{
-   // Print the AlienResult info.
-
-   Print("", option);
 }

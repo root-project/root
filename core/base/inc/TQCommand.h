@@ -46,6 +46,8 @@ protected:
 
    virtual void Init(const char *cl, void *object,
                      const char *redo, const char *undo);
+   virtual void PrintCollectionHeader(Option_t* option) const;
+
 public:
    TQCommand(const char *cl = 0, void *object = 0,
              const char *redo = 0, const char *undo = 0);
@@ -82,8 +84,6 @@ public:
    Bool_t         IsExecuting() const;
    virtual void   SetName(const char *name);
    virtual void   SetTitle(const char *title);
-   virtual void   Print(Option_t *option="") const;
-   virtual void   Print(Option_t *, Option_t *option) const { Print(option); }
    virtual void   ls(Option_t *option="") const;
    virtual void   Add(TObject *obj, Option_t *opt);
    virtual void   Add(TObject *obj) { Add(obj, 0); }
@@ -107,6 +107,8 @@ protected:
    TList      *fLogBook; // listing of all actions during execution
    Bool_t      fLogging; // kTRUE if logging is ON
 
+   virtual void PrintCollectionEntry(TObject* entry, Option_t* option, Int_t recurse) const;
+
 public:
    TQUndoManager();
    virtual ~TQUndoManager();
@@ -124,8 +126,6 @@ public:
    UInt_t         GetLimit() const;
    virtual void   SetLimit(UInt_t limit);
    virtual void   CurrentChanged(TQCommand *c); //*SIGNAL*
-   virtual void   Print(Option_t *option="") const;
-   virtual void   Print(Option_t *, Option_t *option) const { Print(option); }
    virtual void   ls(Option_t *option="") const;
 
    ClassDef(TQUndoManager,0) // recorder of operations for undo and redo

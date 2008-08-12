@@ -268,55 +268,26 @@ TIterator *TMap::MakeIterator(Bool_t dir) const
 }
 
 //______________________________________________________________________________
-void TMap::Print(Option_t *wildcard) const
+void TMap::PrintCollectionEntry(TObject* entry, Option_t* option, Int_t recurse) const
 {
-   // Print all objects in this collection.
-   // Wildcarding is supported, e.g. wildcard="xxx*" prints only objects
-   // with names matching xxx*.
+   // Print the collection entry.
 
-   if (!wildcard) wildcard = "";
-   TRegexp re(wildcard, kTRUE);
-   Int_t nch = strlen(wildcard);
-   TIter next(fTable);
-   TPair *a;
+   TObject* val = GetValue(entry);
 
-   while ((a = (TPair*) next())) {
-      TString s = a->Key()->GetName();
-      if (nch && s != wildcard && s.Index(re) == kNPOS) continue;
-      printf("Key:   ");
-      a->Key()->Print();
-      if (TStorage::IsOnHeap(a->Value())) {
-         printf("Value: ");
-         a->Value()->Print();
-      } else
-         printf("Value: 0x%lx\n", (ULong_t) a->Value());
-   }
-}
-
-//______________________________________________________________________________
-void TMap::Print(Option_t *wildcard, Option_t *option) const
-{
-   // Print all objects in this collection, passing option to the
-   // objects Print() method.
-   // Wildcarding is supported, e.g. wildcard="xxx*" prints only objects
-   // with names matching xxx*.
-
-   if (!wildcard) wildcard = "";
-   TRegexp re(wildcard, kTRUE);
-   Int_t nch = strlen(wildcard);
-   TIter next(fTable);
-   TPair *a;
-
-   while ((a = (TPair*) next())) {
-      TString s = a->Key()->GetName();
-      if (nch && s != wildcard && s.Index(re) == kNPOS) continue;
-      printf("Key:   ");
-      a->Key()->Print(option);
-      if (TStorage::IsOnHeap(a->Value())) {
-         printf("Value: ");
-         a->Value()->Print(option);
-      } else
-         printf("Value: 0x%lx\n", (ULong_t) a->Value());
+   TROOT::IndentLevel();
+   printf("Key:   ");
+   entry->Print();
+   TROOT::IndentLevel();
+   if (TStorage::IsOnHeap(val)) {
+      printf("Value: ");
+      TCollection* coll = dynamic_cast<TCollection*>(val);
+      if (coll) {
+         coll->Print(option, recurse);
+      } else {
+          val->Print(option);
+      }
+   } else {
+      printf("Value: 0x%lx\n", (ULong_t) val);
    }
 }
 

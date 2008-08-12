@@ -2493,7 +2493,12 @@ void TStreamerInfo::ls(Option_t *option) const
       Printf("\nStreamerInfo for class: %s, version=%d, checksum=0x%x",GetName(),fClassVersion,GetCheckSum());
    }
 
-   if (fElements) fElements->ls(option);
+   if (fElements) {
+      TIter    next(fElements);
+      TObject *obj;
+      while ((obj = next()))
+         obj->ls(option);
+   }
    for (Int_t i=0;i < fNdata;i++) {
       TStreamerElement *element = (TStreamerElement*)fElem[i];
       Printf("   i=%2d, %-15s type=%3d, offset=%3d, len=%d, method=%ld",i,element->GetName(),fType[i],fOffset[i],fLength[i],fMethod[i]);
