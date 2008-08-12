@@ -724,9 +724,11 @@ void TBranchElement::Init(TTree *tree, TBranch *parent, const char* bname, TVirt
    fBasketEntry    = new Long64_t[fMaxBaskets];
    fBasketSeek     = new Long64_t[fMaxBaskets];
 
-   fBasketEntry[0] = fEntryNumber;
-   fBasketBytes[0] = 0;
-   fBasketSeek[0] = 0;
+   for (Int_t i = 0; i < fMaxBaskets; ++i) {
+      fBasketBytes[i] = 0;
+      fBasketEntry[i] = 0;
+      fBasketSeek[i] = 0;
+   }
 
    // Reset the bit kAutoDelete to specify that, when reading,
    // the object should not be deleted before calling the streamer.
