@@ -7,7 +7,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += tbits tbits_comp TExMap mytest
+TEST_TARGETS += tbits tbits_comp TExMap mytest TMap
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -64,3 +64,5 @@ TExMap: TExMap.clog
 tbits: tbits.log
 	$(TestDiff)
 
+TMap: TMap.clog
+	$(TestDiff)
