@@ -16,9 +16,9 @@
 
 
 typedef struct {
-    Char_t   name[40];
-    Int_t    code;
-    Double_t lifetime;
+   Char_t   name[40];
+   Int_t    code;
+   Double_t lifetime;
 } particle_def_t;
 
 const particle_def_t particle_def[] = {

@@ -31,7 +31,6 @@
 class MyDetector : public TObject {
 
 private:
-
     Double_t        fMinX,fMinY,fMinZ; // Detector min. boundaries
     Double_t        fMaxX,fMaxY,fMaxZ; // Detector max. boundaries
     Double_t        fDimX,fDimY,fDimZ; // Detector dimensions
@@ -44,7 +43,6 @@ private:
     Double_t        fTotalELoss;       // Total Energy loss by particles into the detector
 
 public:
-
     MyDetector();
     virtual ~MyDetector();
     void        Init();
@@ -78,7 +76,6 @@ public:
     void        ClearELoss() { fTotalELoss = 0.0; }
 
     ClassDef(MyDetector,1)   // Detector structure
-
 };
 
 #endif // MYDETECTOR_H

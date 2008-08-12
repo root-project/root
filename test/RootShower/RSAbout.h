@@ -40,7 +40,6 @@
 class RootShowerAbout : public TGTransientFrame {
 
 private:
-
     TGVerticalFrame*    fVFrame; 
     TGHorizontalFrame*  fHFrame; 
     TGTextButton*       fOkButton;
@@ -57,15 +56,12 @@ private:
     TGLayoutHints*      fBfly;
 
 public:
-  
     RootShowerAbout(const TGWindow *p, const TGWindow *main, UInt_t w, UInt_t h,
                    UInt_t options = kMainFrame | kVerticalFrame);
     virtual ~RootShowerAbout();
 
     virtual void CloseWindow();
     virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
-
-
 };
 
 #endif // ROOTSHOWERABOUT_H

@@ -40,7 +40,6 @@
 class RootShowerMsgBox : public TGTransientFrame {
 
 private:
-
     TGVerticalFrame*    fVFrame; 
     TGHorizontalFrame*  fHFrame; 
     TGTextButton*       fCancelButton;
@@ -64,7 +63,6 @@ public:
 
     virtual void CloseWindow();
     virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
-
 };
 
 #endif // ROOTSHOWERMSGBOX_H

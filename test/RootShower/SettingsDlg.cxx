@@ -87,156 +87,157 @@ SettingsDialog::SettingsDialog(const TGWindow *p, const TGWindow *main, UInt_t w
                        UInt_t h, UInt_t options)
     : TGTransientFrame(p, main, w, h, options)
 {
-    // Create a dialog window. A dialog window pops up with respect to its
-    // "main" window.
-    Int_t i;
-    Char_t tmp[20];
-    UInt_t wh1 = (UInt_t)(0.6 * h);
-    UInt_t wh2 = h - wh1;
+   // Create a dialog window. A dialog window pops up with respect to its
+   // "main" window.
 
-    fFrame1  = new TGHorizontalFrame(this, w, wh2, 0);
+   Int_t i;
+   Char_t tmp[20];
+   UInt_t wh1 = (UInt_t)(0.6 * h);
+   UInt_t wh2 = h - wh1;
 
-    fOkButton = new TGTextButton(fFrame1, "     &Ok     ", 1);
-    fOkButton->Associate(this);
-    fCancelButton = new TGTextButton(fFrame1, "   &Cancel   ", 2);
-    fCancelButton->Associate(this);
-    fHelpButton = new TGTextButton(fFrame1, "    &Help    ", 3);
-    fHelpButton->Associate(this);
+   fFrame1  = new TGHorizontalFrame(this, w, wh2, 0);
 
-    fL1 = new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandX,
+   fOkButton = new TGTextButton(fFrame1, "     &Ok     ", 1);
+   fOkButton->Associate(this);
+   fCancelButton = new TGTextButton(fFrame1, "   &Cancel   ", 2);
+   fCancelButton->Associate(this);
+   fHelpButton = new TGTextButton(fFrame1, "    &Help    ", 3);
+   fHelpButton->Associate(this);
+
+   fL1 = new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandX,
                            2, 2, 2, 2);
-    fL2 = new TGLayoutHints(kLHintsBottom | kLHintsRight | kLHintsExpandX, 2, 2, 5, 1);
+   fL2 = new TGLayoutHints(kLHintsBottom | kLHintsRight | kLHintsExpandX, 2, 2, 5, 1);
 
-    fFrame1->AddFrame(fOkButton, fL1);
-    fFrame1->AddFrame(fHelpButton, fL1);
-    fFrame1->AddFrame(fCancelButton, fL1);
+   fFrame1->AddFrame(fOkButton, fL1);
+   fFrame1->AddFrame(fHelpButton, fL1);
+   fFrame1->AddFrame(fCancelButton, fL1);
 
-    fFrame1->Resize(150, fOkButton->GetDefaultHeight());
-    AddFrame(fFrame1, fL2);
+   fFrame1->Resize(150, fOkButton->GetDefaultHeight());
+   AddFrame(fFrame1, fL2);
 
-    //--------- create Tab widget and some composite frames for Tab testing
-    fTab = new TGTab(this, 300, 300);
-    fL3 = new TGLayoutHints(kLHintsTop | kLHintsLeft, 10, 10, 10, 10);
+   //--------- create Tab widget and some composite frames for Tab testing
+   fTab = new TGTab(this, 300, 300);
+   fL3 = new TGLayoutHints(kLHintsTop | kLHintsLeft, 10, 10, 10, 10);
 
-    TGCompositeFrame *tf = fTab->AddTab("Physics settings");
-    tf->SetLayoutManager(new TGHorizontalLayout(tf));
+   TGCompositeFrame *tf = fTab->AddTab("Physics settings");
+   tf->SetLayoutManager(new TGHorizontalLayout(tf));
 
-    fF3 = new TGGroupFrame(tf, "Particle", kVerticalFrame);
-    tf->AddFrame(fF3, fL3);
-    fF3->SetLayoutManager(new TGMatrixLayout(fF3, 0, 1, 10));
+   fF3 = new TGGroupFrame(tf, "Particle", kVerticalFrame);
+   tf->AddFrame(fF3, fL3);
+   fF3->SetLayoutManager(new TGMatrixLayout(fF3, 0, 1, 10));
 
-    fF3->AddFrame(fListBox = new TGListBox(fF3, 89));
+   fF3->AddFrame(fListBox = new TGListBox(fF3, 89));
 
-    for (i = 0; choice_def[i].pdg_name; i++) {
-        fListBox->AddEntry(choice_def[i].pdg_name, i);
-    }
-    fFirstEntry = 0;
-    fLastEntry  = 30;
-    fListBox->Resize(120, 110);
+   for (i = 0; choice_def[i].pdg_name; i++) {
+      fListBox->AddEntry(choice_def[i].pdg_name, i);
+   }
+   fFirstEntry = 0;
+   fLastEntry  = 30;
+   fListBox->Resize(120, 110);
     
-    fF3->Resize(fF3->GetDefaultSize());
+   fF3->Resize(fF3->GetDefaultSize());
 
-    fF4 = new TGGroupFrame(tf, "E0 / B", kVerticalFrame);
-    fF4->SetTitlePos(TGGroupFrame::kRight); // right aligned
-    tf->AddFrame(fF4, fL3);
-    fF4->SetLayoutManager(new TGMatrixLayout(fF4, 0, 2, 10));
+   fF4 = new TGGroupFrame(tf, "E0 / B", kVerticalFrame);
+   fF4->SetTitlePos(TGGroupFrame::kRight); // right aligned
+   tf->AddFrame(fF4, fL3);
+   fF4->SetLayoutManager(new TGMatrixLayout(fF4, 0, 2, 10));
 
-    fF4->AddFrame(new TGLabel(fF4, "E0 [GeV]"));
-    fF4->AddFrame(fTxt4 = new TGTextEntry(fF4, new TGTextBuffer(100), Id4));
-    fF4->AddFrame(new TGLabel(fF4, "B [kGauss]"));
-    fF4->AddFrame(fTxt5 = new TGTextEntry(fF4, new TGTextBuffer(100), Id5));
-    fTxt4->Associate(this);
-    fTxt5->Associate(this);
-    fTxt4->Resize(65, fTxt4->GetDefaultHeight());
-    fTxt5->Resize(65, fTxt5->GetDefaultHeight());
-    sprintf(tmp,"%1.4f",gRootShower->fE0);
-    fTxt4->SetText(tmp);
-    sprintf(tmp,"%1.4f",gRootShower->fB);
-    fTxt5->SetText(tmp);
+   fF4->AddFrame(new TGLabel(fF4, "E0 [GeV]"));
+   fF4->AddFrame(fTxt4 = new TGTextEntry(fF4, new TGTextBuffer(100), Id4));
+   fF4->AddFrame(new TGLabel(fF4, "B [kGauss]"));
+   fF4->AddFrame(fTxt5 = new TGTextEntry(fF4, new TGTextBuffer(100), Id5));
+   fTxt4->Associate(this);
+   fTxt5->Associate(this);
+   fTxt4->Resize(65, fTxt4->GetDefaultHeight());
+   fTxt5->Resize(65, fTxt5->GetDefaultHeight());
+   sprintf(tmp,"%1.4f",gRootShower->fE0);
+   fTxt4->SetText(tmp);
+   sprintf(tmp,"%1.4f",gRootShower->fB);
+   fTxt5->SetText(tmp);
     
-    TGLayoutHints *fL5 = new TGLayoutHints(kLHintsBottom | kLHintsExpandX |
+   TGLayoutHints *fL5 = new TGLayoutHints(kLHintsBottom | kLHintsExpandX |
                                           kLHintsExpandY, 2, 2, 5, 1);
-    AddFrame(fTab, fL5);
+   AddFrame(fTab, fL5);
 
-    MapSubwindows();
-    Resize(GetDefaultSize());
+   MapSubwindows();
+   Resize(GetDefaultSize());
 
-//    fF2->Resize(fF2->GetDefaultWidth(),fF1->GetDefaultHeight());
-    fF4->Resize(fF4->GetDefaultWidth(),fF3->GetDefaultHeight());
+   fF4->Resize(fF4->GetDefaultWidth(),fF3->GetDefaultHeight());
 
-    for (i = 0; choice_def[i].pdg_name; i++) {
-        if (gRootShower->fFirstParticle == choice_def[i].pdg_code) {
-            fListBox->Select(i);
-            fListBox->GetScrollBar()->SetPosition(i-2);
-            break;
-        }
-    }
-    fListBox->MapSubwindows();
-    fListBox->Layout();
-    // position relative to the parent's window
-    Window_t wdum;
-    Int_t ax, ay;
-    gVirtualX->TranslateCoordinates(main->GetId(), GetParent()->GetId(),
+   for (i = 0; choice_def[i].pdg_name; i++) {
+      if (gRootShower->fFirstParticle == choice_def[i].pdg_code) {
+         fListBox->Select(i);
+         fListBox->GetScrollBar()->SetPosition(i-2);
+         break;
+      }
+   }
+   fListBox->MapSubwindows();
+   fListBox->Layout();
+   // position relative to the parent's window
+   Window_t wdum;
+   Int_t ax, ay;
+   gVirtualX->TranslateCoordinates(main->GetId(), GetParent()->GetId(),
                           (Int_t)(((TGFrame *) main)->GetWidth() - fWidth) >> 1,
                           (Int_t)(((TGFrame *) main)->GetHeight() - fHeight) >> 1,
                           ax, ay, wdum);
-    Move(ax, ay);
+   Move(ax, ay);
 
-    SetWindowName("Shower Settings");
+   SetWindowName("Shower Settings");
 
-    // make the message box non-resizable
-    UInt_t width  = GetDefaultWidth();
-    UInt_t height = GetDefaultHeight();
-    SetWMSize(width, height);
-    SetWMSizeHints(width, height, width, height, 0, 0);
+   // make the message box non-resizable
+   UInt_t width  = GetDefaultWidth();
+   UInt_t height = GetDefaultHeight();
+   SetWMSize(width, height);
+   SetWMSizeHints(width, height, width, height, 0, 0);
 
-    SetMWMHints(kMWMDecorAll | kMWMDecorResizeH  | kMWMDecorMaximize |
-                kMWMDecorMinimize | kMWMDecorMenu,
-                kMWMFuncAll  | kMWMFuncResize    | kMWMFuncMaximize |
-                kMWMFuncMinimize, kMWMInputModeless);
-    MapWindow();
-    fClient->WaitFor(this);
+   SetMWMHints(kMWMDecorAll | kMWMDecorResizeH  | kMWMDecorMaximize |
+               kMWMDecorMinimize | kMWMDecorMenu,
+               kMWMFuncAll  | kMWMFuncResize    | kMWMFuncMaximize |
+               kMWMFuncMinimize, kMWMInputModeless);
+   MapWindow();
+   fClient->WaitFor(this);
 }
 
 //______________________________________________________________________________
 SettingsDialog::~SettingsDialog()
 {
-    // Delete test dialog widgets.
+   // Delete test dialog widgets.
 
-    delete fOkButton;
-    delete fCancelButton;
-    delete fHelpButton;
-    delete fFrame1;
-    delete fListBox;
-    delete fF3; 
-    delete fF4;
-    delete fTxt4; 
-    delete fTxt5;
-    delete fTab;
-    delete fL3;
-    delete fL2; 
-    delete fL1;
+   delete fOkButton;
+   delete fCancelButton;
+   delete fHelpButton;
+   delete fFrame1;
+   delete fListBox;
+   delete fF3; 
+   delete fF4;
+   delete fTxt4; 
+   delete fTxt5;
+   delete fTab;
+   delete fL3;
+   delete fL2; 
+   delete fL1;
 }
-
 
 //______________________________________________________________________________
 void SettingsDialog::CloseWindow()
 {
-    // Called when window is closed via the window manager.
-    DeleteWindow();
+   // Called when window is closed via the window manager.
+
+   DeleteWindow();
 }
 
 //______________________________________________________________________________
 Bool_t SettingsDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 {
-    // Process messages coming from widgets associated with the dialog.
-    Int_t Selection;
-    Int_t retval;
-    TRootHelpDialog* hd;
+   // Process messages coming from widgets associated with the dialog.
 
-    const Char_t *buf_tmp;
+   Int_t Selection;
+   Int_t retval;
+   TRootHelpDialog* hd;
 
-    switch (GET_MSG(msg)) {
+   const Char_t *buf_tmp;
+
+   switch (GET_MSG(msg)) {
       case kC_COMMAND:
 
          switch (GET_SUBMSG(msg)) {
@@ -245,11 +246,11 @@ Bool_t SettingsDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                   case 1:
                      Selection = fListBox->GetSelected();
                      if (Selection > 37) {
-                         new TGMsgBox(fClient->GetRoot(), this, "Particle selection",
-                               "This particle is not implemented yet !",
-                               kMBIconExclamation, kMBOk, &retval);
-                         fListBox->Select(2);
-                         break;
+                        new TGMsgBox(fClient->GetRoot(), this, "Particle selection",
+                                     "This particle is not implemented yet !",
+                                     kMBIconExclamation, kMBOk, &retval);
+                        fListBox->Select(2);
+                        break;
                      }
                      gRootShower->fFirstParticle = choice_def[Selection].pdg_code;
                      buf_tmp = fTxt4->GetBuffer()->GetString();

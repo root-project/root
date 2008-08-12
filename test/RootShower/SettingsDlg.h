@@ -39,7 +39,6 @@
 class SettingsDialog : public TGTransientFrame {
 
 private:
-
     TGCompositeFrame    *fFrame1;
     TGGroupFrame        *fF1, *fF3, *fF4;
     TGButton            *fOkButton, *fCancelButton, *fHelpButton;
@@ -52,7 +51,6 @@ private:
     Int_t                fLastEntry;
 
 public:
-
     SettingsDialog(const TGWindow *p, const TGWindow *main, UInt_t w, UInt_t h,
                          UInt_t options = kVerticalFrame);
     virtual ~SettingsDialog();

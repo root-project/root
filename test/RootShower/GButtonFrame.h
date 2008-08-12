@@ -29,28 +29,24 @@ class TGButton;
 class GButtonFrame: public TGCompositeFrame {
 
 private:
-
-    TGLayoutHints *fButtonLayout;           // Buttons layout
-    TGButton *fNextEventButton;             // "Start New Event" button
-    TGButton *fShowTrackButton;             // "Show Selection" button
-    TGButton *fStopSimButton;               // "Interrupt Simulation" button
+   TGLayoutHints  *fButtonLayout;      // Buttons layout
+   TGButton       *fNextEventButton;   // "Start New Event" button
+   TGButton       *fShowTrackButton;   // "Show Selection" button
+   TGButton       *fStopSimButton;     // "Interrupt Simulation" button
 
 public:
-    
-    // enum 
-    enum EState {
-        kAllActive,
-        kNoneActive
-    };
+   // enum 
+   enum EState {
+      kAllActive,
+      kNoneActive
+   };
 
-    // Constructor & destructor
-    GButtonFrame(const TGWindow* p, TGWindow* buttonHandler, Int_t nextEventId,
-                 Int_t showTrackId, Int_t interruptSimId);
-    virtual ~GButtonFrame();
+   // Constructor & destructor
+   GButtonFrame(const TGWindow* p, TGWindow* buttonHandler, Int_t nextEventId,
+                Int_t showTrackId, Int_t interruptSimId);
+   virtual ~GButtonFrame();
 
-    void SetState(EState state);
-
+   void SetState(EState state);
 };
-
 
 #endif // GBUTTONFRAME_H

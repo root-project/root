@@ -28,34 +28,29 @@ class TGButton;
 class TGPicture;
 class TGIcon;
 
-
 class GTitleFrame: public TGCompositeFrame {
 
 private:
+   TGLayoutHints     *fRightLogoLayout;   // Right logo layout
+   TGLayoutHints     *fLeftLogoLayout;    // Left logo layout
 
-    TGLayoutHints *fRightLogoLayout;        // Right logo layout
-    TGLayoutHints *fLeftLogoLayout;         // Left logo layout
+   TGPicture         *fRightIconPicture;  // Right icon's picture
+   TGIcon            *fRightIcon;         // Right icon (logo)
+   TGPicture         *fLeftIconPicture;   // Left icon's picture
+   TGIcon            *fLeftIcon;          // Right icon (logo)
 
-    TGPicture *fRightIconPicture;           // Right icon's picture
-    TGIcon *fRightIcon;                     // Right icon (logo)
-    TGPicture *fLeftIconPicture;            // Left icon's picture
-    TGIcon *fLeftIcon;                      // Right icon (logo)
-
-    TGLayoutHints *fTextFrameLayout;
-    TGCompositeFrame *fTextFrame;
-    TGLayoutHints *fTextLabelLayout;
-    TGLabel *fTextLabel1;                   // First line title's label
-    TGLabel *fTextLabel2;                   // Second line title's label
+   TGLayoutHints     *fTextFrameLayout;
+   TGCompositeFrame  *fTextFrame;
+   TGLayoutHints     *fTextLabelLayout;
+   TGLabel           *fTextLabel1;        // First line title's label
+   TGLabel           *fTextLabel2;        // Second line title's label
 
 public:
-
-    // Constructor & destructor
-    GTitleFrame(const TGWindow *p, const Text_t *mainText, const Text_t *subText,
-              UInt_t w, UInt_t h, UInt_t options = kHorizontalFrame | kRaisedFrame);
-    void ChangeRightLogo(Int_t frame);
-    virtual ~GTitleFrame();
-
+   // Constructor & destructor
+   GTitleFrame(const TGWindow *p, const Text_t *mainText, const Text_t *subText,
+               UInt_t w, UInt_t h, UInt_t options = kHorizontalFrame | kRaisedFrame);
+   void ChangeRightLogo(Int_t frame);
+   virtual ~GTitleFrame();
 };
-
 
 #endif // GTITLEFRAME_H
