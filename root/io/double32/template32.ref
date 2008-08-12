@@ -23,7 +23,7 @@ StreamerInfo for class: Contains, checksum=0x83fd6ef5
   MyVector<float> v2              offset= [deleted from log] type=62                     
    i= 0, v1              type= 62, offset= [deleted from log] 0, len=1, method=0
    i= 1, v2              type= 62, offset= [deleted from log], len=1, method=0
-OBJ: TList	TList	Doubly linked list : 0 at: [deleted from log]
+OBJ: TList	TList	Doubly linked list : 0
  OBJ: TRealData	v1	Description of persistent data members : 0 at: [deleted from log]
  OBJ: TRealData	v1.d32	Description of persistent data members : 0 at: [deleted from log]
  OBJ: TRealData	v1.regdouble	Description of persistent data members : 0 at: [deleted from log]
