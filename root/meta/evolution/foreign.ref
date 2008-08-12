@@ -15,11 +15,11 @@ StreamerInfo for class: Tdata, version=1, checksum=0x589374f7
    i= 0, myvar_one       type=  3, offset=  0, len=1, method=0
 Tdata's streamerInfo #1 has a checksum of 0x589374f7
 Warning in <TClass::PostLoadCheck>: 
-        The StreamerInfo version 1 for the class Tdata which was read
-        from a file previously opened has the same version as the active class 
-        but a different checksum. You should update the version to ClassDef(Tdata,2).
-        Do not try to write objects with the current class definition,
-        the files will not be readable.
+   The StreamerInfo version 1 for the class Tdata which was read
+   from a file previously opened has the same version as the active class
+   but a different checksum. You should update the version to ClassDef(Tdata,2).
+   Do not try to write objects with the current class definition,
+   the files will not be readable.
 
 
 ==> Looking at the StreamerInfo after loading the library
@@ -30,6 +30,7 @@ StreamerInfo for class: data, checksum=0x72709669
 data's streamerInfo #ffffffff has a checksum of 0x72709669
 
 ==> List all the StreamerInfo after loading the library
+OBJ: TObjArray	TObjArray	An array of objects : 0 at: 0xcfa220
 
 StreamerInfo for class: data, checksum=0x72709669
   double         mydouble_two    offset=  0 type= 8                     
@@ -46,12 +47,14 @@ StreamerInfo for class: Tdata, version=1, checksum=0x589374f7
 Tdata's streamerInfo #1 has a checksum of 0x589374f7
 
 ==> List all the StreamerInfo after loading the library
+OBJ: TObjArray	TObjArray	An array of objects : 0 at: 0xcf5670
 
 StreamerInfo for class: Tdata, version=1, checksum=0x589374f7
   int            myvar_one       offset=99999 type= 3                     
    i= 0, myvar_one       type=103, offset=99999, len=1, method=0
 
 ==> List all the StreamerInfo after loading all the files
+OBJ: TObjArray	TObjArray	An array of objects : 0 at: 0xcfa220
 
 StreamerInfo for class: data, checksum=0x72709669
   double         mydouble_two    offset=  0 type= 8                     

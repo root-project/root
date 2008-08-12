@@ -2,18 +2,21 @@
 Processing runAddVersion.cxx(1,"1")...
 
 Loading library lib1
+OBJ: TObjArray	TObjArray	An array of objects : 0 at: 0xc2a140
 
 StreamerInfo for class: MyClass, checksum=0x75bd56
   int            a               offset= n/a type= 3                     
    i= 0, a               type=  3, offset= n/a, len=1, method=0
 
 Loading myclass1.root
+OBJ: TObjArray	TObjArray	An array of objects : 0 at: 0xc2a140
 
 StreamerInfo for class: MyClass, checksum=0x75bd56
   int            a               offset= n/a type= 3                     
    i= 0, a               type=  3, offset= n/a, len=1, method=0
 
 Loading myclass2.root
+OBJ: TObjArray	TObjArray	An array of objects : 0 at: 0xc2a140
 
 StreamerInfo for class: MyClass, checksum=0x75bd56
   int            a               offset= n/a type= 3                     
@@ -25,12 +28,14 @@ StreamerInfo for class: MyClass, checksum=0x423a847
 Processing runAddVersion.cxx(1,"2")...
 
 Loading library lib2
+OBJ: TObjArray	TObjArray	An array of objects : 0 at: 0xc2a170
 
 StreamerInfo for class: MyClass, checksum=0x423a847
   float          a               offset= n/a type= 5                     
    i= 0, a               type=  5, offset= n/a, len=1, method=0
 
 Loading myclass1.root
+OBJ: TObjArray	TObjArray	An array of objects : 0 at: 0xc2a170
 
 StreamerInfo for class: MyClass, checksum=0x423a847
   float          a               offset= n/a type= 5                     
@@ -40,6 +45,7 @@ StreamerInfo for class: MyClass, checksum=0x75bd56
   int            a               offset= n/a type= 3                     
 
 Loading myclass2.root
+OBJ: TObjArray	TObjArray	An array of objects : 0 at: 0xc2a170
 
 StreamerInfo for class: MyClass, checksum=0x423a847
   float          a               offset= n/a type= 5                     
@@ -51,12 +57,14 @@ StreamerInfo for class: MyClass, checksum=0x75bd56
 Processing runAddVersion.cxx(1,"3")...
 
 Loading library lib3
+OBJ: TObjArray	TObjArray	An array of objects : 0 at: 0xc2a1a0
 
 StreamerInfo for class: MyClass, version=3, checksum=0xc6af8da
   double         a               offset= n/a type= 8                     
    i= 0, a               type=  8, offset= n/a, len=1, method=0
 
 Loading myclass1.root
+OBJ: TObjArray	TObjArray	An array of objects : 0 at: 0xc2a1a0
 
 StreamerInfo for class: MyClass, version=1, checksum=0x75bd56
   int            a               offset= n/a type= 3                     
@@ -66,6 +74,7 @@ StreamerInfo for class: MyClass, version=3, checksum=0xc6af8da
    i= 0, a               type=  8, offset= n/a, len=1, method=0
 
 Loading myclass2.root
+OBJ: TObjArray	TObjArray	An array of objects : 0 at: 0xc2a1a0
 
 StreamerInfo for class: MyClass, version=1, checksum=0x75bd56
   int            a               offset= n/a type= 3                     
@@ -80,12 +89,14 @@ StreamerInfo for class: MyClass, version=3, checksum=0xc6af8da
 Processing runAddVersion.cxx(1,"4")...
 
 Loading library lib4
+OBJ: TObjArray	TObjArray	An array of objects : 0 at: 0xc2a1d0
 
 StreamerInfo for class: MyClass, version=2, checksum=0x423ac2b
   short          a               offset= n/a type= 2                     
    i= 0, a               type=  2, offset= n/a, len=1, method=0
 
 Loading myclass1.root
+OBJ: TObjArray	TObjArray	An array of objects : 0 at: 0xc2a1d0
 
 StreamerInfo for class: MyClass, version=1, checksum=0x75bd56
   int            a               offset= n/a type= 3                     
@@ -95,6 +106,7 @@ StreamerInfo for class: MyClass, version=2, checksum=0x423ac2b
    i= 0, a               type=  2, offset= n/a, len=1, method=0
 
 Loading myclass2.root
+OBJ: TObjArray	TObjArray	An array of objects : 0 at: 0xc2a1d0
 
 StreamerInfo for class: MyClass, version=1, checksum=0x75bd56
   int            a               offset= n/a type= 3                     
@@ -109,12 +121,14 @@ StreamerInfo for class: MyClass, version=3, checksum=0x423a847
 Processing runAddVersion.cxx(1,"5")...
 
 Loading library lib5
+OBJ: TObjArray	TObjArray	An array of objects : 0 at: 0xc2a170
 
 StreamerInfo for class: MyClass, checksum=0x16138b1
   long           a               offset= n/a type= 4                     
    i= 0, a               type=  4, offset= n/a, len=1, method=0
 
 Loading myclass1.root
+OBJ: TObjArray	TObjArray	An array of objects : 0 at: 0xc2a170
 
 StreamerInfo for class: MyClass, checksum=0x16138b1
   long           a               offset= n/a type= 4                     
@@ -124,6 +138,7 @@ StreamerInfo for class: MyClass, checksum=0x75bd56
   int            a               offset= n/a type= 3                     
 
 Loading myclass2.root
+OBJ: TObjArray	TObjArray	An array of objects : 0 at: 0xc2a170
 
 StreamerInfo for class: MyClass, checksum=0x16138b1
   long           a               offset= n/a type= 4                     
@@ -138,6 +153,7 @@ StreamerInfo for class: MyClass, checksum=0x423a847
 Processing runAddVersion.cxx(1,"6")...
 
 Loading library lib6
+OBJ: TObjArray	TObjArray	An array of objects : 0 at: 0xc2a0c0
 
 StreamerInfo for class: MyClass, version=1, checksum=0x4f48eb1f
   long long      a               offset= n/a type=16                     
@@ -151,12 +167,14 @@ Warning in <TStreamerInfo::BuildCheck>:
    (and potentially other files) might not work correctly.
    Most likely the version number of the class was not properly
    updated [See ClassDef(MyClass,1)].
+OBJ: TObjArray	TObjArray	An array of objects : 0 at: 0xc2a0c0
 
 StreamerInfo for class: MyClass, version=1, checksum=0x4f48eb1f
   long long      a               offset= n/a type=16                     
    i= 0, a               type= 16, offset= n/a, len=1, method=0
 
 Loading myclass2.root
+OBJ: TObjArray	TObjArray	An array of objects : 0 at: 0xc2a0c0
 
 StreamerInfo for class: MyClass, version=1, checksum=0x4f48eb1f
   long long      a               offset= n/a type=16                     
@@ -165,10 +183,12 @@ StreamerInfo for class: MyClass, version=1, checksum=0x4f48eb1f
 Processing runAddVersion.cxx(2,"1")...
 Loading myclass1.root
 Warning in <TClass::TClass>: no dictionary for class MyClass is available
+OBJ: TObjArray	TObjArray	An array of objects : 0 at: 0xb100e0
 
 StreamerInfo for class: MyClass, version=1, checksum=0x75bd56
   int            a               offset= n/a type= 3                     
 Loading myclass2.root
+OBJ: TObjArray	TObjArray	An array of objects : 0 at: 0xb100e0
 
 StreamerInfo for class: MyClass, version=1, checksum=0x75bd56
   int            a               offset= n/a type= 3                     
@@ -177,6 +197,7 @@ StreamerInfo for class: MyClass, version=2, checksum=0x423a847
   float          a               offset= n/a type= 5                     
 
 Loading library lib1
+OBJ: TObjArray	TObjArray	An array of objects : 0 at: 0xd1c090
 
 StreamerInfo for class: MyClass, checksum=0x75bd56
   int            a               offset= n/a type= 3                     
@@ -191,10 +212,12 @@ StreamerInfo for class: MyClass, checksum=0x423a847
 Processing runAddVersion.cxx(2,"2")...
 Loading myclass1.root
 Warning in <TClass::TClass>: no dictionary for class MyClass is available
+OBJ: TObjArray	TObjArray	An array of objects : 0 at: 0xb10110
 
 StreamerInfo for class: MyClass, version=1, checksum=0x75bd56
   int            a               offset= n/a type= 3                     
 Loading myclass2.root
+OBJ: TObjArray	TObjArray	An array of objects : 0 at: 0xb10110
 
 StreamerInfo for class: MyClass, version=1, checksum=0x75bd56
   int            a               offset= n/a type= 3                     
@@ -203,6 +226,7 @@ StreamerInfo for class: MyClass, version=2, checksum=0x423a847
   float          a               offset= n/a type= 5                     
 
 Loading library lib2
+OBJ: TObjArray	TObjArray	An array of objects : 0 at: 0xd1c110
 
 StreamerInfo for class: MyClass, checksum=0x423a847
   float          a               offset= n/a type= 5                     
@@ -217,10 +241,12 @@ StreamerInfo for class: MyClass, checksum=0x423a847
 Processing runAddVersion.cxx(2,"3")...
 Loading myclass1.root
 Warning in <TClass::TClass>: no dictionary for class MyClass is available
+OBJ: TObjArray	TObjArray	An array of objects : 0 at: 0xb10140
 
 StreamerInfo for class: MyClass, version=1, checksum=0x75bd56
   int            a               offset= n/a type= 3                     
 Loading myclass2.root
+OBJ: TObjArray	TObjArray	An array of objects : 0 at: 0xb10140
 
 StreamerInfo for class: MyClass, version=1, checksum=0x75bd56
   int            a               offset= n/a type= 3                     
@@ -229,6 +255,7 @@ StreamerInfo for class: MyClass, version=2, checksum=0x423a847
   float          a               offset= n/a type= 5                     
 
 Loading library lib3
+OBJ: TObjArray	TObjArray	An array of objects : 0 at: 0xd1c100
 
 StreamerInfo for class: MyClass, version=1, checksum=0x75bd56
   int            a               offset= n/a type= 3                     
@@ -243,10 +270,12 @@ StreamerInfo for class: MyClass, version=3, checksum=0xc6af8da
 Processing runAddVersion.cxx(2,"4")...
 Loading myclass1.root
 Warning in <TClass::TClass>: no dictionary for class MyClass is available
+OBJ: TObjArray	TObjArray	An array of objects : 0 at: 0xb10170
 
 StreamerInfo for class: MyClass, version=1, checksum=0x75bd56
   int            a               offset= n/a type= 3                     
 Loading myclass2.root
+OBJ: TObjArray	TObjArray	An array of objects : 0 at: 0xb10170
 
 StreamerInfo for class: MyClass, version=1, checksum=0x75bd56
   int            a               offset= n/a type= 3                     
@@ -266,6 +295,7 @@ Warning in <TClass::PostLoadCheck>:
    Do not try to write objects with the current class definition,
    the files might not be readable.
 
+OBJ: TObjArray	TObjArray	An array of objects : 0 at: 0xd1c130
 
 StreamerInfo for class: MyClass, version=1, checksum=0x75bd56
   int            a               offset= n/a type= 3                     
@@ -277,10 +307,12 @@ StreamerInfo for class: MyClass, version=2, checksum=0x423a847
 Processing runAddVersion.cxx(2,"5")...
 Loading myclass1.root
 Warning in <TClass::TClass>: no dictionary for class MyClass is available
+OBJ: TObjArray	TObjArray	An array of objects : 0 at: 0xb101a0
 
 StreamerInfo for class: MyClass, version=1, checksum=0x75bd56
   int            a               offset= n/a type= 3                     
 Loading myclass2.root
+OBJ: TObjArray	TObjArray	An array of objects : 0 at: 0xb101a0
 
 StreamerInfo for class: MyClass, version=1, checksum=0x75bd56
   int            a               offset= n/a type= 3                     
@@ -289,6 +321,7 @@ StreamerInfo for class: MyClass, version=2, checksum=0x423a847
   float          a               offset= n/a type= 5                     
 
 Loading library lib5
+OBJ: TObjArray	TObjArray	An array of objects : 0 at: 0xd1c160
 
 StreamerInfo for class: MyClass, checksum=0x16138b1
   long           a               offset= n/a type= 4                     
@@ -303,10 +336,12 @@ StreamerInfo for class: MyClass, checksum=0x423a847
 Processing runAddVersion.cxx(2,"6")...
 Loading myclass1.root
 Warning in <TClass::TClass>: no dictionary for class MyClass is available
+OBJ: TObjArray	TObjArray	An array of objects : 0 at: 0xb101d0
 
 StreamerInfo for class: MyClass, version=1, checksum=0x75bd56
   int            a               offset= n/a type= 3                     
 Loading myclass2.root
+OBJ: TObjArray	TObjArray	An array of objects : 0 at: 0xb101d0
 
 StreamerInfo for class: MyClass, version=1, checksum=0x75bd56
   int            a               offset= n/a type= 3                     
@@ -322,6 +357,7 @@ Warning in <TClass::PostLoadCheck>:
    Do not try to write objects with the current class definition,
    the files will not be readable.
 
+OBJ: TObjArray	TObjArray	An array of objects : 0 at: 0xd1d9e0
 
 StreamerInfo for class: MyClass, version=1, checksum=0x75bd56
   int            a               offset= n/a type= 3                     
