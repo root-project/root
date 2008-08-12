@@ -104,4 +104,4 @@ libt_rflx.$(DllSuf): t_rflx.cpp
 	$(CMDECHO)rm $(BUILDER) $(WRAPPER) >> $@_build.log 2>&1
 
 t_rflx.cpp: t.h selection.xml
-	$(CMDECHO)genreflex t.h -s selection.xml --gccxmlpath=$(dir $(HAVEGCCXML)) > $@_build.log 2>&1
+	$(CMDECHO)genreflex t.h -s selection.xml --gccxmlopt="--gccxml-cxxflags -U__GXX_WEAK__" --gccxmlpath=$(dir $(HAVEGCCXML)) > $@_build.log 2>&1
