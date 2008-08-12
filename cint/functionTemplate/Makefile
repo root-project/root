@@ -1,8 +1,13 @@
 CLEAN_TARGETS += $(ALL_LIBRARIES) *.log libt_rflx.$(DllSuf) t.exe t_rflx.* *_wrap.* *.rootmap
 
-# which tests we run depends on availability of reflex / python:
-TEST_TARGETS += compiled cintrun
+# Remove "compiled"; cannot do it (easily) on all plaforms, and
+# it's just to show where CINT doesn't call the proper functions.
+#
+# TEST_TARGETS += compiled
 
+TEST_TARGETS += cintrun
+
+# Which tests to run depends on availability of reflex / python:
 HAVEGCCXML := $(shell which gccxml 2>/dev/null)
 ifeq ($(findstring gccxml,$(notdir $(HAVEGCCXML))),gccxml)
  HAVEREFLEX := $(shell root-config --has-reflex)
@@ -58,12 +63,12 @@ else
  endif
 endif
 
-compiled cintrun reflexrun pythoncintrun pythonreflexrun: % : %.log
+cintrun reflexrun pythoncintrun pythonreflexrun: % : %.log
 	$(TestDiff)
 
 
-compiled.log: t.exe
-	$(CMDECHO)./t.exe > $@ 2>&1
+#compiled.log: t.exe
+#	$(CMDECHO)./t.exe > $@ 2>&1
 
 CINTNORMALIZER:=sed -e 's,\bt_h\.[^[:space:]]*,,' -e 's,tagnum=[[:digit:]]\+,tagnum=***,' -e 's/0x[0-9a-f]\{7,\}/0xSOMEHEX/g'
 cintrun.log: cintrun.C
@@ -78,13 +83,13 @@ pythoncintrun.log: testcint.py
 pythonreflexrun.log: libt_rflx.$(DllSuf) testreflex.py
 	$(CMDECHO)$(PYTHON) testreflex.py > $@ 2>&1
 
-t.exe: t.h t.cxx
-ifeq ($(ARCH),win32)
-	$(CMDECHO)$(CXX) t.cxx $(CXXFLAGS) /Fe$@ > $@_build.log 2>&1
-else
-	$(CMDECHO)$(CXX) -c t.cxx $(CXXFLAGS) $(OutPutOpt)t.$(ObjSuf) > $@_build.log 2>&1
-	$(CMDECHO)$(CXX) $(@:.exe=.$(ObjSuf)) $(OutPutOpt)$@ >> $@_build.log 2>&1
-endif
+#t.exe: t.h t.cxx
+#ifeq ($(ARCH),win32)
+#	$(CMDECHO)$(CXX) t.cxx $(CXXFLAGS) /Fe$@ > $@_build.log 2>&1
+#else
+#	$(CMDECHO)$(CXX) -c t.cxx $(CXXFLAGS) $(OutPutOpt)t.$(ObjSuf) > $@_build.log 2>&1
+#	$(CMDECHO)$(CXX) $(@:.exe=.$(ObjSuf)) $(OutPutOpt)$@ >> $@_build.log 2>&1
+#endif
 
 BUILDER:=libt_rflx_tmp.C
 WRAPPER:=t_rflx_wrap.cxx
