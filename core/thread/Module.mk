@@ -67,10 +67,6 @@ CFLAGS       += $(OSTHREADFLAG)
 CINTCXXFLAGS += $(OSTHREADFLAG)
 CINTCFLAGS   += $(OSTHREADFLAG)
 
-ifeq ($(PLATFORM),win32)
-CXXFLAGS     += -D_WIN32_WINNT=0x0400
-endif
-
 # include all dependency files
 INCLUDEFILES += $(THREADDEP)
 
