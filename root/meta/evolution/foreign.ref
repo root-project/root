@@ -30,7 +30,7 @@ StreamerInfo for class: data, checksum=0x72709669
 data's streamerInfo #ffffffff has a checksum of 0x72709669
 
 ==> List all the StreamerInfo after loading the library
-OBJ: TObjArray	TObjArray	An array of objects : 0 at: 0xcfa220
+OBJ: TObjArray	TObjArray	An array of objects : 0
 
 StreamerInfo for class: data, checksum=0x72709669
   double         mydouble_two    offset=  0 type= 8                     
@@ -47,14 +47,14 @@ StreamerInfo for class: Tdata, version=1, checksum=0x589374f7
 Tdata's streamerInfo #1 has a checksum of 0x589374f7
 
 ==> List all the StreamerInfo after loading the library
-OBJ: TObjArray	TObjArray	An array of objects : 0 at: 0xcf5670
+OBJ: TObjArray	TObjArray	An array of objects : 0
 
 StreamerInfo for class: Tdata, version=1, checksum=0x589374f7
   int            myvar_one       offset=99999 type= 3                     
    i= 0, myvar_one       type=103, offset=99999, len=1, method=0
 
 ==> List all the StreamerInfo after loading all the files
-OBJ: TObjArray	TObjArray	An array of objects : 0 at: 0xcfa220
+OBJ: TObjArray	TObjArray	An array of objects : 0
 
 StreamerInfo for class: data, checksum=0x72709669
   double         mydouble_two    offset=  0 type= 8                     
