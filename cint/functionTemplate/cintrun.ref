@@ -1,0 +1,44 @@
+
+Processing cintrun.C...
+===========================================================================
+class t
+ size=0x4 FILE: LINE:-1
+ (tagnum=***,voffset=-1,isabstract=0,parent=-1,gcomp=0:-1,funcs(dn21=~xcpd)=1)
+List of base class--------------------------------------------------------
+List of member variable---------------------------------------------------
+Defined in t
+           -1 0xSOMEHEX private: float fT
+List of member function---------------------------------------------------
+filename       line:size busy function type and name  (in t)
+           -1:-1   0 public: void ~t(void);
+           -1:-1   0 public: t t(void);
+           -1:-1   0 public: float getfloat(void) const;
+           -1:-1   0 public: int get<int>(void) const;
+           -1:-1   0 public: int get(void) const;
+           -1:-1   0 public: float get<float>(void) const;
+           -1:-1   0 public: double get<double>(void) const;
+           -1:-1   0 public: void set<int>(int);
+           -1:-1   0 public: void set(int);
+           -1:-1   0 public: void set<float>(float);
+           -1:-1   0 public: void set(float);
+           -1:-1   0 public: void set<double>(double);
+           -1:-1   0 public: void set(double);
+           -1:-1   0 public: t t(const t&);
+           -1:-1   0 public: t& operator=(const t&);
+called get<double()
+called get<int>()
+called get<double()
+t now 3 1 3
+t now 42.31
+called set<int>()
+called get<double()
+called get<int>()
+called get<double()
+t now 3 1 3
+t now 7
+called set<double>()
+called get<double()
+called get<int>()
+called get<double()
+t now 3 1 3
+t now 9

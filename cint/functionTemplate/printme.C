@@ -1,0 +1,12 @@
+#include <iostream>
+//#include "t.h"
+
+void printme(const t& o) {
+   double d=o.get<double>();
+   int i=o.get<int>();
+   int j=o.get<double>();
+
+   std::cout << "t now " << d << " " << i << " " << j << std::endl;
+   float v = o.getfloat();
+   std::cout << "t now " << v << std::endl;
+}
