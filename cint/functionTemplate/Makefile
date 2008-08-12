@@ -5,7 +5,26 @@ TEST_TARGETS += compiled cintrun
 
 HAVEGCCXML := $(shell which gccxml 2>/dev/null)
 ifeq ($(findstring gccxml,$(notdir $(HAVEGCCXML))),gccxml)
-HAVEREFLEX = $(shell root-config --has-reflex)
+ HAVEREFLEX := $(shell root-config --has-reflex)
+# GCC4.3 needs GCCXML>= 0.9:
+ ifneq ($(subst g++,,$(CXX)),$(CXX))
+  GCC_VER:=$(shell g++ --version | head -n1)
+  GCC_VER_MAJOR:=$(shell echo '$(GCC_VER)' | sed 's,^.*[^.]\([[:digit:]]\+\)\..*$$,\1,')
+  GCC_VER_MINOR:=$(shell echo '$(GCC_VER)' | sed 's,^.*\b$(GCC_VER_MAJOR)\.\([[:digit:]]\+\)\..*$$,\1,')
+  ifeq ($(GCC_VER_MAJOR),4)
+   GCC_VER_GE_43:=$(shell if [ $(GCC_VER_MINOR) -ge 3 ]; then echo yes; fi)
+  else
+   ifeq ($(subst $(GCC_VER_MAJOR),,123), 123)
+    GCC_VER_GE_43:=yes
+   endif
+  endif
+  ifeq ($(GCC_VER_GE_43),yes)
+   GCCXML_VER:=$(shell $(HAVEGCCXML) --version | head -n1 | sed 's,^.*\s\([[:digit:]]\+\.[[:digit:]]\+\).*,\1,')
+   ifneq ($(findstring $(GCCXML_VER),0.7 0.6),)
+    HAVEREFLEX :=
+   endif
+  endif
+ endif
 endif
 
 ifeq ($(HAVEREFLEX),yes)
