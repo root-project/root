@@ -72,13 +72,13 @@ cintrun reflexrun pythoncintrun pythonreflexrun: % : %.log
 
 CINTNORMALIZER:=sed -e 's,\bt_h\.[^[:space:]]*,,' -e 's,tagnum=[[:digit:]]\+,tagnum=***,' -e 's/0x[0-9a-f]\{7,\}/0xSOMEHEX/g'
 cintrun.log: cintrun.C
-	$(CMDECHO)$(CALLROOTEXE) -l -b -q $(@:.log=.C) | $(CINTNORMALIZER) > $@ 2>&1
+	$(CMDECHO)$(CALLROOTEXE) -l -b -q $(@:.log=.C) | $(CINTNORMALIZER) | grep -v 'creating shared library' > $@ 2>&1
 
 reflexrun.log: libt_rflx.$(DllSuf) reflexrun.C
 	$(CMDECHO)$(CALLROOTEXE) -l -b -q $(@:.log=.C) | $(CINTNORMALIZER) > $@ 2>&1
 
 pythoncintrun.log: testcint.py
-	$(CMDECHO)$(PYTHON) testcint.py > $@ 2>&1
+	$(CMDECHO)$(PYTHON) testcint.py | grep -v 'creating shared library' > $@ 2>&1
 
 pythonreflexrun.log: libt_rflx.$(DllSuf) testreflex.py
 	$(CMDECHO)$(PYTHON) testreflex.py > $@ 2>&1

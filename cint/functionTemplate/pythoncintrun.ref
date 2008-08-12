@@ -1,15 +1,15 @@
-['__assign__', '__class__', '__delattr__', '__dict__', '__doc__', '__eq__', '__ge__', '__generic_get', '__generic_set', '__getattribute__', '__gt__', '__hash__', '__init__', '__le__', '__lt__', '__module__', '__ne__', '__new__', '__nonzero__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__str__', '__weakref__', 'get', 'get<double>', 'get<float>', 'get<int>', 'getfloat', 'set', 'set<double>', 'set<float>', 'set<int>']
+['get', 'get<double>', 'get<float>', 'get<int>', 'getfloat', 'set', 'set<double>', 'set<float>', 'set<int>']
 called get<double()
 called get<int>()
-called get<double()
-t now 3 1 3
+called get<float>()
+t now 3 1 2
 called set<int>()
 called get<double()
 called get<int>()
-called get<double()
-t now 3 1 3
+called get<float>()
+t now 3 1 2
 called set<double>()
 called get<double()
 called get<int>()
-called get<double()
-t now 3 1 3
+called get<float>()
+t now 3 1 2

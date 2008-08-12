@@ -4,7 +4,7 @@
 void printme(const t& o) {
    double d=o.get<double>();
    int i=o.get<int>();
-   int j=o.get<double>();
+   int j=o.get<float>();
 
    std::cout << "t now " << d << " " << i << " " << j << std::endl;
    float v = o.getfloat();
