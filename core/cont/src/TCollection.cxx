@@ -38,6 +38,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TCollection.h"
+#include "Riostream.h"
 #include "Varargs.h"
 #include "TClass.h"
 #include "TROOT.h"
@@ -243,7 +244,9 @@ void TCollection::ls(Option_t *option) const
    // Wildcarding supported, eg option="xxx*" lists only objects
    // with names xxx*.
 
-   TObject::ls(option);
+   TROOT::IndentLevel();
+   cout <<"OBJ: " << IsA()->GetName() << "\t" << GetName() << "\t" << GetTitle() << " : "
+        << Int_t(TestBit(kCanDelete)) << endl;
 
    TRegexp re(option,kTRUE);
    TIter next(this);
