@@ -4047,7 +4047,7 @@ void TBranchElement::ValidateAddress() const
 
    if (fID < 0) {
       // -- We are a top-level branch.
-      if (fAddress && (*((char**) fAddress) != fObject)) {
+      if (!fTree->GetMakeClass() && fAddress && (*((char**) fAddress) != fObject)) {
          // -- The semantics of fAddress and fObject are violated.
          // Assume the user changed the pointer on us.
          // Note: The cast is here because we want to be able to
