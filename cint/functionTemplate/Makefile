@@ -1,35 +1,13 @@
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.log libt_rflx.$(DllSuf) t.exe t_rflx.* *_wrap.* *.rootmap
+RFLXDICT_WRAPPER:=t_rflx_wrap.cxx
+RFLXDICT_LIB:=t_rflx_wrap_cxx.$(DllSuf)
 
-# Remove "compiled"; cannot do it (easily) on all plaforms, and
-# it's just to show where CINT doesn't call the proper functions.
-#
-# TEST_TARGETS += compiled
-
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.log $(RFLXDICT_LIB) t.exe t_rflx.* *.rootmap
 TEST_TARGETS += cintrun
 
 # Which tests to run depends on availability of reflex / python:
 HAVEGCCXML := $(shell which gccxml 2>/dev/null)
 ifeq ($(findstring gccxml,$(notdir $(HAVEGCCXML))),gccxml)
  HAVEREFLEX := $(shell root-config --has-reflex)
-# GCC4.3 needs GCCXML>= 0.9:
- ifneq ($(subst g++,,$(CXX)),$(CXX))
-  GCC_VER:=$(shell g++ --version | head -n1)
-  GCC_VER_MAJOR:=$(shell echo '$(GCC_VER)' | sed 's,^.*[^.]\([[:digit:]]\+\)\..*$$,\1,')
-  GCC_VER_MINOR:=$(shell echo '$(GCC_VER)' | sed 's,^.*\b$(GCC_VER_MAJOR)\.\([[:digit:]]\+\)\..*$$,\1,')
-  ifeq ($(GCC_VER_MAJOR),4)
-   GCC_VER_GE_43:=$(shell if [ $(GCC_VER_MINOR) -ge 3 ]; then echo yes; fi)
-  else
-   ifeq ($(subst $(GCC_VER_MAJOR),,123), 123)
-    GCC_VER_GE_43:=yes
-   endif
-  endif
-  ifeq ($(GCC_VER_GE_43),yes)
-   GCCXML_VER:=$(shell $(HAVEGCCXML) --version | head -n1 | sed 's,^.*\s\([[:digit:]]\+\.[[:digit:]]\+\).*,\1,')
-   ifneq ($(findstring $(GCCXML_VER),0.7 0.6),)
-    HAVEREFLEX :=
-   endif
-  endif
- endif
 endif
 
 ifeq ($(HAVEREFLEX),yes)
@@ -52,56 +30,25 @@ endif
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 
-ifeq ($(PLATFORM),win32)
- RFLX_REFLEXLL   = $(ROOTSYS)/lib/libReflex.lib
-else
- RFLX_REFLEXLL   = -lReflex
- ifneq ($(PLATFORM),fbsd)
-  ifneq ($(PLATFORM),obsd)
-   RFLX_REFLEXLL   += -ldl
-  endif
- endif
-endif
-
 cintrun reflexrun pythoncintrun pythonreflexrun: % : %.log
 	$(TestDiff)
 
 
-#compiled.log: t.exe
-#	$(CMDECHO)./t.exe > $@ 2>&1
-
-CINTNORMALIZER:=sed -e 's,\bt_h\.[^[:space:]]*,,' -e 's,tagnum=[[:digit:]]\+,tagnum=***,' -e 's/0x[0-9a-f]\{7,\}/0xSOMEHEX/g'
 cintrun.log: cintrun.C
-	$(CMDECHO)$(CALLROOTEXE) -l -b -q $(@:.log=.C) | $(CINTNORMALIZER) | grep -v 'creating shared library' > $@ 2>&1
+	$(CMDECHO)$(CALLROOTEXE) -l -b -q $(@:.log=.C) | grep -v 'creating shared library' > $@ 2>&1
 
-reflexrun.log: libt_rflx.$(DllSuf) reflexrun.C
-	$(CMDECHO)$(CALLROOTEXE) -l -b -q $(@:.log=.C) | $(CINTNORMALIZER) > $@ 2>&1
+reflexrun.log: $(RFLXDICT_LIB) reflexrun.C
+	$(CMDECHO)$(CALLROOTEXE) -l -b -q $(@:.log=.C) > $@ 2>&1
 
 pythoncintrun.log: testcint.py
 	$(CMDECHO)$(PYTHON) testcint.py | grep -v 'creating shared library' > $@ 2>&1
 
-pythonreflexrun.log: libt_rflx.$(DllSuf) testreflex.py
+pythonreflexrun.log: $(RFLXDICT_LIB) testreflex.py
 	$(CMDECHO)$(PYTHON) testreflex.py > $@ 2>&1
 
-#t.exe: t.h t.cxx
-#ifeq ($(ARCH),win32)
-#	$(CMDECHO)$(CXX) t.cxx $(CXXFLAGS) /Fe$@ > $@_build.log 2>&1
-#else
-#	$(CMDECHO)$(CXX) -c t.cxx $(CXXFLAGS) $(OutPutOpt)t.$(ObjSuf) > $@_build.log 2>&1
-#	$(CMDECHO)$(CXX) $(@:.exe=.$(ObjSuf)) $(OutPutOpt)$@ >> $@_build.log 2>&1
-#endif
-
-BUILDER:=libt_rflx_tmp.C
-WRAPPER:=t_rflx_wrap.cxx
-libt_rflx.$(DllSuf): t_rflx.cpp
-	$(CMDECHO)echo '#ifndef __CINT__' > $(WRAPPER) 2> $@_build.log
-	$(CMDECHO)echo '#include "$<"' >> $(WRAPPER) 2> $@_build.log
-	$(CMDECHO)echo '#endif' >> $(WRAPPER) 2> $@_build.log
-	$(CMDECHO)echo 'int $(<:.cpp=_wrap)() {return 0;}' >> $(WRAPPER) 2> $@_build.log
-	$(CMDECHO)echo '{gSystem->Load("libReflex"); gROOT->ProcessLine(".L $(WRAPPER)+"); exit();}' > $(BUILDER)
+BUILDER:=build_t_rflx_wrap_cxx.C
+$(RFLXDICT_LIB): t_rflx.cpp
 	$(CMDECHO)$(CALLROOTEXE) -l -b -q $(BUILDER) >> $@_build.log 2>&1
-	$(CMDECHO)mv $(WRAPPER:.cxx=_cxx.$(DllSuf)) $@ >> $@_build.log 2>&1
-	$(CMDECHO)rm $(BUILDER) $(WRAPPER) >> $@_build.log 2>&1
 
 t_rflx.cpp: t.h selection.xml
 	$(CMDECHO)genreflex t.h -s selection.xml --gccxmlopt="--gccxml-cxxflags -U__GXX_WEAK__" --gccxmlpath=$(dir $(HAVEGCCXML)) > $@_build.log 2>&1

@@ -1,34 +1,25 @@
 
 Processing reflexrun.C...
-===========================================================================
-class t
- size=0x4 FILE:{CINTEX dictionary translator} LINE:-1
- (tagnum=***,voffset=-1,isabstract=0,parent=-1,gcomp=0:-1,funcs(dn21=~xcpd)=0)
-List of base class--------------------------------------------------------
-List of member variable---------------------------------------------------
-Defined in t
-{CINTEX dictionary translator}  -1 0xSOMEHEX private: float fT
-List of member function---------------------------------------------------
-filename       line:size busy function type and name  (in t)
-{CINTEX dictionary translator}  -1:-1   0 public: void ~t(void);
-{CINTEX dictionary translator}  -1:-1   0 public: t t(void);
-{CINTEX dictionary translator}  -1:-1   0 public: float getfloat(void) const;
-{CINTEX dictionary translator}  -1:-1   0 public: double get<double>(void) const;
-{CINTEX dictionary translator}  -1:-1   0 public: double get(void) const;
-{CINTEX dictionary translator}  -1:-1   0 public: float get<float>(void) const;
-{CINTEX dictionary translator}  -1:-1   0 public: int get<int>(void) const;
-{CINTEX dictionary translator}  -1:-1   0 public: void set<double>(double);
-{CINTEX dictionary translator}  -1:-1   0 public: void set(double);
-{CINTEX dictionary translator}  -1:-1   0 public: void set<float>(float);
-{CINTEX dictionary translator}  -1:-1   0 public: void set(float);
-{CINTEX dictionary translator}  -1:-1   0 public: void set<int>(int);
-{CINTEX dictionary translator}  -1:-1   0 public: void set(int);
-{CINTEX dictionary translator}  -1:-1   0 public: t t(const t&);
-{CINTEX dictionary translator}  -1:-1   0 public: void* __getNewDelFunctions(void);
-{CINTEX dictionary translator}  -1:-1   0 public: TClass* IsA(void);
-{CINTEX dictionary translator}  -1:-1   0 public: virtual void ShowMembers(TMemberInspector&,char*);
-{CINTEX dictionary translator}  -1:-1   0 public: virtual void Streamer(TBuffer&);
-{CINTEX dictionary translator}  -1:-1   0 public: void StreamerNVirtual(TBuffer&);
+TClass* t::IsA()
+void t::ShowMembers(TMemberInspector& ,char* )
+void t::Streamer(TBuffer& )
+void t::StreamerNVirtual(TBuffer& )
+void* t::__getNewDelFunctions()
+double t::get()
+double t::get<double>()
+float t::get<float>()
+int t::get<int>()
+float t::getfloat()
+void t::set(double )
+void t::set(float )
+void t::set(int )
+void t::set<double>(double )
+void t::set<float>(float )
+void t::set<int>(int )
+t t::t()
+t t::t(const t& )
+void t::~t()
+
 called get<double()
 called get<int>()
 called get<float>()

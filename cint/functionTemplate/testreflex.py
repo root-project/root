@@ -6,7 +6,7 @@ def printme(o):
 
 gSystem.Load("libCintex")
 Cintex.Enable()
-gSystem.Load("libt_rflx.so")
+gSystem.Load("t_rflx_wrap_cxx.so")
 print sorted([ item for item in t.__dict__.keys() if item[0:2] != '__' ])
 o = t()
 printme(o)
