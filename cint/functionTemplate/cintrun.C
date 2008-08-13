@@ -4,8 +4,7 @@
 void cintrun() {
    gSystem->Setenv("LINES","-1");
    if (!TClass::GetClass("t"))
-      //gSystem->Load("libG__t");
-      gROOT->ProcessLine(".L t.h+");
+      gSystem->Load("t_h");
    TClass *cl = TClass::GetClass("t");
    if (!cl) {
       cerr << "Cannot find TClass for t" << endl;

@@ -34,14 +34,14 @@ cintrun reflexrun pythoncintrun pythonreflexrun: % : %.log
 	$(TestDiff)
 
 
-cintrun.log: cintrun.C
-	$(CMDECHO)$(CALLROOTEXE) -l -b -q $(@:.log=.C) | grep -v 'creating shared library' > $@ 2>&1
+cintrun.log: cintrun.C t_h.$(DllSuf)
+	$(CMDECHO)$(CALLROOTEXE) -l -b -q $(@:.log=.C) > $@ 2>&1
 
 reflexrun.log: $(RFLXDICT_LIB) reflexrun.C
 	$(CMDECHO)$(CALLROOTEXE) -l -b -q $(@:.log=.C) > $@ 2>&1
 
-pythoncintrun.log: testcint.py
-	$(CMDECHO)$(PYTHON) testcint.py | grep -v 'creating shared library' > $@ 2>&1
+pythoncintrun.log: testcint.py t_h.$(DllSuf)
+	$(CMDECHO)$(PYTHON) testcint.py > $@ 2>&1
 
 pythonreflexrun.log: $(RFLXDICT_LIB) testreflex.py
 	$(CMDECHO)$(PYTHON) testreflex.py > $@ 2>&1
