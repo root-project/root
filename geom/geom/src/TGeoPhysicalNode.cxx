@@ -226,22 +226,22 @@ void TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t che
          voxels->Voxelize();
          vm->FindOverlaps();
       }   
+      // Set aligned node to be checked
+      i = fLevel;
+      node = GetNode(i);
       if (node->IsOverlapping()) {
          Info("Align", "The check for overlaps for node: \n%s\n cannot be performed since the node is declared possibly overlapping", 
               GetName());
       } else {        
-         i = fLevel;
-         node = GetNode(i);
          gGeoManager->SetCheckedNode(node);
-         while (node && node->GetVolume()->IsAssembly()) {
-            i--;
-            node = GetNode(i);
-            if (!node->GetVolume()->IsAssembly() && node->IsOverlapping()) {
-               Info("Align", "The check for overlaps for assembly node: \n%s\n cannot be performed since the parent %s is declared possibly overlapping",
-               GetName(), node->GetName());
-               node = 0;
-               break;
-            }
+         // Check overlaps for the first non-assembly parent node
+         while ((node=GetNode(--i))) {
+            if (!node->GetVolume()->IsAssembly()) break;
+         }   
+         if (node && node->IsOverlapping()) {
+            Info("Align", "The check for overlaps for assembly node: \n%s\n cannot be performed since the parent %s is declared possibly overlapping",
+                 GetName(), node->GetName());
+            node = 0;
          }      
          if (node) node->CheckOverlaps(ovlp);
          gGeoManager->SetCheckedNode(0);
