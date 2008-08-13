@@ -7,7 +7,9 @@ def printme(o):
 gSystem.Load("libCintex")
 Cintex.Enable()
 gSystem.Load("t_rflx_wrap_cxx.so")
-print sorted([ item for item in t.__dict__.keys() if item[0:2] != '__' ])
+sortedMethods = [ item for item in t.__dict__.keys() if item[0:2] != '__' ]
+sortedMethods.sort()
+print sortedMethods
 o = t()
 printme(o)
 o.set(12)

@@ -5,7 +5,9 @@ def printme(o):
 
 #gSystem.Load("libG__t.so")
 gROOT.ProcessLine(".L t.h+")
-print sorted([ item for item in t.__dict__.keys() if item[0:2] != '__' ])
+sortedMethods = [ item for item in t.__dict__.keys() if item[0:2] != '__' ]
+sortedMethods.sort()
+print sortedMethods
 o = t()
 printme(o)
 o.set(12)
