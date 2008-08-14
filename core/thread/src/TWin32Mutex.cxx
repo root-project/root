@@ -17,6 +17,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x0501 // needed for TryEnterCriticalSection
+#endif
+
 #include "TThread.h"
 #include "TWin32Mutex.h"
 
