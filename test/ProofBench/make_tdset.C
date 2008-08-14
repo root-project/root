@@ -42,6 +42,10 @@ TDSet *make_tdset(const char *basedir, Int_t files_per_slave, Int_t max_per_node
    TList msdlist;
    msdlist.SetOwner();
    TList* l = gProof->GetListOfSlaveInfos();
+   if (!l) {
+      cout << "No list of workers received!" << endl;
+      return 0;
+   }
    for(Int_t i=0 ; i < l->GetSize() ; i++){
       TSlaveInfo* si = dynamic_cast<TSlaveInfo*>(l->At(i));
       if (si->fStatus != TSlaveInfo::kActive) continue;

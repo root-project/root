@@ -13,7 +13,7 @@
 #include "TProof.h"
 #include "TDSet.h"
 #include "TDrawFeedback.h"
-
+#include "TList.h"
 
 #include "make_event_trees.C"
 #include "make_tdset.C"
