@@ -1,24 +1,24 @@
 
 Processing reflexrun.C...
-TClass* t::IsA()
-void t::ShowMembers(TMemberInspector& ,char* )
-void t::Streamer(TBuffer& )
-void t::StreamerNVirtual(TBuffer& )
-void* t::__getNewDelFunctions()
-double t::get()
-double t::get<double>()
-float t::get<float>()
-int t::get<int>()
-float t::getfloat()
-void t::set(double )
-void t::set(float )
-void t::set(int )
-void t::set<double>(double )
-void t::set<float>(float )
-void t::set<int>(int )
-t t::t()
-t t::t(const t& )
-void t::~t()
+IsA()
+ShowMembers(TMemberInspector&, char*)
+Streamer(TBuffer&)
+StreamerNVirtual(TBuffer&)
+__getNewDelFunctions()
+get() const
+get<double>() const
+get<float>() const
+get<int>() const
+getfloat() const
+set(double)
+set(float)
+set(int)
+set<double>(double)
+set<float>(float)
+set<int>(int)
+t()
+t(const t&)
+~t()
 
 called get<double()
 called get<int>()
