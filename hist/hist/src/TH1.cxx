@@ -3537,7 +3537,6 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xxmin, Dou
       } else if (GetDimension() < 3) {
          fnew2 = (TF2*)f1->IsA()->New();
          f1->Copy(*fnew2);
-         fnew2 = (TF2*)f1->Clone();
          fFunctions->Add(fnew2);
          fnew2->SetParent(this);
          fnew2->Save(xmin,xmax,ymin,ymax,0,0);
@@ -3546,7 +3545,6 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xxmin, Dou
       } else {
          fnew3 = (TF3*)f1->IsA()->New();
          f1->Copy(*fnew3);
-         fnew3 = (TF3*)f1->Clone();
          fFunctions->Add(fnew3);
          fnew3->SetParent(this);
          fnew3->SetBit(TFormula::kNotGlobal);
