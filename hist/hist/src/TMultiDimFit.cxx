@@ -1932,6 +1932,7 @@ void TMultiDimFit::AddRow(const Double_t *x, Double_t D, Double_t E)
       fMeanQuantity  = D;
       fMaxQuantity   = D;
       fMinQuantity   = D;
+      fSumSqQuantity = D * D;// G.Q. erratum on August 15th, 2008
    }
    else {
       fMeanQuantity  *= 1 - 1./Double_t(fSampleSize);
