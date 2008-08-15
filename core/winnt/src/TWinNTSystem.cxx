@@ -2072,7 +2072,6 @@ TList *TWinNTSystem::GetVolumes(Option_t *opt) const
    Int_t   drive, curdrive;
    UInt_t  type;
    TString sDrive, sType;
-   char    curdir[_MAX_PATH];
    char    szFs[32];
 
    if (!opt || !strlen(opt)) {
@@ -2087,8 +2086,8 @@ TList *TWinNTSystem::GetVolumes(Option_t *opt) const
       *szFs='\0';
       sDrive.Form("%c:", (curdrive + 'A' - 1));
       sType.Form("Unknown Drive (%s)", sDrive.Data());
-      GetVolumeInformation(Form("%s\\", sDrive.Data()), NULL, 0, NULL, NULL,
-                           NULL, (LPSTR)szFs, 32);
+      ::GetVolumeInformation(Form("%s\\", sDrive.Data()), NULL, 0, NULL, NULL,
+                             NULL, (LPSTR)szFs, 32);
       type = ::GetDriveType(sDrive.Data());
       switch (type) {
          case DRIVE_UNKNOWN:
@@ -2113,17 +2112,25 @@ TList *TWinNTSystem::GetVolumes(Option_t *opt) const
       drives->Add(new TNamed(sDrive.Data(), sType.Data()));
    }
    else if (strstr(opt, "all")) {
-      _getcwd(curdir, _MAX_PATH);
-      // If we can switch to the drive, it exists
-      // but skip floppy drives...
       UINT nOldErrorMode = ::SetErrorMode(SEM_FAILCRITICALERRORS);
-      for( drive = 3; drive <= 26; ++drive ) {
-         if( !_chdrive( drive ) ) {
+      TCHAR szTemp[512];
+      szTemp[0] = '\0';
+      if (::GetLogicalDriveStrings(511, szTemp)) {
+         TCHAR szDrive[3] = TEXT(" :");
+         TCHAR* p = szTemp;
+         do {
+            // Copy the drive letter to the template string
+            *szDrive = *p;
             *szFs='\0';
-            sDrive.Form("%c:", (drive + 'A' - 1));
+            sDrive.Form("%s", szDrive);
+            // skip floppy drives, to avoid accessing them each time...
+            if ((sDrive == "A:") || (sDrive == "B:")) {
+               while (*p++);
+               continue;
+            }
             sType.Form("Unknown Drive (%s)", sDrive.Data());
-            GetVolumeInformation(Form("%s\\", sDrive.Data()), NULL, 0, NULL,
-                                 NULL, NULL, (LPSTR)szFs, 32);
+            ::GetVolumeInformation(Form("%s\\", sDrive.Data()), NULL, 0, NULL,
+                                   NULL, NULL, (LPSTR)szFs, 32);
             type = ::GetDriveType(sDrive.Data());
             switch (type) {
                case DRIVE_UNKNOWN:
@@ -2146,13 +2153,11 @@ TList *TWinNTSystem::GetVolumes(Option_t *opt) const
                   break;
             }
             drives->Add(new TNamed(sDrive.Data(), sType.Data()));
-         }
+            // Go to the next NULL character.
+            while (*p++);
+         } while (*p); // end of string
       }
       ::SetErrorMode(nOldErrorMode);
-      // Restore original drive
-      _chdrive( curdrive );
-      if (curdir && strlen(curdir))
-         _chdir(curdir);
    }
    return drives;
 }
