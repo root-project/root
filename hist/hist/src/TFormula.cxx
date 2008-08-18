@@ -2874,16 +2874,16 @@ TString TFormula::GetExpFormula(Option_t *option) const
             // The function name contains return type and parameters types we need
             // to trim them.
             int depth;
-            for(i=0, depth=0;i<funcname.Length();++i) {
-               switch (funcname[i]) {
+            for(j=0, depth=0;j<funcname.Length();++j) {
+               switch (funcname[j]) {
                   case '<':
                      ++depth; break;
                   case '>':
                      --depth; break;
                   case ' ':
                      if (depth==0) {
-                        funcname.Remove(0,i+1);
-                        i = funcname.Length();
+                        funcname.Remove(0,j+1);
+                        j = funcname.Length();
                         break;
                      }
                }
