@@ -6347,7 +6347,7 @@ extern "C" struct G__ifunc_table* G__get_methodhandle(char* funcname, char* argt
       ifn = G__overload_match(funcname, &para, hash, ifunc, G__TRYNORMAL, G__PUBLIC_PROTECTED_PRIVATE, 0, (withConversion & 0x2) ? 1 : 0, &match_error);
       *poffset = 0;
       *pifn = -2;
-      if (ifunc || !withInheritance) {
+      if (ifn || !withInheritance) {
          return (struct G__ifunc_table*) ifn.Id();
       }
       if (tagnum != -1) {
@@ -6359,7 +6359,7 @@ extern "C" struct G__ifunc_table* G__get_methodhandle(char* funcname, char* argt
                ifunc = G__Dict::GetDict().GetScope(baseclass->basetagnum[basen]);
                ifn = G__overload_match(funcname, &para, hash, ifunc, G__TRYNORMAL, G__PUBLIC_PROTECTED_PRIVATE, 0, 0, &match_error);
                *pifn = -2;
-               if (ifunc) {
+               if (ifn) {
                   return (struct G__ifunc_table*) ifn.Id();
                }
             }
@@ -6430,7 +6430,7 @@ extern "C" struct G__ifunc_table *G__get_methodhandle2(char *funcname, G__param 
       int match_error = 0;
       ifn = G__overload_match(funcname, libp, hash, ifunc, G__TRYNORMAL, G__PUBLIC_PROTECTED_PRIVATE, 0, 0, &match_error);
       *poffset = 0;
-      if (ifunc || !withInheritance) return((G__ifunc_table*)ifn.Id());
+      if (ifn || !withInheritance) return((G__ifunc_table*)ifn.Id());
       if (-1 != tagnum) {
          int basen = 0;
          struct G__inheritance *baseclass = G__struct.baseclass[tagnum];
@@ -6453,7 +6453,7 @@ extern "C" struct G__ifunc_table *G__get_methodhandle2(char *funcname, G__param 
             , G__PUBLIC_PROTECTED_PRIVATE, G__EXACT
             , withInheritance
             );
-      if (ifunc) return((G__ifunc_table*)ifn.Id());
+      if (ifn) return((G__ifunc_table*)ifn.Id());
 
       /* if no exact match, try to instantiate template function */
       funclist = G__add_templatefunc(funcname, libp, hash, funclist, ifunc, 0);
