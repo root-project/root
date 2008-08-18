@@ -190,7 +190,8 @@ distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(ROOTEXEDEP) $(ROOTEXE) $(ROOTNEXE) $(PROOFSERVDEP) \
 		   $(PROOFSERVEXE) $(PROOFSERVSH) $(HADDDEP) $(HADD) \
 		   $(H2ROOTDEP) $(H2ROOT) $(G2ROOT) \
-		   $(SSH2RPDDEP) $(SSH2RPD) $(ROOTSEXEDEP) $(ROOTSEXE) $(ROOTSSH)
+		   $(SSH2RPDDEP) $(SSH2RPD) $(ROOTSEXEDEP) $(ROOTSEXE) \
+		   $(ROOTSSH) $(subst root,root7,$(ROOTEXE))
 
 distclean::     distclean-$(MODNAME)
 
