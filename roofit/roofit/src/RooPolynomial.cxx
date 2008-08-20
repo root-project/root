@@ -122,8 +122,9 @@ RooPolynomial::~RooPolynomial()
 //_____________________________________________________________________________
 Double_t RooPolynomial::evaluate() const 
 {
-  Double_t sum(1) ;
   Int_t order(_lowestOrder) ;
+  Double_t sum(order<1 ? 0 : 1) ;
+
   _coefIter->Reset() ;
 
   RooAbsReal* coef ;
@@ -132,6 +133,9 @@ Double_t RooPolynomial::evaluate() const
     sum += coef->getVal(nset)*TMath::Power(_x,order++) ;
   }
 
+  if (sum<=0) {
+    cout << "RooPolynomial sum = " << sum << endl ;  
+  }
   return sum;
 }
 
@@ -151,11 +155,12 @@ Double_t RooPolynomial::analyticalIntegral(Int_t code, const char* rangeName) co
 {
   assert(code==1) ;
 
-  Double_t sum(_x.max(rangeName)-_x.min(rangeName)) ;
+  Int_t order(_lowestOrder) ;
+  
+  Double_t sum(order>0 ? _x.max(rangeName)-_x.min(rangeName) : 0) ;
   //cout << "RooPolynomial::aI(" << GetName() << ") range = " << _x.min(rangeName) << " - " << _x.max(rangeName) << endl ;
   
   const RooArgSet* nset = _coefList.nset() ;
-  Int_t order(_lowestOrder) ;
   _coefIter->Reset() ;
   RooAbsReal* coef ;
 

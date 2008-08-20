@@ -33,4 +33,64 @@
 #pragma link C++ class RooUnblindUniform+ ;
 #pragma link C++ class RooVoigtian+ ;
 #pragma link C++ class RooPoisson+ ;
+#pragma link C++ class RooChi2MCSModule+ ;
+#pragma link C++ class RooTFnBinding+ ;
+#pragma link C++ class RooTFnPdfBinding+ ;
+//
+#pragma link C++ class RooCFunction1Binding<Double_t,Double_t>+ ;
+#pragma link C++ class RooCFunction1PdfBinding<Double_t,Double_t>+ ;
+#pragma link C++ class RooCFunction1Ref<Double_t,Double_t>- ;
+#pragma link C++ class RooCFunction1Binding<Double_t,Int_t>+ ;
+#pragma link C++ class RooCFunction1PdfBinding<Double_t,Int_t>+ ;
+#pragma link C++ class RooCFunction1Ref<Double_t,Int_t>- ;
+//
+#pragma link C++ class RooCFunction2Binding<Double_t,Double_t,Double_t>+ ;
+#pragma link C++ class RooCFunction2PdfBinding<Double_t,Double_t,Double_t>+ ;
+#pragma link C++ class RooCFunction2Ref<Double_t,Double_t,Double_t>- ;
+#pragma link C++ class RooCFunction2Binding<Double_t,Int_t,Double_t>+ ;
+#pragma link C++ class RooCFunction2PdfBinding<Double_t,Int_t,Double_t>+ ;
+#pragma link C++ class RooCFunction2Ref<Double_t,Int_t,Double_t>- ;
+#pragma link C++ class RooCFunction2Binding<Double_t,UInt_t,Double_t>+ ;
+#pragma link C++ class RooCFunction2PdfBinding<Double_t,UInt_t,Double_t>+ ;
+#pragma link C++ class RooCFunction2Ref<Double_t,UInt_t,Double_t>- ;
+#pragma link C++ class RooCFunction2Binding<Double_t,Double_t,Int_t>+ ;
+#pragma link C++ class RooCFunction2PdfBinding<Double_t,Double_t,Int_t>+ ;
+#pragma link C++ class RooCFunction2Ref<Double_t,Double_t,Int_t>- ;
+#pragma link C++ class RooCFunction2Binding<Double_t,Int_t,Int_t>+ ;
+#pragma link C++ class RooCFunction2PdfBinding<Double_t,Int_t,Int_t>+ ;
+#pragma link C++ class RooCFunction2Ref<Double_t,Int_t,Int_t>- ;
+//
+#pragma link C++ class RooCFunction3Binding<Double_t,Double_t,Double_t,Double_t>+ ;
+#pragma link C++ class RooCFunction3PdfBinding<Double_t,Double_t,Double_t,Double_t>+ ;
+#pragma link C++ class RooCFunction3Ref<Double_t,Double_t,Double_t,Double_t>- ;
+#pragma link C++ class RooCFunction3Binding<Double_t,Double_t,Double_t,Bool_t>+ ;
+#pragma link C++ class RooCFunction3PdfBinding<Double_t,Double_t,Double_t,Bool_t>+ ;
+#pragma link C++ class RooCFunction3Ref<Double_t,Double_t,Double_t,Bool_t>- ;
+#pragma link C++ class RooCFunction3Binding<Double_t,Double_t,Int_t,Int_t>+ ;
+#pragma link C++ class RooCFunction3PdfBinding<Double_t,Double_t,Int_t,Int_t>+ ;
+#pragma link C++ class RooCFunction3Ref<Double_t,Double_t,Int_t,Int_t>- ;
+#pragma link C++ class RooCFunction3Binding<Double_t,UInt_t,Double_t,UInt_t>+ ;
+#pragma link C++ class RooCFunction3PdfBinding<Double_t,UInt_t,Double_t,UInt_t>+ ;
+#pragma link C++ class RooCFunction3Ref<Double_t,UInt_t,Double_t,UInt_t>- ;
+#pragma link C++ class RooCFunction3Binding<Double_t,UInt_t,Double_t,Double_t>+ ;
+#pragma link C++ class RooCFunction3PdfBinding<Double_t,UInt_t,Double_t,Double_t>+ ;
+#pragma link C++ class RooCFunction3Ref<Double_t,UInt_t,Double_t,Double_t>- ;
+#pragma link C++ class RooCFunction3Binding<Double_t,UInt_t,UInt_t,Double_t>+ ;
+#pragma link C++ class RooCFunction3PdfBinding<Double_t,UInt_t,UInt_t,Double_t>+ ;
+#pragma link C++ class RooCFunction3Ref<Double_t,UInt_t,UInt_t,Double_t>- ;
+//
+#pragma link C++ class RooCFunction4Binding<Double_t,Double_t,Double_t,Double_t,Double_t>+ ;
+#pragma link C++ class RooCFunction4PdfBinding<Double_t,Double_t,Double_t,Double_t,Double_t>+ ;
+#pragma link C++ class RooCFunction4Ref<Double_t,Double_t,Double_t,Double_t,Double_t>- ;
+#pragma link C++ class RooCFunction4Binding<Double_t,Double_t,Double_t,Double_t,Int_t>+ ;
+#pragma link C++ class RooCFunction4PdfBinding<Double_t,Double_t,Double_t,Double_t,Int_t>+ ;
+#pragma link C++ class RooCFunction4Ref<Double_t,Double_t,Double_t,Double_t,Int_t>- ;
+#pragma link C++ class RooCFunction4Binding<Double_t,Double_t,Double_t,Double_t,Bool_t>+ ;
+#pragma link C++ class RooCFunction4PdfBinding<Double_t,Double_t,Double_t,Double_t,Bool_t>+ ;
+#pragma link C++ class RooCFunction4Ref<Double_t,Double_t,Double_t,Double_t,Bool_t>- ;
+#ifdef USE_FOR_AUTLOADING
+#pragma link C++ class RooFit ;
+#else
+#pragma link C++ namespace RooFit ;
+#endif
 #endif 

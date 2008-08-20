@@ -52,6 +52,7 @@ RooExponential::RooExponential(const RooExponential& other, const char* name) :
 
 //_____________________________________________________________________________
 Double_t RooExponential::evaluate() const{
+  //cout << "exp(x=" << x << ",c=" << c << ")=" << exp(c*x) << endl ;
   return exp(c*x);
 }
 
@@ -70,8 +71,15 @@ Double_t RooExponential::analyticalIntegral(Int_t code, const char* rangeName) c
   switch(code) {
   case 1: 
     {
-      if(c == 0.0) return (x.max(rangeName) - x.min(rangeName));
-      return ( exp( c*x.max(rangeName) ) - exp( c*x.min(rangeName) ) )/c;
+      Double_t ret(0) ;
+      if(c == 0.0) {
+	ret = (x.max(rangeName) - x.min(rangeName));
+      } else {
+	ret =  ( exp( c*x.max(rangeName) ) - exp( c*x.min(rangeName) ) )/c;
+      }
+
+      //cout << "Int_exp_dx(c=" << c << ", xmin=" << x.min(rangeName) << ", xmax=" << x.max(rangeName) << ")=" << ret << endl ;
+      return ret ;
     }
   }
   
