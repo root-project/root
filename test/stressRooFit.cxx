@@ -1757,12 +1757,12 @@ public:
     // Setup a model
     RooRealVar x("x","x",-10,10) ;
     RooRealVar mx("mx","mx",0,-0.5,0.5) ;
-    RooRealVar sx("sx","sx",3,2.5,3.5) ;
+    RooRealVar sx("sx","sx",5,2.5,3.5) ;
     RooGaussian gx("gx","gx",x,mx,sx) ;
     
     RooRealVar y("y","y",-10,10) ;
     RooRealVar my("my","my",0,-0.5,0.5) ;
-    RooRealVar sy("sy","sy",3,1,10) ;
+    RooRealVar sy("sy","sy",5,1,10) ;
     RooGaussian gy("gy","gy",y,my,sy) ;
     
     RooProdPdf f("f","f",RooArgSet(gx,gy)) ;
@@ -1771,8 +1771,8 @@ public:
     RooDataSet* d = f.generate(RooArgSet(x,y),10000) ;
     
     // Bin dataset
-    x.setBins(15) ;
-    y.setBins(15) ;
+    x.setBins(10) ;
+    y.setBins(10) ;
     RooDataHist* db = new RooDataHist("db","db",RooArgSet(x,y),*d) ;
     
     // Construct binned likelihood
@@ -1794,7 +1794,7 @@ public:
     RooFitResult* r2 = m2.save() ;
     
     // Print results
-    regResult(r1,"Basic19_ResultBLL") ;
+    regResult(r1,"Basic19_ResultNLL") ;
     regResult(r2,"Basic19_ResultChi2") ;
 
     delete db ;
@@ -2128,6 +2128,8 @@ int main(int argc,const char *argv[])
      refFileName = "http://root.cern.ch/files/stressRooFit_ref_2.root" ;
   if (gROOT->GetVersionInt() > 51902)
      refFileName = "http://root.cern.ch/files/stressRooFit_ref_3.root" ;
+  if (gROOT->GetVersionInt() > 52100)
+     refFileName = "http://root.cern.ch/files/stressRooFit_ref_4.root" ;
 
   // Parse command line arguments 
   for (Int_t i=1 ;  i<argc ; i++) {
