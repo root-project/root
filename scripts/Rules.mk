@@ -545,8 +545,20 @@ $(CMDECHO) ( touch dummy$$$$.C && \
 )
 endef
 
+ifeq ($(SED_VERSION),)
+   ifeq ($(PLATFORM),macosx)
+      ifeq ($(strip $(shell sed --version 2>&1 | grep GNU | wc -l)) ,1)
+         export SED_VERSION=GNU
+      else
+         export SED_VERSION=macosx
+      endif
+   else 
+      export SED_VERSION=GNU
+   endif
+endif   
+
 RemoveLeadingDirs := sed -e 's?^[A-Za-z/\].*[/\]??' -e 's/.dll/.so/'
-ifeq ($(PLATFORM),macosx)
+ifeq ($(SED_VERSION),macosx)
    RemoveDirs := sed -E -e 's,([[:alpha:]]:\\|/)[^[:space:]]*[/\\],,g' 
 else
    RemoveDirs := sed -e 's?\([A-Za-z]:\|[/]\).*[/\]??'
