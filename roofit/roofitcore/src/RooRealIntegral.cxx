@@ -46,17 +46,22 @@
 #include "RooNumIntFactory.h"
 #include "RooNumIntConfig.h"
 #include "RooNameReg.h"
+#include "RooExpensiveObjectCache.h"
+#include "RooDouble.h"
 
 ClassImp(RooRealIntegral) 
 ;
 
+
+Bool_t RooRealIntegral::_cacheExpensive(kFALSE) ;
 
 
 //_____________________________________________________________________________
 RooRealIntegral::RooRealIntegral() : 
   _valid(kFALSE),
   _numIntEngine(0),
-  _numIntegrand(0)
+  _numIntegrand(0),
+  _params(0)
 {
 }
 
@@ -86,7 +91,8 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   _restartNumIntEngine(kFALSE),
   _numIntEngine(0), 
   _numIntegrand(0),
-  _rangeName((TNamed*)RooNameReg::ptr(rangeName))
+  _rangeName((TNamed*)RooNameReg::ptr(rangeName)),
+  _params(0)
 {
   // Construct integral of 'function' over observables in 'depList'
   // in range 'rangeName'  with normalization observables 'funcNormSet' 
@@ -657,7 +663,8 @@ RooRealIntegral::RooRealIntegral(const RooRealIntegral& other, const char* name)
   _restartNumIntEngine(kFALSE),
   _numIntEngine(0), 
   _numIntegrand(0),
-  _rangeName(other._rangeName) 
+  _rangeName(other._rangeName),
+  _params(0)
 {
   // Copy constructor
 
@@ -703,29 +710,46 @@ Double_t RooRealIntegral::evaluate() const
     
   case Hybrid: 
     {      
-      // Find any function dependents that are AClean 
-      // and switch them temporarily to ADirty
-      setACleanADirty(kTRUE) ;
-
-      // try to initialize our numerical integration engine
-      if(!(_valid= initNumIntegrator())) {
-	coutE(Integration) << ClassName() << "::" << GetName()
-	     << ":evaluate: cannot initialize numerical integrator" << endl;
-	return 0;
+      // Cache numeric integrals in >1d expensive object cache
+      RooDouble* cacheVal(0) ;
+      if (_intList.getSize()>1 && _cacheExpensive) {
+	cacheVal = (RooDouble*) expensiveObjectCache().retrieveObject(GetName(),RooDouble::Class(),parameters())  ;
       }
 
-      // Save current integral dependent values 
-      _saveInt = _intList ;
-      _saveSum = _sumList ;
-      
-      // Evaluate sum/integral
-      retVal = sum() / jacobianProduct() ;
-      
-      // Restore integral dependent values
-      _intList=_saveInt ;
-      _sumList=_saveSum ;
+      if (cacheVal) {
+	retVal = *cacheVal ;
+      } else {
 
-      setACleanADirty(kFALSE) ;
+	// Find any function dependents that are AClean 
+	// and switch them temporarily to ADirty
+	setACleanADirty(kTRUE) ;
+	
+	// try to initialize our numerical integration engine
+	if(!(_valid= initNumIntegrator())) {
+	  coutE(Integration) << ClassName() << "::" << GetName()
+			     << ":evaluate: cannot initialize numerical integrator" << endl;
+	  return 0;
+	}
+	
+	// Save current integral dependent values 
+	_saveInt = _intList ;
+	_saveSum = _sumList ;
+	
+	// Evaluate sum/integral
+	retVal = sum() / jacobianProduct() ;
+	
+	// Restore integral dependent values
+	_intList=_saveInt ;
+	_sumList=_saveSum ;
+	
+	// Cache numeric integrals in >1d expensive object cache
+	if (_intList.getSize()>1 && _cacheExpensive) {
+	  RooDouble* val = new RooDouble(retVal) ;
+	  expensiveObjectCache().registerObject(_function.arg().GetName(),GetName(),*val,parameters())  ;
+	}
+	
+	setACleanADirty(kFALSE) ;
+      }
       break ;
     }
   case Analytic:
@@ -877,7 +901,33 @@ Bool_t RooRealIntegral::redirectServersHook(const RooAbsCollection& /*newServerL
   _intList.snapshot(_saveInt) ;
   _sumList.snapshot(_saveSum) ;
 
+  // Delete parameters cache if we have one
+  if (_params) {
+    delete _params ;
+    _params = 0 ;
+  }
+
   return kFALSE ;
+}
+
+
+
+//_____________________________________________________________________________
+const RooArgSet& RooRealIntegral::parameters() const
+{
+  if (!_params) {
+    _params = new RooArgSet("params") ;
+    
+    TIterator* siter = serverIterator() ;
+    RooArgSet params ;
+    RooAbsArg* server ;
+    while((server = (RooAbsArg*)siter->Next())) {
+      if (server->isValueServer(*this)) _params->add(*server) ;
+    }
+    delete siter ;
+  }
+
+  return *_params ;
 }
 
 

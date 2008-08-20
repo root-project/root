@@ -39,6 +39,7 @@
 #include "RooArgSet.h"
 #include "RooRealConstant.h"
 #include "RooResolutionModel.h"
+#include "RooExpensiveObjectCache.h"
 #include "RooMath.h"
 
 Bool_t RooSentinel::_active = kFALSE ;
@@ -55,6 +56,7 @@ static void CleanUpRooFitAtExit()
   RooRealConstant::cleanup() ;
   RooResolutionModel::cleanup() ;
   RooMath::cleanup() ;
+  RooExpensiveObjectCache::cleanup() ;
 }
 
 

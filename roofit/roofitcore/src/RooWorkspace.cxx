@@ -387,6 +387,11 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg, const RooCmdArg& arg1, const
       }
     }
 
+    // Point expensiveObjectCache to copy in this workspace
+    RooExpensiveObjectCache& oldCache = node->expensiveObjectCache() ;
+    node->setExpensiveObjectCache(_eocache) ;    
+    _eocache.importCacheObjects(oldCache,node->GetName(),kTRUE) ;
+
     // Check if node is already in workspace (can only happen for variables or identical instances, unless RecycleConflictNodes is specified)
     if (_allOwnedNodes.find(node->GetName())) {
       // Do not import node, add not to list of nodes that require reconnection
@@ -1077,6 +1082,10 @@ void RooWorkspace::Print(Option_t* /*opts*/) const
     cout << endl ;
   }
 
+  cout << "embedded precalculated expensive components" << endl ;
+  cout << "-------------------------------------------" << endl ;
+  _eocache.print() ;
+  
 
 
 //   if (_views.GetSize()>0) {

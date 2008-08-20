@@ -144,6 +144,8 @@ public:
   void setStreamStatus(Int_t id, Bool_t active) ;
   Bool_t getStreamStatus(Int_t id) const ;
 
+  void reset() { cleanup() ; }
+
   void setGlobalKillBelow(MsgLevel level) { _globMinLevel = level ; }
   MsgLevel globalKillBelow() const { return _globMinLevel ; }
 
@@ -179,6 +181,7 @@ protected:
 
   std::map<std::string,std::ostream*> _files ;
   MsgLevel _globMinLevel ;
+  MsgLevel _lastMsgLevel ;
 
   Bool_t _silentMode ; 
   Bool_t _showPid ;

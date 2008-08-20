@@ -113,17 +113,17 @@ Bool_t RooDLLSignificanceMCSModule::initializeInstance()
 
   // Construct variable that holds -log(L) fit with null hypothesis for given parameter
   TString nll0hName = Form("nll_nullhypo_%s",_parName.c_str()) ;
-  TString nll0hTitle = Form("-log(L) with null hypothesis for parameter %s",_parName.c_str()) ;
+  TString nll0hTitle = Form("-log(L) with null hypothesis for param %s",_parName.c_str()) ;
   _nll0h = new RooRealVar(nll0hName.Data(),nll0hTitle.Data(),0) ;
 
   // Construct variable that holds -log(L) fit with null hypothesis for given parameter
   TString dll0hName = Form("dll_nullhypo_%s",_parName.c_str()) ;
-  TString dll0hTitle = Form("-log(L) different w.r.t null hypothesis for parameter %s",_parName.c_str()) ;
+  TString dll0hTitle = Form("-log(L) difference w.r.t null hypo for param %s",_parName.c_str()) ;
   _dll0h = new RooRealVar(dll0hName.Data(),dll0hTitle.Data(),0) ;
 
   // Construct variable that holds significance corresponding to delta(-log(L)) w.r.t to null hypothesis for given parameter
   TString sig0hName = Form("significance_nullhypo_%s",_parName.c_str()) ;
-  TString sig0hTitle = Form("Gaussian signficiance of Delta(-log(L)) w.r.t null hypothesis for parameter %s",_parName.c_str()) ;
+  TString sig0hTitle = Form("Gaussian signficiance of Delta(-log(L)) w.r.t null hypo for param %s",_parName.c_str()) ;
   _sig0h = new RooRealVar(sig0hName.Data(),sig0hTitle.Data(),-10,100) ;
 
   // Create new dataset to be merged with RooMCStudy::fitParDataSet

@@ -44,6 +44,12 @@ public:
   virtual void printClassName(ostream& os) const ;
   virtual void printValue(ostream& os) const ;
   virtual void printMultiline(ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const ;
+  virtual Int_t defaultPrintContents(Option_t* opt) const ;
+
+  inline virtual void Print(Option_t *options= 0) const {
+    // Printing interface (human readable)
+    printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
+  }
 
   virtual Bool_t isIdentical(const RooTable& other) ;
 

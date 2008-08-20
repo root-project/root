@@ -57,7 +57,7 @@ ClassImp(RooHist)
 
 
 //_____________________________________________________________________________
-RooHist::RooHist(const TH1 &data, Double_t nominalBinWidth, Double_t nSigma, RooAbsData::ErrorType etype, Double_t xErrorFrac) :
+RooHist::RooHist(const TH1 &data, Double_t nominalBinWidth, Double_t nSigma, RooAbsData::ErrorType etype, Double_t xErrorFrac, Bool_t correctForBinWidth) :
   TGraphAsymmErrors(), _nominalBinWidth(nominalBinWidth), _nSigma(nSigma), _rawEntries(-1)
 {
   // Create a histogram from the contents of the specified TH1 object
@@ -90,8 +90,10 @@ RooHist::RooHist(const TH1 &data, Double_t nominalBinWidth, Double_t nSigma, Roo
     Stat_t dy = data.GetBinError(bin) ;
     if (etype==RooAbsData::Poisson) {
       addBin(x,roundBin(y),data.GetBinWidth(bin),xErrorFrac);
+    } else if (etype==RooAbsData::SumW2) {
+      addBinWithError(x,y,dy,dy,data.GetBinWidth(bin),xErrorFrac,correctForBinWidth);
     } else {
-      addBinWithError(x,y,dy,dy,data.GetBinWidth(bin),xErrorFrac);
+      addBinWithError(x,y,0,0,data.GetBinWidth(bin),xErrorFrac,correctForBinWidth);
     }
   }
   // add over/underflow bins to our event count
@@ -101,7 +103,7 @@ RooHist::RooHist(const TH1 &data, Double_t nominalBinWidth, Double_t nSigma, Roo
 
 
 //_____________________________________________________________________________
-RooHist::RooHist(const TH1 &data1, const TH1 &data2, Double_t nominalBinWidth, Double_t nSigma, Double_t xErrorFrac) :
+RooHist::RooHist(const TH1 &data1, const TH1 &data2, Double_t nominalBinWidth, Double_t nSigma, Double_t xErrorFrac, Bool_t efficiency) :
   TGraphAsymmErrors(), _nominalBinWidth(nominalBinWidth), _nSigma(nSigma), _rawEntries(-1)
 {
   // Create a histogram from the asymmetry between the specified TH1 objects
@@ -124,8 +126,14 @@ RooHist::RooHist(const TH1 &data1, const TH1 &data2, Double_t nominalBinWidth, D
     const TAxis *axis= ((TH1&)data1).GetXaxis();
     if(axis->GetNbins() > 0) _nominalBinWidth= (axis->GetXmax() - axis->GetXmin())/axis->GetNbins();
   }
-  setYAxisLabel(Form("Asymmetry (%s - %s)/(%s + %s)",
+
+  if (!efficiency) {
+    setYAxisLabel(Form("Asymmetry (%s - %s)/(%s + %s)",
 		     data1.GetName(),data2.GetName(),data1.GetName(),data2.GetName()));
+  } else {
+    setYAxisLabel(Form("Efficiency (%s)/(%s + %s)",
+		     data1.GetName(),data1.GetName(),data2.GetName()));
+  }
   // initialize our contents from the input histogram contents
   Int_t nbin= data1.GetNbinsX();
   if(data2.GetNbinsX() != nbin) {
@@ -139,7 +147,11 @@ RooHist::RooHist(const TH1 &data1, const TH1 &data2, Double_t nominalBinWidth, D
     }
     Stat_t y1= data1.GetBinContent(bin);
     Stat_t y2= data2.GetBinContent(bin);
-    addAsymmetryBin(x,roundBin(y1),roundBin(y2),data1.GetBinWidth(bin),xErrorFrac);
+    if (!efficiency) {
+      addAsymmetryBin(x,roundBin(y1),roundBin(y2),data1.GetBinWidth(bin),xErrorFrac);
+    } else {
+      addEfficiencyBin(x,roundBin(y1),roundBin(y2),data1.GetBinWidth(bin),xErrorFrac);
+    }
   }
   // we do not have a meaningful number of entries
   _entries= -1;
@@ -337,14 +349,14 @@ void RooHist::addBin(Axis_t binCenter, Int_t n, Double_t binWidth, Double_t xErr
 
 
 //_____________________________________________________________________________
-void RooHist::addBinWithError(Axis_t binCenter, Double_t n, Double_t elow, Double_t ehigh, Double_t binWidth, Double_t xErrorFrac) 
+void RooHist::addBinWithError(Axis_t binCenter, Double_t n, Double_t elow, Double_t ehigh, Double_t binWidth, Double_t xErrorFrac, Bool_t correctForBinWidth) 
 {
   // Add a bin to this histogram with the specified bin contents
   // and error. The bin width is used to set the relative scale of 
   // bins with different widths.
 
   Double_t scale= 1;
-  if(binWidth > 0) {
+  if(binWidth > 0 && correctForBinWidth) {
     scale= _nominalBinWidth/binWidth;
   }  
   _entries+= n;
@@ -374,12 +386,38 @@ void RooHist::addAsymmetryBin(Axis_t binCenter, Int_t n1, Int_t n2, Double_t bin
 
   // calculate Binomial errors for this bin
   Double_t ym,yp,dx(0.5*binWidth);
-  if(!RooHistError::instance().getBinomialInterval(n1,n2,ym,yp,_nSigma)) {
+  if(!RooHistError::instance().getBinomialIntervalAsym(n1,n2,ym,yp,_nSigma)) {
     coutE(Plotting) << "RooHist::addAsymmetryBin: unable to calculate binomial error for bin with " << n1 << "," << n2 << " events" << endl;
     return;
   }
 
   Double_t a= (Double_t)(n1-n2)/(n1+n2);
+  SetPoint(index,binCenter,a);
+  SetPointError(index,dx*xErrorFrac,dx*xErrorFrac,(a-ym),(yp-a));
+  updateYAxisLimits(scale*yp);
+  updateYAxisLimits(scale*ym);
+}
+
+
+
+//_____________________________________________________________________________
+void RooHist::addEfficiencyBin(Axis_t binCenter, Int_t n1, Int_t n2, Double_t binWidth, Double_t xErrorFrac) 
+{
+  // Add a bin to this histogram with the value n1/(n1+n2)
+  // using an error bar calculated with Binomial statistics.
+  
+  Double_t scale= 1;
+  if(binWidth > 0) scale= _nominalBinWidth/binWidth;
+  Int_t index= GetN();
+
+  // calculate Binomial errors for this bin
+  Double_t ym,yp,dx(0.5*binWidth);
+  if(!RooHistError::instance().getBinomialIntervalEff(n1,n2,ym,yp,_nSigma)) {
+    coutE(Plotting) << "RooHist::addEfficiencyBin: unable to calculate binomial error for bin with " << n1 << "," << n2 << " events" << endl;
+    return;
+  }
+
+  Double_t a= (Double_t)(n1)/(n1+n2);
   SetPoint(index,binCenter,a);
   SetPointError(index,dx*xErrorFrac,dx*xErrorFrac,(a-ym),(yp-a));
   updateYAxisLimits(scale*yp);

@@ -20,6 +20,7 @@
 #include "RooArgSet.h"
 #include "RooLinkedList.h"
 #include "RooCmdArg.h"
+#include "RooExpensiveObjectCache.h" 
 #include <map>
 #include <list>
 #include <string>
@@ -160,7 +161,9 @@ public:
 
   WSDir* _dir ; //! Transient ROOT directory representation of workspace
 
-  ClassDef(RooWorkspace,2)  // Persistable project container for (composite) pdfs, functions, variables and datasets
+  RooExpensiveObjectCache _eocache ; // Cache for expensive objects
+
+  ClassDef(RooWorkspace,3)  // Persistable project container for (composite) pdfs, functions, variables and datasets
   
 } ;
 

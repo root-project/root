@@ -88,13 +88,15 @@ void RooAbsSelfCachedPdf::fillCacheObject(RooAbsCachedPdf::PdfCacheElem& cache) 
     cacheHist.set(wgt) ;
   }
 
+  cache.pdf()->setUnitNorm(kTRUE) ;
+
   delete cloneSet ;
 }
 
 
 
 //_____________________________________________________________________________
-RooArgSet* RooAbsSelfCachedPdf::actualObservables(const RooArgSet& nset) const 
+RooArgSet* RooAbsSelfCachedPdf::actualObservables(const RooArgSet& /*nset*/) const 
 {
   // Defines observables to be cached, given a set of user defined observables
   // Returns the subset of nset that are observables this p.d.f
@@ -110,7 +112,8 @@ RooArgSet* RooAbsSelfCachedPdf::actualObservables(const RooArgSet& nset) const
   }
   
   // Return servers that are in common with given normalization set
-  return (RooArgSet*) servers.selectCommon(nset) ;
+  return new RooArgSet(servers) ;
+  //return (RooArgSet*) servers.selectCommon(nset) ;
   
 }
 

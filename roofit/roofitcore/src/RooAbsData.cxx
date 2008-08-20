@@ -36,6 +36,10 @@
 #include "RooCmdConfig.h"
 #include "RooAbsRealLValue.h"
 #include "RooMsgService.h"
+#include "RooMultiCategory.h"
+
+#include "RooRealVar.h"
+#include "RooGlobalFunc.h"
 
 
 
@@ -76,6 +80,13 @@ RooAbsData::RooAbsData(const char *name, const char *title, const RooArgSet& var
   }
   delete iter ;
 
+  // reconnect any paramaterized ranges to internal dataset observables
+  iter = _vars.createIterator() ;
+  while((0 != (var= (RooAbsArg*)iter->Next()))) {
+    var->attachDataSet(*this) ;
+  } 
+  delete iter ;
+
   _iterator= _vars.createIterator();
   _cacheIter = _cachedVars.createIterator() ;
 }
@@ -91,6 +102,16 @@ RooAbsData::RooAbsData(const RooAbsData& other, const char* newname) :
   // Copy constructor
 
   _vars.addClone(other._vars) ;
+
+  // reconnect any paramaterized ranges to internal dataset observables
+  TIterator* iter = _vars.createIterator() ;
+  RooAbsArg* var ;
+  while((0 != (var= (RooAbsArg*)iter->Next()))) {
+    var->attachDataSet(*this) ;
+  } 
+  delete iter ;
+
+
   _iterator= _vars.createIterator();
   _cacheIter = _cachedVars.createIterator() ;
 }
@@ -361,6 +382,78 @@ RooPlot* RooAbsData::plotOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdA
 
 
 
+
+//_____________________________________________________________________________
+TH1 *RooAbsData::createHistogram(const char* varNameList, Int_t xbins, Int_t ybins, Int_t zbins) const
+{
+  // Create and fill a ROOT histogram TH1,TH2 or TH3 with the values of this dataset for the variables with given names
+  // The range of each observable that is histogrammed is always automatically calculated from the distribution in
+  // the dataset. The number of bins can be controlled using the [xyz]bins parameters. For a greater degree of control
+  // use the createHistogram() method below with named arguments
+  //
+  // The caller takes ownership of the returned histogram
+
+  // Parse list of variable names
+  char buf[1024] ;
+  strcpy(buf,varNameList) ;
+  char* varName = strtok(buf,",:") ;
+  
+  RooRealVar* xvar = (RooRealVar*) get()->find(varName) ;
+  if (!xvar) {
+    coutE(InputArguments) << "RooAbsData::createHistogram(" << GetName() << ") ERROR: dataset does not contain an observable named " << varName << endl ;
+    return 0 ;
+  }
+  varName = strtok(0,",") ; 
+  RooRealVar* yvar = varName ? (RooRealVar*) get()->find(varName) : 0 ;
+  if (varName && !yvar) {
+    coutE(InputArguments) << "RooAbsData::createHistogram(" << GetName() << ") ERROR: dataset does not contain an observable named " << varName << endl ;
+    return 0 ;
+  }
+  varName = strtok(0,",") ;  
+  RooRealVar* zvar = varName ? (RooRealVar*) get()->find(varName) : 0 ;
+  if (varName && !zvar) {
+    coutE(InputArguments) << "RooAbsData::createHistogram(" << GetName() << ") ERROR: dataset does not contain an observable named " << varName << endl ;
+    return 0 ;
+  }
+
+  // Construct list of named arguments to pass to the implementation version of createHistogram()
+
+  RooLinkedList argList ; 
+  if (xbins<=0  || !xvar->hasMax() || !xvar->hasMin() ) {
+    argList.Add(RooFit::AutoBinning(xbins==0?xvar->numBins():abs(xbins)).Clone()) ;
+  } else {
+    argList.Add(RooFit::Binning(xbins).Clone()) ;
+  }
+ 
+  if (yvar) {        
+    if (ybins<=0 || !yvar->hasMax() || !yvar->hasMin() ) {
+      argList.Add(RooFit::YVar(*yvar,RooFit::AutoBinning(ybins==0?yvar->numBins():abs(ybins))).Clone()) ;
+    } else {
+      argList.Add(RooFit::YVar(*yvar,RooFit::Binning(ybins)).Clone()) ;
+    }
+  }
+
+  if (zvar) {    
+    if (zbins<=0 || !zvar->hasMax() || !zvar->hasMin() ) {
+      argList.Add(RooFit::ZVar(*zvar,RooFit::AutoSymBinning(zbins==0?zvar->numBins():abs(zbins))).Clone()) ;
+    } else {
+      argList.Add(RooFit::ZVar(*zvar,RooFit::Binning(zbins)).Clone()) ;
+    }
+  }
+
+
+
+  // Call implementation function
+  TH1* result = createHistogram(GetName(),*xvar,argList) ;
+
+  // Delete temporary list of RooCmdArgs 
+  argList.Delete() ;
+
+  return result ;
+}
+
+
+
 //_____________________________________________________________________________
 TH1 *RooAbsData::createHistogram(const char *name, const RooAbsRealLValue& xvar,
 				 const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3, const RooCmdArg& arg4, 
@@ -373,6 +466,9 @@ TH1 *RooAbsData::createHistogram(const char *name, const RooAbsRealLValue& xvar,
   // name -- Name of the ROOT histogram
   // xvar -- Observable to be mapped on x axis of ROOT histogram
   //
+  // AutoBinning(Int_t nbins, Double_y margin)    -- Automatically calculate range with given added fractional margin, set binning to nbins
+  // AutoSymBinning(Int_t nbins, Double_y margin) -- Automatically calculate range with given added fractional margin, 
+  //                                                 with additional constraint that mean of data is in center of range, set binning to nbins
   // Binning(const char* name)                    -- Apply binning with given name to x axis of histogram
   // Binning(RooAbsBinning& binning)              -- Apply specified binning to x axis of histogram
   // Binning(int nbins, double lo, double hi)     -- Apply specified binning to x axis of histogram
@@ -380,7 +476,7 @@ TH1 *RooAbsData::createHistogram(const char *name, const RooAbsRealLValue& xvar,
   // YVar(const RooAbsRealLValue& var,...)    -- Observable to be mapped on y axis of ROOT histogram
   // ZVar(const RooAbsRealLValue& var,...)    -- Observable to be mapped on z axis of ROOT histogram
   //
-  // The YVar() and ZVar() arguments can be supplied with optional Binning() arguments to control the binning of the Y and Z axes, e.g.
+  // The YVar() and ZVar() arguments can be supplied with optional Binning() Auto(Sym)Range() arguments to control the binning of the Y and Z axes, e.g.
   // createHistogram("histo",x,Binning(-1,1,20), YVar(y,Binning(-1,1,30)), ZVar(z,Binning("zbinning")))
   //
   // The caller takes ownership of the returned histogram
@@ -391,6 +487,15 @@ TH1 *RooAbsData::createHistogram(const char *name, const RooAbsRealLValue& xvar,
   l.Add((TObject*)&arg5) ;  l.Add((TObject*)&arg6) ;  
   l.Add((TObject*)&arg7) ;  l.Add((TObject*)&arg8) ;
 
+  return createHistogram(name,xvar,l) ;
+}
+
+
+//_____________________________________________________________________________
+TH1 *RooAbsData::createHistogram(const char *name, const RooAbsRealLValue& xvar, RooLinkedList& argList) const
+{
+  // Internal method that implements histogram filling
+
   // Define configuration for this method
   RooCmdConfig pc(Form("RooAbsData::createHistogram(%s)",GetName())) ;
   pc.defineString("cutRange","CutRange",0,"",kTRUE) ;
@@ -400,7 +505,7 @@ TH1 *RooAbsData::createHistogram(const char *name, const RooAbsRealLValue& xvar,
   pc.allowUndefined() ;
   
   // Process & check varargs 
-  pc.process(l) ;
+  pc.process(argList) ;
   if (!pc.ok(kTRUE)) {
     return 0 ;
   }
@@ -418,12 +523,74 @@ TH1 *RooAbsData::createHistogram(const char *name, const RooAbsRealLValue& xvar,
     vars.add(*zvar) ;
   }
 
-  pc.stripCmdList(l,"CutRange,CutSpec") ;
-  TH1* histo = xvar.createHistogram(name,l) ;
+  pc.stripCmdList(argList,"CutRange,CutSpec") ;
+
+  // Swap Auto(Sym)RangeData with a Binning command
+  RooCmdArg* autoRD = (RooCmdArg*) argList.find("AutoRangeData") ;
+  if (autoRD) {
+    Double_t xmin,xmax ;
+    getRange((RooRealVar&)xvar,xmin,xmax,autoRD->getDouble(0),autoRD->getInt(0)) ;
+    RooCmdArg* bincmd = (RooCmdArg*) RooFit::Binning(autoRD->getInt(1),xmin,xmax).Clone() ;
+    argList.Replace(autoRD,bincmd) ;
+  }
+
+  if (yvar) {
+    RooCmdArg* autoRDY = (RooCmdArg*) ((RooCmdArg*)argList.find("YVar"))->subArgs().find("AutoRangeData") ;
+    if (autoRDY) {
+      Double_t ymin,ymax ;
+      getRange((RooRealVar&)(*yvar),ymin,ymax,autoRDY->getDouble(0),autoRDY->getInt(0)) ;
+      RooCmdArg* bincmd = (RooCmdArg*) RooFit::Binning(autoRDY->getInt(1),ymin,ymax).Clone() ;
+      ((RooCmdArg*)argList.find("YVar"))->subArgs().Replace(autoRDY,bincmd) ;
+    }
+  }
+
+  if (zvar) {
+    RooCmdArg* autoRDZ = (RooCmdArg*) ((RooCmdArg*)argList.find("ZVar"))->subArgs().find("AutoRangeData") ;
+    if (autoRDZ) {
+      Double_t zmin,zmax ;
+      getRange((RooRealVar&)(*zvar),zmin,zmax,autoRDZ->getDouble(0),autoRDZ->getInt(0)) ;
+      RooCmdArg* bincmd = (RooCmdArg*) RooFit::Binning(autoRDZ->getInt(1),zmin,zmax).Clone() ;
+      ((RooCmdArg*)argList.find("ZVar"))->subArgs().Replace(autoRDZ,bincmd) ;
+    }
+  }
+
+
+  TH1* histo = xvar.createHistogram(name,argList) ;
   fillHistogram(histo,vars,cutSpec,cutRange) ;
 
   return histo ;
 }
+
+
+
+
+//_____________________________________________________________________________
+Roo1DTable* RooAbsData::table(const RooArgSet& catSet, const char* cuts, const char* opts) const 
+{
+  // Construct table for product of categories in catSet
+  RooArgSet catSet2 ;
+
+  string prodName("(") ;
+  TIterator* iter = catSet.createIterator() ;
+  RooAbsArg* arg ;
+  while((arg=(RooAbsArg*)iter->Next())) {
+    if (dynamic_cast<RooAbsCategory*>(arg)) {
+      catSet2.add(*arg) ;
+      if (prodName.length()>1) {
+	prodName += " x " ;
+      }
+      prodName += arg->GetName() ;
+    } else {
+      coutW(InputArguments) << "RooAbsData::table(" << GetName() << ") non-RooAbsCategory input argument " << arg->GetName() << " ignored" << endl ;
+    }
+  }
+  prodName += ")" ;
+  delete iter ;
+
+  RooMultiCategory tmp(prodName.c_str(),prodName.c_str(),catSet2) ;
+  return table(tmp,cuts,opts) ;
+}
+
 
 
 

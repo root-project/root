@@ -191,7 +191,7 @@ Bool_t RooAbsCategory::isValidIndex(Int_t index) const
 {
   // Check if state with given index is defined
 
-  return lookupType(index)?kTRUE:kFALSE ;
+  return lookupType(index,kFALSE)?kTRUE:kFALSE ;
 }
 
 

@@ -43,6 +43,7 @@ using namespace std ;
 #include "RooGlobalFunc.h"
 #include "RooRealVar.h"
 #include "RooChangeTracker.h"
+#include "RooExpensiveObjectCache.h"
 
 ClassImp(RooAbsCachedPdf) 
 
@@ -94,7 +95,7 @@ Double_t RooAbsCachedPdf::getVal(const RooArgSet* nset) const
 
   // Calculate current unnormalized value of object
   PdfCacheElem* cache = getCache(nset) ;
-  
+
   Double_t value = cache->pdf()->getVal(nset) ;  
 
   _value = value ;    
@@ -154,10 +155,12 @@ RooAbsCachedPdf::PdfCacheElem* RooAbsCachedPdf::getCache(const RooArgSet* nset, 
   // Check if this configuration was created becfore
   Int_t sterileIdx(-1) ;
   PdfCacheElem* cache = (PdfCacheElem*) _cacheMgr.getObj(nset,0,&sterileIdx,0) ;
+
+  // Check if we have a cache histogram in the global expensive object cache
   if (cache) {
     if (cache->paramTracker()->hasChanged(kTRUE) && (recalculate || !cache->pdf()->haveUnitNorm()) ) {
-      coutI(Eval) << "RooAbsCachedPdf::getCache(" << GetName() << ") cache " << cache << " pdf " 
-		  << cache->pdf()->GetName() << " requires recalculation as parameters changed" << endl ;
+      cxcoutD(Eval) << "RooAbsCachedPdf::getCache(" << GetName() << ") cache " << cache << " pdf " 
+		    << cache->pdf()->GetName() << " requires recalculation as parameters changed" << endl ;     
       fillCacheObject(*cache) ;  
       cache->pdf()->setValueDirty() ;
     }
@@ -166,14 +169,34 @@ RooAbsCachedPdf::PdfCacheElem* RooAbsCachedPdf::getCache(const RooArgSet* nset, 
 
   // Create and fill cache
   cache = createCache(nset) ; 
-  fillCacheObject(*cache) ;  
-  
 
+  // Check if we have contents registered already in global expensive object cache 
+  RooDataHist* htmp = (RooDataHist*) expensiveObjectCache().retrieveObject(cache->hist()->GetName(),RooDataHist::Class(),cache->paramTracker()->parameters()) ;
+
+  if (htmp) {    
+
+    cache->hist()->reset() ;
+    cache->hist()->add(*htmp) ;
+
+  } else {
+
+    fillCacheObject(*cache) ;  
+
+    RooDataHist* eoclone = new RooDataHist(*cache->hist()) ;
+    eoclone->removeFromDir(eoclone) ;
+    expensiveObjectCache().registerObject(GetName(),cache->hist()->GetName(),*eoclone,cache->paramTracker()->parameters()) ;
+  } 
+
+  
   // Store this cache configuration
   Int_t code = _cacheMgr.setObj(nset,0,((RooAbsCacheElement*)cache),0) ;
 
   coutI(Caching) << "RooAbsCachedPdf::getCache(" << GetName() << ") creating new cache " << cache << " with pdf "
-		 << cache->pdf()->GetName() << " for nset " << (nset?*nset:RooArgSet()) << " with code " << code << endl ;  
+		 << cache->pdf()->GetName() << " for nset " << (nset?*nset:RooArgSet()) << " with code " << code ;
+  if (htmp) {
+    ccoutI(Caching) << " from preexisting content." ;
+  }
+  ccoutI(Caching) << endl ;
   
   return cache ;
 }
@@ -330,8 +353,10 @@ void RooAbsCachedPdf::PdfCacheElem::printCompactTreeHook(ostream& os, const char
   os << Form("[%d] Configuration for observables ",curElem) << _nset << endl ;
   indent2 += Form("[%d] ",curElem) ;
   _pdf->printCompactTree(os,indent2) ;
-  os << Form("[%d] Norm ",curElem) ;
-  _norm->printStream(os,kName|kArgs,kSingleLine) ;
+  if (_norm) {
+    os << Form("[%d] Norm ",curElem) ;
+    _norm->printStream(os,kName|kArgs,kSingleLine) ;
+  }
   
   if (curElem==maxElem) {
     os << indent << "--- RooAbsCachedPdf end cache --- " << endl ;

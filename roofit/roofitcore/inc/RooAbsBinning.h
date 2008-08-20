@@ -40,6 +40,7 @@ public:
   }
   virtual Int_t numBoundaries() const = 0 ;
   virtual Int_t binNumber(Double_t x) const = 0 ;
+  virtual Int_t rawBinNumber(Double_t x) const { return binNumber(x) ; }
   virtual Double_t binCenter(Int_t bin) const = 0 ;
   virtual Double_t binWidth(Int_t bin) const = 0 ;
   virtual Double_t binLow(Int_t bin) const = 0 ;

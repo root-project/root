@@ -140,7 +140,9 @@ void RooAbsCategoryLValue::copyCache(const RooAbsArg* source)
   // calling syncCache() on the source.
 
   RooAbsCategory::copyCache(source) ;
-  setIndex(_value.getVal()) ; // force back-propagation
+  if (isValid(_value)) {
+    setIndex(_value.getVal()) ; // force back-propagation
+  }
 }
 
 

@@ -311,8 +311,8 @@ Bool_t RooRandomizeParamMCSModule::initializeInstance()
   }
   
   // Loop over all gaussian smearing set of parameters
-  std::list<UniParamSet>::iterator ugiter ;
-  for (ugiter= _unifParamSets.begin() ; ugiter!= _unifParamSets.end() ; ++ugiter) {
+  std::list<GausParamSet>::iterator ugiter ;
+  for (ugiter= _gausParamSets.begin() ; ugiter!= _gausParamSets.end() ; ++ugiter) {
 
     // Check that all listed variables are actual generator model parameters
     RooArgSet actualPSet ;

@@ -63,6 +63,7 @@
 #include "RooNameReg.h"
 #include "RooMsgService.h"
 #include "RooRecursiveFraction.h"
+#include "RooGlobalFunc.h"
 
 #include "Riostream.h"
 
@@ -189,6 +190,8 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& inPd
 
   RooArgList partinCoefList ;
 
+  Bool_t first(kTRUE) ;
+
   while((coef = (RooAbsPdf*)coefIter->Next())) {
     pdf = (RooAbsPdf*) pdfIter->Next() ;
     if (!pdf) {
@@ -206,11 +209,24 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& inPd
     }
     _pdfList.add(*pdf) ;
 
+    // Process recursive fraction mode separately
     if (recursiveFractions) {
       partinCoefList.add(*coef) ;
-      RooAbsReal* rfrac = new RooRecursiveFraction(Form("%s_recursive_fraction_%s",GetName(),pdf->GetName()),"Recursive Fraction",partinCoefList) ;
-      addOwnedComponents(*rfrac) ;
-      _coefList.add(*rfrac) ;
+      if (first) {	
+
+	// The first fraction is the first plain fraction
+	first = kFALSE ;
+	_coefList.add(*coef) ;
+
+      } else {
+
+	// The i-th recursive fraction = (1-f1)*(1-f2)*...(fi) and is calculated from the list (f1,...,fi) by RooRecursiveFraction)
+	RooAbsReal* rfrac = new RooRecursiveFraction(Form("%s_recursive_fraction_%s",GetName(),pdf->GetName()),"Recursive Fraction",partinCoefList) ;
+	addOwnedComponents(*rfrac) ;
+	_coefList.add(*rfrac) ;      	
+
+      }
+
     } else {
       _coefList.add(*coef) ;    
     }
@@ -223,6 +239,20 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& inPd
       assert(0) ;
     }
     _pdfList.add(*pdf) ;  
+
+    // Process recursive fractions mode
+    if (recursiveFractions) {
+
+      // The last recursive fraction = (1-f1)*(1-f2)*...(1-fN) and is calculated from the list (f1,...,fN,1) by RooRecursiveFraction)
+      partinCoefList.add(RooFit::RooConst(1)) ;
+      RooAbsReal* rfrac = new RooRecursiveFraction(Form("%s_recursive_fraction_%s",GetName(),pdf->GetName()),"Recursive Fraction",partinCoefList) ;
+      addOwnedComponents(*rfrac) ;
+      _coefList.add(*rfrac) ;      	
+
+      // In recursive mode we always have Ncoef=Npdf
+      _haveLastCoef=kTRUE ;
+    }
+
   } else {
     _haveLastCoef=kTRUE ;
   }

@@ -93,6 +93,7 @@ RooMsgService::RooMsgService()
   _silentMode = kFALSE ;
   _showPid = kFALSE ;
   _globMinLevel = DEBUG ;
+  _lastMsgLevel = DEBUG ;
 
   _devnull = new ofstream("/dev/null") ;
 
@@ -121,7 +122,7 @@ RooMsgService::RooMsgService()
   gMsgService = this ;
 
   addStream(RooMsgService::PROGRESS) ;
-  addStream(RooMsgService::INFO,Topic(RooMsgService::Generation|RooMsgService::Plotting|RooMsgService::Fitting|RooMsgService::Optimization|RooMsgService::Minimization|RooMsgService::Caching|RooMsgService::ObjectHandling|RooMsgService::NumIntegration)) ;
+  addStream(RooMsgService::INFO,Topic(RooMsgService::Eval|RooMsgService::Plotting|RooMsgService::Fitting|RooMsgService::Minimization|RooMsgService::Caching|RooMsgService::ObjectHandling|RooMsgService::NumIntegration|RooMsgService::InputArguments|RooMsgService::DataHandling)) ;
 
 
 }
@@ -258,6 +259,8 @@ Int_t RooMsgService::addStream(MsgLevel level, const RooCmdArg& arg1, const RooC
       }
     }
     _files["outFile"] = os2 ;
+
+    newStream.os = os2 ;
         
   } else {
 
@@ -448,6 +451,12 @@ ostream& RooMsgService::log(const RooAbsArg* self, MsgLevel level, MsgTopic topi
 
   // Flush any previous messages
   (*_streams[as].os).flush() ;
+
+  // Insert an endl if we switch from progress to another level
+  if (_lastMsgLevel==PROGRESS && level!=PROGRESS) {
+    (*_streams[as].os) << endl ;
+  }
+  _lastMsgLevel=level ;
     
   if (_streams[as].prefix && !skipPrefix) {
     if (_showPid) {

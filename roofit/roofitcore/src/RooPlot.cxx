@@ -592,8 +592,9 @@ void RooPlot::printMultiline(ostream& os, Int_t /*content*/, Bool_t verbose, TSt
   if(verbose) {
     _iterator->Reset();
     TObject *obj = 0;
+    Int_t i=0 ;
     while((obj= _iterator->Next())) {
-      os << deeper << "(Options=\"" << _iterator->GetOption() << "\") ";
+      os << deeper << "[" << i++ << "] (Options=\"" << _iterator->GetOption() << "\") ";
       // Is this a printable object?      
       if(obj->IsA()->InheritsFrom(RooPrintable::Class())) {
 	RooPrintable* po = dynamic_cast<RooPrintable*>(obj) ;

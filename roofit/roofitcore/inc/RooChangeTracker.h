@@ -33,12 +33,9 @@ public:
   RooChangeTracker(const RooChangeTracker& other, const char* name = 0);
   virtual TObject* clone(const char* newname) const { return new RooChangeTracker(*this, newname); }
 
-  virtual Double_t getVal(const RooArgSet* /*set*/=0) const { 
-    // The change tracker is meta object and has no sensible value, so return always zero
-    return 0 ; 
-  }
-
   Bool_t hasChanged(Bool_t clearState) ;
+
+  RooArgSet parameters() const ;
 
 
 protected:
@@ -52,7 +49,7 @@ protected:
   mutable TIterator* _realSetIter ;     //! do not persist
   mutable TIterator* _catSetIter ;     //! do not persist
 
-  Double_t evaluate() const;
+  Double_t evaluate() const { return 1 ; }
 
   ClassDef(RooChangeTracker,1) // Meta object that tracks changes in set of other arguments
 };

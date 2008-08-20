@@ -113,6 +113,9 @@
 #include "RooGenContext.h"
 #include "RooConvGenContext.h"
 #include "RooBinning.h"
+#include "RooLinearVar.h"
+#include "RooCustomizer.h"
+#include "RooGlobalFunc.h"
 
 using namespace std ;
 
@@ -126,11 +129,16 @@ RooFFTConvPdf::RooFFTConvPdf(const char *name, const char *title, RooRealVar& co
   _x("x","Convolution Variable",this,convVar),
   _pdf1("pdf1","pdf1",this,pdf1),
   _pdf2("pdf2","pdf2",this,pdf2),
-  _bufFrac(0.1)
+  _bufFrac(0.1),
+  _shift1(0),
+  _shift2(0)
  { 
    // Constructor for convolution of pdf1 (x) pdf2 in observable convVar. The binning used for the FFT sampling is controlled
    // by the binning named "cache" in the convolution observable. The resulting FFT convolved histogram is interpolated at
    // order 'ipOrder' A minimum binning of 1000 bins is recommended.
+   
+   _shift2 = (convVar.getMax()-convVar.getMin())/2 ;
+   
  } 
 
 
@@ -141,7 +149,9 @@ RooFFTConvPdf::RooFFTConvPdf(const RooFFTConvPdf& other, const char* name) :
   _x("x",this,other._x),
   _pdf1("pdf1",this,other._pdf1),
   _pdf2("pdf2",this,other._pdf2),
-  _bufFrac(other._bufFrac)
+  _bufFrac(other._bufFrac),
+  _shift1(other._shift1),
+  _shift2(other._shift2)
  { 
    // Copy constructor
  } 
@@ -186,9 +196,76 @@ RooFFTConvPdf::FFTCacheElem::FFTCacheElem(const RooFFTConvPdf& self, const RooAr
   PdfCacheElem(self,nsetIn),
   fftr2c1(0),fftr2c2(0),fftc2r(0) 
 {
+
+  // Clone input pdf and attach to dataset
+  RooAbsPdf* clonePdf1 = (RooAbsPdf*) self._pdf1.arg().cloneTree() ;
+  RooAbsPdf* clonePdf2 = (RooAbsPdf*) self._pdf2.arg().cloneTree() ;
+  clonePdf1->attachDataSet(*hist()) ;
+  clonePdf2->attachDataSet(*hist()) ;
+
+  // Shift observable
+  RooRealVar* convObs = (RooRealVar*) hist()->get()->find(self._x.arg().GetName()) ;
+  
+  if (self._shift1!=0) {
+    RooLinearVar* shiftObs1 = new RooLinearVar(Form("%s_shifted_FFTBuffer1",convObs->GetName()),"shiftObs1",*convObs,RooFit::RooConst(1),RooFit::RooConst(-1*self._shift1)) ;
+
+    RooArgSet clonedBranches1 ;
+    RooCustomizer cust(*clonePdf1,"fft") ;
+    cust.replaceArg(*convObs,*shiftObs1) ;  
+    cust.setCloneBranchSet(clonedBranches1) ;
+    cust.setOwning(kFALSE) ;
+
+    pdf1Clone = (RooAbsPdf*) cust.build() ;
+    pdf1Clone->addOwnedComponents(clonedBranches1) ;
+    pdf1Clone->addOwnedComponents(RooArgSet(*clonePdf1,*shiftObs1)) ;
+
+  } else {
+    pdf1Clone = clonePdf1 ;
+  }
+
+  if (self._shift2!=0) {
+    RooLinearVar* shiftObs2 = new RooLinearVar(Form("%s_shifted_FFTBuffer2",convObs->GetName()),"shiftObs2",*convObs,RooFit::RooConst(1),RooFit::RooConst(-1*self._shift2)) ;
+
+    RooArgSet clonedBranches2 ;
+    RooCustomizer cust(*clonePdf2,"fft") ;
+    cust.replaceArg(*convObs,*shiftObs2) ;  
+    cust.setCloneBranchSet(clonedBranches2) ;
+    cust.setOwning(kFALSE) ;
+
+    pdf2Clone = (RooAbsPdf*) cust.build() ;
+    pdf2Clone->addOwnedComponents(clonedBranches2) ;
+    pdf2Clone->addOwnedComponents(RooArgSet(*clonePdf2,*shiftObs2)) ;
+
+  } else {
+    pdf2Clone = clonePdf2 ;
+  }
+
+
+  // Attach cloned pdf to all original parameters of self
+  RooArgSet* fftParams = self.getParameters(*convObs) ;
+  pdf1Clone->recursiveRedirectServers(*fftParams) ;
+  pdf2Clone->recursiveRedirectServers(*fftParams) ;
+  delete fftParams ;
+
+  // Deactivate dirty state propagation on datahist observables
+  // and set all nodes on both pdfs to operMode AlwaysDirty
+  hist()->setDirtyProp(kFALSE) ;  
+  convObs->setOperMode(ADirty,kTRUE) ;
+
 } 
 
 
+//_____________________________________________________________________________
+RooArgList RooFFTConvPdf::FFTCacheElem::containedArgs(Action a) 
+{
+  // Returns all RooAbsArg objects contained in the cache element
+  RooArgList ret(PdfCacheElem::containedArgs(a)) ;
+
+  ret.add(*pdf1Clone) ;
+  ret.add(*pdf2Clone) ;
+
+  return ret ;
+}
 
 
 //_____________________________________________________________________________
@@ -206,9 +283,13 @@ RooFFTConvPdf::FFTCacheElem::~FFTCacheElem()
 void RooFFTConvPdf::fillCacheObject(RooAbsCachedPdf::PdfCacheElem& cache) const 
 {
   // Fill the contents of the cache the FFT convolution output
-
   RooDataHist& cacheHist = *cache.hist() ;
   
+
+  ((FFTCacheElem&)cache).pdf1Clone->setOperMode(ADirty,kTRUE) ;
+  ((FFTCacheElem&)cache).pdf2Clone->setOperMode(ADirty,kTRUE) ;
+
+
   // Determine if there other observables than the convolution observable in the cache
   RooArgSet otherObs ;
   RooArgSet(*cacheHist.get()).snapshot(otherObs) ;
@@ -282,9 +363,6 @@ void RooFFTConvPdf::fillCacheSlice(FFTCacheElem& aux, const RooArgSet& slicePos)
   // Extract histogram that is the basis of the RooHistPdf
   RooDataHist& cacheHist = *aux.hist() ;
 
-  RooAbsPdf& pdf1 = (RooAbsPdf&)_pdf1.arg() ;
-  RooAbsPdf& pdf2 = (RooAbsPdf&)_pdf2.arg() ;
-  
   // Sample array of input points from both pdfs 
   // Note that returned arrays have optional buffers zones below and above range ends
   // to reduce cyclical effects and have been cyclically rotated so that bin containing
@@ -297,8 +375,8 @@ void RooFFTConvPdf::fillCacheSlice(FFTCacheElem& aux, const RooArgSet& slicePos)
   // 
 
   Int_t N,N2 ;
-  Double_t* input1 = scanPdf((RooRealVar&)_x.arg(),pdf1,cacheHist,slicePos,N,N2) ;
-  Double_t* input2 = scanPdf((RooRealVar&)_x.arg(),pdf2,cacheHist,slicePos,N,N2) ;
+  Double_t* input1 = scanPdf((RooRealVar&)_x.arg(),*aux.pdf1Clone,cacheHist,slicePos,N,N2,_shift1) ;
+  Double_t* input2 = scanPdf((RooRealVar&)_x.arg(),*aux.pdf2Clone,cacheHist,slicePos,N,N2,_shift2) ;
 
   // Retrieve previously defined FFT transformation plans
   if (!aux.fftr2c1) {
@@ -362,22 +440,12 @@ void RooFFTConvPdf::fillCacheSlice(FFTCacheElem& aux, const RooArgSet& slicePos)
 
 
 //_____________________________________________________________________________
-Double_t*  RooFFTConvPdf::scanPdf(RooRealVar& obs, RooAbsPdf& pdf, const RooDataHist& hist, const RooArgSet& slicePos, Int_t& N, Int_t& N2) const
+Double_t*  RooFFTConvPdf::scanPdf(RooRealVar& obs, RooAbsPdf& pdf, const RooDataHist& hist, const RooArgSet& slicePos, Int_t& N, Int_t& N2, Double_t shift) const
 {
   // Scan the values of 'pdf' in observable 'obs' using the bin values stored in 'hist' at slice position 'slicePos'
   // N is filled with the number of bins defined in hist, N2 is filled with N plus the number of buffer bins
   // The return value is an array of doubles of length N2 with the sampled values. The caller takes ownership
   // of the array
-
-  // Clone input pdf and attach to dataset
-  RooArgSet* cloneSet = (RooArgSet*) RooArgSet(pdf).snapshot(kTRUE) ;
-  RooAbsPdf* theClone = (RooAbsPdf*) cloneSet->find(pdf.GetName()) ;
-  theClone->attachDataSet(hist) ;
-
-  // Store current range of convolution observable 
-  RooArgSet* tmpSet = theClone->getObservables(obs) ;
-  RooRealVar* histObs = (RooRealVar*) tmpSet->first() ;
-  delete tmpSet ;
 
   RooRealVar* histX = (RooRealVar*) hist.get()->find(obs.GetName()) ;
   N = histX->numBins(binningName()) ;
@@ -390,9 +458,18 @@ Double_t*  RooFFTConvPdf::scanPdf(RooRealVar& obs, RooAbsPdf& pdf, const RooData
   Double_t* array = new Double_t[N2] ;
   
   // Find bin ID that contains zero value
+  Double_t shift2 = shift  ;
   Int_t zeroBin = -1 ;
-  if (histX->getMin()<0 && histX->getMax()>0) {
-    zeroBin = histX->getBinning(binningName()).binNumber(0.)+1 ;
+
+  if (histX->getMin()<shift2 && histX->getMax()>shift2) {
+
+    // Account for location of buffer
+    if (histX->getMin()<0 && histX->getMax()>0) {
+      zeroBin = histX->getBinning(binningName()).binNumber(shift2)+1 ;
+    } else {
+      zeroBin = histX->getBinning(binningName()).binNumber(shift2 + (histX->getMax()-histX->getMin())*bufferFraction()/2  )+1 ;
+    }
+    
   }
 
   // First scan hist into temp array 
@@ -401,7 +478,7 @@ Double_t*  RooFFTConvPdf::scanPdf(RooRealVar& obs, RooAbsPdf& pdf, const RooData
   Int_t k=0 ;
   RooAbsArg* arg ;
   while((arg=(RooAbsArg*)iter->Next())) {
-    tmp[k++] = theClone->getVal(hist.get()) ;
+    tmp[k++] = pdf.getVal(hist.get()) ;
   }
   delete iter ;
 
@@ -443,14 +520,10 @@ Double_t*  RooFFTConvPdf::scanPdf(RooRealVar& obs, RooAbsPdf& pdf, const RooData
     } else {
       array[i] = valJ ;
     }
-
   }
 
-  // Restore the reference ranges as default range in the observable
-  histObs->setRange(histObs->getMin("FFTRef"),histObs->getMax("FFTRef")) ;
-  
+
   // Cleanup 
-  delete cloneSet ;
   delete[] tmp ;
   return array ;
 }

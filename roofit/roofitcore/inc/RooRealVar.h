@@ -48,12 +48,12 @@ public:
   virtual Double_t getVal(const RooArgSet* nset=0) const ;
   virtual void setVal(Double_t value);
   inline Double_t getError() const { return _error>=0?_error:0. ; }
-  inline Bool_t hasError() const { return (_error>=0) ; }
+  inline Bool_t hasError(Bool_t allowZero=kTRUE) const { return allowZero ? (_error>=0) : (_error>0) ; }
   inline void setError(Double_t value) { _error= value ; }
   inline void removeError() { _error = -1 ; }
   inline Double_t getAsymErrorLo() const { return _asymErrLo<=0?_asymErrLo:0. ; }
   inline Double_t getAsymErrorHi() const { return _asymErrHi>=0?_asymErrHi:0. ; }
-  inline Bool_t hasAsymError() const { return (_asymErrHi>=0 && _asymErrLo<=0) ; }
+  inline Bool_t hasAsymError(Bool_t allowZero=kTRUE) const { return allowZero ? ((_asymErrHi>=0 && _asymErrLo<=0)) :  ((_asymErrHi>0 && _asymErrLo<0)) ; }
   inline void removeAsymError() { _asymErrLo = 1 ; _asymErrHi = -1 ; }
   inline void setAsymError(Double_t lo, Double_t hi) { _asymErrLo = lo ; _asymErrHi = hi ; }
   RooErrorVar* errorVar() const ;
@@ -114,6 +114,8 @@ public:
   static Int_t  _printSigDigits ;
 
   virtual void setVal(Double_t value, const char* rangeName) ;
+  virtual void setValFast(Double_t value) { _value = value ; setValueDirty() ; }
+
 
   virtual Double_t evaluate() const { return _value ; } // dummy because we overloaded getVal()
   virtual void copyCache(const RooAbsArg* source) ;

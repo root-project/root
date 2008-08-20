@@ -218,11 +218,14 @@ RooChangeTracker::~RooChangeTracker()
 
 
 
-
 //_____________________________________________________________________________
-Double_t RooChangeTracker::evaluate() const 
+RooArgSet RooChangeTracker::parameters() const 
 {
-  // Value of change tracker is always 1
-  return 1 ;
+  RooArgSet ret ;
+  ret.add(_realSet) ;
+  ret.add(_catSet) ;
+  return ret ;
 }
+
+
 

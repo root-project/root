@@ -153,6 +153,22 @@ RooArgSet::RooArgSet(const RooArgList& list) :
 
 
 //_____________________________________________________________________________
+RooArgSet::RooArgSet(const RooArgList& list, const RooAbsArg* var1) :
+  RooAbsCollection(list.GetName())
+{
+  // Constructor from a RooArgList. If the list contains multiple
+  // objects with the same name, only the first is store in the set.
+  // Warning messages will be printed for dropped items.
+
+  if (var1) {
+    add(*var1,kTRUE) ;
+  }
+  add(list,kTRUE) ; // verbose to catch duplicate errors
+}
+
+
+
+//_____________________________________________________________________________
 RooArgSet::RooArgSet(const char *name) :
   RooAbsCollection(name)
 {

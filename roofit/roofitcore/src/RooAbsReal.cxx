@@ -81,13 +81,14 @@ ClassImp(RooAbsReal)
 ;
 
 Bool_t RooAbsReal::_cacheCheck(kFALSE) ;
+Bool_t RooAbsReal::_globalSelectComp = kFALSE ;
 
 Bool_t RooAbsReal::_doLogEvalError ;
 map<const RooAbsArg*,pair<string,list<RooAbsReal::EvalError> > > RooAbsReal::_evalErrorList ;
 
 
 //_____________________________________________________________________________
-RooAbsReal::RooAbsReal() : _specIntegratorConfig(0), _treeVar(kFALSE)
+RooAbsReal::RooAbsReal() : _specIntegratorConfig(0), _treeVar(kFALSE), _selectComp(kTRUE)
 {
   // Default constructor
 }
@@ -97,7 +98,7 @@ RooAbsReal::RooAbsReal() : _specIntegratorConfig(0), _treeVar(kFALSE)
 //_____________________________________________________________________________
 RooAbsReal::RooAbsReal(const char *name, const char *title, const char *unit) : 
   RooAbsArg(name,title), _plotMin(0), _plotMax(0), _plotBins(100), 
-  _value(0),  _unit(unit), _forceNumInt(kFALSE), _specIntegratorConfig(0), _treeVar(kFALSE)
+  _value(0),  _unit(unit), _forceNumInt(kFALSE), _specIntegratorConfig(0), _treeVar(kFALSE), _selectComp(kTRUE)
 {
   // Constructor with unit label
   setValueDirty() ;
@@ -111,7 +112,7 @@ RooAbsReal::RooAbsReal(const char *name, const char *title, const char *unit) :
 RooAbsReal::RooAbsReal(const char *name, const char *title, Double_t inMinVal,
 		       Double_t inMaxVal, const char *unit) :
   RooAbsArg(name,title), _plotMin(inMinVal), _plotMax(inMaxVal), _plotBins(100),
-  _value(0), _unit(unit), _forceNumInt(kFALSE), _specIntegratorConfig(0), _treeVar(kFALSE)
+  _value(0), _unit(unit), _forceNumInt(kFALSE), _specIntegratorConfig(0), _treeVar(kFALSE), _selectComp(kTRUE)
 {
   // Constructor with plot range and unit label
   setValueDirty() ;
@@ -124,7 +125,8 @@ RooAbsReal::RooAbsReal(const char *name, const char *title, Double_t inMinVal,
 //_____________________________________________________________________________
 RooAbsReal::RooAbsReal(const RooAbsReal& other, const char* name) : 
   RooAbsArg(other,name), _plotMin(other._plotMin), _plotMax(other._plotMax), 
-  _plotBins(other._plotBins), _value(other._value), _unit(other._unit), _forceNumInt(other._forceNumInt), _treeVar(other._treeVar)
+  _plotBins(other._plotBins), _value(other._value), _unit(other._unit), _forceNumInt(other._forceNumInt), 
+  _treeVar(other._treeVar), _selectComp(other._selectComp)
 {
   // Copy constructor
 
@@ -1038,6 +1040,66 @@ RooDataHist* RooAbsReal::fillDataHist(RooDataHist *hist, const RooArgSet* normSe
 
 
 //_____________________________________________________________________________
+TH1* RooAbsReal::createHistogram(const char* varNameList, Int_t xbins, Int_t ybins, Int_t zbins) const 
+{
+  // Create and fill a ROOT histogram TH1,TH2 or TH3 with the values of this function for the variables with given names
+  // The number of bins can be controlled using the [xyz]bins parameters. For a greater degree of control
+  // use the createHistogram() method below with named arguments
+  //
+  // The caller takes ownership of the returned histogram
+
+  // Parse list of variable names
+  char buf[1024] ;
+  strcpy(buf,varNameList) ;
+  char* varName = strtok(buf,",:") ;
+
+  RooArgSet* vars = getVariables() ;
+  
+  RooRealVar* xvar = (RooRealVar*) vars->find(varName) ;
+  varName = strtok(0,",") ;
+  RooRealVar* yvar = varName ? (RooRealVar*) vars->find(varName) : 0 ;
+  varName = strtok(0,",") ;
+  RooRealVar* zvar = varName ? (RooRealVar*) vars->find(varName) : 0 ;
+
+  delete vars ;
+
+  // Construct list of named arguments to pass to the implementation version of createHistogram()
+
+  RooLinkedList argList ; 
+  if (xbins>0) {
+    argList.Add(RooFit::Binning(xbins).Clone()) ;
+  }
+ 
+  if (yvar) {        
+    if (ybins>0) {
+      argList.Add(RooFit::YVar(*yvar,RooFit::Binning(ybins)).Clone()) ;
+    } else {
+      argList.Add(RooFit::YVar(*yvar).Clone()) ;
+    }
+  }
+
+
+  if (zvar) {        
+    if (zbins>0) {
+      argList.Add(RooFit::ZVar(*zvar,RooFit::Binning(zbins)).Clone()) ;
+    } else {
+      argList.Add(RooFit::ZVar(*zvar).Clone()) ;
+    }
+  }
+
+
+  // Call implementation function
+  TH1* result = createHistogram(GetName(),*xvar,argList) ;
+
+  // Delete temporary list of RooCmdArgs 
+  argList.Delete() ;
+
+  return result ;
+}
+
+
+
+//_____________________________________________________________________________
 TH1 *RooAbsReal::createHistogram(const char *name, const RooAbsRealLValue& xvar,
 				 const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3, const RooCmdArg& arg4, 
 				 const RooCmdArg& arg5, const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8) const 
@@ -1070,6 +1132,16 @@ TH1 *RooAbsReal::createHistogram(const char *name, const RooAbsRealLValue& xvar,
   l.Add((TObject*)&arg5) ;  l.Add((TObject*)&arg6) ;  
   l.Add((TObject*)&arg7) ;  l.Add((TObject*)&arg8) ;
 
+  return createHistogram(name,xvar,l) ;
+}
+
+
+//_____________________________________________________________________________
+TH1* RooAbsReal::createHistogram(const char *name, const RooAbsRealLValue& xvar, RooLinkedList& argList) const 
+{
+  // Internal method implementing createHistogram
+
+
   // Define configuration for this method
   RooCmdConfig pc(Form("RooAbsReal::createHistogram(%s)",GetName())) ;
   pc.defineInt("scaling","Scaling",0,1) ;
@@ -1079,7 +1151,7 @@ TH1 *RooAbsReal::createHistogram(const char *name, const RooAbsRealLValue& xvar,
   pc.allowUndefined() ;
 
   // Process & check varargs 
-  pc.process(l) ;
+  pc.process(argList) ;
   if (!pc.ok(kTRUE)) {
     return 0 ;
   }
@@ -1100,9 +1172,9 @@ TH1 *RooAbsReal::createHistogram(const char *name, const RooAbsRealLValue& xvar,
 
   // Strip any 'Scaling' commands from list forwarded to createHistogram
   RooLinkedList l2 ;
-  for (Int_t i=0 ; i<8 ; i++) {
-    if (TString(l.At(i)->GetName()).CompareTo("Scaling")) {
-      l2.Add(l.At(i)) ;
+  for (Int_t i=0 ; i<argList.GetSize() ; i++) {
+    if (TString(argList.At(i)->GetName()).CompareTo("Scaling")) {
+      l2.Add(argList.At(i)) ;
     }
   }
 
@@ -1137,46 +1209,78 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdA
   // ------------------
   // Slice(const RooArgSet& set)     -- Override default projection behaviour by omittting observables listed 
   //                                    in set from the projection, resulting a 'slice' plot. Slicing is usually
-  //                                    only sensible in discrete observables
+  //                                    only sensible in discrete observables. The slice is position at the 'current'
+  //                                    value of the observable objects
+  //
+  // Slice(RooCategory& cat,         -- Override default projection behaviour by omittting specified category 
+  //       const char* label)           observable from the projection, resulting in a 'slice' plot. The slice is positioned
+  //                                    at the given label value. Multiple Slice() commands can be given to specify slices
+  //                                    in multiple observables
+  //
   // Project(const RooArgSet& set)   -- Override default projection behaviour by projecting over observables
   //                                    given in set and complete ignoring the default projection behavior. Advanced use only.
+  //
   // ProjWData(const RooAbsData& d)  -- Override default projection _technique_ (integration). For observables present in given dataset
   //                                    projection of PDF is achieved by constructing an average over all observable values in given set.
   //                                    Consult RooFit plotting tutorial for further explanation of meaning & use of this technique
+  //
   // ProjWData(const RooArgSet& s,   -- As above but only consider subset 's' of observables in dataset 'd' for projection through data averaging
   //           const RooAbsData& d)
+  //
   // ProjectionRange(const char* rn) -- Override default range of projection integrals to a different range speficied by given range name.
   //                                    This technique allows you to project a finite width slice in a real-valued observable
+  //
   // NumCPU(Int_t ncpu)              -- Number of CPUs to use simultaneously to calculate data-weighted projections (only in combination with ProjWData)
-  // 
+  //
+  //
   // Misc content control
   // --------------------
+  // PrintEvalErrors(Int_t numErr)   -- Control number of p.d.f evaluation errors printed per curve. A negative
+  //                                    value suppress output completely, a zero value will only print the error count per p.d.f component,
+  //                                    a positive value is will print details of each error up to numErr messages per p.d.f component.
+  // 
+  // EvalErrorValue(Double_t value)  -- Set curve points at which (pdf) evaluation error occur to specified value. By default the 
+  //                                    function value is plotted.
+  //
   // Normalization(Double_t scale,   -- Adjust normalization by given scale factor. Interpretation of number depends on code: Relative:
   //                ScaleType code)     relative adjustment factor, NumEvent: scale to match given number of events.
+  //
   // Name(const chat* name)          -- Give curve specified name in frame. Useful if curve is to be referenced later
+  //
   // Asymmetry(const RooCategory& c) -- Show the asymmetry of the PDF in given two-state category [F(+)-F(-)] / [F(+)+F(-)] rather than
   //                                    the PDF projection. Category must have two states with indices -1 and +1 or three states with
   //                                    indeces -1,0 and +1.
+  //
   // ShiftToZero(Bool_t flag)        -- Shift entire curve such that lowest visible point is at exactly zero. Mostly useful when
   //                                    plotting -log(L) or chi^2 distributions
+  //
   // AddTo(const char* name,         -- Add constructed projection to already existing curve with given name and relative weight factors
-  //       double_t wgtSelf, double_t wgtOther)
+  //                                    double_t wgtSelf, double_t wgtOther)
   //
   // Plotting control 
   // ----------------
   // DrawOption(const char* opt)     -- Select ROOT draw option for resulting TGraph object
+  //
   // LineStyle(Int_t style)          -- Select line style by ROOT line style code, default is solid
+  //
   // LineColor(Int_t color)          -- Select line color by ROOT color code, default is blue
+  //
   // LineWidth(Int_t width)          -- Select line with in pixels, default is 3
+  //
   // FillStyle(Int_t style)          -- Select fill style, default is not filled. If a filled style is selected, also use VLines()
   //                                    to add vertical downward lines at end of curve to ensure proper closure
   // FillColor(Int_t color)          -- Select fill color by ROOT color code
+  //
   // Range(const char* name)         -- Only draw curve in range defined by given name
+  //
   // Range(double lo, double hi)     -- Only draw curve in specified range
+  //
   // VLines()                        -- Add vertical lines to y=0 at end points of curve
+  //
   // Precision(Double_t eps)         -- Control precision of drawn curve w.r.t to scale of plot, default is 1e-3. Higher precision
   //                                    will result in more and more densely spaced curve points
-  // Invisble(Bool_t flag)           -- Add curve to frame, but do not display. Useful in combination AddTo()
+  //
+  // Invisible(Bool_t flag)           -- Add curve to frame, but do not display. Useful in combination AddTo()
 
 
   RooLinkedList l ;
@@ -1200,17 +1304,22 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
   pc.defineString("drawOption","DrawOption",0,"L") ;
   pc.defineString("projectionRangeName","ProjectionRange",0,"",kTRUE) ;
   pc.defineString("curveNameSuffix","CurveNameSuffix",0,"") ;
+  pc.defineString("sliceCatState","SliceCat",0,"",kTRUE) ;
   pc.defineDouble("scaleFactor","Normalization",0,1.0) ;
   pc.defineObject("sliceSet","SliceVars",0) ;
+  pc.defineObject("sliceCatList","SliceCat",0,0,kTRUE) ;
   pc.defineObject("projSet","Project",0) ;
   pc.defineObject("asymCat","Asymmetry",0) ;
   pc.defineDouble("precision","Precision",0,1e-3) ;
+  pc.defineDouble("evalErrorVal","EvalErrorValue",0,0) ;
+  pc.defineInt("doEvalError","EvalErrorValue",0,0) ;
   pc.defineInt("shiftToZero","ShiftToZero",0,0) ;  
   pc.defineObject("projDataSet","ProjData",0) ;
   pc.defineObject("projData","ProjData",1) ;
   pc.defineInt("binProjData","ProjData",0,0) ;
   pc.defineDouble("rangeLo","Range",0,-999.) ;
   pc.defineDouble("rangeHi","Range",1,-999.) ;
+  pc.defineInt("numee","PrintEvalErrors",0,10) ;
   pc.defineInt("rangeAdjustNorm","Range",0,0) ;
   pc.defineInt("rangeWNAdjustNorm","RangeWithName",0,0) ;
   pc.defineInt("VLines","VLines",0,2) ; // 2==ExtendedWings
@@ -1227,6 +1336,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
   pc.defineString("addToCurveName","AddTo",0,"") ;
   pc.defineDouble("addToWgtSelf","AddTo",0,1.) ;
   pc.defineDouble("addToWgtOther","AddTo",1,1.) ;
+  pc.defineInt("moveToBack","MoveToBack",0,0) ;
   pc.defineMutex("SliceVars","Project") ;
   pc.defineMutex("AddTo","Asymmetry") ;
   pc.defineMutex("Range","RangeWithName") ;
@@ -1240,6 +1350,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
   PlotOpt o ;
 
   // Extract values from named arguments
+  o.numee       = pc.getInt("numee") ;
   o.drawOptions = pc.getString("drawOption") ;
   o.curveNameSuffix = pc.getString("curveNameSuffix") ;
   o.scaleFactor = pc.getDouble("scaleFactor") ;
@@ -1248,10 +1359,43 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
   o.projDataSet = (const RooArgSet*) pc.getObject("projDataSet") ;
   o.numCPU = pc.getInt("numCPU") ;
   o.interleave = pc.getInt("interleave") ;
+  o.eeval      = pc.getDouble("evalErrorVal") ;
+  o.doeeval   = pc.getInt("doEvalError") ;
 
-  const RooArgSet* sliceSet = (const RooArgSet*) pc.getObject("sliceSet") ;
+  const RooArgSet* sliceSetTmp = (const RooArgSet*) pc.getObject("sliceSet") ;
+  RooArgSet* sliceSet = sliceSetTmp ? ((RooArgSet*) sliceSetTmp->Clone()) : 0 ;
   const RooArgSet* projSet = (const RooArgSet*) pc.getObject("projSet") ;
   const RooAbsCategoryLValue* asymCat = (const RooAbsCategoryLValue*) pc.getObject("asymCat") ;
+
+
+  // Look for category slice arguments and add them to the master slice list if found
+  const char* sliceCatState = pc.getString("sliceCatState",0,kTRUE) ;
+  const RooLinkedList& sliceCatList = pc.getObjectList("sliceCatList") ;
+  if (sliceCatState) {
+
+    // Make the master slice set if it doesnt exist
+    if (!sliceSet) {
+      sliceSet = new RooArgSet ;
+    }
+
+    // Prepare comma separated label list for parsing
+    char buf[1024] ;
+    strcpy(buf,sliceCatState) ;
+    const char* slabel = strtok(buf,",") ;
+
+    // Loop over all categories provided by (multiple) Slice() arguments
+    TIterator* iter = sliceCatList.MakeIterator() ;
+    RooCategory* scat ;
+    while((scat=(RooCategory*)iter->Next())) {
+      if (slabel) {
+	// Set the slice position to the value indicate by slabel
+	scat->setLabel(slabel) ;
+	// Add the slice category to the master slice set
+	sliceSet->add(*scat,kFALSE) ;
+      }
+      slabel = strtok(0,",") ;
+    }
+  }
 
   o.precision = pc.getDouble("precision") ;
   o.shiftToZero = (pc.getInt("shiftToZero")!=0) ;
@@ -1343,6 +1487,11 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
   if (lineWidth!=-999) ret->getAttLine()->SetLineWidth(lineWidth) ;
   if (fillColor!=-999) ret->getAttFill()->SetFillColor(fillColor) ;
   if (fillStyle!=-999) ret->getAttFill()->SetFillStyle(fillStyle) ;
+
+  // Move last inserted object to back to drawing stack if requested
+  if (pc.getInt("moveToBack") && frame->numItems()>1) {   
+    frame->drawBefore(frame->getObject(0)->GetName(), frame->getCurve()->GetName());    
+  }
   
   return ret ;
 }
@@ -1601,14 +1750,14 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
     if (o.curveNameSuffix) {
       curveName.Append(o.curveNameSuffix) ;
     }
-    // Curve constructor for data weighted average
-    RooCurve *curve = new RooCurve(projection->GetName(),projection->GetTitle(),scaleBind,
-				   o.rangeLo,o.rangeHi,frame->GetNbinsX(),o.precision,o.precision,o.shiftToZero,o.wmode) ;
-    curve->SetName(curveName.Data()) ;
 
-    if (dologW(Eval)) {
-      cout << endl ;
-    }
+    // Curve constructor for data weighted average    
+    RooAbsReal::enableEvalErrorLogging(kTRUE) ;
+    RooCurve *curve = new RooCurve(projection->GetName(),projection->GetTitle(),scaleBind,
+				   o.rangeLo,o.rangeHi,frame->GetNbinsX(),o.precision,o.precision,o.shiftToZero,o.wmode,o.numee,o.doeeval,o.eeval) ;
+    RooAbsReal::enableEvalErrorLogging(kFALSE) ;
+
+    curve->SetName(curveName.Data()) ;
 
     // Add self to other curve if requested
     if (o.addToCurveName) {
@@ -1651,8 +1800,13 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
 
     // create a new curve of our function using the clone to do the evaluations
     // Curve constructor for regular projections
+
+    RooAbsReal::enableEvalErrorLogging(kTRUE) ;
     RooCurve *curve = new RooCurve(*projection,*plotVar,o.rangeLo,o.rangeHi,frame->GetNbinsX(),
-				   o.scaleFactor,0,o.precision,o.precision,o.shiftToZero,o.wmode);
+				   o.scaleFactor,0,o.precision,o.precision,o.shiftToZero,o.wmode,o.numee,o.doeeval,o.eeval);
+    RooAbsReal::enableEvalErrorLogging(kFALSE) ;
+
+
 
     // Set default name of curve
     TString curveName(projection->GetName()) ;
@@ -1943,8 +2097,11 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
     }
 
 
+    RooAbsReal::enableEvalErrorLogging(kTRUE) ;
     RooCurve *curve = new RooCurve(funcAsym->GetName(),funcAsym->GetTitle(),scaleBind,
-				   o.rangeLo,o.rangeHi,frame->GetNbinsX(),o.precision,o.precision,kFALSE,o.wmode) ;
+				   o.rangeLo,o.rangeHi,frame->GetNbinsX(),o.precision,o.precision,kFALSE,o.wmode,o.numee,o.doeeval,o.eeval) ;
+    RooAbsReal::enableEvalErrorLogging(kFALSE) ;
+
     dynamic_cast<TAttLine*>(curve)->SetLineColor(2) ;
     // add this new curve to the specified plot frame
     frame->addPlotable(curve, o.drawOptions);
@@ -1961,8 +2118,11 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
       o.rangeHi = frame->GetXaxis()->GetXmax() ;
     }
 
+    RooAbsReal::enableEvalErrorLogging(kTRUE) ;
     RooCurve* curve= new RooCurve(*funcAsym,*plotVar,o.rangeLo,o.rangeHi,frame->GetNbinsX(),
-				  o.scaleFactor,0,o.precision,o.precision,kFALSE,o.wmode);
+				  o.scaleFactor,0,o.precision,o.precision,kFALSE,o.wmode,o.numee,o.doeeval,o.eeval);
+    RooAbsReal::enableEvalErrorLogging(kFALSE) ;
+
     dynamic_cast<TAttLine*>(curve)->SetLineColor(2) ;
 
 
@@ -2096,6 +2256,25 @@ void RooAbsReal::makeProjectionSet(const RooAbsArg* plotVar, const RooArgSet* al
     }
   }
   delete iter ;
+}
+
+
+
+
+//_____________________________________________________________________________
+Bool_t RooAbsReal::isSelectedComp() const 
+{ 
+  // If true, the current pdf is a selected component (for use in plotting)
+  return _selectComp || _globalSelectComp ; 
+}
+
+
+
+//_____________________________________________________________________________
+void RooAbsReal::globalSelectComp(Bool_t flag) 
+{ 
+  // Global switch controlling the activation of the selectComp() functionality
+  _globalSelectComp = flag ; 
 }
 
 
@@ -2582,6 +2761,8 @@ void RooAbsReal::printEvalErrors(ostream& os, Int_t maxPerNode)
   // per source of errors. A truncation message is shown if there were more errors logged
   // than shown.
 
+  if (maxPerNode<0) return ;
+
   map<const RooAbsArg*,pair<string,list<EvalError> > >::iterator iter = _evalErrorList.begin() ;
 
   for(;iter!=_evalErrorList.end() ; ++iter) {
@@ -2790,7 +2971,7 @@ RooAbsReal* RooAbsReal::createRunningIntegral(const RooArgSet& iset, const RooCm
   }
   if (doScanNum) {
     RooRealIntegral* tmp = (RooRealIntegral*) createIntegral(iset) ;
-    Int_t isNum= (tmp->numIntRealVars().getSize()>0) ;
+    Int_t isNum= (tmp->numIntRealVars().getSize()==1) ;
     delete tmp ;
 
     if (isNum) {

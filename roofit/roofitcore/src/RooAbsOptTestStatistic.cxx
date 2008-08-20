@@ -74,6 +74,7 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *tit
 					       const RooArgSet& projDeps, const char* rangeName, const char* addCoefRangeName,
 					       Int_t nCPU, Bool_t interleave, Bool_t verbose, Bool_t splitCutRange) : 
   RooAbsTestStatistic(name,title,real,data,projDeps,rangeName, addCoefRangeName, nCPU, interleave, verbose, splitCutRange),
+  _blah("blah","blah",this,kFALSE,kFALSE),
   _projDeps(0)
 {
   // Constructor taking function (real), a dataset (data), a set of projected observables (projSet). If 
@@ -106,36 +107,53 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *tit
     return ;
   }
   
-  
-  // Check if the fit ranges of the dependents in the data and in the FUNC are consistent
+
+  // Get list of actual observables of test statistic function
   RooArgSet* realDepSet = real.getObservables(&data) ;
+
+  // Expand list of observables with any observables used in parameterized ranges
+  TIterator* iter9 = realDepSet->createIterator() ;
+  RooAbsArg* realDep ;
+  while((realDep=(RooAbsArg*)iter9->Next())) {
+    RooAbsRealLValue* realDepRLV = dynamic_cast<RooAbsRealLValue*>(realDep) ;
+    if (realDepRLV && realDepRLV->isDerived()) {
+
+      RooArgSet tmp ;
+      realDepRLV->leafNodeServerList(&tmp, 0, kTRUE) ;
+      realDepSet->add(tmp,kTRUE) ;
+    }
+  }
+  delete iter9 ;
+
+
+  // Check if the fit ranges of the dependents in the data and in the FUNC are consistent
   const RooArgSet* dataDepSet = data.get() ;
   TIterator* iter = realDepSet->createIterator() ;
   RooAbsArg* arg ;
   while((arg=(RooAbsArg*)iter->Next())) {
     RooRealVar* realReal = dynamic_cast<RooRealVar*>(arg) ;
     if (!realReal) continue ;
+
     
     RooRealVar* datReal = dynamic_cast<RooRealVar*>(dataDepSet->find(realReal->GetName())) ;
     if (!datReal) continue ;
     
-    if (realReal->getMin()<(datReal->getMin()-1e-6)) {
-      coutE(InputArguments) << "RooAbsOptTestStatistic: ERROR minimum of FUNC variable " << arg->GetName() 
+    if (!realReal->getBinning().lowBoundFunc() && realReal->getMin()<(datReal->getMin()-1e-6)) {
+      coutE(InputArguments) << "RooAbsOptTestStatistic: ERROR minimum of FUNC observable " << arg->GetName() 
 			    << "(" << realReal->getMin() << ") is smaller than that of " 
 			    << arg->GetName() << " in the dataset (" << datReal->getMin() << ")" << endl ;
       RooErrorHandler::softAbort() ;
       return ;
     }
     
-    if (realReal->getMax()>(datReal->getMax()+1e-6)) {
-      coutE(InputArguments) << "RooAbsOptTestStatistic: ERROR maximum of FUNC variable " << arg->GetName() 
+    if (!realReal->getBinning().highBoundFunc() && realReal->getMax()>(datReal->getMax()+1e-6)) {
+      coutE(InputArguments) << "RooAbsOptTestStatistic: ERROR maximum of FUNC observable " << arg->GetName() 
 			    << " is smaller than that of " << arg->GetName() << " in the dataset" << endl ;
       RooErrorHandler::softAbort() ;
       return ;
     }
     
   }
-
   
   // Copy data and strip entries lost by adjusted fit range, _dataClone ranges will be copied from realDepSet ranges
   if (rangeName && strlen(rangeName)) {
@@ -143,7 +161,21 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *tit
   } else {
     _dataClone = ((RooAbsData&)data).reduce(RooFit::SelectVars(*realDepSet)) ;  
   }
+
+  // Copy any non-shared parameterized range definitions from pdf observables to dataset observables
+  iter9 = realDepSet->createIterator() ;
+  while((realDep=(RooAbsRealLValue*)iter9->Next())) {
+    RooAbsRealLValue* realDepRLV = dynamic_cast<RooAbsRealLValue*>(realDep) ;
+    if (realDepRLV && !realDepRLV->getBinning().isShareable()) {
+
+      RooRealVar* datReal = dynamic_cast<RooRealVar*>(_dataClone->get()->find(realDepRLV->GetName())) ;
+      datReal->setBinning(realDepRLV->getBinning()) ;
+      datReal->attachDataSet(*_dataClone) ;
+    }
+  }
+  delete iter9 ;
   
+
   if (rangeName && strlen(rangeName)) {
     
     cxcoutI(Fitting) << "RooAbsOptTestStatistic::ctor(" << GetName() << ") constructing likelihood for sub-range named " << rangeName << endl ;
@@ -174,10 +206,7 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *tit
   }
   delete iter ;
 
-  delete realDepSet ;  
-
   setEventCount(_dataClone->numEntries()) ;
- 
  
   // Clone all FUNC compents by copying all branch nodes
   RooArgSet tmp("RealBranchNodeList") ;
@@ -205,8 +234,10 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *tit
     }
   }
 
+
   // Attach FUNC to data set
   _funcClone->attachDataSet(*_dataClone) ;
+
 
   // Store normalization set  
   _normSet = (RooArgSet*) data.get()->snapshot(kFALSE) ;
@@ -249,14 +280,18 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *tit
   coutI(Optimization) << "RooAbsOptTestStatistic::ctor(" << GetName() << ") optimizing internal clone of p.d.f for likelihood evaluation." 
 			<< "Lazy evaluation and associated change tracking will disabled for all nodes that depend on observables" << endl ;
 
+
   optimizeCaching() ;
+
+  delete realDepSet ;  
   
 }
 
 
 //_____________________________________________________________________________
 RooAbsOptTestStatistic::RooAbsOptTestStatistic(const RooAbsOptTestStatistic& other, const char* name) : 
-  RooAbsTestStatistic(other,name)
+  RooAbsTestStatistic(other,name),
+  _blah("blah","blah",this,kFALSE,kFALSE)
 {
   // Copy constructor
 
@@ -281,7 +316,14 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const RooAbsOptTestStatistic& oth
   // WVE Must use clone with cache redirection here
   _dataClone = (RooAbsData*) other._dataClone->cacheClone(_funcCloneSet) ;
 
+  // Attach function clone to dataset
   _funcClone->attachDataSet(*_dataClone) ;
+
+  // Explicit attach function clone to current parameter instances
+  _funcClone->recursiveRedirectServers(_paramSet) ;
+
+  //_blah.add(*_funcClone) ;
+
   _normSet = (RooArgSet*) other._normSet->snapshot() ;
   
   if (other._projDeps) {
@@ -349,8 +391,9 @@ void RooAbsOptTestStatistic::printCompactTreeHook(ostream& os, const char* inden
   RooAbsTestStatistic::printCompactTreeHook(os,indent) ;
   if (operMode()!=Slave) return ;
   TString indent2(indent) ;
-  indent2 += ">>" ;
+  indent2 += "opt >>" ;
   _funcClone->printCompactTree(os,indent2) ;
+  os << "opt >> " ; _dataClone->get()->printStream(os,kName|kAddress,kStandard) ;
 }
 
 

@@ -149,7 +149,6 @@ ClassImp(RooAbsPdf)
 
 
 Int_t RooAbsPdf::_verboseEval = 0;
-Bool_t RooAbsPdf::_globalSelectComp = kFALSE ;
 Bool_t RooAbsPdf::_evalError = kFALSE ;
 
 //_____________________________________________________________________________
@@ -249,8 +248,6 @@ Double_t RooAbsPdf::getVal(const RooArgSet* nset) const
     // Evaluate denominator
     Double_t normVal(_norm->getVal()) ;
     
-    cxcoutD(Tracing) << "RooAbsPdf::getVal(" << GetName() << ") normalization integral is " << (_norm?_norm->GetName():"none") << endl ;
-
     Double_t normError(kFALSE) ;
     if (normVal==0.) {
       normError=kTRUE ;
@@ -262,7 +259,7 @@ Double_t RooAbsPdf::getVal(const RooArgSet* nset) const
 
     _value = normError ? 0 : (rawVal / normVal) ;
 
-    cxcoutD(Tracing) << "RooAbsPdf::getVal(" << GetName() << ") recalculating, new value = " << rawVal << "/" << normVal << " = " << _value << endl ;
+    cxcoutD(Tracing) << "RooAbsPdf::getVal(" << GetName() << ") new value with norm " << _norm->GetName() << " = " << rawVal << "/" << normVal << " = " << _value << endl ;
 
     clearValueDirty() ; //setValueDirty(kFALSE) ;
     clearShapeDirty() ; //setShapeDirty(kFALSE) ;    
@@ -309,8 +306,6 @@ Bool_t RooAbsPdf::traceEvalPdf(Double_t value) const
   // Check that passed value is positive and not 'not-a-number'.  If
   // not, print an error, until the error counter reaches its set
   // maximum.
-
-  cxcoutD(Tracing) << "RooAbsPdf::traceEvalPdf(" << GetName() << ") value = " << value << endl ;
 
   // check for a math error or negative value
   Bool_t error= isnan(value) || (value < 0);
@@ -674,10 +669,11 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   pc.defineInt("strat","Strategy",0,1) ;
   pc.defineInt("initHesse","InitialHesse",0,0) ;
   pc.defineInt("hesse","Hesse",0,1) ;
-  pc.defineInt("minos","Minos",0,1) ;
-  pc.defineInt("ext","Extended",0,0) ;
+  pc.defineInt("minos","Minos",0,0) ;
+  pc.defineInt("ext","Extended",0,2) ;
   pc.defineInt("numcpu","NumCPU",0,1) ;
   pc.defineInt("numee","PrintEvalErrors",0,10) ;
+  pc.defineInt("doEEWall","EvalErrorWall",0,1) ;
   pc.defineObject("projDepSet","ProjectedObservables",0,0) ;
   pc.defineObject("minosSet","Minos",0,0) ;
   pc.defineObject("cPars","Constrain",0,0) ;
@@ -714,9 +710,16 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   Int_t numcpu   = pc.getInt("numcpu") ;
   Int_t splitr   = pc.getInt("splitRange") ;
   Int_t numee    = pc.getInt("numee") ;
+  Int_t doEEWall = pc.getInt("doEEWall") ;
   const RooArgSet* minosSet = static_cast<RooArgSet*>(pc.getObject("minosSet")) ;
   const RooArgSet* cPars = static_cast<RooArgSet*>(pc.getObject("cPars")) ;
   const RooArgSet* extCons = static_cast<RooArgSet*>(pc.getObject("extCons")) ;
+
+  // Process automatic extended option
+  if (ext==2) {
+    ext = ((extendMode()==CanBeExtended || extendMode()==MustBeExtended)) ? 1 : 0 ;
+    coutI(Minimization) << "p.d.f. provides expected number of events, including extended term in likelihood." << endl ;
+  }
 
   if (pc.hasProcessed("Range")) {
     Double_t rangeLo = pc.getDouble("rangeLo") ;
@@ -741,6 +744,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   }
 
   // Construct NLL
+  RooAbsReal::enableEvalErrorLogging(kTRUE) ;
   RooAbsReal* nll ;
   if (!rangeName || strchr(rangeName,',')==0) {
     // Simple case: default range, or single restricted range
@@ -759,6 +763,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
     delete[] buf ;
     nll = new RooAddition("nll","-log(likelihood)",nllList,kTRUE) ;
   }
+  RooAbsReal::enableEvalErrorLogging(kFALSE) ;
   
   // Collect internal and external constraint specifications
   RooArgSet allConstraints ;
@@ -785,6 +790,8 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
 
   // Instantiate MINUIT
   RooMinuit m(*nll) ;
+
+  m.setEvalErrorWall(doEEWall) ;
   
   m.setPrintEvalErrors(numee) ;
   if (plevel!=1) {
@@ -931,7 +938,10 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooArgSet& projDeps, Opti
   if (oopt.Contains("9")) ncpu=9 ;
 
   // Construct NLL
+
+  RooAbsReal::enableEvalErrorLogging(kTRUE) ;
   RooNLLVar nll("nll","-log(likelihood)",*this,data,projDeps,extended,fitRange,0,ncpu) ;
+  RooAbsReal::enableEvalErrorLogging(kFALSE) ;
   
   // Minimize NLL
   RooMinuit m(nll) ;
@@ -1472,11 +1482,11 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
     RooArgSet branchNodeSet ;
     branchNodeServerList(&branchNodeSet) ;
     
-    // Discard any non-PDF nodes
+    // Discard any non-RooAbsReal nodes
     TIterator* iter = branchNodeSet.createIterator() ;
     RooAbsArg* arg ;
     while((arg=(RooAbsArg*)iter->Next())) {
-      if (!dynamic_cast<RooAbsPdf*>(arg)) {
+      if (!dynamic_cast<RooAbsReal*>(arg)) {
 	branchNodeSet.remove(*arg) ;
       }
     }
@@ -1527,7 +1537,7 @@ void RooAbsPdf::plotOnCompSelect(RooArgSet* selNodes) const
   TIterator* iter = branchNodeSet.createIterator() ;
   RooAbsArg* arg ;
   while((arg=(RooAbsArg*)iter->Next())) {
-    if (!dynamic_cast<RooAbsPdf*>(arg)) {
+    if (!dynamic_cast<RooAbsReal*>(arg)) {
       branchNodeSet.remove(*arg) ;
     }
   }
@@ -1537,7 +1547,7 @@ void RooAbsPdf::plotOnCompSelect(RooArgSet* selNodes) const
     // Reset PDF selection bits to kTRUE
     iter->Reset() ;
     while((arg=(RooAbsArg*)iter->Next())) {
-      ((RooAbsPdf*)arg)->selectComp(kTRUE) ;
+      ((RooAbsReal*)arg)->selectComp(kTRUE) ;
     }
     delete iter ;
     return ;
@@ -1576,7 +1586,7 @@ void RooAbsPdf::plotOnCompSelect(RooArgSet* selNodes) const
   iter->Reset() ;
   while((arg=(RooAbsArg*)iter->Next())) {
     Bool_t select = selNodes->find(arg->GetName()) ? kTRUE : kFALSE ;
-    ((RooAbsPdf*)arg)->selectComp(select) ;
+    ((RooAbsReal*)arg)->selectComp(select) ;
   }
   
   delete iter ;
@@ -1674,7 +1684,7 @@ RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdA
   // Select the pdf-specific commands 
   RooCmdConfig pc(Form("RooAbsPdf::paramOn(%s)",GetName())) ;
   pc.defineString("label","Label",0,"") ;
-  pc.defineDouble("xmin","Layout",0,0.65) ;
+  pc.defineDouble("xmin","Layout",0,0.50) ;
   pc.defineDouble("xmax","Layout",1,0.99) ;
   pc.defineInt("ymaxi","Layout",0,Int_t(0.95*10000)) ;
   pc.defineInt("showc","ShowConstants",0,0) ;
@@ -1779,6 +1789,7 @@ RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooArgSet& params, Bool_t show
 
   // create the box and set its options
   TPaveText *box= new TPaveText(xmin,ymax,xmax,ymin,"BRNDC");
+  box->SetName(Form("%s_paramBox",GetName())) ;
   if(!box) return 0;
   box->SetFillColor(0);
   box->SetBorderSize(1);
@@ -2044,24 +2055,6 @@ Bool_t RooAbsPdf::evalError()
 { 
   // Return the evaluation error flag
   return _evalError ; 
-}
-
-
-
-//_____________________________________________________________________________
-Bool_t RooAbsPdf::isSelectedComp() const 
-{ 
-  // If true, the current pdf is a selected component (for use in plotting)
-  return _selectComp || _globalSelectComp ; 
-}
-
-
-
-//_____________________________________________________________________________
-void RooAbsPdf::globalSelectComp(Bool_t flag) 
-{ 
-  // Global switch controlling the activation of the selectComp() functionality
-  _globalSelectComp = flag ; 
 }
 
 

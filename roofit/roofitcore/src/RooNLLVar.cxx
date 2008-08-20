@@ -35,6 +35,7 @@
 #include "RooCmdConfig.h"
 #include "RooMsgService.h"
 
+#include "RooRealVar.h"
 
 
 ClassImp(RooNLLVar)
@@ -90,6 +91,7 @@ RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbs
 {
   // Construct likelihood from given p.d.f and (binned or unbinned dataset)
   // For internal use.
+
 }
 
 
@@ -103,6 +105,8 @@ RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbs
 {
   // Construct likelihood from given p.d.f and (binned or unbinned dataset)
   // For internal use.  
+
+
 }
 
 
@@ -146,16 +150,11 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t s
     _dataClone->get(i);
     if (_dataClone->weight()==0) continue ;
 
-    //cout << "evaluating nll for event #" << i << " of " << lastEvent-firstEvent << endl ;
+    // cout << "evaluating nll for event #" << i << " of " << lastEvent-firstEvent << endl ;
     Double_t term = _dataClone->weight() * pdfClone->getLogVal(_normSet);
     sumWeight += _dataClone->weight() ;
 
-    // If any event evaluates with zero probability, abort calculation
-    if(term == 0) {
-//       coutE(Eval) << "RooNLLVar::evaluatePartition(" << GetName() 
-// 		  << "): WARNING: event " << i << " has zero or negative probability" << endl ;
-      return 0 ;
-    }
+    //cout << "RooNLLVar term of event [" << i << "] is " << term << endl ; 
 
     result-= term;
   }

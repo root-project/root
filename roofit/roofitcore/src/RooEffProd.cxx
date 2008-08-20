@@ -32,7 +32,6 @@ ClassImp(RooEffProd)
   ;
 
 
-//_____________________________________________________________________________
 
 //_____________________________________________________________________________
 RooEffProd::RooEffProd(const char *name, const char *title, 
@@ -50,7 +49,7 @@ RooEffProd::RooEffProd(const char *name, const char *title,
 
 
 
-//_____________________________________________________________________________
+
 //_____________________________________________________________________________
 RooEffProd::RooEffProd(const RooEffProd& other, const char* name) : 
   RooAbsPdf(other, name),
@@ -64,7 +63,7 @@ RooEffProd::RooEffProd(const RooEffProd& other, const char* name) :
 }
 
 
-//_____________________________________________________________________________
+
 
 //_____________________________________________________________________________
 RooEffProd::~RooEffProd() 
@@ -73,7 +72,6 @@ RooEffProd::~RooEffProd()
 }
 
 
-//_____________________________________________________________________________
 
 //_____________________________________________________________________________
 Double_t RooEffProd::getVal(const RooArgSet* set) const 
@@ -85,7 +83,7 @@ Double_t RooEffProd::getVal(const RooArgSet* set) const
 }
 
 
-//_____________________________________________________________________________
+
 
 //_____________________________________________________________________________
 Double_t RooEffProd::evaluate() const
@@ -96,7 +94,6 @@ Double_t RooEffProd::evaluate() const
 }
 
 
-//_____________________________________________________________________________
 
 //_____________________________________________________________________________
 RooAbsGenContext* RooEffProd::genContext(const RooArgSet &vars, const RooDataSet *prototype,
@@ -112,7 +109,8 @@ RooAbsGenContext* RooEffProd::genContext(const RooArgSet &vars, const RooDataSet
 
 
 
-//_____________________________________________________________________________
+
+
 //_____________________________________________________________________________
 Int_t RooEffProd::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, 
 					  const RooArgSet* normSet, const char* rangeName) const 
@@ -172,7 +170,7 @@ Int_t RooEffProd::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVar
 
 
 
-//_____________________________________________________________________________
+
 //_____________________________________________________________________________
 Double_t RooEffProd::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* /*rangeName*/) const 
 {
@@ -188,12 +186,13 @@ Double_t RooEffProd::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, 
 
   // Partial integration scenarios
   CacheElem* cache = (CacheElem*) _cacheMgr.getObjByIndex(code-1) ;
+
   return cache->_int->getVal() ;
 }
 
 
 
-//_____________________________________________________________________________
+
 //_____________________________________________________________________________
 RooArgList RooEffProd::CacheElem::containedArgs(Action) 
 {

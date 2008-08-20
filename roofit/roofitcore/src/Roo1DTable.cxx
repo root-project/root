@@ -166,6 +166,16 @@ void Roo1DTable::printValue(ostream& os) const
 
 
 
+
+//_____________________________________________________________________________
+Int_t Roo1DTable::defaultPrintContents(Option_t* /*opt*/) const 
+{
+  // Define default contents to print
+  return kName|kClassName|kValue|kArgs ;
+}
+
+
+
 //_____________________________________________________________________________
 void Roo1DTable::printMultiline(ostream& os, Int_t /*contents*/, Bool_t verbose, TString indent) const 
 {

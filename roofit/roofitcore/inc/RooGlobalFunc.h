@@ -31,6 +31,9 @@ class RooAbsPdf ;
 class RooConstVar ;
 class RooRealVar ;
 class RooAbsCategory ;
+class TF1 ;
+class TF2 ;
+class TF3 ;
 
 namespace RooFit {
 
@@ -38,6 +41,7 @@ namespace RooFit {
 RooCmdArg DrawOption(const char* opt) ;
 RooCmdArg Normalization(Double_t scaleFactor) ;
 RooCmdArg Slice(const RooArgSet& sliceSet) ;
+RooCmdArg Slice(RooCategory& cat, const char* label) ;
 RooCmdArg Project(const RooArgSet& projSet) ;
 RooCmdArg ProjWData(const RooAbsData& projData, Bool_t binData=kFALSE) ;
 RooCmdArg ProjWData(const RooArgSet& projSet, const RooAbsData& projData, Bool_t binData=kFALSE) ;
@@ -56,6 +60,8 @@ RooCmdArg ProjectionRange(const char* rangeName) ;
 RooCmdArg Name(const char* name) ;
 RooCmdArg Invisible() ;
 RooCmdArg AddTo(const char* name, double wgtSel=1.0, double wgtOther=1.0) ;
+RooCmdArg EvalErrorValue(Double_t value) ;
+RooCmdArg MoveToBack()  ;
 
 // RooAbsPdf::plotOn arguments
 RooCmdArg Normalization(Double_t scaleFactor, RooAbsPdf::ScaleType scaleType) ;
@@ -74,6 +80,20 @@ RooCmdArg MarkerColor(Color_t color) ;
 RooCmdArg CutRange(const char* rangeName) ;
 RooCmdArg XErrorSize(Double_t width) ;
 RooCmdArg RefreshNorm() ;
+RooCmdArg Efficiency(const RooCategory& cat) ;
+
+// RooDataHist::ctor arguments
+RooCmdArg Weight(Double_t wgt) ;
+RooCmdArg Index(RooCategory& icat) ;
+RooCmdArg Import(const char* state, TH1& histo) ;
+RooCmdArg Import(TH1& histo) ;
+
+// RooDataSet::ctor arguments
+RooCmdArg WeightVar(const char* name) ;
+RooCmdArg WeightVar(const RooRealVar& arg) ;
+RooCmdArg Import(const char* state, RooDataSet& data) ;
+RooCmdArg Import(RooDataSet& data) ;
+RooCmdArg Import(TTree& tree) ;
 
 // RooChi2Var::ctor arguments
 RooCmdArg Extended(Bool_t flag=kTRUE) ;
@@ -95,6 +115,11 @@ RooCmdArg Title(const char* name) ;
 RooCmdArg Bins(Int_t nbin) ;
 RooCmdArg AutoSymRange(const RooAbsData& data, Double_t marginFactor=0.1) ;
 RooCmdArg AutoRange(const RooAbsData& data, Double_t marginFactor=0.1) ;
+
+// RooAbsData::createHistogram arguments
+RooCmdArg AutoSymBinning(Int_t nbins=100, Double_t marginFactor=0.1) ; 
+RooCmdArg AutoBinning(Int_t nbins=100, Double_t marginFactor=0.1) ;
+
 
 // RooAbsData::reduce arguments
 RooCmdArg SelectVars(const RooArgSet& vars) ;
@@ -119,6 +144,7 @@ RooCmdArg SumCoefRange(const char* rangeName) ;
 RooCmdArg Constrain(const RooArgSet& params) ;
 RooCmdArg ExternalConstraints(const RooArgSet& constraintPdfs) ;
 RooCmdArg PrintEvalErrors(Int_t numErrors) ;
+RooCmdArg EvalErrorWall(Bool_t flag) ;
 
 // RooAbsPdf::paramOn arguments
 RooCmdArg Label(const char* str) ;
@@ -147,6 +173,7 @@ RooCmdArg NormSet(const RooArgSet& nset) ;
 RooCmdArg NumIntConfig(const RooNumIntConfig& cfg) ;
 
 // RooMCStudy::ctor arguments
+RooCmdArg Silence(Bool_t flag=kTRUE) ;
 RooCmdArg FitModel(RooAbsPdf& pdf) ;
 RooCmdArg FitOptions(const RooCmdArg& arg1                ,const RooCmdArg& arg2=RooCmdArg::none(),
                      const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),
@@ -200,8 +227,6 @@ RooCmdArg ScanParameters(Int_t nbins,Int_t intOrder) ;
 RooCmdArg ScanNumCdf() ;
 RooCmdArg ScanAllCdf() ;
 RooCmdArg ScanNoCdf() ;
-
-
 
 RooConstVar& RooConst(Double_t val) ; 
 

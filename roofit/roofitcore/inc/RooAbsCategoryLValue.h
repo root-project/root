@@ -51,6 +51,10 @@ public:
   }
   virtual void randomize(const char* rangeName=0);
 
+  virtual const RooAbsBinning* getBinningPtr(const char* /*rangeName*/) const { return 0 ; }
+  virtual Int_t getBin(const RooAbsBinning* /*ptr*/) const { return getBin((const char*)0) ; }
+
+
   inline void setConstant(Bool_t value= kTRUE) { 
     // Declare category constant 
     setAttribute("Constant",value); 

@@ -67,7 +67,7 @@ RooCurve::RooCurve()
 //_____________________________________________________________________________
 RooCurve::RooCurve(const RooAbsReal &f, RooAbsRealLValue &x, Double_t xlo, Double_t xhi, Int_t xbins,
 		   Double_t scaleFactor, const RooArgSet *normVars, Double_t prec, Double_t resolution,
-		   Bool_t shiftToZero, WingMode wmode) 
+		   Bool_t shiftToZero, WingMode wmode, Int_t nEvalError, Int_t doEEVal, Double_t eeVal) 
 {
   // Create a 1-dim curve of the value of the specified real-valued expression
   // as a function of x. Use the optional precision parameter to control
@@ -111,7 +111,7 @@ RooCurve::RooCurve(const RooAbsReal &f, RooAbsRealLValue &x, Double_t xlo, Doubl
 
   // calculate the points to add to our curve
   Double_t prevYMax = getYAxisMax() ;
-  addPoints(*funcPtr,xlo,xhi,xbins+1,prec,resolution,wmode);
+  addPoints(*funcPtr,xlo,xhi,xbins+1,prec,resolution,wmode,nEvalError,doEEVal,eeVal);
   initialize();
 
   // cleanup
@@ -133,7 +133,7 @@ RooCurve::RooCurve(const RooAbsReal &f, RooAbsRealLValue &x, Double_t xlo, Doubl
 //_____________________________________________________________________________
 RooCurve::RooCurve(const char *name, const char *title, const RooAbsFunc &func,
 		   Double_t xlo, Double_t xhi, UInt_t minPoints, Double_t prec, Double_t resolution,
-		   Bool_t shiftToZero, WingMode wmode) 
+		   Bool_t shiftToZero, WingMode wmode, Int_t nEvalError, Int_t doEEVal, Double_t eeVal) 
 {
   // Create a 1-dim curve of the value of the specified real-valued
   // expression as a function of x. Use the optional precision
@@ -144,7 +144,7 @@ RooCurve::RooCurve(const char *name, const char *title, const RooAbsFunc &func,
   SetName(name);
   SetTitle(title);
   Double_t prevYMax = getYAxisMax() ;
-  addPoints(func,xlo,xhi,minPoints+1,prec,resolution,wmode);  
+  addPoints(func,xlo,xhi,minPoints+1,prec,resolution,wmode,nEvalError,doEEVal,eeVal);  
   initialize();
   if (shiftToZero) shiftCurveToZero(prevYMax) ;
 
@@ -264,7 +264,8 @@ void RooCurve::shiftCurveToZero(Double_t prevYMax)
 
 //_____________________________________________________________________________
 void RooCurve::addPoints(const RooAbsFunc &func, Double_t xlo, Double_t xhi,
-			 Int_t minPoints, Double_t prec, Double_t resolution, WingMode wmode) 
+			 Int_t minPoints, Double_t prec, Double_t resolution, WingMode wmode,
+			 Int_t numee, Bool_t doEEVal, Double_t eeVal) 
 {
   // Add points calculated with the specified function, over the range (xlo,xhi).
   // Add at least minPoints equally spaced points, and add sufficient points so that
@@ -281,6 +282,7 @@ void RooCurve::addPoints(const RooAbsFunc &func, Double_t xlo, Double_t xhi,
     return;
   }
 
+  
   // Perform a coarse scan of the function to estimate its y range.
   // Save the results so we do not have to re-evaluate at the scan points.
   Double_t *yval= new Double_t[minPoints];
@@ -292,7 +294,21 @@ void RooCurve::addPoints(const RooAbsFunc &func, Double_t xlo, Double_t xhi,
   for(step= 0; step < minPoints; step++) {
     x= xlo + step*dx;
     if (step==minPoints-1) x-=1e-15 ;
+
     yval[step]= func(&x);
+
+    if (RooAbsReal::numEvalErrors()>0) {
+      if (numee>=0) {
+	coutW(Plotting) << "At observable [x]=" << x <<  " " ;
+	RooAbsReal::printEvalErrors(ccoutW(Plotting),numee) ;
+      }
+      if (doEEVal) {
+	yval[step]=eeVal ;
+      }
+    }
+    RooAbsReal::clearEvalErrorLog() ;
+
+
     if (yval[step]>ymax) ymax=yval[step] ;
     if (yval[step]<ymin) ymin=yval[step] ;
   }
@@ -313,7 +329,7 @@ void RooCurve::addPoints(const RooAbsFunc &func, Double_t xlo, Double_t xhi,
   for(step= 1; step < minPoints; step++) {
     x1= x2;
     x2= xlo + step*dx;
-    addRange(func,x1,x2,yval[step-1],yval[step],prec*yrangeEst,minDx);
+    addRange(func,x1,x2,yval[step-1],yval[step],prec*yrangeEst,minDx,numee,doEEVal,eeVal);
   }
   addPoint(xhi,yval[minPoints-1]) ;
 
@@ -326,12 +342,14 @@ void RooCurve::addPoints(const RooAbsFunc &func, Double_t xlo, Double_t xhi,
 
   // cleanup
   delete [] yval;
+
 }
 
 
 //_____________________________________________________________________________
 void RooCurve::addRange(const RooAbsFunc& func, Double_t x1, Double_t x2,
-			Double_t y1, Double_t y2, Double_t minDy, Double_t minDx) 
+			Double_t y1, Double_t y2, Double_t minDy, Double_t minDx,
+			Int_t numee, Bool_t doEEVal, Double_t eeVal) 
 {
   // Fill the range (x1,x2) with points calculated using func(&x). No point will
   // be added at x1, and a point will always be added at x2. The density of points
@@ -341,12 +359,24 @@ void RooCurve::addRange(const RooAbsFunc& func, Double_t x1, Double_t x2,
   // calculate our value at the midpoint of this range
   Double_t xmid= 0.5*(x1+x2);
   Double_t ymid= func(&xmid);
+
+  if (RooAbsReal::numEvalErrors()>0) {
+    if (numee>=0) {
+      coutW(Plotting) << "At observable [x]=" << xmid <<  " " ;
+      RooAbsReal::printEvalErrors(ccoutW(Plotting),numee) ;
+    }
+    if (doEEVal) {
+      ymid=eeVal ;
+    }
+  }
+  RooAbsReal::clearEvalErrorLog() ;
+
   // test if the midpoint is sufficiently close to a straight line across this interval
   Double_t dy= ymid - 0.5*(y1+y2);
   if((xmid - x1 >= minDx) && fabs(dy)>0 && fabs(dy) >= minDy) {
     // fill in each subrange
-    addRange(func,x1,xmid,y1,ymid,minDy,minDx);
-    addRange(func,xmid,x2,ymid,y2,minDy,minDx);
+    addRange(func,x1,xmid,y1,ymid,minDy,minDx,numee,doEEVal,eeVal);
+    addRange(func,xmid,x2,ymid,y2,minDy,minDx,numee,doEEVal,eeVal);
   }
   else {
     // add the endpoint

@@ -88,6 +88,7 @@ Bool_t RooObjCacheManager::redirectServersHook(const RooAbsCollection& newServer
   // Intercept server redirect calls. If clearOnRedirect was set, sterilize
   // the cache (i.e. keep the structure but delete all contents). If not
   // forward serverRedirect to cache elements
+
   
   if (_clearOnRedirect) {
 

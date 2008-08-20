@@ -51,6 +51,7 @@
 #include "RooGlobalFunc.h"
 #include "RooNameReg.h"
 #include "RooMsgService.h"
+#include "RooCategory.h"
 
 
 
@@ -340,8 +341,10 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
   
   // Extract projection configuration from command list
   RooCmdConfig pc(Form("RooSimultaneous::plotOn(%s)",GetName())) ;
+  pc.defineString("sliceCatState","SliceCat",0,"",kTRUE) ;
   pc.defineDouble("scaleFactor","Normalization",0,1.0) ;
   pc.defineInt("scaleType","Normalization",0,RooAbsPdf::Relative) ;
+  pc.defineObject("sliceCatList","SliceCat",0,0,kTRUE) ;
   pc.defineObject("projSet","Project",0) ;
   pc.defineObject("sliceSet","SliceVars",0) ;
   pc.defineObject("projDataSet","ProjData",0) ;
@@ -357,10 +360,41 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
 
   const RooAbsData* projData = (const RooAbsData*) pc.getObject("projData") ;
   const RooArgSet* projDataSet = (const RooArgSet*) pc.getObject("projDataSet") ;
-  const RooArgSet* sliceSet = (const RooArgSet*) pc.getObject("sliceSet") ;
+  const RooArgSet* sliceSetTmp = (const RooArgSet*) pc.getObject("sliceSet") ;
+  RooArgSet* sliceSet = sliceSetTmp ? ((RooArgSet*) sliceSetTmp->Clone()) : 0 ;
   const RooArgSet* projSet = (const RooArgSet*) pc.getObject("projSet") ;  
   Double_t scaleFactor = pc.getDouble("scaleFactor") ;
   ScaleType stype = (ScaleType) pc.getInt("scaleType") ;
+
+
+  // Look for category slice arguments and add them to the master slice list if found
+  const char* sliceCatState = pc.getString("sliceCatState",0,kTRUE) ;
+  const RooLinkedList& sliceCatList = pc.getObjectList("sliceCatList") ;
+  if (sliceCatState) {
+
+    // Make the master slice set if it doesnt exist
+    if (!sliceSet) {
+      sliceSet = new RooArgSet ;
+    }
+
+    // Prepare comma separated label list for parsing
+    char buf[1024] ;
+    strcpy(buf,sliceCatState) ;
+    const char* slabel = strtok(buf,",") ;
+
+    // Loop over all categories provided by (multiple) Slice() arguments
+    TIterator* iter = sliceCatList.MakeIterator() ;
+    RooCategory* scat ;
+    while((scat=(RooCategory*)iter->Next())) {
+      if (slabel) {
+	// Set the slice position to the value indicate by slabel
+	scat->setLabel(slabel) ;
+	// Add the slice category to the master slice set
+	sliceSet->add(*scat,kFALSE) ;
+      }
+      slabel = strtok(0,",") ;
+    }
+  }
 
   // Check if we have a projection dataset
   if (!projData) {

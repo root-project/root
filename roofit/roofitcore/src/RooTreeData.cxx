@@ -150,6 +150,15 @@ void RooTreeData::Draw(Option_t* opt)
 
 
 
+//_____________________________________________________________________________
+Long64_t RooTreeData::Draw(const char* varexp, const char* selection, Option_t* option, Long64_t nentries, Long64_t firstentry)
+{
+  // Interface function to TTree::Draw()
+  return _tree->Draw(varexp,selection,option,nentries,firstentry) ;
+}
+
+
+
 //________________________________________________________________
 //   Interface functions to TTree
 
@@ -406,7 +415,14 @@ void RooTreeData::createTree(const char* name, const char* title)
   TString pwd(gDirectory->GetPath()) ;
   TString memDir(gROOT->GetName()) ;
   memDir.Append(":/") ;
-  gDirectory->cd(memDir) ;
+  Bool_t notInMemNow= (pwd!=memDir) ;
+
+  // cout << "RooTreeData::createTree pwd=" << pwd << " memDir=" << memDir << " notInMemNow = " << (notInMemNow?"T":"F") << endl ;
+
+  if (notInMemNow) {
+    gDirectory->cd(memDir) ;
+  }
+
   if (!_tree) {
     _tree = new TTree(name,title) ;
     _tree->SetDirectory(0) ;
@@ -417,7 +433,10 @@ void RooTreeData::createTree(const char* name, const char* title)
   }
   gDirectory->RecursiveRemove(_tree) ;
   gDirectory->RecursiveRemove(_cacheTree) ;
-  gDirectory->cd(pwd) ;
+
+  if (notInMemNow) {
+    gDirectory->cd(pwd) ;
+  }
   
 }
 
@@ -540,10 +559,13 @@ void RooTreeData::loadValues(const RooTreeData *t, RooFormulaVar* select,
     allValid=kTRUE ;
     while((arg=(RooAbsArg*)_iterator->Next())) {
       if (!arg->isValid() || (rangeName && !arg->inRange(rangeName))) {
+	//cout << "arg " << arg->GetName() << " is not valid" << endl ;
+	//arg->Print("v") ;
 	allValid=kFALSE ;
 	break ;
       }
     }
+    //cout << "RooTreeData::loadValues(" << GetName() << ") allValid = " << (allValid?"T":"F") << endl ;
     if (!allValid) continue ;
 
     _cachedVars = t->_cachedVars ;
@@ -566,13 +588,30 @@ void RooTreeData::loadValues(const TTree *t, RooFormulaVar* select, const char* 
 
   // Clone source tree
   // WVE Clone() crashes on trees, CloneTree() crashes on tchains :-(
+
+  // Change directory to memory dir before cloning tree to avoid ROOT errors
+  TString pwd(gDirectory->GetPath()) ;
+  TString memDir(gROOT->GetName()) ;
+  memDir.Append(":/") ;
+  Bool_t notInMemNow= (pwd!=memDir) ;
+
+  if (notInMemNow) {
+    gDirectory->cd(memDir) ;
+  }
+
   TTree* tClone ;
   if (dynamic_cast<const TChain*>(t)) {
     tClone = (TTree*) t->Clone() ; 
   } else {
     tClone = ((TTree*)t)->CloneTree() ;
   }
+
+  // Change directory back to original directory
   tClone->SetDirectory(0) ;
+
+  if (notInMemNow) {
+    gDirectory->cd(pwd) ;
+  }
     
   // Clone list of variables  
   RooArgSet *sourceArgSet = (RooArgSet*) _vars.snapshot(kFALSE) ;
@@ -1069,8 +1108,9 @@ RooPlot* RooTreeData::plotOn(RooPlot* frame, const RooLinkedList& argList) const
   //
   // Data representation options
   // ---------------------------
-  // Asymmetry(const RooCategory& c) -- Show the asymmetry of the daya in given two-state category [F(+)-F(-)] / [F(+)+F(-)]. 
+  // Asymmetry(const RooCategory& c) -- Show the asymmetry of the data in given two-state category [F(+)-F(-)] / [F(+)+F(-)]. 
   //                                    Category must have two states with indices -1 and +1 or three states with indeces -1,0 and +1.
+  // Efficiency(const RooCategory& c)-- Show the efficiency F(acc)/[F(acc)+F(rej)]. Category must have two states with indices 0 and 1
   // ErrorType(RooAbsData::EType)    -- Select the type of error drawn: Poisson (default) draws asymmetric Poisson
   //                                    confidence intervals. SumW2 draws symmetric sum-of-weights error
   // Binning(double xlo, double xhi, -- Use specified binning to draw dataset
@@ -1091,6 +1131,8 @@ RooPlot* RooTreeData::plotOn(RooPlot* frame, const RooLinkedList& argList) const
   // MarkerStyle(Int_t style)        -- Select the ROOT marker style, default is 21
   // MarkerColor(Int_t color)        -- Select the ROOT marker color, default is black
   // MarkerSize(Double_t size)       -- Select the ROOT marker size
+  // FillStyle(Int_t style)          -- Select fill style, default is filled. 
+  // FillColor(Int_t color)          -- Select fill color by ROOT color code
   // XErrorSize(Double_t frac)       -- Select size of X error bar as fraction of the bin width, default is 1
   //
   //
@@ -1119,20 +1161,23 @@ RooPlot* RooTreeData::plotOn(RooPlot* frame, const RooLinkedList& argList) const
   pc.defineDouble("xlo","BinningSpec",0,0) ;
   pc.defineDouble("xhi","BinningSpec",1,1) ;
   pc.defineObject("asymCat","Asymmetry",0) ;
+  pc.defineObject("effCat","Efficiency",0) ;
   pc.defineInt("lineColor","LineColor",0,-999) ;
   pc.defineInt("lineStyle","LineStyle",0,-999) ;
   pc.defineInt("lineWidth","LineWidth",0,-999) ;
   pc.defineInt("markerColor","MarkerColor",0,-999) ;
   pc.defineInt("markerStyle","MarkerStyle",0,-999) ;
   pc.defineDouble("markerSize","MarkerSize",0,-999) ;
+  pc.defineInt("fillColor","FillColor",0,-999) ;
+  pc.defineInt("fillStyle","FillStyle",0,-999) ;
   pc.defineInt("errorType","DataError",0,(Int_t)RooAbsData::Poisson) ;
   pc.defineInt("histInvisible","Invisible",0,0) ;
-  pc.defineInt("refreshFrameNorm","RefreshNorm",0,0) ;
+  pc.defineInt("refreshFrameNorm","RefreshNorm",0,1) ;
   pc.defineString("addToHistName","AddTo",0,"") ;
   pc.defineDouble("addToWgtSelf","AddTo",0,1.) ;
   pc.defineDouble("addToWgtOther","AddTo",1,1.) ;
   pc.defineDouble("xErrorSize","XErrorSize",0,1.) ;
-  pc.defineMutex("DataError","Asymmetry") ;
+  pc.defineMutex("DataError","Asymmetry","Efficiency") ;
   pc.defineMutex("Binning","BinningName","BinningSpec") ;
 
   // Process & check varargs 
@@ -1157,6 +1202,7 @@ RooPlot* RooTreeData::plotOn(RooPlot* frame, const RooLinkedList& argList) const
 				   (xlo==xhi)?frame->getPlotVar()->getMax():xhi,pc.getInt("nbins")) ;
   }
   const RooAbsCategoryLValue* asymCat = (const RooAbsCategoryLValue*) pc.getObject("asymCat") ;
+  const RooAbsCategoryLValue* effCat = (const RooAbsCategoryLValue*) pc.getObject("effCat") ;
   o.etype = (RooAbsData::ErrorType) pc.getInt("errorType") ;
   o.histInvisible = pc.getInt("histInvisible") ;
   o.xErrorSize = pc.getDouble("xErrorSize") ;
@@ -1173,10 +1219,12 @@ RooPlot* RooTreeData::plotOn(RooPlot* frame, const RooLinkedList& argList) const
   }
 
   RooPlot* ret ;
-  if (!asymCat) {
+  if (!asymCat && !effCat) {
     ret = plotOn(frame,o) ;
-  } else {
+  } else if (asymCat) {
     ret = plotAsymOn(frame,*asymCat,o) ;    
+  } else {
+    ret = plotEffOn(frame,*effCat,o) ;    
   }
 
   Int_t lineColor   = pc.getInt("lineColor") ;
@@ -1185,12 +1233,16 @@ RooPlot* RooTreeData::plotOn(RooPlot* frame, const RooLinkedList& argList) const
   Int_t markerColor = pc.getInt("markerColor") ;
   Int_t markerStyle = pc.getInt("markerStyle") ;
   Size_t markerSize  = pc.getDouble("markerSize") ;
+  Int_t fillColor = pc.getInt("fillColor") ;
+  Int_t fillStyle = pc.getInt("fillStyle") ;
   if (lineColor!=-999) ret->getAttLine()->SetLineColor(lineColor) ;
   if (lineStyle!=-999) ret->getAttLine()->SetLineStyle(lineStyle) ;
   if (lineWidth!=-999) ret->getAttLine()->SetLineWidth(lineWidth) ;
   if (markerColor!=-999) ret->getAttMarker()->SetMarkerColor(markerColor) ;
   if (markerStyle!=-999) ret->getAttMarker()->SetMarkerStyle(markerStyle) ;
   if (markerSize!=-999) ret->getAttMarker()->SetMarkerSize(markerSize) ;
+  if (fillColor!=-999) ret->getAttFill()->SetFillColor(fillColor) ;
+  if (fillStyle!=-999) ret->getAttFill()->SetFillStyle(fillStyle) ;
 
   if (pc.hasProcessed("BinningSpec")) {
     delete o.bins ;
@@ -1256,7 +1308,7 @@ RooPlot *RooTreeData::plotOn(RooPlot *frame, PlotOpt o) const
   }
 
   // convert this histogram to a RooHist object on the heap
-  RooHist *graph= new RooHist(*hist,nomBinWidth,1,o.etype,o.xErrorSize);
+  RooHist *graph= new RooHist(*hist,nomBinWidth,1,o.etype,o.xErrorSize,o.correctForBinWidth); 
   if(0 == graph) {
     coutE(Plotting) << ClassName() << "::" << GetName()
 	 << ":plotOn: unable to create a RooHist object" << endl;
@@ -1392,13 +1444,7 @@ RooPlot* RooTreeData::plotAsymOn(RooPlot* frame, const RooAbsCategoryLValue& asy
 
   // convert this histogram to a RooHist object on the heap
   RooHist *graph= new RooHist(*hist1,*hist2,0,1,o.xErrorSize);
-  if(0 == graph) {
-    coutE(Plotting) << ClassName() << "::" << GetName()
-	 << ":plotOn: unable to create a RooHist object" << endl;
-    delete hist1;
-    delete hist2;
-    return 0;
-  }
+  graph->setYAxisLabel(Form("Asymmetry in %s",asymCat.GetName())) ;
 
   // initialize the frame's normalization setup, if necessary
   frame->updateNormVars(_vars);
@@ -1418,7 +1464,103 @@ RooPlot* RooTreeData::plotAsymOn(RooPlot* frame, const RooAbsCategoryLValue& asy
   }
 
   // add the RooHist to the specified plot
-  frame->addPlotable(graph,o.drawOptions);
+  frame->addPlotable(graph,o.drawOptions,o.histInvisible,o.refreshFrameNorm);
+
+  // cleanup
+  delete hist1;
+  delete hist2;
+
+  return frame;  
+}
+
+
+
+//_____________________________________________________________________________
+RooPlot* RooTreeData::plotEffOn(RooPlot* frame, const RooAbsCategoryLValue& effCat, PlotOpt o) const 
+{
+  // Create and fill a histogram with the effiency N[1] / ( N[1] + N[0] ),
+  // where N(1/0) is the number of data points with effCat=1 and effCat=0
+  // as function of the frames variable. The efficiency category 'effCat' must
+  // have exactly 2 +1 and 0.
+  // 
+  // The plot range and the number of plot bins is determined by the parameters
+  // of the plot variable of the frame (RooAbsReal::setPlotRange(), RooAbsReal::setPlotBins())
+  // 
+  // The optional cut string expression can be used to select the events to be plotted.
+  // The cut specification may refer to any variable contained in the data set
+  //
+  // The drawOptions are passed to the TH1::Draw() method
+
+  if(0 == frame) {
+    coutE(Plotting) << ClassName() << "::" << GetName() << ":plotEffOn: frame is null" << endl;
+    return 0;
+  }
+  RooAbsRealLValue *var= (RooAbsRealLValue*) frame->getPlotVar();
+  if(0 == var) {
+    coutE(Plotting) << ClassName() << "::" << GetName()
+	 << ":plotEffOn: frame does not specify a plot variable" << endl;
+    return 0;
+  }
+
+  // create and fill temporary histograms of this variable for each state
+  TString hist1Name(GetName()),hist2Name(GetName());
+  hist1Name.Append("_plot1");
+  TH1F *hist1, *hist2 ;
+  hist2Name.Append("_plot2");
+
+  if (o.bins) {
+    hist1= var->createHistogram(hist1Name.Data(), "Events", *o.bins) ;
+    hist2= var->createHistogram(hist2Name.Data(), "Events", *o.bins) ;
+  } else {
+    hist1= var->createHistogram(hist1Name.Data(), "Events", 
+				frame->GetXaxis()->GetXmin(), frame->GetXaxis()->GetXmax(),
+				frame->GetNbinsX());
+    hist2= var->createHistogram(hist2Name.Data(), "Events", 
+				frame->GetXaxis()->GetXmin(), frame->GetXaxis()->GetXmax(),
+				frame->GetNbinsX());
+  }
+
+  assert(0 != hist1 && 0 != hist2);
+
+  TString cuts1,cuts2 ;
+  if (o.cuts && strlen(o.cuts)) {
+    cuts1 = Form("(%s)&&(%s==1)",o.cuts,effCat.GetName());
+    cuts2 = Form("(%s)&&(%s==0)",o.cuts,effCat.GetName());
+  } else {
+    cuts1 = Form("(%s==1)",effCat.GetName());
+    cuts2 = Form("(%s==0)",effCat.GetName());
+  }
+
+  if(0 == fillHistogram(hist1,RooArgList(*var),cuts1.Data(),o.cutRange) ||
+     0 == fillHistogram(hist2,RooArgList(*var),cuts2.Data(),o.cutRange)) {
+    coutE(Plotting) << ClassName() << "::" << GetName()
+	 << ":plotEffOn: createHistogram() failed" << endl;
+    return 0;
+  }
+
+  // convert this histogram to a RooHist object on the heap
+  RooHist *graph= new RooHist(*hist1,*hist2,0,1,o.xErrorSize,kTRUE);
+  graph->setYAxisLabel(Form("Efficiency of %s=%s",effCat.GetName(),effCat.lookupType(1)->GetName())) ;
+
+  // initialize the frame's normalization setup, if necessary
+  frame->updateNormVars(_vars);
+
+  // Rename graph if requested
+  if (o.histName) {
+    graph->SetName(o.histName) ;
+  } else {
+    TString hname(Form("h_%s_Eff[%s]",GetName(),effCat.GetName())) ;
+    if (o.cutRange && strlen(o.cutRange)>0) {
+      hname.Append(Form("_CutRange[%s]",o.cutRange)) ;
+    } 
+    if (o.cuts && strlen(o.cuts)>0) {
+      hname.Append(Form("_Cut[%s]",o.cuts)) ;
+    } 
+    graph->SetName(hname.Data()) ;
+  }
+
+  // add the RooHist to the specified plot
+  frame->addPlotable(graph,o.drawOptions,o.histInvisible,o.refreshFrameNorm);
 
   // cleanup
   delete hist1;
@@ -1588,8 +1730,6 @@ TH1 *RooTreeData::fillHistogram(TH1 *hist, const RooArgList &plotVars, const cha
       assert(hdim < 3);
       break;
     }
-
-    //cout << "hdim = " << hdim << " bin = " << bin << endl ;
 
     Double_t error2 = TMath::Power(hist->GetBinError(bin),2)-TMath::Power(weight(),2)  ;
     Double_t we = weightError(RooAbsData::SumW2) ;
@@ -1800,7 +1940,7 @@ RooRealVar* RooTreeData::rmsVar(RooRealVar &var, const char* cutSpec, const char
 
 
 //_____________________________________________________________________________
-Bool_t RooTreeData::getRange(RooRealVar& var, Double_t& lowest, Double_t& highest) const 
+Bool_t RooTreeData::getRange(RooRealVar& var, Double_t& lowest, Double_t& highest, Double_t marginFrac, Bool_t symMode) const 
 {
   // Fill Doubles 'lowest' and 'highest' with the lowest and highest value of
   // observable 'var' in this dataset. If the return value is kTRUE and error
@@ -1838,6 +1978,27 @@ Bool_t RooTreeData::getRange(RooRealVar& var, Double_t& lowest, Double_t& highes
     }
   }  
 
+  if (marginFrac>0) {
+    if (symMode==kFALSE) {
+
+      Double_t margin = marginFrac*(highest-lowest) ;    
+      lowest -= margin ;
+      highest += margin ; 
+      if (lowest<var.getMin()) lowest = var.getMin() ;
+      if (highest>var.getMax()) highest = var.getMax() ;
+
+    } else {
+
+      Double_t mean = moment(var,1) ;
+      Double_t delta = ((highest-mean)>(mean-lowest)?(highest-mean):(mean-lowest))*(1+marginFrac) ;
+      lowest = mean-delta ;
+      highest = mean+delta ;
+      if (lowest<var.getMin()) lowest = var.getMin() ;
+      if (highest>var.getMax()) highest = var.getMax() ;
+
+    }
+  }
+  
   return kFALSE ;
 }
 
@@ -1946,6 +2107,7 @@ RooPlot* RooTreeData::statOn(RooPlot* frame, const char* what, const char *label
 
   // create the box and set its options
   TPaveText *box= new TPaveText(xmin,ymax,xmax,ymin,"BRNDC");
+  box->SetName(Form("%s_statBox",GetName())) ;
   if(!box) return 0;
   box->SetFillColor(0);
   box->SetBorderSize(1);
@@ -2050,7 +2212,6 @@ void RooTreeData::optimizeReadingWithCaching(RooAbsArg& arg, const RooArgSet& ca
   pruneSet.add(*get()) ;
   RooArgSet* usedObs = arg.getObservables(*this) ;
   pruneSet.remove(*usedObs,kTRUE,kTRUE) ;
-  delete usedObs ;
 
   // Add observables exclusively used to calculate cached observables to pruneSet
   TIterator* vIter = get()->createIterator() ;
@@ -2062,12 +2223,43 @@ void RooTreeData::optimizeReadingWithCaching(RooAbsArg& arg, const RooArgSet& ca
   }
   delete vIter ;
 
+
   if (pruneSet.getSize()!=0) {
+
+    // Go over all used observables and check if any of them have parameterized
+    // ranges in terms of pruned observables. If so, remove those observable
+    // from the pruning list
+    TIterator* uIter = usedObs->createIterator() ;
+    RooAbsArg* obs ;
+    while((obs=(RooAbsArg*)uIter->Next())) {
+      RooRealVar* rrv = dynamic_cast<RooRealVar*>(obs) ;
+      if (rrv && !rrv->getBinning().isShareable()) {
+	RooArgSet depObs ;
+	RooAbsReal* loFunc = rrv->getBinning().lowBoundFunc() ;
+	RooAbsReal* hiFunc = rrv->getBinning().highBoundFunc() ;
+	if (loFunc) {
+	  loFunc->leafNodeServerList(&depObs,0,kTRUE) ;
+	}
+	if (hiFunc) {
+	  hiFunc->leafNodeServerList(&depObs,0,kTRUE) ;
+	}
+	if (depObs.getSize()>0) {
+	  pruneSet.remove(depObs,kTRUE,kTRUE) ;
+	}
+      }
+    }
+    delete uIter ;
+  }
+
+  if (pruneSet.getSize()!=0) {
+    
     // Deactivate tree branches here
     cxcoutI(Optimization) << "RooTreeData::optimizeReadingForTestStatistic(" << GetName() << "): Observables " << pruneSet
 			    << " in dataset are either not used at all, orserving exclusively p.d.f nodes that are now cached, disabling reading of these observables for TTree" << endl ;
     setArgStatus(pruneSet,kFALSE) ;
   }
+
+  delete usedObs ;
   
 }
 

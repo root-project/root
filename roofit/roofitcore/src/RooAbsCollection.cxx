@@ -194,8 +194,11 @@ RooAbsCollection* RooAbsCollection::snapshot(Bool_t deepCopy) const
   //
 
   // First create empty list
-  TString snapName("Snapshot of ") ;
-  snapName.Append(GetName()) ;
+  TString snapName ;
+  if (TString(GetName()).Length()>0) {
+    snapName.Append("Snapshot of ") ;
+    snapName.Append(GetName()) ;
+  }
   RooAbsCollection* output = (RooAbsCollection*) create(snapName.Data()) ;
   if (deepCopy || getSize()>100) {
     output->setHashTableSize(1000) ;
@@ -812,9 +815,9 @@ Int_t RooAbsCollection::defaultPrintContents(Option_t* opt) const
     return kValue ;
   }
   if (opt && TString(opt).Contains("v")) {
-    return kAddress|kName|kArgs|kClassName|kValue|kTitle ;
+    return kAddress|kName|kArgs|kClassName|kValue|kTitle|kExtras ;
   }
-  return kName|kClassName|kValue|kExtras ;
+  return kName|kClassName|kValue ;
 }
 
 
@@ -852,7 +855,9 @@ void RooAbsCollection::printMultiline(ostream&os, Int_t contents, Bool_t /*verbo
   // Implement multiline printin of collection, one line for each ontained object showing
   // the requested content
 
-  os << indent << ClassName() << "::" << GetName() << ":" << (_ownCont?" (Owning contents)":"") << endl;
+  if (TString(GetName()).Length()>0) {
+    os << indent << ClassName() << "::" << GetName() << ":" << (_ownCont?" (Owning contents)":"") << endl;
+  }
 
   TIterator *iterator= createIterator();
   int index= 0;

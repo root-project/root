@@ -65,6 +65,7 @@ public:
   virtual Int_t numEntries(Bool_t useWeights=kFALSE) const ;
   virtual void reset() { Reset() ; }
 
+  using RooAbsData::table ;
   virtual Roo1DTable* table(const RooAbsCategory& cat, const char* cuts="", const char* opts="") const ;
 
   virtual RooPlot* statOn(RooPlot* frame, 
@@ -86,7 +87,8 @@ public:
   RooRealVar* meanVar(RooRealVar &var, const char* cutSpec=0, const char* cutRange=0) const ;
   RooRealVar* rmsVar(RooRealVar &var, const char* cutSpec=0, const char* cutRange=0) const ;
 
-  Bool_t getRange(RooRealVar& var, Double_t& lowest, Double_t& highest) const ;
+  Bool_t getRange(RooRealVar& var, Double_t& lowest, Double_t& highest, Double_t marginFrac=0, Bool_t symMode=kFALSE) const ;
+
 
   virtual TList* split(const RooAbsCategory& splitCat) const ;
 
@@ -107,7 +109,7 @@ public:
   // WVE --- This needs to be public to avoid CINT problems
   struct PlotOpt {
    PlotOpt() : cuts(""), drawOptions("P"), bins(0), etype(RooAbsData::Poisson), cutRange(0), histName(0), histInvisible(kFALSE),
-              addToHistName(0),addToWgtSelf(1.),addToWgtOther(1.),xErrorSize(1),refreshFrameNorm(kFALSE) {} ;
+              addToHistName(0),addToWgtSelf(1.),addToWgtOther(1.),xErrorSize(1),refreshFrameNorm(kFALSE),correctForBinWidth(kTRUE) {} ;
    const char* cuts ;
    Option_t* drawOptions ;
    RooAbsBinning* bins ;
@@ -120,14 +122,17 @@ public:
    Double_t addToWgtOther ;
    Double_t xErrorSize ;
    Bool_t refreshFrameNorm ;
+   Bool_t correctForBinWidth ;
   } ;
 	
   // PlotOn implementation
   virtual RooPlot *plotOn(RooPlot *frame, PlotOpt o) const ;
   virtual RooPlot *plotAsymOn(RooPlot* frame, const RooAbsCategoryLValue& asymCat, PlotOpt o) const ;
+  virtual RooPlot *plotEffOn(RooPlot* frame, const RooAbsCategoryLValue& effCat, PlotOpt o) const ;
   
   // Draw implementation forwarded to underlying tree
   virtual void Draw(Option_t* opt) ;
+  virtual Long64_t Draw(const char* varexp, const char* selection, Option_t* option = "", Long64_t nentries = 1000000000, Long64_t firstentry = 0) ;
 
 protected:
 

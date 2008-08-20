@@ -233,7 +233,9 @@ Double_t RooRealSumPdf::evaluate() const
     Double_t coefVal = coef->getVal() ;
     if (coefVal) {
       cxcoutD(Eval) << "RooRealSumPdf::eval(" << GetName() << ") coefVal = " << coefVal << " funcVal = " << func->getVal() << endl ;
-      value += func->getVal()*coefVal ;
+      if (func->isSelectedComp()) {
+	value += func->getVal()*coefVal ;
+      }
       lastCoef -= coef->getVal() ;
     }
   }
@@ -241,7 +243,9 @@ Double_t RooRealSumPdf::evaluate() const
   if (!_haveLastCoef) {
     // Add last func with correct coefficient
     func = (RooAbsReal*) _funcIter->Next() ;
-    value += func->getVal()*lastCoef ;
+    if (func->isSelectedComp()) {
+      value += func->getVal()*lastCoef ;
+    }
 
     cxcoutD(Eval) << "RooRealSumPdf::eval(" << GetName() << ") lastCoef = " << lastCoef << " funcVal = " << func->getVal() << endl ;
     
@@ -347,8 +351,10 @@ Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSe
   // Do running sum of coef/func pairs, calculate lastCoef.
   TIterator* funcIntIter = _funcIntList->createIterator() ;
   _coefIter->Reset() ;
-  RooAbsReal* coef ;
-  RooAbsReal* funcInt ;
+  _funcIter->Reset() ;
+  RooAbsReal* coef(0) ;
+  RooAbsReal* funcInt(0) ;
+  RooAbsReal* func(0) ;
 
   Double_t value(0) ;
 
@@ -356,9 +362,12 @@ Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSe
   Double_t lastCoef(1) ;
   while((coef=(RooAbsReal*)_coefIter->Next())) {
     funcInt = (RooAbsReal*)funcIntIter->Next() ;
+    func    = (RooAbsReal*)_funcIter->Next() ;
     Double_t coefVal = coef->getVal(normSet) ;
     if (coefVal) {
-      value += funcInt->getVal()*coefVal ;
+      if (func->isSelectedComp()) {
+	value += funcInt->getVal()*coefVal ;
+      }
       lastCoef -= coef->getVal(normSet) ;
     }
   }
@@ -366,7 +375,9 @@ Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSe
   if (!_haveLastCoef) {
     // Add last func with correct coefficient
     funcInt = (RooAbsReal*) funcIntIter->Next() ;
-    value += funcInt->getVal()*lastCoef ;
+    if (func->isSelectedComp()) {
+      value += funcInt->getVal()*lastCoef ;
+    }
     
     // Warn about coefficient degeneration
     if (lastCoef<0 || lastCoef>1) {

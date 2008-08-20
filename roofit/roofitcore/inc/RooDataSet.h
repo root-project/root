@@ -29,6 +29,10 @@ public:
 
   // Constructors, factory methods etc.
   RooDataSet() ; 
+
+  RooDataSet(const char* name, const char* title, const RooArgSet& vars, RooCmdArg arg1, RooCmdArg arg2=RooCmdArg(), RooCmdArg arg3=RooCmdArg(),
+	     RooCmdArg arg4=RooCmdArg(),RooCmdArg arg5=RooCmdArg(),RooCmdArg arg6=RooCmdArg(),RooCmdArg arg7=RooCmdArg(),RooCmdArg arg8=RooCmdArg()) ;
+
   RooDataSet(const char *name, const char *title, const RooArgSet& vars, const char* wgtVarName=0) ;
   RooDataSet(const char *name, const char *title, RooDataSet *ntuple, 
 	     const RooArgSet& vars, const char *cuts=0, const char* wgtVarName=0);
@@ -82,6 +86,7 @@ public:
   virtual RooArgSet* addColumns(const RooArgList& varList) ;
 
   // Plot the distribution of a real valued arg
+  using RooTreeData::createHistogram ;
   TH2F* createHistogram(const RooAbsRealLValue& var1, const RooAbsRealLValue& var2, const char* cuts="", 
 			const char *name= "hist") const;	 
   TH2F* createHistogram(const RooAbsRealLValue& var1, const RooAbsRealLValue& var2, Int_t nx, Int_t ny,

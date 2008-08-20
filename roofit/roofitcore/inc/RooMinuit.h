@@ -27,6 +27,7 @@ class RooRealVar ;
 class RooArgSet ;
 class TVirtualFitter ;
 class TH2F ;
+class RooPlot ;
 
 void RooMinuitGlue(Int_t& /*np*/, Double_t* /*gin*/,  Double_t &f, Double_t *par, Int_t /*flag*/) ;
 
@@ -40,9 +41,9 @@ public:
   enum PrintLevel { None=-1, Reduced=0, Normal=1, ExtraForProblem=2, Maximum=3 } ;
   void setStrategy(Int_t strat) ;
   void setErrorLevel(Double_t level) ;
-  void setErrorHandling(Bool_t flag) { _handleLocalErrors = flag ; }
   void setEps(Double_t eps) ;
   void optimizeConst(Bool_t flag) ;
+  void setEvalErrorWall(Bool_t flag) { _doEvalErrorWall = flag ; }
 
   RooFitResult* fit(const char* options) ;
 
@@ -55,9 +56,9 @@ public:
   Int_t improve() ;
 
   RooFitResult* save(const char* name=0, const char* title=0) ;
-  TH2F* contour(RooRealVar& var1, RooRealVar& var2, 
-		Double_t n1=1, Double_t n2=2, Double_t n3=0,
-		Double_t n4=0, Double_t n5=0, Double_t n6=0) ;
+  RooPlot* contour(RooRealVar& var1, RooRealVar& var2, 
+		   Double_t n1=1, Double_t n2=2, Double_t n3=0,
+		   Double_t n4=0, Double_t n5=0, Double_t n6=0) ;
 
   Int_t setPrintLevel(Int_t newLevel) ; 
   void setNoWarn() ;
@@ -101,6 +102,7 @@ private:
   Int_t       _numBadNLL ;
   Int_t       _nPar ;
   Int_t       _printEvalErrors ;
+  Bool_t      _doEvalErrorWall ;
   RooArgList* _floatParamList ;
   RooArgList* _initFloatParamList ;
   RooArgList* _constParamList ;

@@ -75,7 +75,7 @@ ClassImp(RooMCStudy)
 RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
    		       RooCmdArg arg1, RooCmdArg arg2,
    		       RooCmdArg arg3,RooCmdArg arg4,RooCmdArg arg5,
-   		       RooCmdArg arg6,RooCmdArg arg7,RooCmdArg arg8) 
+   		       RooCmdArg arg6,RooCmdArg arg7,RooCmdArg arg8) : TNamed("mcstudy","mcstudy")
 
 {
   // Construct Monte Carlo Study Manager. This class automates generating data from a given PDF,
@@ -86,6 +86,7 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
   // model       -- The PDF to be studied
   // observables -- The variables of the PDF to be considered the observables
   //
+  // Silence()                         -- Suppress all RooFit messages during running below PROGRESS level
   // FitModel(const RooAbsPdf&)        -- The PDF for fitting, if it is different from the PDF for generating
   // ConditionalObservables
   //           (const RooArgSet& set)  -- The set of observables that the PDF should _not_ be normalized over
@@ -122,6 +123,7 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
   pc.defineObject("protoData","PrototypeData",0,0) ;
   pc.defineObject("cPars","Constrain",0,0) ;
   pc.defineObject("extCons","ExternalConstraints",0,0) ;
+  pc.defineInt("silence","Silence",0,0) ;
   pc.defineInt("randProtoData","PrototypeData",0,0) ;
   pc.defineInt("verboseGen","Verbose",0,0) ;
   pc.defineInt("extendedGen","Extended",0,0) ;
@@ -148,6 +150,7 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
   }
 
   // Decode command line arguments
+  _silence = pc.getInt("silence") ;
   _verboseGen = pc.getInt("verboseGen") ;
   _extendedGen = pc.getInt("extendedGen") ;
   _binGenData = pc.getInt("binGenData") ;
@@ -236,19 +239,34 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
   
   // Place holder for NLL
   _nllVar = new RooRealVar("NLL","-log(Likelihood)",0) ;
+
+  // Place holder for number of generated events
+  _ngenVar = new RooRealVar("ngen","number of generated events",0) ;
   
   // Create data set containing parameter values, errors and pulls
   RooArgSet tmp2(*_fitParams) ;
   tmp2.add(*_nllVar) ;
-  
+  tmp2.add(*_ngenVar) ;
+
   // Mark all variable to store their errors in the dataset
   tmp2.setAttribAll("StoreError",kTRUE) ;
   tmp2.setAttribAll("StoreAsymError",kTRUE) ;
-  _fitParData = new RooDataSet("fitParData","Fit Parameters DataSet",tmp2) ;
+  TString fpdName ;
+  if (_fitModel==_genModel) {
+    fpdName = Form("fitParData_%s",_fitModel->GetName()) ;
+  } else {
+    fpdName= Form("fitParData_%s_%s",_fitModel->GetName(),_genModel->GetName()) ;
+  }
+
+  _fitParData = new RooDataSet(fpdName.Data(),"Fit Parameters DataSet",tmp2) ;
   tmp2.setAttribAll("StoreError",kFALSE) ;
   tmp2.setAttribAll("StoreAsymError",kFALSE) ;
 
-  _genParData = new RooDataSet("genParData","Generated Parameters dataset",*_genParams) ;
+  if (_perExptGenParams) {
+    _genParData = new RooDataSet("genParData","Generated Parameters dataset",*_genParams) ;
+  } else {
+    _genParData = 0 ;
+  }
   
   // Append proto variables to allDependents
   if (_genProtoData) {
@@ -273,6 +291,7 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& genModel, const RooAbsPdf& fitModel,
    		       const RooArgSet& dependents, const char* genOptions, 
    		       const char* fitOptions, const RooDataSet* genProtoData, 
    		       const RooArgSet& projDeps) :
+  TNamed("mcstudy","mcstudy"),
   _genModel((RooAbsPdf*)&genModel), 
   _genProtoData(genProtoData),
   _projDeps(projDeps),
@@ -281,6 +300,8 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& genModel, const RooAbsPdf& fitModel,
   _dependents(dependents), 
   _allDependents(dependents), 
   _fitModel((RooAbsPdf*)&fitModel), 
+  _nllVar(0),
+  _ngenVar(0),
   _genParData(0),
   _fitOptions(fitOptions),
   _canAddFitResults(kTRUE),
@@ -335,6 +356,7 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& genModel, const RooAbsPdf& fitModel,
   // Create data set containing parameter values, errors and pulls
   RooArgSet tmp2(*_fitParams) ;
   tmp2.add(*_nllVar) ;
+  tmp2.add(*_ngenVar) ;
   
   // Mark all variable to store their errors in the dataset
   tmp2.setAttribAll("StoreError",kTRUE) ;
@@ -411,19 +433,29 @@ Bool_t RooMCStudy::run(Bool_t doGenerate, Bool_t DoFit, Int_t nSamples, Int_t nE
   // pattern.
   //
 
+  RooMsgService::MsgLevel oldLevel(RooMsgService::FATAL) ;
+  if (_silence) {
+    oldLevel = RooMsgService::instance().globalKillBelow() ;
+    RooMsgService::instance().setGlobalKillBelow(RooMsgService::PROGRESS) ;
+  }
+
   list<RooAbsMCStudyModule*>::iterator iter ;
   for (iter=_modList.begin() ; iter!= _modList.end() ; ++iter) {
     (*iter)->initializeRun(nSamples) ;
   }  
+  
+  Int_t prescale = nSamples>100 ? Int_t(nSamples/100) : 1 ;
 
   while(nSamples--) {
     
-    oocoutP(_fitModel,Generation) << "RooMCStudy::run: " ;
-    if (doGenerate) ooccoutI(_fitModel,Generation) << "Generating " ;
-    if (doGenerate && DoFit) ooccoutI(_fitModel,Generation) << "and " ;
-    if (DoFit) ooccoutI(_fitModel,Generation) << "fitting " ;
-    ooccoutP(_fitModel,Generation) << "sample " << nSamples << endl ;
-    
+    if (nSamples%prescale==0) {
+      oocoutP(_fitModel,Generation) << "RooMCStudy::run: " ;
+      if (doGenerate) ooccoutI(_fitModel,Generation) << "Generating " ;
+      if (doGenerate && DoFit) ooccoutI(_fitModel,Generation) << "and " ;
+      if (DoFit) ooccoutI(_fitModel,Generation) << "fitting " ;
+      ooccoutP(_fitModel,Generation) << "sample " << nSamples << endl ;
+    }
+
     _genSample = 0;
     Bool_t existingData = kFALSE ;
     if (doGenerate) {
@@ -488,6 +520,9 @@ Bool_t RooMCStudy::run(Bool_t doGenerate, Bool_t DoFit, Int_t nSamples, Int_t nE
       }
     }
 
+    // Save number of generated events
+    _ngenVar->setVal(_genSample->numEntries()) ;
+
     // Call module between generation and fitting hook
     list<RooAbsMCStudyModule*>::iterator iter3 ;
     for (iter3=_modList.begin() ; iter3!= _modList.end() ; ++iter3) {
@@ -540,6 +575,11 @@ Bool_t RooMCStudy::run(Bool_t doGenerate, Bool_t DoFit, Int_t nSamples, Int_t nE
   }
 
   if (DoFit) calcPulls() ;
+
+  if (_silence) {
+    RooMsgService::instance().setGlobalKillBelow(oldLevel) ;
+  }
+
   return kFALSE ;
 }
 
@@ -650,6 +690,9 @@ RooFitResult* RooMCStudy::doFit(RooAbsData* genSample)
 
   // Fit model to data set
   TString fitOpt2(_fitOptions) ; fitOpt2.Append("r") ;
+  if (_silence) {
+    fitOpt2.Append("b") ;
+  }
   
   // Optionally bin dataset before fitting
   RooAbsData* data ;
@@ -671,10 +714,14 @@ RooFitResult* RooMCStudy::doFit(RooAbsData* genSample)
   } else {
     RooCmdArg save  = RooFit::Save() ;
     RooCmdArg condo = RooFit::ConditionalObservables(_projDeps) ;
+    RooCmdArg plevel = RooFit::PrintLevel(-1) ;
     RooLinkedList fitOptList(_fitOptList) ;
     fitOptList.Add(&save) ;
     if (_projDeps.getSize()>0) {
       fitOptList.Add(&condo) ;
+    }
+    if (_silence) {
+      fitOptList.Add(&plevel) ;
     }
     fr = (RooFitResult*) _fitModel->fitTo(*data,fitOptList) ;
   }
@@ -728,6 +775,7 @@ Bool_t RooMCStudy::fitSample(RooAbsData* genSample)
     _nllVar->setVal(fr->minNll()) ;
     RooArgSet tmp(*_fitParams) ;
     tmp.add(*_nllVar) ;
+    tmp.add(*_ngenVar) ;
     _fitParData->add(tmp) ;
   }
   
@@ -776,6 +824,7 @@ Bool_t RooMCStudy::addFitResult(const RooFitResult& fr)
     _nllVar->setVal(fr.minNll()) ;
     RooArgSet tmp(*_fitParams) ;
     tmp.add(*_nllVar) ;
+    tmp.add(*_ngenVar) ;
     _fitParData->add(tmp) ;
   }
   
@@ -1126,12 +1175,12 @@ RooPlot* RooMCStudy::makeFrameAndPlotCmd(const RooRealVar& param, RooLinkedList&
 
   // Select the frame-specific commands 
   RooCmdConfig pc(Form("RooMCStudy::plotParam(%s)",_genModel->GetName())) ;
-  pc.defineInt("nbins","FrameBins",0,0) ;
-  pc.defineDouble("xlo","FrameRange",0,0) ;
-  pc.defineDouble("xhi","FrameRange",1,0) ;
+  pc.defineInt("nbins","Bins",0,0) ;
+  pc.defineDouble("xlo","Range",0,0) ;
+  pc.defineDouble("xhi","Range",1,0) ;
   pc.defineInt("dummy","FrameArgs",0,0) ;
-  pc.defineMutex("FrameBins","FrameArgs") ;
-  pc.defineMutex("FrameRange","FrameArgs") ;
+  pc.defineMutex("Bins","FrameArgs") ;
+  pc.defineMutex("Range","FrameArgs") ;
 
   // Process and check varargs 
   pc.allowUndefined() ;
@@ -1157,8 +1206,8 @@ RooPlot* RooMCStudy::makeFrameAndPlotCmd(const RooRealVar& param, RooLinkedList&
     RooCmdArg autor = symRange ? RooFit::AutoSymRange(*_fitParData,0.2) : RooFit::AutoRange(*_fitParData,0.2) ;
     RooLinkedList frameCmdList ;
 
-    if (pc.hasProcessed("FrameBins")) frameCmdList.Add(&bins) ;
-    if (pc.hasProcessed("FrameRange")) {
+    if (pc.hasProcessed("Bins")) frameCmdList.Add(&bins) ;
+    if (pc.hasProcessed("Range")) {
       frameCmdList.Add(&range) ;
     } else {
       frameCmdList.Add(&autor) ;
@@ -1167,7 +1216,7 @@ RooPlot* RooMCStudy::makeFrameAndPlotCmd(const RooRealVar& param, RooLinkedList&
   }
   
   // Filter frame command from list and pass on to plotOn() 
-  pc.stripCmdList(cmdList,"FrameBins,FrameRange,FrameArgs") ;
+  pc.stripCmdList(cmdList,"FrameArgs,Bins,Range") ;
 
   return frame ;
 }

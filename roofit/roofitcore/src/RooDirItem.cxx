@@ -81,15 +81,25 @@ void RooDirItem::appendToDir(TObject* obj, Bool_t forceMemoryResident)
 
   if (forceMemoryResident) {
     // Append self forcibly to memory directory
+
     TString pwd(gDirectory->GetPath()) ;
     TString memDir(gROOT->GetName()) ;
     memDir.Append(":/") ;
-    gDirectory->cd(memDir) ;
+    Bool_t notInMemNow= (pwd!=memDir) ;
+
+    //cout << "RooDirItem::appendToDir pwd=" << pwd << " memDir=" << memDir << endl ;
+
+    if (notInMemNow) { 
+      gDirectory->cd(memDir) ;
+    }
 
     _dir = gDirectory ;
     gDirectory->Append(obj) ;
     
-    gDirectory->cd(pwd) ;    
+    if (notInMemNow) {
+      gDirectory->cd(pwd) ;    
+    }
+
   } else {
     // Append self to present gDirectory
     _dir = gDirectory ;

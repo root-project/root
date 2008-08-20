@@ -118,7 +118,6 @@ Bool_t RooThresholdCategory::addThreshold(Double_t upperLimit, const char* catNa
 
 
 
-
 //_____________________________________________________________________________
 RooCatType RooThresholdCategory::evaluate() const
 {

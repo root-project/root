@@ -297,30 +297,6 @@ void RooNumIntConfig::printMultiline(ostream &os, Int_t /*content*/, Bool_t verb
   }
   
   if (verbose) {
-    os << indent << "Requested precision: " << _epsAbs << " absolute, " << _epsRel << " relative" << endl << endl ;;
-    if (_printEvalCounter) {
-      os << indent << "Printing of function evaluation counter for each integration enabled" << endl << endl ;
-    }
-
-    os << indent << "Selected integration methods:" << endl ;
-    os << indent << "1-D integration method: " << _method1D.getLabel() ;
-    if (_method1DOpen.getIndex()!=_method1D.getIndex()) {
-      os << " (" << _method1DOpen.getLabel() << " if open-ended)" << endl ;
-    } else {
-      os << endl ;
-    }
-    os << indent << "2-D integration method: " << _method2D.getLabel() ;
-    if (_method2DOpen.getIndex()!=_method2D.getIndex()) {
-      os << " (" << _method2DOpen.getLabel() << " if open-ended)" << endl ;
-    } else {
-      os << endl ;
-    }
-    os << indent << "N-D integration method: " << _methodND.getLabel() ;
-    if (_methodNDOpen.getIndex()!=_methodND.getIndex()) {
-      os << " (" << _methodNDOpen.getLabel() << " if open-ended)" << endl ;
-    } else {
-      os << endl ;
-    }
 
     os << endl << "Available integration methods:" << endl << endl ;
     TIterator* cIter = _configSets.MakeIterator() ;
@@ -337,7 +313,8 @@ void RooNumIntConfig::printMultiline(ostream &os, Int_t /*content*/, Bool_t verb
       os << endl ;
 
       os << "Configuration: " << endl ;
-      configSet->writeToStream(os,kFALSE) ;
+      configSet->printMultiline(os,kName|kValue) ;
+      //configSet->writeToStream(os,kFALSE) ;
 
       const char* depName = RooNumIntFactory::instance().getDepIntegratorName(configSet->GetName()) ;
       if (strlen(depName)>0) {

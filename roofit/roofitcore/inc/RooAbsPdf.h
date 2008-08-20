@@ -75,7 +75,7 @@ public:
                            const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;
 
   virtual RooPlot* paramOn(RooPlot* frame, const RooAbsData* data, const char *label= "", Int_t sigDigits = 2,
-			   Option_t *options = "NELU", Double_t xmin=0.65,
+			   Option_t *options = "NELU", Double_t xmin=0.50,
 			   Double_t xmax= 0.99,Double_t ymax=0.95) ;
 
   // Built-in generator support
@@ -86,14 +86,14 @@ public:
   virtual Bool_t isDirectGenSafe(const RooAbsArg& arg) const ; 
 
   // Interactions with a dataset  
-  virtual RooFitResult* fitTo(RooAbsData& data, RooCmdArg arg1,  RooCmdArg arg2=RooCmdArg::none(),  
+  virtual RooFitResult* fitTo(RooAbsData& data, RooCmdArg arg1=RooCmdArg::none(),  RooCmdArg arg2=RooCmdArg::none(),  
                               RooCmdArg arg3=RooCmdArg::none(),  RooCmdArg arg4=RooCmdArg::none(), RooCmdArg arg5=RooCmdArg::none(),  
                               RooCmdArg arg6=RooCmdArg::none(),  RooCmdArg arg7=RooCmdArg::none(), RooCmdArg arg8=RooCmdArg::none()) ;
   virtual RooFitResult* fitTo(RooAbsData& data, const RooLinkedList& cmdList) ;
 
   virtual RooFitResult* fitTo(RooAbsData& data, const RooArgSet& projDeps, 
 			      Option_t *fitOpt = "", Option_t *optOpt = "c", const char* fitRange=0) ;
-  virtual RooFitResult* fitTo(RooAbsData& data, Option_t *fitOpt = "", Option_t *optOpt = "c", const char* fitRange=0) ;
+  virtual RooFitResult* fitTo(RooAbsData& data, Option_t *fitOpt, Option_t *optOpt = "c", const char* fitRange=0) ;
 
   // Constraint management
   virtual RooArgSet* getConstraints(const RooArgSet& /*observables*/, const RooArgSet& /*constrainedParams*/) const { 
@@ -164,8 +164,6 @@ public:
 
   static void verboseEval(Int_t stat) ;
   static int verboseEval() ;
-
-  Bool_t isSelectedComp() const ;
 
   virtual Double_t extendedTerm(UInt_t observedEvents, const RooArgSet* nset=0) const ;
 
@@ -244,14 +242,7 @@ protected:
   mutable Int_t _traceCount ;        // Number of traces remaining to print
   mutable Int_t _negCount ;          // Number of negative probablities remaining to print
 
-  friend class RooAddPdf ;
-  void selectComp(Bool_t flag) { 
-    // If flag is true, only selected component will be included in evaluates of RooAddPdf components
-    _selectComp = flag ; 
-  }
-  static void globalSelectComp(Bool_t flag) ;
   Bool_t _selectComp ;               // Component selection flag for RooAbsPdf::plotCompOn
-  static Bool_t _globalSelectComp ;  // Global activation switch for component selection
 
   static void raiseEvalError() ;
   

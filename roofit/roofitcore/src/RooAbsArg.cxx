@@ -50,6 +50,7 @@
 #include "RooStringVar.h"
 #include "RooRealIntegral.h"
 #include "RooMsgService.h"
+#include "RooExpensiveObjectCache.h"
 
 #include <string.h>
 #include <iomanip>
@@ -75,8 +76,8 @@ RooAbsArg::RooAbsArg() :
   _deleteWatch(kFALSE),
   _operMode(Auto),
   _ownedComponents(0),
-  _prohibitServerRedirect(kFALSE)
-  
+  _prohibitServerRedirect(kFALSE),
+  _eocache(0)
 {
   // Default constructor 
 
@@ -94,8 +95,8 @@ RooAbsArg::RooAbsArg(const char *name, const char *title) :
   _shapeDirty(kTRUE),
   _operMode(Auto),
   _ownedComponents(0),
-  _prohibitServerRedirect(kFALSE)
-
+  _prohibitServerRedirect(kFALSE),
+  _eocache(0)
 {
   // Create an object with the specified name and descriptive title.
   // The newly created object has no clients or servers and has its
@@ -116,7 +117,8 @@ RooAbsArg::RooAbsArg(const RooAbsArg& other, const char* name)
     _deleteWatch(other._deleteWatch),
     _operMode(Auto),
     _ownedComponents(0),
-    _prohibitServerRedirect(kFALSE)
+    _prohibitServerRedirect(kFALSE),
+    _eocache(other._eocache)
 {
   // Copy constructor transfers all boolean and string properties of the original
   // object. Transient properties and client-server links are not copied
@@ -322,6 +324,7 @@ Bool_t RooAbsArg::getTransientAttribute(const Text_t* name) const
 
 
 
+
 //_____________________________________________________________________________
 void RooAbsArg::addServer(RooAbsArg& server, Bool_t valueProp, Bool_t shapeProp)
 {
@@ -457,12 +460,12 @@ void RooAbsArg::leafNodeServerList(RooAbsCollection* list, const RooAbsArg* arg,
 
 
 //_____________________________________________________________________________
-void RooAbsArg::branchNodeServerList(RooAbsCollection* list, const RooAbsArg* arg) const
+void RooAbsArg::branchNodeServerList(RooAbsCollection* list, const RooAbsArg* arg, Bool_t recurseNonDerived) const
 {
   // Fill supplied list with all branch nodes of the arg tree starting with
   // ourself as top node. A branch node is node that has one or more servers declared.
 
-  treeNodeServerList(list,arg,kTRUE,kFALSE) ;
+  treeNodeServerList(list,arg,kTRUE,kFALSE,kFALSE,recurseNonDerived) ;
 }
  
 
@@ -532,7 +535,7 @@ RooArgSet* RooAbsArg::getParameters(const RooArgSet* nset) const
 
   // Create and fill deep server list
   RooArgSet leafList("leafNodeServerList") ;
-  treeNodeServerList(&leafList,0,kFALSE,kTRUE,kFALSE) ;
+  treeNodeServerList(&leafList,0,kFALSE,kTRUE,kTRUE) ;
   // leafNodeServerList(&leafList) ;
 
   // Copy non-dependent servers to parameter list
@@ -887,13 +890,13 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSet, Bool_t mustRep
   }
   delete sIter ;
 
-
   // Delete all previously registered servers
   sIter = origServerList.MakeIterator() ;
   Bool_t propValue, propShape ;
   while ((oldServer=(RooAbsArg*)sIter->Next())) {
 
     newServer= oldServer->findNewServer(newSet, nameChange);
+
     if (newServer && _verboseDirty) {
       cxcoutD(LinkStateMgmt) << "RooAbsArg::redirectServers(" << (void*)this << "," << GetName() << "): server " << oldServer->GetName()
 			     << " redirected from " << oldServer << " to " << newServer << endl ;
@@ -910,9 +913,8 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSet, Bool_t mustRep
 
     propValue=origServerValue.FindObject(oldServer)?kTRUE:kFALSE ;
     propShape=origServerShape.FindObject(oldServer)?kTRUE:kFALSE ;
+    // cout << "replaceServer with name " << oldServer->GetName() << " old=" << oldServer << " new=" << newServer << endl ;
     replaceServer(*oldServer,*newServer,propValue,propShape) ;
-//     removeServer(*oldServer) ;
-//     addServer(*newServer,propValue,propShape) ;
   }
 
   delete sIter ;
@@ -1237,11 +1239,22 @@ void RooAbsArg::printClassName(ostream& os) const
 }
 
 
+void RooAbsArg::printAddress(ostream& os) const 
+{
+  // Print addrss of this RooAbsArg
+  os << this ;
+}
+
+
 
 //_____________________________________________________________________________
 void RooAbsArg::printArgs(ostream& os) const 
 {
   // Print object arguments, ie its proxies 
+
+  // Print nothing if there are no dependencies
+  if (numProxies()==0) return ;
+
   os << "[ " ;    
   for (Int_t i=0 ; i<numProxies() ; i++) {
     RooAbsProxy* p = getProxy(i) ;
@@ -1376,7 +1389,7 @@ void RooAbsArg::attachDataSet(const RooAbsData &data)
 
   const RooArgSet* set = data.get() ;
   RooArgSet branches ;
-  branchNodeServerList(&branches) ;
+  branchNodeServerList(&branches,0,kTRUE) ;
 
   TIterator* iter = branches.createIterator() ;
   RooAbsArg* branch ;
@@ -1550,7 +1563,7 @@ Bool_t RooAbsArg::findConstantNodes(const RooArgSet& observables, RooArgSet& cac
   // If yes, list node eligible for caching, if not test nodes one level down
   if (canOpt) {
 
-    if (!cacheList.find(GetName()) && dependsOnValue(observables)) {
+    if (!cacheList.find(GetName()) && dependsOnValue(observables) && !observables.find(GetName()) ) {
 
       // Add to cache list
       cxcoutD(Optimization) << "RooAbsArg::findConstantNodes(" << GetName() << ") adding self to list of constant nodes" << endl ;
@@ -1947,7 +1960,7 @@ Bool_t RooAbsArg::addOwnedComponents(const RooArgSet& comps)
 
 
 //_____________________________________________________________________________
-RooAbsArg* RooAbsArg::cloneTree(const char* newname) 
+RooAbsArg* RooAbsArg::cloneTree(const char* newname) const
 {
   // Clone tree expression of objects. All tree nodes will be owned by
   // the head node return by cloneTree()
@@ -1972,4 +1985,24 @@ RooAbsArg* RooAbsArg::cloneTree(const char* newname)
 
   // Return the head
   return head ;  
+}
+
+
+
+//_____________________________________________________________________________
+RooExpensiveObjectCache& RooAbsArg::expensiveObjectCache() const 
+{
+  if (_eocache) {
+    return *_eocache ;
+  } else {
+    return RooExpensiveObjectCache::instance() ;
+  }  
+}
+
+
+
+//_____________________________________________________________________________
+Bool_t RooAbsArg::flipAClean() 
+{
+  return _flipAClean ;
 }

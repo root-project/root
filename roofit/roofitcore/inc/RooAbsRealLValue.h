@@ -49,17 +49,32 @@ public:
   virtual Double_t getBinWidth(Int_t i, const char* rangeName=0) const { return getBinning(rangeName).binWidth(i) ; }
   virtual Double_t volume(const char* rangeName) const { return getMax(rangeName)-getMin(rangeName) ; }
   virtual void randomize(const char* rangeName=0);
+
+  virtual const RooAbsBinning* getBinningPtr(const char* rangeName) const { return &getBinning(rangeName) ; }
+  virtual Int_t getBin(const RooAbsBinning* ptr) const { return ptr->binNumber(getVal()) ; }
+
+
+  virtual void setBin(Int_t ibin, const RooAbsBinning& binning) ;
+  virtual Int_t getBin(const RooAbsBinning& binning) const { return binning.binNumber(getVal()) ; }
+  virtual Int_t numBins(const RooAbsBinning& binning) const { return binning.numBins() ; }
+  virtual Double_t getBinWidth(Int_t i, const RooAbsBinning& binning) const { return binning.binWidth(i) ; }
+  virtual Double_t volume(const RooAbsBinning& binning) const { return binning.highBound() - binning.lowBound() ; }
+  virtual void randomize(const RooAbsBinning& binning) ;
+
+
+  virtual void setBinFast(Int_t ibin, const RooAbsBinning& binning) ;
   
   // Get fit range limits
+
   virtual const RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE, Bool_t createOnTheFly=kFALSE) const = 0 ;
   virtual RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE, Bool_t createOnTheFly=kFALSE) = 0 ;
   virtual Bool_t hasBinning(const char* name) const = 0 ;
+  virtual Bool_t inRange(const char* name) const ;
+  virtual Int_t getBins(const char* name=0) const { return getBinning(name).numBins() ; }
   virtual Double_t getMin(const char* name=0) const { return getBinning(name).lowBound() ; }
   virtual Double_t getMax(const char* name=0) const { return getBinning(name).highBound() ; }
-  virtual Int_t getBins(const char* name=0) const { return getBinning(name).numBins() ; }
   inline Bool_t hasMin(const char* name=0) const { return !RooNumber::isInfinite(getMin(name)); }
   inline Bool_t hasMax(const char* name=0) const { return !RooNumber::isInfinite(getMax(name)); }
-  virtual Bool_t inRange(const char* name) const ;
   virtual Bool_t hasRange(const char* name) const { return hasBinning(name) ; }
 
   // Jacobian term management
@@ -120,6 +135,8 @@ public:
 protected:
 
   friend class RooRealBinding ;
+
+  virtual void setValFast(Double_t value) { setVal(value) ; }
 
   virtual void setVal(Double_t value, const char* /*rangeName*/) { 
     // Set object value to 'value'

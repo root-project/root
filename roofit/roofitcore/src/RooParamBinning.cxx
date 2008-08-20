@@ -281,6 +281,12 @@ void RooParamBinning::printMultiline(ostream &os, Int_t /*content*/, Bool_t /*ve
     os << indent << "xlo() = " << xlo() << endl ;
     os << indent << "xhi() = " << xhi() << endl ;
   }  
+  if (xlo()) {
+    xlo()->Print("t") ;
+  }
+  if (xhi()) {
+    xhi()->Print("t") ;
+  }
 }
 
 

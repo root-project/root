@@ -76,6 +76,10 @@
 #pragma link C++ class RooChangeTracker+ ;
 #pragma link C++ class RooNumRunningInt+ ;
 #pragma link C++ class RooHistFunc+ ;
+#pragma link C++ class RooExpensiveObjectCache+ ;
+#pragma link C++ class RooExpensiveObjectCache::ExpensiveObject+ ;
+#pragma link C++ class std::map<std::string,TH1*>+ ;
+#pragma link C++ class RooBinningCategory+ ;
 #pragma link off class RooErrorHandler+ ;
 #pragma link off class RooNag+ ;
 #endif 

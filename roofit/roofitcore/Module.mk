@@ -82,7 +82,8 @@ ROOFITCOREH3   := RooRandomizeParamMCSModule.h RooRangeBinning.h RooRealAnalytic
                   RooParamBinning.h RooConstraintSum.h RooRecursiveFraction.h RooDataWeightedAverage.h \
                   RooSimWSTool.h RooFracRemainder.h RooLinearMorph.h RooAbsCachedReal.h \
                   RooAbsSelfCachedReal.h RooCachedReal.h RooNumCdf.h RooChangeTracker.h \
-                  RooNumRunningInt.h RooHistFunc.h
+                  RooNumRunningInt.h RooHistFunc.h RooExpensiveObjectCache.h \
+                  RooBinningCategory.h RooCintUtils.h
 
 ROOFITCOREH1   := $(patsubst %,$(MODDIRI)/%,$(ROOFITCOREH1))
 ROOFITCOREH2   := $(patsubst %,$(MODDIRI)/%,$(ROOFITCOREH2))

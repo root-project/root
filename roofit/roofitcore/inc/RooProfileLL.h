@@ -28,22 +28,28 @@ public:
   virtual TObject* clone(const char* newname) const { return new RooProfileLL(*this,newname); }
   virtual ~RooProfileLL() ;
 
+  void setAlwaysStartFromMin(Bool_t flag) { _startFromMin = flag ; }
+  Bool_t alwaysStartFromMin() const { return _startFromMin ; }
+
 protected:
 
-  RooRealProxy _nll ;
-  RooSetProxy _obs ;
-  RooSetProxy _par ;
+  RooRealProxy _nll ;    // Input -log(L) function
+  RooSetProxy _obs ;     // Parameters of profile likelihood
+  RooSetProxy _par ;     // Marginialized parameters of likelihood
+  Bool_t _startFromMin ; // Always start minimization for global minimum?
 
-  TIterator* _piter ; //! 
-  TIterator* _oiter ; //!
+  TIterator* _piter ; //! Iterator over profile likelihood parameters to be minimized 
+  TIterator* _oiter ; //! Iterator of profile likelihood output parameter(s)
 
-  mutable RooMinuit* _minuit ; //!
+  mutable RooMinuit* _minuit ; //! Internal minuit instance
 
   mutable Bool_t _absMinValid ; // flag if absmin is up-to-date
   mutable Double_t _absMin ; // absolute minimum of -log(L)
+  mutable RooArgSet _paramAbsMin ; // Parameter values at absolute minimum
+  mutable std::map<std::string,bool> _paramFixed ; // Parameter constant status at last time of use
   
   Double_t evaluate() const ;
-  mutable std::map<std::string,bool> _paramFixed ;
+
 
 private:
 

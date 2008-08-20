@@ -71,7 +71,7 @@ RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsPdf& pdf, RooD
 {
   RooCmdConfig pc("RooChi2Var::RooChi2Var") ;
   pc.defineInt("extended","Extended",0,kFALSE) ;
-  pc.defineInt("etype","DataError",0,(Int_t)RooDataHist::Poisson) ;  
+  pc.defineInt("etype","DataError",0,(Int_t)RooDataHist::SumW2) ;  
 
   pc.process(arg1) ;  pc.process(arg2) ;  pc.process(arg3) ;
   pc.process(arg4) ;  pc.process(arg5) ;  pc.process(arg6) ;
@@ -88,7 +88,7 @@ RooChi2Var::RooChi2Var(const char *name, const char *title, RooAbsPdf& pdf, RooD
 		       Bool_t extended, const char* cutRange, const char* addCoefRange,
 		       Int_t nCPU, Bool_t interleave, Bool_t verbose, Bool_t splitCutRange) : 
   RooAbsOptTestStatistic(name,title,pdf,data,RooArgSet(),cutRange,addCoefRange,nCPU,interleave,verbose,splitCutRange),
-   _etype(RooAbsData::Poisson), _extended(extended)
+   _etype(RooAbsData::SumW2), _extended(extended)
 {
   // Constructor of a chi2 for given p.d.f. with respect given binned
   // dataset. If cutRange is specified the calculation of the chi2 is
@@ -113,7 +113,7 @@ RooChi2Var::RooChi2Var(const char *name, const char *title, RooAbsPdf& pdf, RooD
 		       const RooArgSet& projDeps, Bool_t extended, const char* cutRange, const char* addCoefRange, 
 		       Int_t nCPU, Bool_t interleave, Bool_t verbose, Bool_t splitCutRange) : 
   RooAbsOptTestStatistic(name,title,pdf,data,projDeps,cutRange,addCoefRange,nCPU,interleave,verbose,splitCutRange),
-  _etype(RooAbsData::Poisson), _extended(extended)
+  _etype(RooAbsData::SumW2), _extended(extended)
 {
   // Constructor of a chi2 for given p.d.f. with respect given binned
   // dataset taking the observables specified in projDeps as projected
@@ -180,11 +180,13 @@ Double_t RooChi2Var::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t 
     Double_t nData = data->weight() ;
     Double_t nPdf = pdfClone->getVal(_normSet) * nDataTotal * data->binVolume() ;
 
+
     Double_t eExt = nPdf-nData ;
 
     Double_t eIntLo,eIntHi ;
     data->weightError(eIntLo,eIntHi,_etype) ;
     Double_t eInt = (eExt>0) ? eIntHi : eIntLo ;
+
     
     // Skip cases where pdf=0 and there is no data
     if (eInt==0. && nData==0. && nPdf==0) continue ;
@@ -195,6 +197,8 @@ Double_t RooChi2Var::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t 
 		  << " has zero error, but function is not zero (" << nPdf << ")" << endl ;
       return 0 ;
     }
+
+    //cout << "Chi2Var[" << i << "] nData = " << nData << " nPdf = " << nPdf << " errorExt = " << eExt << " errorInt = " << eInt << " contrib = " << eExt*eExt/(eInt*eInt) << endl ;
 
     result += eExt*eExt/(eInt*eInt) ;
   }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDouble.h,v 1.8 2007/05/11 09:11:30 verkerke Exp $
+ *    File: $Id$
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -13,45 +13,37 @@
  * with or without modification, are permitted according to the terms        *
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
-#ifndef ROO_DOUBLE
-#define ROO_DOUBLE
+#ifndef ROO_BINNING_CATEGORY
+#define ROO_BINNING_CATEGORY
 
-#include "Rtypes.h"
-#include "TNamed.h"
+#include "TSortedList.h"
+#include "RooAbsCategory.h"
+#include "RooRealProxy.h"
+#include "RooCatType.h"
 
-class RooDouble : public TNamed {
+class RooBinningCategory : public RooAbsCategory {
+
 public:
+  // Constructors etc.
+  inline RooBinningCategory() { }
+  RooBinningCategory(const char *name, const char *title, RooAbsRealLValue& inputVar, const char* binningName=0);
+  RooBinningCategory(const RooBinningCategory& other, const char *name=0) ;
+  virtual TObject* clone(const char* newname) const { return new RooBinningCategory(*this, newname); }
+  virtual ~RooBinningCategory();
 
-  RooDouble() {
-    // Default constructor
-  } ;
-  RooDouble(Double_t value) ;
-  RooDouble(const RooDouble& other) : TNamed(other), _value(other._value) {}
-  virtual ~RooDouble() {
-    // Destructor
-  } ;
-
-  // Double_t cast operator 
-  inline operator Double_t() const { 
-    // Return value of contained double
-    return _value ; 
-  }
-  RooDouble& operator=(Double_t value) { 
-    // Return true if contained double equals value
-    _value = value ; return *this ; 
-  }
-
-  // Sorting interface ;
-  Int_t Compare(const TObject* other) const ;
-  virtual Bool_t IsSortable() const { 
-    // We are a sortable object
-    return kTRUE ; 
-  }
+  // Printing interface (human readable)
+  virtual void printMultiline(ostream& os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const ;
 
 protected:
+  
+  void initialize() ;
 
-  Double_t _value ; // Value payload
-  ClassDef(RooDouble,1) // Container class for Double_t
+  RooRealProxy _inputVar ; // Input variable that is mapped
+  TString _bname ;         // Name of the binning specification to be used to perform the mapping
+
+  virtual RooCatType evaluate() const ; 
+
+  ClassDef(RooBinningCategory,1) // RealVar-to-Category function defined by bin boundaries on input var
 };
 
 #endif

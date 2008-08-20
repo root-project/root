@@ -49,6 +49,8 @@
 #include "RooEllipse.h"
 #include "RooRandom.h"
 #include "RooMsgService.h"
+#include "TH2D.h"
+#include "TText.h"
 
 
 
@@ -228,6 +230,7 @@ RooPlot *RooFitResult::plotOn(RooPlot *frame, const char *parName1, const char *
   // add a 1-sigma error ellipse, if requested
   if(opt.Contains("E")) {
     RooEllipse *contour= new RooEllipse("contour",x1,x2,s1,s2,rho);
+    contour->SetLineWidth(2) ;
     frame->addPlotable(contour);
   }
 
@@ -256,6 +259,7 @@ RooPlot *RooFitResult::plotOn(RooPlot *frame, const char *parName1, const char *
     TLine *line= new TLine(x1-rho*s1,x2-s2,x1+rho*s1,x2+s2);
     line->SetLineStyle(kDashed);
     line->SetLineColor(kBlue);
+    line->SetLineWidth(2) ;
     frame->addObject(line);
     if(opt.Contains("A")) {
       TGaxis *axis= new TGaxis(x1-s1,x2-s2,x1+s1,x2-s2,-1.,+1.,502,"-=");
@@ -268,6 +272,7 @@ RooPlot *RooFitResult::plotOn(RooPlot *frame, const char *parName1, const char *
     TLine *line= new TLine(x1-s1,x2-rho*s2,x1+s1,x2+rho*s2);
     line->SetLineStyle(kDashed);
     line->SetLineColor(kBlue);
+    line->SetLineWidth(2) ;
     frame->addObject(line);
     if(opt.Contains("A")) {
       TGaxis *axis= new TGaxis(x1-s1,x2-s2,x1-s1,x2+s2,-1.,+1.,502,"-=");
@@ -815,6 +820,33 @@ RooFitResult* RooFitResult::lastMinuitFit(const RooArgList& varList)
 
   return r ;
 }
+
+
+
+//_____________________________________________________________________________
+TH2* RooFitResult::correlationHist(const char* name) const 
+{
+  // Return TH2D of correlation matrix 
+  Int_t n = _corrMatrix.GetSize() ;
+
+  TH2D* hh = new TH2D(name,name,n,0,n,n,0,n) ;
+  
+  for (Int_t i = 0 ; i<n ; i++) {
+    RooArgList* row = (RooArgList*) _corrMatrix.At(i) ;
+    for (Int_t j = 0 ; j<n; j++) {
+      RooAbsReal* elem = (RooAbsReal*) row->at(j) ;
+      hh->Fill(i+0.5,n-j-0.5,elem->getVal()) ;
+    }
+    hh->GetXaxis()->SetBinLabel(i+1,_finalPars->at(i)->GetName()) ;
+    hh->GetYaxis()->SetBinLabel(n-i,_finalPars->at(i)->GetName()) ;    
+  }
+  hh->SetMinimum(-1) ;
+  hh->SetMaximum(+1) ;
+
+
+  return hh ;
+}
+
 
 
 

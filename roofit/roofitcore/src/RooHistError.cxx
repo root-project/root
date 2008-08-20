@@ -124,8 +124,8 @@ Bool_t RooHistError::getPoissonIntervalCalc(Int_t n, Double_t &mu1, Double_t &mu
 
 
 //_____________________________________________________________________________
-Bool_t RooHistError::getBinomialInterval(Int_t n, Int_t m,
-					 Double_t &asym1, Double_t &asym2, Double_t nSigma) const
+Bool_t RooHistError::getBinomialIntervalAsym(Int_t n, Int_t m,
+					     Double_t &asym1, Double_t &asym2, Double_t nSigma) const
 {
   // Return 'nSigma' binomial confidence interval for (n,m). The result is return in asym1 and asym2.
   // If the return values is kFALSE and error occurred.
@@ -166,9 +166,9 @@ Bool_t RooHistError::getBinomialInterval(Int_t n, Int_t m,
 
   // create the function objects to use
   Bool_t status(kFALSE);
-  BinomialSum upper(n,m);
+  BinomialSumAsym upper(n,m);
   if(n > 0) {
-    BinomialSum lower(n-1,m+1);
+    BinomialSumAsym lower(n-1,m+1);
     status= getInterval(&upper,&lower,(Double_t)(n-m)/(n+m),0.1,asym1,asym2,nSigma);
   }
   else {
@@ -184,6 +184,71 @@ Bool_t RooHistError::getBinomialInterval(Int_t n, Int_t m,
 
   return status;
 }
+
+
+//_____________________________________________________________________________
+Bool_t RooHistError::getBinomialIntervalEff(Int_t n, Int_t m,
+					     Double_t &asym1, Double_t &asym2, Double_t nSigma) const
+{
+  // Return 'nSigma' binomial confidence interval for (n,m). The result is return in asym1 and asym2.
+  // If the return values is kFALSE and error occurred.
+
+  // sanity checks
+  if(n < 0 || m < 0) {
+    oocoutE((TObject*)0,Plotting) << "RooHistError::getPoissonInterval: cannot calculate interval for n,m = " << n << "," << m << endl;
+    return kFALSE;
+  }
+
+  // handle the special case of no events in either category
+  if(n == 0 && m == 0) {
+    asym1= -1;
+    asym2= +1;
+    return kTRUE;
+  }
+
+  // handle cases when n,m>80 (factorials in BinomialSum will overflow around 170)
+  if ((n>80&&m>80)) {
+    Double_t N = n ;
+    Double_t M = m ;
+    Double_t asym = 1.0*(N)/(N+M) ;
+    Double_t approxErr = sqrt(4.0*n/(N+M)*(1-N/(N+M))/(N+M)) ;
+
+    asym1 = asym-nSigma*approxErr ;
+    asym2 = asym+nSigma*approxErr ;
+    return kTRUE ;
+  }
+
+  // swap n and m to ensure that n <= m
+  Bool_t swapped(kFALSE);
+  if(n > m) {
+    swapped= kTRUE;
+    Int_t tmp(m);
+    m= n;
+    n= tmp;
+  }
+
+  // create the function objects to use
+  Bool_t status(kFALSE);
+  BinomialSumEff upper(n,m);
+  Double_t eff = (Double_t)(n)/(n+m) ;
+  if(n > 0) {
+    BinomialSumEff lower(n-1,m+1);
+    status= getInterval(&upper,&lower,eff,0.1,asym1,asym2,nSigma);
+  }
+  else {
+    status= getInterval(&upper,0,eff,0.1,asym1,asym2,nSigma);
+  }
+
+  // undo the swap here
+  if(swapped) {
+    Double_t tmp(asym1);
+    asym1= 1-asym2;
+    asym2= 1-tmp;
+  }
+
+  return status;
+}
+
 
 
 //_____________________________________________________________________________
@@ -270,9 +335,12 @@ RooAbsFunc *RooHistError::createPoissonSum(Int_t n)
 
 
 //_____________________________________________________________________________
-RooAbsFunc *RooHistError::createBinomialSum(Int_t n, Int_t m) 
+RooAbsFunc *RooHistError::createBinomialSum(Int_t n, Int_t m, Bool_t eff) 
 { 
   // Create and return a BinomialSum function binding
-
-  return new BinomialSum(n,m); 
+  if (eff) {
+    return new BinomialSumEff(n,m) ;
+  } else {
+    return new BinomialSumAsym(n,m) ;
+  }
 }

@@ -33,6 +33,7 @@ class TMatrixF;
 class RooArgSet ;
 class RooPlot;
 class TObject ;
+class TH2 ;
 typedef RooArgSet* pRooArgSet ;
 
 class RooFitResult : public TNamed, public RooPrintable, public RooDirItem {
@@ -97,6 +98,8 @@ public:
     // Return list of floarting parameters after fit
     return *_finalPars ; 
   } 
+
+  TH2* correlationHist(const char* name = "correlation_matrix") const ;
 
   Double_t correlation(const RooAbsArg& par1, const RooAbsArg& par2) const {
     // Return correlation between par1 and par2

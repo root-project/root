@@ -270,8 +270,8 @@ Int_t RooProduct::getPartIntList(const RooArgSet* iset, const char *isetRange) c
 
 //_____________________________________________________________________________
 Int_t RooProduct::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars,
-                                            const RooArgSet* normSet,
-                                            const char* rangeName) const
+					  const RooArgSet* /*normSet*/,
+					  const char* rangeName) const
 {
   // Declare that we handle all integrations internally
 
@@ -279,7 +279,7 @@ Int_t RooProduct::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVar
 
   // Declare that we can analytically integrate all requested observables
   // (basically, we will take care of the problem, and delegate where required)
-  assert(normSet==0);
+  //assert(normSet==0);
   assert(analVars.getSize()==0);
   analVars.add(allVars) ;
   Int_t code = getPartIntList(&analVars,rangeName)+1;

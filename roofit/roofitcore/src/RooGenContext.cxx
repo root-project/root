@@ -103,7 +103,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
   const RooAbsArg *arg = 0;
   while((_isValid && (tmp= (const RooAbsArg*)iterator->Next()))) {
     // is this argument derived?
-    if(tmp->isDerived()) {
+    if(!tmp->isFundamental()) {
       coutE(Generation) << "RooGenContext::ctor(): cannot generate values for derived \""  << tmp->GetName() << "\"" << endl;
       _isValid= kFALSE;
       continue;
@@ -231,7 +231,6 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
       
       // Check if PDF supports maximum finding
       Int_t maxFindCode = _pdfClone->getMaxVal(_otherVars) ;
-      cout << "maxFindCode = " << maxFindCode << endl ;
       if (maxFindCode != 0) {
 	
 	// Special case: PDF supports max-finding in otherVars, no need to scan other+proto space for maximum

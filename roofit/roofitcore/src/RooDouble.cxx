@@ -23,12 +23,19 @@
 //
 
 #include "RooFit.h"
-
 #include "RooDouble.h"
+#include <string>
 
 ClassImp(RooDouble)
 ;
 
+
+
+//_____________________________________________________________________________
+RooDouble::RooDouble(Double_t value) : TNamed(), _value(value) 
+{
+  SetName(Form("%f",value)) ;
+}
 
 
 //_____________________________________________________________________________

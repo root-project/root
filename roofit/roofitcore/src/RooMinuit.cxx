@@ -63,6 +63,7 @@
 #include "RooAbsPdf.h"
 #include "RooSentinel.h"
 #include "RooMsgService.h"
+#include "RooPlot.h"
 
 
 
@@ -112,10 +113,11 @@ RooMinuit::RooMinuit(RooAbsReal& function)
   _optConst = kFALSE ;
   _verbose = kFALSE ;
   _profile = kFALSE ;
-  _handleLocalErrors = kFALSE ;
+  _handleLocalErrors = kTRUE ;
   _printLevel = 1 ;
   _printEvalErrors = 10 ;
   _warnLevel = 0 ;
+  _doEvalErrorWall = kTRUE ;
 
   // Examine parameter list
   RooArgSet* paramSet = function.getParameters(RooArgSet()) ;
@@ -694,12 +696,18 @@ Bool_t RooMinuit::synchronize(Bool_t verbose)
 
   if (_optConst) {
     if (constStatChange) {
+
+      RooAbsReal::enableEvalErrorLogging(kTRUE) ;
+
       coutI(Minimization) << "RooMinuit::synchronize: set of constant parameters changed, rerunning const optimizer" << endl ;
       _func->constOptimizeTestStatistic(RooAbsArg::ConfigChange) ;
     } else if (constValChange) {
       coutI(Minimization) << "RooMinuit::synchronize: constant parameter values changed, rerunning const optimizer" << endl ;
       _func->constOptimizeTestStatistic(RooAbsArg::ValueChange) ;
     }
+
+    RooAbsReal::enableEvalErrorLogging(kFALSE) ;  
+
   }
 
   return 0 ;  
@@ -714,6 +722,8 @@ void RooMinuit::optimizeConst(Bool_t flag)
   // If flag is true, perform constant term optimization on
   // function being minimized.
 
+  RooAbsReal::enableEvalErrorLogging(kTRUE) ;
+
   if (_optConst && !flag){ 
     if (_printLevel>-1) coutI(Minimization) << "RooMinuit::optimizeConst: deactivating const optimization" << endl ;
     _func->constOptimizeTestStatistic(RooAbsArg::DeActivate) ;
@@ -727,6 +737,9 @@ void RooMinuit::optimizeConst(Bool_t flag)
   } else {
     if (_printLevel>-1) coutI(Minimization) << "RooMinuit::optimizeConst: const optimization wasn't active" << endl ;
   }
+
+  RooAbsReal::enableEvalErrorLogging(kFALSE) ;
+
 }
 
 
@@ -782,7 +795,7 @@ RooFitResult* RooMinuit::save(const char* userName, const char* userTitle)
 
 
 //_____________________________________________________________________________
-TH2F* RooMinuit::contour(RooRealVar& var1, RooRealVar& var2, Double_t n1, Double_t n2, Double_t n3, Double_t n4, Double_t n5, Double_t n6) 
+RooPlot* RooMinuit::contour(RooRealVar& var1, RooRealVar& var2, Double_t n1, Double_t n2, Double_t n3, Double_t n4, Double_t n5, Double_t n6) 
 {
   // Create and draw a TH2 with the error contours in parameters var1 and v2 at up to 6 'sigma' settings
   // where 'sigma' is calculated as n*n*errorLevel
@@ -803,125 +816,41 @@ TH2F* RooMinuit::contour(RooRealVar& var1, RooRealVar& var2, Double_t n1, Double
   }
   
   // create and draw a frame
-  TH2F *frame = var1.createHistogram("contourPlot", var2, "-log(likelihood)") ;
-  frame->SetStats(kFALSE);
+  RooPlot* frame = new RooPlot(var1,var2) ;
 
   // draw a point at the current parameter values
   TMarker *point= new TMarker(var1.getVal(), var2.getVal(), 8);
+  frame->addObject(point) ;
 
   // remember our original value of ERRDEF
   Double_t errdef= gMinuit->fUp;
 
-  TGraph* graph1 = 0;
-  if(n1 > 0) {
-    // set the value corresponding to an n1-sigma contour
-    gMinuit->SetErrorDef(n1*n1*errdef);
-    // calculate and draw the contour
-    graph1= (TGraph*)gMinuit->Contour(50, index1, index2);
-    if (graph1) {
-      gDirectory->Append(graph1) ;
-    } else {
-      coutE(Minimization) << "RooMinuit::contour(" << GetName() << ") ERROR: MINUIT did not return a contour graph for n=" << n1 << endl ;
+  Double_t n[6] ;
+  n[0] = n1 ; n[1] = n2 ; n[2] = n3 ; n[3] = n4 ; n[4] = n5 ; n[5] = n6 ;
+  
+
+  for (Int_t ic = 0 ; ic<6 ; ic++) {
+    if(n[ic] > 0) {
+      // set the value corresponding to an n1-sigma contour
+      gMinuit->SetErrorDef(n[ic]*n[ic]*errdef);
+      // calculate and draw the contour
+      TGraph* graph= (TGraph*)gMinuit->Contour(50, index1, index2);
+      if (!graph) {
+	coutE(Minimization) << "RooMinuit::contour(" << GetName() << ") ERROR: MINUIT did not return a contour graph for n=" << n[ic] << endl ;
+      } else {
+	graph->SetName(Form("contour_%s_n%f",_func->GetName(),n[ic])) ;
+	graph->SetLineStyle(ic+1) ;
+	graph->SetLineWidth(2) ;
+	graph->SetLineColor(kBlue) ;
+	frame->addObject(graph,"L") ;
+      }
     }
-  }
-
-  TGraph* graph2 = 0;
-  if(n2 > 0) {
-    // set the value corresponding to an n2-sigma contour
-    gMinuit->SetErrorDef(n2*n2*errdef);
-    // calculate and draw the contour
-    graph2= (TGraph*)gMinuit->Contour(50, index1, index2);
-    if (graph2) {
-      graph2->SetLineStyle(2);
-      gDirectory->Append(graph2) ;
-    } else {
-      coutE(Minimization) << "RooMinuit::contour(" << GetName() << ") ERROR: MINUIT did not return a contour graph for n=" << n2 << endl ;
-    }
-  }
-
-  TGraph* graph3 = 0;
-  if(n3 > 0) {
-    // set the value corresponding to an n3-sigma contour
-    gMinuit->SetErrorDef(n3*n3*errdef);
-    // calculate and draw the contour
-    
-    graph3= (TGraph*)gMinuit->Contour(50, index1, index2);
-
-    if (graph3) {
-      graph3->SetLineStyle(3);
-      gDirectory->Append(graph3) ;   
-    } else {
-      coutE(Minimization) << "RooMinuit::contour(" << GetName() << ") ERROR: MINUIT did not return a contour graph for n=" << n3 << endl ;
-    }
-
-  }
-
-  TGraph* graph4 = 0;
-  if(n4 > 0) {
-    // set the value corresponding to an n3-sigma contour
-    gMinuit->SetErrorDef(n4*n4*errdef);
-    // calculate and draw the contour
-    
-    graph4= (TGraph*)gMinuit->Contour(50, index1, index2);
-
-    if (graph4) {
-      graph4->SetLineStyle(4);
-      gDirectory->Append(graph4) ;   
-    } else {
-      coutE(Minimization) << "RooMinuit::contour(" << GetName() << ") ERROR: MINUIT did not return a contour graph for n=" << n4 << endl ;
-    }
-
-  }
-
-  TGraph* graph5 = 0;
-  if(n5 > 0) {
-    // set the value corresponding to an n5-sigma contour
-    gMinuit->SetErrorDef(n5*n5*errdef);
-    // calculate and draw the contour
-    
-    graph5= (TGraph*)gMinuit->Contour(50, index1, index2);
-
-    if (graph5) {
-      graph5->SetLineStyle(5);
-      gDirectory->Append(graph5) ;   
-    } else {
-      coutE(Minimization) << "RooMinuit::contour(" << GetName() << ") ERROR: MINUIT did not return a contour graph for n=" << n5 << endl ;
-    }
-
-  }
-
-  TGraph* graph6 = 0;
-  if(n6 > 0) {
-    // set the value corresponding to an n6-sigma contour
-    gMinuit->SetErrorDef(n6*n6*errdef);
-    // calculate and draw the contour
-    
-    graph6= (TGraph*)gMinuit->Contour(50, index1, index2);
-
-    if (graph6) {
-      graph6->SetLineStyle(6);
-      gDirectory->Append(graph6) ;   
-    } else {
-      coutE(Minimization) << "RooMinuit::contour(" << GetName() << ") ERROR: MINUIT did not return a contour graph for n=" << n6 << endl ;
-    }
-
   }
 
   // restore the original ERRDEF
   gMinuit->SetErrorDef(errdef);
-
-
-  // Draw all objects
-  frame->Draw();
-  point->Draw();
-  if (graph1) graph1->Draw() ;
-  if (graph2) graph2->Draw();
-  if (graph3) graph3->Draw();
-  if (graph4) graph4->Draw();
-  if (graph5) graph5->Draw();
-  if (graph6) graph6->Draw();
   
-  return frame;
+  return frame ;
 }
 
 
@@ -1095,13 +1024,18 @@ void RooMinuitGlue(Int_t& /*np*/, Double_t* /*gin*/,
 
   // Calculate the function for these parameters
   f= context->_func->getVal() ;
-  if  (f==0 || ( (context->_handleLocalErrors && (  (RooAbsPdf::evalError()) || RooAbsReal::numEvalErrors()>0) ) ) ) {
+  if ( RooAbsPdf::evalError() || RooAbsReal::numEvalErrors()>0 ) {
 
     if (context->_printEvalErrors>=0) {
-      oocoutW(context,Minimization) << "RooFitGlue: Minimized function has error status." << endl 
-				    << "Returning maximum FCN so far (" << maxFCN 
-				    << ") to force MIGRAD to back out of this region. Error log follows" << endl ;
-      
+
+      if (context->_doEvalErrorWall) {
+	oocoutW(context,Minimization) << "RooFitGlue: Minimized function has error status." << endl 
+				      << "Returning maximum FCN so far (" << maxFCN 
+				      << ") to force MIGRAD to back out of this region. Error log follows" << endl ;
+      } else {
+	oocoutW(context,Minimization) << "RooFitGlue: Minimized function has error status but is ignored" << endl ;
+      }	
+
       TIterator* iter = context->_floatParamList->createIterator() ;
       RooRealVar* var ;
       Bool_t first(kTRUE) ;
@@ -1115,9 +1049,12 @@ void RooMinuitGlue(Int_t& /*np*/, Double_t* /*gin*/,
       
       RooAbsReal::printEvalErrors(ooccoutW(context,Minimization),context->_printEvalErrors) ;
       ooccoutW(context,Minimization) << endl ;
+    } 
+
+    if (context->_doEvalErrorWall) {
+      f = maxFCN ;
     }
 
-    f = maxFCN ;
     RooAbsPdf::clearEvalError() ;
     RooAbsReal::clearEvalErrorLog() ;
     context->_numBadNLL++ ;

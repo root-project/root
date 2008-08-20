@@ -130,41 +130,46 @@ RooAbsTestStatistic::RooAbsTestStatistic(const char *name, const char *title, Ro
 //_____________________________________________________________________________
 RooAbsTestStatistic::RooAbsTestStatistic(const RooAbsTestStatistic& other, const char* name) : 
   RooAbsReal(other,name), 
-  _paramSet("paramSet",this,other._paramSet),
+  _paramSet("paramSet","Set of parameters",this),
   _func(other._func),
   _data(other._data),
   _projDeps((RooArgSet*)other._projDeps->Clone()),
   _rangeName(other._rangeName),
+  _addCoefRangeName(other._addCoefRangeName),
   _splitRange(other._splitRange),
-  _simCount(other._simCount),
+  _simCount(1),
   _verbose(other._verbose),
-  _init(other._init),
-  _gofOpMode(other._gofOpMode),
-  _nEvents(other._nEvents),
-  _setNum(other._setNum),
-  _numSets(other._numSets),
+  _nGof(0),
+  _gofArray(0),
   _nCPU(other._nCPU),
+  _mpfeArray(0),
   _mpinterl(other._mpinterl)
 {
   // Copy constructor
 
-  if (operMode()==SimMaster) {
-    _nGof = other._nGof ; 
-    _gofArray = new pRooAbsTestStatistic[_nGof] ;
-    Int_t i ;
-    for (i=0 ; i<_nGof ; i++) {
-      _gofArray[i] = (RooAbsTestStatistic*) other._gofArray[i]->Clone() ;
+  // Our parameters are those of original
+  _paramSet.add(other._paramSet) ;
+
+  if (_nCPU>1) {
+
+    _gofOpMode = MPMaster ;
+
+  } else {
+
+    // Determine if RooAbsReal is a RooSimultaneous
+    Bool_t simMode = dynamic_cast<RooSimultaneous*>(_func)?kTRUE:kFALSE ;
+    
+    if (simMode) {
+      _gofOpMode = SimMaster ;
+    } else {
+      _gofOpMode = Slave ;
     }
   }
 
-  if (operMode()==MPMaster) {
-    _nCPU = other._nCPU ; 
-    _mpfeArray = new pRooRealMPFE[_nCPU] ;
-    Int_t i ;
-    for (i=0 ; i<_nCPU ; i++) {
-      _mpfeArray[i] = (RooRealMPFE*) other._mpfeArray[i]->Clone() ;
-    }
-  }
+  _setNum = 0 ;
+  _numSets = 1 ;
+  _init = kFALSE ;
+  _nEvents = _data->numEntries() ;
 
   
 }
@@ -287,7 +292,7 @@ Bool_t RooAbsTestStatistic::redirectServersHook(const RooAbsCollection& newServe
 {
   // Forward server redirect calls to component test statistics
 
-  if (_gofOpMode==SimMaster) {
+  if (_gofOpMode==SimMaster && _gofArray) {
     // Forward to slaves
     Int_t i ;
     for (i=0 ; i<_nGof ; i++) {
@@ -295,8 +300,17 @@ Bool_t RooAbsTestStatistic::redirectServersHook(const RooAbsCollection& newServe
 	_gofArray[i]->recursiveRedirectServers(newServerList,mustReplaceAll,nameChange) ;
       }
     }
-  } else if (_gofOpMode==MPMaster) {
-    // WVE implement this
+  } else if (_gofOpMode==MPMaster && _mpfeArray) {
+
+    // Forward to slaves
+    Int_t i ;
+    for (i=0 ; i<_nCPU ; i++) {
+      if (_mpfeArray[i]) {
+	_mpfeArray[i]->recursiveRedirectServers(newServerList,mustReplaceAll,nameChange) ;
+	cout << "redirecting servers on " << _mpfeArray[i]->GetName() << endl ;
+      }
+    }    
+
   }
   return kFALSE ;
 }
@@ -378,6 +392,7 @@ void RooAbsTestStatistic::initMPMode(RooAbsReal* real, RooAbsData* data, const R
 
   // Create proto-goodness-of-fit 
   RooAbsTestStatistic* gof = create(GetName(),GetTitle(),*real,*data,*projDeps,rangeName,addCoefRangeName,1,_mpinterl,_verbose,_splitRange) ;
+  gof->recursiveRedirectServers(_paramSet) ;
 
   for (i=0 ; i<_nCPU ; i++) {
 
@@ -386,8 +401,8 @@ void RooAbsTestStatistic::initMPMode(RooAbsReal* real, RooAbsData* data, const R
     gof->SetTitle(Form("%s_GOF%d",GetTitle(),i)) ;
     
     Bool_t doInline = (i==_nCPU-1) ;
-    if (!doInline) coutI(Generation) << "RooAbsTestStatistic::initMPMode: starting remote GOF server process #" << i << endl ; 
-    _mpfeArray[i] = new RooRealMPFE(Form("%s_MPFE%d",GetName(),i),Form("%s_MPFE%d",GetTitle(),i),*gof,doInline) ;    
+    if (!doInline) coutI(Eval) << "RooAbsTestStatistic::initMPMode: starting remote server process #" << i << endl ; 
+    _mpfeArray[i] = new RooRealMPFE(Form("%s_%x_MPFE%d",GetName(),this,i),Form("%s_%x_MPFE%d",GetTitle(),this,i),*gof,doInline) ;    
     _mpfeArray[i]->initialize() ;
   }
   //cout << "initMPMode --- done" << endl ;
@@ -444,7 +459,7 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
     RooAbsData* dset = (RooAbsData*) dsetList->FindObject(type->GetName()) ;
 
     if (pdf && dset && (dset->numEntries(kTRUE)!=0. || processEmptyDataSets())) {      
-      coutE(Fitting) << "RooAbsTestStatistic::initSimMode: creating slave GOF calculator #" << n << " for state " << type->GetName() 
+      coutE(Fitting) << "RooAbsTestStatistic::initSimMode: creating slave calculator #" << n << " for state " << type->GetName() 
 		     << " (" << dset->numEntries() << " dataset entries)" << endl ;
 
       if (_splitRange && rangeName) {
@@ -463,7 +478,7 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
       if ((!dset || (dset->numEntries(kTRUE)==0. && !processEmptyDataSets()) ) && pdf) {
 	if (_verbose) {
 	  coutI(Fitting) << "RooAbsTestStatistic::initSimMode: state " << type->GetName() 
-			 << " has no data entries, no slave GOF calculator created" << endl ;
+			 << " has no data entries, no slave calculator created" << endl ;
 	}
       }      
     }

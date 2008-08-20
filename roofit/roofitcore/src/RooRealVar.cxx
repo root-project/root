@@ -629,6 +629,14 @@ void RooRealVar::printValue(ostream& os) const
 {
   // Print value of variable
   os << getVal() ;
+
+  if(hasError() && !hasAsymError()) {
+    os << " +/- " << getError() ;
+  } else if (hasAsymError()) {
+    os << " +/- (" << getAsymErrorLo() << "," << getAsymErrorHi() << ")" ;
+  }
+
+
 }
 
 
@@ -637,19 +645,13 @@ void RooRealVar::printExtras(ostream& os) const
 {
   // Print extras of variable: (asymmetric) error, constant flag, limits and binning
 
-  if(hasError() && !hasAsymError()) {
-    os << " +/- " << getError() ;
-  } else if (hasAsymError()) {
-    os << " +/- (" << getAsymErrorLo() << "," << getAsymErrorHi() << ")" ;
-  }
-
   // Append limits if not constants
   if (isConstant()) {
     os << "C " ;
   }      
 
   // Append fit limits
-  os << "L(" ;
+  os << " L(" ;
   if(hasMin()) {
     os << getMin();
   }
@@ -794,7 +796,7 @@ TString *RooRealVar::format(Int_t sigDigits, const char *options) const
 
   if (latexTableMode) latexMode = kTRUE ;
   Bool_t asymError= opts.Contains("a") ;
-  Bool_t useErrorForPrecision= (((showError && !isConstant()) || opts.Contains("p")) && !opts.Contains("f")) ;
+  Bool_t useErrorForPrecision= (((showError && hasError(kFALSE) && !isConstant()) || opts.Contains("p")) && !opts.Contains("f")) ;
   // calculate the precision to use
   if(sigDigits < 1) sigDigits= 1;
   Int_t leadingDigitVal = 0;
@@ -840,8 +842,9 @@ TString *RooRealVar::format(Int_t sigDigits, const char *options) const
     sprintf(buffer, fmtVal, _value);
     text->Append(buffer);
   }
+
   // append our error if requested and this variable is not constant
-  if(hasError() && showError && !(asymError && hasAsymError())) {
+  if(hasError(kFALSE) && showError && !(asymError && hasAsymError(kFALSE))) {
     if(tlatexMode) {
       text->Append(" #pm ");
     }

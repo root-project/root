@@ -80,7 +80,7 @@ RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVar
   const RooAbsArg *found = 0;
   const RooAbsArg *arg   = 0;
   while((arg= (const RooAbsArg*)iterator->Next())) {
-    if(arg->isDerived()) {
+    if(!arg->isFundamental()) {
       coutE(Generation) << fName << "::" << ClassName() << ": cannot generate values for derived \""
 			<< arg->GetName() << "\"" << endl;
       _isValid= kFALSE;

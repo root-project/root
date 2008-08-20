@@ -33,6 +33,7 @@ public:
   // Constructors, assignment etc.
   RooArgSet();
   RooArgSet(const RooArgList& list) ;
+  RooArgSet(const RooArgList& list, const RooAbsArg* var1) ;
   explicit RooArgSet(const TCollection& tcoll, const char* name="") ;
   explicit RooArgSet(const char *name);
   RooArgSet(const RooAbsArg& var1, 

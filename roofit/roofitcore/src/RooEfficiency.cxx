@@ -99,3 +99,24 @@ Double_t RooEfficiency::evaluate() const
 
 
 
+//_____________________________________________________________________________
+Int_t RooEfficiency::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const 
+{
+  if (matchArgs(allVars,analVars,_cat)) return 1 ;
+  return 0 ;
+}
+
+
+
+//_____________________________________________________________________________
+Double_t RooEfficiency::analyticalIntegral(Int_t code, const char* /*rangeName*/) const 
+{
+  assert(code==1) ;
+  return 1.0 ;
+}
+
+
+
+
+
+

@@ -49,6 +49,7 @@ protected:
   void optimizeCaching() ;
   void optimizeConstantTerms(Bool_t) ;
 
+  RooSetProxy  _blah ; //
   RooArgSet*  _normSet ; // Pointer to set with observables used for normalization 
   RooArgSet*  _funcCloneSet ; // Set owning all components of internal clone of input function
   RooAbsData* _dataClone ; // Pointer to internal clone if input data

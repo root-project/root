@@ -440,6 +440,47 @@ void RooAbsRealLValue::setBin(Int_t ibin, const char* rangeName)
 
 
 
+
+
+//_____________________________________________________________________________
+void RooAbsRealLValue::setBin(Int_t ibin, const RooAbsBinning& binning) 
+{
+  // Set value to center of bin 'ibin' of binning 'binning' 
+
+  // Set value to center of requested bin
+  setVal(binning.binCenter(ibin)) ;
+}
+
+
+
+
+
+//_____________________________________________________________________________
+void RooAbsRealLValue::randomize(const RooAbsBinning& binning) 
+{
+  // Set a new value sampled from a uniform distribution over the fit range.
+  // Prints a warning and does nothing if the fit range is not finite.
+  
+  Double_t range= binning.highBound() - binning.lowBound() ;
+  setVal(binning.lowBound() + RooRandom::uniform()*range);
+}
+
+
+
+
+
+//_____________________________________________________________________________
+void RooAbsRealLValue::setBinFast(Int_t ibin, const RooAbsBinning& binning) 
+{
+  // Set value to center of bin 'ibin' of binning 'rangeName' (or of 
+  // default binning if no range is specified)
+
+  // Set value to center of requested bin
+  setValFast(binning.binCenter(ibin)) ;
+}
+
+
+
 //_____________________________________________________________________________
 Bool_t RooAbsRealLValue::fitRangeOKForPlotting() const 
 {
@@ -473,7 +514,8 @@ TH1* RooAbsRealLValue::createHistogram(const char *name, const RooCmdArg& arg1, 
   //
   // Binning(const char* name)                    -- Apply binning with given name to x axis of histogram
   // Binning(RooAbsBinning& binning)              -- Apply specified binning to x axis of histogram
-  // Binning(double lo, double hi, int nbins)     -- Apply specified binning to x axis of histogram
+  // Binning(int_t nbins)                         -- Apply specified binning to x axis of histogram
+  // Binning(int_t nbins, double lo, double hi)   -- Apply specified binning to x axis of histogram
   // ConditionalObservables(const RooArgSet& set) -- Do not normalized PDF over following observables when projecting PDF into histogram
   //
   // YVar(const RooAbsRealLValue& var,...)    -- Observable to be mapped on y axis of ROOT histogram
@@ -554,7 +596,7 @@ TH1* RooAbsRealLValue::createHistogram(const char *name, const RooLinkedList& cm
     Double_t xlo = pc.getDouble("xlo") ;
     Double_t xhi = pc.getDouble("xhi") ;
     binning[0] = new RooUniformBinning((xlo==xhi)?getMin():xlo,(xlo==xhi)?getMax():xhi,pc.getInt("nxbins")) ;
-  } else {
+  }  else {
     binning[0] = &getBinning() ;
   }
 

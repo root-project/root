@@ -36,6 +36,7 @@ public:
   virtual void printStream(ostream& os, Int_t contents, StyleOption style, TString indent="") const ;
   
   // Virtual hook function for class-specific content implementation
+  virtual void printAddress(ostream& os) const ;
   virtual void printName(ostream& os) const ;
   virtual void printTitle(ostream& os) const ;
   virtual void printClassName(ostream& os) const ;

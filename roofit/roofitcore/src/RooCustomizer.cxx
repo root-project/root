@@ -162,7 +162,7 @@ RooCustomizer::RooCustomizer(const RooAbsArg& pdf, const RooAbsCategoryLValue& m
 RooCustomizer::RooCustomizer(const RooAbsArg& pdf, const char* name) :
   TNamed(pdf.GetName(),pdf.GetTitle()),
   _sterile(kTRUE), 
-  _owning(kTRUE),
+  _owning(kFALSE),
   _name(name),
   _masterPdf((RooAbsArg*)&pdf), 
   _masterCat(0), 
@@ -290,9 +290,31 @@ RooAbsArg* RooCustomizer::build(Bool_t verbose)
 {
   // Build a clone of the prototype executing all registered 'replace' rules
   // If verbose is set a message is printed for each leaf or branch node
-  // modification. The returned composite arg is owned by the customizer
+  // modification. The returned head node owns all cloned branch nodes
+  // that were created in the cloning proces
 
-  return doBuild(_name,verbose) ;
+  // Execute build
+  RooAbsArg* ret =  doBuild(_name,verbose) ;
+
+  // Make root object own all cloned nodes
+
+  // First make list of all objects that were created
+  RooArgSet allOwned ;
+  if (_cloneNodeListOwned) {
+    allOwned.add(*_cloneNodeListOwned) ;
+  }
+  allOwned.add(*_cloneBranchList) ;
+
+  // Remove head node from list
+  allOwned.remove(*ret) ;
+
+  // If list with owned objects is not empty, assign
+  // head node as owner
+  if (allOwned.getSize()>0) {
+    ret->addOwnedComponents(allOwned) ;
+  }
+
+  return ret ;
 }
 
 

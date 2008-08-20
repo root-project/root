@@ -17,6 +17,7 @@
 #define ROO_MC_STUDY
 
 #include "TList.h"
+#include "TNamed.h"
 #include "RooArgSet.h"
 #include <list>
 class RooAbsPdf;
@@ -28,7 +29,7 @@ class RooPlot ;
 class RooRealVar ;
 class RooAbsMCStudyModule ;
 
-class RooMCStudy {
+class RooMCStudy : public TNamed {
 public:
 
   RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables, 
@@ -124,6 +125,7 @@ protected:
   RooArgSet*   _fitInitParams ; // List of initial values of fit parameters
   RooArgSet*   _fitParams ;     // List of actual fit parameters
   RooRealVar*  _nllVar ;
+  RooRealVar*  _ngenVar ; 
   
   TList       _genDataList ;    // List of generated data sample
   TList       _fitResList ;     // List of RooFitResult fit output objects
@@ -139,6 +141,7 @@ protected:
   Bool_t      _canAddFitResults ; // Allow adding of external fit results?
   Bool_t      _verboseGen       ; // Verbose generation?
   Bool_t      _perExptGenParams ; // Do generation parameter change per event?
+  Bool_t      _silence          ; // Silent running mode?
 
   std::list<RooAbsMCStudyModule*> _modList ; // List of additional study modules ;
 

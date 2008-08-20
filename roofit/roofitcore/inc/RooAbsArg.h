@@ -35,6 +35,7 @@ class RooAbsProxy ;
 class RooArgProxy ;
 class RooSetProxy ;
 class RooListProxy ;
+class RooExpensiveObjectCache ;
 
 class RooAbsArg : public TNamed, public RooPrintable {
 public:
@@ -48,7 +49,7 @@ public:
   virtual TObject* Clone(const char* newname=0) const { 
     return clone(newname?newname:GetName()) ; 
   }
-  virtual RooAbsArg* cloneTree(const char* newname=0) ;
+  virtual RooAbsArg* cloneTree(const char* newname=0) const ;
 
   // Accessors to client-server relation information 
   virtual Bool_t isDerived() const { 
@@ -83,6 +84,7 @@ public:
     // Return iterator over all server RooAbsArgs
     return _serverList.MakeIterator() ; 
   }
+
   inline RooAbsArg* findServer(const char *name) const { 
     // Return server of this arg with given name. Returns null if not found
     return (RooAbsArg*)_serverList.FindObject(name); 
@@ -112,7 +114,7 @@ public:
     return _clientListShape.FindObject(name)?kTRUE:kFALSE ; 
   }
   void leafNodeServerList(RooAbsCollection* list, const RooAbsArg* arg=0, Bool_t recurseNonDerived=kFALSE) const ;
-  void branchNodeServerList(RooAbsCollection* list, const RooAbsArg* arg=0) const ;
+  void branchNodeServerList(RooAbsCollection* list, const RooAbsArg* arg=0, Bool_t recurseNonDerived=kFALSE) const ;
   void treeNodeServerList(RooAbsCollection* list, const RooAbsArg* arg=0, 
 			  Bool_t doBranch=kTRUE, Bool_t doLeaf=kTRUE, 
 			  Bool_t valueOnly=kFALSE, Bool_t recurseNonDerived=kFALSE) const ;
@@ -193,6 +195,7 @@ public:
   virtual void printName(ostream& os) const ;
   virtual void printTitle(ostream& os) const ;
   virtual void printClassName(ostream& os) const ;
+  virtual void printAddress(ostream& os) const ;
   virtual void printArgs(ostream& os) const ;
   virtual void printMultiline(ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const;
   virtual void printTree(ostream& os, TString indent="") const ;
@@ -289,7 +292,7 @@ public:
     // Returns true of value has been invalidated by server value change
     if (inhibitDirty()) return kTRUE ;
     switch(_operMode) {
-    case AClean: return kFALSE ;
+    case AClean: return flipAClean() ;
     case ADirty: return kTRUE ;
     case Auto: return (isDerived()?_valueDirty:kFALSE) ;
     }
@@ -347,6 +350,7 @@ public:
   friend class RooArgSet ;
   friend class RooAbsCollection ;
   friend class RooCustomizer ;
+  friend class RooWorkspace ;
   RooRefCountList _serverList       ; // list of server objects
   RooRefCountList _clientList       ; // list of client objects
   RooRefCountList _clientListShape  ; // subset of clients that requested shape dirty flag propagation
@@ -414,6 +418,7 @@ void printAttribList(ostream& os) const;
   static Bool_t _inhibitDirty ; // Static flag controlling global inhibit of dirty state propagation
   static Bool_t _flipAClean ; // Static flag controlling flipping status of all AClean nodes to ADirty ;
   Bool_t _deleteWatch ; //! Delete watch flag 
+  static Bool_t flipAClean() ;
 
   static Bool_t inhibitDirty() ;
   
@@ -429,8 +434,12 @@ void printAttribList(ostream& os) const;
   RooArgSet* _ownedComponents ; //! Set of owned component
 
   mutable Bool_t _prohibitServerRedirect ; //! Prohibit server redirects -- Debugging tool
+
+  void setExpensiveObjectCache(RooExpensiveObjectCache& cache) { _eocache = &cache ; }  
+  RooExpensiveObjectCache& expensiveObjectCache() const ;
+  mutable RooExpensiveObjectCache* _eocache ; // Pointer to global cache manager for any expensive components created by this object
   
-  ClassDef(RooAbsArg,3) // Abstract variable
+  ClassDef(RooAbsArg,4) // Abstract variable
 };
 
 ostream& operator<<(ostream& os, const RooAbsArg &arg);  

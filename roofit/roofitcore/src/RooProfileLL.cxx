@@ -43,6 +43,7 @@ RooProfileLL::RooProfileLL(const char *name, const char *title,
   _nll("nll","-log(L) function",this,nll),
   _obs("obs","observables",this),
   _par("par","parameters",this,kFALSE,kFALSE),
+  _startFromMin(kTRUE),
   _minuit(0),
   _absMinValid(kFALSE),
   _absMin(0)
@@ -74,6 +75,7 @@ RooProfileLL::RooProfileLL(const RooProfileLL& other, const char* name) :
   _nll("nll",this,other._nll),
   _obs("obs",this,other._obs),
   _par("par",this,other._par),
+  _startFromMin(other._startFromMin),
   _minuit(0),
   _absMinValid(kFALSE),
   _absMin(0),
@@ -151,6 +153,10 @@ Double_t RooProfileLL::evaluate() const
     _absMin = _nll ;
     _absMinValid = kTRUE ;
 
+    // Save parameter values at abs minimum as well
+    _paramAbsMin.removeAll() ;
+    _paramAbsMin.addClone(_par) ;
+
     // Save constant status of all parameters
     _piter->Reset() ;
     RooAbsArg* par ;
@@ -170,12 +176,18 @@ Double_t RooProfileLL::evaluate() const
       }      
       ccxcoutI(Minimization) << ")" << endl ;            
     }
-    
+
   }
   
   // Set all observables constant in the minimization
   const_cast<RooSetProxy&>(_obs).setAttribAll("Constant",kTRUE) ;  
-  ccoutW(Eval) << "." ; ccoutW(Eval).flush() ;
+  ccoutP(Eval) << "." ; ccoutP(Eval).flush() ;
+
+  // If requested set initial parameters to those corresponding to absolute minimum
+  if (_startFromMin) {
+    const_cast<RooProfileLL&>(*this)._par = _paramAbsMin ;
+  }
+
   _minuit->migrad() ;
 
   // Restore original values and constant status of observables

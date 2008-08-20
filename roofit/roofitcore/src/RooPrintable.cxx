@@ -84,7 +84,7 @@ void RooPrintable::printStream(ostream& os, Int_t contents, StyleOption style, T
 
   // Print class name if requested
   if (contents&kAddress) {
-    os << this ; 
+    printAddress(os) ;
     if (contents!=kAddress) {
       os << " " ;
     }
@@ -201,6 +201,15 @@ void RooPrintable::printTitle(ostream& /*os*/) const
 void RooPrintable::printClassName(ostream& /*os*/) const 
 {
   // Print class name of object
+}
+
+
+
+//_____________________________________________________________________________
+void RooPrintable::printAddress(ostream& os) const 
+{
+  // Print class name of object
+  os << this ;
 }
 
 

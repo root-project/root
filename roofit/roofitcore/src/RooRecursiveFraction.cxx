@@ -61,17 +61,15 @@ RooRecursiveFraction::RooRecursiveFraction(const char* name, const char* title, 
   // Constructor of plain RooAddPdf fraction from list of recursive fractions
   _listIter = _list.createIterator() ;
 
-  TIterator* inputIter = fracList.createIterator() ;
-  RooAbsArg* comp ;
-  while((comp = (RooAbsArg*)inputIter->Next())) {
+  for (Int_t ifrac=fracList.getSize()-1 ; ifrac>=0 ; ifrac--) {
+    RooAbsArg* comp = fracList.at(ifrac) ;
     if (!dynamic_cast<RooAbsReal*>(comp)) {
       coutE(InputArguments) << "RooRecursiveFraction::ctor(" << GetName() << ") ERROR: component " << comp->GetName() 
 			    << " is not of type RooAbsReal" << endl ;
       RooErrorHandler::softAbort() ;
     }
-    _list.add(*comp) ;
+    _list.add(*comp) ;    
   }
-  delete inputIter ;
 }
 
 

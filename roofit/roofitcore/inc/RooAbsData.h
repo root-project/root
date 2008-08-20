@@ -61,7 +61,7 @@ public:
     return &_vars ; 
   } 
   virtual Double_t weight() const = 0 ; 
-  enum ErrorType { Poisson, SumW2 } ;
+  enum ErrorType { Poisson, SumW2, None } ;
   virtual Double_t weightError(ErrorType etype=Poisson) const ;
   virtual void weightError(Double_t& lo, Double_t& hi, ErrorType etype=Poisson) const ; 
   virtual const RooArgSet* get(Int_t index) const = 0 ;
@@ -74,7 +74,11 @@ public:
   }
   virtual void reset() = 0 ;
 
+  virtual Bool_t getRange(RooRealVar& var, Double_t& lowest, Double_t& highest, Double_t marginFrac=0, Bool_t symMode=kFALSE) const = 0 ;
+
+
   // Plot the distribution of a real valued arg
+  virtual Roo1DTable* table(const RooArgSet& catSet, const char* cuts="", const char* opts="") const ;
   virtual Roo1DTable* table(const RooAbsCategory& cat, const char* cuts="", const char* opts="") const = 0;
   virtual RooPlot* plotOn(RooPlot* frame, 
 			  const RooCmdArg& arg1=RooCmdArg::none(), const RooCmdArg& arg2=RooCmdArg::none(),
@@ -93,6 +97,8 @@ public:
                        const RooCmdArg& arg3=RooCmdArg::none(), const RooCmdArg& arg4=RooCmdArg::none(), 
                        const RooCmdArg& arg5=RooCmdArg::none(), const RooCmdArg& arg6=RooCmdArg::none(), 
                        const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) const ;
+  TH1* createHistogram(const char *name, const RooAbsRealLValue& xvar, RooLinkedList& argList) const ;
+  TH1 *createHistogram(const char* varNameList, Int_t xbins=0, Int_t ybins=0, Int_t zbins=0) const ;
 
   // Fill an existing histogram
   virtual TH1 *fillHistogram(TH1 *hist, const RooArgList &plotVars, const char *cuts= "", const char* cutRange=0) const = 0;
@@ -109,6 +115,11 @@ public:
 
   virtual Int_t defaultPrintContents(Option_t* opt) const ;
 
+  void setDirtyProp(Bool_t flag) { 
+    // Control propagation of dirty flags from observables in dataset
+    _doDirtyProp = flag ; 
+  }
+
 protected:
 
   virtual void optimizeReadingWithCaching(RooAbsArg& arg, const RooArgSet& cacheList) =0 ;
@@ -124,10 +135,6 @@ protected:
   virtual void cacheArgs(RooArgSet& varSet, const RooArgSet* nset=0) = 0 ;
   virtual void resetCache() = 0 ;
   virtual void setArgStatus(const RooArgSet& set, Bool_t active) = 0 ;
-  void setDirtyProp(Bool_t flag) { 
-    // Control propagation of dirty flags from observables in dataset
-    _doDirtyProp = flag ; 
-  }
 
   virtual RooAbsData* reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange=0, 
 	                        Int_t nStart=0, Int_t nStop=2000000000, Bool_t copyCache=kTRUE) = 0 ;

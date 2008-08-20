@@ -121,6 +121,8 @@ protected:
   } ;
   mutable std::map<Int_t,AnaIntConfig> _anaIntMap ; //! Map for analytical integration codes
 
+
+
 private:
 
   Bool_t _disableCache ; // Flag to run object in passthrough (= non-caching mode)

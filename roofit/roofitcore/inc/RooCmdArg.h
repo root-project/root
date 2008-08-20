@@ -40,7 +40,7 @@ public:
     _procSubArgs = flag ; 
   }
 
-  const RooLinkedList& subArgs() const { 
+  RooLinkedList& subArgs() { 
     // Return list of sub-arguments in this RooCmdArg
     return _argList ; 
   }

@@ -23,6 +23,8 @@
 #include "RooCacheManager.h"
 #include <vector>
 #include <list>
+#include <map>
+#include <string>
 
 class TObject ;
 class RooAbsArg;
@@ -42,6 +44,12 @@ public:
   RooDataHist(const char *name, const char *title, const RooArgSet& vars, const char* binningName=0) ;
   RooDataHist(const char *name, const char *title, const RooArgSet& vars, const RooAbsData& data, Double_t initWgt=1.0) ;
   RooDataHist(const char *name, const char *title, const RooArgList& vars, const TH1* hist, Double_t initWgt=1.0) ;
+  RooDataHist(const char *name, const char *title, const RooArgList& vars, RooCategory& indexCat, std::map<std::string,TH1*> histMap, Double_t initWgt=1.0) ;
+  //RooDataHist(const char *name, const char *title, const RooArgList& vars, Double_t initWgt=1.0) ;
+  RooDataHist(const char *name, const char *title, const RooArgList& vars, RooCmdArg arg1, RooCmdArg arg2=RooCmdArg(), RooCmdArg arg3=RooCmdArg(),
+	      RooCmdArg arg4=RooCmdArg(),RooCmdArg arg5=RooCmdArg(),RooCmdArg arg6=RooCmdArg(),RooCmdArg arg7=RooCmdArg(),RooCmdArg arg8=RooCmdArg()) ;
+
+
   RooDataHist(const RooDataHist& other, const char* newname = 0) ;
   virtual TObject* Clone(const char* newname=0) const { return new RooDataHist(*this,newname?newname:GetName()) ; }
   virtual ~RooDataHist() ;
@@ -123,8 +131,12 @@ protected:
 	      const RooFormulaVar* cutVar, const char* cutRange, Int_t nStart, Int_t nStop, Bool_t copyCache) ;
   RooAbsData* reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange=0, 
 	                Int_t nStart=0, Int_t nStop=2000000000, Bool_t copyCache=kTRUE) ;
-  Double_t interpolateDim(RooRealVar& dim, Double_t xval, Int_t intOrder, Bool_t correctForBinSize, Bool_t cdfBoundaries) ;
+  Double_t interpolateDim(RooRealVar& dim, const RooAbsBinning* binning, Double_t xval, Int_t intOrder, Bool_t correctForBinSize, Bool_t cdfBoundaries) ;
   void calculatePartialBinVolume(const RooArgSet& dimSet) const ;
+
+  void adjustBinning(const RooArgList& vars, TH1& href, Int_t* offset=0) ;
+  void importTH1(const RooArgList& vars, TH1& histo, Double_t initWgt) ;
+  void importTH1Set(const RooArgList& vars, RooCategory& indexCat, std::map<std::string,TH1*> hmap, Double_t initWgt) ;
 
   virtual RooAbsData* cacheClone(const RooArgSet* newCacheVars, const char* newName=0) ;
 
@@ -139,6 +151,8 @@ protected:
   Double_t*      _binv ; //[_arrSize] Bin volume array  
   RooArgSet  _realVars ; // Real dimensions of the dataset 
   TIterator* _realIter ; //! Iterator over realVars
+
+
  
   mutable Double_t _curWeight ; // Weight associated with the current coordinate
   mutable Double_t _curWgtErrLo ; // Error on weight associated with the current coordinate
@@ -150,6 +164,8 @@ protected:
   mutable std::vector<Double_t>* _pbinv ; //! Partial bin volume array
   mutable RooCacheManager<std::vector<Double_t> > _pbinvCacheMgr ; // Cache manager for arrays of partial bin volumes
   std::list<RooAbsLValue*> _lvvars ; //! List of observables casted as RooAbsLValue
+  std::list<const RooAbsBinning*> _lvbins ; //! List of used binnings associated with lvalues
+
   char* _binningName ;               //!Name of binning to be used to define grid
   inline const char* bname() const { 
     // Return name of binning to be used for RooDataHist bin definition
