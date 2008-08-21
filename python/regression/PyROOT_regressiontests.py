@@ -74,7 +74,7 @@ class Regression4ThreadingTestCase( unittest.TestCase ):
    def test1SpecialCasegROOT( self ):
       """Test the special role that gROOT plays vis-a-vis threading"""
 
-      cmd = "python -c 'import sys, ROOT; ROOT.gROOT; %s "\
+      cmd = sys.executable + "  -c 'import sys, ROOT; ROOT.gROOT; %s "\
             "sys.exit( 5 + int(\"thread\" in ROOT.__dict__) )'"
       if self.hasThread == self.noThread:
          cmd += " - -b"
@@ -98,7 +98,7 @@ class Regression4ThreadingTestCase( unittest.TestCase ):
    def test2ImportStyles( self ):
       """Test different import styles vis-a-vis threading"""
 
-      cmd = "python -c 'import sys; %s ;"\
+      cmd = sys.executable + " -c 'import sys; %s ;"\
             "import ROOT; sys.exit( 5 + int(\"thread\" in ROOT.__dict__) )'"
       if self.hasThread == self.noThread:
          cmd += " - -b"
@@ -115,7 +115,7 @@ class Regression4ThreadingTestCase( unittest.TestCase ):
    def test3SettingOfBatchMode( self ):
       """Test various ways of preventing GUI thread startup"""
 
-      cmd = "python -c '%s import ROOT, sys; sys.exit( 5+int(\"thread\" in ROOT.__dict__ ) )'"
+      cmd = sys.executable + " -c '%s import ROOT, sys; sys.exit( 5+int(\"thread\" in ROOT.__dict__ ) )'"
       if self.hasThread == self.noThread:
          cmd += " - -b"
 
@@ -224,6 +224,7 @@ class Regression9BreakSmartPtrCircularLoop( unittest.TestCase ):
 
 ## actual test run
 if __name__ == '__main__':
+   
    sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
    from MyTextTestRunner import MyTextTestRunner
 
