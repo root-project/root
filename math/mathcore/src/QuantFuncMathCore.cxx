@@ -64,12 +64,12 @@ namespace Math {
    }
 
 
-
-//    double chisquared_quantile(double z, double r) {
-//       // use Cephes (probably large error for z approx 1) 
-//       return 2.* ROOT::Math::Cephes::igami( 0.5 *r, 1. - z); 
-//    }
-
+#ifndef R__HAS_MATHMORE
+    double chisquared_quantile(double z, double r) {
+       // use Cephes (probably large error for z approx 1) 
+       return 2.* ROOT::Math::Cephes::igami( 0.5 *r, 1. - z); 
+    }
+#endif
 
 
    double exponential_quantile_c(double z, double lambda) {
@@ -116,12 +116,12 @@ namespace Math {
 
    }
 
-//   double gamma_quantile(double z, double alpha, double theta) {
-
-//      return theta * ROOT::Math::Cephes::igami( alpha, 1.- z); 
-
-//   }
-
+#ifndef R__HAS_MATHMORE
+   double gamma_quantile(double z, double alpha, double theta) {
+      // use gamma_quantile_c (large error for z close to 1)
+      return theta * ROOT::Math::Cephes::igami( alpha, 1.- z); 
+   }
+#endif
 
 
 

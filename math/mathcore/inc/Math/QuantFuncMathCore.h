@@ -219,9 +219,7 @@ namespace Math {
 
    */
 
-   inline double chisquared_quantile(double z, double r) { 
-      return chisquared_quantile_c(1.-z, r); 
-   }
+   double chisquared_quantile(double z, double r);  
 
 #endif
 
@@ -325,9 +323,7 @@ namespace Math {
 
    */
 
-   inline double gamma_quantile(double z, double alpha, double theta) { 
-      return gamma_quantile_c(1.-z, alpha, theta); 
-   }
+   double gamma_quantile(double z, double alpha, double theta);
 
 #endif
 
