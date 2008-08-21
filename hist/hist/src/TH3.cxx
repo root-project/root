@@ -1902,13 +1902,13 @@ TH1 *TH3::Project3D(Option_t *option) const
    Double_t entries  = 0;
    Double_t newerror = 0;
    for (Int_t ixbin=0;ixbin<=1+fXaxis.GetNbins();ixbin++){
-      Int_t ix = ixbin-ixmin;
+      Int_t ix = ixbin-ixmin+1;
       if (ix < 0) ix=0; if (ix > nx+1) ix = nx+1;
       for (Int_t iybin=0;iybin<=1+fYaxis.GetNbins();iybin++){
-         Int_t iy = iybin-iymin;
+         Int_t iy = iybin-iymin+1;
          if (iy < 0) iy=0; if (iy > ny+1) iy = ny+1;
          for (Int_t izbin=0;izbin<=1+fZaxis.GetNbins();izbin++){
-            Int_t iz = izbin-izmin;
+            Int_t iz = izbin-izmin+1;
             if (iz < 0) iz=0; if (iz > nz+1) iz = nz+1;
             Int_t bin = GetBin(ixbin,iybin,izbin);
             cont = GetBinContent(bin);
@@ -2221,14 +2221,8 @@ TProfile2D *TH3::Project3DProfile(Option_t *option) const
    Double_t cont;
    Double_t entries  = 0;
    for (Int_t ixbin=0;ixbin<=1+fXaxis.GetNbins();ixbin++){
-      Int_t ix = ixbin-ixmin;
-      if (ix < 0) ix=0; if (ix > nx+1) ix = nx+1;
       for (Int_t iybin=0;iybin<=1+fYaxis.GetNbins();iybin++){
-         Int_t iy = iybin-iymin;
-         if (iy < 0) iy=0; if (iy > ny+1) iy = ny+1;
          for (Int_t izbin=0;izbin<=1+fZaxis.GetNbins();izbin++){
-            Int_t iz = izbin-izmin;
-            if (iz < 0) iz=0; if (iz > nz+1) iz = nz+1;
             Int_t bin = GetBin(ixbin,iybin,izbin);
             cont = GetBinContent(bin);
             switch (pcase) {
