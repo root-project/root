@@ -60,7 +60,7 @@ void TAlienJDL::SetOutputDirectory(const char* value)
    // Sets OutputDirectory.
 
    if ( value )
-      SetValue ("OutputDirectory", AddQuotes(value));
+      SetValue ("OutputDir", AddQuotes(value));
 }
 
 //______________________________________________________________________________
@@ -69,7 +69,7 @@ void TAlienJDL::SetMergedOutputDirectory ( const char * value )
    // Sets merged OutputDirectory.
 
    if ( value )
-      SetValue ("MergedOutputDirectory", AddQuotes(value));
+      SetValue ("MergeOutputDir", AddQuotes(value));
 }
 
 //______________________________________________________________________________
@@ -338,9 +338,9 @@ void TAlienJDL::SetValueByCmd(TString cmd, TString value)
    if ( !cmd.CompareTo ( "Executable" ) ) SetExecutable ( value.Data() );
    else if ( !cmd.CompareTo ( "Arguments" ) ) SetArguments ( value.Data() );
    else if ( !cmd.CompareTo ( "EMail" ) ) SetEMail ( value.Data() );
-   else if ( !cmd.CompareTo ( "OutputDirectory" ) ) SetOutputDirectory ( value.Data() );
+   else if ( !cmd.CompareTo ( "OutputDir" ) ) SetOutputDirectory ( value.Data() );
    else if ( !cmd.CompareTo ( "Merge" ) ) AddToMerge ( value.Data() );
-   else if ( !cmd.CompareTo ( "MergedOutputDirectory" ) ) SetMergedOutputDirectory ( value.Data() );
+   else if ( !cmd.CompareTo ( "MergeOutputDir" ) ) SetMergedOutputDirectory ( value.Data() );
    else if ( !cmd.CompareTo ( "Price" ) ) SetPrice ( value.Atoi() );
    else if ( !cmd.CompareTo ( "TTL" ) ) SetTTL ( value.Atoi() );
    else if ( !cmd.CompareTo ( "JobTag" ) ) SetJobTag ( value.Data() );
