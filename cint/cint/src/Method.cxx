@@ -593,7 +593,7 @@ char* Cint::G__MethodInfo::GetPrototype()
   strcpy(G__buf,Type()->Name());
   strcat(G__buf," ");
   if(belongingclass && belongingclass->IsValid()) {
-    strcat(G__buf,belongingclass->Name());
+    strcat(G__buf,belongingclass->Fullname());
     strcat(G__buf,"::");
   }
   strcat(G__buf,Name());
