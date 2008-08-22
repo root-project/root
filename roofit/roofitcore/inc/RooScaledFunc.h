@@ -30,6 +30,10 @@ public:
   inline virtual Double_t getMinLimit(UInt_t index) const { return _func->getMinLimit(index); }
   inline virtual Double_t getMaxLimit(UInt_t index) const { return _func->getMaxLimit(index); }
 
+  virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const {
+    return _func->plotSamplingHint(obs,xlo,xhi) ; 
+  }
+
 protected:
   const RooAbsFunc *_func;
   Double_t _scaleFactor;

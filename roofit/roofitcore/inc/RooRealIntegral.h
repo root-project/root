@@ -61,6 +61,11 @@ public:
     return _cacheExpensive ;
   }
 
+  virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const {
+    // Forward plot sampling hint of integrand
+    return _function.arg().plotSamplingHint(obs,xlo,xhi) ;
+  }
+
 protected:
 
   mutable Bool_t _valid;

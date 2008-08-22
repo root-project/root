@@ -77,6 +77,8 @@ public:
   virtual Int_t getMaxVal(const RooArgSet& vars) const ;
   virtual Double_t maxVal(Int_t code) ;
 
+  virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const ; 
+
 protected:
 
   Double_t evaluate() const;

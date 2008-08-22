@@ -174,3 +174,10 @@ const char* RooRealBinding::getName() const
 
   return _func->GetName() ; 
 } 
+
+
+//_____________________________________________________________________________
+std::list<Double_t>* RooRealBinding::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const 
+{
+  return _func->plotSamplingHint(obs,xlo,xhi) ; 
+}

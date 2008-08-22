@@ -22,7 +22,7 @@
 #include "RooFit.h"
 
 #include "RooCintUtils.h"
-#include "Api.h"
+#include "cint/Api.h"
 #include "RooMsgService.h"
 #include <string.h>
 #include <string>

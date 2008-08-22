@@ -36,6 +36,8 @@ public:
 
   virtual const char* getName() const ; 
 
+  virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const ;
+
 protected:
 
   void loadValues(const Double_t xvector[]) const;

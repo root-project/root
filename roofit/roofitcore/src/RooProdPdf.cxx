@@ -1365,3 +1365,21 @@ RooArgSet* RooProdPdf::getConstraints(const RooArgSet& observables, const RooArg
 
   return ret ;
 }
+
+
+
+//_____________________________________________________________________________
+std::list<Double_t>* RooProdPdf::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const 
+{
+  // Forward the plot sampling hint from the p.d.f. that defines the observable obs  
+  _pdfIter->Reset() ;
+  RooAbsPdf* pdf ;
+  while((pdf=(RooAbsPdf*)_pdfIter->Next())) {
+    list<Double_t>* hint = pdf->plotSamplingHint(obs,xlo,xhi) ;      
+    if (hint) {
+      return hint ;
+    }
+  }
+  
+  return 0 ;
+}

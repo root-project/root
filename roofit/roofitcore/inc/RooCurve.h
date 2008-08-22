@@ -18,6 +18,7 @@
 
 #include "TGraph.h"
 #include "RooPlotable.h"
+#include <list>
 
 class RooAbsReal;
 class RooRealVar;
@@ -68,7 +69,7 @@ protected:
   void initialize();
   void addPoints(const RooAbsFunc &func, Double_t xlo, Double_t xhi,
 		 Int_t minPoints, Double_t prec, Double_t resolution, WingMode wmode,
-		 Int_t numee=0, Bool_t doEEVal=kFALSE, Double_t eeVal=0.) ;
+		 Int_t numee=0, Bool_t doEEVal=kFALSE, Double_t eeVal=0.,std::list<Double_t>* samplingHint=0) ;
   void addRange(const RooAbsFunc& func, Double_t x1, Double_t x2, Double_t y1,
 		Double_t y2, Double_t minDy, Double_t minDx,
 		Int_t numee=0, Bool_t doEEVal=kFALSE, Double_t eeVal=0.)  ;

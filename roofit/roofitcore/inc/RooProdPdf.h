@@ -76,6 +76,8 @@ public:
   // Constraint management
   virtual RooArgSet* getConstraints(const RooArgSet& observables, const RooArgSet& constrainedParams) const ;
 
+  virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const ; 
+
 protected:
 
   void initializeFromCmdArgList(const RooArgSet& fullPdfSet, const RooLinkedList& l) ;

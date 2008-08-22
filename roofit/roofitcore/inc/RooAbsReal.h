@@ -151,8 +151,6 @@ public:
 
   virtual void preferredObservableScanOrder(const RooArgSet& obs, RooArgSet& orderedObs) const ;
 
-public:
-
   // User entry point for plotting
   enum ScaleType { Raw, Relative, NumEvent, RelativeExpected } ;
   virtual RooPlot* plotOn(RooPlot* frame, 
@@ -216,6 +214,12 @@ public:
   static EvalErrorIter evalErrorIter() { return _evalErrorList.begin() ; } 
 
   static void clearEvalErrorLog() ;
+
+  virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const { 
+    // Interface for returning an optional hint for initial sampling points when constructing a curve 
+    // projected on observable.
+    return 0 ; 
+  }
 
 protected:
 

@@ -17,6 +17,8 @@
 #define ROO_ABS_FUNC
 
 #include "Rtypes.h"
+#include <list>
+class RooAbsRealLValue ;
 
 class RooAbsFunc {
 public:
@@ -56,6 +58,12 @@ public:
     // Name of function binding
     return "(unnamed)" ; 
   }  
+
+  virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const {
+    // Interface for returning an optional hint for initial sampling points when constructing a curve 
+    // projected on observable.  
+    return 0 ; 
+  }
 
 protected:
   mutable Int_t _ncall ; // Function call counter

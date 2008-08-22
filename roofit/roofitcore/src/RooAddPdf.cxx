@@ -66,6 +66,7 @@
 #include "RooGlobalFunc.h"
 
 #include "Riostream.h"
+#include <algorithm>
 
 
 ClassImp(RooAddPdf)
@@ -991,3 +992,43 @@ RooArgList RooAddPdf::CacheElem::containedArgs(Action)
   return allNodes ;
 }
 
+
+
+//_____________________________________________________________________________
+std::list<Double_t>* RooAddPdf::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const 
+{
+  // Loop over components for plot sampling hints and merge them if there are multiple
+
+  list<Double_t>* sumHint = 0 ;
+
+  _pdfIter->Reset() ;
+  RooAbsPdf* pdf ;
+  // Loop over components pdf
+  while((pdf=(RooAbsPdf*)_pdfIter->Next())) {
+
+    list<Double_t>* pdfHint = pdf->plotSamplingHint(obs,xlo,xhi) ;
+
+    // Process hint
+    if (pdfHint) {
+      if (!sumHint) {
+
+	// If this is the first hint, then just save it
+	sumHint = pdfHint ;
+
+      } else {
+
+	list<Double_t>* newSumHint = new list<Double_t>(sumHint->size()+pdfHint->size()) ;
+
+	// Merge hints into temporary array
+	merge(pdfHint->begin(),pdfHint->end(),sumHint->begin(),sumHint->end(),newSumHint->begin()) ;
+
+	// Copy merged array without duplicates to new sumHintArrau
+	delete sumHint ;
+	sumHint = newSumHint ;
+	
+      }
+    }
+  }
+
+  return sumHint ;
+}
