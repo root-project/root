@@ -72,19 +72,21 @@ enum EEventTrackingBits {
 class TQtWidgetBuffer : public QPixmap
 {
   private:
-    QWidget *fWidget;
+    const QWidget *fWidget;
 
   public:
     TQtWidgetBuffer() :  QPixmap(), fWidget(0) { }
-    TQtWidgetBuffer(QWidget *w) :  QPixmap(w?w->size():QSize(0,0)), fWidget(w)
+    TQtWidgetBuffer(const QWidget *w) :  QPixmap(w?w->size():QSize(0,0)), fWidget(w)
     { }
-    inline void resize(const QSize &size) { QPixmap newSize(size); *(QPixmap *)this = newSize; }
-    inline QRect rect () const { return fWidget->rect();}
+    virtual ~TQtWidgetBuffer(){}
+    inline QRect Rect () const { return fWidget->rect();}
 };
+
 //___________________________________________________________________
 class  TQtWidget : public QWidget {
 #ifndef __CINT__   
  Q_OBJECT
+ friend class TQtSynchPainting;
 #endif
 private:
 		void operator=(const TQtWidget&);
@@ -95,7 +97,9 @@ private:
    };
    bool fNeedStretch;
 protected:
-   void Init();
+   void Init(); 
+   void ResetCanvas() { fCanvas = 0;}
+
 public:
    enum {
       kEXITSIZEMOVE,
@@ -112,13 +116,13 @@ public:
   void SetCanvas(TCanvas *c);
 //  inline TCanvas  *GetCanvas() const         { return fCanvas;}
   inline TCanvas  *GetCanvas() const         { return (!fIsShadow) ? fCanvas : ((TQtWidget *)parentWidget())->GetCanvas(); }
-  inline QPixmap  &GetBuffer()               { return fPixmapID;}
-  inline const QPixmap  &GetBuffer()  const  { return fPixmapID;}
+  inline TQtWidgetBuffer  &GetBuffer()               { return (fPixmapID) ? *fPixmapID : *(fPixmapID = new TQtWidgetBuffer(this));}
+  inline const TQtWidgetBuffer  *GetBuffer()  const  { return fPixmapID;}
 
   // overloaded methods
   virtual void adjustSize();
-  void resize (int w, int h);
-  void resize (const QSize &size);
+  void Resize (int w, int h);
+  void Resize (const QSize &size);
   virtual void Erase ();
   bool    IsDoubleBuffered() { return fDoubleBufferOn; }
   void    SetDoubleBuffer(bool on=TRUE);
@@ -126,9 +130,9 @@ public:
 
 protected:
    friend class TGQt;
-   TCanvas         *fCanvas;
-   TQtWidgetBuffer  fPixmapID; // Double buffer of this widget
-   TQtWidget       *fShadowWidget ; // the "shadow" canvas for the Qt4 offscreen operation
+   TCanvas           *fCanvas;
+   TQtWidgetBuffer   *fPixmapID;     // Double buffer of this widget
+   TQtWidget  *fShadowWidget; // the "shadow" canvas for the Qt4 offscreen operation
    bool        fIsShadow;
    bool        fPaint;
    bool        fSizeChanged;
@@ -146,8 +150,7 @@ protected:
    bool paintFlag(bool mode=TRUE);
    void AdjustBufferSize();
 
-   // overloaded QWidget methods
-   bool paintingActive () const;
+   bool PaintingActive () const;
 
    virtual void enterEvent       ( QEvent *      );
 #if (QT_VERSION > 0x039999)
@@ -241,12 +244,8 @@ signals:
 };
 
 //______________________________________________________________________________
-inline void TQtWidget::AdjustBufferSize()
-   {  if (fPixmapID.size() != size() ) fPixmapID.resize(size()); }
-
-//______________________________________________________________________________
-inline bool TQtWidget::paintingActive () const {
-  return QWidget::paintingActive() || fPixmapID.paintingActive();
+inline bool TQtWidget::PaintingActive () const {
+  return QWidget::paintingActive() || (fPixmapID && fPixmapID->paintingActive());
 }
 //______________________________________________________________________________
 inline void TQtWidget::SetRootID(QWidget *wrapper) { fWrapper = wrapper;}

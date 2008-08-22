@@ -48,6 +48,25 @@
 #include "Win32Constants.h"
 #endif
 
+// Class to adjust buffre within the method scope if needed
+
+class TQtSynchPainting {
+  private:
+    bool fWasPainting;
+  public:
+    TQtSynchPainting(const TQtWidget &w) : fWasPainting(false) 
+    { 
+        // Suspend the painting
+        fWasPainting = w.PaintingActive ();
+        if (fWasPainting) gQt->End();
+    }
+    ~TQtSynchPainting() 
+    {
+       // REstore the painting if needed
+       if (fWasPainting) gQt->Begin();                   
+    }
+};
+
 ClassImp(TQtWidget)
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -132,7 +151,7 @@ TQtWidget::TQtWidget(QWidget* parent, const char* name, Qt::WFlags f,bool embedd
 #else
       QWidget(parent,f)
 #endif
-          ,fBits(0),fNeedStretch(false),fCanvas(0),fPixmapID(this),fShadowWidget(0),fIsShadow(false),fPaint(TRUE),fSizeChanged(FALSE)
+          ,fBits(0),fNeedStretch(false),fCanvas(0),fPixmapID(0),fShadowWidget(0),fIsShadow(false),fPaint(TRUE),fSizeChanged(FALSE)
           ,fDoubleBufferOn(FALSE),fEmbedded(embedded),fWrapper(0),fSaveFormat("PNG")
 {
    if (name && name[0]) setName(name);
@@ -146,7 +165,7 @@ TQtWidget::TQtWidget(QWidget* parent, Qt::WFlags f,bool embedded) :
 #else
       QWidget(parent,f)
 #endif
-          ,fBits(0),fNeedStretch(false),fCanvas(0),fPixmapID(this),fShadowWidget(0),fIsShadow(false),fPaint(TRUE),fSizeChanged(FALSE)
+          ,fBits(0),fNeedStretch(false),fCanvas(0),fPixmapID(0),fShadowWidget(0),fIsShadow(false),fPaint(TRUE),fSizeChanged(FALSE)
           ,fDoubleBufferOn(FALSE),fEmbedded(embedded),fWrapper(0),fSaveFormat("PNG")
 { Init() ;}
 //_____________________________________________________________________________
@@ -192,7 +211,7 @@ void TQtWidget::Init()
 }
 //______________________________________________________________________________
 TQtWidget::TQtWidget( TQtWidget &main) : QWidget(&main)
-          ,fBits(0),fCanvas(0),fPixmapID(this),fShadowWidget(0),fIsShadow(true)
+          ,fBits(0),fCanvas(0),fPixmapID(0),fShadowWidget(0),fIsShadow(true)
           ,fPaint(TRUE),fSizeChanged(FALSE),fDoubleBufferOn(TRUE),fEmbedded(TRUE)
           ,fWrapper(0),fSaveFormat("PNG")
 
@@ -221,14 +240,34 @@ TQtWidget::~TQtWidget()
       if (fEmbedded) {
          // one has to set CanvasID = 0 to disconnect things properly.
          c = fCanvas;
-         fCanvas = 0;
+         ResetCanvas();
          delete c;
       } else {
-         fCanvas = 0;
+         ResetCanvas();
       }
    }
+   delete fPixmapID;  fPixmapID = 0;
 }
 
+//______________________________________________________________________________
+void TQtWidget::AdjustBufferSize() 
+{
+   // Adjust the widget buffer size
+   TQtWidgetBuffer &buf = GetBuffer();
+   if ( buf.size() != size() )  {
+      if (IsDoubleBuffered() && QPainter::redirected(this)) 
+         QPainter::restoreRedirected(this);
+         QPaintDevice *redirected =  QPainter::redirected(this);
+         if (!redirected || (redirected == this) ) {
+#if QT_VERSION >= 0x40400
+           assert(!redirected || (redirected == this));
+#endif
+         }
+      delete  fPixmapID; fPixmapID = 0;
+      fPixmapID = new TQtWidgetBuffer(this); 
+      if (IsDoubleBuffered() ) QPainter::setRedirected(this,fPixmapID);
+   }
+}
 //_____________________________________________________________________________
 TCanvas  *TQtWidget::Canvas()
 {
@@ -326,14 +365,15 @@ TApplication *TQtWidget::InitRint( Bool_t /*prompt*/, const char *appClassName, 
    }
    return gApplication;
 }
+
 //_____________________________________________________________________________
 void TQtWidget::adjustSize()
 {
   // Adjusts the size of the widget to fit the contents.
   // Adjust the size of the double buffer to the
   // current Widget size
+  TQtSynchPainting a(*this);
   QWidget::adjustSize ();
-  AdjustBufferSize();
   update();
 }
 //_____________________________________________________________________________
@@ -341,7 +381,9 @@ void TQtWidget::Erase ()
 {
   // Erases the entire widget and its double buffer
  
-  fPixmapID.fill(this,QPoint(0,0));
+  TQtSynchPainting a(*this);
+  TQtWidgetBuffer &buf = GetBuffer();
+  buf.fill(this,QPoint(0,0));
   erase();
 }
 
@@ -374,7 +416,6 @@ void TQtWidget::Refresh()
    // [slot]  to allow Qt signal refreshing the ROOT TCanvas if needed
 
    TCanvas *c = Canvas();
-   if (!fPixmapID.paintingActive())  AdjustBufferSize();
    if (c) {
       c->Modified();
       c->Resize();
@@ -387,26 +428,27 @@ void TQtWidget::SetCanvas(TCanvas *c)
 { 
    //  remember my host TCanvas and adopt its name
    fCanvas = c;
+   // qDebug() << "TQtWidget::SetCanvas(TCanvas *c)" << fCanvas << fCanvas->GetName() ;
    setName(fCanvas->GetName());
 }
 
 //_____________________________________________________________________________
-void TQtWidget::resize (int w, int h)
+void TQtWidget::Resize (int , int )
 {
    // resize the widget and its double buffer
    // fprintf(stderr,"TQtWidget::resize (int w=%d, int h=%d)\n",w,h);
-   QWidget::resize(w,h);
-   AdjustBufferSize();
+   assert(0);
+   TQtSynchPainting  a(*this);
    // fPixmapID.fill();
 }
 
 //_____________________________________________________________________________
-void TQtWidget::resize (const QSize &size)
+void TQtWidget::Resize (const QSize &)
 {
    // resize the widget and its double buffer
    // fprintf(stderr,"TQtWidget::resize (int w=%d, int h=%d)\n",w,h);
-   QWidget::resize(size);
-   AdjustBufferSize();
+   assert(0);
+   TQtSynchPainting  a(*this);
    // fPixmapID.fill();
 }
 //_____________________________________________________________________________
@@ -743,6 +785,7 @@ bool TQtWidget::Save(const QString &fileName,const char *format,int quality)cons
       c->Print((const char *)fileName,(const char *)saveType);
       Ok = true;
    } else {
+      TQtSynchPainting a(*this);
       // Since the "+" is a legal part of the file name and it is used by Onuchin
       // to indicate  the "animation" mode, we have to proceed very carefully
       int dot = fileName.findRev('.');
@@ -751,7 +794,7 @@ bool TQtWidget::Save(const QString &fileName,const char *format,int quality)cons
          plus = fileName.find('+',dot+1);
       }
       QString fln = (plus) ? TGQt::GetNewFileName(fileName.left(plus)) : fileName;
-      Ok = GetBuffer().save(fln,saveType,quality);
+      Ok = GetBuffer() ? GetBuffer()->save(fln,saveType,quality): false;
    }
    emit ((TQtWidget *)this)->Saved(Ok);
    return Ok;
@@ -763,6 +806,21 @@ void  TQtWidget::SetDoubleBuffer(bool on)
    if (fDoubleBufferOn != on ) {
       fDoubleBufferOn = on;
 #if QT_VERSION >= 0x040000
+      if (fDoubleBufferOn) {
+          TQtSynchPainting a(*this);
+          if (!QPainter::redirected(this)) QPainter::setRedirected(this,&GetBuffer());
+      } else if ( QPainter::redirected(this) )  {
+          TQtSynchPainting a(*this);
+          QPainter::restoreRedirected (this);
+
+          QPaintDevice *redirected =  QPainter::redirected(this);
+          if (!redirected || (redirected == this) ) {
+#if QT_VERSION >= 0x40400
+            assert(!redirected || (redirected == this));
+#endif
+          }
+      }
+ //     qDebug() << "TQtWidget::SetDoubleBuffer " << this << on << QPainter::redirected(this);
 #ifdef SHAWDOWBUFEFR
       fprintf(stderr, "TQtWidget::SetDoubleBuffer buffer=%d \n", fDoubleBufferOn );
       if (!fDoubleBufferOn) {
@@ -791,6 +849,7 @@ void TQtWidget::stretchWidget(QResizeEvent * /*s*/)
    // Stretch the widget during sizing
 
    if  (!paintingActive()) {
+      // use the old buffer size to speed the stretching
 #if defined(R__QTWIN32) && (QT_VERSION < 0x40000)
       QPainter painter( this );
       if (!StretchBlt(
@@ -810,8 +869,10 @@ void TQtWidget::stretchWidget(QResizeEvent * /*s*/)
             printf("last error %d\n",GetLastError());
          }
 #else
-      QPainter pnt(this);
-      pnt.drawPixmap(rect(),GetBuffer());
+       if (fDoubleBufferOn) QPainter::restoreRedirected (this);
+       QPainter pnt(this);
+       pnt.drawPixmap(rect(),GetBuffer());
+       if (fDoubleBufferOn) QPainter::setRedirected(this,&GetBuffer());
 #endif
    }
    fNeedStretch = false;
@@ -822,6 +883,10 @@ void TQtWidget::exitSizeEvent ()
    // Responce to the "exit size event"
 
    if (!fSizeChanged && !IsShadow() ) return;
+   {
+      TQtSynchPainting a(*this);
+      AdjustBufferSize();
+   }
    Refresh();
 }
 
@@ -841,8 +906,8 @@ void TQtWidget::showEvent ( QShowEvent *)
    // Non-spontaneous show events are sent to widgets immediately before
    // they are shown.
    // The spontaneous show events of top-level widgets are delivered afterwards.
-
-   if ( fPixmapID.size() != size() )
+   TQtWidgetBuffer &buf = GetBuffer();
+   if (buf.size() != size() )
    {
       fSizeChanged = kTRUE;
       exitSizeEvent();
@@ -861,7 +926,8 @@ void TQtWidget::paintEvent (QPaintEvent *e)
       stretchWidget((QResizeEvent *)0);
    } else {
 #ifdef R__QTWIN32
-      if ( fEmbedded && fPixmapID.size() != size() )
+      TQtWidgetBuffer &buf = GetBuffer();
+      if ( fEmbedded && buf.size() != size() )
       {
          fSizeChanged = kTRUE;
          exitSizeEvent();
@@ -878,14 +944,30 @@ void TQtWidget::paintEvent (QPaintEvent *e)
 #if QT_VERSION < 0x40000
          bitBlt(this, rect.x(),rect.y(),&GetBuffer(),rect.x(), rect.y(), rect.width(), rect.height());
 #else
+        //  qDebug() << "1. TQtWidget::paintEvent this =" << (QPaintDevice *)this  << " buffer = " << fPixmapID << "redirected = " << QPainter::redirected(this)
+        //    <<" IsDoubleBuffered()=" << IsDoubleBuffered() ;
+         TQtSynchPainting a(*this);
+         if (IsDoubleBuffered() && QPainter::redirected(this)) {
+            QPainter::restoreRedirected(this);
+        //  qDebug() << "2. TQtWidget::paintEvent this =" << (QPaintDevice *)this  << " buffer = " << fPixmapID << "redirected = " << QPainter::redirected(this)
+         //    <<" IsDoubleBuffered()=" << IsDoubleBuffered() ;
+         }
          QPainter screen(this);
-         screen.drawPixmap(rect.x(),rect.y(),GetBuffer(),rect.x(), rect.y(), rect.width(), rect.height());
+         screen.drawPixmap(rect.x(),rect.y(),*fPixmapID,rect.x(), rect.y(), rect.width(), rect.height());
          if ( IsShadow() ) {
             QColor bc("yellow");
             bc.setAlpha(128);
             screen.fillRect(10,10,40,40,QBrush(bc));
             fprintf(stderr,"Shadow painted visible %d\n", isVisible());
          }
+
+         QPaintDevice *redirected =  QPainter::redirected(this);
+         if (!redirected || (redirected == this) ) {
+#if QT_VERSION >= 0x40400
+         assert(!redirected || (redirected == this));
+#endif
+      }
+         if (IsDoubleBuffered() ) QPainter::setRedirected(this,fPixmapID);
 #endif
       }
    }

@@ -142,10 +142,22 @@ TQtBrush::TQtBrush(): QBrush(),fStyle(0),fFasi(0)
    , fCustomPixmap(16,16)
 #endif
 {}
+
 //______________________________________________________________________________
 void TQtBrush::SetColor(const QColor &color)
 {
   fBackground = color;
+  if (fStyle == 4) {
+     // set alpha channel / (extra) transparency;
+     if (!fFasi) fBackground = Qt::transparent;
+     else {
+        int alpha = fBackground.alpha();
+        if (fFasi != 100) {
+           alpha = int(alpha*fFasi/100.);
+           fBackground.setAlpha(alpha);
+        }
+     }
+  }
   setColor(fBackground);
 }
 
@@ -163,6 +175,7 @@ void TQtBrush::SetStyle(int style, int fasi)
 
   case 0:
     setStyle(Qt::NoBrush);                          // hollow
+    SetColor(Qt::transparent);
     break;
   case 1:                                           // solid
     setStyle(Qt::SolidPattern);
@@ -200,9 +213,14 @@ void TQtBrush::SetStyle(int style, int fasi)
                   break;
         }
       break;
+  case 4:                                      // transparent
+     if (!fasi)    setStyle(Qt::NoBrush);      // the window is transparent
+     if(fasi==100) setStyle(Qt::SolidPattern); // 100% opaque
+     ResetColor();
+     break;
 
  default:                                          // solid  - default
-   setStyle(Qt::SolidPattern);
+      setStyle(Qt::SolidPattern);
       break;
  }
 }

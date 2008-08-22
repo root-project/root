@@ -52,7 +52,7 @@ GQTDIRS = src
 
 INCLUDEPATH += $$GQTDIRS $$GQTDIRI $(ROOTSYS)/include
 
-#   List of the package classes the ROOT dictinary should be created for
+#   List of the package classes the ROOT dictionary should be created for
 #
 GQTH1  =  $$GQTDIRI/TGQt.h            $$GQTDIRI/TQtApplication.h  $$GQTDIRI/TQtTimer.h    \
           $$GQTDIRI/TQtBrush.h        $$GQTDIRI/TQMimeTypes.h $$GQTDIRI/TQtClientFilter.h \
@@ -144,24 +144,28 @@ HEADERS += $$GQTDIRI/TGQt.h \
            $$GQTDIRI/TQtLock.h              \
            $$GQTDIRI/TQtEmitter.h           \
            $$GQTDIRI/TQtLockGuard.h         \
+           $$GQTDIRI/TQtPadFont.h           \
+           $$GQTDIRI/TQtPen.h               \
            $$GQTDIRI/TQtRootSlot.h
            
-SOURCES += $$GQTDIRS/GQtGUI.cxx \
-           $$GQTDIRS/TGQt.cxx \
-           $$GQTDIRS/TGQtDummy.cxx \
-           $$GQTDIRS/TQMimeTypes.cxx \
-           $$GQTDIRS/TQtApplication.cxx \
-           $$GQTDIRS/TQtBrush.cxx \
-           $$GQTDIRS/TQtClientFilter.cxx \
-           $$GQTDIRS/TQtClientGuard.cxx \
-           $$GQTDIRS/TQtClientWidget.cxx \
-           $$GQTDIRS/TQtEvent.cxx \
-           $$GQTDIRS/TQtEventQueue.cxx \
-           $$GQTDIRS/TQtMarker.cxx \
+SOURCES += $$GQTDIRS/GQtGUI.cxx             \
+           $$GQTDIRS/TGQt.cxx               \
+           $$GQTDIRS/TGQtDummy.cxx          \
+           $$GQTDIRS/TQMimeTypes.cxx        \
+           $$GQTDIRS/TQtApplication.cxx     \
+           $$GQTDIRS/TQtBrush.cxx           \
+           $$GQTDIRS/TQtClientFilter.cxx    \
+           $$GQTDIRS/TQtClientGuard.cxx     \
+           $$GQTDIRS/TQtClientWidget.cxx    \
+           $$GQTDIRS/TQtEvent.cxx           \
+           $$GQTDIRS/TQtEventQueue.cxx      \
+           $$GQTDIRS/TQtMarker.cxx          \
            $$GQTDIRS/TQtRootApplication.cxx \
-           $$GQTDIRS/TQtSymbolCodec.cxx \
-           $$GQTDIRS/TQtTimer.cxx \
+           $$GQTDIRS/TQtSymbolCodec.cxx     \
+           $$GQTDIRS/TQtTimer.cxx           \
            $$GQTDIRS/TQtWidget.cxx          \
+           $$GQTDIRS/TQtPadFont.cxx         \
+           $$GQTDIRS/TQtPen.cxx             \
            $$GQTDIRS/TQtRootSlot.cxx
            
 DISTFILES += LICENSE.QPL  Module.mk  Module.mk.unix  Module.mk.win32

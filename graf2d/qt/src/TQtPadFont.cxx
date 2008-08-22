@@ -45,22 +45,8 @@ static float CalibrateFont()
        if (envFactor && envFactor[0])
           fontCalibFactor= QString(envFactor).toFloat(&ok);
        if (!ok) {
-
-          bool  italic = TRUE;
-          long  bold   = 5;
-          QString fontName =
-#if QT_VERSION < 0x40000
-            "Nimbus Roman No9 L"; //RomanFontName();
-#else
-            "Nimbus Roman No9 L";
-#endif
-
-          QFont pattern;
-
-          pattern.setWeight(bold*10);
-          pattern.setItalic(italic);
-          pattern.setFamily(fontName);
-          pattern.setPixelSize(12);
+          TQtPadFont pattern;
+          pattern.SetTextFont(6);
 
           int w,h;
           QFontMetrics metrics(pattern);
@@ -70,18 +56,20 @@ static float CalibrateFont()
 // I found 0.94 matches well what Rene thinks it should be
 // for TTF and XFT and it should be 1.1 for X Fonts
 //
-//  X11 returns         h = 12
-//  XFT returns         h = 14
-// WIN32 TTF returns    h = 16
-// Nimbus Roman returns h = 18
+//  X11 returns          h = 12
+//  XFT returns          h = 14
+//  WIN32 TTF returns    h = 16
+//  Nimbus Roman returns h = 18
+//  Qt4 XFT              h = 20
 
-         // printf(" Font metric w = %d , h = %d\n", w,h);
+          // printf(" Font metric w = %d , h = %d\n", w,h);
           float f;
           switch (h) {
              case 12: f = 1.10;  break;// it was  f = 1.13 :-(;
              case 14: f = 0.915; break;// it was f = 0.94  :-(;
-             case 16: f = 0.94;  break;// to be tested yet
+             case 16: f = 0.965; break;// to be tested yet
              case 18: f = 0.92;  break;// to be tested yet
+             case 20: f = 0.99;  break;// to be tested yet
              default: f = 1.10;  break;
           }
           fontCalibFactor = f;

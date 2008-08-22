@@ -78,6 +78,7 @@ class TQtApplication;
 class TQtClientFilter;
 class TQtEventQueue;
 class TQtPadFont;
+class TQtPen;
 
 
 //#define TRACE_TGQt() fprintf(stdout, "TGQt::%s() %d\n", __FUNCTION__, __LINE__)
@@ -94,11 +95,12 @@ class TGQt  : public TVirtualX  {
    friend class TQtImage;
    friend class TQtClientGuard;
    friend class TQtClientFilter;
+   friend class TQtSynchPainting;
 
 protected:
    enum DEFWINDOWID { kDefault=1 };
    QPaintDevice *fSelectedWindow;      // Pointer to the current "paintdevice: PixMap, Widget etc"
-   QPaintDevice *fSelectedBuffer;      // Pointer to the current "paintdevice buffer"
+//   QPaintDevice *fSelectedBuffer;      // Pointer to the current "paintdevice buffer"
    QPaintDevice *fPrevWindow;          // Pointer to the previous "Window"
    Int_t         fDisplayOpened;
    QPainter     *fQPainter;
@@ -127,7 +129,7 @@ protected:
 //   Common HANDLES of the graphics attributes for all HIGZ windows
 
    TQtBrush  *fQBrush;
-   QPen      *fQPen;
+   TQtPen    *fQPen;
    TQtMarker *fQtMarker;
    TQtPadFont *fQFont;
 #if (QT_VERSION <0x40000)
@@ -155,7 +157,7 @@ protected:
     QTextCodec            *fCodec;            // The Current text decoder
     QString                fFontTextCode;     // The default code text code page (from the Gui.DefaultFont)
     const char            *fSymbolFontFamily; // the name of the font to substiute the non-standard "Symbol"
-
+    Int_t                 fQtEventHasBeenProcessed; // Flag whether the events were processed
 
 //
 //   Text management

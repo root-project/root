@@ -31,9 +31,10 @@
 
 #include "TGClient.h"
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
 //
 //  TQtClientWidget is QFrame designed to back the ROOT GUI TGWindow class objects
+//
 //
 // TQtClientWidget  is a QFrame implementation backing  ROOT TGWindow objects
 // It tries to mimic the X11 Widget behaviour, that kind the ROOT Gui relies on heavily.
@@ -42,7 +43,7 @@
 // against of double deleting all TQtClientWidgets are to be registered with a special
 // "guard" container
 //
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
 
 //______________________________________________________________________________
 TQtClientWidget::TQtClientWidget(TQtClientGuard *guard, QWidget* parent, const char* name, Qt::WFlags f ):
@@ -62,6 +63,8 @@ TQtClientWidget::TQtClientWidget(TQtClientGuard *guard, QWidget* parent, const c
    setName(name);
    setAttribute(Qt::WA_PaintOnScreen);
    setAttribute(Qt::WA_PaintOutsidePaintEvent);
+//   fEraseColor  = new QColor("red");
+//   fErasePixmap = new QPixmap(palette().brush(QPalette::Window).texture());
 #endif
 }
 
@@ -105,6 +108,10 @@ void TQtClientWidget::setEraseColor(const QColor &color)
       fEraseColor = new QColor(color);
    else 
       *fEraseColor = color;
+   QPalette pp = palette();
+   pp.setColor(QPalette::Window, *fEraseColor);
+   setPalette(pp);
+//            win->setBackgroundRole(QPalette::Window);
 }
 
 //______________________________________________________________________________
@@ -115,6 +122,11 @@ void TQtClientWidget::setErasePixmap (const QPixmap &pixmap)
       fErasePixmap = new QPixmap(pixmap);
    else
       *fErasePixmap = pixmap;
+
+   QPalette pp = palette();
+   pp.setBrush(QPalette::Window, QBrush(*fErasePixmap));
+   setPalette(pp);
+//            win->setBackgroundRole(QPalette::Window);
 }
 
 //______________________________________________________________________________

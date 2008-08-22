@@ -36,6 +36,9 @@ protected:
 #if defined(R__WIN32) &&  (QT_VERSION < 0x40000)
   QPixmap fCustomPixmap; // shadow transparent pixmap for WIN32
 #endif
+  // Reset the brush color to take in account the new transperency if needed
+  void ResetColor(){  SetColor(fBackground); } 
+
 public:
    TQtBrush();
    TQtBrush(const TQtBrush &src):QBrush(src)
@@ -45,6 +48,7 @@ public:
       fFasi=src.fFasi;
    }
    virtual ~TQtBrush(){;}
+   Bool_t IsTransparent() const;
    void SetStyle(int style=1000){  SetStyle(style/1000,style%1000); };
    void SetStyle(int style, int fasi);
    void SetColor(const QColor &color);
@@ -52,5 +56,8 @@ public:
    int   GetStyle()         const { return 1000*fStyle + fFasi; }
    ClassDef(TQtBrush,0); // create QBrush object based on the ROOT "fill" attributes 
 };
+
+inline Bool_t TQtBrush::IsTransparent() const
+{ return fStyle >= 4000 && fStyle <= 4100 ? kTRUE : kFALSE; }
 
 #endif
