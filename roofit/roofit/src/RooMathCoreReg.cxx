@@ -97,7 +97,7 @@ RooMathCoreReg::RooMathCoreReg()
   RooCFunction2Ref<double,double,double>::fmap().add("ROOT::Math::gaussian_quantile",ROOT::Math::gaussian_quantile, "z", "sigma") ;
   RooCFunction2Ref<double,double,double>::fmap().add("ROOT::Math::normal_quantile_c",ROOT::Math::normal_quantile_c, "z", "sigma") ;
   RooCFunction2Ref<double,double,double>::fmap().add("ROOT::Math::normal_quantile",ROOT::Math::normal_quantile, "z", "sigma") ;
-  RooCFunction2Ref<double,double,double>::fmap().add("ROOT::Math::chisquared_quantile",ROOT::Math::chisquared_quantile, "z", "r") ;
+  //RooCFunction2Ref<double,double,double>::fmap().add("ROOT::Math::chisquared_quantile",ROOT::Math::chisquared_quantile, "z", "r") ;
   RooCFunction3Ref<double,double,double,double>::fmap().add("ROOT::Math::beta_quantile",ROOT::Math::beta_quantile,"x","a","b") ;
   RooCFunction3Ref<double,double,double,double>::fmap().add("ROOT::Math::beta_quantile_c",ROOT::Math::beta_quantile_c,"x","a","b") ;
   RooCFunction3Ref<double,double,double,double>::fmap().add("ROOT::Math::fdistribution_quantile",ROOT::Math::fdistribution_quantile,"z","n","m") ;
@@ -107,7 +107,7 @@ RooMathCoreReg::RooMathCoreReg()
   RooCFunction3Ref<double,double,double,double>::fmap().add("ROOT::Math::lognormal_quantile",ROOT::Math::lognormal_quantile,"x","m","s") ;
   RooCFunction3Ref<double,double,double,double>::fmap().add("ROOT::Math::uniform_quantile_c",ROOT::Math::uniform_quantile_c,"z","a","b") ;
   RooCFunction3Ref<double,double,double,double>::fmap().add("ROOT::Math::uniform_quantile",ROOT::Math::uniform_quantile,"z","a","b") ;
-  RooCFunction3Ref<double,double,double,double>::fmap().add("ROOT::Math::gamma_quantile",ROOT::Math::gamma_quantile,"z","alpha","theta") ;
+  //RooCFunction3Ref<double,double,double,double>::fmap().add("ROOT::Math::gamma_quantile",ROOT::Math::gamma_quantile,"z","alpha","theta") ;
   RooCFunction3Ref<double,double,double,double>::fmap().add("ROOT::Math::gamma_quantile_c",ROOT::Math::gamma_quantile_c,"z","alpha","theta") ;
 
 }
