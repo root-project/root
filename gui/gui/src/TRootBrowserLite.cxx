@@ -2307,16 +2307,8 @@ void TRootBrowserLite::ListTreeHighlight(TGListTreeItem *item)
             TObject *k_obj = gROOT->FindObject(name);
 
             if (k_obj) {
-               TGListTreeItem *parent = item->GetParent();
-               DeleteListTreeItem(item);
-               TGListTreeItem *itm = fLt->AddItem(parent, name, k_obj);
-               if (itm) {
-                  itm->SetUserData(k_obj);
-                  item = itm;
-                  obj = k_obj;
-               } else {
-                  item = parent;
-               }
+               item->SetUserData(k_obj);
+               obj = k_obj;
             }
          } else if (obj->InheritsFrom(TDirectoryFile::Class())) {
             Chdir(item->GetParent());
