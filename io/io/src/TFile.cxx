@@ -2309,7 +2309,7 @@ void TFile::ReadStreamerInfo()
 
    // loop on all TStreamerInfo classes
    TStreamerInfo *info;
-	for (int mode=0;mode<2; ++mode) {
+   for (int mode=0;mode<2; ++mode) {
       // In order for the collection proxy to be initialized properly, we need
       // to setup the TStreamerInfo for non-stl class before the stl classes.
       TObjLink *lnk = list->FirstLink();
