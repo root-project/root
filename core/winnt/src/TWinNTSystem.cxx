@@ -2069,7 +2069,7 @@ TList *TWinNTSystem::GetVolumes(Option_t *opt) const
    // Get list of volumes (drives) mounted on the system.
    // The returned TList must be deleted by the user using "delete".
 
-   Int_t   drive, curdrive;
+   Int_t   curdrive;
    UInt_t  type;
    TString sDrive, sType;
    char    szFs[32];
