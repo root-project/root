@@ -84,7 +84,7 @@ public:
 
 // Zero overhead macros in case not compiled with thread support
 #if defined (_REENTRANT) || defined (WIN32)
-#define R__LOCKGUARD(mutex) TLockGuard R__guard(mutex)
+#define R__LOCKGUARD(mutex) TLockGuard _R__UNIQUE_(R__guard)(mutex)
 #define R__LOCKGUARD2(mutex)                             \
    if (gGlobalMutex && !mutex) {                         \
       gGlobalMutex->Lock();                              \
