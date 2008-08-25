@@ -20,13 +20,13 @@ For an example of how to use it, see <tt>tutorials/eve/pack.C</tt>.
 
 <h4>TGToolTip</h4>
 <ul>
-<li> Add new constructor with global x, y position.
+<li> Added new constructor with global x, y position.
 If neither fWindow nor fPad are set use global fX, fY that was passed from outside.
 </ul>
 
 <h4>TGSplitter</h4>
 <ul>
-<li> Add option to handle frame resizing externally.
+<li> Added option to handle frame resizing externally.
 </ul>
 
 <h4>TGView</h4>
@@ -47,6 +47,12 @@ If neither fWindow nor fPad are set use global fX, fY that was passed from outsi
 
 <h4>TGTextEntry</h4>
 <ul>
-<li> Add optional parameter 'Bool_t emit' to TGTextEntry::SetText(const char* text, Bool_t emit = kTRUE);
-<li> Make the same extension in sub-class TGNumberEntryField.
+<li> Added optional parameter 'Bool_t emit' to TGTextEntry::SetText(const char* text, Bool_t emit = kTRUE);
+<li> Made the same extension in sub-class TGNumberEntryField.
 </ul>
+
+<h4>TGCompositeFrame</h4>
+<ul>
+<li> Added new method virtual TGFrameElement* FindFrameElement(TGFrame *f) const; and use it in several TGCompositeFrame methods to simplify the code.
+</ul>
+
