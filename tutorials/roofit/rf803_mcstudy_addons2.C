@@ -2,7 +2,7 @@
 //
 // 'VALIDATION AND MC STUDIES' RooFit tutorial macro #803
 // 
-// Using add-on modules to tailor the sequence of events in a RooMCStudy
+// RooMCStudy: Using the randomizer and profile likelihood add-on models
 //
 // 
 // 07/2008 - Wouter Verkerke 

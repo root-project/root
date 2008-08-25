@@ -2,7 +2,7 @@
 //
 // 'VALIDATION AND MC STUDIES' RooFit tutorial macro #802
 // 
-// Using add-on modules to tailor the sequence of events in a RooMCStudy
+// RooMCStudy: using separate fit and generator models, using the chi^2 calculator model 
 //
 // 
 // 07/2008 - Wouter Verkerke 

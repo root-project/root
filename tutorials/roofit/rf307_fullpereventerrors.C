@@ -2,7 +2,7 @@
 //
 // 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #307
 // 
-// Complete example with use of conditional p.d.f. with per-event errors
+// Complete example with use of full p.d.f. with per-event errors
 //
 //
 //
