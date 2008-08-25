@@ -4,25 +4,7 @@
 <h3>I/O</h3>
 <ul>
 <li>Fix the order of creation of the TStreamerInfo during the opening of a ROOT file to insure that the CollectionProxy are properly setup.</li> 
-<li>Improve the output of the call to Print for ROOT Collections.  In TCollection replace Print() methods:
-<pre>     virtual void       Print(Option_t *wildcard="") const;
-     virtual void       Print(Option_t *wildcard, Option_t *option) const;</pre>
-with
-<pre>     virtual void       Print(Option_t *option="") const;
-     virtual void       Print(Option_t *option, Int_t recurse) const;
-     virtual void       Print(Option_t *option, const char* wildcard,
-                              Int_t recurse=1) const;
-     virtual void       Print(Option_t *option, TPRegexp& regexp,
-                              Int_t recurse=1) const;
-</pre>
-   Introduce three new protected methods used to print out collection details.
-   These are called from the Print() methods and make overriding of what
-   is printed for a collection / entries easier.
-<pre>     virtual void        PrintCollectionHeader(Option_t* option) const;
-     virtual const char* GetCollectionEntryName(TObject* entry) const;
-     virtual void        PrintCollectionEntry(TObject* entry, Option_t* option,
-                                              Int_t recurse) const;
-</pre>
+
 
 <li>Fix problem: "recover warning when opening an empty file
 created with TXNetFile" which was due to a bad check in TFile::Recover

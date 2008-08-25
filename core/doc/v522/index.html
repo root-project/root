@@ -2,3 +2,28 @@
 <hr> 
 <a name="core"></a> 
 <h3>Core</h3>
+<h2>Collections</h2>
+<li>Improve the output of the call to Print for ROOT Collections.  In TCollection replace Print() methods:
+<pre>     virtual void       Print(Option_t *wildcard="") const;
+     virtual void       Print(Option_t *wildcard, Option_t *option) const;</pre>
+with
+<pre>     virtual void       Print(Option_t *option="") const;
+     virtual void       Print(Option_t *option, Int_t recurse) const;
+     virtual void       Print(Option_t *option, const char* wildcard,
+                              Int_t recurse=1) const;
+     virtual void       Print(Option_t *option, TPRegexp& regexp,
+                              Int_t recurse=1) const;
+</pre>
+   Introduce three new protected methods used to print out collection details.
+   These are called from the Print() methods and make overriding of what
+   is printed for a collection / entries easier.
+<pre>     virtual void        PrintCollectionHeader(Option_t* option) const;
+     virtual const char* GetCollectionEntryName(TObject* entry) const;
+     virtual void        PrintCollectionEntry(TObject* entry, Option_t* option,
+                                              Int_t recurse) const;
+</pre>
+<h2>ACLiC</h2>
+<ul><li>Fix problem finding rootcint in the --prefix configuration<li>
+<li>Change the naming convention for the temporary files created by ACLiC, instead of randomly named ACLiC now uses:<pre>scriptname_scriptextension_ACLiC_function.extension</pre></li>
+<li>Avoid looking for Microsoft's link.exe when we arlready have it (and hence avoid complaining about cygpath when cygwin is not even installed.<li>
+</ul>
