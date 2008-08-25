@@ -411,6 +411,8 @@ public:
    virtual TGLayoutManager *GetLayoutManager() const { return fLayoutManager; }
    virtual void SetLayoutManager(TGLayoutManager *l);
 
+   virtual TGFrameElement* FindFrameElement(TGFrame *f) const;
+
    virtual void   AddFrame(TGFrame *f, TGLayoutHints *l = 0);
    virtual void   RemoveAll();
    virtual void   RemoveFrame(TGFrame *f);

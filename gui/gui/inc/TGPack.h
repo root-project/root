@@ -23,6 +23,7 @@ private:
 protected:
    Bool_t         fVertical;
    Bool_t         fUseSplitters;
+   Int_t          fSplitterLen;
 
    Int_t          fDragOverflow;  //!
 

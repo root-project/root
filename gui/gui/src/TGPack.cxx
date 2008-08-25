@@ -23,6 +23,7 @@ TGPack::TGPack(const TGWindow *p, UInt_t w, UInt_t h, UInt_t options, Pixel_t ba
    TGCompositeFrame(p, w, h, options, back),
    fVertical     (kTRUE),
    fUseSplitters (kTRUE),
+   fSplitterLen  (4),
    fDragOverflow (0)
 {
    // Constructor.
@@ -33,6 +34,7 @@ TGPack::TGPack(TGClient *c, Window_t id, const TGWindow *parent) :
    TGCompositeFrame(c, id, parent),
    fVertical     (kTRUE),
    fUseSplitters (kTRUE),
+   fSplitterLen  (4),
    fDragOverflow (0)
 {
    // Constructor.
@@ -242,7 +244,7 @@ void TGPack::AddFrame(TGFrame* f, TGLayoutHints* l)
    // LayoutHints are ignored in TGPack.
 
    Int_t n     = NumberOfRealFrames();
-   Int_t nflen = (GetLength() - (fUseSplitters ? 4*n : 0)) / (n + 1);
+   Int_t nflen = (GetLength() - (fUseSplitters ? fSplitterLen*n : 0)) / (n + 1);
 
    printf("New frame, n=%d, new_frame_len=%d\n", n, nflen);
 
@@ -251,12 +253,12 @@ void TGPack::AddFrame(TGFrame* f, TGLayoutHints* l)
       ShrinkExistingFrames(nflen);
       
       if (fUseSplitters) {
-         nflen -= 4;
+         nflen -= fSplitterLen;
          TGSplitter* s = 0;
          if (fVertical)
-            s = new TGHSplitter(this, GetWidth(), 4, kTRUE);
+            s = new TGHSplitter(this, GetWidth(), fSplitterLen, kTRUE);
          else
-            s = new TGVSplitter(this, 4, GetHeight(), kTRUE);
+            s = new TGVSplitter(this, fSplitterLen, GetHeight(), kTRUE);
          s->Connect("Moved(Int_t)",  "TGPack", this, "HandleSplitterResize(Int_t)");
          s->Connect("DragStarted()", "TGPack", this, "HandleSplitterStart()");
          TGCompositeFrame::AddFrame(s);
@@ -275,36 +277,35 @@ void TGPack::RemoveFrame(TGFrame* f)
    // Remove frame f and refit existing frames to pack size.
 
 //   Error("RemoveFrame", "not yet supported.");
-   Bool_t found = kFALSE;
-   TGFrame *s;
-   TGFrameElement *el;
-   TIter next(fList, kIterBackward);
 
-   while ((el = (TGFrameElement *) next())) {
-      if (el->fFrame == f) {
-         found = kTRUE;
-         break;
-      }
+   TGFrameElement *el = FindFrameElement(f);
+
+   if (!el) return;
+
+   Int_t space_freed = 0;
+
+   if (fUseSplitters && NumberOfRealFrames() > 1)
+   {
+      TGFrameElement *splitter_el = 0;
+      if (el == fList->First())
+         splitter_el = (TGFrameElement*) fList->After(el);
+      else
+         splitter_el = (TGFrameElement*) fList->Before(el);
+      TGFrame* splitter = splitter_el->fFrame;
+      space_freed += fSplitterLen;
+      splitter->UnmapWindow();
+      TGCompositeFrame::RemoveFrame(splitter);
+      delete splitter;
    }
-   if (!found) return;
-   el = (TGFrameElement *) next();
-   s = el->fFrame;
-   
+
+   space_freed += GetFrameLength(f);
+   f->UnmapWindow();
    TGCompositeFrame::RemoveFrame(f);
-   TGCompositeFrame::RemoveFrame(s);
-
    delete f;
-   delete s;
 
-   Int_t n     = NumberOfRealFrames();
-   Int_t nflen = (GetLength() - (fUseSplitters ? 4*n : 0)) / (n + 1);
+   printf("Removed frame, n=%d, space_freed=%d\n", NumberOfRealFrames(), space_freed);
 
-   printf("Remove frame, n=%d, new_frame_len=%d\n", n, nflen);
-
-   if (n > 0)
-      ExpandExistingFrames(nflen-1);
-
-   RefitFramesToPack();
+   ResizeExistingFrames(space_freed);
    Layout();
 }
 
