@@ -302,9 +302,8 @@ Bool_t TGButton::HandleCrossing(Event_t *event)
 
    if (fState == kButtonEngaged || fState == kButtonDisabled) return kTRUE;
 
-   if (event->fType == kEnterNotify) {
-      SetState(kButtonDown, kFALSE);
-   } else {
+   if (event->fType == kLeaveNotify) {
+      fgReleaseBtn = fId;
       SetState(kButtonUp, kFALSE);
    }
    return kTRUE;

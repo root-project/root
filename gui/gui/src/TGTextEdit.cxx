@@ -860,26 +860,17 @@ void TGTextEdit::DrawCursor(Int_t mode)
                        Int_t(ToScrYCoord(fCurrent.fY+1) - fMaxDescent), &cursor, 1);
             }
          } else {
-//            gVirtualX->DrawLine(fCanvas->GetId(), fCursor0GC,
-//                                ToScrXCoord(fCurrent.fX, fCurrent.fY),
-//                                ToScrYCoord(fCurrent.fY),
-//                                ToScrXCoord(fCurrent.fX, fCurrent.fY),
-//                                ToScrYCoord(fCurrent.fY+1)-1);
-            gVirtualX->FillRectangle(fCanvas->GetId(), fCursor0GC,
-                                     Int_t(ToScrXCoord(fCurrent.fX, fCurrent.fY)),
-                                     Int_t(ToScrYCoord(fCurrent.fY)),
-                                     2,
-                                     UInt_t(ToScrYCoord(fCurrent.fY+1)-ToScrYCoord(fCurrent.fY)));
+            gVirtualX->ClearArea(fCanvas->GetId(),
+                                 Int_t(ToScrXCoord(fCurrent.fX, fCurrent.fY)),
+                                 Int_t(ToScrYCoord(fCurrent.fY)),
+                                 UInt_t(ToScrXCoord(fCurrent.fX+1, fCurrent.fY) -
+                                 ToScrXCoord(fCurrent.fX, fCurrent.fY)),
+                                 UInt_t(ToScrYCoord(fCurrent.fY+1)-ToScrYCoord(fCurrent.fY)));
             gVirtualX->DrawString(fCanvas->GetId(), fNormGC(), (Int_t)ToScrXCoord(fCurrent.fX,fCurrent.fY),
                        Int_t(ToScrYCoord(fCurrent.fY+1) - fMaxDescent), &cursor, 1);
          }
       } else {
          if (mode == 1) {
-//            gVirtualX->DrawLine(fCanvas->GetId(), fCursor1GC,
-//                                ToScrXCoord(fCurrent.fX, fCurrent.fY),
-//                                ToScrYCoord(fCurrent.fY),
-//                                ToScrXCoord(fCurrent.fX, fCurrent.fY),
-//                                ToScrYCoord(fCurrent.fY+1)-1);
             gVirtualX->FillRectangle(fCanvas->GetId(), fCursor1GC,
                                      Int_t(ToScrXCoord(fCurrent.fX, fCurrent.fY)),
                                      Int_t(ToScrYCoord(fCurrent.fY)),

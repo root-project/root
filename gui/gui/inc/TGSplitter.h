@@ -33,6 +33,7 @@ class TGSplitter : public TGFrame {
 protected:
    Cursor_t    fSplitCursor;      // split cursor
    Bool_t      fDragging;         // true if in dragging mode
+   Bool_t      fExternalHandler;  // true when splitter movement is handled externally
    const TGPicture *fSplitterPic; // picture to draw splitter
 
 private:
@@ -50,6 +51,12 @@ public:
    virtual Bool_t HandleButton(Event_t *event) = 0;
    virtual Bool_t HandleMotion(Event_t *event) = 0;
    virtual Bool_t HandleCrossing(Event_t *event) = 0;
+
+   void DragStarted();      // *SIGNAL*
+   void Moved(Int_t delta); // *SIGNAL*
+
+   Bool_t GetExternalHandler() const { return fExternalHandler; }
+   void SetExternalHandler(Bool_t x) { fExternalHandler = x; }
 
    ClassDef(TGSplitter,0)  //A frame splitter abstract base class
 };
@@ -74,6 +81,7 @@ public:
    TGVSplitter(const TGWindow *p = 0, UInt_t w = 4, UInt_t h = 4,
                UInt_t options = kChildFrame,
                Pixel_t back = GetDefaultFrameBackground());
+   TGVSplitter(const TGWindow *p, UInt_t w, UInt_t h, Bool_t external);
    virtual ~TGVSplitter();
 
    virtual void   DrawBorder();
@@ -110,6 +118,7 @@ public:
    TGHSplitter(const TGWindow *p = 0, UInt_t w = 4, UInt_t h = 4,
                UInt_t options = kChildFrame,
                Pixel_t back = GetDefaultFrameBackground());
+   TGHSplitter(const TGWindow *p, UInt_t w, UInt_t h, Bool_t external);
    virtual ~TGHSplitter();
 
    virtual void   DrawBorder();

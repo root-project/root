@@ -549,9 +549,9 @@ void TGTextView::DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h)
    Int_t yloc = rect.fY + (Int_t)fScrollVal.fY;
    pos.fY = ToObjYCoord(fVisible.fY + rect.fY);
 
-   while (pos.fY < line_count &&
-          yloc - fScrollVal.fY < (Int_t)fCanvas->GetHeight() &&
-          yloc  < rect.fY + rect.fHeight) {
+   while (pos.fY <= line_count &&
+          yloc - fScrollVal.fY <= (Int_t)fCanvas->GetHeight() &&
+          yloc <= rect.fY + rect.fHeight) {
 
       pos.fX = ToObjXCoord(fVisible.fX + rect.fX, pos.fY);
       xoffset = ToScrXCoord(pos.fX, pos.fY);
@@ -856,7 +856,8 @@ Bool_t TGTextView::HandleButton(Event_t *event)
    } else if (event->fCode == kButton4) {
       // move three lines up
       if (fVisible.fY > 0) {
-         SetVsbPosition(fVisible.fY / fScrollVal.fY - 3);
+         Long_t amount = fVisible.fY / fScrollVal.fY - 3;
+         SetVsbPosition((amount >= 0) ? amount : 0);
          //Mark(fMousePos.fX, fMarkedStart.fY - 3);
       }
    } else if (event->fCode == kButton5) {

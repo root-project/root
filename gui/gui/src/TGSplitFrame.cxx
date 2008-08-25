@@ -334,6 +334,13 @@ void TGSplitFrame::CloseAndCollapse()
       }
    }
 }
+//______________________________________________________________________________
+void TGSplitFrame::Docked(TGFrame* frame)
+{
+   // Emit Undocked() signal.
+
+   Emit("Docked(TGFrame*)", (Long_t)frame);
+}
 
 //______________________________________________________________________________
 void TGSplitFrame::ExtractFrame()
@@ -353,6 +360,7 @@ void TGSplitFrame::ExtractFrame()
       fUndocked->MapWindow();
       RemoveFrame(fFrame);
       fUndocked->Connect("CloseWindow()", "TGSplitFrame", this, "SwallowBack()");
+      Undocked(fFrame);
    }
 }
 
@@ -621,6 +629,7 @@ void TGSplitFrame::SwallowBack()
       Layout();
       fUndocked->CloseWindow();
       fUndocked = 0;
+      Docked(frame);
    }
 }
 
@@ -677,6 +686,14 @@ void TGSplitFrame::SwitchToMain()
    TGFrame *prev = (TGFrame *)(dest->GetFrame());
    if ((source != prev) && (source != dest))
       SwitchFrames(source, dest, prev);
+}
+
+//______________________________________________________________________________
+void TGSplitFrame::Undocked(TGFrame* frame)
+{
+   // Emit Undocked() signal.
+
+   Emit("Undocked(TGFrame*)", (Long_t)frame);
 }
 
 //______________________________________________________________________________

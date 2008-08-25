@@ -446,6 +446,8 @@ void TGView::ScrollToPosition(TGLongPosition pos)
 {
    // Scroll the canvas to pos.
 
+   if (pos.fX < 0) pos.fX = 0;
+   if (pos.fY < 0) pos.fY = 0;
    if (pos.fX != fHsb->GetPosition()) fHsb->SetPosition(pos.fX / fScrollVal.fX);
    if (pos.fY != fVsb->GetPosition()) fVsb->SetPosition(pos.fY / fScrollVal.fY);
 }

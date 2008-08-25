@@ -463,9 +463,7 @@ TGListTree::~TGListTree()
 
    item = fFirst;
    while (item) {
-      if (item->fFirstchild) {
-         PDeleteChildren(item->fFirstchild);
-      }
+      PDeleteChildren(item);
       sibling = item->fNextsibling;
       delete item;
       item = sibling;
@@ -1682,40 +1680,69 @@ void TGListTree::RemoveReference(TGListTreeItem *item)
 
    ClearViewPort();
 
-   // if there exists a previous sibling, just skip over item to be dereferenced
+   // Disentangle from front (previous-sibling, parent's first child)
    if (item->fPrevsibling) {
       item->fPrevsibling->fNextsibling = item->fNextsibling;
-      if (item->fNextsibling)
-         item->fNextsibling->fPrevsibling = item->fPrevsibling;
    } else {
-      // if not, then the deleted item is the first item in some branch
       if (item->fParent)
          item->fParent->fFirstchild = item->fNextsibling;
       else
          fFirst = item->fNextsibling;
-      if (item->fNextsibling)
-         item->fNextsibling->fPrevsibling = 0;
    }
+   // Disentangle from end (next-sibling, parent's last child)
+   if (item->fNextsibling) {
+      item->fNextsibling->fPrevsibling = item->fPrevsibling;
+   } else {
+      if (item->fParent)
+         item->fParent->fLastchild = item->fPrevsibling;
+      else
+         fLast = item->fPrevsibling;
+   }
+}
+
+//______________________________________________________________________________
+void TGListTree::PDeleteItem(TGListTreeItem *item)
+{
+   // Delete given item. Takes care of list-tree state members
+   // fSelected, fCurrent and fBelowMouse.
+
+   if (fSelected == item) {
+      fSelected = 0;
+   }
+   if (fCurrent == item) {
+      DrawOutline(fId, fCurrent, 0xffffff, kTRUE);
+      fCurrent = item->GetPrevSibling();
+      if (! fCurrent) {
+         fCurrent = item->GetNextSibling();
+         if (! fCurrent)
+            fCurrent = item->GetParent();
+      }
+   }
+   if (fBelowMouse == item) {
+      DrawOutline(fId, fBelowMouse, 0xffffff, kTRUE);
+      fBelowMouse = 0;
+      MouseOver(0);
+      MouseOver(0,fLastEventState);
+   }
+
+   delete item; 
 }
 
 //______________________________________________________________________________
 void TGListTree::PDeleteChildren(TGListTreeItem *item)
 {
-   // Delete children of item from list.
+   // Recursively delete all children of an item.
 
-   TGListTreeItem *sibling;
+   TGListTreeItem *child = item->fFirstchild;
 
-   while (item) {
-      if (item->fFirstchild) {
-         PDeleteChildren(item->fFirstchild);
-         item->fFirstchild = 0;
-      }
-      sibling = item->fNextsibling;
-      if (fSelected == item)
-         fSelected = 0;
-      delete item;
-      item = sibling;
+   while (child) {
+      TGListTreeItem *next = child->fNextsibling;
+      PDeleteChildren(child);
+      PDeleteItem(child);
+      child = next;
    }
+
+   item->fFirstchild = item->fLastchild = 0;
 }
 
 //______________________________________________________________________________
@@ -1944,35 +1971,13 @@ Int_t TGListTree::DeleteItem(TGListTreeItem *item)
 {
    // Delete item from list tree.
 
-   if (item->fFirstchild) {
-      PDeleteChildren(item->fFirstchild);
-   }
+   if (!fUserControlled)
+      fCurrent = fBelowMouse = 0;
 
-   item->fFirstchild = 0;
-
+   PDeleteChildren(item);
    RemoveReference(item);
+   PDeleteItem(item);
 
-   if (fSelected == item) {
-      fSelected = 0;
-   }
-   if (fCurrent == item) {
-      DrawOutline(fId, fCurrent, 0xffffff, kTRUE);
-      fCurrent = item->GetPrevSibling();
-      if (! fCurrent) {
-         fCurrent = item->GetNextSibling();
-         if (! fCurrent)
-            fCurrent = item->GetParent();
-      }
-   }
-   if (fBelowMouse == item) {
-      DrawOutline(fId, fBelowMouse, 0xffffff, kTRUE);
-      fBelowMouse = 0;
-      MouseOver(0);
-      MouseOver(0,fLastEventState);
-   }
-   fCurrent = fBelowMouse = 0;
-
-   delete item;
    fClient->NeedRedraw(this);
 
    return 1;
@@ -2038,18 +2043,10 @@ Int_t TGListTree::DeleteChildren(TGListTreeItem *item)
 {
    // Delete children of item from list.
 
-   if (!fUserControlled) {
-      //if (fCurrent)
-      //   DrawOutline(fId, fCurrent, 0xffffff, kTRUE);
-      //if (fBelowMouse)
-      //   DrawOutline(fId, fBelowMouse, 0xffffff, kTRUE);
+   if (!fUserControlled)
       fCurrent = fBelowMouse = 0;
-   }
-   if (item->fFirstchild) {
-      PDeleteChildren(item->fFirstchild);
-   }
 
-   item->fFirstchild = 0;
+   PDeleteChildren(item);
 
    DoRedraw();
 

@@ -109,5 +109,6 @@
 #pragma link C++ class TGNumberEntryField;
 #pragma link C++ class TGNumberEntry;
 #pragma link C++ class TGNumberEntryLayout;
+#pragma link C++ class TGPack;
 
 #endif

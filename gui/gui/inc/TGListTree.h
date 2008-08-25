@@ -78,6 +78,7 @@ public:
 
    TGListTreeItem *GetParent()      const { return fParent; }
    TGListTreeItem *GetFirstChild()  const { return fFirstchild; }
+   TGListTreeItem *GetLastChild()   const { return fLastchild;  }
    TGListTreeItem *GetPrevSibling() const { return fPrevsibling; }
    TGListTreeItem *GetNextSibling() const { return fNextsibling; }
 
@@ -291,6 +292,7 @@ protected:
 
    void  SaveChildren(ostream &out, TGListTreeItem *item, Int_t &n);
    void  RemoveReference(TGListTreeItem *item);
+   void  PDeleteItem(TGListTreeItem *item);
    void  PDeleteChildren(TGListTreeItem *item);
    void  InsertChild(TGListTreeItem *parent, TGListTreeItem *item);
    void  InsertChildren(TGListTreeItem *parent, TGListTreeItem *item);

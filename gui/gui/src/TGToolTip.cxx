@@ -166,6 +166,38 @@ TGToolTip::TGToolTip(const TBox *box, const char *text,Long_t delayms)
 }
 
 //______________________________________________________________________________
+TGToolTip::TGToolTip(Int_t x, Int_t y, const char *text, Long_t delayms)
+   : TGCompositeFrame(gClient->GetDefaultRoot(), 10, 10, kTempFrame | kHorizontalFrame | kRaisedFrame)
+{
+   // Create a tool tip on global coordinates x, y.
+   // text is the tool tip one-liner and delayms is the delay in ms before
+   // the tool tip is shown.
+
+   SetWindowAttributes_t attr;
+   attr.fMask             = kWAOverrideRedirect | kWASaveUnder;
+   attr.fOverrideRedirect = kTRUE;
+   attr.fSaveUnder        = kTRUE;
+
+   gVirtualX->ChangeWindowAttributes(fId, &attr);
+   SetBackgroundColor(fClient->GetResourcePool()->GetTipBgndColor());
+
+   fLabel = new TGLabel(this, text);
+   fLabel->SetBackgroundColor(fClient->GetResourcePool()->GetTipBgndColor());
+
+   AddFrame(fLabel, fL1 = new TGLayoutHints(kLHintsLeft | kLHintsTop,
+                                            2, 3, 0, 0));
+   MapSubwindows();
+   Resize(GetDefaultSize());
+
+   fWindow = 0;
+   fPad    = 0;
+   fBox    = 0;
+   fX      = x;
+   fY      = y;
+   fDelay = new TTipDelayTimer(this, delayms);
+}
+
+//______________________________________________________________________________
 TGToolTip::~TGToolTip()
 {
    // Delete a tool tip object.
@@ -254,13 +286,7 @@ Bool_t TGToolTip::HandleTimer(TTimer *)
                                       fX == -1 ? fWindow->GetWidth() >> 1 : fX,
                                       fY == -1 ? fWindow->GetHeight() : fY,
                                       x, y, wtarget);
-   } else {
-
-      if (!fPad) {
-         Error("HandleTimer", "parent pad not set for tool tip");
-         return kTRUE;
-      }
-
+   } else if(fPad) {
       if (fBox) {
          px1 = fPad->XtoAbsPixel(fBox->GetX1());
          px2 = fPad->XtoAbsPixel(fBox->GetX2());
@@ -276,6 +302,9 @@ Bool_t TGToolTip::HandleTimer(TTimer *)
                                       GetParent()->GetId(),
                                       px1 + ((px2-px1) >> 1), py1,
                                       x, y, wtarget);
+   } else {
+      x = fX;
+      y = fY;
    }
 
    UInt_t screenW = fClient->GetDisplayWidth();

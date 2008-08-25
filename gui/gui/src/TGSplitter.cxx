@@ -32,14 +32,32 @@ ClassImp(TGVFileSplitter)
 
 //______________________________________________________________________________
 TGSplitter::TGSplitter(const TGWindow *p, UInt_t w, UInt_t h,
-              UInt_t options, ULong_t back) : TGFrame(p, w, h, options, back)
+                       UInt_t options, ULong_t back) :
+   TGFrame(p, w, h, options, back),
+   fDragging        (kFALSE),
+   fExternalHandler (kFALSE),
+   fSplitterPic     (0)
 {
    // Create a splitter.
 
-   fDragging = kFALSE;
    fEditDisabled = kTRUE;
 }
 
+//______________________________________________________________________________
+void TGSplitter::DragStarted()
+{
+   // Emit DragStarted signal.
+
+   Emit("DragStarted()");
+}
+
+//______________________________________________________________________________
+void TGSplitter::Moved(Int_t delta)
+{
+   // Emit Moved signal.
+
+   Emit("Moved(Int_t)", delta);
+}
 
 //______________________________________________________________________________
 TGVSplitter::TGVSplitter(const TGWindow *p, UInt_t w, UInt_t h,
@@ -73,6 +91,30 @@ TGVSplitter::TGVSplitter(const TGWindow *p, UInt_t w, UInt_t h,
 }
 
 //______________________________________________________________________________
+TGVSplitter::TGVSplitter(const TGWindow *p, UInt_t w, UInt_t h, Bool_t external) :
+   TGSplitter(p, w, h, kChildFrame, GetDefaultFrameBackground())
+{
+   // Create a vertical splitter.
+
+   fExternalHandler = external;
+
+   fSplitCursor = kNone;
+   fSplitterPic = fClient->GetPicture("splitterv.xpm");
+
+   if (!fSplitterPic)
+      Error("TGVSplitter", "splitterv.xpm not found");
+
+   fSplitCursor = gVirtualX->CreateCursor(kArrowHor);
+   fFrame = 0;
+
+   gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
+                         kButtonPressMask | kButtonReleaseMask |
+                         kPointerMotionMask, kNone, kNone);
+
+   AddInput(kEnterWindowMask | kLeaveWindowMask);
+}
+
+//______________________________________________________________________________
 TGVSplitter::~TGVSplitter()
 {
    // Delete vertical splitter widget.
@@ -89,7 +131,7 @@ void TGVSplitter::SetFrame(TGFrame *frame, Bool_t left)
    fFrame = frame;
    fLeft  = left;
 
-   if (!(fFrame->GetOptions() & kFixedWidth))
+   if (!fExternalHandler && !(fFrame->GetOptions() & kFixedWidth))
       Error("SetFrame", "resize frame must have kFixedWidth option set");
 }
 
@@ -100,7 +142,7 @@ Bool_t TGVSplitter::HandleButton(Event_t *event)
 
    if (fSplitCursor == kNone) return kTRUE;
 
-   if (!fFrame) {
+   if (!fExternalHandler && !fFrame) {
       Error("HandleButton", "frame to be resized not set");
       return kTRUE;
    }
@@ -109,19 +151,25 @@ Bool_t TGVSplitter::HandleButton(Event_t *event)
       fStartX   = event->fXRoot;
       fDragging = kTRUE;
 
-      Int_t  x, y;
-      gVirtualX->GetWindowSize(fFrame->GetId(), x, y, fFrameWidth, fFrameHeight);
+      if (fExternalHandler) {
+         fMin = 0;
+         fMax = 99999;
+         DragStarted();
+      } else {
+         Int_t  x, y;
+         gVirtualX->GetWindowSize(fFrame->GetId(), x, y, fFrameWidth, fFrameHeight);
 
-      // get fMin and fMax in root coordinates
-      Int_t    xroot, yroot;
-      UInt_t   w, h;
-      Window_t wdum;
-      gVirtualX->GetWindowSize(fParent->GetId(), x, y, w, h);
-      gVirtualX->TranslateCoordinates(fParent->GetParent()->GetId(),
-                                      fClient->GetDefaultRoot()->GetId(),
-                                      x, y, xroot, yroot, wdum);
-      fMin = xroot;
-      fMax = xroot + w - 2;
+         // get fMin and fMax in root coordinates
+         Int_t    xroot, yroot;
+         UInt_t   w, h;
+         Window_t wdum;
+         gVirtualX->GetWindowSize(fParent->GetId(), x, y, w, h);
+         gVirtualX->TranslateCoordinates(fParent->GetParent()->GetId(),
+                                         fClient->GetDefaultRoot()->GetId(),
+                                         x, y, xroot, yroot, wdum);
+         fMin = xroot;
+         fMax = xroot + w - 2;
+      }
 
       // last argument kFALSE forces all specified events to this window
       gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
@@ -144,20 +192,27 @@ Bool_t TGVSplitter::HandleMotion(Event_t *event)
       if (xr > fMax) xr = fMax;
       if (xr < fMin) xr = fMin;
       Int_t delta = xr - fStartX;
-      Int_t w = (Int_t) fFrameWidth;
-      if (fLeft)
-         w += delta;
-      else
-         w -= delta;
-      if (w < 0) w = 0;
-      fStartX = xr;
+      if (fExternalHandler) {
+         if (delta != 0) {
+            Moved(delta);
+            fStartX = xr;
+         }
+      } else {
+         Int_t w = (Int_t) fFrameWidth;
+         if (fLeft)
+            w += delta;
+         else
+            w -= delta;
+         if (w < 0) w = 0;
+         fStartX = xr;
 
-      if (delta != 0) {
-         fFrameWidth = w;
-         fFrame->Resize(fFrameWidth, fFrameHeight);
+         if (delta != 0) {
+            fFrameWidth = w;
+            fFrame->Resize(fFrameWidth, fFrameHeight);
 
-         TGCompositeFrame *p = (TGCompositeFrame *) GetParent();
-         p->Layout();
+            TGCompositeFrame *p = (TGCompositeFrame *) GetParent();
+            p->Layout();
+         }
       }
    }
    return kTRUE;
@@ -222,6 +277,31 @@ TGHSplitter::TGHSplitter(const TGWindow *p, UInt_t w, UInt_t h,
 }
 
 //______________________________________________________________________________
+TGHSplitter::TGHSplitter(const TGWindow *p, UInt_t w, UInt_t h, Bool_t external) :
+   TGSplitter(p, w, h, kChildFrame, GetDefaultFrameBackground())
+{
+   // Create a horizontal splitter.
+
+   fExternalHandler = external;
+
+   fSplitCursor = kNone;
+
+   fSplitterPic = fClient->GetPicture("splitterh.xpm");
+
+   if (!fSplitterPic)
+      Error("TGHSplitter", "splitterh.xpm not found");
+
+   fSplitCursor = gVirtualX->CreateCursor(kArrowVer);
+   fFrame = 0;
+
+   gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
+                         kButtonPressMask | kButtonReleaseMask |
+                         kPointerMotionMask, kNone, kNone);
+
+   AddInput(kEnterWindowMask | kLeaveWindowMask);
+}
+
+//______________________________________________________________________________
 TGHSplitter::~TGHSplitter()
 {
    // Delete horizontal splitter widget.
@@ -238,7 +318,7 @@ void TGHSplitter::SetFrame(TGFrame *frame, Bool_t above)
    fFrame = frame;
    fAbove = above;
 
-   if (!(fFrame->GetOptions() & kFixedHeight))
+   if (!fExternalHandler && !(fFrame->GetOptions() & kFixedHeight))
       Error("SetFrame", "resize frame must have kFixedHeight option set");
 }
 
@@ -249,7 +329,7 @@ Bool_t TGHSplitter::HandleButton(Event_t *event)
 
    if (fSplitCursor == kNone) return kTRUE;
 
-   if (!fFrame) {
+   if (!fExternalHandler && !fFrame) {
       Error("HandleButton", "frame to be resized not set");
       return kTRUE;
    }
@@ -258,19 +338,25 @@ Bool_t TGHSplitter::HandleButton(Event_t *event)
       fStartY   = event->fYRoot;
       fDragging = kTRUE;
 
-      Int_t  x, y;
-      gVirtualX->GetWindowSize(fFrame->GetId(), x, y, fFrameWidth, fFrameHeight);
+      if (fExternalHandler) {
+         fMin = 0;
+         fMax = 99999;
+         DragStarted();
+      } else {
+         Int_t  x, y;
+         gVirtualX->GetWindowSize(fFrame->GetId(), x, y, fFrameWidth, fFrameHeight);
 
-      // get fMin and fMax in root coordinates
-      Int_t    xroot, yroot;
-      UInt_t   w, h;
-      Window_t wdum;
-      gVirtualX->GetWindowSize(fParent->GetId(), x, y, w, h);
-      gVirtualX->TranslateCoordinates(fParent->GetParent()->GetId(),
-                                      fClient->GetDefaultRoot()->GetId(),
-                                      x, y, xroot, yroot, wdum);
-      fMin = yroot;
-      fMax = yroot + h - 2;
+         // get fMin and fMax in root coordinates
+         Int_t    xroot, yroot;
+         UInt_t   w, h;
+         Window_t wdum;
+         gVirtualX->GetWindowSize(fParent->GetId(), x, y, w, h);
+         gVirtualX->TranslateCoordinates(fParent->GetParent()->GetId(),
+                                         fClient->GetDefaultRoot()->GetId(),
+                                         x, y, xroot, yroot, wdum);
+         fMin = yroot;
+         fMax = yroot + h - 2;
+      }
 
       // last argument kFALSE forces all specified events to this window
       gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
@@ -293,20 +379,27 @@ Bool_t TGHSplitter::HandleMotion(Event_t *event)
       if (yr > fMax) yr = fMax;
       if (yr < fMin) yr = fMin;
       Int_t delta = yr - fStartY;
-      Int_t h = (Int_t) fFrameHeight;
-      if (fAbove)
-         h += delta;
-      else
-         h -= delta;
-      if (h < 0) h = 0;
-      fStartY = yr;
+      if (fExternalHandler) {
+         if (delta != 0) {
+            Moved(delta);
+            fStartY = yr;
+         }
+      } else {
+         Int_t h = (Int_t) fFrameHeight;
+         if (fAbove)
+            h += delta;
+         else
+            h -= delta;
+         if (h < 0) h = 0;
+         fStartY = yr;
 
-      if (delta != 0) {
-         fFrameHeight = h;
-         fFrame->Resize(fFrameWidth, fFrameHeight);
+         if (delta != 0) {
+            fFrameHeight = h;
+            fFrame->Resize(fFrameWidth, fFrameHeight);
 
-         TGCompositeFrame *p = (TGCompositeFrame *) GetParent();
-         p->Layout();
+            TGCompositeFrame *p = (TGCompositeFrame *) GetParent();
+            p->Layout();
+         }
       }
    }
    return kTRUE;

@@ -112,6 +112,7 @@ public:
    TGSplitter    *GetSplitter() const { return fSplitter; }
    TGSplitTool   *GetSplitTool() const { return fSplitTool; }
    TGSplitFrame  *GetTopFrame();
+   TGFrame       *GetUndocked() const { return fUndocked; }
    Float_t        GetHRatio() const { return fHRatio; }
    Float_t        GetWRatio() const { return fWRatio; }
    void           MapToSPlitTool(TGSplitFrame *top);
@@ -131,6 +132,9 @@ public:
    void           SwitchToMain();      // *MENU*
    void           SplitHor();          // *MENU*
    void           SplitVer();          // *MENU*
+
+   void           Docked(TGFrame* frame);    //*SIGNAL*
+   void           Undocked(TGFrame* frame);  //*SIGNAL*
 
    static  void   SwitchFrames(TGFrame *frame, TGCompositeFrame *dest,
                                TGFrame *prev);
