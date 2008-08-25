@@ -2,3 +2,46 @@
 <hr> 
 <a name="gui"></a> 
 <h3>GUI</h3>
+
+<h4>New Class: TGPack</h4>
+New Container class for vertical and horizontal grouping of frames. 
+It enforces a predictable resizing behaviour on children.
+For an example of how to use it, see <tt>tutorials/eve/pack.C</tt>.
+<p>
+<p><img alt="TGPack class example." src="gui_tgpack.gif">
+<p>
+
+<h4>TGSplitFrame</h4>
+<ul>
+<li> Added a new signal method <tt>Docked(TGFrame*)</tt> to notify when a embedded frame has been docked.
+<li> Added a new signal method <tt>Undocked(TGFrame*)</tt> to notify when a embedded frame has been undocked.
+<li> Added a new getter method <tt>GetUndocked()</tt> returning a pointer on undocked frame, if any.
+</ul>
+
+<h4>TGToolTip</h4>
+<ul>
+<li> Add new constructor with global x, y position.
+If neither fWindow nor fPad are set use global fX, fY that was passed from outside.
+</ul>
+
+<h4>TGSplitter</h4>
+<ul>
+<li> Add option to handle frame resizing externally.
+</ul>
+
+<h4>TGView</h4>
+<ul>
+<li> Added a protection against possible negative scroll values.
+</ul>
+
+<h4>TGTextView</h4>
+<ul>
+<li> Fix bottom line not being properly updated while scrolling.
+<li> Solve a problem with vertical slider (avoid negative value when scrolling).
+</ul>
+
+<h4>TGTextEdit</h4>
+<ul>
+<li> Fix blinking cursor on some platforms/compilers
+</ul>
+
