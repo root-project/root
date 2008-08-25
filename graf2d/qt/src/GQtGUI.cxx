@@ -3260,7 +3260,8 @@ Window_t TGQt::GetCurrentWindow() const
    fprintf(stderr, " Qt layer is not ready for GetCurrentWindow \n");
    assert(0);
 
-   return (Window_t)(fSelectedBuffer ? fSelectedBuffer : fSelectedWindow);
+   //return (Window_t)(fSelectedBuffer ? fSelectedBuffer : fSelectedWindow);
+   return 0;
 }
 
 //______________________________________________________________________________
