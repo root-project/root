@@ -19,7 +19,8 @@ TEveQuadSet* quad_test(Float_t x=0, Float_t y=0, Float_t z=0,
    q->SetPalette(pal);
    q->SetFrame(box);
    q->Reset(TEveQuadSet::kQT_RectangleXY, kFALSE, 32);
-   for (Int_t i=0; i<num; ++i) {
+   for (Int_t i=0; i<num; ++i)
+   {
       q->AddQuad(r.Uniform(-10, 9), r.Uniform(-10, 9), 0,
                  r.Uniform(0.2, 1), r.Uniform(0.2, 1));
       q->QuadValue(r.Uniform(0, 130));
@@ -43,7 +44,7 @@ TEveQuadSet* quad_test(Float_t x=0, Float_t y=0, Float_t z=0,
 }
 
 TEveQuadSet* quad_test_emc(Float_t x=0, Float_t y=0, Float_t z=0,
-                                Int_t num=100)
+                           Int_t num=100)
 {
    TEveManager::Create();
 
@@ -56,7 +57,8 @@ TEveQuadSet* quad_test_emc(Float_t x=0, Float_t y=0, Float_t z=0,
    q->SetDefWidth(8);
    q->SetDefHeight(8);
 
-   for (Int_t i=0; i<num; ++i) {
+   for (Int_t i=0; i<num; ++i)
+   {
       q->AddQuad(r.Uniform(-100, 100), r.Uniform(-100, 100));
       q->QuadValue(r.Uniform(0, 130));
       q->QuadId(new TNamed(Form("Cell %d", i), "Dong!"));
@@ -121,7 +123,7 @@ TEveQuadSet* quad_test_circ()
 }
 
 TEveQuadSet* quad_test_hex(Float_t x=0, Float_t y=0, Float_t z=0,
-                                Int_t num=100, Bool_t register=kTRUE)
+                           Int_t num=100, Bool_t register=kTRUE)
 {
    TEveManager::Create();
 
@@ -131,7 +133,8 @@ TEveQuadSet* quad_test_hex(Float_t x=0, Float_t y=0, Float_t z=0,
    {
       TEveQuadSet* q = new TEveQuadSet("HexagonXY");
       q->Reset(TEveQuadSet::kQT_HexagonXY, kFALSE, 32);
-      for (Int_t i=0; i<num; ++i) {
+      for (Int_t i=0; i<num; ++i)
+      {
          q->AddHexagon(r.Uniform(-10, 10), r.Uniform(-10, 10), r.Uniform(-10, 10),
                        r.Uniform(0.2, 1));
          q->QuadValue(r.Uniform(0, 120));
@@ -151,7 +154,8 @@ TEveQuadSet* quad_test_hex(Float_t x=0, Float_t y=0, Float_t z=0,
    {
       TEveQuadSet* q = new TEveQuadSet("HexagonYX");
       q->Reset(TEveQuadSet::kQT_HexagonYX, kFALSE, 32);
-      for (Int_t i=0; i<num; ++i) {
+      for (Int_t i=0; i<num; ++i)
+      {
          q->AddHexagon(r.Uniform(-10, 10), r.Uniform(-10, 10), r.Uniform(-10, 10),
                        r.Uniform(0.2, 1));
          q->QuadValue(r.Uniform(0, 120));
@@ -172,7 +176,7 @@ TEveQuadSet* quad_test_hex(Float_t x=0, Float_t y=0, Float_t z=0,
 }
 
 TEveQuadSet* quad_test_hexid(Float_t x=0, Float_t y=0, Float_t z=0,
-                                  Int_t num=100, Bool_t register=kTRUE)
+                             Int_t num=100, Bool_t register=kTRUE)
 {
    TEveManager::Create();
 
@@ -183,7 +187,8 @@ TEveQuadSet* quad_test_hexid(Float_t x=0, Float_t y=0, Float_t z=0,
       TEveQuadSet* q = new TEveQuadSet("HexagonXY");
       q->SetOwnIds(kTRUE);
       q->Reset(TEveQuadSet::kQT_HexagonXY, kFALSE, 32);
-      for (Int_t i=0; i<num; ++i) {
+      for (Int_t i=0; i<num; ++i)
+      {
          q->AddHexagon(r.Uniform(-10, 10), r.Uniform(-10, 10), r.Uniform(-10, 10),
                        r.Uniform(0.2, 1));
          q->QuadValue(r.Uniform(0, 120));

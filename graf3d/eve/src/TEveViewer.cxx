@@ -21,7 +21,7 @@
 
 #include "TGLPhysicalShape.h" // For handling OnMouseIdle signal
 #include "TGLLogicalShape.h"  // For handling OnMouseIdle signal
-
+#include "TGLEventHandler.h"
 
 //==============================================================================
 //==============================================================================
@@ -165,7 +165,8 @@ ClassImp(TEveViewerList);
 
 //______________________________________________________________________________
 TEveViewerList::TEveViewerList(const Text_t* n, const Text_t* t) :
-   TEveElementList(n, t)
+   TEveElementList(n, t),
+   fShowTooltip   (kTRUE)
 {
    // Constructor.
 
@@ -283,6 +284,22 @@ void TEveViewerList::OnMouseOver(TGLPhysicalShape *pshape, UInt_t state)
    if (el && !el->IsPickable())
       el = 0;
    gEve->GetHighlight()->UserPickedElement(el, kFALSE);
+
+   if (fShowTooltip)
+   {
+      TGLViewer       *glw = dynamic_cast<TGLViewer*>((TQObject*) gTQSender);
+      TGLEventHandler *glh = (TGLEventHandler*) glw->GetEventHandler();
+      if (gEve->GetHighlight()->NumChildren() == 1)
+      {
+         TString title(gEve->GetHighlight()->FirstChild()->GetElementTitle());
+         if ( ! title.IsNull())
+            glh->TriggerTooltip(title);
+      }
+      else
+      {
+         glh->RemoveTooltip();
+      }
+   }
 }
 
 //______________________________________________________________________________

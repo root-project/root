@@ -46,7 +46,6 @@ TGLAxisAttrib::TGLAxisAttrib() :
 
    fLabelFontName("arial"),
    fTitleFontName("arial")
-
 {
    // Constructor.
 
@@ -61,7 +60,6 @@ TGLAxisAttrib::TGLAxisAttrib() :
    fTMScale[2] = 0.25;
 }
 
-
 //______________________________________________________________________________
 //
 // Utility class to paint axis in GL.
@@ -70,21 +68,27 @@ TGLAxisAttrib::TGLAxisAttrib() :
 ClassImp(TGLAxisPainter);
 
 //______________________________________________________________________________
-const char* TGLAxisPainter::FormAxisValue(Float_t x) const
+TGLAxisPainter::TGLAxisPainter():
+   fAtt(0),
+
+   fMaxDigits(5),
+   fDecimals(0),
+   fExp(0)
 {
-   // Returns formatted text suitable for display of value.
+   // Constructor.
 
-   using namespace TMath;
+}
 
-   if (Abs(x) > 1000)
-      return Form("%d", (Int_t) 10*Nint(x/10.0f));
-   if (Abs(x) > 100 || x == Nint(x))
-      return Form("%d", (Int_t) Nint(x));
-   if (Abs(x) > 10)
-      return Form("%.1f", x);
-   if (Abs(x) >= 0.01 )
-      return Form("%.2f", x);
-   return "0";
+//______________________________________________________________________________
+void TGLAxisPainter::LabelsLimits(const char *label, Int_t &first, Int_t &last) const
+{
+   // Find first and last character of a label.
+
+   last = strlen(label)-1;
+   for (Int_t i=0; i<=last; i++) {
+      if (strchr("1234567890-+.", label[i]) ) { first = i; return; }
+   }
+   Error("LabelsLimits", "attempt to draw a blank label");
 }
 
 //______________________________________________________________________________
@@ -100,9 +104,134 @@ inline void TGLAxisPainter::DrawTick(TGLVector3 &tv, Int_t order) const
 }
 
 //______________________________________________________________________________
+void TGLAxisPainter::FormAxisValue(Float_t wlabel, char* label) const
+{
+   // Returns formatted text suitable for display of value.
+
+   sprintf(label,&fFormat[0],wlabel);
+   Int_t first, last;
+   LabelsLimits(label, first, last);
+
+   char chtemp[256];
+   if (label[first] == '.') { //check if '.' is preceeded by a digit
+      strcpy(chtemp, "0");
+      strcat(chtemp, &label[first]);
+      strcpy(label, chtemp);
+      first = 1; last = strlen(label);
+   }
+   if (label[first] == '-' && label[first+1] == '.') {
+      strcpy(chtemp, "-0");
+      strcat(chtemp, &label[first+1]);
+      strcpy(label, chtemp);
+      first = 1; last = strlen(label);
+   }
+
+   //  We eliminate the non significant 0 after '.'
+   if (fDecimals) {
+      char *adot = strchr(label,'.');
+      if (adot) adot[fDecimals] = 0;
+   } else {
+      while (label[last] == '0') { label[last] = 0; last--;}
+   }
+   // We eliminate the dot, unless dot is forced.
+   if (label[last] == '.') {
+      label[last] = 0; last--;
+   }
+
+   //  Make sure the label is not "-0"
+   if (last-first == 1 && label[first] == '-' && label[last]  == '0') {
+      strcpy(label, "0");
+      label[last] = 0;
+   }
+}
+
+//______________________________________________________________________________
+void TGLAxisPainter::SetTextFormat(Double_t bw1)
+{
+   // Construct print format.
+
+   Double_t absMax = TMath::Max(TMath::Abs(fAtt->fMin),TMath::Abs(fAtt->fMax));
+   Double_t epsilon = 1e-5;
+   Double_t absMaxLog = TMath::Log10(absMax) + epsilon;
+
+   fExp   = 0;
+   Int_t if1, if2;
+   Double_t xmicros = TMath::Power(10,-fMaxDigits);
+   if ( bw1 < xmicros && absMaxLog<0)
+   {
+      // First case : bw1 less than 0.001
+      fExp = (Int_t)absMaxLog;
+      if (fExp%3 == 1) fExp += TMath::Sign(2, fExp);
+      if (fExp%3 == 2) fExp += TMath::Sign(1, fExp);
+      if1     = fMaxDigits;
+      if2     = fMaxDigits-2;
+   }
+   else
+   {
+      // Use x 10 n format. (only powers of 3 allowed)
+      if (absMax <= 1) TMath::Log10(absMax*0.0001)+epsilon;
+      Int_t  clog  = Int_t(absMaxLog)+1;
+      if (clog > fMaxDigits) {
+         while (1) {
+            fExp++;
+            absMax    /= 10;
+            if (fExp%3 == 0 && absMax <= TMath::Power(10,fMaxDigits-1)) break;
+         }
+      }
+      else if (clog < -fMaxDigits) {
+         Double_t rne   = 1/TMath::Power(10,fMaxDigits-2);
+         while (1) {
+            fExp--;
+            absMax  *= 10;
+            if (fExp%3 == 0 && absMax >= rne) break;
+         }
+      }
+
+      Int_t na = 0;
+      for (Int_t i=fMaxDigits-1; i>0; i--) {
+         if (TMath::Abs(absMax) < TMath::Power(10,i)) na = fMaxDigits-i;
+      }
+      Double_t size =  TMath::Abs(fAtt->fMax - fAtt->fMin);
+      Int_t ndyn = (Int_t)(size/bw1);
+      while (ndyn) {
+         if ( size/ndyn <= 0.999 && na < fMaxDigits-2) {
+            na++;
+            ndyn /= 10;
+         }
+         else break;
+      }
+      if2 = na;
+      if1 = TMath::Max(clog+na,fMaxDigits)+1;
+   }
+
+   // compose text format
+   if (TMath::Min(fAtt->fMin,fAtt->fMax) < 0)if1 = if1+1;
+   if1 = TMath::Min(if1,32);
+
+   // In some cases, if1 and if2 are too small....
+   Double_t dwlabel = bw1*TMath::Power(10, -fExp);
+   while (dwlabel < TMath::Power(10,-if2)) {
+      if1++;
+      if2++;
+   }
+   if (if1 > 14) if1=14;
+   if (if2 > 14) if2=14;
+   if (if2) sprintf(fFormat,"%%%d.%df",if1,if2);
+   else     sprintf(fFormat,"%%%d.%df",if1+1,1);
+
+   // get decimal number
+   char chtemp[8];
+   sprintf(chtemp,"%g",dwlabel);
+   fDecimals = 0;
+   char *dot = strchr(chtemp,'.');
+   if (dot) fDecimals = chtemp + strlen(chtemp) -dot;
+}
+
+
+//______________________________________________________________________________
 void TGLAxisPainter::RnrText(const char* txt, TGLVector3 pos, TGLFont &font) const
 {
-   // Render text at the given position. Make offset depending of text aligment.
+   // Render text at the given position. Offset depends of text aligment.
 
    glPushMatrix();
    glTranslatef(pos.X(), pos.Y(), pos.Z());
@@ -162,7 +291,7 @@ void TGLAxisPainter::Paint(TGLRnrCtx &rnrCtx, TGLAxisAttrib &att)
    THLimitsFinder::Optimize(att.fMin, att.fMax, n1a, bl1, bh1, bn1, bw1);
    THLimitsFinder::Optimize(bl1, bl1+bw1, n2a, bl2, bh2, bn2, bw2);
 
-   /**************************************************************************/
+   //______________________________________________________________________________
 
    TGLFont font;
    Double_t len=0;
@@ -198,9 +327,14 @@ void TGLAxisPainter::Paint(TGLRnrCtx &rnrCtx, TGLAxisAttrib &att)
       font.PreRender();
       TGLVector3 pos  = att.fDir*bl1;
       TGLVector3 step = att.fDir*bw1;
+      SetTextFormat(bw1);
+      Double_t lab0 = bl1*TMath::Power(10, -fExp);
+      Double_t labStep = bw1*TMath::Power(10, -fExp);
+      char chtemp[10];
       for (Int_t i=0; i<=bn1; i++)
       {
-         RnrText(FormAxisValue(bl1+i*bw1), pos, font);
+         FormAxisValue(lab0+i*labStep, &chtemp[0]);
+         RnrText(chtemp, pos, font);
          pos += step;
       }
       font.PostRender();
@@ -208,28 +342,37 @@ void TGLAxisPainter::Paint(TGLRnrCtx &rnrCtx, TGLAxisAttrib &att)
       rnrCtx.ReleaseFont(font);
    }
 
-
    // title
    if (att.fTitle.Length())
    {
       Int_t fs = (att.fRelativeFontSize)? Int_t(att.GetTitleSize()*len) : att.fAbsTitleFontSize;
+      att.fAbsTitleFontSize = TGLFontManager::GetFontSize(fs, 12, 36);
 
       rnrCtx.RegisterFont(TGLFontManager::GetFontSize(fs, 12, 36),
                           att.fTitleFontName.Data(), TGLFont::kPixmap, font);
       TGLUtil::Color(att.fTitleColor);
       font.PreRender();
       TGLVector3 pos = att.fTitlePos;
-      pos  += att.fTMOff[0]*2.5;
-      RnrText(att.fTitle.Data(), pos, font);
+      pos  += att.fTMOff[0]*2.5; //tmp
+
+      TString title = att.fTitle;
+      if (att.fTitleUnits.Length())
+      {
+         if (fExp)
+            title += Form("[10^%d %s]", fExp, att.fTitleUnits.Data());
+         else
+            title += Form("[%s]", att.fTitleUnits.Data());
+      }
+      RnrText(title.Data(), pos, font);
+
       font.PostRender();
       rnrCtx.ReleaseFont(font);
    }
 
-   /**************************************************************************/
+   //______________________________________________________________________________
 
    TGLUtil::Color(att.fAxisColor);
    glBegin(GL_LINES);
-
    // body
    {
       glVertex3dv(start.Arr());

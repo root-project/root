@@ -215,8 +215,8 @@ void TEveTrackPropagatorSubEditor::SetModel(TEveTrackPropagator* m)
    fMaxR->SetValue(fM->fMaxR);
    fMaxZ->SetValue(fM->fMaxZ);
    fMaxOrbits->SetValue(fM->fMaxOrbs);
-   fMinAng->SetValue(fM->fMinAng);
-   fDelta->SetValue(fM->fDelta);
+   fMinAng->SetValue(fM->GetMinAng());
+   fDelta->SetValue(fM->GetDelta());
 
    if(fM->fEditPathMarks)
    {

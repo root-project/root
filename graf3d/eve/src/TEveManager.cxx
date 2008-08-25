@@ -506,6 +506,7 @@ void TEveManager::PreDeleteElement(TEveElement* element)
 void TEveManager::ElementSelect(TEveElement* element)
 {
    // Select an element.
+   // Now it only calls EditElement() - should also update selection state.
 
    if (element != 0)
       EditElement(element);

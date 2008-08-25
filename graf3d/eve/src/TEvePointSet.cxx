@@ -370,9 +370,11 @@ void TEvePointSet::PointSelected(Int_t id)
 //______________________________________________________________________________
 //
 // An array of point-sets with each point-set playing a role of a bin
-// in a histogram. When a new point is added to a TEvePointSetArray, an
-// additional separating quantity needs to be specified: it determines
-// into which TEvePointSet (bin) the point will actually be stored.
+// in a histogram. When a new point is added to a TEvePointSetArray,
+// an additional separating quantity needs to be specified: it
+// determines into which TEvePointSet (bin) the point will actually be
+// stored. Underflow and overflow bins are automatically created but
+// they are not drawn by default.
 //
 // By using the TEvePointSelector the points and the separating
 // quantities can be filled directly from a TTree holding the source
@@ -538,10 +540,30 @@ void TEvePointSetArray::TakeAction(TEvePointSelector* sel)
 /******************************************************************************/
 
 //______________________________________________________________________________
+Int_t TEvePointSetArray::Size(Bool_t under, Bool_t over) const
+{
+   // Get the total of filled points.
+   // 'under' and 'over' flags specify if under/overflow channels
+   // should be added to the sum.
+
+   Int_t size = 0;
+   const Int_t min = under ? 0 : 1;
+   const Int_t max = over  ? fNBins : fNBins - 1;
+   for (Int_t i = min; i < max; ++i)
+   {
+      if (fBins[i])
+         size += fBins[i]->Size();
+   }
+   return size;
+}
+
+//______________________________________________________________________________
 void TEvePointSetArray::InitBins(const Text_t* quant_name,
                                  Int_t nbins, Double_t min, Double_t max)
 {
    // Initialize internal point-sets with given binning parameters.
+   // The actual number of bins is nbins+2, bin 0 corresponding to
+   // underflow and bin nbin+1 to owerflow pointset.
 
    static const TEveException eh("TEvePointSetArray::InitBins ");
 
@@ -551,14 +573,19 @@ void TEvePointSetArray::InitBins(const Text_t* quant_name,
    RemoveElements();
 
    fQuantName = quant_name;
-   fNBins     = nbins;
+   fNBins     = nbins + 2; // under/overflow
    fLastBin   = -1;
    fMin = fCurMin = min;
    fMax = fCurMax = max;
-   fBinWidth  = (fMax - fMin)/fNBins;
+   fBinWidth  = (fMax - fMin)/(fNBins - 2);
 
-   fBins = new TEvePointSet*[fNBins];
-   for (Int_t i=0; i<fNBins; ++i) {
+   fBins = new TEvePointSet* [fNBins];
+
+   fBins[0] = new TEvePointSet("Underflow", fDefPointSetCapacity);
+   fBins[0]->SetRnrSelf(kFALSE);
+   
+   for (Int_t i = 1; i < fNBins - 1; ++i)
+   {
       fBins[i] = new TEvePointSet
          (Form("Slice %d [%4.3lf, %4.3lf]", i, fMin + i*fBinWidth, fMin + (i+1)*fBinWidth),
           fDefPointSetCapacity);
@@ -567,19 +594,39 @@ void TEvePointSetArray::InitBins(const Text_t* quant_name,
       fBins[i]->SetMarkerSize(fMarkerSize);
       AddElement(fBins[i]);
    }
+
+   fBins[fNBins-1] = new TEvePointSet("Overflow", fDefPointSetCapacity);
+   fBins[fNBins-1]->SetRnrSelf(kFALSE);
 }
 
 //______________________________________________________________________________
-void TEvePointSetArray::Fill(Double_t x, Double_t y, Double_t z, Double_t quant)
+Bool_t TEvePointSetArray::Fill(Double_t x, Double_t y, Double_t z, Double_t quant)
 {
    // Add a new point. Appropriate point-set will be chosen based on
    // the value of the separating quantity 'quant'.
+   // If the selected bin does not have an associated TEvePointSet
+   // the point is discarded and false is returned.
 
-   fLastBin = Int_t( (quant - fMin)/fBinWidth );
-   if (fLastBin >= 0 && fLastBin < fNBins && fBins[fLastBin] != 0)
+   fLastBin = Int_t( (quant - fMin)/fBinWidth ) + 1;
+
+   if (fLastBin < 0)
+   {
+      fLastBin = 0;
+   }
+   else if (fLastBin > fNBins - 1)
+   {
+      fLastBin = fNBins - 1;
+   }
+
+   if (fBins[fLastBin] != 0)
+   {
       fBins[fLastBin]->SetNextPoint(x, y, z);
+      return kTRUE;
+   }
    else
-      fLastBin = -1;
+   {
+      return kFALSE;
+   }
 }
 
 //______________________________________________________________________________

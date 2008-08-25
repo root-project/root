@@ -60,6 +60,7 @@ protected:
 
    TEveFrameBox*     fFrame;          //  Pointer to frame structure.
    TEveRGBAPalette*  fPalette;        //  Pointer to signal-color palette.
+   UChar_t           fTransparency;   //
    ERenderMode_e     fRenderMode;     //  Render mode: as-is / line / filled.
    Bool_t            fDisableLigting; //  Disable lighting for rendering.
    Bool_t            fHistoButtons;   //  Show histogram buttons in object editor.
@@ -77,6 +78,10 @@ public:
    virtual Bool_t CanEditMainColor() const { return kTRUE; }
    virtual void   SetMainColor(Color_t color);
 
+   virtual Bool_t  CanEditMainTransparency() const { return kTRUE; }
+   virtual UChar_t GetMainTransparency()     const { return fTransparency; }
+   virtual void    SetMainTransparency(UChar_t t)  { fTransparency = t; }
+
    // Implemented in sub-classes:
    // virtual void Reset(EQuadType_e quadType, Bool_t valIsCol, Int_t chunkSize);
 
@@ -87,6 +92,7 @@ public:
 
    void DigitValue(Int_t value);
    void DigitColor(Color_t ci);
+   void DigitColor(Color_t ci, UChar_t transparency);
    void DigitColor(UChar_t r, UChar_t g, UChar_t b, UChar_t a=255);
    void DigitColor(UChar_t* rgba);
 

@@ -30,8 +30,12 @@ TEveProjectionAxesEditor::TEveProjectionAxesEditor(const TGWindow *p, Int_t widt
    TGedFrame(p, width, height, options | kVerticalFrame, back),
    fM(0),
 
-   fStepMode(0),
-   fNumTickMarks(0),
+   fLabMode(0),
+   fAxesMode(0),
+   fNdiv(0),
+
+   fBoxOffsetX(0),
+   fBoxOffsetY(0),
 
    fCenterFrame(0),
    fDrawCenter(0),
@@ -40,30 +44,73 @@ TEveProjectionAxesEditor::TEveProjectionAxesEditor(const TGWindow *p, Int_t widt
    // Constructor.
 
    MakeTitle("TEveProjectionAxis");
+   Int_t labw=52;
 
-   TGHorizontalFrame* f = new TGHorizontalFrame(this);
-   TGLabel* lab = new TGLabel(f, "TickMark Step:");
-   f->AddFrame(lab, new TGLayoutHints(kLHintsLeft|kLHintsBottom, 1, 3, 1, 2));
-   fStepMode = new TGComboBox(f, "Position");
-   fStepMode->AddEntry("Value", 1);
-   fStepMode->AddEntry("Position", 0);
-   fStepMode->GetTextEntry()->SetToolTipText("Set tick-marks on equidistant values/screen position.");
-   TGListBox* lb = fStepMode->GetListBox();
-   lb->Resize(lb->GetWidth(), 2*18);
-   fStepMode->Resize(80, 20);
-   fStepMode->Connect("Selected(Int_t)", "TEveProjectionAxesEditor", this, "DoStepMode(Int_t)");
-   f->AddFrame(fStepMode, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));
-   AddFrame(f);
+   {
+      TGHorizontalFrame* f = new TGHorizontalFrame(this);
 
-   fNumTickMarks = new TEveGValuator(this, "TickMark Num:", 90, 0);
-   fNumTickMarks->SetLabelWidth(87);
-   fNumTickMarks->SetNELength(4);
-   fNumTickMarks->Build();
-   fNumTickMarks->SetLimits(3, 50);
-   fNumTickMarks->Connect("ValueSet(Double_t)", "TEveProjectionAxesEditor", this, "DoNumTickMarks()");
-   AddFrame(fNumTickMarks, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));
+      TGCompositeFrame *labfr = new TGHorizontalFrame(f, labw, 20, kFixedSize);
+      labfr->AddFrame(new TGLabel(labfr, "Labels:") , new TGLayoutHints(kLHintsLeft  | kLHintsBottom));
+      f->AddFrame(labfr, new TGLayoutHints(kLHintsLeft|kLHintsBottom, 0, 1, 1, 1));
 
-   /**************************************************************************/
+      fLabMode = new TGComboBox(f, "Position");
+      fLabMode->AddEntry("Value", 1);
+      fLabMode->AddEntry("Position", 0);
+      fLabMode->GetTextEntry()->SetToolTipText("Set tick-marks on equidistant values/screen position.");
+      TGListBox* lb = fLabMode->GetListBox();
+      lb->Resize(lb->GetWidth(), 2*18);
+      fLabMode->Resize(80, 20);
+      fLabMode->Connect("Selected(Int_t)", "TEveProjectionAxesEditor", this, "DoLabMode(Int_t)");
+      f->AddFrame(fLabMode, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));
+      AddFrame(f);
+   }
+
+   {
+      TGHorizontalFrame* f = new TGHorizontalFrame(this);
+      TGCompositeFrame *labfr = new TGHorizontalFrame(f, labw, 20, kFixedSize);
+      labfr->AddFrame(new TGLabel(labfr, "Axes:") , new TGLayoutHints(kLHintsLeft  | kLHintsBottom));
+      f->AddFrame(labfr, new TGLayoutHints(kLHintsLeft|kLHintsBottom, 0, 1, 1, 1));
+
+
+      fAxesMode = new TGComboBox(f, "All");
+      fAxesMode->AddEntry("Horizontal", TEveProjectionAxes::kHorizontal);
+      fAxesMode->AddEntry("Vertical",TEveProjectionAxes::kVertical);
+      fAxesMode->AddEntry("All", TEveProjectionAxes::kAll);
+      TGListBox* lb = fAxesMode->GetListBox();
+      lb->Resize(lb->GetWidth(), 2*18);
+      fAxesMode->Resize(80, 20);
+      fAxesMode->Connect("Selected(Int_t)", "TEveProjectionAxesEditor", this, "DoAxesMode(Int_t)");
+      f->AddFrame(fAxesMode, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));
+      AddFrame(f);
+   }
+
+   fNdiv = new TEveGValuator(this, "Ndiv:", 70, 0);
+   fNdiv->SetLabelWidth(labw);
+   fNdiv->SetNELength(4);
+   fNdiv->SetShowSlider(kFALSE);
+   fNdiv->Build();
+   fNdiv->SetLimits(3, 50);
+   fNdiv->Connect("ValueSet(Double_t)", "TEveProjectionAxesEditor", this, "DoNdiv()");
+   AddFrame(fNdiv, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));
+
+   fBoxOffsetX = new TEveGValuator(this, "OffsetX:", 90, 0);
+   fBoxOffsetX->SetLabelWidth(labw);
+   fBoxOffsetX->SetNELength(5);
+   fBoxOffsetX->Build();
+   fBoxOffsetX->SetLimits(0, 1, 100, TGNumberFormat::kNESRealTwo);
+   fBoxOffsetX->Connect("ValueSet(Double_t)", "TEveProjectionAxesEditor", this, "DoBoxOffsetX()");
+   AddFrame(fBoxOffsetX, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));
+
+   fBoxOffsetY = new TEveGValuator(this, "OffsetY:", 90, 0);
+   fBoxOffsetY->SetLabelWidth(labw);
+   fBoxOffsetY->SetNELength(5);
+   fBoxOffsetY->Build();
+   fBoxOffsetY->SetLimits(0, 1, 100, TGNumberFormat::kNESRealTwo);
+   fBoxOffsetY->Connect("ValueSet(Double_t)", "TEveProjectionAxesEditor", this, "DoBoxOffsetY()");
+   AddFrame(fBoxOffsetY, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));
+
+   //______________________________________________________________________________
+
    // center tab
    fCenterFrame = CreateEditorTabSubFrame("Center");
 
@@ -106,8 +153,11 @@ void TEveProjectionAxesEditor::SetModel(TObject* obj)
 
    fM = dynamic_cast<TEveProjectionAxes*>(obj);
 
-   fStepMode->Select(fM->GetStepMode(), kFALSE);
-   fNumTickMarks->SetValue(fM->GetNumTickMarks());
+   fLabMode->Select(fM->GetLabMode(), kFALSE);
+   fAxesMode->Select(fM->GetAxesMode(), kFALSE);
+   fNdiv->SetValue(fM->GetNdiv());
+   fBoxOffsetX->SetValue(fM->GetBoxOffsetX());
+   fBoxOffsetY->SetValue(fM->GetBoxOffsetY());
 
    fDrawCenter->SetState(fM->GetDrawCenter()  ? kButtonDown : kButtonUp);
    fDrawOrigin->SetState(fM->GetDrawOrigin()  ? kButtonDown : kButtonUp);
@@ -133,20 +183,46 @@ void TEveProjectionAxesEditor::DoDrawCenter()
 }
 
 //______________________________________________________________________________
-void TEveProjectionAxesEditor::DoStepMode(Int_t mode)
+void TEveProjectionAxesEditor::DoLabMode(Int_t mode)
 {
    // Slot for setting tick-mark step mode.
 
-   TEveProjectionAxes::EMode em = (TEveProjectionAxes::EMode ) mode;
-   fM->SetStepMode(em);
+   TEveProjectionAxes::ELabMode em = (TEveProjectionAxes::ELabMode ) mode;
+   fM->SetLabMode(em);
    Update();
 }
 
 //______________________________________________________________________________
-void TEveProjectionAxesEditor::DoNumTickMarks()
+void TEveProjectionAxesEditor::DoAxesMode(Int_t mode)
+{
+   // Slot for setting number of axes.
+
+   TEveProjectionAxes::EAxesMode em = (TEveProjectionAxes::EAxesMode ) mode;
+   fM->SetAxesMode(em);
+   Update();
+}
+//______________________________________________________________________________
+void TEveProjectionAxesEditor::DoNdiv()
 {
    // Slot for setting number of tick-marks.
-   fM->SetNumTickMarks((Int_t)fNumTickMarks->GetValue());
+   fM->SetNdiv((Int_t)fNdiv->GetValue());
    Update();
 }
 
+//______________________________________________________________________________
+void TEveProjectionAxesEditor::DoBoxOffsetX()
+{
+   // Slot for setting x offset.
+
+   fM->SetBoxOffsetX(fBoxOffsetX->GetValue());
+   Update();
+}
+
+//______________________________________________________________________________
+void TEveProjectionAxesEditor::DoBoxOffsetY()
+{
+   // Slot for setting y offset.
+
+   fM->SetBoxOffsetY(fBoxOffsetY->GetValue());
+   Update();
+}

@@ -35,6 +35,7 @@
 
 #include "TRootEmbeddedCanvas.h"
 #include "TGSplitFrame.h"
+#include "TGLOverlayButton.h"
 #include "TGLEmbeddedViewer.h"
 #include "TGDockableFrame.h"
 #include "TGShapedFrame.h"
@@ -201,9 +202,10 @@ public:
    void           OnMouseOver(TGLPhysicalShape *shape);
    void           OnViewerActivated();
    void           OpenFile(const char *fname);
+   void           SwapToMainView(TGLViewerBase *viewer);
    void           ToggleOrthoRotate();
    void           ToggleOrthoDolly();
-   void           SwapToMainView();
+   void           UnDock(TGLViewerBase *viewer);
    void           LoadConfig(const char *fname);
    void           SaveConfig(const char *fname);
    static void    UpdateSummary();
@@ -700,12 +702,17 @@ SplitGLView::SplitGLView(const TGWindow *p, UInt_t w, UInt_t h, Bool_t embed) :
    fSplitFrame->GetSecond()->VSplit(266);
    fSplitFrame->GetSecond()->GetSecond()->VSplit(266);
 
+   TGLOverlayButton *but1, *but2, *but3, *but4, *but5, *but6;
    // get top (main) split frame
    frm = fSplitFrame->GetFirst();
    frm->SetName("Main_View");
 
    // create (embed) a GL viewer inside
    fViewer0 = new TGLEmbeddedViewer(frm, fPad);
+   but1 = new TGLOverlayButton(fViewer0, "Swap", 10.0, -10.0, 55.0, 16.0);
+   but1->Connect("Clicked(TGLViewerBase*)", "SplitGLView", this, "SwapToMainView(TGLViewerBase*)");
+   but2 = new TGLOverlayButton(fViewer0, "Undock", 70.0, -10.0, 55.0, 16.0);
+   but2->Connect("Clicked(TGLViewerBase*)", "SplitGLView", this, "UnDock(TGLViewerBase*)");
    frm->AddFrame(fViewer0->GetFrame(), new TGLayoutHints(kLHintsExpandX | 
                  kLHintsExpandY));
    // set the camera to perspective (XOZ) for this viewer
@@ -738,21 +745,14 @@ SplitGLView::SplitGLView(const TGWindow *p, UInt_t w, UInt_t h, Bool_t embed) :
    frm = fSplitFrame->GetSecond()->GetFirst();
    frm->SetName("Bottom_Left");
 
-   dfrm = new TGDockableFrame(frm);
-   dfrm->SetFixedSize(kFALSE);
-   dfrm->EnableHide(kFALSE);
-   hfrm = new TGHorizontalFrame(dfrm);
-   button= new TGPictureButton(hfrm, gClient->GetPicture("swap.png"));
-   button->SetToolTipText("Swap to big view");
-   hfrm->AddFrame(button);
-   button->Connect("Clicked()","SplitGLView",this,"SwapToMainView()");
-
    // create (embed) a GL viewer inside
-   fViewer1 = new TGLEmbeddedViewer(hfrm, fPad);
-   hfrm->AddFrame(fViewer1->GetFrame(), new TGLayoutHints(kLHintsExpandX | 
+   fViewer1 = new TGLEmbeddedViewer(frm, fPad);
+   but3 = new TGLOverlayButton(fViewer1, "Swap", 10.0, -10.0, 55.0, 16.0);
+   but3->Connect("Clicked(TGLViewerBase*)", "SplitGLView", this, "SwapToMainView(TGLViewerBase*)");
+   but4 = new TGLOverlayButton(fViewer1, "Undock", 70.0, -10.0, 55.0, 16.0);
+   but4->Connect("Clicked(TGLViewerBase*)", "SplitGLView", this, "UnDock(TGLViewerBase*)");
+   frm->AddFrame(fViewer1->GetFrame(), new TGLayoutHints(kLHintsExpandX | 
                   kLHintsExpandY));
-   dfrm->AddFrame(hfrm, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
-   frm->AddFrame(dfrm, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
 
    // set the camera to orthographic (XOY) for this viewer
    fViewer1->SetCurrentCamera(TGLViewer::kCameraOrthoXOY);
@@ -789,21 +789,13 @@ SplitGLView::SplitGLView(const TGWindow *p, UInt_t w, UInt_t h, Bool_t embed) :
    frm->SetName("Bottom_Center");
 
    // create (embed) a GL viewer inside
-   dfrm = new TGDockableFrame(frm);
-   dfrm->SetFixedSize(kFALSE);
-   dfrm->EnableHide(kFALSE);
-   hfrm = new TGHorizontalFrame(dfrm);
-   button= new TGPictureButton(hfrm, gClient->GetPicture("swap.png"));
-   button->SetToolTipText("Swap to big view");
-   hfrm->AddFrame(button);
-   button->Connect("Clicked()","SplitGLView",this,"SwapToMainView()");
-
-   // create (embed) a GL viewer inside
-   fViewer2 = new TGLEmbeddedViewer(hfrm, fPad);
-   hfrm->AddFrame(fViewer2->GetFrame(), new TGLayoutHints(kLHintsExpandX | 
+   fViewer2 = new TGLEmbeddedViewer(frm, fPad);
+   but5 = new TGLOverlayButton(fViewer2, "Swap", 10.0, -10.0, 55.0, 16.0);
+   but5->Connect("Clicked(TGLViewerBase*)", "SplitGLView", this, "SwapToMainView(TGLViewerBase*)");
+   but6 = new TGLOverlayButton(fViewer2, "Undock", 70.0, -10.0, 55.0, 16.0);
+   but6->Connect("Clicked(TGLViewerBase*)", "SplitGLView", this, "UnDock(TGLViewerBase*)");
+   frm->AddFrame(fViewer2->GetFrame(), new TGLayoutHints(kLHintsExpandX | 
                   kLHintsExpandY));
-   dfrm->AddFrame(hfrm, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
-   frm->AddFrame(dfrm, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
 
    // set the camera to orthographic (XOY) for this viewer
    fViewer2->SetCurrentCamera(TGLViewer::kCameraOrthoXOY);
@@ -840,7 +832,7 @@ SplitGLView::SplitGLView(const TGWindow *p, UInt_t w, UInt_t h, Bool_t embed) :
    button= new TGPictureButton(hfrm, gClient->GetPicture("swap.png"));
    button->SetToolTipText("Swap to big view");
    hfrm->AddFrame(button);
-   button->Connect("Clicked()","SplitGLView",this,"SwapToMainView()");
+   button->Connect("Clicked()","SplitGLView",this,"SwapToMainView(TGLViewerBase*=0)");
    fgHtmlSummary = new HtmlSummary("Alice Event Display Summary Table");
    fgHtml = new TGHtml(hfrm, 100, 100, -1);
    hfrm->AddFrame(fgHtml, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
@@ -1332,19 +1324,43 @@ void SplitGLView::SaveConfig(const char *fname)
 }
 
 //______________________________________________________________________________
-void SplitGLView::SwapToMainView()
+void SplitGLView::SwapToMainView(TGLViewerBase *viewer)
 {
-   TGPictureButton *src = (TGPictureButton*)gTQSender;
-   TGCompositeFrame *parent = (TGCompositeFrame *)(src->GetParent());
-   TGFrame *source = dynamic_cast<TGFrameElement*>(parent->GetList()->Last())->fFrame;
-   if (!source) return;
+   // Swap frame embedded in a splitframe to the main view (slot method).
 
-   TGSplitFrame *dest = fSplitFrame->GetFirst();
-   
-   TGFrame *prev = (TGFrame *)(dest->GetFrame());
-   
-   if ((source != prev) && (source != dest))
-      TGSplitFrame::SwitchFrames(source, dest, prev);
+   TGCompositeFrame *parent = 0;
+   if (!fSplitFrame->GetFirst()->GetFrame())
+      return;
+   if (viewer == 0) {
+      TGPictureButton *src = (TGPictureButton*)gTQSender;
+      parent = (TGCompositeFrame *)src->GetParent();
+      while (parent && !parent->InheritsFrom("TGSplitFrame")) {
+         parent = (TGCompositeFrame *)parent->GetParent();
+      }
+   }
+   else {
+      TGCompositeFrame *src = ((TGLEmbeddedViewer *)viewer)->GetFrame();
+      if (!src) return;
+      TGLOverlayButton *but = (TGLOverlayButton *)((TQObject *)gTQSender);
+      but->ResetState();
+      parent = (TGCompositeFrame *)src->GetParent();
+   }
+   if (parent && parent->InheritsFrom("TGSplitFrame"))
+      ((TGSplitFrame *)parent)->SwitchToMain();
+}
+
+//______________________________________________________________________________
+void SplitGLView::UnDock(TGLViewerBase *viewer)
+{
+   // Undock frame embedded in a splitframe (slot method).
+
+   TGCompositeFrame *src = ((TGLEmbeddedViewer *)viewer)->GetFrame();
+   if (!src) return;
+   TGLOverlayButton *but = (TGLOverlayButton *)((TQObject *)gTQSender);
+   but->ResetState();
+   TGCompositeFrame *parent = (TGCompositeFrame *)src->GetParent();
+   if (parent && parent->InheritsFrom("TGSplitFrame"))
+      ((TGSplitFrame *)parent)->ExtractFrame();
 }
 
 //______________________________________________________________________________

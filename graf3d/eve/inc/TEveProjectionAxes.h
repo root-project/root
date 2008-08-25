@@ -12,14 +12,24 @@
 #ifndef ROOT_TEveProjectionAxes
 #define ROOT_TEveProjectionAxes
 
-#include "TEveText.h"
+#include "TNamed.h"
+#include "TAtt3D.h"
+#include "TAttBBox.h"
+
+#include "TEveElement.h"
 
 class TEveProjectionManager;
 
-class TEveProjectionAxes : public TEveText
+class TEveProjectionAxes : public TEveElement,
+                           public TNamed,
+                           public TAtt3D,
+                           public TAttBBox
 {
+   friend class TEveProjectionAxesGL;
+
 public:
-   enum EMode      { kPosition, kValue };
+   enum ELabMode      { kPosition, kValue };
+   enum EAxesMode     { kHorizontal, kVertical, kAll};
 
 private:
    TEveProjectionAxes(const TEveProjectionAxes&);            // Not implemented
@@ -27,12 +37,22 @@ private:
 
 protected:
    TEveProjectionManager*  fManager;  // model object
+   
+   TString         fTitle;
+
+   Float_t         fBoxOffsetX;     // offset X of bounding Box
+   Float_t         fBoxOffsetY;     // offset Y  of bounding Box
+
+   Float_t         fLabelSize;       // relative font size
+
+   Color_t         fColor;
+
+   ELabMode        fLabMode;       // tick-mark positioning
+   EAxesMode       fAxesMode;
+   Int_t           fNdiv;  // number of tick-mark on axis
 
    Bool_t          fDrawCenter;  // draw center of distortion
    Bool_t          fDrawOrigin;  // draw origin
-
-   EMode           fStepMode;       // tick-mark positioning
-   Int_t           fNumTickMarks;  // number of tick-mark on axis
 
 public:
    TEveProjectionAxes(TEveProjectionManager* m);
@@ -40,15 +60,34 @@ public:
 
    TEveProjectionManager* GetManager(){ return fManager; }
 
-   void            SetStepMode(EMode x)     { fStepMode = x;        }
-   EMode           GetStepMode()   const    { return fStepMode;     }
-   void            SetNumTickMarks(Int_t x) { fNumTickMarks = x;    }
-   Int_t           GetNumTickMarks()  const { return fNumTickMarks; }
+   const   Text_t* GetTitle() const  { return fTitle.Data(); }
+   void            SetTitle(const Text_t* t) { fTitle = t; }
+
+   void            SetLabMode(ELabMode x)   { fLabMode = x;     }
+   ELabMode        GetLabMode()   const     { return fLabMode;  }
+   void            SetAxesMode(EAxesMode x) { fAxesMode = x;    }
+   EAxesMode       GetAxesMode()   const    { return fAxesMode; }
+
+   void            SetNdiv(Int_t x) { fNdiv = x;    }
+   Int_t           GetNdiv()  const { return fNdiv; }
+
+   void            SetBoxOffsetX(Float_t x) {fBoxOffsetX=x;  }
+   Float_t         GetBoxOffsetX() const    {return fBoxOffsetX; }
+
+   void            SetBoxOffsetY(Float_t x) {fBoxOffsetY=x;  }
+   Float_t         GetBoxOffsetY() const    {return fBoxOffsetY; }
+
+   Float_t         GetLabelSize() const {return fLabelSize;}
+   void            SetLabelSize(Float_t x) {fLabelSize=x;}
 
    void            SetDrawCenter(Bool_t x){ fDrawCenter = x;    }
    Bool_t          GetDrawCenter() const  { return fDrawCenter; }
    void            SetDrawOrigin(Bool_t x){ fDrawOrigin = x;    }
    Bool_t          GetDrawOrigin() const  { return fDrawOrigin; }
+
+   virtual Bool_t CanEditMainColor() const { return kTRUE; }
+
+   virtual void    Paint(Option_t* option="");
 
    virtual void    ComputeBBox();
 

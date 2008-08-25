@@ -26,21 +26,22 @@ private:
    TEveCaloLegoGL(const TEveCaloLegoGL&);            // Not implemented
    TEveCaloLegoGL& operator=(const TEveCaloLegoGL&); // Not implemented
 
-   // cached variables
-   mutable Float_t   fDataMax;
-   mutable Double_t  fZAxisStep;
+   mutable Float_t   fDataMax; // cached
 
    mutable TAxis*    fEtaAxis;
    mutable TAxis*    fPhiAxis;
+   mutable Int_t     fBinStep;
 
    mutable TGLAxisAttrib    fXAxisAtt;
    mutable TGLAxisAttrib    fYAxisAtt;
    mutable TGLAxisAttrib    fZAxisAtt;
 
    mutable TGLAxisPainter   fAxisPainter;
-
 protected:
-   Int_t   GetGridStep(Int_t axId, TGLRnrCtx &rnrCtx) const;
+   Int_t   GetGridStep(TGLRnrCtx &rnrCtx) const;
+   void    SetAxis(TAxis *orig, TAxis *curr) const;
+
+   Bool_t  PhiShiftInterval(Float_t &min, Float_t &max) const;
 
    void    DrawZScales3D(TGLRnrCtx &rnrCtx, Float_t x0, Float_t x1, Float_t y0, Float_t y1) const;
    void    DrawZAxis(TGLRnrCtx &rnrCtx, Float_t azX, Float_t azY) const;
@@ -48,7 +49,7 @@ protected:
    void    DrawXYScales(TGLRnrCtx &rnrCtx, Float_t x0, Float_t x1, Float_t y0, Float_t y1) const;
    void    DrawHistBase(TGLRnrCtx &rnrCtx) const;
 
-   void    DrawCells2D(TGLRnrCtx & rnrCtx) const;
+   void    DrawCells2D() const;
 
    void    DrawCells3D(TGLRnrCtx & rnrCtx) const;
    void    MakeQuad(Float_t x, Float_t y, Float_t z,
@@ -61,21 +62,15 @@ protected:
    typedef std::map<Int_t, UInt_t>::iterator SliceDLMap_i;
 
    mutable SliceDLMap_t     fDLMap;
+   mutable TEveCaloData::RebinData_t fRebinData;
+
+   mutable Bool_t           fCells3D;
 
    TEveCaloLego            *fM;  // Model object.
-
-   // grid density modes
-   Int_t                    fNBinSteps;
-   Int_t*                   fBinSteps;
-
-   // event handling
-   Int_t                    fTowerPicked;
 
 public:
    TEveCaloLegoGL();
    virtual ~TEveCaloLegoGL();
-
-   void   SetTowerPicked(Int_t t) { fTowerPicked=t; }
 
    virtual Bool_t SetModel(TObject* obj, const Option_t* opt=0);
 
@@ -88,6 +83,7 @@ public:
 
    virtual Bool_t SupportsSecondarySelect() const { return kTRUE; }
    virtual void   ProcessSelection(TGLRnrCtx & rnrCtx, TGLSelectRecord & rec);
+
 
 
    ClassDef(TEveCaloLegoGL, 0); // GL renderer class for TEveCaloLego.

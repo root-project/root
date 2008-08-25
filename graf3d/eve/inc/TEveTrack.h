@@ -28,7 +28,6 @@ class TEveTrack : public TEveLine
 {
    friend class TEveTrackPropagator;
    friend class TEveTrackList;
-   friend class TEveTrackCounter;
    friend class TEveTrackGL;
 
 private:
@@ -158,6 +157,9 @@ public:
    void  SetPropagator(TEveTrackPropagator* rs);
    TEveTrackPropagator* GetPropagator() { return fPropagator; }
 
+   Bool_t GetRecurse() const   { return fRecurse; }
+   void   SetRecurse(Bool_t x) { fRecurse = x; }
+
    //--------------------------------
 
    virtual void   SetMainColor(Color_t c);
@@ -203,56 +205,5 @@ public:
 
    ClassDef(TEveTrackList, 1); // A list of tracks supporting change of common attributes and selection based on track parameters.
 };
-
-
-/******************************************************************************/
-// TEveTrackCounter
-/******************************************************************************/
-
-class TEveTrackCounter : public TEveElement, public TNamed
-{
-   friend class TEveTrackCounterEditor;
-
-public:
-   enum EClickAction_e { kCA_PrintTrackInfo, kCA_ToggleTrack };
-
-private:
-   TEveTrackCounter(const TEveTrackCounter&);            // Not implemented
-   TEveTrackCounter& operator=(const TEveTrackCounter&); // Not implemented
-
-protected:
-   Int_t fBadLineStyle;  // TEveLine-style used for secondary/bad tracks.
-   Int_t fClickAction;   // Action to take when a track is ctrl-clicked.
-
-   Int_t fEventId;       // Current event-id.
-
-   Int_t fAllTracks;     // Counter of all tracks.
-   Int_t fGoodTracks;    // Counter of good tracks.
-
-   TList fTrackLists;    // List of TrackLists registered for management.
-
-public:
-   TEveTrackCounter(const Text_t* name="TEveTrackCounter", const Text_t* title="");
-   virtual ~TEveTrackCounter();
-
-   Int_t GetEventId() const { return fEventId; }
-   void  SetEventId(Int_t id) { fEventId = id; }
-
-   void Reset();
-
-   void RegisterTracks(TEveTrackList* tlist, Bool_t goodTracks);
-
-   void DoTrackAction(TEveTrack* track);
-
-   Int_t GetClickAction() const  { return fClickAction; }
-   void  SetClickAction(Int_t a) { fClickAction = a; }
-
-   void OutputEventTracks(FILE* out=0);
-
-   static TEveTrackCounter* fgInstance;
-
-   ClassDef(TEveTrackCounter, 1); // Class for selection of good/primary tracks with basic processing functionality.
-};
-
 
 #endif

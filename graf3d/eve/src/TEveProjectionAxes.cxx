@@ -13,6 +13,12 @@
 #include "TEveProjectionManager.h"
 #include "TMath.h"
 
+#include "TBuffer3D.h"
+#include "TBuffer3DTypes.h"
+#include "TVirtualPad.h"
+#include "TVirtualViewer3D.h"
+#include "TEveTrans.h"
+
 
 // Axes for non-linear projections. Show scale of TEveProjectionManager
 // children. With different step mode tick-marks can positioned
@@ -23,21 +29,27 @@ ClassImp(TEveProjectionAxes);
 
 //______________________________________________________________________________
 TEveProjectionAxes::TEveProjectionAxes(TEveProjectionManager* m) :
-   TEveText("ProjectionAxes"),
+   TEveElement(fColor),
+   TNamed("TEveProjectionAxes", ""),
    fManager(m),
 
-   fDrawCenter(kFALSE),
-   fDrawOrigin(kFALSE),
+   fBoxOffsetX(0.5),
+   fBoxOffsetY(0.2),
 
-   fStepMode(kPosition),
-   fNumTickMarks(7)
+   fLabelSize(0.03),
+
+   fColor(kGray),
+
+   fLabMode(kPosition),
+   fAxesMode(kAll),
+   fNdiv(7),
+
+   fDrawCenter(kFALSE),
+   fDrawOrigin(kFALSE)
 {
    // Constructor.
 
-   SetName("ProjectionAxes");
-   fText = "Axes Title";
    fCanEditMainTrans = kFALSE;
-
    fManager->AddDependent(this);
 }
 
@@ -47,6 +59,29 @@ TEveProjectionAxes::~TEveProjectionAxes()
    // Destructor.
 
    fManager->RemoveDependent(this);
+}
+
+//______________________________________________________________________________
+void TEveProjectionAxes::Paint(Option_t* )
+{
+   // Paint this object. Only direct rendering is supported.
+
+   static const TEveException eH("TEveProjectionAxes::Paint ");
+
+   TBuffer3D buff(TBuffer3DTypes::kGeneric);
+
+   // Section kCore
+   buff.fID           = this;
+   buff.fColor        = GetMainColor();
+   buff.fTransparency = GetMainTransparency();
+   if (HasMainTrans())
+      RefMainTrans().SetBuffer3D(buff);
+
+   buff.SetSectionsValid(TBuffer3D::kCore);
+
+   Int_t reqSections = gPad->GetViewer3D()->AddObject(buff);
+   if (reqSections != TBuffer3D::kNone)
+      Error(eH, "only direct GL rendering supported.");
 }
 
 //______________________________________________________________________________
@@ -66,10 +101,23 @@ void TEveProjectionAxes::ComputeBBox()
    AssertBBoxExtents(0.1);
    {
       using namespace TMath;
-      fBBox[0] = 10.0f * Floor(fBBox[0]/10.0f);
-      fBBox[1] = 10.0f * Ceil (fBBox[1]/10.0f);
-      fBBox[2] = 10.0f * Floor(fBBox[2]/10.0f);
-      fBBox[3] = 10.0f * Ceil (fBBox[3]/10.0f);
+      if (fAxesMode == kAll || fAxesMode == kHorizontal)
+      {
+         fBBox[0] = (fBoxOffsetX+1)*fBBox[0];
+         fBBox[1] = (fBoxOffsetX+1)*fBBox[1];
+
+         // labels placed below horizontal line
+         fBBox[2] -= 3*fLabelSize*(fManager->GetBBox()[1]- fManager->GetBBox()[0]);
+      }
+
+      if (fAxesMode == kAll || fAxesMode == kVertical)
+      {
+         // vertical labels has max 5 digits
+         fBBox[0] -= 5*fLabelSize*(fManager->GetBBox()[3]- fManager->GetBBox()[2]);
+
+         fBBox[2] = (fBoxOffsetY+1)*fBBox[2];
+         fBBox[3] = (fBoxOffsetY+1)*fBBox[3];
+      }
    }
 }
 

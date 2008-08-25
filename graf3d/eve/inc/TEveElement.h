@@ -116,7 +116,7 @@ public:
    void           SetVizModel(TEveElement* model);
    Bool_t         FindVizModel();
 
-   Bool_t         ApplyVizTag(const TString& tag);
+   Bool_t         ApplyVizTag(const TString& tag, const TString& fallback_tag="");
 
    virtual void PropagateVizParamsToProjecteds();
    virtual void PropagateVizParamsToElements(TEveElement* el=0);
@@ -151,6 +151,8 @@ public:
    TEveElement* FindChild(TPRegexp& regexp, const TClass* cls=0);
    Int_t        FindChildren(List_t& matches, const TString&  name, const TClass* cls=0);
    Int_t        FindChildren(List_t& matches, TPRegexp& regexp, const TClass* cls=0);
+   TEveElement* FirstChild() const { return fChildren.front(); }
+   TEveElement* LastChild () const { return fChildren.back();  }
 
    void EnableListElements (Bool_t rnr_self=kTRUE,  Bool_t rnr_children=kTRUE);  // *MENU*
    void DisableListElements(Bool_t rnr_self=kFALSE, Bool_t rnr_children=kFALSE); // *MENU*
@@ -248,7 +250,7 @@ public:
 
    TRef&    GetSource()                 { return fSource; }
    TObject* GetSourceObject()     const { return fSource.GetObject(); }
-   void     SetSourceObject(TObject* o) { fSource.SetObject(o); }
+   void     SetSourceObject(TObject* o) { fSource = o; }
    /*
      void DumpSourceObject();    // *MENU*
      void InspectSourceObject(); // *MENU*

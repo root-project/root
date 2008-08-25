@@ -76,12 +76,23 @@ inline Bool_t TEveQuadSetGL::SetupColor(const TEveDigitSet::DigitBase_t& q) cons
       UChar_t c[4];
       Bool_t visible = fM->fPalette->ColorFromValue(q.fValue, fM->fDefaultValue, c);
       if (visible)
-         TGLUtil::Color4ubv(c);
+         TGLUtil::Color3ubv(c);
       return visible;
    }
 }
 
 /******************************************************************************/
+
+namespace
+{
+  inline void AntiFlick(Float_t x, Float_t y, Float_t z)
+  {
+     // Render anti-flickering point.
+     glBegin(GL_POINTS);
+     glVertex3f(x, y, z);
+     glEnd();
+  }
+}
 
 //______________________________________________________________________________
 void TEveQuadSetGL::DirectDraw(TGLRnrCtx & rnrCtx) const
@@ -120,12 +131,11 @@ void TEveQuadSetGL::DirectDraw(TGLRnrCtx & rnrCtx) const
 
    if (mQ.fDisableLigting)  glDisable(GL_LIGHTING);
 
-   if (mQ.fQuadType < TEveQuadSet::kQT_Rectangle_End)      RenderQuads(rnrCtx);
-   else if (mQ.fQuadType < TEveQuadSet::kQT_Line_End)      RenderLines(rnrCtx);
-   else if (mQ.fQuadType < TEveQuadSet::kQT_Hexagon_End)   RenderHexagons(rnrCtx);
+   if (mQ.fQuadType < TEveQuadSet::kQT_Rectangle_End)    RenderQuads(rnrCtx);
+   else if (mQ.fQuadType < TEveQuadSet::kQT_Line_End)    RenderLines(rnrCtx);
+   else if (mQ.fQuadType < TEveQuadSet::kQT_Hexagon_End) RenderHexagons(rnrCtx);
 
    glPopAttrib();
-
 }
 
 //______________________________________________________________________________
@@ -175,6 +185,8 @@ void TEveQuadSetGL::RenderQuads(TGLRnrCtx & rnrCtx) const
                glVertex3fv(p + 6);
                glVertex3fv(p + 9);
                glEnd();
+               if (mQ.fAntiFlick)
+                  AntiFlick(0.5f*(p[0]+p[6]), 0.5f*(p[1]+p[7]), 0.5f*(p[2]+p[8]));
             }
          }
          break;
@@ -193,6 +205,8 @@ void TEveQuadSetGL::RenderQuads(TGLRnrCtx & rnrCtx) const
                glVertex3f(q.fA + q.fW, q.fB + q.fH, q.fC);
                glVertex3f(q.fA,        q.fB + q.fH, q.fC);
                glEnd();
+               if (mQ.fAntiFlick)
+                  AntiFlick(q.fA + 0.5f*q.fW, q.fB + 0.5f*q.fH, q.fC);
             }
          }
          break;
@@ -211,6 +225,8 @@ void TEveQuadSetGL::RenderQuads(TGLRnrCtx & rnrCtx) const
                glVertex3f(q.fA + q.fW, q.fC, q.fB + q.fH);
                glVertex3f(q.fA,        q.fC, q.fB + q.fH);
                glEnd();
+               if (mQ.fAntiFlick)
+                  AntiFlick(q.fA + 0.5f*q.fW, q.fC, q.fB + 0.5f*q.fH);
             }
          }
          break;
@@ -229,6 +245,8 @@ void TEveQuadSetGL::RenderQuads(TGLRnrCtx & rnrCtx) const
                glVertex3f(q.fC, q.fA + q.fW, q.fB + q.fH);
                glVertex3f(q.fC, q.fA,        q.fB + q.fH);
                glEnd();
+               if (mQ.fAntiFlick)
+                  AntiFlick(q.fC, q.fA + 0.5f*q.fW, q.fB + 0.5f*q.fH);
             }
          }
          break;
@@ -249,6 +267,9 @@ void TEveQuadSetGL::RenderQuads(TGLRnrCtx & rnrCtx) const
                glVertex3f(q.fA + w, q.fB + h, q.fC);
                glVertex3f(q.fA,     q.fB + h, q.fC);
                glEnd();
+               glEnd();
+               if (mQ.fAntiFlick)
+                  AntiFlick(q.fA + 0.5f*w, q.fB + 0.5f*h, q.fC);
             }
          }
          break;
@@ -268,6 +289,8 @@ void TEveQuadSetGL::RenderQuads(TGLRnrCtx & rnrCtx) const
                glVertex3f(q.fA + q.fW, q.fB + q.fH, z);
                glVertex3f(q.fA,        q.fB + q.fH, z);
                glEnd();
+               if (mQ.fAntiFlick)
+                  AntiFlick(q.fA + 0.5f*q.fW, q.fB + 0.5f*q.fH, z);
             }
          }
          break;
@@ -287,6 +310,8 @@ void TEveQuadSetGL::RenderQuads(TGLRnrCtx & rnrCtx) const
                glVertex3f(q.fA + q.fW, y, q.fB + q.fH);
                glVertex3f(q.fA,        y, q.fB + q.fH);
                glEnd();
+               if (mQ.fAntiFlick)
+                  AntiFlick(q.fA + 0.5f*q.fW, y, q.fB + 0.5f*q.fH);
             }
          }
          break;
@@ -306,6 +331,8 @@ void TEveQuadSetGL::RenderQuads(TGLRnrCtx & rnrCtx) const
                glVertex3f(x, q.fA + q.fW, q.fB + q.fH);
                glVertex3f(x, q.fA,        q.fB + q.fH);
                glEnd();
+               if (mQ.fAntiFlick)
+                  AntiFlick(x, q.fA + 0.5f*q.fW, q.fB + 0.5f*q.fH);
             }
          }
          break;
@@ -327,6 +354,8 @@ void TEveQuadSetGL::RenderQuads(TGLRnrCtx & rnrCtx) const
                glVertex3f(q.fA + w, q.fB + h, z);
                glVertex3f(q.fA,     q.fB + h, z);
                glEnd();
+               if (mQ.fAntiFlick)
+                  AntiFlick(q.fA + 0.5f*w, q.fB + 0.5f*h, z);
             }
          }
          break;
@@ -348,6 +377,8 @@ void TEveQuadSetGL::RenderQuads(TGLRnrCtx & rnrCtx) const
                glVertex3f(q.fA + w, y, q.fB + h);
                glVertex3f(q.fA,     y, q.fB + h);
                glEnd();
+               if (mQ.fAntiFlick)
+                  AntiFlick(q.fA + 0.5f*w, y, q.fB + 0.5f*h);
             }
          }
          break;
@@ -369,6 +400,8 @@ void TEveQuadSetGL::RenderQuads(TGLRnrCtx & rnrCtx) const
                glVertex3f(x, q.fA + w, q.fB + h);
                glVertex3f(x, q.fA,     q.fB + h);
                glEnd();
+               if (mQ.fAntiFlick)
+                  AntiFlick(x, q.fA + 0.5f*w, q.fB + 0.5f*h);
             }
          }
          break;
@@ -480,6 +513,8 @@ void TEveQuadSetGL::RenderHexagons(TGLRnrCtx & rnrCtx) const
                glVertex3f(  -rh + q.fA, -rs + q.fB, q.fC);
                glVertex3f(   rh + q.fA, -rs + q.fB, q.fC);
                glEnd();
+               if (mQ.fAntiFlick)
+                  AntiFlick(q.fA, q.fB, q.fC);
             }
          }
          break;
@@ -502,6 +537,8 @@ void TEveQuadSetGL::RenderHexagons(TGLRnrCtx & rnrCtx) const
                glVertex3f(      q.fA, -q.fR + q.fB, q.fC);
                glVertex3f( rs + q.fA,   -rh + q.fB, q.fC);
                glEnd();
+               if (mQ.fAntiFlick)
+                  AntiFlick(q.fA, q.fB, q.fC);
             }
          }
          break;

@@ -58,49 +58,79 @@ public:
       Int_t fTower;
       Int_t fSlice;
 
-      CellId_t(Int_t t, Int_t s):fTower(t), fSlice(s){}
+      Float_t fFraction;
+
+      CellId_t(Int_t t, Int_t s, Float_t fr=1.f):fTower(t), fSlice(s), fFraction(fr){}
    };
 
-   struct CellData_t
+   struct CellGeom_t
    {
       // Cell geometry inner structure.
 
-      Float_t fValue;
       Float_t fPhiMin;
       Float_t fPhiMax;
-      Float_t fThetaMin;  // theta=0 on z axis
-      Float_t fThetaMax;
       Float_t fEtaMin;
       Float_t fEtaMax;
-      Int_t   fZSideSign;
 
-      CellData_t(): fValue(0), fPhiMin(0), fPhiMax(0), fThetaMin(0), fThetaMax(0), fZSideSign(1) {}
-      void Configure(Float_t v, Float_t e1, Float_t e2, Float_t p1, Float_t p2);
+      Float_t fThetaMin; // cached
+      Float_t fThetaMax; // cached
 
-      Float_t Value(Bool_t)    const;
+      CellGeom_t(): fPhiMin(0), fPhiMax(0), fEtaMin(0), fEtaMax(0), fThetaMin(0), fThetaMax(0) {}
+      CellGeom_t(Float_t etaMin, Float_t etaMax, Float_t phiMin, Float_t phiMax) {Configure(etaMin, etaMax, phiMin, phiMax);}
+      virtual ~CellGeom_t() {}
+
+      void Configure(Float_t etaMin, Float_t etaMax, Float_t phiMin, Float_t phiMax);
 
       Float_t EtaMin()   const { return fEtaMin; }
       Float_t EtaMax()   const { return fEtaMax; }
       Float_t Eta()      const { return (fEtaMin+fEtaMax)*0.5f; }
       Float_t EtaDelta() const { return fEtaMax-fEtaMin; }
 
-      Float_t ThetaMin() const { return fThetaMin; }
-      Float_t ThetaMax() const { return fThetaMax; }
-      Float_t Theta() const { return (fThetaMax+fThetaMin)*0.5f; }
-      Float_t ThetaDelta() const { return fThetaMax-fThetaMin; }
-
       Float_t PhiMin()   const { return fPhiMin; }
       Float_t PhiMax()   const { return fPhiMax; }
       Float_t Phi()      const { return (fPhiMin+fPhiMax)*0.5f; }
       Float_t PhiDelta() const { return fPhiMax-fPhiMin; }
 
-      Float_t ZSideSign()const { return fZSideSign;}
+      Float_t ThetaMin() const { return fThetaMin; }
+      Float_t ThetaMax() const { return fThetaMax; }
+      Float_t Theta() const { return (fThetaMax+fThetaMin)*0.5f; }
+      Float_t ThetaDelta() const { return fThetaMax-fThetaMin; }
 
-      void Dump() const;
+      virtual void  Dump() const;
    };
 
-   typedef std::vector<CellId_t>           vCellId_t;
-   typedef std::vector<CellId_t>::iterator vCellId_i;
+   struct CellData_t : public CellGeom_t
+   {
+      // Cell data inner structure.
+
+      Float_t fValue;
+
+      CellData_t() : CellGeom_t(), fValue(0) {}
+      virtual ~CellData_t() {}
+
+      Float_t Value(Bool_t) const;
+      virtual void Dump() const;
+   };
+
+
+   struct RebinData_t
+   {
+      Int_t fNSlices;
+
+      std::vector<Float_t> fSliceData;
+      std::vector<Int_t>   fBinData;
+
+      Float_t* GetSliceVals(Int_t bin);
+   };
+
+   /**************************************************************************/
+
+   typedef std::vector<CellId_t>               vCellId_t;
+   typedef std::vector<CellId_t>::iterator     vCellId_i;
+
+   typedef std::vector<CellGeom_t>             vCellGeom_t;
+   typedef std::vector<CellGeom_t>::iterator   vCellGeom_i;
+   typedef std::vector<CellGeom_t>::const_iterator   vCellGeom_ci;
 
 private:
    TEveCaloData(const TEveCaloData&);            // Not implemented
@@ -112,38 +142,107 @@ protected:
    TAxis*       fEtaAxis;
    TAxis*       fPhiAxis;
 
+   Float_t      fMaxValEt; // cached
+   Float_t      fMaxValE;  // cached
+
+   Float_t      fEps;
+
 public:
    TEveCaloData();
-   virtual ~TEveCaloData(){}
+   virtual ~TEveCaloData() {}
 
-   virtual void GetCellList(Float_t etaMin, Float_t etaMax,
-                            Float_t phi, Float_t phiRng, vCellId_t &out) const = 0;
+   virtual void    GetCellList(Float_t etaMin, Float_t etaMax,
+                               Float_t phi,    Float_t phiRng,
+                               vCellId_t &out) const = 0;
 
-   virtual void GetCellData(const CellId_t &id, CellData_t& data) const = 0;
-   virtual void GetCellData(const CellId_t &id, Float_t  phiMin, Float_t phiRng, CellData_t& data) const = 0;
+   virtual void    Rebin(TAxis *ax, TAxis *ay, vCellId_t &in, Bool_t et, RebinData_t &out) const = 0;
 
-  
-   virtual void SetSliceThreshold(Int_t slice, Float_t threshold);
-   virtual void SetSliceColor(Int_t slice, Color_t col);
 
-   virtual void  InvalidateUsersCellIdCache();
-   virtual void  DataChanged();
+   virtual void    GetCellData(const CellId_t &id, CellData_t& data) const = 0;
 
-   virtual Bool_t SupportsEtaBinning(){ return kFALSE; }
-   virtual Bool_t SupportsPhiBinning(){ return kFALSE; }
+   virtual void    InvalidateUsersCellIdCache();
+   virtual void    DataChanged();
 
-   virtual TAxis* GetEtaBins(){ return fEtaAxis;} 
-   virtual TAxis* GetPhiBins(){ return fPhiAxis ;}
+   Int_t           GetNSlices()    const { return fSliceInfos.size(); }
+   SliceInfo_t&    RefSliceInfo(Int_t s) { return fSliceInfos[s]; }
+   void            SetSliceThreshold(Int_t slice, Float_t threshold);
+   Float_t         GetSliceThreshold(Int_t slice) const;
+   void            SetSliceColor(Int_t slice, Color_t col);
+   Color_t         GetSliceColor(Int_t slice) const;
 
-   virtual Int_t    GetNSlices() const = 0; 
-   virtual Float_t  GetMaxVal(Bool_t et) const = 0;
-   SliceInfo_t&     RefSliceInfo(Int_t s) { return fSliceInfos[s]; }
+   virtual void    GetEtaLimits(Double_t &min, Double_t &max) const = 0;
 
-   virtual void  GetEtaLimits(Double_t &min, Double_t &max) const = 0;
-   virtual void  GetPhiLimits(Double_t &min, Double_t &max) const = 0;
+   virtual void    GetPhiLimits(Double_t &min, Double_t &max) const = 0;
 
+   virtual Float_t GetMaxVal(Bool_t et) const { return et ? fMaxValEt : fMaxValE; }
+   Bool_t  Empty() const { return fMaxValEt < 1e-5; }
+
+   virtual TAxis*  GetEtaBins()    const { return fEtaAxis; }
+   virtual void    SetEtaBins(TAxis* ax) { fEtaAxis=ax; }
+
+   virtual TAxis*  GetPhiBins()    const { return fPhiAxis; }
+   virtual void    SetPhiBins(TAxis* ax) { fPhiAxis=ax; }
+
+   virtual Float_t GetEps()      const { return fEps; }
+   virtual void    SetEps(Float_t eps) { fEps=eps; }
+
+   static  Float_t EtaToTheta(Float_t eta);
 
    ClassDef(TEveCaloData, 0); // Manages calorimeter event data.
+};
+
+/**************************************************************************/
+/**************************************************************************/
+
+class TEveCaloDataVec: public TEveCaloData
+{
+
+private:
+   TEveCaloDataVec(const TEveCaloDataVec&);            // Not implemented
+   TEveCaloDataVec& operator=(const TEveCaloDataVec&); // Not implemented
+
+protected:
+   typedef std::vector<Float_t>               vFloat_t;
+   typedef std::vector<Float_t>::iterator     vFloat_i;
+
+   typedef std::vector<vFloat_t>              vvFloat_t;
+   typedef std::vector<vFloat_t>::iterator    vvFloat_i;
+
+   vvFloat_t   fSliceVec;
+   vFloat_t    fValVec;
+   vCellGeom_t fGeomVec;
+
+   Int_t       fTower; // current tower
+
+   Float_t     fEtaMin;
+   Float_t     fEtaMax;
+
+   Float_t     fPhiMin;
+   Float_t     fPhiMax;
+
+public:
+   TEveCaloDataVec(Int_t nslices);
+   virtual ~TEveCaloDataVec();
+
+   Int_t AddTower(Float_t etaMin, Float_t etaMax, Float_t phiMin, Float_t phiMax);
+   void  FillSlice(Int_t slice, Float_t value);
+   void  FillSlice(Int_t slice, Int_t tower, Float_t value);
+
+   Int_t GetNCells() { return fGeomVec.size(); }
+
+   virtual void GetCellList(Float_t etaMin, Float_t etaMax,
+                            Float_t phi,    Float_t phiRng,
+                            vCellId_t &out) const;
+
+   virtual void Rebin(TAxis *ax, TAxis *ay, vCellId_t &in, Bool_t et, RebinData_t &out) const;
+
+   virtual void GetCellData(const TEveCaloData::CellId_t &id, TEveCaloData::CellData_t& data) const;
+   virtual void GetEtaLimits(Double_t &min, Double_t &max) const { min=fEtaMin, max=fEtaMax;}
+   virtual void GetPhiLimits(Double_t &min, Double_t &max) const { min=fPhiMin; max=fPhiMax;}
+
+   virtual void  DataChanged();
+
+   ClassDef(TEveCaloDataVec, 0); // Manages calorimeter event data.
 };
 
 /**************************************************************************/
@@ -158,33 +257,26 @@ private:
 protected:
    THStack*    fHStack;
 
-   Float_t     fMaxValEt; // cached
-   Float_t     fMaxValE;  // cached
-
 public:
    TEveCaloDataHist();
    virtual ~TEveCaloDataHist();
 
-   THStack* GetStack() { return fHStack; }  
-   virtual void  DataChanged();
-
    virtual void GetCellList( Float_t etaMin, Float_t etaMax,
                              Float_t phi, Float_t phiRng, vCellId_t &out) const;
 
+   virtual void Rebin(TAxis *ax, TAxis *ay, vCellId_t &in, Bool_t et, RebinData_t &out) const;
+
    virtual void GetCellData(const TEveCaloData::CellId_t &id, TEveCaloData::CellData_t& data) const;
-   virtual void GetCellData(const CellId_t &id, Float_t  phiMin, Float_t phiRng, CellData_t& data) const;
 
-   virtual Bool_t SupportsEtaBinning(){ return kTRUE; }
-   virtual Bool_t SupportsPhiBinning(){ return kTRUE; }
+   virtual void GetEtaLimits(Double_t &min, Double_t &max) const;
+   virtual void GetPhiLimits(Double_t &min, Double_t &max) const;
 
-   virtual void    GetEtaLimits(Double_t &min, Double_t &max) const;
-   virtual void    GetPhiLimits(Double_t &min, Double_t &max) const;
+
+   virtual void DataChanged();
+
+   THStack* GetStack() { return fHStack; }
 
    Int_t   AddHistogram(TH2F* hist);
-   virtual Float_t GetMaxVal(Bool_t et) const {return (et)? fMaxValEt:fMaxValE;}
-
-   virtual Int_t   GetNSlices() const;
-
 
    ClassDef(TEveCaloDataHist, 0); // Manages calorimeter TH2F event data.
 };

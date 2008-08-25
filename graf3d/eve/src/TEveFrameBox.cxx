@@ -12,13 +12,16 @@
 #include "TEveFrameBox.h"
 #include "TColor.h"
 
-//______________________________________________________________________________
+//==============================================================================
 // TEveFrameBox
+//==============================================================================
+
+//______________________________________________________________________________
 //
 // Description of a 2D or 3D frame that can be used to visually group
 // a set of objects.
 
-ClassImp(TEveFrameBox)
+ClassImp(TEveFrameBox);
 
 //______________________________________________________________________________
 TEveFrameBox::TEveFrameBox() :
@@ -192,7 +195,7 @@ void TEveFrameBox::SetBackColor(Color_t ci)
 }
 
 //______________________________________________________________________________
-void TEveFrameBox::SetBackColor(Pixel_t pix)
+void TEveFrameBox::SetBackColorPixel(Pixel_t pix)
 {
    // Set color of the background polygon.
 
@@ -200,7 +203,7 @@ void TEveFrameBox::SetBackColor(Pixel_t pix)
 }
 
 //______________________________________________________________________________
-void TEveFrameBox::SetBackColor(UChar_t r, UChar_t g, UChar_t b, UChar_t a)
+void TEveFrameBox::SetBackColorRGBA(UChar_t r, UChar_t g, UChar_t b, UChar_t a)
 {
    // Set color of the background polygon.
 

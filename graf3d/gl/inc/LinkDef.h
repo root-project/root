@@ -55,6 +55,7 @@
 #pragma link C++ class TGLOrthoCamera;
 #pragma link C++ class TGLPerspectiveCamera;
 #pragma link C++ class TGLCameraMarkupStyle;
+#pragma link C++ class TGLCameraOverlay;
 
 #pragma link C++ class TGLSceneBase+;
 #pragma link C++ class TGLScene+;
@@ -63,9 +64,11 @@
 #pragma link C++ class TGLScene::TSceneInfo+;
 #pragma link C++ class TGLOverlayElement+;
 #pragma link C++ class TGLOverlayList+;
+#pragma link C++ class TGLOverlayButton+;
 
 #pragma link C++ class TGLViewerBase+;
 #pragma link C++ class TGLViewer+;
+#pragma link C++ class TGLFaderHelper+;
 #pragma link C++ class TGLViewerEditor+;
 #pragma link C++ class TGLSAViewer;
 #pragma link C++ class TGLSAFrame;

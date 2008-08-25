@@ -68,7 +68,7 @@ inline Bool_t TEveBoxSetGL::SetupColor(const TEveDigitSet::DigitBase_t& q) const
       UChar_t c[4];
       Bool_t visible = fM->fPalette->ColorFromValue(q.fValue, fM->fDefaultValue, c);
       if (visible)
-         TGLUtil::Color4ubv(c);
+         TGLUtil::Color3ubv(c);
       return visible;
    }
 }
@@ -129,16 +129,17 @@ void TEveBoxSetGL::MakeDisplayList() const
    // Some box-types don't benefit from the display-list rendering and
    // so display-list is not created.
 
-   if (fM->fBoxType == TEveBoxSet::kBT_AABox ||
+   if (fM->fBoxType == TEveBoxSet::kBT_AABox         ||
        fM->fBoxType == TEveBoxSet::kBT_AABoxFixedDim ||
-       fM->fBoxType == TEveBoxSet::kBT_Cone)
+       fM->fBoxType == TEveBoxSet::kBT_Cone          ||
+       fM->fBoxType == TEveBoxSet::kBT_EllipticCone)
    {
       if (fBoxDL == 0)
          fBoxDL = glGenLists(1);
 
       glNewList(fBoxDL, GL_COMPILE);
   
-      if (fM->fBoxType != TEveBoxSet::kBT_Cone) { 
+      if (fM->fBoxType < TEveBoxSet::kBT_Cone) { 
          glBegin(PrimitiveType());
          Float_t p[24];
          if (fM->fBoxType == TEveBoxSet::kBT_AABox)
@@ -262,7 +263,11 @@ void TEveBoxSetGL::DirectDraw(TGLRnrCtx & rnrCtx) const
    else if (mB.fRenderMode == TEveDigitSet::kRM_Line)
       glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-   if (mB.fBoxType == TEveBoxSet::kBT_Cone) glDisable(GL_CULL_FACE);
+   if (mB.fBoxType == TEveBoxSet::kBT_Cone ||
+       mB.fBoxType == TEveBoxSet::kBT_EllipticCone)
+   {
+      glDisable(GL_CULL_FACE);
+   }
 
    if (mB.fDisableLigting) glDisable(GL_LIGHTING);
 
@@ -331,6 +336,7 @@ void TEveBoxSetGL::DirectDraw(TGLRnrCtx & rnrCtx) const
          }
          break;
       }
+
       case TEveBoxSet::kBT_Cone:
       {
          using namespace TMath;
@@ -343,14 +349,43 @@ void TEveBoxSetGL::DirectDraw(TGLRnrCtx & rnrCtx) const
             if (SetupColor(b))
             {
                if (rnrCtx.SecSelection()) glLoadName(bi.index());
-               h = b.fDir.Mag();
+               h     = b.fDir.Mag();
                phi   = ATan2(b.fDir.fY, b.fDir.fX)*RadToDeg();
-               theta = ATan(b.fDir.fZ / Sqrt(b.fDir.fX*b.fDir.fX + b.fDir.fY*b.fDir.fY))*RadToDeg();
+               theta = ATan (b.fDir.fZ / Sqrt(b.fDir.fX*b.fDir.fX + b.fDir.fY*b.fDir.fY))*RadToDeg();
                glPushMatrix();
                glTranslatef(b.fPos.fX, b.fPos.fY, b.fPos.fZ);
-               glRotatef(phi,   0, 0, 1);
+               glRotatef(phi,        0, 0, 1);
                glRotatef(90 - theta, 0, 1, 0);
                glScalef (b.fR, b.fR, h);
+               glCallList(fBoxDL);
+               glPopMatrix();
+            }
+            if (boxSkip) { Int_t s = boxSkip; while (s--) bi.next(); }
+         }
+         break;
+      }
+
+      case TEveBoxSet::kBT_EllipticCone:
+      {
+         using namespace TMath;
+
+         glEnable(GL_NORMALIZE);
+         Float_t theta=0, phi=0, h=0;
+         while (bi.next())
+         {
+            TEveBoxSet::BEllipticCone_t& b = * (TEveBoxSet::BEllipticCone_t*) bi();
+            if (SetupColor(b))
+            {
+               if (rnrCtx.SecSelection()) glLoadName(bi.index());
+               h     = b.fDir.Mag();
+               phi   = ATan2(b.fDir.fY, b.fDir.fX)*RadToDeg();
+               theta = ATan (b.fDir.fZ / Sqrt(b.fDir.fX*b.fDir.fX + b.fDir.fY*b.fDir.fY))*RadToDeg();
+               glPushMatrix();
+               glTranslatef(b.fPos.fX, b.fPos.fY, b.fPos.fZ);
+               glRotatef(phi,        0, 0, 1);
+               glRotatef(90 - theta, 0, 1, 0);
+               glRotatef(b.fAngle,   0, 0, 1);
+               glScalef (b.fR, b.fR2, h);
                glCallList(fBoxDL);
                glPopMatrix();
             }

@@ -35,6 +35,7 @@ TEveLine::TEveLine(Int_t n_points, ETreeVarType_e tv_type) :
    // Constructor.
 
    fMainColorPtr = &fLineColor;
+   fMarkerColor = kGreen;
 }
 
 //______________________________________________________________________________
@@ -47,6 +48,7 @@ TEveLine::TEveLine(const Text_t* name, Int_t n_points, ETreeVarType_e tv_type) :
    // Constructor.
 
    fMainColorPtr = &fLineColor;
+   fMarkerColor = kGreen;
 }
 
 //______________________________________________________________________________

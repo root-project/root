@@ -1,0 +1,140 @@
+#if defined(__CINT__) && !defined(__MAKECINT__)
+
+{
+   gSystem->CompileMacro("cms_calo_detail.C");
+   cms_calo_detail();
+}
+
+#else
+
+#include <TEveManager.h>
+#include <TEveCalo.h>
+#include <TEveCaloData.h>
+#include <TEveLegoOverlay.h>
+#include <TEveLegoEventHandler.h>
+
+#include <TGLViewer.h>
+#include <TGLOverlayButton.h>
+
+#include <TAxis.h>
+
+#include <GL/gl.h>
+
+
+class ButtFaker : public TGLOverlayButton
+{
+   ButtFaker(const ButtFaker&);            // Not implemented
+   ButtFaker& operator=(const ButtFaker&); // Not implemented
+
+public:
+   Bool_t fShowLegend;
+
+   ButtFaker(TGLViewerBase *parent) :
+      TGLOverlayButton(parent, "Legend", 10, 200, 50, 16),
+      fShowLegend(kTRUE)
+   {}
+
+   virtual ~ButtFaker() {}
+
+   virtual void Clicked(TGLViewerBase *viewer)
+   {
+      fShowLegend = !fShowLegend;
+      TGLOverlayButton::Clicked(viewer);
+   }
+
+   virtual void Render(TGLRnrCtx& rnrCtx)
+   {
+      TGLOverlayButton::Render(rnrCtx);
+
+      if (fShowLegend)
+      {
+         // Render other stuff here, see TGLOverlayButton.
+         // I guess you might want to move to pixel coordinates.
+
+         glMatrixMode(GL_PROJECTION);
+         glPushMatrix();
+         glLoadIdentity();
+         const TGLRect& vp = rnrCtx.RefCamera().RefViewport();
+         glOrtho(vp.X(), vp.Width(), vp.Y(), vp.Height(), 0, 1);
+         glMatrixMode(GL_MODELVIEW);
+         glPushMatrix();
+         glLoadIdentity();
+
+         glColor4f(1, 0, 0, 1);
+         fFont.PreRender(kFALSE);
+         glPushMatrix();
+         glTranslatef(20, vp.Height()-30, 0);
+         glRasterPos2i(0, 0);
+         fFont.Render("Ooogladoogla");
+         glPopMatrix();
+         fFont.PostRender();
+
+         glMatrixMode(GL_PROJECTION);
+         glPopMatrix();
+         glMatrixMode(GL_MODELVIEW);
+         glPopMatrix();
+      }
+   }
+
+   ClassDef(ButtFaker,0);
+};
+
+
+void cms_calo_detail()
+{
+  TEveManager::Create();
+
+  TGLViewer* v = gEve->GetGLViewer(); // Default
+  v->SetCurrentCamera(TGLViewer::kCameraPerspXOY);
+  v->SetEventHandler(new TEveLegoEventHandler("Lego", (TGWindow*)v->GetGLWidget(), (TObject*)v));
+
+  // data
+
+  TEveCaloDataVec* data = new TEveCaloDataVec(2);
+
+  data->RefSliceInfo(0).Setup("ECAL", 0.3, kRed);
+  data->RefSliceInfo(1).Setup("HCAL", 0.1, kYellow);
+
+  data->AddTower(0.12, 0.14, 0.45, 0.47);
+  data->FillSlice(0, 12);
+  data->FillSlice(1, 3);
+
+  data->AddTower(0.125, 0.145, 0.43, 0.45);
+  data->FillSlice(0, 4);
+  data->FillSlice(1, 7);
+
+  data->AddTower(0.10, 0.12, 0.45, 0.47);
+  data->FillSlice(0, 6);
+  data->FillSlice(1, 0);
+
+  data->SetEtaBins(new TAxis(10, 0.08, 0.16));
+  data->SetPhiBins(new TAxis(10, 0.40, 0.50));
+
+  data->DataChanged();
+
+  // lego
+
+  TEveCaloLego* lego = new TEveCaloLego(data);
+  lego->SetPlaneColor(kBlue-5);
+  lego->Set2DMode(TEveCaloLego::kValSize);
+  lego->SetName("TwoHistLego");
+  lego->SetEta(0.08, 0.16); // eta min, max
+  lego->SetPhiWithRng(0.45, 0.05); // phi, half-range
+  gEve->AddElement(lego);
+
+  // overlay lego
+
+  TEveLegoOverlay* overlay = new TEveLegoOverlay();
+  overlay->SetCaloLego(lego);
+  v->AddOverlayElement(overlay);
+  gEve->AddElement(overlay);
+
+  // overlay legend
+
+  ButtFaker* legend = new ButtFaker(v);
+  v->AddOverlayElement(legend);
+
+  gEve->Redraw3D(kTRUE);
+}
+
+#endif

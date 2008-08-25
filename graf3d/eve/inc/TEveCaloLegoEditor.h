@@ -33,18 +33,25 @@ private:
 protected:
    TEveCaloLego      *fM; // Model object.
 
-   TGColorSelect*     fGridColor;
-   TGColorSelect*     fFontColor;
-   TGColorSelect*     fPlaneColor;
-   TGNumberEntry*     fTransparency;
+   TGCheckButton     *fTopViewUseMaxColor;
+   TGColorSelect     *fTopViewTowerColor;
+   TGColorSelect     *fGridColor;
+   TGColorSelect     *fFontColor;
+   TGColorSelect     *fPlaneColor;
+   TGNumberEntry     *fTransparency;
 
    TEveGValuator     *fNZSteps;
-   TEveGValuator     *fBinWidth;
 
    TGComboBox        *fProjection;
    TGComboBox        *f2DMode;
    TGComboBox        *fBoxMode;
 
+   TGVerticalFrame   *fRebinFrame;
+   TGCheckButton     *fAutoRebin;
+   TEveGValuator     *fPixelsPerBin;
+   TGCheckButton     *fNormalizeRebin;
+
+   void               MakeRebinFrame();
 public:
    TEveCaloLegoEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30,
          UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
@@ -53,19 +60,22 @@ public:
    virtual void SetModel(TObject* obj);
 
    // Declare callback/slot methods
+   void DoTopViewUseMaxColor();
+   void DoTopViewTowerColor(Pixel_t color);
    void DoGridColor(Pixel_t color);
    void DoFontColor(Pixel_t color);
    void DoPlaneColor(Pixel_t color);
    void DoTransparency();
 
-
    void DoNZSteps();
-
-   void DoBinWidth();
 
    void DoProjection();
    void Do2DMode();
    void DoBoxMode();
+
+   void DoAutoRebin();
+   void DoPixelsPerBin();
+   void DoNormalize();
 
    ClassDef(TEveCaloLegoEditor, 0); // GUI editor for TEveCaloLego.
 };

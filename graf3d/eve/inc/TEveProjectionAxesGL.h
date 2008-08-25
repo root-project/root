@@ -12,39 +12,37 @@
 #ifndef ROOT_TEveProjectionAxesGL
 #define ROOT_TEveProjectionAxesGL
 
-#include "TEveTextGL.h"
+#include "TGLObject.h"
 #include <list>
 
 class TEveProjectionAxes;
 class TEveProjection;
+class TGLFont;
 
-class TEveProjectionAxesGL : public TEveTextGL
+class TEveProjectionAxesGL : public TGLObject
 {
 private:
    TEveProjectionAxesGL(const TEveProjectionAxesGL&);            // Not implemented
    TEveProjectionAxesGL& operator=(const TEveProjectionAxesGL&); // Not implemented
 
-   mutable Float_t    fRange;     // bounding box size in the current axis
-   const   Float_t    fLabelSize; // size of labels
-   const   Float_t    fLabelOff;  // distance between labels and tick-marks
-   const   Float_t    fTMSize;    // tick-mark size
+   mutable   Float_t    fTMSize;    // tick-mark size
 
-   typedef std::pair<Float_t, Float_t>  TM_t;
+   typedef std::pair<Float_t, Float_t>  TM_t; // tick-mark <pos, value> pair
    typedef std::list<TM_t>              TMList_t;
 
    mutable TMList_t   fTMList;    // list of tick-mark position-value pairs
 
-   void               RenderText(const char* txt, Float_t x, Float_t y) const;
+   void               RenderText(const char* txt, Float_t x, Float_t y, TGLFont &font) const;
    void               DrawTickMarks(Float_t tms) const;
-   void               DrawHInfo() const;
-   void               DrawVInfo() const;
+   void               DrawHInfo(TGLFont &font) const;
+   void               DrawVInfo(TGLFont &fontx) const;
 
    void               SplitInterval(Float_t x1, Float_t x2, Int_t axis) const;
    void               SplitIntervalByPos(Float_t min, Float_t max, Int_t axis)const;
    void               SplitIntervalByVal(Float_t min, Float_t max, Int_t axis)const;
 
 protected:
-   TEveProjectionAxes     *fAxesModel;  // model object.
+   TEveProjectionAxes     *fM;  // model object.
    mutable TEveProjection *fProjection; // cached model projection
 
 public:

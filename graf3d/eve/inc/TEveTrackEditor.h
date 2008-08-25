@@ -18,7 +18,6 @@ class TGButton;
 class TGCheckButton;
 class TGNumberEntry;
 class TGColorSelect;
-class TGComboBox;
 
 class TEveGValuator;
 class TEveGDoubleValuator;
@@ -91,51 +90,6 @@ public:
    void DoPRange();
 
    ClassDef(TEveTrackListEditor, 0); // Editor for TEveTrackList class.
-};
-
-
-/******************************************************************************/
-// TEveTrackCounterEditor
-/******************************************************************************/
-
-class TEveTrackCounter;
-
-class TEveTrackCounterEditor : public TGedFrame
-{
-private:
-   TEveTrackCounterEditor(const TEveTrackCounterEditor&);            // Not implemented
-   TEveTrackCounterEditor& operator=(const TEveTrackCounterEditor&); // Not implemented
-
-protected:
-   TEveTrackCounter *fM; // Model object.
-
-   // Declare widgets
-   TGComboBox       *fClickAction;
-   TGLabel          *fInfoLabel;
-   TGNumberEntry    *fEventId;
-
-public:
-   TEveTrackCounterEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30,
-                          UInt_t options = kChildFrame, Pixel_t back=GetDefaultFrameBackground());
-   virtual ~TEveTrackCounterEditor() {}
-
-   virtual void SetModel(TObject* obj);
-
-   void DoOrtoXY();
-   void DoOrtoZY();
-   void DoPersp();
-
-   void DoPrev();
-   void DoNext();
-   void DoSetEvent();
-
-   void DoPrintReport();
-   void DoFileReport();
-   void DoShowHistos();
-
-   void DoClickAction(Int_t);
-
-   ClassDef(TEveTrackCounterEditor, 0); // Editor for TEveTrackCounter class.
 };
 
 #endif

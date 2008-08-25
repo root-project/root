@@ -252,10 +252,13 @@ Bool_t TEveElement::FindVizModel()
 }
 
 //______________________________________________________________________________
-Bool_t TEveElement::ApplyVizTag(const TString& tag)
+Bool_t TEveElement::ApplyVizTag(const TString& tag, const TString& fallback_tag)
 {
    // Set the VizTag, find model-element from the VizDB and copy
-   // visualization-parameters from it.
+   // visualization-parameters from it. If the model is not found and
+   // fallback_tag is non-null, its search is attempted as well.
+   // For example: ApplyVizTag("TPC Clusters", "Clusters");
+   //
    // If the model-element can not be found a warning is printed and
    // false is returned.
 
@@ -265,11 +268,17 @@ Bool_t TEveElement::ApplyVizTag(const TString& tag)
       CopyVizParamsFromDB();
       return kTRUE;
    }
-   else
+   if ( ! fallback_tag.IsNull())
    {
-      Warning("TEveElement::ApplyVizTag", "entry for tag '%s' not found in VizDB.", tag.Data());
-      return kFALSE;
+      SetVizTag(fallback_tag);
+      if (FindVizModel())
+      {
+         CopyVizParamsFromDB();
+         return kTRUE;
+      }
    }
+   Warning("TEveElement::ApplyVizTag", "entry for tag '%s' not found in VizDB.", tag.Data());
+   return kFALSE;
 }
 
 //______________________________________________________________________________

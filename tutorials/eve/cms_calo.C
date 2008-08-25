@@ -2,37 +2,47 @@
 
 const char* histFile = "http://amraktad.web.cern.ch/amraktad/cms_calo_hist.root";
 
-void cms_calo()
+void cms_calo(Bool_t hdata = kTRUE)
 {
+  gSystem->IgnoreSignal(kSigSegmentationViolation, true);
+
   TFile::SetCacheFileDir(".");
   TEveManager::Create();
   gEve->GetSelection()->SetPickToSelect(1);
-  
+
   // event data
   TFile* hf = TFile::Open(histFile, "CACHEREAD");
   TH2F* ecalHist = (TH2F*)hf->Get("ecalLego");
   TH2F* hcalHist = (TH2F*)hf->Get("hcalLego");
-  TEveCaloDataHist* data = new TEveCaloDataHist();
 
-  Int_t s;
-  s = data->AddHistogram(ecalHist);
-  data->RefSliceInfo(s).Setup("ECAL", 0.3, kRed);
-  s = data->AddHistogram(hcalHist);
-  data->RefSliceInfo(s).Setup("HCAL", 0.1, kYellow);
-  
   // palette
   gStyle->SetPalette(1, 0);
 
   // different calorimeter presentations
+  TEveCaloData* data = 0;
+  if (hdata)
+  {
+    TEveCaloDataHist* hd = new TEveCaloDataHist();
+    Int_t s;
+    s = hd->AddHistogram(ecalHist);
+    hd->RefSliceInfo(s).Setup("ECAL", 0.3, kRed);
+    s = hd->AddHistogram(hcalHist);
+    hd->RefSliceInfo(s).Setup("HCAL", 0.1, kYellow);
+    data = hd;
+  }
+  else
+  {
+    data = MakeVecData(ecalHist, hcalHist);
+  }
+
   TEveCalo3D* calo3d = MakeCalo3D(data);
   MakeCalo2D(calo3d);
   MakeCaloLego(data);
-
   gEve->Redraw3D(1);
 }
 
 //______________________________________________________________________________
-TEveCalo3D* MakeCalo3D(TEveCaloDataHist* data)
+TEveCalo3D* MakeCalo3D(TEveCaloData* data)
 {
 
   // 3D towers
@@ -67,28 +77,62 @@ void MakeCalo2D(TEveCalo3D* calo3d)
 }
 
 //______________________________________________________________________________
-void MakeCaloLego(TEveCaloDataHist* data)
+void MakeCaloLego(TEveCaloData* data)
 {
-  TEveViewer* v2 = gEve->SpawnNewViewer("Lego Viewer");
-  TGLViewer*  v  = v2->GetGLViewer();
-  v->SetCurrentCamera(TGLViewer::kCameraPerspXOY);
-  v->SetEventHandler(new TEveLegoEventHandler("Lego", v->GetGLWidget(), v));
-  TEveScene*  s2 = gEve->SpawnNewScene("Lego");
-  v2->AddScene(s2);
-  
-  // lego
-  TEveCaloLego* lego = new TEveCaloLego(data);
-  lego->SetPlaneColor(kBlue-5);
-  lego->Set2DMode(TEveCaloLego::kValSize);
-  lego->SetName("TwoHistLego");
-  gEve->AddElement(lego, s2);
-  gEve->AddToListTree(lego, kTRUE);
+   TEveViewer* v2 = gEve->SpawnNewViewer("Lego Viewer");
+   TGLViewer*  v  = v2->GetGLViewer();
+   v->SetCurrentCamera(TGLViewer::kCameraPerspXOY);
+   v->SetEventHandler(new TEveLegoEventHandler("Lego", v->GetGLWidget(), v));
+   TEveScene*  s2 = gEve->SpawnNewScene("Lego");
+   v2->AddScene(s2);
 
-  // overlay lego1
-  gEve->DisableRedraw();
-  TEveLegoOverlay* overlay = new TEveLegoOverlay();
-  overlay->SetCaloLego(lego);
-  v->AddOverlayElement(overlay);
-  gEve->AddElement(overlay, s2);
-  gEve->EnableRedraw();
+   // lego
+   TEveCaloLego* lego = new TEveCaloLego(data);
+   lego->SetPlaneColor(kBlue-5);
+   lego->Set2DMode(TEveCaloLego::kValSize);
+   lego->SetName("TwoHistLego");
+   gEve->AddElement(lego, s2);
+   gEve->AddToListTree(lego, kTRUE);
+
+   lego->InitMainTrans();
+   Float_t sc = TMath::TwoPi();
+   lego->RefMainTrans().SetScale(sc, sc, sc);
+   // overlay lego1
+   TEveLegoOverlay* overlay = new TEveLegoOverlay();
+   v->AddOverlayElement(overlay);
+   overlay->SetCaloLego(lego);
+
+   TGLCameraOverlay* camInfo = new TGLCameraOverlay();
+   camInfo->SetShowPerspective(kFALSE);
+   v->AddOverlayElement(camInfo);
+   gEve->AddElement(overlay, s2);
+}
+
+//______________________________________________________________________________
+TEveCaloDataVec* MakeVecData(TH2* h1, TH2* h2)
+{
+  TEveCaloDataVec* data = new TEveCaloDataVec(2);
+
+  data->RefSliceInfo(0).Setup("ECAL", 0.3, kRed);
+  data->RefSliceInfo(1).Setup("HCAL", 0.1, kYellow);
+
+  TAxis *ax =  h1->GetXaxis();
+  TAxis *ay =  h1->GetYaxis();
+  for(Int_t i=1; i<=ax->GetNbins(); i++)
+  {
+    for(Int_t j=1; j<=ay->GetNbins(); j++)
+    {
+      data->AddTower(ax->GetBinLowEdge(i), ax->GetBinUpEdge(i),
+		     ay->GetBinLowEdge(j), ay->GetBinUpEdge(j));
+
+      data->FillSlice(0, h1->GetBinContent(i, j));
+      data->FillSlice(1, h2->GetBinContent(i, j));
+    }
+  }
+
+  data->SetEtaBins(new TAxis(100, ax->GetBinLowEdge(1), ax->GetBinUpEdge(ax->GetLast())));
+  data->SetPhiBins(new TAxis(100, ay->GetBinLowEdge(1), ay->GetBinUpEdge(ay->GetLast())));
+  data->DataChanged();
+
+  return data;
 }

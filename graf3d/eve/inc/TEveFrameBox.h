@@ -76,8 +76,8 @@ public:
    UChar_t* GetBackRGBA()  { return fBackRGBA;  }
 
    void SetBackColor(Color_t ci);
-   void SetBackColor(Pixel_t pix);
-   void SetBackColor(UChar_t r, UChar_t g, UChar_t b, UChar_t a=255);
+   void SetBackColorPixel(Pixel_t pix);
+   void SetBackColorRGBA(UChar_t r, UChar_t g, UChar_t b, UChar_t a=255);
 
    Bool_t GetFrameFill() const   { return fFrameFill; }
    void   SetFrameFill(Bool_t f) { fFrameFill = f;    }

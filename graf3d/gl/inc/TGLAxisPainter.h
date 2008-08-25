@@ -44,12 +44,13 @@ protected:
    TString      fTitleFontName;
 
    TString      fTitle;
+   TString      fTitleUnits;
    TGLVector3   fTitlePos;
 
 public:
    TGLAxisAttrib();
    virtual ~TGLAxisAttrib(){}
-  
+
    // Getters && Setters
 
    TGLVector3&  RefDir() { return fDir; }
@@ -78,6 +79,11 @@ public:
 
    void SetTitle(const char* title) {fTitle = title;}
    const char* GetTitle() const {return fTitle.Data();}
+
+   void SetTitleUnits(const char* un) {fTitleUnits = un;}
+   const char* GetTitleUnits() const {return fTitleUnits.Data();}
+
+
    TGLVector3& RefTitlePos() {return fTitlePos;}
 
    // override TAttAxis function
@@ -94,18 +100,30 @@ private:
    TGLAxisPainter(const TGLAxisPainter&);            // Not implemented
    TGLAxisPainter& operator=(const TGLAxisPainter&); // Not implemented
 
-   void RnrText(const char* txt, TGLVector3 pos, TGLFont &font) const;
+protected:
    void DrawTick(TGLVector3 &tv, Int_t order) const;
-   const char* FormAxisValue(Float_t x) const;
+
+   void RnrText(const char* txt, TGLVector3 pos, TGLFont &font) const;
+   void LabelsLimits(const char *label, Int_t &first, Int_t &last) const;
+
 
    TGLAxisAttrib* fAtt;
 
+   Int_t          fMaxDigits;
+   Int_t          fDecimals;  // cached
+   char           fFormat[8]; // cached
+   Int_t          fExp;        //cached
+
 public:
-   TGLAxisPainter():fAtt(0) {}
+   TGLAxisPainter();
    virtual ~TGLAxisPainter() {}
 
    void Paint(TGLRnrCtx& ctx, TGLAxisAttrib &atrib);
 
+   void SetTextFormat(Double_t binWidth);
+   void SetAxisAtt(TGLAxisAttrib* axa){ fAtt = axa; }
+   void FormAxisValue(Float_t x, char* lab) const;
+   
    ClassDef(TGLAxisPainter, 0); // GL axis painter.
 };
 

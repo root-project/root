@@ -37,6 +37,10 @@
 // - specifying transformation matrix for the whole collection
 //   by data-member of class TEveTrans.
 //
+// If you use value-is-color mode and want to use transparency, set
+// the transparency to non-zero value so that GL-renderer will be
+// properly informed.
+//
 // See also:
 //   TEveQuadSet: rectangle, hexagon or line per digit
 //   TEveBoxSet   a 3D box per digit
@@ -56,6 +60,7 @@ TEveDigitSet::TEveDigitSet(const Text_t* n, const Text_t* t) :
 
    fFrame          (0),
    fPalette        (0),
+   fTransparency   (0),
    fRenderMode     (kRM_AsIs),
    fDisableLigting (kTRUE),
    fHistoButtons   (kTRUE),
@@ -178,6 +183,14 @@ void TEveDigitSet::DigitColor(Color_t ci)
 }
 
 //______________________________________________________________________________
+void TEveDigitSet::DigitColor(Color_t ci, UChar_t transparency)
+{
+   // Set color for the last digit added.
+
+   TEveUtil::ColorFromIdx(ci, (UChar_t*) & fLastDigit->fValue, transparency);
+}
+
+//______________________________________________________________________________
 void TEveDigitSet::DigitColor(UChar_t r, UChar_t g, UChar_t b, UChar_t a)
 {
    // Set color for the last digit added.
@@ -218,7 +231,7 @@ void TEveDigitSet::Paint(Option_t* /*option*/)
    // Section kCore
    buff.fID           = this;
    buff.fColor        = fFrame ? fFrame->GetFrameColor() : 1;
-   buff.fTransparency = 0;
+   buff.fTransparency = fTransparency;
    RefMainTrans().SetBuffer3D(buff);
    buff.SetSectionsValid(TBuffer3D::kCore);
 

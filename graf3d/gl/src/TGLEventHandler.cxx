@@ -30,6 +30,7 @@
 #include "TGLLogicalShape.h"
 #include "TGLPhysicalShape.h"
 #include "TContextMenu.h"
+#include "TGToolTip.h"
 #include "KeySymbols.h"
 
 //______________________________________________________________________________
@@ -56,13 +57,19 @@ TGLEventHandler::TGLEventHandler(const char *name, TGWindow *w, TObject *obj,
    fLastPos            (-1, -1),
    fLastMouseOverPos   (-1, -1),
    fLastMouseOverShape (0),
+   fTooltip            (0),
    fActiveButtonID     (0),
    fLastEventState     (0),
-   fInPointerGrab      (kFALSE)
+   fInPointerGrab      (kFALSE),
+   fMouseTimerRunning  (kFALSE),
+   fTooltipShown       (kFALSE),
+   fTooltipPixelTolerance (3)
 {
    // Constructor.
 
-   fMouseTimer = new TTimer(this, 250);
+   fMouseTimer = new TTimer(this, 80);
+   fTooltip    = new TGToolTip(0, 0, "", 650);
+   fTooltip->Hide();
 }
 
 //______________________________________________________________________________
@@ -71,6 +78,7 @@ TGLEventHandler::~TGLEventHandler()
    // Destructor.
 
    delete fMouseTimer;
+   delete fTooltip;
 }
 
 //______________________________________________________________________________
@@ -213,20 +221,15 @@ Bool_t TGLEventHandler::HandleEvent(Event_t *event)
          Error("TGLEventHandler::HandleEvent", "active drag-action at focus-in.");
          fGLViewer->fDragAction = TGLViewer::kDragNone;
       }
-      if (fMouseTimer) {
-         fMouseTimer->Reset();
-         fMouseTimer->TurnOn();
-      }
+      StartMouseTimer();
    }
    if (event->fType == kFocusOut) {
       if (fGLViewer->fDragAction != TGLViewer::kDragNone) {
          Warning("TGLEventHandler::HandleEvent", "drag-action active at focus-out.");
          fGLViewer->fDragAction = TGLViewer::kDragNone;
       }
-      if (fMouseTimer) {
-         fMouseTimer->Reset();
-         fMouseTimer->TurnOff();
-      }
+      StopMouseTimer();
+      ClearMouseOver();
    }
 
    return kTRUE;
@@ -244,10 +247,7 @@ Bool_t TGLEventHandler::HandleFocusChange(Event_t *event)
          Error("TGLEventHandler::HandleFocusChange", "active drag-action at focus-in.");
          fGLViewer->fDragAction = TGLViewer::kDragNone;
       }
-      if (fMouseTimer) {
-         fMouseTimer->Reset();
-         fMouseTimer->TurnOn();
-      }
+      StartMouseTimer();
       fGLViewer->Activated();
    }
    if (event->fType == kFocusOut) {
@@ -255,10 +255,8 @@ Bool_t TGLEventHandler::HandleFocusChange(Event_t *event)
          Warning("TGLEventHandler::HandleFocusChange", "drag-action active at focus-out.");
          fGLViewer->fDragAction = TGLViewer::kDragNone;
       }
-      if (fMouseTimer) {
-         fMouseTimer->Reset();
-         fMouseTimer->TurnOff();
-      }
+      StopMouseTimer();
+      ClearMouseOver();
    }
 
    return kTRUE;
@@ -276,10 +274,7 @@ Bool_t TGLEventHandler::HandleCrossing(Event_t *event)
          Error("TGLEventHandler::HandleCrossing", "active drag-action at enter-notify.");
          fGLViewer->fDragAction = TGLViewer::kDragNone;
       }
-      if (fMouseTimer) {
-         fMouseTimer->Reset();
-         fMouseTimer->TurnOn();
-      }
+      StartMouseTimer();
       // Maybe, maybe not...
       fGLViewer->Activated();
    }
@@ -288,10 +283,8 @@ Bool_t TGLEventHandler::HandleCrossing(Event_t *event)
          Warning("TGLEventHandler::HandleCrossing", "drag-action active at leave-notify.");
          fGLViewer->fDragAction = TGLViewer::kDragNone;
       }
-      if (fMouseTimer) {
-         fMouseTimer->Reset();
-         fMouseTimer->TurnOff();
-      }
+      StopMouseTimer();
+      ClearMouseOver();
    }
 
    return kTRUE;
@@ -390,14 +383,14 @@ Bool_t TGLEventHandler::HandleButton(Event_t * event)
                }
                break;
             }
-               // MID mouse button
+            // MID mouse button
             case kButton2:
             {
                fGLViewer->fDragAction = TGLViewer::kDragCameraTruck;
                grabPointer = kTRUE;
                break;
             }
-               // RIGHT mouse button
+            // RIGHT mouse button
             case kButton3:
             {
                // Shift + Right mouse - select+context menu
@@ -708,8 +701,6 @@ Bool_t TGLEventHandler::HandleMotion(Event_t * event)
       return kFALSE;
    }
 
-   assert (event); // was if event==0 return
-
    Bool_t processed = kFALSE, changed = kFALSE;
    Short_t lod = TGLRnrCtx::kLODMed;
 
@@ -719,24 +710,46 @@ Bool_t TGLEventHandler::HandleMotion(Event_t * event)
    Bool_t mod1   = event->fState & kKeyControlMask;
    Bool_t mod2   = event->fState & kKeyShiftMask;
 
+   if (fMouseTimerRunning) StopMouseTimer();
+
+   if (fTooltipShown && 
+       ( TMath::Abs(event->fXRoot - fTooltipPos.fX) > fTooltipPixelTolerance ||
+         TMath::Abs(event->fYRoot - fTooltipPos.fY) > fTooltipPixelTolerance ))
+   {
+      RemoveTooltip();
+   }
+
    if (fGLViewer->fDragAction == TGLViewer::kDragNone)
    {
       changed = fGLViewer->RequestOverlaySelect(event->fX, event->fY);
       if (fGLViewer->fCurrentOvlElm)
          processed = fGLViewer->fCurrentOvlElm->Handle(*fGLViewer->fRnrCtx, fGLViewer->fOvlSelRec, event);
       lod = TGLRnrCtx::kLODHigh;
-   } else if (fGLViewer->fDragAction == TGLViewer::kDragCameraRotate) {
-      processed = fGLViewer->CurrentCamera().Rotate(xDelta, -yDelta, mod1, mod2);
-   } else if (fGLViewer->fDragAction == TGLViewer::kDragCameraTruck) {
+      if ( ! processed && ! fMouseTimerRunning)
+         StartMouseTimer();
+   }
+   else if (fGLViewer->fDragAction == TGLViewer::kDragCameraRotate)
+   {
+      processed = Rotate(xDelta, yDelta, mod1, mod2);
+   }
+   else if (fGLViewer->fDragAction == TGLViewer::kDragCameraTruck)
+   {
       processed = fGLViewer->CurrentCamera().Truck(xDelta, -yDelta, mod1, mod2);
-   } else if (fGLViewer->fDragAction == TGLViewer::kDragCameraDolly) {
+   }
+   else if (fGLViewer->fDragAction == TGLViewer::kDragCameraDolly)
+   {
       processed = fGLViewer->CurrentCamera().Dolly(xDelta, mod1, mod2);
-   } else if (fGLViewer->fDragAction == TGLViewer::kDragOverlay) {
+   }
+   else if (fGLViewer->fDragAction == TGLViewer::kDragOverlay)
+   {
       processed = fGLViewer->fCurrentOvlElm->Handle(*fGLViewer->fRnrCtx, fGLViewer->fOvlSelRec, event);
    }
 
    fLastPos.fX = event->fX;
    fLastPos.fY = event->fY;
+
+   fLastGlobalPos.fX = event->fXRoot;
+   fLastGlobalPos.fY = event->fYRoot;
 
    if (processed || changed) {
       if (fGLViewer->fGLDevice != -1) {
@@ -751,15 +764,29 @@ Bool_t TGLEventHandler::HandleMotion(Event_t * event)
 }
 
 //______________________________________________________________________________
+Bool_t TGLEventHandler::Rotate(Int_t xDelta, Int_t yDelta, Bool_t mod1, Bool_t mod2)
+{
+   // Method to handle action TGLViewer::kDragCameraRotate.
+
+   return fGLViewer->CurrentCamera().Rotate(xDelta, -yDelta, mod1, mod2);
+}
+
+//______________________________________________________________________________
 Bool_t TGLEventHandler::HandleTimer(TTimer *t)
 {
    // If mouse delay timer times out emit signal.
 
-   if (t != fMouseTimer) return kTRUE;
-   if (fGLViewer->fDragAction == TGLViewer::kDragNone) {
-      if (fLastMouseOverPos != fLastPos) {
+   if (t != fMouseTimer) return kFALSE;
+
+   fMouseTimerRunning = kFALSE;
+
+   if (fGLViewer->fDragAction == TGLViewer::kDragNone)
+   {
+      if (fLastMouseOverPos != fLastPos)
+      {
          fGLViewer->RequestSelect(fLastPos.fX, fLastPos.fY, kFALSE);
-         if (fLastMouseOverShape != fGLViewer->fSelRec.GetPhysShape()) {
+         if (fLastMouseOverShape != fGLViewer->fSelRec.GetPhysShape())
+         {
             fLastMouseOverShape = fGLViewer->fSelRec.GetPhysShape();
             fGLViewer->MouseOver(fLastMouseOverShape);
             fGLViewer->MouseOver(fLastMouseOverShape, fLastEventState);
@@ -768,6 +795,38 @@ Bool_t TGLEventHandler::HandleTimer(TTimer *t)
       }
    }
    return kTRUE;
+}
+
+//______________________________________________________________________________
+void TGLEventHandler::StartMouseTimer()
+{
+   // Start mouse timer in single-shot mode.
+
+   fMouseTimer->Start(-1, kTRUE);
+   fMouseTimerRunning = kTRUE;
+}
+
+//______________________________________________________________________________
+void TGLEventHandler::StopMouseTimer()
+{
+   // Make sure mouse timers are not running.
+
+   fMouseTimerRunning = kFALSE;
+   fMouseTimer->Stop();
+}
+
+//______________________________________________________________________________
+void TGLEventHandler::ClearMouseOver()
+{
+   // Clear mouse-over state and emit mouse-over signals.
+   // Current overlay element is also told the mouse has left.
+
+   fLastMouseOverPos.fX = fLastMouseOverPos.fY = -1;
+   fLastMouseOverShape = 0;
+   fGLViewer->MouseOver(fLastMouseOverShape);
+   fGLViewer->MouseOver(fLastMouseOverShape, fLastEventState);
+
+   fGLViewer->ClearCurrentOvlElm();
 }
 
 //______________________________________________________________________________
@@ -785,3 +844,39 @@ void TGLEventHandler::Repaint()
    fGLViewer->fRedrawTimer->RequestDraw(20, TGLRnrCtx::kLODHigh);
 }
 
+//______________________________________________________________________________
+void TGLEventHandler::TriggerTooltip(const char* text)
+{
+   // Trigger display of tooltip.
+
+   fTooltipPos   = fLastGlobalPos;
+   fTooltipShown = kTRUE;
+   fTooltip->SetText(text);
+   fTooltip->SetPosition(fTooltipPos.fX + 16, fTooltipPos.fY - 16);
+   fTooltip->Reset();
+}
+
+//______________________________________________________________________________
+void TGLEventHandler::RemoveTooltip()
+{
+   // Hide the tooltip.
+
+   fTooltip->Hide();
+   fTooltipShown = kFALSE;
+}
+
+//______________________________________________________________________________
+void TGLEventHandler::SetMouseOverSelectDelay(Int_t ms)
+{
+   // Set delay of mouse-over probe (highlight).
+
+   fMouseTimer->SetTime(ms);
+}
+
+//______________________________________________________________________________
+void TGLEventHandler::SetMouseOverTooltipDelay(Int_t ms)
+{
+   // Set delay of tooltip timer.
+
+   fTooltip->SetDelay(ms);
+}

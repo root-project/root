@@ -123,6 +123,7 @@ TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y,
    fDebugMode(kFALSE),
    fIsPrinting(kFALSE),
    fPictureFileName("viewer.jpg"),
+   fFader(0),
    fGLWidget(0),
    fGLDevice(-1),
    fGLCtxId(0),
@@ -178,6 +179,7 @@ TGLViewer::TGLViewer(TVirtualPad * pad) :
    fDebugMode(kFALSE),
    fIsPrinting(kFALSE),
    fPictureFileName("viewer.jpg"),
+   fFader(0),
    fGLWidget(0),
    fGLDevice(fPad->GetGLDevice()),
    fGLCtxId(0),
@@ -486,17 +488,26 @@ void TGLViewer::DoDraw()
 
    PreRender();
 
-   RenderNonSelected();
-   DrawGuides();
-   glClear(GL_DEPTH_BUFFER_BIT);
-   RenderSelected();
+   if (fFader < 1)
+   {
+      RenderNonSelected();
+      DrawGuides();
+      glClear(GL_DEPTH_BUFFER_BIT);
+      RenderSelected();
 
-   glClear(GL_DEPTH_BUFFER_BIT);
-   RenderOverlay();
-   DrawCameraMarkup();
-   DrawDebugInfo();
+      glClear(GL_DEPTH_BUFFER_BIT);
+      RenderOverlay();
+      DrawCameraMarkup();
+      DrawDebugInfo();
+   }
 
    PostRender();
+
+   if (fFader > 0)
+   {
+      FadeView(fFader);
+   }
+
    PostDraw();
 
    fRnrCtx->StopStopwatch();
@@ -692,10 +703,12 @@ void TGLViewer::PreDraw()
    // For embedded gl clear color must be pad's background color.
    Color_t ci = (fGLDevice != -1) ? gPad->GetFillColor() : fClearColor;
    TColor *color = gROOT->GetColor(ci);
-   Float_t sc[3] = {1.f, 1.f, 1.f};
    if (color)
-      color->GetRGB(sc[0], sc[1], sc[2]);
-   glClearColor(sc[0], sc[1], sc[2], 1.);
+      color->GetRGB(fClearColorRGB[0], fClearColorRGB[1], fClearColorRGB[2]);
+   else
+      fClearColorRGB[0] = fClearColorRGB[1] = fClearColorRGB[2] = 1.0f;
+
+   glClearColor(fClearColorRGB[0], fClearColorRGB[1], fClearColorRGB[2], 1.0f);
 
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -720,6 +733,32 @@ void TGLViewer::PostDraw()
    SwapBuffers();
 
    TGLUtil::CheckError("TGLViewer::PostDraw");
+}
+
+//______________________________________________________________________________
+void TGLViewer::FadeView(Float_t alpha)
+{
+   // Draw a rectangle (background color and given alpha) across the
+   // whole viewport.
+
+   static const Float_t z = -1.0f;
+
+   glMatrixMode(GL_PROJECTION); glPushMatrix(); glLoadIdentity();
+   glMatrixMode(GL_MODELVIEW);  glPushMatrix(); glLoadIdentity();
+
+   {
+      TGLCapabilitySwitch blend(GL_BLEND,    kTRUE);
+      TGLCapabilitySwitch light(GL_LIGHTING, kFALSE);
+      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+      glColor4f(fClearColorRGB[0], fClearColorRGB[1], fClearColorRGB[2], alpha);
+      glBegin(GL_QUADS);
+      glVertex3f(-1, -1, z);  glVertex3f( 1, -1, z);
+      glVertex3f( 1,  1, z);  glVertex3f(-1,  1, z);
+      glEnd();
+   }
+
+   glMatrixMode(GL_PROJECTION); glPopMatrix();
+   glMatrixMode(GL_MODELVIEW);  glPopMatrix();
 }
 
 //______________________________________________________________________________
@@ -963,6 +1002,7 @@ Bool_t TGLViewer::DoOverlaySelect(Int_t x, Int_t y)
             selElm = el;
             break;
          }
+         ++idx;
       }
    }
    else
@@ -982,6 +1022,42 @@ Bool_t TGLViewer::DoOverlaySelect(Int_t x, Int_t y)
    {
       return kFALSE;
    }
+}
+
+//______________________________________________________________________________
+void TGLFaderHelper::MakeFadeStep()
+{
+   // Make one fading step and request redraw.
+
+   Float_t fade = fViewer->GetFader();
+
+   if (fade == fFadeTarget) {
+      delete this; return;
+   }
+   if (TMath::Abs(fFadeTarget - fade) < 1e-3) {
+      fViewer->SetFader(fFadeTarget);
+      fViewer->RequestDraw(TGLRnrCtx::kLODHigh);
+      delete this;
+      return;
+   }
+
+   Float_t dt = fTime/fNSteps;
+   Float_t df = (fFadeTarget - fade)/fNSteps;
+   fViewer->SetFader(fade + df);
+   fViewer->RequestDraw(TGLRnrCtx::kLODHigh);
+   fTime -= dt; --fNSteps;
+   TTimer::SingleShot(TMath::CeilNint(1000*dt),
+                      "TGLFaderHelper", this, "MakeFadeStep()");
+}
+
+//______________________________________________________________________________
+void TGLViewer::AutoFade(Float_t fade, Float_t time, Int_t steps)
+{
+   // Animate fading from curernt value to fade over given time (sec)
+   // and number of steps.
+
+   TGLFaderHelper* fh = new TGLFaderHelper(this, fade, time, steps);
+   fh->MakeFadeStep();
 }
 
 /**************************************************************************/
@@ -1374,10 +1450,28 @@ void TGLViewer::PrintObjects()
 //______________________________________________________________________________
 void TGLViewer::SetEventHandler(TGEventHandler *handler)
 {
+   // Set the event-handler.
+   // If GLWidget is set, the handler is propagated to it.
+
    if (fEventHandler)
       delete fEventHandler;
 
    fEventHandler = handler;
    if (fGLWidget)
       fGLWidget->SetEventHandler(fEventHandler);
+}
+
+//______________________________________________________________________________
+void TGLViewer::ClearCurrentOvlElm()
+{
+   // Reset current overlay-element to zero, eventually notifying the
+   // old one that the mouse has left.
+   // Usually called when mouse leaves the window.
+
+   if (fCurrentOvlElm)
+   {
+      fCurrentOvlElm->MouseLeave();
+      fCurrentOvlElm = 0;
+      RequestDraw();
+   }
 }

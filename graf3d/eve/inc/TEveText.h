@@ -17,7 +17,6 @@
 #include "TAttBBox.h"
 
 #include "TEveElement.h"
-#include "TEveTrans.h"
 
 class TEveText : public TEveElement,
                  public TNamed,

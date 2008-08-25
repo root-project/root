@@ -25,6 +25,8 @@
 #include "TPoint.h"
 #endif
 
+class TGToolTip;
+
 class TGLViewer;
 class TGLPhysicalShape;
 
@@ -36,9 +38,17 @@ protected:
    TPoint            fLastPos;
    TPoint            fLastMouseOverPos;
    TGLPhysicalShape *fLastMouseOverShape;
+   TGToolTip        *fTooltip;        // tooltip for highlight
+   TPoint            fLastGlobalPos;
+   TPoint            fTooltipPos;
    UInt_t            fActiveButtonID;
    UInt_t            fLastEventState;
    Bool_t            fInPointerGrab;
+   Bool_t            fMouseTimerRunning;
+   Bool_t            fTooltipShown;
+   Int_t             fTooltipPixelTolerance;
+
+   virtual Bool_t Rotate(Int_t xDelta, Int_t yDelta, Bool_t mod1, Bool_t mod2);
 
 public:
    TGLEventHandler(const char *name, TGWindow *w, TObject *obj, const char *title="");
@@ -55,7 +65,19 @@ public:
    virtual Bool_t HandleKey(Event_t *event);
    virtual Bool_t HandleMotion(Event_t * event);
    virtual Bool_t HandleTimer(TTimer *t);
+   virtual void   StartMouseTimer();
+   virtual void   StopMouseTimer();
+   virtual void   ClearMouseOver();
    virtual void   Repaint();
+
+   virtual void   TriggerTooltip(const char* text);
+   virtual void   RemoveTooltip();
+
+   void SetMouseOverSelectDelay(Int_t ms);
+   void SetMouseOverTooltipDelay(Int_t ms);
+
+   Int_t GetTooltipPixelTolerance()  const { return fTooltipPixelTolerance; }
+   void  SetTooltipPixelTolerance(Int_t t) { fTooltipPixelTolerance = t; }
 
    ClassDef(TGLEventHandler, 0); // Base-class and default implementation of event-handler for TGLViewer.
 };

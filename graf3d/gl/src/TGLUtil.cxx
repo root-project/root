@@ -1473,9 +1473,9 @@ void TGLUtil::DrawLine(const TGLVertex3 & start, const TGLVector3 & vector,
    }
 
    // Line (tube) component
-   gluCylinder(quad.Get(), size/4.0, size/4.0, vector.Mag() - headHeight, fgDrawQuality, 1);
+   gluCylinder(quad.Get(), 0.25*size, 0.25*size, vector.Mag() - headHeight, fgDrawQuality, 1);
    gluQuadricOrientation(quad.Get(), (GLenum)GLU_INSIDE);
-   gluDisk(quad.Get(), 0.0, size/4.0, fgDrawQuality, 1);
+   gluDisk(quad.Get(), 0.0, 0.25*size, fgDrawQuality, 1);
 
    glTranslated(0.0, 0.0, vector.Mag() - headHeight); // Shift down local Z to end of line
 

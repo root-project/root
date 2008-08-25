@@ -68,6 +68,9 @@ private:
    TEveViewerList(const TEveViewerList&);            // Not implemented
    TEveViewerList& operator=(const TEveViewerList&); // Not implemented
 
+protected:
+   Bool_t       fShowTooltip;
+
 public:
    TEveViewerList(const Text_t* n="TEveViewerList", const Text_t* t="");
    virtual ~TEveViewerList() {}
@@ -83,6 +86,11 @@ public:
 
    void OnMouseOver(TGLPhysicalShape* shape, UInt_t state);
    void OnClicked(TObject *obj, UInt_t button, UInt_t state);
+
+   // --------------------------------
+
+   Bool_t GetShowTooltip()   const { return fShowTooltip; }
+   void   SetShowTooltip(Bool_t x) { fShowTooltip = x; }
 
    ClassDef(TEveViewerList, 0); // List of Viewers providing common operations on TEveViewer collections.
 };

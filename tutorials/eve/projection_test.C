@@ -20,9 +20,7 @@ void projection_test()
    TEveProjectionManager* mng = new TEveProjectionManager();
    s->AddElement(mng);
    TEveProjectionAxes* axes = new TEveProjectionAxes(mng);
-   axes->SetText("TEveProjections demo");
-   axes->SetFontFile("comicbd");
-   axes->SetFontSize(20);
+   axes->SetTitle("TEveProjections demo");
    s->AddElement(axes);
    gEve->AddToListTree(axes, kTRUE);
    gEve->AddToListTree(mng, kTRUE);

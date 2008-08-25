@@ -29,8 +29,13 @@ private:
 protected:
    TEveProjectionAxes   *fM;       // Model object.
 
-   TGComboBox      *fStepMode;     // tick-mark positioning widget
-   TEveGValuator   *fNumTickMarks; // tick-mark number widget
+   TGComboBox      *fLabMode;
+   TGComboBox      *fAxesMode;
+   TEveGValuator   *fNdiv;         // tick-mark number widget
+
+
+   TEveGValuator   *fBoxOffsetX;
+   TEveGValuator   *fBoxOffsetY;
 
    TGVerticalFrame *fCenterFrame;  // Parent frame for Center tab.
    TGCheckButton   *fDrawCenter;   // draw center widget
@@ -45,8 +50,13 @@ public:
 
    // Declare callback/slot methods
 
-   void DoStepMode(Int_t type);
-   void DoNumTickMarks();
+   void DoLabMode(Int_t type);
+   void DoAxesMode(Int_t type);
+   void DoNdiv();
+
+   void DoBoxOffsetX();
+   void DoBoxOffsetY();
+
    void DoDrawCenter();
    void DoDrawOrigin();
 

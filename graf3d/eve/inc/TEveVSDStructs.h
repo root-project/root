@@ -78,6 +78,7 @@ public:
    void Set(const TEveVector& v) { fX = v.fX;  fY = v.fY;  fZ = v.fZ;  }
 
    void NegateXYZ() { fX = - fX; fY = -fY; fZ = -fZ; }
+   void Normalize() { Float_t m=Mag(); fX/=m; fY/=m; fZ/=m; }
 
    Float_t Phi()      const;
    Float_t Theta()    const;
@@ -97,6 +98,7 @@ public:
 
    TEveVector& Mult(const TEveVector&a, Float_t af)
    { fX = a.fX*af; fY = a.fY*af; fZ = a.fZ*af; return *this; }
+
 
    ClassDef(TEveVector, 1); // Float three-vector; a minimal Float_t copy of TVector3 used to represent points and momenta (also used in VSD).
 };

@@ -1,4 +1,64 @@
+<!-- DOCTYPE HTML SYSTEM><html><head><title>graf3d</title></head><body -->
+	
 <br> 
 <hr> 
 <a name="graf3d"></a> 
+
 <h3>OpenGL</h3>
+
+<ul>
+
+<li> Add support for showing tooltips for objects shown in
+<tt>TGLViewer</tt>. See <tt>TGLEventHandler::TriggerTooltip(const
+char* text)</tt> and <tt>RemoveTooltip()</tt>. Usage example is in
+class <tt>TEveViewerList</tt>.
+
+<li> Add new overlay element <tt>TGLCameraOverlay</tt> that allows to
+display: a) coordinate axes for orthographic mode; b) intersection of
+center of screen with a given plane.
+
+<li> Add suport for fading in/out of the viewer contents.
+
+</ul>
+
+
+<!------------------------------------------------------------------------------>
+
+
+<br>
+<hr>
+<h3>Eve</h3>
+
+<ul>
+
+<li> <tt>TEveQuadSet</tt> -- Add flag 'Bool_t fAntiFlick'. If on (now the
+default) it causes each quad to be also rendered as a pixel, thus
+preventing it from disappearing when zoomed away.
+
+This is needed for visualization of small quads, e.g. silicon
+detectors digits.
+
+<li> <tt>TEveCalo</tt> classes -- Add support for automatic rebinning
+of 3D views (only supported for 2D views before). In 2D mode support
+automatic determination of the cell color based on the most energetic
+contribution from available calo slices.
+
+Add support for enumerative registration of calorimeter towers. Before
+one had to provide THStack as input. See <tt>TEveCaloDataVec</tt>
+class.
+
+<li> <tt>TEveTrackPropagator</tt> now supports propagation of charged
+particles in arbitrary / external magnetic field.
+
+New abstract interface to magnetic field TEveMagField to get field
+vector at given position. Implement two interfaces: TEveMagFieldConst
+for constant magnetic field and TEveMagFieldDuo (two constant magnetic
+fields, chosen by cylindrical radius).
+
+See examples in <tt>tutorials/eve/track.C</tt>.
+
+<li> Added underflow and overflow bins to <tt>TEvePointSetArray</tt>.
+
+</ul>
+
+<!-- /body></html -->

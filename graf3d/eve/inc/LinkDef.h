@@ -23,6 +23,11 @@
 
 #pragma link C++ class TEveManager::TExceptionHandler+;
 
+
+#pragma link C++ class TEveMagField+;
+#pragma link C++ class TEveMagFieldConst+;
+#pragma link C++ class TEveMagFieldDuo+;
+
 // Basic helper classes
 #pragma link C++ class TEveException+;
 #pragma link C++ class TEvePadHolder+;
@@ -131,9 +136,6 @@
 #pragma link C++ class TEveTrackPropagatorSubEditor+;
 #pragma link C++ class TEveTrackPropagatorEditor+;
 #pragma link C++ class TEveTrackPropagator+;
-#pragma link C++ class TEveTrackCounter+;
-#pragma link C++ class TEveTrackCounterEditor+;
-
 
 // TEveText
 #pragma link C++ class TEveText+;
@@ -186,6 +188,7 @@
 #pragma link C++ class TEveStraightLineSetGL+;
 #pragma link C++ class TEveStraightLineSetEditor+;
 #pragma link C++ class TEveStraightLineSetProjected+;
+#pragma link C++ class TEveScalableStraightLineSet+;
 
 // Projections / non-linear transformations
 #pragma link C++ class TEveProjectable+;
@@ -218,6 +221,7 @@
 // Generic calorimeter representation
 #pragma link C++ class TEveCaloData+;
 #pragma link C++ class TEveCaloData::SliceInfo_t+;
+#pragma link C++ class TEveCaloDataVec;
 #pragma link C++ class TEveCaloDataHist+;
 #pragma link C++ class TEveCaloViz+;
 #pragma link C++ class TEveCaloVizEditor+;

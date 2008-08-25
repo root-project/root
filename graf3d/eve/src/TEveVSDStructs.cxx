@@ -125,10 +125,12 @@ const char* TEvePathMark::TypeName()
 // Not documented.
 //
 
-ClassImp(TEveMCTrack)
-ClassImp(TEveHit)
-ClassImp(TEveCluster)
-ClassImp(TEveRecTrack)
-ClassImp(TEveRecKink)
-ClassImp(TEveRecV0)
-ClassImp(TEveMCRecCrossRef)
+ClassImp(TEveVector4);
+ClassImp(TEveMCTrack);
+ClassImp(TEveHit);
+ClassImp(TEveCluster);
+ClassImp(TEveRecTrack);
+ClassImp(TEveRecKink);
+ClassImp(TEveRecV0);
+ClassImp(TEveRecCascade);
+ClassImp(TEveMCRecCrossRef);

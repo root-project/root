@@ -33,6 +33,7 @@
 //   kBT_AABoxFixedDim   axis-aligned box w/ fixed dimensions: specify (x,y,z)
 //                       also set fDefWidth, fDefHeight and fDefDepth
 //   kBT_Cone            cone defined with position, axis-vector and radius
+//   EllipticCone        conew with elliptic base (specify another radius and angle in deg)
 //
 // Each primitive can be assigned:
 // a) Color or signal value. Thresholds and signal-to-color mapping
@@ -77,6 +78,7 @@ Int_t TEveBoxSet::SizeofAtom(TEveBoxSet::EBoxType_e bt)
       case kBT_AABox:                return sizeof(BAABox_t);
       case kBT_AABoxFixedDim:        return sizeof(BAABoxFixedDim_t);
       case kBT_Cone:                 return sizeof(BCone_t);
+      case kBT_EllipticCone:         return sizeof(BEllipticCone_t);
       default:                       throw(eH + "unexpected atom type.");
    }
    return 0;
@@ -175,6 +177,26 @@ void TEveBoxSet::AddCone(const TEveVector& pos, const TEveVector& dir, Float_t r
    cone->fR   = r;
 }
 
+//______________________________________________________________________________
+void TEveBoxSet::AddEllipticCone(const TEveVector& pos, const TEveVector& dir,
+                                 Float_t r, Float_t r2, Float_t angle)
+{
+   // Create a cone with apex at pos, axis dir and radius r.
+   // To be used for box-type kBT_Cone.
+
+   static const TEveException eH("TEveBoxSet::AddEllipticCone ");
+
+   if (fBoxType != kBT_EllipticCone)
+      throw(eH + "expect ellicptic-cone box-type.");
+
+   BEllipticCone_t* cone = (BEllipticCone_t*) NewDigit();
+   cone->fPos = pos;
+   cone->fDir = dir;
+   cone->fR   = r;
+   cone->fR2  = r2;
+   cone->fAngle = angle;
+}
+
 /******************************************************************************/
 
 //______________________________________________________________________________
@@ -246,6 +268,22 @@ void TEveBoxSet::ComputeBBox()
             mag2 = b.fDir.Mag2();
             if (mag2>mag2Max) mag2Max=mag2;
             if (b.fR>rMax)    rMax=b.fR;
+         }
+         Float_t off = TMath::Sqrt(mag2Max + rMax*rMax);
+         fBBox[0] -= off;fBBox[2] -= off;fBBox[4] -= off;
+         fBBox[1] += off;fBBox[3] += off;fBBox[5] += off;
+         break;
+      }
+      case kBT_EllipticCone:
+      {
+         Float_t mag2=0, mag2Max=0, rMax=0;  
+         while (bi.next()) {
+            BEllipticCone_t& b = * (BEllipticCone_t*) bi();
+            BBoxCheckPoint(b.fPos.fX, b.fPos.fY, b.fPos.fZ);
+            mag2 = b.fDir.Mag2();
+            if (mag2>mag2Max) mag2Max=mag2;
+            if (b.fR  > rMax) rMax = b.fR;
+            if (b.fR2 > rMax) rMax = b.fR2;
          }
          Float_t off = TMath::Sqrt(mag2Max + rMax*rMax);
          fBBox[0] -= off;fBBox[2] -= off;fBBox[4] -= off;

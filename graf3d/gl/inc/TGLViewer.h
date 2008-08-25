@@ -118,6 +118,7 @@ protected:
 
    TGLRect        fViewport;       //! viewport - drawn area
    Color_t        fClearColor;     //! clear-color
+   Float_t        fClearColorRGB[3]; //! clear-color cache
    Int_t          fAxesType;       //! axes type
    Bool_t         fAxesDepthTest;  //! remove guides hidden-lines
    Bool_t         fReferenceOn;    //! reference marker on?
@@ -132,6 +133,7 @@ protected:
    Bool_t         fDebugMode;            //! debug mode (forced rebuild + draw scene/frustum/interest boxes)
    Bool_t         fIsPrinting;           //! 
    TString        fPictureFileName;      //! default file-name for SavePicture()
+   Float_t        fFader;                //! fade the view (0 - no fade/default, 1 - full fade/no rendering done)
 
    ///////////////////////////////////////////////////////////////////////
    // Methods
@@ -140,6 +142,7 @@ protected:
    void InitGL();
    void PreDraw();
    void PostDraw();
+   void FadeView(Float_t alpha);
    void MakeCurrent() const;
    void SwapBuffers() const;
 
@@ -251,6 +254,9 @@ public:
    Bool_t       SavePicture();
    const char*  GetPictureFileName() const { return fPictureFileName.Data(); }
    void         SetPictureFileName(const TString& f) { fPictureFileName = f; }
+   Float_t      GetFader() const { return fFader; }
+   void         SetFader(Float_t x) { fFader = x; }
+   void         AutoFade(Float_t fade, Float_t time=1, Int_t steps=10);
 
    // Update/camera-reset
    void   UpdateScene();
@@ -280,6 +286,7 @@ public:
    TGLSelectRecord&    GetSelRec()    { return fSelRec; }
    TGLOvlSelectRecord& GetOvlSelRec() { return fOvlSelRec; }
    TGLOverlayElement*  GetCurrentOvlElm() const { return fCurrentOvlElm; }
+   void                ClearCurrentOvlElm();
 
    ClassDef(TGLViewer,0) // Standard ROOT GL viewer.
 };
@@ -317,5 +324,22 @@ public:
    }
 };
 
+class TGLFaderHelper {
+public:
+   TGLViewer *fViewer;
+   Float_t    fFadeTarget;
+   Float_t    fTime;
+   Int_t      fNSteps;
+
+   TGLFaderHelper() :
+      fViewer(0), fFadeTarget(0), fTime(0), fNSteps(0) {}
+   TGLFaderHelper(TGLViewer* v, Float_t fade, Float_t time, Int_t steps) :
+      fViewer(v),fFadeTarget(fade), fTime(time), fNSteps(steps) {}
+   virtual ~TGLFaderHelper() {}
+
+   void MakeFadeStep();
+
+   ClassDef(TGLFaderHelper, 0);
+};
 
 #endif // ROOT_TGLViewer

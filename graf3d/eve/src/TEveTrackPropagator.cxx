@@ -17,38 +17,118 @@
 #include <cassert>
 
 //______________________________________________________________________________
-void TEveTrackPropagator::Helix_t::Step(TEveVector4& v, TEveVector& p)
+TEveTrackPropagator::Helix_t::Helix_t():
+   fCharge(0),
+   fMinAng  (45),
+   fDelta   (0.1),
+
+   fPhi(0),
+   fValid(kTRUE),
+
+   fLam(-1),
+   fR(-1),
+   fPhiStep(-1),
+   fSin(-1),
+   fCos(-1),
+
+   fPtMag(-1),
+   fPlDir(-1),
+   fTStepSize(-1)
+
 {
-   // Step from position 'v' with momentum 'p'.
-   // Both quantities are input and output.
+   // Constructor.
 
-   v.fX += (p.fX*fSin - p.fY*(1 - fCos))/fA + fXoff;
-   v.fY += (p.fY*fSin + p.fX*(1 - fCos))/fA + fYoff;
-   v.fZ += fLam*TMath::Abs(fR*fPhiStep);
-   v.fT += fTimeStep;
-
-   const Float_t pxt = p.fX*fCos  - p.fY*fSin;
-   const Float_t pyt = p.fY*fCos  + p.fX*fSin;
-   p.fX = pxt;
-   p.fY = pyt;
 }
 
 //______________________________________________________________________________
-void TEveTrackPropagator::Helix_t::StepVertex(const TEveVector4& v, const TEveVector& p,
-                                              TEveVector4& forw)
+void TEveTrackPropagator::Helix_t::Update(const TEveVector& p, const TEveVector& b,
+                                          Bool_t fullUpdate, Float_t fraction)
 {
-   // Step from position 'v' with momentum 'p'.
-   // Return end position in 'forw'. Momentum is not changed.
-   //
-   // This is used for checking if particle goes outside of the
-   // boundaries in next step.
+   // Update helix parameters.
 
-   forw.fX = v.fX + (p.fX*fSin - p.fY*(1 - fCos))/fA + fXoff;
-   forw.fY = v.fY + (p.fY*fSin + p.fX*(1 - fCos))/fA + fYoff;
-   forw.fZ = v.fZ + fLam*TMath::Abs(fR*fPhiStep);
-   forw.fT = v.fT + fTimeStep;
+   using namespace TMath;
+
+   fB = b;
+
+   // base vectors
+   fE1 = b;
+   fE1.Normalize();
+   fPlDir = p.Dot(fE1);
+   fPl = fE1*fPlDir;
+
+   fPt = p - fPl;
+   fPtMag = fPt.Mag();
+   fE2 = fPt;
+   fE2.Normalize();
+
+   // helix parameters
+   TMath::Cross(fE1.Arr(), fE2.Arr(), fE3.Arr());
+   if (fCharge < 0) fE3.NegateXYZ();
+
+   if (fullUpdate)
+   {
+      Float_t a   = fgkB2C * b.Mag()*TMath::Abs(fCharge);
+      if (a > 1e-10 && fPtMag*fPtMag > 1e-12)
+      {
+         fValid = kTRUE;
+
+         fLam    = fPl.Mag() / fPtMag;
+         if (fPlDir<0) fLam = - fLam;
+
+         fR      = TMath::Abs(fPtMag / a);
+      }
+      else
+      {
+         fValid = kFALSE;
+         return;
+      }
+
+      // phi steps
+      fPhiStep = fMinAng * DegToRad();
+      if (fDelta < fR)
+      {
+         Float_t ang  = 2*ACos(1 - fDelta/fR);
+         if (ang < fPhiStep) fPhiStep = ang;
+      }
+      if (fraction > 0) fPhiStep *= fraction;
+
+      fTStepSize = fR*fPhiStep;
+      fSin      = Sin(fPhiStep);
+      fCos      = Cos(fPhiStep);
+   }
 }
 
+//______________________________________________________________________________
+void TEveTrackPropagator::Helix_t::Step(const TEveVector4& v, const TEveVector& p,
+                                        TEveVector4& vOut, TEveVector& pOut)
+{
+   // Step helix for given momentum p from vertex v.
+
+   vOut = v; 
+
+   if (fValid)
+   {
+      TEveVector d = fE2*(fR*fSin) + fE3*(fR*(1-fCos)) + fE1*(fLam*fTStepSize);
+      vOut += d;
+      vOut.fT += fTStepSize;
+
+      pOut = fPl + fE2*(fPtMag*fCos) + fE3*(fPtMag*fSin);
+
+      fPhi += fPhiStep;
+   }
+   else
+   {
+      // case: pT < 1e-6 or B < 1e-7
+      // might happen if field directon changes pT ~ 0 or B becomes zero
+
+      if (fTStepSize == -1)
+      {
+         printf("WARNING TEveTrackPropagator::Helix_t::Step step-size not initialised.\n");
+      }
+      vOut += p*(fTStepSize/p.Mag());
+      pOut = p;
+   }
+}
 
 //______________________________________________________________________________
 // TEveTrackPropagator
@@ -63,61 +143,99 @@ void TEveTrackPropagator::Helix_t::StepVertex(const TEveVector4& v, const TEveVe
 // TEveTrackList has Get/Set methods for RnrStlye. TEveTrackEditor and
 // TEveTrackListEditor provide editor access.
 
-ClassImp(TEveTrackPropagator)
+ClassImp(TEveTrackPropagator);
 
 Float_t             TEveTrackPropagator::fgDefMagField = 0.5;
 const Float_t       TEveTrackPropagator::fgkB2C        = 0.299792458e-2;
 TEveTrackPropagator TEveTrackPropagator::fgDefStyle;
 
 //______________________________________________________________________________
-TEveTrackPropagator::TEveTrackPropagator() :
-   TObject(),
+TEveTrackPropagator::TEveTrackPropagator(const Text_t* n, const Text_t* t,
+                                         TEveMagField *field) :
+   TEveElementList(n, t),
    TEveRefBackPtr(),
 
-   fMagField(fgDefMagField),
+   fMagFieldObj(field),
    fMaxR    (350),
    fMaxZ    (450),
-   fMaxOrbs (0.5),
-   fMinAng  (45),
-   fDelta   (0.1),
+
+   fNMax     (4096),
+   fMaxOrbs  (0.5),
 
    fEditPathMarks (kTRUE),
    fFitDaughters  (kTRUE),
    fFitReferences (kTRUE),
    fFitDecay      (kTRUE),
    fFitCluster2Ds (kTRUE),
-   fRnrDaughters  (kTRUE),
-   fRnrReferences (kTRUE),
-   fRnrDecay      (kTRUE),
+
+   fRnrDaughters  (kFALSE),
+   fRnrReferences (kFALSE),
+   fRnrDecay      (kFALSE),
    fRnrFV         (kFALSE),
+
    fPMAtt(),
    fFVAtt(),
 
-   fCharge   (0),
-   fVelocity (0.0f),
-   fV        (),
-   fN        (0),
-   fNLast    (0),
-   fNMax     (4096)
+   fV()
 {
    // Default constructor.
+
+   fPMAtt.SetMarkerColor(kYellow);
+   fPMAtt.SetMarkerStyle(2);
+   fPMAtt.SetMarkerSize(2);
+
+   fFVAtt.SetMarkerColor(kRed);
+   fFVAtt.SetMarkerStyle(4);
+   fFVAtt.SetMarkerSize(1.5);
+
+
+   if (fMagFieldObj == 0)
+      fMagFieldObj = new TEveMagFieldConst(0., 0., fgDefMagField);
 }
 
 //______________________________________________________________________________
-void TEveTrackPropagator::InitTrack(TEveVector &v, TEveVector &p,
-                                    Float_t beta,  Int_t charge)
+TEveTrackPropagator::~TEveTrackPropagator()
+{
+   // Destructor.
+
+   delete fMagFieldObj;
+}
+
+//______________________________________________________________________________
+void TEveTrackPropagator::ElementChanged(Bool_t update_scenes, Bool_t redraw)
+{
+   // Element-change notification.
+   // Stamp all tracks as requiring display-list regeneration.
+   // Virtual from TEveElement.
+
+   TEveTrack* track;
+   std::list<TEveElement*>::iterator i = fBackRefs.begin();
+   while (i != fBackRefs.end())
+   {
+      track = dynamic_cast<TEveTrack*>(*i);
+      track->StampObjProps();
+      ++i;
+   }
+   TEveElementList::ElementChanged(update_scenes, redraw);
+}
+
+//==============================================================================
+
+//______________________________________________________________________________
+void TEveTrackPropagator::InitTrack(TEveVector &v, TEveVector& /*p*/,
+                                    Float_t /*beta*/,  Int_t charge)
 {
    // Initialize internal data-members for given particle parameters.
 
    fV.fX = v.fX;
    fV.fY = v.fY;
    fV.fZ = v.fZ;
-   fV.fT = 0;
+
    fPoints.push_back(fV);
 
-   fVelocity = TMath::C()*beta;
-   fCharge = charge;
-   InitHelix(p);
+   // init helix
+   fH.fPhi = 0;
+   fH.fCharge = charge;
 }
 
 //______________________________________________________________________________
@@ -126,17 +244,17 @@ void TEveTrackPropagator::ResetTrack()
    // Reset cache holding particle trajectory.
 
    fPoints.clear();
-   fN     = 0;
-   fNLast = 0;
 }
 
 //______________________________________________________________________________
 Bool_t TEveTrackPropagator::GoToVertex(TEveVector& v, TEveVector& p)
 {
    // Propagate particle with momentum p to vertex v.
-
+  
    Bool_t hit;
-   if (fCharge != 0 && TMath::Abs(fMagField) > 1e-5 && p.Perp2() > 1e-12)
+   fH.Update(p, fMagFieldObj->GetField(fV), kTRUE);
+
+   if (fH.fValid)
       hit = HelixToVertex(v, p);
    else
       hit = LineToVertex(v);
@@ -148,114 +266,90 @@ void TEveTrackPropagator::GoToBounds(TEveVector& p)
 {
    // Propagate particle to bounds.
 
-   if (fCharge != 0 && TMath::Abs(fMagField) > 1e-5 && p.Perp2() > 1e-12)
+   fH.Update(p, fMagFieldObj->GetField(fV), kTRUE);
+
+   if (fH.fValid)
       HelixToBounds(p);
    else
       LineToBounds(p);
 }
 
-//______________________________________________________________________________
-void TEveTrackPropagator::InitHelix(const TEveVector& p)
-{
-   // Initialize helix parameters for given momentum.
 
-   if (fCharge)
+//______________________________________________________________________________
+void TEveTrackPropagator::StepHelix(TEveVector4 &v, TEveVector &p, TEveVector4 &vOut, TEveVector &pOut)
+{
+   // Wrapper to step helix.
+
+   if ( fMagFieldObj->IsConst())
    {
-      // initialise helix
-      using namespace TMath;
-      Float_t pT = p.Perp();
-      fH.fA      = fgkB2C * fMagField * fCharge;
-      fH.fLam    = p.fZ / pT;
-      fH.fR      = pT   / fH.fA;
-
-      fH.fPhiStep = fMinAng * DegToRad();
-      if (fDelta < Abs(fH.fR))
-      {
-         Float_t ang  = 2*ACos(1 - fDelta/Abs(fH.fR));
-         if (ang < fH.fPhiStep) fH.fPhiStep = ang;
-      }
-      if (fH.fA < 0) fH.fPhiStep *= -1;
-      //printf("PHI STEP %f \n", fH.fPhiStep);
-
-      fH.fTimeStep = 0.01 * Abs(fH.fR*fH.fPhiStep)*Sqrt(1+(fH.fLam*fH.fLam))/fVelocity;//cm->m
-      fH.fSin = Sin(fH.fPhiStep);
-      fH.fCos = Cos(fH.fPhiStep);
+      fH.Update(p, fH.fB, kFALSE);
    }
-}
-
-//______________________________________________________________________________
-void TEveTrackPropagator::SetNumOfSteps()
-{
-   // Calculate number of steps needed to get to R/Z bounds.
-
-   using namespace TMath;
-
-   // max orbits
-   Int_t newCount = Int_t(fMaxOrbs*TwoPi()/Abs(fH.fPhiStep));
-   // Z boundaries
-   Float_t nz;
-   if (fH.fLam > 0) {
-      nz = ( fMaxZ - fV.fZ) / (fH.fLam*Abs(fH.fR*fH.fPhiStep));
-   } else {
-      nz = (-fMaxZ - fV.fZ) / (fH.fLam*Abs(fH.fR*fH.fPhiStep));
+   else
+   {
+      fH.Update(p, fMagFieldObj->GetField(v), kTRUE);
    }
-   if (nz < newCount) newCount = Int_t(nz + 1);
-
-   fNLast = fN + newCount;
-   // printf("end steps in helix line %d \n", fNLast);
+   fH.Step(v, p, vOut, pOut);
 }
-
 
 //______________________________________________________________________________
 void TEveTrackPropagator::HelixToBounds(TEveVector& p)
 {
    // Propagate charged particle with momentum p to bounds.
 
-   InitHelix(p);
-   SetNumOfSteps();
+   TEveVector4 currV(fV);
+   TEveVector4 forwV(fV);
+   TEveVector  forwP (p);
 
-   if (fN < fNLast)
+
+   Int_t np = fPoints.size();
+   Float_t maxRsq = fMaxR*fMaxR;
+   Float_t maxPhi = fMaxOrbs*TMath::TwoPi();
+   while ( fH.fPhi < maxPhi && np<fNMax)
    {
-      Bool_t crosR = kFALSE;
-      if (fV.Perp() < fMaxR + TMath::Abs(fH.fR))
-         crosR = true;
+      StepHelix(currV, p, forwV, forwP);
 
-      Float_t maxR2 = fMaxR * fMaxR;
-      TEveVector4 forw;
-      while (fN < fNLast)
+      // cross R
+      if (forwV.Perp2() > maxRsq)
       {
-         fH.StepVertex(fV, p, forw);
-         if (crosR && forw.Perp2() > maxR2)
+         Float_t t = (fMaxR - currV.R()) / (forwV.R() - currV.R());
+         if (t < 0 || t > 1)
          {
-            Float_t t = (fMaxR - fV.R()) / (forw.R() - fV.R());
-            if (t < 0 || t > 1)
-	    {
-               Warning("TEveTrackPropagator::HelixToBounds",
-                       "In MaxR crossing expected t>=0 && t<=1: t=%f, r1=%f, r2=%f, MaxR=%f.",
-                       t, fV.R(), forw.R(), fMaxR);
-               return;
-	    }
-            fPoints.push_back(fV + (forw-fV)*t);
-            ++fN;
+            Warning("TEveTrackPropagator::HelixToBounds",
+                    "In MaxR crossing expected t>=0 && t<=1: t=%f, r1=%f, r2=%f, MaxR=%f.",
+                    t, currV.R(), forwV.R(), fMaxR);
+
             return;
          }
-         if (TMath::Abs(forw.fZ) > fMaxZ)
-         {
-            Float_t t = (fMaxZ - TMath::Abs(fV.fZ)) / TMath::Abs((forw.fZ - fV.fZ));
-            if (t < 0 || t > 1)
-	    {
-               Warning("TEveTrackPropagator::HelixToBounds",
-                       "In MaxZ crossing expected t>=0 && t<=1: t=%f, z1=%f, z2=%f, MaxZ=%f.",
-                       t, fV.fZ, forw.fZ, fMaxZ);
-               return;
-	    }
-            fPoints.push_back(fV + (forw-fV)*t);
-            ++fN;
-            return;
-         }
-         fH.Step(fV, p); fPoints.push_back(fV); ++fN;
+         TEveVector d(forwV);
+         d -= currV;
+         d *= t;
+         d += currV;
+         fPoints.push_back(d);
+         return;
       }
-      return;
+
+      // cross Z
+      else if (TMath::Abs(forwV.fZ) > fMaxZ)
+      {
+         Float_t t = (fMaxZ - TMath::Abs(currV.fZ)) / TMath::Abs((forwV.fZ - currV.fZ));
+         if (t < 0 || t > 1)
+         {
+            Warning("TEveTrackPropagator::HelixToBounds",
+                    "In MaxZ crossing expected t>=0 && t<=1: t=%f, z1=%f, z2=%f, MaxZ=%f.",
+                    t, currV.fZ, forwV.fZ, fMaxZ);
+            return;
+         }
+         TEveVector d(forwV -currV);
+         d *= t;
+         d +=currV;
+         fPoints.push_back(d);
+         return;
+      }
+
+      currV = forwV;
+      p =  forwP;
+      fPoints.push_back(currV);
+      np++;
    }
 }
 
@@ -264,61 +358,63 @@ Bool_t TEveTrackPropagator::HelixToVertex(TEveVector& v, TEveVector& p)
 {
    // Propagate charged particle with momentum p to vertex v.
 
-   InitHelix(p);
-   SetNumOfSteps();
+   if ( fMagFieldObj->IsConst()) fH.Update(p, fMagFieldObj->GetField(fV), kTRUE);
 
-   Float_t p0x = p.fX, p0y = p.fY;
-   Float_t zs  = fH.fLam*TMath::Abs(fH.fR*fH.fPhiStep);
-   Float_t maxrsq  = fMaxR * fMaxR;
-   Float_t fnsteps = (v.fZ - fV.fZ)/zs;
-   Int_t   nsteps  = Int_t((v.fZ - fV.fZ)/zs);
-   Float_t sinf = TMath::Sin(fnsteps*fH.fPhiStep); // final sin
-   Float_t cosf = TMath::Cos(fnsteps*fH.fPhiStep); // final cos
+   Float_t maxRsq = fMaxR*fMaxR;
 
-   // check max orbits
-   nsteps = TMath::Min(nsteps, fNLast - fN);
+   TEveVector4 currV (fV);
+   TEveVector4 forwV(fV);
+   TEveVector  forwP(p);
+
+   Int_t new_points  = 0;
+   Int_t first_point = fPoints.size();
+   Int_t np = fPoints.size();
+   Bool_t hitBounds = kFALSE;
+
+   while (!PointOverVertex(v, currV) && np < fNMax)
    {
-      if (nsteps > 0)
+      StepHelix(currV, p, forwV, forwP);
+
+      if (IsOutsideBounds(forwV, maxRsq, fMaxZ)) 
       {
-         // check offset and distribute it over all steps
-         Float_t xf = fV.fX + (p.fX*sinf - p.fY*(1 - cosf)) / fH.fA;
-         Float_t yf = fV.fY + (p.fY*sinf + p.fX*(1 - cosf)) / fH.fA;
-         fH.fXoff   = (v.fX - xf) / fnsteps;
-         fH.fYoff   = (v.fY - yf) / fnsteps;
-         TEveVector4 forw;
-         for (Int_t l=0; l<nsteps; l++)
-         {
-            fH.StepVertex(fV, p, forw);
-            if (fV.Perp2() > maxrsq || TMath::Abs(fV.fZ) > fMaxZ)
-               return kFALSE;
-            fH.Step(fV, p); fPoints.push_back(fV);
-            ++fN;
-         }
+         hitBounds = kTRUE;
+         TEveVector d = v-forwV;
+         break;
       }
-      // set time to the end point
-      fV.fT += TMath::Sqrt((fV.fX-v.fX)*(fV.fX-v.fX) +
-                           (fV.fY-v.fY)*(fV.fY-v.fY) +
-                           (fV.fZ-v.fZ)*(fV.fZ-v.fZ)) / fVelocity;
-      fV.fX = v.fX; fV.fY = v.fY; fV.fZ = v.fZ;
-      fPoints.push_back(fV);
-      ++fN;
+      currV = forwV;
+      p = forwP;
+      fPoints.push_back(currV);
+      ++ np;
+      ++new_points;
    }
-   { // rotate momentum for residuum
-      Float_t cosr = TMath::Cos((fnsteps-nsteps)*fH.fPhiStep);
-      Float_t sinr = TMath::Sin((fnsteps-nsteps)*fH.fPhiStep);
-      Float_t pxt = p.fX*cosr - p.fY*sinr;
-      Float_t pyt = p.fY*cosr + p.fX*sinr;
-      p.fX = pxt;
-      p.fY = pyt;
+
+   // debug 
+   if (0)
+   {
+      TEveVector d = v-currV;
+      Float_t af = d.Mag2()/fH.GetStepSize2();
+      if (af> 1)
+         printf("Helix propagation %d ended with %f of step distance \n",np,  af);
    }
-   { // calculate size of faked p.fX,py
-      Float_t pxf = (p0x*cosf - p0y*sinf)/TMath::Abs(fH.fA) + fH.fXoff/fH.fPhiStep;
-      Float_t pyf = (p0y*cosf + p0x*sinf)/TMath::Abs(fH.fA) + fH.fYoff/fH.fPhiStep;
-      Float_t fac = TMath::Sqrt((p0x*p0x + p0y*p0y) / (pxf*pxf + pyf*pyf));
-      p.fX = fac*pxf;
-      p.fY = fac*pyf;
+
+   // rotate for remaining time and add offset
+
+   Float_t af = (v-currV).Mag()/fH.fTStepSize;
+   fH.Update(p, fH.fB, kTRUE, af);
+   StepHelix(currV,p, forwV, forwP);
+   p = forwP;
+   TEveVector off(v); off -= currV;
+   off *= (1./currV.fT);
+   for(UInt_t i = first_point; i < fPoints.size(); ++i)
+   {
+      TEveVector4& X = fPoints[i];
+      X += off * X.fT;
    }
-   return kTRUE;
+
+   fPoints.push_back(v);
+   fV = fPoints.back();
+
+   return !hitBounds;
 }
 
 //______________________________________________________________________________
@@ -326,14 +422,14 @@ Bool_t TEveTrackPropagator::LineToVertex(TEveVector& v)
 {
    // Propagate neutral particle to vertex v.
 
-   fV.fT += TMath::Sqrt((fV.fX-v.fX)*(fV.fX-v.fX) +
-                        (fV.fY-v.fY)*(fV.fY-v.fY) +
-                        (fV.fZ-v.fZ)*(fV.fZ-v.fZ)) / fVelocity;
-   fV.fX = v.fX;
-   fV.fY = v.fY;
-   fV.fZ = v.fZ;
-   fPoints.push_back(fV);
+   TEveVector4 currV = v;
 
+   currV.fX = v.fX;
+   currV.fY = v.fY;
+   currV.fZ = v.fZ;
+   fPoints.push_back(currV);
+
+   fV = v;
    return kTRUE;
 }
 
@@ -343,6 +439,7 @@ void TEveTrackPropagator::LineToBounds(TEveVector& p)
    // Propagatate neutral particle with momentum p to bounds.
 
    Float_t tZ = 0, tR = 0, tB = 0;
+
    // time where particle intersect +/- fMaxZ
    if (p.fZ > 0) {
       tZ = (fMaxZ - fV.fZ)/p.fZ;
@@ -350,6 +447,7 @@ void TEveTrackPropagator::LineToBounds(TEveVector& p)
    else  if (p.fZ < 0 ) {
       tZ = (-1)*(fMaxZ + fV.fZ)/p.fZ;
    }
+
    // time where particle intersects cylinder
    Double_t a = p.fX*p.fX + p.fY*p.fY;
    Double_t b = 2*(fV.fX*p.fX + fV.fY*p.fY);
@@ -373,13 +471,12 @@ void TEveTrackPropagator::LineToBounds(TEveVector& p)
 Bool_t TEveTrackPropagator::HelixIntersectPlane(const TEveVector& p,
                                                 const TEveVector& point,
                                                 const TEveVector& normal,
-                                                      TEveVector& itsect)
+                                                TEveVector& itsect)
 {
-   InitHelix(p);
-   SetNumOfSteps(); // These are steps to bound, need it for starting step.
 
    TEveVector pos(fV);
    TEveVector mom(p);
+   if ( fMagFieldObj->IsConst()) fH.Update(mom, fMagFieldObj->GetField(pos), kTRUE);
 
    TEveVector n(normal);
    TEveVector delta = pos - point;
@@ -389,23 +486,25 @@ Bool_t TEveTrackPropagator::HelixIntersectPlane(const TEveVector& p,
       d = -d;
    }
 
+   TEveVector4 forwV;
+   TEveVector forwP;
    TEveVector4 pos4(pos);
    while (1)
    {
-      fH.Step(pos4, mom);
-      TEveVector new_pos = pos4;
-      Float_t new_d = (new_pos - point).Dot(n);
+      StepHelix(pos4, mom, forwV , forwP);
+      Float_t new_d = (forwV - point).Dot(n);
       if (new_d < d) {
          // We are going further away ... fail intersect.
          Warning("TEveTrackPropagator::HelixIntersectPlane", "going away from the plane.");
          return kFALSE;
       }
       if (new_d > 0) {
-         delta = new_pos - pos;
+         delta = forwV - pos;
          itsect = pos + delta * (d / (d - new_d));
          return kTRUE;
       }
-      pos = new_pos;
+      pos4 = forwV;
+      mom  = forwP;
    }
 }
 
@@ -450,7 +549,7 @@ Bool_t TEveTrackPropagator::IntersectPlane(const TEveVector& p,
    // Returns:
    //  kFALSE if intersection can not be found, kTRUE otherwise.
 
-   if (fCharge != 0 && TMath::Abs(fMagField) > 1e-5 && p.Perp2() > 1e-12)
+   if (fH.fCharge && fMagFieldObj && p.Perp2() > 1e-12)
       return HelixIntersectPlane(p, point, normal, itsect);
    else
       return LineIntersectPlane(p, point, normal, itsect);
@@ -483,20 +582,36 @@ void TEveTrackPropagator::RebuildTracks()
    {
       track = dynamic_cast<TEveTrack*>(*i);
       track->MakeTrack();
-      track->ElementChanged();
+      track->StampObjProps();
       ++i;
    }
 }
 
-/******************************************************************************/
-
 //______________________________________________________________________________
-void TEveTrackPropagator::SetMagField(Float_t x)
+void TEveTrackPropagator::SetMagField(Float_t bX, Float_t bY, Float_t bZ)
 {
    // Set constant magnetic field and rebuild tracks.
 
-   fMagField = x;
+   if (fMagFieldObj) delete fMagFieldObj;
+
+   fMagFieldObj = new TEveMagFieldConst(bX, bY, bZ);
    RebuildTracks();
+}
+
+//______________________________________________________________________________
+void TEveTrackPropagator::SetMagFieldObj(TEveMagField *mff)
+{
+   // Set constant magnetic field and rebuild tracks.
+  if (fMagFieldObj) delete fMagFieldObj;
+
+   fMagFieldObj = mff;
+   RebuildTracks();
+}
+
+//______________________________________________________________________________
+void TEveTrackPropagator::PrintMagField(Float_t x, Float_t y, Float_t z) const
+{
+   if (fMagFieldObj) fMagFieldObj->PrintField(x, y, z);
 }
 
 //______________________________________________________________________________
@@ -531,7 +646,7 @@ void TEveTrackPropagator::SetMinAng(Float_t x)
 {
    // Set minimum step angle and rebuild tracks.
 
-   fMinAng = x;
+   fH.fMinAng = x;
    RebuildTracks();
 }
 
@@ -540,7 +655,7 @@ void TEveTrackPropagator::SetDelta(Float_t x)
 {
    // Set maximum error and rebuild tracks.
 
-   fDelta = x;
+   fH.fDelta = x;
    RebuildTracks();
 }
 

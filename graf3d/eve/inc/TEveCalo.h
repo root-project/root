@@ -43,7 +43,9 @@ protected:
 
    Double_t      fPhi;
    Double_t      fPhiOffset;     // phi range +/- offset
-  
+
+   Bool_t        fAutoRange;     // set eta phi limits on DataChanged()
+
    Float_t       fBarrelRadius;  // barrel raidus in cm
    Float_t       fEndCapPos;     // end cap z coordinate in cm
 
@@ -62,19 +64,18 @@ protected:
 
    void SetupColorHeight(Float_t value, Int_t slice, Float_t& height) const;
 
-   virtual Float_t GetValToHeight() const;
-
    virtual void BuildCellIdCache() = 0;
 
 public:
-   TEveCaloViz(const Text_t* n="TEveCaloViz", const Text_t* t="");
-   TEveCaloViz(TEveCaloData* data, const Text_t* n="TEveCaloViz", const Text_t* t="");
+   TEveCaloViz(TEveCaloData* data=0, const Text_t* n="TEveCaloViz", const Text_t* t="");
 
    virtual ~TEveCaloViz();
 
    TEveCaloData* GetData() const { return fData; }
    virtual void  SetData(TEveCaloData* d);
    virtual void  DataChanged();
+
+   virtual Float_t GetValToHeight() const;
 
    Float_t GetDataSliceThreshold(Int_t slice) const;
    void    SetDataSliceThreshold(Int_t slice, Float_t val);
@@ -105,25 +106,27 @@ public:
    void             SetPalette(TEveRGBAPalette* p);
    TEveRGBAPalette* AssertPalette();
 
-   Bool_t  GetValueIsColor() const { return fValueIsColor;}
-   void  SetValueIsColor(Bool_t x) { fValueIsColor = x;}
+   Bool_t GetValueIsColor()   const { return fValueIsColor;}
+   void   SetValueIsColor(Bool_t x) { fValueIsColor = x;}
 
-
-   void SetEta(Float_t l, Float_t u);
-   Float_t GetEta() const { return (fEtaMin+fEtaMax)*0.5f;}
-   Float_t GetEtaMin() const {return fEtaMin;}
-   Float_t GetEtaMax() const {return fEtaMax;}
-   Float_t GetEtaRng() const {return fEtaMax-fEtaMin;}
+   void    SetEta(Float_t l, Float_t u);
+   Float_t GetEta()    const { return 0.5f*(fEtaMin+fEtaMax); }
+   Float_t GetEtaMin() const { return fEtaMin; }
+   Float_t GetEtaMax() const { return fEtaMax; }
+   Float_t GetEtaRng() const { return fEtaMax-fEtaMin; }
 
    virtual void SetPhi(Float_t phi)    { SetPhiWithRng(phi, fPhiOffset); }
    virtual void SetPhiRng(Float_t rng) { SetPhiWithRng(fPhi, rng); }
    virtual void SetPhiWithRng(Float_t x, Float_t r);
-   Float_t GetPhi() const { return fPhi;}
-   Float_t GetPhiMin() const {return fPhi-fPhiOffset;}
-   Float_t GetPhiMax() const {return fPhi+fPhiOffset;}
-   Float_t GetPhiRng() const {return fPhiOffset*2;}
+   Float_t GetPhi()    const { return fPhi; }
+   Float_t GetPhiMin() const { return fPhi-fPhiOffset; }
+   Float_t GetPhiMax() const { return fPhi+fPhiOffset; }
+   Float_t GetPhiRng() const { return 2.0f*fPhiOffset; }
 
-   void InvalidateCellIdCache() { fCellIdCacheOK=kFALSE; ResetBBox(); } // compute bbox
+   Bool_t  GetAutoRange()   const { return fAutoRange; }
+   void    SetAutoRange(Bool_t x) { fAutoRange = x; }
+
+   void InvalidateCellIdCache() { fCellIdCacheOK=kFALSE; ResetBBox(); }
 
    virtual void Paint(Option_t* option="");
 
@@ -148,8 +151,7 @@ protected:
    virtual void BuildCellIdCache();
 
 public:
-   TEveCalo3D(const Text_t* n="TEveCalo3D", const Text_t* t=""):TEveCaloViz(n, t){}
-   TEveCalo3D(TEveCaloData* data): TEveCaloViz(data) { SetElementName("TEveCalo3D");}
+   TEveCalo3D(TEveCaloData* d=0, const Text_t* n="TEveCalo3D", const Text_t* t="xx"):TEveCaloViz(d, n, t){}
    virtual ~TEveCalo3D() {}
    virtual void ComputeBBox();
 
@@ -171,6 +173,7 @@ private:
 
 protected:
    std::vector<TEveCaloData::vCellId_t*>   fCellLists;
+   std::vector<Int_t>                      fBinIds;
 
    virtual void BuildCellIdCache();
 
@@ -205,6 +208,8 @@ private:
 protected:
    TEveCaloData::vCellId_t fCellList;
 
+   Bool_t                  fTopViewUseMaxColor;
+   Color_t                 fTopViewTowerColor;
    Color_t                 fFontColor;
    Color_t                 fGridColor;
    Color_t                 fPlaneColor;
@@ -213,7 +218,9 @@ protected:
    Int_t                   fNZSteps; // Z axis label step in GeV
    Float_t                 fZAxisStep;
 
-   Int_t                   fBinWidth; // distance in pixels of projected up and low edge
+   Bool_t                  fAutoRebin;
+   Int_t                   fPixelsPerBin;
+   Bool_t                  fNormalizeRebin;
 
    EProjection_e           fProjection;
    E2DMode_e               f2DMode;
@@ -222,13 +229,22 @@ protected:
    Bool_t                  fDrawHPlane;
    Float_t                 fHPlaneVal;
 
+   Int_t                   fTowerPicked;
+
    virtual void BuildCellIdCache();
 
 public:
-   TEveCaloLego(const Text_t* n="TEveCaloLego", const Text_t* t="");
-   TEveCaloLego(TEveCaloData* data);
+   TEveCaloLego(TEveCaloData* data=0, const Text_t* n="TEveCaloLego", const Text_t* t="");
 
    virtual ~TEveCaloLego(){}
+
+   virtual void  SetData(TEveCaloData* d);
+
+   Bool_t   GetTopViewUseMaxColor() const { return fTopViewUseMaxColor; }
+   void     SetTopViewUseMaxColor(Bool_t x) { fTopViewUseMaxColor = x; }
+
+   Color_t  GetTopViewTowerColor() const { return fTopViewTowerColor; }
+   void     SetTopViewTowerColor(Color_t x) { fTopViewTowerColor = x; }
 
    Color_t  GetFontColor() const { return fFontColor; }
    void     SetFontColor(Color_t ci) { fFontColor=ci; }
@@ -245,8 +261,14 @@ public:
    Int_t    GetNZSteps() const { return fNZSteps; }
    void     SetNZSteps(Int_t s) { fNZSteps = s;}
 
-   Int_t    GetBinWidth() const { return fBinWidth; }
-   void     SetBinWidth(Int_t bw) { fBinWidth = bw; }
+   Int_t    GetPixelsPerBin() const { return fPixelsPerBin; }
+   void     SetPixelsPerBin(Int_t bw) { fPixelsPerBin = bw; }
+
+   Bool_t   GetAutoRebin() const { return fAutoRebin; }
+   void     SetAutoRebin(Bool_t s) { fAutoRebin = s;}
+
+   Bool_t   GetNormalizeRebin() const { return fNormalizeRebin; }
+   void     SetNormalizeRebin(Bool_t s) { fNormalizeRebin = s; fCellIdCacheOK=kFALSE;}
 
    void           SetProjection(EProjection_e p) { fProjection = p; }
    EProjection_e  GetProjection() { return fProjection; }
@@ -262,6 +284,9 @@ public:
 
    Float_t  GetHPlaneVal() const { return fHPlaneVal; }
    void     SetHPlaneVal(Float_t s) { fHPlaneVal = s;}
+
+   Int_t    GetTowerPicked() const { return fTowerPicked; }
+   void     SetTowerPicked(Int_t p) { fTowerPicked = p;}
 
    virtual void ComputeBBox();
 

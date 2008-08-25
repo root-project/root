@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include "TEveText.h"
+#include "TEveTrans.h"
 
 #include "TGLFontManager.h"
 #include "TObjArray.h"

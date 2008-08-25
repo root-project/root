@@ -323,7 +323,7 @@ void TGLSAViewer::CreateFrames()
       compositeFrame = new TGCompositeFrame(fFrame, 100, 100, kHorizontalFrame | kRaisedFrame);
       fFrame->AddFrame(compositeFrame, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
 
-      fLeftVerticalFrame = new TGVerticalFrame(compositeFrame, 180, 10, kFixedWidth);
+      fLeftVerticalFrame = new TGVerticalFrame(compositeFrame, 195, 10, kFixedWidth);
       compositeFrame->AddFrame(fLeftVerticalFrame, new TGLayoutHints(kLHintsLeft | kLHintsExpandY , 2, 2, 2, 2));
 
       const TGWindow* cw =  fFrame->GetClient()->GetRoot();

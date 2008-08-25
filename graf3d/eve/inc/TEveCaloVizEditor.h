@@ -44,7 +44,7 @@ protected:
    TEveGValuator             *fPhi;
    TEveGValuator             *fPhiOffset;
 
-   TGVerticalFrame           *fTowerFrame;
+   TGVerticalFrame           *fDataFrame;
    TGVerticalFrame           *fSliceFrame;
 
 public:

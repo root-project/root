@@ -76,26 +76,30 @@ void TEveLegoOverlay::DrawSlider(TGLRnrCtx& rnrCtx)
       glVertex2f(-w, fSliderH);
       glEnd();
    }
+   
+   // drawing
+   if ( fCalo->GetData() && fCalo->GetData()->Empty() == kFALSE)
+   {
+      // axis
+      Double_t maxVal = fCalo->GetMaxVal();
+      TGLRect& wprt = rnrCtx.RefCamera().RefViewport();
+      Int_t fs = Int_t(wprt.Height()*fSliderH* fAxisAtt.GetLabelSize());
+      fAxisAtt.SetRng(0, maxVal);
+      fAxisAtt.RefTMOff(0).X() = -maxVal*0.03;
+      fAxisAtt.SetAbsLabelFontSize(fs);
 
-   // draw axis
-   Double_t maxVal = fCalo->GetMaxVal();
-   TGLRect& wprt = rnrCtx.RefCamera().RefViewport();
-   Int_t fs = Int_t(wprt.Height()*fSliderH* fAxisAtt.GetLabelSize());
-   fAxisAtt.SetRng(0, maxVal);
-   fAxisAtt.RefTMOff(0).X() = -maxVal*0.03;
-   fAxisAtt.SetAbsLabelFontSize(fs);
+      glPushMatrix();
+      glScalef( fSliderH/maxVal, fSliderH/maxVal, 1.);
+      fAxisPainter.Paint(rnrCtx, fAxisAtt);
+      glPopMatrix();
 
-   glPushMatrix();
-   glScalef( fSliderH/maxVal, fSliderH/maxVal, 1.);
-   fAxisPainter.Paint(rnrCtx, fAxisAtt);
-   glPopMatrix();
-
-   // marker
-   TGLUtil::Color((fActiveID == 2) ? fActiveCol : 3);
-   glPointSize(8);
-   glBegin(GL_POINTS);
-   glVertex3f(0, fSliderVal*fSliderH, -0.1);
-   glEnd();
+      // marker
+      TGLUtil::Color((fActiveID == 2) ? fActiveCol : 3);
+      glPointSize(8);
+      glBegin(GL_POINTS);
+      glVertex3f(0, fSliderVal*fSliderH, -0.1);
+      glEnd();
+   }
 }
 
 /******************************************************************************/

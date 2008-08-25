@@ -31,22 +31,24 @@ public:
          kBT_Undef,           // unknown-ignored
          kBT_FreeBox,         // arbitrary box: specify 8*(x,y,z) box corners
          kBT_AABox,           // axis-aligned box: specify (x,y,z) and (w, h, d)
-         kBT_AABoxFixedDim,    // axis-aligned box w/ fixed dimensions: specify (x,y,z)
-         kBT_Cone
+         kBT_AABoxFixedDim,   // axis-aligned box w/ fixed dimensions: specify (x,y,z)
+         kBT_Cone,
+         kBT_EllipticCone
       };
 
 protected:
 
    struct BFreeBox_t       : public DigitBase_t { Float_t fVertices[24]; };
 
-   struct BOrigin_t        : public DigitBase_t {
-     virtual ~BOrigin_t() {} ; Float_t fA, fB, fC; };
+   struct BOrigin_t        : public DigitBase_t { Float_t fA, fB, fC; virtual ~BOrigin_t() {} };
 
    struct BAABox_t         : public BOrigin_t   { Float_t fW, fH, fD; };
 
    struct BAABoxFixedDim_t : public BOrigin_t {};
 
-   struct BCone_t          : public DigitBase_t { TEveVector fPos, fDir; Float_t fR; };
+   struct BCone_t          : public DigitBase_t { TEveVector fPos, fDir; Float_t fR; virtual ~BCone_t() {} };
+
+   struct BEllipticCone_t  : public BCone_t  { Float_t fR2, fAngle; };
 
 protected:
    EBoxType_e        fBoxType;      // Type of rendered box.
@@ -71,6 +73,7 @@ public:
    void AddBox(Float_t a, Float_t b, Float_t c);
 
    void AddCone(const TEveVector& pos, const TEveVector& dir, Float_t r);
+   void AddEllipticCone(const TEveVector& pos, const TEveVector& dir, Float_t r, Float_t r2, Float_t angle=0);
 
    virtual void ComputeBBox();
    // virtual void Paint(Option_t* option = "");

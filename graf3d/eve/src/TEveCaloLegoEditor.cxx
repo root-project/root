@@ -30,6 +30,8 @@ TEveCaloLegoEditor::TEveCaloLegoEditor(const TGWindow *p, Int_t width, Int_t hei
                                        UInt_t options, Pixel_t back) :
    TGedFrame(p, width, height, options | kVerticalFrame, back),
    fM(0),
+   fTopViewUseMaxColor(0),
+   fTopViewTowerColor(0),
    fGridColor(0),
    fFontColor(0),
    fPlaneColor(0),
@@ -37,18 +39,36 @@ TEveCaloLegoEditor::TEveCaloLegoEditor(const TGWindow *p, Int_t width, Int_t hei
 
    fNZSteps(0),
 
-   fBinWidth(0),
-
    fProjection(0),
    f2DMode(0),
-   fBoxMode(0)
+   fBoxMode(0),
+
+   fRebinFrame(0),
+   fAutoRebin(0),
+   fPixelsPerBin(0),
+   fNormalizeRebin(0)
+
 {
    // Constructor.
 
    MakeTitle("TEveCaloLego");
 
-   {
-      // grid color
+   {  // tower color in 2d, top-view
+      TGHorizontalFrame* f = new TGHorizontalFrame(this);
+      TGLabel* lab = new TGLabel(f, "Tower-2D:");
+      f->AddFrame(lab, new TGLayoutHints(kLHintsLeft|kLHintsBottom, 1, 8, 1, 1));
+
+      fTopViewTowerColor = new TGColorSelect(f, 0, -1);
+      f->AddFrame(fTopViewTowerColor, new TGLayoutHints(kLHintsLeft|kLHintsTop, 3, 1, 0, 1));
+      fTopViewTowerColor->Connect("ColorSelected(Pixel_t)", "TEveCaloLegoEditor", this, "DoTopViewTowerColor(Pixel_t)");
+
+      fTopViewUseMaxColor = new TGCheckButton(f, "Auto color");
+      f->AddFrame(fTopViewUseMaxColor); // new TGLayoutHints());
+      fTopViewUseMaxColor->Connect("Clicked()", "TEveCaloLegoEditor", this, "DoTopViewUseMaxColor()");
+
+      AddFrame(f, new TGLayoutHints(kLHintsTop, 1, 1, 1, 0));
+   }
+   {  // grid color
       TGHorizontalFrame* f = new TGHorizontalFrame(this);
       TGLabel* lab = new TGLabel(f, "GridColor:");
       f->AddFrame(lab, new TGLayoutHints(kLHintsLeft|kLHintsBottom, 1, 10, 1, 1));
@@ -96,7 +116,7 @@ TEveCaloLegoEditor::TEveCaloLegoEditor(const TGWindow *p, Int_t width, Int_t hei
    }
 
    Int_t lw = 80;
-   fNZSteps = new TEveGValuator(this, "NZTickMarks:", 90, 0);
+   fNZSteps = new TEveGValuator(this, "ZTickMarks:", 90, 0);
    fNZSteps->SetLabelWidth(lw);
    fNZSteps->SetNELength(5);
    fNZSteps->SetShowSlider(kFALSE);
@@ -106,15 +126,6 @@ TEveCaloLegoEditor::TEveCaloLegoEditor(const TGWindow *p, Int_t width, Int_t hei
    fNZSteps->Connect("ValueSet(Double_t)", "TEveCaloLegoEditor", this, "DoNZSteps()");
    AddFrame(fNZSteps, new TGLayoutHints(kLHintsTop, 4, 2, 1, 2));
 
-   fBinWidth = new TEveGValuator(this, "BinWidth:", 90, 0);
-   fBinWidth->SetLabelWidth(lw);
-   fBinWidth->SetNELength(5);
-   fBinWidth->SetShowSlider(kFALSE);
-   fBinWidth->Build();
-   fBinWidth->SetLimits(1, 20);
-   fBinWidth->SetToolTip("Number of labels along the Z axis.");
-   fBinWidth->Connect("ValueSet(Double_t)", "TEveCaloLegoEditor", this, "DoBinWidth()");
-   AddFrame(fBinWidth, new TGLayoutHints(kLHintsTop, 4, 2, 1, 2));
 
    fProjection = MakeLabeledCombo("Project:", 1);
    fProjection->AddEntry("Auto", TEveCaloLego::kAuto);
@@ -132,6 +143,32 @@ TEveCaloLegoEditor::TEveCaloLegoEditor(const TGWindow *p, Int_t width, Int_t hei
    fBoxMode->AddEntry("Back",  TEveCaloLego::kBack);
    fBoxMode->AddEntry("FrontBack",  TEveCaloLego::kFrontBack);
    fBoxMode->Connect("Selected(Int_t)", "TEveCaloLegoEditor", this, "DoBoxMode()");
+
+   MakeRebinFrame();
+}
+
+//______________________________________________________________________________
+void  TEveCaloLegoEditor::MakeRebinFrame()
+{
+   fRebinFrame = CreateEditorTabSubFrame("Rebin");
+
+   fAutoRebin  = new TGCheckButton(fRebinFrame, "AutoRebin");
+   fRebinFrame->AddFrame(fAutoRebin, new TGLayoutHints(kLHintsLeft, 3, 5, 3, 0));
+   fAutoRebin->Connect("Toggled(Bool_t)", "TEveCaloLegoEditor", this, "DoAutoRebin()");
+
+   fNormalizeRebin  = new TGCheckButton(fRebinFrame, "NormalizeRebin");
+   fRebinFrame->AddFrame(fNormalizeRebin, new TGLayoutHints(kLHintsLeft, 3, 5, 3, 0));
+   fNormalizeRebin->Connect("Toggled(Bool_t)", "TEveCaloLegoEditor", this, "DoNormalize()");
+
+   fPixelsPerBin = new TEveGValuator(fRebinFrame, "PixelsPerBin:", 90, 0);
+   fPixelsPerBin->SetLabelWidth(80);
+   fPixelsPerBin->SetNELength(5);
+   fPixelsPerBin->SetShowSlider(kFALSE);
+   fPixelsPerBin->Build();
+   fPixelsPerBin->SetLimits(1, 50);
+   fPixelsPerBin->SetToolTip("Number of labels along the Z axis.");
+   fPixelsPerBin->Connect("ValueSet(Double_t)", "TEveCaloLegoEditor", this, "DoPixelsPerBin()");
+   fRebinFrame->AddFrame(fPixelsPerBin, new TGLayoutHints(kLHintsTop, 4, 2, 1, 2));
 }
 
 //______________________________________________________________________________
@@ -163,6 +200,9 @@ void TEveCaloLegoEditor::SetModel(TObject* obj)
    // Set model object.
 
    fM = dynamic_cast<TEveCaloLego*>(obj);
+
+   fTopViewUseMaxColor->SetState(fM->GetTopViewUseMaxColor() ? kButtonDown : kButtonUp);
+   fTopViewTowerColor->SetColor(TColor::Number2Pixel(fM->GetTopViewTowerColor()), kFALSE);
    fGridColor->SetColor(TColor::Number2Pixel(fM->GetGridColor()), kFALSE);
    fFontColor->SetColor(TColor::Number2Pixel(fM->GetFontColor()), kFALSE);
 
@@ -170,11 +210,32 @@ void TEveCaloLegoEditor::SetModel(TObject* obj)
    fTransparency->SetNumber(fM->GetPlaneTransparency());
 
    fNZSteps->SetValue(fM->GetNZSteps());
-   fBinWidth->SetValue(fM->GetBinWidth());
 
    fProjection->Select(fM->GetProjection(), kFALSE);
    f2DMode->Select(fM->Get2DMode(), kFALSE);
    fBoxMode->Select(fM->GetBoxMode(), kFALSE);
+
+   fPixelsPerBin->SetValue(fM->GetPixelsPerBin());
+   fAutoRebin->SetState(fM->GetAutoRebin() ? kButtonDown : kButtonUp);
+   fNormalizeRebin->SetState(fM->GetNormalizeRebin() ? kButtonDown : kButtonUp);
+}
+
+//______________________________________________________________________________
+void TEveCaloLegoEditor::DoTopViewUseMaxColor()
+{
+   // Slot for TopViewUseMaxColor.
+
+   fM->SetTopViewUseMaxColor(fTopViewUseMaxColor->IsOn());
+   Update();
+}
+
+//______________________________________________________________________________
+void TEveCaloLegoEditor::DoTopViewTowerColor(Pixel_t pixel)
+{
+   // Slot for TopViewTowerColor.
+
+   fM->SetTopViewTowerColor(Color_t(TColor::GetColor(pixel)));
+   Update();
 }
 
 //______________________________________________________________________________
@@ -213,14 +274,6 @@ void TEveCaloLegoEditor::DoNZSteps()
    Update();
 }
 
-//______________________________________________________________________________
-void TEveCaloLegoEditor::DoBinWidth()
-{
-   // Slot for BinWidth.
-
-   fM->SetBinWidth((Int_t)fBinWidth->GetValue());
-   Update();
-}
 
 //______________________________________________________________________________
 void TEveCaloLegoEditor::DoProjection()
@@ -255,5 +308,28 @@ void TEveCaloLegoEditor::DoTransparency()
    // Slot for Transparency.
 
    fM->SetPlaneTransparency((UChar_t)(fTransparency->GetNumber()));
+   Update();
+}
+
+//______________________________________________________________________________
+void TEveCaloLegoEditor::DoPixelsPerBin()
+{
+   // Slot for PixelsPerBin.
+
+   fM->SetPixelsPerBin((Int_t)fPixelsPerBin->GetValue());
+   Update();
+}
+
+//______________________________________________________________________________
+void TEveCaloLegoEditor::DoAutoRebin()
+{
+   fM->SetAutoRebin(fAutoRebin->IsOn());
+   Update();
+}
+
+//______________________________________________________________________________
+void TEveCaloLegoEditor::DoNormalize()
+{
+   fM->SetNormalizeRebin(fNormalizeRebin->IsOn());
    Update();
 }

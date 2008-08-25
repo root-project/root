@@ -224,8 +224,8 @@ Float_t TEveCalo3DGL::RenderEndCapCell(const TEveCaloData::CellData_t &cellData,
    using namespace TMath;
    Float_t z1, r1In, r1Out, z2, r2In, r2Out;
 
-   z1    = TMath::Sign(fM->fEndCapPos + offset, cellData.ZSideSign());
-   z2    = z1 + TMath::Sign(towerH, cellData.ZSideSign());
+   z1    = TMath::Sign(fM->fEndCapPos + offset, cellData.Eta());
+   z2    = z1 + TMath::Sign(towerH, cellData.Eta());
 
    r1In  = z1*Tan(cellData.ThetaMin());
    r2In  = z2*Tan(cellData.ThetaMin());

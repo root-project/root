@@ -57,9 +57,6 @@ void test_compound()
    TEveProjectionManager* mng = new TEveProjectionManager();
    scene->AddElement(mng);
    TEveProjectionAxes* axes = new TEveProjectionAxes(mng);
-   axes->SetText("TEveProjections demo");
-   axes->SetFontFile("comicbd");
-   axes->SetFontSize(20);
    scene->AddElement(axes);
    gEve->AddToListTree(axes, kTRUE);
    gEve->AddToListTree(mng, kTRUE);
