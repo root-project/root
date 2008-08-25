@@ -155,7 +155,7 @@ public:
    virtual  void        SetFont(const char *fontName, Bool_t local = kTRUE);
    virtual  void        SetTextColor(Pixel_t color, Bool_t local = kTRUE);
    virtual  void        SetTextColor(TColor *color, Bool_t local = kTRUE);
-   virtual  void        SetText(const char *text);                               //*MENU*
+   virtual  void        SetText(const char *text, Bool_t emit = kTRUE);          //*MENU*
    virtual  void        SetToolTipText(const char *text, Long_t delayms = 500);  //*MENU*
    virtual  void        SetMaxLength(Int_t maxlen);                              //*MENU*
    virtual  void        SelectAll();

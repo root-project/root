@@ -106,7 +106,7 @@ public:
    virtual void SetTime(Int_t hour, Int_t min, Int_t sec);
    virtual void SetDate(Int_t year, Int_t month, Int_t day);
    virtual void SetHexNumber(ULong_t val);
-   virtual void SetText(const char* text);
+   virtual void SetText(const char* text, Bool_t emit = kTRUE);
 
    virtual Double_t GetNumber() const;
    virtual Long_t   GetIntNumber() const;

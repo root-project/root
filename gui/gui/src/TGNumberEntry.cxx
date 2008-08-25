@@ -1202,14 +1202,14 @@ void TGNumberEntryField::SetHexNumber(ULong_t val)
 }
 
 //______________________________________________________________________________
-void TGNumberEntryField::SetText(const char *text)
+void TGNumberEntryField::SetText(const char *text, Bool_t emit)
 {
    // Set the value (text format).
 
    char buf[256];
    strncpy(buf, text, sizeof(buf) - 1);
    EliminateGarbage(buf, fNumStyle, fNumAttr);
-   TGTextEntry::SetText(buf);
+   TGTextEntry::SetText(buf, emit);
    fNeedsVerification = kFALSE;
 }
 
