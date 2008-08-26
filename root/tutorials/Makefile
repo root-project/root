@@ -11,31 +11,25 @@ TEST_TARGETS += $(TUTORIALSTESTS) $(TUTORIALSTESTS_CC)
 # don't run these, they will fail and need to be fixed.
 
 TUTORIALSTESTS_NONBATCH := \
-  geom/building geom/cheongwadae geom/geomAlice geom/geomAlice_itsv \
-  geom/geomAtlas geom/geomBrahms geom/na49geomfile geom/lego geom/na49view \
-  geom/robot geom/shapes geom/tank geom/station2 geom/station1 geom/south_gate \
-  gl/glViewerExercise gl/glViewerLOD gl/nucleus \
-  gl/viewer3DLocal gl/viewer3DMaster \
-  gui/buttongroupState gui/buttonTest gui/calendar gui/games gui/guilabels \
-  gui/QtFileDialog gui/QtMultiFileDialog gui/guiWithCINT gui/mditest \
-  gui/Slider3Demo gui/textEntries \
+  geom/% \
+  gl/% \
+  gui/% \
   hist/exec1 hist/exec2 \
-  image/img2pad image/galaxy_image image/hist2image \
+  image/% \
   graphics/psview graphics/gtime \
-  tree/tvdemo
+  tree/tvdemo \
+  eve/%
 
 TUTORIALSTESTS_VETO := htmlex  rootalias \
   fft/FFT \
-  fit/fit1_C  fit/TwoHistoFit2D fit/line3Dfit\
-  foam/foam_demo foam/foam_demopers \
+  fit/fit1_C  fit/TwoHistoFit2D fit/line3Dfit \
+  foam/% \
   math/Bessel math/LegendreAssoc math/Legendre math/mathmoreIntegration \
-  math/normalDist \
-  math/tStudent net/authserv net/hcons net/hprod net/hserv2 net/hserv \
-  net/LDAPExample net/pserv net/spyserv net/TestAuth \
-  proof/getProof proof/runProof proof/ProofSimple \
-  pythia/pythiaExample pythia/pythia8 \
-  sql/sqlcanvas \
-  sql/sqlcreatedb sql/sqlfilldb sql/sqlselect \
+  math/normalDist math/tStudent \
+  net/% \
+  proof/% \
+  pythia/% \
+  sql/% \
   tree/hsimpleProxy tree/tree0 tree/tree2a tree/tree4 \
   tree/copytree2 tree/copytree3 tree/copytree
 
@@ -149,3 +143,4 @@ saxexample.xml: $(TUTDIR)/xml/saxexample.xml
 
 xml/DOMParsePerson.log xml/DOMRecursive.log : person.xml person.dtd
 xml/SAXHandler.log: saxexample.xml
+roofit/rf503_wspaceread_call.C: roofit/rf502_wspacewrite.log
