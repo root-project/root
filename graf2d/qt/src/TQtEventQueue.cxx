@@ -36,7 +36,7 @@ TQtEventQueue::TQtEventQueue(bool autoDelete): QPtrList<Event_t> ()
    setAutoDelete(autoDelete); 
 }
 #else /* QT_VERSION */
-TQtEventQueue::TQtEventQueue(bool autoDelete): QQueue<const Event_t *> ()
+TQtEventQueue::TQtEventQueue(bool /*autoDelete*/): QQueue<const Event_t *> ()
 { 
   //  If auto-deleting is turned on, all the items in a collection 
   //  are deleted when the collection itself is deleted.
