@@ -405,6 +405,7 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                         else
                            fFileInfo->fFilename = gSystem->ConcatFileName(fFc->GetDirectory(),
                                                                           fTbfname->GetString());
+                        fFileInfo->fFilename = StrDup(gSystem->UnixPathName(fFileInfo->fFilename));
                      }
                      if (fCheckB && (fCheckB->GetState() == kButtonDown))
                         fFileInfo->fOverwrite = kTRUE;
