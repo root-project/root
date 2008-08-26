@@ -18,6 +18,11 @@
 
 #include <TAxis.h>
 
+#ifdef WIN32
+#include <Windows4root.h>
+#pragma comment(lib, "OpenGL32.lib")
+#endif
+
 #include <GL/gl.h>
 
 

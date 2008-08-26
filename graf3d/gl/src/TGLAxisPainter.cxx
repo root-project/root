@@ -148,7 +148,7 @@ void TGLAxisPainter::FormAxisValue(Float_t wlabel, char* label) const
 //______________________________________________________________________________
 void TGLAxisPainter::SetTextFormat(Double_t bw1)
 {
-   // Construct print format.
+   // Construct print format from given primary bin width.
 
    Double_t absMax = TMath::Max(TMath::Abs(fAtt->fMin),TMath::Abs(fAtt->fMax));
    Double_t epsilon = 1e-5;
@@ -159,7 +159,7 @@ void TGLAxisPainter::SetTextFormat(Double_t bw1)
    Double_t xmicros = TMath::Power(10,-fMaxDigits);
    if ( bw1 < xmicros && absMaxLog<0)
    {
-      // First case : bw1 less than 0.001
+      // First case : bin width less than 0.001
       fExp = (Int_t)absMaxLog;
       if (fExp%3 == 1) fExp += TMath::Sign(2, fExp);
       if (fExp%3 == 2) fExp += TMath::Sign(1, fExp);
@@ -169,8 +169,9 @@ void TGLAxisPainter::SetTextFormat(Double_t bw1)
    else
    {
       // Use x 10 n format. (only powers of 3 allowed)
-      Int_t  clog = (absMax > 1) ? Int_t(absMaxLog) : TMath::Log10(absMax*0.0001);
-      clog = clog + 1 + epsilon; 
+      Float_t af = (absMax > 1) ? absMaxLog : TMath::Log10(absMax*0.0001);
+      af += epsilon;
+      Int_t clog = Int_t(af)+1; 
 
       if (clog > fMaxDigits) {
          while (1) {
