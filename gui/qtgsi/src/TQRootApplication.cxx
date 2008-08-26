@@ -34,6 +34,11 @@ void qMessageOutput( QtMsgType type, const char *msg )
       case QtFatalMsg:
          fprintf( stderr, "QtRoot-Fatal: \n %s\n", msg );
          abort();         // dump core on purpose
+         break;
+      case QtCriticalMsg:
+         fprintf( stderr, "QtRoot-Fatal: \n %s\n", msg );
+         abort();         // dump core on purpose
+         break;
    }
 }
 
