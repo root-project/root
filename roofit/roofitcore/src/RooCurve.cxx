@@ -345,14 +345,14 @@ void RooCurve::addPoints(const RooAbsFunc &func, Double_t xlo, Double_t xhi,
 
   addPoint(xlo,yval[0]);
 
-  list<Double_t>::iterator iter = xval->begin() ;
-  x1 = *iter ;
+  list<Double_t>::iterator iter2 = xval->begin() ;
+  x1 = *iter2 ;
   step=1 ;
   while(true) {
     x1= x2;
-    iter++ ;
-    x2= *iter ;
-    if (iter==xval->end()) {
+    iter2++ ;
+    x2= *iter2 ;
+    if (iter2==xval->end()) {
       break ;
     }
     addRange(func,x1,x2,yval[step-1],yval[step],prec*yrangeEst,minDx,numee,doEEVal,eeVal);
