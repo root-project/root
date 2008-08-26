@@ -941,7 +941,7 @@ Int_t TGQt::InitWindow(ULong_t window)
    wid->setCursor(*fCursors[kCross]);
    if (parent && gDebug==3)
    {
-      fprintf(stderr," ---- >  New Canvas window %p with the parent %s parent id=%p\n",wid, (const char *)parent->name(), rootwid(parent));
+      fprintf(stderr," ---- >  New Canvas window %p with the parent %s parent id=%p\n",wid, (const char *)parent->name(), (void*)rootwid(parent));
    }
    Int_t id = fWidgetArray->GetFreeId(wid);
    // The default mode is the double buffer mode
