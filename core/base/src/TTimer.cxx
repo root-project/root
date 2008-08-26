@@ -13,8 +13,13 @@
 //                                                                      //
 // TTimer                                                               //
 //                                                                      //
-// Handles synchronous and a-synchronous timer events. You can use      //
-// this class in one of the following ways:                             //
+// Handles synchronous and a-synchronous timer events.                  //
+// 1. synchronous timer is registered into TSystem and is processed     //
+//    within the standard ROOT event-loop.                              //
+// 2. asynchronous timer is passed to the operating system which sends  //
+//    an external signal to ROOT and thus interrupts its event-loop.    //
+//                                                                      //
+// You can use this class in one of the following ways:                 //
 //    - Sub-class TTimer and override the Notify() method.              //
 //    - Re-implement the TObject::HandleTimer() method in your class    //
 //      and pass a pointer to this object to timer, see the SetObject() //
@@ -33,8 +38,8 @@
 //                      myObject, "TimerDone()");                       //
 //       timer->Start(2000, kTRUE);   // 2 seconds single-shot          //
 //                                                                      //
-//    // Timeout signal is emitted repeadetly with minimum timeout      //
-//    // timer->Start(0, kFALSE);                                       //
+//  To emit the Timeout signal repeadetly with minimum timeout:         //
+//       timer->Start(0, kFALSE);                                       //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
