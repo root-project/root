@@ -83,8 +83,8 @@ void TQtApplication::CreateQApplication(int &argc, char ** argv, bool GUIenabled
        // Check whether we want to debug the Qt X11
        QString fatalWarnings = gSystem->Getenv("QT_FATAL_WARNINGS");
        if (fatalWarnings.contains("1")) {
-          int argC = 2;
-          static char *argV[] = {"root.exe", "-sync" };
+          //int argC = 2;
+          //static char *argV[] = {"root.exe", "-sync" };
           fprintf(stderr," ATTENTION. the env variable \"QT_FATAL_WARNIGNS\" was defined. The special debug option has  been turned on. argc = %d, argv = %s %s\n", argc,argv[0],argv[1]);
 //          new QApplication(argC,argV,GUIenabled);
           new QApplication(argc,argv,GUIenabled);
