@@ -703,8 +703,6 @@ void TEveCaloLegoGL::DrawHistBase(TGLRnrCtx &rnrCtx) const
 {
    // Draw basic histogram components: x-y grid
 
-   using namespace TMath;
-
    Float_t eta0 = fM->fEtaMin;
    Float_t eta1 = fM->fEtaMax;
    Float_t phi0 = fM->GetPhiMin();
@@ -728,25 +726,21 @@ void TEveCaloLegoGL::DrawHistBase(TGLRnrCtx &rnrCtx) const
    glVertex2f(eta0, phi1);
    glVertex2f(eta1, phi1);
 
-   Float_t val;
-   Int_t i;
-
    // eta grid
-   Int_t eFirst = fEtaAxis->FindBin(eta0);
-   i = eFirst;
-   val= fEtaAxis->GetBinUpEdge(i);
+   Int_t   eFirst = fEtaAxis->FindBin(eta0);
+   Int_t   bin    = eFirst;
+   Float_t val    = fEtaAxis->GetBinUpEdge(bin);
    while (val < eta1)
    {
       glVertex2f(val, phi0);
       glVertex2f(val, phi1);
-
-      i++;
-      val= fEtaAxis->GetBinUpEdge(i);
+      ++bin;
+      val = fEtaAxis->GetBinUpEdge(bin);
    }
 
    // phi grid
    Float_t y0, y1;
-   for (Int_t i=1; i<=fPhiAxis->GetNbins(); i++)
+   for (Int_t i=1; i<=fPhiAxis->GetNbins(); ++i)
    {
       y0 = fPhiAxis->GetBinUpEdge(i);
       y1 = fPhiAxis->GetBinUpEdge(i);
@@ -766,7 +760,7 @@ void TEveCaloLegoGL::DrawHistBase(TGLRnrCtx &rnrCtx) const
 
    if (!fM->fData->Empty())
    {
-      if ( fM->fProjection == TEveCaloLego::k3D || rnrCtx.RefCamera().GetCamBase().GetBaseVec(1).Z() == 0)
+      if (fM->fProjection == TEveCaloLego::k3D || rnrCtx.RefCamera().GetCamBase().GetBaseVec(1).Z() == 0)
          DrawZScales3D(rnrCtx, eta0, eta1, phi0, phi1);
 
       if (fM->fProjection == TEveCaloLego::k2D || rnrCtx.RefCamera().GetCamBase().GetBaseVec(1).Z() != 0)

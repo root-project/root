@@ -60,11 +60,13 @@ TEveCaloVizEditor::TEveCaloVizEditor(const TGWindow *p, Int_t width, Int_t heigh
 
    MakeTitle("TEveCaloViz");
 
- 
+   TGLabel* label  = 0;
+   Int_t    labelW = 45;
+
    // scaling
    TGHorizontalFrame* scf = new TGHorizontalFrame(this);
 
-   TGLabel* label = new TGLabel(scf, "ScaleAbsolute:");
+   label = new TGLabel(scf, "ScaleAbsolute:");
    scf->AddFrame(label, new TGLayoutHints(kLHintsLeft  | kLHintsBottom));
  
    fScaleAbs  = new TGCheckButton(scf);
@@ -98,16 +100,14 @@ TEveCaloVizEditor::TEveCaloVizEditor(const TGWindow *p, Int_t width, Int_t heigh
    //______________________________________________________________________________
 
    fDataFrame = CreateEditorTabSubFrame("Data");
-   Int_t  labelW = 45;
 
    // E/Et Plot
    {
-      TGHorizontalFrame* group = new   TGHorizontalFrame(fDataFrame);
+      TGHorizontalFrame *group = new TGHorizontalFrame(fDataFrame);
+      TGCompositeFrame  *labfr = new TGHorizontalFrame(group, 28, 20, kFixedSize);
 
-      TGCompositeFrame *labfr = new TGHorizontalFrame(group, 28, 20, kFixedSize);
-   
       TGFont *myfont = gClient->GetFont("-adobe-times-bold-r-*-*-12-*-*-*-*-*-iso8859-1");
-      TGLabel* label = new TGLabel(labfr, "Plot:");
+      label = new TGLabel(labfr, "Plot:");
       label->SetTextFont(myfont);
       labfr->AddFrame(label, new TGLayoutHints(kLHintsLeft  | kLHintsBottom));
       group->AddFrame(labfr, new TGLayoutHints(kLHintsLeft));
