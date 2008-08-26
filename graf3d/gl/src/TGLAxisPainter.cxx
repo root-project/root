@@ -169,8 +169,9 @@ void TGLAxisPainter::SetTextFormat(Double_t bw1)
    else
    {
       // Use x 10 n format. (only powers of 3 allowed)
-      if (absMax <= 1) TMath::Log10(absMax*0.0001)+epsilon;
-      Int_t  clog  = Int_t(absMaxLog)+1;
+      Int_t  clog = (absMax > 1) ? Int_t(absMaxLog) : TMath::Log10(absMax*0.0001);
+      clog = clog + 1 + epsilon; 
+
       if (clog > fMaxDigits) {
          while (1) {
             fExp++;
