@@ -413,21 +413,6 @@ TEvePointSetArray::~TEvePointSetArray()
 }
 
 //______________________________________________________________________________
-void TEvePointSetArray::Paint(Option_t* option)
-{
-   // Paint the subjugated TEvePointSet's.
-
-   static const TEveException eh("TEvePointSetArray::Paint ");
-
-   if (fRnrSelf) {
-      for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i) {
-         if ((*i)->GetRnrSelf())
-            (*i)->GetObject(eh)->Paint(option);
-      }
-   }
-}
-
-//______________________________________________________________________________
 void TEvePointSetArray::RemoveElementLocal(TEveElement* el)
 {
    // Virtual from TEveElement, provide bin management.
@@ -581,10 +566,7 @@ void TEvePointSetArray::InitBins(const Text_t* quant_name,
 
    fBins = new TEvePointSet* [fNBins];
 
-   fBins[0] = new TEvePointSet("Underflow", fDefPointSetCapacity);
-   fBins[0]->SetRnrSelf(kFALSE);
-   
-   for (Int_t i = 1; i < fNBins - 1; ++i)
+   for (Int_t i = 0; i < fNBins; ++i)
    {
       fBins[i] = new TEvePointSet
          (Form("Slice %d [%4.3lf, %4.3lf]", i, fMin + i*fBinWidth, fMin + (i+1)*fBinWidth),
@@ -595,7 +577,10 @@ void TEvePointSetArray::InitBins(const Text_t* quant_name,
       AddElement(fBins[i]);
    }
 
-   fBins[fNBins-1] = new TEvePointSet("Overflow", fDefPointSetCapacity);
+   fBins[0]->SetName("Underflow");
+   fBins[0]->SetRnrSelf(kFALSE);
+   
+   fBins[fNBins-1]->SetName("Overflow");
    fBins[fNBins-1]->SetRnrSelf(kFALSE);
 }
 
@@ -607,7 +592,7 @@ Bool_t TEvePointSetArray::Fill(Double_t x, Double_t y, Double_t z, Double_t quan
    // If the selected bin does not have an associated TEvePointSet
    // the point is discarded and false is returned.
 
-   fLastBin = Int_t( (quant - fMin)/fBinWidth ) + 1;
+   fLastBin =TMath::FloorNint((quant - fMin)/fBinWidth) + 1;
 
    if (fLastBin < 0)
    {
@@ -647,12 +632,7 @@ void TEvePointSetArray::CloseBins()
 
    for (Int_t i=0; i<fNBins; ++i) {
       if (fBins[i] != 0) {
-         // HACK! PolyMarker3D does half-management of array size.
-         // !!!! In fact, the error is mine, in pointset3d(gl) i use
-         // fN instead of Size(). Fixed in my root, but not
-         // elsewhere.
-         fBins[i]->fN = fBins[i]->fLastPoint;
-
+         fBins[i]->SetTitle(Form("N=%d", fBins[i]->Size()));
          fBins[i]->ComputeBBox();
       }
    }
@@ -680,13 +660,15 @@ void TEvePointSetArray::SetRange(Double_t min, Double_t max)
 {
    // Set active range of the separating quantity.
    // Appropriate point-sets are tagged for rendering.
+   // Over/underflow point-sets are left as they were.
 
    using namespace TMath;
 
    fCurMin = min; fCurMax = max;
    Int_t  low_b = (Int_t) Max(Double_t(0),       Floor((min-fMin)/fBinWidth));
    Int_t high_b = (Int_t) Min(Double_t(fNBins-1), Ceil((max-fMin)/fBinWidth));
-   for (Int_t i=0; i<fNBins; ++i) {
+   for (Int_t i = 1; i < fNBins - 1; ++i)
+   {
       if (fBins[i] != 0)
          fBins[i]->SetRnrSelf(i>=low_b && i<=high_b);
    }

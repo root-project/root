@@ -125,8 +125,6 @@ public:
    virtual void RemoveElementLocal(TEveElement* el);
    virtual void RemoveElementsLocal();
 
-   virtual void Paint(Option_t* option="");
-
    virtual void SetMarkerColor(Color_t tcolor=1);
    virtual void SetMarkerStyle(Style_t mstyle=1);
    virtual void SetMarkerSize(Size_t msize=1);
