@@ -174,6 +174,7 @@ public:
    Long64_t      GetBytesRead() const { return 0; }
    Float_t       GetInitTime() const { return 0; }
    Float_t       GetProcTime() const { return 0; }
+   void          MarkBad(TSlave *, Bool_t /*resubmit*/, TList **) { }
 
    ClassDef(TPacketizerProgressive, 0);  // Packetizer that does not pre-open any files
 };

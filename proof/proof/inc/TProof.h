@@ -108,7 +108,7 @@ class TMap;
 // 14 -> 15: add support for entry lists; new version of TFileInfo
 // 15 -> 16: add support for generic non-data based processing
 // 16 -> 17: new dataset handling system; support for TFileCollection processing
-// 17 -> 18: support for reconnection on daemon restarts 
+// 17 -> 18: support for reconnection on daemon restarts
 
 // PROOF magic constants
 const Int_t       kPROOF_Protocol        = 18;            // protocol version number
@@ -411,7 +411,7 @@ private:
 
    Bool_t          fIdle;            //on clients, true if no PROOF jobs running
    Bool_t          fSync;            //true if type of currently processed query is sync
-   ERunStatus      fRunStatus;       //run status 
+   ERunStatus      fRunStatus;       //run status
 
    Bool_t          fRedirLog;        //redirect received log info
    TString         fLogFileName;     //name of the temp file for redirected logs
@@ -435,6 +435,7 @@ private:
    TProofLockPath *fPackageLock;     //package lock
    TList          *fEnabledPackagesOnClient; //list of packages enabled on client
 
+   TList          *fLoadedMacros;   // List of loaded macros (just file names)
    static TList   *fgProofEnvList;  // List of TNameds defining environment
                                     // variables to pass to proofserv
 protected:
@@ -460,6 +461,7 @@ protected:
    TProofMgr::EServType fServType;  // type of server: proofd, XrdProofd
    TProofMgr      *fManager;        // manager to which this session belongs (if any)
    EQueryMode      fQueryMode;      // default query mode
+   Bool_t          fDynamicStartup; // are the workers started dynamically?
 
    static TSemaphore *fgSemaphore;   //semaphore to control no of parallel startup threads
 
@@ -555,6 +557,8 @@ protected:
                         const char *confdir, Int_t loglevel,
                         const char *alias = 0);
    virtual Bool_t  StartSlaves(Bool_t parallel, Bool_t attach = kFALSE);
+   Int_t AddWorkers(TList *wrks);
+   Int_t RemoveWorkers(TList *wrks);
 
    void                         SetPlayer(TVirtualProofPlayer *player);
    TVirtualProofPlayer         *GetPlayer() const { return fPlayer; }
@@ -693,6 +697,7 @@ public:
    Int_t       GetParallel() const;
    Int_t       GetSessionID() const { return fSessionID; }
    TList      *GetListOfSlaveInfos();
+   Bool_t      UseDynamicStartup() const { return fDynamicStartup; }
 
    EQueryMode  GetQueryMode(Option_t *mode = 0) const;
    void        SetQueryMode(EQueryMode mode);
@@ -711,6 +716,7 @@ public:
    Bool_t      IsIdle() const { return fIdle; }
 
    ERunStatus  GetRunStatus() const { return fRunStatus; }
+   TList      *GetLoadedMacros() const { return fLoadedMacros; }
 
    //-- input list parameter handling
    void        SetParameter(const char *par, const char *value);

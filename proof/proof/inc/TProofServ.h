@@ -210,6 +210,7 @@ public:
    Float_t        GetRealTime()   const { return fRealTime; }
    Float_t        GetCpuTime()    const { return fCpuTime; }
    void           GetOptions(Int_t *argc, char **argv);
+   TList         *GetEnabledPackages() const { return fEnabledPackages; }
 
    Int_t          GetInflateFactor() const { return fInflateFactor; }
 

@@ -1852,7 +1852,7 @@ void TProofServ::SendLogFile(Int_t status, Int_t start, Int_t end)
       if (!fSendLogToMaster) {
          FlushLogFile();
       } else {
-         // Decide case by case 
+         // Decide case by case
          LogToMaster(kFALSE);
       }
    }
@@ -3380,6 +3380,21 @@ void TProofServ::HandleProcess(TMessage *mess)
    if (!IsTopMaster() && !fIdle)
       return;
 
+   if (IsMaster() && fProof->UseDynamicStartup()) {
+      // get the a list of workers and start them
+      TList* workerList = new TList();
+      Int_t pc = 0;
+      if (GetWorkers(workerList, pc) == TProofServ::kQueryStop) {
+         Error("HandleProcess", "getting list of worker nodes");
+         return;
+      }
+      if (Int_t ret = fProof->AddWorkers(workerList) < 0) {
+         Error("HandleProcess", "Adding a list of worker nodes returned: %d",
+               ret);
+         return;
+      }
+   }
+
    TDSet *dset;
    TString filename, opt;
    TList *input;
@@ -3446,7 +3461,7 @@ void TProofServ::HandleProcess(TMessage *mess)
                }
                if (!(fDataSetManager->ParseUri(dset->GetName(), 0, 0, 0, &dsTree)))
                   dsTree = "";
-   
+
                // Apply the lookup option requested by the client or the administartor
                // (by default we trust the information in the dataset)
                if (TProof::GetParameter(input, "PROOF_LookupOpt", lookupopt) != 0) {
@@ -3713,6 +3728,9 @@ void TProofServ::HandleProcess(TMessage *mess)
          }
 
          DeletePlayer();
+         if (IsMaster() && fProof->UseDynamicStartup())
+            // stop the workers
+            fProof->RemoveWorkers(0);
 
       } // Loop on submitted queries
 

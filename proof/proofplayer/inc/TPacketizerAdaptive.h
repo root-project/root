@@ -70,10 +70,11 @@ private:
    Float_t        fCumProcTime;   // sum of proc time of all packets so far
    Float_t        fBaseLocalPreference;   // indicates how much more likely
    // the nodes will be to open their local files (1 means indifferent)
-   Bool_t          fForceLocal;   // if 1 - eliminate the remote processing
+   Bool_t         fForceLocal;    // if 1 - eliminate the remote processing
 
    TPacketizerAdaptive();
    TPacketizerAdaptive(const TPacketizerAdaptive&);    // no implementation, will generate
+   void           InitStats();                         // initialise the stats
    void operator=(const TPacketizerAdaptive&);         // error on accidental usage
 
    TFileNode     *NextNode();
@@ -88,18 +89,19 @@ private:
 
    void           Reset();
    void           ValidateFiles(TDSet *dset, TList *slaves);
+   void           SplitPerHost(TList *elements, TList **listOfMissingFiles);
 
 public:
-   static Long_t  fgMaxSlaveCnt;  // maximum number of workers per filenode (Long_t to avoid
-                                  // warnings from backward compatibility support)
-   static Int_t   fgPacketAsAFraction;// used to calculate the packet size
-                                 // fPacketSize = fTotalEntries / (fPacketAsAFraction * nslaves)
-                                 // fPacketAsAFraction can be interpreted as follows:
-                                 // assuming all slaves have equal processing rate, packet size
-                                 // is (#events processed by 1 slave) / fPacketSizeAsAFraction.
-                                 // It can be set with PROOF_PacketAsAFraction in input list.
+   static Long_t   fgMaxSlaveCnt;  // maximum number of workers per filenode (Long_t to avoid
+                                   // warnings from backward compatibility support)
+   static Int_t    fgPacketAsAFraction; // used to calculate the packet size
+                                  // fPacketSize = fTotalEntries / (fPacketAsAFraction * nslaves)
+                                  // fPacketAsAFraction can be interpreted as follows:
+                                  // assuming all slaves have equal processing rate, packet size
+                                  // is (#events processed by 1 slave) / fPacketSizeAsAFraction.
+                                  // It can be set with PROOF_PacketAsAFraction in input list.
    static Double_t fgMinPacketTime; // minimum packet time
-   static Int_t   fgStrategy; // 0 means the classic and 1 (default) - the adaptive strategy
+   static Int_t    fgStrategy;    // 0 means the classic and 1 (default) - the adaptive strategy
 
    TPacketizerAdaptive(TDSet *dset, TList *slaves, Long64_t first, Long64_t num,
                        TList *input);
@@ -109,6 +111,7 @@ public:
    Int_t         GetEstEntriesProcessed(Float_t t, Long64_t &ent, Long64_t &bytes);
    Int_t         CalculatePacketSize(TObject *slstat);
    TDSetElement *GetNextPacket(TSlave *sl, TMessage *r);
+   void          MarkBad(TSlave *s, Bool_t resubmit, TList **);
 
    ClassDef(TPacketizerAdaptive,0)  //Generate work packets for parallel processing
 };
