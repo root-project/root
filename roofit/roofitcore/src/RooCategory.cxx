@@ -228,6 +228,7 @@ void RooCategory::addToRange(const char* name, const char* stateNameList)
 		    << ") new range named '" << name << "' created with state list " << stateNameList << endl ;
 
     rangeNameList = new TList ;
+    rangeNameList->SetOwner(kTRUE) ;
     rangeNameList->SetName(name) ;
     _sharedProp->_altRanges.Add(rangeNameList) ;    
   }
@@ -239,7 +240,7 @@ void RooCategory::addToRange(const char* name, const char* stateNameList)
   while(token) {
     const RooCatType* state = lookupType(token,kFALSE) ;
     if (state && !rangeNameList->FindObject(token)) {
-      rangeNameList->Add(const_cast<RooCatType*>(state)) ;	
+      rangeNameList->Add(new RooCatType(*state)) ;	
     } else {
       coutW(InputArguments) << "RooCategory::setRange(" << GetName() << ") WARNING: Ignoring invalid state name '" 
 			    << token << "' in state name list" << endl ;
