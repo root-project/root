@@ -3,10 +3,29 @@
 <a name="hist"></a> 
 <h3>Histogram package</h3>
 
+
+<h4>TFormula</h4>
+
+<ul>
+  <li>
+  Fixed a bug in <tt>TFormula::GetExprFormula</tt>. Now the correct formula is returned for expressions based on CINT type functions. 
+</li>
+</ul>
+
+
 <h4>TF1</h4>
 
 <ul>
   <li>
-    Fixed a bug in the calculation of the integral of multi-dimensional interpreted functions. The method <tt>TF1::operator() (const double *x, const double *p)</tt> calls now <tt>TF1::InitArgs</tt> in the case of CINT functions. 
+    Fixed a bug in the calculation of the integral of multi-dimensional interpreted functions. The method <tt>TF1::operator() (const double *x, const double *p)</tt> calls now <tt>TF1::InitArgs</tt> in the case of CINT functions.
+  </li>
 
+</ul>
+
+<h4>TH3</h4>
+
+<ul>
+  <li>
+    Fixed a bug in <tt>TH3::Project</tt> reported by Marco Van Leeuwen in setting the bin error in the projected histogram when a range was set in the projected axis.
+  </li>
 </ul>
