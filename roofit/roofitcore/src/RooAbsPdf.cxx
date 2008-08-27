@@ -718,7 +718,9 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   // Process automatic extended option
   if (ext==2) {
     ext = ((extendMode()==CanBeExtended || extendMode()==MustBeExtended)) ? 1 : 0 ;
-    coutI(Minimization) << "p.d.f. provides expected number of events, including extended term in likelihood." << endl ;
+    if (ext) {
+      coutI(Minimization) << "p.d.f. provides expected number of events, including extended term in likelihood." << endl ;
+    }
   }
 
   if (pc.hasProcessed("Range")) {
