@@ -308,26 +308,53 @@ void TExMap::Streamer(TBuffer &b)
    UInt_t R__s, R__c;
 
    if (b.IsReading()) {
-      b.ReadVersion(&R__s, &R__c);
+      Version_t R__v = b.ReadVersion(&R__s, &R__c);
       TObject::Streamer(b);
-      Int_t n;
-      b >> n;
-      ULong_t hash;
-      Long_t key,value;
-      for (i = 0; i < n; i++) {
-         b >> hash;
-         b >> key;
-         b >> value;
-         Add(hash,key,value);
+
+      if (R__v >= 2) {
+         // new custom streamer with slots indices stored.
+         Int_t size, tally;
+         b >> size;
+         Expand(size);
+         b >> tally;
+         Int_t slot;
+         ULong_t hash;
+         Long_t key,value;
+         for (i = 0; i < tally; ++i) {
+            b >> slot;
+            b >> hash;
+            b >> key;
+            b >> value;
+            Assoc_t* assoc = fTable + slot;
+            assoc->SetHash(hash);
+            assoc->fKey = key;
+            assoc->fValue = value;
+         }
+         fTally = tally;
+      } else {
+         // old custom streamer that only allows slow dynamic rebuild of TExMap:
+         Int_t n;
+         b >> n;
+         ULong_t hash;
+         Long_t key,value;
+         for (i = 0; i < n; i++) {
+            b >> hash;
+            b >> key;
+            b >> value;
+            Add(hash,key,value);
+         }
       }
       b.CheckByteCount(R__s, R__c,TExMap::IsA());
    } else {
       R__c = b.WriteVersion(TExMap::IsA(), kTRUE);
+      // new custom streamer stores slots indices
       TObject::Streamer(b);
+      b << fSize;
       b << fTally;
 
       for (i=0;i<fSize;i++) {
          if (!fTable[i].InUse()) continue;
+         b << i;
          b << fTable[i].GetHash();
          b << fTable[i].fKey;
          b << fTable[i].fValue;

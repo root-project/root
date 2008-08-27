@@ -80,7 +80,7 @@ public:
    Long_t   &operator()(ULong_t hash, Long_t key);
    Long_t   &operator()(Long_t key) { return operator()(key, key); }
 
-   ClassDef(TExMap,1)  //Map with external hash
+   ClassDef(TExMap,2)  //Map with external hash
 };
 
 
