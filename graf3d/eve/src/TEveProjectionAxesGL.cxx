@@ -262,7 +262,7 @@ void TEveProjectionAxesGL::DirectDraw(TGLRnrCtx& rnrCtx) const
                              + (up[2]-dn[2])*(up[2]-dn[2]));
 
    TGLFont font;
-   Int_t fs =  TGLFontManager::GetFontSize(rng*fM->fLabelSize, 12, 36);
+   Int_t fs =  TGLFontManager::GetFontSize(rng*fM->fLabelSize, 8, 36);
    rnrCtx.RegisterFont(fs, "arial", TGLFont::kPixmap, font);
 
  glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT);
