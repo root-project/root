@@ -3677,14 +3677,14 @@ TClass *TClass::Load(TBuffer &b)
 
    Int_t pos = b.Length();
 
-   b.ReadString(s, maxsize);
-   while (strlen(s)==maxsize) {
+   b.ReadString(s, maxsize); // Reads at most maxsize - 1 characters, plus null at end.
+   while (strlen(s) == (maxsize - 1)) {
       // The classname is too large, try again with a large buffer.
       b.SetBufferOffset(pos);
       maxsize = 2*maxsize;
       delete [] s;
       s = new char[maxsize];
-      b.ReadString(s, maxsize);
+      b.ReadString(s, maxsize); // Reads at most maxsize - 1 characters, plus null at end.
    }
 
    TClass *cl = TClass::GetClass(s, kTRUE);
