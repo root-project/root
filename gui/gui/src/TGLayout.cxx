@@ -326,6 +326,10 @@ void TGVerticalLayout::Layout()
          if (hints & kLHintsCenterY)
             top += extra_space;
 
+         if (size.fWidth > 32768)
+            size.fWidth = 1;
+         if (size.fHeight > 32768)
+            size.fHeight = 1;
          ptr->fFrame->MoveResize(x, y, size.fWidth, size.fHeight);
 
          fModified = fModified || (ptr->fFrame->GetX() != x) || 

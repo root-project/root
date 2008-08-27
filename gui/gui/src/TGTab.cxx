@@ -201,7 +201,11 @@ void TGTabLayout::Layout()
          el->fFrame->MoveResize(xtab, 2, tw, tabh-1);
          el->fFrame->LowerWindow();
       }
-      elnxt->fFrame->MoveResize(bw, tabh + bw, w - (bw << 1), h - tabh - (bw << 1));
+      UInt_t nw = (w - (bw << 1));
+      if (nw > 32768) nw = 1;
+      UInt_t nh = (h - tabh - (bw << 1));
+      if (nh > 32768) nh = 1;
+      elnxt->fFrame->MoveResize(bw, tabh + bw, nw, nh);
       elnxt->fFrame->Layout();
       xtab += (Int_t)tw;
       i++;
