@@ -220,7 +220,6 @@ TMatrixTSparse<Element>::TMatrixTSparse(const TMatrixTSparse<Element> &a,EMatrix
    R__ASSERT(a.IsValid());
    R__ASSERT(b.IsValid());
 
-   //EDDY
    switch(op) {
       case kMult:
          AMultB(a,b,1);

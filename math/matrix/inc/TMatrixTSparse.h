@@ -171,20 +171,20 @@ public:
    TMatrixTSparse<Element> &operator+=(Element val);
    TMatrixTSparse<Element> &operator*=(Element val);
 
-   TMatrixTSparse<Element> &operator+=(const TMatrixTSparse<Element> &source) { TMatrixTSparse<Element> tmp(*this);
+   TMatrixTSparse<Element> &operator+=(const TMatrixTSparse<Element> &source) { TMatrixTSparse<Element> tmp(*this); Clear();
                                                                                 if (this == &source) APlusB (tmp,tmp,1);
                                                                                 else                 APlusB (tmp,source,1); return *this; }
-   TMatrixTSparse<Element> &operator+=(const TMatrixT<Element>       &source) { TMatrixTSparse<Element> tmp(*this);
+   TMatrixTSparse<Element> &operator+=(const TMatrixT<Element>       &source) { TMatrixTSparse<Element> tmp(*this); Clear();
                                                                                 APlusB(tmp,source,1); return *this; }
-   TMatrixTSparse<Element> &operator-=(const TMatrixTSparse<Element> &source) { TMatrixTSparse<Element> tmp(*this);
+   TMatrixTSparse<Element> &operator-=(const TMatrixTSparse<Element> &source) { TMatrixTSparse<Element> tmp(*this); Clear();
                                                                                 if (this == &source) AMinusB (tmp,tmp,1);
                                                                                 else                 AMinusB(tmp,source,1); return *this; }
-   TMatrixTSparse<Element> &operator-=(const TMatrixT<Element>       &source) { TMatrixTSparse<Element> tmp(*this);
+   TMatrixTSparse<Element> &operator-=(const TMatrixT<Element>       &source) { TMatrixTSparse<Element> tmp(*this); Clear();
                                                                                 AMinusB(tmp,source,1); return *this; }
-   TMatrixTSparse<Element> &operator*=(const TMatrixTSparse<Element> &source) { TMatrixTSparse<Element> tmp(*this);
+   TMatrixTSparse<Element> &operator*=(const TMatrixTSparse<Element> &source) { TMatrixTSparse<Element> tmp(*this); Clear();
                                                                                 if (this == &source) AMultB (tmp,tmp,1);
                                                                                 else                 AMultB (tmp,source,1); return *this; }
-   TMatrixTSparse<Element> &operator*=(const TMatrixT<Element>       &source) { TMatrixTSparse<Element> tmp(*this);
+   TMatrixTSparse<Element> &operator*=(const TMatrixT<Element>       &source) { TMatrixTSparse<Element> tmp(*this); Clear();
                                                                                 AMultB(tmp,source,1); return *this; }
 
    virtual TMatrixTBase  <Element> &Randomize  (Element alpha,Element beta,Double_t &seed);

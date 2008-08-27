@@ -569,21 +569,21 @@ void TMatrixT<Element>::Plus(const TMatrixT<Element> &a,const TMatrixTSym<Elemen
 template<class Element>
 void TMatrixT<Element>::Minus(const TMatrixT<Element> &a,const TMatrixT<Element> &b)
 {
-// General matrix summation. Create a matrix C such that C = A + B.
+// General matrix summation. Create a matrix C such that C = A - B.
 
    if (gMatrixCheck) {
       if (!AreCompatible(a,b)) {
-         Error("Plus","matrices not compatible");
+         Error("Minus","matrices not compatible");
          return;
       }
 
       if (this->GetMatrixArray() == a.GetMatrixArray()) {
-         Error("Plus","this->GetMatrixArray() == a.GetMatrixArray()");
+         Error("Minus","this->GetMatrixArray() == a.GetMatrixArray()");
          return;
       }
 
       if (this->GetMatrixArray() == b.GetMatrixArray()) {
-         Error("Plus","this->GetMatrixArray() == b.GetMatrixArray()");
+         Error("Minus","this->GetMatrixArray() == b.GetMatrixArray()");
          return;
       }
    }
@@ -603,7 +603,7 @@ void TMatrixT<Element>::Minus(const TMatrixT<Element> &a,const TMatrixT<Element>
 template<class Element>
 void TMatrixT<Element>::Minus(const TMatrixT<Element> &a,const TMatrixTSym<Element> &b)
 {
-// General matrix summation. Create a matrix C such that C = A + B.
+// General matrix summation. Create a matrix C such that C = A - B.
 
    if (gMatrixCheck) {
       if (!AreCompatible(a,b)) {
