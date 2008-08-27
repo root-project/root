@@ -128,6 +128,8 @@ public:
    void    CreateListOfDataMembers(TClass *cl);
    void    CreateListOfMethods(TClass *cl);
    void    CreateListOfMethodArgs(TFunction *m);
+   void    UpdateListOfMethods(TClass *cl);
+
    TString GetMangledName(TClass *cl, const char *method, const char *params);
    TString GetMangledNameWithPrototype(TClass *cl, const char *method, const char *proto);
    void   *GetInterfaceMethod(TClass *cl, const char *method, const char *params);

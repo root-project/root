@@ -841,6 +841,24 @@ void TCint::CreateListOfMethods(TClass *cl)
 }
 
 //______________________________________________________________________________
+void TCint::UpdateListOfMethods(TClass *cl) 
+{
+   // Update the list of pointers to method for TClass cl, if necessary
+ 
+   if (cl->fMethod) {
+      R__LOCKGUARD2(gCINTMutex);
+      
+      G__ClassInfo *info = (G__ClassInfo*)cl->GetClassInfo();
+      if (!info || cl->fMethod->GetEntries() == info->NMethods()) {
+         return;
+      }
+      delete cl->fMethod;
+      cl->fMethod = 0;
+   }
+   CreateListOfMethods(cl);
+}
+
+//______________________________________________________________________________
 void TCint::CreateListOfMethodArgs(TFunction *m)
 {
    // Create list of pointers to method arguments for TMethod m.

@@ -2393,6 +2393,8 @@ TList *TClass::GetListOfMethods()
          Fatal("GetListOfMethods", "gInterpreter not initialized");
 
       gInterpreter->CreateListOfMethods(this);
+   } else {
+      gInterpreter->UpdateListOfMethods(this);
    }
    return fMethod;
 }

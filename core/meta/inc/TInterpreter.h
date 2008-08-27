@@ -99,6 +99,7 @@ public:
    virtual void     CreateListOfDataMembers(TClass *cl) = 0;
    virtual void     CreateListOfMethods(TClass *cl) = 0;
    virtual void     CreateListOfMethodArgs(TFunction *m) = 0;
+   virtual void     UpdateListOfMethods(TClass *cl) = 0;
    virtual TString  GetMangledName(TClass *cl, const char *method, const char *params) = 0;
    virtual TString  GetMangledNameWithPrototype(TClass *cl, const char *method, const char *proto) = 0;
    virtual const char *GetInterpreterTypeName(const char *name,Bool_t full = kFALSE) = 0;
