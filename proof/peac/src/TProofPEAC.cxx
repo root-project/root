@@ -163,7 +163,7 @@ Bool_t TProofPEAC::StartSlaves(Bool_t,Bool_t)
       while ((cs = (TCondorSlave*)next()) != 0) {
          // Get slave FQDN ...
          TString SlaveFqdn;
-         TInetAddress SlaveAddr = gSystem->GetHostByName((cs->fHostname);
+         TInetAddress SlaveAddr = gSystem->GetHostByName(cs->fHostname);
          if (SlaveAddr.IsValid())
             SlaveFqdn = SlaveAddr.GetHostName();
 
