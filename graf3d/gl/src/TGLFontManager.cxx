@@ -1,3 +1,4 @@
+#include "RConfigure.h"
 #include "TGLFontManager.h"
 
 #include "TSystem.h"
