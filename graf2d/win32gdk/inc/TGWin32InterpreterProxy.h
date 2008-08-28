@@ -76,6 +76,7 @@ public:
    void     CreateListOfBaseClasses(TClass *cl);
    void     CreateListOfDataMembers(TClass *cl);
    void     CreateListOfMethods(TClass *cl);
+   void     UpdateListOfMethods(TClass *cl);
    void     CreateListOfMethodArgs(TFunction *m);
    TString  GetMangledName(TClass *cl, const char *method, const char *params);
    TString  GetMangledNameWithPrototype(TClass *cl, const char *method, const char *proto);
