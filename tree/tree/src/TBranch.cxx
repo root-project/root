@@ -787,8 +787,18 @@ Int_t TBranch::Fill()
             *fEntryBuffer >> tag;
          }
          if (tag == kNewClassTag) {
-            char s[80];
-            fEntryBuffer->ReadString(s, 80);
+            UInt_t maxsize = 256;
+            char* s = new char[maxsize];
+            Int_t name_start = fEntryBuffer->Length();
+            fEntryBuffer->ReadString(s, maxsize); // Reads at most maxsize - 1 characters, plus null at end.
+            while (strlen(s) == (maxsize - 1)) {
+               // The classname is too large, try again with a large buffer.
+               fEntryBuffer->SetBufferOffset(name_start);
+               maxsize *= 2;
+               delete[] s;
+               s = new char[maxsize];
+               fEntryBuffer->ReadString(s, maxsize); // Reads at most maxsize - 1 characters, plus null at end
+            }
          } else {
             fEntryBuffer->SetBufferOffset(objectStart);
          }
