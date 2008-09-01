@@ -447,7 +447,7 @@ void TGContainer::KeyPressed(TGFrame *frame, UInt_t keysym, UInt_t mask)
    args[0] = (Long_t)frame;
    args[1] = (Long_t)keysym;
    args[2] = (Long_t)mask;
-   Emit("KeyPressed(TGFame*,ULong_t,ULong_t)", args);
+   Emit("KeyPressed(TGFrame*,UInt_t,UInt_t)", args);
    SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_KEY), keysym, mask);
 }
 
