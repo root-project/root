@@ -160,6 +160,10 @@ help:
 FINDALLBUTSVN=-type f \! -path '*/.svn/*' \! -name SConscript \! -name Makefile.am
 
 install:
+	if [ "x$(G__CFG_INCLUDEDIRCINT)" = "x" ]; then \
+	  echo 'You must run "./configure --prefix" or "./configure --prefix=..." to be able to call "make $@"!'; \
+	  exit 1; \
+	fi
 	if [ ! -d $(DESTDIR)$(G__CFG_BINDIR) ]; then mkdir -p $(DESTDIR)$(G__CFG_BINDIR); fi
 	cp $(CINT)     $(DESTDIR)$(G__CFG_BINDIR)/$(notdir $(CINT))$(ALTERNATIVENAME)
 	cp $(MAKECINT) $(DESTDIR)$(G__CFG_BINDIR)/$(notdir $(MAKECINT))$(ALTERNATIVENAME)
@@ -194,6 +198,10 @@ install:
 	  cp $(G__CFG_COREVERSION)/$$f $$d/; done
 
 uninstall:
+	if [ "x$(G__CFG_INCLUDEDIRCINT)" = "x" ]; then \
+	  echo 'You must run "./configure --prefix" or "./configure --prefix=..." to be able to call "make $@"!'; \
+	  exit 1; \
+	fi
 	$(G__CFG_RM) $(DESTDIR)$(G__CFG_BINDIR)/$(CINT) $(DESTDIR)$(G__CFG_BINDIR)/$(MAKECINT) $(DESTDIR)$(G__CFG_BINDIR)/cint-config
 	$(G__CFG_RM) $(DESTDIR)$(G__CFG_LIBDIR)/$(CINTLIBSHARED)
 	$(G__CFG_RM) $(DESTDIR)$(G__CFG_LIBDIR)/$(CINTIMPLIB)
