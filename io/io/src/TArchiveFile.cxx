@@ -119,14 +119,14 @@ TArchiveFile *TArchiveFile::Open(const char *url, TFile *file)
       return 0;
    }
 
-   TString archive, member;
+   TString archive, member, type;
 
-   if (!ParseUrl(url, archive, member))
+   if (!ParseUrl(url, archive, member, type))
       return 0;
 
    TArchiveFile *f = 0;
    TPluginHandler *h;
-   if ((h = gROOT->GetPluginManager()->FindHandler("TArchiveFile", archive))) {
+   if ((h = gROOT->GetPluginManager()->FindHandler("TArchiveFile", type))) {
       if (h->LoadPlugin() == -1)
          return 0;
       f = (TArchiveFile*) h->ExecPlugin(3, archive.Data(), member.Data(), file);
@@ -136,7 +136,8 @@ TArchiveFile *TArchiveFile::Open(const char *url, TFile *file)
 }
 
 //______________________________________________________________________________
-Bool_t TArchiveFile::ParseUrl(const char *url, TString &archive, TString &member)
+Bool_t TArchiveFile::ParseUrl(const char *url, TString &archive, TString &member,
+                              TString &type)
 {
    // Try to determine if url contains an anchor specifying an archive member.
    // Returns kFALSE in case of an error.
@@ -145,8 +146,10 @@ Bool_t TArchiveFile::ParseUrl(const char *url, TString &archive, TString &member
 
    archive = "";
    member  = "";
+   type    = "";
 
    // get the options and see, if the archive was specified by an option
+   // FIXME: hard coded for "zip" archive format
    TString urloptions = u.GetOptions();
    TObjArray *objOptions = urloptions.Tokenize("&");
    for (Int_t n = 0; n < objOptions->GetEntries(); n++) {
@@ -160,8 +163,8 @@ Bool_t TArchiveFile::ParseUrl(const char *url, TString &archive, TString &member
 
          if (!key.CompareTo("zip", TString::kIgnoreCase)) {
             archive = u.GetFile();
-            archive += ".zip";
             member = value;
+            type = "dummy.zip";
          }
       }
       delete objTags;
@@ -180,6 +183,7 @@ Bool_t TArchiveFile::ParseUrl(const char *url, TString &archive, TString &member
 
    archive = u.GetFile();
    member  = u.GetAnchor();
+   type    = archive;
 
    if (archive == "" || member == "") {
       archive = "";

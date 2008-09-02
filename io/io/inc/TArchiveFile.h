@@ -51,7 +51,7 @@ protected:
    TObjArray      *fMembers;      // Members in this archive
    TArchiveMember *fCurMember;    // Current archive member
 
-   static Bool_t ParseUrl(const char *url, TString &archive, TString &member);
+   static Bool_t ParseUrl(const char *url, TString &archive, TString &member, TString &type);
 
 public:
    TArchiveFile() : fArchiveName(""), fMemberName(""), fMemberIndex(-1), fFile(0), fMembers(0), fCurMember(0) { }
