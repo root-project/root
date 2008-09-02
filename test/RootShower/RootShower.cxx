@@ -245,7 +245,7 @@ Bool_t TGToolButton::HandleCrossing(Event_t *event)
    }
    if (event->fType == kLeaveNotify) {
       fBgndColor = GetDefaultFrameBackground();
-      if (fState != kButtonDisabled)
+      if (fState != kButtonDisabled && fState != kButtonEngaged)
          SetState(kButtonUp, kFALSE);
    }
    DoRedraw();
@@ -348,6 +348,7 @@ RootShower::RootShower(const TGWindow *p, UInt_t w, UInt_t h):
       const TGPicture *pic = fClient->GetPicture(tb_data[i].fPixmap);
       TGToolButton *pb = new TGToolButton(fToolBar, pic, tb_data[i].fId);
       pb->SetToolTipText(tb_data[i].fTipText);
+      tb_data[i].fButton = pb;
 
       fToolBar->AddButton(this, pb, spacing);
       spacing = 0;
