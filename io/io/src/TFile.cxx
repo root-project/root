@@ -255,7 +255,6 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    if (!gROOT)
       ::Fatal("TFile::TFile", "ROOT system not initialized");
 
-
    // store name without the options as name and title
    TString sfname1 = fname1;
    fNoAnchorInName = kFALSE;
@@ -2315,16 +2314,16 @@ void TFile::ReadStreamerInfo()
       TObjLink *lnk = list->FirstLink();
       while (lnk) {
          info = (TStreamerInfo*)lnk->GetObject();
-         
+
          if (info->IsA() != TStreamerInfo::Class()) {
             Warning("ReadStreamerInfo","%s: not a TStreamerInfo object", GetName());
             continue;
          }
-         // This is a quick way (instead of parsing the name) to see if this is 
+         // This is a quick way (instead of parsing the name) to see if this is
          // the description of an STL container.
          TObject *element = info->GetElements()->UncheckedAt(0);
          Bool_t isstl = element && strcmp("This",element->GetName())==0;
-         
+
          if ( (!isstl && mode ==0) || (isstl && mode ==1) ) {
                // Skip the STL container the first time around
                // Skip the regular classes the second time around;
@@ -2337,7 +2336,7 @@ void TFile::ReadStreamerInfo()
                printf("ReadStreamerInfo, class:%s, illegal uid=%d\n",info->GetName(),uid);
             }
             if (gDebug > 0) printf(" -class: %s version: %d info read at slot %d\n",info->GetName(), info->GetClassVersion(),uid);
-         }         
+         }
          lnk = lnk->Next();
       }
    }
