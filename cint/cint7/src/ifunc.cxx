@@ -4087,9 +4087,7 @@ struct G__funclist* Cint::Internal::G__add_templatefunc(char *funcnamein, G__par
    struct G__inheritance *baseclass;
    ::Reflex::Scope store_friendtagnum = G__friendtagnum;
    char *funcname;
-#ifndef G__OLDIMPLEMENTATION1560
    char *ptmplt;
-#endif
    char *pexplicitarg = 0;
 
    funcname = (char*)malloc(strlen(funcnamein) + 1);
@@ -4104,7 +4102,6 @@ struct G__funclist* Cint::Internal::G__add_templatefunc(char *funcnamein, G__par
    call_para.next = 0;
    deftmpfunc = &G__definedtemplatefunc;
 
-#ifndef G__OLDIMPLEMENTATION1560
    ptmplt = strchr(funcname, '<');
    if (ptmplt)
    {
@@ -4133,9 +4130,6 @@ struct G__funclist* Cint::Internal::G__add_templatefunc(char *funcnamein, G__par
          }
       }
    }
-#else
-   pexplicitarg = strchr(funcname, '<');
-#endif
 
    if (pexplicitarg)
    {
@@ -4150,7 +4144,6 @@ struct G__funclist* Cint::Internal::G__add_templatefunc(char *funcnamein, G__par
    while (deftmpfunc->next)
    {
       G__freecharlist(&call_para);
-#ifndef G__OLDIMPLEMENTATION1560
       if (ptmplt) {
          int itmp = 0;
          int ip = 1;
@@ -4163,7 +4156,6 @@ struct G__funclist* Cint::Internal::G__add_templatefunc(char *funcnamein, G__par
          }
          while (c != '>');
       }
-#endif
       if (deftmpfunc->hash == hash && strcmp(deftmpfunc->name, funcname) == 0 &&
             (G__matchtemplatefunc(deftmpfunc, libp, &call_para, G__PROMOTION)
 #ifndef G__OLDIMPLEMEMTATION2214
@@ -4227,7 +4219,6 @@ struct G__funclist* Cint::Internal::G__add_templatefunc(char *funcnamein, G__par
             if (
                strcmp(funcnamein, func.Name().c_str()) == 0
             ) {
-#ifndef G__OLDIMPLEMENTATION1560
                if (ptmplt) {
                   //int tmp;
                   //*ptmplt='<';
@@ -4237,7 +4228,6 @@ struct G__funclist* Cint::Internal::G__add_templatefunc(char *funcnamein, G__par
                   //G__hash(funcnamein,hash,tmp);
                   //ifunc->hash[ifn] = hash;
                }
-#endif
                if (0 == G__get_funcproperties(func)->entry.p && G__NOLINK == G__globalcomp) {
                   /* This was only a prototype template, search for definition
                    * template */
@@ -4260,9 +4250,7 @@ struct G__funclist* Cint::Internal::G__add_templatefunc(char *funcnamein, G__par
       deftmpfunc = deftmpfunc->next;
    }
    G__freecharlist(&call_para);
-#ifndef G__OLDIMPLEMENTATION1560
    if (funcname) free((void*)funcname);
-#endif
    return funclist;
 }
 

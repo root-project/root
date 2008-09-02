@@ -427,9 +427,7 @@ int G__isenclosingclassbase(int enclosingtagnum, int env_tagnum);
 int G__isenclosingclassbase(const ::Reflex::Scope enclosingtagnum, const ::Reflex::Scope env_tagnum);
 char* G__find_first_scope_operator(char* name);
 char* G__find_last_scope_operator(char* name);
-#ifndef G__OLDIMPLEMENTATION1560
 int G__checkset_charlist(char *tname,struct G__Charlist *pcall_para,int narg,int ftype);
-#endif
 void G__define_struct(char type);
 G__value G__classassign(char *pdest,const ::Reflex::Type &tagnum,G__value result);
  int G__cattemplatearg(char *tagname,struct G__Charlist *charlist, int npara = 0);
@@ -449,9 +447,7 @@ void G__IntList_free(struct G__IntList *body);
 struct G__Templatearg *G__read_formal_templatearg(void);
 int G__createtemplatememfunc(char *new_name);
 int G__createtemplateclass(char *new_name,struct G__Templatearg *targ,int isforwarddecl);
-#ifndef G__OLDIMPLEMENTATION1560
 struct G__Definetemplatefunc *G__defined_templatefunc(const char *name);
-#endif
 struct G__Definetemplatefunc *G__defined_templatememfunc(char *name);
 void G__declare_template(void);
 int G__gettemplatearglist(char *paralist,struct G__Charlist *charlist,struct G__Templatearg *def_para,int *pnpara,int parent_tagnum,G__Definedtemplateclass *specialization);
@@ -474,10 +470,8 @@ int G__defined_type(char *typenamein,int len);
 char *G__valuemonitor(G__value buf,char *temp);
 char *G__access2string(int caccess);
 char *G__tagtype2string(int tagtype);
-#ifndef G__OLDIMPLEMENTATION1560
 bool G__rename_templatefunc(std::string &funcname);
 const char *G__fulltypename(::Reflex::Type typenum);
-#endif
 int G__val2pointer(G__value *result7);
 char *G__getbase(unsigned int expression,int base,int digit,char *result1);
 int G__getdigit(unsigned int number);

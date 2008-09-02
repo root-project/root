@@ -790,7 +790,6 @@ static int G__additional_parenthesis(G__value* presult, G__param* libp)
    return(known);
 }
 
-#ifndef G__OLDIMPLEMENTATION1560
 //______________________________________________________________________________
 bool Cint::Internal::G__rename_templatefunc(std::string& funcname)
 {
@@ -857,7 +856,6 @@ bool Cint::Internal::G__rename_templatefunc(std::string& funcname)
    }
    return false;
 }
-#endif
 
 //______________________________________________________________________________
 static G__value G__operatorfunction(G__value* presult, char* item, int* known3, char* result7, char* funcname)
@@ -1989,7 +1987,6 @@ extern "C" G__value G__getfunction(char* item, int* known3, int memfunc_flag)
       result3 = G__null;
       return result3;
    }
-#ifndef G__OLDIMPLEMENTATION1560
    //
    // f<B>(x) -> f<NS::B>(x)
    //
@@ -1999,7 +1996,6 @@ extern "C" G__value G__getfunction(char* item, int* known3, int memfunc_flag)
          strcpy(funcname, tmp.c_str());
       }
    }
-#endif // G__OLDIMPLEMENTATION1560
    //
    //  Parse function call arguments.
    // 

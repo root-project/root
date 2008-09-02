@@ -1269,7 +1269,6 @@ G__value Cint::Internal::G__getexpr(char* expression)
                   lenbuf = strlen(ebuf);
                   break;
                }
-#ifndef G__OLDIMPLEMENTATION1560
                else if (strchr(expression + ig1, '>') &&
                         (G__defined_templatefunc(ebuf)
                          || G__defined_templatememfunc(ebuf)
@@ -1288,7 +1287,6 @@ G__value Cint::Internal::G__getexpr(char* expression)
                   --ig1;
                   break;
                }
-#endif
                else if (strcmp(ebuf, "dynamic_cast") == 0 ||
                         strcmp(ebuf, "static_cast") == 0 ||
                         strcmp(ebuf, "reinterpret_cast") == 0 ||

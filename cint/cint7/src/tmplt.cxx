@@ -1035,7 +1035,6 @@ struct G__Definetemplatefunc *Cint::Internal::G__defined_templatememfunc(char *n
    return(result);
 }
 
-#ifndef G__OLDIMPLEMENTATION1560
 /***********************************************************************
 * G__defined_templatefunc()
 *
@@ -1136,7 +1135,6 @@ struct G__Definetemplatefunc *Cint::Internal::G__defined_templatefunc(const char
   }
   return((struct G__Definetemplatefunc*)NULL);
 }
-#endif
 
 
 /***********************************************************************
