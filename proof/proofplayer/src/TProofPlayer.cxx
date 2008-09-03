@@ -2454,7 +2454,7 @@ TDSetElement *TProofPlayerRemote::GetNextPacket(TSlave *slave, TMessage *r)
       PDB(kPacketizer,2) Info("GetNextPacket","Waiting");
    } else {
       PDB(kPacketizer,2)
-         Info("GetNextPacket","To slave-%d (%s): '%s' '%s' '%s' %lld %lld",
+         Info("GetNextPacket","To slave-%s (%s): '%s' '%s' '%s' %lld %lld",
               slave->GetOrdinal(), slave->GetName(), e->GetFileName(),
               e->GetDirectory(), e->GetObjName(), e->GetFirst(), e->GetNum());
    }
