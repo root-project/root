@@ -3731,12 +3731,14 @@ static int G__IsFundamentalDecl()
 static void G__unsignedintegral()
 {
    // -- FIXME: Describe this function!
+   // -- FIXME: This routine can not handle 'unsigned int*GetXYZ();' [it must have a space after the *]
+
    G__StrBuf name_sb(G__MAXNAME);
    char *name = name_sb;
    fpos_t pos;
    G__unsigned = -1;
    fgetpos(G__ifile.fp, &pos);
-   G__fgetname(name, "");
+   G__fgetname(name, "(");
    if (strcmp(name, "int") == 0)         G__var_type = 'i' -1;
    else if (strcmp(name, "char") == 0)   G__var_type = 'c' -1;
    else if (strcmp(name, "short") == 0)  G__var_type = 's' -1;
@@ -3762,15 +3764,23 @@ static void G__unsignedintegral()
       G__reftype = G__PARAREFERENCE;
    }
    else if (strchr(name, '*')) {
-      if (strncmp(name, "int*", 4) == 0)        G__var_type = 'I' -1;
+      bool nomatch = false;
+      if (strncmp(name, "int*", 4) == 0 || strncmp(name, "*", 1) == 0 )        G__var_type = 'I' -1;
       else if (strncmp(name, "char*", 5) == 0)  G__var_type = 'C' -1;
       else if (strncmp(name, "short*", 6) == 0) G__var_type = 'S' -1;
       else if (strncmp(name, "long*", 5) == 0)  G__var_type = 'L' -1;
-      if (strstr(name, "******")) G__reftype = G__PARAP2P + 4;
-      else if (strstr(name, "*****")) G__reftype = G__PARAP2P + 3;
-      else if (strstr(name, "****")) G__reftype = G__PARAP2P + 2;
-      else if (strstr(name, "***")) G__reftype = G__PARAP2P + 1;
-      else if (strstr(name, "**")) G__reftype = G__PARAP2P;
+      else { nomatch = true; }
+      
+      if (nomatch) {
+         G__var_type = 'i' -1;
+         fsetpos(G__ifile.fp, &pos);
+      } else {
+         if (strstr(name, "******")) G__reftype = G__PARAP2P + 4;
+         else if (strstr(name, "*****")) G__reftype = G__PARAP2P + 3;
+         else if (strstr(name, "****")) G__reftype = G__PARAP2P + 2;
+         else if (strstr(name, "***")) G__reftype = G__PARAP2P + 1;
+         else if (strstr(name, "**")) G__reftype = G__PARAP2P;
+      }
    }
    else {
       G__var_type = 'i' -1;

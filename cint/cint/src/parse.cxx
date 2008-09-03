@@ -3682,13 +3682,15 @@ static int G__IsFundamentalDecl()
 static void G__unsignedintegral()
 {
    // -- FIXME: Describe this function!
+   // -- FIXME: This routine can not handle 'unsigned int*GetXYZ();' [it must have a space after the *]
+   
    // Remember the current file position.
    fpos_t pos;
    fgetpos(G__ifile.fp, &pos);
    G__unsigned = -1;
    // Scan the next identifier token in.
    char name[G__MAXNAME];
-   G__fgetname(name, "");
+   G__fgetname(name, "(");
    //
    //  And compare against the integral types.
    //
@@ -3734,7 +3736,8 @@ static void G__unsignedintegral()
    }
    else if (strchr(name, '*')) {
       // -- May have been a pointer.
-      if (!strncmp(name, "int*", 4)) {
+      bool nomatch = false;
+      if (!strncmp(name, "int*", 4) || !strncmp(name, "*", 1)) {
          G__var_type = 'I' - 1;
       }
       else if (!strncmp(name, "char*", 5)) {
@@ -3745,21 +3748,30 @@ static void G__unsignedintegral()
       }
       else if (!strncmp(name, "long*", 5)) {
          G__var_type = 'L' -1;
+      } else {
+         // No match at all.
+         nomatch = true;
       }
-      if (strstr(name, "******")) {
-         G__reftype = G__PARAP2P + 4;
-      }
-      else if (strstr(name, "*****")) {
-         G__reftype = G__PARAP2P + 3;
-      }
-      else if (strstr(name, "****")) {
-         G__reftype = G__PARAP2P + 2;
-      }
-      else if (strstr(name, "***")) {
-         G__reftype = G__PARAP2P + 1;
-      }
-      else if (strstr(name, "**")) {
-         G__reftype = G__PARAP2P;
+      if (nomatch) {
+         // Set to unsigned int and rewind
+         G__var_type = 'i' - 1;
+         fsetpos(G__ifile.fp, &pos);         
+      } else {
+         if (strstr(name, "******")) {
+            G__reftype = G__PARAP2P + 4;
+         }
+         else if (strstr(name, "*****")) {
+            G__reftype = G__PARAP2P + 3;
+         }
+         else if (strstr(name, "****")) {
+            G__reftype = G__PARAP2P + 2;
+         }
+         else if (strstr(name, "***")) {
+            G__reftype = G__PARAP2P + 1;
+         }
+         else if (strstr(name, "**")) {
+            G__reftype = G__PARAP2P;
+         }
       }
    }
    else {
@@ -3782,7 +3794,7 @@ static void G__unsignedintegral()
 }
 
 //______________________________________________________________________________
-static void G__externignore()
+static void G__externignore()		
 {
    // -- Handle extern "...", EXTERN "..."
    int flag = 0;
