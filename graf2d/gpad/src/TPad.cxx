@@ -29,6 +29,7 @@
 #include "TPoint.h"
 #include "TGraph.h"
 #include "TMultiGraph.h"
+#include "THStack.h"
 #include "TPaveText.h"
 #include "TGroupButton.h"
 #include "TBrowser.h"
@@ -382,18 +383,21 @@ TLegend *TPad::BuildLegend(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
    // added, excluding TPave and TFrame derived classes.
    // x1, y1, x2, y2 are the Tlegend coordinates.
    // title is the legend title. By default it is " ".
+   //
+   // If the pad contains some TMultiGraph or THStack the individual graphs or
+   // histograms in them are added to the TLegend.
 
    TList *lop=GetListOfPrimitives();
    if (!lop) return 0;
    TLegend *leg=0;
    TIter next(lop);
+   TString mes;
    TObject *o=0;
    while( (o=next()) ) {
       if((o->InheritsFrom("TAttLine") || o->InheritsFrom("TAttMarker") ||
          o->InheritsFrom("TAttFill")) &&
          ( !(o->InheritsFrom("TFrame")) && !(o->InheritsFrom("TPave")) )) {
             if (!leg) leg = new TLegend(x1, y1, x2, y2, title);
-            TString mes;
             if (o->InheritsFrom("TNamed") && strlen(((TNamed *)o)->GetTitle()))
                mes = ((TNamed *)o)->GetTitle();
             else if (strlen(o->GetName()))
@@ -405,6 +409,32 @@ TLegend *TPad::BuildLegend(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
             if (o->InheritsFrom("TAttMarker")) opt += "p";
             if (o->InheritsFrom("TAttFill"))   opt += "f";
             leg->AddEntry(o,mes.Data(),opt.Data());
+      } else if ( o->InheritsFrom("TMultiGraph" ) ) {
+         if (!leg) leg = new TLegend(x1, y1, x2, y2, title);
+         TList * grlist = ((TMultiGraph *)o)->GetListOfGraphs();
+         TIter nextgraph(grlist);
+         TGraph * gr;
+         TObject * obj;
+         while ((obj = nextgraph())) {
+            gr = (TGraph*) obj;
+            if      (strlen(gr->GetTitle())) mes = gr->GetTitle();
+            else if (strlen(gr->GetName()))  mes = gr->GetName();
+            else                             mes = gr->ClassName();
+            leg->AddEntry( obj, mes.Data(), "lpf" );
+         }
+      } else if ( o->InheritsFrom("THStack" ) ) {
+         if (!leg) leg = new TLegend(x1, y1, x2, y2, title);
+         TList * hlist = ((THStack *)o)->GetHists();
+         TIter nexthist(hlist);
+         TH1 * hist;
+         TObject * obj;
+         while ((obj = nexthist())) {
+            hist = (TH1*) obj;
+            if      (strlen(hist->GetTitle())) mes = hist->GetTitle();
+            else if (strlen(hist->GetName()))  mes = hist->GetName();
+            else                               mes = hist->ClassName();
+            leg->AddEntry( obj, mes.Data(), "lpf" );
+         }
       }
    }
    if (leg) leg->Draw();
