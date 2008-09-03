@@ -526,6 +526,9 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                         if ( fFileInfo->fFileNamesList != 0 ) {
                            fFileInfo->fFileNamesList->Delete();
                         }
+                        else {
+                           fFileInfo->fFileNamesList = new TList();
+                        }
                         while ((el = (TObjString *) next())) {
                            tmpString += "\"" + el->GetString() + "\" ";
                            fFileInfo->fFileNamesList->Add(new TObjString(
