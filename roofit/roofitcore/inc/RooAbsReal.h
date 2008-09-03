@@ -318,7 +318,7 @@ protected:
   
   struct PlotOpt {
    PlotOpt() : drawOptions("L"), scaleFactor(1.0), stype(Relative), projData(0), binProjData(kFALSE), projSet(0), precision(1e-3), 
-               shiftToZero(kFALSE),projDataSet(0),rangeLo(0),rangeHi(0),postRangeFracScale(kFALSE),wmode(RooCurve::Extended),
+               shiftToZero(kFALSE),projDataSet(0),normRangeName(0),rangeLo(0),rangeHi(0),postRangeFracScale(kFALSE),wmode(RooCurve::Extended),
                projectionRangeName(0),curveInvisible(kFALSE), curveName(0),addToCurveName(0),addToWgtSelf(1.),addToWgtOther(1.),
                numCPU(1),interleave(kTRUE),curveNameSuffix(""), numee(10), eeval(0), doeeval(kFALSE) {} ;
    Option_t* drawOptions ;
@@ -330,6 +330,7 @@ protected:
    Double_t precision ;
    Bool_t shiftToZero ;
    const RooArgSet* projDataSet ;
+   const char* normRangeName ;
    Double_t rangeLo ;
    Double_t rangeHi ;
    Bool_t postRangeFracScale ;

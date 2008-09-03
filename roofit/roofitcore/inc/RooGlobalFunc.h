@@ -48,8 +48,9 @@ RooCmdArg ProjWData(const RooArgSet& projSet, const RooAbsData& projData, Bool_t
 RooCmdArg Asymmetry(const RooCategory& cat) ;
 RooCmdArg Precision(Double_t prec) ;
 RooCmdArg ShiftToZero() ;
-RooCmdArg Range(const char* rangeName, Bool_t adjustNorm=kFALSE) ;
-RooCmdArg Range(Double_t lo, Double_t hi, Bool_t adjustNorm=kFALSE) ;
+RooCmdArg Range(const char* rangeName, Bool_t adjustNorm=kTRUE) ;
+RooCmdArg Range(Double_t lo, Double_t hi, Bool_t adjustNorm=kTRUE) ;
+RooCmdArg NormRange(const char* rangeNameList) ;
 RooCmdArg VLines() ;
 RooCmdArg LineColor(Color_t color) ;
 RooCmdArg LineStyle(Style_t style) ;

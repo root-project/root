@@ -59,6 +59,20 @@ public:
     // Return operator code
     return strlen(GetName()) ? GetName() : 0 ; 
   }
+
+  void setInt(Int_t idx,Int_t value) {
+    _i[idx] = value ;
+  }
+  void setDouble(Int_t idx,Double_t value) {
+    _d[idx] = value ;
+  }
+  void setString(Int_t idx,const char* value) {
+    _s[idx] = value ;
+  }
+  void setObject(Int_t idx,TObject* value) {
+    _o[idx] = value ;
+  }
+
   Int_t getInt(Int_t idx) const { 
     // Return integer stored in slot idx
     return _i[idx] ; 

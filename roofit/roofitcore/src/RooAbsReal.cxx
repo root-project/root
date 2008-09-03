@@ -530,7 +530,7 @@ RooAbsReal* RooAbsReal::createIntObj(const RooArgSet& iset2, const RooArgSet* ns
 
     // Send info message on recursion if needed
     if (integrand == this && iset.getSize()>0) {
-      coutI(Integration) << GetName() << " : INFO multidimensional integration over observables with parameterized ranges in terms of other integrated observables detected, using recursive integration strategy to construct final integral" << endl ;
+      coutI(Integration) << GetName() << " : multidimensional integration over observables with parameterized ranges in terms of other integrated observables detected, using recursive integration strategy to construct final integral" << endl ;
     }
 
     // Prepare for recursion, next integral should integrate last integrand
@@ -749,7 +749,6 @@ const RooAbsReal *RooAbsReal::createPlotProjection(const RooArgSet &dependentVar
 	while((lvs=(RooAbsArg*)iter->Next())) {
 	  RooAbsArg* tmp = leafNodes.find(lvs->GetName()) ;
 	  if (tmp) {
-	    cout << " replacing " << tmp << " with " << lvs << " in leaf nodes (2)" << endl ;
 	    leafNodes.remove(*tmp) ;
 	    leafNodes.add(*lvs) ;
 	  }
@@ -1299,6 +1298,36 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
 {
   // Internal back-end function of plotOn() with named arguments
 
+  // Special handling here if argList contains RangeWithName argument with multiple
+  // range names -- Need to translate this call into multiple calls
+
+  RooCmdArg* rcmd = (RooCmdArg*) argList.FindObject("RangeWithName") ;
+  if (rcmd && TString(rcmd->getString(0)).Contains(",")) {
+
+    // List joint ranges as choice of normalization for all later processing
+    RooCmdArg rnorm = RooFit::NormRange(rcmd->getString(0)) ;
+    argList.Add(&rnorm) ;
+
+    list<string> rlist ;
+
+    // Separate named ranges using strtok
+    char buf[1024] ;
+    strcpy(buf,rcmd->getString(0)) ;
+    char* oneRange = strtok(buf,",") ;
+    while(oneRange) {
+      rlist.push_back(oneRange) ;
+      oneRange = strtok(0,",") ;      
+    }
+
+    for (list<string>::iterator riter=rlist.begin() ; riter!=rlist.end() ; ++riter) {
+      // Process each range with a separate command with a single range to be plotted
+      rcmd->setString(0,riter->c_str()) ;
+      RooAbsReal::plotOn(frame,argList) ;
+    }
+    return frame ;
+    
+  }
+
   // Define configuration for this method
   RooCmdConfig pc(Form("RooAbsReal::plotOn(%s)",GetName())) ;
   pc.defineString("drawOption","DrawOption",0,"L") ;
@@ -1324,6 +1353,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
   pc.defineInt("rangeWNAdjustNorm","RangeWithName",0,0) ;
   pc.defineInt("VLines","VLines",0,2) ; // 2==ExtendedWings
   pc.defineString("rangeName","RangeWithName",0,"") ;
+  pc.defineString("normRangeName","NormRange",0,"") ;
   pc.defineInt("lineColor","LineColor",0,-999) ;
   pc.defineInt("lineStyle","LineStyle",0,-999) ;
   pc.defineInt("lineWidth","LineWidth",0,-999) ;
@@ -1348,6 +1378,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
   }
 
   PlotOpt o ;
+
 
   // Extract values from named arguments
   o.numee       = pc.getInt("numee") ;
@@ -1406,23 +1437,20 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
     o.postRangeFracScale = pc.getInt("rangeAdjustNorm") ;
     if (vlines==2) vlines=0 ; // Default is NoWings if range was specified
   } else if (pc.hasProcessed("RangeWithName")) {    
+    o.normRangeName = pc.getString("rangeName",0,kTRUE) ;
     o.rangeLo = frame->getPlotVar()->getMin(pc.getString("rangeName",0,kTRUE)) ;
     o.rangeHi = frame->getPlotVar()->getMax(pc.getString("rangeName",0,kTRUE)) ;
-    o.postRangeFracScale = pc.getInt("rangeAdjustNorm") ;
+    o.postRangeFracScale = pc.getInt("rangeWNAdjustNorm") ;
     if (vlines==2) vlines=0 ; // Default is NoWings if range was specified
-  } else {
+  } 
 
-    // Use range of last fit, if it was non-default and no other range was specified
-    RooArgSet* plotDep = getObservables(*frame->getPlotVar()) ;
-    RooRealVar* plotDepVar = (RooRealVar*) plotDep->find(frame->getPlotVar()->GetName()) ;
-    if (plotDepVar->hasBinning("fit")) {
-      o.rangeLo = plotDepVar->getMin("fit") ;
-      o.rangeHi = plotDepVar->getMax("fit") ;
-      o.postRangeFracScale = kTRUE ;
-      if (vlines==2) vlines=0 ; // Default is NoWings if range was specified
-    }
-    delete plotDep ;
+
+  // If separate normalization range was specified this overrides previous settings
+  if (pc.hasProcessed("NormRange")) {
+    o.normRangeName = pc.getString("normRangeName") ;
+    o.postRangeFracScale = kTRUE ;    
   }
+
   o.wmode = (vlines==2)?RooCurve::Extended:(vlines==1?RooCurve::Straight:RooCurve::NoWings) ;
   o.projectionRangeName = pc.getString("projectionRangeName",0,kTRUE) ;
   o.curveName = pc.getString("curveName",0,kTRUE) ;
@@ -1792,10 +1820,20 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
     // Calculate a posteriori range fraction scaling if requested (2nd part of normalization correction for
     // result fit on subrange of data)
     if (o.postRangeFracScale) {
-      plotVar->setRange("plotRange",o.rangeLo,o.rangeHi) ;
-      RooAbsReal* intFrac = projection->createIntegral(*plotVar,*plotVar,"plotRange") ;
+      if (!o.normRangeName) {
+	o.normRangeName = "plotRange" ;
+	plotVar->setRange("plotRange",o.rangeLo,o.rangeHi) ;
+      }
+
+      // Evaluate fractional correction integral always on full p.d.f, not component.
+      Bool_t tmp = _globalSelectComp ;
+      globalSelectComp(kTRUE) ;
+      RooAbsReal* intFrac = projection->createIntegral(*plotVar,*plotVar,o.normRangeName) ;
+      globalSelectComp(kTRUE) ;
       o.scaleFactor /= intFrac->getVal() ;
+      globalSelectComp(tmp) ;
       delete intFrac ;
+
     }
 
     // create a new curve of our function using the clone to do the evaluations

@@ -569,7 +569,7 @@ Double_t RooAbsPdf::extendedTerm(UInt_t observed, const RooArgSet* nset) const
   // calculate and return the negative log-likelihood of the Poisson
   // factor for this dataset, dropping the constant log(observed!)
   Double_t extra= expected - observed*log(expected);
-  
+
   Bool_t trace(kFALSE) ;
   if(trace) {
     cxcoutD(Tracing) << fName << "::extendedTerm: expected " << expected << " events, got "
@@ -1332,6 +1332,9 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
   //           const RooAbsData& d)
   // ProjectionRange(const char* rn) -- Override default range of projection integrals to a different range speficied by given range name.
   //                                    This technique allows you to project a finite width slice in a real-valued observable
+  // NormRange(const char* name)     -- Calculate curve normalization w.r.t. only in specified ranges. NB: A Range() by default implies a NormRange()
+  //                                    on the same range, but this option allows to override the default, or specify a normalization ranges
+  //                                    when the full curve is to be drawn
   // 
   // Misc content control
   // --------------------
@@ -1362,6 +1365,17 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
   // Invisble(Bool_t flag)           -- Add curve to frame, but do not display. Useful in combination AddTo()
 
 
+  // Pre-processing if p.d.f. contains a fit range and there is no command specifying one,
+  // add a fit range as default range
+  RooCmdArg* fitRange(0) ;
+  if (getStringAttribute("fitrange") && !cmdList.FindObject("Range") && 
+      !cmdList.FindObject("RangeWithName") && !cmdList.FindObject("NormRange")) {
+    fitRange = (RooCmdArg*) RooFit::Range(getStringAttribute("fitrange")).Clone() ;    
+    cmdList.Add(fitRange) ;
+    coutI(Plotting) << "RooAbsPdf::plotOn(" << GetName() << ") p.d.f was fitted in range and no explicit plot range was specified, using fit range as default" << endl ;
+  }
+
+
   // Sanity checks
   if (plotSanityChecks(frame)) return frame ;
 
@@ -1375,6 +1389,7 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
   pc.defineDouble("rangeLo","Range",0,-999.) ;
   pc.defineDouble("rangeHi","Range",1,-999.) ;
   pc.defineString("rangeName","RangeWithName",0,"") ;
+  pc.defineString("normRangeName","NormRange",0,"") ;
   pc.defineInt("rangeAdjustNorm","Range",0,0) ;
   pc.defineInt("rangeWNAdjustNorm","RangeWithName",0,0) ;
   pc.defineMutex("SelectCompSet","SelectCompSpec") ;
@@ -1427,40 +1442,87 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
     }
     nExpected = expectedEvents(frame->getNormVars()) ;
   }
-  
+
   if (stype != Raw) {    
 
     if (frame->getFitRangeNEvt() && stype==Relative) {
 
       Bool_t hasCustomRange(kFALSE), adjustNorm(kFALSE) ;
-      Double_t rangeLo(0), rangeHi(0) ;
+
+      list<pair<Double_t,Double_t> > rangeLim ;
+
       // Retrieve plot range to be able to adjust normalization to data
       if (pc.hasProcessed("Range")) {
-	rangeLo = pc.getDouble("rangeLo") ;
-	rangeHi = pc.getDouble("rangeHi") ;
+
+	Double_t rangeLo = pc.getDouble("rangeLo") ;
+	Double_t rangeHi = pc.getDouble("rangeHi") ;
+	rangeLim.push_back(make_pair(rangeLo,rangeHi)) ;
 	adjustNorm = pc.getInt("rangeAdjustNorm") ;
 	hasCustomRange = kTRUE ;
+
+	coutI(Plotting) << "RooAbsPdf::plotOn(" << GetName() << ") only plotting range [" 
+			<< rangeLo << "," << rangeHi << "]" ;
+	if (!pc.hasProcessed("NormRange")) {	  
+	  ccoutI(Plotting) << ", curve is normalized to data in " << (adjustNorm?"given":"full") << " given range" << endl ;
+	} else {
+	  ccoutI(Plotting) << endl ;
+	}
+
+	nameSuffix.Append(Form("_Range[%d_%d]",rangeLo,rangeHi)) ;
+
       } else if (pc.hasProcessed("RangeWithName")) {    
-	rangeLo = frame->getPlotVar()->getMin(pc.getString("rangeName",0,kTRUE)) ;
-	rangeHi = frame->getPlotVar()->getMax(pc.getString("rangeName",0,kTRUE)) ;
+
+	char tmp[1024] ;
+	strcpy(tmp,pc.getString("rangeName",0,kTRUE)) ;
+	char* rangeNameToken = strtok(tmp,",") ;
+	while(rangeNameToken) {
+	  Double_t rangeLo = frame->getPlotVar()->getMin(rangeNameToken) ;
+	  Double_t rangeHi = frame->getPlotVar()->getMax(rangeNameToken) ;
+	  rangeLim.push_back(make_pair(rangeLo,rangeHi)) ;
+	  rangeNameToken = strtok(0,",") ;
+	}
 	adjustNorm = pc.getInt("rangeWNAdjustNorm") ;
 	hasCustomRange = kTRUE ;
-      } else {
-	// Use range of last fit, if it was non-default and no other range was specified
-	RooArgSet* plotDep = getObservables(*frame->getPlotVar()) ;
-	RooRealVar* plotDepVar = (RooRealVar*) plotDep->find(frame->getPlotVar()->GetName()) ;
-	if (plotDepVar->hasBinning("fit")) {
-	  rangeLo = plotDepVar->getMin("fit") ;
-	  rangeHi = plotDepVar->getMax("fit") ;
-	  adjustNorm = kTRUE ;
-	  hasCustomRange = kTRUE ;
-	  coutI(Plotting) << "RooAbsPdf::plotOn(" << GetName() << ") INFO: pdf has been fit over restricted range, plotting only fitted "
-			  << "part of PDF normalized data in restricted range" << endl ;
+
+	coutI(Plotting) << "RooAbsPdf::plotOn(" << GetName() << ") only plotting range '" << pc.getString("rangeName",0,kTRUE) << "'" ;
+	if (!pc.hasProcessed("NormRange")) {	  
+	  ccoutI(Plotting) << ", curve is normalized to data in " << (adjustNorm?"given":"full") << " given range" << endl ;
+	} else {
+	  ccoutI(Plotting) << endl ;
 	}
-	delete plotDep ;
+
+	nameSuffix.Append(Form("_Range[%s]",pc.getString("rangeName"))) ;
+      } 
+      // Specification of a normalization range override those in a regular ranage
+      if (pc.hasProcessed("NormRange")) {    
+	char tmp[1024] ;
+	strcpy(tmp,pc.getString("normRangeName",0,kTRUE)) ;
+	char* rangeNameToken = strtok(tmp,",") ;
+	rangeLim.clear() ;
+	while(rangeNameToken) {
+	  Double_t rangeLo = frame->getPlotVar()->getMin(rangeNameToken) ;
+	  Double_t rangeHi = frame->getPlotVar()->getMax(rangeNameToken) ;
+	  rangeLim.push_back(make_pair(rangeLo,rangeHi)) ;
+	  rangeNameToken = strtok(0,",") ;
+	}
+	adjustNorm = kTRUE ;
+	hasCustomRange = kTRUE ;	
+	coutI(Plotting) << "RooAbsPdf::plotOn(" << GetName() << ") p.d.f. curve is normalized using explicit choice of ranges '" << pc.getString("normRangeName",0,kTRUE) << "'" << endl ;
+
+	nameSuffix.Append(Form("_NormRange[%s]",pc.getString("rangeName"))) ;
+
       }
+
       if (hasCustomRange && adjustNorm) {	
-	scaleFactor *= frame->getFitRangeNEvt(rangeLo,rangeHi)/nExpected ;
+
+	Double_t rangeNevt(0) ;
+	list<pair<Double_t,Double_t> >::iterator riter = rangeLim.begin() ;
+	for (;riter!=rangeLim.end() ; ++riter) {
+	  Double_t nevt= frame->getFitRangeNEvt(riter->first,riter->second) ;
+	  rangeNevt += nevt ;
+	}
+	scaleFactor *= rangeNevt/nExpected ;
+
       } else {
 	scaleFactor *= frame->getFitRangeNEvt()/nExpected ;
       }
@@ -1476,7 +1538,7 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
   // Append overriding scale factor command at end of original command list
   RooCmdArg tmp = RooFit::Normalization(scaleFactor,Raw) ;
   cmdList.Add(&tmp) ;
-  
+
   // Was a component selected requested
   if (haveCompSel) {
     
@@ -1508,6 +1570,7 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
 
     delete dirSelNodes ;
   }
+
 
   RooCmdArg cnsuffix("CurveNameSuffix",0,0,0,0,nameSuffix.Data(),0,0,0) ;
   cmdList.Add(&cnsuffix);

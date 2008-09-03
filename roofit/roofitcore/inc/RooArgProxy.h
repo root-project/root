@@ -25,7 +25,7 @@ class RooArgProxy : public TNamed, public RooAbsProxy  {
 public:
 
   // Constructors, assignment etc.
-  RooArgProxy() : _owner(0), _arg(0) {
+  RooArgProxy() : _owner(0), _arg(0), _ownArg(kFALSE) {
     // Default constructor
   } ;
   RooArgProxy(const char* name, const char* desc, RooAbsArg* owner, RooAbsArg& arg, 

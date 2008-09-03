@@ -198,7 +198,15 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *tit
       while((arg=(RooAbsArg*)iter->Next())) {      
 	RooRealVar* realReal = dynamic_cast<RooRealVar*>(arg) ;
 	if (realReal) {
-	  realReal->setRange("fit",realReal->getMin(rangeName),realReal->getMax(rangeName)) ;
+	  realReal->setRange(Form("fit_%s",GetName()),realReal->getMin(rangeName),realReal->getMax(rangeName)) ;
+
+	  // Keep track of list of fit ranges in string attribute fit range of original p.d.f.
+	  const char* origAttrib = real.getStringAttribute("fitrange") ;
+	  if (origAttrib) {
+	    real.setStringAttribute("fitrange",Form("%s,fit_%s",origAttrib,GetName())) ;
+	  } else {
+	    real.setStringAttribute("fitrange",Form("fit_%s",GetName())) ;
+	  }
 	}
       }
     }
