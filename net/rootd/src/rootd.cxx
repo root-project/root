@@ -2398,7 +2398,7 @@ int main(int argc, char **argv)
                   if (!gInetdFlag)
                      fprintf(stderr,"-F requires a file path name for the"
                              " CASTOR disk file to be accessed\n");
-                  Error(ErrFatal, kErrFatal,"-D requires a file path name"
+                  Error(ErrFatal, kErrFatal,"-F requires a file path name"
                         " for the CASTOR disk file to be accessed");
                }
                gCastorFile = std::string(*++argv);
