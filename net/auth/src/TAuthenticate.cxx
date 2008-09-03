@@ -1845,27 +1845,18 @@ Int_t TAuthenticate::SshAuth(TString &user)
       Info("SshAuth", "received from server command info: %s", cmdinfo);
 
    int rport = -1;
-   char *pd = 0;
-   if ((pd = strstr(cmdinfo, "p:")) != 0 || (pd = strstr(cmdinfo, "k:"))) {
-      Int_t clen = (Int_t) (pd - cmdinfo) - 1;
-      cmdinfo[clen] = '\0';
-      char ss[2][20] = {{0},{0}};
-      Int_t ns = sscanf(pd-1,"%s %s",ss[0],ss[1]);
-      Int_t i = 0;
-      for( ; i < ns; i++ ) {
-         if (strlen(ss[i])) {
-            if (!strncmp(ss[i],"p:",2)) {
-               char *pp = (char *)(ss[i])+2;
-               rport = atoi(pp);
-            }
+   TString ci(cmdinfo), tkn;
+   Ssiz_t from = 0;
+   while (ci.Tokenize(tkn, from, " ")) {
+      if (from > 0) cmdinfo[from-1] = '\0';
+      if (tkn.BeginsWith("p:")) {
+         tkn.ReplaceAll("p:", "");
+         if (tkn.IsDigit()) rport = tkn.Atoi();
 #ifdef R__SSL
-            if (!strncmp(ss[i],"k:",2)) {
-               char *pk = (char *)(ss[i])+2;
-               if (atoi(pk) == 1)
-                  fRSAKey = 1;
-            }
+      } else if (tkn.BeginsWith("k:")) {
+         tkn.ReplaceAll("k:", "");
+         if (tkn.IsDigit() && tkn.Atoi() == 1) fRSAKey = 1;
 #endif
-         }
       }
    }
 
