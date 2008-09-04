@@ -412,8 +412,6 @@ ClassImp(TGeoPNEntry)
 TGeoPNEntry::TGeoPNEntry()
 {
 // Default constructor
-   if (TClass::IsCallingNew() == TClass::kDummyNew) SetBit(kPNEntryOwnMatrix,kTRUE);
-   else SetBit(kPNEntryOwnMatrix,kFALSE);
    fNode = 0;
    fMatrix = 0;
    fGlobalOrig = 0;
@@ -435,7 +433,6 @@ TGeoPNEntry::TGeoPNEntry(const char *name, const char *path)
    fGlobalOrig = new TGeoHMatrix();
    *fGlobalOrig = gGeoManager->GetCurrentMatrix();
    gGeoManager->PopPath();
-   SetBit(kPNEntryOwnMatrix,kFALSE);
    fNode = 0;
    fMatrix = 0;
 }
@@ -444,7 +441,7 @@ TGeoPNEntry::TGeoPNEntry(const char *name, const char *path)
 TGeoPNEntry::~TGeoPNEntry()
 {
 // Destructor
-   if (fMatrix && TestBit(kPNEntryOwnMatrix)) delete fMatrix;
+   if (fMatrix && !fMatrix->IsRegistered()) delete fMatrix;
    delete fGlobalOrig;
 }
    
@@ -462,7 +459,8 @@ void TGeoPNEntry::SetPhysicalNode(TGeoPhysicalNode *node)
 //_____________________________________________________________________________
 void TGeoPNEntry::SetMatrix(const TGeoHMatrix *mat)
 {
-// Set the additional matrix for this node entry. The matrix is owned by user.
+// Set the additional matrix for this node entry. The matrix will be deleted
+// by this class unless registered by the user to gGeoManager
    fMatrix = mat;
 }
 
