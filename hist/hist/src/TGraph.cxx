@@ -1575,14 +1575,16 @@ TH1F *TGraph::GetHistogram() const
 
 
 //______________________________________________________________________________
-void TGraph::GetPoint(Int_t i, Double_t &x, Double_t &y) const
+Int_t TGraph::GetPoint(Int_t i, Double_t &x, Double_t &y) const
 {
    // Get x and y values for point number i.
+   // The function returns -1 in case of an invalid request or the point number otherwise
 
-   if (i < 0 || i >= fNpoints) return;
-   if (!fX || !fY) return;
+   if (i < 0 || i >= fNpoints) return -1;
+   if (!fX || !fY) return -1;
    x = fX[i];
    y = fY[i];
+   return i;
 }
 
 

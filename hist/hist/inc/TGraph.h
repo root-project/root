@@ -149,7 +149,7 @@ public:
    Double_t              GetMinimum()  const {return fMinimum;}
    TAxis                *GetXaxis() const ;
    TAxis                *GetYaxis() const ;
-   virtual void          GetPoint(Int_t i, Double_t &x, Double_t &y) const;
+   virtual Int_t         GetPoint(Int_t i, Double_t &x, Double_t &y) const;
    
    virtual void          InitExpo(Double_t xmin=0, Double_t xmax=0);
    virtual void          InitGaus(Double_t xmin=0, Double_t xmax=0);
