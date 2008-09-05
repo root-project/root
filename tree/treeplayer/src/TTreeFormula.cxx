@@ -303,19 +303,10 @@ TTreeFormula::~TTreeFormula()
          fManager = 0;
       }
    }
+   // Objects in fExternalCuts are not owned and should not be deleted
+   // fExternalCuts.Clear();
    fLeafNames.Delete();
    fDataMembers.Delete();
-   //TCutG objects should not be deleted from fMethods
-   TList temp;
-   TIter next(&fMethods);
-   TObject *obj;
-   while ((obj=next())) {
-      if (obj->InheritsFrom("TCutG") || obj->InheritsFrom("TEntryList")) temp.Add(obj);
-   }
-   TIter next2(&temp);
-   while ((obj=next2())) {
-      fMethods.Remove(obj);
-   }
    fMethods.Delete();
    fAliases.Delete();
    if (fLookupType) delete [] fLookupType;
@@ -2796,7 +2787,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
 
       }
 
-      fMethods.AddAtAndExpand(gcut,code);
+      fExternalCuts.AddAtAndExpand(gcut,code);
       fNcodes++;
       fLookupType[code] = -1;
       return code;
@@ -2807,7 +2798,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
    if (elist) {
       Int_t code = fNcodes;
       fCodes[code] = 0;
-      fMethods.AddAtAndExpand(elist, code);
+      fExternalCuts.AddAtAndExpand(elist, code);
       fNcodes++;
       fLookupType[code] = kEntryList;
       return code;
@@ -3589,14 +3580,14 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
          case kIteration:    return instance;
          case kSum:          return Summing((TTreeFormula*)fAliases.UncheckedAt(0));
          case kEntryList: {
-            TEntryList *elist = (TEntryList*)fMethods.At(0);
+            TEntryList *elist = (TEntryList*)fExternalCuts.At(0);
             return elist->Contains(fTree->GetTree()->GetReadEntry());
          }
          case -1: break;
       }
       switch (fCodes[0]) {
          case -2: {
-            TCutG *gcut = (TCutG*)fMethods.At(0);
+            TCutG *gcut = (TCutG*)fExternalCuts.At(0);
             TTreeFormula *fx = (TTreeFormula *)gcut->GetObjectX();
             TTreeFormula *fy = (TTreeFormula *)gcut->GetObjectY();
             Double_t xcut = fx->EvalInstance(instance);
@@ -3604,7 +3595,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
             return gcut->IsInside(xcut,ycut);
          }
          case -1: {
-            TCutG *gcut = (TCutG*)fMethods.At(0);            TTreeFormula *fx = (TTreeFormula *)gcut->GetObjectX();
+            TCutG *gcut = (TCutG*)fExternalCuts.At(0);            TTreeFormula *fx = (TTreeFormula *)gcut->GetObjectX();
             return fx->EvalInstance(instance);
          }
          default: return 0;
@@ -3827,7 +3818,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
                                           GetValue(leaf,real_instance); continue; }
                case kTreeMember: { TREE_EVAL_INIT_LOOP; tab[pos++] = ((TFormLeafInfo*)fDataMembers.UncheckedAt(code))->
                                           GetValue((TLeaf*)0x0,real_instance); continue; }
-               case kEntryList: { TEntryList *elist = (TEntryList*)fMethods.At(code);
+               case kEntryList: { TEntryList *elist = (TEntryList*)fExternalCuts.At(code);
                   tab[pos++] = elist->Contains(fTree->GetReadEntry());
                   continue;}
                case -1: break;
@@ -3835,7 +3826,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
             }
             switch (fCodes[code]) {
                case -2: {
-                  TCutG *gcut = (TCutG*)fMethods.At(code);
+                  TCutG *gcut = (TCutG*)fExternalCuts.At(code);
                   TTreeFormula *fx = (TTreeFormula *)gcut->GetObjectX();
                   TTreeFormula *fy = (TTreeFormula *)gcut->GetObjectY();
                   Double_t xcut = fx->EvalInstance(instance);
@@ -3844,7 +3835,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
                   continue;
                }
                case -1: {
-                  TCutG *gcut = (TCutG*)fMethods.At(code);
+                  TCutG *gcut = (TCutG*)fExternalCuts.At(code);
                   TTreeFormula *fx = (TTreeFormula *)gcut->GetObjectX();
                   tab[pos++] = fx->EvalInstance(instance);
                   continue;
@@ -4707,7 +4698,7 @@ void TTreeFormula::ResetDimensions() {
 
    for (i=0;i<fNcodes;i++) {
       if (fCodes[i] < 0) {
-         TCutG *gcut = (TCutG*)fMethods.At(i);
+         TCutG *gcut = (TCutG*)fExternalCuts.At(i);
          if (!gcut) continue;
          TTreeFormula *fx = (TTreeFormula *)gcut->GetObjectX();
          TTreeFormula *fy = (TTreeFormula *)gcut->GetObjectY();

@@ -95,6 +95,7 @@ protected:
    TObjArray   fLeaves;           //!  List of leaf used in this formula.
    TObjArray   fDataMembers;      //!  List of leaf data members
    TObjArray   fMethods;          //!  List of leaf method calls
+   TObjArray   fExternalCuts;     //!  List of TCutG and TEntryList used in the formula
    TObjArray   fAliases;          //!  List of TTreeFormula for each alias used.
    TObjArray   fLeafNames;        //   List of TNamed describing leaves
    TObjArray   fBranches;         //!  List of branches to read.  Similar to fLeaces but duplicates are zeroed out.
