@@ -79,10 +79,10 @@
 //   return (XrdProofSched *)0;
 // }}
 
-//__________________________________________________________________________
+//______________________________________________________________________________
 static bool XpdWrkComp(XrdProofWorker *&lhs, XrdProofWorker *&rhs)
 {
-   // COmpare two workers for sorting
+   // Compare two workers for sorting
 
    return ((lhs && rhs &&
             lhs->GetNActiveSessions() < rhs->GetNActiveSessions()) ? 1 : 0);
@@ -143,7 +143,7 @@ void XrdProofSched::ResetParameters()
    fNodesFraction = 0.5;
 }
 
-//_________________________________________________________________________________
+//______________________________________________________________________________
 int XrdProofSched::Config(const char *cfn)
 {
    // Configure this instance using the content of file 'cfn'.
@@ -215,7 +215,7 @@ int XrdProofSched::GetNumWorkers(XrdProofdProofServ *xps)
 
    float priority = 1;
    XrdProofGroup *grp = 0;
-   if (xps->Group())
+   if (fGrpMgr && xps->Group())
       grp = fGrpMgr->GetGroup(xps->Group());
    if (grp) {
       std::list<XrdProofdProofServ *> *sessions = fMgr->SessionMgr()->ActiveSessions();
@@ -233,14 +233,17 @@ int XrdProofSched::GetNumWorkers(XrdProofdProofServ *xps)
    }
 
    int nWrks = (int)(nFreeCPUs * fNodesFraction * priority);
-   nWrks = (fMinForQuery < nWrks) ? fMinForQuery : nWrks;
-   nWrks = (nWrks >= (int) wrks->size()) ? wrks->size() - 1 : nWrks;
+   if (nWrks < fMinForQuery) {
+      nWrks = fMinForQuery;
+   } else if (nWrks >= (int) wrks->size()) {
+      nWrks = wrks->size() - 1;
+   }
    TRACE(DBG, nFreeCPUs<<" : "<< nWrks);
 
    return nWrks;
 }
 
-//__________________________________________________________________________
+//______________________________________________________________________________
 int XrdProofSched::GetWorkers(XrdProofdProofServ *xps,
                               std::list<XrdProofWorker *> *wrks)
 {
