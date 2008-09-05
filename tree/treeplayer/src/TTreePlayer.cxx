@@ -495,6 +495,7 @@ Long64_t TTreePlayer::DrawScript(const char* wrapperPrefix,
 
    Info("DrawScript",Form("Will process tree/chain using %s",selname.Data()));
    Long64_t result = fTree->Process(selname,option,nentries,firstentry);
+   fTree->SetNotify(0);
 
    // could delete the file selname+".h"
    // However this would remove the optimization of avoiding a useless
@@ -1174,6 +1175,7 @@ Long64_t TTreePlayer::GetEntries(const char *selection)
 
    TSelectorEntries s(selection);
    fTree->Process(&s);
+   fTree->SetNotify(0);
    return s.GetSelectedRows();
 }
 
