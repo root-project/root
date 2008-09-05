@@ -567,7 +567,9 @@ int G__matchfilename(int i1,const char *filename)
   struct stat statBuf;
 #endif
 
-  if((strcmp(G__srcfile[i1].filename,filename)==0)) return(1);
+  if((strcmp(G__srcfile[i1].filename,filename)==0)) {
+     return(1);
+  }
 
 #ifdef G__WIN32
   _fullpath( i1name, G__srcfile[i1].filename, _MAX_PATH );
@@ -576,7 +578,11 @@ int G__matchfilename(int i1,const char *filename)
 #else
   if (   ( 0 == stat( filename, & statBufItem ) )
       && ( 0 == stat( G__srcfile[i1].filename, & statBuf ) )
-      && ( statBufItem.st_ino == statBuf.st_ino ) ) {
+      && ( statBufItem.st_dev == statBuf.st_dev )     // Files on same device
+      && ( statBufItem.st_ino == statBuf.st_ino )     // Files on same inode (but this is not unique on AFS so we need the next 2 test
+      && ( statBufItem.st_size == statBuf.st_size )   // Files of same size
+      && ( statBufItem.st_mtime == statBuf.st_mtime ) // Files modified at the same time
+     ) {
      return 1;
   }
 #endif
