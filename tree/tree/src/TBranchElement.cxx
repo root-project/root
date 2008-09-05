@@ -1357,7 +1357,7 @@ TBranch* TBranchElement::FindBranch(const char *name)
             continue;
          TBranchElement *br = (TBranchElement*)GetListOfBranches()->At(i);
          TVirtualStreamerInfo* si = br->GetInfo();
-         if (br->GetID() >= 0) {
+         if (si && br->GetID() >= 0) {
             TStreamerElement* se = (TStreamerElement*) si->GetElems()[br->GetID()];
             if (se && se->IsBase()) {
                result = br->FindBranch(name);

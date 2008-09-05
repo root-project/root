@@ -951,10 +951,12 @@ void TList::Streamer(TBuffer &b)
             }
             readOption.resize(nbig,'\0');
             b.ReadFastArray((char*) readOption.data(),nbig);
-            if (nch) {
-               Add(obj,readOption.c_str());
-            } else {
-               Add(obj);
+            if (obj) { // obj can be null if the class had a custom streamer and we do not have the shared library nor a streamerInfo.
+               if (nch) {
+                  Add(obj,readOption.c_str());
+               } else {
+                  Add(obj);
+               }
             }
          }
          b.CheckByteCount(R__s, R__c,TList::IsA());
