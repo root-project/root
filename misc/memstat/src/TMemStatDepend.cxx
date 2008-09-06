@@ -167,7 +167,7 @@ void TMemStatDepend::GetSymbols(void *_pFunction,
    _strInfo = codeInfo.c_str();
 
    // Resolving a library name
-   const string::size_type pos_begin = codeInfo.find('(');
+   const string::size_type pos_begin = codeInfo.find_first_of("( [");
    if (string::npos == pos_begin) {
       _strLib = codeInfo;
       return;
