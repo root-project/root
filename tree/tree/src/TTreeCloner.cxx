@@ -156,6 +156,18 @@ UInt_t TTreeCloner::CollectBranches(TBranch *from, TBranch *to)
       numBaskets += CollectBranches(fromclones->fBranchCount,toclones->fBranchCount);
    
    } else if (from->InheritsFrom(TBranchElement::Class())) {
+      Int_t nb = from->GetListOfLeaves()->GetEntries();
+      Int_t fnb= to->GetListOfLeaves()->GetEntries();
+      if (nb!=fnb && (nb==0 || fnb==0)) {
+         // We might be in the case where one branch is split
+         // while the other is not split.  We must reject this match.
+         Error("TTreeCloner::CollectBranches",
+               "The export branch and the import branch do not have the same split level. (The branch name is %s.)", 	 
+               from->GetName());
+         fIsValid = kFALSE;
+         return 0;
+      }
+
       TBranchElement *fromelem = (TBranchElement*)from;
       TBranchElement *toelem   = (TBranchElement*)to;
       if (fromelem->fMaximum > toelem->fMaximum) toelem->fMaximum = fromelem->fMaximum;
@@ -165,8 +177,8 @@ UInt_t TTreeCloner::CollectBranches(TBranch *from, TBranch *to)
       Int_t fnb= to->GetListOfLeaves()->GetEntries();
       if (nb!=fnb) {
          Error("TTreeCloner::CollectBranches",
-            "The export branch and the import branch do not have the same number of leaves (%d vs %d)",
-            fnb,nb);
+            "The export branch and the import branch (%s) do not have the same number of leaves (%d vs %d)",
+            from->GetName(), fnb,nb);
          fIsValid = kFALSE;
          return 0;
       }
