@@ -1161,6 +1161,10 @@ Int_t TBranch::GetEntry(Long64_t entry, Int_t getall)
    // Are we still in the same ReadBasket?
    if ((entry < first) || (entry > last)) {
       fReadBasket = TMath::BinarySearch(fWriteBasket + 1, fBasketEntry, entry);
+      if (fReadBasket < 0) {
+         Error("In the branch %s, no basket contains the entry %d\n", GetName(), entry);
+         return -1;
+      } 
       first = fBasketEntry[fReadBasket];
    }
    // We have found the basket containing this entry.
