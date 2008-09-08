@@ -3613,8 +3613,15 @@ void Cint::Internal::G__cppif_gendefault(FILE* fp, FILE* /*hfp*/, int tagnum, in
 
    G__ASSERT(tagnum != -1);
 
-   ::Reflex::Type type(G__Dict::GetDict().GetType(tagnum));
-   if (!type) return;
+   {
+      ::Reflex::Scope scope(G__Dict::GetDict().GetScope(tagnum));
+      if (!scope || scope.IsNamespace()) {
+         return;
+      }
+      if (G__struct.type[tagnum] == 'n') { // FIXME: This is a hack until we fix the problem with G__search_tagname creating autoloading entries as Reflex::Class even for namespaces.
+         return;
+      }
+   }
 
    int extra_pages = 0;
 
