@@ -402,10 +402,28 @@ ROOTCINT = $(ROOT_LOC)/bin/rootcint$(ExeSuf)
 UTILS_LIBS =  $(ROOTTEST_LOC)scripts/utils_cc.$(DllSuf) $(ROOTTEST_LOC)scripts/recordtiming_cc.$(DllSuf)
 
 $(ROOTTEST_LOC)scripts/utils_cc.$(DllSuf) : $(ROOTTEST_LOC)scripts/utils.cc $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) rm -f $@ ; root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$(ROOTTEST_HOME)scripts/utils.cc\"\) > $(ROOTTEST_LOC)scripts/utils_cc.build.log 2>&1 || cat $(ROOTTEST_LOC)scripts/utils_cc.build.log 
+	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$(ROOTTEST_HOME)scripts/utils.cc\"\) > $(ROOTTEST_LOC)scripts/utils_cc.build.log 2>&1 ; \
+	if test $$? -ne 0 ; \
+	then \
+	  cat $(ROOTTEST_LOC)scripts/utils_cc.build.log ; \
+	else \
+	  if test -f $@ ; \
+	  then \
+	    touch $@ ; \
+	  fi ; \
+	fi
 
 $(ROOTTEST_LOC)scripts/recordtiming_cc.$(DllSuf) : $(ROOTTEST_LOC)scripts/recordtiming.cc $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) rm -f $@ ; root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$(ROOTTEST_HOME)scripts/recordtiming.cc\"\) > $(ROOTTEST_LOC)scripts/recordtiming_cc.build.log 2>&1 || cat $(ROOTTEST_LOC)scripts/recordtiming_cc.build.log
+	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$(ROOTTEST_HOME)scripts/recordtiming.cc\"\) > $(ROOTTEST_LOC)scripts/recordtiming_cc.build.log 2>&1 ; \
+	if test $$? -ne 0 ; \
+	then \
+	  cat $(ROOTTEST_LOC)scripts/recordtiming_cc.build.log ; \
+	else \
+	  if test -f $@ ; \
+	  then \
+	    touch $@ ; \
+	  fi ; \
+	fi
 
 override ROOTMAP = $(ROOT_LOC)/etc/system.rootmap
 
