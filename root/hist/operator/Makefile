@@ -1,31 +1,34 @@
-# This is a template for all makefile.
+TEST_TARGETS += add_test copy_test Projections_test sparse_test
 
-#Set the list of files to be delete by clean:
-CLEAN_TARGETS +=  $(ALL_LIBRARIES) *.log *.clog
-
-#Set the list of target to make while testing
-TEST_TARGETS += copy addTest sparse Projections
+CLEAN_TARGETS +=  $(ALL_LIBRARIES) *.log *.clog add copy Projections sparse
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME := $(shell expr $(PWD) : '\(.*/roottest/\)')
 endif
+
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
-addTest:
-	$(CMDECHO) $(CALLROOTEXE) -b -q -l run.C > run.log 2>&1
 
-testWithFailure:
-ifeq ($(FAIL),)
-	$(WarnFailTest)
-endif
+add_test : add
+
+add :
+	$(CMDECHO) $(CALLROOTEXE) -b -q -l run.C > run.log 2>&1 && touch $@
 
 
+copy_test : copy
 
-copy: copy.clog
-	$(TestDiff)
+copy : copy.clog
+	$(TestDiff) && touch $@
 
-sparse: sparse.log sparse.ref
-	$(TestDiff)
 
-Projections: Projections.log Projections.ref
-	$(TestDiff)
+Projections_test : Projections
+
+Projections : Projections.log Projections.ref
+	$(TestDiff) && touch $@
+
+
+sparse_test : sparse
+
+sparse : sparse.log sparse.ref
+	$(TestDiff) && touch $@
+
