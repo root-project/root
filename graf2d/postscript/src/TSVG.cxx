@@ -1232,9 +1232,14 @@ void TSVG::NewPage()
 
    // <svg> directive. It defines the viewBox.
    if(!fBoundingBox) {
-      PrintStr("@<svg viewBox=\"0 0");
-      WriteInteger(CMtoSVG(fXsize));
+      PrintStr("@<?xml version=\"1.0\" standalone=\"no\"?>");
+      PrintStr("@<svg width=\"");
+      WriteInteger(CMtoSVG(fXsize), 0);
+      PrintStr("\" height=\"");
       fYsizeSVG = CMtoSVG(fYsize);
+      WriteInteger(fYsizeSVG, 0);
+      PrintStr("\" viewBox=\"0 0");
+      WriteInteger(CMtoSVG(fXsize));
       WriteInteger(fYsizeSVG);
       PrintStr("\" xmlns=\"http://www.w3.org/2000/svg\">");
       PrintStr("@");
