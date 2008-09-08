@@ -14,7 +14,7 @@ scopeTest_timestamp : run.C myclbad.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -l -q -b run.C 2>&1 | grep -v Processing | $(RemoveLeadingDirs) | sed -e s/myclbad.so/mycl.so/ > output ; diff -wb good.output output && touch $@
 
 myclbad.$(DllSuf) : badDict.$(ObjSuf)
-	$(CMDECHO) $(BuildFromObj)
+	$(BuildFromObj)
 
 badDict.C : mycl.C LinkDef.h
 	$(CMDECHO) rootcint -f badDict.C -c -DBAD mycl.C LinkDef.h
@@ -26,7 +26,7 @@ scopeTest2_timestamp : run.C myclgood.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -l -q -b rungood.C 2>&1 | grep -v Processing | $(RemoveLeadingDirs) |sed -e s/myclgood.so/mycl.so\ / > output ; diff -wb good.output output && touch $@
 
 myclgood.$(DllSuf) : goodDict.$(ObjSuf)
-	$(CMDECHO) $(BuildFromObj)
+	$(BuildFromObj)
 
 goodDict.C : mycl.C LinkDef.h
 	$(CMDECHO) rootcint -f goodDict.C -c mycl.C LinkDef.h
