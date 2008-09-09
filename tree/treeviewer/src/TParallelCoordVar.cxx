@@ -575,7 +575,7 @@ void TParallelCoordVar::Paint(Option_t* /*option*/)
 //______________________________________________________________________________
 void TParallelCoordVar::PaintBoxPlot()
 {
-   // Paint the boxes in the case of a cnadle chart.
+   // Paint the boxes in the case of a candle chart.
 
    TLine *line = new TLine();
    line->SetLineColor(GetLineColor());
@@ -663,7 +663,7 @@ void TParallelCoordVar::PaintBoxPlot()
       else mean = fMean;
       TMarker *mark = NULL;
       if(fX1==fX2) mark = new TMarker(fX1,fY1 + ((mean-a)/b)*(fY2-fY1),24);
-      else         mark = new TMarker(fX1 + ((mean-a)/b)*(fY2-fY1),fY1,24);
+      else         mark = new TMarker(fX1 + ((mean-a)/b)*(fX2-fX1),fY1,24);
       mark->Paint();
       delete mark;
    }
