@@ -1866,6 +1866,7 @@ namespace {
       }
    };
 }
+
 //______________________________________________________________________________
 TVirtualCollectionProxy *TClass::GetCollectionProxy() const
 {
@@ -3648,6 +3649,24 @@ void TClass::DeleteArray(void *ary, Bool_t dtorOnly)
    } else {
       Error("DeleteArray", "This cannot happen! (class '%s')", GetName());
    }
+}
+
+//______________________________________________________________________________
+void TClass::SetClassVersion(Version_t version) 
+{ 
+   // Private function.  Set the class version for the 'class' represented by
+   // this TClass object.  See the public interface: 
+   //    ROOT::ResetClassVersion 
+   // defined in TClassTable.cxx
+   //
+   // Note on class version numbers:
+   //   If no class number has been specified, TClass::GetVersion will return -1
+   //   The Class Version 0 request the whole object to be transient
+   //   The Class Version 1, unless specified via ClassDef indicates that the
+   //      I/O should use the TClass checksum to distinguish the layout of the class   
+   
+   fClassVersion = version; 
+   fCurrentInfo = 0; 
 }
 
 //______________________________________________________________________________

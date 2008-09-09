@@ -512,6 +512,12 @@ void ROOT::ResetClassVersion(TClass *cl, const char *cname, Short_t newid)
    // if cl!=0 and cname==-1, set the new class version if and only is
    // greater than the existing one and greater or equal to 2;
    // and also ignore the request if fVersionUsed is true.
+   //
+   // Note on class version number:
+   //   If no class has been specified, TClass::GetVersion will return -1
+   //   The Class Version 0 request the whole object to be transient
+   //   The Class Version 1, unless specify via ClassDef indicates that the
+   //      I/O should use the TClass checksum to distinguish the layout of the class
 
    if (cname && cname!=(void*)-1) {
       TClassRec *r = TClassTable::FindElement(cname,kFALSE);
@@ -524,6 +530,9 @@ void ROOT::ResetClassVersion(TClass *cl, const char *cname, Short_t newid)
             Error("ResetClassVersion","Version number of %s can not be changed after first usage!",
                   cl->GetName());
       } else {
+         if (newid < 0) {
+            Error("SetClassVersion","The class version (for %s) must be positive (value %d is ignored)",cl->GetName(),newid);
+         }
          if (cname==(void*)-1) {
             if (cl->fClassVersion<newid && 2<=newid) {
                cl->SetClassVersion(newid);

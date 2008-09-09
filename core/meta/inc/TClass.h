@@ -129,7 +129,7 @@ private:
              Int_t dl, Int_t il);
    void ForceReload (TClass* oldcl);
 
-   void               SetClassVersion(Version_t version) { fClassVersion = version; fCurrentInfo = 0; }
+   void               SetClassVersion(Version_t version);
    void               SetClassSize(Int_t sizof) { fSizeof = sizof; }
 
    static IdMap_t    *fgIdMap;          //Map from typeid to TClass pointer
