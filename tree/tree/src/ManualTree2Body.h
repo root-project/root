@@ -2,6 +2,8 @@
 #include "TROOT.h"
 #include "TSelectorCint.h"
 
+#include "Api.h"
+
 TBranch *TTreeBranchImpRef(TTree *tree, const char* branchname, TClass* ptrClass, EDataType datatype, void* addobj, Int_t bufsize, Int_t splitlevel)
 {
    return tree->BranchImpRef(branchname,ptrClass,datatype,addobj,bufsize,splitlevel);

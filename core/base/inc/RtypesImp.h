@@ -16,7 +16,7 @@
 #error RtypesImp.h should only be included by ROOT dictionaries.
 #endif
 
-#include "cint/Api.h"
+#include "TInterpreter.h"
 #include "TClassEdit.h"
 
 namespace ROOT {
@@ -33,8 +33,10 @@ namespace ROOT {
       // transient and does not have a dictionary we check first.
       if (transientMember) {
          if (!TClassEdit::IsSTLCont(topClassName)) {
-            Cint::G__ClassInfo b(topClassName);
-            if (!b.IsLoaded()) return;
+            ClassInfo_t *b = gInterpreter->ClassInfo_Factory(topClassName);
+            Bool_t isloaded = gInterpreter->ClassInfo_IsLoaded(b);
+            gInterpreter->ClassInfo_Delete(b);
+            if (!isloaded) return;
          }
       }
 
