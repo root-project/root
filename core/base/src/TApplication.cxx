@@ -1019,6 +1019,14 @@ void TApplication::Terminate(Int_t status)
 }
 
 //______________________________________________________________________________
+void TApplication::LineProcessed(const char *line)
+{
+   // Emit signal when a line has been processed.
+
+   Emit("LineProcessed(const char*)", line);
+}
+
+//______________________________________________________________________________
 void TApplication::KeyPressed(Int_t key)
 {
    // Emit signal when console keyboard key was pressed.

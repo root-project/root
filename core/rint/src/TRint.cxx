@@ -509,6 +509,8 @@ Bool_t TRint::HandleTermInput()
       try {
 #endif
          TRY {
+            if (!sline.IsNull())
+               LineProcessed(sline);
             ProcessLine(sline);
          } CATCH(excode) {
             // enable again input handler

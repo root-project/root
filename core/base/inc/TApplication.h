@@ -142,9 +142,10 @@ public:
    Bool_t          ReturnFromRun() const { return fReturnFromRun; }
    void            SetReturnFromRun(Bool_t ret) { fReturnFromRun = ret; }
 
-   virtual void    Terminate(Int_t status = 0);   //*SIGNAL*
-   virtual void    KeyPressed(Int_t key);         //*SIGNAL*
-   virtual void    ReturnPressed(char *text );    //*SIGNAL*
+   virtual void    LineProcessed(const char *line);   //*SIGNAL*
+   virtual void    Terminate(Int_t status = 0);       //*SIGNAL*
+   virtual void    KeyPressed(Int_t key);             //*SIGNAL*
+   virtual void    ReturnPressed(char *text );        //*SIGNAL*
 
    static Long_t   ExecuteFile(const char *file, Int_t *error = 0);
    static TList   *GetApplications();
