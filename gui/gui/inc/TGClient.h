@@ -31,6 +31,10 @@
 #ifndef ROOT_TString
 #include "TString.h"
 #endif
+#ifndef ROOT_TQObject
+#include "TQObject.h"
+#endif
+
 
 class TList;
 class THashList;
@@ -47,7 +51,7 @@ class TGUnknownWindowHandler;
 class TGIdleHandler;
 
 
-class TGClient : public TObject {
+class TGClient : public TObject, public TQObject {
 
 protected:
    Pixel_t         fBackColor;        // default background color
@@ -81,8 +85,6 @@ protected:
 
    Bool_t  ProcessOneEvent();
    Bool_t  ProcessIdleEvent();
-   Bool_t  HandleEvent(Event_t *event);
-   Bool_t  HandleMaskEvent(Event_t *event, Window_t wid);
    Bool_t  DoRedraw();
 
 public:
@@ -125,6 +127,11 @@ public:
    EGEventType  GetWaitForEvent() const  { return fWaitForEvent;}
    Window_t     GetWaitForWindow() const { return fWaitForWindow; }
    Bool_t       ProcessEventsFor(TGWindow *w);
+
+   Bool_t       HandleEvent(Event_t *event);
+   Bool_t       HandleMaskEvent(Event_t *event, Window_t wid);
+   void         WindowRegistered(Window_t w);      //*SIGNAL*
+   void         ProcessingEvent(Event_t* event, Window_t wid);   //*SIGNAL*
 
    const TGResourcePool *GetResourcePool() const { return fResourcePool; }
 

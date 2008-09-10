@@ -425,8 +425,10 @@ Bool_t TGFrame::HandleEvent(Event_t *event)
          while (gVirtualX->CheckEvent(fId, kConfigureNotify, *event))
             ;
          // protection
-         if ((event->fWidth < 32768) && (event->fHeight  < 32768))
+         if ((event->fWidth < 32768) && (event->fHeight  < 32768)){
+            ProcessConfigure(event);  // emit signal
             HandleConfigureNotify(event);
+         }
          break;
 
       case kGKeyPress:

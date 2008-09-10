@@ -449,6 +449,8 @@ void TGClient::RegisterWindow(TGWindow *w)
    // Add a TGWindow to the clients list of windows.
 
    fWlist->Add(w);
+   // Emits signal
+   WindowRegistered(w->GetId());
 }
 
 //______________________________________________________________________________
@@ -467,6 +469,8 @@ void TGClient::RegisterPopup(TGWindow *w)
    // is waited for (see WaitFor()).
 
    fPlist->Add(w);
+   // Emits signal
+   WindowRegistered(w->GetId());
 }
 
 //______________________________________________________________________________
@@ -739,6 +743,11 @@ Bool_t TGClient::HandleEvent(Event_t *event)
 
    TGWindow *w;
 
+   // Emit signal for event recorder(s)
+   if (event->fType != kConfigureNotify){
+      ProcessingEvent(event, 0);
+   }
+
    // Find window where event happened
    if ((w = GetWindowById(event->fWindow)) == 0) {
       if (fUWHandlers && fUWHandlers->GetSize() > 0) {
@@ -772,6 +781,11 @@ Bool_t TGClient::HandleMaskEvent(Event_t *event, Window_t wid)
    TGWindow *w, *ptr, *pop;
 
    if ((w = GetWindowById(event->fWindow)) == 0) return kFALSE;
+
+   // Emit signal for event recorder(s)
+   if (event->fType != kConfigureNotify){
+      ProcessingEvent(event, wid);
+   }
 
    // This breaks class member protection, but TGClient is a friend of
    // TGWindow and _should_ know what to do and what *not* to do...
@@ -853,3 +867,26 @@ void TGClient::SetEditDisabled(Bool_t on)
 
    fDefaultRoot->SetEditDisabled(on);
 }
+
+//______________________________________________________________________________
+void TGClient::ProcessingEvent(Event_t* event, Window_t wid)
+{
+   // Emits a signal when an event has been processed.
+   // Used in TRecorder.
+
+   Long_t args[2];
+   args[0] = (Long_t) event;
+   args[1] = (Long_t) wid;
+
+   Emit("ProcessingEvent(Event_t*, Window_t)", args); 
+}
+
+//______________________________________________________________________________
+void TGClient::WindowRegistered(Window_t w)
+{
+   // Emits a signal when a Window has been registered in TGClient.
+   // Used in TRecorder.
+
+   Emit("WindowRegistered(Window_t)", w); 
+}
+

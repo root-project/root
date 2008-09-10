@@ -237,6 +237,8 @@ public:
    virtual Bool_t HandleDragMotion(TGFrame *) { return kFALSE; }
    virtual Bool_t HandleDragDrop(TGFrame *, Int_t /*x*/, Int_t /*y*/, TGLayoutHints*)
                      { return kFALSE; }
+   virtual void   ProcessConfigure(Event_t *event)
+                     { Emit("ProcessConfigure(Event_t*)", (Long_t)event); } //*SIGNAL*
    virtual void   ProcessedEvent(Event_t *event)
                      { Emit("ProcessedEvent(Event_t*)", (Long_t)event); } //*SIGNAL*
 
