@@ -11,16 +11,16 @@
 
 #include "TEveMacro.h"
 
+#include "TPRegexp.h"
 #include "TSystem.h"
 #include "TROOT.h"
 
 //______________________________________________________________________________
-// TEveMacro
 //
 // Sub-class of TMacro, overriding Exec to unload the previous verison
 // and cleanup after the execution.
 
-ClassImp(TEveMacro)
+ClassImp(TEveMacro);
 
 //______________________________________________________________________________
 TEveMacro::TEveMacro() : TMacro()
@@ -42,12 +42,13 @@ TEveMacro::TEveMacro(const char* name) :
 
    fTitle = name;
 
-   char *dot   = (char*)strrchr(name, '.');
-   char *slash = (char*)strrchr(name, '/');
-   if (dot) *dot = 0;
-   if (slash) fName = slash + 1;
-   else       fName = name;
-
+   TPMERegexp re("([^/]+?)(?:\\.\\w*)?$");
+   Int_t nm = re.Match(fTitle);
+   if (nm >= 2) {
+      fName = re[1];
+   } else {
+      fName = "<unknown>";
+   }
    ReadFile(fTitle);
 }
 
