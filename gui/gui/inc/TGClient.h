@@ -130,8 +130,8 @@ public:
 
    Bool_t       HandleEvent(Event_t *event);
    Bool_t       HandleMaskEvent(Event_t *event, Window_t wid);
-   void         WindowRegistered(Window_t w);      //*SIGNAL*
-   void         ProcessingEvent(Event_t* event, Window_t wid);   //*SIGNAL*
+   void         RegisteredWindow(Window_t w);      //*SIGNAL*
+   void         ProcessedEvent(Event_t *event, Window_t wid);   //*SIGNAL*
 
    const TGResourcePool *GetResourcePool() const { return fResourcePool; }
 

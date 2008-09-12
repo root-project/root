@@ -426,7 +426,7 @@ Bool_t TGFrame::HandleEvent(Event_t *event)
             ;
          // protection
          if ((event->fWidth < 32768) && (event->fHeight  < 32768)){
-            ProcessConfigure(event);  // emit signal
+            ProcessedConfigure(event);  // emit signal
             HandleConfigureNotify(event);
          }
          break;
