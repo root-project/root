@@ -104,6 +104,10 @@ public:
    virtual Int_t GetMaxPosition() const { return fVmax; }
    virtual Int_t GetScale() const { return fScale; }
    virtual void  MapSubwindows() { TGWindow::MapSubwindows(); }
+   virtual void  ChangeSliderPic(const char *name) {
+                    if (fSliderPic) fClient->FreePicture(fSliderPic);
+                    fSliderPic = fClient->GetPicture(name);
+                 }
 
    virtual void  PositionChanged(Int_t pos) { Emit("PositionChanged(Int_t)", pos); } // *SIGNAL*
    virtual void  Pressed() { Emit("Pressed()"); }    // *SIGNAL*
