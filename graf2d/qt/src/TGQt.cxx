@@ -47,6 +47,7 @@
 #  include <QImageWriter>
 #  include <QVector>
 #  include <QStack>
+#  include <QFrame>
 #  include <QPicture>
 #  include <QDebug>
 #endif /* QT_VERSION */
@@ -133,7 +134,106 @@ QString TGQt::GetNewFileName(const QString &fileNamePrototype)
    }
    return  fileName;
 }
+//______________________________________________________________________________
+//
+//  custom TQtPainter
+//______________________________________________________________________________
+class TQtPainter : public QPainter {
+protected:
+   bool isQWidget(QPaintDevice * dev) const {
+      return dev ? dev->devType() ==  QInternal::Widget : false;
+   }
+public:
+   TQtPainter() : QPainter () {}
+   TQtPainter(QPaintDevice * device) : QPainter ( device )  {}
+   ~TQtPainter () {}
 
+   void save ()    { if (!isQWidget(device()) && isActive()) QPainter::save(); }
+   void restore () { if (!isQWidget(device()) && isActive()) QPainter::restore();}
+   bool begin ( QPaintDevice * dev )  {return isQWidget(dev) ? false : QPainter::begin(dev);}
+};
+//______________________________________________________________________________
+//
+//   class TQtFeedBackWidget to back the TCanvas FeedBack mode
+//______________________________________________________________________________
+class TQtFeedBackWidget : public QFrame {
+   QPixmap  *fPixBuffer;
+protected:
+   virtual void paintEvent(QPaintEvent *event) {
+      if (fPixBuffer) {
+         QRect rect = event->rect();
+         QPainter p(this);
+         p.setClipRect(rect);
+         p.drawPixmap(0,0,*fPixBuffer);
+         ClearBuffer();
+      } else {
+         QFrame::paintEvent(event);
+      }
+   }
+public:
+   TQtFeedBackWidget(QWidget *parent=0, Qt::WindowFlags f=0)  : QFrame(parent,f),fPixBuffer(0)
+   {   
+      setAttribute(Qt::WA_NoSystemBackground); 
+      setBackgroundRole(QPalette::Window);
+      setAutoFillBackground(false);
+      QPalette  p = palette();
+      p.setBrush(QPalette::Window, Qt::transparent);
+      setPalette(p);
+   }
+   virtual ~TQtFeedBackWidget() {delete fPixBuffer; fPixBuffer = 0;}
+   void hide() {
+      delete fPixBuffer; fPixBuffer = 0;
+      QFrame::hide();
+   }
+   QPixmap *PixBuffer() { 
+      QWidget *canvasWidget = parentWidget();
+      if (canvasWidget ) {
+         // resize the feedback
+         QSize canvasSize = canvasWidget->size();
+         setGeometry(QRect(QPoint(0,0),canvasSize));
+         if ( !fPixBuffer  || (fPixBuffer->size() != canvasSize) ) {
+            delete fPixBuffer;
+            fPixBuffer = new QPixmap(canvasSize);
+            ClearBuffer();
+         }
+      }
+      return  fPixBuffer;
+   }
+   void ClearBuffer() {fPixBuffer->fill(Qt::transparent);}
+};
+
+//______________________________________________________________________________
+//
+//   class TQtFeedBackWidget to back the TCanvas FeedBack mode
+//______________________________________________________________________________
+
+class TQtToggleFeedBack : public TQtPainter {
+   TGQt *fGQt;
+   TQtPainter  *fSavePainter;
+public:
+   TQtToggleFeedBack(TGQt *gqt) : TQtPainter (), fGQt(gqt), fSavePainter(0)
+   {
+      // activate temporary TQtFeedBackWidget widget buffer
+      if (fGQt->fFeedBackMode) {
+         // Save the current painter
+         fSavePainter = fGQt->fQPainter;
+         fGQt->fQPainter = this;
+         begin(fGQt->fFeedBackWidget->PixBuffer());
+         setPen(Qt::darkGray);
+        // qDebug() << fGQt->fFeedBackWidget->PixBuffer()->size();
+         fGQt->fFeedBackWidget->show();
+      }
+   }
+   ~TQtToggleFeedBack()
+   {
+      // Restore the normal painter;
+      if (fSavePainter) {
+         end();
+         fGQt->fQPainter = fSavePainter;
+         fGQt->fFeedBackWidget->update();
+      }
+   }
+};
 //----- Terminal Input file handler --------------------------------------------
 //______________________________________________________________________________
 class TQtEventInputHandler : public TTimer {
@@ -502,7 +602,7 @@ QString TGQt::RootFileFormat(const QString &selector)
    UInt_t nExt = sizeof(defExtension)/sizeof(const char *);
     UInt_t i = 0;
    for (i=0; i < nExt; i++) {
-      if (selector.contains(defExtension[i],FALSE)) {
+      if (selector.contains(defExtension[i], Qt::CaseSensitive)) {
          saveType = defExtension[i];
          break;
       }
@@ -594,6 +694,7 @@ void TGQt::PostQtEvent(QObject *receiver, QEvent *event)
 //______________________________________________________________________________
 TGQt::TGQt() : TVirtualX(),fDisplayOpened(kFALSE),fQPainter(0),fQClientFilterBuffer(0)
 ,fCodec(0),fSymbolFontFamily("Symbol"),fQtEventHasBeenProcessed(0)
+,fFeedBackMode(kFALSE),fFeedBackWidget(0)
 {
    //*-*-*-*-*-*-*-*-*-*-*-*Default Constructor *-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                    ===================
@@ -607,6 +708,7 @@ TGQt::TGQt() : TVirtualX(),fDisplayOpened(kFALSE),fQPainter(0),fQClientFilterBuf
 TGQt::TGQt(const char *name, const char *title) : TVirtualX(name,title),fDisplayOpened(kFALSE)
 ,fQPainter(0),fCursors(kNumCursors),fQClientFilter(0),fQClientFilterBuffer(0),fPointerGrabber(0)
 ,fCodec(0),fSymbolFontFamily("Symbol"),fQtEventHasBeenProcessed(0)
+,fFeedBackMode(kFALSE),fFeedBackWidget(0)
 {
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*Normal Constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                        ==================                              *-*
@@ -840,13 +942,20 @@ Bool_t TGQt::Init(void* /*display*/)
    // Add $QTDIR include  path to the  list of includes for ACliC
    // make sure Qt SDK does exist.
    if (gSystem->Getenv("QTDIR")) {
-      TString qtdir = "$(QTDIR)/include";
+      TString qtdir = "$(QTDIR)/include/";
+      // Expand the QTDIR first to avoid the cross-platform issue
       gSystem->ExpandPathName(qtdir);
-      TString testQtHeader = qtdir + "/qglobal.h";
+      TString testQtHeader = qtdir + "Qt/qglobal.h";
       if (!gSystem->AccessPathName((const char *)testQtHeader) ) {
-         // Expand the QTDIR first to avoid the cross-platform issue
-         TString incpath= "-I"; incpath+=qtdir;
-         gSystem->AddIncludePath((const char*)incpath);
+         void *qtdirHandle = gSystem->OpenDirectory(qtdir);
+         if (qtdirHandle) {
+            TString incpath = " -I"; incpath+=qtdir;
+            while(const char *nextQtInclude = gSystem->GetDirEntry(qtdirHandle)) {
+                  incpath += " -I"; incpath+=qtdir; incpath+=nextQtInclude;
+            }
+            gSystem->FreeDirectory(qtdirHandle);
+            gSystem->AddIncludePath((const char*)incpath);
+         }
 #ifdef R__WIN32
          QString libPath = gSystem->GetLinkedLibs();
          // detect the exact name of the Qt library
@@ -861,9 +970,20 @@ Bool_t TGQt::Init(void* /*display*/)
          gSystem->ExpandPathName(qtlibdir);
          QDir qtdir((const char*)qtlibdir);
          if (qtdir.isReadable ()) {
-            QStringList qtLibFile =  qtdir.entryList("qt-mt*.lib");
-            if (qtLibFile.count() ) {
-               libPath += " -LIBPATH:\"";libPath += qtlibdir;  libPath += "\" "; libPath += qtLibFile.first();
+            QStringList qtLibFile =  qtdir.entryList("Q*4.lib",QDir::Files);
+            QStringListIterator libFiles(qtLibFile);
+            if (libFiles.hasNext()) {
+               libPath += " -LIBPATH:\"";libPath += qtlibdir;  libPath += "\" ";
+#if 0
+               while (libFiles.hasNext()) {
+                  QString nf = libFiles.next();
+                  if (nf.contains("d4")) continue; // skip the debug version of the libraries
+                  libPath += nf.toLocal8Bit().constData();
+                  libPath += " ";
+               }
+#else
+                  libPath += "QtCore4.lib QtGui4.lib QtOpenGL4.lib Qt3Support4.lib";
+#endif
                gSystem->SetLinkedLibs((const char*)libPath);
             }
          } else {
@@ -941,7 +1061,7 @@ Int_t TGQt::InitWindow(ULong_t window)
    wid->setCursor(*fCursors[kCross]);
    if (parent && gDebug==3)
    {
-      fprintf(stderr," ---- >  New Canvas window %p with the parent %s parent id=%p\n",wid, (const char *)parent->name(), (void*)rootwid(parent));
+      fprintf(stderr," ---- >  New Canvas window %p with the parent %s parent id=%p\n",wid, (const char *)parent->name(), rootwid(parent));
    }
    Int_t id = fWidgetArray->GetFreeId(wid);
    // The default mode is the double buffer mode
@@ -1037,8 +1157,14 @@ void  TGQt::ClearWindow()
       } else if (IsPixmap(fSelectedWindow) ) {
           End(); // stop the painter before erasing
 #if QT_VERSION >= 0x40000
-          assert(dynamic_cast<QPixmap *>(fSelectedWindow));
+#  ifdef R__WIN32
          ((QPixmap *)fSelectedWindow)->fill(fQBrush->color()); // Qt::transparent);
+#  else
+        { QPainter p(fSelectedWindow);
+          p.fillRect(GetQRect(*fSelectedWindow),*fQBrush);
+        }
+#  endif
+
 #else
          ((QPixmap *)fSelectedWindow)->fill();
 #endif
@@ -1097,31 +1223,15 @@ void  TGQt::DeleteSelectedObj()
 QRect TGQt::GetQRect(QPaintDevice &dev)
 {
    // Define the rectangle of the current ROOT selection
-  QRect res;
-  switch (dev.devType()) {
+  QRect res(0,0,0,0);
+
+  switch (dev.devType() ) {
   case QInternal::Widget:
     res = ((TQtWidget*)&dev)->rect();
     break;
 
-  case QInternal::Pixmap: {
-     TQtWidgetBuffer *pxmBuffer = dynamic_cast<TQtWidgetBuffer *>(&dev);
-     if (pxmBuffer) res = pxmBuffer->Rect();
-     else           res = ((QPixmap *)&dev)->rect();
-     break;
-                          }
-  case QInternal::Picture:
-     res = ((QPicture *)&dev)->boundingRect();
-     break;
-
-  case QInternal::Printer:
-#if QT_VERSION < 0x40000
-  case QInternal::UndefinedDevice:
-#else /* QT_VERSION */
- // case QInternal::UndefinedDevice:
-#endif /* QT_VERSION */
-     break;
   default:
-     assert(0);
+     res.setSize(QSize(dev.width(),dev.height()));
      break;
   };
   return res;
@@ -1147,8 +1257,9 @@ void  TGQt::CopyPixmap(int wid, int xpos, int ypos)
          Error("TGQt::CopyPixmap","Wrong TGuiFactory implementation was provided. Please, check your plugin settings");
          assert(dst != (QPaintDevice *)-1);
       }
-
       End();
+      TQtWidget *theWidget =  (TQtWidget *)fSelectedWindow;
+      dst = theWidget->GetOffScreenBuffer();
 #if QT_VERSION < 0x40000
       QRect sr = src->rect();
       bitBlt ( dst,QPoint(xpos,ypos),src,sr,Qt::CopyROP); // bool ignoreMask )
@@ -1161,7 +1272,8 @@ void  TGQt::CopyPixmap(int wid, int xpos, int ypos)
      //  ----  !!!!  bitBlt ( dst,QPoint(xpos,ypos),src,sr,QPainter::CompositionMode_Source); // bool ignoreMask )
 #endif /* QT_VERSION */
       Emitter()->EmitPadPainted(src);
-      if (!QPainter::redirected(dst) && (fSelectedWindow->devType() == QInternal::Widget ) )
+//      if (!QPainter::redirected(dst) && (fSelectedWindow->devType() == QInternal::Widget ) )
+      if ( fSelectedWindow->devType() == QInternal::Widget  )
       {
         TQtWidget *w = (TQtWidget *)fSelectedWindow;
         w->EmitCanvasPainted();
@@ -1254,7 +1366,13 @@ void  TGQt::DrawBox(int x1, int y1, int x2, int y2, EBoxMode mode)
    static const int Q3=0;
 #endif
    TQtLock lock;
-   if (fSelectedWindow)
+   if ( (fSelectedWindow->devType() ==  QInternal::Widget) && fFeedBackMode && fFeedBackWidget) {
+      fFeedBackWidget->setGeometry(x1,y2,x2-x1,y1-y2);
+      fFeedBackWidget->show();
+      return;
+   }
+
+   if (fSelectedWindow )
    {
       fQPainter->save();
       // fprintf(stderr, " Drawbox x1=%d, y1=%d, x2=%d, y2=%d, mode=%d\n",x1,y1,x2,y2,mode);
@@ -1351,8 +1469,6 @@ void  TGQt::DrawFillArea(int n, TPoint *xy)
       fQPainter->save();
       if (fQBrush->style() == Qt::SolidPattern)
          fQPainter->setPen(Qt::NoPen);
-      else
-         fQPainter->setPen(fQBrush->GetColor());
 
 #if QT_VERSION < 0x40000
       QPointArray qtPoints(n);
@@ -1384,7 +1500,10 @@ void  TGQt::DrawLine(int x1, int y1, int x2, int y2)
    // x2,y2        : end of line
 
   TQtLock lock;
-  if (fSelectedWindow) fQPainter->drawLine(x1,y1,x2,y2);
+  if (fSelectedWindow) {
+     TQtToggleFeedBack  feedBack(this);
+     fQPainter->drawLine(x1,y1,x2,y2);
+  }
 }
 
 //______________________________________________________________________________
@@ -1396,6 +1515,7 @@ void  TGQt::DrawPolyLine(int n, TPoint *xy)
 
   TQtLock lock;
   if (fSelectedWindow)  {
+     TQtToggleFeedBack  feedBack(this);
 #if QT_VERSION < 0x40000
     QPointArray qtPoints(n);
 #else /* QT_VERSION */
@@ -1584,7 +1704,7 @@ QPaintDevice *TGQt::GetDoubleBuffer(QPaintDevice *dev)
    QPaintDevice *buffer = 0;
    if (dev) {
        TQtWidget *widget = dynamic_cast<TQtWidget *>(dev);
-       buffer = widget && widget->IsDoubleBuffered() ? &widget->GetBuffer() : 0;
+       buffer = widget && widget->IsDoubleBuffered() ? widget->GetBuffer().Buffer() : 0;
     }
     return buffer;
 }
@@ -2030,6 +2150,25 @@ void  TGQt::SetDrawMode(TVirtualX::EDrawMode mode)
    // mode : drawing mode
 
    // Map EDrawMode    { kCopy = 1, kXor, kInvert };
+   Bool_t feedBack =  (mode==kInvert);
+   if (feedBack != fFeedBackMode) {
+      // End();
+      fFeedBackMode = feedBack;
+      if (fFeedBackMode) {
+         // create
+         if (!fFeedBackWidget) {
+            fFeedBackWidget = new TQtFeedBackWidget;
+            fFeedBackWidget->setFrameStyle(QFrame::Box);
+         }
+         fFeedBackWidget->setParent((TQtWidget *)fSelectedWindow);
+         // reparent if needed
+      } else if (fFeedBackWidget) {
+         fFeedBackWidget->hide();
+        // reparent
+         fFeedBackWidget->setParent(0);
+      }
+   }
+#if 0
 #if QT_VERSION < 0x40000
    Qt::RasterOp newMode = Qt::CopyROP;
 #else /* QT_VERSION */
@@ -2062,6 +2201,7 @@ void  TGQt::SetDrawMode(TVirtualX::EDrawMode mode)
 #endif /* QT_VERSION */
      // sfprintf(stderr,"TGQt::SetDrawMode \n");
    }
+#endif
 }
 
 //______________________________________________________________________________
@@ -2674,6 +2814,14 @@ void  TGQt::UpdateWindow(int mode)
 #if QT_VERSION < 0x40000
       ((TQtWidget *)fSelectedWindow)->repaint();
 #else
+#if 1
+      TQtWidget *w =  (TQtWidget *)fSelectedWindow;
+      bool hasBufferOn = w->IsDoubleBuffered();
+      if (hasBufferOn) w->SetDoubleBuffer(FALSE);
+      Begin();End();
+      ((TQtWidget *)fSelectedWindow)->repaint();
+      if (hasBufferOn) w->SetDoubleBuffer(TRUE);
+#else
 //      ((TQtWidget *)fSelectedWindow)->update();
       End();
       TQtWidget *w =  (TQtWidget *)fSelectedWindow;
@@ -2682,6 +2830,7 @@ void  TGQt::UpdateWindow(int mode)
       Begin();End();
       ((TQtWidget *)fSelectedWindow)->repaint();
       if (hasBufferOn) w->SetDoubleBuffer(TRUE);
+#endif
 #endif
    }
 }
@@ -2732,7 +2881,7 @@ void  TGQt::WritePixmap(int wid, UInt_t w, UInt_t h, char *pxname)
 //    bitBlt ( pix,QPoint(xpos,ypos),src,sr,Qt::CopyROP);
         TQtWidget *thisWidget = (TQtWidget*)&dev;
         if (thisWidget->IsDoubleBuffered() ) {
-           pix = &((TQtWidget*)&dev)->GetBuffer();
+           pix = ((const TQtWidget*)&dev)->GetOffScreenBuffer();
         } else {
            // Grab the widget rectangle area directly from the screen
            // The image may contain the "alien" pieces !
@@ -2827,7 +2976,7 @@ void TGQt::UpdatePen()
 void TGQt::UpdateBrush()
 {
    // Update the current QBrush within active QPainter
-  if (!fQPainter) fQPainter = new QPainter();
+  if (!fQPainter) fQPainter = new TQtPainter();
   if (fQBrush && fQPainter->isActive())
    {
       fQPainter->setBrush(*fQBrush);
@@ -2857,7 +3006,7 @@ void TGQt::Begin()
    // Start the painting of the current slection (Pixmap or Widget)
 
    if (!fQPainter) { 
-      fQPainter = new QPainter();
+      fQPainter = new TQtPainter();
     //   fprintf(stderr,"TGQt::Begin():: fQPainter %p QInternal::Widget=%d\n",fQPainter, QInternal::Widget); 
    }
    if (!fQPainter->isActive() )
@@ -2868,8 +3017,11 @@ void TGQt::Begin()
       // Adjust size
       if ( fSelectedWindow->devType() ==  QInternal::Widget)
       {
-         ((TQtWidget *)fSelectedWindow)->AdjustBufferSize();
+         TQtWidget *theWidget =  (TQtWidget *)fSelectedWindow;
+         theWidget->AdjustBufferSize();
 #if QT_VERSION >= 0x40000
+        // if (theWidget->IsDoubleBuffered())
+        src = theWidget->GetBuffer().Buffer();
 #ifdef SHWDOWBUFFER
          if (src == fSelectedWindow) {
             TQtWidget *ww = (TQtWidget *)fSelectedWindow;
@@ -2880,7 +3032,7 @@ void TGQt::Begin()
 #endif
       }
       if (!fQPainter->begin(src) ) {
-         fprintf(stderr,"---> TGQt::Begin() win=%p dev=%p\n",src,fQPainter->device());
+        //  fprintf(stderr,"---> TGQt::Begin() win=%p dev=%p\n",src,fQPainter->device());
       } else {
          UpdatePen();
          UpdateBrush();

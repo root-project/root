@@ -502,9 +502,9 @@ void   QtGContext::SetBackground(ULong_t background)
     setPaletteBackgroundColor(QtColor(background));
     setEraseColor(QtColor(background));
 #else    
-    QPalette pp;
-    pp.setColor(backgroundRole(), QtColor(background));
-    setPalette(pp);    
+    QPalette pp=palette();
+    pp.setColor(QPalette::Window, QtColor(background));
+    setPalette(pp);
 #endif 
 }
 //______________________________________________________________________________
@@ -517,9 +517,9 @@ void   QtGContext::SetForeground(ULong_t foreground)
 #if QT_VERSION < 0x40000   
    setPaletteForegroundColor (QtColor(foreground));
 #else   
-   QPalette palette;
-   palette.setColor(foregroundRole(), QtColor(foreground));
-   setPalette(palette);
+   QPalette pp = palette();
+   pp.setColor(QPalette::WindowText, QtColor(foreground));
+   setPalette(pp);
 #endif
    fBrush.setColor(QtColor(foreground));
    fPen.setColor(QtColor(foreground)); 
@@ -545,7 +545,7 @@ public:
 #else /* QT_VERSION */
 //           if (device()->devType() !=  QInternal::Widget ) 
            if (pd->devType() ==  QInternal::Image ) 
-              setCompositionMode(rootContext.fROp);
+               setCompositionMode(rootContext.fROp);
 #endif /* QT_VERSION */
          }
          if (rootContext.HasValid(QtGContext::kPen)) {
@@ -899,8 +899,10 @@ void TGQt::NextEvent(Event_t &event)
    // and removes event from queue. Not all of the event fields are valid
    // for each event type, except fType and fWindow.
 
-   // Map the accumulated Qt events to the ROOT one tp process:
-   if (qApp->hasPendingEvents ()) qApp->processEvents ();
+   // Map the accumulated Qt events to the ROOT one to process:
+   qApp->processEvents ();
+   if (qApp->hasPendingEvents ())  QCoreApplication::sendPostedEvents();
+   fQtEventHasBeenProcessed = 1;
 
    memset(&event,0,sizeof(Event_t));
    event.fType   = kOtherEvent;
@@ -1167,6 +1169,7 @@ Bool_t TGQt::NeedRedraw(ULong_t w, Bool_t force)
 #if ROOT_VERSION_CODE >= ROOT_VERSION(9,15,9)
    if (!force)
    {
+     assert(0);
       TGWindow *www =(TGWindow *)w;
       Window_t id = www->GetId();
       if (id) wid(id)->update();
@@ -1240,26 +1243,16 @@ void         TGQt::SetWindowBackground(Window_t id, ULong_t color)
 {
    // Set the window background color.
    if (id == kNone || id == kDefault ) return;
-#if QT_VERSION < 0x40000
-   wid(id)->setEraseColor(QtColor(color));
-#else   
-   QPalette palette;
-   palette.setColor(wid(id)->backgroundRole(), QtColor(color));
-   wid(id)->setPalette(palette);
-#endif   
+   TQtClientWidget *wd =  dynamic_cast<TQtClientWidget*>(wid(id));
+   wd->setEraseColor(QtColor(color));
 }
 //______________________________________________________________________________
 void         TGQt::SetWindowBackgroundPixmap(Window_t id, Pixmap_t pxm)
 {
    // Set pixmap as window background.
    if (pxm  != kNone && id != kNone && id != kDefault ) {
-#if QT_VERSION < 0x40000
-      wid(id)->setPaletteBackgroundPixmap(*fQPixmapGuard.Pixmap(pxm));
-#else   
-      QPalette palette;
-      palette.setBrush(wid(id)->backgroundRole(), QBrush(*fQPixmapGuard.Pixmap(pxm)));
-      wid(id)->setPalette(palette);
-#endif      
+      TQtClientWidget *wd =  dynamic_cast<TQtClientWidget*>(wid(id));
+      wd->setErasePixmap (*fQPixmapGuard.Pixmap(pxm));
    }
  }
 //______________________________________________________________________________
@@ -1325,10 +1318,18 @@ Window_t TGQt::CreateWindow(Window_t parent, Int_t x, Int_t y,
       if ((attr->fMask & kWABackPixmap))
          if (attr->fBackgroundPixmap != kNone && attr->fBackgroundPixmap != kParentRelative )
          {
-            //        win->setPaletteBackgroundPixmap(*(QPixmap *)attr->fBackgroundPixmap);
+            QPalette palette= win->palette();
+            palette.setBrush(QPalette::Window, QBrush(*(QPixmap *)attr->fBackgroundPixmap));
+            win->setErasePixmap(*(QPixmap *)attr->fBackgroundPixmap);
+            win->setPalette(palette);
+            win->setBackgroundRole(QPalette::Window);
          }
       if ((attr->fMask & kWABackPixel)) {
-          win->setPaletteBackgroundColor(QtColor(attr->fBackgroundPixel));
+            QPalette palette= win->palette();
+            palette.setColor(QPalette::Window, QtColor(attr->fBackgroundPixel));
+	    win->setEraseColor(QtColor(attr->fBackgroundPixel));
+            win->setPalette(palette);
+            win->setBackgroundRole(QPalette::Window);
        }
       if ( attr->fMask & kWAEventMask) {
           // Long_t     fEventMask;            // set of events that should be saved
@@ -1718,8 +1719,13 @@ void         TGQt::SetDashes(GContext_t /*gc*/, Int_t /*offset*/, const char * /
 //______________________________________________________________________________
 Int_t  TGQt::EventsPending() {
 #ifndef R__QTGUITHREAD
+    // to avoid the race condition
     Int_t retCode = fQClientFilterBuffer ? fQClientFilterBuffer->count(): 0;
-    return  retCode ? retCode : qApp->hasPendingEvents ();
+    if (fQtEventHasBeenProcessed) {
+       fQtEventHasBeenProcessed++;
+       if (fQtEventHasBeenProcessed > 2) fQtEventHasBeenProcessed = 0;
+    } else retCode = qApp->hasPendingEvents();
+    return  retCode;
 #endif
 
    if (fQClientFilterBuffer && fQClientFilterBuffer->isEmpty())
@@ -1761,7 +1767,7 @@ void         TGQt::CopyArea(Drawable_t src, Drawable_t dest, GContext_t gc,
    assert(qtcontext(gc).HasValid(QtGContext::kROp));
    // fprintf(stderr," TQt::CopyArea this=%p, fROp=%x\n", this, qtcontext(gc).fROp);
    if ( dest && src) {
-      //QtGContext qgc = qtcontext(gc);
+      // QtGContext qgc = qtcontext(gc);
       QPixmap *pix = dynamic_cast<QPixmap*>(iwid(src));
       QBitmap *mask = qtcontext(gc).fClipMask;
       if (pix && mask && (qtcontext(gc).fMask & QtGContext::kClipMask)) {
@@ -1772,24 +1778,30 @@ void         TGQt::CopyArea(Drawable_t src, Drawable_t dest, GContext_t gc,
 #if QT_VERSION < 0x40000
          bitBlt(iwid(dest), dest_x,dest_y,pix, src_x,src_y,width,height, qtcontext(gc).fROp);
 #else
-         QPainter copyArea(iwid(dest));
-         copyArea.setCompositionMode(qtcontext(gc).fROp);
+         TQtPainter copyArea(iwid(dest),qtcontext(gc));
          copyArea.drawPixmap(dest_x,dest_y, *pix, src_x,src_y,width,height);
 #endif
       } else {
 #if QT_VERSION < 0x40000
          bitBlt(iwid(dest), dest_x,dest_y,iwid(src), src_x,src_y,width,height, qtcontext(gc).fROp);
 #else
-         QPainter copyArea(iwid(dest));
-         copyArea.setCompositionMode(qtcontext(gc).fROp);
          if (pix) {
+           TQtPainter copyArea(iwid(dest),qtcontext(gc));
            copyArea.drawPixmap(dest_x,dest_y,*pix, src_x,src_y,width,height);
          } else {
             QImage *im = dynamic_cast<QImage*>(iwid(src)); 
             if (im) {
+               TQtPainter copyArea(iwid(dest),qtcontext(gc));
                copyArea.drawImage(dest_x,dest_y,*im, src_x,src_y,width,height);
             } else {
-               qDebug() << " TGQt::CopyArea: illegal image source. Shoudl be either QPixmap or QImage";
+               QWidget *qw = dynamic_cast<QWidget*>(iwid(src)); 
+               if (qw) {
+                  QPixmap pixw = QPixmap::grabWidget(qw, QRect(src_x,src_y,width,height));
+                  TQtPainter copyArea(iwid(dest),qtcontext(gc));
+                  copyArea.drawPixmap(dest_x,dest_y,pixw, src_x,src_y,width,height);
+               } else { 
+                    qDebug() << " TGQt::CopyArea: illegal image source. Should be either QPixmap or QImage";
+               }
             }
          }
 #endif
@@ -1812,27 +1824,14 @@ void         TGQt::ChangeWindowAttributes(Window_t id, SetWindowAttributes_t *at
           case kNone:
           case kParentRelative:
              break;
-          default: {
-#if QT_VERSION < 0x40000
-                f.setPaletteBackgroundPixmap (*(QPixmap *)attr->fBackgroundPixmap);
-#else                
-                QPalette palette;
-                palette.setBrush(f.backgroundRole(), QBrush(*(QPixmap *)attr->fBackgroundPixmap));
-                f.setPalette(palette);
-#endif                
-               }
-              break;
+          default:
+                f.setErasePixmap (*(QPixmap *)attr->fBackgroundPixmap);
+                break;
       };
    }
    if ( attr->fMask & kWABackPixel) {
       // background pixel
-#if QT_VERSION < 0x40000
-      f.setPaletteBackgroundColor(QtColor(attr->fBackgroundPixel));
-#else
-      QPalette palette;
-      palette.setColor(f.backgroundRole(),QtColor(attr->fBackgroundPixel));
-      f.setPalette(palette);    
-#endif            
+      f.setEraseColor(QtColor(attr->fBackgroundPixel));
    }
    if ( attr->fMask & kWABorderPixmap) {
       // fBorderPixmap;         // border of the window
@@ -1908,7 +1907,7 @@ void         TGQt::ClearArea(Window_t id, Int_t x, Int_t y, UInt_t w, UInt_t h)
    TQtClientWidget *wd =  dynamic_cast<TQtClientWidget*>(wid(id));
    const QColor  *c = 0;
    const QPixmap *p = 0;
-#if QT_VERSION < 0x40000
+#if QT_VERSION < 0x50000
    c = wd ? wd->fEraseColor  : 0;
    p = wd ? wd->fErasePixmap : 0;
    const QColor  &cr = *c;
@@ -1920,10 +1919,15 @@ void         TGQt::ClearArea(Window_t id, Int_t x, Int_t y, UInt_t w, UInt_t h)
 #endif      
    if (p && c) 
          paint.fillRect ( x, y, w, h, QBrush(cr,pr));
+   else if (p)
+         paint.fillRect ( x, y, w, h, QBrush(pr));
    else if (c)
          paint.fillRect ( x, y, w, h, cr);
-   else 
-       wid(id)->erase (x, y, w, h );
+   else {
+       const QBrush  &crw = wd->palette().brush(QPalette::Window);
+       paint.fillRect ( x, y, w, h, crw);
+   }
+  //  qDebug() << " TGQt::ClearArea " << (void *)id << p << c;
 }
 //______________________________________________________________________________
 Bool_t       TGQt::CheckEvent(Window_t, EGEventType, Event_t &) 
@@ -2276,16 +2280,16 @@ void TGQt::GetFontProperties(FontStruct_t fs, Int_t &max_ascent, Int_t &max_desc
 //______________________________________________________________________________
  FontStruct_t TGQt::GetFontStruct(FontH_t fh) { return (FontStruct_t)fh; }
 //______________________________________________________________________________
- void         TGQt::ClearWindow(Window_t id)
- {
-    // Clear window.
+void         TGQt::ClearWindow(Window_t id)
+{
+   // Clear window.
    if (id == kNone || id == kDefault ) return;
    QPainter paint(iwid(id));   
    paint.setBackgroundMode( Qt::OpaqueMode); // Qt::TransparentMode
    TQtClientWidget *wd =  dynamic_cast<TQtClientWidget*>(wid(id));
    const QColor  *c = 0;
    const QPixmap *p = 0;
-#if QT_VERSION < 0x40000
+#if QT_VERSION < 0x50000
    c = wd ? wd->fEraseColor  : 0;
    p = wd ? wd->fErasePixmap : 0;
    const QColor  &cr = *c;
@@ -2296,12 +2300,16 @@ void TGQt::GetFontProperties(FontStruct_t fs, Int_t &max_ascent, Int_t &max_desc
    const QPixmap &pr = *p;
 #endif      
    if (p && c ) 
-         paint.fillRect ( wd->rect(),QBrush(cr,pr)); 
+      paint.fillRect(wd->rect(),QBrush(cr,pr));
+   else if (p)
+      paint.fillRect(wd->rect(),QBrush(pr));
    else if (c)
-         paint.fillRect ( wd->rect(), cr);
-   else 
-      wid(id)->erase();
- }
+      paint.fillRect(wd->rect(), cr);
+   else {
+      const QBrush  &brw = wd->palette().brush(QPalette::Window);
+      paint.fillRect ( wd->rect(), brw);
+   }
+}
 
 //---- Key symbol mapping
 struct KeyQSymbolMap_t {
@@ -2712,16 +2720,13 @@ void         TGQt::Update(Int_t mode)
    // Flush (mode = 0, default) or synchronize (mode = 1) X output buffer.
    // Flush flushes output buffer. Sync flushes buffer and waits till all
    // requests have been processed by X server.
-#ifndef R__QTX11
-   if (mode) {}
-   QApplication::flush ();
+   if (mode)
+#ifdef R__QTX11
+      QApplication::syncX (); else
 #else
-   if (mode == 0)
-      QApplication::flush ();
-   if (mode == 1) {
-      QApplication::syncX ();
-   }
+      {}
 #endif
+      QApplication::flush ();
 }
 //------------------------------------------------------------------------------
 //
@@ -3191,7 +3196,7 @@ unsigned char *TGQt::GetColorBits(Drawable_t wid, Int_t x, Int_t y, UInt_t w, UI
    QPixmap *pix=0;
    switch (dev.devType()) {
    case QInternal::Widget:
-     pix = &((TQtWidget*)&dev)->GetBuffer();
+     pix = ((TQtWidget*)&dev)->GetOffScreenBuffer();
      break;
 
    case QInternal::Pixmap: {
@@ -3260,8 +3265,7 @@ Window_t TGQt::GetCurrentWindow() const
    fprintf(stderr, " Qt layer is not ready for GetCurrentWindow \n");
    assert(0);
 
-   //return (Window_t)(fSelectedBuffer ? fSelectedBuffer : fSelectedWindow);
-   return 0;
+   return (Window_t)(fSelectedWindow);
 }
 
 //______________________________________________________________________________

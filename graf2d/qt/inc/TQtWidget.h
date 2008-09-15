@@ -23,7 +23,6 @@
 #ifndef __CINT__
 #  include <qwidget.h>
 #  if (QT_VERSION > 0x039999)
-//Added by qt3to4:
 #     include <QMouseEvent>
 #     include <QCustomEvent>
 #     include <QShowEvent>
@@ -32,6 +31,7 @@
 #     include <QResizeEvent>
 #     include <QEvent>
 #     include <QPaintEvent>
+#     include <QPaintDevice>
 #  endif
 #  include <qpixmap.h>
 #else
@@ -44,6 +44,7 @@
   class QKeyEvent;
   class QShowEvent;
   class QPaintEvent;
+  class QPaintDevice;
   class QResizeEvent;
   class QSize;  
   class QString;
@@ -69,17 +70,21 @@ enum EEventTrackingBits {
 };
 
 //___________________________________________________________________
-class TQtWidgetBuffer : public QPixmap
+class TQtWidgetBuffer
 {
-  private:
-    const QWidget *fWidget;
-
-  public:
-    TQtWidgetBuffer() :  QPixmap(), fWidget(0) { }
-    TQtWidgetBuffer(const QWidget *w) :  QPixmap(w?w->size():QSize(0,0)), fWidget(w)
-    { }
-    virtual ~TQtWidgetBuffer(){}
-    inline QRect Rect () const { return fWidget->rect();}
+private:
+   const QWidget *fWidget;
+   QPaintDevice  *fBuffer;
+   bool  fIsImage;
+public:
+   TQtWidgetBuffer(const QWidget *w, bool clear=false);
+   const QPaintDevice  *Buffer() const  { return fBuffer; }
+   QPaintDevice  *Buffer()  { return fBuffer; }
+   ~TQtWidgetBuffer(){}
+   void Clear();
+   bool PaintingActive(){ return fBuffer ? fBuffer->paintingActive() : false; }
+   inline QRect Rect () const { return fWidget->rect();}
+   QSize size() const { return QSize(fBuffer->width(),fBuffer->height()); }
 };
 
 //___________________________________________________________________
@@ -115,16 +120,17 @@ public:
   virtual ~TQtWidget();
   void SetCanvas(TCanvas *c);
 //  inline TCanvas  *GetCanvas() const         { return fCanvas;}
-  inline TCanvas  *GetCanvas() const         { return (!fIsShadow) ? fCanvas : ((TQtWidget *)parentWidget())->GetCanvas(); }
-  inline TQtWidgetBuffer  &GetBuffer()               { return (fPixmapID) ? *fPixmapID : *(fPixmapID = new TQtWidgetBuffer(this));}
-  inline const TQtWidgetBuffer  *GetBuffer()  const  { return fPixmapID;}
+  TCanvas  *GetCanvas() const;
+  TQtWidgetBuffer  &GetBuffer();
+  const TQtWidgetBuffer  *GetBuffer()  const;
+  QPixmap  *GetOffScreenBuffer()  const;
 
   // overloaded methods
   virtual void adjustSize();
   void Resize (int w, int h);
   void Resize (const QSize &size);
   virtual void Erase ();
-  bool    IsDoubleBuffered() { return fDoubleBufferOn; }
+  bool    IsDoubleBuffered() const { return fDoubleBufferOn; }
   void    SetDoubleBuffer(bool on=TRUE);
   virtual void SetSaveFormat(const char *format);
 
@@ -132,6 +138,7 @@ protected:
    friend class TGQt;
    TCanvas           *fCanvas;
    TQtWidgetBuffer   *fPixmapID;     // Double buffer of this widget
+   TQtWidgetBuffer   *fPixmapScreen; // Double buffer for no-double buffer operation
    TQtWidget  *fShadowWidget; // the "shadow" canvas for the Qt4 offscreen operation
    bool        fIsShadow;
    bool        fPaint;
@@ -195,7 +202,7 @@ public:
    void     SetAllBits(UInt_t f);
    
 public:
-   // Static method to inmitate ROOT as needed
+   // Static method to immitate ROOT as needed
    static TApplication *InitRint(Bool_t prompt=kFALSE, const char *appClassName="QtRint", int *argc=0, char **argv=0,
           void *options = 0, int numOptions = 0, Bool_t noLogo = kTRUE);
    //  Proxy methods to access the TCanvas selected TObject 
@@ -244,8 +251,18 @@ signals:
 };
 
 //______________________________________________________________________________
+inline TCanvas  *TQtWidget::GetCanvas() const         { return (!fIsShadow) ? fCanvas : ((TQtWidget *)parentWidget())->GetCanvas(); }
+
+//______________________________________________________________________________
+inline const TQtWidgetBuffer  *TQtWidget::GetBuffer()  const { 
+   //  return the current widget buffer;
+   return IsDoubleBuffered() ? fPixmapScreen : fPixmapID;
+}
+
+//______________________________________________________________________________
 inline bool TQtWidget::PaintingActive () const {
-  return QWidget::paintingActive() || (fPixmapID && fPixmapID->paintingActive());
+  return QWidget::paintingActive() || (fPixmapID && fPixmapID->PaintingActive())
+     || (fPixmapScreen && fPixmapScreen->PaintingActive());
 }
 //______________________________________________________________________________
 inline void TQtWidget::SetRootID(QWidget *wrapper) { fWrapper = wrapper;}

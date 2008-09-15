@@ -79,6 +79,8 @@ class TQtClientFilter;
 class TQtEventQueue;
 class TQtPadFont;
 class TQtPen;
+class TQtPainter;
+class TQtFeedBackWidget;
 
 
 //#define TRACE_TGQt() fprintf(stdout, "TGQt::%s() %d\n", __FUNCTION__, __LINE__)
@@ -96,6 +98,7 @@ class TGQt  : public TVirtualX  {
    friend class TQtClientGuard;
    friend class TQtClientFilter;
    friend class TQtSynchPainting;
+   friend class TQtToggleFeedBack;
 
 protected:
    enum DEFWINDOWID { kDefault=1 };
@@ -103,7 +106,7 @@ protected:
 //   QPaintDevice *fSelectedBuffer;      // Pointer to the current "paintdevice buffer"
    QPaintDevice *fPrevWindow;          // Pointer to the previous "Window"
    Int_t         fDisplayOpened;
-   QPainter     *fQPainter;
+   TQtPainter     *fQPainter;
    TQtEmitter    fEmitter;             // object to emit Qt signals on behalf of TVirtualX
    static TVirtualX     *fgTQt;        // The hiden poiner to fullish  ROOT TPluginManager
 
@@ -158,7 +161,8 @@ protected:
     QString                fFontTextCode;     // The default code text code page (from the Gui.DefaultFont)
     const char            *fSymbolFontFamily; // the name of the font to substiute the non-standard "Symbol"
     Int_t                 fQtEventHasBeenProcessed; // Flag whether the events were processed
-
+    Bool_t                fFeedBackMode;      // TCanvas feedback mode 
+    TQtFeedBackWidget    *fFeedBackWidget;   // The dedicated widget for TCanvas feebback mode
 //
 //   Text management
 //

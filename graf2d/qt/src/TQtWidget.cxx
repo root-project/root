@@ -23,6 +23,7 @@
 #  include <QResizeEvent>
 #  include <QMouseEvent>
 #  include <QCustomEvent>
+#  include <QImage>
 #  include <QDebug>
 #endif /* QT_VERSION */
 
@@ -62,10 +63,45 @@ class TQtSynchPainting {
     }
     ~TQtSynchPainting() 
     {
-       // REstore the painting if needed
+       // Restore the painting if needed
        if (fWasPainting) gQt->Begin();                   
     }
 };
+
+//___________________________________________________________________
+TQtWidgetBuffer::TQtWidgetBuffer(const QWidget *w, bool clear)
+: fWidget(w),fBuffer(0), fIsImage(clear)
+{
+   if (clear) {
+      fBuffer = new  QImage(w?w->size():QSize(0,0),QImage::Format_ARGB32_Premultiplied);
+      ((QImage*)fBuffer)->fill(0);
+   } else {
+      fBuffer = new  QPixmap(w?w->size():QSize(0,0));
+   }
+}
+//___________________________________________________________________
+void TQtWidgetBuffer::Clear()
+{
+   // Clear the buffer with the transparent color
+   if (fBuffer ) {
+#ifdef R__WIN32   
+      if (fIsImage) { // do not paint it at all
+         // ((QImage*)fBuffer)->fill(0);
+         // ((QPixmap*)fBuffer)->fill(Qt::transparent);
+      } else {
+         ((QPixmap*)fBuffer)->fill(Qt::transparent);
+      }
+#else
+      if (!fIsImage) { // do not paint it at all
+         QPainter p(fBuffer);
+         p.fillRect(QRect(0,0,fBuffer->width(), fBuffer->height())
+            ,Qt::transparent);
+      }
+#endif
+   }
+}
+
+//___________________________________________________________________
 
 ClassImp(TQtWidget)
 
@@ -151,7 +187,7 @@ TQtWidget::TQtWidget(QWidget* parent, const char* name, Qt::WFlags f,bool embedd
 #else
       QWidget(parent,f)
 #endif
-          ,fBits(0),fNeedStretch(false),fCanvas(0),fPixmapID(0),fShadowWidget(0),fIsShadow(false),fPaint(TRUE),fSizeChanged(FALSE)
+          ,fBits(0),fNeedStretch(false),fCanvas(0),fPixmapID(0),fPixmapScreen(0),fShadowWidget(0),fIsShadow(false),fPaint(TRUE),fSizeChanged(FALSE)
           ,fDoubleBufferOn(FALSE),fEmbedded(embedded),fWrapper(0),fSaveFormat("PNG")
 {
    if (name && name[0]) setName(name);
@@ -176,11 +212,18 @@ void TQtWidget::Init()
   setWFlags(getWFlags () | Qt::WRepaintNoErase | Qt:: WResizeNoErase );
 #else /* QT_VERSION */
   setFocusPolicy(Qt::WheelFocus);
+  setAttribute(Qt::WA_NoSystemBackground);
+  setAutoFillBackground(false);
+  QPalette  p = palette();
+  p.setBrush(QPalette::Window, Qt::transparent);
+  setPalette(p);
 //  setAttribute(Qt::WA_OpaquePaintEvent);
-  setAttribute(Qt::WA_PaintOnScreen);
-  setAttribute(Qt::WA_PaintOutsidePaintEvent);// doesn' make sense for Windows
+#  ifndef R__WIN32
+     setAttribute(Qt::WA_PaintOnScreen); // for some reason X11 want this
+                                         // see TGQt::UpdateWindow
+//      setAttribute(Qt::WA_PaintOutsidePaintEvent);// doesn' make sense for Windows
+#  endif
 #endif /* QT_VERSION */
-  setBackgroundMode(Qt::NoBackground);
   if (fEmbedded) {
     if (!gApplication) InitRint();
     int minw = 10;
@@ -246,7 +289,8 @@ TQtWidget::~TQtWidget()
          ResetCanvas();
       }
    }
-   delete fPixmapID;  fPixmapID = 0;
+   delete fPixmapID;     fPixmapID = 0;
+   delete fPixmapScreen; fPixmapScreen = 0;
 }
 
 //______________________________________________________________________________
@@ -255,17 +299,9 @@ void TQtWidget::AdjustBufferSize()
    // Adjust the widget buffer size
    TQtWidgetBuffer &buf = GetBuffer();
    if ( buf.size() != size() )  {
-      if (IsDoubleBuffered() && QPainter::redirected(this)) 
-         QPainter::restoreRedirected(this);
-         QPaintDevice *redirected =  QPainter::redirected(this);
-         if (!redirected || (redirected == this) ) {
-#if QT_VERSION >= 0x40400
-           assert(!redirected || (redirected == this));
-#endif
-         }
-      delete  fPixmapID; fPixmapID = 0;
-      fPixmapID = new TQtWidgetBuffer(this); 
-      if (IsDoubleBuffered() ) QPainter::setRedirected(this,fPixmapID);
+      delete  fPixmapID;     fPixmapID = 0;
+      delete  fPixmapScreen; fPixmapScreen = 0;
+      GetBuffer();
    }
 }
 //_____________________________________________________________________________
@@ -377,14 +413,16 @@ void TQtWidget::adjustSize()
   update();
 }
 //_____________________________________________________________________________
-void TQtWidget::Erase ()
+void TQtWidget::Erase()
 {
   // Erases the entire widget and its double buffer
  
   TQtSynchPainting a(*this);
-  TQtWidgetBuffer &buf = GetBuffer();
-  buf.fill(this,QPoint(0,0));
-  erase();
+  GetBuffer();
+//  buf.fill(this,QPoint(0,0));
+  if (fPixmapScreen)  fPixmapScreen->Clear();
+  if (fPixmapID)      fPixmapID->Clear();
+  // erase();
 }
 
 //_____________________________________________________________________________
@@ -794,7 +832,7 @@ bool TQtWidget::Save(const QString &fileName,const char *format,int quality)cons
          plus = fileName.find('+',dot+1);
       }
       QString fln = (plus) ? TGQt::GetNewFileName(fileName.left(plus)) : fileName;
-      Ok = GetBuffer() ? GetBuffer()->save(fln,saveType,quality): false;
+      Ok = GetOffScreenBuffer() ? GetOffScreenBuffer()->save(fln,saveType,quality): false;
    }
    emit ((TQtWidget *)this)->Saved(Ok);
    return Ok;
@@ -806,20 +844,8 @@ void  TQtWidget::SetDoubleBuffer(bool on)
    if (fDoubleBufferOn != on ) {
       fDoubleBufferOn = on;
 #if QT_VERSION >= 0x040000
-      if (fDoubleBufferOn) {
-          TQtSynchPainting a(*this);
-          if (!QPainter::redirected(this)) QPainter::setRedirected(this,&GetBuffer());
-      } else if ( QPainter::redirected(this) )  {
-          TQtSynchPainting a(*this);
-          QPainter::restoreRedirected (this);
-
-          QPaintDevice *redirected =  QPainter::redirected(this);
-          if (!redirected || (redirected == this) ) {
-#if QT_VERSION >= 0x40400
-            assert(!redirected || (redirected == this));
-#endif
-          }
-      }
+      TQtSynchPainting a(*this);
+      if (on) GetBuffer();
  //     qDebug() << "TQtWidget::SetDoubleBuffer " << this << on << QPainter::redirected(this);
 #ifdef SHAWDOWBUFEFR
       fprintf(stderr, "TQtWidget::SetDoubleBuffer buffer=%d \n", fDoubleBufferOn );
@@ -869,10 +895,10 @@ void TQtWidget::stretchWidget(QResizeEvent * /*s*/)
             printf("last error %d\n",GetLastError());
          }
 #else
-       if (fDoubleBufferOn) QPainter::restoreRedirected (this);
-       QPainter pnt(this);
-       pnt.drawPixmap(rect(),GetBuffer());
-       if (fDoubleBufferOn) QPainter::setRedirected(this,&GetBuffer());
+      if (fPixmapID) {
+         QPainter pnt(this);
+         pnt.drawPixmap(rect(),*GetOffScreenBuffer());
+      }
 #endif
    }
    fNeedStretch = false;
@@ -944,30 +970,14 @@ void TQtWidget::paintEvent (QPaintEvent *e)
 #if QT_VERSION < 0x40000
          bitBlt(this, rect.x(),rect.y(),&GetBuffer(),rect.x(), rect.y(), rect.width(), rect.height());
 #else
-        //  qDebug() << "1. TQtWidget::paintEvent this =" << (QPaintDevice *)this  << " buffer = " << fPixmapID << "redirected = " << QPainter::redirected(this)
-        //    <<" IsDoubleBuffered()=" << IsDoubleBuffered() ;
-         TQtSynchPainting a(*this);
-         if (IsDoubleBuffered() && QPainter::redirected(this)) {
-            QPainter::restoreRedirected(this);
-        //  qDebug() << "2. TQtWidget::paintEvent this =" << (QPaintDevice *)this  << " buffer = " << fPixmapID << "redirected = " << QPainter::redirected(this)
+         //  qDebug() << "1. TQtWidget::paintEvent this =" << (QPaintDevice *)this  << " buffer = " << fPixmapID << "redirected = " << QPainter::redirected(this)
          //    <<" IsDoubleBuffered()=" << IsDoubleBuffered() ;
-         }
+         TQtSynchPainting a(*this);
+         // qDebug() << "2. TQtWidget::paintEvent this =" << (QPaintDevice *)this  << " buffer = " << fPixmapID << " IsDoubleBuffered()=" << IsDoubleBuffered() ;
          QPainter screen(this);
-         screen.drawPixmap(rect.x(),rect.y(),*fPixmapID,rect.x(), rect.y(), rect.width(), rect.height());
-         if ( IsShadow() ) {
-            QColor bc("yellow");
-            bc.setAlpha(128);
-            screen.fillRect(10,10,40,40,QBrush(bc));
-            fprintf(stderr,"Shadow painted visible %d\n", isVisible());
-         }
-
-         QPaintDevice *redirected =  QPainter::redirected(this);
-         if (!redirected || (redirected == this) ) {
-#if QT_VERSION >= 0x40400
-         assert(!redirected || (redirected == this));
-#endif
-      }
-         if (IsDoubleBuffered() ) QPainter::setRedirected(this,fPixmapID);
+         screen.setClipRect(rect);
+         // paint the the TCanvas double buffer
+         if (fPixmapID) screen.drawPixmap(0,0,*GetOffScreenBuffer());
 #endif
       }
    }
@@ -1010,4 +1020,23 @@ void  TQtWidget::SetBit(UInt_t f, Bool_t set)
       SetBit(f);
    else
       ResetBit(f);
+}
+//____________________________________________________________________________
+TQtWidgetBuffer  &TQtWidget::GetBuffer() {
+   // Create (if needed) and return the buffer
+   TQtWidgetBuffer *buf = 0;
+   if (IsDoubleBuffered() ) {
+      if (!fPixmapID) fPixmapID = new TQtWidgetBuffer(this);
+      buf = fPixmapID;
+   } else {
+      if (!fPixmapScreen) fPixmapScreen = new TQtWidgetBuffer(this,true);
+     // qDebug() << "TQtWidget::GetBuffer() " << fPixmapScreen;
+      buf = fPixmapScreen;
+   }
+   return  *buf;
+}
+//______________________________________________________________________________
+QPixmap  *TQtWidget::GetOffScreenBuffer()  const { 
+   //  return the current widget buffer;
+   return fPixmapID ? (QPixmap  *)fPixmapID->Buffer():0;
 }
