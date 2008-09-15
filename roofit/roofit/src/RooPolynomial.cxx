@@ -133,9 +133,9 @@ Double_t RooPolynomial::evaluate() const
     sum += coef->getVal(nset)*TMath::Power(_x,order++) ;
   }
 
-  if (sum<=0) {
-    cout << "RooPolynomial sum = " << sum << endl ;  
-  }
+//   if (sum<=0) {
+    //cout << "RooPolynomial sum = " << sum << endl ;  
+//   }
   return sum;
 }
 

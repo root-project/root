@@ -65,6 +65,49 @@ Double_t RooPoisson::evaluate() const
 
 
 
+
+//_____________________________________________________________________________
+Int_t RooPoisson::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const 
+{
+  if (matchArgs(allVars,analVars,x)) return 1 ;
+  return 0 ;
+}
+
+
+
+//_____________________________________________________________________________
+Double_t RooPoisson::analyticalIntegral(Int_t code, const char* rangeName) const 
+{
+  assert(code==1) ;
+
+  // Implement integral over x as summation. Add special handling in case
+  // range boundaries are not on integer values of x
+  Double_t xmin = x.min(rangeName) ;
+  Double_t xmax = x.max(rangeName) ;
+  
+  Int_t ixmin = Int_t (xmin) ;
+  Int_t ixmax = Int_t (xmax)+1 ;
+
+  Double_t fracLoBin = 1-(xmin-ixmin) ;
+  Double_t fracHiBin = ixmax-xmax ;
+
+  Double_t sum(0) ;
+  sum += TMath::Poisson(ixmin,mean)*fracLoBin ;
+  for (int i=ixmin+1 ; i<ixmax-1 ; i++) {
+    sum += TMath::Poisson(i,mean)  ;       
+  }
+  sum += TMath::Poisson(ixmax-1,mean)*fracHiBin ;
+  
+  return sum ;
+
+}
+
+
+
+
+
+
+
 //_____________________________________________________________________________
 Int_t RooPoisson::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t /*staticInitOK*/) const
 {

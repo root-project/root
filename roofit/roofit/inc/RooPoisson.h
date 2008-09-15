@@ -23,6 +23,9 @@ public:
   virtual TObject* clone(const char* newname) const { return new RooPoisson(*this,newname); }
   inline virtual ~RooPoisson() { }
 
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
+  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
+
   Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const;
   void generateEvent(Int_t code);
 
