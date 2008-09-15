@@ -2346,7 +2346,6 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
          mode=kDebug;
       }
    }
-   Bool_t mkdirFailed = kFALSE;
    
    // if non-zero, build_loc indicates where to build the shared library.
    TString build_loc = ExpandFileName(GetBuildDir());
@@ -2415,6 +2414,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       lib_dirname.Prepend(library(0,2));
    }
    TString lib_location( lib_dirname );
+   Bool_t mkdirFailed = kFALSE;
 
    if (build_loc.Length()==0) {
       build_loc = lib_location;
@@ -2428,11 +2428,20 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       if (pos==0) lib_location.Remove(pos,3);
 
       AssignAndDelete( library, ConcatFileName( build_loc, library) );
+
+      Bool_t canWriteBuild_loc = !gSystem->AccessPathName(build_loc,kWritePermission);
+      TString build_loc_store( build_loc );
       AssignAndDelete( build_loc, ConcatFileName( build_loc, lib_location) );
 
-      if (gSystem->AccessPathName(build_loc,kWritePermission)) {
-         mkdirFailed = 0 != mkdir(build_loc, true);
-      }
+      if (gSystem->AccessPathName(build_loc,kFileExists)) {
+         mkdirFailed = (0 != mkdir(build_loc, true));
+         if (mkdirFailed && !canWriteBuild_loc) {
+            // The mkdir failed __and__ we can not write to the target directory,
+            // let make sure the error message will be about the target directory
+            build_loc = build_loc_store;
+            mkdirFailed = kFALSE;
+         }
+      } 
    }
 
    // ======= Check if the library need to loaded or compiled
