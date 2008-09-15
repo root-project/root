@@ -2346,6 +2346,8 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
          mode=kDebug;
       }
    }
+   Bool_t mkdirFailed = kFALSE;
+   
    // if non-zero, build_loc indicates where to build the shared library.
    TString build_loc = ExpandFileName(GetBuildDir());
    if (build_dir && strlen(build_dir)) build_loc = build_dir;
@@ -2429,7 +2431,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       AssignAndDelete( build_loc, ConcatFileName( build_loc, lib_location) );
 
       if (gSystem->AccessPathName(build_loc,kWritePermission)) {
-         mkdir(build_loc, true);
+         mkdirFailed = 0 != mkdir(build_loc, true);
       }
    }
 
@@ -2743,8 +2745,13 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 
    if (!canWrite && recompile) {
 
-      ::Warning("ACLiC","%s is not writeable!",
+      if (mkdirFailed) {
+         ::Warning("ACLiC","Could not create the directory: %s",
                 build_loc.Data());
+      } else {
+         ::Warning("ACLiC","%s is not writeable!",
+                   build_loc.Data());         
+      }
       if (emergency_loc == build_dir ) {
          ::Error("ACLiC","%s is the last resort location (i.e. temp location)",build_loc.Data());
          return kFALSE;
