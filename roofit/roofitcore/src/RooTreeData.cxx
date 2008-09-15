@@ -947,7 +947,15 @@ RooAbsArg* RooTreeData::addColumn(RooAbsArg& newVar)
     valHolder->copyCache(newVarClone) ;
     valHolder->fillTreeBranch(*_tree) ;
   }
-  
+
+
+  // Set range of valHolder to (just) bracket all values stored in the dataset
+  Double_t vlo,vhi ;
+  RooRealVar* rrvVal = dynamic_cast<RooRealVar*>(valHolder) ;
+  if (rrvVal) {
+    getRange(*rrvVal,vlo,vhi,0.05) ;
+    rrvVal->setRange(vlo,vhi) ;  
+  }
   delete newVarCloneList;  
   return valHolder ;
 }
@@ -1817,6 +1825,42 @@ Roo1DTable* RooTreeData::table(const RooAbsCategory& cat, const char* cuts, cons
 
 
 //_____________________________________________________________________________
+Double_t RooTreeData::standMoment(RooRealVar &var, Double_t order, const char* cutSpec, const char* cutRange) const 
+{
+  // Calculate standardized moment < (X - <X>)^n > / sigma^n,  where n = order.
+  // 
+  // If cutSpec and/or cutRange are specified
+  // the moment is calculated on the subset of the data which pass the C++ cut specification expression 'cutSpec'
+  // and/or are inside the range named 'cutRange'
+
+  // Hardwire invariant answer for first and second moment
+  if (order==1) return 0 ;
+  if (order==2) return 1 ;
+
+  return moment(var,order,cutSpec,cutRange) / TMath::Power(sigma(var,cutSpec,cutRange),order) ; 
+}
+
+
+
+//_____________________________________________________________________________
+Double_t RooTreeData::moment(RooRealVar &var, Double_t order, const char* cutSpec, const char* cutRange) const 
+{
+  // Calculate moment < (X - <X>)^n > where n = order.
+  // 
+  // If cutSpec and/or cutRange are specified
+  // the moment is calculated on the subset of the data which pass the C++ cut specification expression 'cutSpec'
+  // and/or are inside the range named 'cutRange'
+
+  Double_t offset = moment(var,0,cutSpec,cutRange) ;
+  return moment(var,offset,order,cutSpec,cutRange) ;
+
+}
+
+
+
+
+
+//_____________________________________________________________________________
 Double_t RooTreeData::moment(RooRealVar &var, Double_t order, Double_t offset, const char* cutSpec, const char* cutRange) const
 {
   // Return the 'order'-ed moment of observable 'var' in this dataset. If offset is non-zero it is subtracted
@@ -1881,24 +1925,24 @@ RooRealVar* RooTreeData::meanVar(RooRealVar &var, const char* cutSpec, const cha
   TString name(var.GetName()),title("Mean of ") ;
   name.Append("Mean");
   title.Append(var.GetTitle());
-  RooRealVar *mean= new RooRealVar(name,title,0) ;
-  mean->setConstant(kFALSE) ;
+  RooRealVar *meanv= new RooRealVar(name,title,0) ;
+  meanv->setConstant(kFALSE) ;
 
   // Adjust plot label
   TString label("<") ;
   label.Append(var.getPlotLabel());
   label.Append(">");
-  mean->setPlotLabel(label.Data());
+  meanv->setPlotLabel(label.Data());
 
   // fill in this variable's value and error
   Double_t meanVal=moment(var,1,0,cutSpec,cutRange) ;
   Double_t N(sumEntries(cutSpec,cutRange)) ;
 
   Double_t rmsVal= sqrt(moment(var,2,meanVal,cutSpec,cutRange)*N/(N-1));
-  mean->setVal(meanVal) ;
-  mean->setError(N > 0 ? rmsVal/sqrt(N) : 0);
+  meanv->setVal(meanVal) ;
+  meanv->setError(N > 0 ? rmsVal/sqrt(N) : 0);
 
-  return mean;
+  return meanv;
 }
 
 
@@ -1989,10 +2033,10 @@ Bool_t RooTreeData::getRange(RooRealVar& var, Double_t& lowest, Double_t& highes
 
     } else {
 
-      Double_t mean = moment(var,1) ;
-      Double_t delta = ((highest-mean)>(mean-lowest)?(highest-mean):(mean-lowest))*(1+marginFrac) ;
-      lowest = mean-delta ;
-      highest = mean+delta ;
+      Double_t mom1 = moment(var,1) ;
+      Double_t delta = ((highest-mom1)>(mom1-lowest)?(highest-mom1):(mom1-lowest))*(1+marginFrac) ;
+      lowest = mom1-delta ;
+      highest = mom1+delta ;
       if (lowest<var.getMin()) lowest = var.getMin() ;
       if (highest>var.getMax()) highest = var.getMax() ;
 
@@ -2119,18 +2163,18 @@ RooPlot* RooTreeData::statOn(RooPlot* frame, const char* what, const char *label
   TText *text = 0;
   RooRealVar N("N","Number of Events",sumEntries(cutSpec,cutRange));
   N.setPlotLabel("Entries") ;
-  RooRealVar *mean= meanVar(*(RooRealVar*)frame->getPlotVar(),cutSpec,cutRange);
-  mean->setPlotLabel("Mean") ;
+  RooRealVar *meanv= meanVar(*(RooRealVar*)frame->getPlotVar(),cutSpec,cutRange);
+  meanv->setPlotLabel("Mean") ;
   RooRealVar *rms= rmsVar(*(RooRealVar*)frame->getPlotVar(),cutSpec,cutRange);
   rms->setPlotLabel("RMS") ;
   TString *rmsText, *meanText, *NText ;
   if (options) {
     rmsText= rms->format(sigDigits,options);
-    meanText= mean->format(sigDigits,options);
+    meanText= meanv->format(sigDigits,options);
     NText= N.format(sigDigits,options);
   } else {
     rmsText= rms->format(*formatCmd);
-    meanText= mean->format(*formatCmd);
+    meanText= meanv->format(*formatCmd);
     NText= N.format(*formatCmd);
   }
   if (showR) text= box->AddText(rmsText->Data());
@@ -2141,7 +2185,7 @@ RooPlot* RooTreeData::statOn(RooPlot* frame, const char* what, const char *label
   delete NText;
   delete meanText;
   delete rmsText;
-  delete mean;
+  delete meanv;
   delete rms;
 
   // add the optional label if specified

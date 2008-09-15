@@ -1367,14 +1367,24 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
 
   // Pre-processing if p.d.f. contains a fit range and there is no command specifying one,
   // add a fit range as default range
-  RooCmdArg* fitRange(0) ;
+  RooCmdArg* plotRange(0) ;
+  RooCmdArg* normRange(0) ;  
   if (getStringAttribute("fitrange") && !cmdList.FindObject("Range") && 
-      !cmdList.FindObject("RangeWithName") && !cmdList.FindObject("NormRange")) {
-    fitRange = (RooCmdArg*) RooFit::Range(getStringAttribute("fitrange")).Clone() ;    
-    cmdList.Add(fitRange) ;
-    coutI(Plotting) << "RooAbsPdf::plotOn(" << GetName() << ") p.d.f was fitted in range and no explicit plot range was specified, using fit range as default" << endl ;
+      !cmdList.FindObject("RangeWithName")) {
+    plotRange = (RooCmdArg*) RooFit::Range(getStringAttribute("fitrange")).Clone() ;    
+    cmdList.Add(plotRange) ;
   }
 
+  if (getStringAttribute("fitrange") && !cmdList.FindObject("NormRange")) {
+    normRange = (RooCmdArg*) RooFit::NormRange(getStringAttribute("fitrange")).Clone() ;    
+    cmdList.Add(normRange) ;
+  }
+
+  if (plotRange || normRange) {
+    coutI(Plotting) << "RooAbsPdf::plotOn(" << GetName() << ") p.d.f was fitted in range and no explicit " 
+		    << (plotRange?"plot":"") << ((plotRange&&normRange)?",":"")
+		    << (normRange?"norm":"") << " range was specified, using fit range as default" << endl ;
+  }
 
   // Sanity checks
   if (plotSanityChecks(frame)) return frame ;

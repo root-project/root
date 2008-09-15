@@ -83,7 +83,15 @@ public:
 
   TH1 *fillHistogram(TH1 *hist, const RooArgList &plotVars, const char *cuts= "", const char* cutRange=0) const;
 
-  Double_t moment(RooRealVar &var, Double_t order, Double_t offset=0, const char* cutSpec=0, const char* cutRange=0) const ;
+  Double_t moment(RooRealVar &var, Double_t order, const char* cutSpec=0, const char* cutRange=0) const ;
+  Double_t moment(RooRealVar &var, Double_t order, Double_t offset, const char* cutSpec=0, const char* cutRange=0) const ;
+  Double_t standMoment(RooRealVar &var, Double_t order, const char* cutSpec=0, const char* cutRange=0) const ;
+
+  Double_t mean(RooRealVar& var, const char* cutSpec=0, const char* cutRange=0) const { return moment(var,0,0,cutSpec,cutRange) ; }
+  Double_t sigma(RooRealVar& var, const char* cutSpec=0, const char* cutRange=0) const { return moment(var,1,cutSpec,cutRange) ; }
+  Double_t skewness(RooRealVar& var, const char* cutSpec=0, const char* cutRange=0) const { return standMoment(var,3,cutSpec,cutRange) ; }
+  Double_t kurtosis(RooRealVar& var, const char* cutSpec=0, const char* cutRange=0) const { return standMoment(var,4,cutSpec,cutRange) ; }
+
   RooRealVar* meanVar(RooRealVar &var, const char* cutSpec=0, const char* cutRange=0) const ;
   RooRealVar* rmsVar(RooRealVar &var, const char* cutSpec=0, const char* cutRange=0) const ;
 
