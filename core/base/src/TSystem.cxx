@@ -924,18 +924,24 @@ const char *TSystem::DirName(const char *pathname)
 
       static int len = 0;
       static char *buf = 0;
-      int l = strlen(pathname);
-      if (l > len) {
+      int pathlen = strlen(pathname);
+      if (pathlen > len) {
          delete [] buf;
-         len = l;
+         len = pathlen;
          buf = new char [len+1];
       }
       strcpy(buf, pathname);
-      char *r = strrchr(buf, '/');
-      if (r != buf)
-         *r = '\0';
-      else
-         *(r+1) = '\0';
+      
+      char *r = buf+pathlen-1;
+      // First skip the trailing '/'
+      while ( r>buf && *(r)=='/') { --r; }
+      // Then find the next non slash
+      while ( r>buf && *(r)!='/') { --r; }
+      // Then skip duplicate slashes
+      while ( r>buf && *(r)=='/') { --r; }            
+      // And finally terminate the string to drop off the filename
+
+      *(r+1) = '\0';
       return buf;
    }
    return ".";
