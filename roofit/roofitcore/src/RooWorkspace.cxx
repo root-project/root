@@ -53,6 +53,12 @@
 
 using namespace std ;
 
+
+#if ROOT_VERSION_CODE <= ROOT_VERSION(5,19,02)
+#include "Api.h"
+#endif
+
+
 #include "TClass.h"
 #include "Riostream.h"
 #include <string.h>
@@ -698,7 +704,11 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
   // Require that class meets technical criteria to be persistable (i.e it has a default ctor)
   // (We also need a default ctor of abstract classes, but cannot check that through is interface
   //  as TClass::HasDefaultCtor only returns true for callable default ctors)
+#if ROOT_VERSION_CODE <= ROOT_VERSION(5,19,02)
+  if (!(tc->GetClassInfo()->Property()&G__BIT_ISABSTRACT) && !tc->HasDefaultConstructor()) {
+#else
   if (!(gCint->ClassInfo_Property(tc->GetClassInfo())&G__BIT_ISABSTRACT) && !tc->HasDefaultConstructor()) {
+#endif
     oocoutW(_wspace,ObjectHandling) << "RooWorkspace::autoImportClass(" << _wspace->GetName() << ") WARNING cannot import class " 
 				    << tc->GetName() << " : it cannot be persisted because it doesn't have a default constructor. Please fix " << endl ;
     return kFALSE ;      
@@ -1353,12 +1363,22 @@ Bool_t RooWorkspace::CodeRepo::compileClasses()
 void RooWorkspace::WSDir::InternalAppend(TObject* obj) 
 {
   // Internal access to TDirectory append method
-  TDirectory::Append(obj,kFALSE) ; 
+
+#if ROOT_VERSION_CODE <= ROOT_VERSION(5,19,02)
+  TDirectory::Append(obj) ;
+#else
+  TDirectory::Append(obj,kFALSE) ;
+#endif
+
 }
 
 
 //_____________________________________________________________________________
+#if ROOT_VERSION_CODE <= ROOT_VERSION(5,19,02)
+void RooWorkspace::WSDir::Add(TObject*) 
+#else
 void RooWorkspace::WSDir::Add(TObject*,Bool_t) 
+#endif
 {
   // Overload TDirectory interface method to prohibit insertion of objects in read-only directory workspace representation
   coutE(ObjectHandling) << "RooWorkspace::WSDir::Add(" << GetName() << ") ERROR: Directory is read-only representation of a RooWorkspace, use RooWorkspace::import() to add objects" << endl ;
@@ -1366,7 +1386,11 @@ void RooWorkspace::WSDir::Add(TObject*,Bool_t)
 
 
 //_____________________________________________________________________________
+#if ROOT_VERSION_CODE <= ROOT_VERSION(5,19,02)
+void RooWorkspace::WSDir::Append(TObject*) 
+#else
 void RooWorkspace::WSDir::Append(TObject*,Bool_t) 
+#endif
 {
   // Overload TDirectory interface method to prohibit insertion of objects in read-only directory workspace representation
   coutE(ObjectHandling) << "RooWorkspace::WSDir::Add(" << GetName() << ") ERROR: Directory is read-only representation of a RooWorkspace, use RooWorkspace::import() to add objects" << endl ;

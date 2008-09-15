@@ -43,6 +43,10 @@
 #include "RooErrorHandler.h"
 #include "RooMsgService.h"
 
+#if ROOT_VERSION_CODE < ROOT_VERSION(5,20,00)
+#include "Api.h"
+#endif
+
 ClassImp(RooGenCategory)
 
 
@@ -59,7 +63,13 @@ RooGenCategory::RooGenCategory(const char *name, const char *title, void *userFu
   
   // Convert the function pointer into a parse object using the CINT
   // dictionary in memory.
+
+#if ROOT_VERSION_CODE >= ROOT_VERSION(5,20,00)
   _userFuncName = gCint->Getp2f2funcname(userFunc);
+#else
+  _userFuncName = G__p2f2funcname(userFunc);
+#endif
+
   if(_userFuncName.IsNull()) {
     coutE(InputArguments) << GetName() << ": cannot find dictionary info for (void*)"
 			  << (void*)userFunc << endl;

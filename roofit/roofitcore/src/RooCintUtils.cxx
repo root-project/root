@@ -22,7 +22,13 @@
 #include "RooFit.h"
 
 #include "RooCintUtils.h"
+
+#if ROOT_VERSION_CODE >= ROOT_VERSION(5,20,00)
 #include "cint/Api.h"
+#else
+#include "Api.h"
+#endif
+
 #include "RooMsgService.h"
 #include <string.h>
 #include <string>
