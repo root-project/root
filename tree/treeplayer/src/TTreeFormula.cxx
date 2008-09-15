@@ -2794,7 +2794,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
    }
 
    //may be an entrylist
-   TEntryList *elist = (TEntryList*)gDirectory->Get(name.Data());
+   TEntryList *elist = dynamic_cast<TEntryList*> (gDirectory->Get(name.Data()));
    if (elist) {
       Int_t code = fNcodes;
       fCodes[code] = 0;
