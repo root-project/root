@@ -938,10 +938,11 @@ const char *TSystem::DirName(const char *pathname)
       // Then find the next non slash
       while ( r>buf && *(r)!='/') { --r; }
       // Then skip duplicate slashes
+      // Note the 'r>buf' is a strict comparaison to allows '/topdir' to return '/'
       while ( r>buf && *(r)=='/') { --r; }            
       // And finally terminate the string to drop off the filename
-
       *(r+1) = '\0';
+      
       return buf;
    }
    return ".";
