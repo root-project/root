@@ -493,7 +493,7 @@ void TGMenuBar::AddFrameBefore(TGFrame *f, TGLayoutHints *l,
    // indeed only add TGMenuTitle objects to it. If before is not 0
    // the menu will be added before it.
 
-   if (f->IsA() != TGMenuTitle::Class()) {
+   if (!f->InheritsFrom("TGMenuTitle")) {
       Error("AddFrameBefore", "may only add TGMenuTitle objects to a menu bar");
       return;
    }
