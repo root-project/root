@@ -1430,7 +1430,7 @@ void TBufferXML::SkipObjectAny()
 }
 
 //______________________________________________________________________________
-void TBufferXML::WriteObject(const void *actualObjStart, const TClass *actualClass)
+void TBufferXML::WriteObjectClass(const void *actualObjStart, const TClass *actualClass)
 {
    // Write object to buffer. Only used from TBuffer
 

@@ -215,7 +215,7 @@ protected:
 
    // redefined protected virtual functions
 
-   virtual void     WriteObject(const void *actualObjStart, const TClass *actualClass);
+   virtual void     WriteObjectClass(const void *actualObjStart, const TClass *actualClass);
 
    // end redefined protected virtual functions
 

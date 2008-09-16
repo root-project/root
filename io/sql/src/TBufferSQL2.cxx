@@ -973,7 +973,7 @@ void TBufferSQL2::SkipObjectAny()
 }
 
 //______________________________________________________________________________
-void TBufferSQL2::WriteObject(const void *actualObjStart, const TClass *actualClass)
+void TBufferSQL2::WriteObjectClass(const void *actualObjStart, const TClass *actualClass)
 {
    // Write object to buffer. Only used from TBuffer
 
