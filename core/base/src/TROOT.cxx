@@ -129,6 +129,7 @@ extern "C" char* dlerror();
 #endif
 
 extern "C" const char *G__cint_version();
+extern "C" void R__SetZipMode(int);
 
 // Mutex for protection of concurrent gROOT access
 TVirtualMutex* gROOTMutex = 0;
@@ -1227,8 +1228,8 @@ void TROOT::InitSystem()
       gDebug = gEnv->GetValue("Root.Debug", 0);
 
       //By default the zipmode is 1 (see Bits.h)
-      //Int_t zipmode = gEnv->GetValue("Root.ZipMode",1);
-      //R__SetZipMode(zipmode);
+      Int_t zipmode = gEnv->GetValue("Root.ZipMode",1);
+      if (zipmode !=1) R__SetZipMode(zipmode);
 
       const char *sdeb;
       if ((sdeb = gSystem->Getenv("ROOTDEBUG")))
