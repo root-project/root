@@ -58,6 +58,7 @@ public:
    virtual ~TFileCollection();
 
    Int_t           Add(TFileInfo *info);
+   Int_t           Add(TFileCollection *coll);
    Int_t           AddFromFile(const char *file, Int_t nfiles = -1, Int_t firstfile = 1);
    Int_t           Add(const char *path);
    THashList      *GetList() { return fList; }

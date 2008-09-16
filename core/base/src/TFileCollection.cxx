@@ -76,6 +76,21 @@ Int_t TFileCollection::Add(TFileInfo *info)
 }
 
 //______________________________________________________________________________
+Int_t TFileCollection::Add(TFileCollection *coll)
+{
+   // Add content of the TFileCollection to this collection.
+
+   if (fList && coll && coll->GetList()) {
+      TList* list = coll->GetList();
+      for (Int_t i=0; i<list->GetEntries(); i++)
+        fList->Add((TFileInfo*) list->At(i));
+      return 1;
+   } else {
+      return 0;
+   }
+}
+
+//______________________________________________________________________________
 Int_t TFileCollection::AddFromFile(const char *textfile, Int_t nfiles, Int_t firstfile)
 {
    // Add file names contained in the specified text file.
