@@ -40,6 +40,7 @@ TEveProjection::TEveProjection() :
    fPastFixRFac   (0),   fPastFixZFac   (0),
    fScaleR        (1),   fScaleZ        (1),
    fPastFixRScale (1),   fPastFixZScale (1),
+   fMaxTrackStep  (5),
    fLowLimit(-std::numeric_limits<Float_t>::infinity(),
              -std::numeric_limits<Float_t>::infinity(),
              -std::numeric_limits<Float_t>::infinity()),

@@ -19,6 +19,12 @@
 
 #include <vector>
 
+class TEvePointSet;
+
+
+//==============================================================================
+// TEveMagField
+//==============================================================================
 
 class TEveMagField
 {
@@ -39,113 +45,105 @@ public:
 
    virtual TEveVector GetField(const TEveVector &v) const { return GetField(v.fX, v.fY, v.fZ);}
 
-   virtual TEveVector GetField(Float_t x, Float_t y, Float_t z) const  =0;
+   virtual TEveVector GetField(Float_t x, Float_t y, Float_t z) const = 0;
 
    ClassDef(TEveMagField, 0); // Abstract interface to magnetic field
 };
 
 
-/**************************************************************************/
-class TEveMagFieldConst: public TEveMagField
+//==============================================================================
+// TEveMagFieldConst
+//==============================================================================
+
+class TEveMagFieldConst : public TEveMagField
 {
 protected:
    TEveVector fB;
 
 public:
-   TEveMagFieldConst(Float_t x, Float_t y, Float_t z):TEveMagField() { fFieldConstant=kTRUE; fB.Set(x, y, z);}
-   virtual ~TEveMagFieldConst(){}
+   TEveMagFieldConst(Float_t x, Float_t y, Float_t z) : TEveMagField()
+   { fFieldConstant = kTRUE; fB.Set(x, y, z); }
+   virtual ~TEveMagFieldConst() {}
 
    using   TEveMagField::GetField;
-   virtual TEveVector GetField(Float_t /*x*/, Float_t /*y*/, Float_t /*z*/) const
-   {
-      return fB;
-   }
+   virtual TEveVector GetField(Float_t /*x*/, Float_t /*y*/, Float_t /*z*/) const { return fB; }
 
    ClassDef(TEveMagFieldConst, 0); // Interface to constant magnetic field.
 };
 
-/**************************************************************************/
-class TEveMagFieldDuo: public TEveMagField
+
+//==============================================================================
+// TEveMagFieldDuo
+//==============================================================================
+
+class TEveMagFieldDuo : public TEveMagField
 {
 protected:
    TEveVector fBIn;
    TEveVector fBOut;
-   Float_t fR2;
+   Float_t    fR2;
 
 public:
-   TEveMagFieldDuo(Float_t r, Float_t bIn, Float_t bOut):TEveMagField(), fR2(r*r)
+   TEveMagFieldDuo(Float_t r, Float_t bIn, Float_t bOut) : TEveMagField(), fR2(r*r)
    {
-      fFieldConstant=kFALSE;
-      fBIn.Set(0, 0, bIn);
+      fFieldConstant = kFALSE;
+      fBIn. Set(0, 0, bIn);
       fBOut.Set(0, 0, bOut);
    }
-   virtual ~TEveMagFieldDuo(){}
+   virtual ~TEveMagFieldDuo() {}
 
    using   TEveMagField::GetField;
-
    virtual TEveVector GetField(Float_t x, Float_t y, Float_t /*z*/) const
-   {
-      return  ((x*x+y*y)<fR2) ? fBIn : fBOut;
-   }
-
-   virtual void  PrintField(Float_t x, Float_t y, Float_t z) const
-   {
-      TEveVector b = GetField(x, y, z);
-   }
+   { return  ((x*x+y*y)<fR2) ? fBIn : fBOut; }
 
    ClassDef(TEveMagFieldDuo, 0); // Interface to magnetic field with two different values depending of radius.
 };
 
 
-/**************************************************************************/
-/**************************************************************************/
-/**************************************************************************/
-/**************************************************************************/
+//==============================================================================
+// TEveTrackPropagator
+//==============================================================================
 
-class TEvePointSet;
-
-class TEveTrackPropagator: public TEveElementList,
-                           public TEveRefBackPtr
+class TEveTrackPropagator : public TEveElementList,
+                            public TEveRefBackPtr
 {
    friend class TEveTrackPropagatorSubEditor;
 
 public:
    struct Helix_t
    {
-      Int_t   fCharge;   // set in init track
+      Int_t   fCharge;   // Charge of tracked particle.
       Float_t fMinAng;   // Minimal angular step between two helix points.
-      Float_t fDelta;    // Maximal error at the mid-point of the line connecting to helix points.
+      Float_t fDelta;    // Maximal error at the mid-point of the line connecting two helix points.
 
-      Float_t fPhi;      // accumulated angle to check fMaxOrbs by propagator
-      Bool_t  fValid;    // corner case pT~0 or B~0, possible in variable mag field
+      Float_t fPhi;      // Accumulated angle to check fMaxOrbs by propagator.
+      Bool_t  fValid;    // Corner case pT~0 or B~0, possible in variable mag field.
 
-      /**************************************************************************/
+      // ----------------------------------------------------------------
 
       // helix parameters
-      Float_t fLam;         // momentum ratio pT/pZ
-      Float_t fR;           // helix radius in cm
-      Float_t fPhiStep;     // caluclated from fMinAng and fDelta
-      Float_t fSin,  fCos;  // current sin, cos
+      Float_t fLam;         // Momentum ratio pT/pZ.
+      Float_t fR;           // Helix radius in cm.
+      Float_t fPhiStep;     // Caluclated from fMinAng and fDelta.
+      Float_t fSin, fCos;   // Current sin/cos(phistep).
 
       // cached 
-      TEveVector fB;        // current magnetic field, cached 
-      TEveVector fE1, fE2, fE3; // base vectors: E1 -> B dir, E2->pT dir, E3 = E1xE2
-      TEveVector fPt, fPl;  // transverse, longitudinal momentum
-      Float_t fPtMag;       // mag of p transverse
-      Float_t fPlDir;       // momenum is in or oposite mag field
-      Float_t fTStepSize;    // traverse step size in cm
+      TEveVector fB;        // Current magnetic field, cached.
+      TEveVector fE1, fE2, fE3; // Base vectors: E1 -> B dir, E2->pT dir, E3 = E1xE2.
+      TEveVector fPt, fPl;  // Transverse and longitudinal momentum.
+      Float_t fPtMag;       // Magnitude of pT
+      Float_t fPlDir;       // Momentum parallel to mag field.
+      Float_t fTStep;       // Transverse step arc-length in cm.
 
-      /**************************************************************************/
-
+      // ----------------------------------------------------------------
 
       Helix_t();
-      ~Helix_t(){}
 
-      void Update(const TEveVector& p, const TEveVector& b, Bool_t fullUpdate, Float_t fraction = -1);
-      void Step(const TEveVector4& v, const TEveVector& p, TEveVector4& vOut, TEveVector& pOut);
+      void Update(const TEveVector & p, const TEveVector& b, Bool_t fullUpdate, Float_t fraction = -1);
+      void Step  (const TEveVector4& v, const TEveVector& p, TEveVector4& vOut, TEveVector& pOut);
 
-      Float_t GetStepSize()  {return fTStepSize*TMath::Sqrt(1+fLam*fLam);}
-      Float_t GetStepSize2() {return fTStepSize* fTStepSize*(1+fLam*fLam);}
+      Float_t GetStep()  { return fTStep * TMath::Sqrt(1 + fLam*fLam); }
+      Float_t GetStep2() { return fTStep * fTStep * (1 + fLam*fLam);   }
    };
 
 private:
@@ -153,11 +151,10 @@ private:
    TEveTrackPropagator& operator=(const TEveTrackPropagator&); // Not implemented
 
 protected:
-   //----------------------------------
-   // Track extrapolation configuration
+   // Magnetic field
    TEveMagField*            fMagFieldObj;
 
-   // TEveTrack limits
+   // Track extrapolation limits
    Float_t                  fMaxR;          // Max radius for track extrapolation
    Float_t                  fMaxZ;          // Max z-coordinate for track extrapolation.
    Int_t                    fNMax;          // max steps
@@ -178,12 +175,12 @@ protected:
    TMarker                  fPMAtt;         // Marker attributes for rendering of path-marks.
    TMarker                  fFVAtt;         // Marker attributes for fits vertex.
 
-   //------------------------------------
-   // propagation, state of current track
+   // ----------------------------------------------------------------
 
-   std::vector<TEveVector4> fPoints;        // calculated point
-   TEveVector               fV;             // start vertex
-   Helix_t                  fH;             // helix
+   // Propagation, state of current track
+   std::vector<TEveVector4> fPoints;        // Calculated point.
+   TEveVector               fV;             // Start vertex.
+   Helix_t                  fH;             // Helix.
 
    void    RebuildTracks();
    void    StepHelix(TEveVector4 &v, TEveVector &p, TEveVector4 &vOut, TEveVector &pOut);
@@ -240,7 +237,7 @@ public:
    void   SetFitCluster2Ds(Bool_t x);
    void   SetRnrFV(Bool_t x) { fRnrFV = x; }
 
-   TEveVector GetMagField(Float_t x, Float_t y, Float_t z) {return fMagFieldObj->GetField(x, y, z);}
+   TEveVector GetMagField(Float_t x, Float_t y, Float_t z) { return fMagFieldObj->GetField(x, y, z); }
    void PrintMagField(Float_t x, Float_t y, Float_t z) const;
 
    Float_t GetMaxR()     const { return fMaxR;     }
@@ -291,7 +288,6 @@ inline Bool_t TEveTrackPropagator::PointOverVertex(const TEveVector4 &v0,
                 + fH.fB.fY*(v0.fY-v.fY) 
                 + fH.fB.fZ*(v0.fZ-v.fZ);
 
-   //printf("PointOverVertex pDotB %f  %f \n", fH.fPlDir , dotV);
    return (fH.fPlDir > 0 && dotV < 0) || (fH.fPlDir < 0 && dotV >0);
 }
 

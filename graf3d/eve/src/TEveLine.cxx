@@ -35,7 +35,7 @@ TEveLine::TEveLine(Int_t n_points, ETreeVarType_e tv_type) :
    // Constructor.
 
    fMainColorPtr = &fLineColor;
-   fMarkerColor = kGreen;
+   fMarkerColor  =  kGreen;
 }
 
 //______________________________________________________________________________
@@ -49,6 +49,123 @@ TEveLine::TEveLine(const Text_t* name, Int_t n_points, ETreeVarType_e tv_type) :
 
    fMainColorPtr = &fLineColor;
    fMarkerColor = kGreen;
+}
+
+//______________________________________________________________________________
+void TEveLine::SetMarkerColor(Color_t col)
+{
+   // Set marker color. Propagate to projected lines.
+
+   std::list<TEveProjected*>::iterator pi = fProjectedList.begin();
+   while (pi != fProjectedList.end())
+   {
+      TEveLine* l = dynamic_cast<TEveLine*>(*pi);
+      if (l && fMarkerColor == l->GetMarkerColor())
+      {
+         l->SetMarkerColor(col);
+         l->ElementChanged();
+      }
+      ++pi;
+   }
+   TAttMarker::SetMarkerColor(col);
+}
+
+//______________________________________________________________________________
+void TEveLine::SetRnrLine(Bool_t r)
+{
+   // Set rendering of line. Propagate to projected lines.
+
+   fRnrLine = r;
+   std::list<TEveProjected*>::iterator pi = fProjectedList.begin();
+   while (pi != fProjectedList.end())
+   {
+      TEveLine* l = dynamic_cast<TEveLine*>(*pi);
+      if (l)
+      {
+         l->SetRnrLine(r);
+         l->ElementChanged();
+      }
+      ++pi;
+   }
+}
+
+//______________________________________________________________________________
+void TEveLine::SetRnrPoints(Bool_t r)
+{
+   // Set rendering of points. Propagate to projected lines.
+
+   fRnrPoints = r;
+   std::list<TEveProjected*>::iterator pi = fProjectedList.begin();
+   while (pi != fProjectedList.end())
+   {
+      TEveLine* l = dynamic_cast<TEveLine*>(*pi);
+      if (l)
+      {
+         l->SetRnrPoints(r);
+         l->ElementChanged();
+      }
+      ++pi;
+   }
+}
+
+//______________________________________________________________________________
+void TEveLine::SetSmooth(Bool_t r)
+{
+   // Set smooth rendering. Propagate to projected lines.
+   fSmooth = r;
+   std::list<TEveProjected*>::iterator pi = fProjectedList.begin();
+   while (pi != fProjectedList.end())
+   {
+      TEveLine* l = dynamic_cast<TEveLine*>(*pi);
+      if (l)
+      {
+         l->SetSmooth(r);
+         l->ElementChanged();
+      }
+      ++pi;
+   }
+}
+
+//==============================================================================
+
+//______________________________________________________________________________
+void TEveLine::ReduceSegmentLengths(Float_t max)
+{
+   // Make sure that no segment is longer than max.
+   // Per point references and integer ids are lost.
+
+   const Float_t max2 = max*max;
+
+   Float_t    *p = GetP();
+   Int_t       s = Size();
+   TEveVector  a, b, d;
+
+   std::vector<TEveVector> q;
+
+   b.Set(p);
+   q.push_back(b);
+   for (Int_t i = 1; i < s; ++i)
+   {
+      a = b; b.Set(&p[3*i]); d = b - a;
+      Float_t m2 = d.Mag2();
+      if (m2 > max2)
+      {
+         Float_t f = TMath::Sqrt(m2) / max;
+         Int_t   n = TMath::FloorNint(f);
+         d *= 1.0f / (n + 1);
+         for (Int_t j = 0; j < n; ++j)
+         {
+            a += d;
+            q.push_back(a);
+         }
+      }
+      q.push_back(b);
+   }
+
+   s = q.size();
+   Reset(s);
+   for (std::vector<TEveVector>::iterator i = q.begin(); i != q.end(); ++i)
+      SetNextPoint(i->fX, i->fY, i->fZ);
 }
 
 //______________________________________________________________________________

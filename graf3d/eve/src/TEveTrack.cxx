@@ -41,6 +41,8 @@
 
 ClassImp(TEveTrack);
 
+Bool_t TEveTrack::fgDefaultBreakProjectedTracks = kTRUE;
+
 //______________________________________________________________________________
 TEveTrack::TEveTrack() :
    TEveLine(),
@@ -54,8 +56,8 @@ TEveTrack::TEveTrack() :
    fLabel(kMinInt),
    fIndex(kMinInt),
    fPathMarks(),
-
-   fPropagator(0)
+   fPropagator(0),
+   fBreakProjectedTracks(kBPTDefault)
 {
    // Default constructor.
 }
@@ -73,8 +75,8 @@ TEveTrack::TEveTrack(TParticle* t, Int_t label, TEveTrackPropagator* rs):
    fLabel(label),
    fIndex(kMinInt),
    fPathMarks(),
-
-   fPropagator(0)
+   fPropagator(0),
+   fBreakProjectedTracks(kBPTDefault)
 {
    // Constructor from TParticle.
 
@@ -103,8 +105,8 @@ TEveTrack::TEveTrack(TEveMCTrack* t, TEveTrackPropagator* rs):
    fLabel(t->fLabel),
    fIndex(t->fIndex),
    fPathMarks(),
-
-   fPropagator(0)
+   fPropagator(0),
+   fBreakProjectedTracks(kBPTDefault)
 {
    // Constructor from TEveUtil Monte Carlo track.
 
@@ -133,8 +135,8 @@ TEveTrack::TEveTrack(TEveRecTrack* t, TEveTrackPropagator* rs) :
    fLabel(t->fLabel),
    fIndex(t->fIndex),
    fPathMarks(),
-
-   fPropagator(0)
+   fPropagator(0),
+   fBreakProjectedTracks(kBPTDefault)
 {
    // Constructor from TEveUtil reconstructed track.
 
@@ -156,7 +158,8 @@ TEveTrack::TEveTrack(const TEveTrack& t) :
    fLabel(t.fLabel),
    fIndex(t.fIndex),
    fPathMarks(),
-   fPropagator(0)
+   fPropagator(0),
+   fBreakProjectedTracks(t.fBreakProjectedTracks)
 {
    // Copy constructor. Track paremeters are copied but the
    // extrapolation is not perfermed so you should still call
@@ -225,12 +228,17 @@ void TEveTrack::SetTrackParams(const TEveTrack& t)
    // TEveLine
    fRnrLine   = t.fRnrLine;
    fRnrPoints = t.fRnrPoints;
+   // TMarkerAttrib
+   fMarkerColor = t.fMarkerColor;
+   fMarkerSize  = t.fMarkerSize;
+   fMarkerStyle = t.fMarkerStyle;
    // TLineAttrib
    fLineColor = t.fLineColor;
    fLineStyle = t.fLineStyle;
    fLineWidth = t.fLineWidth;
    fPathMarks.clear();
    SetPropagator(t.fPropagator);
+   fBreakProjectedTracks = t.fBreakProjectedTracks;
 }
 
 //______________________________________________________________________________
@@ -382,6 +390,12 @@ void TEveTrack::CopyVizParams(const TEveElement* el)
 
    // No local parameters.
 
+   const TEveTrack* t = dynamic_cast<const TEveTrack*>(el);
+   if (t)
+   {
+      fBreakProjectedTracks = t->fBreakProjectedTracks;
+   }
+
    TEveLine::CopyVizParams(el);
 }
 
@@ -392,7 +406,8 @@ void TEveTrack::WriteVizParams(ostream& out, const TString& var)
 
    TEveLine::WriteVizParams(out, var);
    
-   TAttMarker::SaveMarkerAttributes(out, var);
+   TString t = "   " + var + "->";
+   out << t << "SetBreakProjectedTracks(" << fBreakProjectedTracks << ");\n";
 }
 
 //______________________________________________________________________________
@@ -401,6 +416,20 @@ TClass* TEveTrack::ProjectedClass() const
    // Virtual from TEveProjectable, return TEveTrackProjected class.
 
    return TEveTrackProjected::Class();
+}
+
+//______________________________________________________________________________
+Bool_t TEveTrack::ShouldBreakTrack() const
+{
+   // Should this track be broken in projections.
+
+   switch (fBreakProjectedTracks)
+   {
+      default:
+      case kBPTDefault: return fgDefaultBreakProjectedTracks;
+      case kBPTAlways:  return kTRUE;
+      case kBPTNever:   return kFALSE;
+   }
 }
 
 /******************************************************************************/

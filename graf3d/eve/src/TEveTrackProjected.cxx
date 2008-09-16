@@ -25,8 +25,6 @@
 
 ClassImp(TEveTrackProjected);
 
-Bool_t TEveTrackProjected::fgBreakTracks = kTRUE;
-
 //______________________________________________________________________________
 TEveTrackProjected::TEveTrackProjected() :
    TEveTrack  (),
@@ -70,7 +68,7 @@ void TEveTrackProjected::SetDepth(Float_t d)
 //______________________________________________________________________________
 void TEveTrackProjected::UpdateProjection()
 {
-   // This is virtual method from base-class TEveProjected.
+   // Virtual method from base-class TEveProjected.
 
    fProjection = fManager->GetProjection();
    MakeTrack(kFALSE); // TEveProjectionManager makes recursive calls
@@ -85,12 +83,12 @@ void TEveTrackProjected::GetBreakPoint(Int_t idx, Bool_t back,
    TEveVector vL = fOrigPnts[idx];
    TEveVector vR = fOrigPnts[idx+1];
    TEveVector vM, vLP, vMP;
-   while((vL-vR).Mag() > 0.01)
+   while ((vL-vR).Mag() > 0.01)
    {
       vM.Mult(vL+vR, 0.5f);
       vLP.Set(vL); fProjection->ProjectPoint(vLP.fX, vLP.fY, vLP.fZ);
       vMP.Set(vM); fProjection->ProjectPoint(vMP.fX, vMP.fY, vMP.fZ);
-      if(fProjection->AcceptSegment(vLP, vMP, 0.0f))
+      if (fProjection->AcceptSegment(vLP, vMP, 0.0f))
       {
          vL.Set(vM);
       }
@@ -148,7 +146,10 @@ void TEveTrackProjected::MakeTrack(Bool_t recurse)
 
    fBreakPoints.clear();
    TEveTrack::MakeTrack(recurse);
-   if(Size() == 0) return; // All points can be outside of MaxR / MaxZ limits.
+   if (Size() == 0) return; // All points can be outside of MaxR / MaxZ limits.
+
+   // Break segments additionally if required by the projection.
+   ReduceSegmentLengths(fProjection->GetMaxTrackStep());
 
    // Project points, store originals (needed for break-points).
    Float_t *p = GetP();
@@ -160,12 +161,12 @@ void TEveTrackProjected::MakeTrack(Bool_t recurse)
       p[2] = fDepth;
    }
 
-
    Float_t x, y, z;
-   Int_t bL = 0, bR = GetBreakPointIdx(0);
-   Int_t sign = 1;
+   Int_t   bL = 0, bR = GetBreakPointIdx(0);
+   Int_t   sign = 1;
+   Bool_t  break_track = ShouldBreakTrack();
    std::vector<TEveVector> vvec;
-   while (1)
+   while (kTRUE)
    {
       for(Int_t i=bL; i<=bR; i++)
       {
@@ -175,7 +176,7 @@ void TEveTrackProjected::MakeTrack(Bool_t recurse)
       if (bR == fLastPoint)
          break;
 
-      if (fgBreakTracks)
+      if (break_track)
       {
          GetBreakPoint(bR, kTRUE,  x, y, z); vvec.push_back(TEveVector(x, y, z));
          fBreakPoints.push_back((Int_t)vvec.size());

@@ -35,8 +35,6 @@ protected:
    std::vector<Int_t>   fBreakPoints; // indices of track break-points
    TEveProjection      *fProjection;  // projection
 
-   static Bool_t fgBreakTracks;
-
 public:
    TEveTrackProjected();
    virtual ~TEveTrackProjected() {}
@@ -51,9 +49,6 @@ public:
    void         PrintLineSegments();
 
    virtual void SecSelected(TEveTrack*); // marked as signal in TEveTrack
-
-   static Bool_t GetBreakTracks()          { return fgBreakTracks; }
-   static void   SetBreakTracks(Bool_t bt) { fgBreakTracks = bt;   }
 
    ClassDef(TEveTrackProjected, 1); // Projected copy of a TEveTrack.
 };

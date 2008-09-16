@@ -68,6 +68,7 @@ protected:
    Float_t             fScaleZ;        // scale factor to keep projected z-coordinate at fFixZ fixed
    Float_t             fPastFixRScale; // relative scaling beyond fFixR
    Float_t             fPastFixZScale; // relative scaling beyond fFixZ
+   Float_t             fMaxTrackStep;  // maximum distance between two points on a track
 
    TEveVector          fLowLimit;      // convergence of point +infinity
    TEveVector          fUpLimit;       // convergence of point -infinity
@@ -112,6 +113,8 @@ public:
    Float_t  GetPastFixZFac() const { return fPastFixZFac; }
    void     SetPastFixRFac(Float_t x);
    void     SetPastFixZFac(Float_t x);
+   Float_t  GetMaxTrackStep() const    { return fMaxTrackStep; }
+   void     SetMaxTrackStep(Float_t x) { fMaxTrackStep = TMath::Max(x, 1.0f); }
 
    virtual   Bool_t    AcceptSegment(TEveVector&, TEveVector&, Float_t /*tolerance*/) { return kTRUE; }
    virtual   void      SetDirectionalVector(Int_t screenAxis, TEveVector& vec);
@@ -145,9 +148,9 @@ public:
    virtual   void      ProjectPoint(Float_t& x, Float_t& y, Float_t& z, EPProc_e proc = kPP_Full);
 
    virtual   void      SetCenter(TEveVector& center);
-   virtual Float_t*    GetProjectedCenter() { return fProjectedCenter.Arr(); }
+   virtual   Float_t*  GetProjectedCenter() { return fProjectedCenter.Arr(); }
 
-   virtual void        UpdateLimit();
+   virtual   void      UpdateLimit();
 
    virtual   Bool_t    AcceptSegment(TEveVector& v1, TEveVector& v2, Float_t tolerance);
    virtual   void      SetDirectionalVector(Int_t screenAxis, TEveVector& vec);

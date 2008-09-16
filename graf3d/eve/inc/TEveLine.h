@@ -43,17 +43,17 @@ public:
    TEveLine(const Text_t* name, Int_t n_points=0, ETreeVarType_e tv_type=kTVT_XYZ);
    virtual ~TEveLine() {}
 
-   virtual void SetMarkerColor(Color_t col)
-   { TAttMarker::SetMarkerColor(col); }
-   virtual void SetLineColor(Color_t col)
-   { SetMainColor(col); }
+   virtual void SetLineColor(Color_t col)   { SetMainColor(col); }
+   virtual void SetMarkerColor(Color_t col);
 
-   Bool_t GetRnrLine() const   { return fRnrLine;   }
-   void SetRnrLine(Bool_t r)   { fRnrLine = r;      }
-   Bool_t GetRnrPoints() const { return fRnrPoints; }
-   void SetRnrPoints(Bool_t r) { fRnrPoints = r;    }
-   Bool_t GetSmooth() const    { return fSmooth;    }
-   void SetSmooth(Bool_t r)    { fSmooth = r;       }
+   Bool_t GetRnrLine() const     { return fRnrLine;   }
+   Bool_t GetRnrPoints() const   { return fRnrPoints; }
+   Bool_t GetSmooth() const      { return fSmooth;    }
+   void   SetRnrLine(Bool_t r);
+   void   SetRnrPoints(Bool_t r);
+   void   SetSmooth(Bool_t r);
+
+   void   ReduceSegmentLengths(Float_t max);
 
    virtual void CopyVizParams(const TEveElement* el);
    virtual void WriteVizParams(ostream& out, const TString& var);

@@ -40,6 +40,7 @@ TEveProjectionManagerEditor::TEveProjectionManagerEditor(const TGWindow *p,
    fFixR(0), fFixZ(0),
    fPastFixRFac(0), fPastFixZFac(0),
    fCurrentDepth(0),
+   fMaxTrackStep(0),
 
    fCenterX(0),
    fCenterY(0),
@@ -124,9 +125,20 @@ TEveProjectionManagerEditor::TEveProjectionManagerEditor(const TGWindow *p,
    fCurrentDepth->SetToolTip("Z coordinate of incoming projected object.");
    fCurrentDepth->Connect("ValueSet(Double_t)", "TEveProjectionManagerEditor",
                           this, "DoCurrentDepth()");
-   AddFrame(fCurrentDepth, new TGLayoutHints(kLHintsTop, 1, 1, 1, 3));
+   AddFrame(fCurrentDepth, new TGLayoutHints(kLHintsTop, 1, 1, 1, 0));
 
-   //_________
+   fMaxTrackStep = new TEveGValuator(this, "TrackStep:", 90, 0);
+   fMaxTrackStep->SetNELength(nel);
+   fMaxTrackStep->SetLabelWidth(labelW);
+   fMaxTrackStep->Build();
+   fMaxTrackStep->SetLimits(1, 100, 100, TGNumberFormat::kNESRealOne);
+   fMaxTrackStep->SetToolTip("Maximum step between two consequtive track-points to avoid artefacts due to projective distortions.\nTaken into account automatically during projection procedure.");
+   fMaxTrackStep->Connect("ValueSet(Double_t)", "TEveProjectionManagerEditor",
+                         this, "DoMaxTrackStep()");
+   AddFrame(fMaxTrackStep, new TGLayoutHints(kLHintsTop, 1, 1, 1, 3));
+
+   // --------------------------------
+
    MakeTitle("Distortion centre");
    fCenterFrame = new TGVerticalFrame(this);
 
@@ -177,6 +189,7 @@ void TEveProjectionManagerEditor::SetModel(TObject* obj)
    fPastFixRFac->SetValue(fM->GetProjection()->GetPastFixRFac());
    fPastFixZFac->SetValue(fM->GetProjection()->GetPastFixZFac());
    fCurrentDepth->SetValue(fM->GetCurrentDepth());
+   fMaxTrackStep->SetValue(fM->GetProjection()->GetMaxTrackStep());
 
    fCenterX->SetValue(fM->GetCenter().fX);
    fCenterY->SetValue(fM->GetCenter().fY);
@@ -250,6 +263,16 @@ void TEveProjectionManagerEditor::DoCurrentDepth()
    // Slot for setting current depth.
 
    fM->SetCurrentDepth(fCurrentDepth->GetValue());
+   fM->ProjectChildren();
+   Update();
+}
+
+//______________________________________________________________________________
+void TEveProjectionManagerEditor::DoMaxTrackStep()
+{
+   // Slot for setting fixed z-coordinate.
+
+   fM->GetProjection()->SetMaxTrackStep(fMaxTrackStep->GetValue());
    fM->ProjectChildren();
    Update();
 }

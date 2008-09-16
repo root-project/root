@@ -38,6 +38,7 @@ protected:
    TEveGValuator   *fPastFixRFac;  // TEveProjection relative scale after FixR
    TEveGValuator   *fPastFixZFac;  // TEveProjection relative scale after FixZ
    TEveGValuator   *fCurrentDepth; // TEveProjection z-coordinate widget
+   TEveGValuator   *fMaxTrackStep;  // TEveProjection relative scale after FixZ
 
    TGVerticalFrame *fCenterFrame;  // parent frame for distortion center
    TEveGValuator   *fCenterX;      // center x value widget
@@ -59,6 +60,7 @@ public:
    void DoPastFixRFac();
    void DoPastFixZFac();
    void DoCurrentDepth();
+   void DoMaxTrackStep();
    void DoCenter();
 
    ClassDef(TEveProjectionManagerEditor, 0); // Editor for TEveProjectionManager class.

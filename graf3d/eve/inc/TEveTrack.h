@@ -38,6 +38,8 @@ public:
    typedef vPathMark_t::iterator        vPathMark_i;
    typedef vPathMark_t::const_iterator  vPathMark_ci;
 
+   enum EBreakProjectedTracks_e { kBPTDefault, kBPTAlways, kBPTNever };
+
 protected:
    TEveVector         fV;          // Starting vertex
    TEveVector         fP;          // Starting momentum
@@ -50,6 +52,10 @@ protected:
    vPathMark_t        fPathMarks;  // TEveVector of known points along the track
 
    TEveTrackPropagator *fPropagator;   // Pointer to shared render-style
+
+   UChar_t            fBreakProjectedTracks;  // How to handle breaks during projection - track specific settings.
+
+   static Bool_t      fgDefaultBreakProjectedTracks; // How to handle breaks during projection - global setting.
 
 public:
    TEveTrack();
@@ -75,9 +81,9 @@ public:
    const TEveVector& GetEndMomentum() const { return fPEnd; }
 
    Int_t GetPdg()    const   { return fPdg;   }
-   void SetPdg(Int_t pdg)    { fPdg = pdg;    }
+   void  SetPdg(Int_t pdg)    { fPdg = pdg;    }
    Int_t GetCharge() const   { return fCharge; }
-   void SetCharge(Int_t chg) { fCharge = chg; }
+   void  SetCharge(Int_t chg) { fCharge = chg; }
    Int_t GetLabel()  const   { return fLabel; }
    void  SetLabel(Int_t lbl) { fLabel = lbl;  }
    Int_t GetIndex()  const   { return fIndex; }
@@ -110,6 +116,14 @@ public:
    virtual void WriteVizParams(ostream& out, const TString& var);
 
    virtual TClass* ProjectedClass() const;
+
+   Bool_t  ShouldBreakTrack() const;
+
+   UChar_t GetBreakProjectedTracks() const     { return fBreakProjectedTracks; }
+   void    SetBreakProjectedTracks(UChar_t bt) { fBreakProjectedTracks = bt;   }
+
+   static Bool_t GetDefaultBreakProjectedTracks()          { return fgDefaultBreakProjectedTracks; }
+   static void   SetDefaultBreakProjectedTracks(Bool_t bt) { fgDefaultBreakProjectedTracks = bt;   }
 
    ClassDef(TEveTrack, 1); // Track with given vertex, momentum and optional referece-points (path-marks) along its path.
 };
@@ -177,13 +191,13 @@ public:
    virtual void   SetMarkerStyle(Style_t s);
    virtual void   SetMarkerStyle(Style_t s, TEveElement* el);
 
-   void SetRnrLine(Bool_t rnr);
-   void SetRnrLine(Bool_t rnr, TEveElement* el);
-   Bool_t GetRnrLine(){return fRnrLine;}
+   void   SetRnrLine(Bool_t rnr);
+   void   SetRnrLine(Bool_t rnr, TEveElement* el);
+   Bool_t GetRnrLine() const { return fRnrLine; }
 
-   void SetRnrPoints(Bool_t r);
-   void SetRnrPoints(Bool_t r, TEveElement* el);
-   Bool_t GetRnrPoints(){return fRnrPoints;}
+   void   SetRnrPoints(Bool_t r);
+   void   SetRnrPoints(Bool_t r, TEveElement* el);
+   Bool_t GetRnrPoints() const { return fRnrPoints; }
 
    void SelectByPt(Float_t min_pt, Float_t max_pt);
    void SelectByPt(Float_t min_pt, Float_t max_pt, TEveElement* el);
