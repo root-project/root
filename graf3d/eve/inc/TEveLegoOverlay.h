@@ -12,13 +12,13 @@
 #ifndef ROOT_TEveLegoOverlay
 #define ROOT_TEveLegoOverlay
 
-#include "TGLOverlay.h"
+#include "TGLCameraOverlay.h"
 #include "TEveElement.h"
 #include "TGLAxisPainter.h"
 
 class TEveCaloLego;
 
-class TEveLegoOverlay : public TGLOverlayElement,
+class TEveLegoOverlay : public TGLCameraOverlay,
                         public TEveElementList
 {
 private:
@@ -32,32 +32,46 @@ private:
 protected:
    TEveCaloLego*  fCalo;
 
-   Int_t          fActiveID;
-   Color_t        fActiveCol;
+   Bool_t         fShowCamera;
+   Bool_t         fShowPlane;
 
+   // plane-value  
    Float_t        fMenuW;
    Float_t        fButtonW;
    Float_t        fSliderH;    // slider height in % of viewport
    Float_t        fSliderPosY; // y position of slider bottom up
-
    Bool_t         fShowSlider;
    Float_t        fSliderVal;
 
-   TGLAxisPainter fAxisPainter;
-   TGLAxisAttrib fAxisAtt;
+   //   TGLAxisPainter fSliderAxisPainter;
+   // TGLAxisAttrib  fAxisAtt;
+
+   // event handling
+   Int_t          fActiveID;
+   Color_t        fActiveCol;
+
+   virtual  void   RenderPlane(TGLRnrCtx& rnrCtx);
 
 public:
    TEveLegoOverlay();
    virtual ~TEveLegoOverlay(){}
 
+   // event handling
    virtual  Bool_t MouseEnter(TGLOvlSelectRecord& selRec);
    virtual  Bool_t Handle(TGLRnrCtx& rnrCtx, TGLOvlSelectRecord& selRec, Event_t* event);
    virtual  void   MouseLeave();
 
-   virtual  void    Render(TGLRnrCtx& rnrCtx);
+   //rendering
+   virtual  void   Render(TGLRnrCtx& rnrCtx);
 
    TEveCaloLego* GetCaloLego() {return fCalo;}
    void SetCaloLego(TEveCaloLego* c) {fCalo = c;}
+
+   void SetShowCamera (Bool_t x) { fShowCamera = x; }
+   Bool_t GetShowCamera() const { return fShowCamera; }
+   void SetShowPlane (Bool_t x) { fShowPlane = x; }
+   Bool_t GetShowPlane() const { return fShowPlane; }
+
 
    ClassDef(TEveLegoOverlay, 0); // GL-overaly control GUI for TEveCaloLego.
 };

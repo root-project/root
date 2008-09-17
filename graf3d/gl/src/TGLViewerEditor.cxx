@@ -19,6 +19,7 @@
 #include "TGLLightSetEditor.h"
 #include "TGLClipSetEditor.h"
 #include "TGLUtil.h"
+#include "TGLCameraOverlay.h"
 
 //______________________________________________________________________________
 //
@@ -57,7 +58,7 @@ TGLViewerEditor::TGLViewerEditor(const TGWindow *p,  Int_t width, Int_t height, 
    fReferencePosZ(0),
    fCamContainer(0),
    fCamMode(0),
-   fCamMarkupOn(0),
+   fCamOverlayOn(0),
    fViewer(0),
    fIsInPad(kTRUE)
 {
@@ -103,8 +104,8 @@ void TGLViewerEditor::ConnectSignals2Slots()
    fReferencePosY->Connect("ValueSet(Long_t)", "TGLViewerEditor", this, "UpdateViewerReference()");
    fReferencePosZ->Connect("ValueSet(Long_t)", "TGLViewerEditor", this, "UpdateViewerReference()");
 
-   fCamMode->Connect("Selected(Int_t)", "TGLViewerEditor", this, "DoCameraMarkup()");
-   fCamMarkupOn->Connect("Clicked()", "TGLViewerEditor", this, "DoCameraMarkup()");
+   fCamMode->Connect("Selected(Int_t)", "TGLViewerEditor", this, "DoCameraOverlay()");
+   fCamOverlayOn->Connect("Clicked()", "TGLViewerEditor", this, "DoCameraOverlay()");
 
    fInit = kFALSE;
 }
@@ -223,16 +224,23 @@ void TGLViewerEditor::UpdateMaxDrawTimes()
 }
 
 //______________________________________________________________________________
-void TGLViewerEditor::DoCameraMarkup()
+void TGLViewerEditor::DoCameraOverlay()
 {
    // Update viewer with GUI state.
 
-   TGLCameraMarkupStyle* ms = fViewer->GetCameraMarkup();
-   if (ms) {
-      ms->SetPosition(fCamMode->GetSelected());
-      ViewerRedraw();
-      ms->SetShow(fCamMarkupOn->IsDown());
+   TGLCameraOverlay* co = fViewer->GetCameraOverlay();
+
+   if (fViewer->CurrentCamera().IsPerspective())
+   {
+      co->SetShowPerspective(fCamOverlayOn->IsDown());
+      co->SetPerspectiveMode((TGLCameraOverlay::EMode)fCamMode->GetSelected());
    }
+   else
+   {
+      co->SetShowOrthographic(fCamOverlayOn->IsDown());
+      co->SetOrthographicMode((TGLCameraOverlay::EMode)fCamMode->GetSelected());
+   }
+   ViewerRedraw();
 }
 
 //______________________________________________________________________________
@@ -406,21 +414,18 @@ void TGLViewerEditor::CreateGuidesTab()
    fAxesDepthTest = new TGCheckButton(fAxesContainer, "DepthTest",4);
    fGuidesFrame->AddFrame(fAxesContainer, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 2, 3, 0, 0));
 
-   // camera markup
-   fCamContainer = new TGGroupFrame(fGuidesFrame, "Camera markup");
+   // camera overlay
+   fCamContainer = new TGGroupFrame(fGuidesFrame, "Camera overlay");
    fGuidesFrame->AddFrame(fCamContainer, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 2, 3, 0, 0));
-   fCamMarkupOn = new TGCheckButton(fCamContainer, "Show");
-   fCamMarkupOn->SetToolTipText("Implemented for orthographic mode");
-   fCamContainer->AddFrame(fCamMarkupOn, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX));
+   fCamOverlayOn = new TGCheckButton(fCamContainer, "Show");
+   fCamContainer->AddFrame(fCamOverlayOn, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX));
    TGHorizontalFrame* chf = new TGHorizontalFrame(fCamContainer);
    TGLabel* lab = new TGLabel(chf, "Mode");
    chf->AddFrame(lab, new TGLayoutHints(kLHintsLeft|kLHintsBottom, 1, 4, 1, 2));
    fCamMode = new TGComboBox(chf);
-   fCamMode->AddEntry("Left Up", 0);
-   fCamMode->AddEntry("Left Down", 1);
-   fCamMode->AddEntry("Right Up", 2);
-   fCamMode->AddEntry("Right Down", 3);
-   fCamMode->AddEntry("Center", 4);
+   fCamMode->AddEntry("Plane", TGLCameraOverlay::kPlaneIntersect);
+   fCamMode->AddEntry("Bar", TGLCameraOverlay::kBar);
+   fCamMode->AddEntry("Axis", TGLCameraOverlay::kAxis);
    TGListBox* lb = fCamMode->GetListBox();
    lb->Resize(lb->GetWidth(), 5*18);
    fCamMode->Resize(90, 20);
@@ -432,6 +437,7 @@ void TGLViewerEditor::CreateGuidesTab()
 void TGLViewerEditor::CreateClippingTab()
 {
    // Create GUI controls - clip type (none/plane/box) and plane/box properties.
+
    fClipFrame = CreateEditorTabSubFrame("Clipping");
 
    fClipSet = new TGLClipSetSubEditor(fClipFrame);
@@ -475,11 +481,32 @@ void TGLViewerEditor::SetGuides()
    fReferencePosZ->SetNumber(referencePos[2]);
    UpdateReferencePosState();
 
-   if (fViewer->CurrentCamera().IsA()->InheritsFrom("TGLOrthoCamera")) {
-      fGuidesFrame->ShowFrame(fCamContainer);
-      fCamMarkupOn->SetDown(fViewer->GetCameraMarkup()->Show());
-      fCamMode->Select(fViewer->GetCameraMarkup()->Position(), kFALSE);
-   } else {
-      fGuidesFrame->HideFrame(fCamContainer);
+   // overlay
+   TGLCameraOverlay*  co = fViewer->GetCameraOverlay();
+   TGCompositeFrame *fr = (TGCompositeFrame*)((TGFrameElement*) fCamContainer->GetList()->Last() )->fFrame;
+
+   if (fViewer->CurrentCamera().IsOrthographic())
+   {
+      fCamOverlayOn->SetDown(co->GetShowOrthographic());
+      fr->ShowFrame(fCamMode);
+
+
+      if (! fr->IsMapped()) {
+         fr->MapSubwindows();
+         fr->MapWindow();
+         fCamContainer->MapWindow();
+         fCamContainer->MapWindow();
+         fCamMode->Select(co->GetOrthographicMode(), kFALSE);
+      }
+   }
+   else
+   {
+      fCamOverlayOn->SetDown(co->GetShowPerspective());
+
+      // only mode implemented for perspective camera
+      fCamMode->Select(co->GetPerspectiveMode(), kFALSE);
+      fr->HideFrame(fCamMode);
+      if (fr->IsMapped())
+         fr->UnmapWindow();
    }
 }

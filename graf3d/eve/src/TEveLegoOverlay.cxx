@@ -34,13 +34,13 @@ ClassImp(TEveLegoOverlay);
 
 //______________________________________________________________________________
 TEveLegoOverlay::TEveLegoOverlay() :
-   TGLOverlayElement(),
+   TGLCameraOverlay(),
    TEveElementList("Lego Menu", "TEveLegoOverlay", kTRUE),
 
    fCalo(0),
 
-   fActiveID(-1),
-   fActiveCol(kRed-4),
+   fShowCamera(kTRUE),
+   fShowPlane(kFALSE),
 
    fMenuW(0.08),
    fButtonW(0.5),
@@ -48,14 +48,15 @@ TEveLegoOverlay::TEveLegoOverlay() :
    fSliderPosY(0.15),
 
    fShowSlider(kFALSE),
-   fSliderVal(0)
+   fSliderVal(0),
+
+   fActiveID(-1),
+   fActiveCol(kRed-4)
 {
    // Constructor.
 
-   fAxisAtt.RefDir().Set(0, 1, 0);
-   fAxisAtt.SetTextAlign(TGLAxisAttrib::kLeft);
-   fAxisAtt.SetLabelSize(0.06);
 }
+
 
 /******************************************************************************/
 void TEveLegoOverlay::DrawSlider(TGLRnrCtx& rnrCtx)
@@ -84,6 +85,10 @@ void TEveLegoOverlay::DrawSlider(TGLRnrCtx& rnrCtx)
       Double_t maxVal = fCalo->GetMaxVal();
       TGLRect& wprt = rnrCtx.RefCamera().RefViewport();
       Int_t fs = Int_t(wprt.Height()*fSliderH* fAxisAtt.GetLabelSize());
+
+
+      fAxisAtt.RefDir().Set(0, 1, 0);
+      fAxisAtt.SetTextAlign(TGLFont::kLeft);
       fAxisAtt.SetRng(0, maxVal);
       fAxisAtt.RefTMOff(0).X() = -maxVal*0.03;
       fAxisAtt.SetAbsLabelFontSize(fs);
@@ -107,7 +112,43 @@ void TEveLegoOverlay::Render(TGLRnrCtx& rnrCtx)
 {
    // Render the overlay elements.
 
-   if (! fCalo) return;
+   if (!fCalo) return;
+
+   TGLCamera& cam = rnrCtx.RefCamera();
+   TGLRect& vp = cam.RefViewport();
+   if (fShowCamera)
+   {
+      Bool_t skip = kFALSE;
+
+      // check if lego axis are already visible
+      if (cam.IsOrthographic())
+      {
+         using namespace TMath;
+
+         Float_t x0 = fCalo->GetEtaMin();
+         Float_t y0 = fCalo->GetPhiMin();
+
+         const GLdouble *pm = rnrCtx.RefCamera().RefLastNoPickProjM().CArr();
+         GLdouble mm[16];
+         glGetDoublev(GL_MODELVIEW_MATRIX,  mm);
+
+         GLdouble x, y, z;
+         gluProject(x0, y0, 0, mm, pm, (Int_t*)vp.CArr(), &x, &y, &z);
+         // viewport height goes from top to bottom 
+         if ( x > vp.Left() && y > vp.Top())
+            skip = kTRUE;
+      }
+
+      if (!skip) TGLCameraOverlay::Render(rnrCtx);
+   }
+
+   if (fShowPlane) RenderPlane(rnrCtx);
+}
+
+//______________________________________________________________________________
+void TEveLegoOverlay::RenderPlane(TGLRnrCtx &rnrCtx)
+{
+   // Render menu for plane-value and the plane if marked.
 
    glMatrixMode(GL_PROJECTION);
    glPushMatrix();
@@ -116,8 +157,7 @@ void TEveLegoOverlay::Render(TGLRnrCtx& rnrCtx)
    {
       TGLRect rect(*rnrCtx.GetPickRectangle());
       rnrCtx.GetCamera()->WindowToViewport(rect);
-      gluPickMatrix(rect.X(), rect.Y(), rect.Width(), rect.Height(),
-                    (Int_t*) rnrCtx.GetCamera()->RefViewport().CArr());
+      gluPickMatrix(rect.X(), rect.Y(), rect.Width(), rect.Height(), rnrCtx.RefCamera().RefViewport().CArr());
    }
    glMatrixMode(GL_MODELVIEW);
    glPushMatrix();

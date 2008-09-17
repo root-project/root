@@ -62,8 +62,6 @@ void MakeCalo2D(TEveCalo3D* calo3d)
   v1->AddScene(s1);
   TGLViewer* v = v1->GetGLViewer();
   v->SetCurrentCamera(TGLViewer::kCameraOrthoXOY);
-  TGLCameraMarkupStyle* mup = v->GetCameraMarkup();
-  if(mup) mup->SetShow(kFALSE);
   v->SetGuideState(TGLUtil::kAxesOrigin, kTRUE, kFALSE, 0);
   v->SetClearColor(kBlue + 4);
 
@@ -99,12 +97,12 @@ void MakeCaloLego(TEveCaloData* data)
    lego->RefMainTrans().SetScale(sc, sc, sc);
    // overlay lego1
    TEveLegoOverlay* overlay = new TEveLegoOverlay();
+   overlay->SetShowPlane(kFALSE);
+   overlay->SetShowPerspective(kTRUE);
+   overlay->RefAxisAttrib().SetLabelSize(0.02);
+   overlay->RefAxisAttrib().SetLabelColor(kMagenta);
    v->AddOverlayElement(overlay);
    overlay->SetCaloLego(lego);
-
-   TGLCameraOverlay* camInfo = new TGLCameraOverlay();
-   camInfo->SetShowPerspective(kFALSE);
-   v->AddOverlayElement(camInfo);
    gEve->AddElement(overlay, s2);
 }
 

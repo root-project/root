@@ -115,6 +115,45 @@ void TGLFont::Render(const char* txt) const
 }
 
 //______________________________________________________________________________
+void TGLFont::RenderBitmap(const char* txt, Float_t xs, Float_t ys, Float_t zs, ETextAlign_e align) const
+{
+   // Render text at the given position. Offset depends of text aligment.
+
+   glPushMatrix();
+   glTranslatef(xs, ys, zs);
+
+   Float_t llx, lly, llz, urx, ury, urz;
+   BBox(txt, llx, lly, llz, urx, ury, urz);
+   if (txt[0] == '-')
+      urx += (urx-llx)/strlen(txt);
+
+   Float_t x=0, y=0;
+   switch (align)
+   {
+      case kCenterDown:
+         x = -urx*0.5; y = -ury;
+         break;
+      case kCenterUp:
+         x = -urx*0.5; y = 0;
+         break;
+      case kLeft:
+         x = -urx; y =(lly -ury)*0.5;
+         break;
+      case kRight:
+         x = 0; y = -ury*0.5;
+         break;
+      default:
+         break;
+   };
+
+   glRasterPos2i(0, 0);
+   glBitmap(0, 0, 0, 0, x, y, 0);
+   Render(txt);
+
+   glPopMatrix();
+}
+
+//______________________________________________________________________________
 void TGLFont::PreRender(Bool_t autoLight, Bool_t lightOn) const
 {
    // Set-up GL state before FTFont rendering.

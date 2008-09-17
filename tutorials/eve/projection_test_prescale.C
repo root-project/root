@@ -13,9 +13,6 @@ void projection_test_prescale()
    TGLOrthoCamera* cam = (TGLOrthoCamera*) v->CurrentCamera();
    cam->SetZoomMinMax(0.2, 20);
 
-   TGLCameraMarkupStyle* mup = v->GetCameraMarkup();
-   if (mup) mup->SetShow(kFALSE);
-
    // projections
    TEveProjectionManager* mng = new TEveProjectionManager();
    {

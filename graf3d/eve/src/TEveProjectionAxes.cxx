@@ -33,21 +33,22 @@ TEveProjectionAxes::TEveProjectionAxes(TEveProjectionManager* m) :
    TNamed("TEveProjectionAxes", ""),
    fManager(m),
 
-   fBoxOffsetX(0.5),
-   fBoxOffsetY(0.2),
+   //   fBoxOffsetX(0.5),
+   //fBoxOffsetY(0.2),
 
-   fLabelSize(0.03),
 
    fColor(kGray),
 
    fLabMode(kPosition),
    fAxesMode(kAll),
-   fNdiv(7),
 
    fDrawCenter(kFALSE),
    fDrawOrigin(kFALSE)
 {
    // Constructor.
+
+   fLabelSize = 0.015;
+   fNdivisions = 7;
 
    fCanEditMainTrans = kFALSE;
    fManager->AddDependent(this);
@@ -99,26 +100,6 @@ void TEveProjectionAxes::ComputeBBox()
       fBBox[i] = fManager->GetBBox()[i];
 
    AssertBBoxExtents(0.1);
-   {
-      using namespace TMath;
-      if (fAxesMode == kAll || fAxesMode == kHorizontal)
-      {
-         fBBox[0] = (fBoxOffsetX+1)*fBBox[0];
-         fBBox[1] = (fBoxOffsetX+1)*fBBox[1];
-
-         // labels placed below horizontal line
-         fBBox[2] -= 3*fLabelSize*(fManager->GetBBox()[1]- fManager->GetBBox()[0]);
-      }
-
-      if (fAxesMode == kAll || fAxesMode == kVertical)
-      {
-         // vertical labels has max 5 digits
-         fBBox[0] -= 5*fLabelSize*(fManager->GetBBox()[3]- fManager->GetBBox()[2]);
-
-         fBBox[2] = (fBoxOffsetY+1)*fBBox[2];
-         fBBox[3] = (fBoxOffsetY+1)*fBBox[3];
-      }
-   }
 }
 
 //______________________________________________________________________________

@@ -25,17 +25,13 @@ private:
    TEveProjectionAxesGL(const TEveProjectionAxesGL&);            // Not implemented
    TEveProjectionAxesGL& operator=(const TEveProjectionAxesGL&); // Not implemented
 
-   mutable   Float_t    fTMSize;    // tick-mark size
 
    typedef std::pair<Float_t, Float_t>  TM_t; // tick-mark <pos, value> pair
    typedef std::list<TM_t>              TMList_t;
 
    mutable TMList_t   fTMList;    // list of tick-mark position-value pairs
 
-   void               RenderText(const char* txt, Float_t x, Float_t y, TGLFont &font) const;
-   void               DrawTickMarks(Float_t tms) const;
-   void               DrawHInfo(TGLFont &font) const;
-   void               DrawVInfo(TGLFont &fontx) const;
+   void               DrawTickMarks(Bool_t horizontal, Float_t tms) const;
 
    void               SplitInterval(Float_t x1, Float_t x2, Int_t axis) const;
    void               SplitIntervalByPos(Float_t min, Float_t max, Int_t axis)const;

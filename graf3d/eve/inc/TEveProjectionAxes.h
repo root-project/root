@@ -17,13 +17,15 @@
 #include "TAttBBox.h"
 
 #include "TEveElement.h"
+#include "TGLAxisPainter.h"
 
 class TEveProjectionManager;
 
 class TEveProjectionAxes : public TEveElement,
                            public TNamed,
                            public TAtt3D,
-                           public TAttBBox
+                           public TAttBBox,
+                           public TGLAxisAttrib
 {
    friend class TEveProjectionAxesGL;
 
@@ -37,17 +39,11 @@ private:
 
 protected:
    TEveProjectionManager*  fManager;  // model object
-   
-   Float_t         fBoxOffsetX;     // offset X of bounding Box
-   Float_t         fBoxOffsetY;     // offset Y  of bounding Box
-
-   Float_t         fLabelSize;       // relative font size
 
    Color_t         fColor;
 
    ELabMode        fLabMode;       // tick-mark positioning
    EAxesMode       fAxesMode;
-   Int_t           fNdiv;  // number of tick-mark on axis
 
    Bool_t          fDrawCenter;  // draw center of distortion
    Bool_t          fDrawOrigin;  // draw origin
@@ -63,14 +59,8 @@ public:
    void            SetAxesMode(EAxesMode x) { fAxesMode = x;    }
    EAxesMode       GetAxesMode()   const    { return fAxesMode; }
 
-   void            SetNdiv(Int_t x) { fNdiv = x;    }
-   Int_t           GetNdiv()  const { return fNdiv; }
-
-   void            SetBoxOffsetX(Float_t x) {fBoxOffsetX=x;  }
-   Float_t         GetBoxOffsetX() const    {return fBoxOffsetX; }
-
-   void            SetBoxOffsetY(Float_t x) {fBoxOffsetY=x;  }
-   Float_t         GetBoxOffsetY() const    {return fBoxOffsetY; }
+   void            SetNdiv(Int_t x) { fNdivisions = x;    }
+   Int_t           GetNdiv()  const { return fNdivisions; }
 
    Float_t         GetLabelSize() const {return fLabelSize;}
    void            SetLabelSize(Float_t x) {fLabelSize=x;}

@@ -34,9 +34,6 @@ TEveProjectionAxesEditor::TEveProjectionAxesEditor(const TGWindow *p, Int_t widt
    fAxesMode(0),
    fNdiv(0),
 
-   fBoxOffsetX(0),
-   fBoxOffsetY(0),
-
    fCenterFrame(0),
    fDrawCenter(0),
    fDrawOrigin(0)
@@ -93,22 +90,6 @@ TEveProjectionAxesEditor::TEveProjectionAxesEditor(const TGWindow *p, Int_t widt
    fNdiv->Connect("ValueSet(Double_t)", "TEveProjectionAxesEditor", this, "DoNdiv()");
    AddFrame(fNdiv, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));
 
-   fBoxOffsetX = new TEveGValuator(this, "OffsetX:", 90, 0);
-   fBoxOffsetX->SetLabelWidth(labw);
-   fBoxOffsetX->SetNELength(5);
-   fBoxOffsetX->Build();
-   fBoxOffsetX->SetLimits(0, 1, 100, TGNumberFormat::kNESRealTwo);
-   fBoxOffsetX->Connect("ValueSet(Double_t)", "TEveProjectionAxesEditor", this, "DoBoxOffsetX()");
-   AddFrame(fBoxOffsetX, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));
-
-   fBoxOffsetY = new TEveGValuator(this, "OffsetY:", 90, 0);
-   fBoxOffsetY->SetLabelWidth(labw);
-   fBoxOffsetY->SetNELength(5);
-   fBoxOffsetY->Build();
-   fBoxOffsetY->SetLimits(0, 1, 100, TGNumberFormat::kNESRealTwo);
-   fBoxOffsetY->Connect("ValueSet(Double_t)", "TEveProjectionAxesEditor", this, "DoBoxOffsetY()");
-   AddFrame(fBoxOffsetY, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));
-
    //______________________________________________________________________________
 
    // center tab
@@ -156,9 +137,6 @@ void TEveProjectionAxesEditor::SetModel(TObject* obj)
    fLabMode->Select(fM->GetLabMode(), kFALSE);
    fAxesMode->Select(fM->GetAxesMode(), kFALSE);
    fNdiv->SetValue(fM->GetNdiv());
-   fBoxOffsetX->SetValue(fM->GetBoxOffsetX());
-   fBoxOffsetY->SetValue(fM->GetBoxOffsetY());
-
    fDrawCenter->SetState(fM->GetDrawCenter()  ? kButtonDown : kButtonUp);
    fDrawOrigin->SetState(fM->GetDrawOrigin()  ? kButtonDown : kButtonUp);
 
@@ -206,23 +184,5 @@ void TEveProjectionAxesEditor::DoNdiv()
 {
    // Slot for setting number of tick-marks.
    fM->SetNdiv((Int_t)fNdiv->GetValue());
-   Update();
-}
-
-//______________________________________________________________________________
-void TEveProjectionAxesEditor::DoBoxOffsetX()
-{
-   // Slot for setting x offset.
-
-   fM->SetBoxOffsetX(fBoxOffsetX->GetValue());
-   Update();
-}
-
-//______________________________________________________________________________
-void TEveProjectionAxesEditor::DoBoxOffsetY()
-{
-   // Slot for setting y offset.
-
-   fM->SetBoxOffsetY(fBoxOffsetY->GetValue());
    Update();
 }

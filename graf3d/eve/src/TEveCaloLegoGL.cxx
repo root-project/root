@@ -60,7 +60,7 @@ TEveCaloLegoGL::TEveCaloLegoGL() :
    // modes for different levels of zoom in/out.
 
    fXAxisAtt.SetTMNDim(2);
-   fXAxisAtt.SetTextAlign(TGLAxisAttrib::kCenterDown);
+   fXAxisAtt.SetTextAlign(TGLFont::kCenterDown);
    fXAxisAtt.SetNdivisions(710);
    fXAxisAtt.SetLabelSize(0.03);
    fXAxisAtt.SetTitleSize(0.03);
@@ -73,7 +73,7 @@ TEveCaloLegoGL::TEveCaloLegoGL() :
    fYAxisAtt.SetTitle("f");
 
    fZAxisAtt.RefDir().Set(0., 0., 1.);
-   fZAxisAtt.SetTextAlign(TGLAxisAttrib::kLeft);
+   fZAxisAtt.SetTextAlign(TGLFont::kLeft);
    fZAxisAtt.SetRelativeFontSize(kTRUE);
    fZAxisAtt.SetLabelSize(0.03);
    fZAxisAtt.SetTitle("Et");

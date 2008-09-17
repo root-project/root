@@ -49,8 +49,6 @@ void test_compound()
    {
       TGLViewer* v = viewer->GetGLViewer();
       v->SetCurrentCamera(TGLViewer::kCameraOrthoXOY);
-      TGLCameraMarkupStyle* mup = v->GetCameraMarkup();
-      if(mup) mup->SetShow(kFALSE);
    }
 
    // projections

@@ -19,6 +19,8 @@ public:
       kTexture, kOutline, kPolygon, kExtrude
    }; // Font-types of FTGL.
 
+   enum ETextAlign_e { kCenterDown, kCenterUp, kLeft, kRight };
+
 private:
    TGLFont& operator=(const TGLFont& o); // Not implemented.
 
@@ -61,7 +63,9 @@ public:
    void  BBox(const Text_t* txt,
                Float_t& llx, Float_t& lly, Float_t& llz,
                Float_t& urx, Float_t& ury, Float_t& urz) const;
+
    void  Render(const Text_t* txt) const;
+   void  RenderBitmap(const Text_t* txt, Float_t x, Float_t y, Float_t zs, ETextAlign_e align) const;
 
    // helper gl draw functions
    virtual void PreRender(Bool_t autoLight=kTRUE, Bool_t lightOn=kFALSE) const;

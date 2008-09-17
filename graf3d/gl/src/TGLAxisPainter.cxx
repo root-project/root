@@ -38,7 +38,7 @@ TGLAxisAttrib::TGLAxisAttrib() :
 
    fTMNDim(1),
 
-   fTextAlign(kCenterDown),
+   fTextAlign(TGLFont::kCenterDown),
 
    fRelativeFontSize(kFALSE),
    fAbsLabelFontSize(24),
@@ -247,16 +247,16 @@ void TGLAxisPainter::RnrText(const char* txt, TGLVector3 pos, TGLFont &font) con
 
    switch (fAtt->fTextAlign)
    {
-      case TGLAxisAttrib::kCenterDown:
+      case TGLFont::kCenterDown:
          x = -urx*0.5; y = -ury;
          break;
-      case TGLAxisAttrib::kCenterUp:
+      case TGLFont::kCenterUp:
          x = -urx; y = 0;
          break;
-      case TGLAxisAttrib::kLeft:
+      case TGLFont::kLeft:
          x = -urx; y =(lly -ury)*0.5;
          break;
-      case TGLAxisAttrib::kRight:
+      case TGLFont::kRight:
          x = 0; y = -ury*0.5;
          break;
       default:
@@ -336,7 +336,7 @@ void TGLAxisPainter::Paint(TGLRnrCtx &rnrCtx, TGLAxisAttrib &att)
       for (Int_t i=0; i<=bn1; i++)
       {
          FormAxisValue(lab0+i*labStep, &chtemp[0]);
-         RnrText(chtemp, pos, font);
+         font.RenderBitmap(chtemp, pos.X(), pos.Y(), pos.Z(), att.fTextAlign);
          pos += step;
       }
       font.PostRender();

@@ -16,6 +16,7 @@
 #include "TGLIncludes.h"
 #include "TGLRnrCtx.h"
 #include "TGLFontManager.h"
+#include "TGLCamera.h"
 
 #include "TMath.h"
 
@@ -29,9 +30,6 @@ ClassImp(TEveProjectionAxesGL);
 //______________________________________________________________________________
 TEveProjectionAxesGL::TEveProjectionAxesGL() :
    TGLObject(),
-
-   fTMSize(0),
-
    fM(0),
    fProjection(0)
 {
@@ -39,8 +37,6 @@ TEveProjectionAxesGL::TEveProjectionAxesGL() :
 
    fDLCache    = kFALSE; // Disable display list.
 }
-
-/******************************************************************************/
 
 //______________________________________________________________________________
 Bool_t TEveProjectionAxesGL::SetModel(TObject* obj, const Option_t* /*opt*/)
@@ -64,95 +60,27 @@ void TEveProjectionAxesGL::SetBBox()
    SetAxisAlignedBBox(((TEveProjectionAxes*)fExternalObj)->AssertBBox());
 }
 
-/******************************************************************************/
-
 //______________________________________________________________________________
-void TEveProjectionAxesGL::DrawTickMarks(Float_t y) const
+void TEveProjectionAxesGL::DrawTickMarks(Bool_t horizontal, Float_t tmSize) const
 {
    // Draw tick-marks on the current axis.
 
    glBegin(GL_LINES);
    for (std::list<TM_t>::iterator it = fTMList.begin(); it != fTMList.end(); ++it)
    {
-      glVertex2f((*it).first, 0);
-      glVertex2f((*it).first, y);
+      if (horizontal)
+      {
+         glVertex2f((*it).first, 0);
+         glVertex2f((*it).first, tmSize);
+      }
+      else
+      {
+         glVertex2f(0, (*it).first);
+         glVertex2f(tmSize, (*it).first);
+      }
    }
    glEnd();
-
 }
-
-/******************************************************************************/
-
-//______________________________________________________________________________
-void TEveProjectionAxesGL::RenderText(const char* txt, Float_t x, Float_t y, TGLFont &font) const
-{
-   // Render FTFont at given location.
-
-   if (font.GetMode() < TGLFont::kTexture) {
-      glRasterPos3f(0, 0, 0);
-      glBitmap(0, 0, 0, 0, x, y, 0);
-      font.Render(txt);
-   } else {
-      glPushMatrix();
-      glTranslatef(x, y, 0);
-      font.Render(txt);
-      glPopMatrix();
-   }
-}
-
-//______________________________________________________________________________
-void TEveProjectionAxesGL::DrawHInfo(TGLFont &font) const
-{
-   // Draw labels on horizontal axis.
-
-   DrawTickMarks(-fTMSize);
-
-   Float_t off = 2.5*fTMSize;
-   Float_t llx, lly, llz, urx, ury, urz;
-   const char* txt;
-   for (std::list<TM_t>::iterator it = fTMList.begin(); it != fTMList.end(); ++it)
-   {
-      glPushMatrix();
-      glTranslatef((*it).first, -off, 0);
-      txt = TEveUtil::FormAxisValue((*it).second);
-      font.BBox(txt, llx, lly, llz, urx, ury, urz);
-      Float_t xd = -0.5f*(urx+llx);
-      if (txt[0] == '-')
-         xd -= 0.5f * (urx-llx) / strlen(txt);
-      RenderText(txt,  xd, -ury, font);
-      glPopMatrix();
-   }
-
-   fTMList.clear();
-}
-
-//______________________________________________________________________________
-void TEveProjectionAxesGL::DrawVInfo(TGLFont &font) const
-{
-   // Draw labels on vertical axis.
-
-   glPushMatrix();
-   glRotatef(90, 0, 0, 1);
-   DrawTickMarks(fTMSize);
-   glPopMatrix();
-
-   Float_t off = 2.5*fTMSize;
-   Float_t llx, lly, llz, urx, ury, urz;
-   const char* txt;
-   for (std::list<TM_t>::iterator it = fTMList.begin(); it!= fTMList.end(); ++it)
-   {
-      glPushMatrix();
-      glTranslatef(-off, (*it).first, 0);
-      txt = TEveUtil::FormAxisValue((*it).second);
-      font.BBox(txt, llx, lly, llz, urx, ury, urz);
-      RenderText(txt, -urx, -0.38f*(ury+lly), font);
-      glPopMatrix();
-   }
-
-   fTMList.clear();
-}
-
-/******************************************************************************/
 
 //______________________________________________________________________________
 void TEveProjectionAxesGL::SplitInterval(Float_t p1, Float_t p2, Int_t ax) const
@@ -180,10 +108,10 @@ void TEveProjectionAxesGL::SplitIntervalByPos(Float_t p1, Float_t p2, Int_t ax) 
 {
    // Add tick-marks at equidistant position.
 
+   Float_t step = (p2-p1)/fM->GetNdivisions();
+
    TEveVector zeroPos;
    fProjection->ProjectVector(zeroPos);
-   Float_t step = (p2-p1)/fM->GetNdiv();
-
    Float_t p = zeroPos.fX;
    while (p > p1) {
       fTMList.push_back(TM_t(p , fProjection->GetValForScreenPos(ax, p)));
@@ -202,7 +130,7 @@ void TEveProjectionAxesGL::SplitIntervalByVal(Float_t v1, Float_t v2, Int_t ax) 
 {
    // Add tick-marks on fixed value step.
 
-   Float_t step = (v2-v1)/fM->GetNdiv();
+   Float_t step = (v2-v1)/fM->GetNdivisions();
 
    Float_t v = 0.f;
    while (v > v1) {
@@ -217,8 +145,6 @@ void TEveProjectionAxesGL::SplitIntervalByVal(Float_t v1, Float_t v2, Int_t ax) 
    }
 }
 
-/******************************************************************************/
-
 //______________________________________________________________________________
 void TEveProjectionAxesGL::DirectDraw(TGLRnrCtx& rnrCtx) const
 {
@@ -232,110 +158,112 @@ void TEveProjectionAxesGL::DirectDraw(TGLRnrCtx& rnrCtx) const
    for(Int_t i=0; i<6; i++)
       bbox[i] = fM->GetManager()->GetBBox()[i];
 
-   bbox[0] = (fM->fBoxOffsetX+1)*bbox[0];
-   bbox[1] = (fM->fBoxOffsetX+1)*bbox[1];
-   bbox[2] = (fM->fBoxOffsetY+1)*bbox[2];
-   bbox[3] = (fM->fBoxOffsetY+1)*bbox[3];
+   // horizontal font setup
 
-
-
-   fTMSize = (bbox[1] -bbox[0])*0.02;
-   TEveVector zeroPos;
-   fProjection->ProjectVector(zeroPos);
-
-   //horizontal font setup
-   GLdouble mm[16];
-   GLdouble pm[16];
-   GLint    vp[4];
-   glGetDoublev(GL_MODELVIEW_MATRIX,  mm);
-   glGetDoublev(GL_PROJECTION_MATRIX, pm);
-   glGetIntegerv(GL_VIEWPORT, vp);
-
-   TGLVector3 start(bbox[0], 0, 0);
-   TGLVector3 end(bbox[1], 0, 0);
-   GLdouble dn[3];
-   GLdouble up[3];
-   gluProject(start.X(), start.Y(), start.Z(), mm, pm, vp, &dn[0], &dn[1], &dn[2]);
-   gluProject(end.X(), end.Y(), end.Z(), mm, pm, vp, &up[0], &up[1], &up[2]);
-   Float_t rng = TMath::Sqrt((  up[0]-dn[0])*(up[0]-dn[0])
-                             + (up[1]-dn[1])*(up[1]-dn[1])
-                             + (up[2]-dn[2])*(up[2]-dn[2]));
+   Float_t l =  -rnrCtx.GetCamera()->FrustumPlane(TGLCamera::kLeft).D();
+   Float_t r =   rnrCtx.GetCamera()->FrustumPlane(TGLCamera::kRight).D();
+   Float_t t =   rnrCtx.GetCamera()->FrustumPlane(TGLCamera::kTop).D();
+   Float_t b =  -rnrCtx.GetCamera()->FrustumPlane(TGLCamera::kBottom).D();
 
    TGLFont font;
-   Int_t fs =  TGLFontManager::GetFontSize(rng*fM->fLabelSize, 8, 36);
+   Int_t rng;
+   GLint    vp[4];
+   glGetIntegerv(GL_VIEWPORT, vp);
+
+   if (fM->fAxesMode == TEveProjectionAxes::kAll || TEveProjectionAxes::kVertical)
+      rng = vp[3];
+   else
+      rng = vp[2];
+
+   Int_t fs =  TGLFontManager::GetFontSize(rng*fM->GetLabelSize(), 8, 36);
+
    rnrCtx.RegisterFont(fs, "arial", TGLFont::kPixmap, font);
+   font.PreRender();
 
- glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT);
- glLineWidth(1.);
+   TGLMatrix modview;
+   glGetDoublev(GL_MODELVIEW_MATRIX, modview.Arr());
+   TGLVertex3 worldRef;
+   Float_t tms = rnrCtx.RefCamera().ViewportDeltaToWorld(worldRef, rng*0.01, 0, &modview).Mag();
+   Float_t off = 1.5*tms;
 
+   const char* txt;
+   Float_t uLim, dLim;
+   Float_t start, end;
+   Float_t limFac = 0.98;
+   //______________________________________________________________________________
    // X-axis
+
+   fTMList.clear();
    if (fM->fAxesMode == TEveProjectionAxes::kAll
        || (fM->fAxesMode == TEveProjectionAxes::kHorizontal))
    {
-      glBegin(GL_LINES);
-      glVertex3f(bbox[0], bbox[2], 0.);
-      glVertex3f(bbox[1], bbox[2], 0.);
-      glEnd();
+      dLim = fProjection->GetLimit(0, 0)*limFac;
+      uLim = fProjection->GetLimit(0, 1)*limFac;
+      start =  (l > dLim) ?  l : dLim;
+      end =    (r < uLim) ?  r : uLim;
 
-      glPushMatrix();
-      glTranslatef(0, bbox[2], 0);
-      SplitInterval(bbox[0], bbox[1], 0);
-      font.PreRender();
-      DrawHInfo(font);
-      font.PostRender();
-      glPopMatrix();
+      SplitInterval(start, end, 0);
+      {
+         // bottom
+         glPushMatrix();
+         glTranslatef((bbox[1]+bbox[0])*0.5, b, 0);
+         DrawTickMarks(kTRUE, tms);
+         for (std::list<TM_t>::iterator it = fTMList.begin(); it != fTMList.end(); ++it)
+         {
+            txt =TEveUtil::FormAxisValue((*it).second);
+            font.RenderBitmap(txt, (*it).first, +off, 0, TGLFont::kCenterUp);
+         }
+         glPopMatrix();
+      }
+      {
+         // top
+         glPushMatrix();
+         glTranslatef((bbox[1]+bbox[0])*0.5, t, 0);
+         DrawTickMarks(kTRUE, -tms);
+         for (std::list<TM_t>::iterator it = fTMList.begin(); it != fTMList.end(); ++it)
+         {
+            txt =TEveUtil::FormAxisValue((*it).second);
+            font.RenderBitmap(txt, (*it).first, -off, 0, TGLFont::kCenterDown);
+         }
+         glPopMatrix();
+      }
    }
 
-   //______________________________________________________________________________
-
    // Y-axis
+   fTMList.clear();
    if (fM->fAxesMode == TEveProjectionAxes::kAll
        || (fM->fAxesMode == TEveProjectionAxes::kVertical))
    {
-      glBegin(GL_LINES);
-      glVertex3f(bbox[0], bbox[2], 0.);
-      glVertex3f(bbox[0], bbox[3], 0.);
-      glEnd();
-
-      font.PreRender();
-      glPushMatrix();
-      glTranslatef(bbox[0], 0, 0);
-      SplitInterval(bbox[2], bbox[3], 1);
-      DrawVInfo(font);
-      glPopMatrix();
-      font.PostRender();
+      // left
+      dLim = fProjection->GetLimit(1, 0)*limFac;
+      uLim = fProjection->GetLimit(1, 1)*limFac;
+      start =  (b > dLim) ? b : dLim;
+      end =    (t < uLim) ? t : uLim;
+      SplitInterval(start, end, 0);
+      {
+         glPushMatrix();
+         glTranslatef(l, (bbox[3]+bbox[2])*0.5, 0);
+         DrawTickMarks(kFALSE, tms);
+         for (std::list<TM_t>::iterator it = fTMList.begin(); it != fTMList.end(); ++it)
+         {
+            txt =TEveUtil::FormAxisValue((*it).second);
+            font.RenderBitmap(txt, +off, (*it).first, 0, TGLFont::kRight);
+         }
+         glPopMatrix();
+      }
+      // right
+      {
+         glPushMatrix();
+         glTranslatef(r, (bbox[3]+bbox[2])*0.5, 0);
+         DrawTickMarks(kFALSE, -tms);
+         for (std::list<TM_t>::iterator it = fTMList.begin(); it != fTMList.end(); ++it)
+         {
+            txt =TEveUtil::FormAxisValue((*it).second);
+            font.RenderBitmap(txt, -off, (*it).first, 0,  TGLFont::kLeft);
+         }
+         glPopMatrix();
+      }
    }
 
-   // title
-   glPushMatrix();
-   glTranslatef(zeroPos.fX, bbox[3]*1.1, 0);
-   Float_t llx, lly, llz, urx, ury, urz;
-   font.BBox(fM->GetTitle(), llx, lly, llz, urx, ury, urz);
-   RenderText(fM->GetTitle(), -llx, 0, font);
-   glPopMatrix();
-
-
-   // projection center and origin marker
-   Float_t d = 10;
-   if (fM->GetDrawCenter()) {
-      Float_t* c = fProjection->GetProjectedCenter();
-      TGLUtil::Color3f(1., 0., 0.);
-      glBegin(GL_LINES);
-      glVertex3f(c[0] +d, c[1],    c[2]);     glVertex3f(c[0] - d, c[1]   , c[2]);
-      glVertex3f(c[0] ,   c[1] +d, c[2]);     glVertex3f(c[0]    , c[1] -d, c[2]);
-      glVertex3f(c[0] ,   c[1],    c[2] + d); glVertex3f(c[0]    , c[1]   , c[2] - d);
-      glEnd();
-   }
-   if (fM->GetDrawOrigin()) {
-      TEveVector zero;
-      fProjection->ProjectVector(zero);
-      TGLUtil::Color3f(1., 1., 1.);
-      glBegin(GL_LINES);
-      glVertex3f(zero[0] + d, zero[1],     zero[2]);     glVertex3f(zero[0] - d, zero[1]   ,  zero[2]);
-      glVertex3f(zero[0] ,    zero[1] + d, zero[2]);     glVertex3f(zero[0]    , zero[1] - d, zero[2]);
-      glVertex3f(zero[0] ,    zero[1],     zero[2] + d); glVertex3f(zero[0]    , zero[1]   ,  zero[2] - d);
-      glEnd();
-   }
-
-   glPopAttrib();
+   font.PostRender();
 }

@@ -67,7 +67,7 @@ private:
 
    TGGroupFrame     *fCamContainer;
    TGComboBox*       fCamMode;
-   TGCheckButton*    fCamMarkupOn;
+   TGCheckButton*    fCamOverlayOn;
 
    TGLClipSetSubEditor *fClipSet;
 
@@ -110,7 +110,7 @@ public:
    //Axis manipulation
    void UpdateViewerAxes(Int_t id);
    void UpdateViewerReference();
-   void DoCameraMarkup();
+   void DoCameraOverlay();
 
    void DetachFromPad(){fIsInPad = kFALSE;}
 

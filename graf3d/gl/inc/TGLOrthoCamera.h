@@ -86,8 +86,6 @@ public:
    virtual Bool_t Rotate(Int_t xDelta, Int_t yDelta, Bool_t mod1, Bool_t mod2);
    virtual void   Apply(const TGLBoundingBox & sceneBox, const TGLRect * pickRect = 0) const;
 
-   virtual void   Markup (TGLCameraMarkupStyle* ms) const;
-
    // External scripting control
    //   void Configure(Double_t left, Double_t right, Double_t top, Double_t bottom);
    virtual void Configure(Double_t zoom, Double_t dolly, Double_t center[3],

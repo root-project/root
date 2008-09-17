@@ -34,9 +34,6 @@ protected:
    TEveGValuator   *fNdiv;         // tick-mark number widget
 
 
-   TEveGValuator   *fBoxOffsetX;
-   TEveGValuator   *fBoxOffsetY;
-
    TGVerticalFrame *fCenterFrame;  // Parent frame for Center tab.
    TGCheckButton   *fDrawCenter;   // draw center widget
    TGCheckButton   *fDrawOrigin;   // draw origin widget
@@ -53,9 +50,6 @@ public:
    void DoLabMode(Int_t type);
    void DoAxesMode(Int_t type);
    void DoNdiv();
-
-   void DoBoxOffsetX();
-   void DoBoxOffsetY();
 
    void DoDrawCenter();
    void DoDrawOrigin();

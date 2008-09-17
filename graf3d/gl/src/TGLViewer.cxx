@@ -17,6 +17,7 @@
 #include "TGLLightSet.h"
 #include "TGLClip.h"
 #include "TGLManipSet.h"
+#include "TGLCameraOverlay.h"
 
 #include "TGLScenePad.h"
 #include "TGLLogicalShape.h"
@@ -117,7 +118,7 @@ TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y,
    fReferenceOn(kFALSE),
    fReferencePos(0.0, 0.0, 0.0),
    fDrawCameraCenter(kFALSE),
-   fCameraMarkup(0),
+   fCameraOverlay(0),
    fInitGL(kFALSE),
    fSmartRefresh(kFALSE),
    fDebugMode(kFALSE),
@@ -173,7 +174,7 @@ TGLViewer::TGLViewer(TVirtualPad * pad) :
    fReferenceOn(kFALSE),
    fReferencePos(0.0, 0.0, 0.0),
    fDrawCameraCenter(kFALSE),
-   fCameraMarkup(0),
+   fCameraOverlay(0),
    fInitGL(kFALSE),
    fSmartRefresh(kFALSE),
    fDebugMode(kFALSE),
@@ -217,7 +218,8 @@ void TGLViewer::InitSecondaryObjects()
    fSelectedPShapeRef = new TGLManipSet; fOverlay.push_back(fSelectedPShapeRef);
    fSelectedPShapeRef->SetDrawBBox(kTRUE);
 
-   fCameraMarkup = new TGLCameraMarkupStyle;
+   fCameraOverlay = new TGLCameraOverlay(kFALSE, kFALSE);
+   AddOverlayElement(fCameraOverlay);
 
    fRedrawTimer = new TGLRedrawTimer(*this);
 }
@@ -230,7 +232,7 @@ TGLViewer::~TGLViewer()
    delete fLightSet;
    delete fClipSet;
    delete fSelectedPShapeRef;
-   delete fCameraMarkup;
+   delete fCameraOverlay;
 
    delete fContextMenu;
    delete fRedrawTimer;
@@ -497,7 +499,6 @@ void TGLViewer::DoDraw()
 
       glClear(GL_DEPTH_BUFFER_BIT);
       RenderOverlay();
-      DrawCameraMarkup();
       DrawDebugInfo();
    }
 
@@ -632,34 +633,6 @@ void TGLViewer::DrawGuides()
    TGLUtil::DrawSimpleAxes(*fCamera, fOverallBoundingBox, fAxesType);
    if (disabled)
       glEnable(GL_DEPTH_TEST);
-}
-
-//______________________________________________________________________________
-void TGLViewer::DrawCameraMarkup()
-{
-   // Draw camera markup overlay.
-
-   if (fCameraMarkup && fCameraMarkup->Show())
-   {
-      glMatrixMode(GL_PROJECTION);
-      glPushMatrix();
-      glLoadIdentity();
-      const TGLRect& vp = fRnrCtx->RefCamera().RefViewport();
-      gluOrtho2D(0., vp.Width(), 0., vp.Height());
-      glMatrixMode(GL_MODELVIEW);
-      glPushMatrix();
-      glLoadIdentity();
-      glDisable(GL_LIGHTING);
-      glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-      glDisable(GL_DEPTH_TEST);
-      fRnrCtx->RefCamera().Markup(fCameraMarkup);
-      glEnable(GL_DEPTH_TEST);
-      glEnable(GL_LIGHTING);
-      glMatrixMode(GL_PROJECTION);
-      glPopMatrix();
-      glMatrixMode(GL_MODELVIEW);
-      glPopMatrix();
-   }
 }
 
 //______________________________________________________________________________

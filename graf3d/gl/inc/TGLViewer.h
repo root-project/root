@@ -39,7 +39,7 @@ class TGLWidget;
 class TGLLightSet;
 class TGLClipSet;
 class TGLManipSet;
-class TGLCameraMarkupStyle;
+class TGLCameraOverlay;
 class TGLContextIdentity;
 class TTimer;
 
@@ -124,7 +124,7 @@ protected:
    Bool_t         fReferenceOn;    //! reference marker on?
    TGLVertex3     fReferencePos;   //! reference position
    Bool_t         fDrawCameraCenter; //! reference marker on?
-   TGLCameraMarkupStyle  *fCameraMarkup; //! markup size of viewport in scene units
+   TGLCameraOverlay  *fCameraOverlay; //! markup size of viewport in scene units
 
    Bool_t         fInitGL;         //! has GL been initialised?
    Bool_t         fSmartRefresh;   //! cache logicals during scene rebuilds, use TAtt3D time-stamp to determine if they are still valid
@@ -216,8 +216,8 @@ public:
    void SetDrawCameraCenter(Bool_t x);
    Bool_t GetDrawCameraCenter() { return fDrawCameraCenter; }
    void   PickCameraCenter()    { fPushAction = kPushCamCenter; RefreshPadEditor(this); }
-   TGLCameraMarkupStyle* GetCameraMarkup() const { return fCameraMarkup; }
-   void SetCameraMarkup(TGLCameraMarkupStyle* m) { fCameraMarkup = m; }
+   TGLCameraOverlay* GetCameraOverlay() const { return fCameraOverlay; }
+   void SetCameraOverlay(TGLCameraOverlay* m) { fCameraOverlay = m; }
 
    EPushAction GetPushAction() const { return fPushAction; }
    EDragAction GetDragAction() const { return fDragAction; }
@@ -239,7 +239,6 @@ public:
    void DoDraw();
 
    void DrawGuides();
-   void DrawCameraMarkup();
    void DrawDebugInfo();
 
    Bool_t RequestSelect(Int_t x, Int_t y, Bool_t trySecSel=kFALSE); // Cross thread select request

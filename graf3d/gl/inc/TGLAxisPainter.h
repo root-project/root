@@ -15,6 +15,7 @@
 #include "TAttAxis.h"
 #include "TGLUtil.h"
 #include "TString.h"
+#include "TGLFontManager.h"
 
 class TGLRnrCtx;
 class TGLFont;
@@ -22,8 +23,6 @@ class TGLFont;
 class TGLAxisAttrib: public TAttAxis
 {
    friend class TGLAxisPainter;
-public:
-   enum ETextAlign_e { kCenterDown, kCenterUp, kLeft, kRight };
 
 protected:
    TGLVector3   fDir;
@@ -34,7 +33,7 @@ protected:
    TGLVector3   fTMOff[3];
    Int_t        fTMNDim;
 
-   ETextAlign_e   fTextAlign;
+   TGLFont::ETextAlign_e  fTextAlign;
 
    Bool_t       fRelativeFontSize;
    Int_t        fAbsLabelFontSize;
@@ -61,8 +60,8 @@ public:
    void SetTMNDim(Int_t i) {fTMNDim=i;}
    Int_t GetTMNDim() {return fTMNDim;}
 
-   void SetTextAlign(ETextAlign_e a) {fTextAlign=a;}
-   ETextAlign_e GetTextAlign() const { return fTextAlign;}
+   void SetTextAlign(TGLFont::ETextAlign_e a) {fTextAlign=a;}
+   TGLFont::ETextAlign_e GetTextAlign() const { return fTextAlign;}
 
    void SetRelativeFontSize(Bool_t x) { fRelativeFontSize=x; }
    Bool_t GetRelativeFontSize() const {return fRelativeFontSize;}
