@@ -82,8 +82,9 @@ Int_t TFileCollection::Add(TFileCollection *coll)
 
    if (fList && coll && coll->GetList()) {
       TList* list = coll->GetList();
-      for (Int_t i=0; i<list->GetEntries(); i++)
-        fList->Add((TFileInfo*) list->At(i));
+      for (Int_t i=0; i<list->GetEntries(); i++) {
+         fList->Add((TFileInfo*) list->At(i));
+      }
       return 1;
    } else {
       return 0;
