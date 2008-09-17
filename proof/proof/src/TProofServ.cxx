@@ -3421,8 +3421,9 @@ void TProofServ::HandleProcess(TMessage *mess)
 
       if ((!hasNoData) && dset->GetListOfElements()->GetSize() == 0) {
          TFileCollection* dataset = 0;
-         TString dsTree, lookupopt;         // The dataset maybe in the form of a TFileCollection in the input list
+         TString lookupopt;
          TString dsname(dset->GetName());
+         // The dataset maybe in the form of a TFileCollection in the input list
          if (dsname.BeginsWith("TFileCollection:")) {
             // Isolate the real name
             dsname.ReplaceAll("TFileCollection:", "");
@@ -3437,7 +3438,6 @@ void TProofServ::HandleProcess(TMessage *mess)
                return;
             }
             input->Remove(dataset);
-            dsTree = dataset->GetDefaultTreeName();
             // Make sure we lookup everything (unless the client or the administartor
             // required something else)
             if (TProof::GetParameter(input, "PROOF_LookupOpt", lookupopt) != 0) {
@@ -3451,16 +3451,13 @@ void TProofServ::HandleProcess(TMessage *mess)
          // name, should be processed.
          if (!dataset) {
             if (fDataSetManager) {
-               dataset = fDataSetManager->GetDataSet(dset->GetName());
+               dataset = fDataSetManager->GetDataSet(dsname.Data());
                if (!dataset) {
                   SendAsynMessage(Form("HandleProcess on %s: no such dataset: %s",
-                                       fPrefix.Data(), dset->GetName()));
-                  Error("HandleProcess", "no such dataset on the master: %s",
-                        dset->GetName());
+                                       fPrefix.Data(), dsname.Data()));
+                  Error("HandleProcess", "no such dataset on the master: %s", dsname.Data());
                   return;
                }
-               if (!(fDataSetManager->ParseUri(dset->GetName(), 0, 0, 0, &dsTree)))
-                  dsTree = "";
 
                // Apply the lookup option requested by the client or the administartor
                // (by default we trust the information in the dataset)
@@ -3473,6 +3470,33 @@ void TProofServ::HandleProcess(TMessage *mess)
                Error("HandleProcess", "no dataset manager: cannot proceed");
                return;
             }
+         }
+
+         // Logic for the subdir/obj names: try first to see if the dataset name contains
+         // some info; if not check the settings in the TDSet object itself; if still empty
+         // check the default tree name / path in the TFileCollection object; if still empty
+         // use the default as the flow will determine
+         TString dsTree;
+         // Get the [subdir/]tree, if any
+         fDataSetManager->ParseUri(dset->GetName(), 0, 0, 0, &dsTree);
+         if (dsTree.IsNull()) {
+            // Use what we have in the original dataset; we need this to locate the
+            // meta data information
+            dsTree += dset->GetDirectory();
+            dsTree += dset->GetObjName();
+         }
+         if (!dsTree.IsNull() && dsTree != "/") {
+            TString tree(dsTree);
+            Int_t idx = tree.Index("/");
+            if (idx != kNPOS) {
+               TString dir = tree(0, idx+1);
+               tree.Remove(0, idx);
+               dset->SetDirectory(dir);
+            }
+            dset->SetObjName(tree);
+         } else {
+            // Use the default obj name from the TFileCollection
+            dsTree = dataset->GetDefaultTreeName();
          }
 
          // Transfer the list now
@@ -4281,7 +4305,7 @@ void TProofServ::HandleCheckFile(TMessage *mess)
       TMD5 *md5local = TMD5::FileChecksum(cachef);
       if (md5local && md5 == (*md5local)) {
          // copy file from cache to working directory
-         Bool_t cpbin = (!IsMaster() || !IsParallel()) ? kTRUE : kFALSE;
+         Bool_t cpbin = (opt & TProof::kCpBin) ? kTRUE : kFALSE;
          CopyFromCache(filenam, cpbin);
          fSocket->Send(kPROOF_CHECKFILE);
          PDB(kCache, 1)
@@ -4733,22 +4757,29 @@ Int_t TProofServ::HandleCache(TMessage *mess)
          if (IsMaster())
             fProof->Load(package);
 
+         // Atomic action
+         fCacheLock->Lock();
+
          // Load locally; the implementation and header files (and perhaps
          // the binaries) are already in the cache
          CopyFromCache(package, kTRUE);
 
-         {  TProofServLogHandlerGuard hg(fLogFile, fSocket);
-            PDB(kGlobal, 1) Info("HandleCache:kLoadMacro", "enter");
-            // Load the macro
-            gROOT->ProcessLine(Form(".L %s", package.Data()));
-         }
+         // Load the macro
+         Info("HandleCache", "loading macro %s ...", package.Data());
+         gROOT->ProcessLine(Form(".L %s", package.Data()));
 
          // Cache binaries, if any new
          CopyToCache(package, 1);
 
-         // Wait forworkers to be done
+         // Release atomicity
+         fCacheLock->Unlock();
+
+         // Wait for workers to be done
          if (IsMaster())
-            fProof->Collect(TProof::kAllUnique);
+            fProof->Collect();
+
+         // Notify the upper level
+         LogToMaster();
 
          break;
       default:
@@ -5048,7 +5079,8 @@ Int_t TProofServ::CopyFromCache(const char *macro, Bool_t cpbin)
       Info("CopyFromCache","enter: names: %s, %s", macro, name.Data());
 
    // Atomic action
-   fCacheLock->Lock();
+   Bool_t locked = (fCacheLock->IsLocked()) ? kTRUE : kFALSE;
+   if (!locked) fCacheLock->Lock();
 
    // Get source from the cache
    PDB(kCache,1)
@@ -5059,7 +5091,7 @@ Int_t TProofServ::CopyFromCache(const char *macro, Bool_t cpbin)
    // Check if we are done
    if (!cpbin) {
       // End of atomicity
-      fCacheLock->Unlock();
+      if (!locked) fCacheLock->Unlock();
       return 0;
    }
 
@@ -5074,7 +5106,7 @@ Int_t TProofServ::CopyFromCache(const char *macro, Bool_t cpbin)
          Info("CopyFromCache",
               "non-standard name structure: %s ('.' missing)", name.Data());
       // Done
-      fCacheLock->Unlock();
+      if (!locked) fCacheLock->Unlock();
       return 0;
    }
 
@@ -5110,7 +5142,7 @@ Int_t TProofServ::CopyFromCache(const char *macro, Bool_t cpbin)
       // ... and the binary version file
       gSystem->Exec(Form("%s %s/%s", kRM, fCacheDir.Data(), vername.Data()));
       // Done
-      fCacheLock->Unlock();
+      if (!locked) fCacheLock->Unlock();
       return 0;
    }
 
@@ -5142,7 +5174,7 @@ Int_t TProofServ::CopyFromCache(const char *macro, Bool_t cpbin)
    }
 
    // End of atomicity
-   fCacheLock->Unlock();
+   if (!locked) fCacheLock->Unlock();
 
    // Done
    return 0;
@@ -5188,7 +5220,8 @@ Int_t TProofServ::CopyToCache(const char *macro, Int_t opt)
    Bool_t savever = kFALSE;
 
    // Atomic action
-   fCacheLock->Lock();
+   Bool_t locked = (fCacheLock->IsLocked()) ? kTRUE : kFALSE;
+   if (!locked) fCacheLock->Lock();
 
    // Action depends on 'opt'
    if (opt == 0) {
@@ -5249,7 +5282,7 @@ Int_t TProofServ::CopyToCache(const char *macro, Int_t opt)
    }
 
    // End of atomicity
-   fCacheLock->Unlock();
+   if (!locked) fCacheLock->Unlock();
 
    // Done
    return 0;

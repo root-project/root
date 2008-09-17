@@ -357,7 +357,8 @@ private:
       kAscii               = 0x0,
       kBinary              = 0x1,
       kForce               = 0x2,
-      kForward             = 0x4
+      kForward             = 0x4,
+      kCpBin               = 0x8
    };
    enum EProofWrkListAction {
       kActivateWorker      = 1,
@@ -474,8 +475,8 @@ private:
    Int_t    Exec(const char *cmd, ESlaves list, Bool_t plusMaster);
    Int_t    SendCommand(const char *cmd, ESlaves list = kActive);
    Int_t    SendCurrentState(ESlaves list = kActive);
-   Bool_t   CheckFile(const char *file, TSlave *sl, Long_t modtime);
-   Int_t    SendFile(const char *file, Int_t opt = (kBinary | kForward),
+   Bool_t   CheckFile(const char *file, TSlave *sl, Long_t modtime, Bool_t cpbin = kTRUE);
+   Int_t    SendFile(const char *file, Int_t opt = (kBinary | kForward | kCpBin),
                      const char *rfile = 0, TSlave *sl = 0);
    Int_t    SendObject(const TObject *obj, ESlaves list = kActive);
    Int_t    SendGroupView();

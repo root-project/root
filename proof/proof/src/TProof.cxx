@@ -3405,18 +3405,14 @@ Long64_t TProof::Process(const char *dsetname, const char *selector,
    Int_t idxc = name.Index("#");
    if (idxc != kNPOS) {
       Int_t idxs = name.Index("/", 1, idxc, TString::kExact);
-      if (idxs != kNPOS && idxc != kNPOS) {
+      if (idxs != kNPOS) {
          obj = name(idxs+1, name.Length());
          dir = name(idxc+1, name.Length());
          dir.Remove(dir.Index("/") + 1);
          name.Remove(idxc);
-      } else if (idxc != kNPOS && idxs == kNPOS) {
+      } else {
          obj = name(idxc+1, name.Length());
          name.Remove(idxc);
-      } else if (idxs != kNPOS && idxc == kNPOS) {
-         Error("Process", "bad name syntax (%s): specification of additional"
-                          " attributes needs a '#' after the dataset name", dsetname);
-         return -1;
       }
    } else if (name.Index(":") != kNPOS && name.Index("://") == kNPOS) {
       // protection against using ':' instead of '#'
@@ -4114,7 +4110,7 @@ Int_t TProof::Exec(const char *cmd, ESlaves list, Bool_t plusMaster)
       char *fn = gSystem->Which(TROOT::GetMacroPath(), filename, kReadPermission);
       if (fn) {
          if (GetNumberOfUniqueSlaves() > 0) {
-            if (SendFile(fn, kAscii | kForward) < 0) {
+            if (SendFile(fn, kAscii | kForward | kCpBin) < 0) {
                Error("Exec", "file %s could not be transfered", fn);
                delete [] fn;
                return -1;
@@ -4193,7 +4189,7 @@ Int_t TProof::SendInitialState()
 }
 
 //______________________________________________________________________________
-Bool_t TProof::CheckFile(const char *file, TSlave *slave, Long_t modtime)
+Bool_t TProof::CheckFile(const char *file, TSlave *slave, Long_t modtime, Bool_t cpbin)
 {
    // Check if a file needs to be send to the slave. Use the following
    // algorithm:
@@ -4204,6 +4200,8 @@ Bool_t TProof::CheckFile(const char *file, TSlave *slave, Long_t modtime)
    //     - if no, get file's md5 and modtime and store in file map, ask
    //       slave if file exists with specific md5, if yes return kFALSE,
    //       if no return kTRUE.
+   // To retrieve from the cache the binaries associated with the file 'cpbin' should be
+   // set to kTRUE; this is the default behaviour.
    // Returns kTRUE in case file needs to be send, returns kFALSE in case
    // file is already on remote node.
 
@@ -4215,6 +4213,8 @@ Bool_t TProof::CheckFile(const char *file, TSlave *slave, Long_t modtime)
    sn += slave->GetOrdinal();
    sn += ":";
    sn += gSystem->BaseName(file);
+
+   Int_t opt = (cpbin) ? TProof::kCpBin : 0;
 
    // check if file is in map
    FileMap_t::const_iterator it;
@@ -4237,7 +4237,7 @@ Bool_t TProof::CheckFile(const char *file, TSlave *slave, Long_t modtime)
                if (IsMaster()) {
                   sendto = kFALSE;
                   TMessage mess(kPROOF_CHECKFILE);
-                  mess << TString(gSystem->BaseName(file)) << md.fMD5;
+                  mess << TString(gSystem->BaseName(file)) << md.fMD5 << opt;
                   slave->GetSocket()->Send(mess);
 
                   TMessage *reply;
@@ -4267,7 +4267,7 @@ Bool_t TProof::CheckFile(const char *file, TSlave *slave, Long_t modtime)
          return kFALSE;
       }
       TMessage mess(kPROOF_CHECKFILE);
-      mess << TString(gSystem->BaseName(file)) << md.fMD5;
+      mess << TString(gSystem->BaseName(file)) << md.fMD5 << opt;
       slave->GetSocket()->Send(mess);
 
       TMessage *reply;
@@ -4301,6 +4301,8 @@ Int_t TProof::SendFile(const char *file, Int_t opt, const char *rfile, TSlave *w
    //                          UploadPackage, since the check is done elsewhere.
    //       kForward (0x4)     if set, ask server to forward the file to slave
    //                          or submaster (meaningless for slave servers).
+   //       kCpBin   (0x8)     Retrieve from the cache the binaries associated
+   //                          with the file
    //
 
    if (!IsValid()) return -1;
@@ -4341,6 +4343,7 @@ Int_t TProof::SendFile(const char *file, Int_t opt, const char *rfile, TSlave *w
    Bool_t bin   = (opt & kBinary)  ? kTRUE : kFALSE;
    Bool_t force = (opt & kForce)   ? kTRUE : kFALSE;
    Bool_t fw    = (opt & kForward) ? kTRUE : kFALSE;
+   Bool_t cpbin = (opt & kCpBin)   ? kTRUE : kFALSE;
 
    const Int_t kMAXBUF = 32768;  //16384  //65536;
    char buf[kMAXBUF];
@@ -4353,7 +4356,7 @@ Int_t TProof::SendFile(const char *file, Int_t opt, const char *rfile, TSlave *w
       if (!sl->IsValid())
          continue;
 
-      Bool_t sendto = force ? kTRUE : CheckFile(file, sl, modtime);
+      Bool_t sendto = force ? kTRUE : CheckFile(file, sl, modtime, cpbin);
       // Don't send the kPROOF_SENDFILE command to real slaves when sendto
       // is false. Masters might still need to send the file to newly added
       // slaves.
@@ -5435,7 +5438,7 @@ Int_t TProof::UploadPackage(const char *pack, EUploadPackageOpt opt)
 
          if (fProtocol > 5) {
             // remote directory is locked, upload file over the open channel
-            if (SendFile(par, (kBinary | kForce), Form("%s/%s/%s",
+            if (SendFile(par, (kBinary | kForce | kCpBin), Form("%s/%s/%s",
                          sl->GetProofWorkDir(), kPROOF_PackDir,
                          gSystem->BaseName(par)), sl) < 0) {
                Error("UploadPackage", "problems uploading file %s", par.Data());
@@ -5661,7 +5664,7 @@ Int_t TProof::Load(const char *macro, Bool_t notOnClient)
       TString basemacro = gSystem->BaseName(macro);
       TMessage mess(kPROOF_CACHE);
       mess << Int_t(kLoadMacro) << basemacro;
-      Broadcast(mess, kUnique);
+      Broadcast(mess);
 
       Printf("Adding loaded macro: %s", macro);
       if (!fLoadedMacros) {

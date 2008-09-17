@@ -937,7 +937,8 @@ Bool_t TDSet::Add(TCollection *filelist, const char *meta, Bool_t availableOnly,
          if (!availableOnly ||
             (fi->TestBit(TFileInfo::kStaged) &&
             !fi->TestBit(TFileInfo::kCorrupted))) {
-            Add(fi, meta);
+            if (!Add(fi, meta))
+               return kFALSE;
          } else if (badlist && fi) {
             // Return list of non-usable files
             badlist->Add(fi);
@@ -977,8 +978,32 @@ Bool_t TDSet::Add(TFileInfo *fi, const char *meta)
       return kFALSE;
    }
 
+   // If more than one metadata info require the specification of the objpath;
+   // the order in which they appear is not guaranteed and the error may be
+   // very difficult to find.
+   TFileInfoMeta *m = 0;
+   if (!meta || strlen(meta) <= 0 || !strcmp(meta, "/")) {
+      TList *fil = 0;
+      if ((fil = fi->GetMetaDataList()) && fil->GetSize() > 1) {
+         TString msg = Form("\n  Object name unspecified and several objects available.\n");
+         msg += "  Please choose one from the list below:\n";
+         TIter nx(fil);
+         while ((m = (TFileInfoMeta *) nx())) {
+            TString nm(m->GetName());
+            if (nm.BeginsWith("/")) nm.Remove(0,1);
+            msg += Form("  %s  ->   TProof::Process(\"%s#%s\",...)\n",
+                        nm.Data(), GetName(), nm.Data());
+         }
+         if (gProofServ)
+            gProofServ->SendAsynMessage(msg);
+         else
+            Warning("Add", msg.Data());
+         return kFALSE;
+      }
+   }
+
    // Get the metadata, if any
-   TFileInfoMeta *m = fi->GetMetaData(meta);
+   m = fi->GetMetaData(meta);
 
    // Create the element
    const char *objname = 0;
