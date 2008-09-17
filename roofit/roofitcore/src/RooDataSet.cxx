@@ -800,7 +800,7 @@ void RooDataSet::append(RooTreeData& data)
 
 
 //_____________________________________________________________________________
-RooAbsArg* RooDataSet::addColumn(RooAbsArg& var) 
+RooAbsArg* RooDataSet::addColumn(RooAbsArg& var, Bool_t adjustRange) 
 {
   // Add a column with the values of the given (function) argument
   // to this dataset. The function value is calculated for each
@@ -809,7 +809,7 @@ RooAbsArg* RooDataSet::addColumn(RooAbsArg& var)
   // to the observable names in the dataset
 
 
-  RooAbsArg* ret = RooTreeData::addColumn(var) ;
+  RooAbsArg* ret = RooTreeData::addColumn(var, adjustRange) ;
   initialize(_wgtVar?_wgtVar->GetName():0) ;
   return ret ;
 }

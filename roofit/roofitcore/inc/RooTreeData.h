@@ -59,7 +59,7 @@ public:
   virtual const RooArgSet* get(Int_t index) const;
   virtual const RooArgSet* get() const { return &_vars ; } 
 
-  virtual RooAbsArg* addColumn(RooAbsArg& var) ;
+  virtual RooAbsArg* addColumn(RooAbsArg& var, Bool_t adjustRange=kTRUE) ;
   virtual RooArgSet* addColumns(const RooArgList& varList) ;
 
   virtual Int_t numEntries(Bool_t useWeights=kFALSE) const ;

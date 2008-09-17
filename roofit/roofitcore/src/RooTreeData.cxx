@@ -892,7 +892,7 @@ const RooArgSet* RooTreeData::get(Int_t index) const
 
 
 //_____________________________________________________________________________
-RooAbsArg* RooTreeData::addColumn(RooAbsArg& newVar)
+RooAbsArg* RooTreeData::addColumn(RooAbsArg& newVar, Bool_t adjustRange)
 {
   // Add a new column to the data set which holds the pre-calculated values
   // of 'newVar'. This operation is only meaningful if 'newVar' is a derived
@@ -949,13 +949,16 @@ RooAbsArg* RooTreeData::addColumn(RooAbsArg& newVar)
   }
 
 
-  // Set range of valHolder to (just) bracket all values stored in the dataset
-  Double_t vlo,vhi ;
-  RooRealVar* rrvVal = dynamic_cast<RooRealVar*>(valHolder) ;
-  if (rrvVal) {
-    getRange(*rrvVal,vlo,vhi,0.05) ;
-    rrvVal->setRange(vlo,vhi) ;  
+  if (adjustRange) {
+    // Set range of valHolder to (just) bracket all values stored in the dataset
+    Double_t vlo,vhi ;
+    RooRealVar* rrvVal = dynamic_cast<RooRealVar*>(valHolder) ;
+    if (rrvVal) {
+      getRange(*rrvVal,vlo,vhi,0.05) ;
+      rrvVal->setRange(vlo,vhi) ;  
+    }
   }
+
   delete newVarCloneList;  
   return valHolder ;
 }
@@ -1851,7 +1854,7 @@ Double_t RooTreeData::moment(RooRealVar &var, Double_t order, const char* cutSpe
   // the moment is calculated on the subset of the data which pass the C++ cut specification expression 'cutSpec'
   // and/or are inside the range named 'cutRange'
 
-  Double_t offset = moment(var,0,cutSpec,cutRange) ;
+  Double_t offset = order>0 ? moment(var,0,cutSpec,cutRange) : 0 ;
   return moment(var,offset,order,cutSpec,cutRange) ;
 
 }

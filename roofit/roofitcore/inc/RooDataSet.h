@@ -82,7 +82,7 @@ public:
   Bool_t merge(RooDataSet* data1, RooDataSet* data2=0, RooDataSet* data3=0, 
 	       RooDataSet* data4=0, RooDataSet* data5=0, RooDataSet* data6=0) ;
 
-  virtual RooAbsArg* addColumn(RooAbsArg& var) ;
+  virtual RooAbsArg* addColumn(RooAbsArg& var, Bool_t adjustRange=kTRUE) ;
   virtual RooArgSet* addColumns(const RooArgList& varList) ;
 
   // Plot the distribution of a real valued arg

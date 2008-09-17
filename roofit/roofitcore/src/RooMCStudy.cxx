@@ -860,7 +860,7 @@ void RooMCStudy::calcPulls()
     if (genParOrig && _perExptGenParams) {
 
       RooPullVar pull(name,title,*par,*genParOrig) ;
-      _fitParData->addColumn(pull) ;
+      _fitParData->addColumn(pull,kFALSE) ;
 
     } else {
       // If not use fixed generator value
@@ -870,7 +870,7 @@ void RooMCStudy::calcPulls()
 	RooAbsReal* genPar = (RooAbsReal*) genParOrig->Clone("truth") ;
 	RooPullVar pull(name,title,*par,*genPar) ;
 	
-	_fitParData->addColumn(pull) ;
+	_fitParData->addColumn(pull,kFALSE) ;
 	delete genPar ;
 	
       }
