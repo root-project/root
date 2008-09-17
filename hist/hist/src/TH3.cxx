@@ -1079,6 +1079,33 @@ Double_t TH3::Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Int_t
 }
 
 //______________________________________________________________________________
+Double_t TH3::Interpolate(Double_t)
+{
+   
+   //Not yet implemented
+   Error("Interpolate","This function must be called with 3 arguments for a TH3");
+   return 0;
+}
+
+//______________________________________________________________________________
+Double_t TH3::Interpolate(Double_t, Double_t)
+{
+   
+   //Not yet implemented
+   Error("Interpolate","This function must be called with 3 arguments for a TH3");
+   return 0;
+}
+
+//______________________________________________________________________________
+Double_t TH3::Interpolate(Double_t, Double_t, Double_t)
+{
+   
+   //Not yet implemented
+   Error("Interpolate","This function is not yet implemented for a TH3");
+   return 0;
+}
+
+//______________________________________________________________________________
 Double_t TH3::KolmogorovTest(const TH1 *h2, Option_t *option) const
 {
    //  Statistical test of compatibility in shape between

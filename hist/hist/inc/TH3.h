@@ -90,6 +90,9 @@ public:
    virtual Double_t Integral(Int_t, Int_t, Option_t * ="") const {return 0;}
    virtual Double_t Integral(Int_t, Int_t, Int_t, Int_t, Option_t * ="") const {return 0;}
    virtual Double_t Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Int_t binz1, Int_t binz2, Option_t *option="") const;
+   virtual Double_t Interpolate(Double_t x);
+   virtual Double_t Interpolate(Double_t x, Double_t y);
+   virtual Double_t Interpolate(Double_t x, Double_t y, Double_t z);
    virtual Double_t KolmogorovTest(const TH1 *h2, Option_t *option="") const;
    virtual Long64_t Merge(TCollection *list);
          TH1D      *ProjectionZ(const char *name="_pz", Int_t firstxbin=0, Int_t lastxbin=0, Int_t firstybin=0,

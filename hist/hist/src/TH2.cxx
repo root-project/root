@@ -1097,6 +1097,67 @@ Double_t TH2::Integral(Int_t firstxbin, Int_t lastxbin, Int_t firstybin, Int_t l
 }
 
 //______________________________________________________________________________
+Double_t TH2::Interpolate(Double_t)
+{
+   //illegal for a TH2
+   
+   Error("Interpolate","This function must be called with 2 arguments for a TH2");
+   return 0;
+}
+
+//______________________________________________________________________________
+Double_t TH2::Interpolate(Double_t  x, Double_t  y)
+{
+   // given an arbitrary x,y pair interpolates a TH2 histogram using bilinear
+   // interpolation to return an interpolated  z value.
+   // see Wikipedia
+   // R.Raja 6-Sep-2008
+
+   Int_t nbinsx = GetNbinsX();
+   Int_t nbinsy = GetNbinsY();
+ 
+   Int_t ix0 = fXaxis.FindBin(x);
+   Int_t iy0 = fYaxis.FindBin(y);
+   if(ix0<1)ix0=1;
+   if(ix0>nbinsx) ix0=nbinsx;  //do the best
+   if(iy0<1)iy0=1;
+   if(iy0>nbinsy) iy0=nbinsy;  //do the best
+   Int_t ixp = TMath::Min(ix0+1,nbinsx);
+   Int_t iyp = TMath::Min(iy0+1,nbinsy);
+   Int_t ibinpp = GetBin(ixp,iyp);
+   Int_t ibinp0 = GetBin(ixp,iy0);
+   Int_t ibin0p = GetBin(ix0,iyp);
+   Int_t ibin00 = GetBin(ix0,iy0);
+   Double_t x00 = fXaxis.GetBinCenter(ix0);
+   Double_t y00 = fYaxis.GetBinCenter(iy0);
+   Double_t z00 = GetBinContent(ibin00);
+   Double_t hx  = fXaxis.GetBinWidth(ix0);
+   Double_t hy  = fYaxis.GetBinWidth(iy0);
+   Double_t zpp = GetBinContent(ibinpp);
+   Double_t zp0 = GetBinContent(ibinp0);
+   Double_t z0p = GetBinContent(ibin0p);
+
+   Double_t b1 = z00;
+   Double_t b2 = zp0 -z00;
+   Double_t b3 = z0p - z00;
+   Double_t b4 = z00 - zp0 -z0p + zpp;
+
+   Double_t xx = (x - x00)/hx;
+   Double_t yy = (y - y00)/hy;
+
+   return b1 + b2*xx + b3*yy + b4*xx*yy; //bilinear interpolation-see Wikipedia
+} 
+
+//______________________________________________________________________________
+Double_t TH2::Interpolate(Double_t, Double_t, Double_t)
+{
+   //illegal for a TH2
+   
+   Error("Interpolate","This function must be called with 2 arguments for a TH2");
+   return 0;
+}
+
+//______________________________________________________________________________
 Double_t TH2::KolmogorovTest(const TH1 *h2, Option_t *option) const
 {
    //  Statistical test of compatibility in shape between

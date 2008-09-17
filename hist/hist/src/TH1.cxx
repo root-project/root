@@ -4363,6 +4363,33 @@ TAxis *TH1::GetZaxis() const
    return &((TH1*)this)->fZaxis;
 }
 
+//______________________________________________________________________________
+Double_t TH1::Interpolate(Double_t)
+{
+   
+   //Not yet implemented
+   Error("Interpolate","This function is not yet implemented for a TH1");
+   return 0;
+}
+
+//______________________________________________________________________________
+Double_t TH1::Interpolate(Double_t, Double_t)
+{
+   
+   //Not yet implemented
+   Error("Interpolate","This function must be called with 1 argument for a TH1");
+   return 0;
+}
+
+//______________________________________________________________________________
+Double_t TH1::Interpolate(Double_t, Double_t, Double_t)
+{
+   
+   //Not yet implemented
+   Error("Interpolate","This function must be called with 1 argument for a TH1");
+   return 0;
+}
+
 //___________________________________________________________________________
 void TH1::LabelsDeflate(Option_t *ax)
 {

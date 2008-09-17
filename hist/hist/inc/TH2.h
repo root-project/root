@@ -83,6 +83,9 @@ public:
    virtual Double_t Integral(Int_t, Int_t, Option_t * ="") const {return 0;}
    virtual Double_t Integral(Int_t firstxbin, Int_t lastxbin, Int_t firstybin, Int_t lastybin, Option_t *option="") const;
    virtual Double_t Integral(Int_t, Int_t, Int_t, Int_t, Int_t, Int_t, Option_t * ="") const {return 0;}
+   virtual Double_t Interpolate(Double_t x);
+   virtual Double_t Interpolate(Double_t x, Double_t y);
+   virtual Double_t Interpolate(Double_t x, Double_t y, Double_t z);
    virtual Double_t KolmogorovTest(const TH1 *h2, Option_t *option="") const;
    virtual Long64_t Merge(TCollection *list);
    virtual TH2     *RebinX(Int_t ngroup=2, const char *newname="");

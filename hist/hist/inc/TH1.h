@@ -259,6 +259,9 @@ public:
    virtual Double_t Integral(Int_t binx1, Int_t binx2, Option_t *option="") const;
    virtual Double_t Integral(Int_t, Int_t, Int_t, Int_t, Option_t * /*option*/ ="") const {return 0;}
    virtual Double_t Integral(Int_t, Int_t, Int_t, Int_t, Int_t, Int_t, Option_t * /*option*/ ="" ) const {return 0;}
+   virtual Double_t Interpolate(Double_t x);
+   virtual Double_t Interpolate(Double_t x, Double_t y);
+   virtual Double_t Interpolate(Double_t x, Double_t y, Double_t z);
    virtual Double_t KolmogorovTest(const TH1 *h2, Option_t *option="") const;
    virtual void     LabelsDeflate(Option_t *axis="X");
    virtual void     LabelsInflate(Option_t *axis="X");
