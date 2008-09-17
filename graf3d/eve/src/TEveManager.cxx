@@ -57,7 +57,7 @@ TEveManager* gEve = 0;
 ClassImp(TEveManager);
 
 //______________________________________________________________________________
-TEveManager::TEveManager(UInt_t w, UInt_t h, Bool_t map_window) :
+TEveManager::TEveManager(UInt_t w, UInt_t h, Bool_t map_window, Option_t* opt) :
    fExcHandler  (0),
    fVizDB       (0), fVizDBReplace(kTRUE), fVizDBUpdate(kTRUE),
    fGeometries  (0),
@@ -90,6 +90,11 @@ TEveManager::TEveManager(UInt_t w, UInt_t h, Bool_t map_window) :
    fUseOrphanage   (kFALSE)
 {
    // Constructor.
+   // If map_window is true, the TEveBrowser window is mapped.
+   // Option string is passed to TEveBrowser for creation of
+   // additional plugins. By default file-browser and command-line
+   // plugins are created.
+
 
    static const TEveException eh("TEveManager::TEveManager ");
 
@@ -138,7 +143,7 @@ TEveManager::TEveManager(UInt_t w, UInt_t h, Bool_t map_window) :
    fBrowser->SetTabTitle("GLViewer", 1);
 
    // Finalize it
-   fBrowser->InitPlugins();
+   fBrowser->InitPlugins(opt);
    if (map_window)
       fBrowser->MapWindow();
 
@@ -792,7 +797,7 @@ void TEveManager::ClearROOTClassSaved()
 /******************************************************************************/
 
 //______________________________________________________________________________
-TEveManager* TEveManager::Create(Bool_t map_window)
+TEveManager* TEveManager::Create(Bool_t map_window, Option_t* opt)
 {
    // If global TEveManager* gEve is not set initialize it.
    // Returns gEve.
@@ -808,7 +813,7 @@ TEveManager* TEveManager::Create(Bool_t map_window)
 
       TEveUtil::SetupEnvironment();
       TEveUtil::SetupGUI();
-      gEve = new TEveManager(w, h, map_window);
+      gEve = new TEveManager(w, h, map_window, opt);
    }
    return gEve;
 }

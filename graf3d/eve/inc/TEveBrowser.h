@@ -141,7 +141,7 @@ public:
 
    void ReallyDelete();
 
-   void InitPlugins();
+   void InitPlugins(Option_t *opt="FI");
 
    TGFileBrowser* MakeFileBrowser();
    TGFileBrowser* GetFileBrowser() const { return fFileBrowser; }

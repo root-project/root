@@ -698,66 +698,25 @@ void TEveBrowser::EveMenu(Int_t id)
 /******************************************************************************/
 
 //______________________________________________________________________________
-void TEveBrowser::InitPlugins()
+void TEveBrowser::InitPlugins(Option_t *opt)
 {
    // Initialize standard plugins.
 
-   // File browser plugin...
-   StartEmbedding(0);
-   //gROOT->ProcessLine(Form("new TGFileBrowser((const TGWindow *)0x%lx, 200, 500)",
-   //                   gClient->GetRoot()));
+   TString o(opt);
+
+   // File Browser plugin ... we have to process it here.
+   if (o.Contains('F'))
    {
+      StartEmbedding(0);
       TGFileBrowser *fb = MakeFileBrowser();
       fb->BrowseObj(gROOT);
-      fb->AddFSDirectory("/");
       fb->Show();
-
       fFileBrowser = fb;
+      StopEmbedding("Files");
+      o.ReplaceAll("F", ".");
    }
-   StopEmbedding();
-   SetTabTitle("Files", 0);
 
-   // Class browser plugin
-   /*
-     StartEmbedding(0);
-     gROOT->ProcessLine(Form("new TGClassBrowser((const TGWindow *)0x%lx, 200, 500)",
-     gClient->GetRoot()));
-     StopEmbedding();
-     SetTabTitle("Classes", 0, 1);
-   */
-
-   // --- main frame
-
-   // Canvas plugin...
-   /* Now in menu
-      StartEmbedding(1);
-      gROOT->ProcessLineFast("new TCanvas");
-      StopEmbedding();
-      SetTabTitle("Canvas", 1);
-   */
-
-   // Editor plugin...
-   /* Now in menu
-      StartEmbedding(1);
-      gROOT->ProcessLineFast(Form("new TGTextEditor((const char *)0, (const TGWindow *)0x%lx)",
-      gClient->GetRoot()));
-      StopEmbedding();
-      SetTabTitle("Editor", 1);
-   */
-
-   // --- bottom area
-
-   // Command plugin...
-   StartEmbedding(2);
-   gROOT->ProcessLineFast(Form("new TGCommandPlugin((const TGWindow *)0x%lx, 700, 300)",
-                               gClient->GetRoot()));
-   StopEmbedding();
-   SetTabTitle("Command", 2);
-
-   // --- Select first tab everywhere
-   SetTab(0, 0);
-   SetTab(1, 0);
-   SetTab(2, 0);
+   TRootBrowser::InitPlugins(o);
 }
 
 //______________________________________________________________________________
@@ -769,13 +728,13 @@ TGFileBrowser* TEveBrowser::MakeFileBrowser()
    TBrowserImp    imp;
    TBrowser      *tb = new TBrowser("Pipi", "Strel", &imp);
    TGFileBrowser *fb = new TGFileBrowser(gClient->GetRoot(), tb, 200, 500);
-//   tb->SetBrowserImp((TBrowserImp *)fb);
    tb->SetBrowserImp((TBrowserImp *)this);
    fb->SetBrowser(tb);
    fb->SetNewBrowser(this);
    gROOT->GetListOfBrowsers()->Remove(tb);
    return fb;
 }
+
 //______________________________________________________________________________
 void TEveBrowser::ReallyDelete()
 {

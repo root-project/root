@@ -120,7 +120,7 @@ protected:
    Bool_t                    fUseOrphanage;
 
 public:
-   TEveManager(UInt_t w, UInt_t h, Bool_t map_window=kTRUE);
+   TEveManager(UInt_t w, UInt_t h, Bool_t map_window=kTRUE, Option_t* opt="FI");
    virtual ~TEveManager();
 
    TExceptionHandler* GetExcHandler() const { return fExcHandler; }
@@ -220,7 +220,7 @@ public:
    void SetStatusLine(const char* text);
    void ClearROOTClassSaved();
 
-   static TEveManager* Create(Bool_t map_window=kTRUE);
+   static TEveManager* Create(Bool_t map_window=kTRUE, Option_t* opt="FI");
 
    ClassDef(TEveManager, 0); // Eve application manager.
 };
