@@ -1085,7 +1085,7 @@ void TStreamerInfo::BuildOld()
          //---------------------------------------------------------------------
          if (element->IsA() == TStreamerBase::Class()) {
             TStreamerBase* base = (TStreamerBase*) element;
-            TClass* baseclass = fClass->GetBaseClass( base->GetName() );
+            TClass* baseclass =  base->GetClassPointer(); // fClass->GetBaseClass( base->GetName() );
 
             //------------------------------------------------------------------
             // We do not have this base class - check if we're renaming
