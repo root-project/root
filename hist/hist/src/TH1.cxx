@@ -6446,8 +6446,8 @@ Double_t TH1::GetRMS(Int_t axis) const
    if (axis<10)
       return TMath::Sqrt(rms2);
    else {
-      // The right formula for RMS error is
-      // formula valid for only gaussian distribution ( 4-th momentum =  )
+      // The right formula for RMS error depends on 4th momentum (see Kendall-Stuart Vol 1 pag 243)
+      // formula valid for only gaussian distribution ( 4-th momentum =  3 * sigma^4 )
       Double_t neff = GetEffectiveEntries();
       return ( neff > 0 ? TMath::Sqrt(rms2/(2*neff) ) : 0. );
    }
@@ -6482,36 +6482,62 @@ Double_t TH1::GetSkewness(Int_t axis) const
    //Note, that since third and fourth moment are not calculated
    //at the fill time, skewness and its standard error are computed bin by bin
 
-   const TAxis *ax;
-   if (axis==1 || axis==11) ax = &fXaxis;
-   else if (axis==2 || axis==12) ax = &fYaxis;
-   else if (axis==3 || axis==13) ax = &fZaxis;
-   else {
-      Error("GetSkewness", "illegal value of parameter");
-      return 0;
-   }
 
-   if (axis < 10) {
-      //compute skewness
-      Double_t x, w, mean, rms, rms3, sum=0;
-      mean = GetMean(axis);
-      rms = GetRMS(axis);
-      rms3 = rms*rms*rms;
-      Int_t bin;
+   if (axis > 0 && axis <= 3){
+
+      Double_t mean = GetMean(axis);
+      Double_t rms = GetRMS(axis);
+      Double_t rms3 = rms*rms*rms;
+
+      Int_t firstBinX = fXaxis.GetFirst();
+      Int_t lastBinX  = fXaxis.GetLast();
+      Int_t firstBinY = fYaxis.GetFirst();
+      Int_t lastBinY  = fYaxis.GetLast();
+      Int_t firstBinZ = fZaxis.GetFirst();
+      Int_t lastBinZ  = fZaxis.GetLast();
+      // include underflow/overflow if TH1::StatOverflows(kTRUE) in case no range is set on the axis
+      if (fgStatOverflows) {
+        if ( !fXaxis.TestBit(TAxis::kAxisRange) ) {
+            if (firstBinX == 1) firstBinX = 0;
+            if (lastBinX ==  fXaxis.GetNbins() ) lastBinX += 1;
+         }
+         if ( !fYaxis.TestBit(TAxis::kAxisRange) ) {
+            if (firstBinY == 1) firstBinY = 0;
+            if (lastBinY ==  fYaxis.GetNbins() ) lastBinY += 1;
+         }
+         if ( !fZaxis.TestBit(TAxis::kAxisRange) ) {
+            if (firstBinZ == 1) firstBinZ = 0;
+            if (lastBinZ ==  fZaxis.GetNbins() ) lastBinZ += 1;
+         }
+      }
+
+      Double_t x = 0; 
+      Double_t sum=0;
       Double_t np=0;
-
-      for (bin=ax->GetFirst(); bin<=ax->GetLast(); bin++){
-         x = GetBinCenter(bin);
-         w = GetBinContent(bin);
-         np+=w;
-         sum+=w*(x-mean)*(x-mean)*(x-mean);
+      for (Int_t  binx = firstBinX; binx <= lastBinX; binx++) {
+         for (Int_t biny = firstBinY; biny <= lastBinY; biny++) {
+            for (Int_t binz = firstBinZ; binz <= lastBinZ; binz++) {
+               if (axis==1 ) x = fXaxis.GetBinCenter(binx); 
+               else if (axis==2 ) x = fYaxis.GetBinCenter(biny); 
+               else if (axis==3 ) x = fZaxis.GetBinCenter(binz); 
+               Double_t w = GetBinContent(binx,biny,binz);
+               np+=w;
+               sum+=w*(x-mean)*(x-mean)*(x-mean);
+            }
+         }
       }
       sum/=np*rms3;
       return sum;
-   } else {
+   } 
+   else if (axis > 10 && axis <= 13) {
       //compute standard error of skewness
-      Int_t nbins = ax->GetNbins();
-      return TMath::Sqrt(6./nbins);
+      // assume parent normal distribution use formula from  Kendall-Stuart, Vol 1 pag 243, second edition 
+      Double_t neff = GetEffectiveEntries();
+      return ( neff > 0 ? TMath::Sqrt(6./neff ) : 0. );
+   }
+   else {
+      Error("GetSkewness", "illegal value of parameter");
+      return 0;
    }
 }
 
@@ -6525,33 +6551,62 @@ Double_t TH1::GetKurtosis(Int_t axis) const
    //Note, that since third and fourth moment are not calculated
    //at the fill time, kurtosis and its standard error are computed bin by bin
 
-   const TAxis *ax;
-   if (axis==1 || axis==11) ax = &fXaxis;
-   else if (axis==2 || axis==12) ax = &fYaxis;
-   else if (axis==3 || axis==13) ax = &fZaxis;
+   if (axis > 0 && axis <= 3){
+
+      Double_t mean = GetMean(axis);
+      Double_t rms = GetRMS(axis);
+      Double_t rms4 = rms*rms*rms*rms;
+
+      Int_t firstBinX = fXaxis.GetFirst();
+      Int_t lastBinX  = fXaxis.GetLast();
+      Int_t firstBinY = fYaxis.GetFirst();
+      Int_t lastBinY  = fYaxis.GetLast();
+      Int_t firstBinZ = fZaxis.GetFirst();
+      Int_t lastBinZ  = fZaxis.GetLast();
+      // include underflow/overflow if TH1::StatOverflows(kTRUE) in case no range is set on the axis
+      if (fgStatOverflows) {
+        if ( !fXaxis.TestBit(TAxis::kAxisRange) ) {
+            if (firstBinX == 1) firstBinX = 0;
+            if (lastBinX ==  fXaxis.GetNbins() ) lastBinX += 1;
+         }
+         if ( !fYaxis.TestBit(TAxis::kAxisRange) ) {
+            if (firstBinY == 1) firstBinY = 0;
+            if (lastBinY ==  fYaxis.GetNbins() ) lastBinY += 1;
+         }
+         if ( !fZaxis.TestBit(TAxis::kAxisRange) ) {
+            if (firstBinZ == 1) firstBinZ = 0;
+            if (lastBinZ ==  fZaxis.GetNbins() ) lastBinZ += 1;
+         }
+      }
+
+      Double_t x = 0; 
+      Double_t sum=0;
+      Double_t np=0;
+      for (Int_t binx = firstBinX; binx <= lastBinX; binx++) {
+         for (Int_t biny = firstBinY; biny <= lastBinY; biny++) {
+            for (Int_t binz = firstBinZ; binz <= lastBinZ; binz++) {
+               if (axis==1 ) x = fXaxis.GetBinCenter(binx); 
+               else if (axis==2 ) x = fYaxis.GetBinCenter(biny); 
+               else if (axis==3 ) x = fZaxis.GetBinCenter(binz); 
+               Double_t w = GetBinContent(binx,biny,binz);
+               np+=w;
+               sum+=w*(x-mean)*(x-mean)*(x-mean)*(x-mean);
+            }
+         }
+      }
+      sum/=(np*rms4);
+      return sum-3;
+
+   } else if (axis > 10 && axis <= 13) {
+      //compute standard error of skewness
+      // assume parent normal distribution use formula from  Kendall-Stuart, Vol 1 pag 243, second edition 
+      Double_t neff = GetEffectiveEntries();
+      return ( neff > 0 ? TMath::Sqrt(24./neff ) : 0. );
+   }
    else {
       Error("GetKurtosis", "illegal value of parameter");
       return 0;
-   }
-   if (axis < 10){
-      Double_t x, w, mean, rms, rms4, sum=0;
-      mean = GetMean(axis);
-      rms = GetRMS(axis);
-      rms4 = rms*rms*rms*rms;
-      Int_t bin;
-      Double_t np=0;
-      for (bin=ax->GetFirst(); bin<=ax->GetLast(); bin++){
-         x = GetBinCenter(bin);
-         w = GetBinContent(bin);
-         np+=w;
-         sum+=w*(x-mean)*(x-mean)*(x-mean)*(x-mean);
-      }
-      sum/=np*rms4;
-      return sum-3;
-   } else {
-      Int_t nbins = ax->GetNbins();
-      return TMath::Sqrt(24./nbins);
-   }
+   }               
 }
 
 
