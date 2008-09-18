@@ -7,6 +7,7 @@
 ******************************************************************
 *  Starting  S T R E S S  basic suite                            *
 ******************************************************************
+Warning in <TClass::TClass>: no dictionary for class pair<string,string> is available
 Test  1 : Generate,Fit and Plot on basic p.d.f...................OK
 Test  2 : Addition operator p.d.f................................OK
 Test  3 : Product operator p.d.f.................................OK
