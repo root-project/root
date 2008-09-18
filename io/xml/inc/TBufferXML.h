@@ -150,8 +150,8 @@ public:
    virtual void     WriteArray(const Double_t  *d, Int_t n);
    virtual void     WriteArrayFloat16(const Float_t  *f, Int_t n, TStreamerElement *ele=0);
    virtual void     WriteArrayDouble32(const Double_t  *d, Int_t n, TStreamerElement *ele=0);
-   virtual void     ReadFastArray(void  *start , const TClass *cl, Int_t n=1, TMemberStreamer *s=0);
-   virtual void     ReadFastArray(void **startp, const TClass *cl, Int_t n=1, Bool_t isPreAlloc=kFALSE, TMemberStreamer *s=0);
+   virtual void     ReadFastArray(void  *start , const TClass *cl, Int_t n=1, TMemberStreamer *s=0, const TClass* onFileClass = 0);
+   virtual void     ReadFastArray(void **startp, const TClass *cl, Int_t n=1, Bool_t isPreAlloc=kFALSE, TMemberStreamer *s=0, const TClass* onFileClass = 0);
 
    virtual void     WriteFastArray(const Bool_t    *b, Int_t n);
    virtual void     WriteFastArray(const Char_t    *c, Int_t n);
@@ -171,9 +171,9 @@ public:
    virtual void     WriteFastArray(void  *start,  const TClass *cl, Int_t n=1, TMemberStreamer *s=0);
    virtual Int_t    WriteFastArray(void **startp, const TClass *cl, Int_t n=1, Bool_t isPreAlloc=kFALSE, TMemberStreamer *s=0);
 
-   virtual void     StreamObject(void *obj, const type_info &typeinfo);
-   virtual void     StreamObject(void *obj, const char *className);
-   virtual void     StreamObject(void *obj, const TClass *cl);
+   virtual void     StreamObject(void *obj, const type_info &typeinfo, const TClass* onFileClass = 0);
+   virtual void     StreamObject(void *obj, const char *className, const TClass* onFileClass = 0 );
+   virtual void     StreamObject(void *obj, const TClass *cl, const TClass* onFileClass = 0 );
    virtual void     StreamObject(TObject *obj);
 
    virtual   void     ReadBool(Bool_t       &b);

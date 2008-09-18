@@ -445,7 +445,7 @@ int G__pragma()
 
   else {
     int c2;
-    char args[G__ONELINE];
+    char args[4096];
     args[0]='\0';
     if('\n'!=c&&'\r'!=c) c = G__fgetline(args);
     /* Back up before a line terminator, to get errors reported correctly. */

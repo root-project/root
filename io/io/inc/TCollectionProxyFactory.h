@@ -154,7 +154,7 @@ public:
    /// Attach worker proxy
    void AdoptStreamer(TGenCollectionProxy* streamer);
    /// Streamer for I/O handling
-   void Streamer(TBuffer &refBuffer, void *pObject, int siz);
+   void Streamer(TBuffer &refBuffer, void *pObject, int siz, TClass *onFileClass );
 };
 
 /** @class TEmulatedClassStreamer TCollectionProxy.h cont/TCollectionProxy.h
@@ -177,7 +177,7 @@ public:
    /// Standard destructor
    virtual ~TCollectionClassStreamer()                {                        }
    /// Streamer for I/O handling
-   virtual void operator()(TBuffer &buff, void *pObj) { Streamer(buff,pObj,0); }
+   virtual void operator()(TBuffer &buff, void *pObj ) { Streamer(buff,pObj,0,fOnFileClass); }
 
    /// Virtual copy constructor.
    virtual TClassStreamer *Generate() {
@@ -209,7 +209,7 @@ public:
    virtual ~TCollectionMemberStreamer()             { }
    /// Streamer for I/O handling
    virtual void operator()(TBuffer &buff,void *pObj,Int_t siz=0)
-   { Streamer(buff, pObj, siz);                       }
+   { Streamer(buff, pObj, siz, 0); /* FIXME */ }
 };
 
 #endif

@@ -128,6 +128,8 @@ void TBranchClones::Init(TTree *tree, TBranch *parent, const char* name, void* p
    TRealData* rd = 0;
    TIter next(cl->GetListOfRealData());
    while ((rd = (TRealData *) next())) {
+      if (rd->TestBit(TRealData::kTransient)) continue;
+
       if (rd->IsObject()) {
          continue;
       }
@@ -410,6 +412,8 @@ void TBranchClones::Streamer(TBuffer& b)
       TRealData* rd = 0;
       TIter next(cl->GetListOfRealData());
       while ((rd = (TRealData*) next())) {
+         if (rd->TestBit(TRealData::kTransient)) continue;
+
          TDataMember* member = rd->GetDataMember();
          if (!member || !member->IsBasic() || !member->IsPersistent()) {
             continue;

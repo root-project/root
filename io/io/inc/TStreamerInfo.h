@@ -55,6 +55,7 @@ public:
       TCompInfo& operator=(const TCompInfo&); // Not implemented
    public:
       TClass          *fClass;
+      TClass          *fNewClass;
       TString          fClassName;
       TMemberStreamer *fStreamer;
       TCompInfo() : fClass(0), fClassName(""), fStreamer(0) {};
@@ -103,12 +104,12 @@ private:
 
    static  Int_t     fgCount;            //Number of TStreamerInfo instances
    static TStreamerElement *fgElement;   //Pointer to current TStreamerElement
-   void              BuildUserInfo(const char *info);
    static Double_t   GetValueAux(Int_t type, void *ladd, int k, Int_t len);
    static void       PrintValueAux(char *ladd, Int_t atype, TStreamerElement * aElement, Int_t aleng, Int_t *count);
 
    UInt_t            GenerateIncludes(FILE *fp, char *inclist);
    void              GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subClasses, Bool_t top = kTRUE);
+   void              InsertArtificialElements(const TObjArray *rules);
 
 protected:
    TStreamerInfo(const TStreamerInfo&);
@@ -126,19 +127,23 @@ public:
    };
 
    enum EReadWrite {
-      kBase     =  0,  kOffsetL = 20,  kOffsetP = 40,  kCounter =  6,  kCharStar = 7,
-      kChar     =  1,  kShort   =  2,  kInt     =  3,  kLong    =  4,  kFloat    = 5,
-      kDouble   =  8,  kDouble32=  9,
-      kUChar    = 11,  kUShort  = 12,  kUInt    = 13,  kULong   = 14,  kBits     = 15,
-      kLong64   = 16,  kULong64 = 17,  kBool    = 18,  kFloat16 = 19,
-      kObject   = 61,  kAny     = 62,  kObjectp = 63,  kObjectP = 64,  kTString  = 65,
-      kTObject  = 66,  kTNamed  = 67,  kAnyp    = 68,  kAnyP    = 69,  kAnyPnoVT = 70,
-      kSTLp     = 71,
-      kSkip     = 100, kSkipL = 120, kSkipP   = 140,
-      kConv     = 200, kConvL = 220, kConvP   = 240,
-      kSTL      = 300, kSTLstring = 365,
-      kStreamer = 500, kStreamLoop = 501,
-      kMissing  = 99999
+      kBase        =  0,  kOffsetL = 20,  kOffsetP = 40,  kCounter =  6,  kCharStar = 7,
+      kChar        =  1,  kShort   =  2,  kInt     =  3,  kLong    =  4,  kFloat    = 5,
+      kDouble      =  8,  kDouble32=  9,
+      kUChar       = 11,  kUShort  = 12,  kUInt    = 13,  kULong   = 14,  kBits     = 15,
+      kLong64      = 16,  kULong64 = 17,  kBool    = 18,  kFloat16 = 19,
+      kObject      = 61,  kAny     = 62,  kObjectp = 63,  kObjectP = 64,  kTString  = 65,
+      kTObject     = 66,  kTNamed  = 67,  kAnyp    = 68,  kAnyP    = 69,  kAnyPnoVT = 70,
+      kSTLp        = 71,
+      kSkip        = 100, kSkipL = 120, kSkipP   = 140,
+      kConv        = 200, kConvL = 220, kConvP   = 240,
+      kSTL         = 300, kSTLstring = 365,
+      kStreamer    = 500, kStreamLoop = 501,
+      kCache       = 600,  // Cache the value in memory than is not part of the object but is accessible via a SchemaRule
+      kArtificial  = 1000, 
+      kCacheNew    = 1001,
+      kCacheDelete = 1002,
+      kMissing     = 99999
    };
 
 //	Some comments about EReadWrite
@@ -163,12 +168,13 @@ public:
 
 
    TStreamerInfo();
-   TStreamerInfo(TClass *cl, const char *info);
+   TStreamerInfo(TClass *cl);
    virtual            ~TStreamerInfo();
    void                Build();
    void                BuildCheck();
    void                BuildEmulated(TFile *file);
    void                BuildOld();
+   virtual Bool_t      BuildFor( const TClass *cl );
    void                Clear(Option_t *);
    void                Compile();
    void                ComputeSize();
@@ -203,7 +209,7 @@ public:
    Bool_t              IsOptimized() const {return fOptimized;}
    Int_t               IsRecovered() const {return TestBit(kRecovered);}
    void                ls(Option_t *option="") const;
-   TVirtualStreamerInfo *NewInfo(TClass *cl) {return new TStreamerInfo(cl,0);}
+   TVirtualStreamerInfo *NewInfo(TClass *cl) {return new TStreamerInfo(cl);}
    void               *New(void *obj = 0);
    void               *NewArray(Long_t nElements, void* ary = 0);
    void                Destructor(void* p, Bool_t dtorOnly = kFALSE);
@@ -217,12 +223,15 @@ public:
    Int_t               ReadBuffer(TBuffer &b,  char** const &arrptr, Int_t first,Int_t narr=1,Int_t eoffset=0,Int_t mode=0);
    Int_t               ReadBufferSkip(TBuffer &b, char** const &arrptr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
    Int_t               ReadBufferConv(TBuffer &b, char** const &arrptr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
+   Int_t               ReadBufferArtificial(TBuffer &b, char** const &arrptr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
    Int_t               ReadBuffer(TBuffer &b, const TVirtualCollectionProxy &arrptr, Int_t first,Int_t narr=1,Int_t eoffset=0,Int_t mode=0);
    Int_t               ReadBufferSkip(TBuffer &b, const TVirtualCollectionProxy &arrptr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
    Int_t               ReadBufferConv(TBuffer &b, const TVirtualCollectionProxy &arrptr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
+   Int_t               ReadBufferArtificial(TBuffer &b, const TVirtualCollectionProxy &arrptr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
    Int_t               ReadBuffer(TBuffer &b, const TPointerCollectionAdapter &arrptr, Int_t first,Int_t narr=1,Int_t eoffset=0,Int_t mode=0);
    Int_t               ReadBufferSkip(TBuffer &b, const TPointerCollectionAdapter &arrptr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
    Int_t               ReadBufferConv(TBuffer &b, const TPointerCollectionAdapter &arrptr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
+   Int_t               ReadBufferArtificial(TBuffer &b, const TPointerCollectionAdapter &arrptr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
 #else
    template <class T>
    Int_t               ReadBuffer(TBuffer &b, const T &arrptr, Int_t first,Int_t narr=1,Int_t eoffset=0,Int_t mode=0);
@@ -230,6 +239,8 @@ public:
    Int_t               ReadBufferSkip(TBuffer &b, const T &arrptr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
    template <class T>
    Int_t               ReadBufferConv(TBuffer &b, const T &arrptr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
+   template <class T>
+   Int_t               ReadBufferArtificial(TBuffer &b, const T &arrptr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
 #endif
 
    Int_t               ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc, Int_t first, Int_t eoffset);
@@ -264,7 +275,7 @@ public:
 #endif
 
    //WARNING this class version must be the same as TVirtualStreamerInfo
-   ClassDef(TStreamerInfo,7)  //Streamer information for one class version
+   ClassDef(TStreamerInfo,8)  //Streamer information for one class version
 };
 
 

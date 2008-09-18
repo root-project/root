@@ -1,4 +1,4 @@
-// @(#)root/io:$Id$
+// @(#)Root/io:$Id$
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -62,6 +62,9 @@
 
 #include "TMakeProject.h"
 
+#include "TSchemaRuleSet.h"
+#include "TSchemaRule.h"
+
 TStreamerElement *TStreamerInfo::fgElement = 0;
 Int_t   TStreamerInfo::fgCount = 0;
 
@@ -70,6 +73,44 @@ const Int_t kRegrouped = TStreamerInfo::kOffsetL;
 const Int_t kMaxLen = 1024;
 
 ClassImp(TStreamerInfo)
+
+static void R__TObjArray_InsertAt(TObjArray *arr, TObject *obj, Int_t at)
+{
+   // Slide by one.
+   Int_t last = arr->GetLast();
+   arr->AddAtAndExpand(arr->At(last),last+1);
+   for(Int_t ind = last-1; ind >= at; --ind) {
+      arr->AddAt( arr->At(ind), ind+1);
+   };
+   arr->AddAt( obj, at);
+}
+
+#if 0
+static void R__TObjArray_InsertAfter(TObjArray *arr, TObject *newobj, TObject *oldobj)
+{
+   // Slide by one.
+   Int_t last = arr->GetLast();
+   Int_t at = 0;
+   while (at<last && arr->At(at) != oldobj) {
+      ++at;
+   }
+   if (at!=0) { 
+      ++at; // we found the object, insert after it 
+   }
+   R__TObjArray_InsertAt(arr, newobj, at);
+}
+#endif
+
+static void R__TObjArray_InsertBefore(TObjArray *arr, TObject *newobj, TObject *oldobj)
+{
+   // Slide by one.
+   Int_t last = arr->GetLast();
+   Int_t at = 0;
+   while (at<last && arr->At(at) != oldobj) {
+      ++at;
+   }
+   R__TObjArray_InsertAt(arr, newobj, at);
+}
 
 //______________________________________________________________________________
 TStreamerInfo::TStreamerInfo()
@@ -97,7 +138,7 @@ TStreamerInfo::TStreamerInfo()
 }
 
 //______________________________________________________________________________
-TStreamerInfo::TStreamerInfo(TClass *cl, const char *info)
+TStreamerInfo::TStreamerInfo(TClass *cl)
 : TVirtualStreamerInfo(cl)
 {
    // Create a TStreamerInfo object.
@@ -122,7 +163,6 @@ TStreamerInfo::TStreamerInfo(TClass *cl, const char *info)
    fOnFileClassVersion = 0;
    fOldVersion = Class()->GetClassVersion();
 
-   if (info) BuildUserInfo(info);
 }
 
 //______________________________________________________________________________
@@ -221,6 +261,11 @@ void TStreamerInfo::Build()
 
    fCheckSum = fClass->GetCheckSum();
 
+   const ROOT::TSchemaMatch* rules = 0;
+   if (fClass->GetSchemaRules()) {
+       rules = fClass->GetSchemaRules()->FindRules(fClass->GetName(), fClassVersion);
+   }
+
    //
    // Iterate over base classes.
    //
@@ -310,7 +355,7 @@ void TStreamerInfo::Build()
          if (lbracket && rbracket) {
             const char* counterName = dm->GetArrayIndex();
             TRealData* rdCounter = (TRealData*) fClass->GetListOfRealData()->FindObject(counterName);
-            if (!rdCounter) {
+            if (!rdCounter || rdCounter->TestBit(TRealData::kTransient)) {
                Error("Build", "%s, discarding: %s %s, illegal %s\n", GetName(), dmFull, dmName, dmTitle);
                continue;
             }
@@ -426,10 +471,13 @@ void TStreamerInfo::Build()
       fElements->Add(element);
    } // end of member loop
 
+   // Now add artificial TStreamerElement (i.e. rules that creates new members or set transient members).
+   InsertArtificialElements(rules);
+
+
    //
    // Make a more compact version.
    //
-
    Compile();
 }
 
@@ -487,7 +535,8 @@ void TStreamerInfo::BuildCheck()
 
          searchOnChecksum = kTRUE;
 
-      } else {
+      }
+      else {
          // We are in the case of an 'emulated' class.
 
          if (fOnFileClassVersion >= 2) {
@@ -731,6 +780,7 @@ void TStreamerInfo::BuildCheck()
       fNumber = -1;
       return;
    }
+
    array->AddAtAndExpand(this, fClassVersion);
    ++fgCount;
    fNumber = fgCount;
@@ -778,6 +828,33 @@ void TStreamerInfo::BuildEmulated(TFile *file)
       i++;
    }
    BuildOld();
+}
+
+//______________________________________________________________________________
+Bool_t TStreamerInfo::BuildFor( const TClass *in_memory_cl )
+{
+   //---------------------------------------------------------------------------
+   // Check if we can build this for foreign class - do we have some rules
+   // to do that
+   //---------------------------------------------------------------------------
+   if( !in_memory_cl || !in_memory_cl->GetSchemaRules() )
+      return kFALSE;
+
+   const TObjArray* rules;
+
+   if( fOnFileClassVersion >= 2 )
+      rules = in_memory_cl->GetSchemaRules()->FindRules( GetName(), fOnFileClassVersion );
+   else
+      rules = in_memory_cl->GetSchemaRules()->FindRules( GetName(), fCheckSum );
+
+   if( !rules && !TClassEdit::IsSTLCont( in_memory_cl->GetName() ) ) {
+      Warning( "BuildFor", "The build of %s streamer info for %s has been requested, but no matching conversion rules were specified", GetName(), in_memory_cl->GetName() );
+      return kFALSE;
+   }
+
+   fClass = const_cast<TClass*>(in_memory_cl);
+
+   return kTRUE;
 }
 
 //______________________________________________________________________________
@@ -925,6 +1002,8 @@ void TStreamerInfo::BuildOld()
       printf("\n====>Rebuilding TStreamerInfo for class: %s, version: %d\n", GetName(), fClassVersion);
    }
 
+   Bool_t wasCompiled = fOffset != 0;
+
    // This is used to avoid unwanted recursive call to Build
    fIsBuilt = kTRUE;
 
@@ -968,35 +1047,102 @@ void TStreamerInfo::BuildOld()
    int nBaze = 0;
 
    if (fClass->GetCollectionProxy() && (fElements->GetEntries() == 1) && !strcmp(fElements->At(0)->GetName(), "This")) {
-      next();
+      element = (TStreamerElement*)next();
+      element->SetNewType( element->GetType() );
+      element->SetNewClass( fClass );
    }
 
+   TClass *allocClass = 0;
+
+   //---------------------------------------------------------------------------
+   // Get schema rules for this class
+   //---------------------------------------------------------------------------
+   const ROOT::TSchemaMatch*   rules   = 0;
+   const ROOT::TSchemaRuleSet* ruleSet = fClass->GetSchemaRules();
+   
+   if( fOnFileClassVersion >= 2 )
+      rules = (ruleSet ? ruleSet->FindRules( GetName(), fOnFileClassVersion ) : 0);
+   else
+      rules = (ruleSet ? ruleSet->FindRules( GetName(), fCheckSum ) : 0);
+
    while ((element = (TStreamerElement*) next())) {
+      if (element->IsA()==TStreamerArtificial::Class() 
+          || element->TestBit(TStreamerElement::kCache) ) 
+      {
+         // Prevent BuildOld from modifying existing ArtificialElement (We need to review when and why BuildOld 
+         // needs to be re-run; it might be needed if the 'current' class change (for example from being an onfile 
+         // version to being a version loaded from a shared library) and we thus may have to remove the artifical 
+         // element at the beginning of BuildOld)
+
+         continue;
+      };
+
       element->SetNewType(element->GetType());
       element->Init();
-
       if (element->IsBase()) {
+         //---------------------------------------------------------------------
+         // Dealing with nonSTL bases
+         //---------------------------------------------------------------------
          if (element->IsA() == TStreamerBase::Class()) {
             TStreamerBase* base = (TStreamerBase*) element;
-            TClass* baseclass = base->GetClassPointer();
-            if (!baseclass) {
-               Warning("BuildOld", "Missing base class: %s skipped", base->GetName());
-               // FIXME: Why is the version number 1 here?
-               baseclass = new TClass(element->GetName(), 1, 0, 0, -1, -1);
-               element->Update(0, baseclass);
+            TClass* baseclass = fClass->GetBaseClass( base->GetName() );
+
+            //------------------------------------------------------------------
+            // We do not have this base class - check if we're renaming
+            //------------------------------------------------------------------
+            if( !baseclass && !fClass->TestBit( TClass::kIsEmulation ) ) {
+               const ROOT::TSchemaRule* rule = (rules ? rules->GetRuleWithSource( base->GetName() ) : 0);
+
+               //---------------------------------------------------------------
+               // No renaming, sorry
+               //---------------------------------------------------------------
+               if( !rule ) {
+                  Error("BuildOld", "Could not find base class: %s for %s and could not find any matching rename rule\n", base->GetName(), GetName());
+                  continue;
+               }
+
+               //----------------------------------------------------------------
+               // Find a new target class
+               //----------------------------------------------------------------
+               const TObjArray* targets = rule->GetTarget();
+               if( !targets ) {
+                  Error("BuildOld", "Could not find base class: %s for %s, renaming rule was found but is malformed\n", base->GetName(), GetName());
+               }
+               TString newClass = ((TObjString*)targets->At(0))->GetString();
+               baseclass = TClass::GetClass( newClass );
+               base->SetNewBaseClass( baseclass );
+            }
+            //-------------------------------------------------------------------
+            // No base class in emulated mode
+            //-------------------------------------------------------------------
+            else if( !baseclass ) {
+               baseclass = base->GetClassPointer();
+               if (!baseclass) {
+                  Warning("BuildOld", "Missing base class: %s skipped", base->GetName());
+                  // FIXME: Why is the version number 1 here? Answer: because we don't know any better at this point
+                  baseclass = new TClass(element->GetName(), 1, 0, 0, -1, -1);
+                  element->Update(0, baseclass);
+               }
             }
             baseclass->BuildRealData();
+
+            // Force the StreamerInfo "Compilation" of the base classes first. This is necessary in 
+            // case the base class contains a member used as an array dimension in the derived classes.
             Int_t version = base->GetBaseVersion();
             TStreamerInfo* infobase = (TStreamerInfo*)baseclass->GetStreamerInfo(version);
             if (infobase->GetTypes() == 0) {
                infobase->BuildOld();
             }
             Int_t baseOffset = fClass->GetBaseClassOffset(baseclass);
+
+            // FIXME: Presumably we're in emulated mode, but is still does not make any sense
+            // shouldn't it be element->SetNewType(-1) ?
             if (baseOffset < 0) {
                baseOffset = 0;
             }
             element->SetOffset(baseOffset);
             offset += baseclass->Size();
+
             continue;
          } else {
             // Not a base elem but still base, string or STL as a base
@@ -1223,20 +1369,29 @@ void TStreamerInfo::BuildOld()
             } else if (CollectionMatchFloat16(oldClass,newClass)) {
                // Actually nothing to do, since both are the same collection of double in memory.
             } else if (CollectionMatchDouble32(oldClass,newClass)) {
-               // Actually nothing to do, since both are the same collection of double in memory.
+               // Actually nothing to do, since both are the same collection of double in memory.              
             } else {
                element->SetNewType(-2);
             }
+
+         } else if( oldClass && newClass.GetClass() ) {
+            //-------------------------------------------------------------------
+            // Check if we can convert one type to another
+            //-------------------------------------------------------------------
+            const TObjArray* rules = (newClass->GetSchemaRules() ? newClass->GetSchemaRules()->FindRules( oldClass->GetName() ) : 0 );
+            if( !rules || (rules && rules->GetEntriesFast() == 0) ) {
+               Warning( "BuildOld", "Unable to convert %s to %s - no conversion rules found", oldClass->GetName(), newClass->GetName() );
+               element->SetNewType(-2);
+            }
+            delete rules;
+            element->SetNewClass( newClass );
+            
          } else {
             element->SetNewType(-2);
          }
       } else {
          element->SetNewType(-1);
          element->SetOffset(kMissing);
-      }
-
-      if (element->GetNewType() == -2) {
-         Warning("BuildOld", "Cannot convert %s::%s from type:%s to type:%s, skip element", GetName(), element->GetName(), element->GetTypeName(), newClass->GetName());
       }
 
       if (fClass->GetDeclFileLine() < 0) {
@@ -1250,6 +1405,34 @@ void TStreamerInfo::BuildOld()
          }
          element->SetOffset(offset);
          offset += asize;
+      }
+
+      if ( !wasCompiled && rules && rules->HasRuleWithSource( element->GetName() ) ) {
+         if (allocClass == 0) {
+            TVirtualStreamerInfo *infoalloc  = (TVirtualStreamerInfo *)Clone(TString::Format("%s@@%d",fClass->GetName(),GetOnFileClassVersion()));
+            infoalloc->BuildCheck();
+            allocClass = infoalloc->GetClass();
+         }
+
+         // Now that we are caching the unconverted element, we do not assign it to the real type even if we could have!
+         if (element->GetNewType()>0 /* intentionally not including base class for now */ 
+              && rules && !rules->HasRuleWithTarget( element->GetName() ) ) 
+         {
+            TStreamerElement *copy = (TStreamerElement*)element->Clone();
+            R__TObjArray_InsertBefore( fElements, copy, element );
+            next(); // move the cursor passed the insert object.
+            copy->SetBit(TStreamerElement::kRepeat);
+            element = copy;
+
+            // Warning("BuildOld","%s::%s is not set from the version %d of %s (You must add a rule for it)\n",GetName(), element->GetName(), GetClassVersion(), GetName() );
+         }
+         element->SetBit(TStreamerElement::kCache);
+         element->SetNewType( element->GetType() );
+         element->SetOffset(allocClass->GetDataMemberOffset(element->GetName()));
+      }
+
+      if (element->GetNewType() == -2) {
+         Warning("BuildOld", "Cannot convert %s::%s from type:%s to type:%s, skip element", GetName(), element->GetName(), element->GetTypeName(), newClass->GetName());
       }
    }
 
@@ -1274,130 +1457,21 @@ void TStreamerInfo::BuildOld()
          arr[jel++] = tai[kel++];
       }
    }
+   
+   // Now add artificial TStreamerElement (i.e. rules that creates new members or set transient members).
+   if (!wasCompiled) InsertArtificialElements(rules);
+
+   if (!wasCompiled && allocClass) {
+
+      TStreamerElement *el = new TStreamerArtificial("@@alloc","", 0, TStreamerInfo::kCacheNew, allocClass->GetName());
+      R__TObjArray_InsertAt( fElements, el, 0 );
+
+      el = new TStreamerArtificial("@@dealloc","", 0, TStreamerInfo::kCacheDelete, allocClass->GetName());
+      fElements->Add( el );
+   }
 
    Compile();
-}
-
-//______________________________________________________________________________
-void TStreamerInfo::BuildUserInfo(const char * /*info*/)
-{
-   // Build the I/O data structure for the current class version
-
-#ifdef TOBEIMPLEMENTED
-
-   Int_t nch = strlen(title);
-   char *info = new char[nch+1];
-   strcpy(info,title);
-   char *pos = info;
-   TDataType *dt;
-   TDataMember *dm;
-   TRealData *rdm, *rdm1;
-   TIter nextrdm(rmembers);
-
-   // search tokens separated by a semicolon
-   //tokens can be of the following types
-   // -baseclass
-   // -class     membername
-   // -basictype membername
-   // -classpointer     membername
-   // -basictypepointer membername
-   while (1) {
-      Bool_t isPointer = kFALSE;
-      while (*pos == ' ') pos++;
-      if (*pos == 0) break;
-      char *colon = strchr(pos,';');
-      char *col = colon;
-      if (colon) {
-         *col = 0; col--;
-         while (*col == ' ') {*col = 0; col--;}
-         if (pos > col) break;
-         char *star = strchr(pos,'*');
-         if (star) {*star = ' '; isPointer = kTRUE;}
-         char *blank;
-         while (1) {
-            blank = strstr(pos,"  ");
-            if (blank == 0) break;
-            strcpy(blank,blank+1);
-         }
-         blank = strrchr(pos,' '); //start in reverse order (case like unsigned short xx)
-         if (blank) {
-            *blank = 0;
-            //check that this is a known data member
-            dm  = (TDataMember*)members->FindObject(blank+1);
-            rdm1 = 0;
-            nextrdm.Reset();
-            while ((rdm = (TRealData*)nextrdm())) {
-               if (rdm->GetDataMember() != dm) continue;
-               rdm1 = rdm;
-               break;
-            }
-            if (!dm || !rdm1) {
-               printf("Unknown data member:%s %s in class:%s\n",pos,blank+1,fClass->GetName());
-               pos = colon+1;
-               continue;
-            }
-            // Is type a class name?
-            TClass *clt = TClass::GetClass(pos);
-            if (clt) {
-               //checks that the class matches with the data member declaration
-               if (strcmp(pos,dm->GetTypeName()) == 0) {
-                  newtype[fNdata] = 20;
-                  fNdata++;
-                  printf("class: %s member=%s\n",pos,blank+1);
-               } else {
-                  printf("Mismatch between class:%s %s and data member:%s %s in class:%s\n",
-                         pos,blank+1,dm->GetTypeName(),blank+1,fClass->GetName());
-               }
-               // Is type a basic type?
-            } else {
-               dt = (TDataType*)gROOT->GetListOfTypes()->FindObject(pos);
-               if (dt) {
-                  Int_t dtype = dt->GetType();
-                  //check that this is a valid data member and that the
-                  //declared type matches with the data member type
-                  if (dm->GetDataType()->GetType() == dtype) {
-                     //store type and offset
-                     newtype[fNdata]   = dtype;
-                     newoffset[fNdata] = rdm->GetThisOffset();
-                     fNdata++;
-                     printf("type=%s, basic type=%s dtype=%d, member=%s\n",pos,dt->GetFullTypeName(),dtype,blank+1);
-                  } else {
-                     printf("Mismatch between type:%s %s and data member:%s %s in class:%s\n",
-                            pos,blank+1,dm->GetTypeName(),blank+1,fClass->GetName());
-                  }
-
-               } else {
-                  printf("found unknown type:%s, member=%s\n",pos,blank+1);
-               }
-            }
-         } else {
-            // very likely a base class
-            TClass *base = TClass::GetClass(pos);
-            if (base && fClass->GetBaseClass(pos)) {
-               printf("base class:%s\n",pos);
-               //get pointer to method baseclass::Streamer
-               TMethodCall *methodcall = new TMethodCall(base,"Streamer","");
-               newtype[fNdata]   = 0;
-               newmethod[fNdata] = (ULong_t)methodcall;
-               fNdata++;
-            }
-         }
-         pos = colon+1;
-      }
-   }
-   fType     = new Int_t[fNdata+1];
-   fOffset   = new Int_t[fNdata+1];
-   fMethod   = new ULong_t[fNdata+1];
-   for (Int_t i=0;i < fNdata;i++) {
-      fType[i]   = newtype[i];
-      fOffset[i] = newoffset[i];
-      fMethod[i] = newmethod[i];
-   }
-   delete [] info;
-   delete [] newtype;
-   delete [] newoffset;
-   delete [] newmethod;
-#endif
+   delete rules;
 }
 
 //______________________________________________________________________________
@@ -1562,6 +1636,7 @@ void TStreamerInfo::Compile()
          continue;
       }
       fComp[i].fClass = element->GetClassPointer();
+      fComp[i].fNewClass = element->GetNewClass();
       fComp[i].fClassName = TString(element->GetTypeName()).Strip(TString::kTrailing, '*');
       fComp[i].fStreamer = element->GetStreamer();
    }
@@ -2484,6 +2559,61 @@ Double_t TStreamerInfo::GetValueSTLP(TVirtualCollectionProxy *cont, Int_t i, Int
 }
 
 //______________________________________________________________________________
+void TStreamerInfo::InsertArtificialElements(const TObjArray *rules) 
+{
+   // Insert new members as expressed in the array of TSchemaRule(s).
+
+   if (!rules) return;
+
+   TIter next(fElements);
+
+   for(Int_t art = 0; art < rules->GetEntries(); ++art) {
+      ROOT::TSchemaRule *rule = (ROOT::TSchemaRule*)rules->At(art);
+      if( rule->IsRenameRule() || rule->IsAliasRule() )
+         continue;
+      next.Reset();
+      Bool_t match = kFALSE;
+      TStreamerElement *element;
+      while ((element = (TStreamerElement*) next())) {
+         if ( rule->HasTarget( element->GetName() ) ) {
+            match = kTRUE;
+            break;
+         }
+      }
+      if (!match) {
+         TStreamerArtificial *newel;
+         TObjString * objstr = (TObjString*)(rule->GetTarget()->At(0));
+         if (objstr) {
+            TString newName = objstr->String();
+            if ( fClass->GetDataMember( newName ) ) {
+               newel = new TStreamerArtificial(newName,"", 
+                  fClass->GetDataMemberOffset(newName), TStreamerInfo::kArtificial, 
+                  fClass->GetDataMember( newName )->GetTypeName());
+               newel->SetReadFunc( rule->GetReadFunctionPointer() );
+               newel->SetReadRawFunc( rule->GetReadRawFunctionPointer() );
+               fElements->Add(newel);
+            } else {
+               // This would be a completely new member (so it would need to be cached)
+               // TOBEDONE
+            }
+            for(Int_t other = 1; other < rule->GetTarget()->GetEntries(); ++other) {
+               objstr = (TObjString*)(rule->GetTarget()->At(other));
+               if (objstr) {
+                  newName = objstr->String();
+                  if ( fClass->GetDataMember( newName ) ) {
+                     newel = new TStreamerArtificial(newName,"", 
+                        fClass->GetDataMemberOffset(newName), TStreamerInfo::kArtificial, 
+                        fClass->GetDataMember( newName )->GetTypeName());
+                     fElements->Add(newel);
+                  }
+               }
+            } // For each target of the rule
+         }
+      } // None of the target of the rule are on file.
+   }
+}
+
+//______________________________________________________________________________
 void TStreamerInfo::ls(Option_t *option) const
 {
    //  List the TStreamerElement list and also the precomputed tables
@@ -2501,7 +2631,15 @@ void TStreamerInfo::ls(Option_t *option) const
    }
    for (Int_t i=0;i < fNdata;i++) {
       TStreamerElement *element = (TStreamerElement*)fElem[i];
-      Printf("   i=%2d, %-15s type=%3d, offset=%3d, len=%d, method=%ld",i,element->GetName(),fType[i],fOffset[i],fLength[i],fMethod[i]);
+      TString sequenceType;
+      if (element->TestBit(TStreamerElement::kCache) && element->TestBit(TStreamerElement::kRepeat)) {
+         sequenceType = " [cached,repeat]";
+      } else if (element->TestBit(TStreamerElement::kCache)) {
+         sequenceType = " [cached]";
+      } else if (element->TestBit(TStreamerElement::kRepeat)) {
+         sequenceType = " [repeat]";
+      }
+      Printf("   i=%2d, %-15s type=%3d, offset=%3d, len=%d, method=%ld%s",i,element->GetName(),fType[i],fOffset[i],fLength[i],fMethod[i],sequenceType.Data());
    }
 }
 
@@ -2642,7 +2780,7 @@ void* TStreamerInfo::NewArray(Long_t nElements, void *ary)
    char* p = (char*) ary;
 
    if (!p) {
-      Long_t len = nElements * size;
+      Long_t len = nElements * size + sizeof(Long_t)*2;
       p = new char[len];
       memset(p, 0, len);
    }
@@ -2913,7 +3051,7 @@ void TStreamerInfo::Streamer(TBuffer &R__b)
          R__b.ClassMember("fClassVersion","Int_t");
          R__b >> fClassVersion;
          fOnFileClassVersion = fClassVersion;
-         R__b.ClassMember("fElements","TObjArray*");
+         R__b.ClassMember("fElements","TObjArray*"); 	 
          R__b >> fElements;
          R__b.ClassEnd(TStreamerInfo::Class());
          R__b.SetBufferOffset(R__s+R__c+sizeof(UInt_t));
@@ -2927,7 +3065,6 @@ void TStreamerInfo::Streamer(TBuffer &R__b)
       R__b >> fElements;
       R__b.CheckByteCount(R__s, R__c, TStreamerInfo::IsA());
    } else {
-//      R__b.WriteClassBuffer(TStreamerInfo::Class(),this);
       R__c = R__b.WriteVersion(TStreamerInfo::IsA(), kTRUE);
       R__b.ClassBegin(TStreamerInfo::Class());
       R__b.ClassMember("TNamed");
@@ -2936,8 +3073,31 @@ void TStreamerInfo::Streamer(TBuffer &R__b)
       R__b << fCheckSum;
       R__b.ClassMember("fClassVersion","Int_t");
       R__b << ((fClassVersion > 0) ? fClassVersion : -fClassVersion);
+
+      //------------------------------------------------------------------------
+      // Stream only non-artificial streamer elements
+      //------------------------------------------------------------------------
       R__b.ClassMember("fElements","TObjArray*");
-      R__b << fElements;
+#if NOTYET
+      if (has_no_artificial_member) {
+         R__b << fElements;
+      } else 
+#endif
+      { 
+         Int_t nobjects = fElements->GetEntriesFast();
+         TObjArray shorten( *fElements );
+         TStreamerElement *el;
+         for (Int_t i = 0; i < nobjects; i++) {
+            el = (TStreamerElement*)fElements->UncheckedAt(i);
+            if( el != 0 && el->IsA() == TStreamerArtificial::Class() ) {
+               fElements->RemoveAt( i );
+            }
+         }
+         fElements->Compress();
+         R__b << fElements;
+         R__ASSERT(!fElements->IsOwner());
+         *fElements = shorten;
+      }
       R__b.ClassEnd(TStreamerInfo::Class());
       R__b.SetByteCount(R__c, kTRUE);
    }

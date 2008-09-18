@@ -327,7 +327,8 @@ class genreflex:
       functions = dg.selfunctions(self.selector)
       enums     = dg.selenums(self.selector)
       variables = dg.selvariables(self.selector)
-      cnames, warnings, errors = dg.generate(dicfile, classes, functions, enums, variables, gccxmlinfo )
+      cnames, warnings, errors = dg.generate(dicfile, classes, functions, enums, variables, gccxmlinfo,
+                                             self.selector.io_read_rules, self.selector.io_readraw_rules )
       if errors or (warnings and self.opts.get('fail_on_warnings', False)): os.remove(dicfile)
       total_errors += errors
       total_warnings += warnings

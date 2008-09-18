@@ -43,11 +43,13 @@ class TStreamerInfo;
 class TStreamerElement;
 class TClass;
 class TExMap;
+class TVirtualArray;
 
 class TBufferFile : public TBuffer {
 
 protected:
    typedef std::vector<TStreamerInfo*> InfoList_t;
+   typedef std::vector<TVirtualArray*> CacheList_t;
 
    Int_t           fMapCount;      //Number of objects or classes in map
    Int_t           fMapSize;       //Default size of map
@@ -57,6 +59,7 @@ protected:
    TExMap         *fClassMap;      //Map containing object,class pairs for reading
    TStreamerInfo  *fInfo;          //Pointer to TStreamerInfo object writing/reading the buffer
    InfoList_t      fInfoStack;     //Stack of pointers to the TStreamerInfos
+   CacheList_t     fCacheStack;    //Stack of pointers to the cache where to temporarily store the value of 'missing' data members
 
    static Int_t    fgMapSize;      //Default map size for all TBuffer objects
 
@@ -120,6 +123,10 @@ public:
    virtual void       ClassBegin(const TClass*, Version_t = -1) {}
    virtual void       ClassEnd(const TClass*) {}
    virtual void       ClassMember(const char*, const char* = 0, Int_t = -1, Int_t = -1) {}
+
+   virtual TVirtualArray *PeekDataCache() const;
+   virtual TVirtualArray *PopDataCache();
+   virtual void           PushDataCache(TVirtualArray *);
 
    virtual Int_t      ReadBuf(void *buf, Int_t max);
    virtual void       WriteBuf(const void *buf, Int_t max);
@@ -199,8 +206,8 @@ public:
    virtual   void     ReadFastArray(Double_t  *d, Int_t n);
    virtual   void     ReadFastArrayFloat16(Float_t  *f, Int_t n, TStreamerElement *ele=0);
    virtual   void     ReadFastArrayDouble32(Double_t  *d, Int_t n, TStreamerElement *ele=0);
-   virtual   void     ReadFastArray(void  *start , const TClass *cl, Int_t n=1, TMemberStreamer *s=0);
-   virtual   void     ReadFastArray(void **startp, const TClass *cl, Int_t n=1, Bool_t isPreAlloc=kFALSE, TMemberStreamer *s=0);
+   virtual   void     ReadFastArray(void  *start , const TClass *cl, Int_t n=1, TMemberStreamer *s=0, const TClass* onFileClass=0 );
+   virtual   void     ReadFastArray(void **startp, const TClass *cl, Int_t n=1, Bool_t isPreAlloc=kFALSE, TMemberStreamer *s=0, const TClass* onFileClass=0);
 
    virtual   void     WriteArray(const Bool_t    *b, Int_t n);
    virtual   void     WriteArray(const Char_t    *c, Int_t n);
@@ -237,9 +244,9 @@ public:
    virtual   void     WriteFastArray(void  *start,  const TClass *cl, Int_t n=1, TMemberStreamer *s=0);
    virtual   Int_t    WriteFastArray(void **startp, const TClass *cl, Int_t n=1, Bool_t isPreAlloc=kFALSE, TMemberStreamer *s=0);
 
-   virtual   void     StreamObject(void *obj, const type_info &typeinfo);
-   virtual   void     StreamObject(void *obj, const char *className);
-   virtual   void     StreamObject(void *obj, const TClass *cl);
+   virtual   void     StreamObject(void *obj, const type_info &typeinfo, const TClass* onFileClass = 0 );
+   virtual   void     StreamObject(void *obj, const char *className, const TClass* onFileClass = 0 );
+   virtual   void     StreamObject(void *obj, const TClass *cl, const TClass* onFileClass = 0 );
    virtual   void     StreamObject(TObject *obj);
 
    virtual   void     ReadBool(Bool_t       &b);
@@ -287,10 +294,10 @@ public:
    virtual   Int_t  WriteClones(TClonesArray *a, Int_t nobjects);
 
    // Utilities for TClass
-   virtual   Int_t  ReadClassEmulated(TClass *cl, void *object);
-   virtual   Int_t  ReadClassBuffer(TClass *cl, void *pointer);
-   virtual   Int_t  ReadClassBuffer(TClass *cl, void *pointer, Int_t version, UInt_t start, UInt_t count);
-   virtual   Int_t  WriteClassBuffer(TClass *cl, void *pointer);
+   virtual   Int_t  ReadClassEmulated(const TClass *cl, void *object, const TClass *onfile_class);
+   virtual   Int_t  ReadClassBuffer(const TClass *cl, void *pointer, const TClass *onfile_class);
+   virtual   Int_t  ReadClassBuffer(const TClass *cl, void *pointer, Int_t version, UInt_t start, UInt_t count, const TClass *onfile_class);
+   virtual   Int_t  WriteClassBuffer(const TClass *cl, void *pointer);
 
    static void    SetGlobalReadParam(Int_t mapsize);
    static void    SetGlobalWriteParam(Int_t mapsize);

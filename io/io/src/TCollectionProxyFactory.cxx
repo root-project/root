@@ -93,7 +93,6 @@ TMemberStreamer*
 TCollectionProxyFactory::GenEmulatedMemberStreamer(const char* class_name)
 {
    // Generate emulated member streamer for a given collection class.
-
    TCollectionMemberStreamer* s = new TCollectionMemberStreamer();
    s->AdoptStreamer(GenEmulation(class_name));
    return s;
@@ -170,12 +169,14 @@ void TCollectionStreamer::AdoptStreamer(TGenCollectionProxy* streamer)
    fStreamer = streamer;
 }
 
-void TCollectionStreamer::Streamer(TBuffer &buff, void *pObj, int /* siz */ )
+void TCollectionStreamer::Streamer(TBuffer &buff, void *pObj, int /* siz */, TClass* onFileClass )
 {
    // Streamer for I/O handling.
    if ( fStreamer )  {
       TVirtualCollectionProxy::TPushPop env(fStreamer, pObj);
+      fStreamer->SetOnFileClass( onFileClass );
       fStreamer->Streamer(buff);
+
       return;
    }
    InvalidProxyError();

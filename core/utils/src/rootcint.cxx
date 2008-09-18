@@ -341,6 +341,7 @@ using namespace std;
 using namespace TClassEdit;
 
 #include "RStl.h"
+#include "RConversionRuleParser.h"
 using namespace ROOT;
 
 const char *autoldtmpl = "G__auto%dLinkDef.h";
@@ -778,12 +779,23 @@ extern "C" {
 }
 
 //______________________________________________________________________________
-void EnableAutoLoading()
+void BeforeParseInit()
 {
-   G__set_class_autoloading_table((char*)"ROOT", (char*)"libCore.so");
-   LoadLibraryMap();
-   G__set_class_autoloading_callback(&AutoLoadCallback);
+   // If needed initialize the autoloading hook
+   if (gLiblistPrefix.length()) {
+      G__set_class_autoloading_table((char*)"ROOT", (char*)"libCore.so");
+      LoadLibraryMap();
+      G__set_class_autoloading_callback(&AutoLoadCallback);
+   }
+
+   //---------------------------------------------------------------------------
+   // Add the conversion rule processors
+   //---------------------------------------------------------------------------
+   G__addpragma( "read", ProcessReadPragma );
+   G__addpragma( "readraw", ProcessReadRawPragma );
+   
 }
+
 
 //______________________________________________________________________________
 bool CheckInputOperator(G__ClassInfo &cl, int dicttype)
@@ -2363,6 +2375,72 @@ void WriteClassInit(G__ClassInfo &cl)
       (*dictSrcOut)<< "   static void directoryAutoAdd_" << mappedname.c_str() << "(void *p, TDirectory *dir);" << std::endl;
    }
 
+   //--------------------------------------------------------------------------
+   // Check if we have any schema evolution rules for this class
+   //--------------------------------------------------------------------------
+   SchemaRuleClassMap_t::iterator rulesIt1 = G__ReadRules.find( cl.Fullname() );
+   SchemaRuleClassMap_t::iterator rulesIt2 = G__ReadRawRules.find( cl.Fullname() );
+
+   MembersMap_t nameTypeMap;
+   CreateNameTypeMap( cl, nameTypeMap );
+
+   //--------------------------------------------------------------------------
+   // Process the read rules
+   //--------------------------------------------------------------------------
+   if( rulesIt1 != G__ReadRules.end() ) {
+      int i = 0;
+      (*dictSrcOut) << std::endl;
+      (*dictSrcOut) << "   // Schema evolution read functions" << std::endl;
+      std::list<SchemaRuleMap_t>::iterator rIt = rulesIt1->second.begin();
+      while( rIt != rulesIt1->second.end() ) {
+
+         //--------------------------------------------------------------------
+         // Check if the rules refer to valid data members
+         //--------------------------------------------------------------------
+         if( !HasValidDataMembers( *rIt, nameTypeMap ) ) {
+            rIt = rulesIt1->second.erase(rIt);
+            continue;
+         }
+
+         //---------------------------------------------------------------------
+         // Write the conversion function if necassary
+         //---------------------------------------------------------------------
+         if( rIt->find( "code" ) != rIt->end() ) {
+           WriteReadRuleFunc( *rIt, i++, mappedname, nameTypeMap, *dictSrcOut );
+         }
+         ++rIt;
+      }
+   }
+
+   //--------------------------------------------------------------------------
+   // Process the read raw rules
+   //--------------------------------------------------------------------------
+   if( rulesIt2 != G__ReadRawRules.end() ) {
+      int i = 0;
+      (*dictSrcOut) << std::endl;
+      (*dictSrcOut) << "   // Schema evolution read raw functions" << std::endl;
+      std::list<SchemaRuleMap_t>::iterator rIt = rulesIt2->second.begin();
+      while( rIt != rulesIt2->second.end() ) {
+
+         //--------------------------------------------------------------------
+         // Check if the rules refer to valid data members
+         //--------------------------------------------------------------------
+         if( !HasValidDataMembers( *rIt, nameTypeMap ) ) {
+            rIt = rulesIt2->second.erase(rIt);
+            continue;
+         }
+
+         //---------------------------------------------------------------------
+         // Write the conversion function
+         //---------------------------------------------------------------------
+         if( rIt->find( "code" ) == rIt->end() )
+            continue;
+
+         WriteReadRawRuleFunc( *rIt, i++, mappedname, nameTypeMap, *dictSrcOut );
+         ++rIt;
+      }
+   }
+
    (*dictSrcOut) << std::endl
 
                  << "   // Function generating the singleton type initializer" << std::endl;
@@ -2376,8 +2454,7 @@ void WriteClassInit(G__ClassInfo &cl)
            classname.c_str(), classname.c_str() );
    fprintf(fp, "#endif\n");
 #endif
-
-
+   
    (*dictSrcOut) << "   static TGenericClassInfo *GenerateInitInstanceLocal(const " << csymbol.c_str() << "*)" << std::endl
                  << "   {" << std::endl;
 
@@ -2414,6 +2491,8 @@ void WriteClassInit(G__ClassInfo &cl)
       (*dictSrcOut) << csymbol.c_str() << "::Class_Version(), ";
    } else if (stl) {
       (*dictSrcOut) << "-2, "; // "::TStreamerInfo::Class_Version(), ";
+   } else if( cl.RootFlag() & G__HASVERSION ) {
+      (*dictSrcOut) << cl.Version() << ", ";
    } else { // if (cl.RootFlag() & G__USEBYTECOUNT ) {
 
       // Need to find out if the operator>> is actually defined for this class.
@@ -2504,6 +2583,32 @@ void WriteClassInit(G__ClassInfo &cl)
 
       gNeedCollectionProxy = true;
    }
+
+   //---------------------------------------------------------------------------
+   // Pass the schema evolution rules to TGenericClassInfo
+   //---------------------------------------------------------------------------
+   if( rulesIt1 != G__ReadRules.end() || rulesIt2 != G__ReadRawRules.end() ) {
+      (*dictSrcOut) << std::endl << "      ROOT::TSchemaHelper* rule;" << std::endl;
+   }
+
+   if( rulesIt1 != G__ReadRules.end() ) {
+      (*dictSrcOut) << std::endl;
+      (*dictSrcOut) << "      // the io read rules" << std::endl;
+      (*dictSrcOut) << "      std::vector<ROOT::TSchemaHelper> readrules(";
+      (*dictSrcOut) << rulesIt1->second.size() << ");" << std::endl;
+      WriteSchemaList( rulesIt1->second, "readrules", *dictSrcOut );
+      (*dictSrcOut) << "      instance.SetReadRules( readrules );" << std::endl;
+   }
+
+   if( rulesIt2 != G__ReadRawRules.end() ) {
+      (*dictSrcOut) << std::endl;
+      (*dictSrcOut) << "      // the io read raw rules" << std::endl;
+      (*dictSrcOut) << "      std::vector<ROOT::TSchemaHelper> readrawrules(";
+      (*dictSrcOut) << rulesIt2->second.size() << ");" << std::endl;
+      WriteSchemaList( rulesIt2->second, "readrawrules", *dictSrcOut );
+      (*dictSrcOut) << "      instance.SetReadRawRules( readrawrules );" << std::endl;
+   }
+
    (*dictSrcOut) << "      return &instance;"  << std::endl
                  << "   }" << std::endl;
 
@@ -4681,7 +4786,7 @@ int main(int argc, char **argv)
    G__ShadowMaker::VetoShadow(); // we create them ourselves
    G__setothermain(2);
    G__set_ioctortype_handler( (int (*)(const char*))AddConstructorType );
-   if (gLiblistPrefix.length()) G__set_beforeparse_hook (EnableAutoLoading);
+   G__set_beforeparse_hook( BeforeParseInit );
    if (G__main(argcc, argvv) < 0) {
       Error(0, "%s: error loading headers...\n", argv[0]);
       CleanupOnExit(1);
@@ -4824,6 +4929,23 @@ int main(int argc, char **argv)
    (*dictSrcOut) << "// Since CINT ignores the std namespace, we need to do so in this file." << std::endl
                  << "namespace std {} using namespace std;" << std::endl << std::endl;
 #endif
+
+   //---------------------------------------------------------------------------
+   // Write schema evolution reelated headers and declarations
+   //---------------------------------------------------------------------------
+   if( !G__ReadRules.empty() || !G__ReadRawRules.empty() ) {
+      (*dictSrcOut) << "#include \"TBuffer.h\"" << std::endl;
+      (*dictSrcOut) << "#include \"TVirtualObject.h\"" << std::endl;
+      (*dictSrcOut) << "#include <vector>" << std::endl;
+      (*dictSrcOut) << "#include \"TSchemaHelper.h\"" << std::endl << std::endl;
+
+      std::list<std::string>           includes;
+      std::list<std::string>::iterator it;
+      GetRuleIncludes( includes );
+      for( it = includes.begin(); it != includes.end(); ++it )
+         (*dictSrcOut) << "#include <" << *it << ">" << std::endl;
+      (*dictSrcOut) << std::endl;
+   }
 
    // Loop over all command line arguments and write include statements.
    // Skip options and any LinkDef.h.
@@ -4995,8 +5117,7 @@ int main(int argc, char **argv)
             Error(0,"A dictionary has been requested for %s but there is no declaration!\n",clLocal.Name());
             continue;
          }
-         if ((clLocal.Property() & (G__BIT_ISCLASS|G__BIT_ISSTRUCT)) && clLocal.Linkage() == G__CPPLINK) {
-
+         if ((clLocal.Property() & (G__BIT_ISCLASS|G__BIT_ISSTRUCT)) && clLocal.Linkage() == G__CPPLINK) { 
             // Write Code for initialization object (except for STL containers)
             if ( TClassEdit::IsSTLCont(clLocal.Name()) ) {
                RStl::inst().GenerateTClassFor( clLocal.Name() );

@@ -27,6 +27,8 @@
 #pragma link C++ class TDataType;
 #pragma link C++ class TDictionary;
 #pragma link C++ class TFunction;
+#pragma link C++ class ROOT::TSchemaRule+;
+#pragma link C++ class ROOT::TSchemaRuleSet-;
 #pragma link C++ class TGlobal;
 #pragma link C++ class TMethod;
 #pragma link C++ class TMethodArg;
@@ -37,6 +39,7 @@
 #pragma link C++ class TVirtualStreamerInfo-;
 #pragma link C++ class TIsAProxy;
 #pragma link C++ class TRealData+;
+#pragma link C++ class TStreamerArtificial-;
 #pragma link C++ class TStreamerBase-;
 #pragma link C++ class TStreamerBasicPointer-;
 #pragma link C++ class TStreamerLoop-;

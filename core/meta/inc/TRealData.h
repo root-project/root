@@ -44,6 +44,10 @@ private:
    TRealData& operator=(const TRealData& rhs);  // Copying TRealData in not allowed.
 
 public:
+   enum { 
+      kTransient = BIT(14)  // The member is transient.
+   };
+
    TRealData();
    TRealData(const char *name, Long_t offset, TDataMember *datamember);
    virtual     ~TRealData();

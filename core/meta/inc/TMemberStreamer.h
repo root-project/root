@@ -13,6 +13,7 @@
 #define ROOT_TMemberStreamer
 
 #include "Rtypes.h"
+#include "TClassRef.h"
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -32,6 +33,9 @@ public:
    TMemberStreamer(const TMemberStreamer &rhs) : fStreamer(rhs.fStreamer) {};
 
    virtual  ~TMemberStreamer(){};
+
+   virtual void SetOnFileClass( const TClass* cl ) { fOnFileClass = const_cast<TClass*>(cl); }
+   virtual const TClass* GetOnFileClass() const { return fOnFileClass; }
    
    virtual void operator()(TBuffer &b, void *pmember, Int_t size=0)
    {
@@ -44,6 +48,7 @@ public:
    
 private:
    MemberStreamerFunc_t fStreamer; 
+   TClassRef            fOnFileClass;
 };
 
 #endif

@@ -42,6 +42,7 @@ protected:
    Int_t            fNewType;         //!new element type when reading
    TString          fTypeName;        //Data type name of data member
    TClass          *fClassObject;     //!pointer to class of object
+   TClass          *fNewClass;        //!new element class when reading
    TMemberStreamer *fStreamer;        //!pointer to element Streamer
    TMethodCall     *fMethod;          //!pointer to TMethodCall
    Double_t         fXmin;            //!Minimum of data member if a range is specified  [xmin,xmax,nbits]
@@ -57,7 +58,9 @@ public:
                    kSTLset    =  5,  kSTLmultimap=6,     kSTLmultiset=7};
    // TStreamerElement status bits
    enum {
-      kHasRange     = BIT(6)
+      kHasRange     = BIT(6),
+      kCache        = BIT(9),
+      kRepeat       = BIT(10)
    };
 
    TStreamerElement();
@@ -76,6 +79,7 @@ public:
    TMemberStreamer *GetStreamer() const;
    virtual Int_t    GetSize() const;
    Int_t            GetNewType() const {return fNewType;}
+   TClass*          GetNewClass() const { return fNewClass; }
    Int_t            GetType() const {return fType;}
    Int_t            GetOffset() const {return fOffset;}
    Int_t            GetTObjectOffset() const { return fTObjectOffset; }
@@ -97,6 +101,7 @@ public:
    virtual void     SetStreamer(TMemberStreamer *streamer);
    virtual void     SetSize(Int_t dsize) {fSize = dsize;}
    virtual void     SetNewType(Int_t dtype) {fNewType = dtype;}
+   virtual void     SetNewClass( TClass* cl ) { fNewClass= cl; }
    virtual void     SetType(Int_t dtype) {fType = dtype;}
    virtual void     SetTypeName(const char *name) {fTypeName = name;}
    virtual void     Update(const TClass *oldClass, TClass *newClass);
@@ -108,8 +113,9 @@ public:
 class TStreamerBase : public TStreamerElement {
 
 protected:
-   Int_t            fBaseVersion;         //version number of the base class
+   Int_t            fBaseVersion;         //version number of the base class FIXME: What for? What about the schema evolution issues?
    TClass          *fBaseClass;           //!pointer to base class
+   TClass          *fNewBaseClass;        //!pointer to new base class if renamed
 
 public:
 
@@ -119,12 +125,14 @@ public:
    Int_t            GetBaseVersion() {return fBaseVersion;}
    virtual TClass  *GetClassPointer() const;
    const char      *GetInclude() const;
+   TClass          *GetNewBaseClass() { return fNewBaseClass; }
    ULong_t          GetMethod() const {return ULong_t(fMethod);}
    Int_t            GetSize() const;
    virtual void     Init(TObject *obj=0);
    Bool_t           IsBase() const;
    virtual void     ls(Option_t *option="") const;
    Int_t            ReadBuffer (TBuffer &b, char *pointer);
+   void             SetNewBaseClass( TClass* cl ) { fNewBaseClass = cl; }
    void             SetBaseVersion(Int_t v) {fBaseVersion = v;}
    virtual void     Update(const TClass *oldClass, TClass *newClass);
    Int_t            WriteBuffer(TBuffer &b, char *pointer);
@@ -329,6 +337,32 @@ public:
    Int_t          GetSize() const;
 
    ClassDef(TStreamerSTLstring,2)  //Streamer element of type  C++ string
+};
+
+class TVirtualObject;
+class TBuffer;
+
+#include "TSchemaRule.h"
+
+//________________________________________________________________________
+class TStreamerArtificial : public TStreamerElement {
+protected:
+   ROOT::TSchemaRule::ReadFuncPtr_t     fReadFunc;    //!
+   ROOT::TSchemaRule::ReadRawFuncPtr_t  fReadRawFunc; //!
+
+public:
+
+   // TStreamerArtificial() : fReadFunc(0),fReadRawFunc(0) {}
+
+   TStreamerArtificial(const char *name, const char *title, Int_t offset, Int_t dtype, const char *typeName) : TStreamerElement(name,title,offset,dtype,typeName), fReadFunc(0), fReadRawFunc(0) {}
+
+   void SetReadFunc( ROOT::TSchemaRule::ReadFuncPtr_t val ) { fReadFunc = val; };
+   void SetReadRawFunc( ROOT::TSchemaRule::ReadRawFuncPtr_t val ) { fReadRawFunc = val; };
+
+   ROOT::TSchemaRule::ReadFuncPtr_t     GetReadFunc();
+   ROOT::TSchemaRule::ReadRawFuncPtr_t  GetReadRawFunc(); 
+
+   ClassDef(TStreamerArtificial, 0); // StreamerElement injected by a TSchemaRule. Transient only to preverse forward compatibility.
 };
 
 #endif

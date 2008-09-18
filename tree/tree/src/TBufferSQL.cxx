@@ -724,17 +724,17 @@ void     TBufferSQL::ReadFastArrayDouble32(Double_t  *, Int_t , TStreamerElement
 }
 
 //________________________________________________________________________
-void     TBufferSQL::ReadFastArray(void  *, const TClass *, Int_t, TMemberStreamer *)
+void     TBufferSQL::ReadFastArray(void  *, const TClass *, Int_t, TMemberStreamer *, const TClass *)
 {
    // ReadFastArray SQL implementation.   
-   Fatal("ReadFastArray(void  *, const TClass *, Int_t, TMemberStreamer *)","Not implemented yet");
+   Fatal("ReadFastArray(void  *, const TClass *, Int_t, TMemberStreamer *, const TClass *)","Not implemented yet");
 }
 
 //________________________________________________________________________
-void     TBufferSQL::ReadFastArray(void **, const TClass *, Int_t, Bool_t, TMemberStreamer *)
+void     TBufferSQL::ReadFastArray(void **, const TClass *, Int_t, Bool_t, TMemberStreamer *, const TClass *)
 {
    // ReadFastArray SQL implementation.   
-   Fatal("ReadFastArray(void **, const TClass *, Int_t, Bool_t, TMemberStreamer *)","Not implemented yet");
+   Fatal("ReadFastArray(void **, const TClass *, Int_t, Bool_t, TMemberStreamer *, const TClass *)","Not implemented yet");
 }
 
 //________________________________________________________________________

@@ -33,6 +33,8 @@
 #ifndef ROOT_TObjString
 #include "TObjString.h"
 #endif
+#include <map>
+#include <string>
 
 class TBaseClass;
 class TBrowser;
@@ -49,7 +51,11 @@ class TVirtualIsAProxy;
 class TVirtualRefProxy;
 class THashTable;
 
-namespace ROOT { class TGenericClassInfo; class TCollectionProxyInfo; }
+namespace ROOT {
+   class TGenericClassInfo;
+   class TCollectionProxyInfo;
+   class TSchemaRuleSet;
+}
 
 namespace ROOT {
    class TMapTypeToTClass;
@@ -76,6 +82,7 @@ public:
 private:
 
    mutable TObjArray *fStreamerInfo;    //Array of TVirtualStreamerInfo
+   mutable std::map<std::string, TObjArray*> *fConversionStreamerInfo; //Array of the streamer infos derived from another class.
    TList             *fRealData;        //linked list for persistent members including base classes
    TList             *fBase;            //linked list for base classes
    TList             *fData;            //linked list for data members
@@ -114,19 +121,22 @@ private:
    mutable Bool_t     fVersionUsed;     //!Indicates whether GetClassVersion has been called
    mutable Long_t     fProperty;        //!Property
 
-   void              *fInterStreamer;   //!saved info to call Streamer
-   Long_t             fOffsetStreamer;  //!saved info to call Streamer
+   mutable void      *fInterStreamer;   //!saved info to call Streamer
+   mutable Long_t     fOffsetStreamer;  //!saved info to call Streamer
    Int_t              fStreamerType;    //!cached of the streaming method to use
    mutable TVirtualStreamerInfo     *fCurrentInfo;     //!cached current streamer info.
    TClassRef         *fRefStart;        //!List of references to this object
    TVirtualRefProxy  *fRefProxy;        //!Pointer to reference proxy if this class represents a reference
+   ROOT::TSchemaRuleSet *fSchemaRules;  //! Schema evolution rules
+
    TMethod           *GetClassMethod(Long_t faddr);
    TMethod           *GetClassMethod(const char *name, const char *signature);
    Int_t              GetBaseClassOffsetRecurse(const TClass *base);
    void Init(const char *name, Version_t cversion, const type_info *info,
              TVirtualIsAProxy *isa, ShowMembersFunc_t showmember,
              const char *dfil, const char *ifil,
-             Int_t dl, Int_t il);
+             Int_t dl, Int_t il,
+             Bool_t silent);
    void ForceReload (TClass* oldcl);
 
    void               SetClassVersion(Version_t version);
@@ -173,23 +183,25 @@ private:
 protected:
    TClass(const TClass& tc);
    TClass& operator=(const TClass&);   
+   TVirtualStreamerInfo     *FindStreamerInfo(TObjArray* arr, UInt_t checksum) const;
 
 public:
    TClass();
-   TClass(const char *name);
+   TClass(const char *name, Bool_t silent = kFALSE);
    TClass(const char *name, Version_t cversion,
           const char *dfil = 0, const char *ifil = 0,
-          Int_t dl = 0, Int_t il = 0);
+          Int_t dl = 0, Int_t il = 0, Bool_t silent = kFALSE);
    TClass(const char *name, Version_t cversion,
           const type_info &info, TVirtualIsAProxy *isa,
           ShowMembersFunc_t showmember,
           const char *dfil, const char *ifil,
-          Int_t dl, Int_t il);
+          Int_t dl, Int_t il, Bool_t silent = kFALSE);
    virtual           ~TClass();
 
    void               AddInstance(Bool_t heap = kFALSE) { fInstanceCount++; if (heap) fOnHeap++; }
    void               AddImplFile(const char *filename, int line);
    void               AddRef(TClassRef *ref); 
+   void               AdoptSchemaRules( ROOT::TSchemaRuleSet *rules );
    virtual void       Browse(TBrowser *b);
    void               BuildRealData(void *pointer=0);
    void               BuildEmulatedRealData(const char *name, Long_t offset, TClass *cl);
@@ -202,6 +214,10 @@ public:
    void               Dump(void *obj) const;
    char              *EscapeChars(const char *text) const;
    TVirtualStreamerInfo     *FindStreamerInfo(UInt_t checksum) const;
+   TVirtualStreamerInfo     *GetConversionStreamerInfo( const char* onfile_classname, Int_t version ) const;
+   TVirtualStreamerInfo     *FindConversionStreamerInfo( const char* onfile_classname, UInt_t checksum ) const;
+   TVirtualStreamerInfo     *GetConversionStreamerInfo( const TClass* onfile_cl, Int_t version ) const;
+   TVirtualStreamerInfo     *FindConversionStreamerInfo( const TClass* onfile_cl, UInt_t checksum ) const;
    Bool_t             HasDefaultConstructor() const;
    UInt_t             GetCheckSum(UInt_t code=0) const;
    TVirtualCollectionProxy *GetCollectionProxy() const;
@@ -248,6 +264,8 @@ public:
    Int_t              GetNmethods();
    TRealData         *GetRealData(const char *name) const;
    TVirtualRefProxy  *GetReferenceProxy()  const   {  return fRefProxy; }
+   const ROOT::TSchemaRuleSet *GetSchemaRules() const;
+   ROOT::TSchemaRuleSet *GetSchemaRules(Bool_t create = kFALSE);
    const char        *GetSharedLibs();
    ShowMembersFunc_t  GetShowMembersWrapper() const { return fShowMembers; }
    TClassStreamer    *GetStreamer() const; 
@@ -264,10 +282,10 @@ public:
    Bool_t             IsTObject() const;
    void               MakeCustomMenuList();
    void               Move(void *arenaFrom, void *arenaTo) const;
-   void              *New(ENewType defConstructor = kClassNew);
-   void              *New(void *arena, ENewType defConstructor = kClassNew);
-   void              *NewArray(Long_t nElements, ENewType defConstructor = kClassNew);
-   void              *NewArray(Long_t nElements, void *arena, ENewType defConstructor = kClassNew);
+   void              *New(ENewType defConstructor = kClassNew) const;
+   void              *New(void *arena, ENewType defConstructor = kClassNew) const;
+   void              *NewArray(Long_t nElements, ENewType defConstructor = kClassNew) const;
+   void              *NewArray(Long_t nElements, void *arena, ENewType defConstructor = kClassNew) const;
    virtual void       PostLoadCheck();
    Long_t             Property() const;
    Int_t              ReadBuffer(TBuffer &b, void *pointer, Int_t version, UInt_t start, UInt_t count);
@@ -302,8 +320,8 @@ public:
    // Function to retrieve the TClass object and dictionary function
    static void           AddClass(TClass *cl);
    static void           RemoveClass(TClass *cl);
-   static TClass        *GetClass(const char *name, Bool_t load = kTRUE);
-   static TClass        *GetClass(const type_info &typeinfo, Bool_t load = kTRUE);
+   static TClass        *GetClass(const char *name, Bool_t load = kTRUE, Bool_t silent = kFALSE);
+   static TClass        *GetClass(const type_info &typeinfo, Bool_t load = kTRUE, Bool_t silent = kFALSE);
    static VoidFuncPtr_t  GetDict (const char *cname);
    static VoidFuncPtr_t  GetDict (const type_info &info);
 
@@ -320,7 +338,7 @@ public:
    void               Destructor(void *obj, Bool_t dtorOnly = kFALSE);
    void              *DynamicCast(const TClass *base, void *obj, Bool_t up = kTRUE);
    Bool_t             IsFolder(void *obj) const;
-   void               Streamer(void *obj, TBuffer &b);
+   void               Streamer(void *obj, TBuffer &b, const TClass *onfile_class = 0) const;
 
    ClassDef(TClass,0)  //Dictionary containing class information
 };

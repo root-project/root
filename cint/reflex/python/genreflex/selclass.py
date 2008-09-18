@@ -8,29 +8,35 @@
 
 import xml.parsers.expat
 import os, sys, string, time, fnmatch
+import re
 
 class selClass :
 #----------------------------------------------------------------------------------
   def __init__(self, file, parse=0):
-    self.file           = file
-    self.sel_classes    = []
-    self.exc_classes    = []
-    self.sel_functions  = []
-    self.exc_functions  = []
-    self.sel_enums      = []
-    self.exc_enums      = []
-    self.sel_vars       = []
-    self.exc_vars       = []
+    self.file             = file
+    self.sel_classes      = []
+    self.exc_classes      = []
+    self.sel_functions    = []
+    self.exc_functions    = []
+    self.sel_enums        = []
+    self.exc_enums        = []
+    self.sel_vars         = []
+    self.exc_vars         = []
+    self.io_read_rules    = {}
+    self.io_readraw_rules = {}
+    self.current_io_rule  = None
     self.classes   = self.sel_classes
     self.functions = self.sel_functions
     self.enums     = self.sel_enums
     self.vars      = self.sel_vars
+    self.ver_re    = re.compile('^\d+-$|^-\d+$|^\d+$|^(\d+)-(\d+)$') # ie. it matches: 1-,-1,1,1-2
     if parse : self.parse()
 #----------------------------------------------------------------------------------
   def parse(self):
     p = xml.parsers.expat.ParserCreate()
     p.StartElementHandler = self.start_element
     p.EndElementHandler = self.end_element
+    p.CharacterDataHandler = self.char_data
     f = open(self.file)
     # Replace any occurence of <>& in the attribute values by the xml parameter
     rxml, nxml = f.read(), ''
@@ -79,6 +85,8 @@ class selClass :
       self.classes[-1]['fields'].append(attrs)
     elif name in ('method',) :
       self.classes[-1]['methods'].append(attrs)
+    elif name in ('ioread', 'ioreadraw'):
+      self.current_io_rule = {'attrs': attrs, 'code': '' }
     elif name in ('selection',) :
       self.classes   = self.sel_classes
       self.functions = self.sel_functions
@@ -98,6 +106,147 @@ class selClass :
       self.functions = self.sel_functions
       self.vars      = self.sel_vars
       self.enums     = self.sel_enums
+
+    #------------------------------------------------------------------------------
+    # Processing io rules
+    #------------------------------------------------------------------------------
+    elif name == 'ioread' or name =='ioreadraw':
+      if not self.isRuleValid( self.current_io_rule ):
+        print '--->> genreflex: WARNING: The IO rule has been omited'
+        self.current_io_rule = None
+        return
+
+      className = self.current_io_rule['attrs']['targetClass']
+
+      #----------------------------------------------------------------------------
+      # Handle read rule
+      #----------------------------------------------------------------------------
+      if name == 'ioread':
+        if not self.io_read_rules.has_key( className ):
+          self.io_read_rules[className] = []
+        self.io_read_rules[className].append( self.current_io_rule )
+        self.current_io_rule = None
+
+      #----------------------------------------------------------------------------
+      # Handle readraw rule
+      #----------------------------------------------------------------------------
+      elif name == 'ioreadraw':
+        source = self.current_io_rule['attrs']['source'].split(',')
+        if len(source) > 1:
+          print '--->> genreflex: WARNING: IO rule for class:', className,
+          print '- multiple sources speciffied for readraw rule!'
+          return
+        if not self.io_readraw_rules.has_key( className ):
+          self.io_readraw_rules[className] = []
+        self.io_readraw_rules[className].append( self.current_io_rule )
+        self.current_io_rule = None
+
+      self.current_io_rule = None
+#----------------------------------------------------------------------------------
+  def isRuleValid(self, rule):
+
+    #------------------------------------------------------------------------------
+    # Checks if we have all necessary tags
+    #------------------------------------------------------------------------------
+    attrs = self.current_io_rule['attrs']
+    if not attrs.has_key( 'targetClass' ):
+      print '--->> genreflex: WARNING: You always have to specify the targetClass when specyfying an IO rule'
+      return False
+
+    className = attrs['targetClass'].strip()
+    warning = '--->> genreflex: WARNING: IO rule for class ' + className
+
+    if not attrs.has_key( 'sourceClass' ):
+        print warning, '- sourceClass attribute is missing'
+        return False
+
+    if not attrs.has_key( 'version' ) and not attrs.has_key( 'checksum' ):
+      print warning, '- You need to specify either version or checksum'
+      return False
+
+    #------------------------------------------------------------------------------
+    # Check if the checksums are correct
+    #------------------------------------------------------------------------------
+    if attrs.has_key( 'checksum' ):
+      chk = attrs['checksum']
+      if chk[0] != '[' or chk[-1] != ']':
+        print warning, '- a comma separated list of ints enclosed in square brackets expected',
+        print 'as a value of checksum parameter'
+        return False
+
+      lst = [item.strip() for item in chk[1:-1].split(',')]
+      if len( lst ) == 0:
+        print warning, 'the checksum list is empty'
+        return False
+
+      for chk in lst:
+        try:
+          i = int( chk )
+        except:
+          print warning, chk, 'is not a valid value of checksum parameter - an integer expected'
+          return False
+
+    #------------------------------------------------------------------------------
+    # Check if the versions are correct
+    #------------------------------------------------------------------------------
+    if attrs.has_key( 'version' ):
+      ver = attrs['version']
+      if ver[0] != '[' or ver[-1] != ']':
+        print warning, '- a comma separated list of version specifiers enclosed in square',
+        print 'brackets expected as a value of version parameter'
+        return False
+
+      lst = [item.strip() for item in ver[1:-1].split(',')]
+      if len( lst ) == 0:
+        print warning, 'the version list is empty'
+        return False
+
+      for v in lst:
+        matchObj = self.ver_re.match( v )
+        if not matchObj:
+          print warning, '-', v, 'is not a valid value of version parameter'
+          return False
+        else:
+          rng = matchObj.groups()
+          if rng[0] and rng[1]:
+            b, e = int(rng[0]), int(rng[1])
+            if b >= e:
+              print warning, '-', v, 'is not a valid version range'
+              return False
+
+    #------------------------------------------------------------------------------
+    # Check if we deal with renameing rule
+    #------------------------------------------------------------------------------
+    if len( attrs ) == 3 or (len( attrs ) == 4 and attrs.has_key( 'version' ) and attrs.has_key( 'checksum' )):
+      return True
+
+    #------------------------------------------------------------------------------
+    # Check if we have other parameters specified correctly
+    #------------------------------------------------------------------------------
+    for k in ['target', 'source' ]:
+      if not attrs.has_key(k):
+        print warning, '- Required attribute is missing:', k
+        return False
+
+    if attrs.has_key( 'embed' ):
+      if attrs['embed'] != 'true' and attrs['embed'] != 'false':
+        print warning, '- true or false expected as a value of embed parameter'
+        return False
+
+    #------------------------------------------------------------------------------
+    # Check if the include list is not empty
+    #------------------------------------------------------------------------------
+    if attrs.has_key( 'include' ):
+      if len( attrs['include'] ) == 0:
+        print warning, 'empty include list specified'
+        return False
+
+    return True
+
+#----------------------------------------------------------------------------------
+  def char_data(self, data):
+    if self.current_io_rule:
+      self.current_io_rule['code'] += data
 #----------------------------------------------------------------------------------
   def matchclassTD(self, clname, fname, sltor) :
     clname = clname.replace(' ','')

@@ -16,6 +16,9 @@
 #include "TVirtualIsAProxy.h"
 #include "TVirtualCollectionProxy.h"
 #include "TCollectionProxyInfo.h"
+#include "TSchemaRule.h"
+#include "TSchemaRuleSet.h"
+#include "TError.h"
 
 namespace ROOT {
 
@@ -201,7 +204,6 @@ namespace ROOT {
    TClass *TGenericClassInfo::GetClass()
    {
       // Generate and return the TClass object.
-
       if (!fClass && fAction) {
          fClass = GetAction().CreateClass(GetClassName(),
                                           GetVersion(),
@@ -228,8 +230,61 @@ namespace ROOT {
             }
          }
          fClass->SetClassSize(fSizeof);
+
+         //---------------------------------------------------------------------
+         // Attach the schema evolution information
+         //---------------------------------------------------------------------
+         CreateRuleSet( fReadRules, true );
+         CreateRuleSet( fReadRawRules, false );
       }
       return fClass;
+   }
+
+   //---------------------------------------------------------------------------
+   void TGenericClassInfo::CreateRuleSet( std::vector<TSchemaHelper>& vect,
+                                              Bool_t ProcessReadRules )
+   {
+      // Attach the schema evolution information to TClassObject
+
+      if ( vect.empty() ) {
+         return;
+      }
+      
+      //------------------------------------------------------------------------
+      // Get the rules set
+      //------------------------------------------------------------------------
+      TSchemaRuleSet* rset = fClass->GetSchemaRules( kTRUE );
+
+      //------------------------------------------------------------------------
+      // Process the rules
+      //------------------------------------------------------------------------
+      TSchemaRule* rule;
+      std::vector<TSchemaHelper>::iterator it;
+      for( it = vect.begin(); it != vect.end(); ++it ) {
+         rule = new TSchemaRule();
+         rule->SetTarget( it->fTarget );
+         rule->SetSourceClass( it->fSourceClass );
+         rule->SetSource( it->fSource );
+         rule->SetCode( it->fCode );
+         rule->SetVersion( it->fVersion );
+         rule->SetChecksum( it->fChecksum );
+         rule->SetEmbed( it->fEmbed );
+         rule->SetInclude( it->fInclude );
+
+         if( ProcessReadRules ) {
+            rule->SetRuleType( TSchemaRule::kReadRule );
+            rule->SetReadFunctionPointer( (TSchemaRule::ReadFuncPtr_t)it->fFunctionPtr );
+         }
+         else {
+            rule->SetRuleType( TSchemaRule::kReadRawRule );
+            rule->SetReadRawFunctionPointer( (TSchemaRule::ReadRawFuncPtr_t)it->fFunctionPtr );
+         }
+         if( !rset->AddRule( rule ) ) {
+            ::Warning( "TGenericClassInfo", "The rule for class: \"%s\": version, \"%s\" and data members: \"%s\" has been skipped because it conflicts with one of the other rules.",
+                        GetClassName(), it->fVersion.c_str(), it->fTarget.c_str() );
+            delete rule;
+         }
+      }
    }
 
    const char *TGenericClassInfo::GetClassName() const
@@ -259,6 +314,17 @@ namespace ROOT {
       // Return the typeifno value
 
       return fInfo;
+   }
+
+   const std::vector<TSchemaHelper>& TGenericClassInfo::GetReadRawRules() const
+   {
+      return fReadRawRules;
+   }
+
+
+   const std::vector<TSchemaHelper>& TGenericClassInfo::GetReadRules() const
+   {
+      return fReadRules;
    }
 
    void *TGenericClassInfo::GetShowMembers() const
@@ -347,6 +413,17 @@ namespace ROOT {
          fClass->CopyCollectionProxy(*fCollectionProxy);
       }
       return 0;
+   }
+
+   void TGenericClassInfo::SetReadRawRules( const std::vector<TSchemaHelper>& rules )
+   {
+      fReadRawRules = rules;
+   }
+
+
+   void TGenericClassInfo::SetReadRules( const std::vector<TSchemaHelper>& rules )
+   {
+      fReadRules = rules;
    }
 
    Short_t TGenericClassInfo::SetStreamer(ClassStreamerFunc_t streamer)

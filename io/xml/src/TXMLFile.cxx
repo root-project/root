@@ -739,7 +739,8 @@ TList* TXMLFile::GetStreamerInfoList()
          TString fname = fXML->GetAttr(sinfonode,"name");
          TString ftitle = fXML->GetAttr(sinfonode,"title");
 
-         TStreamerInfo* info = new TStreamerInfo(TClass::GetClass(fname), ftitle);
+         TStreamerInfo* info = new TStreamerInfo(TClass::GetClass(fname));
+         info->SetTitle(ftitle);
 
          list->Add(info);
 

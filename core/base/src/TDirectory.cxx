@@ -893,7 +893,6 @@ void TDirectory::ls(Option_t *option) const
    //
 
    TROOT::IndentLevel();
-   cout <<ClassName()<<"*\t\t"<<GetName()<<"\t"<<GetTitle()<<endl;
    TROOT::IncreaseDirLevel();
 
    TString opta = option;

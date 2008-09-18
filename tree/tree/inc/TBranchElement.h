@@ -29,9 +29,12 @@
 #include "TClassRef.h"
 #endif
 
+#include <vector>
+
 class TFolder;
 class TStreamerInfo;
 class TVirtualCollectionProxy;
+class TVirtualArray;
 
 class TBranchElement : public TBranch {
 
@@ -42,12 +45,15 @@ class TBranchElement : public TBranch {
 protected:
    enum {
       kBranchFolder = BIT(14),
-      kDeleteObject = BIT(16)               //  We are the owner of fObject.
+      kDeleteObject = BIT(16),  //  We are the owner of fObject.
+      kCache        = BIT(18),  //  Need to pushd/pop fOnfileObject.
+      kOwnOnfileObj = BIT(19)   //  We are the owner of fOnfileObject.
    };
 
 // Data Members
 protected:
    TString                  fClassName;     //  Class name of referenced object
+   TString                  fTargetClassName; //! Name of the target in-memory class
    TString                  fParentName;    //  Name of parent class
    TString                  fClonesName;    //  Name of class in TClonesArray (if any)
    TVirtualCollectionProxy *fCollProxy;     //! collection interface (if any)
@@ -63,6 +69,7 @@ protected:
    TBranchElement          *fBranchCount2;  //  pointer to secondary branchcount branch
    TStreamerInfo           *fInfo;          //! Pointer to StreamerInfo
    char                    *fObject;        //! Pointer to object at *fAddress
+   TVirtualArray           *fOnfileObject;  //! Place holder for the onfile representation of data members.
    Bool_t                   fInit;          //! Initialization flag for branch assignment
    Bool_t                   fInitOffsets;   //! Initialization flag to not endlessly recalculate offsets
    TClassRef                fCurrentClass;  //! Reference to current (transient) class definition
@@ -70,6 +77,7 @@ protected:
    TClassRef                fBranchClass;   //! Reference to class definition in fClassName
    Int_t                   *fBranchOffset;  //! Sub-Branch offsets with respect to current transient class
    Int_t                    fBranchID;      //! ID number assigned by a TRefTable.
+   std::vector<Int_t>       fIDs;           //! List of the serial number of all the StreamerInfo to be used.
 
 // Not implemented
 private:
@@ -129,9 +137,11 @@ public:
            Int_t            GetNdata() const { return fNdata; }
            Int_t            GetType() const { return fType; }
            Int_t            GetStreamerType() const { return fStreamerType; }
+   virtual TString          GetTargetClassName() { return fTargetClassName; }
    virtual const char      *GetTypeName() const;
            Double_t         GetValue(Int_t i, Int_t len, Bool_t subarr = kFALSE) const;
    virtual void            *GetValuePointer() const;
+           Int_t            GetClassVersion() { return fClassVersion; }
            Bool_t           IsBranchFolder() const { return TestBit(kBranchFolder); }
            Bool_t           IsFolder() const;
    virtual Bool_t           IsObjectOwner() const { return TestBit(kDeleteObject); }
@@ -149,10 +159,11 @@ public:
    virtual void             SetClassName(const char* name) { fClassName = name; }
    inline  void             SetParentClass(TClass* clparent);
    virtual void             SetParentName(const char* name) { fParentName = name; }
+   virtual void             SetTargetClassName(const char *name);
    virtual void             SetupAddresses();
    virtual void             SetType(Int_t btype) { fType = btype; }
 
-   ClassDef(TBranchElement,8)  // Branch in case of an object
+   ClassDef(TBranchElement,9)  // Branch in case of an object
 };
 
 inline void TBranchElement::SetParentClass(TClass* clparent)

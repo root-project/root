@@ -364,7 +364,7 @@ Int_t TBufferSQL2::SqlWriteObject(const void* obj, const TClass* cl, TMemberStre
 }
 
 //______________________________________________________________________________
-void* TBufferSQL2::SqlReadObject(void* obj, TClass** cl, TMemberStreamer *streamer, Int_t streamer_index)
+void* TBufferSQL2::SqlReadObject(void* obj, TClass** cl, TMemberStreamer *streamer, Int_t streamer_index, const TClass *onFileClass)
 {
    // Read object from the buffer
 
@@ -432,11 +432,11 @@ void* TBufferSQL2::SqlReadObject(void* obj, TClass** cl, TMemberStreamer *stream
    if ((gDebug>2) || (objid<0))
       cout << "Found object reference " << objid << endl;
 
-   return SqlReadObjectDirect(obj, cl, objid, streamer, streamer_index);
+   return SqlReadObjectDirect(obj, cl, objid, streamer, streamer_index, onFileClass);
 }
 
 //______________________________________________________________________________
-void* TBufferSQL2::SqlReadObjectDirect(void* obj, TClass** cl, Long64_t objid, TMemberStreamer *streamer, Int_t streamer_index)
+void* TBufferSQL2::SqlReadObjectDirect(void* obj, TClass** cl, Long64_t objid, TMemberStreamer *streamer, Int_t streamer_index, const TClass *onFileClass)
 {
    // Read object data.
    // Class name and version are taken from special objects table.
@@ -499,11 +499,13 @@ void* TBufferSQL2::SqlReadObjectDirect(void* obj, TClass** cl, Long64_t objid, T
       fCurrentData = objdata;
    }
 
-   if (streamer!=0)
+   if (streamer!=0) {
+      streamer->SetOnFileClass( onFileClass );
       (*streamer)(*this, (void*)obj, streamer_index);
-   else  
-      objClass->Streamer((void*)obj, *this);
-
+   } else { 
+      objClass->Streamer((void*)obj, *this, onFileClass);
+   }
+   
    PopStack();
 
    if (gDebug>1)
@@ -1479,7 +1481,7 @@ void TBufferSQL2::ReadFastArrayDouble32(Double_t  *d, Int_t n, TStreamerElement 
 }
 
 //______________________________________________________________________________
-void TBufferSQL2::ReadFastArray(void  *start, const TClass *cl, Int_t n, TMemberStreamer *streamer)
+void TBufferSQL2::ReadFastArray(void  *start, const TClass *cl, Int_t n, TMemberStreamer *streamer, const TClass* onFileClass )
 {
    // Same functionality as TBuffer::ReadFastArray(...) but
    // instead of calling cl->Streamer(obj,buf) call here
@@ -1490,7 +1492,7 @@ void TBufferSQL2::ReadFastArray(void  *start, const TClass *cl, Int_t n, TMember
       Info("ReadFastArray","(void *"); 
 
    if (streamer) {
-      StreamObject(start, streamer, cl, 0); 
+      StreamObject(start, streamer, cl, 0, onFileClass); 
 //      (*streamer)(*this,start,0);
       return;
    }
@@ -1499,14 +1501,14 @@ void TBufferSQL2::ReadFastArray(void  *start, const TClass *cl, Int_t n, TMember
    char *obj = (char*)start;
    char *end = obj + n*objectSize;
 
-   for(; obj<end; obj+=objectSize) 
-      StreamObject(obj, cl);
-
+   for(; obj<end; obj+=objectSize) {
+      StreamObject(obj, cl, onFileClass);
+   }
    //   TBuffer::ReadFastArray(start, cl, n, s);
 }
 
 //______________________________________________________________________________
-void TBufferSQL2::ReadFastArray(void **start, const TClass *cl, Int_t n, Bool_t isPreAlloc, TMemberStreamer *streamer)
+void TBufferSQL2::ReadFastArray(void **start, const TClass *cl, Int_t n, Bool_t isPreAlloc, TMemberStreamer *streamer, const TClass* onFileClass )
 {
    // Same functionality as TBuffer::ReadFastArray(...) but
    // instead of calling cl->Streamer(obj,buf) call here
@@ -1522,7 +1524,7 @@ void TBufferSQL2::ReadFastArray(void **start, const TClass *cl, Int_t n, Bool_t 
             if (!start[j]) start[j] = ((TClass*)cl)->New();
          }
       }
-      StreamObject((void*)start, streamer, cl, 0); 
+      StreamObject((void*)start, streamer, cl, 0, onFileClass); 
 //      (*streamer)(*this,(void*)start,0);
       return;
    }
@@ -1539,7 +1541,7 @@ void TBufferSQL2::ReadFastArray(void **start, const TClass *cl, Int_t n, Bool_t 
 
       for (Int_t j=0; j<n; j++) {
          if (!start[j]) start[j] = ((TClass*)cl)->New();
-         StreamObject(start[j], cl);
+         StreamObject(start[j], cl, onFileClass);
       }
    }
 
@@ -1953,30 +1955,30 @@ Int_t TBufferSQL2::WriteFastArray(void **start, const TClass *cl, Int_t n, Bool_
 }
 
 //______________________________________________________________________________
-void TBufferSQL2::StreamObject(void *obj, const type_info &typeinfo)
+void TBufferSQL2::StreamObject(void *obj, const type_info &typeinfo, const TClass *onFileClass)
 {
    // steram object to/from buffer
 
-   StreamObject(obj, TClass::GetClass(typeinfo));
+   StreamObject(obj, TClass::GetClass(typeinfo), onFileClass);
 }
 
 //______________________________________________________________________________
-void TBufferSQL2::StreamObject(void *obj, const char *className)
+void TBufferSQL2::StreamObject(void *obj, const char *className, const TClass *onFileClass)
 {
    // steram object to/from buffer
 
-   StreamObject(obj, TClass::GetClass(className));
+   StreamObject(obj, TClass::GetClass(className), onFileClass);
 }
 
 //______________________________________________________________________________
-void TBufferSQL2::StreamObject(void *obj, const TClass *cl)
+void TBufferSQL2::StreamObject(void *obj, const TClass *cl, const TClass *onFileClass)
 {
    // steram object to/from buffer
 
    if (gDebug>1)
       cout << " TBufferSQL2::StreamObject class = " << (cl ? cl->GetName() : "none") << endl;
    if (IsReading())
-      SqlReadObject(obj);
+      SqlReadObject(obj, 0, 0, 0, onFileClass);
    else
       SqlWriteObject(obj, cl);
 }
@@ -1990,7 +1992,7 @@ void TBufferSQL2::StreamObject(TObject *obj)
 }
 
 //______________________________________________________________________________
-void TBufferSQL2::StreamObject(void *obj, TMemberStreamer *streamer, const TClass *cl, Int_t n)
+void TBufferSQL2::StreamObject(void *obj, TMemberStreamer *streamer, const TClass *cl, Int_t n, const TClass *onFileClass)
 {
    // steram object to/from buffer
 
@@ -2001,7 +2003,7 @@ void TBufferSQL2::StreamObject(void *obj, TMemberStreamer *streamer, const TClas
 //   (*streamer)(*this, obj, n);
    
    if (IsReading())
-      SqlReadObject(obj, 0, streamer, n);
+      SqlReadObject(obj, 0, streamer, n, onFileClass);
    else
       SqlWriteObject(obj, cl, streamer, n);
 }

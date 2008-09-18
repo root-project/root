@@ -30,6 +30,7 @@
 #include "TInterpreter.h"
 #include "TError.h"
 #include "TDataType.h"
+#include <iostream>
 
 #include <string>
 namespace std {} using namespace std;
@@ -157,6 +158,7 @@ TStreamerElement::TStreamerElement()
    fMethod      = 0;
    fOffset      = 0;
    fClassObject = (TClass*)(-1);
+   fNewClass    = 0;
    fTObjectOffset = 0;
    fFactor      = 0;
    fXmin        = 0;
@@ -180,6 +182,7 @@ TStreamerElement::TStreamerElement(const char *name, const char *title, Int_t of
    fStreamer    = 0;
    fMethod      = 0;
    fClassObject = (TClass*)(-1);
+   fNewClass    = 0;
    fTObjectOffset = 0;
    fFactor      = 0;
    fXmin        = 0;
@@ -356,7 +359,7 @@ void TStreamerElement::ls(Option_t *) const
 
    sprintf(gIncludeName,GetTypeName());
    if (IsaPointer() && !fTypeName.Contains("*")) strcat(gIncludeName,"*");
-   printf("  %-14s %-15s offset=%3d type=%2d %-20s\n",gIncludeName,GetFullName(),fOffset,fType,GetTitle());
+   printf("  %-14s %-15s offset=%3d type=%2d %s%-20s\n",gIncludeName,GetFullName(),fOffset,fType,TestBit(kCache)?"(cached) ":"",GetTitle());
 }
 
 //______________________________________________________________________________
@@ -487,6 +490,7 @@ TStreamerBase::TStreamerBase()
 
    fBaseClass = (TClass*)(-1);
    fBaseVersion = 0;
+   fNewBaseClass = 0;
 }
 
 //______________________________________________________________________________
@@ -500,6 +504,7 @@ TStreamerBase::TStreamerBase(const char *name, const char *title, Int_t offset)
    fNewType = fType;
    fBaseClass = TClass::GetClass(GetName());
    fBaseVersion = fBaseClass->GetClassVersion();
+   fNewBaseClass = 0;
    Init();
 }
 
@@ -569,7 +574,7 @@ void TStreamerBase::ls(Option_t *) const
 {
    // Print the content of the element.
 
-   printf("  %-14s %-15s offset=%3d type=%2d %-20s\n",GetFullName(),GetTypeName(),fOffset,fType,GetTitle());
+   printf("  %-14s %-15s offset=%3d type=%2d %s%-20s\n",GetFullName(),GetTypeName(),fOffset,fType,TestBit(kCache)?"(cached) ":"",GetTitle());
 }
 
 //______________________________________________________________________________
@@ -584,7 +589,11 @@ Int_t TStreamerBase::ReadBuffer (TBuffer &b, char *pointer)
       fMethod->Execute((void*)(pointer+fOffset));
    } else {
      // printf("Reading baseclass:%s via ReadBuffer\n",fBaseClass->GetName());
-      fBaseClass->ReadBuffer(b,pointer+fOffset);
+      //fBaseClass->ReadBuffer(b,pointer+fOffset);
+      if( fNewBaseClass )
+         b.ReadClassBuffer( fNewBaseClass, pointer+fOffset, fBaseClass );
+      else
+         b.ReadClassBuffer( fBaseClass, pointer+fOffset );
    }
    return 0;
 }
@@ -606,7 +615,8 @@ void TStreamerBase::Streamer(TBuffer &R__b)
       // loaded, on the file their streamer info might be in the following 
       // order (derived class,base class) and hence the base class is not
       // yet emulated.
-      fBaseClass = (TClass*)-1; 
+      fBaseClass = (TClass*)-1;
+      fNewBaseClass = 0;
       if (R__v > 2) {
          R__b.ClassMember("fBaseVersion","Int_t");
          R__b >> fBaseVersion;
@@ -1601,7 +1611,7 @@ void TStreamerSTL::ls(Option_t *) const
       sprintf(cdim,"[%d]",fMaxIndex[i]);
       strcat(name,cdim);
    }
-   printf("  %-14s %-15s offset=%3d type=%2d ,stl=%d, ctype=%d, %-20s",GetTypeName(),name,fOffset,fType,fSTLtype,fCtype,GetTitle());
+   printf("  %-14s %-15s offset=%3d type=%2d %s,stl=%d, ctype=%d, %-20s",GetTypeName(),name,fOffset,fType,TestBit(kCache)?"(cached)":"",fSTLtype,fCtype,GetTitle());
    printf("\n");
 }
 
@@ -1741,4 +1751,36 @@ void TStreamerSTLstring::Streamer(TBuffer &R__b)
    } else {
       R__b.WriteClassBuffer(TStreamerSTLstring::Class(),this);
    }
+}
+
+//______________________________________________________________________________
+
+///////////////////////////////////////////////////////////////////////////////
+//                                                                           //
+// TStreamerArtificial implements StreamerElement injected by a TSchemaRule. //
+//                                                                           //
+///////////////////////////////////////////////////////////////////////////////
+
+ClassImp(TStreamerSTLstring);
+
+void TStreamerArtificial::Streamer(TBuffer& /* R__b */)
+{
+   // Avoid streaming the synthetic/artificial streamer elements.
+
+   // Intentionally, nothing to do at all.
+   return;
+}
+
+ROOT::TSchemaRule::ReadFuncPtr_t     TStreamerArtificial::GetReadFunc()
+{
+   // Return the read function if any.
+
+   return fReadFunc;
+}
+
+ROOT::TSchemaRule::ReadRawFuncPtr_t  TStreamerArtificial::GetReadRawFunc()
+{
+   // Return the raw read function if any.
+
+   return fReadRawFunc;
 }

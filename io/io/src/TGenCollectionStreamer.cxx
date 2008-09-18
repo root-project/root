@@ -152,6 +152,8 @@ void TGenCollectionStreamer::ReadObjects(int nElements, TBuffer &b)
    StreamHelper* itm = 0;
    char   buffer[8096];
    void*  memory = 0;
+   
+   TClass* onFileValClass = (fOnFileClass ? fOnFileClass->GetCollectionProxy()->GetValueClass() : 0);
 
    fEnv->size = nElements;
    switch (fSTL_type)  {
@@ -161,7 +163,7 @@ void TGenCollectionStreamer::ReadObjects(int nElements, TBuffer &b)
          itm = (StreamHelper*)fResize.invoke(fEnv);
          switch (fVal->fCase) {
             case G__BIT_ISCLASS:
-               DOLOOP(b.StreamObject(i, fVal->fType));
+               DOLOOP(b.StreamObject(i, fVal->fType, onFileValClass ));
             case kBIT_ISSTRING:
                DOLOOP(i->read_std_string(b));
             case G__BIT_ISPOINTER | G__BIT_ISCLASS:
@@ -182,7 +184,7 @@ void TGenCollectionStreamer::ReadObjects(int nElements, TBuffer &b)
          fResize.invoke(fEnv);
          switch (fVal->fCase) {
             case G__BIT_ISCLASS:
-               DOLOOP(b.StreamObject(i, fVal->fType));
+               DOLOOP(b.StreamObject(i, fVal->fType, onFileValClass));
             case kBIT_ISSTRING:
                DOLOOP(i->read_std_string(b));
             case G__BIT_ISPOINTER | G__BIT_ISCLASS:
@@ -204,7 +206,7 @@ void TGenCollectionStreamer::ReadObjects(int nElements, TBuffer &b)
          fConstruct.invoke(fEnv);
          switch (fVal->fCase) {
             case G__BIT_ISCLASS:
-               DOLOOP(b.StreamObject(i, fVal->fType));
+               DOLOOP(b.StreamObject(i, fVal->fType, onFileValClass));
                fFeed.invoke(fEnv);
                fDestruct.invoke(fEnv);
                break;

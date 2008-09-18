@@ -56,7 +56,7 @@
 #include "TVirtualMutex.h"
 #include "TVirtualPad.h"
 #include "THashTable.h"
-
+#include "TSchemaRuleSet.h"
 #include "TGenericClassInfo.h"
 
 #include <cstdio>
@@ -378,9 +378,18 @@ void TBuildRealData::Inspect(TClass* cl, const char* pname, const char* mname, c
    // This method is called from ShowMembers() via BuildRealdata().
 
    TDataMember* dm = cl->GetDataMember(mname);
-   if (!dm || !dm->IsPersistent()) {
+   if (!dm) {
       return;
    }
+
+   Bool_t isTransient = kFALSE;
+
+   if (!dm->IsPersistent()) {
+      // For the DataModelEvolution we need access to the transient member.
+      // so we now record them in the list of RealData.
+      isTransient = kTRUE;
+   }
+
    char rname[512];
    strcpy(rname, pname);
    // Take into account cases like TPaveStats->TPaveText->TPave->TBox.
@@ -422,15 +431,18 @@ void TBuildRealData::Inspect(TClass* cl, const char* pname, const char* mname, c
       if (!dm->IsBasic()) {
          // Pointer to class object.
          TRealData* rd = new TRealData(rname, offset, dm);
+         if (isTransient) { rd->SetBit(TRealData::kTransient); };
          fRealDataClass->GetListOfRealData()->Add(rd);
       } else {
          // Pointer to basic data type.
          TRealData* rd = new TRealData(rname, offset, dm);
+         if (isTransient) { rd->SetBit(TRealData::kTransient); };
          fRealDataClass->GetListOfRealData()->Add(rd);
       }
    } else {
       // Data Member is a basic data type.
       TRealData* rd = new TRealData(rname, offset, dm);
+      if (isTransient) { rd->SetBit(TRealData::kTransient); };
       if (!dm->IsBasic()) {
          rd->SetIsObject(kTRUE);
 
@@ -439,9 +451,9 @@ void TBuildRealData::Inspect(TClass* cl, const char* pname, const char* mname, c
          // classes composing this object (base classes, type of
          // embedded object and same for their data members).
          //
-         TClass* dmclass = TClass::GetClass(dm->GetTypeName());
+         TClass* dmclass = TClass::GetClass(dm->GetTypeName(),kTRUE,kTRUE);
          if (!dmclass) {
-            dmclass = TClass::GetClass(dm->GetTrueTypeName());
+            dmclass = TClass::GetClass(dm->GetTrueTypeName(),kTRUE,kTRUE);
          }
          if (dmclass) {
             if (dmclass->Property()) {
@@ -626,7 +638,8 @@ ClassImp(TClass)
 TClass::TClass() : TDictionary(), fNew(0), fNewArray(0), fDelete(0),
                    fDeleteArray(0), fDestructor(0), fDirAutoAdd(0), fSizeof(-1),
                    fVersionUsed(kFALSE), fOffsetStreamer(0), fStreamerType(kNone),
-                   fCurrentInfo(0), fRefStart(0), fRefProxy(0)
+                   fCurrentInfo(0), fRefStart(0), fRefProxy(0),
+                   fSchemaRules( 0 )
 {
    // Default ctor.
 
@@ -654,15 +667,17 @@ TClass::TClass() : TDictionary(), fNew(0), fNewArray(0), fDelete(0),
    fClassMenuList  = new TList();
    fClassMenuList->Add(new TClassMenuItem(TClassMenuItem::kPopupStandardList, this));
    fContextMenuTitle = "";
+   fConversionStreamerInfo = 0;
 }
 
 //______________________________________________________________________________
-TClass::TClass(const char *name) : TDictionary(), fNew(0), fNewArray(0),
+TClass::TClass(const char *name, Bool_t silent) : TDictionary(), fNew(0), fNewArray(0),
                                    fDelete(0), fDeleteArray(0), fDestructor(0),
                                    fDirAutoAdd(0),
                                    fSizeof(-1), fVersionUsed(kFALSE),
                                    fOffsetStreamer(0), fStreamerType(kNone),
-                                   fCurrentInfo(0), fRefStart(0), fRefProxy(0)
+                                   fCurrentInfo(0), fRefStart(0), fRefProxy(0),
+                                   fSchemaRules(0) 
 {
    // Create a TClass object. This object contains the full dictionary
    // of a class. It has list to baseclasses, datamembers and methods.
@@ -714,24 +729,25 @@ TClass::TClass(const char *name) : TDictionary(), fNew(0), fNewArray(0),
          gInterpreter->InitializeDictionaries();
          gInterpreter->SetClassInfo(this);
       }
-      if (!fClassInfo)
+      if (!silent && !fClassInfo && fName.First('@')==kNPOS) 
          ::Warning("TClass::TClass", "no dictionary for class %s is available", name);
       ResetBit(kLoading);
    }
    if (fClassInfo) SetTitle(gCint->ClassInfo_Title(fClassInfo));
+   fConversionStreamerInfo = 0;
 }
 
 //______________________________________________________________________________
 TClass::TClass(const char *name, Version_t cversion,
-               const char *dfil, const char *ifil, Int_t dl, Int_t il)
+               const char *dfil, const char *ifil, Int_t dl, Int_t il, Bool_t silent)
    : TDictionary(), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
      fDestructor(0), fDirAutoAdd(0), fSizeof(-1), fVersionUsed(kFALSE), fOffsetStreamer(0),
-     fStreamerType(kNone), fCurrentInfo(0), fRefStart(0), fRefProxy(0)
+     fStreamerType(kNone), fCurrentInfo(0), fRefStart(0), fRefProxy(0),
+     fSchemaRules(0) 
 {
    // Create a TClass object. This object contains the full dictionary
    // of a class. It has list to baseclasses, datamembers and methods.
-
-   Init(name,cversion, 0, 0, 0, dfil, ifil, dl, il);
+   Init(name,cversion, 0, 0, 0, dfil, ifil, dl, il,silent);
    SetBit(kUnloaded);
 }
 
@@ -739,16 +755,18 @@ TClass::TClass(const char *name, Version_t cversion,
 TClass::TClass(const char *name, Version_t cversion,
                const type_info &info, TVirtualIsAProxy *isa,
                ShowMembersFunc_t showmembers,
-               const char *dfil, const char *ifil, Int_t dl, Int_t il)
+               const char *dfil, const char *ifil, Int_t dl, Int_t il,
+               Bool_t silent)
    : TDictionary(), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
      fDestructor(0), fDirAutoAdd(0), fSizeof(-1), fVersionUsed(kFALSE), fOffsetStreamer(0),
-     fStreamerType(kNone), fCurrentInfo(0), fRefStart(0), fRefProxy(0)
+     fStreamerType(kNone), fCurrentInfo(0), fRefStart(0), fRefProxy(0),
+     fSchemaRules( 0 )
 {
    // Create a TClass object. This object contains the full dictionary
    // of a class. It has list to baseclasses, datamembers and methods.
 
    // use info
-   Init(name, cversion, &info, isa, showmembers, dfil, ifil, dl, il);
+   Init(name, cversion, &info, isa, showmembers, dfil, ifil, dl, il, silent);
 }
 
 //______________________________________________________________________________
@@ -779,7 +797,8 @@ void TClass::ForceReload (TClass* oldcl)
 void TClass::Init(const char *name, Version_t cversion,
                   const type_info *typeinfo, TVirtualIsAProxy *isa,
                   ShowMembersFunc_t showmembers,
-                  const char *dfil, const char *ifil, Int_t dl, Int_t il)
+                  const char *dfil, const char *ifil, Int_t dl, Int_t il,
+                  Bool_t silent)
 {
    // Initialize a TClass object. This object contains the full dictionary
    // of a class. It has list to baseclasses, datamembers and methods.
@@ -813,6 +832,7 @@ void TClass::Init(const char *name, Version_t cversion,
    fInterStreamer  = 0;
    fClassMenuList  = 0;
    fContextMenuTitle = "";
+   fConversionStreamerInfo = 0;
 
    ResetInstanceCount();
 
@@ -882,7 +902,7 @@ void TClass::Init(const char *name, Version_t cversion,
          }
       }
    }
-   if (!fClassInfo && !isStl)
+   if (!silent && !fClassInfo && !isStl && fName.First('@')==kNPOS)
       ::Warning("TClass::TClass", "no dictionary for class %s is available", name);
 
    fgClassCount++;
@@ -970,6 +990,7 @@ void TClass::Init(const char *name, Version_t cversion,
 TClass::TClass(const TClass& cl) :
   TDictionary(cl),
   fStreamerInfo(cl.fStreamerInfo),
+  fConversionStreamerInfo( cl.fConversionStreamerInfo ),
   fRealData(cl.fRealData),
   fBase(cl.fBase),
   fData(cl.fData),
@@ -1059,6 +1080,7 @@ TClass& TClass::operator=(const TClass& cl)
       fStreamerType=cl.fStreamerType;
       fCurrentInfo=cl.fCurrentInfo;
       fRefStart=cl.fRefStart;
+      fConversionStreamerInfo=cl.fConversionStreamerInfo;
    }
    return *this;
 }
@@ -1150,6 +1172,37 @@ TClass::~TClass()
    delete fStreamer;
    delete fCollectionProxy;
    delete fIsAMethod;
+   delete fSchemaRules;
+   delete fConversionStreamerInfo;
+}
+
+//------------------------------------------------------------------------------
+void TClass::AdoptSchemaRules( ROOT::TSchemaRuleSet *rules )
+{
+   // Adopt a new set of Data Model Evolution rules.
+
+   delete fSchemaRules;
+   fSchemaRules = rules;
+   fSchemaRules->SetClass( this );
+}
+
+//------------------------------------------------------------------------------
+const ROOT::TSchemaRuleSet* TClass::GetSchemaRules() const
+{
+   // Return the set of the schema rules if any.
+   return fSchemaRules;
+}
+
+//------------------------------------------------------------------------------
+ROOT::TSchemaRuleSet* TClass::GetSchemaRules(Bool_t create)
+{
+   // Return the set of the schema rules if any.
+   // If create is true, create an empty set
+   if (create && fSchemaRules == 0) {
+      fSchemaRules = new ROOT::TSchemaRuleSet();
+      fSchemaRules->SetClass( this );
+   }
+   return fSchemaRules;
 }
 
 //______________________________________________________________________________
@@ -1224,8 +1277,9 @@ Int_t TClass::Browse(void *obj, TBrowser *b) const
    } else if (IsTObject()) {
       // Call TObject::Browse.
 
-      if (!fInterStreamer)
+      if (!fInterStreamer) {
          const_cast<TClass*>(this)->CalculateStreamerOffset();
+      }
       TObject* realTObject = (TObject*)((size_t)obj + fOffsetStreamer);
       realTObject->Browse(b);
    }
@@ -1323,8 +1377,9 @@ void TClass::BuildRealData(void* pointer)
          // have TObject as the leftmost base class.
          //
          if (isATObject) {
-            if (!fInterStreamer)
+            if (!fInterStreamer) {
                CalculateStreamerOffset();
+            }
             TObject* realTObject = (TObject*)((size_t)realDataObject + fOffsetStreamer);
             realTObject->ShowMembers(brd, parent);
          } else {
@@ -1912,7 +1967,7 @@ TVirtualIsAProxy* TClass::GetIsAProxy() const
 
 
 //______________________________________________________________________________
-TClass *TClass::GetClass(const char *name, Bool_t load)
+TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
 {
    // Static method returning pointer to TClass of the specified class name.
    // If load is true an attempt is made to obtain the class by loading
@@ -2038,7 +2093,7 @@ TClass *TClass::GetClass(const char *name, Bool_t load)
          delete [] modifiable_name;
          return GetClass(altname,load);
       }
-      TClass *ncl = new TClass(name, 1, 0, 0, -1, -1);
+      TClass *ncl = new TClass(name, 1, 0, 0, -1, -1, silent);
       if (!ncl->IsZombie()) {
          delete [] modifiable_name;
          return ncl;
@@ -2050,7 +2105,7 @@ TClass *TClass::GetClass(const char *name, Bool_t load)
 }
 
 //______________________________________________________________________________
-TClass *TClass::GetClass(const type_info& typeinfo, Bool_t load)
+TClass *TClass::GetClass(const type_info& typeinfo, Bool_t load, Bool_t /* silent */)
 {
    // Return pointer to class with name.
 
@@ -2914,6 +2969,7 @@ TVirtualStreamerInfo* TClass::GetStreamerInfo(Int_t version) const
       // When the requested version does not exist we return
       // the TVirtualStreamerInfo for the currently loaded class vesion.
       // FIXME: This arguably makes no sense, we should warn and return nothing instead.
+      // Note: This is done for STL collactions
       // Note: fClassVersion could be -1 here (for an emulated class).
       sinfo = (TVirtualStreamerInfo*) fStreamerInfo->At(fClassVersion);
    }
@@ -3056,7 +3112,7 @@ void *TClass::DynamicCast(const TClass *cl, void *obj, Bool_t up)
 }
 
 //______________________________________________________________________________
-void *TClass::New(ENewType defConstructor)
+void *TClass::New(ENewType defConstructor) const
 {
    // Return a pointer to a newly allocated object of this class.
    // The class must have a default constructor. For meaning of
@@ -3168,7 +3224,7 @@ void *TClass::New(ENewType defConstructor)
 }
 
 //______________________________________________________________________________
-void *TClass::New(void *arena, ENewType defConstructor)
+void *TClass::New(void *arena, ENewType defConstructor) const
 {
    // Return a pointer to a newly allocated object of this class.
    // The class must have a default constructor. For meaning of
@@ -3251,7 +3307,7 @@ void *TClass::New(void *arena, ENewType defConstructor)
 }
 
 //______________________________________________________________________________
-void *TClass::NewArray(Long_t nElements, ENewType defConstructor)
+void *TClass::NewArray(Long_t nElements, ENewType defConstructor) const
 {
    // Return a pointer to a newly allocated array of objects
    // of this class.
@@ -3335,7 +3391,7 @@ void *TClass::NewArray(Long_t nElements, ENewType defConstructor)
 }
 
 //______________________________________________________________________________
-void *TClass::NewArray(Long_t nElements, void *arena, ENewType defConstructor)
+void *TClass::NewArray(Long_t nElements, void *arena, ENewType defConstructor) const
 {
    // Return a pointer to a newly allocated object of this class.
    // The class must have a default constructor. For meaning of
@@ -4342,31 +4398,35 @@ Int_t TClass::WriteBuffer(TBuffer &b, void *pointer, const char * /*info*/)
 }
 
 //______________________________________________________________________________
-void TClass::Streamer(void *object, TBuffer &b)
+void TClass::Streamer(void *object, TBuffer &b, const TClass *onfile_class) const
 {
    // Stream object of this class to or from buffer.
 
    switch (fStreamerType) {
 
       case kExternal:
-      case kExternal|kEmulated:
+      case kExternal|kEmulated: 
+      {
          //There is special streamer for the class
-         // (*fStreamer)(b,object);
-         (*GetStreamer())(b,object);
-         return;
+         TClassStreamer *streamer = GetStreamer();
+         streamer->SetOnFileClass( onfile_class );
+         (*streamer)(b,object);
 
+         return;
+      }
 
       case kTObject:
       {
-         if (!fInterStreamer)
-            CalculateStreamerOffset();
+         if (!fInterStreamer) {
+            const_cast<TClass*>(this)->CalculateStreamerOffset();
+         }
          TObject *tobj = (TObject*)((Long_t)object + fOffsetStreamer);
          tobj->Streamer(b);
       }
       return;
 
       case kTObject|kEmulated : {
-         b.ReadClassEmulated(this, object);
+         b.ReadClassEmulated(this, object, onfile_class);
       }
       return;
 
@@ -4397,7 +4457,7 @@ void TClass::Streamer(void *object, TBuffer &b)
       case kEmulated:
       {
          if (b.IsReading()) {
-            b.ReadClassBuffer(this, object);
+            b.ReadClassBuffer(this, object, onfile_class);
             //ReadBuffer (b, object);
          } else {
             //WriteBuffer(b, object);
@@ -4487,15 +4547,22 @@ void TClass::SetDirectoryAutoAdd(ROOT::DirAutoAdd_t autoAddFunc)
 }
 
 //______________________________________________________________________________
-TVirtualStreamerInfo *TClass::FindStreamerInfo(UInt_t checksum) const
+TVirtualStreamerInfo *TClass::FindStreamerInfo( UInt_t checksum) const
+{
+   // Find the TVirtualStreamerInfo in the StreamerInfos corresponding to checksum
+   return FindStreamerInfo( GetStreamerInfos(), checksum );
+}
+
+//______________________________________________________________________________
+TVirtualStreamerInfo *TClass::FindStreamerInfo( TObjArray* arr, UInt_t checksum) const
 {
    // Find the TVirtualStreamerInfo in the StreamerInfos corresponding to checksum
 
-   Int_t ninfos = GetStreamerInfos()->GetEntriesFast();
+   Int_t ninfos = arr->GetEntriesFast();
    for (Int_t i=-1;i<ninfos;i++) {
       // TClass::fStreamerInfos has a lower bound not equal to 0,
       // so we have to use At and should not use UncheckedAt
-      TVirtualStreamerInfo *info = (TVirtualStreamerInfo*)GetStreamerInfos()->At(i);
+      TVirtualStreamerInfo *info = (TVirtualStreamerInfo*)arr->At(i);
       if (!info) continue;
       if (info->GetCheckSum() == checksum) {
          R__ASSERT(i==info->GetClassVersion() || (i==-1&&info->GetClassVersion()==1));
@@ -4503,6 +4570,180 @@ TVirtualStreamerInfo *TClass::FindStreamerInfo(UInt_t checksum) const
       }
    }
    return 0;
+}
+
+//______________________________________________________________________________
+TVirtualStreamerInfo *TClass::GetConversionStreamerInfo( const char* classname, Int_t version ) const
+{
+   TClass *cl = TClass::GetClass( classname );
+   if( !cl )
+      return 0;
+   return GetConversionStreamerInfo( cl, version );
+}
+
+//______________________________________________________________________________
+TVirtualStreamerInfo *TClass::GetConversionStreamerInfo( const TClass* cl, Int_t version ) const
+{
+   // Find the streamer info for the foreign class
+
+   //----------------------------------------------------------------------------
+   // Check if the classname was specified correctly
+   //----------------------------------------------------------------------------
+   if( !cl )
+      return 0;
+
+   if( cl == this )
+      return GetStreamerInfo( version );
+
+   //----------------------------------------------------------------------------
+   // Check if we already have it
+   //----------------------------------------------------------------------------
+   TObjArray* arr = 0;
+   if (fConversionStreamerInfo) {
+      std::map<std::string, TObjArray*>::iterator it;
+
+      it = fConversionStreamerInfo->find( cl->GetName() );
+
+      if( it != fConversionStreamerInfo->end() ) {
+         arr = it->second;
+      }
+
+      if( version > -1 && version < arr->GetSize() && arr->At( version ) )
+         return (TVirtualStreamerInfo*) arr->At( version );
+   }
+
+   //----------------------------------------------------------------------------
+   // We don't have the streamer info so find it in other class
+   //----------------------------------------------------------------------------
+   TObjArray *clSI = cl->GetStreamerInfos();
+   TVirtualStreamerInfo* info = 0;
+   if( version > -1 && version < clSI->GetSize() )
+      info = (TVirtualStreamerInfo*)clSI->At( version );
+
+   if( !info )
+      return 0;
+
+   //----------------------------------------------------------------------------
+   // We have the right info so we need to clone it to create new object with
+   // non artificial streamer elements and we should build it for current class
+   //----------------------------------------------------------------------------
+   info = (TVirtualStreamerInfo*)info->Clone();
+
+   if( !info->BuildFor( this ) ) {
+      delete info;
+      return 0;
+   }
+
+   if (!info->GetOffsets()) {
+      // Streamer info has not been compiled, but exists.
+      // Therefore it was read in from a file and we have to do schema evolution?
+      // Or it didn't have a dictionary before, but does now?
+      info->BuildOld();
+   }
+   if (info->IsOptimized() && !TVirtualStreamerInfo::CanOptimize()) {
+      // Undo optimization if the global flag tells us to.
+      info->Compile();
+   }
+   
+   //----------------------------------------------------------------------------
+   // Cache this treamer info
+   //----------------------------------------------------------------------------
+   if (!arr) {
+      arr = new TObjArray(version+10, -1);
+      if (!fConversionStreamerInfo) {
+         fConversionStreamerInfo = new std::map<std::string, TObjArray*>();
+      }
+      (*fConversionStreamerInfo)[cl->GetName()] = arr;
+   }
+   arr->AddAtAndExpand( info, info->GetClassVersion() );
+   return info;
+}
+
+//______________________________________________________________________________
+TVirtualStreamerInfo *TClass::FindConversionStreamerInfo( const char* classname, UInt_t checksum ) const
+{
+
+   TClass *cl = TClass::GetClass( classname );
+   if( !cl )
+      return 0;
+   return FindConversionStreamerInfo( cl, checksum );
+}
+
+//______________________________________________________________________________
+TVirtualStreamerInfo *TClass::FindConversionStreamerInfo( const TClass* cl, UInt_t checksum ) const
+{
+   // Find the streamer info from the foreign class
+
+   //---------------------------------------------------------------------------
+   // Check if the classname was specified correctly
+   //---------------------------------------------------------------------------
+   if( !cl )
+      return 0;
+
+   if( cl == this )
+      return FindStreamerInfo( checksum );
+
+   //----------------------------------------------------------------------------
+   // Check if we already have it
+   //----------------------------------------------------------------------------
+   TObjArray* arr = 0;
+   TVirtualStreamerInfo* info = 0;
+   if (fConversionStreamerInfo) {
+      std::map<std::string, TObjArray*>::iterator it;
+      
+      it = fConversionStreamerInfo->find( cl->GetName() );
+      
+      if( it != fConversionStreamerInfo->end() ) {
+         arr = it->second;
+      }
+      info = FindStreamerInfo( arr, checksum );
+   }
+
+   if( info )
+      return info;
+
+   //----------------------------------------------------------------------------
+   // Get it from the foreign class
+   //----------------------------------------------------------------------------
+   info = cl->FindStreamerInfo( checksum );
+
+   if( !info )
+      return 0;
+
+   //----------------------------------------------------------------------------
+   // We have the right info so we need to clone it to create new object with
+   // non artificial streamer elements and we should build it for current class
+   //----------------------------------------------------------------------------
+   info = (TVirtualStreamerInfo*)info->Clone();
+   if( !info->BuildFor( this ) ) {
+      delete info;
+      return 0;
+   }
+
+   if (!info->GetOffsets()) {
+      // Streamer info has not been compiled, but exists.
+      // Therefore it was read in from a file and we have to do schema evolution?
+      // Or it didn't have a dictionary before, but does now?
+      info->BuildOld();
+   }
+   if (info->IsOptimized() && !TVirtualStreamerInfo::CanOptimize()) {
+      // Undo optimization if the global flag tells us to.
+      info->Compile();
+   }
+   
+   //----------------------------------------------------------------------------
+   // Cache this treamer info
+   //----------------------------------------------------------------------------
+   if (!arr) {
+      arr = new TObjArray(16, -1);
+      if (!fConversionStreamerInfo) {
+         fConversionStreamerInfo = new std::map<std::string, TObjArray*>();
+      }
+      (*fConversionStreamerInfo)[cl->GetName()] = arr;
+   }
+   arr->AddAtAndExpand( info, info->GetClassVersion() );
+
+   return info;
 }
 
 //______________________________________________________________________________

@@ -193,8 +193,8 @@ public:
    virtual   void     ReadFastArray(Double_t  *d, Int_t n) = 0;
    virtual   void     ReadFastArrayFloat16(Float_t  *f, Int_t n, TStreamerElement *ele=0) = 0;
    virtual   void     ReadFastArrayDouble32(Double_t  *d, Int_t n, TStreamerElement *ele=0) = 0;
-   virtual   void     ReadFastArray(void  *start , const TClass *cl, Int_t n=1, TMemberStreamer *s=0) = 0;
-   virtual   void     ReadFastArray(void **startp, const TClass *cl, Int_t n=1, Bool_t isPreAlloc=kFALSE, TMemberStreamer *s=0) = 0;
+   virtual   void     ReadFastArray(void  *start , const TClass *cl, Int_t n=1, TMemberStreamer *s=0, const TClass *onFileClass=0) = 0;
+   virtual   void     ReadFastArray(void **startp, const TClass *cl, Int_t n=1, Bool_t isPreAlloc=kFALSE, TMemberStreamer *s=0, const TClass *onFileClass=0) = 0;
 
    virtual   void     WriteArray(const Bool_t    *b, Int_t n) = 0;
    virtual   void     WriteArray(const Char_t    *c, Int_t n) = 0;
@@ -231,9 +231,9 @@ public:
    virtual   void     WriteFastArray(void  *start,  const TClass *cl, Int_t n=1, TMemberStreamer *s=0) = 0;
    virtual   Int_t    WriteFastArray(void **startp, const TClass *cl, Int_t n=1, Bool_t isPreAlloc=kFALSE, TMemberStreamer *s=0) = 0;
 
-   virtual   void     StreamObject(void *obj, const type_info &typeinfo) = 0;
-   virtual   void     StreamObject(void *obj, const char *className) = 0;
-   virtual   void     StreamObject(void *obj, const TClass *cl) = 0;
+   virtual   void     StreamObject(void *obj, const type_info &typeinfo, const TClass* onFileClass = 0 ) = 0;
+   virtual   void     StreamObject(void *obj, const char *className, const TClass* onFileClass = 0 ) = 0;
+   virtual   void     StreamObject(void *obj, const TClass *cl, const TClass* onFileClass = 0 ) = 0;
    virtual   void     StreamObject(TObject *obj) = 0;
 
    virtual   void     ReadBool(Bool_t       &b) = 0;
@@ -281,10 +281,10 @@ public:
    virtual   Int_t    WriteClones(TClonesArray *a, Int_t nobjects) = 0;
 
    // Utilities for TClass
-   virtual   Int_t    ReadClassEmulated(TClass *cl, void *object) = 0;
-   virtual   Int_t    ReadClassBuffer(TClass *cl, void *pointer) = 0;
-   virtual   Int_t    ReadClassBuffer(TClass *cl, void *pointer, Int_t version, UInt_t start, UInt_t count) = 0;
-   virtual   Int_t    WriteClassBuffer(TClass *cl, void *pointer) = 0;
+   virtual   Int_t    ReadClassEmulated(const TClass *cl, void *object, const TClass *onfile_class = 0) = 0;
+   virtual   Int_t    ReadClassBuffer(const TClass *cl, void *pointer, const TClass *onfile_class = 0) = 0;
+   virtual   Int_t    ReadClassBuffer(const TClass *cl, void *pointer, Int_t version, UInt_t start, UInt_t count, const TClass *onfile_class = 0) = 0;
+   virtual   Int_t    WriteClassBuffer(const TClass *cl, void *pointer) = 0;
 
    static TClass *GetClass(const type_info &typeinfo);
    static TClass *GetClass(const char *className);

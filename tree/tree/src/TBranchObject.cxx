@@ -380,6 +380,8 @@ void TBranchObject::SetAddress(void* add)
    TRealData* rd = 0;
    TIter next(cl->GetListOfRealData());
    while ((rd = (TRealData*) next())) {
+      if (rd->TestBit(TRealData::kTransient)) continue;
+
       TDataMember* dm = rd->GetDataMember();
       if (!dm || !dm->IsPersistent()) {
          continue;

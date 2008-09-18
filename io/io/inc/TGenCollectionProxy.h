@@ -64,13 +64,13 @@ public:
     * @date    10/10/2004
     */
    struct Value  {
-      ROOT::NewFunc_t fCtor;      // Method cache for containee constructor
-      ROOT::DesFunc_t fDtor;      // Method cache for containee destructor
-      ROOT::DelFunc_t fDelete;    // Method cache for containee delete
-      unsigned int    fCase;      // type of data of Value_type
-      TClassRef       fType;      // TClass reference of Value_type in collection
-      EDataType       fKind;      // kind of ROOT-fundamental type
-      size_t          fSize;      // fSize of the contained object
+      ROOT::NewFunc_t fCtor;       // Method cache for containee constructor
+      ROOT::DesFunc_t fDtor;       // Method cache for containee destructor
+      ROOT::DelFunc_t fDelete;     // Method cache for containee delete
+      unsigned int    fCase;       // type of data of Value_type
+      TClassRef       fType;       // TClass reference of Value_type in collection
+      EDataType       fKind;       // kind of ROOT-fundamental type
+      size_t          fSize;       // fSize of the contained object
 
       // Copy constructor
       Value(const Value& inside);
@@ -227,6 +227,7 @@ protected:
    Proxies_t     fProxyKept; // Optimization: Keep proxies once they were created
    int           fSTL_type;  // STL container type
    Info_t        fTypeinfo;  // Type information
+   TClass*       fOnFileClass; // On file class
 
    // Late initialization of collection proxy
    TGenCollectionProxy* Initialize() const;
@@ -302,6 +303,9 @@ public:
 
    // TClassStreamer I/O overload.
    virtual void operator()(TBuffer &refBuffer, void *pObject);
+
+   virtual void SetOnFileClass( TClass* cl ) { fOnFileClass = cl; }
+   virtual TClass* GetOnFileClass() const { return fOnFileClass; }
 };
 
 template <typename T>

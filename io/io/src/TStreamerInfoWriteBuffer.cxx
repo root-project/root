@@ -21,6 +21,9 @@
 #include "TRefTable.h"
 #include "TFile.h"
 
+#include "TVirtualArray.h"
+#include "TBufferFile.h"
+
 //==========CPP macros
 
 #define DOLOOP for(int k=0; k<narr; ++k)
@@ -84,6 +87,19 @@
       }                                         \
    }
 
+// Helper function for TStreamerInfo::ReadBuffer
+namespace {
+   template <class T> Bool_t R__TestUseCache(TStreamerElement *element) 
+   {
+      return element->TestBit(TStreamerElement::kCache);
+   }
+
+   template <> Bool_t R__TestUseCache<TVirtualArray>(TStreamerElement*)
+   {
+      // We are already using the cache, no need to recurse one more time.
+      return kFALSE;
+   }
+}
 
 //______________________________________________________________________________
 #ifdef R__BROKEN_FUNCTION_TEMPLATES
@@ -139,6 +155,17 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
 
       b.SetStreamerElementNumber(i);
       TStreamerElement *aElement = (TStreamerElement*)fElem[i];
+
+      if (R__TestUseCache<T>(aElement)) {
+         if (gDebug > 1) {
+           printf("ReadBuffer, class:%s, name=%s, fType[%d]=%d,"
+                " %s, bufpos=%d, arr=%p, eoffset=%d, Redirect=%p\n",
+                fClass->GetName(),aElement->GetName(),i,fType[i],
+                aElement->ClassName(),b.Length(),arr[0], eoffset,((TBufferFile&)b).PeekDataCache()->GetObjectAt(0));
+         }
+         thisVar->ReadBuffer(b,*((TBufferFile&)b).PeekDataCache(),i,narr,eoffset, arrayMode);
+         continue;
+      }
 
       const Int_t ioffset = eoffset+fOffset[i];
 
@@ -522,6 +549,8 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
 
                   UInt_t pos = b.WriteVersionMemberWise(thisVar->IsA(),kTRUE);
                   TVirtualCollectionProxy *proxy = cl->GetCollectionProxy();
+                  TClass* vClass = proxy->GetValueClass();
+                  b.WriteVersion( vClass, kFALSE );
                   TStreamerInfo *subinfo = (TStreamerInfo*)proxy->GetValueClass()->GetStreamerInfo();
                   DOLOOP {
                      char *obj = (char*)(arr[k]+ioffset);
@@ -728,6 +757,20 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
             continue;
          }
 
+         case TStreamerInfo::kCacheNew:
+            ((TBufferFile&)b).PushDataCache( new TVirtualArray( aElement->GetClassPointer(), narr ) );
+            continue;
+         case TStreamerInfo::kCacheDelete:
+            delete ((TBufferFile&)b).PopDataCache();
+            continue;
+         case TStreamerInfo::kArtificial:
+#if 0
+            ROOT::TSchemaRule::WriteFuncPtr_t writefunc = ((TStreamerArtificialElement*)aElement)->GetWriteFunc();
+            if (writefunc) { 
+               DOLOOP( writefunc(arr[k]+eoffset, b) );
+            }
+#endif
+            continue;
          default:
             Error("WriteBuffer","The element %s::%s type %d (%s) is not supported yet\n",thisVar->GetName(),aElement->GetFullName(),fType[i],aElement->GetTypeName());
             continue;

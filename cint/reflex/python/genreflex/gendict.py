@@ -486,22 +486,49 @@ class genDictionary(object) :
       if ap : l2.append(x)
     return l2
 #----------------------------------------------------------------------------------
-  def generate(self, file, selclasses, selfunctions, selenums, selvariables, cppinfo) :
+  def generate(self, file, selclasses, selfunctions, selenums, selvariables, cppinfo, ioReadRules = None, ioReadRawRules = None) :
     for c in selclasses :  c['fullname'] = self.genTypeName(c['id'])
     selclasses = self.sortselclasses(selclasses)
     names = []
     f = open(file,'w') 
     f.write(self.genHeaders(cppinfo))
+
+    #------------------------------------------------------------------------------
+    # Process includes relevent to the IO rules
+    #------------------------------------------------------------------------------
+    if ioReadRules or ioReadRawRules:
+      f.write( '#include "TBuffer.h"\n' )
+      f.write( '#include "TVirtualObject.h"\n' )
+      f.write( '#include <vector>\n' )
+      f.write( '#include "TSchemaHelper.h"\n\n' )
+
+      includes = self.getIncludes( ioReadRules, ioReadRawRules )
+      for inc in includes:
+        f.write( '#include <%s>\n' % (inc,) )
+      f.write( '\n' )
+
     f_buffer = ''
     f_shadow =  '\n// Shadow classes to obtain the data member offsets \n'
     f_shadow += 'namespace __shadow__ {\n'
     for c in selclasses :
       if 'incomplete' not in c :
-        if not self.quiet : print  'class '+ c['fullname']
-        names.append(c['fullname'])
+        className = c['fullname']
+        if not self.quiet : print  'class '+ className
+
+        #--------------------------------------------------------------------------
+        # Get the right io rules
+        #--------------------------------------------------------------------------
+        clReadRules = None
+        if ioReadRules and ioReadRules.has_key( className ):
+          clReadRules = ioReadRules[className]
+        clReadRawRules = None
+        if ioReadRawRules and ioReadRawRules.has_key( className ):
+          clReadRawRules = ioReadRawRules[className]
+
+        names.append(className)
         self.completeClass( c )
         self.enhanceClass( c )
-        scons, stubs   = self.genClassDict( c )
+        scons, stubs   = self.genClassDict( c, clReadRules, clReadRawRules )
         f_buffer += stubs
         f_buffer += scons
         f_shadow += self.genClassShadow(c)
@@ -756,13 +783,232 @@ class genDictionary(object) :
     c += '  static Dictionaries instance;\n}\n'
     return c
 #---------------------------------------------------------------------------------
+  def processIoRules( self, rules, listname ):
+    sc = ''
+    i = 0
+    for rule in rules:
+      attrs = rule['attrs']
+      sc += '  rule = &%s[%d];\n' %(listname, i)
+      i += 1
 
+      sc += '  rule->fSourceClass = "%s";\n' % (attrs['sourceClass'],)
+
+      if attrs.has_key( 'target' ):
+        sc += '  rule->fTarget      = "%s";\n' % (attrs['target'],)
+
+      if attrs.has_key( 'source' ):
+        sc += '  rule->fSource      = "%s";\n' % (attrs['source'],)
+        
+      if rule.has_key( 'funcname' ):
+        sc += '  rule->fFunctionPtr = (void *)%s;\n' % (rule['funcname'],)
+        sc += '  rule->fCode        = "%s";\n' % (rule['code'].replace( '\n', '\\n' ), )
+
+      if attrs.has_key( 'version' ):
+        sc += '  rule->fVersion     = "%s";\n' % (attrs['version'],)
+
+      if attrs.has_key( 'checksum' ):
+        sc += '  rule->fChecksum    = "%s";\n' % (attrs['checksum'],)
+
+      if attrs.has_key( 'embed' ):
+        sc += '  rule->fEmbed       = %s;\n' % (attrs['embed'],)
+
+      if attrs.has_key( 'include' ):
+        sc += '  rule->fInclude     = "%s";\n' % (attrs['include'],)
+
+    return sc
+#---------------------------------------------------------------------------------
+  def processIOAutoVariables( self, className, mappedName, source, target, memTypes ):
+    sc = '  //--- Variables added by the code generator ---\n'
+
+    #-----------------------------------------------------------------------------
+    # Write the source member ids and check if we should write the on-disk struct
+    #-----------------------------------------------------------------------------
+    generateOnFile = False
+    sc += '#if 0\n'
+    for member in source:
+      sc += '  static int id_%s = oldObj->GetId("%s");\n' % (member[1], member[1])
+      if member[0] != '':
+        generateOnFile = True
+    sc += '#endif\n'
+
+    #-----------------------------------------------------------------------------
+    # Generate the onfile structure if needed
+    #-----------------------------------------------------------------------------
+    if generateOnFile:
+      onfileStructName = mappedName + '_Onfile'
+      sc += '  struct ' + onfileStructName + ' {\n'
+
+      #---------------------------------------------------------------------------
+      # Generate the member list
+      #---------------------------------------------------------------------------
+      for member in source:
+        if member[0] == '': continue
+        sc += '    ' + member[0] + ' &' + member[1] + ';\n'
+
+      #---------------------------------------------------------------------------
+      # Generate the constructor
+      #---------------------------------------------------------------------------
+      sc += '    ' + onfileStructName + '( '
+      start = True
+      for member in source:
+        if member[0] == '': continue
+
+        if not start: sc += ', ';
+        else: start = False
+
+        sc += member[0] + ' &onfile_' + member[1]
+      sc += ' ): '
+
+      #---------------------------------------------------------------------------
+      # Generate the initializer list
+      #---------------------------------------------------------------------------
+      start = True
+      for member in source:
+        if member[0] == '': continue
+
+        if not start: sc += ', ';
+        else: start = False
+
+        sc += member[1] + '(onfile_' + member[1] + ')'
+      sc += '{}\n'
+      sc += '  };\n'
+
+      #---------------------------------------------------------------------------
+      # Initialize the structure - to  be changed later
+      #---------------------------------------------------------------------------
+      for member in source:
+        sc += '  static Long_t offset_Onfile_' + mappedName
+        sc += '_' + member[1] + ' = oldObj->GetClass()->GetDataMemberOffset("'
+        sc += member[1] +'");\n';
+
+      sc += '  char *onfile_add = (char*)oldObj->GetObject();\n'
+      sc += '  ' + mappedName + '_Onfile onfile(\n'
+
+      start = True
+      for member in source:
+        if member[0] == '': continue;
+
+        if not start: sc += ",\n"
+        else: start = False
+
+        sc += '         '
+        sc += '*(' + member[0] + '*)(onfile_add+offset_Onfile_'
+        sc += mappedName + '_' + member[1] + ')'  
+
+      sc += ' );\n\n'
+
+    #-----------------------------------------------------------------------------
+    # Write the target members
+    #-----------------------------------------------------------------------------
+    for member in target:
+      sc += '  %s &%s = *(%s*)(target + OffsetOf(__shadow__::%s, %s));\n' % (memTypes[member], member, memTypes[member], mappedName, member)
+    return sc + '\n'
+#---------------------------------------------------------------------------------
+  def processIoReadFunctions( self, cl, clt, rules, memTypes ):
+    i = 0;
+    sc = ''
+    for rule in rules:
+      if rule.has_key( 'code' ) and rule['code'] != '':
+        funcname = 'read_%s_%d' % (clt, i)
+
+        #--------------------------------------------------------------------------
+        # Process the data members
+        #--------------------------------------------------------------------------
+        sourceMembers = [member.strip() for member in rule['attrs']['source'].split(',')]
+        sourceMembersSpl = []
+        for member in sourceMembers:
+          type = ''
+          elem = ''
+          spl = member.split( ' ' )
+
+          if len(spl) == 1:
+            elem = member
+          else:
+            type = spl[0]
+            elem = spl[1]
+          sourceMembersSpl.append( (type, elem) )
+
+        targetMembers = [member.strip() for member in rule['attrs']['target'].split(',')]
+
+        #--------------------------------------------------------------------------
+        # Print things out
+        #--------------------------------------------------------------------------
+        sc += 'void %s( char *target, TVirtualObject *oldObj )\n' % (funcname,)
+        sc += '{\n'
+        sc += self.processIOAutoVariables( cl, clt, sourceMembersSpl, targetMembers, memTypes )
+        sc += '  %s* newObj = (%s*)target;\n' % (cl, cl)
+        sc += '  //--- User\'s code ---\n'
+        sc += rule['code'].strip('\n')
+        sc += '\n}\n\n'
+        rule['funcname'] = funcname
+        i += 1
+    return sc
+#---------------------------------------------------------------------------------
+  def processIoReadRawFunctions( self, cl, clt, rules, memTypes ):
+    i = 0;
+    sc = ''
+    for rule in rules:
+      if rule.has_key( 'code' ):
+        funcname = 'readraw_%s_%d' % (clt, i)
+        targetMembers = [member.strip() for member in rule['attrs']['target'].split(',')]
+        sc += 'static void %s( char *target, TBuffer *oldObj )\n' % (funcname,)
+        sc += '{\n'
+        sc += '#if 0\n';
+        sc += self.processIOAutoVariables( cl, clt, [], targetMembers, memTypes )
+        sc += '  %s* newObj = (%s*)target;\n' % (cl, cl)
+        sc += '  //--- User\'s code ---\n'
+        sc += rule['code'].strip('\n')
+        sc += '\n#endif\n'
+        sc += '}\n\n'
+        rule['funcname'] = funcname
+        i += 1
+    return sc
+
+#---------------------------------------------------------------------------------
+  def createTypeMap( self, memIds ):
+    toRet = {}
+    for memId in memIds:
+      if self.xref[memId]['elem'] != 'Field': continue
+      attrs = self.xref[memId]['attrs']
+      toRet[attrs['name']] = self.genTypeName( attrs['type'] )
+    return toRet
+#---------------------------------------------------------------------------------
+  def removeBrokenIoRules( self, cl, rules, members ):
+    for rule in rules:
+      if rule.has_key( 'target'):
+        targets = [target.strip() for target in rule['attrs']['target'].split(',')]
+        ok = True
+        for t in targets:
+          if not members.has_key( t ): ok = False
+        if not ok:
+          print '--->> genreflex: WARNING: IO rule for class', cl,
+          print '- data member', t, 'appears on the target list but does not seem',
+          print 'to be present in the target class'
+          rules.remove( rule )
+#---------------------------------------------------------------------------------
+  def getIncludes( self, readRules, readRawRules ):
+    testDict = {}
+    rulesets = []
+
+    if readRules: rulesets.append( readRules )
+    if readRawRules: rulesets.append( readRawRules )
+
+    for ruleset in rulesets:
+      for ruleList in ruleset.values():
+        for rule in ruleList:
+          if not rule['attrs'].has_key( 'include' ):
+            continue
+          lst = [r.strip() for r in rule['attrs']['include'].split( ',' )]
+          for r in lst:
+            testDict[r] = 1
+    return testDict.keys()
+#---------------------------------------------------------------------------------
   def translate_typedef (self, id):
     while self.xref[id]['elem'] in ['CvQualifiedType', 'Typedef']:
       id = self.xref[id]['attrs']['type']
     return self.genTypeName(id,enum=True, const=True)
-
-  def genClassDict(self, attrs):
+#---------------------------------------------------------------------------------
+  def genClassDict(self, attrs, ioReadRules, ioReadRawRules):
     members, bases = [], []
     cl  = attrs.get('name')
     clf = '::' + attrs['fullname']
@@ -778,9 +1024,40 @@ class genDictionary(object) :
     else :  # new in version 0.6.0
       if self.isClassVirtual(attrs) :  mod += ' | VIRTUAL'
     members = filter(self.memberfilter, members)  # Eliminate problematic members
+
     # Fill the different streams sc: constructor, ss: stub functions
-    sc = '//------Dictionary for class %s -------------------------------\n' % cl
+    sc = ''
+
+    #-----------------------------------------------------------------------------
+    # Get the data members infor and write down the schema evolution functions
+    #-----------------------------------------------------------------------------
+    memberTypeMap = self.createTypeMap( members )
+    if ioReadRules:
+      self.removeBrokenIoRules( cls, ioReadRules, memberTypeMap );
+      sc += self.processIoReadFunctions( cls, clt, ioReadRules, memberTypeMap )
+    if ioReadRawRules:
+      self.removeBrokenIoRules( csl, ioReadRawRules, memberTypeMap );
+      sc += self.processIoReadRawFunctions( cls, clt, ioReadRawRules, memberTypeMap )
+
+    sc += '//------Dictionary for class %s -------------------------------\n' % cl
     sc += 'void %s_dict() {\n' % (clt,)
+
+    # Write the schema evolution rules
+    if ioReadRules or ioReadRawRules:
+      sc += '  ROOT::TSchemaHelper* rule;\n'
+      
+    if ioReadRules:
+      sc += '  // the io read rules\n'
+      sc += '  std::vector<ROOT::TSchemaHelper> readrules(%d);\n' % (len(ioReadRules),)
+      sc += self.processIoRules( ioReadRules, 'readrules' )
+      sc += '\n\n'
+
+    if ioReadRawRules:
+      sc += '  // the io readraw rules\n'
+      sc += '  std::vector<ROOT::TSchemaHelper> readrawrules(%d);\n' % (len(ioReadRawRules),)
+      sc += self.processIoRules( ioReadRawRules, 'readrawrules' )
+      sc += '\n\n'
+
     if 'extra' in attrs and 'contid' in attrs['extra'] : 
       cid = attrs['extra']['contid'].upper()
     else :
@@ -803,6 +1080,12 @@ class genDictionary(object) :
         if pname not in ('name','pattern','n_name','file_name','file_pattern') :
           if pname == 'id' : pname = 'ClassID'
           sc += '\n  .AddProperty("%s", "%s")' % (pname, pval)
+
+    if ioReadRules:
+      sc += '\n  .AddProperty("ioread", readrules )'
+    if ioReadRawRules:
+      sc += '\n  .AddProperty("ioreadraw", readrawrules )'
+
     for b in bases :
       sc += '\n' + self.genBaseClassBuild( clf, b )
     for m in members :

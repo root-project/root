@@ -262,6 +262,24 @@ namespace ROOT { namespace Cintex {
             info->SetDestructor(newdelfunc->fDestructor);
          }
       }
+
+
+      //------------------------------------------------------------------------
+      // Deal with the schema evolution rules
+      //------------------------------------------------------------------------
+      if( TypeGet().Properties().HasProperty( "ioread" ) ) {
+         Any& obj = TypeGet().Properties().PropertyValue( "ioread" );
+         std::vector<ROOT::TSchemaHelper> rules = any_cast<std::vector<ROOT::TSchemaHelper> >( obj );
+         info->SetReadRules( rules );
+      }
+
+      if( TypeGet().Properties().HasProperty( "ioreadraw" ) ) {
+         Any& obj = TypeGet().Properties().PropertyValue( "ioreadraw" );
+         std::vector<ROOT::TSchemaHelper> rules = any_cast<std::vector<ROOT::TSchemaHelper> >( obj );
+         info->SetReadRawRules( rules );
+      }
+
+
       fClassInfo = info;
    }
 

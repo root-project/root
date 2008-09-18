@@ -1173,7 +1173,8 @@ struct G__comment_info {
 **************************************************************************/
 #define G__NOSTREAMER      0x01
 #define G__NOINPUTOPERATOR 0x02
-#define G__USEBYTECOUNT   0x04
+#define G__USEBYTECOUNT    0x04
+#define G__HASVERSION      0x08
 
 struct G__RootSpecial {
   char* deffile;
