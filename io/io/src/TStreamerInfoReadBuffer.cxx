@@ -1118,7 +1118,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
                   // Collection was saved member-wise
                   vers &= ~( TBufferFile::kStreamedMemberWise );
 
-                  if( vers < 8 && newClass ) {
+                  if( vers < 8 && newClass && newClass!=oldClass ) {
                      Error( "ReadBuffer", "Due to a bug this fill does not contain information necessary to do Schema Evolution, sorry :(" ); 
                      continue;
                   }
