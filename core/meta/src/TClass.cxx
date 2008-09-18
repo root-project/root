@@ -451,9 +451,9 @@ void TBuildRealData::Inspect(TClass* cl, const char* pname, const char* mname, c
          // classes composing this object (base classes, type of
          // embedded object and same for their data members).
          //
-         TClass* dmclass = TClass::GetClass(dm->GetTypeName(),kTRUE,kTRUE);
+         TClass* dmclass = TClass::GetClass(dm->GetTypeName(),kTRUE,isTransient);
          if (!dmclass) {
-            dmclass = TClass::GetClass(dm->GetTrueTypeName(),kTRUE,kTRUE);
+            dmclass = TClass::GetClass(dm->GetTrueTypeName(),kTRUE,isTransient);
          }
          if (dmclass) {
             if (dmclass->Property()) {
