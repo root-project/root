@@ -938,6 +938,7 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
          TSystemFile *file;
          TString fname;
          // directories first
+         fListTree->DeleteChildren(item);
          while ((file=(TSystemFile*)next())) {
             fname = file->GetName();
             if (file->IsDirectory()) {
@@ -1193,23 +1194,50 @@ void TGFileBrowser::GotoDir(const char *path)
    // Go to the directory "path" and open all the parent list tree items.
 
    TGListTreeItem *item, *itm;
+   Bool_t expand = kTRUE;
    TString sPath(gSystem->UnixPathName(path));
    item = fRootDir;
    if (item == 0) return;
-   fListTree->HighlightItem(item);
    fListTree->OpenItem(item);
-   DoubleClicked(item, 1);
    TObjArray *tokens = sPath.Tokenize("/");
+   TString first = ((TObjString*)tokens->At(0))->GetName();
+   if (first == "afs")
+      expand = kFALSE;
+   if (first.Length() == 2 && first.EndsWith(":")) {
+      first.ToUpper();
+      if (first[0] > 0x45) // Drive E
+         expand = kFALSE;
+   }
    for (Int_t i = 0; i < tokens->GetEntriesFast(); ++i) {
-      const char *token = ((TObjString*)tokens->At(i))->GetName();
+      TString token = ((TObjString*)tokens->At(i))->GetName();
+      if (token.Length() == 2 && token.EndsWith(":")) {
+         token.Append("\\");
+         itm = fListTree->FindChildByName(0, token);
+         if (itm) {
+            item = itm;
+            fListTree->OpenItem(item);
+            if (expand)
+               DoubleClicked(item, 1);
+         }
+         continue;
+      }
       itm = fListTree->FindChildByName(item, token);
       if (itm) {
          item = itm;
-         fListTree->HighlightItem(item);
          fListTree->OpenItem(item);
-         DoubleClicked(item, 1);
+         if (expand)
+            DoubleClicked(item, 1);
+      }
+      else {
+         itm = fListTree->AddItem(item, token);
+         item = itm;
+         fListTree->OpenItem(item);
+         if (expand)
+            DoubleClicked(item, 1);
       }
    }
+   fListTree->HighlightItem(item);
+   DoubleClicked(item, 1);
    delete tokens;
    fListTree->ClearViewPort();
    fListTree->AdjustPosition(item);
