@@ -48,6 +48,7 @@ class TClonesArray;
    const Int_t kIsClone      = BIT(11); // to indicate a TBranchClones
    const Int_t kBranchObject = BIT(12); // branch is a TObject*
    const Int_t kBranchAny    = BIT(17); // branch is an object*
+   const Int_t kMapObject    = kBranchObject | kBranchAny;
 
 class TBranch : public TNamed , public TAttFill {
 
