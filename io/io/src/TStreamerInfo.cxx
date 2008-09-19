@@ -1374,18 +1374,14 @@ void TStreamerInfo::BuildOld()
                element->SetNewType(-2);
             }
 
-         } else if( oldClass && newClass.GetClass() ) {
-            //-------------------------------------------------------------------
-            // Check if we can convert one type to another
-            //-------------------------------------------------------------------
-            const TObjArray* rules = (newClass->GetSchemaRules() ? newClass->GetSchemaRules()->FindRules( oldClass->GetName() ) : 0 );
-            if( !rules || (rules && rules->GetEntriesFast() == 0) ) {
-               Warning( "BuildOld", "Unable to convert %s to %s - no conversion rules found", oldClass->GetName(), newClass->GetName() );
-               element->SetNewType(-2);
-            }
-            delete rules;
-            element->SetNewClass( newClass );
-            
+         } else if(oldClass && 
+                   newClass.GetClass() && 
+                   newClass->GetSchemaRules() && 
+                   newClass->GetSchemaRules()->HasRuleWithSourceClass( oldClass->GetName() ) ) {
+            //-----------------------------------------------------------------------
+            // We can convert one type to another (at least for some of the versions.
+            //-----------------------------------------------------------------------
+            element->SetNewClass( newClass );               
          } else {
             element->SetNewType(-2);
          }
