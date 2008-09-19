@@ -1,0 +1,77 @@
+.x runbasicxml.C
+.q
+.L test_classes.h
+TXmlEx1 ex1;
+gROOT->GetClass("TXmlEx1");
+cout << gROOT->GetClass("TXmlEx1") << endl;
+.
+.q
+.x runbasicxml.C
+.q
+.x runbasicxml.C
+.q
+.x runbasicxml.C
+.q
+.x runbasicxml.C
+.q
+.x runbasicxml.C
+.q
+.x runbasicxml.C
+.q
+.x runbasicxml.C
+.q
+.L test_classes.h+
+.x runbasicxml.C
+.q
+.x runbasicxml.C
+.q
+.x runbasicxml.C
+.q
+.x runbasicxml.C
+.q
+.x runbasicxml.C
+.q
+.x runbasicxml.C
+.q
+.x runbasicxml.C
+.q
+.x runbasicxml.C
+.x runfilexml.C
+.q
+.x runfilexml.C
+.q
+.x runfilexml.C
+.x runbasicxml.C
+.x /data.local1/roottest//scripts/Bits.C
+.x runfilexml.C
+.x /data.local1/roottest//scripts/Bits.C
+.x runfilexml.C
+.x /data.local1/roottest//scripts/Bits.C
+.x runfilexml.C
+.x /data.local1/roottest//scripts/Bits.C
+.x runbasicxml.C
+.x runfilexml.C
+.q
+.x /Users/pcanal/root_working/roottest//scripts/Bits.C
+.x runfilexml.C
+.x /Users/pcanal/root_working/roottest//scripts/Bits.C
+.x runfilexml.C
+.x /Users/pcanal/root_working/roottest//scripts/Bits.C
+.x /Users/pcanal/root_working/roottest//scripts/build.C("test_classes.h")
+.x /Users/pcanal/root_working/roottest//scripts/Bits.C
+.x /Users/pcanal/root_working/roottest//scripts/build.C("test_classes.h")
+.x runfilexml.C
+.x /Users/pcanal/root_working/roottest//scripts/Bits.C
+.x runfilexml.C
+.x /Users/pcanal/root_working/roottest//scripts/Bits.C
+.x runbasicxml.C
+.x /Users/pcanal/root_working/roottest//scripts/Bits.C
+.x runbasicxml.C
+.x /Users/pcanal/root_working/roottest//scripts/Bits.C
+.x /Users/pcanal/root_working/roottest//scripts/build.C("test_classes.h")
+.x runfilexml.C
+.x runbasicxml.C
+.x /Users/pcanal/root_working/roottest//scripts/Bits.C
+.x /Users/pcanal/root_working/roottest//scripts/build.C("test_classes.h")
+.x runfilexml.C
+.x runbasicxml.C
