@@ -40,5 +40,7 @@
 #pragma link C++ class TCollectionStreamer-;
 #pragma link C++ class TCollectionClassStreamer-;
 #pragma link C++ class TCollectionMemberStreamer-;
+#pragma link C++ options=version(0) class TVirtualObject-;
+#pragma link C++ options=version(0) class TVirtualArray-;
 
 #endif
