@@ -1505,11 +1505,19 @@ void TBranchElement::InitInfo()
             Bool_t optim = TVirtualStreamerInfo::CanOptimize();
             if( targetClass != cl )
                info = (TStreamerInfo*)targetClass->GetConversionStreamerInfo( cl, fCheckSum );
-            else
+            else {
                info = (TStreamerInfo*)cl->FindStreamerInfo( fCheckSum );
+               if (info) {
+                  // Now that we found it, we need to make sure it is initialize (Find does not initialize the StreamerInfo).
+                  info = (TStreamerInfo*)cl->GetStreamerInfo(info->GetClassVersion());
+               }
+            } 
             if( info ) {
-               fClassVersion = fInfo->GetClassVersion();
                fInfo = info;
+               // We no longer reset the class version so that in case the user is passing us later 
+               // the address of a class that require (another) Conversion we can find the proper
+               // StreamerInfo.
+               //    fClassVersion = fInfo->GetClassVersion();
             }
             TVirtualStreamerInfo::Optimize(optim);
          }
