@@ -4558,11 +4558,11 @@ TVirtualStreamerInfo *TClass::FindStreamerInfo( TObjArray* arr, UInt_t checksum)
 {
    // Find the TVirtualStreamerInfo in the StreamerInfos corresponding to checksum
 
-   Int_t ninfos = arr->GetEntriesFast();
+   Int_t ninfos = arr->GetEntriesFast()-1;
    for (Int_t i=-1;i<ninfos;i++) {
       // TClass::fStreamerInfos has a lower bound not equal to 0,
       // so we have to use At and should not use UncheckedAt
-      TVirtualStreamerInfo *info = (TVirtualStreamerInfo*)arr->At(i);
+      TVirtualStreamerInfo *info = (TVirtualStreamerInfo*)arr->UncheckedAt(i);
       if (!info) continue;
       if (info->GetCheckSum() == checksum) {
          R__ASSERT(i==info->GetClassVersion() || (i==-1&&info->GetClassVersion()==1));
