@@ -576,54 +576,65 @@ TGLLogicalShape * TGLScenePad::CreateNewLogical(const TBuffer3D & buffer) const
    if (buffer.fColor == 1) // black -> light-brown; std behaviour for geom
       const_cast<TBuffer3D&>(buffer).fColor = 42;
 
-   switch (buffer.Type()) {
-   case TBuffer3DTypes::kLine:
-      newLogical = new TGLPolyLine(buffer);
-      break;
-   case TBuffer3DTypes::kMarker:
-      newLogical = new TGLPolyMarker(buffer);
-      break;
-   case TBuffer3DTypes::kSphere: {
-      const TBuffer3DSphere * sphereBuffer = dynamic_cast<const TBuffer3DSphere *>(&buffer);
-      if (sphereBuffer) {
-         // We can only draw solid uncut spheres natively at present
-         if (sphereBuffer->IsSolidUncut()) {
-            newLogical = new TGLSphere(*sphereBuffer);
-         } else {
-            newLogical = new TGLFaceSet(buffer);
-         }
-      }
-      else {
-         Error("TGLScenePad::CreateNewLogical", "failed to cast buffer of type 'kSphere' to TBuffer3DSphere");
-      }
-      break;
-   }
-   case TBuffer3DTypes::kTube:
-   case TBuffer3DTypes::kTubeSeg:
-   case TBuffer3DTypes::kCutTube: {
-      const TBuffer3DTube * tubeBuffer = dynamic_cast<const TBuffer3DTube *>(&buffer);
-      if (tubeBuffer)
+   switch (buffer.Type())
+   {
+      case TBuffer3DTypes::kLine:
+         newLogical = new TGLPolyLine(buffer);
+         break;
+      case TBuffer3DTypes::kMarker:
+         newLogical = new TGLPolyMarker(buffer);
+         break;
+      case TBuffer3DTypes::kSphere:
       {
-         newLogical = new TGLCylinder(*tubeBuffer);
+         const TBuffer3DSphere * sphereBuffer = dynamic_cast<const TBuffer3DSphere *>(&buffer);
+         if (sphereBuffer)
+         {
+            // We can only draw solid uncut spheres natively at present.
+            // If somebody already passed the raw buffer, he probably wants us to use it.
+            if (sphereBuffer->IsSolidUncut() && !buffer.SectionsValid(TBuffer3D::kRawSizes|TBuffer3D::kRaw))
+            {
+               newLogical = new TGLSphere(*sphereBuffer);
+            } else {
+               newLogical = new TGLFaceSet(buffer);
+            }
+         } else {
+            Error("TGLScenePad::CreateNewLogical", "failed to cast buffer of type 'kSphere' to TBuffer3DSphere");
+         }
+         break;
       }
-      else {
-         Error("TGLScenePad::CreateNewLogical", "failed to cast buffer of type 'kTube/kTubeSeg/kCutTube' to TBuffer3DTube");
+      case TBuffer3DTypes::kTube:
+      case TBuffer3DTypes::kTubeSeg:
+      case TBuffer3DTypes::kCutTube:
+      {
+         const TBuffer3DTube * tubeBuffer = dynamic_cast<const TBuffer3DTube *>(&buffer);
+         if (tubeBuffer)
+         {
+            // If somebody already passed the raw buffer, he probably wants us to use it.
+            if (!buffer.SectionsValid(TBuffer3D::kRawSizes|TBuffer3D::kRaw)) {
+               newLogical = new TGLCylinder(*tubeBuffer);
+            } else {
+               newLogical = new TGLFaceSet(buffer);
+            }
+         } else {
+            Error("TGLScenePad::CreateNewLogical", "failed to cast buffer of type 'kTube/kTubeSeg/kCutTube' to TBuffer3DTube");
+         }
+         break;
       }
-      break;
-   }
-   case TBuffer3DTypes::kComposite: {
-      // Create empty faceset and record partial complete composite object
-      // Will be populated with mesh in CloseComposite()
-      if (fComposite) {
-         Error("TGLScenePad::CreateNewLogical", "composite already open");
+      case TBuffer3DTypes::kComposite:
+      {
+         // Create empty faceset and record partial complete composite object
+         // Will be populated with mesh in CloseComposite()
+         if (fComposite)
+         {
+            Error("TGLScenePad::CreateNewLogical", "composite already open");
+         }
+         fComposite = new TGLFaceSet(buffer);
+         newLogical = fComposite;
+         break;
       }
-      fComposite = new TGLFaceSet(buffer);
-      newLogical = fComposite;
-      break;
-   }
-   default:
-      newLogical = new TGLFaceSet(buffer);
-      break;
+      default:
+         newLogical = new TGLFaceSet(buffer);
+         break;
    }
 
    return newLogical;

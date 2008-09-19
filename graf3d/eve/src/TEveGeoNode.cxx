@@ -470,6 +470,7 @@ TEveGeoShape::TEveGeoShape(const Text_t* name, const Text_t* title) :
    TNamed        (name, title),
    fColor        (0),
    fTransparency (0),
+   fNSegments    (0),
    fShape        (0)
 {
    // Constructor.
@@ -515,7 +516,7 @@ void TEveGeoShape::Paint(Option_t* /*option*/)
    if (fShape == 0)
       return;
 
-   TEveGeoManagerHolder gmgr(fgGeoMangeur);
+   TEveGeoManagerHolder gmgr(fgGeoMangeur, fNSegments);
 
    TBuffer3D& buff = (TBuffer3D&) fShape->GetBuffer3D
       (TBuffer3D::kCore, kFALSE);
@@ -526,7 +527,11 @@ void TEveGeoShape::Paint(Option_t* /*option*/)
    RefMainTrans().SetBuffer3D(buff);
    buff.fLocalFrame   = kTRUE; // Always enforce local frame (no geo manager).
 
-   fShape->GetBuffer3D(TBuffer3D::kBoundingBox | TBuffer3D::kShapeSpecific, kTRUE);
+                          
+   Int_t sections = TBuffer3D::kBoundingBox | TBuffer3D::kShapeSpecific;
+   if (fNSegments > 2)
+      sections |= TBuffer3D::kRawSizes | TBuffer3D::kRaw;
+   fShape->GetBuffer3D(sections, kTRUE);
 
    Int_t reqSec = gPad->GetViewer3D()->AddObject(buff);
 
@@ -667,7 +672,7 @@ TBuffer3D* TEveGeoShape::MakeBuffer3D()
       return 0;
    }
 
-   TEveGeoManagerHolder gmgr(fgGeoMangeur);
+   TEveGeoManagerHolder gmgr(fgGeoMangeur, fNSegments);
 
    TBuffer3D* buff  = fShape->MakeBuffer3D();
    TEveTrans& mx    = RefMainTrans();

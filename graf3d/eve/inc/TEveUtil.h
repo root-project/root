@@ -139,13 +139,14 @@ public:
 class TEveGeoManagerHolder
 {
 private:
-   TGeoManager* fManager;
+   TGeoManager *fManager;
+   Int_t        fNSegments;
 
    TEveGeoManagerHolder(const TEveGeoManagerHolder&);            // Not implemented
    TEveGeoManagerHolder& operator=(const TEveGeoManagerHolder&); // Not implemented
 
 public:
-   TEveGeoManagerHolder(TGeoManager* new_gmgr=0);
+   TEveGeoManagerHolder(TGeoManager* new_gmgr=0, Int_t n_seg=0);
    virtual ~TEveGeoManagerHolder();
 
    ClassDef(TEveGeoManagerHolder, 0); // Exception-safe wrapper for temporary setting of gGeoManager variable.

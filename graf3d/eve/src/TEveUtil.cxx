@@ -442,12 +442,20 @@ TEvePadHolder::~TEvePadHolder()
 ClassImp(TEveGeoManagerHolder);
 
 //______________________________________________________________________________
-TEveGeoManagerHolder::TEveGeoManagerHolder(TGeoManager* new_gmgr) :
-   fManager(gGeoManager)
+TEveGeoManagerHolder::TEveGeoManagerHolder(TGeoManager* new_gmgr, Int_t n_seg) :
+   fManager   (gGeoManager),
+   fNSegments (0)
 {
    // Constructor.
+   // If n_seg is specified and larger than 2, the new geo-manager's
+   // NSegments is set to this value.
 
    gGeoManager = new_gmgr;
+   if (gGeoManager && n_seg > 2)
+   {
+      fNSegments = gGeoManager->GetNsegments();
+      gGeoManager->SetNsegments(n_seg);
+   }
 }
 
 //______________________________________________________________________________
@@ -455,6 +463,10 @@ TEveGeoManagerHolder::~TEveGeoManagerHolder()
 {
    // Destructor.
 
+   if (gGeoManager && fNSegments > 2)
+   {
+      gGeoManager->SetNsegments(fNSegments);
+   }
    gGeoManager = fManager;
 }
 

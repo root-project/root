@@ -126,6 +126,7 @@ class TEveGeoShape : public TEveElement,
 protected:
    Color_t           fColor;
    UChar_t           fTransparency;
+   Int_t             fNSegments;
    TGeoShape*        fShape;
 
    static TGeoManager* fgGeoMangeur;
@@ -143,8 +144,10 @@ public:
    virtual UChar_t GetMainTransparency()     const { return fTransparency; }
    virtual void    SetMainTransparency(UChar_t t)  { fTransparency = t; }
 
-   Color_t     GetColor() const { return fColor; }
-   TGeoShape*  GetShape()       { return fShape; }
+   Color_t     GetColor()      const { return fColor; }
+   Int_t       GetNSegments()  const { return fNSegments; }
+   void        SetNSegments(Int_t s) { fNSegments = s; }
+   TGeoShape*  GetShape()            { return fShape; }
    void        SetShape(TGeoShape* s);
 
    virtual void Paint(Option_t* option="");
