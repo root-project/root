@@ -39,7 +39,7 @@ endif
 
 ##### Xrootd executables #####
 ifneq ($(PLATFORM),win32)
-XRDEXEC     = xrootd olbd xrdcp xrd xrdpwdadmin
+XRDEXEC     = xrootd olbd xrdcp xrd xrdpwdadmin cmsd xrdstagetool xprep
 ifneq ($(BUILDXRDGSI),)
 XRDEXEC    += xrdgsiproxy
 endif
