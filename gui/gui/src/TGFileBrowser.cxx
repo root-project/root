@@ -1204,9 +1204,16 @@ void TGFileBrowser::GotoDir(const char *path)
    if (first == "afs")
       expand = kFALSE;
    if (first.Length() == 2 && first.EndsWith(":")) {
-      first.ToUpper();
-      if (first[0] > 0x45) // Drive E
-         expand = kFALSE;
+      TList *curvol  = gSystem->GetVolumes("cur");
+      if (curvol) {
+         TNamed *drive = (TNamed *)curvol->At(0);
+         if (first == drive->GetName()) {
+            TString infos = drive->GetTitle();
+            if (infos.Contains("Network"))
+               expand = kFALSE;
+         }
+         delete curvol;
+      }
    }
    for (Int_t i = 0; i < tokens->GetEntriesFast(); ++i) {
       TString token = ((TObjString*)tokens->At(i))->GetName();
