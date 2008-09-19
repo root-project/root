@@ -83,6 +83,7 @@ protected:
    Int_t                   fNumberOfParticles;     //! Number of particles
 public:
    TPythia8();
+   TPythia8(const char *xmlDir);
    virtual ~TPythia8();
    static TPythia8        *Instance();
    Pythia8::Pythia        *Pythia8() {return fPythia;}

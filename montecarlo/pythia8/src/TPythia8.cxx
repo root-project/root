@@ -90,6 +90,22 @@ TPythia8::TPythia8():
 }
 
 //___________________________________________________________________________
+TPythia8::TPythia8(const char *xmlDir):
+    TGenerator("TPythia8", "TPythia8"),
+    fPythia(0),
+    fNumberOfParticles(0)
+{
+   // Constructor with an xmlDir (eg "../xmldoc"
+   if (fgInstance) 
+      Fatal("TPythia8", "There's already an instance of TPythia8");
+  
+   delete fParticles; // was allocated as TObjArray in TGenerator
+    
+   fParticles = new TClonesArray("TParticle",50);
+   fPythia    = new Pythia8::Pythia(xmlDir);
+}
+
+//___________________________________________________________________________
 TPythia8::~TPythia8()
 {
    // Destructor
