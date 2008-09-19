@@ -11,6 +11,9 @@
 #include <iostream>
 #include "Rtypes.h"
 
+#if !defined(__CINT__)
+// Do no clutter the dictionary (in particular with STL containers)
+
 namespace ROOT
 {
    class TSchemaRuleProcessor
@@ -203,5 +206,6 @@ namespace ROOT
          }
    };
 }
+#endif // defined(__CINT__)
 
 #endif // ROOT_TSchemaRuleProcessor

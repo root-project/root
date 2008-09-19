@@ -22,6 +22,9 @@
 class G__ClassInfo;
 #endif
 
+#if !defined(__CINT__)
+// Avoid clutering the dictionary (in particular with the STL declaration)
+
 namespace ROOT
 {
    //---------------------------------------------------------------------------
@@ -80,5 +83,6 @@ namespace ROOT
    //---------------------------------------------------------------------------
    void ProcessReadRawPragma( char* args );
 }
+#endif // !defined(__CINT__)
 
 #endif // R__R_CONVERSION_RULE_PARSER_H
