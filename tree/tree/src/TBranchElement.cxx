@@ -1485,14 +1485,17 @@ void TBranchElement::InitInfo()
          //---------------------------------------------------------------------
          // Get the streamer info for given verision
          //---------------------------------------------------------------------
-         Bool_t optim = TVirtualStreamerInfo::CanOptimize();
-         TVirtualStreamerInfo::Optimize(kFALSE);
-         if( targetClass != cl )
-            fInfo = (TStreamerInfo*)targetClass->GetConversionStreamerInfo( cl, fClassVersion );
-         else
-            fInfo = (TStreamerInfo*)cl->GetStreamerInfo(fClassVersion);
-         TVirtualStreamerInfo::Optimize(optim);
-
+         {
+            Bool_t optim = TVirtualStreamerInfo::CanOptimize();
+            TVirtualStreamerInfo::Optimize(kFALSE);
+            if( targetClass != cl ) {
+               fInfo = (TStreamerInfo*)targetClass->GetConversionStreamerInfo( cl, fClassVersion );
+            } else {
+               fInfo = (TStreamerInfo*)cl->GetStreamerInfo(fClassVersion);
+            }
+            TVirtualStreamerInfo::Optimize(optim);
+         }
+         
          // FIXME: Check that the found streamer info checksum matches our branch class checksum here.
          // Check to see if the class code was unloaded/reloaded
          // since we were created.

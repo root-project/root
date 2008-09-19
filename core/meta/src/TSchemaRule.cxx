@@ -467,9 +467,9 @@ Bool_t TSchemaRule::ProcessVersion( const TString& version ) const
    //---------------------------------------------------------------------------
    // Check if we have valid list
    //---------------------------------------------------------------------------
-   std::string ver = (const char*)version;
-   if( ver[0] != '[' || ver[ver.size()-1] != ']' )
+   if( version[0] != '[' || version[version.Length()-1] != ']' )
       return kFALSE;
+   std::string ver = version.Data();
 
    std::list<std::string> versions;
    ROOT::TSchemaRuleProcessor::SplitList( ver.substr( 1, ver.size()-2), versions );
@@ -490,14 +490,14 @@ Bool_t TSchemaRule::ProcessVersion( const TString& version ) const
    //---------------------------------------------------------------------------
    std::list<std::string>::iterator it;
    for( it = versions.begin(); it != versions.end(); ++it ) {
-      std::pair<Int_t, Int_t> ver;
-      if( !ROOT::TSchemaRuleProcessor::ProcessVersion( *it, ver ) )
+      std::pair<Int_t, Int_t> verpair;
+      if( !ROOT::TSchemaRuleProcessor::ProcessVersion( *it, verpair ) )
       {
          delete fVersionVect;
          fVersionVect = 0;
          return kFALSE;
       }
-      fVersionVect->push_back( ver );
+      fVersionVect->push_back( verpair );
    }
    return kTRUE;
 }
