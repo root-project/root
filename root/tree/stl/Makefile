@@ -7,7 +7,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += mixingInterp mixingCompiled mixingGood
+TEST_TARGETS += mixingInterp mixingCompiled mixingGood vstr
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME:=$(shell expr $(PWD) : '\(.*/roottest/\)')
@@ -28,4 +28,7 @@ mixingInterp: mixing.log
 	$(TestDiff)
 
 mixingGood: mixingGood.clog
+	$(TestDiff)
+
+vstr: vstr.clog
 	$(TestDiff)
