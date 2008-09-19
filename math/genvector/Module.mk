@@ -19,6 +19,7 @@ GENVECTORLINC :=  \
                 $(MODDIRI)/Math/LinkDef_Point3D.h \
                 $(MODDIRI)/Math/LinkDef_Vector3D.h \
                 $(MODDIRI)/Math/LinkDef_Vector4D.h \
+                $(MODDIRI)/Math/LinkDef_GenVector2.h \
                 $(MODDIRI)/Math/LinkDef_Rotation.h
 GENVECTORDS   := $(MODDIRS)/G__GenVector.cxx
 GENVECTORDS32 := $(MODDIRS)/G__GenVector32.cxx
