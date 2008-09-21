@@ -405,6 +405,9 @@ static BOOL CALLBACK EnumChildProc(HWND hwndChild, LPARAM lParam)
    // Make sure the child window is visible.
 
    ::ShowWindow(hwndChild, SW_SHOWNORMAL);
+   GdkWindow *child = gdk_window_lookup(hwndChild);
+   if (child)
+      ((GdkWindowPrivate *) child)->mapped = TRUE;
    return TRUE;
 }
 
