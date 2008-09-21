@@ -715,7 +715,7 @@ check_comp() {
     case $comptype in
     C)
         if test "x$altcc" = "x" ; then
-            altcc=`grep '^CC ' config/Makefile.$arch | awk '{ if (NF==3) {print $3; nextfile} }'`
+            altcc=`grep '^CC ' config/Makefile.$arch | awk '{ if (NF==3) {print $3; exit 0} }'`
         fi
         if `$cwhich $altcc > /dev/null 2>&1` ; then
             found_comp=1
@@ -726,7 +726,7 @@ check_comp() {
         ;;
     C++)
         if test "x$altcxx" = "x" ; then
-            altcxx=`grep '^CXX ' config/Makefile.$arch | awk '{ if (NF==3) {print $3; nextfile} }'`
+            altcxx=`grep '^CXX ' config/Makefile.$arch | awk '{ if (NF==3) {print $3; exit 0} }'`
         fi
         if `$cwhich $altcxx > /dev/null 2>&1` ; then
             found_comp=1
@@ -737,7 +737,7 @@ check_comp() {
         ;;
     LD)
         if test "x$altld" = "x" ; then
-            altld=`grep '^LD ' config/Makefile.$arch | awk '{ if (NF==3) {print $3; nextfile} }'`
+            altld=`grep '^LD ' config/Makefile.$arch | awk '{ if (NF==3) {print $3; exit 0} }'`
             if test "x$arch" = "xwin32" ; then
                 altldorg="link"
                 altldtmp="$altld"
@@ -762,7 +762,7 @@ check_comp() {
         ;;
     F77)
         if test "x$altf77" = "x" ; then
-            altf77=`grep '^F77 ' config/Makefile.$arch | awk '{ if (NF==3) {print $3; nextfile} }'`
+            altf77=`grep '^F77 ' config/Makefile.$arch | awk '{ if (NF==3) {print $3; exit 0} }'`
             if test "x$arch" = "xwin32" ; then
                 altf77org="fl32"
                 altf77tmp="$altf77"
