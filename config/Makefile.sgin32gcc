@@ -29,7 +29,7 @@ CINTCFLAGS    = -fsigned-char -Wall -fPIC -DG__REGEXP1 -DG__SIGNEDCHAR \
 COMPILER      = gnu
 
 # Linker:
-LD            = g++ $(EXTRA_LDFLAGS)
+LD            = g++
 LDFLAGS       = $(OPT) -lm -lgen -L/usr/lib32
 SOFLAGS       = -shared
 SOEXT         = so

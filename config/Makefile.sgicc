@@ -25,7 +25,7 @@ CINTCFLAGS    = -n32 -signed -w -DIRIX64 -DG__REGEXP1 -DG__UNIX -DG__OSFDLL \
                 -DG__SHAREDLIB -DG__SIGNEDCHAR -DG__ROOT -DG__REDIRECTIO $(EXTRA_CFLAGS)
 
 # Linker:
-LD            = $(CXX)
+LD            = CC
 LDFLAGS       = -ptused -LANG:std -FE:template_in_elf_section $(OPT) $(EXTRA_LDFLAGS)
 SOFLAGS       = -n32 -shared
 SOEXT         = so
