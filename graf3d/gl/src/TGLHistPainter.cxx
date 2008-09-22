@@ -354,17 +354,6 @@ void TGLHistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 }
 
 //______________________________________________________________________________
-void TGLHistPainter::FitPanel()
-{
-   //Default implementation is OK.
-   //This function is called from a context menu
-   //after right click on a plot's area. Opens window
-   //("panel") with several controls.
-   if (fDefaultPainter.get())
-      fDefaultPainter->FitPanel();
-}
-
-//______________________________________________________________________________
 TList *TGLHistPainter::GetContourList(Double_t contour)const
 {
    //Get contour list.

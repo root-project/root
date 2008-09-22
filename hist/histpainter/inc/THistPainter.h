@@ -65,7 +65,6 @@ public:
    virtual Int_t      DistancetoPrimitive(Int_t px, Int_t py);
    virtual void       DrawPanel();
    virtual void       ExecuteEvent(Int_t event, Int_t px, Int_t py);
-   virtual void       FitPanel();
    virtual TList     *GetContourList(Double_t contour) const;
    virtual char      *GetObjectInfo(Int_t px, Int_t py) const;
    virtual TList     *GetStack() const {return fStack;}

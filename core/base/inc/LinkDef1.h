@@ -149,7 +149,6 @@
 #pragma link C++ class TGuiFactory;
 #pragma link C++ class TStyle+;
 #pragma link C++ class TVirtualX+;
-#pragma link C++ class TVirtualFitter+;
 #pragma link C++ class TVirtualPad-;
 // Those are NOT going to be saved ... so no need for a +
 #pragma link C++ class TVirtualViewer3D;

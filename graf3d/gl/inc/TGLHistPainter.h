@@ -59,7 +59,6 @@ public:
    Int_t          DistancetoPrimitive(Int_t px, Int_t py);
    void           DrawPanel();
    void           ExecuteEvent(Int_t event, Int_t px, Int_t py);
-   void           FitPanel();
    TList         *GetContourList(Double_t contour)const;
    char          *GetObjectInfo(Int_t px, Int_t py)const;
    TList         *GetStack()const;

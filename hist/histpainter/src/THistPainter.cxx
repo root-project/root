@@ -2634,25 +2634,6 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    }
 }
 
-
-//______________________________________________________________________________
-void THistPainter::FitPanel()
-{
-   /* Begin_html
-   Display a panel with all histogram fit option.
-   End_html */
-
-   gCurrentHist = fH;
-   if (!gPad) {
-      Error("FitPanel", "need to draw histogram first");
-      return;
-   }
-
-   if (!TClass::GetClass("TFitEditor")) gSystem->Load("libFitPanel");
-   gROOT->ProcessLine(Form("TFitEditor::Open((TVirtualPad*)0x%lx,(TObject*)0x%lx)",gPad,fH));
-}
-
-
 //______________________________________________________________________________
 TList *THistPainter::GetContourList(Double_t contour) const
 {
