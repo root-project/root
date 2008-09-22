@@ -14,6 +14,11 @@
 /*********************************************************************
 * Shadow class functions
 *********************************************************************/
+
+#ifndef G__SHADOW_H
+#define G__SHADOW_H 
+
+
 #include <string>
 #include <ostream>
 #ifndef G__API
@@ -69,3 +74,5 @@ private:
 } // end namespace Cint
 
 using namespace Cint;
+
+#endif // G__SHADOW_H

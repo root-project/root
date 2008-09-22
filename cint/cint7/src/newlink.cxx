@@ -610,6 +610,22 @@ void Cint::Internal::G__gen_clink()
    // --
 }
 
+static void AllocateRootSpecial( int tagnum )
+{
+  if(G__struct.rootspecial[tagnum]) return;
+  G__struct.rootspecial[tagnum]
+    =(struct G__RootSpecial*)malloc(sizeof(struct G__RootSpecial));
+  G__struct.rootspecial[tagnum]->deffile=(char*)NULL;
+  G__struct.rootspecial[tagnum]->impfile=(char*)NULL;
+  G__struct.rootspecial[tagnum]->defline=0;
+  G__struct.rootspecial[tagnum]->impline=0;
+  G__struct.rootspecial[tagnum]->version=0;
+  G__struct.rootspecial[tagnum]->instancecount=0;
+  G__struct.rootspecial[tagnum]->heapinstancecount=0;
+  G__struct.rootspecial[tagnum]->defaultconstructor = 0;
+  // G__struct.rootspecial[tagnum]->defaultconstructorifunc = 0;
+}
+
 #ifdef G__ROOT
 //______________________________________________________________________________
 static void G__cpp_initialize(FILE* fp)
@@ -7224,6 +7240,7 @@ void Cint::Internal::G__specify_link(int link_stub)
    int rfNoInputOper = 0;
    int rfUseBytecount = 0;
    int rfNoMap = 0;
+   int rfVersionNumber = -1;
 
    /*************************************************************************
    * #pragma link [spec] options=...
@@ -7232,6 +7249,7 @@ void Cint::Internal::G__specify_link(int link_stub)
    *   noinputoper: set G__NOINPUTOPERATOR flag
    *   evolution: set G__USEBYTECOUNT flag
    *   nomap: (irgnored by CINT; prevents entry in ROOT's rootmap file)
+   *   version(x): sets the version number of the class to x
    *************************************************************************/
    if (!strncmp(buf, "options=", 8) || !strncmp(buf, "option=", 7)) {
       const char* optionStart = buf + 7;
@@ -7252,6 +7270,26 @@ void Cint::Internal::G__specify_link(int link_stub)
          else if (*iOpt == "nostreamer") rfNoStreamer = 1;
          else if (*iOpt == "noinputoper") rfNoInputOper = 1;
          else if (*iOpt == "evolution") rfUseBytecount = 1;
+         else if (iOpt->size() >= 7 && !strncmp( iOpt->c_str(), "version", 7 )) {
+            std::string::size_type fb = iOpt->find( '(' );
+            std::string::size_type lb = iOpt->find( ')' );
+            if( fb == std::string::npos || lb == std::string::npos ||
+                fb+1 >= lb ) {
+               G__fprinterr(G__serr, "Malformed version option \"%s\"\n", iOpt->c_str() );
+               G__fprinterr(G__serr, "Should be specified as follows: version(x)\n" );
+            }
+            else {
+               std::string verStr = iOpt->substr( fb+1, lb-fb-1 );
+               bool noDigit       = false;
+               for( std::string::size_type i = 0; i<verStr.size(); ++i )
+                  if( !isdigit( verStr[i] ) ) noDigit = true;
+ 
+               if( noDigit )
+                  G__fprinterr(G__serr, "Malformed version option! \"%s\" is not a non-negative number!\n", verStr.c_str() );
+               else
+                  rfVersionNumber = atoi( verStr.c_str() );
+            }
+         }
          else {
             G__printlinenum();
             G__fprinterr(G__serr, "Warning: ignoring unknown #pragma link option=%s\n", iOpt->c_str());
@@ -7448,6 +7486,12 @@ void Cint::Internal::G__specify_link(int link_stub)
                   G__struct.rootflag[i] &= ~G__NOSTREAMER;
                   G__fprinterr(G__serr, "option + mutual exclusive with -, + prevails\n");
                }
+            }
+            if( rfVersionNumber > -1 )
+            {
+               AllocateRootSpecial( i );
+               G__struct.rootflag[i] |= G__HASVERSION;
+               G__struct.rootspecial[i]->version = rfVersionNumber;
             }
          }
       }

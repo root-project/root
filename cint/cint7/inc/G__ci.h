@@ -1085,7 +1085,8 @@ typedef struct G__va_arg_buf_TAG {
 
 #define G__NOSTREAMER      0x01
 #define G__NOINPUTOPERATOR 0x02
-#define G__USEBYTECOUNT   0x04
+#define G__USEBYTECOUNT    0x04
+#define G__HASVERSION      0x08
 
 #define G__BYTECODE_NOTYET    1
 #define G__BYTECODE_FAILURE   2
