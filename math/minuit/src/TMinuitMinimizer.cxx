@@ -32,6 +32,8 @@
 
 // initialize the static instances
 
+#define USE_STATIC_TMINUIT
+
 ROOT::Math::IMultiGenFunction * TMinuitMinimizer::fgFunc = 0; 
 TMinuit * TMinuitMinimizer::fgMinuit = 0; 
 
@@ -39,6 +41,7 @@ ClassImp(TMinuitMinimizer)
 
 
 TMinuitMinimizer::TMinuitMinimizer(ROOT::Minuit::EMinimizerType type ) : 
+   fUsed(false),
    fDim(0),
    fStrategy(1),
    fType(type), 
@@ -51,6 +54,7 @@ TMinuitMinimizer::TMinuitMinimizer(ROOT::Minuit::EMinimizerType type ) :
 }
 
 TMinuitMinimizer::TMinuitMinimizer(const char *  type ) : 
+   fUsed(false),
    fDim(0),
    fStrategy(1),
    fMinuit(fgMinuit)
@@ -74,7 +78,9 @@ TMinuitMinimizer::TMinuitMinimizer(const char *  type ) :
 TMinuitMinimizer::~TMinuitMinimizer() 
 {
    // Destructor implementation.
+#ifndef USE_STATIC_TMINUIT
    if (fMinuit) delete fMinuit; 
+#endif
 }
 
 TMinuitMinimizer::TMinuitMinimizer(const TMinuitMinimizer &) : 
@@ -103,7 +109,13 @@ void TMinuitMinimizer::SetFunction(const  ROOT::Math::IMultiGenFunction & func) 
    fDim = func.NDim(); 
 
 #ifdef USE_STATIC_TMINUIT
-   if (fgMinuit == 0) fgMinuit =  new TMinuit(fDim);
+   if (fgMinuit == 0) 
+      fgMinuit =  new TMinuit(fDim);
+   else if (fgMinuit->GetNumPars() != int(fDim) ) { 
+      delete fgMinuit; 
+      fgMinuit =  new TMinuit(fDim);
+   }
+
    fMinuit = fgMinuit; 
 #else
    if (fMinuit) { 
@@ -137,7 +149,13 @@ void TMinuitMinimizer::SetFunction(const  ROOT::Math::IMultiGradFunction & func)
    fDim = func.NDim(); 
 
 #ifdef USE_STATIC_TMINUIT
-   if (fgMinuit == 0) fgMinuit =  new TMinuit(fDim);
+   if (fgMinuit == 0) 
+      fgMinuit =  new TMinuit(fDim);
+   else if (fgMinuit->GetNumPars() != int(fDim) ) { 
+      delete fgMinuit; 
+      fgMinuit =  new TMinuit(fDim);
+   }
+
    fMinuit = fgMinuit; 
 #else
    if (fMinuit) delete fMinuit;  
@@ -187,6 +205,10 @@ bool TMinuitMinimizer::SetVariable(unsigned int ivar, const std::string & name, 
    if (fMinuit == 0) { 
       std::cerr << "TMinuitMinimizer: ERROR : invalid TMinuit pointer. Set function first " << std::endl;
    }
+
+   // clear after minimization when setting params
+   if (fUsed) DoClear(); 
+
    fMinuit->DefineParameter(ivar , name.c_str(), val, step, 0., 0. ); 
    return true; 
 }
@@ -196,6 +218,10 @@ bool TMinuitMinimizer::SetLimitedVariable(unsigned int ivar, const std::string &
    if (fMinuit == 0) { 
       std::cerr << "TMinuitMinimizer: ERROR : invalid TMinuit pointer. Set function first " << std::endl;
    }
+
+   // clear after minimization when setting params
+   if (fUsed) DoClear(); 
+
    fMinuit->DefineParameter(ivar, name.c_str(), val, step, lower, upper ); 
    return true; 
 }
@@ -274,6 +300,7 @@ bool TMinuitMinimizer::Minimize() {
 
    }
 
+   fUsed = true;
    fStatus = ierr; 
 
    // run improved if needed
@@ -388,6 +415,23 @@ bool TMinuitMinimizer::GetMinosError(unsigned int i, double & errLow, double & e
 
 }
 
+void TMinuitMinimizer::DoClear() { 
+   // reset TMinuit
+
+   fMinuit->mncler();
+   
+   //reset the internal Minuit random generator to its initial state
+   double val = 3;
+   int inseed = 12345;
+   fMinuit->mnrn15(val,inseed);
+   fUsed = false; 
+
+}
+
+void TMinuitMinimizer::PrintResults() { 
+   // print minimizer result
+   fMinuit->mnprin(PrintLevel()-1,fMinVal);
+}
 
 //    } // end namespace Fit
 

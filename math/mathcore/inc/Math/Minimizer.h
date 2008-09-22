@@ -249,6 +249,9 @@ public:
    /// return reference to the objective function
    ///virtual const ROOT::Math::IGenFunction & Function() const = 0; 
 
+   /// print the result according to set level. 
+   virtual void PrintResults() {}
+
 
    /** minimizer configuration parameters **/
 
@@ -297,7 +300,6 @@ public:
 
    /// flag to check if minimizer needs to perform accurate error analysis (e.g. run Hesse for Minuit)
    void SetValidError(bool on) { fValidError = on; } 
-
 
 
 

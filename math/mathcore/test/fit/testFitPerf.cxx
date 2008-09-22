@@ -54,7 +54,7 @@
 
 #include "MinimizerTypes.h"
 
-#define DEBUG
+//#define DEBUG
 
 int nfit;
 const int N = 20; 

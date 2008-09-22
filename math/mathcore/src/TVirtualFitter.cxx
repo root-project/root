@@ -18,13 +18,14 @@
 #include "TPluginManager.h"
 #include "TEnv.h"
 #include "TInterpreter.h"
+#include "Math/MinimizerOptions.h"
 
 
 TVirtualFitter *TVirtualFitter::fgFitter    = 0;
 Int_t           TVirtualFitter::fgMaxpar    = 0;
-Int_t           TVirtualFitter::fgMaxiter   = 5000;
-Double_t        TVirtualFitter::fgPrecision = 1e-6;
-Double_t        TVirtualFitter::fgErrorDef  = 1;
+// Int_t           TVirtualFitter::fgMaxiter   = 5000;
+// Double_t        TVirtualFitter::fgPrecision = 1e-6;
+// Double_t        TVirtualFitter::fgErrorDef  = 1;
 TString         TVirtualFitter::fgDefault   = "";
 
 ClassImp(TVirtualFitter)
@@ -149,7 +150,8 @@ const char *TVirtualFitter::GetDefaultFitter()
 {
    // static: return the name of the default fitter
 
-   return fgDefault.Data();
+   //return fgDefault.Data();
+   return ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
 }
 
 //______________________________________________________________________________
@@ -163,8 +165,10 @@ TVirtualFitter *TVirtualFitter::GetFitter()
 Int_t TVirtualFitter::GetMaxIterations()
 {
    // static: Return the maximum number of iterations
+   // actually max number of function calls
 
-   return fgMaxiter;
+   //return fgMaxiter;
+   return ROOT::Math::MinimizerOptions::DefaultMaxFunctionCalls();
 }
 
 //______________________________________________________________________________
@@ -172,7 +176,8 @@ Double_t TVirtualFitter::GetErrorDef()
 {
    // static: Return the Error Definition
 
-   return fgErrorDef;
+//   return fgErrorDef;
+   return ROOT::Math::MinimizerOptions::DefaultErrorDef();
 }
 
 //______________________________________________________________________________
@@ -180,7 +185,8 @@ Double_t TVirtualFitter::GetPrecision()
 {
    // static: Return the fit relative precision
 
-   return fgPrecision;
+   //return fgPrecision;
+   return ROOT::Math::MinimizerOptions::DefaultTolerance();
 }
 
 //______________________________________________________________________________
@@ -188,6 +194,7 @@ void TVirtualFitter::SetDefaultFitter(const char *name)
 {
    // static: set name of default fitter
 
+   ROOT::Math::MinimizerOptions::SetDefaultMinimizer(name,"");
    if (fgDefault == name) return;
    delete fgFitter;
    fgFitter = 0;
@@ -273,9 +280,9 @@ void TVirtualFitter::SetFCN(void *fcn)
 //______________________________________________________________________________
 void TVirtualFitter::SetMaxIterations(Int_t niter)
 {
-   // static: Set the maximum number of iterations
+   // static: Set the maximum number of iterations measured as function calls 
 
-   fgMaxiter  = niter;
+   ROOT::Math::MinimizerOptions::SetDefaultMaxFunctionCalls(niter);
 }
 
 //______________________________________________________________________________
@@ -283,7 +290,8 @@ void TVirtualFitter::SetErrorDef(Double_t errdef)
 {
    // static: Set the Error Definition (default=1)
 
-   fgErrorDef = errdef;
+//    fgErrorDef = errdef;
+   ROOT::Math::MinimizerOptions::SetDefaultErrorDef(errdef);
    if (!fgFitter) return;
    Double_t arglist[1];
    arglist[0] = errdef;
@@ -295,5 +303,6 @@ void TVirtualFitter::SetPrecision(Double_t prec)
 {
    // static: Set the fit relative precision
 
-   fgPrecision = prec;
+   //fgPrecision = prec;
+   ROOT::Math::MinimizerOptions::SetDefaultTolerance(prec);
 }

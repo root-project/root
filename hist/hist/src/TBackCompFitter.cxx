@@ -22,6 +22,10 @@
 #include "TMultiGraph.h"
 #include "Fit/BinData.h"
 #include "HFitInterface.h"
+#include "Math/Minimizer.h"
+#include "Fit/BinData.h"
+#include "Fit/PoissonLikelihoodFCN.h"
+#include "Fit/Chi2FCN.h"
 
 //#define DEBUG 1
 
@@ -37,24 +41,34 @@ ClassImp(TBackCompFitter);
 
 
 
-TBackCompFitter::TBackCompFitter( ) 
+TBackCompFitter::TBackCompFitter( ) : 
+   fFitData(0), 
+   fMinimizer(0)
 {
    // Constructur needed by TVirtualFitter interface. Same behavior as default constructor.
    // initialize setting name and the global pointer
    SetName("BCFitter");
 }
 
-TBackCompFitter::TBackCompFitter(ROOT::Fit::Fitter & fitter) {
+TBackCompFitter::TBackCompFitter(ROOT::Fit::Fitter & fitter,ROOT::Fit::BinData * data) : 
+   fFitData(data),
+   fMinimizer(0)
+{
    // constructor used after having fit using directly ROOT::Fit::Fitter
    // will create a dummy fitter copying configuration and parameter settings
    fFitter = fitter; 
    SetName("LastFitter");
+   // set in case of minuit the fcn
+   if (fitter.Config().MinimizerType() == "Minuit") 
+      SetMinimizerFunction(data);
 }
 
 
 
+
 TBackCompFitter::~TBackCompFitter() { 
-   
+   // data are own here
+   if (fFitData) delete fFitData; 
 }
 
 Double_t TBackCompFitter::Chisquare(Int_t npar, Double_t *params) const {
@@ -563,8 +577,13 @@ Bool_t TBackCompFitter::IsFixed(Int_t ipar) const {
 
 void TBackCompFitter::PrintResults(Int_t level, Double_t) const {
    // print the fit result
-   if (level > 0) fFitter.Result().Print(std::cout); 
-   if (level > 1)  fFitter.Result().PrintCovMatrix(std::cout);    
+   if (!fMinimizer) {
+      if (level > 0) fFitter.Result().Print(std::cout); 
+      if (level > 1)  fFitter.Result().PrintCovMatrix(std::cout);    
+   }
+   else { 
+      fMinimizer->PrintResults();
+   }
    // need to print minos errors and globalCC + other info
 }
 
@@ -595,6 +614,41 @@ Int_t TBackCompFitter::SetParameter(Int_t ipar,const char *parname,Double_t valu
    parlist[ipar] = ps; 
    return 0; 
 }
+
+// static method evaluating FCN
+// void TBackCompFitter::FCN( int &, double * , double & f, double * x , int /* iflag */) { 
+//    // get static instance of fitter
+//    TBackCompFitter * fitter = dynamic_cast<TBackCompFitter *>(TVirtualFitter::GetFitter()); 
+//    assert(fitter); 
+//    if (fitter->fObjFunc == 0) fitter->RecreateFCN(); 
+//    assert(fitter->fObjFunc);
+//    f = (*(fitter.fObjFunc) )(x);
+// }
+
+void TBackCompFitter::SetMinimizerFunction(const ROOT::Fit::BinData * data) { 
+   // set objective function in minimizers function to re-create FCN from stored data object and fit options
+   // ROOT::Fit::BinData d(opt,range); 
+//    assert(GetObjectFit() );
+//    ROOT::Fit::FillData (d, (TH1*)(GetObjectFit() );  
+   //ROOT::Fit::BinData * data = dynamic_cast<ROOT::Fit::BinData *>(fFitData); 
+   assert(data);
+   ROOT::Math::IParamMultiFunction * func =  dynamic_cast<ROOT::Math::IParamMultiFunction *>((fFitter.Result().FittedFunction())->Clone());
+   assert(func);
+
+   // should consider also gradient case
+   if (GetFitOption().Like ) 
+      fObjFunc = new ROOT::Fit::PoissonLikelihoodFCN<ROOT::Math::IMultiGenFunction>(*data, *func);
+   else
+      fObjFunc = new ROOT::Fit::Chi2FCN<ROOT::Math::IMultiGenFunction>(*data, *func);
+
+   // recreate the minimizer
+   fMinimizer = fFitter.Config().CreateMinimizer(); 
+   if (fMinimizer == 0) { 
+      Error("SetMinimizerFunction","cannot create minimizer %s",fFitter.Config().MinimizerType().c_str() );
+   }
+   else 
+      fMinimizer->SetFunction(*fObjFunc);
+} 
 
 
 void TBackCompFitter::SetFCN(void (*fcn)(Int_t &, Double_t *, Double_t &f, Double_t *, Int_t))

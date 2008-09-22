@@ -163,20 +163,21 @@ int HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const ROOT::Math
 #endif
 
    // fill data  
-   ROOT::Fit::BinData fitdata(opt,range);
-   ROOT::Fit::FillData(fitdata, h1, f1); 
+   //std::auto_ptr<ROOT::Fit::BinData> fitdata = std::auto_ptr<ROOT::Fit::BinData> (new ROOT::Fit::BinData(opt,range) );
+   ROOT::Fit::BinData * fitdata = new ROOT::Fit::BinData(opt,range);
+   ROOT::Fit::FillData(*fitdata, h1, f1); 
 
 #ifdef DEBUG
-   printf("HFit:: data size is %d \n",fitdata.Size());
-   for (unsigned int i = 0; i < fitdata.Size(); ++i) { 
-      if (fitdata.NDim() == 1) printf(" x[%d] = %f - value = %f \n", i,*(fitdata.Coords(i)),fitdata.Value(i) ); 
+   printf("HFit:: data size is %d \n",fitdata->Size());
+   for (unsigned int i = 0; i < fitdata->Size(); ++i) { 
+      if (fitdata->NDim() == 1) printf(" x[%d] = %f - value = %f \n", i,*(fitdata->Coords(i)),fitdata->Value(i) ); 
    }
 #endif   
 
    // this functions use the TVirtualFitter
    if (special != 0 && !fitOption.Bound && !linear) { 
-      if      (special == 100)      ROOT::Fit::InitGaus(fitdata,f1);  // gaussian
-      else if (special == 400)      ROOT::Fit::InitGaus(fitdata,f1);  // landau (use the same)
+      if      (special == 100)      ROOT::Fit::InitGaus(*fitdata,f1);  // gaussian
+      else if (special == 400)      ROOT::Fit::InitGaus(*fitdata,f1);  // landau (use the same)
    // need to do a linear fit first for expo and poly ? 
 //             else if (special == 200)      H1InitExpo();
 //             else if (special == 299+npar) H1InitPolynom();
@@ -191,7 +192,7 @@ int HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const ROOT::Math
       fitter->SetFunction(ROOT::Math::WrappedMultiTF1(*f1) );
 
    // error normalization in case of zero error in the data
-   if (fitdata.GetErrorType() == ROOT::Fit::BinData::kNoError) fitConfig.SetNormErrors(true);
+   if (fitdata->GetErrorType() == ROOT::Fit::BinData::kNoError) fitConfig.SetNormErrors(true);
 
    
    // here need to get some static extra information (like max iterations, error def, etc...)
@@ -251,9 +252,9 @@ int HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const ROOT::Math
    bool fitok = false; 
 
    if (fitOption.Like)
-      fitok = fitter->LikelihoodFit(fitdata);
+      fitok = fitter->LikelihoodFit(*fitdata);
    else 
-      fitok = fitter->Fit(fitdata); 
+      fitok = fitter->Fit(*fitdata); 
 
 
    if ( !fitok  && !fitOption.Quiet )
@@ -280,9 +281,6 @@ int HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const ROOT::Math
       if ( int( fitResult.Errors().size()) >= f1->GetNpar() ) 
          f1->SetParErrors( &(fitResult.Errors().front()) ); 
   
-      // print results
-      if (!fitOption.Quiet) fitResult.Print(std::cout); 
-      if (fitOption.Verbose) fitResult.PrintCovMatrix(std::cout); 
       if (!fitResult.IsValid() ) iret = 1;
    }
    else {
@@ -298,8 +296,19 @@ int HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const ROOT::Math
       // store result in the backward compatible VirtualFitter
       TVirtualFitter * lastFitter = TVirtualFitter::GetFitter(); 
       if (lastFitter) delete lastFitter; 
-      TVirtualFitter::SetFitter( new TBackCompFitter(*fitter) ); 
-      (TVirtualFitter::GetFitter())->SetObjectFit(h1);
+      // pass ownership of fitdata to TBackCompFitter (should do also fitter)
+      TBackCompFitter * bcfitter = new TBackCompFitter(*fitter,fitdata);
+      bcfitter->SetFitOption(fitOption); 
+      bcfitter->SetObjectFit(h1); 
+      TVirtualFitter::SetFitter( bcfitter ); 
+
+      // print results
+//       if (!fitOption.Quiet) fitResult.Print(std::cout);
+//       if (fitOption.Verbose) fitResult.PrintCovMatrix(std::cout); 
+
+      // use old-style for printing the results
+      if (fitOption.Verbose) bcfitter->PrintResults(2,0.);
+      else if (!fitOption.Quiet) bcfitter->PrintResults(1,0.);
 
       return iret; 
 }

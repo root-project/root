@@ -148,6 +148,7 @@ public:
    /// return reference to the objective function
    ///virtual const ROOT::Math::IGenFunction & Function() const; 
 
+   virtual void PrintResults();
 
    
 
@@ -158,9 +159,12 @@ protected:
    /// implementation of FCN for Minuit when user provided gradient is used
    static void FcnGrad( int &, double * g, double & f, double * , int);
 
+   /// reset 
+   void DoClear(); 
+
 private: 
 
-
+   bool fUsed;
    bool fMinosRun; 
    unsigned int fDim; 
    unsigned int fNFree;

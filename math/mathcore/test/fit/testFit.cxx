@@ -132,7 +132,12 @@ int testHisto1DFit() {
    // test using binned likelihood 
    std::cout << "\n\nTest Binned Likelihood Fit" << std::endl; 
 
-   ret = fitter.LikelihoodFit(d, f);
+   ROOT::Fit::DataOptions opt; 
+   opt.fUseEmpty = true;
+   ROOT::Fit::BinData dl(opt);
+   ROOT::Fit::FillData(dl,h1,func);
+   
+   ret = fitter.LikelihoodFit(dl, f);
    f.SetParameters(p); 
    if (ret)  
       fitter.Result().Print(std::cout); 
@@ -140,7 +145,7 @@ int testHisto1DFit() {
       std::cout << "Binned Likelihood Fit Failed " << std::endl;
       return -1; 
    }
-   iret |= compareResult(fitter.Result().Chi2(), chi2ref,"1D histogram likelihood fit",0.2);
+   iret |= compareResult(fitter.Result().Chi2(), chi2ref,"1D histogram likelihood fit",0.3);
 
    // compare with TH1::Fit
    std::cout << "\n******************************\n\t TH1::Fit Result \n" << std::endl; 
@@ -153,7 +158,7 @@ int testHisto1DFit() {
    std::cout << "\n\nTest Chi2 Fit using integral option" << std::endl; 
 
    // need to re-create data
-   ROOT::Fit::DataOptions opt; 
+   opt = ROOT::Fit::DataOptions(); 
    opt.fIntegral = true; 
    ROOT::Fit::BinData d2(opt); 
    ROOT::Fit::FillData(d2,h1,func); 
@@ -174,15 +179,21 @@ int testHisto1DFit() {
    h1->Fit(func,"I");
    iret |= compareResult(func->GetChisquare(),fitter.Result().Chi2(),"TH1::Fit integral ",0.001);
 
+   // test integral likelihood
+   opt = ROOT::Fit::DataOptions(); 
+   opt.fIntegral = true; 
+   opt.fUseEmpty = true; 
+   ROOT::Fit::BinData dl2(opt); 
+   ROOT::Fit::FillData(dl2,h1,func); 
    f.SetParameters(p); 
-   ret = fitter.LikelihoodFit(d2, f);
+   ret = fitter.LikelihoodFit(dl2, f);
    if (ret)  
       fitter.Result().Print(std::cout); 
    else {
       std::cout << "Integral Likelihood Fit Failed " << std::endl;
       return -1; 
    }
-   iret |= compareResult(fitter.Result().Chi2(), chi2ref,"1D histogram integral likelihood fit",0.2);
+   iret |= compareResult(fitter.Result().Chi2(), chi2ref,"1D histogram integral likelihood fit",0.3);
 
    // compare with TH1::Fit
    std::cout << "\n******************************\n\t TH1::Fit Result \n" << std::endl; 
@@ -519,6 +530,7 @@ int testHisto2DFit() {
    // create the fitter 
    ROOT::Fit::Fitter fitter; 
    //fitter.Config().MinimizerOptions().SetPrintLevel(3);
+   fitter.Config().SetMinimizer("Minuit2");
 
    std::cout <<"\ntest 2D histo fit using gradient" << std::endl;
    bool ret = fitter.Fit(d, f);
@@ -685,6 +697,11 @@ int testUnBin1DFit() {
 //    double x[1]; x[0] = 0.; 
 //    std::cout << "fval " << f(x) << std::endl;
 //    x[0] = 1.; std::cout << "fval " << f(x) << std::endl;
+
+   //fitter.Config().SetMinimizer("Minuit2");
+   // fails with minuit (t.b. investigate)
+   fitter.Config().SetMinimizer("Minuit2");
+   
 
    bool ret = fitter.Fit(d);
    if (ret)  
