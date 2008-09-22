@@ -4511,7 +4511,7 @@ int main(int argc, char **argv)
                // break when we see positional options
                break;
             }
-            if (strcmp("-pipe", argv[ic])!=0) {
+            if (strcmp("-pipe", argv[ic])!=0 && strcmp("-pthread", argv[ic])!=0) {
                // filter out undesirable options
                argvv[argcc++] = argv[ic++];
             } else {
