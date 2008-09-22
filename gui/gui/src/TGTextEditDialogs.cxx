@@ -220,7 +220,9 @@ Bool_t TGSearchDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                switch (parm1) {
                   case 1:
                      string = fBSearch->GetString();
-                     fType->fBuffer = (char*)string;
+                     if (fType->fBuffer) 
+                        delete [] fType->fBuffer;
+                     fType->fBuffer = StrDup(string);
                      gLastSearchString = string;
                      *fRetCode = kTRUE;
                      TextEntered(string);
@@ -268,7 +270,9 @@ Bool_t TGSearchDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                break;
             case kTE_ENTER:
                string = fBSearch->GetString();
-               fType->fBuffer = (char*)string;
+               if (fType->fBuffer) 
+                  delete [] fType->fBuffer;
+               fType->fBuffer = StrDup(string);
                gLastSearchString = string;
                *fRetCode = kTRUE;
                TextEntered(string);

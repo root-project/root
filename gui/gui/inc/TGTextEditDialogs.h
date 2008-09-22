@@ -36,6 +36,7 @@ public:
    char   *fBuffer;
    Bool_t  fClose;
    TGSearchType() { fDirection = kTRUE; fCaseSensitive = kFALSE; fBuffer = 0; fClose = kTRUE; }
+   ~TGSearchType() { if (fBuffer) delete [] fBuffer;}
 };
 
 class TGButton;

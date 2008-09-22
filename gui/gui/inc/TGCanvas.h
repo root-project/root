@@ -63,6 +63,7 @@ protected:
    Bool_t             fOnMouseOver;   // kTRUE when mouse pointer is over entry
    Bool_t             fLastDir;       // direction of last search
    Bool_t             fLastCase;      // case sensetivity of last search
+   Bool_t             fLastSubstring; // substring search option of last search
    TString            fLastName;      // the name of object of last search
    TTimer            *fKeyTimer;      // keyboard timer
    TString            fKeyInput;      // keyboard input (buffer)
@@ -132,7 +133,7 @@ public:
    virtual void *FindItem(const TString& name,
                           Bool_t direction = kTRUE,
                           Bool_t caseSensitive = kTRUE,
-                          Bool_t beginWith = kFALSE);
+                          Bool_t subString = kFALSE);
 
    virtual const TGFrame *GetNextSelected(void **current);
    virtual TGFrame *GetLastActive() const { return fLastActiveEl ? fLastActiveEl->fFrame : 0; }

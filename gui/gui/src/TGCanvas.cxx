@@ -307,6 +307,8 @@ TGContainer::TGContainer(const TGWindow *p, UInt_t w, UInt_t h,
    fLastActiveEl = 0;
    fLastDir = kTRUE;
    fLastCase = kTRUE;
+   fLastSubstring = kFALSE;
+   fLastName = "";
    fKeyTimer = new TGContainerKeyboardTimer(this);
    fScrollTimer = new TGContainerScrollTimer(this);
    fKeyTimerActive = kFALSE;
@@ -352,6 +354,8 @@ TGContainer::TGContainer(TGCanvas *p, UInt_t options, ULong_t back) :
    fLastActiveEl = 0;
    fLastDir = kTRUE;
    fLastCase = kTRUE;
+   fLastSubstring = kFALSE;
+   fLastName = "";
    fKeyTimer = new TGContainerKeyboardTimer(this);
    fScrollTimer = new TGContainerScrollTimer(this);
    fKeyTimerActive = kFALSE;
@@ -1387,18 +1391,24 @@ TGFrame *TGContainer::FindFrameByName(const char *name)
 
    Bool_t direction = kTRUE;
    Bool_t caseSensitive = kFALSE;
+   Bool_t subString = kFALSE;
 
    if (gTQSender && (gTQSender == TGSearchDialog::SearchDialog())) {
       caseSensitive = TGSearchDialog::SearchDialog()->GetType()->fCaseSensitive;
       direction = TGSearchDialog::SearchDialog()->GetType()->fDirection;
    }
+   TString sname(name);
+   if (sname.Contains("*")) {
+      subString = kTRUE;
+      sname.ReplaceAll("*", "");
+   }
 
-   TGFrameElement *fe = (TGFrameElement*)FindItem(name, direction, caseSensitive);
-
+   TGFrameElement *fe = (TGFrameElement*)FindItem(sname.Data(), direction, 
+                                                  caseSensitive, subString);
    if (!fe) {  // find again
-      if (fLastActiveEl) fLastActiveEl->fFrame->Activate(kFALSE);
+      if (fLastActiveEl) DeActivateItem(fLastActiveEl);
       fLastActiveEl = 0;
-      fe = (TGFrameElement*)FindItem(fLastName, fLastDir, fLastCase);
+      fe = (TGFrameElement*)FindItem(fLastName, fLastDir, fLastCase, fLastSubstring);
 
       if (!fe) {
          if (gTQSender && (gTQSender == TGSearchDialog::SearchDialog())) {
@@ -1432,6 +1442,7 @@ void TGContainer::Search(Bool_t close)
 
    TGSearchType *srch = new TGSearchType;
    srch->fClose = close;
+   srch->fBuffer = 0;
 
    if (!close) {
       if (!TGSearchDialog::SearchDialog()) {
@@ -1585,12 +1596,15 @@ void TGContainer::RepeatSearch()
 
    TGFrameElement *fe = 0;
 
-   fe = (TGFrameElement*)FindItem(fLastName, fLastDir, fLastCase);
+   if (fLastName == "")
+      return Search();
+
+   fe = (TGFrameElement*)FindItem(fLastName, fLastDir, fLastCase, fLastSubstring);
 
    if (!fe) {
-      if (fLastActiveEl) fLastActiveEl->fFrame->Activate(kFALSE);
+      if (fLastActiveEl) DeActivateItem(fLastActiveEl);
       fLastActiveEl = 0;
-      fe = (TGFrameElement*)FindItem(fLastName, fLastDir, fLastCase);
+      fe = (TGFrameElement*)FindItem(fLastName, fLastDir, fLastCase, fLastSubstring);
 
       if (!fe) {
          TString msg = "Couldn't find \"" + fLastName + '\"';
@@ -1645,7 +1659,7 @@ TGFrameElement *TGContainer::FindFrame(Int_t x, Int_t y, Bool_t exclude)
 
 //______________________________________________________________________________
 void *TGContainer::FindItem(const TString& name, Bool_t direction,
-                            Bool_t caseSensitive, Bool_t beginWith)
+                            Bool_t caseSensitive, Bool_t subString)
 {
 
    // Find a frame which assosiated object has a name containing a "name"
@@ -1661,6 +1675,7 @@ void *TGContainer::FindItem(const TString& name, Bool_t direction,
    fLastDir = direction;
    fLastCase = caseSensitive;
    fLastName = name;
+   fLastSubstring = subString;
 
    if (fLastActiveEl) {
       el = fLastActiveEl;
@@ -1680,8 +1695,8 @@ void *TGContainer::FindItem(const TString& name, Bool_t direction,
       idx = str.Index(name, 0, cmp);
 
       if (idx != kNPOS) {
-         if (beginWith) {
-            if (idx == 0) return el;
+         if (subString) {
+            return el;
          } else {
             if (str.Length() == name.Length()) return el;
          }
