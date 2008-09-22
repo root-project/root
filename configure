@@ -2175,7 +2175,7 @@ check_qtvers()
     qttestdir=$1 ; shift
     qtverneed=$1 ; shift
     qttoonew=$1  ; shift
-    message " Checking whether $qtverneed <= Qt version < $qttoonew under $qttestdir/qglobal.h "
+    message "Checking for $qtverneed <= Qt version < $qttoonew "
     logmsg " grep '# *define *QT_VERSION_STR *' $qttestdir/qglobal.h"
     qtverstr=`grep "# *define *QT_VERSION_STR *" $qttestdir/qglobal.h | \
         sed '-e s/[^"]*"//' -e 's/".*$//' 2>> $logfile`
@@ -2190,19 +2190,21 @@ check_qtvers()
 	    awk 'BEGIN {FS="."}{ printf "%d", (($1*2^8)+$2)*2^8+$3; }'`
 	logmsg " Got $qtgot, min $qtneed, max $qtnew"
 	if test $qtgot -lt $qtneed ; then
-	    logmsg " Please update to Qt $qtverneed"
 	    res="no"
+	    resprint="no (found version $qtverstr)"
 	elif test $qtgot -ge $qtnew; then
-	    logmsg " Qt $qtverstr too new (>= $qttoonew)"
 	    res="no"
+	    resprint="no (found version $qtverstr)"
 	else
 	    res="$qtverstr"
+	    resprint="$res"
 	    qtvers=`echo $qtverstr | awk 'BEGIN {FS="."} {print $1}'`
 	fi
     else
 	res="no"
+	resprint="$res"
     fi
-    result $res
+    result $resprint
 }
 
 if test ! "x$enable_qt" = "xno" || \
@@ -2271,7 +2273,6 @@ if test ! "x$enable_qt" = "xno" || \
     fi
 
     if test $qtvers -eq 0 ; then
-	logmsg "No Qt4 was found, let's try to find Qt3 instead"
         if test ! "x$QTDIR" = "x"; then
         # The user asked for a specific "QTDIR" ... search ONLY in there
           check_header "qt.h" "$qtincdir" $QTDIR $QTDIR/include
@@ -2284,8 +2285,8 @@ if test ! "x$enable_qt" = "xno" || \
 	qtinc=$found_hdr
 	qtincdir=$found_dir
 	if test ! "x$found_hdr" = "x" ; then
-	    qtverneed="3.3.0"
-	    qttoonew="4.0.0"
+	    qtverneed="4.3.0"
+	    qttoonew="5.0.0"
 	    qttestdir=$qtincdir
 	    check_qtvers "$qttestdir" $qtverneed $qttoonew
 	fi
