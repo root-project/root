@@ -43,6 +43,7 @@ struct Foption_t {
    int Nochisq;     // "C"  In case of linear fitting, don't calculate the chisquare
    int Minuit;      // "F"  If fitting a polN, switch to minuit fitter
    int Robust;      // "ROB" For a TGraph use robust fitting
+   double hRobust;  //  value of h parameter used in robust fitting 
 
   Foption_t() :
       Quiet     (0),
@@ -61,7 +62,8 @@ struct Foption_t {
       Integral  (0),
       Nochisq   (0),
       Minuit    (0),
-      Robust    (0)
+      Robust    (0),
+      hRobust   (0)
    {}
 };
 

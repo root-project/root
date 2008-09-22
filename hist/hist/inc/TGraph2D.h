@@ -72,6 +72,10 @@ private:
 
    Bool_t      fUserHisto;   // True when SetHistogram has been called
 
+protected: 
+
+   virtual Int_t    DoFit(TF2 *f2,Option_t *option,Option_t *goption); 
+
 public:
 
    TGraph2D();
@@ -97,6 +101,7 @@ public:
    virtual TObject *FindObject(const TObject *obj) const;
    virtual Int_t    Fit(const char *formula ,Option_t *option="" ,Option_t *goption=""); // *MENU*
    virtual Int_t    Fit(TF2 *f2 ,Option_t *option="" ,Option_t *goption=""); // *MENU*
+   virtual void     FitPanel(); // *MENU*
    TList           *GetContourList(Double_t contour);
    TDirectory      *GetDirectory() const {return fDirectory;}
    Int_t            GetNpx() const {return fNpx;}

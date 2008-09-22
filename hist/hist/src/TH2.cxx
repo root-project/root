@@ -587,6 +587,102 @@ void TH2::FillRandom(TH1 *h, Int_t ntimes)
    }
 }
 
+//______________________________________________________________________________
+void TH2::DoFitSlices(bool onX,
+                      TF1 *f1, Int_t firstbin, Int_t lastbin, Int_t cut, Option_t *option, TObjArray* arr)
+{
+   TAxis& outerAxis = (onX ? fYaxis : fXaxis);
+   TAxis& innerAxis = (onX ? fXaxis : fYaxis);
+
+   Int_t nbins  = outerAxis.GetNbins();
+   if (firstbin < 0) firstbin = 0;
+   if (lastbin < 0 || lastbin > nbins + 1) lastbin = nbins + 1;
+   if (lastbin < firstbin) {firstbin = 0; lastbin = nbins + 1;}
+   TString opt = option;
+   opt.ToLower();
+   Int_t ngroup = 1;
+   if (opt.Contains("g2")) {ngroup = 2; opt.ReplaceAll("g2","");}
+   if (opt.Contains("g3")) {ngroup = 3; opt.ReplaceAll("g3","");}
+   if (opt.Contains("g4")) {ngroup = 4; opt.ReplaceAll("g4","");}
+   if (opt.Contains("g5")) {ngroup = 5; opt.ReplaceAll("g5","");}
+
+   //default is to fit with a gaussian
+   if (f1 == 0) {
+      f1 = (TF1*)gROOT->GetFunction("gaus");
+      if (f1 == 0) f1 = new TF1("gaus","gaus",innerAxis.GetXmin(),innerAxis.GetXmax());
+      else         f1->SetRange(innerAxis.GetXmin(),innerAxis.GetXmax());
+   }
+   Int_t npar = f1->GetNpar();
+   if (npar <= 0) return;
+   Double_t *parsave = new Double_t[npar];
+   f1->GetParameters(parsave);
+
+   if (arr) {
+      arr->SetOwner();
+      arr->Expand(npar + 1);
+   }
+
+   //Create one histogram for each function parameter
+   Int_t ipar;
+   TH1D **hlist = new TH1D*[npar];
+   char *name   = new char[2000];
+   char *title  = new char[2000];
+   const TArrayD *bins = outerAxis.GetXbins();
+   for (ipar=0;ipar<npar;ipar++) {
+      sprintf(name,"%s_%d",GetName(),ipar);
+      sprintf(title,"Fitted value of par[%d]=%s",ipar,f1->GetParName(ipar));
+      delete gDirectory->FindObject(name);
+      if (bins->fN == 0) {
+         hlist[ipar] = new TH1D(name,title, nbins, outerAxis.GetXmin(), outerAxis.GetXmax());
+      } else {
+         hlist[ipar] = new TH1D(name,title, nbins,bins->fArray);
+      }
+      hlist[ipar]->GetXaxis()->SetTitle(outerAxis.GetTitle());
+      if (arr)
+         (*arr)[ipar] = hlist[ipar];
+   }
+   sprintf(name,"%s_chi2",GetName());
+   delete gDirectory->FindObject(name);
+   TH1D *hchi2 = 0;
+   if (bins->fN == 0) {
+      hchi2 = new TH1D(name,"chisquare", nbins, outerAxis.GetXmin(), outerAxis.GetXmax());
+   } else {
+      hchi2 = new TH1D(name,"chisquare", nbins, bins->fArray);
+   }
+   hchi2->GetXaxis()->SetTitle(outerAxis.GetTitle());
+   if (arr)
+      (*arr)[npar] = hchi2;
+
+   //Loop on all bins in Y, generate a projection along X
+   Int_t bin;
+   Int_t nentries;
+   for (bin=firstbin;bin<=lastbin;bin += ngroup) {
+      TH1D *hp;
+      if (onX)
+         hp= ProjectionX("_temp",bin,bin+ngroup-1,"e");
+      else
+         hp= ProjectionY("_temp",bin,bin+ngroup-1,"e");
+      if (hp == 0) continue;
+      nentries = Int_t(hp->GetEntries());
+      if (nentries == 0 || nentries < cut) {delete hp; continue;}
+      f1->SetParameters(parsave);
+      hp->Fit(f1,opt.Data());
+      Int_t npfits = f1->GetNumberFitPoints();
+      if (npfits > npar && npfits >= cut) {
+         Int_t binOn = bin + ngroup/2;
+         for (ipar=0;ipar<npar;ipar++) {
+            hlist[ipar]->Fill(outerAxis.GetBinCenter(binOn),f1->GetParameter(ipar));
+            hlist[ipar]->SetBinError(binOn,f1->GetParError(ipar));
+         }
+         hchi2->Fill(outerAxis.GetBinCenter(binOn),f1->GetChisquare()/(npfits-npar));
+      }
+      delete hp;
+   }
+   delete [] parsave;
+   delete [] name;
+   delete [] title;
+   delete [] hlist;
+}
 
 //______________________________________________________________________________
 void TH2::FitSlicesX(TF1 *f1, Int_t firstybin, Int_t lastybin, Int_t cut, Option_t *option, TObjArray* arr)
@@ -638,90 +734,8 @@ void TH2::FitSlicesX(TF1 *f1, Int_t firstybin, Int_t lastybin, Int_t cut, Option
    //  NOTE: To access the generated histograms in the current directory, do eg:
    //     TH1D *h2_1 = (TH1D*)gDirectory->Get("h2_1");
 
-   Int_t nbins  = fYaxis.GetNbins();
-   if (firstybin < 0) firstybin = 0;
-   if (lastybin < 0 || lastybin > nbins + 1) lastybin = nbins + 1;
-   if (lastybin < firstybin) {firstybin = 0; lastybin = nbins + 1;}
-   TString opt = option;
-   opt.ToLower();
-   Int_t ngroup = 1;
-   if (opt.Contains("g2")) {ngroup = 2; opt.ReplaceAll("g2","");}
-   if (opt.Contains("g3")) {ngroup = 3; opt.ReplaceAll("g3","");}
-   if (opt.Contains("g4")) {ngroup = 4; opt.ReplaceAll("g4","");}
-   if (opt.Contains("g5")) {ngroup = 5; opt.ReplaceAll("g5","");}
+   DoFitSlices(true, f1, firstybin, lastybin, cut, option, arr);
 
-   //default is to fit with a gaussian
-   if (f1 == 0) {
-      f1 = (TF1*)gROOT->GetFunction("gaus");
-      if (f1 == 0) f1 = new TF1("gaus","gaus",fXaxis.GetXmin(),fXaxis.GetXmax());
-      else         f1->SetRange(fXaxis.GetXmin(),fXaxis.GetXmax());
-   }
-   Int_t npar = f1->GetNpar();
-   if (npar <= 0) return;
-   Double_t *parsave = new Double_t[npar];
-   f1->GetParameters(parsave);
-
-   if (arr) {
-      arr->SetOwner();
-      arr->Expand(npar + 1);
-   }
-
-   //Create one histogram for each function parameter
-   Int_t ipar;
-   TH1D **hlist = new TH1D*[npar];
-   char *name   = new char[2000];
-   char *title  = new char[2000];
-   const TArrayD *bins = fYaxis.GetXbins();
-   for (ipar=0;ipar<npar;ipar++) {
-      sprintf(name,"%s_%d",GetName(),ipar);
-      sprintf(title,"Fitted value of par[%d]=%s",ipar,f1->GetParName(ipar));
-      delete gDirectory->FindObject(name);
-      if (bins->fN == 0) {
-         hlist[ipar] = new TH1D(name,title, nbins, fYaxis.GetXmin(), fYaxis.GetXmax());
-      } else {
-         hlist[ipar] = new TH1D(name,title, nbins,bins->fArray);
-      }
-      hlist[ipar]->GetXaxis()->SetTitle(fYaxis.GetTitle());
-      if (arr)
-         (*arr)[ipar] = hlist[ipar];
-   }
-   sprintf(name,"%s_chi2",GetName());
-   delete gDirectory->FindObject(name);
-   TH1D *hchi2 = 0;
-   if (bins->fN == 0) {
-      hchi2 = new TH1D(name,"chisquare", nbins, fYaxis.GetXmin(), fYaxis.GetXmax());
-   } else {
-      hchi2 = new TH1D(name,"chisquare", nbins, bins->fArray);
-   }
-   hchi2->GetXaxis()->SetTitle(fYaxis.GetTitle());
-   if (arr)
-      (*arr)[npar] = hchi2;
-
-   //Loop on all bins in Y, generate a projection along X
-   Int_t bin;
-   Int_t nentries;
-   for (bin=firstybin;bin<=lastybin;bin += ngroup) {
-      TH1D *hpx = ProjectionX("_temp",bin,bin+ngroup-1,"e");
-      if (hpx == 0) continue;
-      nentries = Int_t(hpx->GetEntries());
-      if (nentries == 0 || nentries < cut) {delete hpx; continue;}
-      f1->SetParameters(parsave);
-      hpx->Fit(f1,opt.Data());
-      Int_t npfits = f1->GetNumberFitPoints();
-      if (npfits > npar && npfits >= cut) {
-         Int_t binx = bin + ngroup/2;
-         for (ipar=0;ipar<npar;ipar++) {
-            hlist[ipar]->Fill(fYaxis.GetBinCenter(binx),f1->GetParameter(ipar));
-            hlist[ipar]->SetBinError(binx,f1->GetParError(ipar));
-         }
-         hchi2->Fill(fYaxis.GetBinCenter(binx),f1->GetChisquare()/(npfits-npar));
-      }
-      delete hpx;
-   }
-   delete [] parsave;
-   delete [] name;
-   delete [] title;
-   delete [] hlist;
 }
 
 //______________________________________________________________________________
@@ -782,90 +796,8 @@ void TH2::FitSlicesY(TF1 *f1, Int_t firstxbin, Int_t lastxbin, Int_t cut, Option
    */
    //End_Html
 
-   Int_t nbins  = fXaxis.GetNbins();
-   if (firstxbin < 0) firstxbin = 0;
-   if (lastxbin < 0 || lastxbin > nbins + 1) lastxbin = nbins + 1;
-   if (lastxbin < firstxbin) {firstxbin = 0; lastxbin = nbins + 1;}
-   TString opt = option;
-   opt.ToLower();
-   Int_t ngroup = 1;
-   if (opt.Contains("g2")) {ngroup = 2; opt.ReplaceAll("g2","");}
-   if (opt.Contains("g3")) {ngroup = 3; opt.ReplaceAll("g3","");}
-   if (opt.Contains("g4")) {ngroup = 4; opt.ReplaceAll("g4","");}
-   if (opt.Contains("g5")) {ngroup = 5; opt.ReplaceAll("g5","");}
+   DoFitSlices(false, f1, firstxbin, lastxbin, cut, option, arr);
 
-   //default is to fit with a gaussian
-   if (f1 == 0) {
-      f1 = (TF1*)gROOT->GetFunction("gaus");
-      if (f1 == 0) f1 = new TF1("gaus","gaus",fYaxis.GetXmin(),fYaxis.GetXmax());
-      else         f1->SetRange(fYaxis.GetXmin(),fYaxis.GetXmax());
-   }
-   Int_t npar = f1->GetNpar();
-   if (npar <= 0) return;
-   Double_t *parsave = new Double_t[npar];
-   f1->GetParameters(parsave);
-
-   if (arr) {
-      arr->SetOwner();
-      arr->Expand(npar + 1);
-   }
-
-   //Create one histogram for each function parameter
-   Int_t ipar;
-   TH1D **hlist = new TH1D*[npar];
-   char *name   = new char[2000];
-   char *title  = new char[2000];
-   const TArrayD *bins = fXaxis.GetXbins();
-   for (ipar=0;ipar<npar;ipar++) {
-      sprintf(name,"%s_%d",GetName(),ipar);
-      sprintf(title,"Fitted value of par[%d]=%s",ipar,f1->GetParName(ipar));
-      delete gDirectory->FindObject(name);
-      if (bins->fN == 0) {
-         hlist[ipar] = new TH1D(name,title, nbins, fXaxis.GetXmin(), fXaxis.GetXmax());
-      } else {
-         hlist[ipar] = new TH1D(name,title, nbins, bins->fArray);
-      }
-      hlist[ipar]->GetXaxis()->SetTitle(fXaxis.GetTitle());
-      if (arr)
-         (*arr)[ipar] = hlist[ipar];
-   }
-   sprintf(name,"%s_chi2",GetName());
-   delete gDirectory->FindObject(name);
-   TH1D *hchi2 = 0;
-   if (bins->fN == 0) {
-      hchi2 = new TH1D(name,"chisquare", nbins, fXaxis.GetXmin(), fXaxis.GetXmax());
-   } else {
-      hchi2 = new TH1D(name,"chisquare", nbins, bins->fArray);
-   }
-   hchi2->GetXaxis()->SetTitle(fXaxis.GetTitle());
-   if (arr)
-      (*arr)[npar] = hchi2;
-
-   //Loop on all bins in X, generate a projection along Y
-   Int_t bin;
-   Int_t nentries;
-   for (bin=firstxbin;bin<=lastxbin;bin += ngroup) {
-      TH1D *hpy = ProjectionY("_temp",bin,bin+ngroup-1,"e");
-      if (hpy == 0) continue;
-      nentries = Int_t(hpy->GetEntries());
-      if (nentries == 0 || nentries < cut) {delete hpy; continue;}
-      f1->SetParameters(parsave);
-      hpy->Fit(f1,opt.Data());
-      Int_t npfits = f1->GetNumberFitPoints();
-      if (npfits > npar && npfits >= cut) {
-         Int_t biny = bin + ngroup/2;
-         for (ipar=0;ipar<npar;ipar++) {
-            hlist[ipar]->Fill(fXaxis.GetBinCenter(biny),f1->GetParameter(ipar));
-            hlist[ipar]->SetBinError(biny,f1->GetParError(ipar));
-         }
-         hchi2->Fill(fXaxis.GetBinCenter(biny),f1->GetChisquare()/(npfits-npar));
-      }
-      delete hpy;
-   }
-   delete [] parsave;
-   delete [] name;
-   delete [] title;
-   delete [] hlist;
 }
 
 //______________________________________________________________________________
@@ -1762,10 +1694,102 @@ TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname)
 }
 
 //______________________________________________________________________________
+TProfile *TH2::DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastbin, Option_t *option) const
+{
+   TString opt = option;
+
+   const TAxis& outAxis = ( onX ? fXaxis : fYaxis );
+   const TAxis&  inAxis = ( onX ? fYaxis : fXaxis );
+   Int_t outN = outAxis.GetNbins();
+   Int_t  inN = inAxis.GetNbins();
+   const char *expectedName = ( onX ? "_pfx" : "_pfy" );
+
+   if (firstbin < 0) firstbin = 1;
+   if (lastbin  < 0) lastbin  = inN;
+   if (lastbin  > inN+1) lastbin  = inN;
+
+   // Create the profile histogram
+   char *pname = (char*)name;
+   if (name && strcmp(name, expectedName) == 0) {
+      Int_t nch = strlen(GetName()) + 5;
+      pname = new char[nch];
+      sprintf(pname,"%s%s",GetName(),name);
+   }
+   TProfile *h1=0;
+   //check if a profile with identical name exist
+   TObject *h1obj = gROOT->FindObject(pname);
+   if (h1obj && h1obj->InheritsFrom("TProfile")) {
+      h1 = (TProfile*)h1obj;
+      h1->Reset();
+   }
+
+   Int_t ncuts = 0;
+   if (opt.Contains("[")) {
+      ((TH2 *)this)->GetPainter();
+      if (fPainter) ncuts = fPainter->MakeCuts((char*)opt.Data());
+   }
+   opt.ToLower();  //must be called after MakeCuts
+
+   if (!h1) {
+      const TArrayD *bins = fXaxis.GetXbins();
+      if (bins->fN == 0) {
+         h1 = new TProfile(pname,GetTitle(),outN,fXaxis.GetXmin(),fXaxis.GetXmax(),option);
+      } else {
+         h1 = new TProfile(pname,GetTitle(),outN,bins->fArray,option);
+      }
+   }
+   if (pname != name)  delete [] pname;
+
+   // Copy attributes
+   h1->GetXaxis()->ImportAttributes(this->GetXaxis());
+   h1->SetLineColor(this->GetLineColor());
+   h1->SetFillColor(this->GetFillColor());
+   h1->SetMarkerColor(this->GetMarkerColor());
+   h1->SetMarkerStyle(this->GetMarkerStyle());
+
+   //
+   // Fill the profile histogram
+   Double_t cont;
+   for (Int_t outBin =0;outBin<=outN+1;outBin++) {
+      for (Int_t inBin=firstbin;inBin<=lastbin;inBin++) {
+         Int_t& binx = (onX ? outBin :  inBin );
+         Int_t& biny = (onX ?  inBin : outBin );
+         if (ncuts) {
+            if (!fPainter->IsInside(binx,biny)) continue;
+         }
+         cont =  GetCellContent(binx,biny);
+
+         if (cont) {
+            h1->Fill(fXaxis.GetBinCenter(outBin),fYaxis.GetBinCenter(inBin), cont );
+         }
+      }
+   }
+   if ((firstbin <=1 && lastbin >= inN) && !ncuts) h1->SetEntries(fEntries);
+
+   if (opt.Contains("d")) {
+      TVirtualPad *padsav = gPad;
+      TVirtualPad *pad = gROOT->GetSelectedPad();
+      if (pad) pad->cd();
+      char optin[100];
+      strcpy(optin,opt.Data());
+      char *d = (char*)strstr(optin,"d"); if (d) {*d = ' '; if (*(d+1) == 0) *d=0;}
+      char *e = (char*)strstr(optin,"e"); if (e) {*e = ' '; if (*(e+1) == 0) *e=0;}
+      if (!gPad->FindObject(h1)) {
+         h1->Draw(optin);
+      } else {
+         h1->Paint(optin);
+      }
+      if (padsav) padsav->cd();
+   }
+   return h1;
+}
+
+
+//______________________________________________________________________________
 TProfile *TH2::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Option_t *option) const
 {
-   //*-*-*-*-*Project a 2-D histogram into a profile histogram along X*-*-*-*-*-*
-   //*-*      ========================================================
+   // *-*-*-*-*Project a 2-D histogram into a profile histogram along X*-*-*-*-*-*
+   // *-*      ========================================================
    //
    //   The projection is made from the channels along the Y axis
    //   ranging from firstybin to lastybin included.
@@ -1794,92 +1818,15 @@ TProfile *TH2::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Optio
    //   does! Profiles take the bin center into account, so here the under- and overflow
    //   bins are ignored by default.
 
-   TString opt = option;
-   Int_t nx = fXaxis.GetNbins();
-   Int_t ny = fYaxis.GetNbins();
-   if (firstybin < 0) firstybin = 1;
-   if (lastybin  < 0) lastybin  = ny;
-   if (lastybin  > ny+1) lastybin  = ny;
+   return DoProfile(true, name, firstybin, lastybin, option);
 
-   // Create the profile histogram
-   char *pname = (char*)name;
-   if (name && strcmp(name,"_pfx") == 0) {
-      Int_t nch = strlen(GetName()) + 5;
-      pname = new char[nch];
-      sprintf(pname,"%s%s",GetName(),name);
-   }
-   TProfile *h1=0;
-   //check if a profile with identical name exist
-   TObject *h1obj = gROOT->FindObject(pname);
-   if (h1obj && h1obj->InheritsFrom("TProfile")) {
-      h1 = (TProfile*)h1obj;
-      h1->Reset();
-   }
-
-   Int_t ncuts = 0;
-   if (opt.Contains("[")) {
-      ((TH2 *)this)->GetPainter();
-      if (fPainter) ncuts = fPainter->MakeCuts((char*)opt.Data());
-   }
-   opt.ToLower();  //must be called after MakeCuts
-
-   if (!h1) {
-      const TArrayD *bins = fXaxis.GetXbins();
-      if (bins->fN == 0) {
-         h1 = new TProfile(pname,GetTitle(),nx,fXaxis.GetXmin(),fXaxis.GetXmax(),option);
-      } else {
-         h1 = new TProfile(pname,GetTitle(),nx,bins->fArray,option);
-      }
-   }
-   if (pname != name)  delete [] pname;
-
-   // Copy attributes
-   h1->GetXaxis()->ImportAttributes(this->GetXaxis());
-   h1->SetLineColor(this->GetLineColor());
-   h1->SetFillColor(this->GetFillColor());
-   h1->SetMarkerColor(this->GetMarkerColor());
-   h1->SetMarkerStyle(this->GetMarkerStyle());
-
-   //
-   // Fill the profile histogram
-   Double_t cont;
-   for (Int_t binx =0;binx<=nx+1;binx++) {
-      for (Int_t biny=firstybin;biny<=lastybin;biny++) {
-         if (ncuts) {
-            if (!fPainter->IsInside(binx,biny)) continue;
-         }
-         cont =  GetCellContent(binx,biny);
-
-         if (cont) {
-            h1->Fill(fXaxis.GetBinCenter(binx),fYaxis.GetBinCenter(biny), cont );
-         }
-      }
-   }
-   if ((firstybin <=1 && lastybin >= ny) && !ncuts) h1->SetEntries(fEntries);
-
-   if (opt.Contains("d")) {
-      TVirtualPad *padsav = gPad;
-      TVirtualPad *pad = gROOT->GetSelectedPad();
-      if (pad) pad->cd();
-      char optin[100];
-      strcpy(optin,opt.Data());
-      char *d = (char*)strstr(optin,"d"); if (d) {*d = ' '; if (*(d+1) == 0) *d=0;}
-      char *e = (char*)strstr(optin,"e"); if (e) {*e = ' '; if (*(e+1) == 0) *e=0;}
-      if (!gPad->FindObject(h1)) {
-         h1->Draw(optin);
-      } else {
-         h1->Paint(optin);
-      }
-      if (padsav) padsav->cd();
-   }
-   return h1;
 }
 
 //______________________________________________________________________________
 TProfile *TH2::ProfileY(const char *name, Int_t firstxbin, Int_t lastxbin, Option_t *option) const
 {
-   //*-*-*-*-*Project a 2-D histogram into a profile histogram along Y*-*-*-*-*-*
-   //*-*      ========================================================
+   // *-*-*-*-*Project a 2-D histogram into a profile histogram along Y*-*-*-*-*-*
+   // *-*      ========================================================
    //
    //   The projection is made from the channels along the X axis
    //   ranging from firstxbin to lastxbin included.
@@ -1908,87 +1855,11 @@ TProfile *TH2::ProfileY(const char *name, Int_t firstxbin, Int_t lastxbin, Optio
    //   does! Profiles take the bin center into account, so here the under- and overflow
    //   bins are ignored by default.
 
-   TString opt = option;
-   Int_t nx = fXaxis.GetNbins();
-   Int_t ny = fYaxis.GetNbins();
-   if (firstxbin < 0) firstxbin = 1;
-   if (lastxbin  < 0) lastxbin  = nx;
-   if (lastxbin  > nx+1) lastxbin  = nx;
-
-   // Create the projection histogram
-   char *pname = (char*)name;
-   if (name && strcmp(name,"_pfy") == 0) {
-      Int_t nch = strlen(GetName()) + 5;
-      pname = new char[nch];
-      sprintf(pname,"%s%s",GetName(),name);
-   }
-   TProfile *h1=0;
-   //check if a profile with identical name exist
-   TObject *h1obj = gROOT->FindObject(pname);
-   if (h1obj && h1obj->InheritsFrom("TProfile")) {
-      h1 = (TProfile*)h1obj;
-      h1->Reset();
-   }
-
-   Int_t ncuts = 0;
-   if (opt.Contains("[")) {
-      ((TH2 *)this)->GetPainter();
-      if (fPainter) ncuts = fPainter->MakeCuts((char*)opt.Data());
-   }
-   opt.ToLower();  //must be called after MakeCuts
-
-   if (!h1) {
-      const TArrayD *bins = fYaxis.GetXbins();
-      if (bins->fN == 0) {
-         h1 = new TProfile(pname,GetTitle(),ny,fYaxis.GetXmin(),fYaxis.GetXmax(),option);
-      } else {
-         h1 = new TProfile(pname,GetTitle(),ny,bins->fArray,option);
-      }
-   }
-   if (pname != name)  delete [] pname;
-
-   // Copy attributes
-   h1->GetXaxis()->ImportAttributes(this->GetYaxis());
-   h1->SetLineColor(this->GetLineColor());
-   h1->SetFillColor(this->GetFillColor());
-   h1->SetMarkerColor(this->GetMarkerColor());
-   h1->SetMarkerStyle(this->GetMarkerStyle());
-
-   // Fill the profile histogram
-   Double_t cont;
-   for (Int_t biny =0;biny<=ny+1;biny++) {
-      for (Int_t binx=firstxbin;binx<=lastxbin;binx++) {
-         if (ncuts) {
-            if (!fPainter->IsInside(binx,biny)) continue;
-         }
-         cont =  GetCellContent(binx,biny);
-         if (cont) {
-            h1->Fill(fYaxis.GetBinCenter(biny),fXaxis.GetBinCenter(binx), cont);
-         }
-      }
-   }
-   if ((firstxbin <=1 && lastxbin >= nx) && !ncuts) h1->SetEntries(fEntries);
-
-   if (opt.Contains("d")) {
-      TVirtualPad *padsav = gPad;
-      TVirtualPad *pad = gROOT->GetSelectedPad();
-      if (pad) pad->cd();
-      char optin[100];
-      strcpy(optin,opt.Data());
-      char *d = (char*)strstr(optin,"d"); if (d) {*d = ' '; if (*(d+1) == 0) *d=0;}
-      char *e = (char*)strstr(optin,"e"); if (e) {*e = ' '; if (*(e+1) == 0) *e=0;}
-      if (!gPad->FindObject(h1)) {
-         h1->Draw(optin);
-      } else {
-         h1->Paint(optin);
-      }
-      if (padsav) padsav->cd();
-   }
-   return h1;
+   return DoProfile(false, name, firstxbin, lastxbin, option);
 }
 
 //______________________________________________________________________________
-TH1D *TH2::DoProjection(const char *name, bool onX, Int_t firstbin, Int_t lastbin, Option_t *option) const
+TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbin, Option_t *option) const
 {
    // internal (protected) method for performing projection on the X or Y axis
    // called by ProjectionX or ProjectionY
@@ -1996,6 +1867,7 @@ TH1D *TH2::DoProjection(const char *name, bool onX, Int_t firstbin, Int_t lastbi
    const char *expectedName = 0;
    Int_t outNbin, inNbin;
    TAxis* outAxis;
+
 
    if ( onX )
    {
@@ -2011,6 +1883,15 @@ TH1D *TH2::DoProjection(const char *name, bool onX, Int_t firstbin, Int_t lastbi
       inNbin = fXaxis.GetNbins();
       outAxis = GetYaxis();
    }
+
+   
+   Double_t th2Stats[7];
+   GetStats(th2Stats);
+   Double_t th1Stats[4];
+   th1Stats[0] = th2Stats[0];
+   th1Stats[1] = th2Stats[1];
+   th1Stats[2] = th2Stats[(onX) ? 2 : 4];
+   th1Stats[3] = th2Stats[(onX) ? 3 : 5];
 
    TString opt = option;
    if (firstbin < 0) firstbin = 0;
@@ -2111,6 +1992,11 @@ TH1D *TH2::DoProjection(const char *name, bool onX, Int_t firstbin, Int_t lastbi
       if (padsav) padsav->cd();
    }
 
+
+   if ( ( fgStatOverflows == false && firstbin == 1 && lastbin == outAxis->GetNbins()     ) ||
+        ( fgStatOverflows == true  && firstbin == 0 && lastbin == outAxis->GetNbins() + 1 ) )
+   h1->PutStats(&th1Stats[0]);
+
    return h1;
 }
 
@@ -2148,7 +2034,7 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
    //   the histogram is reset and filled again with the current contents of the TH2.
    //   The X axis attributes of the TH2 are copied to the X axis of the projection.
 
-      return DoProjection(name, true, firstybin, lastybin, option);
+      return DoProjection(true, name, firstybin, lastybin, option);
 }
 
 //______________________________________________________________________________
@@ -2184,7 +2070,7 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
    //   the histogram is reset and filled again with the current contents of the TH2.
    //   The Y axis attributes of the TH2 are copied to the X axis of the projection.
 
-      return DoProjection(name, false, firstxbin, lastxbin, option);
+      return DoProjection(false, name, firstxbin, lastxbin, option);
 }
 
 //______________________________________________________________________________

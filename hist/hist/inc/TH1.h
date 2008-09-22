@@ -104,10 +104,12 @@ protected:
     static Bool_t fgStatOverflows;  //!flag to use under/overflows in statistics
     static Bool_t fgDefaultSumw2;   //!flag to call TH1::Sumw2 automatically at histogram creation time
 
+public:
+   static Int_t FitOptionsMake(Option_t *option, Foption_t &Foption);
+
 private:
    Int_t   AxisChoice(Option_t *axis) const;
    void    Build();
-   Int_t   FitOptionsMake(Option_t *option, Foption_t &Foption);
 
    TH1& operator=(const TH1&); // Not implemented
 
@@ -122,6 +124,8 @@ protected:
    virtual void     SavePrimitiveHelp(ostream &out, Option_t *option = "");
    static Bool_t    RecomputeAxisLimits(TAxis& destAxis, const TAxis& anAxis);
    static Bool_t    SameLimitsAndNBins(const TAxis& axis1, const TAxis& axis2);
+
+   virtual Int_t    DoFit(TF1 *f1,Option_t *option,Option_t *goption, Double_t xmin, Double_t xmax);
 public:
    // TH1 status bits
    enum {

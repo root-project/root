@@ -183,6 +183,7 @@ Int_t TBinomialEfficiencyFitter::Fit(TF1 *f1, Option_t* option)
    opt.ToUpper();
    fAverage  = opt.Contains("I");
    fRange    = opt.Contains("R");
+   Bool_t verbose    = opt.Contains("V");
    fFunction = (TF1*)f1;
    Int_t i, npar;
    npar = f1->GetNpar();
@@ -249,14 +250,21 @@ Int_t TBinomialEfficiencyFitter::Fit(TF1 *f1, Option_t* option)
    }
    if (nfixed > 0) fgFitter->ExecuteCommand("FIX",arglist,nfixed); // Otto
 
-   Double_t plist[1];
+   Double_t plist[2];
    plist[0] = 0.5;
    fgFitter->ExecuteCommand("SET ERRDEF",plist,1);
+
+   if (verbose)   { 
+      plist[0] = 3;
+      fgFitter->ExecuteCommand("SET PRINT",plist,1);
+   }
 
    // perform the actual fit
 
    fFitDone = kTRUE;
-   Int_t result = fgFitter->ExecuteCommand("MINIMIZE",0,0);
+   plist[0] = TVirtualFitter::GetMaxIterations();
+   plist[1] = TVirtualFitter::GetPrecision();
+   Int_t result = fgFitter->ExecuteCommand("MINIMIZE",plist,2);
    
    //Store fit results in fitFunction
    char parName[50];

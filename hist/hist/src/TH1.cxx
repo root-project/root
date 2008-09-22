@@ -37,6 +37,7 @@
 #include "TError.h"
 #include "TVirtualHistPainter.h"
 #include "TVirtualFFT.h"
+#include "TSystem.h"
 
 //______________________________________________________________________________
 /* Begin_Html
@@ -3196,363 +3197,7 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xxmin, Dou
 //
 //   -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-   Int_t fitResult = 0;
-   Int_t i, npar,nvpar,nparx;
-   Double_t par, we, al, bl;
-   Double_t eplus,eminus,eparab,globcc,amin,aminref,edm,errdef,werr;
-   Double_t params[100], arglist[100];
-   Double_t xmin, xmax, ymin, ymax, zmin, zmax, binwidx, binwidy, binwidz;
-   Int_t hxfirst, hxlast, hyfirst, hylast, hzfirst, hzlast;
-   TF1 *fnew1;
-   TF2 *fnew2;
-   TF3 *fnew3;
-
-   // Check validity of function
-   if (!f1) {
-      Error("Fit", "function may not be null pointer");
-      return -1;
-   }
-   if (f1->IsZombie()) {
-      Error("Fit", "function is zombie");
-      return -2;
-   }
-
-   npar = f1->GetNpar();
-   if (npar <= 0) {
-      Error("Fit", "function %s has illegal number of parameters = %d", f1->GetName(), npar);
-      return -3;
-   }
-
-   // Check that function has same dimension as histogram
-   if (f1->GetNdim() > GetDimension()) {
-      Error("Fit","function %s dimension, %d, is greater than histogram dimension, %d",
-            f1->GetName(), f1->GetNdim(), GetDimension());
-      return -4;
-   }
-
-   // We must empty the current buffer (if any), otherwise TH1::Reset may be
-   // called at some point, resetting the function created by this function
-   if (fBuffer) BufferEmpty(1);
-
-   hxfirst = fXaxis.GetFirst();
-   hxlast  = fXaxis.GetLast();
-   binwidx = fXaxis.GetBinWidth(hxlast);
-   xmin    = fXaxis.GetBinLowEdge(hxfirst);
-   xmax    = fXaxis.GetBinLowEdge(hxlast) +binwidx;
-   hyfirst = fYaxis.GetFirst();
-   hylast  = fYaxis.GetLast();
-   binwidy = fYaxis.GetBinWidth(hylast);
-   ymin    = fYaxis.GetBinLowEdge(hyfirst);
-   ymax    = fYaxis.GetBinLowEdge(hylast) +binwidy;
-   hzfirst = fZaxis.GetFirst();
-   hzlast  = fZaxis.GetLast();
-   binwidz = fZaxis.GetBinWidth(hzlast);
-   zmin    = fZaxis.GetBinLowEdge(hzfirst);
-   zmax    = fZaxis.GetBinLowEdge(hzlast) +binwidz;
-
-//   - Decode list of options into fitOption
-   Foption_t fitOption;
-   if (!FitOptionsMake(option,fitOption)) return 0;
-   if (xxmin != xxmax) {
-      f1->SetRange(xxmin,ymin,zmin,xxmax,ymax,zmax);
-      fitOption.Range = 1;
-   }
-   if (f1->GetNdim() < fDimension) fitOption.Integral = 0;
-
-//   - Check if Minuit is initialized and create special functions
-
-
-   Int_t special = f1->GetNumber();
-   Bool_t linear = f1->IsLinear();
-   if (special==299+npar)
-      linear = kTRUE;
-   if (fitOption.Bound || fitOption.Like || fitOption.Errors || fitOption.Gradient || fitOption.More || fitOption.User|| fitOption.Integral || fitOption.Minuit)
-      linear = kFALSE;
-
-   char l[] ="TLinearFitter";
-   Int_t strdiff = 0;
-   Bool_t isSet = kFALSE;
-   if (TVirtualFitter::GetFitter()){
-      //Is a fitter already set? Is it linear?
-      isSet=kTRUE;
-      strdiff = strcmp(TVirtualFitter::GetFitter()->IsA()->GetName(), l);
-   }
-   if (linear) {
-      //
-      TClass *cl = TClass::GetClass("TLinearFitter");
-      if (isSet && strdiff!=0) {
-         delete TVirtualFitter::GetFitter();
-         isSet=kFALSE;
-      }
-      if (!isSet && cl) {
-         TVirtualFitter::SetFitter((TVirtualFitter *)cl->New());
-      }
-   } else {
-      if (isSet && strdiff==0){
-         delete TVirtualFitter::GetFitter();
-         isSet=kFALSE;
-      }
-      if (!isSet)
-         TVirtualFitter::SetFitter(0);
-   }
-
-   TVirtualFitter *hFitter = TVirtualFitter::Fitter(this, f1->GetNpar());
-   if (!hFitter) return -5;
-   hFitter->Clear();
-
-//   - Get pointer to the function by searching in the list of functions in ROOT
-   gF1 = f1;
-   hFitter->SetUserFunc(f1);
-
-   if (xxmin != xxmax) f1->SetRange(xxmin,ymin,zmin,xxmax,ymax,zmax);
-
-   hFitter->SetFitOption(fitOption);
-
-//   - Is a Fit range specified?
-   Double_t fxmin, fymin, fzmin, fxmax, fymax, fzmax;
-   if (fitOption.Range) {
-      f1->GetRange(fxmin, fymin, fzmin, fxmax, fymax, fzmax);
-      if (fxmin > xmin) xmin = fxmin;
-      if (fymin > ymin) ymin = fymin;
-      if (fzmin > zmin) zmin = fzmin;
-      if (fxmax < xmax) xmax = fxmax;
-      if (fymax < ymax) ymax = fymax;
-      if (fzmax < zmax) zmax = fzmax;
-      hxfirst = fXaxis.FindFixBin(xmin); if (hxfirst < 1) hxfirst = 1;
-      hxlast  = fXaxis.FindFixBin(xmax); if (hxlast > fXaxis.GetLast()) hxlast = fXaxis.GetLast();
-      hyfirst = fYaxis.FindFixBin(ymin); if (hyfirst < 1) hyfirst = 1;
-      hylast  = fYaxis.FindFixBin(ymax); if (hylast > fYaxis.GetLast()) hylast = fYaxis.GetLast();
-      hzfirst = fZaxis.FindFixBin(zmin); if (hzfirst < 1) hzfirst = 1;
-      hzlast  = fZaxis.FindFixBin(zmax); if (hzlast > fZaxis.GetLast()) hzlast = fZaxis.GetLast();
-   } else {
-      f1->SetRange(xmin,ymin,zmin,xmax,ymax,zmax);
-   }
-
-   // Initialize the fitter cache
-   hFitter->SetXfirst(hxfirst); hFitter->SetXlast(hxlast);
-   hFitter->SetYfirst(hyfirst); hFitter->SetYlast(hylast);
-   hFitter->SetZfirst(hzfirst); hFitter->SetZlast(hzlast);
-   //for each point the cache contains the following info
-   // -normal case
-   //   -1D : bc,e, xc  (bin content, error, x of center of bin)
-   //   -2D : bc,e, xc,yc
-   //   -3D : bc,e, xc,yc,zc
-   //
-   // -Integral case
-   //   -1D : bc,e, xc,xw  (bin content, error, x of center of bin, x bin width of bin)
-   //   -2D : bc,e, xc,xw,yc,yw
-   //   -3D : bc,e, xc,xw,yc,yw,zc,zw
-   Int_t maxpoints = (hzlast-hzfirst+1)*(hylast-hyfirst+1)*(hxlast-hxfirst+1);
-   Int_t psize = 2 +fDimension;
-   if (fitOption.Integral) psize = 2+2*fDimension;
-   Double_t *cache = hFitter->SetCache(maxpoints,psize);
-   Int_t np = 0;
-   for (Int_t binz=hzfirst;binz<=hzlast;binz++) {
-      for (Int_t biny=hyfirst;biny<=hylast;biny++) {
-         for (Int_t binx=hxfirst;binx<=hxlast;binx++) {
-            Int_t bin = GetBin(binx,biny,binz);
-            cache[0] = GetBinContent(bin);
-            cache[1] = GetBinError(bin);
-            if (fitOption.Integral) {
-               if (fDimension > 2) {
-                  cache[6] = fZaxis.GetBinCenter(binz);
-                  cache[7] = fZaxis.GetBinWidth(binz);
-               }
-               if (fDimension > 1) {
-                  cache[4] = fYaxis.GetBinCenter(biny);
-                  cache[5] = fYaxis.GetBinWidth(biny);
-               }
-               cache[2] = fXaxis.GetBinCenter(binx);
-               cache[3] = fXaxis.GetBinWidth(binx);
-            } else {
-               if (fDimension > 2) {
-                  cache[4] = fZaxis.GetBinCenter(binz);
-                  if (f1->GetNdim() < fDimension) cache[0] = cache[4];
-               }
-               if (fDimension > 1) {
-                  cache[3] = fYaxis.GetBinCenter(biny);
-                  if (f1->GetNdim() < fDimension) cache[0] = cache[3];
-               }
-               cache[2] = fXaxis.GetBinCenter(binx);
-            }
-            if (!f1->IsInside(&cache[2])) continue;
-            if (fitOption.W1) {
-               if (fitOption.W1 == 1 && cache[0] == 0) continue;
-               cache[1] = 1;
-            }
-            if (cache[1] == 0) {
-               if (fitOption.Like) cache[1] = 1;
-               else   continue;
-            }
-            np++;
-            cache += psize;
-         }
-      }
-   }
-   hFitter->SetCache(np,psize);
-
-   if (linear){
-      fitResult = hFitter->ExecuteCommand("FitHist", 0, 0);
-   } else {
-      //   - If case of a predefined function, then compute initial values of parameters
-      if (fitOption.Bound) special = 0;
-      if      (special == 100)      H1InitGaus();
-      else if (special == 400)      H1InitGaus();
-      else if (special == 200)      H1InitExpo();
-      else if (special == 299+npar) H1InitPolynom();
-
-      //   - Some initialisations
-      if (!fitOption.Verbose) {
-         arglist[0] = -1;
-         hFitter->ExecuteCommand("SET PRINT", arglist,1);
-         arglist[0] = 0;
-         hFitter->ExecuteCommand("SET NOW",   arglist,0);
-      }
-
-      //   - Set error criterion for chisquare or likelihood methods
-      //   -  MINUIT ErrDEF should not be set to 0.5 in case of loglikelihood fit.
-      //   -  because the FCN is already multiplied by 2 in H1FitLikelihood
-      //   -  if Hoption.User is specified, assume that the user has already set
-      //   -  his minimization function via SetFCN.
-      arglist[0] = TVirtualFitter::GetErrorDef();
-      if (fitOption.Like) {
-         hFitter->SetFitMethod("H1FitLikelihood");
-      } else {
-         if (!fitOption.User) hFitter->SetFitMethod("H1FitChisquare");
-      }
-      hFitter->ExecuteCommand("SET Err",arglist,1);
-
-      //   - Transfer names and initial values of parameters to Minuit
-      Int_t nfixed = 0;
-      for (i=0;i<npar;i++) {
-         par = f1->GetParameter(i);
-         f1->GetParLimits(i,al,bl);
-         if (al*bl != 0 && al >= bl) {
-            al = bl = 0;
-            arglist[nfixed] = i+1;
-            nfixed++;
-         }
-         we = 0.1*TMath::Abs(bl-al);
-         if (we == 0) we = 0.3*TMath::Abs(par);
-         if (we == 0) we = binwidx;
-         hFitter->SetParameter(i,f1->GetParName(i),par,we,al,bl);
-      }
-      if(nfixed > 0)hFitter->ExecuteCommand("FIX",arglist,nfixed); // Otto
-
-      //   - Set Gradient
-      if (fitOption.Gradient) {
-         if (fitOption.Gradient == 1) arglist[0] = 1;
-         else                       arglist[0] = 0;
-         hFitter->ExecuteCommand("SET GRAD",arglist,1);
-      }
-
-      //   - Reset Print level
-      if (fitOption.Verbose) {
-         arglist[0] = 0; hFitter->ExecuteCommand("SET PRINT", arglist,1);
-      }
-
-      //   - Compute sum of squares of errors in the bin range
-      Double_t ey, sumw2=0;
-      for (i=hxfirst;i<=hxlast;i++) {
-         ey = GetBinError(i);
-         sumw2 += ey*ey;
-      }
-      //
-      //
-      // printf("h1: sumw2=%f\n", sumw2);
-      //
-
-      //   - Perform minimization
-      arglist[0] = TVirtualFitter::GetMaxIterations();
-      arglist[1] = sumw2*TVirtualFitter::GetPrecision();
-      fitResult += hFitter->ExecuteCommand("MIGRAD",arglist,2);
-      if (fitResult != 0) {
-         //   Abnormal termination, MIGRAD might not have converged on a
-         //   minimum.
-         if (!fitOption.Quiet) {
-            Warning("Fit","Abnormal termination of minimization.");
-         }
-      }
-      if (fitOption.More) {
-         fitResult += 1000*hFitter->ExecuteCommand("IMPROVE",arglist,0);
-      }
-      if (fitOption.Errors) {
-         fitResult +=  100*hFitter->ExecuteCommand("HESSE",arglist,0);
-         fitResult +=   10*hFitter->ExecuteCommand("MINOS",arglist,0);
-      }
-
-      //   - Get return status
-      char parName[50];
-      for (i=0;i<npar;i++) {
-         hFitter->GetParameter(i,parName, par,we,al,bl);
-         if (!fitOption.Errors) werr = we;
-         else {
-            hFitter->GetErrors(i,eplus,eminus,eparab,globcc);
-            if (eplus > 0 && eminus < 0) werr = 0.5*(eplus-eminus);
-            else                         werr = we;
-         }
-         params[i] = par;
-         f1->SetParameter(i,par);
-         f1->SetParError(i,werr);
-      }
-      hFitter->GetStats(aminref,edm,errdef,nvpar,nparx);
-      //     If Log Likelihood, compute an equivalent chisquare
-      amin = aminref;
-      if (fitOption.Like) amin = hFitter->Chisquare(npar, params);
-
-      f1->SetChisquare(amin);
-      f1->SetNDF(f1->GetNumberFitPoints()-npar+nfixed);
-   }
-   //   - Print final values of parameters.
-
-
-
-   if (!fitOption.Quiet) {
-      if (fitOption.Errors) hFitter->PrintResults(4,aminref);
-      else                  hFitter->PrintResults(3,aminref);
-   }
-
-
-
-//   - Store fitted function in histogram functions list and draw
-      if (!fitOption.Nostore) {
-      if (!fitOption.Plus) {
-         TIter next(fFunctions, kIterBackward);
-         TObject *obj;
-         while ((obj = next())) {
-            if (obj->InheritsFrom(TF1::Class())) {
-               fFunctions->Remove(obj);
-               delete obj;
-            }
-         }
-      }
-      if (GetDimension() < 2) {
-         fnew1 = (TF1*)f1->IsA()->New();
-         f1->Copy(*fnew1);
-         fFunctions->Add(fnew1);
-         fnew1->SetParent(this);
-         fnew1->Save(xmin,xmax,0,0,0,0);
-         if (fitOption.Nograph) fnew1->SetBit(TF1::kNotDraw);
-         fnew1->SetBit(TFormula::kNotGlobal);
-      } else if (GetDimension() < 3) {
-         fnew2 = (TF2*)f1->IsA()->New();
-         f1->Copy(*fnew2);
-         fFunctions->Add(fnew2);
-         fnew2->SetParent(this);
-         fnew2->Save(xmin,xmax,ymin,ymax,0,0);
-         if (fitOption.Nograph) fnew2->SetBit(TF1::kNotDraw);
-         fnew2->SetBit(TFormula::kNotGlobal);
-      } else {
-         fnew3 = (TF3*)f1->IsA()->New();
-         f1->Copy(*fnew3);
-         fFunctions->Add(fnew3);
-         fnew3->SetParent(this);
-         fnew3->SetBit(TFormula::kNotGlobal);
-      }
-      if (TestBit(kCanDelete)) return fitResult;
-      if (!fitOption.Nograph && GetDimension() < 3) Draw(goption);
-   }
-   return fitResult;
+   return DoFit( f1 , option , goption, xxmin, xxmax); 
 }
 
 //______________________________________________________________________________
@@ -3563,7 +3208,23 @@ void TH1::FitPanel()
 //
 //      See class TFitPanel for example
 
-   if (fPainter) fPainter->FitPanel();
+   if (!gPad)
+      gROOT->MakeDefCanvas();
+
+   if (!gPad) {
+      Error("FitPanel", "Unable to create a default canvas");
+      return;
+   }
+
+
+   // use plugin manager to create instance of TFitEditor
+   TPluginHandler *handler = gROOT->GetPluginManager()->FindHandler("TFitEditor");
+   if (handler && handler->LoadPlugin() != -1) {
+      if (handler->ExecPlugin(2, gPad, this) == 0)
+         Error("FitPanel", "Unable to crate the FitPanel");
+   }
+   else 
+         Error("FitPanel", "Unable to find the FitPanel plug-in");
 }
 
 //______________________________________________________________________________

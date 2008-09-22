@@ -2510,7 +2510,7 @@ Double_t TF1::IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, In
 //______________________________________________________________________________
 Bool_t TF1::IsInside(const Double_t *x) const
 {
-   // Return kTRUE is the point is inside the function range
+   // Return kTRUE if the point is inside the function range
 
    if (x[0] < fXmin || x[0] > fXmax) return kFALSE;
    return kTRUE;

@@ -80,6 +80,8 @@
 #pragma link C++ class TSplinePoly3+;
 #pragma link C++ class TVirtualHistPainter+;
 #pragma link C++ class TVirtualGraphPainter+;
+#pragma link C++ class TBackCompFitter+;
+
 
 #pragma link C++ typedef THnSparseD;
 #pragma link C++ typedef THnSparseF;
