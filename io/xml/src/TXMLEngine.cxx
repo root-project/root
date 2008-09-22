@@ -24,6 +24,7 @@
 #include "Riostream.h"
 #include "TString.h"
 #include <stdlib.h>
+#include <string.h>
 
 ClassImp(TXMLEngine);
 
@@ -151,7 +152,6 @@ protected:
    
    char          *fBuf;
    Int_t          fBufSize;
-   Int_t          fBufLength;
 
    char          *fMaxAddr;
    char          *fLimitAddr;
@@ -163,29 +163,20 @@ public:
 
    char           *fCurrent;
 
-   TXMLInputStream(const char* filename, Int_t ibufsize)
+   TXMLInputStream(bool isfilename, const char* filename, Int_t ibufsize)
    {
-      fInp = new std::ifstream(filename);
-      fInpStr = 0;
-      fInpStrLen = 0;
+      if (isfilename) {
+         fInp = new std::ifstream(filename);
+         fInpStr = 0;
+         fInpStrLen = 0;
+      } else {
+         fInp = 0;
+         fInpStr = filename;
+         fInpStrLen = filename==0 ? 0 : strlen(filename);
+      }
    
-      Init(ibufsize);
-   }
-
-   TXMLInputStream(const char* str)
-   {
-      fInp = 0;
-      fInpStr = str;
-      fInpStrLen = str==0 ? 0 : strlen(str);
-   
-      Init(20000);
-   }
-   
-   void Init(Int_t ibufsize)
-   {
       fBufSize = ibufsize;
       fBuf = (char*) malloc(fBufSize);
-      fBufLength = 0;
 
       fCurrent = 0;
       fMaxAddr = 0;
@@ -201,26 +192,25 @@ public:
 
    virtual ~TXMLInputStream()
    {
-      delete fInp;
-      free(fBuf);
+      delete fInp; fInp = 0;
+      free(fBuf); fBuf = 0;
    }
 
-   Bool_t EndOfFile() { return (fInp!=0) ? fInp->eof() : (fInpStrLen<=0); }
+   inline Bool_t EndOfFile() { return (fInp!=0) ? fInp->eof() : (fInpStrLen<=0); }
    
-   Bool_t EndOfStream() { return EndOfFile() && (fCurrent>=fMaxAddr); }
+   inline Bool_t EndOfStream() { return EndOfFile() && (fCurrent>=fMaxAddr); }
 
    int DoRead(char* buf, int maxsize)
    {
       if (EndOfFile()) return 0;
       if (fInp!=0) {
-         fInp->get(buf,maxsize-1,0);
+         fInp->get(buf, maxsize, 0);
          maxsize = strlen(buf);
       } else {
          if (maxsize>fInpStrLen) maxsize = fInpStrLen;
          strncpy(buf, fInpStr, maxsize);
          fInpStr+=maxsize;
          fInpStrLen-=maxsize;
-         *(buf+maxsize) = 0;
       }
       return maxsize;
    }
@@ -230,10 +220,17 @@ public:
       if (EndOfFile()) return kFALSE;
       fBufSize*=2;
       int curlength = fMaxAddr - fBuf;
-      fBuf = (char*) realloc(fBuf, fBufSize);
+      char* newbuf = (char*) realloc(fBuf, fBufSize);
+      if (newbuf==0) return kFALSE;
+      
+      fMaxAddr = newbuf + (fMaxAddr - fBuf);
+      fCurrent = newbuf + (fCurrent - fBuf);
+      fLimitAddr = newbuf + (fLimitAddr - fBuf);
+      fBuf = newbuf;
+      
       int len = DoRead(fMaxAddr, fBufSize-curlength);
       if (len==0) return kFALSE;
-      fMaxAddr+=len;
+      fMaxAddr += len;
       fLimitAddr += int(len*0.75);
       return kTRUE;
    }
@@ -242,14 +239,13 @@ public:
    {
       if (fCurrent<fLimitAddr) return kTRUE; // everything ok, can cntinue
       if (EndOfFile()) return kTRUE;
-      int curlength = fMaxAddr - fCurrent;
-      memcpy(fBuf, fCurrent, curlength+1); // copy with end 0
+      int rest_len = fMaxAddr - fCurrent;
+      memmove(fBuf, fCurrent, rest_len); 
+      int read_len = DoRead(fBuf + rest_len, fBufSize - rest_len);
+
       fCurrent = fBuf;
-      fMaxAddr = fBuf + curlength;
-      fLimitAddr = fBuf + int(curlength*0.75);
-      int len = DoRead(fMaxAddr, fBufSize - curlength);
-      fMaxAddr+=len;
-      fLimitAddr += int(len*0.75);
+      fMaxAddr = fBuf + rest_len + read_len;
+      fLimitAddr = fBuf + int((rest_len + read_len)*0.75);
       return kTRUE;
    }
 
@@ -1064,7 +1060,7 @@ XMLDocPointer_t TXMLEngine::ParseFile(const char* filename)
    // parses content of file and tries to produce xml structures
 
    if ((filename==0) || (strlen(filename)==0)) return 0;
-   TXMLInputStream inp(filename, 100000);
+   TXMLInputStream inp(true, filename, 100000);
 
    XMLDocPointer_t xmldoc = NewDoc(0);
    
@@ -1137,7 +1133,7 @@ XMLNodePointer_t TXMLEngine::ReadSingleNode(const char* src)
     
    if (src==0) return 0;
    
-   TXMLInputStream inp(src);
+   TXMLInputStream inp(false, src, 10000);
 
    Int_t resvalue;
 
