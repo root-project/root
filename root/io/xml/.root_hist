@@ -75,3 +75,13 @@ cout << gROOT->GetClass("TXmlEx1") << endl;
 .x /Users/pcanal/root_working/roottest//scripts/build.C("test_classes.h")
 .x runfilexml.C
 .x runbasicxml.C
+.x /home/pcanal/root_working/roottest//scripts/Bits.C
+.x /home/pcanal/root_working/roottest//scripts/build.C("test_classes.h")
+.x runfilexml.C
+.x /home/pcanal/root_working/roottest//scripts/Bits.C
+.x /home/pcanal/root_working/roottest//scripts/build.C("/home/pcanal/root_working/roottest/scripts/utils.cc")
+.x /home/pcanal/root_working/roottest//scripts/build.C("/home/pcanal/root_working/roottest/scripts/recordtiming.cc")
+.x /home/pcanal/root_working/roottest//scripts/build.C("test_classes.h")
+.x runfilexml.C
+.x runbasicxml.C
+.x /home/pcanal/root_working/roottest//scripts/Bits.C
