@@ -12,6 +12,14 @@
 #include "Minuit2/LaSum.h"
 #include "Minuit2/LaProd.h"
 
+//#define DEBUG 
+
+#if defined(DEBUG) || defined(WARNINGMSG)
+#include "Minuit2/MnPrint.h" 
+#endif
+
+
+
 namespace ROOT {
 
    namespace Minuit2 {
@@ -36,7 +44,22 @@ MinimumError DavidonErrorUpdator::Update(const MinimumState& s0,
    double delgam = inner_product(dx, dg);
    double gvg = similarity(dg, v0);
 
-   //   std::cout<<"delgam= "<<delgam<<" gvg= "<<gvg<<std::endl;
+#ifdef DEBUG
+   std::cout << "dx = " << dx << std::endl; 
+   std::cout << "dg = " << dg << std::endl; 
+   std::cout<<"delgam= "<<delgam<<" gvg= "<<gvg<<std::endl;
+#endif
+   if (delgam <= 0 ) { 
+       MN_INFO_MSG("DavidonErrorUpdator: delgam < 0 : cannot update - return same matrix ");
+       return s0.Error();
+   }
+   if (gvg <= 0 ) { 
+      // since v0 is pos def this gvg can be only = 0 if  dg = 0 - should never be here
+      MN_INFO_MSG("DavidonErrorUpdator: gvg <= 0 : cannot update - return same matrix "); 
+      return s0.Error();
+   }
+
+
    MnAlgebraicVector vg = v0*dg;
 
    MnAlgebraicSymMatrix vUpd = Outer_product(dx)/delgam - Outer_product(vg)/gvg;

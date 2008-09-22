@@ -16,6 +16,7 @@
 #include "Math/Util.h"
 
 #include "Math/Minimizer.h"
+#include "Math/MinimizerOptions.h"
 #include "Math/Factory.h"
 
 #include <cmath> 
@@ -35,19 +36,18 @@ namespace ROOT {
 namespace Fit { 
 
 
-   static std::string fgDefaultMinimizer = "Minuit2";
-   static std::string fgDefaultMinimAlgo = "Migrad";
-
 
 FitConfig::FitConfig(unsigned int npar) : 
    fNormErrors(false),
+   fParabErrors(false), // ensure that in any case correct parabolic errors are estimated
+   fMinosErrors(false),    // do full Minos error analysis for all parameters
    fSettings(std::vector<ParameterSettings>(npar) )  
 {
    // constructor implementation
 
-   // default minimizer type (ue static default values) 
-   fMinimizerType = fgDefaultMinimizer; 
-   fMinimAlgoType = fgDefaultMinimAlgo; 
+   // default minimizer type (use static default values) 
+   fMinimizerType = ROOT::Math::MinimizerOptions::DefaultMinimizerType(); 
+   fMinimAlgoType = ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo();; 
 }
 
 
@@ -56,32 +56,44 @@ FitConfig::~FitConfig()
    // destructor implementation. No Op
 }
 
-void FitConfig::SetParamsSettings(unsigned int npar, const double *params ) { 
+void FitConfig::SetParamsSettings(unsigned int npar, const double *params, const double * vstep ) { 
    // initialize fit config from parameter values
    if (params == 0) { 
       fSettings =  std::vector<ParameterSettings>(npar); 
       return; 
    }
-   // if a vector of parameters is given
-   fSettings.clear(); 
-   fSettings.reserve(npar); 
+   // if a vector of parameters is given and parameters are not existing or are of different size
+   bool createNew = false; 
+   if (npar != fSettings.size() ) { 
+      fSettings.clear(); 
+      fSettings.reserve(npar); 
+      createNew = true; 
+   }
    unsigned int i = 0; 
    const double * end = params+npar;
    for (const double * ipar = params; ipar !=  end; ++ipar) {  
-      double val = *ipar; 
-      double step = 0.3*std::fabs(val);   // step size is 30% of par value
-      //double step = 2.0*std::fabs(val);   // step size is 30% of par value
-      if (val ==  0) step  =  0.3; 
-      
-      fSettings.push_back( ParameterSettings("Par_" + ROOT::Math::Util::ToString(i), val, step ) ); 
-#ifdef DEBUG
-      std::cout << "FitConfig: add parameter " <<  func.ParameterName(i) << " val = " << val << std::endl;
-#endif
+      double val = *ipar;       
+      double step = 0; 
+      if (vstep == 0) {  
+         step = 0.3*std::fabs(val);   // step size is 30% of par value
+         //double step = 2.0*std::fabs(val);   // step size is 30% of par value
+         if (val ==  0) step  =  0.3; 
+      }
+      else 
+         step = vstep[i]; 
+
+      if (createNew) 
+         fSettings.push_back( ParameterSettings("Par_" + ROOT::Math::Util::ToString(i), val, step ) ); 
+      else {
+         fSettings[i].SetValue(val); 
+         fSettings[i].SetStepSize(step); 
+      }
+
       i++;
-   } 
+   }
 }
 
-void FitConfig::SetParamsSettings(const ROOT::Math::IParamMultiFunction & func) { 
+void FitConfig::CreateParamsSettings(const ROOT::Math::IParamMultiFunction & func) { 
    // initialize from model function
    // set the parameters values from the function
    unsigned int npar = func.NPar(); 
@@ -119,13 +131,14 @@ ROOT::Math::Minimizer * FitConfig::CreateMinimizer() {
    if (min == 0) { 
       std::string minim2 = "Minuit2";
       if (fMinimizerType != minim2 ) {
-         std::string msg = "Could not create Minimizer " + fMinimizerType + " trying using minimizer " + minim2; 
+         std::string msg = "Could not create the " + fMinimizerType + " minimizer. Try using the minimizer " + minim2; 
          MATH_WARN_MSG("FitConfig::CreateMinimizer",msg.c_str());
-         min = ROOT::Math::Factory::CreateMinimizer(minim2); 
+         min = ROOT::Math::Factory::CreateMinimizer(minim2,"Migrad"); 
          if (min == 0) { 
             MATH_ERROR_MSG("FitConfig::CreateMinimizer","Could not create the Minuit2 minimizer");
             return 0; 
          }
+         fMinimizerType = "Minuit2"; fMinimAlgoType = "Migrad"; 
       }
       else {
          std::string msg = "Could not create the Minimizer " + fMinimizerType; 
@@ -148,18 +161,32 @@ ROOT::Math::Minimizer * FitConfig::CreateMinimizer() {
    min->SetMaxFunctionCalls( fMinimizerOpts.MaxFunctionCalls() ); 
    min->SetMaxIterations( fMinimizerOpts.MaxIterations() ); 
    min->SetTolerance( fMinimizerOpts.Tolerance() ); 
-   min->SetValidError( fMinimizerOpts.ParabErrors() );
+   min->SetValidError( fParabErrors );
    min->SetStrategy( fMinimizerOpts.Strategy() );
+   min->SetErrorUp( fMinimizerOpts.ErrorDef() );
 
 
    return min; 
 } 
 
 void FitConfig::SetDefaultMinimizer(const std::string & type, const std::string & algo ) { 
-   // set the default minimizer type and algorithm
-   if (type != "") fgDefaultMinimizer = type; 
-   if (algo != "") fgDefaultMinimAlgo = algo;
+   // set the default minimizer type and algorithms
+   ROOT::Math::MinimizerOptions::SetDefaultMinimizer(type, algo); 
 } 
+
+void FitConfig::SetMinimizerOptions(const ROOT::Math::MinimizerOptions & minopt) {  
+   fMinimizerType = minopt.MinimType; 
+   fMinimAlgoType = minopt.AlgoType; 
+   fMinimizerOpts.SetTolerance(minopt.Tolerance); 
+   fMinimizerOpts.SetMaxFunctionCalls(minopt.MaxFunctionCalls); 
+   fMinimizerOpts.SetMaxIterations(minopt.MaxIterations); 
+   fMinimizerOpts.SetStrategy(minopt.Strategy); 
+   fMinimizerOpts.SetPrintLevel(minopt.PrintLevel); 
+   fMinimizerOpts.SetErrorDef(minopt.ErrorDef); 
+
+   // error up should be added as well
+}
+
 
    } // end namespace Fit
 

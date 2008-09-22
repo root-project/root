@@ -47,8 +47,16 @@ public:
 
    virtual ~MnApplication() { }
 
-   /// Minimize
-   virtual FunctionMinimum operator()(unsigned int = 0, double = 0.1);
+   /**
+      Minimize the function
+      @param maxfcn : max number of function calls (if = 0) default is used which is set to 
+                     200 + 100 * npar + 5 * npar**2
+      @param tolerance : value used for terminating iteration procedure. 
+             For example, MIGRAD will stop iterating when edm (expected distance from minimum) will be: 
+             edm < tolerance * 10**-3
+             Default value of tolerance used is 0.1
+   */
+   virtual FunctionMinimum operator()(unsigned int maxfcn = 0, double tolerance = 0.1);
  
    virtual const ModularFunctionMinimizer& Minimizer() const = 0;
 

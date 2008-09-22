@@ -11,8 +11,7 @@
 #include "Fit/UnBinData.h"
 //#include "Fit/BinPoint.h"
 #include "Fit/Fitter.h"
-#include "THFitInterface.h"
-#include "TGraphFitInterface.h"
+#include "HFitInterface.h"
 
 #include "Math/IParamFunction.h"
 #include "Math/WrappedTF1.h"
@@ -55,7 +54,7 @@
 
 #include "MinimizerTypes.h"
 
-//#define DEBUG
+#define DEBUG
 
 int nfit;
 const int N = 20; 
@@ -338,7 +337,7 @@ int FitUsingNewFitter(FitObj * fitobj, Func & func, bool useGrad=false) {
    TStopwatch w; w.Start(); 
 
 #ifdef DEBUG
-   std::cout << "initial Parameters " << iniPar << "  " << *iniPar << "   " <<  *(iniPar+1) << std::endl;
+   // std::cout << "initial Parameters " << iniPar << "  " << *iniPar << "   " <<  *(iniPar+1) << std::endl;
    func.SetParameters(iniPar);
    iret |= DoFit<MinType>(fitobj,func,true, useGrad);
 
@@ -713,14 +712,15 @@ int testPolyFit() {
 
 
    // fill an histogram 
-   TH1D * h1 = new TH1D("h1","h1",500,-5.,5.);
+   TH1D * h1 = new TH1D("h1","h1",20,-5.,5.);
 //      h1->FillRandom(fname.c_str(),100);
-   for (int i = 0; i <100; ++i) 
+   for (int i = 0; i <1000; ++i) 
       h1->Fill( f1->GetRandom() );
 
    //h1->Print();
    //h1->Draw();
    iniPar[0] = 2.; iniPar[1] = 2.; iniPar[2] = 2.;
+
 
    iret |= FitUsingTFit<TH1,TMINUIT>(h1,f1);
    iret |= FitUsingTFit<TH1,MINUIT2>(h1,f1);
@@ -753,10 +753,13 @@ int testPolyFit() {
 
    iret |= FitUsingNewFitter<MINUIT2>(gr,f2);
 
+
+   std::cout << "\n-----> test now TGraphErrors with errors in X coordinates\n\n"; 
    // try with error in X
-   gStyle->SetErrorX(0.5); // to seto zero error on X
+   gStyle->SetErrorX(0.5); // to set zero error on X
    TGraphErrors * gr2 = new TGraphErrors(h1);
    iret |= FitUsingTFit<TGraph,TMINUIT>(gr2,f1);
+   iret |= FitUsingTFit<TGraph,MINUIT2>(gr2,f1);
 
    iret |= FitUsingNewFitter<MINUIT2>(gr2,f2);
 
@@ -827,6 +830,12 @@ int testGausFit() {
 
    iret |= FitUsingTFit<TH1,TMINUIT>(h2,f1);
    iret |= FitUsingTFit<TH1,MINUIT2>(h2,f1);
+
+
+    iret |= FitUsingNewFitter<GSL_FR>(h2,f2);
+    iret |= FitUsingNewFitter<GSL_PR>(h2,f2);
+    iret |= FitUsingNewFitter<GSL_BFGS>(h2,f2);
+    iret |= FitUsingNewFitter<GSL_BFGS2>(h2,f2);
 
 
    // test also fitting a TGraphErrors with histogram data
@@ -1059,6 +1068,7 @@ int testFitPerf() {
    nfit = 1; 
 #endif
   iret |= testTreeFit(); 
+
 
 
  //return iret; 

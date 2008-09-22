@@ -69,8 +69,15 @@ public:
 
 
 
-   /// set value and name
-   void Set(const std::string & name, double value, double step, double lower = 1, double upper = -1) { 
+   /// set value and name (unlimited parameter) 
+   void Set(const std::string & name, double value, double step) { 
+      SetName(name); 
+      SetValue(value); 
+      SetStepSize(step);
+   }
+
+   /// set a limited parameter
+   void Set(const std::string & name, double value, double step, double lower, double upper ) { 
       SetName(name); 
       SetValue(value); 
       SetStepSize(step);
@@ -95,9 +102,9 @@ public:
 public: 
 
    /// return parameter value
-   double Value() { return fValue; } 
+   double Value() const { return fValue; } 
    /// return step size 
-   double StepSize() { return fStepSize; } 
+   double StepSize() const { return fStepSize; } 
    /// return lower limit value
    double LowerLimit() const {return fLowerLimit;}
    /// return lower limit value
@@ -113,7 +120,7 @@ public:
    /// check if is double bound (upper AND lower limit) 
    bool IsDoubleBound() const { return fHasLowerLimit && fHasUpperLimit;  } 
    /// return name 
-   const std::string & Name() { return fName; }  
+   const std::string & Name() const { return fName; }  
 
    /** interaction **/
 

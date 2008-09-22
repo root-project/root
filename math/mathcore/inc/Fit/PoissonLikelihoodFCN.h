@@ -65,13 +65,11 @@ public:
       Constructor from unbin data set and model function (pdf)
    */ 
    PoissonLikelihoodFCN (const BinData & data, IModelFunction & func) : 
-   fData(data), 
-   fFunc(func), 
-   fNDim(func.NPar() ), 
-   fNPoints(data.Size()),      
-   fNEffPoints(0),
-   fNCalls(0),
-   fGrad ( std::vector<double> ( func.NPar() ) )
+      BaseObjFunction(func.NPar(), data.Size() ),
+      fData(data), 
+      fFunc(func), 
+      fNEffPoints(0),
+      fGrad ( std::vector<double> ( func.NPar() ) )
    { }
  
 
@@ -98,18 +96,8 @@ public:
    /// clone the function (need to return Base for Windows)
    BaseFunction * Clone() const { return new  PoissonLikelihoodFCN(fData,fFunc); }
 
-   unsigned int NDim() const { return fNDim; }
-
-   // count number of function calls
-   unsigned int NCalls() const { return fNCalls; } 
-
-   // size of the data
-   unsigned int NPoints() const { return fNPoints; }
-
    // effective points used in the fit
    unsigned int NFitPoints() const { return fNEffPoints; }
-
-   void ResetNCalls() { fNCalls = 0; }
 
    /// i-th likelihood element and its gradient  
    double DataElement(const double * x, unsigned int i, double * g) const { 
@@ -125,6 +113,13 @@ public:
    /// get type of fit method function
    virtual  typename BaseObjFunction::Type GetType() const { return BaseObjFunction::kLogLikelihood; }
 
+   /// access to const reference to the data 
+   virtual const BinData & Data() const { return fData; }
+
+   /// access to const reference to the model function
+   virtual const IModelFunction & ModelFunction() const { return fFunc; }
+
+
 protected: 
 
 
@@ -134,7 +129,7 @@ private:
       Evaluation of the  function (required by interface)
     */
    double DoEval (const double * x) const { 
-      fNCalls++;
+      this->UpdateNCalls();
       return FitUtil::EvaluatePoissonLogL(fFunc, fData, x, fNEffPoints); 
    } 
 

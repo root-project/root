@@ -15,7 +15,7 @@
 #include "TGraph.h"
 #include "TGraph2D.h"
 #include "TMultiGraph.h"
-#include "TRandom.h"
+#include "TRandom2.h"
 #include "TObjString.h"
 #include "TF2.h"
 #include "TH1.h"
@@ -2139,7 +2139,7 @@ void TLinearFitter::CreateSubset(Int_t ntotal, Int_t h, Int_t *index)
    for(i=0; i<ntotal; i++)
       index[i] = ntotal+1;
 
-   TRandom r;
+   TRandom2 r;
    //create a p-subset
    for (i=0; i<fNfunctions; i++) {
       num=Int_t(r.Uniform(0, 1)*(ntotal-1));

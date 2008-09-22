@@ -11,6 +11,7 @@
 // Implementation file for class DataRange
 
 #include "Fit/DataRange.h"
+#include "Math/Error.h"
 
 #include <algorithm>
 
@@ -68,7 +69,12 @@ DataRange::DataRange(double xmin, double xmax, double ymin, double ymax, double 
    }
 }
 
-void DataRange::AddRange(double xmin, double xmax, unsigned  int  icoord  ) { 
+bool lessRange( const std::pair<double,double> & r1, const std::pair<double,double> & r2 ) { 
+   // compare ranges using max position so in case of included ranges smaller one comes first
+   return r1.second <  r2.second; 
+}
+
+void DataRange::AddRange(unsigned  int  icoord , double xmin, double xmax  ) { 
    // add a range [xmin,xmax] for the new coordinate icoord 
 
    if (xmin >= xmax) return;  // no op in case of bad values
@@ -88,12 +94,36 @@ void DataRange::AddRange(double xmin, double xmax, unsigned  int  icoord  ) {
       return;
    } 
    // case of  an already existing range
+   // need to establish a policy (use OR or AND )
+
    CleanRangeSet(icoord,xmin,xmax); 
    // add the new one
    rs.push_back(std::make_pair(xmin,xmax) ); 
-   // sort range in increasing values 
-   std::sort( rs.begin(), rs.end() );
+   // sort range in increasing values of xmax 
+   std::sort( rs.begin(), rs.end() , lessRange);
 
+}
+
+void DataRange::SetRange(unsigned  int  icoord , double xmin, double xmax  ) { 
+   // set a new range [xmin,xmax] for the new coordinate icoord 
+
+   if (xmin >= xmax) return;  // no op in case of bad values
+
+   // case the  coordinate is larger than the current allocated vector size
+   if (icoord >= fRanges.size() ) { 
+      fRanges.resize(icoord+1);
+      RangeSet rs(1); 
+      rs[0] = std::make_pair(xmin, xmax); 
+      fRanges[icoord] = rs; 
+      return;
+   }
+   // add range 
+   RangeSet & rs = fRanges[icoord]; 
+   // deleting existing ones if (exists)
+   if (rs.size() > 1) MATH_WARN_MSG("DataRange::SetRange","remove existing range and keep only the set one");
+   rs.resize(1); 
+   rs[0] =  std::make_pair(xmin, xmax); 
+   return; 
 }
 
 bool DataRange::IsInside(double x, unsigned int icoord ) const { 

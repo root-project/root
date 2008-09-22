@@ -17,5 +17,6 @@
 #pragma link C++ global gFumili;
 
 #pragma link C++ class TFumili;
+#pragma link C++ class TFumiliMinimizer;
 
 #endif

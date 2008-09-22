@@ -77,11 +77,14 @@
 #include "Math/Util.h"
 
 #define  MATH_INFO_MSG(loc,str)                 \
-   ::Info("ROOT::Math",str);
+   {std::string sl = "ROOT::Math::" + std::string(loc); \
+      ::Info(sl.c_str(),str);}
 #define  MATH_WARN_MSG(loc,str)                 \
-   ::Warning("ROOT::Math",str);
+   {std::string sl = "ROOT::Math::" + std::string(loc); \
+      ::Warning(sl.c_str(),str);}
 #define  MATH_ERROR_MSG(loc,str)                \
-   ::Error("ROOT::Math",str);
+   {std::string sl = "ROOT::Math::" + std::string(loc); \
+      ::Error(sl.c_str(),str);}
 
 # define MATH_INFO_VAL(loc,x)                                           \
    {std::string sl = "ROOT::Math::" + std::string(loc); \

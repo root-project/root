@@ -87,13 +87,11 @@ public:
       Constructor from data set (binned ) and model function 
    */ 
    Chi2FCN (const BinData & data, IModelFunction & func) : 
-   fData(data), 
-   fFunc(func), 
-   fNDim(func.NPar() ), 
-   fNPoints(data.Size()),      
-   fNEffPoints(0),
-   fNCalls(0), 
-   fGrad ( std::vector<double> ( func.NPar() ) )
+      BaseObjFunction(func.NPar(), data.Size() ),
+      fData(data), 
+      fFunc(func), 
+      fNEffPoints(0),
+      fGrad ( std::vector<double> ( func.NPar() ) )
    { }
 
    /** 
@@ -126,20 +124,13 @@ public:
    }
  
 
-   virtual unsigned int NDim() const { return fNDim; }
 
    using BaseObjFunction::operator();
 
-   // count number of function calls
-   virtual unsigned int NCalls() const { return fNCalls; } 
-
-   // size of the fit data points (required by interface)
-   virtual unsigned int NPoints() const { return fNPoints; }
 
    // effective points used in the fit (exclude the rejected one)
    virtual unsigned int NFitPoints() const { return fNEffPoints; }
 
-   virtual void ResetNCalls() { fNCalls = 0; }
 
    /// i-th chi-square residual  
    virtual double DataElement(const double * x, unsigned int i, double * g) const { 
@@ -162,6 +153,7 @@ public:
    virtual const IModelFunction & ModelFunction() const { return fFunc; }
 
 
+
 protected: 
 
 
@@ -174,7 +166,7 @@ private:
       Evaluation of the  function (required by interface)
     */
    virtual double DoEval (const double * x) const { 
-      fNCalls++;
+      this->UpdateNCalls();
 #ifdef ROOT_FIT_PARALLEL
       return FitUtilParallel::EvaluateChi2(fFunc, fData, x, fNEffPoints); 
 #else 
@@ -194,10 +186,7 @@ private:
    const BinData & fData; 
    mutable IModelFunction & fFunc; 
 
-   unsigned int fNDim; 
-   unsigned int fNPoints;   // size of the data
    mutable unsigned int fNEffPoints;  // number of effective points used in the fit 
-   mutable unsigned int fNCalls;
 
    mutable std::vector<double> fGrad; // for derivatives
 

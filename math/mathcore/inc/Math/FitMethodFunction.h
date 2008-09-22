@@ -35,17 +35,28 @@ class BasicFitMethodFunction : public FunctionType {
 
 public:
 
+
    typedef  typename FunctionType::BaseFunc BaseFunction; 
 
    /// enumeration specyfing the possible fit method types
    enum Type { kUndefined , kLeastSquare, kLogLikelihood }; 
 
-  
+
+   BasicFitMethodFunction(int dim, int npoint) : 
+      fNDim(dim), 
+      fNPoints(npoint),
+      fNCalls(0)
+   {}
 
    /** 
       Virtual Destructor (no operations)
    */ 
    virtual ~BasicFitMethodFunction ()  {}  
+
+   /**
+      Number of dimension (parameters) . From IGenMultiFunction interface
+    */
+   virtual unsigned int NDim() const { return fNDim; }
 
    /**
       method returning the data i-th contribution to the fit objective function
@@ -59,7 +70,7 @@ public:
    /**
       return the number of data points used in evaluating the function
     */
-   virtual unsigned int NPoints() const = 0; 
+   virtual unsigned int NPoints() const { return fNPoints; }
 
    /**
       return the type of method, override if needed
@@ -69,7 +80,19 @@ public:
    /**
       return the total number of function calls (overrided if needed)
     */
-   virtual unsigned int NCalls() const { return 0; }
+   virtual unsigned int NCalls() const { return fNCalls; }
+
+   /**
+      update number of calls 
+    */
+   virtual void UpdateNCalls() const { fNCalls++; }
+
+   /**
+      reset number of function calls
+    */
+   virtual void ResetNCalls() { fNCalls = 0; }
+
+
 
 public: 
 
@@ -78,6 +101,10 @@ protected:
 
 
 private: 
+
+   unsigned int fNDim; 
+   unsigned int fNPoints;   // size of the data
+   mutable unsigned int fNCalls;
 
 
 }; 

@@ -181,7 +181,7 @@ public:
       if (status != 0) return edm; 
       status = gsl_blas_ddot(fVec, tmp, &edm); 
       if (status != 0) return -1; 
-      // need to diide bby 2 ??
+      // need to divide by 2 ??
       return 0.5*edm; 
       
    }

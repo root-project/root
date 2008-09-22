@@ -268,7 +268,7 @@ public:
       Assignment operator
    */ 
    ParamFunctor & operator = (const ParamFunctor & rhs)  {
-      ParamFunctor copy(rhs); 
+//      ParamFunctor copy(rhs); 
       // swap auto_ptr by hand
 //       Impl * p = fImpl.release(); 
 //       fImpl.reset(copy.fImpl.release());
@@ -276,13 +276,14 @@ public:
 
       
       if (fImpl) delete fImpl;
+      fImpl = 0; 
       if (rhs.fImpl != 0) 
          fImpl = rhs.fImpl->Clone();
-      else 
-         fImpl = 0;
 
       return *this;
    }
+
+   void * GetImpl() { return (void *) fImpl; }
 
 
    double operator() (double * x, double * p)  { 

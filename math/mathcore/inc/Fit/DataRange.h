@@ -99,6 +99,22 @@ public:
       xmin = fRanges[icoord].front().first; 
       xmax = fRanges[icoord].front().second; 
    }
+   /**
+      get range for the x - coordinate
+    */
+   void GetRange(double & xmin, double & xmax) const {  GetRange(0,xmin,xmax); }
+   /**
+      get range for the x and y coordinates
+    */
+   void GetRange(double & xmin, double & xmax, double & ymin, double & ymax) const {  
+      GetRange(0,xmin,xmax); GetRange(1,ymin,ymax); 
+   }
+   /**
+      get range for the x and y and z coordinates
+    */
+   void GetRange(double & xmin, double & xmax, double & ymin, double & ymax, double & zmin, double & zmax) const {  
+      GetRange(0,xmin,xmax); GetRange(1,ymin,ymax); GetRange(2,zmin,zmax); 
+   }
 
    /** 
       Destructor (no operations)
@@ -109,8 +125,48 @@ public:
 
    /**
       add a range [xmin,xmax] for the new coordinate icoord 
+      Adding a range does not delete existing one, but takes the OR with 
+      existing ranges. 
+      if want to replace range use method SetRange, which replace range with existing one
     */
-   void AddRange(double xmin, double xmax, unsigned  int  icoord = 0 ); 
+   void AddRange(unsigned  int  icoord , double xmin, double xmax ); 
+
+   /**
+      add a range [xmin,xmax] for the first coordinate icoord 
+    */
+   void AddRange(double xmin, double xmax ) { AddRange(0,xmin,xmax); }
+   /**
+      add a range [xmin,xmax] for the first and [ymin,ymax] for the second coordinate
+    */
+   void AddRange(double xmin, double xmax, double ymin, double ymax ) { AddRange(0,xmin,xmax); AddRange(1,ymin,ymax); }
+   /**
+      add a range [xmin,xmax] for the first and [ymin,ymax] for the second coordinate and 
+      [zmin,zmax] for the third coordinate
+    */
+   void AddRange(double xmin, double xmax, double ymin, double ymax, double zmin, double zmax ) { 
+      AddRange(0,xmin,xmax); AddRange(1,ymin,ymax); AddRange(2,zmin,zmax); }
+
+   /**
+      set a range [xmin,xmax] for the new coordinate icoord 
+      If more range exists for other coordinates, delete the existing one and use it the new one
+      Use Add range if want to keep the union of the existing ranges 
+    */
+   void SetRange(unsigned  int  icoord , double xmin, double xmax ); 
+
+   /**
+      set a range [xmin,xmax] for the first coordinate icoord 
+    */
+   void SetRange(double xmin, double xmax ) { SetRange(0,xmin,xmax); }
+   /**
+      set a range [xmin,xmax] for the first and [ymin,ymax] for the second coordinate
+    */
+   void SetRange(double xmin, double xmax, double ymin, double ymax ) { SetRange(0,xmin,xmax); SetRange(1,ymin,ymax); }
+   /**
+      set a range [xmin,xmax] for the first and [ymin,ymax] for the second coordinate and 
+      [zmin,zmax] for the third coordinate
+    */
+   void SetRange(double xmin, double xmax, double ymin, double ymax, double zmin, double zmax ) { 
+      SetRange(0,xmin,xmax); SetRange(1,ymin,ymax); SetRange(2,zmin,zmax); }
 
    /**
       clear all ranges in one coordinate (is now -inf, +inf)

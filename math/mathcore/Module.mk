@@ -33,14 +33,16 @@ MATHCOREDH1  := $(MODDIRI)/TComplex.h \
 MATHCOREDH2  := $(MODDIRI)/TRandom.h \
                 $(MODDIRI)/TRandom1.h \
                 $(MODDIRI)/TRandom2.h \
-                $(MODDIRI)/TRandom3.h \
+		$(MODDIRI)/TRandom3.h \
                 $(MODDIRI)/TKDTree.h \
                 $(MODDIRI)/Math/SpecFuncMathCore.h \
                 $(MODDIRI)/Math/DistFuncMathCore.h \
                 $(MODDIRI)/Math/IParamFunction.h \
                 $(MODDIRI)/Math/IFunction.h \
+                $(MODDIRI)/Math/ParamFunctor.h \
                 $(MODDIRI)/Math/Functor.h \
                 $(MODDIRI)/Math/Minimizer.h \
+                $(MODDIRI)/Math/MinimizerOptions.h \
                 $(MODDIRI)/Math/Integrator.h \
                 $(MODDIRI)/Math/VirtualIntegrator.h \
                 $(MODDIRI)/Math/AllIntegrationTypes.h \

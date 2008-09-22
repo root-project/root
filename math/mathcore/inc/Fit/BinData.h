@@ -306,21 +306,28 @@ public :
    /**
       retrieve in a single call a pointer to the coordinate data, value and inverse error for 
       the given fit point. 
-      To be used only when type is kValueError otherwise the error is returned and not the inverse
+      To be used only when type is kValueError or kNoError. In the last case the value 1 is returned 
+      for the error. 
    */
    const double * GetPoint(unsigned int ipoint, double & value, double & invError) const {
       if (fDataVector) { 
-         assert(fPointSize == fDim +2); // value error
-         unsigned int j = ipoint*fPointSize;
          const std::vector<double> & v = (fDataVector->Data());
+         unsigned int j = ipoint*fPointSize;
          const double * x = &v[j];
-         value = v[j+fDim];
-         invError = v[j+fDim+1];
+         j += fDim;
+         value = v[j];
+         if (fPointSize == fDim +1) // value error (type=kNoError)
+            invError = 1;
+         else if (fPointSize == fDim +2) // value error (type=kNoError)
+            invError = v[j+1];
+         else 
+            assert(0); // cannot be here
+
          return x;
       } 
       value = fDataWrapper->Value(ipoint);
       double e = fDataWrapper->Error(ipoint);
-      invError = ( e != 0 ) ? 1.0/e : 0; 
+      invError = ( e > 0 ) ? 1.0/e : 1.0; 
       return fDataWrapper->Coords(ipoint);
    }
 

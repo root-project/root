@@ -8,7 +8,7 @@
  *                                                                    *
  **********************************************************************/
 
-// Utility functions for all ROOT Math
+// Utility functions for all ROOT Math classes 
 
 #ifndef ROOT_Math_Util
 #define ROOT_Math_Util
@@ -16,6 +16,8 @@
 #include <string> 
 #include <sstream> 
 
+#include <cmath>
+#include <limits>
 
 namespace ROOT { 
 
@@ -41,6 +43,19 @@ std::string ToString(const T& val)
    return ret;
 }
 
+
+/// safe evaluation of log(x) with a protections against negative or zero argument to the log 
+/// smooth linear extrapolation below function values smaller than  epsilon
+/// (better than a simple cut-off)
+inline double EvalLog(double x) { 
+   // evaluate the log 
+   const static double epsilon = 2.*std::numeric_limits<double>::min();
+   if(x<= epsilon) 
+      return x/epsilon + std::log(epsilon) - 1; 
+   else      
+      return std::log(x);
+}
+ 
 }  // end namespace Util
 
 

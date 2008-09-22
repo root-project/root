@@ -93,11 +93,6 @@ public:
    ~Fitter (); 
 
 
-   
-
-private:
-   // usually copying is non trivial, so we make this unaccessible
-
    /** 
       Copy constructor
    */ 
@@ -154,13 +149,13 @@ public:
    }
 
    /**
-      fit using the given FCN function. Give also initial parameter values and data size to get  Ndf
+      fit using the given FCN function. Give optionally initial parameter values and data size to get  Ndf. If parameters are not given it is assumed that the parameter settings are used 
     */
-   bool FitFCN(const ROOT::Math::IMultiGenFunction & fcn, const double * params, unsigned int dataSize ); 
+   bool FitFCN(const ROOT::Math::IMultiGenFunction & fcn, const double * params = 0, unsigned int dataSize = 0 ); 
    /**
       fit using the given gradient FCN function. Give also initial parameter values and data size to get  Ndf
     */
-   bool FitFCN(const ROOT::Math::IMultiGradFunction & fcn, const double * params, unsigned int dataSize ); 
+   bool FitFCN(const ROOT::Math::IMultiGradFunction & fcn, const double * params = 0, unsigned int dataSize = 0); 
 
    /**
       do a linear fit on a set of bin-data

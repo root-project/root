@@ -227,6 +227,9 @@ bool TMinuitMinimizer::Minimize() {
    // By default Migrad is used. 
    // Return true if the found minimum is valid and update internal chached values of 
    // minimum values, errors and covariance matrix. 
+   // Status of minimizer is set to: 
+   // migradResult + 10*minosResult + 100*hesseResult + 1000*improveResult
+
 
    assert(fMinuit != 0 );
 
@@ -271,13 +274,18 @@ bool TMinuitMinimizer::Minimize() {
 
    }
 
+   fStatus = ierr; 
+
    // run improved if needed
-   if (ierr == 0 && fType == ROOT::Minuit::kMigradImproved) 
+   if (ierr == 0 && fType == ROOT::Minuit::kMigradImproved) {
       fMinuit->mnexcm("IMPROVE",arglist,1,ierr);
+      fStatus += 1000*ierr; 
+   }
 
    // check if Hesse needs to be run 
    if (ierr == 0 && IsValidError() ) { 
       fMinuit->mnexcm("HESSE",arglist,1,ierr);
+      fStatus += 100*ierr; 
    }
 
 
@@ -302,7 +310,33 @@ bool TMinuitMinimizer::Minimize() {
    // store global min results (only if minimization is OK)  
    if (ierr == 0) { 
       fCovar.resize(fDim*fDim); 
-      fMinuit->mnemat(&fCovar.front(), fDim); 
+      if (fNFree >= fDim) { // no fixed parameters 
+         fMinuit->mnemat(&fCovar.front(), fDim); 
+      } 
+      else { 
+         // case of fixed params need to take care 
+         if (fNFree > fDim) return true;
+         std::vector<double> tmpMat(fNFree*fNFree); 
+         fMinuit->mnemat(&tmpMat.front(), fNFree); 
+
+
+         unsigned int l = 0; 
+         for (unsigned int i = 0; i < fDim; ++i) { 
+            
+            if ( fMinuit->fNiofex[i] > 0 ) {  // not fixed ?
+               unsigned int m = 0; 
+               for (unsigned int j = 0; j <= i; ++j) { 
+                  if ( fMinuit->fNiofex[j] > 0 ) {  //not fixed
+                     fCovar[i*fDim + j] = tmpMat[l*fNFree + m];
+                     fCovar[j*fDim + i] = fCovar[i*fDim + j]; 
+                     m++;
+                  }
+               }
+               l++;
+            }
+         }
+
+      }
 
       // need to re-run Minos again if requested
       fMinosRun = false; 
@@ -338,15 +372,18 @@ bool TMinuitMinimizer::GetMinosError(unsigned int i, double & errLow, double & e
    
       int nargs = 2; 
       fMinuit->mnexcm("MINOS",arglist,nargs,ierr);
-      if (ierr != 0 ) return false; 
+      fStatus += 10*ierr;
 
       fMinosRun = true; 
+
    }
 
    double errParab = 0; 
    double gcor = 0; 
    // what returns if parameter fixed or constant or at limit ? 
    fMinuit->mnerrs(i,errUp,errLow, errParab, gcor); 
+
+   if (fStatus%100 != 0 ) return false; 
    return true; 
 
 }

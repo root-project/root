@@ -14,7 +14,10 @@
 #include "Minuit2/FCNGradientBase.h"
 #endif
 
+//#define DEBUG
+#ifdef DEBUG
 #include <iostream> 
+#endif
 
 namespace ROOT {
 
@@ -59,10 +62,10 @@ public:
       fFunc.Gradient(&v[0], &fGrad[0]);
 
 #ifdef DEBUG
-      for (int i = 0; i < fGrad.size(); ++i) 
+      std::cout << " gradient in FCNAdapter = { " ;
+      for (unsigned int i = 0; i < fGrad.size(); ++i) 
          std::cout << fGrad[i] << "\t";
-
-      std::cout << " grad in FCNAdapter " << std::endl;
+      std::cout << "}" << std::endl;
 #endif
       return fGrad; 
    }

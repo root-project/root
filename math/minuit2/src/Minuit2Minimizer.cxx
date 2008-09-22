@@ -47,7 +47,6 @@ namespace Minuit2 {
 
 Minuit2Minimizer::Minuit2Minimizer(ROOT::Minuit2::EMinimizerType type ) : 
    fDim(0),
-   fErrorCode(0),
    fMinimizer(0),
    fMinuitFCN(0),
    fMinimum(0)   
@@ -58,7 +57,6 @@ Minuit2Minimizer::Minuit2Minimizer(ROOT::Minuit2::EMinimizerType type ) :
 
 Minuit2Minimizer::Minuit2Minimizer(const char *  type ) : 
    fDim(0),
-   fErrorCode(0),
    fMinimizer(0),
    fMinuitFCN(0),
    fMinimum(0)   
@@ -317,7 +315,7 @@ bool  Minuit2Minimizer::ExamineMinimum(const ROOT::Minuit2::FunctionMinimum & mi
          for (unsigned int i = 0; i < fState.Params().size(); ++i) 
             std::cout << fState.Parameter(i).Name() << "\t  = " << par[i] << "\t  +/-  " << err[i] << std::endl; 
       }
-      fErrorCode = 0; 
+      fStatus = 0; 
       return true;
    }
    else { 
@@ -329,25 +327,25 @@ bool  Minuit2Minimizer::ExamineMinimum(const ROOT::Minuit2::FunctionMinimum & mi
       }
       if (min.HasMadePosDefCovar() ) { 
          if (debugLevel >= 1) std::cout << "      Covar was made pos def" << std::endl;
-         fErrorCode = -11; 
+         fStatus = 1; 
          return false; 
       }
       if (min.HesseFailed() ) { 
          if (debugLevel >= 1) std::cout << "      Hesse is not valid" << std::endl;
-         fErrorCode = -12; 
+         fStatus = 2; 
          return false;
       }
       if (min.IsAboveMaxEdm() ) { 
          if (debugLevel >= 1) std::cout << "      Edm is above max" << std::endl;
-         fErrorCode = -13; 
+         fStatus = 3; 
          return false; 
       }
       if (min.HasReachedCallLimit() ) { 
          if (debugLevel >= 1) std::cout << "      Reached call limit" << std::endl;
-         fErrorCode = -14;
+         fStatus = 4;
          return false; 
       }
-      fErrorCode =  -10;
+      fStatus =  5;
       return false; 
    }
    return true;
@@ -356,7 +354,7 @@ bool  Minuit2Minimizer::ExamineMinimum(const ROOT::Minuit2::FunctionMinimum & mi
 double Minuit2Minimizer::CovMatrix(unsigned int i, unsigned int j) const { 
    // get value of covariance matrices (transform from external to internal indices)
    if ( i >= fDim || i >= fDim) return 0;  
-   if ( fErrorCode < 0 || !fState.HasCovariance()    ) return 0; // no info available when minimization has failed
+   if ( Status()  || !fState.HasCovariance()    ) return 0; // no info available when minimization has failed
    if (fState.Parameter(i).IsFixed() || fState.Parameter(i).IsConst() ) return 0; 
    if (fState.Parameter(j).IsFixed() || fState.Parameter(j).IsConst() ) return 0; 
    unsigned int k = fState.IntOfExt(i); 
@@ -367,7 +365,7 @@ double Minuit2Minimizer::CovMatrix(unsigned int i, unsigned int j) const {
 double Minuit2Minimizer::Correlation(unsigned int i, unsigned int j) const { 
    // get correlation between parameter i and j 
    if ( i >= fDim || i >= fDim) return 0;  
-   if ( fErrorCode < 0 || !fState.HasCovariance()    ) return 0; // no info available when minimization has failed
+   if ( Status()  || !fState.HasCovariance()    ) return 0; // no info available when minimization has failed
    if (fState.Parameter(i).IsFixed() || fState.Parameter(i).IsConst() ) return 0; 
    if (fState.Parameter(j).IsFixed() || fState.Parameter(j).IsConst() ) return 0; 
    unsigned int k = fState.IntOfExt(i); 
@@ -385,7 +383,7 @@ double Minuit2Minimizer::GlobalCC(unsigned int i) const {
 
    if ( i >= fDim || i >= fDim) return 0;  
     // no info available when minimization has failed or has some problems
-   if ( fErrorCode < 0 || !fState.HasGlobalCC()    ) return 0; 
+   if ( Status()  || !fState.HasGlobalCC()    ) return 0; 
    if (fState.Parameter(i).IsFixed() || fState.Parameter(i).IsConst() ) return 0; 
    unsigned int k = fState.IntOfExt(i); 
    return fState.GlobalCC().GlobalCC()[k]; 
@@ -435,6 +433,7 @@ bool Minuit2Minimizer::GetMinosError(unsigned int i, double & errLow, double & e
    if (debugLevel == 0) {
       if (!me.IsValid() ) { 
          std::cout << "Error running Minos for parameter " << i << std::endl; 
+         if ( fStatus%100 == 0 )  fStatus += 10; 
          return false; 
       }
    }

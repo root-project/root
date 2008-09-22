@@ -113,7 +113,10 @@ private:
 
    // calculate derivative using mathcore derivator 
    double DoDerivative (const double * x, unsigned int icoord  ) const { 
-      static double step = 1.0E-8; 
+      static double kEps = 1.E-6;
+      static double kPrecision = 1.E-8; // sqrt(epsilon)
+      double x0 = x[icoord];
+      double step = std::max( kEps* std::abs(x0), 8.0*kPrecision*(std::abs(x0) + kPrecision) );
       return ROOT::Math::Derivator::Eval(*fFunc, x, icoord, step); 
    }  
 

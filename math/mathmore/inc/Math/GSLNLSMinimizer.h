@@ -228,17 +228,18 @@ public:
    virtual bool ProvidesError() const { return true; } 
 
    /// return errors at the minimum 
-   virtual const double * Errors() const { 
-      static std::vector<double> err; 
-      err.resize(fDim);
-      return &err.front(); 
-   }
+   virtual const double * Errors() const { return &fErrors.front(); }
+//  { 
+//       static std::vector<double> err; 
+//       err.resize(fDim);
+//       return &err.front(); 
+//    }
 
    /** return covariance matrices elements 
        if the variable is fixed the matrix is zero
        The ordering of the variables is the same as in errors
    */ 
-   virtual double CovMatrix(unsigned int , unsigned int ) const { return 0; }
+   virtual double CovMatrix(unsigned int , unsigned int ) const;
 
    /// minos error for variable i, return false if Minos failed
    virtual bool GetMinosError(unsigned int , double & /* errLow */ , double & /* errUp */ ) { return false; }
@@ -261,8 +262,9 @@ private:
    
    double fMinVal;                                // minimum function value
    double fLSTolerance;                           // Line Search Tolerance
-   mutable std::vector<double> fValues;           
-   //mutable std::vector<double> fErrors;
+   std::vector<double> fValues;           
+   std::vector<double> fErrors;
+   const double * fCovMatrix;         // pointer to cov matrix (stored in fGSLMultiFit)
    std::vector<double> fSteps;
    std::vector<std::string> fNames;
    std::vector<LSResidualFunc> fResiduals;   //! transient Vector of the residual functions

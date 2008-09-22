@@ -73,7 +73,7 @@ public:
          fType = gsl_multimin_fdfminimizer_vector_bfgs; 
          break; 
       case ROOT::Math::kVectorBFGS2 : 
-#if defined GSL_VERSION >= 1009 
+#if defined (GSL_VERSION_NUM) && GSL_VERSION_NUM >= 1009 
          // bfgs2 is available only for v>= 1.9 
          fType = gsl_multimin_fdfminimizer_vector_bfgs2; 
 #else 

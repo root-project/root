@@ -188,6 +188,8 @@ bool GSLMinimizer::Minimize() {
    std::copy(x, x +fDim, fValues.begin() ); 
    fMinVal =  fGSLMultiMin->Minimum(); 
 
+   fStatus = status; 
+
       
    if (minFound) { 
       if (debugLevel >=1 ) { 

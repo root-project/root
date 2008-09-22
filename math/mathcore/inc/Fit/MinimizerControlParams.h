@@ -36,9 +36,8 @@ public:
       fMaxCalls(0),  // 0 means leave to the minimizer to decide  
       fMaxIter(0), 
       fTol(0.001),
-      fStrategy(1),
-      fParabErrors(false), // ensure that in any case correct parabolic errors are estimated
-      fMinosErrors(false)    // do full Minos error analysis for all parameters
+      fErrorDef(1.),
+      fStrategy(1)
    {}
 
    /** 
@@ -60,14 +59,11 @@ public:
    /// absolute tolerance 
    double Tolerance() const { return  fTol; }
 
+   /// error definition 
+   double ErrorDef() const { return  fErrorDef; }
+
    /// strategy
    int Strategy() const { return fStrategy; } 
-
-   ///do analysis for parabolic errors
-   bool ParabErrors() const { return fParabErrors; }
-
-   ///do minos errros analysis
-   bool MinosErrors() const { return fMinosErrors; }
 
    /// set print level
    void SetPrintLevel(int level) { fDebug = level; }
@@ -84,11 +80,8 @@ public:
    /// set the strategy
    void SetStrategy(int stra) { fStrategy = stra; }
 
-   ///set parabolic erros
-   void SetParabErrors(bool on) { fParabErrors = on; } 
-
-   ///set Minos erros
-   void SetMinosErrors(bool on) { fMinosErrors = on; } 
+   /// set error def
+   void SetErrorDef(double err) { fErrorDef = err; }
 
 
 private: 
@@ -97,9 +90,8 @@ private:
    unsigned int fMaxCalls; 
    unsigned int fMaxIter; 
    double fTol; 
+   double fErrorDef;
    int fStrategy;
-   bool fParabErrors; 
-   bool fMinosErrors;
   
 
 }; 

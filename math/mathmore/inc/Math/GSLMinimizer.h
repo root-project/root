@@ -171,13 +171,11 @@ public:
    virtual unsigned int NFree() const { return fDim; }  
 
    /// minimizer provides error and error matrix
-   virtual bool ProvidesError() const { return true; } 
+   virtual bool ProvidesError() const { return false; } 
 
    /// return errors at the minimum 
    virtual const double * Errors() const { 
-      static std::vector<double> err; 
-      err.resize(fDim);
-      return &err.front(); 
+      return 0;
    }
 
    /** return covariance matrices elements 
@@ -205,7 +203,7 @@ private:
    
    double fMinVal; 
    double fLSTolerance;  // Line Search Tolerance
-   mutable std::vector<double> fValues;
+   std::vector<double> fValues;
    //mutable std::vector<double> fErrors;
    std::vector<double> fSteps;
    std::vector<std::string> fNames;

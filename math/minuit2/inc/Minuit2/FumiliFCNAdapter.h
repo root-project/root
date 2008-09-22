@@ -22,6 +22,10 @@
 #include "Minuit2/MnPrint.h"
 #endif
 
+#ifndef ROOT_Math_Util
+#include "Math/Util.h"
+#endif
+
 #include <cmath>
 
 namespace ROOT {
@@ -138,17 +142,17 @@ void FumiliFCNAdapter<Function>::EvaluateAll( const std::vector<double> & v) {
       for (unsigned int i = 0; i < ndata; ++i) { 
 
          // calculate data element and gradient 
+         // return value is log of pdf and derivative of the log(Pdf)
          double fval = fFunc.DataElement(&v.front(), i, &gf[0]);
 
-         // t.b.d should protect for small values of fval
-         sum -= std::log(fval);
+         sum -= fval;
          
          for (unsigned int j = 0; j < npar; ++j) { 
-            double gfj = gf[j] / fval; 
+            double gfj = gf[j] ; 
             grad[j] -= gfj;
             for (unsigned int k = j; k < npar; ++ k) { 
                int idx =  j + k*(k+1)/2; 
-               hess[idx] +=  gfj * gf[k] / (fval );  
+               hess[idx] +=  gfj * gf[k] ;  
             }
          }
       }

@@ -129,7 +129,15 @@ namespace ROOT {
          int  SetFunction( const IGradFunction & f, double xstart) { 
             return fSolver->SetFunction( f, xstart); 
          }   
+
+         template<class Function, class Derivative> 
+         int Solve(Function f, Derivative d, double start,
+                   int maxIter = 100, double absTol = 1E-3, double relTol = 1E-6);
          
+         template<class Function> 
+         int Solve(Function f, double min, double max, 
+                   int maxIter = 100, double absTol = 1E-3, double relTol = 1E-6);
+
          /** 
              Compute the roots iterating until the estimate of the Root is within the required tolerance returning 
              the iteration Status
@@ -219,5 +227,25 @@ namespace ROOT {
 } // namespace ROOT
 
 
+#include "Math/WrappedFunction.h"
+#include "Math/Functor.h"
+
+template<class Function, class Derivative> 
+int ROOT::Math::RootFinder::Solve(Function f, Derivative d, double start,
+                                  int maxIter, double absTol, double relTol)
+{
+   ROOT::Math::GradFunctor1D wf(f, d);
+   if (fSolver) fSolver->SetFunction(wf, start);
+   return Solve(maxIter, absTol, relTol);
+}
+         
+template<class Function> 
+int ROOT::Math::RootFinder::Solve(Function f, double min, double max, 
+                                  int maxIter, double absTol, double relTol)
+{
+   ROOT::Math::WrappedFunction<Function> wf(f); 
+   if (fSolver) fSolver->SetFunction(wf, min, max);
+   return Solve(maxIter, absTol, relTol);
+}
 
 #endif /* ROOT_Math_RootFinder */
