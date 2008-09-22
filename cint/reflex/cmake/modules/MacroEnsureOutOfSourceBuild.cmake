@@ -1,5 +1,8 @@
-# - MACRO_ENSURE_OUT_OF_SOURCE_BUILD(<errorMessage>)
 # MACRO_ENSURE_OUT_OF_SOURCE_BUILD(<errorMessage>)
+#   Call this macro in your project if you want to enforce out-of-source builds.
+#   If an in-source build is detected, it will abort with the given error message.
+#   This macro works in any of the CMakeLists.txt of your project, but the recommended
+#   location to call this is close to the beginning of the top level CMakeLists.txt
 
 # Copyright (c) 2006, Alexander Neundorf, <neundorf@kde.org>
 #

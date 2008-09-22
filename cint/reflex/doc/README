@@ -1,0 +1,9 @@
+Reflex is a C++ library which provides reflection information about C++ types. The main features of the library are:
+
+   * Close to the ISO/IEC standard for C++
+   * Light and standalone system, no external dependencies
+   * Automatic and non intrusive production of reflection information
+   * Dictionaries can be produced for every compilable source code
+   * A python binding (under construction)
+   * Released on several platforms/compilers
+   * Optimized on library size and memory usage

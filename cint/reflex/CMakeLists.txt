@@ -3,8 +3,12 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.6.0 FATAL_ERROR)
 
 #####################   modules   ####################
 
-SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules")
+SET(REFLEX_MODULE_DIR "${CMAKE_SOURCE_DIR}/cmake/modules")
+SET(REFLEX_TEMPLATE_DIR "${CMAKE_SOURCE_DIR}/cmake/templates")
+SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${REFLEX_MODULE_DIR}")
+
 INCLUDE (MacroLibrary)
+INCLUDE (ReflexMacros)
 
 #####################   version   ####################
 
@@ -38,17 +42,12 @@ FOREACH (m SHARED MODULE EXE)
    SET(CMAKE_${m}_LINKER_FLAGS "${CMAKE_${m}_LINKER_FLAGS} ${REFLEX_LINKER_FLAGS} ${REFLEX_${m}_LINKER_FLAGS}")
 ENDFOREACH (m SHARED MODULE EXE)
 
-# set include dir and library name
-SET(REFLEX_INCLUDE_DIR ${Reflex_SOURCE_DIR}/inc)
-SET(REFLEX_LIBRARY Reflex)
-
-# set the includes for all sub directories
-INCLUDE_DIRECTORIES(${REFLEX_INCLUDE_DIR})
-
 # add definitions required for shared libraries
 IF (NOT BUILD_SHARED_LIBS)
    ADD_DEFINITIONS(-DREFLEX_DLL_VETO)
 ENDIF (NOT BUILD_SHARED_LIBS)
+
+SET(DL_LIBRARY ${CMAKE_DL_LIBS})
 
 #####################   install   ####################
 
@@ -70,7 +69,7 @@ ENDIF (WIN32)
 
 # The INSTALL_TARGETS_DEFAULT_ARGS variable should be used when libraries are installed.
 # The arguments are also ok for regular executables, i.e. executables which don't go
-# into sbin/ or libexec/, but for installing executables the basic syntax 
+# into sbin/ or libexec/, but for installing executables the basic syntax
 # INSTALL(TARGETS genreflex DESTINATION "${BIN_INSTALL_DIR}")
 # is enough, so using this variable there doesn't help a lot.
 # The variable must not be used for installing plugins.
@@ -82,6 +81,28 @@ ENDIF (WIN32)
 SET(INSTALL_TARGETS_DEFAULT_ARGS  RUNTIME DESTINATION "${BIN_INSTALL_DIR}"
                                   LIBRARY DESTINATION "${LIB_INSTALL_DIR}"
                                   ARCHIVE DESTINATION "${LIB_INSTALL_DIR}")
+
+#####################   package   ####################
+
+SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "C++ Reflection Package")
+SET(CPACK_PACKAGE_VENDOR "European Organization for Nuclear Research (CERN)")
+SET(CPACK_PACKAGE_DESCRIPTION_FILE ${CMAKE_CURRENT_SOURCE_DIR}/doc/README)
+SET(CPACK_PACKAGE_CONTACT axel.naumann@cern.ch)
+
+SET(CPACK_PACKAGE_VERSION_MAJOR ${REFLEX_VERSION_MAJOR})
+SET(CPACK_PACKAGE_VERSION_MINOR ${REFLEX_VERSION_MINOR})
+SET(CPACK_PACKAGE_VERSION_PATCH ${REFLEX_VERSION_RELEASE})
+
+SET(CPACK_STRIP_FILES TRUE)
+SET(CPACK_SOURCE_IGNORE_FILES "/CVS/" "/\\\\.svn/" "\\\\.swp$" "\\\\.#" "/#" ".*~" "cscope.*")
+SET(CPACK_SOURCE_STRIP_FILES TRUE)
+
+# debian
+SET(DEBIAN_PACKAGE_MAINTAINER ${CPACK_PACKAGE_CONTACT})
+SET(DEBIAN_PACKAGE_DEPENDS "gccxml (>= 0.7), python (>= 2.5)")
+SET(DEBIAN_PACKAGE_BUILDS_DEPENDS "gccxml (>= 0.7.0), python (>= 2.5), libcppunit (>= 1.12.0), libcppunit-dev (>= 1.12.0)")
+
+INCLUDE (CPack)
 
 #####################   sub dirs  ####################
 

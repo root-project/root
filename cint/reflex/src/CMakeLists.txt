@@ -1,20 +1,24 @@
-FIND_PACKAGE_IF(DL UNIX REQUIRED)
-FIND_PACKAGE_IF(DEMANGLE SOLARIS REQUIRED)
+MACRO_FIND_PACKAGE_IF(DEMANGLE SOLARIS REQUIRED)
 
-# collect headers and sources to create a library
+#####################   sources   ####################
+
 FILE(GLOB Reflex_SRCS *.cxx *.h)
 FILE(GLOB_RECURSE Reflex_HDRS ${REFLEX_INCLUDE_DIR}/*.h)
+
+#####################    build    ####################
+
+INCLUDE_DIRECTORIES(${REFLEX_INCLUDE_DIR})
 ADD_LIBRARY(Reflex ${Reflex_SRCS} ${Reflex_HDRS})
+TARGET_LINK_LIBRARIES(Reflex ${DL_LIBRARY} ${DEMANGLE_LIBRARY})
 
-# link in dl if it exists
-IF(UNIX)
-    LIST(APPEND Additional_LIBRARIES ${DL_LIBRARY})
-ENDIF(UNIX)
-IF(SOLARIS)
-    LIST(APPEND Additional_LIBRARIES ${DEMANGLE_LIBRARY})
-ENDIF(SOLARIS)
+# hack: unit tests currently use non-exported symbols that cause link
+# errors under msvc. possible solutions:
+# 1) stop testing non-API methods (preferred) and test API-visible features instead
+# 2) add a new RFLX_INTERNAL or equivalent macro that exports symbols.
+IF (MSVC AND BUILD_TESTS AND BUILD_SHARED_LIBS)
+   MACRO_ADD_LINK_FLAGS(Reflex "/DEF:${CMAKE_CURRENT_SOURCE_DIR}/Reflex.def")
+ENDIF (MSVC AND BUILD_TESTS AND BUILD_SHARED_LIBS)
 
-TARGET_LINK_LIBRARIES(Reflex ${Additional_LIBRARIES})
+#####################   install   ####################
 
-# install
 INSTALL(TARGETS Reflex ${INSTALL_TARGETS_DEFAULT_ARGS})
