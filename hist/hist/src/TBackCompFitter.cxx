@@ -69,6 +69,7 @@ TBackCompFitter::TBackCompFitter(ROOT::Fit::Fitter & fitter,ROOT::Fit::BinData *
 TBackCompFitter::~TBackCompFitter() { 
    // data are own here
    if (fFitData) delete fFitData; 
+   if (fMinimizer) delete fMinimizer; 
 }
 
 Double_t TBackCompFitter::Chisquare(Int_t npar, Double_t *params) const {
