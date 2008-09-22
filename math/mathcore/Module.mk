@@ -34,6 +34,7 @@ MATHCOREDH2  := $(MODDIRI)/TRandom.h \
                 $(MODDIRI)/TRandom1.h \
                 $(MODDIRI)/TRandom2.h \
 		$(MODDIRI)/TRandom3.h \
+                $(MODDIRI)/TVirtualFitter.h \
                 $(MODDIRI)/TKDTree.h \
                 $(MODDIRI)/Math/SpecFuncMathCore.h \
                 $(MODDIRI)/Math/DistFuncMathCore.h \
