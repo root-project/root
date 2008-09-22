@@ -78,17 +78,17 @@
    f->GetObject("clones", clones);
 
 
-   cout << "ex1 = " << (ex1!=0) << endl;
-   cout << "ex2 = " << (ex2!=0) << endl;
-   cout << "ex3 = " << (ex3!=0) << endl;
-   cout << "ex4 = " << (ex4!=0) << endl;
-   cout << "ex5 = " << (ex5!=0) << endl;
-   cout << "ex6 = " << (ex6!=0) << endl;
-   cout << "ex7 = " << (ex7!=0) << endl;
-   cout << "ex8 = " << (ex8!=0) << endl;
-   cout << "h1 = " << (h1!=0) << endl;
-   cout << "arr = " << (arr!=0) << endl;
-   cout << "clones = " << (clones!=0) << endl;
+   cout << "ex1 = " << (ex1 ? "Ok" : "Error") << endl;
+   cout << "ex2 = " << (ex2 ? "Ok" : "Error") << endl;
+   cout << "ex3 = " << (ex3 ? "Ok" : "Error") << endl;
+   cout << "ex4 = " << (ex4 ? "Ok" : "Error") << endl;
+   cout << "ex5 = " << (ex5 ? "Ok" : "Error") << endl;
+   cout << "ex6 = " << (ex6 ? "Ok" : "Error") << endl;
+   cout << "ex7 = " << (ex7 ? "Ok" : "Error") << endl;
+   cout << "ex8 = " << (ex8 ? "Ok" : "Error") << endl;
+   cout << "h1 = " << (h1 ? "Ok" : "Error") << endl;
+   cout << "arr = " << (arr ? "Ok" : "Error") << endl;
+   cout << "clones = " << (clones ? "Ok" : "Error") << endl;
 
    delete f;
    return 0;
