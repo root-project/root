@@ -33,6 +33,9 @@ class TEveElement;
 
 class TEveUtil
 {
+private:
+   static TObjArray* fgDefaultColors;
+
 public:
    virtual ~TEveUtil() {}
 
@@ -53,6 +56,8 @@ public:
    static void     ColorFromIdx(Float_t f1, Color_t c1, Float_t f2, Color_t c2,
                                 UChar_t col[4], Bool_t alpha=kTRUE);
    static Color_t* FindColorVar(TObject* obj, const Text_t* varname);
+
+   static void     SetColorBrightness(Float_t value, Bool_t full_redraw=kFALSE);
 
    // Text formatting
 
