@@ -43,6 +43,19 @@
 // }
 //
 //
+// Assumptions
+// ===========
+// A few assumptions need to be made for the fit procedure to be carried out:
+//
+// (1) The total number of events in each template is not too small
+//     (so that its Poisson uncertainty can be neglected).
+// (2) The number of events in each bin is much smaller than the total
+//     number of events in each template (so that multinomial
+//     uncertainties can be replaced with Poisson uncertainties).
+//
+// Biased fit uncertainties may result if these conditions are not fulfilled
+// (see e.g. arXiv:0803.2711).
+//
 // Instantiation
 // =============
 // A fit object is instantiated through
