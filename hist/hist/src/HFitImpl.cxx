@@ -138,6 +138,7 @@ int HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const ROOT::Math
    ROOT::Fit::DataOptions opt; 
    opt.fIntegral = fitOption.Integral; 
    opt.fUseRange = fitOption.Range; 
+   if (fitOption.Like) opt.fUseEmpty = true;  // use empty bins in log-likelihood fits 
    if (linear) opt.fCoordErrors = false; // cannot use coordinate errors in a linear fit
 
 
