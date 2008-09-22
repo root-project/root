@@ -140,11 +140,16 @@
 #include "TGraph.h"
 #include "TGraph2D.h"
 #include "TH1.h"
+#include "TH2.h"
+#include "HFitInterface.h"
 #include "TF1.h"
+#include "TF2.h"
+#include "TF3.h"
 #include "TTimer.h"
 #include "THStack.h"
-#include "TVirtualFitter.h"
 #include "TMath.h"
+#include "Fit/DataRange.h"
+#include "TMultiGraph.h"
 
 enum EFitPanel {
    kFP_FLIST, kFP_GAUS,  kFP_GAUSN, kFP_EXPO,  kFP_LAND,  kFP_LANDN,
@@ -156,26 +161,76 @@ enum EFitPanel {
    kFP_DSAME, kFP_DNONE, kFP_DADVB, kFP_DNOST, kFP_PDEF,  kFP_PVER,  kFP_PQET,
    kFP_XMIN,  kFP_XMAX,  kFP_YMIN,  kFP_YMAX,  kFP_ZMIN,  kFP_ZMAX,
    
-   kFP_LMIN,  kFP_LMIN2, kFP_LFUM,  kFP_MIGRAD,kFP_SIMPLX,kFP_FUMILI,
-   kFP_MERR,  kFP_MTOL,  kFP_MITR,
+   kFP_LMIN,  kFP_LMIN2, kFP_LFUM,  kFP_MIGRAD,kFP_SIMPLX,kFP_FUMILI, kFP_COMBINATION,
+   kFP_SCAN,  kFP_MERR,  kFP_MTOL,  kFP_MITR,
    
    kFP_FIT,   kFP_RESET, kFP_CLOSE
 };
+
+enum EParStruct {
+   PAR_VAL = 0,
+   PAR_MIN = 1,
+   PAR_MAX = 2
+};
+
+void GetParameters(TFitEditor::FuncParams_t & pars, TF1* func)
+{
+   int npar = func->GetNpar(); 
+   if (npar != (int) pars.size() ) pars.resize(npar); 
+   for ( Int_t i = 0; i < npar; ++i )
+   {
+      Double_t par_min, par_max;
+      pars[i][PAR_VAL] = func->GetParameter(i);
+      func->GetParLimits(i, par_min, par_max);
+      pars[i][PAR_MIN] = par_min;
+      pars[i][PAR_MAX] = par_max;
+   }
+}
+
+void SetParameters(TFitEditor::FuncParams_t & pars, TF1* func)
+{
+   int npar = func->GetNpar(); 
+   if (npar > (int) pars.size() ) pars.resize(npar); 
+   for ( Int_t i = 0; i < npar; ++i )
+   {
+      func->SetParameter(i, pars[i][PAR_VAL]);
+      func->SetParLimits(i, pars[i][PAR_MIN], pars[i][PAR_MAX]);
+   }
+}
+
+template<class FitObject>
+void InitParameters(TF1* func, FitObject * fitobj)
+{
+   
+   int special = func->GetNumber(); 
+   if (special == 100 || special == 400) { 
+      ROOT::Fit::InitGaus(fitobj, func);
+      // case gaussian or Landau
+   }
+}
 
 ClassImp(TFitEditor)
 
 TFitEditor *TFitEditor::fgFitDialog = 0;
 
 //______________________________________________________________________________
-void TFitEditor::Open(TVirtualPad* pad, TObject *obj)
+TFitEditor * TFitEditor::GetInstance(TVirtualPad* pad, TObject *obj)
 {
    // Static method - opens the fit panel.
 
+   if (!pad)
+   {
+      if (!gPad)
+         gROOT->MakeDefCanvas();
+      pad = gPad;
+   }
+
    if (!fgFitDialog) {
-      TFitEditor::GetFP() = new TFitEditor(pad, obj);
+      fgFitDialog = new TFitEditor(pad, obj);
    } else {
       fgFitDialog->Show(pad, obj);
    }
+   return fgFitDialog;
 }
 
 //______________________________________________________________________________
@@ -194,19 +249,13 @@ TFitEditor::TFitEditor(TVirtualPad* pad, TObject *obj) :
    fYmax        (0),
    fZmin        (0),
    fZmax        (0),
-   fPlus        ('+'),
-   fFunction    (""),
-   fFitOption   (""),
-   fDrawOption  (""),
-   fFitFunc     (0)
+   fFuncPars    (0)
 
 {
    // Constructor of fit editor.
 
    SetCleanup(kDeepCleanup);
    
-   fFitFuncList = new TList();
-
    TString name = obj->GetName();
    name.Append("::");
    name.Append(obj->ClassName());
@@ -260,14 +309,10 @@ TFitEditor::TFitEditor(TVirtualPad* pad, TObject *obj) :
    gROOT->GetListOfCleanups()->Add(this);
 
    MapSubwindows();
-   // not ready yet for 2 & 3 dim
-   fGeneral->HideFrame(fSliderYParent);
    fGeneral->HideFrame(fSliderZParent);
 
    // do not allow resizing
    TGDimension size = GetDefaultSize();
-   SetWMSize(size.fWidth, size.fHeight);
-   SetWMSizeHints(size.fWidth, size.fHeight, size.fWidth, size.fHeight, 0, 0);
    SetWindowName("Fit Panel");
    SetIconName("Fit Panel");
    SetClassHints("Fit Panel", "Fit Panel");
@@ -277,10 +322,10 @@ TFitEditor::TFitEditor(TVirtualPad* pad, TObject *obj) :
                kMWMFuncAll  | kMWMFuncResize    | kMWMFuncMaximize |
                               kMWMFuncMinimize,
                kMWMInputModeless);
+
    if (pad && obj) {
       fParentPad = (TPad *)pad;
       fFitObject = (TObject *)obj;
-      fDrawOption = GetDrawOption();
       SetCanvas(pad->GetCanvas());
       pad->GetCanvas()->Selected(pad, obj, kButton1Down);
    } else {
@@ -299,10 +344,14 @@ TFitEditor::TFitEditor(TVirtualPad* pad, TObject *obj) :
       MoveResize(gedx, gedy,size.fWidth, size.fHeight);
       SetWMPosition(gedx, gedy);
    } 
-   
+
    Resize(size);
    MapWindow();
    gVirtualX->RaiseWindow(GetId());
+
+   ChangeOptions(GetOptions() | kFixedSize);
+   SetWMSize(size.fWidth, size.fHeight);
+   SetWMSizeHints(size.fWidth, size.fHeight, size.fWidth, size.fHeight, 0, 0);
 }
 
 //______________________________________________________________________________
@@ -315,7 +364,6 @@ TFitEditor::~TFitEditor()
    TQObject::Disconnect("TCanvas", "Selected(TVirtualPad *, TObject *, Int_t)");
    gROOT->GetListOfCleanups()->Remove(this);
 
-   if (fFitFunc) delete fFitFunc;
    Cleanup();
    delete fLayoutNone;
    delete fLayoutAdd;
@@ -327,7 +375,7 @@ TFitEditor::~TFitEditor()
 void TFitEditor::CreateGeneralTab()
 {
    // Create 'General' tab.
-   
+
    fTabContainer = fTab->AddTab("General");
    fGeneral = new TGCompositeFrame(fTabContainer, 10, 10, kVerticalFrame);
    fTabContainer->AddFrame(fGeneral, new TGLayoutHints(kLHintsTop |
@@ -378,8 +426,7 @@ void TFitEditor::CreateGeneralTab()
    fEnteredFunc->SetMaxLength(250);
    fEnteredFunc->SetAlignment(kTextLeft);
    TGTextLBEntry *te = (TGTextLBEntry *)fFuncList->GetSelectedEntry();
-   fFunction = te->GetTitle();
-   fEnteredFunc->SetText(fFunction.Data());
+   fEnteredFunc->SetText(te->GetTitle());
    fEnteredFunc->SetToolTipText("Enter file_name/function_name or a function expression");
    fEnteredFunc->Resize(250,fEnteredFunc->GetDefaultHeight());
    tf2->AddFrame(fEnteredFunc, new TGLayoutHints(kLHintsLeft    |
@@ -530,6 +577,11 @@ void TFitEditor::CreateGeneralTab()
    fAdd2FuncList->SetToolTipText("'+'- add function to the list without deleting the previous");
    v4->AddFrame(fAdd2FuncList, new TGLayoutHints(kLHintsNormal, 0, 0, 2, 2));
 
+   fUseGradient = new TGCheckButton(v4, "Use Gradient", kFP_ADDLS);
+   fUseGradient->Associate(this);
+   fUseGradient->SetToolTipText("'G'- Use the gradient as an aid for the fitting");
+   v4->AddFrame(fUseGradient, new TGLayoutHints(kLHintsNormal, 0, 0, 2, 2));
+
    h->AddFrame(v4, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 20, 0, 0, 0));
    gf->AddFrame(h, new TGLayoutHints(kLHintsExpandX, 20, 0, 0, 0));
 
@@ -632,7 +684,6 @@ void TFitEditor::CreateMinimizationTab()
    fLibMinuit->Associate(this);
    fLibMinuit->SetToolTipText("Use minimization from libMinuit (default)");
    hl->AddFrame(fLibMinuit, new TGLayoutHints(kLHintsNormal, 40, 0, 0, 1));
-   fLibMinuit->SetState(kButtonDown);
    fStatusBar->SetText("LIB Minuit",0);
 
    fLibMinuit2 = new TGRadioButton(hl, "Minuit2", kFP_LMIN2);
@@ -653,22 +704,56 @@ void TFitEditor::CreateMinimizationTab()
    fMigrad->Associate(this);
    fMigrad->SetToolTipText("Use MIGRAD as minimization method");
    hm->AddFrame(fMigrad, new TGLayoutHints(kLHintsNormal, 40, 0, 0, 1));
-   fMigrad->SetState(kButtonDown);
    fStatusBar->SetText("MIGRAD",1);
 
    fSimplex = new TGRadioButton(hm, "SIMPLEX", kFP_SIMPLX);
    fSimplex->Associate(this);
    fSimplex->SetToolTipText("Use SIMPLEX as minimization method");
-   // Simplex functionality will come with the new fitter design    
-   fSimplex->SetState(kButtonDisabled);
    hm->AddFrame(fSimplex, new TGLayoutHints(kLHintsNormal, 20, 0, 0, 1));
 
    fFumili = new TGRadioButton(hm, "FUMILI", kFP_FUMILI);
    fFumili->Associate(this);
    fFumili->SetToolTipText("Use FUMILI as minimization method");
-   fFumili->SetState(kButtonDisabled);
    hm->AddFrame(fFumili, new TGLayoutHints(kLHintsNormal, 18, 0, 0, 1));
    fMinimization->AddFrame(hm, new TGLayoutHints(kLHintsExpandX, 20, 0, 5, 1));
+
+   TGHorizontalFrame *hm2 = new TGHorizontalFrame(fMinimization);
+   fScan = new TGRadioButton(hm2, "SCAN", kFP_SCAN);
+   fScan->Associate(this);
+   fScan->SetToolTipText("Use SCAN as minimization method");
+   hm2->AddFrame(fScan, new TGLayoutHints(kLHintsNormal, 40, 0, 0, 1));
+
+   fCombination = new TGRadioButton(hm2, "Combination", kFP_COMBINATION);
+   fCombination->Associate(this);
+   fCombination->SetToolTipText("Use Combination as minimization method");
+   hm2->AddFrame(fCombination, new TGLayoutHints(kLHintsNormal, 34, 0, 0, 1));
+   fMinimization->AddFrame(hm2, new TGLayoutHints(kLHintsExpandX, 20, 0, 5, 1));
+
+   // Set the status to the default minimization options!
+   if ( ROOT::Math::MinimizerOptions::DefaultMinimizerType() == "Fumili" ) {
+      fLibFumili->SetState(kButtonDown);
+      fMigrad->SetState(kButtonDisabled);
+      fScan->SetState(kButtonDisabled);
+      fCombination->SetState(kButtonDisabled);
+      fSimplex->SetState(kButtonDisabled);
+      fFumili->SetState(kButtonDown);
+   } else if ( ROOT::Math::MinimizerOptions::DefaultMinimizerType() == "Minuit" ) {
+      fLibMinuit->SetState(kButtonDown);
+      fFumili->SetState(kButtonDisabled);
+   } else {
+      fLibMinuit2->SetState(kButtonDown);
+   }
+
+   if ( ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo() == "Fumili" )
+      fFumili->SetState(kButtonDown);
+   else if ( ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo() == "Migrad" )
+      fMigrad->SetState(kButtonDown);
+   else if ( ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo() == "Simplex" )
+      fSimplex->SetState(kButtonDown);
+   else if ( ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo() == "Minimize" )
+      fCombination->SetState(kButtonDown);
+   else if ( ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo() == "Scan" )
+      fScan->SetState(kButtonDown);
 
    MakeTitle(fMinimization, "Settings");
    TGLabel *hslabel1 = new TGLabel(fMinimization,"Use ENTER key to validate a new value or click");
@@ -691,30 +776,29 @@ void TFitEditor::CreateMinimizationTab()
    hs->AddFrame(hsv1, new TGLayoutHints(kLHintsNormal, 60, 0, 0, 0));
    
    TGVerticalFrame *hsv2 = new TGVerticalFrame(hs, 90,10, kFixedWidth);
-   fErrorScale = new TGNumberEntryField(hsv2, kFP_MERR, 1.0,
+   fErrorScale = new TGNumberEntryField(hsv2, kFP_MERR, ROOT::Math::MinimizerOptions::DefaultErrorDef(),
                                         TGNumberFormat::kNESRealTwo,
                                         TGNumberFormat::kNEAPositive,
                                         TGNumberFormat::kNELLimitMinMax,0.,100.);
    hsv2->AddFrame(fErrorScale, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 
                                                  1, 1, 0, 3));
-   fTolerance = new TGNumberEntryField(hsv2, kFP_MTOL, 1.0E-9, 
+   fTolerance = new TGNumberEntryField(hsv2, kFP_MTOL, ROOT::Math::MinimizerOptions::DefaultTolerance(), 
                                        TGNumberFormat::kNESReal,
                                        TGNumberFormat::kNEAPositive,
                                        TGNumberFormat::kNELLimitMinMax, 0., 1.);
-   fTolerance->SetNumber(TVirtualFitter::GetPrecision());
+   fTolerance->SetNumber(ROOT::Math::MinimizerOptions::DefaultTolerance());
    hsv2->AddFrame(fTolerance, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 
                                                 1, 1, 3, 3));
    fIterations = new TGNumberEntryField(hsv2, kFP_MITR, 5000, 
                                    TGNumberFormat::kNESInteger,
                                    TGNumberFormat::kNEAPositive,
                                    TGNumberFormat::kNELNoLimits);
-   fIterations->SetNumber(TVirtualFitter::GetMaxIterations());
+   fIterations->SetNumber(ROOT::Math::MinimizerOptions::DefaultMaxIterations());
    hsv2->AddFrame(fIterations, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 
                                                  1, 1, 3, 3));
    hs->AddFrame(hsv2, new TGLayoutHints(kLHintsNormal, 0, 0, 0, 0));
    fMinimization->AddFrame(hs, new TGLayoutHints(kLHintsExpandX, 0, 0, 1, 1));
-   fStatusBar->SetText("Itr: 5000",2);
-
+   fStatusBar->SetText(Form("Itr: %d",ROOT::Math::MinimizerOptions::DefaultMaxIterations()),2);
 
    MakeTitle(fMinimization, "Print Options");
 
@@ -752,31 +836,18 @@ void TFitEditor::ConnectSlots()
    // set parameters dialog
    fSetParam->Connect("Clicked()", "TFitEditor", this, "DoSetParameters()");
    // allowed function operations
-   fNone->Connect("Toggled(Bool_t)","TFitEditor", this, "DoNoOperation(Bool_t)");
    fAdd->Connect("Toggled(Bool_t)","TFitEditor", this, "DoAddition(Bool_t)");
 
    // fit options
-   fIntegral->Connect("Toggled(Bool_t)","TFitEditor",this,"DoIntegral()");
-   fBestErrors->Connect("Toggled(Bool_t)","TFitEditor",this,"DoBestErrors()");
-   fUseRange->Connect("Toggled(Bool_t)","TFitEditor",this,"DoUseRange()");
-   fAdd2FuncList->Connect("Toggled(Bool_t)","TFitEditor",this,"DoAddtoList()");
    fAllWeights1->Connect("Toggled(Bool_t)","TFitEditor",this,"DoAllWeights1()");
    fEmptyBinsWghts1->Connect("Toggled(Bool_t)","TFitEditor",this,"DoEmptyBinsAllWeights1()");
-   fImproveResults->Connect("Toggled(Bool_t)","TFitEditor",this,"DoImproveResults()");
 
    // linear fit
    fLinearFit->Connect("Toggled(Bool_t)","TFitEditor",this,"DoLinearFit()");
    fNoChi2->Connect("Toggled(Bool_t)","TFitEditor",this,"DoNoChi2()");
-   fRobustValue->Connect("ValueSet(Long_t)", "TFitEditor", this, "DoRobust()");
-   (fRobustValue->GetNumberEntry())->Connect("ReturnPressed()", "TFitEditor",
-                                              this, "DoRobust()");
 
    // draw options
    fNoStoreDrawing->Connect("Toggled(Bool_t)","TFitEditor",this,"DoNoStoreDrawing()");
-   fNoDrawing->Connect("Toggled(Bool_t)","TFitEditor",this,"DoNoDrawing()");
-   fDrawSame->Connect("Toggled(Bool_t)","TFitEditor",this,"DoDrawSame()");
-   // fit method
-   fMethodList->Connect("Selected(Int_t)", "TFitEditor", this, "DoMethod(Int_t)");
 
    // fit, reset, close buttons
    fFitButton->Connect("Clicked()", "TFitEditor", this, "DoFit()");
@@ -788,21 +859,13 @@ void TFitEditor::ConnectSlots()
    // advanced draw options
    fDrawAdvanced->Connect("Clicked()", "TFitEditor", this, "DoAdvancedOptions()");
 
-   if (fDim > 0) {
+   if (fDim > 0)
       fSliderX->Connect("PositionChanged()","TFitEditor",this, "DoSliderXMoved()");
-      fSliderX->Connect("Pressed()","TFitEditor",this, "DoSliderXPressed()");
-      fSliderX->Connect("Released()","TFitEditor",this, "DoSliderXReleased()");
-   }
-   if (fDim > 1) {
+   if (fDim > 1)
       fSliderY->Connect("PositionChanged()","TFitEditor",this, "DoSliderYMoved()");
-      fSliderY->Connect("Pressed()","TFitEditor",this, "DoSliderYPressed()");
-      fSliderY->Connect("Released()","TFitEditor",this, "DoSliderYReleased()");
-   }
-   if (fDim > 2) {
+   if (fDim > 2)
       fSliderZ->Connect("PositionChanged()","TFitEditor",this, "DoSliderZMoved()");
-      fSliderZ->Connect("Pressed()","TFitEditor",this, "DoSliderZPressed()");
-      fSliderZ->Connect("Released()","TFitEditor",this, "DoSliderZReleased()");
-   }
+
    fParentPad->Connect("RangeAxisChanged()", "TFitEditor", this, "UpdateGUI()");
    
    // 'Minimization' tab
@@ -814,12 +877,12 @@ void TFitEditor::ConnectSlots()
    // minimization method
    fMigrad->Connect("Toggled(Bool_t)","TFitEditor",this,"DoMinMethod(Bool_t)");
    // Simplex functionality will come with the new fitter design
-   //fSimplex->Connect("Toggled(Bool_t)","TFitEditor",this,"DoMinMethod(Bool_t)");
+   fSimplex->Connect("Toggled(Bool_t)","TFitEditor",this,"DoMinMethod(Bool_t)");
    fFumili->Connect("Toggled(Bool_t)","TFitEditor",this,"DoMinMethod(Bool_t)");
+   fCombination->Connect("Toggled(Bool_t)","TFitEditor",this,"DoMinMethod(Bool_t)");
+   fScan->Connect("Toggled(Bool_t)","TFitEditor",this,"DoMinMethod(Bool_t)");
 
    // fitter settings
-   fErrorScale->Connect("ReturnPressed()", "TFitEditor", this, "DoErrorsDef()");
-   fTolerance->Connect("ReturnPressed()", "TFitEditor", this, "DoMaxTolerance()");
    fIterations->Connect("ReturnPressed()", "TFitEditor", this, "DoMaxIterations()");
    
    // print options
@@ -839,31 +902,18 @@ void TFitEditor::DisconnectSlots()
    fFuncList->Disconnect("Selected(Int_t)");
    fEnteredFunc->Disconnect("ReturnPressed()");
    fSetParam->Disconnect("Clicked()");
-   fNone->Disconnect("Toggled(Bool_t)");
    fAdd->Disconnect("Toggled(Bool_t)");
 
    // fit options
-   fIntegral->Disconnect("Toggled(Bool_t)");
-   fBestErrors->Disconnect("Toggled(Bool_t)");
-   fUseRange->Disconnect("Toggled(Bool_t)");
-   fAdd2FuncList->Disconnect("Toggled(Bool_t)");
    fAllWeights1->Disconnect("Toggled(Bool_t)");
    fEmptyBinsWghts1->Disconnect("Toggled(Bool_t)");
-   fImproveResults->Disconnect("Toggled(Bool_t)");
 
    // linear fit
    fLinearFit->Disconnect("Toggled(Bool_t)");
    fNoChi2->Disconnect("Toggled(Bool_t)");
-   fRobustValue->Disconnect("ValueSet(Long_t)");
-   (fRobustValue->GetNumberEntry())->Disconnect("ReturnPressed()");
 
    // draw options
    fNoStoreDrawing->Disconnect("Toggled(Bool_t)");
-   fNoDrawing->Disconnect("Toggled(Bool_t)");
-   fDrawSame->Disconnect("Toggled(Bool_t)");
-
-   // fit method
-   fMethodList->Disconnect("Selected(Int_t)");
 
    // fit, reset, close buttons
    fFitButton->Disconnect("Clicked()");
@@ -873,21 +923,12 @@ void TFitEditor::DisconnectSlots()
    fUserButton->Disconnect("Clicked()");
    fDrawAdvanced->Disconnect("Clicked()");
 
-   if (fDim > 0) {
+   if (fDim > 0)
       fSliderX->Disconnect("PositionChanged()");
-      fSliderX->Disconnect("Pressed()");
-      fSliderX->Disconnect("Released()");
-   }
-   if (fDim > 1) {
+   if (fDim > 1)
       fSliderY->Disconnect("PositionChanged()");
-      fSliderY->Disconnect("Pressed()");
-      fSliderY->Disconnect("Released()");
-   }
-   if (fDim > 2) {
+   if (fDim > 2) 
       fSliderZ->Disconnect("PositionChanged()");
-      fSliderZ->Disconnect("Pressed()");
-      fSliderZ->Disconnect("Released()");
-   }
    
    // slots related to 'Minimization' tab
    fLibMinuit->Disconnect("Toggled(Bool_t)");
@@ -897,12 +938,12 @@ void TFitEditor::DisconnectSlots()
    // minimization method
    fMigrad->Disconnect("Toggled(Bool_t)");
    // Simplex functionality will come with the new fitter design
-   //fSimplex->Disconnect("Toggled(Bool_t)");
+   fSimplex->Disconnect("Toggled(Bool_t)");
    fFumili->Disconnect("Toggled(Bool_t)");
-
+   fCombination->Disconnect("Toggled(Bool_t)");
+   fScan->Disconnect("Toggled(Bool_t)");
+   
    // fitter settings
-   fErrorScale->Disconnect("ReturnPressed()");
-   fTolerance->Disconnect("ReturnPressed()");
    fIterations->Disconnect("ReturnPressed()");
 
    // print options
@@ -981,12 +1022,11 @@ void TFitEditor::CloseWindow()
 }
 
 //______________________________________________________________________________
-TFitEditor *&TFitEditor::GetFP()
-{
-   // Static: return main fit panel
-
-   return fgFitDialog;
-}
+// TFitEditor *&TFitEditor::GetFP()
+// {
+//    // Static: return main fit panel
+//    return fgFitDialog;
+// }
 
 //______________________________________________________________________________
 void TFitEditor::Terminate()
@@ -1005,70 +1045,72 @@ void TFitEditor::UpdateGUI()
 
    if (!fFitObject) return;
 
+   fPx1old = fParentPad->XtoAbsPixel(fParentPad->GetUxmin());
+   fPy1old = fParentPad->YtoAbsPixel(fParentPad->GetUymin());
+   fPx2old = fParentPad->XtoAbsPixel(fParentPad->GetUxmax());
+   fPy2old = fParentPad->YtoAbsPixel(fParentPad->GetUymax());
+
    // sliders
    if (fDim > 0) {
       fSliderX->Disconnect("PositionChanged()");
-      fSliderX->Disconnect("Pressed()");
-      fSliderX->Disconnect("Released()");
 
+      TH1* hist = 0;
       switch (fType) {
-         case kObjectHisto: {
-            fXaxis = ((TH1*)fFitObject)->GetXaxis();
-            fYaxis = ((TH1*)fFitObject)->GetYaxis();
-            fZaxis = ((TH1*)fFitObject)->GetZaxis();
-            fXrange = fXaxis->GetNbins();
-            fXmin = fXaxis->GetFirst();
-            fXmax = fXaxis->GetLast();
+         case kObjectHisto:
+            hist = (TH1*)fFitObject;
             break;
-         }
-         case kObjectGraph: {
-            TGraph *gr = (TGraph*)fFitObject; //TBV
-            TH1F *hist = gr->GetHistogram();
-            if (hist) {
-               fXaxis = hist->GetXaxis();
-               fYaxis = hist->GetYaxis();
-               fZaxis = hist->GetZaxis();
-               fXrange = fXaxis->GetNbins();
-               fXmin = fXaxis->GetFirst();
-               fXmax = fXaxis->GetLast();
-            }
+
+         case kObjectGraph:
+            hist = ((TGraph*)fFitObject)->GetHistogram();
             break;
-         }
-         case kObjectGraph2D: {
+
+         case kObjectMultiGraph:
+            hist = ((TMultiGraph*)fFitObject)->GetHistogram();
+            break;
+
+         case kObjectGraph2D:
+            hist = ((TGraph2D*)fFitObject)->GetHistogram("empty");
+            break;
+
+         case kObjectHStack: 
+            hist = (TH1 *)((THStack *)fFitObject)->GetHists()->First();
+
+         case kObjectTree:
             //not implemented
             break;
-         }
-         case kObjectHStack: {
-            TH1 *hist = (TH1 *)((THStack *)fFitObject)->GetHists()->First();
-            fXaxis = hist->GetXaxis();
-            fYaxis = hist->GetYaxis();
-            fZaxis = hist->GetZaxis();
-            fXrange = fXaxis->GetNbins();
-            fXmin = fXaxis->GetFirst();
-            fXmax = fXaxis->GetLast();
-            break;
-         }
-         case kObjectTree:  {
-            //not implemented
-            break;
-         }
       }
+      
+      Int_t ixmin = 0; 
+      Int_t ixmax = 0; 
+      Int_t iymin = 0; 
+      Int_t iymax = 0; 
+      Int_t izmin = 0; 
+      Int_t izmax = 0; 
+      if (hist) {
+         fXaxis = hist->GetXaxis();
+         fYaxis = hist->GetYaxis();
+         fZaxis = hist->GetZaxis();
+         fXrange = fXaxis->GetNbins();
+         ixmin = fXaxis->GetFirst();
+         ixmax = fXaxis->GetLast();
+         iymin = fYaxis->GetFirst();
+         iymax = fYaxis->GetLast();
+         izmin = fZaxis->GetFirst();
+         izmax = fZaxis->GetLast();
+      }
+
       fSliderX->SetRange(1,fXrange);
-      if (!fXmin && !fXmax)
+      if (ixmin == 0 && ixmax == 0)
          fSliderX->SetPosition(1,fXrange);
       else 
-         fSliderX->SetPosition(fXmin,fXmax);
+         fSliderX->SetPosition(ixmin,ixmax);
       fSliderX->SetScale(5);
       fSliderX->Connect("PositionChanged()","TFitEditor",this, "DoSliderXMoved()");
-      fSliderX->Connect("Pressed()","TFitEditor",this, "DoSliderXPressed()");
-      fSliderX->Connect("Released()","TFitEditor",this, "DoSliderXReleased()");
    }
 
-/*  no implemented functionality for y & z sliders yet 
+//  no implemented functionality for y & z sliders yet 
    if (fDim > 1) {
       fSliderY->Disconnect("PositionChanged()");
-      fSliderY->Disconnect("Pressed()");
-      fSliderY->Disconnect("Released()");
 
       if (!fSliderYParent->IsMapped())
          fSliderYParent->MapWindow();
@@ -1076,76 +1118,54 @@ void TFitEditor::UpdateGUI()
          fSliderZParent->UnmapWindow();
 
       switch (fType) {
-         case kObjectHisto: {
+         case kObjectHisto: 
+         case kObjectGraph2D:
+         case kObjectHStack: 
             fYrange = fYaxis->GetNbins();
             fYmin = fYaxis->GetFirst();
             fYmax = fYaxis->GetLast();
             break;
-         }
-         case kObjectGraph: {
+         
+         case kObjectGraph: 
+         case kObjectMultiGraph: 
+         case kObjectTree:  
             //not implemented
             break;
-         }
-         case kObjectGraph2D: {
-            //not implemented
-            break;
-         }
-         case kObjectHStack: {
-            fYrange = fYaxis->GetNbins();
-            fYmin = fYaxis->GetFirst();
-            fYmax = fYaxis->GetLast();
-            break;
-         }
-         case kObjectTree:  {
-            //not implemented
-            break;
-         }
       }
       fSliderY->SetRange(1,fYrange);
       fSliderY->SetPosition(fYmin,fYmax);
       fSliderY->SetScale(5);
+      fSliderY->Connect("PositionChanged()","TFitEditor",this, "DoSliderYMoved()");
    }
 
+   
    if (fDim > 2) {
       fSliderZ->Disconnect("PositionChanged()");
-      fSliderZ->Disconnect("Pressed()");
-      fSliderZ->Disconnect("Released()");
 
       if (!fSliderZParent->IsMapped())
          fSliderZParent->MapWindow();
 
       switch (fType) {
-         case kObjectHisto: {
+         case kObjectHStack:
+         case kObjectHisto:
             fZrange = fZaxis->GetNbins();
             fZmin = fZaxis->GetFirst();
             fZmax = fZaxis->GetLast();
             break;
-         }
-         case kObjectGraph: {
+
+         case kObjectGraph:
+         case kObjectGraph2D:
+         case kObjectMultiGraph:
+         case kObjectTree:
             //not implemented
             break;
-         }
-         case kObjectGraph2D: {
-            //not implemented
-            break;
-         }
-         case kObjectHStack: {
-            //TH1 *hist = (TH1 *)((THStack *)fFitObject)->GetHists()->First();
-            fZrange = fZaxis->GetNbins();
-            fZmin = fZaxis->GetFirst();
-            fZmax = fZaxis->GetLast();
-            break;
-         }
-         case kObjectTree:  {
-            //not implemented
-            break;
-         }
       }
       fSliderZ->SetRange(1,fZrange);
       fSliderZ->SetPosition(fZmin,fZmax);
       fSliderZ->SetScale(5);
+      fSliderZ->Connect("PositionChanged()","TFitEditor",this, "DoSliderZMoved()");
    }
-
+/*
    switch (fDim) {
       case 1:
          fGeneral->HideFrame(fSliderYParent);
@@ -1177,31 +1197,48 @@ void TFitEditor::SetFitObject(TVirtualPad *pad, TObject *obj, Int_t event)
 
    fParentPad = pad;
    fFitObject = obj;
-   fDrawOption = GetDrawOption();
    ShowObjectName(obj);
    UpdateGUI();
 
    ConnectSlots();
    
-   Bool_t hasf = HasFitFunction(obj);
-   if (hasf) {
-      fFunction = fFitFunc->GetTitle();
-      fEnteredFunc->SetText(fFunction.Data());
-      TGLBEntry *en = fFuncList->FindEntry(fFunction.Data());
+   TF1* fitFunc = HasFitFunction(obj);
+
+   if (fitFunc) {
+      //fFuncPars = FuncParams_t( fitFunc->GetNpar() );
+      GetParameters(fFuncPars, fitFunc);
+
+      // get function range
+      fitFunc->GetRange(fFuncXmin, fFuncYmin, fFuncZmin, fFuncXmax,  fFuncYmax,  fFuncZmax);
+
+
+      TString tmpStr = fitFunc->GetExpFormula();
+      TGLBEntry *en = 0;
+      if ( tmpStr.Length() == 0 )
+      {
+         fEnteredFunc->SetText(fitFunc->GetName());
+         en= fFuncList->FindEntry(fitFunc->GetName());
+         SetEditable(kFALSE);
+      }
+      else
+      {
+         fEnteredFunc->SetText(fitFunc->GetExpFormula().Data());
+         en= fFuncList->FindEntry(fitFunc->GetExpFormula().Data());
+         SetEditable(kTRUE);
+      }
       if (en) fFuncList->Select(en->EntryId());
    } else {
       TGTextLBEntry *te = (TGTextLBEntry *)fFuncList->GetSelectedEntry();
-      if (fNone->GetState() == kButtonDown)
-         fFunction = te->GetTitle();
+      if (te && fNone->GetState() == kButtonDown)
+         fEnteredFunc->SetText(te->GetTitle());
       else if (fAdd->GetState() == kButtonDown) {
-         fFunction += '+';
-         fFunction +=te->GetTitle();
-      }
-      fEnteredFunc->SetText(fFunction.Data());
+         TString tmpStr = fEnteredFunc->GetText();
+         tmpStr += '+';
+         tmpStr +=te->GetTitle();
+         fEnteredFunc->SetText(tmpStr);
+      } else if ( !te )
+         fEnteredFunc->SetText("");
       fEnteredFunc->SelectAll();
-      if (!fFitFunc) {
-         fFitFunc = new TF1("fitFunc",fFunction.Data(),fXmin,fXmax);
-      }
    }
 
    // Update the information about the selected object.
@@ -1296,18 +1333,7 @@ TGComboBox* TFitEditor::BuildFunctionList(TGFrame* parent, Int_t id)
    c->AddEntry("pol8",   kFP_POL8);
    c->AddEntry("pol9",   kFP_POL9);
    c->AddEntry("user",   kFP_USER);
-   fLastEntryId = kFP_USER;
 
-   if (!gROOT->GetFunction("gaus")) {
-      Float_t xmin = 1.;
-      Float_t xmax = 2.;
-      new TF1("gaus","gaus",xmin,xmax);
-      new TF1("landau","landau",xmin,xmax);
-      new TF1("expo","expo",xmin,xmax);
-      for (Int_t i=0; i<10; i++) {
-         new TF1(Form("pol%d",i),Form("pol%d",i),xmin,xmax);
-      }
-   }
    return c;
 }
 
@@ -1326,19 +1352,6 @@ TGComboBox* TFitEditor::BuildMethodList(TGFrame* parent, Int_t id)
 }
 
 //______________________________________________________________________________
-void TFitEditor::DoAddtoList()
-{
-   // Slot connected to 'add to list of function' setting.
-
-   if (fAdd2FuncList->GetState() == kButtonDown)
-      fFitOption += '+';
-   else {
-      Int_t eq = fFitOption.First('+');
-      fFitOption.Remove(eq, 1);
-   }
-}
-
-//______________________________________________________________________________
 void TFitEditor::DoAdvancedOptions()
 {
    // Slot connected to advanced option button (opens a dialog).
@@ -1353,15 +1366,9 @@ void TFitEditor::DoEmptyBinsAllWeights1()
 {
    // Slot connected to 'include emtry bins and forse all weights to 1' setting.
 
-   if (fEmptyBinsWghts1->GetState() == kButtonDown) {
-      if (fAllWeights1->GetState() == kButtonDown) {
+   if (fEmptyBinsWghts1->GetState() == kButtonDown)
+      if (fAllWeights1->GetState() == kButtonDown)
          fAllWeights1->SetState(kButtonUp, kTRUE);
-      }
-      fFitOption += "WW";
-   } else {
-      Int_t eq = fFitOption.First("WW");
-      fFitOption.Remove(eq, 2);
-   }
 }
 
 //______________________________________________________________________________
@@ -1369,15 +1376,9 @@ void TFitEditor::DoAllWeights1()
 {
    // Slot connected to 'set all weights to 1' setting.
 
-   if (fAllWeights1->GetState() == kButtonDown) {
-      if (fEmptyBinsWghts1->GetState() == kButtonDown) {
+   if (fAllWeights1->GetState() == kButtonDown)
+      if (fEmptyBinsWghts1->GetState() == kButtonDown)
          fEmptyBinsWghts1->SetState(kButtonUp, kTRUE);
-      }
-      fFitOption += 'W';
-   } else {
-      Int_t eq = fFitOption.First('W');
-      fFitOption.Remove(eq, 1);
-   }
 }
 
 //______________________________________________________________________________
@@ -1389,37 +1390,21 @@ void TFitEditor::DoClose()
 }
 
 //______________________________________________________________________________
-void TFitEditor::DoDrawSame()
-{
-   // Slot connected to 'same' draw option.
-
-   fFitOption.ToUpper();
-   
-   if (fDrawSame->GetState() == kButtonDown) {
-      if (fDrawOption.Contains("SAME"))
-         return;
-      else
-         fDrawOption += "SAME";
-   } else {
-      if (fDrawOption.Contains("SAME"))
-         fDrawOption.ReplaceAll("SAME", "");
-   }
-}
-
-//______________________________________________________________________________
 void TFitEditor::DoFit()
 {
    // Perform a fit with current parameters' settings.
 
    if (!fFitObject) return;
    if (!fParentPad) return;
-   if (!fFitFunc) {
+
+   if ( fNone->GetState() != kButtonDisabled && CheckFunctionString(fEnteredFunc->GetText()) )
+   {
       new TGMsgBox(fClient->GetRoot(), GetMainFrame(),
-                   "Error", Form("Function with name '%s' does not exist",
-                   fFunction.Data()), kMBIconExclamation, kMBClose, 0);
+                   "Error...", "DoFit\nVerify the entered function string!",
+                   kMBIconStop,kMBOk, 0);
       return;
    }
-
+   
    fFitButton->SetState(kButtonEngaged);
    if (gPad) gPad->GetVirtCanvas()->SetCursor(kWatch);
    gVirtualX->SetCursor(GetId(), gVirtualX->CreateCursor(kWatch));
@@ -1429,43 +1414,117 @@ void TFitEditor::DoFit()
    save = gPad;
    gPad = fParentPad;
    fParentPad->cd();
-    
+
    fParentPad->GetCanvas()->SetCursor(kWatch);
-   Double_t xmin = 0;
-   Double_t xmax = 0;
+
+   // Option Retrieval!
+   ROOT::Math::MinimizerOptions mopts;
+   Foption_t fitOpts;
+   TString strDrawOpts;
+
+
+   TF1 *fitFunc = 0;
+   if ( fNone->GetState() == kButtonDisabled )
+   {
+      TGTextLBEntry *te = (TGTextLBEntry *)fFuncList->GetSelectedEntry();
+      TF1* tmpF1 = (TF1*) gROOT->GetListOfFunctions()->FindObject(te->GetTitle());
+      if ( tmpF1 == 0 )
+      {
+               new TGMsgBox(fClient->GetRoot(), GetMainFrame(),
+                            "Error...", "DoFit\nVerify the entered function string!",
+                            kMBIconStop,kMBOk, 0);
+               return;
+      }
+      fitFunc = (TF1*)tmpF1->IsA()->New();
+      tmpF1->Copy(*fitFunc);
+   }
+
+   ROOT::Fit::DataRange drange; 
+
+   Int_t ixmin = (Int_t)(fSliderX->GetMinPosition()); 
+   Int_t ixmax = (Int_t)(fSliderX->GetMaxPosition()); 
+   if (ixmin > 1 || ixmax < fXaxis->GetNbins() ) { 
+      Double_t xmin = fXaxis->GetBinLowEdge(ixmin);
+      Double_t xmax = fXaxis->GetBinUpEdge(ixmax);
+      drange.AddRange(0,xmin, xmax);
+   }
+
+   if ( fDim > 1 ) {
+      assert(fYaxis); 
+      Int_t iymin = (Int_t)(fSliderY->GetMinPosition()); 
+      Int_t iymax = (Int_t)(fSliderY->GetMaxPosition()); 
+      if (iymin > 1 || iymax < fYaxis->GetNbins() ) { 
+         Double_t ymin = fYaxis->GetBinLowEdge(iymin);
+         Double_t ymax = fYaxis->GetBinUpEdge(iymax);
+         drange.AddRange(1,ymin, ymax);
+      }
+   }
+   if ( fDim > 2 ) {
+      assert(fZaxis); 
+      Int_t izmin = (Int_t)(fSliderZ->GetMinPosition()); 
+      Int_t izmax = (Int_t)(fSliderZ->GetMaxPosition()); 
+      if (izmin > 1 || izmax < fZaxis->GetNbins() ) { 
+         Double_t zmin = fZaxis->GetBinLowEdge(izmin);
+         Double_t zmax = fZaxis->GetBinUpEdge(izmax);
+         drange.AddRange(2,zmin, zmax);
+      }
+   }
+
+   if ( fitFunc == 0 )
+   {
+      // create function with saved range values 
+      if ( fDim == 1 )
+         fitFunc = new TF1("lastFitFunc",fEnteredFunc->GetText(),fFuncXmin,fFuncXmax);
+      else if ( fDim == 2 )
+         fitFunc = new TF2("lastFitFunc",fEnteredFunc->GetText(),fFuncXmin,fFuncXmax, fFuncYmin, fFuncYmax);
+      else if ( fDim == 3 )
+         fitFunc =  new TF3("lastFitFunc",fEnteredFunc->GetText(),fFuncXmin,fFuncXmax, fFuncYmin, fFuncYmax, fFuncZmin, fFuncZmax);
+   }
+   
+   //if ( fFuncPars ) 
+   // set parameters from panel in function
+   SetParameters(fFuncPars, fitFunc);
+   RetrieveOptions(fitOpts, strDrawOpts, mopts, fitFunc->GetNpar());
+
+
    switch (fType) {
       case kObjectHisto: {
-         TH1 *h1 = (TH1*)fFitObject;
-         xmin = fXaxis->GetBinLowEdge((Int_t)(fSliderX->GetMinPosition()));
-         xmax = fXaxis->GetBinUpEdge((Int_t)(fSliderX->GetMaxPosition()));
-         fFitFunc->SetRange(xmin,xmax);
-         fDrawOption = GetDrawOption();
-         h1->Fit(fFitFunc, fFitOption.Data(), fDrawOption.Data(), xmin, xmax);
+
+         TH1 *hist = (TH1*)fFitObject;
+         ROOT::Fit::FitObject(hist, fitFunc, fitOpts, mopts, strDrawOpts, drange);
+
          break;
       }
       case kObjectGraph: {
          TGraph *gr = (TGraph*)fFitObject;
-         TH1F *hist = gr->GetHistogram();
-         if (hist) { //!!! for many graphs in a pad, use the xmin/xmax of pad!!!
-            xmin = fXaxis->GetBinLowEdge((Int_t)(fSliderX->GetMinPosition()));
-            xmax = fXaxis->GetBinUpEdge((Int_t)(fSliderX->GetMaxPosition()));
-            Int_t npoints = gr->GetN();
-            Double_t *gx = gr->GetX();
-            Double_t gxmin, gxmax;
-            const Int_t imin =  TMath::LocMin(npoints,gx);
-            const Int_t imax =  TMath::LocMax(npoints,gx);
-            gxmin = gx[imin];
-            gxmax = gx[imax];
-            if (xmin < gxmin) xmin = gxmin;
-            if (xmax > gxmax) xmax = gxmax;
-         }
-         fFitFunc->SetRange(xmin,xmax);
-         fDrawOption = GetDrawOption();
-         gr->Fit(fFitFunc, fFitOption.Data(), fDrawOption.Data(), xmin, xmax);
+         // not sure if this is needed 
+//         TH1F *hist = gr->GetHistogram();
+//          if (hist) { //!!! for many graphs in a pad, use the xmin/xmax of pad!!!
+//             Int_t npoints = gr->GetN();
+//             Double_t *gx = gr->GetX();
+//             Double_t gxmin, gxmax;
+//             const Int_t imin =  TMath::LocMin(npoints,gx);
+//             const Int_t imax =  TMath::LocMax(npoints,gx);
+//             gxmin = gx[imin];
+//             gxmax = gx[imax];
+//             if (xmin < gxmin) xmin = gxmin;
+//             if (xmax > gxmax) xmax = gxmax;
+//          }
+
+         FitObject(gr, fitFunc, fitOpts, mopts, strDrawOpts, drange);
+         break;
+      }
+      case kObjectMultiGraph: {
+         TMultiGraph *mg = (TMultiGraph*)fFitObject;
+         FitObject(mg, fitFunc, fitOpts, mopts, strDrawOpts, drange);
+
          break;
       }
       case kObjectGraph2D: {
-         // N/A
+
+         TGraph2D *mg = (TGraph2D*)fFitObject;
+         FitObject(mg, fitFunc, fitOpts, mopts, strDrawOpts, drange);
+
          break;
       }
       case kObjectHStack: {
@@ -1477,6 +1536,13 @@ void TFitEditor::DoFit()
          break;
       }
    }
+
+   // update parameters value shown in dialog 
+   //if (!fFuncPars) fFuncPars = new Double_t[fitFunc->GetNpar()][3];
+   GetParameters(fFuncPars,fitFunc);
+
+   delete fitFunc;
+
 
    fParentPad->Modified();
    fParentPad->Update();
@@ -1497,18 +1563,16 @@ void TFitEditor::DoFit()
 Int_t TFitEditor::CheckFunctionString(const char *fname)
 {
    // Check entered function string.
-
-   fFitFunc = (TF1 *)gROOT->GetListOfFunctions()->FindObject(fname);
-   if (fFitFunc) 
-      return fFitFunc->Compile();
-   
-   TF1 *form = 0;
-   form = new TF1("fitFunc", fname, fXmin, fXmax);
-   if (form) {
-      return form->Compile();
+   Int_t rvalue = 0;
+   if ( fDim == 1 ) {
+      TF1 form("tmpCheck", fname);
+      rvalue = form.Compile();
+   } else if ( fDim == 2 ) {
+      TF2 form("tmpCheck", fname);
+      rvalue = form.Compile();
    }
-   delete form;
-   return -1;
+
+   return rvalue;
 }
 
 //______________________________________________________________________________
@@ -1516,22 +1580,14 @@ void TFitEditor::DoAddition(Bool_t on)
 {
    // Slot connected to addition of predefined functions.
 
-   Int_t sel = fFuncList->GetSelected();
    static Bool_t first = kFALSE;
-   if (sel > kFP_USER) {
-      //no addition for user defined functions
-      fEnteredFunc->Clear();
-      fFunction = "";
-      fFuncList->Select(kFP_GAUS, kTRUE);
-      return;
-   }
    TString s = fEnteredFunc->GetText();
    if (on) {
       if (!first) {
          s += "(0)";
+         fSelLabel->SetText(fEnteredFunc->GetText());
          fEnteredFunc->SetText(s.Data());
          first = kTRUE;
-         fSelLabel->SetText(fFunction.Data());
          ((TGCompositeFrame *)fSelLabel->GetParent())->Layout();
       }
    } else {
@@ -1540,38 +1596,46 @@ void TFitEditor::DoAddition(Bool_t on)
 }
 
 //______________________________________________________________________________
-void TFitEditor::DoNoOperation(Bool_t on)
-{
-   // Slot connected to NOP of predefined functions.
-
-   TGTextLBEntry *te = (TGTextLBEntry *)fFuncList->GetSelectedEntry();
-   if (on) {
-      fEnteredFunc->SetText(te->GetTitle());
-   }
-   fFunction = fEnteredFunc->GetText();
-   fSelLabel->SetText(fFunction.Data());
-   ((TGCompositeFrame *)fSelLabel->GetParent())->Layout();
-   fFitFunc = (TF1 *) gROOT->GetListOfFunctions()->FindObject(fFunction.Data());
-   if (!fFitFunc) 
-      fFitFunc = new TF1("fitFunc",fFunction.Data(),fXmin,fXmax);
-}
-
-//______________________________________________________________________________
-void TFitEditor::DoFunction(Int_t)
+void TFitEditor::DoFunction(Int_t selected)
 {
    // Slot connected to predefined fit function settings.
 
    TGTextLBEntry *te = (TGTextLBEntry *)fFuncList->GetSelectedEntry();
-   if (fNone->GetState() == kButtonDown) {
-      fEnteredFunc->SetText(te->GetTitle());
+   if (fNone->GetState() == kButtonDown || fNone->GetState() == kButtonDisabled) {
+      TF1* tmpTF1 = 0;
+      switch (fType) {
+      case kObjectHisto: {
+         tmpTF1 = (TF1*) gROOT->GetListOfFunctions()->FindObject(te->GetTitle());
+         break;
+      }
+      case kObjectGraph: {
+         tmpTF1 = (TF1*) gROOT->GetListOfFunctions()->FindObject(te->GetTitle());
+         break;
+      }
+      default: { break; }
+      }
+
+      if ( tmpTF1 && strcmp(tmpTF1->GetExpFormula(), "") ) 
+      {
+         SetEditable(kTRUE);
+         fEnteredFunc->SetText(tmpTF1->GetExpFormula());
+      }
+      else
+      {
+         if ( selected <= kFP_USER )
+            SetEditable(kTRUE);
+         else       
+            SetEditable(kFALSE);
+         fEnteredFunc->SetText(te->GetTitle());
+      }
    } else if (fAdd->GetState() == kButtonDown) {
       Int_t np = 0;
       TString s = "";
       if (!strcmp(fEnteredFunc->GetText(), "")) {
-         fFunction = te->GetTitle();
+         fEnteredFunc->SetText(te->GetTitle());
       } else {
          s = fEnteredFunc->GetTitle();
-         TFormula tmp("tmp", fFunction.Data());
+         TFormula tmp("tmp", fEnteredFunc->GetText());
          np = tmp.GetNpar();
       }
       if (np)
@@ -1580,28 +1644,21 @@ void TFitEditor::DoFunction(Int_t)
          s += Form("%s(%d)", te->GetTitle(), np);
       fEnteredFunc->SetText(s.Data());
    }
-   fFunction = fEnteredFunc->GetText();
+   TString tmpStr = fEnteredFunc->GetText();
 
    // create TF1 with the passed string. Delete previous one if existing
-   if (fFunction.Contains("pol") || fFunction.Contains("++")) {
+   if (tmpStr.Contains("pol") || tmpStr.Contains("++")) {
       fLinearFit->SetState(kButtonDown, kTRUE);
    } else {
       fLinearFit->SetState(kButtonUp, kTRUE);
    }
-/*   if (fFunction.Contains("user")) {
-      fFitOption += 'U';
-   } else if (fFitOption.Contains('U')) {
-      Int_t eq = fFitOption.First('U');
-      fFitOption.Remove(eq, 1);
-   }*/
 
    fEnteredFunc->SelectAll();
-   fSelLabel->SetText(fFunction.Data());
+   fSelLabel->SetText(fEnteredFunc->GetText());
    ((TGCompositeFrame *)fSelLabel->GetParent())->Layout();
 
-   fFitFunc = (TF1 *) gROOT->GetListOfFunctions()->FindObject(fFunction.Data());
-   if (!fFitFunc) 
-      fFitFunc = new TF1("fitFunc",fFunction.Data(),fXmin,fXmax);
+   // reset function parameters 
+   fFuncPars.clear();
 }
 
 //______________________________________________________________________________
@@ -1615,57 +1672,13 @@ void TFitEditor::DoEnteredFunction()
 
    if (ok != 0) {
       new TGMsgBox(fClient->GetRoot(), GetMainFrame(),
-                   "Error...", "Verify the entered function string!",
+                   "Error...", "DoEnteredFunction\nVerify the entered function string!",
                    kMBIconStop,kMBOk, 0);
+      return;
    }
 
-   fFunction = fEnteredFunc->GetText();
-
-   fFitFunc = (TF1 *) gROOT->GetListOfFunctions()->FindObject(fFunction.Data());
-
-   fSelLabel->SetText(fFunction.Data());
+   fSelLabel->SetText(fEnteredFunc->GetText());
    ((TGCompositeFrame *)fSelLabel->GetParent())->Layout();
-   if (fFunction.Contains("++")) {
-      fLinearFit->SetState(kButtonDown, kTRUE);
-      fAdd->SetState(kButtonDown, kTRUE);
-   } else if (fFunction.Contains('+')) {
-      fAdd->SetState(kButtonDown, kTRUE);
-   } else {
-      fNone->SetState(kButtonDown, kTRUE);
-   }
-}
-
-//______________________________________________________________________________
-void TFitEditor::DoImproveResults()
-{
-   // Slot connected to 'improve fit results' option settings.
-
-   if (fImproveResults->GetState() == kButtonDown)
-      fFitOption += 'M';
-   else if (fFitOption.Contains('M'))
-      fFitOption.ReplaceAll('M', "");
-}
-
-//______________________________________________________________________________
-void TFitEditor::DoBestErrors()
-{
-   // Slot connected to 'best errors' option settings.
-
-   if (fBestErrors->GetState() == kButtonDown)
-      fFitOption += 'E';
-   else if (fFitOption.Contains('E'))
-      fFitOption.ReplaceAll('E', "");
-}
-
-//______________________________________________________________________________
-void TFitEditor::DoIntegral()
-{
-   // Slot connected to 'integral' option settings.
-
-   if (fIntegral->GetState() == kButtonDown)
-      fFitOption += 'I';
-   else if (fFitOption.Contains('I'))
-      fFitOption.ReplaceAll('I', "");
 }
 
 //______________________________________________________________________________
@@ -1674,34 +1687,15 @@ void TFitEditor::DoLinearFit()
    // Slot connected to linear fit settings.
 
    if (fLinearFit->GetState() == kButtonDown) {
-      fPlus = "++";
-      if (fFitOption.Contains('F'))
-         fFitOption.ReplaceAll('F', "");
-      fSetParam->SetState(kButtonDisabled);
+      //fSetParam->SetState(kButtonDisabled);
       fBestErrors->SetState(kButtonDisabled);
       fImproveResults->SetState(kButtonDisabled);
       fRobustValue->SetState(kTRUE);
    } else {
-      fPlus = '+';
-      if (fFunction.Contains("pol") || fFunction.Contains("++"))
-         fFitOption += 'F';
-      fSetParam->SetState(kButtonUp);
+      //fSetParam->SetState(kButtonUp);
       fBestErrors->SetState(kButtonUp);
       fImproveResults->SetState(kButtonUp);
       fRobustValue->SetState(kFALSE);
-   }
-}
-
-//______________________________________________________________________________
-void TFitEditor::DoMethod(Int_t id)
-{
-   // Slot connected to fit method settings.
-
-   if (id == kFP_MCHIS) {
-      if (fFitOption.Contains('L'))
-         fFitOption.ReplaceAll('L', "");
-   } else {
-      fFitOption += 'L';
    }
 }
 
@@ -1710,36 +1704,14 @@ void TFitEditor::DoNoChi2()
 {
    // Slot connected to 'no chi2' option settings.
 
-   if (fNoChi2->GetState() == kButtonDown)
-      fFitOption += 'C';
-   else if (fFitOption.Contains('C'))
-      fFitOption.ReplaceAll('C', "");
-
    if (fLinearFit->GetState() == kButtonUp)
       fLinearFit->SetState(kButtonDown, kTRUE);
-}
-
-//______________________________________________________________________________
-void TFitEditor::DoNoDrawing()
-{
-   // Slot connected to 'no drawing' settings.
-
-   if (fNoDrawing->GetState() == kButtonDown)
-      fFitOption += '0';
-   else if (fFitOption.Contains('0'))
-      fFitOption.ReplaceAll('0', "");
 }
 
 //______________________________________________________________________________
 void TFitEditor::DoNoStoreDrawing()
 {
    // Slot connected to 'no storing, no drawing' settings.
-
-   if (fNoStoreDrawing->GetState() == kButtonDown)
-      fFitOption += 'N';
-   else if (fFitOption.Contains('N'))
-      fFitOption.ReplaceAll('N', "");
-
    if (fNoDrawing->GetState() == kButtonUp)
       fNoDrawing->SetState(kButtonDown);
 }
@@ -1757,12 +1729,6 @@ void TFitEditor::DoPrintOpt(Bool_t on)
             fOptDefault->SetState(kButtonDown);
             fOptVerbose->SetState(kButtonUp);
             fOptQuiet->SetState(kButtonUp);
-            if (fFitOption.Contains('Q')) {
-               fFitOption.ReplaceAll('Q', "");
-            }
-            if (fFitOption.Contains('V')) {
-               fFitOption.ReplaceAll('V', "");
-            }
          }
          fStatusBar->SetText("Prn: DEF",3);
          break;
@@ -1771,10 +1737,6 @@ void TFitEditor::DoPrintOpt(Bool_t on)
             fOptVerbose->SetState(kButtonDown);
             fOptDefault->SetState(kButtonUp);
             fOptQuiet->SetState(kButtonUp);
-            if (fFitOption.Contains('Q')) {
-               fFitOption.ReplaceAll('Q', "");
-            }
-            fFitOption += 'V';
          }
          fStatusBar->SetText("Prn: VER",3);
          break;
@@ -1783,10 +1745,6 @@ void TFitEditor::DoPrintOpt(Bool_t on)
             fOptQuiet->SetState(kButtonDown);
             fOptDefault->SetState(kButtonUp);
             fOptVerbose->SetState(kButtonUp);
-            if (fFitOption.Contains('V')) {
-               fFitOption.ReplaceAll('V', "");
-            }
-            fFitOption += 'Q';
          }
          fStatusBar->SetText("Prn: QT",3);
       default:
@@ -1801,15 +1759,8 @@ void TFitEditor::DoReset()
 
    fParentPad->Modified();
    fParentPad->Update();
-   fFitOption = "";
-   fDrawOption = GetDrawOption();
-   fFunction = "gaus";
-   if (fFitFunc) {
-      fFitFunc->SetParent(0);
-      fFitFunc = (TF1 *) gROOT->GetListOfFunctions()->FindObject(fFunction.Data());
-      if (!fFitFunc) 
-         fFitFunc = new TF1("fitFunc",fFunction.Data(),fXmin,fXmax);
-   }
+   fEnteredFunc->SetText("gaus");
+
    if (fXmin > 1 || fXmax < fXrange) {
       fSliderX->SetRange(fXmin,fXmax);
       fSliderX->SetPosition(fXmin, fXmax);
@@ -1817,7 +1768,20 @@ void TFitEditor::DoReset()
       fSliderX->SetRange(1,fXrange);
       fSliderX->SetPosition(fXmin,fXmax);
    }
-   fPlus = '+';
+
+   if (fYmin > 1 || fYmax < fYrange) {
+      fSliderY->SetRange(fYmin,fYmax);
+      fSliderY->SetPosition(fYmin, fYmax);
+   } else {
+      fSliderY->SetRange(1,fYrange);
+      fSliderY->SetPosition(fYmin,fYmax);
+   }
+
+   fPx1old = fParentPad->XtoAbsPixel(fParentPad->GetUxmin());
+   fPy1old = fParentPad->YtoAbsPixel(fParentPad->GetUymin());
+   fPx2old = fParentPad->XtoAbsPixel(fParentPad->GetUxmax());
+   fPy2old = fParentPad->YtoAbsPixel(fParentPad->GetUymax());
+
    if (fLinearFit->GetState() == kButtonDown)
       fLinearFit->SetState(kButtonUp, kTRUE);
    if (fBestErrors->GetState() == kButtonDown)
@@ -1832,6 +1796,8 @@ void TFitEditor::DoReset()
       fImproveResults->SetState(kButtonUp, kFALSE);
    if (fAdd2FuncList->GetState() == kButtonDown)
       fAdd2FuncList->SetState(kButtonUp, kFALSE);
+   if (fUseGradient->GetState() == kButtonDown)
+      fUseGradient->SetState(kButtonUp, kFALSE);
    if (fNoChi2->GetState() == kButtonDown)
       fNoChi2->SetState(kButtonUp, kFALSE);
    if (fDrawSame->GetState() == kButtonDown)
@@ -1842,7 +1808,6 @@ void TFitEditor::DoReset()
       fNoStoreDrawing->SetState(kButtonUp, kFALSE);
    fNone->SetState(kButtonDown, kTRUE);
    fFuncList->Select(1, kTRUE);
-   fEnteredFunc->SetText("gaus");
 
    // minimization tab
    if (fLibMinuit->GetState() != kButtonDown)
@@ -1851,57 +1816,17 @@ void TFitEditor::DoReset()
       fMigrad->SetState(kButtonDown, kTRUE);
    if (fOptDefault->GetState() != kButtonDown)
       fOptDefault->SetState(kButtonDown, kTRUE);
-   if (fErrorScale->GetNumber() != 1.0) {
-      fErrorScale->SetNumber(1.0);
+   if (fErrorScale->GetNumber() != ROOT::Math::MinimizerOptions::DefaultErrorDef()) {
+      fErrorScale->SetNumber(ROOT::Math::MinimizerOptions::DefaultErrorDef());
       fErrorScale->ReturnPressed();
    }   
-   if (fTolerance->GetNumber() != 1e-6) {
-      fTolerance->SetNumber(1e-6);
+   if (fTolerance->GetNumber() != ROOT::Math::MinimizerOptions::DefaultTolerance()) {
+      fTolerance->SetNumber(ROOT::Math::MinimizerOptions::DefaultTolerance());
       fTolerance->ReturnPressed();
    }
-   if (fIterations->GetNumber() != 5000) {
-      fIterations->SetIntNumber(5000);
+   if (fIterations->GetNumber() != ROOT::Math::MinimizerOptions::DefaultMaxIterations()) {
+      fIterations->SetIntNumber(ROOT::Math::MinimizerOptions::DefaultMaxIterations());
       fIterations->ReturnPressed();
-   }
-}
-
-//______________________________________________________________________________
-void TFitEditor::DoRobust()
-{
-   // Slot connected to robust setting of linear fit.
-
-   if (fType != kObjectGraph) return;
-
-   fRobustValue->SetState(kTRUE);
-   if (fFitOption.Contains("ROB")) {
-      Int_t pos = fFitOption.Index("=");
-      fFitOption.Replace(pos+1, 4, Form("%g",fRobustValue->GetNumber()));
-   } else {
-      fFitOption += Form("ROB=%g", fRobustValue->GetNumber());
-   }
-}
-
-//______________________________________________________________________________
-void TFitEditor::DoBound(Bool_t on)
-{
-   // Slot connected to 'B' option setting.
-
-   TString s = fFitOption;
-   if (s.Contains("ROB")) {
-      s.ReplaceAll("ROB", "H");
-   }
-   if (on) {
-      if (s.Contains('B'))
-         return;
-      else 
-         fFitOption += 'B';
-   } else {
-      if (s.Contains('B')) {
-      Int_t pos = fFitOption.First('B');
-      Int_t rob = fFitOption.Index("ROB");
-      if (pos != rob+2)
-         fFitOption.Remove(pos, 1);
-      }
    }
 }
 
@@ -1910,81 +1835,66 @@ void TFitEditor::DoSetParameters()
 {
    // Open set parameters dialog.
 
-   if (!fFitFunc) {
-      printf("SetParamters - create fit function %s\n",fFunction.Data());
-      fFitFunc = new TF1("fitFunc",Form("%s",fFunction.Data()), fXmin, fXmax);
+   TF1 * fitFunc = 0;
+   if ( fNone->GetState() == kButtonDisabled )
+   {
+      TGTextLBEntry *te = (TGTextLBEntry *)fFuncList->GetSelectedEntry();
+      //std::cout << te << "  " << te->GetTitle() << std::endl;
+      fitFunc = (TF1*) gROOT->GetListOfFunctions()->FindObject(te->GetTitle());
    }
+   else if ( fDim == 1 )
+      fitFunc = new TF1("tmpPars",fEnteredFunc->GetText() );
+   else if ( fDim == 2 )
+      fitFunc = new TF2("tmpPars",fEnteredFunc->GetText() );
+   else if ( fDim == 3 )
+      fitFunc = new TF3("tmpPars",fEnteredFunc->GetText() );
+
+   if (!fitFunc) { Error("DoSetParameters","NUll function"); return; }
+
+   // case of special functions (gaus, expo, etc...)
+   if (fFuncPars.size() == 0) { 
+      switch (fType) {
+      case kObjectHisto:
+         InitParameters( fitFunc, (TH1*)fFitObject) ;
+         break;
+      case kObjectGraph:
+         InitParameters( fitFunc, ((TGraph*)fFitObject));
+         break;
+      case kObjectMultiGraph:
+         InitParameters( fitFunc, ((TMultiGraph*)fFitObject));
+         break;
+      case kObjectGraph2D:
+         InitParameters( fitFunc, ((TGraph2D*)fFitObject));
+         break;
+      case kObjectHStack: 
+         // N/A
+         break;
+      case kObjectTree:  
+         // N/A
+         break;
+      }
+
+      GetParameters(fFuncPars, fitFunc);
+   }                            
+   else {
+      SetParameters(fFuncPars, fitFunc);
+   }
+
    fParentPad->Disconnect("RangeAxisChanged()");
-   Double_t xmin, xmax;
-   fFitFunc->GetRange(xmin, xmax);
+
+//    Double_t xmin, xma> x;
+//    fitFunc->GetRange(xmin, xmax);
    Int_t ret = 0;
    new TFitParametersDialog(gClient->GetDefaultRoot(), GetMainFrame(), 
-                            fFitFunc, fParentPad, xmin, xmax, &ret);
+                            fitFunc, fParentPad, 0, 0, &ret);
 
-   TGTextLBEntry *te = (TGTextLBEntry *)fFuncList->GetSelectedEntry();
-   if ((fNone->GetState() == kButtonDown) && 
-       strcmp(te->GetTitle(), "user")) {
-      if (ret == kFPDBounded) {
-         DoBound(kTRUE);
-      } else {
-         DoBound(kFALSE);
-      }
-   }
+   //if ( fFuncPars ) delete fFuncPars;
+   //fFuncPars = new Double_t[fitFunc->GetNpar()][3];
+   GetParameters(fFuncPars, fitFunc);
+
    fParentPad->Connect("RangeAxisChanged()", "TFitEditor", this, "UpdateGUI()");
-}
 
-//______________________________________________________________________________
-void TFitEditor::DoSliderXPressed()
-{
-   // Slot connected to range settings on x-axis.
-
-   if (!fParentPad) return;
-
-   TVirtualPad *save = 0;
-   save = gPad;
-   gPad = fParentPad;
-   fParentPad->cd();
-
-   fParentPad->GetCanvas()->FeedbackMode(kFALSE);
-   fParentPad->SetLineWidth(1);
-   fParentPad->SetLineColor(2);
-   Float_t xleft = 0;
-   Double_t xright = 0;
-   switch (fType) {
-      case kObjectHisto: {
-         //hist 1dim
-         xleft  = fXaxis->GetBinLowEdge((Int_t)((fSliderX->GetMinPosition())+0.5));
-         xright = fXaxis->GetBinUpEdge((Int_t)((fSliderX->GetMaxPosition())+0.5));
-         break;
-      }
-      case kObjectGraph: {
-         // graph
-         xleft  = fXaxis->GetBinLowEdge((Int_t)((fSliderX->GetMinPosition())+0.5));
-         xright = fXaxis->GetBinUpEdge((Int_t)((fSliderX->GetMaxPosition())+0.5));
-         break;
-      }
-      case kObjectGraph2D: {
-         // N/A
-         break;
-      }
-      case kObjectHStack: {
-         // N/A
-         break;
-      }
-      case kObjectTree:  {
-         // N/A
-         break;
-      }
-   }
-   Float_t ymin = fParentPad->GetUymin();
-   Float_t ymax = fParentPad->GetUymax();
-   fPx1old = fParentPad->XtoAbsPixel(xleft);
-   fPy1old = fParentPad->YtoAbsPixel(ymin);
-   fPx2old = fParentPad->XtoAbsPixel(xright);
-   fPy2old = fParentPad->YtoAbsPixel(ymax);
-   gVirtualX->DrawBox(fPx1old, fPy1old, fPx2old, fPy2old, TVirtualX::kHollow);
-
-   if(save) gPad = save;
+   if ( fNone->GetState() != kButtonDisabled ) delete fitFunc;
 }
 
 //______________________________________________________________________________
@@ -1993,61 +1903,41 @@ void TFitEditor::DoSliderXMoved()
    // Slot connected to range settings on x-axis.
 
    Int_t px1,py1,px2,py2;
-   Float_t xleft = 0;
-   Double_t xright = 0;
 
    TVirtualPad *save = 0;
    save = gPad;
    gPad = fParentPad;
    gPad->cd();
 
-   switch (fType) {
-      case kObjectHisto: {
-         xleft  = fXaxis->GetBinLowEdge((Int_t)((fSliderX->GetMinPosition())+0.5));
-         xright = fXaxis->GetBinUpEdge((Int_t)((fSliderX->GetMaxPosition())+0.5));
-         break;
-      }
-      case kObjectGraph: {
-         // graph
-         xleft  = fXaxis->GetBinLowEdge((Int_t)((fSliderX->GetMinPosition())+0.5));
-         xright = fXaxis->GetBinUpEdge((Int_t)((fSliderX->GetMaxPosition())+0.5));
-/*         TGraph *gr = (TGraph *)fFitObject;
-         Int_t np = gr->GetN();
-         Double_t *x = gr->GetX();
-         xleft  = x[0];
-         xright = x[0];
-         for(Int_t i=0; i<np; i++) {
-            if (xleft > x[i])
-               xleft = x[i];
-            if (xright < x[i])
-               xright = x[i];
-         }*/
-         break;
-      }
-      case kObjectGraph2D: {
-         // N/A
-         break;
-      }
-      case kObjectHStack: {
-         // N/A
-         break;
-      }
-      case kObjectTree:  {
-         // N/A
-         break;
-      }
+   Double_t xleft = 0;
+   Double_t xright = 0;
+   xleft  = fXaxis->GetBinLowEdge((Int_t)((fSliderX->GetMinPosition())+0.5));
+   xright = fXaxis->GetBinUpEdge((Int_t)((fSliderX->GetMaxPosition())+0.5));
+
+   Float_t ymin, ymax;
+   if ( fDim > 1 )
+   {
+      ymin = fYaxis->GetBinLowEdge((Int_t)((fSliderY->GetMinPosition())+0.5));//gPad->GetUymin();
+      ymax = fYaxis->GetBinUpEdge((Int_t)((fSliderY->GetMaxPosition())+0.5));//gPad->GetUymax();
    }
-   Float_t ymin = gPad->GetUymin();
-   Float_t ymax = gPad->GetUymax();
+   else 
+   {
+      ymin = gPad->GetUymin();
+      ymax = gPad->GetUymax();
+   }
+
    px1 = gPad->XtoAbsPixel(xleft);
    py1 = gPad->YtoAbsPixel(ymin);
    px2 = gPad->XtoAbsPixel(xright);
    py2 = gPad->YtoAbsPixel(ymax);
+
    gPad->GetCanvas()->FeedbackMode(kTRUE);
    gPad->SetLineWidth(1);
    gPad->SetLineColor(2);
+   
    gVirtualX->DrawBox(fPx1old, fPy1old, fPx2old, fPy2old, TVirtualX::kHollow);
    gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
+
    fPx1old = px1;
    fPy1old = py1;
    fPx2old = px2 ;
@@ -2057,128 +1947,47 @@ void TFitEditor::DoSliderXMoved()
 }
 
 //______________________________________________________________________________
-void TFitEditor::DoSliderXReleased()
-{
-   // Slot connected to range settings on x-axis.
-
-   gVirtualX->Update(0);
-}
-
-//______________________________________________________________________________
-void TFitEditor::DoSliderYPressed()
-{
-   // Slot connected to range settings on y-axis.
-
-   fParentPad->cd();
-   switch (fType) {
-      case kObjectHisto: {
-         if (!fParentPad) return;
-         fParentPad->cd();
-         fParentPad->GetCanvas()->FeedbackMode(kFALSE);
-         fParentPad->SetLineWidth(1);
-         fParentPad->SetLineColor(2);
-         //hist 1dim
-         Float_t ybottom = fYaxis->GetBinLowEdge((Int_t)((fSliderY->GetMinPosition())+0.5));
-         Float_t ytop = fYaxis->GetBinUpEdge((Int_t)((fSliderY->GetMaxPosition())+0.5));
-         Float_t xmin = fParentPad->GetUxmin();
-         Float_t xmax = fParentPad->GetUxmax();
-         fPx1old = fParentPad->XtoAbsPixel(xmin);
-         fPy1old = fParentPad->YtoAbsPixel(ybottom);
-         fPx2old = fParentPad->XtoAbsPixel(xmax);
-         fPy2old = fParentPad->YtoAbsPixel(ytop);
-         gVirtualX->DrawBox(fPx1old, fPy1old, fPx2old, fPy2old, TVirtualX::kHollow);
-      }
-      case kObjectGraph: {
-         // N/A
-         break;
-      }
-      case kObjectGraph2D: {
-         // N/A
-         break;
-      }
-      case kObjectHStack: {
-         // N/A
-         break;
-      }
-      case kObjectTree:  {
-         // N/A
-         break;
-      }
-   }
-}
-
-//______________________________________________________________________________
 void TFitEditor::DoSliderYMoved()
 {
    // Slot connected to range settings on y-axis.
 
-   switch (fType) {
-      case kObjectHisto: {
-         Int_t px1,py1,px2,py2;
-         Float_t ybottom = fYaxis->GetBinLowEdge((Int_t)((fSliderY->GetMinPosition())+0.5));
-         Float_t ytop = fYaxis->GetBinUpEdge((Int_t)((fSliderY->GetMaxPosition())+0.5));
-         Float_t xmin = fParentPad->GetUxmin();
-         Float_t xmax = fParentPad->GetUxmax();
-         px1 = fParentPad->XtoAbsPixel(xmin);
-         py1 = fParentPad->YtoAbsPixel(ybottom);
-         px2 = fParentPad->XtoAbsPixel(xmax);
-         py2 = fParentPad->YtoAbsPixel(ytop);
-         fParentPad->GetCanvas()->FeedbackMode(kTRUE);
-         fParentPad->cd();
-         fParentPad->SetLineWidth(1);
-         fParentPad->SetLineColor(2);
-         gVirtualX->DrawBox(fPx1old, fPy1old, fPx2old, fPy2old, TVirtualX::kHollow);
-         gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
-         fPx1old = px1;
-         fPy1old = py1;
-         fPx2old = px2 ;
-         fPy2old = py2;
-         gVirtualX->Update(0);
-      }
-      case kObjectGraph: {
-         // N/A
-         break;
-      }
-      case kObjectGraph2D: {
-         // N/A
-         break;
-      }
-      case kObjectHStack: {
-         // N/A
-         break;
-      }
-      case kObjectTree:  {
-         // N/A
-         break;
-      }
-   }
-}
+   Int_t px1,py1,px2,py2;
 
-//______________________________________________________________________________
-void TFitEditor::DoSliderYReleased()
-{
-   // Slot connected to range settings on y-axis.
+   TVirtualPad *save = 0;
+   save = gPad;
+   gPad = fParentPad;
+   gPad->cd();
 
-   fParentPad->Modified();
-   fParentPad->Update();
-}
+   Float_t ybottom = 0;
+   Float_t ytop = 0;
+   ybottom = fYaxis->GetBinLowEdge((Int_t)((fSliderY->GetMinPosition())+0.5));
+   ytop = fYaxis->GetBinUpEdge((Int_t)((fSliderY->GetMaxPosition())+0.5));
 
-//______________________________________________________________________________
-void TFitEditor::DoSliderZPressed()
-{
-   // Slot connected to range settings on z-axis.
+   Float_t xmin = fXaxis->GetBinLowEdge((Int_t)((fSliderX->GetMinPosition())+0.5));//fParentPad->GetUxmin();
+   Float_t xmax = fXaxis->GetBinUpEdge((Int_t)((fSliderX->GetMaxPosition())+0.5));//fParentPad->GetUxmax();
 
+   px1 = fParentPad->XtoAbsPixel(xmin);
+   py1 = fParentPad->YtoAbsPixel(ybottom);
+   px2 = fParentPad->XtoAbsPixel(xmax);
+   py2 = fParentPad->YtoAbsPixel(ytop);
+
+   gPad->GetCanvas()->FeedbackMode(kTRUE);
+   gPad->SetLineWidth(1);
+   gPad->SetLineColor(2);
+
+   gVirtualX->DrawBox(fPx1old, fPy1old, fPx2old, fPy2old, TVirtualX::kHollow);
+   gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
+
+   fPx1old = px1;
+   fPy1old = py1;
+   fPx2old = px2 ;
+   fPy2old = py2;
+
+   if(save) gPad = save;
 }
 
 //______________________________________________________________________________
 void TFitEditor::DoSliderZMoved()
-{
-   // Slot connected to range settings on z-axis.
-
-}
-
-//______________________________________________________________________________
-void TFitEditor::DoSliderZReleased()
 {
    // Slot connected to range settings on z-axis.
 
@@ -2195,26 +2004,11 @@ void TFitEditor::DoUserDialog()
 }
 
 //______________________________________________________________________________
-void TFitEditor::DoUseRange()
-{
-   // Slot connected to fit range settings.
-
-   if (fUseRange->GetState() == kButtonDown)
-      fFitOption.Insert(0,'R');
-   else  {
-      Int_t pos = fFitOption.First('R');
-      Int_t rob = fFitOption.Index("ROB");
-      if (pos != rob)
-         fFitOption.Remove(pos, 1);
-   }
-}
-
-//______________________________________________________________________________
 void TFitEditor::SetFunction(const char *function)
 {
    // Set the function to be used in performed fit.
 
-   fFunction = function;
+   fEnteredFunc->SetText(function);
 }
 
 //______________________________________________________________________________
@@ -2269,7 +2063,24 @@ Bool_t TFitEditor::SetObjectType(TObject* obj)
       if (!fMethodList->FindEntry("Chi-square"))
          fMethodList->AddEntry("Chi-square", kFP_MCHIS);
       fMethodList->Select(kFP_MCHIS, kFALSE);
+   } else if (obj->InheritsFrom("TMultiGraph")) {
+      fType = kObjectMultiGraph;
+      set = kTRUE;
+      fDim = 1;
+      if (fMethodList->FindEntry("Binned Likelihood"))
+         fMethodList->RemoveEntry(kFP_MBINL);
+      if (!fMethodList->FindEntry("Chi-square"))
+         fMethodList->AddEntry("Chi-square", kFP_MCHIS);
+      fMethodList->Select(kFP_MCHIS, kFALSE);
+      fRobustValue->SetState(kTRUE);
+      fRobustValue->GetNumberEntry()->SetToolTipText("Set robust value");
    }
+
+   if ( fDim < 2 )
+      fGeneral->HideFrame(fSliderYParent);
+   else
+      fGeneral->ShowFrame(fSliderYParent);
+
    return set;
 }
 
@@ -2277,7 +2088,7 @@ Bool_t TFitEditor::SetObjectType(TObject* obj)
 void TFitEditor::ShowObjectName(TObject* obj)
 {
    // Show object name on the top.
-   
+
    TString name;
    
    if (obj) {
@@ -2328,10 +2139,9 @@ void TFitEditor::DoLibrary(Bool_t on)
                }
                fMigrad->SetState(kButtonDown);
                fStatusBar->SetText("MIGRAD", 1);
-               // Simplex functionality will come with the new fitter design    
-               //if (fSimplex->GetState() == kButtonDisabled)
-               //   fSimplex->SetState(kButtonUp);
-               TVirtualFitter::SetDefaultFitter("Minuit");
+               fSimplex->SetState(kButtonUp);
+               fCombination->SetState(kButtonUp);
+               fScan->SetState(kButtonUp);
                fStatusBar->SetText("LIB Minuit", 0);
             }
             
@@ -2344,17 +2154,16 @@ void TFitEditor::DoLibrary(Bool_t on)
                fLibMinuit->SetState(kButtonUp);
                fLibMinuit2->SetState(kButtonDown);
                fLibFumili->SetState(kButtonUp);
-               // Simplex functionality will come with the new fitter design    
-               //if (fSimplex->GetState() == kButtonDisabled)
-               //   fSimplex->SetState(kButtonUp);
+               if (fSimplex->GetState() == kButtonDisabled)
+                  fSimplex->SetState(kButtonUp);
                if (fMigrad->GetState() == kButtonDisabled)
                   fMigrad->SetState(kButtonUp);
                if (fFumili->GetState() == kButtonDisabled)
                   fFumili->SetState(kButtonUp);
-               if (fMigrad->GetState() == kButtonDown)
-                  TVirtualFitter::SetDefaultFitter("Minuit2");
-               else if (fFumili->GetState() == kButtonDown)
-                  TVirtualFitter::SetDefaultFitter("Fumili2");
+               if (fCombination->GetState() == kButtonDisabled)
+                  fCombination->SetState(kButtonUp);
+               if (fScan->GetState() == kButtonDisabled)
+                  fScan->SetState(kButtonUp);
                fStatusBar->SetText("LIB Minuit2", 0);
             }
          }
@@ -2363,24 +2172,24 @@ void TFitEditor::DoLibrary(Bool_t on)
       case kFP_LFUM:
          {
             if (on) {
+               fLibMinuit->SetState(kButtonUp);
+               fLibMinuit2->SetState(kButtonUp);
+               fLibFumili->SetState(kButtonDown);
+
                if (fFumili->GetState() != kButtonDown) {
                   fFumili->SetState(kButtonDown);
                   fStatusBar->SetText("FUMILI", 1);
                }
-               fLibMinuit->SetState(kButtonUp);
-               fLibMinuit2->SetState(kButtonUp);
-               fLibFumili->SetState(kButtonDown);
-               TVirtualFitter::SetDefaultFitter("Fumili");
                fMigrad->SetDisabledAndSelected(kFALSE);
-               // Simplex functionality will come with the new fitter design    
-               //fSimplex->SetState(kButtonDisabled);
+               fSimplex->SetState(kButtonDisabled);
+               fCombination->SetState(kButtonDisabled);
+               fScan->SetState(kButtonDisabled);
                fStatusBar->SetText("LIB Fumili", 0);
             }
          }
       default:
          break;
    }
-   
 }
 
 //______________________________________________________________________________
@@ -2393,74 +2202,84 @@ void TFitEditor::DoMinMethod(Bool_t on)
 
    switch (id) {
 
-      case kFP_MIGRAD:
-         {
-            if (on) {
-               // Simplex functionality will come with the new fitter design    
-               //fSimplex->SetState(kButtonUp);
-               if (fLibMinuit->GetState() == kButtonDown)
-                  fFumili->SetState(kButtonDisabled);
-               else
-                  fFumili->SetState(kButtonUp);
-               fMigrad->SetState(kButtonDown);
-               fStatusBar->SetText("MIGRAD",1);
-               if (fLibMinuit2->GetState() == kButtonDown)
-                  if (strncmp(TVirtualFitter::GetDefaultFitter(),"Minuit2",7) != 0) 
-                     TVirtualFitter::SetDefaultFitter("Minuit2");
-            }
-         }
-         break;
-      
-      case kFP_SIMPLX:
-         {
-            if (on) {
-               // Simplex functionality will come with the new fitter design    
-               //fMigrad->SetState(kButtonUp);
-               //if (fLibMinuit->GetState() == kButtonDown)
-               //   fFumili->SetState(kButtonDisabled);
-               //else
-               //   fFumili->SetState(kButtonUp);
-               //fSimplex->SetState(kButtonDown);
-               //fStatusBar->SetText("SIMPLEX",1);
-            }
-         }
-         break;
-      
-      case kFP_FUMILI:
-         {
-            if (on) {
-               fMigrad->SetState(kButtonUp);
-               // Simplex functionality will come with the new fitter design    
-               //fSimplex->SetState(kButtonUp);
-               fFumili->SetState(kButtonDown);
-               fStatusBar->SetText("FUMILI",1);
-               if (fLibMinuit2->GetState() == kButtonDown)
-                  TVirtualFitter::SetDefaultFitter("Fumili2");
-               else
-                  TVirtualFitter::SetDefaultFitter("Fumili");
-            }
-         }
-         break;
-      
+   case kFP_MIGRAD:
+   {
+      if (on) {
+         fSimplex->SetState(kButtonUp);
+         fCombination->SetState(kButtonUp);
+         fScan->SetState(kButtonUp);
+         if (fLibMinuit->GetState() == kButtonDown)
+            fFumili->SetState(kButtonDisabled);
+         else
+            fFumili->SetState(kButtonUp);
+         fMigrad->SetState(kButtonDown);
+         fStatusBar->SetText("MIGRAD",1);
+      }
    }
-}
-
-//______________________________________________________________________________
-void TFitEditor::DoErrorsDef()
-{
-   // Set the error definition for default fitter.
+   break;
    
-   Double_t err = fErrorScale->GetNumber();
-   TVirtualFitter::SetErrorDef(err);
-}
-
-//______________________________________________________________________________
-void TFitEditor::DoMaxTolerance()
-{
-   // Set the fit relative precision.
+   case kFP_SIMPLX:
+   {
+      if (on) {
+         fMigrad->SetState(kButtonUp);
+         fCombination->SetState(kButtonUp);
+         fScan->SetState(kButtonUp);
+         if (fLibMinuit->GetState() == kButtonDown)
+            fFumili->SetState(kButtonDisabled);
+         else
+            fFumili->SetState(kButtonUp);
+         fSimplex->SetState(kButtonDown);
+         fStatusBar->SetText("SIMPLEX",1);
+      }
+   }
+   break;
    
-   Double_t tol = fTolerance->GetNumber();
-   TVirtualFitter::SetPrecision(tol);
+   case kFP_COMBINATION:
+   {
+      if (on) {
+         fMigrad->SetState(kButtonUp);
+         fSimplex->SetState(kButtonUp);
+         fScan->SetState(kButtonUp);
+         if (fLibMinuit->GetState() == kButtonDown)
+            fFumili->SetState(kButtonDisabled);
+         else
+            fFumili->SetState(kButtonUp);    
+         fCombination->SetState(kButtonDown);
+         fStatusBar->SetText("Combination",1);
+      }
+   }
+   break;
+
+   case kFP_SCAN:
+   {
+      if (on) {
+         fMigrad->SetState(kButtonUp);
+         fSimplex->SetState(kButtonUp);
+         fCombination->SetState(kButtonUp);
+         if (fLibMinuit->GetState() == kButtonDown)
+            fFumili->SetState(kButtonDisabled);
+         else
+            fFumili->SetState(kButtonUp);    
+         fScan->SetState(kButtonDown);
+         fStatusBar->SetText("SCAN",1);
+      }
+   }
+   break;
+
+   case kFP_FUMILI:
+   {
+      if (on) {
+         fMigrad->SetState(kButtonUp);
+         fSimplex->SetState(kButtonUp);
+         fCombination->SetState(kButtonUp);
+         fScan->SetState(kButtonUp);
+         fFumili->SetState(kButtonDown);
+         fStatusBar->SetText("FUMILI",1);
+      }
+   }
+   break;
+   
+   }
 }
 
 //______________________________________________________________________________
@@ -2469,7 +2288,6 @@ void TFitEditor::DoMaxIterations()
    // Set the maximum number of iterations.
 
    Long_t itr = fIterations->GetIntNumber();
-   TVirtualFitter::SetMaxIterations(itr);
    fStatusBar->SetText(Form("Itr: %ld",itr),2);
 }
 
@@ -2488,9 +2306,9 @@ void TFitEditor::MakeTitle(TGCompositeFrame *parent, const char *title)
 }
 
 //______________________________________________________________________________
-Bool_t TFitEditor::HasFitFunction(TObject *obj)
+TF1* TFitEditor::HasFitFunction(TObject *obj)
 {
-   // Look in the list of function for TF1 and set fFitFunc. If a TF1 is
+   // Look in the list of function for TF1. If a TF1 is
    // found in the list of functions, returns kTRUE; if not returns kFALSE.
    
    TF1 *func = 0;
@@ -2505,6 +2323,11 @@ Bool_t TFitEditor::HasFitFunction(TObject *obj)
       case kObjectGraph: {
          func =((TGraph *)obj)->GetFunction("fitFunc");
          lf = ((TGraph *)obj)->GetListOfFunctions();
+         break;
+      }
+      case kObjectMultiGraph: {
+         func =((TMultiGraph *)obj)->GetFunction("fitFunc");
+         lf = ((TMultiGraph *)obj)->GetListOfFunctions();
          break;
       }
       case kObjectGraph2D: {
@@ -2523,16 +2346,14 @@ Bool_t TFitEditor::HasFitFunction(TObject *obj)
    }
    if (func) {
       if (lf) GetFunctionsFromList(lf);
-      fFitFunc = new TF1();
-      func->Copy(*fFitFunc);
       CheckRange(func);
       
-      TGLBEntry *le = fFuncList->FindEntry(Form("%s",func->GetName()));
+      TGLBEntry *le = fFuncList->FindEntry(Form(func->GetName()));
       if (le) {
          fFuncList->Select(le->EntryId(), kFALSE);
          fSelLabel->SetText(le->GetTitle());
       }
-      return kTRUE;
+      return func;
    } 
    if (lf) {
       GetFunctionsFromList(lf);
@@ -2541,19 +2362,19 @@ Bool_t TFitEditor::HasFitFunction(TObject *obj)
       while ((obj2 = next())) {
          if (obj2->InheritsFrom(TF1::Class())) {
             func = (TF1 *)obj2;
-            fFitFunc = new TF1();
-            func->Copy(*fFitFunc);
             CheckRange(func);
-            TGLBEntry *le = fFuncList->FindEntry(Form("%s",func->GetName()));
+            //LM:  does not work - why ??????
+            //std::cout << "from histo function list  func " << func << "  " << func->GetName() << std::endl; 
+            TGLBEntry *le = fFuncList->FindEntry(func->GetName());
             if (le) {
                fFuncList->Select(le->EntryId(), kTRUE);
-               
+//               std::cout << func->GetName() << "  " << le->EntryId() << " is selected " << std::endl;
             }
-            return kTRUE;
+            return func;
          }
       }
    }
-   return kFALSE;
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -2562,32 +2383,49 @@ void TFitEditor::GetFunctionsFromList(TList *list)
    // Scan the list of functions of the selected object and include them 
    // by name in the combobox holding the predefined functions.
    
-   TF1 *f1 = 0;
    TObject *obj;
    Int_t newid = kFP_USER*30;
-   if (fLastEntryId != kFP_USER) {
-      fFuncList->RemoveEntries(newid, fLastEntryId);
-      TIter next(fFitFuncList);
-      while ((obj = next())) {
-         ((TF1 *)obj)->SetParent(0);
-         fFitFuncList->Remove(obj);
-         delete obj;
+
+   static TObject *Object = 0; 
+   if ( Object != fFitObject )
+   {
+      fFuncList->RemoveAll();
+      if ( fDim == 1 ) // Put back the predefined functions for 1D
+         // objects.
+      {
+         fFuncList->AddEntry("gaus" ,  kFP_GAUS);
+         fFuncList->AddEntry("gausn",  kFP_GAUSN);
+         fFuncList->AddEntry("expo",   kFP_EXPO);
+         fFuncList->AddEntry("landau", kFP_LAND);
+         fFuncList->AddEntry("landaun",kFP_LANDN);
+         fFuncList->AddEntry("pol0",   kFP_POL0);
+         fFuncList->AddEntry("pol1",   kFP_POL1);
+         fFuncList->AddEntry("pol2",   kFP_POL2);
+         fFuncList->AddEntry("pol3",   kFP_POL3);
+         fFuncList->AddEntry("pol4",   kFP_POL4);
+         fFuncList->AddEntry("pol5",   kFP_POL5);
+         fFuncList->AddEntry("pol6",   kFP_POL6);
+         fFuncList->AddEntry("pol7",   kFP_POL7);
+         fFuncList->AddEntry("pol8",   kFP_POL8);
+         fFuncList->AddEntry("pol9",   kFP_POL9);
+         fFuncList->AddEntry("user",   kFP_USER);
+
+         // Need to be setted this way, otherwise when the functions
+         // are removed, the list doesn't show them.x
+         TGListBox *lb = fFuncList->GetListBox();
+         lb->Resize(lb->GetWidth(), 200);
       }
+
+      TIter next(list, kIterForward);
+      while ((obj = next()))
+         if (obj->InheritsFrom(TF1::Class())) {
+            fFuncList->AddEntry(obj->GetName(), newid++);
+         }
+
+
+      fFuncList->Select((newid != kFP_USER*30)?newid-1:1);
+      Object = fFitObject;
    }
-   TIter next(list, kIterBackward);
-   while ((obj = next())) {
-      if (obj->InheritsFrom(TF1::Class())) {
-         if (!strcmp(obj->GetName(), "fitFunc")) continue;
-         fFuncList->AddEntry(obj->GetName(), newid);
-         newid++;
-         f1 = new TF1();
-         TF1 *f2 = (TF1 *)obj;
-         f2->Copy(*f1);
-         f1->SetParent(fFitObject);
-         fFitFuncList->Add(f1);
-      }
-   } 
-   fLastEntryId = newid - 1;
 }
 
 //______________________________________________________________________________
@@ -2627,10 +2465,9 @@ void TFitEditor::CheckRange(TF1 *f1)
       fXmax = fXaxis->FindBin(xmax);
       fUseRange->SetState(kButtonUp);
    }
+
    if (fDim > 0) {
       fSliderX->Disconnect("PositionChanged()");
-      fSliderX->Disconnect("Pressed()");
-      fSliderX->Disconnect("Released()");
       fSliderX->SetRange(1,fXrange);
       if (!fXmin && !fXmax)
          fSliderX->SetPosition(1,fXrange);
@@ -2638,8 +2475,93 @@ void TFitEditor::CheckRange(TF1 *f1)
          fSliderX->SetPosition(fXmin,fXmax);
       fSliderX->SetScale(5);
       fSliderX->Connect("PositionChanged()","TFitEditor",this, "DoSliderXMoved()");
-      fSliderX->Connect("Pressed()","TFitEditor",this, "DoSliderXPressed()");
-      fSliderX->Connect("Released()","TFitEditor",this, "DoSliderXReleased()");
    }
 }
 
+//______________________________________________________________________________
+void TFitEditor::RetrieveOptions(Foption_t& fitOpts, TString& drawOpts, ROOT::Math::MinimizerOptions& minOpts, Int_t npar)
+{
+   drawOpts = "";
+
+   fitOpts.Range    = (fUseRange->GetState() == kButtonDown);
+   fitOpts.Integral = (fIntegral->GetState() == kButtonDown);
+   fitOpts.More     = (fImproveResults->GetState() == kButtonDown);
+   fitOpts.Errors   = (fBestErrors->GetState() == kButtonDown);
+   fitOpts.Like = (fMethodList->GetSelected() != kFP_MCHIS);
+
+   if (fEmptyBinsWghts1->GetState() == kButtonDown)
+      fitOpts.W1 = 2;
+   else if (fAllWeights1->GetState() == kButtonDown)
+      fitOpts.W1 = 1;
+
+   TString tmpStr = fEnteredFunc->GetText();
+   if ( !(fLinearFit->GetState() == kButtonDown) &&
+        (tmpStr.Contains("pol") || tmpStr.Contains("++")) )
+      fitOpts.Minuit = 1;
+
+   if ( (int) fFuncPars.size() == npar )
+      for ( Int_t i = 0; i < npar; ++i )
+         if ( fFuncPars[i][PAR_MIN] != fFuncPars[i][PAR_MAX] )
+         {
+            fitOpts.Bound = 1;
+            break;
+         }
+   
+   fitOpts.Nochisq  = (fNoChi2->GetState() == kButtonDown);
+   fitOpts.Nostore  = (fNoStoreDrawing->GetState() == kButtonDown);
+   fitOpts.Nograph  = (fNoDrawing->GetState() == kButtonDown);
+   fitOpts.Plus     = (fAdd2FuncList->GetState() == kButtonDown);
+   fitOpts.Gradient = (fUseGradient->GetState() == kButtonDown);
+   fitOpts.Quiet    = ( fOptQuiet->GetState() == kButtonDown );
+   fitOpts.Verbose  = ( fOptVerbose->GetState() == kButtonDown );
+
+   if ( !(fType != kObjectGraph) && (fLinearFit->GetState() == kButtonDown) )
+   {
+      fitOpts.Robust = 1;
+      fitOpts.hRobust = fRobustValue->GetNumber();
+   }
+
+   if (fDrawSame->GetState() == kButtonDown)
+      drawOpts += "SAME";
+
+   drawOpts = GetDrawOption();
+
+   if ( fLibMinuit->GetState() == kButtonDown )
+      minOpts.MinimType = (std::string)"Minuit";
+   else if ( fLibMinuit2->GetState() == kButtonDown)
+      minOpts.MinimType = "Minuit2";
+   else if ( fLibFumili->GetState() == kButtonDown )
+      minOpts.MinimType = "Fumili";
+
+   if ( fMigrad->GetState() == kButtonDown )
+      minOpts.AlgoType = "Migrad";
+   else if ( fFumili->GetState() == kButtonDown )
+      if ( fLibMinuit2->GetState() == kButtonDown )
+         minOpts.AlgoType = "Fumili2";
+      else 
+         minOpts.AlgoType = "Fumili";
+   else if ( fSimplex->GetState() == kButtonDown )
+      minOpts.AlgoType = "Simplex";
+   else if ( fScan->GetState() == kButtonDown )
+      minOpts.AlgoType = "Scan";
+   else if ( fCombination->GetState() == kButtonDown )
+      minOpts.AlgoType = "Minimize";
+
+   minOpts.ErrorDef = fErrorScale->GetNumber();
+   minOpts.Tolerance = fTolerance->GetNumber();
+   minOpts.MaxIterations = fIterations->GetIntNumber();
+}
+
+void TFitEditor::SetEditable(Bool_t state)
+{
+   if ( state )
+   {
+      fEnteredFunc->SetState(kTRUE);
+         fAdd->SetState(kButtonUp, kFALSE);
+         fNone->SetState(kButtonDown, kFALSE);
+   } else {
+      fEnteredFunc->SetState(kFALSE);
+      fAdd->SetState(kButtonDisabled, kFALSE);
+      fNone->SetState(kButtonDisabled, kFALSE);
+   }
+}

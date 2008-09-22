@@ -155,7 +155,7 @@ TFitParametersDialog::TFitParametersDialog(const TGWindow *p,
       fContBnd->AddFrame(fParBnd[i], new TGLayoutHints(kLHintsLeft | kLHintsCenterY,
                                                        15, 5, 10, 7));
       fParBnd[i]->Connect("Toggled(Bool_t)", "TFitParametersDialog", this, "DoParBound(Bool_t)");
-      if (fParMin[i] < fParMax[i])
+      if ( ((fPmin[i] != fPmax[i]) && (fPmin[i] || fPmax[i])) || (fParMin[i] < fParMax[i]) )
          fParBnd[i]->SetState(kButtonDown, kFALSE);
       else
          fParBnd[i]->SetState(kButtonUp, kFALSE);
@@ -609,7 +609,7 @@ void TFitParametersDialog::DoReset()
       else if (fPerr[i])
          fParMin[i]->SetNumber(fPval[i]-3*fPerr[i]);
       else if (fPval[i])
-         fParMin[i]->SetNumber(fPval[i]-0.1*fPval[i]);
+         fParMin[i]->SetNumber(-3*TMath::Abs(fPval[i]));
       else
          fParMin[i]->SetNumber(1.0);
 
@@ -618,7 +618,7 @@ void TFitParametersDialog::DoReset()
       else if (fPerr[i])
          fParMax[i]->SetNumber(fPval[i]+3*fPerr[i]);
       else if (fPval[i])
-         fParMax[i]->SetNumber(fPval[i]+0.1*fPval[i]);
+         fParMax[i]->SetNumber(3*TMath::Abs(fPval[i]));
       else
          fParMax[i]->SetNumber(1.0);
       if (fParMax[i]->GetNumber() < fParMin[i]->GetNumber()){
@@ -712,9 +712,9 @@ void TFitParametersDialog::DoParValue()
 
    for (Int_t i = 0; i < fNP; i++ ) {
       if (id == kVAL*fNP+i)  {
-         fParSld[i]->SetPointerPosition(fParVal[i]->GetNumber());
          if (fParVal[i]->GetNumber() < fParMin[i]->GetNumber()) {
-            fParMin[i]->SetNumber(fParVal[i]->GetNumber());
+            Double_t extraIncrement = (fParMax[i]->GetNumber() - fParMin[i]->GetNumber()) / 4;
+            fParMin[i]->SetNumber(fParVal[i]->GetNumber() - extraIncrement );
             fClient->NeedRedraw(fParMin[i]);
             fParSld[i]->SetRange(fParMin[i]->GetNumber(),
                                  fParMax[i]->GetNumber());
@@ -722,13 +722,15 @@ void TFitParametersDialog::DoParValue()
                                     fParMax[i]->GetNumber());
          }
          if (fParVal[i]->GetNumber() > fParMax[i]->GetNumber()) {
-            fParMax[i]->SetNumber(fParVal[i]->GetNumber());
+            Double_t extraIncrement = (fParMax[i]->GetNumber() - fParMin[i]->GetNumber()) / 4;
+            fParMax[i]->SetNumber(fParVal[i]->GetNumber()  + extraIncrement );
             fClient->NeedRedraw(fParMax[i]);
             fParSld[i]->SetRange(fParMin[i]->GetNumber(),
                                  fParMax[i]->GetNumber());
             fParSld[i]->SetPosition(fParMin[i]->GetNumber(),
                                     fParMax[i]->GetNumber());
          }
+         fParSld[i]->SetPointerPosition(fParVal[i]->GetNumber());
          fClient->NeedRedraw(fParSld[i]);
          fFunc->SetParameter(i,fParSld[i]->GetPointerPosition());
          if (fParBnd[i]->GetState() == kButtonDown)
@@ -850,7 +852,7 @@ void TFitParametersDialog::DrawFunction()
    opt.ToUpper();
    if (!opt.Contains("SAME"))
       opt += "SAME";
-   fFunc->SetRange(fRXmin, fRXmax);
+   //fFunc->SetRange(fRXmin, fRXmax);
    fFunc->Draw(opt);
    gPad->Modified();
    gPad->Update();

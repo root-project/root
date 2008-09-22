@@ -27,6 +27,10 @@
 #include "TGButton.h"
 #endif
 
+#include "Foption.h"
+#include "Math/MinimizerOptions.h"
+
+#include <vector>
 
 //--- Object types
 enum EObjectType {
@@ -34,7 +38,8 @@ enum EObjectType {
    kObjectGraph,
    kObjectGraph2D,
    kObjectHStack,
-   kObjectTree
+   kObjectTree,
+   kObjectMultiGraph
 };
 
 
@@ -67,7 +72,6 @@ protected:
    TGLabel             *fObjLabel;         // contains fitted object name
    TGLabel             *fSelLabel;         // contains selected fit function
    TGComboBox          *fFuncList;         // contains function list
-   Int_t                fLastEntryId;      // last user function id
    TGTextEntry         *fEnteredFunc;      // contains user function file name
    TGTextButton        *fUserButton;       // opens a dialog for user-defined fit method
    TGRadioButton       *fNone;             // set no operation mode
@@ -81,6 +85,7 @@ protected:
    TGCheckButton       *fBestErrors;       // switch on/off option 'improve errors'
    TGCheckButton       *fUseRange;         // switch on/off option 'use function range'
    TGCheckButton       *fAdd2FuncList;     // switch on/off option 'add to list'
+   TGCheckButton       *fUseGradient ;     // switch on/off option 'use gradient'
    TGCheckButton       *fAllWeights1;      // switch on/off option 'all weights=1'
    TGCheckButton       *fImproveResults;   // switch on/off option 'improve fit results'
    TGCheckButton       *fEmptyBinsWghts1;  // switch on/off option 'include empry bins'
@@ -109,7 +114,8 @@ protected:
    TAxis               *fXaxis;            // x-axis
    TAxis               *fYaxis;            // y-axis
    TAxis               *fZaxis;            // z-axis
-   Float_t              fXrange;           // x-range
+//    are not  these bin numbers ? should be integer  ? 
+   Float_t              fXrange;           // x-range 
    Float_t              fXmin;             // x-min
    Float_t              fXmax;             // x-max
    Float_t              fYrange;           // y-range
@@ -119,16 +125,27 @@ protected:
    Float_t              fZmin;             // z-min
    Float_t              fZmax;             // z-max
 
-   TString              fPlus;             // string for addition ('+' or "++")
-   TString              fFunction;         // selected function to fit
-   TString              fFitOption;        // fitting options
-   TString              fDrawOption;       // graphics option for drawing
-   TF1                 *fFitFunc;          // function used for fitting
-   TList               *fFitFuncList;      // list of 
+   // structure holding parameter value and limits
+   struct FuncParamData_t { 
+      FuncParamData_t() {
+         fP[0] = 0; fP[1] = 0; fP[2] = 0; 
+      }
+      Double_t & operator[](UInt_t i) { return fP[i];}
+      Double_t fP[3];
+   };
+   std::vector<FuncParamData_t >  fFuncPars;         // function parameters (value + limits)
+
    Int_t                fPx1old,
                         fPy1old,
                         fPx2old,
                         fPy2old;
+
+   Double_t             fFuncXmin;       // fit function range (min and max) values    
+   Double_t             fFuncXmax;      
+   Double_t             fFuncYmin;      
+   Double_t             fFuncYmax;      
+   Double_t             fFuncZmin;      
+   Double_t             fFuncZmax;      
 
    TGRadioButton       *fLibMinuit;        // set default minimization library (Minuit)
    TGRadioButton       *fLibMinuit2;       // set Minuit2 as minimization library
@@ -136,6 +153,8 @@ protected:
    TGRadioButton       *fMigrad;           // set default minimization method (MIGRAD)
    TGRadioButton       *fSimplex;          // set Simplex as minimization method
    TGRadioButton       *fFumili;           // set Fumili as minimization method
+   TGRadioButton       *fCombination;      // set Combination as minimization method
+   TGRadioButton       *fScan;             // set Scan as minimization method
    TGNumberEntryField  *fErrorScale;       // contains error scale set for minimization
    TGNumberEntryField  *fTolerance;        // contains tolerance set for minimization
    TGNumberEntryField  *fIterations;       // contains maximum number of iterations
@@ -150,20 +169,23 @@ protected:
    void        CreateGeneralTab();
    void        CreateMinimizationTab();
    void        MakeTitle(TGCompositeFrame *parent, const char *title);
-   Bool_t      HasFitFunction(TObject *obj);
+   TF1*        HasFitFunction(TObject *obj);
    void        GetFunctionsFromList(TList *list);
    void        CheckRange(TF1 *f1);
+   void        SetEditable(Bool_t);
 
 private:
    TFitEditor(const TFitEditor&);              // not implemented
    TFitEditor& operator=(const TFitEditor&);   // not implemented
 
+   void RetrieveOptions(Foption_t&, TString&, ROOT::Math::MinimizerOptions&, Int_t);
+
 public:
    TFitEditor(TVirtualPad* pad, TObject *obj);
    virtual ~TFitEditor();
 
-   static TFitEditor *&GetFP();
-   static  void       Open(TVirtualPad* pad, TObject *obj);
+//   static TFitEditor *&GetFP();
+   static  TFitEditor *GetInstance(TVirtualPad* pad, TObject *obj);
    virtual Option_t  *GetDrawOption() const;
    virtual void       Hide();
    virtual void       Show(TVirtualPad* pad, TObject *obj);
@@ -184,49 +206,32 @@ public:
 
    // slot methods 'General' tab
    virtual void   DoAddition(Bool_t on);
-   virtual void   DoAddtoList();
    virtual void   DoAdvancedOptions();
    virtual void   DoAllWeights1();
-   virtual void   DoBestErrors();
-   virtual void   DoBound(Bool_t set);
    virtual void   DoClose();
-   virtual void   DoDrawSame();
    virtual void   DoEmptyBinsAllWeights1();
    virtual void   DoEnteredFunction();
    virtual void   DoFit();
-   virtual void   DoErrorsDef();
-   virtual void   DoMaxTolerance();
    virtual void   DoMaxIterations();
    virtual void   DoFunction(Int_t sel);
-   virtual void   DoImproveResults();
-   virtual void   DoIntegral();
    virtual void   DoLinearFit();
-   virtual void   DoMethod(Int_t id);
    virtual void   DoNoChi2();
-   virtual void   DoNoDrawing();
-   virtual void   DoNoOperation(Bool_t on);
    virtual void   DoNoSelection();
    virtual void   DoNoStoreDrawing();
    virtual void   DoReset();
-   virtual void   DoRobust();
    virtual void   DoSetParameters();
    virtual void   DoSliderXMoved();
-   virtual void   DoSliderXPressed();
-   virtual void   DoSliderXReleased();
    virtual void   DoSliderYMoved();
-   virtual void   DoSliderYPressed();
-   virtual void   DoSliderYReleased();
    virtual void   DoSliderZMoved();
-   virtual void   DoSliderZPressed();
-   virtual void   DoSliderZReleased();
    virtual void   DoUserDialog();
-   virtual void   DoUseRange();
 
    // slot methods 'Minimization' tab
    virtual void   DoLibrary(Bool_t on);
    virtual void   DoMinMethod(Bool_t on);
    virtual void   DoPrintOpt(Bool_t on);
    
+   typedef std::vector<FuncParamData_t > FuncParams_t; 
+
    
    ClassDef(TFitEditor,0)  //Fit Panel interface
 };
