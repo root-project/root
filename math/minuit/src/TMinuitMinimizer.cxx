@@ -430,7 +430,15 @@ void TMinuitMinimizer::DoClear() {
 
 void TMinuitMinimizer::PrintResults() { 
    // print minimizer result
-   fMinuit->mnprin(PrintLevel()-1,fMinVal);
+   int ntot; 
+   int istat;
+   int nfree; 
+   double errdef = 0;
+   fMinuit->mnstat(fMinVal,fEdm,errdef,nfree,ntot,istat);
+   if (PrintLevel() > 2) 
+      fMinuit->mnprin(4,fMinVal);
+   else
+      fMinuit->mnprin(3,fMinVal);
 }
 
 //    } // end namespace Fit

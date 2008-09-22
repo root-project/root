@@ -576,11 +576,11 @@ Bool_t TBackCompFitter::IsFixed(Int_t ipar) const {
 }
 
 
-void TBackCompFitter::PrintResults(Int_t level, Double_t) const {
+void TBackCompFitter::PrintResults(Int_t level, Double_t ) const {
    // print the fit result
    if (!fMinimizer) {
       if (level > 0) fFitter.Result().Print(std::cout); 
-      if (level > 1)  fFitter.Result().PrintCovMatrix(std::cout);    
+      if (level > 3)  fFitter.Result().PrintCovMatrix(std::cout);    
    }
    else { 
       fMinimizer->PrintResults();
