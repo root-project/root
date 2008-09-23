@@ -318,12 +318,15 @@ namespace ROOT {
 
    const std::vector<TSchemaHelper>& TGenericClassInfo::GetReadRawRules() const
    {
+      // Return the list of rule give raw access to the TBuffer.
+      
       return fReadRawRules;
    }
 
 
    const std::vector<TSchemaHelper>& TGenericClassInfo::GetReadRules() const
    {
+      // Return the list of Data Model Evolution regular read rules.
       return fReadRules;
    }
 
@@ -417,12 +420,14 @@ namespace ROOT {
 
    void TGenericClassInfo::SetReadRawRules( const std::vector<TSchemaHelper>& rules )
    {
+      // Set the list of Data Model Evolution read rules giving direct access to the TBuffer.
       fReadRawRules = rules;
    }
 
 
    void TGenericClassInfo::SetReadRules( const std::vector<TSchemaHelper>& rules )
    {
+      // Set the list of Data Model Evolution regular read rules.
       fReadRules = rules;
    }
 

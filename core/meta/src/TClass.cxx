@@ -4575,6 +4575,8 @@ TVirtualStreamerInfo *TClass::FindStreamerInfo( TObjArray* arr, UInt_t checksum)
 //______________________________________________________________________________
 TVirtualStreamerInfo *TClass::GetConversionStreamerInfo( const char* classname, Int_t version ) const
 {
+   // Return a Conversion StreamerInfo from the class 'classname' for version number 'version' to this class, if any.
+   
    TClass *cl = TClass::GetClass( classname );
    if( !cl )
       return 0;
@@ -4584,7 +4586,7 @@ TVirtualStreamerInfo *TClass::GetConversionStreamerInfo( const char* classname, 
 //______________________________________________________________________________
 TVirtualStreamerInfo *TClass::GetConversionStreamerInfo( const TClass* cl, Int_t version ) const
 {
-   // Find the streamer info for the foreign class
+   // Return a Conversion StreamerInfo from the class represened by cl for version number 'version' to this class, if any.
 
    //----------------------------------------------------------------------------
    // Check if the classname was specified correctly
@@ -4662,6 +4664,7 @@ TVirtualStreamerInfo *TClass::GetConversionStreamerInfo( const TClass* cl, Int_t
 //______________________________________________________________________________
 TVirtualStreamerInfo *TClass::FindConversionStreamerInfo( const char* classname, UInt_t checksum ) const
 {
+   // Return a Conversion StreamerInfo from the class 'classname' for the layout represented by 'checksum' to this class, if any.
 
    TClass *cl = TClass::GetClass( classname );
    if( !cl )
@@ -4672,7 +4675,7 @@ TVirtualStreamerInfo *TClass::FindConversionStreamerInfo( const char* classname,
 //______________________________________________________________________________
 TVirtualStreamerInfo *TClass::FindConversionStreamerInfo( const TClass* cl, UInt_t checksum ) const
 {
-   // Find the streamer info from the foreign class
+   // Return a Conversion StreamerInfo from the class represened by cl for the layout represented by 'checksum' to this class, if any.
 
    //---------------------------------------------------------------------------
    // Check if the classname was specified correctly
