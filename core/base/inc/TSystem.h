@@ -485,7 +485,7 @@ public:
    //---- ACLiC (Automatic Compiler of Shared Library for CINT)
    virtual void            AddIncludePath(const char *includePath);
    virtual void            AddLinkedLibs(const char *linkedLib);
-   virtual int             CompileMacro(const char *filename, Option_t *opt="", const char* library_name = "", const char* build_dir = "");
+   virtual int             CompileMacro(const char *filename, Option_t *opt="", const char* library_name = "", const char* build_dir = "", UInt_t dirmode = 0);
    virtual const char     *GetBuildArch() const;
    virtual const char     *GetBuildCompiler() const;
    virtual const char     *GetBuildCompilerVersion() const;

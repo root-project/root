@@ -2214,7 +2214,8 @@ static void R__FixLink(TString &cmd)
 //______________________________________________________________________________
 int TSystem::CompileMacro(const char *filename, Option_t *opt,
                           const char *library_specified,
-                          const char *build_dir)
+                          const char *build_dir,
+                          UInt_t dirmode)
 {
    // This method compiles and loads a shared library containing
    // the code from the file "filename".
@@ -2234,6 +2235,9 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    // generation of the shared library.  The library is stored in a sub-directories
    // of 'build_dir' including the full pathname of the script.  See also
    // TSystem::SetBuildDir.
+   //
+   // If dirmode is not zero and we need to create the target directory, the
+   // file mode bit will be change to 'dirmode' using chmod.
    //
    // If library_specified is not specified, CompileMacro generate a default name
    // for library by taking the name of the file "filename" but replacing the
@@ -2440,6 +2444,8 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
             // let make sure the error message will be about the target directory
             build_loc = build_loc_store;
             mkdirFailed = kFALSE;
+         } else if (!mkdirFailed && dirmode!=0) {
+            Chmod(build_loc,dirmode); 
          }
       } 
    }
@@ -2773,7 +2779,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       }
       ::Warning("ACLiC","Output will be written to %s",
                 emergency_loc.Data());
-      return CompileMacro(filename, opt, library_specified, emergency_loc);
+      return CompileMacro(filename, opt, library_specified, emergency_loc, dirmode);
    }
 
    Info("ACLiC","creating shared library %s",library.Data());
