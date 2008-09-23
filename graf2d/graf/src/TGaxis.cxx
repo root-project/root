@@ -1082,16 +1082,26 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                if (fAxis->TestBit(TAxis::kLabelsVert)) angle = 90;
                if (fAxis->TestBit(TAxis::kLabelsUp))   angle = 20;
                if (fAxis->TestBit(TAxis::kLabelsDown)) angle =-20;
-               if (angle==   0) textaxis->SetTextAlign(23);
-               if (angle== -20) textaxis->SetTextAlign(12);
+               if (angle ==   0) textaxis->SetTextAlign(23);
+               if (angle == -20) textaxis->SetTextAlign(12);
+               Double_t s = -3;
+               if (ymin == gPad->GetUymax()) {
+                  if (angle == 0) textaxis->SetTextAlign(21);
+                  s = 3;
+               }
                textaxis->PaintLatex(fAxis->GetBinCenter(i),
-                                    gPad->GetUymin() - 3*fAxis->GetLabelOffset()*(gPad->GetUymax()-gPad->GetUymin()),
+                                    ymin + s*fAxis->GetLabelOffset()*(gPad->GetUymax()-gPad->GetUymin()),
                                     angle,
                                     textaxis->GetTextSize(),
                                     fAxis->GetBinLabel(i));
             } else if ((!strcmp(fAxis->GetName(),"yaxis") && !gPad->TestBit(kHori))
                     || (!strcmp(fAxis->GetName(),"xaxis") &&  gPad->TestBit(kHori))) {
-               textaxis->PaintLatex(gPad->GetUxmin() - 3*fAxis->GetLabelOffset()*(gPad->GetUxmax()-gPad->GetUxmin()),
+               Double_t s = -3;
+               if (xmin == gPad->GetUxmax()) {
+                  textaxis->SetTextAlign(12);
+                  s = 3;
+               }
+               textaxis->PaintLatex(xmin + s*fAxis->GetLabelOffset()*(gPad->GetUxmax()-gPad->GetUxmin()),
                                     fAxis->GetBinCenter(i),
                                     0,
                                     textaxis->GetTextSize(),
