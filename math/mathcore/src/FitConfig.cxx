@@ -175,14 +175,14 @@ void FitConfig::SetDefaultMinimizer(const std::string & type, const std::string 
 } 
 
 void FitConfig::SetMinimizerOptions(const ROOT::Math::MinimizerOptions & minopt) {  
-   fMinimizerType = minopt.MinimType; 
-   fMinimAlgoType = minopt.AlgoType; 
-   fMinimizerOpts.SetTolerance(minopt.Tolerance); 
-   fMinimizerOpts.SetMaxFunctionCalls(minopt.MaxFunctionCalls); 
-   fMinimizerOpts.SetMaxIterations(minopt.MaxIterations); 
-   fMinimizerOpts.SetStrategy(minopt.Strategy); 
-   fMinimizerOpts.SetPrintLevel(minopt.PrintLevel); 
-   fMinimizerOpts.SetErrorDef(minopt.ErrorDef); 
+   fMinimizerType = minopt.MinimizerType(); 
+   fMinimAlgoType = minopt.MinimizerAlgorithm(); 
+   fMinimizerOpts.SetTolerance(minopt.Tolerance() ); 
+   fMinimizerOpts.SetMaxFunctionCalls(minopt.MaxFunctionCalls() ); 
+   fMinimizerOpts.SetMaxIterations(minopt.MaxIterations() ); 
+   fMinimizerOpts.SetStrategy(minopt.Strategy() ); 
+   fMinimizerOpts.SetPrintLevel(minopt.PrintLevel() ); 
+   fMinimizerOpts.SetErrorDef(minopt.ErrorDef() ); 
 
    // error up should be added as well
 }

@@ -39,21 +39,27 @@ void MinimizerOptions::SetDefaultMinimizer(const std::string & type, const std::
    if (algo != "") gDefaultMinimAlgo = algo;
 }
 void MinimizerOptions::SetDefaultErrorDef(double up) {
+   // set the default error definition 
    gDefaultErrorDef = up; 
 }
 void MinimizerOptions::SetDefaultTolerance(double tol) {
+   // set the defult tolerance
    gDefaultTolerance = tol; 
 }
 void MinimizerOptions::SetDefaultMaxFunctionCalls(int maxcall) {
+   // set the default maximum number of function calls
    gDefaultMaxCalls = maxcall; 
 }
 void MinimizerOptions::SetDefaultMaxIterations(int maxiter) {
+   // set the default maximum number of iterations
    gDefaultMaxIter = maxiter; 
 }
 void MinimizerOptions::SetDefaultStrategy(int stra) {
+   // set the default minimization strategy
    gDefaultStrategy = stra; 
 }
 void MinimizerOptions::SetDefaultPrintLevel(int level) {
+   // set the default printing level 
    gDefaultPrintLevel = level; 
 }
 const std::string & MinimizerOptions::DefaultMinimizerType() { return gDefaultMinimizer; }

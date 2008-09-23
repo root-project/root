@@ -65,10 +65,10 @@ namespace Math {
 
 
 #ifndef R__HAS_MATHMORE
-    double chisquared_quantile(double z, double r) {
-       // use Cephes (probably large error for z approx 1) 
-       return 2.* ROOT::Math::Cephes::igami( 0.5 *r, 1. - z); 
-    }
+   double chisquared_quantile(double z, double r) {
+      // use Cephes (probably large error for z approx 1) 
+      return 2.* ROOT::Math::Cephes::igami( 0.5 *r, 1. - z); 
+   }
 #endif
 
 

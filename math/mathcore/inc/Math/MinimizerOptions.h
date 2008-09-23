@@ -20,11 +20,13 @@ namespace ROOT {
 
 //_______________________________________________________________________________
 /** 
-    Minimizer options structure
+    Minimizer options 
 
     @ingroup MultiMin
 */
-struct MinimizerOptions {
+class MinimizerOptions {
+
+public:
 
    // static methods for setting and retrieving the default options 
 
@@ -48,26 +50,78 @@ struct MinimizerOptions {
 
    // default options 
    MinimizerOptions() : 
-      MinimType( MinimizerOptions::DefaultMinimizerType() ), 
-      AlgoType(  MinimizerOptions::DefaultMinimizerAlgo() ),
-      ErrorDef(  MinimizerOptions::DefaultErrorDef() ), // no need for a static method here
-      Tolerance( MinimizerOptions::DefaultTolerance() ),
-      MaxFunctionCalls( MinimizerOptions::DefaultMaxFunctionCalls() ), 
-      MaxIterations( MinimizerOptions::DefaultMaxIterations() ), 
-      Strategy(  MinimizerOptions::DefaultStrategy() ), 
-      PrintLevel( MinimizerOptions::DefaultPrintLevel())
+      fLevel( MinimizerOptions::DefaultPrintLevel()),
+      fMaxCalls( MinimizerOptions::DefaultMaxFunctionCalls() ), 
+      fMaxIter( MinimizerOptions::DefaultMaxIterations() ), 
+      fStrategy(  MinimizerOptions::DefaultStrategy() ), 
+      fErrorDef(  MinimizerOptions::DefaultErrorDef() ), 
+      fTolerance( MinimizerOptions::DefaultTolerance() ),
+      fMinimType( MinimizerOptions::DefaultMinimizerType() ), 
+      fAlgoType(  MinimizerOptions::DefaultMinimizerAlgo() )
    {}
 
+   /** non-static methods for  retrivieng options */
 
-   std::string MinimType;   // Minimizer type (Minuit, Minuit2, etc..
-   std::string AlgoType;    // Minimizer algorithmic specification (Migrad, Minimize, ...)
-   double ErrorDef;         // error definition (=1. for getting 1 sigma error for chi2 fits)
-   double Tolerance;        // minimize tolerance to reach solution
-   int MaxFunctionCalls;    // maximum number of function calls
-   int MaxIterations;       // maximum number of iterations
-   int Strategy;            // minimizer strategy (used by Minuit)
-   int PrintLevel;          // debug print level 
+   /// set print level
+   int PrintLevel() const { return fLevel; }
 
+   ///  max number of function calls
+   unsigned int MaxFunctionCalls() const { return fMaxCalls; } 
+
+   /// max iterations
+   unsigned int MaxIterations() const { return fMaxIter; } 
+
+   /// strategy
+   int Strategy() const { return fStrategy; } 
+
+   /// absolute tolerance 
+   double Tolerance() const { return  fTolerance; }
+
+   /// error definition 
+   double ErrorDef() const { return  fErrorDef; }
+
+   /// type of minimizer
+   const std::string & MinimizerType() const { return fMinimType; }
+
+   /// type of algorithm
+   const std::string & MinimizerAlgorithm() const { return fAlgoType; }
+
+   /** non-static methods for setting options */
+
+   /// set print level
+   void SetPrintLevel(int level) { fLevel = level; }
+
+   ///set maximum of function calls 
+   void SetMaxFunctionCalls(unsigned int maxfcn) { fMaxCalls = maxfcn; }
+
+   /// set maximum iterations (one iteration can have many function calls) 
+   void SetMaxIterations(unsigned int maxiter) { fMaxIter = maxiter; } 
+
+   /// set the tolerance
+   void SetTolerance(double tol) { fTolerance = tol; }
+
+   /// set the strategy
+   void SetStrategy(int stra) { fStrategy = stra; }
+
+   /// set error def
+   void SetErrorDef(double err) { fErrorDef = err; }
+
+   /// set minimizer type
+   void SetMinimizerType(const std::string & type) { fMinimType = type; }
+
+   /// set minimizer algorithm
+   void SetMinimizerAlgorithm(const std::string & type) { fAlgoType = type; }
+
+private:
+
+   int fLevel;               // debug print level 
+   int fMaxCalls;            // maximum number of function calls
+   int fMaxIter;             // maximum number of iterations
+   int fStrategy;            // minimizer strategy (used by Minuit)
+   double fErrorDef;         // error definition (=1. for getting 1 sigma error for chi2 fits)
+   double fTolerance;        // minimize tolerance to reach solution
+   std::string fMinimType;   // Minimizer type (Minuit, Minuit2, etc..
+   std::string fAlgoType;    // Minimizer algorithmic specification (Migrad, Minimize, ...)
      
 };
 

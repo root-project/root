@@ -2527,29 +2527,30 @@ void TFitEditor::RetrieveOptions(Foption_t& fitOpts, TString& drawOpts, ROOT::Ma
    drawOpts = GetDrawOption();
 
    if ( fLibMinuit->GetState() == kButtonDown )
-      minOpts.MinimType = (std::string)"Minuit";
+      minOpts.SetMinimizerType ( "Minuit");
    else if ( fLibMinuit2->GetState() == kButtonDown)
-      minOpts.MinimType = "Minuit2";
+      minOpts.SetMinimizerType ( "Minuit2" );
    else if ( fLibFumili->GetState() == kButtonDown )
-      minOpts.MinimType = "Fumili";
+      minOpts.SetMinimizerType ("Fumili" );
 
    if ( fMigrad->GetState() == kButtonDown )
-      minOpts.AlgoType = "Migrad";
+      minOpts.SetMinimizerAlgorithm( "Migrad" );
    else if ( fFumili->GetState() == kButtonDown )
       if ( fLibMinuit2->GetState() == kButtonDown )
-         minOpts.AlgoType = "Fumili2";
+         minOpts.SetMinimizerAlgorithm( "Fumili2" );
       else 
-         minOpts.AlgoType = "Fumili";
+         minOpts.SetMinimizerAlgorithm( "Fumili" );
    else if ( fSimplex->GetState() == kButtonDown )
-      minOpts.AlgoType = "Simplex";
+      minOpts.SetMinimizerAlgorithm( "Simplex" );
    else if ( fScan->GetState() == kButtonDown )
-      minOpts.AlgoType = "Scan";
+      minOpts.SetMinimizerAlgorithm( "Scan" );
    else if ( fCombination->GetState() == kButtonDown )
-      minOpts.AlgoType = "Minimize";
+      minOpts.SetMinimizerAlgorithm( "Minimize" );
 
-   minOpts.ErrorDef = fErrorScale->GetNumber();
-   minOpts.Tolerance = fTolerance->GetNumber();
-   minOpts.MaxIterations = fIterations->GetIntNumber();
+   minOpts.SetErrorDef ( fErrorScale->GetNumber() );
+   minOpts.SetTolerance( fTolerance->GetNumber() );
+   minOpts.SetMaxIterations(fIterations->GetIntNumber());
+   minOpts.SetMaxFunctionCalls(fIterations->GetIntNumber());
 }
 
 void TFitEditor::SetEditable(Bool_t state)

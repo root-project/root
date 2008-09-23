@@ -110,7 +110,7 @@ private:
    mutable std::vector<double> fCovar; // cached covariance matrix (NxN)
 
 
-   ClassDef(TBackCompFitter,1)  // The fitter providing backward compatibility by implementing the TVirtualFitter interface
+   ClassDef(TBackCompFitter,1)  // Class providing backward compatibility for fitting by implementing the TVirtualFitter interface
 
 };
 

@@ -275,6 +275,7 @@ Int_t TBackCompFitter::ExecuteCommand(const char *command, Double_t *args, Int_t
 }
 
 bool TBackCompFitter::ValidParameterIndex(int ipar) const  { 
+   // check if ipar is a valid parameter index
    int nps  = fFitter.Config().ParamsSettings().size(); 
    if (ipar  < 0 || ipar >= nps ) { 
       std::string msg = ROOT::Math::Util::ToString(ipar) + " is an invalid Parameter index";
