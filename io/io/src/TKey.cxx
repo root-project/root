@@ -960,8 +960,8 @@ void *TKey::ReadObjectAny(const TClass* expectedClass)
          if (!expectedClass->GetSchemaRules() || 
              !expectedClass->GetSchemaRules()->HasRuleWithSourceClass(cl->GetName())) 
          {
-             // There is no converter
-             return 0;
+            // There is no converter
+            return 0;
          }
          baseOffset = 0; // For now we do not support requesting from a class that is the base of one of the class for which there is transformation to ....
          clOnfile = cl;
