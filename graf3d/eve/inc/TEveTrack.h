@@ -158,7 +158,9 @@ protected:
    Float_t              fMaxP;       // Maximum track p for display selection.
    Float_t              fLimP;       // Highest track p in the container.
 
+   void    FindMomentumLimits(TEveElement* el, Bool_t recurse=kTRUE);
    Float_t RoundMomentumLimit(Float_t x);
+   void    SanitizeMinMaxCuts();
 
 public:
    TEveTrackList(TEveTrackPropagator* rs=0);
@@ -166,7 +168,7 @@ public:
    virtual ~TEveTrackList();
 
    void  MakeTracks(Bool_t recurse=kTRUE);
-   void  FindMomentumLimits(TEveElement* el, Bool_t recurse);
+   void  FindMomentumLimits(Bool_t recurse=kTRUE);
 
    void  SetPropagator(TEveTrackPropagator* rs);
    TEveTrackPropagator* GetPropagator() { return fPropagator; }
@@ -203,6 +205,13 @@ public:
    void SelectByPt(Float_t min_pt, Float_t max_pt, TEveElement* el);
    void SelectByP (Float_t min_p,  Float_t max_p);
    void SelectByP (Float_t min_p,  Float_t max_p,  TEveElement* el);
+
+   Float_t GetMinPt() const { return fMinPt; }
+   Float_t GetMaxPt() const { return fMaxPt; }
+   Float_t GetLimPt() const { return fLimPt; }
+   Float_t GetMinP()  const { return fMinP;  }
+   Float_t GetMaxP()  const { return fMaxP;  }
+   Float_t GetLimP()  const { return fLimP;  }
 
    //--------------------------------
 

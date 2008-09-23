@@ -721,19 +721,48 @@ void TEveTrackList::MakeTracks(Bool_t recurse)
 
    for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
    {
-      TEveTrack* track = (TEveTrack*)(*i);
-      track->MakeTrack(recurse);
+      TEveTrack* track = dynamic_cast<TEveTrack*>(*i);
+      if (track)
+      {
+         track->MakeTrack(recurse);
 
-      fLimPt = TMath::Max(fLimPt, track->fP.Perp());
-      fLimP  = TMath::Max(fLimP,  track->fP.Mag());
+         fLimPt = TMath::Max(fLimPt, track->fP.Perp());
+         fLimP  = TMath::Max(fLimP,  track->fP.Mag());
+      }
       if (recurse)
          FindMomentumLimits(*i, recurse);
    }
 
    fLimPt = RoundMomentumLimit(fLimPt);
    fLimP  = RoundMomentumLimit(fLimP);
-   if (fMaxPt == 0) fMaxPt = fLimPt;
-   if (fMaxP  == 0) fMaxP  = fLimP;
+
+   SanitizeMinMaxCuts();
+}
+
+//______________________________________________________________________________
+void TEveTrackList::FindMomentumLimits(Bool_t recurse)
+{
+   // Loop over children and find highest pT and p of contained TEveTracks.
+   // These are stored in members fLimPt and fLimP.
+
+   fLimPt = fLimP = 0;
+
+   for (List_i i=BeginChildren(); i!=EndChildren(); ++i)
+   {
+      TEveTrack* track = dynamic_cast<TEveTrack*>(*i);
+      if (track)
+      {
+         fLimPt = TMath::Max(fLimPt, track->fP.Perp());
+         fLimP  = TMath::Max(fLimP,  track->fP.Mag());
+      }
+      if (recurse)
+         FindMomentumLimits(*i, recurse);
+   }
+
+   fLimPt = RoundMomentumLimit(fLimPt);
+   fLimP  = RoundMomentumLimit(fLimP);
+
+   SanitizeMinMaxCuts();
 }
 
 //______________________________________________________________________________
@@ -749,9 +778,9 @@ void TEveTrackList::FindMomentumLimits(TEveElement* el, Bool_t recurse)
       {
          fLimPt = TMath::Max(fLimPt, track->fP.Perp());
          fLimP  = TMath::Max(fLimP,  track->fP.Mag());
-         if (recurse)
-            FindMomentumLimits(*i, recurse);
       }
+      if (recurse)
+         FindMomentumLimits(*i, recurse);
    }
 }
 
@@ -761,8 +790,22 @@ Float_t TEveTrackList::RoundMomentumLimit(Float_t x)
    // Round the momentum limit up to a nice value.
 
    using namespace TMath;
+
    Double_t fac = Power(10, 1 - Floor(Log10(x)));
    return Ceil(fac*x) / fac;
+}
+
+//______________________________________________________________________________
+void TEveTrackList::SanitizeMinMaxCuts()
+{
+   // Set Min/Max cuts so that they are within detected limits.
+
+   using namespace TMath;
+
+   fMinPt = Min(fMinPt, fLimPt);
+   fMaxPt = fMaxPt == 0 ? fLimPt : Min(fMaxPt, fLimPt);
+   fMinP  = Min(fMinP,  fLimP);
+   fMaxP  = fMaxP  == 0 ? fLimP  : Min(fMaxP,  fLimP);
 }
 
 /******************************************************************************/
