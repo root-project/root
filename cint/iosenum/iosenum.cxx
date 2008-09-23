@@ -5,40 +5,10 @@
 * for platform dependent ios enum values.
 ************************************************************************/
 #include <ReadF.C>
+#include "configcint.h"
 
-char CPPSRCPOST[20];
-char CPP[400];
 char FNAME[400];
 char COMMAND[5000];
-
-/************************************************************************
-* read MAKEINFO to get CPP and CPPSRCPOST
-* exit program if MAKEINFO can not open or CPP is not set.
-************************************************************************/
-void readmakeinfo(void) {
-  ReadFile f("cint/MAKEINFO"); 
-  char *p;
-  if(!f.isvalid()) {
-    fprintf(stderr,"MAKEINFO not found. CINT may not be installed properly\n");
-    exit(0);
-  }
-  while(f.read()) {
-    if(f.argc>=3 && strcmp(f.argv[1],"CPP")==0) {
-      p=strchr(f.argv[0],'=');
-      strcpy(CPP,p+1);
-    }
-    else if(f.argc>=3 && strcmp(f.argv[1],"CPPSRCPOST")==0) {
-      p=strchr(f.argv[0],'.');
-      strcpy(CPPSRCPOST,p);
-    }
-  }
-  int i=0;
-  while(isspace(CPP[i])) ++i;
-  if('\0'==CPP[i]) {
-    printf("CINT installed without C++ compiler. No need to create iosenum.h contents\n");
-    exit(0);
-  }
-}
 
 /************************************************************************
 * create source file, compile and run it to get platform dependent enum
@@ -130,82 +100,73 @@ int main() {
   fprintf(fp," *  only once at installation. */\n");
   fclose(fp);
 
-  readmakeinfo();
-  sprintf(FNAME,"iosenum%s",CPPSRCPOST);
-  sprintf(COMMAND,"%s %s 2> /dev/null",CPP,FNAME);
+  const char* flags_common[] = {
+     "boolalpha",
+     "dec",
+     "fixed",
+     "hex",
+     "internal",
+     "left",
+     "oct",
+     "right",
+     "scientific",
+     "showbase",
+     "showpoint",
+     "showpos",
+     "skipws",
+     "unitbuf",
+     "uppercase",
+     "adjustfield",
+     "basefield",
+     "floatfield",
+     "badbit",
+     "eofbit",
+     "failbit",
+     "goodbit",
+     "app",
+     "ate",
+     "binary",
+     "in",
+     "out",
+     "trunc",
+     "beg",
+     "cur",
+     "end",
+     0
+  };
+
+  const char* flags_old[] = {
+     "hardfail",
+     "nocreate",
+     "noreplace",
+     //   "bin",
+     "stdio",
+      0
+  };
+
+  const char* flags_tmpltios[] = {
+     "openmode",
+     0
+  };
+
+  strcpy(FNAME,"iosenum.cxx");
+  sprintf(COMMAND,"%s %s 2> /dev/null", G__CFG_CXX, FNAME);
 
   system("echo '#pragma ifndef G__TMPLTIOS' >> iosenum.h");
-  iosenumdump("goodbit");
-  iosenumdump("eofbit");
-  iosenumdump("failbit");
-  iosenumdump("badbit");
-  iosenumdump("hardfail");
-  iosenumdump("in");
-  iosenumdump("out");
-  iosenumdump("ate");
-  iosenumdump("app");
-  iosenumdump("trunc");
-  iosenumdump("nocreate");
-  iosenumdump("noreplace");
-  iosenumdump("binary");
-  //iosenumdump("bin");
-  iosenumdump("beg");
-  iosenumdump("cur");
-  iosenumdump("end");
-  iosenumdump("boolalpha");
-  iosenumdump("adjustfield");
-  iosenumdump("basefield");
-  iosenumdump("floatfield");
-  iosenumdump("skipws");
-  iosenumdump("left");
-  iosenumdump("right");
-  iosenumdump("internal");
-  iosenumdump("dec");
-  iosenumdump("oct");
-  iosenumdump("hex");
-  iosenumdump("showbase");
-  iosenumdump("showpoint");
-  iosenumdump("uppercase");
-  iosenumdump("showpos");
-  iosenumdump("scientific");
-  iosenumdump("fixed");
-  iosenumdump("unitbuf");
-  iosenumdump("stdio");
+
+  for (int i = 0; flags_common[i]; ++i)
+     iosenumdump(flags_common[i]);
+  for (int i = 0; flags_old[i]; ++i)
+     iosenumdump(flags_old[i]);
+
   system("echo '#pragma else' >> iosenum.h");
 
   // added for g++3.0
-  iosbaseenumdump("boolalpha");
-  iosbaseenumdump("dec");
-  iosbaseenumdump("fixed");
-  iosbaseenumdump("hex");
-  iosbaseenumdump("internal");
-  iosbaseenumdump("left");
-  iosbaseenumdump("oct");
-  iosbaseenumdump("right");
-  iosbaseenumdump("scientific");
-  iosbaseenumdump("showbase");
-  iosbaseenumdump("showpoint");
-  iosbaseenumdump("showpos");
-  iosbaseenumdump("skipws");
-  iosbaseenumdump("unitbuf");
-  iosbaseenumdump("uppercase");
-  iosbaseenumdump("adjustfield");
-  iosbaseenumdump("basefield");
-  iosbaseenumdump("floatfield");
-  iosbaseenumdump("badbit");
-  iosbaseenumdump("eofbit");
-  iosbaseenumdump("failbit");
-  iosbaseenumdump("goodbit");
-  iosbaseenumdump("openmode");
-  iosbaseenumdump("app");
-  iosbaseenumdump("ate");
-  iosbaseenumdump("binary");
-  iosbaseenumdump("in");
-  iosbaseenumdump("out");
-  iosbaseenumdump("trunc");
-  iosbaseenumdump("beg");
-  iosbaseenumdump("cur");
-  iosbaseenumdump("end");
+  for (int i = 0; flags_common[i]; ++i)
+     iosbaseenumdump(flags_common[i]);
+  for (int i = 0; flags_tmpltios[i]; ++i)
+     iosbaseenumdump(flags_tmpltios[i]);
+
   system("echo '#pragma endif' >> iosenum.h");
   
   exit(0);

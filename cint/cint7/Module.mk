@@ -283,7 +283,7 @@ $(IOSENUM7):    $(IOSENUM7A)
 #$(IOSENUM7A):   $(CINT7TMP) $(CINT7_STDIOH)
 #		@(if [ ! -r $@ ]; then \
 #			echo "Making $@..."; \
-#			$(CINT7TMP) $(CINT7TMPINC) $(IOSENUM7C) > /dev/null ; \
+#			$(CINT7TMP) $(CINT7TMPINC) -Iinclude $(IOSENUM7C) > /dev/null ; \
 #			mv iosenum.h $@ ; \
 #		else \
 #			touch $@ ; \

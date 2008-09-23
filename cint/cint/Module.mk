@@ -281,7 +281,7 @@ $(IOSENUM):     $(IOSENUMA)
 $(IOSENUMA):    $(CINTTMP)
 		@(if [ ! -r $@ ]; then \
 			echo "Making $@..."; \
-			$(CINTTMP) $(CINTTMPINC) $(IOSENUMC) > /dev/null; \
+			$(CINTTMP) $(CINTTMPINC) -Iinclude $(IOSENUMC) > /dev/null; \
 			mv iosenum.h $@; \
 		else \
 			touch $@; \
