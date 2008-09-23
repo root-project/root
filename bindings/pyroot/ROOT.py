@@ -2,7 +2,7 @@ from __future__ import generators
 # @(#)root/pyroot:$Id$
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
-# Last: 05/06/08
+# Last: 09/23/08
 
 """PyROOT user module.
 
@@ -14,7 +14,7 @@ from __future__ import generators
 
 """
 
-__version__ = '5.0.3'
+__version__ = '5.1.0'
 __author__  = 'Wim Lavrijsen (WLavrijsen@lbl.gov)'
 
 
@@ -97,10 +97,11 @@ if sys.version[0:3] == '2.2':
 
 ### configuration ---------------------------------------------------------------
 class _Configuration( object ):
-   __slots__ = [ 'StartGuiThread' ]
+   __slots__ = [ 'StartGuiThread', 'GUIThreadScheduleOnce' ]
 
    def __init__( self ):
       self.StartGuiThread = 1
+      self.GUIThreadScheduleOnce = []
 
 PyConfig = _Configuration()
 del _Configuration
@@ -273,6 +274,10 @@ def _processRootEvents( controller ):
    while controller.keeppolling:
       try:
          gSystem.ProcessEvents()
+         if PyConfig.GUIThreadScheduleOnce:
+            for guicall in PyConfig.GUIThreadScheduleOnce:
+               guicall()
+            PyConfig.GUIThreadScheduleOnce = []
          time.sleep( 0.01 )
       except: # in case gSystem gets destroyed early on exit
          pass
@@ -423,10 +428,18 @@ class ModuleFacade( object ):
             not ( self.keeppolling or _root.gROOT.IsBatch() ):
          import threading
          self.__dict__[ 'keeppolling' ] = 1
-         self.__dict__[ 'thread' ] = \
+         self.__dict__[ 'PyGUIThread' ] = \
             threading.Thread( None, _processRootEvents, None, ( self, ) )
-         self.thread.setDaemon( 1 )
-         self.thread.start()
+
+         def _finishSchedule( ROOT = self ):
+            import threading
+            if threading.currentThread() != self.PyGUIThread:
+               while self.PyConfig.GUIThreadScheduleOnce:
+                  self.PyGUIThread.join( 0.1 )
+
+         self.PyGUIThread.finishSchedule = _finishSchedule
+         self.PyGUIThread.setDaemon( 1 )
+         self.PyGUIThread.start()
 
     # store already available ROOT objects to prevent spurious lookups
       for name in self.module.__pseudo__all__ + _memPolicyAPI + _sigPolicyAPI:
@@ -459,13 +472,13 @@ def cleanup():
    del facade.__class__.__setattr__
 
  # shutdown GUI thread, as appropriate
-   if hasattr( facade, 'thread' ):
+   if hasattr( facade, 'PyGUIThread' ):
       facade.keeppolling = 0
 
     # if not shutdown from GUI (often the case), wait for it
       import threading
-      if threading.currentThread() != facade.thread:
-         facade.thread.join( 3. )                      # arbitrary
+      if threading.currentThread() != facade.PyGUIThread:
+         facade.PyGUIThread.join( 3. )                 # arbitrary
       del threading
 
  # remove otherwise (potentially) circular references
