@@ -2307,16 +2307,18 @@ if test ! "x$enable_qt" = "xno" || \
     message "Checking for moc or moc.exe"
     #  we can pick the wrong moc this way  --  qtmocexe=`$cwhich moc`
     #  we can pick the wrong moc this way  --  if test $? -ne 0 ; then
-    for i in $QTDIR $QTDIR/bin /usr/local/bin /usr/local/qt/bin /usr/bin \
+    #  but we should still give it a try.
+    whichmoc=`which moc 2> /dev/null`
+    for i in $QTDIR $QTDIR/bin "`dirname ${whichmoc}`" /usr/local/bin /usr/local/qt/bin /usr/bin \
         /usr/qt3/bin /usr/share/qt3/bin ; do
-	logmsg " Checking for $qtmocexe in $i"
+	logmsg " Checking for moc in $i"
 	for j in $i/moc-qt${qtvers} $i/moc-qt${qtvers}.exe $i/moc $i/moc.exe ;
 	do
 	    if test -x $j ; then
 		moc_vers=`$j -v >/dev/stdout 2>&1 | \
 		    sed -e 's/.*(Qt //' -e 's/\.[0-9]*\.[0-9]*)//'`
                 if test ! "$moc_vers" = "$qtvers" ; then
-		    # Moc version does not match Qt version
+		    logmsg "$j: moc version ${moc_vers} does not match Qt version ${qtvers}"
 		    continue
 		fi
 		qtmocexe=$j
@@ -5372,20 +5374,7 @@ if test "x$enable_reflex" = "xyes"; then
         libdirreflex='`dirname $0`/../lib'
     fi
 
-    # determine whether to use GCCXML0.6 python scripts
-    GCCXML06SED=""
-    if test "x$gccxml" != "x"; then
-        if test -x ${gccxml}/gccxml; then
-            GCCXMLVERSION=`${gccxml}/gccxml --version 2>/dev/null | sed 's,.*\([[:digit:]]\+\.[[:digit:]]\+\.[[:digit:]]\+\).*$,\1,'`
-            GCCXMLVERSION06=`echo $GCCXMLVERSION|grep ^0\.6`
-            if test "x${GCCXMLVERSION06}" != "x"; then
-                GCCXML06SED="-e s|genreflex\([.-]\)|genreflex06\1|g"
-                echo -n ' [ Upgrade to GCCXML >= 0.7 recommended! ] '
-            fi
-        fi
-    fi
-
-    cat $GENREFLEXSHIN | sed -e "s|@libdir@|$libdirreflex|g" $GCCXML06SED > $GENREFLEXSHOUT
+    cat $GENREFLEXSHIN | sed -e "s|@libdir@|$libdirreflex|g" > $GENREFLEXSHOUT
     chmod a+x $GENREFLEXSHOUT
     result "done"
 
@@ -5397,7 +5386,7 @@ if test "x$enable_reflex" = "xyes"; then
             libdirreflex=`cygpath -m $libdir`
         fi
 
-        cat $GENREFLEXBATIN | sed -e "s|@libdir@|$libdirreflex|g" $GCCXML06SED > $GENREFLEXBATOUT
+        cat $GENREFLEXBATIN | sed -e "s|@libdir@|$libdirreflex|g" > $GENREFLEXBATOUT
         chmod a+x $GENREFLEXBATOUT
         result "done"
     fi
@@ -5407,7 +5396,7 @@ if test "x$enable_reflex" = "xyes"; then
     if test "x$haveconfig" = "x" ; then
         libdirreflex='`dirname $0`/../lib'
     fi
-    cat $GENREFLEXROOTCINTSHIN | sed -e "s|@libdir@|$libdirreflex|g" $GCCXML06SED > $GENREFLEXROOTCINTSHOUT
+    cat $GENREFLEXROOTCINTSHIN | sed -e "s|@libdir@|$libdirreflex|g" > $GENREFLEXROOTCINTSHOUT
     chmod a+x $GENREFLEXROOTCINTSHOUT
     result "done"
 
@@ -5418,7 +5407,7 @@ if test "x$enable_reflex" = "xyes"; then
         else
             libdirreflex=`cygpath -m $libdir`
         fi
-        cat $GENREFLEXROOTCINTBATIN | sed -e "s|@libdir@|$libdirreflex|g" $GCCXML06SED > $GENREFLEXROOTCINTBATOUT
+        cat $GENREFLEXROOTCINTBATIN | sed -e "s|@libdir@|$libdirreflex|g" > $GENREFLEXROOTCINTBATOUT
         chmod a+x $GENREFLEXROOTCINTBATOUT
         result "done"
     fi
