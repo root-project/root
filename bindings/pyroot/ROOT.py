@@ -97,11 +97,22 @@ if sys.version[0:3] == '2.2':
 
 ### configuration ---------------------------------------------------------------
 class _Configuration( object ):
-   __slots__ = [ 'StartGuiThread', 'GUIThreadScheduleOnce' ]
+   __slots__ = [ 'StartGuiThread', '_gts' ]
 
    def __init__( self ):
       self.StartGuiThread = 1
-      self.GUIThreadScheduleOnce = []
+      self._gts = []
+
+   def __setGTS( self, value ):
+      for c in value:
+         if not callable( c ):
+            raise ValueError( '"%s" is not callable' % str(c) );
+      self._gts = value
+
+   def __getGTS( self ):
+      return self._gts
+
+   GUIThreadScheduleOnce = property( __getGTS, __setGTS )
 
 PyConfig = _Configuration()
 del _Configuration
