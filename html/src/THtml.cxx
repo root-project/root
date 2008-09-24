@@ -967,10 +967,13 @@ BEGIN_MACRO(source)
   TArc* macro_example_arc = new TArc(0.5,0.32,0.11,180,360);
   macro_example_arc->Draw();
   TEllipse* macro_example_ellipsis = new TEllipse(0.42,0.58,0.014,0.014,0,360,0);
+  macro_example_ellipsis->SetFillStyle(0);
   macro_example_ellipsis->Draw();
   macro_example_ellipsis = new TEllipse(0.58,0.58,0.014,0.014,0,360,0);
+  macro_example_ellipsis->SetFillStyle(0);
   macro_example_ellipsis->Draw();
   macro_example_ellipsis = new TEllipse(0.50,0.48,0.22,0.32,0,360,0);
+  macro_example_ellipsis->SetFillStyle(0);
   macro_example_ellipsis->Draw();
   TLine* macro_example_line = new TLine(0.48,0.53,0.52,0.41);
   macro_example_line->Draw();
