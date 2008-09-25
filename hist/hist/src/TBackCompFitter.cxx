@@ -1,7 +1,6 @@
 #include "TROOT.h"
 #include "TBackCompFitter.h"
 
-#include "TBackCompFcnAdapter.h"
 
 #include "TMethodCall.h"
 #include "TInterpreter.h"
@@ -26,6 +25,7 @@
 #include "Fit/BinData.h"
 #include "Fit/PoissonLikelihoodFCN.h"
 #include "Fit/Chi2FCN.h"
+#include "Fit/FcnAdapter.h"
 
 //#define DEBUG 1
 
@@ -43,7 +43,8 @@ ClassImp(TBackCompFitter);
 
 TBackCompFitter::TBackCompFitter( ) : 
    fFitData(0), 
-   fMinimizer(0)
+   fMinimizer(0), 
+   fObjFunc(0)
 {
    // Constructur needed by TVirtualFitter interface. Same behavior as default constructor.
    // initialize setting name and the global pointer
@@ -52,7 +53,8 @@ TBackCompFitter::TBackCompFitter( ) :
 
 TBackCompFitter::TBackCompFitter(ROOT::Fit::Fitter & fitter,ROOT::Fit::BinData * data) : 
    fFitData(data),
-   fMinimizer(0)
+   fMinimizer(0),
+   fObjFunc(0)
 {
    // constructor used after having fit using directly ROOT::Fit::Fitter
    // will create a dummy fitter copying configuration and parameter settings
@@ -70,6 +72,7 @@ TBackCompFitter::~TBackCompFitter() {
    // data are own here
    if (fFitData) delete fFitData; 
    if (fMinimizer) delete fMinimizer; 
+   if (fObjFunc) delete fObjFunc; 
 }
 
 Double_t TBackCompFitter::Chisquare(Int_t npar, Double_t *params) const {
@@ -661,7 +664,7 @@ void TBackCompFitter::SetFCN(void (*fcn)(Int_t &, Double_t *, Double_t &f, Doubl
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    fFCN = fcn;
    if (fObjFunc) delete fObjFunc;
-   fObjFunc = new TBackCompFcnAdapter(fFCN);
+   fObjFunc = new ROOT::Fit::FcnAdapter(fFCN);
    DoSetDimension(); 
 }
 
@@ -713,7 +716,7 @@ void TBackCompFitter::SetFCN(void *fcn)
    TVirtualFitter::SetFitter(this); 
    
    if (fObjFunc) delete fObjFunc;
-   fObjFunc = new TBackCompFcnAdapter(fFCN);
+   fObjFunc = new ROOT::Fit::FcnAdapter(fFCN);
    DoSetDimension(); 
 }
 
@@ -727,7 +730,7 @@ void TBackCompFitter::SetObjFunction(ROOT::Math::IMultiGenFunction   * fcn) {
 void TBackCompFitter::DoSetDimension() { 
    // set dimension in objective function
    if (!fObjFunc) return; 
-   TBackCompFcnAdapter * fobj = dynamic_cast<TBackCompFcnAdapter*>(fObjFunc); 
+   ROOT::Fit::FcnAdapter * fobj = dynamic_cast<ROOT::Fit::FcnAdapter*>(fObjFunc); 
    assert(fobj != 0); 
    int ndim = fFitter.Config().ParamsSettings().size(); 
    if (ndim != 0) fobj->SetDimension(ndim); 

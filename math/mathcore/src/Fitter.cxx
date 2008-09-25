@@ -20,6 +20,7 @@
 #include "Fit/MinimizerControlParams.h"
 #include "Fit/BinData.h"
 #include "Fit/UnBinData.h"
+#include "Fit/FcnAdapter.h"
 #include "Math/Error.h"
 
 #include <memory> 
@@ -158,6 +159,17 @@ bool Fitter::FitFCN(const BaseGradFunc & fcn, const double * params, unsigned in
    return DoMinimization<BaseGradFunc> (*minimizer, fcn, dataSize); 
 }
 
+bool Fitter::FitFCN(MinuitFCN_t fcn ) { 
+   // fit using Minuit style FCN type (global function pointer)  
+   // create corresponfing objective function from that function
+   int npar = fConfig.ParamsSettings().size(); 
+   if (npar == 0) { 
+      MATH_ERROR_MSG("Fitter::FitFCN","wrong fit parameter settings - npar = 0 ");
+      return false;
+   }
+   ROOT::Fit::FcnAdapter  newFcn(fcn,npar); 
+   return FitFCN(newFcn); 
+}
 
 bool Fitter::DoLeastSquareFit(const BinData & data) { 
    // perform a chi2 fit on a set of binned data 

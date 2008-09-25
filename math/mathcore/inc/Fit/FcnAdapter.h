@@ -7,8 +7,8 @@
  *                                                                    *
  **********************************************************************/
 
-#ifndef ROOT_TBackCompFcnAdapter_H_
-#define ROOT_TBackCompFcnAdapter_H_
+#ifndef ROOT_Fit_FcnAdapter_H_
+#define ROOT_Fit_FcnAdapter_H_
 
 #ifndef ROOT_Math_IFunction
 #include "Math/IFunction.h"
@@ -22,21 +22,25 @@
 // (ROOT::Math::IMultiGenFunction)
 //
 
-class TBackCompFcnAdapter : public ROOT::Math::IMultiGenFunction {
+namespace ROOT { 
+
+   namespace Fit { 
+
+class FcnAdapter : public ROOT::Math::IMultiGenFunction {
 
 public:
 
-   TBackCompFcnAdapter(void (*fcn)(int&, double*, double&, double*, int ), int dim = 0) : 
+   FcnAdapter(void (*fcn)(int&, double*, double&, double*, int ), int dim = 0) : 
       fDim(dim),
       fFCN(fcn)
    {}
 
-   virtual ~TBackCompFcnAdapter() {}
+   virtual ~FcnAdapter() {}
 
    virtual  unsigned int NDim() const { return fDim; }
 
    ROOT::Math::IMultiGenFunction * Clone() const { 
-      return new TBackCompFcnAdapter(fFCN,fDim);
+      return new FcnAdapter(fFCN,fDim);
    }
 
    void SetDimension(int dim) { fDim = dim; }
@@ -58,4 +62,9 @@ private:
    
 
 };
-#endif //ROOT_GFcnAdapter_H_
+
+   } // end namespace Fit
+
+} // end namespace ROOT
+
+#endif //ROOT_Fit_FcnAdapter

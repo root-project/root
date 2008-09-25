@@ -72,6 +72,8 @@ public:
    virtual Double_t *GetCovarianceMatrix() const = 0;
    virtual Double_t  GetCovarianceMatrixElement(Int_t i, Int_t j) const = 0;
    virtual Int_t     GetErrors(Int_t ipar,Double_t &eplus, Double_t &eminus, Double_t &eparab, Double_t &globcc) const = 0;
+   typedef void   (* FCNFunc_t )(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
+   virtual FCNFunc_t GetFCN() { return fFCN; }
    virtual Foption_t GetFitOption() const {return fOption;}
    TMethodCall      *GetMethodCall() const {return fMethodCall;}
    virtual Int_t     GetNumberTotalParameters() const = 0;

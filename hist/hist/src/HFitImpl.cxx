@@ -251,9 +251,19 @@ int HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const ROOT::Math
  
    bool fitok = false; 
 
-   if (fitOption.Like)
+
+   // check if can use option user 
+   //typedef  void (* MinuitFCN_t )(int &npar, double *gin, double &f, double *u, int flag);
+   TVirtualFitter::FCNFunc_t  userFcn = 0;  
+   if (fitOption.User && TVirtualFitter::GetFitter() )
+      userFcn = (TVirtualFitter::GetFitter())->GetFCN(); 
+   
+
+   if (fitOption.User && userFcn) // user provided fit objective function
+      fitok = fitter->FitFCN( userFcn );
+   else if (fitOption.Like) // likelihood fit 
       fitok = fitter->LikelihoodFit(*fitdata);
-   else 
+   else // standard least square fit
       fitok = fitter->Fit(*fitdata); 
 
 
@@ -295,11 +305,17 @@ int HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const ROOT::Math
 
       // store result in the backward compatible VirtualFitter
       TVirtualFitter * lastFitter = TVirtualFitter::GetFitter(); 
-      if (lastFitter) delete lastFitter; 
       // pass ownership of fitdata to TBackCompFitter (should do also fitter)
       TBackCompFitter * bcfitter = new TBackCompFitter(*fitter,fitdata);
       bcfitter->SetFitOption(fitOption); 
       bcfitter->SetObjectFit(h1); 
+      if (userFcn) { 
+         bcfitter->SetFCN(userFcn); 
+         // for interpreted FCN functions
+         if (lastFitter->GetMethodCall() ) bcfitter->SetMethodCall(lastFitter->GetMethodCall() );
+      }
+         
+      if (lastFitter) delete lastFitter; 
       TVirtualFitter::SetFitter( bcfitter ); 
 
       // print results

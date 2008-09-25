@@ -158,6 +158,13 @@ public:
    bool FitFCN(const ROOT::Math::IMultiGradFunction & fcn, const double * params = 0, unsigned int dataSize = 0); 
 
    /**
+      fit using user provided FCN with Minuit-like interface
+      Parameter Settings must have be created before
+    */
+   typedef  void (* MinuitFCN_t )(int &npar, double *gin, double &f, double *u, int flag);
+   bool FitFCN( MinuitFCN_t fcn);
+
+   /**
       do a linear fit on a set of bin-data
     */
    bool LinearFit(const BinData & data) { return DoLinearFit(data); }
