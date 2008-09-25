@@ -137,10 +137,14 @@ void TLinearMinimizer::SetFunction(const  ROOT::Math::IMultiGradFunction & objfu
    // get the basis functions (derivatives of the modelfunc)
    TObjArray flist; 
    for (unsigned int i = 0; i < fDim; ++i) { 
+      // t.b.f: should not create TF1 classes
+      // when creating TF1 (if onother function with same name exists it is 
+      // deleted since it is added in funciton list in gROOT 
+      // fix the problem using meaniful names (difficult to re-produce)
       BasisFunction<const ModelFunc> bf(modfunc,i); 
-      std::string fname = "f" + ROOT::Math::Util::ToString(i);
+      std::string fname = "_LinearMinimimizer_BasisFunction_" + 
+         ROOT::Math::Util::ToString(i);
       TF1 * f = new TF1(fname.c_str(),ROOT::Math::ParamFunctor(bf));
-      //f->SetDirectory(0);
       flist.Add(f);
    }
 
