@@ -22,56 +22,65 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#ifndef ROOT_TObject
 #include "TObject.h"
+#endif
+#ifndef ROOT_TString
 #include "TString.h"
+#endif
+#ifndef ROOT_TMap
 #include "TMap.h"
+#endif
+#ifndef ROOT_TUri
 #include "TUri.h"
+#endif
+
 
 class TFileCollection;
 class TMD5;
 class TVirtualMonitoringWriter;
 
-class TProofDataSetManager : public TObject
-{
-private:
 
+class TProofDataSetManager : public TObject {
+
+private:
    TProofDataSetManager(const TProofDataSetManager&);             // not implemented
    TProofDataSetManager& operator=(const TProofDataSetManager&);  // not implemented
 
 protected:
+   TString  fGroup;         // Group to which the owner of this session belongs
+   TString  fUser;          // Owner of the session
+   TString  fCommonUser;    // User that stores the COMMON datasets
+   TString  fCommonGroup;   // Group that stores the COMMON datasets
 
-   TString fGroup;        // Group to which the owner of this session belongs
-   TString fUser;         // Owner of the session
-   TString fCommonUser;   // user that stores the COMMON datasets
-   TString fCommonGroup;  // group that stores the COMMON datasets
+   TUri     fBase;          // Base URI used to parse dataset names
 
-   TUri    fBase;         // Base URI used to parse dataset names
+   TMap     fGroupQuota;    // Group quotas (read from config file)
+   TMap     fGroupUsed;     // <group> --> <used bytes> (TParameter)
+   TMap     fUserUsed;      // <group> --> <map of users> --> <value>
 
-   TMap    fGroupQuota;   // group quotas (read from config file)
-   TMap    fGroupUsed;    // <group> --> <used bytes> (TParameter)
-   TMap    fUserUsed;     // <group> --> <map of users> --> <value>
+   Long64_t fAvgFileSize;   // Average file size to be used to estimate the dataset size (in MB)
 
-   Long64_t fAvgFileSize; // Average file size to be used to estimate the dataset size (in MB)
+   Int_t    fNTouchedFiles; // Number of files touched in the last ScanDataSet operation
+   Int_t    fNOpenedFiles;  // Number of files opened in the last ScanDataSet operation
+   Int_t    fNDisappearedFiles; // Number of files disappared in the last ScanDataSet operation
 
-   Int_t   fNTouchedFiles; // number of files touched in the last ScanDataSet operation
-   Int_t   fNOpenedFiles;  // number of files opened in the last ScanDataSet operation
-   Int_t   fNDisappearedFiles; // number of files disappared in the last ScanDataSet operation
+   TString  fGroupConfigFile;  // Path to the group config file
+   Long_t   fMTimeGroupConfig; // Last modification of the group config file
 
-   TString fGroupConfigFile;  // Path to the group config file
-   Long_t  fMTimeGroupConfig; // Last modification of the group config file
-
-   static TString fgCommonDataSetTag;  // name for common datasets, default: COMMON
+   static TString fgCommonDataSetTag;  // Name for common datasets, default: COMMON
 
    virtual TMap *GetGroupUsedMap() { return &fGroupUsed; }
    virtual TMap *GetUserUsedMap() { return &fUserUsed; }
-   Int_t    GetNTouchedFiles() { return fNTouchedFiles; }
-   Int_t    GetNOpenedFiles() { return fNOpenedFiles; }
-   Int_t    GetNDisapparedFiles() { return fNDisappearedFiles; }
+   Int_t    GetNTouchedFiles() const { return fNTouchedFiles; }
+   Int_t    GetNOpenedFiles() const { return fNOpenedFiles; }
+   Int_t    GetNDisapparedFiles() const { return fNDisappearedFiles; }
    void     GetQuota(const char *group, const char *user, const char *dsName, TFileCollection *dataset);
    void     PrintUsedSpace();
    Bool_t   ReadGroupConfig(const char *cf = 0);
-   static Long64_t ToBytes(const char *size = 0);
    virtual void UpdateUsedSpace();
+
+   static Long64_t ToBytes(const char *size = 0);
 
 public:
    enum EDataSetStatusBits {
@@ -92,8 +101,6 @@ public:
    TProofDataSetManager(const char *group = 0, const char *user = 0, const char *options = 0);
    virtual ~TProofDataSetManager();
 
-   static TString           CreateUri(const char *dsGroup = 0, const char *dsUser = 0,
-                                      const char *dsName = 0, const char *dsTree = 0);
    virtual TFileCollection *GetDataSet(const char *uri);
    virtual TMap            *GetDataSets(const char *uri, UInt_t /*option*/ = 0);
    virtual Long64_t         GetGroupQuota(const char *group);
@@ -109,6 +116,9 @@ public:
    virtual Int_t            RegisterDataSet(const char *uri, TFileCollection *dataSet, const char *opt);
    virtual Int_t            ScanDataSet(const char *uri, UInt_t /*option*/ = 0);
    virtual void             ShowQuota(const char *opt);
+
+   static TString           CreateUri(const char *dsGroup = 0, const char *dsUser = 0,
+                                      const char *dsName = 0, const char *dsTree = 0);
 
    ClassDef(TProofDataSetManager, 0)  // Abstract data set manager class
 };

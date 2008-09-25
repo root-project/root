@@ -21,16 +21,18 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#ifndef ROOT_TProofDataSetManager
 #include "TProofDataSetManager.h"
+#endif
 
-class TProofDataSetManagerFile : public TProofDataSetManager
-{
+
+class TProofDataSetManagerFile : public TProofDataSetManager {
 
 private:
-   TString fDataSetDir;   // location of datasets
-   TString fMSSUrl;       // URL for the Mass Storage System
-   TString fDataSetLockFile;   // dataset lock file
-   Int_t   fLockFileTimeLimit; // limit in seconds after a lock automatically expires
+   TString fDataSetDir;        // Location of datasets
+   TString fMSSUrl;            // URL for the Mass Storage System
+   TString fDataSetLockFile;   // Dataset lock file
+   Int_t   fLockFileTimeLimit; // Limit in seconds after a lock automatically expires
 
 protected:
    const char *GetDataSetPath(const char *group, const char *user, const char *dsName);
