@@ -93,7 +93,7 @@ $(MINUIT2MAP):  $(RLIBMAP) $(MAKEFILEDEP) $(MINUIT2L)
 all-$(MODNAME):  $(MINUIT2LIB) $(MINUIT2MAP)
 
 test-$(MODNAME): $(MINUIT2LIB)
-		cd $(MINUIT2DIR)/test; make
+		cd $(MINUIT2DIR)/test; $(MAKE)
 
 clean-$(MODNAME):
 		@rm -f $(MINUIT2O) $(MINUIT2DO)

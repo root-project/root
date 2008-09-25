@@ -337,8 +337,13 @@
 #   define R__FBSD
 #   define R__UNIX
 #   define R__BYTESWAP
-#   ifndef __i486__
-#      define __i486__       /* turn off if you really want to run on an i386 */
+#   if defined(__i386__)
+#      ifndef __i486__
+#         define __i486__    /* turn off if you really want to run on an i386 */
+#      endif
+#   endif
+#   if defined(__amd64__)
+#      define R__B64
 #   endif
 #   define R__THROWNEWDELETE /* new/delete throw exceptions */
 #endif
@@ -347,8 +352,13 @@
 #   define R__OBSD
 #   define R__UNIX
 #   define R__BYTESWAP
-#   ifndef __i486__
-#      define __i486__       /* turn off if you really want to run on an i386 */
+#   if defined(__i386__)
+#      ifndef __i486__
+#         define __i486__    /* turn off if you really want to run on an i386 */
+#      endif
+#   endif
+#   if defined(__amd64__)
+#      define R__B64
 #   endif
 #   define R__THROWNEWDELETE /* new/delete throw exceptions */
 #endif

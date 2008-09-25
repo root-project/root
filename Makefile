@@ -427,7 +427,7 @@ endif
 ifeq ($(findstring $(MAKECMDGOALS),clean distclean maintainer-clean dist),)
 ifeq ($(findstring clean-,$(MAKECMDGOALS)),)
 ifeq ($(shell which svn 2>&1 | sed -ne "s@.*/svn@svn@p"),svn)
-SVNREV  := $(shell build/unix/svninfo.sh)
+SVNREV  := $(shell bash build/unix/svninfo.sh)
 endif
 endif
 endif

@@ -854,9 +854,9 @@ typedef int (*G__IgnoreInclude)();
 #define G__TRYNORMAL         0
 #define G__CALLMEMFUNC       1
 #define G__TRYMEMFUNC        2
-#define G__CALLCONSTRUCTOR   3  
-#define G__TRYCONSTRUCTOR    4  
-#define G__TRYDESTRUCTOR     5  
+#define G__CALLCONSTRUCTOR   3
+#define G__TRYCONSTRUCTOR    4
+#define G__TRYDESTRUCTOR     5
 #define G__CALLSTATICMEMFUNC 6
 #define G__TRYUNARYOPR       7
 #define G__TRYBINARYOPR      8
@@ -1108,9 +1108,9 @@ struct G__va_list_para;
 * return status flag
 *********************************************************************/
 #define G__RETURN_NON       0
-#define G__RETURN_NORMAL    1 
+#define G__RETURN_NORMAL    1
 #define G__RETURN_IMMEDIATE 2
-#define G__RETURN_TRY      -1 
+#define G__RETURN_TRY      -1
 #define G__RETURN_EXIT1     4
 #define G__RETURN_EXIT2     5
 
@@ -1149,7 +1149,7 @@ struct G__dictposition {
   /* template class */
   struct G__Definedtemplateclass *definedtemplateclass;
   /* function template */
-  struct G__Definetemplatefunc *definedtemplatefunc;   
+  struct G__Definetemplatefunc *definedtemplatefunc;
 
   char* ptype; /* struct,union,enum,class */
 };
@@ -1524,7 +1524,8 @@ typedef struct {
 #endif
 #define G__VAARG_PASS_BY_REFERENCE 8
 
-#elif defined(__x86_64__) && (defined(__linux) || defined(__APPLE__))
+#elif defined(__x86_64__) && (defined(__linux) || defined(__APPLE__) || \
+      defined(__FreeBSD__))
 /**********************************************
  * AMD64/EM64T
  * It turned out it is quite difficult to support this
@@ -1578,11 +1579,11 @@ typedef struct {
 *  G__VAARG_INC_COPY_N        |   4    |     8     |    8
 *  G__VAARG_PASS_BY_REFERENCE |   4    |     8     |    8
 *
-* Assuming that 
-*    G__VAARG_INC_COPY_N 
-*       is meant to be the size of the argument registers, 
+* Assuming that
+*    G__VAARG_INC_COPY_N
+*       is meant to be the size of the argument registers,
 *    G__VAARG_PASS_BY_REFERENCE
-*       is the number of arguments passed by reference through 
+*       is the number of arguments passed by reference through
 *       registers.
 *
 * Thanks to Thiemo Seufer <ths@networkno.de> of Debian
@@ -1596,7 +1597,7 @@ typedef struct {
 # elif _MIPS_SIM == _ABI64 /* mips64 or mips64el */
 #  define G__VAARG_INC_COPY_N 8
 #  define G__VAARG_PASS_BY_REFERENCE 8
-# else 
+# else
 #  define G__VAARG_NOSUPPORT
 # endif
 #else
@@ -1662,7 +1663,7 @@ extern G__EXPORT int G__IsInMacro G__P((void));
 extern G__EXPORT void G__storerewindposition G__P((void));
 extern G__EXPORT void G__rewinddictionary G__P((void));
 extern G__EXPORT void G__SetCriticalSectionEnv G__P(( int(*issamethread)G__P((void)), void(*storelockthread)G__P((void)), void(*entercs)G__P((void)), void(*leavecs)G__P((void)) ));
-   
+
 extern G__EXPORT void G__storelasterror G__P((void));
 
 
@@ -2438,7 +2439,7 @@ G__EXPORT void G__SetCppCintApiPointers(
   G__memfunc_setup2 = (int (*) G__P((G__CONST char *funcname,int hash,G__InterfaceMethod funcp,int type
 ,int tagnum,int typenum,int reftype,int para_nu,int ansi,int access,int isconst,G__CONST char *paras,G__CONST char *comment)) )  a140;
 #endif /* G__TRUEP2F */
-  
+
 
 }
 
@@ -2557,4 +2558,3 @@ extern G__EXPORT G__uint64 G__expr_strtoull G__P((const char *nptr, char **endpt
 
 
 #endif /* G__CI_H */
-

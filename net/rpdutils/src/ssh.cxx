@@ -34,10 +34,9 @@
 #include <netdb.h>
 
 #if (defined(R__AIX) && !defined(_AIX43)) || \
-    (defined(R__FBSD) && !defined(R__ALPHA)) || \
     (defined(R__SUNGCC3) && !defined(__arch64__))
 #   define USE_SIZE_T
-#elif defined(R__GLIBC) || (defined(R__FBSD) && defined(R__ALPHA)) || \
+#elif defined(R__GLIBC) || defined(R__FBSD) || \
       (defined(R__SUNGCC3) && defined(__arch64__)) || \
       defined(R__OBSD) || defined(MAC_OS_X_VERSION_10_4) || \
       (defined(R__AIX) && defined(_AIX43))

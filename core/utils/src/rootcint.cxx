@@ -571,7 +571,7 @@ namespace {
 }
 
 #ifndef R__USE_MKSTEMP
-# ifdef R__GLIBC
+# if defined(R__GLIBC) || defined(__FreeBSD__)
 #  define R__USE_MKSTEMP 1
 # endif
 #endif
@@ -793,7 +793,7 @@ void BeforeParseInit()
    //---------------------------------------------------------------------------
    G__addpragma( (char*)"read", ProcessReadPragma );
    G__addpragma( (char*)"readraw", ProcessReadRawPragma );
-   
+
 }
 
 
@@ -2454,7 +2454,7 @@ void WriteClassInit(G__ClassInfo &cl)
            classname.c_str(), classname.c_str() );
    fprintf(fp, "#endif\n");
 #endif
-   
+
    (*dictSrcOut) << "   static TGenericClassInfo *GenerateInitInstanceLocal(const " << csymbol.c_str() << "*)" << std::endl
                  << "   {" << std::endl;
 
@@ -5117,7 +5117,7 @@ int main(int argc, char **argv)
             Error(0,"A dictionary has been requested for %s but there is no declaration!\n",clLocal.Name());
             continue;
          }
-         if ((clLocal.Property() & (G__BIT_ISCLASS|G__BIT_ISSTRUCT)) && clLocal.Linkage() == G__CPPLINK) { 
+         if ((clLocal.Property() & (G__BIT_ISCLASS|G__BIT_ISSTRUCT)) && clLocal.Linkage() == G__CPPLINK) {
             // Write Code for initialization object (except for STL containers)
             if ( TClassEdit::IsSTLCont(clLocal.Name()) ) {
                RStl::inst().GenerateTClassFor( clLocal.Name() );

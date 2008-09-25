@@ -125,7 +125,7 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 test-$(MODNAME): all-$(MODNAME)
-		@cd $(GENVECTORDIR)/test; make
+		@cd $(GENVECTORDIR)/test; $(MAKE)
 
 ##### extra rules ######
 
