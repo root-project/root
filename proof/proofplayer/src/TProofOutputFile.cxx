@@ -84,6 +84,25 @@ TProofOutputFile::TProofOutputFile(const char* path,
    fOutputFileName += path;
    if (!fOutputFileName.EndsWith(".root"))
       fOutputFileName += ".root";
+   // Replace <user>, if any
+   if (fOutputFileName.Contains("<user>")) {
+      TString user = "nouser";
+      // Get user logon name
+      UserGroup_t *pw = gSystem->GetUserInfo();
+      if (pw) {
+         user = pw->fUser;
+         delete pw;
+      }
+      fOutputFileName.ReplaceAll("<user>", user);
+   }
+   // Replace <group>, if any
+   if (fOutputFileName.Contains("<group>")) {
+      if (gProofServ && gProofServ->GetGroup() && strlen(gProofServ->GetGroup()))
+         fOutputFileName.ReplaceAll("<group>", gProofServ->GetGroup());
+      else
+         fOutputFileName.ReplaceAll("<group>", "default");
+   }
+   Info("TProofOutputFile", "output file url: %s", fOutputFileName.Data());
 
    // Location
    fLocation = "REMOTE";
