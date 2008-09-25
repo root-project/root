@@ -255,8 +255,10 @@ int HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const ROOT::Math
    // check if can use option user 
    //typedef  void (* MinuitFCN_t )(int &npar, double *gin, double &f, double *u, int flag);
    TVirtualFitter::FCNFunc_t  userFcn = 0;  
-   if (fitOption.User && TVirtualFitter::GetFitter() )
+   if (fitOption.User && TVirtualFitter::GetFitter() ) { 
       userFcn = (TVirtualFitter::GetFitter())->GetFCN(); 
+      (TVirtualFitter::GetFitter())->SetUserFunc(f1); 
+   }
    
 
    if (fitOption.User && userFcn) // user provided fit objective function
@@ -308,7 +310,8 @@ int HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const ROOT::Math
       // pass ownership of fitdata to TBackCompFitter (should do also fitter)
       TBackCompFitter * bcfitter = new TBackCompFitter(*fitter,fitdata);
       bcfitter->SetFitOption(fitOption); 
-      bcfitter->SetObjectFit(h1); 
+      bcfitter->SetObjectFit(h1);
+      bcfitter->SetUserFunc(f1);
       if (userFcn) { 
          bcfitter->SetFCN(userFcn); 
          // for interpreted FCN functions
