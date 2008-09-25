@@ -741,6 +741,7 @@ Bool_t TXProofServ::HandleError(const void *)
          if (gDebug > 0)
             Info("HandleError",
                "%p: connection to local coordinator re-established", this);
+         FlushLogFile();
          return kFALSE;
       }
    }
