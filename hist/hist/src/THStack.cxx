@@ -110,7 +110,7 @@ THStack::THStack(const TH1* hist, Option_t *axis /*="x"*/,
 //          See TH2::ProjectionX/Y for use overflow bins.
 //          Defaults to "all bins but under- / overflow"
 // - firstbin2, lastbin2:
-//          Other axis range for TH3::Project3D, defaults to "all bins but 
+//          Other axis range for TH3::Project3D, defaults to "all bins but
 //          under- / overflow". Ignored for TH2s
 // - proj_option:
 //          option passed to TH2::ProjectionX/Y and TH3::Project3D (along
@@ -751,7 +751,7 @@ void THStack::Paint(Option_t *option)
          lnk = (TObjOptLink*)lnk->Prev();
       }
    }
-   fHistogram->Paint("axissame");
+   gPad->RedrawAxis();
 }
 
 //______________________________________________________________________________
