@@ -501,6 +501,7 @@ XrdCryptoX509data XrdCryptosslX509::GetExtension(const char *oid)
          if (!strcmp(s, oid)) 
             break;
       }
+      // Do not free the extension: its owned by the certificate
       wext = 0;
    }
 
@@ -544,6 +545,7 @@ bool XrdCryptosslX509::IsCA()
           OBJ_sn2nid("basicConstraints")) {
          break;
       }
+      // Do not free the extension: its owned by the certificate
       ext = 0;
    }
 

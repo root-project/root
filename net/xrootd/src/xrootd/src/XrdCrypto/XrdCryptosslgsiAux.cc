@@ -1105,7 +1105,7 @@ int XrdSslgsiX509SignProxyReq(XrdCryptoX509 *xcpi, XrdCryptoRSA *kcpi,
             indepthlen = ASN1_INTEGER_get(inpci->proxyCertPathLengthConstraint);
          DEBUG("IN depth length: "<<indepthlen);
       }
-      X509_EXTENSION_free(xpiext);
+      // Do not free the extension: its owned by the certificate
    }
 
    //
