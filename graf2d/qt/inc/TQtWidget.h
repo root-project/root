@@ -32,6 +32,7 @@
 #     include <QEvent>
 #     include <QPaintEvent>
 #     include <QPaintDevice>
+#     include <QSize>
 #  endif
 #  include <qpixmap.h>
 #else
@@ -51,6 +52,7 @@
   class QEvent;
   class QSizePolicy;
   class QContextMenuEvent;
+  class QSize;
 #endif
   class TApplication;
 //
@@ -83,8 +85,9 @@ public:
    ~TQtWidgetBuffer(){}
    void Clear();
    bool PaintingActive(){ return fBuffer ? fBuffer->paintingActive() : false; }
-   inline QRect Rect () const { return fWidget->rect();}
-   QSize size() const { return QSize(fBuffer->width(),fBuffer->height()); }
+   QRect Rect () const { return fWidget->rect();                }
+   int Height () const { return fBuffer ? fBuffer->height() : 0;}
+   int Width  () const { return fBuffer ? fBuffer->width() : 0; }
 };
 
 //___________________________________________________________________
@@ -94,7 +97,8 @@ class  TQtWidget : public QWidget {
  friend class TQtSynchPainting;
 #endif
 private:
-		void operator=(const TQtWidget&);
+    TQtWidget(const TQtWidget&);
+	 void operator=(const TQtWidget&);
    //----- Private bits, clients can only test but not change them
    UInt_t         fBits;       //bit field status word
    enum {
@@ -121,12 +125,11 @@ public:
   void SetCanvas(TCanvas *c);
 //  inline TCanvas  *GetCanvas() const         { return fCanvas;}
   TCanvas  *GetCanvas() const;
-  TQtWidgetBuffer  &GetBuffer();
+  TQtWidgetBuffer  &SetBuffer();
   const TQtWidgetBuffer  *GetBuffer()  const;
   QPixmap  *GetOffScreenBuffer()  const;
 
   // overloaded methods
-  virtual void adjustSize();
   void Resize (int w, int h);
   void Resize (const QSize &size);
   virtual void Erase ();
@@ -139,8 +142,6 @@ protected:
    TCanvas           *fCanvas;
    TQtWidgetBuffer   *fPixmapID;     // Double buffer of this widget
    TQtWidgetBuffer   *fPixmapScreen; // Double buffer for no-double buffer operation
-   TQtWidget  *fShadowWidget; // the "shadow" canvas for the Qt4 offscreen operation
-   bool        fIsShadow;
    bool        fPaint;
    bool        fSizeChanged;
    bool        fDoubleBufferOn;
@@ -149,7 +150,6 @@ protected:
    QWidget    *fWrapper;
    QString     fSaveFormat;
 
-   TQtWidget(TQtWidget &main);
    void SetRootID(QWidget *wrapper);
    QWidget *GetRootID() const;
    virtual void EmitCanvasPainted() { emit CanvasPainted(); }
@@ -224,8 +224,6 @@ public:
    static TQtWidget *Canvas(const TCanvas *canvas);
    static TQtWidget *Canvas(Int_t id);
 
-   bool    IsShadow() const { return fIsShadow; }
-   TQtWidget *GetShadow() const { return fShadowWidget;}
 public slots:
    virtual void cd();
    virtual void cd(int subpadnumber);
@@ -251,7 +249,7 @@ signals:
 };
 
 //______________________________________________________________________________
-inline TCanvas  *TQtWidget::GetCanvas() const         { return (!fIsShadow) ? fCanvas : ((TQtWidget *)parentWidget())->GetCanvas(); }
+inline TCanvas  *TQtWidget::GetCanvas() const         { return fCanvas; }
 
 //______________________________________________________________________________
 inline const TQtWidgetBuffer  *TQtWidget::GetBuffer()  const { 
