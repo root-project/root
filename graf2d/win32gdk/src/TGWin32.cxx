@@ -848,6 +848,15 @@ TGWin32::~TGWin32()
 }
 
 //______________________________________________________________________________
+VOID CALLBACK MyTimerProc(HWND hwnd, UINT message, UINT idTimer, DWORD dwTime)
+{
+   // Windows timer handling events while moving/resizing windows
+
+   gSystem->ProcessEvents();
+   gVirtualX->UpdateWindow(1);
+} 
+
+//______________________________________________________________________________
 Bool_t TGWin32::GUIThreadMessageFunc(MSG* msg)
 {
    // Message processing function for the GUI thread.
@@ -855,6 +864,18 @@ Bool_t TGWin32::GUIThreadMessageFunc(MSG* msg)
    // in TWinNTSystem; see TWinNTSystem.cxx's GUIThreadMessageProcessingLoop().
 
    Bool_t ret = kFALSE;
+   static Int_t m_timer = 0;
+
+   if ( (msg->message == WM_NCLBUTTONDOWN) ) {
+      if (m_timer == 0)
+         m_timer = SetTimer(NULL, 1, 20, (TIMERPROC) MyTimerProc);
+   }
+   else if (msg->message == WM_NCMOUSELEAVE ) {
+      if (m_timer) {
+         KillTimer(NULL, m_timer);
+      }
+      m_timer = 0;
+   }
 
    if (msg->message == TGWin32ProxyBase::fgPostMessageId) {
       if (msg->wParam) {
@@ -866,10 +887,10 @@ Bool_t TGWin32::GUIThreadMessageFunc(MSG* msg)
    } else if (msg->message == TGWin32ProxyBase::fgPingMessageId) {
       TGWin32ProxyBase::GlobalUnlock();
    } else {
-      if ( (msg->message >= WM_NCMOUSEMOVE) &&
-           (msg->message <= WM_NCMBUTTONDBLCLK) ) {
-         TGWin32ProxyBase::GlobalLock();
-      }
+      //if ( (msg->message >= WM_NCMOUSEMOVE) &&
+      //     (msg->message <= WM_NCMBUTTONDBLCLK) ) {
+      //   TGWin32ProxyBase::GlobalLock();
+      //}
       TGWin32MainThread::LockMSG();
       TranslateMessage(msg);
       DispatchMessage(msg);
