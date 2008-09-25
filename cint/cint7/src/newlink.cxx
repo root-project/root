@@ -2579,7 +2579,16 @@ static void G__x8664_vararg(FILE* fp, const ::Reflex::Member& ifunc, const char*
    fprintf(fp, "  G__int64 lval[imax];\n");
    fprintf(fp, "  double dval[dmax];\n");
    fprintf(fp, "  union { G__int64 lval; double dval; } u[umax];\n");
-
+   
+   int type    = G__get_type(ifunc.TypeOf().ReturnType());
+   int reftype = G__get_reftype(ifunc.TypeOf().ReturnType());
+   if (type == 'u' && reftype==0) {
+      // The function returns an object by value, so we need to reserve space
+      // for it and pass it to the function.
+      fprintf(fp, "  char returnValue[sizeof(%s)];\n", ifunc.TypeOf().ReturnType().Name(Reflex::SCOPED));
+      fprintf(fp, "  lval[icnt] = (G__int64)returnValue; icnt++; // Object returned by value\n");
+   }
+      
    if (tagnum != -1 && !ifunc.IsStatic())
       fprintf(fp, "  lval[icnt] = G__getstructoffset(); icnt++;  // this pointer\n");
 

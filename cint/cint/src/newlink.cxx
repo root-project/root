@@ -809,17 +809,32 @@ int G__stub_method_asm_x86_64(G__ifunc_table_internal *ifunc, int ifn, void* thi
   void *vaddress = G__get_funcptr(ifunc, ifn);
   int paran = rpara->paran;
 
+  int type  = ifunc->type[ifn];
   int reftype = ifunc->reftype[ifn];
+  int isref = (reftype == G__PARAREFERENCE || isupper(type));
   G__params *fpara = &ifunc->param[ifn];
   int ansi = ifunc->ansi[ifn];
-
+   
   const int imax = 6, dmax = 8;
   int objsize, i, icnt = 0, dcnt = 0;
   G__value *pval;
   G__int64 lval[imax];
   double dval[dmax];
   int isextra[rpara->paran];
+   std::vector<char> returnHolder;
 
+  if (type == 'u' && !isref) {
+     int osize;
+     G__value otype;
+     otype.type   = 'u';
+     otype.tagnum = result7->tagnum; // size of the return type!!!
+     
+     // Class Size
+     osize = G__sizeof(&otype);
+     returnHolder.reserve( osize );
+     
+     lval[icnt] = (G__int64)&(returnHolder[0]); icnt++;  // Object returned by value      
+  }
   if (this_ptr) {
     lval[icnt] = G__getstructoffset(); icnt++;  // this pointer
   }
@@ -1081,12 +1096,6 @@ int G__stub_method_asm_x86_64(G__ifunc_table_internal *ifunc, int ifn, void* thi
     }
   }
   }
-
-  int type = ifunc->type[ifn];
-  int isref   = 0;
-
-  if (reftype == G__PARAREFERENCE || isupper(type))
-    isref = 1;
   
   // By Value or By Reference?
   if (!isref){// By Value
@@ -5842,6 +5851,12 @@ static void G__x8664_vararg(FILE *fp, int ifn, G__ifunc_table_internal *ifunc,
    const int umax = 20;   // maximum number of extra vararg stack arguments
    int i;
 
+   int type    = ifunc->type[ifn];
+   int ptagnum = ifunc->p_tagtable[ifn];
+   int typenum = ifunc->p_typetable[ifn];
+   int reftype = ifunc->reftype[ifn];
+   int isconst = ifunc->isconst[ifn];
+   
    fprintf(fp, "  const int imax = 6, dmax = 8, umax = 20;\n");
    fprintf(fp, "  int objsize, type, i, icnt = 0, dcnt = 0, ucnt = 0;\n");
    fprintf(fp, "  G__value *pval;\n");
@@ -5849,6 +5864,13 @@ static void G__x8664_vararg(FILE *fp, int ifn, G__ifunc_table_internal *ifunc,
    fprintf(fp, "  double dval[dmax];\n");
    fprintf(fp, "  union { G__int64 lval; double dval; } u[umax];\n");
 
+   if (type == 'u' && reftype==0) {
+      // The function returns an object by value, so we need to reserve space
+      // for it and pass it to the function.
+      fprintf(fp, "  char returnValue[sizeof(%s)];\n", G__type2string(type, tagnum, typenum, reftype, isconst));
+      fprintf(fp, "  lval[icnt] = (G__int64)returnValue; icnt++; // Object returned by value\n");
+   }
+              
    if (tagnum != -1 && !ifunc->staticalloc[ifn])
       fprintf(fp, "  lval[icnt] = G__getstructoffset(); icnt++;  // this pointer\n");
 
@@ -5919,12 +5941,6 @@ static void G__x8664_vararg(FILE *fp, int ifn, G__ifunc_table_internal *ifunc,
 
    // example of what we try to generate:
    //    void (TQObject::*fptr)(const char *, Int_t, ...) = &TQObject::EmitVA;
-
-   int type    = ifunc->type[ifn];
-   int ptagnum = ifunc->p_tagtable[ifn];
-   int typenum = ifunc->p_typetable[ifn];
-   int reftype = ifunc->reftype[ifn];
-   int isconst = ifunc->isconst[ifn];
 
    int m = ifunc->para_nu[ifn];
    if (tagnum != -1) {
