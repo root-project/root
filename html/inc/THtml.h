@@ -254,7 +254,7 @@ public:
    const TString&      GetProductName() const { return fProductName; }
    const TString&      GetInputPath() const { return fPathInfo.fInputPath; }
    const TString&      GetOutputDir(Bool_t createDir = kTRUE) const;
-   virtual const char* GetEtcDir();
+   virtual const char* GetEtcDir() const;
    const TString&      GetModuleDocPath() const { return fPathInfo.fDocPath; }
    const TString&      GetDotDir() const { return fPathInfo.fDotDir; }
    const char*         GetURL(const char* lib = 0) const;
@@ -370,7 +370,7 @@ protected:
    DocSyntax_t     fDocSyntax;      // doc syntax configuration
    LinkInfo_t      fLinkInfo;       // link (URL) configuration
    OutputStyle_t   fOutputStyle;    // output style configuration
-   PathInfo_t      fPathInfo;       // path configuration
+   mutable PathInfo_t fPathInfo;       // path configuration
    DocEntityInfo_t fDocEntityInfo;  // data for documented entities
    mutable TPathDefinition *fPathDef; // object translating classes to module names
    mutable TModuleDefinition *fModuleDef; // object translating classes to module names

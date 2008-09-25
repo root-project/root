@@ -1210,7 +1210,7 @@ const THtml::TPathDefinition& THtml::GetPathDefinition() const
 
 
 //______________________________________________________________________________
-const char* THtml::GetEtcDir()
+const char* THtml::GetEtcDir() const
 {
 // Get the directory containing THtml's auxiliary files ($ROOTSYS/etc/html)
 
@@ -1625,13 +1625,7 @@ Bool_t THtml::CopyFileFromEtcDir(const char* filename) const {
    TString outFile(filename);
 
    TString inFile(outFile);
-   gSystem->PrependPathName("html", inFile);
-#ifndef ROOTETCDIR
-   gSystem->PrependPathName("etc", inFile);
-   gSystem->PrependPathName(gRootDir, inFile);
-#else
-   gSystem->PrependPathName(ROOTETCDIR, inFile);
-#endif
+   gSystem->PrependPathName(GetEtcDir(), inFile);
 
    gSystem->PrependPathName(GetOutputDir(), outFile);
 
