@@ -5977,6 +5977,7 @@ void TH1::UseCurrentStyle()
 {
    //   Copy current attributes from/to current style
 
+   if (!gStyle) return;
    if (gStyle->IsReading()) {
       fXaxis.ResetAttAxis("X");
       fYaxis.ResetAttAxis("Y");
