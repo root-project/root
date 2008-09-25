@@ -1860,7 +1860,7 @@ void TString::Form(const char *va_(fmt), ...)
 TString TString::Format(const char *va_(fmt), ...)
 {
    // Static method which formats a string using a printf style format
-   // descriptor and return a TString. Same as TString::From() but it is
+   // descriptor and return a TString. Same as TString::Form() but it is
    // not needed to first create a TString.
 
    va_list ap;
