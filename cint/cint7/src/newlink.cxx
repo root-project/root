@@ -2585,7 +2585,7 @@ static void G__x8664_vararg(FILE* fp, const ::Reflex::Member& ifunc, const char*
    if (type == 'u' && reftype==0) {
       // The function returns an object by value, so we need to reserve space
       // for it and pass it to the function.
-      fprintf(fp, "  char returnValue[sizeof(%s)];\n", ifunc.TypeOf().ReturnType().Name(Reflex::SCOPED));
+      fprintf(fp, "  char returnValue[sizeof(%s)];\n", ifunc.TypeOf().ReturnType().Name(Reflex::SCOPED).c_str());
       fprintf(fp, "  lval[icnt] = (G__int64)returnValue; icnt++; // Object returned by value\n");
    }
       
