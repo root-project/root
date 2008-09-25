@@ -2210,14 +2210,13 @@ check_qtvers()
 if test ! "x$enable_qt" = "xno" || \
    test ! "x$enable_qtgsi" = "xno"; then
     # Check for Qt include and library
-    # Check for Qt 4 first
     if test ! "x$QTDIR" = "x"; then
-      # The user asked for a specific "QTDIR" ... search ONLY in there
-      check_header "Qt/qglobal.h" "$qtincdir" $QTDIR $QTDIR/include
+        # The user asked for a specific "QTDIR" ... search ONLY in there
+        check_header "Qt/qglobal.h" "$qtincdir" $QTDIR $QTDIR/include
     else
-      check_header "Qt/qglobal.h" "$qtincdir" $QTDIR/include \
-        /usr/local/include/  /usr/local/qt/include  \
-        /usr/include /usr/include/qt4
+        check_header "Qt/qglobal.h" "$qtincdir" \
+            /usr/local/include/ /usr/local/qt/include  \
+            /usr/include /usr/include/qt4
     fi
     qtvers=0
     if test ! "x$found_hdr" = "x"; then
@@ -2226,10 +2225,9 @@ if test ! "x$enable_qt" = "xno" || \
         qtinc=$found_hdr
         qtmainincdir=$found_dir
         qtincdir=$qtmainincdir
-        qtdirlist=`ls $qtmainincdir`
-        for i in $qtdirlist ; do
-            if test -r $qtmainincdir/$i ; then
-		qtincdir="$qtincdir  $qtmainincdir/$i"
+        for i in `ls -d $qtmainincdir/Qt*` ; do
+            if test -d $i ; then
+		qtincdir="$qtincdir $i"
             fi
         done
 	qtverneed="4.3.0"
@@ -2245,25 +2243,26 @@ if test ! "x$enable_qt" = "xno" || \
 	    if test "x$enable_winrtdebug" = "xyes"; then
 	        qt4suffix="d4"
 	    fi
-	    check_library "libQtCore QtCore QtCore$qt4suffix QtCore4" "$enable_shared" \
+	    check_library "libQtCore QtCore QtCore$qt4suffix QtCore4" \
+		"$enable_shared" \
 		"$qtlibdir" $QTDIR $QTDIR/lib /usr/local/lib \
 		/usr/local/qt/lib /usr/lib /usr/qt/lib
 	    qtlib=$found_lib
 	    qtlibdir=$found_dir
-	    check_library "libQtGui QtGui QtGui$qt4suffix QtGui4" "$enable_shared" \
-		"$found_raw_dir"  ""
+	    check_library "libQtGui QtGui QtGui$qt4suffix QtGui4" \
+		"$enable_shared" "$found_raw_dir" ""
 	    qtlib="$qtlib $found_lib"
 	    check_library "libQt3Support Qt3Support Qt3Support$qt4suffix Qt3Support4" \
-		"$enable_shared" "$found_raw_dir"  ""
+		"$enable_shared" "$found_raw_dir" ""
 	    qtlib="$qtlib $found_lib"
 	    check_library "libQtOpenGL QtOpenGL QtOpenGL$qt4suffix QtOpenGL4" \
-		"$enable_shared" "$found_raw_dir"  ""
+		"$enable_shared" "$found_raw_dir" ""
 	    qtlib="$qtlib $found_lib"
-	    check_library "libQtSvg QtSvg QtSvg$qt4suffix QtSvg4" "$enable_shared" \
-		"$found_raw_dir"  ""
+	    check_library "libQtSvg QtSvg QtSvg$qt4suffix QtSvg4" \
+		"$enable_shared" "$found_raw_dir" ""
 	    qtlib="$qtlib $found_lib"
-	    check_library "libQtXml QtXml QtXml$qt4suffix QtXml4" "$enable_shared" \
-		"$found_raw_dir"  ""
+	    check_library "libQtXml QtXml QtXml$qt4suffix QtXml4" \
+		"$enable_shared" "$found_raw_dir" ""
 	    qtlib="$qtlib $found_lib"
 	else
             qtinc=
@@ -2272,45 +2271,12 @@ if test ! "x$enable_qt" = "xno" || \
 	fi
     fi
 
-    if test $qtvers -eq 0 ; then
-        if test ! "x$QTDIR" = "x"; then
-        # The user asked for a specific "QTDIR" ... search ONLY in there
-          check_header "qt.h" "$qtincdir" $QTDIR $QTDIR/include
-        else
-        # Try to search in all system default subdirectories ...
-	  check_header "qt.h" "$qtincdir" $QTDIR $QTDIR/include \
-            /usr/local/include  /usr/local/qt/include /usr/include \
-            /usr/include/qt /usr/include/qt3
-        fi
-	qtinc=$found_hdr
-	qtincdir=$found_dir
-	if test ! "x$found_hdr" = "x" ; then
-	    qtverneed="4.3.0"
-	    qttoonew="5.0.0"
-	    qttestdir=$qtincdir
-	    check_qtvers "$qttestdir" $qtverneed $qttoonew
-	fi
-	if test $qtvers -eq 3 ; then
-	    check_library \
-		"libqt-mt libqt qt-mt* qt-mt334 qt-mt335 qt-mt336 qt" \
-		"$enable_shared" "$qtlibdir" \
-		$QTDIR $QTDIR/lib /usr/local/lib /usr/local/qt/lib /usr/lib \
-		/usr/qt/lib
-	    qtlib=$found_lib
-	    qtlibdir=$found_dir
-	else
-	    qtinc=
-	    qtincdir=
-	fi
-    fi
-
     message "Checking for moc or moc.exe"
-    #  we can pick the wrong moc this way  --  qtmocexe=`$cwhich moc`
-    #  we can pick the wrong moc this way  --  if test $? -ne 0 ; then
-    #  but we should still give it a try.
-    whichmoc=`which moc 2> /dev/null`
-    for i in $QTDIR $QTDIR/bin "`dirname ${whichmoc}`" /usr/local/bin /usr/local/qt/bin /usr/bin \
-        /usr/qt3/bin /usr/share/qt3/bin ; do
+    if `$cwhich moc > /dev/null 2>&1` ; then
+        mocdir=`dirname $cwhich moc`
+    fi
+    for i in $QTDIR $QTDIR/bin "$mocdir" /usr/local/bin /usr/local/qt/bin \
+        /usr/bin /usr/qt4/bin /usr/lib/qt4/bin /usr/share/qt4/bin ; do
 	logmsg " Checking for moc in $i"
 	for j in $i/moc-qt${qtvers} $i/moc-qt${qtvers}.exe $i/moc $i/moc.exe ;
 	do
@@ -2343,7 +2309,7 @@ if test ! "x$enable_qt" = "xno" || \
     fi
 
     if test "x$qtincdir" = "x" || test "x$qtlib" = "x" || \
-	test "x$qtmocexe" = "x" || test $qtvers -eq 0 ; then
+       test "x$qtmocexe" = "x" || test $qtvers -eq 0 ; then
         enable_qt="no"
         enable_qtgsi="no"
     fi
