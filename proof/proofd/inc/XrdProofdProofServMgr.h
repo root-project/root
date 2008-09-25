@@ -126,6 +126,7 @@ class XrdProofdProofServMgr : public XrdProofdConfig {
 
    // Session Admin path management
    int                AddSession(XrdProofdProtocol *p, XrdProofdProofServ *s);
+   bool               IsSessionSocket(const char *fpid);
    int                RmSession(const char *fpid);
    int                TouchSession(const char *fpid, const char *path = 0);
    int                VerifySession(const char *fpid, int to = -1, const char *path = 0);
@@ -158,7 +159,7 @@ public:
 
    int               Process(XrdProofdProtocol *p);
 
-   XrdProofdProofServ *Accept(XrdProofdClient *c, int to, XrdOucString &e);
+   int               Accept(XrdProofdProofServ *xps, int to, XrdOucString &e);
    int               Attach(XrdProofdProtocol *p);
    int               Create(XrdProofdProtocol *p);
    int               Destroy(XrdProofdProtocol *p);

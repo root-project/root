@@ -149,6 +149,7 @@ public:
    inline void         SetStartMsg(XrdSrvBuffer *sm) { XrdSysMutexHelper mhp(fMutex); fStartMsg = sm; }
    inline void         SetStatus(int st) { XrdSysMutexHelper mhp(fMutex); fStatus = st; }
    void                SetTag(const char *t) { XrdSysMutexHelper mhp(fMutex); fTag = t; }
+   void                SetUNIXSockPath(const char *s) { XrdSysMutexHelper mhp(fMutex); fUNIXSockPath = s; };
    void                SetUserEnvs(const char *t) { XrdSysMutexHelper mhp(fMutex); fUserEnvs = t; }
    inline void         SetValid(bool valid = 1) { XrdSysMutexHelper mhp(fMutex); fIsValid = valid; }
    bool                SkipCheck();
@@ -162,6 +163,10 @@ public:
    int                 VerifyProofServ(bool fw);
    inline std::list<XrdProofWorker *> *Workers() const
                       { XrdSysMutexHelper mhp(fMutex); return (std::list<XrdProofWorker *> *)&fWorkers; }
+
+   int                 CreateUNIXSock(XrdSysError *edest);
+   XrdNet             *UNIXSock() const { return fUNIXSock; }
+   const char         *UNIXSockPath() const { return fUNIXSockPath.c_str(); }
 
  private:
 
@@ -188,6 +193,9 @@ public:
    short int                 fID;
    char                      fProtVer;
    XrdOucString              fFileout;
+
+   XrdNet                   *fUNIXSock;     // UNIX server socket for internal connections
+   XrdOucString              fUNIXSockPath; // UNIX server socket path
 
    bool                      fIsShutdown; // Whether asked to shutdown
    bool                      fIsValid;    // Validity flag

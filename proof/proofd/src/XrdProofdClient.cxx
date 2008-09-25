@@ -33,7 +33,7 @@
 
 //__________________________________________________________________________
 XrdProofdClient::XrdProofdClient(XrdProofUI ui, bool master, bool changeown,
-                                 XrdSysError *edest, const char *adminpath)
+                                 XrdSysError *, const char *adminpath)
                 : fSandbox(ui, master, changeown)
 {
    // Constructor
@@ -41,8 +41,6 @@ XrdProofdClient::XrdProofdClient(XrdProofUI ui, bool master, bool changeown,
    fProofServs.clear();
    fClients.clear();
    fUI = ui;
-   fUNIXSock = 0;
-   fUNIXSockSaved = 0;
    fROOT = 0;
    fIsValid = 0;
    fAskedToTouch = 0;
@@ -58,10 +56,8 @@ XrdProofdClient::XrdProofdClient(XrdProofUI ui, bool master, bool changeown,
    if (XrdProofdAux::AssertDir(fAdminPath.c_str(), effui, 1) != 0)
       return;
 
-   // Create the UNIX socket
-   if (fSandbox.IsValid())
-      if (CreateUNIXSock(edest) == 0)
-         fIsValid = 1;
+   // We must have a valid sandbox
+   if (fSandbox.IsValid()) fIsValid = 1;
 }
 
 //__________________________________________________________________________
@@ -69,8 +65,6 @@ XrdProofdClient::~XrdProofdClient()
 {
    // Destructor
 
-   // Unix socket
-   SafeDel(fUNIXSock);
 }
 
 //__________________________________________________________________________
@@ -163,187 +157,6 @@ int XrdProofdClient::ReserveClientID(int cid)
 
    // We are done
    return 0;
-}
-
-//__________________________________________________________________________
-int XrdProofdClient::CreateUNIXSock(XrdSysError *edest)
-{
-   // Create UNIX socket for internal connections
-   XPDLOC(CMGR, "Client::CreateUNIXSock")
-
-   TRACE(DBG, "enter");
-
-
-   // Make sure we do not have already a socket
-   if (fUNIXSock) {
-       TRACE(DBG,"UNIX socket exists already! (" <<
-             fUNIXSockPath<<")");
-       return 0;
-   }
-
-   // Inputs must make sense
-   if (!edest) {
-       TRACE(XERR,"invalid input: edest: " << (int *)edest);
-       return -1;
-   }
-
-   // Create socket
-   fUNIXSock = new XrdNet(edest);
-
-   // Create path if needed
-   fUNIXSockPath.form("%s/xpdsock", fAdminPath.c_str());
-   fUNIXSockPath.replace("//", "/");
-   bool rm = 0, ok = 0;
-   struct stat st;
-   if (stat(fUNIXSockPath.c_str(), &st) == 0) {
-      if (!S_ISSOCK(st.st_mode))
-         rm = 1;
-      else
-         ok = 1;
-   } else {
-      if (errno != ENOENT)
-         rm = 1;
-   }
-   if (rm  && unlink(fUNIXSockPath.c_str()) != 0) {
-      TRACE(XERR, "non-socket path exists: unable to delete it: " <<fUNIXSockPath);
-      return -1;
-   }
-
-   // Create the path
-   int fd = 0;
-   if (!ok) {
-      if ((fd = open(fUNIXSockPath.c_str(), O_EXCL | O_RDWR | O_CREAT)) < 0) {
-         TRACE(XERR, "unable to create path: " <<fUNIXSockPath);
-         return -1;
-      }
-      close(fd);
-   }
-   if (fd > -1) {
-      if (fUNIXSock->Bind((char *)fUNIXSockPath.c_str())) {
-         TRACE(XERR, " problems binding to UNIX socket; path: " <<fUNIXSockPath);
-         return -1;
-      } else
-         TRACE(DBG, "path for UNIX for socket is " <<fUNIXSockPath);
-   } else {
-      TRACE(XERR, "unable to open / create path for UNIX socket; tried path "<< fUNIXSockPath);
-      return -1;
-   }
-
-   // Set ownership of the socket file to the client
-   XrdSysPrivGuard pGuard((uid_t)0, (gid_t)0);
-   if (XpdBadPGuard(pGuard, fUI.fUid) && fChangeOwn) {
-      TRACE(XERR, "could not get privileges");
-      return -1;
-   }
-   if (fChangeOwn) {
-      if (chown(fUNIXSockPath.c_str(), fUI.fUid, fUI.fGid) == -1) {
-         TRACE(XERR, "cannot set user ownership on UNIX socket (errno: "<<errno<<")");
-         return -1;
-      }
-      // Make sure that it worked out
-      if ((stat(fUNIXSockPath.c_str(), &st) != 0) || 
-            (int) st.st_uid != fUI.fUid || (int) st.st_gid != fUI.fGid) {
-         TRACE(XERR, "problems setting user ownership on UNIX socket");
-         return -1;
-      }
-   }
-
-   // We are done
-   return 0;
-}
-
-//__________________________________________________________________________
-void XrdProofdClient::SaveUNIXPath()
-{
-   // Save UNIX path in <SandBox>/.unixpath
-   XPDLOC(CMGR, "Client::SaveUNIXPath")
-
-   TRACE(DBG, "saved? "<<fUNIXSockSaved);
-
-   // Make sure we do not have already a socket
-   if (fUNIXSockSaved) {
-      TRACE(DBG, "UNIX path saved already");
-      return;
-   }
-
-   // Make sure we do not have already a socket
-   if (fUNIXSockPath.length() <= 0) {
-       TRACE(XERR, "UNIX path undefined!");
-       return;
-   }
-
-   // File name
-   XrdOucString fn = fSandbox.Dir();
-   fn += "/.unixpath";
-
-   // Open the file for appending
-   FILE *fup = fopen(fn.c_str(), "a+");
-   if (!fup) {
-      TRACE(XERR, "cannot open file "<<fn<<" for appending (errno: "<<errno<<")");
-      return;
-   }
-
-   // Lock the file
-   lseek(fileno(fup), 0, SEEK_SET);
-   if (lockf(fileno(fup), F_LOCK, 0) == -1) {
-      TRACE(XERR, "cannot lock file "<<fn<<" (errno: "<<errno<<")");
-      fclose(fup);
-      return;
-   }
-
-   // Read content, if any
-   char ln[1024], path[1024];
-   int pid = -1;
-   std::list<XrdOucString *> actln;
-   while (fgets(ln, sizeof(ln), fup)) {
-      // Get rid of '\n'
-      if (ln[strlen(ln)-1] == '\n')
-         ln[strlen(ln)-1] = '\0';
-      // Skip empty or comment lines
-      if (strlen(ln) <= 0 || ln[0] == '#')
-         continue;
-      // Get PID and path
-      sscanf(ln, "%d %s", &pid, path);
-      // Verify if still running
-      int vrc = -1;
-      if ((vrc = XrdProofdAux::VerifyProcessByID(pid, "xrootd")) != 0) {
-         // Still there
-         actln.push_back(new XrdOucString(ln));
-      }
-   }
-
-   // Truncate the file
-   if (ftruncate(fileno(fup), 0) == -1) {
-      TRACE(XERR, "cannot truncate file "<<fn<<" (errno: "<<errno<<")");
-      lseek(fileno(fup), 0, SEEK_SET);
-      lockf(fileno(fup), F_ULOCK, 0);
-      fclose(fup);
-      return;
-   }
-
-   // If active sockets still exist, write out new composition
-   if (actln.size() > 0) {
-      std::list<XrdOucString *>::iterator i;
-      for (i = actln.begin(); i != actln.end(); ++i) {
-         fprintf(fup, "%s\n", (*i)->c_str());
-         delete (*i);
-      }
-   }
-
-   // Append the path and our process ID
-   lseek(fileno(fup), 0, SEEK_END);
-   fprintf(fup, "%d %s\n", getppid(), fUNIXSockPath.c_str());
-
-   // Unlock the file
-   lseek(fileno(fup), 0, SEEK_SET);
-   if (lockf(fileno(fup), F_ULOCK, 0) == -1)
-      TRACE(XERR, "cannot unlock file "<<fn<<" (errno: "<<errno<<")");
-
-   // Close the file
-   fclose(fup);
-
-   // Path saved
-   fUNIXSockSaved = 1;
 }
 
 //__________________________________________________________________________
@@ -451,7 +264,7 @@ XrdProofdProofServ *XrdProofdClient::GetServer(int psid)
    // Get from the vector server instance with id psid
    XPDLOC(CMGR, "Client::GetServer")
 
-   TRACE(DBG, "psid: " << psid);
+   TRACE(DBG, "psid: " << psid <<", size: "<<fProofServs.size());
 
    XrdSysMutexHelper mh(fMutex);
 
@@ -526,16 +339,13 @@ void XrdProofdClient::EraseServer(int psid)
 void XrdProofdClient::CheckServerSlots()
 {
    // Free slots corresponding to invalid server instances
-   XPDLOC(CMGR, "Client::CheckServerSlots")
 
    XrdSysMutexHelper mh(fMutex);
 
    std::vector<XrdProofdProofServ *>::iterator ip;
    for (ip = fProofServs.begin(); ip != fProofServs.end(); ++ip) {
-      TRACE(DBG, "found: " << *ip);
       if (*ip && !(*ip)->IsValid()) {
          fProofServs.erase(ip);
-         break;
       }
    }
 }

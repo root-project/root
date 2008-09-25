@@ -10,6 +10,8 @@
  *************************************************************************/
 #include <sys/stat.h>
 
+#include "XrdNet/XrdNet.hh"
+
 #include "XrdProofdAux.h"
 #include "XrdProofdProofServ.h"
 #include "XrdProofWorker.h"
@@ -58,6 +60,8 @@ XrdProofdProofServ::XrdProofdProofServ()
    fOrdinal = "";
    fTag = "";
    fUserEnvs = "";
+   fUNIXSock = 0;
+   fUNIXSockPath = "";
 }
 
 //__________________________________________________________________________
@@ -77,6 +81,9 @@ XrdProofdProofServ::~XrdProofdProofServ()
 
    // Cleanup worker info
    ClearWorkers();
+
+   // Remove the associated UNIX socket path
+   unlink(fUNIXSockPath.c_str());
 
    SafeDelete(fMutex);
 }
@@ -132,6 +139,9 @@ void XrdProofdProofServ::Reset()
    fOrdinal = "";
    fTag = "";
    fUserEnvs = "";
+   SafeDelete(fUNIXSock);
+   unlink(fUNIXSockPath.c_str());
+   fUNIXSockPath = "";
 }
 
 //__________________________________________________________________________
@@ -558,3 +568,61 @@ bool XrdProofdProofServ::IsValid()
    // Done
    return 0;
 }
+
+//__________________________________________________________________________
+int XrdProofdProofServ::CreateUNIXSock(XrdSysError *edest)
+{
+   // Create UNIX socket for internal connections
+   XPDLOC(SMGR, "ProofServ::CreateUNIXSock")
+
+   TRACE(DBG, "enter");
+
+   // Make sure we do not have already a socket
+   if (fUNIXSock) {
+       TRACE(DBG,"UNIX socket exists already! (" <<
+             fUNIXSockPath<<")");
+       return 0;
+   }
+
+   // Create socket
+   fUNIXSock = new XrdNet(edest);
+
+   // Create path
+   bool rm = 0, ok = 0;
+   struct stat st;
+   if (stat(fUNIXSockPath.c_str(), &st) == 0 || (errno != ENOENT)) rm = 1;
+   if (rm  && unlink(fUNIXSockPath.c_str()) != 0) {
+      if (!S_ISSOCK(st.st_mode)) {
+         TRACE(XERR, "non-socket path exists: unable to delete it: " <<fUNIXSockPath);
+         return -1;
+      } else {
+         XPDPRT("WARNING: socket path exists: unable to delete it:"
+                " try to use it anyway " <<fUNIXSockPath);
+         ok = 1;
+      }
+   }
+
+   // Create the path
+   int fd = 0;
+   if (!ok) {
+      if ((fd = open(fUNIXSockPath.c_str(), O_EXCL | O_RDWR | O_CREAT)) < 0) {
+         TRACE(XERR, "unable to create path: " <<fUNIXSockPath);
+         return -1;
+      }
+      close(fd);
+   }
+   if (fd > -1) {
+      if (fUNIXSock->Bind((char *)fUNIXSockPath.c_str())) {
+         TRACE(XERR, " problems binding to UNIX socket; path: " <<fUNIXSockPath);
+         return -1;
+      } else
+         TRACE(DBG, "path for UNIX for socket is " <<fUNIXSockPath);
+   } else {
+      TRACE(XERR, "unable to open / create path for UNIX socket; tried path "<< fUNIXSockPath);
+      return -1;
+   }
+
+   // We are done
+   return 0;
+}
+

@@ -387,6 +387,43 @@ int XrdProofdProofServMgr::AddSession(XrdProofdProtocol *p, XrdProofdProofServ *
 }
 
 //______________________________________________________________________________
+bool XrdProofdProofServMgr::IsSessionSocket(const char *fpid)
+{
+   // Checks is fpid is the path of a session UNIX socket
+   // Returns TRUE is yes; cleans the socket if the session is gone.
+   XPDLOC(SMGR, "ProofServMgr::IsSessionSocket")
+
+   TRACE(REQ, "checking "<<fpid<<" ...");
+
+   // Check inputs
+   if (!fpid || strlen(fpid) <= 0) {
+      TRACE(XERR, "invalid input: "<<fpid);
+      return 0;
+   }
+
+   // Paths
+   XrdOucString spath(fpid);
+   if (!spath.endswith(".sock")) return 0;
+   if (!spath.beginswith(fActiAdminPath.c_str())) {
+      // We are given a partial path: create full paths
+      spath.form("%s/%s", fActiAdminPath.c_str(), fpid);
+   }
+   XrdOucString apath = spath;
+   apath.replace(".sock", "");
+
+   // Check the admin path
+   struct stat st;
+   if (stat(apath.c_str(), &st) != 0 && (errno == ENOENT)) {
+      // Remove the socket path
+      unlink(spath.c_str());
+   }
+
+   // Done
+   return 1;
+}
+
+
+//______________________________________________________________________________
 int XrdProofdProofServMgr::MvSession(const char *fpid)
 {
    // Move session file from the active to the terminated areas 
@@ -411,6 +448,11 @@ int XrdProofdProofServMgr::MvSession(const char *fpid)
       npath = fpid;
       npath.replace(fActiAdminPath.c_str(), fTermAdminPath.c_str());
    }
+
+   // Remove the socket path
+   XrdOucString spath = opath;
+   spath += ".sock";
+   unlink(spath.c_str());
 
    // Move the file
    errno = 0;
@@ -763,6 +805,9 @@ int XrdProofdProofServMgr::CheckActiveSessions(bool verify)
    // Scan the active sessions admin path
    struct dirent *ent = 0;
    while ((ent = (struct dirent *)readdir(dir))) {
+      // If a socket path, make sure that the associated session still exists
+      // and go to the next
+      if (strstr(ent->d_name, ".sock") && IsSessionSocket(ent->d_name)) continue;
       // Get the session instance (skip non-digital entries)
       XrdOucString rest, key;
       int pid = XrdProofdAux::ParsePidPath(ent->d_name, rest);
@@ -1425,7 +1470,7 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
 
    // Fork an agent process to handle this session
    int pid = -1;
-   TRACEP(p, FORK,"Forking external proofsrv: UNIX sock: "<<p->Client()->UNIXSockPath());
+   TRACEP(p, FORK,"Forking external proofsrv");
    if (!(pid = fSched->Fork("proofsrv"))) {
 
       p->Client()->Mutex()->UnLock();
@@ -1441,6 +1486,12 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
       path.form("%s/%s.%s.%d", fActiAdminPath.c_str(),
                                p->Client()->User(), p->Client()->Group(), getpid());
       xps->SetAdminPath(path.c_str());
+
+      // UNIX Socket Path
+      XrdOucString sockpath;
+      sockpath.form("%s/%s.%s.%d.sock", fActiAdminPath.c_str(),
+                                        p->Client()->User(), p->Client()->Group(), getpid());
+      xps->SetUNIXSockPath(sockpath.c_str());
 
       // Log to the session log file from now on
       if (fLogger) fLogger->Bind(in.fLogFile.c_str());
@@ -1541,9 +1592,25 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
    }
 
    TRACEP(p, FORK,"Parent process: child is "<<pid);
+   XrdOucString emsg;
+
+   // UNIX Socket Path (set path and create the socket)
+   XrdOucString sockpath;
+   sockpath.form("%s/%s.%s.%d.sock", fActiAdminPath.c_str(),
+                                       p->Client()->User(), p->Client()->Group(), pid);
+   xps->SetUNIXSockPath(sockpath.c_str());
+   if (xps->CreateUNIXSock(fEDest) != 0) {
+      // Failure
+      emsg += ": failure creating UNIX socket on " ;
+      emsg += sockpath;
+      xps->Reset();
+      XrdProofdAux::KillProcess(pid, 1, p->Client()->UI(), fMgr->ChangeOwn());
+      response->Send(kXP_ServerError, emsg.c_str());
+      return 0;
+   }
+   TRACEP(p, FORK,"UNIX sock: "<<xps->UNIXSockPath());
 
    // Read status-of-setup from pipe
-   XrdOucString emsg;
    int setupOK = 0;
    struct pollfd fds_r;
    fds_r.fd = fp[0];
@@ -1627,8 +1694,6 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
       response->Send(kXP_ServerError, emsg.c_str());
       return 0;
    }
-   // UNIX Socket is saved now
-   p->Client()->SetUNIXSockSaved();
 
    // now we wait for the callback to be (successfully) established
    TRACEP(p, FORK, "server launched: wait for callback ");
@@ -1637,7 +1702,7 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
    xps->SetSrvPID(pid);
 
    // Wait for the call back
-   if (!Accept(p->Client(), fInternalWait, emsg)) {
+   if (Accept(xps, fInternalWait, emsg) != 0) {
       // Failure: kill the child process
       if (XrdProofdAux::KillProcess(pid, 0, p->Client()->UI(), fMgr->ChangeOwn()) != 0)
          emsg += ": process could not be killed";
@@ -1735,6 +1800,12 @@ int XrdProofdProofServMgr::ResolveSession(const char *fpid)
 
    // Fill info for this session
    si.FillProofServ(*xps, fMgr->ROOTMgr());
+   if (xps->CreateUNIXSock(fEDest) != 0) {
+      // Failure
+      TRACE(XERR,"failure creating UNIX socket on " << xps->UNIXSockPath());
+      xps->Reset();
+      return -1;
+   }
 
    // Set invalid as we are not yet connected
    xps->SetValid(0);
@@ -1779,8 +1850,11 @@ int XrdProofdProofServMgr::Recover(XpdClientSessions *cl)
    { XrdSysMutexHelper mhp(cl->fMutex); nps = cl->fProofServs.size(), npsref = nps; }
    while (nps--) {
 
+      { XrdSysMutexHelper mhp(cl->fMutex); xps = cl->fProofServs.front();
+        cl->fProofServs.pop_front(); cl->fProofServs.push_back(xps); }
+
       // Short steps of 1 sec
-      if (!(xps = Accept(cl->fClient, 1, emsg))) {
+      if (Accept(xps, 1, emsg) != 0) {
          if (emsg == "timeout") {
             TRACE(DBG, "timeout while accepting callback");
          } else {
@@ -1812,14 +1886,12 @@ int XrdProofdProofServMgr::Recover(XpdClientSessions *cl)
 }
 
 //______________________________________________________________________________
-XrdProofdProofServ *XrdProofdProofServMgr::Accept(XrdProofdClient *c,
-                                                  int to, XrdOucString &msg)
+int XrdProofdProofServMgr::Accept(XrdProofdProofServ *xps,
+                                  int to, XrdOucString &msg)
 {
    // Accept a callback from a starting-up server; return a pointer to the
    // attached session or 0.
    XPDLOC(SMGR, "ProofServMgr::Accept")
-
-   XrdProofdProofServ *xps = 0;
 
    // We will get back a peer to initialize a link
    XrdNetPeer peerpsrv;
@@ -1829,14 +1901,14 @@ XrdProofdProofServ *XrdProofdProofServMgr::Accept(XrdProofdClient *c,
    bool go = 1;
 
    // Check inputs
-   if (!c) {
-      TRACE(XERR, "invalid inputs: "<<c);
-      return xps;
+   if (!xps) {
+      TRACE(XERR, "invalid inputs: "<<xps);
+      return -1;
    }
-   TRACE(REQ, "waiting for server callback for "<<to<<" secs ...");
+   TRACE(REQ, "waiting for server callback for "<<to<<" secs ... on "<<xps->UNIXSockPath());
 
    // Perform regular accept
-   if (go && !(c->UNIXSock()->Accept(peerpsrv, XRDNET_NODNTRIM, to))) {
+   if (go && !(xps->UNIXSock()->Accept(peerpsrv, XRDNET_NODNTRIM, to))) {
       msg = "timeout";
       go = 0;
    }
@@ -1886,7 +1958,7 @@ XrdProofdProofServ *XrdProofdProofServMgr::Accept(XrdProofdClient *c,
       // Close the link
       if (linkpsrv)
          linkpsrv->Close();
-      return xps;
+      return -1;
    }
 
    // Tight this protocol instance to the link
@@ -1897,15 +1969,11 @@ XrdProofdProofServ *XrdProofdProofServMgr::Accept(XrdProofdClient *c,
    // Schedule it
    fSched->Schedule((XrdJob *)linkpsrv);
 
-   // Get the session
-   if ((xps = c->GetServer((XrdProofdProtocol *)xp))) {
-      xps->SetProtocol((XrdProofdProtocol *)xp);
-   } else {
-      msg = "could not get XrdProofdProofServ instance! ";
-   }
+   // Save the protocol in the session instance
+   xps->SetProtocol((XrdProofdProtocol *)xp);
 
    // Done
-   return xps;
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -2123,7 +2191,7 @@ int XrdProofdProofServMgr::SetProofServEnvOld(XrdProofdProtocol *p, void *input)
       fprintf(fenv, "ROOTUSEUSERCFG=1\n");
 
    // Set Open socket
-   fprintf(fenv, "ROOTOPENSOCK=%s\n", p->Client()->UNIXSockPath());
+   fprintf(fenv, "ROOTOPENSOCK=%s\n", xps->UNIXSockPath());
 
    // Entity
    fprintf(fenv, "ROOTENTITY=%s@%s\n", p->Client()->User(), p->Link()->Host());
@@ -2454,7 +2522,7 @@ int XrdProofdProofServMgr::SetProofServEnv(XrdProofdProtocol *p, void *input)
    }
    // Set Open socket
    fprintf(frc, "# Open socket\n");
-   fprintf(frc, "ProofServ.OpenSock: %s\n", p->Client()->UNIXSockPath());
+   fprintf(frc, "ProofServ.OpenSock: %s\n", xps->UNIXSockPath());
    // Entity
    fprintf(frc, "# Entity\n");
    if (p->Client()->UI().fGroup.length() > 0)
@@ -3146,10 +3214,6 @@ int XrdProofdProofServMgr::SetUserEnvironment(XrdProofdProtocol *p)
       }
    }
 
-   // Save UNIX path in the sandbox for later cleaning
-   // (it must be done after sandbox login)
-   p->Client()->SaveUNIXPath();
-
    // We are done
    TRACE(REQ, "done");
    return 0;
@@ -3362,7 +3426,6 @@ XrdProofSessionInfo::XrdProofSessionInfo(XrdProofdClient *c, XrdProofdProofServ 
    // Fill from the client instance
    fUser = c ? c->User() : "";
    fGroup = c ? c->Group() : "";
-   fUnixPath = c ? c->UNIXSockPath() : "";
 
    // Fill from the server instance
    fPid = s ? s->SrvPID() : -1;
@@ -3377,6 +3440,7 @@ XrdProofSessionInfo::XrdProofSessionInfo(XrdProofdClient *c, XrdProofdProofServ 
    fSrvProtVers = (s && s->ROOT()) ? s->ROOT()->SrvProtVers() : -1;
    fUserEnvs = s ? s->UserEnvs() : "";
    fAdminPath = s ? s->AdminPath() : "";
+   fUnixPath = s ? s->UNIXSockPath() : "";
 }
 
 //______________________________________________________________________________
@@ -3408,6 +3472,7 @@ void XrdProofSessionInfo::FillProofServ(XrdProofdProofServ &s, XrdROOTMgr *rmgr)
    }
    s.SetUserEnvs(fUserEnvs.c_str());
    s.SetAdminPath(fAdminPath.c_str());
+   s.SetUNIXSockPath(fUnixPath.c_str());
 }
 
 //______________________________________________________________________________

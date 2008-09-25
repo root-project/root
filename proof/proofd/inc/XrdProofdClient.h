@@ -95,12 +95,6 @@ class XrdProofdClient {
 
    int                     Touch(bool reset = 0);
 
-   int                     CreateUNIXSock(XrdSysError *edest);
-   XrdNet                 *UNIXSock() const { return fUNIXSock; }
-   const char             *UNIXSockPath() const { return fUNIXSockPath.c_str(); }
-   void                    SaveUNIXPath(); // Save path in the sandbox
-   void                    SetUNIXSockSaved() { fUNIXSockSaved = 1;}
-
    const char             *AdminPath() const { return fAdminPath.c_str(); }
 
  private:
@@ -115,10 +109,6 @@ class XrdProofdClient {
    XrdROOT                *fROOT;        // ROOT vers instance to be used for proofserv
 
    XrdProofdSandbox        fSandbox;     // Clients sandbox
-
-   XrdNet                 *fUNIXSock;     // UNIX server socket for internal connections
-   XrdOucString            fUNIXSockPath; // UNIX server socket path
-   bool                    fUNIXSockSaved; // TRUE if the socket path has been saved
 
    XrdOucString            fAdminPath;    // Admin path for this client
 
