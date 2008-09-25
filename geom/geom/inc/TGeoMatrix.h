@@ -180,7 +180,7 @@ public :
    TGeoRotation(const TGeoMatrix &other);
    TGeoRotation(const char *name);
 //   TGeoRotation(const char *name, Double_t *matrix) ;
-   TGeoRotation(const char *name, Double_t alpha, Double_t beta, Double_t gamma);
+   TGeoRotation(const char *name, Double_t phi, Double_t theta, Double_t psi);
    TGeoRotation(const char *name, Double_t theta1, Double_t phi1, Double_t theta2, Double_t phi2,
                 Double_t theta3, Double_t phi3);
    virtual ~TGeoRotation() {}
