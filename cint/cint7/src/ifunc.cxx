@@ -4353,9 +4353,9 @@ static ::Reflex::Member G__overload_match(char* funcname, G__param* libp, int ha
             if (G__get_funcproperties(*ifn)->entry.ansi == 0 || /* K&R C style header */
                   G__get_funcproperties(*ifn)->entry.ansi == 2 || /* variable number of args */
                   (G__HASH_MAIN == hash && strcmp(funcname, "main") == 0)) {
-               /* special match */
-               G__funclist_delete(funclist);
-               return(*ifn);
+               /* immediate return for special match */
+               do_convert = false;
+               goto end_of_function;
             }
             if (-1 != G__get_tagnum(ifunc) &&
                   (memfunc_flag == G__TRYNORMAL && doconvert)
@@ -4450,7 +4450,8 @@ static ::Reflex::Member G__overload_match(char* funcname, G__param* libp, int ha
    /* best match function found */
    result = match->ifunc;
 
-   /*  check private, protected access rights
+end_of_function:
+   /*  check private, protected access rights and static-ness
     *    display error if no access right
     *    do parameter conversion if needed */
    if (!G__test_access(result, access) && (!G__isfriend(G__get_tagnum(result.DeclaringScope())))
@@ -4467,7 +4468,22 @@ static ::Reflex::Member G__overload_match(char* funcname, G__param* libp, int ha
       G__funclist_delete(funclist);
       return ::Reflex::Member();
    }
-
+   if (G__exec_memberfunc && G__getstructoffset()==0 
+       && !result.DeclaringScope().IsNamespace() && !result.IsStatic()  
+       && G__NOLINK == G__globalcomp
+       && G__TRYCONSTRUCTOR !=  memfunc_flag) {
+      /* non static function called without an object */
+      G__fprinterr(G__serr, "Error: cannot call member function without object");
+      G__genericerror((char*)NULL);
+      G__fprinterr(G__serr, "  ");
+      G__display_func(G__serr, p_ifunc, *pifn);
+      G__display_ambiguous(scopetagnum, funcname, libp, funclist, bestmatch);
+      *pifn = -1;
+      G__funclist_delete(funclist);
+      return((struct G__ifunc_table_internal*)NULL);
+   } 
+   
+   
    /* convert parameter */
    if (
       doconvert &&
