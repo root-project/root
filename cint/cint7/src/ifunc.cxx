@@ -4354,7 +4354,7 @@ static ::Reflex::Member G__overload_match(char* funcname, G__param* libp, int ha
                   G__get_funcproperties(*ifn)->entry.ansi == 2 || /* variable number of args */
                   (G__HASH_MAIN == hash && strcmp(funcname, "main") == 0)) {
                /* immediate return for special match */
-               do_convert = false;
+               doconvert = false;
                goto end_of_function;
             }
             if (-1 != G__get_tagnum(ifunc) &&
@@ -4474,13 +4474,13 @@ end_of_function:
        && G__TRYCONSTRUCTOR !=  memfunc_flag) {
       /* non static function called without an object */
       G__fprinterr(G__serr, "Error: cannot call member function without object");
-      G__genericerror((char*)NULL);
+      G__genericerror(0);
       G__fprinterr(G__serr, "  ");
-      G__display_func(G__serr, p_ifunc, *pifn);
-      G__display_ambiguous(scopetagnum, funcname, libp, funclist, bestmatch);
-      *pifn = -1;
+      G__display_func(G__serr, result);
+      G__display_ambiguous(p_ifunc, funcname, libp, funclist, bestmatch);
+      *match_error = 1;
       G__funclist_delete(funclist);
-      return((struct G__ifunc_table_internal*)NULL);
+      return ::Reflex::Member();
    } 
    
    
