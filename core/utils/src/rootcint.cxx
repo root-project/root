@@ -791,8 +791,8 @@ void BeforeParseInit()
    //---------------------------------------------------------------------------
    // Add the conversion rule processors
    //---------------------------------------------------------------------------
-   G__addpragma( "read", ProcessReadPragma );
-   G__addpragma( "readraw", ProcessReadRawPragma );
+   G__addpragma( (char*)"read", ProcessReadPragma );
+   G__addpragma( (char*)"readraw", ProcessReadRawPragma );
    
 }
 
