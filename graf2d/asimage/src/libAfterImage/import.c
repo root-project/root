@@ -116,6 +116,7 @@
 #include "asimage.h"
 #include "imencdec.h"
 #include "bmp.h"
+#include "scanline.h"
 #include "ximage.h"
 #include "xcf.h"
 #include "xpm.h"
@@ -2311,205 +2312,6 @@ gif2ASImage( const char * path, ASImageImportParams *params )
 
 #ifdef HAVE_TIFF/* TIFF TIFF TIFF TIFF TIFF TIFF TIFF TIFF TIFF TIFF TIFF TIFF TIFF */
 
-/* demosaicing */
-#define ASIM_DEMOSAIC_DEFAULT_STRIP_SIZE 	5
-
-typedef struct ASIMStrip
-{
-#define ASIM_SCL_Interpolated 	(0x01<<SCL_CUSTOM_OFFSET);
-
-	int 		 size, width;
-	ASScanline 	**lines;
-	int 		 start_line;
-
-#define ASIM_IsStripLineLoaded(sptr,l)   		((sptr)->lines[l]->flags & SCL_DO_COLOR)
-#define ASIM_IsStripLineInterpolated(sptr,l)   	((sptr)->lines[l]->flags & ASIM_SCL_Interpolated)
-}ASIMStrip;
-
-typedef void (*ASIMStripLoader)(ASScanline *scl, CARD8 *data, int data_size);
-
-void
-destroy_asim_strip (ASIMStrip **pstrip)
-{
-	if (pstrip)
-	{
-		ASIMStrip *strip = *pstrip;
-		if (strip)
-		{
-			int i = strip->size;
-			while (--i >= 0)
-				free_scanline (strip->lines[i], False);
-			free (strip->lines);
-			free (strip);
-			*pstrip = NULL;
-		}
-	}
-}
-
-ASIMStrip *
-create_asim_strip(unsigned int size, unsigned int width, int shift, int bgr)
-{
-	ASIMStrip *strip;
-	int i;
-	
-	if (width == 0 || size == 0)
-		return NULL;
-	
-	strip = safecalloc( 1, sizeof(ASIMStrip));
-	if ((strip->lines = safemalloc (size*sizeof(ASScanline*))) == NULL)
-	{
-		free (strip);
-		return NULL;
-	}
-	
-	strip->size = size;
-	
-	for (i = 0 ; i < (int)size; ++i)
-		if ((strip->lines[i] = prepare_scanline (width, shift, NULL, bgr)) == NULL)
-		{
-			strip->size = i;
-			destroy_asim_strip (&strip);
-			return NULL;
-		}
-
-	strip->width = width;
-	strip->start_line = 0;
-	
-	return strip;
-}
-
-void
-advance_asim_strip (ASIMStrip *strip)
-{
-	ASScanline *tmp = strip->lines[0];
-	int i;
-	
-	/* move all scanlines up, shuffling first scanline to the back */
-	for (i = 0 ; i < strip->size-1; ++i )
-		strip->lines[i] = strip->lines[i+1];
-	strip->lines[strip->size-1] = tmp;
-	
-	/* clear the state of the scanline : */
-	tmp->flags = 0;	
-
-	strip->start_line++;
-} 
-
-/* returns number of lines processed from the data */
-int
-load_asim_strip (ASIMStrip *strip, CARD8 *data, int data_size, int data_start_line, int data_row_size, 
-				 ASIMStripLoader *line_loaders, int line_loaders_num)
-{
-	int line = 0;
-	int loaded = 0;
-	
-	if (strip == NULL || data == NULL || data_size <= 0 || data_row_size <= 0 || line_loaders == NULL)
-		return 0;
-	line = data_start_line - strip->start_line;
-	if (line < 0)
-	{
-		data += data_row_size*(-line);
-		data_size -= data_row_size*(-line);
-		line = 0;
-	}
-		
-	while (line < strip->size && data_size > 0)
-	{
-		int loader = (strip->start_line+line)%line_loaders_num;
-		if (!ASIM_IsStripLineLoaded(strip,line) && line_loaders[loader])
-			line_loaders[loader] (strip->lines[line], data, data_size);
-
-		++line;
-		++loaded;
-		data_size -= data_row_size;
-		data += data_row_size;
-	}
-	return loaded;
-}
-
-static int
-decode_12_be (CARD32 *c1, CARD32 *c2, CARD8 *data, int width, int data_size)
-{
-	int x;
-	int max_x = (data_size*2)/3;
-	
-	if (max_x > width)
-		max_x = width;
-	
-	if (max_x > 0)
-	{
-#if defined(LOCAL_DEBUG) && !defined(NO_DEBUG_OUTPUT)
-		fprintf (stderr, "decode_12_be CFA data : ");		
-		for (x = 0 ; x < (max_x*3)/2; x += 3)
-			fprintf (stderr, " |%2.2X %2.2X %2.2X", data[x], data[x+1], data[x+2]);				
-		fprintf (stderr, "\n");		
-#endif
-		for (x = 0 ; x+1 < max_x; x += 2)
-		{
-			CARD32 tail = ((CARD32)data[1])&0x00F0;
-			c1[x] = (((CARD32)data[0]) << 8)|tail|(tail>>4);
-			tail = data[2]&0x0F;
-			c2[x] = (((CARD32)data[1]&0x0f) << 12)| ((CARD32)data[2]<<4) |tail;
-			data += 3;
-		}
-
-		if (x < max_x);
-		{
-			CARD32 tail = ((CARD32)data[1])&0x00F0;
-			c1[x] = (((CARD32)data[0]) << 8)|tail|(tail>>4);
-		}
-
-		for (x = 1 ; x < max_x; x += 2)
-		{
-			c1[x] = c1[x-1];
-			c2[x] = c2[x-1];
-		}
-#if 0
-#if defined(LOCAL_DEBUG) && !defined(NO_DEBUG_OUTPUT)	
-fprintf (stderr, "decode_12_be  C1 data : ");		
-	for (x = 0 ; x < max_x; ++x)
-		fprintf (stderr, " %4.4X", c1[x]);						
-fprintf (stderr, "\ndecode_12_be  C2 data : ");		
-	for (x = 0 ; x < max_x; ++x)
-		fprintf (stderr, " %4.4X", c2[x]);						
-fprintf (stderr, "\n");				
-#endif
-#endif
-	}
-	return max_x;
-} 
-
-void decode_BG_12_be (ASScanline *scl, CARD8 *data, int data_size)
-{
-	if (decode_12_be (scl->blue, scl->green, data, scl->width, data_size))
-		set_flags (scl->flags, SCL_DO_GREEN|SCL_DO_BLUE);
-}
-
-void decode_GR_12_be (ASScanline *scl, CARD8 *data, int data_size)
-{
-	if (decode_12_be (scl->green, scl->red, data, scl->width, data_size))	
-		set_flags (scl->flags, SCL_DO_GREEN|SCL_DO_RED);
-}
-
-void decode_RG_12_be (ASScanline *scl, CARD8 *data, int data_size)
-{
-	if (decode_12_be (scl->red, scl->green, data, scl->width, data_size))
-		set_flags (scl->flags, SCL_DO_GREEN|SCL_DO_RED);
-}
-
-void decode_GB_12_be (ASScanline *scl, CARD8 *data, int data_size)
-{
-	if (decode_12_be (scl->green, scl->blue, data, scl->width, data_size))
-		set_flags (scl->flags, SCL_DO_GREEN|SCL_DO_BLUE);
-}
-
-void
-interpolate_asim_strip_custom_bggr (ASIMStrip *strip)
-{
-
-}
-
-/* end of demosaicing */
 
 ASImage *
 tiff2ASImage( const char * path, ASImageImportParams *params )
@@ -2646,8 +2448,12 @@ tiff2ASImage( const char * path, ASImageImportParams *params )
 							{
 								int bytes_in;
 								if (bits == 12) /* can't use libTIFF's function - it can't handle 12bit data ! */
+								{
+									/* PENTAX cameras claim that data is compressed as runlength packbits - 
+									   it is not in fact run-length, which confuses libTIFF 
+									 */
 									bytes_in = TIFFReadRawStrip(tif, strip_no, data+loaded_data_size, data_size-loaded_data_size);
-								else
+								}else
 									bytes_in = TIFFReadEncodedStrip(tif, strip_no, data+loaded_data_size, data_size-loaded_data_size);
 
 LOCAL_DEBUG_OUT( "strip size = %d, bytes_in = %d, bytes_per_row = %d", bc[strip_no], bytes_in, bytes_per_row);
@@ -2678,10 +2484,10 @@ LOCAL_DEBUG_OUT( "strip size = %d, bytes_in = %d, bytes_per_row = %d", bc[strip_
 																data_row, bytes_per_row, 
 																line_loaders[cfa_type], line_loaders_num[cfa_type]);
 
-LOCAL_DEBUG_OUT ( "data_row = %d, loaded_rows = %d", data_row, loaded_rows );																	
-
 							if (loaded_rows == 0)
 							{ /* need to write out some rows to free up space */
+								interpolate_asim_strip_custom_rggb2 (strip, SCL_DO_RED|SCL_DO_GREEN|SCL_DO_BLUE, False);
+#if 0
 								if (!get_flags (strip->lines[0]->flags, SCL_DO_RED))
 								{
 									int x;
@@ -2693,7 +2499,10 @@ LOCAL_DEBUG_OUT ( "data_row = %d, loaded_rows = %d", data_row, loaded_rows );
 									set_flags (strip->lines[0]->flags, SCL_DO_RED);
 									set_flags (strip->lines[1]->flags, SCL_DO_BLUE);
 								}
+#endif								
+//clear_flags (strip->lines[0]->flags, SCL_DO_GREEN|SCL_DO_BLUE);
 								imout->output_image_scanline( imout, strip->lines[0], 1);
+								
 								advance_asim_strip (strip);
 
 							}	

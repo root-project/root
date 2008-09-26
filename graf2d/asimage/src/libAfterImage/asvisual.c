@@ -41,6 +41,7 @@
 # include "afterbase.h"
 #endif
 #include "asvisual.h"
+#include "scanline.h"
 
 #if defined(XSHMIMAGE) && !defined(X_DISPLAY_MISSING) 
 # include <sys/ipc.h>
@@ -130,75 +131,6 @@ int get_bits_per_pixel(Display *dpy, int depth)
 	    return 16;
 	return 32;
  }
-
-/* ********************* ASScanline ************************************/
-ASScanline*
-prepare_scanline( unsigned int width, unsigned int shift, ASScanline *reusable_memory, Bool BGR_mode  )
-{
-	register ASScanline *sl = reusable_memory ;
-	size_t aligned_width;
-	void *ptr;
-
-	if( sl == NULL )
-		sl = safecalloc( 1, sizeof( ASScanline ) );
-	else
-		memset( sl, 0x00, sizeof(ASScanline));
-
-	if( width == 0 ) width = 1 ;
-	sl->width 	= width ;
-	sl->shift   = shift ;
-	/* we want to align data by 8 byte boundary (double)
-	 * to allow for code with less ifs and easier MMX/3Dnow utilization :*/
-	aligned_width = width + (width&0x00000001);
-	sl->buffer = ptr = safecalloc (1, ((aligned_width*4)+16)*sizeof(CARD32)+8);
-	if (ptr == NULL)
-	{
-		if (sl != reusable_memory)
-			free (sl);
-		return NULL;
-	}
-
-	sl->xc1 = sl->red 	= (CARD32*)((((long)ptr+7)>>3)*8);
-	sl->xc2 = sl->green = sl->red   + aligned_width;
-	sl->xc3 = sl->blue 	= sl->green + aligned_width;
-	sl->alpha 	= sl->blue  + aligned_width;
-
-	sl->channels[IC_RED] = sl->red ;
-	sl->channels[IC_GREEN] = sl->green ;
-	sl->channels[IC_BLUE] = sl->blue ;
-	sl->channels[IC_ALPHA] = sl->alpha ;
-
-	if( BGR_mode )
-	{
-		sl->xc1 = sl->blue ;
-		sl->xc3 = sl->red ;
-	}
-	/* this way we can be sure that our buffers have size of multiplies of 8s
-	 * and thus we can skip unneeded checks in code */
-#if 0
-	/* initializing padding into 0 to avoid any garbadge carry-over
-	 * bugs with diffusion: */
-	sl->red[aligned_width-1]   = 0;
-	sl->green[aligned_width-1] = 0;
-	sl->blue[aligned_width-1]  = 0;
-	sl->alpha[aligned_width-1] = 0;
-#endif	
-	sl->back_color = ARGB32_DEFAULT_BACK_COLOR;
-
-	return sl;
-}
-
-void
-free_scanline( ASScanline *sl, Bool reusable )
-{
-	if( sl )
-	{
-		if( sl->buffer )
-			free( sl->buffer );
-		if( !reusable )
-			free( sl );
-	}
-}
 
 /* ********************* ASVisual ************************************/
 ASVisual *_set_default_asvisual( ASVisual *new_v );

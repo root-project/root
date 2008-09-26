@@ -36,6 +36,7 @@
 # include "afterbase.h"
 #endif
 #include "asvisual.h"
+#include "scanline.h"
 #include "blender.h"
 
 /*********************************************************************************/

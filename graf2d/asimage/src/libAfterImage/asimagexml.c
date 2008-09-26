@@ -19,7 +19,7 @@
  *
  */
 
-#define LOCAL_DEBUG
+#undef LOCAL_DEBUG
 #ifdef _WIN32
 #include "win32/config.h"
 #else
@@ -518,7 +518,7 @@ translate_tag_size(	const char *width_str, const char *height_str, ASImage *imtm
  * SYNOPSIS
  * <text id="new_id" font="font" point="size" fgcolor="color"
  *       bgcolor="color" fgimage="image_id" bgimage="image_id"
- *       spacing="points">My Text Here</text>
+ *       spacing="points" type="3dtype">My Text Here</text>
  * ATTRIBUTES
  * id       Optional.  Image will be given this name for future reference.
  * font     Optional.  Default is "fixed".  Font to use for text.

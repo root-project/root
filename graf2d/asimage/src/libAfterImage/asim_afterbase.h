@@ -2,11 +2,10 @@
 #define ASIM_AFTERBASE_H_HEADER_INCLUDED
 
 #ifdef HAVE_MALLOC_H
-#include <malloc.h>
-#else
-#ifdef HAVE_STDLIB_H
-#include <stdlib.h>
+# include <malloc.h>
 #endif
+#ifdef HAVE_STDLIB_H
+# include <stdlib.h>
 #endif
 #if TIME_WITH_SYS_TIME
 # include <sys/time.h>
@@ -236,6 +235,10 @@ int asim_mystrncasecmp (const char *s1, const char *s2, size_t n);
 #define mystrcasecmp(s,s2)       asim_mystrcasecmp(s,s2)
 
 /* from libAfterBase/fs.h : */
+#if !defined(S_IFREG) || !defined(S_IFDIR)
+# include <sys/stat.h>
+#endif
+
 #ifndef _WIN32
 struct direntry
   {
@@ -245,9 +248,6 @@ struct direntry
   };
 #endif
 int		asim_check_file_mode (const char *file, int mode);
-#if !defined(S_IFREG) || !defined(S_IFDIR)
-#include <sys/stat.h>
-#endif
 #define CheckFile(f) 	asim_check_file_mode(f,S_IFREG)
 #define CheckDir(d) 	asim_check_file_mode(d,S_IFDIR)
 char   *asim_put_file_home (const char *path_with_home);

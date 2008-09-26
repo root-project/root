@@ -3,6 +3,8 @@
 
 /* our own Xpm handling code : */
 
+#include "scanline.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif

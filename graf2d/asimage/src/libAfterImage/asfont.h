@@ -145,6 +145,12 @@ typedef struct ASGlyphRange
 }ASGlyphRange;
 /*************/
 
+#define MAX_SPECIAL_GLYPH	((ASGlyph*)0x00000003)
+#define GLYPH_TAB	((ASGlyph*)0x00000003)
+#define GLYPH_SPACE	((ASGlyph*)0x00000002)
+#define GLYPH_EOL	((ASGlyph*)0x00000001)
+#define GLYPH_EOT	((ASGlyph*)0x00000000)
+
 /****s* libAfterImage/ASFont
  * NAME
  * ASFont
@@ -469,6 +475,8 @@ int            release_font( struct ASFont *font );
  *********/
 void    print_asfont( FILE* stream, struct ASFont* font);
 void 	print_asglyph( FILE* stream, struct ASFont* font, unsigned long c);
+
+ASGlyph** get_text_glyph_list (const char *text, ASFont *font, ASCharType char_type, int length);
 
 /****f* libAfterImage/asfont/draw_text()
  * NAME

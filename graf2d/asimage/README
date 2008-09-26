@@ -8,20 +8,20 @@ This command download the source in:
 
 To get the updates for this package it is enough to do "cvs update" from this directory.
 
-To import libAfterImage into the ROOT svn repository as a compressed tar file we use the
-following command script:
+To import libAfterImage into the ROOT svn repository we use the following command script:
 
+   cd ~/afterstep-stable/libAfterImage
+   cvs update
    cd /tmp
    cp -rf  ~/afterstep-stable/libAfterImage .
    cd libAfterImage
+   rm -f Makefile config.status afterimage-libs config.log
    rm -rf apps aftershow config.h
-   rm -rf ./libpng/CVS ./CVS ./win32/CVS ./libungif/CVS ./libjpeg/CVS ./zlib/CVS
-   cd ..
-   tar cvf libAfterImage.tar libAfterImage
-   gzip libAfterImage.tar
-   cp -f libAfterImage.tar.gz $ROOTSYS/asimage/src
-   cd /tmp
-   rm -r libAfterImage libAfterImage.tar.gz
+   rm -rf ./libpng/CVS ./CVS ./win32/CVS ./libungif/CVS ./libjpeg/CVS ./zlib/CVS 
+   cd libAfterImage
+   cp -R * $ROOTSYS/graf2d/asimage/src/libAfterImage 
+   cd /tmp   
+   rm -r libAfterImage
 
 Some files have been modified compare to the official libAfterImage version:
 

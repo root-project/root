@@ -1110,7 +1110,7 @@ XRectangle*
 get_asimage_channel_rects( ASImage *src, int channel, unsigned int threshold, unsigned int *rects_count_ret );
 
 void
-raw2scanline( register CARD8 *row, ASScanline *buf, CARD8 *gamma_table, unsigned int width, Bool grayscale, Bool do_alpha );
+raw2scanline( register CARD8 *row, struct ASScanline *buf, CARD8 *gamma_table, unsigned int width, Bool grayscale, Bool do_alpha );
 
 #ifdef __cplusplus
 }

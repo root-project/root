@@ -3,6 +3,7 @@
 
 #include "asvisual.h"
 #include "blender.h"
+#include "scanline.h"
 /*#define TRACK_ASIMAGES*/
 #ifdef __cplusplus
 extern "C" {
@@ -47,6 +48,8 @@ extern "C" {
  * Sasha Vasko <sasha at aftercode dot net>
  ******/
 
+struct ASVisual;
+struct ASImage;
 
 /****s* libAfterImage/ASImageBevel
  * NAME
@@ -137,8 +140,8 @@ typedef void (*decode_image_scanline_func)
 
 typedef struct ASImageDecoder
 {
-	ASVisual 	   *asv;
-	ASImage 	   *im ;
+	struct ASVisual *asv;
+	struct ASImage 	*im ;
 	ASFlagType 		filter;		 /* flags that mask set of 
 								  * channels to be extracted 
 								  * from the image */
@@ -159,13 +162,13 @@ typedef struct ASImageDecoder
 					bevel_right, bevel_bottom ;
 
 	/* scanline buffer containing current scanline */
-	ASScanline 		buffer; /* matches the out_width */
+	struct ASScanline buffer; /* matches the out_width */
 
 	/* internal data : */
-	unsigned short   bevel_h_addon, bevel_v_addon ;
-	int 			next_line ;
+	unsigned short    bevel_h_addon, bevel_v_addon ;
+	int 			  next_line ;
 
-    ASScanline   *xim_buffer; /* matches the size of the 
+    struct ASScanline   *xim_buffer; /* matches the size of the 
 							   * original XImage */
 
 	decode_asscanline_func     decode_asscanline ;
@@ -255,14 +258,14 @@ typedef struct ASImageDecoder
  * SOURCE
  */
 typedef void (*encode_image_scanline_func)( struct ASImageOutput *imout,
-											ASScanline *to_store );
+											struct ASScanline *to_store );
 typedef void (*output_image_scanline_func)( struct ASImageOutput *,
-											ASScanline *, int );
+											struct ASScanline *, int );
 
 typedef struct ASImageOutput
 {
-	ASVisual 		*asv;
-	ASImage  		*im ;
+	struct ASVisual 		*asv;
+	struct ASImage  		*im ;
 	ASAltImFormats   out_format ;
 	CARD32 			 chan_fill[4];
 	int 			 buffer_shift;  /* -1 means - buffer is empty,
@@ -290,7 +293,7 @@ typedef struct ASImageOutput
 								  * encoding only */
 
 	/* internal data members : */
-	ASScanline 		 buffer[2], *used, *available;
+	struct ASScanline 		 buffer[2], *used, *available;
 }ASImageOutput;
 /********/
 /****f* libAfterImage/asimage/start_image_decoding()
@@ -403,7 +406,8 @@ typedef struct ASImageOutput
  * start_image_decoding()
  *******/
 
-ASImageDecoder *start_image_decoding( ASVisual *asv,ASImage *im, ASFlagType filter,
+ASImageDecoder *start_image_decoding( struct ASVisual *asv, struct ASImage *im, 
+									  ASFlagType filter,
 									  int offset_x, int offset_y,
 									  unsigned int out_width,
 									  unsigned int out_height,

@@ -37,14 +37,14 @@ LIBUNGIF_OBJS = libungif/dgif_lib.o libungif/egif_lib.o libungif/gifalloc.o \
 
 AFTERIMAGE_OBJS= @AFTERBASE_C@ asimage.o ascmap.o asfont.o asimagexml.o asstorage.o \
 		asvisual.o blender.o bmp.o char2uni.o draw.o export.o imencdec.o import.o \
-		pixmap.o transform.o ungif.o xcf.o ximage.o xpm.o
+		pixmap.o scanline.o transform.o ungif.o xcf.o ximage.o xpm.o
 
 ################################################################
 # library specifics :
 
 LIB_INCS= afterimage.h afterbase.h ascmap.h asfont.h asim_afterbase.h \
 		asimage.h asimagexml.h asstorage.h asvisual.h blender.h bmp.h char2uni.h \
-		draw.h export.h imencdec.h import.h pixmap.h transform.h ungif.h \
+		draw.h export.h imencdec.h import.h pixmap.h scanline.h transform.h ungif.h \
 		xcf.h ximage.h xpm.h xwrap.h
 
 LIB_OBJS=       @JPEG_OBJS@ @ZLIB_OBJS@ @PNG_OBJS@ @UNGIF_OBJS@ $(AFTERIMAGE_OBJS)
@@ -404,8 +404,8 @@ install.man:
 			cd doc/man; \
 			for f in `ls *.man`; do \
 				page_name=`echo $$f| awk -F . '{print $$1}'`; \
-	  			echo $(INSTALL_DATA) $$page_name.man $(AFTER_MAN_DIR)/$$page_name.1x; \
-	  			$(INSTALL_DATA) $$page_name.man $(AFTER_MAN_DIR)/$$page_name.1x; \
+	  			echo $(INSTALL_DATA) $$page_name.man $(AFTER_MAN_DIR)/$$page_name.3x; \
+	  			$(INSTALL_DATA) $$page_name.man $(AFTER_MAN_DIR)/$$page_name.3x; \
 			done; cd ../..; \
 		fi
 			

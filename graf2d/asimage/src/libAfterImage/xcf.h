@@ -3,6 +3,9 @@
 
 /* GIMP's XCF file properties/structures : */
 
+#include "asvisual.h"
+#include "scanline.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif

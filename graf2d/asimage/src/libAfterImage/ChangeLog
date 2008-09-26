@@ -1,6 +1,80 @@
 
+2008-06-18  sasha
+
+	* libAfterImage 1.18 release
+
+2008-06-13  sasha
+
+	* implemented EdgeResistanceToDragging setting
+
+2008-06-10  sasha
+
+	* compile bugs without X fixed
+
+2008-06-02  sasha
+
+	* added missing scanline.h
+
+2008-05-30  sasha
+
+	* additional logic to avoid red/blue artifacts
+
+2008-05-29  sasha
+
+	* implemented some 12-bps raw image processing- demosaicing
+
+2008-05-02  sasha
+
+	* [no log message]
+
+2008-04-23  sasha
+
+	* Fixed build on non-gcc compilers
+
+2008-04-17  sasha
+
+	* preliminary support for loading RAW camera photos stored as tiff
+	  images with CFA data - still need to implement interpolation,
+	  white balance, and leveling
+	* compile warning on signed/unsigfned comparison
+
+2008-04-10  sasha
+
+	* fixed alpha overflow in color2alpha
+
+2008-04-07  sasha
+
+	* implemented color2alpha method from GIMP without color correction
+	  that was damaging the image. Complete with color2alpha xml tag
+
+2008-04-03  sasha
+
+	* implemented pixelization filter
+
+2008-03-24  sasha
+
+	* fixed bunch of compilation bugs showing up on old systems
+
+2008-03-17  sasha
+
+	* hopefully fixed syslimit.h warnings on FBSD
+
+2008-03-07  sasha
+
+	* [no log message]
+
+2008-03-06  sasha
+
+	* fixed problem with docs having spaces in filenames
+
+2008-03-05  sasha
+
+	* disabled build for Sound2 for now
+
 2008-03-04  sasha
 
+	* fixed segfault in xcf code where layer is larger then image
+	* updated NEW and ChangeLogs for release 2.2.8
 	* AfterStep release v. 2.2.8
 
 2008-02-29  sasha

@@ -1268,7 +1268,7 @@ load_freetype_glyphs( ASFont *font )
 }
 #endif
 
-inline ASGlyph *get_unicode_glyph( const UNICODE_CHAR uc, ASFont *font )
+static inline ASGlyph *get_unicode_glyph( const UNICODE_CHAR uc, ASFont *font )
 {
 	register ASGlyphRange *r;
 	ASGlyph *asg = NULL ;
@@ -1300,7 +1300,7 @@ LOCAL_DEBUG_OUT( "%sFound glyph for char %lu ( %p )", asg?"":"Did not ", uc, asg
 }
 
 
-inline ASGlyph *get_character_glyph( const unsigned char c, ASFont *font )
+static inline ASGlyph *get_character_glyph( const unsigned char c, ASFont *font )
 {
 	return get_unicode_glyph( CHAR2UNICODE(c), font );
 }
@@ -1368,7 +1368,7 @@ utf8_to_unicode ( const unsigned char *s )
     return 0;
 }
 
-inline ASGlyph *get_utf8_glyph( const char *utf8, ASFont *font )
+static inline ASGlyph *get_utf8_glyph( const char *utf8, ASFont *font )
 {
 	UNICODE_CHAR uc = utf8_to_unicode ( (const unsigned char*)utf8 );
 	LOCAL_DEBUG_OUT( "translated to Unicode 0x%lX(%ld), UTF8 size = %d", uc, uc, UTF8_CHAR_SIZE(utf8[0]) );
@@ -1382,11 +1382,6 @@ inline ASGlyph *get_utf8_glyph( const char *utf8, ASFont *font )
 typedef struct ASGlyphMap
 {
 	int  height, width ;
-#define MAX_SPECIAL_GLYPH	((ASGlyph*)0x00000003)
-#define GLYPH_TAB	((ASGlyph*)0x00000003)
-#define GLYPH_SPACE	((ASGlyph*)0x00000002)
-#define GLYPH_EOL	((ASGlyph*)0x00000001)
-#define GLYPH_EOT	((ASGlyph*)0x00000000)
 	ASGlyph 	**glyphs;
 	int 		  glyphs_num;
 	short 		 *x_kerning ;
@@ -1531,8 +1526,64 @@ free_glyph_map( ASGlyphMap *map, Bool reusable )
     }
 }
 
+static int
+get_text_length (ASCharType char_type, const char *text)
+{
+	register int count = 0;
+	if( char_type == ASCT_Char )
+	{
+		register char *ptr = (char*)text ;
+		while( ptr[count] != 0 )++count;
+	}else if( char_type == ASCT_UTF8 )
+	{
+		register char *ptr = (char*)text ;
+		while( *ptr != 0 ){	++count; ptr += UTF8_CHAR_SIZE(*ptr); }
+	}else if( char_type == ASCT_Unicode )
+	{
+		register UNICODE_CHAR *uc_ptr = (UNICODE_CHAR*)text ;
+		while( uc_ptr[count] != 0 )	++count;
+	}
+	return count;
+}
+
+ASGlyph**
+get_text_glyph_list (const char *text, ASFont *font, ASCharType char_type, int length)
+{
+	ASGlyph** glyphs = NULL;
+	int i = 0;
+	
+	if (text == NULL || font == NULL)
+		return NULL;
+	if (length <= 0)
+		if ((length = get_text_length (char_type, text)) <= 0)
+			return NULL;
+	
+	glyphs = safecalloc( length+1, sizeof(ASGlyph*));
+	if (char_type == ASCT_Char)
+	{
+		register char *ptr = (char*)text;
+		for (i = 0 ; i < length ; ++i)
+			glyphs[i] = get_character_glyph (ptr[i], font);
+	}else if (char_type == ASCT_UTF8)
+	{
+		register char *ptr = (char*)text;
+		for (i = 0 ; i < length ; ++i)
+		{
+			glyphs[i] = get_utf8_glyph (ptr, font);
+			ptr += UTF8_CHAR_SIZE(*ptr);
+		}		
+	}else if( char_type == ASCT_Unicode )
+	{
+		register UNICODE_CHAR *uc_ptr = (UNICODE_CHAR*)text ;
+		for (i = 0 ; i < length ; ++i)
+			glyphs[i] = get_unicode_glyph (uc_ptr[i], font);
+	}
+	
+	return glyphs;			
+}
+
 static Bool
-get_text_glyph_map( const char *text, ASFont *font, ASGlyphMap *map, ASTextAttributes *attr, int length  )
+get_text_glyph_map (const char *text, ASFont *font, ASGlyphMap *map, ASTextAttributes *attr, int length  )
 {
 	unsigned int line_count = 0;
 	int offset_3d_x = 0, offset_3d_y = 0 ;
@@ -1553,31 +1604,10 @@ get_text_glyph_map( const char *text, ASFont *font, ASGlyphMap *map, ASTextAttri
 
 	map->glyphs_num = 1;
 	if( length <= 0 ) 
-	{	
-		if( attr->char_type == ASCT_Char )
-		{
-			register int count = 0 ;
-			register char *ptr = (char*)text ;
-			while( ptr[count] != 0 )++count;
-			map->glyphs_num += count ;
-		}else if( attr->char_type == ASCT_UTF8 )
-		{
-			register int count = 0 ;
-			register char *ptr = (char*)text ;
-			while( *ptr != 0 ){	++count; ptr += UTF8_CHAR_SIZE(*ptr); }
-			map->glyphs_num += count ;
-		}else if( attr->char_type == ASCT_Unicode )
-		{
-			register int count = 0 ;
-			register UNICODE_CHAR *uc_ptr = (UNICODE_CHAR*)text ;
-			while( uc_ptr[count] != 0 )	++count;
-			map->glyphs_num += count ;
-		}
-	}else
-		map->glyphs_num += length ;
+		length = get_text_length (attr->char_type, text);
 
-	if( map->glyphs_num == 0 )
-		return False;
+	map->glyphs_num = 1 + length ;
+
 	map->glyphs = safecalloc( map->glyphs_num, sizeof(ASGlyph*));
 	map->x_kerning = safecalloc( map->glyphs_num, sizeof(short));
 

@@ -6,7 +6,7 @@ dnl#Copyright (c) 2001,1998 Sasha Vasko <sasha at aftercode.net>
 dnl#Copyright (c) 1998 Juergen Sawinski <Juergen.Sawinski@urz.uni-heidelberg.de>
 dnl#Copyright (c) 1997 1998 Guylhem AZNAR <guylhem@oeil.qc.ca>
 
-AC_INIT(libAfterImage,1.17,as-bugs@afterstep.org,libAfterImage.tar)
+AC_INIT(libAfterImage,1.18,as-bugs@afterstep.org,libAfterImage.tar)
 
 AC_CONFIG_HEADER(config.h:config.h.in)
 
@@ -72,8 +72,8 @@ AC_ARG_WITH(builtin_gif,    [  --with-builtin-gif               support Uncompre
 AC_ARG_WITH(ttf,		    [  --with-ttf               support True Type Fonts via FreeType library [yes]])
 AC_ARG_WITH(ttf_includes,   [  --with-ttf-includes=DIR  use FreeType includes in DIR], ttf_includes="$withval", ttf_includes=no)
 
-AC_ARG_WITH(afterbase,		    [  --with-afterbase               use libAfterBase library of basic functionality [yes]])
-AC_ARG_WITH(afterbase_includes, [  --with-afterbase-includes=DIR  use libAfterBase includes in DIR], afterbase_includes="$withval", afterbase_includes=no)
+AC_ARG_WITH(afterbase,		    [  --with-afterbase               use libAfterBase library of basic functionality [yes]],with_afterbase="$withval",with_afterbase=yes)
+AC_ARG_WITH(afterbase_includes, [  --with-afterbase-includes=DIR  use libAfterBase includes in DIR],afterbase_includes="$withval",afterbase_includes=no)
 
 dnl# Check for compiler tools
 
@@ -82,12 +82,47 @@ AC_PROG_LN_S
 dnl# AC_SUBST(CC)
 dnl# AC_SUBST(GCC)
 
+
 AC_CYGWIN
+AC_CANONICAL_TARGET
+
+RDYNAMIC="-rdynamic"
+
+case "$target" in
+    *i?86*OpenUNIX*)
+		RDYNAMIC="-Wl,-Bexport"
+		;;
+    *i?86*sco*)
+		RDYNAMIC="-Wl,-Bexport"
+		;;
+    *aix*)
+		RDYNAMIC="-Wl,-bexpall"
+		;;
+    *i?86*freebsd*)
+		RDYNAMIC=""
+		;;
+    hppa*)
+		RDYNAMIC="-Wl,-E"
+		;;
+    i?86*solaris*)
+		RDYNAMIC=""
+		;;
+    sparc*solaris*)
+		RDYNAMIC="-Wl,-export-dynamic"
+		;;
+    *-apple-darwin*)
+		RDYNAMIC="-Wl,-Sn"
+		;;
+    *ppc* | *powerpc*)
+		RDYNAMIC=""
+		;;
+    *)
+esac
+
 if test "x$CYGWIN" = "xno" -a "x$GCC" = "xyes" ; then
   if test -z "`echo $CFLAGS | grep '\-fPIC' 2> /dev/null`" ; then
   	CFLAGS="$CFLAGS -fPIC"
   fi
-  LDFLAGS="$LDFLAGS -rdynamic"
 fi
 
 
@@ -640,6 +675,10 @@ HAVE_AFTERBASE_FLAG=0
 if test "x$have_afterbase" = "xyes"; then
     HAVE_AFTERBASE_FLAG=1
 	AFTERBASE_C=
+	if test "x$CYGWIN" = "xno" -a "x$GCC" = "xyes" ; then
+dnl# rdynamic is only useable if we have libAfterBase's backtrace functionality
+		user_ldflags="$user_ldflags $RDYNAMIC"
+  	fi
     if test "x$have_x" != "xyes" -a "x$have_gif" = "xyes"; then
     	AFTERIMAGE_LIBS="$AFTERIMAGE_LIBS -lAfterBase"
     else
