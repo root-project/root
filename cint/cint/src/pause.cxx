@@ -26,7 +26,7 @@ extern void G__redirectcerr G__P((const char* filename)) ;
 extern void G__unredirectcerr() ;
 extern void G__redirectcin G__P((const char* filename)) ;
 extern void G__unredirectcin() ;
-extern bool G__EnableAutoDictionary;
+extern int G__EnableAutoDictionary;
 
 #if defined(G__WIN32)
 #include <windows.h>
@@ -1989,7 +1989,7 @@ int G__process_cmd(char* line, char* prompt, int* more, int* err, G__value* rslt
       fprintf(G__sout, "G__catchexception=%d\n", G__catchexception);
    }
    else if (strncmp("autodict", com, 8) == 0) {
-      G__EnableAutoDictionary = ! G__EnableAutoDictionary;
+      G__EnableAutoDictionary ^= 1;
       fprintf(G__sout, "Automatic building of dictionaries now %s\n",
               G__EnableAutoDictionary ? "on " : "off");
    }
