@@ -50,7 +50,8 @@
 #endif
 #define G__VAARG_PASS_BY_REFERENCE 8
 
-#elif defined(__x86_64__) && (defined(__linux) || defined(__APPLE__))
+#elif defined(__x86_64__) && (defined(__linux) || defined(__APPLE__)) || \
+      defined(__FreeBSD__))
 /**********************************************
  * AMD64/EM64T
  * It turned out it is quite difficult to support this
