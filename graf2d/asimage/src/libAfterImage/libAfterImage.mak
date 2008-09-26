@@ -150,7 +150,8 @@ LIB32_OBJS= \
 	"$(INTDIR)\ximage.obj" \
 	"$(INTDIR)\xpm.obj" \
 	"$(INTDIR)\draw.obj" \
-	"$(INTDIR)\imencdec.obj"
+	"$(INTDIR)\imencdec.obj" \
+	"$(INTDIR)\scanline.obj"
 
 ".\libAfterImage.lib" : "$(OUTDIR)" $(DEF_FILE) $(LIB32_OBJS)
     $(LIB32) @<<
@@ -282,7 +283,8 @@ LIB32_OBJS= \
 	"$(INTDIR)\ximage.obj" \
 	"$(INTDIR)\xpm.obj" \
 	"$(INTDIR)\draw.obj" \
-	"$(INTDIR)\imencdec.obj"
+	"$(INTDIR)\imencdec.obj" \
+	"$(INTDIR)\scanline.obj"
 
 "$(OUTDIR)\libAfterImage.lib" : "$(OUTDIR)" $(DEF_FILE) $(LIB32_OBJS)
     $(LIB32) @<<
@@ -895,6 +897,10 @@ SOURCE=.\xpm.c
 SOURCE=.\draw.c
 
 "$(INTDIR)\draw.obj" : $(SOURCE) "$(INTDIR)"
+
+SOURCE=.\scanline.c
+
+"$(INTDIR)\scanline.obj" : $(SOURCE) "$(INTDIR)"
 
 
 !ENDIF 
