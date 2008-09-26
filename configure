@@ -999,7 +999,7 @@ enable/disable options, prefix with either --enable- or --disable-
   asimage            Image processing support, requires libAfterImage
   astiff             Include tiff support in image processing
   builtin-afterimage Built included libAfterImage, or use system libAfterImage
-  builtin-ftgl       Built included libFTGL, or use system libftgl_pic
+  builtin-ftgl       Built included libFTGL, or use system libftgl
   builtin-freetype   Built included libfreetype, or use system libfreetype
   builtin-pcre       Built included libpcre, or use system libpcre
   builtin-zlib       Built included libz, or use system libz
@@ -1069,7 +1069,7 @@ with options, prefix with --with-, enables corresponding support
   dcap-libdir        dCache support, location of libdcap
   dicttype           dictionary type: "cint" (default), "reflex", or "gccxml"
   ftgl-incdir        FTGL support, location of FTGL.h
-  ftgl-libdir        FTGL support, location of libftgl_pic
+  ftgl-libdir        FTGL support, location of libftgl
   fftw3-incdir       FFTW3 support, location of fftw3.h
   fftw3-libdir       FFTW3 support, location of libfftw3 (libfftw3-3 for windows)
   gfal-incdir        GFAL support, location of gfal_api.h
@@ -1789,7 +1789,7 @@ if test "x$enable_builtin_ftgl" = "x" || \
       if pkg-config --exists ftgl ; then
 	  result "ok"
 	  ftglincdir=`pkg-config --cflags-only-I ftgl | sed 's/-I//g'`
-	  ftgllibs=`pkg-config --libs-only-l ftgl | sed s'/-lftgl/-lftgl_pic/'`
+	  ftgllibs=`pkg-config --libs-only-l ftgl`
 	  ftgllibdir=`pkg-config --libs-only-L ftgl | sed 's/-L//g'`
 	  enable_builtin_ftgl=no
       else
