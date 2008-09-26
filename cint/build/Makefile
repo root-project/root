@@ -11,11 +11,7 @@
 #
 ##############################################################
 
-# export CINTSYSDIR as the current build directory, to be used by lib/*/setup
-ifeq ($(strip $(CINTSYSDIR)),)
-   CINTSYSDIR := ${PWD}
-endif
-CINTSYSDIR := $(shell echo $(G__CFG_MANGLEPATHS) "${CINTSYSDIR}")
+CINTSYSDIR := ${PWD}
 export CINTSYSDIR
 __CINT_BUILDDIR :=  ${PWD}
 export __CINT_BUILDDIR
@@ -212,4 +208,20 @@ uninstall:
 	$(G__CFG_RM) $(DESTDIR)$(G__CFG_INCLUDEDIRCINT)
 	$(G__CFG_RM) $(DESTDIR)$(G__CFG_DATADIRCINT)
 
+
+
+
+ifeq ($(INCLUDE_DEB_MK),1)
 include build/deb.mk
+else
+deb :
+	$(MAKE) INCLUDE_DEB_MK=1 deb
+endif
+
+ifeq ($(INCLUDE_RPM_MK),1)
+include build/rpm.mk
+else
+rpm :
+	$(MAKE) INCLUDE_RPM_MK=1 rpm
+endif
+

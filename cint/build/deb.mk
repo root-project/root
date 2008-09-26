@@ -36,9 +36,8 @@ $(cint_signature_file) :
 	  $(ECHO) ; \
 	  sleep 5s
 
-arch = $(shell dpkg-architecture -qDEB_HOST_ARCH)
-
-pkgfilename=cint_$(G__CFG_CINTVERSION)-1_$(arch).deb 
+deb : deb_arch = $(shell dpkg-architecture -qDEB_HOST_ARCH)
+pkgfilename = cint_$(G__CFG_CINTVERSION)-1_$(deb_arch).deb 
 pkg  = debian/package-files/$(pkgfilename)
 
 CONFIGCMD = ./configure  --with-prefix --prefix=/usr 
@@ -80,12 +79,12 @@ $(pkg) : $(origtgz_deb) debian/control debian/copyright debian/cint.dirs debian/
 	    fi; \
 	  fi; \
 	  ln -s $$wd cint-${G__CFG_CINTVERSION}; \
-	fi; cd cint-${G__CFG_CINTVERSION}; dpkg-buildpackage -rfakeroot -sd -W -i$(ignore)
+	fi; cd cint-${G__CFG_CINTVERSION}; dpkg-buildpackage -rfakeroot -W -i$(ignore)
 	@if [ ! -d debian/package-files ] ; then mkdir debian/package-files; fi
 	@mv ../$(pkgfilename) $@
-	@mv ../cint_$(G__CFG_CINTVERSION)-1_$(arch).changes debian/package-files/
-	@mv ../cint_$(G__CFG_CINTVERSION)-1.dsc             debian/package-files/
-	@mv ../cint_$(G__CFG_CINTVERSION)-1.diff.gz         debian/package-files/
+	@mv ../cint_$(G__CFG_CINTVERSION)-1_$(deb_arch).changes debian/package-files/
+	@mv ../cint_$(G__CFG_CINTVERSION)-1.dsc                 debian/package-files/
+	@mv ../cint_$(G__CFG_CINTVERSION)-1.diff.gz             debian/package-files/
 	@$(ECHO) '###################################################'
 	@$(ECHO) '#                                                 #' 
 	@$(ECHO) '#  Package files created in debian/package-files  #'
@@ -114,7 +113,7 @@ debian/cint.prerm : build/deb.mk
 	@$(ECHO) '  update-alternatives --remove makecint $(G__CFG_BINDIR)/makecint.cint' >> $@
 	@$(ECHO) 'fi' >> $@
 	@$(ECHO) 'exit 0' >> $@
-	chmod +x $@
+	@chmod +x $@
 
 debian/cint.postinst : build/deb.mk
 	@$(ECHO) '#! /bin/sh' > $@
@@ -140,7 +139,7 @@ debian/cint.postinst : build/deb.mk
 	@$(ECHO) ';;' >> $@
 	@$(ECHO) 'esac' >> $@
 	@$(ECHO) 'exit 0' >> $@
-	chmod +x $@
+	@chmod +x $@
 
 debian/compat : build/deb.mk
 	@if [ ! -d debian ] ; then mkdir debian; fi
