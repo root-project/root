@@ -509,8 +509,8 @@ void FillData ( BinData  & dv, const TGraph * gr,  TF1 * func ) {
    fitOpt.fCoordErrors = (type ==  BinData::kCoordError);
    fitOpt.fAsymErrors = (type ==  BinData::kAsymError);
 
-   // if data are filled already do a re-initialization
-   // need to 
+
+   // if sata are filled already check if there are consistent - otherwise do nothing
    if (dv.Size() > 0 && dv.NDim() == 1 ) { 
       // check if size is correct otherwise flag an errors 
       if (dv.PointSize() == 2 && type != BinData::kNoError ) {

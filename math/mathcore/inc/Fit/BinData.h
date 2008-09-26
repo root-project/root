@@ -438,7 +438,7 @@ public :
       In case of integral option size is npoints -1 
     */ 
    unsigned int Size() const { 
-      return (Opt().fIntegral) ? fNPoints-1 : fNPoints; 
+      return (Opt().fIntegral && fNPoints > 0) ? fNPoints-1 : fNPoints; 
    }
 
    /**

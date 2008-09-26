@@ -46,7 +46,7 @@ namespace HFit {
 
    void FitOptionsMake(const char *option, Foption_t &fitOption);
 
-   void CheckGraphFitOptions(const Foption_t &fitOption);
+   void CheckGraphFitOptions(Foption_t &fitOption);
 
 
    void GetDrawingRange(TH1 * h1, ROOT::Fit::DataRange & range);
@@ -496,6 +496,7 @@ void HFit::FitOptionsMake(const char *option, Foption_t &fitOption) {
    if (opt.Contains("Q")) fitOption.Quiet   = 1;
    if (opt.Contains("V")){fitOption.Verbose = 1; fitOption.Quiet   = 0;}
    if (opt.Contains("L")) fitOption.Like    = 1;
+   if (opt.Contains("I")) fitOption.Integral= 1;
    if (opt.Contains("LL")) fitOption.Like   = 2;
    if (opt.Contains("W")) fitOption.W1      = 1;
    if (opt.Contains("E")) fitOption.Errors  = 1;
@@ -512,9 +513,15 @@ void HFit::FitOptionsMake(const char *option, Foption_t &fitOption) {
 
 }
 
-void HFit::CheckGraphFitOptions(const Foption_t & foption) { 
-   if (foption.Like) Info("CheckGraphFitOptions","L (Log Likelihood fit) is an invalid option when fitting a graph. It is ignored");
-   if (foption.Integral) Info("CheckGraphFitOptions","I (use function integral) is an invalid option when fitting a graph. It is ignored");
+void HFit::CheckGraphFitOptions(Foption_t & foption) { 
+   if (foption.Like) { 
+      Info("CheckGraphFitOptions","L (Log Likelihood fit) is an invalid option when fitting a graph. It is ignored");
+      foption.Like = 0; 
+   }
+   if (foption.Integral) { 
+      Info("CheckGraphFitOptions","I (use function integral) is an invalid option when fitting a graph. It is ignored");
+      foption.Integral = 0; 
+   }
    return;
 } 
 
@@ -526,17 +533,23 @@ int ROOT::Fit::FitObject(TH1 * h1, TF1 *f1 , Foption_t & foption , const ROOT::M
 }
 
 int ROOT::Fit::FitObject(TGraph * gr, TF1 *f1 , Foption_t & foption , const ROOT::Math::MinimizerOptions & moption, const char *goption, ROOT::Fit::DataRange & range) { 
-   // TGraph fitting
+  // exclude options not valid for graphs
+   HFit::CheckGraphFitOptions(foption);
+    // TGraph fitting
    return HFit::Fit(gr,f1,foption,moption,goption,range); 
 }
 
 int ROOT::Fit::FitObject(TMultiGraph * gr, TF1 *f1 , Foption_t & foption , const ROOT::Math::MinimizerOptions & moption, const char *goption, ROOT::Fit::DataRange & range) { 
-   // TMultiGraph fitting
+  // exclude options not valid for graphs
+   HFit::CheckGraphFitOptions(foption);
+    // TMultiGraph fitting
    return HFit::Fit(gr,f1,foption,moption,goption,range); 
 }
 
 int ROOT::Fit::FitObject(TGraph2D * gr, TF1 *f1 , Foption_t & foption , const ROOT::Math::MinimizerOptions & moption, const char *goption, ROOT::Fit::DataRange & range) { 
-   // TGraph2D fitting
+  // exclude options not valid for graphs
+   HFit::CheckGraphFitOptions(foption);
+    // TGraph2D fitting
    return HFit::Fit(gr,f1,foption,moption,goption,range); 
 }
 
@@ -559,8 +572,6 @@ Int_t TGraph::DoFit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t rxmin, 
    // internal graph fitting methods
    Foption_t fitOption;
    HFit::FitOptionsMake(option,fitOption);
-   // exclude options not valid for graphs
-   HFit::CheckGraphFitOptions(fitOption);
    // create range and minimizer options with default values 
    ROOT::Fit::DataRange range(rxmin,rxmax); 
    ROOT::Math::MinimizerOptions minOption; 
@@ -571,7 +582,6 @@ Int_t TMultiGraph::DoFit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t rx
    // internal multigraph fitting methods
    Foption_t fitOption;
    HFit::FitOptionsMake(option,fitOption);
-   HFit::CheckGraphFitOptions(fitOption);
 
    // create range and minimizer options with default values 
    ROOT::Fit::DataRange range(rxmin,rxmax); 
@@ -584,7 +594,6 @@ Int_t TGraph2D::DoFit(TF2 *f2 ,Option_t *option ,Option_t *goption) {
    // internal graph2D fitting methods
    Foption_t fitOption;
    HFit::FitOptionsMake(option,fitOption);
-   HFit::CheckGraphFitOptions(fitOption);
 
    // create range and minimizer options with default values 
    ROOT::Fit::DataRange range(2); 
