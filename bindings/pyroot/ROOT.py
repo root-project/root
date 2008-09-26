@@ -2,7 +2,7 @@ from __future__ import generators
 # @(#)root/pyroot:$Id$
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
-# Last: 09/23/08
+# Last: 09/26/08
 
 """PyROOT user module.
 
@@ -11,10 +11,11 @@ from __future__ import generators
  o) add readline completion (if supported by python build)
  o) enable some ROOT/CINT style commands
  o) handle a few special cases such as gPad, STL, etc.
+ o) execute rootlogon.py/.C scripts
 
 """
 
-__version__ = '5.1.0'
+__version__ = '5.2.0'
 __author__  = 'Wim Lavrijsen (WLavrijsen@lbl.gov)'
 
 
@@ -312,6 +313,7 @@ class ModuleFacade( object ):
 
          def __getattr__( self, name ):
            if name != 'SetBatch' and self._master.__dict__[ 'gROOT' ] != self._gROOT:
+              print 'finalizing'
               self._master._ModuleFacade__finalSetup()
               del self._master.__class__._ModuleFacade__finalSetup
               self._master.__dict__[ 'gROOT' ] = self._gROOT
@@ -422,17 +424,39 @@ class ModuleFacade( object ):
 
     # normally, you'll want a ROOT application; don't init any further if
     # one pre-exists from some C++ code somewhere
-      c = _root.MakeRootClass( 'PyROOT::TPyROOTApplication' )
-      if c.CreatePyROOTApplication():
-         c.InitROOTGlobals()
-         c.InitCINTMessageCallback();
-         c.InitROOTMessageCallback();
+      appc = _root.MakeRootClass( 'PyROOT::TPyROOTApplication' )
+      if appc.CreatePyROOTApplication():
+         appc.InitROOTGlobals()
+         appc.InitCINTMessageCallback();
+         appc.InitROOTMessageCallback();
 
     # must be called after gApplication creation:
       if __builtins__.has_key( '__IPYTHON__' ):
        # IPython's FakeModule hack otherwise prevents usage of python from CINT
          _root.gROOT.ProcessLine( 'TPython::Exec( "" )' )
          sys.modules[ '__main__' ].__builtins__ = __builtins__
+
+    # custom logon file (must be after creation of ROOT globals)
+      if not '-n' in sys.argv:
+         rootlogon = os.path.expanduser( '~/.rootlogon.py' )
+         if os.path.exists( rootlogon ):
+          # could also have used execfile, but import is likely to give fewer surprises
+            import imp
+            imp.load_module( 'rootlogon', open( rootlogon, 'r' ), rootlogon, ('.py','r',1) )
+            del imp
+         else:  # if the .py version of rootlogon exists, the .C is ignored (the user can
+                # load the .C from the .py, if so desired)
+
+          # system logon, user logon, and local logon (skip Rint.Logon)
+            name = '.rootlogon.C'
+            logons = [ os.path.join( self.gRootDir, 'etc', 'system' + name ),
+                       os.path.expanduser( os.path.join( '~', name ) ) ]
+            if logons[-1] != os.path.join( os.getcwd(), name ):
+               logons.append( name )
+            for rootlogon in logons:
+               if os.path.exists( rootlogon ):
+                  appc.ExecuteFile( rootlogon )
+            del rootlogon, logons
 
     # root thread, if needed, to prevent GUIs from starving, as needed
       if self.PyConfig.StartGuiThread and \
