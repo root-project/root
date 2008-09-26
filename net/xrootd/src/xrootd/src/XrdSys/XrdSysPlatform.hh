@@ -38,13 +38,16 @@
 #endif
 #endif
 #endif
+#ifdef __FreeBSD__
+#include <sys/types.h>
+#endif
 
 #ifdef __solaris__
 #define posix_memalign(memp, algn, sz) \
         ((*memp = memalign(algn, sz)) ? 0 : ENOMEM)
 #endif
 
-#if defined(__linux__) || defined(__macos__)
+#if defined(__linux__) || defined(__macos__) || defined(__FreeBSD__)
 
 #define S_IAMB      0x1FF   /* access mode bits */
 
@@ -123,6 +126,12 @@ extern char *cuserid(char *s);
 #ifndef EDEADLOCK
 #define EDEADLOCK EDEADLK
 #endif
+#endif
+
+#ifdef __FreeBSD__
+#define	O_LARGEFILE 0
+typedef off_t off64_t;
+#define	memalign(pgsz,amt) valloc(amt)
 #endif
 
 // Only sparc platforms have structure alignment problems w/ optimization
@@ -204,11 +213,10 @@ extern "C"
 #   define R__GLIBC
 #endif
 #if defined(_AIX) || \
-   (defined(__FreeBSD__) && (!defined(__alpha) || defined(__linux__))) || \
    (defined(XR__SUNGCC3) && !defined(__arch64__))
 #   define SOCKLEN_t size_t
 #elif defined(XR__GLIBC) || \
-   (defined(__FreeBSD__) && (defined(__alpha) && !defined(__linux__))) || \
+   defined(__FreeBSD__) || \
    (defined(XR__SUNGCC3) && defined(__arch64__)) || defined(__macos__)
 #   ifndef SOCKLEN_t
 #      define SOCKLEN_t socklen_t

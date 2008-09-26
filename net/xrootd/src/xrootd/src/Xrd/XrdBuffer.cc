@@ -14,7 +14,7 @@ const char *XrdBufferCVSID = "$Id$";
 
 #include <time.h>
 #include <unistd.h>
-#ifndef __macos__
+#if !defined(__macos__) && !defined(__FreeBSD__)
 #include <malloc.h>
 #endif
 #include <stdio.h>

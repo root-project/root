@@ -885,6 +885,7 @@ int XrdSslgsiX509CreateProxyReq(XrdCryptoX509 *xcpi,
          DEBUG("IN depth length: "<<indepthlen);
       }
       // Do not free the extension: its owned by the certificate
+      xpiext = 0;
    }
 
    // Set the new length
@@ -1106,6 +1107,7 @@ int XrdSslgsiX509SignProxyReq(XrdCryptoX509 *xcpi, XrdCryptoRSA *kcpi,
          DEBUG("IN depth length: "<<indepthlen);
       }
       // Do not free the extension: its owned by the certificate
+      xpiext = 0;
    }
 
    //

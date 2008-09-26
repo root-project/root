@@ -46,6 +46,14 @@
 #define FS_Stat(a,b) statfs(a,b)
 #define FS_BLKSZ f_bsize
 #endif
+#ifdef __FreeBSD__
+#include <sys/param.h>
+#include <sys/mount.h>
+#define STATFS_t struct statfs
+#define FS_Stat(a,b) statfs(a,b)
+/* XXX */
+#define FS_BLKSZ f_bsize
+#endif
 
 /******************************************************************************/
 /*                    X r d O s s C a c h e _ F S D a t a                     */

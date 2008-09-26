@@ -264,7 +264,7 @@ dirent64 *XrdPosixDir::nextEntry(dirent64 *dp)
    cp = (fentries[fentry]).c_str();
    reclen = strlen(cp);
    if (reclen > maxname) reclen = maxname;
-#ifdef __macos__
+#if defined(__macos__) || defined(__FreeBSD__)
    dp->d_fileno = fentry;
    dp->d_type   = DT_UNKNOWN;
    dp->d_namlen = reclen;
@@ -882,7 +882,7 @@ struct dirent* XrdPosixXrootd::Readdir(DIR *dirp)
    dp32 = (struct dirent *)dp64;
    if (dp32->d_name != dp64->d_name)
       {dp32->d_ino    = dp64->d_ino;
-#if !defined(__macos__)
+#if !defined(__macos__) && !defined(__FreeBSD__)
        dp32->d_off    = dp64->d_off;
 #endif
        dp32->d_reclen = dp64->d_reclen;
@@ -923,7 +923,7 @@ int XrdPosixXrootd::Readdir_r(DIR *dirp,   struct dirent    *entry,
    if ((rc = Readdir64_r(dirp, 0, &dp64)) <= 0) {*result = 0; return rc;}
 
    entry->d_ino    = dp64->d_ino;
-#if !defined(__macos__)
+#if !defined(__macos__) && !defined(__FreeBSD__)
    entry->d_off    = dp64->d_off;
 #endif
    entry->d_reclen = dp64->d_reclen;
@@ -1078,16 +1078,18 @@ int XrdPosixXrootd::Statfs(const char *path, struct statfs *buf)
    buf->f_bfree   = myVfs.f_bfree;
    buf->f_files   = myVfs.f_files;
    buf->f_ffree   = myVfs.f_ffree;
-#if defined(__macos__)
+#if defined(__macos__) || defined(__FreeBSD__)
    buf->f_iosize  = myVfs.f_frsize;
 #else
    buf->f_frsize  = myVfs.f_frsize;
 #endif
-#if defined(__linux__) || defined(__macos__)
+#if defined(__linux__) || defined(__macos__) || defined(__FreeBSD__)
    buf->f_bavail  = myVfs.f_bavail;
 #endif
 #if defined(__linux__)
    buf->f_namelen = myVfs.f_namemax;
+#elif defined(__FreeBSD__)
+   buf->f_namemax = myVfs.f_namemax;
 #endif
    return 0;
 }

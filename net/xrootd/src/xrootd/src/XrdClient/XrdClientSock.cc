@@ -34,6 +34,11 @@ const char *XrdClientSockCVSID = "$Id$";
 #include "XrdSys/XrdWin32.hh"
 #endif
 
+#ifdef __FreeBSD__
+#include <sys/types.h>
+#include <pwd.h>
+#endif
+
 //_____________________________________________________________________________
 XrdClientSock::XrdClientSock(XrdClientUrlInfo Host, int windowsize)
 {
@@ -419,6 +424,9 @@ int XrdClientSock::TryConnect_low(bool isUnix, int altport, int windowsz)
 int XrdClientSock::Socks4Handshake(int sockid) {
 
     char buf[4096], userid[4096];
+#ifdef __FreeBSD__
+    struct passwd *pwd;
+#endif
     uint16_t port;
     char a, b, c, d;
 
@@ -435,7 +443,14 @@ int XrdClientSock::Socks4Handshake(int sockid) {
     buf[6] = c;
     buf[7] = d;
 
+#ifdef __FreeBSD__
+    if ((pwd = getpwuid(geteuid())) == NULL)
+        *userid = '\0';
+    else
+        (void)strncpy(userid, pwd->pw_name, L_cuserid);
+#else
     cuserid(userid);
+#endif
     strcpy(buf+8, userid);
 
     // send the buffer to the server!

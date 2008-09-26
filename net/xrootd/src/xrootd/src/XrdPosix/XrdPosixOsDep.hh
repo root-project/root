@@ -49,4 +49,9 @@
 #define ELIBACC ESHLIBVERS
 #endif
 
+#ifdef __FreeBSD__
+#define	dirent64 dirent
+#define	ELIBACC EFTYPE
+#endif
+
 #endif

@@ -396,6 +396,7 @@ guess_architecture () {
     case "$osys:$chip:$rele" in
       aix:*:5*)           arch=rs_aix5         ; platform=aix;   ccflv=xlC;;
       osf1*:alpha:*)      arch=alphacxx6       ; platform=alpha; ccflv=cxx;;
+      freebsd*:*:7*)      arch=FreeBSD7        ; platform=fbsd;  ccflv=fbsd;;
       freebsd*:*:5*)      arch=FreeBSD5        ; platform=fbsd;  ccflv=gcc;;
       freebsd*:*:4.2*)    arch=FreeBSD42       ; platform=fbsd;  ccflv=gcc;;
       freebsd*:*:4.3*)    arch=FreeBSD43       ; platform=fbsd;  ccflv=gcc;;
@@ -2035,12 +2036,16 @@ if test "x$enable_krb5" = "xyes" ; then
         fi
     fi
 
-    case $platform in
-	linux|solaris) # Resolver lives in separate library
-	    resolvlib="-lresolv"
-	    ;;
-    esac
 fi
+
+######################################################################
+#
+### On sme platforms the resolver lives in a separate library
+case $platform in
+    linux|solaris)
+        resolvlib="RESOLVLIB = -lresolv"
+        ;;
+esac
 
 ######################################################################
 #
@@ -2093,6 +2098,7 @@ sed -e "s|@arch@|$arch|"                 \
     -e "s|@libkrb4@|$libkrb4|"           \
     -e "s|@inckrb5@|$inckrb5|"           \
     -e "s|@libkrb5@|$libkrb5|"           \
+    -e "s|@resolvlib@|$resolvlib|"           \
     -e "s|@cryptlib@|$cryptlib|"         \
     -e "s|@incssl@|$incssl|"           \
     -e "s|@libssl@|$libssl|"           \

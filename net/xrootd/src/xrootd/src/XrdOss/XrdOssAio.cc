@@ -16,6 +16,9 @@ const char *XrdOssAioCVSID = "$Id$";
 #include <stdio.h>
 #include <unistd.h>
 #ifdef _POSIX_ASYNCHRONOUS_IO
+#ifdef __FreeBSD__
+#include <fcntl.h>
+#endif
 #ifdef __macos__
 #include <sys/aio.h>
 #else
@@ -297,12 +300,20 @@ int XrdOssSys::AioInit()
                                 (void *)(&OSS_AIO_READ_DONE))) < 0)
       OssEroute.Emsg("AioInit", retc, "creating AIO read signal thread; "
                                  "AIO support terminated.");
+#ifdef __FreeBSD__
+      else {DEBUG("started AIO read signal thread.");
+#else
       else {DEBUG("started AIO read signal thread; tid=" <<(unsigned int)tid);
+#endif
             if ((retc = XrdSysThread::Run(&tid, XrdOssAioWait,
                                 (void *)(&OSS_AIO_WRITE_DONE))) < 0)
                OssEroute.Emsg("AioInit", retc, "creating AIO write signal thread; "
                                  "AIO support terminated.");
+#ifdef __FreeBSD__
+               else {DEBUG("started AIO write signal thread.");
+#else
                else {DEBUG("started AIO write signal thread; tid=" <<(unsigned int)tid);
+#endif
                      AioAllOk = 1;
                     }
            }

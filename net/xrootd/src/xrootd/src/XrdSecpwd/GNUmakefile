@@ -65,7 +65,7 @@ anything: $(TARGETS)
 
 $(LIBRARY): $(OBJECTS) $(LIBDEPS)
 	@echo Creating shared library $(LIBRARY) 
-	$(ECHO)$(CC) $(OBJECTS) $(LDSO) $(BINLIBS) $(LIBS) -lresolv -o $(LIBRARY)
+	$(ECHO)$(CC) $(OBJECTS) $(LDSO) $(BINLIBS) $(LIBS) $(RESOLVLIB) -o $(LIBRARY)
 
 $(SRVADMIN): $(OBJECTA) $(LIBDEPS)
 	@echo Creating executable $(SRVADMIN) 

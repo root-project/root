@@ -21,7 +21,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#if defined(__CYGWIN__)
+#if defined(__CYGWIN__) || defined(__FreeBSD__)
 #include <sys/socket.h>
 #endif
 

@@ -1,5 +1,6 @@
 aix5            xlC       no     for AIX 5.x xlC
 alphacxx6       cxx       no     for DEC Unix cxx6
+FreeBSD7        fbsd      all    for FreeBSD 7.x
 FreeBSD5        gcc       no     for FreeBSD 5.x
 FreeBSD42       gcc       no     for FreeBSD 4.2
 FreeBSD43       gcc       no     for FreeBSD 4.3

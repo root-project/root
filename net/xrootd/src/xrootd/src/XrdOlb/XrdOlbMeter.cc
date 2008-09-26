@@ -24,7 +24,7 @@ const char *XrdOlbMeterCVSID = "$Id$";
 #include <sys/wait.h>
 #ifdef __linux__
 #include <sys/vfs.h>
-#elif defined( __macos__)
+#elif defined( __macos__) || defined(__FreeBSD__)
 #include <sys/param.h>
 #include <sys/mount.h>
 #else

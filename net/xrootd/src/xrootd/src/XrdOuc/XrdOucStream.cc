@@ -22,6 +22,9 @@ const char *XrdOucStreamCVSID = "$Id$";
 #include <unistd.h>
 #include <strings.h>
 #if !defined(__linux__) && !defined(__CYGWIN__)
+#ifdef __FreeBSD__
+#include <sys/param.h>
+#endif
 #include <sys/conf.h>
 #endif
 #include <sys/stat.h>

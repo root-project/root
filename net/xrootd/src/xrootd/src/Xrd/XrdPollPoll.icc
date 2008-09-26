@@ -12,7 +12,7 @@
 
 const char *XrdPollPollCVSID = "cvsid: $Id: XrdPollPoll.icc,v 1.17 2008/05/18 01:30:18 abh Exp $";
 
-#ifndef __macos__
+#if !defined(__macos__) && !defined(__FreeBSD__)
 #include <malloc.h>
 #endif
 #include <unistd.h>
