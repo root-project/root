@@ -49,6 +49,7 @@ extern "C" {
 #define XrdSecPROTOIDLEN    sizeof(XrdSecPROTOIDENT)
 #define XrdSecNOIPCHK       0x0001
 #define XrdSecEXPTKN        0x0002
+#define XrdSecINITTKN       0x0004
 #define XrdSecDEBUG         0x1000
 
 #define XrdSecMAXPATHLEN      4096
@@ -192,6 +193,20 @@ XrdSecCredentials *XrdSecProtocolkrb5::getCredentials(XrdSecParameters *noparm,
        return new XrdSecCredentials(0,0);
       }
 
+// Initialize the context and get the cache default.
+//
+   if ((rc = krb5_init_context(&krb_context)))
+      {Fatal(error, ENOPROTOOPT, "Kerberos initialization failed", Service, rc);
+       return (XrdSecCredentials *)0;
+      }
+
+// Obtain the default cache location
+//
+   if ((rc = krb5_cc_default(krb_context, &krb_ccache)))
+      {Fatal(error, ENOPROTOOPT, "Unable to locate cred cache", Service, rc);
+       return (XrdSecCredentials *)0;
+      }
+
 // Check if the server asked for a forwardable ticket
 //
    char *pfwd = 0;
@@ -243,9 +258,11 @@ XrdSecCredentials *XrdSecProtocolkrb5::getCredentials(XrdSecParameters *noparm,
    bool reinitdone = 0;
    while (notdone)
       {if ((rc = (krb_rc)get_krbCreds(Service, &Creds)))
-          { if (reinitdone)
+          { if (!(options & XrdSecINITTKN) || reinitdone)
                {krbContext.UnLock();
-                Fatal(error, ESRCH, "Unable to get credentials", Service, rc);
+                const char *m = (!(options & XrdSecINITTKN)) ?
+                                "No or invalid credentials" : "Unable to get credentials";
+                Fatal(error, ESRCH, m, Service, rc);
                 return (XrdSecCredentials *)0;
                } else {// Need to re-init
                        CLPRT("Ticket missing or invalid: re-init ");
@@ -259,13 +276,20 @@ XrdSecCredentials *XrdSecProtocolkrb5::getCredentials(XrdSecParameters *noparm,
        if (options & XrdSecEXPTKN)
           {// Make sure the ticket is forwardable
            if (!(Creds->ticket_flags & TKT_FLG_FORWARDABLE))
-              { // Need to re-init
-               CLPRT("Existing ticket is not forwardable: re-init ");
-               rc = system(reinitcmd);
-               CLDBG("getCredentials: return code from '"<<reinitcmd<<
-                     "': "<< rc);
-               reinitdone = 1;
-               continue;
+              { if (options & XrdSecINITTKN)
+                   { // Need to re-init
+                    CLPRT("Existing ticket is not forwardable: re-init ");
+                    rc = system(reinitcmd);
+                    CLDBG("getCredentials: return code from '"<<reinitcmd<<
+                          "': "<< rc);
+                    reinitdone = 1;
+                    continue;
+                   } else {
+                    krbContext.UnLock();
+                    Fatal(error, ESRCH, "Existing ticket is not forwardable: cannot continue",
+                                        Service, rc);
+                    return (XrdSecCredentials *)0;
+                   }
               }
           }
        // We are done
@@ -780,7 +804,10 @@ char  *XrdSecProtocolkrb5Init(const char     mode,
 // initialize the kerberos context and cache location.
 //
    if (mode == 'c')
-      {if (getenv("XrdSecDEBUG")) XrdSecProtocolkrb5::setOpts(XrdSecDEBUG);
+      {int opts = 0;
+       if (getenv("XrdSecDEBUG")) opts |= XrdSecDEBUG;
+       if (getenv("XrdSecKRB5INITTKN")) opts |= XrdSecINITTKN;
+       XrdSecProtocolkrb5::setOpts(opts);
        return (XrdSecProtocolkrb5::Init(erp) ? (char *)0 : (char *)"");
       }
 
