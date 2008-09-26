@@ -4688,10 +4688,10 @@ struct G__ifunc_table_internal* G__overload_match(const char* funcname, G__param
             if (p_ifunc->ansi[ifn] == 0 || /* K&R C style header */
                   p_ifunc->ansi[ifn] == 2 || /* variable number of args */
                   (G__HASH_MAIN == hash && strcmp(funcname, "main") == 0)) {
-               /* immediate return for special match */
-               doconvert = 0;
+               /* special match */
                *pifn = ifn;
-               goto end_of_function;
+               G__funclist_delete(funclist);
+               return(p_ifunc);
             }
             if (-1 != p_ifunc->tagnum &&
                   (memfunc_flag == G__TRYNORMAL && doconvert)
@@ -4810,8 +4810,7 @@ struct G__ifunc_table_internal* G__overload_match(const char* funcname, G__param
    p_ifunc = match->ifunc;
    *pifn = match->ifn;
 
-end_of_function:
-   /*  check private, protected access rights, and static-ness
+   /*  check private, protected access rights
     *    display error if no access right
     *    do parameter conversion if needed */
    if (0 == (p_ifunc->access[*pifn]&access) && (!G__isfriend(p_ifunc->tagnum))
@@ -4829,19 +4828,7 @@ end_of_function:
       G__funclist_delete(funclist);
       return((struct G__ifunc_table_internal*)NULL);
    }
-   if (G__exec_memberfunc && G__getstructoffset()==0 && p_ifunc->tagnum != -1 && G__struct.type[p_ifunc->tagnum]!='n' && !p_ifunc->staticalloc[*pifn] && G__NOLINK == G__globalcomp
-       && G__TRYCONSTRUCTOR !=  memfunc_flag) {
-      /* non static function called without an object */
-      G__fprinterr(G__serr, "Error: cannot call member function without object");
-      G__genericerror((char*)NULL);
-      G__fprinterr(G__serr, "  ");
-      G__display_func(G__serr, p_ifunc, *pifn);
-      G__display_ambiguous(scopetagnum, funcname, libp, funclist, bestmatch);
-      *pifn = -1;
-      G__funclist_delete(funclist);
-      return((struct G__ifunc_table_internal*)NULL);
-   } 
-   
+
    /* convert parameter */
    if (
       doconvert &&
