@@ -60,14 +60,8 @@ longlong: longlong.log
 
 templatefriend.log : templatefriend_cxx.$(DllSuf)
 
-# fails due to CINT's autodict facility:
-# when dict for shared_ptr is generated no dict for the templated constructor is requested
 templatefriend: templatefriend.log
-ifeq ($(FAIL),)
-	$(WarnFailTest)
-else
 	$(TestDiffW)
-endif
 
 templateSingleton.log: Singleton_h.$(DllSuf)
 
