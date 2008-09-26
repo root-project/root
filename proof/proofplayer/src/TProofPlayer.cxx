@@ -817,7 +817,8 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
       gProofServ->GetSocket()->Send(kPROOF_ENDINIT);
 
    // Get the frequency for logging memory consumption information
-   Int_t memlogfreq = ((TParameter<Long_t>*)fInput->FindObject("PROOF_MemLogFreq"))->GetVal();
+   Long64_t memlogfreq =
+      ((TParameter<Long64_t>*)fInput->FindObject("PROOF_MemLogFreq"))->GetVal();
 
    TRY {
 
@@ -847,7 +848,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
             if (gMonitoringWriter)
                gMonitoringWriter->SendProcessingProgress(fEventsProcessed,
                        TFile::GetFileBytesRead()-readbytesatstart, kFALSE);
-            if (fEventsProcessed%memlogfreq == 0){
+            if (memlogfreq > 0 && fEventsProcessed%memlogfreq == 0){
                // Record the memory information
                ProcInfo_t pi;
                if (!gSystem->GetProcInfo(&pi)){
@@ -1367,6 +1368,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
       // Try to have 100 messages about memory, unless a different number is given by the user
       if (!fProof->GetParameter("PROOF_MemLogFreq")){
          Long64_t memlogfreq = fPacketizer->GetTotalEntries()/(fProof->GetParallel()*100);
+         memlogfreq = (memlogfreq > 0) ? memlogfreq : 1;
          fProof->SetParameter("PROOF_MemLogFreq", memlogfreq);
       }
    } else {
@@ -1496,32 +1498,40 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
 }
 
 //______________________________________________________________________________
-Bool_t  TProofPlayerRemote::MergeOutputFiles()
+Bool_t TProofPlayerRemote::MergeOutputFiles()
 {
    // Merge output in files
 
    if (fMergeFiles) {
-      TFileMerger *filemerger = TProofOutputFile::GetFileMerger();
-      if (!filemerger) {
-         Error("MergeOutputFiles", "file merger is null in gProofServ! Protocol error?");
-         return kFALSE;
-      }
-
-      Bool_t result = filemerger->Merge();
-      if (!result) {
-         Error("MergeOutputFiles", "cannot merge the output files");
-         return kFALSE;
-      }
-
-      TList *fileList = filemerger->GetMergeList();
-      if (fileList) {
-         TIter next(fileList);
-         TObjString *url = 0;
-         while((url = (TObjString*)next())) {
-            gSystem->Unlink(url->GetString());
+      TIter nxo(fOutput);
+      TObject *o = 0;
+      TProofOutputFile *pf = 0;
+      while ((o = nxo())) {
+         if ((pf = dynamic_cast<TProofOutputFile*>(o))) {
+            // Point to the merger
+            TFileMerger *filemerger = pf->GetFileMerger();
+            if (!filemerger) {
+               Error("MergeOutputFiles", "file merger is null in TProofOutputFile! Protocol error?");
+               pf->Print();
+               continue;
+            }
+            // Merge
+            if (!filemerger->Merge()) {
+               Error("MergeOutputFiles", "cannot merge the output files");
+               continue;
+            }
+            // Remove the files
+            TList *fileList = filemerger->GetMergeList();
+            if (fileList) {
+               TIter next(fileList);
+               TObjString *url = 0;
+               while((url = (TObjString*)next())) {
+                  gSystem->Unlink(url->GetString());
+               }
+            }
+            filemerger->Reset();
          }
       }
-      filemerger->Reset();
    }
    // Done
    return kTRUE;

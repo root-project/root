@@ -31,8 +31,6 @@
 
 ClassImp(TProofOutputFile)
 
-TFileMerger *TProofOutputFile::fgMerger = 0; // Instance of the file merger for mode "CENTRAL"
-
 //________________________________________________________________________________
 TProofOutputFile::TProofOutputFile(const char* path,
                                    const char* location, const char* mode)
@@ -41,6 +39,7 @@ TProofOutputFile::TProofOutputFile(const char* path,
    // Main conctructor
 
    fMerged = kFALSE;
+   fMerger = 0;
 
    TUrl u(path, kTRUE);
    // File name
@@ -126,6 +125,14 @@ TProofOutputFile::TProofOutputFile(const char* path,
       }
       fMode.ToUpper();
    }
+}
+
+//________________________________________________________________________________
+TProofOutputFile::~TProofOutputFile()
+{
+   // Main destructor
+
+   if (fMerger) delete fMerger;
 }
 
 //______________________________________________________________________________
@@ -456,7 +463,7 @@ TFileMerger *TProofOutputFile::GetFileMerger(Bool_t local)
 {
    // Get instance of the file merger to be used in "CENTRAL" mode
 
-   if (!fgMerger)
-      fgMerger = new TFileMerger(local);
-   return fgMerger;
+   if (!fMerger)
+      fMerger = new TFileMerger(local);
+   return fMerger;
 }
