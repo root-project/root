@@ -45,6 +45,9 @@
 #include "Typedf.h"
 #include "Token.h"
 
+#include <vector>
+#include <string>
+
 #ifndef __CINT__
 struct G__includepath;
 #endif
@@ -117,6 +120,22 @@ void* G__new_interpreted_object(int size);
 G__EXPORT
 #endif
 void G__delete_interpreted_object(void* p);
+
+
+/*********************************************************************
+* Generate dictionary.
+*********************************************************************/
+typedef int (*G__pGenerateDictionary)(const std::string &className,const std::vector<std::string> &headers);
+
+#ifndef __CINT__
+G__EXPORT
+#endif
+void G__InitGenerateDictionary( G__pGenerateDictionary gdict );
+
+#ifndef __CINT__
+G__EXPORT
+#endif
+G__pGenerateDictionary G__GetGenerateDictionary();
 
 
 /*********************************************************************

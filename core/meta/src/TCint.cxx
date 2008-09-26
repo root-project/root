@@ -41,6 +41,7 @@
 #include "TEnv.h"
 #include "THashTable.h"
 #include "RConfigure.h"
+#include "compiledata.h"
 
 #include <vector>
 #include <set>
@@ -80,6 +81,77 @@ TInterpreter* TCint_Factory(const char* name, const char* title) {
    return new TCint(name, title);
 }
 
+
+
+int TCint_GenerateDictionary(const std::string &className,
+                             const std::vector<std::string> &headers )
+{
+   //This function automatically creates the "LinkDef.h" file for templated
+   //classes then executes CompileMacro on it.
+   //The name of the file depends on the class name, and it's not generated again
+   //if the file exist.
+
+
+   //(0) prepare file name
+   TString fileName = "AutoDict_";
+   std::string::const_iterator sIt;
+   for( sIt = className.begin(); sIt != className.end(); sIt++ ) {
+      if (*sIt == '<' || *sIt == '>' ||
+          *sIt == ' ' || *sIt == '*' ||
+          *sIt == ',' || *sIt == '&')
+         fileName += '_';
+      else
+         fileName += *sIt;
+   }
+   fileName += ".cxx";
+
+   if( gSystem->AccessPathName(fileName) != 0 ) {
+      //file does not exist
+      //(1) prepare file data
+      std::vector<std::string>::const_iterator it;
+      std::string fileContent ("");
+
+      for( it = headers.begin(); it < headers.end(); it++ )
+         fileContent += "#include \"" + *it + "\"\n";
+
+      fileContent += "#ifdef __CINT__ \n";
+      fileContent += "#pragma link off all class;\n";
+      fileContent += "#pragma link off all function;\n";
+      fileContent += "#pragma link off all global;\n";
+      fileContent += "#pragma link off all typedef;\n";
+      fileContent += "#pragma link C++ nestedclasses;\n";
+      fileContent += "#pragma link C++ class ";
+      fileContent += className + "+;\n" ;
+      fileContent += "#endif\n";
+      //end(1)
+
+      //(2) prepare the file
+      FILE *filePointer;
+
+      filePointer = fopen( fileName, "w" );
+
+      if( filePointer == NULL ) {
+         //can't open a file
+         return 1;
+      }
+      //end(2)
+        
+      //write data into the file
+      fprintf( filePointer, fileContent.c_str() );
+      fclose( filePointer );
+   }
+
+   //(3) checking if we can compile a macro, if not then cleaning
+   Int_t oldErrorIgnoreLevel = gErrorIgnoreLevel;
+   gErrorIgnoreLevel = kWarning; // no "Info: creating library..."
+   Int_t ret = gSystem->CompileMacro( fileName, "k" );
+   gErrorIgnoreLevel = oldErrorIgnoreLevel;
+   if( ret == 0 ) //can't compile a macro
+      return 2;
+   //end(3)
+   return 0;
+}
+
 namespace {
    static class TInitCintFactory {
    public:
@@ -113,6 +185,15 @@ TCint::TCint(const char *name, const char *title) : TInterpreter(name, title)
    G__set_ignoreinclude(&IgnoreInclude);
    G__InitUpdateClassInfo(&TCint_UpdateClassInfo);
    G__InitGetSpecialObject(&TCint_FindSpecialObject);
+
+   // check whether the compiler is available:
+   TString  pathString = "$(PATH)";
+   gSystem->ExpandPathName(pathString);
+   char* path = gSystem->Which(pathString, gSystem->BaseName( COMPILER ));
+   if (path && path[0]) {
+      G__InitGenerateDictionary( &TCint_GenerateDictionary );
+   }
+   delete path;
 
    fDictPos.ptype = 0;
    fDictPosGlobals.ptype = 0;
@@ -1242,7 +1323,7 @@ Int_t TCint::LoadLibraryMap(const char *rootmapfile)
          if (!skip) {
             void *dirp = gSystem->OpenDirectory(d);
             if (dirp) {
-               if (gDebug > 0)
+               if (gDebug > 3)
                   Info("LoadLibraryMap", "%s", d.Data());
                const char *f1;
                while ((f1 = gSystem->GetDirEntry(dirp))) {
@@ -1251,7 +1332,7 @@ Int_t TCint::LoadLibraryMap(const char *rootmapfile)
                      TString p;
                      p = d + "/" + f;
                      if (!gSystem->AccessPathName(p, kReadPermission)) {
-                        if (gDebug > 1)
+                        if (gDebug > 4)
                            Info("LoadLibraryMap", "   rootmap file: %s", p.Data());
                         fMapfile->ReadFile(p, kEnvGlobal);
                         fRootmapFiles->Add(new TObjString(p));
@@ -1339,7 +1420,7 @@ Int_t TCint::LoadLibraryMap(const char *rootmapfile)
          }
          G__set_class_autoloading_table((char*)cls.Data(), lib);
          G__security_recover(stderr); // Ignore any error during this setting.
-         if (gDebug > 2) {
+         if (gDebug > 6) {
             const char *wlib = gSystem->Which(gSystem->GetDynamicPath(), lib);
             Info("LoadLibraryMap", "class %s in %s", cls.Data(), wlib);
             delete [] wlib;
@@ -1588,12 +1669,15 @@ Int_t TCint::AutoLoadCallback(const char *cls, const char *lib)
    // lookup class to find list of dependent libraries
    TString deplibs = gInterpreter->GetClassSharedLibs(cls);
    if (!deplibs.IsNull()) {
+     if (gDebug > 0 && gDebug <= 4)
+       ::Info("TCint::AutoLoadCallback", "loaded dependent library %s for class %s",
+	      deplibs.Data(), cls);
       TString delim(" ");
       TObjArray *tokens = deplibs.Tokenize(delim);
       for (Int_t i = tokens->GetEntriesFast()-1; i > 0; i--) {
          const char *deplib = ((TObjString*)tokens->At(i))->GetName();
          if (gROOT->LoadClass(cls, deplib) == 0) {
-            if (gDebug > 0)
+            if (gDebug > 4)
                ::Info("TCint::AutoLoadCallback", "loaded dependent library %s for class %s",
                       deplib, cls);
          } else {

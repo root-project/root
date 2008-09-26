@@ -14,7 +14,11 @@
  ************************************************************************/
 
 #include "common.h"
+#include "Api.h"
 #include <string>
+#include <vector>
+#include <algorithm>
+#include <iostream>
 
 extern "C" {
 
@@ -1999,6 +2003,137 @@ int G__gettemplatearglist(const char *paralist,G__Charlist *charlist_in
   return(searchflag);
 }
 
+
+/*********************************
+ *
+ *G__isSource
+ *
+ *********************************/
+static bool G__isSource( const char* name )
+{
+  //Very simple check (by extension),if the file is a source file.
+
+  const char* ptr = strrchr( name, '.');
+  if( ptr == NULL ) return false;
+  if( *(ptr+1) == 'c' || *(ptr+1) == 'C' ) return true;
+  else return false;    
+}
+
+static int G__getIndex( int index, int tagnum ,std::vector<std::string> &headers )
+{
+
+  //Function iterates through G__srcfile to find the name of *.h file where we have
+  //class definition, then adds it to data container 'headers'.
+
+  std::vector<std::string>::iterator it;
+  while( (G__srcfile[index].included_from < G__nfile)  && (G__srcfile[index].included_from > -1) )
+  {
+    const int nextFileIndex = G__srcfile[index].included_from; 
+    if( G__isSource( G__srcfile[nextFileIndex].filename ) || ( G__srcfile[nextFileIndex].slindex != -1  ) ) break;
+    index = nextFileIndex;
+  }
+  if( G__srcfile[index].slindex != -1 )
+  {
+    if( tagnum >= 0 && G__struct.comment[tagnum].p.com && strstr(G__struct.comment[tagnum].p.com, "//[INCLUDE:") )
+    {// check whether G__struct...comment.p.com is set and statrs with "//[INCLUDE:"
+    
+      char *pDel = G__struct.comment[tagnum].p.com;
+      while( *pDel != 0 && *pDel != ':' ) pDel++;
+      if( *pDel != 0 )pDel++;
+      std::string tmpHeader;
+      // if so, add all headers from G__struct..comment.p.com to headers.push_back(...)
+      // and go on.
+      while( *pDel != 0 )
+      {
+        if( *pDel != ';' ) tmpHeader += *pDel;
+        else
+        {
+          it = std::find( headers.begin(), headers.end(), tmpHeader );
+          if( it == headers.end() ) headers.push_back( tmpHeader );
+          tmpHeader = "";
+	}
+        pDel++;
+      }
+    }
+    else
+    {
+      // otherwise:
+      return -2;
+    }
+  }
+  else
+  {
+    it = std::find( headers.begin(), headers.end(),G__srcfile[ index ].filename  );
+    if( (it == headers.end()) && (G__srcfile[index].slindex == -1 ) ) headers.push_back( G__srcfile[index].filename );
+  }
+  return index;
+}
+
+/***********************************************************************
+* G__instantiatgenerate_template_dict()
+*
+*  noerror >= 0   
+*                
+*    error < 0   
+*
+***********************************************************************/
+static int G__generate_template_dict(const char* tagname,G__Definedtemplateclass *deftmpclass,G__Charlist *call_para)
+{
+  // Generates a dictionary for tagname by invoking G__GenerateDictionary.
+  // Function goes through all includes and collects only the ones headers 
+  // which are needed for our template class.
+
+  //example: vector<MyClass>
+  if( G__def_tagnum != -1 ) return -1;
+
+  std::string className;
+  std::vector<std::string> headers;
+  std::vector<std::string>::iterator it;
+
+  //getting 'vector<MyClass>'
+  className = tagname;
+
+  //getting 'vector' header file
+  int fileNum = deftmpclass->filenum;
+  if( fileNum < 0 ) return -1;
+  fileNum = G__getIndex(fileNum,-1, headers);
+  if( fileNum < 0 ) return fileNum;
+  //headers.push_back( G__srcfile[ fileNum ].filename );
+  
+  //getting 'MyClass' header file/s
+  while(call_para->next != NULL) {
+    G__value gValue = G__string2type_noerror( call_para->string, 1 );
+    if( (char)gValue.type == 'u' || (char)gValue.type == 'U' ) {
+      int index = gValue.tagnum;
+      index = G__struct.filenum[index];
+      if( index < 0 ) return -3;
+      index = G__getIndex(index, gValue.tagnum, headers);
+      if( index < 0 ) return index;
+      //it = find( headers.begin(), headers.end(),G__srcfile[ index ].filename  );
+      //if( (it == headers.end()) && (G__srcfile[index].slindex == -1 ) ) headers.push_back( G__srcfile[index].filename );
+    }
+    call_para = call_para->next;
+  }
+
+  Cint::G__pGenerateDictionary pGD = Cint::G__GetGenerateDictionary();
+  int rtn = pGD( className, headers );
+  if( rtn != 0 ) return (-rtn)-2;
+  int tagnum = G__defined_tagname( className.c_str(), 3 );
+
+  if (tagnum >= 0) {
+     if (!G__struct.comment[tagnum].p.com) {
+        std::string headersToInclude("//[INCLUDE:");
+        for( it = headers.begin(); it!= headers.end(); it++ ) {
+           headersToInclude += *it + ";";
+        }
+        G__struct.comment[tagnum].p.com = new char[headersToInclude.length() + 1];
+        strcpy(G__struct.comment[tagnum].p.com, headersToInclude.c_str());
+     }
+  }
+
+  return tagnum;
+}
+
 /***********************************************************************
 * G__instantiate_templateclass()
 *
@@ -2225,6 +2360,13 @@ int G__instantiate_templateclass(const char *tagnamein, int noerror)
     }
     G__freecharlist(&call_para);
     return(tagnum);
+  }
+
+  if( G__GetGenerateDictionary() )
+  {
+    int rtn = G__generate_template_dict(tagname, deftmpclass, &call_para);
+    if( rtn >= 0 )
+      return rtn;
   }
 
   if(-1!=scope_tagnum
