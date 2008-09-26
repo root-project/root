@@ -8,29 +8,29 @@ FreeBSD44       gcc       no     for FreeBSD 4.4
 FreeBSD4        gcc       no     for FreeBSD 4.x
 FreeBSD         gcc       no     for FreeBSD
 hpuxia64acc     aCC       no     for HP-UX 11i v1.5 (IA-64) aCC
-ia64_linux22    gcc       all    for Itanium Linux kernel 2.2.x gcc 2.9x and glibc
-ia64_linux24    gcc       all    for Itanium Linux kernel 2.4.x gcc 2.9x and glibc
-ia64_linux26    gcc       all    for Itanium Linux kernel 2.6.x gcc 2.9x and glibc
-ia64_linux      gcc       all    for Itanium Linux gcc 2.9x and glibc
+ia64_linux22    gccia64   all    for Itanium Linux kernel 2.2.x gcc and glibc
+ia64_linux24    gccia64   all    for Itanium Linux kernel 2.4.x gcc and glibc
+ia64_linux26    gccia64   all    for Itanium Linux kernel 2.6.x gcc and glibc
+ia64_linux      gccia64   all    for Itanium Linux gcc and glibc
 ia64_linux22    icc       all    for Itanium Linux kernel 2.2.x Intel icc
 ia64_linux24    icc       all    for Itanium Linux kernel 2.4.x Intel icc
 ia64_linux26    icc       all    for Itanium Linux kernel 2.6.x Intel icc
 ia64_linux      icc       all    for Itanium Linux Intel icc
-i386_linux22    gcc       all    for Linux kernel 2.2.x gcc 2.9x, gcc 3.x and glibc
-i386_linux24    gcc       all    for Linux kernel 2.4.x gcc 2.9x, gcc 3.x and glibc
-i386_linux26    gcc       all    for Linux kernel 2.6.x gcc 2.9x, gcc 3.x and glibc
-i386_linux      gcc       all    for Linux gcc 2.9x, gcc 3.x and glibc
+i386_linux22    gcc       all    for Linux kernel 2.2.x gcc and glibc
+i386_linux24    gcc       all    for Linux kernel 2.4.x gcc and glibc
+i386_linux26    gcc       all    for Linux kernel 2.6.x gcc and glibc
+i386_linux      gcc       all    for Linux gcc glibc
 i386_linux22    icc       all    for Linux kernel 2.2.x Intel icc
 i386_linux24    icc       all    for Linux kernel 2.4.x Intel icc
 i386_linux26    icc       all    for Linux kernel 2.6.x Intel icc
 i386_linux      icc       all    for Linux Intel icc
 i386_rhel30     gcc       all    for Linux kernel 2.4.x Enterprise Release
 i386_rhel30     icc       all    for Linux kernel 2.4.x Enterprise Release Intel icc
-i386_linux      gcc       all    for AMD Athlon Linux gcc 3.x, glibc
-x86_64_linux_22 gccx8664  all    for AMD Opteron 64 Linux kernel 2.2.x gcc 3.x, glibc
-x86_64_linux_24 gccx8664  all    for AMD Opteron 64 Linux kernel 2.4.x gcc 3.x, glibc
-x86_64_linux_26 gccx8664  all    for AMD Opteron 64 Linux kernel 2.6.x gcc 3.x, glibc
-x86_64_linux    gccx8664  all    for AMD Opteron 64 Linux gcc 3.x, glibc
+i386_linux      gcc       all    for AMD Athlon Linux gcc glibc
+x86_64_linux_22 gccx8664  all    for AMD Opteron 64 Linux kernel 2.2.x gcc glibc
+x86_64_linux_24 gccx8664  all    for AMD Opteron 64 Linux kernel 2.4.x gcc glibc
+x86_64_linux_26 gccx8664  all    for AMD Opteron 64 Linux kernel 2.6.x gcc glibc
+x86_64_linux    gccx8664  all    for AMD Opteron 64 Linux gcc glibc
 x86_64_linux_22 iccx8664  all    for AMD Opteron 64 Linux kernel 2.2.x Intel icc
 x86_64_linux_24 iccx8664  all    for AMD Opteron 64 Linux kernel 2.4.x Intel icc
 x86_64_linux_26 iccx8664  all    for AMD Opteron 64 Linux kernel 2.6.x Intel icc

@@ -746,6 +746,11 @@ if test "x$platform" = "xlinux" && test "x$chip" = "xx86_64" ; then
       nccflv="iccx8664"
    fi
 fi
+if test "x$platform" = "xlinux" && test "x$chip" = "xia64" ; then
+   if test "x$nccflv" = "xgcc" ; then
+      nccflv="gccia64"
+   fi
+fi
 
 macosx_target_setting=""
 if test "x$platform" = "xmacosx" ; then
