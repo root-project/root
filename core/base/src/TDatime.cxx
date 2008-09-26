@@ -361,10 +361,10 @@ void TDatime::Set(Int_t date, Int_t time)
 void TDatime::Set(Int_t year, Int_t month, Int_t day,
                   Int_t hour, Int_t min, Int_t sec)
 {
-   // Set date and time. Year may be xx where 95 <= xx <= 199 (199 being 2099).
+   // Set date and time. Year may be xx where 95 <= xx <= 158 (158 being 2058).
    // The year must be >= 1995.
 
-   if (year < 200) year += 1900;
+   if (year < 159) year += 1900;
    if (year < 1995) {
       Error("TDatime::Set", "year must be >= 1995");
       return;
