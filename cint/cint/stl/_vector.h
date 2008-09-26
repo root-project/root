@@ -26,7 +26,6 @@
 #ifndef VECTOR_H
 #define VECTOR_H
 
-#include <function.h>
 #include <algobase.h>
 #include <bool.h>
 
