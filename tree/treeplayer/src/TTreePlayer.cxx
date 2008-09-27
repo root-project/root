@@ -3011,8 +3011,29 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
       for (ui=0;ui<ncs;++ui) {
          TLeaf *lf = (TLeaf*)leaves->At(ui);
          if (lf->GetBranch()->GetListOfBranches()->GetEntries() > 0) continue;
-         cnames[ncols] = lf->GetName();
-         ncols++;
+         cnames[ncols] = lf->GetBranch()->GetMother()->GetName();
+         if (cnames[ncols] == lf->GetName() ) {
+            // Already complete, let move on.
+         } else if (cnames[ncols][cnames[ncols].Length()-1]=='.') {
+            cnames[ncols] = lf->GetBranch()->GetName(); // name of branch already include mother's name
+         } else {
+            if (lf->GetBranch()->GetMother()->IsA()->InheritsFrom(TBranchElement::Class())) {
+               TBranchElement *mother = (TBranchElement*)lf->GetBranch()->GetMother();
+               if (mother->GetType() == 3 || mother->GetType() == 4) {
+                  // The name of the mother branch is embedded in the sub-branch names.
+                  cnames[ncols] = lf->GetBranch()->GetName();
+                  ++ncols;
+                  continue;
+               }
+            }
+            cnames[ncols].Append('.');
+            cnames[ncols].Append( lf->GetBranch()->GetName() );
+         }
+         if (strcmp( lf->GetBranch()->GetName(), lf->GetName() ) != 0 ) {
+            cnames[ncols].Append('.');
+            cnames[ncols].Append( lf->GetName() );
+         }
+         ++ncols;
       }
 //*-*- otherwise select only the specified columns
    } else {

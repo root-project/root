@@ -1374,8 +1374,13 @@ TBranch* TBranchElement::FindBranch(const char *name)
             if (longnm_parent == brname) {
                return branch;
             }
+            if (strncmp(name,brname.c_str(),brname.length())==0
+                && name[brname.length()]=='.') {
+               // The prefix subbranch name match the branch name.
+               return branch->FindBranch(name+brname.length()+1);
+            }
          }
-         return 0;
+         // return 0;
       }
    }
    TBranch *result = TBranch::FindBranch(name);

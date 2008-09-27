@@ -758,7 +758,19 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
    if (leaf) {
       tleaf = leaf->GetBranch()->GetTree();
       fCodes[code] = tleaf->GetListOfLeaves()->IndexOf(leaf);
-      TNamed *named = new TNamed(scratch,leaf->GetBranch()->GetName());
+      const char *mother_name = leaf->GetBranch()->GetMother()->GetName();
+      TString br_extended_name; // Could do ( strlen(mother_name)+strlen( leaf->GetBranch()->GetName() ) + 2 )
+      if (leaf->GetBranch()!=leaf->GetBranch()->GetMother()) {
+         if (mother_name[strlen(mother_name)-1]!='.') {
+            br_extended_name = mother_name;
+            br_extended_name.Append('.');
+         }
+      }
+      br_extended_name.Append( leaf->GetBranch()->GetName() );
+      Ssiz_t dim = br_extended_name.First('[');
+      if (dim >= 0) br_extended_name.Remove(dim);
+
+      TNamed *named = new TNamed(scratch,br_extended_name.Data());
       fLeafNames.AddAtAndExpand(named,code);
       fLeaves.AddAtAndExpand(leaf,code);
    }
