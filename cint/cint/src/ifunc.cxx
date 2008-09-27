@@ -3473,12 +3473,19 @@ void G__rate_parameter_match(G__param* libp, G__ifunc_table_internal* p_ifunc, i
             ifunc2 = G__struct.memfunc[formal_tagnum];
             para.paran = 1;
             para.para[0] = libp->para[i];
+            long store_struct_offset = G__store_struct_offset;
+            if (param_type = 'u') {
+               G__store_struct_offset = libp->para[i].obj.i;
+            } else {
+               G__store_struct_offset = 0;
+            }
             strcpy(funcname2, G__struct.name[formal_tagnum]);
             G__hash(funcname2, hash2, ifn2);
             ifunc2 = G__overload_match(funcname2, &para, hash2, ifunc2
                                        , G__TRYCONSTRUCTOR, G__PUBLIC, &ifn2, 1
                                        , 1
                                       );
+            G__store_struct_offset = store_struct_offset;
             if (ifunc2 && -1 != ifn2)
                funclist->p_rate[i] = G__USRCONVMATCH;
          }
@@ -3494,6 +3501,8 @@ void G__rate_parameter_match(G__param* libp, G__ifunc_table_internal* p_ifunc, i
             struct G__param para;
             G__incsetup_memfunc(param_tagnum);
             para.paran = 0;
+            long store_struct_offset = G__store_struct_offset;
+            G__store_struct_offset = libp->para[i].obj.i;
             /* search for  operator type */
             sprintf(funcname2, "operator %s"
                     , G__type2string(formal_type, formal_tagnum, -1, 0, 0));
@@ -3514,6 +3523,7 @@ void G__rate_parameter_match(G__param* libp, G__ifunc_table_internal* p_ifunc, i
                                           , 1
                                          );
             }
+            G__store_struct_offset = store_struct_offset;
             if (ifunc2 && -1 != ifn2)
                funclist->p_rate[i] = G__USRCONVMATCH;
             else {
@@ -4674,6 +4684,7 @@ struct G__ifunc_table_internal* G__overload_match(const char* funcname, G__param
    int scopetagnum = p_ifunc->tagnum;
    struct G__ifunc_table_internal *store_ifunc = p_ifunc;
    int ix = 0;
+   int active_run = doconvert;
 
 
    /* Search for name match
@@ -4688,10 +4699,10 @@ struct G__ifunc_table_internal* G__overload_match(const char* funcname, G__param
             if (p_ifunc->ansi[ifn] == 0 || /* K&R C style header */
                   p_ifunc->ansi[ifn] == 2 || /* variable number of args */
                   (G__HASH_MAIN == hash && strcmp(funcname, "main") == 0)) {
-               /* special match */
+               /* immediate return for special match */
+               doconvert = 0;
                *pifn = ifn;
-               G__funclist_delete(funclist);
-               return(p_ifunc);
+               goto end_of_function;
             }
             if (-1 != p_ifunc->tagnum &&
                   (memfunc_flag == G__TRYNORMAL && doconvert)
@@ -4810,7 +4821,8 @@ struct G__ifunc_table_internal* G__overload_match(const char* funcname, G__param
    p_ifunc = match->ifunc;
    *pifn = match->ifn;
 
-   /*  check private, protected access rights
+end_of_function:
+   /*  check private, protected access rights, and static-ness
     *    display error if no access right
     *    do parameter conversion if needed */
    if (0 == (p_ifunc->access[*pifn]&access) && (!G__isfriend(p_ifunc->tagnum))
@@ -4828,7 +4840,19 @@ struct G__ifunc_table_internal* G__overload_match(const char* funcname, G__param
       G__funclist_delete(funclist);
       return((struct G__ifunc_table_internal*)NULL);
    }
-
+   if (active_run && G__exec_memberfunc && G__getstructoffset()==0 && p_ifunc->tagnum != -1 && G__struct.type[p_ifunc->tagnum]!='n' && !p_ifunc->staticalloc[*pifn] && G__NOLINK == G__globalcomp
+       && G__TRYCONSTRUCTOR !=  memfunc_flag) {
+      /* non static function called without an object */
+      G__fprinterr(G__serr, "Error: cannot call member function without object");
+      G__genericerror((char*)NULL);
+      G__fprinterr(G__serr, "  ");
+      G__display_func(G__serr, p_ifunc, *pifn);
+      G__display_ambiguous(scopetagnum, funcname, libp, funclist, bestmatch);
+      *pifn = -1;
+      G__funclist_delete(funclist);
+      return((struct G__ifunc_table_internal*)NULL);
+   } 
+   
    /* convert parameter */
    if (
       doconvert &&

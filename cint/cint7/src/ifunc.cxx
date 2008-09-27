@@ -3148,6 +3148,12 @@ static void G__rate_parameter_match(G__param* libp, const ::Reflex::Member func,
          struct G__param para;
          para.paran = 1;
          para.para[0] = libp->para[i];
+         char *store_struct_offset = G__store_struct_offset;
+         if (arg_type = 'u') {
+            G__store_struct_offset = (char*)libp->para[i].obj.i;
+         } else {
+            G__store_struct_offset = 0;
+         }
          G__StrBuf funcname2_sb(G__ONELINE);
          char* funcname2 = funcname2_sb;
          strcpy(funcname2, formal_tagnum.Name().c_str());
@@ -3156,15 +3162,19 @@ static void G__rate_parameter_match(G__param* libp, const ::Reflex::Member func,
          G__hash(funcname2, hash2, ifn2);
          int match_error = 0;
          ::Reflex::Member func2 = G__overload_match(funcname2, &para, hash2, formal_tagnum, G__TRYCONSTRUCTOR, G__PUBLIC, 1, 1, &match_error);
+         G__store_struct_offset = store_struct_offset;
          if (func2) {
             funclist->p_rate[i] = G__USRCONVMATCH;
          }
+         
       }
       if (!recursive && (funclist->p_rate[i] == G__NOMATCH) && (arg_type == 'u') && (G__get_tagnum(arg_tagnum) != -1)) { // Try a type conversion operator function.
          //fprintf(stderr, "G__rate_parameter_match: %d Checking for a user-defined conversion by operator function.\n", depth);
          G__incsetup_memfunc(arg_tagnum);
          struct G__param para;
          para.paran = 0;
+         char *store_struct_offset = G__store_struct_offset;
+         G__store_struct_offset = (char*)libp->para[i].obj.i;
          // search for  operator type
          G__StrBuf funcname2_sb(G__ONELINE);
          char* funcname2 = funcname2_sb;
@@ -3180,6 +3190,7 @@ static void G__rate_parameter_match(G__param* libp, const ::Reflex::Member func,
             G__hash(funcname2, hash2, ifn2);
             ifunc2 = G__overload_match(funcname2, &para, hash2, arg_tagnum, G__TRYMEMFUNC, G__PUBLIC, 1, 1, &match_error);
          }
+         G__store_struct_offset = store_struct_offset;
          if (ifunc2) {
             funclist->p_rate[i] = G__USRCONVMATCH;
          }
@@ -4341,7 +4352,7 @@ static ::Reflex::Member G__overload_match(char* funcname, G__param* libp, int ha
    ::Reflex::Scope ifunc = p_ifunc;
    ::Reflex::Member result;
    int ix = 0;
-
+   int active_run = doconvert;
 
    // Search for name match
    
@@ -4468,7 +4479,7 @@ end_of_function:
       G__funclist_delete(funclist);
       return ::Reflex::Member();
    }
-   if (G__exec_memberfunc && G__getstructoffset()==0 
+   if (active_run && G__exec_memberfunc && G__getstructoffset()==0 
        && !result.DeclaringScope().IsNamespace() && !result.IsStatic()  
        && G__NOLINK == G__globalcomp
        && G__TRYCONSTRUCTOR !=  memfunc_flag) {
