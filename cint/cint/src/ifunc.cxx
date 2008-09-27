@@ -3474,7 +3474,7 @@ void G__rate_parameter_match(G__param* libp, G__ifunc_table_internal* p_ifunc, i
             para.paran = 1;
             para.para[0] = libp->para[i];
             long store_struct_offset = G__store_struct_offset;
-            if (param_type = 'u') {
+            if (param_type == 'u') {
                G__store_struct_offset = libp->para[i].obj.i;
             } else {
                G__store_struct_offset = 0;

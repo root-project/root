@@ -3149,7 +3149,7 @@ static void G__rate_parameter_match(G__param* libp, const ::Reflex::Member func,
          para.paran = 1;
          para.para[0] = libp->para[i];
          char *store_struct_offset = G__store_struct_offset;
-         if (arg_type = 'u') {
+         if (arg_type == 'u') {
             G__store_struct_offset = (char*)libp->para[i].obj.i;
          } else {
             G__store_struct_offset = 0;
