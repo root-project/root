@@ -89,7 +89,7 @@ public:
 //______________________________________________________________________________
 TPacketizerUnit::TSlaveStat::TSlaveStat(TSlave *slave, TList *input)
                             : fSlave(slave), fProcessed(0), fLastProcessed(0),
-                              fSpeed(0), fTimeInstant(0)
+                              fSpeed(0), fTimeInstant(0), fCircLvl(5)
 {
    // Main constructor
 
