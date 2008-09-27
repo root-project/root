@@ -3474,32 +3474,39 @@ static TBranch *R__FindBranchHelper(TObjArray *list, const char *branchname) {
    
    if (list==0) return 0;
    
-   for(Int_t index = 0; index < list->GetEntries(); ++index) {
+   Int_t nbranches = list->GetEntries();
+
+   UInt_t brlen = strlen(branchname);
+   
+   for(Int_t index = 0; index < nbranches; ++index) {
       TBranch *where = (TBranch*)list->UncheckedAt(index); 
       
-      std::string name(where->GetName());
-      std::size_t dim = name.find_first_of("[");
-      if (dim != std::string::npos) {
-         name.erase(dim);
+      const char *name = where->GetName();
+      UInt_t len = strlen(name);
+      if (name[len-1]==']') {
+         const  char *dim = strchr(name,'[');
+         if (dim) {
+            len = dim - name;
+         }
       }
-      if (branchname == name) {
+      if (brlen == len && strncmp(branchname,name,len)==0) {
          return where;
       }
       TBranch *next = 0;
-      if (branchname && strncmp(name.c_str(),branchname,name.length())==0
-          && branchname[name.length()]=='.') {
+      if (branchname && branchname[len]=='.' 
+          && strncmp(name,branchname,len)==0) {
          // The prefix subbranch name match the branch name.
          
          next = where->FindBranch(branchname);
          if (!next) {
-            next = where->FindBranch(branchname+name.length()+1);
+            next = where->FindBranch(branchname+len+1);
          }
          if (next) return next;
       }
       const char *dot = strchr((char*)branchname,'.');
       if (dot) {
-         TString prefix(branchname,dot-branchname);
-         if (prefix == name) {
+         if (len==(size_t)(dot-branchname) &&
+             strncmp(branchname,name,dot-branchname)==0 ) {
             return R__FindBranchHelper(where->GetListOfBranches(),dot+1);
          }
       }

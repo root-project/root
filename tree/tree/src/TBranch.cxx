@@ -882,27 +882,39 @@ TBranch* TBranch::FindBranch(const char* name)
    // -- Find the immediate sub-branch with passed name.
 
    // We allow the user to pass only the last dotted component of the name.
-   std::string longnm(GetName());
-   std::size_t dim = longnm.find_first_of("[");
-   if (dim != std::string::npos) {
-      longnm.erase(dim);
+   std::string longnm;
+   longnm.reserve(fName.Length()+strlen(name)+3);
+   longnm = fName.Data();
+   if (longnm[longnm.length()-1]==']') {
+      std::size_t dim = longnm.find_first_of("[");
+      if (dim != std::string::npos) {
+         longnm.erase(dim);
+      }
    }
-   if (longnm[longnm.size()-1] != '.') {
+   if (longnm[longnm.length()-1] != '.') {
       longnm += '.';
    }
    longnm += name;
    TBranch* branch = 0;
-   TIter next(GetListOfBranches());
-   while ((branch = (TBranch*) next())) {
-      std::string brname(branch->GetName());
-      dim = brname.find_first_of("[");
-      if (dim != std::string::npos) {
-         brname.erase(dim);
+
+   Int_t nbranches = fBranches.GetEntries();
+   for(Int_t i = 0; i < nbranches; ++i) {
+      branch = (TBranch*) fBranches.UncheckedAt(i);
+      
+      const char *brname = branch->fName.Data();
+      UInt_t brlen = branch->fName.Length();
+      if (brname[brlen-1]==']') {
+         const char *dim = strchr(brname,'[');         
+         if (dim) {
+            brlen = dim - brname;
+         }
       }
-      if (name == brname) {
+      if (name[brlen]=='\0' /* same size */
+          && strncmp(name,brname,brlen) == 0) {
          return branch;
       }
-      if (longnm == brname) {
+      if (brlen == (size_t)longnm.length()
+          && strncmp(longnm.c_str(),brname,brlen) == 0) {
          return branch;
       }
    }

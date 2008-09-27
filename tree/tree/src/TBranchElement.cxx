@@ -1325,9 +1325,11 @@ static void R__CleanName(std::string &name)
    // Remove trailing dimensions and make sure
    // there is a trailing dot.
 
-   std::size_t dim = name.find_first_of("[");
-   if (dim != std::string::npos) {
-      name.erase(dim);
+   if (name[name.length()-1]==']') {
+      std::size_t dim = name.find_first_of("[");
+      if (dim != std::string::npos) {
+         name.erase(dim);
+      }
    }
    if (name[name.size()-1] != '.') {
       name += '.';
@@ -1350,46 +1352,61 @@ TBranch* TBranchElement::FindBranch(const char *name)
       TStreamerElement* se = (TStreamerElement*) si->GetElems()[fID];
       if (se && se->IsBase()) {
          // We allow the user to pass only the last dotted component of the name.
-         std::string longnm(GetName());
+         UInt_t len = strlen(name);
+         std::string longnm;
+         longnm.reserve(fName.Length()+len+3); // Enough space of fName + name + dots
+         longnm = fName.Data();
          R__CleanName(longnm);
          longnm += name;
-         std::string longnm_parent(GetMother()->GetSubBranch(this)->GetName());
+         std::string longnm_parent;
+         longnm_parent.reserve(fName.Length()+len+3);
+         longnm_parent = (GetMother()->GetSubBranch(this)->GetName());
          R__CleanName(longnm_parent);
          longnm_parent += name;  // Name without the base class name
 
          TBranch* branch = 0;
-         TIter next(GetListOfBranches());
-         while ((branch = (TBranch*) next())) {
-            std::string brname(branch->GetName());
-            std::size_t dim = brname.find_first_of("[");
-            if (dim != std::string::npos) {
-               brname.erase(dim);
+         Int_t nbranches = fBranches.GetEntries();
+         for(Int_t i = 0; i < nbranches; ++i) {
+            branch = (TBranch*) fBranches.UncheckedAt(i);
+            
+            const char *brname = branch->GetName();
+            UInt_t brlen = strlen(brname);
+            if (brname[brlen-1]==']') {
+               const char *dim = strchr(brname,'[');         
+               if (dim) {
+                  brlen = dim - brname;
+               }
             }
-            if (name == brname) {
+            if (name[brlen]=='\0' /* same size */
+                && strncmp(name,brname,brlen) == 0) {
                return branch;
             }
-            if (longnm == brname) {
+            if (brlen == longnm.length()
+                && strncmp(longnm.c_str(),brname,brlen) == 0) {
+                return branch;
+            }
+            // This check is specific to base class
+            if (brlen == longnm_parent.length()
+                && strncmp(longnm_parent.c_str(),brname,brlen) == 0) {
                return branch;
             }
-            if (longnm_parent == brname) {
-               return branch;
-            }
-            if (strncmp(name,brname.c_str(),brname.length())==0
-                && name[brname.length()]=='.') {
+            
+            if (name[brlen]=='.' && strncmp(name,brname,brlen)==0) {
                // The prefix subbranch name match the branch name.
-               return branch->FindBranch(name+brname.length()+1);
+               return branch->FindBranch(name+brlen+1);
             }
          }
-         // return 0;
       }
    }
    TBranch *result = TBranch::FindBranch(name);
    if (!result) {
       // Look in base classes if any
-      for(Int_t i = 0; i < GetListOfBranches()->GetEntries(); ++i) {
-         if( GetListOfBranches()->At(i)->IsA() != TBranchElement :: Class() )
+      Int_t nbranches = fBranches.GetEntries();
+      for(Int_t i = 0; i < nbranches; ++i) {
+         TObject *obj = fBranches.UncheckedAt(i);
+         if(obj->IsA() != TBranchElement :: Class() )
             continue;
-         TBranchElement *br = (TBranchElement*)GetListOfBranches()->At(i);
+         TBranchElement *br = (TBranchElement*)obj;
          TVirtualStreamerInfo* si = br->GetInfo();
          if (si && br->GetID() >= 0) {
             TStreamerElement* se = (TStreamerElement*) si->GetElems()[br->GetID()];
