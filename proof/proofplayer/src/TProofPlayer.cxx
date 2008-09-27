@@ -1139,12 +1139,7 @@ TProofPlayerRemote::~TProofPlayerRemote()
    SafeDelete(fOutput);      // owns the output list
    SafeDelete(fOutputLists);
 
-   if (fFeedbackLists != 0) {
-      TIter next(fFeedbackLists);
-      while (TMap *m = (TMap*) next()) {
-         m->DeleteValues();
-      }
-   }
+   // Objects stored in maps are already deleted when merging the feedback
    SafeDelete(fFeedbackLists);
    SafeDelete(fPacketizer);
 }
