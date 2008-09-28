@@ -343,9 +343,11 @@ void XrdProofdClient::CheckServerSlots()
    XrdSysMutexHelper mh(fMutex);
 
    std::vector<XrdProofdProofServ *>::iterator ip;
-   for (ip = fProofServs.begin(); ip != fProofServs.end(); ++ip) {
+   for (ip = fProofServs.begin(); ip != fProofServs.end();) {
       if (*ip && !(*ip)->IsValid()) {
-         fProofServs.erase(ip);
+         ip = fProofServs.erase(ip);
+      } else {
+         ip++;
       }
    }
 }
