@@ -99,6 +99,7 @@ public:
                     fInputList(0), fEntries(-1), fFirst(-1), fBytes(0),
                     fLogFile(0), fSelecHdr(0), fSelecImp(0),
                     fLibList("-"), fOutputList(0),
+                    fFinalized(kFALSE), fArchived(kFALSE),
                     fInitTime(0.), fProcTime(0.) { }
    virtual ~TQueryResult();
 
