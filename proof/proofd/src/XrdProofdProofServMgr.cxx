@@ -1482,15 +1482,14 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
       TRACE(FORK, "log file: "<<in.fLogFile);
 
       // Path
-      XrdOucString path;
+      XrdOucString path, sockpath;
       path.form("%s/%s.%s.%d", fActiAdminPath.c_str(),
                                p->Client()->User(), p->Client()->Group(), getpid());
       xps->SetAdminPath(path.c_str());
 
       // UNIX Socket Path
-      XrdOucString sockpath;
-      sockpath.form("%s/%s.%s.%d.sock", fActiAdminPath.c_str(),
-                                        p->Client()->User(), p->Client()->Group(), getpid());
+      sockpath = path;
+      sockpath.form("%s.sock", path.c_str());
       xps->SetUNIXSockPath(sockpath.c_str());
 
       // Log to the session log file from now on
@@ -1594,10 +1593,13 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
    TRACEP(p, FORK,"Parent process: child is "<<pid);
    XrdOucString emsg;
 
-   // UNIX Socket Path (set path and create the socket)
-   XrdOucString sockpath;
-   sockpath.form("%s/%s.%s.%d.sock", fActiAdminPath.c_str(),
-                                       p->Client()->User(), p->Client()->Group(), pid);
+   // Admin and UNIX Socket Path (set path and create the socket); we need to
+   // set and create them in here, otherwise the cleaning may remove the socket
+   XrdOucString path, sockpath;
+   path.form("%s/%s.%s.%d", fActiAdminPath.c_str(),
+                            p->Client()->User(), p->Client()->Group(), pid);
+   sockpath.form("%s.sock", path.c_str());
+   xps->SetAdminPath(path.c_str());
    xps->SetUNIXSockPath(sockpath.c_str());
    if (xps->CreateUNIXSock(fEDest) != 0) {
       // Failure

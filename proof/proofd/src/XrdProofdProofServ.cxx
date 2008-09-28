@@ -587,9 +587,16 @@ int XrdProofdProofServ::CreateUNIXSock(XrdSysError *edest)
    // Create socket
    fUNIXSock = new XrdNet(edest);
 
-   // Create path
-   bool rm = 0, ok = 0;
+   // Make sure the admin path exists
    struct stat st;
+   if (fAdminPath.length() > 0 &&
+       stat(fAdminPath.c_str(), &st) != 0 && (errno == ENOENT)) {;
+      FILE *fadm = fopen(fAdminPath.c_str(), "w");
+      fclose(fadm);
+   }
+
+   // Check the path
+   bool rm = 0, ok = 0;
    if (stat(fUNIXSockPath.c_str(), &st) == 0 || (errno != ENOENT)) rm = 1;
    if (rm  && unlink(fUNIXSockPath.c_str()) != 0) {
       if (!S_ISSOCK(st.st_mode)) {
