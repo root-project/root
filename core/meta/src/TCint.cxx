@@ -193,7 +193,7 @@ TCint::TCint(const char *name, const char *title) : TInterpreter(name, title)
    if (path && path[0]) {
       G__InitGenerateDictionary( &TCint_GenerateDictionary );
    }
-   delete path;
+   delete[] path;
 
    fDictPos.ptype = 0;
    fDictPosGlobals.ptype = 0;
