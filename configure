@@ -2233,9 +2233,8 @@ if test ! "x$enable_qt" = "xno" || \
         done
 	qtverneed="4.3.0"
 	qttoonew="5.0.0"
-	if test "x$platform" = xwin32 ; then
-	    qttestdir=$qtmainincdir/../src/corelib/global
-	else
+	qttestdir=$qtmainincdir/../src/corelib/global
+	if test ! -d $qttestdir ; then
 	    qttestdir=$qtmainincdir/Qt
 	fi
 	check_qtvers "$qttestdir" $qtverneed $qttoonew
