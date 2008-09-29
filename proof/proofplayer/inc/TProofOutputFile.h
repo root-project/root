@@ -54,6 +54,7 @@ private:
 
    TString GetTmpName(const char* name);
 
+   void ResolveKeywords(TString &fname);
    void SetFileName(const char* name);
    void SetDir(const char* dir) { fDir = dir; }
    void SetWorkerOrdinal(const char* ordinal) { fWorkerOrdinal = ordinal; }
@@ -65,8 +66,9 @@ private:
 protected:
 
 public:
-   TProofOutputFile(const char* path = "prooffile.root",
-              const char* location = "REMOTE", const char* mode = "CENTRAL");
+   TProofOutputFile() { fMerger = 0; }
+   TProofOutputFile(const char* path,
+                    const char* location = "REMOTE", const char* mode = "CENTRAL");
    virtual ~TProofOutputFile();
 
    const char* GetDir() const { return fDir; }

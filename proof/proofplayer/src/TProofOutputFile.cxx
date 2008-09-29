@@ -83,24 +83,8 @@ TProofOutputFile::TProofOutputFile(const char* path,
    fOutputFileName += path;
    if (!fOutputFileName.EndsWith(".root"))
       fOutputFileName += ".root";
-   // Replace <user>, if any
-   if (fOutputFileName.Contains("<user>")) {
-      TString user = "nouser";
-      // Get user logon name
-      UserGroup_t *pw = gSystem->GetUserInfo();
-      if (pw) {
-         user = pw->fUser;
-         delete pw;
-      }
-      fOutputFileName.ReplaceAll("<user>", user);
-   }
-   // Replace <group>, if any
-   if (fOutputFileName.Contains("<group>")) {
-      if (gProofServ && gProofServ->GetGroup() && strlen(gProofServ->GetGroup()))
-         fOutputFileName.ReplaceAll("<group>", gProofServ->GetGroup());
-      else
-         fOutputFileName.ReplaceAll("<group>", "default");
-   }
+   // Resolve placeholders
+   ResolveKeywords(fOutputFileName);
    Info("TProofOutputFile", "output file url: %s", fOutputFileName.Data());
 
    // Location
@@ -169,8 +153,35 @@ void TProofOutputFile::SetOutputFileName(const char *name)
 
    if (name && strlen(name) > 0) {
       fOutputFileName = name;
+      ResolveKeywords(fOutputFileName);
+      Info("SetOutputFileName", "output file url: %s", fOutputFileName.Data());
    } else {
       fOutputFileName = "";
+   }
+}
+
+//______________________________________________________________________________
+void TProofOutputFile::ResolveKeywords(TString &fname)
+{
+   // Replace <user> and <group> placeholders in fname
+
+   // Replace <user>, if any
+   if (fname.Contains("<user>")) {
+      TString user = "nouser";
+      // Get user logon name
+      UserGroup_t *pw = gSystem->GetUserInfo();
+      if (pw) {
+         user = pw->fUser;
+         delete pw;
+      }
+      fname.ReplaceAll("<user>", user);
+   }
+   // Replace <group>, if any
+   if (fname.Contains("<group>")) {
+      if (gProofServ && gProofServ->GetGroup() && strlen(gProofServ->GetGroup()))
+         fname.ReplaceAll("<group>", gProofServ->GetGroup());
+      else
+         fname.ReplaceAll("<group>", "default");
    }
 }
 
