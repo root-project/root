@@ -4352,7 +4352,7 @@ void TWinNTSystem::CloseConnection(int socket, Bool_t force)
    if (force) {
       ::shutdown(sock, 2);
    }
-   struct linger linger = {1, 0};
+   struct linger linger = {0, 0};
    ::setsockopt(sock, SOL_SOCKET, SO_LINGER, (char *) &linger, sizeof(linger));
    while (::closesocket(sock) == SOCKET_ERROR && WSAGetLastError() == WSAEINTR) {
       TSystem::ResetErrno();
