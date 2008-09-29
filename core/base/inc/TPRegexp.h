@@ -113,15 +113,21 @@ public:
 
    virtual ~TPMERegexp() {}
 
+   void    Reset(const TString& s, const TString& opts = "", Int_t nMatchMax = -1);
+   void    Reset(const TString& s, UInt_t opts, Int_t nMatchMax = -1);
+
    Int_t   GetNMaxMatches()   const { return fNMaxMatches; }
    void    SetNMaxMatches(Int_t nm) { fNMaxMatches = nm; }
+
+   Int_t   GetGlobalPosition() const { return fLastGlobalPosition; }
+   void    AssignGlobalState(const TPMERegexp& re);
    void    ResetGlobalState();
 
    Int_t   Match(const TString& s, UInt_t start = 0);
    Int_t   Split(const TString& s, Int_t maxfields = 0);
    TString Substitute(const TString& s, const TString& r, Bool_t doDollarSubst=kTRUE);
 
-   Int_t   NMatches()    const { return fNMatches; }
+   Int_t   NMatches() const { return fNMatches; }
    TString operator[](Int_t);
 
    virtual void Print(Option_t* option="");

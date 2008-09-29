@@ -517,6 +517,10 @@ TSubString TString::operator()(TPRegexp& r) const
 
 
 //////////////////////////////////////////////////////////////////////////
+// TPMERegexp
+//////////////////////////////////////////////////////////////////////////
+
+//______________________________________________________________________________
 //
 // Wrapper for PCRE library (Perl Compatible Regular Expressions).
 // Based on PME - PCRE Made Easy by Zachary Hansen.
@@ -525,7 +529,9 @@ TSubString TString::operator()(TPRegexp& r) const
 // Substitute and Split). To retrieve the results one can simply use
 // operator[] returning a TString.
 //
-//////////////////////////////////////////////////////////////////////////
+// See $ROOTSYS/tutorials/regexp_pme.C for examples.
+
+ClassImp(TPMERegexp);
 
 //______________________________________________________________________________
 TPMERegexp::TPMERegexp() :
@@ -588,36 +594,78 @@ TPMERegexp::TPMERegexp(const TPMERegexp& r) :
 }
 
 //______________________________________________________________________________
+void TPMERegexp::Reset(const TString& s, const TString& opts, Int_t nMatchMax)
+{
+   // Reset the patteren and options.
+   // If 'nMatchMax' other than -1 (the default) is passed, it is also set.
+
+   Reset(s, ParseMods(opts), nMatchMax);
+}
+
+//______________________________________________________________________________
+void TPMERegexp::Reset(const TString& s, UInt_t opts, Int_t nMatchMax)
+{
+   // Reset the patteren and options.
+   // If 'nMatchMax' other than -1 (the default) is passed, it is also set.
+
+   fPattern = s;
+   fPCREOpts = opts;
+   Compile();
+
+   if (nMatchMax != -1)
+      fNMatches = nMatchMax;
+   fNMatches = 0;
+   fLastGlobalPosition = 0;   
+}
+
+//______________________________________________________________________________
+void TPMERegexp::AssignGlobalState(const TPMERegexp& re)
+{
+   // Copy global-match state from 're; so that this regexp can continue
+   // parsing the string from where 're' left off.
+   //
+   // Alternatively, GetGlobalPosition() get be used to retrieve the
+   // last match position so that it can passed to Match().
+   //
+   // Ideally, as it is done in PERL, the last match position would be
+   // stored in the TString itself.
+
+   fLastStringMatched  = re.fLastStringMatched;
+   fLastGlobalPosition = re.fLastGlobalPosition;
+}
+
+//______________________________________________________________________________
 void TPMERegexp::ResetGlobalState()
 {
    // Reset state of global match.
    // This happens automatically when a new string is passed for matching.
+   // But be carefull, as the address of last TString object is used
+   // to make this decision.
 
    fLastGlobalPosition = 0;
 }
 
 //______________________________________________________________________________
-Int_t TPMERegexp::Match(const TString& s, UInt_t offset)
+Int_t TPMERegexp::Match(const TString& s, UInt_t start)
 {
    // Runs a match on s against the regex 'this' was created with.
    //
    // Args:
    //  s        - string to match against
-   //  offset   - offset at which to start matching
+   //  start    - offset at which to start matching
    // Returns:  - number of matches found
 
-
-   // if we got a new string, reset the global position counter
+   // If we got a new string, reset the global position counter.
    if (fAddressOfLastString != (void*) &s) {
       fLastGlobalPosition = 0;
    }
 
    if (fPCREOpts & kPCRE_GLOBAL) {
-      offset += fLastGlobalPosition;
+      start += fLastGlobalPosition;
    }
 
    //fprintf(stderr, "string: '%s' length: %d offset: %d\n", s.Data(), s.length(), offset);
-   fNMatches = MatchInternal(s, offset, fNMaxMatches, &fMarkers);
+   fNMatches = MatchInternal(s, start, fNMaxMatches, &fMarkers);
 
    //fprintf(stderr, "MatchInternal_exec result = %d\n", fNMatches);
 
@@ -842,6 +890,7 @@ void TPMERegexp::Print(Option_t* option)
          Printf("  %d - %s", i, operator[](i).Data());
    }
 }
+
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
