@@ -1,8 +1,9 @@
 // @(#)root/alien:$Id$
 // Author: Jan Fiete Grosse-Oetringhaus   28/9/2004
-//         Lucia.Jancurova@cern.ch  2007
+//         Lucia.Jancurova@cern.ch Slovakia 2007
+
 /*************************************************************************
- * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2008, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -28,209 +29,268 @@
 ClassImp(TAlienJDL)
 
 //______________________________________________________________________________
-void TAlienJDL::SetExecutable(const char* value)
+void TAlienJDL::SetExecutable(const char *value, const char *description)
 {
    // Sets the executable.
 
    if (value)
       SetValue("Executable", AddQuotes(value));
+   if (description)
+      SetDescription("Executable", description);
 }
 
 //______________________________________________________________________________
-void TAlienJDL::SetArguments(const char* value)
+void TAlienJDL::SetArguments(const char *value, const char *description)
 {
    // Sets the arguments.
 
    if (value)
       SetValue("Arguments", AddQuotes(value));
+   if (description)
+      SetDescription("Arguments", description);
 }
 
 //______________________________________________________________________________
-void TAlienJDL::SetEMail(const char* value)
+void TAlienJDL::SetEMail(const char *value, const char *description)
 {
    // Sets eMail address.
 
    if (value)
-      SetValue("EMail", AddQuotes(value));
+      SetValue("Email", AddQuotes(value));
+   if (description)
+      SetDescription("Email", description);
 }
 
 //______________________________________________________________________________
-void TAlienJDL::SetOutputDirectory(const char* value)
+void TAlienJDL::SetOutputDirectory(const char *value, const char *description)
 {
    // Sets OutputDirectory.
 
-   if ( value )
+   if ( value )void SetMaxInitFailed(Int_t maxInitFailed);
       SetValue ("OutputDir", AddQuotes(value));
+   if (description)
+      SetDescription("OutputDir", description);
 }
 
 //______________________________________________________________________________
-void TAlienJDL::SetMergedOutputDirectory ( const char * value )
+void TAlienJDL::SetMergedOutputDirectory ( const char * value,const char* description)
 {
    // Sets merged OutputDirectory.
 
    if ( value )
       SetValue ("MergeOutputDir", AddQuotes(value));
+   if (description)
+      SetDescription("MergeOutputDir", description);
 }
 
 //______________________________________________________________________________
-void TAlienJDL:: SetPrice(UInt_t price)
+void TAlienJDL:: SetPrice(UInt_t price,const char* description)
 {
    // Sets OutputDirectory.
 
    TString pricestring(Form("%d",price));
+   SetValue("Price", AddQuotes(pricestring.Data()));
 
-   SetValue("Price", pricestring.Data());
+   if (description)
+      SetDescription("Price", description);
 }
 
 //______________________________________________________________________________
-void TAlienJDL:: SetTTL(UInt_t ttl)
+void TAlienJDL:: SetTTL(UInt_t ttl, const char *description)
 {
    // To inform AliEn master about estimated Time-To-Live of included nodes.
 
    TString ttlstring;
    ttlstring+= ttl;
-
    SetValue("TTL", ttlstring.Data());
+
+   if (description)
+      SetDescription("TTL", description);
 }
 
 //______________________________________________________________________________
-void TAlienJDL::SetJobTag(const char* value)
+void TAlienJDL::SetJobTag(const char* value,const char* description)
 {
    // Sets Job Tag
 
    if (value)
       SetValue("JobTag", AddQuotes(value));
+   if (description)
+      SetDescription("JobTag", description);
 }
 
 //______________________________________________________________________________
-void TAlienJDL::SetInputDataListFormat(const char* value)
+void TAlienJDL::SetInputDataListFormat(const char* value,const char* description)
 {
    // Sets InputDataListFormat - can be "xml-single" or "xml-multi"
 
    if (value)
       SetValue("InputDataListFormat", AddQuotes(value));
+   if (description)
+      SetDescription("InputDataListFormat", description);
 }
 
 //______________________________________________________________________________
-void TAlienJDL::SetInputDataList(const char* value)
+void TAlienJDL::SetInputDataList(const char* value,const char* description)
 {
    // Sets InputDataList name
 
    if (value)
       SetValue("InputDataList", AddQuotes(value));
+   if (description)
+      SetDescription("InputDataList", description);
 }
 
 
 //______________________________________________________________________________
-void TAlienJDL::SetSplitMode(const char* value, UInt_t maxnumberofinputfiles, UInt_t maxinputfilesize)
+void TAlienJDL::SetSplitMode(const char *value, UInt_t maxnumberofinputfiles,
+                             UInt_t maxinputfilesize, const char *d1, const char *d2,
+                             const char *d3)
 {
    // Sets the split mode.
 
    if (value && !strcasecmp(value, "SE")) {
 
-      SetValue("Split", AddQuotes(value));
+      SetSplitArguments(value,d1);
       if (maxnumberofinputfiles) {
-         TString val;
-         val += maxnumberofinputfiles;
-         SetValue("SplitMaxInputFileNumber", AddQuotes(val.Data()));
+         SetSplitModeMaxNumOfFiles(maxnumberofinputfiles,d2);
       }
       if (maxinputfilesize) {
-         TString val;
-         val += maxinputfilesize;
-         SetValue("SplitMaxInputFileSize", AddQuotes(val.Data()));
+         SetSplitModeMaxInputFileSize(maxinputfilesize,d3);
       }
    } else {
       if (value)
-         SetValue("Split",AddQuotes(value));
+         SetSplitArguments(value,d1);
    }
 }
 
 //______________________________________________________________________________
-void TAlienJDL::SetSplitModeMaxNumOfFiles ( UInt_t maxnumberofinputfiles )
+void TAlienJDL::SetSplitModeMaxNumOfFiles(UInt_t maxnumberofinputfiles, const char *description)
 {
    // Sets the SplitMaxNumOfFiles.
+
    TString val;
    val += maxnumberofinputfiles;
    SetValue ( "SplitMaxInputFileNumber", AddQuotes ( val.Data() ) );
+
+   if (description)
+      SetDescription("SplitMaxInputFileNumber", description);
 }
 
 //______________________________________________________________________________
-void TAlienJDL::SetSplitModeMaxInputFileSize ( UInt_t maxinputfilesize )
+void TAlienJDL::SetSplitModeMaxInputFileSize(UInt_t maxinputfilesize, const char *description)
 {
    // Sets the SplitMaxInputFileSize.
 
    TString val;
    val += maxinputfilesize;
    SetValue ( "SplitMaxInputFileSize", AddQuotes ( val.Data() ) );
-
+   if (description)
+      SetDescription("SplitMaxInputFileSize", description);
 }
 
 //______________________________________________________________________________
-void TAlienJDL::SetSplitArguments(const char* splitarguments)
+void TAlienJDL::SetSplitArguments(const char *splitarguments, const char *description)
 {
    // Sets the split.
 
    if (splitarguments)
       SetValue("SplitArguments", AddQuotes(splitarguments));
+   if (description)
+      SetDescription("SplitArguments", description);
 }
 
 //______________________________________________________________________________
-void TAlienJDL::SetValidationCommand(const char* value)
+void TAlienJDL::SetValidationCommand(const char *value, const char *description)
 {
    // Sets the validation command.
 
-   SetValue("ValidationCommand", AddQuotes(value));
+   SetValue("Validationcommand", AddQuotes(value));
+   if (description)
+      SetDescription("Validationcommand", description);
 }
 
 //______________________________________________________________________________
-void TAlienJDL::AddToRequirements(const char* value)
+void TAlienJDL::SetMaxInitFailed(Int_t maxInitFailed, const char *description)
+{
+   // Sets the Maxium init failed
+   TString str;
+   str += maxInitFailed;
+   SetValue("MaxInitFailed", AddQuotes(str.Data()));
+   if (description)
+      SetDescription("MaxInitFailed", description);
+}
+
+//______________________________________________________________________________
+void TAlienJDL::SetOwnCommand(const char *command, const char *value, const char *description)
+{
+   // Sets the Own Command
+   if ((command) && (value))
+     SetValue(command, AddQuotes(value));
+   if ((command) && (description))
+     SetDescription(command, description);
+}
+
+//______________________________________________________________________________
+void TAlienJDL::AddToRequirements(const char *value, const char *description)
 {
    // Adds a requirement.
 
    if (value)
       AddToReqSet("Requirements", value);
+   if (description)
+      AddToSetDescription("Requirements", description);
 }
 
 //______________________________________________________________________________
-void TAlienJDL::AddToInputSandbox(const char* value)
+void TAlienJDL::AddToInputSandbox(const char *value, const char *description)
 {
    // Adds a file to the input sandbox.
 
    if (value)
       AddToSet("InputFile", value);
+   if (description)
+      AddToSetDescription("InputFile", description);
 }
 
 //______________________________________________________________________________
-void TAlienJDL::AddToOutputSandbox(const char* value)
+void TAlienJDL::AddToOutputSandbox(const char *value, const char *description)
 {
    // Adds a file to the output sandbox.
 
    if (value)
       AddToSet("OutputFile", value);
+   if (description)
+      AddToSetDescription("OutputFile", description);
 }
 
 //______________________________________________________________________________
-void TAlienJDL::AddToInputData(const char* value)
+void TAlienJDL::AddToInputData(const char *value, const char *description)
 {
    // Adds a file to the input data.
 
    if (value)
       AddToSet("InputData", value);
+   if (description)
+      AddToSetDescription("InputData", description);
 }
 
 //______________________________________________________________________________
-void TAlienJDL::AddToInputDataCollection(const char* value)
+void TAlienJDL::AddToInputDataCollection(const char *value, const char *description)
 {
    // Adds a file to the input data collection.
 
    if (value)
       AddToSet("InputDataCollection", value);
+   if (description)
+      AddToSetDescription("InputDataCollection", description);
 }
 
 //______________________________________________________________________________
-void TAlienJDL::AddToPackages(const char* name,const char* version, const char* type)
+void TAlienJDL::AddToPackages(const char *name, const char *version,
+                              const char *type, const char *description)
 {
-   // Adds a package name to the package section
+   // Adds a package name to the package section.
 
    if (name) {
       TString packagename = type;
@@ -241,23 +301,30 @@ void TAlienJDL::AddToPackages(const char* name,const char* version, const char* 
 
       AddToSet("Packages", packagename.Data());
    }
+
+   if (description)
+      AddToSetDescription("Packages", description);
 }
 
 //______________________________________________________________________________
-void TAlienJDL::AddToPackages ( const char * name )
+void TAlienJDL::AddToPackages(const char *name, const char *description)
 {
    // Adds a package.
 
    AddToSet("Packages", name);
+   if (description)
+      AddToSetDescription("Packages", description);
 }
 
 //______________________________________________________________________________
-void TAlienJDL::AddToOutputArchive(const char* value)
+void TAlienJDL::AddToOutputArchive(const char* value,const char* description)
 {
    // Adds an output archive definition
 
    if (value)
       AddToSet("OutputArchive", value);
+   if (description)
+      AddToSetDescription("OutputArchive", description);
 }
 
 //______________________________________________________________________________
@@ -284,8 +351,8 @@ void TAlienJDL::AddToReqSet(const char *key, const char *value)
 }
 
 //______________________________________________________________________________
-void TAlienJDL::AddToMerge(const char* filenameToMerge,const char* jdlToSubmit,
-                           const char* mergedFile )
+void TAlienJDL::AddToMerge(const char *filenameToMerge, const char *jdlToSubmit,
+                           const char *mergedFile, const char *description )
 {
    // Adds a package name to the package section.
 
@@ -295,14 +362,18 @@ void TAlienJDL::AddToMerge(const char* filenameToMerge,const char* jdlToSubmit,
    mergename += ":";
    mergename += mergedFile;
    AddToSet ( "Merge", mergename.Data() );
+   if (description)
+      AddToSetDescription("Merge", description);
 }
 
 //______________________________________________________________________________
-void TAlienJDL::AddToMerge(const char *merge)
+void TAlienJDL::AddToMerge(const char *merge, const char *description)
 {
    // Adds a package name the the package section.
 
    AddToSet("Merge", merge);
+   if (description)
+      AddToSetDescription("Merge", description);
 }
 
 //______________________________________________________________________________
@@ -337,7 +408,7 @@ void TAlienJDL::SetValueByCmd(TString cmd, TString value)
 
    if ( !cmd.CompareTo ( "Executable" ) ) SetExecutable ( value.Data() );
    else if ( !cmd.CompareTo ( "Arguments" ) ) SetArguments ( value.Data() );
-   else if ( !cmd.CompareTo ( "EMail" ) ) SetEMail ( value.Data() );
+   else if ( !cmd.CompareTo ( "Email" ) ) SetEMail ( value.Data() );
    else if ( !cmd.CompareTo ( "OutputDir" ) ) SetOutputDirectory ( value.Data() );
    else if ( !cmd.CompareTo ( "Merge" ) ) AddToMerge ( value.Data() );
    else if ( !cmd.CompareTo ( "MergeOutputDir" ) ) SetMergedOutputDirectory ( value.Data() );
@@ -350,7 +421,8 @@ void TAlienJDL::SetValueByCmd(TString cmd, TString value)
    else if ( !cmd.CompareTo ( "SplitMaxInputFileNumber" ) ) SetSplitModeMaxNumOfFiles ( value.Atoi() );
    else if ( !cmd.CompareTo ( "SplitMaxInputFileSize" ) ) SetSplitModeMaxInputFileSize ( value.Atoi() );
    else if ( !cmd.CompareTo ( "SplitArguments" ) ) SetSplitArguments ( value.Data() );
-   else if ( !cmd.CompareTo ( "ValidationCommand" ) ) SetValidationCommand ( value.Data() );
+   else if ( !cmd.CompareTo ( "Validationcommand" ) ) SetValidationCommand ( value.Data() );
+   else if ( !cmd.CompareTo ( "MaxInitFailed" ) ) SetMaxInitFailed ( value.Atoi() );
    else if ( !cmd.CompareTo ( "InputSandbox" ) ) AddToInputSandbox ( value.Data() );
    else if ( !cmd.CompareTo ( "OutputSandbox" ) ) AddToOutputSandbox ( value.Data() );
    else if ( !cmd.CompareTo ( "InputData" ) ) AddToInputData ( value.Data() );
@@ -365,7 +437,7 @@ void TAlienJDL::SetValueByCmd(TString cmd, TString value)
 }
 
 //______________________________________________________________________________
-void TAlienJDL::Parse(const char * filename)
+void TAlienJDL::Parse(const char *filename)
 {
    // fills the TAlienJDL from inputfile (should be AliEn JDL file)
 
@@ -381,7 +453,9 @@ void TAlienJDL::Parse(const char * filename)
    while ( file.good() ) {
       file.getline ( line,1024 );
       lineString=line;
+      lineString.ReplaceAll ( " ","" );
       if ( !lineString.IsNull() ) {
+         if (lineString.Index('#') == 0) continue;
          TObjArray *strCmdOrValue = lineString.Tokenize ( "=" );
          TObjString*strObjCmd = ( TObjString* ) strCmdOrValue->At ( 0 );
          TObjString*strObjValue = ( TObjString* ) strCmdOrValue->At ( 1 );
