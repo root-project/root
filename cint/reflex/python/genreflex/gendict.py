@@ -534,6 +534,7 @@ class genDictionary(object) :
         f_shadow += self.genClassShadow(c)
     f_shadow += '}\n\n'
     f_buffer += self.genFunctionsStubs( selfunctions )
+    f_buffer += ClassDefImplementation(selclasses, self)
     f_buffer += self.genInstantiateDict(selclasses, selfunctions, selenums, selvariables)
     f.write('namespace {\n')
     f.write(self.genNamespaces(selclasses + selfunctions + selenums + selvariables))
@@ -2317,3 +2318,94 @@ def clean(a) :
   for i in a :
 	if i not in r : r.append(i)
   return r
+#--------------------------------------------------------------------------------------
+# Add implementations of functions declared by ROOT's ClassDef() macro
+def ClassDefImplementation(selclasses, self) :
+  # test whether Rtypes.h got included:
+  haveRtypes = 0
+  for file in self.files:
+    if self.files[file]['name'].endswith('Rtypes.h') \
+           and ( self.files[file]['name'][-9] == '/' or self.files[file]['name'][-9] == '\\' ):
+      haveRtypes = 1
+      break
+  if haveRtypes == 0: return ''
+  
+  returnValue  = '#include "TClass.h"\n'
+  returnValue += '#include "TMemberInspector.h"\n'
+  haveClassDef = 0
+
+  for attrs in selclasses :
+    members = attrs.get('members','')
+    membersList = members.split()
+
+    listOfMembers = ""
+    for ml in membersList:
+      if ml[1].isdigit() :
+        listOfMembers += self.xref[ml]['attrs']['name']
+
+    if  "fgIsA" in listOfMembers \
+      and "Class" in listOfMembers \
+      and "Class_Name" in listOfMembers  \
+      and "Class_Version" in listOfMembers  \
+      and "Dictionary" in listOfMembers  \
+      and "IsA" in listOfMembers  \
+      and "ShowMembers" in listOfMembers  \
+      and "Streamer" in listOfMembers  \
+      and "StreamerNVirtual" in listOfMembers \
+      and "DeclFileName" in listOfMembers \
+      and "ImplFileLine" in listOfMembers \
+      and "ImplFileName" in listOfMembers :
+
+         haveClassDef = 1
+
+         clname = '::' + attrs['fullname']
+         returnValue += 'TClass* ' + clname + '::fgIsA = 0;\n'
+         returnValue += 'TClass* ' + clname + '::Class() {\n'
+         returnValue += '   if (!fgIsA)\n'
+         returnValue += '      fgIsA = TClass::GetClass("' + clname[2:] + '");\n'
+         returnValue += '   return fgIsA;\n'
+         returnValue += '}\n'
+         returnValue += 'const char * ' + clname + '::Class_Name() {return "' + clname[2:]  + '";}\n'
+         returnValue += 'void ' + clname + '::Dictionary() {}\n'
+         returnValue += 'const char *' + clname  + '::ImplFileName() {return "";}\n'
+
+         returnValue += 'int ' + clname + '::ImplFileLine() {return 0;}\n'
+
+         returnValue += 'void '+ clname  +'::ShowMembers(TMemberInspector &R__insp, char *R__parent) {\n'
+         returnValue += '   TClass *R__cl = ' + clname  + '::IsA();\n'
+         returnValue += '   Int_t R__ncp = strlen(R__parent);\n'
+         returnValue += '   if (R__ncp || R__cl || R__insp.IsA()) { }\n'
+
+         for ml in membersList:
+           if ml[1].isdigit() :
+             if self.xref[ml]['elem'] == 'Field' :
+               mattrs = self.xref[ml]['attrs']
+               varname  = mattrs['name']
+               tt = self.xref[mattrs['type']]
+               te = tt['elem']
+               if te == 'PointerType' :
+                 varname1 = '*' + varname
+               elif te == 'ArrayType' :
+                 t = self.genTypeName(mattrs['type'],colon=True,const=True)
+                 arraytype = t[t.find('['):]
+                 varname1 = varname + arraytype
+               else :
+                 varname1 = varname
+               returnValue += '   R__insp.Inspect(R__cl, R__parent, "' + varname1 + '", &' + varname + ');\n'
+
+         if 'bases' in attrs :
+           for b in attrs['bases'].split() :
+             returnValue +=  '   ' + self.xref[b]['attrs']['name'] + '::ShowMembers(R__insp,R__parent);\n'
+
+         returnValue += '}\n'
+
+         returnValue += 'void '+ clname  +'::Streamer(TBuffer &b) {\n   if (b.IsReading()) {\n'
+         returnValue += '      b.ReadClassBuffer(' + clname + '::Class(),this);\n'
+         returnValue += '   } else {\n'
+         returnValue += '      b.WriteClassBuffer(' + clname  + '::Class(),this);\n'
+         returnValue += '   }\n'
+         returnValue += '}\n'
+
+  if haveClassDef == 1 :
+    return "} // unnamed namespace\n\n" + returnValue + "\nnamespace {\n"
+  return ""
