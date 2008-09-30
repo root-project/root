@@ -24,6 +24,18 @@
      now fixed. Note that "can.pdf" could be read by "ghostview" and printed.
 </ul>
 
+<h4>SVG</h4>
+<ul>
+<li> Some SVG viewer need a more complete header: &quot;width&quot; and
+     &quot;height&quot; attributes
+     in the svg tag and a &quot;xml&quot; tag to start the file.
+     (Found by Hubert Degaudenzi &lt;Hubert.Degaudenzi@cern.ch&gt;)
+</ul>
+
+<h4>libAfterImage</h4>
+<ul>
+<li> Synchronizing libAfterImage with Sasha'a latest version.
+</ul>
 
 <h3>Miscellaneous</h3>
 
@@ -69,4 +81,17 @@ provided by Thomas Ullrich <thomas.ullrich@bnl.gov>, shows it clearly.
 <img alt="example of option []" src="graf2d_01.gif">
 <center>
 
+<h4>TPad</h4>
+
+Improvments in <tt>TPad::BuildLegend</tt>: If the pad contains some 
+<tt>TMultiGraph</tt> or <tt>THStack</tt> the individual graphs or histograms
+in them are automatically added to the <tt>TLegend</tt> produced by 
+<tt>TPad::BuildLegend</tt>.
+
+<h4>TGaxis</h4>
+
+When drawn with the option
+X+ or Y+ the histogram axis were wrong in
+case of alphanumeric labels. The tick marks were in the right
+place but the labels were not.
 

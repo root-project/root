@@ -29,3 +29,42 @@
     Fixed a bug in <tt>TH3::Project</tt> reported by Marco Van Leeuwen in setting the bin error in the projected histogram when a range was set in the projected axis.
   </li>
 </ul>
+
+<h4>TGraph</h4>
+
+<ul>
+  <li>
+    Change the API of <tt>TGraph::GetPoint</tt> from
+    <pre>
+    void TGraph::GetPoint(Int_t i, Double_t &amp;x, Double_t &amp;y) const
+    </pre>
+    to
+    <pre>
+    Int_t TGraph::GetPoint(Int_t i, Double_t &amp;x, Double_t &amp;y) const
+    </pre>
+    The function returns -1 in case of an invalid request or the
+    point number otherwise.
+  </li>
+</ul>
+
+<h4>THStack</h4>
+<ul>
+<li>
+In <tt>THStack::Paint()</tt> replace
+<tt>fHistogram-&gt;Paint(&quot;axissame&quot;);</tt> by
+<tt>gPad-&gt;RedrawAxis();</tt> in order to fix the bug described here:
+<tt>https://savannah.cern.ch/bugs/?41423</tt> .
+The simple following macro was enough to show the problem:
+<pre>
+   {
+      TH1D h(&quot;h&quot;, &quot;h&quot;, 10., 0., 1.); h.Fill(.5);
+      THStack s(&quot;s&quot;, &quot;s&quot;); s.Add(&amp;h);
+      TCanvas canvas(&quot;canvas&quot;);
+      frame = canvas.DrawFrame(-1., 0., 2., 2.);
+      frame.SetLabelSize(0.05, &quot;XY&quot;);
+      frame.Draw(); s.Draw(&quot;same&quot;);
+   }
+</pre>
+
+</li>
+</ul>

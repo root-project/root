@@ -16,3 +16,16 @@ The existing code was not compatible with the change made in TTree to reduce the
 and TTree::MakeCode functions.</li>
 
 </ul>
+
+<h3>Tree Viewer</h3>
+<ul>
+<li>In <tt>TParallelCoordVar</tt> the "average marker" for candle plots was not painted at
+    the right place in case of horizontal view.
+<li> Protection added in:
+<tt>TParallelCoord::TParallelCoord(TTree* tree, Long64_t nentries)</tt>
+          in case <tt>nentries &gt; tree-&gt;GetEstimate()</tt>
+          in such case a warning is printed and <tt>fNentries</tt> is set to
+          <tt>tree-&gt;GetEstimate()</tt>
+          instead of <tt>nentries</tt>.
+
+</ul>
