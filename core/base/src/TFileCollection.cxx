@@ -106,7 +106,7 @@ Int_t TFileCollection::AddFromFile(const char *textfile, Int_t nfiles, Int_t fir
    Int_t nf = 0;
    if (textfile && *textfile) {
       ifstream f;
-      f.open(gSystem->ExpandPathName(textfile), ifstream::out);
+      f.open(gSystem->ExpandPathName(textfile));
       if (f.is_open()) {
          Bool_t all = (nfiles <= 0) ? kTRUE : kFALSE;
          Int_t ff = (!all && (firstfile < 1)) ? 1 : firstfile;
@@ -510,11 +510,10 @@ TObjString *TFileCollection::ExportInfo(const char *name)
    if (dsname.IsNull()) dsname = GetName();
 
    // Create the output string
-   TObjString *outs = 
+   TObjString *outs =
       new TObjString(Form("%s| %7lld |%s| %5lld %s |  %3d %%", dsname.Data(),
                      GetNFiles(), treeInfo.Data(), xsz, unit[k],
                      (Int_t)GetStagedPercentage()));
    // Done
    return outs;
 }
-
