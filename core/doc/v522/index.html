@@ -2,7 +2,8 @@
 <hr> 
 <a name="core"></a> 
 <h3>Core</h3>
-<h2>Collections</h2>
+<h4>Collections</h4>
+<ul>
 <li>Improve the output of the call to Print for ROOT Collections.  In TCollection replace Print() methods:
 <pre>     virtual void       Print(Option_t *wildcard="") const;
      virtual void       Print(Option_t *wildcard, Option_t *option) const;</pre>
@@ -22,15 +23,34 @@ with
      virtual void        PrintCollectionEntry(TObject* entry, Option_t* option,
                                               Int_t recurse) const;
 </pre>
-<h2>ACLiC</h2>
-<ul><li>Fix problem finding rootcint in the --prefix configuration<li>
+<li>Improve performance of reading TExMap object (50 times faster) using an updated, 
+slightly larger (16%) on file format for the TExMap object.
+</li>
+</ul>
+<h4>ACLiC</h4>
+<ul><li>Fix problem finding rootcint in the --prefix configuration.</li>
 <li>Change the naming convention for the temporary files created by ACLiC, instead of randomly named ACLiC now uses:<pre>scriptname_scriptextension_ACLiC_function.extension</pre></li>
-<li>Avoid looking for Microsoft's link.exe when we arlready have it (and hence avoid complaining about cygpath when cygwin is not even installed.<li>
+<li>When ACLiC need to revert to the temp directory for storing the library, it now create the directory 
+structure under a directory named after the userid.
+</li>
+<li>Add optional 5th argument to <tt>CompileMacro</tt> to allow set the file bit
+	  mode of the directory created.</li>
+<li>Avoid looking for Microsoft's link.exe when we already have it (and hence avoid complaining about cygpath when cygwin is not even installed.</li>
+</ul>
+<h4>Meta</h4>
+<ul>
+<li>Insure that the TClass list of methods is refreshed when new functions are added to the dictionary.
+</li>
 </ul>
 
-<h2>TStyle</h2>
+<h4>TStyle</h4>
 <ul>
-<li> In <tt>TStyle::Reset<.tt>, the Frame
+<li> In <tt>TStyle::Reset</tt>, the Frame
      Fill Color default value did not match the TFrame
      Fill Color default value.
 </ul>
+<h4>TSystem</h4>
+<ul>
+<li><tt>DirName</tt> now properly handle
+	  repeated '/'; this allow <tt>mkdir("a/b//c",true);</tt> to succeed.</li>
+</ul> 
