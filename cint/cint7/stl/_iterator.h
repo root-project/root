@@ -29,7 +29,6 @@
 #include <stddef.h>
 #include <iostream.h>
 #include <bool.h>
-#include <function.h>
 
 struct input_iterator_tag {};
 struct output_iterator_tag {};

@@ -63,6 +63,9 @@ std::vector<Reflex::Type> *instiator;
 #include "Typedf.h"
 #include "Token.h"
 
+#include <vector>
+#include <string>
+
 #ifndef __CINT__
 struct G__includepath;
 #endif
@@ -140,22 +143,21 @@ void G__delete_interpreted_object(void* p);
 #endif
 
 /*********************************************************************
- * Generate dictionary.
- *********************************************************************/
+* Generate dictionary.
+*********************************************************************/
 typedef int (*G__pGenerateDictionary)(const std::string &className,const std::vector<std::string> &headers);
-   
+
 #ifndef __CINT__
-inline
-   G__EXPORT
+G__EXPORT
 #endif
-   void G__InitGenerateDictionary( G__pGenerateDictionary /* gdict */ ) {}
-   
+void G__InitGenerateDictionary( G__pGenerateDictionary gdict );
+
 #ifndef __CINT__
-inline
-   G__EXPORT
+G__EXPORT
 #endif
-   G__pGenerateDictionary G__GetGenerateDictionary() { return 0; }
-   
+G__pGenerateDictionary G__GetGenerateDictionary();
+
+
 /*********************************************************************
 * G__SourceFileInfo
 *********************************************************************/
@@ -215,7 +217,10 @@ G__IncludePathInfo {
 /*********************************************************************
 * G__ExceptionWrapper
 *********************************************************************/
+#ifdef __GNUC__
+#else
 #pragma message (FIXME("G__ExceptionWrapper needs to return its offset as char*!"))
+#endif
 int G__ExceptionWrapper(G__InterfaceMethod funcp
                         ,G__value* result7
                         ,char* funcname

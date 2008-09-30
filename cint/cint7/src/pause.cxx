@@ -30,6 +30,8 @@ extern "C" void G__unredirectcerr();
 extern "C" void G__redirectcin(const char* filename);
 extern "C" void G__unredirectcin();
 
+extern "C" int G__EnableAutoDictionary;
+
 #if defined(G__WIN32)
 #include <windows.h>
 #elif defined(G__POSIX)
@@ -2085,6 +2087,12 @@ extern "C" int G__process_cmd(char *line,char *prompt,int *more,int *err
     else if(strncmp("exception",com,4)==0) {
       G__catchexception ^= 1;
       fprintf(G__sout,"G__catchexception=%d\n",G__catchexception);
+    }
+
+    else if (strncmp("autodict", com, 8) == 0) {
+       G__EnableAutoDictionary ^= 1;
+       fprintf(G__sout, "Automatic building of dictionaries now %s\n",
+               G__EnableAutoDictionary ? "on " : "off");
     }
 
     else if(strncmp("status",com,4)==0) {
