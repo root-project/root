@@ -113,28 +113,33 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#ifndef ROOT_Riostream
 #include "Riostream.h"
-#include "Rtypes.h"
-
+#endif
+#ifndef ROOT_TApplication
 #include "TApplication.h"
+#endif
+#ifndef ROOT_TError
 #include "TError.h"
+#endif
+#ifndef ROOT_TTimer
 #include "TTimer.h"
-
+#endif
+#ifndef ROOT_TGClient
 #include "TGClient.h"
+#endif
+#ifndef ROOT_TGFrame
 #include "TGFrame.h"
+#endif
 
 class TMutex;
 class TTree;
 class TFile;
-
-// The following are needed just for TGRecorder
-#include "TGWindow.h"
-
 class TGPictureButton;
 class TGCheckButton;
 class TGLabel;
-
 class TRecorderState;
+
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -481,7 +486,7 @@ public:
    enum EReplayModes {
       kRealtime
    };
-   //---- States of recorder. In every moment, recorder is in right 
+   //---- States of recorder. In every moment, recorder is in right
    // one of these states.
    enum ERecorderState {
       kInactive,
@@ -808,4 +813,3 @@ public:
 
    ClassDef(TGRecorder,0)             // GUI class of the event recorder.
 };
-
