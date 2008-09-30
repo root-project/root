@@ -1545,7 +1545,18 @@ void TFitEditor::DoFit()
 
 
    fParentPad->Modified();
+   // As the range is not changed, save the old values and restore
+   // after the GUI has been updated.  It would be more elegant to
+   // disconnect the signal from fParentPad, however, this doesn't
+   // work for unknown reasons.
+   float xmin, xmax, ymin, ymax, zmin, zmax;
+   if ( fDim > 0 ) fSliderX->GetPosition(xmin, xmax);
+   if ( fDim > 1 ) fSliderY->GetPosition(ymin, ymax);
+   if ( fDim > 2 ) fSliderZ->GetPosition(zmin, zmax);
    fParentPad->Update();
+   if ( fDim > 0 ) { fSliderX->SetPosition(xmin, xmax); DoSliderXMoved(); }
+   if ( fDim > 1 ) { fSliderY->SetPosition(ymin, ymax); DoSliderYMoved(); }
+   if ( fDim > 2 ) { fSliderZ->SetPosition(zmin, zmax); DoSliderZMoved(); }
    fParentPad->GetCanvas()->SetCursor(kPointer);
    fParentPad->Connect("RangeAxisChanged()", "TFitEditor", this, "UpdateGUI()");
    
