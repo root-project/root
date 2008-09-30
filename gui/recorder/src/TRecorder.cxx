@@ -115,6 +115,7 @@
 
 #include "TRecorder.h"
 
+#include "TROOT.h"
 #include "TFile.h"
 #include "TTimer.h"
 #include "TTree.h"
@@ -124,6 +125,7 @@
 #include "TGFileDialog.h"
 #include "TGLabel.h"
 #include "TGWindow.h"
+#include "Buttons.h"
 
 
 // Names of ROOT GUI events. Used for listing event logs.
@@ -650,6 +652,10 @@ void TRecorderReplaying::ReplayRealtime()
    // The excpetions are determined by TRecorderReplaying::CanOverlap()
    //
 
+   if ((gROOT->GetEditorMode() == kText) ||
+       (gROOT->GetEditorMode() == kPaveLabel))
+      gROOT->SetEditorMode();
+   
    // If there are automatically generated ROOT events in the queue, they are let to be handled first
    if (gVirtualX->EventsPending())
       return;
