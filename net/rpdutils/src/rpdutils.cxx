@@ -3986,8 +3986,7 @@ int RpdGlobusAuth(const char *sstr)
       // Check that we got delegation to autheticate the slaves
       if (GssRetFlags | GSS_C_DELEG_FLAG) {
          if (gDebug > 2)
-            ErrorInfo("RpdGlobusAuth: Pointer to del cred is 0x%x",
-                      (int) GlbDelCredHandle);
+            ErrorInfo("RpdGlobusAuth: Pointer to del cred is %p", GlbDelCredHandle);
       } else {
          Error(gErr, kErrAuthNotOK,
                "RpdGlobusAuth: did not get delegated credentials (RetFlags: 0x%x)",

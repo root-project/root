@@ -213,6 +213,9 @@ int  SshToolNotifyFailure(const char *);
 #ifdef R__GLBS
 #define HAVE_MEMMOVE 1
 extern "C" {
+#ifdef IOV_MAX
+#undef IOV_MAX
+#endif
 #ifdef R__GLBS22
    #include <globus_gsi_credential.h>
 #else

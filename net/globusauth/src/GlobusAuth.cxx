@@ -19,7 +19,7 @@
 #include <errno.h>
 #include <signal.h>
 #include <string.h>
-#include <stdlib.h>
+// #include <stdlib.h>
 
 #include "TSocket.h"
 #include "TAuthenticate.h"
@@ -35,6 +35,9 @@
 
 #define HAVE_MEMMOVE 1
 extern "C" {
+#ifdef IOV_MAX
+#undef IOV_MAX
+#endif
 #include <globus_common.h>
 #include <globus_gss_assist.h>
 #include <openssl/x509.h>
@@ -259,8 +262,7 @@ Int_t GlobusAuthenticate(TAuthenticate * tAuth, TString & user,
        0 ? (GSS_C_DELEG_FLAG | GSS_C_MUTUAL_FLAG) : GSS_C_MUTUAL_FLAG;
    if (gDebug > 3)
       Info("GlobusAuthenticate",
-           " gssReqFlags: 0x%x, GlbCredentials: 0x%x", gssReqFlags,
-           (int) gGlbCredHandle);
+           " gssReqFlags: %p, GlbCredentials: %p", gssReqFlags, gGlbCredHandle);
 
    // Now we are ready to start negotiating with the Server
    if ((majStat =
@@ -924,14 +926,13 @@ void GlobusGetDetails(Int_t localEnv, Int_t opt, TString &details)
 
       // Check if needs to prompt the client
       if (TAuthenticate::GetPromptUser()) {
-         TString prompt = " Local Globus settings (";
-         prompt += Form("%s %s %s %s", ddir.Data(), dcer.Data(),
-                                     dkey.Data(), dadi.Data());
-         prompt += ")\n Enter <key>:<new value> to change: ";
+         TString ppt(Form(" Local Globus settings (%s %s %s %s)\n"
+                          " Enter <key>:<new value> to change: ",
+                          ddir.Data(), dcer.Data(), dkey.Data(), dadi.Data()));
 
          TString indet;
          if (!gROOT->IsProofServ()) {
-            indet = Getline(prompt);
+            indet = Getline(ppt);
             // get rid of \n
             indet.Remove(TString::kTrailing, '\n');
             if (indet.Length() > 0) {

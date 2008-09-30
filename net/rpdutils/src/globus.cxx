@@ -339,9 +339,8 @@ int GlbsToolStoreContext(gss_ctx_id_t context_handle, char *user)
    // Attach segment to address
    gss_buffer_t databuf = (gss_buffer_t) shmat(shmId, 0, 0);
    if (databuf == (gss_buffer_t)(-1)) {
-      ErrorInfo
-          ("GlbsToolStoreContext: while attaching to shared memory segment (rc=%d)",
-           (int) databuf);
+      ErrorInfo("GlbsToolStoreContext: while attaching to shared memory"
+                " segment (rc=%d)", shmId);
       gss_release_buffer(&minstat,secContExp);
       shmctl(shmId, IPC_RMID, &shm_ds);
       return 0;
@@ -434,9 +433,8 @@ int GlbsToolStoreToShm(gss_buffer_t buffer, int *shmId)
    // Attach segment to address
    gss_buffer_t databuf = (gss_buffer_t) shmat(lshmId, 0, 0);
    if (databuf == (gss_buffer_t)(-1)) {
-      ErrorInfo
-          ("GlbsToolStoreToShm: while attaching to shared memory segment (rc=%d)",
-           (int) databuf);
+      ErrorInfo("GlbsToolStoreToShm: while attaching to shared memory"
+                " segment (rc=%d)", lshmId);
       shmctl(lshmId, IPC_RMID, &shm_ds);
       return 2;
    }
