@@ -106,6 +106,7 @@ EVELIBDEPM             = $(GEOMLIB) $(GEOMPAINTERLIB) $(G3DLIB) $(GUILIB) \
                          $(GLLIB) $(FTGLLIB) $(IOLIB) $(RINTLIB) $(MATHCORELIB)
 MEMSTATLIBDEPM         = $(TREELIB)
 MEMSTATGUILIBDEPM      = $(MEMSTATLIB) $(TREELIB) $(GUILIB)
+RECLIBDEPM             = $(IOLIB) $(TREELIB) $(GUILIB) $(THREADLIB)
 
 
 ifeq ($(EXPLICITLINK),yes)
@@ -192,6 +193,7 @@ THREADLIBDEP           = $(THREADLIBDEPM)
 EVELIBDEP              = $(EVELIBDEPM)
 MEMSTATLIBDEP          = $(MEMSTATLIBDEPM)
 MEMSTATGUILIBDEP       = $(MEMSTATGUILIBDEPM)
+RECLIBDEP              = $(RECLIBDEPM)
 
 ifeq ($(PLATFORM),win32)
 
@@ -326,6 +328,8 @@ EVELIBEXTRA             = lib/libGeom.lib lib/libGeomPainter.lib \
                           lib/libRint.lib lib/libMathCore.lib
 MEMSTATLIBEXTRA         = lib/libTree.lib
 MEMSTATGUILIBEXTRA      = lib/libMemStat.lib lib/libTree.lib lib/libGui.lib
+RECLIBEXTRA             = lib/libGui.lib lib/libRIO.lib lib/libTree.lib \
+                          lib/libThread.lib
 
 else
 
@@ -427,6 +431,7 @@ EVELIBEXTRA             = -Llib -lGeom -lGeomPainter -lGraf3d -lGui -lGpad \
                           -lTreePlayer -lRGL -lRIO -lRint -lMathCore
 MEMSTATLIBEXTRA         = -Llib -lTree
 MEMSTATGUILIBEXTRA      = -Llib -lMemStat -lTree -lGui
+RECLIBEXTRA             = -Llib -lGui -lRIO -lTree -lThread
 
 endif
 
