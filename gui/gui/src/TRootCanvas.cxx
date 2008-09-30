@@ -118,10 +118,10 @@ enum ERootCanvasCommands {
    kOptionCanEdit,
 
    kInspectRoot,
-   kInspectBrowser,
-   kInspectBuilder,
-
    kClassesTree,
+   kToolsBrowser,
+   kToolsBuilder,
+   kToolsRecorder,
 
    kHelpAbout,
    kHelpOnCanvas,
@@ -182,7 +182,7 @@ static ToolBarData_t gToolBarData[] = {
    { "refresh2.xpm",   "Refresh",          kFALSE,    kOptionRefresh,  0 },
    { "",               "",                 kFALSE,    -1,              0 },
    { "inspect.xpm",    "Inspect",          kFALSE,    kInspectRoot,    0 },
-   { "browser.xpm",    "Browser",          kFALSE,    kInspectBrowser, 0 },
+   { "browser.xpm",    "Browser",          kFALSE,    kToolsBrowser, 0 },
    { 0,                0,                  kFALSE,    0,               0 }
 };
 
@@ -431,13 +431,12 @@ void TRootCanvas::CreateCanvas(const char *name)
    if (gROOT->GetEditHistograms())
       fOptionMenu->CheckEntry(kOptionCanEdit);
 
-   fInspectMenu = new TGPopupMenu(fClient->GetDefaultRoot());
-   fInspectMenu->AddEntry("&ROOT",              kInspectRoot);
-   fInspectMenu->AddEntry("&Start Browser",     kInspectBrowser);
-   fInspectMenu->AddEntry("&Gui Builder",       kInspectBuilder);
-
-   fClassesMenu = new TGPopupMenu(fClient->GetDefaultRoot());
-   fClassesMenu->AddEntry("&Class Tree",        kClassesTree);
+   fToolsMenu = new TGPopupMenu(fClient->GetDefaultRoot());
+   fToolsMenu->AddEntry("&Inspect ROOT",   kInspectRoot);
+   fToolsMenu->AddEntry("&Class Tree",     kClassesTree);
+   fToolsMenu->AddEntry("&Start Browser",  kToolsBrowser);
+   fToolsMenu->AddEntry("&Gui Builder",    kToolsBuilder);
+   fToolsMenu->AddEntry("&Event Recorder", kToolsRecorder);
 
    fHelpMenu = new TGPopupMenu(fClient->GetDefaultRoot());
    fHelpMenu->AddLabel("Basic Help On...");
@@ -459,8 +458,7 @@ void TRootCanvas::CreateCanvas(const char *name)
    fViewMenu->Associate(this);
    fViewWithMenu->Associate(this);
    fOptionMenu->Associate(this);
-   fInspectMenu->Associate(this);
-   fClassesMenu->Associate(this);
+   fToolsMenu->Associate(this);
    fHelpMenu->Associate(this);
 
    // Create menubar layout hints
@@ -474,8 +472,7 @@ void TRootCanvas::CreateCanvas(const char *name)
    fMenuBar->AddPopup("&Edit",    fEditMenu,    fMenuBarItemLayout);
    fMenuBar->AddPopup("&View",    fViewMenu,    fMenuBarItemLayout);
    fMenuBar->AddPopup("&Options", fOptionMenu,  fMenuBarItemLayout);
-   fMenuBar->AddPopup("&Inspect", fInspectMenu, fMenuBarItemLayout);
-   fMenuBar->AddPopup("&Classes", fClassesMenu, fMenuBarItemLayout);
+   fMenuBar->AddPopup("&Tools",   fToolsMenu,   fMenuBarItemLayout);
    fMenuBar->AddPopup("&Help",    fHelpMenu,    fMenuBarHelpLayout);
 
    AddFrame(fMenuBar, fMenuBarLayout);
@@ -633,8 +630,7 @@ TRootCanvas::~TRootCanvas()
    delete fViewMenu;
    delete fViewWithMenu;
    delete fOptionMenu;
-   delete fInspectMenu;
-   delete fClassesMenu;
+   delete fToolsMenu;
    delete fHelpMenu;
 }
 
@@ -1066,20 +1062,23 @@ again:
                      }
                      break;
 
-                  // Handle Inspect menu items...
+                  // Handle Tools menu items...
                   case kInspectRoot:
                      fCanvas->cd();
                      gROOT->Inspect();
                      fCanvas->Update();
                      break;
-                  case kInspectBrowser:
+                  case kToolsBrowser:
                      new TBrowser("browser");
                      break;
-                  case kInspectBuilder:
+                  case kToolsBuilder:
                      TGuiBuilder::Instance();
                      break;
+                  case kToolsRecorder:
+                     gROOT->ProcessLine("new TGRecorder()");
+                     break;
 
-                  // Handle Inspect menu items...
+                  // Handle Tools menu items...
                   case kClassesTree:
                      {
                         char cdef[64];

@@ -57,8 +57,7 @@ private:
    TGPopupMenu         *fViewMenu;           // view menu
    TGPopupMenu         *fViewWithMenu;       // view with... cascade submenu
    TGPopupMenu         *fOptionMenu;         // option menu
-   TGPopupMenu         *fInspectMenu;        // inspect menu
-   TGPopupMenu         *fClassesMenu;        // classes menu
+   TGPopupMenu         *fToolsMenu;          // tools menu
    TGPopupMenu         *fHelpMenu;           // help menu
    TGLayoutHints       *fMenuBarLayout;      // menubar layout hints
    TGLayoutHints       *fMenuBarItemLayout;  // layout hints for menu in menubar
