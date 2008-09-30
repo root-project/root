@@ -907,7 +907,7 @@ struct OperModAssign
    };
    template <typename Common>
    struct Select<Common,bool> {
-      static void Apply(const G__value *bufm1, G__value *bufm2)
+      static void Apply(const G__value*, G__value*)
       {
          // '%' : unsafe use of type 'bool' in operation
          assert(0);
@@ -940,7 +940,7 @@ struct OperDivAssign
    };
    template <typename Common> 
    struct Select<Common,bool> {
-      static void Apply(const G__value *bufm1, G__value *bufm2)
+      static void Apply(const G__value*, G__value*)
       {
          // '/' : unsafe use of type 'bool' in operation
          assert(0);
