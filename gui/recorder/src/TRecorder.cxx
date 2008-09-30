@@ -272,7 +272,11 @@ TRecorder::ERecorderState TRecorder::GetState()
    return fRecorderState->GetState();
 }
 
+
+
 //______________________________________________________________________________
+// Represents state of TRecorder when replaying
+
 ClassImp(TRecorderReplaying)
    
 //______________________________________________________________________________
@@ -718,7 +722,11 @@ void TRecorderReplaying::Continue()
       fTimer->Start((ULong_t) (fNextEvent->GetTime() - fPreviousEventTime));
 }
 
+
+
 //______________________________________________________________________________
+// Represents state of TRecorder after its creation
+
 ClassImp(TRecorderInactive)
    
 //______________________________________________________________________________
@@ -866,7 +874,9 @@ void TRecorderInactive::DumpRootEvent(TRecGuiEvent *e, Int_t n)
 }
 
 //______________________________________________________________________________
-ClassImp(TRecorderPaused)
+// Represents state of TRecorder when paused
+   
+   ClassImp(TRecorderPaused)
    
 //______________________________________________________________________________
 TRecorderPaused::TRecorderPaused(TRecorderReplaying * state)
@@ -899,7 +909,10 @@ void TRecorderPaused::ReplayStop(TRecorder * r)
    r->ChangeState(new TRecorderInactive());
 }
 
+
 //______________________________________________________________________________
+// Represents state of TRecorder when recording events
+
 ClassImp(TRecorderRecording)
    
 //______________________________________________________________________________
@@ -1180,11 +1193,19 @@ void TRecorderRecording::SetTypeOfConfigureNotify(Event_t * e)
 #endif
 }
 
+
+
+//______________________________________________________________________________
+// The GUI for the recorder
+
 ClassImp(TGRecorder)
+   
 //______________________________________________________________________________
 TGRecorder::TGRecorder(const TGWindow *p, UInt_t w, UInt_t h) :
    TGMainFrame(p ? p : gClient->GetRoot(), w, h)
 {
+   // The GUI for the recorder
+   
    fRecorder = new TRecorder();
 
    // Create a main frame
@@ -1405,6 +1426,8 @@ TGRecorder::~TGRecorder()
 }
 
 //______________________________________________________________________________
+// Helper class
+
 ClassImp(TRecCmdEvent)
 ClassImp(TRecGuiEvent)
 ClassImp(TRecWinPair)
