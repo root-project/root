@@ -28,6 +28,11 @@
 //                                                                      //
 //  1] Start recording                                                  //
 //                                                                      //
+//    TRecorder r(const char * filename, "NEW")                         //
+//    TRecorder r(const char * filename, "RECREATE")                    //
+//                                                                      //
+//    or:                                                               //
+//                                                                      //
 //    TRecorder::Start(const char * filename, ...)                      //
 //                                                                      //
 //    -filename      Name of ROOT file in which to save                 //
@@ -63,6 +68,11 @@
 //  =================================================================== //
 //                                                                      //
 //  1] Start replaying                                                  //
+//                                                                      //
+//    TRecorder r(const char * filename)                                //
+//    TRecorder r(const char * filename, "READ")                         //
+//                                                                      //
+//    or:                                                               //
 //                                                                      //
 //    TRecorder::Replay(const char * filename,                          //
 //                      Bool_t showMouseCursor = kTRUE);                //
@@ -100,11 +110,6 @@
 //  4] Stop replaying before its end                                    //
 //                                                                      //
 //    TRecorder::Stop()                                                 //
-//                                                                      //
-//                                                                      //
-//  GUI for recorder                                                    //
-//  =================================================================== //
-//  See TGRecorder class for more information                           //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -457,6 +462,20 @@ public:
 //////////////////////////////////////////////////////////////////////////
 class TRecorder : public TObject
 {
+private:
+   TRecorderState *fRecorderState;   // Current state of recorder
+
+protected:
+   friend class TRecorderState;
+   friend class TRecorderInactive;
+   friend class TRecorderPaused;
+   friend class TRecorderRecording;
+   friend class TRecorderReplaying;
+
+   // Changes state to the new one.
+   // See class documentation for information about state changing.
+   void  ChangeState(TRecorderState* newstate, Bool_t deletePreviousState = kTRUE);
+
 public:
    //---- Modes of replaying. Only kRealtime implemented so far
    enum EReplayModes {
@@ -473,6 +492,7 @@ public:
 
    // Creates recorder and sets its state as INACTIVE
    TRecorder();
+   TRecorder(const char * filename, Option_t * option = "READ");
 
    // Deletes recorder together with its current state
    virtual ~TRecorder();
@@ -504,20 +524,6 @@ public:
    // Gets current state of recorder
    virtual TRecorder::ERecorderState GetState();
 
-protected:
-   friend class TRecorderState;
-   friend class TRecorderInactive;
-   friend class TRecorderPaused;
-   friend class TRecorderRecording;
-   friend class TRecorderReplaying;
-
-   // Changes state to the new one.
-   // See class documentation for information about state changing.
-   void  ChangeState(TRecorderState* newstate, Bool_t deletePreviousState = kTRUE);
-
-private:
-   TRecorderState *fRecorderState;   // Current state of recorder
-
    ClassDef(TRecorder,1)             // Class provides direct recorder/replayer interface for a user.
 };
 
@@ -538,6 +544,10 @@ private:
 //////////////////////////////////////////////////////////////////////////
 class TRecorderState
 {
+protected:
+   friend class TRecorder;
+   void ChangeState(TRecorder * r, TRecorderState * s, Bool_t deletePreviousState) { r->ChangeState(s, deletePreviousState); }
+
 public:
    virtual        ~TRecorderState() {}
    virtual void   Start(TRecorder *, const char *, Option_t *, Window_t *, Int_t) {}
@@ -552,9 +562,7 @@ public:
 
    virtual TRecorder::ERecorderState  GetState() = 0;
 
-protected:
-   friend class TRecorder;
-   void ChangeState(TRecorder * r, TRecorderState * s, Bool_t deletePreviousState) { r->ChangeState(s, deletePreviousState); }
+   ClassDef(TRecorderState, 0) // Abstract class that defines interface for a state of recorder
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -570,25 +578,7 @@ protected:
 //////////////////////////////////////////////////////////////////////////
 class TRecorderReplaying : public TRecorderState
 {
-public:
-   virtual TRecorder::ERecorderState GetState() { return TRecorder::kReplaying; }
-
-   virtual void            Pause(TRecorder * r);
-   virtual void            Continue();
-   virtual void            ReplayStop(TRecorder * r);
-
-   void        RegisterWindow(Window_t w);   //SLOT
-   void        ReplayRealtime();             //SLOT
-
-protected:
-   friend class TRecorderInactive;
-   friend class TRecorderPaused;
-
-   TRecorderReplaying(const char * filename);
-   Bool_t     Initialize(TRecorder * r, Bool_t showMouseCursor, TRecorder::EReplayModes mode);
-
 private:
-
    virtual  ~TRecorderReplaying();
    Bool_t   PrepareNextEvent();
    Bool_t   RemapWindowReferences();
@@ -638,6 +628,25 @@ private:
                                           // Exceptions: ButtonPress and ButtonRelease events (See TRecorderReplaying::CanBeOverlapped)
 
    Bool_t            fShowMouseCursor;    // Specifies if mouse cursor should be also replayed
+
+protected:
+   friend class TRecorderInactive;
+   friend class TRecorderPaused;
+
+   TRecorderReplaying(const char * filename);
+   Bool_t     Initialize(TRecorder * r, Bool_t showMouseCursor, TRecorder::EReplayModes mode);
+
+public:
+   virtual TRecorder::ERecorderState GetState() { return TRecorder::kReplaying; }
+
+   virtual void            Pause(TRecorder * r);
+   virtual void            Continue();
+   virtual void            ReplayStop(TRecorder * r);
+
+   void        RegisterWindow(Window_t w);   //SLOT
+   void        ReplayRealtime();             //SLOT
+
+   ClassDef(TRecorderReplaying, 0) // Represents state of TRecorder when replaying
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -651,24 +660,7 @@ private:
 //////////////////////////////////////////////////////////////////////////
 class TRecorderRecording: public TRecorderState
 {
-public:
-   virtual TRecorder::ERecorderState GetState() { return TRecorder::kRecording; }
-
-   virtual void Stop(TRecorder * r, Bool_t guiCommand);
-
-   void  RegisterWindow(Window_t w);               //SLOT
-   void  RecordCmdEvent(const char* line);         //SLOT
-   void  RecordGuiEvent(Event_t* e, Window_t wid); //SLOT
-   void  RecordGuiCNEvent(Event_t* e);             //SLOT
-
-protected:
-   friend class TRecorderInactive;
-   TRecorderRecording(TRecorder * r, const char * filename, Option_t * option, Window_t * w, Int_t winCount);
-
-   Bool_t StartRecording();
-
 private:
-
    virtual ~TRecorderRecording();
    Bool_t  IsFiltered(Window_t id);
    void    SetTypeOfConfigureNotify(Event_t * e);
@@ -698,6 +690,23 @@ private:
    Int_t               fFilteredIdsCount; // Only when GUI for recorder is used: Count of windows in GUI recorder
    Window_t           *fFilteredIds;      // Only when GUI for recorer is used: IDs of windows that creates that GUI.
                                           // Events for GUI recorder are not recorded.
+protected:
+   friend class TRecorderInactive;
+   TRecorderRecording(TRecorder * r, const char * filename, Option_t * option, Window_t * w, Int_t winCount);
+
+   Bool_t StartRecording();
+
+public:
+   virtual TRecorder::ERecorderState GetState() { return TRecorder::kRecording; }
+
+   virtual void Stop(TRecorder * r, Bool_t guiCommand);
+
+   void  RegisterWindow(Window_t w);               //SLOT
+   void  RecordCmdEvent(const char* line);         //SLOT
+   void  RecordGuiEvent(Event_t* e, Window_t wid); //SLOT
+   void  RecordGuiCNEvent(Event_t* e);             //SLOT
+
+   ClassDef(TRecorderRecording, 0) // Represents state of TRecorder when recording events
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -726,6 +735,8 @@ public:
 
    static void    DumpRootEvent(TRecGuiEvent *e, Int_t n);
    static long    DisplayValid(Long_t n) { return ( n < 0 ? -1 : n); }
+
+   ClassDef(TRecorderInactive, 0) // Represents state of TRecorder after its creation
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -742,20 +753,22 @@ public:
 //////////////////////////////////////////////////////////////////////////
 class TRecorderPaused: public TRecorderState
 {
+private:
+   virtual ~TRecorderPaused() {}
+
+   TRecorderReplaying       *fReplayingState;      // Replaying that is paused
+
+protected:
+   friend class TRecorderReplaying;
+   TRecorderPaused(TRecorderReplaying * state);
+
 public:
    virtual TRecorder::ERecorderState GetState() { return TRecorder::kPaused; }
 
    virtual void Resume(TRecorder * r);
    virtual void ReplayStop(TRecorder * r);
 
-protected:
-   friend class TRecorderReplaying;
-   TRecorderPaused(TRecorderReplaying * state);
-
-private:
-   virtual ~TRecorderPaused() {}
-
-   TRecorderReplaying       *fReplayingState;      // Replaying that is paused
+   ClassDef(TRecorderPaused, 0) // Represents state of TRecorder when paused
 };
 
 
@@ -768,14 +781,6 @@ private:
 //////////////////////////////////////////////////////////////////////////
 class TGRecorder : public TGMainFrame
 {
-public:
-   TGRecorder(const TGWindow *p = 0, UInt_t w = 200, UInt_t h = 200);
-   virtual ~TGRecorder();
-
-   void StartStop();
-   void Update();
-   void Replay();
-
 private:
    TRecorder          *fRecorder;          // Recorder
 
@@ -792,6 +797,14 @@ private:
    Window_t            fFilteredIds[kWidgetsCount];   // IDs of these windows in GUI recorder
 
    void                SetDefault();
+
+public:
+   TGRecorder(const TGWindow *p = 0, UInt_t w = 200, UInt_t h = 200);
+   virtual ~TGRecorder();
+
+   void StartStop();
+   void Update();
+   void Replay();
 
    ClassDef(TGRecorder,0)             // GUI class of the event recorder.
 };

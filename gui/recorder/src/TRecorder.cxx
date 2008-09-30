@@ -28,6 +28,11 @@
 //                                                                      //
 //  1] Start recording                                                  //
 //                                                                      //
+//    TRecorder r(const char * filename, "NEW")                         //
+//    TRecorder r(const char * filename, "RECREATE")                    //
+//                                                                      //
+//    or:                                                               //
+//                                                                      //
 //    TRecorder::Start(const char * filename, ...)                      //
 //                                                                      //
 //    -filename      Name of ROOT file in which to save                 //
@@ -63,6 +68,11 @@
 //  =================================================================== //
 //                                                                      //
 //  1] Start replaying                                                  //
+//                                                                      //
+//    TRecorder r(const char * filename)                                //
+//    TRecorder r(const char * filename, "READ")                         //
+//                                                                      //
+//    or:                                                               //
 //                                                                      //
 //    TRecorder::Replay(const char * filename,                          //
 //                      Bool_t showMouseCursor = kTRUE);                //
@@ -100,11 +110,6 @@
 //  4] Stop replaying before its end                                    //
 //                                                                      //
 //    TRecorder::Stop()                                                 //
-//                                                                      //
-//                                                                      //
-//  GUI for recorder                                                    //
-//  =================================================================== //
-//  See TGRecorder class for more information                           //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -167,8 +172,25 @@ TRecorder::TRecorder()
 }
 
 //______________________________________________________________________________
+TRecorder::TRecorder(const char * filename, Option_t * option)
+{
+   // Creates a recorder with filename to replay or to record,
+   // depending on option (NEW or RECREATE will start recording, 
+   // READ will start replaying)
+
+   TString opt(option);
+   fRecorderState = new TRecorderInactive();
+   if ((opt == "NEW") || (opt == "RECREATE"))
+      Start(filename, option);
+   else
+      Replay(filename);
+}
+
+//______________________________________________________________________________
 TRecorder::~TRecorder()
 {
+   // Destructor.
+
    delete fRecorderState;
 }
 
@@ -1372,6 +1394,8 @@ void TGRecorder::Replay()
 //______________________________________________________________________________
 TGRecorder::~TGRecorder()
 {
+   // Destructor. Cleanup the GUI.
+
    Cleanup();
 }
 
