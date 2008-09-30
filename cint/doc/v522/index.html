@@ -3,9 +3,17 @@
 <a name="cint"></a> 
 <h3>CINT</h3>
 <ul>
-<li>
-Several bug fixes, most notably regarding dictionaries for templated functions, which will now be accessible both as func&lt;int&gt;(int) and func(int).
+<li>Several bug fixes, most notably regarding dictionaries for templated functions, which will now be accessible both as func&lt;int&gt;(int) and func(int).
 </li>
 <li>Improve support for permanet library (in particular for TSystem::DynFindSymbol.)</li>
-<li>Correctly the handling of function parameter type 'reference to bool'.<li>
+<li>Correctly the handle of function parameter type 'reference to bool'.</li>
+<li>Fail to match a non-static class member function when called without an object (i.e. typically TString::Form(...)); previously this was allowed and lead to a segfault</li>
+<li>port to FreeBSD 7.0</li>
+<li>CINT can now autmatically generate dictionary for templated classes, e.g. A&lt;B&gt; if the header file for A and B is known.
+This allows to interpret vector&lt;MyClass&gt; by transparently generating a
+dictionary for it. This feature can be toggeled on or off by ".autodict".</li>
+</ul>
+<h4>Reflex</h4>
+<ul>
+<li>GCCXML 0.6 is not supported anymore.</li>
 </ul>
