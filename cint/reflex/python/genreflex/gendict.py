@@ -2218,9 +2218,12 @@ else :
   stldeftab['hash_multimap'] = '=','=','__gnu_cxx::hash','std::equal_to','std::allocator'  
 #---------------------------------------------------------------------------------------
 def getTemplateArgs( cl ) :
-  if cl.find('<') == -1 : return []
+  begin = cl.find('<')
+  if begin == -1 : return []
+  end = cl.rfind('>')
+  if end == -1 : return []
   args, cnt = [], 0
-  for s in string.split(cl[cl.find('<')+1:cl.rfind('>')],',') :
+  for s in string.split(cl[begin+1:end],',') :
     if   cnt == 0 : args.append(s)
     else          : args[-1] += ','+ s
     cnt += s.count('<')+s.count('(')-s.count('>')-s.count(')')
@@ -2248,10 +2251,14 @@ def normalizeClass(name,alltempl,_useCache=True,_cache={}) :
       _cache[key] = ret
       return ret
   names, cnt = [], 0
+  # Special cases:
+  # a< (0 > 1) >::b
+  # a< b::c >
+  # a< b::c >::d< e::f >
   for s in string.split(name,'::') :
     if cnt == 0 : names.append(s)
     else        : names[-1] += '::' + s
-    cnt += s.count('<')-s.count('>')
+    cnt += s.count('<')+s.count('(')-s.count('>')-s.count(')')
   if alltempl : return string.join(map(normalizeFragmentAllTempl,names),'::')
   else        : return string.join(map(normalizeFragmentNoDefTempl,names),'::')
 #--------------------------------------------------------------------------------------
@@ -2280,9 +2287,9 @@ def normalizeFragment(name,alltempl=False,_useCache=True,_cache={}) :
              ['long int',               'long']] :
       nor = nor.replace(e[0], e[1])
     return nor
-  else                     : clname = name[:name.find('<')]
-  if name.rfind('>') == -1 : suffix = ''
-  else                     : suffix = name[name.rfind('>')+1:]
+  else : clname = name[:name.find('<')]
+  if name.rfind('>') < len(clname) : suffix = ''
+  else                             : suffix = name[name.rfind('>')+1:]
   args = getTemplateArgs(name)
   sargs = [normalizeClass(a, alltempl) for a in args]
 
