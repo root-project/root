@@ -157,10 +157,6 @@ const char *kGuiEventTree = "GuiEvents";   // Name of TTree with GUI events
 const char *kWindowsTree  = "WindowsTree"; // Name of TTree with window IDs
 const char *kBranchName   = "MainBranch";  // Name of the main branch in all TTress
 
-ClassImp(TRecEvent)
-ClassImp(TRecCmdEvent)
-ClassImp(TRecGuiEvent)
-ClassImp(TRecWinPair)
 ClassImp(TRecorder)
 
 //______________________________________________________________________________
@@ -277,6 +273,8 @@ TRecorder::ERecorderState TRecorder::GetState()
 }
 
 //______________________________________________________________________________
+ClassImp(TRecorderReplaying)
+   
 //______________________________________________________________________________
 TRecorderReplaying::TRecorderReplaying(const char * filename)
 {
@@ -721,6 +719,8 @@ void TRecorderReplaying::Continue()
 }
 
 //______________________________________________________________________________
+ClassImp(TRecorderInactive)
+   
 //______________________________________________________________________________
 void TRecorderInactive::Start(TRecorder * r, const char * filename, Option_t * option, Window_t * w, Int_t winCount)
 {
@@ -866,6 +866,8 @@ void TRecorderInactive::DumpRootEvent(TRecGuiEvent *e, Int_t n)
 }
 
 //______________________________________________________________________________
+ClassImp(TRecorderPaused)
+   
 //______________________________________________________________________________
 TRecorderPaused::TRecorderPaused(TRecorderReplaying * state)
 {
@@ -898,6 +900,8 @@ void TRecorderPaused::ReplayStop(TRecorder * r)
 }
 
 //______________________________________________________________________________
+ClassImp(TRecorderRecording)
+   
 //______________________________________________________________________________
 TRecorderRecording::TRecorderRecording(TRecorder * r, const char * filename, Option_t * option, Window_t * w, Int_t winCount)
 {
@@ -1176,6 +1180,7 @@ void TRecorderRecording::SetTypeOfConfigureNotify(Event_t * e)
 #endif
 }
 
+ClassImp(TGRecorder)
 //______________________________________________________________________________
 TGRecorder::TGRecorder(const TGWindow *p, UInt_t w, UInt_t h) :
    TGMainFrame(p ? p : gClient->GetRoot(), w, h)
@@ -1399,3 +1404,7 @@ TGRecorder::~TGRecorder()
    Cleanup();
 }
 
+//______________________________________________________________________________
+ClassImp(TRecCmdEvent)
+ClassImp(TRecGuiEvent)
+ClassImp(TRecWinPair)
