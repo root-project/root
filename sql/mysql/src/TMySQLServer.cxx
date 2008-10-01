@@ -125,6 +125,35 @@ TMySQLServer::TMySQLServer(const char *db, const char *uid, const char *pw)
                if (gDebug) Info("TMySQLServer","Set timeout %d",timeout);
             }
          } else
+         if (opt.Contains("read_timeout=")) {
+            #if MYSQL_VERSION_ID >= 40101
+            opt.Remove(0, 13);
+            Int_t timeout = opt.Atoi();
+            if (timeout > 0) {
+               UInt_t mysqltimeout = (UInt_t) timeout;
+               mysql_options(fMySQL, MYSQL_OPT_READ_TIMEOUT, (const char*) &mysqltimeout);
+               if (gDebug) Info("TMySQLServer","Set read timeout %d", timeout);
+            }
+            #else
+            Warning("TMySQLServer","MYSQL_OPT_READ_TIMEOUT option not supported by this version of MySql");
+            #endif 
+             
+         } else
+         if (opt.Contains("write_timeout=")) {
+            #if MYSQL_VERSION_ID >= 40101
+            opt.Remove(0, 14);
+            Int_t timeout = opt.Atoi();
+            if (timeout > 0) {
+               UInt_t mysqltimeout = (UInt_t) timeout;
+               mysql_options(fMySQL, MYSQL_OPT_WRITE_TIMEOUT, (const char*) &mysqltimeout);
+               if (gDebug) Info("TMySQLServer","Set write timeout %d", timeout);
+            }
+            #else
+            Warning("TMySQLServer","MYSQL_OPT_WRITE_TIMEOUT option not supported by this version of MySql");
+            #endif 
+         } else
+         
+         
          if (opt.Contains("socket=")) {
             socket = (obj->GetName()+7);
             if (gDebug) Info("TMySQLServer","Use socket %s", socket.Data());

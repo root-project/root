@@ -742,7 +742,10 @@ Bool_t TMySQLStatement::SetSQLParamType(Int_t npar, int sqltype, bool sig, int s
 #endif
       case MYSQL_TYPE_STRING:   allocsize = sqlsize > 256 ? sqlsize : 256; break;
       case MYSQL_TYPE_VAR_STRING: allocsize = sqlsize > 256 ? sqlsize : 256; break;
-      case MYSQL_TYPE_BLOB:     allocsize = sqlsize >= 65500 ? sqlsize + 10 : 65510; break;
+      case MYSQL_TYPE_MEDIUM_BLOB:
+      case MYSQL_TYPE_LONG_BLOB:
+      case MYSQL_TYPE_BLOB:     allocsize = sqlsize >= 65525 ? sqlsize + 10 : 65535; break;
+      case MYSQL_TYPE_TINY_BLOB:   allocsize = sqlsize > 255 ? sqlsize + 10 : 255; break;
       case MYSQL_TYPE_TIME:
       case MYSQL_TYPE_DATE:
       case MYSQL_TYPE_TIMESTAMP:
@@ -937,8 +940,12 @@ Bool_t TMySQLStatement::SetBinary(Int_t npar, void* mem, Long_t size, Long_t max
    // Set parameter value as binary data.
 
    if (size>=maxsize) maxsize = size + 1;
+   
+   int bin_type = MYSQL_TYPE_BLOB;
+   if (maxsize > 65525) bin_type = MYSQL_TYPE_MEDIUM_BLOB;
+   if (maxsize > 16777205) bin_type = MYSQL_TYPE_LONG_BLOB;
 
-   void* addr = BeforeSet("SetBinary", npar, MYSQL_TYPE_BLOB, true, maxsize);
+   void* addr = BeforeSet("SetBinary", npar, bin_type, true, maxsize);
 
    if (addr==0) return kFALSE;
 
