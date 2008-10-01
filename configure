@@ -3286,7 +3286,9 @@ if test "x$enable_globus" = "xyes"; then
        globusincdir=$globusdir/include
     fi
     searchincdir="$globusincdir/gcc32 $globusincdir/gcc32dbg \
-                  $globusincdir/gcc32pthr $globusincdir/gcc32dbgpthr"
+                  $globusincdir/gcc32pthr $globusincdir/gcc32dbgpthr \
+                  $globusincdir/gcc64 $globusincdir/gcc64dbg \
+                  $globusincdir/gcc64pthr $globusincdir/gcc64dbgpthr"
 
     # Found the reference dir first
     check_header "openssl/x509.h" "" "$searchincdir"
