@@ -68,12 +68,32 @@ In addition HFitInterface defines a function <tt>ROOT::Fit::FitObject</tt>
         <li>Add possibility to be used in the FitPanel (add a <tt>TGraph2D::FitPanel()</tt> method).
 </ul>
 
-<h4>TMultiGrah</h4>
+<h4>TMultiGraph</h4>
 <ul>
   <li>    Re-implement <tt>TMultiGraph::Fit</tt> using the functions defined in <tt>HFitImpl.cxx</tt>.
         <li>Add possibility to be used in the FitPanel (add a <tt>TMultiGraph::FitPanel()</tt> method).
 </ul>
 
+<h4>TGraphPainter</h4>
+<ul>
+<li> When a histogram was drawn in a larger frame than its limits (using the 
+  option "SAME"), the `outside' vertical lines for the first and last bins 
+  were not drawn. The macro below demonstrates the problem: 
+<pre>
+  {
+     TH1D h("h", "h", 10., 0., 1.);
+     h.SetBinContent(1, 1.);
+     h.SetBinContent(3, 1.);
+     h.SetBinContent(10, 1.);
+     h.SetFillColor(1001);
+     h.SetFillColor(kOrange-2);
+     h.SetLineColor(kBlack);
+     TCanvas canvas("canvas");
+     frame = canvas.DrawFrame(-1., 0., 2., 2.);
+     h.Draw("SAME");
+  }
+</pre>
+</ul>
 
 <h4>TFormula</h4>
 

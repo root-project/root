@@ -38,6 +38,3 @@ Some files have been modified compare to the official libAfterImage version:
 
    "configure" has been modified to look at the ".dylib" file extension to find
    the X11 libraries. This is needed on the Mac Leopard system.
-
-   libAfterImage.mak is usually not up to date for windows (specially when there
-   is a new file). It is the case for the current version.
