@@ -475,7 +475,7 @@ int XrdProofSched::DoDirectiveSchedParam(char *val, XrdOucStream *cfg, bool)
       return -1;
 
    // Get the parameters
-   while ((val = cfg->GetToken()) && val[0]) {
+   while (val && val[0]) {
       XrdOucString s(val);
       if (s.beginswith("wmx:")) {
          s.replace("wmx:","");
@@ -504,6 +504,7 @@ int XrdProofSched::DoDirectiveSchedParam(char *val, XrdOucStream *cfg, bool)
          ResetParameters();
          break;
       }
+      val = cfg->GetToken();
    }
    return 0;
 }

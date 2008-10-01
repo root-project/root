@@ -214,7 +214,7 @@ int XrdROOTMgr::Config(bool rcf)
         }
          if (fROOT.size() <= 0) {
             TRACE(XERR, "no ROOT dir defined; ROOTSYS location missing - unloading");
-            return 0;
+            return -1;
          }
       }
    }
