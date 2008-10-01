@@ -2227,7 +2227,8 @@ def getTemplateArgs( cl ) :
     if   cnt == 0 : args.append(s)
     else          : args[-1] += ','+ s
     cnt += s.count('<')+s.count('(')-s.count('>')-s.count(')')
-  if args[-1][-1] == ' ' : args[-1] = args[-1][:-1]
+  if len(args) and len(args[-1]) and args[-1][-1] == ' ' :
+    args[-1] = args[-1][:-1]
   return args
 #---------------------------------------------------------------------------------------
 def getTemplateArgString( cl ) :
