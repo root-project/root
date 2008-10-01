@@ -66,7 +66,7 @@ void TAlienJDL::SetOutputDirectory(const char *value, const char *description)
 {
    // Sets OutputDirectory.
 
-   if ( value )void SetMaxInitFailed(Int_t maxInitFailed);
+   if (value)
       SetValue ("OutputDir", AddQuotes(value));
    if (description)
       SetDescription("OutputDir", description);
@@ -77,7 +77,7 @@ void TAlienJDL::SetMergedOutputDirectory ( const char * value,const char* descri
 {
    // Sets merged OutputDirectory.
 
-   if ( value )
+   if (value)
       SetValue ("MergeOutputDir", AddQuotes(value));
    if (description)
       SetDescription("MergeOutputDir", description);
