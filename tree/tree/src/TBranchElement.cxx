@@ -1364,6 +1364,8 @@ TBranch* TBranchElement::FindBranch(const char *name)
          R__CleanName(longnm_parent);
          longnm_parent += name;  // Name without the base class name
 
+         Int_t namelen = strlen(name);
+
          TBranch* branch = 0;
          Int_t nbranches = fBranches.GetEntries();
          for(Int_t i = 0; i < nbranches; ++i) {
@@ -1377,7 +1379,7 @@ TBranch* TBranchElement::FindBranch(const char *name)
                   brlen = dim - brname;
                }
             }
-            if (name[brlen]=='\0' /* same size */
+            if (namelen == brlen /* same effective size */
                 && strncmp(name,brname,brlen) == 0) {
                return branch;
             }
@@ -1391,7 +1393,7 @@ TBranch* TBranchElement::FindBranch(const char *name)
                return branch;
             }
             
-            if (name[brlen]=='.' && strncmp(name,brname,brlen)==0) {
+            if (namelen>brlen && name[brlen]=='.' && strncmp(name,brname,brlen)==0) {
                // The prefix subbranch name match the branch name.
                return branch->FindBranch(name+brlen+1);
             }
