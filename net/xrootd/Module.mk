@@ -212,6 +212,7 @@ ifneq ($(PLATFORM),win32)
 else
 		@(if [ -f $(XROOTDMAKE) ]; then \
    		   cd $(XROOTDDIRD); \
+		   unset MAKEFLAGS; \
 		   nmake -f Makefile.msc clean; \
 		fi)
 endif
@@ -228,6 +229,7 @@ ifneq ($(PLATFORM),win32)
 else
 		@(if [ -f $(XROOTDMAKE) ]; then \
 		   cd $(XROOTDDIRD); \
+		   unset MAKEFLAGS; \
 		   nmake -f Makefile.msc distclean; \
 		   rm -f GNUmakefile; \
 		fi)
