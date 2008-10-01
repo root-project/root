@@ -271,6 +271,8 @@ void TRecorder::ChangeState(TRecorderState *newstate, Bool_t deletePreviousState
 //______________________________________________________________________________
 TRecorder::ERecorderState TRecorder::GetState() const
 {
+   // Get current state of recorder.
+
    return fRecorderState->GetState();
 }
 
@@ -559,7 +561,7 @@ Bool_t TRecorderReplaying::PrepareNextEvent()
       fGuiTree->GetEntry(fGuiTreeCounter);
       if (!FilterEvent(fGuiEvent))
          break;
-       fGuiTreeCounter++;
+      fGuiTreeCounter++;
    }
 
    // Chooses which one will be fNextEvent (the next event to be replayed)
@@ -1183,8 +1185,7 @@ void TRecorderRecording::SetTypeOfConfigureNotify(Event_t *e)
       // If this event does not cause any change in position or size -> automatically generated event
       if (t->GetWidth() == e->fWidth && t->GetHeight() == e->fHeight &&
           e->fX == t->GetX() && e->fY == t->GetY()) {
-
-             e->fUser[4] = TRecGuiEvent::kCNFilter;
+         e->fUser[4] = TRecGuiEvent::kCNFilter;
       }
       else {
          // Size of the window did not change -> move
@@ -1350,7 +1351,7 @@ void TGRecorder::StartStop()
 
          if (fi.fFilename && strlen(fi.fFilename)) {
 
-            fRecorder->Start(fi.fFilename, "RECREATE", fFilteredIds, kWidgetsCount);
+            fRecorder->Start(fi.fFilename, "RECREATE", fFilteredIds, fgWidgetsCount);
 
             fCursorCheckBox->SetDisabledAndSelected(kTRUE);
             fStartStop->SetPicture(gClient->GetPicture("stop.png"));

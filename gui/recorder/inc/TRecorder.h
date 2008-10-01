@@ -708,8 +708,8 @@ private:
    TTimer             *fTimer;             // Timer for handling GUI of recorder
    Int_t               fSecCounter;        // Seconds counter for recording/replaying
 
-   static const Int_t  kWidgetsCount = 6;             // Number of windows in GUI recorder
-   Window_t            fFilteredIds[kWidgetsCount];   // IDs of these windows in GUI recorder
+   static const Int_t  fgWidgetsCount = 6;            // Number of windows in GUI recorder
+   Window_t            fFilteredIds[fgWidgetsCount];   // IDs of these windows in GUI recorder
 
    void                SetDefault();
 
