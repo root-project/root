@@ -83,9 +83,9 @@ Begin_Html
 <h3>Exclusion graphs</h3>
 
 
-When a graph is painted with the option <tt>"C"</tt> or <tt>"L"</tt> it is 
+When a graph is painted with the option <tt>"C"</tt> or <tt>"L"</tt> it is
 possible to draw a filled area on one side of the line. This is useful to show
-exclusion zones. 
+exclusion zones.
 
 <p>This drawing mode is activated when the absolute value of the graph line
 width (set thanks to <tt>SetLineWidth()</tt>) is greater than 99. In that
@@ -94,7 +94,7 @@ case the line width number is interpreted as:
       100*ff+ll = ffll
 </pre>
 <ul>
-<li> The two digits number <tt>"ll"</tt> represent the normal line width 
+<li> The two digits number <tt>"ll"</tt> represent the normal line width
 <li> The two digits number  <tt>"ff"</tt> is the filled area width.
 <li> The sign of "ffll" allows to flip the filled area from one side of the line to
      the other.
@@ -197,7 +197,7 @@ Disable the display of the polar labels.
 
 </table>
 
-End_Html  
+End_Html
 Begin_Macro(source)
 {
    TCanvas *c1 = new TCanvas("c1","c1",500,500);
@@ -224,7 +224,7 @@ Begin_Macro(source)
    grP1->GetPolargram()->SetToRadian();
 
    return c1;
-}  
+}
 End_Macro
 Begin_Html
 
@@ -253,8 +253,8 @@ TGraphPainter::~TGraphPainter()
 void TGraphPainter::ComputeLogs(Int_t npoints, Int_t opt)
 {
    /* Begin_Html
-   Compute the lorarithm of global variables <tt>gxwork</tt> and <tt>gywork</tt> 
-   according to the value of Options and put the results in the global 
+   Compute the lorarithm of global variables <tt>gxwork</tt> and <tt>gywork</tt>
+   according to the value of Options and put the results in the global
    variables <tt>gxworkl</tt> and <tt>gyworkl</tt>.
    <p>
    npoints : Number of points in gxwork and in gywork.
@@ -287,7 +287,7 @@ Int_t TGraphPainter::DistancetoPrimitiveHelper(TGraph *theGraph, Int_t px, Int_t
 {
    /* Begin_Html
    Compute distance from point px,py to a graph.
-   <p> 
+   <p>
    Compute the closest distance of approach from point px,py to this line.
    The distance is computed in pixels units.
    End_Html */
@@ -616,7 +616,7 @@ void TGraphPainter::PaintHelper(TGraph *theGraph, Option_t *option)
       if (theGraph->InheritsFrom("TGraphBentErrors")) {
          PaintGraphBentErrors(theGraph,option);
       } else if (theGraph->InheritsFrom("TGraphQQ")) {
-	PaintGraphQQ(theGraph,option);
+         PaintGraphQQ(theGraph,option);
       } else if (theGraph->InheritsFrom("TGraphAsymmErrors")) {
          PaintGraphAsymmErrors(theGraph,option);
       } else if (theGraph->InheritsFrom("TGraphErrors")) {
@@ -1133,8 +1133,8 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
 
    const char *where = "PaintGraphHist";
 
-   Int_t optionLine , optionAxis , optionCurve, optionStar , optionMark;
-   Int_t optionBar  , optionRot  , optionOne  , optionOff;
+   Int_t optionLine , optionAxis , optionCurve, optionStar, optionMark;
+   Int_t optionBar  , optionRot  , optionOne  , optionOff ;
    Int_t optionFill , optionZ;
    Int_t optionHist , optionBins , optionMarker;
    Int_t i, j, npt;
@@ -1411,14 +1411,17 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
                gywork[npt-1] = gywork[0];
                //make sure that the fill area does not overwrite the frame
                //take into account the frame linewidth
-               if (gxwork[0    ] < vxmin) {gxwork[0    ] = vxmin; gxwork[1    ] = vxmin;}
+               if (gxwork[0] < vxmin) {gxwork[0] = vxmin; gxwork[1    ] = vxmin;}
                if (gywork[0] < vymin) {gywork[0] = vymin; gywork[npt-1] = vymin;}
 
                ComputeLogs(npt, optionZ);
 
-               //do not draw the two vertical lines on the edges
+               // do not draw the two vertical lines on the edges
                Int_t nbpoints = npt-2;
                Int_t point1  = 1;
+               if (gxwork[0] > gPad->GetUxmin()) { nbpoints++; point1 = 0; }
+               if (gxwork[nbpoints] < gPad->GetUxmax()) nbpoints++;
+
                if (optionOff) {
                   // remove points before the low cutoff
                   Int_t ip;
@@ -2760,7 +2763,7 @@ void TGraphPainter::PaintGraphPolar(TGraph *theGraph, Option_t* options)
             eymax = (theY[i]+theEY[i]-rwrmin)/radiusNDC*
                      TMath::Sin((theX[i]-rwtmin)/thetaNDC);
             theGraphPolar->TAttLine::Modify();
-	    if (exmin != exmax || eymin != eymax) gPad->PaintLine(exmin,eymin,exmax,eymax);
+            if (exmin != exmax || eymin != eymax) gPad->PaintLine(exmin,eymin,exmax,eymax);
          }
       }
       if (theEX) {
@@ -2901,23 +2904,23 @@ void TGraphPainter::PaintGraphPolar(TGraph *theGraph, Option_t* options)
       }
       return;
    }
-   
+
    Int_t talh = gStyle->GetTitleAlign()/10;
    if (talh < 1) talh = 1; if (talh > 3) talh = 3;
    Int_t talv = gStyle->GetTitleAlign()%10;
    if (talv < 1) talv = 1; if (talv > 3) talv = 3;
-   
+
    Double_t xpos, ypos;
    xpos = gStyle->GetTitleX();
    ypos = gStyle->GetTitleY();
-   
+
    if (talh == 2) xpos = xpos-wt/2.;
    if (talh == 3) xpos = xpos-wt;
    if (talv == 2) ypos = ypos+ht/2.;
    if (talv == 1) ypos = ypos+ht;
-   
+
    TPaveText *ptitle = new TPaveText(xpos, ypos-ht, xpos+wt, ypos,"blNDC");
-   
+
    // Box with the histogram title.
    ptitle->SetFillColor(gStyle->GetTitleFillColor());
    ptitle->SetFillStyle(gStyle->GetTitleStyle());
