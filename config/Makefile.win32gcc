@@ -49,6 +49,11 @@ CILIBS        = -lm
 CRYPTLIBS     = -lcrypt
 
 # Fortran:
+ifneq ($(findstring gfortran, $(F77)),)
+F77FLAGS      = -std=legacy
+F77LIBS      := $(shell $(F77) -print-file-name=libgfortran.a)
+F77LIBS      += $(shell $(F77) -print-file-name=libgfortranbegin.a)
+endif
 ifeq ($(F77),g77)
 F77           = g77
 F77FLAGS      =

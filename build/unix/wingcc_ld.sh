@@ -3,6 +3,8 @@
 # Put dlls into bin/, symlinking them to lib/, and create
 # a symlinked import archive .dll.a in lib/.
 
+CXX=`grep CXX config/Makefile.comp | sed 's,CXX[[:space:]]*=,,'`
+
 args=
 isdll=0
 while [ "$1" != "" ]; do
@@ -21,7 +23,7 @@ while [ "$1" != "" ]; do
 done
 
 #
-g++ $args \
+$CXX $args \
   && ( if [ "$isdll" != "0" ]; then \
           ln -sf $dllbase $dllname.a; \
           ln -sf ../bin/$dllbase $dllname; \
