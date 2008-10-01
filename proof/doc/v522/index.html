@@ -1,11 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
-<head>
-  <title>PROOF release notes</title>
-
-
-</head>
-
+<html><head>
+  <title>PROOF release notes</title></head>
 
 <body>
 
@@ -56,9 +51,14 @@ connections.&nbsp;</li>
         packages as well as the macros loaded by the user. </li>
 
         <li> A packet resubmitting mechanism. When a worker dies all the
-        packets that it processed are resubmitted. </li>
+        packets that it processed are resubmitted.</li>
 
-      </ul>
+      </ul><li>Add
+possibility to display the memory footprint on workers and master as a
+function of the entry processed (workers) or of the merging step
+(master). A new button has been added to the PROOF dialog box to
+retrieve and display the memory usage. On the workers about 100
+measurements are recorded by default; this number can be changed with'proof-&gt;SetParameter("PROOF_MemLogFreq", memlogfreq)'; </li>
 
   </ul>
 
@@ -115,7 +115,10 @@ instead of 10</li>
     <li>Improve diagnostic in case of worker death: clients will
 now
 receive a message containing the low level reason for the failure and a
-hint for getting more information</li>
+hint for getting more information</li><li>In
+TProofOutputFile, support the "&lt;user&gt;" and "&lt;group&gt;"
+placeholders in the output file name to automatically re-direct the
+output to an area specific to the logged user.<br></li>
 
   </ul>
 
@@ -144,11 +147,11 @@ workers death</li>
     <li>Avoid duplicating worker logs in the master log file
 unless
 when explicitely needed by the request (Exec(...), Print(...)) or when
-an error occured</li>
-
-  </ul>
+an error occured</li><li>Fix problem with the determination and transmission of the name of the object to be processed. The problem appeared when processing files containing &gt;1 trees in changing order.</li><li>Fix problem with TProof::Load loading the macro to one worker only per machine</li><li>Fix wrong return code preventing the correct propagation of the full ClearPackage to workers</li><li>Fix a problem causing the whole query to stop even in the case a worker was terminated gently with SIGTERM.</li><li>
+Fix a problem triggering full re-build of a package upon change of a
+single file; the version info file was wrongly reset; this should
+happen only after a re-build.</li><li>Make sure that in case multiple TProofOutputFile are present, each get merged correctly<br></li></ul></ul><ul><ul></ul>
 
 </ul>
 
-</body>
-</html>
+</body></html>
