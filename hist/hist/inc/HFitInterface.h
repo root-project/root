@@ -24,7 +24,7 @@ class TGraph;
 class TGraphErrors; 
 class TGraph2D;  
 class TMultiGraph; 
-class Foption_t; 
+struct Foption_t; 
 
 
 namespace ROOT { 
