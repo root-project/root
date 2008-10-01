@@ -19,6 +19,14 @@ center of screen with a given plane.
 
 <li> Add suport for fading in/out of the viewer contents.
 
+<li> Many improvements in text and axis rendering for orthographic
+view markup.
+
+<li> In <tt>TGLSceneBase</tt> add data-member <tt>Bool_t
+fSelectable</tt> allowing one to preventing any of its elements to be
+selected. Useful when given scene is used as background to help guid
+the eye.
+
 </ul>
 
 
@@ -47,17 +55,27 @@ Add support for enumerative registration of calorimeter towers. Before
 one had to provide THStack as input. See <tt>TEveCaloDataVec</tt>
 class.
 
+<li> <tt>TEveTrackList</tt> -- Generalized API for finding of momentum
+limits.
+
 <li> <tt>TEveTrackPropagator</tt> now supports propagation of charged
 particles in arbitrary / external magnetic field.
 
-New abstract interface to magnetic field TEveMagField to get field
-vector at given position. Implement two interfaces: TEveMagFieldConst
-for constant magnetic field and TEveMagFieldDuo (two constant magnetic
-fields, chosen by cylindrical radius).
+New abstract interface to magnetic field <tt>TEveMagField</tt> to get
+field vector at given position. Implement two interfaces:
+<tt>TEveMagFieldConst</tt> for constant magnetic field and
+<tt>TEveMagFieldDuo</tt> (two constant magnetic fields, chosen by
+cylindrical radius).
 
 See examples in <tt>tutorials/eve/track.C</tt>.
 
-<li> Added underflow and overflow bins to <tt>TEvePointSetArray</tt>.
+<li> <tt>TEvePointSetArray</tt> -- Added underflow and overflow bins.
+
+<li> Many improvements in text and axis rendering for axes in
+non-linear projections and for the dedicated lego view.
+
+<li> New tutorial <tt>tutorials/eve/lineset_test.py</tt> showing how
+tu run Eve from python.
 
 </ul>
 
