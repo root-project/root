@@ -1291,7 +1291,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
    if (fFile) {
       if (!fDirectory->GetList()->FindObject(this)) {
          tpf = (TTreeCache*) fFile->GetCacheRead();
-         tpf->ResetCache();
+         if (tpf) tpf->ResetCache();
          fFile->SetCacheRead(0);
          if (fCanDeleteRefs) {
             fFile->Close("R");
