@@ -9,7 +9,28 @@
   </li>
   <li>
   Fixed a bug in the <tt>ROOT::Math::landau_pdf</tt> function. Now it evaluates to the correct normalized distribution when the scale factor is different than 1.</li>
+  <li><bf><tt>TVirtualFitter</tt></bf>: move TVirtualFitter from base to mathcore. Setting the minimizer parameters is done via the new class <tt>ROOT::Math::MinimizerOptions</tt>.
+  <li><bf><tt>ROOT::Math::MinimizerOptions</tt></bf>: new class keeping the minimizer control parameters, minimizer name and algorithms. Static values of the parameter exist and can be set and retrieved via corresponding static methods. 
+  <li><bf>Fitting Classes</bf>: improve in general all classes in view of using them in the histogram and graph fitting routines. Few bugs have been as well fixed (see the <a href="http://root.cern.ch/viewcvs?rev=25486&root=root&view=rev">cvs log</a> for details).
+ </li> 
   </ul>
+  <h4>Fumili</h4>
+  <ul>
+ <li> Add implementation of Minimizer interface using TFumili.
+    </ul>
+  <h4>Minuit</h4>
+  <ul>
+    <li>
+  In  <tt>TMinuitMinimizer</tt>: do not delete the contained TMinuit reference, but maintain it alife, and accessable outside as gMinuit. It can then be used after fitting, for example for drawing contour plots.
+ <li>
+<tt>    TLinearMinimizer</tt>: add support for robust fitting
+    </li>
+    </ul>
+<h4>Minuit2</h4>
+    <ul>
+ <li><tt>DavidonErrorUpdator</tt>: add an additonal check to avoid a divison by zero.
+ <li>In <tt>Minuit2Minimizer</tt> fill the status information according to the minimizer result
+      </ul>
 
   <h4>GenVector</h4>
 <ul>

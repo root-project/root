@@ -2,6 +2,77 @@
 <hr> 
 <a name="hist"></a> 
 <h3>Histogram package</h3>
+<uL>
+  <li>
+Modify implementation of the Fit function in the histograms and data classes to use a new common implementation, defned in the file <tt>HFitImpl.cxx</tt>.
+  <li>Combine files <tt>THistFitInterface.cxx</tt>  and
+	  <tt>TGraphFitInterface.cxx</tt> (and *.h) in the new file <tt>HFitInterface.cxx</tt> and <tt>HFitInterface.h</tt>. 
+In addition HFitInterface defines a function <tt>ROOT::Fit::FitObject</tt>
+	  passing
+	  option directly via Foption class and not by a string. They are
+	  used by the FitPanel.
+
+  <li>
+  Add new class <tt>TBackCompFitter</tt>, providing a backward compatible
+	  implementation of
+	  <tt>TVirtualFitter</tt> using the new fitting class. It is wrapping the functionality of
+  the <tt>ROOT::Math::Fitter</tt> and it 
+	  can be used to retrieve the fit information (result and
+	  configuration) via the
+	  TVirtualFitter API from <tt>FitConfig</tt> and <tt>FitResult</tt>. A static instance of this class 
+	  is created afte calling the histograms and graph Fit methods in order to retrieve the full fit information after having fit. This gives full backward compatibility functionality in fitting. 
+  </ul>
+
+  <h4>TH1</h4>
+  <ul><li>
+  Re-implement <tt>TH1::Fit</tt> using the functions defined in <tt>HFitImpl.cxx</tt>.
+    </ul>
+  <h4>TH2</h4>
+    <ul>
+<li>  Share a common implementatin for (FitSlicesX,FitSclicesY) and (ProfileX, ProfileY) using a common protected method.
+      <li>Add possibility to be used in the FitPanel (add a <tt>TH2::FitPanel()</tt> method).
+      </ul>
+
+  <h4>TH3</h4>
+
+<ul>
+  <li>
+    Fixed a bug in <tt>TH3::Project</tt> reported by Marco Van Leeuwen in setting the bin error in the projected histogram when a range was set in the projected axis.
+  </li>
+        <li>Add possibility to be used in the FitPanel (add a <tt>TH3::FitPanel()</tt> method).
+
+</ul>
+
+<h4>TGraph</h4>
+
+<ul>
+  <li>
+    Change the API of <tt>TGraph::GetPoint</tt> from
+    <pre>
+    void TGraph::GetPoint(Int_t i, Double_t &amp;x, Double_t &amp;y) const
+    </pre>
+    to
+    <pre>
+    Int_t TGraph::GetPoint(Int_t i, Double_t &amp;x, Double_t &amp;y) const
+    </pre>
+    The function returns -1 in case of an invalid request or the
+    point number otherwise.
+  </li>
+<li>    Re-implement <tt>TGraph::Fit</tt> using the functions defined in <tt>HFitImpl.cxx</tt>.
+
+</ul>
+
+<h4>TGraph2D</h4>
+<ul>
+  <li>    Re-implement <tt>TGraph2D::Fit</tt> using the functions defined in <tt>HFitImpl.cxx</tt>.
+        <li>Add possibility to be used in the FitPanel (add a <tt>TGraph2D::FitPanel()</tt> method).
+</ul>
+
+<h4>TMultiGrah</h4>
+<ul>
+  <li>    Re-implement <tt>TMultiGraph::Fit</tt> using the functions defined in <tt>HFitImpl.cxx</tt>.
+        <li>Add possibility to be used in the FitPanel (add a <tt>TMultiGraph::FitPanel()</tt> method).
+</ul>
 
 
 <h4>TFormula</h4>
@@ -22,30 +93,6 @@
 
 </ul>
 
-<h4>TH3</h4>
-
-<ul>
-  <li>
-    Fixed a bug in <tt>TH3::Project</tt> reported by Marco Van Leeuwen in setting the bin error in the projected histogram when a range was set in the projected axis.
-  </li>
-</ul>
-
-<h4>TGraph</h4>
-
-<ul>
-  <li>
-    Change the API of <tt>TGraph::GetPoint</tt> from
-    <pre>
-    void TGraph::GetPoint(Int_t i, Double_t &amp;x, Double_t &amp;y) const
-    </pre>
-    to
-    <pre>
-    Int_t TGraph::GetPoint(Int_t i, Double_t &amp;x, Double_t &amp;y) const
-    </pre>
-    The function returns -1 in case of an invalid request or the
-    point number otherwise.
-  </li>
-</ul>
 
 <h4>THStack</h4>
 <ul>
@@ -68,3 +115,13 @@ The simple following macro was enough to show the problem:
 
 </li>
 </ul>
+
+<h4>FitPanel</h4>
+<ul>
+ <li> Add interfaces for TH2, TH3, TMultiGraph and TGraph2D
+  <li> Fix various bugs in setting the fit model function and in setting the parameters (values, limits, etc..)
+  <li> Allow the opening of the  parameter dialog in case of linear fitter. This is needed for example for fixing some of the parameters
+  <li>Improve minimization panel by adding some extra methods, like combined for a combined migrad-simplex minimization (option "MINIMIZE" in Minuit).
+  </ul>
+
+  
