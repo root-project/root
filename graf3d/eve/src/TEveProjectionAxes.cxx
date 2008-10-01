@@ -33,13 +33,9 @@ TEveProjectionAxes::TEveProjectionAxes(TEveProjectionManager* m) :
    TNamed("TEveProjectionAxes", ""),
    fManager(m),
 
-   //   fBoxOffsetX(0.5),
-   //fBoxOffsetY(0.2),
-
-
    fColor(kGray),
 
-   fLabMode(kPosition),
+   fLabMode(kValue),
    fAxesMode(kAll),
 
    fDrawCenter(kFALSE),
@@ -47,8 +43,8 @@ TEveProjectionAxes::TEveProjectionAxes(TEveProjectionManager* m) :
 {
    // Constructor.
 
+   fNdivisions = 1006; // primary np = n/100, secondary ns = n -np*100 
    fLabelSize = 0.015;
-   fNdivisions = 7;
 
    fCanEditMainTrans = kFALSE;
    fManager->AddDependent(this);

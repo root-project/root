@@ -59,12 +59,6 @@ public:
    void            SetAxesMode(EAxesMode x) { fAxesMode = x;    }
    EAxesMode       GetAxesMode()   const    { return fAxesMode; }
 
-   void            SetNdiv(Int_t x) { fNdivisions = x;    }
-   Int_t           GetNdiv()  const { return fNdivisions; }
-
-   Float_t         GetLabelSize() const {return fLabelSize;}
-   void            SetLabelSize(Float_t x) {fLabelSize=x;}
-
    void            SetDrawCenter(Bool_t x){ fDrawCenter = x;    }
    Bool_t          GetDrawCenter() const  { return fDrawCenter; }
    void            SetDrawOrigin(Bool_t x){ fDrawOrigin = x;    }

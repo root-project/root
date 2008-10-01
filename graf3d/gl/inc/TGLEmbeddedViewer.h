@@ -29,13 +29,13 @@ private:
    // GUI components
    TGCompositeFrame  *fFrame;
 
-   void CreateFrames();
+   void CreateFrames(Int_t border);
 
    TGLEmbeddedViewer(const TGLEmbeddedViewer&); // Not implemented
    TGLEmbeddedViewer& operator=(const TGLEmbeddedViewer&); // Not implemented
 
 public:
-   TGLEmbeddedViewer(const TGWindow *parent, TVirtualPad *pad = 0);
+   TGLEmbeddedViewer(const TGWindow *parent, TVirtualPad *pad=0, Int_t border=2);
    ~TGLEmbeddedViewer();
 
    virtual const char *GetName() const { return "GLViewer"; }

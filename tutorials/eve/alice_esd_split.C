@@ -211,13 +211,13 @@ void alice_esd_split()
    // import the geometry in the projection managers
    if (gRPhiMgr) {
       TEveProjectionAxes* a = new TEveProjectionAxes(gRPhiMgr);
-      a->SetNdiv(3);
+      a->SetNdivisions(3);
       gEve->GetScenes()->FindChild("R-Phi Projection")->AddElement(a);
       gRPhiMgr->ImportElements(gGeoShape);
    }
    if (gRhoZMgr) {
       TEveProjectionAxes* a = new TEveProjectionAxes(gRhoZMgr);
-      a->SetNdiv(3);
+      a->SetNdivisions(3);
       gEve->GetScenes()->FindChild("Rho-Z Projection")->AddElement(a);
       gRhoZMgr->ImportElements(gGeoShape);
    }

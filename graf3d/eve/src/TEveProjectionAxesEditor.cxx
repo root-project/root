@@ -32,7 +32,7 @@ TEveProjectionAxesEditor::TEveProjectionAxesEditor(const TGWindow *p, Int_t widt
 
    fLabMode(0),
    fAxesMode(0),
-   fNdiv(0),
+   fNdivisions(0),
 
    fCenterFrame(0),
    fDrawCenter(0),
@@ -81,14 +81,14 @@ TEveProjectionAxesEditor::TEveProjectionAxesEditor(const TGWindow *p, Int_t widt
       AddFrame(f);
    }
 
-   fNdiv = new TEveGValuator(this, "Ndiv:", 70, 0);
-   fNdiv->SetLabelWidth(labw);
-   fNdiv->SetNELength(4);
-   fNdiv->SetShowSlider(kFALSE);
-   fNdiv->Build();
-   fNdiv->SetLimits(3, 50);
-   fNdiv->Connect("ValueSet(Double_t)", "TEveProjectionAxesEditor", this, "DoNdiv()");
-   AddFrame(fNdiv, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));
+   fNdivisions = new TEveGValuator(this, "Ndivisions:", 70, 0);
+   fNdivisions->SetLabelWidth(labw);
+   fNdivisions->SetNELength(6);
+   fNdivisions->SetShowSlider(kFALSE);
+   fNdivisions->Build();
+   fNdivisions->SetLimits(100, 10000);
+   fNdivisions->Connect("ValueSet(Double_t)", "TEveProjectionAxesEditor", this, "DoNdivisions()");
+   AddFrame(fNdivisions, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));
 
    //______________________________________________________________________________
 
@@ -136,7 +136,7 @@ void TEveProjectionAxesEditor::SetModel(TObject* obj)
 
    fLabMode->Select(fM->GetLabMode(), kFALSE);
    fAxesMode->Select(fM->GetAxesMode(), kFALSE);
-   fNdiv->SetValue(fM->GetNdiv());
+   fNdivisions->SetValue(fM->GetNdivisions());
    fDrawCenter->SetState(fM->GetDrawCenter()  ? kButtonDown : kButtonUp);
    fDrawOrigin->SetState(fM->GetDrawOrigin()  ? kButtonDown : kButtonUp);
 
@@ -180,9 +180,10 @@ void TEveProjectionAxesEditor::DoAxesMode(Int_t mode)
    Update();
 }
 //______________________________________________________________________________
-void TEveProjectionAxesEditor::DoNdiv()
+void TEveProjectionAxesEditor::DoNdivisions()
 {
-   // Slot for setting number of tick-marks.
-   fM->SetNdiv((Int_t)fNdiv->GetValue());
+   // Slot for setting step size.
+
+   fM->SetNdivisions((Int_t)fNdivisions->GetValue());
    Update();
 }

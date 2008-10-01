@@ -318,7 +318,7 @@ void TGLAxisPainter::Paint(TGLRnrCtx &rnrCtx, TGLAxisAttrib &att)
    // labels
    {
       Int_t fs = att.fRelativeFontSize ? Int_t(att.GetLabelSize()*len):att.fAbsLabelFontSize;
-      att.fAbsLabelFontSize = TGLFontManager::GetFontSize(fs, 12, 36);
+      att.fAbsLabelFontSize = TGLFontManager::GetFontSize(fs, 8, 36);
       rnrCtx.RegisterFont(att.fAbsLabelFontSize, att.fLabelFontName.Data(), TGLFont::kPixmap, font);
 
       TGLUtil::Color(att.fLabelColor);

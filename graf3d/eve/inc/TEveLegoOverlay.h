@@ -43,9 +43,6 @@ protected:
    Bool_t         fShowSlider;
    Float_t        fSliderVal;
 
-   //   TGLAxisPainter fSliderAxisPainter;
-   // TGLAxisAttrib  fAxisAtt;
-
    // event handling
    Int_t          fActiveID;
    Color_t        fActiveCol;

@@ -58,6 +58,7 @@ TGLSceneBase::TGLSceneBase() :
    fLOD              (TGLRnrCtx::kLODHigh),
    fStyle            (TGLRnrCtx::kStyleUndef),
    fClip             (0),
+   fSelectable       (kTRUE),
    fBoundingBox      (),
    fBoundingBoxValid (kFALSE),
    fForceUpdateSI    (kFALSE),

@@ -324,7 +324,7 @@ void TGLSAViewer::CreateFrames()
       fFrame->AddFrame(compositeFrame, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
 
       fLeftVerticalFrame = new TGVerticalFrame(compositeFrame, 195, 10, kFixedWidth);
-      compositeFrame->AddFrame(fLeftVerticalFrame, new TGLayoutHints(kLHintsLeft | kLHintsExpandY , 2, 2, 2, 2));
+      compositeFrame->AddFrame(fLeftVerticalFrame, new TGLayoutHints(kLHintsLeft | kLHintsExpandY, 2, 2, 2, 2));
 
       const TGWindow* cw =  fFrame->GetClient()->GetRoot();
       fFrame->GetClient()->SetRoot(fLeftVerticalFrame);
@@ -341,8 +341,12 @@ void TGLSAViewer::CreateFrames()
       compositeFrame->AddFrame(splitter, new TGLayoutHints(kLHintsLeft | kLHintsExpandY, 0,1,2,2) );
    }
 
-   TGVerticalFrame *rightVerticalFrame = new TGVerticalFrame(compositeFrame, 10, 10, kSunkenFrame);
-   compositeFrame->AddFrame(rightVerticalFrame, new TGLayoutHints(kLHintsRight | kLHintsExpandX | kLHintsExpandY,0,2,2,2));
+   // SunkenFrame introduces 1-pixel offset - in TGFrame.cxx:163
+   //
+   // TGVerticalFrame *rightVerticalFrame = new TGVerticalFrame(compositeFrame, 10, 10, kSunkenFrame);
+   // compositeFrame->AddFrame(rightVerticalFrame, new TGLayoutHints(kLHintsRight | kLHintsExpandX | kLHintsExpandY,0,2,2,2));
+   TGVerticalFrame *rightVerticalFrame = new TGVerticalFrame(compositeFrame, 10, 10);
+   compositeFrame->AddFrame(rightVerticalFrame, new TGLayoutHints(kLHintsRight | kLHintsExpandX | kLHintsExpandY));
 
    fGLWidget = TGLWidget::Create(rightVerticalFrame, kTRUE, kTRUE, 0, 10, 10);
 

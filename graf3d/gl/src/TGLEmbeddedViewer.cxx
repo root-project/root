@@ -31,15 +31,17 @@
 ClassImp(TGLEmbeddedViewer);
 
 //______________________________________________________________________________
-TGLEmbeddedViewer::TGLEmbeddedViewer(const TGWindow *parent, TVirtualPad *pad) :
+TGLEmbeddedViewer::TGLEmbeddedViewer(const TGWindow *parent, TVirtualPad *pad, Int_t border) :
    TGLViewer(pad, 0, 0, 400, 300),
    fFrame(0)
 {
-   // Default constructor;
+   // Constructor.
+   // Argument 'border' specifies how many pixels to pad on each side of the
+   // viewer. This area can be used for highlightning of the active viewer.
 
    fFrame = new TGCompositeFrame(parent);
 
-   CreateFrames();
+   CreateFrames(border);
 
    fFrame->MapSubwindows();
    fFrame->Resize(fFrame->GetDefaultSize());
@@ -56,7 +58,7 @@ TGLEmbeddedViewer::~TGLEmbeddedViewer()
 }
 
 //______________________________________________________________________________
-void TGLEmbeddedViewer::CreateFrames()
+void TGLEmbeddedViewer::CreateFrames(Int_t border)
 {
    // Internal frames creation.
 
@@ -66,7 +68,6 @@ void TGLEmbeddedViewer::CreateFrames()
    fEventHandler = new TGLEventHandler("Default", fGLWidget, this);
    fGLWidget->SetEventHandler(fEventHandler);
 
-   fFrame->AddFrame(fGLWidget, new TGLayoutHints(kLHintsExpandX |
-                    kLHintsExpandY, 2, 2, 2, 2));
+   fFrame->AddFrame(fGLWidget, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY,
+                                                 border, border, border, border));
 }
-

@@ -275,9 +275,12 @@ void TGLViewerBase::PreRender()
    SceneInfoList_t locked_scenes;
    for (SceneInfoList_i i=fScenes.begin(); i!=fScenes.end(); ++i)
    {
-      TGLSceneInfo * sinfo = *i;
+      TGLSceneInfo *sinfo = *i;
+      TGLSceneBase *scene = sinfo->GetScene();
       if (sinfo->GetActive())
       {
+         if (fRnrCtx->Selection() && ! scene->GetSelectable())
+            continue;
          if ( ! sinfo->GetScene()->TakeLock(kDrawLock))
          {
             Warning("TGLViewerBase::PreRender", "locking of scene '%s' failed, skipping.",

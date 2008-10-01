@@ -46,6 +46,7 @@ protected:
    Short_t            fLOD;         // Scene-lod.
    Short_t            fStyle;       // Scene-style.
    TGLClip          * fClip;        // Scene clipping-plane.
+   Bool_t             fSelectable;  // Objects in the scene are selectable.
 
    // BoundingBox
    mutable TGLBoundingBox fBoundingBox;      // bounding box for scene (axis aligned) - lazy update - use BoundingBox() to access
@@ -118,6 +119,9 @@ public:
 
    TGLClip* Clip()         const { return fClip; }
    void     SetClip(TGLClip *p)  { fClip = p;    }
+
+   Bool_t   GetSelectable()   const { return fSelectable; }
+   void     SetSelectable(Bool_t a) { fSelectable = a;    }
 
    Bool_t   GetAutoDestruct()   const { return fAutoDestruct; }
    void     SetAutoDestruct(Bool_t a) { fAutoDestruct = a;    }
