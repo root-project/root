@@ -895,10 +895,10 @@ TBranch* TBranch::FindBranch(const char* name)
       longnm += '.';
    }
    longnm += name;
-   TBranch* branch = 0;
-   Int_t namelen = strlen(name);
+   UInt_t namelen = strlen(name);
 
    Int_t nbranches = fBranches.GetEntries();
+   TBranch* branch = 0;
    for(Int_t i = 0; i < nbranches; ++i) {
       branch = (TBranch*) fBranches.UncheckedAt(i);
       

@@ -1364,7 +1364,7 @@ TBranch* TBranchElement::FindBranch(const char *name)
          R__CleanName(longnm_parent);
          longnm_parent += name;  // Name without the base class name
 
-         Int_t namelen = strlen(name);
+         UInt_t namelen = strlen(name);
 
          TBranch* branch = 0;
          Int_t nbranches = fBranches.GetEntries();
