@@ -20,15 +20,17 @@ SET(REFLEX_VERSION_BUILD 2)
 SET(REFLEX_VERSION "${REFLEX_VERSION_MAJOR}.${REFLEX_VERSION_MINOR}")
 SET(REFLEX_VERSION_FULL "${REFLEX_VERSION}.${REFLEX_VERSION_RELEASE}.${REFLEX_VERSION_BUILD}")
 
-#####################   checks    ####################
-
-# disallow in-source builds
-MACRO_ENSURE_OUT_OF_SOURCE_BUILD("${PROJECT_NAME} requires an out of source build. Please create a separate build directory and run 'cmake /path/to/${PROJECT_NAME} [options]' there.")
-
 #####################   options   ####################
 
 OPTION(BUILD_SHARED_LIBS "inhibits building of the static version of the Reflex lib" OFF)
 OPTION(BUILD_TESTS "builds and runs the unit test suite" ON)
+OPTION(FORBID_IN_SOURCE_BUILDS "forbids in-source builds of Reflex" OFF)
+
+#####################   checks    ####################
+
+IF (FORBID_IN_SOURCE_BUILDS)
+   MACRO_ENSURE_OUT_OF_SOURCE_BUILD("${PROJECT_NAME} requires an out of source build. Please create a separate build directory and run 'cmake /path/to/${PROJECT_NAME} [options]' there.")
+ENDIF (FORBID_IN_SOURCE_BUILDS)
 
 #####################   config    ####################
 

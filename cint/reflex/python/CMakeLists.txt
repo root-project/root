@@ -1,24 +1,32 @@
 FIND_PACKAGE(GCCXML)
 FIND_PACKAGE(PythonInterp)
 
+#####################   python    ####################
+
+# if no python interpeter found, force to 'python' and
+# just hope it works (maybe this should be removed?)
+IF (NOT PYTHONINTERP_FOUND)
+   SET(PYTHON_EXECUTABLE "python")
+ENDIF (NOT PYTHONINTERP_FOUND)
+
 #####################   sources   ####################
 
 FILE(GLOB_RECURSE GENREFLEX_SRCS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} genreflex/*.py)
-SET(GENREFLEX_SCRIPT ${CMAKE_CURRENT_BINARY_DIR}/genreflex/genreflex.py PARENT_SCOPE)
+SET(GENREFLEX_SCRIPT ${CMAKE_CURRENT_BINARY_DIR}/genreflex/genreflex.pyc PARENT_SCOPE)
 SET(GENREFLEX_OBJS)
 
 #####################   targets   ####################
 
-# copy modified genreflex sources to the binary
-# dir to avoid polluting the source dir
+# compile modified genreflex sources to the binary dir
+# dir (for out-of-source builds) to avoid polluting the source dir
 FOREACH (f ${GENREFLEX_SRCS})
 
    SET(_in ${CMAKE_CURRENT_SOURCE_DIR}/${f})
-   SET(_out ${CMAKE_CURRENT_BINARY_DIR}/${f})
+   SET(_out ${CMAKE_CURRENT_BINARY_DIR}/${f}c)
 
    ADD_CUSTOM_COMMAND(OUTPUT ${_out}
-                      COMMAND ${CMAKE_COMMAND}
-                      ARGS -E copy ${_in} ${_out}
+                      COMMAND ${PYTHON_EXECUTABLE}
+                      ARGS -c "import py_compile; py_compile.compile('${_in}', '${_out}')"
                       DEPENDS ${_in}
                       VERBATIM)
 
@@ -49,13 +57,6 @@ ENDIF (GCCXML)
 
 #####################  genreflex  ####################
 
-# if no python interpeter found,
-# force to 'python' and just hope it works
-# maybe this should be removed?
-IF (NOT PYTHONINTERP_FOUND)
-   SET(PYTHON_EXECUTABLE "python")
-ENDIF (NOT PYTHONINTERP_FOUND)
-
 # create genreflex script for later installation.
 # todo: this should be more dynamic since installer packages
 # will have the paths set at configure time.
@@ -69,10 +70,10 @@ ENDIF (WIN32)
 
 #####################   install   ####################
 
-INSTALL(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/genreflex
+INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/genreflex
         DESTINATION lib/python
         FILES_MATCHING PATTERN "*.py"
-        PATTERN "genreflex-rootcint.py" EXCLUDE)
+        PATTERN "gccxmlpath.py" EXCLUDE)
 
 INSTALL(PROGRAMS ${_genreflex_filename}
         DESTINATION bin)
