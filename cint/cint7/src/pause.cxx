@@ -2275,108 +2275,126 @@ extern "C" int G__process_cmd(char *line,char *prompt,int *more,int *err
       G__update_stdio();
     }
 
-    else if (strncmp("X",com,1)==0) {
-      /*******************************************************
-       * Execute C/C++ source file. Filename minus extension
-       * must match a function in the source file. This function
-       * will be automatically executed.
-       *******************************************************/ 
-      char *com1;
-      temp=0;
-      while(isspace(string[temp])) temp++;
-      if (string[temp] == '\0') {
-        G__fprinterr(G__serr,"Error: no file specified\n");
-        G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
-                      ,keyword,pipefile);
+    else if (!strncmp("X", com, 1)) {
+      //
+      // Execute C/C++ source file. Filename minus extension
+      // must match a function in the source file. This function
+      // will be automatically executed.
+      //
+      temp = 0;
+      while (isspace(string[temp])) {
+        ++temp;
+      }
+      if (!string[temp]) {
+        G__fprinterr(G__serr, "Error: no file specified\n");
+        G__unredirectoutput(&store_stdout, &store_stderr, &store_stdin, keyword, pipefile);
 #ifdef G__SECURITY
         *err |= G__security_recover(G__serr);
-#endif
+#endif // G__SECURITY
         G__UnlockCriticalSection();
-        return(ignore);
+        return ignore;
       }
       G__store_undo_position();
-      com = strchr(string+temp, '(');
+      com = strchr(string + temp, '(');
       if (com) {
-        char *px = com-1;
+        char* px = com - 1;
         *com = '\0';
-        while(isspace(*px)) *px-- = '\0';
+        while (isspace(*px)) {
+          *px-- = '\0';
+        }
       }
       temp2 = G__prerun;
-      G__prerun = 1;  /* suppress warning message if file already loaded */
-      temp1 = G__loadfile(string+temp);
+      G__prerun = 1;  // suppress warning message if file already loaded
+      temp1 = G__loadfile(string + temp);
       if (temp1 == 1) {
-         G__prerun = 0;
-         G__unloadfile(string+temp);
-         G__storerewindposition();
-         if (G__loadfile(string+temp)) {
-            G__prerun = temp2;
-            G__pause_return=1;
-            G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
-                      ,keyword,pipefile);
-            if(G__security_error) G__cancel_undo_position();
+        G__prerun = 0;
+        G__unloadfile(string + temp);
+        G__storerewindposition();
+        if (G__loadfile(string + temp)) {
+          G__prerun = temp2;
+          G__pause_return = 1;
+          G__unredirectoutput(&store_stdout, &store_stderr, &store_stdin, keyword, pipefile);
+          if (G__security_error) {
+            G__cancel_undo_position();
+          }
 #ifdef G__SECURITY
-            *err |= G__security_recover(G__serr);
-#endif
-            G__UnlockCriticalSection();
-            return(ignore);
-         }
+          *err |= G__security_recover(G__serr);
+#endif // G__SECURITY
+          G__UnlockCriticalSection();
+          return ignore;
+        }
       }
-
       G__prerun = temp2;
-      com1= strrchr(string+temp,'.');
-      if(com) {
-        char *px = com-1;
-        *com='(';
-        while(0==(*px)) *px-- = ' ';
+      char* com1 = strrchr(string + temp, '.');
+      if (com) {
+        char *px = com - 1;
+        *com = '(';
+        while (!*px) {
+          *px-- = ' ';
+        }
       }
       com = com1;
       if (com) {
-         char *s;
-         *com = '\0';
-         s = strrchr(string+temp,'/');
-         if(!s) s=strrchr(string+temp,'\\');
-         if(!s) s=string+temp;
-         else   s++;
-         strcpy(syscom, s);
-         s=syscom;
-         while(s && *s) {
-           if('-'==(*s)) *s='_';
-           ++s;
-         }
-         string = strchr(com+1, '(');
-         if (string)
-           strcat(syscom, string);
-         else
-           strcat(syscom, "()");
-         buf=G__calc_internal(syscom);
-         if(rslt) *rslt = buf;
-         G__in_pause=1;
-         G__valuemonitor(buf,syscom);
-         G__in_pause=0;
+        *com = '\0';
+        char* s = strrchr(string + temp, '/');
+        if (!s) {
+          s = strrchr(string + temp, '\\');
+        }
+        if (!s) {
+          s = string + temp;
+        }
+        else {
+          ++s;
+        }
+        strcpy(syscom, s);
+        s = syscom;
+        while (s && *s) {
+          if (*s == '-') {
+            *s = '_';
+          }
+          ++s;
+        }
+        string = strchr(com + 1, '(');
+        if (string) {
+          strcat(syscom, string);
+        }
+        else {
+          strcat(syscom, "()");
+        }
+        buf = G__calc_internal(syscom);
+        if (rslt) {
+          *rslt = buf;
+        }
+        G__in_pause = 1;
+        G__valuemonitor(buf, syscom);
+        G__in_pause = 0;
 #ifndef G__OLDIMPLEMENTATION1259
-         ::Reflex::Type type(G__value_typenum(buf).FinalType()); 
-         if(type.IsConst()) {
-            if (type.IsPointer()) {
-               G__StrBuf tmp2_sb(G__ONELINE);
-               char *tmp2 = tmp2_sb;
-               char *ptmp = strchr(syscom,')');
-               strcpy(tmp2,ptmp);
-               strcpy(ptmp,"const");
-               strcat(syscom,tmp2);
-            } else {
-               G__StrBuf tmp_sb(G__ONELINE);
-               char *tmp = tmp_sb;
-               sprintf(tmp,"(const %s",syscom+1);
-               strcpy(syscom,tmp);
-            }
-         }
-#endif
-         if(Reflex::Tools::FundamentalType(type.RawType()) != Reflex::kVOID && 0==G__atevaluate(buf)) fprintf(G__sout,"%s\n",syscom);
+        ::Reflex::Type type = G__value_typenum(buf);
+        if (G__get_isconst(type) & (G__CONSTVAR | G__CONSTFUNC)) {
+          G__StrBuf tmp_sb(G__ONELINE);
+          char* tmp = tmp_sb;
+          sprintf(tmp, "(const %s", syscom + 1);
+          strcpy(syscom, tmp);
+        }
+        if (G__get_isconst(type) & G__PCONSTVAR) {
+          G__StrBuf tmp2_sb(G__ONELINE);
+          char* tmp2 = tmp2_sb;
+          char* ptmp = strchr(syscom, ')');
+          strcpy(tmp2, ptmp);
+          strcpy(ptmp, "const");
+          strcat(syscom, tmp2);
+        }
+#endif // G__OLDIMPLEMENTATION1259
+        if (G__get_type(type) && !G__atevaluate(buf)) {
+          fprintf(G__sout, "%s\n", syscom);
+        }
 #ifdef G__SECURITY
-         *err |= G__security_recover(G__serr);
-#endif
-      } else {
-         fprintf(G__sout, "Expecting . in filename\n");
+        *err |= G__security_recover(G__serr);
+#endif // G__SECURITY
+        // --
+      }
+      else {
+        fprintf(G__sout, "Expecting . in filename\n");
       }
     }
 

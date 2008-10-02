@@ -218,9 +218,9 @@ G__IncludePathInfo {
 * G__ExceptionWrapper
 *********************************************************************/
 #ifdef __GNUC__
-#else
+#else // __GNUC__
 #pragma message (FIXME("G__ExceptionWrapper needs to return its offset as char*!"))
-#endif
+#endif // __GNUC__
 int G__ExceptionWrapper(G__InterfaceMethod funcp
                         ,G__value* result7
                         ,char* funcname

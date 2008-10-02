@@ -17,6 +17,7 @@
 #include "Api.h"
 #include "Dict.h"
 
+#include "Reflex/internal/TypeName.h"
 #include "Reflex/Builder/TypeBuilder.h"
 #include "Reflex/Builder/NamespaceBuilder.h"
 #include "Reflex/Builder/FunctionBuilder.h"
@@ -25,6 +26,9 @@
 #include <sstream>
 
 using namespace Cint::Internal;
+
+static int G__call_cppfunc(G__value* return_value, G__param* libp, const ::Reflex::Member ifunc);
+static int G__debug_compiledfunc_arg(FILE* fout, const ::Reflex::Member ifunc, G__param* libp);
 
 namespace Cint {
 namespace Internal {
@@ -1473,21 +1477,20 @@ static int Cint::Internal::G__readansiproto(std::vector<Reflex::Type>& i_params_
             }
             else {
                //fprintf(stderr, "G__readansiproto: search for tagname: '%s' ... \n", buf);
-               tagnum = G__defined_tagname(buf, 1);
+               tagnum = G__defined_tagname(buf, 1); // WARNING: This may cause a template instantiation!
                if (tagnum != -1) {
                   if (G__struct.type[tagnum] == 'e') { // FIXME: Enumerators are not ints!
                      //fprintf(stderr, "G__readansiproto: found enumerator: '%s' ... \n", buf);
                      type = 'u'; // FIXME: cint5 has 'i' here.
                   }
                   else {
-                     // re-evaluate typedef name in case of template class
-                     if (strchr(buf, '<')) {
-                        ::Reflex::Type ty = G__find_typedef(buf);
+                     type = 'u';
+                     if (strchr(buf, '<')) { // Possibly a template id.
+                        ::Reflex::Type ty = G__find_typedef(buf);  // The previous lookup may have created a typedef.
                         if (ty) {
                            typenum = G__get_properties(ty)->typenum;
                         }
                      }
-                     type = 'u';
                   }
                }
                else {
@@ -2820,7 +2823,7 @@ static void G__display_param(FILE* fp, const ::Reflex::Scope scopetagnum, char* 
 static void G__display_func(FILE* fp, const ::Reflex::Member func);
 
 //______________________________________________________________________________
-static void G__rate_parameter_match(G__param* libp, const ::Reflex::Member func, G__funclist* funclist, int recursive)
+void Cint::Internal::G__rate_parameter_match(G__param* libp, const ::Reflex::Member func, G__funclist* funclist, int recursive)
 {
    // Rate the conversion sequence for mapping the argument types to the formal parameter types for each function in funclist.
    //static int depth = -1;
@@ -4087,185 +4090,6 @@ static void G__display_ambiguous(const ::Reflex::Scope& scopetagnum, char* funcn
 }
 
 //______________________________________________________________________________
-struct G__funclist* Cint::Internal::G__add_templatefunc(char *funcnamein, G__param* libp, int hash, G__funclist *funclist, const ::Reflex::Scope &p_ifunc, int isrecursive)
-{
-   // Search matching template function, search by name then parameter.
-   // If match found, expand template, parse as pre-run
-   struct G__Definetemplatefunc *deftmpfunc;
-   struct G__Charlist call_para;
-   /* int env_tagnum=G__get_envtagnum(); */
-   int env_tagnum = G__get_tagnum(p_ifunc);
-   struct G__inheritance *baseclass;
-   ::Reflex::Scope store_friendtagnum = G__friendtagnum;
-   char *funcname;
-   char *ptmplt;
-   char *pexplicitarg = 0;
-
-   funcname = (char*)malloc(strlen(funcnamein) + 1);
-   strcpy(funcname, funcnamein);
-
-   if (env_tagnum != -1) baseclass = G__struct.baseclass[env_tagnum];
-   else               baseclass = &G__globalusingnamespace;
-   if (0 == baseclass->basen) baseclass = 0;
-
-
-   call_para.string = 0;
-   call_para.next = 0;
-   deftmpfunc = &G__definedtemplatefunc;
-
-   ptmplt = strchr(funcname, '<');
-   if (ptmplt)
-   {
-      if (strncmp("operator", funcname, ptmplt - funcname) == 0) {
-         /* We have operator< */
-         if (ptmplt[1] == '<') ptmplt = strchr(ptmplt + 2, '<');
-         else ptmplt = strchr(ptmplt + 1, '<');
-      }
-   }
-   if (ptmplt)
-   {
-      if ((-1 != env_tagnum) && strcmp(funcname, G__struct.name[env_tagnum]) == 0) {
-         /* this is probably a template constructor of a class template */
-         ptmplt = (char*)0;
-      }
-      else {
-         int tmp;
-         *ptmplt = 0;
-         if (G__defined_templatefunc(funcname)) {
-            G__hash(funcname, hash, tmp);
-         }
-         else {
-            pexplicitarg = ptmplt;
-            *ptmplt = '<';
-            ptmplt = (char*)0;
-         }
-      }
-   }
-
-   if (pexplicitarg)
-   {
-      /* funcname="f<int>" ->  funcname="f" , pexplicitarg="int>" */
-      int tmp = 0;
-      *pexplicitarg = 0;
-      ++pexplicitarg;
-      G__hash(funcname, hash, tmp);
-   }
-
-   /* Search matching template function name */
-   while (deftmpfunc->next)
-   {
-      G__freecharlist(&call_para);
-      if (ptmplt) {
-         int itmp = 0;
-         int ip = 1;
-         int c;
-         G__StrBuf buf_sb(G__ONELINE);
-         char *buf = buf_sb;
-         do {
-            c = G__getstream_template(ptmplt, &ip, buf, ",>");
-            G__checkset_charlist(buf, &call_para, ++itmp, 'u');
-         }
-         while (c != '>');
-      }
-      if (deftmpfunc->hash == hash && strcmp(deftmpfunc->name, funcname) == 0 &&
-            (G__matchtemplatefunc(deftmpfunc, libp, &call_para, G__PROMOTION)
-#ifndef G__OLDIMPLEMEMTATION2214
-             || (pexplicitarg && libp->paran == 0)
-#else
-             || pexplicitarg
-#endif
-            )) {
-
-         if (-1 != deftmpfunc->parent_tagnum &&
-               env_tagnum != deftmpfunc->parent_tagnum) {
-            if (baseclass) {
-               int temp;
-               for (temp = 0;temp < baseclass->basen;temp++) {
-                  if (baseclass->basetagnum[temp] == deftmpfunc->parent_tagnum) {
-                     goto match_found;
-                  }
-               }
-            }
-            deftmpfunc = deftmpfunc->next;
-            continue;
-         }
-   match_found:
-         G__friendtagnum = G__Dict::GetDict().GetScope(deftmpfunc->friendtagnum);
-
-         if (pexplicitarg) {
-            int npara = 0;
-            G__gettemplatearglist(pexplicitarg, &call_para
-                                  , deftmpfunc->def_para, &npara
-                                  , -1, 0
-                                 );
-         }
-
-         if (pexplicitarg) {
-            int tmp = 0;
-            G__hash(funcname, hash, tmp);
-         }
-
-         /* matches funcname and parameter,
-          * then expand the template and parse as prerun */
-         G__replacetemplate(
-            funcname
-            , funcnamein
-            , &call_para /* needs to make this up */
-            , deftmpfunc->def_fp
-            , deftmpfunc->line
-            , deftmpfunc->filenum
-            , &(deftmpfunc->def_pos)
-            , deftmpfunc->def_para
-            , 0
-            , SHRT_MAX /* large enough number */
-            , deftmpfunc->parent_tagnum
-         );
-
-         G__friendtagnum = store_friendtagnum;
-
-
-         /* search for instantiated template function */
-         ::Reflex::Member func = p_ifunc.FunctionMemberAt(p_ifunc.FunctionMemberSize() - 1);
-         if (func) {
-            if (
-               strcmp(funcnamein, func.Name().c_str()) == 0
-            ) {
-               if (ptmplt) {
-                  //int tmp;
-                  //*ptmplt='<';
-                  //free((void*)ifunc->funcname[ifn]);
-                  //ifunc->funcname[ifn] = (char*)malloc(strlen(funcnamein)+1);
-                  //strcpy(ifunc->funcname[ifn],funcnamein);
-                  //G__hash(funcnamein,hash,tmp);
-                  //ifunc->hash[ifn] = hash;
-               }
-               if (0 == G__get_funcproperties(func)->entry.p && G__NOLINK == G__globalcomp) {
-                  /* This was only a prototype template, search for definition
-                   * template */
-                  deftmpfunc = deftmpfunc->next;
-                  continue;
-               }
-               funclist = G__funclist_add(funclist, func, 0);
-               if ((int)func.FunctionParameterSize() < libp->paran ||
-                     ((int)func.FunctionParameterSize() > libp->paran &&
-                      !func.FunctionParameterSize(true))) {
-                  funclist->rate = G__NOMATCH;
-               }
-               else {
-                  G__rate_parameter_match(libp, func, funclist, isrecursive);
-               }
-            }
-         }
-         G__freecharlist(&call_para);
-      }
-      deftmpfunc = deftmpfunc->next;
-   }
-   G__freecharlist(&call_para);
-   if (funcname) free((void*)funcname);
-   return funclist;
-}
-
-//______________________________________________________________________________
 static struct G__funclist* G__rate_binary_operator(const ::Reflex::Scope &p_ifunc, G__param *libp, const ::Reflex::Type &tagnum, char* funcname, int /*hash*/, G__funclist *funclist, int isrecursive)
 {
    int i;
@@ -4538,7 +4362,7 @@ static ::Reflex::Scope G__create_scope(const ::Reflex::Member &ifn, const ::Refl
 }
 
 //______________________________________________________________________________
-int Cint::Internal::G__interpret_func(G__value *result7, struct G__param *libp, int hash, const ::Reflex::Member &func, int funcmatch, int memfunc_flag)
+int Cint::Internal::G__interpret_func(G__value *result7, struct G__param *libp, int hash, const ::Reflex::Member func, int funcmatch, int memfunc_flag)
 {
 #ifndef __GNUC__
 #pragma message (FIXME("Remove static buf and this func's overload"))
@@ -4550,7 +4374,7 @@ int Cint::Internal::G__interpret_func(G__value *result7, struct G__param *libp, 
 }
 
 //______________________________________________________________________________
-int Cint::Internal::G__interpret_func(G__value *result7, char* funcname, G__param *libp, int hash, const ::Reflex::Scope &input_ifunc, int funcmatch , int memfunc_flag)
+int Cint::Internal::G__interpret_func(G__value *result7, char* funcname, G__param *libp, int hash, const ::Reflex::Scope input_ifunc, int funcmatch , int memfunc_flag)
 {
    /*  return 1 if function is executed */
    /*  return 0 if function isn't executed */
@@ -5897,7 +5721,9 @@ asm_ifunc_start:   /* loop compilation execution label */
    }
    if (G__RETURN_EXIT1 != G__return) { /* if not exit */
       // return struct and typedef identity
-      G__value_typenum(*result7) = G__replace_rawtype(G__value_typenum(*result7), ifn.TypeOf().ReturnType().RawType());
+      if (G__value_typenum(*result7)) { // if not G__null
+         G__value_typenum(*result7) = G__replace_rawtype(G__value_typenum(*result7), ifn.TypeOf().ReturnType().RawType());
+      }
    }
    if (G__RETURN_TRY != G__return) {
       G__no_exec = 0;
@@ -6057,6 +5883,149 @@ asm_ifunc_start:   /* loop compilation execution label */
    G__memberfunc_tagnum = store_memberfunc_tagnum;
    G__memberfunc_struct_offset = store_memberfunc_struct_offset;
    return 1;
+}
+
+//______________________________________________________________________________
+static int G__call_cppfunc(G__value* return_value, G__param* libp, const ::Reflex::Member ifunc)
+{
+   // -- Calling C++ compiled function.
+   int result = 0;
+   G__InterfaceMethod cppfunc = (G__InterfaceMethod) G__get_funcproperties(ifunc)->entry.p;
+#ifdef G__ASM
+   if (G__asm_noverflow) {
+      // -- We are generating bytecode.
+      if (cppfunc == (G__InterfaceMethod) G__DLL_direct_globalfunc) {
+         // --
+#ifdef G__ASM_DBG
+         if (G__asm_dbg) {
+            G__fprinterr(G__serr, "%3x,%3x: LD_FUNC direct global function '%s' paran: %d  %s:%d\n", G__asm_cp, G__asm_dt, ifunc.Name().c_str(), libp->paran, __FILE__, __LINE__);
+         }
+#endif // G__ASM_DBG
+         G__asm_inst[G__asm_cp] = G__LD_FUNC;
+         G__asm_inst[G__asm_cp+1] = 2;
+         G__asm_inst[G__asm_cp+2] = (long) ifunc.Id();
+         G__asm_inst[G__asm_cp+3] = libp->paran;
+         G__asm_inst[G__asm_cp+4] = (long) cppfunc;
+         G__asm_inst[G__asm_cp+5] = 0;
+         if (ifunc) G__asm_inst[G__asm_cp+5] = G__get_funcproperties(ifunc)->entry.ptradjust;
+         G__inc_cp_asm(6, 0);
+      }
+      else {
+         // --
+#ifdef G__ASM_DBG
+         if (G__asm_dbg) {
+            G__fprinterr(G__serr, "%3x,%3x: LD_FUNC C++ compiled '%s' paran: %d  %s:%d\n", G__asm_cp, G__asm_dt, ifunc.Name().c_str(), libp->paran, __FILE__, __LINE__);
+         }
+#endif // G__ASM_DBG
+         G__asm_inst[G__asm_cp] = G__LD_FUNC;
+         G__asm_inst[G__asm_cp+1] = 0;
+         //FIXME: By going through Type::Id we lose the modifiers.
+         //however the Cint5 code was not really passing it either!
+         {
+            Reflex::Type rtype( ifunc.TypeOf().ReturnType() );
+            if ( rtype.IsFundamental() && ::Reflex::Tools::FundamentalType(rtype) == Reflex::kVOID )
+            {
+               rtype = Reflex::Dummy::Type();
+            } 
+            G__asm_inst[G__asm_cp+2] = (long)rtype.Id();
+         }
+         G__asm_inst[G__asm_cp+3] = libp->paran;
+         G__asm_inst[G__asm_cp+4] = (long) cppfunc;
+         if (ifunc) G__asm_inst[G__asm_cp+5] = G__get_funcproperties(ifunc)->entry.ptradjust;
+         G__inc_cp_asm(6, 0);
+      }
+   }
+#endif // G__ASM
+   *return_value = G__null;
+   G__value_typenum(*return_value) = ifunc.TypeOf().ReturnType();
+#ifdef G__ASM
+   if (G__no_exec_compile) {
+      // -- We are generating bytecode, but not executing.  Do not call function, just return.
+      if (G__value_typenum(*return_value).FinalType().IsPointer()) {
+         return_value->obj.i = (long) G__PVOID;
+      }
+      else {
+         return_value->obj.i = 0;
+      }
+      if (
+         G__value_typenum(*return_value).FinalType().IsClass() &&
+         !G__value_typenum(*return_value).FinalType().IsReference()
+      ) {
+         G__store_tempobject(*return_value); // To free tempobject in pcode
+      }
+      if (G__value_typenum(*return_value).FinalType().IsClass()) {
+         return_value->ref = 1;
+         return_value->obj.i = 1;
+      }
+      return 1;
+   }
+#endif // G__ASM
+   //
+   //  Show function arguments when step into mode.
+   //
+   if (G__breaksignal) {
+      int ret = G__debug_compiledfunc_arg(G__sout, ifunc, libp);
+      if (ret == G__PAUSE_IGNORE) {
+         return 0;
+      }
+   }
+   if (
+      (ifunc.Name()[0] == '~') &&
+      ((long) G__store_struct_offset == 1) &&
+      ifunc.DeclaringScope().IsClass() &&
+      !ifunc.IsStatic()
+   ) {
+      // Object is constructed when G__no_exec_compile is true at loop compilation
+      // and destructed when G__no_exec_compile is false at 2nd iteration.
+      // G__store_struct_offset is set to 1. Need to avoid calling destructor.
+      return 1;
+   }
+   {
+      int store_asm_noverflow = G__asm_noverflow;
+      G__suspendbytecode();
+      long lifn = -2; // ifn;
+      G__CurrentCall(G__SETMEMFUNCENV, ifunc.Id(), &lifn);
+
+      // We store the this-pointer
+      char *save_offset = G__store_struct_offset;
+
+      // this-pointer adjustment
+      G__this_adjustment(ifunc);
+ 
+#ifdef G__EXCEPTIONWRAPPER
+      G__ExceptionWrapper((G__InterfaceMethod) cppfunc, return_value, (char*) ifunc.Id(), libp, -2);
+#else // G__EXCEPTIONWRAPPER
+      (*cppfunc)(return_value, (char*) ifunc.Id(), libp, -2);
+#endif // G__EXCEPTIONWRAPPER
+      // Restore the correct type.
+      if (G__value_typenum(*return_value)) { // if return_value is not G__null
+         G__value_typenum(*return_value) = ifunc.TypeOf().ReturnType();
+      }
+
+      // This-pointer restoring
+      G__store_struct_offset = save_offset;
+
+      G__CurrentCall(G__NOP, 0, 0);
+      result = 1;
+      G__asm_noverflow = store_asm_noverflow;
+   }
+   return result;
+}
+
+//______________________________________________________________________________
+static int G__debug_compiledfunc_arg(FILE* fout, const ::Reflex::Member ifunc, G__param* libp)
+{
+   // -- Show compiled function call parameters.
+   G__StrBuf temp_sb(G__ONELINE);
+   char* temp = temp_sb;
+   fprintf(fout, "\n!!!Calling compiled function %s()\n", ifunc.Name().c_str());
+   G__in_pause = 1;
+   for (int i = 0; i < libp->paran; ++i) {
+      G__valuemonitor(libp->para[i], temp);
+      fprintf(fout, "  arg%d = %s\n", i + 1, temp);
+   }
+   G__in_pause = 0;
+   return G__pause();
 }
 
 //______________________________________________________________________________

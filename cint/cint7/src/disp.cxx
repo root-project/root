@@ -1648,7 +1648,13 @@ int Cint::Internal::G__varmonitor(FILE* fout, const ::Reflex::Scope scope, const
       //
       {
          ::Reflex::Type ty = mbr.TypeOf();
-         sprintf(msg, "%s", G__type2string(G__get_type(ty), G__get_tagnum(ty), G__get_typenum(ty), G__get_reftype(ty), G__get_isconst(ty)));
+         char type = '\0';
+         int tagnum = -1;
+         int typenum = -1;
+         int reftype = 0;
+         int constvar = 0;
+         G__get_cint5_type_tuple(mbr.TypeOf(), &type, &tagnum, &typenum, &reftype, &constvar);
+         sprintf(msg, "%s", G__type2string(type, tagnum, typenum, reftype, constvar));
          //sprintf(msg, "%s::%s", ty.DeclaringScope().Name(::Reflex::SCOPED).c_str(), ty.Name(::Reflex::SCOPED).c_str());
       }
       if (G__more(fout, msg)) {

@@ -4555,8 +4555,7 @@ int Cint::Internal::G__asm_optimize3(int* start)
             ***************************************/
 #ifdef G__ASM_DBG
             if (G__asm_dbg) {
-               G__fprinterr(G__serr, "%3lx: CAST to %c type%d tag%d\n" , pc
-                            , (char)G__asm_inst[pc+1], G__asm_inst[pc+2], G__asm_inst[pc+3]);
+               G__fprinterr(G__serr, "%3lx: CAST to %s\n", pc, reinterpret_cast< ::Reflex::Type*>(G__asm_inst[pc+1])->Name(::Reflex::SCOPED).c_str());
             }
 #endif
             /* need optimization */
@@ -6137,8 +6136,7 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             * sp
             ***************************************/
             if (0 == isthrow) {
-               fprintf(fout, "%3x: CAST to %c type%ld tag%ld\n" , pc
-                       , (char)G__asm_inst[pc+1], G__asm_inst[pc+2], G__asm_inst[pc+3]);
+               fprintf(fout, "%3x: CAST to %s\n", pc, reinterpret_cast< ::Reflex::Type*>(G__asm_inst[pc+1])->Name(::Reflex::SCOPED).c_str());
             }
             pc += 5;
             break;

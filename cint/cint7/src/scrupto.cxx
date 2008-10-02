@@ -123,8 +123,8 @@ static void G__close_inputfiles_upto(G__dictposition* pos)
             char* name = G__struct.name[itag];
             int hash = G__struct.hash[itag];
             char* libname = G__struct.libname[itag];
-            G__struct.name[itag] = 0; // autoload entry - must not delete it, just set it to 0
-            G__struct.libname[itag] = 0; // same here
+            //PSRXXX//G__struct.name[itag] = 0; // autoload entry - must not delete it, just set it to 0 FIXME: Must add this back!
+            //PSRXXX//G__struct.libname[itag] = 0; // same here FIXME: Must add this back!
             int alltag = G__struct.alltag;
             G__struct.alltag = itag + 1; // to only free itag
             G__free_struct_upto(itag);

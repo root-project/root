@@ -1855,7 +1855,7 @@ extern "C" int G__defined_tagname(const char* tagname, int noerror)
    //
    {
       ::Reflex::Scope scope = env_tagnum.LookupScope(atom_tagname);
-      if (p && (scope.DeclaringScope() != env_tagnum)) { // We found something, but not where we asked for it.
+      if (p && scope && (scope.DeclaringScope() != env_tagnum)) { // We found something, but not where we asked for it.
          ::Reflex::Scope decl_scope(scope.DeclaringScope());
          int dtagnum = G__get_tagnum(decl_scope);
          int etagnum = G__get_tagnum(env_tagnum);

@@ -47,7 +47,9 @@ extern "C" void G__letbool(G__value *buf, int type, long value)
 //______________________________________________________________________________
 extern "C" void G__letint(G__value* buf, int type, long value)
 {
-   G__value_typenum(*buf) = G__get_from_type(type, 1);
+   if (type != 'U') {
+      G__value_typenum(*buf) = G__get_from_type(type, 1);
+   }
    switch (type) {
       case 'w': // logic
       case 'r': // unsigned short
@@ -57,7 +59,7 @@ extern "C" void G__letint(G__value* buf, int type, long value)
          buf->obj.uin = value;
          break;
 #ifndef G__BOOL4BYTE
-      case 'g':
+      case 'g': // boolean
 #endif // G__BOOL4BYTE
       case 'b': // unsigned char
          buf->obj.uch = value;

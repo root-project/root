@@ -1933,6 +1933,9 @@ int Cint::Internal::G__fgetstream(char *string,char *endmark)
 *      -----^                   return(')');
 *
 ***********************************************************************/
+
+char G__peekbuf[2048];
+
 //______________________________________________________________________________
 void Cint::Internal::G__fgetstream_peek(char* string, int nchars)
 {

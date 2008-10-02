@@ -157,9 +157,9 @@ void Cint::G__delete_interpreted_object(void* p) {
 *********************************************************************/
 static G__pGenerateDictionary G__GenerateDictionary = 0;
 extern "C" int G__EnableAutoDictionary;
-int G__EnableAutoDictionary = 1;
+int G__EnableAutoDictionary = 0;
 
-void Cint::G__InitGenerateDictionary( G__pGenerateDictionary gdict )
+void Cint::G__InitGenerateDictionary(G__pGenerateDictionary gdict)
 {
   //gdict will be a pointer to TCint_GenerateDictionary
   G__GenerateDictionary = gdict;
@@ -167,7 +167,10 @@ void Cint::G__InitGenerateDictionary( G__pGenerateDictionary gdict )
 
 G__pGenerateDictionary Cint::G__GetGenerateDictionary()
 {
-  return G__EnableAutoDictionary ? G__GenerateDictionary : 0;
+  if (G__EnableAutoDictionary) {
+     return G__GenerateDictionary;
+  }
+  return 0;
 }
 
 /*********************************************************************

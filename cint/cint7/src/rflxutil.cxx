@@ -180,6 +180,29 @@ void Cint::Internal::G__get_cint5_type_tuple(const ::Reflex::Type in_type, char*
 }
 
 //______________________________________________________________________________
+int Cint::Internal::G__get_cint5_typenum(const ::Reflex::Type in_type)
+{
+   //  Get the cint5 typenum part of a cint7 type.
+   //
+   //  Note: This is not right because cint5 can only have certain type nodes
+   //        above a typedef and technically we should allow only those and
+   //        return an error if an invalid node is found, but this is good
+   //        enough for now.
+   //
+   int ret_typenum = -1;
+   for (::Reflex::Type current = in_type; current; current = current.ToType()) {
+      if (current.IsTypedef()) {
+         G__RflxProperties* prop = G__get_properties(current);
+         if (prop) {
+            ret_typenum = prop->typenum;
+         }
+         break;
+      }
+   }
+   return ret_typenum;
+}
+
+//______________________________________________________________________________
 extern "C" int G__value_get_type(G__value *buf)
 {
    return Cint::Internal::G__get_type(*buf);
@@ -1903,6 +1926,7 @@ void Cint::Internal::G__BuilderInfo::AddParameter(int /* ifn */, int type, int n
          // if (!m.IsExplicit() && isexplicit)
          // if (m.IsAbstract() != !ispurevirtual)
          // if (m.IsConst() != isconst)
+         //m.SetTypeOf(fReturnType);
          if (fIspurevirtual & !m.IsAbstract()) {
             if (G__tagdefining) {
                //fprintf(stderr, "G__BuilderInfo::Build: 2 Decrement abstract count for '%s' count: %d -> %d\n", G__p_ifunc.Name(Reflex::SCOPED).c_str(), G__struct.isabstract[G__get_tagnum(G__tagdefining)], G__struct.isabstract[G__get_tagnum(G__tagdefining)] - 1);

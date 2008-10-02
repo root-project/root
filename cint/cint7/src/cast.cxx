@@ -29,6 +29,7 @@ static void G__castclass(G__value* result3, int tagnum, int castflag, int* ptype
 namespace Cint {
 namespace Internal {
 void G__asm_cast(G__value* buf, const Reflex::Type& totype);
+G__value G__castvalue(char* casttype, G__value result3, int bc);
 G__value G__castvalue(char* casttype, G__value result3);
 } // namespace Internal
 } // namespace Cint
@@ -44,7 +45,7 @@ extern "C" long G__int_cast(G__value buf);
 //______________________________________________________________________________
 static void G__SlideString(char* str, unsigned int slide)
 {
-   // -- Do the equivalent of strcpy(str,str+slide);
+   // Do the equivalent of strcpy(str,str+slide);
    unsigned int i = 0;
    while (str[i+slide]) {
       str[i] = str[i+slide];
@@ -56,7 +57,7 @@ static void G__SlideString(char* str, unsigned int slide)
 //______________________________________________________________________________
 static void G__castclass(G__value* result3, int tagnum, int castflag, int* ptype, int reftype, int isconst)
 {
-   // -- FIXME: Describe this function!
+   // FIXME: Describe this function!
    int offset = 0;
    Reflex::Type valueRawType = G__value_typenum(*result3).RawType();
    if (valueRawType.IsClass() ||  valueRawType.IsStruct()) {
@@ -117,7 +118,7 @@ static void G__castclass(G__value* result3, int tagnum, int castflag, int* ptype
    }
    Reflex::Type resultType = G__Dict::GetDict().GetType(tagnum);
    if (isconst) {
-      resultType = Reflex::Type(resultType,Reflex::CONST);
+      resultType = Reflex::Type(resultType, Reflex::CONST);
    }
    if (castflag) {
 
@@ -138,7 +139,7 @@ static void G__castclass(G__value* result3, int tagnum, int castflag, int* ptype
 //______________________________________________________________________________
 void Cint::Internal::G__asm_cast(G__value* buf, const Reflex::Type& totype)
 {
-   // -- FIXME: Describe this function!
+   // FIXME: Describe this function!
    char type = G__get_type(totype);
    char reftype = G__get_reftype(totype);
    switch (type) {
@@ -186,8 +187,7 @@ void Cint::Internal::G__asm_cast(G__value* buf, const Reflex::Type& totype)
          if (type != G__get_type(*buf)) buf->ref = 0; /* questionable */
          G__letint(buf, (char)type , (unsigned char)(G__int_cast(*buf) ? 1 : 0));
          break;
-      case 'U':
-         {
+      case 'U': {
             int offset = G__ispublicbase(G__value_typenum(*buf).RawType(), totype.RawType(), (void*)buf->obj.i);
             if (offset != -1) {
                buf->obj.i += offset;
@@ -217,14 +217,14 @@ void Cint::Internal::G__asm_cast(G__value* buf, const Reflex::Type& totype)
 //______________________________________________________________________________
 void Cint::Internal::G__this_adjustment(const Reflex::Member ifunc)
 {
-   // -- FIXME: Describe this function!
+   // FIXME: Describe this function!
    G__store_struct_offset += G__get_funcproperties(ifunc)->entry.ptradjust;
 }
 
 //______________________________________________________________________________
-G__value Cint::Internal::G__castvalue(char* casttype, G__value result3)
+G__value Cint::Internal::G__castvalue_bc(char* casttype, G__value result3, int bc)
 {
-   // -- FIXME: Describe this function!
+   // FIXME: Describe this function!
    int lenitem, castflag, type;
    int tagnum;
    long offset;
@@ -280,7 +280,7 @@ G__value Cint::Internal::G__castvalue(char* casttype, G__value result3)
    if (strncmp(casttype, "const", 5) == 0) {
       for (lenitem = strlen(casttype) - 1;
             lenitem >= 5 && (casttype[lenitem] == '*' || casttype[lenitem] == '&');
-         lenitem--) {}
+            lenitem--) {}
       if (lenitem >= 5) {
          lenitem++;
          hasstar = casttype[lenitem];
@@ -304,23 +304,24 @@ G__value Cint::Internal::G__castvalue(char* casttype, G__value result3)
 
    /* check if pointer */
    while (casttype[lenitem-1] == '*') {
-      if ((G__security&G__SECURE_CAST2P) &&
-            !G__oprovld && !G__cppconstruct && !G__castcheckoff) {
-         if (isupper(G__get_type(result3)) && (G__value_typenum(result3).ToType().IsClass()||G__value_typenum(result3).ToType().IsStruct())) {
+      if ((G__security&G__SECURE_CAST2P) && !G__oprovld && !G__cppconstruct && !G__castcheckoff) {
+         if (isupper(G__get_type(result3)) && (G__value_typenum(result3).ToType().IsClass() || G__value_typenum(result3).ToType().IsStruct())) {
             /* allow casting between public base-derived */
             casttype[lenitem-1] = '\0';
             tagnum = G__defined_tagname(casttype, 2);
             if (-1 != tagnum) {
+               if (
 #ifdef G__VIRTUALBASE
-               if (-1 != (offset = G__ispublicbase(tagnum, G__get_tagnum(G__value_typenum(result3).RawType())
-                                                   , (void*)result3.obj.i))) {
-#else
-               if (-1 != (offset = G__ispublicbase(tagnum, result3.tagnum))) {
-#endif
+                  - 1 != (offset = G__ispublicbase(tagnum, G__get_tagnum(G__value_typenum(result3).RawType()), (void*)result3.obj.i))
+#else // G__VIRTUALBASE
+                  - 1 != (offset = G__ispublicbase(tagnum, result3.tagnum))
+#endif // G__VIRTUALBASE
+               ) {
                   result3.obj.i += offset;
                   if (isconst) {
-                     G__replace_rawtype(G__value_typenum(result3), Reflex::Type(G__Dict::GetDict().GetType(tagnum),Reflex::CONST));
-                  } else {
+                     G__replace_rawtype(G__value_typenum(result3), Reflex::Type(G__Dict::GetDict().GetType(tagnum), Reflex::CONST));
+                  }
+                  else {
                      G__replace_rawtype(G__value_typenum(result3), G__Dict::GetDict().GetType(tagnum));
                   }
                   return(result3);
@@ -333,8 +334,9 @@ G__value Cint::Internal::G__castvalue(char* casttype, G__value result3)
                   if (offset) {
                      result3.obj.i -= offset;
                      if (isconst) {
-                        G__replace_rawtype(G__value_typenum(result3), Reflex::Type(G__Dict::GetDict().GetType(tagnum),Reflex::CONST));
-                     } else {
+                        G__replace_rawtype(G__value_typenum(result3), Reflex::Type(G__Dict::GetDict().GetType(tagnum), Reflex::CONST));
+                     }
+                     else {
                         G__replace_rawtype(G__value_typenum(result3), G__Dict::GetDict().GetType(tagnum));
                      }
                      return(result3);
@@ -355,7 +357,7 @@ G__value Cint::Internal::G__castvalue(char* casttype, G__value result3)
       while (lenitem > 1 && isspace(casttype[lenitem-1])) casttype[--lenitem] = 0;
    }
 
-   /* this part will be a problem if (type&*) */
+   // this part will be a problem if (type&*)
    if (casttype[lenitem-1] == '&') {
       casttype[--lenitem] = '\0';
       reftype = G__PARAREFERENCE;
@@ -505,7 +507,6 @@ G__value Cint::Internal::G__castvalue(char* casttype, G__value result3)
    }
 
    if (type) {
-
       while (numLong) {
          switch (type) {
             case 'i':
@@ -560,12 +561,12 @@ G__value Cint::Internal::G__castvalue(char* casttype, G__value result3)
       }
 
       if (type == '\0' && strstr(casttype, "(*)")) {
-         /* pointer to function casted to void* */
+         // pointer to function casted to void*
 #ifndef G__OLDIMPLEMENTATION2191
          type = '1';
-#else
+#else // G__OLDIMPLEMENTATION2191
          type = 'Q';
-#endif
+#endif // G__OLDIMPLEMENTATION2191
          // Note Cint 5 code was reseting the typedef value (result3.typenum)
       }
 
@@ -580,28 +581,28 @@ G__value Cint::Internal::G__castvalue(char* casttype, G__value result3)
          }
          else {
             tagnum = G__get_tagnum(typenum);
-            { 
-              // Accumulate the typedef pointer information
-             // into a local version of reftype
-             // to pass down to G__castclass
-             type = G__get_type(typenum);
-             int local_reftype;
-             if (islower(type))
-                type = type + castflag;
-             else {
-                local_reftype = G__get_reftype(typenum);
-                switch (local_reftype) {
-                    case G__PARANORMAL:
-                    case G__PARAREFERENCE:
-                       local_reftype = G__PARAP2P;
-                    break;
-                    default:
-                       local_reftype = local_reftype;
-                    break;
+            {
+               // Accumulate the typedef pointer information
+               // into a local version of reftype
+               // to pass down to G__castclass
+               type = G__get_type(typenum);
+               int local_reftype;
+               if (islower(type))
+                  type = type + castflag;
+               else {
+                  local_reftype = G__get_reftype(typenum);
+                  switch (local_reftype) {
+                     case G__PARANORMAL:
+                     case G__PARAREFERENCE:
+                        local_reftype = G__PARAP2P;
+                        break;
+                     default:
+                        local_reftype = local_reftype;
+                        break;
+                  }
                }
-             }
-              if (G__get_type(typenum)=='u' && tagnum != -1) {
-                 if (
+               if (G__get_type(typenum) == 'u' && tagnum != -1) {
+                  if (
                      G__struct.type[tagnum] == 'e'
                   ) {
                      G__value_typenum(result3) = typenum;
@@ -614,13 +615,14 @@ G__value Cint::Internal::G__castvalue(char* casttype, G__value result3)
                else if ('u' == G__get_type(store_result)) {
                   G__fundamental_conversion_operator(type, -1, G__value_typenum(result3), reftype, isconst, &store_result);
                   return store_result;
-               } else {
+               }
+               else {
                   G__value_typenum(result3) = typenum;
                }
-           }
-           if (castflag) {
-              G__value_typenum(result3) = ::Reflex::PointerBuilder(typenum);
-           }
+            }
+            if (castflag) {
+               G__value_typenum(result3) = ::Reflex::PointerBuilder(typenum);
+            }
          }
       }
       G__var_type = 'p';
@@ -632,34 +634,28 @@ G__value Cint::Internal::G__castvalue(char* casttype, G__value result3)
 
 #ifdef G__ASM
    if (G__asm_noverflow
+      // --
 #ifndef G__OLDIMPLEMENTATION1073
-         && 0 == G__oprovld
-#endif
-      ) {
-      /*********************************************************
-       * CAST
-       *********************************************************/
+      && 0 == G__oprovld
+#endif // G__OLDIMPLEMENTATION1073
+      // --
+   ) {
+      //
+      // CAST
+      //
+      if (bc) {
 #ifdef G__ASM_DBG
-      if (G__asm_dbg && G__asm_noverflow) {
-         G__fprinterr(G__serr, "%3x: CAST to %c\n", G__asm_cp, type);
-      }
-#endif
-      {
-//           ::Reflex::Type castto(G__get_from_type(type, 0, isconst));
-//           bool ispointer = false;
-//           if (!castto) {
-//              castto = G__value_typenum(result3);
-//              if (type == 'U') ispointer = true;
-//           }
-//           castto = G__modify_type(castto, ispointer, reftype, 0, 0, 0);
-         ::Reflex::Type castto = G__value_typenum(result3);
-
+         if (G__asm_dbg && G__asm_noverflow) {
+            G__fprinterr(G__serr, "%3x,%3x: CAST to '%s'  %s:%d\n", G__asm_cp, G__asm_dt, G__value_typenum(result3).Name(::Reflex::SCOPED).c_str(), __FILE__, __LINE__);
+         }
+#endif // G__ASM_DBG
          G__asm_inst[G__asm_cp] = G__CAST;
+         ::Reflex::Type castto = G__value_typenum(result3);
          *(reinterpret_cast<Reflex::Type*>(&(G__asm_inst[G__asm_cp+1]))) = castto;
          G__inc_cp_asm(5, 0);
       }
    }
-#endif /* G__ASM */
+#endif // G__ASM
 
    if (G__security_error) return(result3);
 
@@ -674,31 +670,31 @@ G__value Cint::Internal::G__castvalue(char* casttype, G__value result3)
          break;
       case 'b':
          G__setvalue(&result3, (unsigned char)G__int_cast(store_result));
-         G__value_typenum(result3) = G__get_from_type(type,0);
+         G__value_typenum(result3) = G__get_from_type(type, 0);
          break;
       case 'c':
          G__setvalue(&result3, (char)G__int_cast(store_result));
-         G__value_typenum(result3) = G__get_from_type(type,0);
+         G__value_typenum(result3) = G__get_from_type(type, 0);
          break;
       case 'r':
          G__setvalue(&result3, (unsigned short)G__int_cast(store_result));
-         G__value_typenum(result3) = G__get_from_type(type,0);
+         G__value_typenum(result3) = G__get_from_type(type, 0);
          break;
       case 's':
          G__setvalue(&result3, (short)G__int_cast(store_result));
-         G__value_typenum(result3) = G__get_from_type(type,0);
+         G__value_typenum(result3) = G__get_from_type(type, 0);
          break;
       case 'h':
          G__setvalue(&result3, (unsigned int)G__int_cast(store_result));
-         G__value_typenum(result3) = G__get_from_type(type,0);
+         G__value_typenum(result3) = G__get_from_type(type, 0);
          break;
       case 'i':
          G__setvalue(&result3, (int)G__int_cast(store_result));
-         G__value_typenum(result3) = G__get_from_type(type,0);
+         G__value_typenum(result3) = G__get_from_type(type, 0);
          break;
       case 'k':
          G__setvalue(&result3, (unsigned long)G__int_cast(store_result));
-         G__value_typenum(result3) = G__get_from_type(type,0);
+         G__value_typenum(result3) = G__get_from_type(type, 0);
          break;
       case 'l':
          G__letint(&result3, type , (long)G__int_cast(store_result));
@@ -713,20 +709,26 @@ G__value Cint::Internal::G__castvalue(char* casttype, G__value result3)
          G__letLongdouble(&result3, type , G__Longdouble(store_result));
          break;
       case 'g':
+         // --
 #ifdef G__BOOL4BYTE
          G__letint(&result3, type , (int)(G__int_cast(store_result) ? 1 : 0));
-#else
+#else // G__BOOL4BYTE
          G__letint(&result3, type , (unsigned char)(G__int_cast(store_result) ? 1 : 0));
-#endif
+#endif // G__BOOL4BYTE
          break;
-      default:
-         {
+      default: {
             G__letpointer(&result3, G__int(result3), G__value_typenum(result3));
             if (islower(type)) result3.ref = result3.obj.i;
          }
          break;
    }
-   return(result3);
+   return result3;
+}
+
+//______________________________________________________________________________
+G__value Cint::Internal::G__castvalue(char* casttype, G__value result3)
+{
+   return G__castvalue_bc(casttype, result3, 1);
 }
 
 //______________________________________________________________________________
@@ -740,15 +742,3 @@ extern "C" long G__int_cast(G__value buf)
    return G__convertT<long>(&buf);
 }
 
-/*
- * Local Variables:
- * c-tab-always-indent:nil
- * c-indent-level:3
- * c-continued-statement-offset:3
- * c-brace-offset:-3
- * c-brace-imaginary-offset:0
- * c-argdecl-indent:0
- * c-label-offset:-3
- * compile-command:"make -k"
- * End:
- */

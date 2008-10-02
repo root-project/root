@@ -39,6 +39,26 @@ int G__dlclose(void *handle);
 */
 
 //______________________________________________________________________________
+static char* G__catparam(G__param* libp, int catn, char* connect)
+{
+   // Concatenate parameter string to libp->parameter[0] and return.
+   //
+   // "B<int"   "double"   "5>"     =>    "B<int,double,5>"
+   //
+   // B<int\0
+   //      ^ => p
+   char* p = libp->parameter[0] + strlen(libp->parameter[0]);
+   int lenconnect = strlen(connect);
+   for (int i = 1; i < catn; ++i) {
+      strcpy(p, connect);
+      p += lenconnect;
+      strcpy(p, libp->parameter[i]);
+      p += strlen(libp->parameter[i]);
+   }
+   return libp->parameter[0];
+}
+
+//______________________________________________________________________________
 static void G__gen_PUSHSTROS_SETSTROS()
 {
    // --
@@ -552,7 +572,7 @@ int Cint::Internal::G__explicit_fundamental_typeconv(char* funcname, int hash, G
       if (G__asm_noverflow) {
 #ifdef G__ASM_DBG
          if (G__asm_dbg && G__asm_noverflow) {
-            G__fprinterr(G__serr, "%3x: CAST to %s\n", G__asm_cp, G__value_typenum(*presult3).Name().c_str());
+            G__fprinterr(G__serr, "%3x,%3x: CAST to %s  %s:%d\n", G__asm_cp, G__asm_dt, G__value_typenum(*presult3).Name().c_str(), __FILE__, __LINE__);
          }
 #endif
          G__asm_inst[G__asm_cp] = G__CAST;
