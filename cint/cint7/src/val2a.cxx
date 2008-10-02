@@ -753,7 +753,7 @@ extern "C" char* G__type2string(int type, int tagnum, int typenum_in, int reftyp
          }
       }
    }
-   else if (tagnum != -1) { // class/struct/union/enum/namespace
+   else if (tagnum > 0) { // class/struct/union/enum/namespace [excluding global namespace]
       if (tagnum >= G__struct.alltag || !G__struct.name[tagnum]) {
          strcpy(stringbuf, "(invalid_class)");
          return stringbuf;
