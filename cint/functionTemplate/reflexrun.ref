@@ -10,6 +10,7 @@ get<double>() const
 get<float>() const
 get<int>() const
 getfloat() const
+operator=(const t&)
 set(double)
 set(float)
 set(int)
