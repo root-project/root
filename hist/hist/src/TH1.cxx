@@ -5019,7 +5019,12 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
    }
 
    Int_t newbins = nbins/ngroup;
-   if (xbins) newbins = ngroup;
+   // in the case of xbins ngroup is the new number of bin.
+   //  we need also to recompute ngroup  
+   if (xbins) { 
+      newbins = ngroup;
+      ngroup = nbins/newbins;
+   }
 
    // Save old bin contents into a new array
    Double_t entries = fEntries;
@@ -5067,7 +5072,6 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
       hnew->SetBins(newbins,bins); //this also changes errors array (if any)
       delete [] bins;
    } else if (xbins) {
-      ngroup = newbins;
       hnew->SetBins(newbins,xbins);
    } else {
       hnew->SetBins(newbins,xmin,xmax);
