@@ -56,6 +56,14 @@ void Reflex::Union::HideName() const
 }
 
 //______________________________________________________________________________
+void Reflex::Union::UnhideName() const
+{
+   //  Hide the union from name lookup; forwards to TypeBase and ScopeBase.
+   TypeBase::UnhideName();
+   ScopeBase::UnhideName();
+}
+
+//______________________________________________________________________________
 Reflex::Member Reflex::Union::DataMemberAt(size_t nth) const
 {
 // Return the nth datamember of the union

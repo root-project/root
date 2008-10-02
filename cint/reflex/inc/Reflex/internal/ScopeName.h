@@ -60,9 +60,18 @@ namespace Reflex {
       void DeleteScope() const;
 
 
+      
+      /**
+       * Hide this scope from any lookup by appending the string " @HIDDEN@" to its name.
+       */      
       void HideName();
-
-
+      
+      /**
+       * Un-Hide this scope from any lookup by removing the string " @HIDDEN@" to its name.
+       */
+      void UnhideName();
+      
+      
       /**
       * Name will return a string representation of Name of the Scope
       * @return string representation of the Scope

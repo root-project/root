@@ -72,7 +72,15 @@ namespace Reflex {
       void DeleteType() const;
 
 
+      /**
+       * Hide this type from any lookup by appending the string " @HIDDEN@" to its name.
+       */      
       void HideName();
+
+      /**
+       * Un-Hide this type from any lookup by removing the string " @HIDDEN@" to its name.
+       */
+      void UnhideName();
 
 
       /**

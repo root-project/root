@@ -131,6 +131,17 @@ void Reflex::ScopeName::HideName() {
    }
 }
 
+//-------------------------------------------------------------------------------
+void Reflex::ScopeName::UnhideName() {
+   //-------------------------------------------------------------------------------
+   // Remove the string " @HIDDEN@" to a scope name.
+   static const unsigned int len = strlen(" @HIDDEN@");
+   if ( fName.length() > len && fName[fName.length()-1] == '@' && 0==strcmp(" @HIDDEN@",fName.c_str()+fName.length()-len) ){
+      sScopes().erase(&fName);
+      fName.erase(fName.length()-len);
+      sScopes()[&fName] = this;
+   }
+}
 
 //-------------------------------------------------------------------------------
 Reflex::Scope Reflex::ScopeName::ThisScope() const {

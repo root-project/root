@@ -102,8 +102,17 @@ public:
    */
    virtual void GenerateDict(DictionaryGenerator& generator) const;
 
+   /**
+    * Hide this class from any lookup by appending the string " @HIDDEN@" to its name.
+    */
    virtual void HideName() const;
-
+   
+   /**
+    * Un-Hide class type from any lookup by removing the string " @HIDDEN@" to its name.
+    */
+   virtual void UnhideName() const;
+   
+   
    /**
    * nthDataMember will return the nth data MemberAt of the At
    * @param  nth data MemberAt
@@ -736,7 +745,6 @@ inline Reflex::Reverse_Member_Iterator Reflex::Class::FunctionMember_REnd() cons
    return ScopeBase::FunctionMember_REnd();
 }
 
-
 //-------------------------------------------------------------------------------
 inline void Reflex::Class::HideName() const
 {
@@ -745,6 +753,13 @@ inline void Reflex::Class::HideName() const
    ScopeBase::HideName();
 }
 
+//-------------------------------------------------------------------------------
+inline void Reflex::Class::UnhideName() const
+{
+   //-------------------------------------------------------------------------------
+   TypeBase::UnhideName();
+   ScopeBase::UnhideName();
+}
 
 //-------------------------------------------------------------------------------
 inline bool Reflex::Class::IsAbstract() const

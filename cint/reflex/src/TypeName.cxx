@@ -143,6 +143,17 @@ void Reflex::TypeName::HideName() {
    }
 }
 
+//-------------------------------------------------------------------------------
+void Reflex::TypeName::UnhideName() {
+   //-------------------------------------------------------------------------------
+   // Remove the string " @HIDDEN@" to a type name.
+   static const unsigned int len = strlen(" @HIDDEN@");
+   if ( fName.length() > len && fName[fName.length()-1] == '@' && 0==strcmp(" @HIDDEN@",fName.c_str()+fName.length()-len) ){
+      sTypes().erase(&fName);
+      fName.erase(fName.length()-len);
+      sTypes()[&fName] = this;
+   }
+}
 
 //-------------------------------------------------------------------------------
 Reflex::Type Reflex::TypeName::ThisType() const {

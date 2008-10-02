@@ -49,8 +49,16 @@ public:
     */
    operator Type() const;
 
+   /**
+    * Hide this type from any lookup by appending the string " @HIDDEN@" to its name.
+    */
    virtual void HideName() const;
-
+   
+   /**
+    * Un-Hide this type from any lookup by removing the string " @HIDDEN@" to its name.
+    */
+   virtual void UnhideName() const;
+      
    /**
     * DataMemberAt will return the nth data MemberAt of the At
     * @param  nth data MemberAt

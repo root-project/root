@@ -324,6 +324,13 @@ void Reflex::TypeBase::HideName() const {
    fTypeName->HideName();
 }
 
+//-------------------------------------------------------------------------------
+void Reflex::TypeBase::UnhideName() const {
+   //-------------------------------------------------------------------------------
+   // Remove the string " @HIDDEN@" to a type name.
+   fTypeName->UnhideName();
+}
+
 
 //-------------------------------------------------------------------------------
 Reflex::Member Reflex::TypeBase::MemberByName( const std::string & /* nam */,

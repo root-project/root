@@ -109,10 +109,16 @@ namespace Reflex {
       */
       virtual void GenerateDict(DictionaryGenerator &generator) const;
 
-
+      /**
+       * Hide this type from any lookup by appending the string " @HIDDEN@" to its name.
+       */
       virtual void HideName() const;
-
-
+      
+      /**
+       * Un-Hide this type from any lookup by removing the string " @HIDDEN@" to its name.
+       */
+      virtual void UnhideName() const;
+      
       /** 
       * IsPrivate will check if the scope access is private
       * @return true if scope access is private
@@ -315,6 +321,12 @@ inline void Reflex::Enum::HideName() const {
    ScopeBase::HideName();
 }
 
+//-------------------------------------------------------------------------------
+inline void Reflex::Enum::UnhideName() const {
+   //-------------------------------------------------------------------------------
+   TypeBase::UnhideName();
+   ScopeBase::UnhideName();
+}
 
 //-------------------------------------------------------------------------------
 inline bool Reflex::Enum::IsPrivate() const {

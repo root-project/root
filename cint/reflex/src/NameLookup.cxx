@@ -128,7 +128,7 @@ template<class T> T Reflex::NameLookup::Lookup(bool isTemplateExpanded /* = fals
                         // this is Double32_t or Float16_t
                         type = type.FinalType();
                      }
-		     tmp << type.Name(Reflex::SCOPED|Reflex::QUALIFIED);
+                     tmp << type.Name(Reflex::SCOPED|Reflex::QUALIFIED);
                   } else {
                      tmp << arg;
                   }

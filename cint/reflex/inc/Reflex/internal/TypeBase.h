@@ -728,8 +728,16 @@ namespace Reflex {
       void SetTypeInfo( const std::type_info & ti ) const;
 
 
+      /**
+       * Hide this type from any lookup by appending the string " @HIDDEN@" to its name.
+       */
       virtual void HideName() const;
 
+      /**
+       * Un-Hide this type from any lookup by removing the string " @HIDDEN@" to its name.
+       */
+      virtual void UnhideName() const;
+      
    protected:
 
       /**

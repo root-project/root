@@ -280,6 +280,12 @@ void Reflex::ScopeBase::HideName() const {
    fScopeName->HideName();
 }
 
+//-------------------------------------------------------------------------------
+void Reflex::ScopeBase::UnhideName() const {
+   //-------------------------------------------------------------------------------
+   // Remove the string " @HIDDEN@" to a type name.
+   fScopeName->UnhideName();
+}
 
 //-------------------------------------------------------------------------------
 bool Reflex::ScopeBase::IsTopScope() const {

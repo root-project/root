@@ -641,8 +641,16 @@ namespace Reflex {
       void RemoveUsingDirective( const Scope & ud ) const;
 
 
+      /**
+       * Hide this scope from any lookup by appending the string " @HIDDEN@" to its name.
+       */
       virtual void HideName() const;
-
+      
+      /**
+       * Un-Hide this scope from any lookup by removing the string " @HIDDEN@" to its name.
+       */
+      virtual void UnhideName() const;
+      
    private:
 
       /* no copying */
