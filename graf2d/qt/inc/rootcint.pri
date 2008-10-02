@@ -4,7 +4,7 @@
 # Qmake include file to add the rules to create RootCint Dictionary
 #-------------------------------------------------------------------------
 #
-# $Id: rootcint.pri,v 1.6 2006/04/20 00:51:10 fine Exp $
+# $Id: rootcint.pri,v 1.7 2008/09/25 22:19:24 fine Exp $
 #
 # Copyright (C) 2002 by Valeri Fine.  All rights reserved.
 #
@@ -19,11 +19,11 @@
 #-------------------------------------------------------------------------------------
 # 1. Include this file into your project with QMAKE inlcude statement:
 #
-#    !exists ($(ROOTSYS)/include/rootcint.pri){
+#    !exists ($$(ROOTSYS)/include/rootcint.pri){
 #        message "The Rootcint.pri was not found"
 #    }
-#    exists ($(ROOTSYS)/include/rootcint.pri){
-#       include ($(ROOTSYS)/include/rootcint.pri)
+#    exists ($$(ROOTSYS)/include/rootcint.pri){
+#       include ($$(ROOTSYS)/include/rootcint.pri)
 #    }
 #
 # 2. Provide the list of the class header files followed by the appropriated LinkDef.f file
@@ -33,11 +33,11 @@
 #   For example
 #
 #    . . . 
-#    !exists ($(ROOTSYS)/include/rootcint.pri){
+#    !exists ($$(ROOTSYS)/include/rootcint.pri){
 #        message "The Rootcint.pri was not found"
 #    }
-#    exists ($(ROOTSYS)/include/rootcint.pri){
-#       include ($(ROOTSYS)/include/rootcint.pri)
+#    exists ($$(ROOTSYS)/include/rootcint.pri){
+#       include ($$(ROOTSYS)/include/rootcint.pri)
 #       CREATE_ROOT_DICT_FOR_CLASSES  = ${HEADERS} MyParticle.h MyDetector.h MyEvent.h ShowerMain.h 
 #       CREATE_ROOT_DICT_FOR_CLASSES *= ${HEADERS} RSLinkDef.h
 #    }
@@ -64,14 +64,14 @@ exists ($$ROOTLIBSPRIFILE){
 }
 
 isEmpty(ROOTLIBSPRI) { 
-  exists ($(QTROOTSYSDIR)/include/$$ROOTLIBSPRIFILE){
-     ROOTLIBSPRI = $(QTROOTSYSDIR)/include/$$ROOTLIBSPRIFILE
+  exists ($$(QTROOTSYSDIR)/include/$$ROOTLIBSPRIFILE){
+     ROOTLIBSPRI = $$(QTROOTSYSDIR)/include/$$ROOTLIBSPRIFILE
   }
 }
 
 isEmpty(ROOTLIBSPRI) { 
-  exists ($(ROOTSYS)/include/$$ROOTLIBSPRIFILE){
-     ROOTLIBSPRI = $(ROOTSYS)/include/$$ROOTLIBSPRIFILE
+  exists ($$(ROOTSYS)/include/$$ROOTLIBSPRIFILE){
+     ROOTLIBSPRI = $$(ROOTSYS)/include/$$ROOTLIBSPRIFILE
   }
 }
 
@@ -95,13 +95,13 @@ exists ($$ROOTCINTRULEPRIFILE){
   }
 
 isEmpty(ROOTCINTRULEPRI) { 
-  exists ($(QTROOTSYSDIR)/include/$$ROOTCINTRULEPRIFILE ){
-     ROOTCINTRULEPRI = $(QTROOTSYSDIR)/include/$$ROOTCINTRULEPRIFILE 
+  exists ($$(QTROOTSYSDIR)/include/$$ROOTCINTRULEPRIFILE ){
+     ROOTCINTRULEPRI = $$(QTROOTSYSDIR)/include/$$ROOTCINTRULEPRIFILE 
   }
 }
 isEmpty(ROOTCINTRULEPRI) { 
-  exists ($(ROOTSYS)/include/$$ROOTCINTRULEPRIFILE ){
-     ROOTCINTRULEPRI = $(ROOTSYS)/include/$$ROOTCINTRULEPRIFILE 
+  exists ($$(ROOTSYS)/include/$$ROOTCINTRULEPRIFILE ){
+     ROOTCINTRULEPRI = $$(ROOTSYS)/include/$$ROOTCINTRULEPRIFILE 
   }
 }
 
@@ -111,4 +111,3 @@ isEmpty(ROOTCINTRULEPRI){
 !isEmpty(ROOTCINTRULEPRI){
    include ($$ROOTCINTRULEPRI)
 }
-

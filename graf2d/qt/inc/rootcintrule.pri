@@ -4,7 +4,7 @@
 # Qmake include file to add the rules to create RootCint Dictionary
 #-------------------------------------------------------------------------
 #
-# $Id: rootcintrule.pri,v 1.19 2008/02/15 23:43:42 fine Exp $
+# $Id: rootcintrule.pri,v 1.20 2008/09/25 22:19:24 fine Exp $
 #
 # Copyright (C) 2002 by Valeri Fine.  All rights reserved.
 #
@@ -25,11 +25,11 @@
 #-------------------------------------------------------------------------------------
 # 1. Include this file into your project with QMAKE include statement:
 #
-#    !exists ($(ROOTSYS)/include/rootcintrule.pri){
+#    !exists ($$(ROOTSYS)/include/rootcintrule.pri){
 #        message "The rootcintrules.pri was not found"
 #    }
-#    exists ($(ROOTSYS)/include/rootcintrule.pri){
-#       include ($(ROOTSYS)/include/rootcintrule.pri)
+#    exists ($$(ROOTSYS)/include/rootcintrule.pri){
+#       include ($$(ROOTSYS)/include/rootcintrule.pri)
 #    }
 #
 # 2. Provide the list of the class header files followed by the appropriated LinkDef.h file
@@ -39,10 +39,10 @@
 #   For example
 #
 #    . . . 
-#    !exists ($(ROOTSYS)/include/rootcintrule.pri){
+#    !exists ($$(ROOTSYS)/include/rootcintrule.pri){
 #        message "The rootcintrule.pri was not found"
 #    }
-#    exists ($(ROOTSYS)/include/rootcintrule.pri){
+#    exists ($$(ROOTSYS)/include/rootcintrule.pri){
 #       include ($(ROOTSYS)/include/rootcintrule.pri)
 #       CREATE_ROOT_DICT_FOR_CLASSES  = ${HEADERS} MyParticle.h MyDetector.h MyEvent.h ShowerMain.h 
 #       CREATE_ROOT_DICT_FOR_CLASSES *= ${HEADERS} RSLinkDef.h
@@ -64,8 +64,8 @@ win32 {
   # Required to use dynamic_cast
    CONFIG *= rtti
 }
-includeFile = $(QTROOTSYSDIR)/include
-exists ( $$includeFile ){
+include__File = $$(QTROOTSYSDIR)/include
+exists ( $$include__File ){
 
   DEPENDPATH *= $(QTROOTSYSDIR)/include
 
@@ -78,8 +78,8 @@ exists ( $$includeFile ){
   }
 }
 
-includeFile = $(ROOTSYS)/include
-exists ($$includeFile){
+include__File = $$(ROOTSYS)/include
+exists ($$include__File){
 
   DEPENDPATH *= $(ROOTSYS)/include
 
@@ -104,7 +104,7 @@ exists ($$includeFile){
 
   rootcint.target       = $${ROOT_CINT_TARGET}Dict.cxx 
 
-  win32:  rootcint.commands    +=$(ROOTSYS)\bin\rootcint.exe
+  win32:  rootcint.commands    +="$$(ROOTSYS)\bin\rootcint.exe"
   unix:   rootcint.commands    +=$(ROOTSYS)/bin/rootcint
 
   rootcint.commands    +=  -f $$rootcint.target  -c -p $$DICTDEFINES $(INCPATH) $$CREATE_ROOT_DICT_FOR_CLASSES

@@ -4,7 +4,7 @@
 # Qmake include file to add the rules to create RootCint Dictionary
 #-------------------------------------------------------------------------
 #
-# $Id: rootlibs.pri,v 1.27 2008/02/18 20:47:43 fine Exp $
+# $Id: rootlibs.pri,v 1.28 2008/09/25 22:19:24 fine Exp $
 #
 # Copyright (C) 2002 by Valeri Fine.  All rights reserved.
 #
@@ -47,6 +47,7 @@ unix {
 }
 
 mac {
+#  I dropped using .dylib as extension with 10.5 as MacOS X now allows .so . Fons. 
   QMAKE_EXTENSION_SHLIB = dylib
   CONFIG += no_smart_library_merge
 }
@@ -64,15 +65,15 @@ win32 {
       -include:_G__cpp_setupG__PostScript -include:_G__cpp_setupG__Matrix -include:_G__cpp_setupG__Physics \
       -include:_G__cpp_setupG__Gui1       -include:_G__cpp_setupG__Geom1 
     
-   exists( $(ROOTSYS)/lib/libRIO.lib ) {
+   exists( $$(ROOTSYS)/lib/libRIO.lib ) {
       LIBS	+= -include:_G__cpp_setupG__IO
    }   
 
-   exists( $(ROOTSYS)/lib/libTable.lib ) {
+   exists( $$(ROOTSYS)/lib/libTable.lib ) {
       LIBS	+= -include:_G__cpp_setupG__Table
    }   
 
-   exists( $(ROOTSYS)/lib/libQtRootGui.lib ) {
+   exists( $%(ROOTSYS)/lib/libQtRootGui.lib ) {
       LIBS	+=  -include:_G__cpp_setupG__QtGUI     
    }   
    
@@ -84,38 +85,38 @@ win32 {
     "$(ROOTSYS)/lib/libGeom.lib"   "$(ROOTSYS)/lib/libTable.lib"                                         \
     "$(ROOTSYS)/lib/libGQt.lib"   
     
-   exists( $(ROOTSYS)/lib/libRIO.lib ) {
+   exists( $$(ROOTSYS)/lib/libRIO.lib ) {
       LIBS	+= "$(ROOTSYS)/lib/libRIO.lib" 
    }   
 
-   exists( $(ROOTSYS)/lib/libTable.lib ) {
+   exists( $$(ROOTSYS)/lib/libTable.lib ) {
       LIBS	+=  "$(ROOTSYS)/lib/libTable.lib"
    }   
        
-   exists( $(ROOTSYS)/lib/libQtRootGui.lib ) {
+   exists( $$(ROOTSYS)/lib/libQtRootGui.lib ) {
       LIBS	+=  "$(ROOTSYS)/lib/libQtRootGui.lib"
    }   
 }
 
 unix {
-    libFile = $(QTROOTSYSDIR)/lib/libGQt.$$QMAKE_EXTENSION_SHLIB
+    libFile = $$(QTROOTSYSDIR)/lib/libGQt.$$QMAKE_EXTENSION_SHLIB
     exists ($$libFile ) {
         LIBS += -L$(QTROOTSYSDIR)/lib
         LIBS += -lGQt  
     }
-    libFile = $(QTROOTSYSDIR)/lib/libQtRootGui.$$QMAKE_EXTENSION_SHLIB
+    libFile = $$(QTROOTSYSDIR)/lib/libQtRootGui.$$QMAKE_EXTENSION_SHLIB
     exists ($$libFile ) {
         LIBS += -lQtRootGui
     }
     LIBS	+= $$system(${ROOTSYS}/bin/root-config --glibs)
-    libFile = $(ROOTSYS)/lib/libTable.$$QMAKE_EXTENSION_SHLIB 
+    libFile = $$(ROOTSYS)/lib/libTable.$$QMAKE_EXTENSION_SHLIB 
     exists( $$libFile ) {
         LIBS += -lTable
     }   
     
     LIBS *= -lGQt 
     
-    exists( $(ROOTSYS)/lib/libQtRootGui.$$QMAKE_EXTENSION_SHLIB ) {
+    exists( $$(ROOTSYS)/lib/libQtRootGui.$$QMAKE_EXTENSION_SHLIB ) {
           LIBS	*=  -lQtRootGui  
           message ( "Found Qt extensions library !!!") 
     }
@@ -131,11 +132,11 @@ mac {
   # this trick does not work yet (To be fixed. V.Fine)
       LIBS	+=  $$join( FORCELINKLIST, " -u ")                                                                
 
-      exists( $(ROOTSYS)/lib/libTable.lib ) {
+      exists( $$(ROOTSYS)/lib/libTable.lib ) {
          LIBS	+= -u _G__cpp_setupG__Table
       }   
 
-      exists( $(ROOTSYS)/lib/libQtRootGui.lib ) {
+      exists( $$(ROOTSYS)/lib/libQtRootGui.lib ) {
          LIBS	+=  -u _G__cpp_setupG__QtGUI     
       }
   }
