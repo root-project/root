@@ -120,10 +120,10 @@ void TEveProjectionAxesGL::DrawScales(Bool_t horizontal, TGLFont& font, Float_t 
    // get text format for current axis range and bin width
    fAxisAtt.SetRng(fLabVec.front().second, fLabVec.back().second);
    fAxisPainter.SetAxisAtt(&fAxisAtt);
-   if (minIdx < (Int_t) fLabVec.size())
-      fAxisPainter.SetTextFormat(fLabVec[minIdx+1].second -fLabVec[minIdx].second);
+   if (minIdx + 1 < (Int_t) fLabVec.size())
+      fAxisPainter.SetTextFormat(fLabVec[minIdx+1].second - fLabVec[minIdx].second);
    else
-      fAxisPainter.SetTextFormat(fLabVec[minIdx].second -fLabVec[minIdx-1].second);
+      fAxisPainter.SetTextFormat(fLabVec[minIdx].second - fLabVec[minIdx-1].second);
 
    // move from center out to be symetric
    Int_t nl = fLabVec.size();
