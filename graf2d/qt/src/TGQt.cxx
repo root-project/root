@@ -162,9 +162,11 @@ protected:
    virtual void paintEvent(QPaintEvent *event) {
       if (fPixBuffer) {
          QRect rect = event->rect();
-         QPainter p(this);
-         p.setClipRect(rect);
-         p.drawPixmap(0,0,*fPixBuffer);
+	 {
+            QPainter p(this);
+            p.setClipRect(rect);
+            p.drawPixmap(0,0,*fPixBuffer);
+	 }
          ClearBuffer();
       } else {
          QFrame::paintEvent(event);
@@ -199,7 +201,26 @@ public:
       }
       return  fPixBuffer;
    }
-   void ClearBuffer() {fPixBuffer->fill(Qt::transparent);}
+   void ClearBuffer() { 
+#ifdef R__WIN32
+      fPixBuffer->fill(Qt::transparent);
+#else
+      // X11 workaround. I did not find the good solution yet.
+      QColor q(Qt::lightGray);
+      QPainter p(fPixBuffer);
+      p.fillRect(0,0,fPixBuffer->width()-1, fPixBuffer->height()-1,q);
+#endif
+   }
+   void SetGeometry(int x1,int y2,int w, int h)
+   {
+       // Set the feedback widget postion and geometry
+       if (isHidden() ) {
+          // grab the parent window and move the feedback 
+	  // To be done yet !!!
+       }
+       setGeometry(x1,y2,w, h);
+   }
+
 };
 
 //______________________________________________________________________________
@@ -207,20 +228,20 @@ public:
 //   class TQtFeedBackWidget to back the TCanvas FeedBack mode
 //______________________________________________________________________________
 
-class TQtToggleFeedBack : public TQtPainter {
+class TQtToggleFeedBack {
    TGQt *fGQt;
+   TQtPainter  fFeedBackPainter;
    TQtPainter  *fSavePainter;
 public:
-   TQtToggleFeedBack(TGQt *gqt) : TQtPainter (), fGQt(gqt), fSavePainter(0)
+   TQtToggleFeedBack(TGQt *gqt) : fGQt(gqt), fSavePainter(0)
    {
       // activate temporary TQtFeedBackWidget widget buffer
       if (fGQt->fFeedBackMode) {
          // Save the current painter
-         fSavePainter = fGQt->fQPainter;
-         fGQt->fQPainter = this;
-         begin(fGQt->fFeedBackWidget->PixBuffer());
-         setPen(Qt::darkGray);
-        // qDebug() << fGQt->fFeedBackWidget->PixBuffer()->size();
+         fSavePainter    = fGQt->fQPainter;
+         fGQt->fQPainter = &fFeedBackPainter;
+         fFeedBackPainter.begin(fGQt->fFeedBackWidget->PixBuffer());
+         fFeedBackPainter.setPen(Qt::darkGray);
          fGQt->fFeedBackWidget->show();
       }
    }
@@ -228,7 +249,7 @@ public:
    {
       // Restore the normal painter;
       if (fSavePainter) {
-         end();
+         fFeedBackPainter.end();
          fGQt->fQPainter = fSavePainter;
          fGQt->fFeedBackWidget->update();
       }
@@ -1339,7 +1360,7 @@ void  TGQt::DrawBox(int x1, int y1, int x2, int y2, EBoxMode mode)
 #endif
    TQtLock lock;
    if ( (fSelectedWindow->devType() ==  QInternal::Widget) && fFeedBackMode && fFeedBackWidget) {
-      fFeedBackWidget->setGeometry(x1,y2,x2-x1,y1-y2);
+      fFeedBackWidget->SetGeometry(x1,y2,x2-x1,y1-y2);
       if (fFeedBackWidget->isHidden() ) fFeedBackWidget->show();
       return;
    }
@@ -2081,11 +2102,14 @@ void  TGQt::SetDrawMode(TVirtualX::EDrawMode mode)
             fFeedBackWidget = new TQtFeedBackWidget;
             fFeedBackWidget->setFrameStyle(QFrame::Box);
          }
+	 // This makes no sense on X11 yet due the  
+	 // TQtWidget::setAttribute(Qt::WA_PaintOnScreen) flag
+	 // TQtWidget keeps painting itself over the feedback windows. Wierd !!!
          fFeedBackWidget->setParent((TQtWidget *)fSelectedWindow);
          // reparent if needed
       } else if (fFeedBackWidget) {
          fFeedBackWidget->hide();
-        // reparent
+         // reparent
          fFeedBackWidget->setParent(0);
       }
    }
