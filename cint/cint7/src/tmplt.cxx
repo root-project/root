@@ -3792,7 +3792,7 @@ int Cint::Internal::G__instantiate_templateclass(char* tagnamein, int noerror)
    //
    //  FIXME: Move this all to Reflex.
    //
-   struct G__Definedtemplateclass* class_tmpl = &G__definedtemplateclass;
+   G__Definedtemplateclass* class_tmpl = &G__definedtemplateclass;
    for ( ; class_tmpl->next; class_tmpl = class_tmpl->next) {
       if ( // no match on name, next entry
          (hash != class_tmpl->hash) ||
@@ -3983,7 +3983,8 @@ int Cint::Internal::G__instantiate_templateclass(char* tagnamein, int noerror)
    //  WARNING: If a match is found, tmpl_arg_list will be modified by
    //           having all pointer, reference, and const modifiers removed.
    //
-   if (class_tmpl->specialization) {
+   G__Definedtemplateclass* primary_class_tmpl = class_tmpl;
+   if (primary_class_tmpl->specialization) {
       G__StrBuf expanded_tmpl_args_string_sb(G__LONGLINE);
       char* expanded_tmpl_args_string = expanded_tmpl_args_string_sb;
       strcpy(expanded_tmpl_args_string, "<");
@@ -4018,7 +4019,7 @@ int Cint::Internal::G__instantiate_templateclass(char* tagnamein, int noerror)
    //  then parsing the result as input.
    //
    //fprintf(stderr, "G__instantiate_templateclass: templatename: '%s' tagname '%s' parent: '%s'\n", simple_templatename, tagname, (class_tmpl->parent_tagnum == -1) ? "" : G__struct.name[class_tmpl->parent_tagnum]);
-   G__replacetemplate(simple_templatename, tagname, &tmpl_arg_list, class_tmpl->def_fp, class_tmpl->line, class_tmpl->filenum, &class_tmpl->def_pos, class_tmpl->def_para, class_tmpl->isforwarddecl ? 2 : 1, npara, class_tmpl->parent_tagnum);
+   G__replacetemplate(simple_templatename, tagname, &tmpl_arg_list, class_tmpl->def_fp, class_tmpl->line, class_tmpl->filenum, &class_tmpl->def_pos, primary_class_tmpl->def_para, class_tmpl->isforwarddecl ? 2 : 1, npara, class_tmpl->parent_tagnum);
    //
    //  Get new number of classes to compare against the
    //  old number to see if we actually created any
@@ -4038,7 +4039,7 @@ int Cint::Internal::G__instantiate_templateclass(char* tagnamein, int noerror)
    }
    struct G__Definedtemplatememfunc* tmpl_mbrfunc = &class_tmpl->memfunctmplt;
    for ( ; tmpl_mbrfunc->next; tmpl_mbrfunc = tmpl_mbrfunc->next) {
-      G__replacetemplate(simple_templatename, tagname, &tmpl_arg_list, tmpl_mbrfunc->def_fp, tmpl_mbrfunc->line, tmpl_mbrfunc->filenum, &(tmpl_mbrfunc->def_pos), class_tmpl->def_para, 0, npara, G__get_tagnum(parent_tagnum));
+      G__replacetemplate(simple_templatename, tagname, &tmpl_arg_list, tmpl_mbrfunc->def_fp, tmpl_mbrfunc->line, tmpl_mbrfunc->filenum, &(tmpl_mbrfunc->def_pos), primary_class_tmpl->def_para, 0, npara, G__get_tagnum(parent_tagnum));
    }
    //
    //  Try to find the instantiation.  It may not have been created
@@ -4193,7 +4194,12 @@ int Cint::Internal::G__instantiate_templateclass(char* tagnamein, int noerror)
    //      vector<string,allocator<string> >
    //
    if (intTagnum != -1) {
-      G__settemplatealias(scope_name, tagname, intTagnum, &tmpl_arg_list, class_tmpl->def_para);
+      if (!class_tmpl->spec_arg) {
+         G__settemplatealias(scope_name, tagname, intTagnum, &tmpl_arg_list, class_tmpl->def_para);
+      }
+      else {
+         G__settemplatealias(scope_name, tagname, intTagnum, &tmpl_arg_list, primary_class_tmpl->def_para);
+      }
    }
    //
    //  Restore global state and return.
