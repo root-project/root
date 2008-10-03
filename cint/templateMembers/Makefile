@@ -67,7 +67,7 @@ operatorEqual.log: operatorEqual_C.$(DllSuf)
 	$(CMDECHO)$(CALLROOTEXE) -q -b -l runoperatorEqual.C | grep -v FILE | grep -v tagnum |  $(RemoveDirs)| $(RemoveLeadingDirs) > operatorEqual.log
 
 operatorEqual: operatorEqual.log
-	$(TestDiff)
+	$(TestDiffCintSpecific)
 
 duplicate.log: duplicate_C.$(DllSuf)
 
