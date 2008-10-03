@@ -5,4 +5,5 @@ typedef long time_t;
 #ifndef G__STDSTRUCT
 #pragma setstdstruct
 #endif
+#define 	CLK_TCK (100)
 #endif
