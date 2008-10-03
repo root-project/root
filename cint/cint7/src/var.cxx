@@ -7838,24 +7838,23 @@ extern "C" int G__deleteglobal(void* pin)
    char* p = (char*) pin;
    G__CriticalSection lock;
    ::Reflex::Scope var = ::Reflex::Scope::GlobalScope();
-   for (::Reflex::Member_Iterator m(var.DataMember_End()); m != var.DataMember_Begin(); ++m) {
-
+   for (::Reflex::Member_Iterator m = var.DataMember_Begin(); m != var.DataMember_End(); ++m) {
       if (p == G__get_offset(*m)) {
          G__get_offset(*m) = 0;
          var.RemoveDataMember(*m);
-
       }
-      if (isupper(G__get_type(m->TypeOf())) && G__get_offset(*m) && (p == (*(char**)G__get_offset(*m)))) {
+      else if (
+         isupper(G__get_type(m->TypeOf())) &&
+         G__get_offset(*m) &&
+         (p == (*(char**)G__get_offset(*m)))
+      ) {
          if (G__get_properties(*m)->globalcomp == G__AUTO) {
             free(G__get_offset(*m));
          }
          G__get_offset(*m) = 0;
          var.RemoveDataMember(*m);
-
       }
-
    }
-
    return 0;
 }
 
