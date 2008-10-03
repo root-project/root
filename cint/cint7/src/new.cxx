@@ -325,8 +325,11 @@ G__value Cint::Internal::G__new_operator(char* expression)
       }
       else {
          int int_tagnum = G__defined_tagname(type, 1);
-         G__tagnum = G__Dict::GetDict().GetScope(int_tagnum);
-         if (G__tagnum && !G__tagnum.IsTopScope()) {
+         G__tagnum = ::Reflex::Scope();
+         if (int_tagnum != -1 ) {
+            G__tagnum = G__Dict::GetDict().GetScope(int_tagnum);
+         }
+         if (G__tagnum) {
             var_type = 'u';
          }
          else {
