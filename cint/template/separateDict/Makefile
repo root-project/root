@@ -12,7 +12,8 @@ ROOTCFLAGS   := $(CXXFLAGS) -DUSE_ROOT
 ROOTLIBS     += -lGui
 
 sepDictLibs: sepDictLibs.log
-	$(CMDECHO) diff -b -w sepDictLibs.ref sepDictLibs.log
+	$(TestDiffCintSpecific)
+#	$(CMDECHO) diff -b -w sepDictLibs.ref sepDictLibs.log
 
 
 sepDictLibs.log: run.C libmaster.$(DllSuf) libslave1.$(DllSuf) libslave2.$(DllSuf) sepDictLibs.ref
