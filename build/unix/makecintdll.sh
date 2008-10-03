@@ -56,9 +56,9 @@ if [ "x`echo $MAKELIB | grep build/unix/makelib.sh`" != "x" ]; then
    MAKELIB=`echo $MAKELIB | sed -e "s/ -x//g"`
 fi
 
-CINTDIRL=cint/lib
-CINTDIRI=cint/include
-CINTDIRS=cint/stl
+CINTDIRL=cint/cint/lib
+CINTDIRI=cint/cint/include
+CINTDIRS=cint/cint/stl
 
 clean() {
    rm -f $CINTDIRI/$DLLNAME.dll          $CINTDIRI/$DLLNAME.so.*
