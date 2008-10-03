@@ -34,7 +34,7 @@ class TBits : public TObject {
 
 protected:
 
-   UInt_t   fNbits;         // Number of bits (around fNbytes*8)
+   UInt_t   fNbits;         // Highest bit set + 1
    UInt_t   fNbytes;        // Number of UChars in fAllBits
    UChar_t *fAllBits;       //[fNbytes] array of UChars
 
@@ -200,6 +200,7 @@ inline void TBits::SetBitNumber(UInt_t bitnumber, Bool_t value)
    if (bitnumber >= fNbits) {
       UInt_t new_size = (bitnumber/8) + 1;
       if (new_size > fNbytes) {
+         new_size *= 2;
          UChar_t *old_location = fAllBits;
          fAllBits = new UChar_t[new_size];
          memcpy(fAllBits,old_location,fNbytes);
