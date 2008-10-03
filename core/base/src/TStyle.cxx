@@ -109,6 +109,7 @@ TStyle::TStyle(const char *name, const char *title) : TNamed(name,title)
    //may be a standard style to be initialized
    if (strcmp(name,"Plain") == 0) {
       SetFrameBorderMode(0);
+      SetFrameFillColor(0);
       SetCanvasBorderMode(0);
       SetPadBorderMode(0);
       SetPadColor(0);
