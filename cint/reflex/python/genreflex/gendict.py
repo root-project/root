@@ -67,9 +67,9 @@ class genDictionary(object) :
                   or demangled[posargs - 2] == '_') :
         posname = demangled.find(attrs['name'] + '<');
         if posname :
-          reui = re.compile('\\b(unsigned\\s+int)\\b')
+          reui = re.compile('\\b(unsigned)(\\s+)?([^\w\s])')
           name1 = demangled[posname : posargs]
-          attrs['name'] = reui.sub('unsigned', name1)
+          attrs['name'] = reui.sub('unsigned int\\3', name1)
 #----------------------------------------------------------------------------------
   def start_element(self, name, attrs):
     if 'id' in attrs :
@@ -2290,8 +2290,7 @@ def normalizeFragment(name,alltempl=False,_useCache=True,_cache={}) :
              ['short int',              'short'],
              ['long unsigned int',      'unsigned long'],
              ['unsigned long int',      'unsigned long'],
-             ['long int',               'long'],
-             ['unsigned int',           'unsigned']] :
+             ['long int',               'long']] :
       nor = nor.replace(e[0], e[1])
     return nor
   else : clname = name[:name.find('<')]
