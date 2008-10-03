@@ -4019,7 +4019,7 @@ int Cint::Internal::G__instantiate_templateclass(char* tagnamein, int noerror)
    //  then parsing the result as input.
    //
    //fprintf(stderr, "G__instantiate_templateclass: templatename: '%s' tagname '%s' parent: '%s'\n", simple_templatename, tagname, (class_tmpl->parent_tagnum == -1) ? "" : G__struct.name[class_tmpl->parent_tagnum]);
-   G__replacetemplate(simple_templatename, tagname, &tmpl_arg_list, class_tmpl->def_fp, class_tmpl->line, class_tmpl->filenum, &class_tmpl->def_pos, primary_class_tmpl->def_para, class_tmpl->isforwarddecl ? 2 : 1, npara, class_tmpl->parent_tagnum);
+   G__replacetemplate(simple_templatename, tagname, &tmpl_arg_list, class_tmpl->def_fp, class_tmpl->line, class_tmpl->filenum, &class_tmpl->def_pos, class_tmpl->def_para, class_tmpl->isforwarddecl ? 2 : 1, npara, class_tmpl->parent_tagnum);
    //
    //  Get new number of classes to compare against the
    //  old number to see if we actually created any
@@ -4039,7 +4039,7 @@ int Cint::Internal::G__instantiate_templateclass(char* tagnamein, int noerror)
    }
    struct G__Definedtemplatememfunc* tmpl_mbrfunc = &class_tmpl->memfunctmplt;
    for ( ; tmpl_mbrfunc->next; tmpl_mbrfunc = tmpl_mbrfunc->next) {
-      G__replacetemplate(simple_templatename, tagname, &tmpl_arg_list, tmpl_mbrfunc->def_fp, tmpl_mbrfunc->line, tmpl_mbrfunc->filenum, &(tmpl_mbrfunc->def_pos), primary_class_tmpl->def_para, 0, npara, G__get_tagnum(parent_tagnum));
+      G__replacetemplate(simple_templatename, tagname, &tmpl_arg_list, tmpl_mbrfunc->def_fp, tmpl_mbrfunc->line, tmpl_mbrfunc->filenum, &(tmpl_mbrfunc->def_pos), class_tmpl->def_para, 0, npara, G__get_tagnum(parent_tagnum));
    }
    //
    //  Try to find the instantiation.  It may not have been created
