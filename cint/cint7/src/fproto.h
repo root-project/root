@@ -591,7 +591,7 @@ void* G__FindSym(const char *filename,const char *funcname);
 
 int G__loadfile_tmpfile(FILE *fp);
 
-int G__class_autoloading(int tagnum);
+int G__class_autoloading(int *tagnum);
 
 #ifndef G__OLDIMPLEMENTATION2030
 int G__callfunc0(G__value* result, const Reflex::Member func, struct G__param* libp, void* p, int funcmatch);

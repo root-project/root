@@ -722,8 +722,13 @@ void Cint::Internal::G__clink_header(FILE* fp)
    G__getcintsysdir();
    fprintf(fp, "#include \"%s/%s/inc/G__ci.h\"\n", G__cintsysdir, G__CFG_COREVERSION);
 #elif defined(G__ROOT)
+
+#ifndef ROOT_CINT7_ONLY   
    fprintf(fp,"#include \"cint7/G__ci.h\"\n");
-   //fprintf(fp, "#include \"G__ci.h\"\n");
+#else
+   fprintf(fp, "#include \"G__ci.h\"\n");
+#endif
+
 #else
    fprintf(fp, "#include \"G__ci.h\"\n");
 #endif
@@ -777,8 +782,13 @@ void Cint::Internal::G__cpplink_header(FILE* fp)
    G__getcintsysdir();
    fprintf(fp, "#include \"%s/%s/inc/G__ci.h\"\n", G__cintsysdir, G__CFG_COREVERSION);
 #elif defined(G__ROOT)
-   fprintf(fp,"#include \"cint7/G__ci.h\"\n");
-   //fprintf(fp, "#include \"G__ci.h\"\n");
+
+#ifndef ROOT_CINT7_ONLY
+   fprintf(fp, "#include \"cint7/G__ci.h\"\n");
+#else
+   fprintf(fp, "#include \"G__ci.h\"\n");
+#endif
+
 #else
    fprintf(fp, "#include \"G__ci.h\"\n");
 #endif
@@ -4099,9 +4109,6 @@ void Cint::Internal::G__cppif_genfunc(FILE* fp, FILE* /*hfp*/, int tagnum, const
 }
 
 //______________________________________________________________________________
-int G__class_autoloading(int tagnum);
-
-//______________________________________________________________________________
 int Cint::Internal::G__cppif_returntype(FILE* fp, const ::Reflex::Member& ifunc, char* endoffunc)
 {
    // -- FIXME: Describe this function!
@@ -4262,7 +4269,7 @@ int Cint::Internal::G__cppif_returntype(FILE* fp, const ::Reflex::Member& ifunc,
       case 'u':
          switch (G__struct.type[tagnum]) {
             case 'a':
-               G__class_autoloading(tagnum);
+               G__class_autoloading(&tagnum);
             case 'c':
             case 's':
             case 'u':

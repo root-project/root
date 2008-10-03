@@ -42,7 +42,6 @@ int G__isenclosingclassbase(const ::Reflex::Scope enclosingtagnum, const ::Refle
 int G__isenclosingclassbase(int enclosingtagnum, int env_tagnum);
 char* G__find_first_scope_operator(char* name);
 char* G__find_last_scope_operator(char* name);
-int G__class_autoloading(int tagnum);
 ::Reflex::Type G__find_type(const char* type_name, int /*errorflag*/, int /*templateflag*/);
 ::Reflex::Member G__add_scopemember(::Reflex::Scope envvar, const char* varname, const ::Reflex::Type type, int reflex_modifiers, size_t reflex_offset, char* offset, int var_access, int var_statictype);
 void G__define_struct(char type);
@@ -497,8 +496,17 @@ char* Cint::Internal::G__find_last_scope_operator(char* name)
 }
 
 //______________________________________________________________________________
-int Cint::Internal::G__class_autoloading(int tagnum)
+int Cint::Internal::G__class_autoloading(int* ptagnum)
 {
+   // Load the library containing the class tagnum, according to
+   // G__struct.libname[tagnum] set via G__set_class_autloading_table().
+   // As a request to load vector<Long64_t> can result in vector<long long>
+   // beging loaded, the requested tagnum and the loaded tagnum need not
+   // be identical, i.e. G__class_autolading can change the tagnum to
+   // point to the valid class with dictionary. The previous G__struct entry
+   // is marked as an "ex autoload entry" so no name lookup can find it anymore.
+
+   int& tagnum = *ptagnum;
    if (!G__enable_autoloading || (tagnum < 0)) {
       return 0;
    }
@@ -536,10 +544,28 @@ int Cint::Internal::G__class_autoloading(int tagnum)
                store_def_tagnum = G__def_tagnum;
                store_tagdefining = G__tagdefining;
                G__tagdefining = G__def_tagnum = G__Dict::GetDict().GetScope(G__struct.parent_tagnum[tagnum]);
-               int found_tagnum = G__defined_tagname(G__struct.name[tagnum], 3);
+
+               // Find the corresponding Reflex type (This must be done before
+               // modifying G__struct.name since GetType uses it to find the Reflex Type!).
+               ::Reflex::Type autoloadcl = G__Dict::GetDict().GetType( tagnum );
+
+               // "hide" tagnum's name: we want to check whether this auto-loading loaded
+               // another version of the same class, e.g. because of vector<Long64_t>
+               // being requested but vector<long long> being loaded:
+               std::string origName(G__struct.name[tagnum]);
+               if (G__struct.name[tagnum][0]) {
+                  G__struct.name[tagnum][0] = '@';
+               }
+               // Also hide the Reflex Type.
+               if (autoloadcl.ToTypeBase()) {
+                  autoloadcl.ToTypeBase()->HideName();
+               }
+               
+               int found_tagnum = G__defined_tagname(origName.c_str(), 3);
+ 
                G__def_tagnum = store_def_tagnum;
                G__tagdefining = store_tagdefining;
-               if (found_tagnum != tagnum) {
+               if (found_tagnum != -1 && found_tagnum != tagnum) {
                   // The autoload has seemingly failed!
                   // This can happens in 'normal' case if the string representation of the
                   // type registered by the autoloading mechanism is actually a typedef
@@ -552,7 +578,15 @@ int Cint::Internal::G__class_autoloading(int tagnum)
                   strcat(G__struct.name[tagnum], old);
                   G__struct.type[tagnum] = 0;
                   free(old);
-               }
+                  tagnum = found_tagnum;
+               } else {
+                  if (G__struct.name[tagnum][0]) {
+                     G__struct.name[tagnum][0] = origName[0];
+                  }
+                  if (autoloadcl.ToTypeBase()) {
+                     autoloadcl.ToTypeBase()->UnhideName();
+                  }                  
+               }                  
             }
          }
          G__enable_autoloading = 1;
@@ -1887,9 +1921,9 @@ extern "C" int G__defined_tagname(const char* tagname, int noerror)
       if (scope) {
          // -- Success, we found the class/struct/union/enum/namespace.
          // Now try to autoload the class library, if requested.
-         long tagnum = G__get_tagnum(scope);
+         int tagnum = G__get_tagnum(scope);
          if (noerror < 3) {
-            G__class_autoloading(tagnum);
+            G__class_autoloading(&tagnum);
          }
          // And return the final result.
          return tagnum;
@@ -1938,9 +1972,9 @@ extern "C" int G__defined_tagname(const char* tagname, int noerror)
       if (scope) {
          // -- Success, we found the class/struct/union/enum/namespace.
          // Now try to autoload the class library, if requested.
-         long tagnum = G__get_tagnum(scope);
+         int tagnum = G__get_tagnum(scope);
          if (noerror < 3) {
-            G__class_autoloading(tagnum);
+            G__class_autoloading(&tagnum);
          }
          // And return the final result.
          return tagnum;
@@ -1982,7 +2016,7 @@ extern "C" int G__defined_tagname(const char* tagname, int noerror)
          // -- Found a typedef.
          // Now autoload the class library, if requested.
          if (noerror < 3) {
-            G__class_autoloading(i);
+            G__class_autoloading(&i);
          }
          return i;
       }
