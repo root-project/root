@@ -279,9 +279,10 @@ Bool_t TTreeCache::FillBuffer()
       if (!lbaskets || !entries) continue;
       //we have found the branch. We now register all its baskets
       //from the requested offset to the basket below fEntrymax
+      Int_t blistsize = b->GetListOfBaskets()->GetSize();
       for (Int_t j=0;j<nb;j++) {
          // This basket has already been read, skip it
-         if (b->GetListOfBaskets()->UncheckedAt(j)) continue;
+         if (j<blistsize && b->GetListOfBaskets()->UncheckedAt(j)) continue;
 
          Long64_t pos = b->GetBasketSeek(j);
          Int_t len = lbaskets[j];
