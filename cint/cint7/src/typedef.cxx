@@ -1303,104 +1303,105 @@ int G__search_typename(const char *typenamein,int typein
 }
                                      
 // FIXME: This might be part of the new interface.
-::Reflex::Type Cint::Internal::G__declare_typedef(
-   const char *typenamein,int typein,int tagnum,int reftype,
-   int isconst, int globalcomp,
-   int parent_tagnum,
-   bool pointer_fix)
+//______________________________________________________________________________
+::Reflex::Type Cint::Internal::G__declare_typedef(const char* typenamein, int typein, int tagnum, int reftype, int isconst, int globalcomp, int parent_tagnum, bool pointer_fix)
 {
    // PointerFix is for G__search_typename replacement.
+   //
+   // WARNING: typenamein must not be scoped!
+   //
 
-  int len;
-  char ispointer=0;
+   int len;
+   char ispointer = 0;
 
-  G__StrBuf type_name_sb(G__LONGLINE);
-  char *type_name = type_name_sb;
-  strcpy(type_name,typenamein);
-  /* keep uniqueness for pointer to function typedefs */
+   G__StrBuf type_name_sb(G__LONGLINE);
+   char *type_name = type_name_sb;
+   strcpy(type_name, typenamein);
+   /* keep uniqueness for pointer to function typedefs */
 #ifndef G__OLDIMPLEMENTATION2191
-  if('1'==typein) G__make_uniqueP2Ftypedef(type_name);
+   if ('1' == typein) G__make_uniqueP2Ftypedef(type_name);
 #else
-  if('Q'==typein) G__make_uniqueP2Ftypedef(type_name);
+   if ('Q' == typein) G__make_uniqueP2Ftypedef(type_name);
 #endif
-  
-  // FIXME: similar to G__find_typedef except for the
-  // source of the scope (here its G__static_parent_tagnum)
-  if (pointer_fix){
-     len=strlen(type_name);
-     if(
-        len &&
-        type_name[len-1]=='*') {
-           type_name[--len]='\0';
-           ispointer = 'A' - 'a';
-     }
-  }
 
-  ::Reflex::Scope scope = G__Dict::GetDict().GetScope(parent_tagnum);
-  ::Reflex::Type typedf = scope.LookupType(type_name);
+   // FIXME: similar to G__find_typedef except for the
+   // source of the scope (here its G__static_parent_tagnum)
+   if (pointer_fix) {
+      len = strlen(type_name);
+      if (
+         len &&
+         type_name[len-1] == '*') {
+         type_name[--len] = '\0';
+         ispointer = 'A' - 'a';
+      }
+   }
 
-  if (pointer_fix && typedf && typedf.IsTypedef()) {
-     G__var_type=G__get_type(typedf) + ispointer ;
-  }
+   ::Reflex::Scope scope = G__Dict::GetDict().GetScope(parent_tagnum);
+   ::Reflex::Type typedf = scope.LookupType(type_name);
 
-  /* allocate new type table entry */
-  if(!typedf && typein) {
-    /*
-    if( some memory threshold is reached ) {
-      G__fprinterr(G__serr,
-              "Limitation: Number of typedef exceed %d FILE:%s LINE:%d\nFatal error, exit program. Increase G__MAXTYPEDEF in G__ci.h and recompile %s\n"
-              ,G__MAXTYPEDEF ,G__ifile.name ,G__ifile.line_number ,G__nam);
-      G__eof=1;
-      G__var_type = 'p';
-      return(-1);
-    }
-    */
-    
-     ::Reflex::Type baseType;
-     if (tagnum > -1) {
-        baseType = G__Dict::GetDict().GetType(tagnum);
-     } else {
-        baseType = G__get_from_type(typein,false);
-     }
-     if (!baseType.Id()) {
-        //Cint::Internal::G__dumpreflex();
-        G__fprinterr(G__serr,"Internal error: G__declare_typedef could not find the type for tagnum==%d (to define %s as %s)",
-           tagnum,type_name,G__fulltagname(tagnum,0));
-        G__genericerror((char*)NULL);
-        return typedf;
-     }
-     ::Reflex::Type newType = 
-        G__modify_type(baseType,ispointer||isupper(typein),reftype,isconst,0,0);
-     
-     std::string fullname;
-     if (parent_tagnum!=-1) {
-        fullname = G__fulltagname(parent_tagnum,0); // parentScope.Name(SCOPED);
-        if (fullname.length())
-           fullname += "::";
-     }
-     fullname += type_name;
-     //if (newType.Name(::Reflex::SCOPED) != fullname) {
-        ::Reflex::Type result = 
-           ::Reflex::TypedefTypeBuilder(fullname.c_str(),newType);
-        G__RflxProperties *prop = G__get_properties(result);
-        if (prop) {
-           prop->globalcomp = globalcomp;
+   if (pointer_fix && typedf && typedf.IsTypedef()) {
+      G__var_type = G__get_type(typedf) + ispointer ;
+   }
+
+   /* allocate new type table entry */
+   if (!typedf && typein) {
+      /*
+      if( some memory threshold is reached ) {
+        G__fprinterr(G__serr,
+                "Limitation: Number of typedef exceed %d FILE:%s LINE:%d\nFatal error, exit program. Increase G__MAXTYPEDEF in G__ci.h and recompile %s\n"
+                ,G__MAXTYPEDEF ,G__ifile.name ,G__ifile.line_number ,G__nam);
+        G__eof=1;
+        G__var_type = 'p';
+        return(-1);
+      }
+      */
+
+      ::Reflex::Type baseType;
+      if (tagnum > -1) {
+         baseType = G__Dict::GetDict().GetType(tagnum);
+      }
+      else {
+         baseType = G__get_from_type(typein, false);
+      }
+      if (!baseType.Id()) {
+         //Cint::Internal::G__dumpreflex();
+         G__fprinterr(G__serr, "Internal error: G__declare_typedef could not find the type for tagnum==%d (to define %s as %s)",
+                      tagnum, type_name, G__fulltagname(tagnum, 0));
+         G__genericerror((char*)NULL);
+         return typedf;
+      }
+      ::Reflex::Type newType =
+         G__modify_type(baseType, ispointer || isupper(typein), reftype, isconst, 0, 0);
+
+      std::string fullname;
+      if (parent_tagnum != -1) {
+         fullname = G__fulltagname(parent_tagnum, 0); // parentScope.Name(SCOPED);
+         if (fullname.length())
+            fullname += "::";
+      }
+      fullname += type_name;
+      //if (newType.Name(::Reflex::SCOPED) != fullname) {
+      ::Reflex::Type result =
+         ::Reflex::TypedefTypeBuilder(fullname.c_str(), newType);
+      G__RflxProperties *prop = G__get_properties(result);
+      if (prop) {
+         prop->globalcomp = globalcomp;
 
 #ifdef G__TYPEDEFFPOS
-           prop->filenum = G__ifile.filenum;
-           prop->linenum = G__ifile.line_number;
+         prop->filenum = G__ifile.filenum;
+         prop->linenum = G__ifile.line_number;
 #endif
-           //fprintf(stderr, "Registering typedef '%s'\n", result.Name().c_str());
-           prop->typenum = G__Dict::GetDict().Register(result);
-           if (tagnum!=-1)
-              prop->tagnum = tagnum;
-           else
-              prop->tagnum = G__get_tagnum(newType.RawType());
-        }
-        typedf = result;
-     //}
-  }
-  return(typedf);
+         //fprintf(stderr, "Registering typedef '%s'\n", result.Name().c_str());
+         prop->typenum = G__Dict::GetDict().Register(result);
+         if (tagnum != -1)
+            prop->tagnum = tagnum;
+         else
+            prop->tagnum = G__get_tagnum(newType.RawType());
+      }
+      typedf = result;
+      //}
+   }
+   return(typedf);
 }
 
 #ifndef __CINT__

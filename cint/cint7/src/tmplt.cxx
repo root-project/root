@@ -150,7 +150,7 @@ static void G__instantiate_templatememfunclater(G__Definedtemplateclass* deftmpc
 static void G__freetemplatememfunc(G__Definedtemplatememfunc* memfunctmplt);
 
 static void G__cattemplatearg(char* template_id, G__Charlist* tmpl_arg_list, int npara = 0);
-static int G__settemplatealias(char* tagnamein, char* tagname, int tagnum, G__Charlist* tmpl_arg_list, G__Templatearg* defpara, int encscope);
+static void G__settemplatealias(const char* scope_name, const char* template_id, int tagnum, G__Charlist* tmpl_arg_list, G__Templatearg* tmpl_param);
 static struct G__Definedtemplateclass* G__resolve_specialization(char* tmpl_args_string, G__Definedtemplateclass* class_tmpl, G__Charlist* expanded_tmpl_arg_list);
 static void G__modify_callpara(G__Templatearg* spec_arg, G__Templatearg* tmpl_arg, G__Charlist* expanded_tmpl_arg);
 static void G__delete_string(char* str, char* del);
@@ -3465,34 +3465,34 @@ int Cint::Internal::G__instantiate_templateclass(char* tagnamein, int noerror)
       // list, then create a typedef to map the name as provided
       // to the actual name with all the default arguments filled in.
 #if 0
-      ::Reflex::Type typenum;
-      int templatearg_enclosedscope = G__templatearg_enclosedscope;
-      G__templatearg_enclosedscope = store_templatearg_enclosedscope;
-      G__StrBuf tagname_sb(G__LONGLINE);
-      char* tagname = tagname_sb;
-      strcpy(tagname, tagnamein);
-      std::string tmp = tagname;
-      G__cattemplatearg(tagname, &tmpl_arg_list, npara);
-      std::string short_name = tagname;
-      strcpy(tagname, tmp.c_str());
-      G__cattemplatearg(tagname, &tmpl_arg_list);
-      ::Reflex::Scope tagnum;
-      long intTagnum = G__defined_tagname(tagname, 1);
-      if (intTagnum != -1) {
-         tagnum = G__Dict::GetDict().GetScope(intTagnum);
-      }
-      else {
-         tagnum = Reflex::Dummy::Scope();
-      }
-      G__settemplatealias(tagnamein, tagname, intTagnum, &tmpl_arg_list, class_tmpl->def_para, 0); // FIXME: No enclosedscope?
-      ::Reflex::Scope parent_tagnum;
-      if ((short_name != tagname) && !G__find_typedef(short_name.c_str())) {
-         parent_tagnum = tagnum.DeclaringScope();
-         typenum = G__declare_typedef(short_name.c_str(), 'u', G__get_tagnum(tagnum), G__PARANORMAL, 0, G__globalcomp, G__get_tagnum(parent_tagnum), false);
-         if (defarg == 3) {
-            G__struct.defaulttypenum[G__get_tagnum(tagnum)] = typenum; // FIXME: This should be G__get_typenum(typenum)!
+         ::Reflex::Type typenum;
+         int templatearg_enclosedscope = G__templatearg_enclosedscope;
+         G__templatearg_enclosedscope = store_templatearg_enclosedscope;
+         G__StrBuf tagname_sb(G__LONGLINE);
+         char* tagname = tagname_sb;
+         strcpy(tagname, tagnamein);
+         std::string tmp = tagname;
+         G__cattemplatearg(tagname, &tmpl_arg_list, npara);
+         std::string short_name = tagname;
+         strcpy(tagname, tmp.c_str());
+         G__cattemplatearg(tagname, &tmpl_arg_list);
+         ::Reflex::Scope tagnum;
+         long intTagnum = G__defined_tagname(tagname, 1);
+         if (intTagnum != -1) {
+            tagnum = G__Dict::GetDict().GetScope(intTagnum);
          }
-      }
+         else {
+            tagnum = Reflex::Dummy::Scope();
+         }
+         G__settemplatealias(tagnamein, tagname, intTagnum, &tmpl_arg_list, class_tmpl->def_para, 0); // FIXME: No enclosedscope?
+         ::Reflex::Scope parent_tagnum;
+         if ((short_name != tagname) && !G__find_typedef(short_name.c_str())) {
+            parent_tagnum = tagnum.DeclaringScope();
+            typenum = G__declare_typedef(short_name.c_str(), 'u', G__get_tagnum(tagnum), G__PARANORMAL, 0, G__globalcomp, G__get_tagnum(parent_tagnum), false);
+            if (defarg == 3) {
+               G__struct.defaulttypenum[G__get_tagnum(tagnum)] = typenum; // FIXME: This should be G__get_typenum(typenum)!
+            }
+         }
 #endif // 0
       int templatearg_enclosedscope = G__templatearg_enclosedscope;
       G__templatearg_enclosedscope = store_templatearg_enclosedscope;
@@ -3743,11 +3743,14 @@ int Cint::Internal::G__instantiate_templateclass(char* tagnamein, int noerror)
    //
    G__StrBuf atom_name_sb(G__LONGLINE);
    char* atom_name = atom_name_sb;
+   strcpy(atom_name, templatename);
+   G__StrBuf scope_name_sb(G__LONGLINE);
+   char* scope_name = scope_name_sb;
+   scope_name[0] = '\0';
    ::Reflex::Scope given_scope;
    int hash = 0;
    int temp = 0;
    {
-      strcpy(atom_name, templatename);
       char* patom = atom_name;
       //
       //  Advance to the final component of a scoped name.
@@ -3762,24 +3765,25 @@ int Cint::Internal::G__instantiate_templateclass(char* tagnamein, int noerror)
       //
       if (patom != atom_name) { // A scope was given.
          *(patom - 2) = 0; // terminate scope name
-         if (
-            !atom_name[0] ||
-            !strcmp(atom_name, "::") // FIXME: This can never be true!
-         ) { // the given scope is the global scope
-            given_scope = ::Reflex::Scope::GlobalScope();
-         }
-         else { // not given as global scope
-            int int_tagnum = G__defined_tagname(atom_name, 0); // Get specified scope.  WARNING: This may cause a template instantiation!
-            if (int_tagnum != -1) {
-               given_scope = G__Dict::GetDict().GetScope(int_tagnum);
-            }
-         }
+         strcpy(scope_name, atom_name);
          // Copy the atom name down.
          p = atom_name;
          while (*patom) {
             *p++ = *patom++;
          }
          *p = 0;
+         if (
+            !scope_name[0] ||
+            !strcmp(scope_name, "::") // FIXME: This can never be true!
+         ) { // the given scope is the global scope
+            given_scope = ::Reflex::Scope::GlobalScope();
+         }
+         else { // not given as global scope
+            int int_tagnum = G__defined_tagname(scope_name, 0); // Get specified scope.  WARNING: This may cause a template instantiation!
+            if (int_tagnum != -1) {
+               given_scope = G__Dict::GetDict().GetScope(int_tagnum);
+            }
+         }
       }
       G__hash(atom_name, hash, temp)
    }
@@ -4157,6 +4161,43 @@ int Cint::Internal::G__instantiate_templateclass(char* tagnamein, int noerror)
          class_tmpl->instantiatedtagnum = G__IntList_new(intTagnum, 0);
       }
    }
+   // Create a set of typedefs which map to the canonical
+   // instantiation we just created.
+   //
+   // The constructed typedefs start from a base name constructed
+   // by taking the provided name, adding in all default template
+   // arguments, and then removing any and all "std::" from the
+   // resulting set of template arguments.  Note that this base
+   // name should be the same as the canonical instantiation we
+   // just looked up or created.
+   //
+   // For example, given:
+   //
+   //      vector<std::string>
+   //
+   // the base name will be:
+   //
+   //      vector<string,allocator<string> >
+   //
+   // The first typedef created has only the required template
+   // arguments, and further typedefs are created by adding the
+   // default arguments one-by-one until one before the last
+   // argument.
+   //
+   // So continuing the example we will make this set of typedefs:
+   //
+   //      vector<string>
+   //
+   // but not:
+   //
+   //      vector<string,allocator<string> >
+   //
+   if (intTagnum != -1) {
+      G__settemplatealias(scope_name, tagname, intTagnum, &tmpl_arg_list, class_tmpl->def_para);
+   }
+   //
+   //  Restore global state and return.
+   //
    G__def_tagnum = store_def_tagnum;
    G__tagdefining = store_tagdefining;
    G__constvar = store_constvar;
@@ -4196,54 +4237,68 @@ static void G__cattemplatearg(char* template_id, G__Charlist* tmpl_arg_list, int
 }
 
 //______________________________________________________________________________
-static int G__settemplatealias(char* tagnamein, char* tagname, int tagnum, G__Charlist* tmpl_arg_list, G__Templatearg* defpara, int encscope)
+static void G__settemplatealias(const char* scope_name, const char* template_id, int tagnum, G__Charlist* tmpl_arg_list, G__Templatearg* tmpl_param)
 {
-   char* p = strchr(tagname, '<');
+   // Declare a set of typedefs mapping short names for the passed
+   // template instantiation to the canonical name.
+   //
+   // Note:  This routine expects tagnamein to be fully expanded
+   //        with default arguments.
+   //
+   G__StrBuf short_name_sb(G__LONGLINE);
+   char* short_name = short_name_sb;
+   strcpy(short_name, template_id);
+   char* p = strchr(short_name, '<');
    if (p) {
       ++p;
    }
    else {
-      p = tagname + strlen(tagname);
+      p = short_name + strlen(short_name);
       *p++ = '<';
    }
-   // B<int,5*2>
-   //   ^ => p
-   while (tmpl_arg_list->next) {
-      if (defpara->default_parameter) {
-         char oldp = *(p - 1);
+   while (tmpl_arg_list->next) { // Stop before the last given template argument.
+      if (tmpl_param->default_parameter) { // This arg is a default, make a short name.
+         //
+         //  Replace the final ',' with '>' temporarily.
+         //
+         char oldp = p[-1];
          if (oldp == '<') { // all template args have defaults
-            *(p - 1) = 0;
+            p[-1] = 0;
          }
          else {
-            *(p - 1) = '>';
+            p[-1] = '>';
             *p = 0;
          }
-         if (strcmp(tagnamein, tagname) && !G__find_typedef(tagname)) {
-            int parent_tagnum = -1;
-            if (encscope) {
-               parent_tagnum = G__get_tagnum(G__get_envtagnum());
-            }
-            else {
-               parent_tagnum = G__struct.parent_tagnum[tagnum];
-            }
-            G__declare_typedef(tagname, 'u', tagnum, G__PARANORMAL, 0, G__globalcomp, parent_tagnum, false);
+         //
+         //  If there is no typedef for this short name, make it.
+         //
+         G__StrBuf scoped_short_name_sb(G__LONGLINE);
+         char* scoped_short_name = scoped_short_name_sb;
+         strcpy(scoped_short_name, scope_name);
+         if (scope_name[0]) {
+            strcat(scoped_short_name, "::");
          }
-         *(p - 1) = oldp;
+         strcat(scoped_short_name, short_name);
+         if (!G__find_typedef(scoped_short_name)) {
+            int parent_tagnum = G__struct.parent_tagnum[tagnum];
+            G__declare_typedef(short_name, 'u', tagnum, G__PARANORMAL, 0, G__globalcomp, parent_tagnum, false);
+         }
+         // Restore final ','.
+         p[-1] = oldp;
       }
+      //
+      //  Add current template argument to
+      //  the short name and continue.
+      //
       strcpy(p, tmpl_arg_list->string);
       p += strlen(tmpl_arg_list->string);
       tmpl_arg_list = tmpl_arg_list->next;
-      defpara = defpara->next;
+      tmpl_param = tmpl_param->next;
       if (tmpl_arg_list->next) {
          *p = ',';
          ++p;
       }
    }
-   *p = '>'; // FIXME: If the final argument ended in '>' then we have just made '>>'!  vector<int,allocator<int>>
-   ++p;
-   *p = '\0';
-   ++p;
-   return 0;
 }
 
 //______________________________________________________________________________
