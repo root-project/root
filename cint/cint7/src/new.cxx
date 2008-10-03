@@ -326,7 +326,7 @@ G__value Cint::Internal::G__new_operator(char* expression)
       else {
          int int_tagnum = G__defined_tagname(type, 1);
          G__tagnum = G__Dict::GetDict().GetScope(int_tagnum);
-         if (G__tagnum) {
+         if (G__tagnum && !G__tagnum.IsTopScope()) {
             var_type = 'u';
          }
          else {
