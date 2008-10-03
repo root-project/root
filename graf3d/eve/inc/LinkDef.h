@@ -152,6 +152,11 @@
 #pragma link C++ class TEveLineEditor+;
 #pragma link C++ class TEveLineGL+;
 
+// TEveArrow
+#pragma link C++ class TEveArrow+;
+#pragma link C++ class TEveArrowEditor+;
+#pragma link C++ class TEveArrowGL+;
+
 // TEveFrameBox
 #pragma link C++ class TEveFrameBox+;
 #pragma link C++ class TEveFrameBoxGL+;

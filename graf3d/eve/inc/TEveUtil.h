@@ -59,9 +59,6 @@ public:
 
    static void     SetColorBrightness(Float_t value, Bool_t full_redraw=kFALSE);
 
-   // Text formatting
-
-   static const char* FormAxisValue(Float_t x);
 
    // Math utilities
 

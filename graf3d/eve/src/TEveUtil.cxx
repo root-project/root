@@ -337,33 +337,6 @@ void TEveUtil::SetColorBrightness(Float_t value, Bool_t full_redraw)
       gEve->FullRedraw3D();
 }
 
-
-/******************************************************************************/
-// Text formatting
-/******************************************************************************/
-
-//______________________________________________________________________________
-const char* TEveUtil::FormAxisValue(Float_t x)
-{
-   // Returns formatted text suitable for display of value 'x' on an
-   // axis tick-mark.
-
-   // There is a problem on windows: for values printed with the %f.0
-   // format 8 trailing zeros are displayed.
-
-   using namespace TMath;
-
-   if (Abs(x) > 1000)
-      return Form("%d", (Int_t) 10*Nint(x/10.0f));
-   if (Abs(x) > 100 || x == Nint(x))
-      return Form("%d", (Int_t) Nint(x));
-   if (Abs(x) > 10)
-      return Form("%.1f", x);
-   if (Abs(x) >= 0.01 )
-      return Form("%.2f", x);
-   return "0";
-}
-
 /******************************************************************************/
 // Math utilities
 /******************************************************************************/
