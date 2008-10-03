@@ -287,7 +287,7 @@ static int G__generate_template_dict(const char* template_id, G__Definedtemplate
    if (!pGD) { // Dictionary generation is disabled.
       return -1;
    }
-   if (G__def_tagnum != -1) { // Ignore member templates.
+   if (G__def_tagnum) { // Ignore member templates.
       return -1;
    }
    vector<string> headers; // List of header files.
