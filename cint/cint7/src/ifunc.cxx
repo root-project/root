@@ -4190,6 +4190,7 @@ static ::Reflex::Member G__overload_match(char* funcname, G__param* libp, int ha
                   (G__HASH_MAIN == hash && strcmp(funcname, "main") == 0)) {
                /* immediate return for special match */
                doconvert = false;
+               result = *ifn;
                goto end_of_function;
             }
             if (-1 != G__get_tagnum(ifunc) &&
