@@ -24,7 +24,7 @@ class genreflex:
     self.opts            = {}
     self.gccxmlpath      = None
     self.gccxmlopt       = ''
-    self.gccxmlvers      = '0.7.0_20070615'
+    self.gccxmlvers      = '[UNKNOWN]'
     self.selector        = None
     self.gccxml          = ''
     self.quiet           = False
@@ -251,12 +251,15 @@ class genreflex:
       print '--->> genreflex: WARNING: Could not invoke %s --print' % self.gccxml
       print '--->> genreflex: WARNING: %s' % serr
       return s
-    gccxmlv = sout.split('\n')[0].split()[-1]
-    # For 0.6.0 we can't do much because we have not put in a patch info into the version string 
-    if gccxmlv != '0.6.0' and gccxmlv != self.gccxmlvers :
-      print '--->> genreflex: WARNING: gccxml versions differ. Used version: %s. Recommended version: %s. ' % ( gccxmlv, self.gccxmlvers)
+    self.gccxmlvers = sout.split('\n')[0].split()[-1]
+    recommendedvers = ( '0.7.0_20070615', '0.9.' )
+    foundgoodvers = filter(lambda c: self.gccxmlvers.startswith(c), recommendedvers)
+    if len(foundgoodvers) == 0:
+      plural = ''
+      if len(recommendedvers) > 1 : plural = 's'
+      print '--->> genreflex: WARNING: gccxml versions differ. Used version: %s. Recommended version%s: %s ' \
+            % ( self.gccxmlvers, plural, ', '.join(recommendedvers) )
       print '--->> genreflex: WARNING: gccxml binary used: %s' % ( self.gccxml )
-    self.gccxmlvers = gccxmlv
     s += sout    
     compiler = ''
     for l in sout.split('\n'):
