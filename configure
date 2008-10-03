@@ -2273,7 +2273,8 @@ if test ! "x$enable_qt" = "xno" || \
 
     message "Checking for moc or moc.exe"
     if `$cwhich moc > /dev/null 2>&1` ; then
-        mocdir=`dirname $cwhich moc`
+        mocdir=`$cwhich moc`
+        mocdir=`dirname $mocdir`
     fi
     for i in $QTDIR $QTDIR/bin "$mocdir" /usr/local/bin /usr/local/qt/bin \
         /usr/bin /usr/qt4/bin /usr/lib/qt4/bin /usr/share/qt4/bin ; do
