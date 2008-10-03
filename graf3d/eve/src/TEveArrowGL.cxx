@@ -62,13 +62,13 @@ void TEveArrowGL::DirectDraw(TGLRnrCtx & rnrCtx) const
 {
    // Render with OpenGL.
 
-   printf("TEveArrowGL::DirectDraw LOD \n");
+   // printf("TEveArrowGL::DirectDraw LOD \n");
 
    static TGLQuadric quad;
    UInt_t drawQuality = 10;
    // Draw 3D line (tube) with optional head shape
 
-   //   glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT);
+   // glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT);
    glDisable(GL_CULL_FACE);
 
    glPushMatrix();
@@ -96,6 +96,6 @@ void TEveArrowGL::DirectDraw(TGLRnrCtx & rnrCtx) const
    gluDisk(quad.Get(), 0.0, size*fM->fConeR, drawQuality, 1);
 
    glPopMatrix();
-   //glPopAttrib();
+   // glPopAttrib();
 }
 
