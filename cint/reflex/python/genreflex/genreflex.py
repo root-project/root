@@ -212,6 +212,7 @@ class genreflex:
         self.usage()
       for l in open(self.select).readlines() : classes.append(l[:-1])
     #----------GCCXML command------------------------------
+    self.gccxml = ''
     if not self.gccxmlpath:
       try:
         import gccxmlpath
@@ -225,15 +226,14 @@ class genreflex:
         self.gccxml = self.gccxmlpath + os.sep + 'gccxml'
       if not os.path.isfile(self.gccxml) :
         print '--->> genreflex: ERROR: Path to gccxml given, but no executable found at', self.gccxml
-    elif self.which('gccxml') :
-      self.gccxml = 'gccxml'
-      print '--->> genreflex: INFO: No explicit path to gccxml given. Found gccxml at', self.which('gccxml')
-    else :
-      if sys.platform == 'win32' :
-        self.gccxml = r'\\cern.ch\dfs\Experiments\sw\lcg\external\gccxml\0.6.0_patch3\win32_vc71\bin\gccxml'
+        self.gccxml = ''
+    if len(self.gccxml) == 0 :
+      if self.which('gccxml') :
+        self.gccxml = 'gccxml'
+        print '--->> genreflex: INFO: Using gccxml from', self.which('gccxml')
       else :
-        self.gccxml = '/afs/cern.ch/sw/lcg/external/gccxml/0.6.0_patch3/slc3_ia32_gcc323/bin/gccxml'
-      print '--->> genreflex: INFO: No gccxml executable found, using fallback location at', self.gccxml
+        print '--->> genreflex: ERROR: Cannot find gccxml executable, aborting!'
+        sys.exit(1)
     #---------------Open selection file-------------------
     try :
       if self.select : self.selector = selclass.selClass(self.select,parse=1)
