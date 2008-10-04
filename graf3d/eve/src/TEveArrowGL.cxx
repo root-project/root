@@ -17,8 +17,6 @@
 #include "TGLUtil.h"
 #include "TGLQuadric.h"
 
-// #include "TAttLine.h"
-
 //______________________________________________________________________________
 // OpenGL renderer class for TEveArrow.
 //
@@ -58,7 +56,7 @@ void TEveArrowGL::SetBBox()
 /******************************************************************************/
 
 //______________________________________________________________________________
-void TEveArrowGL::DirectDraw(TGLRnrCtx & rnrCtx) const
+void TEveArrowGL::DirectDraw(TGLRnrCtx& /*rnrCtx*/) const
 {
    // Render with OpenGL.
 
@@ -67,9 +65,6 @@ void TEveArrowGL::DirectDraw(TGLRnrCtx & rnrCtx) const
    static TGLQuadric quad;
    UInt_t drawQuality = 10;
    // Draw 3D line (tube) with optional head shape
-
-   // glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT);
-   glDisable(GL_CULL_FACE);
 
    glPushMatrix();
 
@@ -96,6 +91,4 @@ void TEveArrowGL::DirectDraw(TGLRnrCtx & rnrCtx) const
    gluDisk(quad.Get(), 0.0, size*fM->fConeR, drawQuality, 1);
 
    glPopMatrix();
-   // glPopAttrib();
 }
-
