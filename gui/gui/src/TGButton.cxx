@@ -174,6 +174,10 @@ void TGButton::SetState(EButtonState state, Bool_t emit)
 
    Bool_t was = !IsDown();   // kTRUE if button was off
 
+   if (state == kButtonDisabled)
+      fWidgetFlags &= ~kWidgetIsEnabled;
+   else 
+      fWidgetFlags |= kWidgetIsEnabled;
    if (state != fState) {
       switch (state) {
          case kButtonEngaged:
@@ -1079,6 +1083,10 @@ void TGCheckButton::SetState(EButtonState state, Bool_t emit)
 {
    // Set check button state.
 
+   if (state == kButtonDisabled)
+      fWidgetFlags &= ~kWidgetIsEnabled;
+   else 
+      fWidgetFlags |= kWidgetIsEnabled;
    PSetState(state, emit);
 }
 
@@ -1431,6 +1439,10 @@ void TGRadioButton::SetState(EButtonState state, Bool_t emit)
 {
    // Set radio button state.
 
+   if (state == kButtonDisabled)
+      fWidgetFlags &= ~kWidgetIsEnabled;
+   else 
+      fWidgetFlags |= kWidgetIsEnabled;
    PSetState(state, emit);
 }
 
