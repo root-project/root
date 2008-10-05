@@ -1140,15 +1140,22 @@ void TProofServ::HandleSocketInput()
                sscanf(str, "%s %d %ld %d", name, &bin, &size, &fw);
             else
                sscanf(str, "%s %d %ld", name, &bin, &size);
-            ReceiveFile(name, bin ? kTRUE : kFALSE, size);
+            TString fnam(name);
+            Bool_t copytocache = kTRUE;
+            if (fnam.BeginsWith("cache:")) {
+               fnam.ReplaceAll("cache:", Form("%s/", fCacheDir.Data()));
+               copytocache = kFALSE;
+            }
+            ReceiveFile(fnam, bin ? kTRUE : kFALSE, size);
             // copy file to cache if not a PAR file
-            if (size > 0 && strncmp(fPackageDir, name, fPackageDir.Length()))
+            if (copytocache && size > 0 &&
+                strncmp(fPackageDir, name, fPackageDir.Length()))
                CopyToCache(name, 0);
             if (IsMaster() && fw == 1) {
-               Int_t opt = TProof::kForward;
+               Int_t opt = TProof::kForward | TProof::kCp;
                if (bin)
                   opt |= TProof::kBinary;
-               fProof->SendFile(name, opt);
+               fProof->SendFile(fnam, opt, (copytocache ? "cache" : ""));
             }
          }
          break;
@@ -2582,7 +2589,7 @@ TProofQueryResult *TProofServ::MakeQueryResult(Long64_t nent,
    fSeqNum++;
 
    // Locally we always use the current streamer
-   Bool_t olds = (dset->TestBit(TDSet::kWriteV3)) ? kTRUE : kFALSE;
+   Bool_t olds = (dset && dset->TestBit(TDSet::kWriteV3)) ? kTRUE : kFALSE;
    if (olds)
       dset->SetWriteV3(kFALSE);
 
@@ -3369,6 +3376,134 @@ void TProofServ::HandleArchive(TMessage *mess)
 }
 
 //______________________________________________________________________________
+Int_t TProofServ::AssertDataSet(TDSet *dset, TList *input)
+{
+   // Make sure that dataset is in the form to be processed. This may mean
+   // retrieving the relevant info from the dataset manager or from the
+   // attached input list.
+   // Returns 0 on success, -1 on error
+
+   // We must have something to process
+   if (!dset || !input) return -1;
+
+   // We need a dataset manager
+   if (!fDataSetManager) {
+      SendAsynMessage(Form("AssertDataSet on %s: no dataset manager!", fPrefix.Data()));
+      Error("AssertDataSet", "no dataset manager: cannot proceed");
+      return -1;
+   }
+
+   TFileCollection* dataset = 0;
+   TString lookupopt;
+   TString dsname(dset->GetName());
+   // The dataset maybe in the form of a TFileCollection in the input list
+   if (dsname.BeginsWith("TFileCollection:")) {
+      // Isolate the real name
+      dsname.ReplaceAll("TFileCollection:", "");
+      // Get the object
+      dataset = (TFileCollection *) input->FindObject(dsname);
+      if (!dataset) {
+         SendAsynMessage(Form("AssertDataSet on %s: TFileCollection %s not"
+                              " found in input list",
+                              fPrefix.Data(), dset->GetName()));
+         Error("AssertDataSet", "TFileCollection %s not found in input list",
+                                 dset->GetName());
+         return -1;
+      }
+      // Remove from everywhere
+      input->RecursiveRemove(dataset);
+      // Make sure we lookup everything (unless the client or the administartor
+      // required something else)
+      if (TProof::GetParameter(input, "PROOF_LookupOpt", lookupopt) != 0) {
+         lookupopt = gEnv->GetValue("Proof.LookupOpt", "all");
+         input->Add(new TNamed("PROOF_LookupOpt", lookupopt.Data()));
+      }
+   }
+
+   // The received message included an empty dataset, with only the name
+   // defined: assume that a dataset, stored on the PROOF master by that
+   // name, should be processed.
+   if (!dataset) {
+      dataset = fDataSetManager->GetDataSet(dsname.Data());
+      if (!dataset) {
+         SendAsynMessage(Form("AssertDataSet on %s: no such dataset: %s",
+                              fPrefix.Data(), dsname.Data()));
+         Error("AssertDataSet", "no such dataset on the master: %s", dsname.Data());
+         return -1;
+      }
+
+      // Apply the lookup option requested by the client or the administartor
+      // (by default we trust the information in the dataset)
+      if (TProof::GetParameter(input, "PROOF_LookupOpt", lookupopt) != 0) {
+         lookupopt = gEnv->GetValue("Proof.LookupOpt", "stagedOnly");
+         input->Add(new TNamed("PROOF_LookupOpt", lookupopt.Data()));
+      }
+   }
+
+   // Logic for the subdir/obj names: try first to see if the dataset name contains
+   // some info; if not check the settings in the TDSet object itself; if still empty
+   // check the default tree name / path in the TFileCollection object; if still empty
+   // use the default as the flow will determine
+   TString dsTree;
+   // Get the [subdir/]tree, if any
+   fDataSetManager->ParseUri(dset->GetName(), 0, 0, 0, &dsTree);
+   if (dsTree.IsNull()) {
+      // Use what we have in the original dataset; we need this to locate the
+      // meta data information
+      dsTree += dset->GetDirectory();
+      dsTree += dset->GetObjName();
+   }
+   if (!dsTree.IsNull() && dsTree != "/") {
+      TString tree(dsTree);
+      Int_t idx = tree.Index("/");
+      if (idx != kNPOS) {
+         TString dir = tree(0, idx+1);
+         tree.Remove(0, idx);
+         dset->SetDirectory(dir);
+      }
+      dset->SetObjName(tree);
+   } else {
+      // Use the default obj name from the TFileCollection
+      dsTree = dataset->GetDefaultTreeName();
+   }
+
+   // Transfer the list now
+   if (dataset) {
+      TList *missingFiles = new TList;
+      TSeqCollection* files = dataset->GetList();
+      Bool_t availableOnly = (lookupopt != "all") ? kTRUE : kFALSE;
+      if (!dset->Add(files, dsTree, availableOnly, missingFiles)) {
+         SendAsynMessage(Form("AssertDataSet on %s: error retrieving"
+                              " dataset: %s", fPrefix.Data(), dset->GetName()));
+         Error("AssertDataSet", "error retrieving dataset %s",
+               dset->GetName());
+         delete dataset;
+         return -1;
+      }
+      if (missingFiles) {
+         // The missing files objects have to be removed from the dataset
+         // before delete.
+         TIter next(missingFiles);
+         TObject *file;
+         while ((file = next()))
+            dataset->GetList()->Remove(file);
+      }
+      delete dataset;
+
+      // Make sure it will be sent back merged with other similar lists created
+      // during processing; this list will be transferred by the player to the
+      // output list, once the latter has been created (see TProofPlayerRemote::Process)
+      if (missingFiles && missingFiles->GetSize() > 0) {
+         missingFiles->SetName("MissingFiles");
+         input->Add(missingFiles);
+      }
+   }
+
+   // Done
+   return 0;
+}
+
+//______________________________________________________________________________
 void TProofServ::HandleProcess(TMessage *mess)
 {
    // Handle processing request.
@@ -3419,126 +3554,29 @@ void TProofServ::HandleProcess(TMessage *mess)
 
    if (IsTopMaster()) {
 
+      // Make sure the dataset contains the information needed
       if ((!hasNoData) && dset->GetListOfElements()->GetSize() == 0) {
-         TFileCollection* dataset = 0;
-         TString lookupopt;
-         TString dsname(dset->GetName());
-         // The dataset maybe in the form of a TFileCollection in the input list
-         if (dsname.BeginsWith("TFileCollection:")) {
-            // Isolate the real name
-            dsname.ReplaceAll("TFileCollection:", "");
-            // Get the object
-            dataset = (TFileCollection *) input->FindObject(dsname);
-            if (!dataset) {
-               SendAsynMessage(Form("HandleProcess on %s: TFileCollection %s not"
-                                    " found in input list",
-                                    fPrefix.Data(), dset->GetName()));
-               Error("HandleProcess", "TFileCollection %s not found in input list",
-                                      dset->GetName());
-               return;
-            }
-            input->Remove(dataset);
-            // Make sure we lookup everything (unless the client or the administartor
-            // required something else)
-            if (TProof::GetParameter(input, "PROOF_LookupOpt", lookupopt) != 0) {
-               lookupopt = gEnv->GetValue("Proof.LookupOpt", "all");
-               input->Add(new TNamed("PROOF_LookupOpt", lookupopt.Data()));
-            }
-         }
-
-         // The received message included an empty dataset, with only the name
-         // defined: assume that a dataset, stored on the PROOF master by that
-         // name, should be processed.
-         if (!dataset) {
-            if (fDataSetManager) {
-               dataset = fDataSetManager->GetDataSet(dsname.Data());
-               if (!dataset) {
-                  SendAsynMessage(Form("HandleProcess on %s: no such dataset: %s",
-                                       fPrefix.Data(), dsname.Data()));
-                  Error("HandleProcess", "no such dataset on the master: %s", dsname.Data());
-                  return;
-               }
-
-               // Apply the lookup option requested by the client or the administartor
-               // (by default we trust the information in the dataset)
-               if (TProof::GetParameter(input, "PROOF_LookupOpt", lookupopt) != 0) {
-                  lookupopt = gEnv->GetValue("Proof.LookupOpt", "stagedOnly");
-                  input->Add(new TNamed("PROOF_LookupOpt", lookupopt.Data()));
-               }
-            } else {
-               SendAsynMessage(Form("HandleProcess on %s: no dataset manager!", fPrefix.Data()));
-               Error("HandleProcess", "no dataset manager: cannot proceed");
-               return;
-            }
-         }
-
-         // Logic for the subdir/obj names: try first to see if the dataset name contains
-         // some info; if not check the settings in the TDSet object itself; if still empty
-         // check the default tree name / path in the TFileCollection object; if still empty
-         // use the default as the flow will determine
-         TString dsTree;
-         // Get the [subdir/]tree, if any
-         fDataSetManager->ParseUri(dset->GetName(), 0, 0, 0, &dsTree);
-         if (dsTree.IsNull()) {
-            // Use what we have in the original dataset; we need this to locate the
-            // meta data information
-            dsTree += dset->GetDirectory();
-            dsTree += dset->GetObjName();
-         }
-         if (!dsTree.IsNull() && dsTree != "/") {
-            TString tree(dsTree);
-            Int_t idx = tree.Index("/");
-            if (idx != kNPOS) {
-               TString dir = tree(0, idx+1);
-               tree.Remove(0, idx);
-               dset->SetDirectory(dir);
-            }
-            dset->SetObjName(tree);
-         } else {
-            // Use the default obj name from the TFileCollection
-            dsTree = dataset->GetDefaultTreeName();
-         }
-
-         // Transfer the list now
-         if (dataset) {
-            TList *missingFiles = new TList;
-            TSeqCollection* files = dataset->GetList();
-            Bool_t availableOnly = (lookupopt != "all") ? kTRUE : kFALSE;
-            if (!dset->Add(files, dsTree, availableOnly, missingFiles)) {
-               SendAsynMessage(Form("HandleProcess on %s: error retrieving"
-                                    " dataset: %s", fPrefix.Data(), dset->GetName()));
-               Error("HandleProcess", "error retrieving dataset %s",
-                     dset->GetName());
-               delete dataset;
-               return;
-            }
-            if (missingFiles) {
-               // The missing files objects have to be removed from the dataset
-               // before delete.
-               TIter next(missingFiles);
-               TObject *file;
-               while ((file = next()))
-                  dataset->GetList()->Remove(file);
-            }
-            delete dataset;
-
-            // Make sure it will be sent back merged with other similar lists created
-            // during processing; this list will be transferred by the player to the
-            // output list, once the latter has been created (see TProofPlayerRemote::Process)
-            if (missingFiles && missingFiles->GetSize() > 0) {
-               missingFiles->SetName("MissingFiles");
-               input->Add(missingFiles);
-            }
-         }
+         if (AssertDataSet(dset, input) != 0) return;
       }
 
       TProofQueryResult *pq = 0;
 
-      // Create instance of query results
-      pq = MakeQueryResult(nentries, opt, input, first, dset, filename, elist);
-      // Make sure that cleanup is done when required
-      input->SetOwner();
+      // Create instance of query results; we set ownership of the input list
+      // to the TQueryResult object, to avoid too many instantiations
+      pq = MakeQueryResult(nentries, opt, 0, first, 0, filename, 0);
+
+      // Prepare the input list and transfer it into the TQueryResult object
+      if (dset) input->Add(dset);
+      if (elist) input->Add(elist);
+      pq->SetInputList(input, kTRUE);
+
+      // Re-attach to the new list
+      input->Clear("nodelete");
       SafeDelete(input);
+      input = pq->GetInputList();
+
+      // Save input data, if any
+      SaveInputData(pq);
 
       // If not a draw action add the query to the main list
       if (!(pq->IsDraw())) {
@@ -3637,6 +3675,9 @@ void TProofServ::HandleProcess(TMessage *mess)
          // Setup data set
          if (dset->IsA() == TDSetProxy::Class())
             ((TDSetProxy*)dset)->SetProofServ(this);
+
+         // Send input data, if any
+         SendInputData(pq);
 
          // Add the unique query tag as TNamed object to the input list
          // so that it is available in TSelectors for monitoring
@@ -3771,6 +3812,9 @@ void TProofServ::HandleProcess(TMessage *mess)
       // Setup data set
       if (dset->IsA() == TDSetProxy::Class())
          ((TDSetProxy*)dset)->SetProofServ(this);
+
+      // Get input data, if any
+      GetInputData(input);
 
       // Set input
       TIter next(input);
@@ -4305,8 +4349,11 @@ void TProofServ::HandleCheckFile(TMessage *mess)
       TMD5 *md5local = TMD5::FileChecksum(cachef);
       if (md5local && md5 == (*md5local)) {
          // copy file from cache to working directory
-         Bool_t cpbin = (opt & TProof::kCpBin) ? kTRUE : kFALSE;
-         CopyFromCache(filenam, cpbin);
+         Bool_t cp = (opt & TProof::kCp) ? kTRUE : kFALSE;
+         if (cp) {
+            Bool_t cpbin = (opt & TProof::kCpBin) ? kTRUE : kFALSE;
+            CopyFromCache(filenam, cpbin);
+         }
          fSocket->Send(kPROOF_CHECKFILE);
          PDB(kCache, 1)
             Info("HandleCheckFile", "file %s already on node", filenam.Data());
@@ -4338,7 +4385,7 @@ Int_t TProofServ::HandleCache(TMessage *mess)
    TString noth = (IsMaster()) ? Form("Mst-%s", fOrdinal.Data())
                                : Form("Wrk-%s", fOrdinal.Data());
 
-   TString package, pdir, ocwd;
+   TString package, pdir, ocwd, file;
    (*mess) >> type;
    switch (type) {
       case TProof::kShowCache:
@@ -4356,11 +4403,17 @@ Int_t TProofServ::HandleCache(TMessage *mess)
          LogToMaster();
          break;
       case TProof::kClearCache:
+         file = "";
+         if ((mess->BufferSize() > mess->Length())) (*mess) >> file;
          fCacheLock->Lock();
-         gSystem->Exec(Form("%s %s/* %s/.*.binversion", kRM, fCacheDir.Data(), fCacheDir.Data()));
+         if (file.IsNull() || file == "*") {
+            gSystem->Exec(Form("%s %s/* %s/.*.binversion", kRM, fCacheDir.Data(), fCacheDir.Data()));
+         } else {
+            gSystem->Exec(Form("%s %s/%s", kRM, fCacheDir.Data(), file.Data()));
+         }
          fCacheLock->Unlock();
          if (IsMaster())
-            fProof->ClearCache();
+            fProof->ClearCache(file);
          break;
       case TProof::kShowPackages:
          (*mess) >> all;
@@ -4670,8 +4723,10 @@ Int_t TProofServ::HandleCache(TMessage *mess)
          LogToMaster();
          break;
       case TProof::kClearSubCache:
+         file = "";
+         if ((mess->BufferSize() > mess->Length())) (*mess) >> file;
          if (IsMaster())
-            fProof->ClearCache();
+            fProof->ClearCache(file);
          break;
       case TProof::kShowSubPackages:
          (*mess) >> all;
@@ -5576,6 +5631,157 @@ Int_t TProofServ::HandleDataSets(TMessage *mess)
 
    // We are done
    return rc;
+}
+
+//______________________________________________________________________________
+Int_t TProofServ::SaveInputData(TQueryResult *qr)
+{
+   // Save input data file from cache into the sandbox or create a the file
+   // with input data objects
+
+   TList *input = 0;
+
+   // We must have got something to process
+   if (!qr || !(input = qr->GetInputList())) return 0;
+
+   // There must be some input data or input data file
+   TNamed *data = (TNamed *) input->FindObject("PROOF_InputDataFile");
+   TList *inputdata = (TList *) input->FindObject("PROOF_InputData");
+   if (!data && !inputdata) return 0;
+   // Default dstination filename
+   if (!data)
+      input->Add((data = new TNamed("PROOF_InputDataFile", kPROOF_InputDataFile)));
+
+   TString dstname(data->GetTitle()), srcname;
+   Bool_t fromcache = kFALSE;
+   if (dstname.BeginsWith("cache:")) {
+      fromcache = kTRUE;
+      srcname = dstname;
+      dstname.ReplaceAll("cache:", "");
+      srcname.ReplaceAll("cache:", Form("%s/", fCacheDir.Data()));
+      if (gSystem->AccessPathName(srcname)) {
+         Error("SaveInputData",
+               "input data file not found in cache (%s)", srcname.Data());
+         return -1;
+      }
+   }
+
+   // If from cache, just move the cache file
+   if (fromcache) {
+      if (gSystem->CopyFile(srcname, dstname, kTRUE) != 0) {
+         Error("SaveInputData",
+               "problems copying %s to %s", srcname.Data(), dstname.Data());
+         return -1;
+      }
+   } else {
+      // Create the file
+      if (inputdata && inputdata->GetSize() > 0) {
+         TFile *f = TFile::Open(dstname.Data(), "RECREATE");
+         if (f) {
+            f->cd();
+            inputdata->Write();
+            f->Close();
+            delete f;
+         } else {
+            Error("SaveInputData", "could not create %s", dstname.Data());
+            return -1;
+         }
+      } else {
+         Error("SaveInputData", "no input data!");
+         return -1;
+      }
+   }
+   Info("SaveInputData", "input data saved to %s", dstname.Data());
+
+   // Save the file name and clean up the data list
+   data->SetTitle(dstname);
+   if (inputdata) {
+      input->Remove(inputdata);
+      inputdata->SetOwner();
+      delete inputdata;
+   }
+
+   // Done
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TProofServ::SendInputData(TQueryResult *qr)
+{
+   // Send the input data file to the workers
+
+   TList *input = 0;
+
+   // We must have got something to process
+   if (!qr || !(input = qr->GetInputList())) return 0;
+
+   // There must be some input data or input data file
+   TNamed *inputdata = (TNamed *) input->FindObject("PROOF_InputDataFile");
+   if (!inputdata) return 0;
+
+   TString fname(inputdata->GetTitle());
+   if (gSystem->AccessPathName(fname)) {
+      Error("SendInputData",
+            "input data file not found in sandbox (%s)", fname.Data());
+      return -1;
+   }
+
+   // PROOF session must available
+   if (!fProof) {
+      Error("SendInputData", "fProof object undefined: protocol error!");
+      return -1;
+   }
+
+   // Send to unique workers and submasters
+   fProof->BroadcastFile(fname, TProof::kBinary, "cache");
+
+   // Done
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TProofServ::GetInputData(TList *input)
+{
+   // Get the input data from the file defined in the input list
+
+   // We must have got something to process
+   if (!input) return 0;
+
+   // There must be some input data or input data file
+   TNamed *inputdata = (TNamed *) input->FindObject("PROOF_InputDataFile");
+   if (!inputdata) return 0;
+
+   TString fname(inputdata->GetTitle());
+   fname.Insert(0, Form("%s/", fCacheDir.Data()));
+   if (gSystem->AccessPathName(fname)) {
+      Error("GetInputData",
+            "input data file not found in cache (%s)", fname.Data());
+      return -1;
+   }
+
+   // Read the input data into the input list
+   TFile *f = TFile::Open(fname.Data());
+   if (f) {
+      TList *keys = (TList *) f->GetListOfKeys();
+      if (!keys) {
+         Error("GetInputData", "could not get list of object keys from file");
+         return -1;
+      }
+      TIter nxk(keys);
+      TKey *k = 0;
+      while ((k = (TKey *)nxk())) {
+         TObject *o = f->Get(k->GetName());
+         if (o) input->Add(o);
+      }
+      f->Close();
+      delete f;
+   } else {
+      Error("GetInputData", "could not open %s", fname.Data());
+      return -1;
+   }
+
+   // Done
+   return 0;
 }
 
 //______________________________________________________________________________

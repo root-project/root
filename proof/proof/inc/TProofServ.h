@@ -146,6 +146,8 @@ private:
    Int_t         OldAuthSetup(TString &wconf);
    Int_t         GetPriority();
 
+   Int_t         AssertDataSet(TDSet *dset, TList *input);
+
    // Query handlers
    void          AddLogFile(TProofQueryResult *pq);
    Int_t         ApplyMaxQueries();
@@ -163,6 +165,11 @@ private:
    Int_t         LockSession(const char *sessiontag, TProofLockPath **lck);
    Int_t         CleanupSession(const char *sessiontag);
    void          ScanPreviousQueries(const char *dir);
+
+   // Input data handling
+   Int_t         GetInputData(TList *input);
+   Int_t         SaveInputData(TQueryResult *qr);
+   Int_t         SendInputData(TQueryResult *qr);
 
 protected:
    virtual void  HandleArchive(TMessage *mess);

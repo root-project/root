@@ -1766,11 +1766,11 @@ Bool_t TProofPlayerRemote::SendSelector(const char* selector_file)
    }
 
    // Send files now
-   if (fProof->SendFile(selec, (TProof::kBinary | TProof::kForward)) == -1) {
+   if (fProof->SendFile(selec, (TProof::kBinary | TProof::kForward | TProof::kCp)) == -1) {
       Info("SendSelector", "problems sending implementation file %s", selec.Data());
       return kFALSE;
    }
-   if (fProof->SendFile(header, (TProof::kBinary | TProof::kForward)) == -1) {
+   if (fProof->SendFile(header, (TProof::kBinary | TProof::kForward | TProof::kCp)) == -1) {
       Info("SendSelector", "problems sending header file %s", header.Data());
       return kFALSE;
    }

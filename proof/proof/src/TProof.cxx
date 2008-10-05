@@ -365,6 +365,7 @@ TProof::~TProof()
    SafeDelete(fPackageLock);
    SafeDelete(fGlobalPackageDirList);
    SafeDelete(fRecvMessages);
+   SafeDelete(fInputData);
 
    // remove file with redirected logs
    if (!IsMaster()) {
@@ -462,6 +463,8 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
    fAvailablePackages = 0;
    fEnabledPackages = 0;
    fEndMaster      = IsMaster() ? kTRUE : kFALSE;
+   fInputData      = 0;
+   ResetBit(TProof::kNewInputData);
 
    // Timeout for some collect actions
    fCollectTimeout = gEnv->GetValue("Proof.CollectTimeout", -1);
@@ -1957,6 +1960,51 @@ Int_t TProof::BroadcastRaw(const void *buffer, Int_t length, ESlaves list)
 }
 
 //______________________________________________________________________________
+Int_t TProof::BroadcastFile(const char *file, Int_t opt, const char *rfile, TList *wrks)
+{
+   // Broadcast file to all workers in the specified list. Returns the number of workers
+   // the buffer was sent to.
+   // Returns -1 in case of error.
+
+   if (!IsValid()) return -1;
+
+   if (wrks->GetSize() == 0) return 0;
+
+   int   nsent = 0;
+   TIter next(wrks);
+
+   TSlave *wrk;
+   while ((wrk = (TSlave *)next())) {
+      if (wrk->IsValid()) {
+         if (SendFile(file, opt, rfile, wrk) < 0)
+            Error("BroadcastFile",
+                  "problems sending file to worker %s (%s)",
+                  wrk->GetOrdinal(), wrk->GetName());
+         else
+            nsent++;
+      }
+   }
+
+   return nsent;
+}
+
+//______________________________________________________________________________
+Int_t TProof::BroadcastFile(const char *file, Int_t opt, const char *rfile, ESlaves list)
+{
+   // Broadcast file to all workers in the specified list. Returns the number of workers
+   // the buffer was sent to.
+   // Returns -1 in case of error.
+
+   TList *wrks = 0;
+   if (list == kAll)       wrks = fSlaves;
+   if (list == kActive)    wrks = fActiveSlaves;
+   if (list == kUnique)    wrks = fUniqueSlaves;
+   if (list == kAllUnique) wrks = fAllUniqueSlaves;
+
+   return BroadcastFile(file, opt, rfile, wrks);
+}
+
+//______________________________________________________________________________
 Int_t TProof::Collect(const TSlave *sl, Long_t timeout)
 {
    // Collect responses from slave sl. Returns the number of slaves that
@@ -3309,6 +3357,9 @@ Long64_t TProof::Process(TDSet *dset, const char *selector, Option_t *option,
          sh = gSystem->RemoveSignalHandler(gApplication->GetSignalHandler());
    }
 
+   // Send large input data objects, if any
+   SendInputDataFile();
+
    Long64_t rv = fPlayer->Process(dset, selector, option, nentries, first);
 
 //   // Clear input list
@@ -3359,11 +3410,15 @@ Long64_t TProof::Process(TFileCollection *fc, const char *selector,
 
    Long64_t rv = -1;
 
+   // Send large input data objects, if any
+   SendInputDataFile();
+
    // We include the TFileCollection to the input list and we create a
    // fake TDSet with infor about it
    TDSet *dset = new TDSet(Form("TFileCollection:%s", fc->GetName()), 0, 0, "");
    fPlayer->AddInput(fc);
    rv = fPlayer->Process(dset, selector, option, nentries, first);
+   fPlayer->GetInputList()->Remove(fc); // To avoid problems in future
 
    if (fSync) {
       // reactivate the default application interrupt handler
@@ -3462,6 +3517,9 @@ Long64_t TProof::Process(const char *selector, Long64_t n, Option_t *option)
 
    TDSet *dset = new TDSet;
    dset->SetBit(TDSet::kEmpty);
+
+   // Send large input data objects, if any
+   SendInputDataFile();
 
    Long64_t rv = fPlayer->Process(dset, selector, option, n);
 
@@ -4189,7 +4247,7 @@ Int_t TProof::SendInitialState()
 }
 
 //______________________________________________________________________________
-Bool_t TProof::CheckFile(const char *file, TSlave *slave, Long_t modtime, Bool_t cpbin)
+Bool_t TProof::CheckFile(const char *file, TSlave *slave, Long_t modtime, Int_t cpopt)
 {
    // Check if a file needs to be send to the slave. Use the following
    // algorithm:
@@ -4200,8 +4258,9 @@ Bool_t TProof::CheckFile(const char *file, TSlave *slave, Long_t modtime, Bool_t
    //     - if no, get file's md5 and modtime and store in file map, ask
    //       slave if file exists with specific md5, if yes return kFALSE,
    //       if no return kTRUE.
-   // To retrieve from the cache the binaries associated with the file 'cpbin' should be
-   // set to kTRUE; this is the default behaviour.
+   // The options 'cpopt' define if to copy things from cache to sandbox and what.
+   // To retrieve from the cache the binaries associated with the file TProof::kCpBin
+   // must be set in cpopt; the default is copy everything.
    // Returns kTRUE in case file needs to be send, returns kFALSE in case
    // file is already on remote node.
 
@@ -4213,8 +4272,6 @@ Bool_t TProof::CheckFile(const char *file, TSlave *slave, Long_t modtime, Bool_t
    sn += slave->GetOrdinal();
    sn += ":";
    sn += gSystem->BaseName(file);
-
-   Int_t opt = (cpbin) ? TProof::kCpBin : 0;
 
    // check if file is in map
    FileMap_t::const_iterator it;
@@ -4237,7 +4294,7 @@ Bool_t TProof::CheckFile(const char *file, TSlave *slave, Long_t modtime, Bool_t
                if (IsMaster()) {
                   sendto = kFALSE;
                   TMessage mess(kPROOF_CHECKFILE);
-                  mess << TString(gSystem->BaseName(file)) << md.fMD5 << opt;
+                  mess << TString(gSystem->BaseName(file)) << md.fMD5 << cpopt;
                   slave->GetSocket()->Send(mess);
 
                   TMessage *reply;
@@ -4267,7 +4324,7 @@ Bool_t TProof::CheckFile(const char *file, TSlave *slave, Long_t modtime, Bool_t
          return kFALSE;
       }
       TMessage mess(kPROOF_CHECKFILE);
-      mess << TString(gSystem->BaseName(file)) << md.fMD5 << opt;
+      mess << TString(gSystem->BaseName(file)) << md.fMD5 << cpopt;
       slave->GetSocket()->Send(mess);
 
       TMessage *reply;
@@ -4290,6 +4347,8 @@ Int_t TProof::SendFile(const char *file, Int_t opt, const char *rfile, TSlave *w
    // file system image, -1 in case of error.
    // If defined, send to worker 'wrk' only.
    // If defined, the full path of the remote path will be rfile.
+   // If rfile = "cache" the file is copied to the remote cache instead of the sandbox
+   // (to copy to the cache on a different name use rfile = "cache:newname").
    // The mask 'opt' is an or of ESendFileOpt:
    //
    //       kAscii  (0x0)      if set true ascii file transfer is used
@@ -4343,7 +4402,11 @@ Int_t TProof::SendFile(const char *file, Int_t opt, const char *rfile, TSlave *w
    Bool_t bin   = (opt & kBinary)  ? kTRUE : kFALSE;
    Bool_t force = (opt & kForce)   ? kTRUE : kFALSE;
    Bool_t fw    = (opt & kForward) ? kTRUE : kFALSE;
-   Bool_t cpbin = (opt & kCpBin)   ? kTRUE : kFALSE;
+
+   // Copy options
+   Int_t cpopt  = 0;
+   if ((opt & kCp)) cpopt |= kCp;
+   if ((opt & kCpBin)) cpopt |= (kCp | kCpBin);
 
    const Int_t kMAXBUF = 32768;  //16384  //65536;
    char buf[kMAXBUF];
@@ -4351,12 +4414,17 @@ Int_t TProof::SendFile(const char *file, Int_t opt, const char *rfile, TSlave *w
 
    TIter next(slaves);
    TSlave *sl;
-   const char *fnam = (rfile) ? rfile : gSystem->BaseName(file);
+   TString fnam(rfile);
+   if (fnam == "cache") {
+      fnam += Form(":%s", gSystem->BaseName(file));
+   } else if (fnam.IsNull()) {
+      fnam = gSystem->BaseName(file);
+   }
    while ((sl = (TSlave *)next())) {
       if (!sl->IsValid())
          continue;
 
-      Bool_t sendto = force ? kTRUE : CheckFile(file, sl, modtime, cpbin);
+      Bool_t sendto = force ? kTRUE : CheckFile(file, sl, modtime, cpopt);
       // Don't send the kPROOF_SENDFILE command to real slaves when sendto
       // is false. Masters might still need to send the file to newly added
       // slaves.
@@ -4373,7 +4441,7 @@ Int_t TProof::SendFile(const char *file, Int_t opt, const char *rfile, TSlave *w
             printf("   slave = %s:%s\n", sl->GetName(), sl->GetOrdinal());
          }
 
-      sprintf(buf, "%s %d %lld %d", fnam, bin, siz, fw);
+      sprintf(buf, "%s %d %lld %d", fnam.Data(), bin, siz, fw);
       if (sl->GetSocket()->Send(buf, kPROOF_SENDFILE) == -1) {
          MarkBad(sl, "could not send kPROOF_SENDFILE request");
          continue;
@@ -4669,18 +4737,19 @@ void TProof::ShowCache(Bool_t all)
 }
 
 //______________________________________________________________________________
-void TProof::ClearCache()
+void TProof::ClearCache(const char *file)
 {
-    // Remove files from all file caches.
+   // Remove file from all file caches. If file is 0 or "" or "*", remove all
+   // the files
 
    if (!IsValid()) return;
 
    TMessage mess(kPROOF_CACHE);
-   mess << Int_t(kClearCache);
+   mess << Int_t(kClearCache) << TString(file);
    Broadcast(mess, kUnique);
 
    TMessage mess2(kPROOF_CACHE);
-   mess2 << Int_t(kClearSubCache);
+   mess2 << Int_t(kClearSubCache) << TString(file);
    Broadcast(mess2, fNonUniqueMasters);
 
    Collect(kAllUnique);
@@ -6116,6 +6185,189 @@ void TProof::ValidateDSet(TDSet *dset)
       Info("ValidateDSet","Calling Collect");
    Collect(&usedslaves);
    SetDSet(0);
+}
+
+//______________________________________________________________________________
+void TProof::AddInputData(TObject *obj, Bool_t push)
+{
+   // Add data objects that might be needed during the processing of
+   // the selector (see Process()). This object can be very large, so they
+   // are distributed in an optimized way using a dedicated file.
+   // If push is TRUE the input data are snet over even if no apparent change
+   // occured to the list.
+
+   if (obj) {
+      if (!fInputData) fInputData = new TList;
+      if (!fInputData->FindObject(obj)) {
+         fInputData->Add(obj);
+         SetBit(TProof::kNewInputData);
+      }
+   }
+   if (push) SetBit(TProof::kNewInputData);
+}
+
+//______________________________________________________________________________
+void TProof::ClearInputData(TObject *obj)
+{
+   // Remove obj form the input data list; if obj is null (default), clear the
+   // input data info.
+
+   if (!obj) {
+      if (fInputData) {
+         fInputData->SetOwner(kTRUE);
+         SafeDelete(fInputData);
+      }
+      ResetBit(TProof::kNewInputData);
+
+      // Also remove any info about input data in the input list
+      TObject *o = 0;
+      TList *in = GetInputList();
+      while ((o = GetInputList()->FindObject("PROOF_InputDataFile")))
+         in->Remove(o);
+      while ((o = GetInputList()->FindObject("PROOF_InputData")))
+         in->Remove(o);
+
+      // ... and reset the file
+      fInputDataFile = "";
+      gSystem->Unlink(kPROOF_InputDataFile);
+
+   } else if (fInputData) {
+      Int_t sz = fInputData->GetSize();
+      while (fInputData->FindObject(obj))
+         fInputData->Remove(obj);
+      // Flag for update, if anything changed
+      if (sz != fInputData->GetSize())
+         SetBit(TProof::kNewInputData);
+   }
+}
+
+//______________________________________________________________________________
+void TProof::ClearInputData(const char *name)
+{
+   // Remove obj 'name' form the input data list;
+
+   TObject *obj = (fInputData && name) ? fInputData->FindObject(name) : 0;
+   if (obj) ClearInputData(obj);
+}
+
+//______________________________________________________________________________
+void TProof::SetInputDataFile(const char *datafile)
+{
+   // Set the file to be used to optimally distribute the input data objects.
+   // If the file exists the object in the file are added to those in the
+   // fInputData list. If the file path is null, a default file will be created
+   // at the moment of sending the processing request with the content of
+   // the fInputData list. See also SendInputDataFile.
+
+   if (datafile && strlen(datafile) > 0) {
+      if (fInputDataFile != datafile && strcmp(datafile, kPROOF_InputDataFile))
+         SetBit(TProof::kNewInputData);
+      fInputDataFile = datafile;
+   } else {
+      if (!fInputDataFile.IsNull())
+         SetBit(TProof::kNewInputData);
+      fInputDataFile = "";
+   }
+   // Make sure that the chose file is readable
+   if (fInputDataFile != kPROOF_InputDataFile && !fInputDataFile.IsNull() &&
+      gSystem->AccessPathName(fInputDataFile, kReadPermission)) {
+      fInputDataFile = "";
+   }
+}
+
+//______________________________________________________________________________
+void TProof::SendInputDataFile()
+{
+   // Send the input data objects to the master; the objects are taken from the
+   // dedicated list and / or the specified file.
+   // If the fInputData is empty the specified file is sent over.
+   // If there is no specified file, a file named "inputdata.root" is created locally
+   // with the content of fInputData and sent over to the master.
+   // If both fInputData and the specified file are not empty, a copy of the file
+   // is made locally and augmented with the content of fInputData.
+
+   // Save info about new data for usage in this call;
+   Bool_t newdata = TestBit(TProof::kNewInputData) ? kTRUE : kFALSE;
+   // Next time we need some change
+   ResetBit(TProof::kNewInputData);
+
+   // Check the list
+   Bool_t list_ok = (fInputData && fInputData->GetSize() > 0) ? kTRUE : kFALSE;
+   // Check the file
+   Bool_t file_ok = kFALSE;
+   if (fInputDataFile != kPROOF_InputDataFile && !fInputDataFile.IsNull() &&
+      !gSystem->AccessPathName(fInputDataFile, kReadPermission)) {
+      // It must contain something
+      TFile *f = TFile::Open(fInputDataFile);
+      if (f && f->GetListOfKeys() && f->GetListOfKeys()->GetSize() > 0)
+         file_ok = kTRUE;
+   }
+
+   // Remove any info about input data in the input list
+   TObject *o = 0;
+   TList *in = GetInputList();
+   while ((o = GetInputList()->FindObject("PROOF_InputDataFile")))
+      in->Remove(o);
+   while ((o = GetInputList()->FindObject("PROOF_InputData")))
+      in->Remove(o);
+
+   // We must have something to send
+   if (!list_ok && !file_ok) return;
+
+   TString dataFile;
+   // Three cases:
+   if (file_ok && !list_ok) {
+      // Just send the file
+      dataFile = fInputDataFile;
+   } else if (!file_ok && list_ok) {
+      fInputDataFile = kPROOF_InputDataFile;
+      // Nothing to do, if no new data
+      if (!newdata && !gSystem->AccessPathName(fInputDataFile)) return;
+      // Create the file first
+      TFile *f = TFile::Open(fInputDataFile, "RECREATE");
+      if (f) {
+         f->cd();
+         fInputData->Write();
+         f->Close();
+         SafeDelete(f);
+      } else {
+         Error("SendInputDataFile", "could not (re-)create %s", fInputDataFile.Data());
+         return;
+      }
+      dataFile = fInputDataFile;
+   } else if (file_ok && list_ok) {
+      dataFile = kPROOF_InputDataFile;
+      // Create the file if not existing or there are new data
+      if (newdata || gSystem->AccessPathName(dataFile)) {
+         // Cleanup previous file if obsolete
+         if (!gSystem->AccessPathName(dataFile))
+            gSystem->Unlink(dataFile);
+         if (dataFile != fInputDataFile) {
+            // Make a local copy first
+            if (gSystem->CopyFile(fInputDataFile, dataFile, kTRUE) != 0) {
+               Error("SendInputDataFile", "could not make local copy of %s", fInputDataFile.Data());
+               return;
+            }
+         }
+         // Add the input data list
+         TFile *f = TFile::Open(dataFile, "UPDATE");
+         if (f) {
+            f->cd();
+            fInputData->Write();
+            f->Close();
+            SafeDelete(f);
+         } else {
+            Error("SendInputDataFile", "could not open %s for updating", dataFile.Data());
+            return;
+         }
+      }
+   }
+   // Send the file
+   Info("SendInputDataFile", "broadcasting %s", dataFile.Data());
+   BroadcastFile(dataFile.Data(), kBinary, "cache");
+
+   // Set the name in the input list
+   AddInput(new TNamed("PROOF_InputDataFile", Form("cache:%s", gSystem->BaseName(dataFile))));
 }
 
 //______________________________________________________________________________

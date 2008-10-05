@@ -37,9 +37,9 @@ TProofQueryResult::TProofQueryResult(Int_t sn, const char *opt, TList *inlist,
    fStartLog = -1;
 
    // Add data sets and event lists to the input list
-   if (dset)
+   if (fInputList && dset)
       fInputList->Add(dset);
-   if (elist)
+   if (fInputList && elist)
       fInputList->Add(elist);
 }
 

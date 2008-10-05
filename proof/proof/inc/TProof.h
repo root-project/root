@@ -124,6 +124,7 @@ const char* const kPROOF_CacheLockFile   = "proof-cache-lock-";   // cache lock 
 const char* const kPROOF_PackageLockFile = "proof-package-lock-"; // package lock file
 const char* const kPROOF_QueryLockFile   = "proof-query-lock-";   // query lock file
 const char* const kPROOF_TerminateWorker = "+++ terminating +++"; // signal worker termination in MarkBad
+const char* const kPROOF_InputDataFile   = "inputdata.root";      // Default input data file name
 
 #ifndef R__WIN32
 const char* const kCP     = "/bin/cp -fp";
@@ -275,7 +276,8 @@ friend class TXProofServ;     // to access EUrgent
 public:
    // PROOF status bits
    enum EStatusBits {
-      kUsingSessionGui     = BIT(14)
+      kUsingSessionGui     = BIT(14),
+      kNewInputData        = BIT(15)
    };
    enum EQueryMode {
       kSync                = 0,
@@ -358,7 +360,8 @@ private:
       kBinary              = 0x1,
       kForce               = 0x2,
       kForward             = 0x4,
-      kCpBin               = 0x8
+      kCpBin               = 0x8,
+      kCp                  = 0x10
    };
    enum EProofWrkListAction {
       kActivateWorker      = 1,
@@ -436,9 +439,12 @@ private:
    TProofLockPath *fPackageLock;     //package lock
    TList          *fEnabledPackagesOnClient; //list of packages enabled on client
 
-   TList          *fLoadedMacros;   // List of loaded macros (just file names)
-   static TList   *fgProofEnvList;  // List of TNameds defining environment
-                                    // variables to pass to proofserv
+   TList          *fInputData;       //Input data objects sent over via file
+   TString         fInputDataFile;   //File with input data objects
+
+   TList          *fLoadedMacros;    // List of loaded macros (just file names)
+   static TList   *fgProofEnvList;   // List of TNameds defining environment
+                                     // variables to pass to proofserv
 protected:
    enum ESlaves { kAll, kActive, kUnique, kAllUnique };
 
@@ -475,8 +481,8 @@ private:
    Int_t    Exec(const char *cmd, ESlaves list, Bool_t plusMaster);
    Int_t    SendCommand(const char *cmd, ESlaves list = kActive);
    Int_t    SendCurrentState(ESlaves list = kActive);
-   Bool_t   CheckFile(const char *file, TSlave *sl, Long_t modtime, Bool_t cpbin = kTRUE);
-   Int_t    SendFile(const char *file, Int_t opt = (kBinary | kForward | kCpBin),
+   Bool_t   CheckFile(const char *file, TSlave *sl, Long_t modtime, Int_t cpopt = (kCp | kCpBin));
+   Int_t    SendFile(const char *file, Int_t opt = (kBinary | kForward | kCp | kCpBin),
                      const char *rfile = 0, TSlave *sl = 0);
    Int_t    SendObject(const TObject *obj, ESlaves list = kActive);
    Int_t    SendGroupView();
@@ -509,6 +515,8 @@ private:
    Int_t    Broadcast(const char *mess, Int_t kind = kMESS_STRING, ESlaves list = kActive);
    Int_t    Broadcast(Int_t kind, TList *slaves) { return Broadcast(0, kind, slaves); }
    Int_t    Broadcast(Int_t kind, ESlaves list = kActive) { return Broadcast(0, kind, list); }
+   Int_t    BroadcastFile(const char *file, Int_t opt, const char *rfile, TList *wrks);
+   Int_t    BroadcastFile(const char *file, Int_t opt, const char *rfile = 0, ESlaves list = kAllUnique);
    Int_t    BroadcastGroupPriority(const char *grp, Int_t priority, ESlaves list = kAllUnique);
    Int_t    BroadcastGroupPriority(const char *grp, Int_t priority, TList *workers);
    Int_t    BroadcastObject(const TObject *obj, Int_t kind, TList *slaves);
@@ -551,6 +559,8 @@ private:
    Int_t    GetQueryReference(Int_t qry, TString &ref);
 
    void     PrintProgress(Long64_t total, Long64_t processed, Float_t procTime = -1.);
+
+   void     SendInputDataFile();
 
 protected:
    TProof(); // For derived classes to use
@@ -636,7 +646,7 @@ public:
 
    //-- cache and package management
    void        ShowCache(Bool_t all = kFALSE);
-   void        ClearCache();
+   void        ClearCache(const char *file = 0);
    TList      *GetListOfPackages();
    TList      *GetListOfEnabledPackages();
    void        ShowPackages(Bool_t all = kFALSE);
@@ -734,6 +744,11 @@ public:
    TList      *GetInputList();
    TObject    *GetOutput(const char *name);
    TList      *GetOutputList();
+
+   void        AddInputData(TObject *obj, Bool_t push = kFALSE);
+   void        SetInputDataFile(const char *datafile);
+   void        ClearInputData(TObject *obj = 0);
+   void        ClearInputData(const char *name);
 
    void        AddFeedback(const char *name);
    void        RemoveFeedback(const char *name);
