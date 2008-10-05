@@ -224,7 +224,7 @@ void XrdProofConn::Connect()
                if (GetServType() == kSTProofd)
                   return;
                if (fLastErr == kXR_NotAuthorized || fLastErr == kXR_InvalidRequest) {
-                  // Auth error or iunvalid request: does not make much sense to retry
+                  // Auth error or invalid request: does not make much sense to retry
                   Close("P");
                   XrdOucString msg = fLastErrMsg;
                   msg.erase(msg.rfind(":"));
@@ -1095,7 +1095,7 @@ bool XrdProofConn::Login()
             TRACE(DBG, "server requires authentication");
 
             secp = Authenticate(plist, (int)(len+1));
-            resp = (secp != 0);
+            resp = (secp != 0) ? 1 : 0;
 
             if (!resp)
                // We failed the aythentication attempt: cannot continue
