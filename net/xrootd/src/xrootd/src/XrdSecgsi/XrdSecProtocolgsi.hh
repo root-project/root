@@ -193,8 +193,7 @@ public:
                   if (Options & kOptsDelChn)
                      SafeDelete(Chain);
                   if (PxyChain)
-                     PxyChain->Cleanup(1);
-                  SafeDelete(PxyChain); }
+                     PxyChain->Cleanup(1); }
    void Dump(XrdSecProtocolgsi *p = 0);
 };
 
