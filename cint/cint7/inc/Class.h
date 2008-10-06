@@ -58,7 +58,7 @@ G__ClassInfo {
   long IsBase(const char* classname);
   long IsBase(G__ClassInfo& a);
   long Tagnum() const;
-  Reflex::Type ReflexType();
+  Reflex::Scope ReflexScope();
   G__ClassInfo EnclosingClass();
   G__ClassInfo EnclosingSpace();
   struct G__friendtag* GetFriendInfo();
