@@ -94,7 +94,9 @@ static G__pMethodSpecialObject G__UserSpecificGetSpecialObject;
 static void G__ClassInfo2G__value(G__ClassInfo* type
 				     ,G__value* pvalue,long l)
 {
-   G__value_typenum(*pvalue) = ::Reflex::PointerBuilder(type->ReflexType());
+   ::Reflex::Scope scope = type->ReflexScope();
+   ::Reflex::Type what = scope;
+   G__value_typenum(*pvalue) = ::Reflex::PointerBuilder(what);
    pvalue->ref=0;
    pvalue->obj.i = l;
 }

@@ -53,7 +53,7 @@ void Cint::G__MethodInfo::Init(G__ClassInfo& a)
    usingIndex = -1;
 #endif // G__OLDIMPLEMENTATION2194
    if (a.IsValid()) {
-      fScope = a.ReflexType();
+      fScope = a.ReflexScope();
       G__incsetup_memfunc((int) a.Tagnum());
    }
 }
@@ -86,7 +86,7 @@ void Cint::G__MethodInfo::Init(G__ClassInfo* belongingclassin, long funcpage, lo
    fClassInfo = 0;
    fScope = Reflex::Scope::GlobalScope();
    if (belongingclassin && belongingclassin->IsValid()) { // member function
-      fScope = belongingclassin->ReflexType();
+      fScope = belongingclassin->ReflexScope();
    }
    fName = "";
    delete fTypeInfo;

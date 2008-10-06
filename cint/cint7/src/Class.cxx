@@ -253,9 +253,9 @@ long Cint::G__ClassInfo::Tagnum() const
    return tagnum;
 }
 ///////////////////////////////////////////////////////////////////////////
-::Reflex::Type Cint::G__ClassInfo::ReflexType()
+::Reflex::Scope Cint::G__ClassInfo::ReflexScope()
 {
-   return G__Dict::GetDict().GetType(tagnum);
+   return G__Dict::GetDict().GetScope(tagnum);
 }
 ///////////////////////////////////////////////////////////////////////////
 G__ClassInfo Cint::G__ClassInfo::EnclosingClass()

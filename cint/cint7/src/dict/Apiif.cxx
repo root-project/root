@@ -1063,7 +1063,7 @@ static int G__G__API_98_12294064_0(G__value* result7, G__CONST char* funcname, s
 {
       {
          Reflex::Type* pobj;
-         Reflex::Type xobj = ((Cint::G__ClassInfo*) G__getstructoffset())->ReflexType();
+         Reflex::Type xobj = ((Cint::G__ClassInfo*) G__getstructoffset())->ReflexScope();
          pobj = new Reflex::Type(xobj);
          result7->obj.i = (long) ((void*) pobj);
          result7->ref = result7->obj.i;

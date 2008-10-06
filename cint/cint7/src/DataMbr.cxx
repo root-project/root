@@ -180,7 +180,7 @@ void Cint::G__DataMemberInfo::Init()
 void Cint::G__DataMemberInfo::Init(class G__ClassInfo& a)
 {
    if (a.IsValid()) {
-      m_scope = a.ReflexType();
+      m_scope = a.ReflexScope();
       m_datambr = ::Reflex::Member();
       m_memberiter = -1;
       delete m_typeinfo; // we own, cache object
@@ -230,7 +230,7 @@ void Cint::G__DataMemberInfo::Init(long handlein, long indexin, G__ClassInfo* be
       delete m_memberof; // we own, cache object
       m_memberof = 0; // we own, cache object
       if (belongingclassin && belongingclassin->IsValid()) {
-         m_scope = belongingclassin->ReflexType();
+         m_scope = belongingclassin->ReflexScope();
       }
       else {
          m_scope = ::Reflex::Scope();
