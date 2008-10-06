@@ -48,9 +48,11 @@
   (i.e. direct copy of the raw byte on disk). The "fast" mode is typically
   5 times faster than the mode unzipping and unstreaming the baskets.
    
-  NOTE: By default histograms are added. However if histograms have their bit kIsAverage
+  NOTE1: By default histograms are added. However if histograms have their bit kIsAverage
         set, the contents are averaged instead of being summed. See TH1::Add.
         
+  NOTE2: hadd returns a status code: 0 if OK, -1 otherwise
+  
   Authors: Rene Brun, Dirk Geppert, Sven A. Schmidt, sven.schmidt@cern.ch
          : rewritten from scratch by Rene Brun (30 November 2005)
             to support files with nested directories.
@@ -76,7 +78,7 @@ Bool_t noTrees;
 Bool_t fastMethod;
 
 int AddFile(TList* sourcelist, std::string entry, int newcomp) ;
-void MergeRootfile( TDirectory *target, TList *sourcelist, Int_t isdir );
+int MergeRootfile( TDirectory *target, TList *sourcelist, Int_t isdir );
 
 //___________________________________________________________________________
 int main( int argc, char **argv ) 
@@ -142,12 +144,12 @@ int main( int argc, char **argv )
       cout <<"Merging will be slower"<<endl;
    }
 
-   MergeRootfile( Target, FileList,0 );
+   int status = MergeRootfile( Target, FileList,0 );
 
    //must delete Target to avoid a problem with dictionaries in~ TROOT
    delete Target;
 
-   return 0;
+   return status;
 }
 
 //___________________________________________________________________________
@@ -185,9 +187,10 @@ int AddFile(TList* sourcelist, std::string entry, int newcomp)
 
 
 //___________________________________________________________________________
-void MergeRootfile( TDirectory *target, TList *sourcelist, Int_t isdir ) 
+int MergeRootfile( TDirectory *target, TList *sourcelist, Int_t isdir ) 
 {
    // Merge all objects in a directory
+   int status = 0;
    cout << "Target path: " << target->GetPath() << endl;
    TString path( (char*)strstr( target->GetPath(), ":" ) );
    path.Remove( 0, 2 );
@@ -270,7 +273,8 @@ void MergeRootfile( TDirectory *target, TList *sourcelist, Int_t isdir )
             // newdir is now the starting point of another round of merging
             // newdir still knows its depth within the target file via
             // GetPath(), so we can still figure out where we are in the recursion
-            MergeRootfile( newdir, sourcelist,1);
+            status = MergeRootfile( newdir, sourcelist,1);
+            if (status) return status;
 
          } else if ( obj->InheritsFrom(TObject::Class())
               && obj->IsA()->GetMethodWithPrototype("Merge", "TCollection*") ) {
@@ -315,7 +319,8 @@ void MergeRootfile( TDirectory *target, TList *sourcelist, Int_t isdir )
                   if (key2) {
                      TObject *nobj = key2->ReadObj();
                      nobj->ResetBit(kMustCleanup);
-                     target->WriteTObject(nobj, key2->GetName(), "SingleKey" );
+                     int nbytes1 = target->WriteTObject(nobj, key2->GetName(), "SingleKey" );
+                     if (nbytes1 <= 0) status = -1;
                      delete nobj;
                   }
                }
@@ -341,7 +346,8 @@ void MergeRootfile( TDirectory *target, TList *sourcelist, Int_t isdir )
                   delete globChain;
                }
             } else {
-               obj->Write( key->GetName(), TObject::kSingleKey );
+               int nbytes2 = obj->Write( key->GetName(), TObject::kSingleKey );
+               if (nbytes2 <= 0) status = -1;
             }
          }
          oldkey = key;
@@ -351,4 +357,5 @@ void MergeRootfile( TDirectory *target, TList *sourcelist, Int_t isdir )
    // save modifications to target file
    target->SaveSelf(kTRUE);
    if (!isdir) sourcelist->Remove(sourcelist->First());
+   return status;
 }
