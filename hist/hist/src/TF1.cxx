@@ -1551,6 +1551,8 @@ Double_t TF1::GetMaximum(Double_t xmin, Double_t xmax) const
    //  the fNpx to a small value speeds the algorithm up many times.
    //  Then, Brent's method is applied on the bracketed interval
 
+   if (xmin >= xmax) {xmin = fXmin; xmax = fXmax;}
+
    ROOT::Math::BrentMinimizer1D bm;
    GInverseFunc g(this);
    ROOT::Math::WrappedFunction<GInverseFunc> wf1(g);
@@ -1574,6 +1576,8 @@ Double_t TF1::GetMaximumX(Double_t xmin, Double_t xmax) const
    //  If the function is unimodal or if its extrema are far apart, setting
    //  the fNpx to a small value speeds the algorithm up many times.
    //  Then, Brent's method is applied on the bracketed interval
+
+   if (xmin >= xmax) {xmin = fXmin; xmax = fXmax;}
 
    ROOT::Math::BrentMinimizer1D bm;
    GInverseFunc g(this);
@@ -1599,6 +1603,8 @@ Double_t TF1::GetMinimum(Double_t xmin, Double_t xmax) const
    //  a small value speeds the algorithm up many times.
    //  Then, Brent's method is applied on the bracketed interval
 
+   if (xmin >= xmax) {xmin = fXmin; xmax = fXmax;}
+
    ROOT::Math::BrentMinimizer1D bm;
    ROOT::Math::WrappedFunction<const TF1&> wf1(*this);
    bm.SetFunction( wf1, xmin, xmax );
@@ -1623,6 +1629,8 @@ Double_t TF1::GetMinimumX(Double_t xmin, Double_t xmax) const
    //  a small value speeds the algorithm up many times.
    //  Then, Brent's method is applied on the bracketed interval
 
+   if (xmin >= xmax) {xmin = fXmin; xmax = fXmax;}
+
    ROOT::Math::BrentMinimizer1D bm;
    ROOT::Math::WrappedFunction<const TF1&> wf1(*this);
    bm.SetFunction( wf1, xmin, xmax );
@@ -1645,6 +1653,8 @@ Double_t TF1::GetX(Double_t fy, Double_t xmin, Double_t xmax) const
    //  unimodal or if its extrema are far apart, setting the fNpx to
    //  a small value speeds the algorithm up many times.
    //  Then, Brent's method is applied on the bracketed interval
+
+   if (xmin >= xmax) {xmin = fXmin; xmax = fXmax;}
    
    GFunc g(this, fy);
    ROOT::Math::WrappedFunction<GFunc> wf1(g);
