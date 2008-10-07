@@ -80,6 +80,7 @@ friend class TProofServ;   // to be able to call SetDescriptor(), RecvHostAuth()
 friend class TSlave;       // to be able to call SendHostAuth()
 
 public:
+   enum EStatusBits { kIsUnix = BIT(16) };   // set if unix socket
    enum EInterest { kRead = 1, kWrite = 2 };
    enum EServiceType { kSOCKD, kROOTD, kPROOFD };
 
@@ -130,6 +131,7 @@ public:
    TSocket(TInetAddress address, Int_t port, Int_t tcpwindowsize = -1);
    TSocket(const char *host, const char *service, Int_t tcpwindowsize = -1);
    TSocket(const char *host, Int_t port, Int_t tcpwindowsize = -1);
+   TSocket(const char *sockpath);
    TSocket(Int_t descriptor);
    TSocket(const TSocket &s);
    virtual ~TSocket() { Close(); }

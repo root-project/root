@@ -2924,8 +2924,11 @@ int TUnixSystem::ConnectService(const char *servername, int port,
 {
    // Connect to service servicename on server servername.
 
-   if (!strcmp(servername, "unix"))
+   if (!strcmp(servername, "unix")) {
       return UnixUnixConnect(port);
+   } else if (!gSystem->AccessPathName(servername) || servername[0] == '/') {
+      return UnixUnixConnect(servername);
+   }
    return UnixTcpConnect(servername, port, tcpwindowsize);
 }
 
@@ -2962,9 +2965,17 @@ int TUnixSystem::AnnounceTcpService(int port, Bool_t reuse, int backlog,
 //______________________________________________________________________________
 int TUnixSystem::AnnounceUnixService(int port, int backlog)
 {
-   // Announce unix domain service.
+   // Announce unix domain service on path "kServerPath/<port>"
 
    return UnixUnixService(port, backlog);
+}
+
+//______________________________________________________________________________
+int TUnixSystem::AnnounceUnixService(const char *sockpath, int backlog)
+{
+   // Announce unix domain service on path 'sockpath'
+
+   return UnixUnixService(sockpath, backlog);
 }
 
 //______________________________________________________________________________
@@ -3863,14 +3874,23 @@ int TUnixSystem::UnixUnixConnect(int port)
 {
    // Connect to a Unix domain socket.
 
+   return UnixUnixConnect(Form("%s/%d", kServerPath, port));
+}
+
+//______________________________________________________________________________
+int TUnixSystem::UnixUnixConnect(const char *sockpath)
+{
+   // Connect to a Unix domain socket.
+
+   if (!sockpath || strlen(sockpath) <= 0) {
+      ::SysError("TUnixSystem::UnixUnixConnect", "socket path undefined");
+      return -1;
+   }
+
    int sock;
-   char buf[100];
    struct sockaddr_un unserver;
-
-   sprintf(buf, "%s/%d", kServerPath, port);
-
    unserver.sun_family = AF_UNIX;
-   strcpy(unserver.sun_path, buf);
+   strcpy(unserver.sun_path, sockpath);
 
    // Open socket
    if ((sock = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
@@ -3969,20 +3989,41 @@ int TUnixSystem::UnixUnixService(int port, int backlog)
    // Open a socket, bind to it and start listening for Unix domain connections
    // to it. Returns socket fd or -1.
 
-   struct sockaddr_un unserver;
-   int sock, oldumask;
-
-   memset(&unserver, 0, sizeof(unserver));
-   unserver.sun_family = AF_UNIX;
+   int oldumask;
 
    // Assure that socket directory exists
    oldumask = umask(0);
    ::mkdir(kServerPath, 0777);
    umask(oldumask);
-   sprintf(unserver.sun_path, "%s/%d", kServerPath, port);
+
+   // Socket path
+   TString sockpath;
+   sockpath.Form("%s/%d", kServerPath, port);
 
    // Remove old socket
-   unlink(unserver.sun_path);
+   unlink(sockpath.Data());
+
+   return UnixUnixService(sockpath, backlog);
+}
+
+//______________________________________________________________________________
+int TUnixSystem::UnixUnixService(const char *sockpath, int backlog)
+{
+   // Open a socket on path 'sockpath', bind to it and start listening for Unix
+   // domain connections to it. Returns socket fd or -1.
+
+   if (!sockpath || strlen(sockpath) <= 0) {
+      ::SysError("TUnixSystem::UnixUnixService", "socket path undefined");
+      return -1;
+   }
+
+   struct sockaddr_un unserver;
+   int sock;
+
+   // Prepare structure
+   memset(&unserver, 0, sizeof(unserver));
+   unserver.sun_family = AF_UNIX;
+   sprintf(unserver.sun_path, "%s", sockpath);
 
    // Create socket
    if ((sock = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {

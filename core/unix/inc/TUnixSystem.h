@@ -61,9 +61,11 @@ protected:
                                   Long_t *blocks, Long_t *bfree);
    static int          UnixTcpConnect(const char *hostname, int port, int tcpwindowsize);
    static int          UnixUnixConnect(int port);
+   static int          UnixUnixConnect(const char *path);
    static int          UnixTcpService(int port, Bool_t reuse, int backlog,
                                       int tcpwindowsize);
    static int          UnixUnixService(int port, int backlog);
+   static int          UnixUnixService(const char *sockpath, int backlog);
    static int          UnixRecv(int sock, void *buf, int len, int flag);
    static int          UnixSend(int sock, const void *buf, int len, int flag);
 
@@ -119,7 +121,7 @@ public:
    void              Sleep(UInt_t milliSec);
 
    //---- Processes --------------------------------------------
-   int               Exec(const char *shellcmd);
+   Int_t             Exec(const char *shellcmd);
    FILE             *OpenPipe(const char *shellcmd, const char *mode);
    int               ClosePipe(FILE *pipe);
    void              Exit(int code, Bool_t mode = kTRUE);
@@ -198,6 +200,7 @@ public:
    int               OpenConnection(const char *server, int port, int tcpwindowsize = -1);
    int               AnnounceTcpService(int port, Bool_t reuse, int backlog, int tcpwindowsize = -1);
    int               AnnounceUnixService(int port, int backlog);
+   int               AnnounceUnixService(const char *sockpath, int backlog);
    int               AcceptConnection(int sock);
    void              CloseConnection(int sock, Bool_t force = kFALSE);
    int               RecvRaw(int sock, void *buffer, int length, int flag);

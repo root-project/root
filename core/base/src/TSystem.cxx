@@ -2037,6 +2037,15 @@ int TSystem::AnnounceUnixService(int, int)
 }
 
 //______________________________________________________________________________
+int TSystem::AnnounceUnixService(const char *, int)
+{
+   // Announce unix domain service.
+
+   AbstractMethod("AnnounceUnixService");
+   return -1;
+}
+
+//______________________________________________________________________________
 int TSystem::AcceptConnection(int)
 {
    // Accept a connection.

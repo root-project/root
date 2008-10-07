@@ -247,6 +247,39 @@ TSocket::TSocket(const char *url, Int_t port, Int_t tcpwindowsize)
 }
 
 //______________________________________________________________________________
+TSocket::TSocket(const char *sockpath) : TNamed(sockpath, "")
+{
+   // Create a socket in the Unix domain on 'sockpath'.
+   // Returns when connection has been accepted by the server. Use IsValid()
+   // to check the validity of the socket. Every socket is added to the TROOT
+   // sockets list which will make sure that any open sockets are properly
+   // closed on program termination.
+
+   R__ASSERT(gROOT);
+   R__ASSERT(gSystem);
+
+   fUrl = sockpath;
+
+   fService = "unix";
+   fSecContext = 0;
+   fRemoteProtocol= -1;
+   fServType = kSOCKD;
+   fAddress.fPort = -1;
+   fName.Form("unix:%s", sockpath);
+   SetTitle(fService);
+   fBytesSent = 0;
+   fBytesRecv = 0;
+   fCompress  = 0;
+   fTcpWindowSize = -1;
+
+   fSocket = gSystem->OpenConnection(sockpath, -1, -1);
+   if (fSocket > 0) {
+      R__LOCKGUARD2(gROOTMutex);
+      gROOT->GetListOfSockets()->Add(this);
+   }
+}
+
+//______________________________________________________________________________
 TSocket::TSocket(Int_t desc) : TNamed("", "")
 {
    // Create a socket. The socket will use descriptor desc.
