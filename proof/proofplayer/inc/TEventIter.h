@@ -134,6 +134,7 @@ private:
    TTree      *fTree;         // tree we are iterating over
    TTreeCache *fTreeCache;    // instance of the tree cache for the tree
    Bool_t      fUseTreeCache; // Control usage of the tree cache
+   Long64_t    fCacheSize;    // Cache size
    TList      *fFileTrees;    // Files && Trees currently open
 
    // Auxilliary class to keep track open files and loaded trees
