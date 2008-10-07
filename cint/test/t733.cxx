@@ -13,12 +13,13 @@ using namespace std;
 
 int main() 
 {
-#if (G__CINTVERSION < 70000000))
-  // emulate Reflex's global namespace:
   cout << endl;
-#endif
   G__ClassInfo c;
   G__DataMemberInfo m;
+#if (G__CINTVERSION > 70000000))
+  // Skip global namespace
+  c.Next();
+#endif
   while(c.Next() && strcmp(c.Name(),"bool")!=0 && 
 	strcmp(c.Name(),"type_info")!=0) {
     cout << c.Name() << endl;
