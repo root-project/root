@@ -2325,6 +2325,8 @@ void TPostScript::Text(Double_t xx, Double_t yy, const char *chars)
          if (chars[i]=='(' || chars[i]==')') {
             sprintf(str,"\\%c",chars[i]);
             PrintStr(str);
+         } else if (chars[i]=='-') {
+            PrintStr("\\255");
          } else {
             sprintf(str,"%c",chars[i]);
             PrintFast(1,str);
