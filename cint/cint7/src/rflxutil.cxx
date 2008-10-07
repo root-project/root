@@ -23,6 +23,12 @@
 #include <string>
 #include <cstring>
 
+using namespace std;
+
+extern "C" void G__dump_reflex();
+extern "C" void G__dump_reflex_atlevel(const ::Reflex::Scope scope, int level);
+extern "C" void G__dump_reflex_function(const ::Reflex::Scope scope, int level);
+
 //______________________________________________________________________________
 size_t Cint::Internal::GetReflexPropertyID()
 {
@@ -234,7 +240,7 @@ int Cint::Internal::G__get_type(const ::Reflex::Type in)
    if (in.IsPointerToMember() || in.ToType().IsPointerToMember() ||  final.IsPointerToMember()) return 'a';
 
    // The type code for a variable in cint5 ignores any array part.
-   for (; final.IsArray(); final = final.ToType());
+   for (; final.IsArray(); final = final.ToType()) {}
 
    int pointerThusUppercase = final.IsPointer();
    pointerThusUppercase *= 'A' - 'a';
@@ -317,6 +323,18 @@ int Cint::Internal::G__get_tagtype(const ::Reflex::Type in)
       case ::Reflex::STRUCT: return 's';
       case ::Reflex::ENUM: return 'e';
       case ::Reflex::UNION: return 'u';
+      case ::Reflex::FUNCTION:
+      case ::Reflex::ARRAY:
+      case ::Reflex::FUNDAMENTAL:
+      case ::Reflex::POINTER:
+      case ::Reflex::POINTERTOMEMBER:
+      case ::Reflex::TYPEDEF:
+      case ::Reflex::MEMBERTEMPLATEINSTANCE:
+      case ::Reflex::NAMESPACE:
+      case ::Reflex::DATAMEMBER:
+      case ::Reflex::FUNCTIONMEMBER:
+      case ::Reflex::UNRESOLVED:
+         break;
    }
    return 0;
 }
@@ -333,6 +351,17 @@ int Cint::Internal::G__get_tagtype(const ::Reflex::Scope in)
       case ::Reflex::ENUM: return 'e';
       case ::Reflex::UNION: return 'u';
       case ::Reflex::NAMESPACE: return 'n';
+      case ::Reflex::FUNCTION:
+      case ::Reflex::ARRAY:
+      case ::Reflex::FUNDAMENTAL:
+      case ::Reflex::POINTER:
+      case ::Reflex::POINTERTOMEMBER:
+      case ::Reflex::TYPEDEF:
+      case ::Reflex::MEMBERTEMPLATEINSTANCE:
+      case ::Reflex::DATAMEMBER:
+      case ::Reflex::FUNCTIONMEMBER:
+      case ::Reflex::UNRESOLVED:
+         break;
    }
    return 0;
 }
@@ -502,7 +531,7 @@ int Cint::Internal::G__get_nindex(const ::Reflex::Type passed_type)
    int nindex = 0;
    for (; ty; ty = ty.ToType()) {
       // Skip typedefs.
-      for (; ty.IsTypedef(); ty = ty.ToType());
+      for (; ty.IsTypedef(); ty = ty.ToType()) {}
       if (!ty.IsArray()) {
          // -- Stop when we are no longer an array.
          break;
@@ -527,7 +556,7 @@ std::vector<int> Cint::Internal::G__get_index(const ::Reflex::Type passed_var)
    Reflex::Type var(passed_var);
 
    // Remove typedefs until we get to a real type.
-   for (; var.IsTypedef(); var = var.ToType());
+   for (; var.IsTypedef(); var = var.ToType()) {}
 
    // Handle a scalar right away.
    if (!var.IsArray()) {
@@ -539,7 +568,7 @@ std::vector<int> Cint::Internal::G__get_index(const ::Reflex::Type passed_var)
    int idx = 0;
    for (Reflex::Type ty = var; ty; ty = ty.ToType()) {
       // Skip typedefs.
-      for (; ty.IsTypedef(); ty = ty.ToType());
+      for (; ty.IsTypedef(); ty = ty.ToType()) {}
       if (!ty.IsArray()) {
          // -- Stop when we are no longer an array.
          break;
@@ -728,7 +757,7 @@ int Cint::Internal::G__get_varlabel(const Reflex::Type passed_var, int idx)
    Reflex::Type var(passed_var);
 
    // Remove typedefs until we get to a real type.
-   for (; var.IsTypedef(); var = var.ToType());
+   for (; var.IsTypedef(); var = var.ToType()) {}
 
    // Handle a scalar right away.
    if (!var.IsArray()) {
@@ -751,7 +780,7 @@ int Cint::Internal::G__get_varlabel(const Reflex::Type passed_var, int idx)
       for (; ty; ty = ty.ToType()) {
          // -- Multipy all but the first array dimension together.
          // Skip typedefs.
-         for (; ty.IsTypedef(); ty = ty.ToType());
+         for (; ty.IsTypedef(); ty = ty.ToType()) {}
          if (!ty.IsArray()) {
             // -- Stop when we are no longer an array.
             break;
@@ -765,7 +794,7 @@ int Cint::Internal::G__get_varlabel(const Reflex::Type passed_var, int idx)
       for (Reflex::Type ty = var; ty; ty = ty.ToType()) {
          // -- Multipy all the array dimensions together.
          // Skip typedefs.
-         for (; ty.IsTypedef(); ty = ty.ToType());
+         for (; ty.IsTypedef(); ty = ty.ToType()) {}
          if (!ty.IsArray()) {
             // -- Stop when we are no longer an array.
             break;
@@ -795,7 +824,7 @@ int Cint::Internal::G__get_varlabel(const Reflex::Type passed_var, int idx)
       }
       ty = ty.ToType();
       // Skip typedefs.
-      for (; ty.IsTypedef(); ty = ty.ToType());
+      for (; ty.IsTypedef(); ty = ty.ToType()) {}
    }
    if (!i) {
       // -- We are at the end marker, which is a one.
@@ -1128,62 +1157,75 @@ Reflex::Type Cint::Internal::G__deref(const Reflex::Type typein)
    return result;
 }
 
-void G__dumpreflex_function(const ::Reflex::Scope scope, int level);
+//______________________________________________________________________________
+extern "C" void G__dump_reflex()
+{
+   //return;
+   ::G__dump_reflex_atlevel(::Reflex::Scope::GlobalScope(), 0);
+}
 
 //______________________________________________________________________________
-void G__dumpreflex_atlevel(const ::Reflex::Scope scope, int level)
+extern "C" void G__dump_reflex_atlevel(const ::Reflex::Scope scope, int level)
 {
-   G__dumpreflex_function(scope, level);
-   for (
+   for ( // Dump data members.
       ::Reflex::Member_Iterator m = scope.DataMember_Begin();
       m != scope.DataMember_End();
       ++m
+   ) { // Dump data members.
+         // Indent.
+         for (int i=0; i<(level*2); ++i) {
+            fprintf(stderr, " ");
+         }
+         // Dump.
+         fprintf(stderr, "data member: '%s' '%s'\n", m->Name(Reflex::SCOPED | Reflex::QUALIFIED).c_str(), m->TypeOf().Name(Reflex::SCOPED | Reflex::QUALIFIED).c_str());
+   }
+   G__dump_reflex_function(scope, level); // Dump member functions.
+   for ( // Dump typdefs and enums.
+      ::Reflex::Type_Iterator itype = scope.SubType_Begin();
+      itype != scope.SubType_End();
+      ++itype
+   ) { // Dump typdefs and enums.
+         // Skip classes and structs.  // FIXME: Should skip unions too!
+         if (itype->IsClass()) {
+            continue;
+         }
+         // Indent.
+         for (int i=0; i<(level*2); ++i) {
+            fprintf(stderr, " ");
+         }
+         // Dump.
+         fprintf(stderr, "%s: '%s'\n", itype->TypeTypeAsString().c_str(), itype->Name(Reflex::SCOPED | Reflex::QUALIFIED).c_str());
+   }
+   for ( // Dump inner classes recursively.
+      ::Reflex::Scope_Iterator iscope = scope.SubScope_Begin();
+      iscope != scope.SubScope_End();
+      ++iscope
+   ) { // Dump inner classes recursively.
+         // Indent.
+         for (int i=0; i<(level*2); ++i) {
+            fprintf(stderr, " ");
+         }
+         // Dump.
+         fprintf(stderr, "%s: '%s'\n", iscope->ScopeTypeAsString().c_str(), iscope->Name(Reflex::SCOPED | Reflex::QUALIFIED).c_str());
+         G__dump_reflex_atlevel(*iscope, level+1); // Recurse. // FIXME: This is a tail recursion!
+   }
+}
+
+//______________________________________________________________________________
+extern "C" void G__dump_reflex_function(const ::Reflex::Scope scope, int level)
+{
+   for (
+      ::Reflex::Member_Iterator itype = scope.FunctionMember_Begin();
+      itype != scope.FunctionMember_End();
+      ++itype
    ) {
-         for (int i=0; i<(level*2); ++i)
+         // Indent.
+         for (int i=0; i<(level*2); ++i) {
             fprintf(stderr, " ");
-         fprintf(stderr, "data member: '%s'\n", m->Name(Reflex::SCOPED | Reflex::QUALIFIED).c_str());
+         }
+         // Dump.
+         fprintf(stderr, "function member: '%s' '%s'\n", itype->Name(Reflex::SCOPED | Reflex::QUALIFIED).c_str(), itype->TypeOf().Name(Reflex::SCOPED | Reflex::QUALIFIED).c_str());
    }
-   for (::Reflex::Scope_Iterator iscope = scope.SubScope_Begin();
-      iscope != scope.SubScope_End(); ++iscope) {
-         for (int i=0; i<(level*2); ++i)
-            fprintf(stderr, " ");
-         fprintf(stderr, "%s %s\n", iscope->IsClass()?"class":"scope", iscope->Name(Reflex::SCOPED | Reflex::QUALIFIED).c_str());
-         G__dumpreflex_atlevel(*iscope, level+1);
-   }
-   for (::Reflex::Type_Iterator itype = scope.SubType_Begin();
-      itype != scope.SubType_End(); ++itype) {
-         if (itype->IsClass()) continue;
-         for (int i=0; i<(level*2); ++i)
-            fprintf(stderr, " ");
-         fprintf(stderr, "%s %s\n", itype->TypeTypeAsString().c_str(), itype->Name(Reflex::SCOPED | Reflex::QUALIFIED).c_str());
-   }
-}
-
-//______________________________________________________________________________
-void G__dumpreflex_function(const ::Reflex::Scope scope, int level)
-{
-#if 0
-   for (::Reflex::Scope_Iterator iscope = scope.SubScope_Begin();
-      iscope != scope.SubScope_End(); ++iscope) {
-         for (int i=0; i<level; ++i)
-            fprintf(stderr, " ");
-         fprintf(stderr, "%s %s\n", iscope->IsClass()?"class":"scope", iscope->Name(Reflex::SCOPED | Reflex::QUALIFIED).c_str());
-         G__dumpreflex_function(*iscope, level+1);
-   }
-#endif // 0
-   for (::Reflex::Member_Iterator itype = scope.FunctionMember_Begin();
-      itype != scope.FunctionMember_End(); ++itype) {
-         for (int i=0; i<(level*2); ++i)
-            fprintf(stderr, " ");
-         fprintf(stderr, "%s\n", itype->Name(Reflex::SCOPED | Reflex::QUALIFIED).c_str());
-   }
-}
-
-//______________________________________________________________________________
-void Cint::Internal::G__dumpreflex()
-{
-   //return;
-   ::G__dumpreflex_atlevel(::Reflex::Scope::GlobalScope(), 0);
 }
 
 //______________________________________________________________________________
@@ -2082,7 +2124,7 @@ void Cint::Internal::G__BuilderInfo::AddParameter(int /* ifn */, int type, int n
       //m = funcBuilder.ToMember();
       if (!m) {
          fprintf(stderr, "G__BuilderInfo::Build: Something went wrong creating entry for '%s' in '%s'\n", name.c_str(), G__p_ifunc.Name(::Reflex::SCOPED | ::Reflex::QUALIFIED).c_str());
-         G__dumpreflex_function(G__p_ifunc, 1);
+         G__dump_reflex_function(G__p_ifunc, 1);
          return m;
       }
       G__RflxFuncProperties* a = G__get_funcproperties(m);

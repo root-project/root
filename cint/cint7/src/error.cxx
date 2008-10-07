@@ -48,7 +48,7 @@ int G__referencetypeerror(char* new_name);
 int G__syntaxerror(char* expr);
 int G__parenthesiserror(char* expression, char* funcname);
 int G__commenterror();
-int G__changeconsterror(const char* item, char* categ);
+int G__changeconsterror(const char* item, const char* categ);
 int G__pounderror();
 int G__missingsemicolumn(char* item);
 } // namespace Internal
@@ -398,7 +398,7 @@ int Cint::Internal::G__commenterror()
 }
 
 //______________________________________________________________________________
-int Cint::Internal::G__changeconsterror(const char* item, char* categ)
+int Cint::Internal::G__changeconsterror(const char* item, const char* categ)
 {
    if (G__dispmsg >= G__DISPWARN) {
       G__fprinterr(G__serr, "Warning: Re-initialization %s %s", categ, item);

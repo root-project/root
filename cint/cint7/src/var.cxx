@@ -288,7 +288,7 @@ static void G__getpointer2pointer(G__value* presult, const ::Reflex::Member& var
                      G__letint(presult, G__get_type(var.TypeOf()), *((long*) presult->ref));
                   } else {
                      ::Reflex::Type ty = var.TypeOf().FinalType();
-                     for (; ty.IsArray(); ty = ty.ToType());
+                     for (; ty.IsArray(); ty = ty.ToType()) {}
                      G__letpointer(presult, *((long*) presult->ref), ty);
                   }
                }
@@ -300,7 +300,7 @@ static void G__getpointer2pointer(G__value* presult, const ::Reflex::Member& var
                   G__letint(presult, G__get_type(var.TypeOf()), *(long*)presult->ref);
                } else {
                   ::Reflex::Type ty = var.TypeOf().FinalType();
-                  for (; ty.IsArray(); ty = ty.ToType());
+                  for (; ty.IsArray(); ty = ty.ToType()) {}
                   G__letpointer(presult, *(long*)presult->ref, G__deref(ty));
                }
                break;
@@ -309,7 +309,7 @@ static void G__getpointer2pointer(G__value* presult, const ::Reflex::Member& var
                   G__letint(presult, G__get_type(var.TypeOf()), *(long*)presult->ref);
                } else {
                   ::Reflex::Type ty = var.TypeOf().FinalType();
-                  for (; ty.IsArray(); ty = ty.ToType());
+                  for (; ty.IsArray(); ty = ty.ToType()) {}
                   G__letpointer(presult, *(long*)presult->ref, G__deref(ty));
                }
                break;
@@ -353,7 +353,7 @@ static void G__getpointer2pointer(G__value* presult, const ::Reflex::Member& var
          }
          else if (paran == G__get_paran(var)) {
             ::Reflex::Type ty = var.TypeOf().FinalType();
-            for (; ty.IsArray(); ty = ty.ToType());
+            for (; ty.IsArray(); ty = ty.ToType()) {}
             int var_ptr_count = 0;
             for (; ty.IsPointer(); ty = ty.ToType()) {
                ++var_ptr_count;
@@ -377,7 +377,7 @@ static void G__getpointer2pointer(G__value* presult, const ::Reflex::Member& var
                   break;
                default:
                   ::Reflex::Type ty = var.TypeOf().FinalType();
-                  for (; ty.IsArray(); ty = ty.ToType());
+                  for (; ty.IsArray(); ty = ty.ToType()) {}
                   int var_ptr_count = 0;
                   for (; ty.IsPointer(); ty = ty.ToType()) {
                      ++var_ptr_count;
@@ -1781,7 +1781,7 @@ void Cint::Internal::G__letautomatic(const ::Reflex::Member& var, char* arg_G__s
 }
 
 //______________________________________________________________________________
-G__value Cint::Internal::G__letstructmem(int store_var_type, const char* varname_input, char* membername, char* tagname, const ::Reflex::Scope& varglobal, G__value expression, int objptr /* 1: object, 2: pointer */)
+G__value Cint::Internal::G__letstructmem(int store_var_type, const char* /*varname_input*/, char* membername, char* tagname, const ::Reflex::Scope& varglobal, G__value expression, int objptr /* 1: object, 2: pointer */)
 {
    // -- FIXME: Describe me!
    G__value result;
@@ -4043,6 +4043,7 @@ static G__value Cint::Internal::G__allocvariable(G__value result, G__value para[
    //
    //  Set variable properties.
    //
+   G__get_properties(var)->statictype = var_statictype;
    G__get_properties(var)->isCompiledGlobal = var_isCompiledGlobal;
    G__get_properties(var)->comment = var_comment;
    G__get_properties(var)->globalcomp = var_globalcomp;
@@ -4827,11 +4828,10 @@ static G__value Cint::Internal::G__allocvariable(G__value result, G__value para[
 #undef G__ALLOC_VAR_REF
 
 //______________________________________________________________________________
-static int Cint::Internal::G__asm_gen_stvar(long arg_G__struct_offset, const ::Reflex::Member& var, int paran, const char* item, long store_struct_offset, int var_type, G__value* presult)
+static int Cint::Internal::G__asm_gen_stvar(long arg_G__struct_offset, const ::Reflex::Member& var, int paran, const char* item, long store_struct_offset, int var_type, G__value* /*presult*/)
 {
    // -- FIXME: Describe me!
    ::Reflex::Type type(var.TypeOf().FinalType());
-   int cint_type = G__get_type(type);
    // ST_GVAR or ST_VAR instruction.
    if (arg_G__struct_offset) {
       // --
@@ -5060,7 +5060,7 @@ inline void G__get_pvar(CONVFUNC f, char TYPE, char PTYPE, ::Reflex::Member& var
                G__letint(result, PTYPE, (long)((CASTTYPE*)(*((long*)result->ref))));
                if (G__get_reftype(variable.TypeOf()) > G__PARAP2P) {
                   ::Reflex::Type ty = variable.TypeOf().FinalType();
-                  for (; ty.IsArray(); ty = ty.ToType());
+                  for (; ty.IsArray(); ty = ty.ToType()) {}
                   int var_ptr_count = 0;
                   for (; ty.IsPointer(); ty = ty.ToType()) {
                      ++var_ptr_count;
@@ -5077,7 +5077,7 @@ inline void G__get_pvar(CONVFUNC f, char TYPE, char PTYPE, ::Reflex::Member& var
                   result->ref = (long)(((long*)(*((long*)result->ref))) + para[ip].obj.i);
                }
                ::Reflex::Type result_type = variable.TypeOf().FinalType();
-               for (; result_type.IsArray(); result_type = result_type.ToType());
+               for (; result_type.IsArray(); result_type = result_type.ToType()) {}
                int ptr_to_drop = paran - G__get_paran(variable);
                for (int i = 0; i < ptr_to_drop; ++i) {
                   result_type = G__deref(result_type);
@@ -5097,7 +5097,7 @@ inline void G__get_pvar(CONVFUNC f, char TYPE, char PTYPE, ::Reflex::Member& var
                      result->ref = (long)((long*) (*((long*) result->ref)) + para[paran-1].obj.i);
                      G__letint(result, PTYPE, *((long*)result->ref));
                      ::Reflex::Type ty = variable.TypeOf().FinalType();
-                     for (; ty.IsArray(); ty = ty.ToType());
+                     for (; ty.IsArray(); ty = ty.ToType()) {}
                      int var_ptr_count = 0;
                      for (; ty.IsPointer(); ty = ty.ToType()) {
                         ++var_ptr_count;
@@ -5723,7 +5723,7 @@ G__value Cint::Internal::G__getvariable(char* item, int* known, const ::Reflex::
                varparan += (G__get_reftype(variable.TypeOf()) % G__PARAREF) - G__PARAP2P + 1;
             }
             int ig25 = 0;
-            for (; (ig25 < paran) && (ig25 < varparan); ++ig25);
+            for (; (ig25 < paran) && (ig25 < varparan); ++ig25) {}
             while ((ig25 < paran) && G__get_varlabel(variable.TypeOf(), ig25 + 4)) {
                ++ig25;
             }
@@ -6341,18 +6341,20 @@ G__value Cint::Internal::G__getvariable(char* item, int* known, const ::Reflex::
                // calls to G__getvariable() or G__getexpr()
                // It is restored at this point.
                G__var_type = store_var_type;
-               if (!result.obj.i) {
+               if (!result.obj.i) { // A nil pointer was returned.
                   *known = 0;
                }
-               else {
+               else { // We got something, change the result type.
                   Reflex::Scope varscope = variable.DeclaringScope();
                   std::string name = variable.Name();
                   char* offset = G__get_offset(variable);
+                  G__RflxVarProperties* prop = G__get_properties(variable);
                   varscope.RemoveDataMember(variable);
                   if (G__var_type == 'v') {
                      G__value_typenum(result) = G__deref(G__value_typenum(result));
                   }
-                  G__add_scopemember(varscope, name.c_str(), G__value_typenum(result), 0, (size_t)offset, offset, G__PUBLIC, 0);
+                  variable = G__add_scopemember(varscope, name.c_str(), G__value_typenum(result), 0, (size_t)offset, offset, G__PUBLIC, prop->statictype);
+                  *G__get_properties(variable) = *prop; // Overwrite the new properties with the previous ones.
                }
                switch (G__var_type) {
                   case 'p':
@@ -6978,7 +6980,7 @@ void Cint::Internal::G__returnvartype(G__value* presult, const ::Reflex::Member&
 }
 
 //______________________________________________________________________________
-::Reflex::Member Cint::Internal::G__getvarentry(const char* varname, int varhash, const ::Reflex::Scope& varglobal, const ::Reflex::Scope& varlocal)
+::Reflex::Member Cint::Internal::G__getvarentry(const char* varname, int /*varhash*/, const ::Reflex::Scope& varglobal, const ::Reflex::Scope& varlocal)
 {
    // -- FIXME: Describe me!
    ::Reflex::Scope varscope;

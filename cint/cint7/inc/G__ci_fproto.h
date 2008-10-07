@@ -116,7 +116,7 @@ G__DECL_API(48, int, G__getexitcode, (void));
 G__DECL_API(49, int, G__get_return, (int *exitval));
 
 #ifndef G__OLDIMPLEMENTATION1485
-G__DECL_API(50, int, G__fprinterr, (FILE* fp,char* fmt,...));
+G__DECL_API(50, int, G__fprinterr, (FILE* fp,const char* fmt,...));
 G__DECL_API(51, int, G__fputerr, (int c));
 #else
 #define G__fprinterr  fprintf

@@ -27,8 +27,11 @@ extern "C" {
       int no_exec_compile, G__value* tempbuf_obj, FILE* intp_sout, FILE* intp_sin);
    void G__list_sut(FILE *fp);
    /* defined Class.cxx used in G__exec_asm.h */
-   extern "C" void G__exec_alloc_lock();
-   extern "C" void G__exec_alloc_unlock();
+   void G__exec_alloc_lock();
+   void G__exec_alloc_unlock();
+   void G__dump_reflex();
+   void G__dump_reflex_atlevel(const ::Reflex::Scope scope, int level);
+   void G__dump_reflex_function(const ::Reflex::Scope scope, int level);
 }
 
 namespace Cint {
@@ -131,7 +134,7 @@ void G__setCINTLIBNAME(char * cintlib);
 void G__setInitFunc(char *initfunc);
 int G__parenthesiserror(char *expression,char *funcname);
 int G__commenterror(void);
-int G__changeconsterror(const char *item,char *categ);
+int G__changeconsterror(const char* item, const char* categ);
   /* int G__printlinenum(void); */
 int G__autocc(void);
 int G__init_readline(void);
@@ -694,7 +697,6 @@ void G__set_G__tagnum(const ::Reflex::Scope);
 void G__set_G__tagnum(const ::Reflex::Type);
 void G__set_G__tagnum(const G__value&);
 
-void G__dumpreflex();
 
 #if defined(G__WIN32) && (!defined(G__SYMANTEC)) && defined(G__CINTBODY)
 /* ON562 , this used to be test for G__SPECIALSTDIO */

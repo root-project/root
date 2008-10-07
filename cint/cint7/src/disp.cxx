@@ -2045,7 +2045,7 @@ extern "C" void* G__get_errmsgcallback()
 #ifndef G__TESTMAIN
 #undef G__fprinterr
 #if defined(G__ANSI) || defined(G__WIN32) || defined(G__FIX1) || defined(__sun)
-extern "C" int G__fprinterr(FILE* fp, char* fmt, ...)
+extern "C" int G__fprinterr(FILE* fp, const char* fmt, ...)
 #elif defined(__GNUC__)
 extern "C" int G__fprinterr(fp, fmt)
    FILE* fp;
