@@ -11,7 +11,7 @@ libmaster.so     -1 0x0        private: static TClass* fgIsA
 List of member function---------------------------------------------------
 filename       line:size busy function type and name  (in MyClass)
 libmaster.so     -1:-1   0 public: Name::MyClass MyClass(void);
-libmaster.so     -1:-1   0 public: void Print(const char*);
+libmaster.so     -1:-1   0 public: void Print(Option_t*);
 libmaster.so     -1:-1   0 public: static TClass* Class(void);
 libmaster.so     -1:-1   0 public: static const char* Class_Name(void);
 libmaster.so     -1:-1   0 public: static Version_t Class_Version(void);
@@ -38,7 +38,7 @@ libmaster.so     -1 0x0        private: static TClass* fgIsA
 List of member function---------------------------------------------------
 filename       line:size busy function type and name  (in MyClass)
 libmaster.so     -1:-1   0 public: Name::MyClass MyClass(void);
-libmaster.so     -1:-1   0 public: void Print(const char*);
+libmaster.so     -1:-1   0 public: void Print(Option_t*);
 libmaster.so     -1:-1   0 public: static TClass* Class(void);
 libmaster.so     -1:-1   0 public: static const char* Class_Name(void);
 libmaster.so     -1:-1   0 public: static Version_t Class_Version(void);
@@ -66,7 +66,7 @@ libmaster.so     -1 0x0        private: static TClass* fgIsA
 List of member function---------------------------------------------------
 filename       line:size busy function type and name  (in MyClass)
 libmaster.so     -1:-1   0 public: Name::MyClass MyClass(void);
-libmaster.so     -1:-1   0 public: void Print(const char*);
+libmaster.so     -1:-1   0 public: void Print(Option_t*);
 libmaster.so     -1:-1   0 public: static TClass* Class(void);
 libmaster.so     -1:-1   0 public: static const char* Class_Name(void);
 libmaster.so     -1:-1   0 public: static Version_t Class_Version(void);
