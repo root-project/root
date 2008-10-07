@@ -341,8 +341,9 @@ class genDictionary(object) :
             catt = c['attrs']
             catt['extra'] = match[0]
             if catt not in selec :
+              t['fullname'] = self.genTypeName(t['id'])
               if not self.quiet:
-                print '--->> genreflex: INFO: Using typedef %s to select class %s' % (self.genTypeName(t['id']), self.genTypeName(catt['id']))
+                print '--->> genreflex: INFO: Using typedef %s to select class %s' % (t['fullname'], self.genTypeName(catt['id']))
               selec.append(catt)
               self.typedefs_for_usr.append(t)
       if self.resolvettd :
