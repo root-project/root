@@ -47,6 +47,38 @@ static TAFS *gAFS = 0;
 #endif
 
 //______________________________________________________________________________
+static void ReadPutEnvs(const char *envfile)
+{
+   // Read envs from file 'envfile' and add them to the env space
+
+   // Check inputs
+   if (!envfile || strlen(envfile) <= 0) return;
+
+   // Open the file
+   FILE *fenv = fopen(envfile, "r");
+   if (!fenv) return;
+
+   // Read lines
+   char ln[4096];
+   while (fgets(ln, sizeof(ln), fenv)) {
+      int l = strlen(ln);
+      // Strip '\n'
+      if (l > 0 && ln[l-1] == '\n') { ln[l-1] = '\0'; l--; }
+      // Skip comments or empty line
+      if (l <= 0 || ln[0] == '#') continue;
+      // Skip lines not in the form '<name>=<value>'
+      if (!strchr(ln, '=')) continue;
+      // Good line
+      char *ev = new char[l+1];
+      strcpy(ev, ln);
+      putenv(ev);
+   }
+
+   // Close the file
+   fclose(fenv);
+}
+
+//______________________________________________________________________________
 static FILE *RedirectOutput(const char *logfile, const char *loc)
 {
    // Redirect stdout to 'logfile'. This log file will be flushed to the
@@ -142,7 +174,12 @@ int main(int argc, char **argv)
    while (debug)
       ;
 #endif
-   int loglevel = (argc >= 6) ? strtol(argv[5], 0, 10) : -1;
+   if (argc >= 6) {
+      // Read and put system envs
+      ReadPutEnvs(argv[5]);
+   }
+
+   int loglevel = (argc >= 5) ? strtol(argv[4], 0, 10) : -1;
    if (loglevel < 0 && getenv("ROOTPROOFLOGLEVEL"))
       loglevel = atoi(getenv("ROOTPROOFLOGLEVEL"));
    if (loglevel > 0)
@@ -186,9 +223,14 @@ int main(int argc, char **argv)
    TString getter("GetTProofServ");
    TString prooflib = "libProof";
    if (argc > 2) {
-      // XPD: additionally load the appropriate library
-      prooflib = "libProofx";
-      getter = "GetTXProofServ";
+      if (!strcmp(argv[2], "lite")) {
+         // Lite version for local processing
+         getter = "GetTProofServLite";
+      } else if (!strcmp(argv[2], "xpd")) {
+         // XPD: additionally load the appropriate library
+         prooflib = "libProofx";
+         getter = "GetTXProofServ";
+      }
    }
    char *p = 0;
    if ((p = gSystem->DynamicPathName(prooflib, kTRUE))) {
