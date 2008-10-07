@@ -245,7 +245,7 @@ void TQueryResult::RecordEnd(EQueryStatus status, TList *outlist)
    fStatus = (status < kAborted || status > kCompleted) ? kAborted : status;
 
    // Clone the results
-   if (outlist) {
+   if (outlist && fOutputList != outlist) {
       if (fOutputList) {
          fOutputList->Delete();
          SafeDelete(fOutputList);
@@ -406,9 +406,10 @@ void TQueryResult::SetInputList(TList *in, Bool_t adopt)
    // or cloned. If adopted, object ownership is transferred to this object.
    // The internal fInputList will always be owner of its objects.
 
-   SafeDelete(fInputList);
+   if (!in || in != fInputList)
+      SafeDelete(fInputList);
 
-   if (in) {
+   if (in && in != fInputList) {
       if (!adopt) {
          fInputList = (TList *) (in->Clone());
       } else {
@@ -431,9 +432,10 @@ void TQueryResult::SetOutputList(TList *out, Bool_t adopt)
    // or cloned.  If adopted, object ownership is transferred to this object.
    // The internal fOutputList will always be owner of its objects.
 
-   SafeDelete(fOutputList);
+   if (!out || out != fOutputList)
+      SafeDelete(fOutputList);
 
-   if (out) {
+   if (out && out != fOutputList) {
       if (!adopt) {
          fOutputList = (TList *) (out->Clone());
       } else {

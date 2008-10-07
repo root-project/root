@@ -44,9 +44,12 @@ Bool_t operator==(const TQueryResult &qr1, const TQueryResult &qr2);
 class TQueryResult : public TNamed {
 
 friend class TTreePlayer;
+friend class TProofPlayerLite;
 friend class TProofPlayerRemote;
 friend class TProof;
+friend class TProofLite;
 friend class TProofServ;
+friend class TQueryResultManager;
 
 public:
    enum EQueryStatus {
