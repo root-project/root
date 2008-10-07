@@ -624,7 +624,7 @@ Bool_t TXNetFile::ReadBuffer(char *buffer, Int_t bufferLength)
      // Update the counters only if the block has not been prefetched
      fBytesRead += nr;
      fReadCalls++;
-##ifdef WIN32
+#ifdef WIN32
      SetFileBytesRead(GetFileBytesRead() + nr);
      SetFileReadCalls(GetFileReadCalls() + 1);
 #else
