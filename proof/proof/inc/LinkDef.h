@@ -38,12 +38,16 @@
 #pragma link C++ class TSlave;
 #pragma link C++ class TVirtualProofPlayer+;
 #pragma link C++ class TProofQueryResult+;
+#pragma link C++ class TQueryResultManager+;
 #pragma link C++ class TDSetProxy+;
 #pragma link C++ class TCondor+;
 #pragma link C++ class TCondorSlave+;
 #pragma link C++ class TProofNodeInfo;
 #pragma link C++ class TProofResources;
 #pragma link C++ class TProofResourcesStatic;
+
+#pragma link C++ class TProofDataSetManager;
+#pragma link C++ class TProofDataSetManagerFile;
 
 #pragma link C++ class TProofDataSetManager;
 #pragma link C++ class TProofDataSetManagerFile;

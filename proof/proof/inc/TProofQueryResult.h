@@ -26,11 +26,11 @@
 #endif
 
 class TDSet;
-class TProofServ;
 
 class TProofQueryResult : public TQueryResult {
 
 friend class TProofServ;
+friend class TQueryResultManager;
 
 private:
    Int_t    fStartLog;     //log file offset at start
@@ -39,7 +39,11 @@ private:
                      Long64_t entries, Long64_t first, TDSet *dset,
                      const char *selec, TObject *elist = 0);
 
+   void  RecordEnd(EQueryStatus status, TList *outlist = 0)
+         { TQueryResult::RecordEnd(status, outlist); }
+
    void  SetFinalized() { TQueryResult::SetFinalized(); }
+   void  SetResultFile(const char *rf) { fResultFile = rf; }
    void  SetRunning(Int_t startlog, const char *par);
 
 public:
