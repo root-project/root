@@ -16,6 +16,8 @@
 #ifndef QT_NO_TEXTCODEC
 #  define QT_NO_TEXTCODEC
 #endif
+#define QT_NO_QFUTURE
+#define QT_NO_CONCURRENT
 
 typedef long long __int64;
 typedef __int64 Q_UINT64;
@@ -133,6 +135,9 @@ class Data { int d; };
 #include <QtCore/QtCore>
 #include <QtGui/QtGui>
 
-#include "qtclasses.h"
-#include "qtglobals.h"
-#include "qtfunctions.h"
+#pragma link off all classes;
+
+//#include "qtclasses.h"
+//#include "qtglobals.h"
+//#include "qtfunctions.h"
+
