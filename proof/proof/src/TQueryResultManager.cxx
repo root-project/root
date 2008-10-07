@@ -17,6 +17,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#ifdef WIN32
+#   include <io.h>
+#endif
+
 #include "TQueryResultManager.h"
 
 #include "TFile.h"
