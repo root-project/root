@@ -2091,7 +2091,7 @@ void TUnixSystem::StackTrace()
 #if (__GNUC__ >= 3)
    // try finding supported format option for g++ v3
    if (filter) {
-      FILE *p = OpenPipe(Form("%s --help 2>&1", filter), "r");
+      FILE *p = OpenPipe(TString::Format("%s --help 2>&1", filter), "r");
       TString help;
       while (help.Gets(p)) {
          if (help.Index("gnu-v3") != kNPOS) {
@@ -2613,7 +2613,7 @@ const char *TUnixSystem::GetLinkedLibraries()
    DylibAdded(0, 0);
    linkedLibs = gLinkedDylibs;
 #if 0
-   FILE *p = OpenPipe(Form("otool -L %s", exe), "r");
+   FILE *p = OpenPipe(TString::Format("otool -L %s", exe), "r");
    TString otool;
    while (otool.Gets(p)) {
       TString delim(" \t");
@@ -2636,7 +2636,7 @@ const char *TUnixSystem::GetLinkedLibraries()
    const char *cLDD="ldd";
    const char *cSOEXT=".so";
 #endif
-   FILE *p = OpenPipe(Form("%s %s", cLDD, exe), "r");
+   FILE *p = OpenPipe(TString::Format("%s %s", cLDD, exe), "r");
    TString ldd;
    while (ldd.Gets(p)) {
       TString delim(" \t");
@@ -3874,7 +3874,7 @@ int TUnixSystem::UnixUnixConnect(int port)
 {
    // Connect to a Unix domain socket.
 
-   return UnixUnixConnect(Form("%s/%d", kServerPath, port));
+   return UnixUnixConnect(TString::Format("%s/%d", kServerPath, port));
 }
 
 //______________________________________________________________________________
@@ -4181,7 +4181,7 @@ static const char *DynamicPath(const char *newpath = 0, Bool_t reset = kFALSE)
          dynpath += ":"; dynpath += ROOTLIBDIR;
       }
 #else
-      if (!dynpath.Contains(Form("%s/lib", gRootDir))) {
+      if (!dynpath.Contains(TString::Format("%s/lib", gRootDir))) {
          dynpath += ":"; dynpath += gRootDir; dynpath += "/lib";
       }
 #endif
@@ -4231,20 +4231,21 @@ char *TUnixSystem::DynamicPathName(const char *lib, Bool_t quiet)
       name = gSystem->Which(GetDynamicPath(), lib, kReadPermission);
       ext  = 1;
    } else {
-      name = Form("%s.dll", lib);
-      name = gSystem->Which(GetDynamicPath(), name, kReadPermission);
+      TString fname;
+      fname.Form("%s.dll", lib);
+      name = gSystem->Which(GetDynamicPath(), fname, kReadPermission);
       if (!name) {
-         name = Form("%s.so", lib);
-         name = gSystem->Which(GetDynamicPath(), name, kReadPermission);
+         fname.Form("%s.so", lib);
+         name = gSystem->Which(GetDynamicPath(), fname, kReadPermission);
          if (!name) {
-            name = Form("%s.sl", lib);
-            name = gSystem->Which(GetDynamicPath(), name, kReadPermission);
+            fname.Form("%s.sl", lib);
+            name = gSystem->Which(GetDynamicPath(), fname, kReadPermission);
             if (!name) {
-               name = Form("%s.dl", lib);
-               name = gSystem->Which(GetDynamicPath(), name, kReadPermission);
+               fname.Form("%s.dl", lib);
+               name = gSystem->Which(GetDynamicPath(), fname, kReadPermission);
                if (!name) {
-                  name = Form("%s.a", lib);
-                  name = gSystem->Which(GetDynamicPath(), name, kReadPermission);
+                  fname.Form("%s.a", lib);
+                  name = gSystem->Which(GetDynamicPath(), fname, kReadPermission);
                }
             }
          }
@@ -4880,7 +4881,7 @@ static void GetLinuxProcInfo(ProcInfo_t *procinfo)
    }
 
    TString s;
-   FILE *f = fopen(Form("/proc/%d/statm", gSystem->GetPid()), "r");
+   FILE *f = fopen(TString::Format("/proc/%d/statm", gSystem->GetPid()), "r");
    s.Gets(f);
    Long_t total, rss;
    sscanf(s.Data(), "%ld %ld", &total, &rss);
