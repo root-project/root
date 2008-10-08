@@ -34,7 +34,7 @@ typedef int Tag;
 #define ULONG_MAX qtcint_UL_max
 // Qt4 
 class QTextStreamFunction;
-typedef  char basic_string<wchar_t>
+//typedef char basic_string<wchar_t>;
 
 static unsigned int UINT_MAX;
 static unsigned long ULONG_MAX;
@@ -55,10 +55,6 @@ template <typename T> uint qHash(T);
 class QStyleOption;
 class QStyleOptionViewItem;
 class QStyleOptionComboBox;
-
-namespace QVariant {
-   enum Type;
-}
 
 // const bool FALSE=false;
 // const bool TRUE=true;
@@ -92,7 +88,7 @@ class Data { int d; };
 # undef dllimport
 #endif
 #define dllimport
-#endif
+#endif // CINT
 
 #include "qplatformdefs.h"
 
@@ -131,13 +127,14 @@ class Data { int d; };
 #  define  QT_NO_DEBUG_STREAM
 #endif
 
+#define QT_NO_SYSTEMLOCALE
+#define QT_NO_INPUTMETHOD
+
 // ---- may be removed above 
 #include <QtCore/QtCore>
 #include <QtGui/QtGui>
 
-#pragma link off all classes;
-
-//#include "qtclasses.h"
+#include "qtclasses.h"
 //#include "qtglobals.h"
 //#include "qtfunctions.h"
 
