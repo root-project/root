@@ -59,13 +59,10 @@ TFitParametersDialog::TFitParametersDialog(const TGWindow *p,
                                            const TGWindow *main,
                                            TF1 *func,
                                            TVirtualPad *pad,
-                                           Double_t rxmin, Double_t rxmax,
                                            Int_t *ret_code) :
    TGTransientFrame(p, main, 10, 10, kVerticalFrame),
    fFunc           (func),
    fFpad           (pad),
-   fRXmin          (rxmin),
-   fRXmax          (rxmax),
    fHasChanges     (kFALSE),
    fImmediateDraw  (kTRUE),
    fRetCode        (ret_code)

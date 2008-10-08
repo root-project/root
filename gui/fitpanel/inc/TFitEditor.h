@@ -1,5 +1,5 @@
 // @(#)root/fitpanel:$Id$
-// Author: Ilka Antcheva, Lorenzo Moneta 10/08/2006
+// Author: Ilka Antcheva, Lorenzo Moneta, David Gonzalez Maline 10/08/2006
 
 /*************************************************************************
  * Copyright (C) 1995-2006, Rene Brun and Fons Rademakers.               *
@@ -114,16 +114,6 @@ protected:
    TAxis               *fXaxis;            // x-axis
    TAxis               *fYaxis;            // y-axis
    TAxis               *fZaxis;            // z-axis
-//    are not  these bin numbers ? should be integer  ? 
-   Float_t              fXrange;           // x-range 
-   Float_t              fXmin;             // x-min
-   Float_t              fXmax;             // x-max
-   Float_t              fYrange;           // y-range
-   Float_t              fYmin;             // y-min
-   Float_t              fYmax;             // y-max
-   Float_t              fZrange;           // z-range
-   Float_t              fZmin;             // z-min
-   Float_t              fZmax;             // z-max
 
    // structure holding parameter value and limits
    struct FuncParamData_t { 
@@ -171,7 +161,6 @@ protected:
    void        MakeTitle(TGCompositeFrame *parent, const char *title);
    TF1*        HasFitFunction(TObject *obj);
    void        GetFunctionsFromList(TList *list);
-   void        CheckRange(TF1 *f1);
    void        SetEditable(Bool_t);
 
 private:
