@@ -27,10 +27,11 @@ namespace {
 // callable cache
    std::map< PyObject*, PyObject* > gSizeCallbacks;
 
-// make copies of buffer types
+// create buffer types and copy methods to be adjusted
 #define PYROOT_PREPARE_PYBUFFER_TYPE( name )                                 \
-   PyTypeObject      Py##name##Buffer_Type      = PyBuffer_Type;             \
-   PySequenceMethods Py##name##Buffer_SeqMethods = *(PyBuffer_Type.tp_as_sequence);
+   PyTypeObject      Py##name##Buffer_Type;                                  \
+   PySequenceMethods Py##name##Buffer_SeqMethods = *(PyBuffer_Type.tp_as_sequence);\
+   PyMappingMethods  Py##name##Buffer_MapMethods;
 
    PYROOT_PREPARE_PYBUFFER_TYPE( Short )
    PYROOT_PREPARE_PYBUFFER_TYPE( UShort )
@@ -110,6 +111,16 @@ namespace {
                                                                              \
       *((type*)buf+idx) = (type)value;                                       \
        return 0;                                                             \
+   }                                                                         \
+                                                                             \
+   PyObject* name##_buffer_subscript( PyObject* self, PyObject* item ) {     \
+      if ( PyIndex_Check( item ) ) {                                         \
+          Py_ssize_t idx = PyNumber_AsSsize_t( item, PyExc_IndexError );     \
+          if ( idx == -1 && PyErr_Occurred() )                               \
+               return 0;                                                     \
+          return name##_buffer_item( self, idx );                            \
+      }                                                                      \
+      return 0;                                                              \
    }
 
    PYROOT_IMPLEMENT_PYBUFFER_METHODS( Short,  Short_t,  Long_t,   PyInt_FromLong, PyInt_AsLong )
@@ -190,13 +201,22 @@ PyROOT::TPyBufferFactory* PyROOT::TPyBufferFactory::Instance()
 
 //- constructor/destructor ------------------------------------------------------
 #define PYROOT_INSTALL_PYBUFFER_METHODS( name, type )                           \
+   Py##name##Buffer_Type.tp_name            = (char*)"ROOT.Py"#name"Buffer";    \
+   Py##name##Buffer_Type.tp_base            = &PyBuffer_Type;                   \
    Py##name##Buffer_SeqMethods.sq_item      = (ssizeargfunc)name##_buffer_item; \
    Py##name##Buffer_SeqMethods.sq_ass_item  = (ssizeobjargproc)name##_buffer_ass_item;\
    Py##name##Buffer_SeqMethods.sq_length    = (lenfunc)buffer_length;           \
    Py##name##Buffer_Type.tp_as_sequence     = &Py##name##Buffer_SeqMethods;     \
+   if ( PyBuffer_Type.tp_as_mapping ) { /* p2.6 and later */                    \
+      Py##name##Buffer_MapMethods.mp_length    = (lenfunc)buffer_length;        \
+      Py##name##Buffer_MapMethods.mp_subscript = (binaryfunc)name##_buffer_subscript;\
+      Py##name##Buffer_MapMethods.mp_ass_subscript = 0;                         \
+      Py##name##Buffer_Type.tp_as_mapping      = &Py##name##Buffer_MapMethods;  \
+   }                                                                            \
    Py##name##Buffer_Type.tp_str             = (reprfunc)name##_buffer_str;      \
    Py##name##Buffer_Type.tp_methods         = buffer_methods;                   \
-   Py##name##Buffer_Type.tp_getset          = buffer_getset;
+   Py##name##Buffer_Type.tp_getset          = buffer_getset;                    \
+   PyType_Ready( &Py##name##Buffer_Type );
 
 PyROOT::TPyBufferFactory::TPyBufferFactory()
 {
@@ -223,7 +243,7 @@ PyObject* PyROOT::TPyBufferFactory::PyBuffer_FromMemory( type* address, Py_ssize
 {                                                                               \
    size = size < 0 ? INT_MAX : size;                                            \
    PyObject* buf = PyBuffer_FromReadWriteMemory( (void*)address, size );        \
-   Py_INCREF( &Py##name##Buffer_Type );                                         \
+   Py_INCREF( (PyObject*)(void*)&Py##name##Buffer_Type );                       \
    buf->ob_type = &Py##name##Buffer_Type;                                       \
    return buf;                                                                  \
 }                                                                               \

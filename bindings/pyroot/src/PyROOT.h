@@ -58,6 +58,14 @@ typedef int Py_ssize_t;
 #define ssizeobjargproc intobjargproc
 #define lenfunc         inquiry
 #define ssizeargfunc    intargfunc
+
+#define PyIndex_Check(obj) \
+   (PyInt_Check(obj) || PyLong_Check(obj))
+
+inline Py_ssize_t PyNumber_AsSsize_t( PyObject* obj, PyObject* ) {
+   return (Py_ssize_t)PyLong_AsLong( obj );
+}
+
 #else
 # ifdef R__MACOSX
 #  if SIZEOF_SIZE_T == SIZEOF_INT

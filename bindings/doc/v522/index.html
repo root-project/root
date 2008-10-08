@@ -9,6 +9,11 @@ just as you do with MATLAB files. For more information, see <a href="http://root
 <h3>PyROOT</h3>
 
 <p>
+Support for python 2.6 has been added. Older versions will compile fine, but will
+have problems when using the buffer interface for C arrays.
+</p>
+
+<p>
 For user convenience, code was added to load a custom rootlogon.py/.C, if available.
 This code is loaded on first use of the ROOT module, and the python rootlogon.py is
 loaded as a module.

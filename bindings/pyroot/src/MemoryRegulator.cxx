@@ -159,7 +159,7 @@ void PyROOT::TMemoryRegulator::RecursiveRemove( TObject* object )
          op_dealloc_nofree( pyobj );    // normal object cleanup, while keeping memory
 
       // reset type object
-         Py_INCREF( &PyROOT_NoneType );
+         Py_INCREF( (PyObject*)(void*)&PyROOT_NoneType );
          Py_DECREF( pyobj->ob_type );
          pyobj->ob_type = &PyROOT_NoneType;
       }

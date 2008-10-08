@@ -55,10 +55,12 @@ PyTypeObject TCustomFloat_Type = {     // python float is a C/C++ double
    0,                         // tp_mro
    0,                         // tp_cache
    0,                         // tp_subclasses
-   0,                         // tp_weaklist
-
+   0                          // tp_weaklist
 #if PY_MAJOR_VERSION >= 2 && PY_MINOR_VERSION >= 3
-   0                          // tp_del
+   , 0                        // tp_del
+#endif
+#if PY_MAJOR_VERSION >= 2 && PY_MINOR_VERSION >= 6
+   , 0                        // tp_version_tag
 #endif
 };
 
@@ -110,10 +112,12 @@ PyTypeObject TCustomInt_Type = {       // python int is a C/C++ long
    0,                         // tp_mro
    0,                         // tp_cache
    0,                         // tp_subclasses
-   0,                         // tp_weaklist
-
+   0                          // tp_weaklist
 #if PY_MAJOR_VERSION >= 2 && PY_MINOR_VERSION >= 3
-   0                          // tp_del
+   , 0                        // tp_del
+#endif
+#if PY_MAJOR_VERSION >= 2 && PY_MINOR_VERSION >= 6
+   , 0                        // tp_version_tag
 #endif
 };
 
