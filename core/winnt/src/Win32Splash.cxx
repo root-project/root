@@ -246,10 +246,8 @@ void CreateCredits(HDC hDC, bool extended)
 {
    HFONT   hFont, hOldFont;
    HBRUSH  hBr;
-   SIZE    sizeFont;
    LOGFONT lf;
    RECT    fillRect;
-   int     logpixelsy, nHeight;
 
    gRgnScreen = CreateRectRgnIndirect(&gCreditsRect);
    SelectClipRgn(hDC, gRgnScreen);
@@ -635,7 +633,6 @@ LRESULT CALLBACK SplashWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
    char *RootSysDir;
    int xScreen;
    int yScreen;
-   int logpixelsy, nHeight;
 
    switch (message) {
       case WM_CREATE:
