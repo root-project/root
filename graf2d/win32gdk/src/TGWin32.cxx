@@ -2416,7 +2416,7 @@ Int_t TGWin32::RequestLocator(Int_t mode, Int_t ctyp, Int_t & x, Int_t & y)
 
       case GDK_KEY_RELEASE:
          if (mode == 1) {
-            button_press = -event->key.keyval;
+            button_press = -1 * (int)(event->key.keyval);
             xlocp = event->button.x;
             ylocp = event->button.y;
          }
@@ -7068,7 +7068,7 @@ unsigned char *TGWin32::GetColorBits(Drawable_t wid,  Int_t x, Int_t y,
 
    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
    bmi.bmiHeader.biWidth = width;
-   bmi.bmiHeader.biHeight = -height;
+   bmi.bmiHeader.biHeight = -1 * (int)(height);
    bmi.bmiHeader.biPlanes = 1;
    bmi.bmiHeader.biBitCount = 32;
    bmi.bmiHeader.biCompression = BI_RGB;
@@ -7108,7 +7108,7 @@ Pixmap_t TGWin32::CreatePixmapFromData(unsigned char *bits, UInt_t width, UInt_t
    BITMAPINFO bmp_info;
    bmp_info.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
    bmp_info.bmiHeader.biWidth = width;
-   bmp_info.bmiHeader.biHeight = -height;
+   bmp_info.bmiHeader.biHeight = -1 * (int)(height);
    bmp_info.bmiHeader.biPlanes = 1;
    bmp_info.bmiHeader.biBitCount = 32;
    bmp_info.bmiHeader.biCompression = BI_RGB;

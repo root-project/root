@@ -147,9 +147,9 @@ int GIFquantize(unsigned int Width, unsigned int Height, int *ColorMapSize,
                 Blue += QuantizedColor -> RGB[2];
                 QuantizedColor = QuantizedColor -> Pnext;
             }
-            OutputColorMap[i].Red = (Red << (8 - BITS_PER_PRIM_COLOR)) / j;
-            OutputColorMap[i].Green = (Green << (8 - BITS_PER_PRIM_COLOR)) / j;
-            OutputColorMap[i].Blue= (Blue << (8 - BITS_PER_PRIM_COLOR)) / j;
+            OutputColorMap[i].Red = (byte)((Red << (8 - BITS_PER_PRIM_COLOR)) / j);
+            OutputColorMap[i].Green = (byte)((Green << (8 - BITS_PER_PRIM_COLOR)) / j);
+            OutputColorMap[i].Blue= (byte)((Blue << (8 - BITS_PER_PRIM_COLOR)) / j);
         }
         else
             fprintf(stderr, "Null entry in quantized color map - thats weird.");
