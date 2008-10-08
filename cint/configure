@@ -352,7 +352,8 @@ add_opt "--psdir=" 'ignored'
 
 add_opt "--readlinelib=" "Readline library "$'\n\t'"(defaults to /usr/(local)/lib/libreadline.a if it exists)"
 add_opt "--debug" "Build non-optimized Cint with debug symbols"
-add_opt "--pedantic" "Warn on everything that the compielr allows (only supported for GCC)"
+add_opt "--checkstack" "Build with stack checking (GCC only)"
+add_opt "--pedantic" "Warn on everything that the compiler allows (only supported for GCC)"
 
 add_opt "--inputmode=" "Define the inputmode (C++|cint|root)"
 
@@ -540,6 +541,12 @@ function processflag_inputmode {
         echo WARNING: unknown INPUTMODE \"$INPUTMODE\" specified\!
     fi
 }
+
+function processflag_checkstack {
+    CXXFLAGS="$CXXFLAGS -fstack-check"
+    LDFLAGS="$LDFLAGS -fstack-check "
+}
+
 
 # process options
 ALLOPTIONS=(${*:1})
@@ -733,7 +740,7 @@ done
 
 $RM bin/cint-config
 echo Writing bin/cint-config...
-[ "x$INCLUDEDIR" = "x" ] && INCLUDEDIR='$CINTSYSDIR/include'
+[ "x$INCLUDEDIR" = "x" ] && INCLUDEDIR='$CINTSYSDIR/include' && INCLUDEDIRCINT=$INCLUDEDIR/cint
 [ "x$LIBDIR" = "x" ] && LIBDIR='$CINTSYSDIR/lib'
 [ "x$DATADIR" = "x" ] && DATADIR='$CINTSYSDIR/'${COREVERSION}'/'
 
