@@ -229,6 +229,7 @@ public:
    int               OpenConnection(const char *server, int port, int tcpwindowsize = -1);
    int               AnnounceTcpService(int port, Bool_t reuse, int backlog, int tcpwindowsize = -1);
    int               AnnounceUnixService(int port, int backlog);
+   int               AnnounceUnixService(const char *sockpath, int backlog) { return -1; }
    int               AcceptConnection(int sock);
    void              CloseConnection(int sock, Bool_t force = kFALSE);
    int               RecvRaw(int sock, void *buffer, int length, int flag);

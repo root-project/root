@@ -3747,6 +3747,9 @@ int TWinNTSystem::Load(const char *module, const char *entry, Bool_t system)
    return TSystem::Load(module, entry, system);
 }
 
+/* nonstandard extension used : zero-sized array in struct/union */
+#pragma warning(push)
+#pragma warning(disable:4200)
 //______________________________________________________________________________
 const char *TWinNTSystem::GetLinkedLibraries()
 {
@@ -3891,7 +3894,7 @@ const char *TWinNTSystem::GetLinkedLibraries()
 
    return linkedLibs;
 }
-
+#pragma warning(pop)
 
 //______________________________________________________________________________
 const char *TWinNTSystem::GetLibraries(const char *regexp, const char *options,
