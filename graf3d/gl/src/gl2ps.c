@@ -2029,8 +2029,8 @@ static void gl2psParseFeedbackBuffer(GLint used)
         node->image->width = (GLint)current[2];
         current += 2; used -= 2;
         node->image->height = (GLint)current[2];
-        prim->verts[0].xyz[0] = prim->verts[0].xyz[0] - (int)(node->image->width / 2) + 0.5;
-        prim->verts[0].xyz[1] = prim->verts[0].xyz[1] - (int)(node->image->height / 2) + 0.5;
+        prim->verts[0].xyz[0] = (GLfloat)(prim->verts[0].xyz[0] - (int)(node->image->width / 2) + 0.5);
+        prim->verts[0].xyz[1] = (GLfloat)(prim->verts[0].xyz[1] - (int)(node->image->height / 2) + 0.5);
         for(i = 1; i < 4; i++){
           for(v = 0; v < 3; v++){
             prim->verts[i].xyz[v] = prim->verts[0].xyz[v];
@@ -2141,7 +2141,7 @@ static void gl2psPrintPostScriptPixmap(GLfloat x, GLfloat y, GL2PSimage *im)
     for(row = 0; row < height; row++){
       for(col = 0; col < width; col++){ 
         gl2psGetRGB(im, col, row, &dr, &dg, &db);
-        fgrey = (0.30 * dr + 0.59 * dg + 0.11 * db);
+        fgrey = (GLfloat)(0.30 * dr + 0.59 * dg + 0.11 * db);
         grey = (unsigned char)(255. * fgrey);
         gl2psWriteByte(grey);
       }
@@ -4888,8 +4888,8 @@ GL2PSDLL_API GLint gl2psDrawImageMap(GLsizei width, GLsizei height,
   glBegin(GL_POINTS);
   glVertex3f(position[0], position[1],position[2]);
   glEnd();
-  glPassThrough(width);
-  glPassThrough(height);
+  glPassThrough((GLfloat)width);
+  glPassThrough((GLfloat)height);
   for(i = 0; i < size; i += sizeoffloat){
     float *value = (float*)imagemap;
     glPassThrough(*value);
