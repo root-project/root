@@ -1853,27 +1853,27 @@ void TGTransientFrame::CenterOnParent(Bool_t croot, EPlacement pos)
             y = (Int_t)(((TGFrame *) fMain)->GetHeight() - fHeight) >> 1;
             break;
          case kLeft:
-            x = (Int_t)(-(fWidth >> 1));
+            x = (Int_t)(-1 * (fWidth >> 1));
             y = (Int_t)(((TGFrame *) fMain)->GetHeight() - fHeight) >> 1;
             break;
          case kTop:
             x = (Int_t)(((TGFrame *) fMain)->GetWidth() - fWidth) >> 1;
-            y = (Int_t)(-(fHeight >> 1));
+            y = (Int_t)(-1 * (fHeight >> 1));
             break;
          case kBottom:
             x = (Int_t)(((TGFrame *) fMain)->GetWidth() - fWidth) >> 1;
             y = (Int_t)(((TGFrame *) fMain)->GetHeight() - (fHeight >> 1));
             break;
          case kTopLeft:
-            x = (Int_t)(-(fWidth >> 1));
-            y = (Int_t)(-(fHeight >> 1));
+            x = (Int_t)(-1 * (fWidth >> 1));
+            y = (Int_t)(-1 * (fHeight >> 1));
             break;
          case kTopRight:
             x = (Int_t)(((TGFrame *) fMain)->GetWidth() - (fWidth >> 1));
-            y = (Int_t)(-(fHeight >> 1));
+            y = (Int_t)(-1 * (fHeight >> 1));
             break;
          case kBottomLeft:
-            x = (Int_t)(-(fWidth >> 1));
+            x = (Int_t)(-1 * (fWidth >> 1));
             y = (Int_t)(((TGFrame *) fMain)->GetHeight() - (fHeight >> 1));
             break;
          case kBottomRight:
@@ -1906,27 +1906,27 @@ void TGTransientFrame::CenterOnParent(Bool_t croot, EPlacement pos)
             y = (dh - fHeight) >> 1;
             break;
          case kLeft:
-            x = -(fWidth >> 1);
+            x = -1 * (fWidth >> 1);
             y = (dh - fHeight) >> 1;
             break;
          case kTop:
             x = (dw - fWidth) >> 1;
-            y = -(fHeight >> 1);
+            y = -1 * (fHeight >> 1);
             break;
          case kBottom:
             x = (dw - fWidth) >> 1;
             y = dh - (fHeight >> 1);
             break;
          case kTopLeft:
-            x = -(fWidth >> 1);
-            y = -(fHeight >> 1);
+            x = -1 * (fWidth >> 1);
+            y = -1 * (fHeight >> 1);
             break;
          case kTopRight:
             x = dw - (fWidth >> 1);
-            y = -(fHeight >> 1);
+            y = -1 * (fHeight >> 1);
             break;
          case kBottomLeft:
-            x = -(fWidth >> 1);
+            x = -1 * (fWidth >> 1);
             y = dh - (fHeight >> 1);
             break;
          case kBottomRight:
