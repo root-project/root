@@ -27,6 +27,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <string>
+#include <cstring>
 #include <vector>
 #ifndef WIN32
 #   include <unistd.h>
