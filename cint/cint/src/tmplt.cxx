@@ -1387,22 +1387,40 @@ void G__declare_template()
 
   /* template class */
   if(strcmp(temp,"class")==0 || strcmp(temp,"struct")==0) {
+     fpos_t fppreclassname;
+     fgetpos(G__ifile.fp, &fppreclassname);
      c = G__fgetstream_template(temp,":{;"); /* read template name */
+     bool haveFuncReturn = false; // whether we have "class A<T>::B f()"
      if(';'==c) {
         isforwarddecl = 1;
+     } else if (c == ':') {
+        fpos_t fpprepeek;
+        fgetpos(G__ifile.fp, &fpprepeek);
+        // could be "class A<T>::B f()" i.e. not a template class but
+        // a function with a templated return type.
+        char c2 = G__fgetc();
+        if (c2 == ':') {
+           haveFuncReturn = true;
+           // put temp back onto the stream, get up to '<'
+           fsetpos(G__ifile.fp, &fppreclassname);
+           c = G__fgetname_template(temp,"(<");
+        } else
+           fsetpos(G__ifile.fp, &fpprepeek);
      }
-     // Friend declaration are NOT forward declaration.
-     if (isforwarddecl && isfrienddecl) {
-        // We do not need to autoload friend declaration.
+     if (!haveFuncReturn) {
+        // Friend declaration are NOT forward declaration.
+        if (isforwarddecl && isfrienddecl) {
+           // We do not need to autoload friend declaration.
+           if (isfrienddecl) G__set_class_autoloading(autoload_old);
+           return;
+        }
+        fsetpos(G__ifile.fp,&pos);
+        if(G__dispsource) G__disp_mask=0;
+        G__ifile.line_number = store_line_number;
+        G__createtemplateclass(temp,targ,isforwarddecl);
         if (isfrienddecl) G__set_class_autoloading(autoload_old);
         return;
      }
-     fsetpos(G__ifile.fp,&pos);
-     if(G__dispsource) G__disp_mask=0;
-     G__ifile.line_number = store_line_number;
-     G__createtemplateclass(temp,targ,isforwarddecl);
-     if (isfrienddecl) G__set_class_autoloading(autoload_old);
-     return;
   }
 
   /* Judge between template class member and global function */
