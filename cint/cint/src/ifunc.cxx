@@ -3598,6 +3598,10 @@ int G__convert_param(G__param* libp, G__ifunc_table_internal* p_ifunc, int ifn, 
    int recursive = 0;
    int rewind_arg;
    int match = 0;
+
+   int store_exec_memberfunc = G__exec_memberfunc;
+   G__exec_memberfunc = 0; // Allow for proper testing of static vs non-static calls.
+
    for (i = 0; i < libp->paran; i++) {
       rate = pmatch->p_rate[i];
       param_type = libp->para[i].type;
@@ -4245,10 +4249,12 @@ int G__convert_param(G__param* libp, G__ifunc_table_internal* p_ifunc, int ifn, 
                   p_ifunc->pentry[ifn]->size < 0
                ) {
                G__genericerror("Limitation: Precompiled function can not get pointer to interpreted function as argument");
+               G__exec_memberfunc = store_exec_memberfunc;
                return(-1);
             }
       }
    }
+   G__exec_memberfunc = store_exec_memberfunc;
    return 0;
 }
 
