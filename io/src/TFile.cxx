@@ -2299,21 +2299,37 @@ void TFile::ReadStreamerInfo()
 
    // loop on all TStreamerInfo classes
    TStreamerInfo *info;
-   TIter next(list);
-   while ((info = (TStreamerInfo*)next())) {
-      if (info->IsA() != TStreamerInfo::Class()) {
-         Warning("ReadStreamerInfo","%s: not a TStreamerInfo object", GetName());
-         continue;
+   for (int mode=0;mode<2; ++mode) {
+      // In order for the collection proxy to be initialized properly, we need
+      // to setup the TStreamerInfo for non-stl class before the stl classes.
+      TObjLink *lnk = list->FirstLink();
+      while (lnk) {
+         info = (TStreamerInfo*)lnk->GetObject();
+
+         if (info->IsA() != TStreamerInfo::Class()) {
+            Warning("ReadStreamerInfo","%s: not a TStreamerInfo object", GetName());
+            continue;
+         }
+         // This is a quick way (instead of parsing the name) to see if this is
+         // the description of an STL container.
+         TObject *element = info->GetElements()->UncheckedAt(0);
+         Bool_t isstl = element && strcmp("This",element->GetName())==0;
+
+         if ( (!isstl && mode ==0) || (isstl && mode ==1) ) {
+               // Skip the STL container the first time around
+               // Skip the regular classes the second time around;
+            info->BuildCheck();
+            Int_t uid = info->GetNumber();
+            Int_t asize = fClassIndex->GetSize();
+            if (uid >= asize && uid <100000) fClassIndex->Set(2*asize);
+            if (uid >= 0 && uid < fClassIndex->GetSize()) fClassIndex->fArray[uid] = 1;
+            else {
+               printf("ReadStreamerInfo, class:%s, illegal uid=%d\n",info->GetName(),uid);
+            }
+            if (gDebug > 0) printf(" -class: %s version: %d info read at slot %d\n",info->GetName(), info->GetClassVersion(),uid);
+         }
+         lnk = lnk->Next();
       }
-      info->BuildCheck();
-      Int_t uid = info->GetNumber();
-      Int_t asize = fClassIndex->GetSize();
-      if (uid >= asize && uid <100000) fClassIndex->Set(2*asize);
-      if (uid >= 0 && uid < fClassIndex->GetSize()) fClassIndex->fArray[uid] = 1;
-      else {
-         printf("ReadStreamerInfo, class:%s, illegal uid=%d\n",info->GetName(),uid);
-      }
-      if (gDebug > 0) printf(" -class: %s version: %d info read at slot %d\n",info->GetName(), info->GetClassVersion(),uid);
    }
    fClassIndex->fArray[0] = 0;
    list->Clear();  //this will delete all TStreamerInfo objects with kCanDelete bit set
