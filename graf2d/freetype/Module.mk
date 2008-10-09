@@ -68,7 +68,7 @@ ifeq ($(PLATFORM),win32)
 		unset MAKEFLAGS; \
 		nmake -nologo -f freetype.mak \
 		CFG=$(FTNMCFG) \
-		NMAKECXXFLAGS="$(BLDCXXFLAGS)")
+		NMAKECXXFLAGS="$(BLDCXXFLAGS) -D_CRT_SECURE_NO_DEPRECATE")
 else
 		@(if [ -d $(FREETYPEDIRS)/$(FREETYPEVERS) ]; then \
 			rm -rf $(FREETYPEDIRS)/$(FREETYPEVERS); \
