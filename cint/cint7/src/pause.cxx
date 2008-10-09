@@ -2281,6 +2281,9 @@ extern "C" int G__process_cmd(char *line,char *prompt,int *more,int *err
       // must match a function in the source file. This function
       // will be automatically executed.
       //
+      struct G__store_env store;
+      G__SET_TEMPENV;
+
       temp = 0;
       while (isspace(string[temp])) {
         ++temp;
@@ -2396,6 +2399,7 @@ extern "C" int G__process_cmd(char *line,char *prompt,int *more,int *err
       else {
         fprintf(G__sout, "Expecting . in filename\n");
       }
+      G__RESET_TEMPENV;      
     }
 
     else if(

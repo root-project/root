@@ -3285,6 +3285,9 @@ static int G__convert_param(G__param* libp, const ::Reflex::Member& func, G__fun
    int rewind_arg;
    int match = 0;
 
+   int store_exec_memberfunc = G__exec_memberfunc;
+   G__exec_memberfunc = 0; // Allow for proper testing of static vs non-static calls.
+
    for (i = 0;i < libp->paran;i++) {
       rate = pmatch->p_rate[i];
       param_tagnum = G__value_typenum(libp->para[i]);
@@ -3925,6 +3928,7 @@ static int G__convert_param(G__param* libp, const ::Reflex::Member& func, G__fun
                   G__get_funcproperties(func)->entry.size < 0
                ) {
                G__genericerror("Limitation: Precompiled function can not get pointer to interpreted function as argument");
+               G__exec_memberfunc = store_exec_memberfunc;
                return(-1);
             }
       }
@@ -3935,6 +3939,7 @@ static int G__convert_param(G__param* libp, const ::Reflex::Member& func, G__fun
       G__inc_cp_asm(store_asm_cp - G__asm_cp, 0);
    }
 #endif
+   G__exec_memberfunc = store_exec_memberfunc;
    return(0);
 }
 
