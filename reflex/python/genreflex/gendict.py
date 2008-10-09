@@ -253,6 +253,7 @@ class genDictionary(object) :
     return None
 #----------------------------------------------------------------------------------
   def resolveTypedefName( self, name ) :
+    #print ">>>> resolveTypedefName '%s'" %(name,)
     notname = ['*','<','>',',',':',' ']
     for td in self.typedefs :
       tdname = self.genTypeName(td['id'])
@@ -890,7 +891,16 @@ class genDictionary(object) :
       elif colon  : s = '::'
     return s
 #----------------------------------------------------------------------------------
-  def genTypeName(self, id, enum=False, const=False, colon=False, alltempl=False) :
+  def genTypeName(self, id, enum=False, const=False, colon=False, alltempl=False, _useCache=True,_cache={}) :
+    if _useCache:
+        key = (self,id,enum,const,colon,alltempl)
+        if _cache.has_key(key):
+            return _cache[key]
+        else:
+            ret = self.genTypeName(id,enum,const,colon,alltempl,False)
+            _cache[key] = ret
+            #print ">>>> genTypename CACHE SIZE ",len(_cache)
+            return ret
     elem  = self.xref[id]['elem']
     attrs = self.xref[id]['attrs']
     if self.isUnnamedType(attrs.get('demangled')) :
@@ -1713,6 +1723,7 @@ else :
   stldeftab['hash_multimap'] = '=','=','__gnu_cxx::hash','std::equal_to','std::allocator'  
 #---------------------------------------------------------------------------------------
 def getTemplateArgs( cl ) :
+  #print ">>>> getTemplateArgs '%s'" %(cl,)
   if cl.find('<') == -1 : return []
   args, cnt = [], 0
   for s in string.split(cl[cl.find('<')+1:cl.rfind('>')],',') :
@@ -1733,7 +1744,19 @@ def getTemplateArgString( cl ) :
 #---------------------------------------------------------------------------------------
 def normalizeClassAllTempl(name)   : return normalizeClass(name,True)
 def normalizeClassNoDefTempl(name) : return normalizeClass(name,False)
-def normalizeClass(name,alltempl) :
+def normalizeClass(name,alltempl,_useCache=True,_cache={}) :
+  #print ">>>> normalizeClass '%s' ()" %(name,alltempl)
+  if _useCache:
+    key = (name,alltempl)
+    if _cache.has_key(key):
+        #print ">>>> normalizeClass(cached) '%s' (%s)" %(name,alltempl)
+        return _cache[key]    
+    else:
+        #print ">>>> normalizeClass(UNCACHED) '%s' (%s)" %(name,alltempl)
+        ret = normalizeClass(name,alltempl,False)
+        _cache[key] = ret
+        #print ">>>> normalizeClass:CACHE SIZE ", len(_cache)
+        return ret
   names, cnt = [], 0
   for s in string.split(name,'::') :
     if cnt == 0 : names.append(s)
@@ -1744,8 +1767,20 @@ def normalizeClass(name,alltempl) :
 #--------------------------------------------------------------------------------------
 def normalizeFragmentAllTempl(name)   : return normalizeFragment(name,True)
 def normalizeFragmentNoDefTempl(name) : return normalizeFragment(name) 
-def normalizeFragment(name,alltempl=False) :
+def normalizeFragment(name,alltempl=False,_useCache=True,_cache={}) :
+  #print ">>>> normalizeFragment '%s' ()" %(name,alltempl)
   name = name.strip()
+  if _useCache:
+    key = (name,alltempl)
+    if _cache.has_key(key):
+        #print ">>>> normalizeFragment(cached) '%s' (%s)" %(name,alltempl)
+        return _cache[key]    
+    else:
+        #print ">>>> normalizeFragment(UNCACHED) '%s' (%s)" %(name,alltempl)
+        ret = normalizeFragment(name,alltempl,False)
+        _cache[key] = ret
+        #print ">>>> normalizeFragment:CACHE SIZE ", len(_cache)
+        return ret
   if name.find('<') == -1  : 
     nor =  name
     for e in [ ['long long unsigned int', 'unsigned long long'],
