@@ -1853,7 +1853,7 @@ void TProfile::SetErrorOption(Option_t *option)
 //                      "     "  0.  for N.eq.0
 //     'g'            Errors are 1./SQRT(W) for Spread.ne.0. , 
 //                      "     "  0.  for N.eq.0
-//                    W is the sum of wights of the profile. 
+//                    W is the sum of weights of the profile. 
 //                    This option is for measurements y +/ dy and  the profile is filled with 
 //                    weights w = 1/dy**2
 //
