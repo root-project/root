@@ -1578,7 +1578,7 @@ void TGListTree::DrawActive(Handle_t id, TGListTreeItem *item)
    width = TextWidth(item->GetText());
    gVirtualX->SetForeground(fDrawGC, item->GetActiveColor());
    gVirtualX->FillRectangle(id, fDrawGC, item->fXtext-1, 
-                    item->fYtext-pos.fY, width+2, FontHeight());
+                    item->fYtext-pos.fY, width+2, FontHeight()+1);
    gVirtualX->SetForeground(fDrawGC, fgBlackPixel);
    gVirtualX->DrawString(id, fHighlightGC, item->fXtext, 
                          item->fYtext - pos.fY + FontAscent(),
@@ -1599,7 +1599,7 @@ void TGListTree::DrawItemName(Handle_t id, TGListTreeItem *item)
    else { // if (!item->IsActive() && (item != fSelected)) {
       gVirtualX->FillRectangle(id, fHighlightGC, item->fXtext, 
                        item->fYtext-pos.fY, dim.fWidth-item->fXtext-2,
-                       FontHeight());
+                       FontHeight()+1);
       gVirtualX->DrawString(id, fDrawGC,
                        item->fXtext, item->fYtext-pos.fY + FontAscent(),
                        item->GetText(), item->GetTextLength());
