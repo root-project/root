@@ -1038,46 +1038,68 @@ Double_t TH2::Interpolate(Double_t)
 }
 
 //______________________________________________________________________________
-Double_t TH2::Interpolate(Double_t  x, Double_t  y)
-{
-   // given an arbitrary x,y pair interpolates a TH2 histogram using bilinear
-   // interpolation to return an interpolated  z value.
-   // see Wikipedia
-   // R.Raja 6-Sep-2008
-
-   Int_t nbinsx = GetNbinsX();
-   Int_t nbinsy = GetNbinsY();
- 
-   Int_t ix0 = fXaxis.FindBin(x);
-   Int_t iy0 = fYaxis.FindBin(y);
-   if(ix0<1)ix0=1;
-   if(ix0>nbinsx) ix0=nbinsx;  //do the best
-   if(iy0<1)iy0=1;
-   if(iy0>nbinsy) iy0=nbinsy;  //do the best
-   Int_t ixp = TMath::Min(ix0+1,nbinsx);
-   Int_t iyp = TMath::Min(iy0+1,nbinsy);
-   Int_t ibinpp = GetBin(ixp,iyp);
-   Int_t ibinp0 = GetBin(ixp,iy0);
-   Int_t ibin0p = GetBin(ix0,iyp);
-   Int_t ibin00 = GetBin(ix0,iy0);
-   Double_t x00 = fXaxis.GetBinCenter(ix0);
-   Double_t y00 = fYaxis.GetBinCenter(iy0);
-   Double_t z00 = GetBinContent(ibin00);
-   Double_t hx  = fXaxis.GetBinWidth(ix0);
-   Double_t hy  = fYaxis.GetBinWidth(iy0);
-   Double_t zpp = GetBinContent(ibinpp);
-   Double_t zp0 = GetBinContent(ibinp0);
-   Double_t z0p = GetBinContent(ibin0p);
-
-   Double_t b1 = z00;
-   Double_t b2 = zp0 -z00;
-   Double_t b3 = z0p - z00;
-   Double_t b4 = z00 - zp0 -z0p + zpp;
-
-   Double_t xx = (x - x00)/hx;
-   Double_t yy = (y - y00)/hy;
-
-   return b1 + b2*xx + b3*yy + b4*xx*yy; //bilinear interpolation-see Wikipedia
+ Double_t TH2::Interpolate(Double_t x, Double_t y) 
+{ 
+   // Given a point P(x,y), Interpolate approximates the value via bilinear 
+   // interpolation based on the four nearest bin centers 
+   // see Wikipedia, Bilinear Interpolation 
+   // Andy Mastbaum 10/8/2008 
+   // vaguely based on R.Raja 6-Sep-2008 
+   
+   Double_t f=0; 
+   Double_t x1=0,x2=0,y1=0,y2=0; 
+   Double_t dx,dy; 
+   Int_t bin_x = fXaxis.FindBin(x); 
+   Int_t bin_y = fYaxis.FindBin(y); 
+   Int_t quadrant = 0; // CCW from UR 1,2,3,4 
+   // which quadrant of the bin (bin_P) are we in? 
+   dx = fXaxis.GetBinUpEdge(bin_x)-x; 
+   dy = fYaxis.GetBinUpEdge(bin_y)-y; 
+   if (dx<=fXaxis.GetBinWidth(bin_x)/2 && dy<=fYaxis.GetBinWidth(bin_y)/2) 
+   quadrant = 1; // upper right 
+   if (dx>fXaxis.GetBinWidth(bin_x)/2 && dy<=fYaxis.GetBinWidth(bin_y)/2) 
+   quadrant = 2; // upper left 
+   if (dx>fXaxis.GetBinWidth(bin_x)/2 && dy>fYaxis.GetBinWidth(bin_y)/2) 
+   quadrant = 3; // lower left 
+   if (dx<=fXaxis.GetBinWidth(bin_x)/2 && dy>fYaxis.GetBinWidth(bin_y)/2) 
+   quadrant = 4; // lower right 
+   switch(quadrant) { 
+   case 1: 
+      x1 = fXaxis.GetBinCenter(bin_x); 
+      y1 = fYaxis.GetBinCenter(bin_y); 
+      x2 = fXaxis.GetBinCenter(bin_x+1); 
+      y2 = fYaxis.GetBinCenter(bin_y+1); 
+      break; 
+   case 2: 
+      x1 = fXaxis.GetBinCenter(bin_x-1); 
+      y1 = fYaxis.GetBinCenter(bin_y); 
+      x2 = fXaxis.GetBinCenter(bin_x); 
+      y2 = fYaxis.GetBinCenter(bin_y+1); 
+      break; 
+   case 3: 
+      x1 = fXaxis.GetBinCenter(bin_x-1); 
+      y1 = fYaxis.GetBinCenter(bin_y-1); 
+      x2 = fXaxis.GetBinCenter(bin_x); 
+      y2 = fYaxis.GetBinCenter(bin_y); 
+      break; 
+   case 4: 
+      x1 = fXaxis.GetBinCenter(bin_x); 
+      y1 = fYaxis.GetBinCenter(bin_y-1); 
+      x2 = fXaxis.GetBinCenter(bin_x+1); 
+      y2 = fYaxis.GetBinCenter(bin_y); 
+      break; 
+   } 
+   Int_t bin_q22 = GetBin(fXaxis.FindBin(x2),fYaxis.FindBin(y2)); 
+   Int_t bin_q12 = GetBin(fXaxis.FindBin(x1),fYaxis.FindBin(y2)); 
+   Int_t bin_q11 = GetBin(fXaxis.FindBin(x1),fYaxis.FindBin(y1)); 
+   Int_t bin_q21 = GetBin(fXaxis.FindBin(x2),fYaxis.FindBin(y1)); 
+   Double_t q11 = GetBinContent(bin_q11); 
+   Double_t q12 = GetBinContent(bin_q12); 
+   Double_t q21 = GetBinContent(bin_q21); 
+   Double_t q22 = GetBinContent(bin_q22); 
+   Double_t d = 1.0*(x2-x1)*(y2-y1);
+   f = 1.0*q11/d*(x2-x)*(y2-y)+1.0*q21/d*(x-x1)*(y2-y)+1.0*q12/d*(x2-x)*(y-y1)+1.0*q22/d*(x-x1)*(y-y1);
+   return f; 
 } 
 
 //______________________________________________________________________________
