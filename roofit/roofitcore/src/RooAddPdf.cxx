@@ -922,9 +922,12 @@ Double_t RooAddPdf::expectedEvents(const RooArgSet* nset) const
   Int_t i(0) ;
   for (i=0 ; i<_pdfList.getSize() ; i++) {
 
+    Double_t proj(1) ;
     RooAbsReal* r1 = ((RooAbsReal*)cache->_refRangeProjList.at(i)) ;
     RooAbsReal* r2 = ((RooAbsReal*)cache->_rangeProjList.at(i)) ;    
-    Double_t proj = (r2->getVal()/r1->getVal()) ;      
+    if (r1 && r2) {
+      proj = (r2->getVal()/r1->getVal()) ;      
+    }
 
     Double_t ncomp =  _allExtendable ? ((RooAbsPdf*)_pdfList.at(i))->expectedEvents(nset) :  ((RooAbsReal*)_coefList.at(i))->getVal(nset) ;
     expectedTotal += proj*ncomp ;
