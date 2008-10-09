@@ -255,7 +255,7 @@ endif
 
 ifneq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
 MODULES      += core/unix core/winnt graf2d/x11 graf2d/x11ttf \
-                graf2d/win32gdk graf3d/gl graf3d/ftgl io/rfio io/castor \
+                graf3d/gl graf3d/ftgl io/rfio io/castor \
                 montecarlo/pythia6 montecarlo/pythia8 misc/table \
                 sql/mysql sql/pgsql sql/sapdb net/srputils graf3d/x3d \
                 rootx net/rootd io/dcache io/chirp hist/hbook graf2d/asimage \
