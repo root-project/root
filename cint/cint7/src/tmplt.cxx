@@ -2009,34 +2009,52 @@ void Cint::Internal::G__declare_template()
    //
    if (!strcmp(temp, "class") || !strcmp(temp, "struct")) { // FIXME: We need to support "union" too!
       // Class or struct template.
+      fpos_t fppreclassname;
+      fgetpos(G__ifile.fp, &fppreclassname);
       c = G__fgetstream_template(temp, ":{;"); // read template name and any possible specialization arguments
+      bool haveFuncReturn = false; // whether we have "class A<T>::B f()"
       if (c == ';') { // Nothing after the name, this is a forward declaration.
          isforwarddecl = 1;
          if (isfrienddecl) { // Friend declarations are NOT forward declarations, return.
             G__set_class_autoloading(autoload_old); // Restore the old autoloading setting.
             return;
          }
+      } else if (c == ':') {
+         fpos_t fpprepeek;
+         fgetpos(G__ifile.fp, &fpprepeek);
+         // could be "class A<T>::B f()" i.e. not a template class but
+         // a function with a templated return type.
+         char c2 = G__fgetc();
+         if (c2 == ':') {
+            haveFuncReturn = true;
+            // put temp back onto the stream, get up to '<'
+            fsetpos(G__ifile.fp, &fppreclassname);
+            c = G__fgetname_template(temp,"(<");
+         } else
+            fsetpos(G__ifile.fp, &fpprepeek);
       }
-      //
-      //  Rewind file position to just after
-      //  the template arguments.
-      //
-      fsetpos(G__ifile.fp, &pos);
-      if (G__dispsource) {
-         G__disp_mask = 0;
+      if (!haveFuncReturn) {
+         //
+         //  Rewind file position to just after
+         //  the template arguments.
+         //
+         fsetpos(G__ifile.fp, &pos);
+         if (G__dispsource) {
+            G__disp_mask = 0;
+         }
+         G__ifile.line_number = store_line_number;
+         //
+         //  Make an entry in the class template table.
+         //
+         G__createtemplateclass(temp, targ, isforwarddecl);
+         //
+         //  Restore any changes to autoloading and we are done.
+         //
+         if (isfrienddecl) { // This was a friend class template definition.
+            G__set_class_autoloading(autoload_old); // Reset old autoloading flag.
+         }
+         return;
       }
-      G__ifile.line_number = store_line_number;
-      //
-      //  Make an entry in the class template table.
-      //
-      G__createtemplateclass(temp, targ, isforwarddecl);
-      //
-      //  Restore any changes to autoloading and we are done.
-      //
-      if (isfrienddecl) { // This was a friend class template definition.
-         G__set_class_autoloading(autoload_old); // Reset old autoloading flag.
-      }
-      return;
    }
    //
    //  Not a class template declaration or definition, so this
