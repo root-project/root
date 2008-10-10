@@ -5005,10 +5005,7 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
       Error("Rebin", "Illegal value of ngroup=%d",ngroup);
       return 0;
    }
-   Int_t nbg = nbins/ngroup;
-   if (nbg*ngroup != nbins) {
-      Warning("Rebin", "ngroup=%d must be an exact divider of nbins=%d",ngroup,nbins);
-   }
+
    if (fDimension > 1 || InheritsFrom("TProfile")) {
       Error("Rebin", "Operation valid on 1-D histograms only");
       return 0;
@@ -5019,11 +5016,19 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
    }
 
    Int_t newbins = nbins/ngroup;
-   // in the case of xbins ngroup is the new number of bin.
-   //  we need also to recompute ngroup  
-   if (xbins) { 
+   if (!xbins) { 
+      Int_t nbg = nbins/ngroup;
+      if (nbg*ngroup != nbins) {
+         Warning("Rebin", "ngroup=%d must be an exact divider of nbins=%d",ngroup,nbins);
+      }
+   }
+   else {   
+   // in the case of xbins given (rebinning in variable bins) ngroup is the news number of bins.
+   //  and number of grouped bins is not constant. 
+   // when looping for setting the contents for the new histogram we 
+   // need to loop on all bins of original histogram. Set then ngroup=nbins
       newbins = ngroup;
-      ngroup = nbins/newbins;
+      ngroup = nbins;
    }
 
    // Save old bin contents into a new array
