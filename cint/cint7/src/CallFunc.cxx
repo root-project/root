@@ -421,7 +421,7 @@ int Cint::G__CallFunc::ExecInterpretedFunc(G__value* presult)
       int store_asm_noverflow = G__asm_noverflow;
       G__asm_exec=1;
       if (method.Index()==-2) {
-         G__asm_index = G__Dict::GetDict().GetFunction(method.Hash());
+         G__asm_index = G__Dict::GetDict().GetFunction(method.Handle());
       } else {
          assert(0); // humm strange this should not happen!
       }
