@@ -58,7 +58,7 @@ public:
    // methods
    virtual void        cd(Int_t /*idiv*/) {}
    virtual TGeoNode   *CdNext();
-   virtual TGeoNode   *FindNode(Double_t * /*point*/, const Double_t */*dir*/=0) {return 0;} 
+   virtual TGeoNode   *FindNode(Double_t * /*point*/, const Double_t * /*dir*/=0) {return 0;} 
    virtual Int_t       GetByteCount() const {return 36;}
    Int_t               GetCurrent()      {return fCurrent;}
    Int_t               GetDivIndex()     {return fDivIndex;}
@@ -71,7 +71,7 @@ public:
    Double_t            GetStep() const   {return fStep;}
    Double_t            GetEnd() const    {return fEnd;}
    TGeoVolume         *GetVolume() const {return fVolume;}
-   virtual Bool_t      IsOnBoundary(const Double_t */*point*/) const {return kFALSE;}
+   virtual Bool_t      IsOnBoundary(const Double_t * /*point*/) const {return kFALSE;}
    Bool_t              IsReflected() const {return TObject::TestBit(kPatternReflected);}
    virtual 
    TGeoPatternFinder  *MakeCopy(Bool_t reflect=kFALSE);

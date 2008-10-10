@@ -1304,7 +1304,7 @@ TGeoPatternSphR::~TGeoPatternSphR()
 // Destructor
 }
 //_____________________________________________________________________________
-TGeoNode *TGeoPatternSphR::FindNode(Double_t * /*point*/, const Double_t */*dir*/)
+TGeoNode *TGeoPatternSphR::FindNode(Double_t * /*point*/, const Double_t * /*dir*/)
 {
 // find the node containing the query point
    return 0;
@@ -1372,7 +1372,7 @@ TGeoPatternSphTheta::~TGeoPatternSphTheta()
 // Destructor
 }
 //_____________________________________________________________________________
-TGeoNode *TGeoPatternSphTheta::FindNode(Double_t * /*point*/, const Double_t */*dir*/)
+TGeoNode *TGeoPatternSphTheta::FindNode(Double_t * /*point*/, const Double_t * /*dir*/)
 {
 // find the node containing the query point
    return 0;
@@ -1440,7 +1440,7 @@ TGeoPatternSphPhi::~TGeoPatternSphPhi()
 // Destructor
 }
 //_____________________________________________________________________________
-TGeoNode *TGeoPatternSphPhi::FindNode(Double_t * /*point*/, const Double_t */*dir*/)
+TGeoNode *TGeoPatternSphPhi::FindNode(Double_t * /*point*/, const Double_t * /*dir*/)
 {
 // find the node containing the query point
    return 0;
@@ -1519,7 +1519,7 @@ TGeoPatternHoneycomb::~TGeoPatternHoneycomb()
 // destructor
 }
 //_____________________________________________________________________________
-TGeoNode *TGeoPatternHoneycomb::FindNode(Double_t * /*point*/, const Double_t */*dir*/)
+TGeoNode *TGeoPatternHoneycomb::FindNode(Double_t * /*point*/, const Double_t * /*dir*/)
 {
 // find the node containing the query point
    return 0;
