@@ -166,7 +166,7 @@ function config_macosx64 {
     CFLAGS="${CFLAGS} -m64"
     CXXFLAGS="${CXXFLAGS} -m64"
     LDFLAGS="${LDFLAGS} -m64"
-    SOFLAGS="${SOFLAGS -m64}"
+    SOFLAGS="${SOFLAGS} -m64"
 }
 
 function config_djgpp {
