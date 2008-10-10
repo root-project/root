@@ -138,7 +138,7 @@ $(IOSENUMH): $(ORDER_) $(CINTTMP) $(G__CFG_COREVERSION)/include/stdio.h $(MAKECI
 		( cd $(G__CFG_COREVERSION)/include;$(G__CFG_RM) stdfunc$(G__CFG_SOEXT) ) && \
 		unset VS_UNICODE_OUTPUT && \
 		cd $(G__CFG_COREVERSION) && \
-		  LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:.. ../$(CINTTMP) $(G__CFG_INCP)inc include/iosenum.cxx && \
+		  (LD_LIBRARY_PATH=$${LD_LIBRARY_PATH}:../lib DYLD_LIBRARY_PATH=../lib:.:$$DYLD_LIBRARY_PATH ../$(CINTTMP) $(G__CFG_INCP)inc include/iosenum.cxx ) && \
 		  mv -f iosenum.h include/iosenum.h); \
 	fi)
 
@@ -155,7 +155,7 @@ $(LOADFILETMPCXX): $(LOADFILECXX)
 $(PRAGMATMPO) $(LOADFILETMPO): CXXFLAGS += -DG__BUILDING_CINTTMP
 
 $(APIDICTCXX): $(APIDICTHDRS) $(ORDER_) $(CINTTMP) $(IOSENUMH)
-	cd $(G__CFG_COREVERSION)/src/dict && LD_LIBRARY_PATH=../../..:$$LD_LIBRARY_PATH \
+	cd $(G__CFG_COREVERSION)/src/dict && LD_LIBRARY_PATH=../../../lib:$$LD_LIBRARY_PATH DYLD_LIBRARY_PATH=../lib:.:$$DYLD_LIBRARY_PATH\
 	  ../../../$(CINTTMP) -n$(notdir $@) -NG__API -Z0 -D__MAKECINT__ \
 	  -c-1 -I../../inc -I../../../reflex/inc -I.. Api.h
 
