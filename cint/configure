@@ -156,7 +156,7 @@ function config_macos {
     MACOSX_MINOR=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`
     if [ `echo $MACOSX_MINOR | cut -d ' ' -f 2` -gt 4 ]; then
         # this is set for 64 but not for 32  bit
-        CFLAGS="${CFLAGS} -D__DARWIN_UNIX03=1"
+        CMACROS="${CMACROS} -D__DARWIN_UNIX03=1"
         CXXFLAGS="${CXXFLAGS} -D__DARWIN_UNIX03=1"
     fi
 }

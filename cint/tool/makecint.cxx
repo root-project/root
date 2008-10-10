@@ -766,7 +766,7 @@ TODO!
     out << "\t";
     if (G__quiet) out << "@";
     out << "$(CINT) " << G__INITFUNC << " -K -w" << (int)(G__flags & G__isDLL) << " -z" << G__DLLID 
-        << " -n$(CIFC) $(DLLSPEC) -D__MAKECINT__ -DG__MAKECINT "
+        << " -n$(CIFC) $(DLLSPEC) -D__MAKECINT__ -DG__MAKECINT $(CMACRO) "
         << G__preprocess
         << " -c-2 $(KRMODE) $(CINTIPATH) $(IPATH) $(CMACRO) $(CINTOPT) $(CHEADERCINT)" ;
     if(!G__CSTUB.empty()) out << " +STUB $(CSTUBCINT) -STUB";
