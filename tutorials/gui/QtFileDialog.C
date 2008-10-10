@@ -1,33 +1,38 @@
+// @(#)root/qt:$Name:  $:$Id: QtFileDialog.C,v 1.5 2008/09/28 02:22:23 fine Exp $
+// Author: Valeri Fine   23/03/2006
 #ifndef __CINT__
-#  include <qfiledialog.h> 
-#  include <qstring.h> 
+#  include <QFileDialog> 
+#  include <QString> 
+#  include "TString.h"
+#  include <string>
 #endif
 TString QtFileDialog() {
-  // This is a small AClIC wrapper to use Qt 3.3 begin_html <a href="http://doc.trolltech.com/3.3/qfiledialog.html">QFileDialog</a> end_html class
-  // See: begin_html http://doc.trolltech.com/3.3/qfiledialog.html#getOpenFileName end_html
+  // This is a small ROOT macro to use Qt 3.3 class: begin_html <a href="http://doc.trolltech.com/3.3/qfiledialog.html">QFileDialog</a> end_html
+  // See: begin_html <a href="http://doc.trolltech.com/3.3/qfiledialog.html#getOpenFileName">http://doc.trolltech.com/3.3/qfiledialog.html#getOpenFileName</a> end_html
   //
   // To use, invoke ACLiC from the ROOT prompt:
   // root [] .x QtFileDialog.C++
   //
-  // To use it with no ACLiC omit the trailing "++
+  // To use it with no ACLiC, omit the trailing "++"
   // root [] .x QtFileDialog.C
   //
-  // The QtFileDialog returns TString object that conatisn the selected file name.
+  // The QtFileDialog returns TString object that contains the selected file name.
   // returns its pointer.
-  // Teh nmacro QtMultiFileDialog.C provides an adavcned example.
+  // The macro QtMultiFileDialog.C provides an advanced example.
   //
-  // The full list of the Qt classes availbe from Cint is defined by
-  // begin_html <http://root.bnl.gov/QtRoot/htmldoc/src/qtclasses.h.html">by $ROOTSYS/cint/lib/qtclasses.h</a> end-html
-  // Author: Valeri Fine   23/03/2006
+  // The full list of the Qt classes available from Cint is defined by
+  // begin_html <a href="http://root.bnl.gov/QtRoot/htmldoc/src/qtclasses.h.html">by $ROOTSYS/cint/lib/qtclasses.h</a> end_html
+  //
+  // All Qt classes can be used from ACLiC though.
   
 #ifdef __CINT__
   // Load the qt cint dictionary.
   // One is recommended to do that at once somewhere.
   // For example  from his/her custom rootlogon.C script
-  gSystem->Load("$ROOTSYS/cint/include/qtcint");
-#endif   
+  gSystem->Load("$ROOTSYS/cint/cint/include/qtcint");
+#endif
   QString fileName = QFileDialog::getOpenFileName ();
-  return TString((const char *)fileName);
+  std::string flnm = fileName.toStdString();
+  return TString(flnm.c_str());
 }
 
- 
