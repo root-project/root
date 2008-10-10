@@ -39,17 +39,17 @@ class QTextStreamFunction;
 static unsigned int UINT_MAX;
 static unsigned long ULONG_MAX;
 
-#define QLIST_H
-template <typename T> class QList;
-template <typename T> class QListIterator;
-template <typename T> class QMutableListIterator;
+// #define QLIST_H
+// template <typename T> class QList;
+// template <typename T> class QListIterator;
+// template <typename T> class QMutableListIterator;
 
 #define QVECTOR_H
 template <typename T> class QVector;
 
 #define QHASH_H
 // originally it's not templated but hey who cares
-template <typename T> uint qHash(T);
+ template <typename T> uint qHash(T);
 
 #define QSTYLEOPTION_H
 class QStyleOption;
@@ -59,9 +59,6 @@ class QStyleOptionComboBox;
 // const bool FALSE=false;
 // const bool TRUE=true;
 
-//#ifndef sizeof
-//#  define sizeof(A)  1000
-// #endif
 class Data { int d; };
 
 #ifndef typename
@@ -92,16 +89,7 @@ class Data { int d; };
 
 #include "qplatformdefs.h"
 
-#ifdef QT3_SUPPORT
-# undef QT3_SUPPORT
-#endif
-#ifndef QT_NO_TEXTCODEC
-#  define QT_NO_TEXTCODEC
-#endif
 // add-tions 
-#ifndef QT_NO_USERDATA
-# define QT_NO_USERDATA
-#endif
 
 #ifndef QT_NO_PROPERTIES
 #  define QT_NO_PROPERTIES
@@ -109,14 +97,6 @@ class Data { int d; };
 
 #ifndef  QT_NO_STL
 #  define  QT_NO_STL
-#endif
-
-#ifndef QT_NO_REGEXP
-#  define  QT_NO_REGEXP
-#endif
-
-#ifndef QT_NO_MEMBER_TEMPLATES
-#  define QT_NO_MEMBER_TEMPLATES
 #endif
 
 #ifndef QT_NO_QOBJECT_CHECK
@@ -127,14 +107,14 @@ class Data { int d; };
 #  define  QT_NO_DEBUG_STREAM
 #endif
 
-#define QT_NO_SYSTEMLOCALE
-#define QT_NO_INPUTMETHOD
+//#define QT_NO_SYSTEMLOCALE
+// #define QT_NO_INPUTMETHOD
 
 // ---- may be removed above 
 #include <QtCore/QtCore>
 #include <QtGui/QtGui>
 
 #include "qtclasses.h"
-//#include "qtglobals.h"
-//#include "qtfunctions.h"
+#include "qtglobals.h"
+#include "qtfunctions.h"
 
