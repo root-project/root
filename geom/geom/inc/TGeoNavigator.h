@@ -43,6 +43,7 @@ protected:
    TGeoNode             *FindInCluster(Int_t *cluster, Int_t nc);
    Int_t                 GetTouchedCluster(Int_t start, Double_t *point, Int_t *check_list,
                                            Int_t ncheck, Int_t *result);
+   TGeoNode             *CrossDivisionCell();
    void                  SafetyOverlaps();
 
 private :

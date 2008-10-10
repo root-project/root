@@ -463,6 +463,65 @@ void TGeoNavigator::GetBranchOnlys(Int_t *isonly) const
 }
 
 //_____________________________________________________________________________
+TGeoNode *TGeoNavigator::CrossDivisionCell()
+{
+// Cross a division cell. Distance to exit contained in fStep, current node
+// points to the cell node.
+   TGeoPatternFinder *finder = fCurrentNode->GetFinder();
+   if (!finder) {
+      Fatal("CrossDivisionCell", "Volume has no pattern finder");
+      return 0;
+   }
+   // Mark current node and go up to the level of the divided volume
+   TGeoNode *skip = fCurrentNode;
+   CdUp();
+   Double_t point[3], newpoint[3], dir[3];
+   fGlobalMatrix->MasterToLocal(fPoint, newpoint);
+   fGlobalMatrix->MasterToLocalVect(fDirection, dir);
+   // Does step cross a boundary along division axis ?
+   Bool_t onbound = finder->IsOnBoundary(newpoint);
+   if (onbound) {
+      // Work along division axis
+      // Get the starting point
+      point[0] = newpoint[0] - dir[0]*fStep;
+      point[1] = newpoint[1] - dir[1]*fStep;
+      point[2] = newpoint[2] - dir[2]*fStep;
+      // Find which is the next crossed cell.
+      finder->FindNode(point, dir);
+      Int_t inext = finder->GetNext();
+      if (inext<0) {
+         // step fully exits the division along the division axis
+         // Do step exits in a mother cell ?
+         if (fCurrentNode->IsOffset()) {
+            Double_t dist = fCurrentNode->GetVolume()->GetShape()->DistFromInside(point,dir,3);
+            // Do step exit also from mother cell ?
+            if (dist < fStep+2.*gTolerance) {
+               // Step exits mother on its own division axis
+               return CrossDivisionCell();
+            }
+            // We end up here
+            return fCurrentNode;
+         }   
+         // Exiting in a non-divided volume
+         while (fCurrentNode->GetVolume()->IsAssembly()) {
+            // Move always to mother for assemblies
+            skip = fCurrentNode;
+            if (!fLevel) break;
+            CdUp();
+         } 
+         return CrossBoundaryAndLocate(kFALSE, skip);
+      }
+      // step enters a new cell
+      CdDown(inext+finder->GetDivIndex());
+      skip = fCurrentNode;
+      return CrossBoundaryAndLocate(kTRUE, skip);
+   }
+   // step exits on an axis other than the division axis -> get next slice
+   if (fCurrentNode->IsOffset()) return CrossDivisionCell();
+   return CrossBoundaryAndLocate(kFALSE, skip);
+}
+   
+//_____________________________________________________________________________
 TGeoNode *TGeoNavigator::CrossBoundaryAndLocate(Bool_t downwards, TGeoNode *skipnode)
 {
 // Cross next boundary and locate within current node
@@ -491,15 +550,15 @@ TGeoNode *TGeoNavigator::CrossBoundaryAndLocate(Bool_t downwards, TGeoNode *skip
    if ((skipnode && current == skipnode) || current->GetVolume()->IsAssembly()) {
       if (!fLevel) {
          fIsOutside = kTRUE;
-         return fGeometry->GetTopNode();
+         return fGeometry->GetCurrentNode();
       }
       CdUp();
       while (fLevel && fCurrentNode->GetVolume()->IsAssembly()) CdUp();
       if (!fLevel && fCurrentNode->GetVolume()->IsAssembly()) {
          fIsOutside = kTRUE;
-         return fGeometry->GetTopNode();
+         return fCurrentNode;
       }
-      return fGeometry->GetTopNode();
+      return fCurrentNode;
    }
    return current;
 }   
@@ -954,6 +1013,8 @@ TGeoNode *TGeoNavigator::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsa
    if (compsafe) {
       fIsOnBoundary = kFALSE;
       Safety();
+      // If proposed step less than safety, nothing to check
+      if (fSafety > stepmax+gTolerance) return fCurrentNode;
    }   
    Double_t extra = (fIsOnBoundary)?gTolerance:0.0;
    fIsOnBoundary = kFALSE;
@@ -1019,11 +1080,15 @@ TGeoNode *TGeoNavigator::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsa
       fIsStepEntering = kFALSE;
       fIsStepExiting = kTRUE;
       skip = fCurrentNode;
+      fPoint[0] += fStep*fDirection[0];
+      fPoint[1] += fStep*fDirection[1];
+      fPoint[2] += fStep*fDirection[2];
       is_assembly = fCurrentNode->GetVolume()->IsAssembly();
       if (!fLevel && !is_assembly) {
          fIsOutside = kTRUE;
          return 0;
-      }   
+      }
+      if (fCurrentNode->IsOffset()) return CrossDivisionCell();   
       if (fLevel) CdUp();
       else        skip = 0;
       return CrossBoundaryAndLocate(kFALSE, skip);
@@ -1198,6 +1263,7 @@ TGeoNode *TGeoNavigator::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsa
    fStep += extra;
    if (icrossed == -2) {
       // Nothing crossed within stepmax -> propagate and return same location   
+      fIsOnBoundary = kFALSE;
       return fCurrentNode;
    }
    fIsOnBoundary = kTRUE;
@@ -1208,6 +1274,7 @@ TGeoNode *TGeoNavigator::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsa
          fIsOutside = kTRUE;
          return 0;
       }   
+      if (fCurrentNode->IsOffset()) return CrossDivisionCell();   
       if (fLevel) CdUp();
       else        skip = 0;
 //      is_assembly = fCurrentNode->GetVolume()->IsAssembly();
@@ -1618,6 +1685,7 @@ TGeoNode *TGeoNavigator::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
       }
       // point is not inside the division, but might be in other nodes
       // at the same level (NOT SUPPORTED YET)
+      while (fCurrentNode && fCurrentNode->IsOffset()) CdUp();
       return fCurrentNode;
    }
    // second, look if current volume is voxelized

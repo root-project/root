@@ -44,6 +44,7 @@ protected :
    Int_t               fDivIndex;       // index of first div. node
    TGeoMatrix         *fMatrix;         // generic matrix
    TGeoVolume         *fVolume;         // volume to which applies
+   Int_t               fNextIndex;      //! index of next node
 
    TGeoPatternFinder(const TGeoPatternFinder&); 
    TGeoPatternFinder& operator=(const TGeoPatternFinder&);
@@ -56,23 +57,27 @@ public:
    virtual ~TGeoPatternFinder();
    // methods
    virtual void        cd(Int_t /*idiv*/) {}
-   virtual TGeoNode   *FindNode(Double_t * /*point*/) {return 0;} 
+   virtual TGeoNode   *CdNext();
+   virtual TGeoNode   *FindNode(Double_t * /*point*/, const Double_t */*dir*/=0) {return 0;} 
    virtual Int_t       GetByteCount() const {return 36;}
    Int_t               GetCurrent()      {return fCurrent;}
    Int_t               GetDivIndex()     {return fDivIndex;}
    virtual Int_t       GetDivAxis()      {return 1;}
    virtual TGeoMatrix *GetMatrix()       {return fMatrix;}
    Int_t               GetNdiv() const   {return fNdivisions;}
+   Int_t               GetNext() const   {return fNextIndex;}
    TGeoNode           *GetNodeOffset(Int_t idiv) {return fVolume->GetNode(fDivIndex+idiv);}  
    Double_t            GetStart() const  {return fStart;}
    Double_t            GetStep() const   {return fStep;}
    Double_t            GetEnd() const    {return fEnd;}
    TGeoVolume         *GetVolume() const {return fVolume;}
+   virtual Bool_t      IsOnBoundary(const Double_t */*point*/) const {return kFALSE;}
    Bool_t              IsReflected() const {return TObject::TestBit(kPatternReflected);}
    virtual 
    TGeoPatternFinder  *MakeCopy(Bool_t reflect=kFALSE);
    void                Reflect(Bool_t flag=kTRUE) {TObject::SetBit(kPatternReflected,flag);}
    void                SetDivIndex(Int_t index) {fDivIndex = index;}
+   void                SetNext(Int_t index)     {fNextIndex = index;}
    void                SetVolume(TGeoVolume *vol) {fVolume = vol;}
 
    ClassDef(TGeoPatternFinder, 3)              // patterns to divide volumes
@@ -99,9 +104,10 @@ public:
    virtual ~TGeoPatternX();
    // methods
    virtual void        cd(Int_t idiv);
-   virtual TGeoNode   *FindNode(Double_t *point);
+   virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0);
    virtual Double_t    FindNextBoundary(Double_t *point, Double_t *dir, Int_t &indnext);
    virtual Int_t       GetDivAxis()      {return 1;}
+   virtual Bool_t      IsOnBoundary(const Double_t *point) const;
    virtual 
    TGeoPatternFinder  *MakeCopy(Bool_t reflect=kFALSE);
    virtual void        SavePrimitive(ostream &out, Option_t *option = "");
@@ -127,9 +133,10 @@ public:
    virtual ~TGeoPatternY();
    // methods
    virtual void        cd(Int_t idiv);
-   virtual TGeoNode   *FindNode(Double_t *point); 
+   virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0); 
    virtual Double_t    FindNextBoundary(Double_t *point, Double_t *dir, Int_t &indnext);
    virtual Int_t       GetDivAxis()      {return 2;}
+   virtual Bool_t      IsOnBoundary(const Double_t *point) const;
    virtual 
    TGeoPatternFinder  *MakeCopy(Bool_t reflect=kFALSE);
    virtual void        SavePrimitive(ostream &out, Option_t *option = "");
@@ -155,9 +162,10 @@ public:
    virtual ~TGeoPatternZ();
    // methods
    virtual void        cd(Int_t idiv);
-   virtual TGeoNode   *FindNode(Double_t *point); 
+   virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0); 
    virtual Double_t    FindNextBoundary(Double_t *point, Double_t *dir, Int_t &indnext);
    virtual Int_t       GetDivAxis()      {return 3;}
+   virtual Bool_t      IsOnBoundary(const Double_t *point) const;
    virtual 
    TGeoPatternFinder  *MakeCopy(Bool_t reflect=kFALSE);
    virtual void        SavePrimitive(ostream &out, Option_t *option = "");
@@ -184,8 +192,9 @@ public:
    virtual ~TGeoPatternParaX();
    // methods
    virtual void        cd(Int_t idiv);
-   virtual TGeoNode   *FindNode(Double_t *point);
+   virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0);
    virtual Int_t       GetDivAxis()      {return 1;}
+   virtual Bool_t      IsOnBoundary(const Double_t *point) const;
    virtual 
    TGeoPatternFinder  *MakeCopy(Bool_t reflect=kFALSE);
    virtual void        SavePrimitive(ostream &out, Option_t *option = "");
@@ -215,8 +224,9 @@ public:
    virtual ~TGeoPatternParaY();
    // methods
    virtual void        cd(Int_t idiv);
-   virtual TGeoNode   *FindNode(Double_t *point);
+   virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0);
    virtual Int_t       GetDivAxis()      {return 2;}
+   virtual Bool_t      IsOnBoundary(const Double_t *point) const;
    virtual 
    TGeoPatternFinder  *MakeCopy(Bool_t reflect=kFALSE);
    virtual void        SavePrimitive(ostream &out, Option_t *option = "");
@@ -247,8 +257,9 @@ public:
    virtual ~TGeoPatternParaZ();
    // methods
    virtual void        cd(Int_t idiv);
-   virtual TGeoNode   *FindNode(Double_t *point);
+   virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0);
    virtual Int_t       GetDivAxis()      {return 3;}
+   virtual Bool_t      IsOnBoundary(const Double_t *point) const;
    virtual 
    TGeoPatternFinder  *MakeCopy(Bool_t reflect=kFALSE);
    virtual void        SavePrimitive(ostream &out, Option_t *option = "");
@@ -281,8 +292,9 @@ public:
    Double_t            GetTxz() const {return fTxz;}
    Double_t            GetTyz() const {return fTyz;}
    virtual void        cd(Int_t idiv);
-   virtual TGeoNode   *FindNode(Double_t *point);
+   virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0);
    virtual Int_t       GetDivAxis()      {return 3;}
+   virtual Bool_t      IsOnBoundary(const Double_t *point) const;
    virtual 
    TGeoPatternFinder  *MakeCopy(Bool_t reflect=kFALSE);
    virtual void        SavePrimitive(ostream &out, Option_t *option = "");
@@ -309,8 +321,9 @@ public:
    virtual ~TGeoPatternCylR();
    // methods
    virtual void        cd(Int_t idiv) {fCurrent=idiv;}
-   virtual TGeoNode   *FindNode(Double_t *point); 
+   virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0); 
    virtual Int_t       GetDivAxis()      {return 1;}
+   virtual Bool_t      IsOnBoundary(const Double_t *point) const;
    virtual 
    TGeoPatternFinder  *MakeCopy(Bool_t reflect=kFALSE);
    virtual void        SavePrimitive(ostream &out, Option_t *option = "");
@@ -347,8 +360,9 @@ public:
    virtual ~TGeoPatternCylPhi();
    // methods
    virtual void        cd(Int_t idiv);
-   virtual TGeoNode   *FindNode(Double_t *point); 
+   virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0); 
    virtual Int_t       GetDivAxis()      {return 2;}
+   virtual Bool_t      IsOnBoundary(const Double_t *point) const;
    virtual 
    TGeoPatternFinder  *MakeCopy(Bool_t reflect=kFALSE);
    virtual void        SavePrimitive(ostream &out, Option_t *option = "");
@@ -374,7 +388,7 @@ public:
    virtual ~TGeoPatternSphR();
    // methods
    virtual void        cd(Int_t idiv) {fCurrent=idiv;}
-   virtual TGeoNode   *FindNode(Double_t *point); 
+   virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0); 
    virtual Int_t       GetDivAxis()      {return 1;}
    virtual 
    TGeoPatternFinder  *MakeCopy(Bool_t reflect=kFALSE);
@@ -401,7 +415,7 @@ public:
    virtual ~TGeoPatternSphTheta();
    // methods
    virtual void        cd(Int_t idiv) {fCurrent=idiv;}
-   virtual TGeoNode   *FindNode(Double_t *point); 
+   virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0); 
    virtual Int_t       GetDivAxis()      {return 2;}
    virtual 
    TGeoPatternFinder  *MakeCopy(Bool_t reflect=kFALSE);
@@ -428,7 +442,7 @@ public:
    virtual ~TGeoPatternSphPhi();
    // methods
    virtual void        cd(Int_t idiv) {fCurrent=idiv;}
-   virtual TGeoNode   *FindNode(Double_t *point); 
+   virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0); 
    virtual Int_t       GetDivAxis()      {return 3;}
    virtual 
    TGeoPatternFinder  *MakeCopy(Bool_t reflect=kFALSE);
@@ -464,7 +478,7 @@ public:
    virtual ~TGeoPatternHoneycomb();
    // methods
    virtual void        cd(Int_t idiv) {fCurrent=idiv;}
-   virtual TGeoNode   *FindNode(Double_t *point); 
+   virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0); 
 
    ClassDef(TGeoPatternHoneycomb, 1)             // pattern for honeycomb divisions
 };

@@ -62,6 +62,7 @@ TGeoPatternFinder::TGeoPatternFinder()
    fStart      = 0;
    fEnd        = 0;
    fVolume     = 0;
+   fNextIndex = -1;
 }
 
 //_____________________________________________________________________________
@@ -76,6 +77,7 @@ TGeoPatternFinder::TGeoPatternFinder(TGeoVolume *vol, Int_t ndiv)
    fStep       = 0;
    fStart      = 0;
    fEnd        = 0;
+   fNextIndex = -1;
 }
 
 //_____________________________________________________________________________
@@ -116,6 +118,15 @@ TGeoPatternFinder::~TGeoPatternFinder()
 {
 // Destructor
 }
+
+//______________________________________________________________________________
+TGeoNode *TGeoPatternFinder::CdNext()
+{
+// Make next node (if any) current.
+   if (fNextIndex < 0) return NULL;
+   cd(fNextIndex);
+   return GetNodeOffset(fCurrent);
+}   
 
 //______________________________________________________________________________
 TGeoPatternFinder *TGeoPatternFinder::MakeCopy(Bool_t)
@@ -187,11 +198,28 @@ TGeoPatternX::~TGeoPatternX()
 }
 
 //_____________________________________________________________________________
-TGeoNode *TGeoPatternX::FindNode(Double_t *point)
+Bool_t TGeoPatternX::IsOnBoundary(const Double_t *point) const
 {
-// get the node division containing the query point
+// Checks if the current point is on division boundary
+   Double_t seg = (point[0]-fStart)/fStep;
+   Double_t diff = seg - Int_t(seg);
+   if (diff>0.5) diff = 1.-diff;
+   if (diff<1e-8) return kTRUE;
+   return kFALSE;
+}   
+
+//_____________________________________________________________________________
+TGeoNode *TGeoPatternX::FindNode(Double_t *point, const Double_t *dir)
+{
+// Find the cell corresponding to point and next cell along dir (if asked)
    TGeoNode *node = 0;
-   Int_t ind = (Int_t)((point[0]-fStart)/fStep);
+   Int_t ind = (Int_t)(1.+(point[0]-fStart)/fStep) - 1;
+   if (dir) {
+      fNextIndex = ind;
+      if (dir[0]>0) fNextIndex++;
+      else fNextIndex--;
+      if ((fNextIndex<0) || (fNextIndex>=fNdivisions)) fNextIndex = -1;
+   }   
    if ((ind<0) || (ind>=fNdivisions)) return node; 
    node = GetNodeOffset(ind);
    cd(ind);
@@ -305,11 +333,28 @@ void TGeoPatternY::cd(Int_t idiv)
 }
 
 //_____________________________________________________________________________
-TGeoNode *TGeoPatternY::FindNode(Double_t *point)
+Bool_t TGeoPatternY::IsOnBoundary(const Double_t *point) const
 {
-// find the node containing the query point
+// Checks if the current point is on division boundary
+   Double_t seg = (point[1]-fStart)/fStep;
+   Double_t diff = seg - Int_t(seg);
+   if (diff>0.5) diff = 1.-diff;
+   if (diff<1e-8) return kTRUE;
+   return kFALSE;
+}   
+
+//_____________________________________________________________________________
+TGeoNode *TGeoPatternY::FindNode(Double_t *point, const Double_t *dir)
+{
+// Find the cell corresponding to point and next cell along dir (if asked)
    TGeoNode *node = 0;
-   Int_t ind = (Int_t)((point[1]-fStart)/fStep);
+   Int_t ind = (Int_t)(1.+(point[1]-fStart)/fStep) - 1;
+   if (dir) {
+      fNextIndex = ind;
+      if (dir[1]>0) fNextIndex++;
+      else fNextIndex--;
+      if ((fNextIndex<0) || (fNextIndex>=fNdivisions)) fNextIndex = -1;
+   }   
    if ((ind<0) || (ind>=fNdivisions)) return node; 
    node = GetNodeOffset(ind);
    cd(ind);
@@ -416,17 +461,34 @@ void TGeoPatternZ::cd(Int_t idiv)
    fCurrent=idiv; 
    fMatrix->SetDz(((IsReflected())?-1.:1.)*(fStart+idiv*fStep+0.5*fStep));
 }
+
 //_____________________________________________________________________________
-TGeoNode *TGeoPatternZ::FindNode(Double_t *point)
+Bool_t TGeoPatternZ::IsOnBoundary(const Double_t *point) const
 {
-// find the node containing the query point
+// Checks if the current point is on division boundary
+   Double_t seg = (point[2]-fStart)/fStep;
+   Double_t diff = seg - Int_t(seg);
+   if (diff>0.5) diff = 1.-diff;
+   if (diff<1e-8) return kTRUE;
+   return kFALSE;
+}   
+
+//_____________________________________________________________________________
+TGeoNode *TGeoPatternZ::FindNode(Double_t *point, const Double_t *dir)
+{
+// Find the cell corresponding to point and next cell along dir (if asked)
    TGeoNode *node = 0;
-   Int_t ind = (Int_t)((point[2]-fStart)/fStep);
+   Int_t ind = (Int_t)(1.+(point[2]-fStart)/fStep) - 1;
+   if (dir) {
+      fNextIndex = ind;
+      if (dir[2]>0) fNextIndex++;
+      else fNextIndex--;
+      if ((fNextIndex<0) || (fNextIndex>=fNdivisions)) fNextIndex = -1;
+   }   
    if ((ind<0) || (ind>=fNdivisions)) return node; 
    node = GetNodeOffset(ind);
    cd(ind);
    return node;
-
 }
 
 //______________________________________________________________________________
@@ -528,8 +590,24 @@ void TGeoPatternParaX::cd(Int_t idiv)
    fCurrent=idiv; 
    fMatrix->SetDx(fStart+idiv*fStep+0.5*fStep);
 }
+
 //_____________________________________________________________________________
-TGeoNode *TGeoPatternParaX::FindNode(Double_t *point)
+Bool_t TGeoPatternParaX::IsOnBoundary(const Double_t *point) const
+{
+// Checks if the current point is on division boundary
+   Double_t txy = ((TGeoPara*)fVolume->GetShape())->GetTxy();
+   Double_t txz = ((TGeoPara*)fVolume->GetShape())->GetTxz();
+   Double_t tyz = ((TGeoPara*)fVolume->GetShape())->GetTyz();
+   Double_t xt = point[0]-txz*point[2]-txy*(point[1]-tyz*point[2]);
+   Double_t seg = (xt-fStart)/fStep;
+   Double_t diff = seg - Int_t(seg);
+   if (diff>0.5) diff = 1.-diff;
+   if (diff<1e-8) return kTRUE;
+   return kFALSE;
+}   
+
+//_____________________________________________________________________________
+TGeoNode *TGeoPatternParaX::FindNode(Double_t *point, const Double_t *dir)
 {
 // get the node division containing the query point
    TGeoNode *node = 0;
@@ -537,7 +615,18 @@ TGeoNode *TGeoPatternParaX::FindNode(Double_t *point)
    Double_t txz = ((TGeoPara*)fVolume->GetShape())->GetTxz();
    Double_t tyz = ((TGeoPara*)fVolume->GetShape())->GetTyz();
    Double_t xt = point[0]-txz*point[2]-txy*(point[1]-tyz*point[2]);
-   Int_t ind = (Int_t)((xt-fStart)/fStep);
+   Int_t ind = (Int_t)(1.+(xt-fStart)/fStep)-1;
+   if (dir) {
+      Double_t ttsq = txy*txy + (txz-txy*tyz)*(txz-txy*tyz);
+      Double_t divdirx = 1./TMath::Sqrt(1.+ttsq);
+      Double_t divdiry = -txy*divdirx;
+      Double_t divdirz = -(txz-txy*tyz)*divdirx;
+      Double_t dot = dir[0]*divdirx + dir[1]*divdiry + dir[2]*divdirz;
+      fNextIndex = ind;
+      if (dot>0) fNextIndex++;
+      else fNextIndex--;
+      if ((fNextIndex<0) || (fNextIndex>=fNdivisions)) fNextIndex = -1;
+   }
    if ((ind<0) || (ind>=fNdivisions)) return node; 
    node = GetNodeOffset(ind);
    cd(ind);
@@ -629,14 +718,37 @@ void TGeoPatternParaY::cd(Int_t idiv)
    fMatrix->SetDx(fTxy*dy);
    fMatrix->SetDy(dy);
 }
+
 //_____________________________________________________________________________
-TGeoNode *TGeoPatternParaY::FindNode(Double_t *point)
+Bool_t TGeoPatternParaY::IsOnBoundary(const Double_t *point) const
+{
+// Checks if the current point is on division boundary
+   Double_t tyz = ((TGeoPara*)fVolume->GetShape())->GetTyz();
+   Double_t yt = point[1]-tyz*point[2];
+   Double_t seg = (yt-fStart)/fStep;
+   Double_t diff = seg - Int_t(seg);
+   if (diff>0.5) diff = 1.-diff;
+   if (diff<1e-8) return kTRUE;
+   return kFALSE;
+}   
+
+//_____________________________________________________________________________
+TGeoNode *TGeoPatternParaY::FindNode(Double_t *point, const Double_t *dir)
 {
 // get the node division containing the query point
    TGeoNode *node = 0;
    Double_t tyz = ((TGeoPara*)fVolume->GetShape())->GetTyz();
    Double_t yt = point[1]-tyz*point[2];
-   Int_t ind = (Int_t)((yt-fStart)/fStep);
+   Int_t ind = (Int_t)(1.+(yt-fStart)/fStep) - 1;
+   if (dir) {
+      Double_t divdiry = 1./TMath::Sqrt(1.+tyz*tyz);
+      Double_t divdirz = -tyz*divdiry;
+      Double_t dot = dir[1]*divdiry + dir[2]*divdirz;
+      fNextIndex = ind;
+      if (dot>0) fNextIndex++;
+      else fNextIndex--;
+      if ((fNextIndex<0) || (fNextIndex>=fNdivisions)) fNextIndex = -1;
+   }
    if ((ind<0) || (ind>=fNdivisions)) return node; 
    node = GetNodeOffset(ind);
    cd(ind);
@@ -705,6 +817,7 @@ TGeoPatternParaZ::TGeoPatternParaZ(TGeoVolume *vol, Int_t ndivisions, Double_t s
    fMatrix     = new TGeoTranslation(0,0,0);
    fMatrix->RegisterYourself();
 }
+
 //_____________________________________________________________________________
 TGeoPatternParaZ::TGeoPatternParaZ(TGeoVolume *vol, Int_t ndivisions, Double_t start, Double_t end)
              :TGeoPatternFinder(vol, ndivisions)
@@ -718,11 +831,13 @@ TGeoPatternParaZ::TGeoPatternParaZ(TGeoVolume *vol, Int_t ndivisions, Double_t s
    fMatrix     = new TGeoTranslation(0,0,0);
    fMatrix->RegisterYourself();
 }
+
 //_____________________________________________________________________________
 TGeoPatternParaZ::~TGeoPatternParaZ()
 {
 // Destructor
 }
+
 //_____________________________________________________________________________
 void TGeoPatternParaZ::cd(Int_t idiv)
 {
@@ -735,12 +850,29 @@ void TGeoPatternParaZ::cd(Int_t idiv)
 }
 
 //_____________________________________________________________________________
-TGeoNode *TGeoPatternParaZ::FindNode(Double_t *point)
+Bool_t TGeoPatternParaZ::IsOnBoundary(const Double_t *point) const
+{
+// Checks if the current point is on division boundary
+   Double_t seg = (point[2]-fStart)/fStep;
+   Double_t diff = seg - Int_t(seg);
+   if (diff>0.5) diff = 1.-diff;
+   if (diff<1e-8) return kTRUE;
+   return kFALSE;
+}   
+
+//_____________________________________________________________________________
+TGeoNode *TGeoPatternParaZ::FindNode(Double_t *point, const Double_t *dir)
 {
 // get the node division containing the query point
    TGeoNode *node = 0;
    Double_t zt = point[2];
-   Int_t ind = (Int_t)((zt-fStart)/fStep);
+   Int_t ind = (Int_t)(1.+(zt-fStart)/fStep) - 1;
+   if (dir) {
+      fNextIndex = ind;
+      if (dir[2]>0) fNextIndex++;
+      else fNextIndex--;
+      if ((fNextIndex<0) || (fNextIndex>=fNdivisions)) fNextIndex = -1;
+   }   
    if ((ind<0) || (ind>=fNdivisions)) return node; 
    node = GetNodeOffset(ind);
    cd(ind);
@@ -843,13 +975,31 @@ void TGeoPatternTrapZ::cd(Int_t idiv)
    fMatrix->SetDy(fTyz*dz);
    fMatrix->SetDz((IsReflected())?-dz:dz);
 }
+
 //_____________________________________________________________________________
-TGeoNode *TGeoPatternTrapZ::FindNode(Double_t *point)
+Bool_t TGeoPatternTrapZ::IsOnBoundary(const Double_t *point) const
+{
+// Checks if the current point is on division boundary
+   Double_t seg = (point[2]-fStart)/fStep;
+   Double_t diff = seg - Int_t(seg);
+   if (diff>0.5) diff = 1.-diff;
+   if (diff<1e-8) return kTRUE;
+   return kFALSE;
+}   
+
+//_____________________________________________________________________________
+TGeoNode *TGeoPatternTrapZ::FindNode(Double_t *point, const Double_t *dir)
 {
 // get the node division containing the query point
    TGeoNode *node = 0;
    Double_t zt = point[2];
-   Int_t ind = (Int_t)((zt-fStart)/fStep);
+   Int_t ind = (Int_t)(1. + (zt-fStart)/fStep) - 1;
+   if (dir) {
+      fNextIndex = ind;
+      if (dir[2]>0) fNextIndex++;
+      else fNextIndex--;
+      if ((fNextIndex<0) || (fNextIndex>=fNdivisions)) fNextIndex = -1;
+   }   
    if ((ind<0) || (ind>=fNdivisions)) return node; 
    node = GetNodeOffset(ind);
    cd(ind);
@@ -922,14 +1072,34 @@ TGeoPatternCylR::~TGeoPatternCylR()
 {
 // Destructor
 }
+
 //_____________________________________________________________________________
-TGeoNode *TGeoPatternCylR::FindNode(Double_t *point)
+Bool_t TGeoPatternCylR::IsOnBoundary(const Double_t *point) const
+{
+// Checks if the current point is on division boundary
+   Double_t r = TMath::Sqrt(point[0]*point[0]+point[1]*point[1]);
+   Double_t seg = (r-fStart)/fStep;
+   Double_t diff = seg - Int_t(seg);
+   if (diff>0.5) diff = 1.-diff;
+   if (diff<1e-8) return kTRUE;
+   return kFALSE;
+}   
+
+//_____________________________________________________________________________
+TGeoNode *TGeoPatternCylR::FindNode(Double_t *point, const Double_t *dir)
 {
 // find the node containing the query point
    if (!fMatrix) fMatrix = gGeoIdentity;
    TGeoNode *node = 0;
    Double_t r = TMath::Sqrt(point[0]*point[0]+point[1]*point[1]);
-   Int_t ind = (Int_t)((r-fStart)/fStep);
+   Int_t ind = (Int_t)(1. + (r-fStart)/fStep) - 1;
+   if (dir) {
+      fNextIndex = ind;
+      Double_t dot = point[0]*dir[0] + point[1]*dir[1];
+      if (dot>0) fNextIndex++;
+      else fNextIndex--;
+      if ((fNextIndex<0) || (fNextIndex>=fNdivisions)) fNextIndex = -1;
+   }   
    if ((ind<0) || (ind>=fNdivisions)) return node; 
    node = GetNodeOffset(ind);
    cd(ind);
@@ -1031,8 +1201,24 @@ void TGeoPatternCylPhi::cd(Int_t idiv)
    }      
    ((TGeoRotation*)fMatrix)->FastRotZ(&fSinCos[2*idiv]);
 }
+
 //_____________________________________________________________________________
-TGeoNode *TGeoPatternCylPhi::FindNode(Double_t *point)
+Bool_t TGeoPatternCylPhi::IsOnBoundary(const Double_t *point) const
+{
+// Checks if the current point is on division boundary
+   Double_t phi = TMath::ATan2(point[1], point[0])*TMath::RadToDeg();
+   if (phi<0) phi += 360;
+   Double_t ddp = phi - fStart;
+   if (ddp<0) ddp+=360;
+   Double_t seg = ddp/fStep;
+   Double_t diff = seg - Int_t(seg);
+   if (diff>0.5) diff = 1.-diff;
+   if (diff<1e-8) return kTRUE;
+   return kFALSE;
+}   
+
+//_____________________________________________________________________________
+TGeoNode *TGeoPatternCylPhi::FindNode(Double_t *point, const Double_t *dir)
 {
 // find the node containing the query point
    TGeoNode *node = 0;
@@ -1042,7 +1228,14 @@ TGeoNode *TGeoPatternCylPhi::FindNode(Double_t *point)
    Double_t ddp = phi - fStart;
    if (ddp<0) ddp+=360;
 //   if (ddp>360) ddp-=360;
-   Int_t ind = (Int_t)(ddp/fStep);
+   Int_t ind = (Int_t)(1. + ddp/fStep) - 1;
+   if (dir) {
+      fNextIndex = ind;
+      Double_t dot = point[0]*dir[1]-point[1]*dir[0];
+      if (dot>0) fNextIndex++;
+      else fNextIndex--;
+      if ((fNextIndex<0) || (fNextIndex>=fNdivisions)) fNextIndex = -1;
+   }   
    if ((ind<0) || (ind>=fNdivisions)) return node; 
    node = GetNodeOffset(ind);
    cd(ind);
@@ -1111,7 +1304,7 @@ TGeoPatternSphR::~TGeoPatternSphR()
 // Destructor
 }
 //_____________________________________________________________________________
-TGeoNode *TGeoPatternSphR::FindNode(Double_t * /*point*/)
+TGeoNode *TGeoPatternSphR::FindNode(Double_t * /*point*/, const Double_t */*dir*/)
 {
 // find the node containing the query point
    return 0;
@@ -1179,7 +1372,7 @@ TGeoPatternSphTheta::~TGeoPatternSphTheta()
 // Destructor
 }
 //_____________________________________________________________________________
-TGeoNode *TGeoPatternSphTheta::FindNode(Double_t * /*point*/)
+TGeoNode *TGeoPatternSphTheta::FindNode(Double_t * /*point*/, const Double_t */*dir*/)
 {
 // find the node containing the query point
    return 0;
@@ -1247,7 +1440,7 @@ TGeoPatternSphPhi::~TGeoPatternSphPhi()
 // Destructor
 }
 //_____________________________________________________________________________
-TGeoNode *TGeoPatternSphPhi::FindNode(Double_t * /*point*/)
+TGeoNode *TGeoPatternSphPhi::FindNode(Double_t * /*point*/, const Double_t */*dir*/)
 {
 // find the node containing the query point
    return 0;
@@ -1326,7 +1519,7 @@ TGeoPatternHoneycomb::~TGeoPatternHoneycomb()
 // destructor
 }
 //_____________________________________________________________________________
-TGeoNode *TGeoPatternHoneycomb::FindNode(Double_t * /*point*/)
+TGeoNode *TGeoPatternHoneycomb::FindNode(Double_t * /*point*/, const Double_t */*dir*/)
 {
 // find the node containing the query point
    return 0;

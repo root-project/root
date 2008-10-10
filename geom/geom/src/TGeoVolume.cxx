@@ -1210,7 +1210,11 @@ void TGeoVolume::RandomPoints(Int_t npoints, Option_t *option)
 {
 // Draw random points in the bounding box of this volume.
    if (gGeoManager != fGeoManager) gGeoManager = fGeoManager;
+   TGeoVolume *old_vol = fGeoManager->GetTopVolume();
+   if (old_vol!=this) fGeoManager->SetTopVolume(this);
+   else old_vol=0;
    fGeoManager->RandomPoints(this, npoints, option);
+   if (old_vol) fGeoManager->SetTopVolume(old_vol);
 }
 
 //_____________________________________________________________________________
@@ -1222,6 +1226,7 @@ void TGeoVolume::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doubl
    if (old_vol!=this) fGeoManager->SetTopVolume(this);
    else old_vol=0;
    fGeoManager->RandomRays(nrays, startx, starty, startz);
+   if (old_vol) fGeoManager->SetTopVolume(old_vol);
 }
 
 //_____________________________________________________________________________
