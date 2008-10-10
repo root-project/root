@@ -879,10 +879,12 @@ int main(int argc, char** argv)
    ret += ci(kLangCXX, "t1032.cxx", difffile);
    ret += ci(kLangCXX, "t1032.cxx", difffile);
 #if !defined(G__WIN32) || defined(FORCEWIN32)
-   if (sizeof(long)==4) {
+   if (sizeof(long double)==16) {
+      ret += io("t1034.cxx", "t1034.ref64", difffile); // sizeof(long double)==16      
+   } else if (sizeof(long)==4) {
       ret += io("t1034.cxx", "t1034.ref", difffile); // sizeof(long double)==12
    } else if (sizeof(void*)==8) {
-      ret += io("t1034.cxx", "t1034.ref64", difffile); // sizeof(long double)==12
+      ret += io("t1034.cxx", "t1034.ref64", difffile); // sizeof(long double)==16
    } else {
       ret += io("t1034.cxx", "t1034.refXX", difffile); // sizeof(long double)==12
    }
