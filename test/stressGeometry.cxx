@@ -188,8 +188,9 @@ void ReadRef(Int_t kexp) {
    TStopwatch sw;
    char fname[100];
    TFile *f = 0;
+   //use ref_2 files from version 5.21/05
    if (!gen_ref)
-      sprintf(fname, "http://root.cern.ch/files/%s_ref.root", exps[kexp]);
+      sprintf(fname, "http://root.cern.ch/files/%s_ref_2.root", exps[kexp]);
    else
       sprintf(fname, "%s_ref.root", exps[kexp]);
    
@@ -437,7 +438,7 @@ void InspectDiff(const char* exp="alice",Long64_t ientry=-1) {
 void InspectRef(const char *exp) {
 // Inspect current reference.
    char fname[64];
-   sprintf(fname, "%s_ref.root", exp);
+   sprintf(fname, "%s_ref_2.root", exp);
    if (gSystem->AccessPathName(fname)) {
       printf("ERROR: file %s does not exist\n", fname);
       return;
