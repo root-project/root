@@ -267,7 +267,7 @@ extern pid_t getpgid(pid_t pid);
 extern char *getwd(char *buf);
 
 #if (defined(G__APPLE) || defined(__APPLE__))
-#if __DARWIN_UNIX03
+#if __DARWIN_UNIX03 || G__GNUC >= 4 // approxymation to guess the macos platform
 extern pid_t setpgrp(void);
 #else
 extern int setpgrp(pid_t _pid,pid_t _pgrp);
