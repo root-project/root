@@ -693,7 +693,8 @@ if [ "x${COREVERSION}" = "xcint" ]; then
 else
   CINTVERSIONTAG=G__CINTVERSIONSTR
 fi
-CINTVERSION=`grep '#define *'${CINTVERSIONTAG}' ' ${COREVERSION}/inc/G__ci.h | sed 's/^.*"\([^,]\+\),.*$/\1/'`
+
+CINTVERSION=`grep '#define *'${CINTVERSIONTAG}' ' ${COREVERSION}/inc/G__ci.h | sed 's/^.*"\([^,]*\),.*$/\1/'`
 
 
 #############################################################
