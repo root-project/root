@@ -25,7 +25,7 @@ template<class T> class B {
 };
 
 template<class T> int compare3(B<T> a,B<T> b) {
-  return(a.b==b.b);
+   return( a.b==0 ? a.b==b.b : (((a.b-b.b)/a.b) < 1e-4) );
 }
 
 void test3()
@@ -53,7 +53,7 @@ class A {
 };
 
 int operator==(A a,A b) {
-  return(a.a==b.a);
+   return( a.a==0 ? a.a==b.a : (((a.a-b.a)/a.a)<1e-4));
 }
 
 void test1()
