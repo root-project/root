@@ -9,4 +9,5 @@ void printme(const t& o) {
    std::cout << "t now " << d << " " << i << " " << j << std::endl;
    float v = o.getfloat();
    std::cout << "t now " << v << std::endl;
+   std::cout << flush;
 }
