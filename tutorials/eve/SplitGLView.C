@@ -28,6 +28,8 @@
 #include "TEveViewer.h"
 #include "TEveBrowser.h"
 #include "TEveProjectionManager.h"
+#include "TEveProjectionAxes.h"
+#include "TEveScene.h"
 #include "TEveGeoNode.h"
 #include "TEveEventManager.h"
 #include "TEveTrack.h"
@@ -739,6 +741,8 @@ SplitGLView::SplitGLView(const TGWindow *p, UInt_t w, UInt_t h, Bool_t embed) :
       fRhoZMgr = new TEveProjectionManager();
       gEve->AddElement(fRhoZMgr, (TEveElement *)s);
       gEve->AddToListTree(fRhoZMgr, kTRUE);
+      TEveProjectionAxes* a = new TEveProjectionAxes(fRhoZMgr);
+      s->AddElement(a);
    }
 
    // get bottom left split frame
@@ -782,6 +786,8 @@ SplitGLView::SplitGLView(const TGWindow *p, UInt_t w, UInt_t h, Bool_t embed) :
       fRPhiMgr = new TEveProjectionManager();
       gEve->AddElement(fRPhiMgr, (TEveElement *)s);
       gEve->AddToListTree(fRPhiMgr, kTRUE);
+      TEveProjectionAxes* a = new TEveProjectionAxes(fRPhiMgr);
+      s->AddElement(a);
    }
 
    // get bottom center split frame
