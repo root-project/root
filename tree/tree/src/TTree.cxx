@@ -3493,10 +3493,10 @@ static TBranch *R__FindBranchHelper(TObjArray *list, const char *branchname) {
          return where;
       }
       TBranch *next = 0;
-      if (branchname && branchname[len]=='.' 
-          && strncmp(name,branchname,len)==0) {
+      if (branchname && (brlen >= len) && (branchname[len] == '.')
+          && strncmp(name, branchname, len) == 0) {
          // The prefix subbranch name match the branch name.
-         
+
          next = where->FindBranch(branchname);
          if (!next) {
             next = where->FindBranch(branchname+len+1);
