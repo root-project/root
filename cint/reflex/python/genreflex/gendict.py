@@ -37,7 +37,7 @@ class genDictionary(object) :
     self.cppEnumSelect     = {}
     self.cppFunctionSelect = {}
     self.last_id    = ''
-    self.transtable = string.maketrans('<>&*,: ().$-', '__rp__s___dm')
+    self.transtable = string.maketrans('<>&*,: ().$-[]', '__rp__s___dm__')
     self.ignoremeth = ('rbegin', 'rend', '_Eq','_Lt', 'value_comp')
     self.x_id       = iter(xrange(sys.maxint))
     self.errors     = 0
@@ -1369,7 +1369,7 @@ class genDictionary(object) :
     elif elem == 'PointerType' :
       t = self.genTypeName(attrs['type'],enum, const, colon)
       if   t[-1] == ')' or t[-7:] == ') const' or t[-10:] == ') volatile' : s += t.replace('::*)','::**)').replace('::)','::*)').replace('(*)', '(**)').replace('()','(*)')
-      elif t[-1] == ']' or t[-7:] == ') const' or t[-10:] == ') volatile' : s += t[:t.find('[')] + '(*)' + t[t.find('['):]
+      elif t[-1] == ')' or t[-7:] == ') const' or t[-10:] == ') volatile' : s += t[:t.find('[')] + '(*)' + t[t.find('['):]
       else              : s += t + '*'
     elif elem == 'ReferenceType' :
       s += self.genTypeName(attrs['type'],enum, const, colon)+'&'
