@@ -168,8 +168,8 @@ class list {
   bool empty() const ;
   size_type size() const ;
   size_type max_size() const ;
-  const T& front() const ;
-  const T& back() const ;
+  T& front() const ;
+  T& back() const ;
   void swap(list& x) ;
   iterator insert(iterator position,const T& x);
   void insert(iterator position,T* first,T* last);
