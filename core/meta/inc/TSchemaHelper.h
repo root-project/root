@@ -10,7 +10,9 @@ namespace ROOT
 {
    struct TSchemaHelper
    {
-      TSchemaHelper(): fEmbed(kTRUE), fFunctionPtr( 0 ) {}
+      TSchemaHelper(): fTarget(), fSourceClass(),
+       fSource(), fCode(), fVersion(), fChecksum(),
+       fInclude(), fEmbed(kTRUE), fFunctionPtr( 0 ) {}
       std::string fTarget;
       std::string fSourceClass;
       std::string fSource;
@@ -20,6 +22,9 @@ namespace ROOT
       std::string fInclude;
       bool        fEmbed;
       void*       fFunctionPtr;
+
+      TSchemaHelper(const TSchemaHelper &); // Not implemented
+      TSchemaHelper& operator=(const TSchemaHelper &); // Not implemented
    };
 }
 
