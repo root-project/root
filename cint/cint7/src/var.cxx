@@ -5846,7 +5846,11 @@ G__value Cint::Internal::G__getvariable(char* item, int* known, const ::Reflex::
       //  Now fetch the variable value.
       //
       //  Note: We return here if we are not a pointer variable.
-      switch (G__get_type(variable.TypeOf())) {
+      int type_code = G__get_type(variable.TypeOf());
+      if (variable.Name()[0] == '$') { // Hack ROOT specials, we really need to give these guys their own type.
+         type_code = 'Z';
+      }
+      switch (type_code) {
          case 'i':
             // int
             //G__GET_VAR(G__INTALLOC, int, G__letint, 'i', 'I')
@@ -7841,20 +7845,22 @@ extern "C" int G__deleteglobal(void* pin)
    G__CriticalSection lock;
    ::Reflex::Scope var = ::Reflex::Scope::GlobalScope();
    for (::Reflex::Member_Iterator m = var.DataMember_Begin(); m != var.DataMember_End(); ++m) {
-      if (p == G__get_offset(*m)) {
+      if (p == G__get_offset(*m)) { // addr match
          G__get_offset(*m) = 0;
          var.RemoveDataMember(*m);
+         break;
       }
-      else if (
-         isupper(G__get_type(m->TypeOf())) &&
-         G__get_offset(*m) &&
-         (p == (*(char**)G__get_offset(*m)))
-      ) {
-         if (G__get_properties(*m)->globalcomp == G__AUTO) {
+      else if ( // pointer member matches addr
+         isupper(G__get_type(m->TypeOf())) && // member is a pointer, and
+         G__get_offset(*m) && // not nil, and
+         (p == (*(char**)G__get_offset(*m))) // we have an addr match
+      ) { // pointer member matches addr
+         if (G__get_properties(*m)->globalcomp == G__AUTO) { // FIXME: A G__AUTO global var, how can that be?
             free(G__get_offset(*m));
          }
          G__get_offset(*m) = 0;
          var.RemoveDataMember(*m);
+         break;
       }
    }
    return 0;

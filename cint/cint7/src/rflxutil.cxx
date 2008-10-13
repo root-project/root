@@ -1442,18 +1442,23 @@ bool Cint::Internal::G__test_static(const ::Reflex::Member var, int what_static,
 Reflex::Type Cint::Internal::G__replace_rawtype(const Reflex::Type target, const Reflex::Type raw)
 {
    // copy with modifiers
-   if (target.FinalType().ToType() != target.FinalType()) {
+   if (target != target.ToType()) {
       // FIXME: This recursion can be turned into a loop.
-      Reflex::Type out = G__replace_rawtype(target.FinalType().ToType(), raw);
-      if (target.FinalType().IsPointer()) {
-         out = Reflex::PointerBuilder(out, target.FinalType().TypeInfo());
+      Reflex::Type out = G__replace_rawtype(target.ToType(), raw);
+      if (target.IsTypedef()) {
+         out = Reflex::TypedefTypeBuilder(target.Name().c_str(), out);
       }
-      else if (target.FinalType().IsPointerToMember()) {
-         out = Reflex::PointerToMemberBuilder(out, target.PointerToMemberScope(), target.FinalType().TypeInfo());
+      else if (target.IsPointer()) {
+         out = Reflex::PointerBuilder(out, target.TypeInfo());
       }
-      else if (target.FinalType().IsArray()) {
-         out = Reflex::ArrayBuilder(out, target.FinalType().ArrayLength(), target.FinalType().TypeInfo());
+      else if (target.IsPointerToMember()) {
+         out = Reflex::PointerToMemberBuilder(out, target.PointerToMemberScope(), target.TypeInfo());
       }
+      else if (target.IsArray()) {
+         out = Reflex::ArrayBuilder(out, target.ArrayLength(), target.TypeInfo());
+      }
+      // FIXME: We are missing an else if clause here for Reflex::Function.
+      //
       // FIXME: This does not properly handle a const volatile type.
       if (target.IsConst()) {
          out = Reflex::ConstBuilder(out);
@@ -1788,26 +1793,19 @@ void Cint::Internal::G__BuilderInfo::AddParameter(int /* ifn */, int type, int n
 {
    // -- Internal, called only by G__BuilderInfo::ParseParameterLink().
    ::Reflex::Type paramType;
-   ::Reflex::Type tagnum = G__Dict::GetDict().GetScope(numerical_tagnum);
    ::Reflex::Type typenum = G__Dict::GetDict().GetTypedef(numerical_typenum);
-   if (tagnum) {
-      if (typenum) {
-         tagnum = typenum;
-      }
-      if (isupper(type)) paramType = ::Reflex::PointerBuilder(tagnum);
-      else paramType = tagnum;
-   }
-   else if ((type == 'Y' || type == '1') && typenum) {
-      // (void*); since this is used of emulation of typedef to function
-      // let's make sure to get the typedef name
+   ::Reflex::Type tagnum = G__Dict::GetDict().GetScope(numerical_tagnum);
+   if (typenum) {
       paramType = typenum;
+   } else if (tagnum) {
+      paramType = tagnum;
    }
    else {
-      paramType = G__get_from_type(type, 1);
+      paramType = G__get_from_type(type, 0);
    }
    int isconst = (reftype_const / 10) % 10;
    int reftype = reftype_const - (reftype_const / 10 % 10 * 10);
-   paramType = G__modify_type(paramType, 0, reftype, isconst, 0, 0);
+   paramType = G__modify_type(paramType, isupper(type), reftype, isconst, 0, 0);
    fParams_type.push_back(paramType);
    fDefault_vals.push_back(para_default);
    fParams_name.push_back(std::make_pair(para_name, para_def));

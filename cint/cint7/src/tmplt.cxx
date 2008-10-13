@@ -150,7 +150,7 @@ static void G__instantiate_templatememfunclater(G__Definedtemplateclass* deftmpc
 static void G__freetemplatememfunc(G__Definedtemplatememfunc* memfunctmplt);
 
 static void G__cattemplatearg(char* template_id, G__Charlist* tmpl_arg_list, int npara = 0);
-static void G__settemplatealias(const char* scope_name, const char* template_id, int tagnum, G__Charlist* tmpl_arg_list, G__Templatearg* tmpl_param);
+static void G__settemplatealias(const char* scope_name, const char* template_id, int tagnum, G__Charlist* tmpl_arg_list, G__Templatearg* tmpl_param, int create_in_envtagnum);
 static struct G__Definedtemplateclass* G__resolve_specialization(char* tmpl_args_string, G__Definedtemplateclass* class_tmpl, G__Charlist* expanded_tmpl_arg_list);
 static void G__modify_callpara(G__Templatearg* spec_arg, G__Templatearg* tmpl_arg, G__Charlist* expanded_tmpl_arg);
 static void G__delete_string(char* str, char* del);
@@ -1414,7 +1414,13 @@ static void G__templatemaptypename(char* string)
       if (typenum) {
          char type = G__get_type(typenum);
          int ref = G__get_reftype(typenum);
-         if (!strstr(string, "::") && (typenum.DeclaringScope() != ::Reflex::Scope::GlobalScope())) {
+         if (!strstr(string, "::") && (typenum.DeclaringScope() != ::Reflex::Scope::GlobalScope())) { // The arg was unqualified and its type has a parent, flag this.
+            // The arg was unqualified and its type has
+            // a parent, flag this for G__instantiate_templateclass
+            // so that when it creates the typedef to map the given
+            // template name to this changed name, it will create the
+            // typedef in the parent of the argument type instead of
+            // the parent of the template definition.
             ++G__templatearg_enclosedscope;
          }
          int target_tagnum = G__get_tagnum(typenum);
@@ -1426,8 +1432,14 @@ static void G__templatemaptypename(char* string)
       }
       else {
          int tagnum = G__defined_tagname(string, 1);
-         if (tagnum != -1) {
-            if (!strstr(string, "::") && (G__struct.parent_tagnum[tagnum] != -1)) {
+         if (tagnum != -1) { // Template argument is a defined class, enum, namespace, struct, or union type.
+            if (!strstr(string, "::") && (G__struct.parent_tagnum[tagnum] != -1)) { // The arg was unqualified and its type has a parent, flag this.
+               // The arg was unqualified and its type has
+               // a parent, flag this for G__instantiate_templateclass
+               // so that when it creates the typedef to map the given
+               // template name to this changed name, it will create the
+               // typedef in the parent of the argument type instead of
+               // the parent of the template definition.
                ++G__templatearg_enclosedscope;
             }
             strcpy(string, G__fulltagname(tagnum, 1));
@@ -3925,8 +3937,33 @@ int Cint::Internal::G__instantiate_templateclass(char* tagnamein, int noerror)
    tmpl_arg_list.string = 0;
    tmpl_arg_list.next = 0;
    int npara = 0;
-   //858//int defarg = G__gettemplatearglist(tmpl_args_string, &tmpl_arg_list, class_tmpl->def_para, &npara, class_tmpl->parent_tagnum, class_tmpl->specialization); // FIXME: Port the addition of the specialization args to cint5?
-   int defarg = G__gettemplatearglist(tmpl_args_string, &tmpl_arg_list, class_tmpl->def_para, &npara, class_tmpl->parent_tagnum);
+   int defarg = 0;
+   int create_in_envtagnum = 0;
+   {
+      int store_templatearg_enclosedscope = G__templatearg_enclosedscope;
+      G__templatearg_enclosedscope = 0;
+      //858//defarg = G__gettemplatearglist(tmpl_args_string, &tmpl_arg_list, class_tmpl->def_para, &npara, class_tmpl->parent_tagnum, class_tmpl->specialization); // FIXME: Port the addition of the specialization args to cint5?
+      defarg = G__gettemplatearglist(tmpl_args_string, &tmpl_arg_list, class_tmpl->def_para, &npara, class_tmpl->parent_tagnum);
+      create_in_envtagnum = G__templatearg_enclosedscope;
+      G__templatearg_enclosedscope = store_templatearg_enclosedscope;
+   }
+   //
+   //  Remove any given scope qualifiers from the template name
+   //  to make the simple template name.
+   //
+   G__StrBuf simple_templatename_sb(G__LONGLINE);
+   char* simple_templatename = simple_templatename_sb;
+   strcpy(simple_templatename, templatename);
+   if (
+      (given_scope && !given_scope.IsTopScope()) ||
+      (simple_templatename[0] == ':')
+   ) {
+      char* p = strrchr(simple_templatename, ':');
+      int i = 0;
+      while (p && *p) {
+         simple_templatename[i++] = *(++p);
+      }
+   }
    //
    //  Lookup instantiation name and return it it already exists.
    //
@@ -3951,6 +3988,47 @@ int Cint::Internal::G__instantiate_templateclass(char* tagnamein, int noerror)
          //}
          int intTagnum = G__defined_tagname(scoped_name, 2); // Try to find it, with autoloading enabled.
          if (intTagnum != -1) { // Got it, done.
+            //
+            //  If we succeeded and we applied default values
+            //  to the provided template arguments or we
+            //  expanded the typename of any of the provided
+            //  template arguments, then create a typedef mapping
+            //  the provided name to the canonical name in the
+            //  scope of the canonical name's parent.  This is
+            //  used by G__fulltagname() and G__type2string()
+            //  to change the spelling of the name of the type
+            //  used for calculating class checksums.  It will
+            //  also be noticed at the beginning of this routine
+            //  the next time it is called with the same argument,
+            //  and will be used to satisfy the request directly.
+            //
+            if ((intTagnum != -1) && defarg) {
+               G__StrBuf unscoped_tagname_sb(G__LONGLINE);
+               char* unscoped_tagname = unscoped_tagname_sb;
+               strcpy(unscoped_tagname, simple_templatename);
+               strcat(unscoped_tagname, "<");
+               strcat(unscoped_tagname, tmpl_args_string);
+               int parent_tagnum = -1;
+               if (create_in_envtagnum) {
+                  parent_tagnum = G__get_tagnum(G__get_envtagnum());
+               }
+               else {
+                  parent_tagnum = G__struct.parent_tagnum[intTagnum];
+                  //::Reflex::Scope tagnum = G__Dict::GetDict().GetScope(intTagnum);
+                  //if (!tagnum.DeclaringScope().IsTopScope()) { // We do not want parent_tagnum to be zero!
+                  //   parent_tagnum = G__get_tagnum(tagnum.DeclaringScope());
+                  //}
+               }
+               ::Reflex::Type typenum = G__declare_typedef(unscoped_tagname, 'u', intTagnum, G__PARANORMAL, 0, G__globalcomp, parent_tagnum, false);
+               if (defarg == 3) {
+                  G__struct.defaulttypenum[intTagnum] = typenum; // Trick G__fulltagname() and G__type2string() into printing the provided name.  Well not actually, G__OLDIMPLEMENTATION1503 is defined to turn this off in G__val2a.cxx.
+               }
+            }
+            //
+            //  Restore global state and return.
+            //
+            G__constvar = store_constvar;
+            G__freecharlist(&tmpl_arg_list);
             return intTagnum;
          }
       }
@@ -3962,24 +4040,12 @@ int Cint::Internal::G__instantiate_templateclass(char* tagnamein, int noerror)
    if (Cint::G__GetGenerateDictionary()) {
       int int_tagnum = G__generate_template_dict(tagnamein, class_tmpl, &tmpl_arg_list);
       if (int_tagnum != -1) {
+         //
+         //  Restore global state and return.
+         //
+         G__constvar = store_constvar;
+         G__freecharlist(&tmpl_arg_list);
          return int_tagnum;
-      }
-   }
-   //
-   //  Remove any given scope qualifiers from the template name
-   //  to make the simple template name.
-   //
-   G__StrBuf simple_templatename_sb(G__LONGLINE);
-   char* simple_templatename = simple_templatename_sb;
-   strcpy(simple_templatename, templatename);
-   if (
-      (given_scope && !given_scope.IsTopScope()) ||
-      (simple_templatename[0] == ':')
-   ) {
-      char* p = strrchr(simple_templatename, ':');
-      int i = 0;
-      while (p && *p) {
-         simple_templatename[i++] = *(++p);
       }
    }
    //
@@ -4011,8 +4077,12 @@ int Cint::Internal::G__instantiate_templateclass(char* tagnamein, int noerror)
       tmpl_arg_list.string = 0;
       tmpl_arg_list.next = 0;
       npara = 0;
+      int store_templatearg_enclosedscope = G__templatearg_enclosedscope;
+      G__templatearg_enclosedscope = 0;
       //858//G__gettemplatearglist(expanded_tmpl_args_string + 1, &tmpl_arg_list, class_tmpl->def_para, &npara, class_tmpl->parent_tagnum, class_tmpl->specialization); // FIXME: Port the addition of the specialization args to cint5?
       G__gettemplatearglist(expanded_tmpl_args_string + 1, &tmpl_arg_list, class_tmpl->def_para, &npara, class_tmpl->parent_tagnum);
+      create_in_envtagnum = G__templatearg_enclosedscope;
+      G__templatearg_enclosedscope = store_templatearg_enclosedscope;
       class_tmpl = G__resolve_specialization(expanded_tmpl_args_string + 1, class_tmpl, &tmpl_arg_list);
    }
    //
@@ -4059,6 +4129,11 @@ int Cint::Internal::G__instantiate_templateclass(char* tagnamein, int noerror)
    for ( ; tmpl_mbrfunc->next; tmpl_mbrfunc = tmpl_mbrfunc->next) {
       G__replacetemplate(simple_templatename, tagname, &tmpl_arg_list, tmpl_mbrfunc->def_fp, tmpl_mbrfunc->line, tmpl_mbrfunc->filenum, &(tmpl_mbrfunc->def_pos), class_tmpl->def_para, 0, npara, G__get_tagnum(parent_tagnum));
    }
+   //
+   //  Restore state.
+   //
+   G__def_tagnum = store_def_tagnum;
+   G__tagdefining = store_tagdefining;
    //
    //  Try to find the instantiation.  It may not have been created
    //  by the substitution above because it was forward declared
@@ -4133,40 +4208,54 @@ int Cint::Internal::G__instantiate_templateclass(char* tagnamein, int noerror)
             //  in which case we do not properly change tagname to reflect
             //  what will actually be created.  We should fix that.
             //
+            //  Note: cint5 did this by overwriting the the G__struct.name[i] of
+            //        the actually created instantiation.  We cannot do this because
+            //        reflex has immutable typenames.
+            //
             int parent_tagnum = -1;
             if (!new_tagnum.DeclaringScope().IsTopScope()) { // We do not want parent_tagnum to be zero!
                parent_tagnum = G__get_tagnum(new_tagnum.DeclaringScope());
             }
             ::Reflex::Type typenum = G__declare_typedef(tagname, 'u', intTagnum, G__PARANORMAL, 0, G__globalcomp, parent_tagnum, false);
+            //G__struct.defaulttypenum[intTagnum] = typenum; // Trick G__fulltagname() and G__type2string() into printing the overriding name.
          }
       }
    }
    //
    //  If we succeeded and we applied default values
-   //  to the provided template arguments, then create
-   //  a typedef mapping the provided name to the
-   //  canonical name in the scope of the canonical
-   //  name's parent.  This is used by G__fulltagname()
-   //  G__type2string() to change the spelling of the
-   //  name of the type used for calculating class
-   //  checksums.  It will also be noticed at the
-   //  beginning of this routine the next time it is
-   //  called with the same argument, and will be used
-   //  to satisfy the request directly.
+   //  to the provided template arguments or we
+   //  expanded the typename of any of the provided
+   //  template arguments, then create a typedef mapping
+   //  the provided name to the canonical name in the
+   //  scope of the canonical name's parent.  This is
+   //  used by G__fulltagname() and G__type2string()
+   //  to change the spelling of the name of the type
+   //  used for calculating class checksums.  It will
+   //  also be noticed at the beginning of this routine
+   //  the next time it is called with the same argument,
+   //  and will be used to satisfy the request directly.
    //
-   if ((intTagnum != -1) && (defarg == 3)) {
+   if ((intTagnum != -1) && defarg) {
       G__StrBuf unscoped_tagname_sb(G__LONGLINE);
       char* unscoped_tagname = unscoped_tagname_sb;
       strcpy(unscoped_tagname, simple_templatename);
       strcat(unscoped_tagname, "<");
       strcat(unscoped_tagname, tmpl_args_string);
-      int parent_tagnum = G__struct.parent_tagnum[intTagnum];
-      //::Reflex::Scope tagnum = G__Dict::GetDict().GetScope(intTagnum);
-      //if (!tagnum.DeclaringScope().IsTopScope()) { // We do not want parent_tagnum to be zero!
-      //   parent_tagnum = G__get_tagnum(tagnum.DeclaringScope());
-      //}
+      int parent_tagnum = -1;
+      if (create_in_envtagnum) {
+         parent_tagnum = G__get_tagnum(G__get_envtagnum());
+      }
+      else {
+         parent_tagnum = G__struct.parent_tagnum[intTagnum];
+         //::Reflex::Scope tagnum = G__Dict::GetDict().GetScope(intTagnum);
+         //if (!tagnum.DeclaringScope().IsTopScope()) { // We do not want parent_tagnum to be zero!
+         //   parent_tagnum = G__get_tagnum(tagnum.DeclaringScope());
+         //}
+      }
       ::Reflex::Type typenum = G__declare_typedef(unscoped_tagname, 'u', intTagnum, G__PARANORMAL, 0, G__globalcomp, parent_tagnum, false);
-      G__struct.defaulttypenum[intTagnum] = typenum;
+      if (defarg == 3) {
+         G__struct.defaulttypenum[intTagnum] = typenum; // Trick G__fulltagname() and G__type2string() into printing the provided name.  Well not actually, G__OLDIMPLEMENTATION1503 is defined to turn this off in G__val2a.cxx.
+      }
    }
    //
    //  Add to the list of instantiations for the template.
@@ -4213,17 +4302,15 @@ int Cint::Internal::G__instantiate_templateclass(char* tagnamein, int noerror)
    //
    if (intTagnum != -1) {
       if (!class_tmpl->spec_arg) {
-         G__settemplatealias(scope_name, tagname, intTagnum, &tmpl_arg_list, class_tmpl->def_para);
+         G__settemplatealias(scope_name, tagname, intTagnum, &tmpl_arg_list, class_tmpl->def_para, create_in_envtagnum);
       }
       else {
-         G__settemplatealias(scope_name, tagname, intTagnum, &tmpl_arg_list, primary_class_tmpl->def_para);
+         G__settemplatealias(scope_name, tagname, intTagnum, &tmpl_arg_list, primary_class_tmpl->def_para, create_in_envtagnum);
       }
    }
    //
    //  Restore global state and return.
    //
-   G__def_tagnum = store_def_tagnum;
-   G__tagdefining = store_tagdefining;
    G__constvar = store_constvar;
    G__freecharlist(&tmpl_arg_list);
    return intTagnum;
@@ -4261,7 +4348,7 @@ static void G__cattemplatearg(char* template_id, G__Charlist* tmpl_arg_list, int
 }
 
 //______________________________________________________________________________
-static void G__settemplatealias(const char* scope_name, const char* template_id, int tagnum, G__Charlist* tmpl_arg_list, G__Templatearg* tmpl_param)
+static void G__settemplatealias(const char* scope_name, const char* template_id, int tagnum, G__Charlist* tmpl_arg_list, G__Templatearg* tmpl_param, int create_in_envtagnum)
 {
    // Declare a set of typedefs mapping short names for the passed
    // template instantiation to the canonical name.
@@ -4304,7 +4391,17 @@ static void G__settemplatealias(const char* scope_name, const char* template_id,
          }
          strcat(scoped_short_name, short_name);
          if (!G__find_typedef(scoped_short_name)) {
-            int parent_tagnum = G__struct.parent_tagnum[tagnum];
+            int parent_tagnum = -1;
+            if (create_in_envtagnum) {
+               parent_tagnum = G__get_tagnum(G__get_envtagnum());
+            }
+            else {
+               parent_tagnum = G__struct.parent_tagnum[tagnum];
+               //::Reflex::Scope scope = G__Dict::GetDict().GetScope(tagnum);
+               //if (!scope.DeclaringScope().IsTopScope()) { // We do not want parent_tagnum to be zero!
+               //   parent_tagnum = G__get_tagnum(scope.DeclaringScope());
+               //}
+            }
             G__declare_typedef(short_name, 'u', tagnum, G__PARANORMAL, 0, G__globalcomp, parent_tagnum, false);
          }
          // Restore final ','.
