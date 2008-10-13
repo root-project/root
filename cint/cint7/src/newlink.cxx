@@ -4339,16 +4339,15 @@ void Cint::Internal::G__cppif_paratype(FILE* fp, const ::Reflex::Member& ifunc, 
    int reftype = 0;
    int isconst = 0;
    G__get_cint5_type_tuple(param_type, &type, &tagnum, &typenum, &reftype, &isconst);
-   //if (typenum != -1) {
-   //   reftype = G__PARANORMAL;
-   //}
    // Promote link-off typedef to link-on if used in function.
-   if (
-      (typenum != -1) &&
-      (G__get_properties(param_type)->globalcomp == G__NOLINK) &&
-      (G__get_properties(param_type)->iscpplink == G__NOLINK)
-   ) {
-      G__get_properties(param_type)->globalcomp = G__globalcomp;
+   if (typenum != -1) {
+      ::Reflex::Type ty = G__Dict::GetDict().GetTypedef(typenum);
+      if (
+         (G__get_properties(ty)->globalcomp == G__NOLINK) &&
+         (G__get_properties(ty)->iscpplink == G__NOLINK)
+      ) {
+         G__get_properties(ty)->globalcomp = G__globalcomp;
+      }
    }
    if (k && !(k % 2)) {
       fprintf(fp, "\n");
@@ -4374,7 +4373,7 @@ void Cint::Internal::G__cppif_paratype(FILE* fp, const ::Reflex::Member& ifunc, 
    ) {
       switch (reftype) {
          case G__PARANORMAL:
-            if ((typenum != -1) && param_type.ToType().IsReference()) {
+            if ((typenum != -1) && G__get_reftype(G__Dict::GetDict().GetTypedef(typenum)) == G__PARAREFERENCE) {
                reftype = G__PARAREFERENCE;
                typenum = -1;
             }
@@ -4511,7 +4510,7 @@ void Cint::Internal::G__cppif_paratype(FILE* fp, const ::Reflex::Member& ifunc, 
                   }
                }
                else {
-                  if ((typenum != -1) && param_type.IsTypedef() && isupper(G__get_type(param_type.ToType()))) {
+                  if ((typenum != -1) && isupper(G__get_type(G__Dict::GetDict().GetTypedef(typenum)))) {
                      // This part is not perfect. Cint data structure bug.
                      // typedef char* value_type;
                      // void f(value_type& x);  // OK
@@ -4549,7 +4548,7 @@ void Cint::Internal::G__cppif_paratype(FILE* fp, const ::Reflex::Member& ifunc, 
          case G__PARAREFP2P:
          case G__PARAREFP2P2P:
             reftype = G__PLVL(reftype);
-            if ((typenum != -1) && param_type.IsTypedef() && isupper(G__get_type(param_type.ToType()))) {
+            if ((typenum != -1) && isupper(G__get_type(G__Dict::GetDict().GetTypedef(typenum)))) {
                fprintf(fp, "libp->para[%d].ref ? *(%s*) libp->para[%d].ref : *(%s*) (&G__Mlong(libp->para[%d]))"
                        , k, G__type2string(type, tagnum, typenum, reftype, isconst)
                        , k, G__type2string(type, tagnum, typenum, reftype, isconst), k
@@ -5082,9 +5081,10 @@ void Cint::Internal::G__cpplink_typetable(FILE* fp, FILE* /*hfp*/)
       if (!ty.IsTypedef()) {
          continue;
       }
+      G__RflxProperties* prop = G__get_properties(ty);
       //fprintf(stderr, "G__cpplink_typetable: name: '%s'\n", ty.Name(::Reflex::SCOPED).c_str());
       //fprintf(stderr, "G__cpplink_typetable:   gc: %d\n", (int) G__struct.globalcomp[G__get_tagnum(ty.DeclaringScope())]);
-      G__RflxProperties* prop = G__get_properties(ty);
+      //fprintf(stderr, "G__cpplink_typetable:   gc: %d\n", (int) prop->globalcomp);
       if (prop && (prop->globalcomp < G__NOLINK)) {
          if (
             (ty.DeclaringScope() != ::Reflex::Scope::GlobalScope()) &&
@@ -5513,7 +5513,12 @@ void Cint::Internal::G__cpplink_memfunc(FILE* fp)
                ****************************************************************/
                /* function name and return type */
                fprintf(fp, "   G__memfunc_setup(");
-               fprintf(fp, "\"%s\",%d,", ifunc->Name().c_str(), 0 /* ifunc->hash[j]*/);
+               {
+                  int hash = 0;
+                  int junk = 0;
+                  G__hash(ifunc->Name().c_str(), hash, junk)
+                  fprintf(fp, "\"%s\",%d,", ifunc->Name().c_str(), hash);
+               }
                if (G__test_access(*ifunc, G__PUBLIC)
                      || (((ifunc->IsProtected() &&
                            (G__PROTECTEDACCESS&G__struct.protectedaccess[i])) ||
@@ -5575,30 +5580,41 @@ void Cint::Internal::G__cpplink_memfunc(FILE* fp)
                * function parameter
                ****************************************************************/
 
-               for (k = 0; k < ifunc->FunctionParameterSize(); k++) {
-                  /* newline to avoid lines more than 256 char for CMZ */
-                  if (G__CPPLINK == G__globalcomp && k && 0 == (k % 2)) fprintf(fp, "\"\n\"");
-                  if (isprint(G__get_type(ifunc->TypeOf().FunctionParameterAt(k)))) {
-                     fprintf(fp, "%c ", G__get_type(ifunc->TypeOf().FunctionParameterAt(k)));
+               for (k = 0; k < ifunc->FunctionParameterSize(); ++k) {
+                  char type = '\0';
+                  int tagnum = -1;
+                  int typenum = -1;
+                  int reftype = 0;
+                  int isconst = 0;
+                  G__get_cint5_type_tuple(ifunc->TypeOf().FunctionParameterAt(k), &type, &tagnum, &typenum, &reftype, &isconst);
+                  // newline to avoid lines more than 256 char for CMZ
+                  if ((G__globalcomp == G__CPPLINK) && k && !(k % 2)) {
+                     fprintf(fp, "\"\n\"");
+                  }
+                  if (isprint(type)) {
+                     fprintf(fp, "%c ", type);
                   }
                   else {
                      G__fprinterr(G__serr, "Internal error: function parameter type\n");
-                     fprintf(fp, "%d ", G__get_type(ifunc->TypeOf().FunctionParameterAt(k)));
+                     fprintf(fp, "%d ", type);
                   }
 
-                  if (-1 != G__get_tagnum(ifunc->TypeOf().FunctionParameterAt(k).RawType())) {
-                     fprintf(fp, "'%s' ", G__fulltagname(G__get_tagnum(ifunc->TypeOf().FunctionParameterAt(k).RawType()), 0));
-                     G__mark_linked_tagnum(G__get_tagnum(ifunc->TypeOf().FunctionParameterAt(k).RawType()));
+                  if (tagnum != -1) {
+                     fprintf(fp, "'%s' ", G__fulltagname(tagnum, 0));
+                     G__mark_linked_tagnum(tagnum);
                   }
-                  else
+                  else {
                      fprintf(fp, "- ");
+                  }
 
-                  if (ifunc->TypeOf().FunctionParameterAt(k).IsTypedef())
-                     fprintf(fp, "'%s' ", ifunc->TypeOf().FunctionParameterAt(k).Name(::Reflex::SCOPED).c_str());
-                  else
+                  if (typenum != -1) {
+                     fprintf(fp, "'%s' ", G__fulltypename(G__Dict::GetDict().GetTypedef(typenum)));
+                  }
+                  else {
                      fprintf(fp, "- ");
+                  }
 
-                  fprintf(fp, "%d ", G__get_reftype(ifunc->TypeOf().FunctionParameterAt(k)) + G__get_isconst(ifunc->TypeOf().FunctionParameterAt(k))*10);
+                  fprintf(fp, "%d ", reftype + (isconst * 10));
                   if (ifunc->FunctionParameterDefaultAt(k).c_str()[0])
                      fprintf(fp, "'%s' ", G__quotedstring((char*)ifunc->FunctionParameterDefaultAt(k).c_str(), buf));
                   else
@@ -6192,7 +6208,12 @@ void Cint::Internal::G__cpplink_func(FILE* fp)
 
          /* function name and return type */
          fprintf(fp, "   G__memfunc_setup(");
-         fprintf(fp, "\"%s\", %d, ", ifunc->Name().c_str(), 0 /* ifunc->hash[j] */);
+         {
+            int hash = 0;
+            int junk = 0;
+            G__hash(ifunc->Name().c_str(), hash, junk)
+            fprintf(fp, "\"%s\", %d, ", ifunc->Name().c_str(), hash);
+         }
          fprintf(fp, "%s, ",::G__map_cpp_funcname(*ifunc));
          fprintf(fp, "%d, ", G__get_type(ifunc->TypeOf().ReturnType()));
 
@@ -6231,33 +6252,41 @@ void Cint::Internal::G__cpplink_func(FILE* fp)
          /****************************************************************
          * function parameter
          ****************************************************************/
-         for (k = 0;k < ifunc->FunctionParameterSize();k++) {
-            /* newline to avoid lines more than 256 char for CMZ */
-            if (G__CPPLINK == G__globalcomp && k && 0 == (k % 2)) fprintf(fp, "\"\n\"");
-            if (isprint(G__get_type(ifunc->TypeOf().FunctionParameterAt(k)))) {
-               fprintf(fp, "%c ", G__get_type(ifunc->TypeOf().FunctionParameterAt(k)));
+         for (k = 0; k < ifunc->FunctionParameterSize(); ++k) {
+            char type = '\0';
+            int tagnum = -1;
+            int typenum = -1;
+            int reftype = 0;
+            int isconst = 0;
+            G__get_cint5_type_tuple(ifunc->TypeOf().FunctionParameterAt(k), &type, &tagnum, &typenum, &reftype, &isconst);
+            // newline to avoid lines more than 256 char for CMZ
+            if ((G__globalcomp == G__CPPLINK) && k && !(k % 2)) {
+               fprintf(fp, "\"\n\"");
+            }
+            if (isprint(type)) {
+               fprintf(fp, "%c ", type);
             }
             else {
                G__fprinterr(G__serr, "Internal error: function parameter type\n");
-               fprintf(fp, "%d ", G__get_type(ifunc->TypeOf().FunctionParameterAt(k)));
+               fprintf(fp, "%d ", type);
             }
 
-            if (-1 != G__get_tagnum(ifunc->TypeOf().FunctionParameterAt(k).RawType())) {
-               fprintf(fp, "'%s' "
-                       , G__fulltagname(G__get_tagnum(ifunc->TypeOf().FunctionParameterAt(k).RawType()), 0));
-               G__mark_linked_tagnum(G__get_tagnum(ifunc->TypeOf().FunctionParameterAt(k).RawType()));
+            if (tagnum != -1) {
+               fprintf(fp, "'%s' ", G__fulltagname(tagnum, 0));
+               G__mark_linked_tagnum(tagnum);
             }
-            else
+            else {
                fprintf(fp, "- ");
+            }
 
-            if (ifunc->TypeOf().FunctionParameterAt(k).IsTypedef())
-               fprintf(fp, "'%s' "
-                       , ifunc->TypeOf().FunctionParameterAt(k).Name().c_str());
-            else
+            if (typenum != -1) {
+               fprintf(fp, "'%s' ", G__fulltypename(G__Dict::GetDict().GetTypedef(typenum)));
+            }
+            else {
                fprintf(fp, "- ");
+            }
 
-            fprintf(fp, "%d "
-                    , G__get_reftype(ifunc->TypeOf().FunctionParameterAt(k)) + G__get_isconst(ifunc->TypeOf().FunctionParameterAt(k))*10);
+            fprintf(fp, "%d ", reftype + (isconst * 10));
             if (ifunc->FunctionParameterDefaultAt(k).c_str()[0])
                fprintf(fp, "'%s' ", G__quotedstring((char*)ifunc->FunctionParameterDefaultAt(k).c_str(), buf));
             else fprintf(fp, "- ");
@@ -6301,9 +6330,8 @@ void Cint::Internal::G__cpplink_func(FILE* fp)
 }
 
 //______________________________________________________________________________
-char G__incsetup_exist(std::list<G__incsetup> *incsetuplist, G__incsetup incsetup)
+char G__incsetup_exist(std::list<G__incsetup>* incsetuplist, G__incsetup incsetup)
 {
-
    if(incsetuplist->empty()) return 0;
    std::list<G__incsetup>::iterator iter;
    for (iter=incsetuplist->begin(); iter != incsetuplist->end(); ++iter)
@@ -6586,22 +6614,10 @@ extern "C" int G__tag_memvar_reset()
 }
 
 //______________________________________________________________________________
-extern "C" int G__usermemfunc_setup(char* funcname, int hash, int (*funcp)(), int type, int tagnum, int typenum, int reftype, int para_nu, int ansi, int accessin, int isconst, char* paras, char* comment
-#ifdef G__TRUEP2F
-                                       , void* truep2f, int isvirtual
-#endif // G__TRUEP2F
-                                       , void* userparam)
+extern "C" int G__usermemfunc_setup(char* funcname, int hash, int (*funcp)(), int type, int tagnum, int typenum, int reftype, int para_nu, int ansi, int accessin, int isconst, char* paras, char* comment, void* truep2f, int isvirtual, void* userparam)
 {
-   // --
-   int ret = G__memfunc_setup(funcname, hash, (G__InterfaceMethod) funcp, type, tagnum, typenum, reftype, para_nu, ansi, accessin, isconst, paras, comment
-                              // --
-#ifdef G__TRUEP2F
-                              , truep2f, isvirtual
-#endif // G__TRUEP2F
-                              // --
-                             );
-   // Add the userparam to the last created function member.
-   G__get_funcproperties(*(--G__p_ifunc.FunctionMember_REnd()))->entry.userparam = userparam;
+   int ret = G__memfunc_setup(funcname, hash, (G__InterfaceMethod) funcp, type, tagnum, typenum, reftype, para_nu, ansi, accessin, isconst, paras, comment, truep2f, isvirtual);
+   G__get_funcproperties(*(--G__p_ifunc.FunctionMember_REnd()))->entry.userparam = userparam; // Add the userparam to the last created function member.
    return ret;
 }
 
@@ -6609,43 +6625,35 @@ extern "C" int G__usermemfunc_setup(char* funcname, int hash, int (*funcp)(), in
 extern "C" int G__tag_memfunc_setup(int tagnum)
 {
    /* Variables stack storing */
-  G__IncSetupStack incsetup_stack;
-  std::stack<G__IncSetupStack>* var_stack = G__stack_instance(); 
+   G__IncSetupStack incsetup_stack;
+   std::stack<G__IncSetupStack>* var_stack = G__stack_instance();
 
-  incsetup_stack.G__incset_p_ifunc = G__p_ifunc;
-  incsetup_stack.G__incset_tagnum = G__tagnum;
-  incsetup_stack.G__incset_func_now = G__func_now;
-  incsetup_stack.G__incset_tagdefining = G__tagdefining;
-  incsetup_stack.G__incset_var_type = G__var_type;
-  incsetup_stack.G__incset_def_tagnum = G__def_tagnum;
+   incsetup_stack.G__incset_p_ifunc = G__p_ifunc;
+   incsetup_stack.G__incset_tagnum = G__tagnum;
+   incsetup_stack.G__incset_func_now = G__func_now;
+   incsetup_stack.G__incset_tagdefining = G__tagdefining;
+   incsetup_stack.G__incset_var_type = G__var_type;
+   incsetup_stack.G__incset_def_tagnum = G__def_tagnum;
 
-  var_stack->push(incsetup_stack);
-  
-  G__tagdefining =  G__Dict::GetDict().GetScope(G__struct.parent_tagnum[tagnum]);
-  G__def_tagnum = G__tagdefining;
-  G__tagnum = G__Dict::GetDict().GetScope(tagnum);
-  G__p_ifunc = G__tagnum;
+   var_stack->push(incsetup_stack);
 
-  G__memfunc_next();
-  return(0);
+   G__tagdefining =  G__Dict::GetDict().GetScope(G__struct.parent_tagnum[tagnum]);
+   G__def_tagnum = G__tagdefining;
+   G__tagnum = G__Dict::GetDict().GetScope(tagnum);
+   G__p_ifunc = G__tagnum;
+
+   G__memfunc_next();
+   return(0);
 }
 
 //______________________________________________________________________________
-extern "C" int G__memfunc_setup(const char* funcname, int hash, G__InterfaceMethod funcp, int type, int tagnum, int typenum, int reftype, int para_nu, int ansi, int accessin, int isconst, const char* paras, const char* comment
-   // --
-#ifdef G__TRUEP2F
-   , void* truep2f
-   , int isvirtual
-#endif // G__TRUEP2F
-   // --
-   )
-
+extern "C" int G__memfunc_setup(const char* funcname, int /*hash*/, G__InterfaceMethod funcp, int type, int tagnum, int typenum, int reftype, int para_nu, int ansi, int accessin, int isconst, const char* paras, const char* comment, void* truep2f, int isvirtual)
 {
+   // Create a dictionary information for a member function.
    G__BuilderInfo builder;
-   // set entry pointer
    builder.fProp.entry.p = (void*) funcp;
    builder.fProp.entry.size = -1;
-   if (G__p_ifunc && !G__p_ifunc.IsTopScope()) {
+   if (G__p_ifunc && !G__p_ifunc.IsTopScope()) { // Parent is a class or namespace, and not the global namespace.
       builder.fProp.filenum = G__get_properties(G__p_ifunc)->filenum;
    }
    else {
@@ -6653,38 +6661,33 @@ extern "C" int G__memfunc_setup(const char* funcname, int hash, G__InterfaceMeth
    }
    builder.fProp.entry.line_number = -1;
    builder.fProp.entry.bytecode = 0;
-#ifdef G__TRUEP2F
    if (truep2f) {
       builder.fProp.entry.tp2f = truep2f;
    }
    else {
-      builder.fProp.entry.tp2f = (void*)funcp;
+      builder.fProp.entry.tp2f = (void*) funcp;
    }
-#endif // G__TRUEP2F
-   bool return_is_const = isconst & ~G__CONSTFUNC;
-   builder.fReturnType = G__get_Type(type, tagnum, typenum, return_is_const);
-   bool return_is_pointer = (G__var_type == 'U');
+   {
+      bool return_is_const = isconst & ~G__CONSTFUNC;
+      builder.fReturnType = G__get_Type(type, tagnum, typenum, return_is_const);
+   }
    builder.fIsconst = isconst & G__CONSTFUNC;
-   builder.fReturnType = G__modify_type(builder.fReturnType, return_is_pointer, reftype, isconst & ~G__CONSTVAR, 0, 0);
-   if (ansi & 8) {
+   {
+      bool return_is_pointer = (G__var_type == 'U');
+      builder.fReturnType = G__modify_type(builder.fReturnType, return_is_pointer, reftype, isconst & ~G__CONSTVAR, 0, 0);
+   }
+   if (ansi & 0x08) {
       builder.fProp.entry.ansi = 2;
    }
-   else if (ansi & 1) {
+   else if (ansi & 0x01) {
       builder.fProp.entry.ansi = 1;
    }
    builder.fAccess = accessin;
    builder.fIsexplicit = (ansi & 0x04) >> 2;
    builder.fStaticalloc = (ansi & 0x02) >> 1;
-#ifdef G__TRUEP2F
    builder.fIsvirtual = isvirtual & 0x01;
    builder.fIspurevirtual = (isvirtual & 0x02) >> 1;
-#else // G__TRUEP2F
-   builder.fIsvirtual = 0;
-   builder.fIspurevirtual = 0;
-#endif // G__TRUEP2F
-#ifdef G__FRIEND
    builder.fProp.entry.friendtag = 0;
-#endif // G__FRIEND
    builder.fProp.comment.p.com = (char*) comment;
    if (comment) {
       builder.fProp.comment.filenum = -2;
@@ -6692,57 +6695,153 @@ extern "C" int G__memfunc_setup(const char* funcname, int hash, G__InterfaceMeth
    else {
       builder.fProp.comment.filenum = -1;
    }
-   // parse parameter setup information
-   builder.ParseParameterLink(paras);
-   Reflex::Member newfunc = builder.Build(funcname);
-   // stub pointer adjustement
-   builder.fProp.entry.ptradjust = 0;
-   // stub pointer initialization.
-   if (funcp || !builder.fIsvirtual || (builder.fAccess != G__PUBLIC)) {
-      return 0;
-   }
-   // The function is in a base class.
-   G__inheritance* cbases = G__struct.baseclass[G__get_tagnum(G__p_ifunc)];
-   if (!cbases) {
-      return 0;
-   }
-   void* base_memberfunc_addr = 0;
-   // Go through the bases tagnums if there are base classes and a valid stub is not found yet
-   for (int idx = 0; (idx < cbases->basen) && !base_memberfunc_addr; ++idx) {
-      int basetagnum = cbases->basetagnum[idx];
-      {
-         Reflex::Scope store_ifunc = G__p_ifunc;
-         G__incsetup_memfunc(basetagnum); // Force memfunc_setup for the base.
-         G__p_ifunc = store_ifunc;
-      }
-      Reflex::Type base(G__Dict::GetDict().GetType(basetagnum));
-      // Look for the method in the base class.
-      // FIXME: Should we be looking in ALL bases classes instead of just one level?
-      ::Reflex::Member base_memberfunc = G__ifunc_exist(newfunc, base, true); // FIXME: Should we really match the return type?
-      if (base_memberfunc) {
-         G__RflxFuncProperties* base_memberfunc_prop = G__get_funcproperties(base_memberfunc);
-         G__RflxFuncProperties* newfunc_prop = G__get_funcproperties(newfunc);
-         G__value ptr;
-         G__value_typenum(ptr) = Reflex::PointerBuilder(Reflex::Type(newfunc.DeclaringScope()));
-         ptr.obj.i = 0;
-         //{
-         //   char buf[G__ONELINE];
-         //   fprintf(stderr, "G__memfunc_setup: newfunc.Name(): '%s'  %s:%d\n", newfunc.Name(::Reflex::SCOPED).c_str(), __FILE__, __LINE__);
-         //   fprintf(stderr, "G__memfunc_setup: Calling G__castvalue('%s', '%s')  %s:%d\n", base_memberfunc.DeclaringScope().Name(Reflex::SCOPED).c_str(), G__valuemonitor(ptr, buf), __FILE__, __LINE__);
-         //}
-         ptr = G__castvalue_bc((char*) base_memberfunc.DeclaringScope().Name(Reflex::SCOPED).c_str(), ptr, 0);
-         //{
-         //   fprintf(stderr, "G__memfunc_setup: base_memberfunc_prop->entry.ptradjust: %016lx  %s:%d\n", (unsigned long) base_memberfunc_prop->entry.ptradjust, __FILE__, __LINE__);
-         //   fprintf(stderr, "G__memfunc_setup: ptr.obj.i: %016lx  %s:%d\n", (unsigned long) ptr.obj.i, __FILE__, __LINE__);
-         //}
-         newfunc_prop->entry.ptradjust = base_memberfunc_prop->entry.ptradjust + ptr.obj.i;
-         base_memberfunc_addr = base_memberfunc_prop->entry.p;
-         newfunc_prop->entry.p = (void*) base_memberfunc_addr;
-         if (truep2f) {
-            newfunc_prop->entry.tp2f = truep2f;
+   builder.ParseParameterLink(paras); // parse parameter setup information
+   //
+   //  Now that we have all the information,
+   //  create dictionary entry for function.
+   //
+   ::Reflex::Member newfunc = builder.Build(funcname); // Create new function entry in dictionary.
+   //
+   //
+   //
+   builder.fProp.entry.ptradjust = 0; // FIXME: Why now after we created it?
+   if (!funcp && builder.fIsvirtual && (builder.fAccess == G__PUBLIC)) {
+      //
+      //  No pointer and the function is
+      //  public virtual, so the stub must
+      //  be in a base class.
+      //
+      G__inheritance* cbases = G__struct.baseclass[G__get_tagnum(G__p_ifunc)];
+      if (cbases) {
+         void* base_memberfunc_addr = 0;
+         for (int idx = 0; (idx < cbases->basen) && !base_memberfunc_addr; ++idx) {
+            int basetagnum = cbases->basetagnum[idx];
+            {
+               Reflex::Scope store_ifunc = G__p_ifunc;
+               G__incsetup_memfunc(basetagnum); // Force memfunc_setup for the base.
+               G__p_ifunc = store_ifunc;
+            }
+            Reflex::Scope base(G__Dict::GetDict().GetScope(basetagnum));
+            // Look for the method in the base class.
+            // FIXME: Should we be looking in ALL bases classes instead of just one level?
+            ::Reflex::Member base_memberfunc = G__ifunc_exist(newfunc, base, true); // FIXME: Should we really match the return type?
+            if (base_memberfunc) {
+               G__RflxFuncProperties* base_memberfunc_prop = G__get_funcproperties(base_memberfunc);
+               G__RflxFuncProperties* newfunc_prop = G__get_funcproperties(newfunc);
+               G__value ptr;
+               G__value_typenum(ptr) = Reflex::PointerBuilder(Reflex::Type(newfunc.DeclaringScope()));
+               ptr.obj.i = 0;
+               //{
+               //   char buf[G__ONELINE];
+               //   fprintf(stderr, "G__memfunc_setup: newfunc.Name(): '%s'  %s:%d\n", newfunc.Name(::Reflex::SCOPED).c_str(), __FILE__, __LINE__);
+               //   fprintf(stderr, "G__memfunc_setup: Calling G__castvalue('%s', '%s')  %s:%d\n", base_memberfunc.DeclaringScope().Name(Reflex::SCOPED).c_str(), G__valuemonitor(ptr, buf), __FILE__, __LINE__);
+               //}
+               ptr = G__castvalue_bc((char*) base_memberfunc.DeclaringScope().Name(Reflex::SCOPED).c_str(), ptr, 0);
+               //{
+               //   fprintf(stderr, "G__memfunc_setup: base_memberfunc_prop->entry.ptradjust: %016lx  %s:%d\n", (unsigned long) base_memberfunc_prop->entry.ptradjust, __FILE__, __LINE__);
+               //   fprintf(stderr, "G__memfunc_setup: ptr.obj.i: %016lx  %s:%d\n", (unsigned long) ptr.obj.i, __FILE__, __LINE__);
+               //}
+               newfunc_prop->entry.ptradjust = base_memberfunc_prop->entry.ptradjust + ptr.obj.i;
+               base_memberfunc_addr = base_memberfunc_prop->entry.p;
+               newfunc_prop->entry.p = (void*) base_memberfunc_addr;
+               if (truep2f) {
+                  newfunc_prop->entry.tp2f = truep2f;
+               }
+               else {
+                  newfunc_prop->entry.tp2f = (void*) base_memberfunc_addr;
+               }
+            }
          }
-         else {
-            newfunc_prop->entry.tp2f = (void*) base_memberfunc_addr;
+      }
+   }
+   //
+   //  Create some fake member functions.
+   //
+   {
+      const char* isTemplate = strchr(funcname, '<');
+      if (
+         isTemplate &&
+         (
+            !strncmp(funcname, "operator", 8) || // operator<(), or
+            ((tagnum != -1) && !strcmp(funcname, G__struct.name[tagnum])) // template constructor
+         )
+      ) {
+         isTemplate = 0;
+      }
+      if (isTemplate) {
+         //
+         //  Allocate a buffer for
+         //  the new function name.
+         //
+         G__StrBuf funcname_notmplt_sb(strlen(funcname));
+         char* funcname_notmplt = funcname_notmplt_sb;
+         strcpy(funcname_notmplt, funcname);
+         //
+         //  Remove the template arguments
+         //  from the original name, creating
+         //  the new function name.
+         //
+         *(funcname_notmplt + (isTemplate - funcname)) = 0;
+         //
+         //  Recalculate the hash code.
+         //
+         const char* p = funcname_notmplt;
+         int notmplt_hash = 0;
+         while (*p) {
+            notmplt_hash += *p;
+            ++p;
+         }
+         //
+         //  Check to see if new name
+         //  already exists in parent.
+         //
+         bool found = false;
+         for (
+            ::Reflex::Member_Iterator mem_iter = G__p_ifunc.FunctionMember_Begin();
+            mem_iter != G__p_ifunc.FunctionMember_End();
+            ++mem_iter
+         ) {
+            if (strcmp(funcname_notmplt, mem_iter->Name().c_str())) { // No name match.
+               continue;
+            }
+            if ( // ansi function, no match on number of parameters.
+               G__get_funcproperties(*mem_iter)->entry.ansi &&
+               G__get_funcproperties(newfunc)->entry.ansi &&
+               mem_iter->FunctionParameterSize() != newfunc.FunctionParameterSize()
+            ) { // ansi function, no match on number of parameters.
+               continue;
+            }
+            if (mem_iter->IsConst() != newfunc.IsConst()) { // No constness match.
+               continue;
+            }
+            // Note: We do not check return type on purpose.
+            //if (mem_iter->TypeOf().ReturnType() != newfunc.TypeOf().ReturnType()) { // No return type match.
+            //   continue;
+            //}
+            if (!G__get_funcproperties(*mem_iter)->entry.ansi || !G__get_funcproperties(newfunc)->entry.ansi) { // Match now for non-ansi.
+               found = true;
+               break;
+            }
+            found = true;
+            int paran = newfunc.FunctionParameterSize(); // Note: We already verified that parameter count matches.
+            for (int i = 0; i < paran; ++i) {
+               if (mem_iter->TypeOf().FunctionParameterAt(i) != newfunc.TypeOf().FunctionParameterAt(i)) { // No parameter type match.
+                  found = false;
+                  break;
+               }
+            }
+            if (found) { //  We have a match, all done.
+               break;
+            }
+         }
+         //
+         //  Create new function identical
+         //  to the current function, with
+         //  a non-template name by calling
+         //  ourselves recursively.
+         //
+         if (!found) {
+            G__memfunc_setup(funcname_notmplt, notmplt_hash, funcp, type, tagnum, typenum, reftype, para_nu, ansi, accessin, isconst, paras, comment, truep2f, isvirtual);
          }
       }
    }
@@ -6752,125 +6851,120 @@ extern "C" int G__memfunc_setup(const char* funcname, int hash, G__InterfaceMeth
 //______________________________________________________________________________
 int Cint::Internal::G__separate_parameter(const char* original, int* pos, char* param)
 {
-// --
-#ifndef G__SMALLOBJECT
-int single_quote = 0;
-int double_quote = 0;
-int single_arg_quote = 0;
-bool argStartsWithSingleQuote = false;
+   int single_quote = 0;
+   int double_quote = 0;
+   int single_arg_quote = 0;
+   bool argStartsWithSingleQuote = false;
 
-int startPos = (*pos);
-if (original[startPos] == '\'') {
-// don't put beginning ' into param
-++startPos;
-argStartsWithSingleQuote = true;
-single_arg_quote = 1;
-}
+   int startPos = (*pos);
+   if (original[startPos] == '\'') {
+      // don't put beginning ' into param
+      ++startPos;
+      argStartsWithSingleQuote = true;
+      single_arg_quote = 1;
+   }
 
-int i = startPos;
-bool done = false;
-for (; !done; ++i) {
-int c = original[i];
-switch (c) {
-   case '\'':
-      if (!double_quote)
-         if (single_quote) single_quote = 0;
-      // only turn on single_quote if at the beginning!
-         else if (i == startPos)  single_quote = 1;
-         else if (single_arg_quote) single_arg_quote = 0;
-      break;
-   case '"':
-      if (!single_quote) double_quote ^= 1;
-      break;
-   case ' ':
-      if (!single_quote && !double_quote && !single_arg_quote) {
-         c = 0;
-         done = true;
+   int i = startPos;
+   bool done = false;
+   for (; !done; ++i) {
+      int c = original[i];
+      switch (c) {
+         case '\'':
+            if (!double_quote)
+               if (single_quote) single_quote = 0;
+            // only turn on single_quote if at the beginning!
+               else if (i == startPos)  single_quote = 1;
+               else if (single_arg_quote) single_arg_quote = 0;
+            break;
+         case '"':
+            if (!single_quote) double_quote ^= 1;
+            break;
+         case ' ':
+            if (!single_quote && !double_quote && !single_arg_quote) {
+               c = 0;
+               done = true;
+            }
+            break;
+         case '\\':
+            if (single_quote || double_quote) {
+               // prevent special treatment of next char
+               *(param++) = c;
+               c = original[++i];
+            }
+            break;
+         case 0:
+            done = true;
+            break;
       }
-      break;
-   case '\\':
-      if (single_quote || double_quote) {
-         // prevent special treatment of next char
-         *(param++) = c;
-         c = original[++i];
-      }
-      break;
-   case 0:
-      done = true;
-      break;
-}
 
-*(param++) = c;
-}
+      *(param++) = c;
+   }
 
-if (argStartsWithSingleQuote && ! *(param - 1) && *(param - 2) == '\'')
-*(param - 2) = 0; // skip trailing '
-*pos = i;
+   if (argStartsWithSingleQuote && ! *(param - 1) && *(param - 2) == '\'')
+      *(param - 2) = 0; // skip trailing '
+   *pos = i;
 
-if (i > startPos) --i;
-else i = startPos;
+   if (i > startPos) --i;
+   else i = startPos;
 
-return original[i];
-
-#endif
-// --
+   return original[i];
 }
 
 //______________________________________________________________________________
 extern "C" int G__memfunc_next()
 {
-// -- FIXME: Describe this function!
-return 0;
+   // -- FIXME: Describe this function!
+   return 0;
 }
 
 //______________________________________________________________________________
 extern "C" int G__tag_memfunc_reset()
 {
-/* Variables stack restoring */
-std::stack<G__IncSetupStack> *var_stack = G__stack_instance(); 
-G__IncSetupStack *incsetup_stack = &var_stack->top();
+   /* Variables stack restoring */
+   std::stack<G__IncSetupStack> *var_stack = G__stack_instance();
+   G__IncSetupStack *incsetup_stack = &var_stack->top();
 
-G__tagnum = incsetup_stack->G__incset_tagnum;
-G__p_ifunc = incsetup_stack->G__incset_p_ifunc;
-G__func_now = incsetup_stack->G__incset_func_now;
-G__var_type = incsetup_stack->G__incset_var_type;
-G__tagdefining = incsetup_stack->G__incset_tagdefining;
-G__def_tagnum = incsetup_stack->G__incset_def_tagnum;
+   G__tagnum = incsetup_stack->G__incset_tagnum;
+   G__p_ifunc = incsetup_stack->G__incset_p_ifunc;
+   G__func_now = incsetup_stack->G__incset_func_now;
+   G__var_type = incsetup_stack->G__incset_var_type;
+   G__tagdefining = incsetup_stack->G__incset_tagdefining;
+   G__def_tagnum = incsetup_stack->G__incset_def_tagnum;
 
-var_stack->pop();
+   var_stack->pop();
 
-return(0);
+   return(0);
 }
 
 //______________________________________________________________________________
 int Cint::Internal::G__cppif_p2memfunc(FILE* fp)
 {
-fprintf(fp, "\n/*********************************************************\n");
-fprintf(fp, "* Get size of pointer to member function\n");
-fprintf(fp, "*********************************************************/\n");
-fprintf(fp, "class G__Sizep2memfunc%s {\n", G__DLLID);
-fprintf(fp, " public:\n");
-fprintf(fp, "  G__Sizep2memfunc%s(): p(&G__Sizep2memfunc%s::sizep2memfunc) {}\n"
-        , G__DLLID, G__DLLID);
-fprintf(fp, "    size_t sizep2memfunc() { return(sizeof(p)); }\n");
-fprintf(fp, "  private:\n");
-fprintf(fp, "    size_t (G__Sizep2memfunc%s::*p)();\n", G__DLLID);
-fprintf(fp, "};\n\n");
+   fprintf(fp, "\n/*********************************************************\n");
+   fprintf(fp, "* Get size of pointer to member function\n");
+   fprintf(fp, "*********************************************************/\n");
+   fprintf(fp, "class G__Sizep2memfunc%s {\n", G__DLLID);
+   fprintf(fp, " public:\n");
+   fprintf(fp, "  G__Sizep2memfunc%s(): p(&G__Sizep2memfunc%s::sizep2memfunc) {}\n"
+           , G__DLLID, G__DLLID);
+   fprintf(fp, "    size_t sizep2memfunc() { return(sizeof(p)); }\n");
+   fprintf(fp, "  private:\n");
+   fprintf(fp, "    size_t (G__Sizep2memfunc%s::*p)();\n", G__DLLID);
+   fprintf(fp, "};\n\n");
 
-fprintf(fp, "size_t G__get_sizep2memfunc%s()\n", G__DLLID);
-fprintf(fp, "{\n");
-fprintf(fp, "  G__Sizep2memfunc%s a;\n", G__DLLID);
-fprintf(fp, "  G__setsizep2memfunc((int)a.sizep2memfunc());\n");
-fprintf(fp, "  return((size_t)a.sizep2memfunc());\n");
-fprintf(fp, "}\n\n");
-return 0;
+   fprintf(fp, "size_t G__get_sizep2memfunc%s()\n", G__DLLID);
+   fprintf(fp, "{\n");
+   fprintf(fp, "  G__Sizep2memfunc%s a;\n", G__DLLID);
+   fprintf(fp, "  G__setsizep2memfunc((int)a.sizep2memfunc());\n");
+   fprintf(fp, "  return((size_t)a.sizep2memfunc());\n");
+   fprintf(fp, "}\n\n");
+   return 0;
 }
 
 //______________________________________________________________________________
 int Cint::Internal::G__set_sizep2memfunc(FILE* fp)
 {
-fprintf(fp, "\n   if(0==G__getsizep2memfunc()) G__get_sizep2memfunc%s();\n", G__DLLID);
-return 0;
+   fprintf(fp, "\n   if(0==G__getsizep2memfunc()) G__get_sizep2memfunc%s();\n", G__DLLID);
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -6891,26 +6985,26 @@ int Cint::Internal::G__getcommentstring(char* buf, int tagnum, G__comment_info* 
 //______________________________________________________________________________
 static void G__pragmalinkenum(int tagnum, int globalcomp)
 {
-// double check tagnum points to a enum
-if (-1 == tagnum || 'e' != G__struct.type[tagnum]) return;
+   // double check tagnum points to a enum
+   if (-1 == tagnum || 'e' != G__struct.type[tagnum]) return;
 
-/* enum in global scope */
-if (-1 == G__struct.parent_tagnum[tagnum]
-      || G__nestedclass
-   ) {
-   ::Reflex::Scope scope = ::Reflex::Scope::GlobalScope();
-   for (::Reflex::Member_Iterator memvar = scope.DataMember_Begin();
-         memvar != scope.DataMember_End();
-         ++memvar) {
-      if (G__get_tagnum(memvar->TypeOf().RawType()) == tagnum) {
-         G__get_properties(*memvar)->globalcomp = globalcomp;
+   /* enum in global scope */
+   if (-1 == G__struct.parent_tagnum[tagnum]
+         || G__nestedclass
+      ) {
+      ::Reflex::Scope scope = ::Reflex::Scope::GlobalScope();
+      for (::Reflex::Member_Iterator memvar = scope.DataMember_Begin();
+            memvar != scope.DataMember_End();
+            ++memvar) {
+         if (G__get_tagnum(memvar->TypeOf().RawType()) == tagnum) {
+            G__get_properties(*memvar)->globalcomp = globalcomp;
+         }
       }
    }
-}
-else {
-   /* enum enclosed in class  */
-   /* do nothing, should already be OK. */
-}
+   else {
+      /* enum enclosed in class  */
+      /* do nothing, should already be OK. */
+   }
 }
 
 #if !defined(G__OLDIMPLEMENTATION1955) && defined(G__ROOT)
