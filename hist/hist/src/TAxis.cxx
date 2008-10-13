@@ -822,8 +822,9 @@ void TAxis::SetRangeUser(Double_t ufirst, Double_t ulast)
 
    if (!strstr(GetName(),"xaxis")) {
       TH1 *hobj = (TH1*)GetParent();
-      if ((hobj->GetDimension() == 2 && strstr(GetName(),"zaxis")) 
-       || (hobj->GetDimension() == 1 && strstr(GetName(),"yaxis"))) {
+      if (hobj &&
+          ((hobj->GetDimension() == 2 && strstr(GetName(),"zaxis")) 
+           || (hobj->GetDimension() == 1 && strstr(GetName(),"yaxis")))) {
          hobj->SetMinimum(ufirst);
          hobj->SetMaximum(ulast);
          return;
@@ -1007,6 +1008,7 @@ void TAxis::UnZoom()
    SetRange(0,0);
    if (!strstr(GetName(),"xaxis")) {
       TH1 *hobj = (TH1*)GetParent();
+      if (!hobj) return;
       if (hobj->GetDimension() == 2) {
          if (strstr(GetName(),"zaxis")) {
             hobj->SetMinimum();
