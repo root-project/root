@@ -23,8 +23,8 @@ namespace ROOT
       bool        fEmbed;
       void*       fFunctionPtr;
 
-      TSchemaHelper(const TSchemaHelper &); // Not implemented
-      TSchemaHelper& operator=(const TSchemaHelper &); // Not implemented
+      TSchemaHelper(const TSchemaHelper &) {;} // Not implemented
+      TSchemaHelper& operator=(const TSchemaHelper &) {return *this;} // Not implemented
    };
 }
 
