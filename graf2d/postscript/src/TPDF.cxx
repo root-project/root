@@ -883,6 +883,10 @@ void TPDF::FontEncode()
       PrintStr("/BaseFont ");
       PrintStr(sdtfonts[i]);
       PrintStr("@");
+      if (i!=11 && i!=13) {
+         PrintStr("/Encoding /WinAnsiEncoding");
+         PrintStr("@");
+      }
       PrintStr(">>");
       PrintStr("endobj@");
    }
@@ -1954,7 +1958,10 @@ void TPDF::Text(Double_t xx, Double_t yy, const char *chars)
    PrintStr(" BT");
 
    // Font and text size
-   sprintf(str," /F%d",abs(fTextFont)/10);
+   Int_t font = abs(fTextFont)/10;
+   if( font > 14 || font < 1) font = 1;
+
+   sprintf(str," /F%d",font);
    PrintStr(str);
    Double_t wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
    Double_t hh = (Double_t)gPad->YtoPixel(gPad->GetY1());
