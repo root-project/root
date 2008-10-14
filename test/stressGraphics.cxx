@@ -753,6 +753,8 @@ void ttext1()
       lh->Draw();
    }
    TText *tex1b = new TText(0.02,0.4,"jgabcdefhiklmnopqrstuvwxyz_{}");
+   // 161 is not a valid text font. This tests if the protection against
+   // invalid text font is working.
    tex1b->SetTextFont(161);
    tex1b->SetTextColor(2);
    tex1b->SetTextAngle(0);
