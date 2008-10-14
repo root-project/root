@@ -57,14 +57,6 @@ new0.cxx
 template0.cxx 
 template1.cxx 
 template2.cxx 
-template2.cxx compiled:
-   9: 0=compare3(0.02,0.02)
-template2.cxx interpreted:
-   9: 1=compare3(0.02,0.02)
-template2.cxx compiled:
-  24: 1=compare(2,2)  0=compare(0.2,0.2) 1=compare(20,20)
-template2.cxx interpreted:
-  24: 1=compare(2,2)  1=compare(0.2,0.2) 1=compare(20,20)
 template4.cxx 
 template5.cxx 
 template6.cxx 
