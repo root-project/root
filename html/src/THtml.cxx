@@ -108,6 +108,16 @@ bool THtml::TModuleDefinition::GetModule(TClass* cl, TString& out_modulename) co
 
    // take the directory name without "/" or leading "."
    out_modulename = gSystem->DirName(filename);
+
+   TString inputdir = GetOwner()->GetInputPath();
+   TString tok;
+   Ssiz_t start = 0;
+   while (inputdir.Tokenize(tok, start, THtml::GetDirDelimiter())) {      
+      if (out_modulename.BeginsWith(tok)) {
+         out_modulename.Remove(0, tok.Length());
+         break;
+      }
+   }
    while (out_modulename[0] == '.')
       out_modulename.Remove(0, 1);
    out_modulename.ReplaceAll("\\", "/");
@@ -185,7 +195,10 @@ void THtml::TFileDefinition::ExpandSearchPath(TString& path) const
       if (tok.EndsWith("\\"))
          tok.Remove(tok.Length() - 1);
       pathext += tok;
-      pathext += GetDirDelimiter() + tok + "/" + path;
+      if (path.BeginsWith(tok))
+         pathext += GetDirDelimiter() + path;
+      else
+         pathext += GetDirDelimiter() + tok + "/" + path;
    }
    path = pathext;
 
@@ -575,10 +588,9 @@ void THtml::TFileSysDir::Recurse(TFileSysDB* db, const char* path)
       void* hDir = gSystem->OpenDirectory(dir);
       const char* direntry = 0;
       while ((direntry = gSystem->GetDirEntry(hDir))) {
-         if (!direntry[0] || direntry[0] == '.') continue;
+         if (!direntry[0] || direntry[0] == '.' || regexp.Match(direntry)) continue;
          TString entryPath(dir + direntry);
-         if (gSystem->AccessPathName(entryPath, kReadPermission)
-            || regexp.Match(entryPath))
+         if (gSystem->AccessPathName(entryPath, kReadPermission))
             continue;
          FileStat_t buf;
          gSystem->GetPathInfo(entryPath, buf);
@@ -2205,6 +2217,7 @@ void THtml::SetInputDir(const char *dir)
    // be found after this call.
 
    fPathInfo.fInputPath = dir;
+   gSystem->ExpandPathName(fPathInfo.fInputPath);
 
    // reset class table
    fDocEntityInfo.fClasses.Clear();
