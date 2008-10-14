@@ -864,11 +864,40 @@ namespace {
       }
       return false;
    }
+
+   //______________________________________________________________________________
+   static void SetConsoleWindowName()
+   {
+
+      char pszNewWindowTitle[1024]; // contains fabricated WindowTitle
+      char pszOldWindowTitle[1024]; // contains original WindowTitle
+
+      if (!::GetConsoleTitle(pszOldWindowTitle, 1024))
+         return;
+      // format a "unique" NewWindowTitle
+      wsprintf(pszNewWindowTitle,"%d/%d", ::GetTickCount(), ::GetCurrentProcessId());
+      // change current window title
+      if (!::SetConsoleTitle(pszNewWindowTitle))
+         return;
+      // ensure window title has been updated
+      ::Sleep(40);
+      // look for NewWindowTitle
+      gConsoleWindow = (ULong_t)::FindWindow(0, pszNewWindowTitle);
+      if (gConsoleWindow) {
+         // restore original window title
+         ::ShowWindow((HWND)gConsoleWindow, SW_RESTORE);
+         ::SetForegroundWindow((HWND)gConsoleWindow);
+         ::SetConsoleTitle("ROOT session");
+      }
+   }
+
 } // end unnamed namespace
 
 
 ///////////////////////////////////////////////////////////////////////////////
 ClassImp(TWinNTSystem)
+
+ULong_t gConsoleWindow = 0;
 
 //______________________________________________________________________________
 Bool_t TWinNTSystem::HandleConsoleEvent()
@@ -1037,6 +1066,7 @@ Bool_t TWinNTSystem::Init()
    gGlobalEvent = ::CreateEvent(NULL, TRUE, FALSE, NULL);
    fGUIThreadHandle = ::CreateThread( NULL, 0, &GUIThreadMessageProcessingLoop, 0, 0, &fGUIThreadId );
 
+   SetConsoleWindowName();
    fGroupsInitDone = kFALSE;
 
    return kFALSE;

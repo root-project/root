@@ -214,7 +214,6 @@ const char null_cursor_bits[] = {
    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 static GdkCursor *gNullCursor;
-static HWND gConsoleWindow = 0;   // console window handle
 
 static bool gdk_initialized = false;
 
@@ -591,30 +590,6 @@ static char *EventMask2String(UInt_t evmask)
    return bfr;
 }
 
-//______________________________________________________________________________
-static void TGWin32SetConsoleWindowName()
-{
-   //
-
-   char pszNewWindowTitle[1024]; // contains fabricated WindowTitle
-   char pszOldWindowTitle[1024]; // contains original WindowTitle
-
-   ::GetConsoleTitle(pszOldWindowTitle, 1024);
-   // format a "unique" NewWindowTitle
-   wsprintf(pszNewWindowTitle,"%d/%d", ::GetTickCount(), ::GetCurrentProcessId());
-   // change current window title
-   ::SetConsoleTitle(pszNewWindowTitle);
-   // ensure window title has been updated
-   ::Sleep(40);
-   // look for NewWindowTitle
-   gConsoleWindow = ::FindWindow(0, pszNewWindowTitle);
-   // restore original window title
-   ::ShowWindow(gConsoleWindow, SW_RESTORE);
-   ::SetForegroundWindow(gConsoleWindow);
-   ::SetConsoleTitle("ROOT session");
-}
-
-
 ///////////////////////////////////////////////////////////////////////////////
 class TGWin32MainThread {
 
@@ -826,7 +801,6 @@ TGWin32::TGWin32(const char *name, const char *title) : TVirtualX(name,title), f
       gPtr2VirtualX = &TGWin32VirtualXProxy::ProxyObject;
       gPtr2Interpreter = &TGWin32InterpreterProxy::ProxyObject;
    }
-   TGWin32SetConsoleWindowName();
 }
 
 //______________________________________________________________________________
@@ -4355,12 +4329,13 @@ void TGWin32::MapRaised(Window_t id)
          ::SetForegroundWindow(window);
    }
 
-   if (hwnd == gConsoleWindow) {
+   if (gConsoleWindow && (hwnd == (HWND)gConsoleWindow)) {
       RECT r1, r2, r3;
-      ::GetWindowRect(gConsoleWindow, &r1);
-      ::GetWindowRect(window, &r2);
+      ::GetWindowRect((HWND)gConsoleWindow, &r1);
+      HWND fore = ::GetForegroundWindow();
+      ::GetWindowRect(fore, &r2);
       if (!::IntersectRect(&r3, &r2, &r1)) {
-          ::SetForegroundWindow(gConsoleWindow);
+         ::SetForegroundWindow((HWND)gConsoleWindow);
       }
    }
 }

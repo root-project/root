@@ -248,4 +248,6 @@ public:
    ClassDef(TWinNTSystem, 0)
 };
 
+R__EXTERN ULong_t gConsoleWindow;   // console window handle
+
 #endif
