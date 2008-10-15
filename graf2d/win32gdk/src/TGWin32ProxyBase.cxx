@@ -287,6 +287,7 @@ Bool_t TGWin32ProxyBase::ForwardCallBack(Bool_t sync)
       if (wait++ > 5) return kFALSE; // failed to post
    }
 
+   Int_t cnt = 0; //VO attempt counters
    // limiting wait time
    DWORD res = WAIT_TIMEOUT;
    while (res ==  WAIT_TIMEOUT) {
@@ -295,6 +296,7 @@ Bool_t TGWin32ProxyBase::ForwardCallBack(Bool_t sync)
          (!gROOT->IsLineProcessing() && IsGloballyLocked())) {
          break;
       }
+      if (cnt++ > 20) break; // VO after some efforts go out from loop
    }
    ::ResetEvent(fPimpl->fEvent);
 
