@@ -1584,7 +1584,7 @@ int Cint::Internal::G__defined_type(char *type_name,int len)
       return 0;
    }
 
-   G__typenum = G__find_typedef(type_name);
+   G__typenum = G__find_typedef(type_name); // Important: If a typedef is found, this sets G__var_type.
 
    if(!G__typenum) {
       /* search for class/struct/enum tagnames */

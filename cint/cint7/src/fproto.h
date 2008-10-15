@@ -626,7 +626,7 @@ void G__setcopyflag(int flag);
 void G__get_cint5_type_tuple(const ::Reflex::Type in_type, char* out_type, int* out_tagnum, int* out_typenum, int* out_reftype, int* out_constvar);
 int G__get_cint5_typenum(const ::Reflex::Type in_type);
 int G__get_type(const ::Reflex::Type in);
-int G__get_type(const G__value& in);
+int G__get_type(const G__value in);
 int G__get_tagtype(const ::Reflex::Type in);
 int G__get_tagtype(const ::Reflex::Scope in);
 int G__get_reftype(const ::Reflex::Type in);
@@ -692,6 +692,7 @@ int G__get_access(const ::Reflex::Member mem);
 int G__get_static(const ::Reflex::Member mem);
 char*& G__get_offset(const ::Reflex::Member var);
 Reflex::Type G__replace_rawtype(const Reflex::Type target, const Reflex::Type raw);
+Reflex::Type G__apply_const_to_typedef(const Reflex::Type target);
 
 void G__set_G__tagnum(const ::Reflex::Scope);
 void G__set_G__tagnum(const ::Reflex::Type);

@@ -3898,19 +3898,13 @@ static G__value Cint::Internal::G__allocvariable(G__value result, G__value para[
    //
    ::Reflex::Type var_type;
    bool typeFromTypenum = false;
-   if (G__typenum) {
-      var_type = G__typenum;
+   if (G__typenum) { // We are of typdef type, the modifiers apply to the typedef.
+      var_type = G__typenum; // We are of typdef type, the modifiers apply to the typedef.
       typeFromTypenum = true;
-   } else if (G__tagnum && !G__tagnum.IsTopScope()) {
-      // -- We are a class, enum, struct, or union, or a namespace, the modifiers apply to that.
-#ifdef __GNUC__
-#else // __GNUC__
-#pragma message (FIXME("We are losing the typedef information of all variable since G__tagnum is the raw type!"))
-#endif // __GNUC__
-      var_type = G__tagnum;
-   } else {
-      // -- We are of fundamental type.
-      var_type = G__get_from_type(G__var_type, 0);
+   } else if (G__tagnum && !G__tagnum.IsTopScope()) { // We are a class, enum, struct, or union, or a namespace, the modifiers apply to that.
+      var_type = G__tagnum; // We are a class, enum, struct, or union, or a namespace, the modifiers apply to that.
+   } else { // We are of fundamental type.
+      var_type = G__get_from_type(G__var_type, 0); // We are of fundamental type.
    }
    //
    //  Do special processing for macro types, and auto types.
@@ -3957,36 +3951,42 @@ static G__value Cint::Internal::G__allocvariable(G__value result, G__value para[
    //
    //  Accumulate array bounds, and pointer, and reference qualifications into the base variable type.
    //
-   if (typeFromTypenum) {
+   if (typeFromTypenum) { // Information from the typedef was added to the modifiers, so we need to undo that.
       // FIXME we should probably change the rest of the code to avoid having to undo it here!!
-      // Information from the typenum was added to G__xxx information, so we need to remove it from there.
-      ::Reflex::Type final( var_type.FinalType() );
+      ::Reflex::Type final = var_type.FinalType();
+      //FIXME: Is this right, cint5 ignores const from a typedef?
       if (final.IsConst() && var_constvar) {
-         var_constvar = 0; // humm doubtfull, var_constvar contains more information than that.
+         var_constvar = 0; // humm doubtful, var_constvar contains more information than that.
       }
       if (final.IsPointer() && var_ispointer) { 
-         switch(G__get_reftype(final)) {
+         switch (G__get_reftype(final)) {
             case G__PARANORMAL:
             case G__PARAREFERENCE:
-               if(var_ispointer) {
-                  switch(var_reftype) {
+               if (var_ispointer) {
+                  switch (var_reftype) {
                      case G__PARAREFERENCE:
-                     case G__PARANORMAL: var_ispointer = false; break;
-                     case G__PARAP2P:    var_reftype=G__PARANORMAL; break;
-                     default:            --var_reftype; break;
+                     case G__PARANORMAL:
+                        var_ispointer = false;
+                        break;
+                     case G__PARAP2P:
+                        var_reftype = G__PARANORMAL;
+                        break;
+                     default:
+                        --var_reftype;
+                        break;
                   }
                }
                break;
             default:
-               if(G__get_reftype(final)==var_reftype) {
+               if (G__get_reftype(final) == var_reftype) {
                   var_reftype = G__PARANORMAL;
                   var_ispointer = false;
                }
-               else if(G__get_reftype(final)+1==var_reftype) {
+               else if ((G__get_reftype(final) + 1) == var_reftype) {
                   var_reftype = G__PARANORMAL;
                }
-               else if(G__get_reftype(final)<var_reftype) {
-                  var_reftype = G__PARAP2P + var_reftype-G__get_reftype(final)-2;
+               else if (G__get_reftype(final) < var_reftype) {
+                  var_reftype = G__PARAP2P + var_reftype - G__get_reftype(final) - 2;
                }
                break;
          }

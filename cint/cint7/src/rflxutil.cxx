@@ -25,9 +25,66 @@
 
 using namespace std;
 
-extern "C" void G__dump_reflex();
-extern "C" void G__dump_reflex_atlevel(const ::Reflex::Scope scope, int level);
-extern "C" void G__dump_reflex_function(const ::Reflex::Scope scope, int level);
+namespace Cint {
+namespace Internal {
+size_t GetReflexPropertyID();
+void G__get_cint5_type_tuple(const ::Reflex::Type in_type, char* out_type, int* out_tagnum, int* out_typenum, int* out_reftype, int* out_constvar);
+int G__get_cint5_typenum(const ::Reflex::Type in_type);
+int G__get_type(const ::Reflex::Type in);
+int G__get_type(const G__value in);
+int G__get_tagtype(const ::Reflex::Type in);
+int G__get_tagtype(const ::Reflex::Scope in);
+int G__get_reftype(const ::Reflex::Type in);
+G__RflxProperties* G__get_properties(const ::Reflex::Type in);
+G__RflxProperties* G__get_properties(const ::Reflex::Scope in);
+G__RflxVarProperties* G__get_properties(const ::Reflex::Member in);
+G__RflxFuncProperties* G__get_funcproperties(const ::Reflex::Member in);
+G__SIGNEDCHAR_T G__get_isconst(const ::Reflex::Type in);
+int G__get_nindex(const ::Reflex::Type passed_type);
+std::vector<int> G__get_index(const ::Reflex::Type passed_var);
+//std::vector<int> G__get_varlabel_as_vector(const ::Reflex::Type passed_var);
+int G__get_varlabel(const Reflex::Member var, int idx);
+int G__get_varlabel(const Reflex::Type passed_var, int idx);
+int G__get_typenum(const ::Reflex::Type in);
+int G__get_tagnum(const ::Reflex::Type in);
+int G__get_tagnum(const ::Reflex::Scope in);
+::Reflex::Type& G__value_typenum(G__value& gv);
+const ::Reflex::Type& G__value_typenum(const G__value& gv);
+::Reflex::Type G__get_Type(int type, int tagnum, int typenum, int isconst);
+::Reflex::Type G__get_from_type(int type, int createpointer, int isconst /*=0*/);
+bool G__is_localstaticbody(const Reflex::Member var);
+int G__get_paran(const Reflex::Member var);
+size_t G__get_bitfield_width(const Reflex::Member var);
+size_t G__get_bitfield_start(const Reflex::Member var);
+char*& G__get_offset(const ::Reflex::Member var);
+Reflex::Type G__strip_array(const Reflex::Type typein);
+Reflex::Type G__strip_one_array(const Reflex::Type typein);
+Reflex::Type G__deref(const Reflex::Type typein);
+::Reflex::Type G__modify_type(const ::Reflex::Type typein, bool ispointer, int reftype, int isconst, int nindex, int* index);
+::Reflex::Type G__findInScope(const ::Reflex::Scope scope, const char* name);
+bool G__test_access(const ::Reflex::Member var, int access);
+bool G__is_cppmacro(const ::Reflex::Member var);
+bool G__test_const(const ::Reflex::Type type, int what_const);
+bool G__test_const(const ::Reflex::Member var, int what_const);
+bool G__filescopeaccess(int filenum, int statictype);
+bool G__test_static(const ::Reflex::Member var, int what_static, int filenum);
+Reflex::Type G__replace_rawtype(const Reflex::Type target, const Reflex::Type raw);
+Reflex::Type G__apply_const_to_typedef(const Reflex::Type target);
+void G__set_G__tagnum(const ::Reflex::Scope scope);
+void G__set_G__tagnum(const ::Reflex::Type type);
+void G__set_G__tagnum(const G__value& result);
+::Reflex::Member G__update_array_dimension(::Reflex::Member member, size_t nelem);
+int G__get_access(const ::Reflex::Member mem);
+int G__get_static(const ::Reflex::Member mem);
+} // namespace Cint
+} // namespace Internal
+
+extern "C" {
+int G__value_get_type(G__value *buf);
+void G__dump_reflex();
+void G__dump_reflex_atlevel(const ::Reflex::Scope scope, int level);
+void G__dump_reflex_function(const ::Reflex::Scope scope, int level);
+}
 
 //______________________________________________________________________________
 size_t Cint::Internal::GetReflexPropertyID()
@@ -306,7 +363,7 @@ int Cint::Internal::G__get_type(const ::Reflex::Type in)
 }
 
 //______________________________________________________________________________
-int Cint::Internal::G__get_type(const G__value& in)
+int Cint::Internal::G__get_type(const G__value in)
 {
    // -- Get CINT type code for a G__value.
    int ret = G__get_type(G__value_typenum(in));
@@ -587,7 +644,7 @@ std::vector<int> Cint::Internal::G__get_index(const ::Reflex::Type passed_var)
 
 #if 0 //PSRXXX// Will be useful later.
 //______________________________________________________________________________
-std::vector<int> Cint::Internal::G__get_varlabel_as_vector(const ::Reflex::Type& passed_var)
+std::vector<int> Cint::Internal::G__get_varlabel_as_vector(const ::Reflex::Type passed_var)
 {
    // -- Get CINT varlabel as a std::vector<int> for a data type.
    //
@@ -1013,7 +1070,8 @@ bool Cint::Internal::G__is_localstaticbody(const Reflex::Member var)
 }
 
 //______________________________________________________________________________
-int Cint::Internal::G__get_paran(const Reflex::Member var) {
+int Cint::Internal::G__get_paran(const Reflex::Member var)
+{
    // -- Get the CINT paran for a REFLEX class member.
    // Note: This is zero if the member is not an array,
    //       otherwise it is the number of array dimensions.
@@ -1033,7 +1091,7 @@ size_t Cint::Internal::G__get_bitfield_start(const Reflex::Member var)
 }
 
 //______________________________________________________________________________
-char*& Cint::Internal::G__get_offset(const ::Reflex::Member var) 
+char*& Cint::Internal::G__get_offset(const ::Reflex::Member var)
 {
    return G__get_properties(var)->addressOffset;
 }
@@ -1089,17 +1147,27 @@ Reflex::Type Cint::Internal::G__deref(const Reflex::Type typein)
 //______________________________________________________________________________
 ::Reflex::Type Cint::Internal::G__modify_type(const ::Reflex::Type typein, bool ispointer, int reftype, int isconst, int nindex, int* index)
 {
-   // -- Construct a new REFLEX Type based on a given type.
+   // -- Modify a reflex type by applying pointer, reference, const and array bounds.
+   //
+   // Note: ispointer and reftype are required to be consistent.
+   //       If reftype is G__PARAP2P or greater, then ispointer
+   //       must be set or we will do the wrong thing.
+   //
    int ref = G__REF(reftype);
    reftype = G__PLVL(reftype);
-   ::Reflex::Type result = typein;
-   if (isconst & G__CONSTVAR) {
-     result = G__replace_rawtype( result,  ::Reflex::Type(result.RawType(), ::Reflex::CONST, Reflex::Type::APPEND) );
+   ::Reflex::Type result = typein; // Start with the given type.
+   if (isconst & G__CONSTVAR) { // Add a const qualification to the end node of the chain.
+      if (G__get_cint5_typenum(typein) == -1) { // No typedefs in chain.
+         result = G__replace_rawtype(result, ::Reflex::Type(result.RawType(), ::Reflex::CONST, Reflex::Type::APPEND));
+      }
+      else {
+         result = G__apply_const_to_typedef(result);
+      }
    }
-   if (ispointer) {
+   if (ispointer) { // Apply the first level of pointers.
       result = ::Reflex::PointerBuilder(result);
    }
-   if (nindex) {
+   if (nindex) { // Now make an array.
       // Build the array type chain in the reverse order
       // of the dimensions, starting from the right and
       // moving left towards the variable name.
@@ -1116,42 +1184,44 @@ Reflex::Type Cint::Internal::G__deref(const Reflex::Type typein)
       //
       //      a --> array[2] --> array[3] --> int
       //
+      // That is: a is an array of two arrays of 3 ints.
+      //
       for (int i = nindex - 1; i >= 0; --i) {
          result = ::Reflex::ArrayBuilder(result, index[i]);
       }
    }
-   switch (reftype) {
-    case G__PARANORMAL:
-       break;
-    case G__PARAREFERENCE:
-       result = ::Reflex::Type(result, ::Reflex::REFERENCE, Reflex::Type::APPEND);
-       //strcpy(string+strlen(string),"&");
-       break;
-    case G__PARAP2P:
-       // else strcpy(string+strlen(string),"*");
-       result = ::Reflex::PointerBuilder(result);
-       break;
-    case G__PARAP2P2P:
-       // else strcpy(string+strlen(string),"**");
-       result = ::Reflex::PointerBuilder(result);
-       result = ::Reflex::PointerBuilder(result);
-       break;
-    default:
-       if ((reftype > 10) || (reftype < 0)) {
-          // workaround
-          break;
-       }
-       for (int i = G__PARAP2P; i <= reftype; ++i) {
-          // strcpy(string+strlen(string),"*");
-          result = ::Reflex::PointerBuilder(result);
-       }
-       break;
+   switch (reftype) { // Apply the rest of the pointer levels, and the reference.
+      case G__PARANORMAL:
+         break;
+      case G__PARAREFERENCE: // Cannot happen, we removed this above by using G__PLVL.
+         //strcpy(string+strlen(string),"&");
+         result = ::Reflex::Type(result, ::Reflex::REFERENCE, Reflex::Type::APPEND);
+         break;
+      case G__PARAP2P:
+         // else strcpy(string+strlen(string),"*");
+         result = ::Reflex::PointerBuilder(result);
+         break;
+      case G__PARAP2P2P:
+         // else strcpy(string+strlen(string),"**");
+         result = ::Reflex::PointerBuilder(result);
+         result = ::Reflex::PointerBuilder(result);
+         break;
+      default:
+         if ((reftype > 10) || (reftype < 0)) {
+            // workaround
+            break;
+         }
+         for (int i = G__PARAP2P; i <= reftype; ++i) {
+            // strcpy(string+strlen(string),"*");
+            result = ::Reflex::PointerBuilder(result);
+         }
+         break;
    }
    //if(isconst&G__PCONSTVAR) strcpy(string+strlen(string)," const");
-   if ((isconst & G__PCONSTVAR) && ((reftype >= G__PARAREFERENCE) || ispointer)) {
+   if ((isconst & G__PCONSTVAR) && ((reftype >= G__PARAREFERENCE) || ispointer)) { // Apply const pointer qualifier.
       result = ::Reflex::Type(result, ::Reflex::CONST, Reflex::Type::APPEND);
    }
-   if (ref) {
+   if (ref) { // Apply reference.
       result = ::Reflex::Type(result, ::Reflex::REFERENCE, Reflex::Type::APPEND);
    }
    return result;
@@ -1442,36 +1512,70 @@ bool Cint::Internal::G__test_static(const ::Reflex::Member var, int what_static,
 Reflex::Type Cint::Internal::G__replace_rawtype(const Reflex::Type target, const Reflex::Type raw)
 {
    // copy with modifiers
-   if (target != target.ToType()) {
-      // FIXME: This recursion can be turned into a loop.
-      Reflex::Type out = G__replace_rawtype(target.ToType(), raw);
-      if (target.IsTypedef()) {
-         out = Reflex::TypedefTypeBuilder(target.Name().c_str(), out);
-      }
-      else if (target.IsPointer()) {
-         out = Reflex::PointerBuilder(out, target.TypeInfo());
-      }
-      else if (target.IsPointerToMember()) {
-         out = Reflex::PointerToMemberBuilder(out, target.PointerToMemberScope(), target.TypeInfo());
-      }
-      else if (target.IsArray()) {
-         out = Reflex::ArrayBuilder(out, target.ArrayLength(), target.TypeInfo());
-      }
-      // FIXME: We are missing an else if clause here for Reflex::Function.
-      //
-      // FIXME: This does not properly handle a const volatile type.
-      if (target.IsConst()) {
-         out = Reflex::ConstBuilder(out);
-      }
-      if (target.IsVolatile()) {
-         out = Reflex::VolatileBuilder(out);
-      }
-      // KEEP RAW'S! if (target.IsAbstract()) out = Reflex::Type(out, Reflex::ABSTRACT, Reflex::Type::APPEND);
-      // KEEP RAW'S! if (target.IsVirtual()) out = Reflex::Type(out, Reflex::ABSTRACT, Reflex::Type::APPEND);
-      // KEEP RAW'S! if (target.IsArtificial()) out = Reflex::Type(out, Reflex::ARTIFICIAL, Reflex::Type::APPEND);
-      return out;
+   if (target == target.ToType()) { // Terminate recursion when target is the invalid type.
+      return raw;
    }
-   return raw;
+   Reflex::Type out = G__replace_rawtype(target.ToType(), raw); // Recurse to the bottom of the type chain.
+   if (target.IsTypedef()) {
+      out = Reflex::TypedefTypeBuilder(target.Name().c_str(), out);
+   }
+   else if (target.IsPointer()) {
+      out = Reflex::PointerBuilder(out, target.TypeInfo());
+   }
+   else if (target.IsPointerToMember()) {
+      out = Reflex::PointerToMemberBuilder(out, target.PointerToMemberScope(), target.TypeInfo());
+   }
+   else if (target.IsArray()) {
+      out = Reflex::ArrayBuilder(out, target.ArrayLength(), target.TypeInfo());
+   }
+   // FIXME: We are missing an else if clause here for Reflex::Function.
+   //
+   // Now copy the qualifiers. // FIXME: What about reference on the first node, do we lose that?
+   if (target.IsConst()) {
+      out = Reflex::ConstBuilder(out);
+   }
+   if (target.IsVolatile()) {
+      out = Reflex::VolatileBuilder(out);
+   }
+   // KEEP RAW'S! if (target.IsAbstract()) out = Reflex::Type(out, Reflex::ABSTRACT, Reflex::Type::APPEND);
+   // KEEP RAW'S! if (target.IsVirtual()) out = Reflex::Type(out, Reflex::ABSTRACT, Reflex::Type::APPEND);
+   // KEEP RAW'S! if (target.IsArtificial()) out = Reflex::Type(out, Reflex::ARTIFICIAL, Reflex::Type::APPEND);
+   return out;
+}
+
+//______________________________________________________________________________
+Reflex::Type Cint::Internal::G__apply_const_to_typedef(const Reflex::Type target)
+{
+   // Copy type chain, but make last typedef in chain const. // FIXME: We change all typedefs in chain, but cint5 can have only one for now.
+   if (!target.ToType()) { // Terminate recursion at last node in chain.
+      return target;
+   }
+   Reflex::Type out = G__apply_const_to_typedef(target.ToType()); // Recurse to the bottom of the type chain.
+   if (target.IsTypedef()) {
+      out = ::Reflex::Type(Reflex::TypedefTypeBuilder(target.Name().c_str(), out), ::Reflex::CONST, ::Reflex::Type::APPEND);
+   }
+   else if (target.IsPointer()) {
+      out = Reflex::PointerBuilder(out, target.TypeInfo());
+   }
+   else if (target.IsPointerToMember()) {
+      out = Reflex::PointerToMemberBuilder(out, target.PointerToMemberScope(), target.TypeInfo());
+   }
+   else if (target.IsArray()) {
+      out = Reflex::ArrayBuilder(out, target.ArrayLength(), target.TypeInfo());
+   }
+   // FIXME: We are missing an else if clause here for Reflex::Function.
+   //
+   // Now copy the qualifiers. // FIXME: What about reference on the first node, do we lose that?
+   if (target.IsConst()) {
+      out = Reflex::ConstBuilder(out);
+   }
+   if (target.IsVolatile()) {
+      out = Reflex::VolatileBuilder(out);
+   }
+   // KEEP RAW'S! if (target.IsAbstract()) out = Reflex::Type(out, Reflex::ABSTRACT, Reflex::Type::APPEND);
+   // KEEP RAW'S! if (target.IsVirtual()) out = Reflex::Type(out, Reflex::ABSTRACT, Reflex::Type::APPEND);
+   // KEEP RAW'S! if (target.IsArtificial()) out = Reflex::Type(out, Reflex::ARTIFICIAL, Reflex::Type::APPEND);
+   return out;
 }
 
 //______________________________________________________________________________
@@ -1544,7 +1648,7 @@ void Cint::Internal::G__set_G__tagnum(const G__value& result)
 }
 
 //______________________________________________________________________________
-int ::Cint::Internal::G__get_access(const ::Reflex::Member mem) 
+int ::Cint::Internal::G__get_access(const ::Reflex::Member mem)
 {
    if (mem.IsPublic()) return G__PUBLIC;
    else if(mem.IsProtected()) return G__PROTECTED;
@@ -1553,7 +1657,7 @@ int ::Cint::Internal::G__get_access(const ::Reflex::Member mem)
 }
 
 //______________________________________________________________________________
-int ::Cint::Internal::G__get_static(const ::Reflex::Member mem) 
+int ::Cint::Internal::G__get_static(const ::Reflex::Member mem)
 {
    if (mem.IsDataMember() && G__get_properties(mem)->isCompiledGlobal) {
       return G__COMPILEDGLOBAL;
@@ -1580,9 +1684,6 @@ int ::Cint::Internal::G__get_static(const ::Reflex::Member mem)
    }
    return G__AUTO;
 }
-
-#include "fproto.h"
-#include "common.h"
 
 //______________________________________________________________________________
 G__RflxStackProperties::~G__RflxStackProperties()
@@ -1980,9 +2081,10 @@ void Cint::Internal::G__BuilderInfo::AddParameter(int /* ifn */, int type, int n
          G__get_funcproperties(m)->entry = fProp.entry;
          G__get_funcproperties(m)->entry.friendtag = prev_friendtag;
          G__get_funcproperties(m)->entry.para_default = prev_para_default;
-#ifndef GNUC
+#ifdef __GNUC__
+#else // __GNUC__
 #pragma message(FIXME("tp2f need to move from char* to be an opaque member::Id"))
-#endif
+#endif // __GNUC__
          G__get_funcproperties(m)->entry.for_tp2f = m.Name();
          G__get_funcproperties(m)->entry.tp2f = (void*) G__get_funcproperties(m)->entry.for_tp2f.c_str();
          for (unsigned int i = 0; i < fParams_name.size(); ++i) {
