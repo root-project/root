@@ -25,6 +25,11 @@
 
 using namespace std;
 
+//
+// Function Directory
+//
+
+// Cint internal functions.
 namespace Cint {
 namespace Internal {
 size_t GetReflexPropertyID();
@@ -79,6 +84,7 @@ int G__get_static(const ::Reflex::Member mem);
 } // namespace Cint
 } // namespace Internal
 
+// C interface functions.
 extern "C" {
 int G__value_get_type(G__value *buf);
 void G__dump_reflex();
