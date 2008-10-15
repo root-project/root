@@ -341,7 +341,7 @@ RooPlot* RooAbsData::plotOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdA
   // ---------------------------
   // Asymmetry(const RooCategory& c) -- Show the asymmetry of the daya in given two-state category [F(+)-F(-)] / [F(+)+F(-)]. 
   //                                    Category must have two states with indices -1 and +1 or three states with indeces -1,0 and +1.
-  // ErrorType(RooAbsData::EType)    -- Select the type of error drawn: Poisson (default) draws asymmetric Poisson
+  // DataError(RooAbsData::EType)    -- Select the type of error drawn: Poisson (default) draws asymmetric Poisson
   //                                    confidence intervals. SumW2 draws symmetric sum-of-weights error
   // Binning(double xlo, double xhi, -- Use specified binning to draw dataset
   //                      int nbins)
