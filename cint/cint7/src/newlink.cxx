@@ -6801,6 +6801,10 @@ extern "C" int G__memfunc_setup(const char* funcname, int /*hash*/, G__Interface
             mem_iter != G__p_ifunc.FunctionMember_End();
             ++mem_iter
          ) {
+            if ((funcname_notmplt[0] == '~') && (mem_iter->Name().c_str()[0] == '~')) {
+               found = true;
+               break;
+            }
             if (strcmp(funcname_notmplt, mem_iter->Name().c_str())) { // No name match.
                continue;
             }
