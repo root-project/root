@@ -25,8 +25,10 @@
 class RooSetProxy : public RooArgSet, public RooAbsProxy  {
 public:
 
+#ifdef USEMEMPOOL
   void* operator new (size_t bytes);
   void operator delete (void *ptr);
+#endif
 
   // Constructors, assignment etc.
   RooSetProxy() { _iter = createIterator() ; _owner = 0 ; } ;

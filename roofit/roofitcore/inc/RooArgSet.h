@@ -23,12 +23,15 @@
 class RooArgList ;
 
 
+#define USEMEMPOOL
 
 class RooArgSet : public RooAbsCollection {
 public:
   
+#ifdef USEMEMPOOL
   void* operator new (size_t bytes);
   void operator delete (void *ptr);
+#endif
  
   // Constructors, assignment etc.
   RooArgSet();

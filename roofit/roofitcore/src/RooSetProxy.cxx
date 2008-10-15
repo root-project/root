@@ -42,6 +42,7 @@ ClassImp(RooSetProxy)
 ;
 
 
+#ifdef USEMEMPOOL
 
 //_____________________________________________________________________________
 void* RooSetProxy::operator new (size_t bytes)
@@ -55,9 +56,12 @@ void* RooSetProxy::operator new (size_t bytes)
 
 
 //_____________________________________________________________________________
-void RooSetProxy::operator delete (void * /*ptr*/)
+void RooSetProxy::operator delete (void* ptr)
 {
+  free(ptr) ;
 }
+
+#endif
 
 
 //_____________________________________________________________________________

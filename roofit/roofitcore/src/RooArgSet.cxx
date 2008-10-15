@@ -1,5 +1,4 @@
-/*****************************************************************************
- * Project: RooFit                                                           *
+/***************************************************************************** * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
  * @(#)root/roofitcore:$Id$
  * Authors:                                                                  *
@@ -87,6 +86,7 @@ void RooArgSet::cleanup()
 }
 
 
+#ifdef USEMEMPOOL
 
 //_____________________________________________________________________________
 void* RooArgSet::operator new (size_t bytes)
@@ -160,6 +160,7 @@ void RooArgSet::operator delete (void* ptr)
   
 }
 
+#endif
 
 
 //_____________________________________________________________________________
