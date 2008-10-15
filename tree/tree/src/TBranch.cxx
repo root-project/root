@@ -643,7 +643,7 @@ void TBranch::DropBaskets(Option_t* option)
          delete basket;
       }
       if (fNBasketRAM < 0) {
-         Error("DropBaskets", "fNBasketRAM =%d",fNBasketRAM);
+         //Error("DropBaskets", "fNBasketRAM =%d",fNBasketRAM);
          fNBasketRAM = 0;
       }
       i = 0;
