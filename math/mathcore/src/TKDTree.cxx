@@ -13,6 +13,7 @@
 
 #include "TString.h"
 #include <string.h>
+#include <limits>
 
 #ifndef R__ALPHA
 templateClassImp(TKDTree)
@@ -900,13 +901,13 @@ void TKDTree<Index, Value>::FindInRangeB(Value * point, Value * delta, Index *re
          currentIndex++; 
          stackNode[currentIndex]= (inode<<1)+1;
          if (point[fAxis[inode]] + delta[fAxis[inode]] > fValue[inode])
-            stackStatus[currentIndex]= status | (1<<(2*fAxis[inode]));
+            stackStatus[currentIndex]= status | (Long64_t) (1 <<(2*fAxis[inode]));
       }
       if (point[fAxis[inode]] + delta[fAxis[inode]] >= fValue[inode]){
          currentIndex++; 
          stackNode[currentIndex]= (inode<<1)+2;
          if (point[fAxis[inode]] - delta[fAxis[inode]]<fValue[inode])
-            stackStatus[currentIndex]= status | (1<<(2*fAxis[inode]+1));
+            stackStatus[currentIndex]= status | (Long64_t) (1<<(2*fAxis[inode]+1));
       }
    }
    if (fData){
@@ -1172,8 +1173,8 @@ void TKDTree<Index, Value>::MakeBoundariesExact()
    for (Index inode=fNNodes; inode<totNodes; inode++){
       //go through the terminal nodes
       for (Index idim=0; idim<fNDim; idim++){
-         min[idim]=1E40;
-         max[idim]=-1E40;
+         min[idim]= std::numeric_limits<Value>::max();
+         max[idim]=-std::numeric_limits<Value>::max();
       }
       Index *points = GetPointsIndexes(inode);
       Index npoints = GetNPointsNode(inode);
