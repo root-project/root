@@ -92,7 +92,7 @@ void G__del_classbreak(char *name);
 void G__setclassdebugcond(int tagnum,int brkflag);
 void G__define_var(int tagnum,::Reflex::Type typenum);
 int G__listfunc(FILE *fp,int access,char* fname = 0,const ::Reflex::Scope &ifunc = ::Reflex::Scope());
-int G__listfunc_pretty(FILE *fp,int access,const char* fname,const ::Reflex::Scope &ifunc,char friendlyStyle);
+int G__listfunc_pretty(FILE* fp, int access, const char* fname, const ::Reflex::Scope ifunc, char friendlyStyle);
 int G__showstack(FILE *fout);
 void G__display_note(void);
 int G__display_proto(FILE *fout,char *string);

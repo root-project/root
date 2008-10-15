@@ -341,229 +341,256 @@ int Cint::Internal::G__listfunc(FILE *fp, int access, char *fname, const ::Refle
 }
 
 //______________________________________________________________________________
-int Cint::Internal::G__listfunc_pretty(FILE *fp, int access, const char *fname, const ::Reflex::Scope &i_func, char friendlyStyle)
+int Cint::Internal::G__listfunc_pretty(FILE* fp, int access, const char* fname, const ::Reflex::Scope i_func, char friendlyStyle)
 {
    char msg[G__LONGLINE];
-
    G__browsing = 1;
-
    ::Reflex::Scope ifunc = i_func;
-   if (!ifunc) ifunc = G__p_ifunc;
-
+   if (!ifunc) {
+      ifunc = G__p_ifunc;
+   }
    bool showHeader = !friendlyStyle;
-   showHeader |= (ifunc.FunctionMemberSize() > 0 && G__get_funcproperties(*ifunc.FunctionMember_Begin())->filenum >= 0); // if we need to display filenames
-
+   showHeader |= ((ifunc.FunctionMemberSize() > 0) && (G__get_funcproperties(*ifunc.FunctionMember_Begin())->filenum >= 0)); // if we need to display filenames
    if (showHeader) {
       if (!friendlyStyle || ifunc.IsTopScope()) {
          sprintf(msg, "%-15sline:size busy function type and name  ", "filename");
-         if (G__more(fp, msg)) return(1);
+         if (G__more(fp, msg)) {
+            return 1;
+         }
       }
       if (!ifunc.IsTopScope()) {
          sprintf(msg, "(in %s)\n", ifunc.Name().c_str());
-         if (G__more(fp, msg)) return(1);
+         if (G__more(fp, msg)) {
+            return 1;
+         }
       }
       else {
-         if (G__more(fp, "\n")) return(1);
+         char nl[2] = {'\n', 0 };
+         if (G__more(fp, nl)) {
+            return 1;
+         }
       }
    }
-
    std::string parentname = ifunc.Name();
-
-   /***************************************************
-    * while interpreted function table list exists
-    ***************************************************/
-   {
-      for (::Reflex::Member_Iterator i = ifunc.FunctionMember_Begin();
-            i != ifunc.FunctionMember_End();
-            ++i) {
-
-         if (!G__browsing) return(0);
-
-         if (fname && i->Name() != fname) continue;
-
-         if (
-            /* ifunc->hash[i] && */
-            G__test_access(*i, access)) {
-
-            /* print out file name and line number */
-            if (G__get_funcproperties(*i)->filenum >= 0) {
-               int filenum = G__get_funcproperties(*i)->filenum;
-               int linenum = G__get_funcproperties(*i)->linenum;
-               if (G__get_funcproperties(*i)->entry.filenum >= 0) {
-                  filenum = G__get_funcproperties(*i)->entry.filenum;
-                  linenum = G__get_funcproperties(*i)->entry.line_number;
-               }
-               sprintf(msg, "%-15s%4d:%-3d%c%2d "
-                       , G__stripfilename(G__srcfile[filenum].filename)
-                       , linenum
-#ifdef G__ASM_FUNC
-                       , G__get_funcproperties(*i)->entry.size
-#else
-                       , 0
-#endif
-#ifdef G__ASM_WHOLEFUNC
-                       , (G__get_funcproperties(*i)->entry.bytecode) ? '*' : ' '
-#else
-                       , ' '
-#endif
-                       , G__globalcomp ? G__get_funcproperties(*i)->globalcomp : G__get_funcproperties(*i)->entry.busy
-                      );
-               if (G__more(fp, msg)) return(1);
-#ifdef G__ASM_DBG
-               if (G__get_funcproperties(*i)->entry.bytecode) {
-                  G__ASSERT(G__get_funcproperties(*i)->entry.bytecodestatus == G__BYTECODE_SUCCESS ||
-                            G__get_funcproperties(*i)->entry.bytecodestatus == G__BYTECODE_ANALYSIS);
-               }
-#ifndef G__OLDIMPLEMENTATIN2021
-               else if (G__get_funcproperties(*i)->entry.size < 0) {
-               }
-#endif
-               else {
-                  G__ASSERT(G__get_funcproperties(*i)->entry.bytecodestatus == G__BYTECODE_FAILURE ||
-                            G__get_funcproperties(*i)->entry.bytecodestatus == G__BYTECODE_NOTYET);
-               }
-               if (G__get_funcproperties(*i)->entry.bytecodestatus == G__BYTECODE_SUCCESS
-                     || G__get_funcproperties(*i)->entry.bytecodestatus == G__BYTECODE_ANALYSIS
-                  ) {
-                  G__ASSERT(G__get_funcproperties(*i)->entry.bytecode);
-               }
-               else {
-                  G__ASSERT(!G__get_funcproperties(*i)->entry.bytecode);
-               }
-#endif
-            }
-            else {
-               if (!friendlyStyle) {
-                  sprintf(msg, "%-15s%4d:%-3d%3d " , "(compiled)" , 0, 0 , G__get_funcproperties(*i)->entry.busy);
-                  if (G__more(fp, msg)) return(1);
-               }
-            }
-
-            if (1 /* ifunc->hash[i] */) {
-               // sprintf(msg,"%s ",G__access2string(ifunc->access[i]));
-               if (i->IsPublic()) strcpy(msg, "public: ");
-               else if (i->IsProtected()) strcpy(msg, "protected: ");
-               else strcpy(msg, "private: ");
-            }
-            else
-               sprintf(msg, "------- ");
-            if (G__more(fp, msg)) return(1);
-            if (i->IsExplicit()) {
-               sprintf(msg, "explicit ");
-               if (G__more(fp, msg)) return(1);
-            }
-#ifndef G__NEWINHERIT
-            if (ifunc->isinherit[i]) {
-               sprintf(msg, "inherited ");
-               if (G__more(fp, msg)) return(1);
-            }
-#endif
-            if (i->IsVirtual()) {
-               sprintf(msg, "virtual ");
-               if (G__more(fp, msg)) return(1);
-            }
-
-            if (i->IsStatic()) {
-               sprintf(msg, "static ");
-               if (G__more(fp, msg)) return(1);
-            }
-
-
-            /* print out type of return value */
-            sprintf(msg, "%s ", i->TypeOf().ReturnType().Name(::Reflex::SCOPED | ::Reflex::QUALIFIED).c_str());
-            if (G__more(fp, msg)) return(1);
-
-            /*****************************************************
-             * to get type of function parameter
-             *****************************************************/
-            /**********************************************************
-             * print out type and name of function and parameters
-             **********************************************************/
-            /* print out function name */
-            if (i->Name().length() >= sizeof(msg) - 6) {
-               strncpy(msg, i->Name().c_str(), sizeof(msg) - 3);
-               msg[sizeof(msg)-6] = 0;
-               strcat(msg, "...(");
-            }
-            else {
-               if (friendlyStyle) {
-                  sprintf(msg, "%s::", parentname.c_str());
-                  if (G__more(fp, msg)) return(1);
-               }
-               sprintf(msg, "%s(", i->Name().c_str());
-            }
-            if (G__more(fp, msg)) return(1);
-
-            if (G__get_funcproperties(*i)->entry.ansi && 0 == i->FunctionParameterSize()) {
-               sprintf(msg, "void");
-               if (G__more(fp, msg)) return(1);
-            }
-
-            /* print out parameter types */
-            for (unsigned int n = 0;n < i->FunctionParameterSize();n++) {
-
-               if (n != 0) {
-                  sprintf(msg, ",");
-                  if (G__more(fp, msg)) return(1);
-               }
-               /* print out type of return value */
-#ifndef G__OLDIMPLEMENATTION401
-               sprintf(msg, "%s", i->TypeOf().FunctionParameterAt(n).Name(::Reflex::SCOPED | ::Reflex::QUALIFIED).c_str());
-               //G__type2string(ifunc->para_type[i][n]
-               //                            ,ifunc->para_p_tagtable[i][n]
-               //                            ,G__get_typenum(ifunc->para_p_typetable[i][n])
-               //                            ,ifunc->para_reftype[i][n]
-               //                            ,ifunc->para_isconst[i][n]));
-#else
-               sprintf(msg, "%s", G__type2string(ifunc->para_type[i][n]
-                                                 , ifunc->para_p_tagtable[i][n]
-                                                 , ifunc->para_p_typetable[i][n]
-                                                 , ifunc->para_reftype[i][n]));
-#endif
-               if (G__more(fp, msg)) return(1);
-
-               if (i->FunctionParameterNameAt(n).c_str()[0]) {
-                  sprintf(msg, " %s", i->FunctionParameterNameAt(n).c_str());
-                  if (G__more(fp, msg)) return(1);
-               }
-               if (i->FunctionParameterDefaultAt(n).c_str()[0]) {
-                  sprintf(msg, "=%s", i->FunctionParameterDefaultAt(n).c_str());
-                  if (G__more(fp, msg)) return(1);
-               }
-            }
-            if (2 == G__get_funcproperties(*i)->entry.ansi) {
-               sprintf(msg, " ...");
-               if (G__more(fp, msg)) return(1);
-            }
-            sprintf(msg, ")");
-            if (G__more(fp, msg)) return(1);
-            if (i->IsConst()) {
-               sprintf(msg, " const");
-               if (G__more(fp, msg)) return(1);
-            }
-            if (i->IsAbstract()) {
-               sprintf(msg, "=0");
-               if (G__more(fp, msg)) return(1);
-            }
-            sprintf(msg, ";");
-            if (G__more(fp, msg)) return(1);
-            G__StrBuf temp_sb(G__ONELINE);
-            char *temp = temp_sb;
-            temp[0] = '\0';
-            G__getcomment(temp, &(G__get_funcproperties(*i)->comment), G__get_tagnum(i->DeclaringScope()));
-            if (temp[0]) {
-               sprintf(msg, " //%s", temp);
-               if (G__more(fp, msg)) return(1);
-            }
-            if (G__get_funcproperties(*i)->entry.friendtag)
-               if (G__display_friend(fp, *i)) return(1);
-            if (G__more(fp, "\n")) return(1);
-         }
-
+   //
+   // while interpreted function table list exists
+   //
+   for (::Reflex::Member_Iterator i = ifunc.FunctionMember_Begin(); i != ifunc.FunctionMember_End(); ++i) {
+      if (!G__browsing) {
+         return 0;
       }
-   } /* end of while(ifunc) */
-
-   return(0);
+      if (fname && (i->Name() != fname)) {
+         continue;
+      }
+      if (!G__test_access(*i, access)) {
+         continue;
+      }
+      // print out file name and line number
+      if (G__get_funcproperties(*i)->filenum >= 0) {
+         int filenum = G__get_funcproperties(*i)->filenum;
+         int linenum = G__get_funcproperties(*i)->linenum;
+         if (G__get_funcproperties(*i)->entry.filenum >= 0) {
+            filenum = G__get_funcproperties(*i)->entry.filenum;
+            linenum = G__get_funcproperties(*i)->entry.line_number;
+         }
+         sprintf(msg, "%-15s%4d:%-3d%c%2d "
+                 , G__stripfilename(G__srcfile[filenum].filename)
+                 , linenum
+#ifdef G__ASM_FUNC
+                 , G__get_funcproperties(*i)->entry.size
+#else // G__ASM_FUNC
+                 , 0
+#endif // G__ASM_FUNC
+#ifdef G__ASM_WHOLEFUNC
+                 , (G__get_funcproperties(*i)->entry.bytecode) ? '*' : ' '
+#else // G__ASM_WHOLEFUNC
+                 , ' '
+#endif // G__ASM_WHOLEFUNC
+                 , G__globalcomp ? G__get_funcproperties(*i)->globalcomp : G__get_funcproperties(*i)->entry.busy
+                );
+         if (G__more(fp, msg)) {
+            return 1;
+         }
+#ifdef G__ASM_DBG
+         if (G__get_funcproperties(*i)->entry.bytecode) {
+            G__ASSERT(G__get_funcproperties(*i)->entry.bytecodestatus == G__BYTECODE_SUCCESS ||
+                      G__get_funcproperties(*i)->entry.bytecodestatus == G__BYTECODE_ANALYSIS);
+         }
+         else if (G__get_funcproperties(*i)->entry.size < 0) {
+         }
+         else {
+            G__ASSERT(G__get_funcproperties(*i)->entry.bytecodestatus == G__BYTECODE_FAILURE ||
+                      G__get_funcproperties(*i)->entry.bytecodestatus == G__BYTECODE_NOTYET);
+         }
+         if (
+            G__get_funcproperties(*i)->entry.bytecodestatus == G__BYTECODE_SUCCESS ||
+            G__get_funcproperties(*i)->entry.bytecodestatus == G__BYTECODE_ANALYSIS
+         ) {
+            G__ASSERT(G__get_funcproperties(*i)->entry.bytecode);
+         }
+         else {
+            G__ASSERT(!G__get_funcproperties(*i)->entry.bytecode);
+         }
+#endif // G__ASM_DBG
+      }
+      else {
+         if (!friendlyStyle) {
+            sprintf(msg, "%-15s%4d:%-3d%3d " , "(compiled)" , 0, 0 , G__get_funcproperties(*i)->entry.busy);
+            if (G__more(fp, msg)) {
+               return 1;
+            }
+         }
+      }
+      if (1 /* ifunc->hash[i] */) {
+         // sprintf(msg,"%s ",G__access2string(ifunc->access[i]));
+         if (i->IsPublic()) strcpy(msg, "public: ");
+         else if (i->IsProtected()) strcpy(msg, "protected: ");
+         else strcpy(msg, "private: ");
+      }
+      else {
+         sprintf(msg, "------- ");
+      }
+      if (G__more(fp, msg)) {
+         return 1;
+      }
+      if (i->IsExplicit()) {
+         sprintf(msg, "explicit ");
+         if (G__more(fp, msg)) {
+            return 1;
+         }
+      }
+#ifndef G__NEWINHERIT
+      if (ifunc->isinherit[i]) {
+         sprintf(msg, "inherited ");
+         if (G__more(fp, msg)) {
+            return 1;
+         }
+      }
+#endif // G__NEWINHERIT
+      if (i->IsVirtual()) {
+         sprintf(msg, "virtual ");
+         if (G__more(fp, msg)) {
+            return 1;
+         }
+      }
+      if (i->IsStatic()) {
+         sprintf(msg, "static ");
+         if (G__more(fp, msg)) {
+            return 1;
+         }
+      }
+      // print out type of return value
+      {
+         ::Reflex::Type ty = i->TypeOf().ReturnType();
+         sprintf(msg, "%s ", G__type2string(G__get_type(ty), G__get_tagnum(ty), G__get_cint5_typenum(ty), G__get_reftype(ty), G__get_isconst(ty)));
+      }
+      if (G__more(fp, msg)) {
+         return 1;
+      }
+      //
+      // to get type of function parameter
+      //
+      //
+      // print out type and name of function and parameters
+      //
+      // print out function name
+      if (i->Name().length() >= (sizeof(msg) - 6)) {
+         strncpy(msg, i->Name().c_str(), sizeof(msg) - 3);
+         msg[sizeof(msg)-6] = 0;
+         strcat(msg, "...(");
+      }
+      else {
+         if (friendlyStyle) {
+            sprintf(msg, "%s::", parentname.c_str());
+            if (G__more(fp, msg)) {
+               return 1;
+            }
+         }
+         sprintf(msg, "%s(", i->Name().c_str());
+      }
+      if (G__more(fp, msg)) {
+         return 1;
+      }
+      if (G__get_funcproperties(*i)->entry.ansi && !i->FunctionParameterSize()) {
+         sprintf(msg, "void");
+         if (G__more(fp, msg)) {
+            return 1;
+         }
+      }
+      // print out parameter types
+      for (unsigned int n = 0; n < i->FunctionParameterSize(); ++n) {
+         if (n) {
+            sprintf(msg, ",");
+            if (G__more(fp, msg)) {
+               return 1;
+            }
+         }
+         // print out type of return value
+         {
+            ::Reflex::Type ty = i->TypeOf().FunctionParameterAt(n);
+            sprintf(msg, "%s", G__type2string(G__get_type(ty), G__get_tagnum(ty), G__get_cint5_typenum(ty), G__get_reftype(ty), G__get_isconst(ty)));
+         }
+         if (G__more(fp, msg)) {
+            return 1;
+         }
+         if (i->FunctionParameterNameAt(n).c_str()[0]) {
+            sprintf(msg, " %s", i->FunctionParameterNameAt(n).c_str());
+            if (G__more(fp, msg)) {
+               return 1;
+            }
+         }
+         if (i->FunctionParameterDefaultAt(n).c_str()[0]) {
+            sprintf(msg, "=%s", i->FunctionParameterDefaultAt(n).c_str());
+            if (G__more(fp, msg)) {
+               return 1;
+            }
+         }
+      }
+      if (G__get_funcproperties(*i)->entry.ansi == 2) {
+         sprintf(msg, " ...");
+         if (G__more(fp, msg)) {
+            return 1;
+         }
+      }
+      sprintf(msg, ")");
+      if (G__more(fp, msg)) {
+         return 1;
+      }
+      if (i->IsConst()) {
+         sprintf(msg, " const");
+         if (G__more(fp, msg)) {
+            return 1;
+         }
+      }
+      if (i->IsAbstract()) {
+         sprintf(msg, "=0");
+         if (G__more(fp, msg)) {
+            return 1;
+         }
+      }
+      sprintf(msg, ";");
+      if (G__more(fp, msg)) {
+         return 1;
+      }
+      G__StrBuf temp_sb(G__ONELINE);
+      char* temp = temp_sb;
+      temp[0] = '\0';
+      G__getcomment(temp, &G__get_funcproperties(*i)->comment, G__get_tagnum(i->DeclaringScope()));
+      if (temp[0]) {
+         sprintf(msg, " //%s", temp);
+         if (G__more(fp, msg)) {
+            return 1;
+         }
+      }
+      if (G__get_funcproperties(*i)->entry.friendtag)
+         if (G__display_friend(fp, *i)) {
+            return 1;
+         }
+      if (G__more(fp, "\n")) {
+         return 1;
+      }
+   }
+   return 0;
 }
 
 //______________________________________________________________________________
