@@ -354,7 +354,9 @@ int G__isenclosingclass(int enclosingtagnum, int env_tagnum)
       if (tagnum == enclosingtagnum) {
          return 1;
       }
+      fprintf(stderr,"tagnum==%d to %d\n",tagnum,G__struct.parent_tagnum[tagnum]);
       tagnum = G__struct.parent_tagnum[tagnum];
+      fprintf(stderr,"next tagnum==%d to %d\n",tagnum,G__struct.parent_tagnum[tagnum]);
    }
    return 0;
 }
