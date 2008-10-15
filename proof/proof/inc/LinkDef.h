@@ -45,6 +45,7 @@
 #pragma link C++ class TProofNodeInfo;
 #pragma link C++ class TProofResources;
 #pragma link C++ class TProofResourcesStatic;
+#pragma link C++ class TProofProgressStatus;
 
 #pragma link C++ class TProofDataSetManager;
 #pragma link C++ class TProofDataSetManagerFile;

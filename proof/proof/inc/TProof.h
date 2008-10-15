@@ -109,9 +109,11 @@ class TMap;
 // 15 -> 16: add support for generic non-data based processing
 // 16 -> 17: new dataset handling system; support for TFileCollection processing
 // 17 -> 18: support for reconnection on daemon restarts
+// 18 -> 19: TProofProgressStatus used in kPROOF_PROGRESS, kPROOF_STOPPROCESS
+//           and kPROOF_GETNEXTPACKET messages in Master - worker communication
 
 // PROOF magic constants
-const Int_t       kPROOF_Protocol        = 18;            // protocol version number
+const Int_t       kPROOF_Protocol        = 19;            // protocol version number
 const Int_t       kPROOF_Port            = 1093;          // IANA registered PROOF port
 const char* const kPROOF_ConfFile        = "proof.conf";  // default config file
 const char* const kPROOF_ConfDir         = "/usr/local/root";  // default config dir

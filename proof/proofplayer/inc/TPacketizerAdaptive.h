@@ -67,7 +67,6 @@ private:
                                           // that are on non slaves
    Long64_t       fNEventsOnRemLoc;       // number of events in currently
                                           // unalloc files on non-worker loc.
-   Float_t        fCumProcTime;   // sum of proc time of all packets so far
    Float_t        fBaseLocalPreference;   // indicates how much more likely
    // the nodes will be to open their local files (1 means indifferent)
    Bool_t         fForceLocal;    // if 1 - eliminate the remote processing
@@ -89,7 +88,9 @@ private:
 
    void           Reset();
    void           ValidateFiles(TDSet *dset, TList *slaves);
+   Int_t          ReassignPacket(TDSetElement *e, TList **listOfMissingFiles);
    void           SplitPerHost(TList *elements, TList **listOfMissingFiles);
+   Int_t          AddProcessed(TSlave *sl, TProofProgressStatus *st, TList **listOfMissingFiles = 0);
 
 public:
    static Long_t   fgMaxSlaveCnt;  // maximum number of workers per filenode (Long_t to avoid
@@ -104,15 +105,13 @@ public:
    static Int_t    fgStrategy;    // 0 means the classic and 1 (default) - the adaptive strategy
 
    TPacketizerAdaptive(TDSet *dset, TList *slaves, Long64_t first, Long64_t num,
-                       TList *input);
+                       TList *input, TProofProgressStatus *st);
    virtual ~TPacketizerAdaptive();
 
-   Long64_t      GetEntriesProcessed(TSlave *sl) const;
    Int_t         GetEstEntriesProcessed(Float_t t, Long64_t &ent, Long64_t &bytes);
    Int_t         CalculatePacketSize(TObject *slstat);
    TDSetElement *GetNextPacket(TSlave *sl, TMessage *r);
-   void          MarkBad(TSlave *s, Bool_t resubmit, TList **);
-
+   void          MarkBad(TSlave *s, TProofProgressStatus *status, TList **missingFiles);
    ClassDef(TPacketizerAdaptive,0)  //Generate work packets for parallel processing
 };
 

@@ -86,12 +86,11 @@ private:
 
 public:
    TPacketizer(TDSet *dset, TList *slaves, Long64_t first, Long64_t num,
-                TList *input);
+                TList *input, TProofProgressStatus *st);
    virtual ~TPacketizer();
 
    TDSetElement *GetNextPacket(TSlave *sl, TMessage *r);
    Long64_t      GetEntriesProcessed(TSlave *sl) const;
-   void          MarkBad(TSlave *, Bool_t /*resubmit*/, TList **) { }
 
    ClassDef(TPacketizer,0)  //Generate work packets for parallel processing
 };

@@ -48,6 +48,9 @@
 #ifndef ROOT_TQueryResult
 #include "TQueryResult.h"
 #endif
+#ifndef ROOT_TProofProgressStatus
+#include "TProofProgressStatus.h"
+#endif
 
 class TSelector;
 class TProof;
@@ -78,8 +81,8 @@ protected:
    TEventIter   *fEvIter;          //!  iterator on events or objects
    TStatus      *fSelStatus;       //!  status of query in progress
    EExitStatus   fExitStatus;      //   exit status
-   Long64_t      fEventsProcessed; //   number of events processed
    Long64_t      fTotalEvents;     //   number of events requested
+   TProofProgressStatus *fProgressStatus; // the progress status object;
 
    TList        *fQueryResults;    //List of TQueryResult
    TQueryResult *fQuery;           //Instance of TQueryResult currently processed
@@ -177,8 +180,8 @@ public:
    Bool_t    IsClient() const { return kFALSE; }
 
    EExitStatus GetExitStatus() const { return fExitStatus; }
-   Long64_t    GetEventsProcessed() const { return fEventsProcessed; }
-   void        AddEventsProcessed(Long64_t ev) { fEventsProcessed += ev; }
+   Long64_t    GetEventsProcessed() const { return fProgressStatus->GetEntries(); }
+   void        AddEventsProcessed(Long64_t ev) { fProgressStatus->IncEntries(ev); }
 
    void      SetDispatchTimer(Bool_t on = kTRUE);
    void      SetStopTimer(Bool_t on = kTRUE,
@@ -186,6 +189,7 @@ public:
 
    virtual void      SetInitTime() { }
    void              SetProcessing(Bool_t on = kTRUE);
+   TProofProgressStatus  *GetProgressStatus() const { return fProgressStatus; }
 
    ClassDef(TProofPlayer,0)  // Basic PROOF player
 };
@@ -253,7 +257,8 @@ protected:
 public:
    TProofPlayerRemote(TProof *proof = 0) : fProof(proof), fOutputLists(0), fFeedback(0),
                                            fFeedbackLists(0), fPacketizer(0),
-                                           fMergeFiles(kFALSE) {}
+                                           fMergeFiles(kFALSE)
+                                           { fProgressStatus = new TProofProgressStatus(); }
    virtual ~TProofPlayerRemote();   // Owns the fOutput list
    Long64_t       Process(TDSet *set, const char *selector,
                           Option_t *option = "", Long64_t nentries = -1,

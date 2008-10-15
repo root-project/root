@@ -92,6 +92,7 @@
 #include "TFileCollection.h"
 #include "TLockFile.h"
 #include "TProofDataSetManagerFile.h"
+#include "TProofProgressStatus.h"
 
 // global proofserv handle
 TProofServ *gProofServ = 0;
@@ -792,10 +793,25 @@ TDSetElement *TProofServ::GetNextPacket(Long64_t totalEntries)
          Info("GetNextPacket","slept %d millisec", sleeptime);
    }
 
-   req << fLatency.RealTime() << realtime << cputime
-       << bytesRead << totalEntries;
-   if (fPlayer)
-       req << fPlayer->GetEventsProcessed();
+   if (fProtocol > 18) {
+      req << fLatency.RealTime();
+      TProofProgressStatus *status = 0;
+      if (fPlayer)
+         status = fPlayer->GetProgressStatus();
+      else {
+         Error("GetNextPacket", "No progress status object");
+         return 0;
+      }
+      status->IncProcTime(realtime);
+      status->IncCPUTime(cputime);
+      req << status;
+      status = 0; // status is owned by the player.
+   } else {
+      req << fLatency.RealTime() << realtime << cputime
+          << bytesRead << totalEntries;
+      if (fPlayer)
+         req << fPlayer->GetEventsProcessed();
+   }
 
    fLatency.Start();
    Int_t rc = fSocket->Send(req);
@@ -1453,8 +1469,10 @@ void TProofServ::HandleSocketInputDuringProcess()
                Info("HandleSocketInputDuringProcess:kPROOF_STOPPROCESS",
                     "enter %d, %d", aborted, timeout);
             if (fProof)
+               // On the master: propagate further
                fProof->StopProcess(aborted, timeout);
             else
+               // Worker: actually stop processing
                if (fPlayer)
                   fPlayer->StopProcess(aborted, timeout);
          }
@@ -3076,7 +3094,12 @@ void TProofServ::HandleProcess(TMessage *mess)
             Bool_t abort =
               (fPlayer->GetExitStatus() == TVirtualProofPlayer::kAborted) ? kTRUE : kFALSE;
             m.Reset(kPROOF_STOPPROCESS);
-            if (fProtocol > 8) {
+            // message sent from worker to the master
+            if (fProtocol > 18) {
+               TProofProgressStatus* status = fPlayer->GetProgressStatus();
+               m << status << abort;
+               status = 0; // the status belongs to the player.
+            } else if (fProtocol > 8) {
                m << fPlayer->GetEventsProcessed() << abort;
             } else {
                m << fPlayer->GetEventsProcessed();
@@ -3213,7 +3236,15 @@ void TProofServ::HandleProcess(TMessage *mess)
       // Return number of events processed
       TMessage m(kPROOF_STOPPROCESS);
       Bool_t abort = (fPlayer->GetExitStatus() != TVirtualProofPlayer::kAborted) ? kFALSE : kTRUE;
-      m << fPlayer->GetEventsProcessed() << abort;
+      if (fProtocol > 18) {
+         TProofProgressStatus* status =
+            new TProofProgressStatus(fPlayer->GetEventsProcessed(),
+                                    gPerfStats?gPerfStats->GetBytesRead():0);
+         if (status)
+            m << status << abort;
+      } else {
+         m << fPlayer->GetEventsProcessed() << abort;
+      }
       fSocket->Send(m);
 
       // Send back the results

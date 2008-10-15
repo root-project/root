@@ -2727,18 +2727,40 @@ Int_t TProof::CollectInputFrom(TSocket *s)
 
       case kPROOF_STOPPROCESS:
          {
-            // answer contains number of processed events;
+            // This message is sent from a worker that finished processing.
+            // We determine whether it was asked to finish by the
+            // packetizer or stopped during processing a packet
+            // (by TProof::RemoveWorkers() or by an external signal).
+            // In the later case call packetizer->MarkBad.
             PDB(kGlobal,2) Info("CollectInputFrom","kPROOF_STOPPROCESS: enter");
 
-            Long64_t events;
+            Long64_t events = 0;
             Bool_t abort = kFALSE;
+            TProofProgressStatus *status = 0;
 
-            if ((mess->BufferSize() > mess->Length()) && (fProtocol > 8))
+            if ((mess->BufferSize() > mess->Length()) && (fProtocol > 18)) {
+               (*mess) >> status >> abort;
+            } else if ((mess->BufferSize() > mess->Length()) && (fProtocol > 8)) {
                (*mess) >> events >> abort;
-            else
+            } else {
                (*mess) >> events;
+            }
             if (!abort) {
-               fPlayer->AddEventsProcessed(events);
+               if (fProtocol > 18) {
+                  sl = FindSlave(s);
+                  TList *listOfMissingFiles = 0;
+                  if (!(listOfMissingFiles = (TList *)GetOutput("MissingFiles"))) {
+                     listOfMissingFiles = new TList();
+                     listOfMissingFiles->SetName("MissingFiles");
+                     if (fPlayer)
+                        fPlayer->AddOutputObject(listOfMissingFiles);
+                  }
+                  Int_t ret = fPlayer->GetPacketizer()->AddProcessed(sl, status, &listOfMissingFiles);
+                  if (ret > 0)
+                     fPlayer->GetPacketizer()->MarkBad(sl, status, &listOfMissingFiles);
+               } else {
+                  fPlayer->AddEventsProcessed(events);
+               }
             }
             if (!IsMaster())
                Emit("StopProcess(Bool_t)", abort);
@@ -2754,22 +2776,26 @@ Int_t TProof::CollectInputFrom(TSocket *s)
             Bool_t bad = (GetListOfBadSlaves()->FindObject(sl) != 0);
             TList* tmpinfo = 0;
             (*mess) >> tmpinfo;
-            tmpinfo->SetOwner(kFALSE);
-            Int_t nentries = tmpinfo->GetSize();
-            for (Int_t i=0; i<nentries; i++) {
-               TSlaveInfo* slinfo =
-                  dynamic_cast<TSlaveInfo*>(tmpinfo->At(i));
-               if (slinfo) {
-                  fSlaveInfo->Add(slinfo);
-                  if (slinfo->fStatus != TSlaveInfo::kBad) {
-                     if (!active) slinfo->SetStatus(TSlaveInfo::kNotActive);
-                     if (bad) slinfo->SetStatus(TSlaveInfo::kBad);
+            if (tmpinfo == 0) {
+               Error("CollectInputFrom","kPROOF_GETSLAVEINFO: no list received!");
+            } else {
+               tmpinfo->SetOwner(kFALSE);
+               Int_t nentries = tmpinfo->GetSize();
+               for (Int_t i=0; i<nentries; i++) {
+                  TSlaveInfo* slinfo =
+                     dynamic_cast<TSlaveInfo*>(tmpinfo->At(i));
+                  if (slinfo) {
+                     fSlaveInfo->Add(slinfo);
+                     if (slinfo->fStatus != TSlaveInfo::kBad) {
+                        if (!active) slinfo->SetStatus(TSlaveInfo::kNotActive);
+                        if (bad) slinfo->SetStatus(TSlaveInfo::kBad);
+                     }
+                     if (!sl->GetMsd().IsNull()) slinfo->fMsd = sl->GetMsd();
                   }
-                  if (!sl->GetMsd().IsNull()) slinfo->fMsd = sl->GetMsd();
                }
+               delete tmpinfo;
+               rc = 1;
             }
-            delete tmpinfo;
-            rc = 1;
          }
          break;
 
@@ -2982,7 +3008,8 @@ void TProof::HandleAsyncInput(TSocket *sl)
 void TProof::MarkBad(TSlave *wrk, const char *reason)
 {
    // Add a bad slave server to the bad slave list and remove it from
-   // the active list and from the two monitor objects.
+   // the active list and from the two monitor objects. Assume that the work
+   // done by this worker was lost and ask packerizer to reassign it.
 
    if (!wrk) {
       Error("MarkBad", "worker instance undefined: protocol error? ");
@@ -3046,17 +3073,20 @@ void TProof::MarkBad(TSlave *wrk, const char *reason)
             fPlayer->AddOutputObject(listOfMissingFiles);
       }
 
+      // Assume that the work done by the worker was lost and needs to reassigned.
       TVirtualPacketizer *packetizer = fPlayer ? fPlayer->GetPacketizer() : 0;
       if (packetizer)
-         // if the worker is being terminated, don't resubmit the packets
+         // the worker was lost so do resubmit the packets
          packetizer->MarkBad(wrk,
-                             strcmp(reason, kPROOF_TerminateWorker) != 0,
+                             0,
                              &listOfMissingFiles);
       else
          Info("MarkBad", "No packetizer received form the player!");
    }
 
    fActiveSlaves->Remove(wrk);
+   FindUniqueSlaves();
+   fBadSlaves->Add(wrk);
 
    fAllMonitor->Remove(wrk->GetSocket());
    fActiveMonitor->Remove(wrk->GetSocket());
@@ -3075,41 +3105,6 @@ void TProof::MarkBad(TSlave *wrk, const char *reason)
       if (fManager)
          fManager->ShutdownSession(this);
    }
-
-   if (IsMaster()) {
-      if (strcmp(reason, kPROOF_TerminateWorker)) {
-         TList *listOfMissingFiles = 0;
-         if (!(listOfMissingFiles = (TList *)GetOutput("MissingFiles"))) {
-            listOfMissingFiles = new TList();
-            listOfMissingFiles->SetName("MissingFiles");
-            if (fPlayer)
-               fPlayer->AddOutputObject(listOfMissingFiles);
-         }
-         TVirtualPacketizer *packetizer = fPlayer ? fPlayer->GetPacketizer() : 0;
-         if (packetizer)
-            // the worker is not terminated intentionally - do resubmit the packets
-            packetizer->MarkBad(wrk, kTRUE, &listOfMissingFiles);
-         else
-            Info("MarkBad", "No packetizer received form the player!");
-         fBadSlaves->Add(wrk);
-      } else {
-         // Assume that an idle worker is being termianted
-         // TODO handle termination while processing and do packetizer->MarkBad
-         fSlaves->Remove(wrk);
-         SafeDelete(wrk);
-      }
-      // Update session workers files
-      SaveWorkerInfo();
-   } else {
-      // On clients the proof session should be removed from the lists
-      // and deleted, since it is not valid anymore
-      fSlaves->Remove(wrk);
-      if (fManager)
-         fManager->ShutdownSession(this);
-   }
-
-   FindUniqueSlaves();
-
 }
 
 //______________________________________________________________________________

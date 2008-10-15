@@ -242,7 +242,8 @@ ClassImp(TPacketizer)
 
 //______________________________________________________________________________
 TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
-                         Long64_t num, TList *input) : TVirtualPacketizer(input)
+                         Long64_t num, TList *input, TProofProgressStatus *st)
+            : TVirtualPacketizer(input, st)
 {
    // Constructor
 
@@ -256,6 +257,11 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
    fActive = 0;
    fFileNodes = 0;
    fMaxPerfIdx = 1;
+
+   if (!fProgressStatus) {
+      Error("TPacketizerAdaptive", "No progress status");
+      return;
+   }
 
    Long_t maxSlaveCnt = 0;
    if (TProof::GetParameter(input, "PROOF_MaxSlavesPerNode", maxSlaveCnt) == 0) {
@@ -1008,9 +1014,10 @@ TDSetElement *TPacketizer::GetNextPacket(TSlave *sl, TMessage *r)
       if (totev > 0)
          numev = totev - slstat->fProcessed;
       slstat->fProcessed += ((numev > 0) ? numev : 0);
-      fProcessed += ((numev > 0) ? numev : 0);
-      fBytesRead += ((bytesRead > 0) ? bytesRead : 0);
-
+      if (fProgressStatus) {
+         if (numev > 0)  fProgressStatus->IncEntries(numev);
+         if (bytesRead > 0)  fProgressStatus->IncBytesRead(bytesRead);
+      }
       PDB(kPacketizer,2)
          Info("GetNextPacket","worker-%s (%s): %lld %7.3lf %7.3lf %7.3lf %lld",
                               sl->GetOrdinal(), sl->GetName(),
@@ -1022,7 +1029,7 @@ TDSetElement *TPacketizer::GetNextPacket(TSlave *sl, TMessage *r)
       }
 
       slstat->fCurElem = 0;
-      if ( fProcessed == fTotalEntries ) {
+      if (fProgressStatus && fProgressStatus->GetEntries() == fTotalEntries) {
          HandleTimer(0);   // Send last timer message
          delete fProgress; fProgress = 0;
       }

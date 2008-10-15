@@ -40,6 +40,7 @@ class TMessage;
 class TProof;
 class TSocket;
 class TVirtualPacketizer;
+class TProofProgressStatus;
 
 
 class TVirtualProofPlayer : public TObject, public TQObject {
@@ -107,14 +108,14 @@ public:
    virtual EExitStatus GetExitStatus() const = 0;
    virtual Long64_t    GetEventsProcessed() const = 0;
    virtual void        AddEventsProcessed(Long64_t ev) = 0;
+   virtual TProofProgressStatus*  GetProgressStatus() const = 0;
 
    virtual void      SetDispatchTimer(Bool_t on = kTRUE) = 0;
    virtual void      SetStopTimer(Bool_t on = kTRUE,
                                   Bool_t abort = kFALSE, Int_t timeout = 0) = 0;
    virtual void      SetInitTime() = 0;
 
-   virtual TVirtualPacketizer *GetPacketizer() const = 0;
-
+   virtual TVirtualPacketizer   *GetPacketizer() const { return 0; }
    static TVirtualProofPlayer *Create(const char *player, TProof *p, TSocket *s = 0);
 
    ClassDef(TVirtualProofPlayer,0)  // Abstract PROOF player

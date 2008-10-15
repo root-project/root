@@ -195,7 +195,7 @@ ClassImp(TProofPlayer)
 TProofPlayer::TProofPlayer(TProof *)
    : fAutoBins(0), fOutput(0), fSelector(0), fSelectorClass(0),
      fFeedbackTimer(0), fFeedbackPeriod(2000),
-     fEvIter(0), fSelStatus(0), fEventsProcessed(0),
+     fEvIter(0), fSelStatus(0),
      fTotalEvents(0), fQueryResults(0), fQuery(0), fDrawQueries(0),
      fMaxDrawQueries(1), fStopTimer(0), fStopTimerMtx(0), fDispatchTimer(0)
 {
@@ -203,6 +203,7 @@ TProofPlayer::TProofPlayer(TProof *)
 
    fInput         = new TList;
    fExitStatus    = kFinished;
+   fProgressStatus = new TProofProgressStatus();
    SetProcessing(kFALSE);
 
    static Bool_t initLimitsFinder = kFALSE;
@@ -810,7 +811,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
    // Loop over range
    gAbort = kFALSE;
    Long64_t entry;
-   fEventsProcessed = 0;
+   fProgressStatus->Reset();
 
    // Signal the master that we start processing
    if (gProofServ)
@@ -822,6 +823,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
 
    TRY {
 
+      // The event loop on the worker
       while ((entry = fEvIter->GetNextEvent()) >= 0 && fSelStatus->IsOk()) {
 
          // This is needed by the inflate infrastructure to calculate
@@ -844,16 +846,17 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
          }
 
          if (fSelStatus->IsOk()) {
-            fEventsProcessed++;
+            fProgressStatus->IncEntries();
+            fProgressStatus->SetBytesRead(TFile::GetFileBytesRead()-readbytesatstart); //TODO: this should be total; not difference
             if (gMonitoringWriter)
-               gMonitoringWriter->SendProcessingProgress(fEventsProcessed,
+               gMonitoringWriter->SendProcessingProgress(fProgressStatus->GetEntries(),
                        TFile::GetFileBytesRead()-readbytesatstart, kFALSE);
-            if (memlogfreq > 0 && fEventsProcessed%memlogfreq == 0){
+            if (memlogfreq > 0 && GetEventsProcessed()%memlogfreq == 0){
                // Record the memory information
                ProcInfo_t pi;
                if (!gSystem->GetProcInfo(&pi)){
                   Info("Process|Svc", "Memory %ld virtual %ld resident event %d",
-                                      pi.fMemVirtual, pi.fMemResident, fEventsProcessed);
+                                      pi.fMemVirtual, pi.fMemResident, GetEventsProcessed());
                }
             }
          }
@@ -884,10 +887,10 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
    } ENDTRY;
 
    PDB(kGlobal,2)
-      Info("Process","%lld events processed",fEventsProcessed);
+      Info("Process","%lld events processed", fProgressStatus->GetEntries());
 
    if (gMonitoringWriter) {
-      gMonitoringWriter->SendProcessingProgress(fEventsProcessed,TFile::GetFileBytesRead()-readbytesatstart, kFALSE);
+      gMonitoringWriter->SendProcessingProgress(fProgressStatus->GetEntries(), TFile::GetFileBytesRead()-readbytesatstart, kFALSE);
       gMonitoringWriter->SendProcessingStatus("DONE");
    }
 
@@ -1157,7 +1160,11 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
    PDB(kGlobal,1) Info("Process","Enter");
    fDSet = dset;
    fExitStatus = kFinished;
-   fEventsProcessed = 0;
+   if (!fProgressStatus) {
+      Error("Process", "No progress status");
+      return -1;
+   }
+   fProgressStatus->Reset();
 
    //   delete fOutput;
    if (!fOutput)
@@ -1219,6 +1226,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
          callEnv.SetParam((Long_t) fProof->GetListOfActiveSlaves());
          callEnv.SetParam((Long64_t) nentries);
          callEnv.SetParam((Long_t) fInput);
+         callEnv.SetParam((Long_t) fProgressStatus);
 
       } else {
 
@@ -1268,7 +1276,8 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
          }
 
          // Init the constructor
-         callEnv.InitWithPrototype(cl, cl->GetName(),"TDSet*,TList*,Long64_t,Long64_t,TList*");
+         callEnv.InitWithPrototype(cl, cl->GetName(),"TDSet*,TList*,Long64_t,"
+                                   "Long64_t,TList*,TProofProgressStatus*");
          if (!callEnv.IsValid()) {
             Error("Process", "cannot find correct constructor for '%s'", cl->GetName());
             fExitStatus = kAborted;
@@ -1280,6 +1289,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
          callEnv.SetParam((Long64_t) first);
          callEnv.SetParam((Long64_t) nentries);
          callEnv.SetParam((Long_t) fInput);
+         callEnv.SetParam((Long_t) fProgressStatus);
 
          // We are going to test validity during the packetizer initialization
          dset->SetBit(TDSet::kValidityChecked);
@@ -1300,6 +1310,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
          fExitStatus = kAborted;
          return -1;
       }
+
       // Add invalid elements to the list of missing elements
       TDSetElement *elem = 0;
       if (!noData && dset->TestBit(TDSet::kSomeInvalid)) {
@@ -2586,7 +2597,7 @@ Bool_t TProofPlayerSlave::HandleTimer(TTimer *)
    // so we also send the info to update the progress bar.
    if (gProofServ && gProofServ->IsMaster() && !gProofServ->IsParallel()) {
       TMessage m(kPROOF_PROGRESS);
-      m << fTotalEvents << fEventsProcessed;
+      m << fTotalEvents << GetEventsProcessed();
       gProofServ->GetSocket()->Send(m);
    }
 
@@ -2690,7 +2701,7 @@ Long64_t TProofPlayerSuperMaster::Process(TDSet *dset, const char *selector_file
    // The return value is -1 in case of error and TSelector::GetStatus() in
    // in case of success.
 
-   fEventsProcessed = 0;
+   fProgressStatus->Reset();
    PDB(kGlobal,1) Info("Process","Enter");
 
    TProofSuperMaster *proof = dynamic_cast<TProofSuperMaster*>(GetProof());

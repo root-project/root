@@ -36,6 +36,9 @@
 #ifndef ROOT_TObject
 #include "TObject.h"
 #endif
+#ifndef ROOT_TProofProgressStatus
+#include "TProofProgressStatus.h"
+#endif
 
 
 class TDSet;
@@ -60,8 +63,7 @@ private:
       kEstAverage = 2
    };
 
-   Long64_t  fProcessed;    // number of entries processed
-   Long64_t  fBytesRead;    // number of bytes processed
+   TProofProgressStatus *fProgressStatus; // pointer to status in the player.
    TTimer   *fProgress;     // progress updates timer
 
    Long64_t  fTotalEntries; // total number of entries to be distributed;
@@ -90,7 +92,7 @@ protected:
    Bool_t   fValid;           // Constructed properly?
    Bool_t   fStop;            // Termination of Process() requested?
 
-   TVirtualPacketizer(TList *input);
+   TVirtualPacketizer(TList *input, TProofProgressStatus *st = 0);
    Long64_t GetEntries(Bool_t tree, TDSetElement *e); // Num of entries or objects
 
 public:
@@ -98,10 +100,9 @@ public:
    virtual ~TVirtualPacketizer();
 
    Bool_t                  IsValid() const { return fValid; }
-   Long64_t                GetEntriesProcessed() const { return fProcessed; }
-   virtual Long64_t        GetEntriesProcessed(TSlave *sl) const;
+   Long64_t                GetEntriesProcessed() const { return (fProgressStatus? fProgressStatus->GetEntries():0); }
    virtual Int_t           GetEstEntriesProcessed(Float_t, Long64_t &ent, Long64_t &bytes)
-                           { ent = fProcessed; bytes = fBytesRead; return 0; }
+                           { ent = GetEntriesProcessed(); bytes = GetBytesRead(); return 0; }
    Long64_t                GetTotalEntries() const { return fTotalEntries; }
    virtual TDSetElement   *GetNextPacket(TSlave *sl, TMessage *r);
    virtual void            SetInitTime();
@@ -109,11 +110,14 @@ public:
    TList                  *GetFailedPackets() { return fFailedPackets; }
    void                    SetFailedPackets(TList *list) { fFailedPackets = list; }
 
-   Long64_t      GetBytesRead() const { return fBytesRead; }
+   Long64_t      GetBytesRead() const { return (fProgressStatus? fProgressStatus->GetBytesRead() : 0); }
+   Double_t      GetCumProcTime() const { return fProgressStatus->GetProcTime(); }
    Float_t       GetInitTime() const { return fInitTime; }
    Float_t       GetProcTime() const { return fProcTime; }
-   virtual void  MarkBad(TSlave *, Bool_t resubmit, TList **) = 0;
-
+   virtual void  MarkBad(TSlave */*s*/, TProofProgressStatus */*status*/, TList **/*missingFiles*/) { return; }
+   virtual Int_t AddProcessed(TSlave */*sl*/, TProofProgressStatus */*st*/, TList **/*missingFiles*/) { return 0; }
+   TProofProgressStatus *GetStatus() { return fProgressStatus; }
+   void          SetProgressStatus(TProofProgressStatus *st) { fProgressStatus = st; }
    ClassDef(TVirtualPacketizer,0)  //Generate work packets for parallel processing
 };
 
