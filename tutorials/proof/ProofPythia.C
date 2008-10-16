@@ -42,6 +42,7 @@
 #include "ProofPythia.h"
 #include "TPythia8.h"
 
+//_____________________________________________________________________________
 ProofPythia::ProofPythia()
 {
    // Constructor
@@ -53,6 +54,7 @@ ProofPythia::ProofPythia()
    fP = 0;
 }
 
+//_____________________________________________________________________________
 ProofPythia::~ProofPythia()
 {
    // Destructor
@@ -61,6 +63,7 @@ ProofPythia::~ProofPythia()
    SafeDelete(fP);
 }
 
+//_____________________________________________________________________________
 void ProofPythia::Begin(TTree * /*tree*/)
 {
    // The Begin() function is called at the start of the query.
@@ -70,6 +73,7 @@ void ProofPythia::Begin(TTree * /*tree*/)
    TString option = GetOption();
 }
 
+//_____________________________________________________________________________
 void ProofPythia::SlaveBegin(TTree * /*tree*/)
 {
    // The SlaveBegin() function is called after the Begin() function.
@@ -101,7 +105,7 @@ void ProofPythia::SlaveBegin(TTree * /*tree*/)
 
 }
 
-
+//_____________________________________________________________________________
 Bool_t ProofPythia::Process(Long64_t entry)
 {
    // Main event loop  
@@ -134,6 +138,7 @@ Bool_t ProofPythia::Process(Long64_t entry)
    return kTRUE;
 }
 
+//_____________________________________________________________________________
 void ProofPythia::SlaveTerminate()
 {
    // The SlaveTerminate() function is called after all entries or objects
@@ -141,6 +146,7 @@ void ProofPythia::SlaveTerminate()
    // on each slave server.
 }
 
+//_____________________________________________________________________________
 void ProofPythia::Terminate()
 {
    // The Terminate() function is the last function to be called during
