@@ -201,23 +201,13 @@ TQtWidget::TQtWidget(QWidget* parent, Qt::WFlags f,bool embedded) :
 //_____________________________________________________________________________
 void TQtWidget::Init()
 {
-#if QT_VERSION < 0x40000
-  setFocusPolicy(QWidget::WheelFocus);
-  setWFlags(getWFlags () | Qt::WRepaintNoErase | Qt:: WResizeNoErase );
-#else /* QT_VERSION */
   setFocusPolicy(Qt::WheelFocus);
   setAttribute(Qt::WA_NoSystemBackground);
   setAutoFillBackground(false);
   QPalette  p = palette();
   p.setBrush(QPalette::Window, Qt::transparent);
   setPalette(p);
-//  setAttribute(Qt::WA_OpaquePaintEvent);
-#  ifndef R__WIN32
-     setAttribute(Qt::WA_PaintOnScreen); // for some reason X11 want this
-                                         // see TGQt::UpdateWindow
-//      setAttribute(Qt::WA_PaintOutsidePaintEvent);// doesn' make sense for Windows
-#  endif
-#endif /* QT_VERSION */
+
   if (fEmbedded) {
     if (!gApplication) InitRint();
     int minw = 10;
