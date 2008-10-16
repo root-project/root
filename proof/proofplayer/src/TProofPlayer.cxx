@@ -1216,7 +1216,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
          }
 
          // Init the constructor
-         callEnv.InitWithPrototype(cl, cl->GetName(),"TList*,Long64_t,TList*");
+         callEnv.InitWithPrototype(cl, cl->GetName(),"TList*,Long64_t,TList*,TProofProgressStatus*");
          if (!callEnv.IsValid()) {
             Error("Process", "cannot find correct constructor for '%s'", cl->GetName());
             fExitStatus = kAborted;
