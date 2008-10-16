@@ -146,6 +146,8 @@ public:
    TEveScene*        GetEventScene()   const { return fEventScene; }
    TEveEventManager* GetCurrentEvent() const { return fCurrentEvent; }
 
+   void SetCurrentEvent(TEveEventManager* mgr) { fCurrentEvent = mgr; }
+
    TCanvas*     AddCanvasTab(const char* name);
    TGWindow*    GetMainWindow() const;
    TGLViewer*   GetGLViewer() const;
