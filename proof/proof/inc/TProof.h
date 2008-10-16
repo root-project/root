@@ -90,6 +90,7 @@ class TTree;
 class TVirtualMutex;
 class TFileCollection;
 class TMap;
+class TProofDataSetManager;
 
 // protocol changes:
 // 1 -> 2: new arguments for Process() command, option added
@@ -596,6 +597,9 @@ protected:
    TPluginHandler *GetProgressDialog() const { return fProgressDialog; }
 
    static void *SlaveStartupThread(void *arg);
+
+   static Int_t AssertDataSet(TDSet *dset, TList *input,
+                              TProofDataSetManager *mgr, TString &emsg);
 
 public:
    TProof(const char *masterurl, const char *conffile = kPROOF_ConfFile,

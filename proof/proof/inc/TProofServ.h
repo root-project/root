@@ -144,8 +144,6 @@ private:
    Int_t         OldAuthSetup(TString &wconf);
    Int_t         GetPriority();
 
-   Int_t         AssertDataSet(TDSet *dset, TList *input);
-
    // Query handlers
    TProofQueryResult *MakeQueryResult(Long64_t nentries, const char *opt,
                                       TList *inl, Long64_t first, TDSet *dset,

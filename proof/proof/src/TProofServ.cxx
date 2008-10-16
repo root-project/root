@@ -2763,134 +2763,6 @@ void TProofServ::HandleArchive(TMessage *mess)
 }
 
 //______________________________________________________________________________
-Int_t TProofServ::AssertDataSet(TDSet *dset, TList *input)
-{
-   // Make sure that dataset is in the form to be processed. This may mean
-   // retrieving the relevant info from the dataset manager or from the
-   // attached input list.
-   // Returns 0 on success, -1 on error
-
-   // We must have something to process
-   if (!dset || !input) return -1;
-
-   // We need a dataset manager
-   if (!fDataSetManager) {
-      SendAsynMessage(Form("AssertDataSet on %s: no dataset manager!", fPrefix.Data()));
-      Error("AssertDataSet", "no dataset manager: cannot proceed");
-      return -1;
-   }
-
-   TFileCollection* dataset = 0;
-   TString lookupopt;
-   TString dsname(dset->GetName());
-   // The dataset maybe in the form of a TFileCollection in the input list
-   if (dsname.BeginsWith("TFileCollection:")) {
-      // Isolate the real name
-      dsname.ReplaceAll("TFileCollection:", "");
-      // Get the object
-      dataset = (TFileCollection *) input->FindObject(dsname);
-      if (!dataset) {
-         SendAsynMessage(Form("AssertDataSet on %s: TFileCollection %s not"
-                              " found in input list",
-                              fPrefix.Data(), dset->GetName()));
-         Error("AssertDataSet", "TFileCollection %s not found in input list",
-                                 dset->GetName());
-         return -1;
-      }
-      // Remove from everywhere
-      input->RecursiveRemove(dataset);
-      // Make sure we lookup everything (unless the client or the administartor
-      // required something else)
-      if (TProof::GetParameter(input, "PROOF_LookupOpt", lookupopt) != 0) {
-         lookupopt = gEnv->GetValue("Proof.LookupOpt", "all");
-         input->Add(new TNamed("PROOF_LookupOpt", lookupopt.Data()));
-      }
-   }
-
-   // The received message included an empty dataset, with only the name
-   // defined: assume that a dataset, stored on the PROOF master by that
-   // name, should be processed.
-   if (!dataset) {
-      dataset = fDataSetManager->GetDataSet(dsname.Data());
-      if (!dataset) {
-         SendAsynMessage(Form("AssertDataSet on %s: no such dataset: %s",
-                              fPrefix.Data(), dsname.Data()));
-         Error("AssertDataSet", "no such dataset on the master: %s", dsname.Data());
-         return -1;
-      }
-
-      // Apply the lookup option requested by the client or the administartor
-      // (by default we trust the information in the dataset)
-      if (TProof::GetParameter(input, "PROOF_LookupOpt", lookupopt) != 0) {
-         lookupopt = gEnv->GetValue("Proof.LookupOpt", "stagedOnly");
-         input->Add(new TNamed("PROOF_LookupOpt", lookupopt.Data()));
-      }
-   }
-
-   // Logic for the subdir/obj names: try first to see if the dataset name contains
-   // some info; if not check the settings in the TDSet object itself; if still empty
-   // check the default tree name / path in the TFileCollection object; if still empty
-   // use the default as the flow will determine
-   TString dsTree;
-   // Get the [subdir/]tree, if any
-   fDataSetManager->ParseUri(dset->GetName(), 0, 0, 0, &dsTree);
-   if (dsTree.IsNull()) {
-      // Use what we have in the original dataset; we need this to locate the
-      // meta data information
-      dsTree += dset->GetDirectory();
-      dsTree += dset->GetObjName();
-   }
-   if (!dsTree.IsNull() && dsTree != "/") {
-      TString tree(dsTree);
-      Int_t idx = tree.Index("/");
-      if (idx != kNPOS) {
-         TString dir = tree(0, idx+1);
-         tree.Remove(0, idx);
-         dset->SetDirectory(dir);
-      }
-      dset->SetObjName(tree);
-   } else {
-      // Use the default obj name from the TFileCollection
-      dsTree = dataset->GetDefaultTreeName();
-   }
-
-   // Transfer the list now
-   if (dataset) {
-      TList *missingFiles = new TList;
-      TSeqCollection* files = dataset->GetList();
-      Bool_t availableOnly = (lookupopt != "all") ? kTRUE : kFALSE;
-      if (!dset->Add(files, dsTree, availableOnly, missingFiles)) {
-         SendAsynMessage(Form("AssertDataSet on %s: error retrieving"
-                              " dataset: %s", fPrefix.Data(), dset->GetName()));
-         Error("AssertDataSet", "error retrieving dataset %s",
-               dset->GetName());
-         delete dataset;
-         return -1;
-      }
-      if (missingFiles) {
-         // The missing files objects have to be removed from the dataset
-         // before delete.
-         TIter next(missingFiles);
-         TObject *file;
-         while ((file = next()))
-            dataset->GetList()->Remove(file);
-      }
-      delete dataset;
-
-      // Make sure it will be sent back merged with other similar lists created
-      // during processing; this list will be transferred by the player to the
-      // output list, once the latter has been created (see TProofPlayerRemote::Process)
-      if (missingFiles && missingFiles->GetSize() > 0) {
-         missingFiles->SetName("MissingFiles");
-         input->Add(missingFiles);
-      }
-   }
-
-   // Done
-   return 0;
-}
-
-//______________________________________________________________________________
 void TProofServ::HandleProcess(TMessage *mess)
 {
    // Handle processing request.
@@ -2943,7 +2815,13 @@ void TProofServ::HandleProcess(TMessage *mess)
 
       // Make sure the dataset contains the information needed
       if ((!hasNoData) && dset->GetListOfElements()->GetSize() == 0) {
-         if (AssertDataSet(dset, input) != 0) return;
+         TString emsg;
+         if (TProof::AssertDataSet(dset, input, fDataSetManager, emsg) != 0) {
+            SendAsynMessage(Form("AssertDataSet on %s: %s",
+                                 fPrefix.Data(), emsg.Data()));
+            Error("HandleProcess", "AssertDataSet: %s", emsg.Data());
+            return;
+         }
       }
 
       TProofQueryResult *pq = 0;

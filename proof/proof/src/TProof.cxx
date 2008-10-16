@@ -73,6 +73,7 @@
 #include "TTree.h"
 #include "TUrl.h"
 #include "TFileCollection.h"
+#include "TProofDataSetManager.h"
 
 TProof *gProof = 0;
 TVirtualMutex *gProofMutex = 0;
@@ -8223,4 +8224,122 @@ Int_t TProof::GetParameter(TCollection *c, const char *par, Double_t &value)
       }
    }
    return -1;
+}
+
+//______________________________________________________________________________
+Int_t TProof::AssertDataSet(TDSet *dset, TList *input,
+                            TProofDataSetManager *mgr, TString &emsg)
+{
+   // Make sure that dataset is in the form to be processed. This may mean
+   // retrieving the relevant info from the dataset manager or from the
+   // attached input list.
+   // Returns 0 on success, -1 on error
+
+   emsg = "";
+
+   // We must have something to process
+   if (!dset || !input || !mgr) {
+      emsg.Form("invalid inputs (%p, %p, %p)", dset, input, mgr);
+      return -1;
+   }
+
+   TFileCollection* dataset = 0;
+   TString lookupopt;
+   TString dsname(dset->GetName());
+   // The dataset maybe in the form of a TFileCollection in the input list
+   if (dsname.BeginsWith("TFileCollection:")) {
+      // Isolate the real name
+      dsname.ReplaceAll("TFileCollection:", "");
+      // Get the object
+      dataset = (TFileCollection *) input->FindObject(dsname);
+      if (!dataset) {
+         emsg.Form("TFileCollection %s not found in input list", dset->GetName());
+         return -1;
+      }
+      // Remove from everywhere
+      input->RecursiveRemove(dataset);
+      // Make sure we lookup everything (unless the client or the administartor
+      // required something else)
+      if (TProof::GetParameter(input, "PROOF_LookupOpt", lookupopt) != 0) {
+         lookupopt = gEnv->GetValue("Proof.LookupOpt", "all");
+         input->Add(new TNamed("PROOF_LookupOpt", lookupopt.Data()));
+      }
+   }
+
+   // The received message included an empty dataset, with only the name
+   // defined: assume that a dataset, stored on the PROOF master by that
+   // name, should be processed.
+   if (!dataset) {
+      dataset = mgr->GetDataSet(dsname.Data());
+      if (!dataset) {
+         emsg.Form("no such dataset on the master: %s", dsname.Data());
+         return -1;
+      }
+
+      // Apply the lookup option requested by the client or the administartor
+      // (by default we trust the information in the dataset)
+      if (TProof::GetParameter(input, "PROOF_LookupOpt", lookupopt) != 0) {
+         lookupopt = gEnv->GetValue("Proof.LookupOpt", "stagedOnly");
+         input->Add(new TNamed("PROOF_LookupOpt", lookupopt.Data()));
+      }
+   }
+
+   // Logic for the subdir/obj names: try first to see if the dataset name contains
+   // some info; if not check the settings in the TDSet object itself; if still empty
+   // check the default tree name / path in the TFileCollection object; if still empty
+   // use the default as the flow will determine
+   TString dsTree;
+   // Get the [subdir/]tree, if any
+   mgr->ParseUri(dset->GetName(), 0, 0, 0, &dsTree);
+   if (dsTree.IsNull()) {
+      // Use what we have in the original dataset; we need this to locate the
+      // meta data information
+      dsTree += dset->GetDirectory();
+      dsTree += dset->GetObjName();
+   }
+   if (!dsTree.IsNull() && dsTree != "/") {
+      TString tree(dsTree);
+      Int_t idx = tree.Index("/");
+      if (idx != kNPOS) {
+         TString dir = tree(0, idx+1);
+         tree.Remove(0, idx);
+         dset->SetDirectory(dir);
+      }
+      dset->SetObjName(tree);
+   } else {
+      // Use the default obj name from the TFileCollection
+      dsTree = dataset->GetDefaultTreeName();
+   }
+
+   // Transfer the list now
+   if (dataset) {
+      TList *missingFiles = new TList;
+      TSeqCollection* files = dataset->GetList();
+      Bool_t availableOnly = (lookupopt != "all") ? kTRUE : kFALSE;
+      if (!dset->Add(files, dsTree, availableOnly, missingFiles)) {
+         emsg.Form("error retrieving dataset %s", dset->GetName());
+         delete dataset;
+         return -1;
+      }
+      if (missingFiles) {
+         // The missing files objects have to be removed from the dataset
+         // before delete.
+         TIter next(missingFiles);
+         TObject *file;
+         while ((file = next()))
+            dataset->GetList()->Remove(file);
+      }
+      delete dataset;
+
+      // Make sure it will be sent back merged with other similar lists created
+      // during processing; this list will be transferred by the player to the
+      // output list, once the latter has been created (see TProofPlayerRemote::Process)
+      if (missingFiles && missingFiles->GetSize() > 0) {
+         missingFiles->SetName("MissingFiles");
+         input->Add(missingFiles);
+      }
+   }
+
+   // Done
+   return 0;
 }
