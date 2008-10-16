@@ -30,8 +30,15 @@
 //      This runs the 'famous' H1 analysis from $ROOTSYS/tree/h1analysis.C,.h .
 //      The data are read from the HTTP server at root.cern.ch .
 //
+//  3. "event"
 //
-//  3. "pythia8"
+//      This is an example of using PROOF par files.
+//      It runs event generation and simple analysis based on the 'Event' class found
+//      under test.
+//
+//   root[] runProof("event")
+//
+//  4. "pythia8"
 //
 //      This runs Pythia8 generation based on main03.cc example in Pythia 8.1 
 //
@@ -43,7 +50,6 @@
 //      is the same on all machines, i.e. local and worker ones
 //
 //   root[] runProof("pythia8")
-//
 //
 //
 //   In all cases, to run in non blocking mode the option 'asyn' is available, e.g.
@@ -308,6 +314,47 @@ void runProof(const char *what = "simple",
       Printf("\nrunProof: running \"Pythia01\" nevt= %d\n", nevt);
       // The selector string
       TString sel = Form("%s/proof/ProofPythia.C+", tutorials.Data());
+      // Run it for nevt times
+      proof->Process(sel.Data(), nevt);
+
+  } else if (act == "event") {
+
+      TString eventpar("proof/event");
+      if (gSystem->AccessPathName(Form("%s.par", eventpar.Data()))) {
+         eventpar = "event";
+         if (gSystem->AccessPathName(Form("%s.par", eventpar.Data()))) {
+            Printf("runProof: event: par file not found: tried 'proof/event.par'"
+                   " and 'event.par'");
+            return;
+         }
+      }
+
+      proof->UploadPackage(eventpar);
+      proof->EnablePackage("event");
+      Printf("Enabled packages...\n");
+      proof->ShowEnabledPackages(); 
+
+      // Setting number of events from arguments
+      TString aNevt, opt;
+      while (args.Tokenize(tok, from, " ")) {
+         // Number of events
+         if (tok.BeginsWith("nevt=")) {
+            aNevt = tok;
+            aNevt.ReplaceAll("nevt=","");
+            if (!aNevt.IsDigit()) {
+               Printf("runProof: event: error parsing the 'nevt=' option (%s) - ignoring", tok.Data());
+               aNevt = "";
+            }
+         }
+         // Sync or async ?
+         if (tok.BeginsWith("asyn"))
+            opt = "ASYN";
+      }
+
+      Long64_t nevt = (aNevt.IsNull()) ? 100 : aNevt.Atoi();
+      Printf("\nrunProof: running \"event\" nevt= %d\n", nevt);
+      // The selector string
+      TString sel = Form("%s/proof/ProofEvent.C+", tutorials.Data());
       // Run it for nevt times
       proof->Process(sel.Data(), nevt);
 
