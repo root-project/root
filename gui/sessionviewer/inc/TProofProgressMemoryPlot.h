@@ -1,4 +1,4 @@
-// @(#)root/sessionviewer:$Id:$
+// @(#)root/sessionviewer:$Id$
 // Author: Anna Kreshuk 18/07/2008
 
 /*************************************************************************
