@@ -350,13 +350,14 @@ TDSetElement *TPacketizerUnit::GetNextPacket(TSlave *sl, TMessage *r)
             num = (optTime > fTimeLimit) ? Nint(fTimeLimit*(slstat->fSpeed))
                                          : Nint(optTime*(slstat->fSpeed));
            PDB(kPacketizer,2)
-               Info("GetNextPacket", "opTime %lf num %lld", optTime, num);
+              Info("GetNextPacket", "opTime %lf num %lld speed %lf", optTime, num, slstat->fSpeed);
          } else {
             Long64_t avg = fTotalEntries/(fSlaveStats->GetSize());
             num = (avg > 5) ? 5 : avg;
          }
       }
    }
+   num = (num > 1) ? num : 1;
    fProcessing = (num < (fTotalEntries - GetEntriesProcessed())) ? num : (fTotalEntries - GetEntriesProcessed());
 
    // Set the informations of the current slave
