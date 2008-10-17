@@ -2670,7 +2670,7 @@ char *THistPainter::GetObjectInfo(Int_t px, Int_t py) const
    End_html */
 
    if (!gPad) return (char*)"";
-   static char info[64];
+   static char info[100];
    Double_t x  = gPad->PadtoX(gPad->AbsPixeltoX(px));
    Double_t y  = gPad->PadtoY(gPad->AbsPixeltoY(py));
    Double_t x1 = gPad->PadtoX(gPad->AbsPixeltoX(px+1));
@@ -6222,7 +6222,7 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
    <a href="#HP07">Draw the statistics box for 1D and profile histograms.</a>
    End_html */
 
-   static char t[64];
+   static char t[100];
    Int_t dofit;
    TPaveStats *stats  = 0;
    TIter next(fFunctions);
@@ -6441,7 +6441,7 @@ void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
    if (fH->GetDimension() != 2) return;
    TH2 *h2 = (TH2*)fH;
 
-   static char t[64];
+   static char t[100];
    Int_t dofit;
    TPaveStats *stats  = 0;
    TIter next(fFunctions);
@@ -6652,7 +6652,7 @@ void THistPainter::PaintStat3(Int_t dostat, TF1 *fit)
    if (fH->GetDimension() != 3) return;
    TH3 *h3 = (TH3*)fH;
 
-   static char t[64];
+   static char t[100];
    Int_t dofit;
    TPaveStats *stats  = 0;
    TIter next(fFunctions);
