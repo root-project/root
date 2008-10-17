@@ -166,8 +166,9 @@ void TGeoChecker::OpProgress(const char *opname, Long64_t current, Long64_t size
       if (!size) return;
       owatch = watch;
       oname = opname;
-      ocurrent = current;
-      osize = size;
+      ocurrent = TMath::Abs(current);
+      osize = TMath::Abs(size);
+      if (ocurrent > osize) ocurrent=osize;
    } else {
       nrefresh++;
       if (!osize) return;
@@ -197,17 +198,18 @@ void TGeoChecker::OpProgress(const char *opname, Long64_t current, Long64_t size
    if (refresh && oneoftwo) {
       nname = oname;
       Int_t pctdone = (Int_t)(100.*nrefresh/fNchecks);
-      oname = Form("== %d%% ==", pctdone);
-      Int_t ntimes = nname.Length()-oname.Length();
-      if (ntimes>0) oname.Append(' ',ntimes);
+      oname = Form("     == %d%% ==", pctdone);
    }         
    Double_t percent = 100.0*ocurrent/osize;
    Int_t nchar = Int_t(percent/10);
+   if (nchar>10) nchar=10;
    Int_t i;
    for (i=0; i<nchar; i++)  progress[i] = '=';
    progress[nchar] = symbol[ichar];
    for (i=nchar+1; i<10; i++) progress[i] = ' ';
    progress[10] = '\0';
+   oname += "                    ";
+   oname.Remove(20);
    if(size<10000) fprintf(stderr, "%s [%10s] %4lld ", oname.Data(), progress, ocurrent);
    else if(size<100000) fprintf(stderr, "%s [%10s] %5lld ",oname.Data(), progress, ocurrent);
    else fprintf(stderr, "%s [%10s] %7lld ",oname.Data(), progress, ocurrent);

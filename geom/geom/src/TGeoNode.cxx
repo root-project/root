@@ -194,7 +194,6 @@ void TGeoNode::CheckOverlaps(Double_t ovlp, Option_t *option)
    Int_t icheck = 0;
    Int_t ncheck = 0;
    TStopwatch *timer;
-   char msg[20];
    Int_t i;
    Bool_t sampling = kFALSE;
    TString opt(option);
@@ -211,23 +210,18 @@ void TGeoNode::CheckOverlaps(Double_t ovlp, Option_t *option)
       Info("CheckOverlaps", "Checking overlaps by sampling <%s> for %s and daughters", option, fVolume->GetName());
       Info("CheckOverlaps", "=== NOTE: Extrusions NOT checked with sampling option ! ===");
    }   
-   msg[19] = '\0';
    timer->Start();
-   geom->GetGeomPainter()->OpProgress(Form("%s          ",fVolume->GetName()),icheck,ncheck,timer,kFALSE);
+   geom->GetGeomPainter()->OpProgress(fVolume->GetName(),icheck,ncheck,timer,kFALSE);
    fVolume->CheckOverlaps(ovlp,option);
    icheck++;
    TGeoIterator next(fVolume);
    TGeoNode *node;
    TString path;
    while ((node=next())) {
-      for (i=0; i<18; i++) {
-         if (i<(Int_t)strlen(node->GetVolume()->GetName())) msg[i] = node->GetVolume()->GetName()[i];
-         else                              msg[i] = ' ';
-      }   
       next.GetPath(path);
       icheck++;
       if (!node->GetVolume()->IsSelected()) {
-         geom->GetGeomPainter()->OpProgress(msg,icheck,ncheck,timer,kFALSE);
+         geom->GetGeomPainter()->OpProgress(node->GetVolume()->GetName(),icheck,ncheck,timer,kFALSE);
          node->GetVolume()->SelectVolume(kFALSE);
          node->GetVolume()->CheckOverlaps(ovlp,option);
       }   
