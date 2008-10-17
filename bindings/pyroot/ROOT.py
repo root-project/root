@@ -313,7 +313,6 @@ class ModuleFacade( object ):
 
          def __getattr__( self, name ):
            if name != 'SetBatch' and self._master.__dict__[ 'gROOT' ] != self._gROOT:
-              print 'finalizing'
               self._master._ModuleFacade__finalSetup()
               del self._master.__class__._ModuleFacade__finalSetup
               self._master.__dict__[ 'gROOT' ] = self._gROOT
