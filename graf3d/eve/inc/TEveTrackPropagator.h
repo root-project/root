@@ -61,8 +61,8 @@ protected:
    TEveVector fB;
 
 public:
-   TEveMagFieldConst(Float_t x, Float_t y, Float_t z) : TEveMagField()
-   { fFieldConstant = kTRUE; fB.Set(x, y, z); }
+ TEveMagFieldConst(Float_t x, Float_t y, Float_t z) : TEveMagField(), fB(x, y, z)
+   { fFieldConstant = kTRUE; }
    virtual ~TEveMagFieldConst() {}
 
    using   TEveMagField::GetField;
@@ -84,11 +84,10 @@ protected:
    Float_t    fR2;
 
 public:
-   TEveMagFieldDuo(Float_t r, Float_t bIn, Float_t bOut) : TEveMagField(), fR2(r*r)
+   TEveMagFieldDuo(Float_t r, Float_t bIn, Float_t bOut) : TEveMagField(), 
+     fBIn(0,0,bIn), fBOut(0,0,bOut), fR2(r*r)
    {
       fFieldConstant = kFALSE;
-      fBIn. Set(0, 0, bIn);
-      fBOut.Set(0, 0, bOut);
    }
    virtual ~TEveMagFieldDuo() {}
 

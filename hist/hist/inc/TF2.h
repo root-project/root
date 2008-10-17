@@ -55,24 +55,20 @@ public:
    template <class PtrObj, typename MemFn>
    TF2(const char *name, const  PtrObj& p, MemFn memFn, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, char * c1, char * c2) : 
       TF1(name,p,memFn,xmin,xmax,npar,c1,c2),
-      fYmin(ymin), fYmax(ymax) 
+	fYmin(ymin), fYmax(ymax), fNpy(30), fContour(0)
    {
       fNpx = 30; 
-      fNpy = 30;
       fNdim = 2;
-      fContour.Set(0);
    } 
    // Template constructors from any  C++ callable object,  defining  the operator() (double * , double *) 
    // and returning a double.    
    template <typename Func> 
    TF2(const char *name, Func f, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, char * tmp  ) : 
       TF1(name,f,xmin,xmax,npar,tmp),
-      fYmin(ymin), fYmax(ymax) 
+	fYmin(ymin), fYmax(ymax), fNpy(30), fContour(0)
    {
       fNpx = 30; 
-      fNpy = 30;
       fNdim = 2;
-      fContour.Set(0);
    } 
 
    // constructor used by CINT 

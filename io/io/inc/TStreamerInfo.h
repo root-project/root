@@ -58,7 +58,7 @@ public:
       TClass          *fNewClass;
       TString          fClassName;
       TMemberStreamer *fStreamer;
-      TCompInfo() : fClass(0), fClassName(""), fStreamer(0) {};
+      TCompInfo() : fClass(0), fNewClass(0), fClassName(""), fStreamer(0) {};
       ~TCompInfo() {};
       void Update(const TClass *oldcl, TClass *newcl);
    };

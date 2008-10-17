@@ -40,6 +40,9 @@ friend class TProofPlayer;
 public:
 
 private:
+   TProofOutputFile(const TProofOutputFile&); // Not implemented
+   TProofOutputFile& operator=(const TProofOutputFile&); // Not implemented
+ 
    TString  fDir;         // name of the directory
    TString  fFileName;
    TString  fFileName1;
@@ -66,7 +69,10 @@ private:
 protected:
 
 public:
-   TProofOutputFile() { fMerger = 0; }
+   TProofOutputFile() : fDir(), fFileName(), fFileName1(), fLocation(),
+     fMode(), fOutputFileName(), fWorkerOrdinal(), fIsLocal(kTRUE), fMerged(kTRUE), 
+     fMerger(NULL) {}
+
    TProofOutputFile(const char* path,
                     const char* location = "REMOTE", const char* mode = "CENTRAL");
    virtual ~TProofOutputFile();

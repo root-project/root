@@ -66,7 +66,7 @@ protected:
    // Default ctor
    TBufferFile() : TBuffer(), fMapCount(0), fMapSize(0),
                fDisplacement(0),fPidOffset(0), fMap(0), fClassMap(0),
-               fInfo(0), fInfoStack() {}
+     fInfo(0), fInfoStack(), fCacheStack() {}
 
    // TBuffer objects cannot be copied or assigned
    TBufferFile(const TBufferFile &);       // not implemented

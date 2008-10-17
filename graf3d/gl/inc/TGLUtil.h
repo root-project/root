@@ -917,8 +917,8 @@ public:
    {
       Int_t fOldQuality;
    public:
-      TDrawQualityModifier(Int_t dq)
-      { fOldQuality = GetDrawQuality(); SetDrawQuality(dq); }
+      TDrawQualityModifier(Int_t dq) :
+      fOldQuality(GetDrawQuality()) {SetDrawQuality(dq); }
 
       virtual ~TDrawQualityModifier()
       { SetDrawQuality(fOldQuality); }
@@ -930,8 +930,8 @@ public:
    {
       Int_t fOldQuality;
    public:
-      TDrawQualityScaler(Float_t fac)
-      { fOldQuality = GetDrawQuality(); SetDrawQuality((Int_t)(fac*fOldQuality)); }
+      TDrawQualityScaler(Float_t fac) :
+      fOldQuality(GetDrawQuality()) {SetDrawQuality((Int_t)(fac*fOldQuality)); }
 
       virtual ~TDrawQualityScaler()
       { SetDrawQuality(fOldQuality); }

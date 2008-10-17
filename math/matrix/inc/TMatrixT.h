@@ -64,7 +64,7 @@ public:
    TMatrixT(const TMatrixT      <Element> &another);
    TMatrixT(const TMatrixTSym   <Element> &another);
    TMatrixT(const TMatrixTSparse<Element> &another);
-   template <class Element2> TMatrixT(const TMatrixT<Element2> &another)
+   template <class Element2> TMatrixT(const TMatrixT<Element2> &another): fElements(0)
    {
       R__ASSERT(another.IsValid());
       Allocate(another.GetNrows(),another.GetNcols(),another.GetRowLwb(),another.GetColLwb());

@@ -95,6 +95,9 @@ public:
 
 class TPMERegexp : protected TPRegexp {
 
+private:
+   TPMERegexp& operator=(const TPMERegexp&);  // Not implemented
+
 protected:
    Int_t    fNMaxMatches;         // maximum number of matches
    Int_t    fNMatches;            // number of matches returned from last pcre_exec call

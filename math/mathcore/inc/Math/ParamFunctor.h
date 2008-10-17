@@ -182,6 +182,8 @@ public:
 
 
 private :
+   ParamMemFunHandler(const ParamMemFunHandler&); // Not implemented
+   ParamMemFunHandler& operator=(const ParamMemFunHandler&); // Not implemented
        
    PointerToObj fObj;
    PointerToMemFn fMemFn; 

@@ -324,6 +324,10 @@ public:
 };
 
 class TGLFaderHelper {
+private:
+   TGLFaderHelper(const TGLFaderHelper&); // Not implemented
+   TGLFaderHelper& operator=(const TGLFaderHelper&); // Not implemented
+
 public:
    TGLViewer *fViewer;
    Float_t    fFadeTarget;
