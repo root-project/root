@@ -92,6 +92,8 @@
 
 #include "getProof.C"
 
+TDrawFeedback *fb = 0;
+
 // Variable used to locate the Pythia8 directory for the Pythia8 example
 const char *pythia8dir = 0;
 const char *pythia8data = 0;
@@ -177,9 +179,13 @@ void runProof(const char *what = "simple",
    delete[] rootbin;
 
    // Create feedback displayer
-   TDrawFeedback fb(proof);
-   // Number of events per worker
-   proof->AddFeedback("PROOF_EventsHist");
+   if (!fb) {
+      fb = new TDrawFeedback(proof);
+   }
+   if (!proof->GetFeedbackList() || !proof->GetFeedbackList()->FindObject("PROOF_EventsHist")) {
+      // Number of events per worker
+      proof->AddFeedback("PROOF_EventsHist");
+   }
 
    // Have constant progress reporting based on estimated info
    proof->SetParameter("PROOF_RateEstimation", "average");
