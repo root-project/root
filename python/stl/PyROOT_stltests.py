@@ -1,7 +1,7 @@
 # File: roottest/python/stl/PyROOT_stltests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 10/25/05
-# Last: 03/04/08
+# Last: 06/27/08
 
 """STL unit tests for PyROOT package."""
 
@@ -66,6 +66,24 @@ class STL1VectorTestCase( unittest.TestCase ):
       a = std.vector( int )()
       for arg in a:
          pass
+
+   def test5PushbackIterablesWithIAdd( self ):
+      """Test usage of += of iterable on push_back-able container"""
+
+      a = std.vector( int )()
+      a += [ 1, 2, 3 ]
+      self.assertEqual( len(a), 3 )
+      self.assertEqual( a[0], 1 )
+      self.assertEqual( a[1], 2 )
+      self.assertEqual( a[2], 3 )
+
+      a += ( 4, 5, 6 )
+      self.assertEqual( len(a), 6 )
+      self.assertEqual( a[3], 4 )
+      self.assertEqual( a[4], 5 )
+      self.assertEqual( a[5], 6 )
+
+      self.assertRaises( TypeError, a.__iadd__, ( 7, '8' ) )
 
 
 ### STL list test case =======================================================
