@@ -1624,6 +1624,9 @@ void TGTextLBEntry::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
    // Save a list box entry widget as a C++ statement(s) on output stream out.
 
+   TString content = GetText()->GetString();
+   content.ReplaceAll('\\', "\\\\");
+   content.ReplaceAll("\"", "\\\"");
    char quote = '"';
-   out << quote << GetText()->GetString() << quote << "," << EntryId();
+   out << quote << content << quote << "," << EntryId();
 }

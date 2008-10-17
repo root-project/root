@@ -2610,7 +2610,10 @@ void TGListTreeItemStd::SavePrimitive(ostream &out, Option_t *option, Int_t n)
       out << "NULL,";
    else
       out << "item" << option << ",";
-   out << quote << GetText() << quote;
+   TString text = GetText();
+   text.ReplaceAll('\\', "\\\\");
+   text.ReplaceAll("\"", "\\\"");
+   out << quote << text << quote;
    out << ");" << endl;
 
    if (oldopen != fOpenPic) {
@@ -2658,8 +2661,12 @@ void TGListTreeItemStd::SavePrimitive(ostream &out, Option_t *option, Int_t n)
       }
    }
    if (fTipText.Length() > 0) {
+      TString tiptext = GetTipText();
+      tiptext.ReplaceAll('\\', "\\\\");
+      tiptext.ReplaceAll("\n", "\\n");
+      tiptext.ReplaceAll("\"", "\\\"");
       out << "   item" << s.Data() << "->SetTipText(" << quote
-          << GetTipText() << quote << ");" << endl;
+          << tiptext << quote << ");" << endl;
    }
 
 }
