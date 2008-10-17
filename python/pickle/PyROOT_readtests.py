@@ -1,7 +1,7 @@
 # File: roottest/python/pickle/PyROOT_readingtests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 04/16/08
-# Last: 10/16/08
+# Last: 10/17/08
 
 """Pickle writing unit tests for PyROOT package."""
 
@@ -11,7 +11,7 @@ from ROOT import *
 
 __all__ = [
    'PickleReadingSimpleObjectsTestCase',
-   'PickleReadingMemoryTestCase'
+   'PickleReadingComplicationsTestCase'
 ]
 
 gROOT.LoadMacro( "PickleTypes.C+" )
@@ -83,8 +83,8 @@ class PickleReadingSimpleObjectsTestCase( unittest.TestCase ):
       __dodtest( self, d )
 
 
-### Pretend-write and read back an object and check refcounting ==============
-class PickleReadingMemoryTestCase( unittest.TestCase ):
+### Pretend-write and read back objects that gave complications ==============
+class PickleReadingComplicationsTestCase( unittest.TestCase ):
 
    def test1RefCountCheck( self ):
       """Test reference counting of pickled object"""
@@ -97,6 +97,14 @@ class PickleReadingMemoryTestCase( unittest.TestCase ):
       self.assertEqual( SomeCountedClass.s_counter, 2 )
       del c2, c1
       self.assertEqual( SomeCountedClass.s_counter, 0 )
+
+   def test2TBufferCheck( self ):
+      """Test that a TBufferFile can be pickled"""
+
+    # the following does not assert anything, but if there is a failure, the
+    # ROOT I/O layer will print an error message
+      f1 = TBufferFile( TBuffer.kWrite )
+      f2 = pickle.loads( pickle.dumps( f1 ) )
 
 
 ## actual test run
