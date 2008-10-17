@@ -321,12 +321,22 @@ namespace {
                 &PyString_Type, &pybuf, &clname ) )
          return 0;
 
-   // use the PyString macro's to by-pass error checking; do not adopt the buffer,
-   // as the local TBufferFile can go out of scope (there is no copying)
-      TBufferFile buf( TBuffer::kRead,
-          PyString_GET_SIZE( pybuf ), PyString_AS_STRING( pybuf ), kFALSE );
+   // TBuffer and its derived classes can't write themselves, but can be created
+   // directly from the buffer, so handle them in a special case
+      void* newObj = 0;
+      if ( strcmp( clname, "TBufferFile" ) == 0 ) {
+         TBufferFile* buf = new TBufferFile( TBuffer::kWrite );
+         buf->WriteFastArray( PyString_AS_STRING(pybuf), PyString_GET_SIZE( pybuf ) );
+         newObj = buf;
+      } else {
+      // use the PyString macro's to by-pass error checking; do not adopt the buffer,
+      // as the local TBufferFile can go out of scope (there is no copying)
+         TBufferFile buf( TBuffer::kRead,
+            PyString_GET_SIZE( pybuf ), PyString_AS_STRING( pybuf ), kFALSE );
+         newObj = buf.ReadObjectAny( 0 );
+      }
 
-      PyObject* result = BindRootObject( buf.ReadObjectAny( 0 ), TClass::GetClass( clname ) );
+      PyObject* result = BindRootObject( newObj, TClass::GetClass( clname ) );
       if ( result ) {
       // this object is to be owned by the interpreter, assuming that the call
       // originated from there

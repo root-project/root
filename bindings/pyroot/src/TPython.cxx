@@ -105,18 +105,18 @@ Bool_t TPython::Initialize()
       PyEval_InitThreads();
       Py_Initialize();
 
-   // try again
+   // try again to initialize the interpreter
       if ( ! Py_IsInitialized() ) {
       // give up ...
          std::cerr << "Error: python has not been intialized; returning." << std::endl;           
          return kFALSE;
       }
 
-   // set argv
+   // set the command line arguments on python's sys.argv
       char* argv[] = { const_cast< char* >( "root" ) };
       PySys_SetArgv( sizeof(argv)/sizeof(argv[0]), argv );
 
-   // force loading of ROOT
+   // force loading of the ROOT module
       PyRun_SimpleString( const_cast< char* >( "import ROOT" ) );
    }
 

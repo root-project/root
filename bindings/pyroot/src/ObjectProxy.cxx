@@ -45,20 +45,31 @@ namespace {
       static PyObject* s_expand = PyDict_GetItemString(
          PyModule_GetDict( gRootModule ),  const_cast< char* >( "_ObjectProxy__expand__" ) );
 
-   // no cast is needed, but WriteObject taking a TClass argument is protected,
-   // so use WriteObjectAny()
-      TBufferFile buf( TBuffer::kWrite );
-      if ( buf.WriteObjectAny( self->GetObject(), self->ObjectIsA() ) != 1 ) {
-         PyErr_Format( PyExc_IOError,
-            "could not stream object of type %s", self->ObjectIsA()->GetName() );
-         return 0;
+   // TBuffer and its derived classes can't write themselves, but can be created
+   // directly from the buffer, so handle them in a special case
+      static TClassRef s_bfClass( "TBufferFile" );
+
+      TBufferFile* buff = 0;
+      if ( s_bfClass == self->ObjectIsA() ) {
+         buff = (TBufferFile*)self->GetObject();
+      } else {
+      // no cast is needed, but WriteObject taking a TClass argument is protected,
+      // so use WriteObjectAny()
+         static TBufferFile s_buff( TBuffer::kWrite );
+         s_buff.Reset();
+         if ( s_buff.WriteObjectAny( self->GetObject(), self->ObjectIsA() ) != 1 ) {
+            PyErr_Format( PyExc_IOError,
+               "could not stream object of type %s", self->ObjectIsA()->GetName() );
+            return 0;
+         }
+         buff = &s_buff;
       }
 
    // use a string for the serialized result, as a python buffer will not copy
    // the buffer contents; use a string for the class name, used when casting
    // on reading back in (see RootModule.cxx:TObjectExpand)
       PyObject* res2 = PyTuple_New( 2 );
-      PyTuple_SET_ITEM( res2, 0, PyString_FromStringAndSize( buf.Buffer(), buf.Length() ) );
+      PyTuple_SET_ITEM( res2, 0, PyString_FromStringAndSize( buff->Buffer(), buff->Length() ) );
       PyTuple_SET_ITEM( res2, 1, PyString_FromString( self->ObjectIsA()->GetName() ) );
 
       PyObject* result = PyTuple_New( 2 );
