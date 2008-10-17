@@ -999,16 +999,30 @@ TDSetElement *TPacketizer::GetNextPacket(TSlave *sl, TMessage *r)
       Double_t latency, proctime, proccpu;
       Long64_t bytesRead = -1;
       Long64_t totalEntries = -1;
-
+      Long64_t totev = 0;
       Long64_t numev = slstat->fCurElem->GetNum();
 
       fPackets->Add(slstat->fCurElem);
-      (*r) >> latency >> proctime >> proccpu;
-      // only read new info if available
-      if (r->BufferSize() > r->Length()) (*r) >> bytesRead;
-      if (r->BufferSize() > r->Length()) (*r) >> totalEntries;
-      Long64_t totev = 0;
-      if (r->BufferSize() > r->Length()) (*r) >> totev;
+
+      if (!gProofServ || gProofServ->GetProtocol() > 18) {
+         TProofProgressStatus *status = 0;
+         (*r) >> latency;
+         (*r) >> status;
+
+         proctime = status ? status->GetProcTime() : -1.;
+         proccpu  = status ? status->GetCPUTime() : -1.;
+         totev  = status ? status->GetEntries() : 0;
+         bytesRead  = status ? status->GetBytesRead() : 0;
+
+         delete status;
+      } else {
+
+         (*r) >> latency >> proctime >> proccpu;
+         // only read new info if available
+         if (r->BufferSize() > r->Length()) (*r) >> bytesRead;
+         if (r->BufferSize() > r->Length()) (*r) >> totalEntries;
+         if (r->BufferSize() > r->Length()) (*r) >> totev;
+      }
 
       // Record
       if (totev > 0)

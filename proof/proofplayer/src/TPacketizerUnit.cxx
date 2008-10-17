@@ -214,20 +214,34 @@ TDSetElement *TPacketizerUnit::GetNextPacket(TSlave *sl, TMessage *r)
    TSlaveStat *slstat = (TSlaveStat*) fSlaveStats->GetValue(sl);
    R__ASSERT(slstat != 0);
 
-
    // Update stats & free old element
    Double_t latency, proctime, proccpu;
    Long64_t bytesRead = -1;
    Long64_t totalEntries = -1;
-
-   (*r) >> latency >> proctime >> proccpu;
-
-   // only read new info if available
-   if (r->BufferSize() > r->Length()) (*r) >> bytesRead;
-   if (r->BufferSize() > r->Length()) (*r) >> totalEntries;
    Long64_t totev = 0;
-   if (r->BufferSize() > r->Length()) (*r) >> totev;
-   Long64_t numev = totev - slstat->fProcessed;
+   Long64_t numev = -1;
+
+   if (!gProofServ || gProofServ->GetProtocol() > 18) {
+      TProofProgressStatus *status = 0;
+      (*r) >> latency;
+      (*r) >> status;
+
+      proctime = status ? status->GetProcTime() : -1.;
+      proccpu  = status ? status->GetCPUTime() : -1.;
+      totev  = status ? status->GetEntries() : 0;
+      bytesRead  = status ? status->GetBytesRead() : 0;
+
+      delete status;
+   } else {
+
+      (*r) >> latency >> proctime >> proccpu;
+
+      // only read new info if available
+      if (r->BufferSize() > r->Length()) (*r) >> bytesRead;
+      if (r->BufferSize() > r->Length()) (*r) >> totalEntries;
+      if (r->BufferSize() > r->Length()) (*r) >> totev;
+   }
+   numev = totev - slstat->fProcessed;
 
    PDB(kPacketizer,2)
       Info("GetNextPacket","worker-%s: fProcessed %lld\t", sl->GetOrdinal(), GetEntriesProcessed());
@@ -323,17 +337,24 @@ TDSetElement *TPacketizerUnit::GetNextPacket(TSlave *sl, TMessage *r)
          Info("GetNextPacket", "worker-%s: sum speed: %lf, sum busy: %f",
                                sl->GetOrdinal(), sumSpeed, sumBusy);
       // firstly the slave will try to get all of the remaining entries
-      if ((fTotalEntries - GetEntriesProcessed())/(slstat->fSpeed) < fTimeLimit) {
+      if (slstat->fSpeed > 0 &&
+         (fTotalEntries - GetEntriesProcessed())/(slstat->fSpeed) < fTimeLimit) {
          num = (fTotalEntries - GetEntriesProcessed());
       } else {
-         // calculating the optTime
-         Double_t optTime = (fTotalEntries - GetEntriesProcessed() + sumBusy)/sumSpeed;
-         // if optTime is greater than the official time limit, then the slave gets a number
-         // of entries that still fit into the time limit, otherwise it uses the optTime as
-         // a time limit
-         num = (optTime > fTimeLimit) ? Nint(fTimeLimit*(slstat->fSpeed)) : Nint(optTime*(slstat->fSpeed));
-         PDB(kPacketizer,2)
-            Info("GetNextPacket", "opTime %lf", optTime);
+         if (slstat->fSpeed > 0) {
+            // calculating the optTime
+            Double_t optTime = (fTotalEntries - GetEntriesProcessed() + sumBusy)/sumSpeed;
+            // if optTime is greater than the official time limit, then the slave gets a number
+            // of entries that still fit into the time limit, otherwise it uses the optTime as
+            // a time limit
+            num = (optTime > fTimeLimit) ? Nint(fTimeLimit*(slstat->fSpeed))
+                                         : Nint(optTime*(slstat->fSpeed));
+           PDB(kPacketizer,2)
+               Info("GetNextPacket", "opTime %lf num %lld", optTime, num);
+         } else {
+            Long64_t avg = fTotalEntries/(fSlaveStats->GetSize());
+            num = (avg > 5) ? 5 : avg;
+         }
       }
    }
    fProcessing = (num < (fTotalEntries - GetEntriesProcessed())) ? num : (fTotalEntries - GetEntriesProcessed());

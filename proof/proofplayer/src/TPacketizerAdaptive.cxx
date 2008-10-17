@@ -1316,12 +1316,29 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
    // update stats & free old element
 
    if ( slstat->fCurElem != 0 ) {
-      Double_t latency;
 
-      (*r) >> latency;
-
+      Double_t latency, proctime, proccpu;
       TProofProgressStatus *status = 0;
-      (*r) >> status;
+
+      if (!gProofServ || gProofServ->GetProtocol() > 18) {
+
+         (*r) >> latency;
+         (*r) >> status;
+
+      } else {
+
+         Long64_t bytesRead = -1;
+         Long64_t totalEntries = -1;
+
+         (*r) >> latency >> proctime >> proccpu;
+         // only read new info if available
+         if (r->BufferSize() > r->Length()) (*r) >> bytesRead;
+         if (r->BufferSize() > r->Length()) (*r) >> totalEntries;
+         Long64_t totev = 0;
+         if (r->BufferSize() > r->Length()) (*r) >> totev;
+
+         status = new TProofProgressStatus(totev, bytesRead, proctime, proccpu);
+      }
 
       // Calculate the number of events processed in the last packet
       Long64_t numev;
@@ -1334,10 +1351,10 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
          Error("GetNextPacket", "The worker processed diff. no. entries");
       PDB(kPacketizer,2)
          Info("GetNextPacket","worker-%s (%s): %lld %7.3lf %7.3lf %7.3lf %lld",
-              sl->GetOrdinal(), sl->GetName(), numev, latency,
-              status ? status->GetProcTime() : 0,
-              status ? status->GetCPUTime() : 0,
-              status ? status->GetBytesRead() : -1);
+            sl->GetOrdinal(), sl->GetName(), numev, latency,
+            status ? status->GetProcTime() : 0,
+            status ? status->GetCPUTime() : 0,
+            status ? status->GetBytesRead() : -1);
 
       if (gPerfStats != 0) {
          gPerfStats->PacketEvent(sl->GetOrdinal(), sl->GetName(),
