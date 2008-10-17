@@ -36,10 +36,15 @@
 // *  ******************************************************************   * //
 // *  *  Log file: /tmp/ProofStress_XrcwBe                                 * //
 // *  ******************************************************************   * //
-// *   Test  1 : Open ............................................. OK *   * //
-// *   Test  2 : GetLogs .......................................... OK *   * //
-// *   Test  3 : Simple ........................................... OK *   * //
-// *   Test  4 : H1:http .......................................... OK *   * //
+// *   Test  1 : Open a session ................................... OK *   * //
+// *   Test  2 : Get session logs ................................. OK *   * //
+// *   Test  3 : Simple random number generation .................. OK *   * //
+// *   Test  4 : Dataset handling with H1 files ................... OK *   * //
+// *   Test  5 : H1: chain processing ............................. OK *   * //
+// *   Test  6 : H1: file collection processing ................... OK *   * //
+// *   Test  7 : H1: by-name processing ........................... OK *   * //
+// *   Test  8 : Package management with 'event' .................. OK *   * //
+// *   Test  9 : Simple 'event' generation ........................ OK *   * //
 // *  * All registered tests have been passed  :-)                     *   * //
 // *  ******************************************************************   * //
 // *                                                                       * //
@@ -59,12 +64,16 @@
 
 #include "Getline.h"
 #include "TChain.h"
+#include "TFileCollection.h"
+#include "TFileInfo.h"
 #include "TH1F.h"
 #include "TH2F.h"
+#include "TMap.h"
 #include "TMath.h"
 #include "TProof.h"
 #include "TProofLog.h"
 #include "TProofMgr.h"
+#include "TQueryResult.h"
 #include "TString.h"
 #include "TSystem.h"
 #include "TROOT.h"
@@ -210,6 +219,11 @@ Int_t PT_Open(void *);
 Int_t PT_GetLogs(void *);
 Int_t PT_Simple(void *);
 Int_t PT_H1Http(void *);
+Int_t PT_H1FileCollection(void *);
+Int_t PT_H1DataSet(void *);
+Int_t PT_DataSets(void *);
+Int_t PT_Packages(void *);
+Int_t PT_Event(void *);
 
 // Arguments structures
 typedef struct {            // Open
@@ -263,13 +277,23 @@ void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfil
    TList *testList = new TList;
    // Simple open
    PT_Open_Args_t PToa = { url, nwrks };
-   testList->Add(new ProofTest("Open", 1, &PT_Open, (void *)&PToa));
+   testList->Add(new ProofTest("Open a session", 1, &PT_Open, (void *)&PToa));
    // Get logs
-   testList->Add(new ProofTest("GetLogs", 2, &PT_GetLogs, (void *)&PToa));
+   testList->Add(new ProofTest("Get session logs", 2, &PT_GetLogs, (void *)&PToa));
    // Simple histogram generation
-   testList->Add(new ProofTest("Simple", 3, &PT_Simple));
-   // H1 analysis over HTTP
-   testList->Add(new ProofTest("H1:http", 4, &PT_H1Http));
+   testList->Add(new ProofTest("Simple random number generation", 3, &PT_Simple));
+   // Test of data set handling with the H1 http files
+   testList->Add(new ProofTest("Dataset handling with H1 files", 4, &PT_DataSets));
+   // H1 analysis over HTTP (chain)
+   testList->Add(new ProofTest("H1: chain processing", 5, &PT_H1Http));
+   // H1 analysis over HTTP (file collection)
+   testList->Add(new ProofTest("H1: file collection processing", 6, &PT_H1FileCollection));
+   // H1 analysis over HTTP by dataset name
+   testList->Add(new ProofTest("H1: by-name processing", 7, &PT_H1DataSet));
+   // Test of data set handling with the H1 http files
+   testList->Add(new ProofTest("Package management with 'event'", 8, &PT_Packages));
+   // Simple event analysis
+   testList->Add(new ProofTest("Simple 'event' generation", 9, &PT_Event));
 
    //
    // Run the tests
@@ -321,7 +345,8 @@ Int_t PT_Open(void *args)
 
    // Temp dir for PROOF tutorials
    PutPoint();
-   TString tutdir = Form("%s/.proof-tutorial", gSystem->TempDirectory());
+   TString tutdir;
+   tutdir.Form("%s/.proof-tutorial", gSystem->TempDirectory());
    if (gSystem->AccessPathName(tutdir)) {
       if (gSystem->mkdir(tutdir, kTRUE) != 0) {
          printf("\n >>> Test failure: could not assert/create the temporary directory"
@@ -329,6 +354,16 @@ Int_t PT_Open(void *args)
          return -1;
       }
    }
+
+   // String to initialize the dataset manager
+   TString dsetmgrstr;
+   dsetmgrstr.Form("file dir:%s/datasets Cq:-Av:Sb:", tutdir.Data());
+   gEnv->SetValue("Proof.DataSetManager", dsetmgrstr.Data());
+
+   // String to initialize the package dir
+   TString packdir;
+   packdir.Form("%s/packages", tutdir.Data());
+   gEnv->SetValue("Proof.PackageDir", packdir.Data());
 
    // Get the PROOF Session
    PutPoint();
@@ -381,9 +416,83 @@ Int_t PT_GetLogs(void *args)
 }
 
 //_____________________________________________________________________________
+Int_t PT_Simple(void *)
+{
+   // Test run for the ProofSimple analysis (see tutorials)
+
+   // Checking arguments
+   PutPoint();
+   if (!gProof) {
+      printf("\n >>> Test failure: no PROOF session found\n");
+      return -1;
+   }
+
+   // Define the number of events and histos
+   Long64_t nevt = 1000000;
+   Int_t nhist = 16;
+   // The number of histograms is added as parameter in the input list
+   gProof->SetParameter("ProofSimple_NHist", (Long_t)nhist);
+
+   // Clear the list of query results
+   if (gProof->GetQueryResults()) gProof->GetQueryResults()->Clear();
+
+   // Process
+   PutPoint();
+   gProof->Process("../tutorials/proof/ProofSimple.C++", nevt);
+
+   // Make sure the query result is there
+   PutPoint();
+   TQueryResult *qr = 0;
+   if (!(qr = gProof->GetQueryResult())) {
+      printf("\n >>> Test failure: query result not found\n");
+      return -1;
+   }
+
+   // Make sure the number of processed entries is the one expected
+   PutPoint();
+   if (qr->GetEntries() != nevt) {
+      printf("\n >>> Test failure: wrong number of entries processed: %lld (expected %lld)\n", qr->GetEntries(), nevt);
+      return -1;
+   }
+
+   // Make sure the output list is there
+   PutPoint();
+   if (!(gProof->GetOutputList())) {
+      printf("\n >>> Test failure: output list not found\n");
+      return -1;
+   }
+
+   // Get the histos
+   PutPoint();
+   TH1F **hist = new TH1F*[nhist];
+   for (Int_t i=0; i < nhist; i++) {
+      hist[i] = dynamic_cast<TH1F *>(gProof->GetOutputList()->FindObject(Form("h%d",i)));
+      if (!hist[i]) {
+         printf("\n >>> Test failure: 'h%d' histo not found\n", i);
+         return -1;
+      }
+   }
+
+   // Check the mean values
+   PutPoint();
+   for (Int_t i=0; i < nhist; i++) {
+      Double_t ave = hist[i]->GetMean();
+      Double_t rms = hist[i]->GetRMS();
+      if (TMath::Abs(ave) > 5 * rms / TMath::Sqrt(hist[i]->GetEntries())) {
+         printf("\n >>> Test failure: 'h%d' histo: mean > 5 * RMS/Sqrt(N)\n", i);
+         return -1;
+      }
+   }
+
+   // Done
+   PutPoint();
+   return 0;
+}
+
+//_____________________________________________________________________________
 Int_t PT_H1Http(void *)
 {
-   // Test run for the H1 analysis reading the data from HTTP
+   // Test run for the H1 analysis as a chain reading the data from HTTP
 
    // Checking arguments
    PutPoint();
@@ -400,12 +509,30 @@ Int_t PT_H1Http(void *)
    chain->Add("http://root.cern.ch/files/h1/dstarp1b.root");
    chain->Add("http://root.cern.ch/files/h1/dstarp2.root");
 
+   // Clear the list of query results
+   if (gProof->GetQueryResults()) gProof->GetQueryResults()->Clear();
+
    // Process
    PutPoint();
    chain->SetProof();
    PutPoint();
    chain->Process("../tutorials/tree/h1analysis.C++");
    gProof->RemoveChain(chain);
+
+   // Make sure the query result is there
+   PutPoint();
+   TQueryResult *qr = 0;
+   if (!(qr = gProof->GetQueryResult())) {
+      printf("\n >>> Test failure: query result not found\n");
+      return -1;
+   }
+
+   // Make sure the number of processed entries is the one expected
+   PutPoint();
+   if (qr->GetEntries() != 283813) {
+      printf("\n >>> Test failure: wrong number of entries processed: %lld (expected 283813)\n", qr->GetEntries());
+      return -1;
+   }
 
    // Make sure the output list is there
    PutPoint();
@@ -455,9 +582,9 @@ Int_t PT_H1Http(void *)
 }
 
 //_____________________________________________________________________________
-Int_t PT_Simple(void *)
+Int_t PT_H1FileCollection(void *)
 {
-   // Test run for the ProofSimple analysis (see tutorials)
+   // Test run for the H1 analysis as a file collection reading the data from HTTP
 
    // Checking arguments
    PutPoint();
@@ -466,14 +593,35 @@ Int_t PT_Simple(void *)
       return -1;
    }
 
-   // Define the number of events and histos
-   Long64_t nevt = 1000000;
-   Int_t nhist = 16;
-   // The number of histograms is added as parameter in the input list
-   gProof->SetParameter("ProofSimple_NHist", (Long_t)nhist);
+   // Create the file collection
+   PutPoint();
+   TFileCollection *fc = new TFileCollection("h42");
+   fc->Add(new TFileInfo("http://root.cern.ch/files/h1/dstarmb.root"));
+   fc->Add(new TFileInfo("http://root.cern.ch/files/h1/dstarp1a.root"));
+   fc->Add(new TFileInfo("http://root.cern.ch/files/h1/dstarp1b.root"));
+   fc->Add(new TFileInfo("http://root.cern.ch/files/h1/dstarp2.root"));
+
+   // Clear the list of query results
+   if (gProof->GetQueryResults()) gProof->GetQueryResults()->Clear();
+
    // Process
    PutPoint();
-   gProof->Process("../tutorials/proof/ProofSimple.C++", nevt);
+   gProof->Process(fc, "../tutorials/tree/h1analysis.C++");
+
+   // Make sure the query result is there
+   PutPoint();
+   TQueryResult *qr = 0;
+   if (!(qr = gProof->GetQueryResult())) {
+      printf("\n >>> Test failure: query result not found\n");
+      return -1;
+   }
+
+   // Make sure the number of processed entries is the one expected
+   PutPoint();
+   if (qr->GetEntries() != 283813) {
+      printf("\n >>> Test failure: wrong number of entries processed: %lld (expected 283813)\n", qr->GetEntries());
+      return -1;
+   }
 
    // Make sure the output list is there
    PutPoint();
@@ -482,26 +630,370 @@ Int_t PT_Simple(void *)
       return -1;
    }
 
-   // Get the histos
+   // Check the 'hdmd' histo
    PutPoint();
-   TH1F **hist = new TH1F*[nhist];
-   for (Int_t i=0; i < nhist; i++) {
-      hist[i] = dynamic_cast<TH1F *>(gProof->GetOutputList()->FindObject(Form("h%d",i)));
-      if (!hist[i]) {
-         printf("\n >>> Test failure: 'h%d' histo not found\n", i);
+   TH1F *hdmd = dynamic_cast<TH1F*>(gProof->GetOutputList()->FindObject("hdmd"));
+   if (!hdmd) {
+      printf("\n >>> Test failure: 'hdmd' histo not found\n");
+      return -1;
+   }
+   if ((Int_t)(hdmd->GetEntries()) != 7525) {
+      printf("\n >>> Test failure: 'hdmd' histo: wrong number"
+             " of entries (%d: expected 7525) \n",(Int_t)(hdmd->GetEntries()));
+      return -1;
+   }
+   if (TMath::Abs((hdmd->GetMean() - 0.15512023) / 0.15512023) > 0.001) {
+      printf("\n >>> Test failure: 'hdmd' histo: wrong mean"
+             " (%f: expected 0.15512023) \n", hdmd->GetMean());
+      return -1;
+   }
+
+   PutPoint();
+   TH2F *h2 = dynamic_cast<TH2F*>(gProof->GetOutputList()->FindObject("h2"));
+   if (!h2) {
+      printf("\n >>> Test failure: 'h2' histo not found\n");
+      return -1;
+   }
+   if ((Int_t)(h2->GetEntries()) != 7525) {
+      printf("\n >>> Test failure: 'h2' histo: wrong number"
+             " of entries (%d: expected 7525) \n",(Int_t)(h2->GetEntries()));
+      return -1;
+   }
+   if (TMath::Abs((h2->GetMean() - 0.15245688) / 0.15245688) > 0.001) {
+      printf("\n >>> Test failure: 'h2' histo: wrong mean"
+             " (%f: expected 0.15245688) \n", h2->GetMean());
+      return -1;
+   }
+
+   // Done
+   PutPoint();
+   return 0;
+}
+
+//_____________________________________________________________________________
+Int_t PT_H1DataSet(void *)
+{
+   // Test run for the H1 analysis as a named dataset reading the data from HTTP
+
+   // Checking arguments
+   PutPoint();
+   if (!gProof) {
+      printf("\n >>> Test failure: no PROOF session found\n");
+      return -1;
+   }
+
+   // Name for the target dataset
+   const char *dsname = "h1http";
+
+   // Clear the list of query results
+   if (gProof->GetQueryResults()) gProof->GetQueryResults()->Clear();
+
+   // Process the dataset by name
+   PutPoint();
+   gProof->Process(dsname, "../tutorials/tree/h1analysis.C++");
+
+   // Make sure the query result is there
+   PutPoint();
+   TQueryResult *qr = 0;
+   if (!(qr = gProof->GetQueryResult())) {
+      printf("\n >>> Test failure: query result not found\n");
+      return -1;
+   }
+
+   // Make sure the number of processed entries is the one expected
+   PutPoint();
+   if (qr->GetEntries() != 283813) {
+      printf("\n >>> Test failure: wrong number of entries processed: %lld (expected 283813)\n", qr->GetEntries());
+      return -1;
+   }
+
+   // Make sure the output list is there
+   PutPoint();
+   if (!(gProof->GetOutputList())) {
+      printf("\n >>> Test failure: output list not found\n");
+      return -1;
+   }
+
+   // Check the 'hdmd' histo
+   PutPoint();
+   TH1F *hdmd = dynamic_cast<TH1F*>(gProof->GetOutputList()->FindObject("hdmd"));
+   if (!hdmd) {
+      printf("\n >>> Test failure: 'hdmd' histo not found\n");
+      return -1;
+   }
+   if ((Int_t)(hdmd->GetEntries()) != 7525) {
+      printf("\n >>> Test failure: 'hdmd' histo: wrong number"
+             " of entries (%d: expected 7525) \n",(Int_t)(hdmd->GetEntries()));
+      return -1;
+   }
+   if (TMath::Abs((hdmd->GetMean() - 0.15512023) / 0.15512023) > 0.001) {
+      printf("\n >>> Test failure: 'hdmd' histo: wrong mean"
+             " (%f: expected 0.15512023) \n", hdmd->GetMean());
+      return -1;
+   }
+
+   PutPoint();
+   TH2F *h2 = dynamic_cast<TH2F*>(gProof->GetOutputList()->FindObject("h2"));
+   if (!h2) {
+      printf("\n >>> Test failure: 'h2' histo not found\n");
+      return -1;
+   }
+   if ((Int_t)(h2->GetEntries()) != 7525) {
+      printf("\n >>> Test failure: 'h2' histo: wrong number"
+             " of entries (%d: expected 7525) \n",(Int_t)(h2->GetEntries()));
+      return -1;
+   }
+   if (TMath::Abs((h2->GetMean() - 0.15245688) / 0.15245688) > 0.001) {
+      printf("\n >>> Test failure: 'h2' histo: wrong mean"
+             " (%f: expected 0.15245688) \n", h2->GetMean());
+      return -1;
+   }
+
+   // Done
+   PutPoint();
+   return 0;
+}
+
+//_____________________________________________________________________________
+Int_t PT_DataSets(void *)
+{
+   // Test dataset registration, verification, usage, removal.
+   // Use H1 analysis files on HTTP as example
+
+   // Checking arguments
+   PutPoint();
+   if (!gProof) {
+      printf("\n >>> Test failure: no PROOF session found\n");
+      return -1;
+   }
+
+   // Cleanup the area
+   PutPoint();
+   TMap *dsm = gProof->GetDataSets();
+   if (!dsm) {
+      printf("\n >>> Test failure: could not retrieve map of datasets (even empty)!\n");
+      return -1;
+   }
+   if (dsm->GetSize() > 0) {
+      // Remove the datasets already registered
+      TIter nxd(dsm);
+      TObjString *os = 0;
+      while ((os = (TObjString *)nxd())) {
+         gProof->RemoveDataSet(os->GetName());
+      }
+      // Check the result
+      delete dsm;
+      dsm = gProof->GetDataSets();
+      if (!dsm || dsm->GetSize() > 0) {
+         printf("\n >>> Test failure: could not cleanup the dataset area! (%p)\n", dsm);
+         delete dsm;
+         return -1;
+      }
+   }
+   delete dsm;
+
+   // Create the file collection
+   PutPoint();
+   TFileCollection *fc = new TFileCollection();
+   fc->Add(new TFileInfo("http://root.cern.ch/files/h1/dstarmb.root"));
+   fc->Add(new TFileInfo("http://root.cern.ch/files/h1/dstarp1a.root"));
+   fc->Add(new TFileInfo("http://root.cern.ch/files/h1/dstarp1b.root"));
+   fc->Add(new TFileInfo("http://root.cern.ch/files/h1/dstarp2.root"));
+   fc->Update();
+
+   // Name for this dataset
+   const char *dsname = "h1http";
+
+   // Register the dataset
+   PutPoint();
+   gProof->RegisterDataSet(dsname, fc);
+   // Check the result
+   dsm = gProof->GetDataSets();
+   if (!dsm || dsm->GetSize() != 1) {
+      printf("\n >>> Test failure: could not register '%s' (%p)\n", dsname, dsm);
+      delete dsm;
+      return -1;
+   }
+   delete dsm;
+
+   // Test removal
+   PutPoint();
+   gProof->RemoveDataSet(dsname);
+   // Check the result
+   dsm = gProof->GetDataSets();
+   if (!dsm || dsm->GetSize() != 0) {
+      printf("\n >>> Test failure: could not cleanup '%s' (%p)\n", dsname, dsm);
+      delete dsm;
+      return -1;
+   }
+   delete dsm;
+
+   // Re-register the dataset
+   PutPoint();
+   gProof->RegisterDataSet(dsname, fc);
+   // Check the result
+   dsm = gProof->GetDataSets();
+   if (dsm->GetSize() != 1) {
+      printf("\n >>> Test failure: could not re-register '%s' (%p)\n", dsname, dsm);
+      delete dsm;
+      return -1;
+   }
+   delete dsm;
+
+   // Verify the dataset
+   PutPoint();
+   if (gProof->VerifyDataSet(dsname) != 0) {
+      printf("\n >>> Test failure: could not verify '%s'!\n", dsname);
+      return -1;
+   }
+
+   // Remove the file collection
+   delete fc;
+
+   // Done
+   PutPoint();
+   return 0;
+}
+
+//_____________________________________________________________________________
+Int_t PT_Packages(void *)
+{
+   // Test package clearing, uploading, enabling, removal.
+   // Use event.par as example.
+
+   // Checking arguments
+   PutPoint();
+   if (!gProof) {
+      printf("\n >>> Test failure: no PROOF session found\n");
+      return -1;
+   }
+
+   // Cleanup the area
+   PutPoint();
+   TList *packs = gProof->GetListOfPackages();
+   if (!packs) {
+      printf("\n >>> Test failure: could not retrieve list of packages (even empty)!\n");
+      return -1;
+   }
+   if (packs->GetSize() > 0) {
+      // Remove the packages already available
+      gProof->ClearPackages();
+      // Check the result
+      packs = gProof->GetListOfPackages();
+      if (!packs || packs->GetSize() > 0) {
+         printf("\n >>> Test failure: could not cleanup the package area!\n");
          return -1;
       }
    }
 
-   // Check the mean values
+   // Name and location for this package
+   const char *pack = "event";
+   const char *packpath = "../tutorials/proof/event.par";
+
+   // Upload the package
    PutPoint();
-   for (Int_t i=0; i < nhist; i++) {
-      Double_t ave = hist[i]->GetMean();
-      Double_t rms = hist[i]->GetRMS();
-      if (TMath::Abs(ave) > 5 * rms / TMath::Sqrt(hist[i]->GetEntries())) {
-         printf("\n >>> Test failure: 'h%d' histo: mean > 5 * RMS/Sqrt(N)\n", i);
-         return -1;
-      }
+   gProof->UploadPackage(packpath);
+   // Check the result
+   packs = gProof->GetListOfPackages();
+   if (!packs || packs->GetSize() != 1) {
+      printf("\n >>> Test failure: could not upload '%s'!\n", packpath);
+      return -1;
+   }
+
+   // Test cleanup
+   PutPoint();
+   gProof->ClearPackage(pack);
+   // Check the result
+   packs = gProof->GetListOfPackages();
+   if (!packs || packs->GetSize() != 0) {
+      printf("\n >>> Test failure: could not cleanup '%s'!\n", pack);
+      return -1;
+   }
+
+   // Re-upload the package
+   PutPoint();
+   gProof->UploadPackage(packpath);
+   // Check the result
+   packs = gProof->GetListOfPackages();
+   if (!packs || packs->GetSize() != 1) {
+      printf("\n >>> Test failure: could not re-upload '%s'!\n", packpath);
+      return -1;
+   }
+
+   // Enable the package
+   PutPoint();
+   gProof->EnablePackage(pack);
+   // Check the result
+   packs = gProof->GetListOfEnabledPackages();
+   if (!packs || packs->GetSize() != 1) {
+      printf("\n >>> Test failure: could not enable '%s'!\n", pack);
+      return -1;
+   }
+
+   // Done
+   PutPoint();
+   return 0;
+}
+
+//_____________________________________________________________________________
+Int_t PT_Event(void *)
+{
+   // Test run for the ProofEvent analysis (see tutorials)
+
+   // Checking arguments
+   PutPoint();
+   if (!gProof) {
+      printf("\n >>> Test failure: no PROOF session found\n");
+      return -1;
+   }
+
+   // Define the number of events
+   Long64_t nevt = 100000;
+
+   // Clear the list of query results
+   if (gProof->GetQueryResults()) gProof->GetQueryResults()->Clear();
+
+   // Process
+   PutPoint();
+   gProof->Process("../tutorials/proof/ProofEvent.C++", nevt);
+
+   // Make sure the query result is there
+   PutPoint();
+   TQueryResult *qr = 0;
+   if (!(qr = gProof->GetQueryResult())) {
+      printf("\n >>> Test failure: query result not found\n");
+      return -1;
+   }
+
+   // Make sure the number of processed entries is the one expected
+   PutPoint();
+   if (qr->GetEntries() != nevt) {
+      printf("\n >>> Test failure: wrong number of entries processed: %lld (expected %lld)\n",
+             qr->GetEntries(), nevt);
+      return -1;
+   }
+
+   // Make sure the output list is there
+   PutPoint();
+   if (!(gProof->GetOutputList())) {
+      printf("\n >>> Test failure: output list not found\n");
+      return -1;
+   }
+
+   // Check the 'histo'
+   PutPoint();
+   TH1F *histo = dynamic_cast<TH1F*>(gProof->GetOutputList()->FindObject("histo"));
+   if (!histo) {
+      printf("\n >>> Test failure: 'histo' not found\n");
+      return -1;
+   }
+
+   // Check the mean values
+   Double_t ave = histo->GetMean();
+   Double_t rms = histo->GetRMS();
+   if (TMath::Abs(ave - 50) > 5 * rms / TMath::Sqrt(histo->GetEntries())) {
+      printf("\n >>> Test failure: 'histo': mean > 5 * RMS/Sqrt(N)\n");
+      return -1;
    }
 
    // Done
