@@ -1,7 +1,7 @@
 # File: roottest/python/pickle/PyROOT_readingtests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 04/16/08
-# Last: 04/16/08
+# Last: 10/16/08
 
 """Pickle writing unit tests for PyROOT package."""
 
@@ -10,7 +10,8 @@ import pickle, cPickle
 from ROOT import *
 
 __all__ = [
-   'PickleReadingSimpleObjectsTestCase'
+   'PickleReadingSimpleObjectsTestCase',
+   'PickleReadingMemoryTestCase'
 ]
 
 gROOT.LoadMacro( "PickleTypes.C+" )
@@ -80,6 +81,22 @@ class PickleReadingSimpleObjectsTestCase( unittest.TestCase ):
 
       d = cPickle.load( self.in2 )
       __dodtest( self, d )
+
+
+### Pretend-write and read back an object and check refcounting ==============
+class PickleReadingMemoryTestCase( unittest.TestCase ):
+
+   def test1RefCountCheck( self ):
+      """Test reference counting of pickled object"""
+
+      self.assertEqual( SomeCountedClass.s_counter, 0 )
+      c1 = SomeCountedClass();
+      self.assertEqual( SomeCountedClass.s_counter, 1 )
+
+      c2 = pickle.loads( pickle.dumps( c1 ) )
+      self.assertEqual( SomeCountedClass.s_counter, 2 )
+      del c2, c1
+      self.assertEqual( SomeCountedClass.s_counter, 0 )
 
 
 ## actual test run

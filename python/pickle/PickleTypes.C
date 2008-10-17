@@ -42,3 +42,15 @@ struct SomeDataStruct {
    Char_t   Label[3];
    Int_t    NLabel;
 };
+
+
+class SomeCountedClass {
+public:
+   SomeCountedClass() { ++s_counter; }
+   ~SomeCountedClass() { --s_counter; }
+
+public:
+   static int s_counter;
+};
+
+int SomeCountedClass::s_counter = 0;
