@@ -326,8 +326,13 @@ namespace {
       TBufferFile buf( TBuffer::kRead,
           PyString_GET_SIZE( pybuf ), PyString_AS_STRING( pybuf ), kFALSE );
 
-      void* result = buf.ReadObjectAny( 0 );
-      return BindRootObject( result, TClass::GetClass( clname ) );
+      PyObject* result = BindRootObject( buf.ReadObjectAny( 0 ), TClass::GetClass( clname ) );
+      if ( result ) {
+      // this object is to be owned by the interpreter, assuming that the call
+      // originated from there
+         ((ObjectProxy*)result)->HoldOn();
+      }
+      return result;
    }
 
 //____________________________________________________________________________
