@@ -802,8 +802,8 @@ TDSetElement *TProofServ::GetNextPacket(Long64_t totalEntries)
          Error("GetNextPacket", "No progress status object");
          return 0;
       }
-      status->IncProcTime(realtime);
-      status->IncCPUTime(cputime);
+      status->SetProcTime(realtime);
+      status->SetCPUTime(cputime);
       req << status;
       status = 0; // status is owned by the player.
    } else {
