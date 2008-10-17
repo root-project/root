@@ -23,7 +23,11 @@ namespace ROOT
       bool        fEmbed;
       void*       fFunctionPtr;
 
-      TSchemaHelper(const TSchemaHelper &) {;} // Not implemented
+      TSchemaHelper(const TSchemaHelper &tsh) :
+       fTarget(tsh.fTarget), fSourceClass(tsh.fSourceClass),
+       fSource(tsh.fSource), fCode(tsh.fCode), fVersion(tsh.fVersion), fChecksum(tsh.fChecksum),
+       fInclude(tsh.fInclude), fEmbed(tsh.fEmbed), fFunctionPtr(tsh.fFunctionPtr) {}
+
       TSchemaHelper& operator=(const TSchemaHelper &) {return *this;} // Not implemented
    };
 }
