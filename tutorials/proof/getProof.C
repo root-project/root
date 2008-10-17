@@ -51,12 +51,11 @@ TProof *getProof(const char *url, Int_t nwrks, const char *dir, const char *opt 
 #else
 
    // Local url (use a special port to try to not disturb running daemons)
-   Int_t lportx = 11094;
-   Int_t lportp = 11093;
    url = (url && strlen(url) > 0) ? url : refloc;
    TUrl u(url);
    u.SetProtocol("proof");
-   u.SetPort(lportp);
+   Int_t lportp = u.GetPort();
+   Int_t lportx = lportp + 1;
    TString lurl = u.GetUrl();
 
    // Temp dir for tutorial daemons
