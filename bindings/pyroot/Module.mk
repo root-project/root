@@ -74,7 +74,7 @@ $(PYROOTLIB):   $(PYROOTO) $(PYROOTDO) $(ROOTPY) $(ROOTPYC) $(ROOTPYO) \
 		  "$(SOFLAGS)" libPyROOT.$(SOEXT) $@ \
 		  "$(PYROOTO) $(PYROOTDO)" \
 		  "$(ROOTULIBS) $(RPATH) $(ROOTLIBS) \
-		   $(PYTHONLIBDIR) $(PYTHONLIB) $(PYTHONLIBFLAGS)" ""
+		   $(PYTHONLIBDIR) $(PYTHONLIB)" "$(PYTHONLIBFLAGS)"
 ifeq ($(ARCH),win32)
 		cp -f bin/$(notdir $@) $(PYROOTPYD)
 endif
