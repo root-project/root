@@ -171,7 +171,7 @@ using namespace Cint::Internal;
          vstack[sp-1] = G__getitem("-1"); \
          sp++; \
          opr[op] = '*'; \
-         prec[op++] = G__PREC_MULT; \
+         prec[op++] = G__PREC_PWR; \
       } \
       else { \
          vstack[sp] = vstack[sp-1]; \
