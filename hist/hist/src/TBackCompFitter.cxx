@@ -19,11 +19,12 @@
 #include "TGraphErrors.h"
 #include "TGraph2DErrors.h"
 #include "TMultiGraph.h"
-#include "Fit/BinData.h"
 #include "HFitInterface.h"
 #include "Math/Minimizer.h"
 #include "Fit/BinData.h"
+#include "Fit/UnBinData.h"
 #include "Fit/PoissonLikelihoodFCN.h"
+#include "Fit/LogLikelihoodFCN.h"
 #include "Fit/Chi2FCN.h"
 #include "Fit/FcnAdapter.h"
 
@@ -51,7 +52,7 @@ TBackCompFitter::TBackCompFitter( ) :
    SetName("BCFitter");
 }
 
-TBackCompFitter::TBackCompFitter(ROOT::Fit::Fitter & fitter,ROOT::Fit::BinData * data) : 
+TBackCompFitter::TBackCompFitter(ROOT::Fit::Fitter & fitter,ROOT::Fit::FitData * data) : 
    fFitData(data),
    fMinimizer(0),
    fObjFunc(0)
@@ -116,8 +117,11 @@ Int_t TBackCompFitter::ExecuteCommand(const char *command, Double_t *args, Int_t
    // set also number of parameters in obj function
    DoSetDimension(); 
 
+   TString scommand(command); 
+   scommand.ToUpper();
+
    // MIGRAD 
-   if (strncmp(command,"MIG",3) == 0 || strncmp(command,"mig",3)  == 0) {
+   if (scommand.Contains("MIG")) {
       if (nargs > 0) nfcn = int ( args[0] );
       if (nargs > 1) edmval = args[1];
       if (!fObjFunc) { 
@@ -133,7 +137,7 @@ Int_t TBackCompFitter::ExecuteCommand(const char *command, Double_t *args, Int_t
       
    } 
    //Minimize
-   if (strncmp(command,"MINI",4) == 0 || strncmp(command,"mini",4)  == 0) {
+   if (scommand.Contains("MINI")) {
 
       if (nargs > 0) nfcn = int ( args[0] );
       if (nargs > 1) edmval = args[1];
@@ -147,7 +151,7 @@ Int_t TBackCompFitter::ExecuteCommand(const char *command, Double_t *args, Int_t
       return  (ret) ? 0 : -1;
    }
    //Simplex
-   if (strncmp(command,"SIM",3) == 0 || strncmp(command,"sim",3)  == 0) {
+   if (scommand.Contains("SIM")) {
       
       if (nargs > 0) nfcn = int ( args[0] );
       if (nargs > 1) edmval = args[1];
@@ -161,7 +165,7 @@ Int_t TBackCompFitter::ExecuteCommand(const char *command, Double_t *args, Int_t
       return  (ret) ? 0 : -1;
    }
    //SCan
-   if (strncmp(command,"SCA",3) == 0 || strncmp(command,"sca",3)  == 0) {
+   if (scommand.Contains("SCA")) {
       
       if (nargs > 0) nfcn = int ( args[0] );
       if (nargs > 1) edmval = args[1];
@@ -175,7 +179,7 @@ Int_t TBackCompFitter::ExecuteCommand(const char *command, Double_t *args, Int_t
       return  (ret) ? 0 : -1;
    }
    // MINOS 
-   else if (strncmp(command,"MINO",4) == 0 || strncmp(command,"mino",4)  == 0) {
+   else if (scommand.Contains("MINO"))   {
 
       if (fFitter.Config().MinosErrors() ) return 0; 
 
@@ -193,7 +197,7 @@ Int_t TBackCompFitter::ExecuteCommand(const char *command, Double_t *args, Int_t
 
    } 
    //HESSE
-   else if (strncmp(command,"HES",3) == 0 || strncmp(command,"hes",3)  == 0) {
+   else if (scommand.Contains("HES"))   {
 
       if (fFitter.Config().ParabErrors() ) return 0; 
 
@@ -210,14 +214,14 @@ Int_t TBackCompFitter::ExecuteCommand(const char *command, Double_t *args, Int_t
    } 
    
    // FIX 
-   else if (strncmp(command,"FIX",3) == 0 || strncmp(command,"fix",3)  == 0) {
+   else if (scommand.Contains("FIX"))   {
       for(int i = 0; i < nargs; i++) {
          FixParameter(int(args[i])-1);
       }
       return 0;
    } 
    // SET LIMIT (upper and lower)
-   else if (strncmp(command,"SET LIM",7) == 0 || strncmp(command,"set lim",7)  == 0) {
+   else if (scommand.Contains("SET LIM"))   {
       if (nargs < 3) { 
          Error("ExecuteCommand","Invalid parameters given in SET LIMIT");
          return -1; 
@@ -230,31 +234,37 @@ Int_t TBackCompFitter::ExecuteCommand(const char *command, Double_t *args, Int_t
       return 0; 
    } 
    // SET PRINT
-   else if (strncmp(command,"SET PRINT",9) == 0 || strncmp(command,"set print",9)  == 0) {
+   else if (scommand.Contains("SET PRIN"))   {
       if (nargs < 1) return -1;  
       fFitter.Config().MinimizerOptions().SetPrintLevel(int(args[0]) );
       return 0; 
    } 
    // SET ERR
-   else if (strncmp(command,"SET Err",7) == 0 || strncmp(command,"set err",7)  == 0) {
+   else if (scommand.Contains("SET ERR"))   {
       if (nargs < 1) return -1;  
       fFitter.Config().MinimizerOptions().SetPrintLevel(int( args[0]) );
       return 0; 
    } 
    // SET STRATEGY
-   else if (strncmp(command,"SET STR",7) == 0 || strncmp(command,"set str",7)  == 0) {
+   else if (scommand.Contains("SET STR"))   {
       if (nargs < 1) return -1;  
       fFitter.Config().MinimizerOptions().SetStrategy(int(args[0]) );
       return 0; 
    } 
    //SET GRAD (not impl.) 
-   else if (strncmp(command,"SET GRA",7) == 0 || strncmp(command,"set gra",7)  == 0) {
+   else if (scommand.Contains("SET GRA"))   {
       //     not yet available
       //     fGradient = true;
       return -1;
    } 
+   //SET NOW (not impl.) 
+   else if (scommand.Contains("SET NOW"))   {
+      //     no warning (works only for TMinuit)
+      //     fGradient = true;
+      return -1;
+   } 
    // CALL FCN
-   else if (strncmp(command,"CALL FCN",8) == 0 || strncmp(command,"call fcn",8)  == 0) {
+   else if (scommand.Contains("CALL FCN"))   {
       //     call fcn function (global pointer to free function)
 
       if (nargs < 1 || fFCN == 0 ) return -1;
@@ -270,7 +280,7 @@ Int_t TBackCompFitter::ExecuteCommand(const char *command, Double_t *args, Int_t
    } 
    else {
       // other commands passed 
-      Error("ExecuteCommand","Invalid command given");
+      Error("ExecuteCommand","Invalid or not supported command given %s",command);
       return -1;
    }
    
@@ -630,21 +640,25 @@ Int_t TBackCompFitter::SetParameter(Int_t ipar,const char *parname,Double_t valu
 //    f = (*(fitter.fObjFunc) )(x);
 // }
 
-void TBackCompFitter::SetMinimizerFunction(const ROOT::Fit::BinData * data) { 
+void TBackCompFitter::SetMinimizerFunction(const ROOT::Fit::FitData * data) { 
    // set objective function in minimizers function to re-create FCN from stored data object and fit options
-   // ROOT::Fit::BinData d(opt,range); 
-//    assert(GetObjectFit() );
-//    ROOT::Fit::FillData (d, (TH1*)(GetObjectFit() );  
-   //ROOT::Fit::BinData * data = dynamic_cast<ROOT::Fit::BinData *>(fFitData); 
    assert(data);
    ROOT::Math::IParamMultiFunction * func =  dynamic_cast<ROOT::Math::IParamMultiFunction *>((fFitter.Result().FittedFunction())->Clone());
    assert(func);
 
-   // should consider also gradient case
-   if (GetFitOption().Like ) 
-      fObjFunc = new ROOT::Fit::PoissonLikelihoodFCN<ROOT::Math::IMultiGenFunction>(*data, *func);
-   else
-      fObjFunc = new ROOT::Fit::Chi2FCN<ROOT::Math::IMultiGenFunction>(*data, *func);
+   // create fcn functions, should consider also gradient case
+   const ROOT::Fit::BinData * bindata = dynamic_cast<const ROOT::Fit::BinData *>(data); 
+   if (bindata) { 
+      if (GetFitOption().Like ) 
+         fObjFunc = new ROOT::Fit::PoissonLikelihoodFCN<ROOT::Math::IMultiGenFunction>(*bindata, *func);
+      else
+         fObjFunc = new ROOT::Fit::Chi2FCN<ROOT::Math::IMultiGenFunction>(*bindata, *func);
+   }
+   else { 
+      const ROOT::Fit::UnBinData * unbindata = dynamic_cast<const ROOT::Fit::UnBinData *>(data); 
+      assert(unbindata); 
+      fObjFunc = new ROOT::Fit::LogLikelihoodFCN<ROOT::Math::IMultiGenFunction>(*unbindata, *func);
+   }
 
    // recreate the minimizer
    fMinimizer = fFitter.Config().CreateMinimizer(); 
@@ -654,6 +668,7 @@ void TBackCompFitter::SetMinimizerFunction(const ROOT::Fit::BinData * data) {
    else 
       fMinimizer->SetFunction(*fObjFunc);
 } 
+
 
 
 void TBackCompFitter::SetFCN(void (*fcn)(Int_t &, Double_t *, Double_t &f, Double_t *, Int_t))

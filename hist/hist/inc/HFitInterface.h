@@ -13,9 +13,6 @@
 #ifndef ROOT_HFitInterface
 #define ROOT_HFitInterface
 
-#ifndef ROOT_Fit_BinData
-#include "Fit/BinData.h"
-#endif
 
 class TH1; 
 class TF1;
@@ -38,6 +35,8 @@ namespace ROOT {
       //class BinData; 
       class FitResult;
       class DataRange; 
+      class BinData;
+      class UnBinData; 
 
 #ifndef __CINT__  // does not link on Windows (why ??)
 
@@ -61,6 +60,15 @@ namespace ROOT {
        */
       int FitObject(TGraph2D * gr, TF1 *f1 , Foption_t & option , const ROOT::Math::MinimizerOptions & moption, const char *goption, ROOT::Fit::DataRange & range); 
 #endif
+
+      /** 
+          fit an unbin data set (from tree or from histogram buffer) 
+          using a TF1 pointer and fit options.
+          N.B. ownership of fit data is passed to the UnBinFit function which will be responsible of 
+          deleting the data after the fit. User calling this function MUST NOT delete UnBinData after 
+          calling it
+      */
+      int UnBinFit(ROOT::Fit::UnBinData * data, TF1 * f1 , Foption_t & option , const ROOT::Math::MinimizerOptions & moption); 
 
       /** 
           fill the data vector from a TH1. Pass also the TF1 function which is 
@@ -95,12 +103,6 @@ namespace ROOT {
        */ 
       void InitGaus(const ROOT::Fit::BinData & data, TF1 * f1 ); 
 
-      template <class FitObject> 
-      void InitGaus(FitObject * obj, TF1 * f1) { 
-         BinData dv; 
-         FillData(dv, obj); // no need to function 
-         InitGaus(dv, f1);
-      }
 
       /**
          compute confidence intervals at level cl for a fitted histogram h1 in a TGraphErrors gr

@@ -59,6 +59,9 @@ public:
    /// construct with default option and data range 
    FitData() {}
 
+   /// dummy virtual destructor
+   virtual ~FitData() {}
+
    /// construct passing options and default data range 
    FitData(const DataOptions & opt) : 
       fOptions(opt)

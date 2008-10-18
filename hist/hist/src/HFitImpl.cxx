@@ -14,6 +14,7 @@
 
 #include "Fit/Fitter.h"
 #include "Fit/BinData.h"
+#include "Fit/UnBinData.h"
 #include "HFitInterface.h"
 #include "Math/MinimizerOptions.h"
 
@@ -240,6 +241,13 @@ int HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const ROOT::Math
    if (!fitOption.Verbose) fitConfig.MinimizerOptions().SetPrintLevel(0); 
    else fitConfig.MinimizerOptions().SetPrintLevel(3); 
 
+   // check if Error option (run Hesse and Minos) then 
+   if (fitOption.Errors) { 
+      // run Hesse and Minos
+      fitConfig.SetParabErrors(true);
+      fitConfig.SetMinosErrors(true);
+   }
+
 
    // do fitting 
 
@@ -272,14 +280,7 @@ int HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const ROOT::Math
    if ( !fitok  && !fitOption.Quiet )
       Warning("Fit","Abnormal termination of minimization.");
    iret |= !fitok; 
-    
-   // chech if Minos or more options
-   if (fitOption.Errors) { 
-      // run Hesse and Minos
-      fitConfig.SetParabErrors(true);
-      fitConfig.SetMinosErrors(true);
-   }
-    
+        
 
    const ROOT::Fit::FitResult & fitResult = fitter->Result(); 
    // one could set directly the fit result in TF1
@@ -294,10 +295,6 @@ int HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const ROOT::Math
       if ( int( fitResult.Errors().size()) >= f1->GetNpar() ) 
          f1->SetParErrors( &(fitResult.Errors().front()) ); 
   
-      if (!fitResult.IsValid() ) iret = 1;
-   }
-   else {
-      iret = -1; 
    }
 
 //   - Store fitted function in histogram functions list and draw
@@ -501,9 +498,9 @@ void HFit::FitOptionsMake(const char *option, Foption_t &fitOption) {
    if (opt.Contains("LL")) fitOption.Like   = 2;
    if (opt.Contains("W")) fitOption.W1      = 1;
    if (opt.Contains("E")) fitOption.Errors  = 1;
-   if (opt.Contains("M")) fitOption.More    = 1;
    if (opt.Contains("R")) fitOption.Range   = 1;
    if (opt.Contains("G")) fitOption.Gradient= 1;
+   if (opt.Contains("M")) fitOption.More    = 1;
    if (opt.Contains("N")) fitOption.Nostore = 1;
    if (opt.Contains("0")) fitOption.Nograph = 1;
    if (opt.Contains("+")) fitOption.Plus    = 1;
@@ -525,6 +522,100 @@ void HFit::CheckGraphFitOptions(Foption_t & foption) {
    }
    return;
 } 
+
+// implementation of unbin fit function (defined in HFitInterface)
+
+int ROOT::Fit::UnBinFit(ROOT::Fit::UnBinData * fitdata, TF1 * fitfunc, Foption_t & fitOption , const ROOT::Math::MinimizerOptions & minOption) { 
+
+#ifdef DEBUG
+   printf("tree data size is %d \n",fitdata->Size());
+   for (unsigned int i = 0; i < fitdata->Size(); ++i) { 
+      if (fitdata->NDim() == 1) printf(" x[%d] = %f - value = %f \n", i,*(fitdata->Coords(i) ); 
+   }
+#endif   
+      
+   // create the fitter
+   std::auto_ptr<ROOT::Fit::Fitter> fitter = std::auto_ptr<ROOT::Fit::Fitter> (new ROOT::Fit::Fitter() );
+   ROOT::Fit::FitConfig & fitConfig = fitter->Config();
+
+
+   // set the fit function
+   // if option grad is specified use gradient (works only for 1D) 
+   // need to create a wrapper for an automatic  normalized TF1 ???
+   if ( fitOption.Gradient  && fitfunc->GetNdim() == 1) 
+      fitter->SetFunction(ROOT::Math::WrappedTF1(*fitfunc) );
+   else 
+      fitter->SetFunction(ROOT::Math::WrappedMultiTF1(*fitfunc) );
+
+   // parameter setting is done automaticaly in the Fitter class 
+   // need only to set limits
+   int npar = fitfunc->GetNpar();
+   for (int i = 0; i < npar; ++i) { 
+      ROOT::Fit::ParameterSettings & parSettings = fitConfig.ParSettings(i); 
+      double plow,pup; 
+      fitfunc->GetParLimits(i,plow,pup);  
+      // this is a limitation of TF1 interface - cannot fix a parameter to zero value
+      if (plow*pup != 0 && plow >= pup) {
+         parSettings.Fix();
+      }
+      else if (plow < pup ) 
+         parSettings.SetLimits(plow,pup);
+   }
+
+   fitConfig.SetMinimizerOptions(minOption); 
+
+   if (fitOption.Verbose)   fitConfig.MinimizerOptions().SetPrintLevel(3); 
+   if (fitOption.Quiet)   fitConfig.MinimizerOptions().SetPrintLevel(0); 
+  
+   // more 
+   if (fitOption.More)   fitConfig.SetMinimizer("Minuit","MigradImproved");
+
+   // chech if Minos or more options
+   if (fitOption.Errors) { 
+      // run Hesse and Minos
+      fitConfig.SetParabErrors(true);
+      fitConfig.SetMinosErrors(true);
+   }
+   
+   bool fitok = false; 
+   fitok = fitter->Fit(*fitdata); 
+ 
+   const ROOT::Fit::FitResult & fitResult = fitter->Result(); 
+   // one could set directly the fit result in TF1
+   int iret = fitResult.Status(); 
+   if (!fitResult.IsEmpty() ) { 
+      // set in fitfunc the result of the fit      
+      fitfunc->SetNDF(fitResult.Ndf() );
+      fitfunc->SetNumberFitPoints(fitdata->Size() );
+
+      fitfunc->SetParameters( &(fitResult.Parameters().front()) ); 
+      if ( int( fitResult.Errors().size()) >= fitfunc->GetNpar() ) 
+         fitfunc->SetParErrors( &(fitResult.Errors().front()) ); 
+  
+   }
+
+   // store result in the backward compatible VirtualFitter
+   TVirtualFitter * lastFitter = TVirtualFitter::GetFitter(); 
+   // pass ownership of fitdata to TBackCompFitter (should do also fitter)
+   TBackCompFitter * bcfitter = new TBackCompFitter(*fitter,fitdata);
+   bcfitter->SetFitOption(fitOption); 
+   //bcfitter->SetObjectFit(fTree);
+   bcfitter->SetUserFunc(fitfunc);
+   
+   if (lastFitter) delete lastFitter; 
+   TVirtualFitter::SetFitter( bcfitter ); 
+   
+   // print results
+//       if (!fitOption.Quiet) fitResult.Print(std::cout);
+//       if (fitOption.Verbose) fitResult.PrintCovMatrix(std::cout); 
+   
+   // use old-style for printing the results
+   if (fitOption.Verbose) bcfitter->PrintResults(2,0.);
+   else if (!fitOption.Quiet) bcfitter->PrintResults(1,0.);
+
+   return iret; 
+}
+
 
 // implementations of ROOT::Fit::FitObject functions (defined in HFitInterface) in terms of the template HFit::Fit
 
@@ -553,6 +644,10 @@ int ROOT::Fit::FitObject(TGraph2D * gr, TF1 *f1 , Foption_t & foption , const RO
     // TGraph2D fitting
    return HFit::Fit(gr,f1,foption,moption,goption,range); 
 }
+
+
+
+
 
 
 // implementations of DoFit member functions in data objects (TH1, TGrah, etc...)

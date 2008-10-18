@@ -129,7 +129,7 @@ public :
    /**
       destructor
    */
-   ~BinData(); 
+   virtual ~BinData(); 
 
    /**
       preallocate a data set given size and dimension

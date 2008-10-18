@@ -44,7 +44,7 @@ public:
 
    TBackCompFitter();
 
-   TBackCompFitter(ROOT::Fit::Fitter & fitter, ROOT::Fit::BinData * ); 
+   TBackCompFitter(ROOT::Fit::Fitter & fitter, ROOT::Fit::FitData * ); 
 
    virtual ~TBackCompFitter();
 
@@ -100,8 +100,7 @@ protected:
   
    void DoSetDimension(); 
    
-   void SetMinimizerFunction(const ROOT::Fit::BinData * data);
-   void SetMinimizerFunction(const ROOT::Fit::UnBinData * ) {}; // not yet impl.
+   void SetMinimizerFunction(const ROOT::Fit::FitData * data);
    
 private:
 
