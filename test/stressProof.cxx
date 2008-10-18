@@ -346,7 +346,8 @@ Int_t PT_Open(void *args)
    // Temp dir for PROOF tutorials
    PutPoint();
    TString tutdir;
-   tutdir.Form("%s/.proof-tutorial", gSystem->TempDirectory());
+   UserGroup_t *ug = gSystem->GetUserInfo(gSystem->GetUid());
+   tutdir.Form("%s/%s/.proof-tutorial", gSystem->TempDirectory(), ug->fUser.Data());
    if (gSystem->AccessPathName(tutdir)) {
       if (gSystem->mkdir(tutdir, kTRUE) != 0) {
          printf("\n >>> Test failure: could not assert/create the temporary directory"
