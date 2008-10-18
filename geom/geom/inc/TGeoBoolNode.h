@@ -38,6 +38,9 @@ enum EGeoBoolType {
    kGeoIntersection,
    kGeoSubtraction
 };
+private:
+   TGeoBoolNode(const TGeoBoolNode&); // Not implemented
+   TGeoBoolNode& operator=(const TGeoBoolNode&); // Not implemented
 
 protected:
    Int_t             fSelected;       // ! selected branch

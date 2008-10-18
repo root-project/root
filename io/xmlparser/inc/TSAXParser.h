@@ -46,6 +46,9 @@ class TSAXParser : public TXMLParser {
 friend class TSAXParserCallback;
 
 private:
+   TSAXParser(const TSAXParser&); // Not implemented
+   TSAXParser& operator=(const TSAXParser&); // Not implemented
+
    _xmlSAXHandler         *fSAXHandler;  // libxml2 SAX handler
 
    virtual Int_t           Parse();

@@ -55,6 +55,9 @@ public:
 };
 
 class TRootBrowser : public TGMainFrame, public TBrowserImp {
+private:
+   TRootBrowser(const TRootBrowser&); // Not implemented
+   TRootBrowser& operator=(const TRootBrowser&); // Not implemented
 
 protected:
 
