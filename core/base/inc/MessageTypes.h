@@ -36,7 +36,7 @@ enum EMessageTypes {
    kMESS_CINT            = 5,            //cint command follows
    kMESS_STREAMERINFO    = 6,            //TStreamerInfo object follows
    kMESS_PROCESSID       = 7,            //TProcessID object follows
-      
+
    //---- PROOF message opcodes (1000 - 1999)
    kPROOF_GROUPVIEW      = 1000,         //groupview follows
    kPROOF_STOP           = 1001,         //stop proof server
@@ -91,7 +91,8 @@ enum EMessageTypes {
    kPROOF_REALTIMELOG    = 1050,         //switch on/off real-time retrieval of log messages
    kPROOF_VERSARCHCOMP   = 1051,         //String with worker version/architecture/compiler follows
    kPROOF_ENDINIT        = 1052,         //signals end of initialization on worker
-   kPROOF_TOUCH          = 1053,         //Touch the client admin file
+   kPROOF_TOUCH          = 1053,         //touch the client admin file
+   kPROOF_FORK           = 1054,         //ask the worker to clone itself
 
    //---- ROOTD message opcodes (2000 - 2099)
    kROOTD_USER           = 2000,         //user id follows
