@@ -70,7 +70,7 @@ TMinuitMinimizer::TMinuitMinimizer(const char *  type ) :
    ROOT::Minuit::EMinimizerType algoType = ROOT::Minuit::kMigrad; 
    if (algoname == "simplex")   algoType = ROOT::Minuit::kSimplex; 
    if (algoname == "minimize" ) algoType = ROOT::Minuit::kCombined; 
-   if (algoname == "migrad_imp" ) algoType = ROOT::Minuit::kMigradImproved; 
+   if (algoname == "migradimproved" ) algoType = ROOT::Minuit::kMigradImproved; 
 
    fType = algoType; 
 }
@@ -302,6 +302,7 @@ bool TMinuitMinimizer::Minimize() {
 
    fUsed = true;
    fStatus = ierr; 
+   int minErrStatus = ierr;
 
    // run improved if needed
    if (ierr == 0 && fType == ROOT::Minuit::kMigradImproved) {
@@ -334,8 +335,9 @@ bool TMinuitMinimizer::Minimize() {
       fMinuit->GetParameter( i, fParams[i], fErrors[i]);
    }
    // get covariance matrix
-   // store global min results (only if minimization is OK)  
-   if (ierr == 0) { 
+   // store global min results (only if minimization is OK)
+   // ignore cases when Hesse or IMprove return error different than zero
+   if (minErrStatus == 0) { 
       fCovar.resize(fDim*fDim); 
       if (fNFree >= fDim) { // no fixed parameters 
          fMinuit->mnemat(&fCovar.front(), fDim); 
