@@ -64,20 +64,20 @@ void TGLPerspectiveCamera::Setup(const TGLBoundingBox & box, Bool_t reset)
       SetCenterVec(center.X(), center.Y(), center.Z());
    }
 
-   // At default FOV, the maximum dolly should just encapsulate the longest side of box with
-   // offset for next longetst side
+   // At default FOV, the dolly should be set so as to encapsulate the scene.
    TGLVector3 extents = box.Extents();
    Int_t sortInd[3];
    TMath::Sort(3, extents.CArr(), sortInd);
-   Double_t longest = extents[sortInd[0]];
-   Double_t nextLongest = extents[sortInd[1]];
+   Double_t size = TMath::Hypot(extents[sortInd[0]], extents[sortInd[1]]);
+   Double_t fov  = TMath::Min(fgFOVDefault, fgFOVDefault*fViewport.Aspect());
 
-   fDollyDefault  = longest/(2.0*tan(fgFOVDefault*TMath::Pi()/360));
-   fDollyDefault += nextLongest/2.0;
+   fDollyDefault  = size / (2.0*TMath::Tan(fov*TMath::Pi()/360));
    fDollyDistance = 0.002 * fDollyDefault;
 
    if (reset)
+   {
       Reset();
+   }
 }
 
 //______________________________________________________________________________

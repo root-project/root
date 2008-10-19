@@ -355,7 +355,7 @@ void TEveManager::FullRedraw3D(Bool_t resetCameras, Bool_t dropLogicals)
 {
    // Perform 3D redraw of all scenes and viewers.
 
-   fScenes ->RepaintAllScenes (fDropLogicals);
+   fScenes ->RepaintAllScenes (dropLogicals);
    fViewers->RepaintAllViewers(resetCameras, dropLogicals);
 }
 

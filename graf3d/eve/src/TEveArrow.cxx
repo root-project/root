@@ -17,37 +17,48 @@
 #include "TVirtualPad.h"
 #include "TVirtualViewer3D.h"
 
-
-// TEveElement class used for display of arrow.
+//______________________________________________________________________________
+//
+// TEveElement class used for display of a thick arrow.
 
 ClassImp(TEveArrow);
 
 //______________________________________________________________________________
 TEveArrow::TEveArrow(Float_t xVec, Float_t yVec, Float_t zVec,
-                     Float_t x0,   Float_t y0,   Float_t z0):
+                     Float_t xOrg, Float_t yOrg, Float_t zOrg):
    TEveElement(fColor),
    TNamed("TEveArrow", ""),
-   TAtt3D(),
-   TAttBBox(),
+   TAtt3D(), TAttBBox(),
 
-   fTubeR(0.02),
-   fConeR(0.04),
-   fConeL(0.08)
+   fTubeR(0.02), fConeR(0.04), fConeL(0.08),
+   fOrigin(xOrg, yOrg, zOrg), fVector(xVec, yVec, zVec)
 {
    // Constructor.
-
-   fVector.Set(xVec, yVec, zVec);
-   fOrigin.Set(x0, y0, z0);
+   // Org - starting point.
+   // Vec - vector from start to end of the arrow.
 }
 
 //______________________________________________________________________________
 void TEveArrow::ComputeBBox()
 {
-   // Compute bounding-box of the data.
+   // Compute bounding-box of the arrow.
+
+   TEveVector a, b;
+   fVector.OrthoNormBase(a, b);
+   Float_t r = TMath::Max(fTubeR, fConeR);
+   a *= r; b *= r;
+
+   TEveVector end(fOrigin + fVector);
 
    BBoxZero();
-   BBoxCheckPoint(fOrigin.fX, fOrigin.fY, fOrigin.fZ);
-   BBoxCheckPoint(fOrigin.fX+fVector.fX, fOrigin.fY+fVector.fY, fOrigin.fZ+fVector.fZ);
+   BBoxCheckPoint(fOrigin + a + b);
+   BBoxCheckPoint(fOrigin + a - b);
+   BBoxCheckPoint(fOrigin - a - b);
+   BBoxCheckPoint(fOrigin - a + b);
+   BBoxCheckPoint(end + a + b);
+   BBoxCheckPoint(end + a - b);
+   BBoxCheckPoint(end - a - b);
+   BBoxCheckPoint(end - a + b);
 }
 
 //______________________________________________________________________________

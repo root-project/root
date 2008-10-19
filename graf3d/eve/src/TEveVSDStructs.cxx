@@ -11,7 +11,6 @@
 
 #include "TEveVSDStructs.h"
 
-
 //==============================================================================
 // TEveVector
 //==============================================================================
@@ -40,6 +39,46 @@ Float_t TEveVector::Eta() const
    if (cosTheta*cosTheta < 1) return -0.5* TMath::Log( (1.0-cosTheta)/(1.0+cosTheta) );
    Warning("Eta","transverse momentum = 0, returning +/- 1e10");
    return (fZ >= 0) ? 1e10 : -1e10;
+}
+
+//______________________________________________________________________________
+void TEveVector::Normalize(Float_t length)
+{
+   // Normalize the vector to length if current length is non-zero.
+
+   Float_t m = Mag();
+   if (m != 0)
+   {
+      m = length / m;
+      fX *= m; fY *= m; fZ *= m;
+   }
+}
+
+//______________________________________________________________________________
+TEveVector TEveVector::Orthogonal() const
+{
+   // Returns an orthogonal vector (not normalized).
+
+   Float_t xx = fX < 0 ? -fX : fX;
+   Float_t yy = fY < 0 ? -fY : fY;
+   Float_t zz = fZ < 0 ? -fZ : fZ;
+   if (xx < yy) {
+      return xx < zz ? TEveVector(0,fZ,-fY) : TEveVector(fY,-fX,0);
+   } else {
+      return yy < zz ? TEveVector(-fZ,0,fX) : TEveVector(fY,-fX,0);
+   }
+}
+
+//______________________________________________________________________________
+void TEveVector::OrthoNormBase(TEveVector& a, TEveVector& b) const
+{
+   // Set vectors a and b to be normal to this and among themselves,
+   // both of length 1.
+
+   a = Orthogonal();
+   TMath::Cross(this->Arr(), a.Arr(), b.Arr());
+   a.Normalize();
+   b.Normalize();
 }
 
 //______________________________________________________________________________

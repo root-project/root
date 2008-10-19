@@ -42,7 +42,7 @@ protected:
 
 public:
    TEveArrow(Float_t xVec=0, Float_t yVec=0, Float_t zVec=1,
-             Float_t x0=0, Float_t y0=0, Float_t z0=0);
+             Float_t xOrg=0, Float_t yOrg=0, Float_t zOrg=0);
    virtual ~TEveArrow() {}
 
    void SetTubeR(Float_t x) { fTubeR = x; }

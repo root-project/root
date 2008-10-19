@@ -335,6 +335,9 @@ void TGLViewer::SetupCameras(Bool_t reset)
       fOrthoXOYCamera.Setup(box, reset);
       fOrthoXOZCamera.Setup(box, reset);
       fOrthoZOYCamera.Setup(box, reset);
+      fOrthoXnOYCamera.Setup(box, reset);
+      fOrthoXnOZCamera.Setup(box, reset);
+      fOrthoZnOYCamera.Setup(box, reset);
    }
 }
 
