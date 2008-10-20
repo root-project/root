@@ -178,7 +178,7 @@ class ProofTest : public TNamed {
 private:
    Int_t           fSeq;  // Sequential number for the test
    ProofTestFun_t  fFun;  // Function to be executed for the test
-   void           *fArgs; // Arguments to be passed tothe function
+   void           *fArgs; // Arguments to be passed to the function
 
 public:
    ProofTest(const char *n, Int_t seq, ProofTestFun_t f, void *a = 0)
@@ -230,6 +230,15 @@ typedef struct {            // Open
    const char *url;
    Int_t       nwrks;
 } PT_Open_Args_t;
+
+// Packetizer parameters
+typedef struct {
+   const char *fName;
+   Int_t fType;
+} PT_Packetizer_t;
+
+static PT_Packetizer_t gStd_New = { "TPacketizerAdaptive", 0 };
+static PT_Packetizer_t gStd_Old = { "TPacketizer", 0 };
 
 //_____________________________________________________________________________
 void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfile)
@@ -290,6 +299,8 @@ void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfil
    testList->Add(new ProofTest("H1: file collection processing", 6, &PT_H1FileCollection));
    // H1 analysis over HTTP by dataset name
    testList->Add(new ProofTest("H1: by-name processing", 7, &PT_H1DataSet));
+   // H1 analysis over HTTP: classic packetizer
+   testList->Add(new ProofTest("H1: by-name, TPacketizer", 7, &PT_H1DataSet, (void *)&gStd_Old));
    // Test of data set handling with the H1 http files
    testList->Add(new ProofTest("Package management with 'event'", 8, &PT_Packages));
    // Simple event analysis
@@ -672,7 +683,7 @@ Int_t PT_H1FileCollection(void *)
 }
 
 //_____________________________________________________________________________
-Int_t PT_H1DataSet(void *)
+Int_t PT_H1DataSet(void *arg)
 {
    // Test run for the H1 analysis as a named dataset reading the data from HTTP
 
@@ -681,6 +692,17 @@ Int_t PT_H1DataSet(void *)
    if (!gProof) {
       printf("\n >>> Test failure: no PROOF session found\n");
       return -1;
+   }
+
+   // Are we asked to change the packetizer strategy?
+   if (arg) {
+      PT_Packetizer_t *strategy = (PT_Packetizer_t *)arg;
+      if (strcmp(strategy->fName, "TPacketizerAdaptive")) {
+         gProof->SetParameter("PROOF_Packetizer", strategy->fName);
+      } else {
+         if (strategy->fType != 1)
+            gProof->SetParameter("PROOF_PacketizerStrategy", strategy->fType);
+      }
    }
 
    // Name for the target dataset
@@ -692,6 +714,10 @@ Int_t PT_H1DataSet(void *)
    // Process the dataset by name
    PutPoint();
    gProof->Process(dsname, "../tutorials/tree/h1analysis.C++");
+
+   // Restore settings
+   gProof->DeleteParameters("PROOF_Packetizer");
+   gProof->DeleteParameters("PROOF_PacketizerStrategy");
 
    // Make sure the query result is there
    PutPoint();
