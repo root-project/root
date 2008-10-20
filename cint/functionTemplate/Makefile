@@ -40,12 +40,12 @@ reflexrun.log: $(RFLXDICT_LIB) reflexrun.C
 	$(CMDECHO)$(CALLROOTEXE) -l -b -q $(@:.log=.C) > $@ 2>&1 || ( cat $@ && false )
 
 pythoncintrun.log: testcint.py t_h.$(DllSuf)
-	$(CMDECHO)$(PYTHON) testcint.py > $@ 2>&1 || ( cat $@ && false )
+	$(CMDECHO)python testcint.py > $@ 2>&1 || ( cat $@ && false )
 
 pythonreflexrun.log: $(RFLXDICT_LIB) testreflex.py
-	$(CMDECHO)$(PYTHON) testreflex.py > $@ 2>&1 || ( cat $@ && false )
+	$(CMDECHO)python testreflex.py > $@ 2>&1 || ( cat $@ && false )
 
 t_rflx.cpp: t.h selection.xml
-	$(CMDECHO)genreflex t.h -s selection.xml --gccxmlopt="--gccxml-cxxflags -U__GXX_WEAK__" --gccxmlpath=$(dir $(HAVEGCCXML)) > $@_build.log 2>&1
+	$(CMDECHO)genreflex t.h -s selection.xml --gccxmlopt="--gccxml-cxxflags -U__GXX_WEAK__" > $@_build.log 2>&1
 
 $(RFLXDICT_LIB): t_rflx.cpp
