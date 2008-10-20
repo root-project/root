@@ -28,6 +28,7 @@
 #include "TSocket.h"
 #include "Riostream.h"
 #include "TGHtmlBrowser.h"
+#include "TGText.h"
 
 #ifdef WIN32
 #include "TWin32SplashThread.h"
@@ -46,6 +47,7 @@ ClassImp(TGHtmlBrowser)
 
 enum EMyMessageTypes {
    M_FILE_OPEN,
+   M_FILE_SAVEAS,
    M_FILE_BROWSE,
    M_FILE_EXIT,
    M_FAVORITES_ADD,
@@ -123,7 +125,9 @@ TGHtmlBrowser::TGHtmlBrowser(const char *filename, const TGWindow *p, UInt_t w, 
 
    fMenuFile = new TGPopupMenu(gClient->GetDefaultRoot());
    fMenuFile->AddEntry(" &Open...            Ctrl+O", M_FILE_OPEN, 0,
-                       gClient->GetPicture("bld_open.png"));
+                       gClient->GetPicture("ed_open.png"));
+   fMenuFile->AddEntry(" Save &As...       Ctrl+A", M_FILE_SAVEAS, 0,
+                       gClient->GetPicture("ed_save.png"));
    fMenuFile->AddEntry(" &Browse...         Ctrl+B", M_FILE_BROWSE);
    fMenuFile->AddSeparator();
    fMenuFile->AddEntry(" E&xit                   Ctrl+Q", M_FILE_EXIT, 0,
@@ -458,6 +462,22 @@ Bool_t TGHtmlBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                         if (fi.fFilename) {
                            Selected(StrDup(Form("file://%s",
                               gSystem->UnixPathName(fi.fFilename))));
+                        }
+                     }
+                     break;
+
+                  case M_FILE_SAVEAS:
+                     {
+                        static TString sdir(".");
+                        TGFileInfo fi;
+                        fi.fFileTypes = filetypes;
+                        fi.fIniDir    = StrDup(sdir);
+                        new TGFileDialog(fClient->GetRoot(), this,
+                                         kFDSave, &fi);
+                        sdir = fi.fIniDir;
+                        if (fi.fFilename) {
+                           TGText txt(fHtml->GetText());
+                           txt.Save(gSystem->UnixPathName(fi.fFilename));
                         }
                      }
                      break;
