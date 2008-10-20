@@ -274,7 +274,7 @@ Bool_t TRootContainer::HandleButton(Event_t *event)
 
    if (event->fCode == kButton4) {
       //scroll up
-      newpos = y - page;
+      newpos = fCanvas->fCanvasWindow->GetVsbPosition() - page;
       if (newpos < 0) newpos = 0;
       fCanvas->fCanvasWindow->SetVsbPosition(newpos);
 //      return kTRUE;
