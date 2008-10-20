@@ -32,6 +32,8 @@ private:
 protected:
    TEveCaloLego*  fCalo;
 
+   Color_t        fMainColor;
+
    Bool_t         fShowCamera;
    Bool_t         fShowPlane;
 
@@ -44,7 +46,7 @@ protected:
    Float_t        fSliderVal;
 
    // event handling
-   Int_t          fActiveID;
+   Int_t           fActiveID;
    Color_t        fActiveCol;
 
    virtual  void   RenderPlane(TGLRnrCtx& rnrCtx);

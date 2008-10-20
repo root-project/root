@@ -97,10 +97,9 @@ void MakeCaloLego(TEveCaloData* data)
    lego->RefMainTrans().SetScale(sc, sc, sc);
    // overlay lego1
    TEveLegoOverlay* overlay = new TEveLegoOverlay();
-   overlay->SetShowPlane(kFALSE);
+   overlay->SetShowPlane(kTRUE);
    overlay->SetShowPerspective(kTRUE);
    overlay->RefAxisAttrib().SetLabelSize(0.02);
-   overlay->RefAxisAttrib().SetLabelColor(kMagenta);
    v->AddOverlayElement(overlay);
    overlay->SetCaloLego(lego);
    gEve->AddElement(overlay, s2);

@@ -33,13 +33,15 @@ protected:
    EMode          fPerspectiveMode;
 
    TGLAxisPainter fAxisPainter;
-   TGLAxisAttrib  fAxisAtt;
+   TGLAxisAttrib   fAxisAtt;
 
-   Float_t        fAxisExtend;
-   TGLPlane       fExternalRefPlane;
-   Bool_t         fUseExternalRefPlane;
+   Float_t          fAxisExtend;
+   TGLPlane      fExternalRefPlane;
+   Bool_t           fUseExternalRefPlane;
 
-   void    RenderPlaneIntersect(TGLRnrCtx& rnrCtx, TGLVertex3 &v, const TGLFont &font);
+  Double_t         fFrustum[4]; // cached
+
+   void    RenderPlaneIntersect(TGLRnrCtx& rnrCtx, const TGLFont &font);
    void    RenderAxis(TGLRnrCtx& rnrCtx);
    void    RenderBar(TGLRnrCtx& rnrCtx, const TGLFont &font);
 

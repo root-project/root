@@ -111,9 +111,9 @@ void TEveProjectionAxesGL::DrawScales(Bool_t horizontal, TGLFont& font, Float_t 
    //  align labels
    TGLFont::ETextAlign_e align;
    if (horizontal)
-      align = (tmSize > 0) ? TGLFont::kCenterUp : TGLFont::kCenterDown;
+      align = (tmSize < 0) ? TGLFont::kCenterUp : TGLFont::kCenterDown;
    else
-      align = (tmSize > 0) ? TGLFont::kRight : TGLFont::kLeft;
+      align = (tmSize < 0) ? TGLFont::kRight : TGLFont::kLeft;
    Float_t llx, lly, llz, urx, ury, urz;
 
 

@@ -49,71 +49,79 @@ TGLCameraOverlay::TGLCameraOverlay(Bool_t showOrtho, Bool_t showPersp) :
    fAxisAtt.SetNdivisions(810);
 }
 
-
 //______________________________________________________________________________
-void TGLCameraOverlay::RenderPlaneIntersect(TGLRnrCtx& rnrCtx, TGLVertex3 &v, const TGLFont &font)
+void TGLCameraOverlay::RenderPlaneIntersect(TGLRnrCtx& rnrCtx, const TGLFont &font)
 {
    // Print corss section coordinates in top right corner of screen.
 
-   // get print format
-   Float_t m = TMath::Sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2] );
-   fAxisAtt.SetRng(-m, m);
-   fAxisPainter.SetAxisAtt(&fAxisAtt);
-   fAxisPainter.SetTextFormat(m);
-   char l0[100];
-   char l1[100];
-   char l2[100];
-   fAxisPainter.FormAxisValue(v[0], l0);
-   fAxisPainter.FormAxisValue(v[1], l1);
-   fAxisPainter.FormAxisValue(v[2], l2);
-   const char* txt = Form("(%s, %s, %s)", l0, l1, l2);
+   TGLCamera &cam = rnrCtx.RefCamera();
+   // get eye line
+   const TGLMatrix& mx =  cam.GetCamBase() * cam.GetCamTrans();
+   TGLVertex3 d   = mx.GetTranslation();
+   TGLVertex3 p = d + mx.GetBaseVec(1);
+   TGLLine3  line(d, p);
+   // get ref plane
+   const TGLPlane rp = (fUseExternalRefPlane) ? fExternalRefPlane :
+      TGLPlane(cam.GetCamBase().GetBaseVec(3), TGLVertex3());
+   // get intersection
+   std::pair<Bool_t, TGLVertex3> intersection;
+   intersection = Intersection(rp, line, kTRUE);
 
-   // get font bounding box
-   Float_t bb[6];
-   font.BBox(txt, bb[0], bb[1], bb[2], bb[3], bb[4], bb[5]);
-   TGLRect &vp = rnrCtx.GetCamera()->RefViewport();
-   Float_t off = fAxisAtt.GetAbsLabelFontSize()*0.25 ;
-   Float_t x =  vp.Width()  -bb[3] -off;
-   Float_t y =  vp.Height() -bb[4] -off;
+   if (intersection.first)
+   {
+      TGLVertex3 v = intersection.second;
+      // get print format
+      Float_t m = TMath::Sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2] );
+      fAxisAtt.SetRng(-m, m);
+      fAxisPainter.SetAxisAtt(&fAxisAtt);
+      fAxisPainter.SetTextFormat(m);
+      char l0[100];
+      char l1[100];
+      char l2[100];
+      fAxisPainter.FormAxisValue(v[0], l0);
+      fAxisPainter.FormAxisValue(v[1], l1);
+      fAxisPainter.FormAxisValue(v[2], l2);
+      const char* txt = Form("(%s, %s, %s)", l0, l1, l2);
 
+      TGLUtil::Color(fAxisAtt.GetLabelColor());
+      glMatrixMode(GL_PROJECTION);
+      glPushMatrix();
+      glLoadIdentity();
 
-   // background polygon
-   TGLViewer* vw = dynamic_cast<TGLViewer*> (rnrCtx.GetViewer());
-   TGLUtil::Color(vw->GetClearColor());
-   Float_t x0 = (x-off)/vp.Width();
-   Float_t y0 = (y-off)/vp.Height();
-   TGLCapabilitySwitch poly(GL_POLYGON_OFFSET_FILL, kTRUE);
-   glPolygonOffset(0.1, 1); // move polygon back
-   glBegin(GL_POLYGON);
-   glVertex2f(x0, y0);
-   glVertex2f(1 , y0);
-   glVertex2f(1 , 1);
-   glVertex2f(x0, 1);
-   glEnd();
+      glMatrixMode(GL_MODELVIEW);
+      glPushMatrix();
+      glLoadIdentity();
 
-   // render font
-   TGLUtil::Color(fAxisAtt.GetLabelColor());
-   font.RenderBitmap(txt, x, y, 0,fAxisAtt.GetTextAlign());
+      Float_t bb[6];
+      font.BBox(txt, bb[0], bb[1], bb[2], bb[3], bb[4], bb[5]);
+      TGLRect &vp = rnrCtx.GetCamera()->RefViewport();
+      Float_t off = 1.5*bb[4];
+      off /= vp.Height() ;
+      font.RenderBitmap(txt, 1 -off, 1-off, 0,TGLFont::kRight);
 
-   // render cross
-   Float_t ce = 0.15; //empty space
-   Float_t w = 0.02;  //realtice size
-   glBegin(GL_LINES);
-   glVertex2f(0.5 +w*ce, 0.5);
-   glVertex2f(0.5 +w,    0.5);
+      // render cross
+      Float_t w = 0.02;  // cross size
+      Float_t ce = 0.15; // empty space
+      glBegin(GL_LINES);
+      glVertex2f(0 +w*ce, 0);
+      glVertex2f(0 +w,    0);
 
-   glVertex2f(0.5 -w*ce, 0.5);
-   glVertex2f(0.5 -w, 0.5);
+      glVertex2f(0 -w*ce, 0);
+      glVertex2f(0 -w, 0);
 
-   Float_t h = 0.02*vp.Width()/vp.Height();
-   glVertex2f(0.5, 0.5 +h*ce);
-   glVertex2f(0.5, 0.5 +h);
+      Float_t h = w*vp.Width()/vp.Height();
+      glVertex2f(0, 0 +h*ce);
+      glVertex2f(0, 0 +h);
 
-   glVertex2f(0.5, 0.5 -h*ce);
-   glVertex2f(0.5, 0.5 -h);
+      glVertex2f(0, 0 -h*ce);
+      glVertex2f(0, 0 -h);
+      glEnd();
 
-   glEnd();
-
+      glPopMatrix();
+      glMatrixMode(GL_PROJECTION);
+      glPopMatrix();
+      glMatrixMode(GL_MODELVIEW);
+   }
 }
 
 //______________________________________________________________________________
@@ -121,62 +129,54 @@ void TGLCameraOverlay::RenderAxis(TGLRnrCtx& rnrCtx)
 {
    // Draw axis on four edges.
 
-   Float_t l =  -rnrCtx.GetCamera()->FrustumPlane(TGLCamera::kLeft).D();
-   Float_t r =   rnrCtx.GetCamera()->FrustumPlane(TGLCamera::kRight).D();
-   Float_t t =   rnrCtx.GetCamera()->FrustumPlane(TGLCamera::kTop).D();
-   Float_t b =  -rnrCtx.GetCamera()->FrustumPlane(TGLCamera::kBottom).D();
+   TGLCamera &cam = rnrCtx.RefCamera();
+   Int_t minPix = 5; // minimum tick-mark size in pixels
+   Float_t relTM = 0.015;  // tick-mark size relative to axis range
+   Float_t tms;
+   TGLVertex3 worldRef;
 
-   // relative tick-kmark offset in x and y direction
-   Float_t tms = 0.01;
-
-   glPushMatrix();
-   glScalef(1./(r-l), 1./(t-b), 1);
    // vertical
-   {
-      fAxisAtt.RefTMOff(0).Set(0,0,0);
-      fAxisAtt.RefDir().Set(0, 1, 0);
-      Float_t off = (t-b)*0.5*(1-fAxisExtend);
-      fAxisAtt.SetRng(b+off, t-off);
-      fAxisAtt.RefTMOff(0).X() = (t-b)*tms;
-
-      // left
-      glPushMatrix();
-      glTranslatef(0, -b, 0);
-      fAxisAtt.SetTextAlign(TGLFont::kRight);
-      fAxisPainter.Paint(rnrCtx, fAxisAtt);
-      glPopMatrix();
-
-      // right
-      glPushMatrix();
-      glTranslatef(r-l, -b, 0);
-      fAxisAtt.SetTextAlign(TGLFont::kLeft);
-      fAxisAtt.RefTMOff(0).X() = -fAxisAtt.RefTMOff(0).X();
-      fAxisPainter.Paint(rnrCtx, fAxisAtt);
-      glPopMatrix();
-   }
+   fAxisAtt.RefDir().Set(0, 1, 0);
+   Float_t off = (fFrustum[3]-fFrustum[1])*0.5*(1-fAxisExtend);
+   fAxisAtt.SetRng(fFrustum[1]+off, fFrustum[3]-off);
+   tms = (fFrustum[2]-fFrustum[0])*relTM;
+   TGLVertex3 hOff = cam.ViewportDeltaToWorld(worldRef, minPix, 0);
+   if (tms > hOff.X()) tms = hOff.X();
+   // left
+   glPushMatrix();
+   glTranslated(fFrustum[0], 0, 0);
+   fAxisAtt.RefTMOff(0).Set(tms, 0, 0);
+   fAxisAtt.SetTextAlign(TGLFont::kLeft);
+   fAxisPainter.Paint(rnrCtx, fAxisAtt);
+   glPopMatrix();
+   // right
+   glPushMatrix();
+   glTranslatef(fFrustum[2], 0, 0);
+   fAxisAtt.SetTextAlign(TGLFont::kRight);
+   fAxisAtt.RefTMOff(0).Set(-tms, 0, 0);
+   fAxisPainter.Paint(rnrCtx, fAxisAtt);
+   glPopMatrix();
 
    // horizontal
-   {
-      fAxisAtt.RefTMOff(0).Set(0,0,0);
-      fAxisAtt.RefDir().Set(1, 0, 0);
-      fAxisAtt.RefTMOff(0).Y() = (t-b)*tms;
-
-      Float_t off = (r-l)*0.5*(1-fAxisExtend);
-      fAxisAtt.SetRng(l+off, r-off);
-      // bottom
-      glPushMatrix();
-      glTranslatef(-l, 0, 0);
-      fAxisAtt.SetTextAlign(TGLFont::kCenterUp);
-      fAxisPainter.Paint(rnrCtx, fAxisAtt);
-      glPopMatrix();
-      // top
-      glPushMatrix();
-      glTranslatef(-l, t-b, 0);
-      fAxisAtt.SetTextAlign(TGLFont::kCenterDown);
-      fAxisAtt.RefTMOff(0).Y() = - fAxisAtt.RefTMOff(0).Y();
-      fAxisPainter.Paint(rnrCtx, fAxisAtt);
-      glPopMatrix();
-   }
+   fAxisAtt.RefDir().Set(1, 0, 0);
+   off = (fFrustum[2]-fFrustum[0])*0.5*(1-fAxisExtend);
+   fAxisAtt.SetRng(fFrustum[0]+off, fFrustum[2]-off);
+   tms = (fFrustum[3]-fFrustum[1])*relTM;
+   TGLVertex3 vOff = cam.ViewportDeltaToWorld(worldRef,  0, minPix);
+   if (tms > vOff.Y()) tms = vOff.Y();
+   // bottom
+   glPushMatrix();
+   glTranslatef(0, fFrustum[1], 0);
+   fAxisAtt.SetTextAlign(TGLFont::kCenterDown);
+   fAxisAtt.RefTMOff(0).Set( 0, tms,  0);
+   fAxisPainter.Paint(rnrCtx, fAxisAtt);
+   glPopMatrix();
+   // top
+   glPushMatrix();
+   glTranslatef(0, fFrustum[3], 0);
+   fAxisAtt.SetTextAlign(TGLFont::kCenterUp);
+   fAxisAtt.RefTMOff(0).Set( 0, -tms,  0);
+   fAxisPainter.Paint(rnrCtx, fAxisAtt);
    glPopMatrix();
 }
 
@@ -185,42 +185,40 @@ void TGLCameraOverlay::RenderBar(TGLRnrCtx&  rnrCtx, const TGLFont &font)
 {
    // Show frustum size with fixed screen line length and printed value.
 
-   TGLCamera &cam = rnrCtx.RefCamera();
-   Float_t barsize= 0.14;
-
    // factors 10, 5 and 2 are allowed
-   Double_t wfrust     = cam.FrustumPlane(TGLCamera::kLeft).D() + cam.FrustumPlane(TGLCamera::kRight).D();
-   Double_t barsizePix  = barsize*wfrust;
-   Int_t exp = (Int_t) TMath::Floor(TMath::Log10(barsizePix));
-   Double_t fact = barsizePix/TMath::Power(10, exp);
-   Float_t barw;
+   Double_t wfrust     = fFrustum[2]-fFrustum[0];
+   Float_t barsize= 0.14* wfrust;
+   Int_t exp = (Int_t) TMath::Floor(TMath::Log10(barsize));
+   Double_t fact = barsize/TMath::Power(10, exp);
+   Double_t red;
    if (fact > 5)
    {
-      barw = 5*TMath::Power(10, exp);
+      red = 5*TMath::Power(10, exp);
    }
-   else if (fact > 2) {
-      barw = 2*TMath::Power(10, exp);
-   } else {
-      barw = TMath::Power(10, exp);
+   else if (fact > 2)
+   {
+      red = 2*TMath::Power(10, exp);
+   } else
+   {
+      red = TMath::Power(10, exp);
    }
-   Double_t red = barw/wfrust;
-
 
    TGLUtil::Color(kWhite);
-   const char* txt = Form("%.*f", (exp < 0) ? -exp : 0, barw);
+   const char* txt = Form("%.*f", (exp < 0) ? -exp : 0, red);
    Float_t bb[6];
    font.BBox(txt, bb[0], bb[1], bb[2], bb[3], bb[4], bb[5]);
    TGLRect &vp = rnrCtx.GetCamera()->RefViewport();
+   Double_t mH = (fFrustum[3]-fFrustum[1])*bb[4]/vp.Height();
+   glPushMatrix();
+   glTranslatef(fFrustum[2] -barsize, fFrustum[3] - (mH*1.5), 0);
+   glRasterPos2i(0,0);
+   font.Render(txt);
+   glPopMatrix();
 
    glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT);
-   glPushMatrix();
-   Float_t off = barsize*0.1;
-   glTranslatef(1-barsize -off, 1 -off -bb[4]/vp.Height(), 0);
-   off = barsize*0.05;
-   font.RenderBitmap(txt, 0.2, 0.2, 0, fAxisAtt.GetTextAlign());
-   glTranslatef(-off, -off, 0);
    glLineWidth(2.);
-   Double_t mH = barsize*0.1;
+   glPushMatrix();
+   glTranslatef (fFrustum[2] - 1.1*barsize,  fFrustum[3] - 2.1*mH, 0);
    glBegin(GL_LINES);
    // horizontal static
    glVertex3d(red, 0.,0.);
@@ -249,47 +247,22 @@ void TGLCameraOverlay::Render(TGLRnrCtx& rnrCtx)
    // Display coodinates info of current frustum.
 
    TGLCamera &cam = rnrCtx.RefCamera();
-
-   if ((cam.IsPerspective()  && ! fShowPerspective) ||
+   if ( rnrCtx.Selection() || (cam.IsPerspective()  && ! fShowPerspective) ||
        (cam.IsOrthographic() && ! fShowOrthographic))
       return;
 
-   EMode mode = cam.IsOrthographic() ? fOrthographicMode : fPerspectiveMode;
-
-   // get intersection point with original camera
-   std::pair<Bool_t, TGLVertex3> intersection;
-   if (mode == kPlaneIntersect)
-   {
-      // get eye line
-      const TGLMatrix& mx =  cam.GetCamBase() * cam.GetCamTrans();
-      TGLVertex3 d   = mx.GetTranslation();
-      TGLVertex3 p = d + mx.GetBaseVec(1);
-      TGLLine3  line(d, p);
-
-      // get ref plane
-      const TGLPlane rp = (fUseExternalRefPlane) ? fExternalRefPlane :
-         TGLPlane(cam.GetCamBase().GetBaseVec(3), TGLVertex3());
-
-      // get intersection
-      intersection = Intersection(rp, line, kTRUE);
-   }
-
-   // reset modelview and persective matrix
-   glMatrixMode(GL_PROJECTION);
-   glPushMatrix();
-   glLoadIdentity();
-   if (rnrCtx.Selection())
-   {
-      TGLRect rect(*rnrCtx.GetPickRectangle());
-      rnrCtx.GetCamera()->WindowToViewport(rect);
-      gluPickMatrix(rect.X(), rect.Y(),
-                    rect.Width(), rect.Height(), cam.RefViewport().CArr());
-   }
-   glMatrixMode(GL_MODELVIEW);
-   glPushMatrix();
-   glLoadIdentity();
-   glScalef(2, 2, 1); // normalised coordinates
-   glTranslatef(-0.5, -0.5, 0);
+   const GLdouble *pm = rnrCtx.RefCamera().RefLastNoPickProjM().CArr();
+   GLdouble mm[16];
+   GLint    vp[4];
+   glGetDoublev(GL_MODELVIEW_MATRIX,  mm);
+   glGetIntegerv(GL_VIEWPORT, vp);
+   GLdouble l, r, t, b, z;
+   gluUnProject(vp[0]+0.5, vp[1]+0.5, 0,  mm, pm, vp, &l, &b, &z);
+   gluUnProject(vp[2]-0.5, vp[3]-0.5, 0,  mm, pm, vp, &r, &t, &z);
+   fFrustum[0]=l;
+   fFrustum[1]=b;
+   fFrustum[2]=r;
+   fFrustum[3]=t;
 
    // font size
    Int_t fs = TGLFontManager::GetFontSize(cam.RefViewport().Height()*fAxisAtt.GetLabelSize());
@@ -299,22 +272,15 @@ void TGLCameraOverlay::Render(TGLRnrCtx& rnrCtx)
    rnrCtx.RegisterFont(fs, fAxisAtt.GetLabelFontName(), TGLFont::kPixmap, font);
    TGLCapabilitySwitch lights_off(GL_LIGHTING, kFALSE);
 
-   switch (mode)
+   if (cam.IsOrthographic())
    {
-      case kPlaneIntersect:
-         if (intersection.first)
-            RenderPlaneIntersect(rnrCtx, intersection.second, font);
-         break;
-      case kBar:
+      if (fOrthographicMode == kBar)
          RenderBar(rnrCtx, font);
-         break;
-      case kAxis:
+      else
          RenderAxis(rnrCtx);
-         break;
-   };
-
-   glPopMatrix();
-   glMatrixMode(GL_PROJECTION);
-   glPopMatrix();
-   glMatrixMode(GL_MODELVIEW);
+   }
+   else
+   {
+      RenderPlaneIntersect(rnrCtx, font);
+   }
 }

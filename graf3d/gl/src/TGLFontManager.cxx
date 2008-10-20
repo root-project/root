@@ -130,22 +130,21 @@ void TGLFont::RenderBitmap(const char* txt, Float_t xs, Float_t ys, Float_t zs, 
    Float_t x=0, y=0;
    switch (align)
    {
-      case kCenterDown:
+      case kCenterUp:
          x = -urx*0.5; y = -ury;
          break;
-      case kCenterUp:
+      case kCenterDown:
          x = -urx*0.5; y = 0;
          break;
-      case kLeft:
+      case kRight:
          x = -urx; y =(lly -ury)*0.5;
          break;
-      case kRight:
+      case kLeft:
          x = 0; y = -ury*0.5;
          break;
       default:
          break;
    };
-
    glRasterPos2i(0, 0);
    glBitmap(0, 0, 0, 0, x, y, 0);
    Render(txt);

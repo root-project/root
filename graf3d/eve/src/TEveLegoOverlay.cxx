@@ -35,6 +35,7 @@ TEveLegoOverlay::TEveLegoOverlay() :
    TEveElementList("Lego Menu", "TEveLegoOverlay", kTRUE),
 
    fCalo(0),
+   fMainColor(kGray),
 
    fShowCamera(kTRUE),
    fShowPlane(kFALSE),
@@ -50,7 +51,8 @@ TEveLegoOverlay::TEveLegoOverlay() :
    fActiveID(-1),
    fActiveCol(kRed-4)
 {
-   // Constructor.
+   // Constructor.  
+  fMainColorPtr = &fMainColor;
 
 }
 
@@ -92,6 +94,8 @@ void TEveLegoOverlay::DrawSlider(TGLRnrCtx& rnrCtx)
 
       glPushMatrix();
       glScalef( fSliderH/maxVal, fSliderH/maxVal, 1.);
+      fAxisAtt.SetAxisColor(fMainColor);
+      fAxisAtt.SetLabelColor(fMainColor);
       fAxisPainter.Paint(rnrCtx, fAxisAtt);
       glPopMatrix();
 
