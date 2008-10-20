@@ -2032,10 +2032,12 @@ void TGHtml::SavePrimitive(ostream &out, Option_t * /*= ""*/)
    out << "      " << GetName() << "->Clear();" << endl;
    out << "      " << GetName() << "->Layout();" << endl;
    out << "      " << GetName() << "->SetBaseUri(\"\");" << endl;
-   out << "      " << "buf = (char *)calloc(4096, sizeof(char));" << endl;
+   out << "      " << "char *buf = (char *)calloc(4096, sizeof(char));" << endl;
    out << "      " << "while (fgets(buf, 4096, f)) {" << endl;
    out << "         " << GetName() << "->ParseText(buf);" << endl;
    out << "      " << "}" << endl;
+   out << "      " << "free(buf);" << endl;
+   out << "      " << "fclose(f);" << endl;
    out << "   " << "}" << endl;
    out << "   " << GetName() << "->Layout();" << endl;
 }
