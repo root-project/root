@@ -258,7 +258,7 @@ void TGLCameraOverlay::Render(TGLRnrCtx& rnrCtx)
    glGetIntegerv(GL_VIEWPORT, vp);
    GLdouble l, r, t, b, z;
    gluUnProject(vp[0]+0.5, vp[1]+0.5, 0,  mm, pm, vp, &l, &b, &z);
-   gluUnProject(vp[2]-0.5, vp[3]-0.5, 0,  mm, pm, vp, &r, &t, &z);
+   gluUnProject(vp[0]+vp[2]-0.5, vp[1]+vp[3]-0.5, 0,  mm, pm, vp, &r, &t, &z);
    fFrustum[0]=l;
    fFrustum[1]=b;
    fFrustum[2]=r;

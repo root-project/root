@@ -322,7 +322,12 @@ void TEveProjectionAxesGL::DirectDraw(TGLRnrCtx& rnrCtx) const
 
    fProjection = fM->GetManager()->GetProjection();
 
+   Float_t dr[2];
+   glGetFloatv(GL_DEPTH_RANGE,dr);
+   glDepthRange(0., 0.); 
+
    // frustum size
+   TGLCamera &cam = rnrCtx.RefCamera();
    Float_t l =  -rnrCtx.GetCamera()->FrustumPlane(TGLCamera::kLeft).D();
    Float_t r =   rnrCtx.GetCamera()->FrustumPlane(TGLCamera::kRight).D();
    Float_t t =   rnrCtx.GetCamera()->FrustumPlane(TGLCamera::kTop).D();
@@ -346,17 +351,22 @@ void TEveProjectionAxesGL::DirectDraw(TGLRnrCtx& rnrCtx) const
    Float_t rngX = endX -startX;
    Float_t rngY = endY -startY;
 
+   Int_t minPix = 5; // minimum tick-mark size in pixels
+   Float_t rtm = 0.015;
    //______________________________________________________________________________
    // X-axis
 
    if (fM->fAxesMode == TEveProjectionAxes::kAll
        || (fM->fAxesMode == TEveProjectionAxes::kHorizontal))
    {
-      Float_t tms = (t-b)*0.02;
+     
       Float_t dtw = (r-l)/vp[2]; // delta to viewport
       Int_t nLab = (rngX< rngY ) ? TMath::FloorNint(fM->GetNdivisions()/100) : TMath::CeilNint((fM->GetNdivisions()*rngX)/(rngY*100)) ;
       SplitInterval(startX, endX,  0,  nLab);
-
+ 
+      Float_t vOff = dtw*minPix;
+      Float_t tms = (t-b)*rtm;
+      if (tms < vOff) tms = vOff;
       {
          // bottom
          glPushMatrix();
@@ -377,10 +387,14 @@ void TEveProjectionAxesGL::DirectDraw(TGLRnrCtx& rnrCtx) const
    if (fM->fAxesMode == TEveProjectionAxes::kAll
        || (fM->fAxesMode == TEveProjectionAxes::kVertical))
    {
-      Float_t tms = (r-l)*0.015;
       Float_t dtw = (t-b)/vp[3];// delta to viewport
       Int_t nLab = (rngY < rngX ) ? TMath::FloorNint(fM->GetNdivisions()/100) : TMath::CeilNint((fM->GetNdivisions()*rngY)/(rngX*100)) ;
       SplitInterval(startY, endY,  1,  nLab);
+
+      Float_t hOff = dtw*minPix;
+      Float_t tms = (r-l)*rtm;
+      if (tms < hOff) tms = hOff;
+
       // left
       {
          glPushMatrix();
@@ -397,4 +411,29 @@ void TEveProjectionAxesGL::DirectDraw(TGLRnrCtx& rnrCtx) const
       }
    }
    font.PostRender();
+
+   // projection center and origin marker
+   Float_t d = ((r-l) > (b-t)) ? (b-t) : (r-l);
+   d *= 0.02;
+   if (fM->GetDrawCenter()) 
+   {
+      Float_t* c = fProjection->GetProjectedCenter();
+      TGLUtil::Color3f(1., 0., 0.);
+      glBegin(GL_LINES);
+      glVertex3f(c[0] +d, c[1],    c[2]);     glVertex3f(c[0] - d, c[1]   , c[2]);
+      glVertex3f(c[0] ,   c[1] +d, c[2]);     glVertex3f(c[0]    , c[1] -d, c[2]);
+      glVertex3f(c[0] ,   c[1],    c[2] + d); glVertex3f(c[0]    , c[1]   , c[2] - d);
+      glEnd();
+   }
+   if (fM->GetDrawOrigin()) {
+      TEveVector zero;
+      fProjection->ProjectVector(zero);
+      TGLUtil::Color3f(1., 1., 1.);
+      glBegin(GL_LINES);
+      glVertex3f(zero[0] + d, zero[1],     zero[2]);     glVertex3f(zero[0] - d, zero[1]   ,  zero[2]);
+      glVertex3f(zero[0] ,    zero[1] + d, zero[2]);     glVertex3f(zero[0]    , zero[1] - d, zero[2]);
+      glVertex3f(zero[0] ,    zero[1],     zero[2] + d); glVertex3f(zero[0]    , zero[1]   ,  zero[2] - d);
+      glEnd();
+   } 
+   glDepthRange(dr[0], dr[1]);
 }

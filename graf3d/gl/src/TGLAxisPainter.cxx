@@ -23,7 +23,7 @@
 
 
 //______________________________________________________________________________
-// Axsis attributes reguired to be drawn in GL.
+// Axis attributes required to be drawn in GL.
 //
 
 ClassImp(TGLAxisAttrib);
