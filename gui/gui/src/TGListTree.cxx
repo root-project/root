@@ -856,7 +856,13 @@ Bool_t TGListTree::HandleMotion(Event_t *event)
                   fDNDData.fData = (void *)strdup(str.Data());
                   fDNDData.fDataLength = str.Length()+1;
                }
-               SetDragPixmap(item->GetPicture());
+               TString xmpname = item->GetPicture()->GetName();
+               if (xmpname.EndsWith("_t.xpm"))
+                  xmpname.ReplaceAll("_t.xpm", "_s.xpm");
+               if (xmpname.EndsWith("_t.xpm__16x16"))
+                  xmpname.ReplaceAll("_t.xpm__16x16", "_s.xpm");
+               SetDragPixmap(fClient->GetPicture(xmpname.Data()));
+               //SetDragPixmap(item->GetPicture());
                gDNDManager->StartDrag(this, event->fXRoot, event->fYRoot);
             }
          }
