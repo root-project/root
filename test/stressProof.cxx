@@ -43,8 +43,9 @@
 // *   Test  5 : H1: chain processing ............................. OK *   * //
 // *   Test  6 : H1: file collection processing ................... OK *   * //
 // *   Test  7 : H1: by-name processing ........................... OK *   * //
-// *   Test  8 : Package management with 'event' .................. OK *   * //
-// *   Test  9 : Simple 'event' generation ........................ OK *   * //
+// *   Test  8 : H1: by-name, TPacketizer ......................... OK *   * //
+// *   Test  9 : Package management with 'event' .................. OK *   * //
+// *   Test 10 : Simple 'event' generation ........................ OK *   * //
 // *  * All registered tests have been passed  :-)                     *   * //
 // *  ******************************************************************   * //
 // *                                                                       * //
@@ -52,7 +53,7 @@
 // * normally deleted at the end of a successful run; if the test fails    * //
 // * the caller is asked if she/he wants to keep the log file; if the      * //
 // * specifies a log file path of her/his choice, the log file is never    * //
-// * deleted.
+// * deleted.                                                              * //
 // *                                                                       * //
 // * New tests can be easily added by providing a function performing the  * //
 // * test and a name for the test; see examples below.                     * //
@@ -300,11 +301,11 @@ void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfil
    // H1 analysis over HTTP by dataset name
    testList->Add(new ProofTest("H1: by-name processing", 7, &PT_H1DataSet));
    // H1 analysis over HTTP: classic packetizer
-   testList->Add(new ProofTest("H1: by-name, TPacketizer", 7, &PT_H1DataSet, (void *)&gStd_Old));
+   testList->Add(new ProofTest("H1: by-name, TPacketizer", 8, &PT_H1DataSet, (void *)&gStd_Old));
    // Test of data set handling with the H1 http files
-   testList->Add(new ProofTest("Package management with 'event'", 8, &PT_Packages));
+   testList->Add(new ProofTest("Package management with 'event'", 9, &PT_Packages));
    // Simple event analysis
-   testList->Add(new ProofTest("Simple 'event' generation", 9, &PT_Event));
+   testList->Add(new ProofTest("Simple 'event' generation", 10, &PT_Event));
 
    //
    // Run the tests
