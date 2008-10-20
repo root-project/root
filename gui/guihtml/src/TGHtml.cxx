@@ -35,6 +35,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "TSystem.h"
 #include "TGHtml.h"
 #include "THashTable.h"
 #include "TObjString.h"
@@ -42,6 +43,8 @@
 #include "TImage.h"
 #include "TGScrollBar.h"
 #include "TGTextEntry.h"
+#include "TGText.h"
+#include "Riostream.h"
 
 //_____________________________________________________________________________
 //
@@ -2003,4 +2006,35 @@ int TGHtml::SetInsert(const char *insIx)
    }
 
    return kTRUE;
+}
+
+//______________________________________________________________________________
+void TGHtml::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+{
+   // Save a html widget as a C++ statement(s) on output stream out.
+
+   char quote = '"';
+   out << "   TGHtml *";
+   out << GetName() << " = new TGHtml(" << fParent->GetName()
+       << "," << GetWidth() << "," << GetHeight()
+       << ");"<< endl;
+
+   if (fCanvas->GetBackground() != TGFrame::GetWhitePixel()) {
+      out << "   " << GetName() << "->ChangeBackground(" << fCanvas->GetBackground() << ");" << endl;
+   }
+
+   char fn[kMAXPATHLEN];
+   TGText txt(GetText());
+   sprintf(fn,"Html%s.htm",GetName()+5);
+   txt.Save(fn);
+   out << "   " << "FILE *f = fopen(\"" << fn << "\", \"r\");" << endl;
+   out << "   " << "if (f) {" << endl;
+   out << "      " << GetName() << "->Clear();" << endl;
+   out << "      " << GetName() << "->Layout();" << endl;
+   out << "      " << GetName() << "->SetBaseUri(\"\");" << endl;
+   out << "      " << "buf = (char *)calloc(4096, sizeof(char));" << endl;
+   out << "      " << "while (fgets(buf, 4096, f)) {" << endl;
+   out << "         " << GetName() << "->ParseText(buf);" << endl;
+   out << "      " << "}" << endl;
+   out << "   " << "}" << endl;
 }
