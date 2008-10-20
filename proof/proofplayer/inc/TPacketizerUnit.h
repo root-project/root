@@ -54,8 +54,9 @@ private:
                                  // assuming all slaves have equal processing rate, packet size
                                  // is (#events processed by 1 slave) / fPacketSizeAsAFraction.
                                  // It can be set with PROOF_PacketAsAFraction in input list.
-   TStopwatch *fStopwatch;	     // For measuring the start time of each packet
+   TStopwatch *fStopwatch;       // For measuring the start time of each packet
    Long64_t    fProcessing;      // Event being processed
+   Long64_t    fAssigned;        // no. entries processed or being processed.
    Double_t    fTimeLimit;       // Packet time limit
 
    TPacketizerUnit();
@@ -68,7 +69,7 @@ public:
 
    TDSetElement *GetNextPacket(TSlave *sl, TMessage *r);
 
-   Double_t	     GetCurrentTime();
+   Double_t      GetCurrentTime();
 
    ClassDef(TPacketizerUnit,0)  //Generate work packets for parallel processing
 };

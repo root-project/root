@@ -208,33 +208,43 @@ TPacketizer::TFileNode::TFileNode(const char *name)
 
 //------------------------------------------------------------------------------
 
-class TPacketizer::TSlaveStat : public TObject {
+class TPacketizer::TSlaveStat : public TVirtualPacketizer::TVirtualSlaveStat {
 
 friend class TPacketizer;
 
 private:
-   TSlave        *fSlave;        // corresponding TSlave record
    TFileNode     *fFileNode;     // corresponding node or 0
    TFileStat     *fCurFile;      // file currently being processed
    TDSetElement  *fCurElem;      // TDSetElement currently being processed
-   Long64_t       fProcessed;    // number of entries processed
-
+   TProofProgressStatus *AddProcessed(TProofProgressStatus *st);
 public:
    TSlaveStat(TSlave *slave);
 
    TFileNode  *GetFileNode() const { return fFileNode; }
    const char *GetName() const { return fSlave->GetName(); }
-   Long64_t    GetEntriesProcessed() const { return fProcessed; }
 
    void        SetFileNode(TFileNode *node) { fFileNode = node; }
 };
 
 
 TPacketizer::TSlaveStat::TSlaveStat(TSlave *slave)
-   : fSlave(slave), fFileNode(0), fCurFile(0), fCurElem(0), fProcessed(0)
+   : fFileNode(0), fCurFile(0), fCurElem(0)
 {
+   fSlave = slave;
+   fStatus = new TProofProgressStatus();
 }
 
+TProofProgressStatus* TPacketizer::TSlaveStat::AddProcessed(TProofProgressStatus *st)
+{
+   if (st) {
+      TProofProgressStatus *diff = new TProofProgressStatus(*st - *fStatus);
+      *fStatus += *diff;
+      return diff;
+   } else {
+      Error("AddProcessed", "status of the worker undefined");
+      return 0;
+   }
+}
 
 //------------------------------------------------------------------------------
 
@@ -1009,25 +1019,37 @@ TDSetElement *TPacketizer::GetNextPacket(TSlave *sl, TMessage *r)
          (*r) >> latency;
          (*r) >> status;
 
-         proctime = status ? status->GetProcTime() : -1.;
-         proccpu  = status ? status->GetCPUTime() : -1.;
-         totev  = status ? status->GetEntries() : 0;
-         bytesRead  = status ? status->GetBytesRead() : 0;
-
-         delete status;
+         // Calculate the progress made in the last packet
+         TProofProgressStatus *progress = 0;
+         if (status) {
+            // upadte the worker status
+            numev = status->GetEntries() - slstat->GetEntriesProcessed();
+            progress = slstat->AddProcessed(status);
+            if (progress) {
+               // (*fProgressStatus) += *progress;
+               proctime = progress->GetProcTime();
+               proccpu  = progress->GetCPUTime();
+               totev  = status->GetEntries(); // for backward compatibility
+               bytesRead  = progress->GetBytesRead();
+               delete progress;
+            }
+            delete status;
+         } else
+             Error("GetNextPacket", "no status came in the kPROOF_GETPACKET message");
       } else {
 
          (*r) >> latency >> proctime >> proccpu;
+
          // only read new info if available
          if (r->BufferSize() > r->Length()) (*r) >> bytesRead;
          if (r->BufferSize() > r->Length()) (*r) >> totalEntries;
          if (r->BufferSize() > r->Length()) (*r) >> totev;
+
+         numev = totev - slstat->GetEntriesProcessed();
+         slstat->GetProgressStatus()->IncEntries(numev);
+         slstat->GetProgressStatus()->IncBytesRead(bytesRead);
       }
 
-      // Record
-      if (totev > 0)
-         numev = totev - slstat->fProcessed;
-      slstat->fProcessed += ((numev > 0) ? numev : 0);
       if (fProgressStatus) {
          if (numev > 0)  fProgressStatus->IncEntries(numev);
          if (bytesRead > 0)  fProgressStatus->IncBytesRead(bytesRead);

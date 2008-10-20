@@ -90,7 +90,8 @@ private:
    void           ValidateFiles(TDSet *dset, TList *slaves);
    Int_t          ReassignPacket(TDSetElement *e, TList **listOfMissingFiles);
    void           SplitPerHost(TList *elements, TList **listOfMissingFiles);
-   Int_t          AddProcessed(TSlave *sl, TProofProgressStatus *st, TList **listOfMissingFiles = 0);
+   Int_t          AddProcessed(TSlave *sl, TProofProgressStatus *st,
+                               Double_t latency, TList **listOfMissingFiles = 0);
 
 public:
    static Long_t   fgMaxSlaveCnt;  // maximum number of workers per filenode (Long_t to avoid

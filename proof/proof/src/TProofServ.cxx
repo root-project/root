@@ -802,8 +802,10 @@ TDSetElement *TProofServ::GetNextPacket(Long64_t totalEntries)
          Error("GetNextPacket", "No progress status object");
          return 0;
       }
-      status->SetProcTime(realtime);
-      status->SetCPUTime(cputime);
+      // the CPU and wallclock proc times are kept in the TProofServ and here
+      // added to the status object in the fPlayer.
+      status->IncProcTime(realtime);
+      status->IncCPUTime(cputime);
       req << status;
       status = 0; // status is owned by the player.
    } else {

@@ -263,19 +263,17 @@ TPacketizerAdaptive::TFileNode::TFileNode(const char *name)
 
 //------------------------------------------------------------------------------
 
-class TPacketizerAdaptive::TSlaveStat : public TObject {
+class TPacketizerAdaptive::TSlaveStat : public TVirtualPacketizer::TVirtualSlaveStat {
 
 friend class TPacketizerAdaptive;
 
 private:
-   TSlave        *fSlave;        // corresponding TSlave record
    TFileNode     *fFileNode;     // corresponding node or 0
    TFileStat     *fCurFile;      // file currently being processed
    TDSetElement  *fCurElem;      // TDSetElement currently being processed
    Long64_t       fCurProcessed; // events processed in the current file
    Float_t        fCurProcTime;  // proc time spent on the current file
    TList         *fDSubSet;      // packets processed by this worker
-   TProofProgressStatus *fStatus; // status as of the last finished packet
 
 public:
    TSlaveStat(TSlave *slave);
@@ -299,13 +297,14 @@ public:
 
 //______________________________________________________________________________
 TPacketizerAdaptive::TSlaveStat::TSlaveStat(TSlave *slave)
-   : fSlave(slave), fFileNode(0), fCurFile(0), fCurElem(0),
+   : fFileNode(0), fCurFile(0), fCurElem(0),
      fCurProcessed(0), fCurProcTime(0)
 {
    // Constructor
 
    fDSubSet = new TList();
    fDSubSet->SetOwner();
+   fSlave = slave;
    fStatus = new TProofProgressStatus();
 }
 
@@ -1221,6 +1220,7 @@ Int_t TPacketizerAdaptive::CalculatePacketSize(TObject *slStatPtr)
 //______________________________________________________________________________
 Int_t TPacketizerAdaptive::AddProcessed(TSlave *sl,
                                         TProofProgressStatus *status,
+                                        Double_t latency,
                                         TList **listOfMissingFiles)
 {
    // To be used by GetNextPacket but also in reaction to kPROOF_STOPPROCESS
@@ -1246,17 +1246,35 @@ Int_t TPacketizerAdaptive::AddProcessed(TSlave *sl,
       else
          numev = 0;
 
+      // Calculate the progress made in the last packet
+      TProofProgressStatus *progress;
       if (numev > 0) {
          // This also moves the pointer in the corrsponding TFileInfo
-         TProofProgressStatus *statusDifference = slstat->AddProcessed(status);
-         if (statusDifference) {
-            (*fProgressStatus) += *statusDifference;
-            delete statusDifference;
+         progress = slstat->AddProcessed(status);
+         if (progress) {
+            (*fProgressStatus) += *progress;
             // update processing rate
             slstat->UpdateRates(status);
          }
-      }
+      } else
+          progress = new TProofProgressStatus();
+      PDB(kPacketizer,2)
+         Info("GetNextPacket","worker-%s (%s): %lld %7.3lf %7.3lf %7.3lf %lld",
+            sl->GetOrdinal(), sl->GetName(), progress->GetEntries(), latency,
+            progress->GetProcTime(),
+            progress->GetCPUTime(),
+            progress->GetBytesRead());
 
+      if (gPerfStats != 0) {
+         gPerfStats->PacketEvent(sl->GetOrdinal(), sl->GetName(),
+                                 slstat->fCurElem->GetFileName(),
+                                 progress->GetEntries(),
+                                 latency,
+                                 progress->GetProcTime(),
+                                 progress->GetCPUTime(),
+                                 progress->GetBytesRead());
+      }
+      delete progress;
       if (numev != expectedNumEv) {
          // The last packet was not fully processed
          // and will be split in two:
@@ -1282,6 +1300,8 @@ Int_t TPacketizerAdaptive::AddProcessed(TSlave *sl,
          fFailedPackets->Add(slstat->fCurElem);
          */
       }
+
+      slstat->fCurElem = 0;
       return (expectedNumEv - numev);
    } else {
       // the kPROOF_STOPPRPOCESS message is send after the worker receives zero
@@ -1340,39 +1360,14 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
          status = new TProofProgressStatus(totev, bytesRead, proctime, proccpu);
       }
 
-      // Calculate the number of events processed in the last packet
-      Long64_t numev;
-      if (status && status->GetEntries() > 0)
-         numev = status->GetEntries() - slstat->GetEntriesProcessed();
-      else
-         numev = 0;
-
-      if (AddProcessed(sl, status))
+      if (AddProcessed(sl, status, latency))
          Error("GetNextPacket", "The worker processed diff. no. entries");
-      PDB(kPacketizer,2)
-         Info("GetNextPacket","worker-%s (%s): %lld %7.3lf %7.3lf %7.3lf %lld",
-            sl->GetOrdinal(), sl->GetName(), numev, latency,
-            status ? status->GetProcTime() : 0,
-            status ? status->GetCPUTime() : 0,
-            status ? status->GetBytesRead() : -1);
-
-      if (gPerfStats != 0) {
-         gPerfStats->PacketEvent(sl->GetOrdinal(), sl->GetName(),
-                                 slstat->fCurElem->GetFileName(),
-                                 numev, latency,
-                                 status ? status->GetProcTime() : 0,
-                                 status ? status->GetCPUTime() : 0,
-                                 status ? status->GetBytesRead() : -1);
-      }
-
-      slstat->fCurElem = 0;
       if ( fProgressStatus->GetEntries() >= fTotalEntries ) {
          if (fProgressStatus->GetEntries() > fTotalEntries)
             Error("GetNextPacket", "Processed too many entries!");
          HandleTimer(0);   // Send last timer message
          delete fProgress; fProgress = 0;
       }
-
    }
 
    if ( fStop ) {
@@ -1695,37 +1690,6 @@ void TPacketizerAdaptive::SplitPerHost(TList *elements,
             Error("ReassignPacket", "Error removing a missing file");
          delete e;
       }
-/*      // check the old filenode
-      TUrl url = e->GetFileName();
-      // Check the host from which 'e' was previously read.
-      // Map non URL filenames to dummy host
-      TString host;
-      if ( !url.IsValid() ||
-          (strncmp(url.GetProtocol(),"root", 4) &&
-           strncmp(url.GetProtocol(),"rfio", 4))) {
-         host = "no-host";
-      } else {
-         host = url.GetHost();
-      }
 
-      // if accessible add it back to the old node
-      // and do DecProcessed
-      TFileNode *node = (TFileNode*) fFileNodes->FindObject( host );
-      if (node) {
-         // the packet 'e' was processing data from this node.
-         node->DecProcessed(e->GetNum());
-         node->Add( e );
-         if (!fUnAllocated->FindObject(node))
-             fUnAllocated->Add(node);
-      } else {
-         // remove from the list in order to delete it.
-         if (elements->Remove(e))
-            Error("SplitPerHost", "Error removing a missing file");
-         TFileInfo *fi = e->GetFileInfo();
-         if (listOfMissingFiles)
-            (*listOfMissingFiles)->Add((TObject *)fi);
-         delete e;
-      }
-*/
    }
 }

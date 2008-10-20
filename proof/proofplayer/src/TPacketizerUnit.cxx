@@ -60,19 +60,16 @@ using namespace TMath;
 
 //------------------------------------------------------------------------------
 
-class TPacketizerUnit::TSlaveStat : public TObject {
+class TPacketizerUnit::TSlaveStat : public TVirtualPacketizer::TVirtualSlaveStat {
 
 friend class TPacketizerUnit;
 
 private:
-   TSlave   *fSlave;         // corresponding TSlave record
-   Long64_t  fProcessed;     // number of entries processed
    Long64_t  fLastProcessed; // number of processed entries of the last packet
    Double_t  fSpeed;         // estimated current average speed of the processing slave
    Double_t  fTimeInstant;   // stores the time instant when the current packet started
    TNtupleD *fCircNtp;       // Keeps circular info for speed calculations
    Long_t    fCircLvl;       // Circularity level
-
 
 public:
    TSlaveStat(TSlave *sl, TList *input);
@@ -81,14 +78,14 @@ public:
    void        GetCurrentTime();
 
    const char *GetName() const { return fSlave->GetName(); }
-   Long64_t    GetEntriesProcessed() const { return fProcessed; }
 
    void        UpdatePerformance(Double_t time);
+   TProofProgressStatus *AddProcessed(TProofProgressStatus *st);
 };
 
 //______________________________________________________________________________
 TPacketizerUnit::TSlaveStat::TSlaveStat(TSlave *slave, TList *input)
-                            : fSlave(slave), fProcessed(0), fLastProcessed(0),
+                            : fLastProcessed(0),
                               fSpeed(0), fTimeInstant(0), fCircLvl(5)
 {
    // Main constructor
@@ -98,6 +95,8 @@ TPacketizerUnit::TSlaveStat::TSlaveStat(TSlave *slave, TList *input)
    TProof::GetParameter(input, "PROOF_TPacketizerUnitCircularity", fCircLvl);
    fCircLvl = (fCircLvl > 0) ? fCircLvl : 5;
    fCircNtp->SetCircular(fCircLvl);
+   fSlave = slave;
+   fStatus = new TProofProgressStatus();
 }
 
 //______________________________________________________________________________
@@ -125,17 +124,33 @@ void TPacketizerUnit::TSlaveStat::UpdatePerformance(Double_t time)
    // Fill the entry
    fCircNtp->GetEntry(ne-1);
    ttot = ar[0] + time;
-   fCircNtp->Fill(ttot, fProcessed);
+   fCircNtp->Fill(ttot, GetEntriesProcessed());
 
    // Calculate the speed
    fCircNtp->GetEntry(0);
    Double_t dtime = (ttot > ar[0]) ? ttot - ar[0] : ne+1 ;
-   Long64_t nevts = fProcessed - (Long64_t)ar[1];
+   Long64_t nevts = GetEntriesProcessed() - (Long64_t)ar[1];
    fSpeed = nevts / dtime;
    PDB(kPacketizer,2)
       Info("UpdatePerformance", "time:%f, dtime:%f, nevts:%lld, speed: %f",
                                 time, dtime, nevts, fSpeed);
 
+}
+
+//______________________________________________________________________________
+TProofProgressStatus *TPacketizerUnit::TSlaveStat::AddProcessed(TProofProgressStatus *st)
+{
+   // Update the status info to the 'st'.
+   // return the difference (*st - *fStatus)
+
+   if (st) {
+      TProofProgressStatus *diff = new TProofProgressStatus(*st - *fStatus);
+      *fStatus += *diff;
+      return diff;
+   } else {
+      Error("AddProcessed", "status arg undefined");
+      return 0;
+   }
 }
 
 //------------------------------------------------------------------------------
@@ -160,6 +175,7 @@ TPacketizerUnit::TPacketizerUnit(TList *slaves, Long64_t num, TList *input,
    PDB(kPacketizer,1)
       Info("TPacketizerUnit", "time limit is %lf", fTimeLimit);
    fProcessing = 0;
+   fAssigned = 0;
 
    fStopwatch = new TStopwatch();
 
@@ -217,21 +233,32 @@ TDSetElement *TPacketizerUnit::GetNextPacket(TSlave *sl, TMessage *r)
    // Update stats & free old element
    Double_t latency, proctime, proccpu;
    Long64_t bytesRead = -1;
-   Long64_t totalEntries = -1;
+   Long64_t totalEntries = -1; // used only to read an old message type
    Long64_t totev = 0;
    Long64_t numev = -1;
 
+   TProofProgressStatus *status = 0;
    if (!gProofServ || gProofServ->GetProtocol() > 18) {
-      TProofProgressStatus *status = 0;
       (*r) >> latency;
       (*r) >> status;
 
-      proctime = status ? status->GetProcTime() : -1.;
-      proccpu  = status ? status->GetCPUTime() : -1.;
-      totev  = status ? status->GetEntries() : 0;
-      bytesRead  = status ? status->GetBytesRead() : 0;
-
-      delete status;
+      // Calculate the progress made in the last packet
+      TProofProgressStatus *progress = 0;
+      if (status) {
+         // upadte the worker status
+         numev = status->GetEntries() - slstat->GetEntriesProcessed();
+         progress = slstat->AddProcessed(status);
+         if (progress) {
+            // (*fProgressStatus) += *progress;
+            proctime = progress->GetProcTime();
+            proccpu  = progress->GetCPUTime();
+            totev  = status->GetEntries(); // for backward compatibility
+            bytesRead  = progress->GetBytesRead();
+            delete progress;
+         }
+         delete status;
+      } else
+          Error("GetNextPacket", "no status came in the kPROOF_GETPACKET message");
    } else {
 
       (*r) >> latency >> proctime >> proccpu;
@@ -240,11 +267,15 @@ TDSetElement *TPacketizerUnit::GetNextPacket(TSlave *sl, TMessage *r)
       if (r->BufferSize() > r->Length()) (*r) >> bytesRead;
       if (r->BufferSize() > r->Length()) (*r) >> totalEntries;
       if (r->BufferSize() > r->Length()) (*r) >> totev;
+
+      numev = totev - slstat->GetEntriesProcessed();
+      slstat->GetProgressStatus()->IncEntries(numev);
    }
-   numev = totev - slstat->fProcessed;
+
+   fProgressStatus->IncEntries(numev);
 
    PDB(kPacketizer,2)
-      Info("GetNextPacket","worker-%s: fProcessed %lld\t", sl->GetOrdinal(), GetEntriesProcessed());
+      Info("GetNextPacket","worker-%s: fAssigned %lld\t", sl->GetOrdinal(), fAssigned);
    fProcessing = 0;
 
    PDB(kPacketizer,2)
@@ -257,7 +288,7 @@ TDSetElement *TPacketizerUnit::GetNextPacket(TSlave *sl, TMessage *r)
                               latency, proctime, proccpu, bytesRead);
    }
 
-   if (GetEntriesProcessed() == fTotalEntries) {
+   if (fAssigned == fTotalEntries) {
       // Send last timer message
       HandleTimer(0);
       SafeDelete(fProgress);
@@ -289,8 +320,8 @@ TDSetElement *TPacketizerUnit::GetNextPacket(TSlave *sl, TMessage *r)
    } else {
       // Schedule tasks for workers based on the currently estimated processing speeds
 
-      // Update worker stats and performances
-      slstat->fProcessed += slstat->fLastProcessed;
+      // Update performances
+      // slstat->fStatus was updated before;
       slstat->UpdatePerformance(proctime);
 
       TMapIter *iter = (TMapIter *)fSlaveStats->MakeIterator();
@@ -338,12 +369,12 @@ TDSetElement *TPacketizerUnit::GetNextPacket(TSlave *sl, TMessage *r)
                                sl->GetOrdinal(), sumSpeed, sumBusy);
       // firstly the slave will try to get all of the remaining entries
       if (slstat->fSpeed > 0 &&
-         (fTotalEntries - GetEntriesProcessed())/(slstat->fSpeed) < fTimeLimit) {
-         num = (fTotalEntries - GetEntriesProcessed());
+         (fTotalEntries - fAssigned)/(slstat->fSpeed) < fTimeLimit) {
+         num = (fTotalEntries - fAssigned);
       } else {
          if (slstat->fSpeed > 0) {
             // calculating the optTime
-            Double_t optTime = (fTotalEntries - GetEntriesProcessed() + sumBusy)/sumSpeed;
+            Double_t optTime = (fTotalEntries - fAssigned + sumBusy)/sumSpeed;
             // if optTime is greater than the official time limit, then the slave gets a number
             // of entries that still fit into the time limit, otherwise it uses the optTime as
             // a time limit
@@ -357,8 +388,10 @@ TDSetElement *TPacketizerUnit::GetNextPacket(TSlave *sl, TMessage *r)
          }
       }
    }
+   // Minimum packet size
    num = (num > 1) ? num : 1;
-   fProcessing = (num < (fTotalEntries - GetEntriesProcessed())) ? num : (fTotalEntries - GetEntriesProcessed());
+   fProcessing = (num < (fTotalEntries - fAssigned)) ? num
+                                                     : (fTotalEntries - fAssigned);
 
    // Set the informations of the current slave
    slstat->fLastProcessed = fProcessing;
@@ -367,12 +400,12 @@ TDSetElement *TPacketizerUnit::GetNextPacket(TSlave *sl, TMessage *r)
 
    PDB(kPacketizer,2)
       Info("GetNextPacket", "worker-%s: num %lld, processing %lld, remaining %lld",sl->GetOrdinal(),
-                            num, fProcessing, (fTotalEntries - GetEntriesProcessed() - fProcessing));
+                            num, fProcessing, (fTotalEntries - fAssigned - fProcessing));
    TDSetElement *elem = new TDSetElement("", "", "", 0, fProcessing);
    elem->SetBit(TDSetElement::kEmpty);
 
    // Update the total counter
-   fProgressStatus->IncEntries(slstat->fLastProcessed);
+   fAssigned += slstat->fLastProcessed;
 
    return elem;
 }

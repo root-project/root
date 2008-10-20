@@ -2756,7 +2756,8 @@ Int_t TProof::CollectInputFrom(TSocket *s)
                      if (fPlayer)
                         fPlayer->AddOutputObject(listOfMissingFiles);
                   }
-                  Int_t ret = fPlayer->GetPacketizer()->AddProcessed(sl, status, &listOfMissingFiles);
+                  Int_t ret =
+                     fPlayer->GetPacketizer()->AddProcessed(sl, status, 0, &listOfMissingFiles);
                   if (ret > 0)
                      fPlayer->GetPacketizer()->MarkBad(sl, status, &listOfMissingFiles);
                } else {

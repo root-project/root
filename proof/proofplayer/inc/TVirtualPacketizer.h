@@ -36,6 +36,9 @@
 #ifndef ROOT_TObject
 #include "TObject.h"
 #endif
+#ifndef ROOT_TSlave
+#include "TSlave.h"
+#endif
 #ifndef ROOT_TProofProgressStatus
 #include "TProofProgressStatus.h"
 #endif
@@ -48,13 +51,15 @@ class TMessage;
 class TNtupleD;
 
 
-
 class TVirtualPacketizer : public TObject {
 
 friend class TPacketizer;
 friend class TPacketizerAdaptive;
 friend class TPacketizerProgressive;
 friend class TPacketizerUnit;
+
+public:              // public because of Sun CC bug
+   class TVirtualSlaveStat;
 
 private:
    enum EUseEstOpt {        // Option for usage of estimated values
@@ -115,10 +120,31 @@ public:
    Float_t       GetInitTime() const { return fInitTime; }
    Float_t       GetProcTime() const { return fProcTime; }
    virtual void  MarkBad(TSlave * /*s*/, TProofProgressStatus * /*status*/, TList ** /*missingFiles*/) { return; }
-   virtual Int_t AddProcessed(TSlave * /*sl*/, TProofProgressStatus * /*st*/, TList ** /*missingFiles*/) { return 0; }
+   virtual Int_t AddProcessed(TSlave * /*sl*/, TProofProgressStatus * /*st*/,
+                    Double_t /*lat*/, TList ** /*missingFiles*/) { return 0; }
    TProofProgressStatus *GetStatus() { return fProgressStatus; }
    void          SetProgressStatus(TProofProgressStatus *st) { fProgressStatus = st; }
    ClassDef(TVirtualPacketizer,0)  //Generate work packets for parallel processing
+};
+
+//------------------------------------------------------------------------------
+
+class TVirtualPacketizer::TVirtualSlaveStat : public TObject {
+
+friend class TPacketizerAdaptive;
+friend class TPacketizer;
+
+protected:
+   TSlave        *fSlave;        // corresponding TSlave record
+   TProofProgressStatus *fStatus; // status as of the last finished packet
+
+public:
+   const char *GetName() const { return fSlave->GetName(); }
+   Long64_t    GetEntriesProcessed() const { return fStatus?fStatus->GetEntries():-1; }
+   Double_t    GetProcTime() const { return fStatus?fStatus->GetProcTime():-1; }
+   Float_t     GetAvgRate() { return fStatus->GetRate(); }
+   TProofProgressStatus *GetProgressStatus() { return fStatus; }
+   virtual TProofProgressStatus *AddProcessed(TProofProgressStatus *st) = 0;
 };
 
 #endif
