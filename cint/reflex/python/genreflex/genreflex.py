@@ -245,8 +245,8 @@ class genreflex:
   def genGccxmlInfo(self):
     s = ''
     (inp,out,err) = os.popen3('"' + self.gccxml + '" --print')
-    serr = err.read()
     sout = out.read()
+    serr = err.read()
     if serr :
       print '--->> genreflex: WARNING: Could not invoke %s --print' % self.gccxml
       print '--->> genreflex: WARNING: %s' % serr
