@@ -2037,4 +2037,5 @@ void TGHtml::SavePrimitive(ostream &out, Option_t * /*= ""*/)
    out << "         " << GetName() << "->ParseText(buf);" << endl;
    out << "      " << "}" << endl;
    out << "   " << "}" << endl;
+   out << "   " << GetName() << "->Layout();" << endl;
 }
