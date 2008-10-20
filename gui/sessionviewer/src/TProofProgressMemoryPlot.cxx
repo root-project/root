@@ -391,7 +391,7 @@ TGraph *TProofProgressMemoryPlot::DoAveragePlot(Int_t &max_el, Int_t &min_el)
       const char *role = ple->GetRole();
       if (role[0]!='w') continue; //skip the master log
       TList *lines = ple->GetMacro()->GetListOfLines();
-      if (!lines) continue;
+      if (!lines || lines->GetSize() <= 0) continue;
       curline = (TObjString*)lines->Last();
       parts = curline->String().Tokenize(" ");
       curevent = (TObjString*)parts->At(kEventNumberPos);
@@ -437,6 +437,7 @@ TGraph *TProofProgressMemoryPlot::DoAveragePlot(Int_t &max_el, Int_t &min_el)
       const char *role = ple->GetRole();
       if (role[0]!='w') continue;
       TList *lines = ple->GetMacro()->GetListOfLines();
+      if (!lines || lines->GetSize() <= 0) continue;
       TIter prev(lines, kIterBackward);
       nev = 0;
       nextevent = Long64_t(10E16);
