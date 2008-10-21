@@ -593,8 +593,7 @@ Int_t TProofDataSetManagerFile::RegisterDataSet(const char *uri,
       // Fail if it exists already
       if (ExistsDataSet(fGroup, fUser, dsName)) {
          //Dataset name does exist
-         delete dataSet;
-         return -1;;
+         return -1;
       }
    }
 
@@ -633,7 +632,6 @@ Int_t TProofDataSetManagerFile::RegisterDataSet(const char *uri,
    if (opt.Contains("V", TString::kIgnoreCase)) {
       if (ScanDataSet(dataSet, (UInt_t)(kReopen | kDebug)) < 0) {
          Error("RegisterDataSet", "problems verifying the dataset");
-         delete dataSet;
          return -1;
       }
    }
@@ -648,7 +646,6 @@ Int_t TProofDataSetManagerFile::RegisterDataSet(const char *uri,
             Error("RegisterDataSet", "you may want to define an average"
                                      " file size to get an estimated dataset size");
          }
-         delete dataSet;
          return -1;
       }
       // now check the quota
@@ -662,13 +659,11 @@ Int_t TProofDataSetManagerFile::RegisterDataSet(const char *uri,
                               (Float_t) GetGroupQuota(fGroup)   / 1073741824);
       if (used > GetGroupQuota(fGroup)) {
          Error("RegisterDataSet", "quota exceeded");
-         delete dataSet;
          return -1;
       }
    }
 
    Bool_t success = WriteDataSet(fGroup, fUser, dsName, dataSet);
-   delete dataSet;
    if (!success)
       Error("RegisterDataSet", "could not write dataset: %s", dsName.Data());
 
