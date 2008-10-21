@@ -24,6 +24,9 @@
 #ifndef ROOT_TObject
 #include "TObject.h"
 #endif
+#ifndef ROOT_TStopwatch
+#include "TStopwatch.h"
+#endif
 #ifndef ROOT_TString
 #include "TString.h"
 #endif
@@ -48,6 +51,7 @@ private:
    TList        *fPreviousQueries;  //list of TProofQueryResult objects from previous sections
    TProofLockPath *fLock;           //dir locker
    FILE         *fLogFile;          //log file
+   TStopwatch    fCompute;          //measures time spend processing a query on the master
 
    void          AddLogFile(TProofQueryResult *pq);
 
@@ -70,9 +74,12 @@ public:
    Int_t         CleanupQueriesDir();
    Bool_t        FinalizeQuery(TProofQueryResult *pq,
                                TProof *proof, TVirtualProofPlayer *player);
+   Float_t       GetCpuTime() { return fCompute.CpuTime(); }
+   Float_t       GetRealTime() { return fCompute.RealTime(); }
    TProofQueryResult *LocateQuery(TString queryref, Int_t &qry, TString &qdir);
    void          RemoveQuery(TQueryResult *qr, Bool_t soft = kFALSE);
    void          RemoveQuery(const char *queryref, TList *otherlist = 0);
+   void          ResetTime() { fCompute.Start(); }
    void          SaveQuery(TProofQueryResult *qr, const char *fout = 0);
    void          SaveQuery(TProofQueryResult *qr, Int_t mxq);
 
