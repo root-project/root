@@ -537,6 +537,10 @@ D: implementation of Qt like signals and slots mechanism (TQObject,
 D: TQConnection, etc.)
 D: author of Carrot (http://carrot.cern.ch)
 
+N: Katerina Opocenska
+E: opocenska@gmail.com
+D: Event Recorder
+
 N: Suzanne Panacek
 E: spanacek@fnal.gov
 D: editor of the User's Guide
