@@ -286,15 +286,15 @@ Bool_t TEveProjectionAxesGL::GetRange(Int_t ax, Float_t frustMin, Float_t frustM
    Bool_t rngBBox=kTRUE;
 
    Float_t bf = 1.2;
-   start = fM->GetManager()->GetBBox()[ax*2]*bf;
-   end   = fM->GetManager()->GetBBox()[ax*2+1]*bf;
+   start = fM->GetManager()->GetBBox()[ax*2]   * bf;
+   end   = fM->GetManager()->GetBBox()[ax*2+1] * bf;
 
    // compare frustum range with bbox, take smaller
-   Float_t frustC = (frustMin+frustMax) *0.5;
-   Float_t frustR =  (frustMax-frustMin)*0.8;
-   frustMin = frustC-frustR*0.5;
-   frustMax   = frustC+frustR*0.5;
-   if (start<frustMin || end>frustMax)
+   Float_t frustC = 0.5f * (frustMin + frustMax);
+   Float_t frustR = 0.8f * (frustMax - frustMin);
+   frustMin = frustC - 0.5f*frustR;
+   frustMax = frustC + 0.5f*frustR;
+   if (start < frustMin || end > frustMax)
    {
       rngBBox=kFALSE;
       start = frustMin;
@@ -307,7 +307,7 @@ Bool_t TEveProjectionAxesGL::GetRange(Int_t ax, Float_t frustMin, Float_t frustM
    Float_t uLim = fProjection->GetLimit(ax, 1);
 
    if (start < dLim) start = dLim*0.98;
-   if (end   > uLim)  end  = uLim*0.98;
+   if (end   > uLim) end   = uLim*0.98;
 
    return rngBBox;
 }
@@ -322,20 +322,20 @@ void TEveProjectionAxesGL::DirectDraw(TGLRnrCtx& rnrCtx) const
 
    fProjection = fM->GetManager()->GetProjection();
 
-   Float_t dr[2];
-   glGetFloatv(GL_DEPTH_RANGE,dr);
-   glDepthRange(0., 0.); 
+   Float_t old_depth_range[2];
+   glGetFloatv(GL_DEPTH_RANGE, old_depth_range);
+   glDepthRange(0, 0); // Draw on front-clipping plane.
 
    // frustum size
-   TGLCamera &cam = rnrCtx.RefCamera();
-   Float_t l =  -rnrCtx.GetCamera()->FrustumPlane(TGLCamera::kLeft).D();
-   Float_t r =   rnrCtx.GetCamera()->FrustumPlane(TGLCamera::kRight).D();
-   Float_t t =   rnrCtx.GetCamera()->FrustumPlane(TGLCamera::kTop).D();
-   Float_t b =  -rnrCtx.GetCamera()->FrustumPlane(TGLCamera::kBottom).D();
+   TGLCamera &camera = rnrCtx.RefCamera();
+   Float_t l = -camera.FrustumPlane(TGLCamera::kLeft).D();
+   Float_t r =  camera.FrustumPlane(TGLCamera::kRight).D();
+   Float_t t =  camera.FrustumPlane(TGLCamera::kTop).D();
+   Float_t b = -camera.FrustumPlane(TGLCamera::kBottom).D();
 
    // font size relative to wiewport width
    TGLFont font;
-   GLint    vp[4];
+   GLint   vp[4];
    glGetIntegerv(GL_VIEWPORT, vp);
    Int_t fs =  TGLFontManager::GetFontSize(TMath::Min(vp[2], vp[3])*fM->GetLabelSize(), 8, 36);
    rnrCtx.RegisterFont(fs, "arial", TGLFont::kPixmap, font);
@@ -348,92 +348,87 @@ void TEveProjectionAxesGL::DirectDraw(TGLRnrCtx& rnrCtx) const
    Float_t startY, endY;
    Bool_t  rngBBoxX = GetRange(0, l, r, startX, endX);
    Bool_t  rngBBoxY = GetRange(1, b, t, startY, endY);
-   Float_t rngX = endX -startX;
-   Float_t rngY = endY -startY;
+   Float_t rngX = endX - startX;
+   Float_t rngY = endY - startY;
 
-   Int_t minPix = 5; // minimum tick-mark size in pixels
-   Float_t rtm = 0.015;
-   //______________________________________________________________________________
+   const Float_t rtm    = 0.015; // relative tick-mark size
+   const Int_t   minPix = 5;     // minimum tick-mark size in pixels
+
    // X-axis
-
-   if (fM->fAxesMode == TEveProjectionAxes::kAll
-       || (fM->fAxesMode == TEveProjectionAxes::kHorizontal))
+   if (fM->fAxesMode == TEveProjectionAxes::kAll ||
+       fM->fAxesMode == TEveProjectionAxes::kHorizontal)
    {
      
-      Float_t dtw = (r-l)/vp[2]; // delta to viewport
-      Int_t nLab = (rngX< rngY ) ? TMath::FloorNint(fM->GetNdivisions()/100) : TMath::CeilNint((fM->GetNdivisions()*rngX)/(rngY*100)) ;
-      SplitInterval(startX, endX,  0,  nLab);
+      Float_t dtw  = (r-l)/vp[2]; // delta to viewport
+      Int_t   nLab = (rngX < rngY ) ? TMath::FloorNint(fM->GetNdivisions()/100) :
+                                      TMath::CeilNint((fM->GetNdivisions()*rngX)/(rngY*100));
+      SplitInterval(startX, endX, 0, nLab);
  
       Float_t vOff = dtw*minPix;
-      Float_t tms = (t-b)*rtm;
+      Float_t tms  = (t-b)*rtm;
       if (tms < vOff) tms = vOff;
-      {
-         // bottom
-         glPushMatrix();
-         glTranslatef(rngBBoxX ? bboxCentX : 0, b, 0);
-         DrawScales(kTRUE, font, tms, dtw);
-         glPopMatrix();
-      }
-      {
-         // top
-         glPushMatrix();
-         glTranslatef(rngBBoxX ? bboxCentX : 0, t, 0);
-         DrawScales(kTRUE, font, -tms, dtw);
-         glPopMatrix();
-      }
+
+      // bottom
+      glPushMatrix();
+      glTranslatef(rngBBoxX ? bboxCentX : 0, b, 0);
+      DrawScales(kTRUE, font, tms, dtw);
+      glPopMatrix();
+      // top
+      glPushMatrix();
+      glTranslatef(rngBBoxX ? bboxCentX : 0, t, 0);
+      DrawScales(kTRUE, font, -tms, dtw);
+      glPopMatrix();
    }
 
    // Y-axis
-   if (fM->fAxesMode == TEveProjectionAxes::kAll
-       || (fM->fAxesMode == TEveProjectionAxes::kVertical))
+   if (fM->fAxesMode == TEveProjectionAxes::kAll ||
+       fM->fAxesMode == TEveProjectionAxes::kVertical)
    {
       Float_t dtw = (t-b)/vp[3];// delta to viewport
       Int_t nLab = (rngY < rngX ) ? TMath::FloorNint(fM->GetNdivisions()/100) : TMath::CeilNint((fM->GetNdivisions()*rngY)/(rngX*100)) ;
-      SplitInterval(startY, endY,  1,  nLab);
+      SplitInterval(startY, endY, 1, nLab);
 
-      Float_t hOff = dtw*minPix;
-      Float_t tms = (r-l)*rtm;
+      Float_t hOff = dtw * minPix;
+      Float_t tms  = (r - l) * rtm;
       if (tms < hOff) tms = hOff;
 
       // left
-      {
-         glPushMatrix();
-         glTranslatef(l, rngBBoxY ? bboxCentY : 0, 0);
-         DrawScales(kFALSE, font, tms, dtw);
-         glPopMatrix();
-      }
+      glPushMatrix();
+      glTranslatef(l, rngBBoxY ? bboxCentY : 0, 0);
+      DrawScales(kFALSE, font, tms, dtw);
+      glPopMatrix();
       // right
-      {
-         glPushMatrix();
-         glTranslatef(r, rngBBoxY ? bboxCentY : 0 , 0);
-         DrawScales(kFALSE, font, -tms, dtw);
-         glPopMatrix();
-      }
+      glPushMatrix();
+      glTranslatef(r, rngBBoxY ? bboxCentY : 0, 0);
+      DrawScales(kFALSE, font, -tms, dtw);
+      glPopMatrix();
    }
    font.PostRender();
 
    // projection center and origin marker
    Float_t d = ((r-l) > (b-t)) ? (b-t) : (r-l);
-   d *= 0.02;
+   d *= 0.02f;
    if (fM->GetDrawCenter()) 
    {
       Float_t* c = fProjection->GetProjectedCenter();
       TGLUtil::Color3f(1., 0., 0.);
       glBegin(GL_LINES);
-      glVertex3f(c[0] +d, c[1],    c[2]);     glVertex3f(c[0] - d, c[1]   , c[2]);
-      glVertex3f(c[0] ,   c[1] +d, c[2]);     glVertex3f(c[0]    , c[1] -d, c[2]);
-      glVertex3f(c[0] ,   c[1],    c[2] + d); glVertex3f(c[0]    , c[1]   , c[2] - d);
+      glVertex3f(c[0] + d, c[1], c[2]); glVertex3f(c[0] - d, c[1], c[2]);
+      glVertex3f(c[0], c[1] + d, c[2]); glVertex3f(c[0], c[1] - d, c[2]);
+      glVertex3f(c[0], c[1], c[2] + d); glVertex3f(c[0], c[1], c[2] - d);
       glEnd();
    }
-   if (fM->GetDrawOrigin()) {
+   if (fM->GetDrawOrigin())
+   {
       TEveVector zero;
       fProjection->ProjectVector(zero);
       TGLUtil::Color3f(1., 1., 1.);
       glBegin(GL_LINES);
-      glVertex3f(zero[0] + d, zero[1],     zero[2]);     glVertex3f(zero[0] - d, zero[1]   ,  zero[2]);
-      glVertex3f(zero[0] ,    zero[1] + d, zero[2]);     glVertex3f(zero[0]    , zero[1] - d, zero[2]);
-      glVertex3f(zero[0] ,    zero[1],     zero[2] + d); glVertex3f(zero[0]    , zero[1]   ,  zero[2] - d);
+      glVertex3f(zero[0] + d, zero[1], zero[2]); glVertex3f(zero[0] - d, zero[1], zero[2]);
+      glVertex3f(zero[0], zero[1] + d, zero[2]); glVertex3f(zero[0], zero[1] - d, zero[2]);
+      glVertex3f(zero[0], zero[1], zero[2] + d); glVertex3f(zero[0], zero[1], zero[2] - d);
       glEnd();
-   } 
-   glDepthRange(dr[0], dr[1]);
+   }
+
+   glDepthRange(old_depth_range[0], old_depth_range[1]);
 }
