@@ -238,7 +238,6 @@ typedef struct {
    Int_t fType;
 } PT_Packetizer_t;
 
-static PT_Packetizer_t gStd_New = { "TPacketizerAdaptive", 0 };
 static PT_Packetizer_t gStd_Old = { "TPacketizer", 0 };
 
 //_____________________________________________________________________________
