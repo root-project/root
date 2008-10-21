@@ -2013,7 +2013,6 @@ void TGHtml::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
    // Save a html widget as a C++ statement(s) on output stream out.
 
-   char quote = '"';
    out << "   TGHtml *";
    out << GetName() << " = new TGHtml(" << fParent->GetName()
        << "," << GetWidth() << "," << GetHeight()

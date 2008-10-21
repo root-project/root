@@ -266,7 +266,6 @@ Bool_t TRootContainer::HandleButton(Event_t *event)
    // 1, 2 and 3 on to the TCanvas.
 
    TGViewPort *vp = (TGViewPort*)fParent;
-   Int_t y = vp->GetVPos();
    UInt_t page = vp->GetHeight()/4;
    Int_t newpos;
 
