@@ -4025,12 +4025,33 @@ TAxis *TH1::GetZaxis() const
 }
 
 //______________________________________________________________________________
-Double_t TH1::Interpolate(Double_t)
+Double_t TH1::Interpolate(Double_t x)
 {
-   
-   //Not yet implemented
-   Error("Interpolate","This function is not yet implemented for a TH1");
-   return 0;
+   // Given a point x, approximates the value via linear interpolation
+   // based on the two nearest bin centers
+   // Andy Mastbaum 10/21/08
+
+   Int_t xbin = FindBin(x);
+   Double_t x0,x1,y0,y1;
+
+   if(x<=GetBinCenter(1)) {
+      return GetBinContent(1);
+   } else if(x>=GetBinCenter(GetNbinsX())) {
+      return GetBinContent(GetNbinsX());
+   } else {
+      if(x<=GetBinCenter(xbin)) {
+         y0 = GetBinContent(xbin-1);
+         x0 = GetBinCenter(xbin-1);
+         y1 = GetBinContent(xbin);
+         x1 = GetBinCenter(xbin);
+      } else {
+         y0 = GetBinContent(xbin);
+         x0 = GetBinCenter(xbin);
+         y1 = GetBinContent(xbin+1);
+         x1 = GetBinCenter(xbin+1);
+      }
+      return y0 + (x-x0)*((y1-y0)/(x1-x0));
+   }
 }
 
 //______________________________________________________________________________
