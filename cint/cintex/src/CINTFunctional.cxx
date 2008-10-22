@@ -313,25 +313,19 @@ namespace ROOT { namespace Cintex {
    //------ Support for functions a state -------------------------------------------------------
 
    char* Allocate_code(const void* src, size_t len)  {
+#if defined(__linux) && ! defined(DATA_EXECUTABLE)
+      char* code = (char*) ::mmap(NULL, len + sizeof(size_t), PROT_READ | PROT_WRITE | PROT_EXEC,
+                                  MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+      if (!code || code == ((void *) -1)) return 0;
+      // write the size of the allocation into the first few bytes; we need
+      // it for munmap.
+      *((size_t*)code) = len + sizeof(size_t);
+      code += sizeof(size_t);
+#else
       char* code = new char[len+1];
       if ( !code ) return 0;
-      ::memcpy(code, src, len);
-      //---The following lines take care of unprotecting for execution the allocated data
-      //   The usage of mprotect taken from ffcall package (http://directory.fsf.org/libs/c/ffcall.html)
-#if defined(__linux) && ! defined(DATA_EXECUTABLE)
-      {
-         static long pagesize = 0;
-         if ( !pagesize ) pagesize = getpagesize();
-         unsigned long start_addr = (unsigned long) code;
-         unsigned long end_addr   = (unsigned long) (code + len);
-         start_addr = start_addr & -pagesize;
-         end_addr   = (end_addr + pagesize-1) & -pagesize;
-         unsigned long len_pg = end_addr - start_addr;
-         if ( mprotect( (void*)start_addr, len_pg, PROT_READ|PROT_WRITE|PROT_EXEC) < 0 ) {
-            return 0;
-         }
-      }
 #endif
+      ::memcpy(code, src, len);
       return code;
    }
 
@@ -418,7 +412,13 @@ namespace ROOT { namespace Cintex {
    {
       // Free function code.
       char* scode = (char*)code;
+#if defined(__linux) && ! defined(DATA_EXECUTABLE)
+      if (!code) return;
+      scode -= sizeof(size_t);
+      munmap(scode, *((size_t*)scode));
+#else
       delete [] scode;
+#endif
    }
 
 } }   // seal and cintex namepaces
