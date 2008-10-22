@@ -40,13 +40,14 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 ifeq ($(PLATFORM),win32)
 GENREFLEX = genreflex.bat
+GENREFLEXCXXFLAGS = --gccxmlopt='-include "$(ROOTSYS)/include/w32pragma.h"'
 else
 GENREFLEX = genreflex
 endif
 
 # The dictionary:
 %_rflx.cpp: %_selection.xml %.h
-	$(CMDECHO) $(GENREFLEX) $*.h -s $*_selection.xml $(GENREFLEXFLAGS) -I"$(ROOTSYS)/include" > $@.log
+	$(CMDECHO) $(GENREFLEX) $*.h -s $*_selection.xml $(GENREFLEXFLAGS) -I"$(ROOTSYS)/include" $(GENREFLEXCXXFLAGS) > $@.log
 
 # the driver which includes the relevant files for the library:
 %_rflxdriver.C: %_rflx.cpp %_test.C TestHelper.h

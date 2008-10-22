@@ -32,7 +32,7 @@ void IsTemplated() {
 }
 
 void runTools() {
-   gSystem->Load("libReflexDict.so");
+   gSystem->Load("libReflexDict");
 
    IsTemplated();
 }
