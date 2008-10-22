@@ -25,6 +25,7 @@
 #include "Riostream.h"
 
 #ifdef WIN32
+   #include <process.h>
    #include <io.h>
    typedef long off_t;
 #endif
@@ -33,7 +34,9 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#ifndef WIN32
 #include <sys/wait.h>
+#endif
 #include <cstdlib>
 
 #if (defined(__FreeBSD__) && (__FreeBSD__ < 4)) || \
@@ -382,10 +385,15 @@ Bool_t TReaperTimer::Notify()
       TParameter<Int_t> *p = 0;
       while ((p = (TParameter<Int_t> *)nxp())) {
          int status;
+#ifndef WIN32
          pid_t pid;
          do {
             pid = waitpid(p->GetVal(), &status, WNOHANG);
          } while (pid < 0 && errno == EINTR);
+#else
+         intptr_t pid;
+         pid = _cwait(&status, (intptr_t)p->GetVal(), 0);
+#endif
          if (pid > 0 && pid == p->GetVal()) {
             // Remove from the list
             fChildren->Remove(p);

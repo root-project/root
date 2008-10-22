@@ -22,6 +22,9 @@
 
 #include "TProofLite.h"
 
+#ifdef WIN32
+#   include <io.h>
+#endif
 #include "TDSet.h"
 #include "TEnv.h"
 #include "TError.h"

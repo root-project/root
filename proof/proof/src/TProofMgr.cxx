@@ -419,7 +419,7 @@ TProofMgr *TProofMgr::Create(const char *uin, Int_t loglevel,
       u.SetProtocol("proof");
       u.SetPort(1093);
 #else
-      Info("TProofMgr::Create","'lite' not yet supported on Windows");
+      ::Info("TProofMgr::Create","'lite' not yet supported on Windows");
       return m;
 #endif
    }

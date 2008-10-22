@@ -27,9 +27,10 @@
 #ifdef WIN32
    #include <io.h>
    typedef long off_t;
+#else
+#include <netinet/in.h>
 #endif
 #include <sys/types.h>
-#include <netinet/in.h>
 #include <cstdlib>
 
 #include "TProofServLite.h"
