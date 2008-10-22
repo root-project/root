@@ -437,6 +437,17 @@ TProof::~TProof()
          gSystem->Unlink(fLogFileName);
    }
 
+   // Remove for the global list
+   gROOT->GetListOfProofs()->Remove(this);
+   if (gProof && gProof == this) {
+      // Set previous as default
+      TIter pvp(gROOT->GetListOfProofs(), kIterBackward);
+      while ((gProof = (TProof *)pvp())) {
+         if (gProof->InheritsFrom("TProof"))
+            break;
+      }
+   }
+
    // For those interested in our destruction ...
    Emit("~TProof()");
 }
