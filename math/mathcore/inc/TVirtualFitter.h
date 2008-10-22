@@ -1,4 +1,4 @@
-// @(#)root/base:$Id$
+// @(#)root/mathcore:$Id$
 // Author: Rene Brun   31/08/99
 
 /*************************************************************************
@@ -8,9 +8,9 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+
 #ifndef ROOT_TVirtualFitter
 #define ROOT_TVirtualFitter
-
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -48,14 +48,14 @@ protected:
    TObject               *fUserFunc;   //pointer to user theoretical function (a TF1*)
    TMethodCall           *fMethodCall; //Pointer to MethodCall in case of interpreted function
    void                 (*fFCN)(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
-   
+
    static TVirtualFitter *fgFitter;    //Current fitter (default TFitter)
    static Int_t           fgMaxpar;    //Maximum number of fit parameters for current fitter
    static Int_t           fgMaxiter;   //Maximum number of iterations
    static Double_t        fgErrorDef;  //Error definition (default=1)
    static Double_t        fgPrecision; //maximum precision
    static TString         fgDefault;   //name of the default fitter ("Minuit","Fumili",etc)
-   
+
    TVirtualFitter(const TVirtualFitter& tvf);
    TVirtualFitter& operator=(const TVirtualFitter& tvf);
 

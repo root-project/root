@@ -1,5 +1,6 @@
-// @(#)root/base:$Id$
+// @(#)root/mathcore:$Id$
 // Author: Rene Brun   31/08/99
+
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -29,8 +30,8 @@ Int_t           TVirtualFitter::fgMaxpar    = 0;
 TString         TVirtualFitter::fgDefault   = "";
 
 ClassImp(TVirtualFitter)
-   
-   
+
+
 //______________________________________________________________________________
 TVirtualFitter::TVirtualFitter()
 {
@@ -46,7 +47,7 @@ TVirtualFitter::TVirtualFitter()
 
 //______________________________________________________________________________
 TVirtualFitter::TVirtualFitter(const TVirtualFitter& tvf) :
-  TNamed(tvf), 
+  TNamed(tvf),
   fOption(tvf.fOption),
   fXfirst(tvf.fXfirst),
   fXlast(tvf.fXlast),
@@ -61,8 +62,8 @@ TVirtualFitter::TVirtualFitter(const TVirtualFitter& tvf) :
   fObjectFit(tvf.fObjectFit),
   fUserFunc(tvf.fUserFunc),
   fMethodCall(tvf.fMethodCall),
-  fFCN(tvf.fFCN) 
-{ 
+  fFCN(tvf.fFCN)
+{
    //copy constructor
 }
 
@@ -87,7 +88,7 @@ TVirtualFitter& TVirtualFitter::operator=(const TVirtualFitter& tvf)
       fUserFunc=tvf.fUserFunc;
       fMethodCall=tvf.fMethodCall;
       fFCN=tvf.fFCN;
-   } 
+   }
    return *this;
 }
 
@@ -248,7 +249,7 @@ Double_t *TVirtualFitter::SetCache(Int_t npoints, Int_t psize)
    // if (npoints*psize > fCacheSize) the existing cache is deleted
    // and a new array is created.
    // The function returns a pointer to the cache
-   
+
    if (npoints*psize > fCacheSize) {
       delete [] fCache;
       fCacheSize = npoints*psize;
@@ -280,7 +281,7 @@ void TVirtualFitter::SetFCN(void *fcn)
 //______________________________________________________________________________
 void TVirtualFitter::SetMaxIterations(Int_t niter)
 {
-   // static: Set the maximum number of iterations measured as function calls 
+   // static: Set the maximum number of iterations measured as function calls
 
    ROOT::Math::MinimizerOptions::SetDefaultMaxFunctionCalls(niter);
 }
