@@ -339,7 +339,7 @@ void TProofPlayer::AddQueryResult(TQueryResult *q)
             fQueryResults->AddAfter(qp, q);
          }
       }
-   } else if(IsClient()) {
+   } else if (IsClient()) {
       // If max reached, eliminate first the oldest one
       if (fDrawQueries == fMaxDrawQueries && fMaxDrawQueries > 0) {
          TIter nxr(fQueryResults);
@@ -748,8 +748,6 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
       fSelStatus = new TStatus;
       fOutput->Add(fSelStatus);
 
-      SetupFeedback();
-
       fSelector->SetOption(option);
       fSelector->SetInputList(fInput);
 
@@ -792,6 +790,9 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
       return -1;
    } ENDTRY;
 
+   // Create feedback lists, if required
+   SetupFeedback();
+
    if (gMonitoringWriter)
       gMonitoringWriter->SendProcessingStatus("STARTED",kTRUE);
 
@@ -818,8 +819,8 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
       gProofServ->GetSocket()->Send(kPROOF_ENDINIT);
 
    // Get the frequency for logging memory consumption information
-   Long64_t memlogfreq =
-      ((TParameter<Long64_t>*)fInput->FindObject("PROOF_MemLogFreq"))->GetVal();
+   TParameter<Long64_t> *par = (TParameter<Long64_t>*)fInput->FindObject("PROOF_MemLogFreq");
+   Long64_t memlogfreq = (par) ? par->GetVal() : 100;
 
    TRY {
 
@@ -1148,172 +1149,146 @@ TProofPlayerRemote::~TProofPlayerRemote()
 }
 
 //______________________________________________________________________________
-Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
-                                     Option_t *option, Long64_t nentries,
-                                     Long64_t first)
+Int_t TProofPlayerRemote::InitPacketizer(TDSet *dset, Long64_t nentries,
+                                         Long64_t first, const char *defpackunit,
+                                         const char *defpackdata)
 {
-   // Process specified TDSet on PROOF.
-   // This method is called on client and on the PROOF master.
-   // The return value is -1 in case of an error and TSelector::GetStatus() in
-   // in case of success.
+   // Init the packetizer
+   // Return 0 on success (fPacketizer is correctly initialized), -1 on failure.
 
+   SafeDelete(fPacketizer);
    PDB(kGlobal,1) Info("Process","Enter");
    fDSet = dset;
    fExitStatus = kFinished;
-   if (!fProgressStatus) {
-      Error("Process", "No progress status");
+
+   Bool_t noData = dset->TestBit(TDSet::kEmpty) ? kTRUE : kFALSE;
+
+   TString packetizer;
+   TList *listOfMissingFiles = 0;
+
+   TMethodCall callEnv;
+   TClass *cl;
+   noData = dset->TestBit(TDSet::kEmpty) ? kTRUE : kFALSE;
+
+   if (noData) {
+
+      if (TProof::GetParameter(fInput, "PROOF_Packetizer", packetizer) != 0)
+         packetizer = defpackunit;
+      else
+         Info("InitPacketizer", "using alternate packetizer: %s", packetizer.Data());
+
+      // Get linked to the related class
+      cl = TClass::GetClass(packetizer);
+      if (cl == 0) {
+         Error("InitPacketizer", "class '%s' not found", packetizer.Data());
+         fExitStatus = kAborted;
+         return -1;
+      }
+
+      // Init the constructor
+      callEnv.InitWithPrototype(cl, cl->GetName(),"TList*,Long64_t,TList*,TProofProgressStatus*");
+      if (!callEnv.IsValid()) {
+         Error("InitPacketizer",
+               "cannot find correct constructor for '%s'", cl->GetName());
+         fExitStatus = kAborted;
+         return -1;
+      }
+      callEnv.ResetParam();
+      callEnv.SetParam((Long_t) fProof->GetListOfActiveSlaves());
+      callEnv.SetParam((Long64_t) nentries);
+      callEnv.SetParam((Long_t) fInput);
+      callEnv.SetParam((Long_t) fProgressStatus);
+
+   } else {
+
+      // Lookup - resolve the end-point urls to optmize the distribution.
+      // The lookup was previously called in the packetizer's constructor.
+      // A list for the missing files may already have been added to the
+      // output list; otherwise, if needed it will be created inside
+      if ((listOfMissingFiles = (TList *)fInput->FindObject("MissingFiles"))) {
+         // Move it to the output list
+         fInput->Remove(listOfMissingFiles);
+      } else {
+         listOfMissingFiles = new TList;
+      }
+      dset->Lookup(kTRUE, &listOfMissingFiles);
+
+      if (fProof->GetRunStatus() != TProof::kRunning) {
+         // We have been asked to stop
+         Error("InitPacketizer", "received stop/abort request");
+         fExitStatus = kAborted;
+         return -1;
+      }
+
+      if (!(dset->GetListOfElements()) ||
+          !(dset->GetListOfElements()->GetSize())) {
+         if (gProofServ)
+            gProofServ->SendAsynMessage("InitPacketizer: No files from the data set were found - Aborting");
+         Error("InitPacketizer", "No files from the data set were found - Aborting");
+         fExitStatus = kAborted;
+         if (listOfMissingFiles) {
+            listOfMissingFiles->SetOwner();
+            fOutput->Remove(listOfMissingFiles);
+            SafeDelete(listOfMissingFiles);
+         }
+         return -1;
+      }
+
+      if (TProof::GetParameter(fInput, "PROOF_Packetizer", packetizer) != 0)
+         // Using standard packetizer TAdaptivePacketizer
+         packetizer = defpackdata;
+      else
+         Info("InitPacketizer", "using alternate packetizer: %s", packetizer.Data());
+
+      // Get linked to the related class
+      cl = TClass::GetClass(packetizer);
+      if (cl == 0) {
+         Error("InitPacketizer", "class '%s' not found", packetizer.Data());
+         fExitStatus = kAborted;
+         return -1;
+      }
+
+      // Init the constructor
+      callEnv.InitWithPrototype(cl, cl->GetName(),"TDSet*,TList*,Long64_t,Long64_t,TList*,TProofProgressStatus*");
+      if (!callEnv.IsValid()) {
+         Error("InitPacketizer", "cannot find correct constructor for '%s'", cl->GetName());
+         fExitStatus = kAborted;
+         return -1;
+      }
+      callEnv.ResetParam();
+      callEnv.SetParam((Long_t) dset);
+      callEnv.SetParam((Long_t) fProof->GetListOfActiveSlaves());
+      callEnv.SetParam((Long64_t) first);
+      callEnv.SetParam((Long64_t) nentries);
+      callEnv.SetParam((Long_t) fInput);
+      callEnv.SetParam((Long_t) fProgressStatus);
+
+      // We are going to test validity during the packetizer initialization
+      dset->SetBit(TDSet::kValidityChecked);
+      dset->ResetBit(TDSet::kSomeInvalid);
+   }
+
+   // Get an instance of the packetizer
+   Long_t ret = 0;
+   callEnv.Execute(ret);
+   if ((fPacketizer = (TVirtualPacketizer *)ret) == 0) {
+      Error("InitPacketizer", "cannot construct '%s'", cl->GetName());
+      fExitStatus = kAborted;
       return -1;
    }
-   fProgressStatus->Reset();
 
-   //   delete fOutput;
-   if (!fOutput)
-      fOutput = new TList;
-   else
-      fOutput->Clear();
-
-   if (fProof->IsMaster()){
-      TPerfStats::Start(fInput, fOutput);
-   } else {
-      TPerfStats::Setup(fInput);
+   if (!fPacketizer->IsValid()) {
+      Error("InitPacketizer",
+            "instantiated packetizer object '%s' is invalid", cl->GetName());
+      fExitStatus = kAborted;
+      SafeDelete(fPacketizer);
+      return -1;
    }
 
-   if(!SendSelector(selector_file)) return -1;
-
-   TMessage mesg(kPROOF_PROCESS);
-   TString fn(gSystem->BaseName(selector_file));
-
-   // Parse option
-   Bool_t sync = (fProof->GetQueryMode(option) == TProof::kSync);
-   Bool_t noData = kFALSE;
-
-   TDSet *set = dset;
-   if (fProof->IsMaster()) {
-
-      PDB(kPacketizer,1) Info("Process","Create Proxy TDSet");
-      set = new TDSetProxy( dset->GetType(), dset->GetObjName(),
-                            dset->GetDirectory() );
-      TString packetizer;
-      TMethodCall callEnv;
-      TClass *cl;
-      noData = dset->TestBit(TDSet::kEmpty) ? kTRUE : kFALSE;
-      TList *listOfMissingFiles = 0;
-
-      if (noData) {
-
-         set->SetBit(TDSet::kEmpty);
-         if (TProof::GetParameter(fInput, "PROOF_Packetizer", packetizer) != 0)
-            packetizer = "TPacketizerUnit";
-         else
-            Info("Process", "using alternate packetizer: %s", packetizer.Data());
-
-         // Get linked to the related class
-         cl = TClass::GetClass(packetizer);
-         if (cl == 0) {
-            Error("Process", "class '%s' not found", packetizer.Data());
-            fExitStatus = kAborted;
-            return -1;
-         }
-
-         // Init the constructor
-         callEnv.InitWithPrototype(cl, cl->GetName(),"TList*,Long64_t,TList*,TProofProgressStatus*");
-         if (!callEnv.IsValid()) {
-            Error("Process", "cannot find correct constructor for '%s'", cl->GetName());
-            fExitStatus = kAborted;
-            return -1;
-         }
-         callEnv.ResetParam();
-         callEnv.SetParam((Long_t) fProof->GetListOfActiveSlaves());
-         callEnv.SetParam((Long64_t) nentries);
-         callEnv.SetParam((Long_t) fInput);
-         callEnv.SetParam((Long_t) fProgressStatus);
-
-      } else {
-
-         // Lookup - resolve the end-point urls to optmize the distribution.
-         // The lookup was previously called in the packetizer's constructor.
-         // A list for the missing files may already have been added to the
-         // output list; otherwise, if needed it will be created inside
-         if ((listOfMissingFiles = (TList *)fInput->FindObject("MissingFiles"))) {
-            // The list will be registered into the output list:
-            // remove it from the input list to avoid problems at destruction
-            fInput->Remove(listOfMissingFiles);
-         } else {
-            listOfMissingFiles = new TList;
-         }
-         dset->Lookup(kTRUE, &listOfMissingFiles);
-         if (fProof->GetRunStatus() != TProof::kRunning) {
-            // We have been asked to stop
-            Error("Process", "received stop/abort request");
-            fExitStatus = kAborted;
-            return -1;
-         }
-         if (!(dset->GetListOfElements()) ||
-             !(dset->GetListOfElements()->GetSize())) {
-            gProofServ->SendAsynMessage("Process: No files from the data set were found - Aborting");
-            Error("Process", "No files from the data set were found - Aborting");
-            fExitStatus = kAborted;
-            if (listOfMissingFiles) {
-               listOfMissingFiles->SetOwner();
-               fOutput->Remove(listOfMissingFiles);
-               SafeDelete(listOfMissingFiles);
-            }
-            return -1;
-         }
-
-         if (TProof::GetParameter(fInput, "PROOF_Packetizer", packetizer) != 0)
-            // Using standard packetizer TAdaptivePacketizer
-            packetizer = "TPacketizerAdaptive";
-         else
-            Info("Process", "using alternate packetizer: %s", packetizer.Data());
-
-         // Get linked to the related class
-         cl = TClass::GetClass(packetizer);
-         if (cl == 0) {
-            Error("Process", "class '%s' not found", packetizer.Data());
-            fExitStatus = kAborted;
-            return -1;
-         }
-
-         // Init the constructor
-         callEnv.InitWithPrototype(cl, cl->GetName(),"TDSet*,TList*,Long64_t,"
-                                   "Long64_t,TList*,TProofProgressStatus*");
-         if (!callEnv.IsValid()) {
-            Error("Process", "cannot find correct constructor for '%s'", cl->GetName());
-            fExitStatus = kAborted;
-            return -1;
-         }
-         callEnv.ResetParam();
-         callEnv.SetParam((Long_t) dset);
-         callEnv.SetParam((Long_t) fProof->GetListOfActiveSlaves());
-         callEnv.SetParam((Long64_t) first);
-         callEnv.SetParam((Long64_t) nentries);
-         callEnv.SetParam((Long_t) fInput);
-         callEnv.SetParam((Long_t) fProgressStatus);
-
-         // We are going to test validity during the packetizer initialization
-         dset->SetBit(TDSet::kValidityChecked);
-         dset->ResetBit(TDSet::kSomeInvalid);
-      }
-
-      // Get an instance of the packetizer
-      Long_t ret = 0;
-      callEnv.Execute(ret);
-      if ((fPacketizer = (TVirtualPacketizer *)ret) == 0) {
-         Error("Process", "cannot construct '%s'", cl->GetName());
-         fExitStatus = kAborted;
-         return -1;
-      }
-
-      if (!fPacketizer->IsValid()) {
-         Error("Process", "instantiated packetizer object '%s' is invalid", cl->GetName());
-         fExitStatus = kAborted;
-         return -1;
-      }
-
+   if (!noData) {
       // Add invalid elements to the list of missing elements
       TDSetElement *elem = 0;
-      if (!noData && dset->TestBit(TDSet::kSomeInvalid)) {
+      if (dset->TestBit(TDSet::kSomeInvalid)) {
          TIter nxe(dset->GetListOfElements());
          while ((elem = (TDSetElement *)nxe())) {
             if (!elem->GetValid()) {
@@ -1340,7 +1315,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
                } else {
                   msg = Form("File not found: %s - skipping!", fi->GetName());
                }
-               gProofServ->SendAsynMessage(msg.Data());
+               if (gProofServ) gProofServ->SendAsynMessage(msg.Data());
             }
          }
          // Make sure it will be sent back
@@ -1364,11 +1339,73 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
                     " +++ About %.2f %c of the requested files (%d out of %d) are missing; details in"
                     " the 'MissingFiles' list\n"
                     " +++", xb * 100., '%', nbad, nbad + ngood);
-         gProofServ->SendAsynMessage(msg.Data());
+         if (gProofServ) gProofServ->SendAsynMessage(msg.Data());
       } else {
          // Cleanup
          SafeDelete(listOfMissingFiles);
       }
+   }
+
+   // Done
+   return 0;
+}
+
+//______________________________________________________________________________
+Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
+                                     Option_t *option, Long64_t nentries,
+                                     Long64_t first)
+{
+   // Process specified TDSet on PROOF.
+   // This method is called on client and on the PROOF master.
+   // The return value is -1 in case of an error and TSelector::GetStatus() in
+   // in case of success.
+
+   PDB(kGlobal,1) Info("Process","Enter");
+   fDSet = dset;
+   fExitStatus = kFinished;
+
+   if (!fProgressStatus) {
+      Error("Process", "No progress status");
+      return -1;
+   }
+   fProgressStatus->Reset();
+
+   //   delete fOutput;
+   if (!fOutput)
+      fOutput = new TList;
+   else
+      fOutput->Clear();
+
+   if (fProof->IsMaster()){
+      TPerfStats::Start(fInput, fOutput);
+   } else {
+      TPerfStats::Setup(fInput);
+   }
+
+   if(!SendSelector(selector_file)) return -1;
+
+   TMessage mesg(kPROOF_PROCESS);
+   TString fn(gSystem->BaseName(selector_file));
+
+   // Parse option
+   Bool_t sync = (fProof->GetQueryMode(option) == TProof::kSync);
+
+   TDSet *set = dset;
+   if (fProof->IsMaster()) {
+
+      PDB(kPacketizer,1) Info("Process","Create Proxy TDSet");
+      set = new TDSetProxy( dset->GetType(), dset->GetObjName(),
+                            dset->GetDirectory() );
+      if (dset->TestBit(TDSet::kEmpty))
+         set->SetBit(TDSet::kEmpty);
+
+      const char *datapack = (fProof->IsLite()) ? "TPacketizer" : "TPacketizerAdaptive";
+      if (InitPacketizer(dset, nentries, first, "TPacketizerUnit", datapack) != 0) {
+         Error("Process", "cannot init the packetizer");
+         fExitStatus = kAborted;
+         return -1;
+      }
+
       // Reset start, this is now managed by the packetizer
       first = 0;
       // Try to have 100 messages about memory, unless a different number is given by the user
@@ -1905,7 +1942,8 @@ Int_t TProofPlayerRemote::AddOutputObject(TObject *obj)
    // one (so that its ownership has not been taken and can be deleted), and 0
    // otherwise.
 
-   PDB(kOutput,1) Info("AddOutputObject","Enter");
+   PDB(kOutput,1)
+      Info("AddOutputObject","Enter: %p", obj);
 
    // We must something to process
    if (!obj) {
@@ -2004,7 +2042,7 @@ Int_t TProofPlayerRemote::AddOutputObject(TObject *obj)
 
    // For other objects we just run the incorporation procedure
    Incorporate(obj, fOutput, merged);
-   if (!IsClient()){
+   if (!IsClient() || fProof->IsLite()){
       ProcInfo_t pi;
       if (!gSystem->GetProcInfo(&pi)){
          Info("AddOutputObject|Svc", "Memory %ld virtual %ld resident after merging object %s",
@@ -2112,6 +2150,8 @@ Int_t TProofPlayerRemote::Incorporate(TObject *newobj, TList *outlist, Bool_t &m
    // Return 0 on success, -1 on error.
 
    merged = kTRUE;
+
+   PDB(kOutput,1) Info("Incorporate", "enter: obj: %p, list: %p", newobj, outlist);
 
    // The object and list must exist
    if (!newobj || !outlist) {
@@ -2483,7 +2523,7 @@ Bool_t TProofPlayerRemote::IsClient() const
 {
    // Is the player running on the client?
 
-   return !fProof->IsMaster();
+   return fProof->TestBit(TProof::kIsClient);
 }
 
 //______________________________________________________________________________
@@ -2556,9 +2596,13 @@ void TProofPlayerSlave::SetupFeedback()
    // Setup feedback.
 
    TList *fb = (TList*) fInput->FindObject("FeedbackList");
-
-   PDB(kFeedback,1) Info("SetupFeedback","\"FeedbackList\" %sfound",
-      fb == 0 ? "NOT ":"");
+   if (fb) {
+      PDB(kFeedback,1)
+        Info("SetupFeedback","\"FeedbackList\" found: %d objects", fb->GetSize());
+   } else {
+      PDB(kFeedback,1)
+        Info("SetupFeedback","\"FeedbackList\" NOT found");
+   }
 
    if (fb == 0 || fb->GetSize() == 0) return;
 

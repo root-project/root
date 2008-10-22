@@ -116,7 +116,8 @@ Bool_t TProofPEAC::StartSlaves(Bool_t,Bool_t)
          if (sp->fType == "inetd") {
             TString fullord = TString(gProofServ->GetOrdinal()) + "." + ((Long_t) ord);
             ord++;
-            TSlave *slave = CreateSlave(sp->fNode, fullord, sp->fPerfidx, sp->fImg, kPROOF_WorkDir);
+            TSlave *slave = CreateSlave(sp->fNode, fullord,
+                                        sp->fPerfidx, sp->fImg, Form("~/%s", kPROOF_WorkDir));
             fSlaves->Add(slave);
             if (slave->IsValid()) {
                fAllMonitor->Add(slave->GetSocket());
@@ -171,7 +172,7 @@ Bool_t TProofPEAC::StartSlaves(Bool_t,Bool_t)
          TString fullord = TString(gProofServ->GetOrdinal()) + "." + ((Long_t) ord);
          ord++;
          TSlave *slave = CreateSlave(cs->fHostname, fullord,
-                                     cs->fPerfIdx, cs->fImage, kPROOF_WorkDir);
+                                     cs->fPerfIdx, cs->fImage, Form("~/%s", kPROOF_WorkDir));
 
          fSlaves->Add(slave);
          if (slave->IsValid()) {

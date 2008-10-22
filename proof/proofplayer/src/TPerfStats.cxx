@@ -58,7 +58,10 @@ TPerfEvent::TPerfEvent(TTimeStamp *offset)
    if (gProofServ != 0) {
       fEvtNode = gProofServ->GetOrdinal();
    } else {
-      fEvtNode = "-2"; // not on a PROOF server
+      if (gProof && gProof->IsLite())
+         fEvtNode = "0";
+      else
+         fEvtNode = "-2"; // not on a PROOF server
    }
 
    if (offset != 0) {
@@ -118,7 +121,12 @@ TPerfStats::TPerfStats(TList *input, TList *output)
 {
    // Normal constructor.
 
-   TProof *proof = gProofServ->GetProof();
+   TProof *proof = (gProofServ) ? gProofServ->GetProof() : gProof;
+
+   // Master flag
+   Bool_t isMaster = ((proof && proof->TestBit(TProof::kIsMaster)) ||
+                      (gProofServ && gProofServ->IsMaster())) ? kTRUE : kFALSE;
+
    TList *l = proof ? proof->GetListOfSlaveInfos() : 0 ;
    TIter nextslaveinfo(l);
    while (TSlaveInfo *si = dynamic_cast<TSlaveInfo*>(nextslaveinfo()))
@@ -131,27 +139,29 @@ TPerfStats::TPerfStats(TList *input, TList *output)
    fDoTraceRate = (input->FindObject("PROOF_RateTrace") != 0);
    fDoSlaveTrace = (input->FindObject("PROOF_SlaveStatsTrace") != 0);
 
-   if ((gProofServ->IsMaster() && (fDoTrace || fDoTraceRate)) ||
-       (!gProofServ->IsMaster() && fDoSlaveTrace)) {
+   if ((isMaster && (fDoTrace || fDoTraceRate)) || (!isMaster && fDoSlaveTrace)) {
       // Construct tree
+      gDirectory->RecursiveRemove(gDirectory->FindObject("PROOF_PerfStats"));
       fTrace = new TTree("PROOF_PerfStats", "PROOF Statistics");
       fTrace->SetDirectory(0);
       fTrace->Bronch("PerfEvents", "TPerfEvent", &fPerfEvent, 64000, 0);
       output->Add(fTrace);
    }
 
-   if (fDoHist && gProofServ->IsMaster()) {
+   if (fDoHist && isMaster) {
       // Make Histograms
       Double_t time_per_bin = 1e-3; // 10ms
       Double_t min_time = 0;
       Int_t ntime_bins = 1000;
 
+      gDirectory->RecursiveRemove(gDirectory->FindObject("PROOF_PacketsHist"));
       fPacketsHist = new TH1D("PROOF_PacketsHist", "Packets processed per Worker",
                               fSlaves, 0, fSlaves);
       fPacketsHist->SetDirectory(0);
       fPacketsHist->SetMinimum(0);
       output->Add(fPacketsHist);
 
+      gDirectory->RecursiveRemove(gDirectory->FindObject("PROOF_EventsHist"));
       fEventsHist = new TH1D("PROOF_EventsHist", "Events processed per Worker",
                              fSlaves, 0, fSlaves);
       fEventsHist->SetFillColor(kGreen);
@@ -159,6 +169,7 @@ TPerfStats::TPerfStats(TList *input, TList *output)
       fEventsHist->SetMinimum(0);
       output->Add(fEventsHist);
 
+      gDirectory->RecursiveRemove(gDirectory->FindObject("PROOF_NodeHist"));
       fNodeHist = new TH1D("PROOF_NodeHist", "Slaves per Fileserving Node",
                            fSlaves, 0, fSlaves);
       fNodeHist->SetDirectory(0);
@@ -166,6 +177,7 @@ TPerfStats::TPerfStats(TList *input, TList *output)
       fNodeHist->SetBit(TH1::kCanRebin);
       output->Add(fNodeHist);
 
+      gDirectory->RecursiveRemove(gDirectory->FindObject("PROOF_LatencyHist"));
       fLatencyHist = new TH2D("PROOF_LatencyHist", "GetPacket Latency per Worker",
                               fSlaves, 0, fSlaves,
                               ntime_bins, min_time, time_per_bin);
@@ -174,6 +186,7 @@ TPerfStats::TPerfStats(TList *input, TList *output)
       fLatencyHist->SetBit(TH1::kCanRebin);
       output->Add(fLatencyHist);
 
+      gDirectory->RecursiveRemove(gDirectory->FindObject("PROOF_ProcTimeHist"));
       fProcTimeHist = new TH2D("PROOF_ProcTimeHist", "Packet Processing Time per Worker",
                                fSlaves, 0, fSlaves,
                                ntime_bins, min_time, time_per_bin);
@@ -182,6 +195,7 @@ TPerfStats::TPerfStats(TList *input, TList *output)
       fProcTimeHist->SetBit(TH1::kCanRebin);
       output->Add(fProcTimeHist);
 
+      gDirectory->RecursiveRemove(gDirectory->FindObject("PROOF_CpuTimeHist"));
       fCpuTimeHist = new TH2D("PROOF_CpuTimeHist", "Packet CPU Time per Worker",
                               fSlaves, 0, fSlaves,
                               ntime_bins, min_time, time_per_bin);
@@ -196,6 +210,7 @@ TPerfStats::TPerfStats(TList *input, TList *output)
          if (si->fStatus == TSlaveInfo::kActive) {
             fPacketsHist->GetXaxis()->SetBinLabel(slavebin, si->GetOrdinal());
             fEventsHist->GetXaxis()->SetBinLabel(slavebin, si->GetOrdinal());
+            fNodeHist->GetXaxis()->SetBinLabel(slavebin, si->GetOrdinal());
             fLatencyHist->GetXaxis()->SetBinLabel(slavebin, si->GetOrdinal());
             fProcTimeHist->GetXaxis()->SetBinLabel(slavebin, si->GetOrdinal());
             fCpuTimeHist->GetXaxis()->SetBinLabel(slavebin, si->GetOrdinal());
@@ -204,7 +219,7 @@ TPerfStats::TPerfStats(TList *input, TList *output)
       }
    }
 
-   if (gProofServ->IsMaster()) {
+   if (isMaster) {
       // Monitoring for query performances using SQL DB
       TString sqlserv = gEnv->GetValue("ProofServ.QueryLogDB", "");
       if (sqlserv != "") {
@@ -481,9 +496,11 @@ void TPerfStats::WriteQueryLog()
    if (fMonitoringWriter) {
       if (!gProofServ || !gProofServ->GetSessionTag() || !gProofServ->GetProof() ||
           !gProofServ->GetProof()->GetQueryResult()) {
-         Error("WriteQueryLog", "some require object are 0 (0x%lx 0x%lx 0x%lx 0x%lx)",
-               gProofServ, gProofServ->GetSessionTag(), gProofServ->GetProof(),
-               gProofServ->GetProof()->GetQueryResult());
+         Error("WriteQueryLog", "some required object are undefined (0x%lx 0x%lx 0x%lx 0x%lx)",
+               gProofServ, (gProofServ ? gProofServ->GetSessionTag() : 0),
+              (gProofServ ? gProofServ->GetProof() : 0),
+              ((gProofServ && gProofServ->GetProof()) ?
+                gProofServ->GetProof()->GetQueryResult() : 0));
          return;
       }
 
@@ -545,8 +562,11 @@ void TPerfStats::Start(TList *input, TList *output)
    }
 
    gPerfStats = new TPerfStats(input, output);
-
-   gPerfStats->SimpleEvent(TVirtualPerfStats::kStart);
+   if (gPerfStats && !gPerfStats->TestBit(TObject::kInvalidObject)) {
+      gPerfStats->SimpleEvent(TVirtualPerfStats::kStart);
+   } else {
+      SafeDelete(gPerfStats);
+   }
 }
 
 //______________________________________________________________________________

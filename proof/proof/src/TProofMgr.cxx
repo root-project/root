@@ -21,9 +21,11 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TError.h"
+#include "TEnv.h"
 #include "TList.h"
 #include "TProof.h"
 #include "TProofMgr.h"
+#include "TProofMgrLite.h"
 #include "TROOT.h"
 
 ClassImp(TProofMgr)
@@ -401,17 +403,35 @@ TProofMgr *TProofMgr::Create(const char *uin, Int_t loglevel,
    // the plugin manager.
    TProofMgr *m= 0;
 
-   // Resolve url; if empty input try to get the localhost FQDN
+   Bool_t isLite = kFALSE;
+   // Resolve url; if empty the actions depend of the default
    TUrl u(uin);
-   if (!uin || !strlen(uin))
-      u.SetUrl("localhost");
-
-   // in case user gave as url: "machine.dom.ain", replace
-   // "http" by "proof" and "80" by "1093"
-   if (!strcmp(u.GetProtocol(), TUrl("a").GetProtocol()))
+   TString host = u.GetHost();
+   if (host.IsNull()) {
+      host = gEnv->GetValue("Proof.LocalDefault", "lite");
+      if (host != "lite")
+         u.SetUrl("localhost");
+   }
+   if (host == "lite" || host == "__lite__") {
+#ifndef WIN32
+      isLite = kTRUE;
+      u.SetHost("__lite__");
       u.SetProtocol("proof");
-   if (u.GetPort() == TUrl("a").GetPort())
       u.SetPort(1093);
+#else
+      Info("TProofMgr::Create","'lite' not yet supported on Windows");
+      return m;
+#endif
+   }
+
+   if (!isLite) {
+      // in case user gave as url: "machine.dom.ain", replace
+      // "http" by "proof" and "80" by "1093"
+      if (!strcmp(u.GetProtocol(), TUrl("a").GetProtocol()))
+         u.SetProtocol("proof");
+      if (u.GetPort() == TUrl("a").GetPort())
+         u.SetPort(1093);
+   }
 
    // Avoid multiple calls to GetUrl
    const char *url = u.GetUrl();
@@ -429,6 +449,11 @@ TProofMgr *TProofMgr::Create(const char *uin, Int_t loglevel,
             break;
          }
       }
+   }
+
+   if (isLite) {
+      // Init the lite version
+      return new TProofMgrLite(url, loglevel, alias);
    }
 
    m = 0;

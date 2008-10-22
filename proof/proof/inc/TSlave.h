@@ -50,6 +50,8 @@ typedef TSlave *(*TSlave_t)(const char *url, const char *ord, Int_t perf,
 class TSlave : public TObject {
 
 friend class TProof;
+friend class TProofLite;
+friend class TSlaveLite;
 friend class TXSlave;
 
 public:
@@ -107,6 +109,7 @@ protected:
    virtual TObjString *SendCoordinator(Int_t kind, const char *msg = 0, Int_t int2 = 0);
    virtual Int_t SendGroupPriority(const char * /*grp*/, Int_t /*priority*/) { return 0; }
    virtual void  SetAlias(const char *alias);
+   void          SetSocket(TSocket *s) { fSocket = s; }
    virtual void  SetStatus(Int_t st) { fStatus = st; }
    virtual void  StopProcess(Bool_t abort, Int_t timeout);
 
@@ -145,7 +148,7 @@ public:
 
    virtual Bool_t IsValid() const { return fSocket ? kTRUE : kFALSE; }
 
-   void           Print(Option_t *option="") const;
+   virtual void   Print(Option_t *option="") const;
 
    virtual Int_t  SetupServ(Int_t stype, const char *conffile);
 

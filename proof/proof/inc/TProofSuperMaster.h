@@ -40,9 +40,6 @@ friend class TProofPlayerSuperMaster;
 
 protected:
    Bool_t    StartSlaves(Bool_t, Bool_t);
-   Long64_t  Process(TDSet *set, const char *selector,
-                     Option_t *option = "", Long64_t nentries = -1,
-                     Long64_t firstentry = 0);
    void      ValidateDSet(TDSet *dset);
    virtual   TVirtualProofPlayer *MakePlayer(const char *player = 0, TSocket *s = 0);
 
@@ -51,6 +48,19 @@ public:
                      const char *confdir = kPROOF_ConfDir, Int_t loglevel = 0,
                      const char *alias = 0, TProofMgr *mgr = 0);
    virtual ~TProofSuperMaster() { }
+
+   Long64_t Process(TDSet *set, const char *selector,
+                    Option_t *option = "", Long64_t nentries = -1,
+                    Long64_t firstentry = 0);
+   Long64_t Process(TFileCollection *fc, const char *sel, Option_t *o = "",
+                    Long64_t nent = -1, Long64_t fst = 0)
+                    { return TProof::Process(fc, sel, o, nent, fst); }
+   Long64_t Process(const char *dsname, const char *sel,
+                    Option_t *o = "", Long64_t nent = -1,
+                    Long64_t fst = 0, TObject *enl = 0)
+                    { return TProof::Process(dsname, sel, o, nent, fst, enl); }
+   Long64_t Process(const char *sel, Long64_t nent, Option_t *o = "")
+                    { return TProof::Process(sel, nent, o); }
 
    ClassDef(TProofSuperMaster,0) //PROOF control class for making submasters
 };

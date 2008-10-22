@@ -108,7 +108,7 @@ class TProofDataSetManager;
 // 13 -> 14: new proofserv environment setting
 // 14 -> 15: add support for entry lists; new version of TFileInfo
 // 15 -> 16: add support for generic non-data based processing
-// 16 -> 17: new dataset handling system; support for TFileCollection processing
+// 16 -> 17: new dataset handling system; support for TFileCollection processing 
 // 17 -> 18: support for reconnection on daemon restarts
 // 18 -> 19: TProofProgressStatus used in kPROOF_PROGRESS, kPROOF_STOPPROCESS
 //           and kPROOF_GETNEXTPACKET messages in Master - worker communication
@@ -118,7 +118,7 @@ const Int_t       kPROOF_Protocol        = 19;            // protocol version nu
 const Int_t       kPROOF_Port            = 1093;          // IANA registered PROOF port
 const char* const kPROOF_ConfFile        = "proof.conf";  // default config file
 const char* const kPROOF_ConfDir         = "/usr/local/root";  // default config dir
-const char* const kPROOF_WorkDir         = "~/proof";     // default working directory
+const char* const kPROOF_WorkDir         = ".proof";      // default working directory
 const char* const kPROOF_CacheDir        = "cache";       // file cache dir, under WorkDir
 const char* const kPROOF_PackDir         = "packages";    // package dir, under WorkDir
 const char* const kPROOF_QueryDir        = "queries";     // query dir, under WorkDir
@@ -191,7 +191,7 @@ public:
    TThread         *fThread;
    TProofThreadArg *fArgs;
 
-   TProofThread(TThread *t, TProofThreadArg *a) : fThread(t), fArgs(a) {}
+   TProofThread(TThread *t, TProofThreadArg *a) { fThread = t; fArgs = a; }
    virtual ~TProofThread() { SafeDelete(fThread); SafeDelete(fArgs); }
 private:
 
@@ -262,14 +262,18 @@ class TProof : public TNamed, public TQObject {
 friend class TPacketizer;
 friend class TPacketizerDev;
 friend class TPacketizerAdaptive;
+friend class TProofLite;
 friend class TProofDataSetManager;
 friend class TProofServ;
 friend class TProofInputHandler;
 friend class TProofInterruptHandler;
 friend class TProofPlayer;
+friend class TProofPlayerLite;
 friend class TProofPlayerRemote;
 friend class TProofProgressDialog;
 friend class TSlave;
+friend class TSlaveLite;
+friend class TVirtualPacketizer;
 friend class TXSlave;
 friend class TXSocket;        // to access kPing
 friend class TXSocketHandler; // to access fCurrentMonitor and CollectInputFrom
@@ -280,7 +284,9 @@ public:
    // PROOF status bits
    enum EStatusBits {
       kUsingSessionGui     = BIT(14),
-      kNewInputData        = BIT(15)
+      kNewInputData        = BIT(15),
+      kIsClient            = BIT(16),
+      kIsMaster            = BIT(17)
    };
    enum EQueryMode {
       kSync                = 0,
@@ -580,6 +586,8 @@ protected:
 
    void    UpdateDialog();
 
+   void    HandleLibIncPath(const char *what, Bool_t add, const char *dirs);
+
    TList  *GetListOfActiveSlaves() const { return fActiveSlaves; }
    TSlave *CreateSlave(const char *url, const char *ord,
                        Int_t perf, const char *image, const char *workdir);
@@ -595,6 +603,8 @@ protected:
    virtual void ValidateDSet(TDSet *dset);
 
    TPluginHandler *GetProgressDialog() const { return fProgressDialog; }
+
+   Int_t AssertPath(const char *path, Bool_t writable);
 
    static void *SlaveStartupThread(void *arg);
 
@@ -612,17 +622,19 @@ public:
    Int_t       Ping();
    void        Touch();
    Int_t       Exec(const char *cmd, Bool_t plusMaster = kFALSE);
-   Long64_t    Process(TDSet *dset, const char *selector,
-                       Option_t *option = "", Long64_t nentries = -1,
-                       Long64_t firstentry = 0);
-   Long64_t    Process(TFileCollection *fc, const char *selector,
-                       Option_t *option = "", Long64_t nentries = -1,
-                       Long64_t firstentry = 0);
-   Long64_t    Process(const char *dsetname, const char *selector,
-                       Option_t *option = "", Long64_t nentries = -1,
-                       Long64_t firstentry = 0, TObject *enl = 0);
-   Long64_t    Process(const char *selector, Long64_t nentries,
-                       Option_t *option = "");
+
+   virtual Long64_t Process(TDSet *dset, const char *selector,
+                            Option_t *option = "", Long64_t nentries = -1,
+                            Long64_t firstentry = 0);
+   virtual Long64_t Process(TFileCollection *fc, const char *selector,
+                            Option_t *option = "", Long64_t nentries = -1,
+                            Long64_t firstentry = 0);
+   virtual Long64_t Process(const char *dsetname, const char *selector,
+                            Option_t *option = "", Long64_t nentries = -1,
+                            Long64_t firstentry = 0, TObject *enl = 0);
+   virtual Long64_t Process(const char *selector, Long64_t nentries,
+                            Option_t *option = "");
+
    Long64_t    DrawSelect(TDSet *dset, const char *varexp,
                           const char *selection = "",
                           Option_t *option = "", Long64_t nentries = -1,
@@ -648,11 +660,11 @@ public:
    void        SetLogLevel(Int_t level, UInt_t mask = TProofDebug::kAll);
 
    void        Close(Option_t *option="");
-   void        Print(Option_t *option="") const;
+   virtual void Print(Option_t *option="") const;
 
    //-- cache and package management
-   void        ShowCache(Bool_t all = kFALSE);
-   void        ClearCache(const char *file = 0);
+   virtual void ShowCache(Bool_t all = kFALSE);
+   virtual void ClearCache(const char *file = 0);
    TList      *GetListOfPackages();
    TList      *GetListOfEnabledPackages();
    void        ShowPackages(Bool_t all = kFALSE);
@@ -663,10 +675,10 @@ public:
    Int_t       UploadPackage(const char *par, EUploadPackageOpt opt = kUntar);
    Int_t       Load(const char *macro, Bool_t notOnClient = kFALSE);
 
-   Int_t       AddDynamicPath(const char *libpath);
-   Int_t       AddIncludePath(const char *incpath);
-   Int_t       RemoveDynamicPath(const char *libpath);
-   Int_t       RemoveIncludePath(const char *incpath);
+   Int_t       AddDynamicPath(const char *libpath, Bool_t onClient = kFALSE);
+   Int_t       AddIncludePath(const char *incpath, Bool_t onClient = kFALSE);
+   Int_t       RemoveDynamicPath(const char *libpath, Bool_t onClient = kFALSE);
+   Int_t       RemoveIncludePath(const char *incpath, Bool_t onClient = kFALSE);
 
    //-- dataset management
    Int_t       UploadDataSet(const char *dataset,
@@ -684,18 +696,18 @@ public:
                                      const char *dest = 0,
                                      Int_t opt = kAskUser,
                                      TList *skippedFiles = 0);
-   Bool_t      RegisterDataSet(const char *name,
+   virtual Bool_t  RegisterDataSet(const char *name,
                                TFileCollection *dataset, const char* optStr = "");
-   TMap       *GetDataSets(const char *uri = 0, const char* optStr = "");
-   void        ShowDataSets(const char *uri = 0, const char* optStr = "");
+   virtual TMap *GetDataSets(const char *uri = "", const char* optStr = "");
+   virtual void  ShowDataSets(const char *uri = "", const char* optStr = "");
 
    TMap       *GetDataSetQuota(const char* optStr = "");
    void        ShowDataSetQuota(Option_t* opt = 0);
 
-   void        ShowDataSet(const char *dataset, const char* opt = "M");
-   Int_t       RemoveDataSet(const char *dataset, const char* optStr = "");
-   Int_t       VerifyDataSet(const char *dataset, const char* optStr = "");
-   TFileCollection *GetDataSet(const char *dataset, const char* optStr = "");
+   void        ShowDataSet(const char *dataset = "", const char* opt = "M");
+   virtual Int_t RemoveDataSet(const char *dataset, const char* optStr = "");
+   virtual Int_t VerifyDataSet(const char *dataset, const char* optStr = "");
+   virtual TFileCollection *GetDataSet(const char *dataset, const char* optStr = "");
    TList       *FindDataSets(const char *searchString, const char* optStr = "");
 
    const char *GetMaster() const { return fMaster; }
@@ -725,6 +737,7 @@ public:
    Float_t     GetRealTime() const { return fRealTime; }
    Float_t     GetCpuTime() const { return fCpuTime; }
 
+   Bool_t      IsLite() const { return (fServType == TProofMgr::kProofLite); }
    Bool_t      IsProofd() const { return (fServType == TProofMgr::kProofd); }
    Bool_t      IsFolder() const { return kTRUE; }
    Bool_t      IsMaster() const { return fMasterServ; }
@@ -762,7 +775,7 @@ public:
    void        ShowFeedback() const;
    TList      *GetFeedbackList() const;
 
-   TList      *GetListOfQueries(Option_t *opt = "");
+   virtual TList *GetListOfQueries(Option_t *opt = "");
    Int_t       GetNumberOfQueries();
    Int_t       GetNumberOfDrawQueries() { return fDrawQueries; }
    TList      *GetQueryResults();

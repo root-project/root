@@ -36,6 +36,7 @@ class TProofMgr;
 class TProofLog : public TNamed, public TQObject {
 
 friend class TProofLogElem;
+friend class TProofMgrLite;
 friend class TXProofMgr;
 
 private:

@@ -223,69 +223,78 @@ Bool_t TVirtualPacketizer::HandleTimer(TTimer *)
    if (fProgress == 0 || TestBit(TVirtualPacketizer::kIsDone))
       return kFALSE; // timer stopped already or reports completed
 
-   // Message to be sent over
-   TMessage m(kPROOF_PROGRESS);
+   // Prepare progress info
+   TTime tnow = gSystem->Now();
+   Float_t now = (Float_t) (Long_t(tnow) - fStartTime) / (Double_t)1000.;
+   Long64_t estent = GetEntriesProcessed();
+   Long64_t estmb = GetBytesRead();
 
-   if (gProofServ->GetProtocol() > 11) {
-
-      // Prepare progress info
-      TTime tnow = gSystem->Now();
-      Float_t now = (Float_t) (Long_t(tnow) - fStartTime) / (Double_t)1000.;
-      Long64_t estent = GetEntriesProcessed();
-      Long64_t estmb = GetBytesRead();
-
-      // Times and counters
-      Float_t evtrti = -1., mbrti = -1.;
-      if (TestBit(TVirtualPacketizer::kIsInitializing)) {
-         // Initialization
-         fInitTime = now;
-      } else {
-         // Fill the reference as first
-         if (fCircProg->GetEntries() <= 0) {
-            fCircProg->Fill((Double_t)0., 0., 0.);
-            // Best estimation of the init time
-            fInitTime = (now + fInitTime) / 2.;
-         }
-         // Time between updates
-         fTimeUpdt = now - fProcTime;
-         // Update proc time
-         fProcTime = now - fInitTime;
-         // Estimated number of processed events
-         GetEstEntriesProcessed(fProcTime, estent, estmb);
-         Double_t evts = (Double_t) estent;
-         Double_t mbs = (estmb > 0) ?  estmb / TMath::Power(2.,20.) : 0.; //--> MB
-         // Good entry
-         fCircProg->Fill((Double_t)fProcTime, evts, mbs);
-         // Instantaneous rates (at least 5 reports)
-         if (fCircProg->GetEntries() > 4) {
-            Double_t *ar = fCircProg->GetArgs();
-            fCircProg->GetEntry(0);
-            Double_t dt = (Double_t)fProcTime - ar[0];
-            evtrti = (dt > 0) ? (Float_t) (evts - ar[1]) / dt : -1. ;
-            mbrti = (dt > 0) ? (Float_t) (mbs - ar[2]) / dt : -1. ;
-            if (gPerfStats != 0)
-               gPerfStats->RateEvent((Double_t)fProcTime, dt,
-                                     (Long64_t) (evts - ar[1]),
-                                     (Long64_t) ((mbs - ar[2])*TMath::Power(2.,20.)));
-         }
+   // Times and counters
+   Float_t evtrti = -1., mbrti = -1.;
+   if (TestBit(TVirtualPacketizer::kIsInitializing)) {
+      // Initialization
+      fInitTime = now;
+   } else {
+      // Fill the reference as first
+      if (fCircProg->GetEntries() <= 0) {
+         fCircProg->Fill((Double_t)0., 0., 0.);
+         // Best estimation of the init time
+         fInitTime = (now + fInitTime) / 2.;
+      }
+      // Time between updates
+      fTimeUpdt = now - fProcTime;
+      // Update proc time
+      fProcTime = now - fInitTime;
+      // Estimated number of processed events
+      GetEstEntriesProcessed(fProcTime, estent, estmb);
+      Double_t evts = (Double_t) estent;
+      Double_t mbs = (estmb > 0) ?  estmb / TMath::Power(2.,20.) : 0.; //--> MB
+      // Good entry
+      fCircProg->Fill((Double_t)fProcTime, evts, mbs);
+      // Instantaneous rates (at least 5 reports)
+      if (fCircProg->GetEntries() > 4) {
+         Double_t *ar = fCircProg->GetArgs();
+         fCircProg->GetEntry(0);
+         Double_t dt = (Double_t)fProcTime - ar[0];
+         evtrti = (dt > 0) ? (Float_t) (evts - ar[1]) / dt : -1. ;
+         mbrti = (dt > 0) ? (Float_t) (mbs - ar[2]) / dt : -1. ;
+         if (gPerfStats != 0)
+            gPerfStats->RateEvent((Double_t)fProcTime, dt,
+                                 (Long64_t) (evts - ar[1]),
+                                 (Long64_t) ((mbs - ar[2])*TMath::Power(2.,20.)));
       }
 
-      // Fill the message now
-      m << fTotalEntries << estent << estmb << fInitTime << fProcTime
-        << evtrti << mbrti;
+      // Final report only once (to correctly determine the proc time)
+      if (fTotalEntries > 0 && GetEntriesProcessed() >= fTotalEntries)
+         SetBit(TVirtualPacketizer::kIsDone);
+   }
 
+   if (gProofServ) {
+
+      // Message to be sent over
+      TMessage m(kPROOF_PROGRESS);
+      if (gProofServ->GetProtocol() > 11) {
+         // Fill the message now
+         m << fTotalEntries << estent << estmb << fInitTime << fProcTime
+           << evtrti << mbrti;
+      } else {
+         // Old format
+         m << fTotalEntries << GetEntriesProcessed();
+      }
+      // send message to client;
+      gProofServ->GetSocket()->Send(m);
 
    } else {
-      // Old format
-      m << fTotalEntries << GetEntriesProcessed();
+      if (gProof && gProof->GetPlayer()) {
+         // Log locally
+         gProof->GetPlayer()->Progress(fTotalEntries, estent, estmb,
+                                       fInitTime, fProcTime, evtrti, mbrti);
+      }
    }
 
    // Final report only once (to correctly determine the proc time)
    if (fTotalEntries > 0 && GetEntriesProcessed() >= fTotalEntries)
       SetBit(TVirtualPacketizer::kIsDone);
-
-   // send message to client;
-   gProofServ->GetSocket()->Send(m);
 
    return kFALSE; // ignored?
 }

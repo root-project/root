@@ -43,7 +43,7 @@ typedef TProofMgr *(*TProofMgr_t)(const char *, Int_t, const char *);
 class TProofMgr : public TNamed {
 
 public:
-   enum EServType { kProofd = 0, kXProofd = 1 };
+   enum EServType { kProofd = 0, kXProofd = 1, kProofLite = 2 };
 
 private:
    TProofMgr(const TProofMgr&); // Not implemented
@@ -67,6 +67,7 @@ public:
    TProofMgr(const char *url, Int_t loglevel = -1, const char *alias = "");
    virtual ~TProofMgr();
 
+   virtual Bool_t      IsLite() const { return (fServType == kProofLite); }
    virtual Bool_t      IsProofd() const { return (fServType == kProofd); }
    virtual Bool_t      IsValid() const { return kTRUE; }
    virtual void        SetInvalid() { }

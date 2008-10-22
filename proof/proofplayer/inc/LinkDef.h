@@ -18,6 +18,7 @@
 #pragma link C++ nestedclasses;
 
 #pragma link C++ class TProofPlayer+;
+#pragma link C++ class TProofPlayerLite+;
 #pragma link C++ class TProofPlayerLocal+;
 #pragma link C++ class TProofPlayerRemote+;
 #pragma link C++ class TProofPlayerSlave+;

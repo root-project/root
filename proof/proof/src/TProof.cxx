@@ -282,6 +282,65 @@ TProof::TProof(const char *masterurl, const char *conffile, const char *confdir,
    // Default query mode
    fQueryMode = kSync;
 
+   // Parse the main URL, adjusting the missing fields and setting the relevant
+   // bits
+   ResetBit(TProof::kIsClient);
+   ResetBit(TProof::kIsMaster);
+
+   // Protocol and Host
+   if (!masterurl || strlen(masterurl) <= 0) {
+      fUrl.SetProtocol("proof");
+      fUrl.SetHost("__master__");
+   } else if (!(strstr(masterurl, "://"))) {
+      fUrl.SetProtocol("proof");
+   }
+
+   // Port
+   if (fUrl.GetPort() == TUrl(" ").GetPort())
+      fUrl.SetPort(TUrl("proof:// ").GetPort());
+
+   // User
+   if (strlen(fUrl.GetUser()) <= 0) {
+      // Get user logon name
+      UserGroup_t *pw = gSystem->GetUserInfo();
+      if (pw) {
+         fUrl.SetUser(pw->fUser);
+         delete pw;
+      }
+   }
+
+   // Make sure to store the FQDN, so to get a solid reference for subsequent checks
+   if (!strcmp(fUrl.GetHost(), "__master__"))
+      fMaster = fUrl.GetHost();
+   else if (!strlen(fUrl.GetHost()))
+      fMaster = gSystem->GetHostByName(gSystem->HostName()).GetHostName();
+   else
+      fMaster = gSystem->GetHostByName(fUrl.GetHost()).GetHostName();
+
+   // Server type
+   if (strlen(fUrl.GetOptions()) > 0) {
+      if (!(strncmp(fUrl.GetOptions(),"std",3))) {
+         fServType = TProofMgr::kProofd;
+      } else if (!(strncmp(fUrl.GetOptions(),"lite",4))) {
+         fServType = TProofMgr::kProofLite;
+      }
+      fUrl.SetOptions("");
+   }
+
+   // Instance type
+   fMasterServ = kFALSE;
+   SetBit(TProof::kIsClient);
+   ResetBit(TProof::kIsMaster);
+   if (fMaster == "__master__") {
+      fMasterServ = kTRUE;
+      ResetBit(TProof::kIsClient);
+      SetBit(TProof::kIsMaster);
+   } else if (fMaster == "prooflite") {
+      // Client and master are merged
+      fMasterServ = kTRUE;
+      SetBit(TProof::kIsMaster);
+   }
+
    Init(masterurl, conffile, confdir, loglevel, alias);
 
    // If called by a manager, make sure it stays in last position
@@ -293,7 +352,7 @@ TProof::TProof(const char *masterurl, const char *conffile, const char *confdir,
    }
 
    // Old-style server type: we add this to the list and set the global pointer
-   if (IsProofd() || IsMaster())
+   if (IsProofd() || TestBit(TProof::kIsMaster))
       gROOT->GetListOfProofs()->Add(this);
 
    // Still needed by the packetizers: needs to be changed
@@ -327,14 +386,14 @@ TProof::~TProof()
    }
 
    // remove links to packages enabled on the client
-   if (!IsMaster()) {
+   if (TestBit(TProof::kIsClient)) {
       // iterate over all packages
       TIter nextpackage(fEnabledPackagesOnClient);
       while (TObjString *package = dynamic_cast<TObjString*>(nextpackage())) {
          FileStat_t stat;
          gSystem->GetPathInfo(package->String(), stat);
          // check if symlink, if so unlink
-         // NOTE: GetPathnfo() returns 1 in case of symlink that does not point to
+         // NOTE: GetPathInfo() returns 1 in case of symlink that does not point to
          // existing file or to a directory, but if fIsLink is true the symlink exists
          if (stat.fIsLink)
             gSystem->Unlink(package->String());
@@ -369,7 +428,7 @@ TProof::~TProof()
    SafeDelete(fInputData);
 
    // remove file with redirected logs
-   if (!IsMaster()) {
+   if (TestBit(TProof::kIsClient)) {
       if (fLogFileR)
          fclose(fLogFileR);
       if (fLogFileW)
@@ -383,7 +442,7 @@ TProof::~TProof()
 }
 
 //______________________________________________________________________________
-Int_t TProof::Init(const char *masterurl, const char *conffile,
+Int_t TProof::Init(const char *, const char *conffile,
                    const char *confdir, Int_t loglevel, const char *alias)
 {
    // Start the PROOF environment. Starting PROOF involves either connecting
@@ -396,20 +455,6 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
    R__ASSERT(gSystem);
 
    fValid = kFALSE;
-
-   if (strlen(fUrl.GetOptions()) > 0 && !(strncmp(fUrl.GetOptions(),"std",3))) {
-      fServType = TProofMgr::kProofd;
-      fUrl.SetOptions("");
-   }
-
-   if (!masterurl || !*masterurl) {
-      fUrl.SetProtocol("proof");
-      fUrl.SetHost("__master__");
-   } else if (!(strstr(masterurl, "://"))) {
-      fUrl.SetProtocol("proof");
-   }
-   if (fUrl.GetPort() == TUrl(" ").GetPort())
-      fUrl.SetPort(TUrl("proof:// ").GetPort());
 
    // If in attach mode, options is filled with additiona info
    Bool_t attach = kFALSE;
@@ -424,23 +469,7 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
       }
    }
 
-   if (strlen(fUrl.GetUser()) <= 0) {
-      // Get user logon name
-      UserGroup_t *pw = gSystem->GetUserInfo();
-      if (pw) {
-         fUrl.SetUser(pw->fUser);
-         delete pw;
-      }
-   }
-   // Make sure to store the FQDN, so to get a solid reference for subsequent checks
-   if (!strcmp(fUrl.GetHost(), "__master__"))
-      fMaster = fUrl.GetHost();
-   else if (!strlen(fUrl.GetHost()))
-      fMaster = gSystem->GetHostByName(gSystem->HostName()).GetHostName();
-   else
-      fMaster = gSystem->GetHostByName(fUrl.GetHost()).GetHostName();
-   fMasterServ     = (fMaster == "__master__") ? kTRUE : kFALSE;
-   if (IsMaster()) {
+   if (TestBit(TProof::kIsMaster)) {
       // Fill default conf file and conf dir
       if (!conffile || strlen(conffile) == 0)
          fConfFile = kPROOF_ConfFile;
@@ -463,7 +492,7 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
    fChains         = new TList;
    fAvailablePackages = 0;
    fEnabledPackages = 0;
-   fEndMaster      = IsMaster() ? kTRUE : kFALSE;
+   fEndMaster      = TestBit(TProof::kIsMaster) ? kTRUE : kFALSE;
    fInputData      = 0;
    ResetBit(TProof::kNewInputData);
 
@@ -474,7 +503,7 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
    fDynamicStartup = gEnv->GetValue("Proof.DynamicStartup", kFALSE);
 
    // Default entry point for the data pool is the master
-   if (!IsMaster())
+   if (TestBit(TProof::kIsClient))
       fDataPoolUrl.Form("root://%s", fMaster.Data());
    else
       fDataPoolUrl = "";
@@ -488,7 +517,7 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
 
    // Client logging of messages from the master and slaves
    fRedirLog = kFALSE;
-   if (!IsMaster()) {
+   if (TestBit(TProof::kIsClient)) {
       fLogFileName    = "ProofLog_";
       if ((fLogFileW = gSystem->TempFileName(fLogFileName)) == 0)
          Error("Init", "could not create temporary logfile");
@@ -546,23 +575,25 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
 
    if (IsMaster()) {
       // to make UploadPackage() method work on the master as well.
-      fPackageDir = gSystem->DirName(fWorkDir);
-      fPackageDir = gSystem->DirName(fPackageDir) + TString("/") + kPROOF_PackDir;
+      fPackageDir = gProofServ->GetPackageDir();
    } else {
-      fPackageDir = kPROOF_WorkDir;
-      gSystem->ExpandPathName(fPackageDir);
-      if (gSystem->AccessPathName(fPackageDir)) {
-         if (gSystem->MakeDirectory(fPackageDir) == -1) {
-            Error("Init", "failure creating directory %s", fPackageDir.Data());
-            return 0;
-         }
-      }
-      fPackageDir += TString("/") + kPROOF_PackDir;
-   }
 
-   if (gSystem->AccessPathName(fPackageDir)) {
-      if (gSystem->MakeDirectory(fPackageDir) == -1) {
-         Error("Init", "failure creating directory %s", fPackageDir.Data());
+      TString sandbox = gEnv->GetValue("Proof.Sandbox", "");
+      if (sandbox.IsNull()) {
+         sandbox.Form("~/%s", kPROOF_WorkDir);
+      }
+      gSystem->ExpandPathName(sandbox);
+      if (AssertPath(sandbox, kTRUE) != 0) {
+         Error("Init", "failure asserting directory %s", sandbox.Data());
+         return 0;
+      }
+
+      // Package Dir
+      fPackageDir = gEnv->GetValue("Proof.PackageDir", "");
+      if (fPackageDir.IsNull())
+         fPackageDir.Form("%s/%s", sandbox.Data(), kPROOF_PackDir);
+      if (AssertPath(fPackageDir, kTRUE) != 0) {
+         Error("Init", "failure asserting directory %s", fPackageDir.Data());
          return 0;
       }
    }
@@ -600,7 +631,7 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
 
    // Master may want parallel startup
    Bool_t parallelStartup = kFALSE;
-   if (!attach && IsMaster()) {
+   if (!attach && TestBit(TProof::kIsMaster)) {
       parallelStartup = gEnv->GetValue("Proof.ParallelStartup", kFALSE);
       PDB(kGlobal,1) Info("Init", "Parallel Startup: %s",
                           parallelStartup ? "kTRUE" : "kFALSE");
@@ -664,7 +695,7 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
       fRedirLog = kTRUE;
 
    // Done at this point, the alias will be communicated to the coordinator, if any
-   if (!IsMaster())
+   if (TestBit(TProof::kIsClient))
       SetAlias(al);
 
    SetActive(kFALSE);
@@ -678,6 +709,38 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
       gROOT->GetListOfSockets()->Add(this);
    }
    return fActiveSlaves->GetSize();
+}
+
+//______________________________________________________________________________
+Int_t TProof::AssertPath(const char *inpath, Bool_t writable)
+{
+   // Make sure that 'path' exists; if 'writable' is kTRUE, make also sure
+   // that the path is writable
+
+   if (!inpath || strlen(inpath) <= 0) {
+      Error("AssertPath", "undefined input path");
+      return -1;
+   }
+
+   TString path(inpath);
+   gSystem->ExpandPathName(path);
+
+   if (gSystem->AccessPathName(path, kFileExists)) {
+      if (gSystem->mkdir(path, kTRUE) != 0) {
+         Error("AssertPath", "could not create path %s", path.Data());
+         return -1;
+      }
+   }
+   // It must be writable
+   if (gSystem->AccessPathName(path, kWritePermission) && writable) {
+      if (gSystem->Chmod(path, 0666) != 0) {
+         Error("AssertPath", "could not make path %s writable", path.Data());
+         return -1;
+      }
+   }
+
+   // Done
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -887,17 +950,30 @@ Int_t TProof::RemoveWorkers(TList *workerList)
    TObject *to;
    TProofNodeInfo *worker;
    while ((to = next())) {
-      // Get the next worker from the list
-      worker = (TProofNodeInfo *)to;
-      TIter nxsl(fSlaves);
-         TSlave *sl = 0;
+      TSlave *sl = 0;
+      if (!strcmp(to->ClassName(), "TProofNodeInfo")) {
+         // Get the next worker from the list
+         worker = (TProofNodeInfo *)to;
+         TIter nxsl(fSlaves);
          while ((sl = (TSlave *) nxsl())) {
             // Shut down the worker assumig that it is not processing
             if (sl->GetName() == worker->GetNodeName())
-            // sl->StopProcess(kFALSE, -1);
-               TerminateWorker(sl);
+               break;
          }
+      } else if (to->InheritsFrom("TSlave")) {
+         sl = (TSlave *) to;
+      } else {
+         Warning("RemoveWorkers","unknown object type: %s - it should be"
+                 " TProofNodeInfo or inheriting from TSlave", to->ClassName());
+      }
+      // Shut down the worker assumig that it is not processing
+      if (sl) {
+         if (gDebug > 0)
+            Info("RemoveWorkers","terminating worker %s", sl->GetOrdinal());
+         TerminateWorker(sl);
+      }
    }
+
    return 0;
 }
 
@@ -908,7 +984,7 @@ Bool_t TProof::StartSlaves(Bool_t parallel, Bool_t attach)
 
    // If this is a master server, find the config file and start slave
    // servers as specified in the config file
-   if (IsMaster()) {
+   if (TestBit(TProof::kIsMaster)) {
 
       Int_t pc = 0;
       TList *workerList = new TList;
@@ -1461,7 +1537,7 @@ TList *TProof::GetListOfQueries(Option_t *opt)
 {
    // Ask the master for the list of queries.
 
-   if (!IsValid() || IsMaster()) return (TList *)0;
+   if (!IsValid() || TestBit(TProof::kIsMaster)) return (TList *)0;
 
    Bool_t all = ((strchr(opt,'A') || strchr(opt,'a'))) ? kTRUE : kFALSE;
    TMessage m(kPROOF_QUERYLIST);
@@ -2396,7 +2472,8 @@ Int_t TProof::CollectInputFrom(TSocket *s)
 
       case kPROOF_OUTPUTOBJECT:
          {
-            PDB(kGlobal,2) Info("CollectInputFrom","kPROOF_OUTPUTOBJECT: enter");
+            PDB(kGlobal,2)
+               Info("CollectInputFrom","kPROOF_OUTPUTOBJECT: enter");
             Int_t type = 0;
             (*mess) >> type;
             // If a query result header, add it to the player list
@@ -2424,7 +2501,8 @@ Int_t TProof::CollectInputFrom(TSocket *s)
                   SafeDelete(o);
                }
 
-               if (type > 1 && !IsMaster()) {
+               if (type > 1 && TestBit(TProof::kIsClient) && !IsLite()) {
+                  // In PROOFLite this has to be done once only in TProofLite::Process 
                   TQueryResult *pq = fPlayer->GetCurrentQuery();
                   pq->SetOutputList(fPlayer->GetOutputList(), kFALSE);
                   pq->SetInputList(fPlayer->GetInputList(), kFALSE);
@@ -2439,9 +2517,10 @@ Int_t TProof::CollectInputFrom(TSocket *s)
 
       case kPROOF_OUTPUTLIST:
          {
-            PDB(kGlobal,2) Info("CollectInputFrom","kPROOF_OUTPUTLIST: enter");
+            PDB(kGlobal,2)
+               Info("CollectInputFrom","kPROOF_OUTPUTLIST: enter");
             TList *out = 0;
-            if (IsMaster() || fProtocol < 7) {
+            if (TestBit(TProof::kIsMaster) || fProtocol < 7) {
                out = (TList *) mess->ReadObject(TList::Class());
             } else {
                TQueryResult *pq =
@@ -2471,7 +2550,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
             }
 
             // On clients at this point processing is over
-            if (!IsMaster())
+            if (TestBit(TProof::kIsClient) && !IsLite())
                UpdateDialog();
          }
          break;
@@ -2525,7 +2604,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
 
             (*mess) >> action >> tot >> done >> st;
 
-            if (!IsMaster()) {
+            if (TestBit(TProof::kIsClient)) {
                if (tot) {
                   TString type = (action.Contains("submas")) ? "submasters"
                                                              : "workers";
@@ -2565,7 +2644,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
 
             (*mess) >> action >> tot >> done >> st;
 
-            if (!IsMaster()) {
+            if (TestBit(TProof::kIsClient)) {
                if (tot) {
                   TString type = "files";
                   Int_t frac = (Int_t) (done*100.)/tot;
@@ -2603,7 +2682,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
             // The signal is used on masters by XrdProofdProtocol to catch
             // the start of processing; on clients it allows to update the
             // progress dialog
-            if (!IsMaster()) {
+            if (!TestBit(TProof::kIsMaster)) {
                TString selec;
                Int_t dsz = -1;
                Long64_t first = -1, nent = -1;
@@ -2630,7 +2709,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
          {
             PDB(kGlobal,2) Info("CollectInputFrom","kPROOF_ENDINIT: enter");
 
-            if (IsMaster()) {
+            if (TestBit(TProof::kIsMaster)) {
                if (fPlayer)
                   fPlayer->SetInitTime();
             }
@@ -2764,7 +2843,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
                   fPlayer->AddEventsProcessed(events);
                }
             }
-            if (!IsMaster())
+            if (!TestBit(TProof::kIsMaster))
                Emit("StopProcess(Bool_t)", abort);
             break;
          }
@@ -2842,7 +2921,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
             if ((mess->BufferSize() > mess->Length()))
                (*mess) >> lfeed;
 
-            if (!IsMaster()) {
+            if (TestBit(TProof::kIsClient)) {
 
                if (fSync) {
                   // Notify locally
@@ -3066,7 +3145,7 @@ void TProof::MarkBad(TSlave *wrk, const char *reason)
       }
    }
 
-   if (IsMaster() && strcmp(reason, kPROOF_TerminateWorker)) {
+   if (IsMaster() && reason && strcmp(reason, kPROOF_TerminateWorker)) {
       TList *listOfMissingFiles = 0;
       if (!(listOfMissingFiles = (TList *)GetOutput("MissingFiles"))) {
          listOfMissingFiles = new TList();
@@ -3077,13 +3156,12 @@ void TProof::MarkBad(TSlave *wrk, const char *reason)
 
       // Assume that the work done by the worker was lost and needs to reassigned.
       TVirtualPacketizer *packetizer = fPlayer ? fPlayer->GetPacketizer() : 0;
-      if (packetizer)
+      if (packetizer) {
          // the worker was lost so do resubmit the packets
-         packetizer->MarkBad(wrk,
-                             0,
-                             &listOfMissingFiles);
-      else
-         Info("MarkBad", "No packetizer received form the player!");
+         packetizer->MarkBad(wrk, 0, &listOfMissingFiles);
+      } else {
+         Error("MarkBad", "packetizer is undefined: protocol error?");
+      }
    }
 
    fActiveSlaves->Remove(wrk);
@@ -3233,7 +3311,7 @@ void TProof::Print(Option_t *option) const
 
    TString secCont;
 
-   if (!IsMaster()) {
+   if (TestBit(TProof::kIsClient)) {
       Printf("Connected to:             %s (%s)", GetMaster(),
                                              IsValid() ? "valid" : "invalid");
       Printf("Port number:              %d", GetPort());
@@ -3338,6 +3416,9 @@ Long64_t TProof::Process(TDSet *dset, const char *selector, Option_t *option,
 
    if (!IsValid()) return -1;
 
+   // Set PROOF to running state
+   SetRunStatus(TProof::kRunning);
+
    // Resolve query mode
    fSync = (GetQueryMode(option) == kSync);
 
@@ -3358,9 +3439,6 @@ Long64_t TProof::Process(TDSet *dset, const char *selector, Option_t *option,
    SendInputDataFile();
 
    Long64_t rv = fPlayer->Process(dset, selector, option, nentries, first);
-
-//   // Clear input list
-//   fPlayer->ClearInput();
 
    if (fSync) {
       // reactivate the default application interrupt handler
@@ -3389,41 +3467,14 @@ Long64_t TProof::Process(TFileCollection *fc, const char *selector,
       return -1;
    }
 
-   // Resolve query mode
-   fSync = (GetQueryMode(option) == kSync);
-
-   if (fSync && !IsIdle()) {
-      Info("Process","not idle, cannot submit synchronous query");
-      return -1;
-   }
-
-   // deactivate the default application interrupt handler
-   // ctrl-c's will be forwarded to PROOF to stop the processing
-   TSignalHandler *sh = 0;
-   if (fSync) {
-      if (gApplication)
-         sh = gSystem->RemoveSignalHandler(gApplication->GetSignalHandler());
-   }
-
-   Long64_t rv = -1;
-
-   // Send large input data objects, if any
-   SendInputDataFile();
-
    // We include the TFileCollection to the input list and we create a
    // fake TDSet with infor about it
    TDSet *dset = new TDSet(Form("TFileCollection:%s", fc->GetName()), 0, 0, "");
    fPlayer->AddInput(fc);
-   rv = fPlayer->Process(dset, selector, option, nentries, first);
+   Long64_t retval = Process(dset, selector, option, nentries, first);
    fPlayer->GetInputList()->Remove(fc); // To avoid problems in future
 
-   if (fSync) {
-      // reactivate the default application interrupt handler
-      if (sh)
-         gSystem->AddSignalHandler(sh);
-   }
-
-   return rv;
+   return retval;
 }
 
 //______________________________________________________________________________
@@ -3496,39 +3547,14 @@ Long64_t TProof::Process(const char *selector, Long64_t n, Option_t *option)
       return -1;
    }
 
-   // Resolve query mode
-   fSync = (GetQueryMode(option) == kSync);
-
-   if (fSync && !IsIdle()) {
-      Info("Process","not idle, cannot submit synchronous query");
-      return -1;
-   }
-
-   // deactivate the default application interrupt handler
-   // ctrl-c's will be forwarded to PROOF to stop the processing
-   TSignalHandler *sh = 0;
-   if (fSync) {
-      if (gApplication)
-         sh = gSystem->RemoveSignalHandler(gApplication->GetSignalHandler());
-   }
-
+   // Fake data set
    TDSet *dset = new TDSet;
    dset->SetBit(TDSet::kEmpty);
 
-   // Send large input data objects, if any
-   SendInputDataFile();
-
-   Long64_t rv = fPlayer->Process(dset, selector, option, n);
-
-   if (fSync) {
-      // reactivate the default application interrupt handler
-      if (sh)
-         gSystem->AddSignalHandler(sh);
-   }
-
-   return rv;
+   Long64_t retval = Process(dset, selector, option, n);
+   delete dset;
+   return retval;
 }
-
 
 //______________________________________________________________________________
 Int_t TProof::GetQueryReference(Int_t qry, TString &ref)
@@ -3714,6 +3740,8 @@ Int_t TProof::Remove(const char *ref, Bool_t all)
       if (fPlayer)
          fPlayer->RemoveQueryResult(ref);
    }
+
+   if (IsLite()) return 0;
 
    if (ref) {
       TMessage m(kPROOF_REMOVE);
@@ -3915,8 +3943,8 @@ void TProof::StopProcess(Bool_t abort, Int_t timeout)
       fPlayer->StopProcess(abort, timeout);
 
    // Stop any blocking 'Collect' request; on masters we do this only if
-   // aborting; when stopping, we still need to receive the results
-   if (!IsMaster() || abort)
+   // aborting; when stopping, we still need to receive the results 
+   if (TestBit(TProof::kIsClient) || abort)
       InterruptCurrentMonitor();
 
    if (fSlaves->GetSize() == 0)
@@ -3989,7 +4017,7 @@ void TProof::RecvLogFile(TSocket *s, Int_t size)
    }
 
    // If idle restore logs to main session window
-   if (fRedirLog && IsIdle())
+   if (fRedirLog && IsIdle() && !TestBit(TProof::kIsMaster))
       fRedirLog = kFALSE;
 }
 
@@ -4101,7 +4129,7 @@ Int_t TProof::SendGroupView()
    // Returns -1 in case of error.
 
    if (!IsValid()) return -1;
-   if (!IsMaster()) return 0;
+   if (TestBit(TProof::kIsClient)) return 0;
    if (!fSendGroupView) return 0;
    fSendGroupView = kFALSE;
 
@@ -4184,12 +4212,16 @@ Int_t TProof::Exec(const char *cmd, ESlaves list, Bool_t plusMaster)
    }
 
    if (plusMaster) {
-      Int_t n = GetParallel();
-      SetParallelSilent(0);
-      Int_t res = SendCommand(cmd, list);
-      SetParallelSilent(n);
-      if (res < 0)
-         return res;
+      if (IsLite()) {
+         gROOT->ProcessLine(cmd);
+      } else {
+         Int_t n = GetParallel();
+         SetParallelSilent(0);
+         Int_t res = SendCommand(cmd, list);
+         SetParallelSilent(n);
+         if (res < 0)
+            return res;
+      }
    }
    return SendCommand(cmd, list);
 }
@@ -4288,7 +4320,7 @@ Bool_t TProof::CheckFile(const char *file, TSlave *slave, Long_t modtime, Int_t 
                // check for the file. If the file already exists with the
                // expected md5 the kPROOF_CHECKFILE command will cause the
                // file to be copied from cache to slave sandbox.
-               if (IsMaster()) {
+               if (TestBit(TProof::kIsMaster)) {
                   sendto = kFALSE;
                   TMessage mess(kPROOF_CHECKFILE);
                   mess << TString(gSystem->BaseName(file)) << md.fMD5 << cpopt;
@@ -4548,7 +4580,7 @@ Int_t TProof::SetParallelSilent(Int_t nodes, Bool_t random)
 
    if (!IsValid()) return -1;
 
-   if (IsMaster()) {
+   if (TestBit(TProof::kIsMaster)) {
       GoParallel(nodes, kFALSE, random);
       return SendCurrentState();
    } else {
@@ -4571,7 +4603,7 @@ Int_t TProof::SetParallel(Int_t nodes, Bool_t random)
    // parallel slaves. Returns -1 in case of error.
 
    Int_t n = SetParallelSilent(nodes, random);
-   if (!IsMaster()) {
+   if (TestBit(TProof::kIsClient)) {
       if (n < 1) {
          Printf("PROOF set to sequential mode");
       } else {
@@ -4624,7 +4656,7 @@ Int_t TProof::GoParallel(Int_t nodes, Bool_t attach, Bool_t random)
    }
    Int_t nwrks = (nodes > wlst->GetSize()) ? wlst->GetSize() : nodes;
    int cnt = 0;
-   fEndMaster = IsMaster() ? kTRUE : kFALSE;
+   fEndMaster = TestBit(TProof::kIsMaster) ? kTRUE : kFALSE;
    while (cnt < nwrks) {
       // Random choice, if requested
       if (random) {
@@ -4698,7 +4730,7 @@ Int_t TProof::GoParallel(Int_t nodes, Bool_t attach, Bool_t random)
 
    Int_t n = GetParallel();
 
-   if (!IsMaster()) {
+   if (TestBit(TProof::kIsClient)) {
       if (n < 1)
          printf("PROOF set to sequential mode\n");
       else
@@ -4764,7 +4796,7 @@ void TProof::ShowPackages(Bool_t all)
 
    if (!IsValid()) return;
 
-   if (!IsMaster()) {
+   if (TestBit(TProof::kIsClient)) {
       if (fGlobalPackageDirList && fGlobalPackageDirList->GetSize() > 0) {
          // Scan the list of global packages dirs
          TIter nxd(fGlobalPackageDirList);
@@ -4782,6 +4814,9 @@ void TProof::ShowPackages(Bool_t all)
       fflush(stdout);
       gSystem->Exec(Form("%s %s", kLS, fPackageDir.Data()));
    }
+
+   // Nothing more to do if we are a Lite-session
+   if (IsLite()) return;
 
    TMessage mess(kPROOF_CACHE);
    mess << Int_t(kShowPackages) << all;
@@ -4807,12 +4842,15 @@ void TProof::ShowEnabledPackages(Bool_t all)
 
    if (!IsValid()) return;
 
-   if (!IsMaster()) {
+   if (TestBit(TProof::kIsClient)) {
       printf("*** Enabled packages on client on %s\n", gSystem->HostName());
       TIter next(fEnabledPackagesOnClient);
       while (TObjString *str = (TObjString*) next())
          printf("%s\n", str->GetName());
    }
+
+   // Nothing more to do if we are a Lite-session
+   if (IsLite()) return;
 
    TMessage mess(kPROOF_CACHE);
    mess << Int_t(kShowEnabledPackages) << all;
@@ -4887,6 +4925,9 @@ Int_t TProof::DisablePackage(const char *package)
    if (DisablePackageOnClient(pac) == -1)
       return -1;
 
+   // Nothing more to do if we are a Lite-session
+   if (IsLite()) return 0;
+
    TMessage mess(kPROOF_CACHE);
    mess << Int_t(kDisablePackage) << pac;
    Broadcast(mess, kUnique);
@@ -4906,7 +4947,7 @@ Int_t TProof::DisablePackageOnClient(const char *package)
    // Remove a specific package from the client.
    // Returns 0 in case of success and -1 in case of error.
 
-   if (!IsMaster()) {
+   if (TestBit(TProof::kIsClient)) {
       // remove the package directory and the par file
       fPackageLock->Lock();
       gSystem->Exec(Form("%s %s/%s", kRM, fPackageDir.Data(), package));
@@ -4930,11 +4971,14 @@ Int_t TProof::DisablePackages()
    if (!IsValid()) return -1;
 
    // remove all packages on client
-   if (!IsMaster()) {
+   if (TestBit(TProof::kIsClient)) {
       fPackageLock->Lock();
       gSystem->Exec(Form("%s %s/*", kRM, fPackageDir.Data()));
       fPackageLock->Unlock();
    }
+
+   // Nothing more to do if we are a Lite-session
+   if (IsLite()) return 0;
 
    TMessage mess(kPROOF_CACHE);
    mess << Int_t(kDisablePackages);
@@ -4980,7 +5024,7 @@ Int_t TProof::BuildPackage(const char *package, EBuildPackageOpt opt)
       opt = kBuildAll;
    }
 
-   if (opt <= kBuildAll) {
+   if (opt <= kBuildAll && !IsLite()) {
       TMessage mess(kPROOF_CACHE);
       mess << Int_t(kBuildPackage) << pac;
       Broadcast(mess, kUnique);
@@ -4997,7 +5041,9 @@ Int_t TProof::BuildPackage(const char *package, EBuildPackageOpt opt)
       if (buildOnClient)
          st = BuildPackageOnClient(pac);
 
-      Collect(kAllUnique);
+      fStatus = 0;
+      if (!IsLite())
+         Collect(kAllUnique);
 
       if (fStatus < 0 || st < 0)
          return -1;
@@ -5015,7 +5061,7 @@ Int_t TProof::BuildPackageOnClient(const TString &package)
    // The code is equivalent to the one in TProofServ.cxx (TProof::kBuildPackage
    // case). Keep in sync in case of changes.
 
-   if (!IsMaster()) {
+   if (TestBit(TProof::kIsClient)) {
       Int_t status = 0;
       TString pdir, ocwd;
 
@@ -5173,7 +5219,7 @@ Int_t TProof::LoadPackageOnClient(const TString &package)
    // The code is equivalent to the one in TProofServ.cxx (TProof::kLoadPackage
    // case). Keep in sync in case of changes.
 
-   if (!IsMaster()) {
+   if (TestBit(TProof::kIsClient)) {
       Int_t status = 0;
       TString pdir, ocwd;
       // If already loaded don't do it again
@@ -5289,6 +5335,9 @@ Int_t TProof::UnloadPackage(const char *package)
    if (UnloadPackageOnClient(pac) == -1)
       return -1;
 
+   // Nothing more to do if we are a Lite-session
+   if (IsLite()) return 0;
+
    TMessage mess(kPROOF_CACHE);
    mess << Int_t(kUnloadPackage) << pac;
    Broadcast(mess);
@@ -5305,7 +5354,7 @@ Int_t TProof::UnloadPackageOnClient(const char *package)
    // The code is equivalent to the one in TProofServ.cxx (TProof::UnloadPackage
    // case). Keep in sync in case of changes.
 
-   if (!IsMaster()) {
+   if (TestBit(TProof::kIsClient)) {
       TObjString *pack = (TObjString *) fEnabledPackagesOnClient->FindObject(package);
       if (pack) {
 
@@ -5340,13 +5389,16 @@ Int_t TProof::UnloadPackages()
 
    if (!IsValid()) return -1;
 
-   if (!IsMaster()) {
+   if (TestBit(TProof::kIsClient)) {
       // Iterate over packages on the client and remove each package
       TIter nextpackage(fEnabledPackagesOnClient);
       while (TObjString *objstr = dynamic_cast<TObjString*>(nextpackage()))
          if (UnloadPackageOnClient(objstr->String()) == -1 )
             return -1;
    }
+
+   // Nothing more to do if we are a Lite-session
+   if (IsLite()) return 0;
 
    TMessage mess(kPROOF_CACHE);
    mess << Int_t(kUnloadPackages);
@@ -5469,6 +5521,9 @@ Int_t TProof::UploadPackage(const char *pack, EUploadPackageOpt opt)
       return -1;
    }
 
+   // Nothing more to do if we are a Lite-session
+   if (IsLite()) return 0;
+
    TMessage mess(kPROOF_CHECKFILE);
    mess << TString("+")+TString(gSystem->BaseName(par)) << (*md5);
    TMessage mess2(kPROOF_CHECKFILE);
@@ -5574,7 +5629,7 @@ Int_t TProof::UploadPackageOnClient(const TString &par, EUploadPackageOpt opt, T
 
    Int_t status = 0;
 
-   if (!IsMaster()) {
+   if (TestBit(TProof::kIsClient)) {
       // the fPackageDir directory exists (has been created in Init())
 
       // create symlink to the par file in the fPackageDir (needed by
@@ -5663,7 +5718,7 @@ Int_t TProof::Load(const char *macro, Bool_t notOnClient)
       return -1;
    }
 
-   if (!IsMaster()) {
+   if (TestBit(TProof::kIsClient)) {
 
       // Extract the file implementation name first
       TString implname = macro;
@@ -5710,7 +5765,7 @@ Int_t TProof::Load(const char *macro, Bool_t notOnClient)
       TString basemacro = gSystem->BaseName(macro);
       TMessage mess(kPROOF_CACHE);
       mess << Int_t(kLoadMacro) << basemacro;
-      Broadcast(mess, kUnique);
+      Broadcast(mess, kActive);
 
       // Load locally, if required
       if (!notOnClient)
@@ -5719,7 +5774,7 @@ Int_t TProof::Load(const char *macro, Bool_t notOnClient)
          gROOT->ProcessLine(Form(".L %s", macro));
 
       // Wait for master and workers to be done
-      Collect(kAllUnique);
+      Collect(kActive);
 
    } else {
       // On master
@@ -5745,7 +5800,7 @@ Int_t TProof::Load(const char *macro, Bool_t notOnClient)
 }
 
 //______________________________________________________________________________
-Int_t TProof::AddDynamicPath(const char *libpath)
+Int_t TProof::AddDynamicPath(const char *libpath, Bool_t onClient)
 {
    // Add 'libpath' to the lib path search.
    // Multiple paths can be specified at once separating them with a comma or
@@ -5757,6 +5812,10 @@ Int_t TProof::AddDynamicPath(const char *libpath)
          Info("AddDynamicPath", "list is empty - nothing to do");
       return 0;
    }
+
+   // Do it also on clients, if required
+   if (onClient)
+      HandleLibIncPath("lib", kTRUE, libpath);
 
    TMessage m(kPROOF_LIB_INC_PATH);
    m << TString("lib") << (Bool_t)kTRUE;
@@ -5775,7 +5834,7 @@ Int_t TProof::AddDynamicPath(const char *libpath)
 }
 
 //______________________________________________________________________________
-Int_t TProof::AddIncludePath(const char *incpath)
+Int_t TProof::AddIncludePath(const char *incpath, Bool_t onClient)
 {
    // Add 'incpath' to the inc path search.
    // Multiple paths can be specified at once separating them with a comma or
@@ -5787,6 +5846,10 @@ Int_t TProof::AddIncludePath(const char *incpath)
          Info("AddIncludePath", "list is empty - nothing to do");
       return 0;
    }
+
+   // Do it also on clients, if required
+   if (onClient)
+      HandleLibIncPath("inc", kTRUE, incpath);
 
    TMessage m(kPROOF_LIB_INC_PATH);
    m << TString("inc") << (Bool_t)kTRUE;
@@ -5805,7 +5868,7 @@ Int_t TProof::AddIncludePath(const char *incpath)
 }
 
 //______________________________________________________________________________
-Int_t TProof::RemoveDynamicPath(const char *libpath)
+Int_t TProof::RemoveDynamicPath(const char *libpath, Bool_t onClient)
 {
    // Remove 'libpath' from the lib path search.
    // Multiple paths can be specified at once separating them with a comma or
@@ -5817,6 +5880,10 @@ Int_t TProof::RemoveDynamicPath(const char *libpath)
          Info("RemoveDynamicPath", "list is empty - nothing to do");
       return 0;
    }
+
+   // Do it also on clients, if required
+   if (onClient)
+      HandleLibIncPath("lib", kFALSE, libpath);
 
    TMessage m(kPROOF_LIB_INC_PATH);
    m << TString("lib") <<(Bool_t)kFALSE;
@@ -5835,7 +5902,7 @@ Int_t TProof::RemoveDynamicPath(const char *libpath)
 }
 
 //______________________________________________________________________________
-Int_t TProof::RemoveIncludePath(const char *incpath)
+Int_t TProof::RemoveIncludePath(const char *incpath, Bool_t onClient)
 {
    // Remove 'incpath' from the inc path search.
    // Multiple paths can be specified at once separating them with a comma or
@@ -5847,6 +5914,10 @@ Int_t TProof::RemoveIncludePath(const char *incpath)
          Info("RemoveIncludePath", "list is empty - nothing to do");
       return 0;
    }
+
+   // Do it also on clients, if required
+   if (onClient)
+      HandleLibIncPath("in", kFALSE, incpath);
 
    TMessage m(kPROOF_LIB_INC_PATH);
    m << TString("inc") << (Bool_t)kFALSE;
@@ -5862,6 +5933,114 @@ Int_t TProof::RemoveIncludePath(const char *incpath)
    Collect(kActive, fCollectTimeout);
 
    return 0;
+}
+
+//______________________________________________________________________________
+void TProof::HandleLibIncPath(const char *what, Bool_t add, const char *dirs)
+{
+   // Handle lib, inc search paths modification request
+
+   TString type(what);
+   TString path(dirs);
+
+   // Check type of action
+   if ((type != "lib") && (type != "inc")) {
+      Error("HandleLibIncPath","unknown action type: %s", type.Data());
+      return;
+   }
+
+   // Separators can be either commas or blanks
+   path.ReplaceAll(","," ");
+
+   // Decompose lists
+   TObjArray *op = 0;
+   if (path.Length() > 0 && path != "-") {
+      if (!(op = path.Tokenize(" "))) {
+         Error("HandleLibIncPath","decomposing path %s", path.Data());
+         return;
+      }
+   }
+
+   if (add) {
+
+      if (type == "lib") {
+
+         // Add libs
+         TIter nxl(op, kIterBackward);
+         TObjString *lib = 0;
+         while ((lib = (TObjString *) nxl())) {
+            // Expand path
+            TString xlib = lib->GetName();
+            gSystem->ExpandPathName(xlib);
+            // Add to the dynamic lib search path if it exists and can be read
+            if (!gSystem->AccessPathName(xlib, kReadPermission)) {
+               TString newlibpath = gSystem->GetDynamicPath();
+               // In the first position after the working dir
+               Int_t pos = 0;
+               if (newlibpath.BeginsWith(".:"))
+                  pos = 2;
+               if (newlibpath.Index(xlib) == kNPOS) {
+                  newlibpath.Insert(pos,Form("%s:", xlib.Data()));
+                  gSystem->SetDynamicPath(newlibpath);
+               }
+            } else {
+               Info("HandleLibIncPath",
+                    "libpath %s does not exist or cannot be read - not added", xlib.Data());
+            }
+         }
+
+      } else {
+
+         // Add incs
+         TIter nxi(op);
+         TObjString *inc = 0;
+         while ((inc = (TObjString *) nxi())) {
+            // Expand path
+            TString xinc = inc->GetName();
+            gSystem->ExpandPathName(xinc);
+            // Add to the dynamic lib search path if it exists and can be read
+            if (!gSystem->AccessPathName(xinc, kReadPermission)) {
+               TString curincpath = gSystem->GetIncludePath();
+               if (curincpath.Index(xinc) == kNPOS)
+                  gSystem->AddIncludePath(Form("-I%s", xinc.Data()));
+            } else
+               Info("HandleLibIncPath",
+                    "incpath %s does not exist or cannot be read - not added", xinc.Data());
+         }
+      }
+
+
+   } else {
+
+      if (type == "lib") {
+
+         // Remove libs
+         TIter nxl(op);
+         TObjString *lib = 0;
+         while ((lib = (TObjString *) nxl())) {
+            // Expand path
+            TString xlib = lib->GetName();
+            gSystem->ExpandPathName(xlib);
+            // Remove from the dynamic lib search path
+            TString newlibpath = gSystem->GetDynamicPath();
+            newlibpath.ReplaceAll(Form("%s:", xlib.Data()),"");
+            gSystem->SetDynamicPath(newlibpath);
+         }
+
+      } else {
+
+         // Remove incs
+         TIter nxi(op);
+         TObjString *inc = 0;
+         while ((inc = (TObjString *) nxi())) {
+            TString newincpath = gSystem->GetIncludePath();
+            newincpath.ReplaceAll(Form("-I%s", inc->GetName()),"");
+            // Remove the interpreter path (added anyhow internally)
+            newincpath.ReplaceAll(gInterpreter->GetIncludePath(),"");
+            gSystem->SetIncludePath(newincpath);
+         }
+      }
+   }
 }
 
 //______________________________________________________________________________
@@ -6035,14 +6214,34 @@ void TProof::DataSetStatus(const char *msg, Bool_t st, Int_t done, Int_t total)
 }
 
 //______________________________________________________________________________
-void TProof::SendDataSetStatus(const char *msg, UInt_t n,
-                                 UInt_t tot, Bool_t st)
+void TProof::SendDataSetStatus(const char *action, UInt_t done,
+                               UInt_t tot, Bool_t st)
 {
-   // Send data set status
+   // Send or notify data set status
 
-   if (IsMaster()) {
+   if (IsLite()) {
+      if (tot) {
+         TString type = "files";
+         Int_t frac = (Int_t) (done*100.)/tot;
+         char msg[512] = {0};
+         if (frac >= 100) {
+            sprintf(msg,"%s: OK (%d %s)                 \n",
+                     action,tot, type.Data());
+         } else {
+            sprintf(msg,"%s: %d out of %d (%d %%)\r",
+                     action, done, tot, frac);
+         }
+         if (fSync)
+            fprintf(stderr,"%s", msg);
+         else
+            NotifyLogMsg(msg, 0);
+      }
+      return;
+   }
+
+   if (TestBit(TProof::kIsMaster)) {
       TMessage mess(kPROOF_DATASET_STATUS);
-      mess << TString(msg) << tot << n << st;
+      mess << TString(action) << tot << done << st;
       gProofServ->GetSocket()->Send(mess);
    }
 }
@@ -6628,14 +6827,13 @@ TTree *TProof::GetTreeHeader(TDSet *dset)
    (*reply) >> s1;
    (*reply) >> t;
 
-   PDB(kGlobal, 1) {
+   PDB(kGlobal, 1)
       if (t) {
          Info("GetTreeHeader", Form("%s, message size: %d, entries: %d\n",
              s1.Data(), reply->BufferSize(), (int) t->GetMaxEntryLoop()));
       } else {
          Info("GetTreeHeader", Form("%s, message size: %d\n", s1.Data(), reply->BufferSize()));
       }
-   }
    delete reply;
 
    return t;
@@ -6853,7 +7051,7 @@ void TProof::GetLog(Int_t start, Int_t end)
    // Ask for remote logs in the range [start, end]. If start == -1 all the
    // messages not yet received are sent back.
 
-   if (!IsValid() || IsMaster()) return;
+   if (!IsValid() || TestBit(TProof::kIsMaster)) return;
 
    TMessage msg(kPROOF_LOGFILE);
 
@@ -7127,14 +7325,14 @@ void TProof::SetAlias(const char *alias)
 
    // Set it locally
    TNamed::SetTitle(alias);
-   if (IsMaster())
+   if (TestBit(TProof::kIsMaster))
       // Set the name at the same value
       TNamed::SetName(alias);
 
    // Nothing to do if not in contact with coordinator
    if (!IsValid()) return;
 
-   if (!IsProofd() && !IsMaster()) {
+   if (!IsProofd() && TestBit(TProof::kIsClient)) {
       TSlave *sl = (TSlave *) fActiveSlaves->First();
       if (sl)
          sl->SetAlias(alias);
@@ -7183,6 +7381,11 @@ Int_t TProof::UploadDataSet(const char *dataSetName,
       return -1;
    }
 
+   if (IsLite()) {
+      Info("UploadDataSet", "Lite-session: functionality not needed - do nothing");
+      return -1;
+   }
+
    // check if  dataSetName is not excluded
    if (strchr(dataSetName, '/')) {
       if (strstr(dataSetName, "public") != dataSetName) {
@@ -7191,15 +7394,15 @@ Int_t TProof::UploadDataSet(const char *dataSetName,
          return kError;
       }
    }
-   if (((opt & kOverwriteAllFiles) && (opt & kOverwriteNoFiles))
-       || ((opt & kNoOverwriteDataSet) && (opt & kAppend))
-       || ((opt & kOverwriteDataSet) && (opt & kAppend))
-       || ((opt & kNoOverwriteDataSet) && (opt & kOverwriteDataSet))
-       || ((opt & kAskUser) && (opt & (kOverwriteDataSet |
+   if (opt & kOverwriteAllFiles && opt & kOverwriteNoFiles
+       || opt & kNoOverwriteDataSet && opt & kAppend
+       || opt & kOverwriteDataSet && opt & kAppend
+       || opt & kNoOverwriteDataSet && opt & kOverwriteDataSet
+       || opt & kAskUser && opt & (kOverwriteDataSet |
                                    kNoOverwriteDataSet |
                                    kAppend |
                                    kOverwriteAllFiles |
-                                   kOverwriteNoFiles)))) {
+                                   kOverwriteNoFiles)) {
       Error("UploadDataSet", "you specified contradicting options.");
       return kError;
    }
@@ -7466,6 +7669,11 @@ Bool_t TProof::RegisterDataSet(const char *dataSetName,
       return kFALSE;
    }
 
+   if (!dataSetName || strlen(dataSetName) <= 0) {
+      Info("RegisterDataSet", "specifying a dataset name is mandatory");
+      return kFALSE;
+   }
+
    TSocket *master;
    if (fActiveSlaves->GetSize())
       master = ((TSlave*)(fActiveSlaves->First()))->GetSocket();
@@ -7493,8 +7701,7 @@ Bool_t TProof::RegisterDataSet(const char *dataSetName,
 //______________________________________________________________________________
 TMap *TProof::GetDataSets(const char *uri, const char* optStr)
 {
-   // lists all datasets
-   // that match given uri
+   // Lists all datasets that match given uri.
 
    if (fProtocol < 15) {
       Info("GetDataSets",
@@ -7536,7 +7743,7 @@ TMap *TProof::GetDataSets(const char *uri, const char* optStr)
 //______________________________________________________________________________
 void TProof::ShowDataSets(const char *uri, const char* optStr)
 {
-   // Shows datasets in locations that match the uri
+   // Shows datasets in locations that match the uri.
    // By default shows the user's datasets and global ones
 
    if (fProtocol < 15) {
@@ -7577,7 +7784,13 @@ TFileCollection *TProof::GetDataSet(const char *uri, const char* optStr)
       return 0;
    }
 
+   if (!uri || strlen(uri) <= 0) {
+      Info("GetDataSet", "specifying a dataset name is mandatory");
+      return kFALSE;
+   }
+
    TSocket *master = 0;
+
    if (fActiveSlaves->GetSize())
       master = ((TSlave*)(fActiveSlaves->First()))->GetSocket();
    else {
@@ -7698,6 +7911,11 @@ TMap *TProof::GetDataSetQuota(const char* optStr)
 {
    // returns a map of the quotas of all groups
 
+   if (IsLite()) {
+      Info("UploadDataSet", "Lite-session: functionality not implemented");
+      return (TMap *)0;
+   }
+
    TSocket *master = 0;
    if (fActiveSlaves->GetSize())
       master = ((TSlave*)(fActiveSlaves->First()))->GetSocket();
@@ -7735,8 +7953,13 @@ void TProof::ShowDataSetQuota(Option_t* opt)
    // if opt contains "U" shows also distribution of usage on user-level
 
    if (fProtocol < 15) {
-      Info("ShowDataSetQuota",
-           "functionality not available: the server does not have dataset support");
+     Info("ShowDataSetQuota",
+          "functionality not available: the server does not have dataset support");
+     return;
+   }
+
+   if (IsLite()) {
+      Info("UploadDataSet", "Lite-session: functionality not implemented");
       return;
    }
 
@@ -7816,7 +8039,7 @@ void TProof::ModifyWorkerLists(const char *ord, Bool_t add)
    TList *in = (add) ? fInactiveSlaves : fActiveSlaves;
    TList *out = (add) ? fActiveSlaves : fInactiveSlaves;
 
-   if (IsMaster()) {
+   if (TestBit(TProof::kIsMaster)) {
       fw = IsEndMaster() ? kFALSE : kTRUE;
       // Look for the worker in the inactive list
       if (in->GetSize() > 0) {
@@ -7866,7 +8089,7 @@ void TProof::ModifyWorkerLists(const char *ord, Bool_t add)
 
 //_____________________________________________________________________________
 TProof *TProof::Open(const char *cluster, const char *conffile,
-                                   const char *confdir, Int_t loglevel)
+                                          const char *confdir, Int_t loglevel)
 {
    // Start a PROOF session on a specific cluster. If cluster is 0 (the
    // default) then the PROOF Session Viewer GUI pops up and 0 is returned.
@@ -7910,8 +8133,12 @@ TProof *TProof::Open(const char *cluster, const char *conffile,
 
    } else {
 
+      TString clst(cluster);
+      if (clst.BeginsWith("workers=") || clst.BeginsWith("tunnel="))
+         clst.Insert(0, "/?");
+
       // Parse input URL
-      TUrl u(cluster);
+      TUrl u(clst);
 
       // Parse any tunning info ("<cluster>/?tunnel=[<tunnel_host>:]tunnel_port)
       TString opts(u.GetOptions());
@@ -7951,16 +8178,14 @@ TProof *TProof::Open(const char *cluster, const char *conffile,
       }
 
       // Find out if we are required to attach to a specific session
-      TString o(u.GetOptions());
       Int_t locid = -1;
       Bool_t create = kFALSE;
-      if (o.Length() > 0) {
-         if (o.BeginsWith("N",TString::kIgnoreCase)) {
+      if (opts.Length() > 0) {
+         if (opts.BeginsWith("N",TString::kIgnoreCase)) {
             create = kTRUE;
-         } else if (o.IsDigit()) {
-            locid = o.Atoi();
+         } else if (opts.IsDigit()) {
+            locid = opts.Atoi();
          }
-         u.SetOptions("");
       }
 
       // Attach-to or create the appropriate manager
@@ -7971,7 +8196,7 @@ TProof *TProof::Open(const char *cluster, const char *conffile,
 
          // If XProofd we always attempt an attach first (unless
          // explicitely not requested).
-         Bool_t attach = (create || mgr->IsProofd()) ? kFALSE : kTRUE;
+         Bool_t attach = (create || mgr->IsProofd() || mgr->IsLite()) ? kFALSE : kTRUE;
          if (attach) {
             TProofDesc *d = 0;
             if (locid < 0)
@@ -8093,7 +8318,7 @@ void TProof::SaveWorkerInfo()
    // TProof::MarkBad().
 
    // We must be masters
-   if (!IsMaster())
+   if (TestBit(TProof::kIsClient))
       return;
 
    // We must have a server defined
@@ -8291,7 +8516,7 @@ Int_t TProof::AssertDataSet(TDSet *dset, TList *input,
    // use the default as the flow will determine
    TString dsTree;
    // Get the [subdir/]tree, if any
-   mgr->ParseUri(dset->GetName(), 0, 0, 0, &dsTree);
+   mgr->ParseUri(dsname.Data(), 0, 0, 0, &dsTree);
    if (dsTree.IsNull()) {
       // Use what we have in the original dataset; we need this to locate the
       // meta data information
@@ -8316,6 +8541,7 @@ Int_t TProof::AssertDataSet(TDSet *dset, TList *input,
    if (dataset) {
       TList *missingFiles = new TList;
       TSeqCollection* files = dataset->GetList();
+      files->Print();
       Bool_t availableOnly = (lookupopt != "all") ? kTRUE : kFALSE;
       if (!dset->Add(files, dsTree, availableOnly, missingFiles)) {
          emsg.Form("error retrieving dataset %s", dset->GetName());

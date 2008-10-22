@@ -29,6 +29,7 @@ class TDSet;
 
 class TProofQueryResult : public TQueryResult {
 
+friend class TProofLite;
 friend class TProofServ;
 friend class TQueryResultManager;
 
