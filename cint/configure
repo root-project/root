@@ -513,7 +513,7 @@ function processflag_datadir {
     DATADIRCINT=$ABSPATH/cint
 }
 
-function processflag_datadir {
+function processflag_mandir {
     pathtoabs $1
     MANDIR=$ABSPATH
 }
