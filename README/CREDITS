@@ -449,6 +449,10 @@ N: John Marraffino
 E: marafino@fnal.gov
 D: improvements in TUnixSystem::StackTrace()
 
+N: Andy Mastbaum
+E: mastbaum@lanl.gov
+D: implementation of TH1::Interpolate and TH2::Interpolate
+
 N: Jiri Masik
 E: Jiri.Masik@fzu.cz
 D: Numerous contributions to the system
