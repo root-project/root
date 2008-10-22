@@ -139,7 +139,7 @@ Int_t TProofLite::Init(const char *, const char *conffile,
    }
 
    // UNIX path for communication with workers
-   fSockPath       = Form("%s/sockpath", fWorkDir.Data());
+   fSockPath       = Form("%s/prooflite-sockpath-%s", gSystem->TempDirectory(), GetName());
 
    fLogLevel       = loglevel;
    fProtocol       = kPROOF_Protocol;
@@ -317,6 +317,9 @@ TProofLite::~TProofLite()
 {
    // Destructor
 
+   // Shutdown the workers
+   RemoveWorkers(0);
+
    if (!(fQMgr && fQMgr->Queries() && fQMgr->Queries()->GetSize())) {
       // needed in case fQueryDir is on NFS ?!
       gSystem->MakeDirectory(fQueryDir+"/.delete");
@@ -330,6 +333,7 @@ TProofLite::~TProofLite()
    }
 
    SafeDelete(fServSock);
+   gSystem->Unlink(fSockPath);
 }
 
 //______________________________________________________________________________
