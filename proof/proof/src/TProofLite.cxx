@@ -154,6 +154,8 @@ Int_t TProofLite::Init(const char *, const char *conffile,
    fAvailablePackages = 0;
    fEnabledPackages = 0;
    fEndMaster      = TestBit(TProof::kIsMaster) ? kTRUE : kFALSE;
+   fInputData      = 0;
+   ResetBit(TProof::kNewInputData);
 
    // Timeout for some collect actions
    fCollectTimeout = gEnv->GetValue("Proof.CollectTimeout", -1);
@@ -248,6 +250,7 @@ Int_t TProofLite::Init(const char *, const char *conffile,
 
    fPackageLock             = 0;
    fEnabledPackagesOnClient = 0;
+   fLoadedMacros            = 0;
    fGlobalPackageDirList    = 0;
    if (TestBit(TProof::kIsClient)) {
 
