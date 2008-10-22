@@ -512,7 +512,8 @@ Int_t TProofServLite::SetupOnFork(const char *ord)
          FileStat_t st;
          gSystem->GetPathInfo(ent.Data(), st);
          if (st.fIsLink && ent.Contains(sord)) {
-         Info("SetupOnFork","unlinking: %s", ent.Data());
+            PDB(kGlobal, 1)
+               Info("SetupOnFork","unlinking: %s", ent.Data());
             gSystem->Unlink(ent);
          }
       }
