@@ -464,8 +464,7 @@ Int_t TProofLite::SetupWorkers(Int_t opt, TList *startedWorkers)
             TString ord;
             *msg >> ord;
             // Find who is calling back
-            TSlave *wrk = (TSlave *) started.FindObject(ord);
-            if (wrk) {
+            if ((wrk = (TSlave *) started.FindObject(ord))) {
                // Remove it from the started list
                started.Remove(wrk);
 

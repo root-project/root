@@ -30,6 +30,7 @@
 #endif
 #include <sys/types.h>
 #include <netinet/in.h>
+#include <cstdlib>
 
 #include "TProofServLite.h"
 #include "TObjString.h"

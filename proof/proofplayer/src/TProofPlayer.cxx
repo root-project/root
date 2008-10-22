@@ -820,7 +820,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
 
    // Get the frequency for logging memory consumption information
    TParameter<Long64_t> *par = (TParameter<Long64_t>*)fInput->FindObject("PROOF_MemLogFreq");
-   Long64_t memlogfreq = (par) ? par->GetVal() : 100;
+   volatile Long64_t memlogfreq = (par) ? par->GetVal() : 100;
 
    TRY {
 
