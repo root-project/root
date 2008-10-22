@@ -570,10 +570,15 @@ void TGVSplitter::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    } else {
       out << "," << GetOptionString() << ",ucolor);" << endl;
    }
-
-   out << "   " << GetName() << "->SetFrame(" << GetFrame()->GetName();
-   if (GetLeft()) out << ",kTRUE);" << endl;
-   else           out << ",kFALSE);"<< endl;
+   // TGVSplitter->SetFrame( theframe ) can only be saved here
+   // if fFrame is the frame on the left (since the frame on the
+   // right will only be saved afterwards)... The other case is
+   // handled in TGCompositeFrame::SavePrimitiveSubframes()
+   if (GetLeft()) {
+      out << "   " << GetName() << "->SetFrame(" << GetFrame()->GetName();
+      if (GetLeft()) out << ",kTRUE);" << endl;
+      else           out << ",kFALSE);"<< endl;
+   }
 }
 
 //______________________________________________________________________________
@@ -596,10 +601,15 @@ void TGHSplitter::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    } else {
       out << "," << GetOptionString() << ",ucolor);" << endl;
    }
-
-   out << "   " << GetName() << "->SetFrame(" << GetFrame()->GetName();
-   if (GetAbove()) out << ",kTRUE);" << endl;
-   else            out << ",kFALSE);"<< endl;
+   // TGHSplitter->SetFrame( theframe ) can only be saved here
+   // if fFrame is the frame above (since the frame below will
+   // only be saved afterwards)... The other case is handled in
+   // TGCompositeFrame::SavePrimitiveSubframes()
+   if (GetAbove()) {
+      out << "   " << GetName() << "->SetFrame(" << GetFrame()->GetName();
+      if (GetAbove()) out << ",kTRUE);" << endl;
+      else            out << ",kFALSE);"<< endl;
+   }
 }
 
 //______________________________________________________________________________

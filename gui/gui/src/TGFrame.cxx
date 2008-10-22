@@ -2545,6 +2545,8 @@ void TGCompositeFrame::SavePrimitiveSubframes(ostream &out, Option_t *option /*=
    char quote = '"';
 
    TGFrameElement *el;
+   static TGHSplitter *hsplit = 0;
+   static TGVSplitter *vsplit = 0;
    TList *signalslist;
    TList *connlist;
    TQConnection *conn;
@@ -2553,6 +2555,25 @@ void TGCompositeFrame::SavePrimitiveSubframes(ostream &out, Option_t *option /*=
    TIter next(fList);
 
    while ((el = (TGFrameElement *) next())) {
+
+      // Don't save hidden (unmapped) frames having a parent different
+      // than this frame. Solves a problem with shared frames
+      // (e.g. shared menus in the new Browser)
+      if ((!el->fState & kIsVisible) && (el->fFrame->GetParent() != this))
+         continue;
+
+      // Remember if the frame to be saved is a TG(H,V)Splitter
+      // See comments below and in TG[H/V]Splitter::SavePrimitive()
+      if (el->fFrame->InheritsFrom("TGVSplitter")) {
+         vsplit = (TGVSplitter *)el->fFrame;
+         if (vsplit->GetLeft())
+            vsplit = 0;
+      }
+      else if (el->fFrame->InheritsFrom("TGHSplitter")) {
+         hsplit = (TGHSplitter *)el->fFrame;
+         if (hsplit->GetAbove())
+            hsplit = 0;
+      }
       el->fFrame->SavePrimitive(out, option);
       out << "   " << GetName() << "->AddFrame(" << el->fFrame->GetName();
       el->fLayout->SavePrimitive(out, option);
@@ -2562,6 +2583,23 @@ void TGCompositeFrame::SavePrimitiveSubframes(ostream &out, Option_t *option /*=
          out << el->fFrame->GetX() << "," << el->fFrame->GetY() << ",";
          out << el->fFrame->GetWidth() << ","  << el->fFrame->GetHeight();
          out << ");" << endl;
+      }
+      // TG(H,V)Splitter->SetFrame(theframe) can only be saved _AFTER_
+      // having saved "theframe", when "theframe" is either at right
+      // or below the splitter (that means after the splitter in the
+      // list of frames), otherwise "theframe" would be undefined
+      // (aka used before to be created)...
+      if (vsplit && el->fFrame == vsplit->GetFrame()) {
+         out << "   " << vsplit->GetName() << "->SetFrame(" << vsplit->GetFrame()->GetName();
+         if (vsplit->GetLeft()) out << ",kTRUE);" << endl;
+         else                 out << ",kFALSE);"<< endl;
+         vsplit = 0;
+      }
+      if (hsplit && el->fFrame == hsplit->GetFrame()) {
+         out << "   " << hsplit->GetName() << "->SetFrame(" << hsplit->GetFrame()->GetName();
+         if (hsplit->GetAbove()) out << ",kTRUE);" << endl;
+         else                  out << ",kFALSE);"<< endl;
+         hsplit = 0;
       }
 
       if (!el->fState & kIsVisible) {
@@ -2698,6 +2736,14 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
             TObjString *iel = (TObjString *)ilist->FindObject(tname);
             if (!iel) {
                ilist->Add(new TObjString(tname));
+            }
+            // Weird, but when saving a canvas, the following two classes
+            // may be missing if the toolbar has not been displayed...
+            if (strstr(tname, "TRootCanvas")) {
+               if (!ilist->FindObject("TGDockableFrame"))
+                  ilist->Add(new TObjString("TGDockableFrame"));
+               if (!ilist->FindObject("TG3DLine"))
+                  ilist->Add(new TObjString("TG3DLine"));
             }
             delete [] tname;
          }

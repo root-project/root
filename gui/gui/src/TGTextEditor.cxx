@@ -243,7 +243,9 @@ TGTextEditor::TGTextEditor(const char *filename, const TGWindow *p, UInt_t w,
       // special case for TRootBrowser
       // remove the command line combo box and its associated label
       fComboCmd->UnmapWindow();
+      fToolBar->RemoveFrame(fComboCmd);
       fLabel->UnmapWindow();
+      fToolBar->RemoveFrame(fLabel);
       fToolBar->GetButton(kM_FILE_EXIT)->SetState(kButtonDisabled);
       fToolBar->Layout();
    }
@@ -571,7 +573,7 @@ Int_t TGTextEditor::IsSaved()
    Int_t ret;
    char tmp[1024];
    Int_t opt = (kMBYes | kMBNo);
-   
+
    sprintf(tmp, "The text has been modified. Do you want to save the changes?");
 
    if (!fTextChanged) {
