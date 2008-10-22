@@ -230,6 +230,9 @@ TDSetElement *TPacketizerUnit::GetNextPacket(TSlave *sl, TMessage *r)
    TSlaveStat *slstat = (TSlaveStat*) fSlaveStats->GetValue(sl);
    R__ASSERT(slstat != 0);
 
+   PDB(kPacketizer,2)
+      Info("GetNextPacket","worker-%s: fAssigned %lld\t", sl->GetOrdinal(), fAssigned);
+
    // Update stats & free old element
    Double_t latency, proctime, proccpu;
    Long64_t bytesRead = -1;
@@ -274,8 +277,6 @@ TDSetElement *TPacketizerUnit::GetNextPacket(TSlave *sl, TMessage *r)
 
    fProgressStatus->IncEntries(numev);
 
-   PDB(kPacketizer,2)
-      Info("GetNextPacket","worker-%s: fAssigned %lld\t", sl->GetOrdinal(), fAssigned);
    fProcessing = 0;
 
    PDB(kPacketizer,2)
@@ -291,7 +292,7 @@ TDSetElement *TPacketizerUnit::GetNextPacket(TSlave *sl, TMessage *r)
    if (fAssigned == fTotalEntries) {
       // Send last timer message
       HandleTimer(0);
-      SafeDelete(fProgress);
+      return 0;
    }
 
    if (fStop) {
