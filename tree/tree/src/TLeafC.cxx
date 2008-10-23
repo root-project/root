@@ -16,6 +16,7 @@
 
 #include "TLeafC.h"
 #include "TBranch.h"
+#include "TBasket.h"
 #include "TClonesArray.h"
 #include "Riostream.h"
 #include <string>
@@ -81,7 +82,7 @@ void TLeafC::FillBasket(TBuffer &b)
    Int_t len = strlen(fValue);
    if (len >= fMaximum) fMaximum = len+1;
    if (len >= fLen)     fLen = len+1;
-   if (len) b.WriteFastArrayString(fValue,len);
+   b.WriteFastArrayString(fValue,len);
 }
 
 //______________________________________________________________________________
@@ -122,6 +123,24 @@ void TLeafC::ReadBasket(TBuffer &b)
 {
    // Read leaf elements from Basket input buffer.
 
+   // Try to deal with the file written during the time where len was not
+   // written to disk when len was == 0.
+   Int_t readbasket = GetBranch()->GetReadBasket();
+   TBasket *basket = GetBranch()->GetBasket(readbasket);
+   Int_t* entryOffset = basket->GetEntryOffset();
+   if (entryOffset) {
+      Long64_t first = GetBranch()->GetBasketEntry()[readbasket];
+      Long64_t entry = GetBranch()->GetReadEntry();
+      if ( ( ( (readbasket == GetBranch()->GetWriteBasket() && (entry+1)==GetBranch()->GetEntries())
+              || (entry+1) == GetBranch()->GetBasketEntry()[readbasket+1])
+             && ( entryOffset[entry-first] == basket->GetLast() ) )
+           || ( entryOffset[entry-first] == entryOffset[entry-first+1] ) ) 
+      {
+         // Empty string
+         fValue[0] = '\0';
+         return;
+      }
+   }
    b.ReadFastArrayString(fValue,fLen);
 }
 
