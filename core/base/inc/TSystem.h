@@ -172,6 +172,8 @@ struct SysInfo_t {
    Int_t     fPhysRam;     // physical RAM in MB
    SysInfo_t() : fOS(), fModel(), fCpuType(), fCpus(0), fCpuSpeed(0),
                  fBusSpeed(0), fL2Cache(0), fPhysRam(0) { }
+   virtual ~SysInfo_t() { }
+   ClassDef(SysInfo_t, 1); // System information - OS, CPU, RAM.
 };
 
 struct CpuInfo_t {
@@ -184,6 +186,8 @@ struct CpuInfo_t {
    Float_t   fIdle;        // cpu idle percentage
    CpuInfo_t() : fLoad1m(0), fLoad5m(0), fLoad15m(0),
                  fUser(0), fSys(0), fTotal(0), fIdle(0) { }
+   virtual ~CpuInfo_t() { }
+   ClassDef(CpuInfo_t, 1); // CPU load information.
 };
 
 struct MemInfo_t {
@@ -195,6 +199,8 @@ struct MemInfo_t {
    Int_t     fSwapFree;    // free swap in MB
    MemInfo_t() : fMemTotal(0), fMemUsed(0), fMemFree(0),
                  fSwapTotal(0), fSwapUsed(0), fSwapFree(0) { }
+   virtual ~MemInfo_t() { }
+   ClassDef(MemInfo_t, 1); // Memory utilization information.
 };
 
 struct ProcInfo_t {
@@ -204,6 +210,8 @@ struct ProcInfo_t {
    Long_t    fMemVirtual;  // virtual memory used by this process in KB
    ProcInfo_t() : fCpuUser(0), fCpuSys(0), fMemResident(0),
                   fMemVirtual(0) { }
+   virtual ~ProcInfo_t() { }
+   ClassDef(ProcInfo_t, 1);// System resource usage of given process.
 };
 
 struct RedirectHandle_t {
