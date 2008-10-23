@@ -4585,7 +4585,7 @@ void TProof::SetRealTimeLog(Bool_t on)
 //______________________________________________________________________________
 Int_t TProof::SetParallelSilent(Int_t nodes, Bool_t random)
 {
-   // Tell RPOOF how many slaves to use in parallel. If random is TRUE a random
+   // Tell PROOF how many slaves to use in parallel. If random is TRUE a random
    // selection is done (if nodes is less than the available nodes).
    // Returns the number of parallel slaves. Returns -1 in case of error.
 
