@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.29 2008/06/03 01:50:37 abh Exp $
+#              $Id: GNUmakefile,v 1.31 2008/09/07 04:40:55 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -131,7 +131,8 @@ $(OBJDIR)/XrdXrootdConfig.o: XrdXrootdProtocol.hh XrdXrootdFile.hh \
                              XrdNetDNS.hh         XrdNetSocket.hh  XrdNetOpts.hh \
                              XrdBuffer.hh         XProtocol.hh \
                              XrdOuca2x.hh         XrdSysError.hh  \
-                             XrdSysLogger.hh      XrdOucReqID.hh \
+                             XrdSysLogger.hh      XrdSysHeaders.hh \
+                             XrdOucReqID.hh \
                              XrdOucTokenizer.hh   XrdOucTrace.hh \
                              XrdOucProg.hh        XrdXrootdConfig.cc \
                              XrdOucStream.hh      XrdOucEnv.hh

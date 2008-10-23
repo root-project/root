@@ -19,6 +19,7 @@ const char *XrdOucStreamCVSID = "$Id$";
 #include <string.h>
 #include <stdio.h>
 #ifndef WIN32
+#include <poll.h>
 #include <unistd.h>
 #include <strings.h>
 #if !defined(__linux__) && !defined(__CYGWIN__)
@@ -40,6 +41,7 @@ const char *XrdOucStreamCVSID = "$Id$";
 #include "XrdOuc/XrdOucStream.hh"
 #include "XrdOuc/XrdOucUtils.hh"
 #include "XrdSys/XrdSysHeaders.hh"
+#include "XrdSys/XrdSysLogger.hh"
 #include "XrdSys/XrdSysPlatform.hh"
 
 /******************************************************************************/
@@ -53,6 +55,10 @@ const char *XrdOucStreamCVSID = "$Id$";
 #define Erq(p, a, b) Err(p, a, b, (char *)0)
 #define Err(p, a, b, c) (ecode=(Eroute ? Eroute->Emsg(#p, a, b, c) : a), -1)
 #define Erp(p, a, b, c)  ecode=(Eroute ? Eroute->Emsg(#p, a, b, c) : a)
+
+// The following is used by child processes prior to exec() to avoid deadlocks
+//
+#define Erx(p, a, b) if (Eroute) cerr <<#p <<' ' <<strerror(a) <<' ' <<b <<endl;
 
 /******************************************************************************/
 /*               o o u c _ S t r e a m   C o n s t r u c t o r                */
@@ -249,6 +255,7 @@ int XrdOucStream::Exec(char *cmd, int inrd)
 int XrdOucStream::Exec(char **parm, int inrd)
 {
     int fildes[2], Child_in = -1, Child_out = -1;
+    int Child_log = (Eroute ? Eroute->logger()->xlogFD() : -1);
 
     // Create a pipe. Minimize file descriptor leaks.
     //
@@ -291,7 +298,7 @@ int XrdOucStream::Exec(char **parm, int inrd)
     if (Child_in >= 0)
        {if (inrd)
            {if (dup2(Child_in, STDIN_FILENO) < 0)
-               {Erp(Exec, errno, "set up standard in for", parm[0]);
+               {Erx(Exec, errno, "set up standard in for " <<parm[0]);
                 exit(255);
                } else if (Child_in != Child_out) close(Child_in);
            }
@@ -301,9 +308,18 @@ int XrdOucStream::Exec(char **parm, int inrd)
     //
     if (Child_out >= 0)
        {if (dup2(Child_out, STDOUT_FILENO) < 0)
-           {Erp(Exec, errno, "set up standard out for", parm[0]);
+           {Erx(Exec, errno, "set up standard out for " <<parm[0]);
             exit(255);
            } else close(Child_out);
+       }
+
+    // Redirect stderr of the stream if we can to avoid keeping the logfile open
+    //
+    if (Child_log >= 0)
+       {if (dup2(Child_log, STDERR_FILENO) < 0)
+           {Erx(Exec, errno, "set up standard err for " <<parm[0]);
+            exit(255);
+           } else close(Child_log);
        }
 
     // Set our process group (the parent should have done this by now) then
@@ -311,7 +327,7 @@ int XrdOucStream::Exec(char **parm, int inrd)
     //
     setpgid(0,0);
     execv(parm[0], parm);
-    Erp(Exec, errno, "execute", parm[0]);
+    Erx(Exec, errno, "execute " <<parm[0]);
     exit(255);
 }
 
@@ -647,6 +663,25 @@ int XrdOucStream::Put(const char *datavec[], const int dlenvec[]) {
     return 0;
 }
  
+/******************************************************************************/
+/*                             W a i t 4 D a t a                              */
+/******************************************************************************/
+
+int XrdOucStream::Wait4Data(int msMax)
+{
+   struct pollfd polltab = {FD, POLLIN|POLLRDNORM, 0};
+   int retc;
+
+// Wait until we can actually read something
+//
+   do {retc = poll(&polltab, 1, msMax);} while(retc < 0 && errno == EINTR);
+   if (retc != 1) return (retc ? errno : -1);
+
+// Return correct value
+//
+   return (polltab.revents & (POLLIN|POLLRDNORM) ? 0 : EIO);
+}
+  
 /******************************************************************************/
 /*                       P r i v a t e   M e t h o d s                        */
 /******************************************************************************/

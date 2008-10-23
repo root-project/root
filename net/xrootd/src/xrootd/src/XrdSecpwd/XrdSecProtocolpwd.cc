@@ -239,7 +239,8 @@ static const char *ServerStepStr(int ksrv)
 
 //_____________________________________________________________________________
 XrdSecProtocolpwd::XrdSecProtocolpwd(int opts, const char *hname,
-                                     const struct sockaddr *ipadd)
+                                     const struct sockaddr *ipadd,
+                                     const char *parms)
 {
    // Default constructor
    EPNAME("XrdSecProtocolpwd");
@@ -297,7 +298,7 @@ XrdSecProtocolpwd::XrdSecProtocolpwd(int opts, const char *hname,
    options  = opts;
 
    //
-   // Notify, if required
+   // Mode specific initializations
    if (Server) {
       srvMode = 1;
       DEBUG("mode: server");
@@ -314,6 +315,12 @@ XrdSecProtocolpwd::XrdSecProtocolpwd(int opts, const char *hname,
          DEBUG("server verification ON");
       } else {
          DEBUG("server verification OFF");
+      }
+      // Decode received buffer
+      if (parms) {
+         XrdOucString p("&P=pwd,");
+         p += parms;
+         hs->Parms = new XrdSutBuffer(p.c_str(), p.length());
       }
    }
 
@@ -872,9 +879,9 @@ XrdSecCredentials *XrdSecProtocolpwd::getCredentials(XrdSecParameters *parm,
    hs->ErrMsg = "";
 
    //
-   // Nothing to do if buffer is empty
-   if (!parm || !(parm->buffer) || parm->size <= 0)
-      return ErrC(ei,0,0,0,kPWErrNoBuffer,"parm empty","getCredentials");
+   // Nothing to do if buffer is empty and not filled during construction
+   if ((!parm && !hs->Parms) || (parm && (!(parm->buffer) || parm->size <= 0)))
+      return ErrC(ei,0,0,0,kPWErrNoBuffer,"missing parameters","getCredentials");
 
    // Count interations
    (hs->Iter)++;
@@ -906,8 +913,11 @@ XrdSecCredentials *XrdSecProtocolpwd::getCredentials(XrdSecParameters *parm,
    XrdSysMutexHelper pwdGuard(&pwdContext);
    //
    // Decode received buffer
-   if (!(bpar = new XrdSutBuffer((const char *)parm->buffer,parm->size)))
+   bpar = hs->Parms;
+   if (!bpar && !(bpar = new XrdSutBuffer((const char *)parm->buffer,parm->size)))
       return ErrC(ei,0,0,0,kPWErrDecodeBuffer,"global",stepstr);
+   // Ownership has been transferred
+   hs->Parms = 0;
    //
    // Check protocol ID name
    if (strcmp(bpar->GetProtocol(),XrdSecPROTOIDENT))
@@ -1775,7 +1785,7 @@ XrdSecProtocol *XrdSecProtocolpwdObject(const char              mode,
 
    //
    // Get a new protocol object
-   if (!(prot = new XrdSecProtocolpwd(options,hostname,&netaddr))) {
+   if (!(prot = new XrdSecProtocolpwd(options, hostname, &netaddr, parms))) {
       char *msg = (char *)"Secpwd: Insufficient memory for protocol.";
       if (erp) 
          erp->setErrInfo(ENOMEM, msg);

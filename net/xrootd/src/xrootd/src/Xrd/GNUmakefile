@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.27 2008/06/03 01:49:45 abh Exp $
+#              $Id: GNUmakefile,v 1.28 2008/09/07 04:30:20 abh Exp $
 
 #-----------------------------------------------------------------------------#
 #                            E n v i r o n m e n t                            #
@@ -90,7 +90,7 @@ $(OBJDIR)/XrdConfig.o: XrdBuffer.hh      XrdConfig.hh      XrdJob.hh     \
                        XrdStats.hh       XrdTrace.hh       XrdInfo.hh    \
                        XrdOuca2x.hh      XrdSysError.hh    XrdSysLogger.hh   \
                        XrdOucStream.hh   XrdOucTrace.hh    XrdSysTimer.hh \
-                       XrdOucEnv.hh \
+                       XrdOucEnv.hh      XrdSysHeaders.hh \
                        XrdNetSecurity.hh XrdNetDNS.hh      XrdConfig.cc \
                        ../XrdVersion.hh
 	@echo Compiling XrdConfig.cc 
@@ -122,7 +122,7 @@ $(OBJDIR)/XrdLinkMatch.o: XrdLinkMatch.cc XrdLinkMatch.hh XrdSysPlatform.hh
 $(OBJDIR)/XrdMain.o:   XrdConfig.hh    XrdLink.hh        XrdInet.hh \
                        XrdPoll.hh      XrdScheduler.hh   XrdTrace.hh    \
                        XrdSysError.hh  XrdSysLogger.hh   XrdSysPthread.hh \
-                       XrdOucTrace.hh  XrdProtLoad.hh \
+                       XrdOucTrace.hh  XrdProtLoad.hh    XrdSysHeaders.hh \
                        XrdMain.cc
 	@echo Compiling XrdMain.cc 
 	$(ECHO)$(CC) -c $(CFLAGS) $(CFNOSTRICTALIAS) $(INCLUDE) -o $(OBJDIR)/XrdMain.o XrdMain.cc

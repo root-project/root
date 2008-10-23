@@ -502,33 +502,6 @@ int XrdPosixXrootd::Closedir(DIR *dirp)
    if (XrdDirp) delete XrdDirp;
    return 0;
 }
-  
-/******************************************************************************/
-/*                                 L s e e k                                  */
-/******************************************************************************/
-  
-off_t   XrdPosixXrootd::Lseek(int fildes, off_t offset, int whence)
-{
-   XrdPosixFile *fp;
-   long long curroffset;
-
-// Find the file object
-//
-   if (!(fp = findFP(fildes))) return -1;
-
-// Set the new offset
-//
-   if (whence == SEEK_SET) curroffset = fp->setOffset(offset);
-      else if (whence == SEEK_CUR) curroffset = fp->addOffset(offset);
-              else if (whence == SEEK_END)
-                      curroffset = fp->setOffset(fp->stat.size+offset);
-                      else {Scuttle(fp, EINVAL);}
-
-// All done
-//
-   fp->UnLock();
-   return curroffset;
-}
 
 /******************************************************************************/
 /*                                 F s t a t                                  */
@@ -632,6 +605,33 @@ long long XrdPosixXrootd::Getxattr (const char *path, const char *name,
       return admin.Fault();
      }
   return admin.Result();
+}
+  
+/******************************************************************************/
+/*                                 L s e e k                                  */
+/******************************************************************************/
+  
+off_t   XrdPosixXrootd::Lseek(int fildes, off_t offset, int whence)
+{
+   XrdPosixFile *fp;
+   long long curroffset;
+
+// Find the file object
+//
+   if (!(fp = findFP(fildes))) return -1;
+
+// Set the new offset
+//
+   if (whence == SEEK_SET) curroffset = fp->setOffset(offset);
+      else if (whence == SEEK_CUR) curroffset = fp->addOffset(offset);
+              else if (whence == SEEK_END)
+                      curroffset = fp->setOffset(fp->stat.size+offset);
+                      else {Scuttle(fp, EINVAL);}
+
+// All done
+//
+   fp->UnLock();
+   return curroffset;
 }
   
 /******************************************************************************/

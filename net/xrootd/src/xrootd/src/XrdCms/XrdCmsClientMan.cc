@@ -78,7 +78,7 @@ XrdCmsClientMan::XrdCmsClientMan(char *host, int port,
    minDelay= rd;
    maxDelay= rd*3;
    chkCount= chkVal;
-   lastUpdt= time(0);
+   lastUpdt= lastTOut = time(0);
 
 // Compute dally value
 //
@@ -192,7 +192,7 @@ int XrdCmsClientMan::Send(const struct iovec *iov, int iovcnt, int iotot)
           if (!(allok = Link->Send(iov, iovcnt, iotot) > 0))
              {Active = 0;
               Link->Close(1);
-             }
+             } else SendCnt++;
        myData.UnLock();
       }
 
@@ -262,11 +262,7 @@ void *XrdCmsClientMan::Start()
 int  XrdCmsClientMan::whatsUp(const char *user, const char *path)
 {
    EPNAME("whatsUp");
-   int theDelay;
-
-// Do Some tracing here
-//
-   TRACE(Redirect, user <<" got no response from " <<HPfx  <<" path=" <<path);
+   int theDelay, inQ;
 
 // The cmsd did not respond. Increase silent count and see if restart is needed
 // Otherwise, increase the wait interval just in case things are just slow.
@@ -274,22 +270,29 @@ int  XrdCmsClientMan::whatsUp(const char *user, const char *path)
    myData.Lock();
    if (Active)
       {if (Active == RecvCnt)
-          {Silent++;
-           if (Silent > nrMax)
-              {Active = 0; Silent = 0; Suspend = 1;
-               if (Link) Link->Close(1);
-              } else if (Silent & 0x02 && repWait < repWMax) repWait++;
-          } else Active = RecvCnt;
+          {if ((time(0)-lastTOut) >= repWait)
+              {Silent++;
+               if (Silent > nrMax)
+                  {Active = 0; Silent = 0; Suspend = 1;
+                   if (Link) Link->Close(1);
+                  } else if (Silent & 0x02 && repWait < repWMax) repWait++;
+              }
+          } else {Active = RecvCnt; Silent = 0; lastTOut = time(0);}
       }
 
 // Calclulate how long to delay the client. This will be based on the number
 // of outstanding requests bounded by the config delay value.
 //
-   theDelay = (SendCnt - RecvCnt) * qTime;
+   inQ = SendCnt - RecvCnt;
+   theDelay = inQ * qTime;
    myData.UnLock();
    theDelay = theDelay/1000 + (theDelay % 1000 ? 1 : 0);
    if (theDelay < minDelay) return minDelay;
    if (theDelay > maxDelay) return maxDelay;
+
+// Do Some tracing here
+//
+   TRACE(Redirect, user <<" no resp from " <<HPfx  <<"; inQ " <<inQ <<" wait " <<theDelay <<" path=" <<path);
    return theDelay;
 }
 
@@ -368,7 +371,7 @@ int XrdCmsClientMan::Hookup()
 // Calculate how long we will wait for replies before delaying the client.
 // This is computed dynamically based on the expected response window.
 //
-   oldWait = (repWait*20/100);
+   if ((oldWait = (repWait*20/100)) < 2) oldWait = 2;
    if (Data.HoldTime > repWMax*1000) repWait = repWMax;
       else if (Data.HoldTime <= 0)   repWait = repWMax;
               else {repWait = Data.HoldTime*3;
@@ -377,6 +380,7 @@ int XrdCmsClientMan::Hookup()
                        else if (repWait < oldWait) repWait = oldWait;
                    }
    qTime = (Data.HoldTime < 100 ? 100 : Data.HoldTime);
+   lastTOut = time(0);
    myData.UnLock();
 
 // Tell the world

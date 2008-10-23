@@ -47,6 +47,14 @@ static int getHostAddr(const  char     *InetName,
                               int       maxipa=1,
                               char    **errtxt=0);
 
+// getHostID()   returns the ASCII string corresponding to the IP address
+//               InetAddr. If a translation is successful, the address
+//               of an strdup'd null terminated name is returned (it must be
+//               released using free()). Otherwise, an strdup of '0.0.0.0' is
+//               returned (which must also be freed).
+//
+static char *getHostID(struct sockaddr &InetAddr);
+
 // getAddrName() finds addresses and names associated with an host name or
 //               an ascii host ip address. The host name or address must be
 //               registered in the DNS for the translation to be successful.

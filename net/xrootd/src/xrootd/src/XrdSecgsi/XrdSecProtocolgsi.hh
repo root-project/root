@@ -151,13 +151,14 @@ public:
    int    dlgpxy; // [c] explicitely ask the creation of a delegated proxy 
                   // [s] ask client for proxies
    int    sigpxy; // [c] accept delegated proxy requests 
+   char  *srvnames;// [c] '|' separated list of allowed server names
 
    gsiOptions() { debug = -1; mode = 's'; clist = 0; 
                   certdir = 0; crldir = 0; crlext = 0; cert = 0; key = 0;
                   cipher = 0; md = 0; ca = 1 ; crl = 1;
                   proxy = 0; valid = 0; deplen = 0; bits = 512;
                   gridmap = 0; gmapto = -1; gmapfun = 0; gmapfunparms = 0; ogmap = 1;
-                  dlgpxy = 0; sigpxy = 1;}
+                  dlgpxy = 0; sigpxy = 1; srvnames = 0;}
    virtual ~gsiOptions() { } // Cleanup inside XrdSecProtocolgsiInit
 };
 
@@ -180,12 +181,13 @@ public:
    bool              Tty;           // Terminal attached / not attached
    int               LastStep;      // Step required at previous iteration
    int               Options;       // Handshake options;
+   XrdSutBuffer     *Parms;         // Buffer with server parms on first iteration 
 
    gsiHSVars() { Iter = 0; TimeStamp = -1; CryptoMod = "";
                  RemVers = -1; Rcip = 0;
                  Cbck = 0;
                  ID = ""; Cref = 0; Pent = 0; Chain = 0; Crl = 0; PxyChain = 0;
-                 RtagOK = 0; Tty = 0; LastStep = 0; Options = 0;}
+                 RtagOK = 0; Tty = 0; LastStep = 0; Options = 0; Parms = 0;}
 
    ~gsiHSVars() { SafeDelete(Cref);
                   if (Chain)
@@ -193,7 +195,8 @@ public:
                   if (Options & kOptsDelChn)
                      SafeDelete(Chain);
                   if (PxyChain)
-                     PxyChain->Cleanup(1); }
+                     PxyChain->Cleanup(1);
+                  SafeDelete(Parms); }
    void Dump(XrdSecProtocolgsi *p = 0);
 };
 
@@ -230,7 +233,7 @@ public:
                                           XrdOucErrInfo     *einfo=0);
 
         XrdSecProtocolgsi(int opts, const char *hname,
-                          const struct sockaddr *ipadd);
+                          const struct sockaddr *ipadd, const char *parms = 0);
         virtual ~XrdSecProtocolgsi() {} // Delete() does it all
 
         // Initialization methods
@@ -281,6 +284,7 @@ private:
    static XrdSysPlugin    *GMAPPlugin;
    static XrdSecgsiGMAP_t  GMAPFun;
    static int              PxyReqOpts;
+   static String           SrvAllowedNames;
    //
    // Crypto related info
    static int              ncrypt;                  // Number of factories
@@ -350,6 +354,7 @@ private:
    int            GetCA(const char *cahash);
    static String  GetCApath(const char *cahash);
    static bool    VerifyCA(int opt, X509Chain *cca, XrdCryptoFactory *cf);
+   bool           ServerCertNameOK(const char *subject, String &e);
 
    // Load CRLs
    static XrdCryptoX509Crl *LoadCRL(XrdCryptoX509 *xca,

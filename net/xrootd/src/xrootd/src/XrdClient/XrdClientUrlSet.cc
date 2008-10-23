@@ -257,6 +257,26 @@ XrdClientUrlInfo *XrdClientUrlSet::GetARandomUrl()
    return retval;
 }
 
+
+//_____________________________________________________________________________
+XrdClientUrlInfo *XrdClientUrlSet::GetARandomUrl(unsigned int seed)
+{
+   XrdClientUrlInfo *retval;
+
+   if (!fTmpUrlArray.GetSize()) Rewind();
+
+   // If the urlarray is still empty, just exits
+   if (!fTmpUrlArray.GetSize()) return 0;
+   
+   // When all the urls have been picked, we restart from the full url set
+
+   int rnd = seed % fTmpUrlArray.GetSize();
+   retval = fTmpUrlArray[rnd];
+   fTmpUrlArray.Erase(rnd);
+
+   return retval;
+}
+
 //_____________________________________________________________________________
 void XrdClientUrlSet::EraseUrl(XrdClientUrlInfo *url)
 {

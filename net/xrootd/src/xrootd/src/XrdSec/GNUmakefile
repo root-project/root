@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.25 2008/06/09 10:44:23 ganis Exp $
+#              $Id: GNUmakefile,v 1.26 2008/09/07 04:39:00 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -110,7 +110,7 @@ $(OBJDIR)/XrdSecProtocolhost.o: XrdSecProtocolhost.cc XrdSecProtocolhost.hh \
 	@echo Compiling XrdSecProtocolhost.cc
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdSecProtocolhost.o XrdSecProtocolhost.cc
 $(OBJDIR)/XrdSecServer.o: XrdSecServer.cc       XrdSecServer.hh \
-                          XrdNetDNS.hh \
+                          XrdNetDNS.hh          XrdSysHeaders.hh \
                           XrdOucErrInfo.hh      XrdSysError.hh \
                           XrdSysLogger.hh       XrdOucStream.hh \
                           XrdSecInterface.hh    XrdSecPManager.hh \
@@ -119,11 +119,11 @@ $(OBJDIR)/XrdSecServer.o: XrdSecServer.cc       XrdSecServer.hh \
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdSecServer.o XrdSecServer.cc
 
 $(OBJDIR)/XrdSectestClient.o:   XrdSectestClient.cc XrdSecInterface.hh \
-                                XrdSecEntity.hh
+                                XrdSysHeaders.hh    XrdSecEntity.hh
 	@echo Compiling XrdSectestClient.cc 
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdSectestClient.o XrdSectestClient.cc
 
 $(OBJDIR)/XrdSectestServer.o: XrdSecInterface.hh XrdSecEntity.hh XrdSysLogger.hh \
-                              XrdSectestServer.cc
+                              XrdSysHeaders.hh   XrdSectestServer.cc
 	@echo Compiling XrdSectestServer.cc 
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdSectestServer.o XrdSectestServer.cc

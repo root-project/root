@@ -273,7 +273,7 @@ int XrdOssSys::StatXA(const char *path, char *buff, int &blen)
    Size = sbuff.st_size;
    Mtime = sbuff.st_mtime; Ctime = sbuff.st_ctime; Atime = sbuff.st_atime;
    blen = snprintf(buff, blen, 
-          "oss.cgroup=%s&soss.type=%c&oss.used=%lld&oss.mt=%lld"
+          "oss.cgroup=%s&oss.type=%c&oss.used=%lld&oss.mt=%lld"
           "&oss.ct=%lld&oss.at=%lld&oss.u=*&oss.g=*&oss.fs=%c",
           cgbuff, fType, Size, Mtime, Ctime, Atime,
           (sbuff.st_mode & S_IWUSR ? 'w':'r'));

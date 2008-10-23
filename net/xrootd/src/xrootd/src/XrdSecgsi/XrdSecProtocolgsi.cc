@@ -20,6 +20,7 @@
 #include <fcntl.h>
 #include <dirent.h>
 
+#include "XrdNet/XrdNetDNS.hh"
 #include "XrdSys/XrdSysHeaders.hh"
 #include <XrdSys/XrdSysLogger.hh>
 #include <XrdSys/XrdSysError.hh>
@@ -119,6 +120,7 @@ int    XrdSecProtocolgsi::PxyReqOpts = 0;
 XrdSysPlugin   *XrdSecProtocolgsi::GMAPPlugin = 0;
 XrdSecgsiGMAP_t XrdSecProtocolgsi::GMAPFun = 0;
 int    XrdSecProtocolgsi::GMAPCacheTimeOut = -1;
+String XrdSecProtocolgsi::SrvAllowedNames;
 //
 // Crypto related info
 int  XrdSecProtocolgsi::ncrypt    = 0;                 // Number of factories
@@ -220,7 +222,8 @@ void gsiHSVars::Dump(XrdSecProtocolgsi *p)
 
 //_____________________________________________________________________________
 XrdSecProtocolgsi::XrdSecProtocolgsi(int opts, const char *hname,
-                                     const struct sockaddr *ipadd)
+                                     const struct sockaddr *ipadd,
+                                     const char *parms)
 {
    // Default constructor
    EPNAME("XrdSecProtocolgsi");
@@ -241,13 +244,13 @@ XrdSecProtocolgsi::XrdSecProtocolgsi(int opts, const char *hname,
    strncpy(Entity.prot, XrdSecPROTOIDENT, sizeof(Entity.prot));
 
    // Set host name
-   if (hname) {
-      Entity.host = strdup(hname);
+   if (ipadd) {
+      Entity.host = XrdNetDNS::getHostName((sockaddr&)*ipadd);
+      // Set host addr
+      memcpy(&hostaddr, ipadd, sizeof(hostaddr));
    } else {
-      DEBUG("warning: host name undefined");
+      PRINT("WARNING: IP addr undefined: cannot determin host name: failure may follow");
    }
-   // Set host addr
-   memcpy(&hostaddr, ipadd, sizeof(hostaddr));
 
    // Init session variables
    sessionCF = 0;
@@ -269,12 +272,19 @@ XrdSecProtocolgsi::XrdSecProtocolgsi(int opts, const char *hname,
    srvMode = 0;
 
    //
-   // Notify, if required
+   // Mode specific initializations
    if (Server) {
       srvMode = 1;
       DEBUG("mode: server");
    } else {
       DEBUG("mode: client");
+      //
+      // Decode received buffer
+      if (parms) {
+         XrdOucString p("&P=gsi,");
+         p += parms;
+         hs->Parms = new XrdSutBuffer(p.c_str(), p.length());
+      }
    }
 
    // We are done
@@ -826,6 +836,11 @@ char *XrdSecProtocolgsi::Init(gsiOptions opt, XrdOucErrInfo *erp)
       if (opt.sigpxy > 0 || opt.dlgpxy == 1)
          PxyReqOpts |= kOptsSigReq;
       //
+      // Define valid CNs for the server certificates; default is null, which means that
+      // the server CN must be in the form "*/<hostname>"
+      if (opt.srvnames)
+         SrvAllowedNames = opt.srvnames;
+      //
       // Notify
       DEBUG("using certificate file:         "<<UsrCert);
       DEBUG("using private key file:         "<<UsrKey);
@@ -833,6 +848,7 @@ char *XrdSecProtocolgsi::Init(gsiOptions opt, XrdOucErrInfo *erp)
       DEBUG("proxy: validity:                "<<PxyValid);
       DEBUG("proxy: depth of signature path: "<<DepLength);
       DEBUG("proxy: bits in key:             "<<DefBits);
+      DEBUG("server cert: allowed names:     "<<SrvAllowedNames);
 
       // We are done
       Parms = (char *)"";
@@ -1199,9 +1215,9 @@ XrdSecCredentials *XrdSecProtocolgsi::getCredentials(XrdSecParameters *parm,
                   "handshake var container missing","getCredentials");
    //
    // Nothing to do if buffer is empty
-   if (!parm || !(parm->buffer) || parm->size <= 0) {
+   if ((!parm && !hs->Parms) || (parm && (!(parm->buffer) || parm->size <= 0))) {
       if (hs->Iter == 0) 
-         return ErrC(ei,0,0,0,kGSErrNoBuffer,"parm empty","getCredentials");
+         return ErrC(ei,0,0,0,kGSErrNoBuffer,"missing parameters","getCredentials");
       else
          return (XrdSecCredentials *)0;
    }
@@ -1230,8 +1246,11 @@ XrdSecCredentials *XrdSecProtocolgsi::getCredentials(XrdSecParameters *parm,
 
    //
    // Decode received buffer
-   if (!(bpar = new XrdSutBuffer((const char *)parm->buffer,parm->size)))
+   bpar = hs->Parms;
+   if (!bpar && !(bpar = new XrdSutBuffer((const char *)parm->buffer,parm->size)))
       return ErrC(ei,0,0,0,kGSErrDecodeBuffer,"global",stepstr);
+   // Ownership has been transferred
+   hs->Parms = 0;
    //
    // Check protocol ID name
    if (strcmp(bpar->GetProtocol(),XrdSecPROTOIDENT))
@@ -1670,15 +1689,26 @@ char *XrdSecProtocolgsiInit(const char mode,
       //             "XrdSecGSIPROXYDEPLEN"  depth of signature path for proxies;
       //                                     use -1 for unlimited [0]
       //             "XrdSecGSIPROXYKEYBITS" bits in PKI for proxies [512]
-      //             "XrdSecGSICRLCHECK"     CRL check level: 0 don't care,
-      //                                     1 use if available, 2 require,
-      //                                     3 require non-expired CRL [2] 
+      //             "XrdSecGSICACHECK"      CA check level [1]:
+      //                                      0 do not verify;
+      //                                      1 verify if self-signed, warn if not;
+      //                                      2 verify in all cases, fail if not possible
+      //             "XrdSecGSICRLCHECK"     CRL check level [2]:
+      //                                      0 don't care;
+      //                                      1 use if available;
+      //                                      2 require,
+      //                                      3 require non-expired CRL
       //             "XrdSecGSIDELEGPROXY"   Forwarding of credentials option:
       //                                     0 none; 1 sign request created
       //                                     by server; 2 forward local proxy
       //                                     (include private key) [0]
       //             "XrdSecGSISIGNPROXY"    permission to sign requests
       //                                     0 no, 1 yes [1]
+      //             "XrdSecGSISRVNAMES"     Server names allowed: if the server CN
+      //                                     does not match any of these, or it is
+      //                                     explicitely denied by these, or it is
+      //                                     not in the form "*/<hostname>", the
+      //                                     handshake fails.
 
       //
       opts.mode = mode;
@@ -1757,6 +1787,11 @@ char *XrdSecProtocolgsiInit(const char mode,
       if (cenv)
          opts.sigpxy = atoi(cenv);
 
+      // Allowed server name formats
+      cenv = getenv("XrdSecGSISRVNAMES");
+      if (cenv)
+         opts.srvnames = strdup(cenv);
+
       //
       // Setup the object with the chosen options
       rc = XrdSecProtocolgsi::Init(opts,erp);
@@ -1769,6 +1804,7 @@ char *XrdSecProtocolgsiInit(const char mode,
       SafeFree(opts.key);
       SafeFree(opts.proxy);
       SafeFree(opts.valid);
+      SafeFree(opts.srvnames);
 
       // We are done
       return rc;
@@ -1925,7 +1961,7 @@ XrdSecProtocol *XrdSecProtocolgsiObject(const char              mode,
 
    //
    // Get a new protocol object
-   if (!(prot = new XrdSecProtocolgsi(options,hostname,&netaddr))) {
+   if (!(prot = new XrdSecProtocolgsi(options, hostname, &netaddr, parms))) {
       char *msg = (char *)"Secgsi: Insufficient memory for protocol.";
       if (erp) 
          erp->setErrInfo(ENOMEM, msg);
@@ -2293,6 +2329,11 @@ int XrdSecProtocolgsi::ClientDoCert(XrdSutBuffer *br, XrdSutBuffer **bm,
    if (!(hs->Chain->Verify(ecode, &vopt))) {
       emsg = "certificate chain verification failed: ";
       emsg += hs->Chain->LastError();
+      return -1;
+   }
+   //
+   // Verify server identity
+   if (!ServerCertNameOK(hs->Chain->End()->Subject(), emsg)) {
       return -1;
    }
    //
@@ -4144,3 +4185,77 @@ XrdSecgsiGMAP_t XrdSecProtocolgsi::LoadGMAPFun(const char *plugin,
    // Done
    return ep;
 }
+
+//_____________________________________________________________________________
+bool XrdSecProtocolgsi::ServerCertNameOK(const char *subject, XrdOucString &emsg)
+{
+   // Check that the server certificate subject name is consistent with the
+   // expectations defined by the static SrvAllowedNames
+
+   // The subject must be defined
+   if (!subject || strlen(subject) <= 0) return 0;
+
+   bool allowed = 0;
+   emsg = "";
+
+   // The server subject and its CN
+   String srvsubj(subject);
+   String srvcn;
+   int cnidx = srvsubj.find("CN=");
+   if (cnidx != STR_NPOS) srvcn.assign(srvsubj, cnidx + 3);
+
+   // Always check if the server CN is in the standard form "*/<target host name>"
+   if (Entity.host) {
+      String defcn("*/");
+      defcn += Entity.host;
+      if (srvcn.matches(defcn.c_str()) > 0) allowed = 1;
+      // Update the error msg, if the case
+      if (!allowed) {
+         if (emsg.length() <= 0) {
+            emsg = "server certificate CN '"; emsg += srvcn;
+            emsg += "' does not match the expected format(s):";
+         }
+         emsg += " '"; emsg += defcn; emsg += "' (default)";
+      }
+   }
+
+   // Take into account specif requests, if any
+   if (SrvAllowedNames.length() > 0) {
+      // The SrvAllowedNames string contains the allowed formats separated by a '|'.
+      // The specifications can contain the <host> or <fqdn> placeholders which
+      // are replaced by Entity.host; they can also contain the '*' wildcard, in
+      // which case XrdOucString::matches is used. A '-' before the specification
+      // will deny the matching CN's; the last matching wins.
+      String allowedfmts(SrvAllowedNames);
+      allowedfmts.replace("<host>", (const char *) Entity.host);
+      allowedfmts.replace("<fqdn>", (const char *) Entity.host);
+      int from = 0;
+      String fmt;
+      while ((from = allowedfmts.tokenize(fmt, from, '|')) != -1) {
+         // Check if this should be denied
+         bool deny = 0;
+         if (fmt.beginswith("-")) {
+            deny = 1;
+            fmt.erasefromstart(1);
+         }
+         if (srvcn.matches(fmt.c_str()) > 0) allowed = (deny) ? 0 : 1;
+      }
+      // Update the error msg, if the case
+      if (!allowed) {
+         if (emsg.length() <= 0) {
+            emsg = "server certificate CN '"; emsg += srvcn;
+            emsg += "' does not match the expected format:";
+         }
+         emsg += " '"; emsg += SrvAllowedNames; emsg += "' (exceptions)";
+      }
+   }
+   // Reset error msg, if the match was successful
+   if (allowed)
+      emsg = "";
+   else
+      emsg += "; exceptions are controlled by the env XrdSecGSISRVNAMES";
+
+   // Done
+   return allowed;
+}
+

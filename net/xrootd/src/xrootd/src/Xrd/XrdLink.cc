@@ -27,7 +27,11 @@ const char *XrdLinkCVSID = "$Id$";
 #endif
 
 #ifdef HAS_SENDFILE
+
+#ifndef __macos__
 #include <sys/sendfile.h>
+#endif
+
 #endif
 
 #include "XrdNet/XrdNetDNS.hh"
@@ -697,11 +701,14 @@ int XrdLink::Send(const struct sfVec *sfP, int sfN)
         bytes += sfP->sendsz;
        }
 
-// Lock the link, issue sendfilev(), and unlock the link
+// Lock the link, issue sendfilev(), and unlock the link. The documentation
+// is very spotty and inconsistent. We can only retry this operation under
+// very limited conditions.
 //
    wrMutex.Lock();
    isIdle = 0;
-   retc = sendfilev(FD, vecSF, sfN, &xframt);
+   do {retc = sendfilev(FD, vecSF, sfN, &xframt);}
+      while ((retc < 0 && errno == EINTR) || !retc);
 
 // Check if all went well and return if so (usual case)
 //
@@ -747,6 +754,7 @@ int XrdLink::Send(const struct sfVec *sfP, int sfN)
                     && (retc=sendfile(FD,sfP->fdnum,&myOffset,bytesleft)) > 0)
                       {myOffset += retc; bytesleft -= retc;}
                 }
+        if (retc <  0 && errno == EINTR) continue;
         if (retc <= 0) break;
         xfrbytes += sfP->sendsz;
        }

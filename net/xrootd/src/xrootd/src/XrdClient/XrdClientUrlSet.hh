@@ -59,6 +59,9 @@ public:
    // From the remaining urls we pick a random one. Without reinsert.
    //  i.e. while there are not considered urls, never pick an already seen one
    XrdClientUrlInfo *GetARandomUrl();
+   // Given a seed, use that to pick an url
+   // the effect will be that, given the same list, the same seed will pick the same url
+   XrdClientUrlInfo *GetARandomUrl(unsigned int seed);
 
    void              Rewind();
    void              ShowUrls();

@@ -319,8 +319,8 @@ int XrdCmsFinderRMT::Prepare(XrdOucErrInfo &Resp, XrdSfsPrep &pargs)
    XrdOucTList       *tp, *op;
    XrdCmsClientMan   *Manp = 0;
 
-   int                iovcnt = 0, NoteLen;
-   char               Prty[8], *NoteNum = 0;
+   int                iovcnt = 0, NoteLen, n;
+   char               Prty[1032], *NoteNum = 0, *colocp = 0;
    char               Work[xNum*12];
    struct iovec       xmsg[xNum];
 
@@ -359,7 +359,11 @@ int XrdCmsFinderRMT::Prepare(XrdOucErrInfo &Resp, XrdSfsPrep &pargs)
 //
    Data.Request.modifier =
                (pargs.opts & Prep_STAGE ? CmsPrepAddRequest::kYR_stage : 0)
-             | (pargs.opts & Prep_WMODE ? CmsPrepAddRequest::kYR_write : 0);
+             | (pargs.opts & Prep_WMODE ? CmsPrepAddRequest::kYR_write : 0)
+             | (pargs.opts & Prep_FRESH ? CmsPrepAddRequest::kYR_fresh : 0);
+
+// Set coloc information if staging wanted and there are atleast two paths
+//
 
 // Set the prepadd mode
 //
@@ -377,9 +381,14 @@ int XrdCmsFinderRMT::Prepare(XrdOucErrInfo &Resp, XrdSfsPrep &pargs)
           else Data.Mode = (char *)(pargs.opts & Prep_WMODE ? "wnq" : "rnq");
       }
 
-// Set the priority
+// Set the priority (if co-locate, add in the co-locate path)
 //
-   sprintf(Prty, "%d", (pargs.opts & Prep_PMASK));
+   n = sprintf(Prty, "%d", (pargs.opts & Prep_PMASK));
+   if (pargs.opts & Prep_STAGE && pargs.opts & Prep_COLOC
+   &&  pargs.paths && pargs.paths->next) 
+      {colocp = Prty + n;
+       strlcpy(colocp+1, pargs.paths->text, sizeof(Prty)-n-1);
+      }
    Data.Prty = Prty;
 
 // Distribute out paths to the various managers
@@ -399,6 +408,9 @@ int XrdCmsFinderRMT::Prepare(XrdOucErrInfo &Resp, XrdSfsPrep &pargs)
          if (!Manp->Send((const struct iovec *)&xmsg, iovcnt+1)) break;
          if ((tp = tp->next))
             {prepMutex.Lock(); XrdSysTimer::Wait(PrepWait); prepMutex.UnLock();}
+         if (colocp) {Data.Request.modifier |= CmsPrepAddRequest::kYR_coloc;
+                      *colocp = ' '; colocp = 0;
+                     }
         }
 
 // Check if all went well

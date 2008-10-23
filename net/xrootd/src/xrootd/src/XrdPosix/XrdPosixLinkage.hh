@@ -54,9 +54,9 @@
 #define Retv_Closedir int
 #define Args_Closedir DIR *
 
-#define Symb_Fclose UNIX_PFX "fclose"
-#define Retv_Fclose int
-#define Args_Fclose FILE *
+#define Symb_Fclose  UNIX_PFX "fclose"
+#define Retv_Fclose  int
+#define Args_Fclose  FILE *
 
 #define Symb_Fcntl   UNIX_PFX "fcntl"
 #define Retv_Fcntl   int
@@ -70,6 +70,10 @@
 #define Retv_Fdatasync int
 #define Args_Fdatasync int
 
+#define Symb_Fflush  UNIX_PFX "fflush"
+#define Retv_Fflush  int
+#define Args_Fflush  FILE *
+
 #define Symb_Fopen UNIX_PFX "fopen"
 #define Retv_Fopen FILE *
 #define Args_Fopen const char *, const char *
@@ -77,6 +81,22 @@
 #define Symb_Fopen64 UNIX_PFX "fopen64"
 #define Retv_Fopen64 FILE *
 #define Args_Fopen64 const char *, const char *
+
+#define Symb_Fread UNIX_PFX "fread"
+#define Retv_Fread size_t
+#define Args_Fread void *, size_t, size_t, FILE *
+
+#define Symb_Fseek  UNIX_PFX "fseek"
+#define Retv_Fseek  int
+#define Args_Fseek  FILE *, long, int
+
+#define Symb_Fseeko UNIX_PFX "fseeko"
+#define Retv_Fseeko int
+#define Args_Fseeko FILE *, off_t, int
+
+#define Symb_Fseeko64 UNIX_PFX "fseeko64"
+#define Retv_Fseeko64 int
+#define Args_Fseeko64 FILE *, off64_t, int
 
 #ifdef __linux__
 #define Symb_Fstat UNIX_PFX "__fxstat"
@@ -102,6 +122,18 @@
 #define Retv_Fsync int
 #define Args_Fsync int
 
+#define Symb_Ftell  UNIX_PFX "ftell"
+#define Retv_Ftell  long
+#define Args_Ftell  FILE *
+
+#define Symb_Ftello UNIX_PFX "ftello"
+#define Retv_Ftello off_t
+#define Args_Ftello FILE *
+
+#define Symb_Ftello64 UNIX_PFX "ftello64"
+#define Retv_Ftello64 off64_t
+#define Args_Ftello64 FILE *
+
 #define Symb_Ftruncate UNIX_PFX "ftruncate"
 #define Retv_Ftruncate int
 #define Args_Ftruncate int, off_t
@@ -109,6 +141,10 @@
 #define Symb_Ftruncate64 UNIX_PFX "ftruncate64"
 #define Retv_Ftruncate64 int
 #define Args_Ftruncate64 int, off64_t
+
+#define Symb_Fwrite UNIX_PFX "fwrite"
+#define Retv_Fwrite int
+#define Args_Fwrite const void *, size_t, size_t, FILE *
 
 #define Symb_Fgetxattr UNIX_PFX "fgetxattr"
 #define Retv_Fgetxattr ssize_t
@@ -303,13 +339,22 @@ class XrdPosixLinkage
       Retv_Fcntl       (*Fcntl)(Args_Fcntl);
       Retv_Fcntl64     (*Fcntl64)(Args_Fcntl64);
       Retv_Fdatasync   (*Fdatasync)(Args_Fdatasync);
+      Retv_Fflush      (*Fflush)(Args_Fflush);
       Retv_Fopen       (*Fopen)(Args_Fopen);
       Retv_Fopen64     (*Fopen64)(Args_Fopen64);
+      Retv_Fread       (*Fread)(Args_Fread);
+      Retv_Fseek       (*Fseek)(Args_Fseek);
+      Retv_Fseeko      (*Fseeko)(Args_Fseeko);
+      Retv_Fseeko64    (*Fseeko64)(Args_Fseeko64);
       Retv_Fstat       (*Fstat)(Args_Fstat);
       Retv_Fstat64     (*Fstat64)(Args_Fstat64);
       Retv_Fsync       (*Fsync)(Args_Fsync);
+      Retv_Ftell       (*Ftell)(Args_Ftell);
+      Retv_Ftello      (*Ftello)(Args_Ftello);
+      Retv_Ftello64    (*Ftello64)(Args_Ftello64);
       Retv_Ftruncate   (*Ftruncate)(Args_Ftruncate);
       Retv_Ftruncate64 (*Ftruncate64)(Args_Ftruncate64);
+      Retv_Fwrite      (*Fwrite)(Args_Fwrite);
       Retv_Fgetxattr   (*Fgetxattr)(Args_Fgetxattr);
       Retv_Lgetxattr   (*Lgetxattr)(Args_Lgetxattr);
       Retv_Getxattr    (*Getxattr)(Args_Getxattr);

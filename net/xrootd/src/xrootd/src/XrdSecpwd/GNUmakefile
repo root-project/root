@@ -1,4 +1,4 @@
-# $Id: GNUmakefile,v 1.7 2007/07/31 02:26:26 abh Exp $
+# $Id: GNUmakefile,v 1.9 2008/09/26 07:26:36 ganis Exp $
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
 #------------------------------------------------------------------------------#
@@ -81,7 +81,7 @@ $(OBJDIR)/XrdSecpwdSrvAdmin.o: XrdSecpwdSrvAdmin.cc \
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdSecpwdSrvAdmin.o XrdSecpwdSrvAdmin.cc
 
 $(OBJDIR)/XrdSecProtocolpwd.o: XrdSecProtocolpwd.cc XrdSysLogger.hh \
-		XrdSysPthread.hh  XrdSysError.hh XrdOucStream.hh \
+		XrdSysPthread.hh  XrdSysError.hh XrdOucStream.hh XrdSysHeaders.hh \
 		XrdSutCache.hh XPtypes.hh XrdSutPFEntry.hh \
 		XProtocol.hh XrdOucHash.hh XrdOucHash.icc XrdOucString.hh \
 		XrdSecProtocolpwd.hh XrdOucErrInfo.hh XrdSysPlatform.hh \

@@ -179,6 +179,24 @@ int XrdNetDNS::getAddrName(const char *InetName,
 }
 
 /******************************************************************************/
+/*                             g e t H o s t I D                              */
+/******************************************************************************/
+  
+char *XrdNetDNS::getHostID(struct sockaddr &InetAddr)
+{
+   struct sockaddr_in *ip = (sockaddr_in *)&InetAddr;
+   char mybuff[256];
+   char *hname;
+
+// Convert address
+//
+   hname = (char *)inet_ntop(ip->sin_family,
+                             (const void *)(&ip->sin_addr),
+                             mybuff, sizeof(mybuff));
+   return (hname ? strdup(hname) : strdup("0.0.0.0"));
+}
+
+/******************************************************************************/
 /*               g e t H o s t N a m e   ( V a r i a n t   1 )                */
 /******************************************************************************/
 

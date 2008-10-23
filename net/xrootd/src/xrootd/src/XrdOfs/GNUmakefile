@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.31 2008/04/07 02:11:04 abh Exp $
+#              $Id: GNUmakefile,v 1.32 2008/09/07 04:32:23 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -91,7 +91,7 @@ $(OBJDIR)/XrdOfs.o:  XrdOfs.cc             XrdOfs.hh \
                      XrdOucPList.hh   XrdSysPthread.hh      XrdOucTrace.hh     \
                      XrdNetDNS.hh     XrdSecEntity.hh       XrdSecInterface.hh \
                      XrdSfsNative.hh  XrdSfsAio.hh          XrdSfsInterface.hh \
-                     XrdOss.hh        XrdSysPlatform.hh \
+                     XrdOss.hh        XrdSysHeaders.hh      XrdSysPlatform.hh \
                      XrdOucTList.hh   XrdCmsClient.hh  XrdAccAuthorize.hh      \
                   ../XrdVersion.hh
 	@echo Compiling XrdOfs.cc 
@@ -105,6 +105,7 @@ $(OBJDIR)/XrdOfsConfig.o:  XrdOfsConfig.cc \
                            XrdOfs.hh         XrdOfsEvs.hh     XrdOfsTrace.hh  \
                            XrdOuca2x.hh      XrdSysError.hh   XrdOucStream.hh \
                            XrdOucTrace.hh    XrdOucUtils.hh   XrdNetDNS.hh   \
+                           XrdSysHeaders.hh \
                            XrdOucEnv.hh      XrdAccAuthorize.hh \
                            XrdCmsClient.hh   XrdCmsFinder.hh  XrdOdcFinder.hh
 	@echo Compiling XrdOfsConfig.cc 

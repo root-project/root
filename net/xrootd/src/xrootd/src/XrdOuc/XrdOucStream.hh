@@ -167,6 +167,13 @@ void         SetEroute(XrdSysError *eroute) {Eroute = eroute;}
 //
 void         Tabs(int x=1) {notabs = !x;}
 
+// Wait for inbound data to arrive. The argument is the max number of millisec
+// to wait (-1 means wait forever). Returns 0 if data is present. Otherwise,
+// -1 indicates that the connection timed out, a positive value indicates an
+// error and the value is the errno describing the error.
+//
+int          Wait4Data(int msMax=-1);
+
 /******************************************************************************/
   
 private:

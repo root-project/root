@@ -163,6 +163,20 @@ int     fdatasync(int fildes)
 }
 
 /******************************************************************************/
+/*                                f f l u s h                                 */
+/******************************************************************************/
+  
+extern "C"
+{
+int    fflush(FILE *stream)
+{
+   static int Init = Xunix.Init(&Init);
+
+   return XrdPosix_Fflush(stream);
+}
+}
+  
+/******************************************************************************/
 /*                                 f o p e n                                  */
 /******************************************************************************/
   
@@ -173,6 +187,48 @@ FILE  *fopen64(const char *path, const char *mode)
    static int Init = Xunix.Init(&Init);
 
    return XrdPosix_Fopen(path, mode);
+}
+}
+
+/******************************************************************************/
+/*                                 f r e a d                                  */
+/******************************************************************************/
+  
+extern "C"
+{
+size_t fread(void *ptr, size_t size, size_t nitems, FILE *stream)
+{
+   static int Init = Xunix.Init(&Init);
+
+   return XrdPosix_Fread(ptr, size, nitems, stream);
+}
+}
+  
+/******************************************************************************/
+/*                                 f s e e k                                  */
+/******************************************************************************/
+
+extern "C"
+{
+int fseek(FILE *stream, long offset, int whence)
+{
+   static int Init = Xunix.Init(&Init);
+
+   return XrdPosix_Fseek(stream, offset, whence);
+}
+}
+  
+/******************************************************************************/
+/*                                f s e e k o                                 */
+/******************************************************************************/
+
+extern "C"
+{
+int fseeko64(FILE *stream, off64_t offset, int whence)
+{
+   static int Init = Xunix.Init(&Init);
+
+   return XrdPosix_Fseeko(stream, offset, whence);
 }
 }
   
@@ -213,6 +269,34 @@ int     fsync(int fildes)
 }
   
 /******************************************************************************/
+/*                                 f t e l l                                  */
+/******************************************************************************/
+
+extern "C"
+{
+long    ftell(FILE *stream)
+{
+   static int Init = Xunix.Init(&Init);
+
+   return XrdPosix_Ftell(stream);
+}
+}
+  
+/******************************************************************************/
+/*                                f t e l l o                                 */
+/******************************************************************************/
+
+extern "C"
+{
+off64_t ftello64(FILE *stream)
+{
+   static int Init = Xunix.Init(&Init);
+
+   return XrdPosix_Ftello(stream);
+}
+}
+  
+/******************************************************************************/
 /*                             f t r u n c a t e                              */
 /******************************************************************************/
   
@@ -223,6 +307,20 @@ int ftruncate64(int fildes, off_t offset)
    static int Init = Xunix.Init(&Init);
 
    return XrdPosix_Ftruncate(fildes, offset);
+}
+}
+  
+/******************************************************************************/
+/*                                f w r i t e                                 */
+/******************************************************************************/
+  
+extern "C"
+{
+size_t fwrite(const void *ptr, size_t size, size_t nitems, FILE *stream)
+{
+   static int Init = Xunix.Init(&Init);
+
+   return XrdPosix_Fwrite(ptr, size, nitems, stream);
 }
 }
   

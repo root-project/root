@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.26 2008/01/04 05:20:14 abh Exp $
+#              $Id: GNUmakefile,v 1.27 2008/09/07 04:38:38 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -130,7 +130,7 @@ $(OBJDIR)/XrdOucProg.o: XrdOucProg.cc  XrdOucProg.hh \
 	@echo Compiling XrdOucProg.cc
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) XrdOucProg.cc -o $(OBJDIR)/XrdOucProg.o
 
-$(OBJDIR)/XrdOucPup.o: XrdOucPup.cc  XrdOucPup.hh
+$(OBJDIR)/XrdOucPup.o: XrdOucPup.cc  XrdOucPup.hh XrdSysHeaders.hh
 	@echo Compiling XrdOucPup.cc
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) XrdOucPup.cc -o $(OBJDIR)/XrdOucPup.o
 
@@ -141,11 +141,12 @@ $(OBJDIR)/XrdOucReqID.o: XrdOucReqID.cc XrdOucReqID.hh \
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) XrdOucReqID.cc -o $(OBJDIR)/XrdOucReqID.o
 
 $(OBJDIR)/XrdOucStream.o: XrdOucStream.cc XrdOucStream.hh XrdSysError.hh \
-                          XrdOucUtils.hh  XrdSysPlatform.hh
+                          XrdOucUtils.hh  XrdSysHeaders.hh \
+                          XrdSysLogger.hh XrdSysPlatform.hh
 	@echo Compiling XrdOucStream.cc
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) XrdOucStream.cc -o $(OBJDIR)/XrdOucStream.o
 
-$(OBJDIR)/XrdOucString.o: XrdOucString.cc XrdOucString.hh
+$(OBJDIR)/XrdOucString.o: XrdOucString.cc XrdOucString.hh XrdSysHeaders.hh
 	@echo Compiling XrdOucString.cc
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) XrdOucString.cc -o $(OBJDIR)/XrdOucString.o
 
@@ -153,7 +154,8 @@ $(OBJDIR)/XrdOucTokenizer.o: XrdOucTokenizer.cc XrdOucTokenizer.hh
 	@echo Compiling XrdOucTokenizer.cc
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) XrdOucTokenizer.cc -o $(OBJDIR)/XrdOucTokenizer.o
 
-$(OBJDIR)/XrdOucTrace.o: XrdSysError.hh XrdOucTrace.hh XrdOucTrace.cc
+$(OBJDIR)/XrdOucTrace.o: XrdSysError.hh XrdOucTrace.hh XrdOucTrace.cc \
+                         XrdSysHeaders.hh
 	@echo Compiling XrdOucTrace.cc
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) XrdOucTrace.cc -o $(OBJDIR)/XrdOucTrace.o
 

@@ -322,7 +322,7 @@ const char *XrdCmsNode::do_Gone(XrdCmsRRData &Arg)
 
 // Do some debugging
 //
-   DEBUGR(Arg.Path);
+   TRACER(Files,Arg.Path);
 
 // Update path information and delete this from the prep queue if we are a
 // staging node. We can also be called via the admin end-point interface
@@ -364,7 +364,8 @@ const char *XrdCmsNode::do_Have(XrdCmsRRData &Arg)
 
 // Do some debugging
 //
-   DEBUGR((Arg.Request.modifier&CmsHaveRequest::Pending ? "P ":"") <<Arg.Path);
+   TRACER(Files, (Arg.Request.modifier&CmsHaveRequest::Pending ? "P ":"") 
+                 <<Arg.Path);
 
 // Find if we can handle the file in r/w mode and if staging is present
 //
@@ -1087,6 +1088,8 @@ int XrdCmsNode::do_SelPrep(XrdCmsPrepArgs &Arg) // Static!!!
 
 // Complete the arguments to select
 //
+   if ( Arg.options & CmsPrepAddRequest::kYR_fresh)
+      Sel.Opts |= XrdCmsSelect::Freshen;
    if ( Arg.options & CmsPrepAddRequest::kYR_write) 
       Sel.Opts |= XrdCmsSelect::Write;
    if (Arg.options & CmsPrepAddRequest::kYR_stage) 
@@ -1100,13 +1103,28 @@ int XrdCmsNode::do_SelPrep(XrdCmsPrepArgs &Arg) // Static!!!
    Sel.InfoP = 0;  // No fast redirects
    Sel.nmask = SMask_t(0);
 
+// Check if co-location wanted relevant only when staging wanted
+//
+   if (Arg.clPath && Sel.iovP)
+      {XrdCmsSelect Scl(XrdCmsSelect::Peers, Arg.clPath, strlen(Arg.clPath));
+       Scl.iovP = 0; Scl.iovN  = 0; Scl.InfoP = 0; Scl.nmask = SMask_t(0);
+       DEBUGR("colocating " <<Arg.path <<" w.r.t. " <<Arg.clPath);
+       rc = Cluster.Select(Scl);
+       if (rc > 0) {Sched->Schedule((XrdJob *)&Arg, rc+time(0));
+                    DEBUGR("coloc to " <<Arg.clPath <<" delayed " <<rc <<" seconds");
+                    return 1;
+                   }
+       if (rc < 0) Say.Emsg("SelPrep", Arg.path, "failed;", Sel.Resp.Data);
+          else Sel.nmask = ~Scl.smask;
+      }
+
 // Perform selection
 //
    if ((rc = Cluster.Select(Sel)))
       {if (rc > 0)
           {if (!(Arg.options & CmsPrepAddRequest::kYR_stage)) return 0;
            Sched->Schedule((XrdJob *)&Arg, rc+time(0));
-           DEBUGR("delayed " <<rc <<" seconds");
+           DEBUGR("prep delayed " <<rc <<" seconds");
            return 1;
           }
        Say.Emsg("SelPrep", Arg.path, "failed;", Sel.Resp.Data);
@@ -1170,10 +1188,11 @@ const char *XrdCmsNode::do_State(XrdCmsRRData &Arg)
 {
    EPNAME("do_State")
    struct iovec xmsg[2];
+   int noResp = Arg.Request.modifier & CmsStateRequest::kYR_noresp;
 
 // Do some debugging
 //
-   DEBUGR(Arg.Path);
+   TRACER(Files,Arg.Path);
 
 // Process: state <path>
 // Respond: have <path>
@@ -1190,7 +1209,7 @@ const char *XrdCmsNode::do_State(XrdCmsRRData &Arg)
 
 // Respond appropriately
 //
-   if (Arg.Request.modifier)
+   if (Arg.Request.modifier && !noResp)
       {xmsg[0].iov_base      = (char *)&Arg.Request;
        xmsg[0].iov_len       = sizeof(Arg.Request);
        xmsg[1].iov_base      = Arg.Buff;

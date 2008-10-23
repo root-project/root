@@ -7,6 +7,9 @@
 #include <sys/time.h>
 #include <math.h>
 
+kXR_unt16 open_mode = (kXR_ur | kXR_uw);
+kXR_unt16 open_opts = (kXR_open_updt);
+ 
 int ReadSome(kXR_int64 *offs, kXR_int32 *lens, int maxnread, long long &totalbytes) {
 
     for (int i = 0; i < maxnread;) {
@@ -90,7 +93,7 @@ int main(int argc, char **argv) {
 	    endl << endl <<
 	    " Where:" << endl <<
 	    "  <xrootd url>          is the xrootd URL of a remote file " << endl <<
-	    "  <rasize>              is the cache block size. Can be 0." << endl <<
+	    "  <rasize>              is the read ahead size. Can be 0." << endl <<
 	    "  <cachesize>           is the size of the internal cache, in bytes. Can be 0." << endl <<
 	    "  <vectored_style>      means 0: no vectored reads (default)," << endl <<
 	    "                              1: sync vectored reads," << endl <<
@@ -99,6 +102,7 @@ int main(int argc, char **argv) {
 	    "                                (makes it sync through async calls!)" << endl <<
 	    "                              4: no vectored reads. Async reads followed by sync reads." << endl <<
 	    "                                (exploits the multistreaming for single reads)" << endl <<
+	    "                              5: don't read, but write data which is compatible with the --check option." << endl <<
 	    "  <inter_read_delay_ms> is the optional think time between reads." << endl <<
 	    "                        note: the think time will comsume cpu cycles, not sleep." << endl <<
             "  --check               verify if the value of the byte at offet i is i%256. Valid only for the single url mode." << endl <<
@@ -167,7 +171,7 @@ int main(int argc, char **argv) {
     if (isrooturl) {
 	XrdClient *cli = new XrdClient(argv[1]);
 
-	cli->Open(0, 0);
+	cli->Open(open_mode, open_opts | ( (vectored_style > 4) ? kXR_delete : 0 ) );
 	filezcount = 1;
 
 	gettimeofday(&tv, 0);
@@ -271,8 +275,6 @@ int main(int argc, char **argv) {
 		
 	    
     	    case 4: // read async and then read
-	      
-
 		for (int iii = -512; iii < ntoread; iii++) {
 		    if (iii + 512 < ntoread)
 		      retval = cli->Read_Async(v_offsets[iii+512], v_lens[iii+512]);
@@ -304,7 +306,32 @@ int main(int argc, char **argv) {
 
 		break;
 
-	    }
+	    case 5: // don't read... write
+	      for (int iii = 0; iii < ntoread; iii++) {
+
+		  for (int kkk = 0; kkk < v_lens[iii]; kkk++)
+		    ((unsigned char *)buf)[kkk] = (v_offsets[iii]+kkk) % 256;
+
+		  retval = cli->Write(buf, v_offsets[iii], v_lens[iii]);
+
+		  if (retval <= 0) {
+		    cout << endl << "---Write (" << iii << " of " << ntoread << ") " <<
+		      v_lens[iii] << "@" << v_offsets[iii] <<
+		      " returned " << retval << endl;		 
+		    iserror = true;
+		    break;
+		  }
+
+		  if (retval > 0) {
+		    Think(read_delay);
+		  }
+	      }
+		
+	      break;
+
+
+
+	    } // switch
 
 	    if (!cli->IsOpen_wait()) {
 	      iserror = true;
@@ -340,8 +367,8 @@ int main(int argc, char **argv) {
 	  fnamecount++;
 	  cli = new XrdClient(s.c_str());
 	  u.TakeUrl(s.c_str());
-	      
-	  if (cli->Open(0, 0)) {
+
+	  if (cli->Open( open_mode, open_opts | ((vectored_style > 4) ? kXR_delete : 0) )) {
 	    cout << "--- Open of " << s << " in progress." << endl;
 	    xrdcvec.push_back(cli);
 	  }
@@ -574,6 +601,37 @@ int main(int argc, char **argv) {
 
 
 	    break;
+
+	  case 5: // don't read... write
+	    for (int iii = 0; iii < ntoread; iii++) {
+
+
+	      for(int i = 0; i < (int) xrdcvec.size(); i++) {
+
+		for (int kkk = 0; kkk < v_lens[iii]; kkk++)
+		  ((unsigned char *)buf)[kkk] = (v_offsets[iii]+kkk) % 256;
+
+		retval = xrdcvec[i]->Write(buf, v_offsets[iii], v_lens[iii]);
+
+		if (retval <= 0) {
+		  cout << endl << "---Write (" << iii << " of " << ntoread << ") " <<
+		    v_lens[iii] << "@" << v_offsets[iii] <<
+		    " returned " << retval << endl;		 
+		  iserror = true;
+		  break;
+		}
+
+		if (retval > 0) {
+		  Think(read_delay);
+		}
+
+	      }
+
+	    }
+		
+	    break;
+
+
 
 		
 	  } // switch

@@ -95,7 +95,7 @@ void *Respond();
 
 void *TimeOut();
 
-      XrdCmsRRQ() : isWaiting(0), isReady(0), Tslice(133),
+      XrdCmsRRQ() : isWaiting(0), isReady(0), Tslice(178),
                     Tdelay(5),    myClock(0) {}
      ~XrdCmsRRQ() {}
 

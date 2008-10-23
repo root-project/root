@@ -4,7 +4,7 @@
 ##
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id: Makefile.am,v 1.7 2008/06/17 10:07:34 ganis Exp $
+## Version info: $Id: Makefile.am,v 1.8 2008/09/27 09:17:45 ganis Exp $
 ## Checked in by $Author: ganis $
 #######################################################################
 
@@ -20,7 +20,13 @@ INCLUDES = -I$(top_srcdir)/src
 libXrdSecgsi_la_SOURCES = \
         XrdSecProtocolgsi.cc XrdSecProtocolgsi.hh XrdSecgsiTrace.hh
 libXrdSecgsi_la_LDFLAGS = -module
-libXrdSecgsi_la_LIBADD = ../XrdCrypto/libXrdCrypto.la
+
+libXrdSecgsi_la_LIBADD = ../XrdCrypto/libXrdCryptossl.la \
+                         ../XrdCrypto/libXrdCrypto.la \
+                         ../XrdSec/libXrdSec.la \
+                         ../XrdOuc/libXrdOuc.la \
+                         ../XrdNet/libXrdNet.la \
+                         ../XrdSys/libXrdSys.la
 # following line disabled. Look for reason in XrdSec/Makefile.am
 #libXrdSecgsi_la_LIBTOOLFLAGS = --tag=disable-static
 

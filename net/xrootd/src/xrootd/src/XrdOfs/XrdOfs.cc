@@ -88,6 +88,9 @@ XrdOucTrace      OfsTrace(&OfsEroute);
   
 XrdOfsHandle     *XrdOfs::dummyHandle;
 
+int               XrdOfs::MaxDelay = 60;
+int               XrdOfs::OSSDelay = 30;
+
 /******************************************************************************/
 /*                    F i l e   S y s t e m   O b j e c t                     */
 /******************************************************************************/
@@ -112,7 +115,6 @@ XrdOfs::XrdOfs()
 
 // Establish defaults
 //
-   MaxDelay      = 60;
    Authorization = 0;
    Finder        = 0;
    Balancer      = 0;
@@ -1686,6 +1688,10 @@ int XrdOfs::Emsg(const char    *pfx,    // Message prefix value
 //
     if (ecode < 0) ecode = -ecode;
     if (ecode == EBUSY) return 5;  // A hack for proxy support
+
+// Check for timeout conditions that require a client delay
+//
+   if (ecode == ETIMEDOUT) return OSSDelay;
 
 // Get the reason for the error
 //

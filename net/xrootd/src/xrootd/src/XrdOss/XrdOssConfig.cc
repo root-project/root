@@ -162,6 +162,7 @@ XrdOssSys::XrdOssSys()
    StageAction   = (char *)"wq "; 
    StageActLen   = 3;
    MSSgwCmd      = 0;
+   MSSgwTMO      =15*1000;
    DirFlags      = 0; 
    OptFlags      = 0;
    LocalRoot     = 0;

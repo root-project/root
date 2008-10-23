@@ -255,7 +255,7 @@ int XrdBwmFile::open(const char          *path,      // In
    EPNAME("open");
    XrdBwmHandle *hP;
    int incomming;
-   const char *miss, *theUsr, *theSrc, *theDst, *theLfn, *lclNode, *rmtNode;
+   const char *miss, *theUsr, *theSrc, *theDst=0, *theLfn=0, *lclNode, *rmtNode;
    XrdOucEnv Open_Env(info);
 
 // Trace entry

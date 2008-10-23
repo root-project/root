@@ -148,7 +148,9 @@ enum XQueryType {
    kXR_Qspace = 5,
    kXR_Qckscan= 6,
    kXR_Qconfig= 7,
-   kXR_Qvisa  = 8
+   kXR_Qvisa  = 8,
+   kXR_Qopaque=16,
+   kXR_Qopaquf=32
 };
 
 enum XVerifyType {
@@ -167,7 +169,9 @@ enum XPrepRequestOption {
    kXR_notify = 2,
    kXR_noerrs = 4,
    kXR_stage  = 8,
-   kXR_wmode  = 16
+   kXR_wmode  = 16,
+   kXR_coloc  = 32,
+   kXR_fresh  = 64
 };
 
 //_______________________________________________

@@ -383,6 +383,10 @@ int XrdCmsConfig::Configure2()
 //
    if (!NoGo && XmiPath) NoGo = setupXmi();
 
+// Set the default scheduling options if they have not already been set
+//
+   Sched->setParms(8, 200, 40, -1, 1);
+
 // All done, check for success or failure
 //
    sprintf(buff, " phase 2 %s initialization %s.", myRole,
@@ -566,7 +570,7 @@ void XrdCmsConfig::ConfigDefaults(void)
    myName   = (char *)"localhost"; // Correctly set in Configure()
    myDomain = 0;
    LUPDelay = 5;
-   LUPHold  = 133;
+   LUPHold  = 178;
    DRPDelay = 10*60;
    PSDelay  = 0;
    RWDelay  = 2;
@@ -2468,9 +2472,10 @@ int XrdCmsConfig::xtrace(XrdSysError *eDest, XrdOucStream &CFile)
         {"all",      TRACE_ALL},
         {"debug",    TRACE_Debug},
         {"defer",    TRACE_Defer},
-        {"stage",    TRACE_Stage},
+        {"files",    TRACE_Files},
         {"forward",  TRACE_Forward},
-        {"redirect", TRACE_Redirect}
+        {"redirect", TRACE_Redirect},
+        {"stage",    TRACE_Stage}
        };
     int i, neg, trval = 0, numopts = sizeof(tropts)/sizeof(struct traceopts);
 

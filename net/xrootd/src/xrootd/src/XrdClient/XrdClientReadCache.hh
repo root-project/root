@@ -64,6 +64,8 @@ public:
     inline bool ContainsOffset(long long offs) {
 	return (fBeginOffset <= offs) && (fEndOffset >= offs);
     }
+
+    void *GetData() { return fData; }
     
     // Get the requested interval, if possible
     inline bool   GetInterval(const void *buffer, long long begin_offs, 
@@ -106,10 +108,11 @@ public:
 
     inline bool IsPlaceholder() { return fIsPlaceholder; }
 
-    long Size() { return (fEndOffset - fBeginOffset - 1); }
+    long Size() { return (fEndOffset - fBeginOffset + 1); }
 
     inline void     Touch(long long ticksnow) { fTimestampTicks = ticksnow; }
 
+    bool Pinned;
 };
 
 //
@@ -225,9 +228,9 @@ public:
 				   long long end_offs);
 
     bool            SubmitRawData(const void *buffer, long long begin_offs,
-				   long long end_offs);
+				  long long end_offs, bool pinned=false);
 
-    void            RemoveItems();
+    void            RemoveItems(bool leavepinned=true);
     void            RemoveItems(long long begin_offs, long long end_offs);
     void            RemovePlaceholders();
 
@@ -239,6 +242,9 @@ public:
     void            SetBlkRemovalPolicy(int p) {
       fBlkRemPolicy = p;
     }
+
+    void UnPinCacheBlk(long long begin_offs, long long end_offs);
+    void *FindBlk(long long begin_offs, long long end_offs);
 
     // To check if a block dimension will fit into the cache
     inline bool   WillFit(long long bc) {

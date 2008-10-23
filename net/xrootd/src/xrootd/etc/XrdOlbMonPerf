@@ -1,6 +1,6 @@
 #!/usr/local/bin/perl
 
-## $Id: XrdOlbMonPerf,v 1.10 2008/06/20 11:42:06 furano Exp $
+## $Id: XrdOlbMonPerf,v 1.11 2008/07/11 13:05:50 furano Exp $
 ## this script collects the informations on the server activity like:
 ## CPU, network I/O, memory usage ...
 ## modified to get rid of rperf.
@@ -78,11 +78,12 @@ if ($systype eq 'SunOS') {
 # netstat usable on RH 9 and RHEL 3 ==> distrib = "RH_OK", else "RH_WRONG"
 if ($systype eq 'Linux') {
   $distrib = "RH_OK";
-  if (test -r /etc/redhat-release) {
+
+  if ( -r '/etc/redhat-release' ) {
      $resp = `cat /etc/redhat-release`;
-  else
+  } else {
      $resp = "";
-  fi
+  }
 
   if ( $resp =~ /release 7./ ) { $distrib = "RH_WRONG"; }
 }

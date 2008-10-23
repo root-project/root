@@ -100,6 +100,7 @@ int               maxDelay;
 int               qTime;
 int               chkCount;
 time_t            lastUpdt;
+time_t            lastTOut;
 XrdCms::CmsRRHdr  Response;
 XrdNetBuffer     *NetBuff;
 };

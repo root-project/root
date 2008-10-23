@@ -68,20 +68,38 @@ XrdPosixLinkage Xunix;
                          {Xunix.Load_Error("fcntl"); return (Retv_Fcntl64)0;}
       Retv_Fdatasync   Xrd_U_Fdatasync(Args_Fdatasync)
                          {return (Retv_Fdatasync)Xunix.Load_Error("fdatasync");}
+      Retv_Fflush      Xrd_U_Fflush(Args_Fflush)
+                         {return (Retv_Fflush)Xunix.Load_Error("fflush");}
       Retv_Fopen       Xrd_U_Fopen(Args_Fopen) 
                          {Xunix.Load_Error("fopen"); return (Retv_Fopen)0;}
       Retv_Fopen64     Xrd_U_Fopen64(Args_Fopen64)
                          {Xunix.Load_Error("fopen"); return (Retv_Fopen64)0;}
+      Retv_Fread       Xrd_U_Fread(Args_Fread)
+                         {return (Retv_Fread)Xunix.Load_Error("fread");}
+      Retv_Fseek       Xrd_U_Fseek(Args_Fseek)
+                         {return (Retv_Fseek)Xunix.Load_Error("fseek");}
+      Retv_Fseeko      Xrd_U_Fseeko(Args_Fseeko)
+                         {return (Retv_Fseeko)Xunix.Load_Error("fseeko");}
+      Retv_Fseeko64    Xrd_U_Fseeko64(Args_Fseeko64)
+                         {return (Retv_Fseeko64)Xunix.Load_Error("fseeko64");}
       Retv_Fstat       Xrd_U_Fstat(Args_Fstat) 
                          {return (Retv_Fstat)Xunix.Load_Error("fstat");}
       Retv_Fstat64     Xrd_U_Fstat64(Args_Fstat64)
-                         {return (Retv_Fstat64)Xunix.Load_Error("fstat");}
+                         {return (Retv_Fstat64)Xunix.Load_Error("fstat64");}
       Retv_Fsync       Xrd_U_Fsync(Args_Fsync) 
                          {return (Retv_Fsync)Xunix.Load_Error("fsync");}
+      Retv_Ftell       Xrd_U_Ftell(Args_Ftell)
+                         {return (Retv_Ftell)Xunix.Load_Error("ftell");}
+      Retv_Ftello      Xrd_U_Ftello(Args_Ftello)
+                         {return (Retv_Ftello)Xunix.Load_Error("ftello");}
+      Retv_Ftello64    Xrd_U_Ftello64(Args_Ftello64)
+                         {return (Retv_Ftello64)Xunix.Load_Error("ftello64");}
       Retv_Ftruncate   Xrd_U_Ftruncate(Args_Ftruncate)
                          {return (Retv_Ftruncate)Xunix.Load_Error("ftruncate");}
       Retv_Ftruncate64 Xrd_U_Ftruncate64(Args_Ftruncate64)
                          {return (Retv_Ftruncate64)Xunix.Load_Error("ftruncate64");}
+      Retv_Fwrite      Xrd_U_Fwrite(Args_Fwrite)
+                         {return (Retv_Fwrite)Xunix.Load_Error("fwrite");}
       Retv_Fgetxattr   Xrd_U_Fgetxattr(Args_Fgetxattr)
                          {return (Retv_Fgetxattr)Xunix.Load_Error("fgetxattr");}
       Retv_Getxattr    Xrd_U_Getxattr(Args_Getxattr)
@@ -174,13 +192,22 @@ int XrdPosixLinkage::Resolve()
   LOOKUP_UNIX(Fcntl)
   LOOKUP_UNIX(Fcntl64)
   LOOKUP_UNIX(Fdatasync)
+  LOOKUP_UNIX(Fflush)
   LOOKUP_UNIX(Fopen)
   LOOKUP_UNIX(Fopen64)
+  LOOKUP_UNIX(Fread)
+  LOOKUP_UNIX(Fseek)
+  LOOKUP_UNIX(Fseeko)
+  LOOKUP_UNIX(Fseeko64)
   LOOKUP_UNIX(Fstat)
   LOOKUP_UNIX(Fstat64)
   LOOKUP_UNIX(Fsync)
+  LOOKUP_UNIX(Ftell)
+  LOOKUP_UNIX(Ftello)
+  LOOKUP_UNIX(Ftello64)
   LOOKUP_UNIX(Ftruncate)
   LOOKUP_UNIX(Ftruncate64)
+  LOOKUP_UNIX(Fwrite)
   LOOKUP_UNIX(Fgetxattr)
   LOOKUP_UNIX(Getxattr)
   LOOKUP_UNIX(Lgetxattr)

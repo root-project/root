@@ -341,15 +341,14 @@ void  XrdCmsMeter::setParms(XrdOucTList *tlp, int warnDups)
     if ((nlp = tlp))
        do {if ((rc = stat(nlp->text, &buf)) || isDup(buf, &baseFS))
               {XrdOucTList *xlp = nlp->next;
-               const char *fault = (rc ? "Missing filesystem '"
-                                       : "Duplicate filesystem '");
+               const char *fault = (rc ? "Missing filesystem"
+                                       : "Duplicate filesystem");
                if (rc || warnDups)
-                  Say.Emsg("Meter",fault,nlp->text,"' skipped for free space.");
+                  Say.Emsg("Meter",fault,nlp->text,"skipped for free space.");
                if (plp) plp->next = xlp;
                   else  fs_list   = xlp;
                delete nlp;
-               if ((nlp = xlp)) continue;
-               break;
+               nlp = xlp;
               } else {
                fs_nums++;
                if (!STATFS(nlp->text, &fsdata))
@@ -362,9 +361,9 @@ void  XrdCmsMeter::setParms(XrdOucTList *tlp, int warnDups)
                    if (fsval > dsk_lpn) dsk_lpn = fsval;
                    dsk_tot += fsval;
                   }
+               plp = nlp; nlp = nlp->next;
               }
-           plp = nlp;
-          } while((nlp = nlp->next));
+          } while(nlp);
    dsk_tot = dsk_tot >> 20LL; // in MB
    dsk_lpn = dsk_lpn >> 20LL;
 

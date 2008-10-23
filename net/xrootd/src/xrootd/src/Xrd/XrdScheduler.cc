@@ -408,12 +408,15 @@ void XrdScheduler::Schedule(XrdJob *jp, time_t atime)
 /*                              s e t P a r m s                               */
 /******************************************************************************/
   
-void XrdScheduler::setParms(int minw, int maxw, int avlw, int maxi)
+void XrdScheduler::setParms(int minw, int maxw, int avlw, int maxi, int once)
 {
+   static int isSet = 0;
 
-// Lock the data area
+// Lock the data area and check for 1-time set
 //
    SchedMutex.Lock();
+   if (once && isSet) {SchedMutex.UnLock(); return;}
+   isSet = 1;
 
 // get a consistent view of all the values
 //
@@ -436,7 +439,10 @@ void XrdScheduler::setParms(int minw, int maxw, int avlw, int maxi)
 
 // If we have an idle interval, schedule the idle check
 //
-   if (maxi > 0) Schedule((XrdJob *)this, (time_t)maxi+time(0));
+   if (maxi > 0)
+      {Cancel((XrdJob *)this);
+       Schedule((XrdJob *)this, (time_t)maxi+time(0));
+      }
 
 // Debug the info
 //
@@ -450,8 +456,13 @@ void XrdScheduler::setParms(int minw, int maxw, int avlw, int maxi)
   
 void XrdScheduler::Start()
 {
+    static int isDone = 0;
     int retc, numw;
     pthread_t tid;
+
+// If we did this, just return
+//
+   if (isDone) return;
 
 // Start a time based scheduler
 //

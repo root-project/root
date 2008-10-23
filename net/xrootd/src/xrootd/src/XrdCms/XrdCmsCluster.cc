@@ -374,6 +374,7 @@ XrdCmsSelected *XrdCmsCluster::List(SMask_t mask, CmsLSOpts opts)
 
 int XrdCmsCluster::Locate(XrdCmsSelect &Sel)
 {
+   EPNAME("Locate");
    XrdCmsPInfo   pinfo;
    SMask_t       qfVec = 0;
    int           retc = 0;
@@ -414,6 +415,7 @@ int XrdCmsCluster::Locate(XrdCmsSelect &Sel)
       {CmsStateRequest QReq = {{Sel.Path.Hash, kYR_state, kYR_raw, 0}};
        if (Sel.Opts & XrdCmsSelect::Refresh)
           QReq.Hdr.modifier |= CmsStateRequest::kYR_refresh;
+       TRACE(Files, "seeking " <<Sel.Path.Val);
        qfVec = Cluster.Broadcast(qfVec, QReq.Hdr, 
                                  (void *)Sel.Path.Val, Sel.Path.Len+1);
        if (qfVec) Cache.UnkFile(Sel, qfVec);
@@ -609,6 +611,7 @@ void XrdCmsCluster::ResetRef(SMask_t smask)
   
 int XrdCmsCluster::Select(XrdCmsSelect &Sel)
 {
+   EPNAME("Select");
    XrdCmsPInfo  pinfo;
    const char  *Amode;
    int dowt = 0, retc, isRW, fRD, noSel = (Sel.Opts & XrdCmsSelect::Defer);
@@ -677,12 +680,20 @@ int XrdCmsCluster::Select(XrdCmsSelect &Sel)
        if (Sel.Opts & XrdCmsSelect::Refresh)
           QReq.Hdr.modifier |= CmsStateRequest::kYR_refresh;
        if (dowt) retc= (fRD ? Cache.WT4File(Sel,Sel.Vec.hf) : Config.LUPDelay);
+       TRACE(Files, "seeking " <<Sel.Path.Val);
        amask = Cluster.Broadcast(Sel.Vec.bf, QReq.Hdr,
                                  (void *)Sel.Path.Val,Sel.Path.Len+1);
        if (amask) Cache.UnkFile(Sel, amask);
        if (dowt) return retc;
       } else if (dowt && retc < 0 && !noSel)
                 return (fRD ? Cache.WT4File(Sel,Sel.Vec.hf) : Config.LUPDelay);
+
+// Broadcast a freshen up request if wanted
+//
+   if ((Sel.Opts & XrdCmsSelect::Freshen) && (amask = pmask & ~Sel.Vec.bf))
+      {CmsStateRequest Qupt={{0,kYR_state,kYR_raw|CmsStateRequest::kYR_noresp,0}};
+       Cluster.Broadcast(amask, Qupt.Hdr,(void *)Sel.Path.Val,Sel.Path.Len+1);
+      }
 
 // If we need to defer selection, simply return as this is a mindless prepare
 //
@@ -1064,7 +1075,7 @@ int XrdCmsCluster::SelNode(XrdCmsSelect &Sel, SMask_t pmask, SMask_t amask)
 //
    if (nP)
       {strcpy(Sel.Resp.Data, nP->Name(Sel.Resp.DLen, Sel.Resp.Port));
-       Sel.Resp.DLen++;
+       Sel.Resp.DLen++; Sel.smask = nP->NodeMask;
        if (isalt || (Sel.Opts & XrdCmsSelect::Create) || Sel.iovN)
           {if (isalt || (Sel.Opts & XrdCmsSelect::Create))
               {Sel.Opts |= (XrdCmsSelect::Pending | XrdCmsSelect::Advisory);
@@ -1099,7 +1110,7 @@ int XrdCmsCluster::SelNode(XrdCmsSelect &Sel, SMask_t pmask, SMask_t amask)
        STMutex.UnLock();
        if (nP)
           {strcpy(Sel.Resp.Data, nP->Name(Sel.Resp.DLen, Sel.Resp.Port));
-           Sel.Resp.DLen++;
+           Sel.Resp.DLen++; Sel.smask = nP->NodeMask;
            if (Sel.iovN && Sel.iovP) nP->Send(Sel.iovP, Sel.iovN);
            nP->UnLock();
            TRACE(Stage, "Peer " <<Sel.Resp.Data <<" handling " <<Sel.Path.Val);

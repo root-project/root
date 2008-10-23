@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.10 2007/07/31 02:26:31 abh Exp $
+#              $Id: GNUmakefile,v 1.11 2008/09/07 04:39:28 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -52,6 +52,7 @@ $(TARGETS): $(OBJECTS)
 
 $(OBJDIR)/XrdSfsNative.o:  XrdSfsInterface.hh XrdSfsNative.hh  XrdSecInterface.hh \
                            XrdSysError.hh     XrdOucErrInfo.hh XrdSysLogger.hh \
+                           XrdSysHeaders.hh \
                            XrdSfsNative.cc    XrdSfsAio.hh  ../XrdVersion.hh
 	@echo Compiling XrdSfsNative.cc 
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdSfsNative.o XrdSfsNative.cc

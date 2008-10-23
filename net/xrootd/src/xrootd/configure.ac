@@ -12,7 +12,7 @@
 ## Author: Derek Feichtinger <derek.feichtinger@cern.ch>
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id: configure.ac,v 1.35 2008/06/03 01:45:44 abh Exp $
+## Version info: $Id: configure.ac,v 1.36 2008/08/20 02:36:19 abh Exp $
 ## Checked in by $Author: abh $
 #######################################################################
 
@@ -923,6 +923,7 @@ AC_OUTPUT(Makefile
           src/XrdPosix/Makefile
           src/XrdPss/Makefile
           src/XrdMon/Makefile
+          src/XrdCns/Makefile
           src/XrdCS2/Makefile
           src/XrdTokenAuthzOfs/Makefile
           test/testconfig.sh

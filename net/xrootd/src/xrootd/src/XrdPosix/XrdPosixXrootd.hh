@@ -42,8 +42,6 @@ static int     Close(int fildes, int Stream=0);
 
 static int     Closedir(DIR *dirp);
 
-static off_t   Lseek(int fildes, off_t offset, int whence);
-
 static int     Fstat(int fildes, struct stat *buf);
 
 static int     Fsync(int fildes);
@@ -52,6 +50,8 @@ static int     Ftruncate(int fildes, off_t offset);
 
 static long long Getxattr (const char *path, const char *name,
                            void *value, unsigned long long size);
+
+static off_t   Lseek(int fildes, off_t offset, int whence);
 
 static int     Mkdir(const char *path, mode_t mode);
 

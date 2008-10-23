@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.57 2008/03/01 05:10:31 abh Exp $
+#              $Id: GNUmakefile,v 1.59 2008/09/07 04:30:44 abh Exp $
 
 #-----------------------------------------------------------------------------#
 #                            E n v i r o n m e n t                            #
@@ -253,7 +253,7 @@ $(OBJDIR)/XrdClient.o: XrdClient.cc ../XrdClient/XrdClient.hh \
    ../XrdClient/XrdClientConn.hh ../XrdClient/XrdClientPSock.hh \
   ../XrdClient/XrdClientConst.hh ../XrdClient/XrdClientReadCache.hh \
   ../XrdClient/XrdClientInputBuffer.hh ../XrdSys/XrdSysPthread.hh \
-  ../XrdSys/XrdSysError.hh ../XrdSys/XrdSysSemWait.hh \
+  ../XrdSys/XrdSysError.hh ../XrdSys/XrdSysHeaders.hh ../XrdSys/XrdSysSemWait.hh \
   ../XrdOuc/XrdOucHash.hh ../XrdOuc/XrdOucHash.icc \
   ../XrdClient/XrdClientVector.hh ../XrdClient/XrdClientDebug.hh \
   ../XrdClient/XrdClientEnv.hh ../XrdOuc/XrdOucEnv.hh \
@@ -444,7 +444,7 @@ $(OBJDIR)/XrdClientReadCache.o: XrdClientReadCache.cc \
   ../XrdOuc/XrdOucHash.hh ../XrdOuc/XrdOucHash.icc \
   ../XrdClient/XrdClientVector.hh ../XrdClient/XrdClientConst.hh \
   ../XrdClient/XrdClientDebug.hh ../XrdClient/XrdClientEnv.hh \
-  ../XrdOuc/XrdOucEnv.hh ../XrdSys/XrdSysLogger.hh
+  ../XrdOuc/XrdOucEnv.hh ../XrdSys/XrdSysHeaders.hh ../XrdSys/XrdSysLogger.hh
 	@echo Compiling XrdClientReadCache.cc
 	$(ECHO)$(CC) -g -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdClientReadCache.o XrdClientReadCache.cc
 
@@ -460,7 +460,7 @@ $(OBJDIR)/XrdClientUrlSet.o: XrdClientUrlSet.cc ../XrdClient/XrdClientUrlSet.hh 
   ../XrdSys/XrdSysPthread.hh ../XrdSys/XrdSysError.hh \
   ../XrdClient/XrdClientEnv.hh ../XrdOuc/XrdOucEnv.hh \
   ../XrdOuc/XrdOucHash.hh ../XrdOuc/XrdOucHash.icc \
-  ../XrdSys/XrdSysLogger.hh
+  ../XrdSys/XrdSysHeaders.hh ../XrdSys/XrdSysLogger.hh
 	@echo Compiling XrdClientUrlSet.cc
 	$(ECHO)$(CC) -g -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdClientUrlSet.o XrdClientUrlSet.cc
 
@@ -492,7 +492,7 @@ $(OBJDIR)/TestXrdClient_read.o: TestXrdClient_read.cc ../XrdClient/XrdClient.hh 
    ../XrdClient/XrdClientConn.hh ../XrdClient/XrdClientPSock.hh \
   ../XrdClient/XrdClientConst.hh ../XrdClient/XrdClientReadCache.hh \
   ../XrdClient/XrdClientInputBuffer.hh ../XrdSys/XrdSysPthread.hh \
-  ../XrdSys/XrdSysError.hh ../XrdSys/XrdSysSemWait.hh \
+  ../XrdSys/XrdSysError.hh ../XrdSys/XrdSysHeaders.hh ../XrdSys/XrdSysSemWait.hh \
   ../XrdOuc/XrdOucHash.hh ../XrdOuc/XrdOucHash.icc \
   ../XrdClient/XrdClientVector.hh ../XrdClient/XrdClientAdmin_c.hh
 	@echo Compiling TestXrdClient_read.cc
@@ -529,7 +529,8 @@ $(OBJDIR)/Xrdcp.o: Xrdcp.cc ../XrdClient/XrdClientUrlInfo.hh \
 
 $(OBJDIR)/XrdClientPrep.o: XrdClientPrep.cc ../XProtocol/XProtocol.hh \
                            ../XrdClient/XrdClientAdmin.hh \
-                           ../XrdClient/XrdClientEnv.hh
+                           ../XrdClient/XrdClientEnv.hh \
+                           ../XrdSys/XrdSysHeaders.hh
 	@echo Compiling XrdClientPrep.cc
 	$(ECHO)$(CC) -g -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdClientPrep.o XrdClientPrep.cc
 
@@ -542,6 +543,7 @@ $(OBJDIR)/XrdStageTool.o: XrdStageTool.cc ../XrdClient/XrdClientUrlInfo.hh \
   ../XrdClient/XrdClientSock.hh ../XrdClient/XrdClientConn.hh ../XrdClient/XrdClientPSock.hh \
   ../XrdClient/XrdClientConst.hh ../XrdClient/XrdClientReadCache.hh \
   ../XrdClient/XrdClientInputBuffer.hh ../XrdSys/XrdSysSemWait.hh \
+  ../XrdSys/XrdSysHeaders.hh \
   ../XrdOuc/XrdOucHash.hh ../XrdOuc/XrdOucHash.icc \
   ../XrdClient/XrdClientVector.hh ../XrdClient/XrdCpMthrQueue.hh \
   ../XrdClient/XrdClientDebug.hh ../XrdClient/XrdClientEnv.hh \
@@ -563,7 +565,7 @@ $(OBJDIR)/XrdCommandLine.o: XrdCommandLine.cc ../XrdClient/XrdClientUrlInfo.hh \
   ../XrdOuc/XrdOucHash.hh ../XrdOuc/XrdOucHash.icc \
   ../XrdClient/XrdClientVector.hh ../XrdClient/XrdClientPSock.hh \
   ../XrdClient/XrdClientDebug.hh ../XrdClient/XrdClientEnv.hh \
-  ../XrdOuc/XrdOucEnv.hh ../XrdSys/XrdSysLogger.hh \
+  ../XrdOuc/XrdOucEnv.hh ../XrdSys/XrdSysHeaders.hh ../XrdSys/XrdSysLogger.hh \
   ../XrdClient/XrdClientAdmin.hh
 	@echo Compiling XrdCommandLine.cc
 	$(ECHO)$(CC) -g -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdCommandLine.o XrdCommandLine.cc
@@ -571,7 +573,7 @@ $(OBJDIR)/XrdCommandLine.o: XrdCommandLine.cc ../XrdClient/XrdClientUrlInfo.hh \
 $(OBJDIR)/XrdClientEnv.o: XrdClientEnv.cc ../XrdClient/XrdClientConst.hh \
   ../XrdClient/XrdClientEnv.hh ../XrdOuc/XrdOucEnv.hh \
   ../XrdOuc/XrdOucHash.hh ../XrdOuc/XrdOucHash.icc \
-  ../XrdSys/XrdSysPthread.hh ../XrdSys/XrdSysError.hh
+  ../XrdSys/XrdSysPthread.hh ../XrdSys/XrdSysError.hh ../XrdSys/XrdSysHeaders.hh
 	@echo Compiling XrdClientEnv.cc
 	$(ECHO)$(CC) -g -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdClientEnv.o XrdClientEnv.cc
 
@@ -586,6 +588,7 @@ $(OBJDIR)/XrdCpWorkLst.o: XrdCpWorkLst.cc ../XrdClient/XrdCpWorkLst.hh \
   ../XrdSys/XrdSysPthread.hh ../XrdSys/XrdSysError.hh \
   ../XrdSys/XrdSysSemWait.hh ../XrdOuc/XrdOucHash.hh \
   ../XrdOuc/XrdOucHash.icc ../XrdClient/XrdClientVector.hh \
+  ../XrdSys/XrdSysHeaders.hh \
   ../XrdClient/XrdClient.hh
 	@echo Compiling XrdCpWorkLst.cc
 	$(ECHO)$(CC) -g -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdCpWorkLst.o XrdCpWorkLst.cc
@@ -594,7 +597,7 @@ $(OBJDIR)/XrdClientSid.o: XrdClientSid.cc ../XrdClient/XrdClientSid.hh \
   ../XrdOuc/XrdOucRash.hh ../XrdOuc/XrdOucRash.icc \
   ../XrdSys/XrdSysPlatform.hh ../XProtocol/XProtocol.hh \
   ../XProtocol/XPtypes.hh ../XrdClient/XrdClientVector.hh \
-  ../XrdSys/XrdSysPthread.hh ../XrdSys/XrdSysError.hh
+  ../XrdSys/XrdSysPthread.hh ../XrdSys/XrdSysHeaders.hh ../XrdSys/XrdSysError.hh
 	@echo Compiling XrdClientSid.cc
 	$(ECHO)$(CC) -g -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdClientSid.o XrdClientSid.cc
 

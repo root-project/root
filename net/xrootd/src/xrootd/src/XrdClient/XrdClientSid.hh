@@ -30,6 +30,8 @@ struct  SidInfo {
    kXR_unt16 fathersid;
    ClientRequest outstandingreq;
    long long reqbyteprogress;
+   time_t sendtime;
+   ServerResponseHeader resp;
 };
 
 class XrdClientSid {
@@ -77,6 +79,15 @@ class XrdClientSid {
    // Releases a sid and all its childs
    void ReleaseSidTree(kXR_unt16 fathersid);
 
+   // Report the response for an outstanding request
+   // Typically this is used to keep track of the received errors, expecially
+   // for async writes
+   void ReportSidResp(kXR_unt16 sid, struct ServerResponseHeader *resp);
+
+   int GetFailedOutstandingWriteRequests(kXR_unt16 fathersid, XrdClientVector<ClientRequest> &reqvect);
+   int GetAllOutstandingWriteRequests(kXR_unt16 fathersid, XrdClientVector<ClientRequest> &reqvect);
+   int GetOutstandingWriteRequestCnt(kXR_unt16 fathersid);
+ 
    // 0 if non existent as a child sid
    inline struct SidInfo *GetSidInfo(kXR_unt16 sid) {
       XrdSysMutexHelper l(fMutex);

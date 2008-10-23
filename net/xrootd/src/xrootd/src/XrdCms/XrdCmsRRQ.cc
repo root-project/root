@@ -331,7 +331,7 @@ void *XrdCmsRRQ::TimeOut()
 // EPNAME("RRQ TimeOut");
    XrdCmsRRQSlot *sp;
 
-// We measure 133ms (default) intervals to timeout waiting requests
+// We measure millisecond intervals to timeout waiting requests
 //
    while(1)
         {isWaiting.Wait();

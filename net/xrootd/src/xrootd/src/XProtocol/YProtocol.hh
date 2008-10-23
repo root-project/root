@@ -332,7 +332,9 @@ struct CmsPrepAddRequest
 {      CmsRRHdr      Hdr;    // Modifier used with following options
 
 enum  {kYR_stage   = 0x0001, // Stage   the data
-       kYR_write   = 0x0002  // Prepare for writing
+       kYR_write   = 0x0002, // Prepare for writing
+       kYR_coloc   = 0x0004, // Prepare for co-location
+       kYR_fresh   = 0x0008  // Prepare by  time refresh
       };
 //     kXR_string    Ident;
 //     kXR_string    reqid;
@@ -442,7 +444,8 @@ struct CmsStateRequest
 {      CmsRRHdr      Hdr;
 //     kXR_string    Path;
 
-enum  {kYR_refresh = 0x01    // Modifier
+enum  {kYR_refresh = 0x01,   // Modifier
+       kYR_noresp  = 0x02
       };
 };
   

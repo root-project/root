@@ -17,6 +17,8 @@
 
 
 #include "XrdClient/XrdClientSid.hh"
+#include "XrdClient/XrdClientEnv.hh"
+#include "XrdClient/XrdClientConst.hh"
 
 XrdClientSid::XrdClientSid() {
 
@@ -51,28 +53,39 @@ kXR_unt16 XrdClientSid::GetNewSid() {
 // The request gets inserted the new sid in the right place
 // Also the one passed as parameter gets the new sid, as should be expected
 kXR_unt16 XrdClientSid::GetNewSid(kXR_unt16 sid, ClientRequest *req) {
-   XrdSysMutexHelper l(fMutex);
+  XrdSysMutexHelper l(fMutex);
 
-   if (!freesids.GetSize()) return 0;
+  if (!freesids.GetSize()) return 0;
       
-   kXR_unt16 nsid = freesids.Pop_back();
+  kXR_unt16 nsid = freesids.Pop_back();
+  
+  if (nsid) {
+    struct SidInfo si;
+    
+    memcpy(req->header.streamid, &nsid, sizeof(req->header.streamid));
+    memset(&si.resp, 0, sizeof(si.resp));
+    si.fathersid = sid;
+    si.outstandingreq = *req;
+    si.reqbyteprogress = 0;
+    si.sendtime = time(0);
+    childsidnfo.Add(nsid, si);
+  }
+  
+  
+  
+  return nsid;
+  
+};
 
-   if (nsid) {
-      struct SidInfo si;
-
-      memcpy(req->header.streamid, &nsid, sizeof(req->header.streamid));
-
-      si.fathersid = sid;
-      si.outstandingreq = *req;
-      si.reqbyteprogress = 0;
-
-      childsidnfo.Add(nsid, si);
-   }
-
-      
-
-   return nsid;
-
+// Report the response for an outstanding request
+// Typically this is used to keep track of the received errors, expecially
+// for async writes
+void XrdClientSid::ReportSidResp(kXR_unt16 sid, struct ServerResponseHeader *resp) {
+  XrdSysMutexHelper l(fMutex);
+  struct SidInfo *si = childsidnfo.Find(sid);
+  
+  if (si) memcpy(&si->resp, resp, sizeof(struct ServerResponseHeader));
+    
 };
 
 // Releases a sid.
@@ -88,26 +101,38 @@ void XrdClientSid::ReleaseSid(kXR_unt16 sid) {
 
 
 //_____________________________________________________________________________
+struct ReleaseSidTreeItem_data {
+  kXR_unt16 fathersid;
+  XrdClientVector<kXR_unt16> *freesids;
+};
 int ReleaseSidTreeItem(kXR_unt16 key,
 		       struct SidInfo si, void *arg) {
 
-  kXR_unt16 *pfathersid = static_cast<kXR_unt16 *>(arg);
+  ReleaseSidTreeItem_data *data = (ReleaseSidTreeItem_data *)arg;
 
   // If the sid we have is a son of the given father then delete it
-  if (si.fathersid == *pfathersid) return -1;
-  return 0;
+  if (si.fathersid == data->fathersid) {
+    data->freesids->Push_back(key);
+    return -1;
+  }
 
+  return 0;
 }
 
 // Releases a sid and all its childs
 void XrdClientSid::ReleaseSidTree(kXR_unt16 fathersid) {
    XrdSysMutexHelper l(fMutex);
-   childsidnfo.Apply(ReleaseSidTreeItem, static_cast<void *>(&fathersid));
-  
-   freesids.Push_back(fathersid);
-   
 
+   ReleaseSidTreeItem_data data;
+   data.fathersid = fathersid;
+   data.freesids = &freesids;
+
+   childsidnfo.Apply(ReleaseSidTreeItem, static_cast<void *>(&data));
+   freesids.Push_back(fathersid);
 }
+
+
+
 
 
 static int printoutreq(kXR_unt16,
@@ -116,11 +141,105 @@ static int printoutreq(kXR_unt16,
   smartPrintClientHeader(&p.outstandingreq);
   return 0;
 }
+
 void XrdClientSid::PrintoutOutstandingRequests() {
+  cerr << "-------------------------------------------------- start outstanding reqs dump. freesids: " << freesids.GetSize() << endl;
 
   childsidnfo.Apply(printoutreq, this);
+  cerr << "++++++++++++++++++++++++++++++++++++++++++++++++++++ end  outstanding reqs dump." << endl;
+}
+
+
+struct sniffOutstandingFailedWriteReq_data {
+  XrdClientVector<ClientRequest> *reqs;
+  kXR_unt16 fathersid;
+  XrdClientVector<kXR_unt16> *freesids;
+};
+static int sniffOutstandingFailedWriteReq(kXR_unt16 sid,
+				    struct SidInfo p, void *d) {
+
+  sniffOutstandingFailedWriteReq_data *data = (sniffOutstandingFailedWriteReq_data *)d;
+  if ((p.fathersid == data->fathersid) &&
+      (p.outstandingreq.header.requestid == kXR_write)) {
+
+    // If it went into timeout or got a negative response
+    // we add this req to the vector
+    if ( (time(0) - p.sendtime > EnvGetLong(NAME_REQUESTTIMEOUT)) ||
+	 (p.resp.status != kXR_ok) ) {
+      data->reqs->Push_back(p.outstandingreq);
+
+      // And we release the failed sid
+      data->freesids->Push_back(sid);
+      return -1;
+    }
+
+  }
+
+  //  smartPrintClientHeader(&p.outstandingreq);
+  return 0;
+}
+
+static int sniffOutstandingAllWriteReq(kXR_unt16 sid,
+				    struct SidInfo p, void *d) {
+
+  sniffOutstandingFailedWriteReq_data *data = (sniffOutstandingFailedWriteReq_data *)d;
+  if ((p.fathersid == data->fathersid) &&
+      (p.outstandingreq.header.requestid == kXR_write)) {
+
+      // we add this req to the vector
+      data->reqs->Push_back(p.outstandingreq);
+
+      // And we release the failed sid
+      data->freesids->Push_back(sid);
+      return -1;
+  }
+
+  //  smartPrintClientHeader(&p.outstandingreq);
+  return 0;
+}
+
+struct countOutstandingWriteReq_data {
+  int cnt;
+  kXR_unt16 fathersid;
+};
+static int countOutstandingWriteReq(kXR_unt16 sid,
+				    struct SidInfo p, void *c) {
+
+  countOutstandingWriteReq_data *data = (countOutstandingWriteReq_data *)c;
+
+  if ((p.fathersid == data->fathersid) && (p.outstandingreq.header.requestid == kXR_write))
+    data->cnt++;
+
+  //  smartPrintClientHeader(&p.outstandingreq);
+  return 0;
+}
+
+int XrdClientSid::GetFailedOutstandingWriteRequests(kXR_unt16 fathersid, XrdClientVector<ClientRequest> &reqvect) {
+  sniffOutstandingFailedWriteReq_data data;
+  data.reqs = &reqvect;
+  data.fathersid = fathersid;
+  data.freesids = &freesids;
+
+  childsidnfo.Apply(sniffOutstandingFailedWriteReq, (void *)&data);
+  return reqvect.GetSize();
+}
+
+int XrdClientSid::GetOutstandingWriteRequestCnt(kXR_unt16 fathersid) {
+  countOutstandingWriteReq_data data;
+  data.fathersid = fathersid;
+  data.cnt = 0;
+  childsidnfo.Apply(countOutstandingWriteReq, (void *)&data);
+  return data.cnt;
+}
 
 
 
+int XrdClientSid::GetAllOutstandingWriteRequests(kXR_unt16 fathersid, XrdClientVector<ClientRequest> &reqvect) {
+  sniffOutstandingFailedWriteReq_data data;
+  data.reqs = &reqvect;
+  data.fathersid = fathersid;
+  data.freesids = &freesids;
 
+  childsidnfo.Apply(sniffOutstandingAllWriteReq, (void *)&data);
+  return reqvect.GetSize();
 }

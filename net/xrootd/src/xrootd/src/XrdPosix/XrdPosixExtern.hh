@@ -80,12 +80,20 @@ extern int        XrdPosix_Fcntl(int fd, int cmd, ...);
 
 extern int        XrdPosix_Fdatasync(int fildes);
 
+extern int        XrdPosix_Fflush(FILE *stream);
+
 #ifdef __linux__
 extern long long  XrdPosix_Fgetxattr (int fd, const char *name,
                                       void *value, unsigned long long size);
 #endif
 
 extern FILE      *XrdPosix_Fopen(const char *path, const char *mode);
+
+extern size_t     XrdPosix_Fread(void *ptr, size_t size, size_t nitems, FILE *stream);
+
+extern int        XrdPosix_Fseek(FILE *stream, long offset, int whence);
+
+extern int        XrdPosix_Fseeko(FILE *stream, long long offset, int whence);
 
 extern int        XrdPosix_Fstat(int fildes, struct stat *buf);
 
@@ -95,7 +103,13 @@ extern int        XrdPosix_FstatV(int ver, int fildes, struct stat *buf);
 
 extern int        XrdPosix_Fsync(int fildes);
 
+extern long       XrdPosix_Ftell(FILE *stream);
+
+extern long long  XrdPosix_Ftello(FILE *stream);
+
 extern int        XrdPosix_Ftruncate(int fildes, long long offset);
+
+extern size_t     XrdPosix_Fwrite(const void *ptr, size_t size, size_t nitems, FILE *stream);
 
 #ifdef __linux__
 extern long long  XrdPosix_Getxattr (const char *path, const char *name, 

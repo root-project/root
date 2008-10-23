@@ -60,6 +60,8 @@
 #define SFS_FSCTL_STATFS  2 // Return FS data
 #define SFS_FSCTL_STATLS  3 // Return LS data
 #define SFS_FSCTL_STATXA  4 // Return XA data
+#define SFS_FSCTL_PLUGIN  8 // Return Implementation Dependent Data
+#define SFS_FSCTL_PLUGIO 16 // Return Implementation Dependent Data
 
 // Return Values for Integer Returning XrdSfs Interface
 //
@@ -97,8 +99,18 @@ enum XrdSfsFileExistence
 #define Prep_SENDACK 12
 #define Prep_WMODE   16
 #define Prep_STAGE   32
+#define Prep_COLOC   64
+#define Prep_FRESH  128
 
 class XrdOucTList;
+
+struct XrdSfsFSctl // SFS_FSCTL_PLUGIN/PLUGIO parameters
+{
+ const char            *Arg1;      // PLUGIO & PLUGIN
+       int              Arg1Len;
+       int              Arg2Len;
+ const char            *Arg2;      // PLUGIN opaque string
+};
 
 struct XrdSfsPrep  // Prepare parameters
 {
@@ -139,6 +151,11 @@ virtual int            chmod(const char             *Name,
                                    XrdOucErrInfo    &out_error,
                              const XrdSecEntity     *client = 0,
                              const char             *opaque = 0) = 0;
+
+virtual int            FSctl(const int               cmd,
+                                   XrdSfsFSctl      &args,
+                                   XrdOucErrInfo    &out_error,
+                             const XrdSecEntity     *client = 0) {return SFS_OK;}
 
 virtual int            fsctl(const int               cmd,
                              const char             *args,

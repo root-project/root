@@ -93,7 +93,7 @@ int XrdOucMsubs::Parse(const char *dName, char *msg)
              mData[j] = vp = strdup(vp); mData[j++]++;
              *ip = ctmp; lastp = infop = ip;
              if (isupper(*(vp+1)))
-                for (i = 1; i <= vMax; i++)
+                for (i = 1; i < vMax; i++)
                     if (!strcmp(vp, vName[i])) 
                        {mDlen[j-1] = i; mData[j-1] = 0; free(vp); break;}
             } else if (ip != infop && *(ip-1) == '\\')

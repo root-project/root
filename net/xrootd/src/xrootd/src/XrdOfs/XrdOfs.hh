@@ -277,7 +277,8 @@ struct fwdOpt fwdRM;
 struct fwdOpt fwdRMDIR;
 struct fwdOpt fwdTRUNC;
 
-int   MaxDelay;       //    Max delay imposed during staging
+static int MaxDelay;  //    Max delay imposed during staging
+static int OSSDelay;  //    Delay to impose when oss interface times out
 
 char *HostName;       //    ->Our hostname
 char *HostPref;       //    ->Our hostname with domain removed

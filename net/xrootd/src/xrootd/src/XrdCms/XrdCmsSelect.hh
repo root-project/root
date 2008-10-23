@@ -26,6 +26,7 @@ public:
 XrdCmsKey      Path;    //  In: Path to select or lookup in the cache
 XrdCmsRRQInfo *InfoP;   //  In: Fast redirect routing
 SMask_t        nmask;   //  In: Nodes to avoid
+SMask_t        smask;   // Out: Nodes selected
 struct iovec  *iovP;    //  In: Prepare notification I/O vector
 int            iovN;    //  In: Prepare notification I/O vector count
 int            Opts;    //  In: One or more of the following enums
@@ -41,6 +42,7 @@ enum {Write   = 0x0001, // File will be open in write mode     (select & cache)
       Asap    = 0x0080, // Respond as soon as possible         (locate   only)
       noBind  = 0x0100, // Do not new bind file to a server    (select   only)
       isMeta  = 0x0200, // Only inode information being changed(select   only)
+      Freshen = 0x0400, // Freshen access times                (prep     only)
       Advisory= 0x4000, // Cache A/D is advisory (no delay)    (have   & cache)
       Pending = 0x8000  // File being staged                   (have   & cache)
      };
@@ -57,7 +59,7 @@ struct {int  Port;      // Out: Target node port number
        }     Resp;
 
              XrdCmsSelect(int opts=0, char *thePath=0, int thePLen=0)
-                         : Path(thePath,thePLen), Opts(opts)
+                         : Path(thePath,thePLen), smask(0), Opts(opts)
                          {Resp.Port = 0; *Resp.Data = '\0'; Resp.DLen = 0;}
             ~XrdCmsSelect() {}
 };

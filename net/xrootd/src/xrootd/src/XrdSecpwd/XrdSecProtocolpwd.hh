@@ -243,15 +243,16 @@ public:
    String            ErrMsg;        // Last error message
    int               SysPwd;        // 0 = no, 1 = Unix sys pwd, 2 = AFS pwd
    String            AFScell;       // AFS cell if it makes sense
+   XrdSutBuffer     *Parms;         // Buffer with server parms on first iteration 
 
    pwdHSVars() { Iter = 0; TimeStamp = -1; CryptoMod = ""; User = ""; Tag = "";
                  RemVers = -1; CF = 0; Hcip = 0; Rcip = 0;
                  ID = ""; Cref = 0; Pent = 0; RtagOK = 0; Tty = 0;
                  Step = 0; LastStep = 0; ErrMsg = "";
                  SysPwd = 0; AFScell = "";
-                 Status.ctype = 0; Status.action = 0; Status.options = 0; }
+                 Status.ctype = 0; Status.action = 0; Status.options = 0; Parms = 0;}
 
-   ~pwdHSVars() { SafeDelete(Cref); SafeDelete(Hcip); }
+   ~pwdHSVars() { SafeDelete(Cref); SafeDelete(Hcip); SafeDelete(Parms); }
 };
 
 
@@ -270,7 +271,8 @@ public:
                                           XrdOucErrInfo     *einfo=0);
 
         XrdSecProtocolpwd(int opts, const char *hname,
-                          const struct sockaddr *ipadd);
+                          const struct sockaddr *ipadd,
+                          const char *parms = 0);
         virtual ~XrdSecProtocolpwd() {} // Delete() does it all
 
         // Initialization methods

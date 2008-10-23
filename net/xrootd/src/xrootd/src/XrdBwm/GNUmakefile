@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.1 2008/05/17 02:44:27 abh Exp $
+#              $Id: GNUmakefile,v 1.2 2008/09/07 04:30:34 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -84,7 +84,7 @@ $(OBJDIR)/XrdBwm.o:  XrdBwm.cc           XrdBwm.hh \
                      XrdSecEntity.hh \
                      XrdSfsAio.hh        XrdSfsInterface.hh \
                      XrdSysError.hh      XrdSysLogger.hh    XrdSysPlatform.hh \
-                     XrdSysPthread.hh \
+                     XrdSysPthread.hh    XrdSysHeaders.hh \
                   ../XrdVersion.hh
 	@echo Compiling XrdBwm.cc 
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdBwm.o XrdBwm.cc
@@ -95,7 +95,7 @@ $(OBJDIR)/XrdBwmConfig.o:  XrdBwmConfig.cc \
                            XrdBwmPolicy1.hh   XrdBwmTrace.hh \
                            XrdOuca2x.hh       XrdOucEnv.hh     XrdOucStream.hh\
                            XrdOucTrace.hh \
-                           XrdSysError.hh     XrdSysPlugin.hh
+                           XrdSysError.hh     XrdSysHeaders.hh XrdSysPlugin.hh
 	@echo Compiling XrdBwmConfig.cc 
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdBwmConfig.o XrdBwmConfig.cc
 

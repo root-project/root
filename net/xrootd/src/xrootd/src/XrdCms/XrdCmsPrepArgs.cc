@@ -56,6 +56,15 @@ XrdCmsPrepArgs::XrdCmsPrepArgs(XrdCmsRRData &Arg) : XrdJob("prepare")
    options = Arg.Request.modifier;
    Data    = Arg.Buff; Arg.Buff = 0; Arg.Blen = 0;
 
+// Fill out co-location information
+//
+   if (options & CmsPrepAddRequest::kYR_stage
+   &&  options & CmsPrepAddRequest::kYR_coloc && prty)
+      {clPath = prty;
+       while(*clPath && *clPath != '/') clPath++;
+       if (*clPath != '/') clPath = 0;
+      } else clPath = 0;
+
 // Fill out the iovec
 //
    ioV[0].iov_base = (char *)&Request;

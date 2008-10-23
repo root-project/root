@@ -193,12 +193,12 @@ char     *StageArg[MaxArgs];
 int       StageAln[MaxArgs];
 int       StageAnum;      //    Count of valid Arg/Aln array elements
 char     *MSSgwCmd;       // -> MSS Gateway command to use
-long long MaxDBsize;      //    Maximum database size
+int       MSSgwTMO;       //    MSS Gateway command response timeout
+long long MaxDBsize;      //    Maximum database size (*obsolete*)
 int       FDFence;        //    Smallest file FD number allowed
 int       FDLimit;        //    Largest  file FD number allowed
 unsigned long long DirFlags;//  Default directory settings
 int       Trace;          //    Trace flags
-int       ConvertFN;      //    If 1 filenames need to be converted
 char     *CompSuffix;     // -> Compressed file suffix or null for autodetect
 int       CompSuflen;     //    Length of suffix
 int       OptFlags;       //    General option flags

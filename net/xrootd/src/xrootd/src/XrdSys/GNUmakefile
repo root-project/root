@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.6 2008/01/11 09:56:15 ganis Exp $
+#              $Id: GNUmakefile,v 1.7 2008/09/07 04:40:22 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -74,7 +74,7 @@ $(OBJDIR)/XrdSysDir.o: XrdSysDir.cc  XrdSysDir.hh
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) XrdSysDir.cc -o $(OBJDIR)/XrdSysDir.o
 
 $(OBJDIR)/XrdSysError.o: XrdSysError.cc XrdSysError.hh XrdSysLogger.hh \
-                         XrdSysPlatform.hh
+                         XrdSysHeaders.hh XrdSysPlatform.hh
 	@echo Compiling XrdSysError.cc
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) XrdSysError.cc -o $(OBJDIR)/XrdSysError.o
 
@@ -87,11 +87,12 @@ $(OBJDIR)/XrdSysPlatform.o: XrdSysPlatform.cc  XrdSysPlatform.hh
 	@echo Compiling XrdSysPlatform.cc
 	$(ECHO)$(CC) -c $(CFLAGS) $(CFSETRESUID) $(INCLUDE) XrdSysPlatform.cc -o $(OBJDIR)/XrdSysPlatform.o
 
-$(OBJDIR)/XrdSysPlugin.o: XrdSysPlugin.cc XrdSysPlugin.hh  XrdSysError.hh
+$(OBJDIR)/XrdSysPlugin.o: XrdSysPlugin.cc XrdSysPlugin.hh  \
+                          XrdSysError.hh  XrdSysHeaders.hh
 	@echo Compiling XrdSysPlugin.cc
 	$(ECHO)$(CC) -c $(CFLAGS) $(CFSTRLCPY) $(INCLUDE) XrdSysPlugin.cc -o $(OBJDIR)/XrdSysPlugin.o
 
-$(OBJDIR)/XrdSysPriv.o: XrdSysPriv.cc  XrdSysPriv.hh
+$(OBJDIR)/XrdSysPriv.o: XrdSysPriv.cc  XrdSysPriv.hh XrdSysHeaders.hh
 	@echo Compiling XrdSysPriv.cc
 	$(ECHO)$(CC) -c $(CFLAGS) $(CFSETRESUID) $(INCLUDE) XrdSysPriv.cc -o $(OBJDIR)/XrdSysPriv.o
 
@@ -103,6 +104,7 @@ $(OBJDIR)/XrdSysTimer.o: XrdSysTimer.cc XrdSysTimer.hh
 	@echo Compiling XrdSysTimer.cc
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) XrdSysTimer.cc -o $(OBJDIR)/XrdSysTimer.o
 
-$(OBJDIR)/XrdSysXSLock.o: XrdSysError.hh XrdSysXSLock.hh XrdSysXSLock.cc
+$(OBJDIR)/XrdSysXSLock.o: XrdSysError.hh XrdSysHeaders.hh \
+                          XrdSysXSLock.hh XrdSysXSLock.cc
 	@echo Compiling XrdSysXSLock.cc
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) XrdSysXSLock.cc -o $(OBJDIR)/XrdSysXSLock.o

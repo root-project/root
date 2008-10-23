@@ -322,6 +322,10 @@ int XrdClientConnectionMgr::Connect(XrdClientUrlInfo RemoteServ)
 	 // then we use that
 	 if (fPhyHash.Num() > 0) {
 	   XrdClientPhyConnection *p = 0;
+
+           // We must avoid the unfortunate pick of a disconnected phyconn
+           GarbageCollect();
+
 	   if (((p = fPhyHash.Find(key1.c_str())) ||
 		(p = fPhyHash.Find(key2.c_str()))) && p->IsValid()) {
 	     // We link that physical connection to the new logical connection

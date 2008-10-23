@@ -70,12 +70,17 @@ const char *XrdNetSecurity::TraceID = "NetSecurity";
   
 void XrdNetSecurity::AddHost(char *hname)
 {
-  XrdOucNList *nlp = new XrdOucNList(hname);
+   char *Hname = 0;
 
-// Add host object to list of authorized hosts
+// If host is an ip address then do short circuit add otherwise do a full add
 //
-   HostList.Insert(nlp);
-   DEBUG(hname <<" added to authorized hosts.");
+   if (isdigit(*hname) && (Hname = XrdNetDNS::getHostName(hname)))
+      OKHosts.Add(hname, Hname, 0, Hash_dofree);
+      else {XrdOucNList *nlp = new XrdOucNList(hname);
+            HostList.Insert(nlp);
+           }
+   if (Hname) {DEBUG(hname <<" (" <<Hname <<") added to authorized hosts.");}
+      else    {DEBUG(hname <<" added to authorized hosts.");}
 }
 
 /******************************************************************************/

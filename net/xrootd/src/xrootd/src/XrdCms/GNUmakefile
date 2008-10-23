@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.13 2008/06/02 22:09:43 abh Exp $
+#              $Id: GNUmakefile,v 1.15 2008/09/07 04:30:49 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -171,7 +171,7 @@ $(OBJDIR)/XrdCmsCache.o:     XrdCmsCache.cc      XrdCmsCache.hh \
 
 $(OBJDIR)/XrdCmsClientConfig.o: XrdCmsClientConfig.cc   XrdCmsClientConfig.hh \
                                 XrdCmsClientMsg.hh      XrdCmsTrace.hh \
-                                XrdNetDNS.hh \
+                                XrdNetDNS.hh            XrdSysHeaders.hh \
                                 XrdOuca2x.hh            XrdOucEnv.hh \
                                 XrdOucStream.hh         XrdOucTList.hh \
                                 XrdOucUtils.hh
@@ -229,7 +229,7 @@ $(OBJDIR)/XrdCmsConfig.o:    XrdCmsConfig.cc     XrdCmsConfig.hh \
                              XrdOucExport.hh     XrdOucName2Name.hh \
                              XrdOucPList.hh      XrdOucProg.hh \
                              XrdOucStream.hh     XrdOucTList.hh \
-                             XrdOucUtils.hh \
+                             XrdOucUtils.hh      XrdSysHeaders.hh \
                              XrdSysError.hh      XrdSysPlatform.hh \
                              XrdSysPlugin.hh     XrdSysPthread.hh \
                              XrdSysTimer.hh \
@@ -258,7 +258,7 @@ $(OBJDIR)/XrdCmsFinder.o:    XrdCmsFinder.cc     XrdCmsFinder.hh \
 $(OBJDIR)/XrdCmsJob.o:       XrdCmsJob.cc        XrdCmsJob.hh \
                              XrdCmsProtocol.hh   XrdCmsRRData.hh \
                              XrdCmsTrace.hh      XrdOss.hh \
-                             XrdSysPthread.hh \
+                             XrdSysHeaders.hh    XrdSysPthread.hh \
                              XrdJob.hh           XrdLink.hh \
                              XrdScheduler.hh \
                              YProtocol.hh
@@ -387,7 +387,7 @@ $(OBJDIR)/XrdCmsProtocol.o:  XrdCmsProtocol.cc   XrdCmsProtocol.hh \
                              XrdOucPup.hh        XrdOucTokenizer.hh \
                              XrdNetDNS.hh \
                              XrdSysError.hh      XrdSysPthread.hh \
-                             XrdSysTimer.hh \
+                             XrdSysHeaders.hh    XrdSysTimer.hh \
                              XrdInet.hh          XrdLink.hh \
                              XrdProtocol.hh \
                              YProtocol.hh

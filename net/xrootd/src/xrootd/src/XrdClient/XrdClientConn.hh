@@ -106,9 +106,9 @@ public:
     }
 
   
-    void                       RemoveAllDataFromCache() {
+    void                       RemoveAllDataFromCache(bool keepwriteblocks=true) {
         if (fMainReadCache)
-            fMainReadCache->RemoveItems();
+            fMainReadCache->RemoveItems(keepwriteblocks);
     }
 
     void                       RemoveDataFromCache(long long begin_offs,
@@ -176,6 +176,14 @@ public:
         if (fMainReadCache)
 	   fMainReadCache->SetBlkRemovalPolicy(RmPolicy);
     }
+
+    void                       UnPinCacheBlk(long long begin_offs, long long end_offs) {
+        fMainReadCache->UnPinCacheBlk(begin_offs, end_offs);
+	// Also use this to signal the possibility to proceed for a hard checkpoint
+	fWriteWaitAck->Broadcast();
+    }
+
+
     // -------------------
 
 
@@ -298,6 +306,9 @@ public:
     void                       SetMaxRedirCnt(short mx) {fMaxGlobalRedirCnt = mx; }
     short                      GetRedirCnt() const { return fGlobalRedirCnt; }
 
+    bool                       DoWriteSoftCheckPoint();
+    bool                       DoWriteHardCheckPoint();
+    void                       UnPinCacheBlk();
 protected:
     void                       SetLogConnID(int cid) { fLogConnID = cid; }
     void                       SetStreamID(kXR_unt16 sid) { fPrimaryStreamid = sid; }
@@ -352,6 +363,9 @@ private:
 
     int                        fOpenSockFD;         // Descriptor of the underlying socket
     static XrdClientConnectionMgr *fgConnectionMgr; //Instance of the Connection Manager
+
+    XrdSysCondVar              *fWriteWaitAck;
+    XrdClientVector<ClientRequest> fWriteReqsToRetry; // To store the write reqs to retry in case of a disconnection
 
     bool                       CheckErrorStatus(XrdClientMessage *, short &, char *);
     void                       CheckPort(int &port);

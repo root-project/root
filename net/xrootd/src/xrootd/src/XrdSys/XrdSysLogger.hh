@@ -68,9 +68,15 @@ int Time(char *tbuff);
 char *traceBeg() {Logger_Mutex.Lock(); Time(TBuff); return TBuff;}
 char  traceEnd() {Logger_Mutex.UnLock(); return '\n';}
 
+// xlogFD() returns the FD to be used by external programs as their STDERR.
+// A negative one indicates that no special FD is assigned.
+//
+int   xlogFD();
+
 private:
 
 XrdSysMutex Logger_Mutex;
+static int extLFD[4];
 long long  eKeep;
 char       TBuff[24];        // Trace header buffer
 int        eFD;

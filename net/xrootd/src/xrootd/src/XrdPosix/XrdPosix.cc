@@ -9,8 +9,9 @@
 /******************************************************************************/
 
 const char *XrdPosixCVSID = "$Id$";
-  
+
 #include <stdarg.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <strings.h>
 #include <sys/types.h>
@@ -384,6 +385,24 @@ long long XrdPosix_Fgetxattr (int fd, const char *name, void *value,
 #endif
 
 /******************************************************************************/
+/*                       X r d P o s i x _ F f l u s h                        */
+/******************************************************************************/
+  
+extern "C"
+{
+int XrdPosix_Fflush(FILE *stream)
+{
+
+// Return the result of the fseek
+//
+   if (!stream || !Xroot.myFD(fileno(stream)))
+      return Xunix.Fflush(stream);
+
+   return Xroot.Fsync(fileno(stream));
+}
+}
+  
+/******************************************************************************/
 /*                        X r d P o s i x _ F o p e n                         */
 /******************************************************************************/
 
@@ -411,7 +430,7 @@ FILE *XrdPosix_Fopen(const char *path, const char *mode)
    else if (ISMODE("r+") || ISMODE("rb+") || ISMODE("r+b")) omode = O_RDWR;
    else if (ISMODE("w+") || ISMODE("wb+") || ISMODE("w+b")) omode = O_RDWR
                                                         | O_CREAT | O_TRUNC;
-// else if (ISMODE("a+") || ISMODE("ab+") || ISMODE("a+b")) omode = unsupported;
+   else if (ISMODE("a+") || ISMODE("ab+") || ISMODE("a+b")) omode = O_APPEND;
    else {errno = EINVAL; return 0;}
 
 // Now open the file
@@ -426,6 +445,77 @@ FILE *XrdPosix_Fopen(const char *path, const char *mode)
 // All done
 //
    return stream;
+}
+}
+
+/******************************************************************************/
+/*                        X r d P o s i x _ F r e a d                         */
+/******************************************************************************/
+  
+extern "C"
+{
+size_t XrdPosix_Fread(void *ptr, size_t size, size_t nitems, FILE *stream)
+{
+   size_t bytes, rc = 0;
+   int fd = fileno(stream);
+
+   if (!Xroot.myFD(fd)) return Xunix.Fread(ptr, size, nitems, stream);
+
+   bytes = Xroot.Read(fd, ptr, size*nitems);
+
+// Get the right return code. Note that we cannot emulate the flags in sunx86
+//
+        if (bytes > 0 && size) rc = bytes/size;
+#ifndef SUNX86
+#if defined(__linux__)
+   else if (bytes < 0) stream->_flags |= _IO_ERR_SEEN;
+   else                stream->_flags |= _IO_EOF_SEEN;
+#elif defined(__macos__)
+   else if (bytes < 0) stream->_flags |= __SEOF;
+   else                stream->_flags |= __SERR;
+#else
+   else if (bytes < 0) stream->_flag  |= _IOERR;
+   else                stream->_flag  |= _IOEOF;
+#endif
+#endif
+
+   return rc;
+}
+}
+  
+/******************************************************************************/
+/*                        X r d P o s i x _ F s e e k                         */
+/******************************************************************************/
+  
+extern "C"
+{
+int XrdPosix_Fseek(FILE *stream, long offset, int whence)
+{
+
+// Return the result of the fseek
+//
+   if (!Xroot.myFD(fileno(stream)))
+      return Xunix.Fseek( stream, offset, whence);
+
+   return (Xroot.Lseek(fileno(stream), offset, whence) < 0 ? -1 : 0);
+}
+}
+
+/******************************************************************************/
+/*                       X r d P o s i x _ F s e e k o                        */
+/******************************************************************************/
+  
+extern "C"
+{
+int XrdPosix_Fseeko(FILE *stream, long long offset, int whence)
+{
+
+// Return the result of the fseek
+//
+   if (!Xroot.myFD(fileno(stream)))
+      return Xunix.Fseeko64(stream, offset, whence);
+
+   return (Xroot.Lseek(fileno(stream), offset, whence) < 0 ? -1 : 0);
 }
 }
 
@@ -476,6 +566,40 @@ int XrdPosix_Fsync(int fildes)
 }
   
 /******************************************************************************/
+/*                        X r d P o s i x _ F t e l l                         */
+/******************************************************************************/
+  
+extern "C"
+{
+long XrdPosix_Ftell(FILE *stream)
+{
+
+// Return the result of the tell
+//
+   if (!Xroot.myFD(fileno(stream))) return Xunix.Ftell(stream);
+
+   return static_cast<long>(Xroot.Lseek(fileno(stream), 0, SEEK_CUR));
+}
+}
+  
+/******************************************************************************/
+/*                       X r d P o s i x _ F t e l l o                        */
+/******************************************************************************/
+  
+extern "C"
+{
+long long XrdPosix_Ftello(FILE *stream)
+{
+
+// Return the result of the tell
+//
+   if (!Xroot.myFD(fileno(stream))) return Xunix.Ftello64(stream);
+
+   return Xroot.Lseek(fileno(stream), 0, SEEK_CUR);
+}
+}
+  
+/******************************************************************************/
 /*                    X r d P o s i x _ F t r u n c a t e                     */
 /******************************************************************************/
   
@@ -491,6 +615,38 @@ int XrdPosix_Ftruncate(int fildes, long long offset)
 }
 }
 
+/******************************************************************************/
+/*                       X r d P o s i x _ F w r i t e                        */
+/******************************************************************************/
+  
+extern "C"
+{
+size_t XrdPosix_Fwrite(const void *ptr, size_t size, size_t nitems, FILE *stream)
+{
+   size_t bytes, rc = 0;
+   int fd = fileno(stream);
+
+   if (!Xroot.myFD(fd)) return Xunix.Fwrite(ptr, size, nitems, stream);
+
+   bytes = Xroot.Write(fd, ptr, size*nitems);
+
+// Get the right return code. Note that we cannot emulate the flags in sunx86
+//
+   if (bytes > 0 && size) rc = bytes/size;
+#ifndef SUNX86
+#if defined(__linux__)
+      else stream->_flags |= _IO_ERR_SEEN;
+#elif defined(__macos__)
+      else stream->_flags |= __SERR;
+#else
+      else stream->_flag  |= _IOERR;
+#endif
+#endif
+
+   return rc;
+}
+}
+  
 /******************************************************************************/
 /*                     X r d P o s i x _ G e t x a t t r                      */
 /******************************************************************************/

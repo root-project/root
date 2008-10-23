@@ -70,7 +70,7 @@ XrdCmsPrepare::XrdCmsPrepare() : XrdJob("File cache scrubber"),
   
 int XrdCmsPrepare::Add(XrdCmsPrepArgs &pargs)
 {
-   char *pdata[XrdOucMsubs::maxElem + 2];
+   char *pdata[XrdOucMsubs::maxElem + 2], prtybuff[8], *pP = prtybuff;
    int rc, pdlen[XrdOucMsubs::maxElem + 2];
 
 // Restart the scheduler if need be
@@ -82,6 +82,10 @@ int XrdCmsPrepare::Add(XrdCmsPrepArgs &pargs)
        return 0;
       }
 
+// Extract out prty
+//
+   *pP++ = pargs.prty[0]; *pP = '\0';
+
 // Write out the header line
 //
    if (!prepMsg)
@@ -90,7 +94,7 @@ int XrdCmsPrepare::Add(XrdCmsPrepArgs &pargs)
        pdata[2] = (char *)" ";                pdlen[2] = 1;
        pdata[3] = pargs.notify;               pdlen[3] = strlen(pargs.notify);
        pdata[4] = (char *)" ";                pdlen[4] = 1;
-       pdata[5] = pargs.prty;                 pdlen[5] = strlen(pargs.prty);
+       pdata[5] = prtybuff;                   pdlen[5] = strlen(prtybuff);
        pdata[6] = (char *)" ";                pdlen[6] = 1;
        pdata[7] = pargs.mode;                 pdlen[7] = strlen(pargs.mode);
        pdata[8] = (char *)" ";                pdlen[8] = 1;

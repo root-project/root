@@ -52,6 +52,9 @@ const char *XrdConfigCVSID = "$Id$";
 #include "XrdSys/XrdSysTimer.hh"
 #include "XrdOuc/XrdOucUtils.hh"
 
+#ifdef __linux__
+#include <netinet/tcp.h>
+#endif
 #ifdef __macos__
 #include <AvailabilityMacros.h>
 #endif
@@ -603,6 +606,23 @@ int XrdConfig::Setup(char *dfltp)
 // Establish the FD limit
 //
    if (setFDL()) return 1;
+
+// Special handling for Linux sendfile()
+//
+#if defined(__linux__) && defined(TCP_CORK)
+{  int sokFD, setON = 1;
+   if ((sokFD = socket(PF_INET, SOCK_STREAM, 0)) >= 0)
+      {setsockopt(sokFD, XrdNetDNS::getProtoID("tcp"), TCP_NODELAY,
+                  &setON, sizeof(setON));
+       if (setsockopt(sokFD, SOL_TCP, TCP_CORK, &setON, sizeof(setON)) < 0)
+          XrdLink::sfOK = 0;
+       close(sokFD);
+      }
+}
+#endif
+
+// Indicate how sendfile is being handled
+//
    TRACE(NET,"sendfile " <<(XrdLink::sfOK ? "enabled." : "disabled!"));
 
 // Initialize the buffer manager
@@ -663,7 +683,7 @@ int XrdConfig::Setup(char *dfltp)
    if (PortWAN &&  (NetWAN = new XrdInet(&XrdLog, Police)))
       {if (Wan_Opts || Wan_Blen) NetWAN->setDefaults(Wan_Opts, Wan_Blen);
        if (myDomain) NetWAN->setDomain(myDomain);
-       if (NetWAN->Bind(0, "tcp")) return 1;
+       if (NetWAN->Bind((PortWAN > 0 ? PortWAN : 0), "tcp")) return 1;
        PortWAN  = NetWAN->Port();
        wsz      = NetWAN->WSize();
        Wan_Blen = (wsz < Wan_Blen || !Wan_Blen ? wsz : Wan_Blen);
@@ -902,10 +922,12 @@ int XrdConfig::xbuf(XrdSysError *eDest, XrdOucStream &Config)
 /* Function: xnet
 
    Purpose:  To parse directive: network [wan] [keepalive] [buffsz <blen>]
+                                         [[no]dnr]
 
              wan       parameters apply only to the wan port
              keepalive sets the socket keepalive option.
              <blen>    is the socket's send/rcv buffer size.
+             [no]dnr   do [not] perform a reverse DNS lookup if not needed.
 
    Output: 0 upon success or !0 upon failure.
 */
@@ -913,15 +935,17 @@ int XrdConfig::xbuf(XrdSysError *eDest, XrdOucStream &Config)
 int XrdConfig::xnet(XrdSysError *eDest, XrdOucStream &Config)
 {
     char *val;
-    int  i, V_keep = 0, V_iswan = 0, V_blen = -1;
+    int  i, V_keep = 0, V_nodnr = 1, V_iswan = 0, V_blen = -1;
     long long llp;
-    static struct netopts {const char *opname; int hasarg;
+    static struct netopts {const char *opname; int hasarg; int opval;
                            int  *oploc;  const char *etxt;}
            ntopts[] =
        {
-        {"keepalive",  0, &V_keep,   "option"},
-        {"buffsz",     1, &V_blen,   "network buffsz"},
-        {"wan",        0, &V_iswan,  "option"}
+        {"keepalive",  0, 1, &V_keep,   "option"},
+        {"buffsz",     1, 0, &V_blen,   "network buffsz"},
+        {"dnr",        0, 0, &V_nodnr,  "option"},
+        {"nodnr",      0, 1, &V_nodnr,  "option"},
+        {"wan",        0, 1, &V_iswan,  "option"}
        };
     int numopts = sizeof(ntopts)/sizeof(struct netopts);
 
@@ -931,7 +955,7 @@ int XrdConfig::xnet(XrdSysError *eDest, XrdOucStream &Config)
     while (val)
     {for (i = 0; i < numopts; i++)
          if (!strcmp(val, ntopts[i].opname))
-            {if (!ntopts[i].hasarg) llp = 1;
+            {if (!ntopts[i].hasarg) llp=static_cast<long long>(ntopts[i].opval);
                 else {if (!(val = Config.GetWord()))
                          {eDest->Emsg("Config", "network",
                               ntopts[i].opname, ntopts[i].etxt);
@@ -950,11 +974,13 @@ int XrdConfig::xnet(XrdSysError *eDest, XrdOucStream &Config)
 
      if (V_iswan)
         {if (V_blen >= 0) Wan_Blen = V_blen;
-         Wan_Opts = (V_keep ? XRDNET_KEEPALIVE : 0);
-         PortWAN  = 1;
+         Wan_Opts  = (V_keep  ? XRDNET_KEEPALIVE : 0)
+                   | (V_nodnr ? XRDNET_NORLKUP   : 0);
+         if (!PortWAN) PortWAN = -1;
         } else {
          if (V_blen >= 0) Net_Blen = V_blen;
-         Net_Opts = (V_keep ? XRDNET_KEEPALIVE : 0);
+         Net_Opts  = (V_keep  ? XRDNET_KEEPALIVE : 0)
+                   | (V_nodnr ? XRDNET_NORLKUP   : 0);
         }
      return 0;
 }
@@ -965,8 +991,10 @@ int XrdConfig::xnet(XrdSysError *eDest, XrdOucStream &Config)
 
 /* Function: xport
 
-   Purpose:  To parse the directive: port <tcpnum> [if [<hlst>] [named <nlst>]]
+   Purpose:  To parse the directive: port [wan] <tcpnum>
+                                               [if [<hlst>] [named <nlst>]]
 
+             wan        apply this to the wan port
              <tcpnum>   number of the tcp port for incomming requests
              <hlst>     list of applicable host patterns
              <nlst>     list of applicable instance names.
@@ -974,11 +1002,15 @@ int XrdConfig::xnet(XrdSysError *eDest, XrdOucStream &Config)
    Output: 0 upon success or !0 upon failure.
 */
 int XrdConfig::xport(XrdSysError *eDest, XrdOucStream &Config)
-{   int rc, pnum = 0;
+{   int rc, iswan = 0, pnum = 0;
     char *val, cport[32];
 
-    if (!(val = Config.GetWord()))
-       {eDest->Emsg("Config", "tcp port not specified"); return 1;}
+    do {if (!(val = Config.GetWord()))
+           {eDest->Emsg("Config", "tcp port not specified"); return 1;}
+        if (strcmp("wan", val) || iswan) break;
+        iswan = 1;
+       } while(1);
+
     strncpy(cport, val, sizeof(cport)-1); cport[sizeof(cport)-1] = '\0';
 
     if ((val = Config.GetWord()) && !strcmp("if", val))
@@ -986,7 +1018,8 @@ int XrdConfig::xport(XrdSysError *eDest, XrdOucStream &Config)
                               ProtInfo.myInst, myProg)) <= 0) return (rc < 0);
 
     if ((pnum = yport(eDest, "tcp", cport)) < 0) return 1;
-    PortTCP = PortUDP = pnum;
+    if (iswan) PortWAN = pnum;
+       else PortTCP = PortUDP = pnum;
 
     return 0;
 }

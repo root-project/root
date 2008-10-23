@@ -36,10 +36,10 @@ private:
    short          fStatusCode;
    XrdSysRecMutex fMultireadMutex;
 
-   kXR_unt16       CharStreamid2Int(kXR_char *charstreamid);
-   void            Int2CharStreamid(kXR_char *charstreamid, short intstreamid);
-
 public:
+
+   static kXR_unt16       CharStreamid2Int(kXR_char *charstreamid);
+   static void            Int2CharStreamid(kXR_char *charstreamid, short intstreamid);
 
    enum EXrdMSCStatus {             // Some status codes useful
       kXrdMSC_ok               = 0,

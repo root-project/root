@@ -19,7 +19,7 @@ ia64_linux      icc       all    for Itanium Linux Intel icc
 i386_linux22    gcc       all    for Linux kernel 2.2.x gcc and glibc
 i386_linux24    gcc       all    for Linux kernel 2.4.x gcc and glibc
 i386_linux26    gcc       all    for Linux kernel 2.6.x gcc and glibc
-i386_linux      gcc       all    for Linux gcc glibc
+i386_linux      gcc       all    for Linux gcc and glibc
 i386_linux22    icc       all    for Linux kernel 2.2.x Intel icc
 i386_linux24    icc       all    for Linux kernel 2.4.x Intel icc
 i386_linux26    icc       all    for Linux kernel 2.6.x Intel icc

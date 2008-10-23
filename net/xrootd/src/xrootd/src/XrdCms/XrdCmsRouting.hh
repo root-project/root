@@ -19,12 +19,13 @@ class XrdCmsRouting
 public:
 
 enum {isInvalid = 0x00,
-      isAsync   = 0x01,
       isSync    = 0x02,
       Forward   = 0x04,
       noArgs    = 0x08,
       Delayable = 0x10,
-      Repliable = 0x20
+      Repliable = 0x20,
+      AsyncQ0   = 0x40,
+      AsyncQ1   = 0x80
      };
 
 struct      theRouting {int reqCode; int reqOpts;};

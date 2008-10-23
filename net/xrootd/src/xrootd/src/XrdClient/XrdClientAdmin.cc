@@ -180,7 +180,7 @@ bool XrdClientAdmin::Connect()
                   XrdOucString msg(fConnModule->LastServerError.errmsg);
                   msg.erasefromend(1);
                   Error("Connect", "Authentication failure: " << msg);
-                  break;
+                  connectTry = connectMaxTry;
                } else {
                   XrdOucString msg(fConnModule->LastServerError.errmsg);
                   msg.erasefromend(1);

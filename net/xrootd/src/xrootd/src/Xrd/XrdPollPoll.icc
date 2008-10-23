@@ -8,9 +8,9 @@
 /*              DE-AC03-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
-//        $Id: XrdPollPoll.icc,v 1.17 2008/05/18 01:30:18 abh Exp $
+//        $Id: XrdPollPoll.icc,v 1.18 2008/09/26 07:26:46 ganis Exp $
 
-const char *XrdPollPollCVSID = "cvsid: $Id: XrdPollPoll.icc,v 1.17 2008/05/18 01:30:18 abh Exp $";
+const char *XrdPollPollCVSID = "cvsid: $Id: XrdPollPoll.icc,v 1.18 2008/09/26 07:26:46 ganis Exp $";
 
 #if !defined(__macos__) && !defined(__FreeBSD__)
 #include <malloc.h>

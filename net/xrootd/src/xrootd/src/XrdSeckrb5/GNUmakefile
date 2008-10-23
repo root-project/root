@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.12 2007/07/27 09:23:26 ganis Exp $
+#              $Id: GNUmakefile,v 1.14 2008/09/24 17:01:15 ganis Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -49,6 +49,6 @@ $(TARGETS): $(OBJECTS) $(LIBDEPS)
 
 $(OBJDIR)/XrdSecProtocolkrb5.o: XrdSecProtocolkrb5.cc XrdSecInterface.hh \
                                 XrdSysPthread.hh      XrdOucTokenizer.hh \
-                                XrdOucErrInfo.hh
+                                XrdOucErrInfo.hh      XrdSysHeaders.hh
 	@echo Compiling XrdSecProtocolkrb5.cc 
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) $(INCKRB5) -o $(OBJDIR)/XrdSecProtocolkrb5.o XrdSecProtocolkrb5.cc

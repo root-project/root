@@ -49,7 +49,8 @@ XrdLink *XrdInet::Accept(int opts, int timeout)
 
 // Perform regular accept
 //
-   if (!XrdNet::Accept(myPeer, opts, timeout)) return (XrdLink *)0;
+   if (!XrdNet::Accept(myPeer, opts | (netOpts & XRDNET_NORLKUP), timeout)) 
+      return (XrdLink *)0;
    if ((ismyfd = (myPeer.fd == iofd))) lnkopts |= XRDLINK_NOCLOSE;
 
 // Allocate a new network object

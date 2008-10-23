@@ -152,7 +152,7 @@ int XrdOssSys::MSS_Readdir(void *dir_handle, char *buff, int blen) {
        else if ((resp = oh->sp->GetLine()))
                {if ( ((int)strlen(resp)) >= blen )
                    {*buff = '\0';
-                    return OssEroute.Emsg("XrdOssMSS_Readdir", -EOVERFLOW,
+                    return OssEroute.Emsg(epname, -EOVERFLOW,
                                             "readdir rmt", resp);
                    }
                    strlcpy(buff, resp, blen);
@@ -257,7 +257,7 @@ int XrdOssSys::MSS_Stat(const char *path, struct stat *buff)
     // Read in the results.
     //
     if ( !(resp = sfd ->GetLine()))
-       return OssEroute.Emsg("XrdOssMSS_Stat",-XRDOSS_E8012,"process ",path);
+       return OssEroute.Emsg(epname,-XRDOSS_E8012,"process ",path);
 
     // Extract data from the response.
     //
@@ -367,6 +367,7 @@ int XrdOssSys::MSS_Xeq(XrdOucStream **xfd, int okerr,
                        const char *cmd, const char *arg1, const char *arg2)
 {
     EPNAME("MSS_Xeq")
+    static int NoResp = 0;
     char *resp;
     int retc;
     XrdOucStream *sp;
@@ -378,7 +379,7 @@ int XrdOssSys::MSS_Xeq(XrdOucStream **xfd, int okerr,
 // Allocate a stream for this command
 //
    if (!(sp = new XrdOucStream(&OssEroute)))
-      return OssEroute.Emsg("XrdOssMSS_Xeq",-ENOMEM,"create stream for",MSSgwCmd);
+      return OssEroute.Emsg("MSS_Xeq",-ENOMEM,"create stream for",MSSgwCmd);
 
 // Run the command
 //
@@ -386,6 +387,18 @@ int XrdOssSys::MSS_Xeq(XrdOucStream **xfd, int okerr,
                       <<' ' <<(arg2 ? arg2 : ""));
    if ((retc = MSSgwProg->Run(sp, cmd, arg1, arg2)))
       {delete sp; return NegVal(retc);}
+
+// Wait for data to appear. We do this to avoid hanging up and chewing through
+// all of the threads while clients retry the requests with a new connection.
+//
+   if ((retc = sp->Wait4Data(MSSgwTMO)))
+      {if (retc < 0)
+          {if (!(0xff & NoResp++))
+               OssEroute.Emsg("MSS_Xeq", -ETIMEDOUT, "execute", cmd);
+           retc = ETIMEDOUT;
+          }
+       delete sp; return NegVal(retc);
+      }
 
 // Read back the first record. The first records must be the return code
 // from the command followed by any output. Make sure that this is the case.
@@ -397,7 +410,7 @@ int XrdOssSys::MSS_Xeq(XrdOucStream **xfd, int okerr,
       }
    if (retc)
       {if (retc != -okerr)
-          OssEroute.Emsg("XrdOssMSS_Xeq", NegVal(retc), "execute", cmd);
+          OssEroute.Emsg("MSS_Xeq", NegVal(retc), "execute", cmd);
        delete sp;
        return NegVal(retc);
       }

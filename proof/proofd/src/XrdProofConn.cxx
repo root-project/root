@@ -1222,7 +1222,7 @@ XrdSecProtocol *XrdProofConn::Authenticate(char *plist, int plsiz)
       //
       // Once we have the protocol, get the credentials
       XrdOucErrInfo ei;
-      credentials = protocol->getCredentials(&Parms, &ei);
+      credentials = protocol->getCredentials(0, &ei);
       if (!credentials) {
          TRACE(XERR, "cannot obtain credentials (protocol: "<<protname<<")");
          // Set error, in case of need

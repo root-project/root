@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.1 2007/08/02 01:41:04 abh Exp $
+#              $Id: GNUmakefile,v 1.2 2008/09/07 04:39:23 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -28,6 +28,7 @@ TARGETS = $(LIBDIR)/libXrdSecunix.$(TYPESHLIB)
 
 vpath XrdOuc% ../XrdOuc
 vpath XrdSec% ../XrdSec
+vpath XrdSys% ../XrdSys
 
 #------------------------------------------------------------------------------#
 #                          I n i t i a l   R u l e s                           #
@@ -47,6 +48,7 @@ $(TARGETS): $(OBJECTS) $(LIBDEPS)
 	$(ECHO)$(CC) $(OBJECTS) $(LDSO) $(MORELIBS) $(LIBS) -o $(TARGETS);
 
 $(OBJDIR)/XrdSecProtocolunix.o: XrdSecProtocolunix.cc XrdSecInterface.hh \
+                                XrdSysHeaders.hh \
                                 XrdSecEntity.hh       XrdOucErrInfo.hh
 	@echo Compiling XrdSecProtocolunix.cc 
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdSecProtocolunix.o XrdSecProtocolunix.cc

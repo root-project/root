@@ -41,7 +41,7 @@ void          Schedule(XrdJob *jp);
 void          Schedule(int num, XrdJob *jfirst, XrdJob *jlast);
 void          Schedule(XrdJob *jp, time_t atime);
 
-void          setParms(int minw, int maxw, int avlt, int maxi);
+void          setParms(int minw, int maxw, int avlt, int maxi, int once=0);
 
 void          Start();
 

@@ -76,19 +76,20 @@ LFLAGS   =
 
 ####### Files
 
-HEADERS =   XrdOuca2x.hh XrdOucChain.hh XrdOucDLlist.hh XrdOucEnv.hh XrdOucErrInfo.hh \
+HEADERS =   XrdOuca2x.hh XrdOucChain.hh XrdOucCRC.hh \
+            XrdOucDLlist.hh XrdOucEnv.hh XrdOucErrInfo.hh \
             XrdOucHash.hh XrdOucLock.hh XrdOucName2Name.hh \
             XrdOucNList.hh XrdOucPList.hh XrdOucProg.hh \
             XrdOucRash.hh XrdOucReqID.hh XrdOucStream.hh \
             XrdOucString.hh XrdOucTable.hh XrdOucTList.hh XrdOucTokenizer.hh \
             XrdOucTrace.hh XrdOucUtils.hh
 
-SOURCES =   XrdOuca2x.cc XrdOucEnv.cc XrdOucHashVal.cc \
+SOURCES =   XrdOuca2x.cc XrdOucCRC.cc XrdOucEnv.cc XrdOucHashVal.cc \
             XrdOucName2Name.cc XrdOucNList.cc XrdSysPlatform.cc XrdOucProg.cc \
             XrdOucReqID.cc XrdOucStream.cc XrdOucString.cc \
             XrdOucTokenizer.cc XrdOucTrace.cc XrdOucUtils.cc
 
-OBJECTS =   $(OUTDIR)/XrdOuca2x.obj $(OUTDIR)/XrdOucEnv.obj \
+OBJECTS =   $(OUTDIR)/XrdOuca2x.obj $(OUTDIR)/XrdOucCRC.obj $(OUTDIR)/XrdOucEnv.obj \
             $(OUTDIR)/XrdOucHashVal.obj $(OUTDIR)/XrdOucName2Name.obj \
             $(OUTDIR)/XrdOucNList.obj \
             $(OUTDIR)/XrdOucProg.obj $(OUTDIR)/XrdOucReqID.obj \

@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.19 2008/06/09 10:44:20 ganis Exp $
+#              $Id: GNUmakefile,v 1.20 2008/09/07 04:38:50 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -97,7 +97,8 @@ endif
 # all of the objects in the preload library (yech).
 
 $(OBJDIR)/XrdPosix.o:  XrdPosix.cc XrdPosix.hh XrdPosixXrootd.hh  \
-                       XrdPosixExtern.hh XrdPosixLinkage.hh XrdOucTokenizer.hh
+                       XrdPosixExtern.hh XrdPosixLinkage.hh \
+                       XrdOucTokenizer.hh XrdSysHeaders.hh
 	@echo Compiling XrdPosix.cc
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdPosix.o XrdPosix.cc
 
@@ -114,12 +115,14 @@ $(OBJDIR)/XrdPosixPreload.o:  XrdPosixPreload.cc   XrdPosixLinkage.hh \
 
 $(OBJDIR)/XrdPosixPreload32.o:  XrdPosixPreload32.cc   XrdPosixLinkage.hh \
                                 XrdPosixExtern.hh      XrdPosixXrootd.hh \
-                                XrdPosixOsDep.hh       XrdSysPlatform.hh
+                                XrdPosixOsDep.hh \
+                                XrdSysHeaders.hh       XrdSysPlatform.hh
 	@echo Compiling XrdPosixPreload32.cc
 	$(ECHO)$(CC) -c $(CFLAGS32) $(CFUSENEWHDRS) $(CFNOSTRICTALIAS) $(INCLUDE) -o $(OBJDIR)/XrdPosixPreload32.o XrdPosixPreload32.cc
 
 $(OBJDIR)/XrdPosixXrootd.o:  XrdPosixXrootd.cc   XrdPosixXrootd.hh \
                              XrdClient.hh        XrdPosixExtern.hh \
+                             XrdSysHeaders.hh \
                              XrdPosixOsDep.hh
 	@echo Compiling XrdPosixXrootd.cc 
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdPosixXrootd.o XrdPosixXrootd.cc

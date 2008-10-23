@@ -10,7 +10,7 @@
 
 //           $Id$
 
-#if !defined(SUNX86)
+#if !defined(SUNX86) && defined(__LP64__) && !defined(_LP64)
 #undef  _LARGEFILE_SOURCE
 #undef  _FILE_OFFSET_BITS
 #define _FILE_OFFSET_BITS 32
@@ -56,6 +56,7 @@ extern XrdPosixLinkage Xunix;
 // defined as 64 bits anyway. So, the dirent structure is 64-bit conformable
 // making CopyDirent() superfluous. In Solaris x86 there are no 32 bit interfaces.
 //
+#if !defined(__LP64__) && !defined(_LP64)
 #if !defined( __macos__) && !defined(SUNX86) && !defined(__FreeBSD__)
 int XrdPosix_CopyDirent(struct dirent *dent, struct dirent64 *dent64)
 {
@@ -74,6 +75,7 @@ int XrdPosix_CopyDirent(struct dirent *dent, struct dirent64 *dent64)
   return 0;
 }
 #endif
+#endif
 
 /******************************************************************************/
 /*                     X r d P o s i x _ C o p y S t a t                      */
@@ -85,6 +87,7 @@ int XrdPosix_CopyDirent(struct dirent *dent, struct dirent64 *dent64)
 // stat and stat64 are defined separately making it necessary to use CopyStat().
 // In Solaris x86 there are no 32 bit interfaces.
 //
+#if !defined(__LP64__) && !defined(_LP64)
 #if !defined(SUNX86) && !defined(__FreeBSD__)
 int XrdPosix_CopyStat(struct stat *buf, struct stat64 &buf64)
 {
@@ -111,6 +114,7 @@ int XrdPosix_CopyStat(struct stat *buf, struct stat64 &buf64)
       buf->st_blksize=buf64.st_blksize;  /*     Preferred I/O block size */
   return 0;
 }
+#endif
 #endif
 
 /******************************************************************************/
@@ -163,6 +167,24 @@ FILE  *fopen(const char *path, const char *mode)
 }
 }
 */
+
+  
+/******************************************************************************/
+/*                                f s e e k o                                 */
+/******************************************************************************/
+
+#ifndef SUNX86
+extern "C"
+{
+int fseeko(FILE *stream, off_t offset, int whence)
+{
+   static int Init = Xunix.Init(&Init);
+
+   return XrdPosix_Fseeko(stream, offset, whence);
+}
+}
+#endif
+
 /******************************************************************************/
 /*                                 f s t a t                                  */
 /******************************************************************************/
@@ -179,8 +201,6 @@ int     fstat(         int fildes, struct stat *buf)
 #endif
 {
    static int Init = Xunix.Init(&Init);
-   struct stat64 buf64;
-   int rc;
 
 #ifdef __linux__
    if (!XrdPosixXrootd::myFD(fildes)) return Xunix.Fstat(ver, fildes, buf);
@@ -188,8 +208,31 @@ int     fstat(         int fildes, struct stat *buf)
    if (!XrdPosixXrootd::myFD(fildes)) return Xunix.Fstat(     fildes, buf);
 #endif
 
+#if defined(__LP64__) || defined(_LP64)
+   return    XrdPosix_Fstat(fildes,                 buf  );
+#else
+   int rc;
+   struct stat64 buf64;
    if ((rc = XrdPosix_Fstat(fildes, (struct stat *)&buf64))) return rc;
    return XrdPosix_CopyStat(buf, buf64);
+#endif
+}
+}
+#endif
+
+  
+/******************************************************************************/
+/*                                f t e l l o                                 */
+/******************************************************************************/
+
+#ifndef SUNX86
+extern "C"
+{
+off_t ftello(FILE *stream)
+{
+   static int Init = Xunix.Init(&Init);
+
+   return static_cast<off_t>(XrdPosix_Ftello(stream));
 }
 }
 #endif
@@ -242,8 +285,6 @@ int        lstat(         const char *path, struct stat *buf)
 #endif
 {
    static int Init = Xunix.Init(&Init);
-   struct stat64 buf64;
-   int rc;
 
    if (!XrdPosix_isMyPath(path))
 #ifdef __linux__
@@ -252,8 +293,14 @@ int        lstat(         const char *path, struct stat *buf)
       return Xunix.Lstat(     path, buf);
 #endif
 
+#if defined(__LP64__) || defined(_LP64)
+   return    XrdPosix_Lstat(path,                 buf  );
+#else
+   struct stat64 buf64;
+   int rc;
    if ((rc = XrdPosix_Lstat(path, (struct stat *)&buf64))) return rc;
    return XrdPosix_CopyStat(buf, buf64);
+#endif
 }
 }
 #endif
@@ -309,7 +356,7 @@ struct dirent* readdir(DIR *dirp)
 
    if (!(dp64 = XrdPosix_Readdir64(dirp))) return 0;
 
-#if !defined(__macos__) && !defined(_LP64)
+#if !defined(__macos__) && !defined(_LP64) && !defined(__LP64__)
    if (XrdPosix_CopyDirent((struct dirent *)dp64, dp64)) return 0;
 #endif
 
@@ -328,7 +375,7 @@ extern "C"
 int     readdir_r(DIR *dirp, struct dirent *entry, struct dirent **result)
 {
    static int Init = Xunix.Init(&Init);
-#if defined(__macos__) || defined(_LP64)
+#if defined(__macos__) || defined(__LP64__) || defined(_LP64)
    return XrdPosix_Readdir_r(dirp, entry, result);
 #else
    char buff[sizeof(struct dirent64) + 2048];
@@ -382,8 +429,6 @@ int        stat(         const char *path, struct stat *buf)
 #endif
 {
    static int Init = Xunix.Init(&Init);
-   struct stat64 buf64;
-   int rc;
 
    if (!XrdPosix_isMyPath(path))
 #ifdef __linux__
@@ -391,8 +436,15 @@ int        stat(         const char *path, struct stat *buf)
 #else
       return Xunix.Stat(     path, buf);
 #endif
+
+#if defined(__LP64__) || defined(_LP64)
+   return    XrdPosix_Stat(path,                 buf  );
+#else
+   struct stat64 buf64;
+   int rc;
    if ((rc = XrdPosix_Stat(path, (struct stat *)&buf64))) return rc;
    return XrdPosix_CopyStat(buf, buf64);
+#endif
 }
 }
 #endif
@@ -411,6 +463,7 @@ int        statfs(         const char *path, struct statfs *buf)
    int rc;
 
    if ((rc = XrdPosix_Statfs(path, (struct statfs *)&buf64))) return rc;
+   memset(buf, 0, sizeof(buf));
    buf->f_type    = buf64.f_type;
    buf->f_bsize   = buf64.f_bsize;
    buf->f_blocks  = buf64.f_blocks;
@@ -437,6 +490,15 @@ int        statvfs(         const char *path, struct statvfs *buf)
    struct statvfs64 buf64;
    int rc;
    if ((rc = XrdPosix_Statvfs(path, (struct statvfs *)&buf64))) return rc;
+   memset(buf, 0, sizeof(buf));
+   buf->f_flag    = buf64.f_flag;
+   buf->f_bsize   = buf64.f_bsize;
+   buf->f_blocks  = buf64.f_blocks;
+   buf->f_bfree   = buf64.f_bfree;
+   buf->f_files   = buf64.f_files;
+   buf->f_ffree   = buf64.f_ffree;
+   buf->f_fsid    = buf64.f_fsid;
+   buf->f_namemax = buf64.f_namemax;
    return 0;
 }
 }

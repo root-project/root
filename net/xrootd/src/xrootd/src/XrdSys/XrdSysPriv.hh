@@ -54,8 +54,7 @@ class XrdSysPriv
 };
 
 //
-// Guard class; ownership is not chageable by thread, so we must prevent
-// other threads to do the same thing.
+// Guard class;
 // Usage:
 //
 //    {  XrdSysPrivGuard priv(tempuid);

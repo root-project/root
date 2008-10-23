@@ -67,31 +67,31 @@ XrdCmsRouter::theRoute initRouter[] =
 namespace XrdCms
 {
 XrdCmsRouting::theRouting initRDRrouting[] =
-     {{kYR_chmod,   XrdCmsRouting::isAsync   | XrdCmsRouting::Forward
+     {{kYR_chmod,   XrdCmsRouting::AsyncQ1   | XrdCmsRouting::Forward
                   | XrdCmsRouting::Repliable | XrdCmsRouting::Delayable},
-      {kYR_locate,  XrdCmsRouting::isAsync
+      {kYR_locate,  XrdCmsRouting::AsyncQ0
                   | XrdCmsRouting::Repliable | XrdCmsRouting::Delayable},
-      {kYR_mkdir,   XrdCmsRouting::isAsync   | XrdCmsRouting::Forward
+      {kYR_mkdir,   XrdCmsRouting::AsyncQ1   | XrdCmsRouting::Forward
                   | XrdCmsRouting::Repliable | XrdCmsRouting::Delayable},
-      {kYR_mkpath,  XrdCmsRouting::isAsync   | XrdCmsRouting::Forward
+      {kYR_mkpath,  XrdCmsRouting::AsyncQ1   | XrdCmsRouting::Forward
                   | XrdCmsRouting::Repliable | XrdCmsRouting::Delayable},
-      {kYR_mv,      XrdCmsRouting::isAsync   | XrdCmsRouting::Forward
+      {kYR_mv,      XrdCmsRouting::AsyncQ1   | XrdCmsRouting::Forward
                   | XrdCmsRouting::Repliable | XrdCmsRouting::Delayable},
       {kYR_prepadd, XrdCmsRouting::isSync
                   | XrdCmsRouting::Repliable | XrdCmsRouting::Delayable},
       {kYR_prepdel, XrdCmsRouting::isSync    | XrdCmsRouting::Forward
                   | XrdCmsRouting::Repliable | XrdCmsRouting::Delayable},
-      {kYR_rm,      XrdCmsRouting::isAsync   | XrdCmsRouting::Forward
+      {kYR_rm,      XrdCmsRouting::AsyncQ1   | XrdCmsRouting::Forward
                   | XrdCmsRouting::Repliable | XrdCmsRouting::Delayable},
-      {kYR_rmdir,   XrdCmsRouting::isAsync   | XrdCmsRouting::Forward
+      {kYR_rmdir,   XrdCmsRouting::AsyncQ1   | XrdCmsRouting::Forward
                   | XrdCmsRouting::Repliable | XrdCmsRouting::Delayable},
-      {kYR_select,  XrdCmsRouting::isAsync
+      {kYR_select,  XrdCmsRouting::AsyncQ0
                   | XrdCmsRouting::Repliable | XrdCmsRouting::Delayable},
-      {kYR_statfs,  XrdCmsRouting::isAsync
+      {kYR_statfs,  XrdCmsRouting::AsyncQ0
                   | XrdCmsRouting::Repliable | XrdCmsRouting::Delayable},
-      {kYR_stats,   XrdCmsRouting::isAsync
+      {kYR_stats,   XrdCmsRouting::AsyncQ0
                   | XrdCmsRouting::Repliable | XrdCmsRouting::Delayable},
-      {kYR_trunc,   XrdCmsRouting::isAsync   | XrdCmsRouting::Forward
+      {kYR_trunc,   XrdCmsRouting::AsyncQ1   | XrdCmsRouting::Forward
                   | XrdCmsRouting::Repliable | XrdCmsRouting::Delayable},
       {kYR_update,  XrdCmsRouting::isSync    | XrdCmsRouting::noArgs
                   | XrdCmsRouting::Repliable},
@@ -112,7 +112,7 @@ XrdCmsRouting::theRouting initRSProuting[] =
      {{kYR_avail,   XrdCmsRouting::isSync},
       {kYR_disc,    XrdCmsRouting::isSync | XrdCmsRouting::noArgs},
       {kYR_gone,    XrdCmsRouting::isSync},
-      {kYR_have,    XrdCmsRouting::isSync},
+      {kYR_have,    XrdCmsRouting::AsyncQ0},
       {kYR_load,    XrdCmsRouting::isSync},
       {kYR_pong,    XrdCmsRouting::isSync | XrdCmsRouting::noArgs},
       {kYR_status,  XrdCmsRouting::isSync | XrdCmsRouting::noArgs},
@@ -130,20 +130,20 @@ XrdCmsRouting::theRouting initRSProuting[] =
 namespace XrdCms
 {
 XrdCmsRouting::theRouting initSRVrouting[] =
-     {{kYR_chmod,   XrdCmsRouting::isAsync},
+     {{kYR_chmod,   XrdCmsRouting::AsyncQ1},
       {kYR_disc,    XrdCmsRouting::isSync  | XrdCmsRouting::noArgs},
-      {kYR_mkdir,   XrdCmsRouting::isAsync},
-      {kYR_mkpath,  XrdCmsRouting::isAsync},
-      {kYR_mv,      XrdCmsRouting::isAsync},
+      {kYR_mkdir,   XrdCmsRouting::AsyncQ1},
+      {kYR_mkpath,  XrdCmsRouting::AsyncQ1},
+      {kYR_mv,      XrdCmsRouting::AsyncQ1},
       {kYR_ping,    XrdCmsRouting::isSync  | XrdCmsRouting::noArgs},
       {kYR_prepadd, XrdCmsRouting::isSync},
       {kYR_prepdel, XrdCmsRouting::isSync},
-      {kYR_rm,      XrdCmsRouting::isAsync},
-      {kYR_rmdir,   XrdCmsRouting::isAsync},
+      {kYR_rm,      XrdCmsRouting::AsyncQ1},
+      {kYR_rmdir,   XrdCmsRouting::AsyncQ1},
       {kYR_space,   XrdCmsRouting::isSync  | XrdCmsRouting::noArgs},
-      {kYR_state,   XrdCmsRouting::isSync},
-      {kYR_stats,   XrdCmsRouting::isAsync | XrdCmsRouting::noArgs},
-      {kYR_trunc,   XrdCmsRouting::isAsync},
+      {kYR_state,   XrdCmsRouting::AsyncQ0},
+      {kYR_stats,   XrdCmsRouting::AsyncQ0 | XrdCmsRouting::noArgs},
+      {kYR_trunc,   XrdCmsRouting::AsyncQ1},
       {kYR_try,     XrdCmsRouting::isSync},
       {kYR_usage,   XrdCmsRouting::isSync  | XrdCmsRouting::noArgs},
       {0,           0}};
@@ -160,20 +160,20 @@ XrdCmsRouting::theRouting initSRVrouting[] =
 namespace XrdCms
 {
 XrdCmsRouting::theRouting initSUProuting[] =
-     {{kYR_chmod,   XrdCmsRouting::isAsync | XrdCmsRouting::Forward},
+     {{kYR_chmod,   XrdCmsRouting::AsyncQ1 | XrdCmsRouting::Forward},
       {kYR_disc,    XrdCmsRouting::isSync  | XrdCmsRouting::noArgs},
-      {kYR_mkdir,   XrdCmsRouting::isAsync | XrdCmsRouting::Forward},
-      {kYR_mkpath,  XrdCmsRouting::isAsync | XrdCmsRouting::Forward},
-      {kYR_mv,      XrdCmsRouting::isAsync | XrdCmsRouting::Forward},
+      {kYR_mkdir,   XrdCmsRouting::AsyncQ1 | XrdCmsRouting::Forward},
+      {kYR_mkpath,  XrdCmsRouting::AsyncQ1 | XrdCmsRouting::Forward},
+      {kYR_mv,      XrdCmsRouting::AsyncQ1 | XrdCmsRouting::Forward},
       {kYR_ping,    XrdCmsRouting::isSync  | XrdCmsRouting::noArgs},
       {kYR_prepadd, XrdCmsRouting::isSync},
       {kYR_prepdel, XrdCmsRouting::isSync  | XrdCmsRouting::Forward},
-      {kYR_rm,      XrdCmsRouting::isAsync | XrdCmsRouting::Forward},
-      {kYR_rmdir,   XrdCmsRouting::isAsync | XrdCmsRouting::Forward},
+      {kYR_rm,      XrdCmsRouting::AsyncQ1 | XrdCmsRouting::Forward},
+      {kYR_rmdir,   XrdCmsRouting::AsyncQ1 | XrdCmsRouting::Forward},
       {kYR_space,   XrdCmsRouting::isSync  | XrdCmsRouting::noArgs},
       {kYR_state,   XrdCmsRouting::isSync},
-      {kYR_stats,   XrdCmsRouting::isAsync | XrdCmsRouting::noArgs},
-      {kYR_trunc,   XrdCmsRouting::isAsync | XrdCmsRouting::Forward},
+      {kYR_stats,   XrdCmsRouting::AsyncQ0 | XrdCmsRouting::noArgs},
+      {kYR_trunc,   XrdCmsRouting::AsyncQ1 | XrdCmsRouting::Forward},
       {kYR_try,     XrdCmsRouting::isSync},
       {kYR_usage,   XrdCmsRouting::isSync  | XrdCmsRouting::noArgs},
       {0,           0}};

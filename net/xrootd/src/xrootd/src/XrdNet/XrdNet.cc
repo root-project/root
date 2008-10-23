@@ -296,6 +296,7 @@ int XrdNet::WSize()
   
 int XrdNet::do_Accept_TCP(XrdNetPeer &myPeer, int opts)
 {
+  static int noAcpt = 0;
   int        newfd;
   char      *hname;
   struct sockaddr addr;
@@ -307,19 +308,23 @@ int XrdNet::do_Accept_TCP(XrdNetPeer &myPeer, int opts)
       while(newfd < 0 && errno == EINTR);
 
    if (newfd < 0)
-      {eDest->Emsg("Accept", errno, "perform accept."); 
+      {if (errno != EMFILE || !(0x1ff & noAcpt++))
+          eDest->Emsg("Accept", errno, "perform accept");
        return 0;
       }
 
 // Authorize by ip address or full (slow) hostname format
 //
-   if (Police && !(hname = Police->Authorize(&addr)))
-      {eDest->Emsg("Accept", EACCES, "accept TCP connection from",
-                     (hname = XrdNetDNS::getHostName(addr)));
-       free(hname);
-       close(newfd);
-       return 0;
-      } else hname = XrdNetDNS::getHostName(addr);
+   if (Police)
+      {if (!(hname = Police->Authorize(&addr)))
+          {eDest->Emsg("Accept", EACCES, "accept TCP connection from",
+                      (hname = XrdNetDNS::getHostName(addr)));
+           free(hname);
+           close(newfd);
+           return 0;
+          }
+      } else hname = (opts & XRDNET_NORLKUP ? XrdNetDNS::getHostID(addr)
+                                            : XrdNetDNS::getHostName(addr));
 
 // Set all required fd options are set
 //
@@ -340,7 +345,7 @@ int XrdNet::do_Accept_TCP(XrdNetPeer &myPeer, int opts)
   
 int XrdNet::do_Accept_UDP(XrdNetPeer &myPeer, int opts)
 {
-  char           *hname;
+  char           *hname = 0;
   int             dlen;
   struct sockaddr addr;
   SOCKLEN_t       addrlen = sizeof(addr);
@@ -375,7 +380,10 @@ int XrdNet::do_Accept_UDP(XrdNetPeer &myPeer, int opts)
        free(hname);
        BuffQ->Recycle(bp);
        return 0;
-      } else hname = XrdNetDNS::getHostName(addr);
+      } else {
+       if (!hname) hname=(opts & XRDNET_NORLKUP ? XrdNetDNS::getHostID(addr)
+                                                : XrdNetDNS::getHostName(addr));
+      }
 
 // Fill in the peer structure. We use our base FD for outgoing messages.
 // Note that XrdNetLink object never closes this FDS for UDP messages.

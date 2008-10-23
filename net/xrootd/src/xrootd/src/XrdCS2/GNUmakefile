@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.6 2007/07/31 02:24:09 abh Exp $
+#              $Id: GNUmakefile,v 1.7 2008/09/07 04:30:39 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -72,7 +72,7 @@ XrdCS2d: $(OBJBINS)
 	$(ECHO)$(CC) $(CFLAGS) $(OBJBINS) $(CS2LIBS) -lXrd -o $(BINDIR)/XrdCS2d
 
 $(OBJDIR)/XrdCS2DCM.o:     XrdCS2DCM.hh  XrdCS2DCM.cc  XrdCS2DCMFile.hh \
-                           XrdSysError.hh   XrdSysPthread.hh \
+                           XrdSysError.hh   XrdSysHeaders.hh XrdSysPthread.hh \
                            XrdOucStream.hh  XrdOucUtils.hh \
                            XrdScheduler.hh  XrdTrace.hh
 	@echo Compiling XrdCS2DCM.cc
@@ -80,6 +80,7 @@ $(OBJDIR)/XrdCS2DCM.o:     XrdCS2DCM.hh  XrdCS2DCM.cc  XrdCS2DCMFile.hh \
 
 $(OBJDIR)/XrdCS2DCM2cs.o: XrdCS2DCM.hh  XrdCS2DCM2cs.cc \
                           XrdSysError.hh   XrdSysLogger.hh  XrdTrace.hh \
+                          XrdSysHeaders.hh \
                           XrdSysTimer.hh   XrdSysPthread.hh XrdNetLink.hh
 	@echo Compiling XrdCS2DCM2cs.cc
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdCS2DCM2cs.o XrdCS2DCM2cs.cc
@@ -87,7 +88,7 @@ $(OBJDIR)/XrdCS2DCM2cs.o: XrdCS2DCM.hh  XrdCS2DCM2cs.cc \
 $(OBJDIR)/XrdCS2DCMConfig.o: XrdCS2DCM.hh  XrdCS2DCMConfig.cc  XrdCS2DCMFile.hh \
                              XrdNetOpts.hh    XrdNetSocket.hh  XrdOucUtils.hh \
                              XrdSysError.hh   XrdSysLogger.hh  XrdSysTimer.hh \
-                             XrdScheduler.hh  XrdTrace.hh      \
+                             XrdSysHeaders.hh XrdScheduler.hh  XrdTrace.hh    \
                              XrdNetLink.hh    XrdNetWork.hh
 	@echo Compiling XrdCS2DCMConfig.cc
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdCS2DCMConfig.o XrdCS2DCMConfig.cc
@@ -99,7 +100,7 @@ $(OBJDIR)/XrdCS2DCMFile.o: XrdCS2DCM.hh   XrdCS2DCMFile.cc \
 
 $(OBJDIR)/XrdCS2DCMMain.o: XrdCS2DCM.hh XrdCS2DCMMain.cc \
                            XrdSysError.hh    XrdSysLogger.hh   XrdSysPthread.hh \
-                           XrdScheduler.hh   XrdTrace.hh
+                           XrdSysHeaders.hh  XrdScheduler.hh   XrdTrace.hh
 	@echo Compiling XrdCS2DCMMain.cc
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdCS2DCMMain.o XrdCS2DCMMain.cc
 

@@ -81,7 +81,7 @@ struct XrdCpInfo {
 
 #define XRDCP_BLOCKSIZE          (4*1024*1024)
 #define XRDCP_XRDRASIZE          (10*XRDCP_BLOCKSIZE)
-#define XRDCP_VERSION            "(C) 2004 SLAC INFN $Revision: 1.83.2.1 $ - Xrootd version: "XrdVSTRING
+#define XRDCP_VERSION            "(C) 2004 SLAC INFN $Revision: 1.85 $ - Xrootd version: "XrdVSTRING
 
 ///////////////////////////////////////////////////////////////////////
 // Coming from parameters on the cmd line
@@ -774,8 +774,7 @@ int doCp_loc2xrd(XrdClient **xrddest, const char *src, const char * dst) {
 	      MD_5->Update((const char*)buf,len);
 	    }
 
-	    // Always do a checkpoint for the multistream mode
-	    if ( !(*xrddest)->Write(buf, offs, len, true) ) {
+	    if ( !(*xrddest)->Write(buf, offs, len) ) {
 	       cerr << "Error writing to output server." << endl;
 	       PrintLastServerError(*xrddest);
 	       retvalue = 12;

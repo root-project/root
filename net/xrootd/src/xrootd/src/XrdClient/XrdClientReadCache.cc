@@ -30,6 +30,7 @@ XrdClientReadCacheItem::XrdClientReadCacheItem(const void *buffer, long long beg
     Touch(ticksnow);
     fBeginOffset = begin_offs;
     fEndOffset = end_offs;
+    Pinned = false;
 }
 
 //________________________________________________________________________
@@ -80,7 +81,7 @@ XrdClientReadCache::~XrdClientReadCache()
 {
   // Destructor
 
-  RemoveItems();
+  RemoveItems(false);
 
 }
 
@@ -88,14 +89,13 @@ XrdClientReadCache::~XrdClientReadCache()
 
 //________________________________________________________________________
 bool XrdClientReadCache::SubmitRawData(const void *buffer, long long begin_offs,
-					long long end_offs)
+				       long long end_offs, bool pinned)
 {
     if (!buffer) return true;
     XrdClientReadCacheItem *itm;
 
-
     Info(XrdClientDebug::kHIDEBUG, "Cache",
-	 "Submitting " << begin_offs << "->" << end_offs << " to cache.");
+	 "Submitting " << begin_offs << "->" << end_offs << " to cache" << (pinned ? " as pinned data." : ".") );
 
     // Mutual exclusion man!
     XrdSysMutexHelper mtx(fMutex);
@@ -105,8 +105,9 @@ bool XrdClientReadCache::SubmitRawData(const void *buffer, long long begin_offs,
 
     // We remove all the blocks contained in the one we are going to put
     RemoveItems(begin_offs, end_offs);
+    bool spaceok = MakeFreeSpace(end_offs - begin_offs + 1);
 
-    if (MakeFreeSpace(end_offs - begin_offs + 1)) {
+    if (pinned || spaceok) {
 
 
 
@@ -131,18 +132,23 @@ bool XrdClientReadCache::SubmitRawData(const void *buffer, long long begin_offs,
 	if (pos >= 0) {
 	    itm = new XrdClientReadCacheItem(buffer, begin_offs, end_offs,
 					     GetTimestampTick());
+	    itm->Pinned = pinned;
+
 	    fItems.Insert(itm, pos);
-	    fTotalByteCount += itm->Size();
-	    fBytesSubmitted += itm->Size();
+
+	    if (!pinned) {
+	      fTotalByteCount += itm->Size();
+	      fBytesSubmitted += itm->Size();
+	    }
+
             return true;
 	}
 
 	return false;
     } // if
 
-    return false;
 
-    //    PrintCache();
+    return false;
 }
 
 
@@ -462,13 +468,76 @@ void XrdClientReadCache::PrintCache() {
 	    else
 		Info(XrdClientDebug::kHIDEBUG,
 		     "Cache blk", it << "Data block  " <<
-		     fItems[it]->BeginOffset() << "->" << fItems[it]->EndOffset() );
+		     fItems[it]->BeginOffset() << "->" << fItems[it]->EndOffset() <<
+		     (fItems[it]->Pinned ? " (pinned) " : "" ) );
 
 	}
     }
     
     Info(XrdClientDebug::kHIDEBUG, "Cache",
-	 "--------------------------------------");
+	 "-------------------------------------- fTotalByteCount = " << fTotalByteCount );
+
+}
+
+void *XrdClientReadCache::FindBlk(long long begin_offs, long long end_offs) {
+
+    int it;
+    XrdSysMutexHelper mtx(fMutex);
+
+    it = FindInsertionApprox(begin_offs) - 1;
+    for (; it >= 0; it--)
+        if (fItems[it]->EndOffset() < begin_offs) break;
+    if (it < 0) it = 0;
+
+    while (it < fItems.GetSize()) {
+	if (fItems[it]) {
+
+	    if (fItems[it]->BeginOffset() > end_offs) break;
+
+	    if ((fItems[it]->BeginOffset() == begin_offs) &&
+		(fItems[it]->EndOffset() == end_offs)) {
+	      return fItems[it]->GetData();
+	    }
+	    else it++;
+
+	}
+	else it++;
+
+    }
+
+    return 0;
+
+}
+
+
+
+void XrdClientReadCache::UnPinCacheBlk(long long begin_offs, long long end_offs) {
+
+    int it;
+    XrdSysMutexHelper mtx(fMutex);
+
+    it = FindInsertionApprox(begin_offs) - 1;
+    for (; it >= 0; it--)
+        if (fItems[it]->EndOffset() < begin_offs) break;
+    if (it < 0) it = 0;
+
+    // We make sure that exactly tat block gets unpinned
+    while (it < fItems.GetSize()) {
+      if (fItems[it]) {
+
+	if (fItems[it]->BeginOffset() > end_offs) break;
+
+	if (fItems[it]->Pinned && fItems[it]->ContainedInInterval(begin_offs, end_offs)) {
+	  fItems[it]->Pinned = false;
+	  fTotalByteCount += fItems[it]->Size();
+	  break;
+	}
+	else it++;
+
+      }
+      else it++;
+      
+    }
 
 }
 
@@ -493,7 +562,7 @@ void XrdClientReadCache::RemoveItems(long long begin_offs, long long end_offs)
 
 	    if (fItems[it]->BeginOffset() > end_offs) break;
 
-	    if (fItems[it]->ContainedInInterval(begin_offs, end_offs)) {
+	    if (!fItems[it]->Pinned && fItems[it]->ContainedInInterval(begin_offs, end_offs)) {
 
 		if (!fItems[it]->IsPlaceholder())
 		    fTotalByteCount -= fItems[it]->Size();
@@ -577,22 +646,35 @@ void XrdClientReadCache::RemoveItems(long long begin_offs, long long end_offs)
 }
 
 //________________________________________________________________________
-void XrdClientReadCache::RemoveItems()
+void XrdClientReadCache::RemoveItems(bool leavepinned)
 {
-    // To remove all the items
-    int it;
+    // To remove all the items which were not pinned
+    // The typical reason to pin a block is because there is an outstanding write on it
+
+    // if leavepinned == false then it removes everything
     XrdSysMutexHelper mtx(fMutex);
+    int it = fItems.GetSize()-1;
 
-    it = 0;
-
-    while (it < fItems.GetSize()) {
+    for (; it >= 0; it--) {
+      if (!fItems[it]->Pinned) {
+	fTotalByteCount -= fItems[it]->Size();
 	delete fItems[it];
 	fItems.Erase(it);
+	continue;
+      }
+
+      if (fItems[it]->Pinned && !leavepinned) {
+	delete fItems[it];
+	fItems.Erase(it);
+	continue;
+      }
     }
 
-    fTotalByteCount = 0;
+    if (!leavepinned) fTotalByteCount = 0;
 
 }
+
+
 //________________________________________________________________________
 void XrdClientReadCache::RemovePlaceholders() {
 
@@ -620,12 +702,11 @@ void XrdClientReadCache::RemovePlaceholders() {
 }
 
 
-
 //________________________________________________________________________
 bool XrdClientReadCache::RemoveFirstItem()
 {
     // Finds the first item (lower offset) and removes it
-    // We don't remove placeholders
+    // We don't remove placeholders or pinned items
 
     int it, lruit;
     XrdClientReadCacheItem *item;
@@ -638,7 +719,7 @@ bool XrdClientReadCache::RemoveFirstItem()
 	lruit = -1;
 	for (it = 0; it < fItems.GetSize(); it++) {
 	    // We don't remove placeholders
-	    if (!fItems[it]->IsPlaceholder()) {
+	    if (!fItems[it]->IsPlaceholder() && !fItems[it]->Pinned) {
 		lruit = it;
 		break;
 	    }
@@ -658,13 +739,11 @@ bool XrdClientReadCache::RemoveFirstItem()
 }
 
 
-
-
 //________________________________________________________________________
 bool XrdClientReadCache::RemoveLRUItem()
 {
     // Finds the LRU item and removes it
-    // We don't remove placeholders
+    // We don't remove placeholders or pinned items
 
     int it, lruit;
     long long minticks = -1;
@@ -677,7 +756,7 @@ bool XrdClientReadCache::RemoveLRUItem()
     if (fItems.GetSize() < 1000000)
 	for (it = 0; it < fItems.GetSize(); it++) {
 	    // We don't remove placeholders
-	    if (fItems[it] && !fItems[it]->IsPlaceholder()) {
+	    if (fItems[it] && !fItems[it]->IsPlaceholder() && !fItems[it]->Pinned) {
 		if ((minticks < 0) || (fItems[it]->GetTimestampTicks() < minticks)) {
 		    minticks = fItems[it]->GetTimestampTicks();
 		    lruit = it;
@@ -690,7 +769,7 @@ bool XrdClientReadCache::RemoveLRUItem()
 	lruit = -1;
 	for (it = 0; it < fItems.GetSize(); it++) {
 	    // We don't remove placeholders
-	    if (!fItems[it]->IsPlaceholder()) {
+	    if (!fItems[it]->IsPlaceholder() && !fItems[it]->Pinned) {
 		lruit = it;
 		minticks = 0;
 		break;

@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile.in,v 1.27 2008/05/17 02:44:14 abh Exp $
+#              $Id: GNUmakefile.in,v 1.29 2008/10/07 11:10:56 ganis Exp $
 
 #------------------------------------------------------------------------------#
 #                             C o m p o n e n t s                              #
@@ -20,7 +20,7 @@ XRDCLIENT = XrdClient
 
 XRDMON    = XrdMon
 
-XRDPOSIX  = XrdPosix XrdPss
+XRDPOSIX  = XrdPosix XrdPss XrdCns
 
 TARGETS = @targets@
 
@@ -74,6 +74,7 @@ clean: FORCE
 	      $(RM) -fr obj$(SUNCACHE);\
 	   fi;\
 	fi
+	$(RM) -f test-comp.*
 
 distclean: FORCE
 	@$(MAKE) $(TARGETS) MAKEXEQ=clean XMSG=Cleaning --no-print-directory
@@ -81,6 +82,8 @@ distclean: FORCE
 	$(ECHO)$(RM) -f GNUmakefile
 	$(ECHO)$(RM) -f src/GNUmake.env
 	$(ECHO)$(RM) -f src/GNUmake.options
+	$(ECHO)$(RM) -f config.log
+	$(ECHO)$(RM) -f test-comp.*
 
 XrdAcc: FORCE
 	@echo $(XMSG) acc $(XDBG) component...
@@ -105,6 +108,11 @@ XrdClientPerl: FORCE
 XrdCms: FORCE
 	@echo $(XMSG) cms $(XDBG) component...
 	$(ECHO)cd src/XrdCms;\
+	$(MAKE) $(MAKEXEQ) ARCH=$(ARCH) --no-print-directory
+
+XrdCns: FORCE
+	@echo $(XMSG) cns $(XDBG) component...
+	$(ECHO)cd src/XrdCns;\
 	$(MAKE) $(MAKEXEQ) ARCH=$(ARCH) --no-print-directory
 
 XrdCrypto: FORCE
