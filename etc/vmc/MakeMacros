@@ -21,7 +21,11 @@ $(SLIBRARY):
 		   @cd $(BINDIR); $(SHLD) -o $@ $(LIBS) -p 0 $(patsubst $(BINDIR)/%,%,$^)
                 else
                    ifneq (,$(findstring macosx,$(PLATFORM)))
-		      @cd $(BINDIR); $(SHLD) $(SOFLAGS) $(patsubst $(BINDIR)/%,%,$^) $(SHLIB) -o $@
+ifeq ($(CXXVERBOSE),)
+		      @cd $(BINDIR); $(SHLD) $(SOFLAGS) $(patsubst $(BINDIR)/%,%,$^) $(SHLIB) $(ELIBS) -o $@
+else
+		      cd $(BINDIR); $(SHLD) $(SOFLAGS) $(patsubst $(BINDIR)/%,%,$^) $(SHLIB) $(ELIBS) -o $@
+endif
                       ifeq (3,$(MACOSX_MINOR))
 ifeq ($(CXXVERBOSE),)
 			@cd $(BINDIR); $(SHLD) -bundle -undefined dynamic_lookup $(patsubst $(BINDIR)/%,%,$^) $(SHLIB) -o $(subst .$(SL),.so,$@)
