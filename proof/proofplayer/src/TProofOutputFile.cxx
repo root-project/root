@@ -203,6 +203,31 @@ TFile* TProofOutputFile::OpenFile(const char* opt)
 }
 
 //______________________________________________________________________________
+Int_t TProofOutputFile::AdoptFile(TFile *f)
+{
+   // Adopt a file already open.
+   // Return 0 if OK, -1 in case of failure
+
+   if (!f || f->IsZombie())
+      return -1;
+
+   // Set the name and dir
+   TUrl u(*(f->GetEndpointUrl()));
+   fIsLocal = kFALSE;
+   if (!strcmp(u.GetProtocol(), "file")) {
+      fIsLocal = kTRUE;
+      fDir = u.GetFile();
+   } else {
+      fDir = u.GetUrl();
+   }
+   fFileName1 = gSystem->BaseName(fDir.Data());
+   fFileName = fFileName1;
+   fDir.ReplaceAll(fFileName1, "");
+
+   return 0;
+}
+
+//______________________________________________________________________________
 Long64_t TProofOutputFile::Merge(TCollection* list)
 {
    // Merge objects from the list into this object
