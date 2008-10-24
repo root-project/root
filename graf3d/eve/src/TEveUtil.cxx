@@ -388,17 +388,17 @@ Float_t TEveUtil::GetFraction(Float_t minM, Float_t maxM, Float_t minQ, Float_t 
 {
    // Get fraction of interval [minQ, maxQ] in [minM, maxM]
 
-   if (minQ<=minM && maxQ>=maxM)
+   if (minQ>=minM && maxQ<=maxM)
       return 1;
 
-   else if (minQ>minM && maxQ<maxM)
-      return (minQ-minM)/(maxQ-maxM);
+   else if (minQ<minM && maxQ>maxM)
+      return (maxM-minM)/(maxQ-minQ);
 
-   else if (minQ<minM && maxQ>minM)
-      return (maxQ-minM)/(maxM-minM);
+   else if (minQ>=minM && maxQ>maxM)
+      return (maxM-minQ)/(maxQ-minQ);
 
-   else if (minQ<maxM && maxQ>maxM)
-      return (maxM-minQ)/(maxM-minM);
+   else if (minQ<minM && maxQ<=maxM)
+      return (maxQ-minM)/(maxQ-minQ);
 
    return 0;
 }

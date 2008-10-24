@@ -75,20 +75,18 @@ void TEveArrowGL::DirectDraw(TGLRnrCtx& /*rnrCtx*/) const
    Float_t size = fM->fVector.Mag();
 
    // Line (tube) component
-   Float_t tr = size*fM->fTubeR;
-   Float_t hh = size*fM->fConeL;
-   gluCylinder(quad.Get(), tr, tr, size - hh, drawQuality, 1);
-
-   // disks
+   Float_t r = size*fM->fTubeR;
+   Float_t h = size*fM->fConeL;
+   gluCylinder(quad.Get(), r, r, size - h, drawQuality, 1);
    gluQuadricOrientation(quad.Get(), (GLenum)GLU_INSIDE);
-   gluDisk(quad.Get(), 0.0, tr, drawQuality, 1);
-   glTranslated(0.0, 0.0, size -hh );
-   gluDisk(quad.Get(), 0.0, tr, drawQuality, 1);
+   gluDisk(quad.Get(), 0.0, r, drawQuality, 1);
 
    // Arrow cone
+   r = size*fM->fConeR;
+   glTranslated(0.0, 0.0, size -h );
+   gluDisk(quad.Get(), 0.0, r, drawQuality, 1);
    gluQuadricOrientation(quad.Get(), (GLenum)GLU_OUTSIDE);
-   gluCylinder(quad.Get(), size*fM->fConeR, 0., hh , drawQuality, 1);
-   gluDisk(quad.Get(), 0.0, size*fM->fConeR, drawQuality, 1);
+   gluCylinder(quad.Get(), r, 0., h , drawQuality, 1);
 
    glPopMatrix();
 }
