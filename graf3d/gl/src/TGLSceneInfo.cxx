@@ -51,6 +51,7 @@ TGLSceneInfo::TGLSceneInfo(TGLViewerBase* view, TGLSceneBase* scene) :
    fSceneStamp (0),
    fClipStamp  (0),
    fCameraStamp(0),
+   fUpdateTimeouted(kFALSE),
 
    fViewCheck (kTRUE),
    fInFrustum (kTRUE),

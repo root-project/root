@@ -52,8 +52,6 @@ protected:
    mutable TGLBoundingBox fBoundingBox;      // bounding box for scene (axis aligned) - lazy update - use BoundingBox() to access
    mutable Bool_t         fBoundingBoxValid; // bounding box valid?
 
-   Bool_t  fForceUpdateSI;   // Force update of scene-info in PreRender().
-
    Bool_t  fDoFrustumCheck;  // Perform global frustum-check in UpdateSceneInfo()
    Bool_t  fDoClipCheck;     // Perform global clip-plane-check in UpdateSceneInfo()
 

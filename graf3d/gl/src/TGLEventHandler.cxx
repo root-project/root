@@ -305,7 +305,7 @@ Bool_t TGLEventHandler::HandleButton(Event_t * event)
    }
 
    // Button DOWN
-   if (event->fType == kButtonPress)
+   if (event->fType == kButtonPress && event->fCode <= kButton3)
    {
       // Allow a single action/button down/up pairing - block others
       fGLViewer->MouseIdle(0, 0, 0);
@@ -455,17 +455,17 @@ Bool_t TGLEventHandler::HandleButton(Event_t * event)
          // Note: Modifiers (ctrl/shift) disabled as fState doesn't seem to
          // have correct modifier flags with mouse wheel under Windows.
          case kButton5: {
-            // Zoom out (adjust camera FOV)
-            if (fGLViewer->CurrentCamera().Zoom(+50, kFALSE, kFALSE)) { //TODO : val static const somewhere
-               fGLViewer->RequestDraw();
-            }
+            // Zoom out (dolly or adjust camera FOV). TODO : val static const somewhere
+            if (fGLViewer->CurrentCamera().Zoom(50, kFALSE, kFALSE))
+               fGLViewer->fRedrawTimer->RequestDraw(10, TGLRnrCtx::kLODMed);
+            return kTRUE;
             break;
          }
          case kButton4: {
-            // Zoom in (adjust camera FOV)
-            if (fGLViewer->CurrentCamera().Zoom(-50, kFALSE, kFALSE)) { //TODO : val static const somewhere
-               fGLViewer->RequestDraw();
-            }
+            // Zoom in - adjust camera FOV. TODO : val static const somewhere
+            if (fGLViewer->CurrentCamera().Zoom(-50, kFALSE, kFALSE))
+               fGLViewer->fRedrawTimer->RequestDraw(10, TGLRnrCtx::kLODMed);
+            return kTRUE;
             break;
          }
       }
@@ -491,7 +491,6 @@ Bool_t TGLEventHandler::HandleButton(Event_t * event)
       if (event->fCode == kButton1 && fMouseTimer) {
          fMouseTimer->TurnOn();
       }
-
    }
 
    return kTRUE;
@@ -528,17 +527,18 @@ Bool_t TGLEventHandler::HandleConfigureNotify(Event_t *event)
 {
    // Handle configure notify 'event' - a window resize/movement.
 
-   if (fGLViewer->IsLocked()) {
+   if (fGLViewer->IsLocked())
+   {
       if (gDebug > 0) {
          Info("TGLEventHandler::HandleConfigureNotify", "ignored - viewer is %s",
             fGLViewer->LockName(fGLViewer->CurrentLock()));
       }
       return kFALSE;
    }
-
-   if (event) {
+   if (event)
+   {
       fGLViewer->SetViewport(event->fX, event->fY, event->fWidth, event->fHeight);
-      fGLViewer->RequestDraw(TGLRnrCtx::kLODMed);
+      fGLViewer->fRedrawTimer->RequestDraw(10, TGLRnrCtx::kLODMed);
    }
    return kTRUE;
 }
@@ -696,7 +696,7 @@ Bool_t TGLEventHandler::HandleMotion(Event_t * event)
    if (fGLViewer->IsLocked()) {
       if (gDebug>3) {
          Info("TGLEventHandler::HandleMotion", "ignored - viewer is %s",
-            fGLViewer->LockName(fGLViewer->CurrentLock()));
+              fGLViewer->LockName(fGLViewer->CurrentLock()));
       }
       return kFALSE;
    }
@@ -721,6 +721,11 @@ Bool_t TGLEventHandler::HandleMotion(Event_t * event)
 
    if (fGLViewer->fDragAction == TGLViewer::kDragNone)
    {
+      if (fGLViewer->fRedrawTimer->IsPending()) {
+         if (gDebug > 2)
+            Info("TGLEventHandler::HandleMotion", "Redraw pending, ignoring.");
+         return kTRUE;
+      }
       changed = fGLViewer->RequestOverlaySelect(event->fX, event->fY);
       if (fGLViewer->fCurrentOvlElm)
          processed = fGLViewer->fCurrentOvlElm->Handle(*fGLViewer->fRnrCtx, fGLViewer->fOvlSelRec, event);
@@ -779,6 +784,12 @@ Bool_t TGLEventHandler::HandleTimer(TTimer *t)
    if (t != fMouseTimer) return kFALSE;
 
    fMouseTimerRunning = kFALSE;
+
+   if (fGLViewer->fRedrawTimer->IsPending()) {
+      if (gDebug > 2)
+         Info("TGLEventHandler::HandleTimer", "Redraw pending, ignoring.");
+      return kTRUE;
+   }
 
    if (fGLViewer->fDragAction == TGLViewer::kDragNone)
    {

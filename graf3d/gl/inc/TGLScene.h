@@ -133,8 +133,6 @@ protected:
    TGLContextIdentity * fGLCtxIdentity;
    void ReleaseGLCtxIdentity();
 
-   Bool_t                    fUpdateTimeouted;   //! Set if draw list update was interrupted.
-
    // Smart Refresh -- will go in this version
    Bool_t                    fInSmartRefresh;    //!
    mutable LogicalShapeMap_t fSmartRefreshCache; //!

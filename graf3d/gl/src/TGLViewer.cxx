@@ -463,7 +463,7 @@ void TGLViewer::DoDraw()
       }
    }
 
-   if (fGLDevice == -1 && (fViewport.Width() <= 0 || fViewport.Height() <= 0)) {
+   if (fGLDevice == -1 && (fViewport.Width() <= 1 || fViewport.Height() <= 1)) {
       ReleaseLock(kDrawLock);
       if (gDebug > 2) {
 	 Info("TGLViewer::DoDraw()", "zero surface area, draw skipped.");
@@ -521,7 +521,6 @@ void TGLViewer::DoDraw()
    if (gDebug>2) {
       Info("TGLViewer::DoDraw()", "Took %f msec", timer.End());
    }
-
 
    // Check if further redraws are needed and schedule them.
 

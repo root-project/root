@@ -303,12 +303,13 @@ public:
    TGLRedrawTimer(TGLViewer & viewer) :
       fViewer(viewer), fRedrawLOD(TGLRnrCtx::kLODHigh), fPending(kFALSE) {}
    ~TGLRedrawTimer() {}
-   void RequestDraw(Int_t milliSec, Short_t redrawLOD=TGLRnrCtx::kLODHigh)
+   void RequestDraw(Int_t milliSec, Short_t redrawLOD)
    {
       if (fPending) TurnOff(); else fPending = kTRUE;
       if (redrawLOD < fRedrawLOD) fRedrawLOD = redrawLOD;
       TTimer::Start(milliSec, kTRUE);
    }
+   Bool_t IsPending() const { return fPending; }
    virtual void Stop()
    {
       if (fPending) { TurnOff(); fPending = kFALSE; }

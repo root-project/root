@@ -276,7 +276,6 @@ ClassImp(TGLScene);
 TGLScene::TGLScene() :
    TGLSceneBase(),
    fGLCtxIdentity(0),
-   fUpdateTimeouted(kFALSE),
    fInSmartRefresh(kFALSE)
 {}
 
@@ -437,7 +436,7 @@ void TGLScene::UpdateSceneInfo(TGLRnrCtx& rnrCtx)
 
    Int_t  checkCount = 0;
    Bool_t timerp     = rnrCtx.IsStopwatchRunning();
-   fUpdateTimeouted  = kFALSE;
+   sinfo->ResetUpdateTimeouted();
 
    for (ShapeVec_i phys=sinfo->fShapesOfInterest.begin();
         phys!=sinfo->fShapesOfInterest.end();
@@ -515,7 +514,7 @@ void TGLScene::UpdateSceneInfo(TGLRnrCtx& rnrCtx)
       // Only test every 5000 objects as this is somewhat costly.
       if (timerp && (checkCount % 5000) == 0 && rnrCtx.HasStopwatchTimedOut())
       {
-         fUpdateTimeouted = kTRUE;
+         sinfo->UpdateTimeouted();
          if (rnrCtx.ViewerLOD() == TGLRnrCtx::kLODHigh)
             Warning("TGLScene::UpdateSceneInfo",
                     "Timeout reached, not all elements processed.");
@@ -567,9 +566,6 @@ void TGLScene::PreDraw(TGLRnrCtx & rnrCtx)
                                       si, si ? si->IsA()->GetName() : "<>"));
       return;
    }
-
-   if (fUpdateTimeouted)
-      fForceUpdateSI = kTRUE;
 
    // Setup ctx, check if Update/Lodify needed.
    TGLSceneBase::PreDraw(rnrCtx);

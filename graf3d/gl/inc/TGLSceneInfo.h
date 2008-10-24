@@ -48,9 +48,10 @@ protected:
    TGLClip        * fLastClip;  // Last combined viewer/scene clip  (set in scene::update)
    TGLCamera      * fLastCamera;// Last camera used.
 
-   UInt_t           fSceneStamp; // Scene's time-stamp on last update.
-   UInt_t           fClipStamp;  // Clip's time-stamp on last update.
-   UInt_t           fCameraStamp;// Camera's time-stamp on last update.
+   UInt_t           fSceneStamp;  // Scene's time-stamp on last update.
+   UInt_t           fClipStamp;   // Clip's time-stamp on last update.
+   UInt_t           fCameraStamp; // Camera's time-stamp on last update.
+   Bool_t           fUpdateTimeouted; // Set if update was interrupted.
 
    // Eventually we will allow additional per-scene transforamtion.
    // TGLMatrix  fSceneTrans;
@@ -134,6 +135,10 @@ public:
    UInt_t   CameraStamp()       const { return fCameraStamp; }
    void     SetCameraStamp(UInt_t ts) { fCameraStamp = ts;   }
    void     ResetCameraStamp()        { fCameraStamp = 0;    }
+
+   Bool_t   HasUpdateTimeouted() const { return fUpdateTimeouted;   }
+   void     UpdateTimeouted()          { fUpdateTimeouted = kTRUE;  }
+   void     ResetUpdateTimeouted()     { fUpdateTimeouted = kFALSE; }
 
    ClassDef(TGLSceneInfo, 0) // Data about a scene within a viewer context.
 }; // endclass TGLSceneInfo

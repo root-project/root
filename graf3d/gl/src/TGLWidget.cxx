@@ -523,8 +523,11 @@ Bool_t TGLWidget::HandleConfigureNotify(Event_t *ev)
       gROOT->ProcessLineFast(Form("((TGLWidget *)0x%lx)->HandleConfigureNotify((Event_t *)0x%lx)", this, ev));
       return kTRUE;
    }
-   if (fEventHandler)
-      return fEventHandler->HandleConfigureNotify(ev);
+   if (fEventHandler && fEventHandler->HandleConfigureNotify(ev))
+   {
+      TGFrame::HandleConfigureNotify(ev);
+      return kTRUE;
+   }
    return kFALSE;
 }
 

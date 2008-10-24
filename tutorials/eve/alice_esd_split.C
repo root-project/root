@@ -127,7 +127,7 @@ TGHProgressBar *gProgress;
 /******************************************************************************/
 
 //______________________________________________________________________________
-void alice_esd_split()
+void alice_esd_split(Bool_t auto_size=kFALSE)
 {
    // Main function, initializes the application.
    //
@@ -181,19 +181,18 @@ void alice_esd_split()
    TEveManager::Create();
 
    // Adapt the main frame to the screen size...
-   Int_t qq; 
-   UInt_t ww, hh;
-   gVirtualX->GetWindowSize(gVirtualX->GetDefaultRootWindow(), qq, qq, ww, hh);
-   Float_t screen_ratio = (Float_t)ww/(Float_t)hh;
-   if (screen_ratio > 1.5) {
-      gEve->GetBrowser()->MoveResize(100, 50, ww - 300, hh - 100);
-      //gEve->GetBrowser()->SetWMPosition(100, 50);
+   if (auto_size)
+   {
+      Int_t qq; 
+      UInt_t ww, hh;
+      gVirtualX->GetWindowSize(gVirtualX->GetDefaultRootWindow(), qq, qq, ww, hh);
+      Float_t screen_ratio = (Float_t)ww/(Float_t)hh;
+      if (screen_ratio > 1.5) {
+         gEve->GetBrowser()->MoveResize(100, 50, ww - 300, hh - 100);
+      } else {
+         gEve->GetBrowser()->Move(50, 50);
+      }
    }
-   else {
-      gEve->GetBrowser()->Move(50, 50);
-      //gEve->GetBrowser()->SetWMPosition(50, 50);
-   }
-
 
    { // Simple geometry
       TFile* geom = TFile::Open(esd_geom_file_name, "CACHEREAD");

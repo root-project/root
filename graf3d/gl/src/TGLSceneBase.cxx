@@ -61,7 +61,6 @@ TGLSceneBase::TGLSceneBase() :
    fSelectable       (kTRUE),
    fBoundingBox      (),
    fBoundingBoxValid (kFALSE),
-   fForceUpdateSI    (kFALSE),
    fDoFrustumCheck   (kTRUE),
    fDoClipCheck      (kTRUE),
    fAutoDestruct     (kTRUE)
@@ -327,7 +326,7 @@ void TGLSceneBase::PreDraw(TGLRnrCtx & rnrCtx)
    }
 
 
-   Bool_t needUpdate = fForceUpdateSI;
+   Bool_t needUpdate =  sInfo.HasUpdateTimeouted();
 
    if (rnrCtx.GetCamera() != sInfo.LastCamera())
    {
@@ -356,7 +355,6 @@ void TGLSceneBase::PreDraw(TGLRnrCtx & rnrCtx)
 
    if (needUpdate)
    {
-      fForceUpdateSI = kFALSE;
       UpdateSceneInfo(rnrCtx);
    }
 
@@ -368,7 +366,7 @@ void TGLSceneBase::PreDraw(TGLRnrCtx & rnrCtx)
    else                                     lod = rnrCtx.ViewerLOD();
    rnrCtx.SetSceneLOD(lod);
    rnrCtx.SetCombiLOD(TMath::Min(rnrCtx.ViewerLOD(), rnrCtx.SceneLOD()));
-   if (rnrCtx.CombiLOD() != sInfo.LastLOD())
+   if (needUpdate || rnrCtx.CombiLOD() != sInfo.LastLOD())
    {
       LodifySceneInfo(rnrCtx);
    }
