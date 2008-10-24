@@ -69,7 +69,7 @@ DIRECT SCENE INTERACTIONS\n\n\
    You can ZOOM the camera by dragging side to side holding the right\n\
    mouse button (in perspective mode the camera is translated along viewing axis).\n\n\
    Mouse wheel action depends on the camera type:\n\
-     orthographic -- zoom,
+     orthographic -- zoom,\n\
      perspective  -- change field-of-view (focal length)\n\n\
    RESET the camera via the button in viewer-editor or Home key.\n\n\
    SELECT a shape with Shift+Left mouse button click.\n\n\
