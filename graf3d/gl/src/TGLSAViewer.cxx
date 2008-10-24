@@ -66,9 +66,12 @@ DIRECT SCENE INTERACTIONS\n\n\
    By default, the scene will be rotated about its center. To select arbitrary center\n\
    bring up the viewer-editor and use 'Camera center' controls in the 'Guides' tab.\n\n\
    You can PAN (TRUCK) the camera using the middle mouse button or arrow keys.\n\n\
-   You can ZOOM (DOLLY) the camera by dragging side to side holding the right\n\
-   mouse button or using the mouse wheel.\n\n\
-   RESET the camera by double clicking any button.\n\n\
+   You can ZOOM the camera by dragging side to side holding the right\n\
+   mouse button (in perspective mode the camera is translated along viewing axis).\n\n\
+   Mouse wheel action depends on the camera type:\n\
+     orthographic -- zoom,
+     perspective  -- change field-of-view (focal length)\n\n\
+   RESET the camera via the button in viewer-editor or Home key.\n\n\
    SELECT a shape with Shift+Left mouse button click.\n\n\
    SELECT the viewer with Shift+Left mouse button click on a free space.\n\n\
    MOVE a selected shape using Shift+Mid mouse drag.\n\n\
