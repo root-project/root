@@ -249,7 +249,7 @@ XrdSecProtocolgsi::XrdSecProtocolgsi(int opts, const char *hname,
       // Set host addr
       memcpy(&hostaddr, ipadd, sizeof(hostaddr));
    } else {
-      PRINT("WARNING: IP addr undefined: cannot determin host name: failure may follow");
+      PRINT("WARNING: IP addr undefined: cannot determine host name: failure may follow");
    }
 
    // Init session variables
@@ -4258,4 +4258,3 @@ bool XrdSecProtocolgsi::ServerCertNameOK(const char *subject, XrdOucString &emsg
    // Done
    return allowed;
 }
-

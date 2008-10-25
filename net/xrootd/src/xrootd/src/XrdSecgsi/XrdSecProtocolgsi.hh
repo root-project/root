@@ -190,12 +190,14 @@ public:
                  RtagOK = 0; Tty = 0; LastStep = 0; Options = 0; Parms = 0;}
 
    ~gsiHSVars() { SafeDelete(Cref);
-                  if (Chain)
-                     Chain->Cleanup(1);
-                  if (Options & kOptsDelChn)
+                  if (Options & kOptsDelChn) {
+                     // Do not delete the CA certificate in the cached reference
+                     if (Chain) Chain->Cleanup(1);
                      SafeDelete(Chain);
-                  if (PxyChain)
-                     PxyChain->Cleanup(1);
+                  }
+                  // The proxy chain is owned by the cache; invalid proxies are detected
+                  // (and eventually removed) by QueryProxy
+                  PxyChain = 0;
                   SafeDelete(Parms); }
    void Dump(XrdSecProtocolgsi *p = 0);
 };
