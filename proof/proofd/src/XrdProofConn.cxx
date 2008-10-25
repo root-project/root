@@ -220,9 +220,10 @@ void XrdProofConn::Connect()
 
             // Get access to server
             if (!GetAccessToSrv()) {
-               fConnected = 0;
-               if (GetServType() == kSTProofd)
+               if (GetServType() == kSTProofd) {
+                  fConnected = 0;
                   return;
+               }
                if (fLastErr == kXR_NotAuthorized || fLastErr == kXR_InvalidRequest) {
                   // Auth error or invalid request: does not make much sense to retry
                   Close("P");
@@ -233,6 +234,7 @@ void XrdProofConn::Connect()
                } else {
                   TRACE(XERR, "access to server failed (" << fLastErrMsg << ")");
                }
+               fConnected = 0;
                continue;
             }
          }
@@ -361,17 +363,22 @@ int XrdProofConn::TryConnect()
 }
 
 //_____________________________________________________________________________
-void XrdProofConn::Close(const char *)
+void XrdProofConn::Close(const char *opt)
 {
    // Close connection.
+   XPDLOC(ALL, "Conn::Close")
 
    // Make sure we are connected
    if (!fConnected)
       return;
 
+   // Close also theunderlying physical connection ?
+   bool closephys = (opt[0] == 'P') ? 1 : 0;
+   TRACE(DBG, URLTAG <<": closing also physical connection ? "<< closephys);
+
    // Close connection
    if (fgConnMgr)
-      fgConnMgr->Disconnect(GetLogConnID(), 0);
+      fgConnMgr->Disconnect(GetLogConnID(), closephys);
 
    // Flag this action
    fConnected = 0;
