@@ -3248,18 +3248,15 @@ check_explicit "$enable_xrootd" "$enable_xrootd_explicit" \
 # If the user has set the flags "--disable-globus", we don't check for
 # Globus at all.
 #
-buildxrdgsi=
+# By default, always try to build the XRD GSI plug-in; this can be
+# disabled with
+#                  --with-xrootd-opts="--disable-gsi"
+buildxrdgsi="yes"
+#
 glbextracflags=""
 glbpatchcflags=""
 haveglobus=""
 if test ! "x$enable_globus" = "xno"; then
-   # If XROOTD is enabled ...
-   if test ! "x$enable_xrootd" = "xno"; then
-      # ... enable the GSI module in there
-      message "Checking whether to build the xrootd GSI plug-in"
-      buildxrdgsi="yes"
-      result "yes"
-   fi
    # Check if the GLOBUS_LOCATION variable is set
    checking_msg "for globusdir"
    if test "x$globusdir" = "x" ; then
