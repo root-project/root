@@ -1,7 +1,7 @@
 CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog copiedEvent* Event.h one two merged \
 	Event*.root dt_reference.root CloneTree.root cal.root
 
-TEST_TARGETS += cloneChain single merge Plot
+TEST_TARGETS += cloneChain single merge Plot SplitMismatch outoforder
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME := $(shell expr $(PWD) : '\(.*/roottest/\)')
 endif
@@ -132,3 +132,10 @@ Plot.log: recon-v1r030603p6_700000811_00000-00984_calTuple.root
 
 Plot: Plot.log
 	$(TestDiff)
+
+SplitMismatch: SplitMismatch.clog
+	$(TestDiff)
+
+outoforder: outoforder.log	
+	$(TestDiff)
+	
