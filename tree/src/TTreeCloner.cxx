@@ -248,17 +248,26 @@ UInt_t TTreeCloner::CollectBranches(TObjArray *from, TObjArray *to)
    while (ti < tnb) {
       TBranch* fb = (TBranch*) from->UncheckedAt(fi);
       TBranch* tb = (TBranch*) to->UncheckedAt(ti);
-      if (strcmp(fb->GetName(), tb->GetName())) {
+      Int_t firstfi = fi;
+      while (strcmp(fb->GetName(), tb->GetName())) {
          ++fi;
-         if (fi >= fnb) {
+         if (fi==firstfi) {
+            // We tried all the branches and there is not match.
+            fb = 0;
             break;
          }
-         continue;
+         if (fi >= fnb) {
+            // continue at the beginning
+            fi = 0;
+         }
+         fb = (TBranch*) from->UncheckedAt(fi);
       }
-      numBasket += CollectBranches(fb, tb);
-      ++fi;
-      if (fi >= fnb) {
-         break;
+      if (fb) {
+         numBasket += CollectBranches(fb, tb);
+         ++fi;
+         if (fi >= fnb) {
+           fi = 0;
+         }
       }
       ++ti;
    }
