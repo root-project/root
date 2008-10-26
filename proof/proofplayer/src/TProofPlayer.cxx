@@ -2598,10 +2598,10 @@ void TProofPlayerSlave::SetupFeedback()
    TList *fb = (TList*) fInput->FindObject("FeedbackList");
    if (fb) {
       PDB(kFeedback,1)
-        Info("SetupFeedback","\"FeedbackList\" found: %d objects", fb->GetSize());
+         Info("SetupFeedback","\"FeedbackList\" found: %d objects", fb->GetSize());
    } else {
       PDB(kFeedback,1)
-        Info("SetupFeedback","\"FeedbackList\" NOT found");
+         Info("SetupFeedback","\"FeedbackList\" NOT found");
    }
 
    if (fb == 0 || fb->GetSize() == 0) return;

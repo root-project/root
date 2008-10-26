@@ -71,6 +71,8 @@ public:
 //______________________________________________________________________________
 Bool_t TProofServLiteInterruptHandler::Notify()
 {
+   // Handle urgent data
+
    fServ->HandleUrgentData();
    if (TROOT::Initialized()) {
       Throw(GetSignal());
@@ -91,6 +93,8 @@ public:
 //______________________________________________________________________________
 Bool_t TProofServLiteSigPipeHandler::Notify()
 {
+   // Handle sig pipe
+
    fServ->HandleSigPipe();
    return kTRUE;
 }
@@ -108,6 +112,8 @@ public:
 //______________________________________________________________________________
 Bool_t TProofServLiteTerminationHandler::Notify()
 {
+   // Handle termination
+
    Printf("TProofServLiteTerminationHandler::Notify: wake up!");
 
    fServ->HandleTermination();
@@ -127,6 +133,8 @@ public:
 //______________________________________________________________________________
 Bool_t TProofServLiteSegViolationHandler::Notify()
 {
+   // Handle seg violation
+
    Printf("**** ");
    Printf("**** Segmentation violation: terminating ****");
    Printf("**** ");
@@ -148,6 +156,8 @@ public:
 //______________________________________________________________________________
 Bool_t TProofServLiteInputHandler::Notify()
 {
+   // Handle input on the socket
+
    fServ->HandleSocketInput();
 
    return kTRUE;

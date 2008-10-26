@@ -537,10 +537,10 @@ void TProofPlayerLite::SetupFeedback()
 
    if (fFeedback) {
       PDB(kFeedback,1)
-        Info("SetupFeedback","\"FeedbackList\" found: %d objects", fFeedback->GetSize());
+         Info("SetupFeedback","\"FeedbackList\" found: %d objects", fFeedback->GetSize());
    } else {
       PDB(kFeedback,1)
-        Info("SetupFeedback","\"FeedbackList\" NOT found");
+         Info("SetupFeedback","\"FeedbackList\" NOT found");
    }
 
    if (fFeedback == 0 || fFeedback->GetSize() == 0) return;

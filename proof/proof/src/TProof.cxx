@@ -7962,9 +7962,9 @@ void TProof::ShowDataSetQuota(Option_t* opt)
    // if opt contains "U" shows also distribution of usage on user-level
 
    if (fProtocol < 15) {
-     Info("ShowDataSetQuota",
-          "functionality not available: the server does not have dataset support");
-     return;
+      Info("ShowDataSetQuota",
+           "functionality not available: the server does not have dataset support");
+      return;
    }
 
    if (IsLite()) {
