@@ -41,7 +41,7 @@ CXXOPT        = -Z7 -MDd
 LDOPT         = -debug
 !ENDIF 
 
-!if ("$(_NMAKE_VER)" == "8.00.50727.42") || ("$(_NMAKE_VER)" == "8.00.50727.762") || ("$(_NMAKE_VER)" == "9.00.21022.08")
+!if ("$(_NMAKE_VER)" == "8.00.50727.42") || ("$(_NMAKE_VER)" == "8.00.50727.762") || ("$(_NMAKE_VER)" == "9.00.21022.08") || ("$(_NMAKE_VER)" == "9.00.30729.01")
 MT_EXE        = mt -nologo -manifest $@.manifest -outputresource:$@;1
 MT_DLL        = mt -nologo -manifest $@.manifest -outputresource:$@;2
 EXTRAFLAGS    = -D_CRT_SECURE_NO_DEPRECATE
