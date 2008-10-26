@@ -204,7 +204,7 @@ int main(int argc, char **argv)
      }
 
      // Create a ROOT Tree and one superbranch
-      TTree *tree = new TTree("T","An example of a ROOT tree");
+      tree = new TTree("T","An example of a ROOT tree");
       tree->SetAutoSave(1000000000); // autosave when 1 Gbyte written
       tree->SetCacheSize(10000000);  //set a 10 MBytes cache (useless when writing local files)
       bufsize = 64000;
