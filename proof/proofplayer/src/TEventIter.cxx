@@ -647,6 +647,10 @@ Long64_t TEventIterTree::GetNextEvent()
                attach = kTRUE;
                fOldBytesRead = fTree->GetCurrentFile()->GetBytesRead();
             }
+            // Set range to be analysed
+            if (fTreeCache)
+               fTreeCache->SetEntryRange(fElem->GetFirst(),
+                                         fElem->GetFirst() + fElem->GetNum() - 1);
          } else {
             // Could not open this element: ask for another one
             SafeDelete(fElem);
