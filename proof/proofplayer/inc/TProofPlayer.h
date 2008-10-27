@@ -51,6 +51,9 @@
 #ifndef ROOT_TProofProgressStatus
 #include "TProofProgressStatus.h"
 #endif
+#ifndef ROOT_TError
+#include "TError.h"
+#endif
 
 class TSelector;
 class TProof;
@@ -243,6 +246,7 @@ protected:
    TVirtualPacketizer *fPacketizer;    // transform TDSet into packets for slaves
    Bool_t              fMergeFiles;    // is True when merging output files centrally is needed
    TDSet              *fDSet;          //!tdset for current processing
+   ErrorHandlerFunc_t  fErrorHandler;  // Store previous handler when redirecting output
 
    virtual Bool_t  HandleTimer(TTimer *timer);
    Int_t           InitPacketizer(TDSet *dset, Long64_t nentries,
@@ -258,7 +262,7 @@ protected:
 public:
    TProofPlayerRemote(TProof *proof = 0) : fProof(proof), fOutputLists(0), fFeedback(0),
                                            fFeedbackLists(0), fPacketizer(0),
-                                           fMergeFiles(kFALSE)
+                                           fMergeFiles(kFALSE), fDSet(0), fErrorHandler(0)
                                            { fProgressStatus = new TProofProgressStatus(); }
    virtual ~TProofPlayerRemote();   // Owns the fOutput list
    virtual Long64_t Process(TDSet *set, const char *selector,
@@ -270,6 +274,7 @@ public:
                              const char *selection, Option_t *option = "",
                              Long64_t nentries = -1, Long64_t firstentry = 0);
 
+   void           RedirectOutput(Bool_t on = kTRUE);
    void           StopProcess(Bool_t abort, Int_t timeout = -1);
    void           StoreOutput(TList *out);   // Adopts the list
    virtual void   StoreFeedback(TObject *slave, TList *out); // Adopts the list

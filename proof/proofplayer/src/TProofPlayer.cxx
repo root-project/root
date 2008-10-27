@@ -2045,12 +2045,32 @@ Int_t TProofPlayerRemote::AddOutputObject(TObject *obj)
    if (!IsClient() || fProof->IsLite()){
       ProcInfo_t pi;
       if (!gSystem->GetProcInfo(&pi)){
+         // For PROOF-Lite we redirect this output to a the open log file so that the
+         // memory monitor can pick these messages up
+         RedirectOutput(fProof->IsLite());
          Info("AddOutputObject|Svc", "Memory %ld virtual %ld resident after merging object %s",
                                      pi.fMemVirtual, pi.fMemResident, obj->GetName());
+         RedirectOutput(0);
       }
    }
    // We are done
    return (merged ? 1 : 0);
+}
+
+//______________________________________________________________________________
+void TProofPlayerRemote::RedirectOutput(Bool_t on)
+{
+   // Control output redirection to TProof::fLogFileW
+
+   if (on && fProof && fProof->fLogFileW) {
+      TProofServ::SetErrorHandlerFile(fProof->fLogFileW);
+      fErrorHandler = SetErrorHandler(TProofServ::ErrorHandler);
+   } else if (!on) {
+      if (fErrorHandler) {
+         TProofServ::SetErrorHandlerFile(0);
+         SetErrorHandler(fErrorHandler);
+      }
+   }
 }
 
 //______________________________________________________________________________

@@ -375,9 +375,7 @@ Long64_t TProofPlayerLite::Process(TDSet *dset, const char *selector_file,
 
       // Wait for processing
       PDB(kGlobal,1) Info("Process","Synchronous processing: calling Collect");
-      gSystem->RedirectOutput(fProof->fLogFileName);
       fProof->Collect();
-      gSystem->RedirectOutput(0);
 
       // Restore prompt logging (Collect leaves things as they were
       // at the time it was called)
