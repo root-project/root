@@ -132,7 +132,10 @@ Plot.log: recon-v1r030603p6_700000811_00000-00984_calTuple.root
 
 Plot: Plot.log
 	$(TestDiff)
-
+	
+SplitMismatch.clog: runSplitMismatch_C.$(DllSuf)
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l runSplitMismatch.C+ 2>&1 | sed -e 's:file .*roottest:file .../roottest:' > SplitMismatch.clog
+	
 SplitMismatch: SplitMismatch.clog
 	$(TestDiff)
 
