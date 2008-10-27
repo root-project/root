@@ -95,6 +95,8 @@ protected:
    void     Init(const char *name, const char *leaflist, Int_t compress);
 
    Int_t    WriteBasket(TBasket* basket, Int_t where);
+   
+   TString  GetRealFileName() const;
 
 private:
    TBranch(const TBranch&);             // not implemented

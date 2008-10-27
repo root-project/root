@@ -275,7 +275,11 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
 
    Int_t badread= 0;
    TDirectory *cursav = gDirectory;
-   fBranch->GetDirectory()->cd();
+   TDirectory *brdir = fBranch->GetDirectory();
+   if(!brdir) {
+      return -1;
+   }
+   brdir->cd();
 
    if (fBranch->GetTree()->MemoryFull(fBufferSize)) fBranch->DropBaskets();
 

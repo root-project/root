@@ -454,8 +454,11 @@ TBranch::~TBranch()
    // because two branches may point to the same file and the file
    // may have already been deleted in the previous branch.
    if (fDirectory && (fDirectory != fTree->GetDirectory())) {
-      TFile* file = (TFile*) gROOT->GetListOfFiles()->FindObject(GetFileName());
-      if (file ) {
+      TString bFileName( GetRealFileName() );
+      
+      TFile* file = (TFile*)gROOT->GetListOfFiles()->FindObject(bFileName);     
+      if (file){
+         file->Close();
          delete file;
          file = 0;
       }
@@ -1096,7 +1099,7 @@ TBasket* TBranch::GetBasket(Int_t basketnumber)
             return 0;
          }
       }
-      Error("GetBasket","File: %s at byte:%lld, branch:%s, entry:%d, badread=%d, nerrors=%d, basketnumber=%d",file->GetName(),basket->GetSeekKey(),GetName(),fReadEntry,badread,nerrors,basketnumber);
+      Error("GetBasket","File: %s at byte:%lld, branch:%s, entry:%d, badread=%d, nerrors=%d, basketnumber=%d",file?file->GetName():"no file",basket->GetSeekKey(),GetName(),fReadEntry,badread,nerrors,basketnumber);
       return 0;
    }
 
@@ -1295,41 +1298,14 @@ TFile* TBranch::GetFile(Int_t mode)
    // check if a file with this name is in the list of Root files
    TFile *file = (TFile*)gROOT->GetListOfFiles()->FindObject(fFileName.Data());
    if (file) {
-      fDirectory = (TDirectory*)file;
+      fDirectory = file;
       return file;
    }
 
    if (fFileName.Length() == 0) return 0;
 
-   TString bFileName = fFileName;
-
-   // check if branch file name is absolute or a URL (e.g. /castor/...,
-   // root://host/..., rfio:/path/...)
-   char *bname = gSystem->ExpandPathName(fFileName.Data());
-   if (!gSystem->IsAbsoluteFileName(bname) && !strstr(bname, ":/")) {
-
-      // if not, get filename where tree header is stored
-      const char *tfn = fTree->GetCurrentFile()->GetName();
-
-      // If it is an archive file we need a special treatment
-      TUrl arc(tfn);
-      if (strlen(arc.GetAnchor()) > 0) {
-         arc.SetAnchor(gSystem->BaseName(fFileName));
-         bFileName = arc.GetUrl();
-      } else {
-         // if this is an absolute path or a URL then prepend this path
-         // to the branch file name
-         char *tname = gSystem->ExpandPathName(tfn);
-         if (gSystem->IsAbsoluteFileName(tname) || strstr(tname, ":/")) {
-            bFileName = gSystem->DirName(tname);
-            bFileName += "/";
-            bFileName += fFileName;
-         }
-         delete [] tname;
-      }
-   }
-   delete [] bname;
-
+   TString bFileName( GetRealFileName() );
+   
    // Open file (new file if mode = 1)
    {
       TDirectory::TContext ctxt(0);
@@ -1354,6 +1330,41 @@ TLeaf* TBranch::GetLeaf(const char* name) const
       if (!strcmp(leaf->GetName(),name)) return leaf;
    }
    return 0;
+}
+
+//______________________________________________________________________________
+TString TBranch::GetRealFileName() const
+{
+   TString bFileName = fFileName;
+   
+   // check if branch file name is absolute or a URL (e.g. /castor/...,
+   // root://host/..., rfio:/path/...)
+   char *bname = gSystem->ExpandPathName(fFileName.Data());
+   if (!gSystem->IsAbsoluteFileName(bname) && !strstr(bname, ":/")) {
+      
+      // if not, get filename where tree header is stored
+      const char *tfn = fTree->GetCurrentFile()->GetName();
+      
+      // If it is an archive file we need a special treatment
+      TUrl arc(tfn);
+      if (strlen(arc.GetAnchor()) > 0) {
+         arc.SetAnchor(gSystem->BaseName(fFileName));
+         bFileName = arc.GetUrl();
+      } else {
+         // if this is an absolute path or a URL then prepend this path
+         // to the branch file name
+         char *tname = gSystem->ExpandPathName(tfn);
+         if (gSystem->IsAbsoluteFileName(tname) || strstr(tname, ":/")) {
+            bFileName = gSystem->DirName(tname);
+            bFileName += "/";
+            bFileName += fFileName;
+         }
+         delete [] tname;
+      }
+   }
+   delete [] bname;
+   
+   return bFileName;
 }
 
 //______________________________________________________________________________
