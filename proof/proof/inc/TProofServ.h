@@ -140,6 +140,8 @@ private:
    Long64_t      fMaxBoxSize;       //Max size of the sandbox
    Long64_t      fHWMBoxSize;       //High-Water-Mark on the sandbox size
 
+   static FILE  *fgErrorHandlerFile; // File where to log 
+
    void          RedirectOutput(const char *dir = 0, const char *mode = "w");
    Int_t         CatMotd();
    Int_t         UnloadPackage(const char *package);
@@ -178,9 +180,6 @@ protected:
    virtual void  DeletePlayer();
 
    virtual Int_t Fork();
-
-   static void   ErrorHandler(Int_t level, Bool_t abort, const char *location,
-                              const char *msg);
 
 public:
    TProofServ(Int_t *argc, char **argv, FILE *flog = 0);
@@ -254,6 +253,10 @@ public:
    // Log control
    Bool_t         LogToSysLog() { return fLogToSysLog; }
    void           LogToMaster(Bool_t on = kTRUE) { fSendLogToMaster = on; }
+
+   static FILE   *SetErrorHandlerFile(FILE *ferr);
+   static void    ErrorHandler(Int_t level, Bool_t abort, const char *location,
+                               const char *msg);
 
    static Bool_t      IsActive();
    static TProofServ *This();

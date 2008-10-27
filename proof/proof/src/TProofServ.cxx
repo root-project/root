@@ -104,6 +104,9 @@ TProofServ *gProofServ = 0;
 // debug hook
 static volatile Int_t gProofServDebug = 1;
 
+// File where to log: default stderr
+FILE *TProofServ::fgErrorHandlerFile = 0;
+
 //----- Interrupt signal handler -----------------------------------------------
 //______________________________________________________________________________
 class TProofServInterruptHandler : public TSignalHandler {
@@ -464,6 +467,7 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
 
    // abort on higher than kSysError's and set error handler
    gErrorAbortLevel = kSysError + 1;
+   SetErrorHandlerFile(stderr);
    SetErrorHandler(ErrorHandler);
 
    fNcmd            = 0;
@@ -4359,10 +4363,22 @@ TProofServ::EQueryAction TProofServ::GetWorkers(TList *workers,
 }
 
 //______________________________________________________________________________
+FILE *TProofServ::SetErrorHandlerFile(FILE *ferr)
+{
+   // Set the file stream where to log (default stderr).
+   // If ferr == 0 the default is restored.
+   // Returns current setting.
+
+   FILE *oldferr = fgErrorHandlerFile;
+   fgErrorHandlerFile = (ferr) ? ferr : stderr;
+   return oldferr;
+}
+
+//______________________________________________________________________________
 void TProofServ::ErrorHandler(Int_t level, Bool_t abort, const char *location,
                               const char *msg)
 {
-   // The PROOF error handler function. It prints the message on stderr and
+   // The PROOF error handler function. It prints the message on fgErrorHandlerFile and
    // if abort is set it aborts the application.
 
    if (gErrorIgnoreLevel == kUnset) {
@@ -4458,22 +4474,25 @@ void TProofServ::ErrorHandler(Int_t level, Bool_t abort, const char *location,
    if (!location || ipos == 0 ||
        (level >= kPrint && level < kInfo) ||
        (level >= kBreak && level < kSysError)) {
-      fprintf(stderr, "%s %5d %s | %s: %s\n", st(11,8).Data(), gSystem->GetPid(),
-                     (gProofServ ? gProofServ->GetPrefix() : "proof"), type, msg);
+      fprintf(fgErrorHandlerFile, "%s %5d %s | %s: %s\n", st(11,8).Data(),
+                                  gSystem->GetPid(),
+                                 (gProofServ ? gProofServ->GetPrefix() : "proof"),
+                                  type, msg);
       if (tosyslog)
          buf.Form("%s:%s:%s:%s", (gProofServ ? gProofServ->GetUser() : "unknown"),
                                  (gProofServ ? gProofServ->GetPrefix() : "proof"),
                                  type, msg);
    } else {
-      fprintf(stderr, "%s %5d %s | %s in <%.*s>: %s\n", st(11,8).Data(), gSystem->GetPid(),
-                      (gProofServ ? gProofServ->GetPrefix() : "proof"),
-                      type, ipos, location, msg);
+      fprintf(fgErrorHandlerFile, "%s %5d %s | %s in <%.*s>: %s\n", st(11,8).Data(),
+                                  gSystem->GetPid(),
+                                 (gProofServ ? gProofServ->GetPrefix() : "proof"),
+                                  type, ipos, location, msg);
       if (tosyslog)
          buf.Form("%s:%s:%s:<%.*s>:%s", (gProofServ ? gProofServ->GetUser() : "unknown"),
                                         (gProofServ ? gProofServ->GetPrefix() : "proof"),
                                         type, ipos, location, msg);
    }
-   fflush(stderr);
+   fflush(fgErrorHandlerFile);
 
    if (tosyslog)
       gSystem->Syslog(loglevel, buf);
@@ -4488,8 +4507,8 @@ void TProofServ::ErrorHandler(Int_t level, Bool_t abort, const char *location,
          recursive = kFALSE;
       }
 
-      fprintf(stderr, "aborting\n");
-      fflush(stderr);
+      fprintf(fgErrorHandlerFile, "aborting\n");
+      fflush(fgErrorHandlerFile);
       gSystem->StackTrace();
       gSystem->Abort();
    }
