@@ -1177,6 +1177,7 @@ static void setCursorPosition(int x)
 
    ci.dwCursorPosition.X = x;
    SetConsoleCursorPosition(out, ci.dwCursorPosition);
+   SleepEx(0, TRUE);
 #else
    if (x) { }
 #endif
