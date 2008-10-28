@@ -7155,7 +7155,13 @@ void TH1::SetStats(Bool_t stats)
    if (!stats) {
       SetBit(kNoStats);
       //remove the "stats" object from the list of functions
-      if (fFunctions) delete fFunctions->FindObject("stats");
+      if (fFunctions) {
+         TObject *obj = fFunctions->FindObject("stats");
+         if (obj) {
+            fFunctions->Remove(obj);
+            delete obj;
+         }
+      }
    }
 }
 
