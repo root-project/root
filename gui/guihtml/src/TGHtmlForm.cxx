@@ -42,7 +42,7 @@
 #include "TGTextEntry.h"
 #include "TGListBox.h"
 #include "TGTextEdit.h"
-
+#include "TGComboBox.h"
 
 
 //______________________________________________________________________________
@@ -306,9 +306,12 @@ void TGHtml::AddSelectOptions(TGListBox *lb,
   while (p && p != pEnd && p->type != Html_EndSELECT) {
     if (p->type == Html_OPTION) {
       TGString *str;
+      int selected = -1;
 
       const char *zValue = p->MarkupArg("value", "");
-      //int selected = (p->MarkupArg("selected", 0) != 0);
+      const char *sel = p->MarkupArg("selected", "");
+      if (sel && !strcmp(sel, "selected"))
+         selected = id;
 
       p = p->pNext;
 
@@ -324,9 +327,12 @@ void TGHtml::AddSelectOptions(TGListBox *lb,
         }
         p = p->pNext;
       }
-      lb->AddEntry(new TGHtmlLBEntry(lb, str, new TGString(zValue), id),
+      lb->AddEntry(new TGHtmlLBEntry(lb->GetContainer(), str, 
+                   new TGString(zValue), id),
                    new TGLayoutHints(kLHintsTop | kLHintsExpandX));
-      if (p->MarkupArg("selected", 0) != 0) lb->Select(id);
+      //if (p->MarkupArg("selected", 0) != 0) lb->Select(id);
+      if (selected >= 0)
+        lb->Select(selected);
       ++id;
     } else {
       p = p->pNext;
@@ -455,13 +461,23 @@ int TGHtml::ControlSize(TGHtmlInput *pElem) {
       int size = z ? atoi(z) : 1;
 
       if (size == 1) {
-        TGListBox *lb = new TGListBox(fCanvas, pElem->cnt);
+        TGComboBox *cb = new TGComboBox(fCanvas, pElem->cnt);
+        TGListBox *lb = cb->GetListBox();
         AddSelectOptions(lb, pElem, pElem->pEnd);
         TGLBEntry *e = lb->GetSelectedEntry();
-        if (e) lb->Select(e->GetId());
-        lb->Resize(200, lb->GetDefaultHeight());
-        lb->Associate(this);
-        SizeAndLink(lb, pElem);
+        lb->Select(e->EntryId(), kFALSE);
+        lb->MapSubwindows();
+        lb->Layout();
+        UInt_t width = 0;
+        for (int i=0;i<lb->GetNumberOfEntries();++i) {
+          TGHtmlLBEntry *te = (TGHtmlLBEntry *)lb->GetEntry(i);
+          if (te && te->GetText())
+            width = TMath::Max(width, te->GetDefaultWidth());
+        }
+        UInt_t height = lb->GetItemVsize() ? lb->GetItemVsize()+4 : 20;
+        cb->Resize(width > 0 ? width+20 : 200, height);
+        if (e) cb->Select(e->EntryId(), kFALSE);
+        SizeAndLink(cb, pElem);
       } else {
         TGListBox *lb = new TGListBox(fCanvas, pElem->cnt);
         z = pElem->MarkupArg("multiple", 0);

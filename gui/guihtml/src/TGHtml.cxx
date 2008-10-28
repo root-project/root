@@ -45,6 +45,8 @@
 #include "TGTextEntry.h"
 #include "TGText.h"
 #include "Riostream.h"
+#include "TGComboBox.h"
+#include "TGListBox.h"
 
 //_____________________________________________________________________________
 //
@@ -1214,6 +1216,17 @@ Bool_t TGHtml::HandleHtmlInput(TGHtmlInput *pr, Event_t *event)
          te->SetFocus();
          break;
       }
+      case INPUT_TYPE_Select: {
+         RemoveInput(kButtonPressMask | kButtonReleaseMask | kPointerMotionMask);
+         eventSt.fUser[0] = childdum;
+         if (pr->frame->InheritsFrom("TGComboBox"))
+            ((TGComboBox *)pr->frame)->HandleButton(&eventSt);
+         else if (pr->frame->InheritsFrom("TGListBox"))
+            ((TGListBox *)pr->frame)->HandleButton(&eventSt);
+         InputSelected(name, val); // emit InputSelected
+         AddInput(kButtonPressMask | kButtonReleaseMask | kPointerMotionMask);
+         break;
+      }
       default:
          break;
    }
@@ -1275,6 +1288,19 @@ void TGHtml::RadioChanged(const char *name, const char *val)
    args[1] = (Long_t)val;
 
    Emit("RadioChanged(char*,char*)", args);
+}
+
+//______________________________________________________________________________
+void TGHtml::InputSelected(const char *name, const char *val)
+{
+   // Emit Selected() signal.
+
+   Long_t args[2];
+
+   args[0] = (Long_t)name;
+   args[1] = (Long_t)val;
+
+   Emit("InputSelected(char*,char*)", args);
 }
 
 //______________________________________________________________________________
