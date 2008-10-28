@@ -1585,11 +1585,6 @@ class genDictionary(object) :
     for f in selfunctions :
       id   = f['id']
       name = self.genTypeName(id)
-      if ( self.xref[id]['attrs'].has_key('mangled') ):
-        mm = self.xref[id]['attrs']['mangled'][2:]
-        dname = gccdemangler.demangle_name(mm)
-      else :
-        dname = name
       args = self.xref[id]['subelems']      
       if args : params  = '"'+ string.join( map(self.genParameter, args),';')+'"'
       else    : params  = '0'
