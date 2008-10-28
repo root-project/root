@@ -207,7 +207,7 @@ Misc</H3>
 
 <H5>
 Angle between two vectors</H5>
-<TT>&nbsp; Double_t a = v1.Angle(v2);&nbsp; // get angle between v1 and
+<TT>&nbsp; Double_t a = v1.Angle(v2.Vect());&nbsp; // get angle between v1 and
 v2</TT>
 <H5>
 Light-cone components</H5>
