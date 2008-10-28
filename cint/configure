@@ -482,38 +482,45 @@ function processflag_with_prefix {
 }
 
 function processflag_prefix {
+    WITHPREFIX=1
     pathtoabs $1
     PREFIX=$ABSPATH
 }
 
 function processflag_exec_prefix {
+    WITHPREFIX=1
     pathtoabs $1
     EPREFIX=$ABSPATH
 }
 
 function processflag_bindir {
+    WITHPREFIX=1
     pathtoabs $1
     BINDIR=$ABSPATH
 }
 
 function processflag_libdir {
+    WITHPREFIX=1
     pathtoabs $1
     LIBDIR=$ABSPATH
 }
 
 function processflag_includedir {
+    WITHPREFIX=1
     pathtoabs $1
     INCLUDEDIR=$ABSPATH
     INCLUDEDIRCINT=$ABSPATH/cint
 }
 
 function processflag_datadir {
+    WITHPREFIX=1
     pathtoabs $1
     DATADIR=$ABSPATH
     DATADIRCINT=$ABSPATH/cint
 }
 
 function processflag_mandir {
+    WITHPREFIX=1
     pathtoabs $1
     MANDIR=$ABSPATH
 }
@@ -675,8 +682,17 @@ EXPORTS=(${EXPORTS[*]} HAVE_CONFIG)
 # now set the default values of the installation directories, if
 # they were not set explicitely by the user
 
-if [ "x$PREFIX" != "x" ]; then
+if [ "x$WITHPREFIX" = "x1" ]; then
   # prefix based build
+    [ "$PREFIX" = "" ] && PREFIX=/usr/local
+    if [ "`cd \"$PREFIX\"; pwd`" = "`cd \"$PWD\"; pwd`" ]; then
+        echo ' '
+        echo ' '
+        echo 'ERROR: Cannot build within install location!'
+        echo 'Directory '$PREFIX' set as --prefix is the same as the current directory!'
+        echo ' '
+        exit 1
+    fi
     [ "$EPREFIX" = "" ] && EPREFIX=$PREFIX
     [ "$BINDIR" = "" ]  && BINDIR=$EPREFIX/bin
     [ "$LIBDIR" = "" ]  && LIBDIR=$EPREFIX/lib
@@ -788,6 +804,18 @@ echo ${ALLOPTIONS[*]} > config.status
 
 echo Creating Makefile...
 cp build/Makefile .
+
+echo Creating reconfigure...
+# we need the "&& exit" below to ensure that the shell doesn't
+# continue reading reconfigure, where reconfigure will be the
+# one recreated by the sub-configure:
+cat > reconfigure <<EOF
+echo Reconfiguring with
+echo '  $' ./configure ${ALLOPTIONS[*]} "\$@"
+echo ' '
+./configure ${ALLOPTIONS[*]} "\$@" && exit
+EOF
+chmod u+x reconfigure
 
 echo Done.
 echo ""
