@@ -191,7 +191,7 @@ public:
    TThread         *fThread;
    TProofThreadArg *fArgs;
 
-   TProofThread(TThread *t, TProofThreadArg *a) { fThread = t; fArgs = a; }
+   TProofThread(TThread *t, TProofThreadArg *a): fThread(t), fArgs(a) {}
    virtual ~TProofThread() { SafeDelete(fThread); SafeDelete(fArgs); }
 private:
 
