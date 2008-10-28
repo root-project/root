@@ -518,26 +518,23 @@ void TEveCalo2D::ComputeBBox()
    Float_t r  = fBarrelRadius + th;
    Float_t ze = fEndCapPos + th;
 
-   x = r, y = 0, z = 0;
+   x = r,  y = 0, z = 0;
    fManager->GetProjection()->ProjectPoint(x, y, z);
    BBoxCheckPoint(x, y, z);
-
-   x = 0, y = 0, z = 0;
+   x = -r, y = 0, z = 0;
    fManager->GetProjection()->ProjectPoint(x, y, z);
    BBoxCheckPoint(x, y, z);
 
    x = 0, y = 0, z = ze;
    fManager->GetProjection()->ProjectPoint(x, y, z);
    BBoxCheckPoint(x, y, z);
-
    x = 0, y = 0, z = -ze;
    fManager->GetProjection()->ProjectPoint(x, y, z);
    BBoxCheckPoint(x, y, z);
 
-   x = 0, y = r, z = 0;
+   x = 0, y = r,  z = 0;
    fManager->GetProjection()->ProjectPoint(x, y, z);
    BBoxCheckPoint(x, y, z);
-
    x = 0, y = -r, z = 0;
    fManager->GetProjection()->ProjectPoint(x, y, z);
    BBoxCheckPoint(x, y, z);

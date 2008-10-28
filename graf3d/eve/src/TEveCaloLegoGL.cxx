@@ -334,6 +334,8 @@ void TEveCaloLegoGL::DrawZAxis(TGLRnrCtx &rnrCtx, Float_t azX, Float_t azY) cons
    TGLVertex3 worldRef(azX, azY, fDataMax*0.5);
 
    fZAxisAtt.SetAxisColor(fM->fGridColor);
+   fZAxisAtt.SetLabelColor(fM->fFontColor);
+   fZAxisAtt.SetTitleColor(fM->fFontColor);
    fZAxisAtt.SetRng(0, fDataMax);
    fZAxisAtt.SetNdivisions( fM->fNZSteps*100+10);
    fZAxisAtt.RefTMOff(0) = rnrCtx.RefCamera().ViewportDeltaToWorld(worldRef, -10, 0, &modview);
@@ -594,6 +596,8 @@ void TEveCaloLegoGL::DrawXYScales(TGLRnrCtx & rnrCtx,
 
    fXAxisAtt.SetRng(x0, x1);
    fXAxisAtt.SetAxisColor(fM->fGridColor);
+   fXAxisAtt.SetLabelColor(fM->fFontColor);
+   fXAxisAtt.SetTitleColor(fM->fFontColor);
    fXAxisAtt.RefTMOff(0).Set(0, yOff, 0);
    fXAxisAtt.RefTMOff(1).Set(0, 0, zOff);
    fXAxisAtt.RefTitlePos().Set(axtX, 0, 0);
@@ -605,6 +609,8 @@ void TEveCaloLegoGL::DrawXYScales(TGLRnrCtx & rnrCtx,
 
    fYAxisAtt.SetRng(y0, y1);
    fYAxisAtt.SetAxisColor(fM->fGridColor);
+   fYAxisAtt.SetLabelColor(fM->fFontColor);
+   fYAxisAtt.SetTitleColor(fM->fFontColor);
    fYAxisAtt.RefTMOff(0).Set(xOff, 0, 0);
    fYAxisAtt.RefTMOff(1).Set(0, 0, zOff);
    fYAxisAtt.SetAbsLabelFontSize(fXAxisAtt.GetAbsLabelFontSize());

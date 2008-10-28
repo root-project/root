@@ -4,74 +4,81 @@ const char* histFile = "http://amraktad.web.cern.ch/amraktad/cms_calo_hist.root"
 
 void cms_calo(Bool_t hdata = kTRUE)
 {
-  gSystem->IgnoreSignal(kSigSegmentationViolation, true);
+   gSystem->IgnoreSignal(kSigSegmentationViolation, true);
 
-  TFile::SetCacheFileDir(".");
-  TEveManager::Create();
-  gEve->GetSelection()->SetPickToSelect(1);
+   TFile::SetCacheFileDir(".");
+   TEveManager::Create();
+   gEve->GetSelection()->SetPickToSelect(1);
 
-  // event data
-  TFile* hf = TFile::Open(histFile, "CACHEREAD");
-  TH2F* ecalHist = (TH2F*)hf->Get("ecalLego");
-  TH2F* hcalHist = (TH2F*)hf->Get("hcalLego");
+   // event data
+   TFile* hf = TFile::Open(histFile, "CACHEREAD");
+   TH2F* ecalHist = (TH2F*)hf->Get("ecalLego");
+   TH2F* hcalHist = (TH2F*)hf->Get("hcalLego");
 
-  // palette
-  gStyle->SetPalette(1, 0);
+   // palette
+   gStyle->SetPalette(1, 0);
 
-  // different calorimeter presentations
-  TEveCaloData* data = 0;
-  if (hdata)
-  {
-    TEveCaloDataHist* hd = new TEveCaloDataHist();
-    Int_t s;
-    s = hd->AddHistogram(ecalHist);
-    hd->RefSliceInfo(s).Setup("ECAL", 0.3, kRed);
-    s = hd->AddHistogram(hcalHist);
-    hd->RefSliceInfo(s).Setup("HCAL", 0.1, kYellow);
-    data = hd;
-  }
-  else
-  {
-    data = MakeVecData(ecalHist, hcalHist);
-  }
+   // different calorimeter presentations
+   TEveCaloData* data = 0;
+   if (hdata)
+   {
+      TEveCaloDataHist* hd = new TEveCaloDataHist();
+      Int_t s;
+      s = hd->AddHistogram(ecalHist);
+      hd->RefSliceInfo(s).Setup("ECAL", 0.3, kRed);
+      s = hd->AddHistogram(hcalHist);
+      hd->RefSliceInfo(s).Setup("HCAL", 0.1, kYellow);
+      data = hd;
+   }
+   else
+   {
+      data = MakeVecData(ecalHist, hcalHist);
+   }
 
-  TEveCalo3D* calo3d = MakeCalo3D(data);
-  MakeCalo2D(calo3d);
-  MakeCaloLego(data);
-  gEve->Redraw3D(1);
+   TEveCalo3D* calo3d = MakeCalo3D(data);
+   MakeCalo2D(calo3d);
+   MakeCaloLego(data);
+   gEve->Redraw3D(1);
 }
 
 //______________________________________________________________________________
 TEveCalo3D* MakeCalo3D(TEveCaloData* data)
 {
 
-  // 3D towers
-  TEveCalo3D* calo3d = new TEveCalo3D(data);
-  calo3d->SetBarrelRadius(129);
-  calo3d->SetEndCapPos(300);
-  gEve->AddElement(calo3d);
+   // 3D towers
+   TEveCalo3D* calo3d = new TEveCalo3D(data);
+   calo3d->SetBarrelRadius(129);
+   calo3d->SetEndCapPos(300);
+   gEve->AddElement(calo3d);
 
-  return calo3d;
+   return calo3d;
 }
 
 //______________________________________________________________________________
 void MakeCalo2D(TEveCalo3D* calo3d)
 {
-  TEveViewer* v1 = gEve->SpawnNewViewer("2D Viewer");
-  TEveScene*  s1 = gEve->SpawnNewScene("Projected Event");
-  v1->AddScene(s1);
-  TGLViewer* v = v1->GetGLViewer();
-  v->SetCurrentCamera(TGLViewer::kCameraOrthoXOY);
-  v->SetGuideState(TGLUtil::kAxesOrigin, kTRUE, kFALSE, 0);
-  v->SetClearColor(kBlue + 4);
+   TEveViewer* v1 = gEve->SpawnNewViewer("2D Viewer");
+   TEveScene*  s1 = gEve->SpawnNewScene("Projected Event");
+   v1->AddScene(s1);
+   TGLViewer* v = v1->GetGLViewer();
+   v->SetCurrentCamera(TGLViewer::kCameraOrthoXOY);
+   v->SetGuideState(TGLUtil::kAxesOrigin, kTRUE, kFALSE, 0);
+   v->SetClearColor(kBlue + 4);
 
-  // projected calorimeter
-  TEveProjectionManager* mng = new TEveProjectionManager();
-  mng->SetProjection(TEveProjection::kPT_RhoZ);
-  gEve->AddElement(mng, s1);
-  gEve->AddToListTree(mng, kTRUE);
-  TEveCalo2D* c2d = (TEveCalo2D*) mng->ImportElements(calo3d);
-  c2d->SetValueIsColor(kFALSE);
+   // projected calorimeter
+   TEveProjectionManager* mng = new TEveProjectionManager();
+   mng->SetProjection(TEveProjection::kPT_RhoZ);
+   gEve->AddElement(mng, s1);
+   gEve->AddToListTree(mng, kTRUE);
+
+   TEveProjectionAxes* axes = new TEveProjectionAxes(mng);
+   axes->SetTitle("TEveProjections demo");
+   s1->AddElement(axes);
+   gEve->AddToListTree(axes, kTRUE);
+   gEve->AddToListTree(mng, kTRUE);
+
+   TEveCalo2D* c2d = (TEveCalo2D*) mng->ImportElements(calo3d);
+   c2d->SetValueIsColor(kFALSE);
 }
 
 //______________________________________________________________________________

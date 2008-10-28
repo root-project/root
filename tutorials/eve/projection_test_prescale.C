@@ -42,9 +42,6 @@ void projection_test_prescale()
 
 
    TEveProjectionAxes* axes = new TEveProjectionAxes(mng);
-   axes->SetText("TEveProjections demo");
-   axes->SetFontFile("comicbd");
-   axes->SetFontSize(20);
    s->AddElement(axes);
    gEve->AddToListTree(axes, kTRUE);
    gEve->AddToListTree(mng, kTRUE);
