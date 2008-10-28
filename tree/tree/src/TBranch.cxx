@@ -1335,12 +1335,15 @@ TLeaf* TBranch::GetLeaf(const char* name) const
 //______________________________________________________________________________
 TString TBranch::GetRealFileName() const
 {
+   if (fFileName.Length()==0) {
+      return fFileName;
+   }
    TString bFileName = fFileName;
    
    // check if branch file name is absolute or a URL (e.g. /castor/...,
    // root://host/..., rfio:/path/...)
    char *bname = gSystem->ExpandPathName(fFileName.Data());
-   if (!gSystem->IsAbsoluteFileName(bname) && !strstr(bname, ":/")) {
+   if (!gSystem->IsAbsoluteFileName(bname) && !strstr(bname, ":/") && fTree && fTree->GetCurrentFile()) {
       
       // if not, get filename where tree header is stored
       const char *tfn = fTree->GetCurrentFile()->GetName();
