@@ -14,6 +14,7 @@
 
 #include "DArray.h"
 
+using namespace std;
 
 #ifdef __GNUC__
 int G__defaultsize=100;

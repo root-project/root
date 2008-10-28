@@ -16,13 +16,22 @@
 #define DARRAY_H
 
 #include <stdio.h>
-#include <iostream.h>
+#include <iostream>
 #include <math.h>
 #include <string.h>
 
 #ifdef __GNUC__
 extern int G__defaultsize;
 #endif
+
+class DArray;
+
+DArray operator +(DArray& a,DArray& b);
+DArray operator -(DArray& a,DArray& b);
+DArray operator *(DArray& a,DArray& b);
+DArray operator /(DArray& a,DArray& b);
+DArray exp(DArray& a);
+DArray abs(DArray& a);
 
 class DArray  {
 public:
