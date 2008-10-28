@@ -1,5 +1,5 @@
 CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog copiedEvent* Event.h one two merged \
-	Event*.root dt_reference.root CloneTree.root cal.root
+	Event*.root dt_reference.root CloneTree.root cal.root Tuple_merge.root
 
 TEST_TARGETS += cloneChain single merge Plot SplitMismatch outoforder
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -138,6 +138,11 @@ SplitMismatch.clog: runSplitMismatch_C.$(DllSuf)
 	
 SplitMismatch: SplitMismatch.clog
 	$(TestDiff)
+
+Tuple_merge.root: Tuple_1.root Tuple_2.root $(ROOTCORELIBS)
+	$(CMDECHO) hadd -f Tuple_merge.root Tuple_1.root Tuple_2.root > Tuple_merge.log
+
+outoforder.log: Tuple_merge.root
 
 outoforder: outoforder.log	
 	$(TestDiff)
