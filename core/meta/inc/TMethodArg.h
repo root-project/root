@@ -35,6 +35,9 @@ class TMethodArg : public TDictionary {
 friend class TMethod;
 
 private:
+   TMethodArg(const TMethodArg&);    // Not implemented
+   TMethodArg& operator=(const TMethodArg&);    // Not implemented
+
    MethodArgInfo_t   *fInfo;         //pointer to CINT method argument info
    TFunction         *fMethod;       //pointer to the method or global function
    TDataMember       *fDataMember;   //TDataMember pointed by this arg,to get values and options from.
