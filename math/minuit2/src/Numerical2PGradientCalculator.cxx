@@ -16,8 +16,16 @@
 #include "Minuit2/FunctionGradient.h"
 #include "Minuit2/MnStrategy.h"
 
+//#define DEBUG
 #if defined(DEBUG) || defined(WARNINGMSG)
 #include "Minuit2/MnPrint.h" 
+#ifdef MINUIT2_PARALLEL_OPENMP
+#include <omp.h>
+#include <iomanip>
+#ifdef DEBUG
+#define DEBUG_MP
+#endif
+#endif
 #endif
 
 #include <math.h>
@@ -68,7 +76,6 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
    
    assert(par.IsValid());
    
-   MnAlgebraicVector x = par.Vec();
    
    double fcnmin = par.Fval();
    //   std::cout<<"fval: "<<fcnmin<<std::endl;
@@ -83,13 +90,42 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
    //    std::cout<<"vrysml= "<<vrysml<<std::endl;
    //    std::cout << " ncycle " << Ncycle() << std::endl;
    
-   unsigned int n = x.size();
+   unsigned int n = (par.Vec()).size();
    unsigned int ncycle = Ncycle();
    //   MnAlgebraicVector vgrd(n), vgrd2(n), vgstp(n);
    MnAlgebraicVector grd = Gradient.Grad();
    MnAlgebraicVector g2 = Gradient.G2();
    MnAlgebraicVector gstep = Gradient.Gstep();
-   for(unsigned int i = 0; i < n; i++) {
+
+#ifdef DEBUG
+   std::cout << "Calculating Gradient at x =   " << par.Vec() << std::endl;
+#endif
+
+#ifndef MINUIT2_PARALLEL_OPENMP
+   // for serial execution this can be outside the loop
+   MnAlgebraicVector x = par.Vec();
+#else
+
+ // parallelize this loop using OpenMP
+//#define N_PARALLEL_PAR 5
+#pragma omp parallel
+#pragma omp for 
+//#pragma omp for schedule (static, N_PARALLEL_PAR)
+
+#endif
+
+   for(int i = 0; i < int(n); i++) {
+
+#ifdef DEBUG_MP
+      int ith = omp_get_thread_num();
+      //std::cout << "Thread number " << ith << "  " << i << std::endl;
+#endif
+
+#ifdef MINUIT2_PARALLEL_OPENMP
+       // create in loop since each thread will use its own copy
+       MnAlgebraicVector x = par.Vec();
+#endif
+
       double xtf = x(i);
       double epspri = eps2 + fabs(grd(i)*eps2);
       double stepb4 = 0.;
@@ -139,10 +175,23 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
          }
       }
       
+
+#ifdef DEBUG_MP
+#pragma omp critical
+ {
+      std::cout << "Gradient for thread " << ith << "  " << i << "  " << std::setprecision(15)  << grd(i) << "  " << g2(i) << std::endl;
+ }
+#endif
+
       //     vgrd(i) = grd;
       //     vgrd2(i) = g2;
       //     vgstp(i) = gstep;
    }  
+
+#ifdef DEBUG
+   std::cout << "Gradient =   " << grd << std::endl;
+#endif
+
    //   std::cout<<"final grd: "<<grd<<std::endl;
    //   std::cout<<"########### return from Numerical2PDerivative"<<std::endl;
    return FunctionGradient(grd, g2, gstep);

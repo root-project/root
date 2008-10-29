@@ -23,6 +23,12 @@ ifneq ($(USE_OPENMPI),)
 CXX=mpic++
 LD=mpic++
 endif
+ifneq ($(USE_OPENMP),)
+CXXFLAGS += -D_GLIBCXX_PARALLEL -fopenmp 
+LDFLAGS += -fopenmp 
+endif
+
+
 
 USERFUNCOBJ      = testUserFunc.$(ObjSuf)
 USERFUNCSRC      = testUserFunc.$(SrcSuf)

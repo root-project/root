@@ -39,20 +39,21 @@ namespace ROOT {
 
 FitResult::FitResult() : 
    fValid(false), fNormalized(false), fNFree(0), fNdf(0), fNCalls(0), 
-   fStatus(-1), fVal(0), fEdm(0), fChi2(0), fFitFunc(0)
+   fStatus(-1), fVal(0), fEdm(0), fChi2(-1), fFitFunc(0)
 {
    // Default constructor implementation.
 }
 
-      FitResult::FitResult(ROOT::Math::Minimizer & min, const FitConfig & fconfig, IModelFunction & func,  bool isValid,  unsigned int sizeOfData, const  ROOT::Math::IMultiGenFunction * chi2func, bool minosErr, unsigned int ncalls ) : 
+      FitResult::FitResult(ROOT::Math::Minimizer & min, const FitConfig & fconfig, IModelFunction * func,  bool isValid,  unsigned int sizeOfData, bool binnedFit, const  ROOT::Math::IMultiGenFunction * chi2func, bool minosErr, unsigned int ncalls ) : 
    fValid(isValid),
    fNormalized(false),
    fNFree(min.NFree() ),
    fNCalls(min.NCalls()),
    fStatus(min.Status() ),
    fVal (min.MinValue()),  
-   fEdm (min.Edm()),  
-   fFitFunc(&func), 
+   fEdm (min.Edm()), 
+   fChi2(-1),
+   fFitFunc(func), 
    fParams(std::vector<double>(min.X(), min.X() + min.NDim() ) )
 {
    // Constructor from a minimizer, fill the data. ModelFunction  is passed as non const 
@@ -62,7 +63,7 @@ FitResult::FitResult() :
 
    // set right parameters in function (in case minimizer did not do before)
    // do also when fit is not valid
-   fFitFunc->SetParameters(&fParams.front());
+   if (fFitFunc) fFitFunc->SetParameters(&fParams.front());
 
    if (min.Errors() != 0) 
       fErrors = std::vector<double>(min.Errors(), min.Errors() + min.NDim() ) ; 
@@ -74,11 +75,13 @@ FitResult::FitResult() :
       if (par.IsBound() ) fBoundParams.push_back(ipar); 
    } 
 
-   if (chi2func == 0) 
-      fChi2 = fVal;
-   else { 
-      // compute chi2 equivalent
-      fChi2 = (*chi2func)(&fParams[0]); 
+   if (binnedFit) { 
+      if (chi2func == 0) 
+         fChi2 = fVal;
+      else { 
+         // compute chi2 equivalent
+         fChi2 = (*chi2func)(&fParams[0]); 
+      }
    }
 
    // replace ncalls if given (they are taken from the FitMethodFunction)
@@ -195,6 +198,7 @@ double FitResult::Prob() const {
 }
 
 int FitResult::Index(const std::string & name) const { 
+   if (! fFitFunc) return -1;
    // find index for given parameter name
    unsigned int npar = fParams.size(); 
    for (unsigned int i = 0; i < npar; ++i) 
@@ -215,6 +219,11 @@ bool FitResult::IsParameterFixed(unsigned int ipar) const {
    return false; 
 }
 
+std::string FitResult::GetParameterName(unsigned int ipar) const {
+   if (fFitFunc) return fFitFunc->ParameterName(ipar); 
+   else return "param_" + ROOT::Math::Util::ToString(ipar);
+}
+
 void FitResult::Print(std::ostream & os, bool doCovMatrix) const { 
    // print the result in the given stream 
    // need to add minos errors , globalCC, etc..
@@ -230,17 +239,17 @@ void FitResult::Print(std::ostream & os, bool doCovMatrix) const {
    os << "Minimizer is " << fMinimType << std::endl;
    unsigned int npar = fParams.size(); 
    const unsigned int nw = 25; 
-   if (fVal != fChi2) 
-      os << std::setw(nw) << std::left << "Likelihood" << " =\t" << fVal << std::endl;
-   os << std::setw(nw) << std::left <<  "Chi2"  << " =\t" << fChi2<< std::endl;
+   if (fVal != fChi2 || fChi2 < 0) 
+      os << std::setw(nw) << std::left << "LogLikelihood" << " =\t" << fVal << std::endl;
+   if (fChi2 >= 0) os << std::setw(nw) << std::left <<  "Chi2"  << " =\t" << fChi2<< std::endl;
    os << std::setw(nw) << std::left << "NDf"    << " =\t" << fNdf << std::endl; 
    if (fMinimType.find("Linear") == std::string::npos) {  // no need to print this for linear fits
       os << std::setw(nw) << std::left << "Edm"    << " =\t" << fEdm << std::endl; 
       os << std::setw(nw) << std::left << "NCalls" << " =\t" << fNCalls << std::endl; 
    }
-   assert(fFitFunc != 0); 
    for (unsigned int i = 0; i < npar; ++i) { 
-      os << std::setw(nw) << std::left << fFitFunc->ParameterName(i) << " =\t" << fParams[i]; 
+      os << std::setw(nw) << std::left << GetParameterName(i); 
+      os << " =\t" << fParams[i]; 
       if (IsParameterFixed(i) ) 
          os << " \t(fixed)";
       else {
@@ -267,14 +276,15 @@ void FitResult::PrintCovMatrix(std::ostream &os) const {
    const int parw = 12; 
    const int matw = kWidth+4;
    os << std::setw(parw) << " " << "\t"; 
-   for (unsigned int i = 0; i < npar; ++i) 
+   for (unsigned int i = 0; i < npar; ++i) {
       if (!IsParameterFixed(i) ) { 
-         os << std::setw(matw)  << fFitFunc->ParameterName(i) ;
+         os << std::setw(matw)  << GetParameterName(i) ;
       }
+   }
    os << std::endl;   
    for (unsigned int i = 0; i < npar; ++i) {
       if (!IsParameterFixed(i) ) { 
-         os << std::setw(parw) << std::left << fFitFunc->ParameterName(i) << "\t";
+         os << std::setw(parw) << std::left << GetParameterName(i) << "\t";
          for (unsigned int j = 0; j < npar; ++j) {
             if (!IsParameterFixed(j) ) { 
                os.precision(kPrec); os.width(kWidth);  os << std::setw(matw) << CovMatrix(i,j); 
@@ -286,14 +296,15 @@ void FitResult::PrintCovMatrix(std::ostream &os) const {
 //   os << "****************************************\n";
    os << "\n            Correlation Matrix         \n\n";
    os << std::setw(parw) << " " << "\t"; 
-   for (unsigned int i = 0; i < npar; ++i) 
+   for (unsigned int i = 0; i < npar; ++i) {
       if (!IsParameterFixed(i) ) { 
-         os << std::setw(matw)  << fFitFunc->ParameterName(i) ;
+         os << std::setw(matw)  << GetParameterName(i) ;
       }
+   }
    os << std::endl;   
    for (unsigned int i = 0; i < npar; ++i) {
       if (!IsParameterFixed(i) ) { 
-         os << std::setw(parw) << std::left << fFitFunc->ParameterName(i) << "\t";
+         os << std::setw(parw) << std::left << GetParameterName(i) << "\t";
          for (unsigned int j = 0; j < npar; ++j) {
             if (!IsParameterFixed(j) ) {
                os.precision(kPrec); os.width(kWidth);  os << std::setw(matw) << Correlation(i,j); 

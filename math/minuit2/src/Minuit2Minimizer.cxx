@@ -179,6 +179,10 @@ bool Minuit2Minimizer::SetFixedVariable(unsigned int ivar , const std::string & 
    return true;
 }
 
+std::string Minuit2Minimizer::VariableName(unsigned int ivar) const { 
+   return fState.GetName(ivar);
+}
+
 
 void Minuit2Minimizer::SetFunction(const  ROOT::Math::IMultiGenFunction & func) { 
    // set function to be minimized

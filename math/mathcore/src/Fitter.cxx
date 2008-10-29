@@ -138,6 +138,9 @@ bool Fitter::FitFCN(const BaseFunc & fcn, const double * params, unsigned int da
    std::auto_ptr<ROOT::Math::Minimizer> minimizer = std::auto_ptr<ROOT::Math::Minimizer> ( fConfig.CreateMinimizer() );
    if (minimizer.get() == 0) return false; 
 
+   if (fFunc && fResult.FittedFunction() == 0) delete fFunc; 
+   fFunc = 0;
+
    return DoMinimization<BaseFunc> (*minimizer, fcn, dataSize); 
 }
 
@@ -155,6 +158,10 @@ bool Fitter::FitFCN(const BaseGradFunc & fcn, const double * params, unsigned in
    // create Minimizer  (need to be done afterwards)
    std::auto_ptr<ROOT::Math::Minimizer> minimizer = std::auto_ptr<ROOT::Math::Minimizer> ( fConfig.CreateMinimizer() );
    if (minimizer.get() == 0) return false; 
+
+   if (fFunc && fResult.FittedFunction() == 0) delete fFunc; 
+   fFunc = 0;
+
    // create fit configuration if null 
    return DoMinimization<BaseGradFunc> (*minimizer, fcn, dataSize); 
 }
@@ -290,6 +297,7 @@ bool Fitter::DoLinearFit(const BinData & data ) {
    return ret; 
 }
 
+// traits for distinhuishing fit methods functions from generic objective functions
 template<class Func> 
 struct ObjFuncTrait { 
    static unsigned int NCalls(const Func &  ) { return 0; }
@@ -299,15 +307,16 @@ struct ObjFuncTrait {
 template<>
 struct ObjFuncTrait<ROOT::Math::FitMethodFunction> { 
    static unsigned int NCalls(const ROOT::Math::FitMethodFunction & f ) { return f.NCalls(); }
-   static int Type(const ROOT::Math::FitMethodFunction & f) { return f.GetType(); }
+   static int Type(const ROOT::Math::FitMethodFunction & f) { return f.Type(); }
    static bool IsGrad() { return false; }
 };
 template<>
 struct ObjFuncTrait<ROOT::Math::FitMethodGradFunction> { 
    static unsigned int NCalls(const ROOT::Math::FitMethodGradFunction & f ) { return f.NCalls(); }
-   static int Type(const ROOT::Math::FitMethodGradFunction & f) { return f.GetType(); }
+   static int Type(const ROOT::Math::FitMethodGradFunction & f) { return f.Type(); }
    static bool IsGrad() { return true; }
 };
+
 
 template<class ObjFunc> 
 bool Fitter::DoMinimization(ROOT::Math::Minimizer & minimizer, const ObjFunc & objFunc, unsigned int dataSize, const ROOT::Math::IMultiGenFunction * chi2func) { 
@@ -318,14 +327,6 @@ bool Fitter::DoMinimization(ROOT::Math::Minimizer & minimizer, const ObjFunc & o
    minimizer.SetFunction(objFunc);
    minimizer.SetVariables(fConfig.ParamsSettings().begin(), fConfig.ParamsSettings().end() ); 
 
-   //minimizer.SetPrintLevel(3);
-   
-   // do minimization
-//    if (minimizer.Minimize()) {  
-//       fResult = FitResult(minimizer,*fFunc,dataSize ); 
-//       return true;
-//    } 
-//    return false; 
 
    // if requested parabolic error do correct error  analysis by the minimizer (call HESSE) 
    if (fConfig.ParabErrors()) minimizer.SetValidError(true);
@@ -337,9 +338,14 @@ bool Fitter::DoMinimization(ROOT::Math::Minimizer & minimizer, const ObjFunc & o
    std::cout << "ROOT::Fit::Fitter::DoMinimization : ncalls = " << ObjFuncTrait<ObjFunc>::NCalls(objFunc) << " type of objfunc " << ObjFuncTrait<ObjFunc>::Type(objFunc) << "  typeid: " << typeid(objFunc).name() << " prov gradient " << ObjFuncTrait<ObjFunc>::IsGrad() << std::endl;
 #endif
    
-   unsigned int ncalls = ObjFuncTrait<ObjFunc>::NCalls(objFunc);
-   fResult = FitResult(minimizer,fConfig, *fFunc, ret, dataSize, chi2func, fConfig.MinosErrors(), ncalls );
-   if (fConfig.NormalizeErrors() ) fResult.NormalizeErrors(); 
+   unsigned int ncalls =  ObjFuncTrait<ObjFunc>::NCalls(objFunc);
+   int fitType =  ObjFuncTrait<ObjFunc>::Type(objFunc);
+   bool binFit = true;
+   if (fitType == ROOT::Math::FitMethodFunction::kLogLikelihood) binFit = false; 
+
+   fResult = FitResult(minimizer,fConfig, fFunc, ret, dataSize, binFit, chi2func, fConfig.MinosErrors(), ncalls );
+
+   if (fConfig.NormalizeErrors() && fitType == ROOT::Math::FitMethodFunction::kLeastSquare ) fResult.NormalizeErrors(); 
    return ret; 
 }
 

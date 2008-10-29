@@ -49,7 +49,7 @@ class FumiliFCNAdapter : public FumiliFCNBase {
 public:
 
 //   typedef ROOT::Math::FitMethodFunction Function; 
-   typedef typename Function::Type Type; 
+   typedef typename Function::Type_t Type_t; 
 
    FumiliFCNAdapter(const Function & f, unsigned int ndim, double up = 1.) : 
       FumiliFCNBase( ndim ),
@@ -118,7 +118,7 @@ void FumiliFCNAdapter<Function>::EvaluateAll( const std::vector<double> & v) {
 
 
    // assume for now least-square
-   if (fFunc.GetType() == Function::kLeastSquare) { 
+   if (fFunc.Type() == Function::kLeastSquare) { 
 
       for (unsigned int i = 0; i < ndata; ++i) { 
          // calculate data element and gradient 
@@ -136,7 +136,7 @@ void FumiliFCNAdapter<Function>::EvaluateAll( const std::vector<double> & v) {
          }
       }
    }
-   else if (fFunc.GetType() == Function::kLogLikelihood) {  
+   else if (fFunc.Type() == Function::kLogLikelihood) {  
 
 
       for (unsigned int i = 0; i < ndata; ++i) { 

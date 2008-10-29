@@ -83,7 +83,13 @@ public:
       return *this;
    }
 
-   const std::vector<double>& operator()(const MnAlgebraicVector&) const;
+   
+//#ifdef MINUIT2_THREAD_SAFE
+   // thread-safe version (do not use cache) 
+  std::vector<double> operator()(const MnAlgebraicVector&) const;
+//#else // not thread safe
+//   const std::vector<double>& operator()(const MnAlgebraicVector&) const;
+//#endif
 
    // Index = internal Parameter
    double Int2ext(unsigned int, double) const;

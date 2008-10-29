@@ -10,6 +10,7 @@
 
 // Header file for class FitUtil
 
+
 #ifdef _WIN32  // no support for parallel fits on Win32 
 #ifdef ROOT_FIT_PARALLEL
 #undef ROOT_FIT_PARALLEL
@@ -56,6 +57,8 @@ namespace FitUtilParallel {
    */ 
    double EvaluateChi2(IModelFunction & func, const BinData & data, const double * x, unsigned int & nPoints);  
 
+
+   double EvaluateLogL(IModelFunction & func, const UnBinData & data, const double * p, unsigned int &nPoints);  
 
 
 } // end namespace FitUtil 

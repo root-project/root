@@ -14,28 +14,44 @@
 
 #include "Fit/FitUtilParallel.h"
 
-#include "Fit/DataVector.h"
-#include "Fit/BinPoint.h"
+#include "Fit/BinData.h"
+#include "Fit/UnBinData.h"
+#include "Fit/FitUtil.h"
 
 #include "Math/IParamFunction.h"
 
-#include <pthread.h>
+int ncalls = 0; 
 
 #include <limits>
 #include <cmath>
+#include <numeric>
 
 //#define DEBUG
 #ifdef DEBUG
 #include <iostream> 
 #endif
 
+#ifdef USE_PTHREAD
+
+#include <pthread.h>
+
+
 #define NUMBER_OF_THREADS 2
+
+#else 
+#include <omp.h>
+// maximum number of threads for the array
+#define MAX_THREAD 8
+
+#endif
 
 namespace ROOT { 
 
    namespace Fit { 
 
       namespace FitUtilParallel { 
+
+#ifdef USE_PTHREAD
 
 class ThreadData { 
 
@@ -178,10 +194,107 @@ double EvaluateChi2(IModelFunction & func, const BinData & data, const double * 
 
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// use open MP 
+#else 
+
+double EvaluateChi2(IModelFunction & func, const BinData & data, const double * p, unsigned int & nPoints) { 
+   return FitUtil::EvaluateChi2(func,data,p,nPoints); 
+}
+
+
+// use openMP (log-likelihood calculation)
+
+inline double EvalLogF(double fval) { 
+   // evaluate the log with a protections against negative argument to the log 
+   // smooth linear extrapolation below function values smaller than  epsilon
+   // (better than a simple cut-off)
+   const static double epsilon = 2.*std::numeric_limits<double>::min();
+   if(fval<= epsilon) 
+      return fval/epsilon + std::log(epsilon) - 1; 
+   else      
+      return std::log(fval);
+}
+
+
+double EvaluateLogL(IModelFunction & func, const UnBinData & data, const double * p, unsigned int &nPoints) {  
+   // evaluate the LogLikelihood 
+
+   unsigned int n = data.Size();
+
+#ifdef DEBUG
+   std::cout << "\n\nFit data size = " << n << std::endl;
+   //std::cout << "func pointer is " << typeid(func).name() << std::endl;
+   std::cout << "\tpar = [ " << func.NPar() << " ] =  "; 
+   for (unsigned int ipar = 0; ipar < func.NPar(); ++ipar) 
+      std::cout << p[ipar] << ", ";
+   std::cout <<"---------------------------\n";
+#endif
+
+   double logl = 0;
+   int nRejected = 0; 
+//   func.SetParameters(p); 
+
+   //std::vector<double> sum( MAX_THREAD ); 
+
+
+#pragma omp parallel
+#pragma omp for reduction (+:logl,nRejected)
+//#pragma omp for reduction (+:logl,nRejected) schedule (static, 10)
+//#pragma omp reduction (+:nRejected) 
+
+   for (unsigned int i = 0; i < n; ++ i) { 
+
+      //int ith = omp_get_thread_num();
+      //func.SetParameters(p); 
+
+      const double * x = data.Coords(i);
+      double fval = func ( x, p  ); // this is thread safe passing the params 
+
+      if (fval < 0) { 
+         nRejected++; // reject points with negative pdf (cannot exist)
+      }
+      else 
+         //sum[ith] += EvalLogF( fval); 
+         logl += EvalLogF( fval); 
+
+#ifdef DEBUG      
+#pragma omp critical 
+      {     std::cout << " ==== i = " << i << " thread " << omp_get_thread_num() 
+                      << "fval = " << fval << " logl = " << logl << std::endl;}
+//       std::cout << "x [ " << data.PointSize() << " ] = "; 
+//       for (unsigned int j = 0; j < data.PointSize(); ++j)
+//          std::cout << x[j] << "\t"; 
+#endif
+   }
+   
+   // reset the number of fitting data points
+   if (nRejected != 0)  nPoints = n - nRejected;
+
+#ifdef DEBUG
+   ncalls++;
+   int pr = std::cout.precision(15);
+   std::cout << "ncalls " << ncalls << " Logl = " << logl << " np = " << nPoints << std::endl;
+   std::cout.precision(pr);
+   assert(ncalls<3);
+#endif
+
+   // logl = std::accumulate(sum.begin(), sum.end(),0. );
+
+   double result = - logl; 
+   return result;
+}
+
+#endif
+
+
       } // end namespace FitUtilParallel
 
    } // end namespace Fit
 
 } // end namespace ROOT
+
+
+
 
 #endif

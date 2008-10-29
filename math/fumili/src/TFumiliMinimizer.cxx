@@ -54,7 +54,7 @@ public:
       fFumili->SetUserFunc(fModFunc);
    }
 
-   ROOT::Math::FitMethodFunction::Type GetType() const { return fObjFunc->GetType();  }
+   ROOT::Math::FitMethodFunction::Type_t Type() const { return fObjFunc->Type();  }
 
    FumiliFunction * Clone() const { return new FumiliFunction(fFumili, fObjFunc); }
 
@@ -69,7 +69,7 @@ public:
       double fval  = fFumili->EvalTFN(g,const_cast<double *>( x));
       fFumili->Derivatives(g, const_cast<double *>( x));
 
-      if ( fObjFunc->GetType() == ROOT::Math::FitMethodFunction::kLogLikelihood) {
+      if ( fObjFunc->Type() == ROOT::Math::FitMethodFunction::kLogLikelihood) {
          double logPdf =   y * ROOT::Math::Util::EvalLog( fval) - fval; 
          for (unsigned int k = 0; k < npar; ++k) {
             g[k] *= ( y/fval - 1.) ;//* pdfval; 
@@ -82,7 +82,7 @@ public:
          
          return logPdf; 
       }
-      else if (fObjFunc->GetType() == ROOT::Math::FitMethodFunction::kLeastSquare ) { 
+      else if (fObjFunc->Type() == ROOT::Math::FitMethodFunction::kLeastSquare ) { 
          double resVal = (y-fval)*invError; 
          for (unsigned int k = 0; k < npar; ++k) {
             g[k] *= -invError; 
@@ -286,14 +286,14 @@ double TFumiliMinimizer::EvaluateFCN(const double * x, double * grad) {
    for (unsigned int ipar = 0; ipar < npar; ++ipar) 
       std::cout << x[ipar] << "\t";
    std::cout << std::endl; 
-   if (fgFunc) std::cout << "type " << fgFunc->GetType() << std::endl; 
+   if (fgFunc) std::cout << "type " << fgFunc->Type() << std::endl; 
 #endif
 
 
    // assume for now least-square
    // since TFumili doet not use errodef I must diveide chi2 by 2 
-   if ( (fgFunc && fgFunc->GetType() == ROOT::Math::FitMethodFunction::kLeastSquare) || 
-        (fgGradFunc && fgGradFunc->GetType() == ROOT::Math::FitMethodGradFunction::kLeastSquare) ) { 
+   if ( (fgFunc && fgFunc->Type() == ROOT::Math::FitMethodFunction::kLeastSquare) || 
+        (fgGradFunc && fgGradFunc->Type() == ROOT::Math::FitMethodGradFunction::kLeastSquare) ) { 
 
       double fval = 0; 
       for (unsigned int i = 0; i < ndata; ++i) { 
@@ -323,8 +323,8 @@ double TFumiliMinimizer::EvaluateFCN(const double * x, double * grad) {
          }
       }
    }
-   else if ( (fgFunc && fgFunc->GetType() == ROOT::Math::FitMethodFunction::kLogLikelihood) || 
-             (fgGradFunc && fgGradFunc->GetType() == ROOT::Math::FitMethodGradFunction::kLogLikelihood) ) {  
+   else if ( (fgFunc && fgFunc->Type() == ROOT::Math::FitMethodFunction::kLogLikelihood) || 
+             (fgGradFunc && fgGradFunc->Type() == ROOT::Math::FitMethodGradFunction::kLogLikelihood) ) {  
 
 
 

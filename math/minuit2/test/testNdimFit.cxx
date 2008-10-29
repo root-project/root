@@ -26,13 +26,20 @@
 
 #include "TStopwatch.h"
 
-//#define DEBUG
+#define DEBUG
 
 // test fit with many dimension
 
 const int N = 10; 
 const std::string branchType = "x[10]/D";
 const int NPoints = 100000;
+
+// const int N = 50; 
+// const std::string branchType = "x[50]/D";
+// const int NPoints = 10000;
+
+
+
 double truePar[2*N]; 
 double iniPar[2*N]; 
 const int nfit = 1;
@@ -157,7 +164,12 @@ int DoUnBinFit(T * tree, Func & func, bool debug = false ) {
    int iret =  (prob < 1.0E-6) ? -1 : 0;
    if (iret != 0) {
       std::cout <<"Found difference in fitted values - prob = " << prob << std::endl;
-      fitter.Result().Print(std::cout);    
+      if (!debug) fitter.Result().Print(std::cout);    
+      for (int i = 0; i < N; ++i) { 
+         double d = (truePar[i] - fitter.Result().Value(i) )/ (fitter.Result().Error(i) );
+         std::cout << "par_" << i << " = " << fitter.Result().Value(i) << " true  = " << truePar[i] << " pull = " << d << std::endl;
+      } 
+      
    }
 
    delete d; 

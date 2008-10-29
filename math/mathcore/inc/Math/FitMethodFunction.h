@@ -39,7 +39,7 @@ public:
    typedef  typename FunctionType::BaseFunc BaseFunction; 
 
    /// enumeration specyfing the possible fit method types
-   enum Type { kUndefined , kLeastSquare, kLogLikelihood }; 
+   enum Type_t { kUndefined , kLeastSquare, kLogLikelihood }; 
 
 
    BasicFitMethodFunction(int dim, int npoint) : 
@@ -75,7 +75,7 @@ public:
    /**
       return the type of method, override if needed
     */
-   virtual Type GetType() const { return kUndefined; }
+   virtual Type_t Type() const { return kUndefined; }
 
    /**
       return the total number of function calls (overrided if needed)

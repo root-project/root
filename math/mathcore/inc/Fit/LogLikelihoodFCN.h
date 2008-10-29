@@ -28,8 +28,8 @@
 #ifndef ROOT_Fit_FitUtil
 #include "Fit/FitUtil.h"
 #endif
-//#define PARALLEL
-#ifdef PARALLEL
+
+#ifdef ROOT_FIT_PARALLEL
 #ifndef ROOT_Fit_FitUtilParallel
 #include "Fit/FitUtilParallel.h"
 #endif
@@ -118,7 +118,7 @@ public:
    }
 
    /// get type of fit method function
-   virtual  typename BaseObjFunction::Type GetType() const { return BaseObjFunction::kLogLikelihood; }
+   virtual  typename BaseObjFunction::Type_t Type() const { return BaseObjFunction::kLogLikelihood; }
 
    /// access to const reference to the data 
    virtual const UnBinData & Data() const { return fData; }
@@ -136,7 +136,8 @@ private:
     */
    double DoEval (const double * x) const { 
       this->UpdateNCalls();
-#ifdef PARALLEL
+
+#ifdef ROOT_FIT_PARALLEL
       return FitUtilParallel::EvaluateLogL(fFunc, fData, x, fNEffPoints); 
 #else 
       return FitUtil::EvaluateLogL(fFunc, fData, x, fNEffPoints); 

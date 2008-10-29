@@ -54,18 +54,39 @@ MnUserTransformation::MnUserTransformation(const std::vector<double>& par, const
    }
 }
 
-const std::vector<double>& MnUserTransformation::operator()(const MnAlgebraicVector& pstates) const {
+//#ifdef MINUIT2_THREAD_SAFE
+//  this if a thread-safe implementation needed if want to share transformation object between the threads
+std::vector<double> MnUserTransformation::operator()(const MnAlgebraicVector& pstates ) const {
    // transform an internal  Minuit vector of internal values in a std::vector of external values 
-   for(unsigned int i = 0; i < pstates.size(); i++) {
+   // fixed parameters will have their fixed values
+   unsigned int n = pstates.size(); 
+   // need to initialize to the stored (initial values) parameter  values for the fixed ones
+   std::vector<double> Cache( fCache );
+   for(unsigned int i = 0; i < n; i++) {
       if(fParameters[fExtOfInt[i]].HasLimits()) {
-         fCache[fExtOfInt[i]] = Int2ext(i, pstates(i));
+         Cache[fExtOfInt[i]] = Int2ext(i, pstates(i));
       } else {
-         fCache[fExtOfInt[i]] = pstates(i);
+         Cache[fExtOfInt[i]] = pstates(i);
       }
    }
-   
-   return fCache;
+   return Cache;
 }
+
+// #else
+// const std::vector<double> & MnUserTransformation::operator()(const MnAlgebraicVector& pstates) const {
+//    // transform an internal  Minuit vector of internal values in a std::vector of external values 
+//    // std::vector<double> Cache(pstates.size() );
+//    for(unsigned int i = 0; i < pstates.size(); i++) {
+//       if(fParameters[fExtOfInt[i]].HasLimits()) {
+//          fCache[fExtOfInt[i]] = Int2ext(i, pstates(i));
+//       } else {
+//          fCache[fExtOfInt[i]] = pstates(i);
+//       }
+//    }
+   
+//    return fCache;
+// }
+// #endif
 
 double MnUserTransformation::Int2ext(unsigned int i, double val) const {
    // return external value from internal value for parameter i

@@ -60,7 +60,7 @@ public:
    /**
       Construct from a Minimizer instance 
     */
-   FitResult(ROOT::Math::Minimizer & min, const FitConfig & fconfig, IModelFunction & f, bool isValid, unsigned int sizeOfData = 0, const ROOT::Math::IMultiGenFunction * chi2func = 0, bool minosErr = false, unsigned int ncalls = 0);
+   FitResult(ROOT::Math::Minimizer & min, const FitConfig & fconfig, IModelFunction * f, bool isValid, unsigned int sizeOfData = 0, bool binFit = true, const ROOT::Math::IMultiGenFunction * chi2func = 0, bool minosErr = false, unsigned int ncalls = 0);
 
    /** 
       Copy constructor. 
@@ -251,6 +251,9 @@ public:
 
    /// query if a parameter is fixed 
    bool IsParameterFixed(unsigned int ipar) const; 
+
+   /// get name of parameter 
+   std::string GetParameterName(unsigned int ipar) const;
 
 protected: 
 

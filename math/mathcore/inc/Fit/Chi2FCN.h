@@ -81,7 +81,7 @@ public:
    typedef typename  BaseObjFunction::BaseFunction BaseFunction; 
 
    typedef  typename ModelFunctionTrait<FunType>::ModelFunc IModelFunction;
-   typedef typename BaseObjFunction::Type Type;
+   typedef typename BaseObjFunction::Type_t Type_t;
 
    /** 
       Constructor from data set (binned ) and model function 
@@ -144,7 +144,7 @@ public:
    }
 
    /// get type of fit method function
-   virtual  typename BaseObjFunction::Type GetType() const { return BaseObjFunction::kLeastSquare; }
+   virtual  typename BaseObjFunction::Type_t Type() const { return BaseObjFunction::kLeastSquare; }
 
    /// access to const reference to the data 
    virtual const BinData & Data() const { return fData; }

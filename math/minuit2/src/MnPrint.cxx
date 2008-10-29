@@ -23,6 +23,9 @@
 
 #include <iomanip>
 
+#define PRECISION 13
+#define WIDTH     20
+
 namespace ROOT {
 
    namespace Minuit2 {
@@ -35,7 +38,7 @@ std::ostream& operator<<(std::ostream& os, const LAVector& vec) {
       //os << std::endl;
       int nrow = vec.size();
       for (int i = 0; i < nrow; i++) {
-         os.precision(8); os.width(15); 
+         os.precision(PRECISION); os.width(WIDTH); 
          os << vec(i) << std::endl;
       }
    }
@@ -72,12 +75,12 @@ std::ostream& operator<<(std::ostream& os, const MnUserParameters& par) {
       os << std::setw(4) << (*ipar).Number() << std::setw(5) << "||"; 
       os << std::setw(10) << (*ipar).Name()   << std::setw(3) << "||";
       if((*ipar).IsConst()) {
-         os << "  const  ||" << std::setprecision(8) << std::setw(14) << (*ipar).Value() << " ||" << std::endl;
+         os << "  const  ||" << std::setprecision(PRECISION) << std::setw(WIDTH) << (*ipar).Value() << " ||" << std::endl;
       } else if((*ipar).IsFixed()) {
-         os << "  fixed  ||" << std::setprecision(8) << std::setw(14) << (*ipar).Value() << " ||" << std::endl;
+         os << "  fixed  ||" << std::setprecision(PRECISION) << std::setw(WIDTH) << (*ipar).Value() << " ||" << std::endl;
       } else if((*ipar).HasLimits()) {
          if((*ipar).Error() > 0.) {
-            os << " limited ||" << std::setprecision(8) << std::setw(14) << (*ipar).Value();
+            os << " limited ||" << std::setprecision(PRECISION) << std::setw(WIDTH) << (*ipar).Value();
             if(fabs((*ipar).Value() - (*ipar).LowerLimit()) < par.Precision().Eps2()) {
                os <<"*";
                atLoLim = true;
@@ -88,12 +91,12 @@ std::ostream& operator<<(std::ostream& os, const MnUserParameters& par) {
             }
             os << " ||" << std::setw(12) << (*ipar).Error() << std::endl;
          } else
-            os << "  free   ||" << std::setprecision(8) << std::setw(14) << (*ipar).Value() << " ||" << std::setw(12) << "no" << std::endl;
+            os << "  free   ||" << std::setprecision(PRECISION) << std::setw(WIDTH) << (*ipar).Value() << " ||" << std::setw(12) << "no" << std::endl;
       } else {
          if((*ipar).Error() > 0.)
-            os << "  free   ||" << std::setprecision(8) << std::setw(14) << (*ipar).Value() << " ||" << std::setw(12) << (*ipar).Error() << std::endl;
+            os << "  free   ||" << std::setprecision(PRECISION) << std::setw(WIDTH) << (*ipar).Value() << " ||" << std::setw(12) << (*ipar).Error() << std::endl;
          else
-            os << "  free   ||" << std::setprecision(8) << std::setw(14) << (*ipar).Value() << " ||" << std::setw(12) << "no" << std::endl;
+            os << "  free   ||" << std::setprecision(PRECISION) << std::setw(WIDTH) << (*ipar).Value() << " ||" << std::setw(12) << "no" << std::endl;
          
       }
    }
@@ -169,8 +172,8 @@ std::ostream& operator<<(std::ostream& os, const MnUserParameterState& state) {
    }
    
    os <<"# of function calls: "<<state.NFcn()<<std::endl;
-   os <<"function Value: "<< std::setprecision(12) << state.Fval()<<std::endl;
-   os <<"expected distance to the Minimum (edm): "<< std::setprecision(8) << state.Edm()<<std::endl;
+   os <<"function Value: "<< std::setprecision(PRECISION) << state.Fval()<<std::endl;
+   os <<"expected distance to the Minimum (edm): "<< std::setprecision(PRECISION) << state.Edm()<<std::endl;
    os <<"external parameters: "<<state.Parameters()<<std::endl;
    if(state.HasCovariance())
       os <<"covariance matrix: "<<state.Covariance()<<std::endl;
@@ -196,8 +199,8 @@ std::ostream& operator<<(std::ostream& os, const FunctionMinimum& min) {
    }
    
    os <<"# of function calls: "<<min.NFcn()<<std::endl;
-   os <<"minimum function Value: "<< std::setprecision(12) << min.Fval()<<std::endl;
-   os <<"minimum edm: "<< std::setprecision(8) << min.Edm()<<std::endl;
+   os <<"minimum function Value: "<< std::setprecision(PRECISION) << min.Fval()<<std::endl;
+   os <<"minimum edm: "<< std::setprecision(PRECISION) << min.Edm()<<std::endl;
    os <<"minimum internal state vector: "<<min.Parameters().Vec()<<std::endl;
    if(min.HasValidCovariance()) 
       os <<"minimum internal covariance matrix: "<<min.Error().Matrix()<<std::endl;
@@ -218,8 +221,8 @@ std::ostream& operator<<(std::ostream& os, const MinimumState& min) {
    
    os << std::endl;
    
-   os <<"minimum function Value: "<< std::setprecision(12) << min.Fval()<<std::endl;
-   os <<"minimum edm: "<< std::setprecision(8) << min.Edm()<<std::endl;
+   os <<"minimum function Value: "<< std::setprecision(PRECISION) << min.Fval()<<std::endl;
+   os <<"minimum edm: "<< std::setprecision(PRECISION) << min.Edm()<<std::endl;
    os <<"minimum internal state vector: "<<min.Vec()<<std::endl;
    os <<"minimum internal Gradient vector: "<<min.Gradient().Vec()<<std::endl;
    if(min.HasCovariance()) 
@@ -273,7 +276,7 @@ std::ostream& operator<<(std::ostream& os, const MinosError& me) {
    os << "# ext. |" << "|   Name    |" << "|   Value@min   |" << "|    negative   |" << "|   positive  " << std::endl;
    os << std::setw(4) << me.Parameter() << std::setw(5) << "||"; 
    os << std::setw(10) << me.LowerState().Name(me.Parameter()) << std::setw(3) << "||";
-   os << std::setprecision(8) << std::setw(14) << me.Min() << " ||" << std::setprecision(8) << std::setw(14) << me.Lower() << " ||" << std::setw(14) << me.Upper() << std::endl;
+   os << std::setprecision(PRECISION) << std::setw(WIDTH) << me.Min() << " ||" << std::setprecision(PRECISION) << std::setw(WIDTH) << me.Lower() << " ||" << std::setw(WIDTH) << me.Upper() << std::endl;
    
    os << std::endl;
    

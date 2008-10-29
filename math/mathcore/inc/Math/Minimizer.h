@@ -17,6 +17,10 @@
 #include "Math/IFunction.h"
 #endif
 
+// #ifndef ROOT_Math_Util
+// #include "Math/Util.h"
+// #endif
+
 
 #include <vector> 
 #include <string> 
@@ -252,6 +256,8 @@ public:
    /// print the result according to set level. 
    virtual void PrintResults() {}
 
+   // get name of variables (override if minimizer support storing of variable names)
+   //virtual std::string VariableName(unsigned int ivar) const { return "x_" + ROOT::Math::Util::ToString(ivar); }
 
    /** minimizer configuration parameters **/
 
