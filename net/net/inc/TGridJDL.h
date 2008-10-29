@@ -40,7 +40,7 @@ protected:
    TMap    fMap;              // stores the key, value pairs of the JDL
    TMap    fDescriptionMap;   // stores the key, value pairs of the JDL
 public:
-   TGridJDL() : fMap() { }
+   TGridJDL() : fMap(), fDescriptionMap() { }
    virtual ~TGridJDL();
 
    void             SetValue(const char *key, const char *value);
