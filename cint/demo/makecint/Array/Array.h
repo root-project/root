@@ -16,7 +16,7 @@
 #define ARRAY_H
 
 #include <stdio.h>
-#include <iostream.h>
+#include <iostream>
 #include <math.h>
 #include <string.h>
 
@@ -26,12 +26,20 @@
 
 #if defined(_WINDOWS) || defined(_WIN32) || defined(__GNUC__)
 #define G__NOSTATICMEMBER
+extern int G__defaultsize;
 #endif
 
 #if defined(_WINDOWS) || defined(_WIN32) 
 #define G__NOFRIENDS
 #endif
 
+template <typename T> class Array;
+template <typename T> Array<T> operator +(Array<T>& a,Array<T>& b);
+template <typename T> Array<T> operator -(Array<T>& a,Array<T>& b);
+template <typename T> Array<T> operator *(Array<T>& a,Array<T>& b);
+template <typename T> Array<T> operator /(Array<T>& a,Array<T>& b);
+template <typename T> Array<T> exp(Array<T>& a);
+template <typename T> Array<T> abs(Array<T>& a);
 
 /**********************************************************
 * definition of array class
@@ -56,10 +64,17 @@ public:
   // Ralf Garionis's bug report
   T*& newdat(T* d);
 
-  void disp(ostream& ostr=cout);
+  void disp(ostream& ostr=std::cout);
 
 
-#ifndef G__NOFRIENDS
+#ifndef __CINT__
+  friend Array<T> operator + <>(Array<T>& a,Array<T>& b);
+  friend Array<T> operator - <>(Array<T>& a,Array<T>& b);
+  friend Array<T> operator * <>(Array<T>& a,Array<T>& b);
+  friend Array<T> operator / <>(Array<T>& a,Array<T>& b);
+  friend Array<T> exp <>(Array<T>& a);
+  friend Array<T> abs <>(Array<T>& a);
+#else
   friend Array<T> operator +(Array<T>& a,Array<T>& b);
   friend Array<T> operator -(Array<T>& a,Array<T>& b);
   friend Array<T> operator *(Array<T>& a,Array<T>& b);
@@ -90,11 +105,12 @@ public:
   friend Array<T> diff(Array<T>& x,Array<T>& y);
 #endif
 
+  int n;               // number of data
+
 #ifndef G__NOFRIENDS
 private:
 #endif
   T *dat;         // pointer to data Array
-  int n;               // number of data
 #ifndef G__NOSTATICMEMBER
   static int G__defaultsize;
 #endif
@@ -135,9 +151,7 @@ template<class T> Array<T>::operator T* () const {
 }
 #endif
 
-#ifdef G__NOSTATICMEMBER
-extern int G__defaultsize;
-#else
+#ifndef G__NOSTATICMEMBER
 template<class T> int Array<T>::G__defaultsize = 100;
 #endif
 
@@ -620,13 +634,13 @@ template<class T> Array<T> conv(Array<T>& a,Array<T>& b)
   int f,t;
   f = b.n/2;
   t = b.n-f;
-  for(i=0;i<n;i++) {
+  for(i=0;i<a.n;i++) {
     c[i]=0;
-    for(j=0;j<m;j++) {
+    for(j=0;j<b.n;j++) {
       k=i-f+j;
-      if(k<0)       c[i] += a[0]*b[j];
-      else if(k>=n) c[i] += a[n-1]*b[j];
-      else          c[i] += a[k]*b[j];
+      if(k<0)         c[i] += a[0]*b[j];
+      else if(k>=a.n) c[i] += a[a.n-1]*b[j];
+      else            c[i] += a[k]*b[j];
     }
   }
   return(c);
@@ -637,7 +651,7 @@ template<class T> Array<T> conv(Array<T>& a,Array<T>& b)
  ***********************************************/
 template<class T> Array<T> integ(Array<T>& x,Array<T>& y)
 {
-  a.setdefaultsize(a.n);
+  x.setdefaultsize(x.n);
   Array<T> c;
   int i;
   T integ=0;
@@ -655,7 +669,7 @@ template<class T> Array<T> integ(Array<T>& x,Array<T>& y)
  ***********************************************/
 template<class T> Array<T> diff(Array<T>& x,Array<T>& y)
 {
-  a.setdefaultsize(a.n);
+  x.setdefaultsize(x.n);
   Array<T> c;
   int i;
   T integ=0;

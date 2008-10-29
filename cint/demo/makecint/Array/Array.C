@@ -11,8 +11,10 @@
 * Array class instanciation
 *
 **************************************************************************/
-#include <iostream.h>
 #include "Array.h"
+#include "Complex.C"
+
+using namespace std;
 
 /**************************************************************************
 * int dummy
@@ -28,7 +30,7 @@ Array<int> abs(Array<int>& a)
 {
   a.setdefaultsize(a.n);
   Array<int> c;
-  for(int i=0;i<a.n;i++) c[i] = (int)abs(a[i]);
+  for(int i=0;i<a.n;i++) c[i] = (int)fabs(a[i]);
   return(c);
 }
 
