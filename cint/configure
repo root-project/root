@@ -685,7 +685,7 @@ EXPORTS=(${EXPORTS[*]} HAVE_CONFIG)
 if [ "x$WITHPREFIX" = "x1" ]; then
   # prefix based build
     [ "$PREFIX" = "" ] && PREFIX=/usr/local
-    if [ "`cd \"$PREFIX\"; pwd`" = "`cd \"$PWD\"; pwd`" ]; then
+    if [ -d "$PREFIX" -a "`cd \"$PREFIX\"; pwd`" = "`cd \"$PWD\"; pwd`" ]; then
         echo ' '
         echo ' '
         echo 'ERROR: Cannot build within install location!'
