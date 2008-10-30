@@ -34,10 +34,10 @@ extern int G__defaultsize;
 #endif
 
 template <typename T> class Array;
-template <typename T> Array<T> operator +(Array<T>& a,Array<T>& b);
-template <typename T> Array<T> operator -(Array<T>& a,Array<T>& b);
-template <typename T> Array<T> operator *(Array<T>& a,Array<T>& b);
-template <typename T> Array<T> operator /(Array<T>& a,Array<T>& b);
+template <typename T> Array<T> operator+(Array<T>& a,Array<T>& b);
+template <typename T> Array<T> operator-(Array<T>& a,Array<T>& b);
+template <typename T> Array<T> operator*(Array<T>& a,Array<T>& b);
+template <typename T> Array<T> operator/(Array<T>& a,Array<T>& b);
 template <typename T> Array<T> exp(Array<T>& a);
 template <typename T> Array<T> abs(Array<T>& a);
 
@@ -68,17 +68,10 @@ public:
 
 
 #ifndef __CINT__
-  friend Array<T> operator + <>(Array<T>& a,Array<T>& b);
-  friend Array<T> operator - <>(Array<T>& a,Array<T>& b);
-  friend Array<T> operator * <>(Array<T>& a,Array<T>& b);
-  friend Array<T> operator / <>(Array<T>& a,Array<T>& b);
-  friend Array<T> exp <>(Array<T>& a);
-  friend Array<T> abs <>(Array<T>& a);
-#else
-  friend Array<T> operator +(Array<T>& a,Array<T>& b);
-  friend Array<T> operator -(Array<T>& a,Array<T>& b);
-  friend Array<T> operator *(Array<T>& a,Array<T>& b);
-  friend Array<T> operator /(Array<T>& a,Array<T>& b);
+  friend Array<T> operator+(Array<T>& a,Array<T>& b);
+  friend Array<T> operator-(Array<T>& a,Array<T>& b);
+  friend Array<T> operator*(Array<T>& a,Array<T>& b);
+  friend Array<T> operator/(Array<T>& a,Array<T>& b);
   friend Array<T> exp(Array<T>& a);
   friend Array<T> abs(Array<T>& a);
 #endif
@@ -105,11 +98,10 @@ public:
   friend Array<T> diff(Array<T>& x,Array<T>& y);
 #endif
 
-  int n;               // number of data
-
 #ifndef G__NOFRIENDS
 private:
 #endif
+  int n;               // number of data
   T *dat;         // pointer to data Array
 #ifndef G__NOSTATICMEMBER
   static int G__defaultsize;
@@ -385,7 +377,7 @@ template<class T> Array<T> operator-(Array<T>& a,Array<T>& b)
 /***********************************************
 * operator *
 ***********************************************/
-template<class T> Array<T> operator *(Array<T>& a,Array<T>& b)
+template<class T> Array<T> operator*(Array<T>& a,Array<T>& b)
 {
   int minn;
   if(a.n<b.n) minn = a.n;
