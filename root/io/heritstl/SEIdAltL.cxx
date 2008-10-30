@@ -173,7 +173,7 @@ void SEIdAltL::KeepTopWeights(UInt_t n, Bool_t keeporder)
    // sort it
    // select the nth down the list for lowest weight value to keep
    vector<Float_t> sortedwgt(cnt);
-   vector<Int_t>   sortedindx(cnt);
+   vector<unsigned int> sortedindx(cnt);
    for (i=0; i<cnt; i++) sortedwgt[i] = self[i].GetWeight();
    Bool_t down=kTRUE;
    TMath::Sort(cnt,&(sortedwgt[0]),&(sortedindx[0]),down);
