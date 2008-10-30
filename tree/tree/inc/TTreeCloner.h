@@ -50,7 +50,7 @@ class TTreeCloner {
 
    Long64_t  *fBasketSeek;       //[fMaxBaskets] list of basket position to be read.
    Long64_t  *fBasketEntry;      //[fMaxBaskets] list of basket start entries.
-   Int_t     *fBasketIndex;      //[fMaxBaskets] ordered list of basket indices to be written.
+   UInt_t    *fBasketIndex;      //[fMaxBaskets] ordered list of basket indices to be written.
 
    UShort_t   fPidOffset;        //Offset to be added to the copied key/basket.
 

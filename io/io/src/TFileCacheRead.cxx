@@ -80,7 +80,7 @@ TFileCacheRead::TFileCacheRead(TFile *file, Int_t buffersize)
    fNb          = 0;
    fSeekSize    = 10000;
    fSeek        = new Long64_t[fSeekSize];
-   fSeekIndex   = new Long64_t[fSeekSize];
+   fSeekIndex   = new Int_t[fSeekSize];
    fSeekSort    = new Long64_t[fSeekSize];
    fPos         = new Long64_t[fSeekSize];
    fSeekLen     = new Int_t[fSeekSize];
@@ -142,7 +142,7 @@ void TFileCacheRead::Prefetch(Long64_t pos, Int_t len)
       //reallocate buffers
       fSeekSize *= 2;
       Long64_t *aSeek        = new Long64_t[fSeekSize];
-      Long64_t *aSeekIndex   = new Long64_t[fSeekSize];
+      Int_t    *aSeekIndex   = new Int_t[fSeekSize];
       Long64_t *aSeekSort    = new Long64_t[fSeekSize];
       Long64_t *aPos         = new Long64_t[fSeekSize];
       Int_t    *aSeekLen     = new Int_t[fSeekSize];
@@ -335,7 +335,7 @@ void TFileCacheRead::Sort()
    Int_t i;
    Int_t nb = 0;
    for (i=0;i<fNseek;i++) {
-      Long64_t ind = fSeekIndex[i];
+      Int_t ind = fSeekIndex[i];
       fSeekSort[i] = fSeek[ind];
       fSeekSortLen[i] = fSeekLen[ind];
    }

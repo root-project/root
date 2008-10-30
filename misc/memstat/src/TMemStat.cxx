@@ -813,7 +813,7 @@ void TMemStat::SortStack(StatType sortType, StampType stampType)
       ++iselected;
    }
    TArrayI  sortIndexes(entries);
-   TMath::Sort(iselected, &values[0], &sortIndexes[0], fOrder);
+   TMath::Sort(static_cast<Int_t>(iselected), &values[0], &sortIndexes[0], fOrder);
    const Int_t sizeOut = TMath::Min(fSortDeep, iselected);
    fSelectedStackIndex.clear();
    fSelectedStackIndex.reserve(sizeOut);

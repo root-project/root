@@ -43,8 +43,8 @@ protected:
    Int_t         fNb;             //Number of long buffers
    Int_t         fSeekSize;       //Allocated size of fSeek
    Long64_t     *fSeek;           //[fNseek] Position on file of buffers to be prefetched
-   Long64_t     *fSeekIndex;      //[fNseek] sorted index table of fSeek
    Long64_t     *fSeekSort;       //[fNseek] Position on file of buffers to be prefetched (sorted)
+   Int_t        *fSeekIndex;      //[fNseek] sorted index table of fSeek
    Long64_t     *fPos;            //[fNb] start of long buffers
    Int_t        *fSeekLen;        //[fNseek] Length of buffers to be prefetched
    Int_t        *fSeekSortLen;    //[fNseek] Length of buffers to be prefetched (sorted)
