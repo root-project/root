@@ -459,6 +459,7 @@ int TGHtml::ControlSize(TGHtmlInput *pElem) {
       pElem->cnt = ++nInput;
       const char *z = pElem->MarkupArg("size", 0);
       int size = z ? atoi(z) : 1;
+      UInt_t width = 0, height = 0;
 
       if (size == 1) {
         TGComboBox *cb = new TGComboBox(fCanvas, pElem->cnt);
@@ -468,14 +469,14 @@ int TGHtml::ControlSize(TGHtmlInput *pElem) {
         lb->Select(e->EntryId(), kFALSE);
         lb->MapSubwindows();
         lb->Layout();
-        UInt_t width = 0;
         for (int i=0;i<lb->GetNumberOfEntries();++i) {
           TGHtmlLBEntry *te = (TGHtmlLBEntry *)lb->GetEntry(i);
           if (te && te->GetText())
             width = TMath::Max(width, te->GetDefaultWidth());
         }
-        UInt_t height = lb->GetItemVsize() ? lb->GetItemVsize()+4 : 20;
-        cb->Resize(width > 0 ? width+20 : 200, height);
+        height = lb->GetItemVsize() ? lb->GetItemVsize()+4 : 22;
+        cb->Resize(width > 0 ? width+30 : 200, 
+                   height > 22 ? height : 22);
         if (e) cb->Select(e->EntryId(), kFALSE);
         SizeAndLink(cb, pElem);
       } else {
@@ -483,7 +484,13 @@ int TGHtml::ControlSize(TGHtmlInput *pElem) {
         z = pElem->MarkupArg("multiple", 0);
         if (z) lb->SetMultipleSelections(kTRUE);
         AddSelectOptions(lb, pElem, pElem->pEnd);
-        lb->Resize(200, lb->GetDefaultHeight() * size);
+        for (int i=0;i<lb->GetNumberOfEntries();++i) {
+          TGHtmlLBEntry *te = (TGHtmlLBEntry *)lb->GetEntry(i);
+          if (te && te->GetText())
+            width = TMath::Max(width, te->GetDefaultWidth());
+        }
+        height = lb->GetItemVsize() ? lb->GetItemVsize() : 22;
+        lb->Resize(width > 0 ? width+30 : 200, height * size);
         lb->Associate(this);
         SizeAndLink(lb, pElem);
       }
