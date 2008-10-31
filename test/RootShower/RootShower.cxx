@@ -1576,8 +1576,6 @@ int main(int argc, char **argv)
    gEnv->SetValue("Gui.BackgroundColor", "#e1e2ed");
    gEnv->SetValue("Gui.SelectBackgroundColor", "#aaaaff");
    gEnv->SetValue("Gui.SelectForegroundColor", "black");
-   gEnv->SetValue("Gui.IconFont", "-*-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1");
-   gEnv->SetValue("Gui.StatusFont", "-*-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1");
    
    TApplication *theApp;
    if (rint)
