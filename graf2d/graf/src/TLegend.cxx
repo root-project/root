@@ -152,7 +152,7 @@ TLegendEntry *TLegend::AddEntry(TObject *obj, const char *label, Option_t *optio
    //    L draw line associated w/ TAttLine if obj inherits from TAttLine
    //    P draw polymarker assoc. w/ TAttMarker if obj inherits from TAttMarker
    //    F draw a box with fill associated w/ TAttFill if obj inherits TAttFill
-   //    E draw vertical error bar if option "P" is also specified
+   //    E draw vertical error bar if option "L" is also specified
 
    const char *lab = label;
    if ((obj && !label) || strlen(label)==0) lab = obj->GetTitle();
