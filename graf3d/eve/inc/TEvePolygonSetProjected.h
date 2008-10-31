@@ -88,7 +88,6 @@ protected:
    Color_t      fFillColor; // fill color of polygons
    Color_t      fLineColor; // outline color of polygons
    Float_t      fLineWidth; // outline width of polygons
-   UChar_t      fTransparency; // transparency of polygons
 
 public:
    TEvePolygonSetProjected(const Text_t* n="TEvePolygonSetProjected", const Text_t* t="");
@@ -113,8 +112,6 @@ public:
    virtual void    SetMainColor(Color_t color);
 
    virtual Bool_t  CanEditMainTransparency() const { return kTRUE; }
-   virtual UChar_t GetMainTransparency()     const { return fTransparency; }
-   virtual void    SetMainTransparency(UChar_t t)  { fTransparency = t; }
 
    virtual Color_t GetFillColor() const { return fFillColor; }
    virtual Color_t GetLineColor() const { return fLineColor; }

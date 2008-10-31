@@ -54,8 +54,12 @@ public:
 
    virtual void   AddStamp(UChar_t bits);
 
-   virtual Bool_t CanEditMainColor() const { return kTRUE; }
+   virtual Bool_t CanEditMainColor() const;
    virtual void   SetMainColor(Color_t color);
+
+   virtual Bool_t  CanEditMainTransparency() const;
+   virtual UChar_t GetMainTransparency() const;
+   virtual void    SetMainTransparency(UChar_t t);
 
    void UpdateNode(TGeoNode* node);
    void UpdateVolume(TGeoVolume* volume);
@@ -125,7 +129,6 @@ class TEveGeoShape : public TEveElement,
 
 protected:
    Color_t           fColor;
-   UChar_t           fTransparency;
    Int_t             fNSegments;
    TGeoShape*        fShape;
 
@@ -138,11 +141,8 @@ public:
    TEveGeoShape(const Text_t* name="TEveGeoShape", const Text_t* title=0);
    virtual ~TEveGeoShape();
 
-   virtual Bool_t  CanEditMainColor() const { return kTRUE; }
-
+   virtual Bool_t  CanEditMainColor()        const { return kTRUE; }
    virtual Bool_t  CanEditMainTransparency() const { return kTRUE; }
-   virtual UChar_t GetMainTransparency()     const { return fTransparency; }
-   virtual void    SetMainTransparency(UChar_t t)  { fTransparency = t; }
 
    Color_t     GetColor()      const { return fColor; }
    Int_t       GetNSegments()  const { return fNSegments; }

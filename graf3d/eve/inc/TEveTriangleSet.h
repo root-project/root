@@ -52,7 +52,11 @@ public:
    TEveTriangleSet(Int_t nv, Int_t nt, Bool_t norms=kFALSE, Bool_t cols=kFALSE);
    ~TEveTriangleSet();
 
-   virtual Bool_t CanEditMainColor() const { return kTRUE; }
+   virtual Bool_t CanEditMainColor()        const { return kTRUE; }
+   virtual Bool_t CanEditMainTransparency() const { return kTRUE; }
+
+   Int_t GetNVerts()  const { return fNVerts;  }
+   Int_t GetNTrings() const { return fNTrings; }
 
    Float_t* Vertex(Int_t i)         { return &(fVerts[3*i]);      }
    Int_t*   Triangle(Int_t i)       { return &(fTrings[3*i]);     }
@@ -74,11 +78,7 @@ public:
    virtual void ComputeBBox();
    virtual void Paint(Option_t* = "");
 
-   Color_t GetColor() const { return fColor; }
-   void SetColor(Color_t c) { fColor = c; }
-
-   UShort_t GetTransparency() const { return fTransp; }
-   void SetTransparency(UShort_t tr) { fTransp = tr; } // *MENU*
+   void SetTransparency(UChar_t tr) { SetMainTransparency(tr); } // *MENU*
 
    static TEveTriangleSet* ReadTrivialFile(const char* file);
 

@@ -74,6 +74,7 @@ TEveElement::TEveElement() :
    fRnrSelf             (kTRUE),
    fRnrChildren         (kTRUE),
    fCanEditMainTrans    (kFALSE),
+   fMainTransparency    (0),
    fMainColorPtr        (0),
    fMainTrans           (0),
    fItems               (),
@@ -103,6 +104,7 @@ TEveElement::TEveElement(Color_t& main_color) :
    fRnrSelf             (kTRUE),
    fRnrChildren         (kTRUE),
    fCanEditMainTrans    (kFALSE),
+   fMainTransparency    (0),
    fMainColorPtr        (&main_color),
    fMainTrans           (0),
    fItems               (),
@@ -968,6 +970,28 @@ void TEveElement::PropagateMainColorToProjecteds(Color_t color, Color_t old_colo
    {
       pable->PropagateMainColor(color, old_color);
    }
+}
+
+//______________________________________________________________________________
+void TEveElement::SetMainTransparency(UChar_t t)
+{
+   // Set main-transparency.
+   // Transparency is clamped to [0, 100].
+
+   if (t > 100) t = 100;
+   fMainTransparency = t;
+   StampColorSelection();
+}
+
+//______________________________________________________________________________
+void TEveElement::SetMainAlpha(Float_t alpha)
+{
+   // Set main-transparency via float alpha varable.
+   // Value of alpha is clamped t0 [0, 1].
+
+   if (alpha < 0) alpha = 0;
+   if (alpha > 1) alpha = 1;
+   SetMainTransparency((UChar_t) (100.0f*(1.0f - alpha)));
 }
 
 /******************************************************************************/

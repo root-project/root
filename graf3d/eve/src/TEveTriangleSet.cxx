@@ -22,7 +22,6 @@
 #include "TBuffer3DTypes.h"
 
 //______________________________________________________________________________
-// TEveTriangleSet
 //
 // Made from a list of vertices and a list of triangles (triplets of
 // vertex indices).
@@ -32,7 +31,7 @@
 // and specifying it only once.
 //
 
-ClassImp(TEveTriangleSet)
+ClassImp(TEveTriangleSet);
 
 //______________________________________________________________________________
 TEveTriangleSet::TEveTriangleSet(Int_t nv, Int_t nt, Bool_t norms, Bool_t cols) :
@@ -155,8 +154,8 @@ void TEveTriangleSet::Paint(Option_t* )
 
    // Section kCore
    buffer.fID           = this;
-   buffer.fColor        = fColor;
-   buffer.fTransparency = fTransp;
+   buffer.fColor        = GetMainColor();
+   buffer.fTransparency = GetMainTransparency();
    RefMainTrans().SetBuffer3D(buffer);
    buffer.SetSectionsValid(TBuffer3D::kCore);
 
@@ -170,8 +169,6 @@ void TEveTriangleSet::Paint(Option_t* )
 }
 
 /******************************************************************************/
-
-#include <stdio.h>
 
 //______________________________________________________________________________
 TEveTriangleSet* TEveTriangleSet::ReadTrivialFile(const char* file)

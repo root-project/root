@@ -52,6 +52,7 @@ TEveGeoNode::TEveGeoNode(TGeoNode* node) :
    // Hack!! Should use cint to retrieve TAttLine::fLineColor offset.
    char* l = (char*) dynamic_cast<TAttLine*>(node->GetVolume());
    SetMainColorPtr((Color_t*)(l + sizeof(void*)));
+   SetMainTransparency((UChar_t) fNode->GetVolume()->GetTransparency());
 
    fRnrSelf = fNode->TGeoAtt::IsVisible();
 }
@@ -127,12 +128,51 @@ void TEveGeoNode::AddStamp(UChar_t bits)
 /******************************************************************************/
 
 //______________________________________________________________________________
+Bool_t TEveGeoNode::CanEditMainColor() const
+{
+   // Can edit main-color -- not available for assemblies.
+
+   return ! fNode->GetVolume()->IsAssembly();
+}
+
+//______________________________________________________________________________
 void TEveGeoNode::SetMainColor(Color_t color)
 {
    // Set color, propagate to volume's line color.
 
    TEveElement::SetMainColor(color);
    fNode->GetVolume()->SetLineColor(color);
+}
+
+//______________________________________________________________________________
+Bool_t TEveGeoNode::CanEditMainTransparency() const
+{
+   // Can edit main transparency -- not available for assemblies.
+
+   return ! fNode->GetVolume()->IsAssembly();
+}
+
+//______________________________________________________________________________
+UChar_t TEveGeoNode::GetMainTransparency() const
+{
+   // Get transparency from node, if different propagate to this.
+
+   UChar_t t = (UChar_t) fNode->GetVolume()->GetTransparency();
+   if (fMainTransparency != t)
+   {
+      TEveGeoNode* ncthis = const_cast<TEveGeoNode*>(this);
+      ncthis->SetMainTransparency(t);
+   }
+   return t;
+}
+
+//______________________________________________________________________________
+void TEveGeoNode::SetMainTransparency(UChar_t t)
+{
+   // Set transparency, propagate to volume's transparency.
+
+   TEveElement::SetMainTransparency(t);
+   fNode->GetVolume()->SetTransparency((Char_t) t);
 }
 
 /******************************************************************************/
@@ -469,7 +509,6 @@ TEveGeoShape::TEveGeoShape(const Text_t* name, const Text_t* title) :
    TEveElement   (fColor),
    TNamed        (name, title),
    fColor        (0),
-   fTransparency (0),
    fNSegments    (0),
    fShape        (0)
 {
@@ -522,8 +561,8 @@ void TEveGeoShape::Paint(Option_t* /*option*/)
       (TBuffer3D::kCore, kFALSE);
 
    buff.fID           = this;
-   buff.fColor        = fColor;
-   buff.fTransparency = fTransparency;
+   buff.fColor        = GetMainColor();
+   buff.fTransparency = GetMainTransparency();
    RefMainTrans().SetBuffer3D(buff);
    buff.fLocalFrame   = kTRUE; // Always enforce local frame (no geo manager).
 
@@ -626,8 +665,8 @@ TEveGeoShape* TEveGeoShape::SubImportShapeExtract(TEveGeoShapeExtract* gse,
    TEveGeoShape* gsre = new TEveGeoShape(gse->GetName(), gse->GetTitle());
    gsre->RefMainTrans().SetFromArray(gse->GetTrans());
    const Float_t* rgba = gse->GetRGBA();
-   gsre->fColor        = TColor::GetColor(rgba[0], rgba[1], rgba[2]);
-   gsre->fTransparency = (UChar_t) (100.0f*(1.0f - rgba[3]));
+   gsre->SetMainColorRGB(rgba[0], rgba[1], rgba[2]);
+   gsre->SetMainAlpha(rgba[3]);
    gsre->SetRnrSelf(gse->GetRnrSelf());
    gsre->SetRnrChildren(gse->GetRnrElements());
    gsre->SetShape(gse->GetShape());

@@ -153,8 +153,8 @@ void TEveStraightLineSet::Paint(Option_t* /*option*/)
 
    // Section kCore
    buff.fID           = this;
-   buff.fColor        = fLineColor;
-   buff.fTransparency = 0;
+   buff.fColor        = GetMainColor();
+   buff.fTransparency = GetMainTransparency();
    buff.fLocalFrame   = kFALSE;
    RefMainTrans().SetBuffer3D(buff);
    buff.SetSectionsValid(TBuffer3D::kCore);

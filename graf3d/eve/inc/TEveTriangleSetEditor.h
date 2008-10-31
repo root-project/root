@@ -14,12 +14,9 @@
 
 #include "TGedFrame.h"
 
-class TGCheckButton;
-class TGNumberEntry;
-class TGColorSelect;
-
-class TEveTransSubEditor;
 class TEveTriangleSet;
+
+class TGLabel;
 
 class TEveTriangleSetEditor : public TGedFrame
 {
@@ -30,7 +27,7 @@ private:
 protected:
    TEveTriangleSet    *fM;        // Model object.
 
-   TEveTransSubEditor *fTrans;  // Sub-editor of transforamtion matrix.
+   TGLabel            *fInfo;     // Info label.
 
 public:
    TEveTriangleSetEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30, UInt_t options = kChildFrame, Pixel_t back=GetDefaultFrameBackground());
@@ -38,7 +35,7 @@ public:
 
    virtual void SetModel(TObject* obj);
 
-   ClassDef(TEveTriangleSetEditor, 1); // Editor for TEveTriangleSet class.
+   ClassDef(TEveTriangleSetEditor, 0); // Editor for TEveTriangleSet class.
 };
 
 #endif

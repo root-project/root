@@ -22,7 +22,6 @@
 #include "TVirtualViewer3D.h"
 
 //______________________________________________________________________________
-// TEveDigitSet
 //
 // Base-class for storage of digit collections; provides
 // transformation matrix (TEveTrans), signal to color mapping
@@ -60,7 +59,6 @@ TEveDigitSet::TEveDigitSet(const Text_t* n, const Text_t* t) :
 
    fFrame          (0),
    fPalette        (0),
-   fTransparency   (0),
    fRenderMode     (kRM_AsIs),
    fDisableLigting (kTRUE),
    fHistoButtons   (kTRUE),
@@ -231,7 +229,7 @@ void TEveDigitSet::Paint(Option_t* /*option*/)
    // Section kCore
    buff.fID           = this;
    buff.fColor        = fFrame ? fFrame->GetFrameColor() : 1;
-   buff.fTransparency = fTransparency;
+   buff.fTransparency = GetMainTransparency();
    RefMainTrans().SetBuffer3D(buff);
    buff.SetSectionsValid(TBuffer3D::kCore);
 

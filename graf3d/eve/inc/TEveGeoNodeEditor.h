@@ -36,8 +36,6 @@ protected:
    TGCheckButton*  fVizVolume;
    TGCheckButton*  fVizVolumeDaughters;
 
-   TGNumberEntry*  fTransparency;
-
 public:
    TEveGeoNodeEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30,
                      UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
@@ -49,8 +47,6 @@ public:
    void DoVizNodeDaughters();
    void DoVizVolume();
    void DoVizVolumeDaughters();
-
-   void DoTransparency();
 
    ClassDef(TEveGeoNodeEditor, 0); // Editor for TEveGeoNode class.
 };

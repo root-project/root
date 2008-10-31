@@ -62,8 +62,7 @@ TEvePolygonSetProjected::TEvePolygonSetProjected(const Text_t* n, const Text_t* 
 
    fFillColor(5),
    fLineColor(3),
-   fLineWidth(1),
-   fTransparency (0)
+   fLineWidth(1)
 {
    // Constructor.
 
@@ -468,7 +467,7 @@ void TEvePolygonSetProjected::Paint(Option_t* )
    // Section kCore
    buffer.fID           = this;
    buffer.fColor        = GetMainColor();
-   buffer.fTransparency = fTransparency;
+   buffer.fTransparency = GetMainTransparency();
    buffer.fLocalFrame   = false;
 
    buffer.SetSectionsValid(TBuffer3D::kCore);

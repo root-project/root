@@ -88,6 +88,7 @@ protected:
    Bool_t           fRnrChildren;          //  Render children of this element.
    Bool_t           fCanEditMainTrans;     //  Allow editing of main transformation.
 
+   UChar_t          fMainTransparency;     //  Main-transparency variable.
    Color_t         *fMainColorPtr;         //  Pointer to main-color variable.
    TEveTrans       *fMainTrans;            //  Pointer to main transformation matrix.
 
@@ -235,8 +236,9 @@ public:
    virtual void    PropagateMainColorToProjecteds(Color_t color, Color_t old_color);
 
    virtual Bool_t  CanEditMainTransparency() const { return kFALSE; }
-   virtual UChar_t GetMainTransparency()     const { return 0; }
-   virtual void    SetMainTransparency(UChar_t) {}
+   virtual UChar_t GetMainTransparency()     const { return fMainTransparency; }
+   virtual void    SetMainTransparency(UChar_t t);
+   void            SetMainAlpha(Float_t alpha);
 
    virtual Bool_t     CanEditMainTrans() const { return fCanEditMainTrans; }
    virtual Bool_t     HasMainTrans()     const { return fMainTrans != 0;   }

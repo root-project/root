@@ -42,9 +42,7 @@ TEveGeoNodeEditor::TEveGeoNodeEditor(const TGWindow *p,
    fVizNode(0),
    fVizNodeDaughters(0),
    fVizVolume(0),
-   fVizVolumeDaughters(0),
-
-   fTransparency(0)
+   fVizVolumeDaughters(0)
 {
    // Constructor.
 
@@ -75,23 +73,6 @@ TEveGeoNodeEditor::TEveGeoNodeEditor(const TGWindow *p,
    fVizVolumeDaughters->Connect
       ("Toggled(Bool_t)",
        "TEveGeoNodeEditor", this, "DoVizVolumeDaughters()");
-
-
-   // --- Color props
-
-   {
-      TGHorizontalFrame* f = new TGHorizontalFrame(this);
-      TGLabel *l = new TGLabel(f, "Transparency:");
-      f->AddFrame(l, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 1, 2, 1, 1));
-      fTransparency = new TGNumberEntry(f, 0., 6, -1,
-                                        TGNumberFormat::kNESInteger, TGNumberFormat::kNEANonNegative,
-                                        TGNumberFormat::kNELLimitMinMax, 0, 100);
-      fTransparency->GetNumberEntry()->SetToolTipText("0 is opaque, 100 fully transparent.");
-      f->AddFrame(fTransparency, new TGLayoutHints(kLHintsLeft, 1, 1, 1, 1));
-      fTransparency->Connect("ValueSet(Long_t)",
-                             "TEveGeoNodeEditor", this, "DoTransparency()");
-      AddFrame(f, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));
-   }
 }
 
 /******************************************************************************/
@@ -109,8 +90,6 @@ void TEveGeoNodeEditor::SetModel(TObject* obj)
    fVizNodeDaughters->SetState(node->TGeoAtt::IsVisDaughters() ? kButtonDown : kButtonUp);
    fVizVolume->SetState(vol->IsVisible() ? kButtonDown : kButtonUp);
    fVizVolumeDaughters->SetState(vol->IsVisDaughters() ? kButtonDown : kButtonUp);
-
-   fTransparency->SetNumber(vol->GetTransparency());
 }
 
 /******************************************************************************/
@@ -148,17 +127,6 @@ void TEveGeoNodeEditor::DoVizVolumeDaughters()
    // Slot for VizVolumeDaughters.
 
    fNodeRE->fNode->GetVolume()->VisibleDaughters(fVizVolumeDaughters->IsOn());
-   Update();
-}
-
-/******************************************************************************/
-
-//______________________________________________________________________________
-void TEveGeoNodeEditor::DoTransparency()
-{
-   // Slot for Transparenc.
-
-   fNodeRE->fNode->GetVolume()->SetTransparency(char(fTransparency->GetNumber()));
    Update();
 }
 
