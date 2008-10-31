@@ -28,6 +28,8 @@
 #include <cmath>
 #include <cassert>
 
+#include <vector>
+
 using std::cout; 
 using std::endl; 
 
@@ -68,7 +70,6 @@ double gaus100d(double * x, double *) {
 } 
 
 
-
 int testUnuran(TUnuran & unr, const std::string & method, const TUnuranMultiContDist & dist, TH3 * h1, const TH3 * href = 0, const int dim = 3 ) { 
 
    assert (dim >=3);
@@ -87,9 +88,9 @@ int testUnuran(TUnuran & unr, const std::string & method, const TUnuranMultiCont
    TStopwatch w; 
 
    w.Start(); 
-   double x[dim]; 
+   std::vector<double> x(dim); 
    for (int i = 0; i < n; ++i) {
-      unr.SampleMulti(x);
+      unr.SampleMulti( &x[0]);
       h1->Fill(x[0],x[1],x[2]);
    }
 

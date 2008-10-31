@@ -33,7 +33,7 @@ endif
 ifneq ($(BUILDMATHMORE),)
 CXXFLAGS+= -DHAVE_MATHMORE
 ifeq ($(PLATFORM),win32)
-EXTRALIBS        = "$(ROOTSYS)/lib/libMathMore.lib"
+EXTRALIBS       += "$(ROOTSYS)/lib/libMathMore.lib"
 else
 EXTRALIBS += -lMathMore
 endif
