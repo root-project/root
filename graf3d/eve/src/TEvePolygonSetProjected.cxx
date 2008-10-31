@@ -53,9 +53,6 @@ TEvePolygonSetProjected::TEvePolygonSetProjected(const Text_t* n, const Text_t* 
    TEveElementList(n, t),
 
    fBuff(0),
-   fIdxMap(0),
-
-   fSurf(0),
 
    fNPnts(0),
    fPnts(0),
@@ -74,39 +71,9 @@ TEvePolygonSetProjected::~TEvePolygonSetProjected()
 {
    // Destructor.
 
-   ClearPolygonSet();
-}
-
-//______________________________________________________________________________
-void TEvePolygonSetProjected::SetMainColor(Color_t color)
-{
-   // Set main color.
-   // Override so that line-color can also be changed if it is equal
-   // to fill color (which is treated as main color).
-
-   if (fFillColor == fLineColor) {
-      fLineColor = color;
-      StampObjProps();
-   }
-   TEveElementList::SetMainColor(color);
-}
-
-/******************************************************************************/
-
-//______________________________________________________________________________
-void TEvePolygonSetProjected::ClearPolygonSet()
-{
-   // Clears list of points and polygons.
-
-   Int_t* p;
-   for (vpPolygon_i i = fPols.begin(); i!= fPols.end(); i++)
-   {
-      p =  (*i).fPnts; delete [] p;
-   }
    fPols.clear();
-
-   // delete reduced points
-   delete [] fPnts;
+   if (fPnts) delete [] fPnts;
+   if (fBuff) delete fBuff;
 }
 
 //______________________________________________________________________________
@@ -148,10 +115,8 @@ void TEvePolygonSetProjected::UpdateProjection()
    if (fBuff == 0) return;
 
    // drop polygons, and projected/reduced points
-   ClearPolygonSet();
-   fPnts  = 0;
-   fNPnts = 0;
-   fSurf  = 0;
+   fPols.clear();
+
    ProjectBuffer3D();
 }
 
@@ -167,7 +132,7 @@ Bool_t TEvePolygonSetProjected::IsFirstIdxHead(Int_t s0, Int_t s1)
 }
 
 //______________________________________________________________________________
-void TEvePolygonSetProjected::ProjectAndReducePoints()
+Int_t* TEvePolygonSetProjected::ProjectAndReducePoints()
 {
    // Project and reduce buffer points.
 
@@ -181,29 +146,32 @@ void TEvePolygonSetProjected::ProjectAndReducePoints()
       projection->ProjectPoint(pnts[i].fX, pnts[i].fY, pnts[i].fZ,
                                TEveProjection::kPP_Plane);
    }
-   fIdxMap   = new Int_t[buffN];
+
+   if (fPnts) delete [] fPnts;
+   fNPnts=0;
+   Int_t* idxMap   = new Int_t[buffN];
    Int_t* ra = new Int_t[buffN];  // list of reduced vertices
    for (UInt_t v = 0; v < (UInt_t)buffN; ++v)
    {
-      fIdxMap[v] = -1;
+      idxMap[v] = -1;
       for (Int_t k = 0; k < fNPnts; ++k)
       {
          if(pnts[v].SquareDistance(pnts[ra[k]]) < TEveProjection::fgEps*TEveProjection::fgEps)
          {
-            fIdxMap[v] = k;
+            idxMap[v] = k;
             break;
          }
       }
       // have not found a point inside epsilon, add new point in scaled array
-      if (fIdxMap[v] == -1)
+      if (idxMap[v] == -1)
       {
-         fIdxMap[v] = fNPnts;
+         idxMap[v] = fNPnts;
          ra[fNPnts] = v;
          ++fNPnts;
       }
    }
 
-   // create an array of scaled points
+   // write the array of scaled points
    fPnts = new TEveVector[fNPnts];
    for (Int_t idx = 0; idx < fNPnts; ++idx)
    {
@@ -216,15 +184,17 @@ void TEvePolygonSetProjected::ProjectAndReducePoints()
    delete [] ra;
    delete [] pnts;
    // printf("reduced %d points of %d\n", fNPnts, N);
+
+   return idxMap;
 }
 
 //______________________________________________________________________________
-void TEvePolygonSetProjected::AddPolygon(std::list<Int_t>& pp, vpPolygon_t& pols)
+Float_t TEvePolygonSetProjected::AddPolygon(std::list<Int_t>& pp, vpPolygon_t& pols)
 {
    // Check if polygon has dimensions above TEveProjection::fgEps and add it
    // to a list if it is not a duplicate.
 
-   if (pp.size() <= 2) return;
+   if (pp.size() <= 2) return 0;
 
    // dimension of bbox
    Float_t bbox[] = { 1e6, -1e6, 1e6, -1e6, 1e6, -1e6 };
@@ -238,7 +208,7 @@ void TEvePolygonSetProjected::AddPolygon(std::list<Int_t>& pp, vpPolygon_t& pols
       if (fPnts[idx].fY > bbox[3]) bbox[3] = fPnts[idx].fY;
    }
    Float_t eps = 2*TEveProjection::fgEps;
-   if ((bbox[1]-bbox[0]) < eps || (bbox[3]-bbox[2]) < eps) return;
+   if ((bbox[1]-bbox[0]) < eps || (bbox[3]-bbox[2]) < eps) return 0;
 
    // duplication
    for (vpPolygon_i poi = pols.begin(); poi != pols.end(); ++poi)
@@ -257,7 +227,7 @@ void TEvePolygonSetProjected::AddPolygon(std::list<Int_t>& pp, vpPolygon_t& pols
          ++u;
          if (++pidx >= refP.fNPnts) pidx = 0;
       }
-      if (u == pp.end()) return;
+      if (u == pp.end()) return 0;
    }
 
    Int_t* pv = new Int_t[pp.size()];
@@ -267,17 +237,22 @@ void TEvePolygonSetProjected::AddPolygon(std::list<Int_t>& pp, vpPolygon_t& pols
       pv[count] = *u;
       count++;
    }
-   pols.push_back(Polygon_t((Int_t)pp.size(), pv));
-   fSurf += (bbox[1]-bbox[0]) * (bbox[3]-bbox[2]);
+
+   pols.push_back(Polygon_t());
+   pols.back().fNPnts = pp.size();
+   pols.back().fPnts = &pv[0];
+
+   return (bbox[1]-bbox[0]) * (bbox[3]-bbox[2]);
 }
 
 //______________________________________________________________________________
-void TEvePolygonSetProjected::MakePolygonsFromBP()
+Float_t TEvePolygonSetProjected::MakePolygonsFromBP(Int_t* idxMap)
 {
    // Build polygons from list of buffer polygons.
 
    TEveProjection* projection = fManager->GetProjection();
    Int_t* bpols = fBuff->fPols;
+   Float_t surf =0; // surface of projected polygons
    for (UInt_t pi = 0; pi< fBuff->NbPols(); pi++)
    {
       std::list<Int_t> pp; // points in current polygon
@@ -287,13 +262,13 @@ void TEvePolygonSetProjected::MakePolygonsFromBP()
       Int_t  tail, head;
       Bool_t h = IsFirstIdxHead(seg[0], seg[1]);
       if (h) {
-         head = fIdxMap[fBuff->fSegs[3*seg[0] + 1]];
-         tail = fIdxMap[fBuff->fSegs[3*seg[0] + 2]];
+         head = idxMap[fBuff->fSegs[3*seg[0] + 1]];
+         tail = idxMap[fBuff->fSegs[3*seg[0] + 2]];
       }
       else
       {
-         head = fIdxMap[fBuff->fSegs[3*seg[0] + 2]];
-         tail = fIdxMap[fBuff->fSegs[3*seg[0] + 1]];
+         head = idxMap[fBuff->fSegs[3*seg[0] + 2]];
+         tail = idxMap[fBuff->fSegs[3*seg[0] + 1]];
       }
       pp.push_back(head);
       // printf("start idx head %d, tail %d\n", head, tail);
@@ -304,8 +279,8 @@ void TEvePolygonSetProjected::MakePolygonsFromBP()
       Bool_t accepted = kFALSE;
       for (LSegIt_t it = segs.begin(); it != segs.end(); ++it)
       {
-         Int_t mv1 = fIdxMap[(*it).fV1];
-         Int_t mv2 = fIdxMap[(*it).fV2];
+         Int_t mv1 = idxMap[(*it).fV1];
+         Int_t mv2 = idxMap[(*it).fV2];
          accepted = projection->AcceptSegment(fPnts[mv1], fPnts[mv2], TEveProjection::fgEps);
 
          if(accepted == kFALSE)
@@ -320,22 +295,24 @@ void TEvePolygonSetProjected::MakePolygonsFromBP()
       if (pp.empty() == kFALSE)
       {
          if (pp.front() == pp.back()) pp.pop_front();
-         AddPolygon(pp, fPolsBP);
+         surf += AddPolygon(pp, fPolsBP);
       }
       bpols += (segN+2);
    }
+   return surf;
 }
 
 //______________________________________________________________________________
-void TEvePolygonSetProjected::MakePolygonsFromBS()
+Float_t TEvePolygonSetProjected::MakePolygonsFromBS(Int_t* idxMap)
 {
    // Build polygons from the set of buffer segments.
    // First creates a segment pool according to reduced and projected points
    // and then build polygons from the pool.
 
-   LSeg_t segs;
+   LSeg_t   segs;
    LSegIt_t it;
-   TEveProjection* projection = fManager->GetProjection();
+   Float_t  surf = 0; // surface of projected polygons
+   TEveProjection *projection = fManager->GetProjection();
    for (UInt_t s = 0; s < fBuff->NbSegs(); ++s)
    {
       Bool_t duplicate = kFALSE;
@@ -343,14 +320,16 @@ void TEvePolygonSetProjected::MakePolygonsFromBS()
       Int_t vor1, vor2; // mapped idx
       vo1 =  fBuff->fSegs[3*s + 1];
       vo2 =  fBuff->fSegs[3*s + 2]; //... skip color info
-      vor1 = fIdxMap[vo1];
-      vor2 = fIdxMap[vo2];
+      vor1 = idxMap[vo1];
+      vor2 = idxMap[vo2];
       if (vor1 == vor2) continue;
       // check duplicate
-      for (it = segs.begin(); it != segs.end(); it++ ){
+      for (it = segs.begin(); it != segs.end(); ++it)
+      {
          Int_t vv1 = (*it).fV1;
          Int_t vv2 = (*it).fV2;
-         if((vv1 == vor1 && vv2 == vor2 )||(vv1 == vor2 && vv2 == vor1 )) {
+         if((vv1 == vor1 && vv2 == vor2) || (vv1 == vor2 && vv2 == vor1))
+         {
             duplicate = kTRUE;
             continue;
          }
@@ -359,14 +338,14 @@ void TEvePolygonSetProjected::MakePolygonsFromBS()
          segs.push_back(Seg_t(vor1, vor2));
    }
 
-   while (segs.empty() == kFALSE)
+   while ( ! segs.empty())
    {
       std::list<Int_t> pp; // points in current polygon
       pp.push_back(segs.front().fV1);
       Int_t tail = segs.front().fV2;
       segs.pop_front();
       Bool_t match = kTRUE;
-      while (match && segs.empty() == kFALSE)
+      while (match && ! segs.empty())
       {
          for (LSegIt_t k = segs.begin(); k != segs.end(); ++k)
          {
@@ -389,8 +368,9 @@ void TEvePolygonSetProjected::MakePolygonsFromBS()
          if (tail == pp.front())
             break;
       }
-      AddPolygon(pp, fPolsBS);
+      surf += AddPolygon(pp, fPolsBS);
    }
+   return surf;
 }
 
 /******************************************************************************/
@@ -400,33 +380,32 @@ void  TEvePolygonSetProjected::ProjectBuffer3D()
 {
    // Project current buffer.
 
-   ProjectAndReducePoints();
-   TEveProjection::EGeoMode_e mode = fManager->GetProjection()->GetGeoMode();
+   // create map from original to projected and reduced point needed oly for geometry
+   Int_t* idxMap = ProjectAndReducePoints();
 
+   TEveProjection::EGeoMode_e mode = fManager->GetProjection()->GetGeoMode();
    switch (mode)
    {
       case TEveProjection::kGM_Polygons :
       {
-         MakePolygonsFromBP();
+         MakePolygonsFromBP(idxMap);
          fPolsBP.swap(fPols);
          break;
       }
       case TEveProjection::kGM_Segments :
       {
-         MakePolygonsFromBS();
+         MakePolygonsFromBS(idxMap);
          fPolsBS.swap(fPols);
          break;
       }
       case TEveProjection::kGM_Unknown:
       {
-         MakePolygonsFromBP();
-         Float_t surfBP = fSurf;
-         fSurf = 0;
-         MakePolygonsFromBS();
-         if (fSurf < surfBP)
+         // take projectopn with largest surface
+        Float_t surfBP = MakePolygonsFromBP(idxMap);
+        Float_t surfBS = MakePolygonsFromBS(idxMap);
+         if (surfBS < surfBP)
          {
             fPolsBP.swap(fPols);
-            fSurf = surfBP;
             fPolsBS.clear();
          }
          else
@@ -439,7 +418,7 @@ void  TEvePolygonSetProjected::ProjectBuffer3D()
          break;
    }
 
-   delete [] fIdxMap;
+   delete [] idxMap;
    ResetBBox();
 }
 
@@ -452,6 +431,20 @@ void TEvePolygonSetProjected::ComputeBBox()
    for (Int_t pi = 0; pi<fNPnts; ++pi)
       BBoxCheckPoint(fPnts[pi].fX, fPnts[pi].fY, fPnts[pi].fZ);
    AssertBBoxExtents(0.1);
+}
+
+//______________________________________________________________________________
+void TEvePolygonSetProjected::SetMainColor(Color_t color)
+{
+   // Set main color.
+   // Override so that line-color can also be changed if it is equal
+   // to fill color (which is treated as main color).
+
+   if (fFillColor == fLineColor) {
+      fLineColor = color;
+      StampObjProps();
+   }
+   TEveElementList::SetMainColor(color);
 }
 
 //______________________________________________________________________________

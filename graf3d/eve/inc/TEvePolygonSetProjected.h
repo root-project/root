@@ -49,9 +49,7 @@ protected:
       Int_t*    fPnts;   // point indices
 
       Polygon_t() : fNPnts(0), fPnts(0) {}
-      Polygon_t(Int_t n, Int_t* p) : fNPnts(n), fPnts(p) {}
-      Polygon_t(const Polygon_t& x) : fNPnts(x.fNPnts), fPnts(x.fPnts) {}
-      virtual ~Polygon_t() {}
+     virtual ~Polygon_t() { delete [] fPnts; fNPnts=0; fPnts=0;}
 
       Polygon_t& operator=(const Polygon_t& x)
       { fNPnts = x.fNPnts; fPnts = x.fPnts; return *this; }
@@ -66,21 +64,18 @@ protected:
 
 private:
    TBuffer3D*   fBuff;   // buffer of projectable object
-   Int_t*       fIdxMap; // map from original to projected and reduced point needed oly for geometry
 
    Bool_t       IsFirstIdxHead(Int_t s0, Int_t s1);
-   void         AddPolygon(std::list<Int_t, std::allocator<Int_t> >& pp, std::list<Polygon_t, std::allocator<Polygon_t> >& p);
+   Float_t      AddPolygon(std::list<Int_t, std::allocator<Int_t> >& pp, std::list<Polygon_t, std::allocator<Polygon_t> >& p);
 
-   void         ProjectAndReducePoints();
-   void         MakePolygonsFromBP();
-   void         MakePolygonsFromBS();
-   void         ClearPolygonSet();
+   Int_t*       ProjectAndReducePoints();
+   Float_t      MakePolygonsFromBP(Int_t* idxMap);
+   Float_t      MakePolygonsFromBS(Int_t* idxMap);
 
 protected:
    vpPolygon_t  fPols;     // polygons
    vpPolygon_t  fPolsBS;   // polygons build from TBuffer3D segments
    vpPolygon_t  fPolsBP;   // polygons build from TBuffer3D polygons
-   Float_t      fSurf;     // sum of surface of polygons
 
    Int_t        fNPnts;    // number of reduced and projected points
    TEveVector*  fPnts;     // reduced and projected points
@@ -105,9 +100,7 @@ public:
    virtual void    DumpPolys() const;
    void            DumpBuffer3D();
 
-
    // Rendering parameters.
-
    virtual Bool_t  CanEditMainColor() const { return kTRUE; }
    virtual void    SetMainColor(Color_t color);
 
