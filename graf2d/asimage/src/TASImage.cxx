@@ -3875,6 +3875,7 @@ void TASImage::DrawRectangle(UInt_t x, UInt_t y, UInt_t w, UInt_t h,
    DrawVLine(x + w, y, y + h, (UInt_t)color, thick);
    DrawHLine(y + h, x, x + w, (UInt_t)color, thick);
    DrawVLine(x, y, y + h, (UInt_t)color, thick);
+   UnZoom();
 }
 
 //______________________________________________________________________________
