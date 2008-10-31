@@ -459,7 +459,7 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
     RooAbsData* dset = (RooAbsData*) dsetList->FindObject(type->GetName()) ;
 
     if (pdf && dset && (dset->numEntries(kTRUE)!=0. || processEmptyDataSets())) {      
-      coutE(Fitting) << "RooAbsTestStatistic::initSimMode: creating slave calculator #" << n << " for state " << type->GetName() 
+      coutI(Fitting) << "RooAbsTestStatistic::initSimMode: creating slave calculator #" << n << " for state " << type->GetName() 
 		     << " (" << dset->numEntries() << " dataset entries)" << endl ;
 
       if (_splitRange && rangeName) {

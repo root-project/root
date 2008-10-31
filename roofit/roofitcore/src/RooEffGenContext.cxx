@@ -57,6 +57,8 @@ RooEffGenContext::RooEffGenContext(const RooAbsPdf &model,
 RooEffGenContext::~RooEffGenContext()
 {
   // Destructor
+  delete _generator ;
+  delete _cloneSet ;
 }
 
 

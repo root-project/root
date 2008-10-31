@@ -41,7 +41,7 @@ ClassImp(RooParamBinning)
 
 //_____________________________________________________________________________
 RooParamBinning::RooParamBinning(const char* name) : 
-  RooAbsBinning(name), _lp(0), _owner(0)
+  RooAbsBinning(name), _lp(0), _xlo(0), _xhi(0), _owner(0)
 {  
   // Default constructor
 

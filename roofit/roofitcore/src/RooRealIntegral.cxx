@@ -572,6 +572,7 @@ Bool_t RooRealIntegral::servesExclusively(const RooAbsArg* server,const RooArgSe
        
        if (!servesExclusively(client,exclLVBranches)) {
 	 // Client is a non-LValue that doesn't have an exclusive LValue server
+	 delete cIter ;
 	 return kFALSE ;	 
        }
      } else {

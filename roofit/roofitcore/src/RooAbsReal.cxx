@@ -1426,6 +1426,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
       }
       slabel = strtok(0,",") ;
     }
+    delete iter ;
   }
 
   o.precision = pc.getDouble("precision") ;
@@ -1503,6 +1504,8 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
     // Forward to actual calculation
     ret = RooAbsReal::plotAsymOn(frame,*asymCat,o) ;
   }
+
+  delete sliceSet ;
 
   // Optionally adjust line/fill attributes
   Int_t lineColor = pc.getInt("lineColor") ;
@@ -1807,7 +1810,6 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
     frame->addPlotable(curve, o.drawOptions);
 
     if (projDataSel!=o.projData) delete projDataSel ;
-    delete projDataNeededVars ;
        
   } else {
     
@@ -1876,6 +1878,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
     frame->addPlotable(curve, o.drawOptions, o.curveInvisible);
   }
 
+  if (projDataNeededVars) delete projDataNeededVars ;
   delete deps ;
   delete projectionCompList ;
   delete plotCloneSet ;
@@ -2030,6 +2033,8 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
   asymNeg->setIndex(-1) ;
   RooCustomizer* custPos = new RooCustomizer(*this,"pos") ;
   RooCustomizer* custNeg = new RooCustomizer(*this,"neg") ;
+  custPos->setOwning(kTRUE) ;
+  custNeg->setOwning(kTRUE) ;
   custPos->replaceArg(asymCat,*asymPos) ;
   custNeg->replaceArg(asymCat,*asymNeg) ;
   RooAbsReal* funcPos = (RooAbsReal*) custPos->build() ;
@@ -3101,7 +3106,7 @@ RooAbsReal* RooAbsReal::createIntRI(const RooArgSet& iset, const RooArgSet& nset
   RooAbsReal* cdf = tmp->createIntegral(cloneList,finalNset,"CDF") ;
 
   // Transfer ownership of cloned items to top-level c.d.f object
-  cdf->addOwnedComponents(clonedBranchNodes) ;
+  cdf->addOwnedComponents(*tmp) ;
   cdf->addOwnedComponents(cloneList) ;
   cdf->addOwnedComponents(loList) ;
 

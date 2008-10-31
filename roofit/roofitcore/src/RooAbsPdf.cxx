@@ -622,6 +622,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, RooCmdArg arg1, RooCmdArg arg2,
   // Verbose(Bool_t flag)           -- Flag controls if verbose output is printed (NLL, parameter changes during fit
   // Timer(Bool_t flag)             -- Time CPU and wall clock consumption of fit steps, off by default
   // PrintLevel(Int_t level)        -- Set Minuit print level (-1 through 3, default is 1). At -1 all RooFit informational 
+  // Warnings(Bool_t flag)          -- Enable or disable MINUIT warnings (enabled by default)
   //                                   messages are suppressed as well
   // PrintEvalErrors(Int_t numErr)  -- Control number of p.d.f evaluation errors printed per likelihood evaluation. A negative
   //                                   value suppress output completely, a zero value will only print the error count per p.d.f component,
@@ -674,6 +675,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   pc.defineInt("numcpu","NumCPU",0,1) ;
   pc.defineInt("numee","PrintEvalErrors",0,10) ;
   pc.defineInt("doEEWall","EvalErrorWall",0,1) ;
+  pc.defineInt("doWarn","Warnings",0,1) ;
   pc.defineObject("projDepSet","ProjectedObservables",0,0) ;
   pc.defineObject("minosSet","Minos",0,0) ;
   pc.defineObject("cPars","Constrain",0,0) ;
@@ -711,6 +713,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   Int_t splitr   = pc.getInt("splitRange") ;
   Int_t numee    = pc.getInt("numee") ;
   Int_t doEEWall = pc.getInt("doEEWall") ;
+  Int_t doWarn   = pc.getInt("doWarn") ;
   const RooArgSet* minosSet = static_cast<RooArgSet*>(pc.getObject("minosSet")) ;
   const RooArgSet* cPars = static_cast<RooArgSet*>(pc.getObject("cPars")) ;
   const RooArgSet* extCons = static_cast<RooArgSet*>(pc.getObject("extCons")) ;
@@ -779,7 +782,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   }
 
   // Include constraints, if any, in likelihood
-  RooAbsReal* nllCons ;
+  RooAbsReal* nllCons(0) ;
   if (allConstraints.getSize()>0) {   
 
     coutI(Minimization) << " Including the following contraint terms in minimization: " << allConstraints << endl ;
@@ -787,13 +790,16 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
     nllCons = new RooConstraintSum("nllCons","nllCons",allConstraints) ;
     RooAbsReal* orignll = nll ;
     nll = new RooAddition("nllWithCons","nllWithCons",RooArgSet(*nll,*nllCons)) ;
-    nll->addOwnedComponents(*orignll) ;
+    nll->addOwnedComponents(RooArgSet(*orignll,*nllCons)) ;
   }
 
   // Instantiate MINUIT
   RooMinuit m(*nll) ;
 
   m.setEvalErrorWall(doEEWall) ;
+  if (doWarn==0) {
+    m.setNoWarn() ;
+  }
   
   m.setPrintEvalErrors(numee) ;
   if (plevel!=1) {
@@ -1087,7 +1093,7 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet& whatVars, const RooCmdArg& arg1
   // Decode command line arguments
   RooDataSet* protoData = static_cast<RooDataSet*>(pc.getObject("proto",0)) ;
   const char* dsetName = pc.getString("dsetName") ;
-  Int_t  nEvents = pc.getInt("nEvents") ;
+  Int_t nEvents = pc.getInt("nEvents") ;
   Bool_t verbose = pc.getInt("verbose") ;
   Bool_t randProto = pc.getInt("randProto") ;
   Bool_t resampleProto = pc.getInt("resampleProto") ;
@@ -1097,6 +1103,10 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet& whatVars, const RooCmdArg& arg1
     nEvents = RooRandom::randomGenerator()->Poisson(nEvents==0?expectedEvents(&whatVars):nEvents) ;
     cxcoutI(Generation) << " Extended mode active, number of events generated (" << nEvents << ") is Poisson fluctuation on " 
 			  << GetName() << "::expectedEvents() = " << nEvents << endl ;
+    // If Poisson fluctuation results in zero events, stop here
+    if (nEvents==0) {
+      return 0 ;
+    }
   } else if (nEvents==0) {
     cxcoutI(Generation) << "No number of events specified , number of events generated is " 
 			  << GetName() << "::expectedEvents() = " << expectedEvents(&whatVars)<< endl ;
@@ -1589,7 +1599,14 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
   
   // Restore selection status ;
   if (haveCompSel) plotOnCompSelect(0) ;
-  
+
+  if (plotRange) {
+    delete plotRange ;
+  }
+  if (normRange) {
+    delete normRange ;
+  }  
+
   return ret ;
 }
 

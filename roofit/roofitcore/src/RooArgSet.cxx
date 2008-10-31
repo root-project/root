@@ -70,16 +70,23 @@ char* RooArgSet::_poolBegin = 0 ;
 char* RooArgSet::_poolCur = 0 ;
 char* RooArgSet::_poolEnd = 0 ;
 #define POOLSIZE 1048576
-static std::list<void*> _memPoolList ;
+
+struct POOLDATA 
+{
+  void* _base ;
+} ;
+
+static std::list<POOLDATA> _memPoolList ;
 
 //_____________________________________________________________________________
 void RooArgSet::cleanup()
 {
   // Clear memoery pool on exit to avoid reported memory leaks
 
-  std::list<void*>::iterator iter = _memPoolList.begin() ;
+  std::list<POOLDATA>::iterator iter = _memPoolList.begin() ;
   while(iter!=_memPoolList.end()) {
-    free(*iter) ;
+    free(iter->_base) ;
+    iter->_base=0 ;
     iter++ ;
   }
   _memPoolList.clear() ;
@@ -99,7 +106,7 @@ void* RooArgSet::operator new (size_t bytes)
 
   //cout << " RooArgSet::operator new(" << bytes << ")" << endl ;
 
-  if (!_poolBegin || _poolCur >= _poolEnd) {
+  if (!_poolBegin || _poolCur+(sizeof(RooArgSet)) >= _poolEnd) {
 
     if (_poolBegin!=0) {
       oocxcoutD((TObject*)0,Caching) << "RooArgSet::operator new(), starting new 1MB memory pool" << endl ;
@@ -107,16 +114,22 @@ void* RooArgSet::operator new (size_t bytes)
 
     // Start pruning empty memory pools if number exceeds 3
     if (_memPoolList.size()>3) {
-      for (std::list<void*>::iterator poolIter =  _memPoolList.begin() ; poolIter!=_memPoolList.end() ; ++poolIter) {
+      
+      void* toFree(0) ;
+
+      for (std::list<POOLDATA>::iterator poolIter =  _memPoolList.begin() ; poolIter!=_memPoolList.end() ; ++poolIter) {
 
 	// If pool is empty, delete it and remove it from list
-	if ((*(Int_t*)(*poolIter))==0) {
-	  oocxcoutD((TObject*)0,Caching) << "RooArgSet::operator new(), pruning empty memory pool " << (*poolIter) << endl ;
-	  free(*poolIter) ;
-	  _memPoolList.remove(*poolIter) ;
+	if ((*(Int_t*)(poolIter->_base))==0) {
+	  oocxcoutD((TObject*)0,Caching) << "RooArgSet::operator new(), pruning empty memory pool " << (void*)(poolIter->_base) << endl ;
+
+	  toFree = poolIter->_base ;
+	  _memPoolList.erase(poolIter) ;
 	  break ;
 	}
       }      
+
+      free(toFree) ;      
     }
     
     void* mem = malloc(POOLSIZE) ;
@@ -128,8 +141,11 @@ void* RooArgSet::operator new (size_t bytes)
 
     // Clear pool counter
     *((Int_t*)_poolBegin)=0 ;
+    
+    POOLDATA p ;
+    p._base=mem ;
+    _memPoolList.push_back(p) ;
 
-    _memPoolList.push_back(mem) ;
     RooSentinel::activate() ;
   }
 
@@ -151,9 +167,9 @@ void RooArgSet::operator delete (void* ptr)
   // Memory is owned by pool, we need to do nothing to release it
 
   // Decrease use count in pool that ptr is on
-  for (std::list<void*>::iterator poolIter =  _memPoolList.begin() ; poolIter!=_memPoolList.end() ; ++poolIter) {
-    if ((char*)ptr > (char*)*poolIter && (char*)ptr < (char*)*poolIter + POOLSIZE) {
-      (*(Int_t*)(*poolIter))-- ;
+  for (std::list<POOLDATA>::iterator poolIter =  _memPoolList.begin() ; poolIter!=_memPoolList.end() ; ++poolIter) {
+    if ((char*)ptr > (char*)poolIter->_base && (char*)ptr < (char*)poolIter->_base + POOLSIZE) {
+      (*(Int_t*)(poolIter->_base))-- ;
       break ;
     }
   }

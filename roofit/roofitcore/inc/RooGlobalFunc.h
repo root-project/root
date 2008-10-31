@@ -135,6 +135,7 @@ RooCmdArg Verbose(Bool_t flag=kTRUE) ;
 RooCmdArg Save(Bool_t flag=kTRUE) ;
 RooCmdArg Timer(Bool_t flag=kTRUE) ;
 RooCmdArg PrintLevel(Int_t code) ;
+RooCmdArg Warnings(Bool_t flag=kTRUE) ; 
 RooCmdArg Strategy(Int_t code) ;
 RooCmdArg InitialHesse(Bool_t flag=kTRUE) ;
 RooCmdArg Hesse(Bool_t flag=kTRUE) ;

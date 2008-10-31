@@ -394,6 +394,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
       }
       slabel = strtok(0,",") ;
     }
+    delete iter ;
   }
 
   // Check if we have a projection dataset
@@ -551,6 +552,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
     }
 
     delete wTable ;
+    delete sliceSet ;
     return retFrame ;
   }
 
@@ -691,6 +693,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
   }
 
   // Cleanup
+  delete sliceSet ;
   delete pIter ;
   delete wTable ;
   delete idxCloneSet ;

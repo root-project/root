@@ -153,6 +153,7 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
       hmap[token] = (RooDataSet*) hiter->Next() ;
       token = strtok(0,",") ;
     }
+    delete hiter ;
   }
 
   // Lookup name of weight variable if it was specified by object reference

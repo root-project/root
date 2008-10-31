@@ -176,6 +176,7 @@ RooProduct::ProdMap* RooProduct::groupProductTerms(const RooArgSet& allVars) con
     }
     map->push_back( std::make_pair(vars,comps) );
   }
+  delete allVarsIter ;
 
   // Merge groups with overlapping dependents
   Bool_t overlap;
@@ -230,8 +231,16 @@ Int_t RooProduct::getPartIntList(const RooArgSet* iset, const char *isetRange) c
   }
   
   // did we find any factorizable terms?
-  if (map->size()<2) return -1; // RRI caller will zero analVars if return code = 0....
+  if (map->size()<2) {
+    
+    for (ProdMap::iterator iter = map->begin() ; iter != map->end() ; ++iter) {
+      delete iter->first ;
+      delete iter->second ;
+    }
 
+    delete map ;
+    return -1; // RRI caller will zero analVars if return code = 0....
+  }
   cache = new CacheElem();
 
   for (ProdMap::const_iterator i = map->begin();i!=map->end();++i) {
@@ -263,6 +272,10 @@ Int_t RooProduct::getPartIntList(const RooArgSet* iset, const char *isetRange) c
   cxcoutD(Integration) << "RooProduct::getPartIntList(" << GetName() << ") created list " << cache->_prodList << " with code " << code+1 << endl
 		       << " for iset=" << *iset << " @" << iset << " range: " << (isetRange?isetRange:"<none>") << endl ;
 
+  for (ProdMap::iterator iter = map->begin() ; iter != map->end() ; ++iter) {
+    delete iter->first ;
+    delete iter->second ;
+  }
   delete map ;
   return code;
 }

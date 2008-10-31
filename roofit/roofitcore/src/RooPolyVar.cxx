@@ -121,6 +121,16 @@ RooPolyVar::RooPolyVar(const RooPolyVar& other, const char* name) :
 
 
 //_____________________________________________________________________________
+RooPolyVar::~RooPolyVar() 
+{
+  // Destructor
+  delete _coefIter ;
+}
+
+
+
+
+//_____________________________________________________________________________
 Double_t RooPolyVar::evaluate() const 
 {
   // Calculate and return value of polynomial

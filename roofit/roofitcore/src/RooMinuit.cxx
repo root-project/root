@@ -116,7 +116,7 @@ RooMinuit::RooMinuit(RooAbsReal& function)
   _handleLocalErrors = kTRUE ;
   _printLevel = 1 ;
   _printEvalErrors = 10 ;
-  _warnLevel = 0 ;
+  _warnLevel = -1 ;
   _doEvalErrorWall = kTRUE ;
 
   // Examine parameter list
@@ -369,6 +369,7 @@ Int_t RooMinuit::minos(const RooArgSet& minosParamList)
         arglist[nMinosPar]=index+1;
       }
     }
+    delete aIter ;
   }
   arglist[0]= 500*_nPar; // maximum iterations
 
@@ -490,8 +491,15 @@ Int_t RooMinuit::setWarnLevel(Int_t newLevel)
   // Set MINUIT warning level to given level
   Int_t ret = _warnLevel ;
   Double_t arg(newLevel) ;
-  _theFitter->ExecuteCommand("SET WARNINGS",&arg,1);
+
+  if (newLevel>=0) {
+    _theFitter->ExecuteCommand("SET WARNINGS",&arg,1);
+  } else {
+    Double_t arg2(0) ;
+    _theFitter->ExecuteCommand("SET NOWARNINGS",&arg2,1);    
+  }
   _warnLevel = newLevel ;
+  
   return ret ;
 }
       

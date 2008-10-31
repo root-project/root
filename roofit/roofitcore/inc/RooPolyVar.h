@@ -33,7 +33,7 @@ public:
 
   RooPolyVar(const RooPolyVar& other, const char* name = 0);
   virtual TObject* clone(const char* newname) const { return new RooPolyVar(*this, newname); }
-  inline virtual ~RooPolyVar() { }
+  virtual ~RooPolyVar() ;
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
   Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;

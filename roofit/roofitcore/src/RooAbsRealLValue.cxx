@@ -584,6 +584,7 @@ TH1* RooAbsRealLValue::createHistogram(const char *name, const RooLinkedList& cm
   // Initialize arrays for call to implementation version of createHistogram
   const char* axisLabel = pc.getString("axisLabel") ;
   const RooAbsBinning* binning[3] ;
+  Bool_t ownBinning[3]  = { kFALSE, kFALSE, kFALSE } ;
   RooArgList vars ;
 
   // Prepare X dimension
@@ -596,6 +597,7 @@ TH1* RooAbsRealLValue::createHistogram(const char *name, const RooLinkedList& cm
     Double_t xlo = pc.getDouble("xlo") ;
     Double_t xhi = pc.getDouble("xhi") ;
     binning[0] = new RooUniformBinning((xlo==xhi)?getMin():xlo,(xlo==xhi)?getMax():xhi,pc.getInt("nxbins")) ;
+    ownBinning[0] = kTRUE ;
   }  else {
     binning[0] = &getBinning() ;
   }
@@ -611,6 +613,7 @@ TH1* RooAbsRealLValue::createHistogram(const char *name, const RooLinkedList& cm
       Double_t ylo = pc.getDouble("ylo") ;
       Double_t yhi = pc.getDouble("yhi") ;
       binning[1] = new RooUniformBinning((ylo==yhi)?yvar.getMin():ylo,(ylo==yhi)?yvar.getMax():yhi,pc.getInt("nybins")) ;
+      ownBinning[1] = kTRUE ;
     } else {
       binning[1] = &yvar.getBinning() ;
     }
@@ -627,13 +630,20 @@ TH1* RooAbsRealLValue::createHistogram(const char *name, const RooLinkedList& cm
       Double_t zlo = pc.getDouble("zlo") ;
       Double_t zhi = pc.getDouble("zhi") ;
       binning[2] = new RooUniformBinning((zlo==zhi)?zvar.getMin():zlo,(zlo==zhi)?zvar.getMax():zhi,pc.getInt("nzbins")) ;
+      ownBinning[2] = kTRUE ;
     } else {
       binning[2] = &zvar.getBinning() ;
     }
   }
 
 
-  return createHistogram(name, vars, axisLabel, binning) ;
+  TH1* ret = createHistogram(name, vars, axisLabel, binning) ;
+
+  if (ownBinning[0]) delete binning[0] ;
+  if (ownBinning[1]) delete binning[1] ;
+  if (ownBinning[2]) delete binning[2] ;
+  
+  return ret ;
 }
 
 

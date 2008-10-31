@@ -128,6 +128,7 @@ namespace RooFit {
   RooCmdArg Save(Bool_t flag)            { return RooCmdArg("Save",flag,0,0,0,0,0,0,0) ; }
   RooCmdArg Timer(Bool_t flag)           { return RooCmdArg("Timer",flag,0,0,0,0,0,0,0) ; }
   RooCmdArg PrintLevel(Int_t level)      { return RooCmdArg("PrintLevel",level,0,0,0,0,0,0,0) ; }
+  RooCmdArg Warnings(Bool_t flag)        { return RooCmdArg("Warnings",flag,0,0,0,0,0,0,0) ; }
   RooCmdArg Strategy(Int_t code)         { return RooCmdArg("Strategy",code,0,0,0,0,0,0,0) ; }
   RooCmdArg InitialHesse(Bool_t flag)    { return RooCmdArg("InitialHesse",flag,0,0,0,0,0,0,0) ; }
   RooCmdArg Hesse(Bool_t flag)           { return RooCmdArg("Hesse",flag,0,0,0,0,0,0,0) ; }
