@@ -227,6 +227,10 @@ void TMultiGraph::Draw(Option_t *option)
    //  TMultiGraph::Draw. Use GetDrawOption to return the option specified
    //  when drawin the TMultiGraph.
 
+   if (!fGraphs) {
+      Error("Draw", "Cannot draw an empty TMultiGraph");
+      return;
+   }
    AppendPad(option);
 }
 
@@ -423,7 +427,7 @@ void TMultiGraph::FitPanel()
       if (handler->ExecPlugin(2, gPad, this) == 0)
          Error("FitPanel", "Unable to crate the FitPanel");
    }
-   else 
+   else
          Error("FitPanel", "Unable to find the FitPanel plug-in");
 }
 
@@ -707,13 +711,13 @@ TF1 *TMultiGraph::GetFunction(const char *name) const
 }
 
 //______________________________________________________________________________
-TList *TMultiGraph::GetListOfFunctions() 
+TList *TMultiGraph::GetListOfFunctions()
 {
    // Return pointer to list of functions
    // if pointer is null create the list
 
    if (!fFunctions) fFunctions = new TList();
-   return fFunctions; 
+   return fFunctions;
 }
 
 
