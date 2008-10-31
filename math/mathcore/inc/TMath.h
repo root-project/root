@@ -194,7 +194,7 @@ namespace TMath {
 
    // Sorting
    template <typename Element, typename Index>
-   void Sort(Long64_t n, const Element* a, Index* index, Bool_t down=kTRUE);
+   void Sort(Index n, const Element* a, Index* index, Bool_t down=kTRUE);
    template <typename Iterator, typename IndexIterator>
    void SortItr(Iterator first, Iterator last, IndexIterator index, Bool_t down=kTRUE);
 
@@ -758,16 +758,18 @@ void TMath::SortItr(Iterator first, Iterator last, IndexIterator index, Bool_t d
        std::sort(index, cindex, CompareAsc<Iterator>(first) );
 }
 
-template <typename Element, typename Index> void TMath::Sort(Long64_t n, const Element* a, Index* index, Bool_t down)
+template <typename Element, typename Index> void TMath::Sort(Index n, const Element* a, Index* index, Bool_t down)
 {
-   // Sort the n1 elements of the Short_t array a.
-   // In output the array index contains the indices of the sorted array.
+   // Sort the n elements of the  array a of generic templated type Element.
+   // In output the array index of type Index contains the indices of the sorted array.
    // If down is false sort in increasing order (default is decreasing order).
 
    // NOTE that the array index must be created with a length >= n
    // before calling this function.
+   // NOTE also that the size type for n must be the same type used for the index array
+   // (templated type Index)
 
-   for(Long64_t i = 0; i < n; i++) { index[i] = i; }
+   for(Index i = 0; i < n; i++) { index[i] = i; }
    if ( down )
       std::sort(index, index + n, CompareDesc<const Element*>(a) );
    else
