@@ -61,6 +61,8 @@ TMVA::FitterBase::FitterBase( IFitterTarget& target,
      fClassName( name )
 {
    // constructor   
+   SetConfigName( GetName() );
+   SetConfigDescription( "Confugration options for setup and tuning of specific fitter" );
 }
 
 //_______________________________________________________________________

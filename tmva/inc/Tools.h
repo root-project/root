@@ -57,6 +57,7 @@ class TSpline;
 namespace TMVA {
 
    class Event;
+   class PDF;
    
    class Tools {
    private:
@@ -105,8 +106,9 @@ namespace TMVA {
       // normalization of variable output
       Double_t NormVariable( Double_t x, Double_t xmin, Double_t xmax );
 
-      // return separation of two histograms
-      Double_t GetSeparation( TH1* S, TH1* B );
+      // return separation of two histograms or PDFs
+      Double_t GetSeparation( const TH1& S, const TH1& B ) const;
+      Double_t GetSeparation( const PDF& pdfS, const PDF& pdfB ) const;
 
       // vector rescaling
       std::vector<Double_t> MVADiff( std::vector<Double_t>&, std::vector<Double_t>& );
@@ -148,7 +150,7 @@ namespace TMVA {
       inline Int_t VerifyRange( T& var, T vmin, T vmax );
 
       // output logger
-      MsgLogger& Logger();
+      MsgLogger& Logger() const;
 
       const TString& Color( const TString& );
 
@@ -168,9 +170,9 @@ namespace TMVA {
       void TMVAVersionMessage( MsgLogger& logger );
       void ROOTVersionMessage( MsgLogger& logger );
 
-      const TString fRegexp;
-      MsgLogger*    fLogger;
-      static Tools* fgTools;
+      const   TString    fRegexp;
+      mutable MsgLogger* fLogger;
+      static  Tools*     fgTools;
 
    }; // Common tools
 

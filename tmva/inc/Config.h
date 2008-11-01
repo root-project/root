@@ -51,6 +51,9 @@ namespace TMVA {
       Bool_t IsSilent() { return fSilent; }
       void   SetSilent( Bool_t s ) { fSilent = s; }
 
+      Bool_t WriteOptionsReference() { return fWriteOptionsReference; }
+      void   SetWriteOptionsReference( Bool_t w ) { fWriteOptionsReference = w; }
+
    public:
 
       class VariablePlotting;
@@ -75,6 +78,7 @@ namespace TMVA {
       public:
          TString fWeightFileDir;
          TString fWeightFileExtension;
+         TString fOptionsReferenceFileDir;
       } fIONames; // Customisable weight file properties
          
       
@@ -86,8 +90,9 @@ namespace TMVA {
                   
    private:
 
-      Bool_t fUseColoredConsole;
-      Bool_t fSilent; // no output at all
+      Bool_t fUseColoredConsole;     // coloured standard output
+      Bool_t fSilent;                // no output at all
+      Bool_t fWriteOptionsReference; // if set true: Configurable objects write file with option reference
 
       mutable MsgLogger fLogger;   // message logger
          

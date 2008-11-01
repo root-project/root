@@ -54,6 +54,9 @@
 #ifndef ROOT_TMVA_Version
 #include "TMVA/Version.h"
 #endif
+#ifndef ROOT_TMVA_PDF
+#include "TMVA/PDF.h"
+#endif
 
 TMVA::Tools * TMVA::Tools::fgTools = 0;
 
@@ -72,7 +75,7 @@ TMVA::Tools::~Tools()
    delete fLogger;
 }
 
-TMVA::MsgLogger& TMVA::Tools::Logger()
+TMVA::MsgLogger& TMVA::Tools::Logger() const
 {
    // access to a common MsgLogger
    return *fLogger;
@@ -85,7 +88,7 @@ Double_t TMVA::Tools::NormVariable( Double_t x, Double_t xmin, Double_t xmax )
 }
 
 //_______________________________________________________________________
-Double_t TMVA::Tools::GetSeparation( TH1* S, TH1* B ) 
+Double_t TMVA::Tools::GetSeparation( const TH1& S, const TH1& B ) const
 {
    // compute "separation" defined as
    // <s2> = (1/2) Int_-oo..+oo { (S^2(x) - B^2(x))/(S(x) + B(x)) dx }
@@ -94,34 +97,33 @@ Double_t TMVA::Tools::GetSeparation( TH1* S, TH1* B )
    // sanity checks
    // signal and background histograms must have same number of bins and 
    // same limits
-   if ((S->GetNbinsX() != B->GetNbinsX()) || (S->GetNbinsX() <= 0)) {
+   if ((S.GetNbinsX() != B.GetNbinsX()) || (S.GetNbinsX() <= 0)) {
       Logger() << kFATAL << "<GetSeparation> signal and background"
                << " histograms have different number of bins: " 
-               << S->GetNbinsX() << " : " << B->GetNbinsX() << Endl;
+               << S.GetNbinsX() << " : " << B.GetNbinsX() << Endl;
    }
 
-   if (S->GetXaxis()->GetXmin() != B->GetXaxis()->GetXmin() || 
-       S->GetXaxis()->GetXmax() != B->GetXaxis()->GetXmax() || 
-       S->GetXaxis()->GetXmax() <= S->GetXaxis()->GetXmin()) {
-      Logger() << kINFO << S->GetXaxis()->GetXmin() << " " << B->GetXaxis()->GetXmin() 
-               << " " << S->GetXaxis()->GetXmax() << " " << B->GetXaxis()->GetXmax() 
-               << " " << S->GetXaxis()->GetXmax() << " " << S->GetXaxis()->GetXmin() << Endl;
+   if (S.GetXaxis()->GetXmin() != B.GetXaxis()->GetXmin() || 
+       S.GetXaxis()->GetXmax() != B.GetXaxis()->GetXmax() || 
+       S.GetXaxis()->GetXmax() <= S.GetXaxis()->GetXmin()) {
+      Logger() << kINFO << S.GetXaxis()->GetXmin() << " " << B.GetXaxis()->GetXmin() 
+               << " " << S.GetXaxis()->GetXmax() << " " << B.GetXaxis()->GetXmax() 
+               << " " << S.GetXaxis()->GetXmax() << " " << S.GetXaxis()->GetXmin() << Endl;
       Logger() << kFATAL << "<GetSeparation> signal and background"
                << " histograms have different or invalid dimensions:" << Endl;
    }
 
-   Int_t    nstep  = S->GetNbinsX();
-   Double_t intBin = (S->GetXaxis()->GetXmax() - S->GetXaxis()->GetXmin())/nstep;
-   Double_t nS     = S->GetEntries()*intBin;
-   Double_t nB     = B->GetEntries()*intBin;
+   Int_t    nbins = S.GetNbinsX();
+   Double_t nS    = S.Integral( 0, nbins+1, "width" ); // include under/overflow bins
+   Double_t nB    = B.Integral( 0, nbins+1, "width" );
    if (nS > 0 && nB > 0) {
-      for (Int_t bin=0; bin<nstep; bin++) {
-         Double_t s = S->GetBinContent( bin )/nS;
-         Double_t b = B->GetBinContent( bin )/nB;
+      // include under/overflow bins
+      for (Int_t ibin=0; ibin<=nbins+1; ibin++) {
+         Double_t s = S.GetBinContent( ibin )/nS;
+         Double_t b = B.GetBinContent( ibin )/nB;
          // separation
-         if (s + b > 0) separation += 0.5*(s - b)*(s - b)/(s + b);
+         if (s + b > 0) separation += 0.5*(s - b)*(s - b)/(s + b)*S.GetXaxis()->GetBinWidth(ibin);
       }
-      separation *= intBin;
    }
    else {
       Logger() << kWARNING << "<GetSeparation> histograms with zero entries: " 
@@ -133,6 +135,36 @@ Double_t TMVA::Tools::GetSeparation( TH1* S, TH1* B )
    return separation;
 }
 
+//_______________________________________________________________________
+Double_t TMVA::Tools::GetSeparation( const PDF& pdfS, const PDF& pdfB ) const 
+{
+   // compute "separation" defined as
+   // <s2> = (1/2) Int_-oo..+oo { (S(x)2 - B(x)2)/(S(x) + B(x)) dx }
+
+   Double_t xmin = pdfS.GetXmin();
+   Double_t xmax = pdfS.GetXmax();
+   // sanity check
+   if (xmin != pdfB.GetXmin() || xmax != pdfB.GetXmax()) {
+      Logger() << kFATAL << "<GetSeparation> Mismatch in PDF limits: "
+               << xmin << " " << pdfB.GetXmin() << xmax << " " << pdfB.GetXmax()  << Endl;
+   }
+
+   Double_t separation = 0;
+   Int_t    nstep      = 100;
+   Double_t intBin     = (xmax - xmin)/nstep;
+   for (Int_t bin=0; bin<nstep; bin++) {
+      Double_t x = (bin + 0.5)*intBin + xmin;
+      Double_t s = pdfS.GetVal( x );
+      Double_t b = pdfB.GetVal( x );
+      // separation
+      if (s + b > 0) separation += (s - b)*(s - b)/(s + b);
+   }
+   separation *= (0.5*intBin);
+
+   return separation;
+}
+
+//_______________________________________________________________________
 void TMVA::Tools::ComputeStat( TTree* theTree, const TString theVarName,
                                Double_t& meanS, Double_t& meanB,
                                Double_t& rmsS,  Double_t& rmsB,
@@ -603,9 +635,6 @@ const TString& TMVA::Tools::Color( const TString& c )
 
    static TString gClr_reset  = "\033[0m";     // reset
 
-#ifdef R__WIN32
-   return gClr_none;
-#endif
    if (!gConfig().UseColor()) return gClr_none;
 
    if (c == "white" )         return gClr_white; 

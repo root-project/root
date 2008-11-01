@@ -79,6 +79,8 @@ Double_t TMVA::SeparationBase::GetSeparationGain(const Double_t &nSelS, const Do
    // this is then the quality crition which is optimized for when trying  
    // to increase the information in the system (making the best selection             
 
+   if ( (nTotS-nSelS)==nSelS && (nTotB-nSelB)==nSelB) return 0.;
+
    Double_t parentIndex = (nTotS+nTotB) *this->GetSeparationIndex(nTotS,nTotB);
    Double_t leftIndex   = ( ((nTotS - nSelS) + (nTotB - nSelB))
                             * this->GetSeparationIndex(nTotS-nSelS,nTotB-nSelB) );

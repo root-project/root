@@ -44,7 +44,9 @@ TMVA::Config& TMVA::gConfig() { return TMVA::Config::Instance(); }
 
 //_______________________________________________________________________
 TMVA::Config::Config() :
-   fUseColoredConsole( kTRUE ),
+   fUseColoredConsole    ( kTRUE  ),
+   fSilent               ( kFALSE ),
+   fWriteOptionsReference( kFALSE ),
    fLogger( "Config" )
 {
    // constructor - set defaults
@@ -57,8 +59,9 @@ TMVA::Config::Config() :
    fVariablePlotting.fNbinsXOfROCCurve                        = 100;
 
    // IO names
-   fIONames.fWeightFileDir       = "weights";
-   fIONames.fWeightFileExtension = "weights";
+   fIONames.fWeightFileDir           = "weights";
+   fIONames.fWeightFileExtension     = "weights";
+   fIONames.fOptionsReferenceFileDir = "optionInfo";
 }
 
 //_______________________________________________________________________

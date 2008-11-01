@@ -70,6 +70,9 @@ TMVA::MethodHMatrix::MethodHMatrix( const TString& jobName, const TString& metho
    InitHMatrix();
 
    // HMatrix options: none ... process base class option
+   SetConfigName( TString("Method") + GetMethodName() );
+   DeclareOptions();
+   ParseOptions();
    ProcessOptions();
 }
 
@@ -124,6 +127,7 @@ void TMVA::MethodHMatrix::ProcessOptions()
 {
    // process user options
    MethodBase::ProcessOptions();
+   CheckForUnusedOptions();
 }
 
 //_______________________________________________________________________
@@ -459,5 +463,5 @@ void TMVA::MethodHMatrix::GetHelpMessage() const
    fLogger << Endl;
    fLogger << gTools().Color("bold") << "--- Performance tuning via configuration options:" << gTools().Color("reset") << Endl;
    fLogger << Endl;
-   fLogger << "<None>" << Endl;
+   fLogger << "None" << Endl;
 }

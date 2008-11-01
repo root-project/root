@@ -29,8 +29,8 @@ Bool_t Use_Fisher          = 1;
 Bool_t Use_FDA_GA          = 0;
 Bool_t Use_FDA_MT          = 1;
 Bool_t Use_MLP             = 1; // this is the recommended ANN
-Bool_t Use_CFMlpANN        = 1; 
-Bool_t Use_TMlpANN         = 1; 
+Bool_t Use_CFMlpANN        = 0; 
+Bool_t Use_TMlpANN         = 0; 
 Bool_t Use_SVM_Gauss       = 1;
 Bool_t Use_SVM_Poly        = 0;
 Bool_t Use_SVM_Lin         = 0;
@@ -109,30 +109,58 @@ void TMVApplication( TString myMethodList = "" )
    //
    string dir    = "weights/";
    string prefix = "TMVAnalysis";
+   string weightfile = "";
+   TString methodName = "";
 
-   if (Use_Cuts)          reader->BookMVA( "Cuts method",          dir + prefix + "_Cuts.weights.txt" );
-   if (Use_CutsD)         reader->BookMVA( "CutsD method",         dir + prefix + "_CutsD.weights.txt" );
-   if (Use_CutsGA)        reader->BookMVA( "CutsGA method",        dir + prefix + "_CutsGA.weights.txt" );
-   if (Use_Likelihood)    reader->BookMVA( "Likelihood method",    dir + prefix + "_Likelihood.weights.txt" );
-   if (Use_LikelihoodD)   reader->BookMVA( "LikelihoodD method",   dir + prefix + "_LikelihoodD.weights.txt" );
-   if (Use_LikelihoodPCA) reader->BookMVA( "LikelihoodPCA method", dir + prefix + "_LikelihoodPCA.weights.txt" );
-   if (Use_PDERS)         reader->BookMVA( "PDERS method",         dir + prefix + "_PDERS.weights.txt" );
-   if (Use_PDERSD)        reader->BookMVA( "PDERSD method",        dir + prefix + "_PDERSD.weights.txt" );
-   if (Use_PDERSPCA)      reader->BookMVA( "PDERSPCA method",      dir + prefix + "_PDERSPCA.weights.txt" );
-   if (Use_KNN)           reader->BookMVA( "KNN method",           dir + prefix + "_KNN.weights.txt" );
-   if (Use_HMatrix)       reader->BookMVA( "HMatrix method",       dir + prefix + "_HMatrix.weights.txt" );
-   if (Use_Fisher)        reader->BookMVA( "Fisher method",        dir + prefix + "_Fisher.weights.txt" );
-   if (Use_MLP)           reader->BookMVA( "MLP method",           dir + prefix + "_MLP.weights.txt" );
-   if (Use_CFMlpANN)      reader->BookMVA( "CFMlpANN method",      dir + prefix + "_CFMlpANN.weights.txt" );
-   if (Use_TMlpANN)       reader->BookMVA( "TMlpANN method",       dir + prefix + "_TMlpANN.weights.txt" );
-   if (Use_BDT)           reader->BookMVA( "BDT method",           dir + prefix + "_BDT.weights.txt" );
-   if (Use_BDTD)          reader->BookMVA( "BDTD method",          dir + prefix + "_BDTD.weights.txt" );
-   if (Use_RuleFit)       reader->BookMVA( "RuleFit method",       dir + prefix + "_RuleFit.weights.txt" );
-   if (Use_SVM_Gauss)     reader->BookMVA( "SVM_Gauss method",     dir + prefix + "_SVM_Gauss.weights.txt" );
-   if (Use_SVM_Poly)      reader->BookMVA( "SVM_Poly method",      dir + prefix + "_SVM_Poly.weights.txt" );
-   if (Use_SVM_Lin)       reader->BookMVA( "SVM_Lin method",       dir + prefix + "_SVM_Lin.weights.txt" );
-   if (Use_FDA_MT)        reader->BookMVA( "FDA_MT method",        dir + prefix + "_FDA_MT.weights.txt" );
-   if (Use_FDA_GA)        reader->BookMVA( "FDA_GA method",        dir + prefix + "_FDA_GA.weights.txt" );
+
+   if (Use_Cuts)          { methodName = "Cuts method";           weightfile = "_Cuts.weights.txt";   reader->BookMVA( methodName, dir+prefix+weightfile );}
+   if (Use_CutsD)         { methodName = "CutsD method";          weightfile = "_CutsD.weights.txt";  reader->BookMVA( methodName, dir+prefix+weightfile );}
+   if (Use_CutsGA)        { methodName = "CutsGA method";         weightfile = "_CutsGA.weights.txt"; reader->BookMVA( methodName, dir+prefix+weightfile );}
+   if (Use_Likelihood)    { methodName = "Likelihood method";     weightfile = "_Likelihood.weights.txt";  reader->BookMVA( methodName, dir+prefix+weightfile );}
+   if (Use_LikelihoodD)   { methodName = "LikelihoodD method";    weightfile = "_LikelihoodD.weights.txt";  reader->BookMVA( methodName, dir+prefix+weightfile );}
+   if (Use_LikelihoodPCA) { methodName = "LikelihoodPCA method";  weightfile = "_LikelihoodPCA.weights.txt";  reader->BookMVA( methodName, dir+prefix+weightfile );}
+   if (Use_PDERS)         { methodName = "PDERS method";          weightfile = "_PDERS.weights.txt"; reader->BookMVA( methodName, dir+prefix+weightfile ); }
+   if (Use_PDERSD)        { methodName = "PDERSD method";         weightfile = "_PDERSD.weights.txt";  reader->BookMVA( methodName, dir+prefix+weightfile );}
+   if (Use_PDERSPCA)      { methodName = "PDERSPCA method";       weightfile = "_PDERSPCA.weights.txt";  reader->BookMVA( methodName, dir+prefix+weightfile );}
+   if (Use_KNN)           { methodName = "KNN method";            weightfile = "_KNN.weights.txt"; reader->BookMVA( methodName, dir+prefix+weightfile ); }
+   if (Use_HMatrix)       { methodName = "HMatrix method";        weightfile = "_HMatrix.weights.txt";  reader->BookMVA( methodName, dir+prefix+weightfile );}
+   if (Use_Fisher)        { methodName = "Fisher method";         weightfile = "_Fisher.weights.txt"; reader->BookMVA( methodName, dir+prefix+weightfile ); }
+   if (Use_MLP)           { methodName = "MLP method";            weightfile = "_MLP.weights.txt";  reader->BookMVA( methodName, dir+prefix+weightfile );}
+   if (Use_CFMlpANN)      { methodName = "CFMlpANN method";       weightfile = "_CFMlpANN.weights.txt";  reader->BookMVA( methodName, dir+prefix+weightfile );}
+   if (Use_TMlpANN)       { methodName = "TMlpANN method";        weightfile = "_TMlpANN.weights.txt";  reader->BookMVA( methodName, dir+prefix+weightfile );}
+   if (Use_BDT)           { methodName = "BDT method";            weightfile = "_BDT.weights.txt"; reader->BookMVA( methodName, dir+prefix+weightfile ); }
+   if (Use_BDTD)          { methodName = "BDTD method";           weightfile = "_BDTD.weights.txt";  reader->BookMVA( methodName, dir+prefix+weightfile );}
+   if (Use_RuleFit)       { methodName = "RuleFit method";        weightfile = "_RuleFit.weights.txt";  reader->BookMVA( methodName, dir+prefix+weightfile );}
+   if (Use_SVM_Gauss)     { methodName = "SVM_Gauss method";      weightfile = "_SVM_Gauss.weights.txt"; reader->BookMVA( methodName, dir+prefix+weightfile ); }
+   if (Use_SVM_Poly)      { methodName = "SVM_Poly method";       weightfile = "_SVM_Poly.weights.txt";  reader->BookMVA( methodName, dir+prefix+weightfile );}
+   if (Use_SVM_Lin)       { methodName = "SVM_Lin method";        weightfile = "_SVM_Lin.weights.txt";  reader->BookMVA( methodName, dir+prefix+weightfile );}
+   if (Use_FDA_MT)        { methodName = "FDA_MT method";         weightfile = "_FDA_MT.weights.txt";  reader->BookMVA( methodName, dir+prefix+weightfile );}
+   if (Use_FDA_GA)        { methodName = "FDA_GA method";         weightfile = "_FDA_GA.weights.txt"; reader->BookMVA( methodName, dir+prefix+weightfile ); }
+
+
+   // !!!!!! dont try this:
+   //  reader->BookMVA( "Fisher method", "../macros/weights/TMVAnalysis_Fisher.weights.txt" );
+   //
+   //  this will cause CINT to fatally crash sometimes and funnily not in all directory-folders.
+   //
+   //  sometimes the characters of the first string are written over the characters of the second
+   //  string or even some more important memory regions. 
+   //
+   //  Conclusion:
+   //  Do it like shown above: prepare first a TString object and give this TString to the reader.
+   //  CINT preferes it like that. 
+   // 
+   //  Example of how it can be done:
+   //    std::string dir    = "../macros/weights/";
+   //    std::string prefix = "TMVAnalysis";
+   //    std::string name = "_Fisher.weights.txt";
+   //    TString method = "Fisher method";
+   //    reader->BookMVA( method, dir + prefix + name );
+
+
+
+
+
    
    // example how to use your own method as plugin
    if (Use_Plugin) {
@@ -192,8 +220,8 @@ void TMVApplication( TString myMethodList = "" )
    // book example histogram for probability (the other methods are done similarly)
    TH1F *probHistFi(0), *rarityHistFi(0);
    if (Use_Fisher) {
-      probHistFi   = new TH1F( "PROBA_MVA_Fisher",  "PROBA_MVA_Fisher",  nbin, 0, 1 );
-      rarityHistFi = new TH1F( "RARITY_MVA_Fisher", "RARITY_MVA_Fisher", nbin, 0, 1 );
+           probHistFi   = new TH1F( "PROBA_MVA_Fisher",  "PROBA_MVA_Fisher",  nbin, 0, 1 );
+           rarityHistFi = new TH1F( "RARITY_MVA_Fisher", "RARITY_MVA_Fisher", nbin, 0, 1 );
    }
 
    // Prepare input tree (this must be replaced by your data source)
@@ -243,14 +271,15 @@ void TMVApplication( TString myMethodList = "" )
    sw.Start();
    for (Long64_t ievt=0; ievt<theTree->GetEntries();ievt++) {
 
-      if (ievt%1000 == 0)
+      if (ievt%1000 == 0){
          cout << "--- ... Processing event: " << ievt << endl;
+      }
 
       theTree->GetEntry(ievt);
 
       var1 = userVar1 + userVar2;
       var2 = userVar1 - userVar2;
-    
+
       // 
       // return the MVAs and fill to histograms
       // 
@@ -294,8 +323,8 @@ void TMVApplication( TString myMethodList = "" )
 
       // retrieve probability instead of MVA output
       if (Use_Fisher       )   {
-         probHistFi  ->Fill( reader->GetProba ( "Fisher method" ) );
-         rarityHistFi->Fill( reader->GetRarity( "Fisher method" ) );
+	 probHistFi->Fill( reader->GetProba ( "Fisher method" ) );
+	 rarityHistFi->Fill( reader->GetRarity( "Fisher method" ) );
       }
    }
    sw.Stop();
@@ -308,24 +337,29 @@ void TMVApplication( TString myMethodList = "" )
    if (Use_CutsGA) cout << "--- Efficiency for CutsGA method: " << double(nSelCutsGA)/theTree->GetEntries()
                         << " (for a required signal efficiency of " << effS << ")" << endl;
 
+   if (Use_Cuts || Use_CutsD || Use_CutsGA ){
+      // test: retrieve cuts for particular signal efficiency
 
-   // test: retrieve cuts for particular signal efficiency
-   TMVA::MethodCuts* mcuts = dynamic_cast<TMVA::MethodCuts*>(reader->FindMVA( "CutsGA method" ));
-   if (mcuts) {      
-      std::vector<Double_t> cutsMin;
-      std::vector<Double_t> cutsMax;
-      mcuts->GetCuts( 0.7, cutsMin, cutsMax );
-      cout << "--- -------------------------------------------------------------" << endl;
-      cout << "--- Retrieve cut values for signal efficiency of 0.7 from Reader" << endl;
-      for (UInt_t ivar=0; ivar<cutsMin.size(); ivar++) {
-         cout << "... Cut: " 
-              << cutsMin[ivar] 
-              << " < \"" 
-              << reader->GetVarName(ivar) 
-              << "\" <= " 
-              << cutsMax[ivar] << endl;
+      // workaround for CINT (dynamic_cast does not work)
+      // mcuts = TMVA::MethodCuts::DynamicCast( reader->FindMVA( "CutsGA method" ) );
+      mcuts = dynamic_cast<TMVA::MethodCuts*>( reader->FindMVA( "CutsGA method" ) );
+
+      if (mcuts) {      
+         std::vector<Double_t> cutsMin;
+         std::vector<Double_t> cutsMax;
+         mcuts->GetCuts( 0.7, cutsMin, cutsMax );
+         cout << "--- -------------------------------------------------------------" << endl;
+         cout << "--- Retrieve cut values for signal efficiency of 0.7 from Reader" << endl;
+         for (UInt_t ivar=0; ivar<cutsMin.size(); ivar++) {
+            cout << "... Cut: " 
+                 << cutsMin[ivar] 
+                 << " < \"" 
+	         << mcuts->GetInputVar(ivar)
+                 << "\" <= " 
+                 << cutsMax[ivar] << endl;
+         }
+         cout << "--- -------------------------------------------------------------" << endl;
       }
-      cout << "--- -------------------------------------------------------------" << endl;
    }
 
    //
@@ -355,7 +389,7 @@ void TMVApplication( TString myMethodList = "" )
    if (Use_Plugin       )   histPBdt  ->Write();
 
    // write also probability hists
-   if (Use_Fisher) { probHistFi->Write(); rarityHistFi->Write(); }
+   if (Use_Fisher) { if( probHistFi != 0 ) probHistFi->Write(); if( rarityHistFi != 0 ) rarityHistFi->Write(); }
    target->Close();
 
    cout << "--- Created root file: \"TMVApp.root\" containing the MVA output histograms" << endl;

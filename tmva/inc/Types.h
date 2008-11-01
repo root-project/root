@@ -75,7 +75,8 @@ namespace TMVA {
          kNone = 0,
          kDecorrelated,
          kPCA,
-         kMaxVariableTransform
+         kMaxVariableTransform,
+         kGaussDecorr
       };
 
       enum ESBType { 

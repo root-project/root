@@ -413,7 +413,7 @@ void TMVA::VariableTransformBase::PlotVariables( TTree* theTree )
    if (fRanking) delete fRanking;
    fRanking = new Ranking( GetName(), "Separation" );
    for (UInt_t i=0; i<nvar; i++) {   
-      Double_t sep = gTools().GetSeparation( vS[i], vB[i] );
+      Double_t sep = gTools().GetSeparation( *vS[i], *vB[i] );
       fRanking->AddRank( Rank( vS[i]->GetTitle(), sep ) );
    }
 

@@ -87,6 +87,12 @@ void TMVAGui( const char* fName = "TMVA.root" )
                  buttonType, "PCATransform" );
 
    ActionButton( cbar,  
+                 Form( "(%id) GaussDecorr-transformed Input Variables", ic ),
+                 Form( ".x variables.C(\"%s\",3)", fName ),    
+                 "Plots all GaussDecorrelated-transformed input variables (macro variables.C(3))",
+                 buttonType, "GaussDecorr" );
+
+   ActionButton( cbar,  
                  Form( "(%ia) Input Variable Correlations (scatter profiles)", ++ic ),
                  Form( ".x CorrGui.C\(\"%s\",0)", fName ), 
                  "Plots signal and background correlation profiles between input variables (macro CorrGui.C)",
@@ -103,6 +109,12 @@ void TMVAGui( const char* fName = "TMVA.root" )
                  Form( ".x CorrGui.C\(\"%s\",2)", fName ), 
                  "Plots signal and background correlation profiles between PCA-transformed input variables (macro CorrGui.C(2))",
                  buttonType, "PCATransform" );
+
+   ActionButton( cbar,  
+                 Form( "(%id) GaussDecorr-transformed Input Variable Correlations (scatter profiles)", ic ),
+                 Form( ".x CorrGui.C\(\"%s\",3)", fName ), 
+                 "Plots signal and background correlation profiles between Gaussianised and Decorrelated input variables (macro CorrGui.C(3))",
+                 buttonType, "GaussDecorr" );
 
    ActionButton( cbar,  
                  Form( "(%i) Input Variable Linear Correlation Coefficients", ++ic ),
@@ -143,7 +155,7 @@ void TMVAGui( const char* fName = "TMVA.root" )
    ActionButton( cbar,  
                  Form( "(%ib) Classifier Background Rejection vs Signal Efficiency (ROC curve)", ic ),
                  Form( ".x efficiencies.C(\"%s\")", fName ),
-                 "Plots background rejection vs signal efficiencies (macro efficiencies.C)",
+                 "Plots background rejection vs signal efficiencies (macro efficiencies.C) [\"ROC\" stands for \"Receiver Operation Characteristics\"]",
                  buttonType, defaultRequiredClassifier );
 
    TString title = Form( "(%i) Parallel Coordinates (requires ROOT-version >= 5.17)", ++ic );
@@ -180,6 +192,12 @@ void TMVAGui( const char* fName = "TMVA.root" )
                  Form( "(%i) Decision Trees", ++ic ),
                  Form( ".x BDT.C+(\"%s\")", fName ),
                  "Plots the Decision Trees trained by BDT algorithms (macro BDT.C(itree,...))",
+                 buttonType, "BDT" );
+
+   ActionButton( cbar,  
+                 Form( "(%i) Decision Tree Control Plots", ++ic ),
+                 Form( ".x BDTControlPlots.C(\"%s\")", fName ),
+                 "Plots to monitor boosting and pruning of decision trees (macro BDTControlPlots.C)",
                  buttonType, "BDT" );
 
    ActionButton( cbar,  

@@ -199,7 +199,7 @@ TString StatDialogMVAEffs::GetLatexFormula()
 {
    TString f = fFormula;
    f.ReplaceAll("(","{");
-   f.ReplaceAll("}","}");
+   f.ReplaceAll(")","}");
    f.ReplaceAll("sqrt","#sqrt");
    return f;
 }

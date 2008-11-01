@@ -171,6 +171,7 @@ namespace TMVA {
       std::vector<DecisionTree*>      fForest;          // the collection of decision trees
       std::vector<double>             fBoostWeights;    // the weights applied in the individual boosts
       TString                         fBoostType;       // string specifying the boost type
+      Double_t                        fAdaBoostBeta;    // beta parameter for AdaBoost algorithm
 
       //options for the decision Tree
       SeparationBase                 *fSepType;         // the separation used in node splitting
@@ -179,6 +180,7 @@ namespace TMVA {
   
       Int_t                           fNCuts;           // grid used in cut applied in node splitting
       Bool_t                          fUseYesNoLeaf;    // use sig or bkg classification in leave nodes or sig/bkg
+      Double_t                        fNodePurityLimit; // purity limit for sig/bkg nodes
       Bool_t                          fUseWeightedTrees;// use average classification from the trees, or have the individual trees trees in the forest weighted (e.g. log(boostweight) from AdaBoost
     
 
@@ -198,6 +200,7 @@ namespace TMVA {
       Double_t                         fPruneStrength;   // a parameter to set the "amount" of pruning..needs to be adjusted 
       DecisionTree::EPruneMethod       fPruneMethod;     // method used for prunig 
       TString                          fPruneMethodS;    // prune method option String
+      Bool_t                           fPruneBeforeBoost;// flag to prune before boosting
       Bool_t                           fAutomatic;       // use user given prune strength or automatically determined one using a validation sample 
       Bool_t                           fNoNegWeightsInTraining; // ignore negative event weights in the training  
       Bool_t                           fRandomisedTrees; // choose a random subset of possible cut variables at each node during training
@@ -220,3 +223,4 @@ const std::vector<TMVA::Event*>&        TMVA::MethodBDT::GetTrainingEvents() con
 const std::vector<double>&              TMVA::MethodBDT::GetBoostWeights()   const { return fBoostWeights; }
 
 #endif
+

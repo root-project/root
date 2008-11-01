@@ -58,6 +58,10 @@
 #ifndef ROOT_TMVA_VariablePCATransform
 #include "TMVA/VariablePCATransform.h"
 #endif
+#ifndef ROOT_TMVA_VariableGaussDecorr
+#include "TMVA/VariableGaussDecorr.h"
+#endif
+
 
 using std::cout;
 using std::endl;
@@ -122,13 +126,12 @@ TMVA::DataSet::~DataSet()
       }
    }
 
-   if(fCutSigF) delete fCutSigF;
-   if(fCutBkgF) delete fCutBkgF;
+   if(fCutSigF) { delete fCutSigF; fCutSigF = 0; }
+   if(fCutBkgF) { delete fCutBkgF; fCutBkgF = 0; }
 
-
-   if(fTrainingTree) { delete fTrainingTree; fTrainingTree = 0; }
-   if(fTestTree) { delete fTestTree; fTestTree = 0; }
-   if(fMultiCutTestTree) { delete fMultiCutTestTree; fMultiCutTestTree = 0; }
+   if(fTrainingTree && fTrainingTree->GetDirectory() ) { delete fTrainingTree; fTrainingTree = 0; }
+   if(fTestTree && fTestTree->GetDirectory() ) { delete fTestTree; fTestTree = 0; }
+   if(fMultiCutTestTree && fMultiCutTestTree->GetDirectory() ) { delete fMultiCutTestTree; fMultiCutTestTree = 0; }
 
    std::map<Types::EVariableTransform,VariableTransformBase*>::iterator vtIt = fVarTransforms.begin();
    for(; vtIt != fVarTransforms.end(); vtIt++ ) {
@@ -200,6 +203,9 @@ TMVA::VariableTransformBase* TMVA::DataSet::GetTransform( Types::EVariableTransf
       break;
    case Types::kPCA:
       trbase = new VariablePCATransform( GetVariableInfos() );
+      break;
+   case Types::kGaussDecorr:
+      trbase = new VariableGaussDecorr( GetVariableInfos() );
       break;
    case Types::kMaxVariableTransform:
    default:
@@ -333,7 +339,8 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt )
    // preparation is executed
 
    Configurable splitSpecs( splitOpt );
-   splitSpecs.SetName("DataSet");
+   splitSpecs.SetConfigName( GetName() );
+   splitSpecs.SetConfigDescription( "Configuration options given in the \"PrepareForTrainingAndTesting\" call; these options define the creation of the data sets used for training and expert validation by TMVA" );
    if (Verbose()) splitSpecs.fLogger.SetMinType( kVERBOSE );
 
    UInt_t splitSeed(0);
@@ -341,7 +348,7 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt )
    // the split modes
    TString splitMode( "Random" );
    splitSpecs.DeclareOptionRef( splitMode, "SplitMode",
-                                "Method of picking training and testing events (default: random)" );
+                                "Method for selecting training and testing events (default: random)" );
    splitSpecs.AddPreDefVal(TString("Random"));
    splitSpecs.AddPreDefVal(TString("Alternate"));
    splitSpecs.AddPreDefVal(TString("Block"));
@@ -352,7 +359,7 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt )
    // the weight normalisation modes
    TString normMode( "NumEvents" );
    splitSpecs.DeclareOptionRef( normMode, "NormMode",
-                                "Type of renormalisation of event-by-event weights" );
+                                "Overall renormalisation of event-by-event weights (NumEvents: average weight of 1 per event, independently for signal and background; EqualNumEvents: average weight of 1 per event for signal, and sum of weights for background equal to sum of weights for signal)" );
    splitSpecs.AddPreDefVal(TString("None"));
    splitSpecs.AddPreDefVal(TString("NumEvents"));
    splitSpecs.AddPreDefVal(TString("EqualNumEvents"));
@@ -371,7 +378,7 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt )
    splitSpecs.DeclareOptionRef( nBkgTestEvents,  "NBkgTest",
                                 "Number of background testing events (default: 0 - all)" );
    
-   splitSpecs.DeclareOptionRef( fVerbose, "V", "Verbosity (default: true)" );
+   splitSpecs.DeclareOptionRef( fVerbose, "V", "Verbose mode" );
    splitSpecs.ParseOptions();
 
    if (Verbose()) fLogger.SetMinType( kVERBOSE );
@@ -490,7 +497,7 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt )
          Bool_t isChain = (TString("TChain") == currentInfo.GetTree()->ClassName());
          type = 1-sb;
          currentInfo.GetTree()->LoadTree(0);
-         ChangeToNewTree( currentInfo.GetTree()->GetTree() );
+         ChangeToNewTree( currentInfo.GetTree()->GetTree(), sb );
 
          // count number of events in tree before cut
          nInitialEvents[sb] += currentInfo.GetTree()->GetEntries();
@@ -505,7 +512,7 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt )
                if (currentInfo.GetTree()->GetTree()->GetDirectory()->GetFile()->GetName() != currentFileName) {
                   currentFileName = currentInfo.GetTree()->GetTree()->GetDirectory()->GetFile()->GetName();
                   TTree* pCurrentTree = currentInfo.GetTree()->GetTree();
-                  ChangeToNewTree( pCurrentTree );
+                  ChangeToNewTree( pCurrentTree, sb );
                }
             }
             currentInfo.GetTree()->GetEntry(evtIdx);
@@ -987,7 +994,7 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt )
 }
 
 //_______________________________________________________________________
-void TMVA::DataSet::ChangeToNewTree( TTree* tr )
+void TMVA::DataSet::ChangeToNewTree( TTree* tr, Int_t sb )
 { 
    // While the data gets copied into the local training and testing
    // trees, the input tree can change (for intance when changing from
@@ -1038,36 +1045,30 @@ void TMVA::DataSet::ChangeToNewTree( TTree* tr )
    // clear the old Formulas, if there are any
    //    vector<TTreeFormula*>::const_iterator varFIt = fInputVarFormulas.begin();
    //    for (;varFIt!=fInputVarFormulas.end();varFIt++) delete *varFIt;
-
-   for (Int_t sb=0; sb<2; sb++) {
-      if (fWeightFormula[sb]!=0) {
-         delete fWeightFormula[sb]; fWeightFormula[sb]=0;
-      }
-      if (fWeightExp[sb]!=TString("")) {
-         fWeightFormula[sb] = new TTreeFormula( "FormulaWeight", fWeightExp[sb].Data(), tr );
-      }
+   
+   if (fWeightFormula[sb]!=0) {
+      delete fWeightFormula[sb]; fWeightFormula[sb]=0;
+   }
+   if (fWeightExp[sb]!=TString("")) {
+      fWeightFormula[sb] = new TTreeFormula( "FormulaWeight", fWeightExp[sb].Data(), tr );
    }
 
    tr->SetBranchStatus("*",0);
-
+   
    for (varFIt = fInputVarFormulas.begin(); varFIt!=fInputVarFormulas.end(); varFIt++) {
       TTreeFormula * ttf = *varFIt;
       for (Int_t bi = 0; bi<ttf->GetNcodes(); bi++)
          tr->SetBranchStatus( ttf->GetLeaf(bi)->GetBranch()->GetName(), 1 );
    }
 
-   for (Int_t sb=0; sb<2; sb++) {
-      if (fWeightFormula[sb]!=0)
-         for (Int_t bi = 0; bi<fWeightFormula[sb]->GetNcodes(); bi++)
-            tr->SetBranchStatus( fWeightFormula[sb]->GetLeaf(bi)->GetBranch()->GetName(), 1 );
-   }
-
-   for (Int_t sb=0; sb<2; sb++) {
-      TTreeFormula * tfc = sb==0?fCutSigF:fCutBkgF;
-      if (tfc!=0)
-         for (Int_t bi = 0; bi<tfc->GetNcodes(); bi++)
-            tr->SetBranchStatus( tfc->GetLeaf(bi)->GetBranch()->GetName(), 1 );
-   }
+   if (fWeightFormula[sb]!=0)
+      for (Int_t bi = 0; bi<fWeightFormula[sb]->GetNcodes(); bi++)
+         tr->SetBranchStatus( fWeightFormula[sb]->GetLeaf(bi)->GetBranch()->GetName(), 1 );
+   
+   TTreeFormula * tfc = sb==0?fCutSigF:fCutBkgF;
+   if (tfc!=0)
+      for (Int_t bi = 0; bi<tfc->GetNcodes(); bi++)
+         tr->SetBranchStatus( tfc->GetLeaf(bi)->GetBranch()->GetName(), 1 );
 
    return;
 }

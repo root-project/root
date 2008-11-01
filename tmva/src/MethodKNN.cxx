@@ -62,6 +62,7 @@ TMVA::MethodKNN::MethodKNN(const TString& jobName,
    InitKNN();
 
    // interpretation of configuration option string
+   SetConfigName( TString("Method") + GetMethodName() );
    DeclareOptions();
    ParseOptions();
    ProcessOptions();
@@ -564,11 +565,15 @@ void TMVA::MethodKNN::GetHelpMessage() const
    fLogger << Endl;
    fLogger << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
    fLogger << Endl;
-   fLogger << "k-nearest neighbor algorithm" << endl;
+   fLogger << "Sorry - not available" << Endl;
+   fLogger << Endl;
+   fLogger << gTools().Color("bold") << "--- Performance optimisation:" << gTools().Color("reset") << Endl;
+   fLogger << Endl;
+   fLogger << "Sorry - not available" << Endl;
    fLogger << Endl;
    fLogger << gTools().Color("bold") << "--- Performance tuning via configuration options:" 
            << gTools().Color("reset") << Endl;
    fLogger << Endl;
-   fLogger << "<None>" << Endl;
+   fLogger << "Sorry - not available" << Endl;
 }
 

@@ -61,7 +61,7 @@ TMVA::MCFitter::MCFitter( IFitterTarget& target,
 void TMVA::MCFitter::DeclareOptions() 
 {
    // Declare MCFitter options
-   DeclareOptionRef( fSamples = 100000, "SampleSize", "Number of Monte Carlo samples" );  
+   DeclareOptionRef( fSamples = 100000, "SampleSize", "Number of Monte Carlo events in toy sample" );  
    DeclareOptionRef( fSigma   = -1.0,   "Sigma", 
                     "If > 0: new points are generated according to Gauss around best value and with \"Sigma\" in units of interval length" );  
    DeclareOptionRef( fSeed    = 100,    "Seed",       "Seed for the random generator (0 takes random seeds)" );  

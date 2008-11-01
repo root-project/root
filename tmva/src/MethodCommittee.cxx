@@ -76,10 +76,9 @@ TMVA::MethodCommittee::MethodCommittee( const TString& jobName, const TString& c
    // constructor
    InitCommittee(); // sets default values
 
+   SetConfigName( TString("Method") + GetMethodName() );
    DeclareOptions();
-
    ParseOptions();
-   
    ProcessOptions();
 
    // book monitoring histograms (currently for AdaBost, only)

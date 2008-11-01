@@ -118,9 +118,10 @@ TMVA::Reader::Reader( TString theOption, Bool_t verbose )
    : Configurable( theOption ),
      fDataSet( new DataSet ),
      fVerbose( verbose ),
-     fLogger ( this )
+     fLogger ( "Reader" )
 {
    // constructor
+   SetConfigName( GetName() );
    DeclareOptions();
    ParseOptions();
 
@@ -135,6 +136,7 @@ TMVA::Reader::Reader( vector<TString>& inputVars, TString theOption, Bool_t verb
      fLogger ( this )
 {
    // constructor
+   SetConfigName( GetName() );
    DeclareOptions();
    ParseOptions();
 
@@ -154,6 +156,7 @@ TMVA::Reader::Reader( vector<string>& inputVars, TString theOption, Bool_t verbo
      fLogger ( this )
 {
    // constructor
+   SetConfigName( GetName() );
    DeclareOptions();
    ParseOptions();
 
@@ -173,6 +176,7 @@ TMVA::Reader::Reader( const string varNames, TString theOption, Bool_t verbose )
      fLogger ( this )
 {
    // constructor
+   SetConfigName( GetName() );
    DeclareOptions();
    ParseOptions();
 
@@ -190,6 +194,7 @@ TMVA::Reader::Reader( const TString varNames, TString theOption, Bool_t verbose 
      fLogger ( this )
 {
    // constructor
+   SetConfigName( GetName() );
    DeclareOptions();
    ParseOptions();
 

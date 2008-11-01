@@ -47,9 +47,10 @@ Bool_t Use_LikelihoodKDE   = 0;
 Bool_t Use_LikelihoodMIX   = 0;
 // ---
 Bool_t Use_PDERS           = 1;
-Bool_t Use_PDERSkNN        = 0; // depreciated until further notice
 Bool_t Use_PDERSD          = 0;
 Bool_t Use_PDERSPCA        = 0;
+Bool_t Use_PDERSkNN        = 0; // depreciated until further notice
+Bool_t Use_PDEFoam         = 0; // preparation for new TMVA version "reader". This method is not available in this version of TMVA
 Bool_t Use_KNN             = 1;
 // ---
 Bool_t Use_HMatrix         = 1;
@@ -62,8 +63,8 @@ Bool_t Use_FDA_GAMT        = 0;
 Bool_t Use_FDA_MCMT        = 0;
 // ---
 Bool_t Use_MLP             = 1; // this is the recommended ANN
-Bool_t Use_CFMlpANN        = 1; 
-Bool_t Use_TMlpANN         = 1; 
+Bool_t Use_CFMlpANN        = 0; 
+Bool_t Use_TMlpANN         = 0; 
 // ---
 Bool_t Use_BDT             = 1;
 Bool_t Use_BDTD            = 1;
@@ -104,6 +105,7 @@ void TMVAnalysis( TString myMethodList = "" )
       Use_CutsGA = Use_CutsSA = Use_CutsD = Use_CutsPCA = Use_Cuts
          = Use_LikelihoodKDE = Use_LikelihoodMIX = Use_LikelihoodPCA = Use_LikelihoodD = Use_Likelihood
          = Use_PDERSPCA = Use_PDERSD = Use_PDERS = Use_PDERSkNN
+	 = Use_PDEFoam
          = Use_KNN
          = Use_MLP = Use_CFMlpANN = Use_TMlpANN
          = Use_HMatrix = Use_Fisher = Use_BDTD = Use_BDT
@@ -129,6 +131,7 @@ void TMVAnalysis( TString myMethodList = "" )
       if (mlist->FindObject( "PDERSD"        ) != 0) Use_PDERSD        = 1; 
       if (mlist->FindObject( "PDERSkNN"      ) != 0) Use_PDERSkNN      = 1; 
       if (mlist->FindObject( "PDERS"         ) != 0) Use_PDERS         = 1; 
+      if (mlist->FindObject( "PDEFoam"       ) != 0) Use_PDEFoam       = 1; 
       if (mlist->FindObject( "KNN"           ) != 0) Use_KNN           = 1; 
       if (mlist->FindObject( "HMatrix"       ) != 0) Use_HMatrix       = 1; 
       if (mlist->FindObject( "Fisher"        ) != 0) Use_Fisher        = 1; 
@@ -156,10 +159,10 @@ void TMVAnalysis( TString myMethodList = "" )
       }
    }
   
-   std::cout << "Start Test TMVAnalysis" << std::endl
-             << "======================" << std::endl
+   std::cout << "Start TMVAnalysis" << std::endl
+             << "=================" << std::endl
              << std::endl;
-   std::cout << "Testing all standard methods may take about 10 minutes of running..." << std::endl;
+   std::cout << "Running all standard methods may take about 10 minutes of running..." << std::endl;
 
    // Create a new root output file.
    TString outfileName( "TMVA.root" );
@@ -186,10 +189,10 @@ void TMVAnalysis( TString myMethodList = "" )
    // Define the input variables that shall be used for the MVA training
    // note that you may also use variable expressions, such as: "3*var1/var2*abs(var3)"
    // [all types of expressions that can also be parsed by TTree::Draw( "expression" )]
-   factory->AddVariable( "var1+var2", 'F' );
-   factory->AddVariable( "var1-var2", 'F' );
-   factory->AddVariable( "var3",      'F' );
-   factory->AddVariable( "var4",      'F' );
+//    factory->AddVariable( "var1+var2", 'F' );
+//    factory->AddVariable( "var1-var2", 'F' );
+   factory->AddVariable( "var3",      'I' );
+   factory->AddVariable( "var4",      'I' );
 
    // read training and test data
    if (ReadDataFromAsciiIFormat) {
@@ -206,7 +209,7 @@ void TMVAnalysis( TString myMethodList = "" )
    else {
       // load the signal and background event samples from ROOT trees
       TFile *input(0);
-      TString fname = "./tmva_example.root";
+      TString fname = "./data.root";
       if (!gSystem->AccessPathName( fname )) {
          // first we try to find tmva_example.root in the local directory
          std::cout << "--- TMVAnalysis    : Accessing " << fname << std::endl;
@@ -285,7 +288,8 @@ void TMVAnalysis( TString myMethodList = "" )
    TCut mycutb = ""; // for example: TCut mycutb = "abs(var1)<0.5";
 
    // tell the factory to use all remaining events in the trees after training for testing:
-   factory->PrepareTrainingAndTestTree( mycuts, mycutb, "NSigTrain=3000:NBkgTrain=3000:SplitMode=Random:NormMode=NumEvents:!V" );  
+   factory->PrepareTrainingAndTestTree( mycuts, mycutb,
+                                        "SplitMode=Random:NormMode=NumEvents:!V" );
 
    // If no numbers of events are given, half of the events in the tree are used for training, and 
    // the other half for testing:
@@ -365,7 +369,14 @@ void TMVAnalysis( TString myMethodList = "" )
    if (Use_PDERSPCA) 
       factory->BookMethod( TMVA::Types::kPDERS, "PDERSPCA", 
                            "!H:!V:VolumeRangeMode=Adaptive:KernelEstimator=Gauss:GaussSigma=0.3:NEventsMin=400:NEventsMax=600:VarTransform=PCA" );
-  
+
+   // this method (PDEFoam) is not (yet) available in this TMVA-version -------------------------------
+   // // PDEFoam method
+   // if (Use_PDEFoam)
+   //     factory->BookMethod( TMVA::Types::kPDEFoam, "PDEFoam", 
+   //                          "!H:!V:nCells=200:!SigBgSeparated:Frac=0.999:CreateMVAPdfs" );
+   // -------------------------------------------------------------------------------------------------
+
    // K-Nearest Neighbour classifier (KNN)
    if (Use_KNN)
       factory->BookMethod( TMVA::Types::kKNN, "KNN", 
@@ -426,10 +437,10 @@ void TMVAnalysis( TString myMethodList = "" )
    // Boosted Decision Trees (second one with decorrelation)
    if (Use_BDT)
       factory->BookMethod( TMVA::Types::kBDT, "BDT", 
-                           "!H:!V:NTrees=400:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=20:PruneMethod=CostComplexity:PruneStrength=4.5" );
+                           "!H:!V:NTrees=400:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=20:PruneMethod=CostComplexity:PruneStrength=1.5" );
    if (Use_BDTD)
       factory->BookMethod( TMVA::Types::kBDT, "BDTD", 
-                           "!H:!V:NTrees=400:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=20:PruneMethod=CostComplexity:PruneStrength=4.5:VarTransform=Decorrelate" );
+                           "!H:!V:NTrees=400:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=20:PruneMethod=CostComplexity:PruneStrength=1.5:VarTransform=Decorrelate" );
 
    // RuleFit -- TMVA implementation of Friedman's method
    if (Use_RuleFit)

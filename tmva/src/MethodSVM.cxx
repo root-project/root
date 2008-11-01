@@ -67,6 +67,7 @@ TMVA::MethodSVM::MethodSVM( const TString& jobName, const TString& methodTitle, 
    InitSVM();
 
    // interpretation of configuration option string
+   SetConfigName( TString("Method") + GetMethodName() );
    DeclareOptions();
    ParseOptions();
    ProcessOptions();
@@ -155,14 +156,14 @@ void TMVA::MethodSVM::DeclareOptions()
    DeclareOptionRef( fMaxIter   = 1000, "MaxIter", "Maximum number of training loops" );
 
    // for gaussian kernel parameter(s)
-   DeclareOptionRef( fDoubleSigmaSquered = 2., "Sigma", "Kernel parameter: Sigma");
+   DeclareOptionRef( fDoubleSigmaSquered = 2., "Sigma", "Kernel parameter: sigma");
   
    // for polynomiarl kernel parameter(s)
    DeclareOptionRef( fOrder = 3, "Order", "Polynomial Kernel parameter: polynomial order");
 
    // for sigmoid kernel parameters
-   DeclareOptionRef( fTheta = 1., "Theta", "Sigmoid Kernel parameter: Theta");
-   DeclareOptionRef( fKappa = 1., "Kappa", "Sigmoid Kernel parameter: Kappa");
+   DeclareOptionRef( fTheta = 1., "Theta", "Sigmoid Kernel parameter: theta");
+   DeclareOptionRef( fKappa = 1., "Kappa", "Sigmoid Kernel parameter: kappa");
   
    DeclareOptionRef( fTheKernel = "Gauss", "Kernel", "Uses kernel function");
    AddPreDefVal( TString("Linear")     );

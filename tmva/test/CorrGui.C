@@ -35,15 +35,22 @@ void CorrGui(  TString fin = "TMVA.root",  TMVAGlob::TypeOfPlot type = TMVAGlob:
 
    const TString directories[TMVAGlob::kNumOfMethods] = { "InputVariables_NoTransform",
                                                           "InputVariables_DecorrTransform",
-                                                          "InputVariables_PCATransform" };
+                                                          "InputVariables_PCATransform",
+                                                          "InputVariables_GaussDecorr"
+   };
+
    
    const TString titles[TMVAGlob::kNumOfMethods] = { "TMVA Input Variable",
                                                      "Decorrelated TMVA Input Variables",
-                                                     "Principal Component Transformed TMVA Input Variables" };
+                                                     "Principal Component Transformed TMVA Input Variables" ,
+                                                     "Gaussianized and Decorrelated TMVA Input Variable"
+   };
    
    const TString extensions[TMVAGlob::kNumOfMethods] = { "_NoTransform",
                                                          "_DecorrTransform",
-                                                         "_PCATransform" };
+                                                         "_PCATransform", 
+                                                         "_GaussDecorr" 
+   };
    // checks if file with name "fin" is already open, and if not opens one
    TFile* file = TMVAGlob::OpenFile( fin );  
 
@@ -105,6 +112,7 @@ void CorrGui(  TString fin = "TMVA.root",  TMVAGlob::TypeOfPlot type = TMVAGlob:
    cbar->Show();
 
    gROOT->SaveContext();
+
 }
 
 void CorrGui_DeleteTBar()

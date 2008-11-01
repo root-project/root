@@ -48,6 +48,7 @@
 #include "TMVA/SimulatedAnnealingFitter.h"
 #include "TMVA/MinuitFitter.h"
 #include "TMVA/MCFitter.h"
+#include "TMVA/Config.h"
 
 #include <stdlib.h>
 
@@ -65,6 +66,7 @@ TMVA::MethodFDA::MethodFDA( const TString& jobName, const TString& methodTitle, 
    InitFDA();
 
    // interpretation of configuration option string
+   SetConfigName( TString("Method") + GetMethodName() );
    DeclareOptions();
    ParseOptions();
    ProcessOptions();
@@ -198,7 +200,7 @@ void TMVA::MethodFDA::ProcessOptions()
    }
 
    // write the variables "xi" as additional parameters "[npar+i]"
-   for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
+   for (Int_t ivar=GetNvar()-1; ivar >= 0; ivar--) {
       fFormulaStringT.ReplaceAll( Form("x%i",ivar), Form("[%i]",ivar+fNPars) );
    }
 
@@ -477,9 +479,13 @@ void TMVA::MethodFDA::GetHelpMessage() const
    fLogger << "underperform for involved problems with complicated, phase space" << Endl;
    fLogger << "dependent nonlinear correlations." << Endl;
    fLogger << Endl;
-   fLogger << "Please consult the users manual for the format of the formula string" << Endl;
+   fLogger << "Please consult the Users Guide for the format of the formula string" << Endl;
    fLogger << "and the allowed parameter ranges:" << Endl;
-   fLogger << "http://tmva.sourceforge.net/docu/TMVAUsersGuide.pdf" << Endl;
+   if (gConfig().WriteOptionsReference()) {
+      fLogger << "<a href=\"http://tmva.sourceforge.net/docu/TMVAUsersGuide.pdf\">" 
+              << "http://tmva.sourceforge.net/docu/TMVAUsersGuide.pdf</a>" << Endl;
+   }
+   else fLogger << "http://tmva.sourceforge.net/docu/TMVAUsersGuide.pdf" << Endl;
    fLogger << Endl;
    fLogger << gTools().Color("bold") << "--- Performance optimisation:" << gTools().Color("reset") << Endl;
    fLogger << Endl;

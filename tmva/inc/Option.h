@@ -263,22 +263,6 @@ namespace TMVA {
               << Endl;
    }
 
-   //______________________________________________________________________
-   template<class T>
-   inline void TMVA::Option<T>::PrintPreDefs( ostream& os, Int_t levelofdetail ) const 
-   {
-      // template specialization for TString printing
-      if (HasPreDefinedVal() && levelofdetail>0) {
-         os << "    possible values are";
-         typename std::vector<T>::const_iterator predefIt;
-         predefIt = fPreDefs.begin();
-         for (;predefIt!=fPreDefs.end(); predefIt++) {
-            if (predefIt != fPreDefs.begin()) os << "                       ";
-            os << "  - " << (*predefIt) << std::endl;
-         }
-      }
-   }
-
    template<class T>
    inline void TMVA::Option<T>::Print( ostream& os, Int_t levelofdetail ) const 
    {
@@ -301,6 +285,22 @@ namespace TMVA {
       this->PrintPreDefs(os,levelofdetail);
    }
 
+   //______________________________________________________________________
+   template<class T>
+   inline void TMVA::Option<T>::PrintPreDefs( ostream& os, Int_t levelofdetail ) const 
+   {
+      // template specialization for TString printing
+      if (HasPreDefinedVal() && levelofdetail>0) {
+         os << std::endl << "PreDefined - possible values are:" << std::endl;
+         typename std::vector<T>::const_iterator predefIt;
+         predefIt = fPreDefs.begin();
+         for (;predefIt!=fPreDefs.end(); predefIt++) {
+            os << "                       ";
+            os << "  - " << (*predefIt) << std::endl;
+         }
+      }
+   }
+   
    //______________________________________________________________________
    template<class T>
    inline Bool_t TMVA::Option<T*>::SetValue( const TString& val, Int_t ind ) 

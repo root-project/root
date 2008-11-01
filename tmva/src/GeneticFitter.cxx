@@ -43,7 +43,7 @@ TMVA::GeneticFitter::GeneticFitter( IFitterTarget& target,
 {
    // constructor
 
-   // default parameters settings for Genetic Algorithm
+   // default parameters settings for Genetic Algorithm  
    DeclareOptions();
    ParseOptions();
 }            
@@ -62,9 +62,9 @@ void TMVA::GeneticFitter::DeclareOptions()
    DeclareOptionRef( fConvCrit=0.001, "ConvCrit",   "Convergence criteria" );  
 
    DeclareOptionRef( fSaveBestFromGeneration=1, "SaveBestGen", 
-                     "Saves the best n results from each generation. They are included in the last cycle" );  
+                     "Saves the best n results from each generation; these are included in the last cycle" );  
    DeclareOptionRef( fSaveBestFromCycle=10,     "SaveBestCycle", 
-                     "Saves the best n results from each cycle. They are included in the last cycle" );  
+                     "Saves the best n results from each cycle; these are included in the last cycle" );  
    
    DeclareOptionRef( fTrim=kFALSE, "Trim", 
                      "Trim the population to PopSize after assessing the fitness of each individual" );  

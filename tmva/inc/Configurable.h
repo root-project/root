@@ -35,6 +35,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include <ostream>
+
 #include "TObject.h"
 #include "TList.h"
 
@@ -65,8 +67,11 @@ namespace TMVA {
       // print list of defined options
       void PrintOptions() const;
 
-      virtual const char* GetName() const { return fName; }
-      void SetName( const char* n ) { fName = TString(n); }
+      virtual const char* GetName()      const { return GetConfigName(); }
+      const char* GetConfigName()        const { return fConfigName; }
+      const char* GetConfigDescription() const { return fConfigDescription; }
+      void SetConfigName       ( const char* n ) { fConfigName        = TString(n); }
+      void SetConfigDescription( const char* d ) { fConfigDescription = TString(d); }
 
       // Declare option and bind it to a variable
       template<class T> 
@@ -82,17 +87,20 @@ namespace TMVA {
       void CheckForUnusedOptions() const;
 
       const TString& GetOptions() const { return fOptions; }
-      void      SetOptions(const TString& s) { fOptions = s; }
+      void SetOptions(const TString& s) { fOptions = s; }
 
    protected:
       
-      Bool_t    LooseOptionCheckingEnabled() const { return fLooseOptionCheckingEnabled; }
-      void      EnableLooseOptions( Bool_t b = kTRUE ) { fLooseOptionCheckingEnabled = b; }
+      Bool_t LooseOptionCheckingEnabled() const { return fLooseOptionCheckingEnabled; }
+      void   EnableLooseOptions( Bool_t b = kTRUE ) { fLooseOptionCheckingEnabled = b; }
 
-      void WriteOptionsToStream ( ostream& o, const TString& prefix ) const;
-      void ReadOptionsFromStream( istream& istr );
+      void   WriteOptionsToStream       ( std::ostream& o, const TString& prefix ) const;
+      void   WriteOptionsReferenceToFile();
+      void   ReadOptionsFromStream      ( istream& istr );
 
-      void ResetSetFlag();
+      void   ResetSetFlag();
+
+      const TString& GetReferenceFile() const { return fReferenceFile; }
 
    private:
 
@@ -106,7 +114,9 @@ namespace TMVA {
       OptionBase* fLastDeclaredOption;  // last declared option
       TList       fListOfOptions;       // option list
 
-      TString     fName;                // the name of this configurable
+      TString     fConfigName;          // the name of this configurable
+      TString     fConfigDescription;   // description of this configurable
+      TString     fReferenceFile;       // reference file for options writing
 
    public:
       // the mutable declaration is needed to use the logger in const methods

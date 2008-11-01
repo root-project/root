@@ -91,6 +91,7 @@ End_Html */
 #include "TMVA/VariableIdentityTransform.h"
 #include "TMVA/VariableDecorrTransform.h"
 #include "TMVA/VariablePCATransform.h"
+#include "TMVA/VariableGaussDecorr.h"
 #include "TMVA/Version.h"
 #include "TMVA/TSpline1.h"
 #include "TMVA/Ranking.h"
@@ -111,11 +112,11 @@ const Int_t    NBIN_HIST_HIGH = 10000;
 #endif
 
 //_______________________________________________________________________
-TMVA::MethodBase::MethodBase( const TString&      jobName,
-                              const TString&      methodTitle,
-                              DataSet&     theData,
-                              const TString&      theOption,
-                              TDirectory*  theBaseDir)
+TMVA::MethodBase::MethodBase( const TString& jobName,
+                              const TString& methodTitle,
+                              DataSet&       theData,
+                              const TString& theOption,
+                              TDirectory*    theBaseDir)
    : IMethod(),
      Configurable               ( theOption ),
      fData                      ( theData ),
@@ -185,9 +186,9 @@ TMVA::MethodBase::MethodBase( const TString&      jobName,
 }
 
 //_______________________________________________________________________
-TMVA::MethodBase::MethodBase( DataSet&     theData,
-                              const TString&      weightFile,
-                              TDirectory*  theBaseDir )
+TMVA::MethodBase::MethodBase( DataSet&       theData,
+                              const TString& weightFile,
+                              TDirectory*    theBaseDir )
    : IMethod(),
      Configurable               ( "" ),
      fData                      ( theData ),
@@ -307,6 +308,8 @@ TMVA::MethodBase::~MethodBase( void )
 void TMVA::MethodBase::Init()
 {
    // default initialization called by all constructors
+   SetConfigDescription( "Configuration options for classifier architecture and tuning" );
+
    fNbins              = gConfig().fVariablePlotting.fNbinsXOfROCCurve;
    fNbinsH             = NBIN_HIST_HIGH;
 
@@ -386,7 +389,7 @@ void TMVA::MethodBase::DeclareOptions()
    //               V                   for Verbose output (!V) for non verbos
    //               H                   for Help message
 
-   DeclareOptionRef( fUseDecorr=kFALSE, "D", "use-decorrelated-variables flag (depreciated)" );
+   DeclareOptionRef( fUseDecorr=kFALSE, "D", "Use-decorrelated-variables flag (depreciated)" );
 
    DeclareOptionRef( fNormalise=kFALSE, "Normalise", "Normalise input variables" ); // don't change the default !!!
 
@@ -394,14 +397,15 @@ void TMVA::MethodBase::DeclareOptions()
    AddPreDefVal( TString("None") );
    AddPreDefVal( TString("Decorrelate") );
    AddPreDefVal( TString("PCA") );
+   AddPreDefVal( TString("GaussDecorr") );
 
    DeclareOptionRef( fVariableTransformTypeString="Signal", "VarTransformType",
-                     "Use signal or background events for var transform" );
+                     "Use signal or background events to derive for variable transformation (the transformation is applied on both types of, course)" );
    AddPreDefVal( TString("Signal") );
    AddPreDefVal( TString("Background") );
 
-   DeclareOptionRef( fNbinsMVAPdf   = 60, "NbinsMVAPdf",   "Number of bins used to create MVA PDF" );
-   DeclareOptionRef( fNsmoothMVAPdf = 2,  "NsmoothMVAPdf", "Number of smoothing iterations for MVA PDF" );
+   DeclareOptionRef( fNbinsMVAPdf   = 60, "NbinsMVAPdf",   "Number of bins used for the PDFs of classifier outputs" );
+   DeclareOptionRef( fNsmoothMVAPdf = 2,  "NsmoothMVAPdf", "Number of smoothing iterations for classifier PDFs" );
 
    DeclareOptionRef( fVerbose,   "V",       "Verbose mode" );
 
@@ -415,9 +419,9 @@ void TMVA::MethodBase::DeclareOptions()
    AddPreDefVal( TString("Fatal")   );
 
    DeclareOptionRef( fHelp,             "H",             "Print classifier-specific help message" );
-   DeclareOptionRef( fHasMVAPdfs=kFALSE, "CreateMVAPdfs", "Create PDFs for classifier outputs" );
+   DeclareOptionRef( fHasMVAPdfs=kFALSE, "CreateMVAPdfs", "Create PDFs for classifier outputs (signal and background)" );
 
-   DeclareOptionRef( fTxtWeightsOnly=kTRUE, "TxtWeightFilesOnly", "if True, write all weights as text files" );
+   DeclareOptionRef( fTxtWeightsOnly=kTRUE, "TxtWeightFilesOnly", "If True: write all training results (weights) as text files (False: some are written in ROOT format)" );
 }
 
 //_______________________________________________________________________
@@ -428,6 +432,7 @@ void TMVA::MethodBase::ProcessOptions()
    if      (fVarTransformString == "None")         fVariableTransform = Types::kNone;
    else if (fVarTransformString == "Decorrelate" ) fVariableTransform = Types::kDecorrelated;
    else if (fVarTransformString == "PCA" )         fVariableTransform = Types::kPCA;
+   else if (fVarTransformString == "GaussDecorr" ) fVariableTransform = Types::kGaussDecorr;
    else {
       fLogger << kFATAL << "<ProcessOptions> Variable transform '"
               << fVarTransformString << "' unknown." << Endl;
@@ -516,9 +521,7 @@ void TMVA::MethodBase::AddClassifierToTestTree( TTree* testTree )
 
    fLogger << kINFO << "Preparing evaluation tree... " << Endl;
    for (Int_t ievt=0; ievt<testTree->GetEntries(); ievt++) {
-
       ReadTestEvent(ievt);
-      
       // fill the MVA output value for this event
       newBranchMVA->SetAddress( &myMVA ); // only when the tree changed, but we don't know when that is
       myMVA = (Float_t)GetMvaValue();
@@ -1635,26 +1638,7 @@ Double_t TMVA::MethodBase::GetSeparation( TH1* histoS, TH1* histoB ) const
 {
    // compute "separation" defined as
    // <s2> = (1/2) Int_-oo..+oo { (S(x) - B(x))^2/(S(x) + B(x)) dx }
-
-   Double_t xmin = histoS->GetXaxis()->GetXmin();
-   Double_t xmax = histoB->GetXaxis()->GetXmax();
-   // sanity check
-   if (xmin != histoB->GetXaxis()->GetXmin() || xmax != histoB->GetXaxis()->GetXmax()) {
-      fLogger << kFATAL << "<GetSeparation> Mismatch in histogram limits: "
-              << xmin << " " << histoB->GetXaxis()->GetXmin()
-              << xmax << " " << histoB->GetXaxis()->GetXmax()  << Endl;
-   }
-
-   Double_t separation = 0;
-   Int_t nstep  = histoS->GetNbinsX();
-   Double_t intBin = (xmax - xmin)/nstep;
-   for (Int_t bin=0; bin<nstep; bin++) {
-      Double_t s = histoS->GetBinContent(bin);
-      Double_t b = histoB->GetBinContent(bin);
-      if (s + b > 0) separation += 0.5*(s - b)*(s - b)/(s + b);
-   }
-   separation *= intBin;
-   return separation;
+   return gTools().GetSeparation( *histoS, *histoB );
 }
 
 //_______________________________________________________________________
@@ -1662,13 +1646,15 @@ Double_t TMVA::MethodBase::GetSeparation( PDF* pdfS, PDF* pdfB ) const
 {
    // compute "separation" defined as
    // <s2> = (1/2) Int_-oo..+oo { (S(x)2 - B(x)2)/(S(x) + B(x)) dx }
-
+   
    // note, if zero pointers given, use internal pdf
    // sanity check first
    if ((!pdfS && pdfB) || (pdfS && !pdfB))
       fLogger << kFATAL << "<GetSeparation> Mismatch in pdfs" << Endl;
    if (!pdfS) pdfS = fSplS;
    if (!pdfB) pdfB = fSplB;
+   
+   return gTools().GetSeparation( *pdfS, *pdfB );
 
    Double_t xmin = pdfS->GetXmin();
    Double_t xmax = pdfS->GetXmax();
@@ -1679,16 +1665,16 @@ Double_t TMVA::MethodBase::GetSeparation( PDF* pdfS, PDF* pdfB ) const
    }
 
    Double_t separation = 0;
-   Int_t nstep  = 100;
-   Double_t intBin = (xmax - xmin)/nstep;
+   Int_t    nstep      = 100;
+   Double_t intBin     = (xmax - xmin)/nstep;
    for (Int_t bin=0; bin<nstep; bin++) {
       Double_t x = (bin + 0.5)*intBin + xmin;
       Double_t s = pdfS->GetVal( x );
       Double_t b = pdfB->GetVal( x );
       // separation
-      if (s + b > 0) separation += 0.5*(s - b)*(s - b)/(s + b);
+      if (s + b > 0) separation += (s - b)*(s - b)/(s + b);
    }
-   separation *= intBin;
+   separation *= (0.5*intBin);
 
    return separation;
 }
@@ -2053,27 +2039,53 @@ void TMVA::MethodBase::PrintHelpMessage() const
 {
    // prints out classifier-specific help method
 
+   // if options are written to reference file, also append help info 
+   std::streambuf* cout_sbuf = std::cout.rdbuf(); // save original sbuf 
+   std::ofstream* o = 0;
+   if (gConfig().WriteOptionsReference()) {
+      fLogger << kINFO << "Print Help message for class " << GetName() << " into file: " << GetReferenceFile() << Endl;
+      o = new std::ofstream( GetReferenceFile(), std::ios::app );
+      if (!o->good()) { // file could not be opened --> Error
+         fLogger << kFATAL << "<PrintHelpMessage> Unable to append to output file: " << GetReferenceFile() << Endl;
+      }
+      std::cout.rdbuf( o->rdbuf() ); // redirect 'cout' to file      
+   }
+
    //         "|--------------------------------------------------------------|"
-   fLogger << kINFO << Endl;
-   fLogger << gTools().Color("bold")
-           << "================================================================" 
-           << gTools().Color( "reset" )
-           << Endl;
-   fLogger << gTools().Color("bold")
-           << "H e l p   f o r   c l a s s i f i e r   [ " << GetName() << " ] :" 
-           << gTools().Color( "reset" )
-           << Endl;
+   if (!o) {
+      fLogger << kINFO << Endl;
+      fLogger << gTools().Color("bold")
+              << "================================================================" 
+              << gTools().Color( "reset" )
+              << Endl;      
+      fLogger << gTools().Color("bold")
+              << "H e l p   f o r   c l a s s i f i e r   [ " << GetName() << " ] :" 
+              << gTools().Color( "reset" )
+              << Endl;
+   }
+   else {
+      fLogger << "Help for classifier [ " << GetName() << " ] :" << Endl;
+   }
 
    // print method-specific help message
    GetHelpMessage(); 
 
-   fLogger << Endl;
-   fLogger << "<Suppress this message by specifying \"!H\" in the booking option>" << Endl;
-   fLogger << gTools().Color("bold")
-           << "================================================================" 
-           << gTools().Color( "reset" )
-           << Endl;
-   fLogger << Endl;
+   if (!o) {
+      fLogger << Endl;
+      fLogger << "<Suppress this message by specifying \"!H\" in the booking option>" << Endl;
+      fLogger << gTools().Color("bold")
+              << "================================================================" 
+              << gTools().Color( "reset" )
+              << Endl;
+      fLogger << Endl;
+   }
+   else {
+      // indicate END
+      fLogger << "# End of Message___" << Endl;
+   }
+
+   std::cout.rdbuf( cout_sbuf ); // restore the original stream buffer 
+   if (o) o->close();
 }
 
 // ----------------------- r o o t   f i n d i n g ----------------------------

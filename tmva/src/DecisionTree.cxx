@@ -71,11 +71,10 @@
 #include "TMVA/MisClassificationError.h"
 #include "TMVA/SdivSqrtSplusB.h"
 #include "TMVA/Event.h"
+#include "TMVA/BDTEventWrapper.h"
+#include "TMVA/CCPruner.h"
 
 using std::vector;
-
-#define USE_HELGESCODE 1    // the other one is Dougs implementation of the TrainNode
-#define USE_HELGE_V1  0     // out loop is over NVAR in TrainNode, inner loop is Eventloop
 
 ClassImp(TMVA::DecisionTree)
 
@@ -87,6 +86,7 @@ TMVA::DecisionTree::DecisionTree( void )
      fSepType    (NULL),
      fMinSize    (0),
      fPruneMethod(kCostComplexityPruning),
+     fNodePurityLimit(0.5),
      fRandomisedTree (kFALSE),
      fUseNvars   (0),
      fMyTrandom  (NULL),
@@ -108,6 +108,7 @@ TMVA::DecisionTree::DecisionTree( DecisionTreeNode* n )
      fSepType    (NULL),
      fMinSize    (0),
      fPruneMethod(kCostComplexityPruning),
+     fNodePurityLimit(0.5),
      fRandomisedTree (kFALSE),
      fUseNvars   (0),
      fMyTrandom  (NULL),
@@ -134,6 +135,7 @@ TMVA::DecisionTree::DecisionTree( TMVA::SeparationBase *sepType,Int_t minSize,
    fSepType    (sepType),
    fMinSize    (minSize),
    fPruneMethod(kCostComplexityPruning),
+   fNodePurityLimit(0.5),
    fRandomisedTree (randomisedTree),
    fUseNvars   (useNvars),
    fMyTrandom  (NULL),
@@ -156,6 +158,7 @@ TMVA::DecisionTree::DecisionTree( const DecisionTree &d):
    fSepType    (d.fSepType),
    fMinSize    (d.fMinSize),
    fPruneMethod(d.fPruneMethod),
+   fNodePurityLimit(0.5),
    fRandomisedTree (d.fRandomisedTree),
    fUseNvars    (d.fUseNvars),
    fMyTrandom  (NULL),   
@@ -253,8 +256,14 @@ Int_t TMVA::DecisionTree::BuildTree( vector<TMVA::Event*> & eventSample,
    }
 
    if (s+b < 0){
-      fLogger << kWARNING << " One of the Decision Tree nodes has negative total number of signal or background events. (Nsig="<<s<<" Nbkg="<<b<<" Probaby you use a Monte Carlo with negative weights. That should in principle be fine as long as on average you end up with something positive. For this you have to make sure that the minimul number of (unweighted) events demanded for a tree node (currently you use: nEventsMin="<<fMinSize<<", you can set this via the BDT option string when booking the classifier) is large enough to allow for reasonable averaging!!!"<<Endl
-              << " If this does not help.. maybe you want to try the option: NoNegWeightsInTraining  which ignores events with negative weight in the training. " << Endl;
+      fLogger << kWARNING << " One of the Decision Tree nodes has negative total number of signal or background events. " 
+	      << "(Nsig="<<s<<" Nbkg="<<b<<" Probaby you use a Monte Carlo with negative weights. That should in principle " 
+	      << "be fine as long as on average you end up with something positive. For this you have to make sure that the "
+	      << "minimul number of (unweighted) events demanded for a tree node (currently you use: nEventsMin="<<fMinSize
+	      << ", you can set this via the BDT option string when booking the classifier) is large enough to allow for "
+	      << "reasonable averaging!!!" << Endl
+              << " If this does not help.. maybe you want to try the option: NoNegWeightsInTraining which ignores events "
+	      << "with negative weight in the training." << Endl;
       double nBkg=0.;
       for (UInt_t i=0; i<eventSample.size(); i++){
          if (! eventSample[i]->IsSignal()){
@@ -276,21 +285,18 @@ Int_t TMVA::DecisionTree::BuildTree( vector<TMVA::Event*> & eventSample,
    }
    node->SetSeparationIndex(fSepType->GetSeparationIndex(s,b));
 
-   //   if ( eventSample.size() > fMinSize  &&
-   //        node->GetPurity() < fSoverSBUpperThreshold      &&
-   //        node->GetPurity() > fSoverSBLowerThreshold  ) {
-
    // I now demand the minimum number of events for both daughter nodes. Hence if the number
    // of events in the parent node is not at least two times as big, I don't even need to try
    // splitting
    if ( eventSample.size() >= 2*fMinSize){
 
       Double_t separationGain;
-      separationGain = this->TrainNode(eventSample, node);
-      if (separationGain == 0) {//we could not gain anything, e.g. all events are in one bin, 
+      if(fNCuts > 0) separationGain = this->TrainNodeFast(eventSample, node);
+      else separationGain = this->TrainNodeFull(eventSample, node);
+      if (separationGain < std::numeric_limits<double>::epsilon()) { // we could not gain anything, e.g. all events are in one bin, 
          // hence no cut can actually do anything. Happens for Integer Variables
          // Hence natuarlly the current node is a leaf node
-         if (node->GetPurity() > 0.5) node->SetNodeType(1);
+         if (node->GetPurity() > fNodePurityLimit) node->SetNodeType(1);
          else node->SetNodeType(-1);
          if (node->GetDepth() > this->GetTotalTreeDepth()) this->SetTotalTreeDepth(node->GetDepth());
       } 
@@ -342,7 +348,7 @@ Int_t TMVA::DecisionTree::BuildTree( vector<TMVA::Event*> & eventSample,
       }
    } 
    else{ // it is a leaf node
-      if (node->GetPurity() > 0.5) node->SetNodeType(1);
+      if (node->GetPurity() > fNodePurityLimit) node->SetNodeType(1);
       else node->SetNodeType(-1);
       if (node->GetDepth() > this->GetTotalTreeDepth()) this->SetTotalTreeDepth(node->GetDepth());
    }
@@ -439,7 +445,6 @@ void TMVA::DecisionTree::PruneTree()
 
    if      (fPruneMethod == kExpectedErrorPruning)  this->PruneTreeEEP((DecisionTreeNode *)this->GetRoot());
    else if (fPruneMethod == kCostComplexityPruning) this->PruneTreeCC();
-   else if (fPruneMethod == kMCC)                   this->PruneTreeMCC();
    else {
       fLogger << kFATAL << "Selected pruning method not yet implemented "
               << Endl;
@@ -458,7 +463,7 @@ void TMVA::DecisionTree::PruneTreeEEP(DecisionTreeNode *node)
    if (node->GetNodeType() == 0){
       this->PruneTreeEEP(l);
       this->PruneTreeEEP(r);
-      if (this->GetSubTreeError(node) >= this->GetNodeError(node)) { 
+      if (this->GetSubTreeError(node)*fPruneStrength >= this->GetNodeError(node)) { 
          this->PruneNode(node);
       }
    } 
@@ -467,128 +472,13 @@ void TMVA::DecisionTree::PruneTreeEEP(DecisionTreeNode *node)
 //_______________________________________________________________________
 void TMVA::DecisionTree::PruneTreeCC()
 {
-   // prunig of nodes using the Cost Complexity criteria. The Pruning is performed
-   // until a minimum in the cost complexity CC(alpha) is reached.
-   // CC(alpha) = alpha*NLeafs + sum_over_leafs[ N*Quality(leaf) ]
-   // where Quality(leaf) is given by the 1-purity (for Misclassification Error)
-   // purity(1-purity) for Gini-Index..e.t.c.. typically the Misclassification Error
-   // is used for guiding the pruning.
-   
-   // you keep pruning the nodes that give the smallest gain in quality until the
-   // CC has reached its minimum. I.e...you keep pruning nodes until the next pruning
-   // step would result in a CC that is larger than the CC of the current tree.
-
-   Double_t currentCC = this->GetCostComplexity(fPruneStrength);
-   Double_t nextCC    = this->GetCostComplexityIfNextPruneStep(fPruneStrength);
-   while (currentCC > nextCC &&  this->GetNNodes() > 3 ){//find the weakest node and prune it away
-      this->PruneNode( this->FindCCPruneCandidate() );
-      currentCC = this->GetCostComplexity(fPruneStrength);
-      nextCC    = this->GetCostComplexityIfNextPruneStep(fPruneStrength);
-   }
-   return;
-}
-
-//_______________________________________________________________________
-void TMVA::DecisionTree::PruneTreeMCC()
-{
-   // Similar to the CostCoplexity pruning, only here I calculate immediately
-   // the "prunestrength" (= alpha, the regularisation parameter in the CostComplexity)
-   // for which the respective subtree below a node would be pruned. Then I continue
-   // pruning until all nodes have such a value larger than the specified prunestrength
-
-   this->FillLinkStrengthMap();
-   Double_t currentG = fLinkStrengthMap.begin()->first;
-
-   
-   while (currentG < fPruneStrength &&  this->GetNNodes() > 3 ){//find the weakest node and prune it away
-      //      this->PruneNode( fLinkStrengthMap.begin()->second );
-      this->PruneNode( this->GetWeakestLink() );
-      currentG = fLinkStrengthMap.begin()->first;
-   }
-   return;
-}
-
-//_______________________________________________________________________
-TMVA::DecisionTreeNode*  TMVA::DecisionTree::GetWeakestLink() 
-{
-   // get the weakest link for the pruning step
-   this->FillLinkStrengthMap();
-   return fLinkStrengthMap.begin()->second;
-}
-
-//_______________________________________________________________________
-void TMVA::DecisionTree::FillLinkStrengthMap(TMVA::DecisionTreeNode *n) 
-{
-   // loop over all non-leaf nodes of the tree and calculate for each
-   // of these nodes the prunestrenght ("alpha") at which this node
-   // would win against its subtree.(hence it's subtree would be pruned)
-   // this is given by:
-   //          R(t) - R(T_t)       where R(t)  : MisClassificationCost of the node t
-   // alpha < --------------             R(T_t): MisClassificationCost of subtree blow t
-   //          |T_t| - 1                 |T|   : # nodes in Tree T
-   //
-
-
-
-   if (n == NULL){ //default, start at the tree top, then descend recursively
-      n = (DecisionTreeNode*) this->GetRoot();
-      fLinkStrengthMap.clear();
-      if (n == NULL) {
-         fLogger << kFATAL << "FillLinkStrengthMap: started with undefined ROOT node" <<Endl;
-         return ;
-      }
-   } 
-   if (this->GetLeftDaughter(n) != NULL){
-      this->FillLinkStrengthMap( this->GetLeftDaughter(n)); 
-   }
-   if (this->GetRightDaughter(n) != NULL) {
-      this->FillLinkStrengthMap( this->GetRightDaughter(n));
-   }
-   
-   //now you are intrested  non-leaf nodes only
-   if ((this->GetLeftDaughter(n) != NULL) && (this->GetRightDaughter(n) != NULL) ) {   
-      // R(t) = 
-      Double_t alpha = ( this->MisClassificationCostOfNode(n)  -
-                         this->MisClassificationCostOfSubTree(n) ) /  
-         (n->CountMeAndAllDaughters() - 1);
-
-      fLinkStrengthMap.insert(std::pair<const Double_t, TMVA::DecisionTreeNode* > ( alpha, n ));
-   }
-}
-
-//_______________________________________________________________________
-Double_t TMVA::DecisionTree::MisClassificationCostOfNode(TMVA::DecisionTreeNode *n)
-{
-   // get the misclassificationCost of the subTree
-   return (1 - n->GetPurity()) * n->GetNEvents(); //  / this->GetNNodes() ;
-}
-
-//_______________________________________________________________________
-Double_t TMVA::DecisionTree::MisClassificationCostOfSubTree(TMVA::DecisionTreeNode *n)
-{
-   // get the misclassificationCost of the subTree
-   Double_t tmp=0;
-
-   if (n == NULL){ //default, start at the tree top, then descend recursively
-      n = (DecisionTreeNode*) this->GetRoot();
-      if (n == NULL) {
-         fLogger << kFATAL << "MisClassificationCostOfSubTree: started with undefined ROOT node" <<Endl;
-         return 0.;
-      }
-   } 
-   if (this->GetLeftDaughter(n) != NULL){
-      tmp += this->MisClassificationCostOfSubTree( this->GetLeftDaughter(n)); 
-   }
-   if (this->GetRightDaughter(n) != NULL) {
-      tmp += this->MisClassificationCostOfSubTree( this->GetRightDaughter(n));
-   }
-   
-   //now you are interested  leaf nodes only
-   if ((this->GetLeftDaughter(n) == NULL) && (this->GetRightDaughter(n) == NULL) ) {   
-      tmp = this->MisClassificationCostOfNode(n);
-   }
-
-   return tmp;
+   CCPruner* pruneTool = new CCPruner(this, NULL, fSepType);
+   pruneTool->SetPruneStrength(fPruneStrength);
+   pruneTool->Optimize();
+   std::vector<DecisionTreeNode*> nodes = pruneTool->GetOptimalPruneSequence();
+   for(UInt_t i = 0; i < nodes.size(); i++) 
+     this->PruneNode(nodes[i]);
+   delete pruneTool;
 }
 
 //_______________________________________________________________________
@@ -596,7 +486,7 @@ UInt_t TMVA::DecisionTree::CountLeafNodes(TMVA::DecisionTreeNode *n)
 {
    // return the number of terminal nodes in the sub-tree below Node n
 
-   if (n == NULL){ //default, start at the tree top, then descend recursively
+   if (n == NULL){ // default, start at the tree top, then descend recursively
       n = (DecisionTreeNode*) this->GetRoot();
       if (n == NULL) {
          fLogger << kFATAL << "CountLeafNodes: started with undefined ROOT node" <<Endl;
@@ -619,177 +509,13 @@ UInt_t TMVA::DecisionTree::CountLeafNodes(TMVA::DecisionTreeNode *n)
    }
    return countLeafs;
 }
-
-//_______________________________________________________________________
-Double_t TMVA::DecisionTree::GetCostComplexity(Double_t alpha) 
-{
-   // returns the cost complexity criterion for the decision tree
-   // see "L.Breiman, J.H.Friedman, R.A.Olshen, C.J.Stone; "Classification and
-   // Regression Trees", Wadsworth International Group (1984), Chapman & Hall/CRC (1984)
-   
-   // even though for guiding the cross complexity pruning, any index (gini index,
-   // cross entropy or miscalssifiaction error can be used, typically one
-   // chooses the "misclassification error" .. so will I.
-   // (taken from "Elements of Statistical Learning" page 271)
-
-   // find all leaf nodes
-   
-   Double_t cc=0.;
-
-   this->FillQualityMap();
-   std::multimap<Double_t, TMVA::DecisionTreeNode* >::iterator it=fQualityMap.begin();
-   Int_t count=0;
-   for (;it!=fQualityMap.end(); it++){
-//       Double_t s=it->second->GetNSigEvents();
-//       Double_t b=it->second->GetNBkgEvents();
-      Double_t s=it->second->GetNSigEvents_unweighted();
-      Double_t b=it->second->GetNBkgEvents_unweighted();
-      cc += (s+b) * it->first ;  
-      count++;
-   }
-
-   return cc+alpha * count;
-}
-
-//_______________________________________________________________________
-Double_t TMVA::DecisionTree::GetCostComplexityIfNextPruneStep(Double_t alpha) 
-{
-   // returns the cost complexity criterion for the decision tree
-   // see "L.Breiman, J.H.Friedman, R.A.Olshen, C.J.Stone; "Classification and
-   // Regression Trees", Wadsworth International Group (1984), Chapman & Hall/CRC (1984)
-   
-   // even though for guiding the cross complexity pruning, any index (gini index,
-   // cross entropy or miscalssifiaction error can be used, typically one
-   // chooses the "misclassification error" 
-   // (taken from "Elements of Statistical Learning" page 271)
-   // This however for me shows strange behaviours. In particulary, there are nodes 
-   // which have daughters that both have a purity > 0.5. Hence for the actual 
-   // Misclassificaion error of 1-max(p,1-p), the gain in quality:
-   // (S + B) Q(S,B) - (s+b)Q(s,b) - ( (S-s)+(B-s) Q(S-s,B-b)) turns out to be == 0
-   // which leads to non-convex behaviour of "CostComplexity vs tree-size"
-
-   // find all leaf nodes
-
-
-   Double_t cc=0.;
-
-   this->FillQualityMap();
-   this->FillQualityGainMap();
-
-   if (fQualityMap.size() == 0 ){
-      fLogger << kError << "The Quality Map in the BDT-Pruning is empty.. maybe your Tree has "
-              << " absolutely no splits ?? e.g.. minimun number of events for node splitting"
-              << " being larger than the number of events available ??? " << Endl;
-   } 
-   else if (fQualityGainMap.size() == 0 ){
-      fLogger << kError << "The QualityGain Map in the BDT-Pruning is empty.. This can happen"
-              << " if your Tree has absolutely no splits ?? e.g.. minimun number of events for"
-              << " node splitting being larger than the number of events available ??? " << Endl;
-   } 
-   else {
-
-      std::multimap<Double_t, TMVA::DecisionTreeNode* >::iterator it=fQualityMap.begin();
-      Int_t count=0;
-      for (;it!=fQualityMap.end(); it++){
-         if (it->second->GetParent() != fQualityGainMap.begin()->second ) {
-            Double_t s=it->second->GetNSigEvents_unweighted();
-            Double_t b=it->second->GetNBkgEvents_unweighted();
-            cc += (s+b) * it->first ;  
-            count++;
-         } 
-      }
-      // now add the pruning candidates contribution as if it were pruned
-      Double_t s=fQualityGainMap.begin()->second->GetNSigEvents_unweighted();
-      Double_t b=fQualityGainMap.begin()->second->GetNBkgEvents_unweighted();
-      
-      cc += (s+b) * fQualityIndex->GetSeparationIndex(s,b);
-      count++;
-      
-   cc+=alpha*count;
-   }
-
-   return cc;
-}
-
-//_______________________________________________________________________
-void TMVA::DecisionTree::FillQualityGainMap(DecisionTreeNode* n )
-{
-   // traverse the whole tree and fill the map of QualityGain - Node
-   // for pre-leaf nodes, deciding which node is the next prune candidate
-   
-   if (n == NULL){ //default, start at the tree top, then descend recursively
-      n = (DecisionTreeNode*) this->GetRoot();
-      fQualityGainMap.clear();
-      if (n == NULL) {
-         fLogger << kFATAL << "FillQualityGainMap: started with undefined ROOT node" <<Endl;
-         return ;
-      }
-   } 
-
-   if (this->GetLeftDaughter(n) != NULL){
-      this->FillQualityGainMap( this->GetLeftDaughter(n)); 
-   }
-   if (this->GetRightDaughter(n) != NULL) {
-      this->FillQualityGainMap( this->GetRightDaughter(n));
-   }
-
-   //quality gain of course exists for internal nodes only:
-   if ((this->GetLeftDaughter(n) != NULL) && (this->GetRightDaughter(n) != NULL) ) {
-      //but you want to fill it for pre-leaf nodes only
-      if ((this->GetLeftDaughter(n)->GetLeft() == NULL) && 
-          (this->GetLeftDaughter(n)->GetRight() == NULL) && 
-          (this->GetRightDaughter(n)->GetLeft() == NULL) && 
-          (this->GetRightDaughter(n)->GetRight() == NULL) ){
-         
-         fQualityGainMap.insert(std::pair<const Double_t, TMVA::DecisionTreeNode* > 
-                                ( fQualityIndex->GetSeparationGain (this->GetRightDaughter(n)->GetNSigEvents_unweighted(),
-                                                                    this->GetRightDaughter(n)->GetNBkgEvents_unweighted(),
-                                                                    n->GetNSigEvents_unweighted(), n->GetNBkgEvents_unweighted()),
-                                  n));
-      }
-   }
-   return;
-}
-
-//_______________________________________________________________________
-void TMVA::DecisionTree::FillQualityMap(DecisionTreeNode* n )
-{
-   // traverse the whole tree and find the leaf nodes, and then fill the Quality Criterion
-   // for the leaf nodes (Used in the Pruning)
-
-   if (n == NULL){ //default, start at the tree top, then descend recursively
-      n = (DecisionTreeNode*) this->GetRoot();
-      fQualityMap.clear();
-      if (n == NULL) {
-         fLogger << kFATAL << "FillQualityMap: started with undefined ROOT node" <<Endl;
-         return ;
-      }
-   } 
-   
-   if (this->GetLeftDaughter(n) != NULL){
-      this->FillQualityMap( this->GetLeftDaughter(n)); 
-   }
-   if (this->GetRightDaughter(n) != NULL) {
-      this->FillQualityMap( this->GetRightDaughter(n));
-   }
-   
-   //now you are intrested in leaf nodes only
-   if ((this->GetLeftDaughter(n) == NULL) && (this->GetRightDaughter(n) == NULL) ) {   
-      fQualityMap.insert(std::pair<const Double_t, TMVA::DecisionTreeNode* > 
-                         ( fQualityIndex->GetSeparationIndex (n->GetNSigEvents_unweighted(), 
-                                                              n->GetNBkgEvents_unweighted()),
-                           n));
-   }
-   return;
-}
-
    
 //_______________________________________________________________________
 void TMVA::DecisionTree::DescendTree( DecisionTreeNode *n)
 {
    // descend a tree to find all its leaf nodes
 
-   if (n == NULL){ //default, start at the tree top, then descend recursively
+   if (n == NULL){ // default, start at the tree top, then descend recursively
       n = (DecisionTreeNode*) this->GetRoot();
       if (n == NULL) {
          fLogger << kFATAL << "DescendTree: started with undefined ROOT node" <<Endl;
@@ -818,14 +544,6 @@ void TMVA::DecisionTree::DescendTree( DecisionTreeNode *n)
    }
 }
 
-//_______________________________________________________________________
-TMVA::DecisionTreeNode* TMVA::DecisionTree::FindCCPruneCandidate()
-{
-   // get the  pruning candidate node as the one pre-leaf node that gives
-   // the smalest quality gain
-   this->FillQualityGainMap();
-   return fQualityGainMap.begin()->second;
-}
 
 //_______________________________________________________________________
 void TMVA::DecisionTree::PruneNode(DecisionTreeNode *node)
@@ -840,7 +558,7 @@ void TMVA::DecisionTree::PruneNode(DecisionTreeNode *node)
    node->SetSelector(-1);
    node->SetSeparationIndex(-1);
    node->SetSeparationGain(-1);
-   if (node->GetPurity() > 0.5) node->SetNodeType(1);
+   if (node->GetPurity() > fNodePurityLimit) node->SetNodeType(1);
    else node->SetNodeType(-1);
    this->DeleteNode(l);
    this->DeleteNode(r);
@@ -867,12 +585,13 @@ Double_t TMVA::DecisionTree::GetNodeError(DecisionTreeNode *node)
    
    //fraction of correctly classified events by this node:
    Double_t f=0;
-   if (node->GetPurity() > 0.5) f = node->GetPurity();
+   if (node->GetPurity() > fNodePurityLimit) f = node->GetPurity();
    else  f = (1-node->GetPurity());
 
    Double_t df = TMath::Sqrt(f*(1-f)/nEvts );
    
-   errorRate = std::min(1.,(1 - (f-fPruneStrength*df) ));
+   errorRate = std::min(1.,(1 - (f-df) ));
+   //   errorRate = std::min(1.,(1 - (f-fPruneStrength*df) ));
    
    // -------------------------------------------------------------------
    // standard algorithm:
@@ -1004,8 +723,7 @@ void  TMVA::DecisionTree::SetCutPoints(vector<Double_t> & cut_points,
 };
 
 //_______________________________________________________________________
-
-Double_t TMVA::DecisionTree::TrainNode(vector<TMVA::Event*> & eventSample,
+Double_t TMVA::DecisionTree::TrainNodeFast(vector<TMVA::Event*> & eventSample,
                                        TMVA::DecisionTreeNode *node)
 {
    // decide how to split a node. At each node, ONE of the variables is
@@ -1176,6 +894,121 @@ Double_t TMVA::DecisionTree::TrainNode(vector<TMVA::Event*> & eventSample,
    return separationGain;
 }
 
+//_______________________________________________________________________
+Double_t TMVA::DecisionTree::TrainNodeFull(vector<TMVA::Event*> & eventSample,
+					   TMVA::DecisionTreeNode *node)
+{
+   // decide how to split a node. At each node, ONE of the variables is
+   // choosen, which gives the best separation between signal and bkg on
+   // the sample which enters the Node.  
+   // In this node splitting routine the event are sorted for each
+   // variable allowing to find the true optimal cut in each variable, by
+   // looping through all events, placing the cuts always in the middle between
+   // two of the sorted event and finding the true maximal separation gain
+   // possible by cutting on this variable
+
+
+   Double_t nTotS = 0.0, nTotB = 0.0;
+   Int_t nTotS_unWeighted = 0, nTotB_unWeighted = 0;  
+   
+   vector<TMVA::BDTEventWrapper> bdtEventSample;
+   
+   // List of optimal cuts, separation gains, and cut types (removed background or signal) - one for each variable
+   vector<Double_t> lCutValue( fNvars, 0.0 );
+   vector<Double_t> lSepGain( fNvars, -1.0 );
+   vector<Bool_t>   lCutType( fNvars, kFALSE ); 
+   
+   // Initialize (un)weighted counters for signal & background
+   // Construct a list of event wrappers that point to the original data
+   for( vector<TMVA::Event*>::const_iterator it = eventSample.begin(); it != eventSample.end(); ++it ) {
+      if( (*it)->Type() == 1 ) { // signal or background event
+         nTotS += (*it)->GetWeight();
+         ++nTotS_unWeighted;
+      }
+      else {
+         nTotB += (*it)->GetWeight();
+         ++nTotB_unWeighted;
+      }
+      bdtEventSample.push_back(TMVA::BDTEventWrapper(*it));
+   }
+   
+   for( Int_t ivar = 0; ivar < fNvars; ivar++ ) { // loop over all discriminating variables
+      TMVA::BDTEventWrapper::SetVarIndex(ivar); // select the variable to sort by
+      std::sort( bdtEventSample.begin(),bdtEventSample.end() ); // sort the event data 
+      
+      Double_t bkgWeightCtr = 0.0, sigWeightCtr = 0.0;
+      vector<TMVA::BDTEventWrapper>::iterator it = bdtEventSample.begin(), it_end = bdtEventSample.end();
+      for( ; it != it_end; ++it ) {
+         if( (**it)->Type() == 1 ) // specify signal or background event
+            sigWeightCtr += (**it)->GetWeight();
+         else 
+            bkgWeightCtr += (**it)->GetWeight(); 
+         // Store the accumulated signal (background) weights
+         it->SetCumulativeWeight(false,bkgWeightCtr); 
+         it->SetCumulativeWeight(true,sigWeightCtr);
+      }
+      
+      const Double_t fPMin = 1.0e-6;
+      Bool_t cutType = kFALSE;
+      Long64_t index = 0;
+      Double_t separationGain = -1.0, sepTmp = 0.0, cutValue = 0.0, dVal = 0.0, norm = 0.0;
+      // Locate the optimal cut for this (ivar-th) variable
+      for( it = bdtEventSample.begin(); it != it_end; ++it ) {
+         if( index == 0 ) { ++index; continue; }
+         if( *(*it) == NULL ) {
+            fLogger << kFATAL << "In TrainNodeFull(): have a null event! Where index=" 
+                    << index << ", and parent node=" << node->GetParent() << Endl;
+            break;
+         }
+         dVal = bdtEventSample[index].GetVal() - bdtEventSample[index-1].GetVal();
+         norm = TMath::Abs(bdtEventSample[index].GetVal() + bdtEventSample[index-1].GetVal());
+         // Only allow splits where both daughter nodes have the specified miniumum number of events
+         // Splits are only sensible when the data are ordered (eg. don't split inside a sequence of 0's)
+         if( index >= fMinSize && 
+             (nTotS_unWeighted + nTotB_unWeighted) - index >= fMinSize && 
+             TMath::Abs(dVal/(0.5*norm + 1)) > fPMin ) {
+            sepTmp = fSepType->GetSeparationGain( it->GetCumulativeWeight(true), it->GetCumulativeWeight(false), sigWeightCtr, bkgWeightCtr );
+            if( sepTmp > separationGain ) {
+               separationGain = sepTmp;
+               cutValue = it->GetVal() - 0.5*dVal; 
+               Double_t nSelS = it->GetCumulativeWeight(true);
+               Double_t nSelB = it->GetCumulativeWeight(false);
+               // Indicate whether this cut is improving the node purity by removing background (enhancing signal)
+               // or by removing signal (enhancing background)
+               if( nSelS/sigWeightCtr > nSelB/bkgWeightCtr ) cutType = kTRUE; 
+               else cutType = kFALSE; 
+            }
+         }
+         ++index;
+      }
+      lCutType[ivar] = cutType;
+      lCutValue[ivar] = cutValue;
+      lSepGain[ivar] = separationGain;
+   }
+   
+   Double_t separationGain = -1.0;
+   Int_t iVarIndex = -1;
+   for( Int_t ivar = 0; ivar < fNvars; ivar++ ) {
+      if( lSepGain[ivar] > separationGain ) {
+         iVarIndex = ivar;
+         separationGain = lSepGain[ivar];
+      }
+   }
+   
+   if(iVarIndex >= 0) {
+      node->SetSelector(iVarIndex);
+      node->SetCutValue(lCutValue[iVarIndex]);
+      node->SetSeparationGain(lSepGain[iVarIndex]);
+      node->SetCutType(lCutType[iVarIndex]);
+      
+      fVariableImportance[iVarIndex] += separationGain*separationGain * (nTotS+nTotB) * (nTotS+nTotB);
+   }
+   else {
+      separationGain = 0.0;
+   }
+   
+   return separationGain;
+}
 
 //_______________________________________________________________________
 Double_t TMVA::DecisionTree::CheckEvent(const TMVA::Event & e, Bool_t UseYesNoLeaf)
@@ -1255,4 +1088,5 @@ Double_t  TMVA::DecisionTree::GetVariableImportance(Int_t ivar)
 
    return -1;
 }
+
 

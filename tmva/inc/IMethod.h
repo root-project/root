@@ -84,13 +84,13 @@ namespace TMVA {
       // print help message
       virtual void PrintHelpMessage() const = 0;
 
+      // get specific help message from classifer
+      virtual void GetHelpMessage() const = 0;
+
    protected:
 
       // make ROOT-independent C++ class for classifier response (classifier-specific implementation)
       virtual void MakeClassSpecific( std::ostream&, const TString& ) const = 0;
-
-      // get specific help message from classifer
-      virtual void GetHelpMessage() const = 0;
 
       ClassDef(IMethod,0) // Method Interface
 

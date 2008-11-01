@@ -20,6 +20,12 @@ void correlations( TString fin = "TMVA.root", Bool_t greyScale = kFALSE, Bool_t 
    const Int_t width = 600;
    for (Int_t ic=0; ic<2; ic++) {
 
+      TH2* h2 = file->Get( hName[ic] );
+      if(!h2) {
+         cout << "Did not find histogram " << hName[ic] << " in " << fin << endl;
+         continue;
+      }
+
       TCanvas* c = new TCanvas( hName[ic], 
                                 Form("Correlations between MVA input variables (%s)", (ic==0?"signal":"background")), 
                                 ic*(width+5)+200, 0, width, width ); 
@@ -35,7 +41,6 @@ void correlations( TString fin = "TMVA.root", Bool_t greyScale = kFALSE, Bool_t 
       c->SetTopMargin   ( newMargin1 );
       gStyle->SetPalette( 1, 0 );
 
-      TH2* h2 = file->Get( hName[ic] );
 
       gStyle->SetPaintTextFormat( "3g" );
 

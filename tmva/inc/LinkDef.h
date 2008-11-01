@@ -84,6 +84,7 @@
 #pragma link C++ class TMVA::VariableIdentityTransform+;
 #pragma link C++ class TMVA::VariableDecorrTransform+;
 #pragma link C++ class TMVA::VariablePCATransform+;
+#pragma link C++ class TMVA::VariableGaussDecorr+;
 #pragma link C++ class TMVA::Config+;
 #pragma link C++ class TMVA::Config::VariablePlotting+;
 #pragma link C++ class TMVA::Config::IONames+;
@@ -100,5 +101,10 @@
 #pragma link C++ class TMVA::MetricEuler+;
 #pragma link C++ class TMVA::MetricManhattan+;
 #pragma link C++ class TMVA::SeedDistance+;
+#pragma link C++ class TMVA::BDTEventWrapper+;
+#pragma link C++ class TMVA::CCTreeWrapper+;
+#pragma link C++ class TMVA::CCPruner+;
+
+
 
 #endif

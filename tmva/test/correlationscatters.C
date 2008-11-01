@@ -11,17 +11,23 @@ void correlationscatters( TString fin = "TMVA.root", TString var= "var3",
                           TMVAGlob::TypeOfPlot type = TMVAGlob::kNormal, Bool_t useTMVAStyle = kTRUE )
 {
 
-   const TString directories[TMVAGlob::kNumOfMethods] = { "InputVariables_NoTransform",
-                                                          "InputVariables_DecorrTransform",
-                                                          "InputVariables_PCATransform" }; 
+   const TString directories[4] = { "InputVariables_NoTransform",
+                                    "InputVariables_DecorrTransform",
+                                    "InputVariables_PCATransform",
+                                    "InputVariables_GaussDecorr"
+   }; 
 
-   const TString titles[3] = { "TMVA Input Variable",
+   const TString titles[4] = { "TMVA Input Variable",
                                "Decorrelated TMVA Input Variables",
-                               "Principal Component Transformed TMVA Input Variables" };
+                               "Principal Component Transformed TMVA Input Variables",
+                               "Gaussianized and Decorrelated TMVA Input Variable"
+   };
   
-   const TString extensions[TMVAGlob::kNumOfMethods] = { "_NoTransform",
-                                                         "_DecorrTransform",
-                                                         "_PCATransform" };
+   const TString extensions[4] = { "_NoTransform",
+                                   "_DecorrTransform",
+                                   "_PCATransform",
+                                   "_GaussDecorr"
+   };
 
    cout << "Called macro \"correlationscatters\" with type: " << type << endl;
 

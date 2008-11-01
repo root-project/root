@@ -64,15 +64,15 @@ void TMVA::MinuitFitter::DeclareOptions()
 {
    // declare SA options
 
-   DeclareOptionRef(fErrorLevel    =  1,     "ErrorLevel",    "MINUIT: error level: 0.5=logL fit, 1=chi-squared fit" );
-   DeclareOptionRef(fPrintLevel    = -1,     "PrintLevel",    "MINUIT: output level: -1=least, 0, +1=all garbage" );
-   DeclareOptionRef(fFitStrategy   = 2,      "FitStrategy",   "MINUIT: fit strategy: 2=best" );
-   DeclareOptionRef(fPrintWarnings = kFALSE, "PrintWarnings", "MINUIT: suppress warnings" );
-   DeclareOptionRef(fUseImprove    = kTRUE,  "UseImprove",    "MINUIT: use IMPROVE routine" );
-   DeclareOptionRef(fUseMinos      = kTRUE,  "UseMinos",      "MINUIT: use MINOS routine" );  
-   DeclareOptionRef(fBatch         = kFALSE, "SetBatch",      "MINUIT: use batch mode" );  
-   DeclareOptionRef(fMaxCalls      = 1000,   "MaxCalls",      "MINUIT: approximate maximum number of function calls" );
-   DeclareOptionRef(fTolerance     = 0.1,    "Tolerance",     "MINUIT: tolerance to the function value at the minimum" );
+   DeclareOptionRef(fErrorLevel    =  1,     "ErrorLevel",    "TMinuit: error level: 0.5=logL fit, 1=chi-squared fit" );
+   DeclareOptionRef(fPrintLevel    = -1,     "PrintLevel",    "TMinuit: output level: -1=least, 0, +1=all garbage" );
+   DeclareOptionRef(fFitStrategy   = 2,      "FitStrategy",   "TMinuit: fit strategy: 2=best" );
+   DeclareOptionRef(fPrintWarnings = kFALSE, "PrintWarnings", "TMinuit: suppress warnings" );
+   DeclareOptionRef(fUseImprove    = kTRUE,  "UseImprove",    "TMinuit: use IMPROVE" );
+   DeclareOptionRef(fUseMinos      = kTRUE,  "UseMinos",      "TMinuit: use MINOS" );  
+   DeclareOptionRef(fBatch         = kFALSE, "SetBatch",      "TMinuit: use batch mode" );  
+   DeclareOptionRef(fMaxCalls      = 1000,   "MaxCalls",      "TMinuit: approximate maximum number of function calls" );
+   DeclareOptionRef(fTolerance     = 0.1,    "Tolerance",     "TMinuit: tolerance to the function value at the minimum" );
 }
 
 //_______________________________________________________________________

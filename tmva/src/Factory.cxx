@@ -92,14 +92,18 @@ TMVA::Factory::Factory( TString jobName, TFile* theTargetFile, TString theOption
    //                   will be stored here
    //   theOption     : option string; currently: "V" for verbose
 
+   // init configurable
+   SetConfigDescription( "Configuration options for factory running" );
+
    // histograms are not automatically associated with the current
    // directory and hence don't go out of scope when closing the file
    // TH1::AddDirectory(kFALSE);
    Bool_t silent = kFALSE;
    Bool_t color  = !gROOT->IsBatch();
-   DeclareOptionRef( fVerbose, "V", "verbose flag" );
+   SetConfigName( GetName() );
+   DeclareOptionRef( fVerbose, "V", "Verbose mode" );
    DeclareOptionRef( color, "Color", "Color flag (default on)" );
-   DeclareOptionRef( silent, "Silent", "Boolean silent flag (default off)" );
+   DeclareOptionRef( silent, "Silent", "Batch mode: boolean silent flag inhibiting any output from TMVA after the creation of the factory class object (default: False)" );
 
    ParseOptions( kFALSE );
 
@@ -132,12 +136,12 @@ TMVA::Factory::~Factory( void )
    // default destructor
    this->DeleteAllMethods();
 
-   if (!fTrainSigAssignTree) delete fTrainSigAssignTree;
-   if (!fTrainBkgAssignTree) delete fTrainBkgAssignTree;
-   if (!fTestSigAssignTree)  delete fTestSigAssignTree;
-   if (!fTestBkgAssignTree)  delete fTestBkgAssignTree;
+   if (fTrainSigAssignTree) { delete fTrainSigAssignTree; fTrainSigAssignTree = 0; }
+   if (fTrainBkgAssignTree) { delete fTrainBkgAssignTree; fTrainBkgAssignTree = 0; }
+   if (fTestSigAssignTree)  { delete fTestSigAssignTree; fTestSigAssignTree = 0; }
+   if (fTestBkgAssignTree)  { delete fTestBkgAssignTree; fTestBkgAssignTree = 0; }
 
-   delete fDataSet;
+   if ( fDataSet ) { delete fDataSet; fDataSet = 0; }
 }
 
 //_______________________________________________________________________
@@ -1095,6 +1099,7 @@ void TMVA::Factory::EvaluateAllMethods( void )
    fLogger << kINFO << Endl;  
    fLogger << kINFO << "Write Test Tree '"<< Data().GetTestTree()->GetName()<<"' to file" << Endl;
    Data().BaseRootDir()->cd();
+   Data().GetTestTree()->SetDirectory( Data().BaseRootDir() );
    Data().GetTestTree()->Write("",TObject::kOverwrite);
 }
 

@@ -10,17 +10,23 @@ void variables( TString fin = "TMVA.root", TMVAGlob::TypeOfPlot type = TMVAGlob:
                 Bool_t useTMVAStyle = kTRUE )
 {
 
-   const TString directories[3] = { "InputVariables_NoTransform",
+   const TString directories[4] = { "InputVariables_NoTransform",
                                     "InputVariables_DecorrTransform",
-                                    "InputVariables_PCATransform" };
+                                    "InputVariables_PCATransform",
+                                    "InputVariables_GaussDecorr"
+   };
 
-   const TString titles[3] = { "TMVA Input Variable",
+   const TString titles[4] = { "TMVA Input Variable",
                                "Decorrelated TMVA Input Variables",
-                               "Principal Component Transformed TMVA Input Variables" };
+                               "Principal Component Transformed TMVA Input Variables",
+                               "Gaussianized and Decorrelated TMVA Input Variable"
+   };
 
-   const TString outfname[3] = { "variables",
+   const TString outfname[4] = { "variables",
                                  "variables_decorr",
-                                 "variables_pca" };
+                                 "variables_pca",
+                                 "variables_gaussdecorr"
+   };
 
 
    // set style and remove existing canvas'

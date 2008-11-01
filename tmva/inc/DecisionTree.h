@@ -89,7 +89,9 @@ namespace TMVA {
                        DecisionTreeNode *node = NULL );
 
       // determine the way how a node is split (which variable, which cut value)
-      Double_t TrainNode( vector<TMVA::Event*> & eventSample,  DecisionTreeNode *node );
+      Double_t TrainNode( vector<TMVA::Event*> & eventSample,  DecisionTreeNode *node ) { return TrainNodeFast( eventSample, node ); }
+      Double_t TrainNodeFast( vector<TMVA::Event*> & eventSample,  DecisionTreeNode *node );
+      Double_t TrainNodeFull( vector<TMVA::Event*> & eventSample,  DecisionTreeNode *node );
 
       // fill at tree with a given structure already (just see how many signa/bkgr
       // events end up in each node 
@@ -103,15 +105,15 @@ namespace TMVA {
       // returns: 1 = Signal (right),  -1 = Bkg (left)
       Double_t CheckEvent( const TMVA::Event & , Bool_t UseYesNoLeaf = kFALSE ); 
 
-      //return the individual relative variable importance 
+      // return the individual relative variable importance 
       vector< Double_t > GetVariableImportance();
       Double_t GetVariableImportance(Int_t ivar);
 
-      //clear the tree nodes (their S/N, Nevents etc), just keep the structure of the tree
+      // clear the tree nodes (their S/N, Nevents etc), just keep the structure of the tree
       void ClearTree();
 
       // set pruning method
-      enum EPruneMethod { kExpectedErrorPruning=0, kCostComplexityPruning, kMCC, kNoPruning };
+      enum EPruneMethod { kExpectedErrorPruning=0, kCostComplexityPruning, kNoPruning };
       void SetPruneMethod( EPruneMethod m = kCostComplexityPruning ) { fPruneMethod = m; }
 
       // recursive pruning of the tree
@@ -119,8 +121,9 @@ namespace TMVA {
 
       void SetPruneStrength( Double_t p ) { fPruneStrength = p; }
 
-      Double_t GetCostComplexity( Double_t alpha );
-      Double_t GetCostComplexityIfNextPruneStep( Double_t alpha );
+      void SetNodePurityLimit( Double_t p ) { fNodePurityLimit = p; }
+      Double_t GetNodePurityLimit( ) const { return fNodePurityLimit; }
+
 
       void DescendTree( DecisionTreeNode *n = NULL );
       void SetParentTreeInNodes( DecisionTreeNode *n = NULL );
@@ -136,25 +139,11 @@ namespace TMVA {
 
       void CleanTree(DecisionTreeNode *node=NULL);
 
-      std::multimap<Double_t,TMVA::DecisionTreeNode* >& GetQualityGainMap() { return fQualityGainMap; }
-      std::multimap<Double_t,TMVA::DecisionTreeNode* >& GetQualityMap()     { return fQualityMap; }
-
-      void FillQualityMap(DecisionTreeNode* n=NULL); 
-      void FillQualityGainMap(DecisionTreeNode* n=NULL); 
 
       void PruneTreeEEP(DecisionTreeNode *node);
       void PruneTreeCC();
-      void PruneTreeMCC();
-      DecisionTreeNode* FindCCPruneCandidate();
 
       void PruneNode(TMVA::DecisionTreeNode *node);
-
-      TMVA::DecisionTreeNode* GetWeakestLink();
-      void FillLinkStrengthMap(TMVA::DecisionTreeNode *n = NULL);
-      std::multimap<Double_t,TMVA::DecisionTreeNode* >& GetLinkStrengthMap(){ return fLinkStrengthMap; }
-
-      Double_t MisClassificationCostOfNode(TMVA::DecisionTreeNode *n);
-      Double_t MisClassificationCostOfSubTree(TMVA::DecisionTreeNode *n = NULL);
 
       UInt_t CountLeafNodes(TMVA::DecisionTreeNode *n = NULL);
 
@@ -166,14 +155,12 @@ namespace TMVA {
 
       // utility functions
 
-      //calculates the min and max values for each variable in event sample
-      //helper for TrainNode
-      //find min and max of the variable distrubution
+      // calculates the min and max values for each variable in event sample
       void FindMinAndMax(vector<TMVA::Event*> & eventSample,
                          vector<Double_t> & min,
                          vector<Double_t> & max);
       
-      //set up the grid for the cut scan
+      // set up the grid for the cut scan
       void SetCutPoints(vector<Double_t> & cut_points,
                         Double_t xmin,
                         Double_t xmax,
@@ -182,7 +169,7 @@ namespace TMVA {
       // calculate the Purity out of the number of sig and bkg events collected
       // from individual samples.
       
-      //calculates the purity S/(S+B) of a given event sample
+      // calculates the purity S/(S+B) of a given event sample
       Double_t SamplePurity(vector<Event*> eventSample);
       
       Int_t     fNvars;          // number of variables used to separate S and B
@@ -197,6 +184,8 @@ namespace TMVA {
       
       EPruneMethod fPruneMethod; // method used for prunig 
 
+      Double_t  fNodePurityLimit;// purity limit to decide whether a node is signal
+
       Bool_t    fRandomisedTree; // choose at each node splitting a random set of variables 
       Int_t     fUseNvars;       // the number of variables used in randomised trees;
       
@@ -205,15 +194,13 @@ namespace TMVA {
       std::vector< Double_t > fVariableImportance; // the relative importance of the different variables 
       
       SeparationBase *fQualityIndex;  // separation/quality criterio for CC-pruning
-      std::multimap<Double_t,TMVA::DecisionTreeNode*> fQualityGainMap;  // the quality-gain of pre-leaf nodes
-      std::multimap<Double_t,TMVA::DecisionTreeNode*> fQualityMap;      // the quality of leaf nodes
-      std::multimap<Double_t,TMVA::DecisionTreeNode*> fLinkStrengthMap; // prunestrenghts at which the subtree below the node would be pruned 
 
       static const Int_t  fgDebugLevel = 0;     // debug level determining some printout/control plots etc.
 
-      ClassDef(DecisionTree,0)                  // Implementation of a Decision Tree
+      ClassDef(DecisionTree,0)                  // implementation of a Decision Tree
    };
 
 } // namespace TMVA
 
 #endif 
+

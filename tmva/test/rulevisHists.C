@@ -49,7 +49,8 @@ void rulevisHists( TDirectory *rfdir, TDirectory *vardir, TDirectory *corrdir, T
    const TString rfNameOpt = "_RF2D_";
    const TString outfname[TMVAGlob::kNumOfMethods] = { "rulevisHists",
                                                        "rulevisHists_decorr",
-                                                       "rulevisHists_pca" };
+                                                       "rulevisCorr_pca",
+                                                       "rulevisCorr_gaussdecorr" };
 
    const TString outputName = outfname[type]+"_"+rfdir->GetName();
    //

@@ -30,6 +30,7 @@ namespace TMVAGlob {
    enum TypeOfPlot { kNormal = 0,
                      kDecorrelated,
                      kPCA,
+                     kGaussDecorr,
                      kNumOfMethods };
 
    static Int_t c_Canvas         = TColor::GetColor( "#e9e6da" );
@@ -321,12 +322,17 @@ namespace TMVAGlob {
    void NormalizeHists( TH1* sig, TH1* bkg = 0 ) 
    {
       if (sig->GetSumw2N() == 0) sig->Sumw2();
-      if (bkg != 0) if (bkg->GetSumw2N() == 0) bkg->Sumw2();
+      if (bkg && bkg->GetSumw2N() == 0) bkg->Sumw2();
       
-      Float_t dx = (sig->GetXaxis()->GetXmax() - sig->GetXaxis()->GetXmin())/sig->GetNbinsX();
-      sig->Scale( 1.0/sig->GetSumOfWeights()/dx );
-      if (bkg != 0) bkg->Scale( 1.0/bkg->GetSumOfWeights()/dx );      
-   }      
+      if(sig->GetSumOfWeights()!=0) {
+         Float_t dx = (sig->GetXaxis()->GetXmax() - sig->GetXaxis()->GetXmin())/sig->GetNbinsX();
+         sig->Scale( 1.0/sig->GetSumOfWeights()/dx );
+      }
+      if (bkg != 0 && bkg->GetSumOfWeights()!=0) {
+         Float_t dx = (bkg->GetXaxis()->GetXmax() - bkg->GetXaxis()->GetXmin())/bkg->GetNbinsX();
+         bkg->Scale( 1.0/bkg->GetSumOfWeights()/dx );
+      }
+   }
 
    // the following are tools to help handling different methods and titles
 
@@ -515,8 +521,9 @@ namespace TMVAGlob {
       // get the InputVariables directory
       const TString directories[TMVAGlob::kNumOfMethods] = { "InputVariables_NoTransform",
                                                              "InputVariables_DecorrTransform",
-                                                             "InputVariables_PCATransform" };
-      //if (dir==0) dir = gDirectory;
+                                                             "InputVariables_PCATransform",
+                                                             "InputVariables_GaussDecorr" };
+      if (dir==0) dir = gDirectory;
 
       // get top dir containing all hists of the variables
       dir = (TDirectory*)gDirectory->Get( directories[type] );

@@ -56,6 +56,7 @@ End_Html */
 #include "TObjString.h"
 #include "TROOT.h"
 #include "TMultiLayerPerceptron.h"
+#include "TMVA/Config.h"
 
 #include "TMVA/MethodTMlpANN.h"
 
@@ -79,6 +80,7 @@ TMVA::MethodTMlpANN::MethodTMlpANN( const TString& jobName, const TString& metho
    InitTMlpANN();
    
    // interpretation of configuration option string
+   SetConfigName( TString("Method") + GetMethodName() );
    DeclareOptions();
    ParseOptions();
    ProcessOptions();  
@@ -171,8 +173,8 @@ void TMVA::MethodTMlpANN::DeclareOptions()
    //   * there is always a single node in the output layer 
    //   example: a net with 6 input nodes and "Hiddenlayers=N-1,N-2" has 6,5,4,1 nodes in the 
    //   layers 1,2,3,4, repectively 
-   DeclareOptionRef( fNcycles  = 3000,     "NCycles",      "Number of training cycles" );
-   DeclareOptionRef( fLayerSpec="N-1,N-2", "HiddenLayers", "Specification of hidden layer architecture" );
+   DeclareOptionRef( fNcycles    = 3000,      "NCycles",      "Number of training cycles" );
+   DeclareOptionRef( fLayerSpec  = "N-1,N-2", "HiddenLayers", "Specification of hidden layer architecture (N stands for number of variables; any integers may also be used)" );
    
    DeclareOptionRef( fValidationFraction = 0.5, "ValidationFraction", 
                      "Fraction of events in training tree used for cross validation" );
@@ -349,13 +351,14 @@ void TMVA::MethodTMlpANN::GetHelpMessage() const
    fLogger << Endl;
    fLogger << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
    fLogger << Endl;
-   fLogger << "<None>" << Endl;
+   fLogger << "This feed-forward multilayer perceptron neural network is the " << Endl;
+   fLogger << "standard impementation distributed with ROOT (class TMultiLayerPerceptron)." << Endl;
    fLogger << Endl;
-   fLogger << gTools().Color("bold") << "--- Performance optimisation:" << gTools().Color("reset") << Endl;
+   fLogger << "Detailed information is available here:" << Endl;
+   if (gConfig().WriteOptionsReference()) {
+      fLogger << "<a href=\"http://root.cern.ch/root/html/TMultiLayerPerceptron.html\">";
+      fLogger << "http://root.cern.ch/root/html/TMultiLayerPerceptron.html</a>" << Endl;
+   }
+   else fLogger << "http://root.cern.ch/root/html/TMultiLayerPerceptron.html" << Endl;
    fLogger << Endl;
-   fLogger << "<None>" << Endl;
-   fLogger << Endl;
-   fLogger << gTools().Color("bold") << "--- Performance tuning via configuration options:" << gTools().Color("reset") << Endl;
-   fLogger << Endl;
-   fLogger << "<None>" << Endl;
 }

@@ -103,6 +103,7 @@ TMVA::MethodPDERS::MethodPDERS( const TString& jobName, const TString& methodTit
    InitPDERS();
 
    // interpretation of configuration option string
+   SetConfigName( TString("Method") + GetMethodName() );
    DeclareOptions();
    ParseOptions();
    ProcessOptions();

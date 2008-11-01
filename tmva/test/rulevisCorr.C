@@ -50,7 +50,8 @@ void rulevisCorr( TDirectory *rfdir, TDirectory *vardir, TDirectory *corrdir, TM
    const TString rfNameOpt = "_RF2D_";
    const TString outfname[TMVAGlob::kNumOfMethods] = { "rulevisCorr",
                                                        "rulevisCorr_decorr",
-                                                       "rulevisCorr_pca" };
+                                                       "rulevisCorr_pca",
+                                                       "rulevisCorr_gaussdecorr" };
    const TString outputName = outfname[type]+"_"+rfdir->GetName();
    //
    TIter rfnext(rfdir->GetListOfKeys());

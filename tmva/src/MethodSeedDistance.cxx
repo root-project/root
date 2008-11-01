@@ -62,6 +62,7 @@ TMVA::MethodSeedDistance::MethodSeedDistance( const TString& jobName, const TStr
    InitSeedDistance();
 
    // interpretation of configuration option string
+   SetConfigName( TString("Method") + GetMethodName() );
    DeclareOptions();
    ParseOptions();
    ProcessOptions();

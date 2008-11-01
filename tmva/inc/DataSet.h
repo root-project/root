@@ -186,7 +186,7 @@ namespace TMVA {
 
    private:
 
-      void ChangeToNewTree( TTree* tr );
+      void ChangeToNewTree( TTree* tr, Int_t sb );
       void PrintCorrelationMatrix( TTree* theTree );
 
       // verbosity
@@ -220,7 +220,7 @@ namespace TMVA {
 
       TMatrixD*                  fDecorrMatrix[2];     //! Decorrelation matrix [signal/background]
 
-      std::map<Types::EVariableTransform,TMVA::VariableTransformBase*> fVarTransforms; //! Registered variable transformations
+      std::map<TMVA::Types::EVariableTransform,TMVA::VariableTransformBase*> fVarTransforms; //! Registered variable transformations
       
       // verbosity
       Bool_t                    fVerbose;           //! Verbosity

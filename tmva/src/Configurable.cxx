@@ -33,6 +33,7 @@ End_Html */
 
 #include <string>
 #include <iostream>
+#include <fstream>
 #include <stdlib.h>
 
 #include "TROOT.h"
@@ -45,9 +46,8 @@ End_Html */
 #include "TFile.h"
 #include "TKey.h" 
 
-#ifndef ROOT_TMVA_Configurable
 #include "TMVA/Configurable.h"
-#endif
+#include "TMVA/Config.h"
 
 using std::endl;
 
@@ -66,6 +66,9 @@ TMVA::Configurable::Configurable( const TString& theOption)
    : fOptions                    ( theOption ),
      fLooseOptionCheckingEnabled ( kTRUE ),
      fLastDeclaredOption         ( 0 ),
+     fConfigName                 ( "Configurable" ), // must be replaced by name of class that uses the configurable
+     fConfigDescription          ( "No description" ), 
+     fReferenceFile              ( "None" ),
      fLogger                     ( this )
 {
    // constructor
@@ -98,7 +101,8 @@ void TMVA::Configurable::SplitOptions(const TString& theOpt, TList& loo) const
 }
 
 //_______________________________________________________________________
-void TMVA::Configurable::ResetSetFlag() {
+void TMVA::Configurable::ResetSetFlag() 
+{
    // resets the IsSet falg for all declare options
    // to be called before options are read from stream
 
@@ -214,7 +218,8 @@ void TMVA::Configurable::ParseOptions( Bool_t verbose )
          if (decOpt != 0) {
             decOpt->SetValue( hasNotSign ? "0" : "1" );
             paramParsed = kTRUE;
-         } else {
+         } 
+         else {
             if (optionExists && hasNotSign) {
                fLogger << kFATAL << "Negating a non-boolean variable " << optname
                        << ", please check the opions for method " << GetName() << Endl;
@@ -234,14 +239,15 @@ void TMVA::Configurable::ParseOptions( Bool_t verbose )
          }
       }
    
-      if(fOptions!="") fOptions += ":";
-      if(paramParsed || preserveTilde) fOptions += '~';
-      if(paramParsed || preserveNotSign) fOptions += '!';
+      if (fOptions!="") fOptions += ":";
+      if (paramParsed || preserveTilde) fOptions += '~';
+      if (paramParsed || preserveNotSign) fOptions += '!';
       fOptions += s;
-
    }
 
-   if (verbose) PrintOptions();
+   // print options summary
+   if (verbose)                           PrintOptions();
+   if (gConfig().WriteOptionsReference()) WriteOptionsReferenceToFile();
 }
 
 //______________________________________________________________________
@@ -260,12 +266,12 @@ void TMVA::Configurable::CheckForUnusedOptions() const
    while (TObjString * os = (TObjString*) setOptIt()) { // loop over parsed options
 
       TString s = os->GetString();
-      if( !s.BeginsWith('~') ) {
-         if(unusedOptions!="") unusedOptions += ':';
+      if ( !s.BeginsWith('~') ) {
+         if (unusedOptions!="") unusedOptions += ':';
          unusedOptions += s;
       }
    }
-   if(unusedOptions!="")
+   if (unusedOptions!="")
       fLogger << kFATAL
               << "The following options were specified, but could not be interpreted: \'"
               << unusedOptions << "\', please check!" << Endl;
@@ -309,6 +315,32 @@ void TMVA::Configurable::WriteOptionsToStream( ostream& o, const TString& prefix
    while (OptionBase * opt = (OptionBase *) optIt()) 
       if (!opt->IsSet()) { o << prefix; opt->Print(o); o << endl; }
    o << prefix << "##" << endl;
+}
+
+//______________________________________________________________________
+void TMVA::Configurable::WriteOptionsReferenceToFile()  
+{
+   // write complete options to output stream
+
+   TString dir = gConfig().GetIONames().fOptionsReferenceFileDir;
+   gSystem->MakeDirectory( dir );
+   fReferenceFile = dir + "/" + GetConfigName() + "_optionsRef.txt";
+   std::ofstream o( fReferenceFile );
+   if (!o.good()) { // file could not be opened --> Error
+      fLogger << kFATAL << "<WriteOptionsToInfoFile> Unable to open output file: " << fReferenceFile << Endl;
+   }
+
+   TListIter optIt( &fListOfOptions );   
+   o << "# List of options:" << endl;
+   o << "# Configurable: " << GetConfigName() << endl;
+   o << "# Description: " << GetConfigDescription() << endl;
+   while (OptionBase * opt = (OptionBase *) optIt()) {
+      opt->Print( o, 1 ); 
+      o << endl << "# ------------------------------------------------" << endl; 
+   }
+
+   o.close();
+   fLogger << kINFO << "Wrote options reference file: \"" << fReferenceFile << "\"" << Endl;
 }
 
 //______________________________________________________________________

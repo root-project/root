@@ -91,7 +91,7 @@ void TMVA::MethodANNBase::DeclareOptions()
    //                
 
    DeclareOptionRef( fNcycles    = 3000,      "NCycles",      "Number of training cycles" );
-   DeclareOptionRef( fLayerSpec  = "N-1,N-2", "HiddenLayers", "Specification of hidden layer architecture" );
+   DeclareOptionRef( fLayerSpec  = "N-1,N-2", "HiddenLayers", "Specification of hidden layer architecture (N stands for number of variables; any integers may also be used)" );
    DeclareOptionRef( fNeuronType = "tanh",    "NeuronType",   "Neuron activation function type" );
 
    TActivationChooser aChooser;
@@ -151,12 +151,12 @@ vector<Int_t>* TMVA::MethodANNBase::ParseLayoutString(TString layerSpec)
 void TMVA::MethodANNBase::InitANNBase()
 {
    // initialize ANNBase object
-   fNetwork         = NULL;
-   frgen            = NULL;
-   fActivation      = NULL;
-   fIdentity        = NULL;
-   fInputCalculator = NULL;
-   fSynapses        = NULL;
+   fNetwork            = NULL;
+   frgen               = NULL;
+   fActivation         = NULL;
+   fIdentity           = NULL;
+   fInputCalculator    = NULL;
+   fSynapses           = NULL;
    fEstimatorHistTrain = NULL;  
    fEstimatorHistTest  = NULL;  
 
@@ -164,7 +164,7 @@ void TMVA::MethodANNBase::InitANNBase()
    SetNormalised( kTRUE );
 
    // these will be set in BuildNetwork()
-   fInputLayer = NULL;
+   fInputLayer   = NULL;
    fOutputNeuron = NULL;
 
    if (fgFIXED_SEED) frgen = new TRandom3(1);   // fix output for debugging

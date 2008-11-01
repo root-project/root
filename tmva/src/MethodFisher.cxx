@@ -123,6 +123,7 @@ TMVA::MethodFisher::MethodFisher( const TString& jobName, const TString& methodT
    InitFisher(); // sets default values
 
    // interpretation of configuration option string
+   SetConfigName( TString("Method") + GetMethodName() );
    DeclareOptions();
    ParseOptions();
    ProcessOptions();
@@ -188,7 +189,6 @@ void TMVA::MethodFisher::ProcessOptions()
    if (fTheMethod ==  "Fisher" ) fFisherMethod = kFisher;
    else                          fFisherMethod = kMahalanobis;
 
-   PrintOptions();
    CheckForUnusedOptions();
 }
 
@@ -543,7 +543,7 @@ void TMVA::MethodFisher::PrintCoefficients( void )
 }
   
 //_______________________________________________________________________
-void  TMVA::MethodFisher::WriteWeightsToStream( ostream& o ) const
+void  TMVA::MethodFisher::WriteWeightsToStream( std::ostream& o ) const
 {  
    // save the weights
    o << std::setprecision(12) << fF0 << endl;
@@ -641,6 +641,6 @@ void TMVA::MethodFisher::GetHelpMessage() const
    fLogger << Endl;
    fLogger << gTools().Color("bold") << "--- Performance tuning via configuration options:" << gTools().Color("reset") << Endl;
    fLogger << Endl;
-   fLogger << "<None>" << Endl;
+   fLogger << "None" << Endl;
 }
 

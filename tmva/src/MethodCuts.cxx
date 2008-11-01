@@ -113,6 +113,7 @@ End_Html */
 #include "TMVA/Interval.h"
 #include "TMVA/TSpline1.h"
 #include "TMVA/SimulatedAnnealingFitter.h"
+#include "TMVA/Config.h"
 
 ClassImp(TMVA::MethodCuts)
 
@@ -132,6 +133,7 @@ TMVA::MethodCuts::MethodCuts( const TString& jobName, const TString& methodTitle
    InitCuts();
 
    // interpretation of configuration option string
+   SetConfigName( TString("Method") + GetMethodName() );
    DeclareOptions();
    ParseOptions();
    ProcessOptions();
@@ -257,7 +259,7 @@ void TMVA::MethodCuts::DeclareOptions()
    //
    // CutRangeMin/Max    <float>  user-defined ranges in which cuts are varied
 
-   DeclareOptionRef(fFitMethodS = "GA", "FitMethod", "Minimization Method");
+   DeclareOptionRef(fFitMethodS = "GA", "FitMethod", "Minimization Method (GA, SA, and MC are the primary methods to be used; the others have been introduced for testing purposes and are depreciated)");
    AddPreDefVal(TString("GA"));
    AddPreDefVal(TString("SA"));
    AddPreDefVal(TString("MC"));
@@ -533,7 +535,7 @@ void  TMVA::MethodCuts::Train( void )
       xmin -= eps;
       xmax += eps;
 
-      if (fCutRange[ivar]->GetMin() == fCutRange[ivar]->GetMax()) {
+      if (TMath::Abs(fCutRange[ivar]->GetMin() - fCutRange[ivar]->GetMax()) < 1.0e-300 ) {
          fCutRange[ivar]->SetMin( xmin );
          fCutRange[ivar]->SetMax( xmax );
       }         
@@ -587,6 +589,7 @@ void  TMVA::MethodCuts::Train( void )
             ranges.push_back( new Interval( 0, fCutRange[ivar]->GetMax() - fCutRange[ivar]->GetMin(), nbins ) );
          }
       }
+
 
       // create the fitter
       FitterBase* fitter = NULL;
@@ -1431,15 +1434,19 @@ void TMVA::MethodCuts::GetHelpMessage() const
    //
    // typical length of text line: 
    //         "|--------------------------------------------------------------|"
+   TString bold    = gConfig().WriteOptionsReference() ? "<b>" : "";
+   TString resbold = gConfig().WriteOptionsReference() ? "</b>" : "";
+   TString brk     = gConfig().WriteOptionsReference() ? "<br>" : "";
+
    fLogger << Endl;
    fLogger << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
    fLogger << Endl;
    fLogger << "The optimisation of rectangular cuts performed by TMVA maximises " << Endl;
    fLogger << "the background rejection at given signal efficiency, and scans " << Endl;
    fLogger << "over the full range of the latter quantity. Three optimisation" << Endl;
-   fLogger << "methods are optional: Monte Carlo sampling (MC), a Genetics Algo-," << Endl;
-   fLogger << "rithm (GA), and Simulated Annealing. GA and SA are expected to" << Endl;
-   fLogger << "perform best." << Endl;
+   fLogger << "methods are optional: Monte Carlo sampling (MC), a Genetics" << Endl;
+   fLogger << "Algorithm (GA), and Simulated Annealing (SA). GA and SA are"  << Endl;
+   fLogger << "expected to perform best." << Endl;
    fLogger << Endl;
    fLogger << "The difficulty to find the optimal cuts strongly increases with" << Endl;
    fLogger << "the dimensionality (number of input variables) of the problem." << Endl;
@@ -1459,14 +1466,14 @@ void TMVA::MethodCuts::GetHelpMessage() const
    fLogger << Endl;
    fLogger << gTools().Color("bold") << "--- Performance tuning via configuration options:" << gTools().Color("reset") << Endl;
    fLogger << "" << Endl;
-   fLogger << "Monte Carlo sampling:" << Endl;
+   fLogger << bold << "Monte Carlo sampling:" << resbold << Endl;
    fLogger << "" << Endl;
    fLogger << "Apart form the \"Fsmart\" option for the variables, the only way" << Endl;
    fLogger << "to improve the MC sampling is to increase the sampling rate. This" << Endl;
    fLogger << "is done via the configuration option \"MC_NRandCuts\". The execution" << Endl;
    fLogger << "time scales linearly with the sampling rate." << Endl;
    fLogger << "" << Endl;
-   fLogger << "Genetic Algorithm:" << Endl;
+   fLogger << bold << "Genetic Algorithm:" << resbold << Endl;
    fLogger << "" << Endl;
    fLogger << "The algorithm terminates if no significant fitness increase has" << Endl;
    fLogger << "been achieved within the last \"nsteps\" steps of the calculation." << Endl;
@@ -1479,7 +1486,7 @@ void TMVA::MethodCuts::GetHelpMessage() const
    fLogger << "  -> increase \"popSize\" (at least >10 * number of variables)" << Endl;
    fLogger << "  -> increase \"nsteps\"" << Endl;
    fLogger << "" << Endl;
-   fLogger << "Simulated Annealing (SA) algorithm:" << Endl;
+   fLogger << bold << "Simulated Annealing (SA) algorithm:" << resbold << Endl;
    fLogger << "" << Endl;
    fLogger << "\"Increasing Adaptive\" approach:" << Endl;
    fLogger << "" << Endl;
@@ -1489,10 +1496,10 @@ void TMVA::MethodCuts::GetHelpMessage() const
    fLogger << "the number of iteration steps (\"MaxCalls\"), or by adjusting the" << Endl;
    fLogger << "minimal temperature (\"MinTemperature\"). Manual adjustments of the" << Endl;
    fLogger << "speed of the temperature increase (\"TemperatureScale\" and \"AdaptiveSpeed\")" << Endl;
-   fLogger << "to individual data sets should also help. Summary:" << Endl;
-   fLogger << "  -> increase \"MaxCalls\"" << Endl;
-   fLogger << "  -> adjust   \"MinTemperature\"" << Endl;
-   fLogger << "  -> adjust   \"TemperatureScale\"" << Endl;
+   fLogger << "to individual data sets should also help. Summary:" << brk << Endl;
+   fLogger << "  -> increase \"MaxCalls\"" << brk << Endl;
+   fLogger << "  -> adjust   \"MinTemperature\"" << brk << Endl;
+   fLogger << "  -> adjust   \"TemperatureScale\"" << brk << Endl;
    fLogger << "  -> adjust   \"AdaptiveSpeed\"" << Endl;
    fLogger << "" << Endl;   
    fLogger << "\"Decreasing Adaptive\" approach:" << Endl;
@@ -1501,8 +1508,8 @@ void TMVA::MethodCuts::GetHelpMessage() const
    fLogger << "iveness of large steps) and the multiplier that ensures to reach the" << Endl;
    fLogger << "minimal temperature with the requested number of iteration steps." << Endl;
    fLogger << "The performance can be improved by adjusting the minimal temperature" << Endl;
-   fLogger << " (\"MinTemperature\") and by increasing number of steps (\"MaxCalls\"):" << Endl;
-   fLogger << "  -> increase \"MaxCalls\"" << Endl;
+   fLogger << " (\"MinTemperature\") and by increasing number of steps (\"MaxCalls\"):" << brk << Endl;
+   fLogger << "  -> increase \"MaxCalls\"" << brk << Endl;
    fLogger << "  -> adjust   \"MinTemperature\"" << Endl;
    fLogger << " " << Endl;
    fLogger << "Other kernels:" << Endl;
@@ -1510,20 +1517,20 @@ void TMVA::MethodCuts::GetHelpMessage() const
    fLogger << "Alternative ways of counting the temperature change are implemented. " << Endl;
    fLogger << "Each of them starts with the maximum temperature (\"MaxTemperature\")" << Endl;
    fLogger << "and descreases while changing the temperature according to a given" << Endl;
-   fLogger << "prescription:" << Endl;
-   fLogger << "CurrentTemperature =" << Endl;
-   fLogger << "  - Sqrt: InitialTemperature / Sqrt(StepNumber+2) * TemperatureScale" << Endl;
-   fLogger << "  - Log:  InitialTemperature / Log(StepNumber+2) * TemperatureScale" << Endl;
-   fLogger << "  - Homo: InitialTemperature / (StepNumber+2) * TemperatureScale" << Endl;
-   fLogger << "  - Sin:  ( Sin( StepNumber / TemperatureScale ) + 1 ) / (StepNumber + 1) * InitialTemperature + Eps" << Endl;
+   fLogger << "prescription:" << brk << Endl;
+   fLogger << "CurrentTemperature =" << brk << Endl;
+   fLogger << "  - Sqrt: InitialTemperature / Sqrt(StepNumber+2) * TemperatureScale" << brk << Endl;
+   fLogger << "  - Log:  InitialTemperature / Log(StepNumber+2) * TemperatureScale" << brk << Endl;
+   fLogger << "  - Homo: InitialTemperature / (StepNumber+2) * TemperatureScale" << brk << Endl;
+   fLogger << "  - Sin:  ( Sin( StepNumber / TemperatureScale ) + 1 ) / (StepNumber + 1) * InitialTemperature + Eps" << brk << Endl;
    fLogger << "  - Geo:  CurrentTemperature * TemperatureScale" << Endl;
    fLogger << "" << Endl;
    fLogger << "Their performance can be improved by adjusting initial temperature" << Endl;
    fLogger << "(\"InitialTemperature\"), the number of iteration steps (\"MaxCalls\")," << Endl;
    fLogger << "and the multiplier that scales the termperature descrease" << Endl;
-   fLogger << "(\"TemperatureScale\")" << Endl;
-   fLogger << "  -> increase \"MaxCalls\"" << Endl;
-   fLogger << "  -> adjust   \"InitialTemperature\"" << Endl;
-   fLogger << "  -> adjust   \"TemperatureScale\"" << Endl;
+   fLogger << "(\"TemperatureScale\")" << brk << Endl;
+   fLogger << "  -> increase \"MaxCalls\"" << brk << Endl;
+   fLogger << "  -> adjust   \"InitialTemperature\"" << brk << Endl;
+   fLogger << "  -> adjust   \"TemperatureScale\"" << brk << Endl;
    fLogger << "  -> adjust   \"KernelTemperature\"" << Endl;
 }

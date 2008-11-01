@@ -10,7 +10,7 @@
  * Description:                                                                   *
  *      TMVA output logger class producing nicely formatted log messages          *
  *                                                                                *
- * Authors (alphabetical):                                                        *
+ * Author:                                                                        *
  *      Attila Krasznahorkay <Attila.Krasznahorkay@cern.ch> - CERN, Switzerland   *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
@@ -36,6 +36,7 @@
 // STL include(s):
 #include <string>
 #include <sstream>
+#include <iostream>
 #include <map>
 
 // ROOT include(s)
@@ -105,16 +106,16 @@ namespace TMVA {
       void InitMaps();
       void WriteMsg( EMsgType type, const std::string& line ) const;
 
-      const TObject*                  fObjSource;     // the source TObject (used for name)
-      std::string                     fStrSource;     // alternative string source
-      const std::string               fPrefix;        // the prefix of the source name
-      const std::string               fSuffix;        // suffix following source name
-      EMsgType                        fActiveType;    // active type
+      const TObject*                  fObjSource;      // the source TObject (used for name)
+      std::string                     fStrSource;      // alternative string source
+      const std::string               fPrefix;         // the prefix of the source name
+      const std::string               fSuffix;         // suffix following source name
+      EMsgType                        fActiveType;     // active type
       static UInt_t                   fgMaxSourceSize; // maximum length of source name
 
-      std::map<EMsgType, std::string> fTypeMap;       // matches output types with strings
-      std::map<EMsgType, std::string> fColorMap;      // matches output types with terminal colors
-      EMsgType                        fMinType;       // minimum type for output
+      std::map<EMsgType, std::string> fTypeMap;        // matches output types with strings
+      std::map<EMsgType, std::string> fColorMap;       // matches output types with terminal colors
+      EMsgType                        fMinType;        // minimum type for output
 
       ClassDef(MsgLogger,0) // Ostringstream derivative to redirect and format logging output  
    }; // class MsgLogger

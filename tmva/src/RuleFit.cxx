@@ -718,14 +718,18 @@ void TMVA::RuleFit::MakeVisHists()
 {
    // this will create histograms visualizing the rule ensemble
 
-   const TString directories[3] = { "InputVariables_NoTransform",
+   const TString directories[4] = { "InputVariables_NoTransform",
                                     "InputVariables_DecorrTransform",
-                                    "InputVariables_PCATransform" };
+                                    "InputVariables_PCATransform", 
+                                    "InputVariables_GaussDecorr" 
+  };
 
    const TString corrDirName = "CorrelationPlots";   
    //   const TString outfname[TMVAGlob::kNumOfMethods] = { "variables",
    //                                                       "variables_decorr",
-   //                                                       "variables_pca" };
+   //                                                       "variables_pca",
+   //                                                       "variables_gaussd"
+   //   };
    
    TDirectory* localDir = fMethodBase->Data().BaseRootDir();
    //   TDirectory* methodDir = fMethodBase->GetMethodBaseDir();

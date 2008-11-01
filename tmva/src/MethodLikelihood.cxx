@@ -141,6 +141,7 @@ TMVA::MethodLikelihood::MethodLikelihood( const TString& jobName, const TString&
    InitLik();
 
    // interpretation of configuration option string
+   SetConfigName( TString("Method") + GetMethodName() );
    DeclareOptions();
    ParseOptions();
    ProcessOptions();
