@@ -1541,7 +1541,7 @@ void TGTextEntry::ScrollByChar()
    TString dt = GetDisplayText();
    Int_t len = dt.Length();
    Int_t ind = fCursorIX < len-1 ? fCursorIX : len-1;
-   Int_t charWidth = gVirtualX->TextWidth(fFontStruct, &dt[ind],1);
+   Int_t charWidth = ind < 0 ? 4 : gVirtualX->TextWidth(fFontStruct, &dt[ind],1);
    Int_t w = GetWidth();
    Int_t d;
    Int_t offset =  IsFrameDrawn() ? 4 : 0;
@@ -1583,7 +1583,7 @@ void TGTextEntry::UpdateOffset()
    Int_t offset = IsFrameDrawn() ? 4 : 0;
    Int_t w = GetWidth() - 2 * offset;   // subtract border twice
 
-   if (textWidth > w) {                          // may need to scroll.
+   if (textWidth > 0 && textWidth > w) {                          // may need to scroll.
       if (IsCursorOutOfFrame()) ScrollByChar();
    }
    else if (fAlignment == kTextRight)   fOffset = w - textWidth - 1;
