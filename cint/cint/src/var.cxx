@@ -994,6 +994,73 @@ G__value G__letvariable(char* item, G__value expression, G__var_array* varglobal
             }
             return G__null;
          }
+      } else if (var->statictype[ig15] == G__LOCALSTATIC && var->p_tagtable[ig15]!=-1 && var->type[ig15]=='u') {
+         //fprintf(stderr,"humm .. declaration of static variable %s\n",var->varnamebuf[ig15]);
+         // Let's assume this is the first definition of the class static variable (CINT currently allows the
+         // declaration to be there several times  ...
+         // First delete the memory allocated at the time of the declaration (inside the class declaration)
+         free((void*)var->p[ig15]);
+         var->p[ig15] = 0;
+         // And let's allocate the object (currently CINT does not allow a constructor in this case).
+         // (this is inpired from code in G__define_var
+         if ( G__struct.iscpplink[var->p_tagtable[ig15]] == G__CPPLINK) {
+            // -- The struct is compiled code.
+            char temp1[G__ONELINE];
+            G__value reg = G__null;
+            int known;
+            sprintf(temp1, "%s()", G__struct.name[var->p_tagtable[ig15]]);
+            if (G__struct.parent_tagnum[var->p_tagtable[ig15]] != -1) {
+               int store_exec_memberfunc = G__exec_memberfunc;
+               int store_memberfunc_tagnum = G__memberfunc_tagnum;
+               G__exec_memberfunc = 1;
+               G__memberfunc_tagnum = G__struct.parent_tagnum[var->p_tagtable[ig15]];
+               reg = G__getfunction(temp1, &known, G__CALLCONSTRUCTOR);
+               G__exec_memberfunc = store_exec_memberfunc;
+               G__memberfunc_tagnum = store_memberfunc_tagnum;
+            }
+            else {
+               int store_exec_memberfunc = G__exec_memberfunc;
+               int store_memberfunc_tagnum = G__memberfunc_tagnum;
+               int store_G__tagnum = G__tagnum;
+               G__exec_memberfunc = 0;
+               G__memberfunc_tagnum = -1;
+               G__tagnum = var->p_tagtable[ig15];
+               reg = G__getfunction(temp1, &known, G__CALLCONSTRUCTOR);
+               G__exec_memberfunc = store_exec_memberfunc;
+               G__memberfunc_tagnum = store_memberfunc_tagnum;
+               G__tagnum = store_G__tagnum;
+            }
+            var->p[ig15] = G__int(reg);
+         }
+         else {
+            // -- The struct is interpreted.
+            // Initialize it.
+            char temp1[G__ONELINE];
+            // G__value reg = G__null;
+            // int known;
+            sprintf(temp1, "new %s", G__struct.name[var->p_tagtable[ig15]]);
+
+            int store_exec_memberfunc = G__exec_memberfunc;
+            int store_memberfunc_tagnum = G__memberfunc_tagnum;
+            int store_tagnum = G__tagnum;
+            int store_prerun = G__prerun;
+            int store_vartype = G__var_type;
+            G__exec_memberfunc = 0;
+            G__memberfunc_tagnum = -1;
+            G__prerun = 0;
+            G__tagnum = var->p_tagtable[ig15];
+            G__value reg = G__getexpr(temp1);
+            G__exec_memberfunc = store_exec_memberfunc;
+            G__memberfunc_tagnum = store_memberfunc_tagnum;
+            G__tagnum = store_tagnum;
+            G__prerun = store_prerun;
+            G__var_type = store_vartype;
+            
+            var->p[ig15] = G__int(reg);
+            
+            // G__letvariable(var->varnamebuf[ig15], reg, &G__global, var);
+         }
+         
       }
       //
       //
