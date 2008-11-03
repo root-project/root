@@ -4847,7 +4847,7 @@ end_of_function:
       return((struct G__ifunc_table_internal*)NULL);
    }
    if (active_run && G__exec_memberfunc && G__getstructoffset()==0 && p_ifunc->tagnum != -1 && G__struct.type[p_ifunc->tagnum]!='n' && !p_ifunc->staticalloc[*pifn] && G__NOLINK == G__globalcomp
-       && G__TRYCONSTRUCTOR !=  memfunc_flag) {
+       && (G__TRYCONSTRUCTOR !=  memfunc_flag && G__CALLCONSTRUCTOR != memfunc_flag) ) {
       /* non static function called without an object */
       G__fprinterr(G__serr, "Error: cannot call member function without object");
       G__genericerror((char*)NULL);
