@@ -1001,6 +1001,41 @@ UInt_t TGLUtil::fgDefaultDrawQuality = 10;
 UInt_t TGLUtil::fgDrawQuality        = fgDefaultDrawQuality;
 UInt_t TGLUtil::fgColorLockCount     = 0;
 
+//______________________________________________________________________________
+GLUtesselator* TGLUtil::GetDrawTesselator()
+{
+   // Returns a tesselator for direct drawing.
+
+   static struct Init {
+      Init()
+      {
+#if defined(R__WIN32)
+         typedef void (CALLBACK *tessfuncptr_t)();
+#elif defined(R__AIXGCC) || (defined(__APPLE_CC__) && __APPLE_CC__ > 4000 && __APPLE_CC__ < 5341 && !defined(__INTEL_COMPILER))
+         typedef void (*tessfuncptr_t)(...);
+#else
+         typedef void (*tessfuncptr_t)();
+#endif
+         fTess = gluNewTess();
+
+         if (!fTess) {
+            Error("GetTesselator::Init", "could not create tesselation object");
+         } else {
+            gluTessCallback(fTess, (GLenum)GLU_BEGIN,  (tessfuncptr_t) glBegin);
+            gluTessCallback(fTess, (GLenum)GLU_END,    (tessfuncptr_t) glEnd);
+            gluTessCallback(fTess, (GLenum)GLU_VERTEX, (tessfuncptr_t) glVertex3dv);
+         }
+      }
+      ~Init()
+      {
+         if(fTess)
+            gluDeleteTess(fTess);
+      }
+      GLUtesselator *fTess;
+   } singleton;
+
+   return singleton.fTess;
+}
 
 //______________________________________________________________________________
 UInt_t TGLUtil::GetDrawQuality()

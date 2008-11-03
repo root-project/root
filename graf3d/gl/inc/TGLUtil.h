@@ -26,6 +26,8 @@ class TGLCamera;
 class TAttMarker;
 class TAttLine;
 
+class GLUtesselator;
+
 #include <cmath>
 #include <vector>
 #include <cassert>
@@ -953,6 +955,9 @@ public:
 
    // Error checking
    static void   CheckError(const char * loc);
+
+   // Polygon tesselator for direct drawing
+   static GLUtesselator* GetDrawTesselator();
 
    // Some simple shape drawing utils
    enum ELineHeadShape { kLineHeadNone, kLineHeadArrow, kLineHeadBox };
