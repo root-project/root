@@ -28,6 +28,7 @@
 #include "TLatex.h"
 #include "TArrow.h"
 #include "TFrame.h"
+#include "TVirtualPadEditor.h"
 
 Double_t *gxwork, *gywork, *gxworkl, *gyworkl;
 
@@ -366,6 +367,23 @@ Int_t TGraphPainter::DistancetoPrimitiveHelper(TGraph *theGraph, Int_t px, Int_t
    }
 
    return distance;
+}
+
+
+//______________________________________________________________________________
+void TGraphPainter::DrawPanelHelper(TGraph *theGraph)
+{
+   /* Begin_html
+   Display a panel with all histogram drawing options.
+   End_html */
+
+   if (!gPad) {
+      Error("DrawPanel", "need to draw graph first");
+      return;
+   }
+   TVirtualPadEditor *editor = TVirtualPadEditor::GetPadEditor();
+   editor->Show();
+   gROOT->ProcessLine(Form("((TCanvas*)0x%lx)->Selected((TVirtualPad*)0x%lx,(TObject*)0x%lx,1)",gPad->GetCanvas(),gPad,theGraph));
 }
 
 

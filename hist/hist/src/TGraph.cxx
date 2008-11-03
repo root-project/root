@@ -286,7 +286,7 @@ TGraph::TGraph(const TH1 *h)
    h->TAttFill::Copy(*this);
    h->TAttMarker::Copy(*this);
 
-   std::string gname = "Graph_from_" + std::string(h->GetName() ); 
+   std::string gname = "Graph_from_" + std::string(h->GetName() );
    SetName(gname.c_str());
    SetTitle(h->GetTitle());
 }
@@ -730,7 +730,7 @@ void TGraph::DrawPanel()
 {
    // Display a panel with all graph drawing options.
 
-   printf("TGraph::DrawPanel: not yet implemented\n");
+   TVirtualGraphPainter::GetPainter()->DrawPanelHelper(this);
 }
 
 
@@ -1064,7 +1064,7 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t rxmin, Ax
    //   The fitResult is 0 is the fit is OK.
    //   The fitResult is negative in case of an error not connected with the fit.
 
-   return DoFit( f1 , option , goption, rxmin, rxmax); 
+   return DoFit( f1 , option , goption, rxmin, rxmax);
 
 }
 
@@ -1090,7 +1090,7 @@ void TGraph::FitPanel()
       if (handler->ExecPlugin(2, gPad, this) == 0)
          Error("FitPanel", "Unable to crate the FitPanel");
    }
-   else 
+   else
          Error("FitPanel", "Unable to find the FitPanel plug-in");
 }
 

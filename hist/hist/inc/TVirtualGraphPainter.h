@@ -36,11 +36,12 @@ public:
    virtual ~TVirtualGraphPainter() { }
 
    virtual Int_t DistancetoPrimitiveHelper(TGraph *theGraph, Int_t px, Int_t py) = 0;
+   virtual void  DrawPanelHelper(TGraph *theGraph) = 0;
    virtual void  ExecuteEventHelper(TGraph *theGraph, Int_t event, Int_t px, Int_t py) = 0;
    virtual char *GetObjectInfoHelper(TGraph *theGraph, Int_t px, Int_t py) const = 0;
    virtual void  PaintHelper(TGraph *theGraph, Option_t *option) = 0;
    virtual void  PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *x, const Double_t *y, Option_t *chopt) = 0;
-   virtual void  PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_t *x, const Double_t *y, Option_t *chopt) = 0; 
+   virtual void  PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_t *x, const Double_t *y, Option_t *chopt) = 0;
    virtual void  PaintStats(TGraph *theGraph, TF1 *fit) = 0;
 
    static TVirtualGraphPainter *GetPainter();

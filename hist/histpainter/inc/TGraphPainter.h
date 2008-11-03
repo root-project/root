@@ -38,6 +38,7 @@ public:
 
    void           ComputeLogs(Int_t npoints, Int_t opt);
    virtual Int_t  DistancetoPrimitiveHelper(TGraph *theGraph, Int_t px, Int_t py);
+   virtual void   DrawPanelHelper(TGraph *theGraph);
    virtual void   ExecuteEventHelper(TGraph *theGraph, Int_t event, Int_t px, Int_t py);
    virtual char  *GetObjectInfoHelper(TGraph *theGraph, Int_t px, Int_t py) const;
    void           PaintHelper(TGraph *theGraph, Option_t *option);
