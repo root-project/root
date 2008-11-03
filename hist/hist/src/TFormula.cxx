@@ -340,6 +340,7 @@ Bool_t TFormula::AnalyzeFunction(TString &chaine, Int_t &err, Int_t offset)
 
    TString args = chaine(argStart+1,chaine.Length()-2-argStart);
    TObjArray argArr;
+   argArr.SetOwner(kTRUE);
    //fprintf(stderr,"args are '%s'\n",args.Data());
 
    Bool_t inString = false;
