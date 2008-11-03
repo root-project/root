@@ -1174,7 +1174,7 @@ int G__defined_typename(const char* type_name)
    }
    len = strlen(buf);
    if (!scope) {
-      printf("Trying to look up typedef '%s' in an invalid enclosing scope!\n", buf);
+      // printf("Trying to look up typedef '%s' in an invalid enclosing scope!\n", buf);
       while (scope.Id() && !scope && !scope.IsTopScope()) {
          scope = scope.DeclaringScope();
       }
