@@ -710,6 +710,9 @@ int main(int argc, char** argv)
    ret += ci(kLangCXX, "staticmem0.cxx", difffile);
    ret += ci(kLangCXX, "staticmem1.cxx", difffile);
    ret += ci(kLangCXX, "staticary.cxx", difffile);
+   ret += ci(kLangCXX, "static_object.cxx", difffile);
+   ret += ci(kLangCXX, "static_string.cxx", difffile);
+   ret += ci(kLangCXX, "static_call.cxx", difffile);
    ret += ci(kLangCXX, "minexam.cxx", difffile);
    ret += ci(kLangCXX, "btmplt.cxx", difffile);
    int loopcompile[] = { 1, 2, 3, 4, 5, -1 };
