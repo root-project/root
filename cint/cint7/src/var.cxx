@@ -1084,7 +1084,7 @@ G__value Cint::Internal::G__letvariable(char* item, G__value expression, const :
             else {
                int store_exec_memberfunc = G__exec_memberfunc;
                ::Reflex::Scope store_memberfunc_tagnum = G__memberfunc_tagnum;
-               ::Reflex::Type store_G__tagnum = G__tagnum;
+               ::Reflex::Scope store_G__tagnum = G__tagnum;
                G__exec_memberfunc = 0;
                G__memberfunc_tagnum = ::Reflex::Scope();
                G__tagnum = var.TypeOf().RawType();
