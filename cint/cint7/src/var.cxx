@@ -1056,7 +1056,76 @@ G__value Cint::Internal::G__letvariable(char* item, G__value expression, const :
 
             return G__null;
          }
+      } else if (var.IsStatic() && (!var.DeclaringScope().IsNamespace()) && G__get_type(var.TypeOf())=='u') {
+         //fprintf(stderr,"humm .. declaration of static variable %s\n",var->varnamebuf[ig15]);
+         // Let's assume this is the first definition of the class static variable (CINT currently allows the
+         // declaration to be there several times  ...
+         // First delete the memory allocated at the time of the declaration (inside the class declaration)
+         free(G__get_offset(var));
+         G__get_offset(var) = 0;
+         // And let's allocate the object (currently CINT does not allow a constructor in this case).
+         // (this is inpired from code in G__define_var
+         int vtagnum = G__get_tagnum( var.TypeOf() );
+         if ( G__struct.iscpplink[vtagnum] == G__CPPLINK) {
+            // -- The struct is compiled code.
+            char temp1[G__ONELINE];
+            G__value reg = G__null;
+            int known;
+            sprintf(temp1, "%s()", G__struct.name[vtagnum]);
+            if (G__struct.parent_tagnum[vtagnum] != -1) {
+               int store_exec_memberfunc = G__exec_memberfunc;
+               ::Reflex::Scope store_memberfunc_tagnum = G__memberfunc_tagnum;
+               G__exec_memberfunc = 1;
+               G__memberfunc_tagnum = var.DeclaringScope();
+               reg = G__getfunction(temp1, &known, G__CALLCONSTRUCTOR);
+               G__exec_memberfunc = store_exec_memberfunc;
+               G__memberfunc_tagnum = store_memberfunc_tagnum;
+            }
+            else {
+               int store_exec_memberfunc = G__exec_memberfunc;
+               ::Reflex::Scope store_memberfunc_tagnum = G__memberfunc_tagnum;
+               ::Reflex::Type store_G__tagnum = G__tagnum;
+               G__exec_memberfunc = 0;
+               G__memberfunc_tagnum = ::Reflex::Scope();
+               G__tagnum = var.TypeOf().RawType();
+               reg = G__getfunction(temp1, &known, G__CALLCONSTRUCTOR);
+               G__exec_memberfunc = store_exec_memberfunc;
+               G__memberfunc_tagnum = store_memberfunc_tagnum;
+               G__tagnum = store_G__tagnum;
+            }
+            G__get_offset(var)  = (char*)G__int(reg);
+         }
+         else {
+            // -- The struct is interpreted.
+            // Initialize it.
+            char temp1[G__ONELINE];
+            // G__value reg = G__null;
+            // int known;
+            sprintf(temp1, "new %s", G__struct.name[vtagnum]);
+            
+            int store_exec_memberfunc = G__exec_memberfunc;
+            ::Reflex::Scope store_memberfunc_tagnum = G__memberfunc_tagnum;
+            ::Reflex::Scope store_tagnum = G__tagnum;
+            int store_prerun = G__prerun;
+            int store_vartype = G__var_type;
+            G__exec_memberfunc = 0;
+            G__memberfunc_tagnum = ::Reflex::Scope();
+            G__prerun = 0;
+            G__tagnum = var.TypeOf().RawType();
+            G__value reg = G__getexpr(temp1);
+            G__exec_memberfunc = store_exec_memberfunc;
+            G__memberfunc_tagnum = store_memberfunc_tagnum;
+            G__tagnum = store_tagnum;
+            G__prerun = store_prerun;
+            G__var_type = store_vartype;
+            
+            G__get_offset(var)  = (char*) G__int(reg);
+            
+            // G__letvariable(var->varnamebuf[ig15], reg, &G__global, var);
+         }
+         
       }
+      
       //
       //
       //
