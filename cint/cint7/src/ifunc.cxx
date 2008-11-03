@@ -4312,7 +4312,8 @@ end_of_function:
    if (active_run && G__exec_memberfunc && G__getstructoffset()==0 
        && !result.DeclaringScope().IsNamespace() && !result.IsStatic()  
        && G__NOLINK == G__globalcomp
-       && G__TRYCONSTRUCTOR !=  memfunc_flag) {
+       && G__TRYCONSTRUCTOR !=  memfunc_flag
+       && G__CALLCONSTRUCTOR != memfunc_flag) {
       /* non static function called without an object */
       G__fprinterr(G__serr, "Error: cannot call member function without object");
       G__genericerror(0);
