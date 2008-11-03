@@ -5,14 +5,12 @@
 #define CALLBACK
 #endif
 
-#if defined(__APPLE_CC__) && __APPLE_CC__ > 4000 && __APPLE_CC__ < 5450 && !defined(__INTEL_COMPILER)
+#if defined (WIN32)
+    typedef GLvoid (CALLBACK *GLUTesselatorFunction)();
+#elif defined(__APPLE_CC__) && __APPLE_CC__ > 4000 && __APPLE_CC__ < 5450 && !defined(__INTEL_COMPILER)
     typedef GLvoid (*GLUTesselatorFunction)(...);
-#elif defined( __mips ) || defined( __linux__ ) || defined( __FreeBSD__ ) || defined( __OpenBSD__ ) || defined( __sun ) || defined (__CYGWIN__) || defined (__APPLE__)
-    typedef GLvoid (*GLUTesselatorFunction)();
-#elif defined ( WIN32)
-    typedef GLvoid (CALLBACK *GLUTesselatorFunction)( );
 #else
-    #error "Error - need to define type GLUTesselatorFunction for this platform/compiler"
+    typedef GLvoid (*GLUTesselatorFunction)();
 #endif
 
 
@@ -34,7 +32,7 @@ void CALLBACK ftglCombine( FTGL_DOUBLE coords[3], void* /*vertex_data[4]*/, GLfl
     const FTGL_DOUBLE* vertex = static_cast<const FTGL_DOUBLE*>(coords);
     *outData = const_cast<FTGL_DOUBLE*>(mesh->Combine( vertex[0], vertex[1], vertex[2]));
 }
-        
+
 
 void CALLBACK ftglBegin( GLenum type, FTMesh* mesh)
 {
@@ -62,7 +60,7 @@ FTMesh::~FTMesh()
     {
         delete tesselationList[t];
     }
-    
+
     tesselationList.clear();
 }
 
@@ -107,11 +105,11 @@ FTVectoriser::FTVectoriser( const FT_GlyphSlot glyph)
     if( glyph)
     {
         outline = glyph->outline;
-        
+
         ftContourCount = outline.n_contours;
         contourList = 0;
         contourFlag = outline.flags;
-        
+
         ProcessContours();
     }
 }
@@ -134,21 +132,21 @@ void FTVectoriser::ProcessContours()
     short contourLength = 0;
     short startIndex = 0;
     short endIndex = 0;
-    
+
     contourList = new FTContour*[ftContourCount];
-    
+
     for( short contourIndex = 0; contourIndex < ftContourCount; ++contourIndex)
     {
         FT_Vector* pointList = &outline.points[startIndex];
         char* tagList = &outline.tags[startIndex];
-        
+
         endIndex = outline.contours[contourIndex];
         contourLength =  ( endIndex - startIndex) + 1;
 
         FTContour* contour = new FTContour( pointList, tagList, contourLength);
-        
+
         contourList[contourIndex] = contour;
-        
+
         startIndex = endIndex + 1;
     }
 }
@@ -161,7 +159,7 @@ size_t FTVectoriser::PointCount()
     {
         s += contourList[c]->PointCount();
     }
-    
+
     return s;
 }
 
@@ -178,9 +176,9 @@ void FTVectoriser::MakeMesh( FTGL_DOUBLE zNormal)
     {
         delete mesh;
     }
-        
+
     mesh = new FTMesh;
-    
+
     GLUtesselator* tobj = gluNewTess();
 
     gluTessCallback( tobj, GLU_TESS_BEGIN_DATA,     (GLUTesselatorFunction)ftglBegin);
@@ -188,7 +186,7 @@ void FTVectoriser::MakeMesh( FTGL_DOUBLE zNormal)
     gluTessCallback( tobj, GLU_TESS_COMBINE_DATA,   (GLUTesselatorFunction)ftglCombine);
     gluTessCallback( tobj, GLU_TESS_END_DATA,       (GLUTesselatorFunction)ftglEnd);
     gluTessCallback( tobj, GLU_TESS_ERROR_DATA,     (GLUTesselatorFunction)ftglError);
-    
+
     if( contourFlag & ft_outline_even_odd_fill) // ft_outline_reverse_fill
     {
         gluTessProperty( tobj, GLU_TESS_WINDING_RULE, GLU_TESS_WINDING_ODD);
@@ -197,18 +195,18 @@ void FTVectoriser::MakeMesh( FTGL_DOUBLE zNormal)
     {
         gluTessProperty( tobj, GLU_TESS_WINDING_RULE, GLU_TESS_WINDING_NONZERO);
     }
-    
-    
+
+
     gluTessProperty( tobj, GLU_TESS_TOLERANCE, 0);
     gluTessNormal( tobj, 0.0f, 0.0f, zNormal);
     gluTessBeginPolygon( tobj, mesh);
-    
+
         for( size_t c = 0; c < ContourCount(); ++c)
         {
             const FTContour* contour = contourList[c];
 
             gluTessBeginContour( tobj);
-            
+
                 for( size_t p = 0; p < contour->PointCount(); ++p)
                 {
                     const FTGL_DOUBLE* d = contour->Point(p);
@@ -217,9 +215,8 @@ void FTVectoriser::MakeMesh( FTGL_DOUBLE zNormal)
 
             gluTessEndContour( tobj);
         }
-        
+
     gluTessEndPolygon( tobj);
 
     gluDeleteTess( tobj);
 }
-

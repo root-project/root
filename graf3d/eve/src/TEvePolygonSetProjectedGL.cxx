@@ -66,7 +66,7 @@ static GLUtriangulatorObj *GetTesselator()
       {
 #if defined(R__WIN32)
          typedef void (CALLBACK *tessfuncptr_t)();
-#elif defined(R__AIXGCC)
+#elif defined(R__AIXGCC) || (defined(__APPLE_CC__) && __APPLE_CC__ > 4000 && __APPLE_CC__ < 5450 && !defined(__INTEL_COMPILER))
          typedef void (*tessfuncptr_t)(...);
 #else
          typedef void (*tessfuncptr_t)();
