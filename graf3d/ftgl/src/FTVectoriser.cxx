@@ -7,7 +7,7 @@
 
 #if defined (WIN32)
     typedef GLvoid (CALLBACK *GLUTesselatorFunction)();
-#elif defined(__APPLE_CC__) && __APPLE_CC__ > 4000 && __APPLE_CC__ < 5450 && !defined(__INTEL_COMPILER)
+#elif defined(__APPLE_CC__) && __APPLE_CC__ > 4000 && __APPLE_CC__ < 5341 && !defined(__INTEL_COMPILER)
     typedef GLvoid (*GLUTesselatorFunction)(...);
 #else
     typedef GLvoid (*GLUTesselatorFunction)();
