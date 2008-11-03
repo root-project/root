@@ -1033,13 +1033,15 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
                fe = (TGFrameElement *)frame->GetList()->First();
             if (fe) {
                TGCompositeFrame *embed = (TGCompositeFrame *)fe->fFrame;
+               TString fullname = f.GetTitle();
+               fullname.ReplaceAll("\\", "\\\\");
                if (embed->InheritsFrom("TGTextEditor")) {
                   gROOT->ProcessLine(Form("((TGTextEditor *)0x%lx)->LoadFile(\"%s\");",
-                                     embed, f.GetName()));
+                                     embed, fullname.Data()));
                }
                else if (embed->InheritsFrom("TGTextEdit")) {
                   gROOT->ProcessLine(Form("((TGTextEdit *)0x%lx)->LoadFile(\"%s\");",
-                                     embed, f.GetName()));
+                                     embed, fullname.Data()));
                }
                else {
                   XXExecuteDefaultAction(&f);

@@ -162,6 +162,7 @@
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TMacro.h"
+#include "TInterpreter.h"
 #include "TGMsgBox.h"
 #include "TGFileDialog.h"
 #include "TGFontDialog.h"
@@ -468,16 +469,11 @@ void TGTextEditor::DataDropped(char *fname)
    // Update file informations when receiving the signal
    // DataDropped from TGTextEdit widget.
 
-   char *p, tmp[1024];
-   if ((p = strrchr(fname, '/')) == 0) {
-      p = fname;
-   } else {
-      ++p;
-   }
-   sprintf(tmp, "%s: %ld lines read.", p, fTextEdit->ReturnLineCount());
+   char tmp[1024];
+   fFilename = fname;
+   sprintf(tmp, "%s: %ld lines read.", fname, fTextEdit->ReturnLineCount());
    fStatusBar->SetText(tmp, 0);
-   fFilename = p;
-   sprintf(tmp, "%s - TGTextEditor", p);
+   sprintf(tmp, "%s - TGTextEditor", fname);
    SetWindowName(tmp);
 }
 
@@ -486,7 +482,7 @@ void TGTextEditor::LoadFile(char *fname)
 {
    // Load a file into the editor. If fname is 0, a TGFileDialog will popup.
 
-   char *p, tmp[1024];
+   char tmp[1024];
    TGFileInfo fi;
    fi.fFileTypes = ed_filetypes;
    if (fname == 0) {
@@ -501,15 +497,10 @@ void TGTextEditor::LoadFile(char *fname)
          new TGMsgBox(fClient->GetRoot(), this, "TGTextEditor",
                       tmp, kMBIconExclamation, kMBOk);
       } else {
-         if ((p = strrchr(fname, '/')) == 0) {
-            p = fname;
-         } else {
-            ++p;
-         }
-         sprintf(tmp, "%s: %ld lines read.", p, fTextEdit->ReturnLineCount());
+         fFilename = fname;
+         sprintf(tmp, "%s: %ld lines read.", fname, fTextEdit->ReturnLineCount());
          fStatusBar->SetText(tmp, 0);
-         fFilename = p;
-         sprintf(tmp, "%s - TGTextEditor", p);
+         sprintf(tmp, "%s - TGTextEditor", fname);
          SetWindowName(tmp);
       }
    }
@@ -777,17 +768,24 @@ void TGTextEditor::ExecuteMacro()
          return;
    }
    if (!fFilename.CompareTo("Untitled")) {
-      if (!SaveFileAs())
-         return;
+      //if (!SaveFileAs())
+      //   return;
+      fFilename += ".C";
    }
-   char *tmpfile = gSystem->ConcatFileName(gSystem->TempDirectory(),
-                                gSystem->BaseName(fFilename.Data()));
+   gInterpreter->SaveContext();
+   TString savdir = gSystem->WorkingDirectory();
+   TString tmpfile = gSystem->BaseName(fFilename.Data());
+   tmpfile += "_exec";
+   gSystem->ChangeDirectory(gSystem->DirName(fFilename.Data()));
+   fTextEdit->SaveFile(tmpfile.Data(), kFALSE);
    gROOT->SetExecutingMacro(kTRUE);
-   fTextEdit->SaveFile(tmpfile, kFALSE);
-   gROOT->Macro(tmpfile);
-   gSystem->Unlink(tmpfile);
-   delete tmpfile;
+   gROOT->Macro(tmpfile.Data());
    gROOT->SetExecutingMacro(kFALSE);
+   if (gInterpreter->IsLoaded(tmpfile.Data()))
+      gInterpreter->UnloadFile(tmpfile.Data());
+   gSystem->Unlink(tmpfile.Data());
+   gSystem->ChangeDirectory(savdir.Data());
+   gInterpreter->Reset();
 }
 
 //______________________________________________________________________________
