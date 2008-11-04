@@ -1743,7 +1743,7 @@ void TGeoManager::SetPdgName(Int_t pdg, const char *name)
    }
    fPdgId[fNpdg] = pdg;
    TNamed *pdgname = new TNamed(name, "");
-   fPdgNames->AddAt(pdgname, fNpdg++);
+   fPdgNames->AddAtAndExpand(pdgname, fNpdg++);
 }
 
 //_____________________________________________________________________________
