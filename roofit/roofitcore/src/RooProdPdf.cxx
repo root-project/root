@@ -1143,7 +1143,7 @@ Double_t RooProdPdf::expectedEvents(const RooArgSet* nset) const
   // Return the expected number of events associated with the extentable input p.d.f
   // in the product. If there is no extendable term, return zero and issue and error
 
-  if (_extendedIndex<=0) {
+  if (_extendedIndex<0) {
     coutE(Generation) << "ERROR: Requesting expected number of events from a RooProdPdf that does not contain an extended p.d.f" << endl ;
   }
   assert(_extendedIndex>=0) ;
