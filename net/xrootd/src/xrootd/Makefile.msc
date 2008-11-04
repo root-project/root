@@ -104,7 +104,9 @@ CXXFLAGS = /nologo /MDd /W3 /Gm /EHsc /Zi /Od /D "_WIN32" /D "WIN32" /D "_DEBUG"
 LDFLAGS = -debug
 !ENDIF 
 
-!if ("$(_NMAKE_VER)" == "8.00.50727.42") || ("$(_NMAKE_VER)" == "8.00.50727.762") || ("$(_NMAKE_VER)" == "9.00.21022.08") || ("$(_NMAKE_VER)" == "9.00.30729.01")
+# Check if nmake version is 8.xx or 9.xx
+!if ([nmake /? 2>&1 | findstr /c:"Version 8\." > nul ] == 0) || \
+    ([nmake /? 2>&1 | findstr /c:"Version 9\." > nul ] == 0)
 MT_EXE        = mt -nologo -manifest $@.manifest -outputresource:$@;1
 MT_DLL        = mt -nologo -manifest $@.manifest -outputresource:$@;2
 EXTRAFLAGS    = /wd4244 /wd4996 /wd4273 /wd4355 /wd4800 /D_CRT_SECURE_NO_DEPRECATE
