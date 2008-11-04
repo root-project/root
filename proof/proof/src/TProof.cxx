@@ -7795,7 +7795,7 @@ TFileCollection *TProof::GetDataSet(const char *uri, const char* optStr)
 
    if (!uri || strlen(uri) <= 0) {
       Info("GetDataSet", "specifying a dataset name is mandatory");
-      return kFALSE;
+      return 0;
    }
 
    TSocket *master = 0;

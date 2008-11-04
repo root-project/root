@@ -1361,7 +1361,7 @@ TFileCollection *TProofLite::GetDataSet(const char *uri, const char *)
 
    if (!uri || strlen(uri) <= 0) {
       Info("GetDataSet", "specifying a dataset name is mandatory");
-      return kFALSE;
+      return 0;
    }
 
    // Return the list
