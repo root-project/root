@@ -41,6 +41,7 @@ class TMemberStreamer;
 class TStreamerElement;
 class TStreamerBasicType;
 class TClassStreamer;
+class TVirtualArray;
 namespace ROOT { class TCollectionProxyInfo; }
 
 class TStreamerInfo : public TVirtualStreamerInfo {
@@ -232,6 +233,10 @@ public:
    Int_t               ReadBufferSkip(TBuffer &b, const TPointerCollectionAdapter &arrptr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
    Int_t               ReadBufferConv(TBuffer &b, const TPointerCollectionAdapter &arrptr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
    Int_t               ReadBufferArtificial(TBuffer &b, const TPointerCollectionAdapter &arrptr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
+   Int_t               ReadBuffer(TBuffer &b, const TVirtualArray &arrptr, Int_t first,Int_t narr=1,Int_t eoffset=0,Int_t mode=0);
+   Int_t               ReadBufferSkip(TBuffer &b, const TVirtualArray &arrptr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
+   Int_t               ReadBufferConv(TBuffer &b, const TVirtualArray &arrptr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
+   Int_t               ReadBufferArtificial(TBuffer &b, const TVirtualArray &arrptr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
 #else
    template <class T>
    Int_t               ReadBuffer(TBuffer &b, const T &arrptr, Int_t first,Int_t narr=1,Int_t eoffset=0,Int_t mode=0);
