@@ -550,6 +550,9 @@ void SetRootSys()
             s = strrchr(ep, '/');
          }
          if (s) *s = 0;
+      } else {
+	 // There was no slashes at all let now change ROOTSYS
+	 return; 
       }
       char *env = new char[strlen(ep) + 10];
       sprintf(env, "ROOTSYS=%s", ep);
