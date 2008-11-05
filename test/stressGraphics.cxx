@@ -250,6 +250,8 @@ void stressGraphics(Int_t verbose = 0)
    }
    fclose(sg);
 
+   gRandom->SetSeed();
+
    if (gOptionR) {
       cout << "Test#   PS1Ref#   PS1Err#   PDFRef#   PDFErr#   GIFRef#   GIFErr#   JPGRef#   JPGErr#   PNGRef#   PNGErr#   PS2Ref#   PS2Err#" <<endl;
    } else {
@@ -2414,11 +2416,11 @@ void waves()
    finter->Draw("samecolorz");
 
    TArc *arc = new TArc();;
-   arc->SetFillStyle(0); 
-   arc->SetLineWidth(2);   
-   arc->SetLineColor(5);   
+   arc->SetFillStyle(0);
+   arc->SetLineWidth(2);
+   arc->SetLineColor(5);
    Float_t r = 0.5 * lambda, dr = lambda;
-      for (Int_t i = 0; i < 15; i++) {   
+      for (Int_t i = 0; i < 15; i++) {
       arc->DrawArc(0,  0.5*d, r, 0., 360., "only");
       arc->DrawArc(0, -0.5*d, r, 0., 360., "only");
       r += dr;
