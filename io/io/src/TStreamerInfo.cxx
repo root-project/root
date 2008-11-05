@@ -1237,7 +1237,7 @@ void TStreamerInfo::BuildOld()
       if (dm && dm->IsPersistent()) {
          if (dm->GetDataType()) {
             Bool_t isPointer = dm->IsaPointer();
-            Bool_t isArray = element->GetArrayLength() > 1;
+            Bool_t isArray = element->GetArrayLength() >= 1;
             Bool_t hasCount = element->HasCounter();
             newType = dm->GetDataType()->GetType();
             if ((newType == kChar) && isPointer && !isArray && !hasCount) {
