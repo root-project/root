@@ -121,7 +121,7 @@ public:
 
    virtual TGListBox    *GetListBox() const { return fListBox; }
    virtual TGTextEntry  *GetTextEntry() const { return fTextEntry; }
-   virtual TGLBEntry    *FindEntry(const char *s) const { return fListBox->FindEntry(s); }
+   virtual TGLBEntry    *FindEntry(const char *s) const;
    virtual void  Select(Int_t id, Bool_t emit = kTRUE);
    virtual Int_t GetSelected() const { return fListBox->GetSelected(); }
    virtual TGLBEntry *GetSelectedEntry() const

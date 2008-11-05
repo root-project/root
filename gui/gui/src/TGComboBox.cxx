@@ -325,6 +325,20 @@ void TGComboBox::EnableTextInput(Bool_t on)
 }
 
 //______________________________________________________________________________
+TGLBEntry *TGComboBox::FindEntry(const char *s) const
+{
+   // Find entry by name.
+
+   TGLBEntry *sel = 0;
+   Int_t act = fListBox->GetSelected();
+   ((TGContainer *)fListBox->GetContainer())->UnSelectAll();
+   sel = fListBox->FindEntry(s);
+   if (act)
+      fListBox->Select(act, kTRUE);
+   return sel;
+}
+
+//______________________________________________________________________________
 void TGComboBox::SetTopEntry(TGLBEntry *e, TGLayoutHints *lh)
 {
    // Set a new combo box value (normally update of text string in
