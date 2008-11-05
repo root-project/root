@@ -20,6 +20,7 @@ void ActionButton( TControlBar* cbar,
    if (requiredKey != "") {
       Bool_t found = kFALSE;
       TIter next( TMVAGui_keyContent );
+      TKey* key;
       while ((key = (TKey*)next())) {         
          if (TString(key->GetName()).Contains( requiredKey )) { found = kTRUE; break; }
       }
@@ -226,7 +227,7 @@ void TMVAGui( const char* fName = "TMVA.root" )
    cbar->Show();
 
    // indicate inactive buttons
-   for (Int_t i=0; i<TMVAGui_inactiveButtons.size(); i++) cbar->SetButtonState( TMVAGui_inactiveButtons[i], 3 );
+   for (UInt_t i=0; i<TMVAGui_inactiveButtons.size(); i++) cbar->SetButtonState( TMVAGui_inactiveButtons[i], 3 );
    if (TMVAGui_inactiveButtons.size() > 0) {
       cout << "=== Note: inactive buttons indicate that the corresponding classifiers were not trained ===" << endl;
    }

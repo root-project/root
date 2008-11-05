@@ -31,7 +31,10 @@
 #include "TTree.h"
 
 #include "TMVAGui.C"
-   
+#include "TMVA/Tools.h"
+#include "TMVA/Factory.h"
+#include "TPluginManager.h"
+
 // ---------------------------------------------------------------
 // choose MVA methods to be trained + tested
 Bool_t Use_Cuts            = 0;
@@ -115,7 +118,7 @@ void TMVAnalysis( TString myMethodList = "" )
          = Use_Plugin
          = 0;
 
-      mlist = TMVA::Tools::ParseFormatLine( myMethodList, " :," );
+      mlist = TMVA::gTools().ParseFormatLine( myMethodList, " :," );
 
       if (mlist->FindObject( "Cuts"          ) != 0) Use_Cuts          = 1; 
       if (mlist->FindObject( "CutsD"         ) != 0) Use_CutsD         = 1; 

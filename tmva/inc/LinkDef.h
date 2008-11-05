@@ -105,6 +105,6 @@
 #pragma link C++ class TMVA::CCTreeWrapper+;
 #pragma link C++ class TMVA::CCPruner+;
 
-
+#pragma link C++ function TMVA::gTools;
 
 #endif

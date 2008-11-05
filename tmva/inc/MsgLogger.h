@@ -147,8 +147,9 @@ namespace TMVA {
    // would be nicer C++-wise, it introduces some "unused variable"
    // warnings so let's use the #define definition after all...
    //   static MsgLogger& ( *Endl )( MsgLogger& ) = &MsgLogger::Endmsg;
+#ifndef __CINT__
 #define Endl MsgLogger::Endmsg
-
+#endif
 }
 
 #endif // TMVA_MsgLogger

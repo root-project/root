@@ -176,8 +176,10 @@ namespace TMVA {
 
    }; // Common tools
 
+#if !defined(__CINT__) || defined(__MAKECINT__)
    Tools& gTools(); // global accessor
-
+#endif
+   
 } // namespace TMVA
 
 //_______________________________________________________________________
