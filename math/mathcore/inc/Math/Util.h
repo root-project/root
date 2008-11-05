@@ -49,7 +49,11 @@ std::string ToString(const T& val)
 /// (better than a simple cut-off)
 inline double EvalLog(double x) { 
    // evaluate the log 
+#ifdef __CINT__
+   static const double epsilon = 2.*2.2250738585072014e-308;
+#else
    static const double epsilon = 2.*std::numeric_limits<double>::min();
+#endif
    if(x<= epsilon) 
       return x/epsilon + std::log(epsilon) - 1; 
    else      
