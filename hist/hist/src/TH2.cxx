@@ -1051,6 +1051,10 @@ Double_t TH2::Interpolate(Double_t)
    Double_t dx,dy; 
    Int_t bin_x = fXaxis.FindBin(x); 
    Int_t bin_y = fYaxis.FindBin(y); 
+   if(bin_x<1 || bin_x>GetNbinsX() || bin_y<1 || bin_y>GetNbinsY()) {
+      Error("Interpolate","Cannot interpolate outside histogram domain.");
+      return 0;     
+   }
    Int_t quadrant = 0; // CCW from UR 1,2,3,4 
    // which quadrant of the bin (bin_P) are we in? 
    dx = fXaxis.GetBinUpEdge(bin_x)-x; 
@@ -1089,10 +1093,18 @@ Double_t TH2::Interpolate(Double_t)
       y2 = fYaxis.GetBinCenter(bin_y); 
       break; 
    } 
-   Int_t bin_q22 = GetBin(fXaxis.FindBin(x2),fYaxis.FindBin(y2)); 
-   Int_t bin_q12 = GetBin(fXaxis.FindBin(x1),fYaxis.FindBin(y2)); 
-   Int_t bin_q11 = GetBin(fXaxis.FindBin(x1),fYaxis.FindBin(y1)); 
-   Int_t bin_q21 = GetBin(fXaxis.FindBin(x2),fYaxis.FindBin(y1)); 
+   Int_t bin_x1 = fXaxis.FindBin(x1);
+   if(bin_x1<1) bin_x1=1;
+   Int_t bin_x2 = fXaxis.FindBin(x2);
+   if(bin_x2>GetNbinsX()) bin_x2=GetNbinsX();
+   Int_t bin_y1 = fYaxis.FindBin(y1);
+   if(bin_y1<1) bin_y1=1;
+   Int_t bin_y2 = fYaxis.FindBin(y2);
+   if(bin_y2>GetNbinsY()) bin_y2=GetNbinsY();
+   Int_t bin_q22 = GetBin(bin_x2,bin_y2);
+   Int_t bin_q12 = GetBin(bin_x1,bin_y2);
+   Int_t bin_q11 = GetBin(bin_x1,bin_y1);
+   Int_t bin_q21 = GetBin(bin_x2,bin_y1);
    Double_t q11 = GetBinContent(bin_q11); 
    Double_t q12 = GetBinContent(bin_q12); 
    Double_t q21 = GetBinContent(bin_q21); 
