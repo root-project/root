@@ -73,11 +73,11 @@ STRESSTESTSCOMP := $(STRESSTESTS:-test=-ctest)
 #### disabled tests
 # Run all tests in interpreted mode except for those that CINT
 # cannot interpret - these are run in compiled mode instead.
-STRESSTESTSINTERP_VETO := stressMathCore-itest stressRooFit-itest \
+STRESSTESTSINTERP_VETO := stressMathCore-itest stressMathMore-itest stressRooFit-itest \
   stressLinear-itest stressVector-itest stressGeometry-itest stressIterators-itest
 STRESSTESTSINTERP := $(filter-out $(STRESSTESTSINTERP_VETO),$(STRESSTESTS:-test=-itest))
 
-# run all compiled except for that are run interpreted:
+# run all compiled except for those that are run interpreted:
 STRESSTESTSCOMP_VETO := $(STRESSTESTSINTERP:-itest=-ctest)
 # ...and those that are known to fail: none!
 # STRESSTESTSCOMP_VETO := 
