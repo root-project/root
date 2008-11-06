@@ -3501,15 +3501,8 @@ void TUnixSystem::UnixResetSignals()
 {
    // Restore old signal handlers.
 
-   for (int sig = 0; sig < kMAXSIGNALS; sig++) {
-      if (gSignalMap[sig].fOldHandler) {
-         // restore old signal handler
-         sigaction(gSignalMap[sig].fCode, gSignalMap[sig].fOldHandler, 0);
-         delete gSignalMap[sig].fOldHandler;
-         gSignalMap[sig].fOldHandler = 0;
-         gSignalMap[sig].fHandler    = 0;
-      }
-   }
+   for (int sig = 0; sig < kMAXSIGNALS; sig++)
+      UnixResetSignal((ESignals)sig);
 }
 
 //---- time --------------------------------------------------------------------
