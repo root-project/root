@@ -352,7 +352,7 @@ public:
    void                   SetCurrentTrack(TVirtualGeoTrack *track) {fCurrentTrack=track;}
    Int_t                  GetNtracks() const {return fNtracks;}
    TVirtualGeoTrack      *GetCurrentTrack() {return fCurrentTrack;}
-   TVirtualGeoTrack      *GetLastTrack() {return (TVirtualGeoTrack *)fTracks->At(fNtracks-1);}
+   TVirtualGeoTrack      *GetLastTrack() {return (TVirtualGeoTrack*)((fNtracks>0)?fTracks->At(fNtracks-1):NULL);}
    const Double_t        *GetLastPoint() const {return fCurrentNavigator->GetLastPoint();}
    TVirtualGeoTrack      *GetTrack(Int_t index)         {return (index<fNtracks)?(TVirtualGeoTrack*)fTracks->At(index):0;}
    Int_t                  GetTrackIndex(Int_t id) const;
