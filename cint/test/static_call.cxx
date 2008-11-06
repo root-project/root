@@ -26,3 +26,4 @@ int main()
 {
    return !B::callThrough("config_info");
 }
+

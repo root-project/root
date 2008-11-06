@@ -57,6 +57,9 @@ staticmem1.cxx compiled:
 staticmem1.cxx interpreted:
    8:  X : N = 25 Sum = 481.6 Mean = 19.26 Var = 0.2358 Sigma = 0.4856
 staticary.cxx 
+static_object.cxx 
+static_string.cxx 
+static_call.cxx 
 minexam.cxx 
 btmplt.cxx 
 loopcompile1.cxx 

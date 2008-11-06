@@ -6,17 +6,18 @@ public:
    int value;
    Object() : value(1) {
 #if defined(DEBUG)
-      fprintf(stderr,"default constructor for %d\n",this);
+      fprintf(stderr,"default constructor for %p\n",this);
 #endif
    }
    Object(int val) : value(val) {
 #if defined(DEBUG)
-      fprintf(stderr,"constructor with int for %d\n",this);
+      fprintf(stderr,"constructor with int for %p\n",this);
 #endif
    }
    ~Object() {
 #if defined(DEBUG)
-      fprintf(stderr,"default destructor for %d\n",this);
+      fprintf(stderr,"default destructor for %p\n",this);
 #endif
    }
 };
+

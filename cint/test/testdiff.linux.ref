@@ -45,6 +45,9 @@ access0.cxx
 staticmem0.cxx 
 staticmem1.cxx 
 staticary.cxx 
+static_object.cxx 
+static_string.cxx 
+static_call.cxx 
 minexam.cxx 
 btmplt.cxx 
 loopcompile1.cxx 
