@@ -85,13 +85,17 @@
 
 #pragma link C++ class std::list<TEveElement*>;
 #pragma link C++ class std::list<TEveElement*>::iterator;
+#pragma link C++ class std::list<TEveElement*>::const_iterator;
 #pragma link C++ typedef TEveElement::List_t;
 #pragma link C++ typedef TEveElement::List_i;
+#pragma link C++ typedef TEveElement::List_ci;
 
 #pragma link C++ class std::set<TEveElement*>;
 #pragma link C++ class std::set<TEveElement*>::iterator;
+#pragma link C++ class std::set<TEveElement*>::const_iterator;
 #pragma link C++ typedef TEveElement::Set_t;
 #pragma link C++ typedef TEveElement::Set_i;
+#pragma link C++ typedef TEveElement::Set_ci;
 
 // TEveCompound
 #pragma link C++ class TEveCompound+;

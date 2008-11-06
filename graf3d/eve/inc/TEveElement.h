@@ -67,10 +67,12 @@ public:
    typedef sLTI_t::reverse_iterator             sLTI_ri;
 
    typedef std::list<TEveElement*>              List_t;
-   typedef std::list<TEveElement*>::iterator    List_i;
+   typedef List_t::iterator                     List_i;
+   typedef List_t::const_iterator               List_ci;
 
    typedef std::set<TEveElement*>               Set_t;
-   typedef std::set<TEveElement*>::iterator     Set_i;
+   typedef Set_t::iterator                      Set_i;
+   typedef Set_t::const_iterator                Set_ci;
 
 protected:
    List_t           fParents;              //  List of parents.
@@ -137,15 +139,19 @@ public:
    virtual void CollectSceneParentsFromChildren(List_t& scenes,
                                                 TEveElement* parent);
 
-   List_i BeginParents()      { return  fParents.begin();  }
-   List_i EndParents()        { return  fParents.end();    }
-   Int_t  NumParents()  const { return  fParents.size();   }
-   Bool_t HasParents()  const { return !fParents.empty();  }
+   List_i  BeginParents()        { return  fParents.begin();  }
+   List_i  EndParents()          { return  fParents.end();    }
+   List_ci BeginParents()  const { return  fParents.begin();  }
+   List_ci EndParents()    const { return  fParents.end();    }
+   Int_t   NumParents()    const { return  fParents.size();   }
+   Bool_t  HasParents()    const { return !fParents.empty();  }
 
-   List_i BeginChildren()     { return  fChildren.begin(); }
-   List_i EndChildren()       { return  fChildren.end();   }
-   Int_t  NumChildren() const { return  fChildren.size();  }
-   Bool_t HasChildren() const { return !fChildren.empty(); }
+   List_i  BeginChildren()       { return  fChildren.begin(); }
+   List_i  EndChildren()         { return  fChildren.end();   }
+   List_ci BeginChildren() const { return  fChildren.begin(); }
+   List_ci EndChildren()   const { return  fChildren.end();   }
+   Int_t   NumChildren()   const { return  fChildren.size();  }
+   Bool_t  HasChildren()   const { return !fChildren.empty(); }
 
    Bool_t       HasChild(TEveElement* el);
    TEveElement* FindChild(const TString& name, const TClass* cls=0);
