@@ -33,7 +33,7 @@ namespace {
          return 0;
 
    // not-initialized or public data accesses through class (e.g. by help())
-      if ( address == 0 ) {
+      if ( ! address ) {
          Py_INCREF( pyprop );
          return (PyObject*)pyprop;
       }
@@ -43,8 +43,21 @@ namespace {
       if ( pyprop->fProperty & kIsArray )
          ptr = &address;
 
-      if ( pyprop->fConverter != 0 )
-         return pyprop->fConverter->FromMemory( ptr );
+      if ( pyprop->fConverter != 0 ) {
+         PyObject* result = pyprop->fConverter->FromMemory( ptr );
+         if ( ! result )
+            return result;
+
+         // ensure that the encapsulating class does not go away for the duration
+         // of the data member's lifetime, if it is a bound type (it doesn't matter
+         // for builtin types, b/c those are copied over into python types and thus
+         // end up being "stand-alone")
+         if ( ObjectProxy_Check( result ) ) {
+            if ( PyObject_SetAttrString( result, (char*)"__lifeline", (PyObject*)pyobj ) == -1 )
+               PyErr_Clear();     // ignored
+         }
+         return result;
+      }
 
       PyErr_Format( PyExc_NotImplementedError,
          "no converter available for \"%s\"", pyprop->GetName().c_str() );
