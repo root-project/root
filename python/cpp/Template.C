@@ -2,7 +2,7 @@
   File: roottest/python/cpp/Template.C
   Author: Wim Lavrijsen@lbl.gov
   Created: 01/07/08
-  Last: 01/25/08
+  Last: 11/07/08
 */
 
 #include <vector>
@@ -13,8 +13,16 @@ public:
    T m_b;
 };
 
+template< class T >
+T MyTemplatedFunction( T t ) { return t; }
+
 #ifdef __CINT__
 #pragma link C++ class MyTemplatedClass< std::vector< float > >;
+#pragma link C++ function MyTemplatedFunction< int >( int );
+#pragma link C++ function MyTemplatedFunction< double >( double );
+#else
+template int MyTemplatedFunction< int >( int );
+template double MyTemplatedFunction< double >( double );
 #endif
 
 class MyTemplatedMethodClass {

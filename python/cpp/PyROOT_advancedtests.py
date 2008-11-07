@@ -1,7 +1,7 @@
 # File: roottest/python/cpp/PyROOT_advancedtests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 06/04/05
-# Last: 06/27/08
+# Last: 11/07/08
 
 """C++ advanced language interface unit tests for PyROOT package."""
 
@@ -173,6 +173,18 @@ class Cpp2TemplateLookupTestCase( unittest.TestCase ):
       self.assertEqual( m.GetSize( 'double' )(), m.GetDoubleSize() )
 
       self.assertEqual( m.GetSize( 'MyDoubleVector_t' )(), m.GetVectorOfDoubleSize() )
+
+   def test5TemplateGlobalFunctions( self ):
+      """Test template global function lookup and calls"""
+
+    # gROOT.LoadMacro( "Template.C+" )  # already loaded ...
+
+      f = MyTemplatedFunction
+
+      self.assertEqual( f( 1 ), 1 )
+      self.assertEqual( type( f( 2 ) ), type( 2 ) )
+      self.assertEqual( f( 3. ), 3. )
+      self.assertEqual( type( f( 4. ) ), type( 4. ) )
 
 
 ### C++ by-non-const-ref arguments tests =====================================

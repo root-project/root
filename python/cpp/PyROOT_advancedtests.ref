@@ -4,6 +4,7 @@ Test data member access for a templated class ... ok
 Test data member access for a templated class instantiated with a template ... ok
 Test template instantiation with a std::vector< float > ... ok
 Test template member functions lookup and calls ... ok
+Test template global function lookup and calls ... ok
 Test usage of Long/Double place holders ... ok
 Test parameter passing of builtins through non-const reference ... ok
 Test abstract class in a hierarchy ... ok
