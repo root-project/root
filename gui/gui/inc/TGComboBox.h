@@ -96,17 +96,17 @@ public:
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
 
    virtual void AddEntry(TGString *s, Int_t id)
-                        { fListBox->AddEntry(s, id); }
+                        { fListBox->AddEntry(s, id); Resize(); }
    virtual void AddEntry(const char *s, Int_t id)
-                        { fListBox->AddEntry(s, id); }
+                        { fListBox->AddEntry(s, id); Resize(); }
    virtual void AddEntry(TGLBEntry *lbe, TGLayoutHints *lhints)
-                        { fListBox->AddEntry(lbe, lhints); }
+                        { fListBox->AddEntry(lbe, lhints); Resize(); }
    virtual void InsertEntry(TGString *s, Int_t id, Int_t afterID)
-                        { fListBox->InsertEntry(s, id, afterID); }
+                        { fListBox->InsertEntry(s, id, afterID); Resize(); }
    virtual void InsertEntry(const char *s, Int_t id, Int_t afterID)
-                        { fListBox->InsertEntry(s, id, afterID); }
+                        { fListBox->InsertEntry(s, id, afterID); Resize(); }
    virtual void InsertEntry(TGLBEntry *lbe, TGLayoutHints *lhints, Int_t afterID)
-                        { fListBox->InsertEntry(lbe, lhints, afterID); }
+                        { fListBox->InsertEntry(lbe, lhints, afterID); Resize(); }
    virtual void NewEntry(const char *s = "Entry") 
                         { fListBox->NewEntry(s); Resize(); }       //*MENU*
    virtual void RemoveEntry(Int_t id = -1);                        //*MENU*
