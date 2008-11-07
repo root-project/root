@@ -167,7 +167,7 @@ void TGFileBrowser::CreateBrowser()
    fFileType->AddEntry(" C/C++ Files (*.c;*.cxx;*.h;...)", ftype++);
    fFileType->AddEntry(" ROOT Files (*.root)", ftype++);
    fFileType->AddEntry(" Text Files (*.txt)", ftype++);
-   fFileType->Resize(200, fFileType->GetTextEntry()->GetDefaultHeight());
+   fFileType->Resize(200, 20);
    fBotFrame->AddFrame(fFileType, new TGLayoutHints(kLHintsLeft | kLHintsTop |
                 kLHintsExpandX, 2, 2, 2, 2));
    fFileType->Connect("Selected(Int_t)", "TGFileBrowser", this, "ApplyFilter(Int_t)");
