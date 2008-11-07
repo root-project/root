@@ -993,7 +993,10 @@ TWinNTSystem::~TWinNTSystem()
       ::CloseHandle(gGlobalEvent);
       gGlobalEvent = 0;
    }
-   if (gTimerThreadHandle) ::CloseHandle(gTimerThreadHandle);
+   if (gTimerThreadHandle) {
+      ::TerminateThread(gTimerThreadHandle, 0);
+      ::CloseHandle(gTimerThreadHandle);
+   }
 }
 
 //______________________________________________________________________________
