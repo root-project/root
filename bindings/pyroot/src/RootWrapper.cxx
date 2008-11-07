@@ -3,12 +3,14 @@
 
 // Bindings
 #include "PyROOT.h"
+#include "PyStrings.h"
+#include "RootWrapper.h"
+#include "RootWrapper.h"
 #include "PyRootType.h"
 #include "ObjectProxy.h"
 #include "MethodProxy.h"
 #include "TemplateProxy.h"
 #include "PropertyProxy.h"
-#include "RootWrapper.h"
 #include "Pythonize.h"
 #include "MethodHolder.h"
 #include "ConstructorHolder.h"
@@ -470,7 +472,7 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject
 // determine scope name, if a python scope has been given
    std::string scName = "";
    if ( scope ) {
-      PyObject* pyscope = PyObject_GetAttrString( scope, const_cast< char* >( "__name__" ) );
+      PyObject* pyscope = PyObject_GetAttr( scope, PyStrings::gName );
       if ( ! pyscope ) {
          PyErr_Format( PyExc_SystemError, "given scope has no name for %s", name.c_str() );
          return 0;
@@ -499,7 +501,7 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject
 
    if ( ! (bool)klass && G__defined_templateclass( const_cast< char* >( lookup.c_str() ) ) ) {
    // a "naked" templated class is requested: return callable proxy for instantiations
-      PyObject* pytcl = PyObject_GetAttrString( gRootModule, const_cast< char* >( "Template" ) );
+      PyObject* pytcl = PyObject_GetAttr( gRootModule, PyStrings::gTemplate );
       PyObject* pytemplate = PyObject_CallFunction(
          pytcl, const_cast< char* >( "s" ), const_cast< char* >( lookup.c_str() ) );
       Py_DECREF( pytcl );
@@ -527,7 +529,7 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject
    if ( ! (bool)klass ) {   // if so, all options have been exhausted: it doesn't exist as such
       if ( ! scope && fullname.find( "ROOT::" ) == std::string::npos ) { // not already in ROOT::
       // final attempt, for convenience, the "ROOT" namespace isn't required, try again ...
-         PyObject* rtns = PyObject_GetAttrString( gRootModule, const_cast< char* >( "ROOT" ) );
+         PyObject* rtns = PyObject_GetAttr( gRootModule, PyStrings::gROOTns );
          PyObject* pyclass = PyObject_GetAttrString( rtns, (char*)fullname.c_str() );
          Py_DECREF( rtns );
          return pyclass;

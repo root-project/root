@@ -3,6 +3,7 @@
 
 // Bindings
 #include "PyROOT.h"
+#include "PyStrings.h"
 #include "PyRootType.h"
 #include "ObjectProxy.h"
 #include "MethodProxy.h"
@@ -181,11 +182,10 @@ namespace {
          // locate property proxy for offset info
             PropertyProxy* pyprop = 0;
 
-            PyObject* pyclass = PyObject_GetAttrString(
-               (PyObject*)pyobj, const_cast< char* >( "__class__" ) );
+            PyObject* pyclass = PyObject_GetAttr( (PyObject*)pyobj, PyStrings::gClass );
 
             if ( pyclass ) {
-               PyObject* dict = PyObject_GetAttrString( pyclass, const_cast< char* >( "__dict__" ) );
+               PyObject* dict = PyObject_GetAttr( pyclass, PyStrings::gDict );
                pyprop = (PropertyProxy*)PyObject_GetItem( dict, pyname );
                Py_DECREF( dict );
             }
@@ -239,7 +239,7 @@ namespace {
    // helper to catch common code between MakeNullPointer and BindObject
 
       if ( ! PyString_Check( pyname ) ) {    // name given as string
-         PyObject* nattr = PyObject_GetAttrString( pyname, (char*)"__name__" );
+         PyObject* nattr = PyObject_GetAttr( pyname, PyStrings::gName );
          if ( nattr )                        // object is actually a class
             pyname = nattr;
          pyname = PyObject_Str( pyname );
@@ -408,6 +408,8 @@ static PyMethodDef gPyROOTMethods[] = {
      METH_VARARGS, (char*) "PyROOT internal function" },
    { (char*) "MakeRootTemplateClass", (PyCFunction)MakeRootTemplateClass,
      METH_VARARGS, (char*) "PyROOT internal function" },
+   { (char*) "_DestroyPyStrings", (PyCFunction)PyROOT::DestroyPyStrings,
+     METH_NOARGS, (char*) "PyROOT internal function" },
    { (char*) "AddressOf", (PyCFunction)AddressOf,
      METH_VARARGS, (char*) "Retrieve address of held object in a buffer" },
    { (char*) "AsCObject", (PyCFunction)AsCObject,
@@ -438,6 +440,10 @@ static PyMethodDef gPyROOTMethods[] = {
 extern "C" void initlibPyROOT()
 {
    using namespace PyROOT;
+
+// load commonly used python strings
+   if ( ! PyROOT::CreatePyStrings() )
+      return;
 
 // prepare for lazyness
    PyObject* dict = PyDict_New();

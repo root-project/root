@@ -3,6 +3,7 @@
 
 // Bindings
 #include "PyROOT.h"
+#include "PyStrings.h"
 #include "ObjectProxy.h"
 
 // ROOT
@@ -131,7 +132,7 @@ namespace {
          clName.append( "*" );
 
    // need to prevent accidental derefs when just printing (usually unsafe)
-      if ( ! PyObject_HasAttrString( (PyObject*)pyobj, const_cast< char* >( "__deref__" ) ) ) {
+      if ( ! PyObject_HasAttr( (PyObject*)pyobj, PyStrings::gDeref ) ) {
          PyObject* name = PyObject_CallMethod( (PyObject*)pyobj,
             const_cast< char* >( "GetName" ), const_cast< char* >( "" ) );
 

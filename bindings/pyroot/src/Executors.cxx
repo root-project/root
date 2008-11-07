@@ -3,6 +3,7 @@
 
 // Bindings
 #include "PyROOT.h"
+#include "PyStrings.h"
 #include "Executors.h"
 #include "ObjectProxy.h"
 #include "PyBufferFactory.h"
@@ -144,8 +145,10 @@ PyObject* PyROOT::TCStringExecutor::Execute( G__CallFunc* func, void* self )
 {
 // execute <func> with argument <self>, construct python string return value
    char* result = (char*)func->ExecInt( self );
-   if ( ! result )
-      return PyString_FromString( "" );
+   if ( ! result ) {
+      Py_INCREF( PyStrings::gEmptyString );
+      return PyStrings::gEmptyString;
+   }
 
    return PyString_FromString( result );
 }
@@ -180,8 +183,10 @@ PyObject* PyROOT::TSTLStringExecutor::Execute( G__CallFunc* func, void* self )
 {
 // execute <func> with argument <self>, construct python string return value
    std::string* result = (std::string*)func->ExecInt( self );
-   if ( ! result )
-      return PyString_FromString( "" );
+   if ( ! result ) {
+      Py_INCREF( PyStrings::gEmptyString );
+      return PyStrings::gEmptyString;
+   }
 
    return PyString_FromString( (*result).c_str() );
 }

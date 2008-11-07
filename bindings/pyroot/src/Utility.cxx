@@ -3,6 +3,7 @@
 
 // Bindings
 #include "PyROOT.h"
+#include "PyStrings.h"
 #include "Utility.h"
 #include "ObjectProxy.h"
 #include "MethodProxy.h"
@@ -227,9 +228,9 @@ Bool_t PyROOT::Utility::BuildTemplateName( PyObject*& pyname, PyObject* args, in
       PyObject* tn = PyTuple_GET_ITEM( args, i );
       if ( PyString_Check( tn ) )
          PyString_Concat( &pyname, tn );
-      else if ( PyObject_HasAttrString( tn, const_cast< char* >( "__name__" ) ) ) {
+      else if ( PyObject_HasAttr( tn, PyStrings::gName ) ) {
       // this works for type objects
-         PyObject* tpName = PyObject_GetAttrString( tn, const_cast< char* >( "__name__" ) );
+         PyObject* tpName = PyObject_GetAttr( tn, PyStrings::gName );
 
       // special case for strings
          if ( strcmp( PyString_AS_STRING( tpName ), "str" ) == 0 ) {
@@ -298,7 +299,7 @@ int PyROOT::Utility::GetBuffer( PyObject* pyobject, char tc, int size, void*& bu
 
       if ( check == kTRUE ) {
       // determine buffer compatibility (use "buf" as a status flag)
-         PyObject* pytc = PyObject_GetAttrString( pyobject, const_cast< char* >( "typecode" ) );
+         PyObject* pytc = PyObject_GetAttr( pyobject, PyStrings::gTypeCode );
          if ( pytc != 0 ) {     // for array objects
             if ( PyString_AS_STRING( pytc )[0] != tc )
                buf = 0;         // no match

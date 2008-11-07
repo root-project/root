@@ -3,6 +3,7 @@
 
 // Bindings
 #include "PyROOT.h"
+#include "PyStrings.h"
 #include "Pythonize.h"
 #include "ObjectProxy.h"
 #include "MethodProxy.h"
@@ -47,16 +48,10 @@ namespace {
    using namespace PyROOT;
 
 //____________________________________________________________________________
-   Bool_t HasAttrDirect( PyObject* pyclass, const char* name ) {
+   Bool_t HasAttrDirect( PyObject* pyclass, PyObject* pyname ) {
    // prevents calls to pyclass->ob_type->tp_getattr, which is unnecessary for our
    // purposes here and could tickle problems w/ spurious lookups into ROOT meta
-      PyObject* pyname = PyString_FromString( name );
-      if ( ! pyname )
-         return kFALSE;
-
       PyObject* attr = PyType_Type.tp_getattro( pyclass, pyname );
-      Py_DECREF( pyname );
-
       if ( attr != 0 ) {
          Py_DECREF( attr );
          return kTRUE;
@@ -319,7 +314,7 @@ namespace {
          return 0;
 
    // perform actual cast
-      PyObject* meth = PyObject_GetAttrString( self, (char*)"_TClass__DynamicCast" );
+      PyObject* meth = PyObject_GetAttr( self, PyStrings::gTClassDynCast );
       PyObject* ptr = PyObject_Call(
          meth, PyTuple_GetSlice( args, 1, PyTuple_GET_SIZE( args ) ), 0 );
 
@@ -762,8 +757,7 @@ namespace {
             return 0;
          }
 
-         PyObject* pyclass =
-            PyObject_GetAttrString( (PyObject*)self, const_cast< char* >( "__class__" ) );
+         PyObject* pyclass = PyObject_GetAttr( (PyObject*)self, PyStrings::gClass );
          PyObject* nseq = PyObject_CallObject( pyclass, NULL );
          Py_DECREF( pyclass );
  
@@ -788,7 +782,7 @@ namespace {
       if ( iter ) {
          PyObject* end = CallPySelfMethod( args, "end", "O" );
          if ( end )
-            PyObject_SetAttrString( iter, const_cast< char* >( "end" ), end );
+            PyObject_SetAttr( iter, PyStrings::gEnd, end );
          Py_XDECREF( end );
       }
       return iter;
@@ -826,9 +820,9 @@ namespace {
          return 0;
 
       if ( (int)idx == 0 )
-         return PyObject_GetAttrString( self, (char*)"first" );
+         return PyObject_GetAttr( self, PyStrings::gFirst );
       else if ( (int)idx == 1 )
-         return PyObject_GetAttrString( self, (char*)"second" );
+         return PyObject_GetAttr( self, PyStrings::gSecond );
 
    // still here? Trigger stop iteration
       PyErr_SetString( PyExc_IndexError, "out of bounds" );
@@ -929,7 +923,7 @@ namespace {
          return 0;
 
       PyObject* next = 0;
-      PyObject* last = PyObject_GetAttrString( self, const_cast< char* >( "end" ) );
+      PyObject* last = PyObject_GetAttr( self, PyStrings::gEnd );
 
       if ( last != 0 ) {
       // handle special case of empty container (i.e. self is end)
@@ -1455,7 +1449,7 @@ namespace {
 
       // get constructor
          MethodProxy* method =
-            (MethodProxy*)PyObject_GetAttrString( (PyObject*)self, (char*)"__init__" );
+            (MethodProxy*)PyObject_GetAttr( (PyObject*)self, PyStrings::gInit );
 
       // build new argument array
          PyObject* newArgs = PyTuple_New( reqNArgs + 1 );
@@ -1561,7 +1555,7 @@ namespace {
             return 0;
 
       // use callable name (if available) as identifier
-         PyObject* pyname = PyObject_GetAttrString( pyfunc, (char*)"__name__" );
+         PyObject* pyname = PyObject_GetAttr( pyfunc, PyStrings::gName );
          const char* name = "dummy";
          if ( pyname != 0 )
             name = PyString_AsString( pyname );
@@ -1573,7 +1567,7 @@ namespace {
 
       // get function
          MethodProxy* method =
-            (MethodProxy*)PyObject_GetAttrString( (PyObject*)self, (char*)"SetFCN" );
+            (MethodProxy*)PyObject_GetAttr( (PyObject*)self, PyStrings::gSetFCN );
 
       // build new argument array
          PyObject* newArgs = PyTuple_New( 1 );
@@ -1603,19 +1597,19 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 //- method name based pythonization --------------------------------------------
 
 // for smart pointer style classes (note fall-through)
-   if ( HasAttrDirect( pyclass, "__deref__" ) ) {
+   if ( HasAttrDirect( pyclass, PyStrings::gDeref ) ) {
       Utility::AddToClass( pyclass, "__getattr__", (PyCFunction) DeRefGetAttr );
-   } else if ( HasAttrDirect( pyclass, "__follow__" ) ) {
+   } else if ( HasAttrDirect( pyclass, PyStrings::gFollow ) ) {
       Utility::AddToClass( pyclass, "__getattr__", (PyCFunction) FollowGetAttr );
    }
 
 // for STL containers, and user classes modeled after them
-   if ( HasAttrDirect( pyclass, "size" ) )
+   if ( HasAttrDirect( pyclass, PyStrings::gSize ) )
       Utility::AddToClass( pyclass, "__len__", "size" );
 
-   if ( HasAttrDirect( pyclass, "begin" ) && HasAttrDirect( pyclass, "end" ) ) {
+   if ( HasAttrDirect( pyclass, PyStrings::gBegin ) && HasAttrDirect( pyclass, PyStrings::gEnd ) ) {
    // some classes may not have dicts for their iterators, making begin/end useless
-      PyObject* pyfullname = PyObject_GetAttrString( pyclass, (char*)"__name__" );
+      PyObject* pyfullname = PyObject_GetAttr( pyclass, PyStrings::gName );
       TClass* klass = TClass::GetClass( PyString_AS_STRING( pyfullname ) );
       Py_DECREF( pyfullname );
       TMethod* meth = klass->GetMethodAllAny( "begin" );
@@ -1629,7 +1623,7 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 
       if ( iklass && iklass->GetClassInfo() ) {
          Utility::AddToClass( pyclass, "__iter__", (PyCFunction) StlSequenceIter );
-      } else if ( HasAttrDirect( pyclass, "__getitem__" ) && HasAttrDirect( pyclass, "__len__" ) ) {
+      } else if ( HasAttrDirect( pyclass, PyStrings::gGetItem ) && HasAttrDirect( pyclass, PyStrings::gLen ) ) {
          Utility::AddToClass( pyclass, "_getitem__unchecked", "__getitem__" );
          Utility::AddToClass( pyclass, "__getitem__", (PyCFunction) CheckedGetItem );
       }
@@ -1706,18 +1700,18 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 
    if ( IsTemplatedSTLClass( name, "vector" ) ) {
 
-      if ( HasAttrDirect( pyclass, "at" ) ) {
+      if ( HasAttrDirect( pyclass, PyStrings::gLen ) ) {
          Utility::AddToClass( pyclass, "_vector__at", "at" );
       // remove iterator that was set earlier (checked __getitem__ will do the trick)
-         if ( HasAttrDirect( pyclass, "__iter__" ) )
-            PyObject_DelAttrString(  pyclass, const_cast< char* >( "__iter__" ) );
-      } else if ( HasAttrDirect( pyclass, "__getitem__" ) ) {
+         if ( HasAttrDirect( pyclass, PyStrings::gIter ) )
+            PyObject_DelAttr( pyclass, PyStrings::gIter );
+      } else if ( HasAttrDirect( pyclass, PyStrings::gGetItem ) ) {
          Utility::AddToClass( pyclass, "_vector__at", "__getitem__" );   // unchecked!
       // if unchecked getitem, use checked iterator protocol (was set above if begin/end)
       }
 
    // provide a slice-able __getitem__, if possible
-      if ( HasAttrDirect( pyclass, "_vector__at" ) )
+      if ( HasAttrDirect( pyclass, PyStrings::gVectorAt ) )
          Utility::AddToClass( pyclass, "__getitem__", (PyCFunction) VectorGetItem );
 
       return kTRUE;
@@ -1790,8 +1784,7 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       Utility::AddToClass( pyclass, "__getattr__", (PyCFunction) TTreeGetAttr );
 
    // workaround for templated member Branch()
-      MethodProxy* original = (MethodProxy*)PyObject_GetAttrString(
-         pyclass, const_cast< char* >( "Branch" ) );
+      MethodProxy* original = (MethodProxy*)PyObject_GetAttr( pyclass, PyStrings::gBranch );
       MethodProxy* method = MethodProxy_New( "Branch", new TTreeBranch( original ) );
       Py_DECREF( original ); original = 0;
 
@@ -1800,8 +1793,7 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       Py_DECREF( method ); method = 0;
 
    // workaround for templated member SetBranchAddress()
-      original = (MethodProxy*)PyObject_GetAttrString(
-         pyclass, const_cast< char* >( "SetBranchAddress" ) );
+      original = (MethodProxy*)PyObject_GetAttr( pyclass, PyStrings::gSetBranchAddress );
       method = MethodProxy_New( "SetBranchAddress", new TTreeSetBranchAddress( original ) );
       Py_DECREF( original ); original = 0;
 

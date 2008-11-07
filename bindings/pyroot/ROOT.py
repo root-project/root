@@ -2,7 +2,7 @@ from __future__ import generators
 # @(#)root/pyroot:$Id$
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
-# Last: 09/26/08
+# Last: 11/07/08
 
 """PyROOT user module.
 
@@ -536,6 +536,9 @@ def cleanup():
    if gROOT.GetListOfMappedFiles():
       gROOT.GetListOfMappedFiles().Delete( 'slow' )
    del gROOT
+
+ # cleanup cached python strings
+   sys.modules[ 'libPyROOT' ]._DestroyPyStrings()
 
  # destroy ROOT extension module
    del sys.modules[ 'libPyROOT' ]

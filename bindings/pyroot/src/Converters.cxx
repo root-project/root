@@ -3,6 +3,7 @@
 
 // Bindings
 #include "PyROOT.h"
+#include "PyStrings.h"
 #include "Converters.h"
 #include "ObjectProxy.h"
 #include "PyBufferFactory.h"
@@ -454,7 +455,8 @@ PyObject* PyROOT::TCStringConverter::FromMemory( void* address )
    }
 
 // empty string in case there's no address
-   return PyString_FromString( const_cast< char* >( "" ) );
+   Py_INCREF( PyStrings::gEmptyString );
+   return PyStrings::gEmptyString;
 }
 
 Bool_t PyROOT::TCStringConverter::ToMemory( PyObject* value, void* address )
@@ -640,7 +642,7 @@ PYROOT_IMPLEMENT_ARRAY_CONVERTER( Double, Double_t, 'd' )
 Bool_t PyROOT::TLongLongArrayConverter::SetArg( PyObject* pyobject, TParameter& para, G__CallFunc* func )
 {
 // convert <pyobject> to C++ long long*, set arg for call
-   PyObject* pytc = PyObject_GetAttrString( pyobject, const_cast< char* >( "typecode" ) );
+   PyObject* pytc = PyObject_GetAttr( pyobject, PyStrings::gTypeCode );
    if ( pytc != 0 ) {              // iow, this array has a known type, but there's no
       Py_DECREF( pytc );           // such thing for long long in module array
       return kFALSE;
@@ -675,7 +677,8 @@ PyObject* PyROOT::T##name##Converter::FromMemory( void* address )             \
 {                                                                             \
    if ( address )                                                             \
       return PyString_FromString( ((strtype*)address)->DF1() );               \
-   return PyString_FromString( const_cast< char* >( "" ) );                   \
+   Py_INCREF( PyStrings::gEmptyString );                                      \
+   return PyStrings::gEmptyString;                                            \
 }                                                                             \
                                                                               \
 Bool_t PyROOT::T##name##Converter::ToMemory( PyObject* value, void* address ) \

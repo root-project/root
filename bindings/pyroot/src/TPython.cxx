@@ -3,6 +3,7 @@
 
 // Bindings
 #include "PyROOT.h"
+#include "PyStrings.h"
 #include "TPython.h"
 #include "ObjectProxy.h"
 #include "RootWrapper.h"
@@ -78,16 +79,7 @@
 
 //- data ---------------------------------------------------------------------
 ClassImp(TPython)
-
-namespace {
-
-   PyObject* gMainDict = 0;
-
-   PyObject* gClassString  = 0;
-   PyObject* gNameString   = 0;
-   PyObject* gModuleString = 0;
-
-} // unnamed namespace
+static PyObject* gMainDict = 0;
 
 
 //- static public members ----------------------------------------------------
@@ -121,11 +113,6 @@ Bool_t TPython::Initialize()
    }
 
    if ( ! gMainDict ) {
-   // initialize some handy strings
-      gClassString  = PyString_FromString( "__class__" );
-      gNameString   = PyString_FromString( "__name__" );
-      gModuleString = PyString_FromString( "__module__" );
-
    // retrieve the main dictionary
       gMainDict = PyModule_GetDict(
          PyImport_AddModule( const_cast< char* >( "__main__" ) ) );
@@ -167,10 +154,10 @@ void TPython::LoadMacro( const char* name )
 
       if ( ! PySequence_Contains( old, value ) ) {
       // collect classes
-         if ( PyClass_Check( value ) || PyObject_HasAttrString( value, (char*)"__bases__" ) ) {
+         if ( PyClass_Check( value ) || PyObject_HasAttr( value, PyROOT::PyStrings::gBases ) ) {
          // get full class name (including module)
-            PyObject* pyModName = PyObject_GetAttrString( value, (char*)"__module__" );
-            PyObject* pyClName  = PyObject_GetAttrString( value, (char*)"__name__" );
+            PyObject* pyModName = PyObject_GetAttr( value, PyROOT::PyStrings::gModule );
+            PyObject* pyClName  = PyObject_GetAttr( value, PyROOT::PyStrings::gName );
 
             if ( PyErr_Occurred() )
                PyErr_Clear();
@@ -317,11 +304,11 @@ const TPyReturn TPython::Eval( const char* expr )
       return TPyReturn( result );
 
 // explicit conversion for python type required
-   PyObject* pyclass = PyObject_GetAttr( result, gClassString );
+   PyObject* pyclass = PyObject_GetAttr( result, PyROOT::PyStrings::gClass );
    if ( pyclass != 0 ) {
    // retrieve class name and the module in which it resides
-      PyObject* name = PyObject_GetAttr( pyclass, gNameString );
-      PyObject* module = PyObject_GetAttr( pyclass, gModuleString );
+      PyObject* name = PyObject_GetAttr( pyclass, PyROOT::PyStrings::gName );
+      PyObject* module = PyObject_GetAttr( pyclass, PyROOT::PyStrings::gModule );
 
    // concat name
       std::string qname =

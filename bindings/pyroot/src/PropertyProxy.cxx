@@ -3,6 +3,7 @@
 
 // Bindings
 #include "PyROOT.h"
+#include "PyStrings.h"
 #include "PropertyProxy.h"
 #include "ObjectProxy.h"
 #include "PyBufferFactory.h"
@@ -53,7 +54,7 @@ namespace {
          // for builtin types, b/c those are copied over into python types and thus
          // end up being "stand-alone")
          if ( ObjectProxy_Check( result ) ) {
-            if ( PyObject_SetAttrString( result, (char*)"__lifeline", (PyObject*)pyobj ) == -1 )
+            if ( PyObject_SetAttr( result, PyStrings::gLifeLine, (PyObject*)pyobj ) == -1 )
                PyErr_Clear();     // ignored
          }
          return result;
