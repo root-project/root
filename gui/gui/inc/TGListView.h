@@ -153,7 +153,7 @@ protected:
    FontStruct_t          fFontStruct;    // text font
    TGHeaderFrame        *fHeader;        // frame used as container for column headers
    Bool_t                fJustChanged;   // Indicate whether the view mode was just changed to Detail
-   Int_t                 fMinColumnSize; // Minimun column size
+   UInt_t                fMinColumnSize; // Minimun column size
 
    static const TGFont  *fgDefaultFont;
    static TGGC          *fgDefaultGC;

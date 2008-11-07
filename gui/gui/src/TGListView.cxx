@@ -1369,7 +1369,7 @@ void TGListView::Layout()
          } else {
             w = fColHeader[i]->GetWidth();
          }
-         w = TMath::Max( fMinColumnSize, (Int_t)w);
+         w = TMath::Max(fMinColumnSize, w);
          if ( fColHeader[i]->GetDefaultWidth() > w ) {
             for (int j = fColNames[i].Length() - 1 ; j > 0; j--) {
                fColHeader[i]->SetText( fColNames[i](0,j) + "..." );
@@ -1461,7 +1461,7 @@ void TGListView::LayoutHeader(TGFrame *head)
          } else {
             w = fColHeader[i]->GetWidth();
          }
-         w = TMath::Max( fMinColumnSize, (Int_t)w);
+         w = TMath::Max(fMinColumnSize, w);
          if ( fColHeader[i]->GetDefaultWidth() > w ) {
             for (int j = fColNames[i].Length() - 1 ; j > 0; j--) {
                fColHeader[i]->SetText( fColNames[i](0,j) + "..." );
