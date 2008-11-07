@@ -6,6 +6,6 @@ void runPyClassTest() {
    TPython::LoadMacro( "MyPyClass.py" );
 
    MyPyClass m;
-   printf( "string (aap): %s\n", (char*)m.gime( "aap" ) );
-   printf( "double (0.123): %.3f\n", (double)m.gime( 0.123 ) );
+   printf( "string (aap): %s\n", (const char*)(*(TPyReturn*)m.gime( "aap" )) );
+   printf( "double (0.123): %.3f\n", (double)(*(TPyReturn*)m.gime( 0.123 )) );
 }
