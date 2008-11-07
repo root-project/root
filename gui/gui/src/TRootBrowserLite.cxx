@@ -865,6 +865,7 @@ void TRootIconBox::Refresh()
    SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_SELCHANGED), fTotal, fSelected);
 
    MapSubwindows();
+   fListView->AdjustHeaders();
 }
 
 //______________________________________________________________________________
