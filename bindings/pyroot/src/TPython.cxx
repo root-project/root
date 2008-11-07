@@ -175,15 +175,18 @@ void TPython::LoadMacro( const char* name )
             if ( PyErr_Occurred() )
                PyErr_Clear();
 
+         // need to check for both exact and derived (differences exist between older and newer
+         // versions of python ... bug?)
             if ( pyModName && pyClName &&\
-                 PyString_Check( pyModName ) && PyString_Check( pyClName ) ) {
+                 ( PyString_CheckExact( pyModName ) && PyString_CheckExact( pyClName ) ) ||\
+                 ( PyString_Check( pyModName ) && PyString_Check( pyClName ) ) ) {
             // build full, qualified name
                std::string fullname = PyString_AS_STRING( pyModName );
                fullname += '.';
                fullname += PyString_AS_STRING( pyClName );
 
             // force class creation (this will eventually call TPyClassGenerator)
-               TClass::GetClass( fullname.c_str() );
+               TClass::GetClass( fullname.c_str(), kTRUE );
             }
 
             Py_XDECREF( pyClName );
