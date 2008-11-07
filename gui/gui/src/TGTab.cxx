@@ -404,6 +404,9 @@ void TGTab::ChangeTab(Int_t tabIndex, Bool_t emit)
    if (!te || !te->IsEnabled()) return;
 
    if (tabIndex != fCurrent) {
+      if (GetTabTab(fCurrent)) {
+         fClient->NeedRedraw(GetTabTab(fCurrent));
+      }
       TGFrameElement *el, *elnxt;
       UInt_t tw;
       Int_t  xtab  = 2;
@@ -432,6 +435,7 @@ void TGTab::ChangeTab(Int_t tabIndex, Bool_t emit)
          fClient->ProcessLine(fCommand, MK_MSG(kC_COMMAND, kCM_TAB), fCurrent, 0);
          Selected(fCurrent);
       }
+      fClient->NeedRedraw(GetTabTab(fCurrent));
    }
 }
 
