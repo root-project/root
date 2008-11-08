@@ -379,17 +379,19 @@ PyROOT::Utility::EDataType PyROOT::Utility::EffectiveType( const std::string& na
 const std::string PyROOT::Utility::Compound( const std::string& name )
 {
    std::string cleanName = name;
-   std::string::size_type pos = std::string::npos;
-   while ( ( pos = cleanName.find( "const" ) ) != std::string::npos ) {
-      cleanName.swap( cleanName.erase( pos, 5 ) );
+   {
+      std::string::size_type pos = std::string::npos;
+      while ( ( pos = cleanName.find( "const" ) ) != std::string::npos ) {
+         cleanName.swap( cleanName.erase( pos, 5 ) );
+      }
    }
 
    std::string compound = "";
-   for ( int pos = (int)cleanName.size()-1; 0 <= pos; --pos ) {
-      if ( isspace( cleanName[pos] ) ) continue;
-      if ( isalnum( cleanName[pos] ) || cleanName[pos] == '>' ) break;
+   for ( int ipos = (int)cleanName.size()-1; 0 <= ipos; --ipos ) {
+      if ( isspace( cleanName[ipos] ) ) continue;
+      if ( isalnum( cleanName[ipos] ) || cleanName[ipos] == '>' ) break;
 
-      compound = cleanName[pos] + compound;
+      compound = cleanName[ipos] + compound;
    }
 
    return compound;
