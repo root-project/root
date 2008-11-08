@@ -1782,7 +1782,7 @@ Func_t TSystem::DynFindSymbol(const char * /*lib*/, const char *entry)
    AbstractMethod("DynFindSymbol");
    return 0;
 #else
-   return gInterpreter->FindSym(entry);
+   return (Func_t) gInterpreter->FindSym(entry);
 #endif
 }
 

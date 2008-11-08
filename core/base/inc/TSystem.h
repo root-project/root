@@ -227,7 +227,11 @@ struct RedirectHandle_t {
                   fStdOutDup = -1; fStdErrDup = -1; fReadOffSet = -1; }
 };
 
-typedef void* Func_t;
+#ifdef __CINT__
+typedef void *Func_t;
+#else
+typedef void ((*Func_t)());
+#endif
 
 R__EXTERN const char  *gRootDir;
 R__EXTERN const char  *gProgName;
