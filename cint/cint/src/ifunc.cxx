@@ -4690,7 +4690,7 @@ struct G__ifunc_table_internal* G__overload_match(const char* funcname, G__param
    int scopetagnum = p_ifunc->tagnum;
    struct G__ifunc_table_internal *store_ifunc = p_ifunc;
    int ix = 0;
-   int active_run = doconvert;
+   int active_run = doconvert && !G__asm_wholefunction;
 
 
    /* Search for name match
