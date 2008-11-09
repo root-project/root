@@ -14,7 +14,7 @@
    if (TString(gSystem->GetBuildArch()).Contains("macosx") ) gSystem->Load( "libTMVA.1" );
 
    // welcome the user
-   TMVA::Tools::TMVAWelcomeMessage();
+   TMVA::gTools().TMVAWelcomeMessage();
    
 #include "tmvaglob.C"
    
