@@ -57,13 +57,13 @@ bool IsPointOutOfRange(const TF1 * func, const double * x) {
 bool AdjustError(const DataOptions & option, double & error) {
    // adjust the given error according to the option
    //  if false is returned bin must be skipped 
-   if (option.fErrors1) error = 1;
    if (error <= 0 ) { 
       if (option.fUseEmpty) 
          error = 1.; // set error to 1 for empty bins 
       else 
          return false; 
    }
+   if (option.fErrors1) error = 1;
    return true; 
 }
 
@@ -353,9 +353,10 @@ BinData::ErrorType GetDataType(const TGraph * gr, const DataOptions & fitOpt) {
    // default case for graphs (when they have errors) 
    BinData::ErrorType type = BinData::kValueError; 
    // if all errors are zero set option of using errors to 1
-   if (ey == 0 && ( eyl == 0 || eyh == 0 ) ) { 
+   if (fitOpt.fErrors1 || ( ey == 0 && ( eyl == 0 || eyh == 0 ) ) ) { 
       type =  BinData::kNoError; 
    }
+   // need to treat case when all errors are zero 
    else if ( ex != 0 && fitOpt.fCoordErrors)  { 
       // check that all errors are not zero
       int i = 0; 
@@ -365,7 +366,30 @@ BinData::ErrorType GetDataType(const TGraph * gr, const DataOptions & fitOpt) {
       }
    }
    else if ( ( eyl != 0 && eyh != 0)  && fitOpt.fAsymErrors)  { 
-      type = BinData::kAsymError; 
+      // check also if that all errors are non zero's
+      int i = 0; 
+      bool zeroError = true;
+      while (i < gr->GetN() && zeroError) { 
+         double e2X = ( gr->GetErrorXlow(i) + gr->GetErrorXhigh(i) );
+         double e2Y = eyl[i] + eyh[i];
+         if ( e2X > 0 || e2Y > 0) zeroError = false; 
+         ++i;
+      }
+      if (zeroError) 
+         type = BinData::kNoError;
+      else 
+         type = BinData::kAsymError; 
+   }
+
+   // need to look also a case when all errors in y are zero 
+   if ( ey != 0 && type != BinData::kCoordError )  { 
+      int i = 0; 
+      bool zeroError = true;
+      while (i < gr->GetN() && zeroError) { 
+         if (ey[i] > 0) zeroError = false;; 
+         ++i;
+      }
+      if (zeroError) type = BinData::kNoError;
    }
 
 
@@ -506,6 +530,7 @@ void FillData ( BinData  & dv, const TGraph * gr,  TF1 * func ) {
    BinData::ErrorType type = GetDataType(gr,fitOpt); 
    // adjust option according to type
    fitOpt.fErrors1 = (type == BinData::kNoError);
+   if (fitOpt.fErrors1) fitOpt.fUseEmpty = true; // need to use empty
    fitOpt.fCoordErrors = (type ==  BinData::kCoordError);
    fitOpt.fAsymErrors = (type ==  BinData::kAsymError);
 
