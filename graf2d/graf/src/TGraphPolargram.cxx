@@ -414,7 +414,6 @@ void TGraphPolargram::PaintPolarDivisions(Bool_t optionLabels)
 
    Int_t i, j, rnum, rden, first, last;
    if (!gPad) return ;
-   if (!gPad->IsEditable()) gROOT->MakeDefCanvas();
 
    gPad->RangeAxis(-1,-1,1,1);
    gPad->Range(-1.25,-1.25,1.25,1.25);
@@ -645,7 +644,6 @@ void TGraphPolargram::PaintRadialDivisions(Bool_t drawaxis)
                                frwrmax, ndivmajor,binWidth,"");
 
    if (!gPad) return ;
-   if (!gPad->IsEditable()) gROOT->MakeDefCanvas();
    if (!gPad->GetLogx()) {
       gPad->RangeAxis(-1,-1,1,1);
       gPad->Range(-1.25,-1.25,1.25,1.25);
