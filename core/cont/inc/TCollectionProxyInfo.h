@@ -202,7 +202,7 @@ namespace ROOT {
       static void* feed(void* env)  {
          PEnv_t   e = PEnv_t(env);
          PCont_t  c = PCont_t(e->object);
-         PValue_t m = PValue_t(e->start);
+         PValue_t m = PValue_t(e->start); // Here start is actually a 'buffer' outside the buffer.
          for (size_t i=0; i<e->size; ++i, ++m)
             c->push_back(*m);
          return 0;
@@ -367,6 +367,93 @@ namespace ROOT {
                                            T::collect);
       }
 
+   };
+
+   template <> struct TCollectionProxyInfo::Type<std::vector<bool> >
+   : public Address<std::vector<bool>::const_reference>
+   {
+      typedef std::vector<bool>             Cont_t;
+      typedef std::vector<bool>::iterator   Iter_t;
+      typedef std::vector<bool>::value_type Value_t;
+      typedef Environ<Iter_t>               Env_t;
+      typedef Env_t                        *PEnv_t;
+      typedef Cont_t                       *PCont_t;
+      typedef Value_t                      *PValue_t;
+      
+      virtual ~Type() {}
+      
+      static inline PCont_t object(void* ptr)   {
+         return PCont_t(PEnv_t(ptr)->object);
+      }
+      static void* size(void* env)  {
+         PEnv_t  e = PEnv_t(env);
+         e->size   = PCont_t(e->object)->size();
+         return &e->size;
+      }
+      static void* clear(void* env)  {
+         object(env)->clear();
+         return 0;
+      }
+      static void* first(void* env)  {
+         PEnv_t  e = PEnv_t(env);
+         PCont_t c = PCont_t(e->object);
+         // Assume iterators do not need destruction
+         ::new(e->buff) Iter_t(c->begin());
+         e->size  = c->size();
+         return 0;
+      }
+      static void* next(void* env)  {
+         PEnv_t  e = PEnv_t(env);
+         PCont_t c = PCont_t(e->object);
+         for (; e->idx > 0 && e->iter() != c->end(); ++(e->iter()), --e->idx){ }
+         // TODO: Need to find something for going backwards....
+         return 0;
+      }
+      static void* construct(void*)  {
+         // Nothing to construct.
+         return 0;
+      }
+      static void* collect(void* env)  {
+         PEnv_t   e = PEnv_t(env);
+         PCont_t  c = PCont_t(e->object);
+         PValue_t m = PValue_t(e->start); // 'start' is a buffer outside the container.
+         for (Iter_t i=c->begin(); i != c->end(); ++i, ++m )
+            ::new(m) Value_t(*i);
+         return 0;
+      }
+      static void* destruct(void*)  {
+         // Nothing to destruct.
+         return 0;
+      }
+   };
+   
+   template <> struct TCollectionProxyInfo::Pushback<std::vector<bool> > : public Type<std::vector<bool> > {
+      typedef std::vector<bool>      Cont_t;
+      typedef Cont_t::iterator       Iter_t;
+      typedef Cont_t::value_type     Value_t;
+      typedef Environ<Iter_t>        Env_t;
+      typedef Env_t                 *PEnv_t;
+      typedef Cont_t                *PCont_t;
+      typedef Value_t               *PValue_t;
+      
+      static void* resize(void* env)  {
+         PEnv_t  e = PEnv_t(env);
+         PCont_t c = PCont_t(e->object);
+         c->resize(e->size);
+         e->idx = 0;
+         return 0;
+      }
+      static void* feed(void* env)  {
+         PEnv_t   e = PEnv_t(env);
+         PCont_t  c = PCont_t(e->object);
+         PValue_t m = PValue_t(e->start); // Here start is actually a 'buffer' outside the container.
+         for (size_t i=0; i<e->size; ++i, ++m)
+            c->push_back(*m);
+         return 0;
+      }
+      static int value_offset()  {
+         return 0;
+      }
    };
 
 #ifndef __CINT__
