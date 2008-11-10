@@ -3492,7 +3492,9 @@ const char* TTreeFormula::EvalStringInstance(Int_t instance)
          fNeedLoading = kFALSE;
          TBranch *branch = leaf->GetBranch();
          R__LoadBranch(branch,branch->GetTree()->GetReadEntry(),fQuickLoad);
-      } else if (real_instance>fNdata[0]) return 0;
+      } else if (real_instance>=fNdata[0]) {
+         return 0;
+      }
 
       if (fLookupType[0]==kDirect) {
          return (char*)leaf->GetValuePointer();
@@ -4400,11 +4402,10 @@ char *TTreeFormula::PrintValue(Int_t mode, Int_t instance, const char *decform) 
       for (int i = 0; i < kMAXLENGTH-1; i++)
          value[i] = '*';
       value[kMAXLENGTH-1] = 0;
-   } else if (mode == -1)
+   } else if (mode == -1) {
       sprintf(value, "%s", GetTitle());
-
-   if (fNstring && fNval==0 && fNoper==1) {
-      if (mode == 0) {
+   } else if (mode == 0) {
+      if (fNstring && fNval==0 && fNoper==1) {
          const char * val = 0;
          if (fLookupType[0]==kTreeMember) {
             val = (char*)GetLeafInfo(0)->GetValuePointer((TLeaf*)0x0,instance);
@@ -4422,12 +4423,10 @@ char *TTreeFormula::PrintValue(Int_t mode, Int_t instance, const char *decform) 
          if (val) {
             strncpy(value, val, kMAXLENGTH-1);
          } else {
-            //strncpy(value, " ", kMAXLENGTH-1);
+            value[0] = '\0';
          }
          value[kMAXLENGTH-1] = 0;
-      }
-   } else {
-      if (mode == 0) {
+      } else {
          //NOTE: This is terrible form ... but is forced upon us by the fact that we can not
          //use the mutable keyword AND we should keep PrintValue const.
          Int_t real_instance = ((TTreeFormula*)this)->GetRealInstance(instance,-1);
@@ -4452,44 +4451,44 @@ char *TTreeFormula::PrintValue(Int_t mode, Int_t instance, const char *decform) 
                case 'c':
                case 'd':
                case 'i':
-                  { 
-                     switch (outputSizeLevel) {
-                        case 0:  sprintf(value,Form("%%%s",decform),(Short_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
-                        case 2:  sprintf(value,Form("%%%s",decform),(Long_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
-                        case 3:  sprintf(value,Form("%%%s",decform),(Long64_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
-                        case 1:
-                        default: sprintf(value,Form("%%%s",decform),(Int_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
-                     }
-                     break;
+               { 
+                  switch (outputSizeLevel) {
+                     case 0:  sprintf(value,Form("%%%s",decform),(Short_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
+                     case 2:  sprintf(value,Form("%%%s",decform),(Long_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
+                     case 3:  sprintf(value,Form("%%%s",decform),(Long64_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
+                     case 1:
+                     default: sprintf(value,Form("%%%s",decform),(Int_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
                   }
+                  break;
+               }
                case 'o': 
                case 'x':
                case 'X':
                case 'u':
-                  { 
-                     switch (outputSizeLevel) {
-                        case 0:  sprintf(value,Form("%%%s",decform),(UShort_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
-                        case 2:  sprintf(value,Form("%%%s",decform),(ULong_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
-                        case 3:  sprintf(value,Form("%%%s",decform),(ULong64_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
-                        case 1:
-                        default: sprintf(value,Form("%%%s",decform),(UInt_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
-                     }
-                     break;
+               { 
+                  switch (outputSizeLevel) {
+                     case 0:  sprintf(value,Form("%%%s",decform),(UShort_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
+                     case 2:  sprintf(value,Form("%%%s",decform),(ULong_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
+                     case 3:  sprintf(value,Form("%%%s",decform),(ULong64_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
+                     case 1:
+                     default: sprintf(value,Form("%%%s",decform),(UInt_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
                   }
+                  break;
+               }
                case 'f':
                case 'e':
                case 'E':
                case 'g':
                case 'G':
-                  {
-                     switch (outputSizeLevel) {
-                        case 2:  sprintf(value,Form("%%%s",decform),(long double)((TTreeFormula*)this)->EvalInstance(instance)); break;
-                        case 1:
-                        default: sprintf(value,Form("%%%s",decform),((TTreeFormula*)this)->EvalInstance(instance)); break;
-                     }
-                     expo = strchr(value,'e');
-                     break;
+               {
+                  switch (outputSizeLevel) {
+                     case 2:  sprintf(value,Form("%%%s",decform),(long double)((TTreeFormula*)this)->EvalInstance(instance)); break;
+                     case 1:
+                     default: sprintf(value,Form("%%%s",decform),((TTreeFormula*)this)->EvalInstance(instance)); break;
                   }
+                  expo = strchr(value,'e');
+                  break;
+               }
                default:
                   sprintf(value,Form("%%%sg",decform),((TTreeFormula*)this)->EvalInstance(instance));
                   expo = strchr(value,'e');
