@@ -85,6 +85,65 @@ public:
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
+//  class TGenVectorBoolProxy
+//
+//   Local optimization class.
+//
+//   Collection proxies get copied. On copy we switch the type of the
+//   proxy to the concrete STL type. The concrete types are optimized
+//   for element access.
+//
+//////////////////////////////////////////////////////////////////////////
+class TGenVectorBoolProxy : public TGenCollectionProxy {
+   bool fLastValue;
+   
+public:
+   TGenVectorBoolProxy(const TGenCollectionProxy& c) : TGenCollectionProxy(c), fLastValue(false)
+   {
+      // Standard Constructor.
+   }
+   virtual ~TGenVectorBoolProxy()
+   {
+      // Standard Destructor.
+   }
+   virtual void* At(UInt_t idx)
+   {
+      // Return the address of the value at index 'idx'
+      
+      // However we can 'take' the address of the content of vector<bool>.
+      if ( fEnv && fEnv->object ) {
+         switch( idx ) {
+            case 0:
+               fEnv->start = fFirst.invoke(fEnv);
+               fEnv->idx = idx;
+               break;
+            default:
+               fEnv->idx = idx - fEnv->idx;
+               if (! fEnv->start ) fEnv->start = fFirst.invoke(fEnv);
+               fNext.invoke(fEnv);
+               fEnv->idx = idx;
+               break;
+         }
+         typedef ROOT::TCollectionProxyInfo::Type<std::vector<bool> >::Env_t EnvType_t;
+         EnvType_t *e = (EnvType_t*)fEnv;
+         fLastValue = *(e->iter());
+         return &fLastValue;
+      }
+      Fatal("TGenVectorProxy","At> Logic error - no proxy object set.");
+      return 0;
+   }
+
+   virtual void DeleteItem(bool force, void* ptr) const
+   {
+      // Call to delete/destruct individual item
+      if ( force && ptr ) {
+         fVal->DeleteItem(ptr);
+      }
+   }
+};
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
 //  class TGenListProxy
 //
 //   Localoptimization class.
@@ -494,8 +553,13 @@ TVirtualCollectionProxy* TGenCollectionProxy::Generate() const
       return new TGenCollectionProxy(*this);
 
    switch(fSTL_type) {
-   case TClassEdit::kVector:
-      return new TGenVectorProxy(*this);
+   case TClassEdit::kVector: {
+      if (fValue->fKind == (EDataType)kBOOL_t) {
+         return new TGenVectorBoolProxy(*this);
+      } else {
+         return new TGenVectorProxy(*this);
+      }         
+   }
    case TClassEdit::kList:
       return new TGenListProxy(*this);
    case TClassEdit::kMap:
