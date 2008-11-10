@@ -437,7 +437,7 @@ void ReflexSimple2Test::fooBarZot() {
     // get number of members (i.e. 13)
     fooType.UpdateMembers();
     size_t fooMembers = fooType.MemberSize();
-    CPPUNIT_ASSERT_EQUAL(size_t(13), fooMembers);
+    CPPUNIT_ASSERT_EQUAL(size_t(15), fooMembers);
 
     // get number of data members (i.e. 1)
     size_t fooDataMembers = fooType.DataMemberSize();
@@ -684,7 +684,7 @@ void ReflexSimple2Test::testFunctionMembers() {
   o = t.Construct();
   CPPUNIT_ASSERT(o);
   
-  CPPUNIT_ASSERT_EQUAL(51,int(t.FunctionMemberSize()));
+  CPPUNIT_ASSERT_EQUAL(61,int(t.FunctionMemberSize()));
   
   m = t.MemberByName("h");
   CPPUNIT_ASSERT(m);
@@ -787,8 +787,8 @@ void ReflexSimple2Test::testFreeFunctions() {
                        
   t = Type::ByName("ClassAAA");
   CPPUNIT_ASSERT(t);
-  CPPUNIT_ASSERT_EQUAL(5,int(t.MemberSize()));
-  CPPUNIT_ASSERT_EQUAL(5,int(t.FunctionMemberSize()));
+  CPPUNIT_ASSERT_EQUAL(6,int(t.MemberSize()));
+  CPPUNIT_ASSERT_EQUAL(6,int(t.FunctionMemberSize()));
   CPPUNIT_ASSERT_EQUAL(0,int(t.DataMemberSize()));
   m = t.MemberByName("function6");
   CPPUNIT_ASSERT(m);
@@ -810,7 +810,7 @@ void ReflexSimple2Test::testFreeFunctions() {
 
   t = Type::ByName("ClassBBB");
   CPPUNIT_ASSERT(t);
-  CPPUNIT_ASSERT_EQUAL(5, int(t.MemberSize()));
+  CPPUNIT_ASSERT_EQUAL(6, int(t.MemberSize()));
   m = t.MemberByName("meth");
   CPPUNIT_ASSERT(m);
   CPPUNIT_ASSERT_EQUAL(std::string("ClassBBB::meth"),m.Name(SCOPED));

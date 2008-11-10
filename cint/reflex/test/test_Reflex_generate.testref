@@ -62,7 +62,10 @@
     class _Vector_base<ClassO<int*>*,std::allocator<ClassO<int*>*> > {
     public:
       std::_Vector_base<ClassO<int*>*,std::allocator<ClassO<int*>*> >::_Vector_impl _M_impl;
+      std::allocator<ClassO<int*>*> _M_get_Tp_allocator (void);
+      std::allocator<ClassO<int*>*> _M_get_Tp_allocator (void);
       std::allocator<ClassO<int*>*> get_allocator (void);
+      _Vector_base (void);
       _Vector_base (const std::allocator<ClassO<int*>*>& __a);
       _Vector_base (size_t __n, const std::allocator<ClassO<int*>*>& __a);
       ~_Vector_base (void);
@@ -72,7 +75,10 @@
     class _Vector_base<ClassO<int*>,std::allocator<ClassO<int*> > > {
     public:
       std::_Vector_base<ClassO<int*>,std::allocator<ClassO<int*> > >::_Vector_impl _M_impl;
+      std::allocator<ClassO<int*> > _M_get_Tp_allocator (void);
+      std::allocator<ClassO<int*> > _M_get_Tp_allocator (void);
       std::allocator<ClassO<int*> > get_allocator (void);
+      _Vector_base (void);
       _Vector_base (const std::allocator<ClassO<int*> >& __a);
       _Vector_base (size_t __n, const std::allocator<ClassO<int*> >& __a);
       ~_Vector_base (void);
@@ -82,7 +88,10 @@
     class _Vector_base<const ClassO<const int*>* const*,std::allocator<const ClassO<const int*>* const*> > {
     public:
       std::_Vector_base<const ClassO<const int*>* const*,std::allocator<const ClassO<const int*>* const*> >::_Vector_impl _M_impl;
+      std::allocator<const ClassO<const int*>* const*> _M_get_Tp_allocator (void);
+      std::allocator<const ClassO<const int*>* const*> _M_get_Tp_allocator (void);
       std::allocator<const ClassO<const int*>* const*> get_allocator (void);
+      _Vector_base (void);
       _Vector_base (const std::allocator<const ClassO<const int*>* const*>& __a);
       _Vector_base (size_t __n, const std::allocator<const ClassO<const int*>* const*>& __a);
       ~_Vector_base (void);
@@ -92,7 +101,10 @@
     class _Vector_base<const ClassO<int>*,std::allocator<const ClassO<int>*> > {
     public:
       std::_Vector_base<const ClassO<int>*,std::allocator<const ClassO<int>*> >::_Vector_impl _M_impl;
+      std::allocator<const ClassO<int>*> _M_get_Tp_allocator (void);
+      std::allocator<const ClassO<int>*> _M_get_Tp_allocator (void);
       std::allocator<const ClassO<int>*> get_allocator (void);
+      _Vector_base (void);
       _Vector_base (const std::allocator<const ClassO<int>*>& __a);
       _Vector_base (size_t __n, const std::allocator<const ClassO<int>*>& __a);
       ~_Vector_base (void);
@@ -102,25 +114,25 @@
     class allocator<ClassO<int*> > : public __gnu_cxx::new_allocator<ClassO<int*> > {
     public:
       allocator (void);
-      allocator (const std::allocator<ClassO<int*> >& a);
+      allocator (const std::allocator<ClassO<int*> >& __a);
       ~allocator (void);
     };
     class allocator<ClassO<int*>*> : public __gnu_cxx::new_allocator<ClassO<int*>*> {
     public:
       allocator (void);
-      allocator (const std::allocator<ClassO<int*>*>& a);
+      allocator (const std::allocator<ClassO<int*>*>& __a);
       ~allocator (void);
     };
     class allocator<const ClassO<const int*>* const*> : public __gnu_cxx::new_allocator<const ClassO<const int*>* const*> {
     public:
       allocator (void);
-      allocator (const std::allocator<const ClassO<const int*>* const*>& a);
+      allocator (const std::allocator<const ClassO<const int*>* const*>& __a);
       ~allocator (void);
     };
     class allocator<const ClassO<int>*> : public __gnu_cxx::new_allocator<const ClassO<int>*> {
     public:
       allocator (void);
-      allocator (const std::allocator<const ClassO<int>*>& a);
+      allocator (const std::allocator<const ClassO<int>*>& __a);
       ~allocator (void);
     };
     class basic_string<char> {
@@ -131,9 +143,9 @@
       basic_string (const std::basic_string<char>& __str);
       basic_string (const std::basic_string<char>& __str, size_t __pos, size_t __n = std::basic_string<_CharT, _Traits, _Alloc>::npos);
       basic_string (const std::basic_string<char>& __str, size_t __pos, size_t __n, const std::allocator<char>& __a);
-      basic_string (const char* __s, size_t __n, const std::allocator<char>& __a = <gccxml-cast-expr>);
-      basic_string (const char* __s, const std::allocator<char>& __a = <gccxml-cast-expr>);
-      basic_string (size_t __n, char __c, const std::allocator<char>& __a = <gccxml-cast-expr>);
+      basic_string (const char* __s, size_t __n, const std::allocator<char>& __a = _Alloc());
+      basic_string (const char* __s, const std::allocator<char>& __a = _Alloc());
+      basic_string (size_t __n, char __c, const std::allocator<char>& __a = _Alloc());
       ~basic_string (void);
       std::basic_string<char> operator operator= (const std::basic_string<char>& __str);
       std::basic_string<char> operator operator= (const char* __s);
@@ -233,7 +245,7 @@
       std::_Rb_tree<std::basic_string<char>,std::pair<const std::basic_string<char>,double>,std::_Select1st<std::pair<const std::basic_string<char>,double> >,std::less<std::basic_string<char> >,std::allocator<std::pair<const std::basic_string<char>,double> > > _M_t;
     public:
       map (void);
-      map (const std::less<std::basic_string<char> >& __comp, const std::allocator<std::pair<const std::basic_string<char>,double> >& __a = <gccxml-cast-expr>);
+      map (const std::less<std::basic_string<char> >& __comp, const std::allocator<std::pair<const std::basic_string<char>,double> >& __a = _Alloc());
       map (const std::map<std::basic_string<char>,double>& __x);
       std::map<std::basic_string<char>,double> operator operator= (const std::map<std::basic_string<char>,double>& __x);
       std::allocator<std::pair<const std::basic_string<char>,double> > get_allocator (void);
@@ -244,30 +256,32 @@
       bool empty (void);
       size_t size (void);
       size_t max_size (void);
-      double operator operator[] (const std::string& __k);
+      double operator operator[] (const std::basic_string<char>& __k);
+      double at (const std::basic_string<char>& __k);
+      double at (const std::basic_string<char>& __k);
       std::pair<std::_Rb_tree_iterator<std::pair<const std::basic_string<char>,double> >,bool> insert (const std::pair<const std::basic_string<char>,double>& __x);
-      std::_Rb_tree_iterator<std::pair<const std::basic_string<char>,double> > insert (std::_Rb_tree_iterator<std::pair<const std::basic_string<char>,double> > position, const std::pair<const std::basic_string<char>,double>& __x);
+      std::_Rb_tree_iterator<std::pair<const std::basic_string<char>,double> > insert (std::_Rb_tree_iterator<std::pair<const std::basic_string<char>,double> > __position, const std::pair<const std::basic_string<char>,double>& __x);
       void erase (std::_Rb_tree_iterator<std::pair<const std::basic_string<char>,double> > __position);
-      size_t erase (const std::string& __x);
+      size_t erase (const std::basic_string<char>& __x);
       void erase (std::_Rb_tree_iterator<std::pair<const std::basic_string<char>,double> > __first, std::_Rb_tree_iterator<std::pair<const std::basic_string<char>,double> > __last);
       void swap (std::map<std::basic_string<char>,double>& __x);
       void clear (void);
       std::less<std::basic_string<char> > key_comp (void);
-      std::_Rb_tree_iterator<std::pair<const std::basic_string<char>,double> > find (const std::string& __x);
-      std::_Rb_tree_const_iterator<std::pair<const std::basic_string<char>,double> > find (const std::string& __x);
-      size_t count (const std::string& __x);
-      std::_Rb_tree_iterator<std::pair<const std::basic_string<char>,double> > lower_bound (const std::string& __x);
-      std::_Rb_tree_const_iterator<std::pair<const std::basic_string<char>,double> > lower_bound (const std::string& __x);
-      std::_Rb_tree_iterator<std::pair<const std::basic_string<char>,double> > upper_bound (const std::string& __x);
-      std::_Rb_tree_const_iterator<std::pair<const std::basic_string<char>,double> > upper_bound (const std::string& __x);
-      std::pair<std::_Rb_tree_iterator<std::pair<const std::basic_string<char>,double> >,std::_Rb_tree_iterator<std::pair<const std::basic_string<char>,double> > > equal_range (const std::string& __x);
-      std::pair<std::_Rb_tree_const_iterator<std::pair<const std::basic_string<char>,double> >,std::_Rb_tree_const_iterator<std::pair<const std::basic_string<char>,double> > > equal_range (const std::string& __x);
+      std::_Rb_tree_iterator<std::pair<const std::basic_string<char>,double> > find (const std::basic_string<char>& __x);
+      std::_Rb_tree_const_iterator<std::pair<const std::basic_string<char>,double> > find (const std::basic_string<char>& __x);
+      size_t count (const std::basic_string<char>& __x);
+      std::_Rb_tree_iterator<std::pair<const std::basic_string<char>,double> > lower_bound (const std::basic_string<char>& __x);
+      std::_Rb_tree_const_iterator<std::pair<const std::basic_string<char>,double> > lower_bound (const std::basic_string<char>& __x);
+      std::_Rb_tree_iterator<std::pair<const std::basic_string<char>,double> > upper_bound (const std::basic_string<char>& __x);
+      std::_Rb_tree_const_iterator<std::pair<const std::basic_string<char>,double> > upper_bound (const std::basic_string<char>& __x);
+      std::pair<std::_Rb_tree_iterator<std::pair<const std::basic_string<char>,double> >,std::_Rb_tree_iterator<std::pair<const std::basic_string<char>,double> > > equal_range (const std::basic_string<char>& __x);
+      std::pair<std::_Rb_tree_const_iterator<std::pair<const std::basic_string<char>,double> >,std::_Rb_tree_const_iterator<std::pair<const std::basic_string<char>,double> > > equal_range (const std::basic_string<char>& __x);
     };
     class vector<ClassO<int*> > : std::_Vector_base<ClassO<int*>,std::allocator<ClassO<int*> > > {
     public:
-      vector (const std::allocator<ClassO<int*> >& __a = <gccxml-cast-expr>);
-      vector (size_t __n, const ClassO<int*>& __value, const std::allocator<ClassO<int*> >& __a = <gccxml-cast-expr>);
-      vector (size_t __n);
+      vector (void);
+      vector (const std::allocator<ClassO<int*> >& __a);
+      vector (size_t __n, const ClassO<int*>& __value = _Tp(), const std::allocator<ClassO<int*> >& __a = _Alloc());
       vector (const std::vector<ClassO<int*> >& __x);
       ~vector (void);
       std::vector<ClassO<int*> > operator operator= (const std::vector<ClassO<int*> >& __x);
@@ -278,8 +292,7 @@
       __gnu_cxx::__normal_iterator<const ClassO<int*>*,std::vector<ClassO<int*> > > end (void);
       size_t size (void);
       size_t max_size (void);
-      void resize (size_t __new_size, const ClassO<int*>& __x);
-      void resize (size_t __new_size);
+      void resize (size_t __new_size, ClassO<int*> __x = _Tp());
       size_t capacity (void);
       bool empty (void);
       void reserve (size_t __n);
@@ -291,6 +304,8 @@
       ClassO<int*> front (void);
       ClassO<int*> back (void);
       ClassO<int*> back (void);
+      ClassO<int*>* data (void);
+      ClassO<int*>* data (void);
       void push_back (const ClassO<int*>& __x);
       void pop_back (void);
       __gnu_cxx::__normal_iterator<ClassO<int*>*,std::vector<ClassO<int*> > > insert (__gnu_cxx::__normal_iterator<ClassO<int*>*,std::vector<ClassO<int*> > > __position, const ClassO<int*>& __x);
@@ -302,9 +317,9 @@
     };
     class vector<ClassO<int*>*> : std::_Vector_base<ClassO<int*>*,std::allocator<ClassO<int*>*> > {
     public:
-      vector (const std::allocator<ClassO<int*>*>& __a = <gccxml-cast-expr>);
-      vector (size_t __n, ClassO<int*>* const& __value, const std::allocator<ClassO<int*>*>& __a = <gccxml-cast-expr>);
-      vector (size_t __n);
+      vector (void);
+      vector (const std::allocator<ClassO<int*>*>& __a);
+      vector (size_t __n, ClassO<int*>* const& __value = _Tp(), const std::allocator<ClassO<int*>*>& __a = _Alloc());
       vector (const std::vector<ClassO<int*>*>& __x);
       ~vector (void);
       std::vector<ClassO<int*>*> operator operator= (const std::vector<ClassO<int*>*>& __x);
@@ -315,8 +330,7 @@
       __gnu_cxx::__normal_iterator<ClassO<int*>* const*,std::vector<ClassO<int*>*> > end (void);
       size_t size (void);
       size_t max_size (void);
-      void resize (size_t __new_size, ClassO<int*>* const& __x);
-      void resize (size_t __new_size);
+      void resize (size_t __new_size, ClassO<int*>* __x = _Tp());
       size_t capacity (void);
       bool empty (void);
       void reserve (size_t __n);
@@ -328,6 +342,8 @@
       ClassO<int*>* front (void);
       ClassO<int*>* back (void);
       ClassO<int*>* back (void);
+      ClassO<int*>** data (void);
+      ClassO<int*>** data (void);
       void push_back (ClassO<int*>* const& __x);
       void pop_back (void);
       __gnu_cxx::__normal_iterator<ClassO<int*>**,std::vector<ClassO<int*>*> > insert (__gnu_cxx::__normal_iterator<ClassO<int*>**,std::vector<ClassO<int*>*> > __position, ClassO<int*>* const& __x);
@@ -339,9 +355,9 @@
     };
     class vector<MyClass> : std::_Vector_base<MyClass,std::allocator<MyClass> > {
     public:
-      vector (const std::allocator<MyClass>& __a = <gccxml-cast-expr>);
-      vector (size_t __n, const MyClass& __value, const std::allocator<MyClass>& __a = <gccxml-cast-expr>);
-      vector (size_t __n);
+      vector (void);
+      vector (const std::allocator<MyClass>& __a);
+      vector (size_t __n, const MyClass& __value = _Tp(), const std::allocator<MyClass>& __a = _Alloc());
       vector (const std::vector<MyClass>& __x);
       ~vector (void);
       std::vector<MyClass> operator operator= (const std::vector<MyClass>& __x);
@@ -352,8 +368,7 @@
       __gnu_cxx::__normal_iterator<const MyClass*,std::vector<MyClass> > end (void);
       size_t size (void);
       size_t max_size (void);
-      void resize (size_t __new_size, const MyClass& __x);
-      void resize (size_t __new_size);
+      void resize (size_t __new_size, MyClass __x = _Tp());
       size_t capacity (void);
       bool empty (void);
       void reserve (size_t __n);
@@ -365,6 +380,8 @@
       MyClass front (void);
       MyClass back (void);
       MyClass back (void);
+      MyClass* data (void);
+      MyClass* data (void);
       void push_back (const MyClass& __x);
       void pop_back (void);
       __gnu_cxx::__normal_iterator<MyClass*,std::vector<MyClass> > insert (__gnu_cxx::__normal_iterator<MyClass*,std::vector<MyClass> > __position, const MyClass& __x);
@@ -376,9 +393,9 @@
     };
     class vector<const ClassO<const int*>* const*> : std::_Vector_base<const ClassO<const int*>* const*,std::allocator<const ClassO<const int*>* const*> > {
     public:
-      vector (const std::allocator<const ClassO<const int*>* const*>& __a = <gccxml-cast-expr>);
-      vector (size_t __n, const ClassO<const int*>* const* const& __value, const std::allocator<const ClassO<const int*>* const*>& __a = <gccxml-cast-expr>);
-      vector (size_t __n);
+      vector (void);
+      vector (const std::allocator<const ClassO<const int*>* const*>& __a);
+      vector (size_t __n, const ClassO<const int*>* const* const& __value = _Tp(), const std::allocator<const ClassO<const int*>* const*>& __a = _Alloc());
       vector (const std::vector<const ClassO<const int*>* const*>& __x);
       ~vector (void);
       std::vector<const ClassO<const int*>* const*> operator operator= (const std::vector<const ClassO<const int*>* const*>& __x);
@@ -389,8 +406,7 @@
       __gnu_cxx::__normal_iterator<const ClassO<const int*>* const* const*,std::vector<const ClassO<const int*>* const*> > end (void);
       size_t size (void);
       size_t max_size (void);
-      void resize (size_t __new_size, const ClassO<const int*>* const* const& __x);
-      void resize (size_t __new_size);
+      void resize (size_t __new_size, const ClassO<const int*>* const* __x = _Tp());
       size_t capacity (void);
       bool empty (void);
       void reserve (size_t __n);
@@ -402,6 +418,8 @@
       ClassO<const int*>** front (void);
       ClassO<const int*>** back (void);
       ClassO<const int*>** back (void);
+      ClassO<const int*>*** data (void);
+      ClassO<const int*>*** data (void);
       void push_back (const ClassO<const int*>* const* const& __x);
       void pop_back (void);
       __gnu_cxx::__normal_iterator<const ClassO<const int*>* const**,std::vector<const ClassO<const int*>* const*> > insert (__gnu_cxx::__normal_iterator<const ClassO<const int*>* const**,std::vector<const ClassO<const int*>* const*> > __position, const ClassO<const int*>* const* const& __x);
@@ -413,9 +431,9 @@
     };
     class vector<const ClassO<int>*> : std::_Vector_base<const ClassO<int>*,std::allocator<const ClassO<int>*> > {
     public:
-      vector (const std::allocator<const ClassO<int>*>& __a = <gccxml-cast-expr>);
-      vector (size_t __n, const ClassO<int>* const& __value, const std::allocator<const ClassO<int>*>& __a = <gccxml-cast-expr>);
-      vector (size_t __n);
+      vector (void);
+      vector (const std::allocator<const ClassO<int>*>& __a);
+      vector (size_t __n, const ClassO<int>* const& __value = _Tp(), const std::allocator<const ClassO<int>*>& __a = _Alloc());
       vector (const std::vector<const ClassO<int>*>& __x);
       ~vector (void);
       std::vector<const ClassO<int>*> operator operator= (const std::vector<const ClassO<int>*>& __x);
@@ -426,8 +444,7 @@
       __gnu_cxx::__normal_iterator<const ClassO<int>* const*,std::vector<const ClassO<int>*> > end (void);
       size_t size (void);
       size_t max_size (void);
-      void resize (size_t __new_size, const ClassO<int>* const& __x);
-      void resize (size_t __new_size);
+      void resize (size_t __new_size, const ClassO<int>* __x = _Tp());
       size_t capacity (void);
       bool empty (void);
       void reserve (size_t __n);
@@ -439,6 +456,8 @@
       ClassO<int>* front (void);
       ClassO<int>* back (void);
       ClassO<int>* back (void);
+      ClassO<int>** data (void);
+      ClassO<int>** data (void);
       void push_back (const ClassO<int>* const& __x);
       void pop_back (void);
       __gnu_cxx::__normal_iterator<const ClassO<int>**,std::vector<const ClassO<int>*> > insert (__gnu_cxx::__normal_iterator<const ClassO<int>**,std::vector<const ClassO<int>*> > __position, const ClassO<int>* const& __x);
@@ -450,36 +469,37 @@
     };
     class vector<float> : std::_Vector_base<float,std::allocator<float> > {
     public:
-      vector (const std::allocator<float>& __a = <gccxml-cast-expr>);
-      vector (size_t __n, const MYFLOAT& __value, const std::allocator<float>& __a = <gccxml-cast-expr>);
-      vector (size_t __n);
+      vector (void);
+      vector (const std::allocator<float>& __a);
+      vector (size_t __n, const float& __value = _Tp(), const std::allocator<float>& __a = _Alloc());
       vector (const std::vector<float>& __x);
       ~vector (void);
       std::vector<float> operator operator= (const std::vector<float>& __x);
-      void assign (size_t __n, const MYFLOAT& __val);
+      void assign (size_t __n, const float& __val);
       __gnu_cxx::__normal_iterator<float*,std::vector<float> > begin (void);
       __gnu_cxx::__normal_iterator<const float*,std::vector<float> > begin (void);
       __gnu_cxx::__normal_iterator<float*,std::vector<float> > end (void);
       __gnu_cxx::__normal_iterator<const float*,std::vector<float> > end (void);
       size_t size (void);
       size_t max_size (void);
-      void resize (size_t __new_size, const MYFLOAT& __x);
-      void resize (size_t __new_size);
+      void resize (size_t __new_size, float __x = _Tp());
       size_t capacity (void);
       bool empty (void);
       void reserve (size_t __n);
-      MYFLOAT operator operator[] (size_t __n);
-      MYFLOAT operator operator[] (size_t __n);
-      MYFLOAT at (size_t __n);
-      MYFLOAT at (size_t __n);
-      MYFLOAT front (void);
-      MYFLOAT front (void);
-      MYFLOAT back (void);
-      MYFLOAT back (void);
-      void push_back (const MYFLOAT& __x);
+      float operator operator[] (size_t __n);
+      float operator operator[] (size_t __n);
+      float at (size_t __n);
+      float at (size_t __n);
+      float front (void);
+      float front (void);
+      float back (void);
+      float back (void);
+      float* data (void);
+      float* data (void);
+      void push_back (const float& __x);
       void pop_back (void);
-      __gnu_cxx::__normal_iterator<float*,std::vector<float> > insert (__gnu_cxx::__normal_iterator<float*,std::vector<float> > __position, const MYFLOAT& __x);
-      void insert (__gnu_cxx::__normal_iterator<float*,std::vector<float> > __position, size_t __n, const MYFLOAT& __x);
+      __gnu_cxx::__normal_iterator<float*,std::vector<float> > insert (__gnu_cxx::__normal_iterator<float*,std::vector<float> > __position, const float& __x);
+      void insert (__gnu_cxx::__normal_iterator<float*,std::vector<float> > __position, size_t __n, const float& __x);
       __gnu_cxx::__normal_iterator<float*,std::vector<float> > erase (__gnu_cxx::__normal_iterator<float*,std::vector<float> > __position);
       __gnu_cxx::__normal_iterator<float*,std::vector<float> > erase (__gnu_cxx::__normal_iterator<float*,std::vector<float> > __first, __gnu_cxx::__normal_iterator<float*,std::vector<float> > __last);
       void swap (std::vector<float>& __x);
@@ -487,9 +507,9 @@
     };
     class vector<int> : std::_Vector_base<int,std::allocator<int> > {
     public:
-      vector (const std::allocator<int>& __a = <gccxml-cast-expr>);
-      vector (size_t __n, const int& __value, const std::allocator<int>& __a = <gccxml-cast-expr>);
-      vector (size_t __n);
+      vector (void);
+      vector (const std::allocator<int>& __a);
+      vector (size_t __n, const int& __value = _Tp(), const std::allocator<int>& __a = _Alloc());
       vector (const std::vector<int>& __x);
       ~vector (void);
       std::vector<int> operator operator= (const std::vector<int>& __x);
@@ -500,8 +520,7 @@
       __gnu_cxx::__normal_iterator<const int*,std::vector<int> > end (void);
       size_t size (void);
       size_t max_size (void);
-      void resize (size_t __new_size, const int& __x);
-      void resize (size_t __new_size);
+      void resize (size_t __new_size, int __x = _Tp());
       size_t capacity (void);
       bool empty (void);
       void reserve (size_t __n);
@@ -513,6 +532,8 @@
       int front (void);
       int back (void);
       int back (void);
+      int* data (void);
+      int* data (void);
       void push_back (const int& __x);
       void pop_back (void);
       __gnu_cxx::__normal_iterator<int*,std::vector<int> > insert (__gnu_cxx::__normal_iterator<int*,std::vector<int> > __position, const int& __x);
@@ -524,9 +545,9 @@
     };
     class vector<std::pair<int,float> > : std::_Vector_base<std::pair<int,float>,std::allocator<std::pair<int,float> > > {
     public:
-      vector (const std::allocator<std::pair<int,float> >& __a = <gccxml-cast-expr>);
-      vector (size_t __n, const std::pair<int,float>& __value, const std::allocator<std::pair<int,float> >& __a = <gccxml-cast-expr>);
-      vector (size_t __n);
+      vector (void);
+      vector (const std::allocator<std::pair<int,float> >& __a);
+      vector (size_t __n, const std::pair<int,float>& __value = _Tp(), const std::allocator<std::pair<int,float> >& __a = _Alloc());
       vector (const std::vector<std::pair<int,float> >& __x);
       ~vector (void);
       std::vector<std::pair<int,float> > operator operator= (const std::vector<std::pair<int,float> >& __x);
@@ -537,8 +558,7 @@
       __gnu_cxx::__normal_iterator<const std::pair<int,float>*,std::vector<std::pair<int,float> > > end (void);
       size_t size (void);
       size_t max_size (void);
-      void resize (size_t __new_size, const std::pair<int,float>& __x);
-      void resize (size_t __new_size);
+      void resize (size_t __new_size, std::pair<int,float> __x = _Tp());
       size_t capacity (void);
       bool empty (void);
       void reserve (size_t __n);
@@ -550,6 +570,8 @@
       std::pair<int,float> front (void);
       std::pair<int,float> back (void);
       std::pair<int,float> back (void);
+      std::pair<int,float>* data (void);
+      std::pair<int,float>* data (void);
       void push_back (const std::pair<int,float>& __x);
       void pop_back (void);
       __gnu_cxx::__normal_iterator<std::pair<int,float>*,std::vector<std::pair<int,float> > > insert (__gnu_cxx::__normal_iterator<std::pair<int,float>*,std::vector<std::pair<int,float> > > __position, const std::pair<int,float>& __x);
@@ -686,8 +708,8 @@
     class Typedefs {
     };
     class UnnamedTypes {
-      testclasses::UnnamedTypes::._77 m_struct;
-      testclasses::UnnamedTypes::._78 m_union;
+      testclasses::UnnamedTypes::._85 m_struct;
+      testclasses::UnnamedTypes::._86 m_union;
     };
     class WithArray {
       int[5] m_a;
@@ -707,10 +729,10 @@
       testclasses::MyVector m_mv;
     };
     class WithTypedefMemberT<int> {
-      testclasses::MyInt m_t;
+      int m_t;
     };
     class WithTypedefMemberT<std::vector<int> > {
-      testclasses::MyVector m_t;
+      std::vector<int> m_t;
     };
     class testTemplInt<-1> {
     };
@@ -719,10 +741,10 @@
   }
   namespace testclasses2 {
     class WithTypedefMemberT<int> {
-      testclasses::MyInt m_t;
+      int m_t;
     };
     class WithTypedefMemberT<std::vector<int> > {
-      testclasses::MyVector m_t;
+      std::vector<int> m_t;
     };
   }
   namespace xmlTypedefSelection {
@@ -754,6 +776,7 @@
     int a (void);
     void setA (int v);
     void dummy (int, float);
+    ClassA operator operator=<ClassA> (const ClassA&);
     ClassA operator operator=<int> (const int&);
   };
   class ClassAAA {
