@@ -45,8 +45,6 @@ def genRootMap(mapfile, dicfile, libfile, cnames, classes) :
     nc = string.translate(str(c), transtable)
     nc = re.sub(r"\bstd@@basic_string<char>", 'string', nc)
     nc = re.sub(r"\bstd@@", '', nc)
-    # A<12u> to A<12>
-    nc = re.sub(r"\b([\d]+)u\b", '\\1', nc)
     nc = nc.replace(' ','')
     new_lines += '%-45s %s\n' % ('Library.' + nc + ':', libfile )
   if not os.path.exists(mapfile) :

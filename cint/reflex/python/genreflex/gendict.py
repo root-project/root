@@ -71,6 +71,29 @@ class genDictionary(object) :
           name1 = demangled[posname : posargs]
           attrs['name'] = reui.sub('unsigned int\\3', name1)
 #----------------------------------------------------------------------------------
+  def patchTemplateName(self, attrs, elem):
+    if 'name' not in attrs: return
+    name = attrs['name']
+    postmpltend = name.rfind('>')
+    if postmpltend != -1 :
+      # check whether this entity is templated and extract the template parameters
+      postmpltend = len(name)
+      if elem in ('Function','OperatorFunction','Constructor','Method','OperatorMethod'):
+        postmpltend = name.rfind('(')
+      postmplt = -1
+      if postmpltend and postmpltend > 1 \
+               and name[postmpltend - 1] == '>':
+        postmplt = name.find('<')
+      if postmplt != -1:
+        postmplt += 1
+        postmpltend -= 1
+        # replace template argument "12u" by "12":
+        rep = re.sub(r"\b([\d]+)u\b", '\\1', name[postmplt:postmpltend])
+        # replace -0x00000000000000001 by -1
+        rep = re.sub(r"-0x0*([1-9A-Fa-f][0-9A-Fa-f]*)\b", '-\\1', rep)
+        name = name[:postmplt] + rep + name[postmpltend:]
+        attrs['name'] = name
+#----------------------------------------------------------------------------------
   def start_element(self, name, attrs):
     if 'id' in attrs :
       self.xref[attrs['id']] = {'elem':name, 'attrs':attrs, 'subelems':[]}
@@ -81,21 +104,25 @@ class genDictionary(object) :
       if not 'bases' in self.xref[self.last_id] : self.xref[self.last_id]['bases'] = []
       self.xref[self.last_id]['bases'].append(attrs)       
     elif name in ('Class','Struct') :
+      self.patchTemplateName(attrs, name)
       self.classes.append(attrs)
     elif name in ('Function',) :
       self.addTemplateToName(attrs)
+      self.patchTemplateName(attrs, name)
       self.functions.append(attrs)
     elif name in ('Enumeration',) :
       self.enums.append(attrs)
     elif name in ('Variable',) :
       self.variables.append(attrs)
     elif name in ('OperatorFunction',) :
+      self.patchTemplateName(attrs, name)
       attrs['operator'] = 'true'
       self.addTemplateToName(attrs)
       self.functions.append(attrs)
     elif name in ('Constructor','Method','OperatorMethod') :
       if 'name' in attrs and attrs['name'][0:3] != '_ZT' :
         self.addTemplateToName(attrs)
+        self.patchTemplateName(attrs, name)
         self.methods.append(attrs)
     elif name == 'Namespace' :
       self.namespaces.append(attrs)
