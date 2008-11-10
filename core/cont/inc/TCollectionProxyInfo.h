@@ -19,6 +19,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#ifndef ROOT_TError
+#include "TError.h"
+#endif 
 #include <vector>
 
 #if defined(_WIN32)
@@ -369,7 +372,7 @@ namespace ROOT {
 #ifndef __CINT__
    // Need specialization for boolean references due to stupid STL vector<bool>
    template<> inline void* ::ROOT::TCollectionProxyInfo::Address<std::vector<bool>::const_reference>::address(std::vector<bool>::const_reference ) {
-      assert(0);
+      R__ASSERT(0);
       return 0;
    }
 #endif
