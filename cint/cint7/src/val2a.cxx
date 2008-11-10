@@ -1593,6 +1593,7 @@ extern "C" G__value G__string2type_body(const char* typenamin, int noerror)
    int flag;
    G__value result;
    int isconst = 0;
+   int risconst = 0;
 
    result = G__null;
 
@@ -1606,13 +1607,13 @@ extern "C" G__value G__string2type_body(const char* typenamin, int noerror)
 
    if (strncmp(typenam.c_str(), "const ", 6) == 0) {
       typenam.replace(0, 6, "");
-      isconst = 1;
+      isconst = G__CONSTVAR;
    }
    else
       if (strncmp(typenam.c_str(), "const", 5) == 0 &&
             -1 == G__defined_tagname(typenam.c_str(), 2) && !G__find_typedef(typenam.c_str())) {
          typenam.replace(0, 5, "");
-         isconst = 1;
+         isconst = G__CONSTVAR;
       }
 
    len = typenam.length();
@@ -1622,6 +1623,10 @@ extern "C" G__value G__string2type_body(const char* typenamin, int noerror)
             ++plevel;
             typenam.erase(typenam.end() - 1);
             flag = 1;
+            if (risconst) {
+               isconst |= G__PCONSTVAR;
+               risconst = 0;
+            }
             break;
          case '&':
             ++rlevel;
@@ -1636,6 +1641,15 @@ extern "C" G__value G__string2type_body(const char* typenamin, int noerror)
             typenam.erase(typenam.end() - 1);
             flag = 1;
             break;
+         case 't':
+            // Could be 'const'
+            if (typenam.length()>5 && strncmp("const",typenam.c_str()+len-5,5)==0 && !isalnum(typenam[len-6])) {
+               len -= 5;
+               typenam[len] = '\0';
+               risconst = 1;
+               flag = 1;
+               break;
+            }
          default:
             flag = 0;
             break;
@@ -1643,7 +1657,10 @@ extern "C" G__value G__string2type_body(const char* typenamin, int noerror)
    }
    while (flag);
 
-
+   if (risconst) {
+      isconst |= G__CONSTVAR;
+   }
+   
    switch (len) {
       case 8:
          if (strcmp(typenam.c_str(), "longlong") == 0) {

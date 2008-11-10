@@ -1658,6 +1658,7 @@ G__value G__string2type_body(const char* typenamin, int noerror)
    int flag;
    G__value result;
    int isconst = 0;
+   int risconst = 0;
 
    result = G__null;
 
@@ -1686,7 +1687,7 @@ G__value G__string2type_body(const char* typenamin, int noerror)
    if (strncmp(typenam, "const ", 6) == 0) {
       strcpy(temp, typenam + 6);
       strcpy(typenam, temp);
-      isconst = 1;
+      isconst = G__CONSTVAR;
    }
    else
       if (strncmp(typenam, "const", 5) == 0 &&
@@ -1703,6 +1704,10 @@ G__value G__string2type_body(const char* typenamin, int noerror)
             ++plevel;
             typenam[--len] = '\0';
             flag = 1;
+            if (risconst) {
+               isconst |= G__PCONSTVAR;
+               risconst = 0;
+            }
             break;
          case '&':
             ++rlevel;
@@ -1717,13 +1722,24 @@ G__value G__string2type_body(const char* typenamin, int noerror)
             typenam[--len] = '\0';
             flag = 1;
             break;
+         case 't':
+            // Could be 'const'
+            if (len>5 && strncmp("const",typenam+len-5,5)==0 && !isalnum(typenam[len-6])) {
+               len -= 5;
+               typenam[len] = '\0';
+               risconst = 1;
+               flag = 1;
+               break;
+            }
          default:
             flag = 0;
             break;
       }
    }
    while (flag);
-
+   if (risconst) {
+      isconst |= G__CONSTVAR;
+   }
 
    switch (len) {
       case 3:
