@@ -342,12 +342,12 @@ inline void TLorentzVector::SetXYZM(Double_t  x, Double_t  y, Double_t  z, Doubl
 
 inline void TLorentzVector::SetPtEtaPhiM(Double_t pt, Double_t eta, Double_t phi, Double_t m) {
    pt = TMath::Abs(pt);
-   SetXYZM(pt*TMath::Cos(phi), pt*TMath::Sin(phi), pt/TMath::Tan(2.0*TMath::ATan(TMath::Exp(-eta))),m);
+   SetXYZM(pt*TMath::Cos(phi), pt*TMath::Sin(phi), pt*sinh(eta) ,m);
 }
 
 inline void TLorentzVector::SetPtEtaPhiE(Double_t pt, Double_t eta, Double_t phi, Double_t e) {
    pt = TMath::Abs(pt);
-   SetXYZT(pt*TMath::Cos(phi), pt*TMath::Sin(phi), pt/TMath::Tan(2.0*TMath::ATan(TMath::Exp(-eta))),e);
+   SetXYZT(pt*TMath::Cos(phi), pt*TMath::Sin(phi), pt*sinh(eta) ,e);
 }
 
 inline void TLorentzVector::GetXYZT(Double_t *carray) const {
