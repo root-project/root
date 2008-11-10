@@ -124,10 +124,13 @@ public:
 class TFormLeafInfoNumerical : public TFormLeafInfo {
 public:
    EDataType fKind;
+   Bool_t fIsBool;
+   TFormLeafInfoNumerical(TVirtualCollectionProxy *holder_of);
    TFormLeafInfoNumerical(EDataType kind);
    TFormLeafInfoNumerical(const TFormLeafInfoNumerical& orig);
    virtual TFormLeafInfo* DeepCopy() const;
    virtual ~TFormLeafInfoNumerical();
+   virtual Bool_t    IsString() const;
    virtual Bool_t    Update();
 };
 

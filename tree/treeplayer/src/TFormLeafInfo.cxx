@@ -950,16 +950,36 @@ void* TFormLeafInfoDirect::GetLocalValuePointer(char *thisobj, Int_t instance)
 //______________________________________________________________________________
 TFormLeafInfoNumerical::TFormLeafInfoNumerical(EDataType kind) :
    TFormLeafInfo(0,0,0),
-   fKind(kind)
+   fKind(kind), fIsBool(kFALSE)
 {
    // Constructor.
    fElement = new TStreamerElement("data","in collection", 0, fKind, "");
 }
 
 //______________________________________________________________________________
+TFormLeafInfoNumerical::TFormLeafInfoNumerical(TVirtualCollectionProxy *collection) :
+   TFormLeafInfo(0,0,0),
+   fKind(kNoType_t), fIsBool(kFALSE)
+{
+   // Construct a TFormLeafInfo for the numerical type contained in the collection.
+   
+   if (collection) {
+      fKind = (EDataType)collection->GetType();
+      if (fKind == TStreamerInfo::kOffsetL + TStreamerInfo::kChar) {
+         // Could be a bool
+         if (strcmp( collection->GetCollectionClass()->GetName(), "vector<bool>") == 0 ) {
+            fIsBool = kTRUE;
+            fKind = (EDataType)18;
+         }
+      }
+   }
+   fElement = new TStreamerElement("data","in collection", 0, fKind, "");
+}
+
+//______________________________________________________________________________
 TFormLeafInfoNumerical::TFormLeafInfoNumerical(const TFormLeafInfoNumerical& orig) :
    TFormLeafInfo(orig),
-   fKind(orig.fKind)
+   fKind(orig.fKind), fIsBool(kFALSE)
 {
    // Constructor.
    fElement = new TStreamerElement("data","in collection", 0, fKind, "");
@@ -978,6 +998,15 @@ TFormLeafInfoNumerical::~TFormLeafInfoNumerical()
    // Destructor
    delete fElement;
 }
+//______________________________________________________________________________
+Bool_t TFormLeafInfoNumerical::IsString() const
+{
+   // Return true if the underlying data is a string
+   
+   if (fIsBool) return kFALSE;
+   return TFormLeafInfo::IsString();
+}  
+
 //______________________________________________________________________________
 Bool_t TFormLeafInfoNumerical::Update()
 {
