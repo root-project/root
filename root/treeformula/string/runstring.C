@@ -52,8 +52,8 @@ void runstring() {
    TFile *f = new TFile("string.root","RECREATE");
    TTree *t = new TTree("T","T");
 
-   t->Branch("sone",&sone,32000,0);
-   t->Branch("stwo",&stwo,32000,0);
+   //t->Branch("sone",&sone,32000,0);
+   //t->Branch("stwo",&stwo,32000,0);
    t->Branch("sthree",&sthree,32000,0);
    t->Branch("sfour",&sfour,32000,0);
    t->Branch("obj.",&m);
