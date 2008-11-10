@@ -14,6 +14,7 @@ public:
    
    vector<TString> sthree;
    vector<string> sfour;
+   vector<bool> sfive;
    
    myclass() {}
 
@@ -25,6 +26,10 @@ public:
       sthree.push_back("sthree_2");
       sfour.push_back("sfour_1");
       sfour.push_back("sfour_2");
+      sfive.push_back(true);
+      sfive.push_back(false);
+      sfive.push_back(true);
+      sfive.push_back(false);
    }
 };
 
@@ -41,12 +46,18 @@ void runstring() {
 
    vector<TString> *sthree = new vector<TString>;
    vector<string> *sfour = new vector<string>;
+   vector<bool> sfive;
+   vector<int> ssix;
    
    sthree->push_back("sthree_1");
    sthree->push_back("sthree_2");
    sfour->push_back("sfour_1");
    sfour->push_back("sfour_2");
-
+   sfive.push_back(false);
+   sfive.push_back(true);
+   sfive.push_back(false);
+   ssix.push_back(33);
+   
    myclass *m = new myclass(1);
 
    TFile *f = new TFile("string.root","RECREATE");
@@ -57,6 +68,8 @@ void runstring() {
    t->Branch("sthree",&sthree,32000,0);
    t->Branch("sfour",&sfour,32000,0);
    t->Branch("obj.",&m);
+   t->Branch("sfive",&sfive);
+   t->Branch("ssix",&ssix);
  
    t->Fill();
 
