@@ -72,7 +72,9 @@ distclean::     distclean-$(MODNAME)
 ##### extra rules ######
 ifeq ($(PLATFORM),macosx)
 ifeq ($(GCC_VERS_FULL),gcc-4.0.1)
-$(TREEPLAYERDIRS)/TTreeFormula.o: OPT = $(NOOPT)
+ifneq ($(filter -O%,$(OPT)),)
+   $(TREEPLAYERDIRS)/TTreeFormula.o: OPT = $(NOOPT)
+endif
 endif
 ifeq ($(ICC_MAJOR),10)
 $(TREEPLAYERDIRS)/TTreeFormula.o: OPT = $(NOOPT)
