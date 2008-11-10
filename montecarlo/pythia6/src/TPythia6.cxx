@@ -142,6 +142,7 @@ extern "C" int  type_of_call pyr(int *dummy);
 extern "C" int  type_of_call pyrget(int *lun, int *move);
 extern "C" int  type_of_call pyrset(int *lun, int *move);
 extern "C" int  type_of_call pytest(int *flag);
+extern "C" int  type_of_call pytune(int *itune);
 extern "C" int  type_of_call pyupda(int *mupda, int *lun);
 extern "C" void type_of_call py1ent(Int_t&, Int_t&, Double_t&, Double_t&, Double_t&);
 
@@ -593,6 +594,11 @@ void TPythia6::Pystat(int flag) {
 void TPythia6::Pytest(int flag) {
    //interface with fortran routine pytest
    pytest(&flag);
+}
+
+void TPythia6::Pytune(int itune) {
+   //interface with fortran routine pytune
+   pytune(&itune);
 }
 
 void TPythia6::Pyupda(int mupda, int lun) {

@@ -325,6 +325,7 @@ public:
    void             Pyrset(int lun, int move);
    void             Pystat(int flag);
    void             Pytest(int flag);
+   void             Pytune(int itune);
    void             Pyupda(int mupda, int lun);
    void             SetupTest();
 
