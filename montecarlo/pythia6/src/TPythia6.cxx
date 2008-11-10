@@ -85,6 +85,7 @@ TPythia6*  TPythia6::fgInstance = 0;
 # define pyrset pyrset_
 # define pystat pystat_
 # define pytest pytest_
+# define pytune pytune_
 # define pyupda pyupda_
 # define py1ent py1ent_
 # ifdef PYTHIA6_DOUBLE_UNDERSCORE
@@ -118,6 +119,7 @@ TPythia6*  TPythia6::fgInstance = 0;
 # define pyrset PYRSET
 # define pystat PYSTAT
 # define pytest PYTEST
+# define pytune PYTUNE
 # define pyupda PYUPDA
 # define py1ent PY1ENT
 # define tpythia6_open_fortran_file TPYTHIA6_OPEN_FORTRAN_FILE
