@@ -99,11 +99,7 @@ namespace ROOT {
     * @date    10/10/2004
     */
    template <class T> struct Type
-#ifdef R__KCC
-      : public Address<TYPENAME T::value_type&>
-#else
       : public Address<TYPENAME T::const_reference>
-#endif
    {
       typedef T                      Cont_t;
       typedef typename T::iterator   Iter_t;
@@ -134,11 +130,7 @@ namespace ROOT {
          ::new(e->buff) Iter_t(c->begin());
          e->size  = c->size();
          if ( 0 == e->size ) return e->start = 0;
-#ifdef R__KCC
-         TYPENAME T::value_type& ref = *(e->iter());
-#else
          TYPENAME T::const_reference ref = *(e->iter());
-#endif
          return e->start = address(ref);
       }
       static void* next(void* env)  {
@@ -147,11 +139,7 @@ namespace ROOT {
          for (; e->idx > 0 && e->iter() != c->end(); ++(e->iter()), --e->idx){ }
          // TODO: Need to find something for going backwards....
          if ( e->iter() == c->end() ) return 0;
-#ifdef R__KCC
-         TYPENAME T::value_type& ref = *(e->iter());
-#else
          TYPENAME T::const_reference ref = *(e->iter());
-#endif
          return address(ref);
       }
       static void* construct(void* env)  {
@@ -381,10 +369,11 @@ namespace ROOT {
 #ifndef __CINT__
    // Need specialization for boolean references due to stupid STL vector<bool>
    template<> inline void* ::ROOT::TCollectionProxyInfo::Address<std::vector<bool>::const_reference>::address(std::vector<bool>::const_reference ) {
+      assert(0);
       return 0;
    }
 #endif
-
+   
 }
 
 #endif
