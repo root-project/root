@@ -56,7 +56,7 @@ endif
 # By default the TestDiff variable is set to compare the .log and .ref files
 # To run a diff and ignore whitespacing use $(TestDiffW)
 
-string: string.clog string.ref
+string: string.neutral.clog string.ref
 	$(TestDiff)
 
 

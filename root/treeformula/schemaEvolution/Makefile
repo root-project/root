@@ -41,7 +41,7 @@ endif
 schemaRun.ref: schemaRun1.C Event.root 
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l schemaRun1.C 2>&1 \
 	| grep -a -v fType | grep -v 'no dictionary for class' | grep -v Processing | grep -v TRefArray | grep -v TH1F \
-	| sed -e 's/\([0-9]\.[0-9][0-9][0-9][0-9]\)[0-9]*/\1/g' \
+	| sed -e 's/\([0-9]\.[0-9][0-9][0-9][0-9]\)[0-9]*/\1/g'| sed -e 's:0x[^/w]*:0xRemoved:' \
 	> schemaRun.ref
 
 SCRIPTS = $(wildcard schemaRun*.C)
@@ -53,7 +53,7 @@ LOGFILES_TEST = $(subst .log,.test,$(LOGFILES))
 $(LOGFILES) : %.log : %.C $(EVENT2SO) $(EVENTSO) Event.root schemaRun.ref
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l  $< 2>&1 \
 	| grep -a -v fType | grep -v 'no dictionary for class' | grep -v Processing | grep -v TRefArray | grep -v TH1F | sed -e 's/45[0-9],/45,/g'  \
-	| sed -e 's/\([0-9]\.[0-9][0-9][0-9][0-9]\)[0-9]*/\1/g' \
+	| sed -e 's/\([0-9]\.[0-9][0-9][0-9][0-9]\)[0-9]*/\1/g'| sed -e 's:0x[^/w]*:0xRemoved:'  \
 	> $@
 
 $(LOGFILES_TEST) : %.test : %.log
