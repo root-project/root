@@ -34,7 +34,8 @@ namespace Reflex {
       ValueObject();
 
       /** constructor */
-      template <typename T> explicit ValueObject( T& v);
+      template <typename T>
+      static ValueObject Create(const T& v);
 
       /** constructor */
       ValueObject( const ValueObject& o);
@@ -45,7 +46,7 @@ namespace Reflex {
       /** get the actual value */
       template<typename T> const T& Value();
 
-      template<typename T> ValueObject& operator =(const T&);
+      template<typename T> ValueObject& Assign(const T&);
 
    private:
 
@@ -63,12 +64,11 @@ inline Reflex::ValueObject::ValueObject() {
 
 //-------------------------------------------------------------------------------
 template <typename T> 
-inline Reflex::ValueObject::ValueObject( T& v) 
-   : Object( GetType<T>(), 0 ), 
-     fValue(v)  {
+inline Reflex::ValueObject Reflex::ValueObject::Create(const T& v) {
 //-------------------------------------------------------------------------------
-   if ( TypeOf().IsPointer() ) fAddress = *(void**)fValue.Address();
-   else                        fAddress = fValue.Address();
+   ValueObject ret;
+   ret.Assign(v);
+   return ret;
 }
 
 
@@ -83,7 +83,7 @@ inline Reflex::ValueObject::ValueObject( const ValueObject& o)
 
 //-------------------------------------------------------------------------------
 template < typename T >
-inline Reflex::ValueObject& Reflex::ValueObject::operator=( const T& v)  {
+inline Reflex::ValueObject& Reflex::ValueObject::Assign(const T& v)  {
 //-------------------------------------------------------------------------------
   fValue = Any(v);
   fType = GetType<T>();

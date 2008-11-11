@@ -44,15 +44,15 @@ namespace Reflex {
       template < typename R, typename A0 > 
       static R Create(const std::string& name, const A0& a0) {
          return (R)Create(name, GetType<R>(), 
-            Tools::MakeVector(ValueObject(a0)));
+            Tools::MakeVector(ValueObject::Create(a0)));
       }  
 
 
       template < typename R, typename A0, typename A1 > 
       static R Create(const std::string& name, const A0& a0, const A1& a1) {
          return (R)Create(name, GetType<R>(), 
-            Tools::MakeVector(ValueObject(a0), 
-            ValueObject(a1)));
+            Tools::MakeVector(ValueObject::Create(a0), 
+            ValueObject::Create(a1)));
       }
 
 
@@ -60,9 +60,9 @@ namespace Reflex {
       static R Create(const std::string& name, const A0& a0, const A1& a1, 
          const A2& a2) {
             return (R)Create(name, GetType<R>(), 
-               Tools::MakeVector(ValueObject(a0), 
-               ValueObject(a1), 
-               ValueObject(a2)));
+               Tools::MakeVector(ValueObject::Create(a0), 
+               ValueObject::Create(a1), 
+               ValueObject::Create(a2)));
       }
 
 
@@ -70,10 +70,10 @@ namespace Reflex {
       static R Create(const std::string& name, const A0& a0, const A1& a1, 
          const A2& a2, const A3& a3) {
             return (R)Create(name, GetType<R>(), 
-               Tools::MakeVector(ValueObject(a0), 
-               ValueObject(a1), 
-               ValueObject(a2), 
-               ValueObject(a3)));
+               Tools::MakeVector(ValueObject::Create(a0), 
+               ValueObject::Create(a1), 
+               ValueObject::Create(a2), 
+               ValueObject::Create(a3)));
       }
 
 
@@ -82,11 +82,11 @@ namespace Reflex {
          static R Create(const std::string& name, const A0& a0, const A1& a1, 
          const A2& a2, const A3& a3, const A4& a4 ) {
             return (R)Create(name, GetType<R>(), 
-               Tools::MakeVector(ValueObject(a0), 
-               ValueObject(a1), 
-               ValueObject(a2), 
-               ValueObject(a3),
-               ValueObject(a4)));
+               Tools::MakeVector(ValueObject::Create(a0), 
+               ValueObject::Create(a1), 
+               ValueObject::Create(a2), 
+               ValueObject::Create(a3),
+               ValueObject::Create(a4)));
       }
 
 
@@ -95,12 +95,12 @@ namespace Reflex {
          static R Create(const std::string& name, const A0& a0, const A1& a1, 
          const A2& a2, const A3& a3, const A4& a4, const A5& a5 ) {
             return (R)Create(name, GetType<R>(), 
-               Tools::MakeVector(ValueObject(a0), 
-               ValueObject(a1), 
-               ValueObject(a2), 
-               ValueObject(a3),
-               ValueObject(a4), 
-               ValueObject(a5)));
+               Tools::MakeVector(ValueObject::Create(a0), 
+               ValueObject::Create(a1), 
+               ValueObject::Create(a2), 
+               ValueObject::Create(a3),
+               ValueObject::Create(a4), 
+               ValueObject::Create(a5)));
       }
 
 
@@ -110,13 +110,13 @@ namespace Reflex {
          const A2& a2, const A3& a3, const A4& a4, const A5& a5, 
          const A6& a6 ) {
             return (R)Create(name, GetType<R>(), 
-               Tools::MakeVector(ValueObject(a0), 
-               ValueObject(a1), 
-               ValueObject(a2), 
-               ValueObject(a3),
-               ValueObject(a4), 
-               ValueObject(a5),
-               ValueObject(a6)));
+               Tools::MakeVector(ValueObject::Create(a0), 
+               ValueObject::Create(a1), 
+               ValueObject::Create(a2), 
+               ValueObject::Create(a3),
+               ValueObject::Create(a4), 
+               ValueObject::Create(a5),
+               ValueObject::Create(a6)));
       }
 
 
@@ -126,14 +126,14 @@ namespace Reflex {
          const A2& a2, const A3& a3, const A4& a4, const A5& a5, 
          const A6& a6, const A7& a7 ) {
             return (R)Create(name, GetType<R>(), 
-               Tools::MakeVector(ValueObject(a0), 
-               ValueObject(a1), 
-               ValueObject(a2), 
-               ValueObject(a3),
-               ValueObject(a4), 
-               ValueObject(a5),
-               ValueObject(a6), 
-               ValueObject(a7)));
+               Tools::MakeVector(ValueObject::Create(a0), 
+               ValueObject::Create(a1), 
+               ValueObject::Create(a2), 
+               ValueObject::Create(a3),
+               ValueObject::Create(a4), 
+               ValueObject::Create(a5),
+               ValueObject::Create(a6), 
+               ValueObject::Create(a7)));
       }
 
 
@@ -169,30 +169,30 @@ namespace Reflex {
       template < typename R, typename T, typename A0 > 
       static R CreateWithId(const T& id, const A0& a0) {
          return (R)CreateWithId(id, StringId<T>, CompareId<T>, GetType<R>(), 
-            Tools::MakeVector(ValueObject(a0)));
+            Tools::MakeVector(ValueObject::Create(a0)));
       }  
 
 
       template < typename R, typename T, typename A0, typename A1 > 
       static R CreateWithId(const T& id, const A0& a0, const A1& a1) {
          return (R)CreateWithId(id, StringId<T>, CompareId<T>, GetType<R>(), 
-            Tools::MakeVector(ValueObject(a0), ValueObject(a1)));
+            Tools::MakeVector(ValueObject::Create(a0), ValueObject::Create(a1)));
       }
 
 
       template < typename R, typename T, typename A0, typename A1, typename A2 > 
       static R CreateWithId(const T& id, const A0& a0, const A1& a1, const A2& a2) {
          return (R)CreateWithId(id, StringId<T>, CompareId<T>, GetType<R>(), 
-            Tools::MakeVector(ValueObject(a0), ValueObject(a1), 
-            ValueObject(a2)));
+            Tools::MakeVector(ValueObject::Create(a0), ValueObject::Create(a1), 
+            ValueObject::Create(a2)));
       }
 
 
       template < typename R, typename T, typename A0, typename A1, typename A2, typename A3 > 
       static R CreateWithId(const T& id, const A0& a0, const A1& a1, const A2& a2, const A3& a3) {
          return (R)CreateWithId(id, StringId<T>, CompareId<T>, GetType<R>(), 
-            Tools::MakeVector(ValueObject(a0), ValueObject(a1), 
-            ValueObject(a2), ValueObject(a3)));
+            Tools::MakeVector(ValueObject::Create(a0), ValueObject::Create(a1), 
+            ValueObject::Create(a2), ValueObject::Create(a3)));
       }
 
 
