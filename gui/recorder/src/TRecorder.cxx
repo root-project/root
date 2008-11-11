@@ -1214,53 +1214,86 @@ TGRecorder::TGRecorder(const TGWindow *p, UInt_t w, UInt_t h) :
    TGMainFrame(p ? p : gClient->GetRoot(), w, h)
 {
    // The GUI for the recorder
-   
-   fRecorder = new TRecorder();
 
-   // Create a main frame
-   
+   SetCleanup(kDeepCleanup);   
+   fRecorder = new TRecorder();
    fFilteredIds[0] = GetId();
 
    // Create a horizontal frame widget with buttons
-   TGHorizontalFrame *hframe = new TGHorizontalFrame(this, 200, 200);
+   TGHorizontalFrame *hframe = new TGHorizontalFrame(this, 200, 75, kChildFrame | kFixedHeight, (Pixel_t)0x000000);
    fFilteredIds[1] = hframe->GetId();
+
+   // LABEL WITH TIME
+
+   TGVerticalFrame *vframe = new TGVerticalFrame(hframe, 200, 75, kChildFrame | kFixedHeight, (Pixel_t)0x000000);
+   fFilteredIds[2] = vframe->GetId();
+
+   TGLabel *fStatusLabel = new TGLabel(vframe, "Status:");
+   fStatusLabel->SetTextColor(0x7cffff);
+   fStatusLabel->SetBackgroundColor((Pixel_t)0x000000);
+   vframe->AddFrame(fStatusLabel, new TGLayoutHints(kLHintsLeft | kLHintsTop,2,2,2,2));
+   fFilteredIds[3] = fStatusLabel->GetId();
+
+   TGLabel *fTimeLabel = new TGLabel(vframe, "Time: ");
+   fTimeLabel->SetTextColor(0x7cffff);
+   fTimeLabel->SetBackgroundColor((Pixel_t)0x000000);
+   vframe->AddFrame(fTimeLabel, new TGLayoutHints(kLHintsLeft | kLHintsTop,2,2,13,2));
+   fFilteredIds[4] = fTimeLabel->GetId();
+
+   hframe->AddFrame(vframe, new TGLayoutHints(kLHintsLeft | kLHintsExpandY));
+
+   vframe = new TGVerticalFrame(hframe, 200, 75, kChildFrame | kFixedHeight, (Pixel_t)0x000000);
+   fFilteredIds[5] = vframe->GetId();
+
+   fStatus = new TGLabel(vframe, "Inactive");
+   fStatus->SetTextColor(0x7cffff);
+   fStatus->SetBackgroundColor((Pixel_t)0x000000);
+   vframe->AddFrame(fStatus, new TGLayoutHints(kLHintsLeft | kLHintsTop,2,2,2,2));
+   fFilteredIds[6] = fStatus->GetId();
+         
+   fTimeDisplay = new TGLabel(vframe, "00:00:00");
+   fTimeDisplay->SetTextColor(0x7cffff);
+   fTimeDisplay->SetTextFont("Helvetica -34", kFALSE);
+   fTimeDisplay->SetBackgroundColor((Pixel_t)0x000000);
+   vframe->AddFrame(fTimeDisplay, new TGLayoutHints(kLHintsLeft | kLHintsTop,2,2,2,2));
+   fFilteredIds[7] = fTimeDisplay->GetId();
+
+   hframe->AddFrame(vframe, new TGLayoutHints(kLHintsLeft | kLHintsExpandY,10,0,0,0));
+      
+   AddFrame(hframe, new TGLayoutHints(kLHintsExpandX,2,2,2,2));
+
+   // Create a horizontal frame widget with buttons
+   hframe = new TGHorizontalFrame(this, 200, 200);
+   fFilteredIds[8] = hframe->GetId();
 
    // START-STOP button
    fStartStop = new TGPictureButton(hframe,gClient->GetPicture("record.png"));
    fStartStop->Connect("Clicked()","TGRecorder",this,"StartStop()");
    hframe->AddFrame(fStartStop, new TGLayoutHints(kLHintsLeft | kLHintsTop,2,2,2,2));
    fStartStop->Resize(40,40);
-
-   fFilteredIds[2] = fStartStop->GetId();
+   fFilteredIds[9] = fStartStop->GetId();
 
    // REPLAY button
    fReplay = new TGPictureButton(hframe,gClient->GetPicture("replay.png"));
    fReplay->Connect("Clicked()","TGRecorder",this,"Replay()");
    hframe->AddFrame(fReplay, new TGLayoutHints(kLHintsLeft | kLHintsTop,2,2,2,2));
    fReplay->Resize(40,40);
-
-   fFilteredIds[3] = fReplay->GetId();
-
-   // LABEL WITH TIME
-   fTimeLabel = new TGLabel(this, "Time: 0 [s]");
-   AddFrame(fTimeLabel, new TGLayoutHints(kLHintsCenterX,2,2,2,2));
-
-   fFilteredIds[4] = fTimeLabel->GetId();
+   fFilteredIds[10] = fReplay->GetId();
 
    // MOUSE CURSOR CHECKBOX
    fCursorCheckBox = new TGCheckButton(this,"Show mouse cursor");
    AddFrame(fCursorCheckBox, new TGLayoutHints(kLHintsCenterX, 2,2,2,2));
-
-   fFilteredIds[5] = fCursorCheckBox->GetId();
+   fFilteredIds[11] = fCursorCheckBox->GetId();
 
    // Timer
    fTimer = new TTimer(25);
    fTimer->Connect("Timeout()", "TGRecorder", this, "Update()");
 
    AddFrame(hframe, new TGLayoutHints(kLHintsCenterX,2,2,2,2));
+
    SetWindowName("ROOT Event Recorder");
    MapSubwindows();
-   Resize(GetDefaultSize());
+   Layout();
    MapWindow();
 
    SetDefault();
@@ -1271,8 +1304,7 @@ void TGRecorder::SetDefault()
 {
    // Sets GUI to the default inactive state
 
-   fSecCounter = 0;
-   fTimeLabel->SetText(Form("Time: %d [s]", fSecCounter));
+   fTimeDisplay->SetText("00:00:00");
 
    fReplay->SetPicture(gClient->GetPicture("replay.png"));
    fReplay->SetEnabled(kTRUE);
@@ -1290,7 +1322,12 @@ void TGRecorder::Update()
    // Called when fTimer timeouts (every 0.025 second)
    // Updates GUI of recorder
 
+   struct tm *running;
    static int cnt = 0;
+   TString stime;
+   time( &fElapsed );
+   time_t elapsed_time = (time_t)difftime( fElapsed, fStart );
+   running = gmtime( &elapsed_time );
 
    switch(fRecorder->GetState()) {
 
@@ -1300,16 +1337,25 @@ void TGRecorder::Update()
       case TRecorder::kReplaying:
 
          // Every whole second: updates timer and displays new value
-         if (cnt >= 40) {
-            fTimeLabel->SetText(Form("Time: %d [s]", ++fSecCounter));
+         if (cnt >= 10) {
+            if (fRecorder->GetState() == TRecorder::kReplaying)
+               fStatus->SetText("Replaying");
+            else
+               fStatus->SetText("Recording");
+            stime.Form("%02d:%02d:%02d", running->tm_hour,
+                        running->tm_min, running->tm_sec);
+            fTimeDisplay->SetText(stime.Data());
+
             cnt = 0;
             if (gVirtualX->EventsPending()) {
-               fTimeLabel->SetTextColor((Pixel_t)0xff0000);
+               fStatus->SetText("Waiting...");
+               fStatus->SetTextColor((Pixel_t)0xff0000);
             }
             else {
-               fTimeLabel->SetTextColor((Pixel_t)0x000000);
+               fStatus->SetTextColor((Pixel_t)0x7cffff);
             }
-            fTimeLabel->Resize();
+            fStatus->Resize();
+            fTimeDisplay->Resize();
          }
          else
             ++cnt;
@@ -1320,6 +1366,9 @@ void TGRecorder::Update()
 
       // End of replaying or recording. Sets recorder GUI to default state
       case TRecorder::kInactive:
+         fStatus->SetText("Inactive");
+         fStatus->SetTextColor((Pixel_t)0x7cffff);
+         fStatus->Resize();
          fTimer->TurnOff();
          SetDefault();
          break;
@@ -1357,6 +1406,7 @@ void TGRecorder::StartStop()
             fStartStop->SetPicture(gClient->GetPicture("stop.png"));
             fReplay->SetEnabled(kFALSE);
             fTimer->TurnOn();
+            time( &fStart );
          }
          break;
 
@@ -1402,6 +1452,7 @@ void TGRecorder::Replay()
             if (fRecorder->Replay(fi.fFilename, fCursorCheckBox->IsOn())) {
 
                fTimer->TurnOn();
+               time( &fStart );
 
                fReplay->SetPicture(gClient->GetPicture("stop.png"));
                fStartStop->SetPicture(gClient->GetPicture("pause.png"));
@@ -1431,6 +1482,8 @@ TGRecorder::~TGRecorder()
 {
    // Destructor. Cleanup the GUI.
 
+   fTimer->TurnOff();
+   delete fTimer;
    Cleanup();
 }
 

@@ -132,6 +132,8 @@
 #include "TGFrame.h"
 #endif
 
+#include <time.h>
+
 class TMutex;
 class TTree;
 class TFile;
@@ -139,7 +141,6 @@ class TGPictureButton;
 class TGCheckButton;
 class TGLabel;
 class TRecorderState;
-
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -702,19 +703,20 @@ private:
    TGPictureButton    *fStartStop;         // Button for start and stop of recording
    TGPictureButton    *fReplay;            // Button for start of replaying
 
-   TGLabel            *fTimeLabel;         // Label with time counter
+   TGLabel            *fStatus;            // Label with actual status
+   TGLabel            *fTimeDisplay;       // Label with time counter
    TGCheckButton      *fCursorCheckBox;    // Check box "Show mouse cursor" for replaying
 
    TTimer             *fTimer;             // Timer for handling GUI of recorder
-   Int_t               fSecCounter;        // Seconds counter for recording/replaying
+   time_t              fStart, fElapsed;   // playing/recording time
 
-   static const Int_t  fgWidgetsCount = 6;            // Number of windows in GUI recorder
+   static const Int_t  fgWidgetsCount = 12;            // Number of windows in GUI recorder
    Window_t            fFilteredIds[fgWidgetsCount];   // IDs of these windows in GUI recorder
 
    void                SetDefault();
 
 public:
-   TGRecorder(const TGWindow *p = 0, UInt_t w = 200, UInt_t h = 200);
+   TGRecorder(const TGWindow *p = 0, UInt_t w = 230, UInt_t h = 150);
    virtual ~TGRecorder();
 
    void StartStop();
