@@ -1001,6 +1001,10 @@ UInt_t TGLUtil::fgDefaultDrawQuality = 10;
 UInt_t TGLUtil::fgDrawQuality        = fgDefaultDrawQuality;
 UInt_t TGLUtil::fgColorLockCount     = 0;
 
+#ifndef CALLBACK
+#define CALLBACK
+#endif
+
 namespace
 {
 
@@ -1008,9 +1012,7 @@ class TGLTesselatorWrap
 {
 protected:
 
-#if defined(R__WIN32)
-   typedef void (CALLBACK *tessfuncptr_t)();
-#elif defined(R__AIXGCC) || (defined(__APPLE_CC__) && __APPLE_CC__ > 4000 && __APPLE_CC__ < 5341 && !defined(__INTEL_COMPILER))
+#if defined(R__AIXGCC) || (defined(__APPLE_CC__) && __APPLE_CC__ > 4000 && __APPLE_CC__ < 5341 && !defined(__INTEL_COMPILER))
    typedef void (*tessfuncptr_t)(...);
 #else
    typedef void (*tessfuncptr_t)();
@@ -1036,7 +1038,7 @@ public:
    }
 };
 
-template<void (FOO)(const GLfloat*)>
+template<void (CALLBACK *FOO)(const GLfloat*)>
 class TGLTesselatorWrapFloat : public TGLTesselatorWrap
 {
 public:
@@ -1046,7 +1048,7 @@ public:
    }
 };
 
-template<void (FOO)(const GLdouble*)>
+template<void (CALLBACK *FOO)(const GLdouble*)>
 class TGLTesselatorWrapDouble : public TGLTesselatorWrap
 {
 public:
