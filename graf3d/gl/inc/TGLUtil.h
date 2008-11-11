@@ -957,7 +957,10 @@ public:
    static void   CheckError(const char * loc);
 
    // Polygon tesselator for direct drawing
-   static GLUtesselator* GetDrawTesselator();
+   static GLUtesselator* GetDrawTesselator3fv();
+   static GLUtesselator* GetDrawTesselator4fv();
+   static GLUtesselator* GetDrawTesselator3dv();
+   static GLUtesselator* GetDrawTesselator4dv();
 
    // Some simple shape drawing utils
    enum ELineHeadShape { kLineHeadNone, kLineHeadArrow, kLineHeadBox };

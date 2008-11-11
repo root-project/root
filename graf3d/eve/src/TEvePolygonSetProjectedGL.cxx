@@ -16,7 +16,6 @@
 #include "TGLRnrCtx.h"
 #include "TGLIncludes.h"
 
-
 //==============================================================================
 //==============================================================================
 // TEvePolygonSetProjectedGL
@@ -78,7 +77,7 @@ void TEvePolygonSetProjectedGL::DirectDraw(TGLRnrCtx & /*rnrCtx*/) const
    // polygons
    glEnable(GL_POLYGON_OFFSET_FILL);
    glPolygonOffset(1.,1.);
-   GLUtesselator *tessObj = TGLUtil::GetDrawTesselator();
+   GLUtesselator *tessObj = TGLUtil::GetDrawTesselator3fv();
 
    TEveVector* pnts = refPS.fPnts;
    for (TEvePolygonSetProjected::vpPolygon_ci i = refPS.fPols.begin();

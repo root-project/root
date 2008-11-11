@@ -142,7 +142,7 @@ void TGLFaceSet::DirectDraw(TGLRnrCtx & rnrCtx) const
       Info("TGLFaceSet::DirectDraw", "this %d (class %s) LOD %d", this, IsA()->GetName(), rnrCtx.ShapeLOD());
    }
 
-   GLUtesselator  *tessObj = TGLUtil::GetDrawTesselator();
+   GLUtesselator  *tessObj = TGLUtil::GetDrawTesselator3dv();
    const Double_t *pnts = &fVertices[0];
    const Double_t *normals = &fNormals[0];
    const Int_t *pols = &fPolyDesc[0];

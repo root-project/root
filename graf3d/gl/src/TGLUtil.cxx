@@ -1001,38 +1001,103 @@ UInt_t TGLUtil::fgDefaultDrawQuality = 10;
 UInt_t TGLUtil::fgDrawQuality        = fgDefaultDrawQuality;
 UInt_t TGLUtil::fgColorLockCount     = 0;
 
-//______________________________________________________________________________
-GLUtesselator* TGLUtil::GetDrawTesselator()
+namespace
 {
-   // Returns a tesselator for direct drawing.
 
-   static struct Init {
-      Init()
-      {
+class TGLTesselatorWrap
+{
+protected:
+
 #if defined(R__WIN32)
-         typedef void (CALLBACK *tessfuncptr_t)();
+   typedef void (CALLBACK *tessfuncptr_t)();
 #elif defined(R__AIXGCC) || (defined(__APPLE_CC__) && __APPLE_CC__ > 4000 && __APPLE_CC__ < 5341 && !defined(__INTEL_COMPILER))
-         typedef void (*tessfuncptr_t)(...);
+   typedef void (*tessfuncptr_t)(...);
 #else
-         typedef void (*tessfuncptr_t)();
+   typedef void (*tessfuncptr_t)();
 #endif
-         fTess = gluNewTess();
 
-         if (!fTess) {
-            Error("GetTesselator::Init", "could not create tesselation object");
-         } else {
-            gluTessCallback(fTess, (GLenum)GLU_BEGIN,  (tessfuncptr_t) glBegin);
-            gluTessCallback(fTess, (GLenum)GLU_END,    (tessfuncptr_t) glEnd);
-            gluTessCallback(fTess, (GLenum)GLU_VERTEX, (tessfuncptr_t) glVertex3dv);
-         }
-      }
-      ~Init()
-      {
-         if(fTess)
-            gluDeleteTess(fTess);
-      }
-      GLUtesselator *fTess;
-   } singleton;
+public:
+   GLUtesselator *fTess;
+
+   TGLTesselatorWrap() : fTess(0)
+   {
+      fTess = gluNewTess();
+      if (!fTess)
+         throw std::bad_alloc();
+
+      gluTessCallback(fTess, (GLenum)GLU_BEGIN,  (tessfuncptr_t) glBegin);
+      gluTessCallback(fTess, (GLenum)GLU_END,    (tessfuncptr_t) glEnd);
+   }
+
+   virtual ~TGLTesselatorWrap()
+   {
+      if (fTess)
+         gluDeleteTess(fTess);
+   }
+};
+
+template<void (FOO)(const GLfloat*)>
+class TGLTesselatorWrapFloat : public TGLTesselatorWrap
+{
+public:
+   TGLTesselatorWrapFloat() : TGLTesselatorWrap()
+   {
+      gluTessCallback(fTess, (GLenum)GLU_VERTEX, (tessfuncptr_t) FOO);
+   }
+};
+
+template<void (FOO)(const GLdouble*)>
+class TGLTesselatorWrapDouble : public TGLTesselatorWrap
+{
+public:
+   TGLTesselatorWrapDouble() : TGLTesselatorWrap()
+   {
+      gluTessCallback(fTess, (GLenum)GLU_VERTEX, (tessfuncptr_t) FOO);
+   }
+};
+
+}
+
+//______________________________________________________________________________
+GLUtesselator* TGLUtil::GetDrawTesselator3fv()
+{
+   // Returns a tesselator for direct drawing when using 3-vertices with
+   // single precision.
+
+   static TGLTesselatorWrapFloat<glVertex3fv> singleton;
+
+   return singleton.fTess;
+}
+
+//______________________________________________________________________________
+GLUtesselator* TGLUtil::GetDrawTesselator4fv()
+{
+   // Returns a tesselator for direct drawing when using 4-vertices with
+   // single precision.
+
+   static TGLTesselatorWrapFloat<glVertex4fv> singleton;
+
+   return singleton.fTess;
+}
+
+//______________________________________________________________________________
+GLUtesselator* TGLUtil::GetDrawTesselator3dv()
+{
+   // Returns a tesselator for direct drawing when using 3-vertices with
+   // double precision.
+
+   static TGLTesselatorWrapDouble<glVertex3dv> singleton;
+
+   return singleton.fTess;
+}
+
+//______________________________________________________________________________
+GLUtesselator* TGLUtil::GetDrawTesselator4dv()
+{
+   // Returns a tesselator for direct drawing when using 4-vertices with
+   // double precision.
+
+   static TGLTesselatorWrapDouble<glVertex4dv> singleton;
 
    return singleton.fTess;
 }
