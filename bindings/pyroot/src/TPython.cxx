@@ -164,9 +164,10 @@ void TPython::LoadMacro( const char* name )
 
          // need to check for both exact and derived (differences exist between older and newer
          // versions of python ... bug?)
-            if ( pyModName && pyClName &&\
-                 ( PyString_CheckExact( pyModName ) && PyString_CheckExact( pyClName ) ) ||\
-                 ( PyString_Check( pyModName ) && PyString_Check( pyClName ) ) ) {
+            if ( (pyModName && pyClName) &&\
+                 ( (PyString_CheckExact( pyModName ) && PyString_CheckExact( pyClName )) ||\
+                   (PyString_Check( pyModName ) && PyString_Check( pyClName ))\
+                 ) ) {
             // build full, qualified name
                std::string fullname = PyString_AS_STRING( pyModName );
                fullname += '.';

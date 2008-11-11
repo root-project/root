@@ -379,11 +379,9 @@ PyROOT::Utility::EDataType PyROOT::Utility::EffectiveType( const std::string& na
 const std::string PyROOT::Utility::Compound( const std::string& name )
 {
    std::string cleanName = name;
-   {
-      std::string::size_type pos = std::string::npos;
-      while ( ( pos = cleanName.find( "const" ) ) != std::string::npos ) {
-         cleanName.swap( cleanName.erase( pos, 5 ) );
-      }
+   std::string::size_type spos = std::string::npos;
+   while ( ( spos = cleanName.find( "const" ) ) != std::string::npos ) {
+      cleanName.swap( cleanName.erase( spos, 5 ) );
    }
 
    std::string compound = "";
