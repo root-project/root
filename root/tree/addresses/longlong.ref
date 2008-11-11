@@ -5,7 +5,7 @@ Processing runlonglong.C+...
  B               = 14
  C               = 15
  D               = 16
- takptr.         = NULL
+ takptr.         = (aap*)0xRemoved
  takptr.A        = 13
  takptr.B        = 14
  takptr.C        = 15

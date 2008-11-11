@@ -500,6 +500,12 @@ endif
 %.clog : run%_C.$(DllSuf) $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 	$(CMDECHO) $(CALLROOTEXE) -q -l -b run$*.C+ > $@ 2>&1
 
+%.neutral.clog: %.clog
+	$(CMDECHO) cat $*.clog | sed -e 's:0x.*:0xRemoved:' > $@
+
+%.neutral.log: %.log
+	$(CMDECHO) cat $*.clog | sed -e 's:0x.*:0xRemoved:' > $@
+
 ifneq ($(PLATFORM),macosx)
 
 define BuildWithLib

@@ -140,7 +140,7 @@ prova: prova.log
 augertest: augertest.log
 	$(TestDiff)
 
-longlong: longlong.clog
+longlong: longlong.neutral.clog
 	$(TestDiff)
 
 memleak: memleak.clog
