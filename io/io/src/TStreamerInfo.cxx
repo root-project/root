@@ -2964,7 +2964,21 @@ void TStreamerInfo::PrintValue(const char *name, char *pointer, Int_t i, Int_t l
       aleng = len;
    } else        {
       if (i < 0) {
-         printf("NULL\n"); return;
+         if (pointer==0) {
+            printf("NULL\n");
+         } else {
+            static TClassRef stringClass("string");
+            if (fClass == stringClass) {
+               std::string *st = (std::string*)(pointer);
+               printf("%s\n",st->c_str());               
+            } else if (fClass == TString::Class()) {
+               TString *st = (TString*)(pointer);
+               printf("%s\n",st->Data());               
+            } else {
+               printf("(%s*)0x%lx\n",GetName(),(ULong_t)pointer);
+            }
+         }
+         return;
       }
       ladd  = pointer + fOffset[i];
       atype = fNewType[i];
@@ -3256,7 +3270,7 @@ void TStreamerInfo::PrintValueAux(char *ladd, Int_t atype, TStreamerElement *aEl
       case kAnyp:    {
          TObject **obj = (TObject**)(ladd);
          TStreamerObjectAnyPointer *el = (TStreamerObjectAnyPointer*)aElement;
-         printf("(%s*)%lx",el->GetClass()->GetName(),(Long_t)(*obj));
+         printf("(%s*)0x%lx",el->GetClass()->GetName(),(Long_t)(*obj));
          break;
       }
 
@@ -3264,7 +3278,7 @@ void TStreamerInfo::PrintValueAux(char *ladd, Int_t atype, TStreamerElement *aEl
       case kAnyP:    {
          TObject **obj = (TObject**)(ladd);
          TStreamerObjectAnyPointer *el = (TStreamerObjectAnyPointer*)aElement;
-         printf("(%s*)%lx",el->GetClass()->GetName(),(Long_t)(*obj));
+         printf("(%s*)0x%lx",el->GetClass()->GetName(),(Long_t)(*obj));
          break;
       }
       // Any Class not derived from TObject
@@ -3322,6 +3336,16 @@ void TStreamerInfo::PrintValueAux(char *ladd, Int_t atype, TStreamerElement *aEl
          //b.CheckByteCount(start,count,IsA());
          break;
       }
+      case kSTL: {
+         static TClassRef stringClass("string");
+         if (ladd && aElement && aElement->GetClass() == stringClass) {
+            std::string *st = (std::string*)(ladd);
+            printf(st->c_str());
+         } else {
+            printf("(%s*)0x%lx",aElement->GetClass()->GetName(),(Long_t)(ladd));
+         }
+         break;
+      }   
    }
 }
 
