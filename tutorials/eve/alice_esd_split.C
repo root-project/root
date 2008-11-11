@@ -377,6 +377,10 @@ void make_gui()
 
    browser->StopEmbedding();
    browser->SetTabTitle("Event Control", 0);
+   if (browser->GetTabRight()->GetTabTab(0))
+      browser->GetTabRight()->GetTabTab(0)->ShowClose(kFALSE);
+   if (browser->GetTabRight()->GetTabTab(1))
+      browser->GetTabRight()->GetTabTab(1)->ShowClose(kFALSE);
 }
 
 
