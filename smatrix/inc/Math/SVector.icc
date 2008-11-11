@@ -499,10 +499,10 @@ std::ostream& SVector<T,D>::Print(std::ostream& os) const {
    os.setf(std::ios::right,std::ios::adjustfield);
    //  os.setf(ios::fixed);
    
-   unsigned int i=0;
-   for(; i<D-1; ++i)
-      os << fArray[i] << ", ";
-   os << fArray[i];
+   for (unsigned int i = 0; i < D; ++i ) {
+      os << fArray[i];
+      if (i != D-1) os << ", "; 
+   } 
    return os;
 }
 
