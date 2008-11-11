@@ -2892,7 +2892,7 @@ void TProofServ::HandleProcess(TMessage *mess)
    // Priority to the entry list
    TObject *elist = (enl) ? (TObject *)enl : (TObject *)evl;
    if (enl && evl)
-      // Cannot spcify both at the same time
+      // Cannot specify both at the same time
       SafeDelete(evl);
    if ((!hasNoData) && elist)
       dset->SetEntryList(elist);
