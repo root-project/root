@@ -42,6 +42,7 @@
 #include "TBranchSTL.h"
 #include "TVirtualArray.h"
 #include "TBufferFile.h"
+#include "TInterpreter.h"
 
 ClassImp(TBranchElement)
 
@@ -289,10 +290,16 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
    if (id < 0) {
       // -- We are a top-level branch.  Don't split a top-level branch, TTree::Bronch will do that work.
       if (fBranchClass.GetClass()) {
+         Bool_t hasCustomStreamer = kFALSE;
          if (fBranchClass.GetClass()->InheritsFrom(TObject::Class())) {
             SetBit(kBranchObject);
+            hasCustomStreamer = (!fBranchClass.GetClass()->GetCollectionProxy() && (gCint->ClassInfo_RootFlag(fBranchClass.GetClass()->GetClassInfo()) & 1));
          } else {
             SetBit(kBranchAny);
+            hasCustomStreamer = !fBranchClass.GetClass()->GetCollectionProxy() && (fBranchClass.GetClass()->GetStreamer() != 0 || (gCint->ClassInfo_RootFlag(fBranchClass.GetClass()->GetClassInfo()) & 1));
+         }
+         if (hasCustomStreamer) {
+            fType = -1;
          }
       }
    } else {
@@ -1047,7 +1054,7 @@ Int_t TBranchElement::Fill()
    //
 
    // FIXME: This test probably needs to be extended past 10.
-   if ((fType >= 0) && (fType < 10)) {
+   if ((fType >= -1) && (fType < 10)) {
       TBranchRef* bref = fTree->GetBranchRef();
       if (bref) {
          fBranchID = bref->SetParent(this, fBranchID);
@@ -1145,7 +1152,13 @@ void TBranchElement::FillLeaves(TBuffer& b)
    // Do the actual buffer filling now.
    //
 
-   if (fType <= 2) {
+   if (fType < 0) {
+      // Non TObject, Non collection classes with a custom streamer.
+      // if (fObject)
+      fBranchClass->Streamer(fObject,b);
+      return;
+      
+   } else if (fType <= 2) {
       // -- Top-level, data member, base class, or split class branch.
       // A non-split top-level branch (0, and fID == -1)), a non-split object (0, and fID > -1), or a base class (1), or a split (non-TClonesArray, non-STL container) object (2).  Write out the object.
       // Note: A split top-level branch (0, and fID == -2) should not happen here, see Fill().
@@ -1629,7 +1642,7 @@ void TBranchElement::InitInfo()
                   fIDs.push_back(i);
                }
             }
-            if (fOnfileObject==0 && (fType==31 || fType==41 || fType <=2) && fInfo->GetNdata()
+            if (fOnfileObject==0 && (fType==31 || fType==41 || (0 <= fType && fType <=2) ) && fInfo->GetNdata()
                 && ((TStreamerElement*) fInfo->GetElems()[0])->GetType() == TStreamerInfo::kCacheNew) 
             {
                Int_t arrlen = 1;
@@ -2973,7 +2986,14 @@ void TBranchElement::ReadLeaves(TBuffer& b)
          } else {
             fNdata = 1;
             if (fAddress) {
-               GetInfo()->ReadBuffer(b, (char**) &fObject, fID);
+               if (fType<0) {
+                  // Non TObject, Non collection classes with a custom streamer.
+                  
+                  // if (fObject) 
+                  fBranchClass->Streamer(fObject,b);
+               } else {
+                  GetInfo()->ReadBuffer(b, (char**) &fObject, fID);
+               }
             } else {
                fNdata = 0;
             }
@@ -3126,6 +3146,12 @@ void TBranchElement::ReadLeaves(TBuffer& b)
       for(UInt_t ii=0; ii < fIDs.size(); ++ii) {
          info->ReadBufferClones(b, clones, fNdata, fIDs[ii], fOffset);
       }
+   } else if (fType < 0) {
+      // Non TObject, Non collection classes with a custom streamer.
+      
+      // if (fObject) 
+      fBranchClass->Streamer(fObject,b);
+
    } else if (fType <= 2) {
       // split-class branch, base class branch, data member branch, or top-level branch.
       if (fBranchCount) {
@@ -3393,7 +3419,7 @@ void TBranchElement::SetAddress(void* addr)
    //  FIXME: When would this happen?
    //
 
-   if (fType < 0) {
+   if (fType < -1) {
       return;
    }
 
