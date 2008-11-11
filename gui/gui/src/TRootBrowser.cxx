@@ -131,6 +131,7 @@ TRootBrowser::TRootBrowser(TBrowser *b, const char *name, UInt_t width,
 {
    // Create browser with a specified width and height.
 
+   fShowCloseTab = kTRUE;
    fActBrowser = 0;
    CreateBrowser(name);
    Resize(width, height);
@@ -149,6 +150,7 @@ TRootBrowser::TRootBrowser(TBrowser *b, const char *name, Int_t x, Int_t y,
 {
    // Create browser with a specified width and height and at position x, y.
 
+   fShowCloseTab = kTRUE;
    fActBrowser = 0;
    CreateBrowser(name);
    MoveResize(x, y, width, height);
@@ -258,6 +260,7 @@ void TRootBrowser::CreateBrowser(const char *name)
    fTabRight->Resize(fTabRight->GetDefaultSize());
    fH1->AddFrame(fTabRight, fLH5);
    fTabRight->Connect("Selected(Int_t)", "TRootBrowser", this, "DoTab(Int_t)");
+   fTabRight->Connect("CloseTab(Int_t)", "TRootBrowser", this, "CloseTab(Int_t)");
    fV2->AddFrame(fH1, fLH4);
    
    // Horizontal splitter
@@ -381,6 +384,14 @@ void TRootBrowser::CloneBrowser()
                        plugin->fSubTab);
       ++loop;
    }
+}
+
+//______________________________________________________________________________
+void TRootBrowser::CloseTab(Int_t id)
+{
+   // Remove tab element id from right tab.
+
+   RemoveTab(kRight, id);
 }
 
 //______________________________________________________________________________
@@ -1018,7 +1029,11 @@ void TRootBrowser::StartEmbedding(Int_t pos, Int_t subpos)
          fEditFrame = fEditTab->AddTab(Form("Tab %d",fNbTab[pos]));
          fEditFrame->MapWindow();
          TGTabElement *tabel = fEditTab->GetTabTab(fEditTab->GetNumberOfTabs()-1);
-         if(tabel) tabel->MapWindow();
+         if(tabel) {
+            tabel->MapWindow();
+            if (fShowCloseTab && (pos == 1))
+               tabel->ShowClose();
+         }
          fEditTab->SetTab(fEditTab->GetNumberOfTabs()-1);
          fEditTab->Layout();
       }

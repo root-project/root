@@ -170,6 +170,7 @@ public:
    void           DisplayDirectory(const TString &fname);
    void           DisplayObject(const TString& fname,const TString& name);
    void           OnDoubleClick(TGLVEntry* f, Int_t btn);
+   void           CloseTab(Int_t id);
    void           DoTab(Int_t id);
    void           ApplyFilter(Int_t id);
    

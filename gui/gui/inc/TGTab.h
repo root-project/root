@@ -39,6 +39,7 @@
 class TList;
 class TGTabElement;
 class TGTab;
+class TGPicture;
 
 class TGTabLayout : public TGLayoutManager {
 
@@ -120,6 +121,7 @@ public:
 
    virtual void      SavePrimitive(ostream &out, Option_t *option = "");
 
+   virtual void CloseTab(Int_t id) { Emit("CloseTab(Int_t)", id); }  //*SIGNAL*
    virtual void Removed(Int_t id) { Emit("Removed(Int_t)", id); }    //*SIGNAL*
    virtual void Selected(Int_t id) { Emit("Selected(Int_t)", id); }  //*SIGNAL*
    virtual TGLayoutManager *GetLayoutManager() const;
@@ -133,11 +135,15 @@ class TGTabElement : public TGFrame {
 
 protected:
    TGString        *fText;            // text on tab
+   const TGPicture *fClosePic;        // "close tab" icon
+   const TGPicture *fClosePicD;       // "close tab" icon (disabled)
    GContext_t       fNormGC;          // graphics context for drawing tab
    FontStruct_t     fFontStruct;      // font used for tab
    UInt_t           fTWidth;          // width of tab text
    UInt_t           fTHeight;         // height of tab text
    Bool_t           fEnabled;         // enabled or disabled
+   Bool_t           fShowClose;       // show or hide close icon
+   Bool_t           fActive;          // true if active (in front)
 
 private:
    TGTabElement(const TGTabElement&);             // not implemented
@@ -160,6 +166,10 @@ public:
    virtual void        SetEnabled(Bool_t on = kTRUE) { fEnabled = on; }
    Bool_t              IsEnabled() const { return fEnabled; }
    virtual void        SetEditDisabled(UInt_t) {}
+   virtual void        ShowClose(Bool_t on = kTRUE) { fShowClose = on; }
+   Bool_t              IsCloseShown() const { return fShowClose; }
+   virtual void        SetActive(Bool_t on = kTRUE) { fActive = on; }
+   Bool_t              IsActive() const { return fActive; }
 
    ClassDef(TGTabElement,0)  // Little tab on tab widget
 };

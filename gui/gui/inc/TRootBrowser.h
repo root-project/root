@@ -94,6 +94,7 @@ protected:
    Int_t              fNbTab[3];                   // Number of tab elements (for each Tab)
    Int_t              fCrTab[3];                   // Actual (active) tab elements (for each Tab)
    Int_t              fPid;                        // Current process id
+   Bool_t             fShowCloseTab;               // kTRUE to show close icon on tab elements
 
 public:
    enum EInsertPosition {
@@ -109,6 +110,7 @@ public:
    void              CreateBrowser(const char *name);
    void              CloneBrowser();
    void              CloseWindow();
+   void              CloseTab(Int_t id);
    void              DoTab(Int_t id);
    TGFrame          *GetActFrame() const { return (TGFrame *)fEditFrame; }
    TGFrame          *GetToolbarFrame() const { return (TGFrame *)fToolbarFrame; }
@@ -146,6 +148,9 @@ public:
    virtual void      SetStatusText(const char *txt, Int_t col);
    virtual Bool_t    HandleKey(Event_t *event);
 
+   virtual void      ShowCloseTab(Bool_t show) { fShowCloseTab = show; }
+   virtual Bool_t    IsCloseTabShown() const { return fShowCloseTab; }
+   
    // overridden from TGMainFrame
    virtual void      ReallyDelete();
 
