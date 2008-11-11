@@ -2971,6 +2971,9 @@ void TProofServ::HandleProcess(TMessage *mess)
             input    = pq->GetInputList();
             nentries = pq->GetEntries();
             first    = pq->GetFirst();
+            filename = pq->GetSelecImp()->GetName();
+            if (Ssiz_t id = opt.Last('#') && id != kNPOS)
+               filename += opt(id + 1, opt.Length());
             // Attach to data set and entry- (or event-) list (if any)
             TObject *o = 0;
             if ((o = pq->GetInputObject("TDSet")))
