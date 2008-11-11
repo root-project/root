@@ -52,7 +52,7 @@ ProofSimple::~ProofSimple()
 {
    // Destructor
 
-   SafeDelete(fRandom);
+   if (fRandom) delete fRandom;
 }
 
 //_____________________________________________________________________________
