@@ -199,6 +199,7 @@ Int_t TProofLite::Init(const char *, const char *conffile,
 
    // Status of cluster
    fIdle = kTRUE;
+   fWaitingQueries  = new TList;
 
    // Query type
    fSync = kTRUE;
@@ -864,6 +865,14 @@ Long64_t TProofLite::Process(TDSet *dset, const char *selector, Option_t *option
    // The return value is -1 in case of error and TSelector::GetStatus() in
    // in case of success.
 
+   // For the time being cannot accept other queries if not idle, even if in async
+   // mode; needs to set up an event handler to manage that
+   if (!IsIdle()) {
+      // Notify submission
+      Info("Process", "not idle: cannot accept queries");
+      return -1;
+   }
+
    if (!IsValid() || !fQMgr) {
       Error("Process", "invalid sesion or query-result manager undefined!");
       return -1;
@@ -896,6 +905,9 @@ Long64_t TProofLite::Process(TDSet *dset, const char *selector, Option_t *option
       // Also save it to queries dir
       fQMgr->SaveQuery(pq);
    }
+
+   // Set the query number
+   fSeqNum = pq->GetSeqNum();
 
    // Set in running state
    SetQueryRunning(pq);
@@ -967,65 +979,67 @@ Long64_t TProofLite::Process(TDSet *dset, const char *selector, Option_t *option
 
    Long64_t rv = fPlayer->Process(dset, selector, option, nentries, first);
 
-   // Terminate additional workers if using fork-based startup
-   if (fForkStartup && startedWorkers) {
-      RemoveWorkers(startedWorkers);
-      SafeDelete(startedWorkers);
-   }
-
    if (fSync) {
+
+      // Terminate additional workers if using fork-based startup
+      if (fForkStartup && startedWorkers) {
+         RemoveWorkers(startedWorkers);
+         SafeDelete(startedWorkers);
+      }
+
       // reactivate the default application interrupt handler
       if (sh)
          gSystem->AddSignalHandler(sh);
-   }
 
-   // Return number of events processed
-   if (fPlayer->GetExitStatus() != TVirtualProofPlayer::kFinished) {
-      Bool_t abort = (fPlayer->GetExitStatus() == TVirtualProofPlayer::kAborted)
-                   ? kTRUE : kFALSE;
-      if (abort) fPlayer->StopProcess(kTRUE);
-      Emit("StopProcess(Bool_t)", abort);
-   }
+      // Return number of events processed
+      if (fPlayer->GetExitStatus() != TVirtualProofPlayer::kFinished) {
+         Bool_t abort = (fPlayer->GetExitStatus() == TVirtualProofPlayer::kAborted)
+                     ? kTRUE : kFALSE;
+         if (abort) fPlayer->StopProcess(kTRUE);
+         Emit("StopProcess(Bool_t)", abort);
+      }
 
-   // In PROOFLite this has to be done once only in TProofLite::Process 
-   pq->SetOutputList(fPlayer->GetOutputList(), kFALSE);
-   // If the last object, notify the GUI that the result arrived
-   QueryResultReady(Form("%s:%s", pq->GetTitle(), pq->GetName()));
-   // Processing is over
-   UpdateDialog();
-
-   // Save the data set into the TQueryResult (should be done after Process to avoid
-   // improper deletion during collection)
-   if (dset && pq->GetInputList()) {
-      pq->GetInputList()->Add(dset);
-      if (dset->GetEntryList())
-         pq->GetInputList()->Add(dset->GetEntryList());
-   }
-
-   // Complete filling of the TQueryResult instance
-   AskStatistics();
-   if (fQMgr->FinalizeQuery(pq, this, fPlayer)) {
-      // Automatic saving is controlled by ProofLite.AutoSaveQueries
-      if (!strcmp(gEnv->GetValue("ProofLite.AutoSaveQueries", "off"), "on"))
-         fQMgr->SaveQuery(pq, -1);
-   }
-
-   // Remove aborted queries from the list
-   if (fPlayer->GetExitStatus() == TVirtualProofPlayer::kAborted) {
-      if (fQMgr) fQMgr->RemoveQuery(pq);
-   } else {
+      // In PROOFLite this has to be done once only in TProofLite::Process 
+      pq->SetOutputList(fPlayer->GetOutputList(), kFALSE);
       // If the last object, notify the GUI that the result arrived
       QueryResultReady(Form("%s:%s", pq->GetTitle(), pq->GetName()));
-      // Keep in memory only light infor about a query
-      if (!(pq->IsDraw())) {
-         if (fQMgr->Queries()) {
-            TQueryResult *pqr = pq->CloneInfo();
-            if (pqr)
-               fQMgr->Queries()->Add(pqr);
-            // Remove from the fQueries list
-            fQMgr->Queries()->Remove(pq);
+      // Processing is over
+      UpdateDialog();
+
+      // Save the data set into the TQueryResult (should be done after Process to avoid
+      // improper deletion during collection)
+      if (dset && pq->GetInputList()) {
+         pq->GetInputList()->Add(dset);
+         if (dset->GetEntryList())
+            pq->GetInputList()->Add(dset->GetEntryList());
+      }
+
+      // Complete filling of the TQueryResult instance
+      AskStatistics();
+      if (fQMgr->FinalizeQuery(pq, this, fPlayer)) {
+         // Automatic saving is controlled by ProofLite.AutoSaveQueries
+         if (!strcmp(gEnv->GetValue("ProofLite.AutoSaveQueries", "off"), "on"))
+            fQMgr->SaveQuery(pq, -1);
+      }
+
+      // Remove aborted queries from the list
+      if (fPlayer->GetExitStatus() == TVirtualProofPlayer::kAborted) {
+         if (fQMgr) fQMgr->RemoveQuery(pq);
+      } else {
+         // If the last object, notify the GUI that the result arrived
+         QueryResultReady(Form("%s:%s", pq->GetTitle(), pq->GetName()));
+         // Keep in memory only light infor about a query
+         if (!(pq->IsDraw())) {
+            if (fQMgr->Queries()) {
+               TQueryResult *pqr = pq->CloneInfo();
+               if (pqr)
+                  fQMgr->Queries()->Add(pqr);
+               // Remove from the fQueries list
+               fQMgr->Queries()->Remove(pq);
+            }
          }
       }
+
    }
 
    // Done

@@ -539,15 +539,11 @@ Int_t TProofPlayer::ReinitSelector(TQueryResult *qr)
 
             ok = kTRUE;
          }
-      } else {
-         // Add Aclic mode, if any
-         TString opts(qr->GetOptions());
-         Int_t idx = opts.Index("#");
-         if (idx != kNPOS) {
-            opts.Remove(0,idx+1);
-            selec += opts;
-         }
       }
+      TString opt(qr->GetOptions());
+      Ssiz_t id = opt.Last('#');
+      if (id != kNPOS && id < opt.Length() - 1)
+         selec += opt(id + 1, opt.Length());
 
       if (!ok) {
          Info("ReinitSelector", "problems locating or exporting selector files");
@@ -1798,6 +1794,17 @@ Bool_t TProofPlayerRemote::SendSelector(const char* selector_file)
 
    // Expand possible envs or '~'
    gSystem->ExpandPathName(selec);
+
+   // Update the macro path
+   TString mp(TROOT::GetMacroPath());
+   TString np(gSystem->DirName(selec));
+   if (!np.IsNull()) {
+      np += ":";
+      Int_t ip = (mp.BeginsWith(".:")) ? 2 : 0;
+      mp.Insert(ip, np);
+   }
+   TROOT::SetMacroPath(mp);
+   Info("SendSelector", "macro path set to '%s'", TROOT::GetMacroPath());
 
    // Header file
    TString header = selec;

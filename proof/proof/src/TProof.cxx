@@ -5779,10 +5779,22 @@ Int_t TProof::Load(const char *macro, Bool_t notOnClient)
       Broadcast(mess, kActive);
 
       // Load locally, if required
-      if (!notOnClient)
+      if (!notOnClient) {
          // by first forwarding the load command to the master and workers
          // and only then loading locally we load/build in parallel
          gROOT->ProcessLine(Form(".L %s", macro));
+
+         // Update the macro path
+         TString mp(TROOT::GetMacroPath());
+         TString np(gSystem->DirName(macro));
+         if (!np.IsNull()) {
+            np += ":";
+            Int_t ip = (mp.BeginsWith(".:")) ? 2 : 0;
+            mp.Insert(ip, np);
+         }
+         TROOT::SetMacroPath(mp);
+         Info("Load", "macro path set to '%s'", TROOT::GetMacroPath());
+      }
 
       // Wait for master and workers to be done
       Collect(kActive);

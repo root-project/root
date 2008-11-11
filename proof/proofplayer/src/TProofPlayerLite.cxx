@@ -85,6 +85,18 @@ Int_t TProofPlayerLite::MakeSelector(const char *selfile)
    }
    Int_t dot = name.Last('.');
 
+   // Update the macro path
+   TString mp(TROOT::GetMacroPath());
+   TString np(gSystem->DirName(name));
+   if (!np.IsNull()) {
+      np += ":";
+      Int_t ip = (mp.BeginsWith(".:")) ? 2 : 0;
+      mp.Insert(ip, np);
+   }
+   TROOT::SetMacroPath(mp);
+   PDB(kGlobal,1)
+      Info("MakeSelector", "macro path set to '%s'", TROOT::GetMacroPath());
+
    // Check the header file
    const char *hext[] = { ".h", ".hh", "" };
    TString hname, checkedext;
@@ -411,6 +423,11 @@ Long64_t TProofPlayerLite::Finalize(Bool_t force, Bool_t sync)
    Long64_t rv = 0;
 
    TPerfStats::Stop();
+
+   if (!fQuery) {
+      Info("Finalize", "query is undefined!");
+      return -1;
+   }
 
    // Merge the output files created on workers, if any
    MergeOutputFiles();
