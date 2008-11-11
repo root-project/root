@@ -1015,7 +1015,7 @@ protected:
 #if defined(R__AIXGCC) || (defined(__APPLE_CC__) && __APPLE_CC__ > 4000 && __APPLE_CC__ < 5341 && !defined(__INTEL_COMPILER))
    typedef void (*tessfuncptr_t)(...);
 #else
-   typedef void (*tessfuncptr_t)();
+   typedef void (CALLBACK *tessfuncptr_t)();
 #endif
 
 public:
