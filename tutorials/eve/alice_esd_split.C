@@ -336,7 +336,9 @@ void make_gui()
 
    TEveBrowser* browser = gEve->GetBrowser();
 
+   browser->ShowCloseTab(kFALSE);
    browser->ExecPlugin("SplitGLView", 0, "new SplitGLView(gClient->GetRoot(), 600, 450, kTRUE)");
+   browser->ShowCloseTab(kTRUE);
 
    browser->StartEmbedding(TRootBrowser::kLeft);
 
@@ -377,10 +379,6 @@ void make_gui()
 
    browser->StopEmbedding();
    browser->SetTabTitle("Event Control", 0);
-   if (browser->GetTabRight()->GetTabTab(0))
-      browser->GetTabRight()->GetTabTab(0)->ShowClose(kFALSE);
-   if (browser->GetTabRight()->GetTabTab(1))
-      browser->GetTabRight()->GetTabTab(1)->ShowClose(kFALSE);
 }
 
 

@@ -135,12 +135,14 @@ TEveManager::TEveManager(UInt_t w, UInt_t h, Bool_t map_window, Option_t* opt) :
    fEditor = fLTEFrame->fEditor;
 
    // GL viewer
+   fBrowser->ShowCloseTab(kFALSE);
    fBrowser->StartEmbedding(1);
    TGLSAViewer* glv = new TGLSAViewer(gClient->GetRoot(), 0, fEditor);
    //glv->GetFrame()->SetCleanup(kNoCleanup);
    glv->ToggleEditObject();
    fBrowser->StopEmbedding();
    fBrowser->SetTabTitle("GLViewer", 1);
+   fBrowser->ShowCloseTab(kTRUE);
 
    // Finalize it
    fBrowser->InitPlugins(opt);
@@ -248,10 +250,18 @@ TEveViewer* TEveManager::SpawnNewViewer(const Text_t* name, const Text_t* title,
 
    TEveViewer* v = new TEveViewer(name, title);
 
-   if (embed)  fBrowser->StartEmbedding(1);
+   if (embed)
+   {
+      fBrowser->ShowCloseTab(kFALSE);
+      fBrowser->StartEmbedding(1);
+   }
    v->SpawnGLViewer(gClient->GetRoot(), embed ? fEditor : 0);
    v->IncDenyDestroy();
-   if (embed)  fBrowser->StopEmbedding(), fBrowser->SetTabTitle(name, 1);
+   if (embed)
+   {
+      fBrowser->StopEmbedding(), fBrowser->SetTabTitle(name, 1);
+      fBrowser->ShowCloseTab(kTRUE);
+   }
    AddElement(v, fViewers);
    return v;
 }
