@@ -796,7 +796,7 @@ void TF1::CreateFromFunctor(const char *name, Int_t npar)
 }
 
 //______________________________________________________________________________
-TF1::TF1(const char *name,void *ptr, Double_t xmin, Double_t xmax, Int_t npar, char * className )
+TF1::TF1(const char *name,void *ptr, Double_t xmin, Double_t xmax, Int_t npar, const char * className )
       :TFormula(), TAttLine(), TAttFill(), TAttMarker()
 {
    // F1 constructor from an interpreted class defining the operator() or Eval().
@@ -818,7 +818,7 @@ TF1::TF1(const char *name,void *ptr, Double_t xmin, Double_t xmax, Int_t npar, c
 }
 
 //______________________________________________________________________________
-TF1::TF1(const char *name,void *ptr, void * , Double_t xmin, Double_t xmax, Int_t npar, char * className, char * methodName)
+TF1::TF1(const char *name,void *ptr, void * , Double_t xmin, Double_t xmax, Int_t npar, const char * className, const char * methodName)
       :TFormula(), TAttLine(), TAttFill(), TAttMarker()
 {
    // F1 constructor from an interpreter class using a specidied member function.
@@ -843,7 +843,7 @@ TF1::TF1(const char *name,void *ptr, void * , Double_t xmin, Double_t xmax, Int_
 }
 
 //______________________________________________________________________________
-void TF1::CreateFromCintClass(const char *name,void *ptr, Double_t xmin, Double_t xmax, Int_t npar, char * className, char * methodName)
+void TF1::CreateFromCintClass(const char *name,void *ptr, Double_t xmin, Double_t xmax, Int_t npar, const char * className, const char * methodName)
 {
    // Internal function used to create from TF1 from an interpreter CINT class
    // with the specified type (className) and member function name (methodName).

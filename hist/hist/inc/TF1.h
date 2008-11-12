@@ -77,7 +77,7 @@ protected:
    static TF1   *fgCurrent;   //pointer to current function being processed
 
    void CreateFromFunctor(const char *name, Int_t npar);
-   void CreateFromCintClass(const char *name, void * ptr, Double_t xmin, Double_t xmax, Int_t npar, char * cname, char * fname);
+   void CreateFromCintClass(const char *name, void * ptr, Double_t xmin, Double_t xmax, Int_t npar, const char * cname, const char * fname);
 
 public:
     // TF1 status bits
@@ -106,7 +106,7 @@ public:
    // xmin and xmax specify the plotting range,  npar is the number of parameters.
    // See the tutorial math/exampleFunctor.C for an example of using this constructor
    template <typename Func>
-   TF1(const char *name, Func f, Double_t xmin, Double_t xmax, Int_t npar, char * = 0  ) :
+   TF1(const char *name, Func f, Double_t xmin, Double_t xmax, Int_t npar, const char * = 0  ) :
       TFormula(),
       TAttLine(),
       TAttFill(),
@@ -147,7 +147,7 @@ public:
    // xmin and xmax specify the plotting range,  npar is the number of parameters.
    // See the tutorial math/exampleFunctor.C for an example of using this constructor
    template <class PtrObj, typename MemFn>
-   TF1(const char *name, const  PtrObj& p, MemFn memFn, Double_t xmin, Double_t xmax, Int_t npar, char * = 0, char * = 0) :
+   TF1(const char *name, const  PtrObj& p, MemFn memFn, Double_t xmin, Double_t xmax, Int_t npar, const char * = 0, const char * = 0) :
       TFormula(),
       TAttLine(),
       TAttFill(),
@@ -180,8 +180,8 @@ public:
    }
 
    // constructor used by CINT
-   TF1(const char *name, void *ptr, Double_t xmin, Double_t xmax, Int_t npar, char *className );
-   TF1(const char *name, void *ptr, void *,Double_t xmin, Double_t xmax, Int_t npar, char *className, char *methodName = 0);
+   TF1(const char *name, void *ptr, Double_t xmin, Double_t xmax, Int_t npar, const char *className );
+   TF1(const char *name, void *ptr, void *,Double_t xmin, Double_t xmax, Int_t npar, const char *className, const char *methodName = 0);
 
    TF1(const TF1 &f1);
    TF1& operator=(const TF1 &rhs);

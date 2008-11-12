@@ -201,7 +201,7 @@ TF2::TF2(const char *name, void * ptr, Double_t xmin, Double_t xmax, Double_t ym
 }
 
 //______________________________________________________________________________
-TF2::TF2(const char *name, void * ptr, void *,Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, char *className, char * methodName)
+TF2::TF2(const char *name, void * ptr, void *,Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, const char *className, const char * methodName)
       : TF1(name, ptr, (void*)0,xmin, xmax, npar,className, methodName)
 {
 //*-*-*-*-*-*-*F2 constructor used by CINT for member functions of interpreted classes

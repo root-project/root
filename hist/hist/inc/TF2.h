@@ -53,7 +53,7 @@ public:
    // Template constructors from a pointer to any C++ class of type PtrObj with a specific member function of type 
    // MemFn. 
    template <class PtrObj, typename MemFn>
-   TF2(const char *name, const  PtrObj& p, MemFn memFn, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, char * c1, char * c2) : 
+   TF2(const char *name, const  PtrObj& p, MemFn memFn, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, const char * c1, const char * c2) : 
       TF1(name,p,memFn,xmin,xmax,npar,c1,c2),
 	fYmin(ymin), fYmax(ymax), fNpy(30), fContour(0)
    {
@@ -73,7 +73,7 @@ public:
 
    // constructor used by CINT 
    TF2(const char *name, void *ptr,  Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, char *className ); 
-   TF2(const char *name, void *ptr, void *,Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, char *className, char *methodName = 0);
+   TF2(const char *name, void *ptr, void *,Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, const char *className, const char *methodName = 0);
 
    TF2(const TF2 &f2);
    TF2 &operator=(const TF2& rhs);
