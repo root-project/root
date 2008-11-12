@@ -53,6 +53,8 @@ TEvePointSet::TEvePointSet(Int_t n_points, ETreeVarType_e tv_type) :
    TEveElement(fMarkerColor),
    TPointSet3D(n_points),
    TEvePointSelectorConsumer(tv_type),
+   TEveProjectable(),
+   TQObject(),
 
    fTitle          (),
    fIntIds         (0),
@@ -71,6 +73,8 @@ TEvePointSet::TEvePointSet(const Text_t* name, Int_t n_points, ETreeVarType_e tv
    TEveElement(fMarkerColor),
    TPointSet3D(n_points),
    TEvePointSelectorConsumer(tv_type),
+   TEveProjectable(),
+   TQObject(),
 
    fTitle          (),
    fIntIds         (0),
@@ -83,6 +87,21 @@ TEvePointSet::TEvePointSet(const Text_t* name, Int_t n_points, ETreeVarType_e tv
 
    // Override from TEveElement.
    fPickable = kTRUE;
+}
+
+//______________________________________________________________________________
+TEvePointSet::TEvePointSet(const TEvePointSet& e) :
+   TEveElement(e),
+   TPointSet3D(e),
+   TEvePointSelectorConsumer(e),
+   TEveProjectable(),
+   TQObject(),
+
+   fTitle          (e.fTitle),
+   fIntIds         (e.fIntIds ? new TArrayI(*e.fIntIds) : 0),
+   fIntIdsPerPoint (e.fIntIdsPerPoint)
+{
+   // Copy constructor.
 }
 
 //______________________________________________________________________________

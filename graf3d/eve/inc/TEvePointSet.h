@@ -38,7 +38,6 @@ class TEvePointSet : public TEveElement,
    friend class TEvePointSetArray;
 
 private:
-   TEvePointSet(const TEvePointSet&);            // Not implemented
    TEvePointSet& operator=(const TEvePointSet&); // Not implemented
 
 protected:
@@ -51,7 +50,10 @@ protected:
 public:
    TEvePointSet(Int_t n_points=0, ETreeVarType_e tv_type=kTVT_XYZ);
    TEvePointSet(const Text_t* name, Int_t n_points=0, ETreeVarType_e tv_type=kTVT_XYZ);
+   TEvePointSet(const TEvePointSet& e);
    virtual ~TEvePointSet();
+
+   virtual TEvePointSet* CloneElement() const { return new TEvePointSet(*this); }
 
    virtual void ComputeBBox();
 

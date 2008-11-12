@@ -78,6 +78,7 @@ TEveElement::TEveElement() :
    fMainColorPtr        (0),
    fMainTrans           (0),
    fItems               (),
+   fSource              (),
    fUserData            (0),
    fPickable            (kFALSE),
    fSelected            (kFALSE),
@@ -108,6 +109,7 @@ TEveElement::TEveElement(Color_t& main_color) :
    fMainColorPtr        (&main_color),
    fMainTrans           (0),
    fItems               (),
+   fSource              (),
    fUserData            (0),
    fPickable            (kFALSE),
    fSelected            (kFALSE),
@@ -118,6 +120,50 @@ TEveElement::TEveElement(Color_t& main_color) :
    fDestructing         (kFALSE)
 {
    // Constructor.
+}
+
+//______________________________________________________________________________
+TEveElement::TEveElement(const TEveElement& e) :
+   fParents             (),
+   fChildren            (),
+   fCompound            (0),
+   fVizModel            (0),
+   fVizTag              (e.fVizTag),
+   fParentIgnoreCnt     (0),
+   fTopItemCnt          (0),
+   fDenyDestroy         (0),
+   fDestroyOnZeroRefCnt (e.fDestroyOnZeroRefCnt),
+   fRnrSelf             (e.fRnrSelf),
+   fRnrChildren         (e.fRnrChildren),
+   fCanEditMainTrans    (e.fCanEditMainTrans),
+   fMainTransparency    (e.fMainTransparency),
+   fMainColorPtr        (0),
+   fMainTrans           (0),
+   fItems               (),
+   fSource              (e.fSource),
+   fUserData            (0),
+   fPickable            (e.fPickable),
+   fSelected            (kFALSE),
+   fHighlighted         (kFALSE),
+   fImpliedSelected     (0),
+   fImpliedHighlighted  (0),
+   fChangeBits          (0),
+   fDestructing         (kFALSE)
+{
+   // Copy constructor. Does shallow copy.
+   // Call CloneChildren(const TEveElement& e, Bool_t recurse=kFALSE) if
+   // you want to copy children as well.
+   // 'TRef fSource' is copied but 'void* UserData' is NOT.
+   // If the element is projectable, its projections are NOT copied.
+   //
+   // Not implemented for most sub-classes, let us know.
+   // Note that sub-classes of TEveProjected are NOT and will NOT be copyable.
+
+   SetVizModel(e.fVizModel);
+   if (e.fMainColorPtr)
+      fMainColorPtr = (Color_t*)((const char*) this + ((const char*) e.fMainColorPtr - (const char*) &e));
+   if (e.fMainTrans)
+      fMainTrans = new TEveTrans(*e.fMainTrans);
 }
 
 //______________________________________________________________________________
@@ -140,6 +186,34 @@ TEveElement::~TEveElement()
       i->fTree->DeleteItem(i->fItem);
 
    delete fMainTrans;
+}
+
+//______________________________________________________________________________
+TEveElement* TEveElement::CloneElementRecurse(Int_t recurse) const
+{
+   // Clone elements and 'recurse' levels of its children.
+   // If recurse ==  0, only the element itself is cloned (default).
+   // If recurse == -1, all the hierarchy is cloned.
+
+   TEveElement* el = CloneElement();
+   if (recurse--)
+   {
+      CloneChildrenRecurse(el, recurse);
+   }
+   return el;
+}
+
+//______________________________________________________________________________
+void TEveElement::CloneChildrenRecurse(TEveElement* dest, Int_t recurse) const
+{
+   // Clone children and attach them to the dest element.
+   // If recurse ==  0, only the direct descendants are cloned (default).
+   // If recurse == -1, all the hierarchy is cloned.
+
+   for (List_ci i=fChildren.begin(); i!=fChildren.end(); ++i)
+   {
+      dest->AddElement((*i)->CloneElementRecurse(recurse));
+   }
 }
 
 /******************************************************************************/
@@ -1511,20 +1585,45 @@ ClassImp(TEveElementObjectPtr);
 
 //______________________________________________________________________________
 TEveElementObjectPtr::TEveElementObjectPtr(TObject* obj, Bool_t own) :
-   TEveElement(),
-   fObject(obj),
-   fOwnObject(own)
+   TEveElement (),
+   TObject     (),
+   fObject     (obj),
+   fOwnObject  (own)
 {
    // Constructor.
 }
 
 //______________________________________________________________________________
 TEveElementObjectPtr::TEveElementObjectPtr(TObject* obj, Color_t& mainColor, Bool_t own) :
-   TEveElement(mainColor),
-   fObject(obj),
-   fOwnObject(own)
+   TEveElement (mainColor),
+   TObject     (),
+   fObject     (obj),
+   fOwnObject  (own)
 {
    // Constructor.
+}
+
+//______________________________________________________________________________
+TEveElementObjectPtr::TEveElementObjectPtr(const TEveElementObjectPtr& e) :
+   TEveElement (e),
+   TObject     (e),
+   fObject     (0),
+   fOwnObject  (e.fOwnObject)
+{
+   // Copy constructor.
+   // If object pointed to is owned it is cloned.
+   // It is assumed that the main-color has its origin in the TObject pointed to so
+   // it is fixed here accordingly.
+
+   if (fOwnObject && e.fObject)
+   {
+      fObject = e.fObject->Clone();
+      SetMainColorPtr((Color_t*)((const char*) fObject + ((const char*) e.GetMainColorPtr() - (const char*) e.fObject)));
+   }
+   else
+   {
+      SetMainColorPtr(e.GetMainColorPtr());
+   }
 }
 
 //______________________________________________________________________________
@@ -1592,6 +1691,17 @@ TEveElementList::TEveElementList(const Text_t* n, const Text_t* t, Bool_t doColo
    if(fDoColor) {
       SetMainColorPtr(&fColor);
    }
+}
+
+//______________________________________________________________________________
+TEveElementList::TEveElementList(const TEveElementList& e) :
+   TEveElement (e),
+   TNamed      (e),
+   fColor      (e.fColor),
+   fDoColor    (e.fDoColor),
+   fChildClass (e.fChildClass)
+{
+   // Copy constructor.
 }
 
 //______________________________________________________________________________

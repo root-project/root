@@ -28,8 +28,6 @@ protected:
    Bool_t    fOwnIds; //Flag specifying id-objects are owned by the point-set
    TRefArray fIds;    //User-provided point identifications
 
-   TPointSet3D& operator=(const TPointSet3D&);
-
 public:
    TPointSet3D() :
       TPolyMarker3D(), fOwnIds(kFALSE), fIds() { fName="TPointSet3D"; }
@@ -39,8 +37,9 @@ public:
       TPolyMarker3D(n, p, m, opt), fOwnIds(kFALSE), fIds() { fName="TPointSet3D"; }
    TPointSet3D(Int_t n, Double_t *p, Marker_t m=1, Option_t *opt="") :
       TPolyMarker3D(n, p, m, opt), fOwnIds(kFALSE), fIds() { fName="TPointSet3D"; }
-   TPointSet3D(const TPointSet3D &ps) :
-      TPolyMarker3D(ps), TAttBBox(ps), fOwnIds(kFALSE), fIds(ps.fIds) { }
+   TPointSet3D(const TPointSet3D &t);
+
+   TPointSet3D& operator=(const TPointSet3D& t);
 
    virtual ~TPointSet3D();
 
@@ -56,7 +55,7 @@ public:
 
    virtual void PointSelected(Int_t n);
 
-   ClassDef(TPointSet3D,1) // TPolyMarker3D with direct OpenGL rendering.
-}; // endclass TPointSet3D
+   ClassDef(TPointSet3D,1); // TPolyMarker3D with direct OpenGL rendering.
+};
 
 #endif

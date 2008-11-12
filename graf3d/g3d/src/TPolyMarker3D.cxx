@@ -24,7 +24,7 @@
 
 #include <assert.h>
 
-ClassImp(TPolyMarker3D)
+ClassImp(TPolyMarker3D);
 
 const Int_t kDimension = 3;
 
@@ -177,12 +177,13 @@ TPolyMarker3D::~TPolyMarker3D()
 }
 
 //______________________________________________________________________________
-TPolyMarker3D::TPolyMarker3D(const TPolyMarker3D &polymarker) : TObject(polymarker), TAttMarker(polymarker), TAtt3D(polymarker)
+TPolyMarker3D::TPolyMarker3D(const TPolyMarker3D &p) :
+   TObject(p), TAttMarker(p), TAtt3D(p)
 {
    // 3-D polymarker copy ctor.
 
    fP = 0;
-   ((TPolyMarker3D&)polymarker).Copy(*this);
+   p.Copy(*this);
 }
 
 //______________________________________________________________________________

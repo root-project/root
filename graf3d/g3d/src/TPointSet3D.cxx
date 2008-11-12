@@ -25,29 +25,32 @@
 //
 // Marker-size (from TAttMarker) is multiplied by 5!
 //
-// An identification of type TObject* can be assigned to each point via
-// SetPointId() method. Copy-constructor and assignment operator do
-// not copy these ids. They are not streamed either. Set the fOwnIds flag
-// if the ids are owned by the point-set and should be deleted when pointset
-// is cleared/destructed. Set fFakeIds if ids are of some other type
-// casted to TObject*.
+// An identification of type TObject* can be assigned to each point
+// via SetPointId() method. Set the fOwnIds flag if the ids are owned
+// by the point-set and should be deleted when pointset is cleared or
+// destructed.
+//
+// Copy-constructor and assignment operator COPIES the ids if the are
+// not owned and CLONES them if they are owned.
+//
+// The ids are not streamed. 
 
-ClassImp(TPointSet3D)
+ClassImp(TPointSet3D);
 
 //______________________________________________________________________________
-TPointSet3D& TPointSet3D::operator=(const TPointSet3D& tp3)
+TPointSet3D::TPointSet3D(const TPointSet3D &t) :
+   TPolyMarker3D(t), TAttBBox(t), fOwnIds(t.fOwnIds), fIds()
 {
-   // Assignement operator; clears id array,
+   // Copy constructor.
 
-   if(this!=&tp3) {
-      ClearIds();
-      TPolyMarker3D::operator=(tp3);
-      fOwnIds = kFALSE;
-      fIds.Expand(tp3.fIds.GetSize());
-      for (Int_t i=0; i<tp3.fIds.GetSize(); ++i)
-         fIds.AddAt(tp3.fIds.At(i), i);
+   fIds.Expand(t.fIds.GetSize());
+   if (fOwnIds) {
+      for (Int_t i=0; i<t.fIds.GetSize(); ++i)
+         fIds.AddAt(t.fIds.At(i)->Clone(), i);
+   } else {
+      for (Int_t i=0; i<t.fIds.GetSize(); ++i)
+         fIds.AddAt(t.fIds.At(i), i);
    }
-   return *this;
 }
 
 //______________________________________________________________________________
@@ -56,6 +59,27 @@ TPointSet3D::~TPointSet3D()
    // Destructor.
 
    ClearIds();
+}
+
+//______________________________________________________________________________
+TPointSet3D& TPointSet3D::operator=(const TPointSet3D& t)
+{
+   // Assignement operator.
+
+   if (this != &t) {
+      ClearIds();
+      TPolyMarker3D::operator=(t);
+      fOwnIds = t.fOwnIds;
+      fIds.Expand(t.fIds.GetSize());
+      if (fOwnIds) {
+         for (Int_t i=0; i<t.fIds.GetSize(); ++i)
+            fIds.AddAt(t.fIds.At(i)->Clone(), i);
+      } else {
+         for (Int_t i=0; i<t.fIds.GetSize(); ++i)
+            fIds.AddAt(t.fIds.At(i), i);
+      }
+   }
+   return *this;
 }
 
 //______________________________________________________________________________

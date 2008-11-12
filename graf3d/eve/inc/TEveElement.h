@@ -33,7 +33,6 @@ class TEveElement
 {
    friend class TEveManager;
 
-   TEveElement(const TEveElement&);            // Not implemented
    TEveElement& operator=(const TEveElement&); // Not implemented
 
 public:
@@ -104,7 +103,12 @@ protected:
 public:
    TEveElement();
    TEveElement(Color_t& main_color);
+   TEveElement(const TEveElement& e);
    virtual ~TEveElement();
+
+   virtual TEveElement* CloneElement() const { return new TEveElement(*this); }
+   virtual TEveElement* CloneElementRecurse(Int_t recurse=0) const;
+   virtual void         CloneChildrenRecurse(TEveElement* dest, Int_t recurse=0) const;
 
    virtual const Text_t* GetElementName()  const;
    virtual const Text_t* GetElementTitle() const;
@@ -230,7 +234,7 @@ public:
    virtual void   PropagateRnrStateToProjecteds();
 
    virtual Bool_t CanEditMainColor() const  { return kFALSE; }
-   Color_t* GetMainColorPtr()               { return fMainColorPtr; }
+   Color_t* GetMainColorPtr()        const  { return fMainColorPtr; }
    void     SetMainColorPtr(Color_t* color) { fMainColorPtr = color; }
 
    virtual Bool_t  HasMainColor() const { return fMainColorPtr != 0; }
@@ -351,7 +355,6 @@ public:
 class TEveElementObjectPtr : public TEveElement,
                              public TObject
 {
-   TEveElementObjectPtr(const TEveElementObjectPtr&);            // Not implemented
    TEveElementObjectPtr& operator=(const TEveElementObjectPtr&); // Not implemented
 
 protected:
@@ -361,7 +364,10 @@ protected:
 public:
    TEveElementObjectPtr(TObject* obj, Bool_t own=kTRUE);
    TEveElementObjectPtr(TObject* obj, Color_t& mainColor, Bool_t own=kTRUE);
+   TEveElementObjectPtr(const TEveElementObjectPtr& e);
    virtual ~TEveElementObjectPtr();
+
+   virtual TEveElementObjectPtr* CloneElement() const { return new TEveElementObjectPtr(*this); }
 
    virtual TObject* GetObject(const TEveException& eh="TEveElementObjectPtr::GetObject ") const;
    virtual void     ExportToCINT(Text_t* var_name);
@@ -381,7 +387,6 @@ class TEveElementList : public TEveElement,
                         public TNamed
 {
 private:
-   TEveElementList(const TEveElementList&);            // Not implemented
    TEveElementList& operator=(const TEveElementList&); // Not implemented
 
 protected:
@@ -392,7 +397,10 @@ protected:
 public:
    TEveElementList(const Text_t* n="TEveElementList", const Text_t* t="",
                    Bool_t doColor=kFALSE);
+   TEveElementList(const TEveElementList& e);
    virtual ~TEveElementList() {}
+
+   virtual TEveElementList* CloneElement() const { return new TEveElementList(*this); }
 
    virtual const Text_t* GetElementName()  const { return TNamed::GetName(); }
    virtual const Text_t* GetElementTitle() const { return TNamed::GetTitle(); }

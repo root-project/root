@@ -54,7 +54,7 @@ public:
    TPolyMarker3D(Int_t n, Marker_t marker=1, Option_t *option="");
    TPolyMarker3D(Int_t n, Float_t *p, Marker_t marker=1, Option_t *option="");
    TPolyMarker3D(Int_t n, Double_t *p, Marker_t marker=1, Option_t *option="");
-   TPolyMarker3D(const TPolyMarker3D &polymarker);
+   TPolyMarker3D(const TPolyMarker3D &p);
    virtual ~TPolyMarker3D();
 
    virtual void      Copy(TObject &polymarker) const;
@@ -83,7 +83,7 @@ public:
 
    static  void      PaintH3(TH1 *h, Option_t *option);
 
-   ClassDef(TPolyMarker3D,2)  //An array of 3-D points with the same marker
+   ClassDef(TPolyMarker3D,2);  //An array of 3-D points with the same marker
 };
 
 #endif

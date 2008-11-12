@@ -1,10 +1,23 @@
 // Author: Matevz Tadel
 
-TEvePointSet* pointset_test(Int_t npoints = 512)
+#ifndef __CINT__
+
+#include <TEveManager.h>
+#include <TEvePointSet.h>
+#include <TEveRGBAPalette.h>
+#include <TColor.h>
+#include <TRandom.h>
+
+#endif
+
+TEvePointSet* pointset_test(Int_t npoints = 512, TEveElement* parent=0)
 {
    TEveManager::Create();
 
-   TRandom r(0);
+   if (!gRandom)
+      gRandom = new TRandom(0);
+   TRandom& r= *gRandom;
+
    Float_t s = 100;
 
    TEvePointSet* ps = new TEvePointSet();
@@ -16,13 +29,40 @@ TEvePointSet* pointset_test(Int_t npoints = 512)
       ps->SetPointId(new TNamed(Form("Point %d", i), ""));
    }
 
-   ps->SetMarkerColor(5);
-   ps->SetMarkerSize(1.5);
+   ps->SetMarkerColor(TMath::Nint(r.Uniform(2, 9)));
+   ps->SetMarkerSize(r.Uniform(1, 2));
    ps->SetMarkerStyle(4);
 
-   gEve->AddElement(ps);
-   gEve->Redraw3D();
+   if (parent)
+   {
+      parent->AddElement(ps);
+   }
+   else
+   {
+      gEve->AddElement(ps);
+      gEve->Redraw3D();
+   }
 
+   return ps;
+}
+
+TEvePointSet*
+pointset_test_hierarchy(Int_t level=3, Int_t nps=1, Int_t fac=2,
+                        Int_t npoints=512, TEveElement* parent=0)
+{
+   // This only works in compiled mode!
+
+   TEvePointSet* ps = 0;
+   --level;
+   for (Int_t i=0; i<nps; ++i)
+   {
+      printf("level=%d nps=%d i=%d\n", level, nps, i);
+      ps = pointset_test(npoints, parent);
+      if (level)
+      {
+         pointset_test_hierarchy(level, nps*fac, fac, npoints/fac, ps);
+      }
+   }
    return ps;
 }
 
@@ -63,4 +103,5 @@ TEvePointSetArray* pointsetarray_test()
 
    gEve->Redraw3D();
 
+   return l;
 }
