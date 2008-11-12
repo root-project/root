@@ -767,7 +767,7 @@ void TGRootIDE::Build()
    fFileType->AddEntry(" C/C++ Files (*.c;*.cxx;*.h;...)", dropt++);
    fFileType->AddEntry(" Text Files (*.txt)", dropt++);
    fFilter = fFileType->GetTextEntry();
-   fFileType->Resize(200, fFilter->GetDefaultHeight());
+   fFileType->Resize(200, 20);
    vf3->AddFrame(fFileType, new TGLayoutHints(kLHintsExpandX, 1, 1, 1, 1));
    fFileType->Connect("Selected(Int_t)", "TGRootIDE", this, "ApplyFilter(Int_t)");
 
