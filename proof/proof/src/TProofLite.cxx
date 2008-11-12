@@ -199,7 +199,6 @@ Int_t TProofLite::Init(const char *, const char *conffile,
 
    // Status of cluster
    fIdle = kTRUE;
-   fWaitingQueries  = new TList;
 
    // Query type
    fSync = kTRUE;
