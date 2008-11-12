@@ -197,6 +197,7 @@ void TGeoChecker::OpProgress(const char *opname, Long64_t current, Long64_t size
    }
    if (refresh && oneoftwo) {
       nname = oname;
+      if (fNchecks <= 0) fNchecks = nrefresh+1;
       Int_t pctdone = (Int_t)(100.*nrefresh/fNchecks);
       oname = Form("     == %d%% ==", pctdone);
    }         
