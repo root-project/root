@@ -49,7 +49,6 @@ private:
    TString  fSockPath;    // UNIX socket path for communication with workers
    TServerSocket *fServSock; // Server socket to accept call backs
    Bool_t   fForkStartup; // Startup N-1 workers forking the first worker
-   TList   *fWaitingQueries; // List of outstanding queries
 
    TProofLockPath *fCacheLock; //cache dir locker
    TProofLockPath *fQueryLock; // Query dir locker
