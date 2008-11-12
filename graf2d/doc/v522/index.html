@@ -41,9 +41,13 @@
      before. Now fixed.
 </ul>
 
-<h4>libAfterImage</h4>
+<h4>TASImage / libAfterImage</h4>
 <ul>
 <li> Synchronizing libAfterImage with Sasha'a latest version.
+<li> <tt>TASImage::Merge (const TImage im, const char op, Int_t x, Int_t y) </tt>
+     with x and/or y not equal 0 did not clip the overlayed picture correctly.
+<li> Make sure a rectangle drawn will <tt>TAsimage::DrawRectangle<//t> appears 
+     after calling <tt>gPad->Modified()</tt>.
 </ul>
 
 <h3>Miscellaneous</h3>
@@ -78,6 +82,10 @@ The vertical text aligment is now done using the text alignment attributes
 instead of the trick used before. Histograms' titles are look much better
 centered vertically after this modification.
 
+<h4>TGraph</h4>
+
+<tt>TGraph::DrawPanel</tt> is now implemented.
+
 <h4>TGraphErrors</h4>
 
 The drawing option &quot;[]&quot; has been change to &quot;||&quot;. The new
@@ -89,6 +97,11 @@ provided by Thomas Ullrich <thomas.ullrich@bnl.gov>, shows it clearly.
 <center>
 <img alt="example of option []" src="graf2d_01.gif">
 <center>
+
+<h4>TGraphPolargram.cxx</h4>
+
+An extra empty canvas was created each time a <tt>TGraphPolar</tt> was painted
+in "Not Editable" mode.
 
 <h4>TPad</h4>
 

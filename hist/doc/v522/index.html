@@ -70,8 +70,11 @@ In addition HFitInterface defines a function <tt>ROOT::Fit::FitObject</tt>
 
 <h4>TMultiGraph</h4>
 <ul>
-  <li>    Re-implement <tt>TMultiGraph::Fit</tt> using the functions defined in <tt>HFitImpl.cxx</tt>.
-        <li>Add possibility to be used in the FitPanel (add a <tt>TMultiGraph::FitPanel()</tt> method).
+  <li> Re-implement <tt>TMultiGraph::Fit</tt> using the functions defined in
+      <tt>HFitImpl.cxx</tt>.
+  <li> Add possibility to be used in the FitPanel (add a
+       <tt>TMultiGraph::FitPanel()</tt> method).
+  <li> Protection added in <tt>Draw()</tt>: "Cannot draw empty TMultiGraph".
 </ul>
 
 <h4>TGraphPainter</h4>
