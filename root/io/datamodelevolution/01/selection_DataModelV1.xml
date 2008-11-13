@@ -1,0 +1,12 @@
+<lcgdict>
+  <class name="ClassAIns" ClassVersion="1" />
+  <class name="ClassABase" ClassVersion="1" />
+  <class name="ClassA" ClassVersion="1"  />
+  <class name="ClassB" ClassVersion="1" />
+  <class name="ClassC" ClassVersion="1" />
+  <class name="std::vector<double>" />
+  <class name="std::pair<int,double>" />
+  <class name="std::vector<ClassA>" />
+  <class name="std::vector<std::pair<int,double> >" />
+  <class name="std::vector<ClassA*>" />
+</lcgdict>
