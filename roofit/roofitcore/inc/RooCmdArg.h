@@ -51,7 +51,7 @@ public:
     return newarg ;
   }
 
-  ~RooCmdArg();
+  virtual ~RooCmdArg();
 
   static const RooCmdArg& none() ;
 

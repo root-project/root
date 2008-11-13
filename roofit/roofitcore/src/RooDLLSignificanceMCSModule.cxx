@@ -51,7 +51,7 @@ ClassImp(RooDLLSignificanceMCSModule)
 RooDLLSignificanceMCSModule::RooDLLSignificanceMCSModule(const RooRealVar& param, Double_t nullHypoValue) : 
   RooAbsMCStudyModule(Form("RooDLLSignificanceMCSModule_%s",param.GetName()),Form("RooDLLSignificanceMCSModule_%s",param.GetName())),
   _parName(param.GetName()), 
-  _data(0), _nll0h(0), _sig0h(0), _nullValue(nullHypoValue)
+  _data(0), _nll0h(0), _dll0h(0), _sig0h(0), _nullValue(nullHypoValue)
 {
   // Constructor of module with parameter to be interpreted as nSignal and the value of the
   // null hypothesis for nSignal (usually zero)
@@ -63,7 +63,7 @@ RooDLLSignificanceMCSModule::RooDLLSignificanceMCSModule(const RooRealVar& param
 RooDLLSignificanceMCSModule::RooDLLSignificanceMCSModule(const char* parName, Double_t nullHypoValue) :
   RooAbsMCStudyModule(Form("RooDLLSignificanceMCSModule_%s",parName),Form("RooDLLSignificanceMCSModule_%s",parName)),
   _parName(parName), 
-  _data(0), _nll0h(0), _sig0h(0), _nullValue(nullHypoValue)
+  _data(0), _nll0h(0), _dll0h(0), _sig0h(0), _nullValue(nullHypoValue)
 {
   // Constructor of module with parameter name to be interpreted as nSignal and the value of the
   // null hypothesis for nSignal (usually zero)
@@ -75,7 +75,7 @@ RooDLLSignificanceMCSModule::RooDLLSignificanceMCSModule(const char* parName, Do
 RooDLLSignificanceMCSModule::RooDLLSignificanceMCSModule(const RooDLLSignificanceMCSModule& other) : 
   RooAbsMCStudyModule(other), 
   _parName(other._parName),
-  _data(0), _nll0h(0), _sig0h(0), _nullValue(other._nullValue)
+  _data(0), _nll0h(0), _dll0h(0), _sig0h(0), _nullValue(other._nullValue)
 {
   // Copy constructor
 }
@@ -89,6 +89,9 @@ RooDLLSignificanceMCSModule:: ~RooDLLSignificanceMCSModule()
 
   if (_nll0h) {
     delete _nll0h ;
+  }    
+  if (_dll0h) {
+    delete _dll0h ;
   }    
   if (_sig0h) {
     delete _sig0h ;

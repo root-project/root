@@ -271,8 +271,9 @@ RooPlot::~RooPlot()
 
   // Delete the items in our container and our iterator.
   if (_dir) {
-    if (!_dir->TestBit(TDirectoryFile::kCloseDirectory))
-      _dir->GetList()->Remove(this) ;
+    if (!_dir->TestBit(TDirectoryFile::kCloseDirectory)) {
+      _dir->GetList()->RecursiveRemove(this) ;
+    }
   }
 
   _items.Delete();
@@ -280,6 +281,7 @@ RooPlot::~RooPlot()
   if(_plotVarSet) delete _plotVarSet;
   if(_normVars) delete _normVars;
   delete _hist ;
+
 }
 
 

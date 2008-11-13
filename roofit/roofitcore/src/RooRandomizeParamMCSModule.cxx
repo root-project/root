@@ -150,6 +150,7 @@ void RooRandomizeParamMCSModule::sampleSumUniform(const RooArgSet& paramSet, Dou
     }
     okset.add(*rrv) ;
   }
+  delete iter ;
 
   // If we're already attached to a RooMCStudy, check that given param is actual generator model parameter
   // If not attached, this check is repeated at the attachment moment
@@ -296,6 +297,7 @@ Bool_t RooRandomizeParamMCSModule::initializeInstance()
 	actualPSet.add(*actualVar) ;
       }
     }    
+    delete psiter ;
     usiter->_pset.removeAll() ;
     usiter->_pset.add(actualPSet) ;
 
@@ -411,6 +413,7 @@ Bool_t RooRandomizeParamMCSModule::processBeforeGen(Int_t /*sampleNum*/)
       RooRealVar* genpar = static_cast<RooRealVar*>(_genParSet.find(Form("%s_gen",param->GetName()))) ;
       genpar->setVal(param->getVal()) ;
     }
+    delete iter ;
   }
 
   // Apply gaussian smearing to all sets of generator parameters for which it is requested

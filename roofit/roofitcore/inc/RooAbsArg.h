@@ -312,6 +312,7 @@ public:
   static UInt_t crc32(const char* data) ;
   
   Bool_t addOwnedComponents(const RooArgSet& comps) ;
+  const RooArgSet* ownedComponents() const { return _ownedComponents ; }
   
   void setProhibitServerRedirect(Bool_t flag) { _prohibitServerRedirect = flag ; }
 

@@ -435,7 +435,7 @@ TH1 *RooAbsData::createHistogram(const char* varNameList, Int_t xbins, Int_t ybi
 
   if (zvar) {    
     if (zbins<=0 || !zvar->hasMax() || !zvar->hasMin() ) {
-      argList.Add(RooFit::ZVar(*zvar,RooFit::AutoSymBinning(zbins==0?zvar->numBins():abs(zbins))).Clone()) ;
+      argList.Add(RooFit::ZVar(*zvar,RooFit::AutoBinning(zbins==0?zvar->numBins():abs(zbins))).Clone()) ;
     } else {
       argList.Add(RooFit::ZVar(*zvar,RooFit::Binning(zbins)).Clone()) ;
     }
@@ -492,10 +492,11 @@ TH1 *RooAbsData::createHistogram(const char *name, const RooAbsRealLValue& xvar,
 
 
 //_____________________________________________________________________________
-TH1 *RooAbsData::createHistogram(const char *name, const RooAbsRealLValue& xvar, RooLinkedList& argList) const
+TH1 *RooAbsData::createHistogram(const char *name, const RooAbsRealLValue& xvar, const RooLinkedList& argListIn) const
 {
   // Internal method that implements histogram filling
-
+  RooLinkedList argList(argListIn) ;
+  
   // Define configuration for this method
   RooCmdConfig pc(Form("RooAbsData::createHistogram(%s)",GetName())) ;
   pc.defineString("cutRange","CutRange",0,"",kTRUE) ;
@@ -526,11 +527,13 @@ TH1 *RooAbsData::createHistogram(const char *name, const RooAbsRealLValue& xvar,
   pc.stripCmdList(argList,"CutRange,CutSpec") ;
 
   // Swap Auto(Sym)RangeData with a Binning command
+  RooLinkedList ownedCmds ;
   RooCmdArg* autoRD = (RooCmdArg*) argList.find("AutoRangeData") ;
   if (autoRD) {
     Double_t xmin,xmax ;
     getRange((RooRealVar&)xvar,xmin,xmax,autoRD->getDouble(0),autoRD->getInt(0)) ;
     RooCmdArg* bincmd = (RooCmdArg*) RooFit::Binning(autoRD->getInt(1),xmin,xmax).Clone() ;
+    ownedCmds.Add(bincmd) ;
     argList.Replace(autoRD,bincmd) ;
   }
 
@@ -540,7 +543,9 @@ TH1 *RooAbsData::createHistogram(const char *name, const RooAbsRealLValue& xvar,
       Double_t ymin,ymax ;
       getRange((RooRealVar&)(*yvar),ymin,ymax,autoRDY->getDouble(0),autoRDY->getInt(0)) ;
       RooCmdArg* bincmd = (RooCmdArg*) RooFit::Binning(autoRDY->getInt(1),ymin,ymax).Clone() ;
+      //ownedCmds.Add(bincmd) ;
       ((RooCmdArg*)argList.find("YVar"))->subArgs().Replace(autoRDY,bincmd) ;
+      delete autoRDY ;
     }
   }
 
@@ -550,13 +555,17 @@ TH1 *RooAbsData::createHistogram(const char *name, const RooAbsRealLValue& xvar,
       Double_t zmin,zmax ;
       getRange((RooRealVar&)(*zvar),zmin,zmax,autoRDZ->getDouble(0),autoRDZ->getInt(0)) ;
       RooCmdArg* bincmd = (RooCmdArg*) RooFit::Binning(autoRDZ->getInt(1),zmin,zmax).Clone() ;
+      //ownedCmds.Add(bincmd) ;
       ((RooCmdArg*)argList.find("ZVar"))->subArgs().Replace(autoRDZ,bincmd) ;
+      delete autoRDZ ;
     }
   }
 
 
   TH1* histo = xvar.createHistogram(name,argList) ;
   fillHistogram(histo,vars,cutSpec,cutRange) ;
+
+  ownedCmds.Delete() ;
 
   return histo ;
 }

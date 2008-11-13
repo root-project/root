@@ -162,6 +162,8 @@ Bool_t RooLinearVar::isJacobianOK(const RooArgSet& depList) const
       }
     }
   }
+  delete dIter ;
+
   return kTRUE ;
 }
 

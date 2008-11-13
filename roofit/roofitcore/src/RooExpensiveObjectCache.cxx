@@ -68,6 +68,11 @@ RooExpensiveObjectCache::RooExpensiveObjectCache(const RooExpensiveObjectCache& 
 RooExpensiveObjectCache::~RooExpensiveObjectCache() 
 {
   // Destructor. 
+
+  for (std::map<TString,ExpensiveObject*>::iterator iter = _map.begin() ; iter!=_map.end() ; ++iter) {
+    delete iter->second ;
+  }
+
   if (_instance == this) {
     _instance = 0 ;
   }
@@ -207,6 +212,7 @@ RooExpensiveObjectCache::ExpensiveObject::ExpensiveObject(const ExpensiveObject&
 //_____________________________________________________________________________
 RooExpensiveObjectCache::ExpensiveObject::~ExpensiveObject() 
 {
+  delete _payload ;
 }
 
 
@@ -228,12 +234,14 @@ Bool_t RooExpensiveObjectCache::ExpensiveObject::matches(TClass* tc, const RooAr
     RooAbsReal* real = dynamic_cast<RooAbsReal*>(arg) ;
     if (real) {
       if (fabs(real->getVal()-_realRefParams[real->GetName()])>1e-12) {
+	delete iter ;
 	return kFALSE ;
       } 
     } else {
       RooAbsCategory* cat = dynamic_cast<RooAbsCategory*>(arg) ;
       if (cat) {
 	if (cat->getIndex() != _catRefParams[cat->GetName()]) {
+	  delete iter ;
 	  return kFALSE ;
 	}
       }

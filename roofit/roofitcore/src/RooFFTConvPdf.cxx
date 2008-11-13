@@ -212,12 +212,11 @@ RooFFTConvPdf::FFTCacheElem::FFTCacheElem(const RooFFTConvPdf& self, const RooAr
     RooArgSet clonedBranches1 ;
     RooCustomizer cust(*clonePdf1,"fft") ;
     cust.replaceArg(*convObs,*shiftObs1) ;  
-    cust.setCloneBranchSet(clonedBranches1) ;
-    cust.setOwning(kFALSE) ;
 
     pdf1Clone = (RooAbsPdf*) cust.build() ;
-    pdf1Clone->addOwnedComponents(clonedBranches1) ;
-    pdf1Clone->addOwnedComponents(RooArgSet(*clonePdf1,*shiftObs1)) ;
+
+    pdf1Clone->addOwnedComponents(*shiftObs1) ;
+    pdf1Clone->addOwnedComponents(*clonePdf1) ;
 
   } else {
     pdf1Clone = clonePdf1 ;
@@ -229,12 +228,11 @@ RooFFTConvPdf::FFTCacheElem::FFTCacheElem(const RooFFTConvPdf& self, const RooAr
     RooArgSet clonedBranches2 ;
     RooCustomizer cust(*clonePdf2,"fft") ;
     cust.replaceArg(*convObs,*shiftObs2) ;  
-    cust.setCloneBranchSet(clonedBranches2) ;
-    cust.setOwning(kFALSE) ;
+
+    pdf1Clone->addOwnedComponents(*shiftObs2) ;
+    pdf1Clone->addOwnedComponents(*clonePdf2) ;
 
     pdf2Clone = (RooAbsPdf*) cust.build() ;
-    pdf2Clone->addOwnedComponents(clonedBranches2) ;
-    pdf2Clone->addOwnedComponents(RooArgSet(*clonePdf2,*shiftObs2)) ;
 
   } else {
     pdf2Clone = clonePdf2 ;
@@ -274,6 +272,10 @@ RooFFTConvPdf::FFTCacheElem::~FFTCacheElem()
   delete fftr2c1 ; 
   delete fftr2c2 ; 
   delete fftc2r ; 
+
+  delete pdf1Clone ;
+  delete pdf2Clone ;
+
 }
 
 
@@ -285,16 +287,19 @@ void RooFFTConvPdf::fillCacheObject(RooAbsCachedPdf::PdfCacheElem& cache) const
   // Fill the contents of the cache the FFT convolution output
   RooDataHist& cacheHist = *cache.hist() ;
   
-
   ((FFTCacheElem&)cache).pdf1Clone->setOperMode(ADirty,kTRUE) ;
   ((FFTCacheElem&)cache).pdf2Clone->setOperMode(ADirty,kTRUE) ;
-
 
   // Determine if there other observables than the convolution observable in the cache
   RooArgSet otherObs ;
   RooArgSet(*cacheHist.get()).snapshot(otherObs) ;
-  otherObs.remove(_x.arg(),kTRUE,kTRUE) ;
 
+  RooAbsArg* histArg = otherObs.find(_x.arg().GetName()) ;
+  if (histArg) {
+    otherObs.remove(*histArg,kTRUE,kTRUE) ;
+    delete histArg ;
+  } 
+  
   // Handle trivial scenario -- no other observables
   if (otherObs.getSize()==0) {
     fillCacheSlice((FFTCacheElem&)cache,RooArgSet()) ;
@@ -429,7 +434,8 @@ void RooFFTConvPdf::fillCacheSlice(FFTCacheElem& aux, const RooArgSet& slicePos)
     iter->Next() ;
     cacheHist.set(aux.fftc2r->GetPointReal(j)) ;    
   }
-  
+  delete iter ;
+
   // cacheHist.dump2() ;
 
   // Delete input arrays

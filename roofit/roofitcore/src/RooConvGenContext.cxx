@@ -171,17 +171,22 @@ RooConvGenContext::RooConvGenContext(const RooFFTConvPdf &model, const RooArgSet
 			<< " for generation of observable(s) " << vars << endl ;
 
   // Create generator for physics X truth model
-  _pdfVarsOwned = (RooArgSet*) model._pdf1.arg().getObservables(&vars)->snapshot(kTRUE) ;
+  RooArgSet* tmp1= model._pdf1.arg().getObservables(&vars) ;
+  _pdfVarsOwned = (RooArgSet*) tmp1->snapshot(kTRUE) ;
   _pdfVars = new RooArgSet(*_pdfVarsOwned) ;
   _pdfGen = ((RooAbsPdf&)model._pdf1.arg()).genContext(*_pdfVars,prototype,auxProto,verbose) ;  
   _pdfCloneSet = 0 ;
 
   // Create generator for resolution model as PDF
-  _modelVarsOwned = (RooArgSet*) model._pdf2.arg().getObservables(&vars)->snapshot(kTRUE) ;
+  RooArgSet* tmp2 = model._pdf2.arg().getObservables(&vars) ;
+  _modelVarsOwned = (RooArgSet*) tmp2->snapshot(kTRUE) ;
   _modelVars = new RooArgSet(*_modelVarsOwned) ;
   _convVarName = model._x.arg().GetName() ;
   _modelGen = ((RooAbsPdf&)model._pdf2.arg()).genContext(*_modelVars,prototype,auxProto,verbose) ;
   _modelCloneSet = 0 ;
+
+  delete tmp1 ;
+  delete tmp2 ;
 
   if (prototype) {
     _pdfVars->add(*prototype->get()) ;

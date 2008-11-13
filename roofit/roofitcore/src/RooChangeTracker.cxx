@@ -85,6 +85,7 @@ RooChangeTracker::RooChangeTracker(const char* name, const char* title, const Ro
       _catSet.add(*arg) ;      
     }
   }
+  delete iter ;
   
   if (_checkVal) {
     RooAbsReal* real  ;

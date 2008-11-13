@@ -139,6 +139,8 @@ public:
 
   void dump() const ;
 
+  void releaseOwnership() { _ownCont = kFALSE ; }
+
 protected:
 
   friend class RooMultiCatIter ;

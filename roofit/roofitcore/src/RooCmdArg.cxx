@@ -139,7 +139,6 @@ RooCmdArg& RooCmdArg::operator=(const RooCmdArg& other)
 RooCmdArg::~RooCmdArg()
 {
   // Destructor
-
   _argList.Delete() ;
 }
 

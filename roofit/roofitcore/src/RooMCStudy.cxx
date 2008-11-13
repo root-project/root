@@ -392,6 +392,7 @@ RooMCStudy::~RooMCStudy()
   _genDataList.Delete() ;
   _fitResList.Delete() ;
   _fitOptList.Delete() ;
+  delete _ngenVar ;
   delete _fitParData ;
   delete _genParData ;
   delete _fitInitParams ;
@@ -850,6 +851,7 @@ void RooMCStudy::calcPulls()
     
     RooErrorVar* err = par->errorVar() ;
     _fitParData->addColumn(*err) ;
+    delete err ;
     
     TString name(par->GetName()), title(par->GetTitle()) ;
     name.Append("pull") ;

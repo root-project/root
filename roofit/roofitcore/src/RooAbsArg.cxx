@@ -1978,6 +1978,10 @@ RooAbsArg* RooAbsArg::cloneTree(const char* newname) const
   // Add the set as owned component of the head
   head->addOwnedComponents(*clonedNodes) ;
 
+  // Delete intermediate container   
+  clonedNodes->releaseOwnership() ;
+  delete clonedNodes ;
+
   // Adjust name of head node if requested
   if (newname) {
     head->SetName(newname) ;
