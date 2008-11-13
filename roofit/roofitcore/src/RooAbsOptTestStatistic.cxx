@@ -148,7 +148,7 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *tit
     
     if (!realReal->getBinning().highBoundFunc() && realReal->getMax()>(datReal->getMax()+1e-6)) {
       coutE(InputArguments) << "RooAbsOptTestStatistic: ERROR maximum of FUNC observable " << arg->GetName() 
-			    << " is smaller than that of " << arg->GetName() << " in the dataset" << endl ;
+			    << " is larger than that of " << arg->GetName() << " in the dataset" << endl ;
       RooErrorHandler::softAbort() ;
       return ;
     }
