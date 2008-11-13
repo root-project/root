@@ -87,7 +87,7 @@ test2: test2.clog
 	$(TestDiff)
 
 rtest2.clog: test2_cxx.$(DllSuf) rtest1
-	$(CMDECHO) root.exe -b -q -l test2.cxx+\(\"r\"\) > test2.clog 2>&1
+	$(CMDECHO) root.exe -b -q -l test2.cxx+\(\"r\"\) > rtest2.clog 2>&1
 
 rtest2: rtest2.clog
 	$(TestDiff)
