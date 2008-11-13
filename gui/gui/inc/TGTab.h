@@ -166,7 +166,7 @@ public:
    virtual void        SetEnabled(Bool_t on = kTRUE) { fEnabled = on; }
    Bool_t              IsEnabled() const { return fEnabled; }
    virtual void        SetEditDisabled(UInt_t) {}
-   virtual void        ShowClose(Bool_t on = kTRUE) { fShowClose = on; }
+   virtual void        ShowClose(Bool_t on = kTRUE);
    Bool_t              IsCloseShown() const { return fShowClose; }
    virtual void        SetActive(Bool_t on = kTRUE) { fActive = on; }
    Bool_t              IsActive() const { return fActive; }

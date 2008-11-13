@@ -76,7 +76,7 @@ TGTabElement::TGTabElement(const TGWindow *p, TGString *text, UInt_t w, UInt_t h
       fTWidth = gVirtualX->TextWidth(fFontStruct, fText->GetString(), fText->GetLength());
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
    fTHeight = max_ascent + max_descent;
-   Resize(TMath::Max(fTWidth+30, (UInt_t)45), fTHeight+6);
+   Resize(TMath::Max(fTWidth+12, (UInt_t)45), fTHeight+6);
    fEnabled = kTRUE;
    gVirtualX->GrabButton(fId, kButton1, kAnyModifier, kButtonPressMask, kNone, kNone);
 }
@@ -165,7 +165,10 @@ TGDimension TGTabElement::GetDefaultSize() const
 {
    // Return default size of tab element.
 
-   return TGDimension(TMath::Max(fTWidth+30, (UInt_t)45), fTHeight+6);
+   if (fShowClose && fClosePic && fClosePicD)
+      return TGDimension(TMath::Max(fTWidth+30, (UInt_t)45), fTHeight+6);
+   else
+      return TGDimension(TMath::Max(fTWidth+12, (UInt_t)45), fTHeight+6);
 }
 
 //______________________________________________________________________________
@@ -184,6 +187,21 @@ void TGTabElement::SetText(TGString *text)
    fClient->NeedRedraw(this);
 }
 
+//______________________________________________________________________________
+void TGTabElement::ShowClose(Bool_t show)
+{
+   // Show/hide close icon on the tab element, then apply layout
+   // to compute correct elements size.
+
+   TGTab* main = (TGTab*)fParent;
+   fShowClose = show;
+   if (fShowClose && fClosePic && fClosePicD)
+      Resize(TMath::Max(fTWidth+30, (UInt_t)45), fTHeight+6);
+   else
+      Resize(TMath::Max(fTWidth+12, (UInt_t)45), fTHeight+6);
+   if (main)
+      main->GetLayoutManager()->Layout();
+}
 
 //______________________________________________________________________________
 TGTabLayout::TGTabLayout(TGTab *main)
