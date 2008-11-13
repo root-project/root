@@ -1,0 +1,23 @@
+
+Processing test3.cxx+...
+Warning in <TClass::TClass>: no dictionary for class ACache is available
+Info in <TKey::ReadObjectAny>: Using Converter StreamerInfo from ACache to Axis
+Stream out object
+Axis::x 6
+Axis::y 7
+Axis::z 6070
+Axis::c 13
+Stream out embedded object
+Axis::x 9
+Axis::y 10
+Axis::z 9100
+Axis::c 19
+************************************************
+*    Row   *     obj.x *     obj.y *     obj.c *
+************************************************
+*        0 *         6 *         7 *        13 *
+************************************************
+Axis::x 6
+Axis::y 7
+Axis::z 6070
+Axis::c 13

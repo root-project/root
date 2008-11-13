@@ -1,0 +1,21 @@
+
+Processing test2.cxx+...
+Stream out object
+ACache::x 6
+ACache::y 7
+ACache::z 6070
+ACache::c 13
+Stream out embedded object
+ACache::x 9
+ACache::y 10
+ACache::z 9100
+ACache::c 19
+************************************************
+*    Row   *     obj.x *     obj.y *     obj.c *
+************************************************
+*        0 *         6 *         7 *        13 *
+************************************************
+ACache::x 6
+ACache::y 7
+ACache::z 6070
+ACache::c 13
