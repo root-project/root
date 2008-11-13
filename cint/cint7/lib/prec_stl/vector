@@ -118,9 +118,11 @@ class vector {
 		typedef const_reference reference;
 
 		const_iterator();
-#if (G__MSC_VER>=1310)
+#if (G__MSC_VER>=1310) && (G__MSC_VER<1400)
 		//const_iterator(pointer _Ptr);
 		const_iterator(T *const  _Ptr);
+#elif (G__MSC_VER>=1400)
+		const_iterator(T *const  _Ptr, const vector<T>* _Pvector );
 #endif
 
 		const_reference operator*() const;
@@ -169,9 +171,12 @@ class vector {
 		typedef Allocator::reference reference;
 
 		iterator();
-#if (G__MSC_VER>=1310)
-		iterator(pointer _Ptr);
+#if (G__MSC_VER>=1310) && (G__MSC_VER<1400)
+		iterator(pointer _Ptr );
+#elif (C__MSC_VER>=1400)
+		iterator(pointer _Ptr, const vector<T>* _Pvector );
 #endif
+
 		reference operator*() const;
 		pointer operator->() const;
 		iterator& operator++();

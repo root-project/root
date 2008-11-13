@@ -73,8 +73,6 @@
 
 #if (_MSC_VER >= 1400)
 #define _CRT_SECURE_NO_DEPRECATE 1
-#define _SECURE_SCL 0
-#define _HAS_ITERATOR_DEBUGGING 0
 #define _USE_ATTRIBUTES_FOR_SAL 0
 #endif
 
