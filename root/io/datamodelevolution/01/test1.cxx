@@ -8,10 +8,9 @@
 #include <utility>
 #include <vector>
 #include <algorithm>
-#include <dlfcn.h>
 #include <ctime>
-#include <Dumper.h>
-#include <Generator.h>
+#include <../common/Dumper.h>
+#include <../common/Generator.h>
 #include <cstdlib>
 #include <DataModelV1.h>
 #include <TFile.h>
@@ -25,23 +24,24 @@ void do_del( A* obj )
    delete obj;
 }
 
-int main( int argc, char** argv )
-{
+int test1(const char *mode = "") {
    using namespace std;
    srandom( time( 0 ) );
 
    //---------------------------------------------------------------------------
    // Load the dictionary
    //---------------------------------------------------------------------------
-   const char* dictname = "./libDataModelV1_dictCINT.so";
-   if( argc == 2 && argv[1][0] == 'r' )
+   const char* dictname = "./libDataModelV1_dictcint.so";
+   const char* prefix = ""; 
+   if( mode && mode[0] == 'r' )
    {
-      dictname = "./libDataModelV1_dictREFLEX.so";
+      dictname = "./libDataModelV1_dictrflx.so";
       gROOT->ProcessLine("ROOT :: Cintex :: Cintex :: Enable();");
-      // gROOT->ProcessLine("ROOT :: Cintex :: Cintex :: SetDebug( 1 );");
+      prefix = "rflx_";
    }
-   else
+   else {
       gROOT->ProcessLine("#include <vector>");
+   }
 
    if( gSystem->Load(dictname) < 0 )
    {
@@ -53,12 +53,12 @@ int main( int argc, char** argv )
    //---------------------------------------------------------------------------
    // Open the control files
    //---------------------------------------------------------------------------
-   ofstream o1( "../logs/01/test01_wv1.log" );
-   ofstream o2( "../logs/01/test02_wv1.log" );
-   ofstream o3( "../logs/01/test03_wv1.log" );
-   ofstream o4( "../logs/01/test04_wv1.log" );
-   ofstream o5( "../logs/01/test05_wv1.log" );
-   ofstream o6( "../logs/01/test06_wv1.log" );
+   ofstream o1( TString::Format("../logs/01/%stest01_wv1.log",prefix) );
+   ofstream o2( TString::Format("../logs/01/%stest02_wv1.log",prefix) );
+   ofstream o3( TString::Format("../logs/01/%stest03_wv1.log",prefix) );
+   ofstream o4( TString::Format("../logs/01/%stest04_wv1.log",prefix) );
+   ofstream o5( TString::Format("../logs/01/%stest05_wv1.log",prefix) );
+   ofstream o6( TString::Format("../logs/01/%stest06_wv1.log",prefix) );
 
    //---------------------------------------------------------------------------
    // Generate the objects
@@ -91,7 +91,7 @@ int main( int argc, char** argv )
    //---------------------------------------------------------------------------
    // Store the objects in a ROOT file
    //---------------------------------------------------------------------------
-   TFile *file = new TFile( "testv1.root", "RECREATE" );
+   TFile *file = new TFile( TString::Format("%stestv1.root",prefix), "RECREATE" );
    TTree *tree = new TTree( "TestTree", "" );
 
    tree->Branch( "TestA",          &objA );

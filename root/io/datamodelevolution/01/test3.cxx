@@ -8,11 +8,10 @@
 #include <utility>
 #include <vector>
 #include <algorithm>
-#include <dlfcn.h>
 #include <ctime>
 #include <cstdlib>
-#include <Dumper.h>
-#include <Generator.h>
+#include <../common/Dumper.h>
+#include <../common/Generator.h>
 #include <DataModelV2.h>
 #include <TFile.h>
 #include <TTree.h>
@@ -26,7 +25,7 @@ void do_del( A* obj )
    delete obj;
 }
 
-int main( int argc, char** argv )
+int test3(const char *mode = "")
 {
    using namespace std;
    srandom( time( 0 ) );
@@ -34,15 +33,17 @@ int main( int argc, char** argv )
    //---------------------------------------------------------------------------
    // Load the dictionary
    //---------------------------------------------------------------------------
-   const char* dictname = "./libDataModelV2_dictCINT.so";
-   if( argc == 2 && argv[1][0] == 'r' )
+   const char* dictname = "./libDataModelV2_dictcint.so";
+   const char* prefix = "";
+   if( mode && mode[0] == 'r' )
    {
-      dictname = "./libDataModelV2_dictREFLEX.so";
+      dictname = "./libDataModelV2_dictrflx.so";
       gROOT->ProcessLine("ROOT :: Cintex :: Cintex :: Enable();");
-      // gROOT->ProcessLine("ROOT :: Cintex :: Cintex :: SetDebug( 1 );");
+      prefix = "rflx_";
    }
-   else
+   else {
       gROOT->ProcessLine("#include <vector>");
+   }
 
    if( gSystem->Load(dictname) < 0 )
    {
@@ -56,17 +57,17 @@ int main( int argc, char** argv )
    //---------------------------------------------------------------------------
    // Open the control files
    //---------------------------------------------------------------------------
-   ofstream o1 ( "../logs/01/test01_rv2.log" );
-   ofstream o2 ( "../logs/01/test01_rv2NS.log" );
-   ofstream o3 ( "../logs/01/test02_rv2.log" );
-   ofstream o4 ( "../logs/01/test02_rv2NS.log" );
-   ofstream o5 ( "../logs/01/test03_rv2.log" );
-   ofstream o6 ( "../logs/01/test04_rv2.log" );
-   ofstream o7 ( "../logs/01/test04_rv2NS.log" );
-   ofstream o8 ( "../logs/01/test05_rv2.log" );
-   ofstream o9 ( "../logs/01/test05_rv2NS.log" );
-   ofstream o10( "../logs/01/test06_rv2.log" );
-   ofstream o11( "../logs/01/test06_rv2S.log" );
+   ofstream o1 ( TString::Format("../logs/01/%stest01_rv2.log",prefix) );
+   ofstream o2 ( TString::Format("../logs/01/%stest01_rv2NS.log",prefix) );
+   ofstream o3 ( TString::Format("../logs/01/%stest02_rv2.log",prefix) );
+   ofstream o4 ( TString::Format("../logs/01/%stest02_rv2NS.log",prefix) );
+   ofstream o5 ( TString::Format("../logs/01/%stest03_rv2.log",prefix) );
+   ofstream o6 ( TString::Format("../logs/01/%stest04_rv2.log",prefix) );
+   ofstream o7 ( TString::Format("../logs/01/%stest04_rv2NS.log",prefix) );
+   ofstream o8 ( TString::Format("../logs/01/%stest05_rv2.log",prefix) );
+   ofstream o9 ( TString::Format("../logs/01/%stest05_rv2NS.log",prefix) );
+   ofstream o10( TString::Format("../logs/01/%stest06_rv2.log",prefix) );
+   ofstream o11( TString::Format("../logs/01/%stest06_rv2S.log",prefix) );
 
    //---------------------------------------------------------------------------
    // Generate the objects
@@ -90,7 +91,7 @@ int main( int argc, char** argv )
    //---------------------------------------------------------------------------
    // Store the objects in a ROOT file
    //---------------------------------------------------------------------------
-   TFile *file = new TFile( "testv1.root", "READ" );
+   TFile *file = new TFile( TString::Format("%stestv1.root",prefix), "READ" );
 
    if( !file->IsOpen() )
    {

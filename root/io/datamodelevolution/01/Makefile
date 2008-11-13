@@ -1,48 +1,105 @@
+# This is a template for all makefiles.
+
+#Set the list of files to be deleted by clean (Targets can also be specified).:
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog *.root *_cint.cpp *_rflx.cpp *_cint.h *_rflx.h
+
+# Set the list of target to make while testing.  By default, mytest is the
+# only target added.  If the name of the target is changed in the rules then
+# the name should be changed accordingly in this list.
+
+TEST_TARGETS += test1 test2 test3 rtest1 rtest2 rtest3
+
+# Search for Rules.mk in roottest/scripts
+# Algorithm:  Find the current working directory and remove everything after
+#  '*roottest/'.  Append the path for Rules.mk from within roottest, which 
+#  should be 'scripts/Rules.mk'.  The roottest path is saved in the
+#  ROOTTEST_HOME variable for use by the SUBDIRECTORIES variable and is 
+#  exported to eliminate the overhead of findding the path again during 
+#  recursive calls of gmake.
+# Since all makefiles should be under roottest or one of its
+#  subdirectories and all recursions of gmake are called by 
+#    'cd [DIR]; gmake ...'
+#  this algorithm should not fail in finding /roottest/ in the
+#  current working directory.  
+# Issues:  This algorithm will fail if a makefile is called from outside the 
+#  roottest folder, as in executing 'gmake -f ~/roottest/Makefile' from 
+#  the home directory.
+
+ifeq ($(strip $(ROOTTEST_HOME)),)
+	export ROOTTEST_HOME:=$(shell expr $(PWD) : '\(.*/roottest/\)')
+endif
+
+include $(ROOTTEST_HOME)/scripts/Rules.mk
+include $(ROOTTEST_HOME)/scripts/Reflex.mk
+
+# The name of this target should be changed according to the test being run.  Any name changes
+#  should also be reflected in the TEST_TARGETS variable above.
+
+mytest:
+	$(CMDECHO) echo mytest > /dev/null
 
 
-#===[ general rules ]=========================================================#
+# Outputs a message if the FAIL variable is null
 
-.PHONY: all
-all:
-
-#=============================================================================#
-
-#===[ test1.x ]===============================================================#
-
-test1_OBJS  = test1.o
-test1_LIBS  = -L. -lRIO -lCore -lCint -lTree -lNet -lMathCore -lThread -pthread
-OBJS       += $(test1_OBJS)
-PROGS      += test1.x
-test1.x     : $(test1_OBJS) | $(DICTS)
-
-#=============================================================================#
-
-#===[ test2.x ]===============================================================#
-
-test2_OBJS  = test2.o
-test2_LIBS  = -L. -lRIO -lCore -lCint -lTree -lNet -lMathCore -lThread -pthread
-OBJS       += $(test2_OBJS)
-PROGS      += test2.x
-test2.x     : $(test2_OBJS)
-
-#=============================================================================#
-
-#===[ test3.x ]===============================================================#
-
-test3_OBJS  = test3.o
-test3_LIBS  = -L. -lRIO -lCore -lCint -lTree -lNet -lMathCore -lThread -pthread
-OBJS       += $(test3_OBJS)
-PROGS      += test3.x
-test3.x     : $(test3_OBJS) 
-
-#=============================================================================#
+testWithFailure:
+ifeq ($(FAIL),)
+	$(WarnFailTest)
+endif
 
 
-#===[ dictionaries ]==========================================================#
+# Remember that sometest.log can be made automatically from
+#  from runsometest.C
+# This target attempts to create a log file (which should be the output of running the test), and
+#  compares its output with a prebuilt reference file.  The reference file should be copied from
+#  the log files produced during what is considered a successful run of the test.  The testWithDiff
+#  files should be renamed according to the test being run.
+# By default the TestDiff variable is set to compare the .log and .ref files
+# To run a diff and ignore whitespacing use $(TestDiffW)
 
-DICTS  += libDataModelV1_dictREFLEX.so libDataModelV1_dictCINT.so
-DICTS  += libDataModelV2_dictREFLEX.so libDataModelV2_dictCINT.so
+testWithDiff: testWithDiff.log testWithDiff.ref
+	$(TestDiff)
 
-#=============================================================================#
+.PHONY: test1 test2 test3 test4
 
-include ../common/rules.mk
+test1.root: test1.clog
+rflx_test1.root: rtest1.clog
+
+test1_cxx.$(DllSuf): DataModelV1.h
+
+test1.clog: test1_cxx.$(DllSuf) libDataModelV1_dictcint.$(DllSuf)
+	$(CMDECHO) root.exe -b -q -l test1.cxx+ > test1.clog 2>&1
+
+test1: test1.clog
+	$(TestDiff)
+
+rtest1.clog: test1_cxx.$(DllSuf) libDataModelV1_dictrflx.$(DllSuf)
+	$(CMDECHO) root.exe -b -q -l test1.cxx+\(\"r\"\) > rtest1.clog 2>&1
+
+rtest1: rtest1.clog
+	$(TestDiff)
+
+test2_cxx.$(DllSuf): DataModelV2.h
+
+test2.clog: test2_cxx.$(DllSuf) test1
+	$(CMDECHO) root.exe -b -q -l test2.cxx+ > test2.clog 2>&1
+
+test2: test2.clog
+	$(TestDiff)
+
+rtest2.clog: test2_cxx.$(DllSuf) rtest1
+	$(CMDECHO) root.exe -b -q -l test2.cxx+\(\"r\"\) > test2.clog 2>&1
+
+rtest2: rtest2.clog
+	$(TestDiff)
+
+test3.clog: test3_cxx.$(DllSuf) test2  libDataModelV2_dictcint.$(DllSuf)
+	$(CMDECHO) root.exe -b -q -l test3.cxx+ > test3.clog 2>&1
+
+test3: test3.clog
+	$(TestDiff)
+
+rtest3.clog: test3_cxx.$(DllSuf) rtest2 libDataModelV2_dictrflx.$(DllSuf)
+	$(CMDECHO) root.exe -b -q -l test3.cxx+\(\"r\"\) > rtest3.clog 2>&1
+
+rtest3: rtest3.clog
+	$(TestDiff)
