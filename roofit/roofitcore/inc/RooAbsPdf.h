@@ -95,6 +95,12 @@ public:
 			      Option_t *fitOpt = "", Option_t *optOpt = "c", const char* fitRange=0) ;
   virtual RooFitResult* fitTo(RooAbsData& data, Option_t *fitOpt, Option_t *optOpt = "c", const char* fitRange=0) ;
 
+  virtual RooAbsReal* createNLL(RooAbsData& data, const RooLinkedList& cmdList) ;
+  virtual RooAbsReal* createNLL(RooAbsData& data, RooCmdArg arg1=RooCmdArg::none(),  RooCmdArg arg2=RooCmdArg::none(),  
+				RooCmdArg arg3=RooCmdArg::none(),  RooCmdArg arg4=RooCmdArg::none(), RooCmdArg arg5=RooCmdArg::none(),  
+				RooCmdArg arg6=RooCmdArg::none(),  RooCmdArg arg7=RooCmdArg::none(), RooCmdArg arg8=RooCmdArg::none()) ;
+
+
   // Constraint management
   virtual RooArgSet* getConstraints(const RooArgSet& /*observables*/, const RooArgSet& /*constrainedParams*/) const { 
     // Interface to retrieve constraint terms on this pdf. Default implementation returns null
