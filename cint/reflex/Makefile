@@ -31,23 +31,7 @@ ifeq ($(strip $(ROOTTEST_HOME)),)
 endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk
-
-
-# Generic chain of files for running Reflex tests.
-# Naming scheme: MyReflex_test() in MyReflex_test.C tests
-# the dictionary MyReflex_rflx.cxx which is generated from
-# MyReflex.h with MyReflex_selection.xml.
-
-ifeq ($(PLATFORM),win32)
-GENREFLEX = genreflex.bat
-GENREFLEXCXXFLAGS = --gccxmlopt='-include "$(ROOTSYS)/include/w32pragma.h"'
-else
-GENREFLEX = genreflex
-endif
-
-# The dictionary:
-%_rflx.cpp: %_selection.xml %.h
-	$(CMDECHO) $(GENREFLEX) $*.h -s $*_selection.xml $(GENREFLEXFLAGS) -I"$(ROOTSYS)/include" $(GENREFLEXCXXFLAGS) > $@.log
+include $(ROOTTEST_HOME)/scripts/Reflex.mk
 
 # the driver which includes the relevant files for the library:
 %_rflxdriver.C: %_rflx.cpp %_test.C TestHelper.h
@@ -65,11 +49,6 @@ endif
 	&& root -l -b -q $@_tmp.C | grep -v 'Processing ' > $@ \
 	&& rm -f $@_tmp.C
 
-# We only run these tests if libCintex exists and gccxml is found
-ifeq ($(findstring cintex,$(shell root-config --features)),)
-HAVEGCCXML:="nocintex"
-endif
-HAVEGCCXML?=$(shell which gccxml 2>/dev/null)
 ifeq ($(findstring gccxml,$(notdir $(HAVEGCCXML))),gccxml)
 $(RFLXDICTTESTS): %_rflx: %_rflx.log %_rflx.ref
 	$(TestDiff)
