@@ -160,7 +160,7 @@ namespace Reflex {
       */
       template <typename T>
       void Invoke( const std::string & fm, 
-         const Type & sign, T& ret = 0,
+         const Type & sign, T& ret,
          const std::vector< void * >& args = std::vector<void*>()) const {
          Object retO(Type::ByTypeInfo(typeid(T)), &ret);
          Invoke(fm, sign, &retO, args);
