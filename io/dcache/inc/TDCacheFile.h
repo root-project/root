@@ -37,6 +37,7 @@
 
 #include <sys/stat.h>
 
+#define RAHEAD_BUFFER_SIZE 8192
 
 class TDCacheFile : public TFile {
 
