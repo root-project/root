@@ -36,6 +36,7 @@ class TAttMarker;
 class TAttText;
 class TClass ;
 class TAxis;
+class TBrowser ;
 
 class RooPlot : public TNamed, public RooPrintable {
 public:
@@ -48,6 +49,8 @@ public:
   RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2,
 	  Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax);
   virtual ~RooPlot();
+
+  RooPlot* emptyClone(const char* name) ;
 
   // implement the TH1 interface
   virtual Stat_t GetBinContent(Int_t) const;
@@ -163,7 +166,11 @@ public:
   RooHist* residHist(const char* histname=0, const char* pdfname=0,bool normalize=false) const ;
   RooHist* pullHist(const char* histname=0, const char* pdfname=0) const { return residHist(histname,pdfname,true); }
 
+  void Browse(TBrowser *b) ;
+
 protected:
+
+  RooPlot(const RooPlot& other); // cannot be copied
 
   class DrawOpt {
     public:
@@ -202,8 +209,6 @@ protected:
   Double_t _defYmax ;        // Default maximum for Yaxis (as calculated from contents)
 
   TDirectory* _dir ;         //! non-persistent
-
-  RooPlot(const RooPlot& other); // object cannot be copied
 
   ClassDef(RooPlot,2)        // Plot frame and container for graphics objects
 };

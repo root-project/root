@@ -472,12 +472,23 @@ Bool_t RooHist::hasIdenticalBinning(const RooHist& other) const
 Bool_t RooHist::isIdentical(const RooHist& other, Double_t tol) const 
 {
   // Return kTRUE if contents of this RooHIst is identical within given
-  // absolute tolerance to that of 'other'
+  // relative tolerance to that of 'other'
 
+  // Determine X range and Y range
   Int_t n= GetN();
+  Double_t xmin(1e30), xmax(-1e30), ymin(1e30), ymax(-1e30) ;
   for(Int_t i= 0; i < n; i++) {
-    if (fabs(fX[i]-other.fX[i])>tol) return kFALSE ;
-    if (fabs(fY[i]-other.fY[i])>tol) return kFALSE ;
+    if (fX[i]<xmin) xmin=fX[i] ;
+    if (fX[i]>xmax) xmax=fX[i] ;
+    if (fY[i]<ymin) ymin=fY[i] ;
+    if (fY[i]>ymax) ymax=fY[i] ;
+  }
+  Double_t Xrange=xmax-xmin ;
+  Double_t Yrange=ymax-ymin ;
+
+  for(Int_t i= 0; i < n; i++) {
+    if (fabs(fX[i]-other.fX[i])/Xrange>tol) return kFALSE ;
+    if (fabs(fY[i]-other.fY[i])/Yrange>tol) return kFALSE ;
   }
   
   return kTRUE ;

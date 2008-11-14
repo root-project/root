@@ -120,7 +120,7 @@ public:
   // -----------------------------------------
 
   // Show scan -log(L) of dataset w.r.t alpha
-  RooPlot* frame3 = alpha.frame(Bins(100),Range(0.1,0.9)) ;
+  RooPlot* frame3 = alpha.frame(Bins(100),Range(0.5,0.9)) ;
   
   // Make 2D pdf of histogram  
   RooNLLVar nll("nll","nll",lmorph,*data) ;  

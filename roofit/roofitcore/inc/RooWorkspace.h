@@ -53,6 +53,10 @@ public:
   Bool_t import(const RooArgSet& args, const RooCmdArg& arg1=RooCmdArg(),const RooCmdArg& arg2=RooCmdArg(),const RooCmdArg& arg3=RooCmdArg()) ;
   Bool_t import(RooAbsData& data, const RooCmdArg& arg1=RooCmdArg(),const RooCmdArg& arg2=RooCmdArg(),const RooCmdArg& arg3=RooCmdArg()) ;
 
+  // Import, load and save parameter value snapshots
+  Bool_t saveSnapshot(const char* name, const RooArgSet& params, Bool_t importValues=kFALSE) ;
+  Bool_t loadSnapshot(const char* name) ;  
+
   // Import other workspaces
   Bool_t merge(const RooWorkspace& other) ;
   Bool_t join(const RooWorkspace& other) ;
@@ -164,12 +168,13 @@ public:
   RooArgSet _allOwnedNodes ; // List of owned pdfs and components
   RooLinkedList _dataList ; // List of owned datasets
   RooLinkedList _views ; // List of model views  
+  RooLinkedList _snapshots ; // List of parameter snapshots
 
   WSDir* _dir ; //! Transient ROOT directory representation of workspace
 
   RooExpensiveObjectCache _eocache ; // Cache for expensive objects
 
-  ClassDef(RooWorkspace,3)  // Persistable project container for (composite) pdfs, functions, variables and datasets
+  ClassDef(RooWorkspace,4)  // Persistable project container for (composite) pdfs, functions, variables and datasets
   
 } ;
 

@@ -38,7 +38,7 @@ public:
 
   // Observables
   RooRealVar dt("dt","dt",-10,10) ;
-  RooRealVar dterr("dterr","per-event error on dt",0.01,10) ;
+  RooRealVar dterr("dterr","per-event error on dt",0.1,10) ;
 
   // Build a gaussian resolution model scaled by the per-event error = gauss(dt,bias,sigma*dterr)
   RooRealVar bias("bias","bias",0,-10,10) ;

@@ -46,6 +46,8 @@
 
 #include "TClass.h"
 #include "TH1D.h"
+#include "TBrowser.h"
+#include "TPad.h"
 
 #include "RooPlot.h"
 #include "RooAbsReal.h"
@@ -223,6 +225,18 @@ RooPlot::RooPlot(const RooAbsRealLValue &var, Double_t xmin, Double_t xmax, Int_
   initialize();
 
   _normBinWidth = (xmax-xmin)/nbins ; 
+}
+
+
+
+//_____________________________________________________________________________
+RooPlot* RooPlot::emptyClone(const char* name) 
+{
+  // Return empty clone of current RooPlot
+
+  RooPlot* clone = new RooPlot(*_plotVarClone,_hist->GetXaxis()->GetXmin(),_hist->GetXaxis()->GetXmax(),_hist->GetNbinsX()) ;
+  clone->SetName(name) ;
+  return clone ;
 }
 
 
@@ -1038,6 +1052,18 @@ void RooPlot::SetTitleSize(Float_t size, Option_t* axis) { _hist->SetTitleSize(s
 void RooPlot::SetXTitle(const char *title) { _hist->SetXTitle(title) ; }
 void RooPlot::SetYTitle(const char *title) { _hist->SetYTitle(title) ; }
 void RooPlot::SetZTitle(const char *title) { _hist->SetZTitle(title) ; }
+
+
+
+
+//______________________________________________________________________________
+void RooPlot::Browse(TBrowser * /*b*/)
+{
+  // Plot RooPlot when double-clicked in browser
+  Draw();
+  gPad->Update();
+}
+
 
 
 

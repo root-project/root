@@ -149,12 +149,22 @@ RooWorkspace::RooWorkspace(const RooWorkspace& other) : TNamed(other), _classes(
   // Workspace copy constructor
 
   other._allOwnedNodes.snapshot(_allOwnedNodes,kTRUE) ;
+
   TIterator* iter = other._dataList.MakeIterator() ;
   TObject* data2 ;
   while((data2=iter->Next())) {
     _dataList.Add(data2->Clone()) ;
   }
   delete iter ;
+
+  TIterator* iter2 = other._snapshots.MakeIterator() ;
+  RooArgSet* snap ;
+  while((snap=(RooArgSet*)iter2->Next())) {
+    RooArgSet* snapClone = (RooArgSet*) snap->snapshot() ;
+    snapClone->setName(snap->GetName()) ;
+    _snapshots.Add(snapClone) ;
+  }
+  delete iter2 ;
 }
 
 
@@ -168,6 +178,7 @@ RooWorkspace::~RooWorkspace()
   if (_dir) {
     delete _dir ;
   }
+  _snapshots.Delete() ;
 }
 
 
@@ -201,7 +212,8 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg, const RooCmdArg& arg1, const
   //  Accepted arguments
   //  -------------------------------
   //  RenameConflictNodes(const char* suffix) -- Add suffix to branch node name if name conflicts with existing node in workspace
-  //  RenameNodes(const char* suffix) -- Add suffix to all branch node names including top level node
+  //  RenameAllNodes(const char* suffix) -- Add suffix to all branch node names including top level node
+  //  RenameAllVariables(const char* suffix) -- Add suffix to all variables names
   //  RenameVariable(const char* inputName, const char* outputName) -- Rename variable as specified upon import.
   //  RecycleConflictNodes() -- If any of the function objects to be imported already exist in the name space, connect the
   //                            imported expression to the already existing nodes. WARNING: use with care! If function definitions
@@ -221,12 +233,14 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg, const RooCmdArg& arg1, const
 
   pc.defineString("conflictSuffix","RenameConflictNodes",0) ;
   pc.defineString("allSuffix","RenameAllNodes",0) ;
+  pc.defineString("allVarsSuffix","RenameAllVariables",0) ;
   pc.defineString("varChangeIn","RenameVar",0,"",kTRUE) ;
   pc.defineString("varChangeOut","RenameVar",1,"",kTRUE) ;
   pc.defineInt("useExistingNodes","RecycleConflictNodes",0,0) ;
   pc.defineMutex("RenameConflictNodes","RenameAllNodes") ;
   pc.defineMutex("RenameConflictNodes","RecycleConflictNodes") ;
   pc.defineMutex("RenameAllNodes","RecycleConflictNodes") ;
+  pc.defineMutex("RenameVariable","RenameAllVariables") ;
 
   // Process and check varargs 
   pc.process(args) ;
@@ -237,6 +251,7 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg, const RooCmdArg& arg1, const
   // Decode renaming logic into suffix string and boolean for conflictOnly mode
   const char* suffixC = pc.getString("conflictSuffix") ;
   const char* suffixA = pc.getString("allSuffix") ;
+  const char* suffixV = pc.getString("allVarsSuffix") ;
   const char* varChangeIn = pc.getString("varChangeIn") ;
   const char* varChangeOut = pc.getString("varChangeOut") ;
   Int_t useExistingNodes = pc.getInt("useExistingNodes") ;
@@ -247,10 +262,48 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg, const RooCmdArg& arg1, const
 
   Bool_t conflictOnly = suffixA ? kFALSE : kTRUE ;
   const char* suffix = suffixA ? suffixA : suffixC ;
+
+  // Process any change in variable names 
+  map<string,string> varMap ;
+  if (strlen(varChangeIn)>0) {
+    
+    // Parse comma separated lists into map<string,string>
+    char tmp[1024] ;
+    strcpy(tmp,varChangeIn) ;
+    list<string> tmpIn,tmpOut ;
+    char* ptr = strtok(tmp,",") ;
+    while (ptr) {
+      tmpIn.push_back(ptr) ;
+      ptr = strtok(0,",") ;
+    }
+    strcpy(tmp,varChangeOut) ;
+    ptr = strtok(tmp,",") ;
+    while (ptr) {
+      tmpOut.push_back(ptr) ;
+      ptr = strtok(0,",") ;
+    }    
+    list<string>::iterator iin = tmpIn.begin() ;
+    list<string>::iterator iout = tmpOut.begin() ;
+    for (;iin!=tmpIn.end() ; ++iin,++iout) {
+      varMap[*iin]=*iout ;
+    }       
+  }
+
+  // Process RenameAllVariables argument if specified
+  if (suffixV != 0 && strlen(suffixV)>0) {
+    RooArgSet* vars = inArg.getVariables() ;
+    TIterator* iter = vars->createIterator() ;
+    RooAbsArg* v ;
+    while((v=(RooAbsArg*)iter->Next())) {
+      varMap[v->GetName()] = Form("%s_%s",v->GetName(),suffixV) ;
+    }
+    delete iter ;
+    delete vars ;
+  }
   
   // Scan for overlaps with current contents
   RooAbsArg* wsarg = _allOwnedNodes.find(inArg.GetName()) ;
-  if (!suffix && wsarg && !useExistingNodes ) {
+  if (!suffix && wsarg && !useExistingNodes && !(inArg.isFundamental() && varMap[inArg.GetName()]!="")) {
     if (wsarg!=&inArg) {
       coutE(ObjectHandling) << "RooWorkSpace::import(" << GetName() << ") ERROR importing object named " << inArg.GetName() 
 			    << ": another instance with same name already in the workspace and no conflict resolution protocol specified" << endl ;
@@ -306,7 +359,7 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg, const RooCmdArg& arg1, const
 
     // Save name of new top level node for later use
     if (cnode2==cloneTop) {
-      topName2 = cnode2->GetName() ;
+      topName2 = cnode2->GetName() ;      
     }
 
     coutI(ObjectHandling) << "RooWorkspace::import(" << GetName() 
@@ -316,29 +369,7 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg, const RooCmdArg& arg1, const
   delete citer ;
 
   // Process any change in variable names 
-  if (strlen(varChangeIn)>0) {
-    
-    // Parse comma separated lists into map<string,string>
-    char tmp[1024] ;
-    strcpy(tmp,varChangeIn) ;
-    list<string> tmpIn,tmpOut ;
-    char* ptr = strtok(tmp,",") ;
-    while (ptr) {
-      tmpIn.push_back(ptr) ;
-      ptr = strtok(0,",") ;
-    }
-    strcpy(tmp,varChangeOut) ;
-    ptr = strtok(tmp,",") ;
-    while (ptr) {
-      tmpOut.push_back(ptr) ;
-      ptr = strtok(0,",") ;
-    }    
-    map<string,string> varMap ;
-    list<string>::iterator iin = tmpIn.begin() ;
-    list<string>::iterator iout = tmpOut.begin() ;
-    for (;iin!=tmpIn.end() ; ++iin,++iout) {
-      varMap[*iin]=*iout ;
-    }       
+  if (strlen(varChangeIn)>0 || (suffixV && strlen(suffixV)>0)) {
     
     // Process all changes in variable names
     TIterator* cliter = cloneSet->createIterator() ;
@@ -351,6 +382,11 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg, const RooCmdArg& arg1, const
 	cnode->setAttribute(tag.c_str()) ;
 	coutI(ObjectHandling) << "RooWorkspace::import(" << GetName() << ") Changing name of variable " 
 			   << origName << " to " << cnode->GetName() << " on request" << endl ;
+
+	if (cnode==cloneTop) {
+	  topName2 = cnode->GetName() ;
+	}
+
       }    
     }
     delete cliter ;
@@ -560,6 +596,60 @@ Bool_t RooWorkspace::importClassCode(const char* pat, Bool_t doReplace)
   }  
   delete iter ;
   return ret ;
+}
+
+
+
+//_____________________________________________________________________________
+Bool_t RooWorkspace::saveSnapshot(const char* name, const RooArgSet& params, Bool_t importValues) 
+{
+  // Save snapshot of values and attributes (including "Constant") of parameters 'params'
+  // If importValues is FALSE, the present values from the object in the workspace are
+  // saved. If importValues is TRUE, the values of the objects passed in the 'params'
+  // argument are saved
+
+  RooArgSet* actualParams = (RooArgSet*) _allOwnedNodes.selectCommon(params) ;
+  RooArgSet* snapshot = (RooArgSet*) actualParams->snapshot() ;
+  delete actualParams ;
+
+  snapshot->setName(name) ;
+
+  if (importValues) {
+    *snapshot = params ;
+  }
+
+  RooArgSet* oldSnap = (RooArgSet*) _snapshots.FindObject(name) ;
+  if (oldSnap) {
+    coutI(ObjectHandling) << "RooWorkspace::saveSnaphot(" << GetName() << ") replacing previous snapshot with name " << name << endl ;
+    _snapshots.Remove(oldSnap) ;
+    delete oldSnap ;
+  }
+
+  _snapshots.Add(snapshot) ;
+
+  return kTRUE ;
+}
+
+
+
+
+//_____________________________________________________________________________
+Bool_t RooWorkspace::loadSnapshot(const char* name) 
+{
+  // Load the values and attributes of the parameters in the snapshot saved with
+  // the given name
+
+  RooArgSet* snap = (RooArgSet*) _snapshots.find(name) ;
+  if (!snap) {
+    coutE(ObjectHandling) << "RooWorkspace::loadSnapshot(" << GetName() << ") no snapshot with name " << name << " is available" << endl ;
+    return kFALSE ;
+  }
+
+  RooArgSet* actualParams = (RooArgSet*) _allOwnedNodes.selectCommon(*snap) ;
+  *actualParams = *snap ;
+  delete actualParams ;
+
+  return kTRUE ;
 }
 
 
@@ -1085,6 +1175,31 @@ void RooWorkspace::Print(Option_t* /*opts*/) const
     cout << endl ;
   }
 
+  if (_snapshots.GetSize()>0) {
+    cout << "parameter snapshots" << endl ;
+    cout << "-------------------" << endl ;
+    iter = _snapshots.MakeIterator() ;
+    RooArgSet* snap ;
+    while((snap=(RooArgSet*)iter->Next())) {
+      cout << snap->GetName() << " = (" ;
+      TIterator* aiter = snap->createIterator() ;
+      RooAbsArg* a ;
+      Bool_t first(kTRUE) ;
+      while((a=(RooAbsArg*)aiter->Next())) {
+	if (first) { first=kFALSE ; } else { cout << "," ; }
+	cout << a->GetName() << "=" ; 
+	a->printValue(cout) ;
+	if (a->isConstant()) {
+	  cout << "[C]" ;
+	}
+      }
+      cout << ")" << endl ;
+      delete aiter ;
+    }
+    delete iter ;
+    cout << endl ;
+  }
+
   if (_classes.listOfClassNames().size()>0) {
     cout << "embedded class code" << endl ;
     cout << "-------------------" << endl ;
@@ -1092,10 +1207,11 @@ void RooWorkspace::Print(Option_t* /*opts*/) const
     cout << endl ;
   }
 
-  cout << "embedded precalculated expensive components" << endl ;
-  cout << "-------------------------------------------" << endl ;
-  _eocache.print() ;
-  
+  if (_eocache.size()>0) {
+    cout << "embedded precalculated expensive components" << endl ;
+    cout << "-------------------------------------------" << endl ;
+    _eocache.print() ;
+  }
 
 
 //   if (_views.GetSize()>0) {
