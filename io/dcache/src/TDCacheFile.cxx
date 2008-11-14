@@ -172,12 +172,13 @@ TDCacheFile::TDCacheFile(const char *path, Option_t *option,
       fWritable = kFALSE;
    }
 
-   // Disable dCache read-ahead buffer, as it doesn't cooperate well
-   // with usually non-sequential file access pattern typical for
-   // TFile. The ROOT caches (TFileCacheRead and TFileCacheWrite) perform
-   // much better.
-
-   dc_noBuffering(fD);
+   // use 8K ( default ) read-ahead buffer to get file header.
+   // vector read are not affected by read-ahead buffer
+   if(read) {
+     dc_setBufferSize(fD, RAHEAD_BUFFER_SIZE); 
+   }else{
+     dc_noBuffering(fD);
+   }
 
    Init(create);
 
@@ -386,6 +387,13 @@ const char *TDCacheFile::GetDcapVersion()
 Int_t TDCacheFile::SysOpen(const char *pathname, Int_t flags, UInt_t mode)
 {
    // Interface to system open. All arguments like in POSIX open.
+
+   // often there is a filewall on front of storage system.
+   // let clients connect to the data servers
+   // if it's an old dCache version, pool will try to connect to the client
+   // (if it's fine with firewall)
+
+   dc_setClientActive();
 
    dc_errno = 0;
 
