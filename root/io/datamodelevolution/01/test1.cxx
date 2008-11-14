@@ -59,6 +59,15 @@ int test1(const char *mode = "") {
    ofstream o4( TString::Format("../logs/01/%stest04_wv1.log",prefix) );
    ofstream o5( TString::Format("../logs/01/%stest05_wv1.log",prefix) );
    ofstream o6( TString::Format("../logs/01/%stest06_wv1.log",prefix) );
+   ofstream o7( TString::Format("../logs/01/%stest07_wv1.log",prefix) );
+   ofstream o8( TString::Format("../logs/01/%stest08_wv1.log",prefix) );
+   ofstream o9( TString::Format("../logs/01/%stest09_wv1.log",prefix) );
+   ofstream o10( TString::Format("../logs/01/%stest10_wv1.log",prefix) );
+   ofstream o11( TString::Format("../logs/01/%stest11_wv1.log",prefix) );
+   ofstream o12( TString::Format("../logs/01/%stest12_wv1.log",prefix) );
+   ofstream o13( TString::Format("../logs/01/%stest13_wv1.log",prefix) );
+   ofstream o14( TString::Format("../logs/01/%stest14_wv1.log",prefix) );
+   //ofstream o15( TString::Format("../logs/01/%stest11_wv1.log",prefix) );
 
    //---------------------------------------------------------------------------
    // Generate the objects
@@ -68,44 +77,95 @@ int test1(const char *mode = "") {
    generate( objA );
    dump( objA, o1 );
 
+   ClassAIns *objAI = 0;
+   generate( objAI );
+   dump( objAI, o2 );
+   
+   ClassD *objD = 0;
+   generate( objD );
+   dump( objD, o3 );
+   
    pair<int, double> *pr = 0;
    generate( pr );
-   dump( pr, o2 );
+   dump( pr, o4 );
 
    vector<double> *vd = 0;
    generate( vd );
-   dump( vd, o3 );
+   dump( vd, o5 );
+
+   vector<pair<int, double> > *vP = 0;
+   generate( vP );
+   dump( vP, o6 );
 
    vector<ClassA> *vA = 0;
    generate( vA );
-   dump( vA, o4 );
+   dump( vA, o7 );
  
-   vector<pair<int, double> > *vP = 0;
-   generate( vP );
-   dump( vP, o5 );
-
    vector<ClassA*> *vAS = 0;
    generate( vAS );
-   dump( vAS, o6 );
+   dump( vAS, o8 );
+   
+   vector<ClassB> *vB = 0;
+   generate( vB );
+   dump( vB, o9 );
 
+   vector<ClassB*> *vBS = 0;
+   generate( vBS );
+   dump( vBS, o10 );
+   
+   vector<ClassC> *vC = 0;
+   generate( vC );
+   dump( vC, o11 );
+
+   vector<ClassC*> *vCS = 0;
+   generate( vCS );
+   dump( vCS, o12 );
+   
+   vector<ClassD> *vD = 0;
+   generate( vD );
+   dump( vD, o13 );
+   
+   vector<ClassD*> *vDS = 0;
+   generate( vDS );
+   dump( vDS, o14 );
+   
    //---------------------------------------------------------------------------
    // Store the objects in a ROOT file
    //---------------------------------------------------------------------------
    TFile *file = new TFile( TString::Format("%stestv1.root",prefix), "RECREATE" );
    TTree *tree = new TTree( "TestTree", "" );
 
+   tree->Branch( "TestAIns",       &objAI, 32000, 99 );
+   tree->Branch( "TestD",          &objD, 32000, 99 );
+   tree->Branch( "TestDNS",        &objD, 32000,  0 );
    tree->Branch( "TestA",          &objA );
    tree->Branch( "TestANS",        &objA, 32000, 0 );
    tree->Branch( "TestPair",       &pr );
    tree->Branch( "TestPairNS",     &pr, 32000, 0 );
-   tree->Branch( "TestVectorD",    &vd );
-   tree->Branch( "TestVectorA",    &vA );
-   tree->Branch( "TestVectorANS",  &vA, 32000, 0 );
+   tree->Branch( "TestVectorDbl",  &vd );
    tree->Branch( "TestVectorP",    &vP );
    tree->Branch( "TestVectorPNS",  &vP, 32000, 0 );
+   tree->Branch( "TestVectorA",    &vA );
+   tree->Branch( "TestVectorANS",  &vA, 32000, 0 );
    tree->Branch( "TestVectorAS",   &vAS );
    tree->Branch( "TestVectorASS",  &vAS, 32000, 200 );
-
+   tree->Branch( "TestVectorA",    &vA );
+   tree->Branch( "TestVectorANS",  &vA, 32000, 0 );
+   tree->Branch( "TestVectorAS",   &vAS );
+   tree->Branch( "TestVectorASS",  &vAS, 32000, 200 );
+   tree->Branch( "TestVectorB",    &vB );
+   tree->Branch( "TestVectorBNS",  &vB, 32000, 0 );
+   tree->Branch( "TestVectorBS",   &vBS );
+   tree->Branch( "TestVectorBSS",  &vBS, 32000, 200 );
+   tree->Branch( "TestVectorC",    &vC );
+   tree->Branch( "TestVectorCNS",  &vC, 32000, 0 );
+   tree->Branch( "TestVectorCS",   &vCS );
+   tree->Branch( "TestVectorCSS",  &vCS, 32000, 200 );
+   tree->Branch( "TestVectorD",    &vD );
+   tree->Branch( "TestVectorDNS",  &vD, 32000, 0 );
+   tree->Branch( "TestVectorDS",   &vDS );
+   tree->Branch( "TestVectorDSS",  &vDS, 32000, 200 );
+   
    tree->Fill();
    file->Write();
    file->Close();

@@ -30,16 +30,18 @@ int test3(const char *mode = "")
    using namespace std;
    srandom( time( 0 ) );
 
+   Dumper out("", "01", "rv1");
+
    //---------------------------------------------------------------------------
    // Load the dictionary
    //---------------------------------------------------------------------------
    const char* dictname = "./libDataModelV2_dictcint.so";
-   const char* prefix = "";
+
    if( mode && mode[0] == 'r' )
    {
       dictname = "./libDataModelV2_dictrflx.so";
       gROOT->ProcessLine("ROOT :: Cintex :: Cintex :: Enable();");
-      prefix = "rflx_";
+      out.fPrefix = "rflx_";
    }
    else {
       gROOT->ProcessLine("#include <vector>");
@@ -53,21 +55,6 @@ int test3(const char *mode = "")
    }
 
    // TClass::GetClass( "vector<ClassA>" )->GetStreamerInfo( 10 );
-
-   //---------------------------------------------------------------------------
-   // Open the control files
-   //---------------------------------------------------------------------------
-   ofstream o1 ( TString::Format("../logs/01/%stest01_rv2.log",prefix) );
-   ofstream o2 ( TString::Format("../logs/01/%stest01_rv2NS.log",prefix) );
-   ofstream o3 ( TString::Format("../logs/01/%stest02_rv2.log",prefix) );
-   ofstream o4 ( TString::Format("../logs/01/%stest02_rv2NS.log",prefix) );
-   ofstream o5 ( TString::Format("../logs/01/%stest03_rv2.log",prefix) );
-   ofstream o6 ( TString::Format("../logs/01/%stest04_rv2.log",prefix) );
-   ofstream o7 ( TString::Format("../logs/01/%stest04_rv2NS.log",prefix) );
-   ofstream o8 ( TString::Format("../logs/01/%stest05_rv2.log",prefix) );
-   ofstream o9 ( TString::Format("../logs/01/%stest05_rv2NS.log",prefix) );
-   ofstream o10( TString::Format("../logs/01/%stest06_rv2.log",prefix) );
-   ofstream o11( TString::Format("../logs/01/%stest06_rv2S.log",prefix) );
 
    //---------------------------------------------------------------------------
    // Generate the objects
@@ -84,14 +71,14 @@ int test3(const char *mode = "")
    vector<pair<int, float> >  *vPNS   = 0;
    vector<ClassA2*>           *vAS    = 0;
    vector<ClassA2*>           *vASS   = 0;
-
-   objA = new ClassA2(); 
-   dump( objA,   o1  );
+   ClassAIns2                 *objAI  = 0;
+   ClassD                     *objD   = 0;
+   ClassD                     *objDNS = 0;
 
    //---------------------------------------------------------------------------
    // Store the objects in a ROOT file
    //---------------------------------------------------------------------------
-   TFile *file = new TFile( TString::Format("%stestv1.root",prefix), "READ" );
+   TFile *file = new TFile( TString::Format("%stestv1.root",out.fPrefix.Data()), "READ" );
 
    if( !file->IsOpen() )
    {
@@ -100,34 +87,43 @@ int test3(const char *mode = "")
    }
 
    TTree *tree = (TTree*)file->Get( "TestTree" );
-   tree->SetBranchAddress( "TestA",         &objA   );
-   tree->SetBranchAddress( "TestANS",       &objANS );
+   tree->SetBranchAddress( "TestAIns",      &objAI  );
+   tree->SetBranchAddress( "TestD",         &objD   );
+   tree->SetBranchAddress( "TestDNS",       &objDNS );
+   //tree->SetBranchAddress( "TestA",         &objA   );
+//   tree->SetBranchAddress( "TestANS",       &objANS );
 //   tree->SetBranchAddress( "TestPair",      &pr     );
 //   tree->SetBranchAddress( "TestPairNS",    &prNS   );
 //   tree->SetBranchAddress( "TestVectorD",   &vd     );
 //   tree->SetBranchAddress( "TestVectorA",   &vA     );
-   tree->SetBranchAddress( "TestVectorANS", &vANS   );
+//   tree->SetBranchAddress( "TestVectorANS", &vANS   );
 //   tree->SetBranchAddress( "TestVectorP",   &vP     );
 //   tree->SetBranchAddress( "TestVectorPNS", &vPNS   );
-   tree->SetBranchAddress( "TestVectorAS",  &vAS    );
+//   tree->SetBranchAddress( "TestVectorAS",  &vAS    );
 //   tree->SetBranchAddress( "TestVectorASS", &vASS   );
 
    tree->GetEntry(0);
+   //tree->Print("debugAddress");
+   tree->Print("debugInfo");
    file->Close();
 
    //---------------------------------------------------------------------------
    // Dump what was read
    //---------------------------------------------------------------------------
-   dump( objA,   o1  );
-   dump( objANS, o2  );
+   unsigned int var = 1;
+   //dump( objA,   o1  );
+   out.dump( objAI,  ++var, "" );
+   out.dump( objD,   ++var, "S" );
+   out.dump( objDNS, var,   "NS");
+//   dump( objANS, o2  );
 //   dump( pr,     o3  );
 //   dump( prNS,   o4  );
 //   dump( vd,     o5  );
 //   dump( vA,     o6  );
-   dump( vANS,   o7  );
+//   dump( vANS,   o7  );
 //   dump( vP,     o8  );
 //   dump( vPNS,   o9  );
-   dump( vAS,    o10 );
+//   dump( vAS,    o10 );
 //   dump( vASS,   o11 );
 
    //---------------------------------------------------------------------------
@@ -137,7 +133,9 @@ int test3(const char *mode = "")
 //   delete pr;
 //   delete vd;
 //   delete vP;
-   for_each( vAS->begin(), vAS->end(), do_del<ClassA2> );
-//   delete vAS;
+   if (vAS) for_each( vAS->begin(), vAS->end(), do_del<ClassA2> );
+   if (vASS) for_each( vASS->begin(), vASS->end(), do_del<ClassA2> );
+   delete vAS;
+   delete vASS;
    return 0;
 }

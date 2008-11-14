@@ -46,6 +46,29 @@ void dump( Type* obj, std::ostream& out )
    dump( obj, actClass, out );
 }
 
+template <class Type>
+void dump( Type *obj, const char *prefix, const char *test_number, unsigned int varnumber, const char *version_number, const char *split)
+{
+   ofstream out( TString::Format("../logs/%s/%stest%02d_%s%s.log",test_number,prefix,varnumber,version_number,split) );
+   dump(obj,out);
+}
+
+class Dumper {
+public:
+   TString fPrefix;
+   TString fTestNumber;
+   TString fVersionNumber;
+   
+   Dumper(const char *prefix, const char *test, const char *version) : fPrefix(prefix), fTestNumber(test), fVersionNumber(version) {}
+   
+   template <class Type>
+   void dump( Type *obj, unsigned int varnumber, const char *split)
+   {
+     ofstream out( TString::Format("../logs/%s/%stest%02d_%s%s.log",fTestNumber.Data(),fPrefix.Data(),varnumber,fVersionNumber.Data(),split) );
+      ::dump(obj,out);
+   }
+};
+
 //------------------------------------------------------------------------------
 // Dump all the primitive members of the class
 //------------------------------------------------------------------------------

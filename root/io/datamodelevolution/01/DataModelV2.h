@@ -46,7 +46,7 @@ class ClassB: public ClassA2
       float  m_g;
 };
 
-class ClassC: public ClassA2
+class ClassC: public ClassABase2
 {
    public:
       ClassC(): m_f( 74.22 ), m_g( 199.22 ) {}
@@ -57,6 +57,16 @@ class ClassC: public ClassA2
 //      std::vector<std::pair<float, int> > m_h;
 };
 
+class ClassD 
+{
+public:
+   ClassD(): m_c( 65.22 ), m_e( 8 ) {}
+   virtual ~ClassD() {}
+private:
+   float      m_c;
+   ClassAIns2 m_d;
+   int        m_e;
+};      
 
 struct _dummy
 {
