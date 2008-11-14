@@ -151,8 +151,10 @@ TEveElement::TEveElement(const TEveElement& e) :
    fDestructing         (kFALSE)
 {
    // Copy constructor. Does shallow copy.
-   // Call CloneChildren(const TEveElement& e, Bool_t recurse=kFALSE) if
-   // you want to copy children as well.
+   // For deep-cloning and children-cloning, see:
+   //   TEveElement* CloneElementRecurse(Int_t level)
+   //   void         CloneChildrenRecurse(TEveElement* dest, Int_t level)
+   //
    // 'TRef fSource' is copied but 'void* UserData' is NOT.
    // If the element is projectable, its projections are NOT copied.
    //
@@ -189,30 +191,30 @@ TEveElement::~TEveElement()
 }
 
 //______________________________________________________________________________
-TEveElement* TEveElement::CloneElementRecurse(Int_t recurse) const
+TEveElement* TEveElement::CloneElementRecurse(Int_t level) const
 {
-   // Clone elements and 'recurse' levels of its children.
-   // If recurse ==  0, only the element itself is cloned (default).
-   // If recurse == -1, all the hierarchy is cloned.
+   // Clone elements and recurse 'level' deep over children.
+   // If level ==  0, only the element itself is cloned (default).
+   // If level == -1, all the hierarchy is cloned.
 
    TEveElement* el = CloneElement();
-   if (recurse--)
+   if (level--)
    {
-      CloneChildrenRecurse(el, recurse);
+      CloneChildrenRecurse(el, level);
    }
    return el;
 }
 
 //______________________________________________________________________________
-void TEveElement::CloneChildrenRecurse(TEveElement* dest, Int_t recurse) const
+void TEveElement::CloneChildrenRecurse(TEveElement* dest, Int_t level) const
 {
    // Clone children and attach them to the dest element.
-   // If recurse ==  0, only the direct descendants are cloned (default).
-   // If recurse == -1, all the hierarchy is cloned.
+   // If level ==  0, only the direct descendants are cloned (default).
+   // If level == -1, all the hierarchy is cloned.
 
    for (List_ci i=fChildren.begin(); i!=fChildren.end(); ++i)
    {
-      dest->AddElement((*i)->CloneElementRecurse(recurse));
+      dest->AddElement((*i)->CloneElementRecurse(level));
    }
 }
 

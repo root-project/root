@@ -107,8 +107,8 @@ public:
    virtual ~TEveElement();
 
    virtual TEveElement* CloneElement() const { return new TEveElement(*this); }
-   virtual TEveElement* CloneElementRecurse(Int_t recurse=0) const;
-   virtual void         CloneChildrenRecurse(TEveElement* dest, Int_t recurse=0) const;
+   virtual TEveElement* CloneElementRecurse(Int_t level=0) const;
+   virtual void         CloneChildrenRecurse(TEveElement* dest, Int_t level=0) const;
 
    virtual const Text_t* GetElementName()  const;
    virtual const Text_t* GetElementTitle() const;
