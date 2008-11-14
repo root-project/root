@@ -83,8 +83,8 @@ void TestContainer_for_each(const T &container, Int_t aSize) throw(std::exceptio
 {
    gCount = 0; // TODO: a use of gCount is a very bad method. Needs to be revised.
 
-   TIter iter(&container);
-   std::for_each(iter.Begin(), TIter::End(), SEnumFunctor<T>());
+   TIterCategory<T> iter(&container);
+   std::for_each(iter.Begin(), TIterCategory<T>::End(), SEnumFunctor<T>());
    if (aSize != gCount)
       throw std::runtime_error("Test case <TestList_for_each> has failed.");
    std::cout << "->> Ok." << std::endl;
@@ -98,8 +98,8 @@ void TestContainer_for_each2(const T &container) throw(std::exception)
 {
    gCount = 0; // TODO: a use of gCount is a very bad method. Needs to be revised.
 
-   TIter iter(&container);
-   TIter iter_end(&container);
+   TIterCategory<T> iter(&container);
+   TIterCategory<T> iter_end(&container);
    // Artificially shifting the iterator to the 4th potision - a new End iterator
    iter_end();
    iter_end();
