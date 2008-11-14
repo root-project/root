@@ -220,7 +220,9 @@ namespace ROOT { namespace Cintex {
       Member getbases = fClass.MemberByName("__getBasesTable");
       if ( !getbases ) getbases = fClass.MemberByName("getBasesTable");
       if( getbases ) {
-         fBases = (Bases*)( getbases.Invoke().Address() );
+         static Type tBases = Type::ByTypeInfo(typeid(Bases));
+         Object ret(tBases, &fBases);
+         getbases.Invoke(&ret);
       }
       else {
          static Bases s_bases;

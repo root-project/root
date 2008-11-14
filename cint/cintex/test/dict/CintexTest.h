@@ -4,6 +4,7 @@
 #include <map>
 #include <string>
 #include <cmath>
+#include <cstring>
 
 void free_function(void) { std::cout << "free function called" << std::endl; }
 int another_free_function(int i ) { 

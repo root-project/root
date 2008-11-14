@@ -10,6 +10,7 @@
 // This software is provided "as is" without express or implied warranty.
 
 #include "Reflex/Type.h"
+#include "Reflex/Tools.h"
 #include "CINTdefs.h"
 #include "Api.h"
 #include "CINTFunctional.h"
@@ -55,7 +56,9 @@ namespace ROOT { namespace Cintex {
       if ( mem.IsConstructor() || mem.IsDestructor() ) {
          Member getnewdelfuncs = fClass.MemberByName("__getNewDelFunctions");
          if( getnewdelfuncs ) {
-            fNewdelfuncs = (NewDelFunctions_t*)( getnewdelfuncs.Invoke().Address() );
+            static Type tNewdelfuncs = Type::ByTypeInfo(typeid(&fNewdelfuncs));
+            Object ret = tNewdelfuncs.Construct();
+            getnewdelfuncs.Invoke(&ret);
          }
       }
 
@@ -121,6 +124,23 @@ namespace ROOT { namespace Cintex {
          case 'u': fParam[i] = (void*)libp->para[i].obj.i; break;
          }
       }
+   }
+
+   void* StubContext_t::GetReturnAddress(G__value* result) const {
+      // Extract the memory location of the return value given the return type of fMethod
+      Type ret = fMember.TypeOf().ReturnType().FinalType();
+      if (ret.IsPointer() || ret.IsReference())
+         return &result->obj.i;
+      switch (Tools::FundamentalType(ret)) {
+      case kFLOAT:
+      case kDOUBLE: return &result->obj.d;
+      case kLONG_DOUBLE: return &result->obj.ld;
+      case kVOID: return 0;
+      case kLONGLONG:
+      case kULONGLONG: return &result->obj.ll;
+      default: ;
+      }
+      return &result->obj.i;
    }
 
    void StubContext_t::ProcessResult(G__value* result, void* obj) { 
@@ -189,8 +209,13 @@ namespace ROOT { namespace Cintex {
       if(!G__GetCatchException()) {
 
          // Stub Calling
-         void* r = (*context->fStub)((void*)G__getstructoffset(), context->fParam, context->fStubctx);
-         context->ProcessResult(result, r);
+         void* retaddr = 0;
+         if ( context->fRet_byvalue )
+            retaddr = context->fMember.TypeOf().ReturnType().Construct().Address();
+         else
+            retaddr = context->GetReturnAddress(result);
+         (*context->fStub)((void*)G__getstructoffset(), retaddr, context->fParam, context->fStubctx);
+         context->ProcessResult(result, retaddr);
          if ( context->fRet_byvalue )  G__store_tempobject(*result);
 
          return 1;
@@ -200,8 +225,13 @@ namespace ROOT { namespace Cintex {
       // Catch here everything since going through the adaptor in the data section
       // does not transmit the exception 
       try {
-         void* r = (*context->fStub)((void*)G__getstructoffset(), context->fParam, context->fStubctx);
-         context->ProcessResult(result, r);
+         void* retaddr = 0;
+         if ( context->fRet_byvalue )
+            retaddr = context->fMember.TypeOf().ReturnType().Construct().Address();
+         else
+            retaddr = context->GetReturnAddress(result);
+         (*context->fStub)((void*)G__getstructoffset(), retaddr, context->fParam, context->fStubctx);
+         context->ProcessResult(result, retaddr);
          if ( context->fRet_byvalue )  G__store_tempobject(*result);
       } 
       catch ( std::exception& e ) {
@@ -244,12 +274,12 @@ namespace ROOT { namespace Cintex {
                obj = new char[size];
                long p = (long)obj; 
                for( long i = 0; i < nary; ++i, p += size )
-                  (*context->fStub)((void*)p, context->fParam, 0);
+                  (*context->fStub)((void*)p, 0, context->fParam, 0);
             }
          }
          else {
             obj = new char[size];
-            (*context->fStub)(obj, context->fParam, 0);
+            (*context->fStub)(obj, 0, context->fParam, 0);
          }
       }
       catch ( std::exception& e ) {
@@ -292,14 +322,14 @@ namespace ROOT { namespace Cintex {
          else {
             size_t size = context->fClass.SizeOf();
             for(int i = G__getaryconstruct()-1; i>=0 ; i--)
-               (*context->fStub)((char*)obj + size*i, context->fParam, 0);
+               (*context->fStub)((char*)obj + size*i, 0, context->fParam, 0);
             ::operator delete [] (obj);
          }
       }
       else {
          long g__Xtmp = G__getgvp();
          G__setgvp(G__PVOID);
-         (*context->fStub)(obj, context->fParam, 0);
+         (*context->fStub)(obj, 0, context->fParam, 0);
          G__setgvp(g__Xtmp);
          if( !(long(obj) == G__getgvp() && G__PVOID != G__getgvp()) )  {
             ::operator delete [] (obj); //G__operator_delete(obj);

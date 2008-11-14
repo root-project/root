@@ -86,13 +86,13 @@ namespace ROOT { namespace Cintex {
                         ROOT::Reflex::StubFunction stubFP, void*  stubCtx, int );
       TClass* IsA(const void* obj);
       static void* Stub_IsA2(void* ctxt, void* obj);
-      static void* Stub_IsA(void*, const std::vector<void*>&, void*);
-      static void* Stub_Streamer(void*, const std::vector<void*>&, void*);
-      static void* Stub_StreamerNVirtual(void*, const std::vector<void*>&, void*);
-      static void* Stub_Dictionary(void*, const std::vector<void*>&, void*);
-      static void* Stub_ShowMembers(void*, const std::vector<void*>&, void*);
-      static void  Stub_ShowMembers(TClass*, const ROOT::Reflex::Type&, void*, TMemberInspector&, char*);
-      static void  Stub_Dictionary( void* ctx );
+      static void Stub_IsA(void*, void* ret, const std::vector<void*>&, void*);
+      static void Stub_Streamer(void*, void*, const std::vector<void*>&, void*);
+      static void Stub_StreamerNVirtual(void*, void*, const std::vector<void*>&, void*);
+      static void Stub_Dictionary(void*, void* ret, const std::vector<void*>&, void*);
+      static void Stub_ShowMembers(void*, void*, const std::vector<void*>&, void*);
+      static void Stub_ShowMembers(TClass*, const ROOT::Reflex::Type&, void*, TMemberInspector&, char*);
+      static void Stub_Dictionary( void* ctx );
       static TClass* Default_CreateClass(Type typ, ROOT::TGenericClassInfo* info);
    };
 
@@ -253,7 +253,10 @@ namespace ROOT { namespace Cintex {
       //----Fill the New and Deletete functions
       Member getfuncs = TypeGet().MemberByName("__getNewDelFunctions");
       if( getfuncs ) {
-         NewDelFunctions_t* newdelfunc = (NewDelFunctions_t*)( getfuncs.Invoke().Address() );
+         NewDelFunctions_t* newdelfunc = 0;
+         ValueObject voNewDelFunc = ValueObject::Create(newdelfunc);
+         getfuncs.Invoke(&voNewDelFunc);
+
          if ( newdelfunc ) {
             info->SetNew(newdelfunc->fNew);
             info->SetNewArray(newdelfunc->fNewArray);
@@ -315,9 +318,9 @@ namespace ROOT { namespace Cintex {
    }
 
 
-   void* ROOTClassEnhancerInfo::Stub_IsA(void* obj, const vector<void*>&, void* ctx) {
+   void ROOTClassEnhancerInfo::Stub_IsA(void* obj, void* ret, const vector<void*>&, void* ctx) {
       // Root IsA.
-      return context(ctx).IsA(obj);
+      *((TClass**)ret) = context(ctx).IsA(obj);
    }
    void* ROOTClassEnhancerInfo::Stub_IsA2(void* ctx, void* obj) {
       // Root IsA.
@@ -416,7 +419,10 @@ namespace ROOT { namespace Cintex {
                   }
                   return 0;
                }
-               std::auto_ptr<CollFuncTable> m((CollFuncTable*)method.Invoke().Address());
+               CollFuncTable* m = 0;
+               static Type tCollFuncTable = PointerBuilder(Type::ByTypeInfo(typeid(CollFuncTable)));
+               Object ret(tCollFuncTable, m);
+               method.Invoke(&ret);
 
                ::ROOT::TCollectionProxyInfo cpinfo(tid,
                                                    m->iter_size,
@@ -458,7 +464,7 @@ namespace ROOT { namespace Cintex {
    }
 
 
-   void* ROOTClassEnhancerInfo::Stub_Streamer(void* obj, const vector<void*>& args, void* ctx) {
+   void ROOTClassEnhancerInfo::Stub_Streamer(void* obj, void*, const vector<void*>& args, void* ctx) {
       //  Create streamer info.
       TBuffer& b = *(TBuffer*)args[0];
       TClass* cl = context(ctx).Tclass();
@@ -474,10 +480,9 @@ namespace ROOT { namespace Cintex {
          Version_t version = b.ReadVersion(&start, &count, cl);
          cl->ReadBuffer(b, obj, version, start, count);
       }
-      return 0;
    }
 
-   void* ROOTClassEnhancerInfo::Stub_StreamerNVirtual(void* obj, const vector<void*>& args, void* ctx) {
+   void ROOTClassEnhancerInfo::Stub_StreamerNVirtual(void* obj, void*, const vector<void*>& args, void* ctx) {
       // Create streamer info.
       TBuffer& b = *(TBuffer*)args[0];
       TClass* cl = context(ctx).Tclass();
@@ -493,17 +498,15 @@ namespace ROOT { namespace Cintex {
          Version_t version = b.ReadVersion(&start, &count, cl);
          cl->ReadBuffer(b, obj, version, start, count);
       }
-      return 0;
    }
 
-   void* ROOTClassEnhancerInfo::Stub_ShowMembers(void* obj, const vector<void*>& args, void* ctx) {
+   void ROOTClassEnhancerInfo::Stub_ShowMembers(void* obj, void*, const vector<void*>& args, void* ctx) {
       // Create show members.
       Type typ = context(ctx).TypeGet();
       TClass* tcl = context(ctx).Tclass();
       TMemberInspector& insp = *(TMemberInspector*)args[0];
       char* par = (char*)args[1];
       if( tcl ) Stub_ShowMembers( tcl, typ, obj, insp, par);
-      return 0;
    }
 
    void ROOTClassEnhancerInfo::Stub_ShowMembers(TClass* tcl, const Type& cl, void* obj, TMemberInspector& insp, char* par) {

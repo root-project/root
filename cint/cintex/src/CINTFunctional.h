@@ -50,6 +50,8 @@ namespace ROOT {
          void ProcessParam(G__param* libp);
          /// Process the return value to adapt from Reflex to CINT
          void ProcessResult(G__value* result, void * obj);
+         /// Return the address of the return value within result
+         void* GetReturnAddress(G__value* result) const;
       
          G__InterfaceMethod fMethodCode;   ///< method allocated code
          std::vector<void*> fParam;        ///< Reflex ParameterNth vector

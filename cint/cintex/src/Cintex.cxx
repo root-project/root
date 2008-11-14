@@ -50,27 +50,22 @@ namespace {
          Type t = Type::ByName("Cintex");
          ROOT::Cintex::CINTClassBuilder::Get(t).Setup();
       }
-      static void* Enable(void*, const std::vector<void*>&, void*) {
+      static void Enable(void*, void*, const std::vector<void*>&, void*) {
          Cintex::Enable();
-         return 0;
       }
-      static void* SetDebug(void*, const std::vector<void*>& arg, void*) {
+      static void SetDebug(void*, void*, const std::vector<void*>& arg, void*) {
          Cintex::SetDebug(*(bool*)arg[0]);
-         return 0;
       }
-      static void* Debug(void*, const std::vector<void*>&, void*) {
-         static int b = Cintex::Debug();
-         return &b;
+      static void Debug(void*, void* ret, const std::vector<void*>&, void*) {
+         *(int*)ret = Cintex::Debug();
       }
 
-      static void* PropagateClassTypedefs(void*, const std::vector<void*>&, void*) {
-         static bool b = Cintex::PropagateClassTypedefs();
-         return &b;
+      static void PropagateClassTypedefs(void*, void* ret, const std::vector<void*>&, void*) {
+         *(bool*)ret = Cintex::PropagateClassTypedefs();
       }
 
-      static void* SetPropagateClassTypedefs(void*, const std::vector<void*>& arg, void*) {
+      static void SetPropagateClassTypedefs(void*, void*, const std::vector<void*>& arg, void*) {
          Cintex::SetPropagateClassTypedefs(*(bool*)arg[0]);
-         return 0;
       }
 
    };
