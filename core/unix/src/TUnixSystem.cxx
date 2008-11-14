@@ -1337,11 +1337,12 @@ FILE *TUnixSystem::TempFileName(TString &base, const char *dir)
    delete [] arg;
 
    if (fd == -1) {
-      SysError("TempFileName", "%s", base.Data() );
+      SysError("TempFileName", "%s", base.Data());
       return 0;
    } else {
       FILE *fp = fdopen(fd, "w+");
-      if (fp == 0) SysError("TempFileName", "converting filedescriptor (%d)", fd);
+      if (fp == 0)
+         SysError("TempFileName", "converting filedescriptor (%d)", fd);
       return fp;
    }
 }
@@ -2129,13 +2130,14 @@ void TUnixSystem::StackTrace()
       }
 
       // open tmp file for demangled stack trace
-      char tmpf1[2*L_tmpnam];
+      TString tmpf1 = "gdb-backtrace"; 
       ofstream file1;
       if (demangle) {
-         tmpnam(tmpf1);
+         FILE *f = TempFileName(tmpf1);
+         if (f) fclose(f);
          file1.open(tmpf1);
          if (!file1) {
-            Error("StackTrace", "could not open file %s", tmpf1);
+            Error("StackTrace", "could not open file %s", tmpf1.Data());
             Unlink(tmpf1);
             demangle = kFALSE;
          }
@@ -2200,10 +2202,11 @@ void TUnixSystem::StackTrace()
       }
 
       if (demangle) {
-         char tmpf2[2*L_tmpnam];
-         tmpnam(tmpf2);
+         TString tmpf2 = "gdb-backtrace";
+         FILE *f = TempFileName(tmpf2);
+         if (f) fclose(f);
          file1.close();
-         sprintf(buffer, "%s %s < %s > %s", filter, cppfiltarg, tmpf1, tmpf2);
+         sprintf(buffer, "%s %s < %s > %s", filter, cppfiltarg, tmpf1.Data(), tmpf2.Data());
          Exec(buffer);
          ifstream file2(tmpf2);
          TString line;
@@ -4878,8 +4881,8 @@ static void GetLinuxProcInfo(ProcInfo_t *procinfo)
    s.Gets(f);
    Long_t total, rss;
    sscanf(s.Data(), "%ld %ld", &total, &rss);
-   procinfo->fMemVirtual  = total * getpagesize() / 1024;
-   procinfo->fMemResident = rss * getpagesize() / 1024;
+   procinfo->fMemVirtual  = total * (getpagesize() / 1024);
+   procinfo->fMemResident = rss * (getpagesize() / 1024);
    fclose(f);
 }
 #endif
