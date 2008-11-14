@@ -1,6 +1,6 @@
 //
 // This macro attaches to a PROOF session, possibly at the indicated URL.
-// In the case non existing PROOF session is found and no URL is given, the macro
+// If no existing PROOF session is found and no URL is given, the macro
 // tries to start a local PROOF session.
 
 #include "Getline.h"
@@ -34,7 +34,7 @@ TProof *getProof(const char *url, Int_t nwrks, const char *dir, const char *opt 
    // Is there something valid running elsewhere?
    if (pold && pold->IsValid()) {
       if (url && strlen(url) > 0)
-         Printf("getProof: attaching to existing valid session at %s ", pold->GetMaster());
+         Printf("getProof: attaching to an existing valid session at %s ", pold->GetMaster());
       return pold;
    }
 
@@ -71,7 +71,7 @@ TProof *getProof(const char *url, Int_t nwrks, const char *dir, const char *opt 
    TString cmd;
    Int_t rc = 0;
 
-   // Is there something listening already ? 
+   // Is there something listening already ?
    Int_t pid = -1;
    Bool_t restart = kTRUE;
    gEnv->SetValue("XProof.FirstConnectMaxCnt",1);
@@ -113,7 +113,7 @@ TProof *getProof(const char *url, Int_t nwrks, const char *dir, const char *opt 
    }
 
    if (restart) {
-      // Try to start something locally; make sure that evrything is there
+      // Try to start something locally; make sure that everything is there
       char *xrootd = gSystem->Which(gSystem->Getenv("PATH"), "xrootd", kExecutePermission);
       if (!xrootd) {
          Printf("getProof: xrootd not found: please check the environment!");
