@@ -3,9 +3,10 @@
 <a name="cint"></a> 
 <h3>CINT</h3>
 <ul>
-<li>Several bug fixes, most notably regarding dictionaries for templated functions, 
-which will now be accessible both as <tt>func&lt;int&gt;(int)</tt> and <tt>func(int)</tt>.
-</li>
+<li>improve initialization of class static variable that are objects until a more comprehensive solution (after the cint7 initial release).</li>
+<li>Dictionaries for templated functions are now accessible both as <tt>func&lt;int&gt;(int)</tt> and <tt>func(int)</tt>.</li>
+<li>Several small bug fixes, e.g. for template parameters being arrays, functions returning templated classes, allowing CINT to parse <tt>T*const&</tt>.
+<li>Support qt cintdll for Qt4.</li>
 <li>Improve support for permanent library (in particular for <tt>TSystem::DynFindSymbol</tt>.)</li>
 <li>Correctly the handle of function parameter type 'reference to bool'.</li>
 <li>Avoid incorrectly matching a non-static class member function when called without an object 
@@ -14,9 +15,18 @@ which will now be accessible both as <tt>func&lt;int&gt;(int)</tt> and <tt>func(
 <li>CINT can now autmatically generate dictionary for templated classes, e.g. A&lt;B&gt; if the header file for A and B is known.
 This allows to interpret vector&lt;MyClass&gt; by transparently generating a
 dictionary for it. This feature can be toggeled on or off by ".autodict".</li>
+<li>Add support for cintdlls using the new default STL implementation of MSVC8, 9 that implement additional runtime asserts.</li>
 </ul>
 <h4>Reflex</h4>
 <ul>
+<li>GCCXML 0.9 is now fully supported.</li>
 <li>GCCXML 0.6 is no longer supported.</li>
 <li>genreflex can now generate dictionaries for classes deriving (directly or indirectly) from TObject or any other class using the <tt>ClassDef(<i>classname</i>, <i>version</i>)</tt> macro.</li>
+<li><tt>Member::Invoke()</tt> and <tt>Object::Invoke()</tt> now extect the return value's buffer as an argument. This fixes memory leaks caused by the Reflex function wrappers and invalidation of results.</li>
+<li>Search path for GCCXML is now --gccxmlpath= specified to genreflex, ROOT configured with --with-gccxml, gccxml in $PATH; then abort</li>
+</ul>
+
+<h4>Cintex</h4>
+<ul>
+<li>Support SELinux (e.g. on SLC5).</li>
 </ul>
