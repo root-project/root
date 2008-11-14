@@ -520,12 +520,16 @@ PyObject* TMethodHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member >::Execute( v
    if ( fMethod.IsConstructor() )
       return (PyObject*)((ROOT::Reflex::Type)fClass).Construct( fMethod.TypeOf(), fParamPtrs ).Address();
 
-   ROOT::Reflex::Object obj( fClass, (void*)((Long_t)self + fOffset) );
-   ROOT::Reflex::Object result = fMethod.Invoke( obj, fParamPtrs );
-   std::string retname =
-      fMethod.TypeOf().ReturnType().Name( ROOT::Reflex::Q | ROOT::Reflex::S | ROOT::Reflex::F );
-   if ( retname != "void" ) {
-      TConverter* converter = CreateConverter( retname );
+   Reflex::Object obj( fClass, (void*)((Long_t)self + fOffset) );
+   Reflex::Object result;
+   static Reflex::Type tVoid = Reflex::Type::ByName("void");
+   bool returnsVoid = (fMethod.TypeOf().ReturnType() == tVoid);
+   if ( !returnsVoid ) {
+      result = fMethod.TypeOf().ReturnType().Construct();
+   }
+   fMethod.Invoke( obj, &result, fParamPtrs );
+   if ( !returnsVoid ) {
+      TConverter* converter = CreateConverter( fMethod.TypeOf().ReturnType().Name(Reflex::S|Reflex::Q|Reflex::F) );
       if ( converter ) {
          PyObject* pyresult = converter->FromMemory( result.Address() );
          delete converter;
