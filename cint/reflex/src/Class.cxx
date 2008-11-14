@@ -198,7 +198,7 @@ void Reflex::Class::Destruct(void * instance,
    if (fDestructor.TypeOf()) {
       // we found a destructor -> Invoke it
       Object dummy = Object(Type(), instance);
-      fDestructor.Invoke(dummy, 0);
+      fDestructor.Invoke(dummy, (Object*)0);
       // if deallocation of memory wanted
       if (dealloc) {
          Deallocate(instance);
