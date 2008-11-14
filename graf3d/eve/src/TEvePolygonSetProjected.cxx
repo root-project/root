@@ -355,8 +355,7 @@ Float_t TEvePolygonSetProjected::MakePolygonsFromBS(Int_t* idxMap)
             {
                pp.push_back(tail);
                tail = (cv1 == tail) ? cv2 : cv1;
-               LSegIt_t to_erase = k--;
-               segs.erase(to_erase);
+               segs.erase(k);
                match = kTRUE;
                break;
             }
