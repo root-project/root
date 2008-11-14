@@ -29,6 +29,9 @@ using namespace RooFit ;
 class TestBasic705 : public RooFitTestUnit
 {
 public: 
+
+  Double_t ctol() { return 5e-2 ; } // very conservative, this is a numerically difficult test
+
   TestBasic705(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Linear morph operator p.d.f.",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 

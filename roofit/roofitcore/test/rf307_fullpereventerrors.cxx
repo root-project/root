@@ -94,18 +94,12 @@ public:
   // ---------------------------------------------------------------------
 
 
-  // Make two-dimensional plot of conditional p.d.f in (dt,dterr)
-  TH1* hh_model = model.createHistogram("hh_model",dt,Binning(50),YVar(dterr,Binning(50))) ;
-  hh_model->SetLineColor(kBlue) ;
-
-
   // Make projection of data an dt
   RooPlot* frame = dt.frame(Title("Projection of model(dt|dterr) on dt")) ;
   data->plotOn(frame) ;
   model.plotOn(frame) ;
 
 
-  regTH(hh_model,"rf307_model2d") ;
   regPlot(frame,"rf307_plot1") ;
 
   delete expDataDterr ;

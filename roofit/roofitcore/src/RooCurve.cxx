@@ -701,17 +701,19 @@ Bool_t RooCurve::isIdentical(const RooCurve& other, Double_t tol) const
     if (fY[i]<ymin) ymin=fY[i] ;
     if (fY[i]>ymax) ymax=fY[i] ;
   }
-  Double_t Xrange=xmax-xmin ;
   Double_t Yrange=ymax-ymin ;
 
   Bool_t ret(kTRUE) ;
-  for(Int_t i= 1; i < n-1; i++) {
-    Double_t rdx = fabs(fX[i]-other.fX[i])/Xrange ;
-    Double_t yTest = rdx>tol ? interpolate(other.fX[i],1e-10) : fY[i] ;
+  for(Int_t i= 2; i < n-2; i++) {
+    Double_t yTest = interpolate(other.fX[i],1e-10) ;
     Double_t rdy = fabs(yTest-other.fY[i])/Yrange ;
     if (rdy>tol) {
+
+//       cout << "xref = " << other.fX[i] << " yref = " << other.fY[i] << " xtest = " << fX[i] << " ytest = " << fY[i] 
+// 	   << " ytestInt[other.fX] = " << interpolate(other.fX[i],1e-10) << endl ;
+      
       cout << "RooCurve::isIdentical[" << i << "] Y tolerance exceeded (" << rdy << ">" << tol 
-	   << "), X=" << other.fX[i] << " Ytest=" << yTest << " Yref=" << other.fY[i] << " range = " << Yrange << endl ;
+	   << "), X=" << other.fX[i] << "(" << fX[i] << ")" << " Ytest=" << yTest << " Yref=" << other.fY[i] << " range = " << Yrange << endl ;
       ret=kFALSE ;
     }
   }
