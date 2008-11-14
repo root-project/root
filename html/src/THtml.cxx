@@ -507,11 +507,13 @@ bool THtml::TPathDefinition::GetIncludeAs(TClass* cl, TString& out_dir) const
       hdr.Remove(0, posInc + 5);
       out_dir = hdr;
 
-      // TMVA special treatment:
+      // TMVA and RooStats special treatment:
       // TMVA::Whatever claims to be in in math/tmva/inc/Whatever.h
       // but it needs to get included as TMVA/Whatever.h
       if (strstr(clname, "TMVA::"))
          out_dir.Prepend("TMVA/");
+      if (strstr(clname, "RooStats::"))
+         out_dir.Prepend("RooStats/");
    }
 
    return (out_dir.Length());
@@ -537,6 +539,12 @@ bool THtml::TPathDefinition::GetFileNameFromInclude(const char* included, TStrin
    if (!strncmp(included, "TMVA/", 5)) {
       out_fsname.Remove(0, 4);
       out_fsname.Prepend("tmva/inc");
+      return true;
+   }
+   // special treatment for roostats (same as in TMVA) 
+   if (!strncmp(included, "RooStats/", 9)) {
+      out_fsname.Remove(0, 8);
+      out_fsname.Prepend("roofit/roostats/inc");
       return true;
    }
 
@@ -1476,7 +1484,7 @@ void THtml::CreateListOfClasses(const char* filter)
             // just skip. Silence if it doesn't match the selection anyway
             if (matchesSelection && (!classPtr->GetDeclFileName() || !strstr(classPtr->GetDeclFileName(),"prec_stl/")))
                Warning("CreateListOfClasses",
-                  "Cannot determine declaration file name for %s!", cname);
+                       "Cannot determine declaration file name for %s!", cname);            
             continue;
          }
       }
