@@ -41,7 +41,7 @@ INCLUDEFILES += $(GFALDEP)
 include/%.h:    $(GFALDIRI)/%.h
 		cp $< $@
 
-$(GFALLIB):     $(GFALO) $(GFALDO) $(ORDER_) $(MAINLIBS)
+$(GFALLIB):     $(GFALO) $(GFALDO) $(ORDER_) $(MAINLIBS) $(GFALLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libGFAL.$(SOEXT) $@ "$(GFALO) $(GFALDO)" \
 		   "$(GFALLIBEXTRA) $(GFALLIBDIR) $(GFALCLILIB)"
