@@ -437,7 +437,7 @@ void ReflexSimple2Test::fooBarZot() {
     // get number of members (i.e. 13)
     fooType.UpdateMembers();
     size_t fooMembers = fooType.MemberSize();
-    CPPUNIT_ASSERT_EQUAL(size_t(15), fooMembers);
+    CPPUNIT_ASSERT_EQUAL(size_t(13), fooMembers);
 
     // get number of data members (i.e. 1)
     size_t fooDataMembers = fooType.DataMemberSize();
@@ -487,13 +487,11 @@ void ReflexSimple2Test::fooBarZot() {
     CPPUNIT_ASSERT_EQUAL(4712, val);
 
     // call function setBar with value 4713
-    fooObj.Invoke("set_bar",Type::ByName("void (int)"), 0, std::vector<void*>(1,&(++val)));
+    fooObj.Invoke("set_bar",Type::ByName("void (int)"), ++val);
     // call operator ++ to increase fBar by one
-    fooObj.Invoke("operator++", 0);
+    fooObj.Invoke("operator++");
     // call bar getter and cast the output to int (i.e. 4714)
-    Object ret(Type::ByName("int"), &val);
-    fooObj.Invoke("bar", &ret);
-    val = Object_Cast<int>(ret);
+    val = Object_Cast<int>(fooObj.Invoke("bar"));
     CPPUNIT_ASSERT_EQUAL(4714, val);
     
     // delete the Foo object
@@ -686,7 +684,7 @@ void ReflexSimple2Test::testFunctionMembers() {
   o = t.Construct();
   CPPUNIT_ASSERT(o);
   
-  CPPUNIT_ASSERT_EQUAL(61,int(t.FunctionMemberSize()));
+  CPPUNIT_ASSERT_EQUAL(51,int(t.FunctionMemberSize()));
   
   m = t.MemberByName("h");
   CPPUNIT_ASSERT(m);
@@ -695,16 +693,11 @@ void ReflexSimple2Test::testFunctionMembers() {
   CPPUNIT_ASSERT(m.DeclaringScope());
   CPPUNIT_ASSERT_EQUAL(std::string("ClassH"), m.DeclaringScope().Name());
   CPPUNIT_ASSERT(m.DeclaringType() == (Type)m.DeclaringScope());
-  int retInt = -42;
-  Object ret(m.TypeOf().ReturnType(), &retInt);
-  m.Invoke(o, &ret);
-  CPPUNIT_ASSERT_EQUAL('h',(char)*(int*)ret.Address());
+  CPPUNIT_ASSERT_EQUAL('h',(char)*(int*)m.Invoke(o).Address());
 
   m = t.MemberByName("g");
   CPPUNIT_ASSERT(m);
-  
-  m.Invoke(o, &ret);
-  CPPUNIT_ASSERT_EQUAL('g',(char)*(int*)ret.Address());
+  CPPUNIT_ASSERT_EQUAL('g',(char)*(int*)m.Invoke(o).Address());
 
 
   m = t.MemberByName("setG");
@@ -723,38 +716,31 @@ void ReflexSimple2Test::testFunctionMembers() {
 
   m = t.MemberByName("f");
   CPPUNIT_ASSERT(m);
-  m.Invoke(o, &ret);
-  CPPUNIT_ASSERT_EQUAL('f',(char)*(int*)ret.Address());
+  CPPUNIT_ASSERT_EQUAL('f',(char)*(int*)m.Invoke(o).Address());
 
   m = t.MemberByName("d");
   CPPUNIT_ASSERT(m);
-  m.Invoke(o, &ret);  
-  CPPUNIT_ASSERT_EQUAL('d',(char)*(int*)ret.Address());
+  CPPUNIT_ASSERT_EQUAL('d',(char)*(int*)m.Invoke(o).Address());
 
   m = t.MemberByName("b");
   CPPUNIT_ASSERT(m);
-  m.Invoke(o, &ret);
-  CPPUNIT_ASSERT_EQUAL('b',(char)*(int*)ret.Address());
+  CPPUNIT_ASSERT_EQUAL('b',(char)*(int*)m.Invoke(o).Address());
   
   m = t.MemberByName("a");
   CPPUNIT_ASSERT(m);
-  m.Invoke(o, &ret);
-  CPPUNIT_ASSERT_EQUAL('a',(char)*(int*)ret.Address());
+  CPPUNIT_ASSERT_EQUAL('a',(char)*(int*)m.Invoke(o).Address());
   
   m = t.MemberByName("m");
   CPPUNIT_ASSERT(m);
-  m.Invoke(o, &ret);
-  CPPUNIT_ASSERT_EQUAL('m',(char)*(int*)ret.Address());
+  CPPUNIT_ASSERT_EQUAL('m',(char)*(int*)m.Invoke(o).Address());
 
   m = t.MemberByName("e");
   CPPUNIT_ASSERT(m);
-  m.Invoke(o, &ret);
-  CPPUNIT_ASSERT_EQUAL('e',(char)*(int*)ret.Address());
+  CPPUNIT_ASSERT_EQUAL('e',(char)*(int*)m.Invoke(o).Address());
 
   m = t.MemberByName("c");
   CPPUNIT_ASSERT(m);
-  m.Invoke(o, &ret);
-  CPPUNIT_ASSERT_EQUAL('c',(char)*(int*)ret.Address());
+  CPPUNIT_ASSERT_EQUAL('c',(char)*(int*)m.Invoke(o).Address());
 
   o.Destruct();
 
@@ -776,10 +762,7 @@ void ReflexSimple2Test::testFreeFunctions() {
   CPPUNIT_ASSERT(m);
   CPPUNIT_ASSERT_EQUAL(std::string("function4"),m.Name());
   CPPUNIT_ASSERT_EQUAL(std::string("int (int)"),m.TypeOf().Name());
-  int retInt = -42;
-  Object retIntO(Type::ByName("int"), &retInt);
-  m.Invoke(Object(), &retIntO, vec);
-  CPPUNIT_ASSERT_EQUAL(11, *(int*)retIntO.Address());
+  CPPUNIT_ASSERT_EQUAL(11, *(int*)m.Invoke(Object(), vec).Address());
 
   float f = 1.0;
   vec.push_back((void*)&f);
@@ -787,31 +770,25 @@ void ReflexSimple2Test::testFreeFunctions() {
   CPPUNIT_ASSERT(m);
   CPPUNIT_ASSERT_EQUAL(std::string("function3"),m.Name());
   CPPUNIT_ASSERT_EQUAL(std::string("double* (int, float)"),m.TypeOf().Name());
-  double retDouble = -43.;
-  double* retPDouble = &retDouble;
-  Object retPDoubleO(Type::ByName("double*"), &retPDouble);
-  m.Invoke(Object(), &retPDoubleO, vec);
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0,*retPDouble,0);
+  CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0,*(double*)m.Invoke(Object(), vec).Address(),0);
                        
   m = s.FunctionMemberByName("function2");
   CPPUNIT_ASSERT(m);
   CPPUNIT_ASSERT_EQUAL(std::string("function2"),m.Name());
   CPPUNIT_ASSERT_EQUAL(std::string("int (void)"),m.TypeOf().Name());
-  m.Invoke(Object(), &retIntO, std::vector<void*>());
-  CPPUNIT_ASSERT_EQUAL(999,*(int*)retIntO.Address());
+  CPPUNIT_ASSERT_EQUAL(999,*(int*)m.Invoke(Object(), std::vector<void*>()).Address());
                        
   m = s.FunctionMemberByName("function1");
   CPPUNIT_ASSERT(m);
   CPPUNIT_ASSERT_EQUAL(std::string("function1"),m.Name());
   CPPUNIT_ASSERT_EQUAL(std::string("void (void)"),m.TypeOf().Name());
-  Object ro(Type::ByName("int"), (void*)0);
-  m.Invoke(Object(), &ro, std::vector<void*>());
+  Object ro = m.Invoke(Object(), std::vector<void*>());
   CPPUNIT_ASSERT(!ro);
                        
   t = Type::ByName("ClassAAA");
   CPPUNIT_ASSERT(t);
-  CPPUNIT_ASSERT_EQUAL(6,int(t.MemberSize()));
-  CPPUNIT_ASSERT_EQUAL(6,int(t.FunctionMemberSize()));
+  CPPUNIT_ASSERT_EQUAL(5,int(t.MemberSize()));
+  CPPUNIT_ASSERT_EQUAL(5,int(t.FunctionMemberSize()));
   CPPUNIT_ASSERT_EQUAL(0,int(t.DataMemberSize()));
   m = t.MemberByName("function6");
   CPPUNIT_ASSERT(m);
@@ -833,7 +810,7 @@ void ReflexSimple2Test::testFreeFunctions() {
 
   t = Type::ByName("ClassBBB");
   CPPUNIT_ASSERT(t);
-  CPPUNIT_ASSERT_EQUAL(6, int(t.MemberSize()));
+  CPPUNIT_ASSERT_EQUAL(5, int(t.MemberSize()));
   m = t.MemberByName("meth");
   CPPUNIT_ASSERT(m);
   CPPUNIT_ASSERT_EQUAL(std::string("ClassBBB::meth"),m.Name(SCOPED));
@@ -862,8 +839,7 @@ void ReflexSimple2Test::testFreeFunctions() {
   int arg = 2;
   std::vector<void*> argVec;
   for (int j = 0; j < 20; ++j) argVec.push_back(&arg);
-  int ret = -42;
-  o.Invoke("funWithManyArgs", ret, argVec);
+  int ret = Object_Cast<int>(o.Invoke("funWithManyArgs",argVec));
   CPPUNIT_ASSERT_EQUAL(ret,40);
 
   o.Destruct();
@@ -1530,8 +1506,7 @@ void ReflexSimple2Test::iterateVector() {
    CPPUNIT_ASSERT(t);
    Object o = Object( t, &v );
 
-   size_t vsize;
-   o.Invoke("size", vsize);
+   size_t vsize = Object_Cast<size_t>(o.Invoke("size"));
 
    Type templParType0 = t.TemplateArgumentAt(0);
    CPPUNIT_ASSERT(templParType0);
@@ -1543,9 +1518,7 @@ void ReflexSimple2Test::iterateVector() {
    for ( size_t i = 0; i < vsize; ++i ) {
       params.clear();
       params.push_back(&i);
-      int *ret = 0;
-      o.Invoke("at", ret, params);
-      CPPUNIT_ASSERT_EQUAL(v[i], *ret);
+      CPPUNIT_ASSERT_EQUAL(v[i], Object_Cast<int>(o.Invoke("at",params)));
    }
 
 }

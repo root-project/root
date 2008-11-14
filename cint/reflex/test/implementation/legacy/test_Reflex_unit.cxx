@@ -455,7 +455,7 @@ void ReflexUnitTest::namespace_scope() {
   CPPUNIT_ASSERT(Scope::ByName("Namespace::Subspace1"));
 }
 
-void s_f1( void*, void*, const vector<void*>&, void* ) {}
+void * s_f1( void*, const vector<void*>&, void* ) {return 0;}
 
 void ReflexUnitTest::namespace_members() {
   Namespace n("Members");
@@ -702,19 +702,7 @@ void ReflexUnitTest::object_value() {
   long  l = -99999; unsigned long ul = 99999;
   float f = 1.12F;  double d = 1.12; long double ld = 1.12;
 
-  ValueObject vt = ValueObject::Create(t);
-  ValueObject vb = ValueObject::Create(b);
-  ValueObject vc = ValueObject::Create(c);
-  ValueObject vuc = ValueObject::Create(uc);
-  ValueObject vs = ValueObject::Create(s);
-  ValueObject vus = ValueObject::Create(us);
-  ValueObject vi = ValueObject::Create(i);
-  ValueObject vui = ValueObject::Create(ui);
-  ValueObject vl = ValueObject::Create(l);
-  ValueObject vul = ValueObject::Create(ul);
-  ValueObject vf = ValueObject::Create(f);
-  ValueObject vd = ValueObject::Create(d);
-  ValueObject vld = ValueObject::Create(ld);
+  ValueObject vt(t), vb(b), vc(c), vuc(uc), vs(s), vus(us), vi(i), vui(ui), vl(l), vul(ul), vf(f), vd(d), vld(ld);
   CPPUNIT_ASSERT( t  == vt.Value<bool>() );
   CPPUNIT_ASSERT( b  == vb.Value<bool>() );
   CPPUNIT_ASSERT( c  == vc.Value<char>() );
@@ -729,18 +717,13 @@ void ReflexUnitTest::object_value() {
 
 
   //---Pointers
-  const char*  pc = "Hello";
-  const char** ppc = &pc;
+  char*  pc = "Hello";
+  char** ppc = &pc;
   string* ps = new string(pc);
   const int* cpi = &i;
   int const * pci = &i;
   int * const ipc = &i;
-  ValueObject vpc = ValueObject::Create(pc);
-  ValueObject vppc = ValueObject::Create(ppc);
-  ValueObject vps = ValueObject::Create(ps);
-  ValueObject vcpi = ValueObject::Create(cpi);
-  ValueObject vpci = ValueObject::Create(pci);
-  ValueObject vipc = ValueObject::Create(ipc);
+  ValueObject vpc(pc), vppc(ppc), vps(ps), vcpi(cpi), vpci(pci), vipc(ipc);
 
   CPPUNIT_ASSERT( pc  == vpc.Address() );
   CPPUNIT_ASSERT( ppc  == vppc.Address() );
@@ -751,7 +734,7 @@ void ReflexUnitTest::object_value() {
 
   //---Classes and structs
   string str("Hello");
-  ValueObject vstr = ValueObject::Create(str);
+  ValueObject vstr(str);
   CPPUNIT_ASSERT( str  == vstr.Value<string>() );
 
   //---Copies
@@ -760,7 +743,7 @@ void ReflexUnitTest::object_value() {
   ValueObject vvstr;
   vvstr = vstr;
   CPPUNIT_ASSERT( str  == vvstr.Value<string>() );
-  vvi.Assign(99);
+  vvi = 99;
   CPPUNIT_ASSERT( 99  == vvi.Value<int>() );
   vvi = vstr;
   CPPUNIT_ASSERT( str  == vvi.Value<string>() );
