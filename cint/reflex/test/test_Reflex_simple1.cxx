@@ -106,7 +106,7 @@ void ReflexSimple1Test::testBase() {
 }
   
 void ReflexSimple1Test::testTypeCount() {
-  CPPUNIT_ASSERT( (int(Type::TypeSize()) > 500) && (int(Type::TypeSize()) < 1000) );
+  CPPUNIT_ASSERT( (int(Type::TypeSize()) >= 800) && (int(Type::TypeSize()) < 1300) );
 }
 
 

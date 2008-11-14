@@ -317,7 +317,7 @@ namespace Reflex {
    * typedef for function member type (necessary for return value of
    * getter function)
    */
-   typedef void * (* StubFunction) ( void *, const std::vector < void * > &, void *);
+   typedef void (* StubFunction) ( void*, void *, const std::vector < void * > &, void *);
 
    /** typedef for function for Offset calculation */
    typedef size_t (* OffsetFunction) ( void * );

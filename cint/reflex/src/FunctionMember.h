@@ -62,14 +62,14 @@ namespace Reflex {
       /** Invoke the function (if return At as void*) */
       /*Object Invoke( const Object & obj, 
       const std::vector < Object > & paramList ) const;*/
-      Object Invoke( const Object & obj, 
+      void Invoke( const Object & obj, Object* ret,
          const std::vector < void * > & paramList = 
          std::vector<void*>()) const;
 
 
       /** Invoke the function (for static functions) */
       //Object Invoke( const std::vector < Object > & paramList ) const;
-      Object Invoke( const std::vector < void * > & paramList = 
+      void Invoke( Object* ret, const std::vector < void * > & paramList = 
          std::vector<void*>()) const;
 
 

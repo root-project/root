@@ -145,27 +145,40 @@ namespace Reflex {
       void * Id() const;
 
 
-      /*Object Invoke( const Object & obj, 
-      const std::vector < Object > & paramList ) const;*/
       /** 
       * Invoke a member function
       * @param obj the object which owns the member function
       * @param paramList a vector of addresses to paramter values
       * @return the return value of the function as object
       */
-      Object Invoke( const Object & obj, 
-         const std::vector < void * > & paramList = 
-         std::vector<void*>()) const;
+      void Invoke(const Object & obj, Object* ret,
+                  const std::vector<void *>& paramList = std::vector<void*>()) const;
 
+      /** 
+      * Invoke a member function
+      * @param obj the object which owns the member function
+      * @param paramList a vector of addresses to paramter values
+      * @return the return value of the function as object
+      */
+      template <typename T>
+      void Invoke(const Object & obj, T& ret,
+                  const std::vector<void *>& paramList = std::vector<void*>()) const;
 
-      //Object Invoke( const std::vector < Object > & paramList ) const;
       /** 
       * Invoke a static function 
       * @param paramList a vector of addresses to parameter values
       * @return the return value of the function as object
       */
-      Object Invoke( const std::vector < void * > & paramList = 
-         std::vector<void*>()) const;
+      void Invoke(Object* ret, const std::vector<void *>& paramList = std::vector<void*>()) const;
+
+
+      /** 
+      * Invoke a static function 
+      * @param paramList a vector of addresses to parameter values
+      * @return the return value of the function as object
+      */
+      template <typename T>
+      void Invoke(T& ret, const std::vector<void *>& paramList = std::vector<void*>()) const;
 
 
       /** 
@@ -573,6 +586,26 @@ inline Reflex::Type Reflex::Member::DeclaringType() const {
 inline void * Reflex::Member::Id() const {
 //-------------------------------------------------------------------------------
    return (void*)fMemberBase;
+}
+
+
+//-------------------------------------------------------------------------------
+template <typename T>
+inline void Reflex::Member::Invoke(const Object & obj, T& ret,
+                                   const std::vector<void *>& paramList) const {
+//-------------------------------------------------------------------------------
+   Object retO(Type::ByTypeInfo(typeid(T)), &ret);
+   Invoke(obj, &retO, paramList);
+}
+
+
+//-------------------------------------------------------------------------------
+template <typename T>
+inline void Reflex::Member::Invoke(T& ret,
+                                   const std::vector<void *>& paramList) const {
+//-------------------------------------------------------------------------------
+   Object retO(Type::ByTypeInfo(typeid(T)), &ret);
+   Invoke(&retO, paramList);
 }
 
 

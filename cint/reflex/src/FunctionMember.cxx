@@ -88,18 +88,22 @@ std::string Reflex::FunctionMember::Name( unsigned int mod ) const {
 
 
 //-------------------------------------------------------------------------------
-Reflex::Object
-Reflex::FunctionMember::Invoke( const Object & obj,
-                                      const std::vector < void * > & paramList ) const {
+void
+Reflex::FunctionMember::Invoke( const Object & obj, Object* ret,
+                                const std::vector < void * > & paramList ) const {
 //-----------------------------------------------------------------------------
-// Invoke this function member with object obj. 
+// Invoke this function member with object obj, return value (it it exists)
+// goes into Object ret.
    if ( paramList.size() < FunctionParameterSize(true)) {
       throw RuntimeError("Not enough parameters given to function ");
-      return Object();
    }
    void * mem = CalculateBaseObject( obj );
+   static Type tVoid = Type::ByName("void");
+   void* retaddr = 0;
+   if (TypeOf().ReturnType() != tVoid)
+      retaddr = ret->Address();
    // parameters need more checking FIXME
-   return Object(TypeOf().ReturnType(), fStubFP( mem, paramList, fStubCtx ));
+   fStubFP( retaddr, mem, paramList, fStubCtx );
 }
 
 
@@ -117,12 +121,17 @@ Reflex::FunctionMember::Invoke( const Object & obj,
 
 
 //-------------------------------------------------------------------------------
-Reflex::Object
-Reflex::FunctionMember::Invoke( const std::vector < void * > & paramList ) const {
+void
+Reflex::FunctionMember::Invoke( Object* ret, const std::vector < void * > & paramList ) const {
 //-------------------------------------------------------------------------------
-// Call static function 
+// Call static function, return value (it it exists) goes into Object ret.
+
+   static Type tVoid = Type::ByName("void");
+   void* retaddr = 0;
+   if (TypeOf().ReturnType() != tVoid)
+      retaddr = ret->Address();
    // parameters need more checking FIXME
-   return Object(TypeOf().ReturnType(), fStubFP( 0, paramList, fStubCtx ));
+   fStubFP( retaddr, 0, paramList, fStubCtx );
 }
 
 

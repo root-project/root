@@ -79,14 +79,14 @@ namespace Reflex {
       /** Invoke the member function */
       /*virtual Object Invoke( const Object & obj, 
       const std::vector < Object > & paramList ) const;*/
-      virtual Object Invoke( const Object & obj, 
+      virtual void Invoke( const Object & obj, Object* ret,
          const std::vector < void * > & paramList = 
          std::vector<void*>()) const;
 
 
       /** Invoke the function (for static functions) */
       //virtual Object Invoke( const std::vector < Object > & paramList ) const;
-      virtual Object Invoke( const std::vector < void * > & paramList = 
+      virtual void Invoke( Object* ret, const std::vector < void * > & paramList = 
          std::vector<void*>()) const;
 
 
@@ -390,11 +390,10 @@ inline Reflex::Object Reflex::MemberBase::Get( const Object & /* obj */ ) const 
 
 
 //-------------------------------------------------------------------------------
-inline Reflex::Object 
-Reflex::MemberBase::Invoke( const Object & /* obj */ ,
-                                  const std::vector < void * > & /* paramList */ ) const {
+inline void
+Reflex::MemberBase::Invoke( const Object & /* obj */ , Object* /*ret*/,
+                            const std::vector < void * > & /* paramList */ ) const {
 //-------------------------------------------------------------------------------
-   return Object();
 }
 
 
@@ -407,10 +406,9 @@ Reflex::MemberBase::Invoke( const Object & /* obj */ ,
 
 
 //-------------------------------------------------------------------------------
-inline Reflex::Object 
-Reflex::MemberBase::Invoke( const std::vector < void * > & /* paramList */ ) const {
+inline void
+Reflex::MemberBase::Invoke( Object* /*ret*/, const std::vector < void * > & /* paramList */ ) const {
 //-------------------------------------------------------------------------------
-   return Object();
 }
 
 

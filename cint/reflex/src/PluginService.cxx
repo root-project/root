@@ -97,7 +97,7 @@ void* Reflex::PluginService::Create( const string & name,
                                        const Type & ret, 
                                        const vector<ValueObject> & arg) {
 //-------------------------------------------------------------------------------
-// Create a Plugin.
+// Create a Plugin. Pass ownership of created object (i.e. returned value) to caller.
    static Object dummy; 
    vector<void*> argv;
    vector<Type>  argt;
@@ -123,7 +123,8 @@ void* Reflex::PluginService::Create( const string & name,
       return 0; 
    }
    else {
-      Object rett = m.Invoke(dummy, argv);
+      Object rett = m.TypeOf().ReturnType().Construct();
+      m.Invoke(dummy, &rett, argv);
       return rett.Address();
    }
 }
@@ -176,7 +177,8 @@ void* Reflex::PluginService::CreateWithId(const Any& id,
       return 0; 
    }
    else {
-      Object rett = m.Invoke(dummy, argv);
+      Object rett = m.TypeOf().ReturnType().Construct();
+      m.Invoke(dummy, &rett, argv);
       return rett.Address();
    }
 }

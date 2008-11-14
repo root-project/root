@@ -44,6 +44,11 @@ namespace Reflex {
       ~Object() {}
 
 
+      template <typename T>
+      static Object Create(T& v) {
+         return Object(Type::ByTypeInfo(typeid(T)), &v);
+      }
+
       /**
       * operator assigment 
       */
@@ -109,84 +114,57 @@ namespace Reflex {
       /**
       * Invoke a member function of the object
       * @param fm name of the member function
+      * @param ret Object to put the return value into (can be 0 for function returning void)
       * @param args a vector of memory addresses to parameter values
       * @return the return value of the function as object
       */
-      Object Invoke( const std::string & fm, 
-         std::vector< void * > args = std::vector<void*>()) const;
+      void Invoke( const std::string & fm, Object* ret = 0,
+         const std::vector< void * >& args = std::vector<void*>()) const;
 
 
       /**
       * Invoke a member function of the object
       * @param fm name of the member function
-      * @param sign the signature of the member function (for overloads)
+      * @param ret Object to put the return value into (can be 0 for function returning void)
       * @param args a vector of memory addresses to parameter values
       * @return the return value of the function as object
       */
-      Object Invoke( const std::string & fm, 
-         const Type & sign,
-         std::vector< void * > args = std::vector<void*>()) const;
-
-
-      /*
-      Object Invoke( const std::string & fm, 
-      std::vector< Object > args = std::vector< Object>()) const;
-      Object Invoke( const std::string & fm, 
-      const Type & ft,
-      std::vector< Object > args = std::vector< Object>()) const;
-      */
-
-
-      /**
-      * Invoke a member function of the object
-      * @param fm name of the member function
-      * @param p0 the first argument of the function 
-      * @return the return value of the function as object
-      */
-      template < class T0 >
-      Object Invoke( const std::string & fm,
-         const T0 & p0 ) const ;
+      template <typename T>
+      void Invoke( const std::string & fm, T& ret,
+         const std::vector< void * >& args = std::vector<void*>()) const {
+         Object retO(Type::ByTypeInfo(typeid(T)), &ret);
+         Invoke(fm, &retO, args);
+      }
 
 
       /**
       * Invoke a member function of the object
       * @param fm name of the member function
       * @param sign the signature of the member function (for overloads)
-      * @param p0 the first argument of the function 
+      * @param ret Object to put the return value into (can be 0 for function returning void)
+      * @param args a vector of memory addresses to parameter values
       * @return the return value of the function as object
       */
-      template < class T0 >
-      Object Invoke( const std::string & fm,
-         const Type & sign,
-         const T0 & p0 ) const ;
-
-
-      /**
-      * Invoke a member function of the object
-      * @param fm name of the member function
-      * @param p0 the first argument of the function 
-      * @param p1 the second argument of the function 
-      * @return the return value of the function as object
-      */
-      template < class T0, class T1 >
-      Object Invoke( const std::string & fm,
-         const T0 & p0,
-         const T1 & p1 ) const ;
+      void Invoke( const std::string & fm, 
+         const Type & sign, Object* ret = 0,
+         const std::vector< void * >& args = std::vector<void*>()) const;
 
 
       /**
       * Invoke a member function of the object
       * @param fm name of the member function
       * @param sign the signature of the member function (for overloads)
-      * @param p0 the first argument of the function 
-      * @param p1 the second argument of the function 
+      * @param ret Object to put the return value into (can be 0 for function returning void)
+      * @param args a vector of memory addresses to parameter values
       * @return the return value of the function as object
       */
-      template < class T0, class T1 >
-      Object Invoke( const std::string & fm,
-         const Type & sign,
-         const T0 & p0,
-         const T1 & p1 ) const ;
+      template <typename T>
+      void Invoke( const std::string & fm, 
+         const Type & sign, T& ret = 0,
+         const std::vector< void * >& args = std::vector<void*>()) const {
+         Object retO(Type::ByTypeInfo(typeid(T)), &ret);
+         Invoke(fm, sign, &retO, args);
+      }
 
 
       /**
@@ -196,12 +174,6 @@ namespace Reflex {
       */
       void Set(const std::string & dm,
          const void * value ) const;
-
-
-      /*
-      void Set(const std::string & dm,
-      const Object & value ) const;
-      */
 
 
       /**
@@ -344,73 +316,6 @@ inline void Reflex::Object::Destruct() const {
 inline Reflex::Type Reflex::Object::DynamicType() const {
 //-------------------------------------------------------------------------------
    return fType.DynamicType(*this);
-}
-
-
-//-------------------------------------------------------------------------------
-template < class T0 > 
-inline Reflex::Object
-Reflex::Object::Invoke( const std::string & fm,
-                              const T0 & p0 ) const {
-//-------------------------------------------------------------------------------
-   return Invoke(fm,Tools::MakeVector<void*>(Tools::CheckPointer<T0>::Get(p0)));
-   /*
-     m = TypeOf().FunctionMemberAt( fm );
-     if ( m ) {
-     std::vector< void* > argList;
-     argList.push_back( (void*)&p0 );
-     return m.Invoke( * this, argList );
-     }
-     else throw RuntimeError("No such MemberAt " + fm );
-     return Object();
-   */
-}
-
-
-//-------------------------------------------------------------------------------
-template < class T0 > 
-inline Reflex::Object
-Reflex::Object::Invoke( const std::string & fm,
-                              const Type & sign,
-                              const T0 & p0 ) const {
-//-------------------------------------------------------------------------------
-   return Invoke(fm,sign,Tools::MakeVector<void*>(Tools::CheckPointer<T0>::Get(p0)));
-}
-
-
-//-------------------------------------------------------------------------------
-template < class T0, class T1 > 
-inline Reflex::Object
-Reflex::Object::Invoke( const std::string & fm,
-                              const T0 & p0,
-                              const T1 & p1 ) const {
-//-------------------------------------------------------------------------------
-  return Invoke(fm,Tools::MakeVector<void*>(Tools::CheckPointer<T0>::Get(p0), 
-                                            Tools::CheckPointer<T1>::Get(p1)));
-/*
-  m = TypeOf().FunctionMemberAt( fm );
-  if ( m ) {
-    std::vector< void* > argList;
-    argList.push_back( (void*)&p0 );
-    argList.push_back( (void*)&p1 );
-    return m.Invoke( * this, argList );
-  }
-  else throw RuntimeError("No such MemberAt " + fm );
-  return Object();
-*/
-}
-
-
-//-------------------------------------------------------------------------------
-template < class T0, class T1 > 
-inline Reflex::Object
-Reflex::Object::Invoke( const std::string & fm,
-                              const Type & sign, 
-                              const T0 & p0,
-                              const T1 & p1 ) const {
-//-------------------------------------------------------------------------------
-  return Invoke(fm,sign,Tools::MakeVector<void*>(Tools::CheckPointer<T0>::Get(p0), 
-                                                 Tools::CheckPointer<T1>::Get(p1)));
 }
 
 

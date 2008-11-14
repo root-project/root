@@ -49,12 +49,13 @@ Reflex::Object::Get( const std::string & dm ) const {
 
 
 //-------------------------------------------------------------------------------
-Reflex::Object
+void
 Reflex::Object::Invoke( const std::string & fm,
-                              std::vector < void * > args ) const {
+                        Object* ret,
+                        const std::vector < void * >& args ) const {
 //-------------------------------------------------------------------------------
-// Invoke a data member of this object.
-   return Invoke(fm,Type(),args);
+// Invoke a data member of this object. Put return value(if not void) into ret.
+   Invoke(fm, Type(), ret, args);
    /*
      m = TypeOf().FunctionMemberAt( fm );
      if ( m ) {
@@ -68,20 +69,19 @@ Reflex::Object::Invoke( const std::string & fm,
 
 
 //-------------------------------------------------------------------------------
-Reflex::Object
+void
 Reflex::Object::Invoke( const std::string & fm,
-                              const Type & sign,
-                              std::vector < void * > args ) const {
+                        const Type & sign,
+                        Object* ret,
+                        const std::vector < void * >& args ) const {
 //-------------------------------------------------------------------------------
 // Invoke a data member of this object. Sign can be used for finding overloaded funs.
+// Put return value(if not void) into ret.
    Member m = TypeOf().FunctionMemberByName( fm, sign );
    if ( !m )
       throw RuntimeError("No such MemberAt " + fm );
 
-   if ( args.size() )
-      return m.Invoke( * this, args );
-
-   return m.Invoke( * this );
+   m.Invoke( * this, ret, args );
 }
 
 

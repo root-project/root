@@ -167,7 +167,7 @@ Reflex::Object Reflex::Class::Construct(const Type & sig,
          Member constructor = fConstructors[i];
          if (mem == 0) mem = Allocate();
          Object obj = Object(ThisType(), mem);
-         constructor.Invoke(obj, args);
+         constructor.Invoke(obj, 0, args);
          return obj;
       }
    }
@@ -198,7 +198,7 @@ void Reflex::Class::Destruct(void * instance,
    if (fDestructor.TypeOf()) {
       // we found a destructor -> Invoke it
       Object dummy = Object(Type(), instance);
-      fDestructor.Invoke(dummy);
+      fDestructor.Invoke(dummy, 0);
       // if deallocation of memory wanted
       if (dealloc) {
          Deallocate(instance);

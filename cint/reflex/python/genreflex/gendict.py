@@ -803,6 +803,7 @@ class genDictionary(object) :
 #----------------------------------------------------------------------------------
   def genInstantiateDict( self, selclasses, selfunctions, selenums, selvariables) :
     c = 'namespace {\n  struct Dictionaries {\n    Dictionaries() {\n'
+    c += '      Reflex::Instance initialize_reflex;\n'
     for attrs in selclasses :
       if 'incomplete' not in attrs : 
         clf = '::'+ attrs['fullname']
@@ -1562,19 +1563,16 @@ class genDictionary(object) :
       if not demangled or not len(demangled):
         demangled = name
       if not self.quiet : print  'function '+ demangled
-      s += 'static void* '
-      if len(args) :
-        s +=  'function%s( void*, const std::vector<void*>& arg, void*)\n{\n' % id 
-      else :
-        s +=  'function%s( void*, const std::vector<void*>&, void*)\n{\n' % id
+      s += 'static void '
+      retaddrpar=''
+      if returns != 'void': retaddrpar=' retaddr'
+      argspar=''
+      if len(args) : argspar=' arg'
+      s +=  'function%s( void*%s, void*, const std::vector<void*>&%s, void*)\n{\n' % (id, retaddrpar, argspar)
       ndarg = self.getDefaultArgs(args)
       narg  = len(args)
       if ndarg : iden = '  '
       else     : iden = ''
-      if returns != 'void' and (returns in self.basictypes or
-                                self.translate_typedef (f['returns']) in
-                                self.basictypes):
-        s += '  static %s ret;\n' % returns
       for n in range(narg-ndarg, narg+1) :
         if ndarg :
           if n == narg-ndarg :  s += '  if ( arg.size() == %d ) {\n' % n
@@ -1582,27 +1580,27 @@ class genDictionary(object) :
         if returns == 'void' :
           first = iden + '  %s(' % ( name, )
           s += first + self.genMCOArgs(args, n, len(first)) + ');\n'
-          s += iden + '  return 0;\n'
         else :
-          if returns[-1] in ('*',')' ):
-            first = iden + '  return (void*)%s(' % ( name, )
+          if returns[-1] in ('*',')' ) and returns.find('::*') == -1:
+            first = iden + '  if (retaddr) *(void**)retaddr = (void*)%s(' % ( name, )
+            s += first + self.genMCOArgs(args, n, len(first)) + ');\n'
+            first = iden + '  else %s(' % ( name, )
             s += first + self.genMCOArgs(args, n, len(first)) + ');\n'
           elif returns[-1] == '&' :
-            first = iden + '  return (void*)&%s(' % ( name, )
+            first = iden + '  if (retaddr) *(void**)retaddr = (void*)&%s(' % ( name, )
             s += first + self.genMCOArgs(args, n, len(first)) + ');\n'
-          elif (returns in self.basictypes or
-                self.translate_typedef (f['returns']) in self.basictypes):
-            first = iden + '  ret = %s(' % ( name, )
+            first = iden + '  else %s(' % ( name, )
             s += first + self.genMCOArgs(args, n, len(first)) + ');\n'
-            s += iden + '  return &ret;\n'        
           else :
-            first = iden + '  return new %s(%s(' % ( returns, name )
+            first = iden + '  if (retaddr) new (retaddr) (%s)(%s(' % ( returns, name )
             s += first + self.genMCOArgs(args, n, len(first)) + '));\n'
+            first = iden + '  else %s(' % ( name )
+            s += first + self.genMCOArgs(args, n, len(first)) + ');\n'
         if ndarg : 
           if n != narg : s += '  }\n'
           else :
-            if returns == 'void' : s += '  }\n  return 0;\n'
-            else :                 s += '  }\n  return 0;\n'
+            if returns == 'void' : s += '  }\n'
+            else :                 s += '  }\n'
       s += '}\n'
     return s  
 #----------------------------------------------------------------------------------
@@ -1758,7 +1756,7 @@ class genDictionary(object) :
     return mod
 #----------------------------------------------------------------------------------
   def genMCODecl( self, type, name, attrs, args ) :
-    return 'static void* %s%s(void*, const std::vector<void*>&, void*);' % (type, attrs['id'])
+    return 'static void %s%s(void*, void*, const std::vector<void*>&, void*);' % (type, attrs['id'])
 #----------------------------------------------------------------------------------
   def genMCOBuild(self, type, name, attrs, args):
     id       = attrs['id']
@@ -1782,62 +1780,50 @@ class genDictionary(object) :
     cl       = self.genTypeName(attrs['context'],colon=True)
     clt      = string.translate(str(cl), self.transtable)
     returns  = self.genTypeName(attrs['returns'],enum=True, const=True)
-    s = 'static void* '
-    if len(args) :
-      s +=  '%s%s( void* o, const std::vector<void*>& arg, void*)\n{\n' %( type, id )
-    else :
-      s +=  '%s%s( void* o, const std::vector<void*>&, void*)\n{\n' %( type, id )
+    narg     = len(args)
+    argspar  = ''
+    if narg : argspar = ' arg'
+    retaddrpar = ''
+
+    s = 'static void '
     # If we construct a conversion operator to pointer to function member the name
     # will contain TDF_<attrs['id']>
     tdfname = 'TDF%s'%attrs['id']
+    tdfdecl = ''
     if name.find(tdfname) != -1 :
-      s += '  typedef %s;\n'%name
+      tdfdecl = '  typedef %s;\n'%name
       name = 'operator ' + tdfname
       returns = tdfname
+
+    if returns != 'void': retaddrpar=' retaddr'
+                
+    s +=  '%s%s( void*%s, void* o, const std::vector<void*>&%s, void*)\n{\n' %( type, id, retaddrpar, argspar )
+    s += tdfdecl
     ndarg = self.getDefaultArgs(args)
-    narg  = len(args)
     if ndarg : iden = '  '
     else     : iden = ''
-    if returns != 'void' :
-      if (returns in self.basictypes or
-          self.translate_typedef (attrs['returns']) in self.basictypes or
-          name == 'operator %s'%tdfname):
-        s += '  static %s ret;\n' % returns
-      elif returns.find('::*)') != -1 :
-        s += '  static %s;\n' % returns.replace('::*','::* ret')
-      elif returns.find('::*') != -1 :
-        s += '  static %s ret;\n' % returns  
     if 'const' in attrs : cl = 'const '+ cl
     for n in range(narg-ndarg, narg+1) :
       if ndarg :
         if n == narg-ndarg :  s += '  if ( arg.size() == %d ) {\n' % n
         else               :  s += '  else if ( arg.size() == %d ) { \n' % n
-      if returns == 'void' :
-        first = iden + '  (((%s*)o)->%s)(' % ( cl, name )
-        s += first + self.genMCOArgs(args, n, len(first)) + ');\n'
-        s += iden + '  return 0;\n'
-      else :
+      if returns != 'void' :
         if returns[-1] in ('*',')') and returns.find('::*') == -1 :
-          first = iden + '  return (void*)(((%s*)o)->%s)(' % ( cl, name )
-          s += first + self.genMCOArgs(args, n, len(first)) + ');\n'
+          first = iden + '  if (retaddr) *(void**)retaddr = (void*)(((%s*)o)->%s)(' % ( cl, name )
+          s += first + self.genMCOArgs(args, n, len(first)) + ');\n' + iden + 'else '
         elif returns[-1] == '&' :
-          first = iden + '  return (void*)&(((%s*)o)->%s)(' % ( cl, name )
-          s += first + self.genMCOArgs(args, n, len(first)) + ');\n'
-        elif (returns in self.basictypes or
-              self.translate_typedef (attrs['returns']) in self.basictypes or
-              returns.find('::*') != -1 or
-              name == 'operator '+tdfname):
-          first = iden + '  ret = (((%s*)o)->%s)(' % ( cl, name )
-          s += first + self.genMCOArgs(args, n, len(first)) + ');\n'
-          s += iden + '  return &ret;\n'        
+          first = iden + '  if (retaddr) *(void**)retaddr = (void*)&(((%s*)o)->%s)(' % ( cl, name )
+          s += first + self.genMCOArgs(args, n, len(first)) + ');\n' + iden + 'else '
         else :
-          first = iden + '  return new %s((((%s*)o)->%s)(' % ( returns, cl, name )
-          s += first + self.genMCOArgs(args, n, len(first)) + '));\n'
+          first = iden + '  if (retaddr) new (retaddr) (%s)((((%s*)o)->%s)(' % ( returns, cl, name )
+          s += first + self.genMCOArgs(args, n, len(first)) + '));\n' + iden + 'else '
+      first = iden + '  (((%s*)o)->%s)(' % ( cl, name )
+      s += first + self.genMCOArgs(args, n, len(first)) + ');\n'
       if ndarg : 
         if n != narg : s += '  }\n'
         else :
-          if returns == 'void' : s += '  }\n  return 0;\n'
-          else :                 s += '  }\n  return 0;\n'
+          if returns == 'void' : s += '  }\n'
+          else :                 s += '  }\n'
     s += '}\n'
     return s
 #----------------------------------------------------------------------------------
@@ -1895,12 +1881,12 @@ class genDictionary(object) :
     cl  = self.genTypeName(attrs['context'], colon=True)
     clt = string.translate(str(cl), self.transtable)
     id  = attrs['id']
-    if len(args) :
-      s = 'static void* constructor%s( void* mem, const std::vector<void*>& arg, void*) {\n' %( id, )
-    else :
-      s = 'static void* constructor%s( void* mem, const std::vector<void*>&, void*) {\n' %( id, )
+    paramargs = ''
+    if len(args): paramargs = ' arg'
+    s = 'static void constructor%s( void* retaddr, void* mem, const std::vector<void*>&%s, void*) {\n' %( id, paramargs )
     if 'pseudo' in attrs :
-      s += '  return ::new(mem) %s( *(__void__*)0 );\n' % ( cl )
+      s += '  if (retaddr) *(void**)retaddr =  ::new(mem) %s( *(__void__*)0 );\n' % ( cl )
+      s += '  else ::new(mem) %s( *(__void__*)0 );\n' % ( cl )
     else :
       ndarg = self.getDefaultArgs(args)
       narg  = len(args)
@@ -1908,17 +1894,19 @@ class genDictionary(object) :
         if ndarg :
           if n == narg-ndarg :  s += '  if ( arg.size() == %d ) {\n  ' % n
           else               :  s += '  else if ( arg.size() == %d ) { \n  ' % n
-        first = '  return ::new(mem) %s(' % ( cl )
+        first = '  if (retaddr) *(void**)retaddr = ::new(mem) %s(' % ( cl )
+        s += first + self.genMCOArgs(args, n, len(first)) + ');\n'
+        first = '  else ::new(mem) %s(' % ( cl )
         s += first + self.genMCOArgs(args, n, len(first)) + ');\n'
         if ndarg : 
           if n != narg : s += '  }\n'
-          else :         s += '  }\n  return 0;\n'
+          else :         s += '  }\n'
     s += '}\n'
     return s
 #----------------------------------------------------------------------------------
   def genDestructorDef(self, attrs, childs):
     cl = self.genTypeName(attrs['context'])
-    return 'static void* destructor%s(void * o, const std::vector<void*>&, void *) {\n  (((::%s*)o)->::%s::~%s)(); return 0;\n}' % ( attrs['id'], cl, cl, attrs['name'] )
+    return 'static void destructor%s(void*, void * o, const std::vector<void*>&, void *) {\n  (((::%s*)o)->::%s::~%s)();\n}' % ( attrs['id'], cl, cl, attrs['name'] )
 #----------------------------------------------------------------------------------
   def genDestructorBuild(self, attrs, childs):
     if self.isUnnamedType(self.xref[attrs['context']]['attrs'].get('demangled')) or \
@@ -2021,7 +2009,7 @@ class genDictionary(object) :
       else                  : attrs['members'] = u' ' + id
 #----CollectionProxy stuff--------------------------------------------------------
   def genCreateCollFuncTableDecl( self, attrs, args ) :
-    return 'static void* method%s( void*, const std::vector<void*>&, void* ); ' % (attrs['id'])
+    return 'static void method%s( void*, void*, const std::vector<void*>&, void* ); ' % (attrs['id'])
   def genCreateCollFuncTableBuild( self, attrs, args ) :
     mod = self.genModifier(attrs, None)
     return '  .AddFunctionMember<void*(void)>("createCollFuncTable", method%s, 0, 0, %s)' % ( attrs['id'], mod)
@@ -2029,13 +2017,14 @@ class genDictionary(object) :
     cl       = self.genTypeName(attrs['context'], colon=True)
     clt      = string.translate(str(cl), self.transtable)
     t        = getTemplateArgs(cl)[0]
-    s  = 'static void* method%s( void*, const std::vector<void*>&, void*)\n{\n' %( attrs['id'], )
-    s += '  return ::Reflex::Proxy< %s >::Generate();\n' % (cl,)
+    s  = 'static void method%s( void* retaddr, void*, const std::vector<void*>&, void*)\n{\n' %( attrs['id'], )
+    s += '  if (retaddr) *(void**) retaddr = ::Reflex::Proxy< %s >::Generate();\n' % (cl,)
+    s += '  else ::Reflex::Proxy< %s >::Generate();\n' % (cl,)
     s += '}\n'
     return s
 #----BasesMap stuff--------------------------------------------------------
   def genGetBasesTableDecl( self, attrs, args ) :
-    return 'static void* method%s( void*, const std::vector<void*>&, void* ); ' % (attrs['id'])
+    return 'static void method%s( void*, void*, const std::vector<void*>&, void* ); ' % (attrs['id'])
   def genGetBasesTableBuild( self, attrs, args ) :
     mod = self.genModifier(attrs, None)
     return '  .AddFunctionMember<void*(void)>("__getBasesTable", method%s, 0, 0, %s)' % (attrs['id'], mod)
@@ -2043,8 +2032,9 @@ class genDictionary(object) :
     cid      = attrs['context']
     cl       = self.genTypeName(cid, colon=True)
     clt      = string.translate(str(cl), self.transtable)
-    s  = 'static void* method%s( void*, const std::vector<void*>&, void*)\n{\n' %( attrs['id'], )
-    s += '  static std::vector<std::pair< ::Reflex::Base, int> > s_bases;\n'
+    s  = 'static void method%s( void* retaddr, void*, const std::vector<void*>&, void*)\n{\n' %( attrs['id'], )
+    s += '  typedef std::vector<std::pair< ::Reflex::Base, int> > Bases_t;\n'
+    s += '  static Bases_t s_bases;\n'
     s += '  if ( !s_bases.size() ) {\n'
     bases = []
     self.getAllBases( cid, bases ) 
@@ -2052,7 +2042,7 @@ class genDictionary(object) :
       bname = self.genTypeName(b[0],colon=True)
       bname2 = self.genTypeName(b[0])
       s += '    s_bases.push_back(std::make_pair(::Reflex::Base( ::Reflex::TypeBuilder("%s"), ::Reflex::BaseOffset< %s,%s >::Get(),%s), %d));\n' % (bname2, cl, bname, b[1], b[2])
-    s += '  }\n  return &s_bases;\n' 
+    s += '  }\n  if (retaddr) *(Bases_t**)retaddr = &s_bases;\n' 
     s += '}\n'
     return s
 #----Constructor/Destructor stuff--------------------------------------------------------
@@ -2083,7 +2073,7 @@ class genDictionary(object) :
     return (newc, newa)
 #----Constructor/Destructor stuff--------------------------------------------------------
   def genGetNewDelFunctionsDecl( self, attrs, args ) :
-    return 'static void* method%s( void*, const std::vector<void*>&, void* ); ' % (attrs['id'])
+    return 'static void method%s( void*, void*, const std::vector<void*>&, void* ); ' % (attrs['id'])
   def genGetNewDelFunctionsBuild( self, attrs, args ) :
     mod = self.genModifier(attrs, None)  
     return '  .AddFunctionMember<void*(void)>("__getNewDelFunctions", method%s, 0, 0, %s)' % (attrs['id'], mod)
@@ -2092,14 +2082,14 @@ class genDictionary(object) :
     cl       = self.genTypeName(cid, colon=True)
     clt      = string.translate(str(cl), self.transtable)
     (newc, newa) = self.checkOperators(cid)
-    s  = 'static void* method%s( void*, const std::vector<void*>&, void*)\n{\n' %( attrs['id'] )
+    s  = 'static void method%s( void* retaddr, void*, const std::vector<void*>&, void*)\n{\n' %( attrs['id'] )
     s += '  static NewDelFunctions s_funcs;\n'
     s += '  s_funcs.fNew         = NewDelFunctionsT< %s >::new%s_T;\n' % (cl, newc)
     s += '  s_funcs.fNewArray    = NewDelFunctionsT< %s >::newArray%s_T;\n' % (cl, newa)
     s += '  s_funcs.fDelete      = NewDelFunctionsT< %s >::delete_T;\n' % cl
     s += '  s_funcs.fDeleteArray = NewDelFunctionsT< %s >::deleteArray_T;\n' % cl
     s += '  s_funcs.fDestructor  = NewDelFunctionsT< %s >::destruct_T;\n' % cl
-    s += '  return &s_funcs;\n'
+    s += '  if (retaddr) *(NewDelFunctions**)retaddr = &s_funcs;\n'
     s += '}\n'
     return s
 #----------------------------------------------------------------------------------

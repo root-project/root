@@ -89,13 +89,12 @@ Reflex::Object Reflex::Member::Get( const Object & obj) const {
 
 
 //-------------------------------------------------------------------------------
-Reflex::Object 
-Reflex::Member::Invoke( const Object & obj,
-                              const std::vector < void * > & paramList ) const {
+void
+Reflex::Member::Invoke( const Object & obj, Object* ret,
+                        const std::vector < void * > & paramList ) const {
 //-------------------------------------------------------------------------------
-// Invoke a non static data member.
-   if ( fMemberBase ) return fMemberBase->Invoke( obj, paramList );
-   return Object();
+// Invoke a non static data member. Put return value (if not void) into ret.
+   if ( fMemberBase ) fMemberBase->Invoke( obj, ret, paramList );
 }
 
 
@@ -110,12 +109,11 @@ Reflex::Member::Invoke( const Object & obj,
 
 
 //-------------------------------------------------------------------------------
-Reflex::Object 
-Reflex::Member::Invoke( const std::vector < void * > & paramList ) const {
+void
+Reflex::Member::Invoke( Object* ret, const std::vector < void * > & paramList ) const {
 //-------------------------------------------------------------------------------
-// Invoke a static data member.
-   if ( fMemberBase ) return fMemberBase->Invoke( paramList );
-   return Object();
+// Invoke a static data member. Put return value (if not void) into ret.
+   if ( fMemberBase ) fMemberBase->Invoke( ret, paramList );
 }
 
 
