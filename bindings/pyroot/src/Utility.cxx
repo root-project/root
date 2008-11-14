@@ -493,7 +493,7 @@ void PyROOT::Utility::ErrMsgHandler( int level, Bool_t abort, const char* locati
 Long_t PyROOT::Utility::InstallMethod( G__ClassInfo* scope, PyObject* callback, 
    const std::string& mtName, const char* signature, void* func, Int_t npar, Long_t extra )
 {
-   static Long_t s_fid = 1;
+   static Long_t s_fid = (Long_t)PyROOT::Utility::InstallMethod;
    ++s_fid;
 
 // Install a python callable method so that CINT can call it
