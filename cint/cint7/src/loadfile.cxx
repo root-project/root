@@ -1172,7 +1172,7 @@ int Cint::Internal::G__loadfile_tmpfile(FILE *fp)
 // *
 // *****************************************************************
 
-int G__statfilename(const char *filenamein, struct stat *statBuf)
+int Cint::Internal::G__statfilename(const char *filenamein, struct stat *statBuf)
 {
    char filename[G__ONELINE];
    char workname[G__ONELINE];
