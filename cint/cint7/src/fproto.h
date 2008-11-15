@@ -261,6 +261,7 @@ int G__preprocessor(char *outname,char *inname,int cppflag,char *macros,char *un
 int G__difffile(char *file1,char *file2);
 int G__copyfile(FILE *to,FILE *from);
 
+int G__statfilename(const char *filename, struct stat* buf);
 int G__matchfilename(int i1,char* filename);
 int G__cleardictfile(int flag);
 

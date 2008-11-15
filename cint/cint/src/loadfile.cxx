@@ -1178,7 +1178,234 @@ int G__loadfile_tmpfile(FILE *fp)
   G__UnlockCriticalSection();
   return(fentry+2);
 }
+   
+// *****************************************************************
+// * G__statfilename(filename)
+// *
+// * Use the same search algorithm as G__loadfile to do a 'stat' on the file
+// *
+// *****************************************************************
 
+int G__statfilename(const char *filenamein, struct stat *statBuf)
+{
+   char filename[G__ONELINE];
+   char workname[G__ONELINE];
+   int hash,res,temp;
+   char addpost[3][8];
+
+   strcpy(filename,filenamein);
+   
+   /*************************************************
+    * delete space chars at the end of filename
+    *************************************************/
+   int len = strlen(filename);
+   while(len>1&&isspace(filename[len-1])) {
+      filename[--len]='\0';
+   }
+   
+   G__hash(filename,hash,temp);
+
+   strcpy(addpost[0],"");
+   strcpy(addpost[1],".h");
+   
+   strcpy(addpost[2],"");
+   for(int i2=0;i2<3;i2++) {
+      if(2==i2) {
+         if((len>3&& (strcmp(filename+len-3,".sl")==0 ||
+                      strcmp(filename+len-3,".dl")==0 ||
+                      strcmp(filename+len-3,".so")==0))) {
+            strcpy(filename+len-3,G__getmakeinfo1("DLLPOST"));
+         }
+         else if((len>4&& (strcmp(filename+len-4,".dll")==0 ||
+                           strcmp(filename+len-4,".DLL")==0))) {
+            strcpy(filename+len-4,G__getmakeinfo1("DLLPOST"));
+         }
+         else if((len>2&& (strcmp(filename+len-2,".a")==0 ||
+                           strcmp(filename+len-2,".A")==0))) {
+            strcpy(filename+len-2,G__getmakeinfo1("DLLPOST"));
+         }
+#if defined(R__FBSD) || defined(R__OBSD)
+         else if (len>strlen(soext) &&
+                  strcmp(filename+len-strlen(soext),soext)==0) {
+            strcpy(filename+len-strlen(soext),G__getmakeinfo1("DLLPOST"));
+         }
+#endif
+      }
+      
+      /**********************************************
+       * If it's a "" header with a relative path, first
+       * try relative to the current input file.
+       * (This corresponds to the behavior of gcc.)
+       **********************************************/
+      if (G__USERHEADER == G__kindofheader &&
+#ifdef G__WIN32
+          filename[0] != '/' &&
+          filename[0] != '\\' &&
+#else
+          filename[0] != G__psep[0] &&
+#endif
+          G__ifile.name[0] != '\0') {
+         char* p;
+         strcpy(workname,G__ifile.name);
+#ifdef G__WIN32
+         p = strrchr (workname, '/');
+         {
+            char* q = strrchr (workname, '\\');
+            if (q && q > p)
+               p = q;
+         }
+#else
+         p = strrchr (workname, G__psep[0]);
+#endif
+         if (p == 0) p = workname;
+         else ++p;
+         strcpy (p, filename);
+         strcat (p, addpost[i2]);
+         
+         res = stat( workname, statBuf );
+         
+         if (res==0) return res;
+      }
+      /**********************************************
+       * try ./filename
+       **********************************************/
+      if(G__USERHEADER==G__kindofheader) {
+         sprintf(workname,"%s%s",filename,addpost[i2]);
+         res = stat( workname, statBuf );         
+         if (res==0) return res;
+      }  else {
+         // Do we need that or not?
+         // G__kindofheader = G__USERHEADER;
+      }
+      /**********************************************
+       * try includepath/filename
+       **********************************************/
+      struct G__includepath *ipath = &G__ipathentry;
+      while(res!=0 && ipath->pathname) {
+         sprintf(workname,"%s%s%s%s"
+                 ,ipath->pathname,G__psep,filename,addpost[i2]);
+         res = stat( workname, statBuf );         
+         ipath = ipath->next;
+      }
+      if (res==0) return res;
+      
+      G__getcintsysdir();
+
+      /**********************************************
+       * try $CINTSYSDIR/stl
+       **********************************************/
+      if('\0'!=G__cintsysdir[0]) {
+         sprintf(workname,"%s/%s/stl/%s%s",G__cintsysdir,G__CFG_COREVERSION
+                 ,filename,addpost[i2]);
+         res = stat( workname, statBuf );         
+         if (res==0) return res;
+      }
+
+      /**********************************************
+       * try $CINTSYSDIR/lib
+       **********************************************/
+      /* G__getcintsysdir(); */
+      if('\0'!=G__cintsysdir[0]) {
+         sprintf(workname,"%s/%s/lib/%s%s",G__cintsysdir,G__CFG_COREVERSION
+                 ,filename,addpost[i2]);
+         res = stat( workname, statBuf );         
+         if (res==0) return res;
+      }
+
+#ifdef G__EDU_VERSION
+      /**********************************************
+       * try include/filename
+       **********************************************/
+      if('\0'!=G__cintsysdir[0]) {
+         sprintf(workname,"include%s%s%s"
+                 ,G__psep,filename,addpost[i2]);
+         res = stat( workname, statBuf );         
+         if (res==0) return res;
+      }
+      /**********************************************
+       * try stl
+       **********************************************/
+      G__getcintsysdir();
+      if('\0'!=G__cintsysdir[0]) {
+         sprintf(workname,"stl%s%s%s"
+                 ,G__psep,filename,addpost[i2]);
+         res = stat( workname, statBuf );         
+         if (res==0) return res;
+      }         
+#endif /* G__EDU_VERSION */
+      
+#ifdef G__VISUAL
+      /**********************************************
+       * try /msdev/include
+       **********************************************/
+      if('\0'!=G__cintsysdir[0]) {
+         sprintf(workname,"/msdev/include/%s%s",filename,addpost[i2]);
+         res = stat( workname, statBuf );         
+         if (res==0) return res;
+      }
+#endif /* G__VISUAL */
+         
+#ifdef G__SYMANTEC
+      /**********************************************
+       * try /sc/include
+       **********************************************/
+      if('\0'!=G__cintsysdir[0]) {
+         sprintf(workname,"/sc/include/%s%s",filename,addpost[i2]);
+         res = stat( workname, statBuf );         
+         if (res==0) return res;
+      }
+#endif // G__SYMANTEC
+         
+#ifndef G__WIN32
+      /**********************************************
+       * try /usr/include/filename
+       **********************************************/
+      if('\0'!=G__cintsysdir[0]) {
+         sprintf(workname,"/usr/include/%s%s",filename,addpost[i2]);
+         res = stat( workname, statBuf );         
+         if (res==0) return res;
+      }
+#endif
+      
+#ifdef __GNUC__
+      /**********************************************
+       * try /usr/include/g++/filename
+       **********************************************/
+      if('\0'!=G__cintsysdir[0]) {
+         sprintf(workname,"/usr/include/g++/%s%s",filename,addpost[i2]);
+         res = stat( workname, statBuf );         
+         if (res==0) return res;
+      }
+#endif /* __GNUC__ */
+      
+#ifndef G__WIN32
+      /* #ifdef __hpux */
+      /**********************************************
+       * try /usr/include/CC/filename
+       **********************************************/
+      if('\0'!=G__cintsysdir[0]) {
+         sprintf(workname,"/usr/include/CC/%s%s",filename,addpost[i2]);
+         res = stat( workname, statBuf );         
+         if (res==0) return res;
+      }         
+#endif
+         
+#ifndef G__WIN32
+      /**********************************************
+       * try /usr/include/codelibs/filename
+       **********************************************/
+      if('\0'!=G__cintsysdir[0]) {
+         sprintf(workname,"/usr/include/codelibs/%s%s"
+                 ,filename,addpost[i2]);
+         res = stat( workname, statBuf );         
+         if (res==0) return res;
+      }
+#endif
+   }
+   return 0;
+}
+   
+   
 /******************************************************************
 * G__loadfile(filename)
 *

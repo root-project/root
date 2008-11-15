@@ -8028,7 +8028,7 @@ void Cint::Internal::G__specify_link(int link_stub)
       }
       if (
          0 == tagflag &&
-         0 == stat(buf, & statBufItem)) {
+         0 == G__statfilename(buf, & statBufItem)) {
 #ifdef G__WIN32
          _fullpath(fullItem, buf, _MAX_PATH);
 #endif

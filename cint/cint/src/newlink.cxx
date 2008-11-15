@@ -38,7 +38,6 @@
 #include <sys/stat.h>
 #endif
 
-
 extern "C"
 void G__enable_wrappers(int set) {
    // enable wrappers
@@ -12632,7 +12631,7 @@ void G__specify_link(int link_stub)
     }
     if (
         0==tagflag &&
-        0 == stat( buf, & statBufItem ) ) {
+        0 == G__statfilename( buf, & statBufItem ) ) {
 #ifdef G__WIN32
       _fullpath( fullItem, buf, _MAX_PATH );
 #endif
