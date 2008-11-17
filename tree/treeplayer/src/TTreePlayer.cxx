@@ -267,6 +267,10 @@
 #include "TVirtualMonitoring.h"
 #include "TTreeCache.h"
 
+#include "HFitInterface.h"
+#include "Foption.h"
+#include "Fit/UnBinData.h"
+#include "Math/MinimizerOptions.h"
 
 R__EXTERN Foption_t Foption;
 R__EXTERN  TTree *gTree;
@@ -3482,17 +3486,16 @@ Int_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, const c
 //     mytree.GetSelectedRows();
 //   If the number of selected entries is null the function returns -1
 
-   Int_t npar,nvpar,nparx;
-   Int_t i;
-   Int_t fitResult = 0;
-   Double_t par, we, al, bl;
-   Double_t eplus,eminus,eparab,globcc,amin,edm,errdef,werr;
-   Double_t arglist[10];
 
-   // Set the global fit function so that TreeUnbinnedFitLikelihood can find it.
+// new implementation using new Fitter classes 
+
+   gTree = fTree; // not sure if this is still needed
+
+   // function is given by name, find it in gROOT
    TF1* fitfunc = (TF1*)gROOT->GetFunction(funcname);
    if (!fitfunc) { Error("UnbinnedFit", "Unknown function: %s",funcname); return 0; }
-   npar = fitfunc->GetNpar();
+
+   Int_t npar = fitfunc->GetNpar();
    if (npar <=0) { Error("UnbinnedFit", "Illegal number of parameters = %d",npar); return 0; }
 
    // Spin through the data to select out the events of interest
@@ -3502,8 +3505,7 @@ Int_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, const c
    Long64_t nent = fTree->GetEntriesFriend();
    fTree->SetEstimate(TMath::Min(nent,nentries));
 
-   Long64_t nsel = DrawSelect(varexp, selection, "goff", nentries, firstentry);
-   //printf("fTree=%x, v1=%x,w=%x\n",fTree,GetV1(),GetW());
+   Long64_t nsel = DrawSelect(varexp, selection, "goff para", nentries, firstentry);
 
    //if no selected entries return
    Long64_t nrows = GetSelectedRows();
@@ -3514,98 +3516,32 @@ Int_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, const c
 
    // Check that function has same dimension as number of variables
    Int_t ndim = GetDimension();
-   if (ndim != fitfunc->GetNdim()) {
-      Error("UnbinnedFit", "Function dimension=%d not equal to expression dimension=%d",fitfunc->GetNdim(),ndim);
-      return -2;
-   }
+   // do not check with TF1::GetNdim() since it returns 1 for TF1 classes created with 
+   // a C function with larger dimension
+   
 
-   // Create and set up the fitter
-   gTree = fTree;
-   //printf("nsel=%lld, data1=%x, weight=%x\n",nsel,GetV1(),GetW());
-   tFitter = TVirtualFitter::Fitter(fTree);
-   tFitter->Clear();
-   tFitter->SetFCN(TreeUnbinnedFitLikelihood);
+   // use pointer stored in the tree (not copy the data in)
+   std::vector<double *> vlist(ndim); 
+   for (int i = 0; i < ndim; ++i) 
+      vlist[i] = fSelector->GetVal(i); 
 
-   tFitter->SetObjectFit(fitfunc);
+   // fill the data 
+   ROOT::Fit::UnBinData * fitdata = new ROOT::Fit::UnBinData(nrows, ndim, vlist.begin());
 
+   // build FitOptions
    TString opt = option;
-   opt.ToLower();
-   // Some initializations
-   if (!opt.Contains("v")) {
-      arglist[0] = -1;
-      tFitter->ExecuteCommand("SET PRINT", arglist,1);
-      arglist[0] = 0;
-      tFitter->ExecuteCommand("SET NOW",   arglist,0);
-   }
+   opt.ToUpper();
+   Foption_t fitOption;
+   if (opt.Contains("Q")) fitOption.Quiet   = 1;
+   if (opt.Contains("V")){fitOption.Verbose = 1; fitOption.Quiet   = 0;}
+   if (opt.Contains("E")) fitOption.Errors  = 1;
+   if (opt.Contains("M")) fitOption.More    = 1;
+   if (!opt.Contains("D")) fitOption.Nograph    = 1;  // what about 0
+   // could add range and automatic normalization of functions and gradient
+   
 
-   // Setup the parameters (#, name, start, step, min, max)
-   Double_t min, max;
-   for(i = 0; i < npar; i++) {
-      fitfunc->GetParLimits(i, min, max);
-      we = 0.1*TMath::Abs(max-min);
-      if (we == 0) we = 0.3*TMath::Abs(fitfunc->GetParameter(i));
-      if (we == 0) we = 1;
-      if(min < max) {
-         tFitter->SetParameter(i, fitfunc->GetParName(i),
-                               fitfunc->GetParameter(i),
-                               we, min, max);
-      } else {
-         tFitter->SetParameter(i, fitfunc->GetParName(i),
-                               fitfunc->GetParameter(i),
-                               we, 0, 0);
-      }
-
-
-      // Check for a fixed parameter
-      if(max <= min && min > 0.0) {
-         tFitter->FixParameter(i);
-      }
-   }  // end for loop through parameters
-
-   // Reset Print level
-   if (opt.Contains("v")) {
-      arglist[0] = 0;
-      tFitter->ExecuteCommand("SET PRINT", arglist,1);
-   }
-
-   // Set error criterion
-   //Note that FCN is multiplied by 2 in the UnbinnedLikelihood function
-   arglist[0] = 1;
-   tFitter->ExecuteCommand("SET ERR",arglist,1);
-
-   // Now ready for minimization step
-   arglist[0] = TVirtualFitter::GetMaxIterations();
-   arglist[1] = 1;
-   fitResult += tFitter->ExecuteCommand("MIGRAD", arglist, 2);
-   if (opt.Contains("m")) {
-      fitResult += 1000*tFitter->ExecuteCommand("IMPROVE",arglist,0);
-   }
-   if (opt.Contains("e")) {
-      fitResult +=  100*tFitter->ExecuteCommand("HESSE",arglist,0);
-      fitResult +=   10*tFitter->ExecuteCommand("MINOS",arglist,0);
-   }
-   fitfunc->SetNDF(fitfunc->GetNumberFitPoints()-npar);
-
-   // Get return status into function
-   char parName[50];
-   for (i=0;i<npar;i++) {
-      tFitter->GetParameter(i,parName, par,we,al,bl);
-      if (opt.Contains("e")) werr = we;
-      else {
-         tFitter->GetErrors(i,eplus,eminus,eparab,globcc);
-         if (eplus > 0 && eminus < 0) werr = 0.5*(eplus-eminus);
-         else                         werr = we;
-      }
-      fitfunc->SetParameter(i,par);
-      fitfunc->SetParError(i,werr);
-   }
-   tFitter->GetStats(amin,edm,errdef,nvpar,nparx);
-
-   // Print final values of parameters.
-   if (!opt.Contains("q")) {
-      amin = 0;
-      tFitter->PrintResults(1, amin);
-   }
+   ROOT::Math::MinimizerOptions minOption;
+   int iret = ROOT::Fit::UnBinFit(fitdata,fitfunc, fitOption, minOption); 
 
    //reset estimate
    fTree->SetEstimate(oldEstimate);
@@ -3613,7 +3549,7 @@ Int_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, const c
    //if option "D" is specified, draw the projected histogram
    //with the fitted function normalized to the number of selected rows
    //and multiplied by the bin width
-   if (opt.Contains("d")) {
+   if (!fitOption.Nograph) {
       if (fHistogram->GetDimension() < 2) {
          TH1 *hf = (TH1*)fHistogram->Clone("unbinnedFit");
          hf->SetLineWidth(3);
@@ -3629,7 +3565,9 @@ Int_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, const c
       fHistogram->Draw();
    }
 
-   return fitResult;
+
+   return iret;
+
 }
 
 //______________________________________________________________________________
