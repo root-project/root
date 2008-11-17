@@ -31,7 +31,22 @@ TGInputDialog::TGInputDialog(const TGWindow *p, const TGWindow *main,
                              char *retstr, UInt_t options) :
       TGTransientFrame(p, main, 10, 10, options)
 {
-   // Create simple input dialog.
+   /** Create simple input dialog.  
+
+   It is important to know that the case where the constructor in
+   which all the variables are initialized to their default values is
+   only used for the TBrowser to inspect on the classes. For normal
+   use the only variable that should be free is options.
+
+   Variables prompt, defval are the content of the input dialog while
+   retstr has to be initialized to a char[256]. In case these are not
+   initialized, they will show default values while retstr will be
+   automatically allocated by the dialog. However this will make
+   impossible to retrieve the value entered by the dialog.
+
+   To see TGInputDialog in use see:
+   $ROOTSYS/tutorials/testInputDialog.cxx
+   */
 
    if (!p && !main) {
       MakeZombie();
@@ -39,10 +54,10 @@ TGInputDialog::TGInputDialog(const TGWindow *p, const TGWindow *main,
    }
    SetCleanup(kDeepCleanup);
    // create prompt label and textentry widget
-   fLabel = new TGLabel(this, prompt);
+   fLabel = new TGLabel(this, prompt?prompt:"Introduce value:");
 
    TGTextBuffer *tbuf = new TGTextBuffer(256);  //will be deleted by TGtextEntry
-   tbuf->AddText(0, defval);
+   tbuf->AddText(0, defval?defval:"");
 
    fTE = new TGTextEntry(this, tbuf);
    fTE->Resize(260, fTE->GetDefaultHeight());
@@ -102,6 +117,9 @@ TGInputDialog::TGInputDialog(const TGWindow *p, const TGWindow *main,
    // popup dialog and wait till user replies
    MapWindow();
    fTE->SetFocus();
+
+   if (retstr == 0)
+      retstr = new char[256];
 
    fRetStr = retstr;
 
