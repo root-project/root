@@ -5960,8 +5960,15 @@ public:
   
   // Fill histograms with distributions chi2 and prob(chi2,ndf) that
   // are calculated by RooChiMCSModule
-  TH1* hist_chi2 = mcs->fitParDataSet().createHistogram("chi2") ; 
-  TH1* hist_prob = mcs->fitParDataSet().createHistogram("prob") ;   
+
+  RooRealVar* chi2 = (RooRealVar*) mcs->fitParDataSet().get()->find("chi2") ;
+  RooRealVar* prob = (RooRealVar*) mcs->fitParDataSet().get()->find("prob") ;
+
+  TH1* h_chi2  = new TH1F("h_chi2","",40,0,20) ;
+  TH1* h_prob  = new TH1F("h_prob","",40,0,1) ;
+
+  mcs->fitParDataSet().fillHistogram(h_chi2,*chi2) ; 
+  mcs->fitParDataSet().fillHistogram(h_prob,*prob) ;   
 
 
 
@@ -5986,16 +5993,20 @@ public:
   
   // Fill histograms with distributions chi2 and prob(chi2,ndf) that
   // are calculated by RooChiMCSModule
-  TH1* hist2_chi2 = mcs2->fitParDataSet().createHistogram("chi2") ; 
-  TH1* hist2_prob = mcs2->fitParDataSet().createHistogram("prob") ;   
-  hist2_chi2->SetLineColor(kRed) ;
-  hist2_prob->SetLineColor(kRed) ;
 
+  TH1* h2_chi2  = new TH1F("h2_chi2","",40,0,20) ;
+  TH1* h2_prob  = new TH1F("h2_prob","",40,0,1) ;
+  
+  mcs2->fitParDataSet().fillHistogram(h2_chi2,*chi2) ; 
+  mcs2->fitParDataSet().fillHistogram(h2_prob,*prob) ;   
 
-  regTH(hist_chi2,"rf802_hist_chi2") ;
-  regTH(hist2_chi2,"rf802_hist2_chi2") ;
-  regTH(hist_prob,"rf802_hist_prob") ;
-  regTH(hist2_prob,"rf802_hist2_prob") ;
+  h_chi2->SetLineColor(kRed) ;
+  h_prob->SetLineColor(kRed) ;
+
+  regTH(h_chi2,"rf802_hist_chi2") ;
+  regTH(h2_chi2,"rf802_hist2_chi2") ;
+  regTH(h_prob,"rf802_hist_prob") ;
+  regTH(h2_prob,"rf802_hist2_prob") ;
 
   delete mcs ;
   delete mcs2 ;
@@ -6108,11 +6119,21 @@ public:
 
   mcs->generateAndFit(50) ;
 
-  // Make some plots
-  TH1* dll_vs_ngen = mcs->fitParDataSet().createHistogram("ngen,dll_nullhypo_nsig",-40,-40) ;
-  TH1* z_vs_ngen = mcs->fitParDataSet().createHistogram("ngen,significance_nullhypo_nsig",-40,-40) ;
-  TH1* errnsig_vs_ngen = mcs->fitParDataSet().createHistogram("ngen,nsigerr",-40,-40) ;
-  TH1* errnsig_vs_nsig = mcs->fitParDataSet().createHistogram("nsig,nsigerr",-40,-40) ;
+  // Make some plots  
+  RooRealVar* ngen    = (RooRealVar*) mcs->fitParDataSet().get()->find("ngen") ;
+  RooRealVar* dll     = (RooRealVar*) mcs->fitParDataSet().get()->find("dll_nullhypo_nsig") ;
+  RooRealVar* z       = (RooRealVar*) mcs->fitParDataSet().get()->find("significance_nullhypo_nsig") ;
+  RooRealVar* nsigerr = (RooRealVar*) mcs->fitParDataSet().get()->find("nsigerr") ;
+
+  TH1* dll_vs_ngen     = new TH2F("h_dll_vs_ngen"    ,"",40,0,500,40,0,50) ;
+  TH1* z_vs_ngen       = new TH2F("h_z_vs_ngen"      ,"",40,0,500,40,0,10) ;
+  TH1* errnsig_vs_ngen = new TH2F("h_nsigerr_vs_ngen","",40,0,500,40,0,30) ;
+  TH1* errnsig_vs_nsig = new TH2F("h_nsigerr_vs_nsig","",40,0,200,40,0,30) ;
+
+  mcs->fitParDataSet().fillHistogram(dll_vs_ngen,RooArgList(*ngen,*dll)) ;
+  mcs->fitParDataSet().fillHistogram(z_vs_ngen,RooArgList(*ngen,*z)) ;
+  mcs->fitParDataSet().fillHistogram(errnsig_vs_ngen,RooArgList(*ngen,*nsigerr)) ;
+  mcs->fitParDataSet().fillHistogram(errnsig_vs_nsig,RooArgList(nsig,*nsigerr)) ;
 
   regTH(dll_vs_ngen,"rf803_dll_vs_ngen") ;
   regTH(z_vs_ngen,"rf803_z_vs_ngen") ;
@@ -6160,6 +6181,9 @@ class TestBasic804 : public RooFitTestUnit
 {
 public: 
   TestBasic804(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("MC Studies with aux. obs. constraints",refFile,writeRef,verbose) {} ;
+
+  Double_t htol() { return 0.1 ; } // numerically very difficult test
+
   Bool_t testCode() {
 
   // C r e a t e   m o d e l   w i t h   p a r a m e t e r   c o n s t r a i n t
@@ -6200,14 +6224,16 @@ public:
   mcs.generateAndFit(50,2000) ;
 
   // Make plot of distribution of generated value of f parameter
-  TH1* h_f_gen = mcs.fitParDataSet().createHistogram("f_gen",-40) ;
+  RooRealVar* f_gen = (RooRealVar*) mcs.fitParDataSet().get()->find("f_gen") ;
+  TH1* h_f_gen = new TH1F("h_f_gen","",40,0,1) ;
+  mcs.fitParDataSet().fillHistogram(h_f_gen,*f_gen) ;
 
   // Make plot of distribution of fitted value of f parameter
-  RooPlot* frame1  = mcs.plotParam(f,Bins(40)) ;
+  RooPlot* frame1  = mcs.plotParam(f,Bins(40),Range(0.4,1)) ;
   frame1->SetTitle("Distribution of fitted f values") ;
 
   // Make plot of pull distribution on f
-  RooPlot* frame2 = mcs.plotPull(f,Bins(40),FitGauss()) ;
+  RooPlot* frame2 = mcs.plotPull(f,Bins(40),Range(-3,3)) ;
   frame1->SetTitle("Distribution of f pull values") ;
 
   regTH(h_f_gen,"rf804_h_f_gen") ;

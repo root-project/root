@@ -78,7 +78,7 @@ public:
   virtual Bool_t isTestAvailable() { return kTRUE ; }
   virtual Bool_t testCode() = 0 ;  
 
-  virtual Double_t htol() { return 1e-3 ; } // histogram test tolerance
+  virtual Double_t htol() { return 2e-4 ; } // histogram test tolerance (KS dist != prob)
   virtual Double_t ctol() { return 1e-3 ; } // curve test tolerance
   virtual Double_t fptol() { return 1e-3 ; } // fit parameter test tolerance
   virtual Double_t fctol() { return 1e-3 ; } // fit correlation test tolerance
@@ -189,30 +189,40 @@ Bool_t RooFitTestUnit::areTHidentical(TH1* htest, TH1* href)
     return kFALSE ;
   }
 
-  Int_t ntest = htest->GetNbinsX() +2 ;
-  Int_t nref  = href->GetNbinsX() +2 ;
-  if (htest->GetDimension()>1) {
-    ntest *= htest->GetNbinsY() + 2 ;
-    nref *= href->GetNbinsY() + 2 ;
-  }
-  if (htest->GetDimension()>2) {
-    ntest *= htest->GetNbinsZ() + 2 ;
-    nref *= href->GetNbinsZ() + 2 ;
-  }
+  // Use Kolmogorov distance as metric rather than probability
+  // because we expect histograms to be identical rather
+  // than drawn from the same parent distribution
+  Double_t kmax = htest->KolmogorovTest(href,"M") ;
 
-  if (ntest != nref) {
+  if (kmax>htol()) {
+
+    cout << "KS distances = " << kmax << endl ;
+
+    Int_t ntest = htest->GetNbinsX() +2 ;
+    Int_t nref  = href->GetNbinsX() +2 ;
+    if (htest->GetDimension()>1) {
+      ntest *= htest->GetNbinsY() + 2 ;
+      nref *= href->GetNbinsY() + 2 ;
+    }
+    if (htest->GetDimension()>2) {
+      ntest *= htest->GetNbinsZ() + 2 ;
+      nref *= href->GetNbinsZ() + 2 ;
+    }
+    
+    if (ntest != nref) {
+      return kFALSE ;
+    }
+    
+    for (Int_t i=0 ; i<ntest ; i++) {
+      if (fabs(htest->GetBinContent(i)-href->GetBinContent(i))>htol()) {
+	cout << "htest[" << i << "] = " << htest->GetBinContent(i) << " href[" << i << "] = " << href->GetBinContent(i) << endl; 
+      }
+    }
+
     return kFALSE ;
   }
 
-  Bool_t ret(kTRUE) ;
-  for (Int_t i=0 ; i<ntest ; i++) {
-    if (fabs(htest->GetBinContent(i)-href->GetBinContent(i))>htol()) {
-      cout << "htest[" << i << "] = " << htest->GetBinContent(i) << " href[" << i << "] = " << href->GetBinContent(i) << endl; 
-      ret = kFALSE ;
-    }
-  }
-
-  return ret ;
+  return kTRUE ;
 }
 
 
@@ -267,15 +277,15 @@ Bool_t RooFitTestUnit::runCompTests()
 		 <<   " fails comparison with counterpart in reference RooPlot " << bmark->GetName() << endl ;
 	    
 	    if (compPlot) {
-	      compPlot->addPlotable((RooHist*)testHist->Clone()) ;	    
+	      compPlot->addPlotable((RooHist*)testHist->Clone(),"P") ;	    
 	      compPlot->getAttLine()->SetLineColor(kRed) ;
+	      compPlot->getAttMarker()->SetMarkerColor(kRed) ;
 	      compPlot->getAttLine()->SetLineWidth(1) ;
-	      compPlot->getAttLine()->SetLineStyle(kSolid) ;
 	      
-	      compPlot->addPlotable((RooHist*)refHist->Clone()) ;
+	      compPlot->addPlotable((RooHist*)refHist->Clone(),"P") ;
 	      compPlot->getAttLine()->SetLineColor(kBlue) ;
+	      compPlot->getAttMarker()->SetMarkerColor(kBlue) ;
 	      compPlot->getAttLine()->SetLineWidth(1) ;
-	      compPlot->getAttLine()->SetLineStyle(kDashed) ;
 	    }
 
 	    anyFail=kTRUE ;
