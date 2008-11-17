@@ -25,7 +25,7 @@
 //
 // GUI editor for TGLViewer.
 
-ClassImp(TGLViewerEditor)
+ClassImp(TGLViewerEditor);
 
 //______________________________________________________________________________
 TGLViewerEditor::TGLViewerEditor(const TGWindow *p,  Int_t width, Int_t height, UInt_t options, Pixel_t back) :

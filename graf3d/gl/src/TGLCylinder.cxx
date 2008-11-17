@@ -26,7 +26,8 @@
 TGLVector3 gLowNormalDefault(0., 0., -1.);
 TGLVector3 gHighNormalDefault(0., 0., 1.);
 
-class TGLMesh {
+class TGLMesh
+{
 protected:
    // active LOD (level of detail) - quality
    UInt_t     fLOD;
@@ -67,7 +68,8 @@ public:
 
 //four quad strips:
 //outer, inner, top, bottom
-class TubeMesh : public TGLMesh {
+class TubeMesh : public TGLMesh
+{
 private:
    // Allocate space for highest quality (LOD) meshes
    TGLVertex3 fMesh[(TGLRnrCtx::kLODHigh + 1) * 8];
@@ -95,7 +97,8 @@ public:
 };
 
 //One quad mesh and 2 triangle fans
-class TCylinderSegMesh : public TGLMesh {
+class TCylinderSegMesh : public TGLMesh
+{
 private:
    // Allocate space for highest quality (LOD) meshes
    TGLVertex3 fMesh[(TGLRnrCtx::kLODHigh + 1) * 4 + 10];
@@ -107,8 +110,6 @@ public:
    void Draw() const;
 };
 
-
-//______________________________________________________________________________
 TGLMesh::TGLMesh(UInt_t LOD, Double_t r1, Double_t r2, Double_t r3, Double_t r4, Double_t dz,
                  const TGLVector3 &l, const TGLVector3 &h) :
    fLOD(LOD),
@@ -495,12 +496,16 @@ void TCylinderSegMesh::Draw() const
 }
 
 
+//==============================================================================
+// TGLCylinder
+//==============================================================================
+
 //______________________________________________________________________________
 //
 // Implements a native ROOT-GL cylinder that can be rendered at
 // different levels of detail.
 
-ClassImp(TGLCylinder)
+ClassImp(TGLCylinder);
 
 //______________________________________________________________________________
 TGLCylinder::TGLCylinder(const TBuffer3DTube &buffer) :
@@ -508,6 +513,9 @@ TGLCylinder::TGLCylinder(const TBuffer3DTube &buffer) :
 {
    // Copy out relevant parts of buffer - we create and delete mesh
    // parts on demand in DirectDraw() and they are DL cached
+
+   fDLSize = 14;
+
    fR1 = buffer.fRadiusInner;
    fR2 = buffer.fRadiusOuter;
    fR3 = buffer.fRadiusInner;

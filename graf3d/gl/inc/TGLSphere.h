@@ -28,14 +28,13 @@ private:
 public:
    TGLSphere(const TBuffer3DSphere &buffer);
 
-   virtual Int_t  DLCacheSize()         const  { return 14; }
    virtual UInt_t DLOffset(Short_t lod) const;
 
    virtual ELODAxes SupportedLODAxes() const { return kLODAxesAll; }
    virtual Short_t  QuantizeShapeLOD(Short_t shapeLOD, Short_t combiLOD) const;
    virtual void     DirectDraw(TGLRnrCtx & rnrCtx) const;
 
-   ClassDef(TGLSphere,0) // a spherical logical shape
+   ClassDef(TGLSphere,0); // a spherical logical shape
 };
 
 #endif

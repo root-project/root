@@ -56,12 +56,12 @@ protected:
                     Float_t xw, Float_t yw, Float_t zh) const;
    void    MakeDisplayList() const;
 
-   mutable Bool_t                   fDLCacheOK;
+   mutable Bool_t                    fDLCacheOK;
 
    typedef std::map<Int_t, UInt_t>           SliceDLMap_t;
    typedef std::map<Int_t, UInt_t>::iterator SliceDLMap_i;
 
-   mutable SliceDLMap_t     fDLMap;
+   mutable SliceDLMap_t              fDLMap;
    mutable TEveCaloData::RebinData_t fRebinData;
 
    mutable Bool_t           fCells3D;
@@ -83,8 +83,6 @@ public:
 
    virtual Bool_t SupportsSecondarySelect() const { return kTRUE; }
    virtual void   ProcessSelection(TGLRnrCtx & rnrCtx, TGLSelectRecord & rec);
-
-
 
    ClassDef(TEveCaloLegoGL, 0); // GL renderer class for TEveCaloLego.
 };

@@ -204,6 +204,13 @@ Bool_t TGLContext::MakeCurrent()
 }
 
 //______________________________________________________________________________
+Bool_t TGLContext::ClearCurrent()
+{
+   //Reset current context.
+   return wglMakeCurrent(0, 0);
+}
+
+//______________________________________________________________________________
 void TGLContext::SwapBuffers()
 {
    //If context is valid (TGLPaintDevice, for which context was created still exists),
@@ -316,6 +323,13 @@ Bool_t TGLContext::MakeCurrent()
 
    return kFALSE;//NO pbuffer part yet.
    //return glXMakeCurrent(fPimpl->fDpy, fPimpl->fPBDC, fPimpl->fGLContext);
+}
+
+//______________________________________________________________________________
+Bool_t TGLContext::ClearCurrent()
+{
+   //Reset current context.
+   return glXMakeCurrent(fPimpl->fDpy, None, 0);
 }
 
 //______________________________________________________________________________

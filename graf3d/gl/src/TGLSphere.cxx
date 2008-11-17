@@ -27,13 +27,16 @@
 // Implements a native ROOT-GL sphere that can be rendered at
 // different levels of detail.
 
-ClassImp(TGLSphere)
+ClassImp(TGLSphere);
 
 //______________________________________________________________________________
 TGLSphere::TGLSphere(const TBuffer3DSphere &buffer) :
    TGLLogicalShape(buffer)
 {
    // Default ctor
+
+   fDLSize = 14;
+
    fRadius = buffer.fRadiusOuter;
 
    // TODO:

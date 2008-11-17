@@ -87,6 +87,7 @@ TGLLogicalShape::TGLLogicalShape(TObject* obj) :
    fExternalObj   (obj),
    fScene         (0),
    fDLBase        (0),
+   fDLSize        (1),
    fDLValid       (0),
    fDLCache       (kTRUE),
    fRefStrong     (kFALSE),
@@ -102,6 +103,7 @@ TGLLogicalShape::TGLLogicalShape(const TBuffer3D & buffer) :
    fExternalObj   (buffer.fID),
    fScene         (0),
    fDLBase        (0),
+   fDLSize        (1),
    fDLValid       (0),
    fDLCache       (kTRUE),
    fRefStrong     (kFALSE),
@@ -134,7 +136,7 @@ TGLLogicalShape::~TGLLogicalShape()
    // Physicals should have been cleared elsewhere as they are managed
    // by the scene. But this could change.
    if (fRef > 0) {
-      Warning("TGLLogicalShape::~TGLLogicalShape", "some physicals still lurking around.");
+      Warning("TGLLogicalShape::Destroy", "some physicals still lurking around.");
       DestroyPhysicals();
    }
    DLCachePurge();
@@ -279,8 +281,7 @@ Bool_t TGLLogicalShape::ShouldDLCache(const TGLRnrCtx & rnrCtx) const
    //
    // Override this in sub-class if different behaviour is required.
 
-   if (!fDLCache ||
-       !fScene   ||
+   if (!fDLCache || !fScene   ||
        (rnrCtx.SecSelection() && SupportsSecondarySelect()))
    {
       return kFALSE;
@@ -315,20 +316,34 @@ void TGLLogicalShape::DLCachePurge()
 {
    // Purge all entries for all LODs for this drawable from the
    // display list cache, returning the reserved ids to GL context.
+   //
+   // If you override this function:
+   // 1. call the base-class version from it;
+   // 2. call it from the destructor of the derived class!
 
-   if (fDLBase == 0) return;
+   if (fDLBase != 0)
+   {
+      PurgeDLRange(fDLBase, fDLSize);
+      fDLBase  = 0;
+      fDLValid = 0;
+   }
+}
+
+//______________________________________________________________________________
+void TGLLogicalShape::PurgeDLRange(UInt_t base, Int_t size) const
+{
+   // Purge given display-list range.
+   // Utility function.
 
    if (fScene)
    {
-      fScene->GetGLCtxIdentity()->RegisterDLNameRangeToWipe(fDLBase, DLCacheSize());
+      fScene->GetGLCtxIdentity()->RegisterDLNameRangeToWipe(base, size);
    }
    else
    {
-      Warning("TGLLogicalShape::DLCachePurge", "Scene unknown, attempting direct deletion.");
-      glDeleteLists(fDLBase, DLCacheSize());
+      Warning("TGLLogicalShape::PurgeDLRange", "Scene unknown, attempting direct deletion.");
+      glDeleteLists(base, size);
    }
-   fDLBase  = 0;
-   fDLValid = 0;
 }
 
 //______________________________________________________________________________
@@ -372,7 +387,7 @@ entry_point:
 
    if (fDLBase == 0)
    {
-      fDLBase = glGenLists(DLCacheSize());
+      fDLBase = glGenLists(fDLSize);
       if (fDLBase == 0)
       {
          Warning("TGLLogicalShape::Draw", "display-list registration failed.");

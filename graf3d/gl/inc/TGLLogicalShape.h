@@ -52,10 +52,13 @@ protected:
    TGLBoundingBox     fBoundingBox; //! Shape's bounding box.
    mutable TGLScene  *fScene;       //! scene where object is stored (can be zero!)
    mutable UInt_t     fDLBase;      //! display-list id base
+   mutable Int_t      fDLSize;      //! display-list size for different LODs
    mutable UShort_t   fDLValid;     //! display-list validity bit-field
    mutable Bool_t     fDLCache;     //! use display list caching
    mutable Bool_t     fRefStrong;   //! Strong ref (delete on 0 ref); not in scene
    mutable Bool_t     fOwnExtObj;   //! External object is a fake
+
+   void PurgeDLRange(UInt_t base, Int_t size) const;
 
 public:
    TGLLogicalShape();
@@ -84,7 +87,6 @@ public:
    // Display List Caching
            Bool_t SetDLCache(Bool_t cached);
    virtual Bool_t ShouldDLCache(const TGLRnrCtx & rnrCtx) const;
-   virtual Int_t  DLCacheSize()             const { return 1; }
    virtual UInt_t DLOffset(Short_t /*lod*/) const { return 0; }
    virtual void   DLCacheClear();
    virtual void   DLCacheDrop();

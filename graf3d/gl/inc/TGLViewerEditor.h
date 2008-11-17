@@ -117,7 +117,7 @@ public:
    static TGNumberEntry* MakeLabeledNEntry(TGCompositeFrame* p, const char* name,
                                            Int_t labelw, Int_t nd=7, Int_t s=5);
 
-   ClassDef(TGLViewerEditor, 0) //GUI for editing TGLViewer attributes
+   ClassDef(TGLViewerEditor, 0); //GUI for editing TGLViewer attributes
 };
 
 #endif

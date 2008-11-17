@@ -33,7 +33,7 @@ protected:
 
 public:
    TEveBoxSetGL();
-   virtual ~TEveBoxSetGL() {}
+   virtual ~TEveBoxSetGL();
 
    virtual Bool_t ShouldDLCache(const TGLRnrCtx & rnrCtx) const;
    virtual void   DLCacheDrop();

@@ -34,17 +34,16 @@ public:
    TGLCylinder(const TBuffer3DTube & buffer);
    ~TGLCylinder();
 
-   virtual Int_t  DLCacheSize()         const { return 14; }
    virtual UInt_t DLOffset(Short_t lod) const;
 
    // Cylinders support LOD (tesselation quality) adjustment along
    // X/Y axes (round the cylinder radius), but not along length (Z)
    virtual ELODAxes SupportedLODAxes() const { return ELODAxes(kLODAxesX | kLODAxesY); }
    virtual Short_t  QuantizeShapeLOD(Short_t shapeLOD, Short_t combiLOD) const;
-   virtual void DirectDraw(TGLRnrCtx & rnrCtx) const;
+   virtual void     DirectDraw(TGLRnrCtx & rnrCtx) const;
 
 private:
-   ClassDef(TGLCylinder,0) // a cylinderical logical shape
+   ClassDef(TGLCylinder,0); // a cylinderical logical shape
 };
 
 #endif

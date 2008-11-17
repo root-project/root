@@ -66,6 +66,7 @@ public:
    virtual void      PaintGL();
 
    Bool_t            MakeCurrent();
+   Bool_t            ClearCurrent();
    void              SwapBuffers();
    const TGLContext *GetContext()const;
 

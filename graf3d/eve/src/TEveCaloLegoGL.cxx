@@ -89,6 +89,7 @@ TEveCaloLegoGL::~TEveCaloLegoGL()
 {
    // Destructor.
 
+   DLCachePurge();
 }
 
 //______________________________________________________________________________
@@ -127,18 +128,16 @@ void TEveCaloLegoGL::DLCachePurge()
 {
    // Unregister all display-lists.
 
-   static const TEveException eH("TEveCaloLegoGL::DLCachePurge ");
-
-   if (fDLMap.empty()) return;
-
-   for (SliceDLMap_i i = fDLMap.begin(); i != fDLMap.end(); ++i)
+   if ( ! fDLMap.empty())
    {
-      if (fScene) {
-         fScene->GetGLCtxIdentity()->RegisterDLNameRangeToWipe(i->second, 1);
-      } else {
-         glDeleteLists(i->second, 1);
+      for (SliceDLMap_i i = fDLMap.begin(); i != fDLMap.end(); ++i)
+      {
+         if (i->second)
+         {
+            PurgeDLRange(i->second, 1);
+            i->second = 0;
+         }
       }
-      i->second = 0;
    }
    TGLObject::DLCachePurge();
 }
@@ -1107,14 +1106,14 @@ void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
             {
                Double_t sum = 0;
                for(Int_t s=0; s<fRebinData.fNSlices; s++)
-                  sum+=fRebinData.fSliceData[i+s];
+                  sum += fRebinData.fSliceData[i+s];
 
-               if (sum > maxVal) maxVal=sum;
+               if (sum > maxVal) maxVal = sum;
             }
-            Float_t scale = maxVal/fM->GetMaxVal();
 
+            const Float_t scale = fM->GetMaxVal() / maxVal;
             for (std::vector<Float_t>::iterator it=fRebinData.fSliceData.begin(); it!=fRebinData.fSliceData.end(); it++)
-               (*it) /= scale;
+               (*it) *= scale;
          }
       }
    }

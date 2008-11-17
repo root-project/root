@@ -189,6 +189,13 @@ Bool_t TGLWidget::MakeCurrent()
 }
 
 //______________________________________________________________________________
+Bool_t TGLWidget::ClearCurrent()
+{
+   //Clear the current gl-context.
+   return fGLContext->ClearCurrent();
+}
+
+//______________________________________________________________________________
 void TGLWidget::SwapBuffers()
 {
    //Swap buffers.

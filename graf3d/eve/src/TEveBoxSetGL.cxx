@@ -40,6 +40,14 @@ TEveBoxSetGL::TEveBoxSetGL() : fM(0), fBoxDL(0)
    fMultiColor = kTRUE;
 }
 
+//______________________________________________________________________________
+TEveBoxSetGL::~TEveBoxSetGL()
+{
+   // Destructor.
+
+   DLCachePurge();
+}
+
 /******************************************************************************/
 // Protected methods
 /******************************************************************************/
@@ -201,17 +209,10 @@ void TEveBoxSetGL::DLCachePurge()
    // Called when display-lists need to be returned to the system.
    // Virtual from TGLLogicalShape.
 
-   static const TEveException eH("TEveBoxSetGL::DLCachePurge ");
-
-   if (fBoxDL == 0) return;
-   if (fScene)
+   if (fBoxDL != 0)
    {
-      fScene->GetGLCtxIdentity()->RegisterDLNameRangeToWipe(fBoxDL, 1);
-   }
-   else
-   {
-      Warning(eH, "TEveScene unknown, attempting direct deletion.");
-      glDeleteLists(fBoxDL, 1);
+      PurgeDLRange(fBoxDL, 1);
+      fBoxDL = 0;
    }
    TGLObject::DLCachePurge();
 }

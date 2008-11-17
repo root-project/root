@@ -54,6 +54,7 @@ public:
    virtual ~TGLContext();
 
    Bool_t           MakeCurrent();
+   Bool_t           ClearCurrent();
    void             SwapBuffers();
 
    //This functions are public _ONLY_ for calls via
@@ -62,10 +63,7 @@ public:
    // void          SetContextPB(TGLPBuffer *pbuff, const TGLContext *shareList);
    void             Release();
 
-   Bool_t           IsValid()const
-   {
-      return fValid;
-   }
+   Bool_t           IsValid() const { return fValid; }
 
    static TGLContext *GetCurrent();
 
