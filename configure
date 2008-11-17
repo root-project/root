@@ -717,7 +717,8 @@ check_comp() {
         if test "x$altcc" = "x" ; then
             altcc=`grep '^CC ' config/Makefile.$arch | awk '{ if (NF==3) {print $3; exit 0} }'`
         fi
-        if `$cwhich $altcc > /dev/null 2>&1` ; then
+        altcc1=`echo "$altcc" | awk '{print $1}'`
+        if `$cwhich $altcc1 > /dev/null 2>&1` ; then
             found_comp=1
             result "$altcc"
         else
@@ -728,7 +729,8 @@ check_comp() {
         if test "x$altcxx" = "x" ; then
             altcxx=`grep '^CXX ' config/Makefile.$arch | awk '{ if (NF==3) {print $3; exit 0} }'`
         fi
-        if `$cwhich $altcxx > /dev/null 2>&1` ; then
+        altcxx1=`echo "$altcxx" | awk '{print $1}'`
+        if `$cwhich $altcxx1 > /dev/null 2>&1` ; then
             found_comp=1
             result "$altcxx"
         else
@@ -749,7 +751,8 @@ check_comp() {
                 altld="$altldorg"
             fi
         fi
-        if `$cwhich $altld > /dev/null 2>&1` ; then
+        altld1=`echo "$altld" | awk '{print $1}'`
+        if `$cwhich $altld1 > /dev/null 2>&1` ; then
             found_comp=1
             if test ! "x$altldtmp" = "x" ; then
                 altld="$altldtmp"
@@ -769,7 +772,8 @@ check_comp() {
                 altf77="$altf77org"
             fi
         fi
-        if `$cwhich $altf77 > /dev/null 2>&1` ; then
+        altf771=`echo "$altf77" | awk '{print $1}'`
+        if `$cwhich $altf771 > /dev/null 2>&1` ; then
             found_comp=1
             if test ! "x$altf77tmp" = "x" ; then
                 altf77="$altf77tmp"
