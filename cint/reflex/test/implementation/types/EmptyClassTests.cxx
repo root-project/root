@@ -15,8 +15,8 @@ REFLEX_TEST(test001)
 
    CPPUNIT_ASSERT_EQUAL((size_t)0, t.BaseSize());
    CPPUNIT_ASSERT_EQUAL((size_t)0, t.DataMemberSize());
-   CPPUNIT_ASSERT_EQUAL((size_t)4, t.FunctionMemberSize());
-   CPPUNIT_ASSERT_EQUAL((size_t)4, t.MemberSize());
+   CPPUNIT_ASSERT_EQUAL((size_t)5, t.FunctionMemberSize()); // def c'tor, copt c'tor, d'tor, assign op, __getNewDelFunctions
+   CPPUNIT_ASSERT_EQUAL((size_t)5, t.MemberSize());
    CPPUNIT_ASSERT_EQUAL((size_t)0, t.MemberTemplateSize());
    CPPUNIT_ASSERT_EQUAL((size_t)0, t.SubScopeSize());
    CPPUNIT_ASSERT_EQUAL((size_t)0, t.SubTypeSize());
