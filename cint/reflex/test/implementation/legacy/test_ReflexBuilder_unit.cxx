@@ -471,11 +471,8 @@ namespace e {
     int c;
   };
 }
-void * foo_stub ( void * o, const vector<void*> & args, void * /*ctx*/) {
-  static int ret = ((e::foo*)o)->add(*(int*)args[0],*(int*)args[1]);
-//  int (e::foo::*f)(int,int) = e::foo::add;
-//  static int ret = (((e::foo*)o).*f)(*(int*)args[0],*(int*)args[1]);
-  return &ret;
+void foo_stub ( void* retaddr, void * o, const vector<void*> & args, void * /*ctx*/) {
+  *(int*) retaddr = ((e::foo*)o)->add(*(int*)args[0],*(int*)args[1]);
 }
 void ReflexBuilderUnitTest::methodinvocation()
 {
@@ -486,9 +483,9 @@ void ReflexBuilderUnitTest::methodinvocation()
   Object obj(c,&instance);
   int a1 = 3;
   int a2 = 2;
-  Object ret = obj.Invoke("add",Tools::MakeVector((void*)&a1,(void*)&a2));
-  CPPUNIT_ASSERT(ret.Address());
-  CPPUNIT_ASSERT_EQUAL(15, *(int*)ret.Address());
+  int ret = -42;
+  obj.Invoke("add", ret, Tools::MakeVector((void*)&a1,(void*)&a2));
+  CPPUNIT_ASSERT_EQUAL(15, ret);
 }
 //==============================================================================================
 // Construction and destruction test
@@ -501,15 +498,16 @@ namespace f {
     int   fI;
     float fF;
   };
-  void * ctor1 ( void * o, const vector<void*> & args, void * ) {
-    return new (o) foo(*(int*)args[0], *(float*)args[1]);
+  void ctor1 ( void* retaddr, void * o, const vector<void*> & args, void * ) {
+     if (retaddr) *(void**) retaddr = new (o) foo(*(int*)args[0], *(float*)args[1]);
+     else new (o) foo(*(int*)args[0], *(float*)args[1]);
   }
-  void * ctor2 ( void * o, const vector<void*> & args, void * ) {
-    return new (o) foo(*(foo*)args[0]);
+  void ctor2 ( void* retaddr, void * o, const vector<void*> & args, void * ) {
+     if (retaddr) *(void**) retaddr = new (o) foo(*(foo*)args[0]);
+     else new (o) foo(*(foo*)args[0]);
   }
-  void * dtor ( void * o, const vector<void*> &, void * ) {
+  void dtor ( void*, void * o, const vector<void*> &, void * ) {
     ((foo*)o)->~foo(); 
-    return 0;
   }
 }
 void ReflexBuilderUnitTest::objectinstantiation()
@@ -683,9 +681,8 @@ namespace h {
 }
 int gfunc(int a) { return 3 * a; }
 
-void * func_stub ( void *, const vector<void*> & args, void *) {
-  static int ret = h::func(*(int*)args[0]);
-  return &ret;
+void func_stub ( void* retaddr, void *, const vector<void*> & args, void *) {
+  *(int*) retaddr = h::func(*(int*)args[0]);
 }
 void ReflexBuilderUnitTest::freefunctionbuilder()
 { 
@@ -700,9 +697,9 @@ void ReflexBuilderUnitTest::freefunctionbuilder()
   CPPUNIT_ASSERT(f);
   CPPUNIT_ASSERT(!f.IsStatic());
   int a = 3;
-  Object ret = f.Invoke(Tools::MakeVector((void*)&a));
-  CPPUNIT_ASSERT( ret.Address() );
-  CPPUNIT_ASSERT_EQUAL(6, *(int*)ret.Address() );
+  int ret = -42;
+  f.Invoke(ret, Tools::MakeVector((void*)&a));
+  CPPUNIT_ASSERT_EQUAL(6, ret );
   //
   Type t = Type::ByTypeInfo(typeid(int(int)));
   CPPUNIT_ASSERT(t);
