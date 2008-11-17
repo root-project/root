@@ -103,6 +103,9 @@ public:
    virtual void  DrawFunction();
    virtual void  HandleButtons(Bool_t update);
 
+protected:
+   void SetParameters();
+
    ClassDef(TFitParametersDialog, 0)  // Fit function parameters dialog
 };
 

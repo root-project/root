@@ -29,6 +29,7 @@
 
 #include "Foption.h"
 #include "Math/MinimizerOptions.h"
+#include "Fit/DataRange.h"
 
 #include <vector>
 
@@ -68,9 +69,9 @@ protected:
    TGTextButton        *fFitButton;        // performs fitting
    TGTextButton        *fResetButton;      // resets fit parameters
    TGTextButton        *fCloseButton;      // close the fit panel
-   TGHorizontalFrame   *fObjLabelParent;   // parent of fObjLabel
-   TGLabel             *fObjLabel;         // contains fitted object name
    TGLabel             *fSelLabel;         // contains selected fit function
+   TGComboBox          *fDataSet;          // contains list of data set to be fitted
+   TGComboBox          *fTypeFit;          // contains the types of functions to be selected
    TGComboBox          *fFuncList;         // contains function list
    TGTextEntry         *fEnteredFunc;      // contains user function file name
    TGTextButton        *fUserButton;       // opens a dialog for user-defined fit method
@@ -97,7 +98,11 @@ protected:
    TGCheckButton       *fDrawSame;         // switch on/off fit function drawing
    TGTextButton        *fDrawAdvanced;     // opens a dialog for advanced draw options
    TGDoubleHSlider     *fSliderX;          // slider to set fit range along x-axis
+   TGNumberEntry       *fSliderXMax;       // entry to set the maximum in the range
+   TGNumberEntry       *fSliderXMin;       // entry to set the minumum in the range
    TGDoubleHSlider     *fSliderY;          // slider to set fit range along y-axis
+   TGNumberEntry       *fSliderYMax;       // entry to set the maximum in the range
+   TGNumberEntry       *fSliderYMin;       // entry to set the minumum in the range
    TGDoubleHSlider     *fSliderZ;          // slider to set fit range along z-axis
    TGHorizontalFrame   *fSliderXParent;    // parent of fSliderX
    TGHorizontalFrame   *fSliderYParent;    // parent of fSliderY
@@ -106,7 +111,6 @@ protected:
    TGRadioButton       *fOptDefault;       // set default printing mode
    TGRadioButton       *fOptVerbose;       // set printing mode to 'Verbose'
    TGRadioButton       *fOptQuiet;         // set printing mode to 'Quiet'
-   TCanvas             *fCanvas;           // canvas containing the object
    TVirtualPad         *fParentPad;        // pad containing the object
    TObject             *fFitObject;        // selected object to fit
    EObjectType          fType;             // object type info
@@ -124,11 +128,6 @@ protected:
       Double_t fP[3];
    };
    std::vector<FuncParamData_t >  fFuncPars;         // function parameters (value + limits)
-
-   Int_t                fPx1old,
-                        fPy1old,
-                        fPx2old,
-                        fPy2old;
 
    Double_t             fFuncXmin;       // fit function range (min and max) values    
    Double_t             fFuncXmax;      
@@ -153,14 +152,17 @@ protected:
    
    static TFitEditor *fgFitDialog;         // singleton fit panel
 
-   TGComboBox *BuildFunctionList(TGFrame *parent, Int_t id);
-   TGComboBox *BuildMethodList(TGFrame *parent, Int_t id);
+   TGComboBox* BuildDataSetList(TGFrame *parent, Int_t id);
+   TGComboBox* BuildMethodList(TGFrame *parent, Int_t id);
+   void        GetRanges(ROOT::Fit::DataRange&);
+   TList*      GetFitObjectListOfFunctions();
+   void        DrawSelection(bool restore = false);
    Int_t       CheckFunctionString(const char* str);
+   void        CreateFunctionGroup();
    void        CreateGeneralTab();
    void        CreateMinimizationTab();
    void        MakeTitle(TGCompositeFrame *parent, const char *title);
-   TF1*        HasFitFunction(TObject *obj);
-   void        GetFunctionsFromList(TList *list);
+   TF1*        HasFitFunction();
    void        SetEditable(Bool_t);
 
 private:
@@ -186,14 +188,18 @@ public:
 
    virtual void   CloseWindow();
    virtual void   ConnectSlots();
-   virtual void   ConnectToCanvas();
    virtual void   DisconnectSlots();
    virtual void   RecursiveRemove(TObject* obj);
+
+protected:
    virtual void   SetCanvas(TCanvas *c);
+
+public:
    virtual void   SetFitObject(TVirtualPad *pad, TObject *obj, Int_t event);
    virtual void   SetFunction(const char *function);
 
    // slot methods 'General' tab
+   void           FillFunctionList(Int_t selected = -1);
    virtual void   DoAddition(Bool_t on);
    virtual void   DoAdvancedOptions();
    virtual void   DoAllWeights1();
@@ -202,6 +208,7 @@ public:
    virtual void   DoEnteredFunction();
    virtual void   DoFit();
    virtual void   DoMaxIterations();
+   virtual void   DoDataSet(Int_t sel);
    virtual void   DoFunction(Int_t sel);
    virtual void   DoLinearFit();
    virtual void   DoNoChi2();
@@ -210,15 +217,19 @@ public:
    virtual void   DoReset();
    virtual void   DoSetParameters();
    virtual void   DoSliderXMoved();
+   virtual void   DoNumericSliderXChanged();
    virtual void   DoSliderYMoved();
+   virtual void   DoNumericSliderYChanged();
    virtual void   DoSliderZMoved();
    virtual void   DoUserDialog();
+   virtual void   DoUseFuncRange();
 
    // slot methods 'Minimization' tab
    virtual void   DoLibrary(Bool_t on);
    virtual void   DoMinMethod(Bool_t on);
    virtual void   DoPrintOpt(Bool_t on);
    
+public:
    typedef std::vector<FuncParamData_t > FuncParams_t; 
 
    

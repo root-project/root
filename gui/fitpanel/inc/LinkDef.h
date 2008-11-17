@@ -16,5 +16,6 @@
 
 #pragma link C++ class TFitEditor;
 #pragma link C++ class TFitParametersDialog;
+#pragma link C++ class TTreeInput;
 
 #endif

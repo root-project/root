@@ -19,7 +19,6 @@
 
 #include "TFitParametersDialog.h"
 #include "TF1.h"
-#include "TTimer.h"
 #include "TGButton.h"
 #include "TGFrame.h"
 #include "TGLabel.h"
@@ -352,13 +351,14 @@ void TFitParametersDialog::CloseWindow()
       new TGMsgBox(fClient->GetRoot(), GetMainFrame(),
                    "Parameters Have Been Changed", txt, kMBIconExclamation,
                    kMBYes | kMBNo | kMBCancel, &ret);
-      if (ret == kMBYes) {
-         DoOK();
-         return;
-      } else if (ret == kMBNo) {
+      if (ret == kMBYes)
+         SetParameters();
+      else if (ret == kMBNo)
          DoReset();
-      } else return;
+      else return;
    }
+
+   DisconnectSlots();
    DeleteWindow();
 }
 
@@ -373,8 +373,7 @@ void TFitParametersDialog::DoCancel()
       if (fParBnd[i]->GetState() == kButtonDown)
          *fRetCode = kFPDBounded;
    }
-   DisconnectSlots();
-   TTimer::SingleShot(50, "TFitParametersDialog", this, "CloseWindow()");
+   CloseWindow();
 }
 
 //______________________________________________________________________________
@@ -539,12 +538,8 @@ void TFitParametersDialog::DoParFix(Bool_t on)
 }
 
 //______________________________________________________________________________
-void TFitParametersDialog::DoOK()
+void TFitParametersDialog::SetParameters()
 {
-   // Slot related to the OK button.
-
-   if (fHasChanges)
-      DrawFunction();
    fFunc->SetRange(fRangexmin, fRangexmax);
    for (Int_t i = 0; i < fNP; i++ ) {
       if (fParFix[i]->GetState() == kButtonDown) {
@@ -561,8 +556,19 @@ void TFitParametersDialog::DoOK()
          }
       }
    }
-   DisconnectSlots();
-   TTimer::SingleShot(150, "TFitParametersDialog", this, "CloseWindow()");
+}
+
+//______________________________________________________________________________
+void TFitParametersDialog::DoOK()
+{
+   // Slot related to the OK button.
+
+   if (fHasChanges)
+      DrawFunction();
+
+   SetParameters();
+
+   CloseWindow();
 }
 
 //______________________________________________________________________________
@@ -837,6 +843,7 @@ void TFitParametersDialog::DrawFunction()
 {
    // Redraw function graphics.
 
+   if ( !fFpad ) return;
    TVirtualPad *save = 0;
    save = gPad;
    gPad = fFpad;
