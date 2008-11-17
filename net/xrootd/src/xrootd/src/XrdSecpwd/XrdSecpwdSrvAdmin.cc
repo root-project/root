@@ -1822,15 +1822,12 @@ void SavePasswd(XrdOucString tag, XrdOucString pwd, bool onetime)
    PwdFile += tag;
    //
    // Open file, truncating if it exists already
-   int fd = open(PwdFile.c_str(),O_WRONLY | O_CREAT | O_TRUNC);
+   int fd = open(PwdFile.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0600);
    if (fd < 0) {
       PRT("SavePasswd: could not open/create file: "<<PwdFile.c_str());
       PRT("SavePasswd: errno: "<<errno);
       return;
    }
-   //
-   // Change mode to 0600
-   fchmod(fd,0600);
    //
    // Generate buffer
    XrdOucString buf;
@@ -1958,7 +1955,7 @@ bool ReadPasswd(XrdOucString &tag, XrdOucString &pwd, int &st)
    }
    //
    // Open file in read mode
-   FILE *fd = fopen(PwdFile.c_str(),"r");
+   FILE *fd = fopen(PwdFile.c_str(), "r");
    if (fd == 0) {
       PRT("ReadPasswd: could not open file: "<<PwdFile.c_str());
       PRT("ReadPasswd: errno: "<<errno);
@@ -2045,7 +2042,7 @@ bool ReadPuk(int &ipuk, XrdOucString *tpuk, XrdOucString *puk)
    }
    //
    // Open file in read mode
-   FILE *fd = fopen(PukFile.c_str(),"r");
+   FILE *fd = fopen(PukFile.c_str(), "r");
    if (fd == 0) {
       PRT("ReadPuk: could not open file: "<<PukFile.c_str());
       PRT("ReadPuk: errno: "<<errno);
@@ -2127,15 +2124,12 @@ bool SavePuk()
    delete tstr;
    //
    // Open file, truncating if it exists already
-   int fd = open(PukFile.c_str(),O_WRONLY | O_CREAT | O_TRUNC);
+   int fd = open(PukFile.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0600);
    if (fd < 0) {
       PRT("SavePuk: could not open/create file: "<<PukFile);
       PRT("SavePuk: errno: "<<errno);
       return 0;
    }
-   //
-   // Change mode to 0600
-   fchmod(fd,0600);
    //
    // Temporary array of buckets
    XrdSutBucket **bck = new XrdSutBucket *[ncrypt];
@@ -2218,7 +2212,7 @@ bool ReadPuk()
    }
    //
    // Open file in read mode
-   int fd = open(PukFile.c_str(),O_RDONLY);
+   int fd = open(PukFile.c_str(), O_RDONLY);
    if (fd < 0) {
       PRT("ReadPuk: could not open file: "<<PukFile.c_str());
       PRT("ReadPuk: errno: "<<errno);
@@ -2404,15 +2398,12 @@ bool ExpPuk(const char *puk, bool read)
 
    // Now we save the public part in the export files
    // Open file, truncating if it exists already
-   int fd = open(expfile.c_str(),O_WRONLY | O_CREAT | O_TRUNC);
+   int fd = open(expfile.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
    if (fd < 0) {
       PRT("ExpPuk: could not open/create file: "<<expfile.c_str());
       PRT("ExpPuk: errno: "<<errno);
       return 0;
    }
-   //
-   // Change mode to 0644
-   fchmod(fd,0644);
    //
    // Generate buffer
    XrdOucString buf;

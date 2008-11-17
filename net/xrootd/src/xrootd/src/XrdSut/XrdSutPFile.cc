@@ -367,18 +367,11 @@ kXR_int32 XrdSutPFile::Open(kXR_int32 opt, bool *wasopen,
             // Unknown option
             return Err(kPFErrBadOp,"Open",copt.c_str());
       }
-      
+
       // Open file
-      fd = open(fnam,mode);
+      fd = open(fnam, mode, createmode);
       if (fd <= -1)
          return Err(kPFErrFileOpen,"Open",fnam);
-   }
-   //
-   // This file should be readable/writable by the owner only
-   if (newfile) {
-      //
-      // New: set permissions
-      fchmod(fd,createmode);
    }
 
    //
