@@ -1190,9 +1190,10 @@ int G__statfilename(const char *filenamein, struct stat *statBuf)
 {
    char filename[G__ONELINE];
    char workname[G__ONELINE];
-   int hash,res,temp;
+   int hash,temp;
    char addpost[3][8];
-
+   int res = -1;
+   
    strcpy(filename,filenamein);
    
    /*************************************************
@@ -1402,7 +1403,7 @@ int G__statfilename(const char *filenamein, struct stat *statBuf)
       }
 #endif
    }
-   return 0;
+   return -1;
 }
    
    
