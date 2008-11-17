@@ -249,36 +249,36 @@ namespace {
 
   template< typename P, typename R > class Factory<P, R(void)> {
   public: 
-     static void* Func( void*, const std::vector<void*>& /* arg */, void*) {
-        return (R) ::new P;
+     static void Func( void* retaddr, void*, const std::vector<void*>& /* arg */, void*) {
+        *(R*) retaddr = (R) ::new P;
      }
   };
   
   template < typename P, typename R, typename A0 > class Factory<P, R(A0)> {
   public: 
-     static void* Func( void*, const std::vector<void*>& arg, void*) {
-        return (R) ::new P(Arg<A0>::Cast(arg[0]));
+     static void Func( void* retaddr, void*, const std::vector<void*>& arg, void*) {
+        *(R*) retaddr = (R) ::new P(Arg<A0>::Cast(arg[0]));
      }
   };
 
   template < typename P, typename R, typename A0, typename A1 > class Factory<P, R(A0, A1)> {
   public: 
-     static void* Func( void*, const std::vector<void*>& arg, void*) {
-        return (R) ::new P(Arg<A0>::Cast(arg[0]), Arg<A1>::Cast(arg[1]));
+     static void Func( void* retaddr, void*, const std::vector<void*>& arg, void*) {
+         *(R*) retaddr = (R) ::new P(Arg<A0>::Cast(arg[0]), Arg<A1>::Cast(arg[1]));
      }
   };
 
   template < typename P, typename R, typename A0, typename A1, typename A2 > class Factory<P, R(A0, A1, A2)> {
   public: 
-     static void* Func( void*, const std::vector<void*>& arg, void*) {
-        return (R) ::new P(Arg<A0>::Cast(arg[0]), Arg<A1>::Cast(arg[1]), Arg<A2>::Cast(arg[2]));
+     static void Func( void* retaddr, void*, const std::vector<void*>& arg, void*) {
+        *(R*) retaddr = (R) ::new P(Arg<A0>::Cast(arg[0]), Arg<A1>::Cast(arg[1]), Arg<A2>::Cast(arg[2]));
      }
   };
 
   template < typename P, typename R, typename A0, typename A1, typename A2, typename A3 > class Factory<P, R(A0, A1, A2, A3)> {
   public: 
-     static void* Func( void*, const std::vector<void*>& arg, void*) {
-        return (R) ::new P(Arg<A0>::Cast(arg[0]), Arg<A1>::Cast(arg[1]), Arg<A2>::Cast(arg[2]), Arg<A3>::Cast(arg[3]));
+     static void Func( void* retaddr, void*, const std::vector<void*>& arg, void*) {
+        *(R*) retaddr = (R) ::new P(Arg<A0>::Cast(arg[0]), Arg<A1>::Cast(arg[1]), Arg<A2>::Cast(arg[2]), Arg<A3>::Cast(arg[3]));
      }
   };
 
