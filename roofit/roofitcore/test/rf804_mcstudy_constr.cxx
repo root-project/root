@@ -29,6 +29,9 @@ class TestBasic804 : public RooFitTestUnit
 {
 public: 
   TestBasic804(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("MC Studies with aux. obs. constraints",refFile,writeRef,verbose) {} ;
+
+  Double_t htol() { return 0.1 ; } // numerically very difficult test
+
   Bool_t testCode() {
 
   // C r e a t e   m o d e l   w i t h   p a r a m e t e r   c o n s t r a i n t
@@ -69,14 +72,16 @@ public:
   mcs.generateAndFit(50,2000) ;
 
   // Make plot of distribution of generated value of f parameter
-  TH1* h_f_gen = mcs.fitParDataSet().createHistogram("f_gen",-40) ;
+  RooRealVar* f_gen = (RooRealVar*) mcs.fitParDataSet().get()->find("f_gen") ;
+  TH1* h_f_gen = new TH1F("h_f_gen","",40,0,1) ;
+  mcs.fitParDataSet().fillHistogram(h_f_gen,*f_gen) ;
 
   // Make plot of distribution of fitted value of f parameter
-  RooPlot* frame1  = mcs.plotParam(f,Bins(40)) ;
+  RooPlot* frame1  = mcs.plotParam(f,Bins(40),Range(0.4,1)) ;
   frame1->SetTitle("Distribution of fitted f values") ;
 
   // Make plot of pull distribution on f
-  RooPlot* frame2 = mcs.plotPull(f,Bins(40),FitGauss()) ;
+  RooPlot* frame2 = mcs.plotPull(f,Bins(40),Range(-3,3)) ;
   frame1->SetTitle("Distribution of f pull values") ;
 
   regTH(h_f_gen,"rf804_h_f_gen") ;

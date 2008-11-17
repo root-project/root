@@ -474,23 +474,24 @@ Bool_t RooHist::isIdentical(const RooHist& other, Double_t tol) const
   // Return kTRUE if contents of this RooHIst is identical within given
   // relative tolerance to that of 'other'
 
-  // Determine X range and Y range
-  Int_t n= GetN();
-  Double_t xmin(1e30), xmax(-1e30), ymin(1e30), ymax(-1e30) ;
-  for(Int_t i= 0; i < n; i++) {
-    if (fX[i]<xmin) xmin=fX[i] ;
-    if (fX[i]>xmax) xmax=fX[i] ;
-    if (fY[i]<ymin) ymin=fY[i] ;
-    if (fY[i]>ymax) ymax=fY[i] ;
-  }
-  Double_t Xrange=xmax-xmin ;
-  Double_t Yrange=ymax-ymin ;
+  // Make temporary TH1s output of RooHists to perform kolmogorov test
+  TH1::AddDirectory(kFALSE) ;
+  TH1F h_self("h_self","h_self",GetN(),0,1) ;
+  TH1F h_other("h_other","h_other",GetN(),0,1) ;
+  TH1::AddDirectory(kTRUE) ;
 
-  for(Int_t i= 0; i < n; i++) {
-    if (fabs(fX[i]-other.fX[i])/Xrange>tol) return kFALSE ;
-    if (fabs(fY[i]-other.fY[i])/Yrange>tol) return kFALSE ;
+  for (Int_t i=0 ; i<GetN() ; i++) {
+    h_self.SetBinContent(i+1,GetY()[i]) ;
+    h_other.SetBinContent(i+1,other.GetY()[i]) ;
+  }  
+
+  Double_t M = h_self.KolmogorovTest(&h_other,"M") ;
+  if (M>tol) {
+    Double_t kprob = h_self.KolmogorovTest(&h_other) ;
+    cout << "RooHist::isIdentical() tolerance exceeded M=" << M << " (tol=" << tol << "), corresponding prob = " << kprob << endl ;
+    return kFALSE ;
   }
-  
+
   return kTRUE ;
 }
 

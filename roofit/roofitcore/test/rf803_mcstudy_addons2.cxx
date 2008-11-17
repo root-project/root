@@ -103,11 +103,21 @@ public:
 
   mcs->generateAndFit(50) ;
 
-  // Make some plots
-  TH1* dll_vs_ngen = mcs->fitParDataSet().createHistogram("ngen,dll_nullhypo_nsig",-40,-40) ;
-  TH1* z_vs_ngen = mcs->fitParDataSet().createHistogram("ngen,significance_nullhypo_nsig",-40,-40) ;
-  TH1* errnsig_vs_ngen = mcs->fitParDataSet().createHistogram("ngen,nsigerr",-40,-40) ;
-  TH1* errnsig_vs_nsig = mcs->fitParDataSet().createHistogram("nsig,nsigerr",-40,-40) ;
+  // Make some plots  
+  RooRealVar* ngen    = (RooRealVar*) mcs->fitParDataSet().get()->find("ngen") ;
+  RooRealVar* dll     = (RooRealVar*) mcs->fitParDataSet().get()->find("dll_nullhypo_nsig") ;
+  RooRealVar* z       = (RooRealVar*) mcs->fitParDataSet().get()->find("significance_nullhypo_nsig") ;
+  RooRealVar* nsigerr = (RooRealVar*) mcs->fitParDataSet().get()->find("nsigerr") ;
+
+  TH1* dll_vs_ngen     = new TH2F("h_dll_vs_ngen"    ,"",40,0,500,40,0,50) ;
+  TH1* z_vs_ngen       = new TH2F("h_z_vs_ngen"      ,"",40,0,500,40,0,10) ;
+  TH1* errnsig_vs_ngen = new TH2F("h_nsigerr_vs_ngen","",40,0,500,40,0,30) ;
+  TH1* errnsig_vs_nsig = new TH2F("h_nsigerr_vs_nsig","",40,0,200,40,0,30) ;
+
+  mcs->fitParDataSet().fillHistogram(dll_vs_ngen,RooArgList(*ngen,*dll)) ;
+  mcs->fitParDataSet().fillHistogram(z_vs_ngen,RooArgList(*ngen,*z)) ;
+  mcs->fitParDataSet().fillHistogram(errnsig_vs_ngen,RooArgList(*ngen,*nsigerr)) ;
+  mcs->fitParDataSet().fillHistogram(errnsig_vs_nsig,RooArgList(nsig,*nsigerr)) ;
 
   regTH(dll_vs_ngen,"rf803_dll_vs_ngen") ;
   regTH(z_vs_ngen,"rf803_z_vs_ngen") ;

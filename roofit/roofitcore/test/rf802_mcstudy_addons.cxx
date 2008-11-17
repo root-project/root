@@ -63,8 +63,15 @@ public:
   
   // Fill histograms with distributions chi2 and prob(chi2,ndf) that
   // are calculated by RooChiMCSModule
-  TH1* hist_chi2 = mcs->fitParDataSet().createHistogram("chi2") ; 
-  TH1* hist_prob = mcs->fitParDataSet().createHistogram("prob") ;   
+
+  RooRealVar* chi2 = (RooRealVar*) mcs->fitParDataSet().get()->find("chi2") ;
+  RooRealVar* prob = (RooRealVar*) mcs->fitParDataSet().get()->find("prob") ;
+
+  TH1* h_chi2  = new TH1F("h_chi2","",40,0,20) ;
+  TH1* h_prob  = new TH1F("h_prob","",40,0,1) ;
+
+  mcs->fitParDataSet().fillHistogram(h_chi2,*chi2) ; 
+  mcs->fitParDataSet().fillHistogram(h_prob,*prob) ;   
 
 
 
@@ -89,16 +96,20 @@ public:
   
   // Fill histograms with distributions chi2 and prob(chi2,ndf) that
   // are calculated by RooChiMCSModule
-  TH1* hist2_chi2 = mcs2->fitParDataSet().createHistogram("chi2") ; 
-  TH1* hist2_prob = mcs2->fitParDataSet().createHistogram("prob") ;   
-  hist2_chi2->SetLineColor(kRed) ;
-  hist2_prob->SetLineColor(kRed) ;
 
+  TH1* h2_chi2  = new TH1F("h2_chi2","",40,0,20) ;
+  TH1* h2_prob  = new TH1F("h2_prob","",40,0,1) ;
+  
+  mcs2->fitParDataSet().fillHistogram(h2_chi2,*chi2) ; 
+  mcs2->fitParDataSet().fillHistogram(h2_prob,*prob) ;   
 
-  regTH(hist_chi2,"rf802_hist_chi2") ;
-  regTH(hist2_chi2,"rf802_hist2_chi2") ;
-  regTH(hist_prob,"rf802_hist_prob") ;
-  regTH(hist2_prob,"rf802_hist2_prob") ;
+  h_chi2->SetLineColor(kRed) ;
+  h_prob->SetLineColor(kRed) ;
+
+  regTH(h_chi2,"rf802_hist_chi2") ;
+  regTH(h2_chi2,"rf802_hist2_chi2") ;
+  regTH(h_prob,"rf802_hist_prob") ;
+  regTH(h2_prob,"rf802_hist2_prob") ;
 
   delete mcs ;
   delete mcs2 ;
