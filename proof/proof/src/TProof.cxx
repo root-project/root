@@ -925,6 +925,9 @@ Int_t TProof::AddWorkers(TList *workerList)
    inc.ReplaceAll("\"", " ");
    AddIncludePath(inc);
 
+   // inform the client that the number of workers is changed
+   gProofServ->SendParallel();
+
    return kTRUE;
 }
 
@@ -2513,7 +2516,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
                }
 
                if (type > 1 && TestBit(TProof::kIsClient) && !IsLite()) {
-                  // In PROOFLite this has to be done once only in TProofLite::Process 
+                  // In PROOFLite this has to be done once only in TProofLite::Process
                   TQueryResult *pq = fPlayer->GetCurrentQuery();
                   pq->SetOutputList(fPlayer->GetOutputList(), kFALSE);
                   pq->SetInputList(fPlayer->GetInputList(), kFALSE);
@@ -3954,7 +3957,7 @@ void TProof::StopProcess(Bool_t abort, Int_t timeout)
       fPlayer->StopProcess(abort, timeout);
 
    // Stop any blocking 'Collect' request; on masters we do this only if
-   // aborting; when stopping, we still need to receive the results 
+   // aborting; when stopping, we still need to receive the results
    if (TestBit(TProof::kIsClient) || abort)
       InterruptCurrentMonitor();
 
