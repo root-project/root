@@ -72,6 +72,7 @@ TGLLogicalShape::TGLLogicalShape() :
    fExternalObj   (0),
    fScene         (0),
    fDLBase        (0),
+   fDLSize        (1),
    fDLValid       (0),
    fDLCache       (kTRUE),
    fRefStrong     (kFALSE),
