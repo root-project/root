@@ -99,8 +99,10 @@ TVirtualFitter::~TVirtualFitter()
 
    delete fMethodCall;
    delete [] fCache;
-   fgFitter    = 0;
-   fgMaxpar    = 0;
+   if ( fgFitter == this ) { 
+      fgFitter    = 0;
+      fgMaxpar    = 0;
+   }
    fMethodCall = 0;
    fFCN        = 0;
 }
