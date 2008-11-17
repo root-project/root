@@ -2039,12 +2039,13 @@ if test ! "x$enable_oracle" = "xno"; then
     keeplibdir=$oraclelibdir
     check_library "libclntsh oci" "$enable_shared" "$oraclelibdir" \
        $ORACLE $ORACLE/lib $ORACLELIBDIR /usr/local/lib /usr/lib \
-	/usr/lib/oracle/*/client/lib
+       /usr/lib/oracle/*/client/lib
     oraclelib=$found_lib
     oraclelibdir=$found_dir
 
     check_library "libocci oraocci10" "$enable_shared" "$keeplibdir" \
-       $ORACLE $ORACLE/lib $ORACLELIBDIR /usr/local/lib /usr/lib
+       $ORACLE $ORACLE/lib $ORACLELIBDIR /usr/local/lib /usr/lib \
+       /usr/lib/oracle/*/client/lib
     oraclelib="$oraclelib $found_lib"
 
     # space in "x " is intentional
