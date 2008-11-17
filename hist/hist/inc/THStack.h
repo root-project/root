@@ -38,7 +38,7 @@ private:
 protected:
    TList      *fHists;      //Pointer to array of TH1
    TObjArray  *fStack;      //!Pointer to array of sums of TH1
-   TH1        *fHistogram;  //!Pointer to histogram used for drawing axis
+   TH1        *fHistogram;  //Pointer to histogram used for drawing axis
    Double_t    fMaximum;    //Maximum value for plotting along y
    Double_t    fMinimum;    //Minimum value for plotting along y
 
@@ -48,7 +48,7 @@ public:
 
    THStack();
    THStack(const char *name, const char *title);
-   THStack(const TH1* hist, Option_t *axis="x", 
+   THStack(const TH1* hist, Option_t *axis="x",
            const char *name=0, const char *title=0,
            Int_t firstbin=1, Int_t lastbin=-1,
            Int_t firstbin2=1, Int_t lastbin2=-1,
@@ -75,7 +75,7 @@ public:
    virtual void     SetMaximum(Double_t maximum=-1111); // *MENU*
    virtual void     SetMinimum(Double_t minimum=-1111); // *MENU*
 
-   ClassDef(THStack,1)  //A collection of histograms
+   ClassDef(THStack,2)  //A collection of histograms
 };
 
 #endif
