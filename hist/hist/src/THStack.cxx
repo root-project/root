@@ -582,7 +582,9 @@ void THStack::Paint(Option_t *option)
          padsav->Clear();
          Int_t nx = (Int_t)TMath::Sqrt((Double_t)npads);
          if (nx*nx < npads) nx++;
-         padsav->Divide(nx,nx);
+	 Int_t ny = nx;
+	 if (((nx*ny)-nx) >= npads) ny--;
+         padsav->Divide(nx,ny);
       }
       TH1 *h;
       Int_t i = 0;
