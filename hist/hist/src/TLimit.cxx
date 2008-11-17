@@ -215,6 +215,7 @@ TConfidenceLevel *TLimit::ComputeLimit(TLimitDataSource * data,
       lrb[i] = TMath::Exp(lrb[i] < 710 ? lrb[i] : 710);
    }
    delete tmp_src;
+   delete tmp_src2;
    // lrs and lrb are the LR's (no logs) = prob(s+b)/prob(b) for
    // that choice of s and b within syst. errors in the ensemble.  These are
    // the MC experiment weights for relating the s+b and b PDF's of the unsmeared
@@ -282,15 +283,13 @@ bool TLimit::Fluctuate(TLimitDataSource * input, TLimitDataSource * output,
    // goes negative.  (background = 0 is bad too, so put a little protection
    // around it -- must have at least 10% of the bg estimate).
    Bool_t retoss   = kTRUE;
-   Double_t *serrf = 0;
-   Double_t *berrf = 0;
+   Double_t *serrf = new Double_t[(input->GetSignal()->GetLast()) + 1];
+   Double_t *berrf = new Double_t[(input->GetSignal()->GetLast()) + 1];
    do {
       Double_t *toss = new Double_t[fgSystNames->GetSize()];
       for (Int_t i = 0; i < fgSystNames->GetSize(); i++)
          toss[i] = generator->Gaus(0, 1);
       retoss = kFALSE;
-      serrf = new Double_t[(input->GetSignal()->GetLast()) + 1];
-      berrf = new Double_t[(input->GetSignal()->GetLast()) + 1];
       for (Int_t channel = 0;
            channel <= input->GetSignal()->GetLast();
            channel++) {
@@ -412,9 +411,9 @@ TConfidenceLevel *TLimit::ComputeLimit(Double_t s, Double_t b, Int_t d,
    return out;
 }
 
-Double_t TLimit::LogLikelihood(Double_t s, Double_t b, Double_t b2, Double_t d) 
-{ 
+Double_t TLimit::LogLikelihood(Double_t s, Double_t b, Double_t b2, Double_t d)
+{
    // Compute LogLikelihood (static function)
-   
-   return d*TMath::Log((s+b)/b2); 
+
+   return d*TMath::Log((s+b)/b2);
 }
