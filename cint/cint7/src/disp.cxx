@@ -375,76 +375,76 @@ int Cint::Internal::G__listfunc_pretty(FILE* fp, int access, const char* fname, 
    //
    // while interpreted function table list exists
    //
-   for (::Reflex::Member_Iterator i = ifunc.FunctionMember_Begin(); i != ifunc.FunctionMember_End(); ++i) {
+   for (::Reflex::Member_Iterator func_mbr_iter = ifunc.FunctionMember_Begin(); func_mbr_iter != ifunc.FunctionMember_End(); ++func_mbr_iter) {
       if (!G__browsing) {
          return 0;
       }
-      if (fname && (i->Name() != fname)) {
+      if (fname && (func_mbr_iter->Name() != fname)) {
          continue;
       }
-      if (!G__test_access(*i, access)) {
+      if (!G__test_access(*func_mbr_iter, access)) {
          continue;
       }
       // print out file name and line number
-      if (G__get_funcproperties(*i)->filenum >= 0) {
-         int filenum = G__get_funcproperties(*i)->filenum;
-         int linenum = G__get_funcproperties(*i)->linenum;
-         if (G__get_funcproperties(*i)->entry.filenum >= 0) {
-            filenum = G__get_funcproperties(*i)->entry.filenum;
-            linenum = G__get_funcproperties(*i)->entry.line_number;
+      if (G__get_funcproperties(*func_mbr_iter)->filenum >= 0) {
+         int filenum = G__get_funcproperties(*func_mbr_iter)->filenum;
+         int linenum = G__get_funcproperties(*func_mbr_iter)->linenum;
+         if (G__get_funcproperties(*func_mbr_iter)->entry.filenum >= 0) {
+            filenum = G__get_funcproperties(*func_mbr_iter)->entry.filenum;
+            linenum = G__get_funcproperties(*func_mbr_iter)->entry.line_number;
          }
          sprintf(msg, "%-15s%4d:%-3d%c%2d "
                  , G__stripfilename(G__srcfile[filenum].filename)
                  , linenum
 #ifdef G__ASM_FUNC
-                 , G__get_funcproperties(*i)->entry.size
+                 , G__get_funcproperties(*func_mbr_iter)->entry.size
 #else // G__ASM_FUNC
                  , 0
 #endif // G__ASM_FUNC
 #ifdef G__ASM_WHOLEFUNC
-                 , (G__get_funcproperties(*i)->entry.bytecode) ? '*' : ' '
+                 , (G__get_funcproperties(*func_mbr_iter)->entry.bytecode) ? '*' : ' '
 #else // G__ASM_WHOLEFUNC
                  , ' '
 #endif // G__ASM_WHOLEFUNC
-                 , G__globalcomp ? G__get_funcproperties(*i)->globalcomp : G__get_funcproperties(*i)->entry.busy
+                 , G__globalcomp ? G__get_funcproperties(*func_mbr_iter)->globalcomp : G__get_funcproperties(*func_mbr_iter)->entry.busy
                 );
          if (G__more(fp, msg)) {
             return 1;
          }
 #ifdef G__ASM_DBG
-         if (G__get_funcproperties(*i)->entry.bytecode) {
-            G__ASSERT(G__get_funcproperties(*i)->entry.bytecodestatus == G__BYTECODE_SUCCESS ||
-                      G__get_funcproperties(*i)->entry.bytecodestatus == G__BYTECODE_ANALYSIS);
+         if (G__get_funcproperties(*func_mbr_iter)->entry.bytecode) {
+            G__ASSERT(G__get_funcproperties(*func_mbr_iter)->entry.bytecodestatus == G__BYTECODE_SUCCESS ||
+                      G__get_funcproperties(*func_mbr_iter)->entry.bytecodestatus == G__BYTECODE_ANALYSIS);
          }
-         else if (G__get_funcproperties(*i)->entry.size < 0) {
+         else if (G__get_funcproperties(*func_mbr_iter)->entry.size < 0) {
          }
          else {
-            G__ASSERT(G__get_funcproperties(*i)->entry.bytecodestatus == G__BYTECODE_FAILURE ||
-                      G__get_funcproperties(*i)->entry.bytecodestatus == G__BYTECODE_NOTYET);
+            G__ASSERT(G__get_funcproperties(*func_mbr_iter)->entry.bytecodestatus == G__BYTECODE_FAILURE ||
+                      G__get_funcproperties(*func_mbr_iter)->entry.bytecodestatus == G__BYTECODE_NOTYET);
          }
          if (
-            G__get_funcproperties(*i)->entry.bytecodestatus == G__BYTECODE_SUCCESS ||
-            G__get_funcproperties(*i)->entry.bytecodestatus == G__BYTECODE_ANALYSIS
+            G__get_funcproperties(*func_mbr_iter)->entry.bytecodestatus == G__BYTECODE_SUCCESS ||
+            G__get_funcproperties(*func_mbr_iter)->entry.bytecodestatus == G__BYTECODE_ANALYSIS
          ) {
-            G__ASSERT(G__get_funcproperties(*i)->entry.bytecode);
+            G__ASSERT(G__get_funcproperties(*func_mbr_iter)->entry.bytecode);
          }
          else {
-            G__ASSERT(!G__get_funcproperties(*i)->entry.bytecode);
+            G__ASSERT(!G__get_funcproperties(*func_mbr_iter)->entry.bytecode);
          }
 #endif // G__ASM_DBG
       }
       else {
          if (!friendlyStyle) {
-            sprintf(msg, "%-15s%4d:%-3d%3d " , "(compiled)" , 0, 0 , G__get_funcproperties(*i)->entry.busy);
+            sprintf(msg, "%-15s%4d:%-3d%3d " , "(compiled)" , 0, 0 , G__get_funcproperties(*func_mbr_iter)->entry.busy);
             if (G__more(fp, msg)) {
                return 1;
             }
          }
       }
-      if (1 /* ifunc->hash[i] */) {
-         // sprintf(msg,"%s ",G__access2string(ifunc->access[i]));
-         if (i->IsPublic()) strcpy(msg, "public: ");
-         else if (i->IsProtected()) strcpy(msg, "protected: ");
+      if (1 /* ifunc->hash[func_mbr_iter] */) {
+         // sprintf(msg,"%s ",G__access2string(ifunc->access[func_mbr_iter]));
+         if (func_mbr_iter->IsPublic()) strcpy(msg, "public: ");
+         else if (func_mbr_iter->IsProtected()) strcpy(msg, "protected: ");
          else strcpy(msg, "private: ");
       }
       else {
@@ -453,27 +453,27 @@ int Cint::Internal::G__listfunc_pretty(FILE* fp, int access, const char* fname, 
       if (G__more(fp, msg)) {
          return 1;
       }
-      if (i->IsExplicit()) {
+      if (func_mbr_iter->IsExplicit()) {
          sprintf(msg, "explicit ");
          if (G__more(fp, msg)) {
             return 1;
          }
       }
 #ifndef G__NEWINHERIT
-      if (ifunc->isinherit[i]) {
+      if (ifunc->isinherit[func_mbr_iter]) {
          sprintf(msg, "inherited ");
          if (G__more(fp, msg)) {
             return 1;
          }
       }
 #endif // G__NEWINHERIT
-      if (i->IsVirtual()) {
+      if (func_mbr_iter->IsVirtual()) {
          sprintf(msg, "virtual ");
          if (G__more(fp, msg)) {
             return 1;
          }
       }
-      if (i->IsStatic()) {
+      if (func_mbr_iter->IsStatic()) {
          sprintf(msg, "static ");
          if (G__more(fp, msg)) {
             return 1;
@@ -481,7 +481,7 @@ int Cint::Internal::G__listfunc_pretty(FILE* fp, int access, const char* fname, 
       }
       // print out type of return value
       {
-         ::Reflex::Type ty = i->TypeOf().ReturnType();
+         ::Reflex::Type ty = func_mbr_iter->TypeOf().ReturnType();
          sprintf(msg, "%s ", G__type2string(G__get_type(ty), G__get_tagnum(ty), G__get_cint5_typenum(ty), G__get_reftype(ty), G__get_isconst(ty)));
       }
       if (G__more(fp, msg)) {
@@ -494,8 +494,8 @@ int Cint::Internal::G__listfunc_pretty(FILE* fp, int access, const char* fname, 
       // print out type and name of function and parameters
       //
       // print out function name
-      if (i->Name().length() >= (sizeof(msg) - 6)) {
-         strncpy(msg, i->Name().c_str(), sizeof(msg) - 3);
+      if (func_mbr_iter->Name().length() >= (sizeof(msg) - 6)) {
+         strncpy(msg, func_mbr_iter->Name().c_str(), sizeof(msg) - 3);
          msg[sizeof(msg)-6] = 0;
          strcat(msg, "...(");
       }
@@ -506,19 +506,19 @@ int Cint::Internal::G__listfunc_pretty(FILE* fp, int access, const char* fname, 
                return 1;
             }
          }
-         sprintf(msg, "%s(", i->Name().c_str());
+         sprintf(msg, "%s(", func_mbr_iter->Name().c_str());
       }
       if (G__more(fp, msg)) {
          return 1;
       }
-      if (G__get_funcproperties(*i)->entry.ansi && !i->FunctionParameterSize()) {
+      if (G__get_funcproperties(*func_mbr_iter)->entry.ansi && !func_mbr_iter->FunctionParameterSize()) {
          sprintf(msg, "void");
          if (G__more(fp, msg)) {
             return 1;
          }
       }
       // print out parameter types
-      for (unsigned int n = 0; n < i->FunctionParameterSize(); ++n) {
+      for (unsigned int n = 0; n < func_mbr_iter->FunctionParameterSize(); ++n) {
          if (n) {
             sprintf(msg, ",");
             if (G__more(fp, msg)) {
@@ -527,26 +527,26 @@ int Cint::Internal::G__listfunc_pretty(FILE* fp, int access, const char* fname, 
          }
          // print out type of return value
          {
-            ::Reflex::Type ty = i->TypeOf().FunctionParameterAt(n);
+            ::Reflex::Type ty = func_mbr_iter->TypeOf().FunctionParameterAt(n);
             sprintf(msg, "%s", G__type2string(G__get_type(ty), G__get_tagnum(ty), G__get_cint5_typenum(ty), G__get_reftype(ty), G__get_isconst(ty)));
          }
          if (G__more(fp, msg)) {
             return 1;
          }
-         if (i->FunctionParameterNameAt(n).c_str()[0]) {
-            sprintf(msg, " %s", i->FunctionParameterNameAt(n).c_str());
+         if (func_mbr_iter->FunctionParameterNameAt(n).c_str()[0]) {
+            sprintf(msg, " %s", func_mbr_iter->FunctionParameterNameAt(n).c_str());
             if (G__more(fp, msg)) {
                return 1;
             }
          }
-         if (i->FunctionParameterDefaultAt(n).c_str()[0]) {
-            sprintf(msg, "=%s", i->FunctionParameterDefaultAt(n).c_str());
+         if (func_mbr_iter->FunctionParameterDefaultAt(n).c_str()[0]) {
+            sprintf(msg, "=%s", func_mbr_iter->FunctionParameterDefaultAt(n).c_str());
             if (G__more(fp, msg)) {
                return 1;
             }
          }
       }
-      if (G__get_funcproperties(*i)->entry.ansi == 2) {
+      if (G__get_funcproperties(*func_mbr_iter)->entry.ansi == 2) {
          sprintf(msg, " ...");
          if (G__more(fp, msg)) {
             return 1;
@@ -556,13 +556,13 @@ int Cint::Internal::G__listfunc_pretty(FILE* fp, int access, const char* fname, 
       if (G__more(fp, msg)) {
          return 1;
       }
-      if (i->IsConst()) {
+      if (func_mbr_iter->IsConst()) {
          sprintf(msg, " const");
          if (G__more(fp, msg)) {
             return 1;
          }
       }
-      if (i->IsAbstract()) {
+      if (func_mbr_iter->IsAbstract()) {
          sprintf(msg, "=0");
          if (G__more(fp, msg)) {
             return 1;
@@ -575,15 +575,15 @@ int Cint::Internal::G__listfunc_pretty(FILE* fp, int access, const char* fname, 
       G__StrBuf temp_sb(G__ONELINE);
       char* temp = temp_sb;
       temp[0] = '\0';
-      G__getcomment(temp, &G__get_funcproperties(*i)->comment, G__get_tagnum(i->DeclaringScope()));
+      G__getcomment(temp, &G__get_funcproperties(*func_mbr_iter)->comment, G__get_tagnum(func_mbr_iter->DeclaringScope()));
       if (temp[0]) {
          sprintf(msg, " //%s", temp);
          if (G__more(fp, msg)) {
             return 1;
          }
       }
-      if (G__get_funcproperties(*i)->entry.friendtag)
-         if (G__display_friend(fp, *i)) {
+      if (G__get_funcproperties(*func_mbr_iter)->entry.friendtag)
+         if (G__display_friend(fp, *func_mbr_iter)) {
             return 1;
          }
       if (G__more(fp, "\n")) {
@@ -1569,7 +1569,7 @@ int Cint::Internal::G__varmonitor(FILE* fout, const ::Reflex::Scope scope, const
       //  Calculate the member's address.
       //
       char* addr = G__get_offset(mbr);
-      if (!G__test_static(mbr, G__LOCALSTATIC) || !offset) { // FIXME: Should this test for offset != 0?
+      if ((G__get_properties(mbr)->statictype != G__LOCALSTATIC) || !offset) { // FIXME: Should this test for offset != 0?
          addr = G__get_offset(mbr) + offset;
       }
 #ifdef G__VARIABLEFPOS
@@ -1636,39 +1636,36 @@ int Cint::Internal::G__varmonitor(FILE* fout, const ::Reflex::Scope scope, const
       //
       //  Print out member storage duration (only static for now).
       //
-      if (G__test_static(mbr, G__COMPILEDGLOBAL)) {
-         // compiled global variable
-      } else if (G__test_static(mbr, G__AUTO)) {
-         // auto
-      } else if (G__test_static(mbr, G__LOCALSTATIC)) {
-         // static for function
-         sprintf(msg, "static ");
-         if (G__more(fout, msg)) {
-            return 1;
-         }
-      }
-      else if (G__test_static(mbr, G__LOCALSTATICBODY)) {
-         // body for function static
-         sprintf(msg, "body of static ");
-         if (G__more(fout, msg)) {
-            return 1;
-         }
-      }
-      else {
-         // static for file 0,1,2,...
-         int statictype = G__get_properties(mbr)->filenum;
-         if (mbr.IsStatic() && (statictype >= 0)) {
-            sprintf(msg, "file=%s static ", G__srcfile[statictype].filename);
-            if (G__more(fout, msg)) {
-               return 1;
-            }
-         }
-         else {
+      switch (G__get_properties(mbr)->statictype) {
+         case G__COMPILEDGLOBAL: // compiled global variable
+         case G__AUTO: // auto
+            break;
+         case G__LOCALSTATIC: // static for function
             sprintf(msg, "static ");
             if (G__more(fout, msg)) {
                return 1;
             }
-         }
+            break;
+         case G__LOCALSTATICBODY: // body for function static
+            sprintf(msg, "body of static ");
+            if (G__more(fout, msg)) {
+               return 1;
+            }
+            break;
+         default: // static for file 0,1,2,...
+            if (G__get_properties(mbr)->statictype >= 0) {
+               sprintf(msg, "file=%s static ", G__srcfile[G__get_properties(mbr)->statictype].filename);
+               if (G__more(fout, msg)) {
+                  return 1;
+               }
+            }
+            else {
+               sprintf(msg, "static ");
+               if (G__more(fout, msg)) {
+                  return 1;
+               }
+            }
+            break;
       }
       //
       //  Print member type.

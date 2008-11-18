@@ -322,7 +322,7 @@ static int G__free_struct_upto(int tagnum)
          free(G__struct.libname[ialltag]);
          G__struct.libname[ialltag] = 0;
       }
-      if (G__struct.iscpplink[ialltag] == G__NOLINK) {
+      if (G__struct.iscpplink[ialltag] == G__NOLINK) { // Is interpreted.
          // -- The struct is interpreted.
          ::Reflex::Scope varscope = G__Dict::GetDict().GetScope(ialltag);
          for (unsigned int i = 0; i < varscope.DataMemberSize(); ++i) {
@@ -330,10 +330,10 @@ static int G__free_struct_upto(int tagnum)
             if (
                // -- Static data member or namespace member, not a reference.
                (
-                  G__test_static(var, G__LOCALSTATIC) || // data member is static, or
+                  (G__get_properties(var)->statictype == G__LOCALSTATIC) || // data member is static, or
                   (
                      varscope.IsNamespace() && // is a namespace member, and
-                     !G__test_static(var, G__COMPILEDGLOBAL) // not precompiled
+                     (G__get_properties(var)->statictype != G__COMPILEDGLOBAL) // not precompiled
                   )
                ) && // and,
                (G__get_reftype(var.TypeOf()) == G__PARANORMAL) // not a reference
@@ -367,7 +367,7 @@ static int G__free_struct_upto(int tagnum)
                if (
                   // -- Class is not precompiled, and variable is not a const.
                   (G__struct.iscpplink[G__get_tagnum(var.TypeOf().RawType())] != G__CPPLINK) // Class is not precompiled, and
-                  && !(G__test_const(var,G__CONSTVAR)) // do not free s in const char s[] = "...";  //FIXME: Causes memory leak?
+                  && !(G__get_isconst(var.TypeOf()) & G__CONSTVAR) // do not free s in const char s[] = "...";  //FIXME: Causes memory leak?
                ) {
                   // -- Free the variable value storage.
                   free(G__get_offset(var));
@@ -378,7 +378,7 @@ static int G__free_struct_upto(int tagnum)
             var.DeclaringScope().RemoveDataMember(var);
          }
       }
-      else {
+      else { // Is compiled.
          // -- The struct is precompiled, we need to free enumerator values even for compiled code.
          ::Reflex::Scope varscope = G__Dict::GetDict().GetScope(ialltag);
          for (unsigned int i = 0; i < varscope.DataMemberSize(); ++i) {
@@ -386,7 +386,7 @@ static int G__free_struct_upto(int tagnum)
             // -- Check for an enumerator.
             if (
                var.TypeOf().RawType().IsEnum() && // Is of enum type, and
-               G__test_static(var, G__LOCALSTATIC) // is static, which means enumerator.
+               (G__get_properties(var)->statictype == G__LOCALSTATIC) // is static, which means enumerator.
             ) {
                // -- Free the variable value storage.
                free(G__get_offset(var));
@@ -491,7 +491,8 @@ static int G__scratch_upto_work(G__dictposition* dictpos, int doall)
    // Free struct tagname and member table.
    if (doall) {
       // Note: Be careful to keep the global namespace, at index zero.
-      G__free_struct_upto((G__struct.alltag > 0) ? 1 : 0);
+      // Note: Be careful to keep the bytecode arena, at index one.
+      G__free_struct_upto((G__struct.alltag > 0) ? 2 : 0);
    }
    else {
       G__free_struct_upto(dictpos->tagnum);
@@ -758,25 +759,24 @@ int Cint::Internal::G__destroy_upto(::Reflex::Scope& scope, int global, int inde
             (
                (global != G__BYTECODELOCAL_VAR) && // We are *not* processing bytecode local variables, and
                (
-                  !G__test_static(var, G__LOCALSTATIC) || // Not a static variable, or
+                  (G__get_properties(var)->statictype != G__LOCALSTATIC) || // Not a static variable, or
                   (global == G__GLOBAL_VAR) // We are destroying globals,
                ) && // and,
                (
-                  (!G__test_static(var, G__COMPILEDGLOBAL)) // Not precompiled
+                  (G__get_properties(var)->statictype != G__COMPILEDGLOBAL) // Not precompiled
                )
             )
          ) || // or
          (index >= 0) && // We are *not* handling function local variables, and
 #endif // G__ASM_WHOLEFUNC
          (
-            !G__test_static(var, G__LOCALSTATIC) || // Not a static variable, or
+            (G__get_properties(var)->statictype != G__LOCALSTATIC) || // Not a static variable, or
             (global == G__GLOBAL_VAR) // We are destroying globals,
          ) && // and,
          (
-            (!G__test_static(var, G__COMPILEDGLOBAL)) // Not precompiled
-         )
-           && // and,
-           !G__get_properties(var)->isFromUsing 
+            (G__get_properties(var)->statictype != G__COMPILEDGLOBAL) // Not precompiled
+         ) && // and,
+         !G__get_properties(var)->isFromUsing 
       ) {
          //G__fprinterr(G__serr, "\nG__destroy_upto: Destroying variable! scope: '%s' var: '%s' ary: %d  %s:%d\n", scope.Name().c_str(), var.Name().c_str(), G__get_varlabel(var, 1) /* number of elements */, __FILE__, __LINE__);
          // Default to variable is not of a precompiled class type.
@@ -810,7 +810,7 @@ int Cint::Internal::G__destroy_upto(::Reflex::Scope& scope, int global, int inde
             if (G__struct.iscpplink[G__get_tagnum(G__tagnum)] == G__CPPLINK) {
                // -- The class is precompiled.
                cpplink = 1;
-               if (G__test_static(var, G__AUTOARYDISCRETEOBJ)) {
+               if (G__get_properties(var)->statictype == G__AUTOARYDISCRETEOBJ) {
                   // -- The variable is an array with auto storage duration.
                   //
                   // Note: We allocated the memory for this variable using

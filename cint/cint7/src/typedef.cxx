@@ -1160,6 +1160,9 @@ int G__defined_typename(const char* type_name)
          if (tagnum != -1) {
             scope = G__Dict::GetDict().GetScope(tagnum);
          }
+         else {
+            return ::Reflex::Type();
+         }
       }
    }
    else { // No scope operator in name, start search from current scope.

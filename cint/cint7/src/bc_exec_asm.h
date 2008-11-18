@@ -140,16 +140,18 @@ int G__exec_asm(int start, int stack, G__value* presult, char* localmem)
 #ifdef G__ASM_DBG
             if (G__asm_dbg) {
                var = G__Dict::GetDict().GetDataMember(G__asm_inst[pc+4]);
-               G__fprinterr(G__serr, "%3x,%3x: LDST_LVAR_P index: %d ldst: %d '%s' ", pc, sp, G__asm_inst[pc+1], G__asm_inst[pc+3], var.Name().c_str());
+               G__fprinterr(G__serr, "%3x,%3x: LDST_LVAR_P name: '%s' index: %ld ldst: %s %d ", pc, sp, var.Name(::Reflex::SCOPED).c_str(), G__asm_inst[pc+1], G__asm_inst[pc+3] ? "(store)" : "(load)", G__asm_inst[pc+3]);
             }
 #endif // G__ASM_DBG
             p2fldst = (p2fldst_t) G__asm_inst[pc+2];
             (*p2fldst)(G__asm_stack, &sp, localmem, G__Dict::GetDict().GetDataMember(G__asm_inst[pc+4]));
-            pc += 5;
 #ifdef G__ASM_DBG
             if (G__asm_dbg) {
-               G__fprinterr(G__serr, "val: %d (%g)\n", G__asm_stack[sp-1].obj.i, G__asm_stack[sp-1].obj.d);
+               G__fprinterr(G__serr, "val: 0x%08lx,%ld,%g\n", G__asm_stack[sp-1].obj.i, G__asm_stack[sp-1].obj.i, G__asm_stack[sp-1].obj.d);
             }
+#endif // G__ASM_DBG
+            pc += 5;
+#ifdef G__ASM_DBG
             break;
 #else // G__ASM_DBG
             goto pcode_parse_start;
@@ -555,7 +557,7 @@ int G__exec_asm(int start, int stack, G__value* presult, char* localmem)
             ***************************************/
 #ifdef G__ASM_DBG
             if (G__asm_dbg) {
-               G__fprinterr(G__serr, "%3x,%3x: POP %g -> %g\n", pc, sp, G__double(G__asm_stack[sp-1]), (sp > 2) ? G__double(G__asm_stack[sp-2]) : 0);
+               G__fprinterr(G__serr, "%3x,%3x: POP new top val: 0x%08lx,%ld,%g\n", pc, sp, G__int(G__asm_stack[sp-1]), G__int(G__asm_stack[sp-1]), G__double(G__asm_stack[sp-1]));
             }
 #endif // G__ASM_DBG
             ++pc;
@@ -621,6 +623,11 @@ int G__exec_asm(int start, int stack, G__value* presult, char* localmem)
                }
                fpara.paran = G__asm_inst[pc+3];
                pfunc = (G__InterfaceMethod) G__asm_inst[pc+4];
+#ifdef G__ASM_DBG
+               if (G__asm_dbg) {
+                  G__fprinterr(G__serr, "       : G__store_struct_offset: 0x%lx  %s:%d\n", (long) G__store_struct_offset, __FILE__, __LINE__);
+               }
+#endif // G__ASM_DBG
                for (int i = 0; i < fpara.paran; ++i) {
                   fpara.para[i] = G__asm_stack[sp-fpara.paran+i];
                   if (!fpara.para[i].ref) {
@@ -650,7 +657,7 @@ int G__exec_asm(int start, int stack, G__value* presult, char* localmem)
                if (flag == 0) {
                   //FIXME: By going through Type::Id we lose the modifiers.
                   //however the Cint5 code was not really passing it either!
-                  G__value_typenum(*result) = G__Dict::G__Dict().GetTypeFromId(G__asm_inst[pc+2]); 
+                  G__value_typenum(*result) = ::Reflex::Type(reinterpret_cast<const ::Reflex::TypeName*>(G__asm_inst[pc+2]));
                }
                result->ref = 0;
                if (G__stepover) {
@@ -751,7 +758,7 @@ int G__exec_asm(int start, int stack, G__value* presult, char* localmem)
 #endif // __GNUC__
                //G__value_typenum(G__asm_stack[sp-1]) = *(Reflex::Type*)&G__asm_inst[pc+1];
                //G__asm_stack[sp-1].tagnum = G__asm_inst[pc+3];
-               G__asm_cast(&G__asm_stack[sp-1], *((Reflex::Type*)&G__asm_inst[pc+1]));
+               G__asm_cast(&G__asm_stack[sp-1], *reinterpret_cast<Reflex::Type*>(&G__asm_inst[pc+1]));
                //if (isupper(G__asm_inst[pc+1])) {
                //   G__asm_stack[sp-1].obj.reftype.reftype = G__asm_inst[pc+4];
                //}
@@ -990,7 +997,7 @@ int G__exec_asm(int start, int stack, G__value* presult, char* localmem)
             pc += 5;
 #ifdef G__ASM_DBG
             if (G__asm_dbg) {
-               G__fprinterr(G__serr, "       : return: 0x%08lx,%d,%g  %s:%d\n", G__int(G__asm_stack[sp]), G__int(G__asm_stack[sp]), G__double(G__asm_stack[sp]), __FILE__, __LINE__);
+               G__fprinterr(G__serr, "       : return: 0x%08lx,%ld,%g  %s:%d\n", G__int(G__asm_stack[sp]), G__int(G__asm_stack[sp]), G__double(G__asm_stack[sp]), __FILE__, __LINE__);
             }
 #endif
             ++sp;
@@ -1162,12 +1169,12 @@ int G__exec_asm(int start, int stack, G__value* presult, char* localmem)
             * sp-1
             * sp
             ***************************************/
+            G__asm_index = G__Dict::GetDict().GetDataMember((size_t) G__asm_inst[pc+4]);
 #ifdef G__ASM_DBG
             if (G__asm_dbg) {
-               G__fprinterr(G__serr, "%3x,%3x: LD_LVAR index: %d paran: %d point '%c'  %s:%d\n", pc, sp, G__asm_inst[pc+1], G__asm_inst[pc+2], G__asm_inst[pc+3], __FILE__, __LINE__);
+               G__fprinterr(G__serr, "%3x,%3x: LD_LVAR name: '%s' offset: 0x%08lx type: '%s' index: %ld paran: %ld point '%c'  %s:%d\n", pc, sp, G__asm_index.Name(::Reflex::SCOPED).c_str(), G__get_offset(G__asm_index), G__asm_index.TypeOf().Name().c_str(), G__asm_inst[pc+1], G__asm_inst[pc+2], (char) G__asm_inst[pc+3], __FILE__, __LINE__);
             }
-#endif
-            G__asm_index = G__Dict::GetDict().GetDataMember((size_t) G__asm_inst[pc+4]);
+#endif // G__ASM_DBG
             fpara.paran = G__asm_inst[pc+2];
             G__var_type = (char) G__asm_inst[pc+3];
             for (int i = 0; i < fpara.paran; ++i) {
@@ -1545,7 +1552,11 @@ int G__exec_asm(int start, int stack, G__value* presult, char* localmem)
                // Make sure that we do not try to generate bytecode.
                int store_asm_noverflow = G__asm_noverflow;
                G__asm_noverflow = 0;
-               G__interpret_func(&G__asm_stack[sp], &fpara, G__asm_inst[pc+2], G__asm_index, G__asm_inst[pc+5], G__asm_inst[pc+6]);
+               G__StrBuf funcname_sb(G__LONGLINE);
+               char* funcname = funcname_sb;
+               strcpy(funcname, G__asm_index.Name().c_str());
+               ::Reflex::Scope scope = G__asm_index.DeclaringScope();
+               G__interpret_func(&G__asm_stack[sp], funcname, &fpara, G__asm_inst[pc+2], scope, G__asm_inst[pc+5], G__asm_inst[pc+6]);
                G__asm_noverflow = store_asm_noverflow;
             }
             G__memberfunc_tagnum = store_memberfunc_tagnum;
@@ -2131,13 +2142,13 @@ int G__exec_asm(int start, int stack, G__value* presult, char* localmem)
             * sp-1            <-
             * sp
             ***************************************/
+            var = G__Dict::GetDict().GetDataMember((size_t) G__asm_inst[pc+4]);
 #ifdef G__ASM_DBG
             if (G__asm_dbg) {
-               G__fprinterr(G__serr, "%3x,%3x: INIT_REF index=%d paran=%d point %c value=%ld,%p ref=%p\n", pc, sp, G__asm_inst[pc+1], G__asm_inst[pc+2], G__asm_inst[pc+3], G__int(G__asm_stack[sp-1]), G__int(G__asm_stack[sp-1]), G__asm_stack[sp-1].ref);
+               G__fprinterr(G__serr, "%3x,%3x: INIT_REF name: '%s' index: %d paran: %d point '%c' ref: 0x%lx\n", pc, sp, var.Name(::Reflex::SCOPED).c_str(), G__asm_inst[pc+1], G__asm_inst[pc+2], G__asm_inst[pc+3], G__asm_stack[sp-1].ref);
             }
-#endif
-            var = G__Dict::GetDict().GetDataMember((size_t) G__asm_inst[pc+4]);
-            *(long*)(G__get_offset(var) + (long) localmem) = G__asm_stack[sp-1].ref;
+#endif // G__ASM_DBG
+            *(long*)((long) localmem + G__get_offset(var)) = G__asm_stack[sp-1].ref;
             pc += 5;
 #ifdef G__ASM_DBG
             break;

@@ -13,16 +13,10 @@
  *
  ************************************************************************/
 
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-
 #include "Api.h"
 #include "Reflex/Builder/TypeBuilder.h"
 #include "common.h"
 #include "Dict.h"
-
-using namespace Cint::Internal;
 
 #if defined(G__WIN32)
 #include <windows.h>
@@ -31,12 +25,95 @@ extern "C" int getopt(int argc, char** argv, char* optlist);
 #include <unistd.h> // already included in G__ci.h
 #endif
 
-/* not ready yet
-typedef void* G__SHLHANDLE;
-G__SHLHANDLE G__dlopen(char *path);
-void* G__shl_findsym(G__SHLHANDLE *phandle,char *sym,short type);
-int G__dlclose(void *handle);
-*/
+#include <cstdlib>
+#include <cstring>
+#include <cstdio>
+
+extern "C" int optind;
+extern "C" char* optarg;
+
+using namespace Cint::Internal;
+using namespace std;
+
+//______________________________________________________________________________
+//
+// Function Directory.
+//
+
+// Static Functions
+static char* G__catparam(G__param* libp, int catn, char* connect);
+static void G__gen_PUSHSTROS_SETSTROS();
+static int G__dispvalue(FILE* fp, G__value* buf);
+static int G__bytecodedebugmode(int mode);
+static int G__getbytecodedebugmode();
+static int G__checkscanfarg(char* fname, G__param* libp, int n);
+static void G__getindexedvalue(G__value* result3, char* cindex);
+#ifdef G__PTR2MEMFUNC
+static G__value G__pointer2memberfunction(char* parameter0, char* parameter1, int* known3);
+#endif // G__PTR2MEMFUNC
+static G__value G__pointerReference(char* item, G__param* libp, int* known3);
+static int G__additional_parenthesis(G__value* presult, G__param* libp);
+static G__value G__operatorfunction(G__value* presult, char* item, int* known3, char* result7, char* funcname);
+static G__value G__getfunction_libp(char* item, char* funcname, G__param* libp, int* known3, int memfunc_flag);
+static void G__va_start(G__value ap);
+static G__value G__va_arg(G__value ap);
+static void G__va_end(G__value ap);
+static int G__defined(char* tname);
+static void G__printf_error();
+static void G__sprintformatll(char* result, const char* fmt, void* p, char* buf);
+static void G__sprintformatull(char* result, const char* fmt, void* p, char* buf);
+static void G__sprintformatld(char* result, const char* fmt, void* p, char* buf);
+
+// Internal Functions
+namespace Cint {
+namespace Internal {
+int G__explicit_fundamental_typeconv(char* funcname, int hash, G__param* libp, G__value* presult3);
+void G__gen_addstros(long addstros);
+bool G__rename_templatefunc(std::string& funcname);
+int G__special_func(G__value* result7, char* funcname, G__param* libp, int hash);
+int G__library_func(G__value* result7, char* funcname, G__param* libp, int hash);
+char* G__charformatter(int ifmt, G__param* libp, char* result);
+int G__compiled_func_cxx(G__value* result7, char* funcname, struct G__param* libp, int hash);
+} // namespace Internal
+} // namespace Cint
+
+// Functions in the C interface.
+extern "C" {
+int G__getexitcode();
+int G__get_return(int* exitval);
+void G__storelasterror();
+char* G__lasterror_filename();
+int G__lasterror_linenum();
+void G__p2f_void_void(void* p2f);
+void G__set_atpause(void (*p2f)());
+void G__set_aterror(void (*p2f)());
+void G__set_emergencycallback(void (*p2f)());
+G__value G__getfunction(char* item, int* known3, int memfunc_flag);
+int G__tracemode(int tracemode);
+int G__stepmode(int stepmode);
+int G__gettracemode();
+int G__getstepmode();
+int G__optimizemode(int optimizemode);
+int G__getoptimizemode();
+} // extern "C"
+
+//______________________________________________________________________________
+//
+//  Types.
+//
+
+typedef struct
+{
+   G__param* libp;
+   int ip;
+} G__va_list;
+
+//______________________________________________________________________________
+//
+//  Static Global Variables.
+//
+
+static int G__exitcode = 0;
 
 //______________________________________________________________________________
 static char* G__catparam(G__param* libp, int catn, char* connect)
@@ -85,9 +162,6 @@ static int G__dispvalue(FILE* fp, G__value* buf)
    }
    return(1);
 }
-
-//______________________________________________________________________________
-static int G__exitcode = 0;
 
 //______________________________________________________________________________
 extern "C" int G__getexitcode()
@@ -576,14 +650,13 @@ int Cint::Internal::G__explicit_fundamental_typeconv(char* funcname, int hash, G
          }
 #endif
          G__asm_inst[G__asm_cp] = G__CAST;
-         *(reinterpret_cast<Reflex::Type*>(&(G__asm_inst[G__asm_cp+1]))) = G__value_typenum(*presult3);
+         *(reinterpret_cast<Reflex::Type*>(&G__asm_inst[G__asm_cp+1])) = G__value_typenum(*presult3);
          // REMOVED: G__asm_inst[G__asm_cp+4]=G__PARANORMAL;
          G__inc_cp_asm(5, 0);
       }
 #endif /* ASM */
    }
 #ifndef G_OLDIMPLEMENTATION1128
-#pragma message(FIXME("Again probably just class/struct for type=='u'?"))
    if (flag && (G__value_typenum(libp->para[0]).IsClass()
                 || G__value_typenum(libp->para[0]).IsUnion()
                 || G__value_typenum(libp->para[0]).IsEnum())) {
@@ -787,27 +860,21 @@ static G__value G__pointerReference(char* item, G__param* libp, int* known3)
 //______________________________________________________________________________
 static int G__additional_parenthesis(G__value* presult, G__param* libp)
 {
-   G__StrBuf buf_sb(G__LONGLINE);
-   char *buf = buf_sb;
-   int known;
    ::Reflex::Scope store_tagnum = G__tagnum;
    char* store_struct_offset = G__store_struct_offset;
-
-   if (!G__value_typenum(*presult)) {
-      return(0);
+   if (G__get_tagnum(G__value_typenum(*presult)) == -1) {
+      return 0;
    }
    G__tagnum = G__value_typenum(*presult).RawType();
-   if (!G__tagnum)
-      G__tagnum = G__value_typenum(*presult).DeclaringScope();
-   G__store_struct_offset = (char*)presult->obj.i;
-
+   G__store_struct_offset = (char*) presult->obj.i;
+   G__StrBuf buf_sb(G__LONGLINE);
+   char* buf = buf_sb;
    sprintf(buf, "operator()%s", libp->parameter[1]);
+   int known = 0;
    *presult = G__getfunction(buf, &known, G__CALLMEMFUNC);
-
    G__tagnum = store_tagnum;
    G__store_struct_offset = store_struct_offset;
-
-   return(known);
+   return known;
 }
 
 //______________________________________________________________________________
@@ -1088,11 +1155,11 @@ static G__value G__operatorfunction(G__value* presult, char* item, int* known3, 
 //______________________________________________________________________________
 static G__value G__getfunction_libp(char* item, char* funcname, G__param* libp, int* known3, int memfunc_flag)
 {
-   G__value result3;
+   G__value result3 = G__null;
    G__StrBuf result7_sb(G__LONGLINE);
-   char *result7 = result7_sb;
+   char* result7 = result7_sb;
    int ipara;
-   static struct G__param *p2ffpara = (struct G__param*)NULL;
+   static G__param* p2ffpara = 0;
    int hash;
    int hash_2;
    int funcmatch;
@@ -1104,121 +1171,338 @@ static G__value G__getfunction_libp(char* item, char* funcname, G__param* libp, 
    ::Reflex::Scope store_def_tagnum = G__def_tagnum;
    ::Reflex::Scope store_tagdefining = G__tagdefining;
    int tempstore;
-   char *pfparam;
+   char* pfparam;
    int nindex = 0;
    int oprp = 0;
    int store_cp_asm = 0;
    store_exec_memberfunc = G__exec_memberfunc;
    store_asm_noverflow = G__asm_noverflow;
    char* store_memberfunc_struct_offset = G__memberfunc_struct_offset;
-   *known3 = 1; /* temporary solution */
-   /* scope operator ::f() , A::B::f()
-    * note,
-    *    G__exec_memberfunc restored at return memfunc_flag is local,
-    *   there should be no problem modifying these variables.
-    *    store_struct_offset and store_tagnum are only used in the
-    *   explicit type conversion section.  It is OK to use them here
-    *   independently.
-    */
+   *known3 = 1;
+   //
+   //  Check for a qualified function name.
+   //
+   //       ::f()
+   //       A::B::f()
+   //
+   //  Note:
+   //
+   //    G__exec_memberfunc restored at return memfunc_flag is local,
+   //    there should be no problem modifying these variables.
+   //    store_struct_offset and store_tagnum are only used in the
+   //    explicit type conversion section.  It is OK to use them here
+   //    independently.
+   //
    char* store_struct_offset = G__store_struct_offset;
    int intTagNum = G__get_tagnum(G__tagnum);
-   switch (G__scopeoperator(funcname, &hash, &G__store_struct_offset, &intTagNum)) {
-      case G__GLOBALSCOPE: /* global scope */
-         G__exec_memberfunc = 0;
-         memfunc_flag = G__TRYNORMAL;
-         G__def_tagnum = ::Reflex::Scope();
-         G__tagdefining = ::Reflex::Scope();
-         break;
-      case G__CLASSSCOPE: /* class scope */
-#ifndef G__OLDIMPLEMENTATION1101
-         memfunc_flag = G__CALLSTATICMEMFUNC;
-#else
-         memfunc_flag = G__CALLMEMFUNC;
-#endif
-         /* This looks very risky */
-         G__def_tagnum = ::Reflex::Scope();
-         G__tagdefining = ::Reflex::Scope();
-         G__exec_memberfunc = 1;
-         G__memberfunc_tagnum = G__tagnum;
-         break;
-      default:
-         G__hash(funcname, hash, hash_2);
-         break;
+   {
+      int which_scope = G__scopeoperator(funcname, &hash, &G__store_struct_offset, &intTagNum);
+      G__tagnum = G__Dict::GetDict().GetScope(intTagNum); // might have been changed by G__scopeoperator
+      switch (which_scope) {
+         case G__GLOBALSCOPE:
+            G__exec_memberfunc = 0;
+            memfunc_flag = G__TRYNORMAL;
+            G__def_tagnum = ::Reflex::Scope();
+            G__tagdefining = ::Reflex::Scope();
+            break;
+         case G__CLASSSCOPE:
+            G__exec_memberfunc = 1;
+            memfunc_flag = G__CALLSTATICMEMFUNC;
+            G__def_tagnum = ::Reflex::Scope();
+            G__tagdefining = ::Reflex::Scope();
+            G__memberfunc_tagnum = G__tagnum;
+            break;
+         default:
+            G__hash(funcname, hash, hash_2); // FIXME: not in G__get_function???
+            break;
+      }
    }
-   G__tagnum = G__Dict::GetDict().GetScope(intTagNum); // might have been changed by G__scoperoperator
-   ::Reflex::Type typedf; // = hash_2; // or so it seems from the previous code!
+   ::Reflex::Type typedf; // = hash_2; // or so it seems from the previous code! // FIXME: not in G__get_function???
 #ifdef G__DUMPFILE
-   /***************************************************************
-    * dump that a function is called
-    ***************************************************************/
-   if (G__dumpfile != NULL && 0 == G__no_exec_compile) {
-      for (ipara = 0;ipara < G__dumpspace;ipara++) fprintf(G__dumpfile, " ");
+   if (G__dumpfile && !G__no_exec_compile) {
+      //
+      //  Dump that a function is called.
+      //
+      for (ipara = 0; ipara < G__dumpspace; ++ipara) {
+         fprintf(G__dumpfile, " ");
+      }
       fprintf(G__dumpfile, "%s(", funcname);
-      for (ipara = 1;ipara <= libp->paran;ipara++) {
-         if (ipara != 1) fprintf(G__dumpfile, ",");
+      for (ipara = 1; ipara <= libp->paran; ++ipara) {
+         if (ipara != 1) {
+            fprintf(G__dumpfile, ",");
+         }
          G__valuemonitor(libp->para[ipara-1], result7);
          fprintf(G__dumpfile, "%s", result7);
       }
-      fprintf(G__dumpfile, ");/*%s %d,%p %p*/\n"
-              , G__ifile.name, G__ifile.line_number
-              , store_struct_offset, G__store_struct_offset);
+      fprintf(G__dumpfile, ");/*%s %d,%p %p*/\n", G__ifile.name, G__ifile.line_number, store_struct_offset, G__store_struct_offset);
       G__dumpspace += 3;
 
    }
-#endif
-   /********************************************************************
-    * Begin Loop to resolve overloaded function
-    ********************************************************************/
-   for (funcmatch = G__EXACT;funcmatch <= G__USERCONV;funcmatch++) {
-      /***************************************************************
-       * search for interpreted member function
-       * if(G__exec_memberfunc)     ==>  memfunc();
-       * G__TRYNORMAL!=memfunc_flag ==>  a.memfunc();
-       ***************************************************************/
+#endif // G__DUMPFILE
+   //
+   //  Perform overload resolution.
+   //
+   //  G__EXACT = 1
+   //  G__PROMOTION = 2
+   //  G__STDCONV = 3
+   //  G__USERCONV = 4
+   //
+   for (funcmatch = G__EXACT; funcmatch <= G__USERCONV; ++funcmatch) {
+      //
+      //  Search for interpreted member function.
+      //
+      //  G__exec_memberfunc         ==>  memfunc();
+      //  memfunc_flag!=G__TRYNORMAL ==>  a.memfunc();
+      //
       if (G__exec_memberfunc || (memfunc_flag != G__TRYNORMAL)) {
-         ::Reflex::Scope local_tagnum;
-         if (G__exec_memberfunc && G__tagnum.IsTopScope()) {
+         ::Reflex::Scope local_tagnum = G__tagnum;
+         if (G__exec_memberfunc && (G__get_tagnum(G__tagnum) == -1)) {
             local_tagnum = G__memberfunc_tagnum;
          }
-         else {
-            local_tagnum = G__tagnum;
+         if (G__get_tagnum(G__tagnum) != -1) {
+            G__incsetup_memfunc(G__tagnum);
          }
-         G__incsetup_memfunc(G__tagnum);
-         if (
-            local_tagnum &&
-            !local_tagnum.IsTopScope() &&
-            (G__interpret_func(&result3, funcname, libp, hash, local_tagnum, funcmatch, memfunc_flag) == 1)
-         ) {
-            // --
+         if (G__get_tagnum(local_tagnum) != -1) {
+            int ret = G__interpret_func(&result3, funcname, libp, hash, local_tagnum, funcmatch, memfunc_flag);
+            if (ret == 1) {
+               // --
 #ifdef G__DUMPFILE
-            if (G__dumpfile != NULL && 0 == G__no_exec_compile) {
-               G__dumpspace -= 3;
-               for (ipara = 0;ipara < G__dumpspace;ipara++) fprintf(G__dumpfile, " ");
-               G__valuemonitor(result3, result7);
-               fprintf(G__dumpfile, "/* return(inp) %s.%s()=%s*/\n", G__struct.name[G__get_tagnum(G__tagnum)], funcname, result7);
+               if (G__dumpfile && !G__no_exec_compile) {
+                  G__dumpspace -= 3;
+                  for (ipara = 0; ipara < G__dumpspace; ++ipara) {
+                     fprintf(G__dumpfile, " ");
+                  }
+                  G__valuemonitor(result3, result7);
+                  fprintf(G__dumpfile, "/* return(inp) %s.%s()=%s*/\n", G__struct.name[G__get_tagnum(G__tagnum)], funcname, result7);
+               }
+#endif // G__DUMPFILE
+               if (G__store_struct_offset != store_struct_offset) {
+                  G__gen_addstros(store_struct_offset - G__store_struct_offset);
+               }
+               G__store_struct_offset = store_struct_offset;
+               G__tagnum = store_tagnum;
+               G__def_tagnum = store_def_tagnum;
+               G__tagdefining = store_tagdefining;
+               G__exec_memberfunc = store_exec_memberfunc;
+               G__memberfunc_tagnum = store_memberfunc_tagnum;
+               G__memberfunc_struct_offset = store_memberfunc_struct_offset;
+               G__setclassdebugcond(G__get_tagnum(G__memberfunc_tagnum), 0);
+               if (nindex && (isupper(G__get_type(G__value_typenum(result3))) || (G__get_type(G__value_typenum(result3)) == 'u'))) {
+                  G__getindexedvalue(&result3, libp->parameter[nindex]);
+               }
+               if (oprp) {
+                  *known3 = G__additional_parenthesis(&result3, libp);
+               }
+               return result3;
             }
-#endif
-            if (G__store_struct_offset != store_struct_offset) {
-               G__gen_addstros(store_struct_offset - G__store_struct_offset);
+         }
+      }
+      //
+      //  If searching only member function.
+      //
+      if (memfunc_flag && (G__store_struct_offset || (memfunc_flag != G__CALLSTATICMEMFUNC))) {
+         //
+         //  If member function is called with a qualified name,
+         //  then don't examine global functions.
+         //
+         //  There are 2 cases:
+         //
+         //                                      G__exec_memberfunc
+         //    obj.memfunc();                            1
+         //    X::memfunc();                             1
+         //     X();              constructor            2
+         //    ~X();              destructor             2
+         //
+         //  If G__exec_memberfunc == 2, don't display error message.
+         //
+         G__exec_memberfunc = store_exec_memberfunc;
+         G__memberfunc_tagnum = store_memberfunc_tagnum;
+         G__memberfunc_struct_offset = store_memberfunc_struct_offset;
+         if (funcmatch != G__USERCONV) {
+            continue;
+         }
+         if (memfunc_flag == G__TRYDESTRUCTOR) {
+            // destructor for base class and class members
+#ifdef G__ASM
+#ifdef G__SECURITY
+            store_asm_noverflow = G__asm_noverflow;
+            if (G__security & G__SECURE_GARBAGECOLLECTION) {
+               G__abortbytecode();
             }
-            G__store_struct_offset = store_struct_offset;
+#endif // G__SECURITY
+#endif // G__ASM
+#ifdef G__VIRTUALBASE
+            if (G__struct.iscpplink[G__get_tagnum(G__tagnum)] != G__CPPLINK) {
+               G__basedestructor();
+            }
+#else // G__VIRTUALBASE
+            G__basedestructor();
+#endif // G__VIRTUALBASE
+#ifdef G__ASM
+#ifdef G__SECURITY
+            G__asm_noverflow = store_asm_noverflow;
+#endif // G__SECURITY
+#endif // G__ASM
+            // --
+         }
+         else {
+            switch (memfunc_flag) {
+               case G__CALLCONSTRUCTOR:
+               case G__TRYCONSTRUCTOR:
+               case G__TRYIMPLICITCONSTRUCTOR:
+                  // constructor for base class and class members default constructor only.
+#ifdef G__VIRTUALBASE
+                  if (G__struct.iscpplink[G__get_tagnum(G__tagnum)] != G__CPPLINK) {
+                     G__baseconstructor(0, 0);
+                  }
+#else // G__VIRTUALBASE
+                  G__baseconstructor(0, 0);
+#endif // G__VIRTUALBASE
+                  // --
+            }
+         }
+         G__exec_memberfunc = store_exec_memberfunc;
+         G__memberfunc_tagnum = store_memberfunc_tagnum;
+         G__memberfunc_struct_offset = store_memberfunc_struct_offset;
+         *known3 = 0;
+         switch (memfunc_flag) {
+            case G__CALLMEMFUNC:
+               {
+                  int ret = G__parenthesisovld(&result3, funcname, libp, G__CALLMEMFUNC);
+                  if (ret) {
+                     *known3 = 1;
+                     if (G__store_struct_offset != store_struct_offset) {
+                        G__gen_addstros(store_struct_offset - G__store_struct_offset);
+                     }
+                     G__store_struct_offset = store_struct_offset;
+                     G__tagnum = store_tagnum;
+                     G__def_tagnum = store_def_tagnum;
+                     G__tagdefining = store_tagdefining;
+                     if (nindex && (isupper(G__get_type(G__value_typenum(result3))) || (G__get_type(G__value_typenum(result3)) == 'u'))) {
+                        G__getindexedvalue(&result3, libp->parameter[nindex]);
+                     }
+                     if (oprp) {
+                        *known3 = G__additional_parenthesis(&result3, libp);
+                     }
+                     return result3;
+                  }
+               }
+               if (funcname[0] == '~') {
+                  *known3 = 1;
+                  return G__null;
+               }
+               { // FIXME: This whole block is not in G__get_function.
+                  /******************************************************************
+                   * Search template function
+                   ******************************************************************/
+                  G__exec_memberfunc = 1;
+                  G__memberfunc_tagnum = G__tagnum;
+                  G__memberfunc_struct_offset = G__store_struct_offset;
+                  if ((funcmatch == G__EXACT) || (funcmatch == G__USERCONV)) {
+                     int ret = G__templatefunc(&result3, funcname, libp, hash, funcmatch);
+                     if (ret == 1) {
+                        // --
+#ifdef G__DUMPFILE
+                        if (G__dumpfile && !G__no_exec_compile) {
+                           G__dumpspace -= 3;
+                           for (ipara = 0; ipara < G__dumpspace; ++ipara) {
+                              fprintf(G__dumpfile, " ");
+                           }
+                           G__valuemonitor(result3, result7);
+                           fprintf(G__dumpfile , "/* return(lib) %s()=%s */\n", funcname, result7);
+                        }
+#endif // G__DUMPFILE
+                        G__exec_memberfunc = store_exec_memberfunc;
+                        G__memberfunc_tagnum = store_memberfunc_tagnum;
+                        G__memberfunc_struct_offset = store_memberfunc_struct_offset;
+                        if (oprp) {
+                           *known3 = G__additional_parenthesis(&result3, libp);
+                        }
+                        else {
+                           *known3 = 1;
+                        }
+                        return result3;
+                     }
+                  }
+                  G__exec_memberfunc = store_exec_memberfunc;
+                  G__memberfunc_tagnum = store_memberfunc_tagnum;
+                  G__memberfunc_struct_offset = store_memberfunc_struct_offset;
+               }
+               // NOTE: Intentionally fallthrough!
+            case G__CALLCONSTRUCTOR:
+               if (G__globalcomp < G__NOLINK) { // If generating a dictionary, stop here.
+                  break;
+               }
+               if (G__asm_noverflow || !G__no_exec_compile) {
+                  if (!G__const_noerror) {
+                     G__fprinterr(G__serr, "Error: Can't call %s::%s in current scope (1)  %s:%d", G__struct.name[G__get_tagnum(G__tagnum)], item, __FILE__, __LINE__);
+                  }
+                  G__genericerror(0);
+               }
+               store_exec_memberfunc = G__exec_memberfunc;
+               G__exec_memberfunc = 1;
+               if (!G__const_noerror && (!G__no_exec_compile || G__asm_noverflow)) {
+                  G__fprinterr(G__serr, "Possible candidates are...\n");
+                  {
+                     G__StrBuf itemtmp_sb(G__LONGLINE);
+                     char* itemtmp = itemtmp_sb;
+                     sprintf(itemtmp, "%s::%s", G__struct.name[G__get_tagnum(G__tagnum)], funcname);
+                     G__display_proto_pretty(G__serr, itemtmp, 1);
+                  }
+               }
+               G__exec_memberfunc = store_exec_memberfunc;
+         }
+#ifdef G__DUMPFILE
+         if (G__dumpfile && !G__no_exec_compile) {
+            G__dumpspace -= 3;
+         }
+#endif // G__DUMPFILE
+         if (G__store_struct_offset != store_struct_offset) {
+            G__gen_addstros(store_struct_offset - G__store_struct_offset);
+         }
+         G__store_struct_offset = store_struct_offset;
+         G__def_tagnum = store_def_tagnum;
+         G__tagdefining = store_tagdefining;
+         if ( // Copy constructor not found.
+            libp->paran &&
+            (G__get_type(G__value_typenum(libp->para[0])) == 'u') &&
+            (
+               (memfunc_flag == G__TRYCONSTRUCTOR) ||
+               (memfunc_flag == G__TRYIMPLICITCONSTRUCTOR)
+            )
+         ) { // Copy constructor not found.
             G__tagnum = store_tagnum;
-            G__def_tagnum = store_def_tagnum;
-            G__tagdefining = store_tagdefining;
+            return libp->para[0];
+         }
+         result3 = G__null;
+         G__value_typenum(result3) = G__tagnum;
+         G__tagnum = store_tagnum;
+         return result3; // FIXME: In cint5 this is just return G__null, result3 is not modified.
+      }
+      //
+      //  Check for a global function.
+      //
+      tempstore = G__exec_memberfunc;
+      G__exec_memberfunc = 0;
+      { // FIXME: This is if (memfunc_flag != G__CALLSTATICMEMFUNC) in G__getfunction.
+         int ret = G__interpret_func(&result3, funcname, libp, hash, G__p_ifunc, funcmatch, G__TRYNORMAL);
+         if (ret == 1) {
+            // --
+   #ifdef G__DUMPFILE
+            if (G__dumpfile && !G__no_exec_compile) {
+               G__dumpspace -= 3;
+               for (ipara = 0; ipara < G__dumpspace; ++ipara) {
+                  fprintf(G__dumpfile, " ");
+               }
+               G__valuemonitor(result3, result7);
+               fprintf(G__dumpfile, "/* return(inp) %s()=%s*/\n", funcname, result7);
+            }
+   #endif // G__DUMPFILE
             G__exec_memberfunc = store_exec_memberfunc;
             G__memberfunc_tagnum = store_memberfunc_tagnum;
             G__memberfunc_struct_offset = store_memberfunc_struct_offset;
             G__setclassdebugcond(G__get_tagnum(G__memberfunc_tagnum), 0);
-            if (
-               nindex &&
-               (
-                  G__value_typenum(result3).FinalType().IsPointer() ||
-                  G__value_typenum(result3).FinalType().IsArray() ||
-                  G__value_typenum(result3).FinalType().IsClass() ||
-                  G__value_typenum(result3).FinalType().IsUnion() ||
-                  G__value_typenum(result3).FinalType().IsEnum()
-               )
-            ) {
+            if (nindex && (isupper(G__get_type(G__value_typenum(result3))) || (G__get_type(G__value_typenum(result3)) == 'u'))) {
                G__getindexedvalue(&result3, libp->parameter[nindex]);
             }
             if (oprp) {
@@ -1226,375 +1510,153 @@ static G__value G__getfunction_libp(char* item, char* funcname, G__param* libp, 
             }
             return result3;
          }
-#define G__OLDIMPLEMENTATION1159
       }
-      /***************************************************************
-       * If memberfunction is called explicitly by clarifying scope
-       * don't examine global function and exit from G__getfunction().
-       * There are 2 cases                   G__exec_memberfunc
-       *   obj.memfunc();                            1
-       *   X::memfunc();                             1
-       *    X();              constructor            2
-       *   ~X();              destructor             2
-       * If G__exec_memberfunc==2, don't display error message.
-       ***************************************************************/
-      /* If searching only member function */
-      if (memfunc_flag && (G__store_struct_offset || G__CALLSTATICMEMFUNC != memfunc_flag)) {
-         G__exec_memberfunc = store_exec_memberfunc;
-         G__memberfunc_tagnum = store_memberfunc_tagnum;
-         G__memberfunc_struct_offset = store_memberfunc_struct_offset;
-         /* If the last resolution of overloading failed */
-         if (funcmatch == G__USERCONV) {
-            if (G__TRYDESTRUCTOR == memfunc_flag) {
-               /* destructor for base calss and class members */
+      G__exec_memberfunc = tempstore;
+      if (
+         (funcmatch == G__PROMOTION) ||
+         (funcmatch == G__STDCONV)
+      ) {
+         continue;
+      }
+      if (funcmatch == G__EXACT) {
+         if (G__compiled_func_cxx(&result3, funcname, libp, hash) == 1) {
+            // --
 #ifdef G__ASM
-#ifdef G__SECURITY
-               store_asm_noverflow = G__asm_noverflow;
-               if (G__security&G__SECURE_GARBAGECOLLECTION) G__abortbytecode();
-#endif
-#endif
-#ifdef G__VIRTUALBASE
-               if (G__CPPLINK != G__struct.iscpplink[G__get_tagnum(G__tagnum)]) G__basedestructor();
-#else
-               G__basedestructor();
-#endif
-#ifdef G__ASM
-#ifdef G__SECURITY
-               G__asm_noverflow = store_asm_noverflow;
-#endif
-#endif
+            if (G__asm_noverflow) {
                // --
-            }
-            else {
-               switch (memfunc_flag) {
-                  case G__CALLCONSTRUCTOR:
-                  case G__TRYCONSTRUCTOR:
-                  case G__TRYIMPLICITCONSTRUCTOR:
-                     /* constructor for base class and class members default
-                      * constructor only */
-#ifdef G__VIRTUALBASE
-                     if (G__CPPLINK != G__struct.iscpplink[G__get_tagnum(G__tagnum)])
-                        G__baseconstructor(0 , (struct G__baseparam *)NULL);
-#else
-                     G__baseconstructor(0 , (struct G__baseparam *)NULL);
-#endif
+#ifdef G__ASM_DBG
+               if (G__asm_dbg) {
+                  G__fprinterr(G__serr, "%3x,%3x: LD_FUNC compiled '%s' paran: %d  %s:%d\n", G__asm_cp, G__asm_dt, funcname, libp->paran, __FILE__, __LINE__);
+               }
+#endif // G__ASM_DBG
+               G__asm_inst[G__asm_cp] = G__LD_FUNC;
+               G__asm_inst[G__asm_cp+1] = 1 + 10 * hash;
+               G__asm_inst[G__asm_cp+2] = (long)(&G__asm_name[G__asm_name_p]);
+               G__asm_inst[G__asm_cp+3] = libp->paran;
+               G__asm_inst[G__asm_cp+4] = (long) G__compiled_func_cxx;
+               G__asm_inst[G__asm_cp+5] = 0;
+               if ((G__asm_name_p + strlen(funcname) + 1) < G__ASM_FUNCNAMEBUF) {
+                  strcpy(G__asm_name + G__asm_name_p, funcname);
+                  G__asm_name_p += strlen(funcname) + 1;
+                  G__inc_cp_asm(6, 0);
+               }
+               else {
+                  G__abortbytecode();
+#ifdef G__ASM_DBG
+                  if (G__asm_dbg) {
+                     G__fprinterr(G__serr, "COMPILE ABORT function name buffer overflow");
+                     G__printlinenum();
+                  }
+#endif // G__ASM_DBG
+                  // --
                }
             }
+#endif // G__ASM
+#ifdef G__DUMPFILE
+            if (G__dumpfile && !G__no_exec_compile) {
+               G__dumpspace -= 3;
+               for (ipara = 0; ipara < G__dumpspace; ++ipara) {
+                  fprintf(G__dumpfile, " ");
+               }
+               G__valuemonitor(result3, result7);
+               fprintf(G__dumpfile, "/* return(cmp) %s()=%s */\n", funcname, result7);
+            }
+#endif // G__DUMPFILE
             G__exec_memberfunc = store_exec_memberfunc;
             G__memberfunc_tagnum = store_memberfunc_tagnum;
             G__memberfunc_struct_offset = store_memberfunc_struct_offset;
-            *known3 = 0;
-            switch (memfunc_flag) {
-               case G__CALLMEMFUNC:
-                  if (G__parenthesisovld(&result3, funcname, libp, G__CALLMEMFUNC)) {
-                     *known3 = 1;
-                     if (G__store_struct_offset != store_struct_offset)
-                        G__gen_addstros(store_struct_offset - G__store_struct_offset);
-                     G__store_struct_offset = store_struct_offset;
-                     G__tagnum = store_tagnum;
-                     G__def_tagnum = store_def_tagnum;
-                     G__tagdefining = store_tagdefining;
-                     if (
-                        nindex &&
-                        (
-                           G__value_typenum(result3).FinalType().IsPointer() ||
-                           G__value_typenum(result3).FinalType().IsArray() ||
-                           G__value_typenum(result3).FinalType().IsClass() ||
-                           G__value_typenum(result3).FinalType().IsUnion() ||
-                           G__value_typenum(result3).FinalType().IsEnum()
-                        )
-                     ) {
-                        G__getindexedvalue(&result3, libp->parameter[nindex]);
-                     }
-                     if (oprp) *known3 = G__additional_parenthesis(&result3, libp);
-                     return(result3);
-                  }
-                  if ('~' == funcname[0]) {
-                     *known3 = 1;
-                     return(G__null);
-                  }
-                  /******************************************************************
-                   * Search template function
-                   ******************************************************************/
-                  G__exec_memberfunc = 1;
-                  G__memberfunc_tagnum = G__tagnum;
-                  G__memberfunc_struct_offset = G__store_struct_offset;
-                  if ((G__EXACT == funcmatch || G__USERCONV == funcmatch) &&
-                        G__templatefunc(&result3, funcname, libp, hash, funcmatch) == 1) {
-
-#ifdef G__DUMPFILE
-                     if (G__dumpfile != NULL && 0 == G__no_exec_compile) {
-                        G__dumpspace -= 3;
-                        for (ipara = 0;ipara < G__dumpspace;ipara++) fprintf(G__dumpfile, " ");
-                        G__valuemonitor(result3, result7);
-                        fprintf(G__dumpfile , "/* return(lib) %s()=%s */\n"
-                                , funcname, result7);
-                     }
-#endif
-                     G__exec_memberfunc = store_exec_memberfunc;
-                     G__memberfunc_tagnum = store_memberfunc_tagnum;
-                     G__memberfunc_struct_offset = store_memberfunc_struct_offset;
-                     /* don't know why if(oprp) is needed, copied from line 2111 */
-                     if (oprp) *known3 = G__additional_parenthesis(&result3, libp);
-                     else *known3 = 1;
-                     return(result3);
-                  }
-                  G__exec_memberfunc = store_exec_memberfunc;
-                  G__memberfunc_tagnum = store_memberfunc_tagnum;
-                  G__memberfunc_struct_offset = store_memberfunc_struct_offset;
-               case G__CALLCONSTRUCTOR:
-                  if (G__globalcomp < G__NOLINK) {
-                     break;
-                  }
-                  if (G__asm_noverflow || !G__no_exec_compile) {
-                     if (!G__const_noerror) {
-                        G__fprinterr(G__serr, "Error: Can't call %s::%s in current scope (1)  %s:%d", G__struct.name[G__get_tagnum(G__tagnum)], item, __FILE__, __LINE__);
-                     }
-                     G__genericerror(0);
-                  }
-                  store_exec_memberfunc = G__exec_memberfunc;
-                  G__exec_memberfunc = 1;
-                  if (0 == G__const_noerror
-                        && (!G__no_exec_compile || G__asm_noverflow)
-                     ) {
-                     G__fprinterr(G__serr, "Possible candidates are...\n");
-                     {
-                        G__StrBuf itemtmp_sb(G__LONGLINE);
-                        char *itemtmp = itemtmp_sb;
-                        sprintf(itemtmp, "%s::%s", G__struct.name[G__get_tagnum(G__tagnum)], funcname);
-                        G__display_proto_pretty(G__serr, itemtmp, 1);
-                     }
-                  }
-                  G__exec_memberfunc = store_exec_memberfunc;
+            if (nindex && (isupper(G__get_type(G__value_typenum(result3))) || (G__get_type(G__value_typenum(result3)) == 'u'))) {
+               G__getindexedvalue(&result3, libp->parameter[nindex]);
             }
-#ifdef G__DUMPFILE
-            if (G__dumpfile != NULL && 0 == G__no_exec_compile) G__dumpspace -= 3;
-#endif
-            if (G__store_struct_offset != store_struct_offset)
-               G__gen_addstros(store_struct_offset - G__store_struct_offset);
-            G__store_struct_offset = store_struct_offset;
-            G__tagnum = store_tagnum;
-            G__def_tagnum = store_def_tagnum;
-            G__tagdefining = store_tagdefining;
-            if (libp->paran && G__value_typenum(libp->para[0]).IsClass() &&
-                  (G__TRYCONSTRUCTOR == memfunc_flag ||
-                   G__TRYIMPLICITCONSTRUCTOR == memfunc_flag)
-               ) {
-               /* in case of copy constructor not found */
-               return(libp->para[0]);
+            return result3;
+         }
+         if (G__library_func(&result3, funcname, libp, hash) == 1) {
+            if (G__no_exec_compile) {
+               G__value_typenum(result3) = Reflex::Type::ByTypeInfo(typeid(int)); // result3.type = 'i'
             }
-            return G__null;
-         }
-         continue;
-      }
-      /***************************************************************
-       * reset G__exec_memberfunc for global function.
-       * Original value(store_exec_memberfunc) is restored when exit
-       * from this function
-       ***************************************************************/
-      tempstore = G__exec_memberfunc;
-      G__exec_memberfunc = 0;
-      /***************************************************************
-       * search for interpreted global function
-       ***************************************************************/
-      if (G__interpret_func(&result3, funcname, libp, hash, G__p_ifunc, funcmatch, G__TRYNORMAL) == 1) {
-#ifdef G__DUMPFILE
-         if (G__dumpfile != NULL && 0 == G__no_exec_compile) {
-            G__dumpspace -= 3;
-            for (ipara = 0;ipara < G__dumpspace;ipara++) fprintf(G__dumpfile, " ");
-            G__valuemonitor(result3, result7);
-            fprintf(G__dumpfile , "/* return(inp) %s()=%s*/\n" , funcname, result7);
-         }
-#endif
-
-         G__exec_memberfunc = store_exec_memberfunc;
-         G__memberfunc_tagnum = store_memberfunc_tagnum;
-         G__memberfunc_struct_offset = store_memberfunc_struct_offset;
-         G__setclassdebugcond(G__get_tagnum(G__memberfunc_tagnum), 0);
-         if (
-            nindex &&
-            (
-               G__value_typenum(result3).FinalType().IsPointer() ||
-               G__value_typenum(result3).FinalType().IsArray() ||
-               G__value_typenum(result3).FinalType().IsClass() ||
-               G__value_typenum(result3).FinalType().IsUnion() ||
-               G__value_typenum(result3).FinalType().IsEnum()
-            )
-         ) {
-            G__getindexedvalue(&result3, libp->parameter[nindex]);
-         }
-         if (oprp) *known3 = G__additional_parenthesis(&result3, libp);
-         return(result3);
-      }
-      G__exec_memberfunc = tempstore;
-      /* there is no function overload resolution after this point,
-       * thus, if not found in G__EXACT trial, there is no chance to
-       * find matched function in consequitive search
-       */
-      if (G__USERCONV == funcmatch) goto templatefunc;
-      if (G__EXACT != funcmatch) continue;
-      /***************************************************************
-       * search for compiled(archived) function
-       ***************************************************************/
-      if (G__compiled_func_cxx(&result3, funcname, libp, hash) == 1) {
-         // --
 #ifdef G__ASM
-         if (G__asm_noverflow) {
-            /****************************************
-             * LD_FUNC (compiled)
-             ****************************************/
-#ifdef G__ASM_DBG
-            if (G__asm_dbg) {
-               G__fprinterr(G__serr, "%3x,%3x: LD_FUNC compiled '%s' paran: %d  %s:%d\n", G__asm_cp, G__asm_dt, funcname, libp->paran, __FILE__, __LINE__);
-            }
-#endif // G__ASM_DBG
-            G__asm_inst[G__asm_cp] = G__LD_FUNC;
-            G__asm_inst[G__asm_cp+1] = 1 + 10 * hash;
-            G__asm_inst[G__asm_cp+2] = (long)(&G__asm_name[G__asm_name_p]);
-            G__asm_inst[G__asm_cp+3] = libp->paran;
-            G__asm_inst[G__asm_cp+4] = (long) G__compiled_func_cxx;
-            G__asm_inst[G__asm_cp+5] = 0;
-            if ((G__asm_name_p + strlen(funcname) + 1) < G__ASM_FUNCNAMEBUF) {
-               strcpy(G__asm_name + G__asm_name_p, funcname);
-               G__asm_name_p += strlen(funcname) + 1;
-               G__inc_cp_asm(6, 0);
-            }
-            else {
-               G__abortbytecode();
+            if (G__asm_noverflow) {
+               // --
 #ifdef G__ASM_DBG
                if (G__asm_dbg) {
-                  G__fprinterr(G__serr, "COMPILE ABORT function name buffer overflow");
-                  G__printlinenum();
+                  G__fprinterr(G__serr, "%3x,%3x: LD_FUNC library '%s' paran: %d  %s:%d\n", G__asm_cp, G__asm_dt, funcname, libp->paran, __FILE__, __LINE__);
                }
 #endif // G__ASM_DBG
-               // --
+               G__asm_inst[G__asm_cp] = G__LD_FUNC;
+               G__asm_inst[G__asm_cp+1] = 1 + 10 * hash;
+               G__asm_inst[G__asm_cp+2] = (long)(&G__asm_name[G__asm_name_p]);
+               G__asm_inst[G__asm_cp+3] = libp->paran;
+               G__asm_inst[G__asm_cp+4] = (long) G__library_func;
+               G__asm_inst[G__asm_cp+5] = 0;
+               if ((G__asm_name_p + strlen(funcname) + 1) < G__ASM_FUNCNAMEBUF) {
+                  strcpy(G__asm_name + G__asm_name_p, funcname);
+                  G__asm_name_p += strlen(funcname) + 1;
+                  G__inc_cp_asm(6, 0);
+               }
+               else {
+                  G__abortbytecode();
+#ifdef G__ASM_DBG
+                  if (G__asm_dbg)
+                     G__fprinterr(G__serr, "COMPILE ABORT function name buffer overflow");
+                  G__printlinenum();
+#endif // G__ASM_DBG
+                  // --
+               }
             }
-         }
 #endif // G__ASM
-
 #ifdef G__DUMPFILE
-         if (G__dumpfile != NULL && 0 == G__no_exec_compile) {
-            G__dumpspace -= 3;
-            for (ipara = 0;ipara < G__dumpspace;ipara++) fprintf(G__dumpfile, " ");
-            G__valuemonitor(result3, result7);
-            fprintf(G__dumpfile , "/* return(cmp) %s()=%s */\n" , funcname, result7);
+            if (G__dumpfile && !G__no_exec_compile) {
+               G__dumpspace -= 3;
+               for (ipara = 0; ipara < G__dumpspace; ++ipara) {
+                  fprintf(G__dumpfile, " ");
+               }
+               G__valuemonitor(result3, result7);
+               fprintf(G__dumpfile, "/* return(lib) %s()=%s */\n", funcname, result7);
+            }
+#endif // G__DUMPFILE
+            G__exec_memberfunc = store_exec_memberfunc;
+            G__memberfunc_tagnum = store_memberfunc_tagnum;
+            G__memberfunc_struct_offset = store_memberfunc_struct_offset;
+            if (nindex && (isupper(G__get_type(G__value_typenum(result3))) || (G__get_type(G__value_typenum(result3)) == 'u'))) {
+               G__getindexedvalue(&result3, libp->parameter[nindex]);
+            }
+            return result3;
          }
-#endif
-
+      }
+#ifdef G__TEMPLATEFUNC
+      //
+      //  Search template function.
+      //
+      if (G__templatefunc(&result3, funcname, libp, hash, funcmatch)) {
+         // --
+#ifdef G__DUMPFILE
+         if (G__dumpfile && !G__no_exec_compile) {
+            G__dumpspace -= 3;
+            for (ipara = 0; ipara < G__dumpspace; ++ipara) {
+               fprintf(G__dumpfile, " ");
+            }
+            G__valuemonitor(result3, result7);
+            fprintf(G__dumpfile, "/* return(lib) %s()=%s */\n", funcname, result7);
+         }
+#endif // G__DUMPFILE
          G__exec_memberfunc = store_exec_memberfunc;
          G__memberfunc_tagnum = store_memberfunc_tagnum;
          G__memberfunc_struct_offset = store_memberfunc_struct_offset;
-         if (
-            nindex &&
-            (
-               G__value_typenum(result3).FinalType().IsPointer() ||
-               G__value_typenum(result3).FinalType().IsArray() ||
-               G__value_typenum(result3).FinalType().IsClass() ||
-               G__value_typenum(result3).FinalType().IsUnion() ||
-               G__value_typenum(result3).FinalType().IsEnum()
-            )
-         ) {
-            G__getindexedvalue(&result3, libp->parameter[nindex]);
+         if (oprp) {
+            *known3 = G__additional_parenthesis(&result3, libp);
+         }
+         else {
+            *known3 = 1;
          }
          return result3;
       }
-      /***************************************************************
-       * search for library function which are included in G__ci.c
-       ***************************************************************/
-      if (G__library_func(&result3, funcname, libp, hash) == 1) {
-         if (G__no_exec_compile) {
-            G__value_typenum(result3) = Reflex::Type::ByTypeInfo(typeid(int));
-         }
-#ifdef G__ASM
-         if (G__asm_noverflow) {
-            /****************************************
-             * LD_FUNC (library)
-             ****************************************/
-#ifdef G__ASM_DBG
-            if (G__asm_dbg) {
-               G__fprinterr(G__serr, "%3x,%3x: LD_FUNC library '%s' paran: %d  %s:%d\n", G__asm_cp, G__asm_dt, funcname, libp->paran, __FILE__, __LINE__);
-            }
-#endif // G__ASM_DBG
-            G__asm_inst[G__asm_cp] = G__LD_FUNC;
-            G__asm_inst[G__asm_cp+1] = 1 + 10 * hash;
-            G__asm_inst[G__asm_cp+2] = (long)(&G__asm_name[G__asm_name_p]);
-            G__asm_inst[G__asm_cp+3] = libp->paran;
-            G__asm_inst[G__asm_cp+4] = (long) G__library_func;
-            G__asm_inst[G__asm_cp+5] = 0;
-            if ((G__asm_name_p + strlen(funcname) + 1) < G__ASM_FUNCNAMEBUF) {
-               strcpy(G__asm_name + G__asm_name_p, funcname);
-               G__asm_name_p += strlen(funcname) + 1;
-               G__inc_cp_asm(6, 0);
-            }
-            else {
-               G__abortbytecode();
-#ifdef G__ASM_DBG
-               if (G__asm_dbg)
-                  G__fprinterr(G__serr, "COMPILE ABORT function name buffer overflow");
-               G__printlinenum();
-#endif // G__ASM_DBG
-               // --
-            }
-         }
-#endif // G__ASM
-
-#ifdef G__DUMPFILE
-         if (G__dumpfile != NULL && 0 == G__no_exec_compile) {
-            G__dumpspace -= 3;
-            for (ipara = 0;ipara < G__dumpspace;ipara++) fprintf(G__dumpfile, " ");
-            G__valuemonitor(result3, result7);
-            fprintf(G__dumpfile , "/* return(lib) %s()=%s */\n" , funcname, result7);
-         }
-#endif
-
-         G__exec_memberfunc = store_exec_memberfunc;
-         G__memberfunc_tagnum = store_memberfunc_tagnum;
-         G__memberfunc_struct_offset = store_memberfunc_struct_offset;
-         if (
-            nindex &&
-            (
-               G__value_typenum(result3).FinalType().IsPointer() ||
-               G__value_typenum(result3).FinalType().IsArray() ||
-               G__value_typenum(result3).FinalType().IsClass() ||
-               G__value_typenum(result3).FinalType().IsUnion() ||
-               G__value_typenum(result3).FinalType().IsEnum()
-            )
-         ) {
-            G__getindexedvalue(&result3, libp->parameter[nindex]);
-         }
-         return(result3);
-      }
-#ifdef G__TEMPLATEFUNC
-      templatefunc:
-      /******************************************************************
-       * Search template function
-       ******************************************************************/
-      if ((G__EXACT == funcmatch || G__USERCONV == funcmatch) &&
-            G__templatefunc(&result3, funcname, libp, hash, funcmatch) == 1) {
-
-#ifdef G__DUMPFILE
-         if (G__dumpfile != NULL && 0 == G__no_exec_compile) {
-            G__dumpspace -= 3;
-            for (ipara = 0;ipara < G__dumpspace;ipara++) fprintf(G__dumpfile, " ");
-            G__valuemonitor(result3, result7);
-            fprintf(G__dumpfile , "/* return(lib) %s()=%s */\n" , funcname, result7);
-         }
-#endif
-
-         G__exec_memberfunc = store_exec_memberfunc;
-         G__memberfunc_tagnum = store_memberfunc_tagnum;
-         G__memberfunc_struct_offset = store_memberfunc_struct_offset;
-         if (oprp) *known3 = G__additional_parenthesis(&result3, libp);
-         else *known3 = 1; /* don't know why this was missing */
-         return(result3);
-      }
-#endif /* G__TEMPLATEFUNC */
+#endif // G__TEMPLATEFUNC
       // --
    }
-   /********************************************************************
-    * Explicit type conversion by searching constructors
-    ********************************************************************/
-   if (G__TRYNORMAL == memfunc_flag || G__CALLSTATICMEMFUNC == memfunc_flag) {
+   //
+   //  Check for function-style cast.
+   //
+   if ((memfunc_flag == G__TRYNORMAL) || (memfunc_flag == G__CALLSTATICMEMFUNC)) {
       int store_var_typeX = G__var_type;
       ::Reflex::Type funcnameTypedef = G__find_typedef(funcname);
       G__var_type = store_var_typeX;
@@ -1813,6 +1875,9 @@ static G__value G__getfunction_libp(char* item, char* funcname, G__param* libp, 
          return(result3);
       }
    }
+   //
+   //  Check for use of operator() on an object of class type.
+   //
    if (G__parenthesisovld(&result3, funcname, libp, G__TRYNORMAL)) {
       *known3 = 1;
       if (
@@ -1827,33 +1892,43 @@ static G__value G__getfunction_libp(char* item, char* funcname, G__param* libp, 
       ) {
          G__getindexedvalue(&result3, libp->parameter[nindex]);
       }
-      else if (nindex &&
-               (G__value_typenum(result3).RawType().IsClass()
-                || G__value_typenum(result3).RawType().IsEnum()
-                || G__value_typenum(result3).RawType().IsUnion())) {
+      else if (
+         nindex &&
+         (
+            G__value_typenum(result3).RawType().IsClass() ||
+            G__value_typenum(result3).RawType().IsEnum() ||
+            G__value_typenum(result3).RawType().IsUnion()
+         )
+      ) {
          int len;
          strcpy(libp->parameter[0], libp->parameter[nindex] + 1);
          len = strlen(libp->parameter[0]);
-         if (len > 1) libp->parameter[0][len-1] = 0;
+         if (len > 1) {
+            libp->parameter[0][len-1] = 0;
+         }
          libp->para[0] = G__getexpr(libp->parameter[0]);
          libp->paran = 1;
          G__parenthesisovldobj(&result3, &result3, "operator[]", libp, G__TRYNORMAL);
       }
-      if (oprp) *known3 = G__additional_parenthesis(&result3, libp);
-      return(result3);
+      if (oprp) {
+         *known3 = G__additional_parenthesis(&result3, libp);
+      }
+      return result3;
    }
-   /********************************************************************
-   * pointer to function described like normal function
-   * int (*p2f)(void);  p2f();
-   ********************************************************************/
-   Reflex::Member var = G__getvarentry(funcname, hash, Reflex::Scope::GlobalScope(), G__p_local);
+   //
+   //  Check for pointer to function used like a normal function call.
+   //
+   //       int (*p2f)(void);
+   //       p2f();
+   //
+   ::Reflex::Member var = G__getvarentry(funcname, hash, ::Reflex::Scope::GlobalScope(), G__p_local);
    if (var) {
       sprintf(result7, "*%s", funcname);
       *known3 = 0;
       pfparam = strchr(item, '(');
       p2ffpara = libp;
-      result3 = G__pointer2func((G__value*)NULL, result7, pfparam, known3);
-      p2ffpara = (struct G__param*)NULL;
+      result3 = G__pointer2func(0, result7, pfparam, known3);
+      p2ffpara = 0;
       if (*known3) {
          G__exec_memberfunc = store_exec_memberfunc;
          G__memberfunc_tagnum = store_memberfunc_tagnum;
@@ -1870,18 +1945,25 @@ static G__value G__getfunction_libp(char* item, char* funcname, G__param* libp, 
          ) {
             G__getindexedvalue(&result3, libp->parameter[nindex]);
          }
-         if (oprp) *known3 = G__additional_parenthesis(&result3, libp);
-         return(result3);
+         if (oprp) {
+            *known3 = G__additional_parenthesis(&result3, libp);
+         }
+         return result3;
       }
    }
-   *known3 = 0;
+   //
+   //  Check for a function-style macro invocation.
+   //
+   *known3 = 0; // Flag that no function was called.
 #ifdef G__DUMPFILE
-   if (G__dumpfile != NULL && 0 == G__no_exec_compile) G__dumpspace -= 3;
-#endif
+   if (G__dumpfile && !G__no_exec_compile) {
+      G__dumpspace -= 3;
+   }
+#endif // G__DUMPFILE
    G__exec_memberfunc = store_exec_memberfunc;
    G__memberfunc_tagnum = store_memberfunc_tagnum;
    G__memberfunc_struct_offset = store_memberfunc_struct_offset;
-   if (!G__oprovld) {
+   if (!G__oprovld) { // There were arguments.
       if (G__asm_noverflow && libp->paran) {
          G__asm_cp = store_cp_asm;
       }
@@ -1901,8 +1983,10 @@ static G__value G__getfunction_libp(char* item, char* funcname, G__param* libp, 
          ) {
             G__getindexedvalue(&result3, libp->parameter[nindex]);
          }
-         if (oprp) *known3 = G__additional_parenthesis(&result3, libp);
-         return(result3);
+         if (oprp) {
+            *known3 = G__additional_parenthesis(&result3, libp);
+         }
+         return result3;
       }
    }
    return G__null;
@@ -1913,10 +1997,10 @@ extern "C" G__value G__getfunction(char* item, int* known3, int memfunc_flag)
 {
    G__value result3 = G__null;
    G__StrBuf funcname_sb(G__LONGLINE);
-   char *funcname = funcname_sb;
+   char* funcname = funcname_sb;
    int overflowflag = 0;
    G__StrBuf result7_sb(G__LONGLINE);
-   char *result7 = result7_sb;
+   char* result7 = result7_sb;
    int ipara;
    int ig35;
    int ig15;
@@ -1924,8 +2008,8 @@ extern "C" G__value G__getfunction(char* item, int* known3, int memfunc_flag)
    int nest = 0;
    int single_quote = 0;
    int double_quote = 0;
-   struct G__param fpara;
-   static struct G__param* p2ffpara = 0;
+   G__param fpara;
+   static G__param* p2ffpara = 0;
    int hash;
    int hash_2;
    int funcmatch;
@@ -1954,7 +2038,7 @@ extern "C" G__value G__getfunction(char* item, int* known3, int memfunc_flag)
          *(pcdbg + jdbg) = (char)0xa3;
       }
    }
-#endif
+#endif // G__DEBUG
    store_exec_memberfunc = G__exec_memberfunc;
    store_memberfunc_tagnum = G__memberfunc_tagnum;
    char* store_memberfunc_struct_offset = G__memberfunc_struct_offset;
@@ -1980,8 +2064,7 @@ extern "C" G__value G__getfunction(char* item, int* known3, int memfunc_flag)
       hash += item[ig15];
       ig15++;
    }
-   if (8 == ig15 && strncmp(funcname, "operator", 8) == 0 &&
-         strncmp(item + ig15, "()(", 3) == 0) {
+   if ((ig15 == 8) && !strncmp(funcname, "operator", 8) && !strncmp(item + ig15, "()(", 3)) {
       strcpy(funcname + 8, "()");
       hash = hash + '(' + ')';
       ig15 += 2;
@@ -1997,8 +2080,7 @@ extern "C" G__value G__getfunction(char* item, int* known3, int memfunc_flag)
    //  If '(' not found in expression, then this
    //  is not a function call, return.  This shouldn't happen.
    //
-   if (item[ig15] != '(') {
-      // if no parenthesis , this is not a function
+   if (item[ig15] != '(') { // if no parenthesis, this is not a function
       result3 = G__null;
       return result3;
    }
@@ -2017,106 +2099,142 @@ extern "C" G__value G__getfunction(char* item, int* known3, int memfunc_flag)
       }
    }
    //
-   //  Parse function call arguments.
+   //  Parse arguments to function call.
    // 
-   //  func(argument, ...)
-   //       ^
+   //       func(argument, ...)
+   //            ^
    //
    fpara.paran = 0;
    G__value_typenum(fpara.para[0]) = Reflex::Type();
-   //
-   // scan '(param1,param2,param3)'
-   //
    while (ig15 < lenitem) {
-      int tmpltnest = 0;
       //
-      // scan one parameter upto 'param,' or 'param)'
-      // by reading upto ',' or ')'
+      //  Collect one function parameter.
       //
       ig35 = 0;
       nest = 0;
+      int tmpltnest = 0;
       single_quote = 0;
       double_quote = 0;
-      // Skip leading spaces
       while (item[ig15] == ' ') {
          ++ig15;
       }
-      while ((((item[ig15] != ',') && (item[ig15] != ')')) ||
-              (nest > 0) ||
-              (tmpltnest > 0) ||
-              (single_quote > 0) || (double_quote > 0)) && (ig15 < lenitem)) {
+      while (
+         (ig15 < lenitem) &&
+         (
+            (
+               (item[ig15] != ',') &&
+               (item[ig15] != ')')
+            ) ||
+            (nest > 0) ||
+            (tmpltnest > 0) ||
+            (single_quote > 0) ||
+            (double_quote > 0)
+         )
+      ) {
          switch (item[ig15]) {
-            case '"' : /* double quote */
-               if (single_quote == 0) double_quote ^= 1;
+            case '"' :
+               if (!single_quote) {
+                  double_quote ^= 1;
+               }
                break;
-            case '\'' : /* single quote */
-               if (double_quote == 0) single_quote ^= 1;
+            case '\'' :
+               if (!double_quote) {
+                  single_quote ^= 1;
+               }
                break;
             case '(':
             case '[':
             case '{':
-               if ((double_quote == 0) && (single_quote == 0)) nest++;
+               if (!double_quote && !single_quote) {
+                  ++nest;
+               }
                break;
             case ')':
             case ']':
             case '}':
-               if ((double_quote == 0) && (single_quote == 0)) nest--;
+               if (!double_quote && !single_quote) {
+                  --nest;
+               }
                break;
             case '\\':
                result7[ig35++] = item[ig15++];
                break;
             case '<':
-               if (double_quote == 0 && single_quote == 0) {
+               if (!double_quote && !single_quote) {
                   result7[ig35] = 0;
                   char* checkForTemplate = result7;
-                  if (checkForTemplate && !strncmp(checkForTemplate, "const ", 6))
+                  if (checkForTemplate && !strncmp(checkForTemplate, "const ", 6)) {
                      checkForTemplate += 6;
-                  if (0 == strcmp(result7, "operator") ||
-                        tmpltnest ||
-                        G__defined_templateclass(checkForTemplate)) ++tmpltnest;
+                  }
+                  if (
+                     !strcmp(result7, "operator") ||
+                     tmpltnest ||
+                     G__defined_templateclass(checkForTemplate)
+                  ) {
+                     ++tmpltnest;
+                  }
                }
                break;
             case '>':
-               if (double_quote == 0 && single_quote == 0) {
-                  if (tmpltnest) --tmpltnest;
+               if (!double_quote && !single_quote) {
+                  if (tmpltnest) {
+                     --tmpltnest;
+                  }
                }
                break;
          }
          result7[ig35++] = item[ig15++];
-         if (ig35 >= G__ONELINE - 1) {
+         if (ig35 >= (G__ONELINE - 1)) {
             if (result7[0] == '"') {
                G__value bufv;
                G__StrBuf bufx_sb(G__LONGLINE);
-               char *bufx = bufx_sb;
+               char* bufx = bufx_sb;
                strncpy(bufx, result7, G__ONELINE - 1);
-               while ((((item[ig15] != ',') && (item[ig15] != ')')) ||
-                       (nest > 0) || (single_quote > 0) ||
-                       (double_quote > 0)) && (ig15 < lenitem)) {
+               while (
+                  (ig15 < lenitem) &&
+                  (
+                     (
+                        (item[ig15] != ',') &&
+                        (item[ig15] != ')')
+                     ) ||
+                     (nest > 0) ||
+                     single_quote ||
+                     double_quote
+                  )
+               ) {
                   switch (item[ig15]) {
-                     case '"' : /* double quote */
-                        if (single_quote == 0) double_quote ^= 1;
+                     case '"':
+                        if (!single_quote) {
+                           double_quote ^= 1;
+                        }
                         break;
-                     case '\'' : /* single quote */
-                        if (double_quote == 0) single_quote ^= 1;
+                     case '\'':
+                        if (!double_quote) {
+                           single_quote ^= 1;
+                        }
                         break;
                      case '(':
                      case '[':
                      case '{':
-                        if ((double_quote == 0) && (single_quote == 0)) nest++;
+                        if (!double_quote && !single_quote) {
+                           ++nest;
+                        }
                         break;
                      case ')':
                      case ']':
                      case '}':
-                        if ((double_quote == 0) && (single_quote == 0)) nest--;
+                        if (!double_quote && !single_quote) {
+                           --nest;
+                        }
                         break;
                      case '\\':
                         bufx[ig35++] = item[ig15++];
                         break;
                   }
                   bufx[ig35++] = item[ig15++];
-                  if (ig35 >= G__LONGLINE - 1) {
+                  if (ig35 >= (G__LONGLINE - 1)) {
                      G__genericerror("Limitation: Too long function argument");
-                     return(G__null);
+                     return G__null;
                   }
                }
                bufx[ig35] = 0;
@@ -2125,36 +2243,46 @@ extern "C" G__value G__getfunction(char* item, int* known3, int memfunc_flag)
                ig35 = strlen(result7) + 1;
                break;
             }
-            else if (ig35 > G__LONGLINE - 1) {
-               G__fprinterr(G__serr,
-                            "Limitation: length of one function argument be less than %d"
-                            , G__LONGLINE);
-               G__genericerror((char*)NULL);
+            else if (ig35 > (G__LONGLINE - 1)) {
+               G__fprinterr(G__serr, "Limitation: length of one function argument be less than %d" , G__LONGLINE);
+               G__genericerror(0);
                G__fprinterr(G__serr, "Use temp variable as workaround.\n");
                *known3 = 1;
-               return(G__null);
+               return G__null;
             }
             else {
                overflowflag = 1;
             }
          }
       }
-      //
-      // if ')' is found at the middle of expression,
-      // this should be casting or pointer to function
-      // 
-      //  v                    v            <-- this makes
-      //  (type)expression  or (*p_func)();    castflag=1
-      //       ^                       ^    <-- this makes
-      //                                       castflag=2
-      //
-      if ((item[ig15] == ')') && (ig15 < lenitem - 1)) {
-         if (1 == castflag) {
-            if (('-' == item[ig15+1] && '>' == item[ig15+2]) || '.' == item[ig15+1])
+      if ((item[ig15] == ')') && (ig15 < (lenitem - 1))) { // Cast expression, or pointer to function usage.
+         //
+         //  v                    v            <-- this makes
+         //  (type)expression  or (*p_func)();    castflag=1
+         //       ^                       ^    <-- this makes
+         //                                       castflag=2
+         //
+         if (castflag == 1) {
+            if (
+               (
+                  (item[ig15+1] == '-') &&
+                  (item[ig15+2] == '>')
+               ) ||
+               (item[ig15+1] == '.')
+            ) {
                castflag = 3;
-            else                                       castflag = 2;
+            }
+            else {
+               castflag = 2;
+            }
          }
-         else if (('-' == item[ig15+1] && '>' == item[ig15+2]) || '.' == item[ig15+1]) {
+         else if (
+            (
+               (item[ig15+1] == '-') &&
+               (item[ig15+2] == '>')
+            ) ||
+            (item[ig15+1] == '.')
+         ) {
             castflag = 3;
             base1 = ig15 + 1;
          }
@@ -2163,37 +2291,35 @@ extern "C" G__value G__getfunction(char* item, int* known3, int memfunc_flag)
          }
          else if (funcname[0] && isalnum(item[ig15+1])) {
             G__fprinterr(G__serr, "Error: %s  Syntax error?", item);
-            /* G__genericerror((char*)NULL); , avoid risk of side-effect */
             G__printlinenum();
          }
          else if (
-            (isalpha(item[0]) || '_' == item[0] || '$' == item[0])) {
+            isalpha(item[0]) ||
+            (item[0] == '_') ||
+            (item[0] == '$')
+         ) {
             int itmp;
             result7[ig35] = '\0';
             strcpy(fpara.parameter[fpara.paran], result7);
-            if (ig35) fpara.parameter[++fpara.paran][0] = '\0';
-            for (itmp = 0;itmp < fpara.paran;itmp++) {
+            if (ig35) {
+               fpara.parameter[++fpara.paran][0] = '\0';
+            }
+            for (itmp = 0; itmp < fpara.paran; ++itmp) {
                fpara.para[itmp] = G__getexpr(fpara.parameter[itmp]);
             }
             if (G__parenthesisovld(&result3, funcname, &fpara, G__TRYNORMAL)) {
                *known3 = 1;
-               return(G__operatorfunction(&result3, item + ig15 + 2, known3
-                                          , result7, funcname));
+               return G__operatorfunction(&result3, item + ig15 + 2, known3, result7, funcname);
             }
             else {
-               result3 = G__getfunction_libp(item, funcname, &fpara, known3
-                                             , G__TRYNORMAL);
+               result3 = G__getfunction_libp(item, funcname, &fpara, known3, G__TRYNORMAL);
                if (*known3) {
-                  return(G__operatorfunction(&result3, item + ig15 + 2, known3
-                                             , result7, funcname));
+                  return G__operatorfunction(&result3, item + ig15 + 2, known3, result7, funcname);
                }
             }
          }
       }
-      //
-      // set null char to parameter list buffer.
-      //
-      ig15++;
+      ++ig15;
       result7[ig35] = '\0';
       if (ig35 < G__ONELINE) {
          strcpy(fpara.parameter[fpara.paran], result7);
@@ -2204,8 +2330,11 @@ extern "C" G__value G__getfunction(char* item, int* known3, int memfunc_flag)
       }
       fpara.parameter[++fpara.paran][0] = '\0';
    }
-   if (castflag == 1 && !funcname[0]) {
-      if (fpara.paran == 1 && !strcmp(fpara.parameter[0], "@")) {
+   if ((castflag == 1) && !funcname[0]) { // A parenthesized expression.
+      //
+      //  A parenthesized expression.
+      //
+      if ((fpara.paran == 1) && !strcmp(fpara.parameter[0], "@")) {
          result3 = fpara.para[0];
       }
       else {
@@ -2214,108 +2343,100 @@ extern "C" G__value G__getfunction(char* item, int* known3, int memfunc_flag)
       *known3 = 1;
       return result3;
    }
-   //
-   // member access by (xxx)->xxx , (xxx).xxx
-   //
-   if (castflag == 3) {
+   if (castflag == 2) { // A cast, or use of pointer to function.
+      if (fpara.parameter[0][0] == '*') {
+         //
+         // pointer to function
+         //
+         //  (*p_function)(param);
+         //   ^
+         //  this '*' is significant
+         //
+         switch (fpara.parameter[1][0]) {
+            case '[':
+               return G__pointerReference(fpara.parameter[0], &fpara, known3);
+            case '(':
+            default:
+               return G__pointer2func(0, fpara.parameter[0], fpara.parameter[1], known3);
+         }
+      }
+#ifdef G__PTR2MEMFUNC
+      else if (
+         (fpara.parameter[1][0] == '(') &&
+         (
+            strstr(fpara.parameter[0], ".*") ||
+            strstr(fpara.parameter[0], "->*")
+         )
+      ) {
+         //
+         // pointer to member function
+         // 
+         //  (obj.*p2mf)(param);
+         //  (obj->*p2mf)(param);
+         //
+         return G__pointer2memberfunction(fpara.parameter[0], fpara.parameter[1], known3);
+      }
+#endif // G__PTR2MEMFUNC
+      else if ((fpara.paran >= 2) && (fpara.parameter[1][0] == '[')) {
+         //
+         // (expr)[n]
+         //
+         result3 = G__getexpr(G__catparam(&fpara, fpara.paran, ""));
+         *known3 = 1;
+         return result3;
+      }
+      //
+      // casting
+      // 
+      //  (type) expression;
+      //
+      if (fpara.paran > 2) {
+         if (fpara.parameter[fpara.paran-1][0] != '@') {
+            fpara.para[1] = G__getexpr(fpara.parameter[fpara.paran-1]);
+         }
+         else {
+            fpara.para[1] = fpara.para[fpara.paran-1];
+         }
+         result3 = G__castvalue(G__catparam(&fpara, fpara.paran - 1, ","), fpara.para[1]);
+      }
+      else {
+         if (fpara.parameter[1][0] != '@') {
+            fpara.para[1] = G__getexpr(fpara.parameter[1]);
+         }
+         else {
+            fpara.para[1] = fpara.para[1];
+         }
+         result3 = G__castvalue(fpara.parameter[0], fpara.para[1]);
+      }
+      *known3 = 1;
+      return result3;
+   }
+   if (castflag == 3) { // A parenthesized expression followed by a member access operator.
       store_var_type = G__var_type;
       G__var_type = 'p';
-      if ('.' == fpara.parameter[1][0]) hash_2 = 1;
-      else                           hash_2 = 2;
+      if (fpara.parameter[1][0] == '.') {
+         hash_2 = 1;
+      }
+      else {
+         hash_2 = 2;
+      }
       if (base1) {
          strncpy(fpara.parameter[0], item, base1);
          fpara.parameter[0][base1] = '\0';
          strcpy(fpara.parameter[1], item + base1);
       }
-      if (G__CALLMEMFUNC == memfunc_flag)
-         result3 = G__getstructmem(store_var_type , funcname , fpara.parameter[1] + hash_2
-                                   , fpara.parameter[0] , known3
-                                   , Reflex::Scope() /*(G__var_array*)NULL*/, hash_2);
-      else
-         result3 = G__getstructmem(store_var_type , funcname , fpara.parameter[1] + hash_2
-                                   , fpara.parameter[0] , known3 , Reflex::Scope::GlobalScope(), hash_2);
-      G__var_type = store_var_type;
-      return(result3);
-   }
-   //
-   // casting or pointer to function
-   //
-   if (castflag == 2) {
-      /***************************************************************
-       * pointer to function
-       *
-       *  (*p_function)(param);
-       *   ^
-       *  this '*' is significant
-       ***************************************************************/
-      if (fpara.parameter[0][0] == '*') {
-         switch (fpara.parameter[1][0]) {
-            case '[':
-               /* function pointer */
-               return G__pointerReference(fpara.parameter[0], &fpara, known3);
-            case '(':
-            default:
-               /* function pointer */
-               return G__pointer2func((G__value*)NULL, fpara.parameter[0], fpara.parameter[1], known3);
-         }
+      if (memfunc_flag == G__CALLMEMFUNC) {
+         result3 = G__getstructmem(store_var_type, funcname, fpara.parameter[1] + hash_2, fpara.parameter[0], known3, Reflex::Scope(), hash_2);
       }
-
-#ifdef G__PTR2MEMFUNC
-      /***************************************************************
-       * pointer to member function
-       *
-       *  (obj.*p2mf)(param);
-       *  (obj->*p2mf)(param);
-       ***************************************************************/
-      else if ('(' == fpara.parameter[1][0] &&
-               (strstr(fpara.parameter[0], ".*") ||
-                strstr(fpara.parameter[0], "->*"))) {
-         return(G__pointer2memberfunction(fpara.parameter[0]
-                                          , fpara.parameter[1], known3));
-      }
-#endif
-
-      /***************************************************************
-       * (expr)[n]
-       ***************************************************************/
-      else if (fpara.paran >= 2 && '[' == fpara.parameter[1][0]) {
-         result3 = G__getexpr(G__catparam(&fpara, fpara.paran, ""));
-         *known3 = 1;
-         return(result3);
-      }
-
-      /***************************************************************
-       * casting
-       *
-       *  (type)expression;
-       ***************************************************************/
       else {
-         if (fpara.paran > 2) {
-            if ('@' == fpara.parameter[fpara.paran-1][0])
-               fpara.para[1] = fpara.para[fpara.paran-1];
-            else
-               fpara.para[1] = G__getexpr(fpara.parameter[fpara.paran-1]);
-            result3 = G__castvalue(G__catparam(&fpara, fpara.paran - 1, ",")
-                                   , fpara.para[1]);
-         }
-         else {
-            if ('@' == fpara.parameter[1][0])
-               fpara.para[1] = fpara.para[1];
-            else
-               fpara.para[1] = G__getexpr(fpara.parameter[1]);
-            result3 = G__castvalue(fpara.parameter[0], fpara.para[1]);
-         }
-         *known3 = 1;
-         return(result3);
+         result3 = G__getstructmem(store_var_type, funcname, fpara.parameter[1] + hash_2, fpara.parameter[0], known3, Reflex::Scope::GlobalScope(), hash_2);
       }
+      G__var_type = store_var_type;
+      return result3;
    }
-   //
-   // if length of the first parameter is 0 , there are no
-   // parameters. set fpara.paran to 0.
-   //
-   if (!strlen(fpara.parameter[0])) {
-      if (fpara.paran > 1 && ')' == item[strlen(item)-1]) {
-         if (fpara.paran == 2 && '(' == fpara.parameter[1][0]) {
+   if (!strlen(fpara.parameter[0])) { // First arg is empty, check for usage of operator().
+      if ((fpara.paran > 1) && (item[strlen(item)-1] == ')')) {
+         if ((fpara.paran == 2) && (fpara.parameter[1][0] == '(')) { // We have "myobj()", operator() usage.
             oprp = 1;
          }
          else {
@@ -2328,39 +2449,50 @@ extern "C" G__value G__getfunction(char* item, int* known3, int memfunc_flag)
       fpara.paran = 0;
    }
    //
-   //  Initialize type to fundamental type, and known3 to 1.
+   //  Initialize the result to void.
+   //  Initialized function found and executed flag to true.
    //
    G__value_typenum(result3) = Reflex::Type::ByTypeInfo(typeid(void));
    *known3 = 1;
    //
-   //  Search for sizeof(),
-   // before parameters are evaluated
-   //  sizeof() is processed specially.
+   //  Some function are handled specially, check for those
+   //  first.  The special ones are sizeof, offsetof, typeid,
+   //  and va_arg.
    //
-   if (G__special_func(&result3, funcname, &fpara, hash) == 1) {
+   //
+   if (G__special_func(&result3, funcname, &fpara, hash)) {
       G__var_type = 'p';
       return result3;
    }
    //
-   //  Evaluate parameters  parameter:string expression ,
-   //                       para     :evaluated expression
+   //  Evaluate argument expressions.
+   //
+   //  Result is:
+   //
+   //       parameter: value as a string,
+   //            para: value
    //
 #ifdef G__ASM
    store_asm_noverflow = G__asm_noverflow;
    if (G__oprovld) {
-      /* In case of operator overloading function, arguments are already
-       * evaluated. Avoid duplication in argument stack by temporarily
-       * reset G__asm_noverflow */
-      /* G__asm_noverflow=0; */
+      // In case of operator overloading function, arguments are already
+      // evaluated. Avoid duplication in argument stack by temporarily
+      // reset G__asm_noverflow.
       G__suspendbytecode();
    }
-   if (G__asm_noverflow && fpara.paran &&
-         (G__store_struct_offset != G__memberfunc_struct_offset
-          || G__do_setmemfuncenv
-         )) {
+   if (
+      G__asm_noverflow &&
+      fpara.paran &&
+      (
+         (G__store_struct_offset != G__memberfunc_struct_offset) ||
+         G__do_setmemfuncenv
+      )
+   ) {
 #ifdef G__ASM_DBG
-      if (G__asm_dbg) G__fprinterr(G__serr, "%3x: SETMEMFUNCENV\n", G__asm_cp);
-#endif
+      if (G__asm_dbg) {
+         G__fprinterr(G__serr, "%3x,%3x: SETMEMFUNCENV  %s:%d\n", G__asm_cp, G__asm_dt, __FILE__, __LINE__);
+      }
+#endif // G__ASM_DBG
       G__asm_inst[G__asm_cp] = G__SETMEMFUNCENV;
       G__inc_cp_asm(1, 0);
       memfuncenvflag = 1;
@@ -2368,8 +2500,7 @@ extern "C" G__value G__getfunction(char* item, int* known3, int memfunc_flag)
    if (G__asm_noverflow && fpara.paran) {
       store_cp_asm = G__asm_cp;
    }
-#endif
-   // restore base environment
+#endif // G__ASM
    char* store_struct_offset = G__store_struct_offset;
    store_tagnum = G__tagnum;
    store_memberfunc_var_type = G__var_type;
@@ -2378,40 +2509,40 @@ extern "C" G__value G__getfunction(char* item, int* known3, int memfunc_flag)
    G__tagnum = G__memberfunc_tagnum;
    G__store_struct_offset = G__memberfunc_struct_offset;
    G__var_type = 'p';
-   // evaluate parameter
    if (p2ffpara) {
       fpara = *p2ffpara;
-      p2ffpara = (struct G__param*)NULL;
+      p2ffpara = 0;
    }
    else {
-      for (ig15 = 0;ig15 < fpara.paran;ig15++) {
-         if ('[' == fpara.parameter[ig15][0]) {
+      for (ig15 = 0; ig15 < fpara.paran; ++ig15) {
+         if (fpara.parameter[ig15][0] == '[') {
             fpara.paran = ig15;
             break;
          }
-         if (0 == fpara.parameter[ig15][0]) {
+         if (!fpara.parameter[ig15][0]) {
             if (G__dispmsg >= G__DISPWARN) {
                G__fprinterr(G__serr, "Warning: Empty arg%d", ig15 + 1);
                G__printlinenum();
             }
          }
-         if ('@' != fpara.parameter[ig15][0])
+         if (fpara.parameter[ig15][0] != '@') {
             fpara.para[ig15] = G__getexpr(fpara.parameter[ig15]);
+         }
       }
    }
-   // recover function call environment
 #ifdef G__ASM
-   if (G__asm_noverflow && fpara.paran &&
-         memfuncenvflag
-      ) {
+   if (G__asm_noverflow && fpara.paran && memfuncenvflag) {
+      // --
 #ifdef G__ASM_DBG
-      if (G__asm_dbg) G__fprinterr(G__serr, "%3x: RECMEMFUNCENV\n", G__asm_cp);
-#endif
+      if (G__asm_dbg) {
+         G__fprinterr(G__serr, "%3x,%3x: RECMEMFUNCENV  %s:%d\n", G__asm_cp, G__asm_dt, __FILE__, __LINE__);
+      }
+#endif // G__ASM_DBG
       G__asm_inst[G__asm_cp] = G__RECMEMFUNCENV;
       G__inc_cp_asm(1, 0);
       memfuncenvflag = 0;
    }
-#endif
+#endif // G__ASM
    G__store_struct_offset = store_struct_offset;
    G__tagnum = store_tagnum;
    G__var_type = store_memberfunc_var_type;
@@ -2423,70 +2554,69 @@ extern "C" G__value G__getfunction(char* item, int* known3, int memfunc_flag)
    else {
       G__asm_noverflow &= store_asm_noverflow;
    }
-#endif
+#endif // G__ASM
 #ifdef G__SECURITY
-   if (G__return > G__RETURN_NORMAL || (G__security_error && G__security != G__SECURE_NONE)) {
+   if ((G__return > G__RETURN_NORMAL) || (G__security_error && (G__security != G__SECURE_NONE))) {
       return G__null;
    }
-#endif
+#endif // G__SECURITY
+   //
+   //  Terminate the evaluated argument list.
+   //
    fpara.para[fpara.paran] = G__null;
-   //
-   // if not function name, this is '(expr1,expr2,...,exprn)'
-   // According to ANSI-C , exprn has to be returned,
-   //
-   if (!funcname[0]) {
+   if (!funcname[0]) { // No name, we are a parenthesized comma operator expression.
       //
-      //  'result3 = fpara.para[fpara.paran-1] ;'
-      // should be correct as ANSI-C.
+      //  If not a function name, then this is
+      //  a parenthesized comma operator expression:
       //
-      result3 = fpara.para[0];
+      //       (expr1, expr2, ..., exprn)
+      //
+      result3 = fpara.para[0]; // FIXME: Returns the wrong expression, instead of 0, should be paran-1.
       return result3;
    }
    //
-   // scope operator ::f() , A::B::f()
-   // note,
+   //  Check for a qualified function name.
+   //
+   //       ::f()
+   //       A::B::f()
+   //
+   //  Note:
+   //
    //    G__exec_memberfunc restored at return memfunc_flag is local,
-   //   there should be no problem modifying these variables.
+   //    there should be no problem modifying these variables.
    //    store_struct_offset and store_tagnum are only used in the
-   //   explicit type conversion section.  It is OK to use them here
-   //   independently.
+   //    explicit type conversion section.  It is OK to use them here
+   //    independently.
    //
    store_struct_offset = G__store_struct_offset;
    store_tagnum = G__tagnum;
    store_def_tagnum = G__def_tagnum;
    store_tagdefining = G__tagdefining;
    int intTagNum = G__get_tagnum(G__tagnum);
-   switch (G__scopeoperator(funcname, &hash, &G__store_struct_offset, &intTagNum)) {
-      case G__GLOBALSCOPE: /* global scope */
-         G__exec_memberfunc = 0;
-         memfunc_flag = G__TRYNORMAL;
-         G__def_tagnum = ::Reflex::Scope();
-         G__tagdefining = ::Reflex::Scope();
-         break;
-      case G__CLASSSCOPE: /* class scope */
-#ifndef G__OLDIMPLEMENTATION1101
-         memfunc_flag = G__CALLSTATICMEMFUNC;
-#else
-         memfunc_flag = G__CALLMEMFUNC;
-#endif
-         /* This looks very risky */
-         G__def_tagnum = ::Reflex::Scope();
-         G__tagdefining = ::Reflex::Scope();
-         G__exec_memberfunc = 1;
-#ifdef __GNUC__
-#else
-#pragma message(FIXME("G__scopeoperator should take a Type, not an int* tagnum"))
-#endif
-         G__tagnum = G__Dict::GetDict().GetScope(intTagNum); // might be changed by G__scopeoperator
-         G__memberfunc_tagnum = G__tagnum;
-         break;
+   {
+      int which_scope = G__scopeoperator(funcname, &hash, &G__store_struct_offset, &intTagNum);
+      G__tagnum = G__Dict::GetDict().GetScope(intTagNum); // might have been changed by G__scopeoperator
+      switch (which_scope) {
+         case G__GLOBALSCOPE:
+            G__exec_memberfunc = 0;
+            memfunc_flag = G__TRYNORMAL;
+            G__def_tagnum = ::Reflex::Scope();
+            G__tagdefining = ::Reflex::Scope();
+            break;
+         case G__CLASSSCOPE:
+            G__exec_memberfunc = 1;
+            memfunc_flag = G__CALLSTATICMEMFUNC;
+            G__def_tagnum = ::Reflex::Scope();
+            G__tagdefining = ::Reflex::Scope();
+            G__memberfunc_tagnum = G__tagnum;
+            break;
+      }
    }
-   G__tagnum = G__Dict::GetDict().GetScope(intTagNum); // might be changed by G__scopeoperator
 #ifdef G__DUMPFILE
-   //
-   //  Dump that a function is called.
-   //
    if (G__dumpfile && !G__no_exec_compile) {
+      //
+      //  Dump that a function is called.
+      //
       for (ipara = 0; ipara < G__dumpspace; ++ipara) {
          fprintf(G__dumpfile, " ");
       }
@@ -2501,31 +2631,38 @@ extern "C" G__value G__getfunction(char* item, int* known3, int memfunc_flag)
       fprintf(G__dumpfile, ");/*%s %d,%p %p*/\n", G__ifile.name, G__ifile.line_number, store_struct_offset, G__store_struct_offset);
       G__dumpspace += 3;
    }
-#endif
+#endif // G__DUMPFILE
    //
-   //  Begin loop to resolve overloaded function.
+   //  Perform overload resolution.
+   //
+   //  G__EXACT = 1
+   //  G__PROMOTION = 2
+   //  G__STDCONV = 3
+   //  G__USERCONV = 4
    //
    for (funcmatch = G__EXACT; funcmatch <= G__USERCONV; ++funcmatch) {
-      /***************************************************************
-       * search for interpreted member function
-       * if(G__exec_memberfunc)     ==>  memfunc();
-       * G__TRYNORMAL!=memfunc_flag ==>  a.memfunc();
-       ***************************************************************/
+      //
+      //  Search for interpreted member function.
+      //
+      //  G__exec_memberfunc         ==>  memfunc();
+      //  memfunc_flag!=G__TRYNORMAL ==>  a.memfunc();
+      //
       if (G__exec_memberfunc || (memfunc_flag != G__TRYNORMAL)) {
-         ::Reflex::Scope local_tagnum;
-         if (G__exec_memberfunc && G__tagnum.IsTopScope()) {
+         ::Reflex::Scope local_tagnum = G__tagnum;
+         if (G__exec_memberfunc && (G__get_tagnum(G__tagnum) == -1)) {
             local_tagnum = G__memberfunc_tagnum;
          }
-         else {
-            local_tagnum = G__tagnum;
-         }
-         if (!G__tagnum.IsTopScope()) {
+         // Perform any delayed dictionary loading.
+         if (G__get_tagnum(G__tagnum) != -1) {
             G__incsetup_memfunc(G__tagnum);
          }
-         if (local_tagnum && !local_tagnum.IsTopScope()) {
+         if (G__get_tagnum(local_tagnum) != -1) {
+            //
+            //  Call an interpreted function.
+            //
             int ret = G__interpret_func(&result3, funcname, &fpara, hash, local_tagnum, funcmatch, memfunc_flag);
             if (ret == 1) {
-               // --
+               // -- We found it and ran it, done.
 #ifdef G__DUMPFILE
                if (G__dumpfile && !G__no_exec_compile) {
                   G__dumpspace -= 3;
@@ -2547,16 +2684,7 @@ extern "C" G__value G__getfunction(char* item, int* known3, int memfunc_flag)
                G__memberfunc_tagnum = store_memberfunc_tagnum;
                G__memberfunc_struct_offset = store_memberfunc_struct_offset;
                G__setclassdebugcond(G__get_tagnum(G__memberfunc_tagnum), 0);
-               if (
-                  nindex &&
-                  (
-                     G__value_typenum(result3).FinalType().IsPointer() ||
-                     G__value_typenum(result3).FinalType().IsArray() ||
-                     G__value_typenum(result3).FinalType().IsClass() ||
-                     G__value_typenum(result3).FinalType().IsUnion() ||
-                     G__value_typenum(result3).FinalType().IsEnum()
-                  )
-               ) {
+               if (nindex && (isupper(G__get_type(G__value_typenum(result3))) || (G__get_type(G__value_typenum(result3)) == 'u'))) {
                   G__getindexedvalue(&result3, fpara.parameter[nindex]);
                }
                if (oprp) {
@@ -2565,46 +2693,53 @@ extern "C" G__value G__getfunction(char* item, int* known3, int memfunc_flag)
                return result3;
             }
          }
-#define G__OLDIMPLEMENTATION1159
-         // --
       }
-      /***************************************************************
-       * If memberfunction is called explicitly by clarifying scope
-       * don't examine global function and exit from G__getfunction().
-       * There are 2 cases                   G__exec_memberfunc
-       *   obj.memfunc();                            1
-       *   X::memfunc();                             1
-       *    X();              constructor            2
-       *   ~X();              destructor             2
-       * If G__exec_memberfunc==2, don't display error message.
-       ***************************************************************/
-      /* If searching only member function */
+      //
+      //  If searching only member function.
+      //
       if (memfunc_flag && (G__store_struct_offset || (memfunc_flag != G__CALLSTATICMEMFUNC))) {
+         //
+         //  If member function is called with a qualified name,
+         //  then don't examine global functions.
+         //
+         //  There are 2 cases:
+         //
+         //                                      G__exec_memberfunc
+         //    obj.memfunc();                            1
+         //    X::memfunc();                             1
+         //     X();              constructor            2
+         //    ~X();              destructor             2
+         //
+         //  If G__exec_memberfunc == 2, don't display error message.
+         //
          G__exec_memberfunc = store_exec_memberfunc;
          G__memberfunc_tagnum = store_memberfunc_tagnum;
          G__memberfunc_struct_offset = store_memberfunc_struct_offset;
          if (funcmatch != G__USERCONV) {
-            continue; // ELSE next level overloaded function resolution.
+            continue;
          }
-         /* If the last resolution of overloading failed */
-         if (G__TRYDESTRUCTOR == memfunc_flag) {
-            /* destructor for base class and class members */
+         if (memfunc_flag == G__TRYDESTRUCTOR) {
+            // destructor for base class and class members
 #ifdef G__ASM
 #ifdef G__SECURITY
             store_asm_noverflow = G__asm_noverflow;
-            if (G__security&G__SECURE_GARBAGECOLLECTION) G__abortbytecode();
-#endif
-#endif
+            if (G__security & G__SECURE_GARBAGECOLLECTION) {
+               G__abortbytecode();
+            }
+#endif // G__SECURITY
+#endif // G__ASM
 #ifdef G__VIRTUALBASE
-            if (G__CPPLINK != G__struct.iscpplink[G__get_tagnum(G__tagnum)]) G__basedestructor();
-#else
+            if (G__struct.iscpplink[G__get_tagnum(G__tagnum)] != G__CPPLINK) {
+               G__basedestructor();
+            }
+#else // G__VIRTUALBASE
             G__basedestructor();
-#endif
+#endif // G__VIRTUALBASE
 #ifdef G__ASM
 #ifdef G__SECURITY
             G__asm_noverflow = store_asm_noverflow;
-#endif
-#endif
+#endif // G__SECURITY
+#endif // G__ASM
             // --
          }
          else {
@@ -2612,14 +2747,15 @@ extern "C" G__value G__getfunction(char* item, int* known3, int memfunc_flag)
                case G__CALLCONSTRUCTOR:
                case G__TRYCONSTRUCTOR:
                case G__TRYIMPLICITCONSTRUCTOR:
-                  /* constructor for base class and class members default
-                   * constructor only */
+                  // constructor for base class and class members default constructor only.
 #ifdef G__VIRTUALBASE
-                  if (G__CPPLINK != G__struct.iscpplink[G__get_tagnum(G__tagnum)])
-                     G__baseconstructor(0 , (struct G__baseparam *)NULL);
-#else
-                  G__baseconstructor(0 , (struct G__baseparam *)NULL);
-#endif
+                  if (G__struct.iscpplink[G__get_tagnum(G__tagnum)] != G__CPPLINK) {
+                     G__baseconstructor(0, 0);
+                  }
+#else // G__VIRTUALBASE
+                  G__baseconstructor(0, 0);
+#endif // G__VIRTUALBASE
+                  // --
             }
          }
          G__exec_memberfunc = store_exec_memberfunc;
@@ -2627,42 +2763,34 @@ extern "C" G__value G__getfunction(char* item, int* known3, int memfunc_flag)
          G__memberfunc_struct_offset = store_memberfunc_struct_offset;
          *known3 = 0;
          switch (memfunc_flag) {
-            case G__CALLMEMFUNC: {
-               int ret = G__parenthesisovld(&result3, funcname, &fpara, G__CALLMEMFUNC);
-               if (ret) {
-                  *known3 = 1;
-                  if (G__store_struct_offset != store_struct_offset) {
-                     G__gen_addstros(store_struct_offset - G__store_struct_offset);
+            case G__CALLMEMFUNC:
+               {
+                  int ret = G__parenthesisovld(&result3, funcname, &fpara, G__CALLMEMFUNC);
+                  if (ret) {
+                     *known3 = 1;
+                     if (G__store_struct_offset != store_struct_offset) {
+                        G__gen_addstros(store_struct_offset - G__store_struct_offset);
+                     }
+                     G__store_struct_offset = store_struct_offset;
+                     G__tagnum = store_tagnum;
+                     G__def_tagnum = store_def_tagnum;
+                     G__tagdefining = store_tagdefining;
+                     if (nindex && (isupper(G__get_type(G__value_typenum(result3))) || (G__get_type(G__value_typenum(result3)) == 'u'))) {
+                        G__getindexedvalue(&result3, fpara.parameter[nindex]);
+                     }
+                     if (oprp) {
+                        *known3 = G__additional_parenthesis(&result3, &fpara);
+                     }
+                     return result3;
                   }
-                  G__store_struct_offset = store_struct_offset;
-                  G__tagnum = store_tagnum;
-                  G__def_tagnum = store_def_tagnum;
-                  G__tagdefining = store_tagdefining;
-                  if (
-                     nindex &&
-                     (
-                        G__value_typenum(result3).FinalType().IsPointer() ||
-                        G__value_typenum(result3).FinalType().IsArray() ||
-                        G__value_typenum(result3).FinalType().IsClass() ||
-                        G__value_typenum(result3).FinalType().IsUnion() ||
-                        G__value_typenum(result3).FinalType().IsEnum()
-                     )
-                  ) {
-                     G__getindexedvalue(&result3, fpara.parameter[nindex]);
-                  }
-                  if (oprp) {
-                     *known3 = G__additional_parenthesis(&result3, &fpara);
-                  }
-                  return result3;
                }
-            }
-            if (funcname[0] == '~') {
-               *known3 = 1;
-               return G__null;
-            }
-            // NOTE: Intentionally fallthrough!
+               if (funcname[0] == '~') {
+                  *known3 = 1;
+                  return G__null;
+               }
+               // NOTE: Intentionally fallthrough!
             case G__CALLCONSTRUCTOR:
-               ///
+               //
                // Search template function
                //
                G__exec_memberfunc = 1;
@@ -2688,7 +2816,6 @@ extern "C" G__value G__getfunction(char* item, int* known3, int memfunc_flag)
                      G__exec_memberfunc = store_exec_memberfunc;
                      G__memberfunc_tagnum = store_memberfunc_tagnum;
                      G__memberfunc_struct_offset = store_memberfunc_struct_offset;
-                     // don't know why if(oprp) is needed, copied from line 2111
                      if (oprp) {
                         *known3 = G__additional_parenthesis(&result3, &fpara);
                      }
@@ -2701,7 +2828,7 @@ extern "C" G__value G__getfunction(char* item, int* known3, int memfunc_flag)
                G__exec_memberfunc = store_exec_memberfunc;
                G__memberfunc_tagnum = store_memberfunc_tagnum;
                G__memberfunc_struct_offset = store_memberfunc_struct_offset;
-               if (G__globalcomp < G__NOLINK) {
+               if (G__globalcomp < G__NOLINK) { // Stop here if doing dictionary generation.
                   break;
                }
                if (G__asm_noverflow || !G__no_exec_compile) {
@@ -2716,7 +2843,7 @@ extern "C" G__value G__getfunction(char* item, int* known3, int memfunc_flag)
                   G__fprinterr(G__serr, "Possible candidates are...\n");
                   {
                      G__StrBuf itemtmp_sb(G__LONGLINE);
-                     char *itemtmp = itemtmp_sb;
+                     char* itemtmp = itemtmp_sb;
                      sprintf(itemtmp, "%s::%s", G__struct.name[G__get_tagnum(G__tagnum)], funcname);
                      G__display_proto_pretty(G__serr, itemtmp, 1);
                   }
@@ -2734,19 +2861,14 @@ extern "C" G__value G__getfunction(char* item, int* known3, int memfunc_flag)
          G__store_struct_offset = store_struct_offset;
          G__def_tagnum = store_def_tagnum;
          G__tagdefining = store_tagdefining;
-         if (
+         if ( // Copy constructor not found.
             fpara.paran &&
-            (
-               G__value_typenum(fpara.para[0]).RawType().IsClass() ||
-               G__value_typenum(fpara.para[0]).RawType().IsEnum() ||
-               G__value_typenum(fpara.para[0]).RawType().IsUnion()
-            ) &&
+            (G__get_type(G__value_typenum(fpara.para[0])) == 'u') &&
             (
                (memfunc_flag == G__TRYCONSTRUCTOR) ||
                (memfunc_flag == G__TRYIMPLICITCONSTRUCTOR)
             )
-         ) {
-            // -- In case of copy constructor not found.
+         ) { // Copy constructor not found.
             G__tagnum = store_tagnum;
             return fpara.para[0];
          }
@@ -2755,24 +2877,21 @@ extern "C" G__value G__getfunction(char* item, int* known3, int memfunc_flag)
          G__tagnum = store_tagnum;
          return result3;
       }
-      /***************************************************************
-       * reset G__exec_memberfunc for global function.
-       * Original value(store_exec_memberfunc) is restored when exit
-       * from this function
-       ***************************************************************/
+      //
+      //  Check for a global function.
+      //
       tempstore = G__exec_memberfunc;
       G__exec_memberfunc = 0;
-      /***************************************************************
-       * search for interpreted global function
-       ***************************************************************/
       if (memfunc_flag != G__CALLSTATICMEMFUNC) {
          int ret = G__interpret_func(&result3, funcname, &fpara, hash, G__p_ifunc, funcmatch, G__TRYNORMAL);
          if (ret == 1) {
             // --
 #ifdef G__DUMPFILE
-            if (G__dumpfile != NULL && 0 == G__no_exec_compile) {
+            if (G__dumpfile && !G__no_exec_compile) {
                G__dumpspace -= 3;
-               for (ipara = 0;ipara < G__dumpspace;ipara++) fprintf(G__dumpfile, " ");
+               for (ipara = 0; ipara < G__dumpspace; ++ipara) {
+                  fprintf(G__dumpfile, " ");
+               }
                G__valuemonitor(result3, result7);
                fprintf(G__dumpfile , "/* return(inp) %s()=%s*/\n" , funcname, result7);
             }
@@ -2781,16 +2900,7 @@ extern "C" G__value G__getfunction(char* item, int* known3, int memfunc_flag)
             G__memberfunc_tagnum = store_memberfunc_tagnum;
             G__memberfunc_struct_offset = store_memberfunc_struct_offset;
             G__setclassdebugcond(G__get_tagnum(G__memberfunc_tagnum), 0);
-            if (
-               nindex &&
-               (
-                  G__value_typenum(result3).FinalType().IsPointer() ||
-                  G__value_typenum(result3).FinalType().IsArray() ||
-                  G__value_typenum(result3).FinalType().IsClass() ||
-                  G__value_typenum(result3).FinalType().IsUnion() ||
-                  G__value_typenum(result3).FinalType().IsEnum()
-               )
-            ) {
+            if (nindex && (isupper(G__get_type(G__value_typenum(result3))) || (G__get_type(G__value_typenum(result3)) == 'u'))) {
                G__getindexedvalue(&result3, fpara.parameter[nindex]);
             }
             if (oprp) {
@@ -2800,154 +2910,126 @@ extern "C" G__value G__getfunction(char* item, int* known3, int memfunc_flag)
          }
       }
       G__exec_memberfunc = tempstore;
-      //
-      //  There is no function overload resolution after this point,
-      //  thus, if not found in G__EXACT trial, there is no chance to
-      //  find matched function in consequitive search
-      //
-      if (funcmatch == G__USERCONV) {
-         goto templatefunc;
-      }
-      if (funcmatch != G__EXACT) {
+      if (
+         (funcmatch == G__PROMOTION) ||
+         (funcmatch == G__STDCONV)
+      ) {
          continue;
       }
-      /***************************************************************
-       * search for compiled(archived) function
-       ***************************************************************/
-      if ((memfunc_flag != G__CALLSTATICMEMFUNC) && G__compiled_func_cxx(&result3, funcname, &fpara, hash) == 1) {
-         // --
+      if (funcmatch == G__EXACT) {
+         if (memfunc_flag != G__CALLSTATICMEMFUNC) {
+            int is_compiled = G__compiled_func_cxx(&result3, funcname, &fpara, hash);
+            if (is_compiled) {
+               // --
 #ifdef G__ASM
-         if (G__asm_noverflow) {
-            /****************************************
-             * LD_FUNC (compiled)
-             ****************************************/
+               if (G__asm_noverflow) {
+                  // --
 #ifdef G__ASM_DBG
-            if (G__asm_dbg) {
-               G__fprinterr(G__serr, "%3x,%3x: LD_FUNC compiled '%s' paran: %d  %s:%d\n", G__asm_cp, G__asm_dt, funcname, fpara.paran, __FILE__, __LINE__);
-            }
+                  if (G__asm_dbg) {
+                     G__fprinterr(G__serr, "%3x,%3x: LD_FUNC compiled '%s' paran: %d  %s:%d\n", G__asm_cp, G__asm_dt, funcname, fpara.paran, __FILE__, __LINE__);
+                  }
 #endif // G__ASM_DBG
-            G__asm_inst[G__asm_cp] = G__LD_FUNC;
-            G__asm_inst[G__asm_cp+1] = 1 + 10 * hash;
-            G__asm_inst[G__asm_cp+2] = (long)(&G__asm_name[G__asm_name_p]);
-            G__asm_inst[G__asm_cp+3] = fpara.paran;
-            G__asm_inst[G__asm_cp+4] = (long) G__compiled_func_cxx;
-            G__asm_inst[G__asm_cp+5] = 0;
-            if ((G__asm_name_p + strlen(funcname) + 1) < G__ASM_FUNCNAMEBUF) {
-               strcpy(G__asm_name + G__asm_name_p, funcname);
-               G__asm_name_p += strlen(funcname) + 1;
-               G__inc_cp_asm(6, 0);
+                  G__asm_inst[G__asm_cp] = G__LD_FUNC;
+                  G__asm_inst[G__asm_cp+1] = 1 + 10 * hash;
+                  G__asm_inst[G__asm_cp+2] = (long)(&G__asm_name[G__asm_name_p]);
+                  G__asm_inst[G__asm_cp+3] = fpara.paran;
+                  G__asm_inst[G__asm_cp+4] = (long) G__compiled_func_cxx;
+                  G__asm_inst[G__asm_cp+5] = 0;
+                  if ((G__asm_name_p + strlen(funcname) + 1) < G__ASM_FUNCNAMEBUF) {
+                     strcpy(G__asm_name + G__asm_name_p, funcname);
+                     G__asm_name_p += strlen(funcname) + 1;
+                     G__inc_cp_asm(6, 0);
+                  }
+                  else {
+                     // --
+#ifdef G__ASM_DBG
+                     if (G__asm_dbg) {
+                        G__fprinterr(G__serr, "COMPILE ABORT function name buffer overflow");
+                        G__printlinenum();
+                     }
+#endif // G__ASM_DBG
+                     G__abortbytecode();
+                  }
+               }
+#endif // G__ASM
+#ifdef G__DUMPFILE
+               if (G__dumpfile && !G__no_exec_compile) {
+                  G__dumpspace -= 3;
+                  for (ipara = 0; ipara < G__dumpspace; ++ipara) {
+                     fprintf(G__dumpfile, " ");
+                  }
+                  G__valuemonitor(result3, result7);
+                  fprintf(G__dumpfile, "/* return(cmp) %s()=%s */\n", funcname, result7);
+               }
+#endif // G__DUMPFILE
+               G__exec_memberfunc = store_exec_memberfunc;
+               G__memberfunc_tagnum = store_memberfunc_tagnum;
+               G__memberfunc_struct_offset = store_memberfunc_struct_offset;
+               if (nindex && (isupper(G__get_type(G__value_typenum(result3))) || (G__get_type(G__value_typenum(result3)) == 'u'))) {
+                  G__getindexedvalue(&result3, fpara.parameter[nindex]);
+               }
+               return result3;
             }
-            else {
-               G__abortbytecode();
+         }
+         if (G__library_func(&result3, funcname, &fpara, hash)) {
+            if (G__no_exec_compile) {
+               G__value_typenum(result3) = Reflex::Type::ByTypeInfo(typeid(int)); // result3.type == 'i'
+            }
+#ifdef G__ASM
+            if (G__asm_noverflow) {
+               // --
 #ifdef G__ASM_DBG
                if (G__asm_dbg) {
-                  G__fprinterr(G__serr, "COMPILE ABORT function name buffer overflow");
+                  G__fprinterr(G__serr, "%3x,%3x: LD_FUNC library '%s' paran: %d  %s:%d\n", G__asm_cp, G__asm_dt, funcname, fpara.paran, __FILE__, __LINE__);
+               }
+#endif // G__ASM_DBG
+               G__asm_inst[G__asm_cp] = G__LD_FUNC;
+               G__asm_inst[G__asm_cp+1] = 1 + 10 * hash;
+               G__asm_inst[G__asm_cp+2] = (long)(&G__asm_name[G__asm_name_p]);
+               G__asm_inst[G__asm_cp+3] = fpara.paran;
+               G__asm_inst[G__asm_cp+4] = (long) G__library_func;
+               G__asm_inst[G__asm_cp+5] = 0;
+               if ((G__asm_name_p + strlen(funcname) + 1) < G__ASM_FUNCNAMEBUF) {
+                  strcpy(G__asm_name + G__asm_name_p, funcname);
+                  G__asm_name_p += strlen(funcname) + 1;
+                  G__inc_cp_asm(6, 0);
+               }
+               else {
+                  G__abortbytecode();
+#ifdef G__ASM_DBG
+                  if (G__asm_dbg) {
+                     G__fprinterr(G__serr, "COMPILE ABORT function name buffer overflow");
+                  }
                   G__printlinenum();
-               }
 #endif // G__ASM_DBG
-               // --
+                  // --
+               }
             }
-         }
 #endif // G__ASM
 #ifdef G__DUMPFILE
-         if (G__dumpfile != NULL && 0 == G__no_exec_compile) {
-            G__dumpspace -= 3;
-            for (ipara = 0;ipara < G__dumpspace;ipara++) fprintf(G__dumpfile, " ");
-            G__valuemonitor(result3, result7);
-            fprintf(G__dumpfile , "/* return(cmp) %s()=%s */\n" , funcname, result7);
-         }
-#endif // G__DUMPFILE
-         G__exec_memberfunc = store_exec_memberfunc;
-         G__memberfunc_tagnum = store_memberfunc_tagnum;
-         G__memberfunc_struct_offset = store_memberfunc_struct_offset;
-         if (
-            nindex &&
-            (
-               G__value_typenum(result3).FinalType().IsPointer() ||
-               G__value_typenum(result3).FinalType().IsArray() ||
-               G__value_typenum(result3).FinalType().IsClass() ||
-               G__value_typenum(result3).FinalType().IsUnion() ||
-               G__value_typenum(result3).FinalType().IsEnum()
-            )
-         ) {
-            G__getindexedvalue(&result3, fpara.parameter[nindex]);
-         }
-         return result3;
-      }
-      /***************************************************************
-       * search for library function which are included in G__ci.c
-       ***************************************************************/
-      if (G__library_func(&result3, funcname, &fpara, hash) == 1) {
-         if (G__no_exec_compile) {
-            G__value_typenum(result3) = Reflex::Type::ByTypeInfo(typeid(int));
-         }
-#ifdef G__ASM
-         if (G__asm_noverflow) {
-            /****************************************
-             * LD_FUNC (library)
-             ****************************************/
-#ifdef G__ASM_DBG
-            if (G__asm_dbg) {
-               G__fprinterr(G__serr, "%3x,%3x: LD_FUNC library '%s' paran: %d  %s:%d\n", G__asm_cp, G__asm_dt, funcname, fpara.paran, __FILE__, __LINE__);
-            }
-#endif // G__ASM_DBG
-            G__asm_inst[G__asm_cp] = G__LD_FUNC;
-            G__asm_inst[G__asm_cp+1] = 1 + 10 * hash;
-            G__asm_inst[G__asm_cp+2] = (long)(&G__asm_name[G__asm_name_p]);
-            G__asm_inst[G__asm_cp+3] = fpara.paran;
-            G__asm_inst[G__asm_cp+4] = (long) G__library_func;
-            G__asm_inst[G__asm_cp+5] = 0;
-            if ((G__asm_name_p + strlen(funcname) + 1) < G__ASM_FUNCNAMEBUF) {
-               strcpy(G__asm_name + G__asm_name_p, funcname);
-               G__asm_name_p += strlen(funcname) + 1;
-               G__inc_cp_asm(6, 0);
-            }
-            else {
-               G__abortbytecode();
-#ifdef G__ASM_DBG
-               if (G__asm_dbg) {
-                  G__fprinterr(G__serr, "COMPILE ABORT function name buffer overflow");
+            if (G__dumpfile && !G__no_exec_compile) {
+               G__dumpspace -= 3;
+               for (ipara = 0; ipara < G__dumpspace; ++ipara) {
+                  fprintf(G__dumpfile, " ");
                }
-               G__printlinenum();
-#endif // G__ASM_DBG
-               // --
+               G__valuemonitor(result3, result7);
+               fprintf(G__dumpfile, "/* return(lib) %s()=%s */\n", funcname, result7);
             }
-         }
-#endif // G__ASM
-#ifdef G__DUMPFILE
-         if (G__dumpfile != NULL && 0 == G__no_exec_compile) {
-            G__dumpspace -= 3;
-            for (ipara = 0;ipara < G__dumpspace;ipara++) fprintf(G__dumpfile, " ");
-            G__valuemonitor(result3, result7);
-            fprintf(G__dumpfile , "/* return(lib) %s()=%s */\n" , funcname, result7);
-         }
 #endif // G__DUMPFILE
-         G__exec_memberfunc = store_exec_memberfunc;
-         G__memberfunc_tagnum = store_memberfunc_tagnum;
-         G__memberfunc_struct_offset = store_memberfunc_struct_offset;
-         if (
-            nindex &&
-            (
-               G__value_typenum(result3).FinalType().IsPointer() ||
-               G__value_typenum(result3).FinalType().IsArray() ||
-               G__value_typenum(result3).FinalType().IsClass() ||
-               G__value_typenum(result3).FinalType().IsUnion() ||
-               G__value_typenum(result3).FinalType().IsEnum()
-            )
-         ) {
-            G__getindexedvalue(&result3, fpara.parameter[nindex]);
+            G__exec_memberfunc = store_exec_memberfunc;
+            G__memberfunc_tagnum = store_memberfunc_tagnum;
+            G__memberfunc_struct_offset = store_memberfunc_struct_offset;
+            if (nindex && (isupper(G__get_type(G__value_typenum(result3))) || (G__get_type(G__value_typenum(result3)) == 'u'))) {
+               G__getindexedvalue(&result3, fpara.parameter[nindex]);
+            }
+            return result3;
          }
-         return result3;
       }
 #ifdef G__TEMPLATEFUNC
-      templatefunc:
-      /******************************************************************
-       * Search template function
-       ******************************************************************/
-      if (
-         ((funcmatch == G__EXACT) || (funcmatch == G__USERCONV)) &&
-         G__templatefunc(&result3, funcname, &fpara, hash, funcmatch) == 1
-      ) {
+      //
+      //  Search template function
+      //
+      if (G__templatefunc(&result3, funcname, &fpara, hash, funcmatch)) {
          // --
 #ifdef G__DUMPFILE
          if (G__dumpfile && !G__no_exec_compile) {
@@ -2966,7 +3048,7 @@ extern "C" G__value G__getfunction(char* item, int* known3, int memfunc_flag)
             *known3 = G__additional_parenthesis(&result3, &fpara);
          }
          else {
-            *known3 = 1; /* don't know why this was missing */
+            *known3 = 1;
          }
          return result3;
       }
@@ -2974,17 +3056,16 @@ extern "C" G__value G__getfunction(char* item, int* known3, int memfunc_flag)
       // --
    }
    //
-   //  Explicit type conversion by searching constructors.
+   //  Check for function-style cast.
    //
-   if (G__TRYNORMAL == memfunc_flag || G__CALLSTATICMEMFUNC == memfunc_flag) {
+   if ((memfunc_flag == G__TRYNORMAL) || (memfunc_flag == G__CALLSTATICMEMFUNC)) {
       int store_var_typeX = G__var_type;
       ::Reflex::Type funcnameTypedef = G__find_typedef(funcname);
       G__var_type = store_var_typeX;
-
       int target = -1;
       if (funcnameTypedef) {
          target = G__get_tagnum(funcnameTypedef);
-         if (-1 != target) {
+         if (target != -1) {
             target = G__get_tagnum(funcnameTypedef);
             strcpy(funcname, G__struct.name[G__get_tagnum(funcnameTypedef)]);
          }
@@ -2995,8 +3076,10 @@ extern "C" G__value G__getfunction(char* item, int* known3, int memfunc_flag)
                G__fundamental_conversion_operator(G__get_type(funcnameTypedef), -1, ::Reflex::Type(), G__get_reftype(funcnameTypedef), 0, &result3)
             ) {
                *known3 = 1;
-               if (oprp) *known3 = G__additional_parenthesis(&result3, &fpara);
-               return(result3);
+               if (oprp) {
+                  *known3 = G__additional_parenthesis(&result3, &fpara);
+               }
+               return result3;
             }
             strcpy(funcname, G__type2string(G__get_type(funcnameTypedef), G__get_tagnum(funcnameTypedef), -1, G__get_reftype(funcnameTypedef), 0));
          }
@@ -3007,47 +3090,49 @@ extern "C" G__value G__getfunction(char* item, int* known3, int memfunc_flag)
       }
       classhash = strlen(funcname);
       int cursor = target;
-      while (target != -1 && cursor == target) {
+      while ((target != -1) && (cursor == target)) {
          // Intentionally loop only once, the loop used to loop over
          // from 0 to G__struct.alltag and exit in one case using
          // 'break', so we will need to shuffle the control flow a bit
          // to remove the while loop
-         if ('e' == G__struct.type[cursor] &&
-               G__value_typenum(fpara.para[0]).RawType().IsEnum()) {
-            return(fpara.para[0]);
+         if ((G__struct.type[cursor] == 'e') && G__value_typenum(fpara.para[0]).RawType().IsEnum()) {
+            return fpara.para[0];
          }
          store_struct_offset = G__store_struct_offset;
          store_tagnum = G__tagnum;
          G__tagnum = G__Dict::GetDict().GetScope(cursor);
-         if (G__CPPLINK != G__struct.iscpplink[G__get_tagnum(G__tagnum)]) {
+         if (G__struct.iscpplink[G__get_tagnum(G__tagnum)] != G__CPPLINK) {
             G__alloc_tempobject(G__get_tagnum(G__tagnum), -1);
-            G__store_struct_offset = (char*)G__p_tempbuf->obj.obj.i;
+            G__store_struct_offset = (char*) G__p_tempbuf->obj.obj.i;
 #ifdef G__ASM
             if (G__asm_noverflow) {
                if (G__throwingexception) {
+                  // --
 #ifdef G__ASM_DBG
                   if (G__asm_dbg) {
                      G__fprinterr(G__serr, "%3x: ALLOCEXCEPTION %d\n", G__asm_cp, G__get_tagnum(G__tagnum));
                   }
-#endif
+#endif // G__ASM_DBG
                   G__asm_inst[G__asm_cp] = G__ALLOCEXCEPTION;
                   G__asm_inst[G__asm_cp+1] = G__get_tagnum(G__tagnum);
                   G__inc_cp_asm(2, 0);
                }
                else {
+                  // --
 #ifdef G__ASM_DBG
                   if (G__asm_dbg) {
                      G__fprinterr(G__serr, "%3x: ALLOCTEMP %d\n", G__asm_cp, G__get_tagnum(G__tagnum));
                      G__fprinterr(G__serr, "%3x: SETTEMP\n", G__asm_cp);
                   }
-#endif
+#endif // G__ASM_DBG
                   G__asm_inst[G__asm_cp] = G__ALLOCTEMP;
                   G__asm_inst[G__asm_cp+1] = G__get_tagnum(G__tagnum);
                   G__asm_inst[G__asm_cp+2] = G__SETTEMP;
                   G__inc_cp_asm(3, 0);
                }
             }
-#endif
+#endif // G__ASM
+            // --
          }
          else {
             G__store_struct_offset = G__PVOID;
@@ -3055,9 +3140,11 @@ extern "C" G__value G__getfunction(char* item, int* known3, int memfunc_flag)
          G__incsetup_memfunc(G__tagnum);
          for (funcmatch = G__EXACT; funcmatch <= G__USERCONV; ++funcmatch) {
             *known3 = G__interpret_func(&result3, funcname, &fpara, hash, G__tagnum, funcmatch, G__TRYCONSTRUCTOR);
-            if (*known3) break;
+            if (*known3) {
+               break;
+            }
          }
-         if (G__CPPLINK == G__struct.iscpplink[G__get_tagnum(G__tagnum)] && !G__throwingexception) {
+         if ((G__struct.iscpplink[G__get_tagnum(G__tagnum)] == G__CPPLINK) && !G__throwingexception) {
             G__store_tempobject(result3);
             if (G__dispsource) {
                G__fprinterr(G__serr, "!!!Create temp object (%s)0x%lx,%d for %s()\n", G__struct.name[G__get_tagnum(G__tagnum)], G__p_tempbuf->obj.obj.i, G__templevel, funcname);
@@ -3066,17 +3153,20 @@ extern "C" G__value G__getfunction(char* item, int* known3, int memfunc_flag)
             if (G__asm_noverflow) {
                // --
 #ifdef G__ASM_DBG
-               if (G__asm_dbg) G__fprinterr(G__serr, "%3x: STORETEMP\n", G__asm_cp);
-#endif
+               if (G__asm_dbg) {
+                  G__fprinterr(G__serr, "%3x: STORETEMP\n", G__asm_cp);
+               }
+#endif // G__ASM_DBG
                G__asm_inst[G__asm_cp] = G__STORETEMP;
                G__inc_cp_asm(1, 0);
             }
-#endif
+#endif // G__ASM
+            // --
          }
          else {
             G__value_typenum(result3) = G__tagnum;
-            result3.obj.i = (long)G__store_struct_offset;
-            result3.ref = (long)G__store_struct_offset;
+            result3.obj.i = (long) G__store_struct_offset;
+            result3.ref = (long) G__store_struct_offset;
          }
          G__tagnum = store_tagnum;
          G__exec_memberfunc = store_exec_memberfunc;
@@ -3084,16 +3174,31 @@ extern "C" G__value G__getfunction(char* item, int* known3, int memfunc_flag)
          G__memberfunc_struct_offset = store_memberfunc_struct_offset;
          G__store_struct_offset = store_struct_offset;
 #ifdef G__ASM
-         if (G__asm_noverflow && (!G__throwingexception || (-1 != G__get_tagnum(G__value_typenum(result3).RawType()) && G__CPPLINK != G__struct.iscpplink[G__get_tagnum(G__value_typenum(result3).RawType())]))) {
+         if (
+            G__asm_noverflow &&
+            (
+               !G__throwingexception ||
+               (
+                  (G__get_tagnum(G__value_typenum(result3).RawType()) != -1) &&
+                  (G__struct.iscpplink[G__get_tagnum(G__value_typenum(result3).RawType())] != G__CPPLINK)
+               )
+            )
+         ) {
             G__asm_inst[G__asm_cp] = G__POPTEMP;
-            if (G__throwingexception) G__asm_inst[G__asm_cp+1] = G__get_tagnum(G__value_typenum(result3));
-            else                     G__asm_inst[G__asm_cp+1] = -1;
+            if (G__throwingexception) {
+               G__asm_inst[G__asm_cp+1] = G__get_tagnum(G__value_typenum(result3));
+            }
+            else {
+               G__asm_inst[G__asm_cp+1] = -1;
+            }
 #ifdef G__ASM_DBG
-            if (G__asm_dbg) G__fprinterr(G__serr, "%3x: POPTEMP %d\n" , G__asm_cp, G__asm_inst[G__asm_cp+1]);
-#endif
+            if (G__asm_dbg) {
+               G__fprinterr(G__serr, "%3x: POPTEMP %d\n" , G__asm_cp, G__asm_inst[G__asm_cp+1]);
+            }
+#endif // G__ASM_DBG
             G__inc_cp_asm(2, 0);
          }
-#endif
+#endif // G__ASM
          if (!*known3) {
             if ((cursor != -1) && (fpara.paran == 1)) {
                ::Reflex::Type type = G__value_typenum(fpara.para[0]);
@@ -3104,13 +3209,13 @@ extern "C" G__value G__getfunction(char* item, int* known3, int memfunc_flag)
                   ::Reflex::Scope store_memberfunc_tagnum = G__memberfunc_tagnum;
                   int store_exec_memberfunc = G__exec_memberfunc;
                   store_tagnum = G__tagnum;
-                  G__inc_cp_asm(-5, 0); /* cancel ALLOCTEMP, SETTEMP, POPTEMP */
+                  G__inc_cp_asm(-5, 0); // cancel ALLOCTEMP, SETTEMP, POPTEMP
                   G__pop_tempobject();
                   G__tagnum = G__value_typenum(fpara.para[0]).RawType();
                   if (!G__tagnum) {
                      G__tagnum = G__value_typenum(fpara.para[0]).DeclaringScope();
                   }
-                  G__store_struct_offset = (char*)fpara.para[0].obj.i;
+                  G__store_struct_offset = (char*) fpara.para[0].obj.i;
 #ifdef G__ASM
                   if (G__asm_noverflow) {
                      G__asm_inst[G__asm_cp] = G__PUSHSTROS;
@@ -3121,9 +3226,10 @@ extern "C" G__value G__getfunction(char* item, int* known3, int memfunc_flag)
                         G__fprinterr(G__serr, "%3x: PUSHSTROS\n", G__asm_cp - 2);
                         G__fprinterr(G__serr, "%3x: SETSTROS\n", G__asm_cp - 1);
                      }
-#endif
+#endif // G__ASM_DBG
+                     // --
                   }
-#endif
+#endif // G__ASM
                   sprintf(funcname, "operator %s", G__fulltagname(cursor, 1));
                   G__hash(funcname, hash, hash_2);
                   G__incsetup_memfunc(G__tagnum);
@@ -3137,11 +3243,13 @@ extern "C" G__value G__getfunction(char* item, int* known3, int memfunc_flag)
                            G__asm_inst[G__asm_cp] = G__POPSTROS;
                            G__inc_cp_asm(1, 0);
 #ifdef G__ASM_DBG
-                           if (G__asm_dbg)
+                           if (G__asm_dbg) {
                               G__fprinterr(G__serr, "%3x: POPSTROS\n", G__asm_cp - 1);
-#endif
+                           }
+#endif // G__ASM_DBG
+                           // --
                         }
-#endif
+#endif // G__ASM
                         break;
                      }
                   }
@@ -3152,7 +3260,7 @@ extern "C" G__value G__getfunction(char* item, int* known3, int memfunc_flag)
                   G__store_struct_offset = store_struct_offset;
                }
             }
-            else if (-1 != cursor && fpara.paran == 1) {
+            else if ((cursor != -1) && (fpara.paran == 1)) {
                G__fprinterr(G__serr, "Error: No matching constructor for explicit conversion %s", item);
                G__genericerror(0);
             }
@@ -3178,10 +3286,15 @@ extern "C" G__value G__getfunction(char* item, int* known3, int memfunc_flag)
          G__exec_memberfunc = store_exec_memberfunc;
          G__memberfunc_tagnum = store_memberfunc_tagnum;
          G__memberfunc_struct_offset = store_memberfunc_struct_offset;
-         if (oprp) *known3 = G__additional_parenthesis(&result3, &fpara);
-         return(result3);
+         if (oprp) {
+            *known3 = G__additional_parenthesis(&result3, &fpara);
+         }
+         return result3;
       }
    }
+   //
+   //  Check for use of operator() on an object of class type.
+   //
    if (G__parenthesisovld(&result3, funcname, &fpara, G__TRYNORMAL)) {
       *known3 = 1;
       if (
@@ -3196,35 +3309,43 @@ extern "C" G__value G__getfunction(char* item, int* known3, int memfunc_flag)
       ) {
          G__getindexedvalue(&result3, fpara.parameter[nindex]);
       }
-      else if (nindex && (
-                  G__value_typenum(result3).RawType().IsClass()
-                  || G__value_typenum(result3).RawType().IsEnum()
-                  || G__value_typenum(result3).RawType().IsUnion()
-               )) {
+      else if (
+         nindex &&
+         (
+            G__value_typenum(result3).RawType().IsClass() ||
+            G__value_typenum(result3).RawType().IsEnum() ||
+            G__value_typenum(result3).RawType().IsUnion()
+         )
+      ) {
          int len;
          strcpy(fpara.parameter[0], fpara.parameter[nindex] + 1);
          len = strlen(fpara.parameter[0]);
-         if (len > 1) fpara.parameter[0][len-1] = 0;
+         if (len > 1) {
+            fpara.parameter[0][len-1] = 0;
+         }
          fpara.para[0] = G__getexpr(fpara.parameter[0]);
          fpara.paran = 1;
-         G__parenthesisovldobj(&result3, &result3, "operator[]"
-                               , &fpara, G__TRYNORMAL);
+         G__parenthesisovldobj(&result3, &result3, "operator[]", &fpara, G__TRYNORMAL);
       }
-      if (oprp) *known3 = G__additional_parenthesis(&result3, &fpara);
-      return(result3);
+      if (oprp) {
+         *known3 = G__additional_parenthesis(&result3, &fpara);
+      }
+      return result3;
    }
    //
-   // pointer to function described like normal function
-   // int (*p2f)(void);  p2f();
+   //  Check for pointer to function used like a normal function call.
    //
-   ::Reflex::Member mem = G__getvarentry(funcname, hash, Reflex::Scope::GlobalScope(), G__p_local);
+   //       int (*p2f)(void);
+   //       p2f();
+   //
+   ::Reflex::Member mem = G__getvarentry(funcname, hash, ::Reflex::Scope::GlobalScope(), G__p_local);
    if (mem) {
       sprintf(result7, "*%s", funcname);
       *known3 = 0;
       pfparam = strchr(item, '(');
       p2ffpara = &fpara;
-      result3 = G__pointer2func((G__value*)NULL, result7, pfparam, known3);
-      p2ffpara = (struct G__param*)NULL;
+      result3 = G__pointer2func(0, result7, pfparam, known3);
+      p2ffpara = 0;
       if (*known3) {
          G__exec_memberfunc = store_exec_memberfunc;
          G__memberfunc_tagnum = store_memberfunc_tagnum;
@@ -3241,18 +3362,26 @@ extern "C" G__value G__getfunction(char* item, int* known3, int memfunc_flag)
          ) {
             G__getindexedvalue(&result3, fpara.parameter[nindex]);
          }
-         if (oprp) *known3 = G__additional_parenthesis(&result3, &fpara);
-         return(result3);
+         if (oprp) {
+            *known3 = G__additional_parenthesis(&result3, &fpara);
+         }
+         return result3;
       }
    }
-   *known3 = 0;
+   //
+   //  Check for a function-style macro invocation.
+   //
+   *known3 = 0; // Flag that no function was called.
 #ifdef G__DUMPFILE
-   if (G__dumpfile != NULL && 0 == G__no_exec_compile) G__dumpspace -= 3;
-#endif
+   if (G__dumpfile && !G__no_exec_compile) {
+      G__dumpspace -= 3;
+   }
+#endif // G__DUMPFILE
    G__exec_memberfunc = store_exec_memberfunc;
    G__memberfunc_tagnum = store_memberfunc_tagnum;
    G__memberfunc_struct_offset = store_memberfunc_struct_offset;
-   if (!G__oprovld) {
+   if (!G__oprovld) { // There were arguments.
+      // Try function-style macro invocation.
       if (G__asm_noverflow && fpara.paran) {
          G__asm_cp = store_cp_asm;
       }
@@ -3272,24 +3401,19 @@ extern "C" G__value G__getfunction(char* item, int* known3, int memfunc_flag)
          ) {
             G__getindexedvalue(&result3, fpara.parameter[nindex]);
          }
-         if (oprp) *known3 = G__additional_parenthesis(&result3, &fpara);
-         return(result3);
+         if (oprp) {
+            *known3 = G__additional_parenthesis(&result3, &fpara);
+         }
+         return result3;
       }
    }
    return G__null;
 }
 
 //______________________________________________________________________________
-typedef struct {
-   struct G__param* libp;
-   int    ip;
-} G__va_list;
-
-//______________________________________________________________________________
 static void G__va_start(G__value ap)
 {
    // --
-#pragma message(FIXME("Check callers of G__va_start - is local only meant to transfer the functable index?!"))
    Reflex::Scope local = G__p_local;
    if (!local) return;
    G__va_list* va = (G__va_list*)ap.ref;
@@ -3324,7 +3448,7 @@ static G__value G__va_arg(G__value ap)
 }
 
 //______________________________________________________________________________
-void G__va_end(G__value ap)
+static void G__va_end(G__value ap)
 {
    G__va_list* va = (G__va_list*) ap.ref;
    if (!va) {
@@ -3338,10 +3462,8 @@ int Cint::Internal::G__special_func(G__value* result7, char* funcname, G__param*
 {
    /*  return 1 if function is executed */
    /*  return 0 if function isn't executed */
-
    *result7 = G__null;
-
-   if ((hash == 656) && (strcmp(funcname, "sizeof") == 0)) {
+   if ((hash == 656) && !strcmp(funcname, "sizeof")) {
       if (libp->paran > 1) {
          G__letint(result7, 'i', G__Lsizeof(G__catparam(libp, libp->paran, ",")));
       }
@@ -3350,27 +3472,26 @@ int Cint::Internal::G__special_func(G__value* result7, char* funcname, G__param*
       }
 #ifdef G__ASM
       if (G__asm_noverflow) {
+         // --
 #ifdef G__ASM_DBG
-         if (G__asm_dbg) G__fprinterr(G__serr, "%3x,%3x: LD 0x%lx from %x  %s:%d\n", G__asm_cp, G__asm_dt, G__int(*result7), G__asm_dt, __FILE__, __LINE__);
-#endif
+         if (G__asm_dbg) {
+            G__fprinterr(G__serr, "%3x,%3x: LD 0x%lx from %x  %s:%d\n", G__asm_cp, G__asm_dt, G__int(*result7), G__asm_dt, __FILE__, __LINE__);
+         }
+#endif // G__ASM_DBG
          G__asm_inst[G__asm_cp] = G__LD;
          G__asm_inst[G__asm_cp+1] = G__asm_dt;
          G__asm_stack[G__asm_dt] = *result7;
          G__inc_cp_asm(2, 1);
       }
 #endif
-      return(1);
+      return 1;
    }
-
-   if ((hash == 860) && (strcmp(funcname, "offsetof") == 0)) {
+   if ((hash == 860) && !strcmp(funcname, "offsetof")) {
       if (libp->paran > 2) {
-         G__letint(result7, 'i'
-                   , G__Loffsetof(G__catparam(libp, libp->paran - 1, ",")
-                                  , libp->parameter[libp->paran-1]));
+         G__letint(result7, 'i', G__Loffsetof(G__catparam(libp, libp->paran - 1, ","), libp->parameter[libp->paran-1]));
       }
       else {
-         G__letint(result7, 'i'
-                   , G__Loffsetof(libp->parameter[0], libp->parameter[1]));
+         G__letint(result7, 'i', G__Loffsetof(libp->parameter[0], libp->parameter[1]));
       }
 #ifdef G__ASM
       if (G__asm_noverflow) {
@@ -3386,11 +3507,11 @@ int Cint::Internal::G__special_func(G__value* result7, char* funcname, G__param*
          G__inc_cp_asm(2, 1);
       }
 #endif // G__ASM
-      return(1);
+      return 1;
    }
-
 #ifdef G__TYPEINFO
-   if ((hash == 655) && (strcmp(funcname, "typeid") == 0)) {
+   if ((hash == 655) && !strcmp(funcname, "typeid")) {
+      // --
 #ifdef G__ASM
       if (G__asm_noverflow) {
          G__abortbytecode();
@@ -3399,31 +3520,34 @@ int Cint::Internal::G__special_func(G__value* result7, char* funcname, G__param*
             G__fprinterr(G__serr, "COMPILE ABORT function name buffer overflow");
             G__printlinenum();
          }
-#endif
+#endif // G__ASM_DBG
+         // --
       }
-#endif /* G__ASM */
+#endif // G__ASM
       G__value_typenum(*result7) = ::Reflex::Type();
       if (G__no_exec_compile) {
          G__value_typenum(*result7) = ::Reflex::Type::ByName("type_info");
-         return(1);
+         return 1;
       }
       if (libp->paran > 1) {
-         G__letint(result7, 'u', (long)G__typeid(G__catparam(libp, libp->paran, ",")));
+         G__letint(result7, 'u', (long) G__typeid(G__catparam(libp, libp->paran, ",")));
       }
       else {
-         G__letint(result7, 'u', (long)G__typeid(libp->parameter[0]));
+         G__letint(result7, 'u', (long) G__typeid(libp->parameter[0]));
       }
       result7->ref = result7->obj.i;
       G__value_typenum(*result7) = G__Dict::GetDict().GetType(*(int*)(result7->ref));
-      return(1);
+      return 1;
    }
 #endif
-
-
-   if (hash == 624 && strcmp(funcname, "va_arg") == 0) {
+   if (hash == 624 && !strcmp(funcname, "va_arg")) {
       G__value x;
-      if (!G__get_type(libp->para[0])) x = G__getexpr(libp->parameter[0]);
-      else                    x = libp->para[0];
+      if (!G__get_type(libp->para[0])) {
+         x = G__getexpr(libp->parameter[0]);
+      }
+      else {
+         x = libp->para[0];
+      }
 #ifdef G__ASM
       if (G__asm_noverflow) {
          // -- We are generating bytecode.
@@ -3441,8 +3565,8 @@ int Cint::Internal::G__special_func(G__value* result7, char* funcname, G__param*
          }
 #endif // G__ASM_DBG
          G__asm_inst[G__asm_cp] = G__LD_FUNC;
-         G__asm_inst[G__asm_cp+1] = 1 + 10 * hash;
-         G__asm_inst[G__asm_cp+2] = (long)(&G__asm_name[G__asm_name_p]);
+         G__asm_inst[G__asm_cp+1] = 1 + (10 * hash);
+         G__asm_inst[G__asm_cp+2] = (long) &G__asm_name[G__asm_name_p];
          G__asm_inst[G__asm_cp+3] = 1;
          G__asm_inst[G__asm_cp+4] = (long) G__special_func;
          G__asm_inst[G__asm_cp+5] = 0;
@@ -3484,9 +3608,6 @@ static int G__defined(char* tname)
    if (-1 != tagnum) return 1;
    return 0;
 }
-
-extern "C" int optind;
-extern "C" char* optarg;
 
 //______________________________________________________________________________
 int Cint::Internal::G__library_func(G__value* result7, char* funcname, G__param* libp, int hash)
@@ -4911,13 +5032,6 @@ static void G__printf_error()
 }
 
 //______________________________________________________________________________
-#define G__PRINTF_ERROR(COND) \
-   if (COND) { \
-      G__printf_error(); \
-      return result; \
-   }
-
-//______________________________________________________________________________
 static void G__sprintformatll(char* result, const char* fmt, void* p, char* buf)
 {
    G__int64 *pll = (G__int64*)p;
@@ -4942,7 +5056,7 @@ static void G__sprintformatld(char* result, const char* fmt, void* p, char* buf)
 }
 
 //______________________________________________________________________________
-char *Cint::Internal::G__charformatter(int ifmt, G__param* libp, char* result)
+char* Cint::Internal::G__charformatter(int ifmt, G__param* libp, char* result)
 {
    int ipara, ichar, lenfmt;
    int ionefmt = 0, fmtflag = 0;
@@ -4970,8 +5084,10 @@ char *Cint::Internal::G__charformatter(int ifmt, G__param* libp, char* result)
             if (fmtflag == 1) {
                onefmt[ionefmt] = '\0';
                if (libp->para[ipara].obj.i) {
-                  G__PRINTF_ERROR(strlen(onefmt) + strlen(result) +
-                                  strlen((char*)G__int(libp->para[usedpara])) >= G__LONGLINE)
+                  if (strlen(onefmt) + strlen(result) + strlen((char*)G__int(libp->para[usedpara])) >= G__LONGLINE) {
+                     G__printf_error();
+                     return result;
+                  }
                   sprintf(fmt, "%%s%s", onefmt);
                   sprintf(onefmt, fmt, result , (char *)G__int(libp->para[usedpara]));
                   strcpy(result, onefmt);

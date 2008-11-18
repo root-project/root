@@ -94,14 +94,6 @@ extern "C" void G__loadlonglong(int* ptag, int* ptype, int which)
 
 /******************************************************************
 * int G__sizeof(G__value *object)
-*
-* Called by
-*   G__bstore()    pointer operation
-*   G__bstore()
-*   G__bstore()
-*   G__bstore()
-*   G__bstore()
-*
 ******************************************************************/
 extern "C" int G__sizeof(G__value *object)
 {

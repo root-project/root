@@ -506,7 +506,7 @@ G__value Cint::Internal::G__new_operator(char* expression)
          G__display_purevirtualfunc(G__get_tagnum(G__tagnum));
       }
       if (G__dispsource) {
-         G__fprinterr(G__serr, "\n!!!Calling constructor 0x%lx.%s for new %s", G__store_struct_offset, type, type);
+         G__fprinterr(G__serr, "\n!!!Calling constructor for new %s  addr: 0x%lx  %s:%d", type, G__store_struct_offset, __FILE__, __LINE__);
       }
       if (G__struct.iscpplink[G__get_tagnum(G__tagnum)] == G__CPPLINK) { // This is a pre-compiled class.
          char* store_globalvarpointer = G__globalvarpointer;

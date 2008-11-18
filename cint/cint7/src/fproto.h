@@ -73,7 +73,7 @@ int G__matchregex(char *pattern,char *string);
 G__value G__castvalue_bc(char* casttype, G__value result3, int bc);
 G__value G__castvalue(char* casttype, G__value result3);
 void G__this_adjustment(const Reflex::Member ifunc);
-void G__asm_cast(G__value *buf, const Reflex::Type& totype);
+void G__asm_cast(G__value* buf, const Reflex::Type totype);
   /* void G__setdebugcond(void); */
 int G__findposition(char *string,struct G__input_file view,int *pline,int *pfnum);
 int G__findfuncposition(char *func,int *pline,int *pfnum);
@@ -148,9 +148,7 @@ int G__missingsemicolumn(char *item);
 G__value G__calc_internal(char *exprwithspace);
 G__value G__getexpr(char *expression);
 G__value G__getprod(char *expression1);
-G__value G__getpower(char *expression2);
 G__value G__getitem(char *item);
-int G__getoperator(int newoperator,int oldoperator);
 int G__testandor(int lresult,char *rexpression,int operator2);
 int G__test(char *expression2);
 int G__btest(int operator2,G__value lresult,G__value rresult);
@@ -182,15 +180,10 @@ void G__make_ifunctable(char *funcheader);
 int G__interpret_func(G__value *result7,char *funcname,struct G__param *libp,int hash,const ::Reflex::Scope p_ifunc,int funcmatch,int memfunc_flag);
 int G__interpret_func(G__value *result7,struct G__param *libp,int hash,const ::Reflex::Member func,int funcmatch,int memfunc_flag);
 void G__rate_parameter_match(G__param* libp, const ::Reflex::Member func, G__funclist* funclist, int recursive);
-int G__function_signature_match(const Reflex::Member& func1
-                               ,const Reflex::Member& func2
-                               ,bool check_return_type
-                               ,int /* matchmode */
-                               ,int *nref);
-::Reflex::Member G__ifunc_exist(::Reflex::Member ifunc_now
-                                ,const ::Reflex::Scope &ifunc
-                                ,bool check_return_type);
+int G__function_signature_match(const Reflex::Member func1, const Reflex::Member func2, bool check_return_type, int /*matchmode*/,int* nref);
+::Reflex::Member G__ifunc_exist(::Reflex::Member ifunc_now, const ::Reflex::Scope ifunc, bool check_return_type);
 ::Reflex::Member G__ifunc_ambiguous(const ::Reflex::Member &ifunc_now,const ::Reflex::Scope &ifunc,const ::Reflex::Type &derivedtagnum);
+int G__method_inbase(const Reflex::Member mbr);
 void G__inheritclass(int to_tagnum,int from_tagnum,char baseaccess);
 int G__baseconstructorwp(void);
 int G__baseconstructor(int n,struct G__baseparam *pbaseparam);
@@ -449,7 +442,7 @@ void G__freedeftemplateclass(G__Definedtemplateclass* deftmpclass);
 char* G__gettemplatearg(int n, G__Templatearg* def_para);
 void G__freetemplatefunc(G__Definetemplatefunc* deftmpfunc);
 struct G__funclist* G__add_templatefunc(char* funcnamein, G__param* libp, int hash, G__funclist* funclist, const ::Reflex::Scope p_ifunc, int isrecursive);
-struct G__funclist* G__funclist_add(struct G__funclist* last, const ::Reflex::Member ifunc, int rate);
+struct G__funclist* G__funclist_add(struct G__funclist* last, const ::Reflex::Member ifunc, int ifn, int rate);
 void G__funclist_delete(struct G__funclist* body);
 int G__templatefunc(G__value* result, char* funcname, G__param* libp, int hash, int funcmatch);
 void G__define_type(void);
@@ -627,6 +620,7 @@ void G__clear_errordictpos();
 void G__setcopyflag(int flag);
 
 void G__get_cint5_type_tuple(const ::Reflex::Type in_type, char* out_type, int* out_tagnum, int* out_typenum, int* out_reftype, int* out_constvar);
+void G__get_cint5_type_tuple_long(const ::Reflex::Type in_type, long* out_type, long* out_tagnum, long* out_typenum, long* out_reftype, long* out_constvar);
 int G__get_cint5_typenum(const ::Reflex::Type in_type);
 int G__get_type(const ::Reflex::Type in);
 int G__get_type(const G__value in);
@@ -641,7 +635,6 @@ int G__get_nindex(const ::Reflex::Type in);
 std::vector<int> G__get_index(const ::Reflex::Type in);
 int G__get_varlabel(const ::Reflex::Type in, int idx);
 int G__get_varlabel(const ::Reflex::Member in, int idx);
-bool G__is_localstaticbody(const Reflex::Member var);
 int G__get_paran(const Reflex::Member var);
 
 void G__get_stack_varname(std::string &output,const char *varname,const ::Reflex::Member &m,int tagnum);
@@ -666,6 +659,7 @@ int G__sizeof_deref(const G__value*);
                                     ,bool ispointer
                                     ,int reftype,int isconst
                                     ,int nindex, int *index);
+::Reflex::Type G__cint5_tuple_to_type(int type, int tagnum, int typenum, int reftype, int isconst);
 ::Reflex::Member G__update_array_dimension(::Reflex::Member member, size_t nelem );
 ::Reflex::Type G__get_from_type(int type, int createpointer, int isconst = 0);
 ::Reflex::Type G__find_type(const char *type_name, int errorflag, int templateflag);
@@ -676,23 +670,12 @@ int G__sizeof_deref(const G__value*);
                                         int isconst, int globalcomp,
                                         int parent_tagnum,
                                         bool pointer_fix);
-::Reflex::Member G__find_variable(const char *varname,int varhash
-                                  ,const ::Reflex::Scope &varlocal
-                                  ,const ::Reflex::Scope &varglobal
-                                  ,char **pG__struct_offset
-                                  ,char **pstore_struct_offset
-                                  ,int *pig15
-                                  ,int isdecl);
-::Reflex::Type G__get_Type(int type, int tagnum, int typenum, int isconst);
+::Reflex::Member G__find_variable(const char* varname, int varhash, const ::Reflex::Scope varlocal, const ::Reflex::Scope varglobal, char** pG__struct_offset, char** pstore_struct_offset, int* pig15, int isdecl);
 
 bool G__test_access(const ::Reflex::Member var, int access);
 bool G__is_cppmacro(const ::Reflex::Member var);
 bool G__filescopeaccess(int filenum, int statictype);
-bool G__test_static(const ::Reflex::Member var, int what_static, int filenum = -1);
-bool G__test_const(const ::Reflex::Member var, int what_const);
-bool G__test_const(const ::Reflex::Type type, int what_const);
 int G__get_access(const ::Reflex::Member mem);
-int G__get_static(const ::Reflex::Member mem);
 char*& G__get_offset(const ::Reflex::Member var);
 Reflex::Type G__replace_rawtype(const Reflex::Type target, const Reflex::Type raw);
 Reflex::Type G__apply_const_to_typedef(const Reflex::Type target);

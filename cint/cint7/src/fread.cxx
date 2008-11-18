@@ -2838,8 +2838,7 @@ int Cint::Internal::G__fgetc()
                !G__disp_mask &&
                G__srcfile[G__ifile.filenum].breakpoint &&
                (G__ifile.line_number < G__srcfile[G__ifile.filenum].maxline) &&
-               (G__srcfile[G__ifile.filenum].breakpoint[G__ifile.line_number] |= !G__no_exec) & G__TESTBREAK &&
-               !G__cintv6
+               (G__srcfile[G__ifile.filenum].breakpoint[G__ifile.line_number] |= !G__no_exec) & G__TESTBREAK
             ) {
                G__BREAKfgetc();
             }

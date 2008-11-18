@@ -504,14 +504,14 @@ static int G__setvariablecomment(char* new_name)
    }
    std::string name(new_name);
    //--
-   int pos = name.find('[');
+   std::string::size_type pos = name.find('[');
    if (pos != std::string::npos) {
       name.erase(pos, name.length());
    }
    // Check to see if we were passed a qualified name or name.
    int nest = 0;
    int scope = 0;
-   for (unsigned int j = 0, nest = 0, scope = 0; j < name.length(); ++j) {
+   for (unsigned int j = 0; j < name.length(); ++j) {
       switch (name[j]) {
          case '<':
             ++nest;
@@ -901,13 +901,12 @@ static int G__initary(char* new_name)
             // -- We found the special name variable, copy its array bounds to this variable.
             // FIXME: Do we need to copy any properties here?
             G__RflxVarProperties prop = *G__get_properties(varstatic);
+            prop.statictype = G__LOCALSTATIC; // new mbr will be static
+            prop.addressOffset = G__get_offset(var); // new mbr has same storage as as old mbr
             ::Reflex::Scope varscope = var.DeclaringScope();
             std::string varname = var.Name();
-
             varscope.RemoveDataMember(var);
-            G__add_scopemember(varscope, varname.c_str(), varstatic.TypeOf(), 0, varstatic.Offset(), 
-                               G__get_offset(var), G__PUBLIC, G__LOCALSTATIC);
-            prop.statictype = 1;
+            G__add_scopemember(varscope, varname.c_str(), varstatic.TypeOf(), 0, varstatic.Offset(), G__get_offset(var), G__PUBLIC, G__LOCALSTATIC);
             Reflex::Member newmember = varscope.DataMemberByName(varname);
             *G__get_properties(newmember) = prop;
          }
@@ -1474,7 +1473,7 @@ static void G__initstructary(char* new_name, int tagnum)
          G__globalvarpointer = adr + (i * G__struct.size[tagnum]);
       }
       int known = 0;
-      reg = G__getfunction(buf, &known, G__CALLCONSTRUCTOR);
+      G__getfunction(buf, &known, G__CALLCONSTRUCTOR);
       ++i;
    }
    while (cin != '}');
@@ -2763,7 +2762,7 @@ void Cint::Internal::G__define_var(int tagnum, ::Reflex::Type typenum)
                }
                // Perform the initialization.
                G__var_type = var_type;
-               G__letvariable(new_name, reg,::Reflex::Scope::GlobalScope(), G__p_local);
+               G__letvariable(new_name, reg, ::Reflex::Scope::GlobalScope(), G__p_local);
                // Continue scanning.
                goto readnext;
             }
@@ -2824,7 +2823,10 @@ void Cint::Internal::G__define_var(int tagnum, ::Reflex::Type typenum)
             G__prerun = 0;
             if (G__store_struct_offset) {
                // -- We have allocated memory for the object.
-               if (!temp[0] && G__tagnum && !G__tagnum.IsTopScope()) {
+               if (
+                  !temp[0] && // No initializer, and
+                  (G__get_tagnum(G__tagnum) != -1) // var is of class type.
+               ) {
                   // -- We need to call the default constructor.
                   //
                   // We have:
@@ -2833,7 +2835,7 @@ void Cint::Internal::G__define_var(int tagnum, ::Reflex::Type typenum)
                   //
                   sprintf(temp, "%s()", G__struct.name[G__get_tagnum(G__tagnum)]);
                   if (G__dispsource) {
-                     G__fprinterr(G__serr, "\n!!!Calling default constructor 0x%lx.%s for declaration of %s", G__store_struct_offset, temp, new_name);
+                     G__fprinterr(G__serr, "\n!!!Calling default constructor for declaration of '%s'  addr: 0x%lx  funcname: '%s'  %s:%d", new_name, G__store_struct_offset, temp, __FILE__, __LINE__);
                   }
                   G__decl = 0;
                   if ((index = strchr(new_name, '['))) {
@@ -3218,7 +3220,6 @@ void Cint::Internal::G__define_var(int tagnum, ::Reflex::Type typenum)
                         else {
                            G__StrBuf tttt_sb(G__ONELINE);
                            char *tttt = tttt_sb;
-#define G__OLDIMPLEMENTATION1780 // FIXME: Should this be removed?
                            G__valuemonitor(reg, tttt);
                            sprintf(temp, "%s(%s)", G__struct.name[tagnum], tttt);
                         }

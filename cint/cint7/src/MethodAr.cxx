@@ -7,8 +7,8 @@
  * Description:
  *  Extended Run Time Type Identification API
  ************************************************************************
- * Author                  Masaharu Goto 
- * Copyright(c) 1995~1999  Masaharu Goto 
+ * Author                  Masaharu Goto
+ * Copyright(c) 1995~1999  Masaharu Goto
  *
  * For the licensing terms see the file COPYING
  *
@@ -19,95 +19,132 @@
 #include "fproto.h"
 
 using namespace Cint::Internal;
+using namespace std;
 
-/*********************************************************************
-* class G__MethodArgInfo
-*
-* 
-*********************************************************************/
-///////////////////////////////////////////////////////////////////////////
-void Cint::G__MethodArgInfo::Init(class G__MethodInfo &a)
+//______________________________________________________________________________
+Cint::G__MethodArgInfo::~G__MethodArgInfo()
 {
-  if(a.IsValid()) {
-    belongingmethod = &a;
-    argn = -1;
-    m_name = "";
-  }
-  else {
-    belongingmethod=(G__MethodInfo*)NULL;
-  }
 }
-///////////////////////////////////////////////////////////////////////////
+
+//______________________________________________________________________________
+Cint::G__MethodArgInfo::G__MethodArgInfo() : argn(0), belongingmethod(0), type()
+{
+}
+
+//______________________________________________________________________________
+Cint::G__MethodArgInfo::G__MethodArgInfo(G__MethodInfo& a) : argn(0), belongingmethod(0), type()
+{
+   Init(a);
+}
+
+//______________________________________________________________________________
+void Cint::G__MethodArgInfo::Init(G__MethodInfo &a)
+{
+   belongingmethod = 0;
+   if (a.IsValid()) {
+      belongingmethod = &a;
+      argn = -1;
+   }
+}
+
+//______________________________________________________________________________
+Cint::G__MethodArgInfo::G__MethodArgInfo(const G__MethodArgInfo& mai) : argn(mai.argn), belongingmethod(mai.belongingmethod), type(mai.type)
+{
+}
+
+//______________________________________________________________________________
+G__MethodArgInfo& Cint::G__MethodArgInfo::operator=(const G__MethodArgInfo& mai)
+{
+   if (this != &mai) {
+      argn = mai.argn;
+      belongingmethod = mai.belongingmethod;
+      type = mai.type;
+   }
+   return *this;
+}
+
+//______________________________________________________________________________
 const char* Cint::G__MethodArgInfo::Name()
 {
-   if(IsValid()) {
-      if (m_name.length()==0) {
-         m_name = belongingmethod->fFunc.FunctionParameterNameAt(argn).c_str();
-      }
-      return m_name.c_str();
+   if (!IsValid()) {
+      return 0;
    }
-   else {
-      return((char*)NULL);
-   }
+   // TODO: Remove use of friendship.
+   return belongingmethod->fFunc.FunctionParameterNameAt(argn).c_str();
 }
-///////////////////////////////////////////////////////////////////////////
+
+//______________________________________________________________________________
+G__TypeInfo* Cint::G__MethodArgInfo::Type()
+{
+   return &type;
+}
+
+//______________________________________________________________________________
 long Cint::G__MethodArgInfo::Property()
 {
-   if(IsValid()) {
-      long property=0;
-      ::Reflex::Member func =  belongingmethod->fFunc;
-      if(isupper(G__get_type(func.TypeOf().FunctionParameterAt(argn)))) 
-         property|=G__BIT_ISPOINTER;
-      if(func.FunctionParameterDefaultAt(argn).size()) 
-         property|=G__BIT_ISDEFAULT;
-      if(func.TypeOf().FunctionParameterAt(argn).FinalType().IsReference()) 
-         property|=G__BIT_ISREFERENCE;
-      if(G__test_const(func.TypeOf().FunctionParameterAt(argn),G__CONSTVAR))
-         property|=G__BIT_ISCONSTANT;
-      if(G__test_const(func.TypeOf().FunctionParameterAt(argn),G__PCONSTVAR)) 
-         property|=G__BIT_ISPCONSTANT;
-      return(property);
+   if (!IsValid()) {
+      return 0L;
    }
-   else {
-      return(0);
+   long result = 0L;
+   // TODO: Remove use of friendship.
+   ::Reflex::Member func = belongingmethod->fFunc;
+   ::Reflex::Type param_type = func.TypeOf().FunctionParameterAt(argn);
+   if (isupper(G__get_type(param_type))) {
+      result |= G__BIT_ISPOINTER;
    }
+   if (func.FunctionParameterDefaultAt(argn).size()) {
+      result |= G__BIT_ISDEFAULT;
+   }
+   if (param_type.FinalType().IsReference()) {
+      result |= G__BIT_ISREFERENCE;
+   }
+   if (G__get_isconst(param_type) & G__CONSTVAR) {
+      result |= G__BIT_ISCONSTANT;
+   }
+   if (G__get_isconst(param_type) & G__PCONSTVAR) {
+      result |= G__BIT_ISPCONSTANT;
+   }
+   return result;
 }
-///////////////////////////////////////////////////////////////////////////
+
+//______________________________________________________________________________
 const char* Cint::G__MethodArgInfo::DefaultValue()
 {
-  if(IsValid()) {
-    return(belongingmethod->fFunc.FunctionParameterDefaultAt(argn).c_str()); 
-  }
-  else {
-    return((char*)NULL);
-  }
+   if (!IsValid()) {
+      return 0;
+   }
+   // TODO: Remove use of friendship.
+   return belongingmethod->fFunc.FunctionParameterDefaultAt(argn).c_str();
 }
-///////////////////////////////////////////////////////////////////////////
+
+//______________________________________________________________________________
+G__MethodInfo* Cint::G__MethodArgInfo::ArgOf()
+{
+   return belongingmethod;
+}
+
+//______________________________________________________________________________
 int Cint::G__MethodArgInfo::IsValid()
 {
-  if(belongingmethod && belongingmethod->IsValid()) {
-    if(0<=argn&&argn<belongingmethod->NArg()) {
-      return(1);
-    }
-    else {
-      return(0);
-    }
-  }
-  else {
-    return(0);
-  }
+   if (belongingmethod && belongingmethod->IsValid()) {
+      if ((argn > -1) && (argn < belongingmethod->NArg())) {
+         return 1;
+      }
+   }
+   return 0;
 }
-///////////////////////////////////////////////////////////////////////////
+
+//______________________________________________________________________________
 int Cint::G__MethodArgInfo::Next()
 {
-  ++argn;
-  m_name = "";
-  if(IsValid()) {
-    type.Init( belongingmethod->fFunc.TypeOf().FunctionParameterAt(argn) );
-    return(1);
-  }
-  else {
-    return(0);
-  }
+   ++argn;
+   if (!IsValid()) {
+      return 0;
+   }
+   // TODO: Remove use of friendship.
+   ::Reflex::Type ty = belongingmethod->fFunc.TypeOf().FunctionParameterAt(argn);
+   G__get_cint5_type_tuple_long(ty, &type.fType, &type.fTagnum, &type.fTypenum, &type.fReftype, &type.fIsconst);
+   type.fClassProperty = 0;
+   return 1;
 }
-///////////////////////////////////////////////////////////////////////////
+

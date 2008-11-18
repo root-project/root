@@ -26,172 +26,164 @@ char* Cint::Internal::G__valuemonitor(G__value buf, char* temp)
 {
    G__StrBuf temp2_sb(G__ONELINE);
    char *temp2 = temp2_sb;
-   if (G__value_typenum(buf).IsTypedef()) {
-      switch (G__get_type(G__value_typenum(buf))) {
+   char type = 0;
+   int tagnum = -1;
+   int typenum = -1;
+   int reftype = 0;
+   int isconst = 0;
+   G__get_cint5_type_tuple(G__value_typenum(buf), &type, &tagnum, &typenum, &reftype, &isconst);
+   if (typenum != -1) {
+      switch (type) {
          case 'd':
          case 'f':
-            /* typedef can be local to a class */
-            if (buf.obj.d < 0.0)
-               sprintf(temp, "(%s)(%.17e)", G__value_typenum(buf).Name(::Reflex::SCOPED).c_str()
-                       , G__convertT<double>(&buf));
-            else
-               sprintf(temp, "(%s)%.17e", G__value_typenum(buf).Name(::Reflex::SCOPED).c_str()
-                       , G__convertT<double>(&buf));
+            // typedef can be local to a class
+            if (buf.obj.d < 0.0) {
+               sprintf(temp, "(%s)(%.17e)", G__type2string(type, tagnum, typenum, 0, 0), G__convertT<double>(&buf));
+            }
+            else {
+               sprintf(temp, "(%s)%.17e", G__type2string(type, tagnum, typenum, 0, 0), G__convertT<double>(&buf));
+            }
             break;
          case 'b':
-            if (G__in_pause)
+            if (G__in_pause) {
                sprintf(temp, "(unsigned char)%u", G__convertT<unsigned char>(&buf));
-            else
+            }
+            else {
                sprintf(temp, "(unsignedchar)%u", G__convertT<unsigned char>(&buf));
+            }
             break;
          case 'r':
-            if (G__in_pause)
+            if (G__in_pause) {
                sprintf(temp, "(unsigned short)%u", G__convertT<unsigned short>(&buf));
-            else
+            }
+            else {
                sprintf(temp, "(unsignedshort)%u", G__convertT<unsigned short>(&buf));
+            }
             break;
          case 'h':
-            if (G__in_pause)
+            if (G__in_pause) {
                sprintf(temp, "(unsigned int)%u", G__convertT<unsigned int>(&buf));
-            else
+            }
+            else {
                sprintf(temp, "(unsignedint)%u", G__convertT<unsigned int>(&buf));
+            }
             break;
          case 'k':
-            if (G__in_pause)
+            if (G__in_pause) {
                sprintf(temp, "(unsigned long)%lu", G__convertT<unsigned long>(&buf));
-            else
-               sprintf(temp, "(unsignedlong)%lu,%#08lX", G__convertT<unsigned long>(&buf), G__convertT<unsigned long>(&buf));
+            }
+            else {
+               sprintf(temp, "(unsignedlong)%lu", G__convertT<unsigned long>(&buf));
+            }
             break;
          default:
-            if (islower(G__get_type(G__value_typenum(buf)))) {
-               if ('u' == G__get_type(G__value_typenum(buf)) && G__value_typenum(buf) &&
-                     (G__value_typenum(buf).IsClass() || G__value_typenum(buf).IsStruct())) {
-                  ::Reflex::Type type = G__value_typenum(buf);
-                  if (type.Name() == "G__longlong" ||
-                        type.Name() == "G__ulonglong" ||
-                        type.Name() == "G__longdouble") {
+            if (islower(type)) {
+               if ((type == 'u') && (tagnum != -1) && (G__value_typenum(buf).RawType().IsClass())) {
+                  ::Reflex::Type ty = G__value_typenum(buf).RawType();
+                  if (
+                     (ty.Name() == "G__longlong") ||
+                     (ty.Name() == "G__ulonglong") ||
+                     (ty.Name() == "G__longdouble")
+                  ) {
                      if (G__in_pause) {
                         char llbuf[100];
-                        sprintf(temp, "(%s)", type.Name(::Reflex::SCOPED).c_str());
-                        if (type.RawType().Name() == "G__longlong") {
-                           sprintf(llbuf
-                                   , "G__printformatll((char*)(%ld),\"%%lld\",(void*)(%ld))"
-                                   , (long)llbuf, buf.obj.i);
+                        sprintf(temp, "(%s)", G__type2string(type, tagnum, typenum, reftype, 0));
+                        if (ty.Name() == "G__longlong") {
+                           sprintf(llbuf, "G__printformatll((char*)(%ld),\"%%lld\",(void*)(%ld))", (long) llbuf, buf.obj.i);
                            G__getitem(llbuf);
                            strcat(temp, llbuf);
                         }
-                        else if (type.RawType().Name() == "G__ulonglong") {
-                           sprintf(llbuf
-                                   , "G__printformatull((char*)(%ld),\"%%llu\",(void*)(%ld))"
-                                   , (long)llbuf, buf.obj.i);
+                        else if (ty.Name() == "G__ulonglong") {
+                           sprintf(llbuf, "G__printformatull((char*)(%ld),\"%%llu\",(void*)(%ld))", (long) llbuf, buf.obj.i);
                            G__getitem(llbuf);
                            strcat(temp, llbuf);
                         }
-                        else if (type.RawType().Name() == "G__longdouble") {
-                           sprintf(llbuf
-                                   , "G__printformatld((char*)(%ld),\"%%LG\",(void*)(%ld))"
-                                   , (long)llbuf, buf.obj.i);
+                        else if (ty.Name() == "G__longdouble") {
+                           sprintf(llbuf, "G__printformatld((char*)(%ld),\"%%LG\",(void*)(%ld))", (long) llbuf, buf.obj.i);
                            G__getitem(llbuf);
                            strcat(temp, llbuf);
                         }
                      }
-                     else
+                     else {
                         G__setiparseobject(&buf, temp);
+                     }
                   }
                   else {
-                     sprintf(temp, "(class %s)%ld", type.Name(::Reflex::SCOPED).c_str(),buf.obj.i);
+                     sprintf(temp, "(class %s)%ld", G__type2string(type, tagnum, typenum, reftype, 0), buf.obj.i);
                   }
                }
-               else
-#if defined(G__WIN32)
-                  if (G__get_type(G__value_typenum(buf)) == 'n' && buf.obj.ll < 0)
-                     sprintf(temp, "(%s)(%I64d)"
-                             , G__type2string(G__get_type(G__value_typenum(buf)) , G__get_tagnum(G__value_typenum(buf))
-                                              , G__get_typenum(G__value_typenum(buf))
-                                              , 0, 0)
-                             , buf.obj.ll);
-                  else if (G__get_type(G__value_typenum(buf)) == 'm' || G__get_type(G__value_typenum(buf)) == 'n')
-                     sprintf(temp, "(%s)%I64u"
-                             , G__type2string(G__get_type(G__value_typenum(buf)) , G__get_tagnum(G__value_typenum(buf))
-                                              , G__get_typenum(G__value_typenum(buf))
-                                              , 0, 0)
-                             , buf.obj.ull);
-
-                  else
-#else
-                  if (G__get_type(G__value_typenum(buf)) == 'n' && buf.obj.ll < 0)
-                     sprintf(temp, "(%s)(%lld)"
-                             , G__type2string(G__get_type(G__value_typenum(buf)) , G__get_tagnum(G__value_typenum(buf))
-                                              , G__get_typenum(G__value_typenum(buf))
-                                              , 0, 0)
-                             , buf.obj.ll);
-                  else if (G__get_type(G__value_typenum(buf)) == 'm' || G__get_type(G__value_typenum(buf)) == 'n')
-                     sprintf(temp, "(%s)%llu"
-                             , G__type2string(G__get_type(G__value_typenum(buf)) , G__get_tagnum(G__value_typenum(buf))
-                                              , G__get_typenum(G__value_typenum(buf))
-                                              , 0, 0)
-                             , buf.obj.ull);
-
-                  else
-#endif
-                     if (buf.obj.i < 0)
-                        sprintf(temp, "(%s)(%ld)"
-                                , G__type2string(G__get_type(G__value_typenum(buf)) , G__get_tagnum(G__value_typenum(buf))
-                                                 , G__get_typenum(G__value_typenum(buf))
-                                                 , G__get_reftype(G__value_typenum(buf)), 0)
-                                , buf.obj.i);
-                     else
-                        sprintf(temp, "(%s)%ld"
-                                , G__type2string(G__get_type(G__value_typenum(buf)) , G__get_tagnum(G__value_typenum(buf))
-                                                 , G__get_typenum(G__value_typenum(buf))
-                                                 , G__get_reftype(G__value_typenum(buf)), 0)
-                                , buf.obj.i);
+               else {
+                  if ((type == 'n') && (buf.obj.ll < 0)) {
+                     // --
+#ifdef G__WIN32
+                     sprintf(temp, "(%s)(%I64d)", G__type2string(type, tagnum, typenum, 0, 0), buf.obj.ll);
+#else // G__WIN32
+                     sprintf(temp, "(%s)(%lld)",  G__type2string(type, tagnum, typenum, 0, 0), buf.obj.ll);
+#endif // G__WIN32
+                     // --
+                  }
+                  else if ((type == 'm') || (type == 'n')) {
+                     // --
+#ifdef G__WIN32
+                     sprintf(temp, "(%s)%I64u", G__type2string(type, tagnum, typenum, 0, 0), buf.obj.ull);
+#else // G__WIN32
+                     sprintf(temp, "(%s)%llu",  G__type2string(type, tagnum, typenum, 0, 0), buf.obj.ull);
+#endif // G__WIN32
+                     // --
+                  }
+                  else {
+                     if (buf.obj.i < 0) {
+                        sprintf(temp, "(%s)(%ld)", G__type2string(type, tagnum, typenum, reftype, 0), buf.obj.i);
+                     }
+                     else {
+                        sprintf(temp, "(%s)%ld", G__type2string(type, tagnum, typenum, reftype, 0), buf.obj.i);
+                     }
+                  }
+               }
             }
             else {
-               if ('C' == G__get_type(G__value_typenum(buf)) && G__in_pause && buf.obj.i > 0x10000 &&
-                     G__PARANORMAL == G__get_reftype(G__value_typenum(buf)))
-                  sprintf(temp, "(%s 0x%lx)\"%s\""
-                          , G__type2string(G__get_type(G__value_typenum(buf)) , G__get_tagnum(G__value_typenum(buf))
-                                           , G__get_typenum(G__value_typenum(buf))
-                                           , G__get_reftype(G__value_typenum(buf)), 0)
-                          , buf.obj.i, (char*)buf.obj.i);
-               else
-                  sprintf(temp, "(%s)0x%lx"
-                          , G__type2string(G__get_type(G__value_typenum(buf)) , G__get_tagnum(G__value_typenum(buf))
-                                           , G__get_typenum(G__value_typenum(buf))
-                                           , G__get_reftype(G__value_typenum(buf)), 0)
-                          , buf.obj.i);
+               if ((type == 'C') && G__in_pause && (buf.obj.i > 0x10000) && (reftype == G__PARANORMAL)) {
+                  sprintf(temp, "(%s 0x%lx)\"%s\"", G__type2string(type, tagnum, typenum, reftype, 0), buf.obj.i, (char*) buf.obj.i);
+               }
+               else {
+                  sprintf(temp, "(%s)0x%lx", G__type2string(type, tagnum, typenum, reftype, 0), buf.obj.i);
+               } 
             }
+            break;
       }
-      return(temp);
+      return temp;
    }
-   switch (G__get_type(G__value_typenum(buf))) {
+   switch (type) {
       case '\0':
          sprintf(temp, "NULL");
          break;
       case 'b':
-         if (G__in_pause)
+         if (G__in_pause) {
             sprintf(temp, "(unsigned char)%u", G__convertT<unsigned char>(&buf));
-         else
+         }
+         else {
             sprintf(temp, "(unsignedchar)%u", G__convertT<unsigned char>(&buf));
+         }
          break;
       case 'B':
-         if (G__in_pause)
+         if (G__in_pause) {
             sprintf(temp, "(unsigned char*)0x%lx", buf.obj.i);
-         else
+         }
+         else {
             sprintf(temp, "(unsignedchar*)0x%lx", buf.obj.i);
+         }
          break;
       case 'T':
       case 'C':
-         if (buf.obj.i != 0) {
-            if (G__in_pause && G__PARANORMAL == G__get_reftype(G__value_typenum(buf))) {
-               if (strlen((char*)buf.obj.i) > G__ONELINE - 25) {
-                  strncpy(temp2, (char*)buf.obj.i, G__ONELINE - 25);
+         if (buf.obj.i) {
+            if (G__in_pause && (reftype == G__PARANORMAL)) {
+               if (strlen((char*)buf.obj.i) > (G__ONELINE - 25)) {
+                  strncpy(temp2, (char*) buf.obj.i, G__ONELINE - 25);
                   temp2[G__ONELINE-25] = 0;
                   sprintf(temp, "(char* 0x%lx)\"%s\"...", buf.obj.i, temp2);
                }
                else {
-                  G__add_quotation((char*)buf.obj.i, temp2);
+                  G__add_quotation((char*) buf.obj.i, temp2);
                   sprintf(temp, "(char* 0x%lx)%s", buf.obj.i, temp2);
                }
             }
@@ -200,78 +192,98 @@ char* Cint::Internal::G__valuemonitor(G__value buf, char* temp)
             }
          }
          else {
-            if (G__in_pause)
+            if (G__in_pause) {
                sprintf(temp, "(char* 0x0)\"\"");
-            else
+            }
+            else {
                sprintf(temp, "(char*)0x0");
+            }
          }
          break;
       case 'c':
          G__charaddquote(temp2, G__convertT<char>(&buf));
-         if (G__in_pause)
+         if (G__in_pause) {
             sprintf(temp, "(char %d)%s", G__convertT<char>(&buf), temp2);
-         else
+         }
+         else {
             sprintf(temp, "(char)%d", G__convertT<char>(&buf));
+         }
          break;
       case 'r':
-         if (G__in_pause)
+         if (G__in_pause) {
             sprintf(temp, "(unsigned short)%u", G__convertT<unsigned short>(&buf));
-         else
+         }
+         else {
             sprintf(temp, "(unsignedshort)%u", G__convertT<unsigned short>(&buf));
+         }
          break;
       case 'R':
-         if (G__in_pause)
+         if (G__in_pause) {
             sprintf(temp, "(unsigned short*)0x%lx", buf.obj.i);
-         else
+         }
+         else {
             sprintf(temp, "(unsignedshort*)0x%lx", buf.obj.i);
+         }
          break;
       case 's':
-         if (buf.obj.i < 0)
+         if (buf.obj.i < 0) {
             sprintf(temp, "(short)(%d)", G__convertT<short>(&buf));
-         else
+         }
+         else {
             sprintf(temp, "(short)%d", G__convertT<short>(&buf));
+         }
          break;
       case 'S':
          sprintf(temp, "(short*)0x%lx", buf.obj.i);
          break;
       case 'h':
-         if (G__in_pause)
+         if (G__in_pause) {
             sprintf(temp, "(unsigned int)%u", G__convertT<unsigned int>(&buf));
-         else
+         }
+         else {
             sprintf(temp, "(unsignedint)%u", G__convertT<unsigned int>(&buf));
+         }
          break;
       case 'H':
-         if (G__in_pause)
+         if (G__in_pause) {
             sprintf(temp, "(unsigned int*)0x%lx", buf.obj.i);
-         else
+         }
+         else {
             sprintf(temp, "(unsignedint*)0x%lx", buf.obj.i);
+         }
          break;
       case 'i':
-         if (G__value_typenum(buf)) {
+         if (tagnum != -1) {
             if (G__value_typenum(buf).RawType().IsEnum()) {
-               if (buf.obj.i < 0)
-                  sprintf(temp, "(enum %s)(%d)", G__value_typenum(buf).RawType().Name(::Reflex::SCOPED).c_str(), G__convertT<int>(&buf));
-               else
-                  sprintf(temp, "(enum %s)%d", G__value_typenum(buf).RawType().Name(::Reflex::SCOPED).c_str(), G__convertT<int>(&buf));
+               if (buf.obj.i < 0) {
+                  sprintf(temp, "(enum %s)(%d)", G__fulltagname(tagnum, 1), G__convertT<int>(&buf));
+               }
+               else {
+                  sprintf(temp, "(enum %s)%d", G__fulltagname(tagnum, 1), G__convertT<int>(&buf));
+               }
             }
             else {
-               if (buf.obj.i < 0)
+               if (buf.obj.i < 0) {
                   sprintf(temp, "(int)(%d)", G__convertT<int>(&buf));
-               else
+               }
+               else {
                   sprintf(temp, "(int)%d", G__convertT<int>(&buf));
+               }
             }
          }
          else {
-            if (buf.obj.i < 0)
+            if (buf.obj.i < 0) {
                sprintf(temp, "(int)(%d)", G__convertT<int>(&buf));
-            else
+            }
+            else {
                sprintf(temp, "(int)%d", G__convertT<int>(&buf));
+            }
          }
          break;
       case 'I':
-         if (G__value_typenum(buf)) {
+         if (tagnum != -1) {
             if (G__value_typenum(buf).RawType().IsEnum()) {
-               sprintf(temp, "(enum %s*)0x%lx", G__value_typenum(buf).RawType().Name(::Reflex::SCOPED).c_str(), buf.obj.i);
+               sprintf(temp, "(enum %s*)0x%lx", G__fulltagname(tagnum, 1), buf.obj.i);
             }
             else {
                sprintf(temp, "(int*)0x%lx", buf.obj.i);
@@ -281,68 +293,82 @@ char* Cint::Internal::G__valuemonitor(G__value buf, char* temp)
             sprintf(temp, "(int*)0x%lx", buf.obj.i);
          }
          break;
-#if defined(G__WIN32)
+#ifdef G__WIN32
       case 'n':
-         if (buf.obj.ll < 0)
+         if (buf.obj.ll < 0) {
             sprintf(temp, "(long long)(%I64d)", buf.obj.ll);
-         else
+         }
+         else {
             sprintf(temp, "(long long)%I64d", buf.obj.ll);
+         }
          break;
       case 'm':
          sprintf(temp, "(unsigned long long)%I64u", buf.obj.ull);
          break;
-#else
+#else // G__WIN32
       case 'n':
-         if (buf.obj.ll < 0)
+         if (buf.obj.ll < 0) {
             sprintf(temp, "(long long)(%lld)", buf.obj.ll);
-         else
+         }
+         else {
             sprintf(temp, "(long long)%lld", buf.obj.ll);
+         }
          break;
       case 'm':
          sprintf(temp, "(unsigned long long)%llu", buf.obj.ull);
          break;
-#endif
+#endif // G__WIN32
       case 'q':
-         if (buf.obj.ld < 0)
+         if (buf.obj.ld < 0) {
             sprintf(temp, "(long double)(%Lg)", buf.obj.ld);
-         else
+         }
+         else {
             sprintf(temp, "(long double)%Lg", buf.obj.ld);
+         }
          break;
       case 'g':
          sprintf(temp, "(bool)%d", G__convertT<bool>(&buf));
          break;
       case 'k':
-         if (G__in_pause)
+         if (G__in_pause) {
             sprintf(temp, "(unsigned long)%lu", G__convertT<unsigned long>(&buf));
-         else
+         }
+         else {
             sprintf(temp, "(unsignedlong)%lu", G__convertT<unsigned long>(&buf));
+         }
          break;
       case 'K':
-         if (G__in_pause)
+         if (G__in_pause) {
             sprintf(temp, "(unsigned long*)0x%lx", buf.obj.i);
-         else
+         }
+         else {
             sprintf(temp, "(unsignedlong*)0x%lx", buf.obj.i);
+         }
          break;
       case 'l':
-         if (buf.obj.i < 0)
+         if (buf.obj.i < 0) {
             sprintf(temp, "(long)(%ld)", buf.obj.i);
-         else
+         }
+         else {
             sprintf(temp, "(long)%ld", buf.obj.i);
+         }
          break;
       case 'L':
          sprintf(temp, "(long*)0x%lx", buf.obj.i);
          break;
       case 'y':
-         if (buf.obj.i < 0)
+         if (buf.obj.i < 0) {
             sprintf(temp, "(void)(%ld)", buf.obj.i);
-         else
+         }
+         else {
             sprintf(temp, "(void)%ld", buf.obj.i);
+         }
          break;
 #ifndef G__OLDIMPLEMENTATION2191
       case '1':
-#else
+#else // G__OLDIMPLEMENTATION2191
       case 'Q':
-#endif
+#endif // G__OLDIMPLEMENTATION2191
       case 'Y':
          sprintf(temp, "(void*)0x%lx", buf.obj.i);
          break;
@@ -350,111 +376,119 @@ char* Cint::Internal::G__valuemonitor(G__value buf, char* temp)
          sprintf(temp, "(FILE*)0x%lx", buf.obj.i);
          break;
       case 'd':
-         if (buf.obj.d < 0.0)
+         if (buf.obj.d < 0.0) {
             sprintf(temp, "(double)(%.17e)", buf.obj.d);
-         else
+         }
+         else {
             sprintf(temp, "(double)%.17e", buf.obj.d);
+         }
          break;
       case 'D':
          sprintf(temp, "(double*)0x%lx", buf.obj.i);
          break;
       case 'f':
-         if (buf.obj.d < 0.0)
+         if (buf.obj.d < 0.0) {
             sprintf(temp, "(float)(%.17e)", buf.obj.d);
-         else
+         }
+         else {
             sprintf(temp, "(float)%.17e", buf.obj.d);
+         }
          break;
       case 'F':
          sprintf(temp, "(float*)0x%lx", buf.obj.i);
          break;
       case 'u':
          {
-            ::Reflex::Type type(G__value_typenum(buf).RawType());
-            switch (G__get_tagtype(type)) {
+            ::Reflex::Type ty = G__value_typenum(buf).RawType();
+            switch (G__get_tagtype(ty)) {
                case 's':
                   if (buf.obj.i < 0) {
-                     sprintf(temp, "(struct %s)(%ld)", G__value_typenum(buf).Name(::Reflex::SCOPED).c_str(), buf.obj.i);
+                     sprintf(temp, "(struct %s)(%ld)", G__fulltagname(tagnum, 1), buf.obj.i);
                   }
                   else {
-                     sprintf(temp, "(struct %s)%ld", G__value_typenum(buf).Name(::Reflex::SCOPED).c_str(), buf.obj.i);
+                     sprintf(temp, "(struct %s)%ld", G__fulltagname(tagnum, 1), buf.obj.i);
                   }
                   break;
                case 'c':
                   if (
-                     (type.Name() == "G__longlong") ||
-                     (type.Name() == "G__ulonglong") ||
-                     (type.Name() == "G__longdouble")
+                     (ty.Name() == "G__longlong") ||
+                     (ty.Name() == "G__ulonglong") ||
+                     (ty.Name() == "G__longdouble")
                   ) {
                      if (G__in_pause) {
                         char llbuf[100];
-                        sprintf(temp, "(%s)", G__type2string(G__get_type(type), G__get_tagnum(type), G__get_typenum(G__value_typenum(buf)), G__get_reftype(G__value_typenum(buf)), 0));
-                        if (type.Name() == "G__longlong") {
+                        sprintf(temp, "(%s)", G__type2string(type, tagnum, typenum, reftype, 0));
+                        if (ty.Name() == "G__longlong") {
                            sprintf(llbuf, "G__printformatll((char*)(%ld),\"%%lld\",(void*)(%ld))", (long) llbuf, buf.obj.i);
                            G__getitem(llbuf);
                            strcat(temp, llbuf);
                         }
-                        else if (type.Name() == "G__ulonglong") {
+                        else if (ty.Name() == "G__ulonglong") {
                            sprintf(llbuf, "G__printformatull((char*)(%ld),\"%%llu\",(void*)(%ld))", (long) llbuf, buf.obj.i);
                            G__getitem(llbuf);
                            strcat(temp, llbuf);
                         }
-                        else if (type.Name() == "G__longdouble") {
+                        else if (ty.Name() == "G__longdouble") {
                            sprintf(llbuf, "G__printformatld((char*)(%ld),\"%%LG\",(void*)(%ld))", (long) llbuf, buf.obj.i);
                            G__getitem(llbuf);
                            strcat(temp, llbuf);
                         }
                      }
-                     else
+                     else {
                         G__setiparseobject(&buf, temp);
+                     }
                   }
                   else {
                      if (buf.obj.i < 0) {
-                        sprintf(temp, "(class %s)(%ld)", type.Name(::Reflex::SCOPED).c_str(), buf.obj.i);
+                        sprintf(temp, "(class %s)(%ld)", G__fulltagname(tagnum, 1), buf.obj.i);
                      }
                      else {
-                        sprintf(temp, "(class %s)%ld", type.Name(::Reflex::SCOPED).c_str(), buf.obj.i);
+                        sprintf(temp, "(class %s)%ld", G__fulltagname(tagnum, 1), buf.obj.i);
                      }
                   }
                   break;
                case 'u':
                   if (buf.obj.i < 0) {
-                     sprintf(temp, "(union %s)(%ld)", type.Name(::Reflex::SCOPED).c_str(), buf.obj.i);
+                     sprintf(temp, "(union %s)(%ld)", G__fulltagname(tagnum, 1), buf.obj.i);
                   }
                   else {
-                     sprintf(temp, "(union %s)%ld", type.Name(::Reflex::SCOPED).c_str(), buf.obj.i);
+                     sprintf(temp, "(union %s)%ld", G__fulltagname(tagnum, 1), buf.obj.i);
                   }
                   break;
                case 'e':
-                  sprintf(temp, "(enum %s)%d", type.Name(::Reflex::SCOPED).c_str(), (int) buf.obj.i);
+                  sprintf(temp, "(enum %s)%d", G__fulltagname(tagnum, 1), G__convertT<int>(&buf));
                   break;
                default:
                   if (buf.obj.i < 0) {
-                     sprintf(temp, "(unknown %s)(%ld)", type.Name().c_str(), buf.obj.i);
+                     sprintf(temp, "(unknown %s)(%ld)", ty.Name().c_str(), buf.obj.i);
                   }
                   else {
-                     sprintf(temp, "(unknown %s)%ld" , type.Name().c_str(), buf.obj.i);
+                     sprintf(temp, "(unknown %s)%ld" , ty.Name().c_str(), buf.obj.i);
                   }
                   break;
             }
          }
          break;
       case 'U':
-         switch (G__get_tagtype(G__value_typenum(buf))) {
-            case 's':
-               sprintf(temp, "(struct %s*)0x%lx" , G__value_typenum(buf).RawType().Name(::Reflex::SCOPED).c_str(), buf.obj.i);
-               break;
-            case 'c':
-               sprintf(temp, "(class %s*)0x%lx" , G__value_typenum(buf).RawType().Name(::Reflex::SCOPED).c_str(), buf.obj.i);
-               break;
-            case 'u':
-               sprintf(temp, "(union %s*)0x%lx" , G__value_typenum(buf).RawType().Name(::Reflex::SCOPED).c_str(), buf.obj.i);
-               break;
-            case 'e':
-               sprintf(temp, "(enum %s*)0x%lx" , G__value_typenum(buf).RawType().Name(::Reflex::SCOPED).c_str(), buf.obj.i);
-               break;
-            default:
-               sprintf(temp, "(unknown %s*)0x%lx", G__value_typenum(buf).RawType().Name(::Reflex::SCOPED).c_str(), buf.obj.i);
-               break;
+         {
+            ::Reflex::Type ty = G__value_typenum(buf).RawType();
+            switch (G__get_tagtype(ty)) {
+               case 's':
+                  sprintf(temp, "(struct %s*)0x%lx", G__fulltagname(tagnum, 1), buf.obj.i);
+                  break;
+               case 'c':
+                  sprintf(temp, "(class %s*)0x%lx", G__fulltagname(tagnum, 1), buf.obj.i);
+                  break;
+               case 'u':
+                  sprintf(temp, "(union %s*)0x%lx", G__fulltagname(tagnum, 1), buf.obj.i);
+                  break;
+               case 'e':
+                  sprintf(temp, "(enum %s*)0x%lx", G__fulltagname(tagnum, 1), buf.obj.i);
+                  break;
+               default:
+                  sprintf(temp, "(unknown %s*)0x%lx", G__fulltagname(tagnum, 1), buf.obj.i);
+                  break;
+            }
          }
          break;
       case 'w':
@@ -470,11 +504,11 @@ char* Cint::Internal::G__valuemonitor(G__value buf, char* temp)
          }
          break;
    }
-   if (isupper(G__get_type(G__value_typenum(buf)))) {
+   if (isupper(type)) {
       G__StrBuf sbuf_sb(G__ONELINE);
-      char *sbuf = sbuf_sb;
+      char* sbuf = sbuf_sb;
       char* p = strchr(temp, '*');
-      switch (G__get_reftype(G__value_typenum(buf))) {
+      switch (reftype) {
          case G__PARAP2P:
             strcpy(sbuf, p);
             strcpy(p + 1, sbuf);
@@ -488,10 +522,10 @@ char* Cint::Internal::G__valuemonitor(G__value buf, char* temp)
             break;
          default:
             strcpy(sbuf, p);
-            for (int i = G__PARAP2P - 1; i < G__get_reftype(G__value_typenum(buf)); ++i) {
+            for (int i = G__PARAP2P - 1; i < reftype; ++i) {
                *(p + i) = '*';
             }
-            strcpy(p + G__get_reftype(G__value_typenum(buf)) - G__PARAP2P + 1, sbuf);
+            strcpy(p + reftype - G__PARAP2P + 1, sbuf);
             break;
       }
    }
@@ -503,13 +537,13 @@ char* Cint::Internal::G__access2string(int caccess)
 {
    switch (caccess) {
       case G__PRIVATE:
-         return("private:");
+         return "private:";
       case G__PROTECTED:
-         return("protected:");
+         return "protected:";
       case G__PUBLIC:
-         return("public:");
+         return "public:";
    }
-   return("");
+   return "";
 }
 
 //______________________________________________________________________________
@@ -517,20 +551,20 @@ char* Cint::Internal::G__tagtype2string(int tagtype)
 {
    switch (tagtype) {
       case 'c':
-         return("class");
+         return "class";
       case 's':
-         return("struct");
+         return "struct";
       case 'e':
-         return("enum");
+         return "enum";
       case 'u':
-         return("union");
+         return "union";
       case 'n':
-         return("namespace");
-      case  0 :
+         return "namespace";
+      case  0:
          return("(unknown)");
    }
    G__genericerror("Internal error: Unexpected tagtype G__tagtype2string()");
-   return("");
+   return "";
 }
 
 //______________________________________________________________________________
@@ -546,12 +580,12 @@ extern "C" char* G__fulltagname(int tagnum, int mask_dollar)
    int pt;
    int len = 0;
    int os;
-   if (-1 == tagnum || G__struct.alltag == 0) {
+   if ((tagnum == -1) || !G__struct.alltag) {
       return "";
    }
-   /* enclosed class scope , need to go backwards */
+   // enclosed class scope , need to go backwards.
    p_tagnum[0] = G__struct.parent_tagnum[tagnum];
-   for (pt = 0; (p_tagnum[pt] > 0) && (pt < (G__MAXBASE - 1)); pt++) {
+   for (pt = 0; (p_tagnum[pt] > 0) && (pt < (G__MAXBASE - 1)); ++pt) {
       p_tagnum[pt+1] = G__struct.parent_tagnum[p_tagnum[pt]];
    }
    if (pt == G__MAXBASE) {
@@ -559,7 +593,7 @@ extern "C" char* G__fulltagname(int tagnum, int mask_dollar)
    }
    while (pt) {
       --pt;
-      os = mask_dollar && ('$' == G__struct.name[p_tagnum[pt]][0] && '$' != G__struct.name[p_tagnum[pt]][ strlen(G__struct.name[p_tagnum[pt]]) - 1]);
+      os = mask_dollar && ((G__struct.name[p_tagnum[pt]][0] == '$') && (G__struct.name[p_tagnum[pt]][strlen(G__struct.name[p_tagnum[pt]])-1] != '$'));
 #define G__OLDIMPLEMENTATION1503
 #ifndef G__OLDIMPLEMENTATION1503
       if (G__struct.defaulttypenum[p_tagnum[pt]]) {
@@ -573,7 +607,7 @@ extern "C" char* G__fulltagname(int tagnum, int mask_dollar)
 #endif // G__OLDIMPLEMENTATION1503
       len = strlen(string);
    }
-   os = mask_dollar && ('$' == G__struct.name[tagnum][0] && '$' != G__struct.name[tagnum][strlen(G__struct.name[tagnum]) - 1]);
+   os = mask_dollar && ((G__struct.name[tagnum][0] == '$') && (G__struct.name[tagnum][strlen(G__struct.name[tagnum])-1] != '$'));
 #ifndef G__OLDIMPLEMENTATION1503
    if (G__struct.defaulttypenum[tagnum]) {
       sprintf(string + len, "%s", G__struct.defaulttypenum[tagnum].Name().c_str());
@@ -584,9 +618,9 @@ extern "C" char* G__fulltagname(int tagnum, int mask_dollar)
 #else // G__OLDIMPLEMENTATION1503
    sprintf(string + len, "%s", G__struct.name[tagnum] + os);
 #endif // G__OLDIMPLEMENTATION1503
-#if defined(_MSC_VER) && (_MSC_VER < 1310) /*vc6 and vc7.0*/
+#if defined(_MSC_VER) && (_MSC_VER < 1310) //vc6 and vc7.0
    {
-      char *ptr = strstr(string, "long long");
+      char* ptr = strstr(string, "long long");
       if (ptr) {
          memcpy(ptr, " __int64 ", strlen(" __int64 "));
       }
@@ -953,78 +987,50 @@ extern "C" char* G__type2string(int type, int tagnum, int typenum_in, int reftyp
 //______________________________________________________________________________
 int Cint::Internal::G__val2pointer(G__value* result7)
 {
-   if (0 == result7->ref) {
+   if (!result7->ref) {
       G__genericerror("Error: incorrect use of referencing operator '&'");
-      return(1);
+      return 1;
    }
-
    G__value_typenum(*result7) = ::Reflex::PointerBuilder(G__value_typenum(*result7));
    result7->obj.i = result7->ref;
    result7->ref = 0;
-
 #ifdef G__ASM
-   if (G__asm_noverflow) {
+   if (G__asm_noverflow) { // Makeing bytecode, TOPNTR
+      // -- We are generating bytecode.
 #ifdef G__ASM_DBG
-      G__fprinterr(G__serr, "%3x: TOPNTR\n", G__asm_cp);
-#endif
+      G__fprinterr(G__serr, "%3x,%3x: TOPNTR  %s:%d\n", G__asm_cp, G__asm_dt, __FILE__, __LINE__);
+#endif // G__ASM_DBG
       G__asm_inst[G__asm_cp] = G__TOPNTR;
       G__inc_cp_asm(1, 0);
    }
-#endif
-
-   return(0);
+#endif // G__ASM
+   return 0;
 }
 
 //______________________________________________________________________________
 char* Cint::Internal::G__getbase(unsigned int expression, int base, int digit, char* result1)
 {
    G__StrBuf result_sb(G__MAXNAME);
-   char *result = result_sb;
-   int ig18 = 0, ig28 = 0;
-   unsigned int onedig, value;  /* bug fix  3 mar 1993 */
-
-   value = expression;
-
+   char* result = result_sb;
+   int ig18 = 0;
+   int ig28 = 0;
+   unsigned int onedig;
+   unsigned int value = expression;
    while ((ig28 < digit) || ((digit == 0) && (value != 0))) {
       onedig = value % base ;
       result[ig28] = G__getdigit(onedig);
       value = (value - onedig) / base;
-      ig28++ ;
+      ++ig28;
    }
-   ig28-- ;
-
-   /*
-   result1[ig18++]='0' ;
-   switch(base) {
-   case 2:
-           result1[ig18++]='b' ;
-           break;
-   case 4:
-           result1[ig18++]='q' ;
-           break;
-   case 8:
-           result1[ig18++]='o' ;
-           break;
-   case 10:
-           result1[ig18++]='d' ;
-           break;
-   case 16:
-           result1[ig18++]='x' ;
-           break;
-   default:
-           result1[ig18++]= base + '0' ;
-   }
-   */
-
+   --ig28;
    while (0 <= ig28) {
-      result1[ig18++] = result[ig28--] ;
+      result1[ig18++] = result[ig28--];
    }
    if (ig18 == 0) {
       result1[ig18++] = '0';
    }
    result1[ig18] = '\0';
-
-   return(result1);
+   return result1;
 }
 
 //______________________________________________________________________________
@@ -1449,34 +1455,42 @@ int Cint::Internal::G__isfloat(char* string, int* type)
    // determine whether unsigned int is enough to hold value
    unsigned int lenmax = unsign ? lenmaxuint : lenmaxint;
    unsigned int lenmaxl = unsign ? lenmaxulong : lenmaxlong;
-   if (*type == 'i')
-      if (len > lenmax)
-         if (len > lenmaxl)
+   if (*type == 'i') {
+      if (len > lenmax) {
+         if (len > lenmaxl) {
             *type = 'n';
-         else
+         }
+         else {
             *type = 'l';
+         }
+      }
       else if (len == lenmax) {
          long l = atol(string);
-         if (!unsign && (l > INT_MAX || l < INT_MIN)
-               || unsign && l > (long)UINT_MAX)
+         if ((!unsign && ((l > INT_MAX) || (l < INT_MIN))) || (unsign && (l > (long) UINT_MAX))) {
             *type = 'l';
+         }
       }
       else if (len == lenmaxl) {
          if (unsign) {
             G__uint64 l = G__expr_strtoull(string, 0, 10);
-            if (l > ULONG_MAX)
+            if (l > ULONG_MAX) {
                *type = 'n'; // unsign adjusted below
-            else
+            }
+            else {
                *type = 'l';
+            }
          }
          else {
             G__int64 l = G__expr_strtoll(string, 0, 10);
-            if (l > LONG_MAX || l < LONG_MIN)
+            if ((l > LONG_MAX) || (l < LONG_MIN)) {
                *type = 'n';
-            else
+            }
+            else {
                *type = 'l';
+            }
          }
       }
+   }
 
 
    /**************************************************************
@@ -1585,44 +1599,37 @@ int Cint::Internal::G__isvalue(char* temp)
 //______________________________________________________________________________
 extern "C" G__value G__string2type_body(const char* typenamin, int noerror)
 {
-   std::string typenam(typenamin);
-   std::string temp;
-   int len;
    int plevel = 0;
    int rlevel = 0;
-   int flag;
-   G__value result;
    int isconst = 0;
    int risconst = 0;
-
-   result = G__null;
-
-   if (strncmp(typenam.c_str(), "volatile ", 9) == 0) {
-      typenam.replace(0, 9, "");
+   std::string typenam(typenamin);
+   if (!typenam.compare(0, 9, "volatile ")) {
+      typenam.erase(0, 9);
    }
-   else
-      if (strncmp(typenam.c_str(), "volatile", 8) == 0) {
-         typenam.replace(0, 8, "");
-      }
-
-   if (strncmp(typenam.c_str(), "const ", 6) == 0) {
-      typenam.replace(0, 6, "");
+   else if (!typenam.compare(0, 8, "volatile")) {
+         typenam.erase(0, 8);
+   }
+   if (!typenam.compare(0, 6, "const ")) {
+      typenam.erase(0, 6);
       isconst = G__CONSTVAR;
    }
-   else
-      if (strncmp(typenam.c_str(), "const", 5) == 0 &&
-            -1 == G__defined_tagname(typenam.c_str(), 2) && !G__find_typedef(typenam.c_str())) {
-         typenam.replace(0, 5, "");
-         isconst = G__CONSTVAR;
-      }
-
-   len = typenam.length();
-   do {
+   else if (!typenam.compare(0, 5, "const") && (G__defined_tagname(typenam.c_str(), 2) == -1) && !G__find_typedef(typenam.c_str())) {
+      typenam.erase(0, 5);
+      isconst = G__CONSTVAR;
+   }
+   int len = typenam.size();
+   //
+   //  Remove trailing whitespace.  Count and remove
+   //  trailing '&' and trailing '*'.
+   //
+   int flag = 1;
+   for (; flag; ) {
       switch (typenam[len-1]) {
          case '*':
             ++plevel;
             typenam.erase(typenam.end() - 1);
-            flag = 1;
+            --len;
             if (risconst) {
                isconst |= G__PCONSTVAR;
                risconst = 0;
@@ -1631,7 +1638,7 @@ extern "C" G__value G__string2type_body(const char* typenamin, int noerror)
          case '&':
             ++rlevel;
             typenam.erase(typenam.end() - 1);
-            flag = 1;
+            --len;
             break;
          case ' ':
          case '\t':
@@ -1639,15 +1646,14 @@ extern "C" G__value G__string2type_body(const char* typenamin, int noerror)
          case '\r':
          case '\f':
             typenam.erase(typenam.end() - 1);
-            flag = 1;
+            --len;
             break;
          case 't':
             // Could be 'const'
-            if (typenam.length()>5 && strncmp("const",typenam.c_str()+len-5,5)==0 && !isalnum(typenam[len-6])) {
+            if ((len > 5) && !typenam.compare(len - 5, 5, "const") && !isalnum(typenam[len-6])) {
                len -= 5;
-               typenam[len] = '\0';
+               typenam.erase(typenam.end() - 5);
                risconst = 1;
-               flag = 1;
                break;
             }
          default:
@@ -1655,91 +1661,86 @@ extern "C" G__value G__string2type_body(const char* typenamin, int noerror)
             break;
       }
    }
-   while (flag);
-
    if (risconst) {
       isconst |= G__CONSTVAR;
    }
-   
    switch (len) {
       case 8:
-         if (strcmp(typenam.c_str(), "longlong") == 0) {
+         if (!typenam.compare("longlong")) {
             typenam = "long long";
          }
-         if (strcmp(typenam.c_str(), "long int") == 0) {
+         if (!typenam.compare("long int")) {
             typenam = "long";
          }
          break;
       case 9:
-         if (strcmp(typenam.c_str(), "__int64") == 0) {
+         if (!typenam.compare("__int64")) {
             typenam = "long long";
          }
          break;
       case 10:
-         if (strcmp(typenam.c_str(), "longdouble") == 0) {
+         if (!typenam.compare("longdouble")) {
             typenam = "long double";
          }
          break;
       case 11:
-         if (strcmp(typenam.c_str(), "unsignedint") == 0) {
+         if (!typenam.compare("unsignedint")) {
             typenam = "unsigned int";
          }
          break;
       case 12:
-         if (strcmp(typenam.c_str(), "unsignedchar") == 0) {
+         if (!typenam.compare("unsignedchar")) {
             typenam = "unsigned char";
             break;
          }
-         if (strcmp(typenam.c_str(), "unsignedlong") == 0) {
+         if (!typenam.compare("unsignedlong")) {
             typenam = "unsigned long";
             break;
          }
          break;
       case 13:
-         if (strcmp(typenam.c_str(), "unsignedshort") == 0) {
+         if (!typenam.compare("unsignedshort")) {
             typenam = "unsigned short";
             break;
          }
          break;
       case 16:
-         if (strcmp(typenam.c_str(), "unsignedlonglong") == 0) {
+         if (!typenam.compare("unsignedlonglong")) {
             typenam = "unsigned long long";
             break;
          }
          break;
       case 18:
-         if ((strcmp(typenam.c_str(), "unsigned __in64") == 0)) {
+         if (!typenam.compare("unsigned __int64")) {
             typenam = "unsigned long long";
             break;
          }
          break;
    }
-
-   ::Reflex::Type type(::Reflex::Type::ByName(typenam));
-
-   if (!type) {
-      if (strncmp(typenam.c_str(), "struct", 6) == 0) {
+   ::Reflex::Type type = ::Reflex::Type::ByName(typenam); // Lookup exact name.
+   if (!type) { // Not found, try without any class, enum, struct, or union prefix.
+      if (!typenam.compare(0, 6, "struct")) {
          type = G__Dict::GetDict().GetType(G__defined_tagname(typenam.c_str() + 6, 0));
       }
-      else if (strncmp(typenam.c_str(), "class", 5) == 0) {
+      else if (!typenam.compare(0, 5, "class")) {
          type = G__Dict::GetDict().GetType(G__defined_tagname(typenam.c_str() + 5, 0));
       }
-      else if (strncmp(typenam.c_str(), "union", 5) == 0) {
+      else if (!typenam.compare(0, 5, "union")) {
          type = G__Dict::GetDict().GetType(G__defined_tagname(typenam.c_str() + 5, 0));
       }
-      else if (strncmp(typenam.c_str(), "enum", 4) == 0) {
+      else if (!typenam.compare(0, 4, "enum")) {
          type = G__Dict::GetDict().GetType(G__defined_tagname(typenam.c_str() + 4, 0));
       }
    }
-
-   if (!type) {
+   if (!type) { // Still no type, now try typedef and class/enum/namespace/struct/union.
       type = G__find_typedef(typenam.c_str());
-      if (!type) {
+      if (!type) { // Not typedef, try class/enum/namespace/struct/union.
          type = G__Dict::GetDict().GetType(G__defined_tagname(typenam.c_str(), noerror));
       }
    }
-
+   G__value result = G__null;
    if (type) {
+      result.obj.i = isconst; // borrowing space of the value
       while (plevel) {
          type = ::Reflex::PointerBuilder(type);
          --plevel;
@@ -1747,14 +1748,9 @@ extern "C" G__value G__string2type_body(const char* typenamin, int noerror)
       if (rlevel) {
          type = ::Reflex::Type(type, ::Reflex::REFERENCE, Reflex::Type::APPEND);
       }
-      result.obj.i = isconst; /* borrowing space of the value */
-      if (isconst) {
-         type = ::Reflex::Type(type, ::Reflex::CONST, Reflex::Type::APPEND);
-      }
       G__value_typenum(result) = type;
    }
-
-   return(result);
+   return result;
 }
 
 //______________________________________________________________________________

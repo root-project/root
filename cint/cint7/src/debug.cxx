@@ -961,7 +961,6 @@ void Cint::Internal::G__del_classbreak(char *name)
 **************************************************************************/
 void Cint::Internal::G__setclassdebugcond(int tagnum,int brkflag)
 {
-  if(G__cintv6) return;
   if(-1==tagnum) {
     G__debug = G__istrace;
   }

@@ -61,7 +61,6 @@ Cint::Internal::G__Dict &Cint::Internal::G__Dict::GetDict()
 {
    // Return the Reflex type (class or namespace) corresponding 
    // to the CINT tagnum.
-#pragma message(FIXME("Check that ambiguity is gone between global and invalid scope!"))
    if (-1 == tagnum) 
       return ::Reflex::Scope::GlobalScope();
    std::string fulltagname(G__fulltagname(tagnum,0));

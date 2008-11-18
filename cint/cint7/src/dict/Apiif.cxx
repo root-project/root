@@ -15,9 +15,8 @@ extern "C" void G__cpp_reset_tagtableG__API();
 
 extern "C" void G__set_cpp_environmentG__API() {
   G__add_ipath("../../inc");
-  G__add_ipath("../../../reflex/inc");
-  G__add_ipath("..");
   G__add_compiledheader("Api.h");
+  G__add_compiledheader("Shadow.h");
   G__cpp_reset_tagtableG__API();
 }
 #include <new>
@@ -28,60 +27,73 @@ extern "C" int G__cpp_dllrevG__API() { return(30051515); }
 *********************************************************/
 
 /* Cint */
-static int G__G__API_94_18523152_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_140_8262480_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       Cint::G__InitGetSpecialObject((Cint::G__pMethodSpecialObject) G__int(libp->para[0]));
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_94_18658512_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_140_8301248_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       Cint::G__InitGetSpecialValue((Cint::G__pMethodSpecialValue) G__int(libp->para[0]));
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_94_18659728_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_140_8302512_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) Cint::G__SetGlobalcomp((char*) G__int(libp->para[0]), (char*) G__int(libp->para[1])
 , (int) G__int(libp->para[2])));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_94_18661120_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_140_8303904_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) Cint::G__ForceBytecodecompilation((char*) G__int(libp->para[0]), (char*) G__int(libp->para[1])));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_94_18663200_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_140_8305920_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       Cint::G__InitUpdateClassInfo((Cint::G__pMethodUpdateClassInfo) G__int(libp->para[0]));
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_94_18665088_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_140_8306880_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+{
+      G__letint(result7, 89, (long) Cint::G__new_interpreted_object((int) G__int(libp->para[0])));
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
+static int G__G__API_140_8307808_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+{
+      Cint::G__delete_interpreted_object((void*) G__int(libp->para[0]));
+      G__setnull(result7);
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
+static int G__G__API_140_8309504_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       Cint::G__InitGenerateDictionary((Cint::G__pGenerateDictionary) G__int(libp->para[0]));
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_94_18666176_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_140_8310592_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 89, (long) Cint::G__GetGenerateDictionary());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_94_18683904_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_140_8328704_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 107, (long) Cint::G__long_random((unsigned long) G__int(libp->para[0])));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_94_18714368_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_140_8352784_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       Cint::G__letpointer((G__value*) G__int(libp->para[0]), (long) G__int(libp->para[1])
 , *(Reflex::Type*) libp->para[2].ref);
@@ -91,7 +103,7 @@ static int G__G__API_94_18714368_0(G__value* result7, G__CONST char* funcname, s
 
 
 /* Cint::G__MethodInfo */
-static int G__G__API_95_18461136_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_141_8110752_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    Cint::G__MethodInfo* p = NULL;
    char* gvp = (char*)G__getgvp();
@@ -115,7 +127,7 @@ static int G__G__API_95_18461136_0(G__value* result7, G__CONST char* funcname, s
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_95_18462032_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_141_8111728_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    Cint::G__MethodInfo* p = NULL;
    char* gvp = (char*)G__getgvp();
@@ -131,7 +143,7 @@ static int G__G__API_95_18462032_0(G__value* result7, G__CONST char* funcname, s
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_95_18463280_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_141_8112848_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    Cint::G__MethodInfo* p = NULL;
    char* gvp = (char*)G__getgvp();
@@ -147,23 +159,7 @@ static int G__G__API_95_18463280_0(G__value* result7, G__CONST char* funcname, s
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_95_18464528_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
-{
-   Cint::G__MethodInfo* p = NULL;
-   char* gvp = (char*)G__getgvp();
-   //m: 1
-   if ((gvp == (char*) G__PVOID) || (gvp == 0)) {
-     p = new Cint::G__MethodInfo(*(Reflex::Member*) libp->para[0].ref);
-   } else {
-     p = new((void*) gvp) Cint::G__MethodInfo(*(Reflex::Member*) libp->para[0].ref);
-   }
-   result7->obj.i = (long) p;
-   result7->ref = (long) p;
-   G__set_tagnum(result7,G__get_linked_tagnum(&G__G__APILN_CintcLcLG__MethodInfo));
-   return(1 || funcname || hash || result7 || libp) ;
-}
-
-static int G__G__API_95_18466128_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_141_8114112_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       {
          const Cint::G__MethodInfo& obj = ((Cint::G__MethodInfo*) G__getstructoffset())->operator=(*(Cint::G__MethodInfo*) libp->para[0].ref);
@@ -173,21 +169,21 @@ static int G__G__API_95_18466128_0(G__value* result7, G__CONST char* funcname, s
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_95_18466528_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_141_8115136_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__MethodInfo*) G__getstructoffset())->Init();
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_95_18467696_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_141_8116112_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__MethodInfo*) G__getstructoffset())->Init(*(Cint::G__ClassInfo*) libp->para[0].ref);
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_95_18468816_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_141_8117376_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__MethodInfo*) G__getstructoffset())->Init((long) G__int(libp->para[0]), (long) G__int(libp->para[1])
 , (Cint::G__ClassInfo*) G__int(libp->para[2]));
@@ -195,7 +191,7 @@ static int G__G__API_95_18468816_0(G__value* result7, G__CONST char* funcname, s
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_95_18470448_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_141_8118832_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__MethodInfo*) G__getstructoffset())->Init((Cint::G__ClassInfo*) G__int(libp->para[0]), (long) G__int(libp->para[1])
 , (long) G__int(libp->para[2]));
@@ -203,86 +199,73 @@ static int G__G__API_95_18470448_0(G__value* result7, G__CONST char* funcname, s
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_95_18471584_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_141_8120256_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 67, (long) ((Cint::G__MethodInfo*) G__getstructoffset())->Name());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_95_18471744_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_141_8120416_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
-      G__letint(result7, 107, (long) ((Cint::G__MethodInfo*) G__getstructoffset())->Handle());
+      G__letint(result7, 108, (long) ((Cint::G__MethodInfo*) G__getstructoffset())->Handle());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_95_18472496_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
-{
-      {
-         const Reflex::Member* pobj;
-         const Reflex::Member xobj = ((const Cint::G__MethodInfo*) G__getstructoffset())->ReflexFunction();
-         pobj = new Reflex::Member(xobj);
-         result7->obj.i = (long) ((void*) pobj);
-         result7->ref = result7->obj.i;
-         G__store_tempobject(*result7);
-      }
-   return(1 || funcname || hash || result7 || libp) ;
-}
-
-static int G__G__API_95_18473776_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_141_8121072_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__MethodInfo*) G__getstructoffset())->Index());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_95_18474544_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_141_8122240_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 67, (long) ((Cint::G__MethodInfo*) G__getstructoffset())->Title());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_95_18475488_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_141_8123040_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 85, (long) ((Cint::G__MethodInfo*) G__getstructoffset())->Type());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_95_18476464_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_141_8123984_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 108, (long) ((Cint::G__MethodInfo*) G__getstructoffset())->Property());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_95_18477168_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_141_8124752_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__MethodInfo*) G__getstructoffset())->NArg());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_95_18477824_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_141_8125520_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__MethodInfo*) G__getstructoffset())->NDefaultArg());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_95_18478992_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_141_8126224_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__MethodInfo*) G__getstructoffset())->HasVarArgs());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_95_18479280_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_141_8126832_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 89, (long) ((Cint::G__MethodInfo*) G__getstructoffset())->InterfaceMethod());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_95_18481088_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_141_8128464_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 85, (long) ((Cint::G__MethodInfo*) G__getstructoffset())->GetBytecode());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_95_18482160_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_141_8129504_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       {
          Cint::G__DataMemberInfo* pobj;
@@ -295,144 +278,151 @@ static int G__G__API_95_18482160_0(G__value* result7, G__CONST char* funcname, s
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_95_18483216_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_141_8130528_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 89, (long) ((Cint::G__MethodInfo*) G__getstructoffset())->PointerToFunc());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_95_18483520_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_141_8066640_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 85, (long) ((Cint::G__MethodInfo*) G__getstructoffset())->MemberOf());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_95_18484592_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_141_8131904_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__MethodInfo*) G__getstructoffset())->GetDefiningScopeTagnum());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_95_18485392_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_141_8132768_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 85, (long) ((Cint::G__MethodInfo*) G__getstructoffset())->GetFriendInfo());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_95_18486192_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_141_8133616_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__MethodInfo*) G__getstructoffset())->SetGlobalcomp((int) G__int(libp->para[0]));
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_95_18486688_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_141_8134608_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+{
+      ((Cint::G__MethodInfo*) G__getstructoffset())->SetForceStub();
+      G__setnull(result7);
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
+static int G__G__API_141_8134816_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__MethodInfo*) G__getstructoffset())->IsValid());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_95_18487872_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_141_8136016_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__MethodInfo*) G__getstructoffset())->SetFilePos((const char*) G__int(libp->para[0])));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_95_18488272_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_141_8136912_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__MethodInfo*) G__getstructoffset())->Next());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_95_18489408_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_141_8137216_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 67, (long) ((Cint::G__MethodInfo*) G__getstructoffset())->FileName());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_95_18490176_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_141_8137760_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__MethodInfo*) G__getstructoffset())->LineNumber());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_95_18476992_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_141_8138896_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__MethodInfo*) G__getstructoffset())->Size());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_95_18492000_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_141_8114304_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__MethodInfo*) G__getstructoffset())->IsBusy());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_95_18492768_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_141_8126048_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 69, (long) ((Cint::G__MethodInfo*) G__getstructoffset())->FilePointer());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_95_18493680_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_141_8141024_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 108, (long) ((Cint::G__MethodInfo*) G__getstructoffset())->FilePosition());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_95_18494448_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_141_8141792_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 67, (long) ((Cint::G__MethodInfo*) G__getstructoffset())->GetPrototype());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_95_18495424_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_141_8141952_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 67, (long) ((Cint::G__MethodInfo*) G__getstructoffset())->GetMangledName());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_95_18496400_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_141_8143344_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__MethodInfo*) G__getstructoffset())->LoadDLLDirect((const char*) G__int(libp->para[0]), (const char*) G__int(libp->para[1])));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_95_18497488_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_141_8133072_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__MethodInfo*) G__getstructoffset())->SetVtblIndex((int) G__int(libp->para[0]));
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_95_18498352_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_141_8145088_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__MethodInfo*) G__getstructoffset())->SetIsVirtual((int) G__int(libp->para[0]));
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_95_18499184_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_141_8145984_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__MethodInfo*) G__getstructoffset())->SetVtblBasetagnum((int) G__int(libp->para[0]));
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_95_18499984_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_141_8146752_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__MethodInfo*) G__getstructoffset())->SetUserParam((void*) G__int(libp->para[0]));
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_95_18500288_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_141_8147520_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 89, (long) ((Cint::G__MethodInfo*) G__getstructoffset())->GetUserParam());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_95_18500752_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_141_8147680_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 108, (long) ((Cint::G__MethodInfo*) G__getstructoffset())->GetThisPointerOffset());
    return(1 || funcname || hash || result7 || libp) ;
@@ -440,7 +430,7 @@ static int G__G__API_95_18500752_0(G__value* result7, G__CONST char* funcname, s
 
 // automatic destructor
 typedef Cint::G__MethodInfo G__TCintcLcLG__MethodInfo;
-static int G__G__API_95_0_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_141_0_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    char* gvp = (char*) G__getgvp();
    long soff = G__getstructoffset();
@@ -478,7 +468,7 @@ static int G__G__API_95_0_0(G__value* result7, G__CONST char* funcname, struct G
 
 
 /* Cint::G__DataMemberInfo */
-static int G__G__API_96_18528944_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_142_8174880_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    Cint::G__DataMemberInfo* p = NULL;
    char* gvp = (char*)G__getgvp();
@@ -502,39 +492,7 @@ static int G__G__API_96_18528944_0(G__value* result7, G__CONST char* funcname, s
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_96_18529920_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
-{
-   Cint::G__DataMemberInfo* p = NULL;
-   char* gvp = (char*)G__getgvp();
-   //m: 1
-   if ((gvp == (char*) G__PVOID) || (gvp == 0)) {
-     p = new Cint::G__DataMemberInfo(*(Cint::G__ClassInfo*) libp->para[0].ref);
-   } else {
-     p = new((void*) gvp) Cint::G__DataMemberInfo(*(Cint::G__ClassInfo*) libp->para[0].ref);
-   }
-   result7->obj.i = (long) p;
-   result7->ref = (long) p;
-   G__set_tagnum(result7,G__get_linked_tagnum(&G__G__APILN_CintcLcLG__DataMemberInfo));
-   return(1 || funcname || hash || result7 || libp) ;
-}
-
-static int G__G__API_96_18531104_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
-{
-   Cint::G__DataMemberInfo* p = NULL;
-   char* gvp = (char*)G__getgvp();
-   //m: 1
-   if ((gvp == (char*) G__PVOID) || (gvp == 0)) {
-     p = new Cint::G__DataMemberInfo(*((const Reflex::Member*) G__int(libp->para[0])));
-   } else {
-     p = new((void*) gvp) Cint::G__DataMemberInfo(*((const Reflex::Member*) G__int(libp->para[0])));
-   }
-   result7->obj.i = (long) p;
-   result7->ref = (long) p;
-   G__set_tagnum(result7,G__get_linked_tagnum(&G__G__APILN_CintcLcLG__DataMemberInfo));
-   return(1 || funcname || hash || result7 || libp) ;
-}
-
-static int G__G__API_96_18532496_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_142_8176128_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    Cint::G__DataMemberInfo* p = NULL;
    char* gvp = (char*)G__getgvp();
@@ -550,7 +508,23 @@ static int G__G__API_96_18532496_0(G__value* result7, G__CONST char* funcname, s
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_96_18533552_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_142_8177184_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+{
+   Cint::G__DataMemberInfo* p = NULL;
+   char* gvp = (char*)G__getgvp();
+   //m: 1
+   if ((gvp == (char*) G__PVOID) || (gvp == 0)) {
+     p = new Cint::G__DataMemberInfo(*(Cint::G__ClassInfo*) libp->para[0].ref);
+   } else {
+     p = new((void*) gvp) Cint::G__DataMemberInfo(*(Cint::G__ClassInfo*) libp->para[0].ref);
+   }
+   result7->obj.i = (long) p;
+   result7->ref = (long) p;
+   G__set_tagnum(result7,G__get_linked_tagnum(&G__G__APILN_CintcLcLG__DataMemberInfo));
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
+static int G__G__API_142_8178512_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       {
          const Cint::G__DataMemberInfo& obj = ((Cint::G__DataMemberInfo*) G__getstructoffset())->operator=(*(Cint::G__DataMemberInfo*) libp->para[0].ref);
@@ -560,28 +534,21 @@ static int G__G__API_96_18533552_0(G__value* result7, G__CONST char* funcname, s
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_96_18534608_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_142_8179472_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__DataMemberInfo*) G__getstructoffset())->Init();
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_96_18534912_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_142_8115440_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__DataMemberInfo*) G__getstructoffset())->Init(*(Cint::G__ClassInfo*) libp->para[0].ref);
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_96_18536304_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
-{
-      ((Cint::G__DataMemberInfo*) G__getstructoffset())->Init(*((const Reflex::Scope*) G__int(libp->para[0])));
-      G__setnull(result7);
-   return(1 || funcname || hash || result7 || libp) ;
-}
-
-static int G__G__API_96_18537600_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_142_8181184_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__DataMemberInfo*) G__getstructoffset())->Init((long) G__int(libp->para[0]), (long) G__int(libp->para[1])
 , (Cint::G__ClassInfo*) G__int(libp->para[2]));
@@ -589,130 +556,104 @@ static int G__G__API_96_18537600_0(G__value* result7, G__CONST char* funcname, s
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_96_18538752_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_142_8182144_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 107, (long) ((Cint::G__DataMemberInfo*) G__getstructoffset())->Handle());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_96_18538912_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_142_8182448_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__DataMemberInfo*) G__getstructoffset())->Index());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_96_18539792_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_142_8163216_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 67, (long) ((Cint::G__DataMemberInfo*) G__getstructoffset())->Name());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_96_18540544_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_142_8184192_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 67, (long) ((Cint::G__DataMemberInfo*) G__getstructoffset())->Title());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_96_18541152_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
-{
-      {
-         Reflex::Type* pobj;
-         Reflex::Type xobj = ((Cint::G__DataMemberInfo*) G__getstructoffset())->ReflexType();
-         pobj = new Reflex::Type(xobj);
-         result7->obj.i = (long) ((void*) pobj);
-         result7->ref = result7->obj.i;
-         G__store_tempobject(*result7);
-      }
-   return(1 || funcname || hash || result7 || libp) ;
-}
-
-static int G__G__API_96_18541760_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_142_8184624_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 85, (long) ((Cint::G__DataMemberInfo*) G__getstructoffset())->Type());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_96_18542976_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_142_8185264_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 108, (long) ((Cint::G__DataMemberInfo*) G__getstructoffset())->Property());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_96_18543408_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_142_8186448_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 108, (long) ((Cint::G__DataMemberInfo*) G__getstructoffset())->Offset());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_96_18544624_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_142_8186688_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__DataMemberInfo*) G__getstructoffset())->Bitfield());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_96_18544832_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_142_8187824_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__DataMemberInfo*) G__getstructoffset())->ArrayDim());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_96_18546000_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_142_8081456_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__DataMemberInfo*) G__getstructoffset())->MaxIndex((int) G__int(libp->para[0])));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_96_18546368_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
-{
-      {
-         Reflex::Scope* pobj;
-         Reflex::Scope xobj = ((Cint::G__DataMemberInfo*) G__getstructoffset())->DeclaringScope();
-         pobj = new Reflex::Scope(xobj);
-         result7->obj.i = (long) ((void*) pobj);
-         result7->ref = result7->obj.i;
-         G__store_tempobject(*result7);
-      }
-   return(1 || funcname || hash || result7 || libp) ;
-}
-
-static int G__G__API_96_18547040_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_142_8189600_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 85, (long) ((Cint::G__DataMemberInfo*) G__getstructoffset())->MemberOf());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_96_18548112_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_142_8189792_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__DataMemberInfo*) G__getstructoffset())->SetGlobalcomp((int) G__int(libp->para[0]));
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_96_18548608_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_142_8191072_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__DataMemberInfo*) G__getstructoffset())->IsValid());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_96_18549792_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_142_8191840_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__DataMemberInfo*) G__getstructoffset())->SetFilePos((const char*) G__int(libp->para[0])));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_96_18550192_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_142_8192608_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__DataMemberInfo*) G__getstructoffset())->Next());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_96_18551328_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_142_8192768_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__DataMemberInfo*) G__getstructoffset())->Prev());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_96_18552864_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_142_8194224_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    switch (libp->paran) {
    case 2:
@@ -728,13 +669,13 @@ static int G__G__API_96_18552864_0(G__value* result7, G__CONST char* funcname, s
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_96_18553552_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_142_8195376_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 67, (long) ((Cint::G__DataMemberInfo*) G__getstructoffset())->FileName());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_96_18554192_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_142_8195536_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__DataMemberInfo*) G__getstructoffset())->LineNumber());
    return(1 || funcname || hash || result7 || libp) ;
@@ -742,7 +683,7 @@ static int G__G__API_96_18554192_0(G__value* result7, G__CONST char* funcname, s
 
 // automatic destructor
 typedef Cint::G__DataMemberInfo G__TCintcLcLG__DataMemberInfo;
-static int G__G__API_96_0_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_142_0_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    char* gvp = (char*) G__getgvp();
    long soff = G__getstructoffset();
@@ -780,7 +721,7 @@ static int G__G__API_96_0_0(G__value* result7, G__CONST char* funcname, struct G
 
 
 /* Cint::G__FriendInfo */
-static int G__G__API_97_18330384_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_143_8062352_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    Cint::G__FriendInfo* p = NULL;
    char* gvp = (char*)G__getgvp();
@@ -816,7 +757,7 @@ static int G__G__API_97_18330384_0(G__value* result7, G__CONST char* funcname, s
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_97_18411376_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_143_8063616_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    Cint::G__FriendInfo* p = NULL;
    char* gvp = (char*)G__getgvp();
@@ -832,7 +773,7 @@ static int G__G__API_97_18411376_0(G__value* result7, G__CONST char* funcname, s
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_97_18412688_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_143_8064960_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       {
          const Cint::G__FriendInfo& obj = ((Cint::G__FriendInfo*) G__getstructoffset())->operator=(*(Cint::G__FriendInfo*) libp->para[0].ref);
@@ -842,26 +783,26 @@ static int G__G__API_97_18412688_0(G__value* result7, G__CONST char* funcname, s
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_97_18413856_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_143_8065984_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__FriendInfo*) G__getstructoffset())->Init((G__friendtag*) G__int(libp->para[0]));
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_97_18415328_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_143_8067344_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 85, (long) ((Cint::G__FriendInfo*) G__getstructoffset())->FriendOf());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_97_18416256_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_143_8068288_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__FriendInfo*) G__getstructoffset())->Next());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_97_18415712_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_143_8069056_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__FriendInfo*) G__getstructoffset())->IsValid());
    return(1 || funcname || hash || result7 || libp) ;
@@ -869,7 +810,7 @@ static int G__G__API_97_18415712_0(G__value* result7, G__CONST char* funcname, s
 
 // automatic destructor
 typedef Cint::G__FriendInfo G__TCintcLcLG__FriendInfo;
-static int G__G__API_97_0_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_143_0_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    char* gvp = (char*) G__getgvp();
    long soff = G__getstructoffset();
@@ -907,7 +848,7 @@ static int G__G__API_97_0_0(G__value* result7, G__CONST char* funcname, struct G
 
 
 /* Cint::G__ClassInfo */
-static int G__G__API_98_18331760_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_7986560_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    Cint::G__ClassInfo* p = NULL;
    char* gvp = (char*)G__getgvp();
@@ -931,14 +872,14 @@ static int G__G__API_98_18331760_0(G__value* result7, G__CONST char* funcname, s
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18332752_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_7987456_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__ClassInfo*) G__getstructoffset())->Init();
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18333808_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_7988624_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    Cint::G__ClassInfo* p = NULL;
    char* gvp = (char*)G__getgvp();
@@ -954,30 +895,14 @@ static int G__G__API_98_18333808_0(G__value* result7, G__CONST char* funcname, s
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18334944_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_7989728_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__ClassInfo*) G__getstructoffset())->Init((const char*) G__int(libp->para[0]));
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18336128_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
-{
-   Cint::G__ClassInfo* p = NULL;
-   char* gvp = (char*)G__getgvp();
-   //m: 1
-   if ((gvp == (char*) G__PVOID) || (gvp == 0)) {
-     p = new Cint::G__ClassInfo((int) G__int(libp->para[0]));
-   } else {
-     p = new((void*) gvp) Cint::G__ClassInfo((int) G__int(libp->para[0]));
-   }
-   result7->obj.i = (long) p;
-   result7->ref = (long) p;
-   G__set_tagnum(result7,G__get_linked_tagnum(&G__G__APILN_CintcLcLG__ClassInfo));
-   return(1 || funcname || hash || result7 || libp) ;
-}
-
-static int G__G__API_98_18337392_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_7990816_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    Cint::G__ClassInfo* p = NULL;
    char* gvp = (char*)G__getgvp();
@@ -993,99 +918,102 @@ static int G__G__API_98_18337392_0(G__value* result7, G__CONST char* funcname, s
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18338528_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_7991888_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+{
+   Cint::G__ClassInfo* p = NULL;
+   char* gvp = (char*)G__getgvp();
+   //m: 1
+   if ((gvp == (char*) G__PVOID) || (gvp == 0)) {
+     p = new Cint::G__ClassInfo((int) G__int(libp->para[0]));
+   } else {
+     p = new((void*) gvp) Cint::G__ClassInfo((int) G__int(libp->para[0]));
+   }
+   result7->obj.i = (long) p;
+   result7->ref = (long) p;
+   G__set_tagnum(result7,G__get_linked_tagnum(&G__G__APILN_CintcLcLG__ClassInfo));
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
+static int G__G__API_144_7993040_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__ClassInfo*) G__getstructoffset())->Init((int) G__int(libp->para[0]));
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18339696_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_7994176_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__ClassInfo*) G__getstructoffset())->operator==(*(Cint::G__ClassInfo*) libp->para[0].ref));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18340864_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_7995216_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__ClassInfo*) G__getstructoffset())->operator!=(*(Cint::G__ClassInfo*) libp->para[0].ref));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18341760_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_7995376_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 67, (long) ((Cint::G__ClassInfo*) G__getstructoffset())->Name());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18342064_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_7995984_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 67, (long) ((Cint::G__ClassInfo*) G__getstructoffset())->Fullname());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18342672_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_7996624_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 67, (long) ((Cint::G__ClassInfo*) G__getstructoffset())->Title());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18343744_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_7997808_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__ClassInfo*) G__getstructoffset())->Size());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18344560_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_7998576_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 108, (long) ((Cint::G__ClassInfo*) G__getstructoffset())->Property());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18345504_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_7999456_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__ClassInfo*) G__getstructoffset())->NDataMembers());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18345984_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_7999936_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__ClassInfo*) G__getstructoffset())->NMethods());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18347424_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8001376_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 108, (long) ((Cint::G__ClassInfo*) G__getstructoffset())->IsBase((const char*) G__int(libp->para[0])));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18348608_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8002400_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 108, (long) ((Cint::G__ClassInfo*) G__getstructoffset())->IsBase(*(Cint::G__ClassInfo*) libp->para[0].ref));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18349104_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8003296_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 108, (long) ((const Cint::G__ClassInfo*) G__getstructoffset())->Tagnum());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18350240_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
-{
-      {
-         Reflex::Scope* pobj;
-         Reflex::Scope xobj = ((Cint::G__ClassInfo*) G__getstructoffset())->ReflexScope();
-         pobj = new Reflex::Scope(xobj);
-         result7->obj.i = (long) ((void*) pobj);
-         result7->ref = result7->obj.i;
-         G__store_tempobject(*result7);
-      }
-   return(1 || funcname || hash || result7 || libp) ;
-}
-
-static int G__G__API_98_18350656_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8003456_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       {
          Cint::G__ClassInfo* pobj;
@@ -1098,7 +1026,7 @@ static int G__G__API_98_18350656_0(G__value* result7, G__CONST char* funcname, s
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18351408_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8004064_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       {
          Cint::G__ClassInfo* pobj;
@@ -1111,190 +1039,190 @@ static int G__G__API_98_18351408_0(G__value* result7, G__CONST char* funcname, s
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18352736_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8005280_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 85, (long) ((Cint::G__ClassInfo*) G__getstructoffset())->GetFriendInfo());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18353712_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8006272_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__ClassInfo*) G__getstructoffset())->SetGlobalcomp((int) G__int(libp->para[0]));
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18354736_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8005664_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__ClassInfo*) G__getstructoffset())->SetProtectedAccess((int) G__int(libp->para[0]));
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18355040_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8008048_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__ClassInfo*) G__getstructoffset())->IsValid());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18356144_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8008256_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__ClassInfo*) G__getstructoffset())->IsLoaded());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18356912_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8009456_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__ClassInfo*) G__getstructoffset())->SetFilePos((const char*) G__int(libp->para[0])));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18357216_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8010352_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__ClassInfo*) G__getstructoffset())->Next());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18358352_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8010512_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__ClassInfo*) G__getstructoffset())->Linkage());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18359120_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8011728_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 67, (long) ((Cint::G__ClassInfo*) G__getstructoffset())->FileName());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18345712_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8011936_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__ClassInfo*) G__getstructoffset())->LineNumber());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18359808_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_7999616_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__ClassInfo*) G__getstructoffset())->IsTmplt());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18361392_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8013024_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 67, (long) ((Cint::G__ClassInfo*) G__getstructoffset())->TmpltName());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18362000_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8014464_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 67, (long) ((Cint::G__ClassInfo*) G__getstructoffset())->TmpltArg());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18364288_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8016704_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__ClassInfo*) G__getstructoffset())->SetDefFile((char*) G__int(libp->para[0]));
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18365472_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8017856_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__ClassInfo*) G__getstructoffset())->SetDefLine((int) G__int(libp->para[0]));
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18366304_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8016096_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__ClassInfo*) G__getstructoffset())->SetImpFile((char*) G__int(libp->para[0]));
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18367136_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8019520_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__ClassInfo*) G__getstructoffset())->SetImpLine((int) G__int(libp->para[0]));
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18367968_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8020416_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__ClassInfo*) G__getstructoffset())->SetVersion((int) G__int(libp->para[0]));
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18368272_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8021312_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 67, (long) ((Cint::G__ClassInfo*) G__getstructoffset())->DefFile());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18369408_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8021520_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__ClassInfo*) G__getstructoffset())->DefLine());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18370176_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8022688_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 67, (long) ((Cint::G__ClassInfo*) G__getstructoffset())->ImpFile());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18370336_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8022896_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__ClassInfo*) G__getstructoffset())->ImpLine());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18370992_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8024064_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__ClassInfo*) G__getstructoffset())->Version());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18371696_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8024368_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 89, (long) ((Cint::G__ClassInfo*) G__getstructoffset())->New());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18373008_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8025552_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 89, (long) ((Cint::G__ClassInfo*) G__getstructoffset())->New((int) G__int(libp->para[0])));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18374192_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8026768_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 89, (long) ((Cint::G__ClassInfo*) G__getstructoffset())->New((void*) G__int(libp->para[0])));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18375424_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8027952_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 89, (long) ((Cint::G__ClassInfo*) G__getstructoffset())->New((int) G__int(libp->para[0]), (void*) G__int(libp->para[1])));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18376720_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8029152_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((const Cint::G__ClassInfo*) G__getstructoffset())->Delete((void*) G__int(libp->para[0]));
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18377760_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8029920_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((const Cint::G__ClassInfo*) G__getstructoffset())->Destruct((void*) G__int(libp->para[0]));
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18378752_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8031104_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    switch (libp->paran) {
    case 2:
@@ -1309,53 +1237,53 @@ static int G__G__API_98_18378752_0(G__value* result7, G__CONST char* funcname, s
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18379440_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8032256_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__ClassInfo*) G__getstructoffset())->InstanceCount());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18380080_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8032416_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__ClassInfo*) G__getstructoffset())->ResetInstanceCount();
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18380688_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8033024_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__ClassInfo*) G__getstructoffset())->IncInstanceCount();
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18381296_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8033632_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__ClassInfo*) G__getstructoffset())->HeapInstanceCount());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18382496_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8034240_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__ClassInfo*) G__getstructoffset())->IncHeapInstanceCount();
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18382800_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8035456_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__ClassInfo*) G__getstructoffset())->ResetHeapInstanceCount();
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18384000_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8036224_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__ClassInfo*) G__getstructoffset())->RootFlag());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18392768_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8045104_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    switch (libp->paran) {
    case 5:
@@ -1375,7 +1303,7 @@ static int G__G__API_98_18392768_0(G__value* result7, G__CONST char* funcname, s
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18394768_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8047136_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    switch (libp->paran) {
    case 5:
@@ -1416,7 +1344,7 @@ static int G__G__API_98_18394768_0(G__value* result7, G__CONST char* funcname, s
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18397008_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8049216_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    switch (libp->paran) {
    case 5:
@@ -1457,7 +1385,7 @@ static int G__G__API_98_18397008_0(G__value* result7, G__CONST char* funcname, s
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18397936_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8049952_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       {
          Cint::G__MethodInfo* pobj;
@@ -1470,7 +1398,7 @@ static int G__G__API_98_18397936_0(G__value* result7, G__CONST char* funcname, s
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18399216_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8051168_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       {
          Cint::G__MethodInfo* pobj;
@@ -1483,7 +1411,7 @@ static int G__G__API_98_18399216_0(G__value* result7, G__CONST char* funcname, s
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18391776_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8051936_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       {
          Cint::G__MethodInfo* pobj;
@@ -1496,7 +1424,7 @@ static int G__G__API_98_18391776_0(G__value* result7, G__CONST char* funcname, s
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18360416_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8014000_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       {
          Cint::G__MethodInfo* pobj;
@@ -1509,7 +1437,7 @@ static int G__G__API_98_18360416_0(G__value* result7, G__CONST char* funcname, s
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18402656_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8054896_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    switch (libp->paran) {
    case 6:
@@ -1562,7 +1490,7 @@ static int G__G__API_98_18402656_0(G__value* result7, G__CONST char* funcname, s
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18403936_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8056016_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       {
          Cint::G__DataMemberInfo* pobj;
@@ -1575,38 +1503,38 @@ static int G__G__API_98_18403936_0(G__value* result7, G__CONST char* funcname, s
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18405280_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8057296_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__ClassInfo*) G__getstructoffset())->HasMethod((const char*) G__int(libp->para[0])));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18406048_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8058064_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__ClassInfo*) G__getstructoffset())->HasDataMember((const char*) G__int(libp->para[0])));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18406352_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8058368_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__ClassInfo*) G__getstructoffset())->HasDefaultConstructor());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18408288_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8060272_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 108, (long) ((Cint::G__ClassInfo*) G__getstructoffset())->ClassProperty());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_98_18409056_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_8060560_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 98, (long) ((Cint::G__ClassInfo*) G__getstructoffset())->FuncFlag());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
 // automatic copy constructor
-static int G__G__API_98_0_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_0_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 
 {
    Cint::G__ClassInfo* p;
@@ -1620,7 +1548,7 @@ static int G__G__API_98_0_0(G__value* result7, G__CONST char* funcname, struct G
 
 // automatic destructor
 typedef Cint::G__ClassInfo G__TCintcLcLG__ClassInfo;
-static int G__G__API_98_0_1(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_0_1(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    char* gvp = (char*) G__getgvp();
    long soff = G__getstructoffset();
@@ -1657,7 +1585,7 @@ static int G__G__API_98_0_1(G__value* result7, G__CONST char* funcname, struct G
 }
 
 // automatic assignment operator
-static int G__G__API_98_0_2(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_144_0_2(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    Cint::G__ClassInfo* dest = (Cint::G__ClassInfo*) G__getstructoffset();
    *dest = *(Cint::G__ClassInfo*) libp->para[0].ref;
@@ -1669,7 +1597,7 @@ static int G__G__API_98_0_2(G__value* result7, G__CONST char* funcname, struct G
 
 
 /* Cint::G__BaseClassInfo */
-static int G__G__API_101_18422912_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_147_8075040_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    Cint::G__BaseClassInfo* p = NULL;
    char* gvp = (char*)G__getgvp();
@@ -1685,57 +1613,57 @@ static int G__G__API_101_18422912_0(G__value* result7, G__CONST char* funcname, 
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_101_18424272_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_147_8076240_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__BaseClassInfo*) G__getstructoffset())->Init(*(Cint::G__ClassInfo*) libp->para[0].ref);
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_101_18424736_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_147_8076848_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 108, (long) ((Cint::G__BaseClassInfo*) G__getstructoffset())->Offset());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_101_18425808_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_147_8077920_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 108, (long) ((Cint::G__BaseClassInfo*) G__getstructoffset())->Property());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_101_18426016_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_147_8078688_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__BaseClassInfo*) G__getstructoffset())->IsValid());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_101_18427184_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_147_8078896_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__BaseClassInfo*) G__getstructoffset())->Next());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_101_18427952_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_147_8080064_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__BaseClassInfo*) G__getstructoffset())->Next((int) G__int(libp->para[0])));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_101_18428288_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_147_8081008_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__BaseClassInfo*) G__getstructoffset())->Prev());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_101_18429664_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_147_8082000_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__BaseClassInfo*) G__getstructoffset())->Prev((int) G__int(libp->para[0])));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
 // automatic copy constructor
-static int G__G__API_101_0_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_147_0_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 
 {
    Cint::G__BaseClassInfo* p;
@@ -1749,7 +1677,7 @@ static int G__G__API_101_0_0(G__value* result7, G__CONST char* funcname, struct 
 
 // automatic destructor
 typedef Cint::G__BaseClassInfo G__TCintcLcLG__BaseClassInfo;
-static int G__G__API_101_0_1(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_147_0_1(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    char* gvp = (char*) G__getgvp();
    long soff = G__getstructoffset();
@@ -1786,7 +1714,7 @@ static int G__G__API_101_0_1(G__value* result7, G__CONST char* funcname, struct 
 }
 
 // automatic assignment operator
-static int G__G__API_101_0_2(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_147_0_2(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    Cint::G__BaseClassInfo* dest = (Cint::G__BaseClassInfo*) G__getstructoffset();
    *dest = *(Cint::G__BaseClassInfo*) libp->para[0].ref;
@@ -1798,23 +1726,7 @@ static int G__G__API_101_0_2(G__value* result7, G__CONST char* funcname, struct 
 
 
 /* Cint::G__TypeInfo */
-static int G__G__API_102_18437440_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
-{
-   Cint::G__TypeInfo* p = NULL;
-   char* gvp = (char*)G__getgvp();
-   //m: 1
-   if ((gvp == (char*) G__PVOID) || (gvp == 0)) {
-     p = new Cint::G__TypeInfo(*(Reflex::Type*) libp->para[0].ref);
-   } else {
-     p = new((void*) gvp) Cint::G__TypeInfo(*(Reflex::Type*) libp->para[0].ref);
-   }
-   result7->obj.i = (long) p;
-   result7->ref = (long) p;
-   G__set_tagnum(result7,G__get_linked_tagnum(&G__G__APILN_CintcLcLG__TypeInfo));
-   return(1 || funcname || hash || result7 || libp) ;
-}
-
-static int G__G__API_102_18438544_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_148_8089392_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    Cint::G__TypeInfo* p = NULL;
    char* gvp = (char*)G__getgvp();
@@ -1830,7 +1742,7 @@ static int G__G__API_102_18438544_0(G__value* result7, G__CONST char* funcname, 
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_102_18439616_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_148_8090528_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    Cint::G__TypeInfo* p = NULL;
    char* gvp = (char*)G__getgvp();
@@ -1854,106 +1766,86 @@ static int G__G__API_102_18439616_0(G__value* result7, G__CONST char* funcname, 
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_102_18440640_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_148_8091552_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__TypeInfo*) G__getstructoffset())->Init((const char*) G__int(libp->para[0]));
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_102_18441568_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
-{
-      ((Cint::G__TypeInfo*) G__getstructoffset())->Init(*(Reflex::Type*) libp->para[0].ref);
-      G__setnull(result7);
-   return(1 || funcname || hash || result7 || libp) ;
-}
-
-static int G__G__API_102_18442560_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_148_8092656_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__TypeInfo*) G__getstructoffset())->operator==(*(Cint::G__TypeInfo*) libp->para[0].ref));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_102_18443616_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_148_8091888_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__TypeInfo*) G__getstructoffset())->operator!=(*(Cint::G__TypeInfo*) libp->para[0].ref));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_102_18444416_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_148_8094304_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 67, (long) ((Cint::G__TypeInfo*) G__getstructoffset())->Name());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_102_18445328_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_148_8094608_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 67, (long) ((Cint::G__TypeInfo*) G__getstructoffset())->TrueName());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_102_18446096_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_148_8095680_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((const Cint::G__TypeInfo*) G__getstructoffset())->Size());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_102_18446256_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_148_8096592_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 108, (long) ((Cint::G__TypeInfo*) G__getstructoffset())->Property());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_102_18447472_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_148_8097360_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__TypeInfo*) G__getstructoffset())->IsValid());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_102_18447776_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_148_8098128_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 89, (long) ((Cint::G__TypeInfo*) G__getstructoffset())->New());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_102_18448848_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_148_8098288_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((const Cint::G__TypeInfo*) G__getstructoffset())->Typenum());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_102_18449056_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_148_8098976_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((const Cint::G__TypeInfo*) G__getstructoffset())->Type());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_102_18450224_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_148_8100112_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((const Cint::G__TypeInfo*) G__getstructoffset())->Reftype());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_102_18450928_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_148_8100352_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((const Cint::G__TypeInfo*) G__getstructoffset())->Isconst());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_102_18451536_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
-{
-      {
-         const Reflex::Type* pobj;
-         const Reflex::Type xobj = ((const Cint::G__TypeInfo*) G__getstructoffset())->ReflexType();
-         pobj = new Reflex::Type(xobj);
-         result7->obj.i = (long) ((void*) pobj);
-         result7->ref = result7->obj.i;
-         G__store_tempobject(*result7);
-      }
-   return(1 || funcname || hash || result7 || libp) ;
-}
-
-static int G__G__API_102_18452800_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_148_8101536_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       {
          const G__value* pobj;
@@ -1967,7 +1859,7 @@ static int G__G__API_102_18452800_0(G__value* result7, G__CONST char* funcname, 
 }
 
 // automatic copy constructor
-static int G__G__API_102_0_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_148_0_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 
 {
    Cint::G__TypeInfo* p;
@@ -1981,7 +1873,7 @@ static int G__G__API_102_0_0(G__value* result7, G__CONST char* funcname, struct 
 
 // automatic destructor
 typedef Cint::G__TypeInfo G__TCintcLcLG__TypeInfo;
-static int G__G__API_102_0_1(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_148_0_1(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    char* gvp = (char*) G__getgvp();
    long soff = G__getstructoffset();
@@ -2018,7 +1910,7 @@ static int G__G__API_102_0_1(G__value* result7, G__CONST char* funcname, struct 
 }
 
 // automatic assignment operator
-static int G__G__API_102_0_2(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_148_0_2(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    Cint::G__TypeInfo* dest = (Cint::G__TypeInfo*) G__getstructoffset();
    *dest = *(Cint::G__TypeInfo*) libp->para[0].ref;
@@ -2030,98 +1922,7 @@ static int G__G__API_102_0_2(G__value* result7, G__CONST char* funcname, struct 
 
 
 /* Cint::G__MethodArgInfo */
-static int G__G__API_106_18509136_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
-{
-      ((Cint::G__MethodArgInfo*) G__getstructoffset())->Init(*(Cint::G__MethodInfo*) libp->para[0].ref);
-      G__setnull(result7);
-   return(1 || funcname || hash || result7 || libp) ;
-}
-
-static int G__G__API_106_18510416_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
-{
-   Cint::G__MethodArgInfo* p = NULL;
-   char* gvp = (char*)G__getgvp();
-   //m: 1
-   if ((gvp == (char*) G__PVOID) || (gvp == 0)) {
-     p = new Cint::G__MethodArgInfo(*(Cint::G__MethodInfo*) libp->para[0].ref);
-   } else {
-     p = new((void*) gvp) Cint::G__MethodArgInfo(*(Cint::G__MethodInfo*) libp->para[0].ref);
-   }
-   result7->obj.i = (long) p;
-   result7->ref = (long) p;
-   G__set_tagnum(result7,G__get_linked_tagnum(&G__G__APILN_CintcLcLG__MethodArgInfo));
-   return(1 || funcname || hash || result7 || libp) ;
-}
-
-static int G__G__API_106_18511712_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
-{
-   Cint::G__MethodArgInfo* p = NULL;
-   char* gvp = (char*)G__getgvp();
-   //m: 1
-   if ((gvp == (char*) G__PVOID) || (gvp == 0)) {
-     p = new Cint::G__MethodArgInfo(*(Cint::G__MethodArgInfo*) libp->para[0].ref);
-   } else {
-     p = new((void*) gvp) Cint::G__MethodArgInfo(*(Cint::G__MethodArgInfo*) libp->para[0].ref);
-   }
-   result7->obj.i = (long) p;
-   result7->ref = (long) p;
-   G__set_tagnum(result7,G__get_linked_tagnum(&G__G__APILN_CintcLcLG__MethodArgInfo));
-   return(1 || funcname || hash || result7 || libp) ;
-}
-
-static int G__G__API_106_18512928_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
-{
-      {
-         const Cint::G__MethodArgInfo& obj = ((Cint::G__MethodArgInfo*) G__getstructoffset())->operator=(*(Cint::G__MethodArgInfo*) libp->para[0].ref);
-         result7->ref = (long) (&obj);
-         result7->obj.i = (long) (&obj);
-      }
-   return(1 || funcname || hash || result7 || libp) ;
-}
-
-static int G__G__API_106_18514064_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
-{
-      G__letint(result7, 67, (long) ((Cint::G__MethodArgInfo*) G__getstructoffset())->Name());
-   return(1 || funcname || hash || result7 || libp) ;
-}
-
-static int G__G__API_106_18514224_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
-{
-      G__letint(result7, 85, (long) ((Cint::G__MethodArgInfo*) G__getstructoffset())->Type());
-   return(1 || funcname || hash || result7 || libp) ;
-}
-
-static int G__G__API_106_18514832_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
-{
-      G__letint(result7, 108, (long) ((Cint::G__MethodArgInfo*) G__getstructoffset())->Property());
-   return(1 || funcname || hash || result7 || libp) ;
-}
-
-static int G__G__API_106_18515584_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
-{
-      G__letint(result7, 67, (long) ((Cint::G__MethodArgInfo*) G__getstructoffset())->DefaultValue());
-   return(1 || funcname || hash || result7 || libp) ;
-}
-
-static int G__G__API_106_18517216_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
-{
-      G__letint(result7, 85, (long) ((Cint::G__MethodArgInfo*) G__getstructoffset())->ArgOf());
-   return(1 || funcname || hash || result7 || libp) ;
-}
-
-static int G__G__API_106_18518192_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
-{
-      G__letint(result7, 105, (long) ((Cint::G__MethodArgInfo*) G__getstructoffset())->IsValid());
-   return(1 || funcname || hash || result7 || libp) ;
-}
-
-static int G__G__API_106_18518960_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
-{
-      G__letint(result7, 105, (long) ((Cint::G__MethodArgInfo*) G__getstructoffset())->Next());
-   return(1 || funcname || hash || result7 || libp) ;
-}
-
-static int G__G__API_106_18521808_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_152_8155456_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    Cint::G__MethodArgInfo* p = NULL;
    char* gvp = (char*)G__getgvp();
@@ -2145,9 +1946,100 @@ static int G__G__API_106_18521808_0(G__value* result7, G__CONST char* funcname, 
    return(1 || funcname || hash || result7 || libp) ;
 }
 
+static int G__G__API_152_8156656_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+{
+   Cint::G__MethodArgInfo* p = NULL;
+   char* gvp = (char*)G__getgvp();
+   //m: 1
+   if ((gvp == (char*) G__PVOID) || (gvp == 0)) {
+     p = new Cint::G__MethodArgInfo(*(Cint::G__MethodInfo*) libp->para[0].ref);
+   } else {
+     p = new((void*) gvp) Cint::G__MethodArgInfo(*(Cint::G__MethodInfo*) libp->para[0].ref);
+   }
+   result7->obj.i = (long) p;
+   result7->ref = (long) p;
+   G__set_tagnum(result7,G__get_linked_tagnum(&G__G__APILN_CintcLcLG__MethodArgInfo));
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
+static int G__G__API_152_8157760_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+{
+      ((Cint::G__MethodArgInfo*) G__getstructoffset())->Init(*(Cint::G__MethodInfo*) libp->para[0].ref);
+      G__setnull(result7);
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
+static int G__G__API_152_8159120_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+{
+   Cint::G__MethodArgInfo* p = NULL;
+   char* gvp = (char*)G__getgvp();
+   //m: 1
+   if ((gvp == (char*) G__PVOID) || (gvp == 0)) {
+     p = new Cint::G__MethodArgInfo(*(Cint::G__MethodArgInfo*) libp->para[0].ref);
+   } else {
+     p = new((void*) gvp) Cint::G__MethodArgInfo(*(Cint::G__MethodArgInfo*) libp->para[0].ref);
+   }
+   result7->obj.i = (long) p;
+   result7->ref = (long) p;
+   G__set_tagnum(result7,G__get_linked_tagnum(&G__G__APILN_CintcLcLG__MethodArgInfo));
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
+static int G__G__API_152_8160288_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+{
+      {
+         const Cint::G__MethodArgInfo& obj = ((Cint::G__MethodArgInfo*) G__getstructoffset())->operator=(*(Cint::G__MethodArgInfo*) libp->para[0].ref);
+         result7->ref = (long) (&obj);
+         result7->obj.i = (long) (&obj);
+      }
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
+static int G__G__API_152_8161392_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+{
+      G__letint(result7, 67, (long) ((Cint::G__MethodArgInfo*) G__getstructoffset())->Name());
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
+static int G__G__API_152_8161696_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+{
+      G__letint(result7, 85, (long) ((Cint::G__MethodArgInfo*) G__getstructoffset())->Type());
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
+static int G__G__API_152_8162768_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+{
+      G__letint(result7, 108, (long) ((Cint::G__MethodArgInfo*) G__getstructoffset())->Property());
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
+static int G__G__API_152_8163776_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+{
+      G__letint(result7, 67, (long) ((Cint::G__MethodArgInfo*) G__getstructoffset())->DefaultValue());
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
+static int G__G__API_152_8164720_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+{
+      G__letint(result7, 85, (long) ((Cint::G__MethodArgInfo*) G__getstructoffset())->ArgOf());
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
+static int G__G__API_152_8165664_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+{
+      G__letint(result7, 105, (long) ((Cint::G__MethodArgInfo*) G__getstructoffset())->IsValid());
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
+static int G__G__API_152_8166432_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+{
+      G__letint(result7, 105, (long) ((Cint::G__MethodArgInfo*) G__getstructoffset())->Next());
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
 // automatic destructor
 typedef Cint::G__MethodArgInfo G__TCintcLcLG__MethodArgInfo;
-static int G__G__API_106_0_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_152_0_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    char* gvp = (char*) G__getgvp();
    long soff = G__getstructoffset();
@@ -2185,7 +2077,7 @@ static int G__G__API_106_0_0(G__value* result7, G__CONST char* funcname, struct 
 
 
 /* Cint::G__CallFunc */
-static int G__G__API_108_18561120_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_154_8205616_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    Cint::G__CallFunc* p = NULL;
    char* gvp = (char*)G__getgvp();
@@ -2209,7 +2101,7 @@ static int G__G__API_108_18561120_0(G__value* result7, G__CONST char* funcname, 
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_108_18562288_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_154_8206960_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    Cint::G__CallFunc* p = NULL;
    char* gvp = (char*)G__getgvp();
@@ -2225,7 +2117,7 @@ static int G__G__API_108_18562288_0(G__value* result7, G__CONST char* funcname, 
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_108_18563584_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_154_8208320_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       {
          const Cint::G__CallFunc& obj = ((Cint::G__CallFunc*) G__getstructoffset())->operator=(*(Cint::G__CallFunc*) libp->para[0].ref);
@@ -2235,14 +2127,14 @@ static int G__G__API_108_18563584_0(G__value* result7, G__CONST char* funcname, 
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_108_18564672_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_154_8204272_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__CallFunc*) G__getstructoffset())->Init();
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_108_18569168_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_154_8210848_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    switch (libp->paran) {
    case 5:
@@ -2260,7 +2152,7 @@ static int G__G__API_108_18569168_0(G__value* result7, G__CONST char* funcname, 
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_108_18570784_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_154_8212496_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__CallFunc*) G__getstructoffset())->SetFuncProto((Cint::G__ClassInfo*) G__int(libp->para[0]), (const char*) G__int(libp->para[1])
 , (const char*) G__int(libp->para[2]), (long*) G__int(libp->para[3]));
@@ -2268,34 +2160,34 @@ static int G__G__API_108_18570784_0(G__value* result7, G__CONST char* funcname, 
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_108_18572144_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_154_8213936_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__CallFunc*) G__getstructoffset())->SetFunc((G__InterfaceMethod) G__int(libp->para[0]));
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_108_18573136_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_154_8214928_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__CallFunc*) G__getstructoffset())->SetFunc(*((Cint::G__MethodInfo*) G__int(libp->para[0])));
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_108_18574352_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_154_8216096_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__CallFunc*) G__getstructoffset())->SetBytecode((G__bytecodefunc*) G__int(libp->para[0]));
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_108_18574960_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_154_8217200_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__CallFunc*) G__getstructoffset())->IsValid());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_108_18576176_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_154_8218128_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    switch (libp->paran) {
    case 2:
@@ -2310,98 +2202,98 @@ static int G__G__API_108_18576176_0(G__value* result7, G__CONST char* funcname, 
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_108_18576864_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_154_8219280_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__CallFunc*) G__getstructoffset())->ResetArg();
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_108_18577968_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_154_8220048_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__CallFunc*) G__getstructoffset())->SetArg((long) G__int(libp->para[0]));
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_108_18578960_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_154_8220304_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__CallFunc*) G__getstructoffset())->SetArg((unsigned long) G__int(libp->para[0]));
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_108_18580208_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_154_8221744_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__CallFunc*) G__getstructoffset())->SetArg((double) G__double(libp->para[0]));
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_108_18581328_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_154_8222880_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__CallFunc*) G__getstructoffset())->SetArgRef(*(long*) G__Longref(&libp->para[0]));
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_108_18582720_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_154_8224144_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__CallFunc*) G__getstructoffset())->SetArgRef(*(double*) G__Doubleref(&libp->para[0]));
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_108_18583840_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_154_8225296_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__CallFunc*) G__getstructoffset())->SetArg(*((G__value*) G__int(libp->para[0])));
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_108_18585040_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_154_8226448_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__CallFunc*) G__getstructoffset())->SetArg((G__int64) G__Longlong(libp->para[0]));
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_108_18586288_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_154_8227552_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__CallFunc*) G__getstructoffset())->SetArg((G__uint64) G__ULonglong(libp->para[0]));
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_108_18587424_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_154_8228656_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__CallFunc*) G__getstructoffset())->SetArg((long double) G__Longdouble(libp->para[0]));
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_108_18588688_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_154_8229888_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__CallFunc*) G__getstructoffset())->SetArgRef(*(G__int64*) G__Longlongref(&libp->para[0]));
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_108_18589824_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_154_8231120_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__CallFunc*) G__getstructoffset())->SetArgRef(*(G__uint64*) G__ULonglongref(&libp->para[0]));
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_108_18591024_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_154_8232352_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__CallFunc*) G__getstructoffset())->SetArgRef(*(long double*) G__Longdoubleref(&libp->para[0]));
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_108_18592288_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_154_8233616_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       {
          G__value* pobj;
@@ -2414,45 +2306,45 @@ static int G__G__API_108_18592288_0(G__value* result7, G__CONST char* funcname, 
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_108_18593424_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_154_8234768_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__CallFunc*) G__getstructoffset())->Exec((void*) G__int(libp->para[0]));
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_108_18594352_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_154_8235696_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 108, (long) ((Cint::G__CallFunc*) G__getstructoffset())->ExecInt((void*) G__int(libp->para[0])));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_108_18595536_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_154_8236880_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letdouble(result7, 100, (double) ((Cint::G__CallFunc*) G__getstructoffset())->ExecDouble((void*) G__int(libp->para[0])));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_108_18596784_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_154_8238064_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letLonglong(result7, 110, (G__int64) ((Cint::G__CallFunc*) G__getstructoffset())->ExecInt64((void*) G__int(libp->para[0])));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_108_18597920_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_154_8239168_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 89, (long) ((Cint::G__CallFunc*) G__getstructoffset())->InterfaceMethod());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_108_18598608_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_154_8220816_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__CallFunc*) G__getstructoffset())->SetArgs((const char*) G__int(libp->para[0]));
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_108_18599360_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_154_8239856_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       {
          Cint::G__MethodInfo* pobj;
@@ -2467,7 +2359,7 @@ static int G__G__API_108_18599360_0(G__value* result7, G__CONST char* funcname, 
 
 // automatic destructor
 typedef Cint::G__CallFunc G__TCintcLcLG__CallFunc;
-static int G__G__API_108_0_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_154_0_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    char* gvp = (char*) G__getgvp();
    long soff = G__getstructoffset();
@@ -2505,7 +2397,7 @@ static int G__G__API_108_0_0(G__value* result7, G__CONST char* funcname, struct 
 
 
 /* Cint::G__TypedefInfo */
-static int G__G__API_110_18605120_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_156_8249632_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    Cint::G__TypedefInfo* p = NULL;
    char* gvp = (char*)G__getgvp();
@@ -2529,14 +2421,14 @@ static int G__G__API_110_18605120_0(G__value* result7, G__CONST char* funcname, 
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_110_18605984_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_156_8250912_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__TypedefInfo*) G__getstructoffset())->Init();
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_110_18606912_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_156_8252048_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    Cint::G__TypedefInfo* p = NULL;
    char* gvp = (char*)G__getgvp();
@@ -2552,14 +2444,14 @@ static int G__G__API_110_18606912_0(G__value* result7, G__CONST char* funcname, 
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_110_18608048_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_156_8253152_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__TypedefInfo*) G__getstructoffset())->Init((const char*) G__int(libp->para[0]));
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_110_18609040_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_156_8254240_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    Cint::G__TypedefInfo* p = NULL;
    char* gvp = (char*)G__getgvp();
@@ -2575,37 +2467,14 @@ static int G__G__API_110_18609040_0(G__value* result7, G__CONST char* funcname, 
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_110_18610048_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_156_8255168_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__TypedefInfo*) G__getstructoffset())->Init((int) G__int(libp->para[0]));
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_110_18611168_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
-{
-   Cint::G__TypedefInfo* p = NULL;
-   char* gvp = (char*)G__getgvp();
-   //m: 1
-   if ((gvp == (char*) G__PVOID) || (gvp == 0)) {
-     p = new Cint::G__TypedefInfo(*(Reflex::Type*) libp->para[0].ref);
-   } else {
-     p = new((void*) gvp) Cint::G__TypedefInfo(*(Reflex::Type*) libp->para[0].ref);
-   }
-   result7->obj.i = (long) p;
-   result7->ref = (long) p;
-   G__set_tagnum(result7,G__get_linked_tagnum(&G__G__APILN_CintcLcLG__TypedefInfo));
-   return(1 || funcname || hash || result7 || libp) ;
-}
-
-static int G__G__API_110_18612240_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
-{
-      ((Cint::G__TypedefInfo*) G__getstructoffset())->Init(*(Reflex::Type*) libp->para[0].ref);
-      G__setnull(result7);
-   return(1 || funcname || hash || result7 || libp) ;
-}
-
-static int G__G__API_110_18612832_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_156_8256064_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       {
          Cint::G__ClassInfo* pobj;
@@ -2618,51 +2487,51 @@ static int G__G__API_110_18612832_0(G__value* result7, G__CONST char* funcname, 
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_110_18613936_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_156_8256832_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 67, (long) ((Cint::G__TypedefInfo*) G__getstructoffset())->Title());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_110_18614704_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_156_8257744_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__TypedefInfo*) G__getstructoffset())->SetGlobalcomp((int) G__int(libp->para[0]));
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_110_18615104_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_156_8258656_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__TypedefInfo*) G__getstructoffset())->IsValid());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_110_18616240_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_156_8259424_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__TypedefInfo*) G__getstructoffset())->SetFilePos((const char*) G__int(libp->para[0])));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_110_18616640_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_156_8260192_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__TypedefInfo*) G__getstructoffset())->Next());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_110_18617312_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_156_8260960_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 67, (long) ((Cint::G__TypedefInfo*) G__getstructoffset())->FileName());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_110_18617920_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_156_8261120_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__TypedefInfo*) G__getstructoffset())->LineNumber());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
 // automatic copy constructor
-static int G__G__API_110_0_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_156_0_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 
 {
    Cint::G__TypedefInfo* p;
@@ -2676,7 +2545,7 @@ static int G__G__API_110_0_0(G__value* result7, G__CONST char* funcname, struct 
 
 // automatic destructor
 typedef Cint::G__TypedefInfo G__TCintcLcLG__TypedefInfo;
-static int G__G__API_110_0_1(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_156_0_1(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    char* gvp = (char*) G__getgvp();
    long soff = G__getstructoffset();
@@ -2713,7 +2582,7 @@ static int G__G__API_110_0_1(G__value* result7, G__CONST char* funcname, struct 
 }
 
 // automatic assignment operator
-static int G__G__API_110_0_2(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_156_0_2(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    Cint::G__TypedefInfo* dest = (Cint::G__TypedefInfo*) G__getstructoffset();
    *dest = *(Cint::G__TypedefInfo*) libp->para[0].ref;
@@ -2725,7 +2594,7 @@ static int G__G__API_110_0_2(G__value* result7, G__CONST char* funcname, struct 
 
 
 /* Cint::G__TokenInfo */
-static int G__G__API_111_18634288_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_157_8277120_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    Cint::G__TokenInfo* p = NULL;
    char* gvp = (char*)G__getgvp();
@@ -2749,7 +2618,7 @@ static int G__G__API_111_18634288_0(G__value* result7, G__CONST char* funcname, 
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_111_18635760_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_157_8278512_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    Cint::G__TokenInfo* p = NULL;
    char* gvp = (char*)G__getgvp();
@@ -2765,7 +2634,7 @@ static int G__G__API_111_18635760_0(G__value* result7, G__CONST char* funcname, 
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_111_18637024_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_157_8279888_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       {
          const Cint::G__TokenInfo& obj = ((Cint::G__TokenInfo*) G__getstructoffset())->operator=(*(Cint::G__TokenInfo*) libp->para[0].ref);
@@ -2775,14 +2644,14 @@ static int G__G__API_111_18637024_0(G__value* result7, G__CONST char* funcname, 
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_111_18637536_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_157_8275904_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__TokenInfo*) G__getstructoffset())->Init();
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_111_18639184_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_157_8282112_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       {
          Cint::G__MethodInfo* pobj;
@@ -2796,7 +2665,7 @@ static int G__G__API_111_18639184_0(G__value* result7, G__CONST char* funcname, 
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_111_18640992_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_157_8283920_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__TokenInfo*) G__getstructoffset())->Query(*(Cint::G__ClassInfo*) libp->para[0].ref, *(Cint::G__MethodInfo*) libp->para[1].ref
 , (const char*) G__int(libp->para[2]), (const char*) G__int(libp->para[3])
@@ -2804,19 +2673,19 @@ static int G__G__API_111_18640992_0(G__value* result7, G__CONST char* funcname, 
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_111_18641792_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_157_8284720_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__TokenInfo*) G__getstructoffset())->GetTokenType());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_111_18643040_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_157_8285936_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__TokenInfo*) G__getstructoffset())->GetTokenProperty());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_111_18643584_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_157_8286848_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       {
          Cint::G__ClassInfo* pobj;
@@ -2831,7 +2700,7 @@ static int G__G__API_111_18643584_0(G__value* result7, G__CONST char* funcname, 
 
 // automatic destructor
 typedef Cint::G__TokenInfo G__TCintcLcLG__TokenInfo;
-static int G__G__API_111_0_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_157_0_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    char* gvp = (char*) G__getgvp();
    long soff = G__getstructoffset();
@@ -2869,7 +2738,7 @@ static int G__G__API_111_0_0(G__value* result7, G__CONST char* funcname, struct 
 
 
 /* Cint::G__SourceFileInfo */
-static int G__G__API_114_18669104_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_160_8313568_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    Cint::G__SourceFileInfo* p = NULL;
    char* gvp = (char*)G__getgvp();
@@ -2893,7 +2762,7 @@ static int G__G__API_114_18669104_0(G__value* result7, G__CONST char* funcname, 
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_114_18670656_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_160_8315296_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    Cint::G__SourceFileInfo* p = NULL;
    char* gvp = (char*)G__getgvp();
@@ -2909,7 +2778,7 @@ static int G__G__API_114_18670656_0(G__value* result7, G__CONST char* funcname, 
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_114_18671872_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_160_8316640_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    Cint::G__SourceFileInfo* p = NULL;
    char* gvp = (char*)G__getgvp();
@@ -2925,45 +2794,45 @@ static int G__G__API_114_18671872_0(G__value* result7, G__CONST char* funcname, 
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_114_18673280_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_160_8317872_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__SourceFileInfo*) G__getstructoffset())->Init();
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_114_18674448_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_160_8319232_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__SourceFileInfo*) G__getstructoffset())->Init((const char*) G__int(libp->para[0]));
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_114_18675376_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_160_8320128_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 67, (long) ((Cint::G__SourceFileInfo*) G__getstructoffset())->Name());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_114_18675680_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_160_8320896_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 67, (long) ((Cint::G__SourceFileInfo*) G__getstructoffset())->Prepname());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_114_18676288_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_160_8321056_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 69, (long) ((Cint::G__SourceFileInfo*) G__getstructoffset())->fp());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_114_18677568_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_160_8322416_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__SourceFileInfo*) G__getstructoffset())->MaxLine());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_114_18678336_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_160_8323184_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       {
          const Cint::G__SourceFileInfo& obj = ((Cint::G__SourceFileInfo*) G__getstructoffset())->IncludedFrom();
@@ -2973,26 +2842,26 @@ static int G__G__API_114_18678336_0(G__value* result7, G__CONST char* funcname, 
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_114_18679216_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_160_8324064_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 108, (long) ((Cint::G__SourceFileInfo*) G__getstructoffset())->Property());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_114_18679984_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_160_8324832_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__SourceFileInfo*) G__getstructoffset())->IsValid());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_114_18680752_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_160_8325600_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__SourceFileInfo*) G__getstructoffset())->Next());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
 // automatic copy constructor
-static int G__G__API_114_0_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_160_0_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 
 {
    Cint::G__SourceFileInfo* p;
@@ -3006,7 +2875,7 @@ static int G__G__API_114_0_0(G__value* result7, G__CONST char* funcname, struct 
 
 // automatic destructor
 typedef Cint::G__SourceFileInfo G__TCintcLcLG__SourceFileInfo;
-static int G__G__API_114_0_1(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_160_0_1(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    char* gvp = (char*) G__getgvp();
    long soff = G__getstructoffset();
@@ -3043,7 +2912,7 @@ static int G__G__API_114_0_1(G__value* result7, G__CONST char* funcname, struct 
 }
 
 // automatic assignment operator
-static int G__G__API_114_0_2(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_160_0_2(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    Cint::G__SourceFileInfo* dest = (Cint::G__SourceFileInfo*) G__getstructoffset();
    *dest = *(Cint::G__SourceFileInfo*) libp->para[0].ref;
@@ -3055,7 +2924,7 @@ static int G__G__API_114_0_2(G__value* result7, G__CONST char* funcname, struct 
 
 
 /* Cint::G__IncludePathInfo */
-static int G__G__API_115_18683408_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_161_8318400_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    Cint::G__IncludePathInfo* p = NULL;
    char* gvp = (char*)G__getgvp();
@@ -3079,39 +2948,39 @@ static int G__G__API_115_18683408_0(G__value* result7, G__CONST char* funcname, 
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_115_18685072_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_161_8330240_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       ((Cint::G__IncludePathInfo*) G__getstructoffset())->Init();
       G__setnull(result7);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_115_18686304_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_161_8331040_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 67, (long) ((Cint::G__IncludePathInfo*) G__getstructoffset())->Name());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_115_18686608_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_161_8331808_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 108, (long) ((Cint::G__IncludePathInfo*) G__getstructoffset())->Property());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_115_18687216_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_161_8332016_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__IncludePathInfo*) G__getstructoffset())->IsValid());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_115_18688288_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_161_8333184_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) ((Cint::G__IncludePathInfo*) G__getstructoffset())->Next());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
 // automatic copy constructor
-static int G__G__API_115_0_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_161_0_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 
 {
    Cint::G__IncludePathInfo* p;
@@ -3125,7 +2994,7 @@ static int G__G__API_115_0_0(G__value* result7, G__CONST char* funcname, struct 
 
 // automatic destructor
 typedef Cint::G__IncludePathInfo G__TCintcLcLG__IncludePathInfo;
-static int G__G__API_115_0_1(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+static int G__G__API_161_0_1(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
    char* gvp = (char*) G__getgvp();
    long soff = G__getstructoffset();
@@ -3154,6 +3023,212 @@ static int G__G__API_115_0_1(G__value* result7, G__CONST char* funcname, struct 
      } else {
        G__setgvp((long) G__PVOID);
        ((Cint::G__IncludePathInfo*) (soff))->~G__TCintcLcLG__IncludePathInfo();
+       G__setgvp((long)gvp);
+     }
+   }
+   G__setnull(result7);
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
+
+/* Cint::G__ShadowMaker */
+static int G__G__API_166_8358624_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+{
+      G__letint(result7, 103, (long) Cint::G__ShadowMaker::NeedShadowClass(*(Cint::G__ClassInfo*) libp->para[0].ref));
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
+static int G__G__API_166_8360624_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+{
+   Cint::G__ShadowMaker* p = NULL;
+   char* gvp = (char*)G__getgvp();
+   switch (libp->paran) {
+   case 4:
+     //m: 4
+     if ((gvp == (char*)G__PVOID) || (gvp == 0)) {
+       p = new Cint::G__ShadowMaker(
+*(ostream*) libp->para[0].ref, (const char*) G__int(libp->para[1])
+, (bool (*)(Cint::G__ClassInfo&cl)) G__int(libp->para[2]), (bool (*)(Cint::G__ClassInfo&cl)) G__int(libp->para[3]));
+     } else {
+       p = new((void*) gvp) Cint::G__ShadowMaker(
+*(ostream*) libp->para[0].ref, (const char*) G__int(libp->para[1])
+, (bool (*)(Cint::G__ClassInfo&cl)) G__int(libp->para[2]), (bool (*)(Cint::G__ClassInfo&cl)) G__int(libp->para[3]));
+     }
+     break;
+   case 3:
+     //m: 3
+     if ((gvp == (char*)G__PVOID) || (gvp == 0)) {
+       p = new Cint::G__ShadowMaker(
+*(ostream*) libp->para[0].ref, (const char*) G__int(libp->para[1])
+, (bool (*)(Cint::G__ClassInfo&cl)) G__int(libp->para[2]));
+     } else {
+       p = new((void*) gvp) Cint::G__ShadowMaker(
+*(ostream*) libp->para[0].ref, (const char*) G__int(libp->para[1])
+, (bool (*)(Cint::G__ClassInfo&cl)) G__int(libp->para[2]));
+     }
+     break;
+   case 2:
+     //m: 2
+     if ((gvp == (char*)G__PVOID) || (gvp == 0)) {
+       p = new Cint::G__ShadowMaker(*(ostream*) libp->para[0].ref, (const char*) G__int(libp->para[1]));
+     } else {
+       p = new((void*) gvp) Cint::G__ShadowMaker(*(ostream*) libp->para[0].ref, (const char*) G__int(libp->para[1]));
+     }
+     break;
+   }
+   result7->obj.i = (long) p;
+   result7->ref = (long) p;
+   G__set_tagnum(result7,G__get_linked_tagnum(&G__G__APILN_CintcLcLG__ShadowMaker));
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
+static int G__G__API_166_8361344_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+{
+      ((Cint::G__ShadowMaker*) G__getstructoffset())->WriteAllShadowClasses();
+      G__setnull(result7);
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
+static int G__G__API_166_8362864_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+{
+   switch (libp->paran) {
+   case 2:
+      ((Cint::G__ShadowMaker*) G__getstructoffset())->WriteShadowClass(*(Cint::G__ClassInfo*) libp->para[0].ref, (int) G__int(libp->para[1]));
+      G__setnull(result7);
+      break;
+   case 1:
+      ((Cint::G__ShadowMaker*) G__getstructoffset())->WriteShadowClass(*(Cint::G__ClassInfo*) libp->para[0].ref);
+      G__setnull(result7);
+      break;
+   }
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
+static int G__G__API_166_8364224_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+{
+      G__letint(result7, 105, (long) ((Cint::G__ShadowMaker*) G__getstructoffset())->WriteNamespaceHeader(*(Cint::G__ClassInfo*) libp->para[0].ref));
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
+static int G__G__API_166_8365248_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+{
+      G__letint(result7, 105, (long) ((Cint::G__ShadowMaker*) G__getstructoffset())->NeedShadowCached((int) G__int(libp->para[0])));
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
+static int G__G__API_166_8366176_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+{
+      G__letint(result7, 103, (long) Cint::G__ShadowMaker::IsSTLCont((const char*) G__int(libp->para[0])));
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
+static int G__G__API_166_8366608_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+{
+      G__letint(result7, 103, (long) Cint::G__ShadowMaker::IsStdPair(*(Cint::G__ClassInfo*) libp->para[0].ref));
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
+static int G__G__API_166_8368064_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+{
+      Cint::G__ShadowMaker::GetFullyQualifiedName((const char*) G__int(libp->para[0]), *(string*) libp->para[1].ref);
+      G__setnull(result7);
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
+static int G__G__API_166_8368912_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+{
+      Cint::G__ShadowMaker::GetFullyQualifiedName(*(Cint::G__ClassInfo*) libp->para[0].ref, *(string*) libp->para[1].ref);
+      G__setnull(result7);
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
+static int G__G__API_166_8370752_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+{
+      Cint::G__ShadowMaker::GetFullyQualifiedName(*(Cint::G__TypeInfo*) libp->para[0].ref, *(string*) libp->para[1].ref);
+      G__setnull(result7);
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
+static int G__G__API_166_8373264_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+{
+   switch (libp->paran) {
+   case 2:
+      {
+         string* pobj;
+         string xobj = Cint::G__ShadowMaker::GetNonConstTypeName(*(Cint::G__DataMemberInfo*) libp->para[0].ref, (bool) G__int(libp->para[1]));
+         pobj = new string(xobj);
+         result7->obj.i = (long) ((void*) pobj);
+         result7->ref = result7->obj.i;
+         G__store_tempobject(*result7);
+      }
+      break;
+   case 1:
+      {
+         string* pobj;
+         string xobj = Cint::G__ShadowMaker::GetNonConstTypeName(*(Cint::G__DataMemberInfo*) libp->para[0].ref);
+         pobj = new string(xobj);
+         result7->obj.i = (long) ((void*) pobj);
+         result7->ref = result7->obj.i;
+         G__store_tempobject(*result7);
+      }
+      break;
+   }
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
+static int G__G__API_166_8372736_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+{
+      ((Cint::G__ShadowMaker*) G__getstructoffset())->GetFullShadowName(*(Cint::G__ClassInfo*) libp->para[0].ref, *(string*) libp->para[1].ref);
+      G__setnull(result7);
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
+static int G__G__API_166_8374352_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+{
+   switch (libp->paran) {
+   case 1:
+      Cint::G__ShadowMaker::VetoShadow((bool) G__int(libp->para[0]));
+      G__setnull(result7);
+      break;
+   case 0:
+      Cint::G__ShadowMaker::VetoShadow();
+      G__setnull(result7);
+      break;
+   }
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
+// automatic destructor
+typedef Cint::G__ShadowMaker G__TCintcLcLG__ShadowMaker;
+static int G__G__API_166_0_0(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
+{
+   char* gvp = (char*) G__getgvp();
+   long soff = G__getstructoffset();
+   int n = G__getaryconstruct();
+   //
+   //has_a_delete: 0
+   //has_own_delete1arg: 0
+   //has_own_delete2arg: 0
+   //
+   if (!soff) {
+     return(1);
+   }
+   if (n) {
+     if (gvp == (char*)G__PVOID) {
+       delete[] (Cint::G__ShadowMaker*) soff;
+     } else {
+       G__setgvp((long) G__PVOID);
+       for (int i = n - 1; i >= 0; --i) {
+         ((Cint::G__ShadowMaker*) (soff+(sizeof(Cint::G__ShadowMaker)*i)))->~G__TCintcLcLG__ShadowMaker();
+       }
+       G__setgvp((long)gvp);
+     }
+   } else {
+     if (gvp == (char*) G__PVOID) {
+       delete (Cint::G__ShadowMaker*) soff;
+     } else {
+       G__setgvp((long) G__PVOID);
+       ((Cint::G__ShadowMaker*) (soff))->~G__TCintcLcLG__ShadowMaker();
        G__setgvp((long)gvp);
      }
    }
@@ -3208,10 +3283,6 @@ static int G__G__API_115_0_1(G__value* result7, G__CONST char* funcname, struct 
 
 /* vector<Reflex::Type,allocator<Reflex::Type> >::iterator */
 
-/* vector<Reflex::Type,allocator<Reflex::Type> >::const_iterator */
-
-/* reverse_iterator<vector<Reflex::Type,allocator<Reflex::Type> >::const_iterator> */
-
 /* reverse_iterator<vector<Reflex::Type,allocator<Reflex::Type> >::iterator> */
 
 /* Cint::G__MethodInfo */
@@ -3245,6 +3316,10 @@ static int G__G__API_115_0_1(G__value* result7, G__CONST char* funcname, struct 
 /* Cint::G__SourceFileInfo */
 
 /* Cint::G__IncludePathInfo */
+
+/* Cint::G__ShadowMaker */
+
+/* bool (*)(Cint::G__ClassInfo&cl) */
 
 /*********************************************************
 * Global function Stub
@@ -3326,13 +3401,15 @@ extern "C" void G__cpp_setup_typetableG__API() {
    G__search_typename2("G__InterfaceMethod",89,-1,0,-1);
    G__setnewtype(-1,"int (*G__InterfaceMethod)(G__value*,G__CONST char*,struct G__param*,int);",0);
    G__search_typename2("G__pMethodSpecialObject",89,-1,0,G__get_linked_tagnum(&G__G__APILN_Cint));
-   G__setnewtype(-1,"void *(*G__pMethodSpecialObject)(char *item,G__ClassInfo *typeinfo",0);
+   G__setnewtype(-1,"void* (*G__pMethodSpecialObject)(char* item, G__ClassInfo* typeinfo, void** pptr, void** ppdict);",0);
    G__search_typename2("G__pMethodSpecialValue",89,-1,0,G__get_linked_tagnum(&G__G__APILN_Cint));
-   G__setnewtype(-1,"void (*G__pMethodSpecialValue)(char *item,G__TypeInfo *typeinfo",0);
+   G__setnewtype(-1,"void (*G__pMethodSpecialValue)(char* item, G__TypeInfo* typeinfo, long* pl, double* pd, void** pptr, void** ppdict);",0);
    G__search_typename2("G__pMethodUpdateClassInfo",89,-1,0,G__get_linked_tagnum(&G__G__APILN_Cint));
-   G__setnewtype(-1,"void (*G__pMethodUpdateClassInfo)(char *item,long tagnum);",0);
+   G__setnewtype(-1,"void (*G__pMethodUpdateClassInfo)(char* item, long tagnum);",0);
    G__search_typename2("G__pGenerateDictionary",89,-1,0,G__get_linked_tagnum(&G__G__APILN_Cint));
-   G__setnewtype(-1,"int (*G__pGenerateDictionary)(const std::string &className,const std::vector<std::string> &headers);",0);
+   G__setnewtype(-1,"int (*G__pGenerateDictionary)(const std::string& className, const std::vector<std::string>& headers);",0);
+   G__search_typename2("bool (*)(Cint::G__ClassInfo&cl)",49,-1,0,-1);
+   G__setnewtype(-1,NULL,0);
 }
 
 /*********************************************************
@@ -3496,6 +3573,15 @@ static void G__setup_memvarCintcLcLG__IncludePathInfo(void) {
    G__tag_memvar_reset();
 }
 
+
+   /* Cint::G__ShadowMaker */
+static void G__setup_memvarCintcLcLG__ShadowMaker(void) {
+   G__tag_memvar_setup(G__get_linked_tagnum(&G__G__APILN_CintcLcLG__ShadowMaker));
+   { Cint::G__ShadowMaker *p; p=(Cint::G__ShadowMaker*)0x1000; if (p) { }
+   }
+   G__tag_memvar_reset();
+}
+
 extern "C" void G__cpp_setup_memvarG__API() {
 }
 /***********************************************************
@@ -3513,19 +3599,21 @@ extern "C" void G__cpp_setup_memvarG__API() {
 static void G__setup_memfuncCint(void) {
    /* Cint */
    G__tag_memfunc_setup(G__get_linked_tagnum(&G__G__APILN_Cint));
-   G__memfunc_setup("G__InitGetSpecialObject",0,G__G__API_94_18523152_0, 121, -1, -1, 0, 1, 1, 1, 0, "Y - 'Cint::G__pMethodSpecialObject' 0 - pmethod", (char*)NULL, (void*) (void (*)(Cint::G__pMethodSpecialObject))(&Cint::G__InitGetSpecialObject), 0);
-   G__memfunc_setup("G__InitGetSpecialValue",0,G__G__API_94_18658512_0, 121, -1, -1, 0, 1, 1, 1, 0, "Y - 'Cint::G__pMethodSpecialValue' 0 - pmethod", (char*)NULL, (void*) (void (*)(Cint::G__pMethodSpecialValue))(&Cint::G__InitGetSpecialValue), 0);
-   G__memfunc_setup("G__SetGlobalcomp",0,G__G__API_94_18659728_0, 105, -1, -1, 0, 3, 1, 1, 0, 
+   G__memfunc_setup("G__InitGetSpecialObject",2257,G__G__API_140_8262480_0, 121, -1, -1, 0, 1, 1, 1, 0, "Y - 'Cint::G__pMethodSpecialObject' 0 - pmethod", (char*)NULL, (void*) (void (*)(Cint::G__pMethodSpecialObject))(&Cint::G__InitGetSpecialObject), 0);
+   G__memfunc_setup("G__InitGetSpecialValue",2167,G__G__API_140_8301248_0, 121, -1, -1, 0, 1, 1, 1, 0, "Y - 'Cint::G__pMethodSpecialValue' 0 - pmethod", (char*)NULL, (void*) (void (*)(Cint::G__pMethodSpecialValue))(&Cint::G__InitGetSpecialValue), 0);
+   G__memfunc_setup("G__SetGlobalcomp",1585,G__G__API_140_8302512_0, 105, -1, -1, 0, 3, 1, 1, 0, 
 "C - - 0 - funcname C - - 0 - param "
 "i - - 0 - globalcomp", (char*)NULL, (void*) (int (*)(char*, char*, int))(&Cint::G__SetGlobalcomp), 0);
-   G__memfunc_setup("G__ForceBytecodecompilation",0,G__G__API_94_18661120_0, 105, -1, -1, 0, 2, 1, 1, 0, 
+   G__memfunc_setup("G__ForceBytecodecompilation",2754,G__G__API_140_8303904_0, 105, -1, -1, 0, 2, 1, 1, 0, 
 "C - - 0 - funcname C - - 0 - param", (char*)NULL, (void*) (int (*)(char*, char*))(&Cint::G__ForceBytecodecompilation), 0);
-   G__memfunc_setup("G__InitUpdateClassInfo",0,G__G__API_94_18663200_0, 121, -1, -1, 0, 1, 1, 1, 0, "Y - 'Cint::G__pMethodUpdateClassInfo' 0 - pmethod", (char*)NULL, (void*) (void (*)(Cint::G__pMethodUpdateClassInfo))(&Cint::G__InitUpdateClassInfo), 0);
-   G__memfunc_setup("G__InitGenerateDictionary",0,G__G__API_94_18665088_0, 121, -1, -1, 0, 1, 1, 1, 0, "Y - 'Cint::G__pGenerateDictionary' 0 - gdict", (char*)NULL, (void*) (void (*)(Cint::G__pGenerateDictionary))(&Cint::G__InitGenerateDictionary), 0);
-   G__memfunc_setup("G__GetGenerateDictionary",0,G__G__API_94_18666176_0, 89, -1, G__defined_typename("Cint::G__pGenerateDictionary"), 0, 0, 1, 1, 0, "", (char*)NULL, (void*) (Cint::G__pGenerateDictionary (*)())(&Cint::G__GetGenerateDictionary), 0);
-   G__memfunc_setup("G__long_random",0,G__G__API_94_18683904_0, 107, -1, -1, 0, 1, 1, 1, 0, "k - - 0 - limit", (char*)NULL, (void*) (unsigned long (*)(unsigned long))(&Cint::G__long_random), 0);
-   G__memfunc_setup("G__letpointer",0,G__G__API_94_18714368_0, 121, -1, -1, 0, 3, 1, 1, 0, 
-"U 'G__value' - 0 - buf l - - 0 - value "
+   G__memfunc_setup("G__InitUpdateClassInfo",2174,G__G__API_140_8305920_0, 121, -1, -1, 0, 1, 1, 1, 0, "Y - 'Cint::G__pMethodUpdateClassInfo' 0 - pmethod", (char*)NULL, (void*) (void (*)(Cint::G__pMethodUpdateClassInfo))(&Cint::G__InitUpdateClassInfo), 0);
+   G__memfunc_setup("G__new_interpreted_object",2602,G__G__API_140_8306880_0, 89, -1, -1, 0, 1, 1, 1, 0, "i - - 0 - size", (char*)NULL, (void*) (void* (*)(int))(&Cint::G__new_interpreted_object), 0);
+   G__memfunc_setup("G__delete_interpreted_object",2899,G__G__API_140_8307808_0, 121, -1, -1, 0, 1, 1, 1, 0, "Y - - 0 - p", (char*)NULL, (void*) (void (*)(void*))(&Cint::G__delete_interpreted_object), 0);
+   G__memfunc_setup("G__InitGenerateDictionary",2522,G__G__API_140_8309504_0, 121, -1, -1, 0, 1, 1, 1, 0, "Y - 'Cint::G__pGenerateDictionary' 0 - gdict", (char*)NULL, (void*) (void (*)(Cint::G__pGenerateDictionary))(&Cint::G__InitGenerateDictionary), 0);
+   G__memfunc_setup("G__GetGenerateDictionary",2406,G__G__API_140_8310592_0, 89, -1, G__defined_typename("Cint::G__pGenerateDictionary"), 0, 0, 1, 1, 0, "", (char*)NULL, (void*) (Cint::G__pGenerateDictionary (*)())(&Cint::G__GetGenerateDictionary), 0);
+   G__memfunc_setup("G__long_random",1429,G__G__API_140_8328704_0, 107, -1, -1, 0, 1, 1, 1, 0, "k - - 0 - limit", (char*)NULL, (void*) (unsigned long (*)(unsigned long))(&Cint::G__long_random), 0);
+   G__memfunc_setup("G__letpointer",1355,G__G__API_140_8352784_0, 121, -1, -1, 0, 3, 1, 1, 0, 
+"U 'G__value' 'G__value' 0 - buf l - - 0 - value "
 "u 'Reflex::Type' - 11 - type", (char*)NULL, (void*) (void (*)(G__value*, long, const Reflex::Type&))(&Cint::G__letpointer), 0);
    G__tag_memfunc_reset();
 }
@@ -3533,424 +3621,445 @@ static void G__setup_memfuncCint(void) {
 static void G__setup_memfuncCintcLcLG__MethodInfo(void) {
    /* Cint::G__MethodInfo */
    G__tag_memfunc_setup(G__get_linked_tagnum(&G__G__APILN_CintcLcLG__MethodInfo));
-   G__memfunc_setup("G__MethodInfo",0,G__G__API_95_18461136_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__MethodInfo), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("G__MethodInfo",0,G__G__API_95_18462032_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__MethodInfo), -1, 0, 1, 1, 1, 0, "u 'Cint::G__ClassInfo' - 1 - a", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("G__MethodInfo",0,G__G__API_95_18463280_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__MethodInfo), -1, 0, 1, 1, 1, 0, "u 'Cint::G__MethodInfo' - 11 - mi", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("G__MethodInfo",0,G__G__API_95_18464528_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__MethodInfo), -1, 0, 1, 1, 1, 0, "u 'Reflex::Member' - 11 - m", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("operator=",0,G__G__API_95_18466128_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__MethodInfo), -1, 1, 1, 1, 1, 0, "u 'Cint::G__MethodInfo' - 11 - mi", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Init",0,G__G__API_95_18466528_0, 121, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Init",0,G__G__API_95_18467696_0, 121, -1, -1, 0, 1, 1, 1, 0, "u 'Cint::G__ClassInfo' - 1 - a", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Init",0,G__G__API_95_18468816_0, 121, -1, -1, 0, 3, 1, 1, 0, 
+   G__memfunc_setup("G__MethodInfo",1266,G__G__API_141_8110752_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__MethodInfo), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("G__MethodInfo",1266,G__G__API_141_8111728_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__MethodInfo), -1, 0, 1, 1, 1, 0, "u 'Cint::G__ClassInfo' - 1 - -", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("G__MethodInfo",1266,G__G__API_141_8112848_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__MethodInfo), -1, 0, 1, 1, 1, 0, "u 'Cint::G__MethodInfo' - 11 - -", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("operator=",937,G__G__API_141_8114112_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__MethodInfo), -1, 1, 1, 1, 1, 0, "u 'Cint::G__MethodInfo' - 11 - -", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Init",404,G__G__API_141_8115136_0, 121, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Init",404,G__G__API_141_8116112_0, 121, -1, -1, 0, 1, 1, 1, 0, "u 'Cint::G__ClassInfo' - 1 - -", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Init",404,G__G__API_141_8117376_0, 121, -1, -1, 0, 3, 1, 1, 0, 
 "l - - 0 - handlein l - - 0 - indexin "
 "U 'Cint::G__ClassInfo' - 0 - belongingclassin", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Init",0,G__G__API_95_18470448_0, 121, -1, -1, 0, 3, 1, 1, 0, 
+   G__memfunc_setup("Init",404,G__G__API_141_8118832_0, 121, -1, -1, 0, 3, 1, 1, 0, 
 "U 'Cint::G__ClassInfo' - 0 - belongingclassin l - - 0 - funcpage "
 "l - - 0 - indexin", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Name",0,G__G__API_95_18471584_0, 67, -1, -1, 0, 0, 1, 1, 1, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Handle",0,G__G__API_95_18471744_0, 107, -1, G__defined_typename("size_t"), 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("ReflexFunction",0,G__G__API_95_18472496_0, 117, G__get_linked_tagnum(&G__G__APILN_ReflexcLcLMember), -1, 0, 0, 1, 1, 8, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Index",0,G__G__API_95_18473776_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Title",0,G__G__API_95_18474544_0, 67, -1, -1, 0, 0, 1, 1, 1, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Type",0,G__G__API_95_18475488_0, 85, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__TypeInfo), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Property",0,G__G__API_95_18476464_0, 108, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("NArg",0,G__G__API_95_18477168_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("NDefaultArg",0,G__G__API_95_18477824_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("HasVarArgs",0,G__G__API_95_18478992_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("InterfaceMethod",0,G__G__API_95_18479280_0, 89, -1, G__defined_typename("G__InterfaceMethod"), 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("GetBytecode",0,G__G__API_95_18481088_0, 85, G__get_linked_tagnum(&G__G__APILN_G__bytecodefunc), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("GetLocalVariable",0,G__G__API_95_18482160_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__DataMemberInfo), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("PointerToFunc",0,G__G__API_95_18483216_0, 89, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("MemberOf",0,G__G__API_95_18483520_0, 85, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__ClassInfo), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("GetDefiningScopeTagnum",0,G__G__API_95_18484592_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("GetFriendInfo",0,G__G__API_95_18485392_0, 85, G__get_linked_tagnum(&G__G__APILN_G__friendtag), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("SetGlobalcomp",0,G__G__API_95_18486192_0, 121, -1, -1, 0, 1, 1, 1, 0, "i - - 0 - globalcomp", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("IsValid",0,G__G__API_95_18486688_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("SetFilePos",0,G__G__API_95_18487872_0, 105, -1, -1, 0, 1, 1, 1, 0, "C - - 10 - fname", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Next",0,G__G__API_95_18488272_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("FileName",0,G__G__API_95_18489408_0, 67, -1, -1, 0, 0, 1, 1, 1, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("LineNumber",0,G__G__API_95_18490176_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Size",0,G__G__API_95_18476992_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("IsBusy",0,G__G__API_95_18492000_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("FilePointer",0,G__G__API_95_18492768_0, 69, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("FilePosition",0,G__G__API_95_18493680_0, 108, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("GetPrototype",0,G__G__API_95_18494448_0, 67, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("GetMangledName",0,G__G__API_95_18495424_0, 67, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("LoadDLLDirect",0,G__G__API_95_18496400_0, 105, -1, -1, 0, 2, 1, 1, 0, 
+   G__memfunc_setup("Name",385,G__G__API_141_8120256_0, 67, -1, -1, 0, 0, 1, 1, 1, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Handle",588,G__G__API_141_8120416_0, 108, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Index",504,G__G__API_141_8121072_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Title",514,G__G__API_141_8122240_0, 67, -1, -1, 0, 0, 1, 1, 1, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Type",418,G__G__API_141_8123040_0, 85, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__TypeInfo), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Property",869,G__G__API_141_8123984_0, 108, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("NArg",360,G__G__API_141_8124752_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("NDefaultArg",1069,G__G__API_141_8125520_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("HasVarArgs",978,G__G__API_141_8126224_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("InterfaceMethod",1522,G__G__API_141_8126832_0, 89, -1, G__defined_typename("G__InterfaceMethod"), 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("GetBytecode",1103,G__G__API_141_8128464_0, 85, G__get_linked_tagnum(&G__G__APILN_G__bytecodefunc), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("GetLocalVariable",1585,G__G__API_141_8129504_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__DataMemberInfo), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("PointerToFunc",1328,G__G__API_141_8130528_0, 89, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("MemberOf",781,G__G__API_141_8066640_0, 85, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__ClassInfo), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("GetDefiningScopeTagnum",2218,G__G__API_141_8131904_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("GetFriendInfo",1284,G__G__API_141_8132768_0, 85, G__get_linked_tagnum(&G__G__APILN_G__friendtag), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("SetGlobalcomp",1324,G__G__API_141_8133616_0, 121, -1, -1, 0, 1, 1, 1, 0, "i - - 0 - globalcomp", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("SetForceStub",1209,G__G__API_141_8134608_0, 121, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("IsValid",684,G__G__API_141_8134816_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("SetFilePos",990,G__G__API_141_8136016_0, 105, -1, -1, 0, 1, 1, 1, 0, "C - - 10 - fname", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Next",415,G__G__API_141_8136912_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("FileName",769,G__G__API_141_8137216_0, 67, -1, -1, 0, 0, 1, 1, 1, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("LineNumber",1009,G__G__API_141_8137760_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Size",411,G__G__API_141_8138896_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("IsBusy",607,G__G__API_141_8114304_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("FilePointer",1121,G__G__API_141_8126048_0, 69, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("FilePosition",1237,G__G__API_141_8141024_0, 108, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("GetPrototype",1270,G__G__API_141_8141792_0, 67, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("GetMangledName",1369,G__G__API_141_8141952_0, 67, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("LoadDLLDirect",1207,G__G__API_141_8143344_0, 105, -1, -1, 0, 2, 1, 1, 0, 
 "C - - 10 - filename C - - 10 - funcname", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("SetVtblIndex",0,G__G__API_95_18497488_0, 121, -1, -1, 0, 1, 1, 1, 0, "i - - 0 - vtblindex", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("SetIsVirtual",0,G__G__API_95_18498352_0, 121, -1, -1, 0, 1, 1, 1, 0, "i - - 0 - isvirtual", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("SetVtblBasetagnum",0,G__G__API_95_18499184_0, 121, -1, -1, 0, 1, 1, 1, 0, "i - - 0 - basetagnum", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("SetUserParam",0,G__G__API_95_18499984_0, 121, -1, -1, 0, 1, 1, 1, 0, "Y - - 0 - -", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("GetUserParam",0,G__G__API_95_18500288_0, 89, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("GetThisPointerOffset",0,G__G__API_95_18500752_0, 108, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("SetVtblIndex",1212,G__G__API_141_8133072_0, 121, -1, -1, 0, 1, 1, 1, 0, "i - - 0 - vtblindex", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("SetIsVirtual",1231,G__G__API_141_8145088_0, 121, -1, -1, 0, 1, 1, 1, 0, "i - - 0 - isvirtual", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("SetVtblBasetagnum",1739,G__G__API_141_8145984_0, 121, -1, -1, 0, 1, 1, 1, 0, "i - - 0 - basetagnum", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("SetUserParam",1212,G__G__API_141_8146752_0, 121, -1, -1, 0, 1, 1, 1, 0, "Y - - 0 - -", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("GetUserParam",1200,G__G__API_141_8147520_0, 89, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("GetThisPointerOffset",2048,G__G__API_141_8147680_0, 108, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
    // automatic destructor
-   G__memfunc_setup("~G__MethodInfo", 1392, G__G__API_95_0_0, (int) ('y'), -1, -1, 0, 0, 1, 1, 0, "", (char*) NULL, (void*) NULL, 0);
+   G__memfunc_setup("~G__MethodInfo", 1392, G__G__API_141_0_0, (int) ('y'), -1, -1, 0, 0, 1, 1, 0, "", (char*) NULL, (void*) NULL, 0);
    G__tag_memfunc_reset();
 }
 
 static void G__setup_memfuncCintcLcLG__DataMemberInfo(void) {
    /* Cint::G__DataMemberInfo */
    G__tag_memfunc_setup(G__get_linked_tagnum(&G__G__APILN_CintcLcLG__DataMemberInfo));
-   G__memfunc_setup("G__DataMemberInfo",0,G__G__API_96_18528944_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__DataMemberInfo), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("G__DataMemberInfo",0,G__G__API_96_18529920_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__DataMemberInfo), -1, 0, 1, 1, 1, 0, "u 'Cint::G__ClassInfo' - 1 - -", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("G__DataMemberInfo",0,G__G__API_96_18531104_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__DataMemberInfo), -1, 0, 1, 1, 1, 0, "u 'Reflex::Member' - 10 - -", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("G__DataMemberInfo",0,G__G__API_96_18532496_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__DataMemberInfo), -1, 0, 1, 1, 1, 0, "u 'Cint::G__DataMemberInfo' - 11 - -", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("operator=",0,G__G__API_96_18533552_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__DataMemberInfo), -1, 1, 1, 1, 1, 0, "u 'Cint::G__DataMemberInfo' - 11 - -", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Init",0,G__G__API_96_18534608_0, 121, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Init",0,G__G__API_96_18534912_0, 121, -1, -1, 0, 1, 1, 1, 0, "u 'Cint::G__ClassInfo' - 1 - -", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Init",0,G__G__API_96_18536304_0, 121, -1, -1, 0, 1, 1, 1, 0, "u 'Reflex::Scope' - 10 - -", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Init",0,G__G__API_96_18537600_0, 121, -1, -1, 0, 3, 1, 1, 0, 
+   G__memfunc_setup("G__DataMemberInfo",1635,G__G__API_142_8174880_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__DataMemberInfo), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("G__DataMemberInfo",1635,G__G__API_142_8176128_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__DataMemberInfo), -1, 0, 1, 1, 1, 0, "u 'Cint::G__DataMemberInfo' - 11 - -", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("G__DataMemberInfo",1635,G__G__API_142_8177184_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__DataMemberInfo), -1, 0, 1, 1, 1, 0, "u 'Cint::G__ClassInfo' - 1 - -", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("operator=",937,G__G__API_142_8178512_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__DataMemberInfo), -1, 1, 1, 1, 1, 0, "u 'Cint::G__DataMemberInfo' - 11 - -", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Init",404,G__G__API_142_8179472_0, 121, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Init",404,G__G__API_142_8115440_0, 121, -1, -1, 0, 1, 1, 1, 0, "u 'Cint::G__ClassInfo' - 1 - -", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Init",404,G__G__API_142_8181184_0, 121, -1, -1, 0, 3, 1, 1, 0, 
 "l - - 0 - handlinin l - - 0 - indexin "
 "U 'Cint::G__ClassInfo' - 0 - belongingclassin", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Handle",0,G__G__API_96_18538752_0, 107, -1, G__defined_typename("size_t"), 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Index",0,G__G__API_96_18538912_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Name",0,G__G__API_96_18539792_0, 67, -1, -1, 0, 0, 1, 1, 1, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Title",0,G__G__API_96_18540544_0, 67, -1, -1, 0, 0, 1, 1, 1, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("ReflexType",0,G__G__API_96_18541152_0, 117, G__get_linked_tagnum(&G__G__APILN_ReflexcLcLType), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Type",0,G__G__API_96_18541760_0, 85, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__TypeInfo), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Property",0,G__G__API_96_18542976_0, 108, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Offset",0,G__G__API_96_18543408_0, 108, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Bitfield",0,G__G__API_96_18544624_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("ArrayDim",0,G__G__API_96_18544832_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("MaxIndex",0,G__G__API_96_18546000_0, 105, -1, -1, 0, 1, 1, 1, 0, "i - - 0 - dim", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("DeclaringScope",0,G__G__API_96_18546368_0, 117, G__get_linked_tagnum(&G__G__APILN_ReflexcLcLScope), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("MemberOf",0,G__G__API_96_18547040_0, 85, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__ClassInfo), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("SetGlobalcomp",0,G__G__API_96_18548112_0, 121, -1, -1, 0, 1, 1, 1, 0, "i - - 0 - globalcomp", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("IsValid",0,G__G__API_96_18548608_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("SetFilePos",0,G__G__API_96_18549792_0, 105, -1, -1, 0, 1, 1, 1, 0, "C - - 10 - fname", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Next",0,G__G__API_96_18550192_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Prev",0,G__G__API_96_18551328_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("ValidArrayIndex",0,G__G__API_96_18552864_0, 67, -1, -1, 0, 2, 1, 1, 1, 
+   G__memfunc_setup("Handle",588,G__G__API_142_8182144_0, 107, -1, G__defined_typename("size_t"), 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Index",504,G__G__API_142_8182448_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Name",385,G__G__API_142_8163216_0, 67, -1, -1, 0, 0, 1, 1, 1, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Title",514,G__G__API_142_8184192_0, 67, -1, -1, 0, 0, 1, 1, 1, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Type",418,G__G__API_142_8184624_0, 85, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__TypeInfo), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Property",869,G__G__API_142_8185264_0, 108, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Offset",615,G__G__API_142_8186448_0, 108, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Bitfield",803,G__G__API_142_8186688_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("ArrayDim",793,G__G__API_142_8187824_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("MaxIndex",798,G__G__API_142_8081456_0, 105, -1, -1, 0, 1, 1, 1, 0, "i - - 0 - dim", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("MemberOf",781,G__G__API_142_8189600_0, 85, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__ClassInfo), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("SetGlobalcomp",1324,G__G__API_142_8189792_0, 121, -1, -1, 0, 1, 1, 1, 0, "i - - 0 - globalcomp", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("IsValid",684,G__G__API_142_8191072_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("SetFilePos",990,G__G__API_142_8191840_0, 105, -1, -1, 0, 1, 1, 1, 0, "C - - 10 - fname", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Next",415,G__G__API_142_8192608_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Prev",413,G__G__API_142_8192768_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("ValidArrayIndex",1511,G__G__API_142_8194224_0, 67, -1, -1, 0, 2, 1, 1, 1, 
 "I - - 0 '0' errnum C - - 2 '0' errstr", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("FileName",0,G__G__API_96_18553552_0, 67, -1, -1, 0, 0, 1, 1, 1, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("LineNumber",0,G__G__API_96_18554192_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("FileName",769,G__G__API_142_8195376_0, 67, -1, -1, 0, 0, 1, 1, 1, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("LineNumber",1009,G__G__API_142_8195536_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
    // automatic destructor
-   G__memfunc_setup("~G__DataMemberInfo", 1761, G__G__API_96_0_0, (int) ('y'), -1, -1, 0, 0, 1, 1, 0, "", (char*) NULL, (void*) NULL, 0);
+   G__memfunc_setup("~G__DataMemberInfo", 1761, G__G__API_142_0_0, (int) ('y'), -1, -1, 0, 0, 1, 1, 0, "", (char*) NULL, (void*) NULL, 0);
    G__tag_memfunc_reset();
 }
 
 static void G__setup_memfuncCintcLcLG__FriendInfo(void) {
    /* Cint::G__FriendInfo */
    G__tag_memfunc_setup(G__get_linked_tagnum(&G__G__APILN_CintcLcLG__FriendInfo));
-   G__memfunc_setup("G__FriendInfo",0,G__G__API_97_18330384_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__FriendInfo), -1, 0, 1, 1, 1, 0, "U 'G__friendtag' - 0 '0' pin", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("G__FriendInfo",0,G__G__API_97_18411376_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__FriendInfo), -1, 0, 1, 1, 1, 0, "u 'Cint::G__FriendInfo' - 11 - x", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("operator=",0,G__G__API_97_18412688_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__FriendInfo), -1, 1, 1, 1, 1, 0, "u 'Cint::G__FriendInfo' - 11 - x", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Init",0,G__G__API_97_18413856_0, 121, -1, -1, 0, 1, 1, 1, 0, "U 'G__friendtag' - 0 - pin", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("FriendOf",0,G__G__API_97_18415328_0, 85, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__ClassInfo), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Next",0,G__G__API_97_18416256_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("IsValid",0,G__G__API_97_18415712_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("G__FriendInfo",1257,G__G__API_143_8062352_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__FriendInfo), -1, 0, 1, 1, 1, 0, "U 'G__friendtag' - 0 '0' pin", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("G__FriendInfo",1257,G__G__API_143_8063616_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__FriendInfo), -1, 0, 1, 1, 1, 0, "u 'Cint::G__FriendInfo' - 11 - x", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("operator=",937,G__G__API_143_8064960_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__FriendInfo), -1, 1, 1, 1, 1, 0, "u 'Cint::G__FriendInfo' - 11 - x", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Init",404,G__G__API_143_8065984_0, 121, -1, -1, 0, 1, 1, 1, 0, "U 'G__friendtag' - 0 - pin", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("FriendOf",781,G__G__API_143_8067344_0, 85, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__ClassInfo), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Next",415,G__G__API_143_8068288_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("IsValid",684,G__G__API_143_8069056_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
    // automatic destructor
-   G__memfunc_setup("~G__FriendInfo", 1383, G__G__API_97_0_0, (int) ('y'), -1, -1, 0, 0, 1, 1, 0, "", (char*) NULL, (void*) NULL, 0);
+   G__memfunc_setup("~G__FriendInfo", 1383, G__G__API_143_0_0, (int) ('y'), -1, -1, 0, 0, 1, 1, 0, "", (char*) NULL, (void*) NULL, 0);
    G__tag_memfunc_reset();
 }
 
 static void G__setup_memfuncCintcLcLG__ClassInfo(void) {
    /* Cint::G__ClassInfo */
    G__tag_memfunc_setup(G__get_linked_tagnum(&G__G__APILN_CintcLcLG__ClassInfo));
-   G__memfunc_setup("G__ClassInfo",0,G__G__API_98_18331760_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__ClassInfo), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Init",0,G__G__API_98_18332752_0, 121, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("G__ClassInfo",0,G__G__API_98_18333808_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__ClassInfo), -1, 0, 1, 1, 1, 0, "C - - 10 - classname", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Init",0,G__G__API_98_18334944_0, 121, -1, -1, 0, 1, 1, 1, 0, "C - - 10 - classname", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("G__ClassInfo",0,G__G__API_98_18336128_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__ClassInfo), -1, 0, 1, 1, 1, 0, "i - - 0 - tagnumin", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("G__ClassInfo",0,G__G__API_98_18337392_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__ClassInfo), -1, 0, 1, 1, 1, 0, "u 'G__value' 'G__value' 11 - value_for_type", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Init",0,G__G__API_98_18338528_0, 121, -1, -1, 0, 1, 1, 1, 0, "i - - 0 - tagnumin", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("operator==",0,G__G__API_98_18339696_0, 105, -1, -1, 0, 1, 1, 1, 0, "u 'Cint::G__ClassInfo' - 11 - a", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("operator!=",0,G__G__API_98_18340864_0, 105, -1, -1, 0, 1, 1, 1, 0, "u 'Cint::G__ClassInfo' - 11 - a", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Name",0,G__G__API_98_18341760_0, 67, -1, -1, 0, 0, 1, 1, 1, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Fullname",0,G__G__API_98_18342064_0, 67, -1, -1, 0, 0, 1, 1, 1, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Title",0,G__G__API_98_18342672_0, 67, -1, -1, 0, 0, 1, 1, 1, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Size",0,G__G__API_98_18343744_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Property",0,G__G__API_98_18344560_0, 108, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("NDataMembers",0,G__G__API_98_18345504_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("NMethods",0,G__G__API_98_18345984_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("IsBase",0,G__G__API_98_18347424_0, 108, -1, -1, 0, 1, 1, 1, 0, "C - - 10 - classname", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("IsBase",0,G__G__API_98_18348608_0, 108, -1, -1, 0, 1, 1, 1, 0, "u 'Cint::G__ClassInfo' - 1 - a", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Tagnum",0,G__G__API_98_18349104_0, 108, -1, -1, 0, 0, 1, 1, 8, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("ReflexScope",0,G__G__API_98_18350240_0, 117, G__get_linked_tagnum(&G__G__APILN_ReflexcLcLScope), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("EnclosingClass",0,G__G__API_98_18350656_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__ClassInfo), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("EnclosingSpace",0,G__G__API_98_18351408_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__ClassInfo), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("GetFriendInfo",0,G__G__API_98_18352736_0, 85, G__get_linked_tagnum(&G__G__APILN_G__friendtag), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("SetGlobalcomp",0,G__G__API_98_18353712_0, 121, -1, -1, 0, 1, 1, 1, 0, "i - - 0 - globalcomp", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("SetProtectedAccess",0,G__G__API_98_18354736_0, 121, -1, -1, 0, 1, 1, 1, 0, "i - - 0 - protectedaccess", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("IsValid",0,G__G__API_98_18355040_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("IsLoaded",0,G__G__API_98_18356144_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("SetFilePos",0,G__G__API_98_18356912_0, 105, -1, -1, 0, 1, 1, 1, 0, "C - - 10 - fname", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Next",0,G__G__API_98_18357216_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Linkage",0,G__G__API_98_18358352_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("FileName",0,G__G__API_98_18359120_0, 67, -1, -1, 0, 0, 1, 1, 1, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("LineNumber",0,G__G__API_98_18345712_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("IsTmplt",0,G__G__API_98_18359808_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("TmpltName",0,G__G__API_98_18361392_0, 67, -1, -1, 0, 0, 1, 1, 1, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("TmpltArg",0,G__G__API_98_18362000_0, 67, -1, -1, 0, 0, 1, 1, 1, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("SetDefFile",0,G__G__API_98_18364288_0, 121, -1, -1, 0, 1, 1, 1, 0, "C - - 0 - deffilein", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("SetDefLine",0,G__G__API_98_18365472_0, 121, -1, -1, 0, 1, 1, 1, 0, "i - - 0 - deflinein", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("SetImpFile",0,G__G__API_98_18366304_0, 121, -1, -1, 0, 1, 1, 1, 0, "C - - 0 - impfilein", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("SetImpLine",0,G__G__API_98_18367136_0, 121, -1, -1, 0, 1, 1, 1, 0, "i - - 0 - implinein", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("SetVersion",0,G__G__API_98_18367968_0, 121, -1, -1, 0, 1, 1, 1, 0, "i - - 0 - versionin", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("DefFile",0,G__G__API_98_18368272_0, 67, -1, -1, 0, 0, 1, 1, 1, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("DefLine",0,G__G__API_98_18369408_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("ImpFile",0,G__G__API_98_18370176_0, 67, -1, -1, 0, 0, 1, 1, 1, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("ImpLine",0,G__G__API_98_18370336_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Version",0,G__G__API_98_18370992_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("New",0,G__G__API_98_18371696_0, 89, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("New",0,G__G__API_98_18373008_0, 89, -1, -1, 0, 1, 1, 1, 0, "i - - 0 - n", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("New",0,G__G__API_98_18374192_0, 89, -1, -1, 0, 1, 1, 1, 0, "Y - - 0 - arena", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("New",0,G__G__API_98_18375424_0, 89, -1, -1, 0, 2, 1, 1, 0, 
+   G__memfunc_setup("G__ClassInfo",1159,G__G__API_144_7986560_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__ClassInfo), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Init",404,G__G__API_144_7987456_0, 121, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("G__ClassInfo",1159,G__G__API_144_7988624_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__ClassInfo), -1, 0, 1, 1, 1, 0, "C - - 10 - classname", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Init",404,G__G__API_144_7989728_0, 121, -1, -1, 0, 1, 1, 1, 0, "C - - 10 - classname", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("G__ClassInfo",1159,G__G__API_144_7990816_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__ClassInfo), -1, 0, 1, 1, 1, 0, "u 'G__value' 'G__value' 11 - -", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("G__ClassInfo",1159,G__G__API_144_7991888_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__ClassInfo), -1, 0, 1, 1, 1, 0, "i - - 0 - tagnumin", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Init",404,G__G__API_144_7993040_0, 121, -1, -1, 0, 1, 1, 1, 0, "i - - 0 - tagnumin", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("operator==",998,G__G__API_144_7994176_0, 105, -1, -1, 0, 1, 1, 1, 0, "u 'Cint::G__ClassInfo' - 11 - -", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("operator!=",970,G__G__API_144_7995216_0, 105, -1, -1, 0, 1, 1, 1, 0, "u 'Cint::G__ClassInfo' - 11 - -", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Name",385,G__G__API_144_7995376_0, 67, -1, -1, 0, 0, 1, 1, 1, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Fullname",820,G__G__API_144_7995984_0, 67, -1, -1, 0, 0, 1, 1, 1, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Title",514,G__G__API_144_7996624_0, 67, -1, -1, 0, 0, 1, 1, 1, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Size",411,G__G__API_144_7997808_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Property",869,G__G__API_144_7998576_0, 108, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("NDataMembers",1171,G__G__API_144_7999456_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("NMethods",802,G__G__API_144_7999936_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("IsBase",567,G__G__API_144_8001376_0, 108, -1, -1, 0, 1, 1, 1, 0, "C - - 10 - classname", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("IsBase",567,G__G__API_144_8002400_0, 108, -1, -1, 0, 1, 1, 1, 0, "u 'Cint::G__ClassInfo' - 1 - -", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Tagnum",620,G__G__API_144_8003296_0, 108, -1, -1, 0, 0, 1, 1, 8, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("EnclosingClass",1432,G__G__API_144_8003456_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__ClassInfo), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("EnclosingSpace",1422,G__G__API_144_8004064_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__ClassInfo), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("GetFriendInfo",1284,G__G__API_144_8005280_0, 85, G__get_linked_tagnum(&G__G__APILN_G__friendtag), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("SetGlobalcomp",1324,G__G__API_144_8006272_0, 121, -1, -1, 0, 1, 1, 1, 0, "i - - 0 - globalcomp", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("SetProtectedAccess",1832,G__G__API_144_8005664_0, 121, -1, -1, 0, 1, 1, 1, 0, "i - - 0 - protectedaccess", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("IsValid",684,G__G__API_144_8008048_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("IsLoaded",773,G__G__API_144_8008256_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("SetFilePos",990,G__G__API_144_8009456_0, 105, -1, -1, 0, 1, 1, 1, 0, "C - - 10 - fname", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Next",415,G__G__API_144_8010352_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Linkage",699,G__G__API_144_8010512_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("FileName",769,G__G__API_144_8011728_0, 67, -1, -1, 0, 0, 1, 1, 1, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("LineNumber",1009,G__G__API_144_8011936_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("IsTmplt",717,G__G__API_144_7999616_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("TmpltName",914,G__G__API_144_8013024_0, 67, -1, -1, 0, 0, 1, 1, 1, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("TmpltArg",811,G__G__API_144_8014464_0, 67, -1, -1, 0, 0, 1, 1, 1, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("SetDefFile",955,G__G__API_144_8016704_0, 121, -1, -1, 0, 1, 1, 1, 0, "C - - 0 - deffilein", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("SetDefLine",963,G__G__API_144_8017856_0, 121, -1, -1, 0, 1, 1, 1, 0, "i - - 0 - deflinein", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("SetImpFile",978,G__G__API_144_8016096_0, 121, -1, -1, 0, 1, 1, 1, 0, "C - - 0 - impfilein", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("SetImpLine",986,G__G__API_144_8019520_0, 121, -1, -1, 0, 1, 1, 1, 0, "i - - 0 - implinein", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("SetVersion",1042,G__G__API_144_8020416_0, 121, -1, -1, 0, 1, 1, 1, 0, "i - - 0 - versionin", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("DefFile",655,G__G__API_144_8021312_0, 67, -1, -1, 0, 0, 1, 1, 1, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("DefLine",663,G__G__API_144_8021520_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("ImpFile",678,G__G__API_144_8022688_0, 67, -1, -1, 0, 0, 1, 1, 1, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("ImpLine",686,G__G__API_144_8022896_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Version",742,G__G__API_144_8024064_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("New",298,G__G__API_144_8024368_0, 89, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("New",298,G__G__API_144_8025552_0, 89, -1, -1, 0, 1, 1, 1, 0, "i - - 0 - n", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("New",298,G__G__API_144_8026768_0, 89, -1, -1, 0, 1, 1, 1, 0, "Y - - 0 - arena", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("New",298,G__G__API_144_8027952_0, 89, -1, -1, 0, 2, 1, 1, 0, 
 "i - - 0 - n Y - - 0 - arena", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Delete",0,G__G__API_98_18376720_0, 121, -1, -1, 0, 1, 1, 1, 8, "Y - - 0 - p", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Destruct",0,G__G__API_98_18377760_0, 121, -1, -1, 0, 1, 1, 1, 8, "Y - - 0 - p", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("DeleteArray",0,G__G__API_98_18378752_0, 121, -1, -1, 0, 2, 1, 1, 0, 
+   G__memfunc_setup("Delete",595,G__G__API_144_8029152_0, 121, -1, -1, 0, 1, 1, 1, 8, "Y - - 0 - p", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Destruct",846,G__G__API_144_8029920_0, 121, -1, -1, 0, 1, 1, 1, 8, "Y - - 0 - p", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("DeleteArray",1106,G__G__API_144_8031104_0, 121, -1, -1, 0, 2, 1, 1, 0, 
 "Y - - 0 - ary i - - 0 '0' dtorOnly", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("InstanceCount",0,G__G__API_98_18379440_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("ResetInstanceCount",0,G__G__API_98_18380080_0, 121, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("IncInstanceCount",0,G__G__API_98_18380688_0, 121, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("HeapInstanceCount",0,G__G__API_98_18381296_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("IncHeapInstanceCount",0,G__G__API_98_18382496_0, 121, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("ResetHeapInstanceCount",0,G__G__API_98_18382800_0, 121, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("RootFlag",0,G__G__API_98_18384000_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("GetInterfaceMethod",0,G__G__API_98_18392768_0, 89, -1, G__defined_typename("G__InterfaceMethod"), 0, 5, 1, 1, 0, 
+   G__memfunc_setup("InstanceCount",1342,G__G__API_144_8032256_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("ResetInstanceCount",1857,G__G__API_144_8032416_0, 121, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("IncInstanceCount",1624,G__G__API_144_8033024_0, 121, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("HeapInstanceCount",1724,G__G__API_144_8033632_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("IncHeapInstanceCount",2006,G__G__API_144_8034240_0, 121, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("ResetHeapInstanceCount",2239,G__G__API_144_8035456_0, 121, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("RootFlag",798,G__G__API_144_8036224_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("GetInterfaceMethod",1810,G__G__API_144_8045104_0, 89, -1, G__defined_typename("G__InterfaceMethod"), 0, 5, 1, 1, 0, 
 "C - - 10 - fname C - - 10 - arg "
 "L - - 0 - poffset i 'Cint::G__ClassInfo::MatchMode' - 0 'ConversionMatch' mode "
 "i 'Cint::G__ClassInfo::InheritanceMode' - 0 'WithInheritance' imode", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("GetMethod",0,G__G__API_98_18394768_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__MethodInfo), -1, 0, 5, 1, 1, 0, 
+   G__memfunc_setup("GetMethod",897,G__G__API_144_8047136_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__MethodInfo), -1, 0, 5, 1, 1, 0, 
 "C - - 10 - fname C - - 10 - arg "
 "L - - 0 - poffset i 'Cint::G__ClassInfo::MatchMode' - 0 'ConversionMatch' mode "
 "i 'Cint::G__ClassInfo::InheritanceMode' - 0 'WithInheritance' imode", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("GetMethod",0,G__G__API_98_18397008_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__MethodInfo), -1, 0, 5, 1, 1, 0, 
+   G__memfunc_setup("GetMethod",897,G__G__API_144_8049216_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__MethodInfo), -1, 0, 5, 1, 1, 0, 
 "C - - 10 - fname U 'G__param' - 0 - libp "
 "L - - 0 - poffset i 'Cint::G__ClassInfo::MatchMode' - 0 'ConversionMatch' mode "
 "i 'Cint::G__ClassInfo::InheritanceMode' - 0 'WithInheritance' imode", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("GetDefaultConstructor",0,G__G__API_98_18397936_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__MethodInfo), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("GetCopyConstructor",0,G__G__API_98_18399216_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__MethodInfo), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("GetDestructor",0,G__G__API_98_18391776_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__MethodInfo), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("GetAssignOperator",0,G__G__API_98_18360416_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__MethodInfo), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("AddMethod",0,G__G__API_98_18402656_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__MethodInfo), -1, 0, 6, 1, 1, 0, 
+   G__memfunc_setup("GetDefaultConstructor",2187,G__G__API_144_8049952_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__MethodInfo), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("GetCopyConstructor",1889,G__G__API_144_8051168_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__MethodInfo), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("GetDestructor",1359,G__G__API_144_8051936_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__MethodInfo), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("GetAssignOperator",1745,G__G__API_144_8014000_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__MethodInfo), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("AddMethod",874,G__G__API_144_8054896_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__MethodInfo), -1, 0, 6, 1, 1, 0, 
 "C - - 10 - typenam C - - 10 - fname "
 "C - - 10 - arg i - - 0 '0' isstatic "
 "i - - 0 '0' isvirtual Y - - 0 '0' methodAddress", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("GetDataMember",0,G__G__API_98_18403936_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__DataMemberInfo), -1, 0, 2, 1, 1, 0, 
+   G__memfunc_setup("GetDataMember",1266,G__G__API_144_8056016_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__DataMemberInfo), -1, 0, 2, 1, 1, 0, 
 "C - - 10 - name L - - 0 - poffset", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("HasMethod",0,G__G__API_98_18405280_0, 105, -1, -1, 0, 1, 1, 1, 0, "C - - 10 - fname", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("HasDataMember",0,G__G__API_98_18406048_0, 105, -1, -1, 0, 1, 1, 1, 0, "C - - 10 - name", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("HasDefaultConstructor",0,G__G__API_98_18406352_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("ClassProperty",0,G__G__API_98_18408288_0, 108, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("FuncFlag",0,G__G__API_98_18409056_0, 98, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("HasMethod",893,G__G__API_144_8057296_0, 105, -1, -1, 0, 1, 1, 1, 0, "C - - 10 - fname", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("HasDataMember",1262,G__G__API_144_8058064_0, 105, -1, -1, 0, 1, 1, 1, 0, "C - - 10 - name", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("HasDefaultConstructor",2183,G__G__API_144_8058368_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("ClassProperty",1371,G__G__API_144_8060272_0, 108, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("FuncFlag",774,G__G__API_144_8060560_0, 98, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
    // automatic copy constructor
-   G__memfunc_setup("G__ClassInfo", 1159, G__G__API_98_0_0, (int) ('i'), G__get_linked_tagnum(&G__G__APILN_CintcLcLG__ClassInfo), -1, 0, 1, 1, 1, 0, "u 'Cint::G__ClassInfo' - 11 - -", (char*) NULL, (void*) NULL, 0);
+   G__memfunc_setup("G__ClassInfo", 1159, G__G__API_144_0_0, (int) ('i'), G__get_linked_tagnum(&G__G__APILN_CintcLcLG__ClassInfo), -1, 0, 1, 1, 1, 0, "u 'Cint::G__ClassInfo' - 11 - -", (char*) NULL, (void*) NULL, 0);
    // automatic destructor
-   G__memfunc_setup("~G__ClassInfo", 1285, G__G__API_98_0_1, (int) ('y'), -1, -1, 0, 0, 1, 1, 0, "", (char*) NULL, (void*) NULL, 1);
+   G__memfunc_setup("~G__ClassInfo", 1285, G__G__API_144_0_1, (int) ('y'), -1, -1, 0, 0, 1, 1, 0, "", (char*) NULL, (void*) NULL, 1);
    // automatic assignment operator
-   G__memfunc_setup("operator=", 937, G__G__API_98_0_2, (int) ('u'), G__get_linked_tagnum(&G__G__APILN_CintcLcLG__ClassInfo), -1, 1, 1, 1, 1, 0, "u 'Cint::G__ClassInfo' - 11 - -", (char*) NULL, (void*) NULL, 0);
+   G__memfunc_setup("operator=", 937, G__G__API_144_0_2, (int) ('u'), G__get_linked_tagnum(&G__G__APILN_CintcLcLG__ClassInfo), -1, 1, 1, 1, 1, 0, "u 'Cint::G__ClassInfo' - 11 - -", (char*) NULL, (void*) NULL, 0);
    G__tag_memfunc_reset();
 }
 
 static void G__setup_memfuncCintcLcLG__BaseClassInfo(void) {
    /* Cint::G__BaseClassInfo */
    G__tag_memfunc_setup(G__get_linked_tagnum(&G__G__APILN_CintcLcLG__BaseClassInfo));
-   G__memfunc_setup("G__BaseClassInfo",0,G__G__API_101_18422912_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__BaseClassInfo), -1, 0, 1, 1, 1, 0, "u 'Cint::G__ClassInfo' - 1 - a", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Init",0,G__G__API_101_18424272_0, 121, -1, -1, 0, 1, 1, 1, 0, "u 'Cint::G__ClassInfo' - 1 - a", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Offset",0,G__G__API_101_18424736_0, 108, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Property",0,G__G__API_101_18425808_0, 108, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("IsValid",0,G__G__API_101_18426016_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Next",0,G__G__API_101_18427184_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Next",0,G__G__API_101_18427952_0, 105, -1, -1, 0, 1, 1, 1, 0, "i - - 0 - onlydirect", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Prev",0,G__G__API_101_18428288_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Prev",0,G__G__API_101_18429664_0, 105, -1, -1, 0, 1, 1, 1, 0, "i - - 0 - onlydirect", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("G__BaseClassInfo",1538,G__G__API_147_8075040_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__BaseClassInfo), -1, 0, 1, 1, 1, 0, "u 'Cint::G__ClassInfo' - 1 - a", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Init",404,G__G__API_147_8076240_0, 121, -1, -1, 0, 1, 1, 1, 0, "u 'Cint::G__ClassInfo' - 1 - a", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Offset",615,G__G__API_147_8076848_0, 108, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Property",869,G__G__API_147_8077920_0, 108, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("IsValid",684,G__G__API_147_8078688_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Next",415,G__G__API_147_8078896_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Next",415,G__G__API_147_8080064_0, 105, -1, -1, 0, 1, 1, 1, 0, "i - - 0 - onlydirect", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Prev",413,G__G__API_147_8081008_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Prev",413,G__G__API_147_8082000_0, 105, -1, -1, 0, 1, 1, 1, 0, "i - - 0 - onlydirect", (char*)NULL, (void*) NULL, 0);
    // automatic copy constructor
-   G__memfunc_setup("G__BaseClassInfo", 1538, G__G__API_101_0_0, (int) ('i'), G__get_linked_tagnum(&G__G__APILN_CintcLcLG__BaseClassInfo), -1, 0, 1, 1, 1, 0, "u 'Cint::G__BaseClassInfo' - 11 - -", (char*) NULL, (void*) NULL, 0);
+   G__memfunc_setup("G__BaseClassInfo", 1538, G__G__API_147_0_0, (int) ('i'), G__get_linked_tagnum(&G__G__APILN_CintcLcLG__BaseClassInfo), -1, 0, 1, 1, 1, 0, "u 'Cint::G__BaseClassInfo' - 11 - -", (char*) NULL, (void*) NULL, 0);
    // automatic destructor
-   G__memfunc_setup("~G__BaseClassInfo", 1664, G__G__API_101_0_1, (int) ('y'), -1, -1, 0, 0, 1, 1, 0, "", (char*) NULL, (void*) NULL, 0);
+   G__memfunc_setup("~G__BaseClassInfo", 1664, G__G__API_147_0_1, (int) ('y'), -1, -1, 0, 0, 1, 1, 0, "", (char*) NULL, (void*) NULL, 0);
    // automatic assignment operator
-   G__memfunc_setup("operator=", 937, G__G__API_101_0_2, (int) ('u'), G__get_linked_tagnum(&G__G__APILN_CintcLcLG__BaseClassInfo), -1, 1, 1, 1, 1, 0, "u 'Cint::G__BaseClassInfo' - 11 - -", (char*) NULL, (void*) NULL, 0);
+   G__memfunc_setup("operator=", 937, G__G__API_147_0_2, (int) ('u'), G__get_linked_tagnum(&G__G__APILN_CintcLcLG__BaseClassInfo), -1, 1, 1, 1, 1, 0, "u 'Cint::G__BaseClassInfo' - 11 - -", (char*) NULL, (void*) NULL, 0);
    G__tag_memfunc_reset();
 }
 
 static void G__setup_memfuncCintcLcLG__TypeInfo(void) {
    /* Cint::G__TypeInfo */
    G__tag_memfunc_setup(G__get_linked_tagnum(&G__G__APILN_CintcLcLG__TypeInfo));
-   G__memfunc_setup("G__TypeInfo",0,G__G__API_102_18437440_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__TypeInfo), -1, 0, 1, 1, 1, 0, "u 'Reflex::Type' - 11 - in", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("G__TypeInfo",0,G__G__API_102_18438544_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__TypeInfo), -1, 0, 1, 1, 1, 0, "C - - 10 - typenamein", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("G__TypeInfo",0,G__G__API_102_18439616_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__TypeInfo), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Init",0,G__G__API_102_18440640_0, 121, -1, -1, 0, 1, 1, 1, 0, "C - - 10 - typenamein", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Init",0,G__G__API_102_18441568_0, 121, -1, -1, 0, 1, 1, 1, 0, "u 'Reflex::Type' - 11 - in", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("operator==",0,G__G__API_102_18442560_0, 105, -1, -1, 0, 1, 1, 1, 0, "u 'Cint::G__TypeInfo' - 11 - a", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("operator!=",0,G__G__API_102_18443616_0, 105, -1, -1, 0, 1, 1, 1, 0, "u 'Cint::G__TypeInfo' - 11 - a", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Name",0,G__G__API_102_18444416_0, 67, -1, -1, 0, 0, 1, 1, 1, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("TrueName",0,G__G__API_102_18445328_0, 67, -1, -1, 0, 0, 1, 1, 1, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Size",0,G__G__API_102_18446096_0, 105, -1, -1, 0, 0, 1, 1, 8, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Property",0,G__G__API_102_18446256_0, 108, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("IsValid",0,G__G__API_102_18447472_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("New",0,G__G__API_102_18447776_0, 89, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Typenum",0,G__G__API_102_18448848_0, 105, -1, -1, 0, 0, 1, 1, 8, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Type",0,G__G__API_102_18449056_0, 105, -1, -1, 0, 0, 1, 1, 8, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Reftype",0,G__G__API_102_18450224_0, 105, -1, -1, 0, 0, 1, 1, 8, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Isconst",0,G__G__API_102_18450928_0, 105, -1, -1, 0, 0, 1, 1, 8, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("ReflexType",0,G__G__API_102_18451536_0, 117, G__get_linked_tagnum(&G__G__APILN_ReflexcLcLType), -1, 0, 0, 1, 1, 8, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Value",0,G__G__API_102_18452800_0, 117, G__get_linked_tagnum(&G__G__APILN_G__value), G__defined_typename("G__value"), 0, 0, 1, 1, 8, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("G__TypeInfo",1075,G__G__API_148_8089392_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__TypeInfo), -1, 0, 1, 1, 1, 0, "C - - 10 - typenamein", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("G__TypeInfo",1075,G__G__API_148_8090528_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__TypeInfo), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Init",404,G__G__API_148_8091552_0, 121, -1, -1, 0, 1, 1, 1, 0, "C - - 10 - typenamein", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("operator==",998,G__G__API_148_8092656_0, 105, -1, -1, 0, 1, 1, 1, 0, "u 'Cint::G__TypeInfo' - 11 - -", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("operator!=",970,G__G__API_148_8091888_0, 105, -1, -1, 0, 1, 1, 1, 0, "u 'Cint::G__TypeInfo' - 11 - -", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Name",385,G__G__API_148_8094304_0, 67, -1, -1, 0, 0, 1, 1, 1, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("TrueName",801,G__G__API_148_8094608_0, 67, -1, -1, 0, 0, 1, 1, 1, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Size",411,G__G__API_148_8095680_0, 105, -1, -1, 0, 0, 1, 1, 8, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Property",869,G__G__API_148_8096592_0, 108, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("IsValid",684,G__G__API_148_8097360_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("New",298,G__G__API_148_8098128_0, 89, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Typenum",754,G__G__API_148_8098288_0, 105, -1, -1, 0, 0, 1, 1, 8, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Type",418,G__G__API_148_8098976_0, 105, -1, -1, 0, 0, 1, 1, 8, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Reftype",735,G__G__API_148_8100112_0, 105, -1, -1, 0, 0, 1, 1, 8, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Isconst",739,G__G__API_148_8100352_0, 105, -1, -1, 0, 0, 1, 1, 8, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Value",509,G__G__API_148_8101536_0, 117, G__get_linked_tagnum(&G__G__APILN_G__value), G__defined_typename("G__value"), 0, 0, 1, 1, 8, "", (char*)NULL, (void*) NULL, 0);
    // automatic copy constructor
-   G__memfunc_setup("G__TypeInfo", 1075, G__G__API_102_0_0, (int) ('i'), G__get_linked_tagnum(&G__G__APILN_CintcLcLG__TypeInfo), -1, 0, 1, 1, 1, 0, "u 'Cint::G__TypeInfo' - 11 - -", (char*) NULL, (void*) NULL, 0);
+   G__memfunc_setup("G__TypeInfo", 1075, G__G__API_148_0_0, (int) ('i'), G__get_linked_tagnum(&G__G__APILN_CintcLcLG__TypeInfo), -1, 0, 1, 1, 1, 0, "u 'Cint::G__TypeInfo' - 11 - -", (char*) NULL, (void*) NULL, 0);
    // automatic destructor
-   G__memfunc_setup("~G__TypeInfo", 1201, G__G__API_102_0_1, (int) ('y'), -1, -1, 0, 0, 1, 1, 0, "", (char*) NULL, (void*) NULL, 0);
+   G__memfunc_setup("~G__TypeInfo", 1201, G__G__API_148_0_1, (int) ('y'), -1, -1, 0, 0, 1, 1, 0, "", (char*) NULL, (void*) NULL, 1);
    // automatic assignment operator
-   G__memfunc_setup("operator=", 937, G__G__API_102_0_2, (int) ('u'), G__get_linked_tagnum(&G__G__APILN_CintcLcLG__TypeInfo), -1, 1, 1, 1, 1, 0, "u 'Cint::G__TypeInfo' - 11 - -", (char*) NULL, (void*) NULL, 0);
+   G__memfunc_setup("operator=", 937, G__G__API_148_0_2, (int) ('u'), G__get_linked_tagnum(&G__G__APILN_CintcLcLG__TypeInfo), -1, 1, 1, 1, 1, 0, "u 'Cint::G__TypeInfo' - 11 - -", (char*) NULL, (void*) NULL, 0);
    G__tag_memfunc_reset();
 }
 
 static void G__setup_memfuncCintcLcLG__MethodArgInfo(void) {
    /* Cint::G__MethodArgInfo */
    G__tag_memfunc_setup(G__get_linked_tagnum(&G__G__APILN_CintcLcLG__MethodArgInfo));
-   G__memfunc_setup("Init",0,G__G__API_106_18509136_0, 121, -1, -1, 0, 1, 1, 1, 0, "u 'Cint::G__MethodInfo' - 1 - a", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("G__MethodArgInfo",0,G__G__API_106_18510416_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__MethodArgInfo), -1, 0, 1, 1, 1, 0, "u 'Cint::G__MethodInfo' - 1 - a", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("G__MethodArgInfo",0,G__G__API_106_18511712_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__MethodArgInfo), -1, 0, 1, 1, 1, 0, "u 'Cint::G__MethodArgInfo' - 11 - mai", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("operator=",0,G__G__API_106_18512928_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__MethodArgInfo), -1, 1, 1, 1, 1, 0, "u 'Cint::G__MethodArgInfo' - 11 - mai", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Name",0,G__G__API_106_18514064_0, 67, -1, -1, 0, 0, 1, 1, 1, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Type",0,G__G__API_106_18514224_0, 85, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__TypeInfo), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Property",0,G__G__API_106_18514832_0, 108, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("DefaultValue",0,G__G__API_106_18515584_0, 67, -1, -1, 0, 0, 1, 1, 1, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("ArgOf",0,G__G__API_106_18517216_0, 85, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__MethodInfo), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("IsValid",0,G__G__API_106_18518192_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Next",0,G__G__API_106_18518960_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("G__MethodArgInfo",0,G__G__API_106_18521808_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__MethodArgInfo), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("G__MethodArgInfo",1548,G__G__API_152_8155456_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__MethodArgInfo), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("G__MethodArgInfo",1548,G__G__API_152_8156656_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__MethodArgInfo), -1, 0, 1, 1, 1, 0, "u 'Cint::G__MethodInfo' - 1 - -", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Init",404,G__G__API_152_8157760_0, 121, -1, -1, 0, 1, 1, 1, 0, "u 'Cint::G__MethodInfo' - 1 - -", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("G__MethodArgInfo",1548,G__G__API_152_8159120_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__MethodArgInfo), -1, 0, 1, 1, 1, 0, "u 'Cint::G__MethodArgInfo' - 11 - -", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("operator=",937,G__G__API_152_8160288_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__MethodArgInfo), -1, 1, 1, 1, 1, 0, "u 'Cint::G__MethodArgInfo' - 11 - -", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Name",385,G__G__API_152_8161392_0, 67, -1, -1, 0, 0, 1, 1, 1, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Type",418,G__G__API_152_8161696_0, 85, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__TypeInfo), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Property",869,G__G__API_152_8162768_0, 108, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("DefaultValue",1218,G__G__API_152_8163776_0, 67, -1, -1, 0, 0, 1, 1, 1, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("ArgOf",463,G__G__API_152_8164720_0, 85, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__MethodInfo), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("IsValid",684,G__G__API_152_8165664_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Next",415,G__G__API_152_8166432_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
    // automatic destructor
-   G__memfunc_setup("~G__MethodArgInfo", 1674, G__G__API_106_0_0, (int) ('y'), -1, -1, 0, 0, 1, 1, 0, "", (char*) NULL, (void*) NULL, 0);
+   G__memfunc_setup("~G__MethodArgInfo", 1674, G__G__API_152_0_0, (int) ('y'), -1, -1, 0, 0, 1, 1, 0, "", (char*) NULL, (void*) NULL, 0);
    G__tag_memfunc_reset();
 }
 
 static void G__setup_memfuncCintcLcLG__CallFunc(void) {
    /* Cint::G__CallFunc */
    G__tag_memfunc_setup(G__get_linked_tagnum(&G__G__APILN_CintcLcLG__CallFunc));
-   G__memfunc_setup("G__CallFunc",0,G__G__API_108_18561120_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__CallFunc), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("G__CallFunc",0,G__G__API_108_18562288_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__CallFunc), -1, 0, 1, 1, 1, 0, "u 'Cint::G__CallFunc' - 11 - cf", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("operator=",0,G__G__API_108_18563584_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__CallFunc), -1, 1, 1, 1, 1, 0, "u 'Cint::G__CallFunc' - 11 - cf", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Init",0,G__G__API_108_18564672_0, 121, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("SetFunc",0,G__G__API_108_18569168_0, 121, -1, -1, 0, 5, 1, 1, 0, 
+   G__memfunc_setup("G__CallFunc",1037,G__G__API_154_8205616_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__CallFunc), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("G__CallFunc",1037,G__G__API_154_8206960_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__CallFunc), -1, 0, 1, 1, 1, 0, "u 'Cint::G__CallFunc' - 11 - -", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("operator=",937,G__G__API_154_8208320_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__CallFunc), -1, 1, 1, 1, 1, 0, "u 'Cint::G__CallFunc' - 11 - cf", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Init",404,G__G__API_154_8204272_0, 121, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("SetFunc",696,G__G__API_154_8210848_0, 121, -1, -1, 0, 5, 1, 1, 0, 
 "U 'Cint::G__ClassInfo' - 0 - cls C - - 10 - fname "
 "C - - 10 - args L - - 0 - poffset "
 "i 'Cint::G__CallFunc::MatchMode' - 0 'ConversionMatch' mode", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("SetFuncProto",0,G__G__API_108_18570784_0, 121, -1, -1, 0, 4, 1, 1, 0, 
+   G__memfunc_setup("SetFuncProto",1228,G__G__API_154_8212496_0, 121, -1, -1, 0, 4, 1, 1, 0, 
 "U 'Cint::G__ClassInfo' - 0 - cls C - - 10 - fname "
 "C - - 10 - argtype L - - 0 - poffset", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("SetFunc",0,G__G__API_108_18572144_0, 121, -1, -1, 0, 1, 1, 1, 0, "Y - 'G__InterfaceMethod' 0 - f", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("SetFunc",0,G__G__API_108_18573136_0, 121, -1, -1, 0, 1, 1, 1, 0, "u 'Cint::G__MethodInfo' - 0 - m", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("SetBytecode",0,G__G__API_108_18574352_0, 121, -1, -1, 0, 1, 1, 1, 0, "U 'G__bytecodefunc' - 0 - bc", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("IsValid",0,G__G__API_108_18574960_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("SetArgArray",0,G__G__API_108_18576176_0, 121, -1, -1, 0, 2, 1, 1, 0, 
+   G__memfunc_setup("SetFunc",696,G__G__API_154_8213936_0, 121, -1, -1, 0, 1, 1, 1, 0, "Y - 'G__InterfaceMethod' 0 - f", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("SetFunc",696,G__G__API_154_8214928_0, 121, -1, -1, 0, 1, 1, 1, 0, "u 'Cint::G__MethodInfo' - 0 - m", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("SetBytecode",1115,G__G__API_154_8216096_0, 121, -1, -1, 0, 1, 1, 1, 0, "U 'G__bytecodefunc' - 0 - bc", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("IsValid",684,G__G__API_154_8217200_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("SetArgArray",1093,G__G__API_154_8218128_0, 121, -1, -1, 0, 2, 1, 1, 0, 
 "L - - 0 - p i - - 0 '-1' narg", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("ResetArg",0,G__G__API_108_18576864_0, 121, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("SetArg",0,G__G__API_108_18577968_0, 121, -1, -1, 0, 1, 1, 1, 0, "l - - 0 - l", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("SetArg",0,G__G__API_108_18578960_0, 121, -1, -1, 0, 1, 1, 1, 0, "k - - 0 - ul", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("SetArg",0,G__G__API_108_18580208_0, 121, -1, -1, 0, 1, 1, 1, 0, "d - - 0 - d", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("SetArgRef",0,G__G__API_108_18581328_0, 121, -1, -1, 0, 1, 1, 1, 0, "l - - 1 - l", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("SetArgRef",0,G__G__API_108_18582720_0, 121, -1, -1, 0, 1, 1, 1, 0, "d - - 1 - d", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("SetArg",0,G__G__API_108_18583840_0, 121, -1, -1, 0, 1, 1, 1, 0, "u 'G__value' 'G__value' 0 - -", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("SetArg",0,G__G__API_108_18585040_0, 121, -1, -1, 0, 1, 1, 1, 0, "n - 'G__int64' 0 - ll", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("SetArg",0,G__G__API_108_18586288_0, 121, -1, -1, 0, 1, 1, 1, 0, "m - 'G__uint64' 0 - ull", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("SetArg",0,G__G__API_108_18587424_0, 121, -1, -1, 0, 1, 1, 1, 0, "q - - 0 - ld", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("SetArgRef",0,G__G__API_108_18588688_0, 121, -1, -1, 0, 1, 1, 1, 0, "n - 'G__int64' 1 - ll", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("SetArgRef",0,G__G__API_108_18589824_0, 121, -1, -1, 0, 1, 1, 1, 0, "m - 'G__uint64' 1 - ull", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("SetArgRef",0,G__G__API_108_18591024_0, 121, -1, -1, 0, 1, 1, 1, 0, "q - - 1 - ld", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Execute",0,G__G__API_108_18592288_0, 117, G__get_linked_tagnum(&G__G__APILN_G__value), G__defined_typename("G__value"), 0, 1, 1, 1, 0, "Y - - 0 - pobject", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Exec",0,G__G__API_108_18593424_0, 121, -1, -1, 0, 1, 1, 1, 0, "Y - - 0 - pobject", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("ExecInt",0,G__G__API_108_18594352_0, 108, -1, -1, 0, 1, 1, 1, 0, "Y - - 0 - pobject", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("ExecDouble",0,G__G__API_108_18595536_0, 100, -1, -1, 0, 1, 1, 1, 0, "Y - - 0 - pobject", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("ExecInt64",0,G__G__API_108_18596784_0, 110, -1, G__defined_typename("G__int64"), 0, 1, 1, 1, 0, "Y - - 0 - pobject", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("InterfaceMethod",0,G__G__API_108_18597920_0, 89, -1, G__defined_typename("G__InterfaceMethod"), 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("SetArgs",0,G__G__API_108_18598608_0, 121, -1, -1, 0, 1, 1, 1, 0, "C - - 10 - args", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("GetMethodInfo",0,G__G__API_108_18599360_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__MethodInfo), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("ResetArg",797,G__G__API_154_8219280_0, 121, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("SetArg",582,G__G__API_154_8220048_0, 121, -1, -1, 0, 1, 1, 1, 0, "l - - 0 - -", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("SetArg",582,G__G__API_154_8220304_0, 121, -1, -1, 0, 1, 1, 1, 0, "k - - 0 - -", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("SetArg",582,G__G__API_154_8221744_0, 121, -1, -1, 0, 1, 1, 1, 0, "d - - 0 - -", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("SetArgRef",867,G__G__API_154_8222880_0, 121, -1, -1, 0, 1, 1, 1, 0, "l - - 1 - -", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("SetArgRef",867,G__G__API_154_8224144_0, 121, -1, -1, 0, 1, 1, 1, 0, "d - - 1 - -", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("SetArg",582,G__G__API_154_8225296_0, 121, -1, -1, 0, 1, 1, 1, 0, "u 'G__value' 'G__value' 0 - -", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("SetArg",582,G__G__API_154_8226448_0, 121, -1, -1, 0, 1, 1, 1, 0, "n - 'G__int64' 0 - -", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("SetArg",582,G__G__API_154_8227552_0, 121, -1, -1, 0, 1, 1, 1, 0, "m - 'G__uint64' 0 - -", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("SetArg",582,G__G__API_154_8228656_0, 121, -1, -1, 0, 1, 1, 1, 0, "q - - 0 - -", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("SetArgRef",867,G__G__API_154_8229888_0, 121, -1, -1, 0, 1, 1, 1, 0, "n - 'G__int64' 1 - -", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("SetArgRef",867,G__G__API_154_8231120_0, 121, -1, -1, 0, 1, 1, 1, 0, "m - 'G__uint64' 1 - -", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("SetArgRef",867,G__G__API_154_8232352_0, 121, -1, -1, 0, 1, 1, 1, 0, "q - - 1 - -", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Execute",723,G__G__API_154_8233616_0, 117, G__get_linked_tagnum(&G__G__APILN_G__value), G__defined_typename("G__value"), 0, 1, 1, 1, 0, "Y - - 0 - pobject", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Exec",389,G__G__API_154_8234768_0, 121, -1, -1, 0, 1, 1, 1, 0, "Y - - 0 - pobject", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("ExecInt",688,G__G__API_154_8235696_0, 108, -1, -1, 0, 1, 1, 1, 0, "Y - - 0 - pobject", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("ExecDouble",992,G__G__API_154_8236880_0, 100, -1, -1, 0, 1, 1, 1, 0, "Y - - 0 - pobject", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("ExecInt64",794,G__G__API_154_8238064_0, 110, -1, G__defined_typename("G__int64"), 0, 1, 1, 1, 0, "Y - - 0 - pobject", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("InterfaceMethod",1522,G__G__API_154_8239168_0, 89, -1, G__defined_typename("G__InterfaceMethod"), 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("SetArgs",697,G__G__API_154_8220816_0, 121, -1, -1, 0, 1, 1, 1, 0, "C - - 10 - args", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("GetMethodInfo",1293,G__G__API_154_8239856_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__MethodInfo), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
    // automatic destructor
-   G__memfunc_setup("~G__CallFunc", 1163, G__G__API_108_0_0, (int) ('y'), -1, -1, 0, 0, 1, 1, 0, "", (char*) NULL, (void*) NULL, 0);
+   G__memfunc_setup("~G__CallFunc", 1163, G__G__API_154_0_0, (int) ('y'), -1, -1, 0, 0, 1, 1, 0, "", (char*) NULL, (void*) NULL, 0);
    G__tag_memfunc_reset();
 }
 
 static void G__setup_memfuncCintcLcLG__TypedefInfo(void) {
    /* Cint::G__TypedefInfo */
    G__tag_memfunc_setup(G__get_linked_tagnum(&G__G__APILN_CintcLcLG__TypedefInfo));
-   G__memfunc_setup("G__TypedefInfo",0,G__G__API_110_18605120_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__TypedefInfo), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Init",0,G__G__API_110_18605984_0, 121, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("G__TypedefInfo",0,G__G__API_110_18606912_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__TypedefInfo), -1, 0, 1, 1, 1, 0, "C - - 10 - typenamein", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Init",0,G__G__API_110_18608048_0, 121, -1, -1, 0, 1, 1, 1, 0, "C - - 10 - typenamein", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("G__TypedefInfo",0,G__G__API_110_18609040_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__TypedefInfo), -1, 0, 1, 1, 1, 0, "i - - 0 - typenumin", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Init",0,G__G__API_110_18610048_0, 121, -1, -1, 0, 1, 1, 1, 0, "i - - 0 - typenumin", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("G__TypedefInfo",0,G__G__API_110_18611168_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__TypedefInfo), -1, 0, 1, 1, 1, 0, "u 'Reflex::Type' - 11 - typein", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Init",0,G__G__API_110_18612240_0, 121, -1, -1, 0, 1, 1, 1, 0, "u 'Reflex::Type' - 11 - typein", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("EnclosingClassOfTypedef",0,G__G__API_110_18612832_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__ClassInfo), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Title",0,G__G__API_110_18613936_0, 67, -1, -1, 0, 0, 1, 1, 1, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("SetGlobalcomp",0,G__G__API_110_18614704_0, 121, -1, -1, 0, 1, 1, 1, 0, "i - - 0 - globalcomp", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("IsValid",0,G__G__API_110_18615104_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("SetFilePos",0,G__G__API_110_18616240_0, 105, -1, -1, 0, 1, 1, 1, 0, "C - - 10 - fname", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Next",0,G__G__API_110_18616640_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("FileName",0,G__G__API_110_18617312_0, 67, -1, -1, 0, 0, 1, 1, 1, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("LineNumber",0,G__G__API_110_18617920_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("G__TypedefInfo",1378,G__G__API_156_8249632_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__TypedefInfo), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Init",404,G__G__API_156_8250912_0, 121, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("G__TypedefInfo",1378,G__G__API_156_8252048_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__TypedefInfo), -1, 0, 1, 1, 1, 0, "C - - 10 - typenamein", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Init",404,G__G__API_156_8253152_0, 121, -1, -1, 0, 1, 1, 1, 0, "C - - 10 - typenamein", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("G__TypedefInfo",1378,G__G__API_156_8254240_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__TypedefInfo), -1, 0, 1, 1, 1, 0, "i - - 0 - typenumin", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Init",404,G__G__API_156_8255168_0, 121, -1, -1, 0, 1, 1, 1, 0, "i - - 0 - typenumin", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("EnclosingClassOfTypedef",2334,G__G__API_156_8256064_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__ClassInfo), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Title",514,G__G__API_156_8256832_0, 67, -1, -1, 0, 0, 1, 1, 1, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("SetGlobalcomp",1324,G__G__API_156_8257744_0, 121, -1, -1, 0, 1, 1, 1, 0, "i - - 0 - globalcomp", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("IsValid",684,G__G__API_156_8258656_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("SetFilePos",990,G__G__API_156_8259424_0, 105, -1, -1, 0, 1, 1, 1, 0, "C - - 10 - fname", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Next",415,G__G__API_156_8260192_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("FileName",769,G__G__API_156_8260960_0, 67, -1, -1, 0, 0, 1, 1, 1, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("LineNumber",1009,G__G__API_156_8261120_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
    // automatic copy constructor
-   G__memfunc_setup("G__TypedefInfo", 1378, G__G__API_110_0_0, (int) ('i'), G__get_linked_tagnum(&G__G__APILN_CintcLcLG__TypedefInfo), -1, 0, 1, 1, 1, 0, "u 'Cint::G__TypedefInfo' - 11 - -", (char*) NULL, (void*) NULL, 0);
+   G__memfunc_setup("G__TypedefInfo", 1378, G__G__API_156_0_0, (int) ('i'), G__get_linked_tagnum(&G__G__APILN_CintcLcLG__TypedefInfo), -1, 0, 1, 1, 1, 0, "u 'Cint::G__TypedefInfo' - 11 - -", (char*) NULL, (void*) NULL, 0);
    // automatic destructor
-   G__memfunc_setup("~G__TypedefInfo", 1504, G__G__API_110_0_1, (int) ('y'), -1, -1, 0, 0, 1, 1, 0, "", (char*) NULL, (void*) NULL, 0);
+   G__memfunc_setup("~G__TypedefInfo", 1504, G__G__API_156_0_1, (int) ('y'), -1, -1, 0, 0, 1, 1, 0, "", (char*) NULL, (void*) NULL, 0);
    // automatic assignment operator
-   G__memfunc_setup("operator=", 937, G__G__API_110_0_2, (int) ('u'), G__get_linked_tagnum(&G__G__APILN_CintcLcLG__TypedefInfo), -1, 1, 1, 1, 1, 0, "u 'Cint::G__TypedefInfo' - 11 - -", (char*) NULL, (void*) NULL, 0);
+   G__memfunc_setup("operator=", 937, G__G__API_156_0_2, (int) ('u'), G__get_linked_tagnum(&G__G__APILN_CintcLcLG__TypedefInfo), -1, 1, 1, 1, 1, 0, "u 'Cint::G__TypedefInfo' - 11 - -", (char*) NULL, (void*) NULL, 0);
    G__tag_memfunc_reset();
 }
 
 static void G__setup_memfuncCintcLcLG__TokenInfo(void) {
    /* Cint::G__TokenInfo */
    G__tag_memfunc_setup(G__get_linked_tagnum(&G__G__APILN_CintcLcLG__TokenInfo));
-   G__memfunc_setup("G__TokenInfo",0,G__G__API_111_18634288_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__TokenInfo), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("G__TokenInfo",0,G__G__API_111_18635760_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__TokenInfo), -1, 0, 1, 1, 1, 0, "u 'Cint::G__TokenInfo' - 11 - tki", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("operator=",0,G__G__API_111_18637024_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__TokenInfo), -1, 1, 1, 1, 1, 0, "u 'Cint::G__TokenInfo' - 11 - tki", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Init",0,G__G__API_111_18637536_0, 121, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("MakeLocalTable",0,G__G__API_111_18639184_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__MethodInfo), -1, 0, 3, 1, 1, 0, 
+   G__memfunc_setup("G__TokenInfo",1170,G__G__API_157_8277120_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__TokenInfo), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("G__TokenInfo",1170,G__G__API_157_8278512_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__TokenInfo), -1, 0, 1, 1, 1, 0, "u 'Cint::G__TokenInfo' - 11 - tki", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("operator=",937,G__G__API_157_8279888_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__TokenInfo), -1, 1, 1, 1, 1, 0, "u 'Cint::G__TokenInfo' - 11 - tki", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Init",404,G__G__API_157_8275904_0, 121, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("MakeLocalTable",1361,G__G__API_157_8282112_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__MethodInfo), -1, 0, 3, 1, 1, 0, 
 "u 'Cint::G__ClassInfo' - 1 - tag_scope C - - 10 - fname "
 "C - - 10 - paramtype", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Query",0,G__G__API_111_18640992_0, 105, -1, -1, 0, 5, 1, 1, 0, 
+   G__memfunc_setup("Query",534,G__G__API_157_8283920_0, 105, -1, -1, 0, 5, 1, 1, 0, 
 "u 'Cint::G__ClassInfo' - 1 - tag_scope u 'Cint::G__MethodInfo' - 1 - func_scope "
 "C - - 10 - preopr C - - 10 - name "
 "C - - 10 - postopr", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("GetTokenType",0,G__G__API_111_18641792_0, 105, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__TokenInfocLcLG__TokenType), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("GetTokenProperty",0,G__G__API_111_18643040_0, 105, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__TokenInfocLcLG__TokenProperty), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("GetNextScope",0,G__G__API_111_18643584_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__ClassInfo), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("GetTokenType",1219,G__G__API_157_8284720_0, 105, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__TokenInfocLcLG__TokenType), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("GetTokenProperty",1670,G__G__API_157_8285936_0, 105, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__TokenInfocLcLG__TokenProperty), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("GetNextScope",1209,G__G__API_157_8286848_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__ClassInfo), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
    // automatic destructor
-   G__memfunc_setup("~G__TokenInfo", 1296, G__G__API_111_0_0, (int) ('y'), -1, -1, 0, 0, 1, 1, 0, "", (char*) NULL, (void*) NULL, 0);
+   G__memfunc_setup("~G__TokenInfo", 1296, G__G__API_157_0_0, (int) ('y'), -1, -1, 0, 0, 1, 1, 0, "", (char*) NULL, (void*) NULL, 0);
    G__tag_memfunc_reset();
 }
 
 static void G__setup_memfuncCintcLcLG__SourceFileInfo(void) {
    /* Cint::G__SourceFileInfo */
    G__tag_memfunc_setup(G__get_linked_tagnum(&G__G__APILN_CintcLcLG__SourceFileInfo));
-   G__memfunc_setup("G__SourceFileInfo",0,G__G__API_114_18669104_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__SourceFileInfo), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("G__SourceFileInfo",0,G__G__API_114_18670656_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__SourceFileInfo), -1, 0, 1, 1, 1, 0, "i - - 0 - filenin", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("G__SourceFileInfo",0,G__G__API_114_18671872_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__SourceFileInfo), -1, 0, 1, 1, 1, 0, "C - - 10 - fname", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Init",0,G__G__API_114_18673280_0, 121, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Init",0,G__G__API_114_18674448_0, 121, -1, -1, 0, 1, 1, 1, 0, "C - - 10 - fname", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Name",0,G__G__API_114_18675376_0, 67, -1, -1, 0, 0, 1, 1, 1, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Prepname",0,G__G__API_114_18675680_0, 67, -1, -1, 0, 0, 1, 1, 1, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("fp",0,G__G__API_114_18676288_0, 69, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("MaxLine",0,G__G__API_114_18677568_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("IncludedFrom",0,G__G__API_114_18678336_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__SourceFileInfo), -1, 1, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Property",0,G__G__API_114_18679216_0, 108, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("IsValid",0,G__G__API_114_18679984_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Next",0,G__G__API_114_18680752_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("G__SourceFileInfo",1666,G__G__API_160_8313568_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__SourceFileInfo), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("G__SourceFileInfo",1666,G__G__API_160_8315296_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__SourceFileInfo), -1, 0, 1, 1, 1, 0, "i - - 0 - filenin", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("G__SourceFileInfo",1666,G__G__API_160_8316640_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__SourceFileInfo), -1, 0, 1, 1, 1, 0, "C - - 10 - fname", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Init",404,G__G__API_160_8317872_0, 121, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Init",404,G__G__API_160_8319232_0, 121, -1, -1, 0, 1, 1, 1, 0, "C - - 10 - fname", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Name",385,G__G__API_160_8320128_0, 67, -1, -1, 0, 0, 1, 1, 1, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Prepname",824,G__G__API_160_8320896_0, 67, -1, -1, 0, 0, 1, 1, 1, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("fp",214,G__G__API_160_8321056_0, 69, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("MaxLine",686,G__G__API_160_8322416_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("IncludedFrom",1212,G__G__API_160_8323184_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__SourceFileInfo), -1, 1, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Property",869,G__G__API_160_8324064_0, 108, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("IsValid",684,G__G__API_160_8324832_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Next",415,G__G__API_160_8325600_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
    // automatic copy constructor
-   G__memfunc_setup("G__SourceFileInfo", 1666, G__G__API_114_0_0, (int) ('i'), G__get_linked_tagnum(&G__G__APILN_CintcLcLG__SourceFileInfo), -1, 0, 1, 1, 1, 0, "u 'Cint::G__SourceFileInfo' - 11 - -", (char*) NULL, (void*) NULL, 0);
+   G__memfunc_setup("G__SourceFileInfo", 1666, G__G__API_160_0_0, (int) ('i'), G__get_linked_tagnum(&G__G__APILN_CintcLcLG__SourceFileInfo), -1, 0, 1, 1, 1, 0, "u 'Cint::G__SourceFileInfo' - 11 - -", (char*) NULL, (void*) NULL, 0);
    // automatic destructor
-   G__memfunc_setup("~G__SourceFileInfo", 1792, G__G__API_114_0_1, (int) ('y'), -1, -1, 0, 0, 1, 1, 0, "", (char*) NULL, (void*) NULL, 0);
+   G__memfunc_setup("~G__SourceFileInfo", 1792, G__G__API_160_0_1, (int) ('y'), -1, -1, 0, 0, 1, 1, 0, "", (char*) NULL, (void*) NULL, 0);
    // automatic assignment operator
-   G__memfunc_setup("operator=", 937, G__G__API_114_0_2, (int) ('u'), G__get_linked_tagnum(&G__G__APILN_CintcLcLG__SourceFileInfo), -1, 1, 1, 1, 1, 0, "u 'Cint::G__SourceFileInfo' - 11 - -", (char*) NULL, (void*) NULL, 0);
+   G__memfunc_setup("operator=", 937, G__G__API_160_0_2, (int) ('u'), G__get_linked_tagnum(&G__G__APILN_CintcLcLG__SourceFileInfo), -1, 1, 1, 1, 1, 0, "u 'Cint::G__SourceFileInfo' - 11 - -", (char*) NULL, (void*) NULL, 0);
    G__tag_memfunc_reset();
 }
 
 static void G__setup_memfuncCintcLcLG__IncludePathInfo(void) {
    /* Cint::G__IncludePathInfo */
    G__tag_memfunc_setup(G__get_linked_tagnum(&G__G__APILN_CintcLcLG__IncludePathInfo));
-   G__memfunc_setup("G__IncludePathInfo",0,G__G__API_115_18683408_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__IncludePathInfo), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Init",0,G__G__API_115_18685072_0, 121, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Name",0,G__G__API_115_18686304_0, 67, -1, -1, 0, 0, 1, 1, 1, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Property",0,G__G__API_115_18686608_0, 108, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("IsValid",0,G__G__API_115_18687216_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("Next",0,G__G__API_115_18688288_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
-   G__memfunc_setup("operator=",0,(G__InterfaceMethod) NULL, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__IncludePathInfo), -1, 1, 1, 1, 4, 0, "u 'Cint::G__IncludePathInfo' - 11 - -", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("G__IncludePathInfo",1762,G__G__API_161_8318400_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__IncludePathInfo), -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Init",404,G__G__API_161_8330240_0, 121, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Name",385,G__G__API_161_8331040_0, 67, -1, -1, 0, 0, 1, 1, 1, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Property",869,G__G__API_161_8331808_0, 108, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("IsValid",684,G__G__API_161_8332016_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("Next",415,G__G__API_161_8333184_0, 105, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("operator=",937,(G__InterfaceMethod) NULL, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__IncludePathInfo), -1, 1, 1, 1, 4, 0, "u 'Cint::G__IncludePathInfo' - 11 - -", (char*)NULL, (void*) NULL, 0);
    // automatic copy constructor
-   G__memfunc_setup("G__IncludePathInfo", 1762, G__G__API_115_0_0, (int) ('i'), G__get_linked_tagnum(&G__G__APILN_CintcLcLG__IncludePathInfo), -1, 0, 1, 1, 1, 0, "u 'Cint::G__IncludePathInfo' - 11 - -", (char*) NULL, (void*) NULL, 0);
+   G__memfunc_setup("G__IncludePathInfo", 1762, G__G__API_161_0_0, (int) ('i'), G__get_linked_tagnum(&G__G__APILN_CintcLcLG__IncludePathInfo), -1, 0, 1, 1, 1, 0, "u 'Cint::G__IncludePathInfo' - 11 - -", (char*) NULL, (void*) NULL, 0);
    // automatic destructor
-   G__memfunc_setup("~G__IncludePathInfo", 1888, G__G__API_115_0_1, (int) ('y'), -1, -1, 0, 0, 1, 1, 0, "", (char*) NULL, (void*) NULL, 0);
+   G__memfunc_setup("~G__IncludePathInfo", 1888, G__G__API_161_0_1, (int) ('y'), -1, -1, 0, 0, 1, 1, 0, "", (char*) NULL, (void*) NULL, 0);
+   G__tag_memfunc_reset();
+}
+
+static void G__setup_memfuncCintcLcLG__ShadowMaker(void) {
+   /* Cint::G__ShadowMaker */
+   G__tag_memfunc_setup(G__get_linked_tagnum(&G__G__APILN_CintcLcLG__ShadowMaker));
+   G__memfunc_setup("NeedShadowClass",1496,G__G__API_166_8358624_0, 103, -1, -1, 0, 1, 3, 1, 0, "u 'Cint::G__ClassInfo' - 1 - cl", (char*)NULL, (void*) (bool (*)(Cint::G__ClassInfo&))(&Cint::G__ShadowMaker::NeedShadowClass), 0);
+   G__memfunc_setup("G__ShadowMaker",1371,G__G__API_166_8360624_0, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__ShadowMaker), -1, 0, 4, 1, 1, 0, 
+"u 'basic_ostream<char,char_traits<char> >' 'ostream' 1 - out C - - 10 - nsprefix "
+"1 - 'bool (*)(Cint::G__ClassInfo&cl)' 0 'G__ShadowMaker::NeedShadowClass' needShadowClass 1 - 'bool (*)(Cint::G__ClassInfo&cl)' 0 '0' needTypedefShadow", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("WriteAllShadowClasses",2136,G__G__API_166_8361344_0, 121, -1, -1, 0, 0, 1, 1, 0, "", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("WriteShadowClass",1639,G__G__API_166_8362864_0, 121, -1, -1, 0, 2, 1, 1, 0, 
+"u 'Cint::G__ClassInfo' - 1 - cl i - - 0 '0' level", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("WriteNamespaceHeader",2017,G__G__API_166_8364224_0, 105, -1, -1, 0, 1, 1, 1, 0, "u 'Cint::G__ClassInfo' - 1 - cl", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("NeedShadowCached",1562,G__G__API_166_8365248_0, 105, -1, -1, 0, 1, 1, 1, 0, "i - - 0 - tagnum", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("IsSTLCont",835,G__G__API_166_8366176_0, 103, -1, -1, 0, 1, 3, 1, 0, "C - - 10 - type", (char*)NULL, (void*) (bool (*)(const char*))(&Cint::G__ShadowMaker::IsSTLCont), 0);
+   G__memfunc_setup("IsStdPair",883,G__G__API_166_8366608_0, 103, -1, -1, 0, 1, 3, 1, 0, "u 'Cint::G__ClassInfo' - 1 - cl", (char*)NULL, (void*) (bool (*)(Cint::G__ClassInfo&))(&Cint::G__ShadowMaker::IsStdPair), 0);
+   G__memfunc_setup("GetFullyQualifiedName",2113,G__G__API_166_8368064_0, 121, -1, -1, 0, 2, 3, 1, 0, 
+"C - - 10 - originalName u 'string' - 1 - fullyQualifiedName", (char*)NULL, (void*) (void (*)(const char*, string&))(&Cint::G__ShadowMaker::GetFullyQualifiedName), 0);
+   G__memfunc_setup("GetFullyQualifiedName",2113,G__G__API_166_8368912_0, 121, -1, -1, 0, 2, 3, 1, 0, 
+"u 'Cint::G__ClassInfo' - 1 - cl u 'string' - 1 - fullyQualifiedName", (char*)NULL, (void*) (void (*)(Cint::G__ClassInfo&, string&))(&Cint::G__ShadowMaker::GetFullyQualifiedName), 0);
+   G__memfunc_setup("GetFullyQualifiedName",2113,G__G__API_166_8370752_0, 121, -1, -1, 0, 2, 3, 1, 0, 
+"u 'Cint::G__TypeInfo' - 1 - type u 'string' - 1 - fullyQualifiedName", (char*)NULL, (void*) (void (*)(Cint::G__TypeInfo&, string&))(&Cint::G__ShadowMaker::GetFullyQualifiedName), 0);
+   G__memfunc_setup("GetNonConstTypeName",1909,G__G__API_166_8373264_0, 117, G__get_linked_tagnum(&G__G__APILN_string), -1, 0, 2, 3, 1, 0, 
+"u 'Cint::G__DataMemberInfo' - 1 - m g - - 0 'false' fullyQualified", (char*)NULL, (void*) (string (*)(Cint::G__DataMemberInfo&, bool))(&Cint::G__ShadowMaker::GetNonConstTypeName), 0);
+   G__memfunc_setup("GetFullShadowName",1690,G__G__API_166_8372736_0, 121, -1, -1, 0, 2, 1, 1, 0, 
+"u 'Cint::G__ClassInfo' - 1 - cl u 'string' - 1 - fullname", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("VetoShadow",1028,G__G__API_166_8374352_0, 121, -1, -1, 0, 1, 3, 1, 0, "g - - 0 'true' veto", (char*)NULL, (void*) (void (*)(bool))(&Cint::G__ShadowMaker::VetoShadow), 0);
+   G__memfunc_setup("G__ShadowMaker",1371,(G__InterfaceMethod) NULL, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__ShadowMaker), -1, 0, 1, 1, 4, 0, "u 'Cint::G__ShadowMaker' - 11 - -", (char*)NULL, (void*) NULL, 0);
+   G__memfunc_setup("operator=",937,(G__InterfaceMethod) NULL, 117, G__get_linked_tagnum(&G__G__APILN_CintcLcLG__ShadowMaker), -1, 1, 1, 1, 4, 0, "u 'Cint::G__ShadowMaker' - 11 - -", (char*)NULL, (void*) NULL, 0);
+   // automatic destructor
+   G__memfunc_setup("~G__ShadowMaker", 1497, G__G__API_166_0_0, (int) ('y'), -1, -1, 0, 0, 1, 1, 0, "", (char*) NULL, (void*) NULL, 0);
    G__tag_memfunc_reset();
 }
 
@@ -3979,6 +4088,9 @@ static void G__cpp_setup_global2() {
 
 static void G__cpp_setup_global3() {
    G__memvar_setup((void*)G__PVOID,112,0,1,-1,G__defined_typename("macroInt$"),-1,1,"G__INFO_BUFLEN=50",1,(char*)NULL);
+}
+
+static void G__cpp_setup_global4() {
    G__memvar_setup((void*)G__PVOID,112,0,1,-1,G__defined_typename("macroInt$"),-1,1,"G__INFO_TITLELEN=512",1,(char*)NULL);
    G__memvar_setup((void*)G__PVOID,112,0,1,-1,G__defined_typename("macroInt$"),-1,1,"G__PROPERTY_H=0",1,(char*)NULL);
    G__memvar_setup((void*)G__PVOID,112,0,1,-1,G__defined_typename("macroInt$"),-1,1,"G__BIT_ISTAGNUM=15",1,(char*)NULL);
@@ -3988,9 +4100,6 @@ static void G__cpp_setup_global3() {
    G__memvar_setup((void*)G__PVOID,112,0,1,-1,G__defined_typename("macroInt$"),-1,1,"G__BIT_ISENUM=8",1,(char*)NULL);
    G__memvar_setup((void*)G__PVOID,112,0,1,-1,G__defined_typename("macroInt$"),-1,1,"G__BIT_ISTYPEDEF=16",1,(char*)NULL);
    G__memvar_setup((void*)G__PVOID,112,0,1,-1,G__defined_typename("macroInt$"),-1,1,"G__BIT_ISFUNDAMENTAL=32",1,(char*)NULL);
-}
-
-static void G__cpp_setup_global4() {
    G__memvar_setup((void*)G__PVOID,112,0,1,-1,G__defined_typename("macroInt$"),-1,1,"G__BIT_ISABSTRACT=64",1,(char*)NULL);
    G__memvar_setup((void*)G__PVOID,112,0,1,-1,G__defined_typename("macroInt$"),-1,1,"G__BIT_ISVIRTUAL=128",1,(char*)NULL);
    G__memvar_setup((void*)G__PVOID,112,0,1,-1,G__defined_typename("macroInt$"),-1,1,"G__BIT_ISPUREVIRTUAL=256",1,(char*)NULL);
@@ -4035,6 +4144,7 @@ static void G__cpp_setup_global4() {
    G__memvar_setup((void*)G__PVOID,112,0,1,-1,G__defined_typename("macroInt$"),-1,1,"G__CALLFUNC_H=0",1,(char*)NULL);
    G__memvar_setup((void*)G__PVOID,112,0,1,-1,G__defined_typename("macroInt$"),-1,1,"G__TYPEDEFINFO_H=0",1,(char*)NULL);
    G__memvar_setup((void*)G__PVOID,112,0,1,-1,G__defined_typename("macroInt$"),-1,1,"G__TOKENINFO_H=0",1,(char*)NULL);
+   G__memvar_setup((void*)G__PVOID,112,0,1,-1,G__defined_typename("macroInt$"),-1,1,"G__SHADOW_H=0",1,(char*)NULL);
 
    G__resetglobalenv();
 }
@@ -4055,6 +4165,33 @@ static void G__cpp_setup_func0() {
 }
 
 static void G__cpp_setup_func1() {
+}
+
+static void G__cpp_setup_func2() {
+}
+
+static void G__cpp_setup_func3() {
+}
+
+static void G__cpp_setup_func4() {
+}
+
+static void G__cpp_setup_func5() {
+}
+
+static void G__cpp_setup_func6() {
+}
+
+static void G__cpp_setup_func7() {
+}
+
+static void G__cpp_setup_func8() {
+}
+
+static void G__cpp_setup_func9() {
+}
+
+static void G__cpp_setup_func10() {
 
    G__resetifuncposition();
 }
@@ -4062,6 +4199,15 @@ static void G__cpp_setup_func1() {
 extern "C" void G__cpp_setup_funcG__API() {
   G__cpp_setup_func0();
   G__cpp_setup_func1();
+  G__cpp_setup_func2();
+  G__cpp_setup_func3();
+  G__cpp_setup_func4();
+  G__cpp_setup_func5();
+  G__cpp_setup_func6();
+  G__cpp_setup_func7();
+  G__cpp_setup_func8();
+  G__cpp_setup_func9();
+  G__cpp_setup_func10();
 }
 
 /*********************************************************
@@ -4073,8 +4219,9 @@ G__linked_taginfo G__G__APILN_G__value = { "G__value" , 115 , -1 };
 G__linked_taginfo G__G__APILN_G__param = { "G__param" , 115 , -1 };
 G__linked_taginfo G__G__APILN_G__friendtag = { "G__friendtag" , 115 , -1 };
 G__linked_taginfo G__G__APILN_G__bytecodefunc = { "G__bytecodefunc" , 115 , -1 };
+G__linked_taginfo G__G__APILN_basic_ostreamlEcharcOchar_traitslEchargRsPgR = { "basic_ostream<char,char_traits<char> >" , 99 , -1 };
+G__linked_taginfo G__G__APILN_string = { "string" , 99 , -1 };
 G__linked_taginfo G__G__APILN_ReflexcLcLType = { "Reflex::Type" , 99 , -1 };
-G__linked_taginfo G__G__APILN_ReflexcLcLScope = { "Reflex::Scope" , 99 , -1 };
 G__linked_taginfo G__G__APILN_Cint = { "Cint" , 110 , -1 };
 G__linked_taginfo G__G__APILN_CintcLcLG__MethodInfo = { "Cint::G__MethodInfo" , 99 , -1 };
 G__linked_taginfo G__G__APILN_CintcLcLG__DataMemberInfo = { "Cint::G__DataMemberInfo" , 99 , -1 };
@@ -4101,6 +4248,7 @@ G__linked_taginfo G__G__APILN_G__ConstStringList = { "G__ConstStringList" , 115 
 G__linked_taginfo G__G__APILN_G__Preprocessfilekey = { "G__Preprocessfilekey" , 115 , -1 };
 G__linked_taginfo G__G__APILN_G__Deffuncmacro = { "G__Deffuncmacro" , 115 , -1 };
 G__linked_taginfo G__G__APILN_G__Definetemplatefunc = { "G__Definetemplatefunc" , 115 , -1 };
+G__linked_taginfo G__G__APILN_CintcLcLG__ShadowMaker = { "Cint::G__ShadowMaker" , 99 , -1 };
 
 /* Reset class/struct taginfo */
 extern "C" void G__cpp_reset_tagtableG__API() {
@@ -4109,8 +4257,9 @@ extern "C" void G__cpp_reset_tagtableG__API() {
   G__G__APILN_G__param.tagnum = -1 ;
   G__G__APILN_G__friendtag.tagnum = -1 ;
   G__G__APILN_G__bytecodefunc.tagnum = -1 ;
+  G__G__APILN_basic_ostreamlEcharcOchar_traitslEchargRsPgR.tagnum = -1 ;
+  G__G__APILN_string.tagnum = -1 ;
   G__G__APILN_ReflexcLcLType.tagnum = -1 ;
-  G__G__APILN_ReflexcLcLScope.tagnum = -1 ;
   G__G__APILN_Cint.tagnum = -1 ;
   G__G__APILN_CintcLcLG__MethodInfo.tagnum = -1 ;
   G__G__APILN_CintcLcLG__DataMemberInfo.tagnum = -1 ;
@@ -4137,6 +4286,7 @@ extern "C" void G__cpp_reset_tagtableG__API() {
   G__G__APILN_G__Preprocessfilekey.tagnum = -1 ;
   G__G__APILN_G__Deffuncmacro.tagnum = -1 ;
   G__G__APILN_G__Definetemplatefunc.tagnum = -1 ;
+  G__G__APILN_CintcLcLG__ShadowMaker.tagnum = -1 ;
 }
 
 
@@ -4148,8 +4298,9 @@ extern "C" void G__cpp_setup_tagtableG__API() {
    G__get_linked_tagnum_fwd(&G__G__APILN_G__param);
    G__get_linked_tagnum_fwd(&G__G__APILN_G__friendtag);
    G__get_linked_tagnum_fwd(&G__G__APILN_G__bytecodefunc);
+   G__get_linked_tagnum_fwd(&G__G__APILN_basic_ostreamlEcharcOchar_traitslEchargRsPgR);
+   G__get_linked_tagnum_fwd(&G__G__APILN_string);
    G__get_linked_tagnum_fwd(&G__G__APILN_ReflexcLcLType);
-   G__get_linked_tagnum_fwd(&G__G__APILN_ReflexcLcLScope);
    G__tagtable_setup(G__get_linked_tagnum(&G__G__APILN_Cint),0,-1,0,(char*)NULL,G__setup_memvarCint,G__setup_memfuncCint);
    G__tagtable_setup(G__get_linked_tagnum(&G__G__APILN_CintcLcLG__MethodInfo),sizeof(Cint::G__MethodInfo),-1,36608,(char*)NULL,G__setup_memvarCintcLcLG__MethodInfo,G__setup_memfuncCintcLcLG__MethodInfo);
    G__tagtable_setup(G__get_linked_tagnum(&G__G__APILN_CintcLcLG__DataMemberInfo),sizeof(Cint::G__DataMemberInfo),-1,36608,(char*)NULL,G__setup_memvarCintcLcLG__DataMemberInfo,G__setup_memfuncCintcLcLG__DataMemberInfo);
@@ -4176,6 +4327,7 @@ extern "C" void G__cpp_setup_tagtableG__API() {
    G__tagtable_setup(G__get_linked_tagnum(&G__G__APILN_G__Preprocessfilekey),0,-1,0,(char*)NULL,NULL,NULL);
    G__tagtable_setup(G__get_linked_tagnum(&G__G__APILN_G__Deffuncmacro),0,-1,0,(char*)NULL,NULL,NULL);
    G__tagtable_setup(G__get_linked_tagnum(&G__G__APILN_G__Definetemplatefunc),0,-1,0,(char*)NULL,NULL,NULL);
+   G__tagtable_setup(G__get_linked_tagnum(&G__G__APILN_CintcLcLG__ShadowMaker),sizeof(Cint::G__ShadowMaker),-1,35328,(char*)NULL,G__setup_memvarCintcLcLG__ShadowMaker,G__setup_memfuncCintcLcLG__ShadowMaker);
 }
 extern "C" void G__cpp_setupG__API(void) {
   G__check_setup_version(30051515,"G__cpp_setupG__API()");

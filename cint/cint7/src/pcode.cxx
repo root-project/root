@@ -741,7 +741,7 @@ static void G__OP2_minus(G__value *bufm1, G__value *bufm2)
          G__value_typenum(*bufm2) = G__value_typenum(*bufm1);
       }
    }
-   else if (G__value_typenum(*bufm1).IsPointer()) {
+   else if (G__value_typenum(*bufm1).FinalType().IsPointer()) {
       bufm2->obj.i = (bufm2->obj.i * G__sizeof(bufm2)) - bufm1->obj.i;
       G__value_typenum(*bufm2) = G__value_typenum(*bufm1);
    }
@@ -1218,7 +1218,7 @@ template <typename Common, class Oper> static void G__OP2_apply_common(G__value*
          G__OP2_apply_left_right<Common, G__uint64, Oper>(bufm1, bufm2);
          break;
       default:
-         if (G__value_typenum(*bufm2).IsPointer()) {
+         if (G__value_typenum(*bufm2).FinalType().IsPointer()) {
             G__OP2_apply_left_right<Common, long, Oper>(bufm1, bufm2);
          } else {
             assert(0);
@@ -1270,7 +1270,7 @@ void Cint::Internal::G__CMP2_equal(G__value* bufm1, G__value* bufm2)
 {
    // If the value are pointers, we might first need to convert them to a 
    // potential common base class pointer.
-   if(G__value_typenum(*bufm1).IsPointer() && G__value_typenum(*bufm2).IsPointer()) {
+   if(G__value_typenum(*bufm1).FinalType().IsPointer() && G__value_typenum(*bufm2).FinalType().IsPointer()) {
       G__publicinheritance(bufm1,bufm2);
       OperEqual::Select<long,long>::Apply(bufm1,bufm2);
    } else {
@@ -1283,7 +1283,7 @@ static void G__CMP2_notequal(G__value* bufm1, G__value* bufm2)
 {
    // If the value are pointers, we might first need to convert them to a 
    // potential common base class pointer.
-   if(G__value_typenum(*bufm1).IsPointer() && G__value_typenum(*bufm2).IsPointer()) {
+   if(G__value_typenum(*bufm1).FinalType().IsPointer() && G__value_typenum(*bufm2).FinalType().IsPointer()) {
       G__publicinheritance(bufm1,bufm2);
       OperNotEqual::Select<long,long>::Apply(bufm1,bufm2);
    } else {
@@ -1488,7 +1488,7 @@ template <typename T> static void G__OP1_minus_T(G__value* pbuf)
 //______________________________________________________________________________
 static void G__OP1_minus(G__value* pbuf)
 {
-   if (G__value_typenum(*pbuf).IsPointer()) {
+   if (G__value_typenum(*pbuf).FinalType().IsPointer()) {
       G__genericerror("Error: Illegal pointer operation unary -");
       return;
    }
@@ -1852,12 +1852,12 @@ static int G__isInt(int type)
 }
 
 //______________________________________________________________________________
-// I'm not claiming this is nice...
-#define G__OP_VAR_CONCAT(A,B) A##B
+#define G__OP_VAR1(INST) \
+   (instVar1 = ::Reflex::Member(reinterpret_cast<const Reflex::MemberBase*>(G__asm_inst[INST])))
 
 //______________________________________________________________________________
-#define G__OP_VAR(n, INST) \
-   (G__OP_VAR_CONCAT(instVar,n) = G__Dict::GetDict().GetDataMember((size_t)G__asm_inst[INST]))
+#define G__OP_VAR2(INST) \
+   (instVar2 = ::Reflex::Member(reinterpret_cast<const Reflex::MemberBase*>(G__asm_inst[INST])))
 
 //______________________________________________________________________________
 int Cint::Internal::G__asm_optimize(int* start)
@@ -1900,7 +1900,7 @@ int Cint::Internal::G__asm_optimize(int* start)
          G__asm_inst[*start+5] == G__LD      &&
          G__asm_inst[*start+7] == G__CMP2    &&
          G__asm_inst[*start+9] == G__CNDJMP  &&
-         G__isInt(G__get_type(G__OP_VAR(1, *start + 4).TypeOf())) && /* 2 */
+         G__isInt(G__get_type(G__OP_VAR1(*start + 4).TypeOf())) && /* 2 */
          G__isInt(G__get_type(G__value_typenum(G__asm_stack[G__asm_inst[*start+6]]))) &&
          G__asm_inst[*start+3] == 'p'    /* 3 */
       ) {
@@ -1914,9 +1914,9 @@ int Cint::Internal::G__asm_optimize(int* start)
       G__asm_gettest((int)G__asm_inst[*start+8]
                      , &G__asm_inst[*start+7]);
 
-      G__asm_inst[*start+8] = (long)G__get_offset(instVar1);
+      G__asm_inst[*start+8] = (long) G__get_offset(instVar1);
       if (G__asm_inst[*start] == G__LD_MSTR
-            && !G__test_static(instVar1, G__LOCALSTATIC, -1)
+            && (G__get_properties(instVar1)->statictype != G__LOCALSTATIC)
          )
          G__asm_inst[*start+8] += (long)G__store_struct_offset;
 
@@ -1975,8 +1975,8 @@ int Cint::Internal::G__asm_optimize(int* start)
              )) &&  /* 1 */
             G__asm_inst[*start+10] == G__CMP2    &&
             G__asm_inst[*start+12] == G__CNDJMP  &&
-            G__isInt(G__get_type(G__OP_VAR(1, *start + 4).TypeOf())) && /* 2 */
-            (G__isInt(G__get_type(G__OP_VAR(2, *start + 9).TypeOf())) || /* 2 */
+            G__isInt(G__get_type(G__OP_VAR1(*start + 4).TypeOf())) && /* 2 */
+            (G__isInt(G__get_type(G__OP_VAR2(*start + 9).TypeOf())) || /* 2 */
              G__get_type(instVar2.TypeOf()) == 'p') && /* 2 */
             G__asm_inst[*start+3] == 'p'  &&  /* 3 */
             G__asm_inst[*start+8] == 'p'    /* 3 */
@@ -1989,15 +1989,15 @@ int Cint::Internal::G__asm_optimize(int* start)
 #endif
       G__asm_gettest((int)G__asm_inst[*start+11] , &G__asm_inst[*start+10]);
 
-      G__asm_inst[*start+11] = (long)G__get_offset(instVar1);
-      if (G__asm_inst[*start] == G__LD_MSTR
-            && G__test_static(instVar1, G__LOCALSTATIC)
+      G__asm_inst[*start+11] = (long) G__get_offset(instVar1);
+      if ((G__asm_inst[*start] == G__LD_MSTR)
+            && (G__get_properties(instVar1)->statictype != G__LOCALSTATIC)
          )
-         G__asm_inst[*start+11] += (long)G__store_struct_offset;
+         G__asm_inst[*start+11] += (long) G__store_struct_offset;
 
-      G__asm_inst[*start+12] = (long)G__get_offset(instVar2);
+      G__asm_inst[*start+12] = (long) G__get_offset(instVar2);
       if (G__asm_inst[*start+5] == G__LD_MSTR
-            && !G__test_static(instVar2, G__LOCALSTATIC, -1)
+            && (G__get_properties(instVar2)->statictype != G__LOCALSTATIC)
          )
          G__asm_inst[*start+12] += (long)G__store_struct_offset;
 
@@ -2043,16 +2043,16 @@ int Cint::Internal::G__asm_optimize(int* start)
           (G__LD_MSTR == G__asm_inst[G__asm_cp-9]
            && !G__asm_wholefunction
           )) &&
-         G__isInt(G__get_type(G__OP_VAR(1, G__asm_cp - 5).TypeOf()))) {
+         G__isInt(G__get_type(G__OP_VAR1(G__asm_cp - 5).TypeOf()))) {
 
 #ifdef G__ASM_DBG
       if (G__asm_dbg) G__fprinterr(G__serr, "%3x: INCJMP  i++ optimized\n", G__asm_cp - 9);
 #endif
       G__asm_inst[G__asm_cp-8] = (long)G__get_offset(instVar1);
       if (G__asm_inst[G__asm_cp-9] == G__LD_MSTR
-            && !G__test_static(instVar1, G__LOCALSTATIC, -1)
+            && (G__get_properties(instVar1)->statictype != G__LOCALSTATIC)
          ) {
-         G__asm_inst[G__asm_cp-8] += (long)G__store_struct_offset;
+         G__asm_inst[G__asm_cp-8] += (long) G__store_struct_offset;
       }
 
       G__asm_inst[G__asm_cp-9] = G__INCJMP;
@@ -2113,7 +2113,7 @@ int Cint::Internal::G__asm_optimize(int* start)
              (G__LD_MSTR == G__asm_inst[G__asm_cp-11]
               && !G__asm_wholefunction
              )) &&
-            G__isInt(G__get_type(G__OP_VAR(1, G__asm_cp - 7).TypeOf())))  {
+            G__isInt(G__get_type(G__OP_VAR1(G__asm_cp - 7).TypeOf())))  {
 
 #ifdef G__ASM_DBG
       if (G__asm_dbg) G__fprinterr(G__serr, "%3x: INCJMP  i+=1 optimized\n", G__asm_cp - 11);
@@ -2121,7 +2121,7 @@ int Cint::Internal::G__asm_optimize(int* start)
 
       G__asm_inst[G__asm_cp-10] = (long)G__get_offset(instVar1);
       if (G__asm_inst[G__asm_cp-11] == G__LD_MSTR
-            && !G__test_static(instVar1, G__LOCALSTATIC)
+            && (G__get_properties(instVar1)->statictype != G__LOCALSTATIC)
          ) {
          G__asm_inst[G__asm_cp-10] += (long)G__store_struct_offset;
       }
@@ -2184,7 +2184,7 @@ int Cint::Internal::G__asm_optimize(int* start)
             G__asm_inst[G__asm_cp-15] == G__asm_inst[G__asm_cp-6] && /* 2 */
             G__asm_inst[G__asm_cp-12] == G__asm_inst[G__asm_cp-3] &&
             (G__asm_inst[G__asm_cp-8] == '+' || G__asm_inst[G__asm_cp-8] == '-') &&
-            G__isInt(G__get_type(G__OP_VAR(1, G__asm_cp - 3).TypeOf()))       &&
+            G__isInt(G__get_type(G__OP_VAR1(G__asm_cp - 3).TypeOf()))       &&
             G__asm_inst[G__asm_cp-14] == 0 &&
             G__asm_inst[G__asm_cp-13] == 'p' &&   /* 3 */
             G__asm_inst[G__asm_cp-4] == 'p') {
@@ -2196,7 +2196,7 @@ int Cint::Internal::G__asm_optimize(int* start)
 
       G__asm_inst[G__asm_cp-15] = (long)G__get_offset(instVar1);
       if (G__asm_inst[G__asm_cp-7] == G__ST_MSTR
-            && !G__test_static(instVar1, G__LOCALSTATIC - 1)
+            && (G__get_properties(instVar1)->statictype != G__LOCALSTATIC)
          )
          G__asm_inst[G__asm_cp-15] += (long)G__store_struct_offset;
 
@@ -3368,7 +3368,7 @@ static int G__LD_VAR_int_optimize(int* ppc, long* pi)
    if (1 == G__asm_inst[pc+7] && 'p' == G__asm_inst[pc+8] &&
          (var = G__Dict::GetDict().GetDataMember((size_t)G__asm_inst[pc+9])) &&
          1 == G__get_paran(var) &&
-         (!var.TypeOf().IsPointer() ||
+         (!var.TypeOf().FinalType().IsPointer() ||
           G__PARANORMAL == G__get_reftype(var.TypeOf()))) {
       ig15 = G__asm_inst[pc+6];
       /********************************************************************
@@ -3462,7 +3462,7 @@ static int G__LD_VAR_int_optimize(int* ppc, long* pi)
             'p' == G__asm_inst[pc+12] &&
             (var = G__Dict::GetDict().GetDataMember((size_t)G__asm_inst[pc+13])) &&
             1 == G__get_paran(var) &&
-            (!var.TypeOf().IsPointer() ||
+            (!var.TypeOf().FinalType().IsPointer() ||
              G__PARANORMAL == G__get_reftype(var.TypeOf()))) {
       ig15 = G__asm_inst[pc+10];
       /********************************************************************
@@ -3643,7 +3643,7 @@ static int G__LD_int_optimize(int* ppc, long* pi)
          'p' == G__asm_inst[pc+5] &&
          (var = G__Dict::GetDict().GetDataMember((size_t)G__asm_inst[pc+6])) &&
          1 == G__get_paran(var) &&
-         (!var.TypeOf().IsPointer() ||
+         (!var.TypeOf().FinalType().IsPointer() ||
           G__PARANORMAL == G__get_reftype(var.TypeOf()))
          && (pc < 4 || G__JMP != G__asm_inst[pc-2] || G__asm_inst[pc-1] != pc + 2)
       ) {
@@ -3688,45 +3688,46 @@ static int G__LD_int_optimize(int* ppc, long* pi)
     * 5 point_level == p                  flag &1:param_lcocal,&2:array_local
     * 6 var id                            var id  
     ********************************************************************/
-   else if ((G__ST_VAR == G__asm_inst[pc+2] || G__ST_LVAR == G__asm_inst[pc+2]) &&
-            1 == G__asm_inst[pc+4] &&
-            'p' == G__asm_inst[pc+5]) {
-      if (
-         (var = G__Dict::GetDict().GetDataMember((size_t)G__asm_inst[pc+6])) &&
-         1 == G__get_paran(var) &&
-         (!var.TypeOf().IsPointer()) ||
-         G__PARANORMAL == G__get_reftype(var.TypeOf())
-         && (pc < 4 || G__JMP != G__asm_inst[pc-2] || G__asm_inst[pc-1] != pc + 2)
-      ) {
-         int flag;
-         if (G__ASM_FUNC_COMPILE == G__asm_wholefunction) {
-            if (*pi >= G__MAXINDEXCONST || *pi < 0) return(done);
-            else pi = &G__indexconst[*pi];
-         }
-         if (G__ST_LVAR == G__asm_inst[pc+2]) flag = 2;
-         else                              flag = 0;
-         ig15 = G__asm_inst[pc+3];
-         if (0 == G__get_ST_p1_p2f(G__get_type(var.TypeOf()), &G__asm_inst[pc+2])) {
+   else if (
+      ((G__asm_inst[pc+2] == G__ST_VAR) || (G__asm_inst[pc+2] == G__ST_LVAR)) &&
+      (G__asm_inst[pc+4] == 1) &&
+      (G__asm_inst[pc+5] == 'p') &&
+      (var = G__Dict::GetDict().GetDataMember((size_t) G__asm_inst[pc+6])) &&
+      (G__get_paran(var) == 1) &&
+      (
+         islower(G__get_type(var.TypeOf())) ||
+         (G__get_reftype(var.TypeOf()) == G__PARANORMAL)
+      ) &&
+      ((pc < 4) || (G__asm_inst[pc-2] != G__JMP) || (G__asm_inst[pc-1] != (pc + 2)))
+   ) {
+      int flag;
+      if (G__ASM_FUNC_COMPILE == G__asm_wholefunction) {
+         if (*pi >= G__MAXINDEXCONST || *pi < 0) return(done);
+         else pi = &G__indexconst[*pi];
+      }
+      if (G__ST_LVAR == G__asm_inst[pc+2]) flag = 2;
+      else                              flag = 0;
+      ig15 = G__asm_inst[pc+3];
+      if (0 == G__get_ST_p1_p2f(G__get_type(var.TypeOf()), &G__asm_inst[pc+2])) {
 #ifdef G__ASM_DBG
-            if (G__asm_dbg)
-               G__fprinterr(G__serr, "Error: LD,ST_VAR[1] optimize error %s\n"
-                            , var.Name().c_str());
+         if (G__asm_dbg)
+            G__fprinterr(G__serr, "Error: LD,ST_VAR[1] optimize error %s\n"
+                         , var.Name().c_str());
 #endif
+      }
+      else {
+         done = 1;
+         G__asm_inst[pc+5] = flag;
+         G__asm_inst[pc] = G__LDST_VAR_INDEX;
+         G__asm_inst[pc+1] = (long)pi;
+         if (sizeof(long) > sizeof(int)) { /* long to int conversion */
+            *(int*)G__asm_inst[pc+1] = (int)(*(long*)pi);
          }
-         else {
-            done = 1;
-            G__asm_inst[pc+5] = flag;
-            G__asm_inst[pc] = G__LDST_VAR_INDEX;
-            G__asm_inst[pc+1] = (long)pi;
-            if (sizeof(long) > sizeof(int)) { /* long to int conversion */
-               *(int*)G__asm_inst[pc+1] = (int)(*(long*)pi);
-            }
-            G__asm_inst[pc+4] = 7;
-            *ppc = pc + 5; /* other 2 is incremented one level up */
+         G__asm_inst[pc+4] = 7;
+         *ppc = pc + 5; /* other 2 is incremented one level up */
 #ifdef G__ASM_DBG
-            if (G__asm_dbg) G__fprinterr(G__serr, "LDST_VAR_INDEX (6) optimized\n");
+         if (G__asm_dbg) G__fprinterr(G__serr, "LDST_VAR_INDEX (6) optimized\n");
 #endif
-         }
       }
    }
 
@@ -3945,25 +3946,19 @@ static int G__OP2_optimize(int pc)
 //______________________________________________________________________________
 int Cint::Internal::G__asm_optimize3(int* start)
 {
-   int pc;               /* instruction program counter */
    int illegal = 0;
    Reflex::Member var;
    int ig15;
    int paran;
    int var_type;
-
 #ifdef G__ASM_DBG
    if (G__asm_dbg) {
       G__fprinterr(G__serr, "Optimize 3 start\n");
    }
-#endif
-
-   pc = *start;
-
+#endif // G__ASM_DBG
+   int pc = *start; // Set program counter to start of code.
    while (pc < G__MAXINST) {
-
       switch (G__INST(G__asm_inst[pc])) {
-
          case G__LDST_VAR_P:
             /***************************************
             * inst
@@ -4150,14 +4145,13 @@ int Cint::Internal::G__asm_optimize3(int* start)
             * sp+1             <-
             ***************************************/
 #ifdef G__ASM_DBG
-            if (G__asm_dbg) G__fprinterr(G__serr, "%3lx: LD %g from %x \n"
-                                            , pc
-                                            , G__double(G__asm_stack[G__asm_inst[pc+1]])
-                                            , G__asm_inst[pc+1]);
-#endif
-            /* no optimize */
-            if ('i' == G__get_type(G__value_typenum(G__asm_stack[G__asm_inst[pc+1]]))) {
-               G__LD_int_optimize(&pc, &(G__asm_stack[G__asm_inst[pc+1]].obj.i));
+            if (G__asm_dbg) {
+               G__fprinterr(G__serr, "%3x: LD 0x%08lx,%d,%g from data stack index: 0x%lx  %s:%d\n", pc, G__int(G__asm_stack[G__asm_inst[pc+1]]), G__int(G__asm_stack[G__asm_inst[pc+1]]), G__double(G__asm_stack[G__asm_inst[pc+1]]), G__asm_inst[pc+1], __FILE__, __LINE__);
+            }
+#endif // G__ASM_DBG
+            // no optimize
+            if (G__get_type(G__value_typenum(G__asm_stack[G__asm_inst[pc+1]])) == 'i') {
+               G__LD_int_optimize(&pc, &G__asm_stack[G__asm_inst[pc+1]].obj.i);
             }
             pc += 2;
             break;
@@ -4276,7 +4270,7 @@ int Cint::Internal::G__asm_optimize3(int* start)
             if ('p' == var_type &&
                   (islower(G__get_type(var.TypeOf())) || G__PARANORMAL == G__get_reftype(var.TypeOf()))) {
                long inst;
-               if (G__test_static(var, G__LOCALSTATIC, -1)) inst = G__LDST_VAR_P;
+               if (G__get_properties(var)->statictype == G__LOCALSTATIC) inst = G__LDST_VAR_P;
                else                                      inst = G__LDST_MSTR_P;
                if (0 == paran && 0 == G__get_paran(var)) {
                   G__LD_p0_optimize(var, pc, inst);
@@ -4388,7 +4382,7 @@ int Cint::Internal::G__asm_optimize3(int* start)
             if ('p' == var_type &&
                   (islower(G__get_type(var.TypeOf())) || G__PARANORMAL == G__get_reftype(var.TypeOf()))) {
                long inst;
-               if (G__test_static(var, G__LOCALSTATIC, -1)) inst = G__LDST_VAR_P;
+               if (G__get_properties(var)->statictype == G__LOCALSTATIC) inst = G__LDST_VAR_P;
                else                                      inst = G__LDST_MSTR_P;
                if (0 == paran && 0 == G__get_paran(var)) {
                   G__ST_p0_optimize(var, pc, inst);
@@ -4555,7 +4549,7 @@ int Cint::Internal::G__asm_optimize3(int* start)
             ***************************************/
 #ifdef G__ASM_DBG
             if (G__asm_dbg) {
-               G__fprinterr(G__serr, "%3lx: CAST to %s\n", pc, reinterpret_cast< ::Reflex::Type*>(G__asm_inst[pc+1])->Name(::Reflex::SCOPED).c_str());
+               G__fprinterr(G__serr, "%3lx: CAST to %s\n", pc, reinterpret_cast< ::Reflex::Type*>(&G__asm_inst[pc+1])->Name(::Reflex::SCOPED).c_str());
             }
 #endif
             /* need optimization */
@@ -4816,14 +4810,11 @@ int Cint::Internal::G__asm_optimize3(int* start)
             var_type = G__asm_inst[pc+3];
 #ifdef G__ASM_DBG
             if (G__asm_dbg) {
-               G__fprinterr(G__serr, "%3lx: LD_LVAR index=%d paran=%d point %c %s\n"
-                            , pc, G__asm_inst[pc+1], G__asm_inst[pc+2]
-                            , G__asm_inst[pc+3]
-                            , var.Name().c_str());
+               G__fprinterr(G__serr, "%3x: LD_LVAR name: '%s' index: %d paran: %d point '%c'  %s:%d\n", pc, var.Name(::Reflex::SCOPED).c_str(), G__asm_inst[pc+1], G__asm_inst[pc+2], G__asm_inst[pc+3], __FILE__, __LINE__);
             }
-#endif
-            /* need optimization */
-            if (G__PARAREFERENCE == G__get_reftype(var.TypeOf())) {
+#endif // G__ASM_DBG
+            // need optimization
+            if (G__get_reftype(var.TypeOf()) == G__PARAREFERENCE) {
                switch (var_type) {
                   case 'P':
                      G__LD_RP0_optimize(var, pc, G__LDST_LVAR_P);
@@ -4835,31 +4826,41 @@ int Cint::Internal::G__asm_optimize3(int* start)
                      break;
                }
             }
-            else
-               if ('p' == var_type &&
-                     (islower(G__get_type(var.TypeOf())) || G__PARANORMAL == G__get_reftype(var.TypeOf()))) {
+            else {
+               if (
+                  (var_type == 'p') &&
+                  (
+                     islower(G__get_type(var.TypeOf())) ||
+                     (G__get_reftype(var.TypeOf()) == G__PARANORMAL)
+                  )
+               ) {
                   long inst;
-                  if (G__test_static(var, G__LOCALSTATIC, -1)) inst = G__LDST_VAR_P;
-                  else                                      inst = G__LDST_LVAR_P;
-                  if (0 == paran && 0 == G__get_paran(var)) {
-                     if ('i' == G__get_type(var.TypeOf())) {
-                        if (0 == G__LD_VAR_int_optimize(&pc, (long*)G__get_offset(var)))
+                  if (G__get_properties(var)->statictype == G__LOCALSTATIC) {
+                     inst = G__LDST_VAR_P;
+                  }
+                  else {
+                     inst = G__LDST_LVAR_P;
+                  }
+                  if (!paran && !G__get_paran(var)) {
+                     if (G__get_type(var.TypeOf()) == 'i') {
+                        if (!G__LD_VAR_int_optimize(&pc, (long*) G__get_offset(var)))
                            G__LD_p0_optimize(var, pc, inst);
                      }
                      else {
                         G__LD_p0_optimize(var, pc, inst);
                      }
                   }
-                  else if (1 == paran && 1 == G__get_paran(var)) {
+                  else if ((paran == 1) && (G__get_paran(var) == 1)) {
                      G__LD_p1_optimize(var, pc, inst);
                   }
                   else if (paran == G__get_paran(var)) {
                      G__LD_pn_optimize(var, pc, inst);
                   }
-                  else if (1 == paran && 0 == G__get_paran(var) && isupper(G__get_type(var.TypeOf()))) {
+                  else if ((paran == 1) && !G__get_paran(var) && isupper(G__get_type(var.TypeOf()))) {
                      G__LD_P10_optimize(var, pc, inst);
                   }
                }
+            }
             pc += 5;
             break;
 
@@ -4905,7 +4906,7 @@ int Cint::Internal::G__asm_optimize3(int* start)
                if (('p' == var_type || var_type == G__get_type(var.TypeOf())) &&
                      (islower(G__get_type(var.TypeOf())) || G__PARANORMAL == G__get_reftype(var.TypeOf()))) {
                   long inst;
-                  if (G__test_static(var, G__LOCALSTATIC, -1)) inst = G__LDST_VAR_P;
+                  if (G__get_properties(var)->statictype == G__LOCALSTATIC) inst = G__LDST_VAR_P;
                   else                                      inst = G__LDST_LVAR_P;
                   if (0 == paran && 0 == G__get_paran(var)) {
                      G__ST_p0_optimize(var, pc, inst);
@@ -5275,8 +5276,10 @@ int Cint::Internal::G__asm_optimize3(int* start)
             * sp
             ***************************************/
 #ifdef G__ASM_DBG
-            if (G__asm_dbg) G__fprinterr(G__serr, "%3lx: INIT_REF\n", pc);
-#endif
+            if (G__asm_dbg) {
+               G__fprinterr(G__serr, "%3x: INIT_REF\n", pc);
+            }
+#endif // G__ASM_DBG
             pc += 5;
             break;
 
@@ -5651,10 +5654,8 @@ int Cint::Internal::G__asm_optimize3(int* start)
             return(1);
             break;
       }
-
    }
-
-   return(0);
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -6136,7 +6137,7 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             * sp
             ***************************************/
             if (0 == isthrow) {
-               fprintf(fout, "%3x: CAST to %s\n", pc, reinterpret_cast< ::Reflex::Type*>(G__asm_inst[pc+1])->Name(::Reflex::SCOPED).c_str());
+               fprintf(fout, "%3x: CAST to %s\n", pc, reinterpret_cast< ::Reflex::TypeBase*>(G__asm_inst[pc+1])->Name(::Reflex::SCOPED).c_str());
             }
             pc += 5;
             break;
@@ -6667,8 +6668,10 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             * sp-1
             * sp
             ***************************************/
-            if (0 == isthrow) {
-               if (G__asm_dbg) G__fprinterr(G__serr, "%3x: INIT_REF\n", pc);
+            if (!isthrow) {
+               if (G__asm_dbg) {
+                  G__fprinterr(G__serr, "%3x: INIT_REF\n", pc);
+               }
             }
             pc += 5;
             break;

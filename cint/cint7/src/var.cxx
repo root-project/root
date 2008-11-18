@@ -1014,7 +1014,7 @@ G__value Cint::Internal::G__letvariable(char* item, G__value expression, const :
       if (
          (G__decl || G__cppconstruct) &&
          (G__var_type != 'p') &&
-         G__test_static(var, G__AUTO) &&
+         (G__get_properties(var)->statictype == G__AUTO) &&
          (
             (G__get_type(var.TypeOf()) != G__var_type) ||
             (var.TypeOf().RawType().IsClass() && (var.TypeOf().RawType() != G__tagnum))
@@ -1056,7 +1056,7 @@ G__value Cint::Internal::G__letvariable(char* item, G__value expression, const :
 
             return G__null;
          }
-      } else if (var.IsStatic() && (!var.DeclaringScope().IsNamespace()) && G__get_type(var.TypeOf())=='u') {
+      } else if ((G__get_properties(var)->statictype == G__LOCALSTATIC) && (!var.DeclaringScope().IsNamespace()) && (G__get_type(var.TypeOf()) == 'u')) {
          //fprintf(stderr,"humm .. declaration of static variable %s\n",var->varnamebuf[ig15]);
          // Let's assume this is the first definition of the class static variable (CINT currently allows the
          // declaration to be there several times  ...
@@ -1196,7 +1196,7 @@ G__value Cint::Internal::G__letvariable(char* item, G__value expression, const :
       }
       else if (
          (G__var_type == 'u') &&
-         G__test_static(var, G__AUTO) &&
+         (G__get_properties(var)->statictype == G__AUTO) &&
          (G__decl || G__cppconstruct)
       ) {
          // --
@@ -1248,8 +1248,8 @@ G__value Cint::Internal::G__letvariable(char* item, G__value expression, const :
       if (
          local_G__struct_offset &&
          (
-            G__test_static(var, G__LOCALSTATIC) ||
-            (G__test_static(var, G__COMPILEDGLOBAL) && (var.DeclaringScope().IsNamespace() && !var.DeclaringScope().IsTopScope()))
+            (G__get_properties(var)->statictype == G__LOCALSTATIC) ||
+            ((G__get_properties(var)->statictype == G__COMPILEDGLOBAL) && (var.DeclaringScope().IsNamespace() && !var.DeclaringScope().IsTopScope()))
          )
       ) {
          local_G__struct_offset = 0;
@@ -1260,7 +1260,7 @@ G__value Cint::Internal::G__letvariable(char* item, G__value expression, const :
          if (
             G__asm_noverflow &&
             (G__var_type == 'u') &&
-            G__test_static(var, G__AUTO) &&
+            (G__get_properties(var)->statictype == G__AUTO) &&
             (G__decl || G__cppconstruct)
          ) {
             int store_asm_noverflow = G__asm_noverflow;
@@ -1308,7 +1308,7 @@ G__value Cint::Internal::G__letvariable(char* item, G__value expression, const :
             !G__funcheader &&
             !G__is_cppmacro(var)) {
            if (
-               ((!G__prerun && !G__decl) || G__test_static(var, G__COMPILEDGLOBAL)) &&
+               ((!G__prerun && !G__decl) || (G__get_properties(var)->statictype == G__COMPILEDGLOBAL)) &&
                (
                  islower(G__get_type(var.TypeOf())) ||
                 ((G__var_type == 'p') && (constvar & G__PCONSTVAR)) ||
@@ -2380,11 +2380,11 @@ void Cint::Internal::G__letstruct(G__value* result, int linear_index, const ::Re
          }
          else if (G__funcheader && !paran && G__value_typenum(*result).FinalType().IsPointer()) {
             // FIXME: Remove special case for unspecified length array.
-            if (G__get_offset(var) && !G__test_static(var, G__COMPILEDGLOBAL)) {
+            if (G__get_offset(var) && (G__get_properties(var)->statictype != G__COMPILEDGLOBAL)) {
                free(G__get_offset(var));
             }
             G__get_offset(var) = (char*) result->obj.i;
-            G__get_properties(var)->isCompiledGlobal = true;
+            G__get_properties(var)->statictype = G__COMPILEDGLOBAL;
             break;
          }
       default:
@@ -3169,7 +3169,7 @@ inline void G__alloc_var_ref(unsigned int SIZE, CONVFUNC f, const char* item, ::
             /* Static, const, or enumerator member variable. */
             G__static_alloc ||
             /* Namespace member variable. */
-            (G__get_static(var) == G__LOCALSTATIC) ||
+            (G__get_properties(var)->statictype == G__LOCALSTATIC) ||
             /* Namespace member variable. */
             (G__def_tagnum.IsNamespace() && !G__def_tagnum.IsTopScope())
          ) &&
@@ -3275,7 +3275,7 @@ inline void G__alloc_var_ref(unsigned int SIZE, CONVFUNC f, const char* item, ::
             /* Static or const class member variable, not running. */
             (G__static_alloc && G__prerun) ||
             /* Namespace member. */
-            (G__get_static(var) == G__LOCALSTATIC) ||
+            (G__get_properties(var)->statictype == G__LOCALSTATIC) ||
             /* Namespace member variable. */
             (G__def_tagnum.IsNamespace() && !G__def_tagnum.IsTopScope())
          ) &&
@@ -3401,7 +3401,7 @@ static G__value Cint::Internal::G__allocvariable(G__value result, G__value para[
       !G__definemacro &&
       (G__globalcomp == G__NOLINK)
    ) {
-      if (!G__value_typenum(result).IsClass()) {
+      if (G__get_tagnum(G__value_typenum(result)) == -1) {
          // -- We are auto-allocating an object of a fundamental type.
          G__var_type = G__get_type(G__value_typenum(result));
          if (!G__const_noerror) {
@@ -3432,26 +3432,32 @@ static G__value Cint::Internal::G__allocvariable(G__value result, G__value para[
          store_tagnum = G__tagnum;
          store_typenum = G__typenum;
          store_globalvarpointer = G__globalvarpointer;
-         G__var_type = G__get_type(G__value_typenum(result));
-         G__set_G__tagnum(result);
+         ::Reflex::Type ty = G__value_typenum(result);
+         G__var_type = G__get_type(ty);
+         if (G__get_tagnum(ty) == -1) {
+            G__tagnum = ::Reflex::Scope();
+         }
+         else {
+            G__tagnum = ty.RawType();
+         }
          G__typenum = ::Reflex::Type();
-         if (G__value_typenum(result).FinalType().IsPointer()) {
+         if (isupper(G__get_type(ty))) {
             // a = new T(init);  a is a pointer
 #ifndef G__ROOT
-            G__fprinterr(G__serr, "Warning: Automatic variable %s* %s is allocated", G__value_typenum(result).Name(Reflex::SCOPED).c_str(), item);
+            G__fprinterr(G__serr, "Warning: Automatic variable %s* %s is allocated", G__fulltagname(G__get_tagnum(ty), 1), item);
             G__printlinenum();
 #endif // G__ROOT
             G__reftype = G__PARANORMAL;
          }
          else {
             if (
-               (G__value_typenum(result) == G__value_typenum(G__p_tempbuf->obj)) &&
+               (G__get_tagnum(ty) == G__get_tagnum(G__value_typenum(G__p_tempbuf->obj))) &&
                (G__templevel == G__p_tempbuf->level)
             ) {
                // a = T(init); a is an object
                G__globalvarpointer = (char*) result.obj.i;
 #ifndef G__ROOT
-               G__fprinterr(G__serr, "Warning: Automatic variable %s %s is allocated", G__value_typenum(result).Name(::Reflex::SCOPED).c_str(), item);
+               G__fprinterr(G__serr, "Warning: Automatic variable %s %s is allocated", G__fulltagname(G__get_tagnum(ty), 1), item);
                G__printlinenum();
 #endif // G__ROOT
                G__reftype = G__PARANORMAL;
@@ -3513,7 +3519,6 @@ static G__value Cint::Internal::G__allocvariable(G__value result, G__value para[
    //  Determine storage duration of the variable.
    //
    int var_statictype = G__AUTO;
-   bool var_isCompiledGlobal = false;
    if (G__decl_obj == 2) {
       // -- We are a stack-allocated array of objects of class type.
       var_statictype = G__AUTOARYDISCRETEOBJ;
@@ -3523,7 +3528,6 @@ static G__value Cint::Internal::G__allocvariable(G__value result, G__value para[
       ) {
          // -- We have preallocated memory and we are not in a constructor call.
          var_statictype = G__COMPILEDGLOBAL;
-         var_isCompiledGlobal = true;
       }
    }
    else if (
@@ -3539,7 +3543,6 @@ static G__value Cint::Internal::G__allocvariable(G__value result, G__value para[
          // -- We have an object preallocated, and we are not in a constructor call.
          // Note: Marking it this way means we will not free it during a scratch.
          var_statictype = G__COMPILEDGLOBAL;
-         var_isCompiledGlobal = true;
       }
       else if (G__static_alloc) {
          // -- Static namespace member (affects visibility, not storage duration!).
@@ -3606,7 +3609,6 @@ static G__value Cint::Internal::G__allocvariable(G__value result, G__value para[
             ) {
                // -- We have preallocated memory and we are not in a constructor call, and we are not a static, const, or enum.
                var_statictype = G__COMPILEDGLOBAL;
-               var_isCompiledGlobal = true;
             }
          }
          else {
@@ -3618,7 +3620,6 @@ static G__value Cint::Internal::G__allocvariable(G__value result, G__value para[
             ) {
                // -- We have preallocated memory and we are not in a constructor call.
                var_statictype = G__COMPILEDGLOBAL;
-               var_isCompiledGlobal = true;
             }
          }
       }
@@ -3627,7 +3628,6 @@ static G__value Cint::Internal::G__allocvariable(G__value result, G__value para[
       // -- We have preallocated memory and we are not in a constructor call.
       // Note: Marking it this way means we will not free it during a scratch.
       var_statictype = G__COMPILEDGLOBAL;
-      var_isCompiledGlobal = true;
    }
    //
    //  Determine class member access control.
@@ -3870,7 +3870,6 @@ static G__value Cint::Internal::G__allocvariable(G__value result, G__value para[
       // We share our storage with our caller, on function
       // exit, we must not free the memory.
       var_statictype = G__COMPILEDGLOBAL;
-      var_isCompiledGlobal = true;
       G__globalvarpointer = (char*) result.obj.i;
    }
    //
@@ -3945,19 +3944,19 @@ static G__value Cint::Internal::G__allocvariable(G__value result, G__value para[
       // -- Type void is special.
       var_reftype = G__PARANORMAL;
    }
-   //--  1
-   //--  2
-   //--  3
-   //--  4
-   //--  5
-   //--  6
-   //--  7
-   //--  8
-   //--  9
-   //-- 10
-   //--  1
-   //--  2
-   //--  3
+   //
+   //  Accumulate G__dynconst into G__constvar and clear it.
+   //
+   //
+   //
+   //  Note: G__dynconst is set by G__lock_variable
+   //        and by variable initialization when
+   //        the initializer is a function call
+   //        to force the variable to be treated
+   //        specially for thread safety (not supported).
+   //
+   G__constvar |= G__dynconst;
+   G__dynconst = 0;
    //
    //  Store the constness of the variable.
    //
@@ -4099,21 +4098,9 @@ static G__value Cint::Internal::G__allocvariable(G__value result, G__value para[
    // Create the variable as a data member of its continaing scope, either a namespace or a class.
    ::Reflex::Member var = G__add_scopemember(varscope, varname.c_str(), var_type, reflex_modifiers, reflex_offset, var_offset, var_access, var_statictype);
    //
-   //  Remember G__dynconst and zero it.
-   //
-   //  Note: G__dynconst is set by G__lock_variable
-   //        and by variable initialization when
-   //        the initializer is a function call
-   //        to force the variable to be treated
-   //        specially for thread safety (not supported).
-   //
-   G__get_properties(var)->lock = G__dynconst;
-   G__dynconst = 0;
-   //
    //  Set variable properties.
    //
    G__get_properties(var)->statictype = var_statictype;
-   G__get_properties(var)->isCompiledGlobal = var_isCompiledGlobal;
    G__get_properties(var)->comment = var_comment;
    G__get_properties(var)->globalcomp = var_globalcomp;
 #ifdef G__VARIABLEFPOS
@@ -4961,7 +4948,7 @@ static int Cint::Internal::G__asm_gen_stvar(long arg_G__struct_offset, const ::R
          // -- Generating bytecode for whole function and ??? and not a static local var.
          G__asm_wholefunction &&
          (store_struct_offset  == G__ASM_VARLOCAL) &&
-         !G__test_static(var, G__LOCALSTATIC)
+         (G__get_properties(var)->statictype != G__LOCALSTATIC)
       ) {
          // --
 #ifdef G__ASM_DBG
@@ -5617,8 +5604,8 @@ G__value Cint::Internal::G__getvariable(char* item, int* known, const ::Reflex::
 #endif // G__OLDIMPLEMENTATION2191
          (G__get_type(variable.TypeOf()) != 'p') &&
          (
-            !G__test_const(variable, G__CONSTVAR) ||
-            G__test_const(variable, G__DYNCONST)
+            !(G__get_isconst(variable.TypeOf()) & G__CONSTVAR) ||
+            (G__get_isconst(variable.TypeOf()) & G__DYNCONST)
          )
       ) {
          G__const_noerror = 0;
@@ -5713,7 +5700,7 @@ G__value Cint::Internal::G__getvariable(char* item, int* known, const ::Reflex::
             if (
                G__asm_wholefunction &&
                (((long) store_struct_offset) == G__ASM_VARLOCAL) &&
-               !G__test_static(variable, G__LOCALSTATIC)
+               (G__get_properties(variable)->statictype != G__LOCALSTATIC)
             ) {
                //--
 #ifdef G__ASM_DBG
@@ -5751,7 +5738,7 @@ G__value Cint::Internal::G__getvariable(char* item, int* known, const ::Reflex::
       if (
          G__no_exec_compile &&
          (
-            !G__test_const(variable, G__CONSTVAR) ||
+            (G__get_isconst(variable.TypeOf()) != G__CONSTVAR) ||
             std::isupper(G__get_type(variable.TypeOf())) ||
             (G__get_reftype(variable.TypeOf()) == G__PARAREFERENCE) ||
             G__get_varlabel(variable.TypeOf(), 1) /* number of elements */ ||
@@ -5809,10 +5796,17 @@ G__value Cint::Internal::G__getvariable(char* item, int* known, const ::Reflex::
       if (
          local_G__struct_offset &&
          (
-            G__test_static(variable, G__LOCALSTATIC) ||
+            (G__get_properties(variable)->statictype == G__LOCALSTATIC) ||
             (
-               G__test_static(variable, G__COMPILEDGLOBAL) &&
-               (variable.DeclaringScope().IsTopScope() || variable.DeclaringScope().IsNamespace())
+               (
+                  variable.DeclaringScope().IsTopScope() &&
+                  (G__get_properties(variable)->statictype == G__COMPILEDGLOBAL)
+               ) ||
+               (
+                  !variable.DeclaringScope().IsTopScope() &&
+                  variable.DeclaringScope().IsNamespace() &&
+                  (variable.DeclaringScope().Name()[variable.DeclaringScope().Name().size()-1] != '$') // not function local scope.
+               )
             )
          )
       ) {
@@ -7155,13 +7149,21 @@ void Cint::Internal::G__returnvartype(G__value* presult, const ::Reflex::Member&
       do {
          next_base:
          ::Reflex::Member var = varscope.DataMemberByName(varname);
-         if (
-             var && 
-             //var.TypeOf() != ZType && // This is to exclude the 'Z' type coming from a SpecialObject lookup
-             G__test_static(var, 0, G__ifile.filenum) &&
-             G__test_access(var, accesslimit)
-          ) {
-            return var;
+         if (var) {
+            int statictype = G__get_properties(var)->statictype;
+            int have_access = 0;
+            if (statictype > -1) {
+               have_access = G__filescopeaccess(G__ifile.filenum, statictype); // File scope static access match
+            }
+            if (
+               (statictype < 0) || // Not file scope, or
+               have_access // File scope static access match
+            ) {
+               int ret = G__test_access(var, accesslimit); // Access limit match
+               if (ret) {
+                  return var;
+               }
+            }
          }
          //--
          //--
@@ -7244,12 +7246,12 @@ void Cint::Internal::G__returnvartype(G__value* presult, const ::Reflex::Member&
 int Cint::Internal::G__isfriend(int tagnum)
 {
    // -- FIXME: Describe me!
-   struct G__friendtag* friendtag = 0;
+   G__friendtag* friendtag = 0;
    if (G__exec_memberfunc) {
-      if (G__memberfunc_tagnum == G__Dict::GetDict().GetScope(tagnum)) {
+      if (G__get_tagnum(G__memberfunc_tagnum) == tagnum) {
          return 1;
       }
-      if (!G__memberfunc_tagnum || G__memberfunc_tagnum.IsTopScope()) {
+      if (G__get_tagnum(G__memberfunc_tagnum) == -1) {
          return 0;
       }
       friendtag = G__struct.friendtag[G__get_tagnum(G__memberfunc_tagnum)];
@@ -7283,7 +7285,7 @@ void Cint::Internal::G__get_stack_varname(std::string& output, const char* varna
 }
 
 //______________________________________________________________________________
-::Reflex::Member Cint::Internal::G__find_variable(const char* varname_in, int varhash, const ::Reflex::Scope& varlocal, const ::Reflex::Scope& varglobal, char** pG__struct_offset, char** pstore_struct_offset, int* pig15, int isdecl)
+::Reflex::Member Cint::Internal::G__find_variable(const char* varname_in, int varhash, const ::Reflex::Scope varlocal, const ::Reflex::Scope varglobal, char** pG__struct_offset, char** pstore_struct_offset, int* pig15, int isdecl)
 {
    // -- FIXME: Describe me!
    ::Reflex::Scope var;
@@ -7314,11 +7316,10 @@ void Cint::Internal::G__get_stack_varname(std::string& output, const char* varna
 #endif // G__ROOT
    ilg = G__LOCAL;
    scope_struct_offset = G__store_struct_offset;
-   G__ASSERT(!G__decl || (G__decl == 1));
    if (G__def_struct_member) {
       scope_tagnum = G__get_envtagnum();
    }
-   else if (G__decl && G__exec_memberfunc && !G__memberfunc_tagnum.IsTopScope()) {
+   else if (G__decl && G__exec_memberfunc && (G__get_tagnum(G__memberfunc_tagnum) != -1)) {
       scope_tagnum = G__memberfunc_tagnum;
    }
    else {
@@ -7354,7 +7355,7 @@ void Cint::Internal::G__get_stack_varname(std::string& output, const char* varna
 #endif // G__ASM_WHOLEFUNC
                var = varlocal;
                if (varglobal && !isdecl) {
-                  if (G__exec_memberfunc || (!G__tagdefining.IsTopScope() && !scope_tagnum.IsTopScope())) {
+                  if (G__exec_memberfunc || ((G__get_tagnum(G__tagdefining) != -1) && (G__get_tagnum(scope_tagnum) != -1))) {
                      ilg = G__MEMBER;
                   }
                   else {
@@ -7371,7 +7372,7 @@ void Cint::Internal::G__get_stack_varname(std::string& output, const char* varna
             }
             break;
          case G__MEMBER:
-            if (scope_tagnum && !scope_tagnum.IsTopScope()) {
+            if (G__get_tagnum(scope_tagnum) != -1) {
                in_memfunc = 1;
                *pG__struct_offset = scope_struct_offset;
                G__incsetup_memvar((scope_tagnum));
@@ -7403,7 +7404,7 @@ void Cint::Internal::G__get_stack_varname(std::string& output, const char* varna
          basen = 0;
          baseclass = G__struct.baseclass[G__get_tagnum(scope_tagnum)];
          if (G__exec_memberfunc || isdecl || G__isfriend(G__get_tagnum(G__tagnum))) {
-            accesslimit = G__PUBLIC_PROTECTED_PRIVATE ;
+            accesslimit = G__PUBLIC_PROTECTED_PRIVATE;
             memfunc_or_friend = 1;
          }
          else {
@@ -7426,7 +7427,7 @@ void Cint::Internal::G__get_stack_varname(std::string& output, const char* varna
          next_base:
          ig15 = 0;
          for (::Reflex::Member_Iterator iter = var.DataMember_Begin(); iter != var.DataMember_End(); ++iter, ++ig15) {
-            if (*iter && !strcmp(iter->Name().c_str(), varname.c_str())) {
+            if (*iter && !strcmp(iter->Name().c_str(), varname.c_str())) { // Names match
                if (
                   //iter->TypeOf() != ZType && // This is to exclude the 'Z' type coming from a SpecialObject lookup
                   (
@@ -7486,11 +7487,10 @@ void Cint::Internal::G__get_stack_varname(std::string& output, const char* varna
                         *pG__struct_offset = *pstore_struct_offset + G__getvirtualbaseoffset(*pstore_struct_offset, G__get_tagnum(scope_tagnum), baseclass, basen);
                      }
                      else {
-                        *pG__struct_offset
-                        = *pstore_struct_offset + (size_t)baseclass->baseoffset[basen];
+                        *pG__struct_offset = *pstore_struct_offset + (size_t) baseclass->baseoffset[basen];
                      }
 #else // G__VIRTUALBASE
-                     *pG__struct_offset = *pstore_struct_offset + (size_t)baseclass->baseoffset[basen];
+                     *pG__struct_offset = *pstore_struct_offset + (size_t) baseclass->baseoffset[basen];
 #endif // G__VIRTUALBASE
                      ++basen;
                      goto next_base;
@@ -7502,20 +7502,12 @@ void Cint::Internal::G__get_stack_varname(std::string& output, const char* varna
             if (
                scope_tagnum &&
                (baseclass != &G__globalusingnamespace) &&
-               scope_tagnum.DeclaringScope()
+               (G__get_tagnum(scope_tagnum.DeclaringScope()) != -1)
             ) {
                scope_tagnum = scope_tagnum.DeclaringScope();
                basen = 0;
                baseclass = G__struct.baseclass[G__get_tagnum(scope_tagnum)];
                var = scope_tagnum;
-               in_memfunc = 0;
-               *pG__struct_offset = 0;
-#ifdef G__ASM_WHOLEFUNC
-               *pstore_struct_offset = (char*)G__ASM_VARGLOBAL;
-#endif // G__ASM_WHOLEFUNC
-               if (scope_tagnum.IsTopScope()) {
-                  ilg = G__NOTHING;
-               }
                goto next_base;
             }
             isbase = 0;
@@ -7533,7 +7525,7 @@ void Cint::Internal::G__get_stack_varname(std::string& output, const char* varna
       G__var_type = 'Z';
       G__value para[1];
       std::string final_varname = varname;
-      G__allocvariable(G__null, para, varglobal,::Reflex::Scope(), 0, varhash, varname.c_str(), final_varname, 0);
+      G__allocvariable(G__null, para, varglobal, ::Reflex::Scope(), 0, varhash, varname.c_str(), final_varname, 0);
       G__var_type = store_var_type;
       G__p_local = store_local;
       ::Reflex::Member m = G__find_variable(final_varname.c_str(), varhash, varlocal, varglobal, pG__struct_offset, pstore_struct_offset, pig15, isdecl);

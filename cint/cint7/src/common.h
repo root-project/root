@@ -725,14 +725,11 @@ struct G__Definetemplatefunc {
 #define G__BUFLEN 180
 
 /*********************************************************************
-* cintv6, flags
+* OBSOLETE, cint bytecode machine flags
 *********************************************************************/
-/* G__cintv6 flags */
-/* #define G__CINT_VER6 1 */ /* defined in platform configuration */
 #define G__BC_CINTVER6     0x01
 #define G__BC_COMPILEERROR 0x02
 #define G__BC_RUNTIMEERROR 0x04
-
 #define G__BC_DEBUG        0x08
 
 /**************************************************************************
@@ -866,7 +863,8 @@ struct G__AppPragma {
 **********************************************************************/
 struct G__funclist {
   struct G__funclist* next;
-  Reflex::Member ifunc;
+  ::Reflex::Member ifunc;
+  int ifn;
   unsigned int rate;
   unsigned int p_rate[G__MAXFUNCPARA];
 };
@@ -951,80 +949,85 @@ struct G__bytecodefunc {
  * int bytecodestatus;    NOTYET  NOTYET|FAIL   SUCCESS   ??
  **************************************************************************/
 
-class G__funcentry {
-public:
-   G__funcentry():
-      p(0), line_number(-1), filenum(-1), ptradjust(0),
+class G__funcentry
+{
+public: // -- Data Members
+   fpos_t pos; // if source file, file position of function definition.
+   void* p; // if source file, FILE*
+            // if compiled function, int (*)()
+            // if prototype, 0
+   int line_number; // -1 if no function body or compiled function
+   short filenum; // -1 if compiled function, otherwise interpreted func
+   long ptradjust; // Object Pointer Adjustement to call the stub function (entry)
 #ifdef G__ASM_FUNC
-      size(0),
-#endif
+   int size; // size (number of lines) of function
+#endif // G__ASM_FUNC
 #ifdef G__TRUEP2F
-      tp2f(0),
-#endif
+   std::string for_tp2f; // FIXME: INTERFACE CHANGE
+   void* tp2f;
+#endif // G__TRUEP2F
 #ifdef G__ASM_WHOLEFUNC
-      bytecode(0), bytecodestatus(G__BYTECODE_NOTYET),
-#endif
-      ansi(1), busy(0),
-#ifdef G__FRIEND
-      friendtag(0),
-#endif
-      userparam(0), vtblindex(-1), vtblbasetagnum(0), para_default(0) {}   
+   G__bytecodefunc* bytecode;
+   int bytecodestatus;
+#endif // G__ASM_WHOLEFUNC
 
-   G__funcentry &copy(const G__funcentry &orig); // This function must NOT be made virtual
-   void clear(); 
-   G__funcentry(const G__funcentry &orig) 
+   //
+   //  This part is from G__ifunc_table_internal.
+   //
+
+   // ANSI or standard header format
+   // 0 indicates K&R
+   // 1 indicates ansi
+   // 2 indicates the presence of elipsis (...)
+   char ansi;
+   short busy; // if function is called, busy[] is incremented
+#ifdef G__FRIEND
+   G__friendtag* friendtag;
+#endif // G__FRIEND
+   void* userparam; // user parameter array
+   short vtblindex;
+   short vtblbasetagnum;
+   std::vector<G__value*> para_default;
+public: // -- Member Functions.
+   G__funcentry()
+   : p(0)
+   , line_number(-1)
+   , filenum(-1)
+   , ptradjust(0)
+#ifdef G__ASM_FUNC
+   , size(0)
+#endif // G__ASM_FUNC
+#ifdef G__TRUEP2F
+   , tp2f(0)
+#endif // G__TRUEP2F
+#ifdef G__ASM_WHOLEFUNC
+   , bytecode(0)
+   , bytecodestatus(G__BYTECODE_NOTYET)
+#endif // G__ASM_WHOLEFUNC
+   , ansi(1)
+   , busy(0)
+#ifdef G__FRIEND
+   , friendtag(0)
+#endif // G__FRIEND
+   , userparam(0)
+   , vtblindex(-1)
+   , vtblbasetagnum(0)
+   , para_default(0)
+   {
+   }
+   G__funcentry& copy(const G__funcentry& orig); // This function must NOT be made virtual
+   void clear();
+   G__funcentry(const G__funcentry& orig)
    {
       copy(orig);
    }
-   G__funcentry& operator=(const G__funcentry &orig) 
+   G__funcentry& operator=(const G__funcentry& orig)
    {
       clear();
       return copy(orig);
    }
    ~G__funcentry();
 
-/* file position and pointer for restoring start point */
-  fpos_t pos; /* Set if interpreted func body defined, unknown otherwise */
-  void *p;  /* FILE* for source file or  int (*)() for compiled function
-             * (void*)NULL if no function body */
-  int  line_number; /* -1 if no function body or compiled function */
-  short filenum;    /* -1 if compiled function, otherwise interpreted func */
-
-  // Object Pointer Adjustement to call the stub function (entry) 
-  long ptradjust;
-
-#ifdef G__ASM_FUNC
-  int size; /* size (number of lines) of function */
-#endif
-#ifdef G__TRUEP2F
-  std::string for_tp2f;
-  void *tp2f;
-#endif
-#ifdef G__ASM_WHOLEFUNC
-  struct G__bytecodefunc *bytecode;
-  int bytecodestatus;
-#endif
-
-  // ANSI or standard header format 
-  // 0 indicates K&R 
-  // 1 indicates ansi
-  // 2 indicates the presence of elipsis (...)
-  char ansi; 
-
-  /**************************************************
-   * if function is called, busy[] is incremented
-   **************************************************/
-  short busy;
-
-#ifdef G__FRIEND
-  G__friendtag* friendtag;
-#endif
-
-  void* userparam; /* user parameter array */
-
-  short vtblindex; 
-  short vtblbasetagnum;
-  std::vector<G__value*> para_default;
 };
 
 
@@ -1413,8 +1416,8 @@ public:
 
 class G__RflxVarProperties : public G__RflxProperties {
 public:
-   G__RflxVarProperties(): G__RflxProperties(), bitfield_start(0), bitfield_width(0), addressOffset(0), isCompiledGlobal(false), lock(false) {}
-   G__RflxVarProperties(const G__RflxVarProperties& rhs): G__RflxProperties(rhs), bitfield_start(rhs.bitfield_start), bitfield_width(rhs.bitfield_width), addressOffset(rhs.addressOffset), isCompiledGlobal(rhs.isCompiledGlobal), lock(rhs.lock) {}
+   G__RflxVarProperties(): G__RflxProperties(), bitfield_start(0), bitfield_width(0), addressOffset(0), lock(false) {}
+   G__RflxVarProperties(const G__RflxVarProperties& rhs): G__RflxProperties(rhs), bitfield_start(rhs.bitfield_start), bitfield_width(rhs.bitfield_width), addressOffset(rhs.addressOffset), lock(rhs.lock) {}
    virtual ~G__RflxVarProperties();
    G__RflxVarProperties& operator=(const G__RflxVarProperties& rhs)
    {
@@ -1423,7 +1426,6 @@ public:
          bitfield_start = rhs.bitfield_start;
          bitfield_width = rhs.bitfield_width;
          addressOffset = rhs.addressOffset;
-         isCompiledGlobal = rhs.isCompiledGlobal;
          lock = rhs.lock;
       }
       return *this;
@@ -1432,7 +1434,6 @@ public:
    short bitfield_start;
    short bitfield_width;
    char* addressOffset;   // Offset to be added to the 'base' address (the object address for data member, 0 for global variable, etc.)
-   bool isCompiledGlobal; // true if G__var_array::statictype was equal to G__COMPILEDGLOBAL
    bool lock;
 };
 
@@ -1470,7 +1471,7 @@ public: // Public Interface
    void ParseParameterLink(const char* paras); // Dictionary Interface, called by v6_newlink.cxx(G__memfunc_setup)
    void AddParameter(int ifn, int type, int tagnum, int typenum, int reftype_const, G__value* para_default, char* para_def, char* para_name); // Internal, called by ParseParameterLink()
 // called by v6_ifunc.cxx(G__make_ifunctable)
-   ::Reflex::Member Build(const std::string& name); // Called by v6_newlink.cxx(G__memfunc_setup), v6_ifunc.cxx(G__make_ifunctable).
+   ::Reflex::Member Build(const std::string name); // Called by v6_newlink.cxx(G__memfunc_setup), v6_ifunc.cxx(G__make_ifunctable).
 public: // Public Data Members
    // -- The containing class of this member, despite the name.
    ::Reflex::Scope fBasetagnum; // This is our containing class, despite the name.

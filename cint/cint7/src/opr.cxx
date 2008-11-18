@@ -18,9 +18,36 @@
 #include "value.h"
 
 using namespace Cint::Internal;
+using namespace std;
+
+//
+//  Function Directory.
+//
+
+// Static functions.
+static const char* G__getoperatorstring(int operatortag);
+
+// Cint internal functions.
+namespace Cint {
+namespace Internal {
+void G__doubleassignbyref(G__value* defined, double val);
+void G__intassignbyref(G__value* defined, G__int64 val);
+void G__bstore(int operatortag, G__value expressionin, G__value* defined);
+int G__scopeoperator(char* name /* name is modified and this is intentional */, int* phash, char** pstruct_offset, int* ptagnum);
+int G__cmp(G__value buf1, G__value buf2);
+int G__getunaryop(char unaryop, char* expression, char* buf, G__value* preg);
+int G__iosrdstate(G__value* pios);
+int G__overloadopr(int operatortag, G__value expressionin, G__value* defined);
+int G__parenthesisovldobj(G__value* result3, G__value* result, char* realname, G__param* libp, int flag);
+int G__parenthesisovld(G__value* result3, char* funcname, G__param* libp, int flag);
+int G__tryindexopr(G__value* result7, G__value* para, int paran, int ig25);
+long G__op1_operator_detail(int opr, G__value* val);
+long G__op2_operator_detail(int opr, G__value* lval, G__value* rval);
+} // namespace Internal
+} // namespace Cint
 
 //______________________________________________________________________________
-static char* G__getoperatorstring(int operatortag)
+static const char* G__getoperatorstring(int operatortag)
 {
    // -- FIXME: Describe this function!
    switch (operatortag) {
@@ -1969,41 +1996,38 @@ int Cint::Internal::G__scopeoperator(char* name /* name is modified and this is 
 //______________________________________________________________________________
 int Cint::Internal::G__cmp(G__value buf1, G__value buf2)
 {
-   // -- FIXME: Describe this function!
+   // FIXME: Describe this function!
    switch (G__get_type(G__value_typenum(buf1))) {
-      case 'a':  /* G__start */
-      case 'z':  /* G__default */
-      case '\0': /* G__null */
-         if (G__get_type(G__value_typenum(buf1)) == G__get_type(G__value_typenum(buf2)))
-            return(1);
-         else
-            return(0);
-         /* break; */
-      case 'd':
-      case 'f':
-         if (G__double(buf1) == G__double(buf2))
-            return(1);
-         else
-            return(0);
-         /* break; */
+      case 'a':  // G__start
+      case 'z':  // G__default
+      case '\0': // G__null
+         if (G__get_type(G__value_typenum(buf1)) == G__get_type(G__value_typenum(buf2))) {
+            return 1;
+         }
+         return 0;
+      case 'd': // double
+      case 'f': // float
+         if (G__double(buf1) == G__double(buf2)) {
+            return 1;
+         }
+         return 0;
    }
-   if (G__int(buf1) == G__int(buf2)) return(1);
-   return(0);
+   if (G__int(buf1) == G__int(buf2)) {
+      return 1;
+   }
+   return 0;
 }
 
 //______________________________________________________________________________
 int Cint::Internal::G__getunaryop(char unaryop, char* expression, char* buf, G__value* preg)
 {
-   // -- FIXME: Describe this function!
-   int nest = 0;
-   int c = 0;
-   int i1 = 1, i2 = 0;
-   G__value reg;
-   char prodpower = 0;
-
+   // FIXME: Describe this function!
    *preg = G__null;
-   for (;;) {
-      c = expression[i1];
+   char prodpower = 0; // product or power operator seen
+   int nest = 0; // nesting level of parenthsis, brace, and square bracket
+   int i2 = 0;
+   for (int i1 = 1;; ++i1) { // Loop over chars in expression
+      int c = expression[i1];
       switch (c) {
          case '-':
             if (G__isexponent(buf, i2)) {
@@ -2018,12 +2042,17 @@ int Cint::Internal::G__getunaryop(char unaryop, char* expression, char* buf, G__
          case '|':
          case '^':
          case '\0':
-            if (0 == nest) {
+            if (!nest) {
                buf[i2] = '\0';
-               if (prodpower) reg = G__getprod(buf);
-               else          reg = G__getitem(buf);
+               G__value reg;
+               if (prodpower) {
+                  reg = G__getprod(buf);
+               }
+               else {
+                  reg = G__getitem(buf);
+               }
                G__bstore(unaryop, reg, preg);
-               return(i1);
+               return i1;
             }
             buf[i2++] = c;
             break;
@@ -2033,7 +2062,9 @@ int Cint::Internal::G__getunaryop(char unaryop, char* expression, char* buf, G__
          case '@':
          case '~':
          case ' ':
-            if (0 == nest) prodpower = 1;
+            if (!nest) {
+               prodpower = 1;
+            }
             break;
          case '(':
          case '[':
@@ -2049,7 +2080,6 @@ int Cint::Internal::G__getunaryop(char unaryop, char* expression, char* buf, G__
             buf[i2++] = c;
             break;
       }
-      ++i1;
    }
 }
 
@@ -2151,16 +2181,38 @@ int Cint::Internal::G__iosrdstate(G__value* pios)
 //______________________________________________________________________________
 int Cint::Internal::G__overloadopr(int operatortag, G__value expressionin, G__value* defined)
 {
-   // -- FIXME: Describe this function!
-   int ig2;
-   char expr[G__LONGLINE], opr[12], arg1[G__LONGLINE], arg2[G__LONGLINE];
-   char *store_struct_offset; /* used to be int */
+   // Search for and run an operator function.  Try member function, then global function.
+   //
+   // Inputs:
+   //
+   // operatortag: one character token for operator
+   // expressionin: first argument, which is the this pointer for a member function
+   // defined: second argument, has type code 0 for an unary operator
+   //
+   // Outputs:
+   //
+   // defined: return value of operator function
+   //
+   char expr[G__LONGLINE];
+   char* store_struct_offset;
    ::Reflex::Scope store_tagnum;
    int store_isconst;
    G__value buffer;
-   char *pos;
+   char* pos;
    int postfixflag = 0;
    int store_asm_cp = 0;
+   //
+   //  Exit early on special operatortag.
+   //
+   if (!operatortag) {
+      *defined = expressionin;
+      return 0;
+   }
+   //
+   //  Get short version of operator function name
+   //  based on operatortag.
+   //
+   char opr[12]; // short version of operator function name
    switch (operatortag) {
       case '+':
       case '-':
@@ -2173,106 +2225,106 @@ int Cint::Internal::G__overloadopr(int operatortag, G__value expressionin, G__va
       case '~':
       case '>':
       case '<':
-      case '@': /* power */
+      case '@': // power
       case '!':
          sprintf(opr, "operator%c", operatortag);
          break;
-      case 'A': /* logic and  && */
+      case 'A': // &&, boolean and
          sprintf(opr, "operator&&");
          break;
-      case 'O': /* logic or   || */
+      case 'O': // ||, boolean or
          sprintf(opr, "operator||");
          break;
-      case 'R': /* right shift >> */
+      case 'R': // >>, right bit shift
          sprintf(opr, "operator>>");
          break;
-      case 'L': /* left shift  << */
+      case 'L': // <<, left bit shift
          sprintf(opr, "operator<<");
          break;
-      case 'E':
+      case 'E': // ==, equality
          sprintf(opr, "operator==");
          break;
-      case 'N':
+      case 'N': // !=, inequality
          sprintf(opr, "operator!=");
          break;
-      case 'G':
+      case 'G': // >=, greater than or equal to
          sprintf(opr, "operator>=");
          break;
-      case 'l':
+      case 'l': // <=, less than or equal to
          sprintf(opr, "operator<=");
          break;
-      case '\0':
-         *defined = expressionin;
-         return 0;
-      case G__OPR_ADDASSIGN:
+      case G__OPR_ADDASSIGN: // +=
          sprintf(opr, "operator+=");
          break;
-      case G__OPR_SUBASSIGN:
+      case G__OPR_SUBASSIGN: // -=
          sprintf(opr, "operator-=");
          break;
-      case G__OPR_MODASSIGN:
+      case G__OPR_MODASSIGN: // %=
          sprintf(opr, "operator%%=");
          break;
-      case G__OPR_MULASSIGN:
+      case G__OPR_MULASSIGN: // *=
          sprintf(opr, "operator*=");
          break;
-      case G__OPR_DIVASSIGN:
+      case G__OPR_DIVASSIGN: // /=
          sprintf(opr, "operator/=");
          break;
-      case G__OPR_RSFTASSIGN:
+      case G__OPR_RSFTASSIGN: // >>=
          sprintf(opr, "operator>>=");
          break;
-      case G__OPR_LSFTASSIGN:
+      case G__OPR_LSFTASSIGN: // <<=
          sprintf(opr, "operator<<=");
          break;
-      case G__OPR_BANDASSIGN:
+      case G__OPR_BANDASSIGN: // &=
          sprintf(opr, "operator&=");
          break;
-      case G__OPR_BORASSIGN:
+      case G__OPR_BORASSIGN: // |=
          sprintf(opr, "operator|=");
          break;
-      case G__OPR_EXORASSIGN:
+      case G__OPR_EXORASSIGN: // ^=
          sprintf(opr, "operator^=");
          break;
-      case G__OPR_ANDASSIGN:
+      case G__OPR_ANDASSIGN: // &&=  FIXME: There is no such thing in C++!
          sprintf(opr, "operator&&=");
          break;
-      case G__OPR_ORASSIGN:
+      case G__OPR_ORASSIGN: // ||=  FIXME: There is no such thing in C++!= 
          sprintf(opr, "operator||=");
          break;
-      case G__OPR_POSTFIXINC:
-      case G__OPR_PREFIXINC:
+      case G__OPR_POSTFIXINC: // x++, operator++(x&, int)
+      case G__OPR_PREFIXINC: // ++x, operator++(x&)
          sprintf(opr, "operator++");
          break;
-      case G__OPR_POSTFIXDEC:
-      case G__OPR_PREFIXDEC:
+      case G__OPR_POSTFIXDEC: // x--, operator--(x&, int)
+      case G__OPR_PREFIXDEC: // --x, operator--(x&)
          sprintf(opr, "operator--");
          break;
       default:
          G__genericerror("Limitation: Can't handle combination of overloading operators");
          return 0;
    }
-   /*****************************************************
-    * Unary operator
-    *****************************************************/
-   if (!G__get_type(G__value_typenum(*defined))) {
+   //
+   //  Now try to find operator function and run it.
+   //
+   if (!G__get_type(G__value_typenum(*defined))) { // There is no second argument, so unary operator.
+      //
+      //  Valid operatortag and exit if not valid.
+      //
       switch (operatortag) {
-         case '-':
-         case '!':
-         case '~':
+         case '-': // -x  NOTE: +x is missing!
+         case '!': // !x
+         case '~': // ~x
+         case G__OPR_POSTFIXINC: // x++
+         case G__OPR_POSTFIXDEC: // x--
+         case G__OPR_PREFIXINC: // ++x
+         case G__OPR_PREFIXDEC: // --x
             break;
-         case G__OPR_POSTFIXINC:
-         case G__OPR_POSTFIXDEC:
-         case G__OPR_PREFIXINC:
-         case G__OPR_PREFIXDEC:
-            break;
-         default:
+         default: // Invalid unary operator.
             *defined = expressionin;
             return 0;
       }
+      // Flag we are doing operator overloading.
       G__oprovld = 1;
 #ifdef G__ASM
-      if (G__asm_noverflow) {
+      if (G__asm_noverflow) { // Making bytecode, PUSHSTROS and SETSTROS
          // -- We are generating bytecode.
          store_asm_cp = G__asm_cp;
 #ifdef G__ASM_DBG
@@ -2292,15 +2344,18 @@ int Cint::Internal::G__overloadopr(int operatortag, G__value expressionin, G__va
       }
 #endif // G__ASM
       //
-      // Search for member function.
+      //  Search for member function.
       //
-      ig2 = 0;
+      //--
+      //
+      //  Create member function name.
+      //
       switch (operatortag) {
          case G__OPR_POSTFIXINC:
          case G__OPR_POSTFIXDEC:
             sprintf(expr, "%s(1)", opr);
 #ifdef G__ASM
-            if (G__asm_noverflow) {
+            if (G__asm_noverflow) { // Making bytecode, LD 1 for postfix dummy int arg
                // -- We are generating bytecode.
 #ifdef G__ASM_DBG
                if (G__asm_dbg) {
@@ -2320,46 +2375,68 @@ int Cint::Internal::G__overloadopr(int operatortag, G__value expressionin, G__va
             sprintf(expr, "%s()", opr);
             break;
       }
+      // Save state.
       store_struct_offset = G__store_struct_offset;
       store_tagnum = G__tagnum;
-      G__store_struct_offset = (char*) expressionin.obj.i;
-      G__set_G__tagnum(expressionin);
-      buffer = G__getfunction(expr, &ig2, G__TRYUNARYOPR);
+      // Switch scopes and set this pointer.
+      G__store_struct_offset = (char*) expressionin.obj.i; // The object this pointer is the first argument.
+      G__set_G__tagnum(expressionin); // Scope to search is the class of the first argument.
+      //
+      //  Search for member function
+      //  and run it if found.
+      //
+      int known = 0;
+      buffer = G__getfunction(expr, &known, G__TRYUNARYOPR); // Search for and run member function.
+      // Restore state.
       G__store_struct_offset = store_struct_offset;
       G__tagnum = store_tagnum;
-      //
-      // Search for global function.
-      //
-      if (!ig2) {
-         // --
 #ifdef G__ASM
-         if (G__asm_noverflow) {
-            // -- We are generating bytecode.
-            if (postfixflag) {
-               G__inc_cp_asm(-2, -1);
-               postfixflag = 0;
+      if (known && G__asm_noverflow) { // We ran the member function, and we are making bytecode, pop structure offset.
+         // -- We are generating bytecode.
 #ifdef G__ASM_DBG
-               if (G__asm_dbg) {
-                  G__fprinterr(G__serr, "LD cancelled  %s:%d\n", __FILE__, __LINE__);
-               }
+         if (G__asm_dbg) {
+            G__fprinterr(G__serr, "%3x,%3x: POPSTROS  %s:%d\n", G__asm_cp, G__asm_dt, __FILE__, __LINE__);
+         }
 #endif // G__ASM_DBG
-               // --
-            }
-            G__inc_cp_asm(store_asm_cp - G__asm_cp, 0);
+         G__asm_inst[G__asm_cp] = G__POPSTROS;
+         G__inc_cp_asm(1, 0);
+      }
+      if (!known && G__asm_noverflow) { // No member function, making byecode, cancel LD and PUSHSTROS, SETSTROS
+         // -- We are generating bytecode.
+         if (postfixflag) {
+            G__inc_cp_asm(-2, -1);
+            postfixflag = 0;
 #ifdef G__ASM_DBG
             if (G__asm_dbg) {
-               G__fprinterr(G__serr, "PUSHSTROS,SETSTROS cancelled  %s:%d\n", __FILE__, __LINE__);
+               G__fprinterr(G__serr, "LD cancelled  %s:%d\n", __FILE__, __LINE__);
             }
 #endif // G__ASM_DBG
             // --
          }
+         G__inc_cp_asm(store_asm_cp - G__asm_cp, 0);
+#ifdef G__ASM_DBG
+         if (G__asm_dbg) {
+            G__fprinterr(G__serr, "PUSHSTROS,SETSTROS cancelled  %s:%d\n", __FILE__, __LINE__);
+         }
+#endif // G__ASM_DBG
+         // --
+      }
 #endif // G__ASM
+      if (!known) { // Member function not found, try global function.
+         //
+         //  Search for global function.
+         //
+         //--
+         //
+         //  Create global operator function name.
+         //
+         char arg1[G__LONGLINE];
          switch (operatortag) {
             case G__OPR_POSTFIXINC:
             case G__OPR_POSTFIXDEC:
-               sprintf(expr, "%s(%s,1)", opr , G__setiparseobject(&expressionin, arg1));
+               sprintf(expr, "%s(%s,1)", opr, G__setiparseobject(&expressionin, arg1));
 #ifdef G__ASM
-               if (G__asm_noverflow) {
+               if (G__asm_noverflow) { // Making bytecode, LD 1 for postfix dummy int arg
                   // -- We are generating bytecode.
 #ifdef G__ASM_DBG
                   if (G__asm_dbg) {
@@ -2374,253 +2451,263 @@ int Cint::Internal::G__overloadopr(int operatortag, G__value expressionin, G__va
 #endif // G__ASM
                break;
             default:
-               sprintf(expr, "%s(%s)", opr , G__setiparseobject(&expressionin, arg1));
+               sprintf(expr, "%s(%s)", opr, G__setiparseobject(&expressionin, arg1));
                break;
          }
-         buffer = G__getfunction(expr, &ig2, G__TRYNORMAL);
+         //
+         //  Search for global operator function
+         //  and run it if found.
+         //
+         buffer = G__getfunction(expr, &known, G__TRYNORMAL); // Search for and run global function.
       }
-#ifdef G__ASM
-      else if (G__asm_noverflow) {
-         // -- We are generating bytecode.
-#ifdef G__ASM_DBG
-         if (G__asm_dbg) {
-            G__fprinterr(G__serr, "%3x,%3x: POPSTROS  %s:%d\n", G__asm_cp, G__asm_dt, __FILE__, __LINE__);
-         }
-#endif // G__ASM_DBG
-         G__asm_inst[G__asm_cp] = G__POPSTROS;
-         G__inc_cp_asm(1, 0);
-      }
-#endif // G__ASM
-      *defined = buffer;
-      G__oprovld = 0;
+      *defined = buffer; // Set return value.
+      G__oprovld = 0; // Flag operator overload is finished.
+      return 0;
    }
    //
-   // Binary operator.
+   //  Binary operator.
    //
-   else {
-      G__oprovld = 1;
+   G__oprovld = 1; // Flag we are doing operator overloading.
 #ifdef G__ASM
-      if (G__asm_noverflow) {
-         // -- We are generating bytecode.
+   if (G__asm_noverflow) { // Making bytecode, SWAP, PUSHSTROS, SETSTROS
+      // -- We are generating bytecode.
 #ifdef G__ASM_IFUNC
-         store_asm_cp = G__asm_cp;
+      store_asm_cp = G__asm_cp;
 #ifdef G__ASM_DBG
-         if (G__asm_dbg) {
-            G__fprinterr(G__serr, "%3x,%3x: SWAP  %s:%d\n", G__asm_cp, G__asm_dt, __FILE__, __LINE__);
-         }
+      if (G__asm_dbg) {
+         G__fprinterr(G__serr, "%3x,%3x: SWAP  %s:%d\n", G__asm_cp, G__asm_dt, __FILE__, __LINE__);
+      }
 #endif // G__ASM_DBG
-         G__asm_inst[G__asm_cp] = G__SWAP;
-         G__inc_cp_asm(1, 0);
+      G__asm_inst[G__asm_cp] = G__SWAP;
+      G__inc_cp_asm(1, 0);
 #endif // G__ASM_IFUNC
 #ifdef G__ASM_DBG
-         if (G__asm_dbg) {
-            G__fprinterr(G__serr, "%3x,%3x: PUSHSTROS  %s:%d\n", G__asm_cp - 2, G__asm_dt, __FILE__, __LINE__);
-         }
-#endif // G__ASM_DBG
-         G__asm_inst[G__asm_cp] = G__PUSHSTROS;
-         G__inc_cp_asm(1, 0);
-#ifdef G__ASM_DBG
-         if (G__asm_dbg) {
-            G__fprinterr(G__serr, "%3x,%3x: SETSTROS  %s:%d\n", G__asm_cp - 1, G__asm_dt, __FILE__, __LINE__);
-         }
-#endif // G__ASM_DBG
-         G__asm_inst[G__asm_cp] = G__SETSTROS;
-         G__inc_cp_asm(1, 0);
+      if (G__asm_dbg) {
+         G__fprinterr(G__serr, "%3x,%3x: PUSHSTROS  %s:%d\n", G__asm_cp - 2, G__asm_dt, __FILE__, __LINE__);
       }
+#endif // G__ASM_DBG
+      G__asm_inst[G__asm_cp] = G__PUSHSTROS;
+      G__inc_cp_asm(1, 0);
+#ifdef G__ASM_DBG
+      if (G__asm_dbg) {
+         G__fprinterr(G__serr, "%3x,%3x: SETSTROS  %s:%d\n", G__asm_cp - 1, G__asm_dt, __FILE__, __LINE__);
+      }
+#endif // G__ASM_DBG
+      G__asm_inst[G__asm_cp] = G__SETSTROS;
+      G__inc_cp_asm(1, 0);
+   }
 #endif // G__ASM
+   int known = 0;
+   //
+   //  Prepare the second argument.
+   //
+   char arg2[G__LONGLINE];
+   if (G__get_type(G__value_typenum(expressionin)) == 'u') { // If second arg is of class type, use the temporary
+      G__setiparseobject(&expressionin, arg2);
+   }
+   else { // Otherwise, convert the value to a string
+      G__valuemonitor(expressionin, arg2);
+      if (expressionin.ref && (expressionin.ref != 1)) {
+         pos = strchr(arg2, ')');
+         *pos = '\0';
+         if (expressionin.ref < 0) {
+            sprintf(expr, "*%s*)(%ld)", arg2, expressionin.ref);
+         }
+         else {
+            sprintf(expr, "*%s*)%ld", arg2, expressionin.ref);
+         }
+         strcpy(arg2, expr);
+      } else if (G__get_type(expressionin) == 'm') {
+         strcat(arg2, "ULL");
+      }
+      else if (G__get_type(expressionin) == 'n') {
+         strcat(arg2, "LL");
+      }
+   }
+   if (G__get_type(G__value_typenum(*defined)) == 'u') { // If first arg is of class type, try a member function.
       //
       // Search for member function.
       //
-      ig2 = 0;
-      if (G__get_type(G__value_typenum(expressionin)) == 'u') {
-         G__setiparseobject(&expressionin, arg2);
+      sprintf(expr, "%s(%s)", opr, arg2); // Make the member function name.
+      // Save state.
+      store_struct_offset = G__store_struct_offset;
+      store_tagnum = G__tagnum;
+      store_isconst = G__isconst;
+      // Set the this pointer, and the scope to search.
+      G__store_struct_offset = (char*) defined->obj.i; // Set the this pointer.
+      G__set_G__tagnum(*defined); // Set the scope to search.
+      G__isconst = G__get_isconst(G__value_typenum(*defined));
+      //
+      //  Search for member function and
+      //  run it if found.
+      //
+      buffer = G__getfunction(expr, &known, G__TRYBINARYOPR); // Try to run member function.
+      // Restore state.
+      G__isconst = store_isconst;
+      G__store_struct_offset = store_struct_offset;
+      G__tagnum = store_tagnum;
+   }
+#ifdef G__ASM
+   if (known && G__asm_noverflow) { // We found it as a member function, and making bytecode, POPSTROS
+      // -- We are generating bytecode.
+#ifdef G__ASM_DBG
+      if (G__asm_dbg) {
+         G__fprinterr(G__serr, "%3x,%3x: POPSTROS  %s:%d\n", G__asm_cp, G__asm_dt, __FILE__, __LINE__);
       }
-      else {
-         G__valuemonitor(expressionin, arg2);
-         if (expressionin.ref && 1 != expressionin.ref) {
-            pos = strchr(arg2, ')');
-            *pos = '\0';
-            if (expressionin.ref < 0) {
-               sprintf(expr, "*%s*)(%ld)", arg2, expressionin.ref);
-            }
-            else {
-               sprintf(expr, "*%s*)%ld", arg2, expressionin.ref);
-            }
-            strcpy(arg2, expr);
-         } else if (G__get_type(expressionin) == 'm') {
-            strcat(arg2, "ULL");
-         }
-         else if (G__get_type(expressionin) == 'n') {
-            strcat(arg2, "LL");
-         }
-      }
-      if (G__get_type(G__value_typenum(*defined)) == 'u') {
-         sprintf(expr, "%s(%s)" , opr , arg2);
-         store_struct_offset = G__store_struct_offset;
-         store_tagnum = G__tagnum;
-         G__store_struct_offset = (char*)defined->obj.i;
-         G__set_G__tagnum(*defined);
-         store_isconst = G__isconst;
-         G__isconst = G__get_isconst(G__value_typenum(*defined));
-         buffer = G__getfunction(expr, &ig2, G__TRYBINARYOPR);
-         G__isconst = store_isconst;
-         G__store_struct_offset = store_struct_offset;
-         G__tagnum = store_tagnum;
-      }
+#endif // G__ASM_DBG
+      G__asm_inst[G__asm_cp] = G__POPSTROS;
+      G__inc_cp_asm(1, 0);
+   }
+#endif // G__ASM
+   //
+   //  Try a global function if no
+   //  member function found.
+   //
+   if (!known) {
       //
       // Search for global function.
       //
-      if (!ig2) {
-         // --
+      //--
 #ifdef G__ASM
-         if (G__asm_noverflow) {
-            // -- We are generating bytecode.
+      if (G__asm_noverflow) { // Making bytecode, cancel PUSHSTROS, SETSTROS
+         // -- We are generating bytecode.
 #ifdef G__ASM_DBG
-            if (G__asm_dbg) {
-               G__fprinterr(G__serr, "PUSHSTROS,SETSTROS cancelled  %s:%d\n", __FILE__, __LINE__);
-            }
-#endif // G__ASM_DBG
-            G__inc_cp_asm(store_asm_cp - G__asm_cp, 0);
+         if (G__asm_dbg) {
+            G__fprinterr(G__serr, "PUSHSTROS,SETSTROS cancelled  %s:%d\n", __FILE__, __LINE__);
          }
+#endif // G__ASM_DBG
+         G__inc_cp_asm(store_asm_cp - G__asm_cp, 0);
+      }
 #endif // G__ASM
-         if (G__get_type(G__value_typenum(*defined)) == 'u') {
-            G__setiparseobject(defined, arg1);
-         }
-         else {
-            G__valuemonitor(*defined, arg1);
-            if (defined->ref) {
-               pos = strchr(arg1, ')');
-               *pos = '\0';
-               if (defined->ref < 0) {
-                  sprintf(expr, "*%s*)(%ld)", arg1, defined->ref);
-               }
-               else {
-                  sprintf(expr, "*%s*)%ld", arg1, defined->ref);
-               }
-               strcpy(arg1, expr);
-            }
-         }
-         sprintf(expr, "%s(%s,%s)" , opr , arg1 , arg2);
-         buffer = G__getfunction(expr, &ig2, G__TRYNORMAL);
-         if (!ig2 && (G__get_tagnum(G__value_typenum(expressionin).DeclaringScope()) > 0)) {
-            sprintf(expr, "%s::%s(%s,%s)", G__value_typenum(expressionin).DeclaringScope().Name(::Reflex::SCOPED).c_str(), opr , arg1 , arg2);
-            buffer = G__getfunction(expr, &ig2, G__TRYNORMAL);
-         }
-         if (!ig2 && (G__get_tagnum(G__value_typenum(*defined).DeclaringScope()) > 0)) {
-            sprintf(expr, "%s::%s(%s,%s)", G__value_typenum(*defined).DeclaringScope().Name(::Reflex::SCOPED).c_str(), opr , arg1 , arg2);
-            buffer = G__getfunction(expr, &ig2, G__TRYNORMAL);
-         }
-         if (!ig2 && (('A' == operatortag) || ('O' == operatortag))) {
-            int lval, rval;
-            if ('u' == G__get_type(G__value_typenum(*defined))) {
-               if (G__asm_noverflow) {
-                  // -- We are generating bytecode.
-#ifdef G__ASM_DBG
-                  if (G__asm_dbg) {
-                     G__fprinterr(G__serr, "%3x,%3x: SWAP  %s:%d\n", G__asm_cp, G__asm_dt, __FILE__, __LINE__);
-                  }
-#endif // G__ASM_DBG
-                  G__asm_inst[G__asm_cp] = G__SWAP;
-                  G__inc_cp_asm(1, 0);
-               }
-               lval = G__iosrdstate(defined);
-               if (G__asm_noverflow) {
-                  // -- We are generating bytecode.
-#ifdef G__ASM_DBG
-                  if (G__asm_dbg) G__fprinterr(G__serr, "%3x,%3x: SWAP  %s:%d\n", G__asm_cp, G__asm_dt, __FILE__, __LINE__);
-#endif // G__ASM_DBG
-                  G__asm_inst[G__asm_cp] = G__SWAP;
-                  G__inc_cp_asm(1, 0);
-               }
+      //
+      //  Prepare the first argument.
+      //
+      char arg1[G__LONGLINE];
+      if (G__get_type(G__value_typenum(*defined)) == 'u') { // If first arg is of class type, use the temporary
+         G__setiparseobject(defined, arg1);
+      }
+      else { // Otherwise, convert the value to a string
+         G__valuemonitor(*defined, arg1);
+         if (defined->ref) {
+            pos = strchr(arg1, ')');
+            *pos = '\0';
+            if (defined->ref < 0) {
+               sprintf(expr, "*%s*)(%ld)", arg1, defined->ref);
             }
             else {
-               lval = G__int(*defined);
+               sprintf(expr, "*%s*)%ld", arg1, defined->ref);
             }
-            if ('u' == G__get_type(G__value_typenum(expressionin))) {
-               rval = G__iosrdstate(&expressionin);
-            }
-            else {
-               rval = G__int(expressionin);
-            }
-            buffer.ref = 0;
-            G__value_typenum(buffer) = ::Reflex::Type();
-            switch (operatortag) {
-               case 'A':
-                  G__letint(&buffer, 'i', lval && rval);
-                  break;
-               case 'O':
-                  G__letint(&buffer, 'i', lval || rval);
-                  break;
-            }
+            strcpy(arg1, expr);
+         }
+      }
+      // Make the global operator function name.
+      sprintf(expr, "%s(%s,%s)", opr, arg1, arg2); // Make the global operator function name.
+      //
+      //  Search for the global operator function
+      //  and run it if found.
+      //
+      buffer = G__getfunction(expr, &known, G__TRYNORMAL); // Search for operator function and run it if found.
+      if (!known && (G__get_tagnum(G__value_typenum(expressionin).DeclaringScope()) > 0)) { // Not found, try scope of second argument.
+         sprintf(expr, "%s::%s(%s,%s)", G__value_typenum(expressionin).DeclaringScope().Name(::Reflex::SCOPED).c_str(), opr , arg1 , arg2);
+         buffer = G__getfunction(expr, &known, G__TRYNORMAL); // Search for operator function and run it if found.
+      }
+      if (!known && (G__get_tagnum(G__value_typenum(*defined).DeclaringScope()) > 0)) { // Not found, try scope of first argument.
+         sprintf(expr, "%s::%s(%s,%s)", G__value_typenum(*defined).DeclaringScope().Name(::Reflex::SCOPED).c_str(), opr , arg1 , arg2);
+         buffer = G__getfunction(expr, &known, G__TRYNORMAL); // Search for operator function and run it if found.
+      }
+      if (!known && ((operatortag == 'A') || (operatortag == 'O'))) { // Still not found and is operator&& or operator||
+         int lval, rval;
+         if ('u' == G__get_type(G__value_typenum(*defined))) {
             if (G__asm_noverflow) {
                // -- We are generating bytecode.
 #ifdef G__ASM_DBG
                if (G__asm_dbg) {
-                  if (isprint(operatortag)) {
-                     G__fprinterr(G__serr, "%3x,%3x: OP2 '%c' %d  %s:%d\n", G__asm_cp, G__asm_dt, operatortag, operatortag, __FILE__, __LINE__);
-                  }
-                  else {
-                     G__fprinterr(G__serr, "%3x,%3x: OP2 %d  %s:%d\n", G__asm_cp, G__asm_dt, operatortag, __FILE__, __LINE__);
-                  }
+                  G__fprinterr(G__serr, "%3x,%3x: SWAP  %s:%d\n", G__asm_cp, G__asm_dt, __FILE__, __LINE__);
                }
 #endif // G__ASM_DBG
-               G__asm_inst[G__asm_cp] = G__OP2;
-               G__asm_inst[G__asm_cp+1] = operatortag;
-               G__inc_cp_asm(2, 0);
+               G__asm_inst[G__asm_cp] = G__SWAP;
+               G__inc_cp_asm(1, 0);
             }
-            ig2 = 1;
-         }
-         if (!ig2) {
-            if (G__value_typenum(*defined)) {
-               G__fprinterr(G__serr, "Error: %s not defined for '%s'", opr, G__value_typenum(*defined).Name(::Reflex::SCOPED).c_str());
-            }
-            else {
-               G__fprinterr(G__serr, "Error: '%s' not defined", expr);
-            }
-            G__genericerror(0);
-         }
-      }
-#ifdef G__ASM
-      else if (G__asm_noverflow) {
-         // -- We are generating bytecode.
+            lval = G__iosrdstate(defined);
+            if (G__asm_noverflow) {
+               // -- We are generating bytecode.
 #ifdef G__ASM_DBG
-         if (G__asm_dbg) {
-            G__fprinterr(G__serr, "%3x,%3x: POPSTROS  %s:%d\n", G__asm_cp, G__asm_dt, __FILE__, __LINE__);
-         }
+               if (G__asm_dbg) G__fprinterr(G__serr, "%3x,%3x: SWAP  %s:%d\n", G__asm_cp, G__asm_dt, __FILE__, __LINE__);
 #endif // G__ASM_DBG
-         G__asm_inst[G__asm_cp] = G__POPSTROS;
-         G__inc_cp_asm(1, 0);
+               G__asm_inst[G__asm_cp] = G__SWAP;
+               G__inc_cp_asm(1, 0);
+            }
+         }
+         else {
+            lval = G__int(*defined);
+         }
+         if ('u' == G__get_type(G__value_typenum(expressionin))) {
+            rval = G__iosrdstate(&expressionin);
+         }
+         else {
+            rval = G__int(expressionin);
+         }
+         buffer.ref = 0;
+         G__value_typenum(buffer) = ::Reflex::Type();
+         switch (operatortag) {
+            case 'A':
+               G__letint(&buffer, 'i', lval && rval);
+               break;
+            case 'O':
+               G__letint(&buffer, 'i', lval || rval);
+               break;
+         }
+         if (G__asm_noverflow) {
+            // -- We are generating bytecode.
+#ifdef G__ASM_DBG
+            if (G__asm_dbg) {
+               if (isprint(operatortag)) {
+                  G__fprinterr(G__serr, "%3x,%3x: OP2 '%c' %d  %s:%d\n", G__asm_cp, G__asm_dt, operatortag, operatortag, __FILE__, __LINE__);
+               }
+               else {
+                  G__fprinterr(G__serr, "%3x,%3x: OP2 %d  %s:%d\n", G__asm_cp, G__asm_dt, operatortag, __FILE__, __LINE__);
+               }
+            }
+#endif // G__ASM_DBG
+            G__asm_inst[G__asm_cp] = G__OP2;
+            G__asm_inst[G__asm_cp+1] = operatortag;
+            G__inc_cp_asm(2, 0);
+         }
+         known = 1;
       }
-#endif // G__ASM
-      *defined = buffer;
-      G__oprovld = 0;
+      if (!known) { // Error, not found.
+         if (G__value_typenum(*defined)) {
+            G__fprinterr(G__serr, "Error: %s not defined for '%s'", opr, G__value_typenum(*defined).Name(::Reflex::SCOPED).c_str());
+         }
+         else {
+            G__fprinterr(G__serr, "Error: '%s' not defined", expr);
+         }
+         G__genericerror(0);
+      }
    }
+   *defined = buffer; // Set return value.
+   G__oprovld = 0; // Flag operator overload is done.
    return 0;
 }
 
 //______________________________________________________________________________
 int Cint::Internal::G__parenthesisovldobj(G__value* result3, G__value* result, char* realname, G__param* libp, int flag)
 {
-   // -- FIXME: Describe this function!
+   // FIXME: Describe this function!
+   //
    // Note: flag controls generation of PUSHSTROS, SETSTROS in bytecode.
-   int known;
-   char *store_struct_offset;
-   ::Reflex::Scope store_tagnum;
-   int funcmatch;
-   int hash;
-   int store_exec_memberfunc;
-   ::Reflex::Scope store_memberfunc_tagnum;
-   char *store_memberfunc_struct_offset;
-   store_exec_memberfunc = G__exec_memberfunc;
-   store_memberfunc_tagnum = G__memberfunc_tagnum;
-   store_memberfunc_struct_offset = G__memberfunc_struct_offset;
-   store_struct_offset = G__store_struct_offset;
-   store_tagnum = G__tagnum;
-   G__store_struct_offset = (char*)result->obj.i;
-   G__set_G__tagnum(*result);
-   flag; // Use it so that compiler does not complain of unused parameter.
+   //--
+   // Save state.
+   int store_exec_memberfunc = G__exec_memberfunc;
+   ::Reflex::Scope store_memberfunc_tagnum = G__memberfunc_tagnum;
+   char* store_memberfunc_struct_offset = G__memberfunc_struct_offset;
+   char* store_struct_offset = G__store_struct_offset;
+   ::Reflex::Scope store_tagnum = G__tagnum;
+   // Set this pointer and set scope to search.
+   G__store_struct_offset = (char*) result->obj.i; // Set this pointer.
+   G__set_G__tagnum(*result); // Set scope to search.
 #ifdef G__ASM
-   if (G__asm_noverflow && !flag) {
+   if (G__asm_noverflow && !flag) { // Making bytecode and not flag, PUSHSTROS, SETSTROS
       // -- We are generating bytecode and not flag.
 #ifdef G__ASM_DBG
       if (G__asm_dbg) {
@@ -2632,19 +2719,145 @@ int Cint::Internal::G__parenthesisovldobj(G__value* result3, G__value* result, c
       G__asm_inst[G__asm_cp+1] = G__SETSTROS;
       G__inc_cp_asm(2, 0);
    }
-#endif
+#endif // G__ASM
+   int hash = 0;
+   int known = flag; // Note: Initialization is fake, we just need to use flag so compiler does not complain.
    G__hash(realname, hash, known);
    G__fixedscope = 0;
-   for (funcmatch = G__EXACT;funcmatch <= G__USERCONV;funcmatch++) {
-      if (!G__tagnum.IsTopScope()) G__incsetup_memfunc(G__tagnum);
-      if (G__interpret_func(result3, realname, libp, hash
-                            , G__tagnum
-                            , funcmatch, G__CALLMEMFUNC) == 1) {
+   for (int funcmatch = G__EXACT; funcmatch <= G__USERCONV; ++funcmatch) {
+      if (!G__tagnum.IsTopScope()) {
+         G__incsetup_memfunc(G__tagnum);
+      }
+      int err = G__interpret_func(result3, realname, libp, hash, G__tagnum, funcmatch, G__CALLMEMFUNC);
+      if (err == 1) { // We found and ran function, all done.
+         // Restore state.
          G__store_struct_offset = store_struct_offset;
          G__tagnum = store_tagnum;
-
 #ifdef G__ASM
-         if (G__asm_noverflow) {
+         if (G__asm_noverflow) { // Making bytecode, POPSTROS
+            // -- We are generating bytecode.
+#ifdef G__ASM_DBG
+            if (G__asm_dbg) {
+               G__fprinterr(G__serr, "%3x,%3x: POPSTROS  %s:%d\n", G__asm_cp, G__asm_dt, __FILE__, __LINE__);
+            }
+#endif // G__ASM_DBG
+            G__asm_inst[G__asm_cp] = G__POPSTROS;
+            G__inc_cp_asm(1, 0);
+         }
+#endif // G__ASM
+         // Restore state.
+         G__exec_memberfunc = store_exec_memberfunc;
+         G__memberfunc_tagnum = store_memberfunc_tagnum;
+         G__memberfunc_struct_offset = store_memberfunc_struct_offset;
+         return 1;
+      }
+   }
+   // Restore state.
+   G__store_struct_offset = store_struct_offset;
+   G__tagnum = store_tagnum;
+#ifdef G__ASM
+   if (G__asm_noverflow) { // Making bytecode, POPSTROS
+      // -- We are generating bytecode.
+#ifdef G__ASM_DBG
+      if (G__asm_dbg) {
+         G__fprinterr(G__serr, "%3x,%3x: POPSTROS  %s:%d\n", G__asm_cp, G__asm_dt, __FILE__, __LINE__);
+      }
+#endif // G__ASM_DBG
+      G__asm_inst[G__asm_cp] = G__POPSTROS;
+      G__inc_cp_asm(1, 0);
+   }
+#endif // G__ASM
+   // Restore state.
+   G__exec_memberfunc = store_exec_memberfunc;
+   G__memberfunc_tagnum = store_memberfunc_tagnum;
+   G__memberfunc_struct_offset = store_memberfunc_struct_offset;
+   return 0;
+}
+
+//______________________________________________________________________________
+int Cint::Internal::G__parenthesisovld(G__value* result3, char* funcname, G__param* libp, int flag)
+{
+   // FIXME: Describe this function!
+   int known;
+   G__value result;
+   char* store_struct_offset;
+   ::Reflex::Scope store_tagnum;
+   int funcmatch;
+   int hash;
+   G__StrBuf realname_sb(G__ONELINE);
+   char* realname = realname_sb;
+   int store_exec_memberfunc;
+   ::Reflex::Scope store_memberfunc_tagnum;
+   //
+   char* store_memberfunc_struct_offset;
+   if (!strncmp(funcname, "operator", 8) || !strcmp(funcname, "G__ateval")) {
+      return 0;
+   }
+   if (!funcname[0]) {
+      result = *result3;
+   }
+   else {
+      if (flag == G__CALLMEMFUNC) {
+         G__incsetup_memvar(G__tagnum);
+         result = G__getvariable(funcname, &known,::Reflex::Scope(), G__tagnum);
+      }
+      else {
+         result = G__getvariable(funcname, &known,::Reflex::Scope::GlobalScope(), G__p_local);
+      }
+   }
+   // resolve A::staticmethod(1)(2,3)
+   if (
+      (known != 1) ||
+      (
+         !G__value_typenum(result).IsClass() &&
+         !G__value_typenum(result).IsStruct() &&
+         !G__value_typenum(result).IsUnion()
+      )
+   ) {
+      return 0;
+   }
+   //
+   store_exec_memberfunc = G__exec_memberfunc;
+   store_memberfunc_tagnum = G__memberfunc_tagnum;
+   store_memberfunc_struct_offset = G__memberfunc_struct_offset;
+   store_struct_offset = G__store_struct_offset;
+   store_tagnum = G__tagnum;
+   //
+   G__store_struct_offset = (char*) result.obj.i; // Set this pointer.
+   G__set_G__tagnum(result); // Set scope to search.
+#ifdef G__ASM
+   if (G__asm_noverflow) { // Making byecode, PUSHSTROS, SETSTROS
+      // -- We are generating bytecode.
+#ifdef G__ASM_DBG
+      if (G__asm_dbg) {
+         G__fprinterr(G__serr, "%3x,%3x: PUSHSTROS  %s:%d\n", G__asm_cp, G__asm_dt, __FILE__, __LINE__);
+         G__fprinterr(G__serr, "%3x,%3x: SETSTROS  %s:%d\n", G__asm_cp + 1, G__asm_dt, __FILE__, __LINE__);
+      }
+#endif // G__ASM_DBG
+      G__asm_inst[G__asm_cp] = G__PUSHSTROS;
+      G__asm_inst[G__asm_cp+1] = G__SETSTROS;
+      G__inc_cp_asm(2, 0);
+   }
+#endif // G__ASM
+   sprintf(realname, "operator()");
+   G__hash(realname, hash, known);
+   G__fixedscope = 0;
+   for (funcmatch = G__EXACT; funcmatch <= G__USERCONV; ++funcmatch) {
+      if (!G__tagnum.IsTopScope()) {
+         G__incsetup_memfunc(G__tagnum);
+      }
+      //
+      //  Search for member function and
+      //  run it if found.
+      //
+      int err = G__interpret_func(result3, realname, libp, hash, G__tagnum, funcmatch, G__CALLMEMFUNC);
+      if (err == 1) { // We found it and ran it, all done.
+         // Restore state.
+         G__store_struct_offset = store_struct_offset;
+         G__tagnum = store_tagnum;
+#ifdef G__ASM
+         if (G__asm_noverflow) { // Making bytecode, POPSTROS
+               // -- We are generating bytecode.
 #ifdef G__ASM_DBG
             if (G__asm_dbg) {
                G__fprinterr(G__serr, "%3x,%3x: POPSTROS  %s:%d\n", G__asm_cp, G__asm_dt, __FILE__, __LINE__);
@@ -2654,17 +2867,19 @@ int Cint::Internal::G__parenthesisovldobj(G__value* result3, G__value* result, c
             G__inc_cp_asm(1, 0);
          }
 #endif
-
+         // Restore state.
          G__exec_memberfunc = store_exec_memberfunc;
          G__memberfunc_tagnum = store_memberfunc_tagnum;
          G__memberfunc_struct_offset = store_memberfunc_struct_offset;
-         return(1);
+         return 1;
       }
    }
+   // Restore state.
    G__store_struct_offset = store_struct_offset;
    G__tagnum = store_tagnum;
 #ifdef G__ASM
-   if (G__asm_noverflow) {
+   if (G__asm_noverflow) { // Making bytecode, POPSTROS
+      // -- We are generating bytecode.
 #ifdef G__ASM_DBG
       if (G__asm_dbg) {
          G__fprinterr(G__serr, "%3x,%3x: POPSTROS  %s:%d\n", G__asm_cp, G__asm_dt, __FILE__, __LINE__);
@@ -2674,122 +2889,7 @@ int Cint::Internal::G__parenthesisovldobj(G__value* result3, G__value* result, c
       G__inc_cp_asm(1, 0);
    }
 #endif
-   G__exec_memberfunc = store_exec_memberfunc;
-   G__memberfunc_tagnum = store_memberfunc_tagnum;
-   G__memberfunc_struct_offset = store_memberfunc_struct_offset;
-   return(0);
-}
-
-//______________________________________________________________________________
-int Cint::Internal::G__parenthesisovld(G__value* result3, char* funcname, G__param* libp, int flag)
-{
-   // -- FIXME: Describe this function!
-   int known;
-   G__value result;
-   char *store_struct_offset;
-   ::Reflex::Scope store_tagnum;
-   int funcmatch;
-   int hash;
-   G__StrBuf realname_sb(G__ONELINE);
-   char *realname = realname_sb;
-   int store_exec_memberfunc;
-   ::Reflex::Scope store_memberfunc_tagnum;
-   char *store_memberfunc_struct_offset;
-
-   if (strncmp(funcname, "operator", 8) == 0 || strcmp(funcname, "G__ateval") == 0)
-      return(0);
-
-   if (0 == funcname[0]) {
-      result = *result3;
-   }
-   else
-
-      if (flag == G__CALLMEMFUNC) {
-         G__incsetup_memvar(G__tagnum);
-         result = G__getvariable(funcname, &known,::Reflex::Scope()
-                                 , G__tagnum);
-      }
-      else {
-         result = G__getvariable(funcname, &known,::Reflex::Scope::GlobalScope(), G__p_local);
-      }
-
-   /* resolve A::staticmethod(1)(2,3) */
-
-   if (
-      1 != known
-      || (!G__value_typenum(result).IsClass() && !G__value_typenum(result).IsStruct()
-          && !G__value_typenum(result).IsUnion())
-   ) {
-      return(0);
-   }
-
-   store_exec_memberfunc = G__exec_memberfunc;
-   store_memberfunc_tagnum = G__memberfunc_tagnum;
-   store_memberfunc_struct_offset = G__memberfunc_struct_offset;
-
-   store_struct_offset = G__store_struct_offset;
-   store_tagnum = G__tagnum;
-   G__store_struct_offset = (char*)result.obj.i;
-   G__set_G__tagnum(result);
-
-#ifdef G__ASM
-   if (G__asm_noverflow) {
-#ifdef G__ASM_DBG
-      if (G__asm_dbg) {
-         G__fprinterr(G__serr, "%3x,%3x: PUSHSTROS  %s:%d\n", G__asm_cp, G__asm_dt, __FILE__, __LINE__);
-         G__fprinterr(G__serr, "%3x,%3x: SETSTROS  %s:%d\n", G__asm_cp + 1, G__asm_dt, __FILE__, __LINE__);
-      }
-#endif
-      G__asm_inst[G__asm_cp] = G__PUSHSTROS;
-      G__asm_inst[G__asm_cp+1] = G__SETSTROS;
-      G__inc_cp_asm(2, 0);
-   }
-#endif
-
-   sprintf(realname, "operator()");
-   G__hash(realname, hash, known);
-
-   G__fixedscope = 0;
-
-   for (funcmatch = G__EXACT;funcmatch <= G__USERCONV;funcmatch++) {
-      if (!G__tagnum.IsTopScope()) G__incsetup_memfunc(G__tagnum);
-      if (G__interpret_func(result3, realname, libp, hash
-                            , G__tagnum
-                            , funcmatch, G__CALLMEMFUNC) == 1) {
-         G__store_struct_offset = store_struct_offset;
-         G__tagnum = store_tagnum;
-
-#ifdef G__ASM
-         if (G__asm_noverflow) {
-#ifdef G__ASM_DBG
-            if (G__asm_dbg) {
-               G__fprinterr(G__serr, "%3x,%3x: POPSTROS  %s:%d\n", G__asm_cp, G__asm_dt, __FILE__, __LINE__);
-            }
-#endif
-            G__asm_inst[G__asm_cp] = G__POPSTROS;
-            G__inc_cp_asm(1, 0);
-         }
-#endif
-
-         G__exec_memberfunc = store_exec_memberfunc;
-         G__memberfunc_tagnum = store_memberfunc_tagnum;
-         G__memberfunc_struct_offset = store_memberfunc_struct_offset;
-         return(1);
-      }
-   }
-
-   G__store_struct_offset = store_struct_offset;
-   G__tagnum = store_tagnum;
-
-#ifdef G__ASM
-   if (G__asm_noverflow) {
-#ifdef G__ASM_DBG
-      if (G__asm_dbg) G__fprinterr(G__serr, "%3x,%3x: POPSTROS  %s:%d\n", G__asm_cp, G__asm_dt, __FILE__, __LINE__);
-#endif
-      G__asm_inst[G__asm_cp] = G__POPSTROS;
-      G__inc_cp_asm(1, 0);
-   }
-#endif
+   // Restore state.
    G__exec_memberfunc = store_exec_memberfunc;
    G__memberfunc_tagnum = store_memberfunc_tagnum;
    G__memberfunc_struct_offset = store_memberfunc_struct_offset;
@@ -2799,13 +2899,14 @@ int Cint::Internal::G__parenthesisovld(G__value* result3, char* funcname, G__par
 //______________________________________________________________________________
 int Cint::Internal::G__tryindexopr(G__value* result7, G__value* para, int paran, int ig25)
 {
-   // -- FIXME: Describe this function!
+   // FIXME: Describe this function!
    //
    // 1) asm
    //   * G__ST_VAR/MSTR -> LD_VAR/MSTR
    //   * paran -> ig25
    // 2) try operator[]() function while ig25<paran
    //
+   //--
 #ifdef G__ASM
    if (G__asm_noverflow) {
       // -- We are generating bytecode.
@@ -2813,7 +2914,7 @@ int Cint::Internal::G__tryindexopr(G__value* result7, G__value* para, int paran,
       //  X a[2][3];
       //  Y X::operator[]()
       //  Y::operator[]()
-      //    a[x][y][z][w];   stack x y z w ->  stack w z x y 
+      //    a[x][y][z][w];   stack x y z w ->  stack w z x y
       //                                             Y X a a
       //
       if ((paran > 1) && (paran > ig25)) {
@@ -2955,117 +3056,43 @@ int Cint::Internal::G__tryindexopr(G__value* result7, G__value* para, int paran,
 //______________________________________________________________________________
 long Cint::Internal::G__op1_operator_detail(int opr, G__value* val)
 {
-   // -- FIXME: Describe this function!
-   /* int isdouble; */
-
-   /* don't optimze if optimize level is less than 3 */
-   if (G__asm_loopcompile < 3) return(opr);
-
-   if ('i' == G__get_type(*val)) {
+   // FIXME: Describe this function!
+   // don't optimze if optimize level is less than 3
+   if (G__asm_loopcompile < 3) {
+      return opr;
+   }
+   if (G__get_type(*val) == 'i') {
       switch (opr) {
          case G__OPR_POSTFIXINC:
-            return(G__OPR_POSTFIXINC_I);
+            return G__OPR_POSTFIXINC_I;
          case G__OPR_POSTFIXDEC:
-            return(G__OPR_POSTFIXDEC_I);
+            return G__OPR_POSTFIXDEC_I;
          case G__OPR_PREFIXINC:
-            return(G__OPR_PREFIXINC_I);
+            return G__OPR_PREFIXINC_I;
          case G__OPR_PREFIXDEC:
-            return(G__OPR_PREFIXDEC_I);
+            return G__OPR_PREFIXDEC_I;
       }
+      return opr;
    }
-   else if ('d' == G__get_type(*val)) {
+   if (G__get_type(*val) == 'd') {
       switch (opr) {
          case G__OPR_POSTFIXINC:
-            return(G__OPR_POSTFIXINC_D);
+            return G__OPR_POSTFIXINC_D;
          case G__OPR_POSTFIXDEC:
-            return(G__OPR_POSTFIXDEC_D);
+            return G__OPR_POSTFIXDEC_D;
          case G__OPR_PREFIXINC:
-            return(G__OPR_PREFIXINC_D);
+            return G__OPR_PREFIXINC_D;
          case G__OPR_PREFIXDEC:
-            return(G__OPR_PREFIXDEC_D);
+            return G__OPR_PREFIXDEC_D;
       }
    }
-#ifdef G__NEVER /* following change rather slowed down */
-   else if ('l' == val->type) {
-      switch (opr) {
-         case G__OPR_POSTFIXINC:
-            return(G__OPR_POSTFIXINC_L);
-         case G__OPR_POSTFIXDEC:
-            return(G__OPR_POSTFIXDEC_L);
-         case G__OPR_PREFIXINC:
-            return(G__OPR_PREFIXINC_L);
-         case G__OPR_PREFIXDEC:
-            return(G__OPR_PREFIXDEC_L);
-      }
-   }
-   else if ('s' == val->type) {
-      switch (opr) {
-         case G__OPR_POSTFIXINC:
-            return(G__OPR_POSTFIXINC_S);
-         case G__OPR_POSTFIXDEC:
-            return(G__OPR_POSTFIXDEC_S);
-         case G__OPR_PREFIXINC:
-            return(G__OPR_PREFIXINC_S);
-         case G__OPR_PREFIXDEC:
-            return(G__OPR_PREFIXDEC_S);
-      }
-   }
-   else if ('h' == val->type) {
-      switch (opr) {
-         case G__OPR_POSTFIXINC:
-            return(G__OPR_POSTFIXINC_H);
-         case G__OPR_POSTFIXDEC:
-            return(G__OPR_POSTFIXDEC_H);
-         case G__OPR_PREFIXINC:
-            return(G__OPR_PREFIXINC_H);
-         case G__OPR_PREFIXDEC:
-            return(G__OPR_PREFIXDEC_H);
-      }
-   }
-   else if ('R' == val->type) {
-      switch (opr) {
-         case G__OPR_POSTFIXINC:
-            return(G__OPR_POSTFIXINC_R);
-         case G__OPR_POSTFIXDEC:
-            return(G__OPR_POSTFIXDEC_R);
-         case G__OPR_PREFIXINC:
-            return(G__OPR_PREFIXINC_R);
-         case G__OPR_PREFIXDEC:
-            return(G__OPR_PREFIXDEC_R);
-      }
-   }
-   else if ('k' == val->type) {
-      switch (opr) {
-         case G__OPR_POSTFIXINC:
-            return(G__OPR_POSTFIXINC_K);
-         case G__OPR_POSTFIXDEC:
-            return(G__OPR_POSTFIXDEC_K);
-         case G__OPR_PREFIXINC:
-            return(G__OPR_PREFIXINC_K);
-         case G__OPR_PREFIXDEC:
-            return(G__OPR_PREFIXDEC_K);
-      }
-   }
-   else if ('f' == val->type) {
-      switch (opr) {
-         case G__OPR_POSTFIXINC:
-            return(G__OPR_POSTFIXINC_F);
-         case G__OPR_POSTFIXDEC:
-            return(G__OPR_POSTFIXDEC_F);
-         case G__OPR_PREFIXINC:
-            return(G__OPR_PREFIXINC_F);
-         case G__OPR_PREFIXDEC:
-            return(G__OPR_PREFIXDEC_F);
-      }
-   }
-#endif
-   return(opr);
+   return opr;
 }
 
 //______________________________________________________________________________
 long Cint::Internal::G__op2_operator_detail(int opr, G__value* lval, G__value* rval)
 {
-   // -- FIXME: Describe this function!
+   // FIXME: Describe this function!
    int lisdouble, risdouble;
    int lispointer, rispointer;
 
@@ -3197,14 +3224,14 @@ long Cint::Internal::G__op2_operator_detail(int opr, G__value* lval, G__value* r
 }
 
 /*
- * Local Variables:
- * c-tab-always-indent:nil
- * c-indent-level:3
- * c-continued-statement-offset:3
- * c-brace-offset:-3
- * c-brace-imaginary-offset:0
- * c-argdecl-indent:0
- * c-label-offset:-3
- * compile-command:"make -k"
- * End:
- */
+* Local Variables:
+* c-tab-always-indent:nil
+* c-indent-level:3
+* c-continued-statement-offset:3
+* c-brace-offset:-3
+* c-brace-imaginary-offset:0
+* c-argdecl-indent:0
+* c-label-offset:-3
+* compile-command:"make -k"
+* End:
+*/

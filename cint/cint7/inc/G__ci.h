@@ -306,7 +306,7 @@
 * if __MAKECINT__ is defined, do not include this file
 * G__MAKECINT is automatically defined in makecint or G__makesetup script
 **************************************************************************/
-#if (!defined(__MAKECINT__)) || defined(G__API) || defined(G__BC_DICT)
+#if (!defined(__MAKECINT__)) || defined(G__API)
 
 
 #ifdef __cplusplus

@@ -4746,8 +4746,7 @@ struct G__funclist* Cint::Internal::G__add_templatefunc(char* funcnamein, G__par
       }
    }
    if (ptmplt) {
-      if ((env_tagnum != -1) && !strcmp(funcname, G__struct.name[env_tagnum])) {
-         // This is probably a template constructor of a class template.
+      if ((env_tagnum != -1) && !strcmp(funcname, G__struct.name[env_tagnum])) { // This is probably a template constructor of a class template.
          ptmplt = 0;
       }
       else {
@@ -4764,8 +4763,7 @@ struct G__funclist* Cint::Internal::G__add_templatefunc(char* funcnamein, G__par
          }
       }
    }
-   if (pexplicitarg) {
-      // Replace funcname="f<int>", with funcname="f", pexplicitarg="int>"
+   if (pexplicitarg) { // Replace funcname="f<int>", with funcname="f", pexplicitarg="int>"
       *pexplicitarg = 0;
       ++pexplicitarg;
       int tmp = 0;
@@ -4833,12 +4831,13 @@ struct G__funclist* Cint::Internal::G__add_templatefunc(char* funcnamein, G__par
          //
          //  Search for the instantiated template function.
          //
-         ::Reflex::Member func = p_ifunc.FunctionMemberAt(p_ifunc.FunctionMemberSize() - 1);
+         int index = p_ifunc.FunctionMemberSize() - 1;
+         ::Reflex::Member func = p_ifunc.FunctionMemberAt(index);
          if (func && !strcmp(funcnamein, func.Name().c_str())) {
             if (!G__get_funcproperties(func)->entry.p && (G__globalcomp == G__NOLINK)) {
                continue; // Only a prototype, continue searchng for definition.
             }
-            funclist = G__funclist_add(funclist, func, 0);
+            funclist = G__funclist_add(funclist, func, index, 0);
             if (
                ((int) func.FunctionParameterSize() < libp->paran) ||
                (

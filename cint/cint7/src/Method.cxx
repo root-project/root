@@ -20,85 +20,132 @@
 #include "fproto.h"
 
 using namespace Cint::Internal;
+using namespace std;
+
+//______________________________________________________________________________
+static char G__buf[G__LONGLINE];
+
+//______________________________________________________________________________
+Cint::G__MethodInfo::~G__MethodInfo()
+{
+   delete fClassInfo;
+   fClassInfo = 0;
+   delete fTypeInfo;
+   fTypeInfo = 0;
+}
+
+//______________________________________________________________________________
+Cint::G__MethodInfo::G__MethodInfo() : fIndex(0), fUsingIndex(0), fClassInfo(0), fTypeInfo(0)
+{
+   Init();
+}
+
+//______________________________________________________________________________
+Cint::G__MethodInfo::G__MethodInfo(G__ClassInfo& a) : fIndex(0), fUsingIndex(0), fClassInfo(0), fTypeInfo(0)
+{
+   Init(a);
+}
+
+//______________________________________________________________________________
+Cint::G__MethodInfo::G__MethodInfo(const G__MethodInfo& mi) : fScope(mi.fScope), fIndex(mi.fIndex), fUsingIndex(mi.fUsingIndex), fClassInfo(0), fFunc(mi.fFunc), fTypeInfo(0)
+{
+}
+
+#if 0
+//______________________________________________________________________________
+Cint::G__MethodInfo::G__MethodInfo(const ::Reflex::Member& m) : fScope(m.DeclaringScope()), fFunc(m), fIndex(-1), fUsingIndex(0), fClassInfo(0), fTypeInfo(0)
+{
+}
+#endif // 0
+
+//______________________________________________________________________________
+G__MethodInfo& Cint::G__MethodInfo::operator=(const G__MethodInfo& mi)
+{
+   if (this != &mi) {
+      fScope = mi.fScope;
+      fIndex = mi.fIndex;
+      fUsingIndex = mi.fUsingIndex;
+      fClassInfo = 0;
+      fFunc = mi.fFunc;
+      fTypeInfo = 0;
+   }
+   return *this;
+}
 
 //______________________________________________________________________________
 void Cint::G__MethodInfo::Init()
 {
+   fScope = ::Reflex::Scope::GlobalScope();
+   fIndex = -1;
+   fUsingIndex = -1;
    delete fClassInfo;
    fClassInfo = 0;
-   fScope = ::Reflex::Scope::GlobalScope();
-   fName = "";
+   fFunc = ::Reflex::Member();
    delete fTypeInfo;
    fTypeInfo = 0;
-   fFunc = ::Reflex::Member();
-   iter = -1;
-#ifndef G__OLDIMPLEMENTATION2194
-   usingIndex = -1;
-#endif // G__OLDIMPLEMENTATION2194
-   // --
 }
 
 //______________________________________________________________________________
 void Cint::G__MethodInfo::Init(G__ClassInfo& a)
 {
+   fScope = Reflex::Scope();
+   fIndex = -1;
+   fUsingIndex = -1;
    delete fClassInfo;
    fClassInfo = 0;
-   fScope = Reflex::Scope();
-   fName = "";
+   fFunc = ::Reflex::Member();
    delete fTypeInfo;
    fTypeInfo = 0;
-   fFunc = ::Reflex::Member();
-   iter = -1;
-#ifndef G__OLDIMPLEMENTATION2194
-   usingIndex = -1;
-#endif // G__OLDIMPLEMENTATION2194
    if (a.IsValid()) {
-      fScope = a.ReflexScope();
+      fScope = G__Dict::GetDict().GetScope((int) a.Tagnum());
       G__incsetup_memfunc((int) a.Tagnum());
    }
 }
 
 //______________________________________________________________________________
-void Cint::G__MethodInfo::Init(long handlein, long indexin, G__ClassInfo* belongingclassin)
+void Cint::G__MethodInfo::Init(long handlein, long indexin, G__ClassInfo* /*belongingclassin*/)
 {
-   // --
-#ifndef G__OLDIMPLEMENTATION2194
-   usingIndex = -1;
-#endif // G__OLDIMPLEMENTATION2194
-   iter = -1;
+   fScope = Reflex::Scope();
+   fIndex = -1;
+   fUsingIndex = -1;
    delete fClassInfo;
    fClassInfo = 0;
-   fScope = Reflex::Scope();
-   fName = "";
+   fFunc = Reflex::Member();
    delete fTypeInfo;
    fTypeInfo = 0;
-   fFunc = Reflex::Member();
    if (handlein) {
-      fFunc = G__Dict::GetDict().GetFunction(handlein);
+      fFunc = ::Reflex::Member(reinterpret_cast<const Reflex::MemberBase*>(handlein));
       fScope = fFunc.DeclaringScope();
+      fIndex = indexin;
+      //fClassInfo = new G__ClassInfo(belongingclassin);
+      fClassInfo = new G__ClassInfo(G__get_tagnum(fScope)); // FIXME: What if fScope is the global scope?
+      // TODO: Remove use of friendship.
+      ::Reflex::Type ty = fFunc.TypeOf().ReturnType();
+      fTypeInfo = new G__TypeInfo();
+      G__get_cint5_type_tuple_long(ty, &fTypeInfo->fType, &fTypeInfo->fTagnum, &fTypeInfo->fTypenum, &fTypeInfo->fReftype, &fTypeInfo->fIsconst);
+      fTypeInfo->fClassProperty = 0L;
    }
 }
 
 //______________________________________________________________________________
-void Cint::G__MethodInfo::Init(G__ClassInfo* belongingclassin, long funcpage, long indexin)
+void Cint::G__MethodInfo::Init(G__ClassInfo* belongingclassin, long funcpage, long /*indexin*/)
 {
    delete fClassInfo;
    fClassInfo = 0;
    fScope = Reflex::Scope::GlobalScope();
    if (belongingclassin && belongingclassin->IsValid()) { // member function
-      fScope = belongingclassin->ReflexScope();
+      fScope = G__Dict::GetDict().GetScope(belongingclassin->Tagnum());
    }
-   fName = "";
    delete fTypeInfo;
    fTypeInfo = 0;
    fFunc = fScope.FunctionMemberAt(funcpage);
    if (fFunc) {
-      iter = funcpage;
+      fIndex = funcpage;
    }
    else {
       fScope = Reflex::Scope();
       fFunc = Reflex::Member();
-      iter = -1;
+      fIndex = -1;
    }
 }
 
@@ -106,19 +153,8 @@ void Cint::G__MethodInfo::Init(G__ClassInfo* belongingclassin, long funcpage, lo
 const char* Cint::G__MethodInfo::Name()
 {
    if (IsValid()) {
-      if (!fName.length()) {
-         fName = fFunc.Name();
-      }
-      return fName.c_str();
-   }
-   return 0;
-}
-
-//______________________________________________________________________________
-struct G__friendtag* Cint::G__MethodInfo::GetFriendInfo()
-{
-   if (IsValid()) {
-      return G__get_funcproperties(fFunc)->entry.friendtag;
+      strcpy(G__buf, fFunc.Name().c_str()); // FIXME: Possible buffer overflow here!
+      return G__buf;
    }
    return 0;
 }
@@ -127,18 +163,38 @@ struct G__friendtag* Cint::G__MethodInfo::GetFriendInfo()
 int Cint::G__MethodInfo::Hash()
 {
    if (IsValid()) {
-      return (long) fFunc.Id();
+      return 0; // FIXME: Should we caculate the hash code here?
    }
    return 0;
 }
 
 //______________________________________________________________________________
-struct G__ifunc_table* Cint::G__MethodInfo::ifunc()
+G__ifunc_table* Cint::G__MethodInfo::ifunc()
 {
    if (IsValid()) {
-      return (struct G__ifunc_table*) fFunc.Id();
+      return (G__ifunc_table*) fScope.Id();
    }
    return 0;
+}
+
+//______________________________________________________________________________
+long Cint::G__MethodInfo::Handle()
+{
+   return (long) fScope.Id();
+}
+
+#if 0
+//______________________________________________________________________________
+::Reflex::Member Cint::G__MethodInfo::ReflexFunction() const
+{
+   return fFunc;
+}
+#endif // 0
+
+//______________________________________________________________________________
+int Cint::G__MethodInfo::Index()
+{
+   return (int) fIndex;
 }
 
 //______________________________________________________________________________
@@ -154,12 +210,25 @@ const char* Cint::G__MethodInfo::Title()
 }
 
 //______________________________________________________________________________
+G__TypeInfo* Cint::G__MethodInfo::Type()
+{
+   if (!fTypeInfo) {
+      // TODO: Remove use of friendship.
+      ::Reflex::Type ty = fFunc.TypeOf().ReturnType();
+      fTypeInfo = new G__TypeInfo();
+      G__get_cint5_type_tuple_long(ty, &fTypeInfo->fType, &fTypeInfo->fTagnum, &fTypeInfo->fTypenum, &fTypeInfo->fReftype, &fTypeInfo->fIsconst);
+      fTypeInfo->fClassProperty = 0L;
+   }
+   return fTypeInfo;
+}
+
+//______________________________________________________________________________
 long Cint::G__MethodInfo::Property()
 {
    if (!IsValid()) {
       return 0;
    }
-   long property = 0;
+   long property = 0L;
    switch (G__get_access(fFunc)) {
       case G__PUBLIC:
          property |= G__BIT_ISPUBLIC;
@@ -171,13 +240,13 @@ long Cint::G__MethodInfo::Property()
          property |= G__BIT_ISPRIVATE;
          break;
    }
-   if (G__test_const(fFunc, G__CONSTFUNC)) {
-      property |= G__BIT_ISCONSTANT | G__BIT_ISMETHCONSTANT;
+   if (G__get_isconst(fFunc.TypeOf()) & G__CONSTFUNC) {
+      property |= (G__BIT_ISCONSTANT | G__BIT_ISMETHCONSTANT);
    }
-   if (G__test_const(fFunc, G__CONSTVAR)) {
+   if (G__get_isconst(fFunc.TypeOf()) & G__CONSTVAR) {
       property |= G__BIT_ISCONSTANT;
    }
-   if (G__test_const(fFunc, G__PCONSTVAR)) {
+   if (G__get_isconst(fFunc.TypeOf()) & G__PCONSTVAR) {
       property |= G__BIT_ISPCONSTANT;
    }
    if (isupper(G__get_type(fFunc.TypeOf().ReturnType()))) {
@@ -252,7 +321,7 @@ G__InterfaceMethod Cint::G__MethodInfo::InterfaceMethod()
 
 #ifdef G__ASM_WHOLEFUNC
 //______________________________________________________________________________
-struct G__bytecodefunc *G__MethodInfo::GetBytecode()
+G__bytecodefunc* G__MethodInfo::GetBytecode()
 {
    if (IsValid()) {
       int store_asm_loopcompile = G__asm_loopcompile;
@@ -277,24 +346,25 @@ Cint::G__DataMemberInfo Cint::G__MethodInfo::GetLocalVariable()
 {
    G__DataMemberInfo localvar;
    localvar.Init(0L, -1L, 0);
-   if (IsValid()) {
-      int store_fixedscope = G__fixedscope;
-      G__xrefflag = 1;
-      G__fixedscope = 1;
-      struct G__bytecodefunc* pbc = GetBytecode();
-      G__xrefflag = 0;
-      G__fixedscope = store_fixedscope;
-      if (!pbc) {
-         if (Property() & G__BIT_ISCOMPILED) {
-            G__fprinterr(G__serr, "Limitation: can not get local variable information for compiled function %s\n", Name());
-         }
-         else {
-            G__fprinterr(G__serr, "Limitation: function %s , failed to get local variable information\n", Name());
-         }
-         return localvar;
-      }
-      localvar.Init(pbc->frame);
+   if (!IsValid()) {
+      return localvar;
    }
+   int store_fixedscope = G__fixedscope;
+   G__xrefflag = 1;
+   G__fixedscope = 1;
+   G__bytecodefunc* pbc = GetBytecode();
+   G__xrefflag = 0;
+   G__fixedscope = store_fixedscope;
+   if (!pbc) {
+      if (Property() & G__BIT_ISCOMPILED) {
+         G__fprinterr(G__serr, "Limitation: can not get local variable information for compiled function %s\n", Name());
+      }
+      else {
+         G__fprinterr(G__serr, "Limitation: function %s , failed to get local variable information\n", Name());
+      }
+      return localvar;
+   }
+   localvar.Init((long) pbc->frame.Id(), -1L, 0);
    return localvar;
 }
 
@@ -320,11 +390,45 @@ void* Cint::G__MethodInfo::PointerToFunc()
 #endif // G__TRUEP2F
 
 //______________________________________________________________________________
+G__ClassInfo* Cint::G__MethodInfo::MemberOf()
+{
+   // Return a G__ClassInfo representing the declaring fScope.
+   if (!fClassInfo) {
+      fClassInfo = new G__ClassInfo(G__get_tagnum(fScope)); // FIXME: What if fScope is the global scope?
+   }
+   return fClassInfo;
+}
+
+//______________________________________________________________________________
+int Cint::G__MethodInfo::GetDefiningScopeTagnum()
+{
+   if (IsValid()) {
+      return G__get_tagnum(fFunc.DeclaringScope());
+   }
+   return -1;
+}
+
+//______________________________________________________________________________
+G__friendtag* Cint::G__MethodInfo::GetFriendInfo()
+{
+   if (IsValid()) {
+      return G__get_funcproperties(fFunc)->entry.friendtag;
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
 void Cint::G__MethodInfo::SetGlobalcomp(int globalcomp)
 {
    if (IsValid()) {
       G__get_funcproperties(fFunc)->globalcomp = globalcomp;
    }
+}
+
+//______________________________________________________________________________
+void Cint::G__MethodInfo::SetForceStub()
+{
+   // FIXME: This needs to be implemented!
 }
 
 //______________________________________________________________________________
@@ -336,18 +440,17 @@ int Cint::G__MethodInfo::IsValid()
 //______________________________________________________________________________
 int Cint::G__MethodInfo::SetFilePos(const char* fname)
 {
-   struct G__dictposition* dict = G__get_dictpos((char*)fname);
+   G__dictposition* dict = G__get_dictpos((char*)fname);
    if (!dict) {
       return 0;
    }
-   iter = dict->ifn - 1;
+   fIndex = dict->ifn - 1;
    delete fClassInfo;
    fClassInfo = 0;
    fScope = dict->ifunc;
-   fName = "";
    delete fTypeInfo;
    fTypeInfo = 0;
-   fFunc = fScope.DataMemberAt(iter);
+   fFunc = fScope.DataMemberAt(fIndex);
    return 1;
 }
 
@@ -357,34 +460,31 @@ int Cint::G__MethodInfo::Next()
    if (!fScope) {
       return 0;
    }
-   if ((iter == -1) && fFunc) {
-      for (iter = 0; iter < (int) fScope.FunctionMemberSize(); ++iter) {
-         if (fFunc == fScope.FunctionMemberAt(iter)) {
+   if ((fIndex == -1) && fFunc) {
+      for (fIndex = 0; fIndex < (int) fScope.FunctionMemberSize(); ++fIndex) {
+         if (fFunc == fScope.FunctionMemberAt(fIndex)) {
             break;
          }
       }
    }
-   ++iter;
-   fName = "";
+   ++fIndex;
    delete fTypeInfo;
    fTypeInfo = 0;
-   if (iter < (int) fScope.FunctionMemberSize()) {
-      fFunc = fScope.FunctionMemberAt(iter);
+   if (fIndex < (int) fScope.FunctionMemberSize()) {
+      fFunc = fScope.FunctionMemberAt(fIndex);
    }
    else {
-      iter = -1;
+      fIndex = -1;
       fFunc = ::Reflex::Member();
    }
-#ifndef G__OLDIMPLEMENTATION2194
-   if (!fFunc && !fScope && (usingIndex < G__globalusingnamespace.basen)) {
-      ++usingIndex;
-      G__incsetup_memfunc(G__globalusingnamespace.basetagnum[usingIndex]);
+   if (!fFunc && !fScope && (fUsingIndex < G__globalusingnamespace.basen)) {
+      ++fUsingIndex;
+      G__incsetup_memfunc(G__globalusingnamespace.basetagnum[fUsingIndex]);
       delete fClassInfo;
       fClassInfo = 0;
-      fScope = G__Dict::GetDict().GetScope(G__globalusingnamespace.basetagnum[usingIndex]);
+      fScope = G__Dict::GetDict().GetScope(G__globalusingnamespace.basetagnum[fUsingIndex]);
       return Next();
    }
-#endif // G__OLDIMPLEMENTATION2194
    return (bool) fFunc;
 }
 
@@ -396,20 +496,6 @@ const char* Cint::G__MethodInfo::FileName()
          return G__srcfile[G__get_funcproperties(fFunc)->filenum].filename;
       }
       return "(compiled)";
-   }
-   return 0;
-}
-
-//______________________________________________________________________________
-FILE* Cint::G__MethodInfo::FilePointer()
-{
-   if (IsValid()) {
-      if (
-         (G__get_funcproperties(fFunc)->filenum >= 0) &&
-         (G__get_funcproperties(fFunc)->entry.size >= 0)
-      ) {
-         return(G__srcfile[G__get_funcproperties(fFunc)->filenum].fp);
-      }
    }
    return 0;
 }
@@ -427,31 +513,6 @@ int Cint::G__MethodInfo::LineNumber()
       return 0;
    }
    return -1;
-}
-
-//______________________________________________________________________________
-long Cint::G__MethodInfo::FilePosition()
-{
-   // returns  'type fname(type p1,type p2)'
-   //                      ^
-   long invalid = 0L;
-   if (IsValid()) {
-      if (
-         (G__get_funcproperties(fFunc)->filenum >= 0) &&
-         (G__get_funcproperties(fFunc)->entry.size >= 0)
-      ) {
-         // --
-#if defined(G__NONSCALARFPOS2)
-         return (long) G__get_funcproperties(fFunc)->entry.pos.__pos;
-#elif defined(G__NONSCALARFPOS_QNX)
-         return (long) G__get_funcproperties(fFunc)->entry.pos._Off;
-#else
-         return (long) G__get_funcproperties(fFunc)->entry.pos;
-#endif
-         // --
-      }
-   }
-   return invalid;
 }
 
 //______________________________________________________________________________
@@ -476,19 +537,57 @@ int Cint::G__MethodInfo::IsBusy()
 }
 
 //______________________________________________________________________________
-static char G__buf[G__LONGLINE];
+FILE* Cint::G__MethodInfo::FilePointer()
+{
+   if (IsValid()) {
+      if (
+         (G__get_funcproperties(fFunc)->filenum >= 0) &&
+         (G__get_funcproperties(fFunc)->entry.size >= 0)
+      ) {
+         return(G__srcfile[G__get_funcproperties(fFunc)->filenum].fp);
+      }
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
+long Cint::G__MethodInfo::FilePosition()
+{
+   // returns  'type fname(type p1,type p2)'
+   //                      ^
+   long invalid = 0L;
+   if (IsValid()) {
+      if (
+         (G__get_funcproperties(fFunc)->filenum >= 0) &&
+         (G__get_funcproperties(fFunc)->entry.size >= 0)
+      ) {
+         // --
+#if defined(G__NONSCALARFPOS2)
+         return (long) G__get_funcproperties(fFunc)->entry.pos.__pos;
+#elif defined(G__NONSCALARFPOS_QNX)
+         return (long) G__get_funcproperties(fFunc)->entry.pos._Off;
+#else // G__NONSCALARFPOSxxx
+         return (long) G__get_funcproperties(fFunc)->entry.pos;
+#endif // G__NONSCALARFPOSxxx
+         // --
+      }
+   }
+   return invalid;
+}
 
 //______________________________________________________________________________
 char* Cint::G__MethodInfo::GetPrototype()
 {
-   if (!IsValid()) return 0;
+   if (!IsValid()) {
+      return 0;
+   }
    strcpy(G__buf, Type()->Name());
    strcat(G__buf, " ");
    if (fScope && !fScope.IsTopScope()) {
       strcat(G__buf, fScope.Name(::Reflex::SCOPED).c_str());
       strcat(G__buf, "::");
    }
-   strcat(G__buf, Name());
+   strcat(G__buf, fFunc.Name().c_str());
    strcat(G__buf, "(");
    G__MethodArgInfo arg(*this);
    int flag = 0;
@@ -510,153 +609,54 @@ char* Cint::G__MethodInfo::GetPrototype()
 //______________________________________________________________________________
 char* Cint::G__MethodInfo::GetMangledName()
 {
-   if (!IsValid()) return 0;
+   if (!IsValid()) {
+      return 0;
+   }
    return G__map_cpp_name(GetPrototype());
 }
 
 //______________________________________________________________________________
 int Cint::G__MethodInfo::LoadDLLDirect(const char* filename, const char* funcname)
 {
-   void* p2f;
-   p2f = G__FindSym(filename, funcname);
+   void* p2f = G__FindSym(filename, funcname);
    if (p2f) {
-      G__get_funcproperties(fFunc)->entry.tp2f = p2f;
-      G__get_funcproperties(fFunc)->entry.p = (void*)G__DLL_direct_globalfunc;
-      G__get_funcproperties(fFunc)->entry.size = -1;
-      //G__get_funcproperties(fFunc)->filenum = -1; /* not good */
-      G__get_funcproperties(fFunc)->linenum = -1;
+      G__RflxFuncProperties* prop = G__get_funcproperties(fFunc);
+      prop->entry.tp2f = p2f;
+      prop->entry.p = (void*) G__DLL_direct_globalfunc;
+      prop->entry.size = -1;
+      prop->linenum = -1;
       return 1;
    }
    return 0;
 }
 
 //______________________________________________________________________________
-int Cint::G__SetGlobalcomp(char* funcname, char* param, int globalcomp)
-{
-   G__ClassInfo globalscope;
-   G__MethodInfo method;
-   long dummy = 0;
-   G__StrBuf classname_sb(G__LONGLINE);
-   char *classname = classname_sb;
-
-   // Actually find the last :: to get the full classname, including
-   // namespace and/or containing classes.
-   strcpy(classname, funcname);
-   char *fname = 0;
-   char * tmp = classname;
-   while ((tmp = strstr(tmp, "::"))) {
-      fname = tmp;
-      tmp += 2;
-   }
-   if (fname) {
-      *fname = 0;
-      fname += 2;
-      globalscope.Init(classname);
-   }
-   else {
-      fname = funcname;
-   }
-
-   if (strcmp(fname, "*") == 0) {
-      method.Init(globalscope);
-      while (method.Next()) {
-         method.SetGlobalcomp(globalcomp);
-      }
-      return(0);
-   }
-   method = globalscope.GetMethod(fname, param, &dummy);
-
-   if (method.IsValid()) {
-      method.SetGlobalcomp(globalcomp);
-      return(0);
-   }
-   else {
-      G__fprinterr(G__serr, "Warning: #pragma link, function %s(%s) not found", fname, param);
-      G__printlinenum();
-      return(1);
-   }
-}
-
-//______________________________________________________________________________
-int Cint::G__ForceBytecodecompilation(char *funcname, char *param)
-{
-   G__ClassInfo globalscope;
-   G__MethodInfo method;
-   long dummy = 0;
-   G__StrBuf classname_sb(G__LONGLINE);
-   char *classname = classname_sb;
-
-   // Actually find the last :: to get the full classname, including
-   // namespace and/or containing classes.
-   strcpy(classname, funcname);
-   char *fname = 0;
-   char * tmp = classname;
-   while ((tmp = strstr(tmp, "::"))) {
-      fname = tmp;
-      tmp += 2;
-   }
-   if (fname) {
-      *fname = 0;
-      fname += 2;
-      globalscope.Init(classname);
-   }
-   else {
-      fname = funcname;
-   }
-
-   method = globalscope.GetMethod(fname, param, &dummy);
-
-   if (method.IsValid()) {
-      struct G__ifunc_table *ifunc = method.ifunc();
-      int ifn = method.Index();
-      int stat;
-      int store_asm_loopcompile = G__asm_loopcompile;
-      int store_asm_loopcompile_mode = G__asm_loopcompile_mode;
-      G__asm_loopcompile_mode = G__asm_loopcompile = 4;
-      stat = G__compile_bytecode(ifunc, ifn);
-      G__asm_loopcompile = store_asm_loopcompile;
-      G__asm_loopcompile_mode = store_asm_loopcompile_mode;
-      if (stat) return 0;
-      else return 1;
-   }
-   else {
-      G__fprinterr(G__serr, "Warning: function %s(%s) not found"
-                   , fname, param);
-      G__printlinenum();
-      return(1);
-   }
-}
-
-//______________________________________________________________________________
 void Cint::G__MethodInfo::SetVtblIndex(int vtblindex)
 {
-   if (!IsValid()) return;
-   G__get_funcproperties(fFunc)->entry.vtblindex = (short)vtblindex;
+   if (!IsValid()) {
+      return;
+   }
+   G__get_funcproperties(fFunc)->entry.vtblindex = (short) vtblindex;
 }
 
 //______________________________________________________________________________
-void Cint::G__MethodInfo::SetIsVirtual(int isvirtual)
+void Cint::G__MethodInfo::SetIsVirtual(int /*isvirtual*/)
 {
-   if (!IsValid()) return;
+   if (!IsValid()) {
+      return;
+   }
    fprintf(stderr, "Cint::G__MethodInfo::SetIsVirtual: Reflex is read-only\n");
-   assert(0);
+   assert(0); // FIXME: Production code should never just abort!  Error message, error codes, something.
    //ifunc->isvirtual[index] = isvirtual;
 }
 
 //______________________________________________________________________________
 void Cint::G__MethodInfo::SetVtblBasetagnum(int basetagnum)
 {
-   if (!IsValid()) return;
-   G__get_funcproperties(fFunc)->entry.vtblbasetagnum = (short)basetagnum;
-}
-
-//______________________________________________________________________________
-int Cint::G__MethodInfo::GetDefiningScopeTagnum()
-{
-   if (IsValid()) {
-      return G__get_tagnum(fFunc.DeclaringScope());
+   if (!IsValid()) {
+      return;
    }
-   return -1;
+   G__get_funcproperties(fFunc)->entry.vtblbasetagnum = (short) basetagnum;
 }
 
 //______________________________________________________________________________
@@ -687,21 +687,96 @@ long Cint::G__MethodInfo::GetThisPointerOffset()
 }
 
 //______________________________________________________________________________
-G__ClassInfo* Cint::G__MethodInfo::MemberOf()
+//______________________________________________________________________________
+//
+//  FIXME: What are these functions doing in this file?
+//
+
+//______________________________________________________________________________
+int Cint::G__SetGlobalcomp(char* funcname, char* param, int globalcomp)
 {
-   // Return a G__ClassInfo representing the declaring fScope.
-   if (!fClassInfo) {
-      fClassInfo = new G__ClassInfo(G__get_tagnum(fScope));
+   G__ClassInfo globalscope;
+   G__MethodInfo method;
+   long dummy = 0;
+   G__StrBuf classname_sb(G__LONGLINE);
+   char* classname = classname_sb;
+   // Actually find the last :: to get the full classname, including
+   // namespace and/or containing classes.
+   strcpy(classname, funcname);
+   char* fname = 0;
+   char* tmp = classname;
+   while ((tmp = strstr(tmp, "::"))) {
+      fname = tmp;
+      tmp += 2;
    }
-   return fClassInfo;
+   if (fname) {
+      *fname = 0;
+      fname += 2;
+      globalscope.Init(classname);
+   }
+   else {
+      fname = funcname;
+   }
+   if (!strcmp(fname, "*")) {
+      method.Init(globalscope);
+      while (method.Next()) {
+         method.SetGlobalcomp(globalcomp);
+      }
+      return 0;
+   }
+   method = globalscope.GetMethod(fname, param, &dummy);
+   if (method.IsValid()) {
+      method.SetGlobalcomp(globalcomp);
+      return 0;
+   }
+   G__fprinterr(G__serr, "Warning: #pragma link, function %s(%s) not found", fname, param);
+   G__printlinenum();
+   return 1;
 }
 
 //______________________________________________________________________________
-G__TypeInfo* Cint::G__MethodInfo::Type()
+int Cint::G__ForceBytecodecompilation(char* funcname, char* param)
 {
-   if (!fTypeInfo) {
-      fTypeInfo = new G__TypeInfo(fFunc.TypeOf().ReturnType());
+   G__ClassInfo globalscope;
+   G__MethodInfo method;
+   long dummy = 0;
+   G__StrBuf classname_sb(G__LONGLINE);
+   char* classname = classname_sb;
+   // Actually find the last :: to get the full classname, including
+   // namespace and/or containing classes.
+   strcpy(classname, funcname);
+   char* fname = 0;
+   char* tmp = classname;
+   while ((tmp = strstr(tmp, "::"))) {
+      fname = tmp;
+      tmp += 2;
    }
-   return fTypeInfo;
+   if (fname) {
+      *fname = 0;
+      fname += 2;
+      globalscope.Init(classname);
+   }
+   else {
+      fname = funcname;
+   }
+   method = globalscope.GetMethod(fname, param, &dummy);
+   if (method.IsValid()) {
+      G__ifunc_table* ifunc = method.ifunc();
+      int ifn = method.Index();
+      int stat;
+      int store_asm_loopcompile = G__asm_loopcompile;
+      int store_asm_loopcompile_mode = G__asm_loopcompile_mode;
+      G__asm_loopcompile_mode = G__asm_loopcompile = 4;
+      stat = G__compile_bytecode(ifunc, ifn);
+      G__asm_loopcompile = store_asm_loopcompile;
+      G__asm_loopcompile_mode = store_asm_loopcompile_mode;
+      if (stat) {
+         return 0;
+      }
+      return 1;
+   }
+   G__fprinterr(G__serr, "Warning: function %s(%s) not found", fname, param);
+   G__printlinenum();
+   return 1;
 }
 

@@ -696,7 +696,7 @@ void Cint::G__ShadowMaker::WriteShadowClass(G__ClassInfo& cl, int level /*=0*/)
                   (
                      !type_name.length() ||
                      (type_name == "enum") ||
-                     !type_name.compare(0, 10, "$G__NONAME")
+                     !type_name.compare(0, 10, "$G__NONAME") // Anonymous union, maybe someday anonymous namespace
                   )
                ) ||
                (type_name.find("::") == (type_name.length() - 2))

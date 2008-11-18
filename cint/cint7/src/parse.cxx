@@ -69,7 +69,6 @@ static int G__keyword_anytime_5(char* statement);
 static int G__keyword_anytime_6(char* statement);
 static int G__keyword_anytime_7(char* statement);
 static int G__keyword_anytime_8(char* statement);
-static int G__defined_type(char* type_name, int len);
 
 #ifndef G__SECURITY
 /**************************************************************************
@@ -6648,14 +6647,14 @@ G__preproc_again:
                // Return if called from G__interpret_func()
                // as pass parameter declaration.
                G__unsigned = 0;
-               G__constvar = G__VARIABLE;
+               G__constvar = 0;
                return G__start;
             }
             if (single_quote || double_quote) {
                statement[iout++] = c;
             }
             else {
-               G__constvar = G__VARIABLE;
+               G__constvar = 0;
                G__static_alloc = 0;
                statement[iout] = '\0';
                ++*mparen;
@@ -7029,335 +7028,253 @@ G__preproc_again:
    }  
 }
 
-/***********************************************************************
-* G__alloc_tempobject()
-*
-* Called by
-*    G__interpret_func
-*    G__param_match
-*
-*  Used for interpreted classes
-*
-***********************************************************************/
-extern "C" void G__alloc_tempobject(int tagnum,int typenum)
+//______________________________________________________________________________
+extern "C" void G__alloc_tempobject(int tagnum, int typenum)
 {
-  struct G__tempobject_list *store_p_tempbuf;
-
-  G__ASSERT( 0<=tagnum );
-
-  if(G__xrefflag) return;
-
-  /* create temp object buffer */
-  store_p_tempbuf = G__p_tempbuf;
-  G__p_tempbuf = (struct G__tempobject_list *)malloc(
-                                     sizeof(struct G__tempobject_list)
-                                                     );
-  G__p_tempbuf->prev = store_p_tempbuf;
-  G__p_tempbuf->level = G__templevel;
-  G__p_tempbuf->cpplink = 0;
-  G__p_tempbuf->no_exec = G__no_exec_compile;
-  
-  /* create class object */
-  G__p_tempbuf->obj.obj.i = (long)malloc((size_t)G__struct.size[tagnum]);
-  G__p_tempbuf->obj.ref = G__p_tempbuf->obj.obj.i;
-  G__value_typenum(G__p_tempbuf->obj) = G__Dict::GetDict().GetType(tagnum);
-
-#ifdef G__DEBUG
-  if(G__asm_dbg) {
-    G__fprinterr(G__serr,"alloc_tempobject(%d,%d)=0x%lx\n",tagnum,typenum,
-            G__p_tempbuf->obj.obj.i);
-  }
-#endif
-#ifdef G__DEBUG
-  if(G__asm_dbg) G__display_tempobject("alloctemp");
-#endif
+   // Used for interpreted classes.
+   if (G__xrefflag) {
+      return;
+   }
+   G__tempobject_list* store_p_tempbuf = G__p_tempbuf;
+   G__p_tempbuf = (G__tempobject_list*) malloc(sizeof(G__tempobject_list));
+   G__p_tempbuf->prev = store_p_tempbuf;
+   G__p_tempbuf->level = G__templevel;
+   G__p_tempbuf->cpplink = 0;
+   G__p_tempbuf->no_exec = G__no_exec_compile;
+   G__p_tempbuf->obj.obj.i = (long) malloc((size_t) G__struct.size[tagnum]);
+   G__p_tempbuf->obj.ref = G__p_tempbuf->obj.obj.i;
+   G__value_typenum(G__p_tempbuf->obj) = G__Dict::GetDict().GetType(tagnum);
+#ifdef G__ASM_DBG
+   if (G__asm_dbg) {
+      G__fprinterr(G__serr, "alloc_tempobject(%d,%d)=0x%lx  %s:%d\n", tagnum, typenum, G__p_tempbuf->obj.obj.i, __FILE__, __LINE__);
+   }
+#endif // G__ASM_DBG
+#ifdef G__ASM_DBG
+   if (G__asm_dbg) {
+      G__display_tempobject("alloctemp");
+   }
+#endif // G__ASM_DBG
+   // --
 }
 
-/***********************************************************************
-* G__free_tempobject()
-*
-* Called by
-*    G__exec_statement(&brace_level);     at ';'
-*    G__pause()              'p expr'
-*
-***********************************************************************/
+//______________________________________________________________________________
 extern "C" void G__free_tempobject()
 {
-  char *store_struct_offset; /* used to be int */
-  ::Reflex::Scope store_tagnum;
-  int iout=0;
-  int store_return;
-   /* The only 2 potential risks of making this static are
-    * - a destructor indirectly calls G__free_tempobject
-    * - multi-thread application (but CINT is not multi-threadable anyway). */
-  static char statement[G__ONELINE];
-  struct G__tempobject_list *store_p_tempbuf;
-
-  if(G__xrefflag
-     || (G__command_eval && G__DOWHILE!=G__ifswitch)
-     ) return;
-
+   // The only 2 potential risks of making this static are
+   // - a destructor indirectly calls G__free_tempobject
+   // - multi-thread application (but CINT is not multi-threadable anyway).
+   static char statement[G__ONELINE];
+   if (
+      G__xrefflag || // Generating a variable cross-reference, or
+      (
+         G__command_eval && // Executing temporary code from the command line, and
+         (G__ifswitch != G__DOWHILE) // we are not in a do {} while (); construct.
+      )
+   ) {
+      return;
+   }
 #ifdef G__ASM_DBG
-  if(G__asm_dbg) G__display_tempobject("freetemp");
-#endif
-
-  /*****************************************************
-   * free temp object buffer
-   *****************************************************/
-  while(G__p_tempbuf->level >= G__templevel && G__p_tempbuf->prev) {
-
-
+   if (G__asm_dbg) {
+      G__display_tempobject("freetemp");
+   }
+#endif // G__ASM_DBG
+   while ((G__p_tempbuf->level >= G__templevel) && G__p_tempbuf->prev) {
+      // --
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) {
-      G__fprinterr(G__serr,"free_tempobject(%s)=0x%lx\n"
-              ,G__value_typenum(G__p_tempbuf->obj).Name().c_str(),G__p_tempbuf->obj.obj.i);
-    }
-#endif
-    
-    store_p_tempbuf = G__p_tempbuf->prev;
-    
-    /* calling destructor */
-    store_struct_offset = G__store_struct_offset;
-    G__store_struct_offset = (char*)G__p_tempbuf->obj.obj.i;
-    
-    
+      if (G__asm_dbg) {
+         G__fprinterr(G__serr, "free_tempobject(%s)=0x%lx  %s:%d\n", G__value_typenum(G__p_tempbuf->obj).Name(::Reflex::SCOPED).c_str(), G__p_tempbuf->obj.obj.i, __FILE__, __LINE__);
+      }
+#endif // G__ASM_DBG
+      G__tempobject_list* store_p_tempbuf = G__p_tempbuf->prev;
+      char* store_struct_offset = G__store_struct_offset;
+      G__store_struct_offset = (char*) G__p_tempbuf->obj.obj.i;
 #ifdef G__ASM
-    if(G__asm_noverflow 
+      if (
+         G__asm_noverflow
 #ifndef G__ASM_IFUNC
-       && G__p_tempbuf->cpplink
-#endif
-       ) {
+         && G__p_tempbuf->cpplink
+#endif // G__ASM_IFUNC
+         // --
+      ) {
+         // --
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3x: SETTEMP\n" ,G__asm_cp);
-#endif
-      G__asm_inst[G__asm_cp] = G__SETTEMP;
-      G__inc_cp_asm(1,0);
-    }
-#endif
-    
-    store_tagnum = G__tagnum;
-    G__set_G__tagnum(G__p_tempbuf->obj);
-    
-    store_return=G__return;
-    G__return=G__RETURN_NON;
-    
-    if(0==G__p_tempbuf->no_exec
-       || 1==G__no_exec_compile
-       ) {
-      if(G__dispsource) {
-        G__fprinterr(G__serr,
-                     "!!!Destroy temp object (%s)0x%lx createlevel=%d destroylevel=%d\n"
-                     ,G__struct.name[G__get_tagnum(G__tagnum)]
-                     ,G__p_tempbuf->obj.obj.i
-                     ,G__p_tempbuf->level,G__templevel);
+         if (G__asm_dbg) {
+            G__fprinterr(G__serr, "%3x,%3x: SETTEMP  %s:%d\n", G__asm_cp, G__asm_dt, __FILE__, __LINE__);
+         }
+#endif // G__ASM_DBG
+         G__asm_inst[G__asm_cp] = G__SETTEMP;
+         G__inc_cp_asm(1, 0);
       }
-      
-      sprintf(statement,"~%s()",G__struct.name[G__get_tagnum(G__tagnum)]);
-      G__getfunction(statement,&iout,G__TRYDESTRUCTOR); 
-    }
-    
-    G__store_struct_offset = store_struct_offset;
-    G__tagnum = store_tagnum;
-    G__return=store_return;
-    
-    
-    
+#endif // G__ASM
+      ::Reflex::Scope store_tagnum = G__tagnum;
+      G__tagnum = G__value_typenum(G__p_tempbuf->obj).RawType();
+      int store_return = G__return;
+      G__return = G__RETURN_NON;
+      if (!G__p_tempbuf->no_exec || G__no_exec_compile) {
+         if (G__dispsource) {
+            G__fprinterr(G__serr, "!!!Destroy temp object (%s)0x%lx created at level: %d destroyed at level: %d  %s:%d\n", G__struct.name[G__get_tagnum(G__tagnum)], G__p_tempbuf->obj.obj.i, G__p_tempbuf->level, G__templevel, __FILE__, __LINE__);
+         }
+         sprintf(statement, "~%s()", G__struct.name[G__get_tagnum(G__tagnum)]);
+         int known = 0;
+         G__getfunction(statement, &known, G__TRYDESTRUCTOR);
+      }
+      G__store_struct_offset = store_struct_offset;
+      G__tagnum = store_tagnum;
+      G__return = store_return;
 #ifdef G__ASM
-    if(G__asm_noverflow 
+      if (
+         G__asm_noverflow
 #ifndef G__ASM_IFUNC
-       && G__p_tempbuf->cpplink
-#endif
-       ) {
+         && G__p_tempbuf->cpplink
+#endif // G__ASM_IFUNC
+         // --
+      ) {
+         // --
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3x: FREETEMP\n" ,G__asm_cp);
-#endif
-      G__asm_inst[G__asm_cp] = G__FREETEMP;
-      G__inc_cp_asm(1,0);
-    }
-#endif
-    
-    if(0==G__p_tempbuf->cpplink && G__p_tempbuf->obj.obj.i) {
-      free((void *)G__p_tempbuf->obj.obj.i);
-    }
-    
-    if(store_p_tempbuf) {
-      free((void*)G__p_tempbuf);
-      G__p_tempbuf = store_p_tempbuf;
-      if(G__dispsource) {
-        if(G__p_tempbuf->obj.obj.i==0) {
-          G__fprinterr(G__serr,"!!!No more temp object\n");
-        }
+         if (G__asm_dbg) {
+            G__fprinterr(G__serr, "%3x,%3x: FREETEMP  %s:%d\n", G__asm_cp, G__asm_dt, __FILE__, __LINE__);
+         }
+#endif // G__ASM_DBG
+         G__asm_inst[G__asm_cp] = G__FREETEMP;
+         G__inc_cp_asm(1, 0);
       }
-    }
-    else {
-      if(G__dispsource) {
-        G__fprinterr(G__serr,"!!!no more temp object\n");
+#endif // G__ASM
+      if (!G__p_tempbuf->cpplink && G__p_tempbuf->obj.obj.i) {
+         free((void*) G__p_tempbuf->obj.obj.i);
       }
-    }
-  }
+      if (store_p_tempbuf) {
+         free((void*) G__p_tempbuf);
+         G__p_tempbuf = store_p_tempbuf;
+         if (G__dispsource) {
+            if (!G__p_tempbuf->obj.obj.i) {
+               G__fprinterr(G__serr, "!!!No more temp object\n");
+            }
+         }
+      }
+      else {
+         if (G__dispsource) {
+            G__fprinterr(G__serr, "!!!no more temp object\n");
+         }
+      }
+   }
 }
 
-/***********************************************************************
-* G__store_tempobject()
-*
-* Called by
-*    G__interpret_func
-*    G__param_match
-*
-*  Used for precompiled classes
-*
-***********************************************************************/
+//______________________________________________________________________________
 extern "C" void G__store_tempobject(G__value reg)
 {
-  struct G__tempobject_list *store_p_tempbuf;
-
-  /* G__ASSERT( 'u'==reg.type || '\0'==reg.type ); */
-
-  if(G__xrefflag) return;
-
-#ifdef G__NEVER
-  if('u'!=reg.type) {
-    G__fprinterr(G__serr,"%d %d %d %ld\n"
-            ,reg.type,reg.tagnum,reg.typenum,reg.obj.i);
-  }
-#endif
-
-  /* create temp object buffer */
-  store_p_tempbuf = G__p_tempbuf;
-  G__p_tempbuf = (struct G__tempobject_list *)malloc(
-                                     sizeof(struct G__tempobject_list)
-                                                     );
-  G__p_tempbuf->prev = store_p_tempbuf;
-  G__p_tempbuf->level = G__templevel;
-  G__p_tempbuf->cpplink = 1;
-  G__p_tempbuf->no_exec = G__no_exec_compile;
-
-  /* copy pointer to created class object */
-  G__p_tempbuf->obj = reg;
-
-#ifdef G__DEBUG
-  if(G__asm_dbg) {
-    G__fprinterr(G__serr,"store_tempobject(%d)=0x%lx\n",reg.tagnum,reg.obj.i);
-  }
-#endif
-#ifdef G__DEBUG
-  if(G__asm_dbg) G__display_tempobject("storetemp");
-#endif
+   // Used for precompiled classes.
+   if (G__xrefflag) {
+      return;
+   }
+   G__tempobject_list* p = G__p_tempbuf;
+   G__p_tempbuf = (G__tempobject_list*) malloc(sizeof(G__tempobject_list));
+   G__p_tempbuf->prev = p;
+   G__p_tempbuf->level = G__templevel;
+   G__p_tempbuf->cpplink = 1; // Note: This means that this routine can only be used for compiled classes.
+   G__p_tempbuf->no_exec = G__no_exec_compile;
+   G__p_tempbuf->obj = reg; // Initialize the temp object.
+#ifdef G__ASM_DBG
+   if (G__asm_dbg) {
+      G__fprinterr(G__serr, "store_tempobject(%s)=0x%lx  %s:%d\n", G__value_typenum(reg).Name(::Reflex::SCOPED).c_str(), reg.obj.i, __FILE__, __LINE__);
+   }
+#endif // G__ASM_DBG
+#ifdef G__ASM_DBG
+   if (G__asm_dbg) {
+      G__display_tempobject("storetemp");
+   }
+#endif // G__ASM_DBG
+   // --
 }
 
-/***********************************************************************
-* G__alloc_tempobject_val()
-*
-*
-***********************************************************************/
+//______________________________________________________________________________
 extern "C" void G__alloc_tempobject_val(G__value* val)
 {
-  struct G__tempobject_list *store_p_tempbuf;
-
-  G__ASSERT( G__value_typenum(*val).IsClass() );
-
-  if(G__xrefflag) return;
-
-  /* create temp object buffer */
-  store_p_tempbuf = G__p_tempbuf;
-  G__p_tempbuf = (struct G__tempobject_list *)malloc(
-                                     sizeof(struct G__tempobject_list)
-                                                     );
-  G__p_tempbuf->prev = store_p_tempbuf;
-  G__p_tempbuf->level = G__templevel;
-  G__p_tempbuf->cpplink = 0;
-  G__p_tempbuf->no_exec = G__no_exec_compile;
-  
-  /* create class object */
-  G__p_tempbuf->obj.obj.i = (long)malloc((size_t)G__struct.size[G__get_tagnum(G__value_typenum(*val))]);
-  G__p_tempbuf->obj.ref = G__p_tempbuf->obj.obj.i;
-  G__value_typenum(G__p_tempbuf->obj) = G__value_typenum(*val).RawType();
-
-#ifdef G__DEBUG
-  if(G__asm_dbg) {
-    G__fprinterr(G__serr,"alloc_tempobject(%d,%d)=0x%lx\n",tagnum,typenum,
-            G__p_tempbuf->obj.obj.i);
-  }
-#endif
-#ifdef G__DEBUG
-  if(G__asm_dbg) G__display_tempobject("alloctemp");
-#endif
+   if (G__xrefflag) {
+      return;
+   }
+   G__tempobject_list* store_p_tempbuf = G__p_tempbuf;
+   G__p_tempbuf = (G__tempobject_list*) malloc(sizeof(G__tempobject_list));
+   G__p_tempbuf->prev = store_p_tempbuf;
+   G__p_tempbuf->level = G__templevel;
+   G__p_tempbuf->cpplink = 0;
+   G__p_tempbuf->no_exec = G__no_exec_compile;
+   G__p_tempbuf->obj.obj.i = (long) malloc((size_t) G__struct.size[G__get_tagnum(G__value_typenum(*val))]);
+   G__p_tempbuf->obj.ref = G__p_tempbuf->obj.obj.i;
+   G__value_typenum(G__p_tempbuf->obj) = G__value_typenum(*val).RawType();
+#ifdef G__ASM_DBG
+   if (G__asm_dbg) {
+      G__fprinterr(G__serr, "alloc_tempobject(%s)=0x%lx  %s:%d\n", G__value_typenum(*val).Name(::Reflex::SCOPED).c_str(), G__p_tempbuf->obj.obj.i, __FILE__, __LINE__);
+   }
+#endif // G__ASM_DBG
+#ifdef G__ASM_DBG
+   if (G__asm_dbg) {
+      G__display_tempobject("alloctemp");
+   }
+#endif // G__ASM_DBG
+   // --
 }
 
-
-/***********************************************************************
-* G__pop_tempobject_imp()
-*
-* Called by
-*    G__pop_tempobj[_nodel]()
-*
-***********************************************************************/
+//______________________________________________________________________________
 static int G__pop_tempobject_imp(bool delobj)
 {
-  struct G__tempobject_list *store_p_tempbuf;
-
-  if(G__xrefflag) return(0);
-
-#ifdef G__DEBUG
-  if(G__asm_dbg) {
-    G__fprinterr(G__serr,"pop_tempobject(%d)=0x%lx\n"
-            ,G__p_tempbuf->obj.tagnum ,G__p_tempbuf->obj.obj.i);
-  }
-#endif
-#ifdef G__DEBUG
-  if(G__asm_dbg) G__display_tempobject("poptemp");
-#endif
-
-  store_p_tempbuf = G__p_tempbuf->prev;
-  /* free the object buffer only if interpreted classes are stored */
-  if(delobj && -1!=G__p_tempbuf->cpplink && G__p_tempbuf->obj.obj.i) {
-    free((void *)G__p_tempbuf->obj.obj.i);
-  }
-  free((void *)G__p_tempbuf);
-  G__p_tempbuf = store_p_tempbuf;
-  return(0);
+   // Free the first entry of the temporary object list, and possibly delete the object as well.
+   if (G__xrefflag) {
+      return 0;
+   }
+   G__tempobject_list* store_p_tempbuf;
+#ifdef G__ASM_DBG
+   if (G__asm_dbg) {
+      G__fprinterr(G__serr, "pop_tempobject(%d)=0x%lx\n", G__get_tagnum(G__value_typenum(G__p_tempbuf->obj)), G__p_tempbuf->obj.obj.i);
+   }
+#endif // G__ASM_DBG
+#ifdef G__ASM_DBG
+   if (G__asm_dbg) {
+      G__display_tempobject("poptemp");
+   }
+#endif // G__ASM_DBG
+   store_p_tempbuf = G__p_tempbuf->prev;
+   // Free the object buffer only if interpreted classes are stored.
+   if (
+      delobj && // We have been asked to free the stored object, and
+      (G__p_tempbuf->cpplink != -1) && // the store object is not of a precompiled class type, and
+      G__p_tempbuf->obj.obj.i // we have a address
+   ) {
+      free((void*) G__p_tempbuf->obj.obj.i); // free the stored object.
+   }
+   free((void*) G__p_tempbuf); // free the temporary list entry
+   G__p_tempbuf = store_p_tempbuf;
+   return 0;
 }
 
-/***********************************************************************
-* G__pop_tempobject()
-*
-* Called by
-*    G__getfunction
-*
-***********************************************************************/
+//______________________________________________________________________________
 extern "C" int G__pop_tempobject()
 {
+   // Free the first entry of the temporary object list, and delete the temp object.
    return G__pop_tempobject_imp(true);
-   
-}
-/***********************************************************************
-* G__pop_tempobject_nodel()
-*
-* Called by
-*    G__getfunction
-*
-***********************************************************************/
-int G__pop_tempobject_nodel()
-{
-   return G__pop_tempobject_imp(false);
-   
 }
 
+//______________________________________________________________________________
+int G__pop_tempobject_nodel()
+{
+   // Free the first entry of the temporary object list, and do *not* delete the temp object.
+   return G__pop_tempobject_imp(false);
+}
+
+//______________________________________________________________________________
 extern "C" void G__settemplevel(int val)
 {
    G__templevel += val;
 }
 
+//______________________________________________________________________________
 extern "C" void G__clearstack() 
 {
    int store_command_eval = G__command_eval;
-   ++G__templevel;
    G__command_eval = 0;
-
+   ++G__templevel;
    G__free_tempobject();
-
-   G__command_eval = store_command_eval;
    --G__templevel;
+   G__command_eval = store_command_eval;
 }
    
 /*

@@ -7,8 +7,8 @@
  * Description:
  *  Extended Run Time Type Identification API
  ************************************************************************
- * Author                  Masaharu Goto 
- * Copyright(c) 1995~2005  Masaharu Goto 
+ * Author                  Masaharu Goto
+ * Copyright(c) 1995~2005  Masaharu Goto
  *
  * For the licensing terms see the file COPYING
  *
@@ -20,235 +20,261 @@
 #include "fproto.h"
 
 using namespace Cint::Internal;
+using namespace std;
 
-/*********************************************************************
-* class G__TypeInfo
-* 
-*********************************************************************/
+//______________________________________________________________________________
+static char G__buf[G__LONGLINE]; // This length should match or exceed the length in G__type2string
 
-///////////////////////////////////////////////////////////////////////////
+//______________________________________________________________________________
 Cint::G__TypeInfo::~G__TypeInfo()
-{}
+{
+}
 
-///////////////////////////////////////////////////////////////////////////
-Cint::G__TypeInfo::G__TypeInfo(const char* typenamein): 
-  G__ClassInfo(), typeiter(-1)
+#if 0
+//______________________________________________________________________________
+Cint::G__TypeInfo::G__TypeInfo(const ::Reflex::Type in) : G__ClassInfo()
+{
+   Init(in);
+}
+#endif // 0
+
+//______________________________________________________________________________
+Cint::G__TypeInfo::G__TypeInfo(const char* typenamein) : G__ClassInfo(), fType(0), fTypenum(-1), fReftype(0), fIsconst(0)
 {
    Init(typenamein);
 }
 
-///////////////////////////////////////////////////////////////////////////
-Cint::G__TypeInfo::G__TypeInfo():
-G__ClassInfo(), typeiter(-1)
-{}
+//______________________________________________________________________________
+Cint::G__TypeInfo::G__TypeInfo() : G__ClassInfo(), fType(0), fTypenum(-1), fReftype(0), fIsconst(0)
+{
+}
 
-///////////////////////////////////////////////////////////////////////////
-Cint::G__TypeInfo::G__TypeInfo(G__value buf):
-   G__ClassInfo(), typeiter(-1)
+//______________________________________________________________________________
+void Cint::G__TypeInfo::Init(const char* typenamein)
+{
+   G__value buf = G__string2type_body(typenamein, 2);
+   ::Reflex::Type ty = G__value_typenum(buf);
+   // G__ClassInfo part.
+   fClassProperty = 0;
+   // G__TypeInfo part.
+   G__get_cint5_type_tuple_long(ty, &fType, &fTagnum, &fTypenum, &fReftype, &fIsconst);
+   fIsconst = buf.obj.i;
+}
+
+#if 0
+//______________________________________________________________________________
+void Cint::G__TypeInfo::Init(const ::Reflex::Type in)
+{
+   // G__ClassInfo part.
+   fTagnum = G__get_tagnum(fTypenum);
+   class_property = 0;
+   // G__TypeInfo part.
+   fTypenum = in;
+}
+#endif // 0
+
+//______________________________________________________________________________
+Cint::G__TypeInfo::G__TypeInfo(G__value buf) : G__ClassInfo(), fType(0), fTypenum(-1), fReftype(0), fIsconst(0)
 {
    Init(buf);
 }
 
-///////////////////////////////////////////////////////////////////////////
-Cint::G__TypeInfo::G__TypeInfo(const ::Reflex::Type &in):
-   G__ClassInfo(), typeiter(-1)
+//______________________________________________________________________________
+void Cint::G__TypeInfo::Init(G__value& buf)
 {
-   Init(in);
+   ::Reflex::Type ty = G__value_typenum(buf);
+   G__get_cint5_type_tuple_long(ty, &fType, &fTagnum, &fTypenum, &fReftype, &fIsconst);
+   if ((fType == 'd') || (fType == 'f')) {
+      fReftype = 0;
+   }
 }
 
-///////////////////////////////////////////////////////////////////////////
-void Cint::G__TypeInfo::Init(G__value& buf) { 
-   typenum = Internal::G__value_typenum(buf);
-   typeiter = -1;
-}
-///////////////////////////////////////////////////////////////////////////
-void Cint::G__TypeInfo::Init(const char *typenamein)
+//______________________________________________________________________________
+void Cint::G__TypeInfo::Init(G__var_array* var, int idx)
 {
-   G__value buf = G__string2type_body(typenamein,2);
-   // G__TypeInfo part. 
-   typenum = G__value_typenum(buf);
-   typeiter= -1;
-   // G__ClassInfo part.
-   tagnum = G__get_tagnum(typenum);
-   class_property = 0;
+   ::Reflex::Member m = G__Dict::GetDict().GetDataMember(var, idx);
+   ::Reflex::Type ty = m.TypeOf();
+   G__get_cint5_type_tuple_long(ty, &fType, &fTagnum, &fTypenum, &fReftype, &fIsconst);
 }
-///////////////////////////////////////////////////////////////////////////
-void Cint::G__TypeInfo::Init(const ::Reflex::Type &in)
+
+//______________________________________________________________________________
+Cint::G__TypeInfo::G__TypeInfo(const G__TypeInfo& rhs) : G__ClassInfo(rhs), fType(rhs.fType), fTypenum(rhs.fTypenum), fReftype(rhs.fReftype), fIsconst(rhs.fIsconst)
 {
-   // G__TypeInfo part. 
-   typenum = in;
-   typeiter = -1;
-   // G__ClassInfo part.
-   tagnum = G__get_tagnum(typenum);
-   class_property = 0;
 }
 
-///////////////////////////////////////////////////////////////////////////
-void Cint::G__TypeInfo::Init(struct G__var_array *var,int ig15) {
-   ::Reflex::Member m = G__Dict::GetDict().GetDataMember(var,ig15);
-   typenum = m.TypeOf();
-
-   // G__ClassInfo part.
-   tagnum  = G__get_tagnum(typenum);
-   // G__TypeInfo part.
-   typeiter= -1;
+//______________________________________________________________________________
+G__TypeInfo& Cint::G__TypeInfo::operator=(const G__TypeInfo& rhs)
+{
+   if (this != &rhs) {
+      fType = rhs.fType;
+      fTypenum = rhs.fTypenum;
+      fReftype = rhs.fReftype;
+      fIsconst = rhs.fIsconst;
+   }
+   return *this;
 }
 
-///////////////////////////////////////////////////////////////////////////
+//______________________________________________________________________________
 int Cint::G__TypeInfo::operator==(const G__TypeInfo& a)
 {
-  if(typenum == a.typenum) {
-    return(1);
-  }
-  else {
-    return(0);
-  }
+   if ((fType == a.fType) && (fTagnum == a.fTagnum) && (fTypenum == a.fTypenum) && (fReftype == a.fReftype)) {
+      return 1;
+   }
+   return 0;
 }
-///////////////////////////////////////////////////////////////////////////
+
+//______________________________________________________________________________
 int Cint::G__TypeInfo::operator!=(const G__TypeInfo& a)
 {
-  if(typenum != a.typenum) {
-    return(0);
-  }
-  else {
-    return(1);
-  }
+   return !this->operator==(a);
 }
 
-///////////////////////////////////////////////////////////////////////////
-int Cint::G__TypeInfo::Type() const
+//______________________________________________________________________________
+const char* Cint::G__TypeInfo::Name()
 {
-   return G__get_type(typenum);
+   strcpy(G__buf, G__type2string((int) fType, (int) fTagnum, (int) fTypenum, (int) fReftype, (int) fIsconst));
+   return G__buf;
 }
 
-int Cint::G__TypeInfo::Typenum() const
+//______________________________________________________________________________
+const char* Cint::G__TypeInfo::TrueName()
 {
-   return G__get_typenum(typenum);
+   strcpy(G__buf, G__type2string((int) fType, (int) fTagnum, -1, (int) fReftype, (int) fIsconst));
+   return G__buf;
 }
 
-///////////////////////////////////////////////////////////////////////////
-int Cint::G__TypeInfo::Isconst() const
-{
-   return G__get_isconst(typenum);
-}
-
-///////////////////////////////////////////////////////////////////////////
-int Cint::G__TypeInfo::Reftype() const
-{
-   return G__get_reftype(typenum);
-}
-
-///////////////////////////////////////////////////////////////////////////
-Reflex::Type Cint::G__TypeInfo::ReflexType() const
-{
-   return typenum;
-}
-
-///////////////////////////////////////////////////////////////////////////
-const char* Cint::G__TypeInfo::TrueName() 
-{
-  // This length should match or exceed the length in G__type2string
-  static char G__buf[G__LONGLINE];
-#ifdef __GNUC__
-#else
-#pragma message(FIXME("Get rid of static G__buf by proper lookup"))
-#endif
-
-  strcpy(G__buf,
-	 G__type2string(G__get_type(typenum),(int)tagnum,-1,G__get_reftype(typenum),G__get_isconst(typenum)));
-  return G__buf;
-}
-
-///////////////////////////////////////////////////////////////////////////
-const char* Cint::G__TypeInfo::Name() 
-{
-  // This length should match or exceed the length in G__type2string
-  static char G__buf[G__LONGLINE];
-#ifdef __GNUC__
-#else
-#pragma message(FIXME("Get rid of static G__buf by proper lookup"))
-#endif
-  char type = '\0';
-  int cint5_tagnum = -1;
-  int cint5_typenum = -1;
-  int reftype = 0;
-  int constvar = 0;
-  G__get_cint5_type_tuple(typenum, &type, &cint5_tagnum, &cint5_typenum, &reftype, &constvar);
-  strcpy(G__buf, G__type2string(type, cint5_tagnum, cint5_typenum, reftype, constvar));
-  return G__buf;
-}
-
-///////////////////////////////////////////////////////////////////////////
+//______________________________________________________________________________
 int Cint::G__TypeInfo::Size() const
 {
-  G__value buf;
-  G__value_typenum(buf) = typenum;
-  return(G__sizeof(&buf));
+   G__value buf;
+   ::Reflex::Type ty = G__cint5_tuple_to_type((int) fType, (int) fTagnum, (int) fTypenum, (int) fReftype, 0);
+   G__value_typenum(buf) = ty;
+   buf.ref = fReftype;
+   if (isupper(fType)) {
+      return sizeof(void*);
+   }
+   return G__sizeof(&buf);
 }
-///////////////////////////////////////////////////////////////////////////
+
+//______________________________________________________________________________
 long Cint::G__TypeInfo::Property()
 {
    long property = 0L;
-   if (typenum.IsTypedef())
+   if (fTypenum != -1L) {
       property |= G__BIT_ISTYPEDEF;
-   if (-1==tagnum)
-      property |= G__BIT_ISFUNDAMENTAL;
-   else {
-       std::string cname( typenum.RawType().Name() );
-       if(cname == "G__longlong" ||
-          cname == "G__ulonglong"||
-          cname == "G__longdouble") {
-             property |= G__BIT_ISFUNDAMENTAL;
-             cname = typenum.FinalType().Name(Reflex::FINAL);
-             if((property&G__BIT_ISTYPEDEF) && 
-                (cname == "long long" ||
-                cname == "unsigned long long" ||
-                cname == "long double")) {
-                   property &= (~G__BIT_ISTYPEDEF);
-             }
-       } else {
-          if (G__ClassInfo::IsValid())
-             property |= G__ClassInfo::Property();
-       }
    }
-   if (isupper(G__get_type(typenum)))
+   if (fTagnum == -1L) {
+      property |= G__BIT_ISFUNDAMENTAL;
+   }
+   else {
+      std::string cname = G__Dict::GetDict().GetScope(fTagnum).Name();
+      if (
+         (cname == "G__longlong") ||
+         (cname == "G__ulonglong") ||
+         (cname == "G__longdouble")
+      ) {
+         property |= G__BIT_ISFUNDAMENTAL;
+         if (fTypenum != -1L) {
+            std::string tname = G__Dict::GetDict().GetTypedef(fTypenum).Name();
+            if (
+               (tname == "long long") ||
+               (tname == "unsigned long long") ||
+               (tname == "long double")
+            ) {
+               property &= (~G__BIT_ISTYPEDEF);
+            }
+         }
+      }
+      else {
+         if (G__ClassInfo::IsValid()) {
+            property |= G__ClassInfo::Property();
+         }
+      }
+   }
+   if (isupper((int) fType)) {
       property |= G__BIT_ISPOINTER;
-   if (G__get_reftype(typenum) == G__PARAREFERENCE || G__get_reftype(typenum) > G__PARAREF)
+   }
+   if ((fReftype == G__PARAREFERENCE) || (fReftype > G__PARAREF)) {
       property |= G__BIT_ISREFERENCE;
-   if (G__test_const(typenum,G__CONSTVAR))
+   }
+   if (fIsconst & G__CONSTVAR) {
       property |= G__BIT_ISCONSTANT;
-   if (G__test_const(typenum,G__PCONSTVAR))
+   }
+   if (fIsconst & G__PCONSTVAR) {
       property |= G__BIT_ISPCONSTANT;
-
+   }
    return property;
 }
-///////////////////////////////////////////////////////////////////////////
-void* Cint::G__TypeInfo::New() {
-  if(G__ClassInfo::IsValid()) {
-    return(G__ClassInfo::New());
-  }
 
-  size_t size = Size();
-  void *p = (void*) new char[size];
-  return p;
+//______________________________________________________________________________
+int Cint::G__TypeInfo::IsValid()
+{
+   if (G__ClassInfo::IsValid()) {
+      return 1;
+   }
+   else if (fType) {
+      return 1;
+   }
+   return 0;
 }
-///////////////////////////////////////////////////////////////////////////
-int Cint::G__TypeInfo::IsValid() {
-  if (G__ClassInfo::IsValid() || typenum) {
-    return(1);
-  }
-   return(0);
+
+//______________________________________________________________________________
+void* Cint::G__TypeInfo::New()
+{
+   if (G__ClassInfo::IsValid()) {
+      return G__ClassInfo::New();
+   }
+   size_t size = Size();
+   void* p = new char[size];
+   return p;
 }
-///////////////////////////////////////////////////////////////////////////
-G__value Cint::G__TypeInfo::Value() const {
+
+//______________________________________________________________________________
+int Cint::G__TypeInfo::Typenum() const
+{
+   return fTypenum;
+}
+
+//______________________________________________________________________________
+int Cint::G__TypeInfo::Type() const
+{
+   return fType;
+}
+
+//______________________________________________________________________________
+int Cint::G__TypeInfo::Reftype() const
+{
+   return fReftype;
+}
+
+//______________________________________________________________________________
+int Cint::G__TypeInfo::Isconst() const
+{
+   return fIsconst;
+}
+
+#if 0
+//______________________________________________________________________________
+Reflex::Type Cint::G__TypeInfo::ReflexType() const
+{
+   return fTypenum;
+}
+#endif // 0
+
+//______________________________________________________________________________
+G__value Cint::G__TypeInfo::Value() const
+{
    G__value buf;
-   Internal::G__value_typenum(buf)=typenum;
+   ::Reflex::Type ty = G__cint5_tuple_to_type((int) fType, (int) fTagnum, (int) fTypenum, (int) fReftype, (int) fIsconst);
+   G__value_typenum(buf) = ty;
    buf.obj.i = 1;
    buf.ref = 0;
-   return(buf);
+   return buf;
 }
-///////////////////////////////////////////////////////////////////////////
+
+//______________________________________________________________________________
 int Cint::G__TypeInfo::Next()
 {
    return 0;
 }
+

@@ -109,17 +109,20 @@ static void G__reftypeparam(const ::Reflex::Member &ifunc, G__param *libp)
 //______________________________________________________________________________
 static void G__warn_refpromotion(const ::Reflex::Member &p_ifunc, int itemp, G__param *libp)
 {
-   if (p_ifunc.TypeOf().FunctionParameterAt(itemp).FinalType().IsReference() &&
-         !p_ifunc.TypeOf().FunctionParameterAt(itemp).IsClass() &&
-         G__get_type(p_ifunc.TypeOf().FunctionParameterAt(itemp)) != G__get_type(G__value_typenum(libp->para[itemp])) &&
-         0 != libp->para[itemp].obj.i &&
-         G__test_const(p_ifunc.TypeOf().FunctionParameterAt(itemp), G__VARIABLE)) {
+   if (
+      p_ifunc.TypeOf().FunctionParameterAt(itemp).FinalType().IsReference() &&
+      (G__get_type(p_ifunc.TypeOf().FunctionParameterAt(itemp)) != 'u') &&
+      (G__get_type(p_ifunc.TypeOf().FunctionParameterAt(itemp)) != G__get_type(G__value_typenum(libp->para[itemp]))) &&
+      !G__get_isconst(p_ifunc.TypeOf().FunctionParameterAt(itemp)) &&
+      libp->para[itemp].obj.i
+   ) {
 #ifdef G__OLDIMPLEMENTATION1167
       if (G__dispmsg >= G__DISPWARN) {
          G__fprinterr(G__serr, "Warning: implicit type conversion of non-const reference arg %d", itemp);
          G__printlinenum();
       }
 #endif
+      // --
    }
 }
 
@@ -141,35 +144,27 @@ void Cint::Internal::G__free_bytecode(G__bytecodefunc *bytecode)
 //______________________________________________________________________________
 void Cint::Internal::G__asm_storebytecodefunc(const Reflex::Member& func, const Reflex::Scope& frame, G__value *pstack, int sp, long *pinst, int instsize)
 {
-   struct G__bytecodefunc *bytecode;
-
+   G__bytecodefunc* bytecode;
    /* check if the function is already compiled, replace old one */
    if (G__get_funcproperties(func)->entry.bytecode) {
       G__genericerror("Internal error: G__asm_storebytecodefunc duplicated");
    }
-
    /* allocate bytecode buffer */
    bytecode = new G__bytecodefunc;
    G__get_funcproperties(func)->entry.bytecode = bytecode;
-
    /* store function ID */
    bytecode->ifunc = func;
-
    /* copy local variable table */
    bytecode->frame = frame;
    bytecode->varsize = G__struct.size[G__get_tagnum(G__tagdefining)];
-
    /* copy instruction */
    bytecode->pinst = (long*)malloc(sizeof(long) * instsize + 8);
    memcpy(bytecode->pinst, pinst, sizeof(long)*instsize + 1);
    bytecode->instsize = instsize;
-
    /* copy constant data stack */
    bytecode->stacksize = G__MAXSTACK - sp;
    bytecode->pstack = (G__value*)malloc(sizeof(G__value) * bytecode->stacksize);
-   memcpy((void*)bytecode->pstack, (void*)(&pstack[sp])
-          , sizeof(G__value)*bytecode->stacksize);
-
+   memcpy((void*)bytecode->pstack, (void*)(&pstack[sp]), sizeof(G__value)*bytecode->stacksize);
    /* copy compiled and library function name buffer */
    if (0 == G__asm_name_p) {
       if (G__asm_name) free(G__asm_name);
@@ -178,12 +173,6 @@ void Cint::Internal::G__asm_storebytecodefunc(const Reflex::Member& func, const 
    else {
       bytecode->asm_name = G__asm_name;
    }
-
-#ifdef G__OLDIMPLEMENtATION1578 /* Problem  t1048.cxx */
-   /* store pointer to function */
-   ifunc->pentry[ifn]->tp2f = (void*)bytecode;
-#endif
-   // --
 }
 
 //______________________________________________________________________________
@@ -201,17 +190,25 @@ static int G__noclassargument(const ::Reflex::Member &ifunc)
 }
 
 //______________________________________________________________________________
-extern "C" int G__compile_bytecode(struct G__ifunc_table* ifunc, int index)
+extern "C" int G__compile_bytecode(G__ifunc_table* ifunc, int index)
 {
    return G__compile_function_bytecode(G__Dict::GetDict().GetFunction(ifunc, index));
 }
 
 //______________________________________________________________________________
-int Cint::G__compile_function_bytecode(const ::Reflex::Member &ifunc)
+int Cint::G__compile_function_bytecode(const ::Reflex::Member& ifunc)
 {
+   // -- FIXME: Describe this function!
+#ifdef G__ASM
+#ifdef G__ASM_DBG
+   if (G__asm_dbg) {
+      G__fprinterr(G__serr, "G__compile_bytecode: begin bytecode compilation ...\n");
+   }
+#endif // G__ASM_DBG
+#endif // G__ASM
    G__value buf;
-   struct G__param para; /* This one is only dummy */
-   struct G__input_file store_ifile;
+   G__param para;
+   G__input_file store_ifile;
    int store_prerun = G__prerun;
    ::Reflex::Member store_asm_index = G__asm_index;
    int store_no_exec = G__no_exec;
@@ -219,61 +216,81 @@ int Cint::G__compile_function_bytecode(const ::Reflex::Member &ifunc)
    ::Reflex::Scope store_tagdefining = G__tagdefining;
    int store_asm_noverflow = G__asm_noverflow;
    int funcstatus;
-   char *store_globalvarpointer = G__globalvarpointer;
+   char* store_globalvarpointer = G__globalvarpointer;
    std::string funcname;
    int store_dispsource = G__dispsource;
-   if (G__step || G__stepover) G__dispsource = 0;
-
+   if (G__step || G__stepover) {
+      G__dispsource = 0;
+   }
    if (
       G__xrefflag ||
       (
-         G__get_funcproperties(ifunc)->entry.size < G__ASM_BYTECODE_FUNC_LIMIT
-         && 0 == G__def_struct_member
-         && ('u' != G__get_type(ifunc.TypeOf().ReturnType()) || ifunc.TypeOf().ReturnType().IsReference()
-             && (0 == ifunc.TypeOf().FunctionParameterSize() ||
-                 (G__get_funcproperties(ifunc)->entry.ansi && G__noclassargument(ifunc))))
+         (G__get_funcproperties(ifunc)->entry.size < G__ASM_BYTECODE_FUNC_LIMIT) &&
+         !G__def_struct_member &&
+         (
+            (G__get_type(ifunc.TypeOf().ReturnType()) != 'u') ||
+            (G__get_reftype(ifunc.TypeOf().ReturnType()) == G__PARAREFERENCE)
+         ) &&
+         (
+            !ifunc.TypeOf().FunctionParameterSize() ||
+            (
+               G__get_funcproperties(ifunc)->entry.ansi &&
+               G__noclassargument(ifunc)
+            )
+         )
       )
    ) {
-
       para.paran = 0;
       para.para[0] = G__null;
-#ifndef __GNUC__
-#pragma message(FIXME("we need a G__struct entry for bytecode!"))
-#endif // __GNUC__
-
-      // Create a scratch area for the byte code stack.
-      static int bytecodeTagnum = G__search_tagname("% CINT byte code scratch arena %",'c');
+      static int bytecodeTagnum = G__defined_tagname("% CINT byte code scratch arena %", 0); // Find the arena.
       static ::Reflex::Scope bytecodeArena = G__Dict::GetDict().GetScope(bytecodeTagnum);
-
-       //G__tagdefining = G__MAXSTRUCT-1;
-      //G__struct.type[G__get_tagnum(G__tagdefining)] = 's';
-      // Reset it somewhat.
-      G__struct.size[bytecodeTagnum] = 0;
-      G__get_properties(bytecodeArena)->builder.Class().SetSizeOf(0);
-      G__get_properties(bytecodeArena)->isBytecodeArena = true;
-
       G__tagdefining = bytecodeArena;
-
+      G__struct.size[bytecodeTagnum] = 0;
+      {
+         G__RflxProperties* prop = G__get_properties(bytecodeArena);
+         prop->builder.Class().SetSizeOf(0);
+      }
       G__no_exec = 0;
       G__prerun = 0;
       G__asm_exec = 1;
       G__asm_wholefunction = G__ASM_FUNC_COMPILE;
       G__asm_noverflow = 0;
       store_ifile = G__ifile;
-      G__asm_index = ifunc; // 0; // iexist;
+      G__asm_index = ifunc;
       ++G__templevel;
       ++G__calldepth;
       funcname = ifunc.Name();
-      if (ifunc.DeclaringScope().IsTopScope()) {
+      if (G__get_tagnum(ifunc.DeclaringScope()) == -1) {
          funcstatus = G__TRYNORMAL;
       }
       else {
          funcstatus = G__CALLMEMFUNC;
       }
       G__init_jumptable_bytecode();
-      G__interpret_func(&buf, &para
-                        , 0 /* ifunc->hash[iexist] */ , ifunc
-                        , G__EXACT, funcstatus);
+#ifdef G__ASM
+#ifdef G__ASM_DBG
+      if (G__asm_dbg) {
+         G__fprinterr(G__serr, "G__compile_bytecode: calling G__interpret_func ...\n");
+      }
+#endif // G__ASM_DBG
+#endif // G__ASM
+      {
+         G__StrBuf funcname_sb(G__LONGLINE);
+         char* funcname = funcname_sb;
+         strcpy(funcname, ifunc.Name().c_str());
+         ::Reflex::Scope scope = ifunc.DeclaringScope();
+         G__interpret_func(&buf, funcname, &para, 0, scope, G__EXACT, funcstatus);
+      }
+#ifdef G__ASM
+#ifdef G__ASM_DBG
+      if (G__asm_dbg) {
+         G__fprinterr(G__serr, "G__compile_bytecode: finished G__interpret_func.\n");
+         if (G__get_funcproperties(ifunc)->entry.bytecode) {
+            G__fprinterr(G__serr, "G__compile_bytecode: success.\n");
+         }
+      }
+#endif // G__ASM_DBG
+#endif // G__ASM
       G__init_jumptable_bytecode();
       --G__calldepth;
       --G__templevel;
@@ -288,26 +305,33 @@ int Cint::G__compile_function_bytecode(const ::Reflex::Member &ifunc)
       G__globalvarpointer = store_globalvarpointer;
    }
    else if (G__asm_dbg) {
-      G__fprinterr(G__serr, "!!!bytecode compilation %s not tried either because\n"
-                   , ifunc.Name().c_str());
-      G__fprinterr(G__serr, "    function is longer than %d lines\n"
-                   , G__ASM_BYTECODE_FUNC_LIMIT);
+      G__fprinterr(G__serr, "!!!bytecode compilation %s not tried either because\n", ifunc.Name().c_str());
+      G__fprinterr(G__serr, "    function is longer than %d lines\n", G__ASM_BYTECODE_FUNC_LIMIT);
       G__fprinterr(G__serr, "    function returns class object or reference type\n");
       G__fprinterr(G__serr, "    function is K&R style\n");
       G__printlinenum();
    }
 
    if (G__get_funcproperties(ifunc)->entry.bytecode) {
-      if (0 == G__xrefflag)
+      if (!G__xrefflag) {
          G__get_funcproperties(ifunc)->entry.bytecodestatus = G__BYTECODE_SUCCESS;
-      else
+      }
+      else {
          G__get_funcproperties(ifunc)->entry.bytecodestatus = G__BYTECODE_ANALYSIS;
+      }
    }
-   else if (0 == G__def_struct_member)
+   else if (!G__def_struct_member) {
       G__get_funcproperties(ifunc)->entry.bytecodestatus = G__BYTECODE_FAILURE;
-
+   }
    G__dispsource = store_dispsource;
-   return(G__get_funcproperties(ifunc)->entry.bytecodestatus);
+#ifdef G__ASM
+#ifdef G__ASM_DBG
+   if (G__asm_dbg) {
+      G__fprinterr(G__serr, "G__compile_bytecode: end bytecode compilation.\n");
+   }
+#endif // G__ASM_DBG
+#endif // G__ASM
+   return G__get_funcproperties(ifunc)->entry.bytecodestatus;
 }
 
 //______________________________________________________________________________
@@ -325,7 +349,7 @@ static struct G__gotolabel G__goto_table[G__MAXGOTOLABEL];
 static struct G__gotolabel G__labeltable[G__MAXGOTOLABEL];
 
 //______________________________________________________________________________
-static void G__free_gotolabel(struct G__gotolabel *pgotolabel, int *pn)
+static void G__free_gotolabel(struct G__gotolabel* pgotolabel, int* pn)
 {
    while (*pn > 0)
    {
@@ -462,7 +486,7 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
    // Store ifunc to check if same function already exists
    ::Reflex::Scope ifunc = G__p_ifunc;
    int numstar = 0;
-   for (; funcheader[numstar] == '*'; ++numstar);
+   for (; funcheader[numstar] == '*'; ++numstar) {}
    std::string funcname = funcheader + numstar;
    if (!numstar) {
       if (!strncmp(funcheader, "operator ", 9)) {
@@ -492,10 +516,13 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
             ) {
                // Rewrite the given typedef name, replace it by the underlying type.
                const char* posEndType = oprtype;
-               while (isalnum(*posEndType)
-                      || posEndType[0] == ':' && posEndType[1] == ':'
-                      || *posEndType == '_')
+               while (
+                  isalnum(*posEndType) ||
+                  ((posEndType[0] == ':') && (posEndType[1] == ':')) ||
+                  (*posEndType == '_')
+               ) {
                   ++posEndType;
+               }
                char* ptrrefbuf = 0;
                if (*posEndType) {
                   ptrrefbuf = new char[strlen(posEndType) + 1];
@@ -514,9 +541,11 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
                   // Rewrite the given class name, replace it by the fully-qualified name.
                   const char* posEndType = oprtype;
                   bool isTemplate = (strchr(G__struct.name[oprtagnum], '<'));
-                  while (isalnum(*posEndType)
-                         || posEndType[0] == ':' && posEndType[1] == ':' && (++posEndType)
-                         || *posEndType == '_') {
+                  while (
+                     isalnum(*posEndType) ||
+                     ((posEndType[0] == ':') && (posEndType[1] == ':') && (++posEndType)) ||
+                     (*posEndType == '_')
+                  ) {
                      ++posEndType;
                      if (isTemplate && *posEndType == '<') {
                         // also include "<T>" in type name
@@ -586,10 +615,16 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
    G__funcentry builder_entry;
    fgetpos(G__ifile.fp, &builder.fProp.entry.pos);
    builder.fProp.entry.p = (void*) G__ifile.fp;
-   builder.fProp.filenum = G__ifile.filenum;
-   builder.fProp.linenum = G__ifile.line_number;
+   builder.fProp.linenum = G__ifile.line_number; // FIXME: Duplicate!
+   builder.fProp.filenum = G__ifile.filenum; // FIXME: Duplicate!
    builder.fProp.entry.line_number = G__ifile.line_number;
    builder.fProp.entry.filenum = G__ifile.filenum;
+#if 0 // FIXME
+#ifdef G__TRUEP2F
+   G__p_ifunc->entry[func_now].tp2f = (void*) G__p_ifunc->funcname[func_now];
+   builder.fProp.tp2f = 
+#endif // G__TRUEP2F
+#endif // 0
 #ifdef G__ASM_FUNC
    builder.fProp.entry.size = 0;
 #endif // G__ASM_FUNC
@@ -620,7 +655,7 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
       (funcname == G__struct.name[G__get_tagnum(G__def_tagnum)]) // member name is same as class name
    ) {
       // -- This is a constructor, handle specially.
-      // irregular handling not to instantiate temp object for return
+      // irregular handling to prevent instantiation of temp object for the return value
 #ifndef __GNUC__
 #pragma message(FIXME("We no longer have the irregular constructor function setting preventing temp obj creation"))
 #endif // __GNUC__
@@ -941,7 +976,6 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
       // entry fp = 0 means this is header
       builder.fProp.entry.p = 0;
       builder.fProp.entry.line_number = -1;
-      builder.fProp.entry.filenum = -1;
       builder.fIspurevirtual = 0;
       // Key the class comment off of DeclFileLine rather than ClassDef
       // because ClassDef is removed by a preprocessor
@@ -1032,7 +1066,7 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
          dobody = 1;
       }
       else {
-         // entry fp = 0 means this is header
+         // Entry fp = 0 means this is header.
          builder.fProp.entry.p = 0;
          builder.fProp.entry.line_number = -1;
       }
@@ -1225,13 +1259,16 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
       // --
    }
    if (G__GetShlHandle()) {
-      void *shlp2f = G__FindSymbol(newFunction);
-      if (shlp2f) {
-         G__get_funcproperties(newFunction)->entry.tp2f = shlp2f;
-         G__get_funcproperties(newFunction)->entry.p = (void*)G__DLL_direct_globalfunc;
-         G__get_funcproperties(newFunction)->filenum = G__GetShlFilenum();
-         G__get_funcproperties(newFunction)->entry.size = -1;
-         G__get_funcproperties(newFunction)->linenum = -1;
+      void* funcaddr = G__FindSymbol(newFunction);
+      if (funcaddr) {
+         G__RflxFuncProperties* prop = G__get_funcproperties(newFunction);
+         prop->entry.tp2f = funcaddr;
+         prop->entry.p = (void*) G__DLL_direct_globalfunc;
+         prop->entry.filenum = G__GetShlFilenum();
+         prop->filenum = G__GetShlFilenum(); // FIXME: Duplicate!
+         prop->entry.size = -1;
+         prop->entry.line_number = -1;
+         prop->linenum = -1; // FIXME: Duplicate!
       }
    }
    if (G__fons_comment && G__def_struct_member) {
@@ -1275,7 +1312,7 @@ static int Cint::Internal::G__readansiproto(std::vector<Reflex::Type>& i_params_
          G__fignorestream(")");
          return 1;
       }
-      int isconst = G__VARIABLE;
+      int isconst = 0;
       G__StrBuf buf_sb(G__LONGLINE);
       char *buf = buf_sb; // Parsing I/O buffer.
       buf[0] = '\0';
@@ -2712,12 +2749,13 @@ static int G__param_match(char formal_type, const ::Reflex::Scope& formal_tagnum
 #define G__TOVOIDPMATCH   0x00000003
 
 //______________________________________________________________________________
-struct G__funclist* Cint::Internal::G__funclist_add(G__funclist* head, const ::Reflex::Member ifunc, int rate)
+G__funclist* Cint::Internal::G__funclist_add(G__funclist* head, const ::Reflex::Member ifunc, int ifn, int rate)
 {
    // Add a new entry to a function overloading rating list at the head.
-   struct G__funclist* p = (struct G__funclist*) malloc(sizeof(struct G__funclist));
+   G__funclist* p = (G__funclist*) malloc(sizeof(G__funclist));
    p->next = head;
    p->ifunc = ifunc;
+   p->ifn = ifn;
    p->rate = rate;
    return p;
 }
@@ -2736,7 +2774,7 @@ void Cint::Internal::G__funclist_delete(G__funclist* node)
 //______________________________________________________________________________
 static unsigned int G__rate_inheritance(int basetagnum, int derivedtagnum)
 {
-   struct G__inheritance *derived;
+   G__inheritance* derived;
    int i, n;
 
    if (0 > derivedtagnum || 0 > basetagnum) return(G__NOMATCH);
@@ -2755,11 +2793,11 @@ static unsigned int G__rate_inheritance(int basetagnum, int derivedtagnum)
             else {
                int distance = 1;
                int ii = i; /* i is not 0, because !G__ISDIRECTINHERIT */
-               struct G__inheritance *derived2 = derived;
+               G__inheritance* derived2 = derived;
                int derivedtagnum2 = derivedtagnum;
                while (0 == (derived2->property[ii]&G__ISDIRECTINHERIT)) {
                   ++distance;
-                  while (ii && 0 == (derived2->property[--ii]&G__ISDIRECTINHERIT));
+                  while (ii && 0 == (derived2->property[--ii]&G__ISDIRECTINHERIT)) {}
                   derivedtagnum2 = derived2->basetagnum[ii];
                   derived2 = G__struct.baseclass[derivedtagnum2];
                   for (ii = 0;ii < derived2->basen;ii++) {
@@ -2816,7 +2854,7 @@ static int G__igrd(int formal_type)
 
 //______________________________________________________________________________
 #ifndef __CINT__
-static ::Reflex::Member G__overload_match(char* funcname, G__param* libp, int hash, const ::Reflex::Scope p_ifunc, int memfunc_flag, int access, int isrecursive, int doconvert, int* match_error);
+static ::Reflex::Member G__overload_match(char* funcname, G__param* libp, int hash, const ::Reflex::Scope p_ifunc, int memfunc_flag, int access, int* pifn, int isrecursive, int doconvert, int* match_error);
 #endif // __CINT__
 
 static void G__display_param(FILE* fp, const ::Reflex::Scope scopetagnum, char* funcname, G__param* libp);
@@ -2994,7 +3032,8 @@ void Cint::Internal::G__rate_parameter_match(G__param* libp, const ::Reflex::Mem
          ) {
             //fprintf(stderr, "G__rate_parameter_match: integral const zero passed to pointer seen for function '%s'.\n", func.Name(::Reflex::SCOPED).c_str());
             //funclist->p_rate[i] = G__STDCONVMATCH + G__I02PCONVMATCH;
-            funclist->p_rate[i] = G__EXACTMATCH;
+            //funclist->p_rate[i] = G__EXACTMATCH;
+            funclist->p_rate[i] = G__STDCONVMATCH;
          }
          if (funclist->p_rate[i] == G__NOMATCH) {
             switch (formal_type) {
@@ -3148,7 +3187,7 @@ void Cint::Internal::G__rate_parameter_match(G__param* libp, const ::Reflex::Mem
       if (!recursive && (funclist->p_rate[i] == G__NOMATCH) && (formal_type == 'u')) { // Try a constructor.
          //fprintf(stderr, "G__rate_parameter_match: %d Checking for a user-defined conversion by constructor.\n", depth);
          G__incsetup_memfunc(formal_tagnum);
-         struct G__param para;
+         G__param para;
          para.paran = 1;
          para.para[0] = libp->para[i];
          char *store_struct_offset = G__store_struct_offset;
@@ -3162,9 +3201,9 @@ void Cint::Internal::G__rate_parameter_match(G__param* libp, const ::Reflex::Mem
          strcpy(funcname2, formal_tagnum.Name().c_str());
          int hash2 = 0;
          int ifn2 = 0;
-         G__hash(funcname2, hash2, ifn2);
+         G__hash(funcname2, hash2, ifn2)
          int match_error = 0;
-         ::Reflex::Member func2 = G__overload_match(funcname2, &para, hash2, formal_tagnum, G__TRYCONSTRUCTOR, G__PUBLIC, 1, 1, &match_error);
+         ::Reflex::Member func2 = G__overload_match(funcname2, &para, hash2, formal_tagnum, G__TRYCONSTRUCTOR, G__PUBLIC, &ifn2, 1, 1, &match_error);
          G__store_struct_offset = store_struct_offset;
          if (func2) {
             funclist->p_rate[i] = G__USRCONVMATCH;
@@ -3174,7 +3213,7 @@ void Cint::Internal::G__rate_parameter_match(G__param* libp, const ::Reflex::Mem
       if (!recursive && (funclist->p_rate[i] == G__NOMATCH) && (arg_type == 'u') && (G__get_tagnum(arg_tagnum) != -1)) { // Try a type conversion operator function.
          //fprintf(stderr, "G__rate_parameter_match: %d Checking for a user-defined conversion by operator function.\n", depth);
          G__incsetup_memfunc(arg_tagnum);
-         struct G__param para;
+         G__param para;
          para.paran = 0;
          char *store_struct_offset = G__store_struct_offset;
          G__store_struct_offset = (char*)libp->para[i].obj.i;
@@ -3186,12 +3225,12 @@ void Cint::Internal::G__rate_parameter_match(G__param* libp, const ::Reflex::Mem
          int ifn2 = 0;
          G__hash(funcname2, hash2, ifn2);
          int match_error;
-         ::Reflex::Member ifunc2 = G__overload_match(funcname2, &para, hash2, arg_tagnum, G__TRYMEMFUNC, G__PUBLIC, 1, 1, &match_error);
+         ::Reflex::Member ifunc2 = G__overload_match(funcname2, &para, hash2, arg_tagnum, G__TRYMEMFUNC, G__PUBLIC, &ifn2, 1, 1, &match_error);
          if (!ifunc2) {
             // search for  operator const type
             sprintf(funcname2, "operator %s", G__type2string(formal_type, G__get_tagnum(formal_tagnum), -1, 0, 1));
             G__hash(funcname2, hash2, ifn2);
-            ifunc2 = G__overload_match(funcname2, &para, hash2, arg_tagnum, G__TRYMEMFUNC, G__PUBLIC, 1, 1, &match_error);
+            ifunc2 = G__overload_match(funcname2, &para, hash2, arg_tagnum, G__TRYMEMFUNC, G__PUBLIC, &ifn2, 1, 1, &match_error);
          }
          G__store_struct_offset = store_struct_offset;
          if (ifunc2) {
@@ -4095,48 +4134,40 @@ static void G__display_ambiguous(const ::Reflex::Scope& scopetagnum, char* funcn
 }
 
 //______________________________________________________________________________
-static struct G__funclist* G__rate_binary_operator(const ::Reflex::Scope &p_ifunc, G__param *libp, const ::Reflex::Type &tagnum, char* funcname, int /*hash*/, G__funclist *funclist, int isrecursive)
+static G__funclist* G__rate_binary_operator(const ::Reflex::Scope p_ifunc, G__param* libp, const ::Reflex::Type tagnum, char* funcname, int /*hash*/, G__funclist* funclist, int isrecursive)
 {
-   int i;
-   struct G__param fpara;
-#ifdef G__DEBUG
-   {
-      int jdbg;
-      int sizedbg = sizeof(struct G__param);
-      char *pcdbg = (char*)(&fpara);
-      for (jdbg = 0;jdbg < (int)sizedbg;jdbg++) {
-         *(pcdbg + jdbg) = (char)0xa3;
-      }
-   }
-#endif
-   /* set 1st argument as the object */
+   // Set first argument to the object.
+   G__param fpara;
    G__value_typenum(fpara.para[0]) = G__modify_type(tagnum, 0, 0, G__isconst, 0, 0);
-   fpara.para[0].obj.i = (long)G__store_struct_offset;
-   fpara.para[0].ref = (long)G__store_struct_offset;
-   /* set 2nd to n arguments */
+   fpara.para[0].obj.i = (long) G__store_struct_offset;
+   fpara.para[0].ref = (long) G__store_struct_offset;
+   // Set the rest of the arguments.
    fpara.paran = libp->paran + 1;
-   for (i = 0;i < libp->paran;i++) fpara.para[i+1] = libp->para[i];
-   /* Search for name match
-    *  if reserved func or K&R, match immediately
-    *  check number of arguments and default parameters
-    *  rate parameter match */
-   for (::Reflex::Member_Iterator i = p_ifunc.FunctionMember_Begin();
-         i != p_ifunc.FunctionMember_End();
-         ++i)
-   {
-      if (/* hash==p_ifunc->hash[ifn]&& */ i->Name() == funcname) {
-         if ((int)i->FunctionParameterSize() < fpara.paran ||
-               ((int)i->FunctionParameterSize(true) <= fpara.paran)
-#ifdef G__OLDIMPLEMENTATION1260_YET
-               || (G__isconst && i->TypeOf().IsConst())
-#endif
-               || (isrecursive && i->IsExplicit())
-         ) {}
-         else {
-            funclist = G__funclist_add(funclist, *i, 0);
-            G__rate_parameter_match(&fpara, *i, funclist, isrecursive);
-            funclist->ifunc = 0; /* added as dummy */
+   for (int i = 0; i < libp->paran; ++i) {
+      fpara.para[i+1] = libp->para[i];
+   }
+   // Search for name match
+   //  if reserved func or K&R, match immediately
+   //  check number of arguments and default parameters
+   //  rate parameter match
+   int index = 0;
+   for (
+      ::Reflex::Member_Iterator mbr_iter = p_ifunc.FunctionMember_Begin();
+      mbr_iter != p_ifunc.FunctionMember_End();
+      ++mbr_iter, ++index
+   ) {
+      if (mbr_iter->Name() == funcname) { // We have a name match.
+         if (
+            ((int) mbr_iter->FunctionParameterSize() < fpara.paran) || // Too few arguments, or
+            ((int) mbr_iter->FunctionParameterSize(true) <= fpara.paran) || // Too many arguments, or
+            (isrecursive && mbr_iter->IsExplicit()) // We are in an implicit conversion sequence and the function is marked explicit.
+         )
+         {
+            continue;
          }
+         funclist = G__funclist_add(funclist, *mbr_iter, index, 0);
+         G__rate_parameter_match(&fpara, *mbr_iter, funclist, isrecursive);
+         funclist->ifunc = 0; // added as dummy
       }
    }
    return funclist;
@@ -4170,59 +4201,63 @@ static int G__identical_function(G__funclist *match, G__funclist *func)
 }
 
 //______________________________________________________________________________
-static ::Reflex::Member G__overload_match(char* funcname, G__param* libp, int hash, const ::Reflex::Scope p_ifunc, int memfunc_flag, int access, int isrecursive, int doconvert, int* match_error)
+static ::Reflex::Member G__overload_match(char* funcname, G__param* libp, int hash, const ::Reflex::Scope p_ifunc, int memfunc_flag, int access, int* pifn, int isrecursive, int doconvert, int* match_error)
 {
-   struct G__funclist* funclist = 0;
-   struct G__funclist* match = 0;
-   unsigned int bestmatch = G__NOMATCH;
-   struct G__funclist* func = 0;
-   int ambiguous = 0;
+   // Perform function overload matching, and if found and requested, convert arguments guided by the prototype.
    ::Reflex::Scope store_ifunc = p_ifunc;
-   ::Reflex::Scope ifunc = p_ifunc;
+   bool active_run = doconvert;
+   unsigned int bestmatch = G__NOMATCH;
+   int ambiguous = 0;
+   //
+   //  Search for matching function.
+   //
+   G__funclist* funclist = 0;
+   G__funclist* match = 0;
    ::Reflex::Member result;
+   ::Reflex::Scope ifunc = p_ifunc;
    int ix = 0;
-   int active_run = doconvert;
-
-   // Search for name match
-   
-   while (ifunc) {
-      for (::Reflex::Member_Iterator ifn = ifunc.FunctionMember_Begin();
-            ifn != ifunc.FunctionMember_End();
-            ++ifn) {
-         if (/* hash==ifunc->hash[ifn] && */ifn->Name() == funcname) {
-            if (G__get_funcproperties(*ifn)->entry.ansi == 0 || /* K&R C style header */
-                  G__get_funcproperties(*ifn)->entry.ansi == 2 || /* variable number of args */
-                  (G__HASH_MAIN == hash && strcmp(funcname, "main") == 0)) {
-               /* immediate return for special match */
+   while (ifunc) { // Loop over given scope, and any "using namespace" scopes.
+      int index = 0;
+      for (
+         ::Reflex::Member_Iterator mbr_iter = ifunc.FunctionMember_Begin();
+         mbr_iter != ifunc.FunctionMember_End();
+         ++mbr_iter, ++index
+      ) {
+         if (mbr_iter->Name() == funcname) { // We have a name match.
+            if ( // immediate return for special match
+               !G__get_funcproperties(*mbr_iter)->entry.ansi || // K&R C style header, or
+               (G__get_funcproperties(*mbr_iter)->entry.ansi == 2) || // variable number of args, or
+               !strcmp(funcname, "main") // this is the "main()" function
+            ) { // immediate return for special match
                doconvert = false;
-               result = *ifn;
+               result = *mbr_iter;
+               *pifn = index;
                goto end_of_function;
             }
-            if (-1 != G__get_tagnum(ifunc) &&
-                  (memfunc_flag == G__TRYNORMAL && doconvert)
-                  && ifunc.Name() == funcname) {
+            if ( // Skip if we are ignoring a constructor.
+               (G__get_tagnum(ifunc) != -1) && // Not the global scope, and
+               ((memfunc_flag == G__TRYNORMAL) && doconvert) &&
+               (ifunc.Name() == funcname) // This is a constructor.
+            ) { // Skip if we are ignoring a constructor.
                continue;
             }
-            funclist = G__funclist_add(funclist, *ifn, 0);
-            if ((int)ifn->FunctionParameterSize() < libp->paran ||
-                  ((int)ifn->FunctionParameterSize(true) > libp->paran)
-#ifdef G__OLDIMPLEMENTATION1260_YET
-                  || (G__isconst && ifn->TypeOf().IsConst())
-#endif
-                  || (isrecursive && ifn->IsExplicit())
-               ) {
+            funclist = G__funclist_add(funclist, *mbr_iter, index, 0);
+            if ( // No possible match, wrong number of args, or marked explicit and we are in an implicit conversion sequence.
+               ((int) mbr_iter->FunctionParameterSize() < libp->paran) || // Too many params, or
+               ((int) mbr_iter->FunctionParameterSize(true) > libp->paran) || // Too few params, or
+               (isrecursive && mbr_iter->IsExplicit()) // We are in an implicit conversion sequence and function is marked explict.
+            ) { // No possible match, wrong number of args, or marked explicit and we are in an implicit conversion sequence.
                funclist->rate = G__NOMATCH;
             }
             else {
-               G__rate_parameter_match(libp, *ifn, funclist, isrecursive);
+               G__rate_parameter_match(libp, *mbr_iter, funclist, isrecursive);
             }
-            if (G__EXACTMATCH == (funclist->rate & 0xffffff00)) {
+            if ((funclist->rate & 0xffffff00) == G__EXACTMATCH) { // We have a match.
                match = funclist;
             }
          }
       }
-
-      if (store_ifunc == G__p_ifunc && ix < G__globalusingnamespace.basen) {
+      if ((store_ifunc == G__p_ifunc) && (ix < G__globalusingnamespace.basen)) {
          ifunc = G__Dict::GetDict().GetScope(G__globalusingnamespace.basetagnum[ix]);
          ++ix;
       }
@@ -4230,167 +4265,184 @@ static ::Reflex::Member G__overload_match(char* funcname, G__param* libp, int ha
          ifunc = ::Reflex::Scope();
       }
    }
-
-   // If exact match does not exist
-   if (!match) {
+   if (!match) { // No match found, try to instantiate a function template.
       funclist =  G__add_templatefunc(funcname, libp, hash, funclist, store_ifunc, isrecursive);
    }
-
-   if (!match && (G__TRYUNARYOPR == memfunc_flag || G__TRYBINARYOPR == memfunc_flag)) {
+   if (!match && ((memfunc_flag == G__TRYUNARYOPR) || (memfunc_flag == G__TRYBINARYOPR))) {
       for (ix = 0;ix < G__globalusingnamespace.basen;ix++) {
          funclist = G__rate_binary_operator(G__Dict::GetDict().GetScope(G__globalusingnamespace.basetagnum[ix]), libp, G__tagnum, funcname, hash, funclist, isrecursive);
       }
       funclist = G__rate_binary_operator(::Reflex::Scope::GlobalScope(), libp, G__tagnum, funcname, hash, funclist, isrecursive);
    }
-
-   // if there is no name match, return null
-   if (!funclist) {
+   if (!funclist) { // No possible matches found, all done.
       return ::Reflex::Member();
    }
-
-   //  choose the best match
-   func = funclist;
+   //
+   // Choose the best match from the list.
+   //
+   bestmatch = G__NOMATCH;
    ambiguous = 0;
-   while (func) {
-      if (func->rate < bestmatch) {
+   for (G__funclist* func = funclist; func; func = func->next) {
+      if (func->rate < bestmatch) { // We have a new best match.
          bestmatch = func->rate;
          match = func;
          ambiguous = 0;
       }
-      else if (func->rate == bestmatch && bestmatch != G__NOMATCH) {
-         if (0 == G__identical_function(match, func)) {
+      else if ((func->rate == bestmatch) && (bestmatch != G__NOMATCH)) {
+         if (!G__identical_function(match, func)) {
             ++ambiguous;
          }
          match = func;
       }
-      func = func->next;
    }
-
-   if ((G__TRYUNARYOPR == memfunc_flag || G__TRYBINARYOPR == memfunc_flag) && match && !match->ifunc) {
+   if (((memfunc_flag == G__TRYUNARYOPR) || (memfunc_flag == G__TRYBINARYOPR)) && match && !match->ifunc) {
       G__funclist_delete(funclist);
       return ::Reflex::Member();
    }
-
    if (!match) {
       G__funclist_delete(funclist);
       return ::Reflex::Member();
    }
-
-   if (ambiguous && G__EXACTMATCH != bestmatch && !isrecursive) {
+   if (ambiguous && (bestmatch != G__EXACTMATCH) && !isrecursive) { // Error, ambiguous overloading resolution.
       if (!G__mask_error) {
-         /* error, ambiguous overloading resolution */
          G__fprinterr(G__serr, "Error: Ambiguous overload resolution (%x,%d)", bestmatch, ambiguous + 1);
          G__genericerror(0);
          G__display_ambiguous(p_ifunc, funcname, libp, funclist, bestmatch);
       }
+      *pifn = -1;
       *match_error = 1;
       G__funclist_delete(funclist);
       return ::Reflex::Member();
    }
-
-   /* best match function found */
+   //
+   // A unique best match function was found.
+   //
    result = match->ifunc;
-
-end_of_function:
-   /*  check private, protected access rights and static-ness
-    *    display error if no access right
-    *    do parameter conversion if needed */
-   if (!G__test_access(result, access) && (!G__isfriend(G__get_tagnum(result.DeclaringScope())))
-         && G__NOLINK == G__globalcomp
-         && G__TRYCONSTRUCTOR !=  memfunc_flag
-   ) {
-      /* no access right */
+   *pifn = match->ifn;
+   end_of_function:
+   // Do access check.
+   if ( // Error, no access.
+      !G__test_access(result, access) &&
+      !G__isfriend(G__get_tagnum(result.DeclaringScope())) &&
+      (G__globalcomp == G__NOLINK) &&
+      (memfunc_flag != G__TRYCONSTRUCTOR)
+   ) { // Error, no access.
       G__fprinterr(G__serr, "Error: can not call private or protected function");
       G__genericerror(0);
       G__fprinterr(G__serr, "  ");
       G__display_func(G__serr, result);
       G__display_ambiguous(p_ifunc, funcname, libp, funclist, bestmatch);
       *match_error = 1;
+      *pifn = -1;
       G__funclist_delete(funclist);
       return ::Reflex::Member();
    }
-   if (active_run && G__exec_memberfunc && G__getstructoffset()==0 
-       && !result.DeclaringScope().IsNamespace() && !result.IsStatic()  
-       && G__NOLINK == G__globalcomp
-       && G__TRYCONSTRUCTOR !=  memfunc_flag
-       && G__CALLCONSTRUCTOR != memfunc_flag) {
-      /* non static function called without an object */
+   //
+   // Check for bad attempt to call a class member function.
+   //
+   if ( // Error, non static function called without an object.
+      active_run &&
+      G__exec_memberfunc &&
+      !G__getstructoffset() &&
+      !result.DeclaringScope().IsNamespace() &&
+      !result.IsStatic() &&
+      (G__globalcomp == G__NOLINK) &&
+      (memfunc_flag != G__TRYCONSTRUCTOR) &&
+      (memfunc_flag != G__CALLCONSTRUCTOR)
+   ) { // Error, non static function called without an object.
       G__fprinterr(G__serr, "Error: cannot call member function without object");
       G__genericerror(0);
       G__fprinterr(G__serr, "  ");
       G__display_func(G__serr, result);
       G__display_ambiguous(p_ifunc, funcname, libp, funclist, bestmatch);
+      *pifn = -1;
       *match_error = 1;
       G__funclist_delete(funclist);
       return ::Reflex::Member();
-   } 
-   
-   
-   /* convert parameter */
-   if (
-      doconvert &&
-      G__convert_param(libp, result, match))
-      return ::Reflex::Member();
-
+   }
+   //
+   //  Do parameter conversion if requested.
+   //
+   if (doconvert) {
+      int err = G__convert_param(libp, result, match);
+      if (err) {
+         return ::Reflex::Member();
+      }
+   }
+   //
+   // All done, cleanup and return.
+   //
    G__funclist_delete(funclist);
    return result;
 }
 
 //______________________________________________________________________________
-static ::Reflex::Scope G__create_scope(const ::Reflex::Member &ifn, const ::Reflex::Scope &calling_scope, G__param *libp)
+static ::Reflex::Scope G__create_scope(const ::Reflex::Member ifn, const ::Reflex::Scope calling_scope, G__param* libp)
 {
    // set enclosing/enclosed scope info to m_scope
    std::stringstream sScopeName;
    // NOT the same as m_ifunc.Name(SCOPED|QUALIFIED)!
    // we need the lookup to work, so we really need
    // ns1::ns2::classA::$void myfunc(int a)$
-   if (!ifn.DeclaringScope().IsTopScope()) sScopeName << "::" << ifn.DeclaringScope().Name(Reflex::SCOPED);
-   sScopeName << "::$" << ifn.Name(Reflex::QUALIFIED);
-   sScopeName << "$"; // hidden
+   if (!ifn.DeclaringScope().IsTopScope()) {
+      sScopeName << "::" << ifn.DeclaringScope().Name(Reflex::SCOPED);
+   }
+   sScopeName << "::$" << ifn.Name(Reflex::QUALIFIED) << "$";
+   //
+   //  Make the local variable scope as a namespace,
+   //  with the weird name we just made.
+   //
    ::Reflex::Scope localvar = Reflex::NamespaceBuilder(sScopeName.str().c_str()).ToScope();
-
-   // ::Reflex::Scope localvar = Reflex::Scope::GlobalScope().LookupScope(sScopeName.str());
-
-   G__get_properties(localvar)->stackinfo.calling_scope = calling_scope; // G__p_local;
+   G__get_properties(localvar)->stackinfo.calling_scope = calling_scope;
    G__get_properties(localvar)->stackinfo.ifunc = ifn;
-
 #ifdef G__VAARG
    G__get_properties(localvar)->stackinfo.libp = libp;
-#endif
-   if (!G__tagnum.IsTopScope())
+#endif // G__VAARG
+   if (!G__tagnum.IsTopScope()) {
       G__get_properties(localvar)->stackinfo.tagnum = G__tagnum;
-
+   }
    G__get_properties(localvar)->stackinfo.struct_offset = G__store_struct_offset;
    G__get_properties(localvar)->stackinfo.exec_memberfunc = G__exec_memberfunc;
    G__get_properties(localvar)->stackinfo.prev_filenum = G__ifile.filenum;
    G__get_properties(localvar)->stackinfo.prev_line_number = G__ifile.line_number;
-
    return localvar;
 }
 
+#if 0
 //______________________________________________________________________________
-int Cint::Internal::G__interpret_func(G__value *result7, struct G__param *libp, int hash, const ::Reflex::Member func, int funcmatch, int memfunc_flag)
+int Cint::Internal::G__interpret_func(G__value* result7, G__param* libp, int hash, const ::Reflex::Member func, int funcmatch, int memfunc_flag)
 {
-#ifndef __GNUC__
-#pragma message (FIXME("Remove static buf and this func's overload"))
-#endif // __GNUC__
    G__StrBuf funcname_sb(G__LONGLINE);
-   char *funcname = funcname_sb;
+   char* funcname = funcname_sb;
    strcpy(funcname, func.Name().c_str());
-   return G__interpret_func(result7, funcname, libp, hash, func.DeclaringScope(), funcmatch, memfunc_flag);
+   ::Reflex::Scope scope = func.DeclaringScope();
+   return G__interpret_func(result7, funcname, libp, hash, scope, funcmatch, memfunc_flag);
 }
+#endif // 0
 
 //______________________________________________________________________________
-int Cint::Internal::G__interpret_func(G__value *result7, char* funcname, G__param *libp, int hash, const ::Reflex::Scope input_ifunc, int funcmatch , int memfunc_flag)
+int Cint::Internal::G__interpret_func(G__value* return_value, char* funcname, G__param* libp, int hash, const ::Reflex::Scope input_ifunc, int funcmatch, int memfunc_flag)
 {
-   /*  return 1 if function is executed */
-   /*  return 0 if function isn't executed */
-   ::Reflex::Scope p_ifunc(input_ifunc);
+   // -- FIXME: Describe this function!
+   //
+   // Inputs:
+   //
+   //   G__var_typeB:
+   //
+   //      'p': Ignored
+   //      'v': Ignored
+   //      'P': Caller wishes us to convert the return value
+   //           to a pointer, the pointer value comes from obj.ref.
+   //
+   //  return 1 if function is executed.
+   //  return 0 if function isn't executed.
+   //
+   ::Reflex::Scope p_ifunc = input_ifunc;
    ::Reflex::Member ifn;
    ::Reflex::Scope G_local;
-   FILE *prev_fp;
-   fpos_t prev_pos /*,temppos */;
-   /* paraname[][] is used only for K&R func param. length should be OK */
+   FILE* prev_fp;
+   fpos_t prev_pos;
+   // paraname[][] is used only for K&R func param. length should be OK.
    G__StrBuf paraname_buf(G__MAXFUNCPARA * G__MAXNAME);
    typedef char namearray_t[G__MAXNAME];
    namearray_t *paraname = (namearray_t*) paraname_buf.data();
@@ -4407,12 +4459,11 @@ int Cint::Internal::G__interpret_func(G__value *result7, char* funcname, G__para
    G__value buf;
    int store_var_type;
    ::Reflex::Scope store_tagnum;
-   char *store_struct_offset; /* used to be int */
+   char* store_struct_offset;
    ::Reflex::Scope store_inherit_tagnum;
    char *store_inherit_offset;
    ::Reflex::Scope virtualtag;
    int store_def_struct_member;
-   int store_var_typeB;
    int store_doingconstruction;
    ::Reflex::Member store_func_now;
    int store_iscpp;
@@ -4431,7 +4482,7 @@ int Cint::Internal::G__interpret_func(G__value *result7, char* funcname, G__para
    G__value *store_asm_stack;
    char *store_asm_name;
    int store_asm_name_p;
-   struct G__param *store_asm_param;
+   G__param* store_asm_param;
    int store_asm_exec;
    int store_asm_noverflow;
    int store_asm_cp;
@@ -4447,9 +4498,8 @@ int Cint::Internal::G__interpret_func(G__value *result7, char* funcname, G__para
    int isbase;
    int access;
    int memfunc_or_friend = 0;
-   struct G__inheritance *baseclass = 0;
+   G__inheritance* baseclass = 0;
 #endif
-   /* #define G__OLDIMPLEMENTATION590 */
    ::Reflex::Scope local_tagnum;
    ::Reflex::Scope store_p_ifunc = p_ifunc;
    int specialflag = 0;
@@ -4461,27 +4511,53 @@ int Cint::Internal::G__interpret_func(G__value *result7, char* funcname, G__para
    store_inherit_tagnum = G__tagnum;
 #endif
    store_asm_noverflow = G__asm_noverflow;
+   //
+   // Skip the search for the function if we are
+   // called by running bytecode, the search was
+   // done at bytecode compilation time.
+   //
 #ifdef G__ASM_IFUNC
    if (G__asm_exec) {
       ifn = G__asm_index;
-      /* delete 0 ~destructor ignored */
-      if (0 == G__store_struct_offset && -1 != G__get_tagnum(p_ifunc) &&
-            !ifn.IsStatic() && ifn.IsDestructor()) {
-         return(1);
+      //
+      //  Delete 0 ~destructor ignored.
+      //
+      if (
+         !G__store_struct_offset &&
+         (G__get_tagnum(p_ifunc) != -1) &&
+         !ifn.IsStatic() &&
+         ifn.IsDestructor()
+      ) {
+         return 1;
       }
       goto asm_ifunc_start;
    }
-#endif
-   /*******************************************************
-    * searching function
-    *******************************************************/
+#endif // G__ASM_IFUNC
+   //
+   // Search for function.
+   //
 #ifdef G__NEWINHERIT
-   if ((G__exec_memberfunc && (!G__tagnum.IsTopScope() || !G__memberfunc_tagnum.IsTopScope())) ||
-         G__TRYNORMAL != memfunc_flag) {
+   if (
+      (
+         G__exec_memberfunc &&
+         (
+            (G__get_tagnum(G__tagnum) != -1) ||
+            (G__get_tagnum(G__memberfunc_tagnum) != -1)
+         )
+      ) ||
+      (memfunc_flag != G__TRYNORMAL)
+   ) {
       isbase = 1;
       basen = 0;
-      if (G__exec_memberfunc && G__tagnum.IsTopScope()) local_tagnum = G__memberfunc_tagnum;
-      else                               local_tagnum = G__tagnum;
+      if (
+         G__exec_memberfunc &&
+         (G__get_tagnum(G__tagnum) == -1)
+      ) {
+         local_tagnum = G__memberfunc_tagnum;
+      }
+      else {
+         local_tagnum = G__tagnum;
+      }
       baseclass = G__struct.baseclass[G__get_tagnum(local_tagnum)];
       if (G__exec_memberfunc || G__isfriend(G__get_tagnum(G__tagnum))) {
          access = G__PUBLIC_PROTECTED_PRIVATE;
@@ -4495,37 +4571,53 @@ int Cint::Internal::G__interpret_func(G__value *result7, char* funcname, G__para
    else {
       access = G__PUBLIC;
       isbase = 0;
-      if (p_ifunc && p_ifunc == G__p_ifunc) {
+      if (p_ifunc && (p_ifunc == G__p_ifunc)) {
          basen = 0;
          isbase = 1;
          baseclass = &G__globalusingnamespace;
       }
    }
-next_base:
-#endif
-   ifn = G__overload_match(funcname, libp, hash, p_ifunc, memfunc_flag, access, 0, 1, &match_error);
-   /* error */
+   next_base:
+#endif // G__NEWINHERIT
+   //
+   //  Perform function overloading match.
+   //
+   {
+      int index = -1;
+      ifn = G__overload_match(funcname, libp, hash, p_ifunc, memfunc_flag, access, &index, 0, 1, &match_error);
+   }
    if (match_error) {
-      *result7 = G__null;
-      return(1);
+      *return_value = G__null;
+      return 1;
    }
 #ifdef G__NEWINHERIT
-   /**********************************************************************
-    * iteration for base class member function search
-    **********************************************************************/
-   if (!ifn ||
-         (!G__test_access(ifn, G__PUBLIC) && !G__isfriend(G__get_tagnum(G__tagnum))
-          && (0 == G__exec_memberfunc ||
-              (local_tagnum != G__memberfunc_tagnum
-               && (!G__test_access(ifn, G__PROTECTED)
-                   || -1 == G__ispublicbase(G__get_tagnum(local_tagnum), G__get_tagnum(G__memberfunc_tagnum)
-                                            , (void*)store_inherit_offset))
-              )))) {
+   //
+   //  Search in base classes.
+   //
+   if (
+      !ifn ||
+      (
+         !G__test_access(ifn, G__PUBLIC) &&
+         !G__isfriend(G__get_tagnum(G__tagnum)) &&
+         (
+            !G__exec_memberfunc ||
+            (
+               (local_tagnum != G__memberfunc_tagnum) &&
+               (
+                  !G__test_access(ifn, G__PROTECTED) ||
+                  (G__ispublicbase(G__get_tagnum(local_tagnum), G__get_tagnum(G__memberfunc_tagnum), (void*) store_inherit_offset) == -1)
+               )
+            )
+         )
+      )
+   ) {
       if (isbase) {
-         while (baseclass && basen < baseclass->basen) {
+         while (baseclass && (basen < baseclass->basen)) {
             if (memfunc_or_friend) {
-               if ((baseclass->baseaccess[basen]&G__PUBLIC_PROTECTED) ||
-                     baseclass->property[basen]&G__ISDIRECTINHERIT) {
+               if (
+                  (baseclass->baseaccess[basen] & G__PUBLIC_PROTECTED) ||
+                  (baseclass->property[basen] & G__ISDIRECTINHERIT)
+               ) {
                   access = G__PUBLIC_PROTECTED;
                   G__incsetup_memfunc(baseclass->basetagnum[basen]);
                   p_ifunc = G__Dict::GetDict().GetScope(baseclass->basetagnum[basen]);
@@ -4534,56 +4626,60 @@ next_base:
                   // to a valid object with vtable, and G__getvirtualbaseoffset()
                   // might fail. We should not need the voffset in this case
                   // anyway, as we don't actually call the function.
-                  if (!G__prerun && baseclass->property[basen]&G__ISVIRTUALBASE) {
+                  if (!G__prerun && (baseclass->property[basen] & G__ISVIRTUALBASE)) {
                      G__store_struct_offset = store_inherit_offset + G__getvirtualbaseoffset(store_inherit_offset, G__get_tagnum(G__tagnum), baseclass, basen);
                   }
                   else {
                      G__store_struct_offset = store_inherit_offset + (long)baseclass->baseoffset[basen];
                   }
-#else
-                  G__store_struct_offset
-                  = store_inherit_offset + baseclass->baseoffset[basen];
-#endif
+#else // G__VIRTUALBASE
+                  G__store_struct_offset = store_inherit_offset + baseclass->baseoffset[basen];
+#endif // G__VIRTUALBASE
                   G__tagnum = G__Dict::GetDict().GetScope(baseclass->basetagnum[basen]);
                   ++basen;
                   store_p_ifunc = p_ifunc;
-                  goto next_base; /* I know this is a bad manner */
+                  goto next_base;
                }
             }
             else {
-               if (baseclass->baseaccess[basen]&G__PUBLIC) {
+               if (baseclass->baseaccess[basen] & G__PUBLIC) {
                   access = G__PUBLIC;
                   G__incsetup_memfunc(baseclass->basetagnum[basen]);
                   p_ifunc = G__Dict::GetDict().GetScope(baseclass->basetagnum[basen]);
 #ifdef G__VIRTUALBASE
-                  if (baseclass->property[basen]&G__ISVIRTUALBASE) {
-                     G__store_struct_offset = store_inherit_offset +
-                                              G__getvirtualbaseoffset(store_inherit_offset, G__get_tagnum(G__tagnum)
-                                                                      , baseclass, basen);
+                  // require !G__prerun, else store_inherit_offset might not point
+                  // to a valid object with vtable, and G__getvirtualbaseoffset()
+                  // might fail. We should not need the voffset in this case
+                  // anyway, as we don't actually call the function.
+                  if (
+                     !G__prerun &&
+                     (baseclass->property[basen] & G__ISVIRTUALBASE)
+                  ) {
+                     G__store_struct_offset = store_inherit_offset + G__getvirtualbaseoffset(store_inherit_offset, G__get_tagnum(G__tagnum), baseclass, basen);
                   }
                   else {
-                     G__store_struct_offset
-                     = store_inherit_offset + (long)baseclass->baseoffset[basen];
+                     G__store_struct_offset = store_inherit_offset + (long) baseclass->baseoffset[basen];
                   }
-#else
-                  G__store_struct_offset
-                  = store_inherit_offset + baseclass->baseoffset[basen];
-#endif
+#else // G__VIRTUALBASE
+                  G__store_struct_offset = store_inherit_offset + baseclass->baseoffset[basen];
+#endif // G__VIRTUALBASE
                   G__tagnum = G__Dict::GetDict().GetScope(baseclass->basetagnum[basen]);
                   ++basen;
                   store_p_ifunc = p_ifunc;
-                  goto next_base; /* I know this is a bad manner */
+                  goto next_base;
                }
             }
             ++basen;
          }
          isbase = 0;
       }
-
-      if (0 == specialflag && 1 == libp->paran && -1 != G__get_tagnum(G__value_typenum(libp->para[0])) &&
-            -1 != G__struct.parent_tagnum[G__get_tagnum(G__value_typenum(libp->para[0]))]) {
-         p_ifunc =
-            G__Dict::GetDict().GetScope(G__struct.parent_tagnum[G__get_tagnum(G__value_typenum(libp->para[0]))]);
+      if (
+         !specialflag &&
+         (libp->paran == 1) &&
+         (G__get_tagnum(G__value_typenum(libp->para[0])) != -1) &&
+         (G__struct.parent_tagnum[G__get_tagnum(G__value_typenum(libp->para[0]))] != -1)
+      ) {
+         p_ifunc = G__Dict::GetDict().GetScope(G__struct.parent_tagnum[G__get_tagnum(G__value_typenum(libp->para[0]))]);
          switch (G__get_tagtype(p_ifunc)) {
             case 's':
             case 'c':
@@ -4592,191 +4688,237 @@ next_base:
                goto next_base;
          }
       }
-
-      /* not found */
+      // Not found.
       G__store_struct_offset = store_inherit_offset;
       G__tagnum = store_inherit_tagnum;
       G__asm_noverflow = store_asm_noverflow;
+      return 0;
+   }
+#else // G__NEWINHERIT
+   //
+   //  If function not found, return.
+   //
+   if (!p_ifunc) { // Not found, all done, return error.
+      return 0;
+   }
+   //
+   // We have now found the function to execute.
+   //
+   // Member access control.
+   if (G__PUBLIC != p_ifunc->access[ifn] && !G__isfriend(G__tagnum)) { // Return, if no access.
       return(0);
    }
-#else
-   /******************************************************************
-   * if no such func, return 0
-   *******************************************************************/
-   if (!p_ifunc) {
-      return(0);
+#endif // G__NEWINHERIT
+   asm_ifunc_start: // Loop compilation execution label.
+   if (G__globalcomp) { // Parameter analysis with -c option, return without call.
+      // -- With -c-1 or -c-2 option, return immediately.
+      return_value->obj.d = 0.0;
+      return_value->ref = 0;
+      char type = '\0';
+      int tagnum = -1;
+      int typenum = -1;
+      int reftype = 0;
+      int isconst = 0;
+      G__get_cint5_type_tuple(ifn.TypeOf().ReturnType(), &type, &tagnum, &typenum, &reftype, &isconst);
+      char retval_type = '\0';
+      int retval_tagnum = -1;
+      int retval_typenum = -1;
+      int retval_reftype = 0;
+      int retval_isconst = 0;
+      G__get_cint5_type_tuple(G__value_typenum(*return_value), &retval_type, &retval_tagnum, &retval_typenum, &retval_reftype, &retval_isconst);
+      retval_type = type;
+      retval_tagnum = tagnum;
+      retval_typenum = typenum;
+      if (isupper(type)) {
+         retval_reftype = reftype;
+      }
+#ifndef G__OLDIMPLEMENTATION1259
+      retval_isconst = isconst;
+#endif // G__OLDIMPLEMENTATION1259
+      G__value_typenum(*return_value) = G__cint5_tuple_to_type(retval_type, retval_tagnum, retval_typenum, retval_reftype, retval_isconst);
+      return 1;
    }
-   /******************************************************************
-   * member access control
-   *******************************************************************/
-   if (G__PUBLIC != p_ifunc->access[ifn] && !G__isfriend(G__tagnum)) {
-      return(0);
+   // Constructor or destructor call in G__make_ifunctable() parameter
+   // type allocation.  Return without call.
+   if (G__prerun) { // In G__make_ifunctable() parameter allocation, return immediately.
+      char type = '\0';
+      int tagnum = -1;
+      int typenum = -1;
+      int reftype = 0;
+      int isconst = 0;
+      G__get_cint5_type_tuple(ifn.TypeOf().ReturnType(), &type, &tagnum, &typenum, &reftype, &isconst);
+      char retval_type = '\0';
+      int retval_tagnum = -1;
+      int retval_typenum = -1;
+      int retval_reftype = 0;
+      int retval_isconst = 0;
+      G__get_cint5_type_tuple(G__value_typenum(*return_value), &retval_type, &retval_tagnum, &retval_typenum, &retval_reftype, &retval_isconst);
+      return_value->obj.i = type; // TODO: How strange, why?
+      return_value->ref = 0;
+      retval_type = G__DEFAULT_FUNCCALL; // TODO: How strange, why?
+      retval_tagnum = tagnum;
+      retval_typenum = typenum;
+      if (isupper(G__DEFAULT_FUNCCALL)) { // TODO: How strange, was copied from above obviously, should have been type.
+         retval_reftype = reftype;
+      }
+#ifndef G__OLDIMPLEMENTATION1259
+      retval_isconst = isconst;
+#endif // G__OLDIMPLEMENTATION1259
+      G__value_typenum(*return_value) = G__cint5_tuple_to_type(retval_type, retval_tagnum, retval_typenum, retval_reftype, retval_isconst);
+      return 1;
    }
-#endif
-asm_ifunc_start:   /* loop compilation execution label */
-   /******************************************************************
-    * Constructor or destructor call in G__make_ifunctable() parameter
-    * type allocation. Return without call.
-    * Also, when parameter analysis with -c optoin, return without call.
-    *******************************************************************/
-   if (G__globalcomp) { /* with -c-1 or -c-2 option */
-      result7->obj.d = 0.0;
-      result7->ref = 0;
-      G__value_typenum(*result7) = ifn.TypeOf().ReturnType();
-      return(1);
-   }
-   else if (G__prerun) { /* in G__make_ifunctable parameter allocation */
-      result7->obj.i = G__get_type(ifn.TypeOf().ReturnType());
-      result7->ref = 0;
-      G__value_typenum(*result7) = G__replace_rawtype(ifn.TypeOf().ReturnType(), G__get_from_type(G__DEFAULT_FUNCCALL, 0));
-      return(1);
-   }
-   /******************************************************************
-    * error if body not defined
-    *******************************************************************/
    if (
       // --
 #ifdef G__ASM_WHOLEFUNC
-      (((bool)ifn) && G__get_funcproperties(ifn)->entry.p == 0) &&
+      !G__get_funcproperties(ifn)->entry.p &&
       !ifn.IsAbstract() &&
-      G__ASM_FUNC_NOP == G__asm_wholefunction
-#else
-      !G__get_funproperties(ifn)->entry.p &&
+      (G__asm_wholefunction == G__ASM_FUNC_NOP)
+#else // G__ASM_WHOLEFUNC
+      !G__get_funcproperties(ifn)->entry.p &&
       !ifn.IsAbstract()
-#endif
+#endif // G__ASM_WHOLEFUNC
       // --
    ) {
-      {
-         if (0 == G__templatefunc(result7, funcname, libp, hash, funcmatch)) {
-            if (G__USERCONV == funcmatch) {
-               *result7 = G__null;
-               G__fprinterr(G__serr, "Error: %s() header declared but not defined", funcname);
-               G__genericerror(0);
-               return(1);
+      if (!G__templatefunc(return_value, funcname, libp, hash, funcmatch)) {
+         if (funcmatch == G__USERCONV) {
+            *return_value = G__null;
+            bool isCompiled = (G__get_funcproperties(ifn)->entry.size == -1);
+            if (ifn.IsVirtual() && !ifn.DeclaringScope().IsTopScope() && isCompiled && G__method_inbase(ifn)) {
+               G__fprinterr(G__serr, "Error: %s() declared but no dictionary for the base class", funcname);
             }
-            else return(0);
+            else if (isCompiled) {
+               G__fprinterr(G__serr, "Error: no dictionary for function %s()", funcname);
+            }
+            else {
+               G__fprinterr(G__serr, "Error: %s() declared but not defined", funcname);
+            }
+            G__genericerror(0);
+            return 1;
          }
-         return(1);
+         return 0;
       }
+      return 1;
    }
-   /******************************************************************
-    * function was found in interpreted function list
-    *******************************************************************/
-   /* p_ifunc has found */
-   /******************************************************************
-    * Add baseoffset if calling base class member function.
-    * Resolution of virtual function is not done here. There is a
-    * separate section down below. Search string 'virtual function'
-    * to get there.
-    *******************************************************************/
-   G__tagnum = p_ifunc; // G__Dict::GetDict().GetScope(p_ifunc->tagnum);
+   // Add baseoffset if calling base class member function.
+   // Resolution of virtual function is not done here. There is a
+   // separate section down below. Search string 'virtual function'
+   // to get there.
+   G__tagnum = p_ifunc;
    store_exec_memberfunc = G__exec_memberfunc;
-   if (G__tagnum.IsTopScope() && !G__memberfunc_tagnum) {
+   if ((G__get_tagnum(G__tagnum) == -1) && (G__get_tagnum(G__memberfunc_tagnum) == -1)) {
       G__exec_memberfunc = 0;
    }
-#define G__OLDIMPLEMENTATION1101
-#ifndef G__OLDIMPLEMENTATION1101
-   if (memfunc_flag == G__CALLSTATICMEMFUNC && 0 == G__store_struct_offset &&
-         -1 != G__tagnum && 0 == p_ifunc->staticalloc[ifn] && 0 == G__no_exec) {
-      G__fprinterr(G__serr, "Error: %s() Illegal non-static member function call", funcname);
-      G__genericerror(0);
-      *result7 = G__null;
-      return(1);
-   }
-#endif
-   store_var_typeB = G__var_typeB;
+   int store_var_typeB = G__var_typeB;
    G__var_typeB = 'p';
 #ifdef G__NEWINHERIT
 #ifdef G__ASM
-   if (G__asm_noverflow && G__store_struct_offset &&
-         G__store_struct_offset != store_inherit_offset) {
+   if (G__asm_noverflow && G__store_struct_offset && (G__store_struct_offset != store_inherit_offset)) {
+      // --
 #ifdef G__ASM_DBG
       if (G__asm_dbg) {
-         G__fprinterr(G__serr, "%3x: ADDSTROS %ld\n"
-                      , G__asm_cp, G__store_struct_offset - store_inherit_offset);
+         G__fprinterr(G__serr, "%3x,%3x: ADDSTROS %ld  %s:%d\n", G__asm_cp, G__asm_dt, G__store_struct_offset - store_inherit_offset, __FILE__, __LINE__);
       }
-#endif
+#endif // G__ASM_DBG
       G__asm_inst[G__asm_cp] = G__ADDSTROS;
       G__asm_inst[G__asm_cp+1] = G__store_struct_offset - store_inherit_offset;
       G__inc_cp_asm(2, 0);
    }
-#endif
-#endif
-   /******************************************************************
-    * C++ compiled function
-    *******************************************************************/
-   if (-1 == G__get_funcproperties(ifn)->entry.size) {
+#endif // G__ASM
+#endif // G__NEWINHERIT
+   //
+   //  Handle a linked-in, compiled function now.
+   //
+   if (G__get_funcproperties(ifn)->entry.size == -1) { // Compiled function, call it here and exit.
       // --
 #ifdef G__ROOT
-      if (memfunc_flag == G__CALLCONSTRUCTOR ||
-            memfunc_flag == G__TRYCONSTRUCTOR  ||
-            memfunc_flag == G__TRYIMPLICITCONSTRUCTOR) {
+      if (
+         (memfunc_flag == G__CALLCONSTRUCTOR) ||
+         (memfunc_flag == G__TRYCONSTRUCTOR)  ||
+         (memfunc_flag == G__TRYIMPLICITCONSTRUCTOR)
+      ) {
          G__exec_alloc_lock();
 #ifdef G__ASM
-         if (G__asm_noverflow) {
+         if (G__asm_noverflow) { // We are generating bytecode.
+            // --
 #ifdef G__ASM_DBG
-            if (G__asm_dbg) G__fprinterr(G__serr, "%3x: ROOTOBJALLOCBEGIN\n" , G__asm_cp);
-#endif
+            if (G__asm_dbg) {
+               G__fprinterr(G__serr, "%3x,%3x: ROOTOBJALLOCBEGIN  %s:%d\n", G__asm_cp, G__asm_dt, __FILE__, __LINE__);
+            }
+#endif // G__ASM_DBG
             G__asm_inst[G__asm_cp] = G__ROOTOBJALLOCBEGIN;
             G__inc_cp_asm(1, 0);
          }
-#endif
+#endif // G__ROOT
+         // --
       }
-#endif
-      G__call_cppfunc(result7, libp, ifn);
+#endif // G__ROOT
+      //
+      //  Call the function now.
+      //
+      G__call_cppfunc(return_value, libp, ifn);
+      //
+      //  Function is done, cleanup.
+      //
 #ifdef G__ROOT
-      if (memfunc_flag == G__CALLCONSTRUCTOR ||
-            memfunc_flag == G__TRYCONSTRUCTOR  ||
-            memfunc_flag == G__TRYIMPLICITCONSTRUCTOR) {
+      if (
+         (memfunc_flag == G__CALLCONSTRUCTOR) ||
+         (memfunc_flag == G__TRYCONSTRUCTOR)  ||
+         (memfunc_flag == G__TRYIMPLICITCONSTRUCTOR)
+      ) {
          G__exec_alloc_unlock();
 #ifdef G__ASM
          if (G__asm_noverflow) {
+            // --
 #ifdef G__ASM_DBG
-            if (G__asm_dbg) G__fprinterr(G__serr, "%3x: ROOTOBJALLOCEND\n" , G__asm_cp);
-#endif
+            if (G__asm_dbg) {
+               G__fprinterr(G__serr, "%3x,%3x: ROOTOBJALLOCEND  %s:%d\n", G__asm_cp, G__asm_dt, __FILE__, __LINE__);
+            }
+#endif // G__ASM_DBG
             G__asm_inst[G__asm_cp] = G__ROOTOBJALLOCEND;
             G__inc_cp_asm(1, 0);
          }
-#endif
+#endif // G__ASM
+         // --
       }
-#endif
-
-      /* recover tag environment */
+#endif // G__ROOT
       G__store_struct_offset = store_inherit_offset;
       G__tagnum = store_inherit_tagnum;
-      if (!G__tagnum.IsTopScope()) {
+      if (G__get_tagnum(G__tagnum) != -1) {
          G__incsetup_memvar(G__tagnum);
-         if (G__PVOID != G__struct.virtual_offset[G__get_tagnum(G__tagnum)] &&
-               strcmp(funcname, G__struct.name[G__get_tagnum(G__tagnum)]) == 0) {
-            long *pvtag
-            = (long*)(result7->obj.i + G__struct.virtual_offset[G__get_tagnum(G__tagnum)]);
+         if (
+            ((long) G__struct.virtual_offset[G__get_tagnum(G__tagnum)] != -1) &&
+            !strcmp(funcname, G__struct.name[G__get_tagnum(G__tagnum)])
+         ) {
+            long* pvtag = (long*) (return_value->obj.i + G__struct.virtual_offset[G__get_tagnum(G__tagnum)]);
             *pvtag = G__get_tagnum(G__tagnum);
          }
       }
-      if ('P' == store_var_typeB) G__val2pointer(result7);
+      if (store_var_typeB == 'P') {
+         G__val2pointer(return_value);
+      }
 #ifdef G__NEWINHERIT
 #ifdef G__ASM
-      if (G__asm_noverflow && G__store_struct_offset &&
-            G__store_struct_offset != store_inherit_offset) {
+      if (G__asm_noverflow && G__store_struct_offset && (G__store_struct_offset != store_inherit_offset)) {
+         // --
 #ifdef G__ASM_DBG
-         if (G__asm_dbg)
-            G__fprinterr(G__serr, "%3x: ADDSTROS %ld\n"
-                         , G__asm_cp, -(long)G__store_struct_offset + store_inherit_offset);
-#endif
+         if (G__asm_dbg) {
+            G__fprinterr(G__serr, "%3x,%3x: ADDSTROS %ld  %s:%d\n", G__asm_cp, G__asm_dt, -((long) G__store_struct_offset) + (long) store_inherit_offset, __FILE__, __LINE__);
+         }
+#endif // G__ASM_DBG
          G__asm_inst[G__asm_cp] = G__ADDSTROS;
-         G__asm_inst[G__asm_cp+1] = -(long)G__store_struct_offset + (long)store_inherit_offset;
+         G__asm_inst[G__asm_cp+1] = -((long) G__store_struct_offset) + (long) store_inherit_offset;
          G__inc_cp_asm(2, 0);
       }
-#endif /* ASM */
-#endif /* NEWINHERIT */
+#endif // G__ASM
+#endif // G__NEWINHERIT
       G__exec_memberfunc = store_exec_memberfunc;
-      return(1);
+      return 1;
    }
 #ifdef G__ASM
-   /******************************************************************
-    * create bytecode instruction for calling interpreted function
-    *******************************************************************/
-   if (G__asm_noverflow) {
+   // 
+   //  Create bytecode instruction for calling interpreted function.
+   //
+   if (G__asm_noverflow) { // We are generating bytecode.
       // -- We are generating bytecode.
 #ifdef G__ASM_DBG
       if (G__asm_dbg) {
@@ -4784,56 +4926,97 @@ asm_ifunc_start:   /* loop compilation execution label */
       }
 #endif // G__ASM_DBG
       G__asm_inst[G__asm_cp] = G__LD_IFUNC;
-      G__asm_inst[G__asm_cp+1] = 0; // used to be (long)ifn.Name().c_str();
+      G__asm_inst[G__asm_cp+1] = 0;
       G__asm_inst[G__asm_cp+2] = hash;
       G__asm_inst[G__asm_cp+3] = libp->paran;
-      G__asm_inst[G__asm_cp+4] = (long)ifn.Id();
-      G__asm_inst[G__asm_cp+5] = (long)funcmatch;
-      G__asm_inst[G__asm_cp+6] = (long)memfunc_flag;
-      G__asm_inst[G__asm_cp+7] = (long)0;
+      G__asm_inst[G__asm_cp+4] = (long) ifn.Id();
+      G__asm_inst[G__asm_cp+5] = (long) funcmatch;
+      G__asm_inst[G__asm_cp+6] = (long) memfunc_flag;
+      G__asm_inst[G__asm_cp+7] = 0L;
       G__inc_cp_asm(8, 0);
-      if (G__store_struct_offset && G__store_struct_offset != store_inherit_offset) {
+      if (G__store_struct_offset && (G__store_struct_offset != store_inherit_offset)) {
+         // --
 #ifdef G__ASM_DBG
-         if (G__asm_dbg)
-            G__fprinterr(G__serr, "%3x: ADDSTROS %ld\n"
-                         , G__asm_cp, -(long)G__store_struct_offset + store_inherit_offset);
-#endif
+         if (G__asm_dbg) {
+            G__fprinterr(G__serr, "%3x,%3x: ADDSTROS %ld  %s:%d\n", G__asm_cp, G__asm_dt, -((long) G__store_struct_offset) + (long) store_inherit_offset, __FILE__, __LINE__);
+         }
+#endif // G__ASM_DBG
          G__asm_inst[G__asm_cp] = G__ADDSTROS;
-         G__asm_inst[G__asm_cp+1] = -(long)G__store_struct_offset + (long)store_inherit_offset;
+         G__asm_inst[G__asm_cp+1] = -((long) G__store_struct_offset) + (long) store_inherit_offset;
          G__inc_cp_asm(2, 0);
       }
    }
-#endif /* G__ASM */
-   /* G__oprovld is set when calling operator overload function after
-    * evaluating its' argument to avoid duplication in p-code stack data.
-    * This must be reset when calling lower level interpreted function */
+#endif // G__ASM
+   //
+   //  G__oprovld is set when calling operator overload function after
+   //  evaluating its argument to avoid duplication in p-code stack data.
+   //  This must be reset when calling lower level interpreted function.
+   //
    G__oprovld = 0;
+   //
+   //  Return immediately if we are just bytecode compiling.
+   //
 #ifdef G__ASM
-   if (G__no_exec_compile) {
+   if (G__no_exec_compile) { // Generating bytecode, but not executing, exit now.
+      // -- We are doing whole function compilation right now, do not run function.
       G__store_struct_offset = store_inherit_offset;
       G__tagnum = store_inherit_tagnum;
-      G__value_typenum(*result7) = ifn.TypeOf().ReturnType();
-      if (-1 != G__get_tagnum(G__value_typenum(*result7))) result7->ref = 1;
-      else result7->ref = 0;
-      result7->obj.d = 0.0;
-      result7->obj.i = 1;
-      if ('u' == G__get_type(G__value_typenum(*result7)) && 0 == result7->ref && -1 != G__get_tagnum(G__value_typenum(*result7))) {
-         G__store_tempobject(*result7); /* To free tempobject in pcode */
+      char type = '\0';
+      int tagnum = -1;
+      int typenum = -1;
+      int reftype = 0;
+      int isconst = 0;
+      G__get_cint5_type_tuple(ifn.TypeOf().ReturnType(), &type, &tagnum, &typenum, &reftype, &isconst);
+      char retval_type = '\0';
+      int retval_tagnum = -1;
+      int retval_typenum = -1;
+      int retval_reftype = 0;
+      int retval_isconst = 0;
+      G__get_cint5_type_tuple(G__value_typenum(*return_value), &retval_type, &retval_tagnum, &retval_typenum, &retval_reftype, &retval_isconst);
+      retval_tagnum = tagnum;
+      if ((tagnum != -1) && (G__struct.type[tagnum] != 'e')) {
+         if (isupper(type)) {
+            retval_type = 'U';
+         }
+         else {
+            retval_type = 'u';
+         }
       }
-      /* To be implemented */
+      else {
+         retval_type = type;
+      }
+      retval_typenum = typenum;
+      if (tagnum != -1) {
+         return_value->ref = 1;
+      }
+      else {
+         return_value->ref = 0;
+      }
+#ifndef G__OLDIMPLEMENTATION1259
+      retval_isconst = isconst;
+#endif // G__OLDIMPLEMENTATION1259
+      return_value->obj.d = 0.0;
+      return_value->obj.i = 1;
+      if (isupper(retval_type)) {
+         retval_reftype = reftype;
+      }
+      return_value->ref = reftype; // TODO: How odd, why?
+      G__value_typenum(*return_value) = G__cint5_tuple_to_type(retval_type, retval_tagnum, retval_typenum, retval_reftype, retval_isconst);
+      if ((type == 'u') && !return_value->ref && (tagnum != -1)) {
+         G__store_tempobject(*return_value); // To free tempobject in pcode.
+      }
       G__exec_memberfunc = store_exec_memberfunc;
-      return(1);
+      return 1;
    }
-#endif /* G__ASM */
-   /******************************************************************
-    * virtual function
-    *  If virtual function flag is set, get actual tag identity by
-    * taginfo member at offset of G__struct.virtual_offset[].
-    * Then search for virtual function in actual tag. If found,
-    * change p_ifunc,ifn,G__store_struct_offset and G__tagnum.
-    * G__store_struct_offset and G__tagnum are already stored above,
-    * so no need to store it to temporary here.
-    *******************************************************************/
+#endif // G__ASM
+   //
+   //  If virtual function flag is set, get actual tag identity by
+   //  taginfo member at offset of G__struct.virtual_offset[].
+   //  Then search for virtual function in actual tag. If found,
+   //  change p_ifunc, ifn, G__store_struct_offset and G__tagnum.
+   //  G__store_struct_offset and G__tagnum are already stored above,
+   //  so no need to store it to temporary here.
+   //
    if (ifn.IsVirtual() && !G__fixedscope) {
       if (G__PVOID != G__struct.virtual_offset[G__get_tagnum(G__tagnum)])
          virtualtag = G__Dict::GetDict().GetScope(*(long*)(G__store_struct_offset /* NEED TO CHECK THIS PART */
@@ -4842,7 +5025,7 @@ asm_ifunc_start:   /* loop compilation execution label */
          virtualtag = G__tagnum;
       }
       if (virtualtag != G__tagnum) {
-         struct G__inheritance *baseclass = G__struct.baseclass[G__get_tagnum(virtualtag)];
+         G__inheritance* baseclass = G__struct.baseclass[G__get_tagnum(virtualtag)];
          int xbase[G__MAXBASE], ybase[G__MAXBASE];
          int nxbase = 0, nybase;
          int basen;
@@ -4899,48 +5082,56 @@ asm_ifunc_start:   /* loop compilation execution label */
    }
 #ifdef G__ASM
 #ifdef G__ASM_WHOLEFUNC
-   /******************************************************************
-    * try bytecode compilation
-    *******************************************************************/
-   if (G__BYTECODE_NOTYET == G__get_funcproperties(ifn)->entry.bytecodestatus &&
-         G__asm_loopcompile > 3 && G__ASM_FUNC_NOP == G__asm_wholefunction &&
+   //
+   //  Try bytecode compilation.
+   //
+   if (
+      (G__get_funcproperties(ifn)->entry.bytecodestatus == G__BYTECODE_NOTYET) &&
+      (G__asm_loopcompile > 3) &&
+      (G__asm_wholefunction == G__ASM_FUNC_NOP) &&
 #ifndef G__TO_BE_DELETED
-         G__CALLCONSTRUCTOR != memfunc_flag && G__TRYCONSTRUCTOR != memfunc_flag &&
-         G__TRYIMPLICITCONSTRUCTOR != memfunc_flag &&
-         G__TRYDESTRUCTOR != memfunc_flag &&
-#endif
-         0 == G__step && (G__asm_noverflow || G__asm_exec
-                          || G__asm_loopcompile > 4
-                         )) {
+      (memfunc_flag != G__CALLCONSTRUCTOR) &&
+      (memfunc_flag != G__TRYCONSTRUCTOR) &&
+      (memfunc_flag != G__TRYIMPLICITCONSTRUCTOR) &&
+      (memfunc_flag != G__TRYDESTRUCTOR) &&
+#endif // G__TO_BE_DELETED
+      !G__step &&
+      (G__asm_noverflow || G__asm_exec || (G__asm_loopcompile > 4))
+   ) {
       G__compile_function_bytecode(ifn);
    }
-   /******************************************************************
-    * if already compiled as bytecode run bytecode
-    *******************************************************************/
-   if (G__get_funcproperties(ifn)->entry.bytecode
-         && G__BYTECODE_ANALYSIS != G__get_funcproperties(ifn)->entry.bytecodestatus
-      ) {
-      struct G__input_file store_ifile;
+   //
+   //  If bytecode is available, run the bytecode.
+   //
+   if (
+      G__get_funcproperties(ifn)->entry.bytecode &&
+      (G__get_funcproperties(ifn)->entry.bytecodestatus != G__BYTECODE_ANALYSIS)
+   ) {
+      G__input_file store_ifile;
       store_ifile = G__ifile;
       G__ifile.filenum = G__get_funcproperties(ifn)->entry.filenum;
       G__ifile.line_number = G__get_funcproperties(ifn)->entry.line_number;
-      G__exec_bytecode(result7, (char*)G__get_funcproperties(ifn)->entry.bytecode, libp, hash);
+      G__exec_bytecode(return_value, (char*) G__get_funcproperties(ifn)->entry.bytecode, libp, hash);
       G__ifile = store_ifile;
       G__tagnum = store_inherit_tagnum;
       G__store_struct_offset = store_inherit_offset;
-      return(1);
+      return 1;
    }
-#endif /* G__ASM_WHOLEFUNC */
-#endif /* G__ASM */
+#endif // G__ASM_WHOLEFUNC
+#endif // G__ASM
+   //
+   //  We are going to interpret the function.
+   //
 #ifndef G__OLDIMPLEMENTATION1167
    G__reftypeparam(ifn, libp);
-#endif
+#endif // G__OLDIMPLEMENTATION1167
+   //
+   //
+   //
 #ifdef G__ASM
 #ifdef G__ASM_IFUNC
-   /******************************************************************
-    * push bytecode environment stack
-    *******************************************************************/
-   /* Push loop compilation environment */
+   // Push bytecode environment stack.
+   // Push loop compilation environment.
    store_asm_inst = G__asm_inst;
    store_asm_stack = G__asm_stack;
    store_asm_name = G__asm_name;
@@ -4952,54 +5143,67 @@ asm_ifunc_start:   /* loop compilation execution label */
    store_asm_dt  = G__asm_dt;
    store_asm_index  = G__asm_index;
    store_asm_instsize = G__asm_instsize;
-   G__asm_instsize = 0; /* G__asm_inst is not resizable */
+   G__asm_instsize = 0; // G__asm_inst is not resizable.
    G__asm_inst = asm_inst_g;
    G__asm_stack = asm_stack_g;
    G__asm_name = asm_name;
    G__asm_name_p = 0;
    /* G__asm_param ; */
    G__asm_exec = 0;
-#endif /* G__ASM_IFUNC */
-#endif /* G__ASM */
+#endif // G__ASM_IFUNC
+#endif // G__ASM
+   //
+   //
+   /////
+   //
 #ifdef G__ASM
 #ifdef G__ASM_IFUNC
 #ifdef G__ASM_WHOLEFUNC
-   /******************************************************************
-    * bytecode function compilation start
-    *******************************************************************/
-   if (G__ASM_FUNC_COMPILE&G__asm_wholefunction) {
+   //
+   // Bytecode function compilation start.
+   //
+   if (G__asm_wholefunction & G__ASM_FUNC_COMPILE) {
+      // -- We are doing Whole function compilation.
       if (G__asm_dbg) {
-         G__fprinterr(G__serr, "!!!bytecode compilation %s start"
-                      , ifn.Name().c_str());
+         G__fprinterr(G__serr, "!!!bytecode compilation of '%s' started at ", ifn.Name().c_str());
          G__printlinenum();
       }
-      G__asm_name = (char*)malloc(G__ASM_FUNCNAMEBUF);
+      G__asm_name = (char*) malloc(G__ASM_FUNCNAMEBUF);
+      // Turn on bytecode generation.
       G__asm_noverflow = 1;
+      // Flag that we are doing whole function compilation,
+      // no execution should be done, but bytecode should be generated.
+      // Question: Why do we need this flag, why not G__no_exec and G__asm_noverflow instead?
+      //   Answer: G__no_exec means we are skipping code, so no bytecode can be generated.
       store_no_exec_compile = G__no_exec_compile;
       G__no_exec_compile = 1;
-
-      // Initialize localvar (if anything is needed).
-      localvar = G__create_scope(ifn, G__p_local, libp);
+      //
+      //  Allocate a local variable scope.
+      //
+      localvar = G__create_scope(ifn, G__p_local, libp); // Initialize localvar (if anything is needed).
    }
    else {
       G__asm_noverflow = 0;
    }
-#else /* G__ASM_WHOLEFUNC */
+#else // G__ASM_WHOLEFUNC
    G__asm_noverflow = 0;
-#endif /* G__ASM_WHOLEFUNC */
+#endif // G__ASM_WHOLEFUNC
    G__clear_asm();
-#endif /* G__ASM_IFUNC */
-#endif /* G__ASM */
-   /******************************************************************
-    * G__exec_memberfunc and G__memberfunc_tagnum are stored in one
-    * upper level G__getfunction() and G__parenthesisovld() and restored
-    * when exit from these functions.
-    *******************************************************************/
-   if (-1 == G__get_tagnum(p_ifunc) || p_ifunc.IsTopScope()) {
-      // Note: We should try with:  if (p_ifunc.IsClass())
+#endif // G__ASM_IFUNC
+#endif // G__ASM
+   //
+   //
+   //
+   /////
+   //
+   // G__exec_memberfunc and G__memberfunc_tagnum are stored in one
+   // upper level G__getfunction() and G__parenthesisovld() and restored
+   // when exit from these functions.
+   // FIXME: They should be saved and restore here instead.
+   if (G__get_tagnum(p_ifunc) == -1) { // We are *not* a member function.
       G__exec_memberfunc = 0;
    }
-   else {
+   else { // We are a member function.
       G__exec_memberfunc = 1;
    }
    G__setclassdebugcond(G__get_tagnum(G__tagnum), 0);
@@ -5007,87 +5211,104 @@ asm_ifunc_start:   /* loop compilation execution label */
    store_memberfunc_struct_offset = G__memberfunc_struct_offset;
    G__memberfunc_tagnum = G__tagnum;
    G__memberfunc_struct_offset = G__store_struct_offset;
-   /**********************************************
-    * If return value is struct,class,union,
-    * create temp object buffer
-    **********************************************/
-   if (!ifn.IsConstructor()) { 
-      ::Reflex::Type rtype( ifn.TypeOf().ReturnType() );
-      if (G__get_type(rtype) == 'u' 
-         && G__get_reftype(rtype) == G__PARANORMAL
-         && G__CPPLINK != G__struct.iscpplink[G__get_tagnum(rtype)]
-         && 'e' != G__get_tagtype(rtype)
-         ) {
-            /* create temp object buffer */
-
-            G__alloc_tempobject(G__get_tagnum(ifn.TypeOf().ReturnType()) , G__get_typenum(ifn.TypeOf().ReturnType()));
+   //
+   //  If return value is a struct,class,union, then create a temporary object buffer.
+   //
+   { 
+      if (ifn.Name() != ifn.DeclaringScope().Name()) { // If not a constructor.
+         ::Reflex::Type ty = ifn.TypeOf().ReturnType();
+         if ( // Create temp, if return type is a class by value, and the class is not compiled.
+            (G__get_type(ty) == 'u') && // return type is class or ref to class, and
+            (G__get_reftype(ty) == G__PARANORMAL) && // return type is class, no ref, and
+            (G__struct.iscpplink[G__get_tagnum(ty)] != G__CPPLINK) && // class of return type is not compiled, and
+            (G__struct.type[G__get_tagnum(ty)] != 'e') // return type is not an enum
+         ) { // Create temp, if return type is a class by value, and the class is not compiled.
+            // -- Create temporary object buffer.
+            G__alloc_tempobject(G__get_tagnum(ty) , G__get_typenum(ty)); // Create a temp to hold the return value.
             store_p_tempobject = &G__p_tempbuf->obj;
-
             if (G__dispsource) {
-               G__fprinterr(G__serr, "!!!Create temp object (%s)0x%lx,%d for %s() return\n"
-                  , ifn.TypeOf().ReturnType().Name().c_str()
-                  , G__p_tempbuf->obj.obj.i , G__templevel , ifn.Name().c_str());
+               G__fprinterr(G__serr, "!!!Created temp object for return value of func '%s' addr: (%s) 0x%lx level: %d  %s:%d\n", ifn.Name().c_str(), G__struct.name[G__get_tagnum(ty)], G__p_tempbuf->obj.obj.i, G__templevel, __FILE__, __LINE__);
             }
          }
+      }
    }
-   /**********************************************
-    * increment busy flag
-    **********************************************/
+   //
+   //  Increment busy flag.
    G__get_funcproperties(ifn)->entry.busy++;
-   /**********************************************
-    * set global variable G__func_now. This is
-    * used in G__malloc() to allocate static
-    * variable.
-    **********************************************/
+   //
+   //  Set global variable G__func_now.
+   //
+   //  This is used in G__malloc() when
+   //  allocating function body static variables.
+   //
    store_func_now = G__func_now;
    G__func_now = ifn;
-   /* store old local to prev buffer and allocate new local variable */
+   //
+   //  Setup a new local variable chain.
+   //
    G_local = G__create_scope(ifn, G__p_local, libp);
+   //
+   //  Decide which local variable chain to use.
+   //
+   G__p_local = G_local;
 #ifdef G__ASM_WHOLEFUNC
-   if (G__ASM_FUNC_COMPILE&G__asm_wholefunction) {
+   //  Whole body function compilation uses a block
+   //  of bytes instead of a variable chain to contain
+   //  the values of its local variables.
+   if (G__asm_wholefunction & G__ASM_FUNC_COMPILE) {
       G__p_local = localvar;
    }
-   else {
-      G__p_local = G_local;
-   }
-#else
-   G__p_local = G_local;
-#endif
+#endif // G__ASM_WHOLEFUNC
+   //
+   //  Cancel any break exit function.
+   //
    break_exit_func = G__break_exit_func;
    G__break_exit_func = 0;
-   /* store line number and filename*/
+   //
+   //  Initialize the line number and filename and number.
+   //
    G__ifile.line_number = G__get_funcproperties(ifn)->entry.line_number;
    G__ifile.filenum = G__get_funcproperties(ifn)->entry.filenum;
-   if (G__ifile.filenum>=0) {
+   if (G__ifile.filenum >= 0) {
       strcpy(G__ifile.name, G__srcfile[G__ifile.filenum].filename);
    } else {
       strcpy(G__ifile.name, "unknown");
    }
-   /* check breakpoint */
-   if (0 == G__nobreak && 0 == G__no_exec_compile &&
-         G__srcfile[G__ifile.filenum].breakpoint &&
-         G__srcfile[G__ifile.filenum].maxline > G__ifile.line_number &&
-         G__TESTBREAK&(G__srcfile[G__ifile.filenum].breakpoint[G__ifile.line_number] |= G__TRACED)) {
+   //
+   //  Stop at a breakpoint if necessary.
+   //
+   if (
+      !G__nobreak &&
+      !G__no_exec_compile &&
+      G__srcfile[G__ifile.filenum].breakpoint &&
+      (G__srcfile[G__ifile.filenum].maxline > G__ifile.line_number) &&
+      ((G__srcfile[G__ifile.filenum].breakpoint[G__ifile.line_number] |= G__TRACED) & G__TESTBREAK)
+   ) {
       G__BREAKfgetc();
    }
+   //
+   //  Change to the file-specific security environment.
+   //
    store_security = G__security;
    G__security = G__srcfile[G__ifile.filenum].security;
-   /* store file pointer and fpos*/
-   /* store_linenumber=G__ifile.line_number; */
-   if (G__ifile.fp) fgetpos(G__ifile.fp, &prev_pos);
-   prev_fp = G__ifile.fp;
-   /* Find the right file pointer */
-   if (G__mfp && (FILE*)G__get_funcproperties(ifn)->entry.p == G__mfp) {
-      /* In case of macro expanded by cint, we use the tmpfile */
-      G__ifile.fp = (FILE*)G__get_funcproperties(ifn)->entry.p;
+   //
+   //  Store file pointer and fpos.
+   //
+   if (G__ifile.fp) {
+      fgetpos(G__ifile.fp, &prev_pos);
    }
-   else if (G__srcfile[G__ifile.filenum].fp) {
-      /* The file is already open use that */
+   prev_fp = G__ifile.fp;
+   //
+   //  Find the right file pointer.
+   //
+   if (G__mfp && ((FILE*) G__get_funcproperties(ifn)->entry.p == G__mfp)) { // If macro expanded by cint, we use the tmpfile.
+      G__ifile.fp = (FILE*) G__get_funcproperties(ifn)->entry.p;
+   }
+   else if (G__srcfile[G__ifile.filenum].fp) { // The file is already open use that.
       G__ifile.fp = G__srcfile[G__ifile.filenum].fp;
    }
-   else {
-      /* The file had been closed, let's reopen the proper file
-       * resp from the preprocessor and raw */
+   else { // The file had been closed, let's reopen the proper file.
+      // Resp from the preprocessor and raw.
       if (G__srcfile[G__ifile.filenum].prepname) {
          G__ifile.fp = fopen(G__srcfile[G__ifile.filenum].prepname, "r");
       }
@@ -5095,30 +5316,49 @@ asm_ifunc_start:   /* loop compilation execution label */
          G__ifile.fp = fopen(G__srcfile[G__ifile.filenum].filename, "r");
       }
       G__srcfile[G__ifile.filenum].fp =  G__ifile.fp;
-      if (!G__ifile.fp) G__ifile.fp = (FILE*)G__get_funcproperties(ifn)->entry.p;
+      if (!G__ifile.fp) {
+         G__ifile.fp = (FILE*) G__get_funcproperties(ifn)->entry.p;
+      }
    }
    fsetpos(G__ifile.fp, &G__get_funcproperties(ifn)->entry.pos);
-   /* print function header if debug mode */
+   //
+   //  Print function header if debug mode.
+   //
    if (G__dispsource) {
       G__disp_mask = 0;
-      if ((G__debug || G__break || G__step
-            || (strcmp(G__breakfile, G__ifile.name) == 0) || (strcmp(G__breakfile, "") == 0)
-          ) && ((G__prerun != 0) || (G__no_exec == 0))) {
-         if (G__ifile.name && G__ifile.name[0])
+      if (
+         (
+            G__debug ||
+            G__break ||
+            G__step ||
+            !strcmp(G__breakfile, G__ifile.name) ||
+            !strcmp(G__breakfile, "")
+         ) &&
+         (
+            G__prerun ||
+            !G__no_exec
+         )
+      ) {
+         if (G__ifile.name && G__ifile.name[0]) {
             G__fprinterr(G__serr, "\n# %s", G__ifile.name);
-         if (-1 != G__get_tagnum(p_ifunc) && !p_ifunc.IsTopScope()) {
-            G__fprinterr(G__serr, "\n%-5d%s::%s(" , G__ifile.line_number
-                         , p_ifunc.Name().c_str(), funcname);
+         }
+         if (G__get_tagnum(p_ifunc) != -1) {
+            G__fprinterr(G__serr, "\n%-5d%s::%s(", G__ifile.line_number, p_ifunc.Name().c_str(), funcname);
          }
          else {
-            G__fprinterr(G__serr, "\n%-5d%s(" , G__ifile.line_number, funcname);
+            G__fprinterr(G__serr, "\n%-5d%s(", G__ifile.line_number, funcname);
          }
       }
    }
-   // now came to         func( para1,para2,,,)
-   //                          ^
+   //
+   // Now we have: funcname(para1, ...)
+   //                       ^
+   //--
+   //
+   //  Initialize function parameters.
+   //
    store_doingconstruction = G__doingconstruction;
-   if (G__get_funcproperties(ifn)->entry.ansi == 0) {
+   if (!G__get_funcproperties(ifn)->entry.ansi) {
       /**************************************************************
        * K&R C
        *
@@ -5359,11 +5599,9 @@ asm_ifunc_start:   /* loop compilation execution label */
    }
 #endif
    G__setclassdebugcond(G__get_tagnum(G__memberfunc_tagnum), 1);
-   /**************************************************************
-    * execute ifunction body
-    *
-    * common to standard and ANSI
-    **************************************************************/
+   //
+   //  Now get ready to execute the function body.
+   //
    store_iscpp = G__iscpp;
    G__iscpp = G__get_funcproperties(ifn)->iscpplink;
    ++G__templevel;
@@ -5380,22 +5618,27 @@ asm_ifunc_start:   /* loop compilation execution label */
       }
    }
 #endif
-   G__ASSERT(0 == G__decl || 1 == G__decl);
    store_def_struct_member = G__def_struct_member;
    G__def_struct_member = 0;
    store_decl = G__decl;
    G__decl = 0;
    G__no_exec = 0;
-   // 
-   // Execute Body.
+   //
+   //  Interpret function body.
+   //
    int brace_level = 0;
-   *result7 = G__exec_statement(&brace_level);
+   *return_value = G__exec_statement(&brace_level);
+   //
+   //  After interpretation.
+   //
    G__decl = store_decl;
    G__def_struct_member = store_def_struct_member;
-   G__ASSERT(0 == G__decl || 1 == G__decl);
-   if (G__RETURN_IMMEDIATE == G__return &&
-                                        G__get_type(G__interactivereturnvalue) && '\0' == G__get_type(G__value_typenum(*result7))) {
-      *result7 = G__interactivereturnvalue;
+   if (
+      (G__return == G__RETURN_IMMEDIATE) &&
+      G__get_type(G__interactivereturnvalue) &&
+      !G__get_type(G__value_typenum(*return_value))
+   ) {
+      *return_value = G__interactivereturnvalue;
       G__interactivereturnvalue = G__null;
    }
    --G__calldepth;
@@ -5411,374 +5654,464 @@ asm_ifunc_start:   /* loop compilation execution label */
          G__asm_dbg = 0;
       }
    }
-#endif
-   G__iscpp = (short)store_iscpp;
+#endif // G__ASM_DBG
+   G__iscpp = (short) store_iscpp;
    G__doingconstruction = store_doingconstruction;
-   /**************************************************************
-    * Error if goto label not found
-    **************************************************************/
+   //
+   //  Error if goto label not found.
+   //
    if (G__gotolabel[0]) {
       G__fprinterr(G__serr, "Error: Goto label '%s' not found in %s()", G__gotolabel, funcname);
       G__genericerror(0);
       G__gotolabel[0] = '\0';
    }
-   /**************************************************************
-    * return value type conversion
-    **************************************************************/
-   if (
-      !G__xrefflag &&
-      (G__get_type(G__value_typenum(*result7)) != '\0') &&
+   //
+   //  Do return value type conversion.
+   //
+   if ( // Do return value type conversion, if return val is not nil.
+      !G__xrefflag && // not doing a variable cross-reference, and
+      G__get_type(G__value_typenum(*return_value)) && // return value is not nil type, and
       (G__return != G__RETURN_EXIT1) &&
       ((G__asm_wholefunction == G__ASM_FUNC_NOP) || G__asm_noverflow)
-   ) {
-      char rtype = G__get_type(ifn.TypeOf().ReturnType());
-      if (ifn.IsConstructor()) {
-         rtype = 'i';
+   ) { // Do return value type conversion, if return val is not nil.
+      if (G__dispsource) {
+         G__fprinterr(G__serr, "\n!!!Begin function return value type conversion.\n");
       }
-      switch (rtype) {
-         case 'd': /* double */
-         case 'f': /* float */
-         case 'w': /* logic (original type) */
-            G__letdouble(result7, G__get_type(ifn.TypeOf().ReturnType()) , G__double(*result7));
-#define G__OLDIMPLEMENTATION753
-#ifdef G__OLDIMPLEMENTATION753
-            if (G__get_reftype(ifn.TypeOf().ReturnType()) == G__PARANORMAL) result7->ref = 0;
-#endif // G__OLDIMPLEMENTATION753
+      ::Reflex::Type ty = ifn.TypeOf().ReturnType();
+      char type = '\0';
+      int tagnum = -1;
+      int typenum = -1;
+      int reftype = 0;
+      int isconst = 0;
+      G__get_cint5_type_tuple(ty, &type, &tagnum, &typenum, &reftype, &isconst);
+      ::Reflex::Type retval_ty = G__value_typenum(*return_value);
+      char retval_type = '\0';
+      int retval_tagnum = -1;
+      int retval_typenum = -1;
+      int retval_reftype = 0;
+      int retval_isconst = 0;
+      G__get_cint5_type_tuple(retval_ty, &retval_type, &retval_tagnum, &retval_typenum, &retval_reftype, &retval_isconst);
+      if (ifn.Name() == ifn.DeclaringScope().Name()) { // Func is a constructor
+         if (
+            (G__struct.iscpplink[tagnum] != G__CPPLINK) && // is interpreted, and
+            (G__struct.type[tagnum] != 'e') && // not a constructor for an enum, and // FIXME: Remove, this cannot happen.
+            G__store_struct_offset &&
+            ((long) G__store_struct_offset != 1)
+         ) {
+            return_value->obj.i = (long) G__store_struct_offset;
+         }
+         return_value->ref = return_value->obj.i;
 #ifndef G__OLDIMPLEMENTATION1259
-            if (ifn.TypeOf().ReturnType().FinalType().IsConst()) {
-               G__value_typenum(*result7) = G__modify_type(G__value_typenum(*result7), 0, 0, G__get_isconst(G__value_typenum(*result7)), 0, 0);
-            }
+         G__get_cint5_type_tuple(retval_ty, &retval_type, &retval_tagnum, &retval_typenum, &retval_reftype, &retval_isconst);
+         retval_isconst = 0;
+         G__value_typenum(*return_value) = G__cint5_tuple_to_type(retval_type, retval_tagnum, retval_typenum, retval_reftype, retval_isconst);
+         retval_ty = G__value_typenum(*return_value);
 #endif // G__OLDIMPLEMENTATION1259
+         // --
+      }
+      else {
+      switch (type) {
+         case 'd': // double
+         case 'f': // float
+         case 'w': // logic (original type)
+            G__letdouble(return_value, type, G__double(*return_value));
+            retval_ty = G__value_typenum(*return_value);
+            G__get_cint5_type_tuple(retval_ty, &retval_type, &retval_tagnum, &retval_typenum, &retval_reftype, &retval_isconst);
+            if (reftype == G__PARANORMAL) {
+               return_value->ref = 0;
+            }
+#ifndef G__OLDIMPLEMENTATION1259
+            retval_isconst = isconst;
+#endif // G__OLDIMPLEMENTATION1259
+            G__value_typenum(*return_value) = G__cint5_tuple_to_type(retval_type, retval_tagnum, retval_typenum, retval_reftype, retval_isconst);
+            retval_ty = G__value_typenum(*return_value);
             break;
-         case 'n':
-         case 'm':
-            G__letLonglong(result7, G__get_type(ifn.TypeOf().ReturnType()), G__Longlong(*result7));
-            if (G__get_reftype(ifn.TypeOf().ReturnType()) == G__PARANORMAL) {
-               result7->ref = 0;
+         case 'n': // unsigned long long
+         case 'm': // long long
+            G__letLonglong(return_value, type, G__Longlong(*return_value));
+            retval_ty = G__value_typenum(*return_value);
+            G__get_cint5_type_tuple(retval_ty, &retval_type, &retval_tagnum, &retval_typenum, &retval_reftype, &retval_isconst);
+            if (reftype == G__PARANORMAL) {
+               return_value->ref = 0;
             }
-            if (ifn.TypeOf().ReturnType().FinalType().IsConst()) {
-               G__value_typenum(*result7) = G__modify_type(G__value_typenum(*result7), 0, 0, G__get_isconst(G__value_typenum(*result7)), 0, 0);
-            }
+            retval_isconst = isconst;
+            G__value_typenum(*return_value) = G__cint5_tuple_to_type(retval_type, retval_tagnum, retval_typenum, retval_reftype, retval_isconst);
+            retval_ty = G__value_typenum(*return_value);
             break;
-         case 'q':
-            G__letLongdouble(result7, G__get_type(ifn.TypeOf().ReturnType()), G__Longdouble(*result7));
-            if (G__get_reftype(ifn.TypeOf().ReturnType()) == G__PARANORMAL) {
-               result7->ref = 0;
+         case 'q': // long double
+            G__letLongdouble(return_value, type, G__Longdouble(*return_value));
+            retval_ty = G__value_typenum(*return_value);
+            G__get_cint5_type_tuple(retval_ty, &retval_type, &retval_tagnum, &retval_typenum, &retval_reftype, &retval_isconst);
+            if (reftype == G__PARANORMAL) {
+               return_value->ref = 0;
             }
-            if (ifn.TypeOf().ReturnType().FinalType().IsConst()) {
-               G__value_typenum(*result7) = G__modify_type(G__value_typenum(*result7), 0, 0, G__get_isconst(G__value_typenum(*result7)), 0, 0);
-            }
+            retval_isconst = isconst;
+            G__value_typenum(*return_value) = G__cint5_tuple_to_type(retval_type, retval_tagnum, retval_typenum, retval_reftype, retval_isconst);
+            retval_ty = G__value_typenum(*return_value);
             break;
-         case 'g':
-            G__letint(result7, G__get_type(ifn.TypeOf().ReturnType()), G__int(*result7) ? 1 : 0);
-#ifdef G__OLDIMPLEMENTATION753
-            if (G__get_reftype(ifn.TypeOf().ReturnType()) == G__PARANORMAL) {
-               result7->ref = 0;
+         case 'g': // bool
+            G__letint(return_value, type, G__int(*return_value) ? 1 : 0); // FIXME: Need to test for char-size bool here.
+            retval_ty = G__value_typenum(*return_value);
+            G__get_cint5_type_tuple(retval_ty, &retval_type, &retval_tagnum, &retval_typenum, &retval_reftype, &retval_isconst);
+            if (reftype == G__PARANORMAL) {
+               return_value->ref = 0;
             }
-#endif // G__OLDIMPLEMENTATION753
-            if (ifn.TypeOf().ReturnType().FinalType().IsConst()) {
-               G__value_typenum(*result7) = G__modify_type(G__value_typenum(*result7), 0, 0, G__get_isconst(G__value_typenum(*result7)), 0, 0);
-            }
+            retval_isconst = isconst;
+            G__value_typenum(*return_value) = G__cint5_tuple_to_type(retval_type, retval_tagnum, retval_typenum, retval_reftype, retval_isconst);
+            retval_ty = G__value_typenum(*return_value);
             break;
-         case 'y': /* void */
-            /***************************************************
-             * in case of void, if return(); statement exists
-             * it is illegal.
-             * Maybe bug if return; statement exists without
-             * return value.
-             ***************************************************/
-            if (G__RETURN_NORMAL == G__return) {
+         case 'y': // void
+            if (G__return == G__RETURN_NORMAL) {
                if (G__dispmsg >= G__DISPWARN) {
                   G__fprinterr(G__serr, "Warning: Return value of void %s() ignored", ifn.Name().c_str());
                   G__printlinenum();
                }
             }
-            *result7 = G__null;
+            *return_value = G__null;
+            retval_ty = G__value_typenum(*return_value);
+            retval_type = '\0';
+            retval_tagnum = -1;
+            retval_typenum = -1;
+            retval_reftype = 0;
+            retval_isconst = 0;
             break;
-         case 'u': /* struct, union, class */
-            /***************************************************
-             * result7 contains pointer to the local variable
-             * which will be destroyed right after this.
-             ***************************************************/
+         case 'u': // class, enum, struct, union
             {
-#ifndef G__OLDIMPLEMENTATION1802
-            G__StrBuf temp_sb(G__ONELINE);
-            char *temp = temp_sb;
-#endif // G__OLDIMPLEMENTATION1802
-            /* don't call copy constructor if returning reference type */
-            if (G__PARANORMAL != G__get_reftype(ifn.TypeOf().ReturnType())) {
-               if (ifn.TypeOf().ReturnType().RawType() != G__value_typenum(*result7).RawType()) {
-                  int offset = G__ispublicbase(ifn.TypeOf().ReturnType().RawType(), G__value_typenum(*result7).RawType(), (void*)result7->obj.i);
-                  if (-1 == offset) {
-                     G__fprinterr(G__serr, "Error: Return type mismatch. %s ", ifn.TypeOf().ReturnType().Name(::Reflex::SCOPED).c_str());
-                     G__fprinterr(G__serr, "not a public base of %s", G__value_typenum(*result7).RawType().Name(::Reflex::SCOPED).c_str());
-                     G__genericerror(0);
-                     G__value_typenum(*result7) = G__replace_rawtype(G__value_typenum(*result7), ifn.TypeOf().ReturnType().RawType());
-                     break;
-                  }
-                  else {
-                     result7->obj.i += offset;
-                     if (result7->ref) {
-                        result7->ref += offset;
-                     }
-                     G__value_typenum(*result7) = G__replace_rawtype(G__value_typenum(*result7), ifn.TypeOf().ReturnType().RawType());
-                  }
-               }
-               break;
-            }
-            if ('e' == G__get_tagtype(ifn.TypeOf().ReturnType())) {
-               break;
-            }
-            if (G__get_type(*result7) == 'u' || (G__get_type(*result7) == 'i' && -1 != G__get_tagnum(G__value_typenum(*result7)))) {
-               if (result7->obj.i < 0) {
-                  sprintf(temp, "%s((%s)(%ld))", ifn.TypeOf().ReturnType().RawType().Name().c_str(), G__value_typenum(*result7).RawType().Name(::Reflex::SCOPED).c_str() , result7->obj.i);
-               }
-               else {
-                  sprintf(temp, "%s((%s)%ld)", ifn.TypeOf().ReturnType().RawType().Name().c_str(), G__value_typenum(*result7).RawType().Name(::Reflex::SCOPED).c_str() , result7->obj.i);
-               }
-            }
-            else {
-               G__StrBuf buf2_sb(G__ONELINE);
-               char *buf2 = buf2_sb;
-               G__valuemonitor(*result7, buf2);
-               sprintf(temp, "%s(%s)", ifn.TypeOf().ReturnType().RawType().Name().c_str(), buf2);
-            }
-            store_tagnum = G__tagnum;
-            G__tagnum = ifn.TypeOf().ReturnType().RawType();
-            store_var_type = G__var_type;
-#ifdef G__SECURITY
-            G__castcheckoff = 1;
-#endif // G__SECURITY
-            if (G__RETURN_IMMEDIATE >= G__return) {
-               G__return = G__RETURN_NON;
-            }
-            itemp = 0;
-            store_struct_offset = G__store_struct_offset;
-            if (G__CPPLINK != G__struct.iscpplink[G__get_tagnum(G__tagnum)]) {
-               // -- Interpreted class.
-               if (store_p_tempobject) {
-                  G__store_struct_offset = (char*)store_p_tempobject->obj.i;
-               }
-               else {
-                  G__store_struct_offset = (char*)G__p_tempbuf->obj.obj.i;
-               }
-               if (G__dispsource) {
-                  G__fprinterr(G__serr, "\n!!!Calling copy/conversion constructor for return temp object 0x%lx.%s", G__store_struct_offset, temp);
-               }
-               G__getfunction(temp, &itemp, G__TRYCONSTRUCTOR);
-               if (
-                  itemp &&
-                  (store_p_tempobject != &G__p_tempbuf->obj) &&
-                  (store_struct_offset != (char*) G__p_tempbuf->obj.obj.i)
-               ) {
-                  ++G__p_tempbuf->level;
-                  ++G__templevel;
-                  G__free_tempobject();
-                  --G__templevel;
-               }
-            }
-            else {
-               // -- Precompiled class.
-               char* store_globalvarpointer = G__globalvarpointer;
-               G__globalvarpointer = G__PVOID;
-               G__store_struct_offset = (char*) 0xffff;
-               if (G__dispsource) {
-                  G__fprinterr(G__serr, "\n!!!Calling copy/conversion constructor for return temp object 0x%lx.%s", G__store_struct_offset, temp);
-               }
-               buf = G__getfunction(temp, &itemp, G__TRYCONSTRUCTOR);
-               G__globalvarpointer = store_globalvarpointer;
-               if (itemp) {
-                  G__free_tempobject();
-                  G__store_tempobject(buf);
-               }
-#ifdef G__ASM
-               // It is not needed to explicitly create STORETEMP instruction
-               // because it is preincluded in the compiled funciton call
-               // interface.
-#endif // G__ASM
-               if (G__dispsource) {
-                  G__fprinterr(G__serr, "!!!Create temp object (%s)0x%lx,%d for %s() return\n", G__struct.name[G__get_tagnum(G__tagnum)], G__p_tempbuf->obj.obj.i, G__templevel, ifn.Name().c_str());
-               }
-            }
-            G__store_struct_offset = store_struct_offset;
-            G__tagnum = store_tagnum;
-            G__var_type = store_var_type;
-            // If no copy constructor, memberwise copy.
-            if (!itemp && !G__xrefflag) {
-               long offset = 0;
-               if (G__get_tagnum(G__value_typenum(*result7)) == G__get_tagnum(ifn.TypeOf().ReturnType())) {
-                  if (store_p_tempobject) {
-                     memcpy((void*) store_p_tempobject->obj.i, (void*) result7->obj.i, (size_t) G__struct.size[G__get_tagnum(G__value_typenum(*result7))]);
-                  }
-                  else {
-                     memcpy((void*) G__p_tempbuf->obj.obj.i, (void*) result7->obj.i, (size_t) G__struct.size[G__get_tagnum(G__value_typenum(*result7))]);
-                  }
-               }
-               else if (
-                  -1 != (offset = G__ispublicbase(ifn.TypeOf().ReturnType().RawType(), G__value_typenum(*result7).RawType(), (void*) result7->obj.i))
-               ) {
-                  sprintf(temp, "%s((%s)(%ld))", ifn.TypeOf().ReturnType().RawType().Name().c_str(), ifn.TypeOf().ReturnType().Name(::Reflex::SCOPED).c_str(), result7->obj.i + offset);
-                  if (G__CPPLINK != G__struct.iscpplink[G__get_tagnum(G__tagnum)]) {
-                     // -- Interpreted class.
-                     if (store_p_tempobject) {
-                        G__store_struct_offset = (char*)store_p_tempobject->obj.i;
+               // return_value contains pointer to the local variable
+               // which will be destroyed right after this.
+               G__StrBuf temp_sb(G__ONELINE);
+               char* temp = temp_sb;
+               // don't call copy constructor if returning reference type
+               if (reftype != G__PARANORMAL) {
+                  if (tagnum != retval_tagnum) {
+                     int offset = G__ispublicbase(ty.RawType(), retval_ty.RawType(), (void*) return_value->obj.i);
+                     if (offset == -1) {
+                        G__fprinterr(G__serr, "Error: Return type mismatch. %s ", G__fulltagname(tagnum, 1));
+                        G__fprinterr(G__serr, "not a public base of %s", G__fulltagname(retval_tagnum, 1));
+                        G__genericerror(0);
+                        G__get_cint5_type_tuple(retval_ty, &retval_type, &retval_tagnum, &retval_typenum, &retval_reftype, &retval_isconst);
+                        retval_tagnum = tagnum;
+                        G__value_typenum(*return_value) = G__cint5_tuple_to_type(retval_type, retval_tagnum, retval_typenum, retval_reftype, retval_isconst);
+                        retval_ty = G__value_typenum(*return_value);
+                        break;
                      }
                      else {
-                        G__store_struct_offset = (char*)G__p_tempbuf->obj.obj.i;
+                        return_value->obj.i += offset;
+                        if (return_value->ref) {
+                           return_value->ref += offset;
+                        }
+                        G__get_cint5_type_tuple(retval_ty, &retval_type, &retval_tagnum, &retval_typenum, &retval_reftype, &retval_isconst);
+                        retval_tagnum = tagnum;
+                        G__value_typenum(*return_value) = G__cint5_tuple_to_type(retval_type, retval_tagnum, retval_typenum, retval_reftype, retval_isconst);
+                        retval_ty = G__value_typenum(*return_value);
                      }
-                     G__getfunction(temp, &itemp, G__TRYCONSTRUCTOR);
+                  }
+                  break;
+               }
+               if (G__struct.type[tagnum] == 'e') {
+                  break;
+               }
+               if ((retval_type == 'u') || ((retval_type == 'i') && (retval_tagnum != -1))) {
+                  if (return_value->obj.i < 0) {
+                     sprintf(temp, "%s((%s)(%ld))", G__struct.name[tagnum], G__fulltagname(retval_tagnum, 1), return_value->obj.i);
                   }
                   else {
-                     // -- Precompiled class.
-                     G__store_struct_offset = (char*) 0xffff;
-                     buf = G__getfunction(temp, &itemp, G__TRYCONSTRUCTOR);
-                     if (itemp) {
-                        G__store_tempobject(buf);
+                     sprintf(temp, "%s((%s)%ld)", G__struct.name[tagnum], G__fulltagname(retval_tagnum, 1), return_value->obj.i);
+                  }
+               }
+               else {
+                  G__StrBuf buf2_sb(G__ONELINE);
+                  char* buf2 = buf2_sb;
+                  G__valuemonitor(*return_value, buf2);
+                  sprintf(temp, "%s(%s)", G__struct.name[tagnum], buf2);
+               }
+               store_tagnum = G__tagnum;
+               G__tagnum = ty.RawType();
+               store_var_type = G__var_type;
+#ifdef G__SECURITY
+               G__castcheckoff = 1;
+#endif // G__SECURITY
+               if (G__return <= G__RETURN_IMMEDIATE) {
+                  G__return = G__RETURN_NON;
+               }
+               itemp = 0;
+               store_struct_offset = G__store_struct_offset;
+               if (G__struct.iscpplink[G__get_tagnum(G__tagnum)] != G__CPPLINK) { // Interpreted class.
+                  if (store_p_tempobject) {
+                     G__store_struct_offset = (char*) store_p_tempobject->obj.i;
+                  }
+                  else {
+                     G__store_struct_offset = (char*) G__p_tempbuf->obj.obj.i;
+                  }
+                  if (G__dispsource) {
+                     G__fprinterr(G__serr, "\n!!!Calling copy/conversion constructor for return temp object 0x%lx.%s", G__store_struct_offset, temp);
+                  }
+                  G__getfunction(temp, &itemp, G__TRYCONSTRUCTOR);
+                  if (
+                     itemp &&
+                     (store_p_tempobject != &G__p_tempbuf->obj) &&
+                     (store_struct_offset != (char*) G__p_tempbuf->obj.obj.i)
+                  ) {
+                     ++G__p_tempbuf->level;
+                     ++G__templevel;
+                     G__free_tempobject();
+                     --G__templevel;
+                  }
+               }
+               else { // Precompiled class.
+                  char* store_globalvarpointer = G__globalvarpointer;
+                  G__globalvarpointer = G__PVOID;
+                  G__store_struct_offset = (char*) 0xffff;
+                  if (G__dispsource) {
+                     G__fprinterr(G__serr, "\n!!!Calling copy/conversion constructor for return temp object 0x%lx.%s", G__store_struct_offset, temp);
+                  }
+                  buf = G__getfunction(temp, &itemp, G__TRYCONSTRUCTOR);
+                  G__globalvarpointer = store_globalvarpointer;
+                  if (itemp) {
+                     G__free_tempobject();
+                     G__store_tempobject(buf);
+                  }
+                  if (G__dispsource) {
+                     G__fprinterr(G__serr, "!!!Created temp object for return value of compiled func '%s' addr: (%s) 0x%lx level: %d  %s:%d\n", ifn.Name().c_str(), G__struct.name[G__get_tagnum(G__tagnum)], G__p_tempbuf->obj.obj.i, G__templevel, __FILE__, __LINE__);
+                  }
+               }
+               G__store_struct_offset = store_struct_offset;
+               G__tagnum = store_tagnum;
+               G__var_type = store_var_type;
+               //
+               //  If no copy constructor, then memberwise copy.
+               //
+               if (!itemp && !G__xrefflag) {
+                  long offset = 0;
+                  if (retval_tagnum == tagnum) {
+                     if (store_p_tempobject) {
+                        memcpy((void*) store_p_tempobject->obj.i, (void*) return_value->obj.i, (size_t) G__struct.size[retval_tagnum]);
+                     }
+                     else {
+                        memcpy((void*) G__p_tempbuf->obj.obj.i, (void*) return_value->obj.i, (size_t) G__struct.size[retval_tagnum]);
+                     }
+                  }
+                  else if (
+                     (offset = G__ispublicbase(ty.RawType(), retval_ty.RawType(), (void*) return_value->obj.i)) != -1
+                  ) {
+                     sprintf(temp, "%s((%s)(%ld))", G__struct.name[tagnum], G__fulltagname(tagnum, 1), return_value->obj.i + offset);
+                     if (G__struct.iscpplink[G__get_tagnum(G__tagnum)] != G__CPPLINK) { // Interpreted class.
+                        if (store_p_tempobject) {
+                           G__store_struct_offset = (char*) store_p_tempobject->obj.i;
+                        }
+                        else {
+                           G__store_struct_offset = (char*) G__p_tempbuf->obj.obj.i;
+                        }
+                        G__getfunction(temp, &itemp, G__TRYCONSTRUCTOR);
+                     }
+                     else { // Precompiled class.
+                        G__store_struct_offset = (char*) 0xffff;
+                        buf = G__getfunction(temp, &itemp, G__TRYCONSTRUCTOR);
+                        if (itemp) {
+                           G__store_tempobject(buf);
+                        }
                      }
                   }
                }
-            }
-            if (store_p_tempobject) {
-               *result7 = *store_p_tempobject;
-            }
-            else {
-               *result7 = G__p_tempbuf->obj;
+               //
+               //
+               //
+               if (store_p_tempobject) {
+                  *return_value = *store_p_tempobject;
+                  retval_ty = G__value_typenum(*return_value);
+                  G__get_cint5_type_tuple(retval_ty, &retval_type, &retval_tagnum, &retval_typenum, &retval_reftype, &retval_isconst);
+               }
+               else {
+                  *return_value = G__p_tempbuf->obj;
+                  retval_ty = G__value_typenum(*return_value);
+                  G__get_cint5_type_tuple(retval_ty, &retval_type, &retval_tagnum, &retval_typenum, &retval_reftype, &retval_isconst);
+               }
             }
 #ifndef G__OLDIMPLEMENTATION1259
-            if (ifn.TypeOf().ReturnType().FinalType().IsConst()) {
-               G__value_typenum(*result7) = G__modify_type(G__value_typenum(*result7), 0, 0, G__get_isconst(G__value_typenum(*result7)), 0, 0);
-            }
+            G__get_cint5_type_tuple(retval_ty, &retval_type, &retval_tagnum, &retval_typenum, &retval_reftype, &retval_isconst);
+            retval_isconst = isconst;
+            G__value_typenum(*return_value) = G__cint5_tuple_to_type(retval_type, retval_tagnum, retval_typenum, retval_reftype, retval_isconst);
+            retval_ty = G__value_typenum(*return_value);
 #endif // G__OLDIMPLEMENTATION1259
             break;
-            }
-         case 'i':
-            // -- Return value of constructor.
-            if (-1 != G__get_tagnum(ifn.TypeOf().ReturnType())) {
+         case 'i': // integer
+            if (tagnum != -1) { // Return value of constructor.
                if (
-                  (G__CPPLINK != G__struct.iscpplink[G__get_tagnum(ifn.TypeOf().ReturnType())]) &&
-                  ('e' != G__get_tagtype(ifn.TypeOf().ReturnType())) &&
+                  (G__struct.iscpplink[tagnum] != G__CPPLINK) &&
+                  (G__struct.type[tagnum] != 'e') &&
                   G__store_struct_offset &&
-                  (1 != (long)G__store_struct_offset)
+                  ((long) G__store_struct_offset != 1)
                ) {
-                  result7->obj.i = (long) G__store_struct_offset;
+                  return_value->obj.i = (long) G__store_struct_offset;
                }
-               result7->ref = result7->obj.i;
+               return_value->ref = return_value->obj.i;
 #ifndef G__OLDIMPLEMENTATION1259
-               if (ifn.TypeOf().ReturnType().FinalType().IsConst()) {
-                  G__value_typenum(*result7) = G__modify_type(G__value_typenum(*result7), 0, 0, G__get_isconst(G__value_typenum(*result7)), 0, 0);
-               }
+               G__get_cint5_type_tuple(retval_ty, &retval_type, &retval_tagnum, &retval_typenum, &retval_reftype, &retval_isconst);
+               retval_isconst = 0;
+               G__value_typenum(*return_value) = G__cint5_tuple_to_type(retval_type, retval_tagnum, retval_typenum, retval_reftype, retval_isconst);
+               retval_ty = G__value_typenum(*return_value);
 #endif // G__OLDIMPLEMENTATION1259
                break;
             }
-         case 'U':
-            if ('U' == G__get_type(ifn.TypeOf().ReturnType()) && 'U' == G__get_type(*result7)) {
-               if (ifn.TypeOf().ReturnType().RawType() != G__value_typenum(*result7).RawType()) {
-                  int offset = G__ispublicbase(ifn.TypeOf().ReturnType().RawType(), G__value_typenum(*result7).RawType(), (void*)result7->obj.i);
-                  if (-1 == offset) {
-                     G__fprinterr(G__serr, "Error: Return type mismatch. %s ", ifn.TypeOf().ReturnType().Name(::Reflex::SCOPED).c_str());
-                     G__fprinterr(G__serr, "not a public base of %s", G__value_typenum(*result7).RawType().Name(::Reflex::SCOPED).c_str());
+            // Intentionally fallthrough.
+         case 'U': // pointer to class, enum, struct, or union
+            if ((type == 'U') && (retval_type == 'U')) {
+               if (tagnum != retval_tagnum) {
+                  int offset = G__ispublicbase(ty.RawType(), retval_ty.RawType(), (void*) return_value->obj.i);
+                  if (offset == -1) {
+                     G__fprinterr(G__serr, "Error: Return type mismatch. %s ", G__fulltagname(tagnum, 1));
+                     G__fprinterr(G__serr, "not a public base of %s", G__fulltagname(retval_tagnum, 1));
                      G__genericerror(0);
-                     G__value_typenum(*result7) = G__replace_rawtype(G__value_typenum(*result7), ifn.TypeOf().ReturnType().RawType());
+                     retval_tagnum = tagnum;
+                     G__value_typenum(*return_value) = G__cint5_tuple_to_type(retval_type, retval_tagnum, retval_typenum, retval_reftype, retval_isconst);
+                     retval_ty = G__value_typenum(*return_value);
                      break;
                   }
                   else {
-                     result7->obj.i += offset;
-                     if (result7->ref) {
-                        result7->ref += offset;
+                     return_value->obj.i += offset;
+                     if (return_value->ref) {
+                        return_value->ref += offset;
                      }
-                     G__value_typenum(*result7) = G__replace_rawtype(G__value_typenum(*result7), ifn.TypeOf().ReturnType().RawType());
+                     retval_tagnum = tagnum;
+                     G__value_typenum(*return_value) = G__cint5_tuple_to_type(retval_type, retval_tagnum, retval_typenum, retval_reftype, retval_isconst);
+                     retval_ty = G__value_typenum(*return_value);
                   }
                }
             }
-            /* no break, this case continues to default: */
-            /***************************************************
-             * Everything else is returned as integer. This
-             * includes char,short,int,long,unsigned version
-             * of them, pointer and struct/union.
-             * If return value is struct/union, malloced memory
-             * area will be freed about 20 lines below by
-             * G__destroy_upto(). To prevent any data loss, memory
-             * area has to be copied to left hand side memory
-             * area of assignment (or temp buffer of expression
-             * parser which doesn't exist in this version).
-             ***************************************************/
+            // Intentionally fallthrough.
          default:
+            //
+            //  Everything else is returned as integer.  If the
+            //  return value is a class, enum, struct, or union
+            //  then the memory area will be freed below by a destroy.
+            //  To prevent data loss, the memory area has to be copied
+            //  to the memory area of the left hand side of the
+            //  assignment expression.
+            //
 #ifdef G__SECURITY
-            if (isupper(G__get_type(ifn.TypeOf().ReturnType())) && islower(G__get_type(*result7)) && result7->obj.i && 0 == G__asm_wholefunction) {
+            if (
+               isupper(type) &&
+               islower(retval_type) &&
+               return_value->obj.i &&
+               !G__asm_wholefunction
+            ) {
                G__fprinterr(G__serr, "Error: Return type mismatch %s()", ifn.Name().c_str());
                G__genericerror(0);
                break;
             }
 #endif // G__SECURITY
-            G__letint(result7, G__get_type(ifn.TypeOf().ReturnType()), G__int(*result7));
-#ifdef G__OLDIMPLEMENTATION753
-            if (G__get_reftype(ifn.TypeOf().ReturnType()) == G__PARANORMAL) {
-               result7->ref = 0;
+            G__letint(return_value, type, G__int(*return_value));
+            retval_ty = G__value_typenum(*return_value);
+            G__get_cint5_type_tuple(retval_ty, &retval_type, &retval_tagnum, &retval_typenum, &retval_reftype, &retval_isconst);
+            if (reftype == G__PARANORMAL) {
+               return_value->ref = 0;
             }
-#endif // G__OLDIMPLEMENTATION753
-            G__value_typenum(*result7) = G__modify_type(G__value_typenum(*result7), 0, G__get_reftype(ifn.TypeOf().ReturnType()), G__get_isconst(G__value_typenum(*result7)), 0, 0);
+            if (isupper(retval_type)) {
+               retval_reftype = reftype;
+               G__value_typenum(*return_value) = G__cint5_tuple_to_type(retval_type, retval_tagnum, retval_typenum, retval_reftype, retval_isconst);
+               retval_ty = G__value_typenum(*return_value);
+            }
 #ifdef G__SECURITY
-            if (isupper(G__get_type(*result7)) && (G__security & G__SECURE_GARBAGECOLLECTION) && (!G__no_exec_compile)) {
-               // -- Add reference count to avoid garbage collection when pointer is returned.
-               G__add_refcount((void*) result7->obj.i, 0);
+            if (
+               isupper(retval_type) &&
+               (G__security & G__SECURE_GARBAGECOLLECTION) &&
+               !G__no_exec_compile
+            ) {
+               // Add reference count to avoid garbage collection when pointer is returned.
+               G__add_refcount((void*) return_value->obj.i, 0);
             }
 #endif // G__SECURITY
+#ifndef G__OLDIMPLEMENTATION1259
+            retval_isconst = isconst;
+            G__value_typenum(*return_value) = G__cint5_tuple_to_type(retval_type, retval_tagnum, retval_typenum, retval_reftype, retval_isconst);
+            retval_ty = G__value_typenum(*return_value);
+#endif // G__OLDIMPLEMENTATION1259
             break;
       }
-   }
-   if (G__RETURN_EXIT1 != G__return) { /* if not exit */
-      // return struct and typedef identity
-      if (G__value_typenum(*result7)) { // if not G__null
-         G__value_typenum(*result7) = G__replace_rawtype(G__value_typenum(*result7), ifn.TypeOf().ReturnType().RawType());
+      }
+      if (G__dispsource) {
+         G__fprinterr(G__serr, "\n!!!End function return value type conversion.\n");
       }
    }
-   if (G__RETURN_TRY != G__return) {
+   if (G__return != G__RETURN_EXIT1) { // If not exit, return struct and typedef identity.
+      if (G__value_typenum(*return_value)) { // if not G__null
+         ::Reflex::Type ty = ifn.TypeOf().ReturnType();
+         char type = '\0';
+         int tagnum = -1;
+         int typenum = -1;
+         int reftype = 0;
+         int isconst = 0;
+         G__get_cint5_type_tuple(ty, &type, &tagnum, &typenum, &reftype, &isconst);
+         ::Reflex::Type retval_ty = G__value_typenum(*return_value);
+         char retval_type = '\0';
+         int retval_tagnum = -1;
+         int retval_typenum = -1;
+         int retval_reftype = 0;
+         int retval_isconst = 0;
+         G__get_cint5_type_tuple(retval_ty, &retval_type, &retval_tagnum, &retval_typenum, &retval_reftype, &retval_isconst);
+         retval_tagnum = tagnum;
+         retval_typenum = typenum;
+         G__value_typenum(*return_value) = G__cint5_tuple_to_type(retval_type, retval_tagnum, retval_typenum, retval_reftype, retval_isconst);
+      }
+   }
+   if (G__return != G__RETURN_TRY) {
       G__no_exec = 0;
-      /**************************************************************
-       * reset return flag
-       * G__return is set to 1 if interpreted function returns by
-       * return(); statement.  Until G__return is reset to 0,
-       * execution flow exits from G__exec_statment().
-       **************************************************************/
-      if (G__RETURN_IMMEDIATE >= G__return) {
+      // G__return is set to 1 if interpreted function returns by
+      // return statement.  Until G__return is reset to 0,
+      // execution flow exits from G__exec_statment().
+      if (G__return <= G__RETURN_IMMEDIATE) {
          G__return = G__RETURN_NON;
       }
    }
 #ifndef G__NEWINHERIT
-   // recover prev local variable
+   //
+   //  Recover previous local variable chain.
+   //
    G__p_local = G_local.prev_local; // same as G__p_local->prev_local
 #endif // G__NEWINHERIT
 #ifdef G__ASM_WHOLEFUNC
-   /**************************************************************
-    * whole function bytecode compile end
-    **************************************************************/
-   if (G__ASM_FUNC_COMPILE&G__asm_wholefunction) {
-      if (G__NOERROR != G__security_error) {
+   //
+   //  Whole function bytecode compile end.
+   //
+   if (G__asm_dbg) {
+      //fprintf(stderr, "G__interpret_func: Bytecode compilation of '%s', testing G__asm_wholefunction: %d\n", ifn->Name(::Reflex::SCOPED).c_str(), G__asm_wholefunction);
+   }
+   if (G__asm_wholefunction & G__ASM_FUNC_COMPILE) { // End whole function bytecode compile.
+      // -- End whole function bytecode compile.
+      if (G__asm_dbg) {
+         //fprintf(stderr, "G__interpret_func: Bytecode compilation of '%s', G__asm_noverflow: %d\n", ifn->Name(::Reflex::SCOPED).c_str(), G__asm_noverflow);
+      }
+      if (G__security_error != G__NOERROR) {
          G__resetbytecode();
       }
-      if (G__asm_noverflow) {
+      if (G__asm_dbg) {
+         //fprintf(stderr, "G__interpret_func: Bytecode compilation of '%s', G__asm_noverflow: %d\n", ifn->Name(::Reflex::SCOPED).c_str(), G__asm_noverflow);
+      }
+      if (G__asm_noverflow) { // Bytecode compilation succeeded.
          int pc = 0;
 #ifdef G__ASM_DBG
          if (G__asm_dbg) {
             G__fprinterr(G__serr, "%3x,%3x: RTN_FUNC  %s:%d\n", G__asm_cp, G__asm_dt, __FILE__, __LINE__);
+            G__fprinterr(G__serr, "Bytecode compilation of %s successful", ifn.Name(::Reflex::SCOPED).c_str());
+            G__printlinenum();
          }
 #endif // G__ASM_DBG
          G__asm_inst[G__asm_cp] = G__RTN_FUNC;
          G__asm_inst[G__asm_cp+1] = 0;
          G__inc_cp_asm(2, 0);
+         //
 #ifdef G__ASM_DBG
          if (G__asm_dbg) {
             G__fprinterr(G__serr, "%3x,%3x: RETURN  %s:%d\n", G__asm_cp, G__asm_dt, __FILE__, __LINE__);
          }
 #endif // G__ASM_DBG
+         //
          G__asm_inst[G__asm_cp] = G__RETURN;
-#ifdef G__ASM_DBG
-         if (G__asm_dbg) {
-            G__fprinterr(G__serr, "Bytecode compilation of '%s' successful", ifn.Name().c_str());
-            G__printlinenum();
-         }
-#endif // G__ASM_DBG
+         //
          G__resolve_jumptable_bytecode();
+         //
+         //  Perform bytecode optimization.
+         //
          if (G__asm_loopcompile >= 2) {
             G__asm_optimize(&pc);
          }
@@ -5786,25 +6119,26 @@ asm_ifunc_start:   /* loop compilation execution label */
          G__no_exec_compile = store_no_exec_compile;
          G__asm_storebytecodefunc(ifn, localvar, G__asm_stack, G__asm_dt, G__asm_inst, G__asm_cp);
       }
-      else {
-         /* destroy temp object, before restoreing G__no_exec_compile */
-         if (G__p_tempbuf->level >= G__templevel && G__p_tempbuf->prev) {
+      else { // Bytecode compilation failed, cleanup.
+         // destroy temp object, before restoring G__no_exec_compile
+         if ((G__p_tempbuf->level >= G__templevel) && G__p_tempbuf->prev) {
             G__free_tempobject();
          }
          free(G__asm_name);
          G__resetbytecode();
          G__no_exec_compile = store_no_exec_compile;
-         /* destroy local memory area */
-         localvar.Unload();
+         localvar.Unload(); // destroy local memory area
+         //G__destroy_upto(localvar, G__BYTECODELOCAL_VAR, 0, -1); // destroy local memory area
+         //free((void*)localvar);
          if (G__asm_dbg) {
             if (G__dispmsg >= G__DISPWARN) {
-               G__fprinterr(G__serr,
-                            "Warning: Bytecode compilation of %s failed. Maybe slow"
-                            , ifn.Name().c_str());
+               G__fprinterr(G__serr, "Warning: Bytecode compilation of %s failed. Maybe slow", ifn.Name().c_str());
                G__printlinenum();
             }
          }
-         if (G__return >= G__RETURN_IMMEDIATE) G__return = G__RETURN_NON;
+         if (G__return >= G__RETURN_IMMEDIATE) {
+            G__return = G__RETURN_NON;
+         }
          G__security_error = G__NOERROR;
       }
    }
@@ -5818,61 +6152,64 @@ asm_ifunc_start:   /* loop compilation execution label */
       G__destroy_upto(G_local, G__LOCAL_VAR, -1);
       G__security_error = store_security_error;
    }
-#else /* G__ASM_WHOLEFUNC */
-   /**************************************************************
-   * destroy malloced local memory area
-   **************************************************************/
-   G__destroy_upto(&G_local, G__LOCAL_VAR, -1);
-#endif /* G__ASM_WHOLEFUNC */
-   if (G__TRYDESTRUCTOR == memfunc_flag) {
+#else // G__ASM_WHOLEFUNC
+   //
+   //  Destroy allocated local variable chain.
+   //
+   G__destroy_upto(&G_local, G__LOCAL_VAR, -1); // Destroy allocated local variable chain.
+#endif // G__ASM_WHOLEFUNC
+   if (memfunc_flag == G__TRYDESTRUCTOR) { // Call destructors for base classes and data members of class type.
       /* destructor for base calss and class members */
       G__basedestructor();
    }
 #ifdef G__NEWINHERIT
-   /* recover prev local variable */
-   G__p_local = G__get_properties(G_local)->stackinfo.calling_scope; /* same as G__p_local->prev_local */
-#endif
-
+   //
+   //  Recover previous local variable chain.
+   //
+   G__p_local = G__get_properties(G_local)->stackinfo.calling_scope; // same as G__p_local->prev_local
+#endif // G__NEWINHERIT
    G__tagnum = store_inherit_tagnum;
    G__store_struct_offset = store_inherit_offset;
-
-   /* recover line number and filename*/
    G__ifile.line_number = G__get_properties(G_local)->stackinfo.prev_line_number;
    G__ifile.filenum = G__get_properties(G_local)->stackinfo.prev_filenum;
-   if (-1 != G__ifile.filenum && 0 != G__srcfile[G__ifile.filenum].filename) {
+   if (
+      (G__ifile.filenum != -1) &&
+      G__srcfile[G__ifile.filenum].filename
+   ) {
       strcpy(G__ifile.name, G__srcfile[G__ifile.filenum].filename);
    }
    else {
       G__ifile.name[0] = '\0';
    }
-   //G_local.Unload(); // FIXME: Wasn't this already taken care of by the G__destroy_upto(&G__local,...) call above?
+   //
+   //  If tracing, flag end of function call.
+   //
    if (G__dispsource && G__ifile.name && G__ifile.name[0]) {
       G__fprinterr(G__serr, "\n# %s   ", G__ifile.name);
    }
-   /* recover file pointer and fpos */
    G__ifile.fp = prev_fp;
-   if (G__ifile.fp) fsetpos(G__ifile.fp, &prev_pos);
+   if (G__ifile.fp) {
+      fsetpos(G__ifile.fp, &prev_pos);
+   }
    if (G__dispsource) {
       if ((G__debug || G__break) && ((G__prerun != 0) || (G__no_exec == 0)) &&
             (G__disp_mask == 0)) {
          G__fprinterr(G__serr, "\n");
       }
    }
-   if (G__break_exit_func != 0) {
+   if (G__break_exit_func) { // If requested to break on function exit, then do so.
       G__break = 1;
       G__break_exit_func = 0;
       G__setdebugcond();
    }
    G__break_exit_func = break_exit_func;
-   /**********************************************
-    * decrement busy flag
-    **********************************************/
    G__get_funcproperties(ifn)->entry.busy--;
-   if ('P' == store_var_typeB) G__val2pointer(result7);
-   //  G__func_page = store_func_page;
+   if (store_var_typeB == 'P') {
+      G__val2pointer(return_value);
+   }
    G__func_now = store_func_now;
 #ifdef G__ASM_IFUNC
-   /* Pop loop compilation environment */
+   // Pop loop compilation environment
    G__asm_inst = store_asm_inst;
    G__asm_instsize = store_asm_instsize;
    G__asm_stack = store_asm_stack;
@@ -5884,7 +6221,7 @@ asm_ifunc_start:   /* loop compilation execution label */
    G__asm_cp  = store_asm_cp;
    G__asm_dt  = store_asm_dt;
    G__asm_index  = store_asm_index;
-#endif /* G__ASM_IFUNC */
+#endif // G__ASM_IFUNC
    G__exec_memberfunc = store_exec_memberfunc;
    G__security = store_security;
    G__memberfunc_tagnum = store_memberfunc_tagnum;
@@ -5895,12 +6232,10 @@ asm_ifunc_start:   /* loop compilation execution label */
 //______________________________________________________________________________
 static int G__call_cppfunc(G__value* return_value, G__param* libp, const ::Reflex::Member ifunc)
 {
-   // -- Calling C++ compiled function.
-   int result = 0;
+   // Call a C++ compiled function.
    G__InterfaceMethod cppfunc = (G__InterfaceMethod) G__get_funcproperties(ifunc)->entry.p;
 #ifdef G__ASM
-   if (G__asm_noverflow) {
-      // -- We are generating bytecode.
+   if (G__asm_noverflow) { // We are generating bytecode.
       if (cppfunc == (G__InterfaceMethod) G__DLL_direct_globalfunc) {
          // --
 #ifdef G__ASM_DBG
@@ -5909,12 +6244,11 @@ static int G__call_cppfunc(G__value* return_value, G__param* libp, const ::Refle
          }
 #endif // G__ASM_DBG
          G__asm_inst[G__asm_cp] = G__LD_FUNC;
-         G__asm_inst[G__asm_cp+1] = 2;
+         G__asm_inst[G__asm_cp+1] = 2; // FIXME: Remove this hack!
          G__asm_inst[G__asm_cp+2] = (long) ifunc.Id();
          G__asm_inst[G__asm_cp+3] = libp->paran;
          G__asm_inst[G__asm_cp+4] = (long) cppfunc;
-         G__asm_inst[G__asm_cp+5] = 0;
-         if (ifunc) G__asm_inst[G__asm_cp+5] = G__get_funcproperties(ifunc)->entry.ptradjust;
+         G__asm_inst[G__asm_cp+5] = G__get_funcproperties(ifunc)->entry.ptradjust;
          G__inc_cp_asm(6, 0);
       }
       else {
@@ -5926,41 +6260,80 @@ static int G__call_cppfunc(G__value* return_value, G__param* libp, const ::Refle
 #endif // G__ASM_DBG
          G__asm_inst[G__asm_cp] = G__LD_FUNC;
          G__asm_inst[G__asm_cp+1] = 0;
-         //FIXME: By going through Type::Id we lose the modifiers.
-         //however the Cint5 code was not really passing it either!
          {
-            Reflex::Type rtype( ifunc.TypeOf().ReturnType() );
-            if ( rtype.IsFundamental() && ::Reflex::Tools::FundamentalType(rtype) == Reflex::kVOID )
+            ::Reflex::Type rtype = ifunc.TypeOf().ReturnType();
+            if (rtype.IsFundamental() && ::Reflex::Tools::FundamentalType(rtype) == Reflex::kVOID)
             {
-               rtype = Reflex::Dummy::Type();
+               rtype = Reflex::Type();
             } 
-            G__asm_inst[G__asm_cp+2] = (long)rtype.Id();
+            G__asm_inst[G__asm_cp+2] = (long) rtype.Id();
          }
          G__asm_inst[G__asm_cp+3] = libp->paran;
          G__asm_inst[G__asm_cp+4] = (long) cppfunc;
-         if (ifunc) G__asm_inst[G__asm_cp+5] = G__get_funcproperties(ifunc)->entry.ptradjust;
+         G__asm_inst[G__asm_cp+5] = G__get_funcproperties(ifunc)->entry.ptradjust;
          G__inc_cp_asm(6, 0);
       }
    }
 #endif // G__ASM
+   //
+   //  Initialize the type of the return value to G__null.
    *return_value = G__null;
-   G__value_typenum(*return_value) = ifunc.TypeOf().ReturnType();
+   char retval_type = '\0';
+   int retval_tagnum = -1;
+   int retval_typenum = -1;
+   int retval_reftype = 0;
+   int retval_isconst = 0;
+   //
+   //  Get the function return type.
+   //
+   char type = '\0';
+   int tagnum = -1;
+   int typenum = -1;
+   int reftype = 0;
+   int isconst = 0;
+   G__get_cint5_type_tuple(ifunc.TypeOf().ReturnType(), &type, &tagnum, &typenum, &reftype, &isconst);
+   //
+   //  Calculate new type of return value.
+   //
+   if ( // Function return type is a class, struct, or union, and not an enum.
+      (tagnum != -1) && // return type is of class, enum, struct or union type
+      !ifunc.TypeOf().ReturnType().RawType().IsEnum() // return type is not enum
+   ) { // Function return type is a class, struct, or union, and not an enum.
+      if (isupper(type)) {
+         retval_type = 'U';
+      }
+      else {
+         retval_type = 'u';
+      }
+   }
+   else {
+      retval_type = type;
+   }
+   retval_tagnum = tagnum;
+   retval_typenum = typenum;
+#ifndef G__OLDIMPLEMENTATION1259
+   retval_isconst = isconst;
+#endif // G__OLDIMPLEMENTATION1259
+   // TODO: refness of the return type, and pointer level of the return type is ignored here, but set later, why?
+   G__value_typenum(*return_value) = G__cint5_tuple_to_type(retval_type, retval_tagnum, retval_typenum, retval_reftype, retval_isconst);
 #ifdef G__ASM
-   if (G__no_exec_compile) {
-      // -- We are generating bytecode, but not executing.  Do not call function, just return.
-      if (G__value_typenum(*return_value).FinalType().IsPointer()) {
+   if (G__no_exec_compile) { // We are generating bytecode, but not executing.  Do not call function, just return.
+      if (isupper(type)) {
          return_value->obj.i = (long) G__PVOID;
       }
       else {
          return_value->obj.i = 0;
       }
+      return_value->ref = reftype; // TODO: Wow, the pointer levels are included here, how strange!
       if (
-         G__value_typenum(*return_value).FinalType().IsClass() &&
-         !G__value_typenum(*return_value).FinalType().IsReference()
+         (type == 'u') &&
+         !reftype &&
+         (tagnum != -1) &&
+         (ifunc.Name() != ifunc.DeclaringScope().Name()) // not a constructor (in cint5 did not need this test because type == 'i' there for a constructor, but it does have the tagnum is set to the class though)
       ) {
-         G__store_tempobject(*return_value); // To free tempobject in pcode
+         G__store_tempobject(*return_value); // We must generate code to allocate temp object.
       }
-      if (G__value_typenum(*return_value).FinalType().IsClass()) {
+      if ((retval_type == 'u') && (tagnum != -1)) {
          return_value->ref = 1;
          return_value->obj.i = 1;
       }
@@ -5970,53 +6343,47 @@ static int G__call_cppfunc(G__value* return_value, G__param* libp, const ::Refle
    //
    //  Show function arguments when step into mode.
    //
-   if (G__breaksignal) {
+   if (G__breaksignal) { // Show function arguments when step into mode.
       int ret = G__debug_compiledfunc_arg(G__sout, ifunc, libp);
       if (ret == G__PAUSE_IGNORE) {
          return 0;
       }
    }
-   if (
-      (ifunc.Name()[0] == '~') &&
-      ((long) G__store_struct_offset == 1) &&
-      ifunc.DeclaringScope().IsClass() &&
-      !ifunc.IsStatic()
-   ) {
-      // Object is constructed when G__no_exec_compile is true at loop compilation
-      // and destructed when G__no_exec_compile is false at 2nd iteration.
-      // G__store_struct_offset is set to 1. Need to avoid calling destructor.
+   if ( // Destructor call with G__store_struct_offset set to 1, special case, exit.
+      (ifunc.Name()[0] == '~') && // This is a destructor call, and
+      ((long) G__store_struct_offset == 1) && // special flag???, and
+      (G__get_tagnum(ifunc.DeclaringScope()) != -1) && // class or namespace member function, and
+      !ifunc.IsStatic() // not a static member
+   ) { // Destructor call with G__store_struct_offset set to 1, special case, exit.
+      //  Object is constructed when G__no_exec_compile
+      //  is set at loop compilation and destructed when
+      //  G__no_exec_compile is *not* set at second iteration.
+      //  G__store_struct_offset is set to 1 as a special flag.
+      //  Need to avoid calling destructor.
       return 1;
    }
-   {
-      int store_asm_noverflow = G__asm_noverflow;
-      G__suspendbytecode();
-      long lifn = -2; // ifn;
-      G__CurrentCall(G__SETMEMFUNCENV, ifunc.Id(), &lifn);
-
-      // We store the this-pointer
-      char *save_offset = G__store_struct_offset;
-
-      // this-pointer adjustment
-      G__this_adjustment(ifunc);
- 
+   int store_asm_noverflow = G__asm_noverflow;
+   G__suspendbytecode();
+   long lifn = -2; // ifn;
+   G__CurrentCall(G__SETMEMFUNCENV, ifunc.Id(), &lifn);
+   char* save_offset = G__store_struct_offset;
+   G__this_adjustment(ifunc);
 #ifdef G__EXCEPTIONWRAPPER
-      G__ExceptionWrapper((G__InterfaceMethod) cppfunc, return_value, (char*) ifunc.Id(), libp, -2);
+   G__ExceptionWrapper((G__InterfaceMethod) cppfunc, return_value, (char*) ifunc.Id(), libp, -2);
 #else // G__EXCEPTIONWRAPPER
-      (*cppfunc)(return_value, (char*) ifunc.Id(), libp, -2);
+   (*cppfunc)(return_value, (char*) ifunc.Id(), libp, -2);
 #endif // G__EXCEPTIONWRAPPER
-      // Restore the correct type.
-      if (G__value_typenum(*return_value)) { // if return_value is not G__null
-         G__value_typenum(*return_value) = ifunc.TypeOf().ReturnType();
-      }
-
-      // This-pointer restoring
-      G__store_struct_offset = save_offset;
-
-      G__CurrentCall(G__NOP, 0, 0);
-      result = 1;
-      G__asm_noverflow = store_asm_noverflow;
+   G__store_struct_offset = save_offset;
+   G__CurrentCall(G__NOP, 0, 0);
+   //if (G__value_typenum(*return_value)) { // if return_value is not G__null
+   //   G__value_typenum(*return_value) = ifunc.TypeOf().ReturnType();
+   //}
+   if (isupper(type)) { // If function return type is a pointer, then copy pointer levels and refness to type of result.
+      retval_reftype = reftype;
+      G__value_typenum(*return_value) = G__cint5_tuple_to_type(retval_type, retval_tagnum, retval_typenum, retval_reftype, retval_isconst);
    }
-   return result;
+   G__asm_noverflow = store_asm_noverflow;
+   return 1;
 }
 
 //______________________________________________________________________________
@@ -6036,48 +6403,51 @@ static int G__debug_compiledfunc_arg(FILE* fout, const ::Reflex::Member ifunc, G
 }
 
 //______________________________________________________________________________
-int Cint::Internal::G__function_signature_match(const Reflex::Member& func1, const Reflex::Member& func2, bool check_return_type, int /* matchmode */, int *nref)
+int Cint::Internal::G__function_signature_match(const Reflex::Member func1, const Reflex::Member func2, bool check_return_type, int /*matchmode*/, int* nref)
 {
-   if (nref) *nref = 0;
-
-   if (func1.Name() != func2.Name()
-         || (func1.FunctionParameterSize() != func2.FunctionParameterSize()
-             && G__get_funcproperties(func1)->entry.ansi
-             && G__get_funcproperties(func2)->entry.ansi)
-         || func1.IsConst() != func2.IsConst()
-         || check_return_type && (func1.TypeOf().ReturnType() != func2.TypeOf().ReturnType())) {
+   if (nref) {
+      *nref = 0;
+   }
+   if (
+      (func1.Name() != func2.Name()) ||
+      (
+         (func1.FunctionParameterSize() != func2.FunctionParameterSize()) &&
+         G__get_funcproperties(func1)->entry.ansi &&
+         G__get_funcproperties(func2)->entry.ansi
+      ) ||
+      (func1.IsConst() != func2.IsConst()) ||
+      (
+         check_return_type &&
+         (func1.TypeOf().ReturnType() != func2.TypeOf().ReturnType())
+      )
+   ) {
       return 0;
    }
-
-   int paran;
-   if (G__get_funcproperties(func1)->entry.ansi && G__get_funcproperties(func2)->entry.ansi)
-      paran = func1.FunctionParameterSize();
-   else
+   if (!G__get_funcproperties(func1)->entry.ansi || !G__get_funcproperties(func2)->entry.ansi) {
       return 1;
-
+   }
+   int paran = func1.FunctionParameterSize();
    for (int j = 0; j < paran; ++j) {
       // can't go via func1.TypeOf().FuncParam_Begin... - we might be looking at call args here
       if (func1.TypeOf().FunctionParameterAt(j) != func2.TypeOf().FunctionParameterAt(j)) {
-         if (nref) {
-            if (func1.TypeOf().IsReference() && !func2.TypeOf().IsReference()) {
-               if (func1.TypeOf().ToType() == func2.TypeOf()) {
-                  ++(*nref);
-               }
-               else {
-                  return 0;
-               }
+         if (!nref) {
+            return 0;
+         }
+         if (func1.TypeOf().FunctionParameterAt(j).IsReference() && !func2.TypeOf().FunctionParameterAt(j).IsReference()) {
+            if (func1.TypeOf().FunctionParameterAt(j).ToType() == func2.TypeOf().FunctionParameterAt(j)) {
+               ++(*nref);
             }
-            else if (!func1.TypeOf().IsReference() && func2.TypeOf().IsReference()) {
-               if (func1.TypeOf() == func2.TypeOf().ToType()) {
-                  ++(*nref);
-               }
-               else {
-                  return 0;
-               }
+            else {
+               return 0;
             }
          }
-         else {
-            return 0;
+         else if (!func1.TypeOf().FunctionParameterAt(j).IsReference() && func2.TypeOf().FunctionParameterAt(j).IsReference()) {
+            if (func1.TypeOf().FunctionParameterAt(j) == func2.TypeOf().FunctionParameterAt(j).ToType()) {
+               ++(*nref);
+            }
+            else {
+               return 0;
+            }
          }
       }
    }
@@ -6085,28 +6455,65 @@ int Cint::Internal::G__function_signature_match(const Reflex::Member& func1, con
 }
 
 //______________________________________________________________________________
-::Reflex::Member Cint::Internal::G__ifunc_exist(::Reflex::Member ifunc_now, const ::Reflex::Scope &ifunc, bool check_return_type)
+::Reflex::Member Cint::Internal::G__ifunc_exist(::Reflex::Member ifunc_now, const ::Reflex::Scope ifunc, bool check_return_type)
 {
-   // compare  hash,funcname,type,p_tagtype,p_typetable,reftype,para_nu
-   //          para_type[],para_p_tagtable[],para_p_typetable[],para_reftype[]
-   //          para_default[]
-   for (::Reflex::Member_Iterator i = ifunc.FunctionMember_Begin();
-         i != ifunc.FunctionMember_End();
-         ++i) {
-      if ('~' == ifunc_now.Name()[0] &&
-            '~' == i->Name()[0]) { /* destructor matches with ~ */
-         return *i;
+   // Search for function ifunc_now in the scope ifunc.
+   // If check_return is true, we will compare the return
+   // types as well as the function signatures.
+   //
+   // Inputs:
+   //
+   //         ifunc_now: function to match
+   //             ifunc: scope to search
+   // check_return_type: flag to compare return type as well as signature
+   //
+   // Returns function member if found, invalid member otherwise.
+   //
+   for (::Reflex::Member_Iterator mbr_iter = ifunc.FunctionMember_Begin(); mbr_iter != ifunc.FunctionMember_End(); ++mbr_iter) {
+      if ( // destructor matches with ~
+         (ifunc_now.Name()[0] == '~') &&
+         (mbr_iter->Name()[0] == '~')
+      ) { // destructor matches with ~
+         return *mbr_iter;
       }
-      int nref;
-      bool result = G__function_signature_match(ifunc_now, *i, check_return_type, 0, &nref);
-
-      if (result) {
-         if (nref) {
-            G__fprinterr(G__serr, "Warning: %s(), parameter only differs in reference type or not"
-                         , i->Name().c_str());
+      if (
+         (ifunc_now.Name() != mbr_iter->Name()) ||
+         (ifunc_now.FunctionParameterSize() != mbr_iter->FunctionParameterSize()) ||
+         (ifunc_now.IsConst() != mbr_iter->IsConst()) ||
+         (
+            check_return_type &&
+            (ifunc_now.TypeOf().ReturnType() != mbr_iter->TypeOf().ReturnType())
+         )
+      ) {
+         continue;
+      }
+      int paran = ifunc_now.FunctionParameterSize();
+      int ref_diff = 0;
+      int j = 0;
+      for (; j < paran; ++j) {
+         ::Reflex::Type ty = ifunc_now.TypeOf().FunctionParameterAt(j);
+         ::Reflex::Type mbr_ty = mbr_iter->TypeOf().FunctionParameterAt(j);
+         if (
+            (G__get_type(ty) != G__get_type(mbr_ty)) ||
+            (G__get_tagnum(ty) != G__get_tagnum(mbr_ty)) ||
+            (
+               (G__get_reftype(ty) != G__get_reftype(mbr_ty)) &&
+               ((G__get_reftype(ty) + G__get_reftype(mbr_ty)) != G__PARAREFERENCE)
+            ) ||
+            (G__get_isconst(ty) != G__get_isconst(mbr_ty))
+         ) {
+            break;
+         }
+         if (G__get_reftype(ty) != G__get_reftype(mbr_ty)) {
+            ++ref_diff;
+         }
+      }
+      if (j == paran) { // all matched
+         if (ref_diff) {
+            G__fprinterr(G__serr, "Warning: %s(), parameter only differs in reference type or not", mbr_iter->Name().c_str());
             G__printlinenum();
          }
-         return *i;
+         return *mbr_iter;
       }
    }
    return ::Reflex::Member();
@@ -6163,62 +6570,67 @@ int Cint::Internal::G__function_signature_match(const Reflex::Member& func1, con
 }
 
 //______________________________________________________________________________
-::Reflex::Member G__get_ifunchandle(char *funcname, G__param *libp, int hash, const ::Reflex::Scope &p_ifunc, int access, int funcmatch)
+::Reflex::Member G__get_ifunchandle(char* funcname, G__param* libp, int hash, const ::Reflex::Scope p_ifunc, long* pifn, int access, int funcmatch)
 {
    int ipara = 0;
    int itemp = 0;
    if (G__get_tagnum(p_ifunc) != -1) {
       G__incsetup_memfunc(G__get_tagnum(p_ifunc));
    }
-   ::Reflex::Member_Iterator ifn;
-   for (ifn = p_ifunc.FunctionMember_Begin(); ifn != p_ifunc.FunctionMember_End(); ++ifn) {
-      if (strcmp(funcname, ifn->Name().c_str()) || !G__test_access(*ifn, access)) {
+   ::Reflex::Member_Iterator mbr_iter;
+   int index = 0;
+   for (
+      mbr_iter = p_ifunc.FunctionMember_Begin();
+      mbr_iter != p_ifunc.FunctionMember_End();
+      ++mbr_iter, ++index
+   ) {
+      if (strcmp(funcname, mbr_iter->Name().c_str()) || !G__test_access(*mbr_iter, access)) {
          continue; // name does not match, or access does not match
       }
       //  for overloading of function and operator check if parameter types match
       //  set(reset) match flag ipara temporarily
       itemp = 0;
       ipara = 1;
-      if (!G__get_funcproperties(*ifn)->entry.ansi) { // K&R C style header
+      if (!G__get_funcproperties(*mbr_iter)->entry.ansi) { // K&R C style header
          break;
       }
       if ((hash == G__HASH_MAIN) && !strcmp(funcname, "main")) { // if main(), no overloading
          break;
       }
-      if ((int)ifn->FunctionParameterSize() < libp->paran) { // if more args than formal params, no match
+      if ((int) mbr_iter->FunctionParameterSize() < libp->paran) { // if more args than formal params, no match
          ipara = 0;
-         itemp = ifn->FunctionParameterSize(); // end of this parameter
+         itemp = mbr_iter->FunctionParameterSize(); // end of this parameter
          continue; // next function
       }
-      while (itemp < (int) ifn->FunctionParameterSize()) { // scan each parameter
-         if (!ifn->FunctionParameterDefaultAt(itemp).c_str()[0] && (itemp >= libp->paran)) {
+      while (itemp < (int) mbr_iter->FunctionParameterSize()) { // scan each parameter
+         if (!mbr_iter->FunctionParameterDefaultAt(itemp).c_str()[0] && (itemp >= libp->paran)) {
             ipara = 0; // no arg given, and no default, so no match
          }
-         else if (ifn->FunctionParameterDefaultAt(itemp).c_str()[0] && (itemp >= libp->paran)) {
+         else if (mbr_iter->FunctionParameterDefaultAt(itemp).c_str()[0] && (itemp >= libp->paran)) {
             ipara = 2; // no arg given, but we have a default, a match
          }
          else {
-            ipara = G__param_match(G__get_type(ifn->TypeOf().FunctionParameterAt(itemp)), ifn->TypeOf().FunctionParameterAt(itemp).RawType(), G__get_funcproperties(*ifn)->entry.para_default.at(itemp), G__get_type(G__value_typenum(libp->para[itemp])), G__value_typenum(libp->para[itemp]).RawType(), &(libp->para[itemp]), libp->parameter[itemp], funcmatch, ifn->FunctionParameterSize() - itemp - 1, G__get_reftype(ifn->TypeOf().FunctionParameterAt(itemp)), G__get_isconst(ifn->TypeOf().FunctionParameterAt(itemp)));
+            ipara = G__param_match(G__get_type(mbr_iter->TypeOf().FunctionParameterAt(itemp)), mbr_iter->TypeOf().FunctionParameterAt(itemp).RawType(), G__get_funcproperties(*mbr_iter)->entry.para_default.at(itemp), G__get_type(G__value_typenum(libp->para[itemp])), G__value_typenum(libp->para[itemp]).RawType(), &(libp->para[itemp]), libp->parameter[itemp], funcmatch, mbr_iter->FunctionParameterSize() - itemp - 1, G__get_reftype(mbr_iter->TypeOf().FunctionParameterAt(itemp)), G__get_isconst(mbr_iter->TypeOf().FunctionParameterAt(itemp)));
          }
          switch (ipara) {
             case 0: // no match, next function
                // --
 #ifdef G__ASM_DBG
                if (G__asm_dbg) {
-                  G__fprinterr(G__serr, " unmatch%d %c tagnum%d %p : %c tagnum%d %d\n", itemp, G__get_type(ifn->TypeOf().FunctionParameterAt(itemp)), G__get_tagnum(ifn->TypeOf().FunctionParameterAt(itemp)), (G__get_funcproperties(*ifn)->entry.para_default.at(itemp)), G__get_type(G__value_typenum(libp->para[itemp])), G__get_tagnum(G__value_typenum(libp->para[itemp])), funcmatch);
+                  G__fprinterr(G__serr, " unmatch%d %c tagnum%d %p : %c tagnum%d %d\n", itemp, G__get_type(mbr_iter->TypeOf().FunctionParameterAt(itemp)), G__get_tagnum(mbr_iter->TypeOf().FunctionParameterAt(itemp)), (G__get_funcproperties(*mbr_iter)->entry.para_default.at(itemp)), G__get_type(G__value_typenum(libp->para[itemp])), G__get_tagnum(G__value_typenum(libp->para[itemp])), funcmatch);
                }
 #endif // G__ASM_DBG
-               itemp = (int) ifn->FunctionParameterSize(); // exit from while loop
+               itemp = (int) mbr_iter->FunctionParameterSize(); // exit from while loop
                break;
             case 1: // matched this one, next parameter
                // --
 #ifdef G__ASM_DBG
                if (G__asm_dbg) {
-                  G__fprinterr(G__serr, " match%d %c tagnum%d %p : %c tagnum%d %d\n", itemp, G__get_type(ifn->TypeOf().FunctionParameterAt(itemp)), G__get_tagnum(ifn->TypeOf().FunctionParameterAt(itemp)), (G__get_funcproperties(*ifn)->entry.para_default.at(itemp)), G__get_type(G__value_typenum(libp->para[itemp])), G__get_tagnum(G__value_typenum(libp->para[itemp])), funcmatch);
+                  G__fprinterr(G__serr, " match%d %c tagnum%d %p : %c tagnum%d %d\n", itemp, G__get_type(mbr_iter->TypeOf().FunctionParameterAt(itemp)), G__get_tagnum(mbr_iter->TypeOf().FunctionParameterAt(itemp)), (G__get_funcproperties(*mbr_iter)->entry.para_default.at(itemp)), G__get_type(G__value_typenum(libp->para[itemp])), G__get_tagnum(G__value_typenum(libp->para[itemp])), funcmatch);
                }
 #endif // G__ASM_DBG
                if (funcmatch != G__EXACT) {
-                  G__warn_refpromotion(*ifn, itemp, libp);
+                  G__warn_refpromotion(*mbr_iter, itemp, libp);
                }
                ++itemp; // next function parameter
                break;
@@ -6226,10 +6638,10 @@ int Cint::Internal::G__function_signature_match(const Reflex::Member& func1, con
                // --
 #ifdef G__ASM_DBG
                if (G__asm_dbg) {
-                  G__fprinterr(G__serr, " default%d %c tagnum%d %p : %c tagnum%d %d\n", itemp, G__get_type(ifn->TypeOf().FunctionParameterAt(itemp)), G__get_tagnum(ifn->TypeOf().FunctionParameterAt(itemp)), (G__get_funcproperties(*ifn)->entry.para_default.at(itemp)), G__get_type(G__value_typenum(libp->para[itemp])), G__get_tagnum(G__value_typenum(libp->para[itemp])), funcmatch);
+                  G__fprinterr(G__serr, " default%d %c tagnum%d %p : %c tagnum%d %d\n", itemp, G__get_type(mbr_iter->TypeOf().FunctionParameterAt(itemp)), G__get_tagnum(mbr_iter->TypeOf().FunctionParameterAt(itemp)), (G__get_funcproperties(*mbr_iter)->entry.para_default.at(itemp)), G__get_type(G__value_typenum(libp->para[itemp])), G__get_tagnum(G__value_typenum(libp->para[itemp])), funcmatch);
                }
 #endif // G__ASM_DBG
-               itemp = ifn->FunctionParameterSize(); // exit from while loop
+               itemp = mbr_iter->FunctionParameterSize(); // exit from while loop
                break;
          }
       }
@@ -6237,46 +6649,43 @@ int Cint::Internal::G__function_signature_match(const Reflex::Member& func1, con
          break;
       }
    }
-   if (ifn == p_ifunc.FunctionMember_End()) {
+   if (mbr_iter == p_ifunc.FunctionMember_End()) {
+      *pifn = -1;
       return ::Reflex::Member();
    }
-   return *ifn;
+   *pifn = index;
+   return *mbr_iter;
 }
 
 //______________________________________________________________________________
-::Reflex::Member G__get_ifunchandle_base(char *funcname, G__param *libp, int hash, const ::Reflex::Scope &p_ifunc, char **poffset, int access, int funcmatch, int withInheritance)
+::Reflex::Member G__get_ifunchandle_base(char* funcname, G__param* libp, int hash, const ::Reflex::Scope p_ifunc, long* pifn, char** poffset, int access, int funcmatch, int withInheritance)
 {
-   int tagnum;
-   ::Reflex::Member ifunc;
-   int basen = 0;
-   struct G__inheritance *baseclass;
-
-   /* Search for function */
+   // Search for function.
    *poffset = 0;
-   ifunc = G__get_ifunchandle(funcname, libp, hash, p_ifunc, access, funcmatch);
-   if (ifunc || !withInheritance) return(ifunc);
-
-   /* Search for base class function if member function */
-   tagnum = G__get_tagnum(p_ifunc);
-   if (-1 != tagnum) {
-      baseclass = G__struct.baseclass[tagnum];
-      while (basen < baseclass->basen) {
-         if (baseclass->baseaccess[basen]&G__PUBLIC) {
-#ifdef G__VIRTUALBASE
-            /* Can not handle virtual base class member function for ERTTI
-             * because pointer to the object is not given  */
-#endif
+   ::Reflex::Member mbr = G__get_ifunchandle(funcname, libp, hash, p_ifunc, pifn, access, funcmatch);
+   if (mbr) { // Found, we are done.
+      return mbr;
+   }
+   if (!withInheritance) { // Error, not found, and no base class search.
+      return ::Reflex::Member();
+   }
+   // Search for base class function if member function.
+   int tagnum = G__get_tagnum(p_ifunc);
+   if (tagnum != -1) {
+      G__inheritance* baseclass = G__struct.baseclass[tagnum];
+      for (int basen = 0; basen < baseclass->basen; ++basen) {
+         if (baseclass->baseaccess[basen] & G__PUBLIC) {
+            // Cannot handle virtual base class member function for ERTTI
+            // because pointer to the object is not given.
             *poffset = baseclass->baseoffset[basen];
-            ifunc = G__get_ifunchandle(funcname, libp, hash, G__Dict::GetDict().GetScope(baseclass->basetagnum[basen])
-                                       , access, funcmatch);
-            if (ifunc) return(ifunc);
+            mbr = G__get_ifunchandle(funcname, libp, hash, G__Dict::GetDict().GetScope(baseclass->basetagnum[basen]), pifn, access, funcmatch);
+            if (mbr) { // Found, we are done.
+               return mbr;
+            }
          }
-         ++basen;
       }
    }
-
-   /* Not found , ifunc=0 */
-   return(ifunc);
+   return ::Reflex::Member();
 }
 
 //______________________________________________________________________________
@@ -6308,167 +6717,147 @@ void Cint::Internal::G__argtype2param(char *argtype, G__param *libp)
 }
 
 //______________________________________________________________________________
-extern "C" struct G__ifunc_table* G__get_methodhandle(char* funcname, char* argtype, G__ifunc_table* p_ifunc, long* pifn, long* poffset, int withConversion, int withInheritance)
+extern "C" G__ifunc_table* G__get_methodhandle(char* funcname, char* argtype, G__ifunc_table* p_ifunc, long* pifn, long* poffset, int withConversion, int withInheritance)
 {
-   ::Reflex::Scope ifunc;
-   ::Reflex::Member ifn;
-   struct G__param para;
-   int hash;
-   int temp;
-   struct G__funclist* funclist = 0;
-
-   ::Reflex::Scope store_def_tagnum = G__def_tagnum;
-   ::Reflex::Scope store_tagdefining = G__tagdefining;
-   ifunc = G__Dict::GetDict().GetScope(p_ifunc);
-   G__def_tagnum = ifunc;
-   G__tagdefining = G__def_tagnum;
-   G__argtype2param(argtype, &para);
-   G__def_tagnum = store_def_tagnum;
-   G__tagdefining = store_tagdefining;
+   ::Reflex::Scope ifunc = G__Dict::GetDict().GetScope(p_ifunc);
+   G__param para;
+   {
+      ::Reflex::Scope store_def_tagnum = G__def_tagnum;
+      ::Reflex::Scope store_tagdefining = G__tagdefining;
+      //
+      G__def_tagnum = ifunc;
+      G__tagdefining = ifunc;
+      //
+      G__argtype2param(argtype, &para);
+      //
+      G__def_tagnum = store_def_tagnum;
+      G__tagdefining = store_tagdefining;
+   }
+   int hash = 0;
+   int temp = 0;
    G__hash(funcname, hash, temp);
-
-   *pifn = -2;
-
    if (withConversion) {
       int tagnum = G__get_tagnum(ifunc); // p_ifunc->tagnum;
       if (tagnum != -1) {
          G__incsetup_memfunc(tagnum);
       }
+      int ifn = (int) (*pifn);
       int match_error = 0;
-      ifn = G__overload_match(funcname, &para, hash, ifunc, G__TRYNORMAL, G__PUBLIC_PROTECTED_PRIVATE, 0, (withConversion & 0x2) ? 1 : 0, &match_error);
+      ::Reflex::Member mbr = G__overload_match(funcname, &para, hash, ifunc, G__TRYNORMAL, G__PUBLIC_PROTECTED_PRIVATE, &ifn, 0, (withConversion & 0x2) ? 1 : 0, &match_error);
       *poffset = 0;
-      *pifn = -2;
-      if (ifn || !withInheritance) {
-         return (struct G__ifunc_table*) ifn.Id();
+      *pifn = ifn;
+      if (mbr || !withInheritance) {
+         return (G__ifunc_table*) mbr.Id();
       }
       if (tagnum != -1) {
-         struct G__inheritance* baseclass = G__struct.baseclass[tagnum];
+         G__inheritance* baseclass = G__struct.baseclass[tagnum];
          for (int basen = 0; basen < baseclass->basen; ++basen) {
             if (baseclass->baseaccess[basen] & G__PUBLIC) {
                G__incsetup_memfunc(baseclass->basetagnum[basen]);
                *poffset = (long) baseclass->baseoffset[basen];
                ifunc = G__Dict::GetDict().GetScope(baseclass->basetagnum[basen]);
-               ifn = G__overload_match(funcname, &para, hash, ifunc, G__TRYNORMAL, G__PUBLIC_PROTECTED_PRIVATE, 0, 0, &match_error);
-               *pifn = -2;
-               if (ifn) {
-                  return (struct G__ifunc_table*) ifn.Id();
+               mbr = G__overload_match(funcname, &para, hash, ifunc, G__TRYNORMAL, G__PUBLIC_PROTECTED_PRIVATE, &ifn, 0, 0, &match_error);
+               *pifn = ifn;
+               if (mbr) {
+                  return (G__ifunc_table*) mbr.Id();
                }
             }
          }
       }
+      return (G__ifunc_table*) mbr.Id();
    }
-   else {
-      /* first, search for exact match */
-      ifn = G__get_ifunchandle_base(funcname, &para, hash, ifunc, (char**)poffset
-            , G__PUBLIC_PROTECTED_PRIVATE, G__EXACT
-            , withInheritance
-            );
-      if (ifn) {
-         return((struct G__ifunc_table *)ifn.Id());
-      }
-
-      /* if no exact match, try to instantiate template function */
-      funclist = G__add_templatefunc(funcname, &para, hash, funclist, ifunc, 0);
-      if (funclist && funclist->rate == G__EXACTMATCH) {
-         ifn = funclist->ifunc;
-         G__funclist_delete(funclist);
-         return((struct G__ifunc_table *)ifn.Id());
-      }
+   // Search for exact match.
+   ::Reflex::Member mbr = G__get_ifunchandle_base(funcname, &para, hash, ifunc, pifn, (char**) poffset, G__PUBLIC_PROTECTED_PRIVATE, G__EXACT, withInheritance);
+   if (mbr) {
+      return (G__ifunc_table*) mbr.Id();
+   }
+   // No exact match, try to instantiate a function template.
+   G__funclist* funclist = 0;
+   funclist = G__add_templatefunc(funcname, &para, hash, funclist, ifunc, 0);
+   if (funclist && (funclist->rate == G__EXACTMATCH)) {
+      mbr = funclist->ifunc;
+      *pifn = funclist->ifn;
       G__funclist_delete(funclist);
-
-      // FIXME: Remove this code for now, we should not attempt conversions
-      //        here, we have specified an exact prototype.
-      //
-      //for (int match = G__EXACT;match <= G__STDCONV;match++) {
-      //   ifn = G__get_ifunchandle_base(funcname, &para, hash, ifunc, (char**)poffset
-      //         , G__PUBLIC_PROTECTED_PRIVATE
-      //         , match
-      //         , withInheritance
-      //         );
-      //   if (ifn) return((struct G__ifunc_table *)ifn.Id());
-      //}
+      return (G__ifunc_table*) mbr.Id();
    }
-
-   return (struct G__ifunc_table*) ifn.Id();
+   G__funclist_delete(funclist);
+   // FIXME: Remove this code for now, we should not attempt conversions
+   //        here, we have specified an exact prototype.
+   //
+   //for (int match = G__EXACT; match <= G__STDCONV; ++match) {
+   //   mbr = G__get_ifunchandle_base(funcname, &para, hash, ifunc, pifn, (char**) poffset, G__PUBLIC_PROTECTED_PRIVATE, match, withInheritance);
+   //   if (mbr) {
+   //      return (G__ifunc_table*) mbr.Id();
+   //   }
+   //}
+   return (G__ifunc_table*) mbr.Id();
 }
 
 //______________________________________________________________________________
-extern "C" struct G__ifunc_table *G__get_methodhandle2(char *funcname, G__param *libp, G__ifunc_table *p_ifunc, long *pifn, long *poffset, int withConversion, int withInheritance)
+extern "C" G__ifunc_table* G__get_methodhandle2(char* funcname, G__param* libp, G__ifunc_table* p_ifunc, long* pifn, long* poffset, int withConversion, int withInheritance)
 {
-   int hash;
-   int temp;
-   struct G__funclist* funclist = 0;
-
-   ::Reflex::Scope store_def_tagnum = G__def_tagnum;
-   ::Reflex::Scope store_tagdefining = G__tagdefining;
    ::Reflex::Scope ifunc = G__Dict::GetDict().GetScope(p_ifunc);
-   G__def_tagnum = ifunc;
-   G__tagdefining = ifunc;
-   G__def_tagnum = store_def_tagnum;
-   G__tagdefining = store_tagdefining;
-   G__hash(funcname, hash, temp);
-
-
-   ::Reflex::Member ifn;
-   *pifn = 0;
-
-   if (withConversion)
-   {
+   //
+   int hash = 0;
+   int temp = 0;
+   G__hash(funcname, hash, temp)
+   if (withConversion) {
       int tagnum = G__get_tagnum(ifunc);
-
-      if (-1 != tagnum) G__incsetup_memfunc(tagnum);
-
+      if (tagnum != -1) {
+         G__incsetup_memfunc(tagnum);
+      }
+      int ifn = (int) (*pifn);
       int match_error = 0;
-      ifn = G__overload_match(funcname, libp, hash, ifunc, G__TRYNORMAL, G__PUBLIC_PROTECTED_PRIVATE, 0, 0, &match_error);
+      ::Reflex::Member mbr = G__overload_match(funcname, libp, hash, ifunc, G__TRYNORMAL, G__PUBLIC_PROTECTED_PRIVATE, &ifn, 0, 0, &match_error);
       *poffset = 0;
-      if (ifn || !withInheritance) return((G__ifunc_table*)ifn.Id());
-      if (-1 != tagnum) {
+      *pifn = ifn;
+      if (mbr || !withInheritance) {
+         return (G__ifunc_table*) mbr.Id();
+      }
+      if (tagnum != -1) {
          int basen = 0;
-         struct G__inheritance *baseclass = G__struct.baseclass[tagnum];
+         G__inheritance* baseclass = G__struct.baseclass[tagnum];
          while (basen < baseclass->basen) {
-            if (baseclass->baseaccess[basen]&G__PUBLIC) {
+            if (baseclass->baseaccess[basen] & G__PUBLIC) {
                G__incsetup_memfunc(baseclass->basetagnum[basen]);
-               *poffset = (long)baseclass->baseoffset[basen];
+               *poffset = (long) baseclass->baseoffset[basen];
                ifunc = G__Dict::GetDict().GetScope(baseclass->basetagnum[basen]);
-               ifn = G__overload_match(funcname, libp, hash, ifunc, G__TRYNORMAL, G__PUBLIC_PROTECTED_PRIVATE, 0, 0, &match_error);
-               if (ifn) return((G__ifunc_table*)ifn.Id());
+               mbr = G__overload_match(funcname, libp, hash, ifunc, G__TRYNORMAL, G__PUBLIC_PROTECTED_PRIVATE, &ifn, 0, 0, &match_error);
+               *pifn = ifn;
+               if (mbr) {
+                  return (G__ifunc_table*) mbr.Id();
+               }
             }
             ++basen;
          }
       }
+      return (G__ifunc_table*) mbr.Id();
    }
-   else
-   {
-      /* first, search for exact match */
-      ifn = G__get_ifunchandle_base(funcname, libp, hash, ifunc, (char**)poffset
-            , G__PUBLIC_PROTECTED_PRIVATE, G__EXACT
-            , withInheritance
-            );
-      if (ifn) return((G__ifunc_table*)ifn.Id());
-
-      /* if no exact match, try to instantiate template function */
-      funclist = G__add_templatefunc(funcname, libp, hash, funclist, ifunc, 0);
-      if (funclist && funclist->rate == G__EXACTMATCH) {
-         ifn = funclist->ifunc;
-         G__funclist_delete(funclist);
-         return((G__ifunc_table*)ifn.Id());
-      }
+   // Search for exact match.
+   ::Reflex::Member mbr = G__get_ifunchandle_base(funcname, libp, hash, ifunc, pifn, (char**) poffset, G__PUBLIC_PROTECTED_PRIVATE, G__EXACT, withInheritance);
+   if (mbr) {
+      return (G__ifunc_table*) mbr.Id();
+   }
+   // No exact match, try to instantiate a function template.
+   G__funclist* funclist = 0;
+   funclist = G__add_templatefunc(funcname, libp, hash, funclist, ifunc, 0);
+   if (funclist && funclist->rate == G__EXACTMATCH) {
+      mbr = funclist->ifunc;
+      *pifn = funclist->ifn;
       G__funclist_delete(funclist);
-
-      //
-      // Now see if we can call it using the standard type conversions.
-      //
-      for (int match = G__EXACT;match <= G__STDCONV;match++) {
-         ifn = G__get_ifunchandle_base(funcname, libp, hash, ifunc, (char**)poffset
-               , G__PUBLIC_PROTECTED_PRIVATE
-               , match
-               , withInheritance
-               );
-         if (ifn) return((G__ifunc_table*)ifn.Id());
+      return (G__ifunc_table*) mbr.Id();
+   }
+   G__funclist_delete(funclist);
+   //
+   // Now see if we can call it using the standard type conversions.
+   //
+   for (int match = G__EXACT; match <= G__STDCONV; ++match) {
+      mbr = G__get_ifunchandle_base(funcname, libp, hash, ifunc, pifn, (char**) poffset, G__PUBLIC_PROTECTED_PRIVATE, match, withInheritance);
+      if (mbr) {
+         return (G__ifunc_table*) mbr.Id();
       }
    }
-
-   return((G__ifunc_table*)ifn.Id());
+   return (G__ifunc_table*) mbr.Id();
 }
 
 /*

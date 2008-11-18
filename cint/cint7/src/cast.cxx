@@ -28,7 +28,7 @@ static void G__castclass(G__value* result3, int tagnum, int castflag, int* ptype
 // External functions.
 namespace Cint {
 namespace Internal {
-void G__asm_cast(G__value* buf, const Reflex::Type& totype);
+void G__asm_cast(G__value* buf, const Reflex::Type totype);
 G__value G__castvalue(char* casttype, G__value result3, int bc);
 G__value G__castvalue(char* casttype, G__value result3);
 } // namespace Internal
@@ -137,7 +137,7 @@ static void G__castclass(G__value* result3, int tagnum, int castflag, int* ptype
 //
 
 //______________________________________________________________________________
-void Cint::Internal::G__asm_cast(G__value* buf, const Reflex::Type& totype)
+void Cint::Internal::G__asm_cast(G__value* buf, const Reflex::Type totype)
 {
    // FIXME: Describe this function!
    char type = G__get_type(totype);
@@ -651,7 +651,7 @@ G__value Cint::Internal::G__castvalue_bc(char* casttype, G__value result3, int b
 #endif // G__ASM_DBG
          G__asm_inst[G__asm_cp] = G__CAST;
          ::Reflex::Type castto = G__value_typenum(result3);
-         *(reinterpret_cast<Reflex::Type*>(&(G__asm_inst[G__asm_cp+1]))) = castto;
+         *(reinterpret_cast<Reflex::Type*>(&G__asm_inst[G__asm_cp+1])) = castto;
          G__inc_cp_asm(5, 0);
       }
    }
