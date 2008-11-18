@@ -4489,9 +4489,16 @@ void TClass::AdoptStreamer(TClassStreamer *str)
 //    if (k==1||k==-1) { delete str; return; }
 
    if (fStreamer) delete fStreamer;
-   fStreamer = str;
    if (str) {
       fStreamerType = kExternal | ( fStreamerType&kEmulated );
+      fStreamer = str;
+   } else if (fStreamer) {
+      // Case where there was a custom streamer and it is hereby removed,
+      // we need to reset fStreamerType
+      fStreamer = str;
+      fStreamerType = kNone;
+      fProperty = -1;
+      Property();
    }
 }
 
