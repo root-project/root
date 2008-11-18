@@ -19,6 +19,8 @@ int main()
 #if (G__CINTVERSION > 70000000))
   // Skip global namespace
   c.Next();
+  // Skip bytecode arena
+  c.Next();
 #endif
   while(c.Next() && strcmp(c.Name(),"bool")!=0 && 
 	strcmp(c.Name(),"type_info")!=0) {
