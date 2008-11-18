@@ -107,6 +107,14 @@ TApplication::TApplication(const char *appClassName,
    // in which case you should specify numOptions<0. All options will
    // still be available via the Argv() method for later use.
 
+   if (gApplication && gApplication->TestBit(kDefaultApplication)) {
+      // allow default TApplication to be replaced by a "real" TApplication
+      delete gApplication;
+      gApplication = 0;
+      gROOT->SetBatch(kFALSE);
+      fgGraphInit = kFALSE;
+   }
+
    if (gApplication) {
       Error("TApplication", "only one instance of TApplication allowed");
       return;
@@ -123,10 +131,9 @@ TApplication::TApplication(const char *appClassName,
    gROOT->SetName(appClassName);
 
    // Create the list of applications the first time
-   if (!fgApplications) {
+   if (!fgApplications)
       fgApplications = new TList;
-      fgApplications->Add(this);
-   }
+   fgApplications->Add(this);
 
    if (options) { }  // use unused argument
 
@@ -195,6 +202,8 @@ TApplication::~TApplication()
       if (fArgv[i]) delete [] fArgv[i];
    delete [] fArgv;
    SafeDelete(fAppImp);
+   if (fgApplications)
+      fgApplications->Remove(this);
 }
 
 //______________________________________________________________________________
@@ -1068,6 +1077,7 @@ void TApplication::CreateApplication()
          Printf("<TApplication::CreateApplication>: "
                 "created default TApplication");
       delete [] a; delete [] b;
+      gApplication->SetBit(kDefaultApplication);
    }
 }
 

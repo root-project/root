@@ -47,7 +47,8 @@ class TApplication : public TObject, public TQObject {
 public:
    // TApplication specific bits
    enum EStatusBits {
-      kProcessRemotely = BIT(15)   // TRUE if this line has to be processed remotely
+      kProcessRemotely = BIT(15),   // TRUE if this line has to be processed remotely
+      kDefaultApplication = BIT(16) // TRUE if created via CreateApplication()
    };
 
 private:
