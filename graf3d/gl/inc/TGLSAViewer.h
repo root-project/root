@@ -30,6 +30,7 @@ class TGedEditor;
 class TGLPShapeObj;
 class TGLRenderArea; // Remove - replace with TGLManager
 class TGLEventHandler;
+class TGMenuBar;
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -72,6 +73,7 @@ private:
    TString            fDirName;
    Int_t              fTypeIdx;
    Bool_t             fOverwrite;
+   TGMenuBar          *fMenuBar;
 
    // Initial window positioning
    static const Int_t fgInitX;

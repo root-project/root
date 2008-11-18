@@ -1387,6 +1387,7 @@ TGLLogicalShape * TGLScene::FindLogicalSmartRefresh(TObject* ID) const
       if (l_shape->IsA() != TGLObject::GetGLRenderer(ID->IsA()))
       {
          Warning("TGLScene::FindLogicalSmartRefresh", "Wrong renderer-type found in cache.");
+         delete l_shape;
          return 0;
       }
       // printf("TGLScene::SmartRefresh found cached: %p '%s' [%s] for %p\n",

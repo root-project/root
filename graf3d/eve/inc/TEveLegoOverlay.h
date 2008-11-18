@@ -29,6 +29,9 @@ private:
 
    Bool_t SetSliderVal(Event_t* event,TGLRnrCtx& rnrCtx );
 
+   TString        fHeaderTxt;
+   Bool_t         fHeaderSelected; 
+
 protected:
    TEveCaloLego*  fCalo;
 
@@ -47,9 +50,10 @@ protected:
 
    // event handling
    Int_t           fActiveID;
-   Color_t        fActiveCol;
+   Color_t         fActiveCol;
 
-   virtual  void   RenderPlane(TGLRnrCtx& rnrCtx);
+   virtual  void   RenderPlaneInterface(TGLRnrCtx& rnrCtx);
+   virtual  void   RenderHeader(TGLRnrCtx& rnrCtx);
 
 public:
    TEveLegoOverlay();
@@ -71,6 +75,8 @@ public:
    void SetShowPlane (Bool_t x) { fShowPlane = x; }
    Bool_t GetShowPlane() const { return fShowPlane; }
 
+   void  SetHeaderTxt(const char *txt) {fHeaderTxt = txt; }
+   const char* GetHeaderTxt() const { return fHeaderTxt; }
 
    ClassDef(TEveLegoOverlay, 0); // GL-overaly control GUI for TEveCaloLego.
 };

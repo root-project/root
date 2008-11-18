@@ -255,8 +255,9 @@ void TEveCaloViz::AssignCaloVizParameters(TEveCaloViz* m)
    if (m->fPalette)
    {
       TEveRGBAPalette& mp = * m->fPalette;
-      TEveRGBAPalette* p = new TEveRGBAPalette(mp.GetMinVal(), mp.GetMaxVal(), mp.GetInterpolate());
-      p->SetDefaultColor(mp.GetDefaultColor());
+      if (fPalette) fPalette->DecRefCount();
+      fPalette = new TEveRGBAPalette(mp.GetMinVal(), mp.GetMaxVal(), mp.GetInterpolate());
+      fPalette->SetDefaultColor(mp.GetDefaultColor());
    }
 }
 

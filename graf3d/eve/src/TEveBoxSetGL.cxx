@@ -147,7 +147,8 @@ void TEveBoxSetGL::MakeDisplayList() const
 
       glNewList(fBoxDL, GL_COMPILE);
   
-      if (fM->fBoxType < TEveBoxSet::kBT_Cone) { 
+      if (fM->fBoxType < TEveBoxSet::kBT_Cone)
+      { 
          glBegin(PrimitiveType());
          Float_t p[24];
          if (fM->fBoxType == TEveBoxSet::kBT_AABox)

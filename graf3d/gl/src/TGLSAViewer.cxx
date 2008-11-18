@@ -167,7 +167,8 @@ TGLSAViewer::TGLSAViewer(TVirtualPad *pad) :
    fPShapeWrap(0),
    fDirName("."),
    fTypeIdx(0),
-   fOverwrite(kFALSE)
+   fOverwrite(kFALSE),
+   fMenuBar(0)
 {
    // Construct a standalone viewer, bound to supplied 'pad'.
    fFrame = new TGLSAFrame(*this);
@@ -206,7 +207,8 @@ TGLSAViewer::TGLSAViewer(const TGWindow *parent, TVirtualPad *pad, TGedEditor *g
    fLeftVerticalFrame(0),
    fGedEditor(ged),
    fPShapeWrap(0),
-   fTypeIdx(0)
+   fTypeIdx(0),
+   fMenuBar(0)
 {
    // Construct an embedded standalone viewer, bound to supplied 'pad'.
    //
@@ -249,6 +251,7 @@ TGLSAViewer::~TGLSAViewer()
    delete fFileSaveMenu;
    delete fFileMenu;
    delete fFrame;
+   delete fMenuBar;
    fGLWidget = 0;
 }
 
@@ -307,11 +310,11 @@ void TGLSAViewer::CreateMenus()
    fHelpMenu->Associate(fFrame);
 
    // Create menubar
-   TGMenuBar *menuBar = new TGMenuBar(fFrame, 1, 1, kHorizontalFrame);
-   menuBar->AddPopup("&File", fFileMenu, new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 4, 0, 0));
-   menuBar->AddPopup("&Camera", fCameraMenu, new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 4, 0, 0));
-   menuBar->AddPopup("&Help",    fHelpMenu,    new TGLayoutHints(kLHintsTop | kLHintsRight));
-   fFrame->AddFrame(menuBar, new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandX, 0, 0, 1, 1));
+   fMenuBar = new TGMenuBar(fFrame, 1, 1, kHorizontalFrame);
+   fMenuBar->AddPopup("&File", fFileMenu, new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 4, 0, 0));
+   fMenuBar->AddPopup("&Camera", fCameraMenu, new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 4, 0, 0));
+   fMenuBar->AddPopup("&Help",    fHelpMenu,    new TGLayoutHints(kLHintsTop | kLHintsRight));
+   fFrame->AddFrame(fMenuBar, new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandX, 0, 0, 1, 1));
 
 }
 

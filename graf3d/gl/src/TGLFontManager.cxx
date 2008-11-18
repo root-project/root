@@ -273,6 +273,7 @@ void TGLFontManager::RegisterFont(Int_t size, Int_t fileID, TGLFont::EMode mode,
             Error("TGLFontManager::GetFont", "invalid FTGL type");
             break;
       }
+      delete [] file;
       ftfont->FaceSize(size);
       const TGLFont &mf = fFontMap.insert(std::make_pair(TGLFont(size, fileID, mode, ftfont, 0), 1)).first->first;
       out.CopyAttributes(mf);

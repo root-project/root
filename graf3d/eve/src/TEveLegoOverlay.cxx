@@ -33,6 +33,7 @@ ClassImp(TEveLegoOverlay);
 TEveLegoOverlay::TEveLegoOverlay() :
    TGLCameraOverlay(),
    TEveElementList("Lego Menu", "TEveLegoOverlay", kTRUE),
+   fHeaderSelected(kFALSE),
 
    fCalo(0),
    fMainColor(kGray),
@@ -84,7 +85,7 @@ void TEveLegoOverlay::DrawSlider(TGLRnrCtx& rnrCtx)
       Double_t maxVal = fCalo->GetMaxVal();
       TGLRect& wprt = rnrCtx.RefCamera().RefViewport();
       Float_t fs = wprt.Height()*fSliderH* fAxisAtt.GetLabelSize();
-      fAxisAtt.SetAbsLabelFontSize(TGLFontManager::GetFontSize(fs, 8, 36));
+      fAxisAtt.SetAbsLabelFontSize(TGLFontManager::GetFontSize(fs, 12, 36));
 
       fAxisAtt.RefDir().Set(0, 1, 0);
       fAxisAtt.SetTextAlign(TGLFont::kLeft);
@@ -108,62 +109,10 @@ void TEveLegoOverlay::DrawSlider(TGLRnrCtx& rnrCtx)
    }
 }
 
-/******************************************************************************/
-void TEveLegoOverlay::Render(TGLRnrCtx& rnrCtx)
-{
-   // Render the overlay elements.
-
-   if (!fCalo) return;
-
-   TGLCamera& cam = rnrCtx.RefCamera();
-   TGLRect& vp = cam.RefViewport();
-   if (fShowCamera)
-   {
-      Bool_t skip = kFALSE;
-
-      // check if lego axis are already visible
-      if (cam.IsOrthographic())
-      {
-         using namespace TMath;
-
-         Float_t x0 = fCalo->GetEtaMin();
-         Float_t y0 = fCalo->GetPhiMin();
-
-         const GLdouble *pm = rnrCtx.RefCamera().RefLastNoPickProjM().CArr();
-         GLdouble mm[16];
-         glGetDoublev(GL_MODELVIEW_MATRIX,  mm);
-
-         GLdouble x, y, z;
-         gluProject(x0, y0, 0, mm, pm, (Int_t*)vp.CArr(), &x, &y, &z);
-         // viewport height goes from top to bottom 
-         if ( x > vp.Left() && y > vp.Top())
-            skip = kTRUE;
-      }
-
-      if (!skip) TGLCameraOverlay::Render(rnrCtx);
-   }
-
-   if (fShowPlane) RenderPlane(rnrCtx);
-}
-
 //______________________________________________________________________________
-void TEveLegoOverlay::RenderPlane(TGLRnrCtx &rnrCtx)
+void TEveLegoOverlay::RenderPlaneInterface(TGLRnrCtx &rnrCtx)
 {
    // Render menu for plane-value and the plane if marked.
-
-   glMatrixMode(GL_PROJECTION);
-   glPushMatrix();
-   glLoadIdentity();
-   if (rnrCtx.Selection())
-   {
-      TGLRect rect(*rnrCtx.GetPickRectangle());
-      rnrCtx.GetCamera()->WindowToViewport(rect);
-      gluPickMatrix(rect.X(), rect.Y(), rect.Width(), rect.Height(), rnrCtx.RefCamera().RefViewport().CArr());
-   }
-   glMatrixMode(GL_MODELVIEW);
-   glPushMatrix();
-   glLoadIdentity();
-   glScalef(2, 2, 1); // normalised coordinates
 
    TGLCapabilitySwitch lights_off(GL_LIGHTING, kFALSE);
    glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT | GL_LINE_BIT | GL_POINT_BIT);
@@ -177,8 +126,10 @@ void TEveLegoOverlay::RenderPlane(TGLRnrCtx &rnrCtx)
    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
    glPushName(0);
 
+
    // move to the center of menu
-   glTranslatef(0.5 -fMenuW*0.5, -0.5, 0); // translate to lower left corner
+   glPushMatrix();
+   glTranslatef(1 -fMenuW, 0, 0); // translate to lower left corner
 
    // button
    glPushMatrix();
@@ -220,9 +171,106 @@ void TEveLegoOverlay::RenderPlane(TGLRnrCtx &rnrCtx)
    glPopAttrib();
 
    glPopMatrix();
-   glMatrixMode(GL_PROJECTION);
-   glPopMatrix();
-   glMatrixMode(GL_MODELVIEW);
+
+}
+
+/******************************************************************************/
+void TEveLegoOverlay::RenderHeader(TGLRnrCtx& rnrCtx)
+{
+   // Render text on top right corner of the screen.
+
+   TGLRect &vp = rnrCtx.GetCamera()->RefViewport();
+
+   TGLFont font;
+   Int_t fs = TGLFontManager::GetFontSize(vp.Height()*0.035, 12, 36);
+   rnrCtx.RegisterFont(fs, "arial", TGLFont::kPixmap, font);
+   Float_t off = fs*0.2;
+   Float_t bb[6];
+   font.BBox(fHeaderTxt.Data(), bb[0], bb[1], bb[2], bb[3], bb[4], bb[5]);
+   Float_t x = vp.Width() -bb[3] -off;
+   Float_t y = vp.Height() -bb[4] -off;
+   if (rnrCtx.Selection())
+   {
+      glPushName(0);
+      glLoadName(3);
+      glBegin(GL_QUADS);
+      glVertex2f(x/vp.Width(), y/ vp.Height());
+      glVertex2f(1,  y/ vp.Height());
+      glVertex2f(1, 1);
+      glVertex2f(x/vp.Width(), 1);
+      glEnd();
+      glPopName();
+   }
+   else
+   {
+      TGLUtil::Color(fHeaderSelected ? fActiveCol : fCalo->GetFontColor());
+      glRasterPos2i(0, 0);
+      glBitmap(0, 0, 0, 0, x, y, 0);
+      font.Render(fHeaderTxt.Data());
+   }
+}
+
+/******************************************************************************/
+void TEveLegoOverlay::Render(TGLRnrCtx& rnrCtx)
+{
+   // Render the overlay elements.
+
+   if (fShowPlane || fHeaderTxt.Length())
+   {
+      // go to normalised coordinates
+      glMatrixMode(GL_PROJECTION);
+      glPushMatrix();
+      glLoadIdentity();
+      if (rnrCtx.Selection())
+      {
+         TGLRect rect(*rnrCtx.GetPickRectangle());
+         rnrCtx.GetCamera()->WindowToViewport(rect);
+         gluPickMatrix(rect.X(), rect.Y(), rect.Width(), rect.Height(), rnrCtx.RefCamera().RefViewport().CArr());
+      }
+      glMatrixMode(GL_MODELVIEW);
+      glPushMatrix();
+      glLoadIdentity();
+   
+      glTranslatef(-1, -1, 0);
+
+      glScalef(2, 2, 1);
+      if (fShowPlane) RenderPlaneInterface(rnrCtx);
+      RenderHeader(rnrCtx);
+
+      glPopMatrix();
+      glMatrixMode(GL_PROJECTION);
+      glPopMatrix();
+      glMatrixMode(GL_MODELVIEW);
+   }
+
+
+   // call TGLCamera overlay render
+   if (fShowCamera)
+   {
+      TGLCamera& cam = rnrCtx.RefCamera();
+      TGLRect& vp = cam.RefViewport();
+      Bool_t skip = kFALSE;
+      // check if lego axis are already visible
+      if (cam.IsOrthographic())
+      {
+         using namespace TMath;
+
+         Float_t x0 = fCalo->GetEtaMin();
+         Float_t y0 = fCalo->GetPhiMin();
+
+         const GLdouble *pm = rnrCtx.RefCamera().RefLastNoPickProjM().CArr();
+         GLdouble mm[16];
+         glGetDoublev(GL_MODELVIEW_MATRIX,  mm);
+
+         GLdouble x, y, z;
+         gluProject(x0, y0, 0, mm, pm, (Int_t*)vp.CArr(), &x, &y, &z);
+         // viewport height goes from top to bottom 
+         if ( x > vp.Left() && y > vp.Top())
+            skip = kTRUE;
+      }
+
+      if (!skip) TGLCameraOverlay::Render(rnrCtx);
+   }
 }
 
 /******************************************************************************/
@@ -265,6 +313,7 @@ Bool_t TEveLegoOverlay::Handle(TGLRnrCtx          & rnrCtx,
          } else {
             if (fActiveID == 2 && event->fState == 256)
                return SetSliderVal(event, rnrCtx);
+
             return kFALSE;
          }
          break;
@@ -282,6 +331,8 @@ Bool_t TEveLegoOverlay::Handle(TGLRnrCtx          & rnrCtx,
                break;
             case 2:
                return SetSliderVal(event, rnrCtx);
+            case 3:
+               fHeaderSelected = !fHeaderSelected;
             default:
                break;
          }
