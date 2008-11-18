@@ -226,8 +226,8 @@ you can create as before the following graphics objects:\n\
   You can use the context menu to set the wavelength or amplitude.\n\
   You can use the context menu to set the phimin and phimax.\n\n\
  -A Text/Latex string. Click with the left button where you want to draw the text, \n\
-  then type the text terminated by carriage return. To move the text, point\n\
-  on it keeping the left mouse button pressed and drag the text to its new \n\
+  then type the text terminated by carriage return or by escape. To move the text, \n\
+  point on it keeping the left mouse button pressed and drag the text to its new \n\
   position. You can grow/shrink the text if you position the mouse to the first\n\
   top-third part of the string, then move the mouse up or down to grow or \n\
   shrink the text respectively. If you position near the bottom-end of the text,\n\
