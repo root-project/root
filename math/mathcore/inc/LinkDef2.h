@@ -26,6 +26,8 @@
 //#pragma link C++ class ROOT::Math;
 #endif
 
+#pragma link C++ class vector<Double_t>+;
+
 #pragma link C++ global gRandom;
 
 #pragma link C++ class TRandom+;
