@@ -175,6 +175,7 @@ void FitConfig::SetDefaultMinimizer(const std::string & type, const std::string 
 } 
 
 void FitConfig::SetMinimizerOptions(const ROOT::Math::MinimizerOptions & minopt) {  
+   // set minimizer options
    fMinimizerType = minopt.MinimizerType(); 
    fMinimAlgoType = minopt.MinimizerAlgorithm(); 
    fMinimizerOpts.SetTolerance(minopt.Tolerance() ); 
@@ -184,7 +185,6 @@ void FitConfig::SetMinimizerOptions(const ROOT::Math::MinimizerOptions & minopt)
    fMinimizerOpts.SetPrintLevel(minopt.PrintLevel() ); 
    fMinimizerOpts.SetErrorDef(minopt.ErrorDef() ); 
 
-   // error up should be added as well
 }
 
 

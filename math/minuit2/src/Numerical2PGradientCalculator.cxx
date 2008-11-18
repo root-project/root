@@ -123,7 +123,7 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
 
 #ifdef MINUIT2_PARALLEL_OPENMP
        // create in loop since each thread will use its own copy
-       MnAlgebraicVector x = par.Vec();
+      MnAlgebraicVector x = par.Vec();
 #endif
 
       double xtf = x(i);
@@ -178,9 +178,9 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
 
 #ifdef DEBUG_MP
 #pragma omp critical
- {
-      std::cout << "Gradient for thread " << ith << "  " << i << "  " << std::setprecision(15)  << grd(i) << "  " << g2(i) << std::endl;
- }
+      {
+         std::cout << "Gradient for thread " << ith << "  " << i << "  " << std::setprecision(15)  << grd(i) << "  " << g2(i) << std::endl;
+      }
 #endif
 
       //     vgrd(i) = grd;

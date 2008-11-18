@@ -540,6 +540,7 @@ void TFitParametersDialog::DoParFix(Bool_t on)
 //______________________________________________________________________________
 void TFitParametersDialog::SetParameters()
 {
+   // Set the parameter values inside the function
    fFunc->SetRange(fRangexmin, fRangexmax);
    for (Int_t i = 0; i < fNP; i++ ) {
       if (fParFix[i]->GetState() == kButtonDown) {

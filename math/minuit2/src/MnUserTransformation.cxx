@@ -61,15 +61,15 @@ std::vector<double> MnUserTransformation::operator()(const MnAlgebraicVector& ps
    // fixed parameters will have their fixed values
    unsigned int n = pstates.size(); 
    // need to initialize to the stored (initial values) parameter  values for the fixed ones
-   std::vector<double> Cache( fCache );
+   std::vector<double> pcache( fCache );
    for(unsigned int i = 0; i < n; i++) {
       if(fParameters[fExtOfInt[i]].HasLimits()) {
-         Cache[fExtOfInt[i]] = Int2ext(i, pstates(i));
+         pcache[fExtOfInt[i]] = Int2ext(i, pstates(i));
       } else {
-         Cache[fExtOfInt[i]] = pstates(i);
+         pcache[fExtOfInt[i]] = pstates(i);
       }
    }
-   return Cache;
+   return pcache;
 }
 
 // #else
