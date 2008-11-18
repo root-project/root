@@ -2048,7 +2048,7 @@ void TProofServ::SendStatistics()
 }
 
 //______________________________________________________________________________
-void TProofServ::SendParallel()
+void TProofServ::SendParallel(Bool_t async)
 {
    // Send number of parallel nodes to master or client.
 
@@ -2060,7 +2060,9 @@ void TProofServ::SendParallel()
       nparallel = 1;
    }
 
-   fSocket->Send(nparallel, kPROOF_GETPARALLEL);
+   TMessage mess(kPROOF_GETPARALLEL);
+   mess << nparallel << async;
+   fSocket->Send(mess);
 }
 
 //______________________________________________________________________________

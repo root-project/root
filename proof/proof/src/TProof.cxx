@@ -926,7 +926,7 @@ Int_t TProof::AddWorkers(TList *workerList)
    AddIncludePath(inc);
 
    // inform the client that the number of workers is changed
-   gProofServ->SendParallel();
+   if (gProofServ) gProofServ->SendParallel(kTRUE);
 
    return kTRUE;
 }
@@ -2457,9 +2457,13 @@ Int_t TProof::CollectInputFrom(TSocket *s)
          break;
 
       case kPROOF_GETPARALLEL:
-         sl = FindSlave(s);
-         (*mess) >> sl->fParallel;
-         rc = 1;
+         {  sl = FindSlave(s);
+            Bool_t async = kFALSE;
+            (*mess) >> sl->fParallel;
+            if ((mess->BufferSize() > mess->Length()))
+               (*mess) >> async;
+            rc = (async) ? 0 : 1;
+         }
          break;
 
       case kPROOF_PACKAGE_LIST:

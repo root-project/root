@@ -242,7 +242,7 @@ public:
    virtual Int_t  SendAsynMessage(const char *msg, Bool_t lf = kTRUE);
    virtual void   SendLogFile(Int_t status = 0, Int_t start = -1, Int_t end = -1);
    void           SendStatistics();
-   void           SendParallel();
+   void           SendParallel(Bool_t async = kFALSE);
 
    // Disable / Enable read timeout
    virtual void   DisableTimeout() { }
