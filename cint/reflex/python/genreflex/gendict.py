@@ -1361,7 +1361,7 @@ class genDictionary(object) :
       elif colon  : s = '::'
     return s
 #----------------------------------------------------------------------------------
-  def genTypeName(self, id, enum=False, const=False, colon=False, alltempl=False, _useCache=True,_cache={}) :
+  def genTypeName(self, id, enum=False, const=False, colon=False, alltempl=False, _useCache=True, _cache={}) :
     if _useCache:
       key = (self,id,enum,const,colon,alltempl)
       if _cache.has_key(key):
@@ -2310,12 +2310,12 @@ def normalizeFragment(name,alltempl=False,_useCache=True,_cache={}) :
   if name.rfind('>') < len(clname) : suffix = ''
   else                             : suffix = name[name.rfind('>')+1:]
   args = getTemplateArgs(name)
-  sargs = [normalizeClass(a, alltempl) for a in args]
+  sargs = [normalizeClass(a, alltempl, _useCache=_useCache) for a in args]
 
   if not alltempl :
     defargs = stldeftab.get (clname)
     if defargs and type(defargs) == type({}):
-      args = [normalizeClass(a, True) for a in args]
+      args = [normalizeClass(a, True, _useCache=_useCache) for a in args]
       defargs_tup = None
       for i in range (1, len (args)):
         defargs_tup = defargs.get (tuple (args[:i]))
@@ -2332,7 +2332,7 @@ def normalizeFragment(name,alltempl=False,_useCache=True,_cache={}) :
       sargs = []
       for i in range(len(args)) :  
         if args[i].find(defargs[i]) == -1 : sargs.append(args[i])
-    sargs = [normalizeClass(a, alltempl) for a in sargs]
+    sargs = [normalizeClass(a, alltempl, _useCache=_useCache) for a in sargs]
 
   nor = clname + '<' + string.join(sargs,',')
   if nor[-1] == '>' : nor += ' >' + suffix
