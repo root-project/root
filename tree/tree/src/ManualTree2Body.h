@@ -125,26 +125,44 @@ static int G__ManualTree2_126_0_188(G__value* result7, G__CONST char* funcname, 
    // return BranchImp(name,TBuffer::GetClass(typeid(T)),addobj,bufsize,splitlevel);
 
    G__TypeInfo ti( libp->para[1] );
-   string type( TClassEdit::ShortType(ti.Name(),TClassEdit::kDropTrailStar) );
+   TClass* ptrClass = 0;
+   EDataType datatype = kOther_t;
+   {
+      string type(TClassEdit::ShortType(ti.Name(), TClassEdit::kDropTrailStar));
+      ptrClass = TClass::GetClass(type.c_str());
+      TDataType* data = gROOT->GetType(type.c_str());
+      if (data) {
+         datatype = (EDataType) data->GetType();
+      }
+   }
 
-   TClass *ptrClass = TClass::GetClass(type.c_str());
-   TDataType *data = gROOT->GetType(type.c_str());
-   EDataType datatype = data ? (EDataType)data->GetType() : kOther_t;
+   const char* branchname = (const char*) G__int(libp->para[0]);
 
-   const char *branchname = (const char*)G__int(libp->para[0]);
-
-   if (ti.Reftype()==0) {
-      G__letint(result7,85,(long)TTreeBranchImpRef(((TTree*) G__getstructoffset()),branchname,ptrClass,datatype,
-                                                   (void*)G__int(libp->para[1]),
-                                                   (Int_t)G__int(libp->para[2]),
-                                                   (Int_t)G__int(libp->para[3])));
-
+   if (!ti.Reftype()) {
+      switch(libp->paran) {
+         case 4:
+            G__letint(result7,85,(long)TTreeBranchImpRef(((TTree*) G__getstructoffset()),branchname,ptrClass,datatype,
+                                                         (void*)G__int(libp->para[1]),
+                                                         (Int_t)G__int(libp->para[2]),
+                                                         (Int_t)G__int(libp->para[3])));
+            break;
+         case 3:
+            G__letint(result7,85,(long)TTreeBranchImpRef(((TTree*) G__getstructoffset()),branchname,ptrClass,datatype,
+                                                         (void*)G__int(libp->para[1]),
+                                                         (Int_t)G__int(libp->para[2]),
+                                                         (Int_t)99));
+            break;
+         case 2:
+            G__letint(result7,85,(long)TTreeBranchImpRef(((TTree*) G__getstructoffset()),branchname,ptrClass,datatype,
+                                                         (void*)G__int(libp->para[1]),
+                                                         (Int_t)32000,
+                                                         (Int_t)99));
+            break;
+      }
    } else {
-
       TClass *actualClass = 0;
       void **addr = (void**)G__int(libp->para[1]);
       if (ptrClass && addr) actualClass = ptrClass->GetActualClass(*addr);
-      
       if (ptrClass && ptrClass->GetCollectionProxy() && dynamic_cast<TEmulatedCollectionProxy*>(ptrClass->GetCollectionProxy())) {
          Error("TTree::Branch", "The class requested (%s) for the branch \"%s\" refer to an stl collection and do not have a compiled CollectionProxy.  "
                "Please generate the dictionary for this class (%s)",
@@ -156,10 +174,8 @@ static int G__ManualTree2_126_0_188(G__value* result7, G__CONST char* funcname, 
                actualClass->GetName(), branchname, actualClass->GetName());   
          G__letint(result7,85,0);
       }
-      
-      if (ptrClass == 0) {
-         Error("TTree::Branch","The pointer specified for %s not of a class known to ROOT",
-               branchname);
+      if (!ptrClass) {
+         Error("TTree::Branch","The pointer specified for %s not of a class known to ROOT", branchname);
          G__letint(result7,85,0);
       } else {
          const char* classname = ptrClass->GetName();
