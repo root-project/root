@@ -5796,7 +5796,8 @@ Int_t TProof::Load(const char *macro, Bool_t notOnClient)
             mp.Insert(ip, np);
          }
          TROOT::SetMacroPath(mp);
-         Info("Load", "macro path set to '%s'", TROOT::GetMacroPath());
+         if (gDebug > 0)
+            Info("Load", "macro path set to '%s'", TROOT::GetMacroPath());
       }
 
       // Wait for master and workers to be done

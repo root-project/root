@@ -1804,7 +1804,8 @@ Bool_t TProofPlayerRemote::SendSelector(const char* selector_file)
       mp.Insert(ip, np);
    }
    TROOT::SetMacroPath(mp);
-   Info("SendSelector", "macro path set to '%s'", TROOT::GetMacroPath());
+   if (gDebug > 0)
+      Info("SendSelector", "macro path set to '%s'", TROOT::GetMacroPath());
 
    // Header file
    TString header = selec;
