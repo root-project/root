@@ -155,11 +155,6 @@ private:
                                       const char *selec, TObject *elist);
    void          SetQueryRunning(TProofQueryResult *pq);
 
-   // Input data handling
-   Int_t         GetInputData(TList *input);
-   Int_t         SaveInputData(TQueryResult *qr);
-   Int_t         SendInputData(TQueryResult *qr);
-
 protected:
    virtual void  HandleArchive(TMessage *mess);
    virtual Int_t HandleCache(TMessage *mess);

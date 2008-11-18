@@ -1410,6 +1410,12 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
          memlogfreq = (memlogfreq > 0) ? memlogfreq : 1;
          fProof->SetParameter("PROOF_MemLogFreq", memlogfreq);
       }
+
+      // Send input data, if any
+      TString emsg;
+      if (TProof::SendInputData(fQuery, fProof, emsg) != 0)
+         Warning("Process", "could not forward input data: %s", emsg.Data());
+
    } else {
 
       // For a new query clients should make sure that the temporary
@@ -1439,6 +1445,9 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
 
       PDB(kLoop,1) Info("Process","Call Begin(0)");
       fSelector->Begin(0);
+
+      // Send large input data objects, if any
+      fProof->SendInputDataFile();
 
       if (!sync)
          gSystem->RedirectOutput(0);

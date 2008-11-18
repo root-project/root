@@ -1428,3 +1428,38 @@ Int_t TProofLite::VerifyDataSet(const char *uri, const char *)
    // Done
    return rc;
 }
+
+//______________________________________________________________________________
+void TProofLite::SendInputDataFile()
+{
+   // Make sure that the input data objects are available to the workers in a
+   // dedicated file in the cache; the objects are taken from the dedicated list
+   // and / or the specified file.
+   // If the fInputData is empty the specified file is sent over.
+   // If there is no specified file, a file named "inputdata.root" is created locally
+   // with the content of fInputData and sent over to the master.
+   // If both fInputData and the specified file are not empty, a copy of the file
+   // is made locally and augmented with the content of fInputData.
+
+   // Prepare the file
+   TString dataFile;
+   PrepareInputDataFile(dataFile);
+
+   // Make sure it is in the cache, if not empty
+   if (dataFile.Length() > 0) {
+
+      if (!dataFile.BeginsWith(fCacheDir)) {
+         // Destination
+         TString dst;
+         dst.Form("%s/%s", fCacheDir.Data(), gSystem->BaseName(dataFile));
+         // Remove it first if it exists
+         if (!gSystem->AccessPathName(dst))
+            gSystem->Unlink(dst);
+         // Copy the file
+         gSystem->CopyFile(dataFile, dst);
+      }
+
+      // Set the name in the input list so that the workers can find it
+      AddInput(new TNamed("PROOF_InputDataFile", Form("%s", gSystem->BaseName(dataFile))));
+   }
+}

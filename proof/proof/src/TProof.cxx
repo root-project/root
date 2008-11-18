@@ -47,6 +47,7 @@
 #include "TFTP.h"
 #include "THashList.h"
 #include "TInterpreter.h"
+#include "TKey.h"
 #include "TMap.h"
 #include "TMessage.h"
 #include "TMonitor.h"
@@ -369,6 +370,74 @@ TProof::TProof() : fUrl(""), fServType(TProofMgr::kXProofd)
    // This constructor simply closes any previous gProof and sets gProof
    // to this instance.
 
+   fValid = kFALSE;
+   fRecvMessages = 0;
+   fSlaveInfo = 0;
+   fMasterServ = kFALSE;
+   fSendGroupView = kFALSE;
+   fActiveSlaves = 0;
+   fInactiveSlaves = 0;
+   fUniqueSlaves = 0;
+   fAllUniqueSlaves = 0;
+   fNonUniqueMasters = 0;
+   fActiveMonitor = 0;
+   fUniqueMonitor = 0;
+   fAllUniqueMonitor = 0;
+   fCurrentMonitor = 0;
+   fBytesRead = 0;
+   fRealTime = 0;
+   fCpuTime = 0;
+   fIntHandler = 0;
+   fProgressDialog = 0;
+   fProgressDialogStarted = kFALSE;
+   fPlayer = 0;
+   fFeedback = 0;
+   fChains = 0;
+   fDSet = 0;
+   fIdle = kFALSE;
+   fSync = kTRUE;
+   fRunStatus = kRunning;
+   fRedirLog = kFALSE;
+   fLogFileW = 0;
+   fLogFileR = 0;
+   fLogToWindowOnly = kFALSE;
+
+   fWaitingSlaves = 0;
+   fQueries = 0;
+   fOtherQueries = 0;
+   fDrawQueries = 0;
+   fMaxDrawQueries = 1;
+   fSeqNum = 0;
+
+   fSessionID = -1;
+   fEndMaster = kFALSE;
+
+   fGlobalPackageDirList = 0;
+   fPackageLock = 0;
+   fEnabledPackagesOnClient = 0;
+
+   fInputData = 0;
+
+   fPrintProgress = 0;
+
+   fLoadedMacros = 0;
+
+   fProtocol = -1;
+   fSlaves = 0;
+   fBadSlaves = 0;
+   fAllMonitor = 0;
+   fDataReady = kFALSE;
+   fBytesReady = 0;
+   fTotalBytes = 0;
+   fAvailablePackages = 0;
+   fEnabledPackages = 0;
+
+   fCollectTimeout = -1;
+
+   fManager = 0;
+   fQueryMode = kSync;
+   fDynamicStartup = kFALSE;
+
    gROOT->GetListOfProofs()->Add(this);
 
    gProof = this;
@@ -506,6 +575,7 @@ Int_t TProof::Init(const char *, const char *conffile,
    fEndMaster      = TestBit(TProof::kIsMaster) ? kTRUE : kFALSE;
    fInputData      = 0;
    ResetBit(TProof::kNewInputData);
+   fPrintProgress  = 0;
 
    // Timeout for some collect actions
    fCollectTimeout = gEnv->GetValue("Proof.CollectTimeout", -1);
@@ -3453,9 +3523,6 @@ Long64_t TProof::Process(TDSet *dset, const char *selector, Option_t *option,
          sh = gSystem->RemoveSignalHandler(gApplication->GetSignalHandler());
    }
 
-   // Send large input data objects, if any
-   SendInputDataFile();
-
    Long64_t rv = fPlayer->Process(dset, selector, option, nentries, first);
 
    if (fSync) {
@@ -6111,6 +6178,15 @@ void TProof::PrintProgress(Long64_t total, Long64_t processed, Float_t procTime)
 {
    // Print a progress bar on stderr. Used in batch mode.
 
+   if (fPrintProgress) {
+      Bool_t redirlog = fRedirLog;
+      fRedirLog = kFALSE;
+      // Call the external function
+      (*fPrintProgress)(total, processed, procTime);
+      fRedirLog = redirlog;
+      return;
+   }
+
    fprintf(stderr, "[TProof::Progress] Total %lld events\t|", total);
 
    for (int l = 0; l < 20; l++) {
@@ -6140,6 +6216,11 @@ void TProof::Progress(Long64_t total, Long64_t processed)
 {
    // Get query progress information. Connect a slot to this signal
    // to track progress.
+
+   if (fPrintProgress) {
+      // Call the external function
+      return (*fPrintProgress)(total, processed, -1.);
+   }
 
    PDB(kGlobal,1)
       Info("Progress","%2f (%lld/%lld)", 100.*processed/total, processed, total);
@@ -6495,7 +6576,7 @@ void TProof::SetInputDataFile(const char *datafile)
          SetBit(TProof::kNewInputData);
       fInputDataFile = "";
    }
-   // Make sure that the chose file is readable
+   // Make sure that the chosen file is readable
    if (fInputDataFile != kPROOF_InputDataFile && !fInputDataFile.IsNull() &&
       gSystem->AccessPathName(fInputDataFile, kReadPermission)) {
       fInputDataFile = "";
@@ -6507,6 +6588,32 @@ void TProof::SendInputDataFile()
 {
    // Send the input data objects to the master; the objects are taken from the
    // dedicated list and / or the specified file.
+   // If the fInputData is empty the specified file is sent over.
+   // If there is no specified file, a file named "inputdata.root" is created locally
+   // with the content of fInputData and sent over to the master.
+   // If both fInputData and the specified file are not empty, a copy of the file
+   // is made locally and augmented with the content of fInputData.
+
+   // Prepare the file
+   TString dataFile;
+   PrepareInputDataFile(dataFile);
+
+   // Send it, if not empty
+   if (dataFile.Length() > 0) {
+
+      Info("SendInputDataFile", "broadcasting %s", dataFile.Data());
+      BroadcastFile(dataFile.Data(), kBinary, "cache",kActive);
+
+      // Set the name in the input list
+      AddInput(new TNamed("PROOF_InputDataFile", Form("cache:%s", gSystem->BaseName(dataFile))));
+   }
+}
+
+//______________________________________________________________________________
+void TProof::PrepareInputDataFile(TString &dataFile)
+{
+   // Prepare the file with the input data objects to be sent the master; the
+   // objects are taken from the dedicated list and / or the specified file.
    // If the fInputData is empty the specified file is sent over.
    // If there is no specified file, a file named "inputdata.root" is created locally
    // with the content of fInputData and sent over to the master.
@@ -6539,9 +6646,9 @@ void TProof::SendInputDataFile()
       in->Remove(o);
 
    // We must have something to send
+   dataFile = "";
    if (!list_ok && !file_ok) return;
 
-   TString dataFile;
    // Three cases:
    if (file_ok && !list_ok) {
       // Just send the file
@@ -6554,11 +6661,15 @@ void TProof::SendInputDataFile()
       TFile *f = TFile::Open(fInputDataFile, "RECREATE");
       if (f) {
          f->cd();
-         fInputData->Write();
+         TIter next(fInputData);
+         TObject *obj;
+         while ((obj = next())) {
+            obj->Write(0, TObject::kSingleKey, 0);
+         }
          f->Close();
          SafeDelete(f);
       } else {
-         Error("SendInputDataFile", "could not (re-)create %s", fInputDataFile.Data());
+         Error("PrepareInputDataFile", "could not (re-)create %s", fInputDataFile.Data());
          return;
       }
       dataFile = fInputDataFile;
@@ -6572,7 +6683,7 @@ void TProof::SendInputDataFile()
          if (dataFile != fInputDataFile) {
             // Make a local copy first
             if (gSystem->CopyFile(fInputDataFile, dataFile, kTRUE) != 0) {
-               Error("SendInputDataFile", "could not make local copy of %s", fInputDataFile.Data());
+               Error("PrepareInputDataFile", "could not make local copy of %s", fInputDataFile.Data());
                return;
             }
          }
@@ -6580,21 +6691,22 @@ void TProof::SendInputDataFile()
          TFile *f = TFile::Open(dataFile, "UPDATE");
          if (f) {
             f->cd();
-            fInputData->Write();
+            TIter next(fInputData);
+            TObject *obj = 0;
+            while ((obj = next())) {
+               obj->Write(0, TObject::kSingleKey, 0);
+            }
             f->Close();
             SafeDelete(f);
          } else {
-            Error("SendInputDataFile", "could not open %s for updating", dataFile.Data());
+            Error("PrepareInputDataFile", "could not open %s for updating", dataFile.Data());
             return;
          }
       }
    }
-   // Send the file
-   Info("SendInputDataFile", "broadcasting %s", dataFile.Data());
-   BroadcastFile(dataFile.Data(), kBinary, "cache");
 
-   // Set the name in the input list
-   AddInput(new TNamed("PROOF_InputDataFile", Form("cache:%s", gSystem->BaseName(dataFile))));
+   //  Done
+   return;
 }
 
 //______________________________________________________________________________
@@ -8594,6 +8706,153 @@ Int_t TProof::AssertDataSet(TDSet *dset, TList *input,
          missingFiles->SetName("MissingFiles");
          input->Add(missingFiles);
       }
+   }
+
+   // Done
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TProof::SaveInputData(TQueryResult *qr, const char *cachedir, TString &emsg)
+{
+   // Save input data file from 'cachedir' into the sandbox or create a the file
+   // with input data objects
+
+   TList *input = 0;
+
+   // We must have got something to process
+   if (!qr || !(input = qr->GetInputList()) ||
+       !cachedir || strlen(cachedir) <= 0) return 0;
+
+   // There must be some input data or input data file
+   TNamed *data = (TNamed *) input->FindObject("PROOF_InputDataFile");
+   TList *inputdata = (TList *) input->FindObject("PROOF_InputData");
+   if (!data && !inputdata) return 0;
+   // Default dstination filename
+   if (!data)
+      input->Add((data = new TNamed("PROOF_InputDataFile", kPROOF_InputDataFile)));
+
+   TString dstname(data->GetTitle()), srcname;
+   Bool_t fromcache = kFALSE;
+   if (dstname.BeginsWith("cache:")) {
+      fromcache = kTRUE;
+      dstname.ReplaceAll("cache:", "");
+      srcname.Form("%s/%s", cachedir, dstname.Data());
+      if (gSystem->AccessPathName(srcname)) {
+         emsg.Form("input data file not found in cache (%s)", srcname.Data());
+         return -1;
+      }
+   }
+
+   // If from cache, just move the cache file
+   if (fromcache) {
+      if (gSystem->CopyFile(srcname, dstname, kTRUE) != 0) {
+         emsg.Form("problems copying %s to %s", srcname.Data(), dstname.Data());
+         return -1;
+      }
+   } else {
+      // Create the file
+      if (inputdata && inputdata->GetSize() > 0) {
+         TFile *f = TFile::Open(dstname.Data(), "RECREATE");
+         if (f) {
+            f->cd();
+            inputdata->Write();
+            f->Close();
+            delete f;
+         } else {
+            emsg.Form("could not create %s", dstname.Data());
+            return -1;
+         }
+      } else {
+         emsg.Form("no input data!");
+         return -1;
+      }
+   }
+   ::Info("TProof::SaveInputData", "input data saved to %s", dstname.Data());
+
+   // Save the file name and clean up the data list
+   data->SetTitle(dstname);
+   if (inputdata) {
+      input->Remove(inputdata);
+      inputdata->SetOwner();
+      delete inputdata;
+   }
+
+   // Done
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TProof::SendInputData(TQueryResult *qr, TProof *p, TString &emsg)
+{
+   // Send the input data file to the workers
+
+   TList *input = 0;
+
+   // We must have got something to process
+   if (!qr || !(input = qr->GetInputList())) return 0;
+
+   // There must be some input data or input data file
+   TNamed *inputdata = (TNamed *) input->FindObject("PROOF_InputDataFile");
+   if (!inputdata) return 0;
+
+   TString fname(inputdata->GetTitle());
+   if (gSystem->AccessPathName(fname)) {
+      emsg.Form("input data file not found in sandbox (%s)", fname.Data());
+      return -1;
+   }
+
+   // PROOF session must available
+   if (!p || !p->IsValid()) {
+      emsg.Form("TProof object undefined or invalid: protocol error!");
+      return -1;
+   }
+
+   // Send to unique workers and submasters
+   p->BroadcastFile(fname, TProof::kBinary, "cache");
+
+   // Done
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TProof::GetInputData(TList *input, const char *cachedir, TString &emsg)
+{
+   // Get the input data from the file defined in the input list
+
+   // We must have got something to process
+   if (!input || !cachedir || strlen(cachedir) <= 0) return 0;
+
+   // There must be some input data or input data file
+   TNamed *inputdata = (TNamed *) input->FindObject("PROOF_InputDataFile");
+   if (!inputdata) return 0;
+
+   TString fname;
+   fname.Form("%s/%s", cachedir, inputdata->GetTitle());
+   if (gSystem->AccessPathName(fname)) {
+      emsg.Form("input data file not found in cache (%s)", fname.Data());
+      return -1;
+   }
+
+   // Read the input data into the input list
+   TFile *f = TFile::Open(fname.Data());
+   if (f) {
+      TList *keys = (TList *) f->GetListOfKeys();
+      if (!keys) {
+         emsg.Form("could not get list of object keys from file");
+         return -1;
+      }
+      TIter nxk(keys);
+      TKey *k = 0;
+      while ((k = (TKey *)nxk())) {
+         TObject *o = f->Get(k->GetName());
+         if (o) input->Add(o);
+      }
+      f->Close();
+      delete f;
+   } else {
+      emsg.Form("could not open %s", fname.Data());
+      return -1;
    }
 
    // Done

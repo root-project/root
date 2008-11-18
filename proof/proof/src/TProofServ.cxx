@@ -2929,7 +2929,9 @@ void TProofServ::HandleProcess(TMessage *mess)
       input = pq->GetInputList();
 
       // Save input data, if any
-      SaveInputData(pq);
+      TString emsg;
+      if (TProof::SaveInputData(pq, fCacheDir.Data(), emsg) != 0)
+         Warning("HandleProcess", "could not save input data: %s", emsg.Data());
 
       // If not a draw action add the query to the main list
       if (!(pq->IsDraw())) {
@@ -3037,9 +3039,6 @@ void TProofServ::HandleProcess(TMessage *mess)
          // Setup data set
          if (dset->IsA() == TDSetProxy::Class())
             ((TDSetProxy*)dset)->SetProofServ(this);
-
-         // Send input data, if any
-         SendInputData(pq);
 
          // Add the unique query tag as TNamed object to the input list
          // so that it is available in TSelectors for monitoring
@@ -3187,7 +3186,9 @@ void TProofServ::HandleProcess(TMessage *mess)
          ((TDSetProxy*)dset)->SetProofServ(this);
 
       // Get input data, if any
-      GetInputData(input);
+      TString emsg;
+      if (TProof::GetInputData(input, fCacheDir.Data(), emsg) != 0)
+         Warning("HandleProcess", "could not get input data: %s", emsg.Data());
 
       // Set input
       TIter next(input);
@@ -5051,157 +5052,6 @@ void TProofServ::HandleFork(TMessage *)
    // Cloning itself via fork. Not implemented
 
    Info("HandleFork", "fork cloning not implemented");
-}
-
-//______________________________________________________________________________
-Int_t TProofServ::SaveInputData(TQueryResult *qr)
-{
-   // Save input data file from cache into the sandbox or create a the file
-   // with input data objects
-
-   TList *input = 0;
-
-   // We must have got something to process
-   if (!qr || !(input = qr->GetInputList())) return 0;
-
-   // There must be some input data or input data file
-   TNamed *data = (TNamed *) input->FindObject("PROOF_InputDataFile");
-   TList *inputdata = (TList *) input->FindObject("PROOF_InputData");
-   if (!data && !inputdata) return 0;
-   // Default dstination filename
-   if (!data)
-      input->Add((data = new TNamed("PROOF_InputDataFile", kPROOF_InputDataFile)));
-
-   TString dstname(data->GetTitle()), srcname;
-   Bool_t fromcache = kFALSE;
-   if (dstname.BeginsWith("cache:")) {
-      fromcache = kTRUE;
-      srcname = dstname;
-      dstname.ReplaceAll("cache:", "");
-      srcname.ReplaceAll("cache:", Form("%s/", fCacheDir.Data()));
-      if (gSystem->AccessPathName(srcname)) {
-         Error("SaveInputData",
-               "input data file not found in cache (%s)", srcname.Data());
-         return -1;
-      }
-   }
-
-   // If from cache, just move the cache file
-   if (fromcache) {
-      if (gSystem->CopyFile(srcname, dstname, kTRUE) != 0) {
-         Error("SaveInputData",
-               "problems copying %s to %s", srcname.Data(), dstname.Data());
-         return -1;
-      }
-   } else {
-      // Create the file
-      if (inputdata && inputdata->GetSize() > 0) {
-         TFile *f = TFile::Open(dstname.Data(), "RECREATE");
-         if (f) {
-            f->cd();
-            inputdata->Write();
-            f->Close();
-            delete f;
-         } else {
-            Error("SaveInputData", "could not create %s", dstname.Data());
-            return -1;
-         }
-      } else {
-         Error("SaveInputData", "no input data!");
-         return -1;
-      }
-   }
-   Info("SaveInputData", "input data saved to %s", dstname.Data());
-
-   // Save the file name and clean up the data list
-   data->SetTitle(dstname);
-   if (inputdata) {
-      input->Remove(inputdata);
-      inputdata->SetOwner();
-      delete inputdata;
-   }
-
-   // Done
-   return 0;
-}
-
-//______________________________________________________________________________
-Int_t TProofServ::SendInputData(TQueryResult *qr)
-{
-   // Send the input data file to the workers
-
-   TList *input = 0;
-
-   // We must have got something to process
-   if (!qr || !(input = qr->GetInputList())) return 0;
-
-   // There must be some input data or input data file
-   TNamed *inputdata = (TNamed *) input->FindObject("PROOF_InputDataFile");
-   if (!inputdata) return 0;
-
-   TString fname(inputdata->GetTitle());
-   if (gSystem->AccessPathName(fname)) {
-      Error("SendInputData",
-            "input data file not found in sandbox (%s)", fname.Data());
-      return -1;
-   }
-
-   // PROOF session must available
-   if (!fProof) {
-      Error("SendInputData", "fProof object undefined: protocol error!");
-      return -1;
-   }
-
-   // Send to unique workers and submasters
-   fProof->BroadcastFile(fname, TProof::kBinary, "cache");
-
-   // Done
-   return 0;
-}
-
-//______________________________________________________________________________
-Int_t TProofServ::GetInputData(TList *input)
-{
-   // Get the input data from the file defined in the input list
-
-   // We must have got something to process
-   if (!input) return 0;
-
-   // There must be some input data or input data file
-   TNamed *inputdata = (TNamed *) input->FindObject("PROOF_InputDataFile");
-   if (!inputdata) return 0;
-
-   TString fname(inputdata->GetTitle());
-   fname.Insert(0, Form("%s/", fCacheDir.Data()));
-   if (gSystem->AccessPathName(fname)) {
-      Error("GetInputData",
-            "input data file not found in cache (%s)", fname.Data());
-      return -1;
-   }
-
-   // Read the input data into the input list
-   TFile *f = TFile::Open(fname.Data());
-   if (f) {
-      TList *keys = (TList *) f->GetListOfKeys();
-      if (!keys) {
-         Error("GetInputData", "could not get list of object keys from file");
-         return -1;
-      }
-      TIter nxk(keys);
-      TKey *k = 0;
-      while ((k = (TKey *)nxk())) {
-         TObject *o = f->Get(k->GetName());
-         if (o) input->Add(o);
-      }
-      f->Close();
-      delete f;
-   } else {
-      Error("GetInputData", "could not open %s", fname.Data());
-      return -1;
-   }
-
-   // Done
-   return 0;
 }
 
 //______________________________________________________________________________

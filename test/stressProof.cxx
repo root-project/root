@@ -46,6 +46,7 @@
 // *   Test  8 : H1: by-name, TPacketizer ......................... OK *   * //
 // *   Test  9 : Package management with 'event' .................. OK *   * //
 // *   Test 10 : Simple 'event' generation ........................ OK *   * //
+// *   Test 11 : Input data propagation ........................... OK *   * //
 // *  * All registered tests have been passed  :-)                     *   * //
 // *  ******************************************************************   * //
 // *                                                                       * //
@@ -65,12 +66,14 @@
 
 #include "Getline.h"
 #include "TChain.h"
+#include "TFile.h"
 #include "TFileCollection.h"
 #include "TFileInfo.h"
 #include "TH1F.h"
 #include "TH2F.h"
 #include "TMap.h"
 #include "TMath.h"
+#include "TParameter.h"
 #include "TProof.h"
 #include "TProofLog.h"
 #include "TProofMgr.h"
@@ -86,6 +89,7 @@ static Int_t gverbose = 0;
 static TString glogfile = 0;
 static Int_t gpoints = 0;
 static Int_t totpoints = 53;
+static RedirectHandle_t gRH;
 
 void stressProof(const char *url = "proof://localhost:11093",
                  Int_t nwrks = -1, Int_t verbose = 0, const char *logfile = 0);
@@ -171,6 +175,38 @@ Int_t PutPoint()
    return ++gpoints;
 }
 
+//______________________________________________________________________________
+void PrintStressProgress(Long64_t total, Long64_t processed, Float_t procTime)
+{
+   // Print some progress information
+
+   gSystem->RedirectOutput(0, 0, &gRH);
+
+   char pc[2] = { '.', ':'};
+   static int lstpc = 1;
+
+   int ns = 0;
+   for (int l = 0; l < 5; l++) {
+      if (total > 0) {
+         if (l < (5*processed)/total) {
+            ns++;
+            if (processed >= total)
+               PutPoint();
+            else
+               fprintf(stderr, ".");
+         }
+      }
+   }
+   if (processed < total) {
+      ns += 6;
+      fprintf(stderr, "%c %2.0f %%", pc[(lstpc++)%2],
+                                    (total ? ((100.0*processed)/total) : 100.0));
+   }
+   while (ns--) fprintf(stderr, "\b");
+
+   gSystem->RedirectOutput(glogfile, "a", &gRH);
+}
+
 //
 // Auxilliary classes for testing
 //
@@ -197,10 +233,9 @@ Int_t ProofTest::Run()
    gpoints = 0;
    printf(" Test %2d : %s ", fSeq, GetName());
    PutPoint();
-   RedirectHandle_t rh;
-   gSystem->RedirectOutput(glogfile, "a", &rh);
+   gSystem->RedirectOutput(glogfile, "a", &gRH);
    Int_t rc = (*fFun)(fArgs);
-   gSystem->RedirectOutput(0, 0, &rh);
+   gSystem->RedirectOutput(0, 0, &gRH);
    if (rc == 0) {
       Int_t np = totpoints - strlen(GetName()) - strlen(" OK *");
       while (np--) { printf("."); }
@@ -209,7 +244,7 @@ Int_t ProofTest::Run()
       Int_t np = totpoints - strlen(GetName()) - strlen(" FAILED *");
       while (np--) { printf("."); }
       printf(" FAILED *\n");
-      gSystem->ShowOutput(&rh);
+      gSystem->ShowOutput(&gRH);
    }
    // Done
    return rc;
@@ -225,6 +260,7 @@ Int_t PT_H1DataSet(void *);
 Int_t PT_DataSets(void *);
 Int_t PT_Packages(void *);
 Int_t PT_Event(void *);
+Int_t PT_InputData(void *);
 
 // Arguments structures
 typedef struct {            // Open
@@ -305,6 +341,8 @@ void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfil
    testList->Add(new ProofTest("Package management with 'event'", 9, &PT_Packages));
    // Simple event analysis
    testList->Add(new ProofTest("Simple 'event' generation", 10, &PT_Event));
+   // Test input data propagation
+   testList->Add(new ProofTest("Input data propagation", 11, &PT_InputData));
 
    //
    // Run the tests
@@ -450,7 +488,9 @@ Int_t PT_Simple(void *)
 
    // Process
    PutPoint();
+   gProof->SetPrintProgress(&PrintStressProgress);
    gProof->Process("../tutorials/proof/ProofSimple.C++", nevt);
+   gProof->SetPrintProgress(0);
 
    // Make sure the query result is there
    PutPoint();
@@ -528,7 +568,9 @@ Int_t PT_H1Http(void *)
    PutPoint();
    chain->SetProof();
    PutPoint();
+   gProof->SetPrintProgress(&PrintStressProgress);
    chain->Process("../tutorials/tree/h1analysis.C++");
+   gProof->SetPrintProgress(0);
    gProof->RemoveChain(chain);
 
    // Make sure the query result is there
@@ -618,7 +660,9 @@ Int_t PT_H1FileCollection(void *)
 
    // Process
    PutPoint();
+   gProof->SetPrintProgress(&PrintStressProgress);
    gProof->Process(fc, "../tutorials/tree/h1analysis.C++");
+   gProof->SetPrintProgress(0);
 
    // Make sure the query result is there
    PutPoint();
@@ -713,7 +757,9 @@ Int_t PT_H1DataSet(void *arg)
 
    // Process the dataset by name
    PutPoint();
+   gProof->SetPrintProgress(&PrintStressProgress);
    gProof->Process(dsname, "../tutorials/tree/h1analysis.C++");
+   gProof->SetPrintProgress(0);
 
    // Restore settings
    gProof->DeleteParameters("PROOF_Packetizer");
@@ -982,7 +1028,9 @@ Int_t PT_Event(void *)
 
    // Process
    PutPoint();
+   gProof->SetPrintProgress(&PrintStressProgress);
    gProof->Process("../tutorials/proof/ProofEvent.C++", nevt);
+   gProof->SetPrintProgress(0);
 
    // Make sure the query result is there
    PutPoint();
@@ -1028,4 +1076,118 @@ Int_t PT_Event(void *)
    return 0;
 }
 
+//_____________________________________________________________________________
+Int_t PT_InputData(void *)
+{
+   // Test input data functionality
+
+   // Checking arguments
+   PutPoint();
+   if (!gProof) {
+      printf("\n >>> Test failure: no PROOF session found\n");
+      return -1;
+   }
+
+   // Create the test information to be send via input and retrieved
+   TH1F *h1 = new TH1F("h1data","Input data from file",100,-5.,5.);
+   h1->FillRandom("gaus", 1000);
+   TList *h1list = new TList;
+   h1list->SetName("h1list");
+   h1list->SetOwner(kTRUE);
+   h1list->Add(h1);
+   h1list->Add(new TParameter<Double_t>("h1avg", h1->GetMean()));
+   h1list->Add(new TParameter<Double_t>("h1rms", h1->GetRMS()));
+   TString datafile = glogfile;
+   datafile += ("_h1data.root");
+   TFile *f = TFile::Open(datafile, "RECREATE");
+   if (!f) {
+      printf("\n >>> Test failure: could not open file for input data\n");
+      return -1;
+   }
+   f->cd();
+   h1list->Write(0, TObject::kSingleKey, 0);
+   f->Close();
+   gProof->SetInputDataFile(datafile.Data());
+
+   // Histo to be sent from memory
+   TH1F *h2 = new TH1F("h2data","Input data from memory",100,-5.,5.);
+   h2->FillRandom("gaus", 1000);
+   TList *h2list = new TList;
+   h2list->SetName("h2list");
+   h2list->SetOwner(kTRUE);
+   h2list->Add(h2);
+   h2list->Add(new TParameter<Double_t>("h2avg", h2->GetMean()));
+   h2list->Add(new TParameter<Double_t>("h2rms", h2->GetRMS()));
+   gProof->AddInputData(h2list);
+
+   // Normal input parameter
+   gProof->AddInput(new TNamed("InputObject", glogfile.Data()));
+
+   // Type of test
+   gProof->AddInput(new TNamed("ProofTests_type", "InputData"));
+
+   // Define the number of events
+   Long64_t nevt = 1;
+
+   // Clear the list of query results
+   if (gProof->GetQueryResults()) gProof->GetQueryResults()->Clear();
+
+   // Process
+   PutPoint();
+   gProof->SetPrintProgress(&PrintStressProgress);
+   gProof->Process("../tutorials/proof/ProofTests.C++", nevt);
+   gProof->SetPrintProgress(0);
+
+   // Cleanup
+   gSystem->Unlink(datafile.Data());
+   delete h1list;
+   delete h2list;
+
+   // Make sure the query result is there
+   PutPoint();
+   TQueryResult *qr = 0;
+   if (!(qr = gProof->GetQueryResult())) {
+      printf("\n >>> Test failure: query result not found\n");
+      return -1;
+   }
+
+   // Make sure the output list is there
+   PutPoint();
+   if (!(gProof->GetOutputList())) {
+      printf("\n >>> Test failure: output list not found\n");
+      return -1;
+   }
+
+   // Check the 'histo's
+   PutPoint();
+   TH1I *stat = dynamic_cast<TH1I*>(gProof->GetOutputList()->FindObject("TestStat"));
+   if (!stat) {
+      printf("\n >>> Test failure: 'TestStat' histo not found\n");
+      return -1;
+   }
+
+   // Test how many workers got everything successfully
+   Int_t nw = gProof->GetParallel();
+   PutPoint();
+
+   if (TMath::Abs(stat->GetBinContent(1) - nw) > .1) {
+      printf("\n >>> Test failure: histo 'h1' not correctly received on all workers (%.0f/%d)\n",
+             stat->GetBinContent(1), nw);
+      return -1;
+   }
+   if (TMath::Abs(stat->GetBinContent(2) - nw) > .1) {
+      printf("\n >>> Test failure: histo 'h2' not correctly received on all workers (%.0f/%d)\n",
+             stat->GetBinContent(2), nw);
+      return -1;
+   }
+   if (TMath::Abs(stat->GetBinContent(3) - nw) > .1) {
+      printf("\n >>> Test failure: test input object not correctly received on all workers (%.0f/%d)\n",
+             stat->GetBinContent(3), nw);
+      return -1;
+   }
+
+   // Done
+   PutPoint();
+   return 0;
+}
 

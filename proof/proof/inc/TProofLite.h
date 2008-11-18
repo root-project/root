@@ -65,6 +65,8 @@ private:
    Int_t SetProofServEnv(const char *ord);
    Int_t InitDataSetManager();
 
+   void SendInputDataFile();
+
 protected:
    TProofLite() : TProof() { } // For derived classes to use
 

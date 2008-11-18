@@ -149,6 +149,7 @@ const char* const kGUNZIP = "gunzip";
 
 R__EXTERN TVirtualMutex *gProofMutex;
 
+typedef void (*PrintProgress_t)(Long64_t tot, Long64_t proc, Float_t proctime);
 
 // Helper classes used for parallel startup
 class TProofThreadArg {
@@ -451,6 +452,8 @@ private:
    TList          *fInputData;       //Input data objects sent over via file
    TString         fInputDataFile;   //File with input data objects
 
+   PrintProgress_t fPrintProgress;   //Function function to display progress info in batch mode
+
    TList          *fLoadedMacros;    // List of loaded macros (just file names)
    static TList   *fgProofEnvList;   // List of TNameds defining environment
                                      // variables to pass to proofserv
@@ -569,8 +572,6 @@ private:
 
    void     PrintProgress(Long64_t total, Long64_t processed, Float_t procTime = -1.);
 
-   void     SendInputDataFile();
-
 protected:
    TProof(); // For derived classes to use
    Int_t           Init(const char *masterurl, const char *conffile,
@@ -606,10 +607,17 @@ protected:
 
    Int_t AssertPath(const char *path, Bool_t writable);
 
+   void PrepareInputDataFile(TString &dataFile);
+   virtual void SendInputDataFile();
+
    static void *SlaveStartupThread(void *arg);
 
    static Int_t AssertDataSet(TDSet *dset, TList *input,
                               TProofDataSetManager *mgr, TString &emsg);
+   // Input data handling
+   static Int_t GetInputData(TList *input, const char *cachedir, TString &emsg);
+   static Int_t SaveInputData(TQueryResult *qr, const char *cachedir, TString &emsg);
+   static Int_t SendInputData(TQueryResult *qr, TProof *p, TString &emsg);
 
 public:
    TProof(const char *masterurl, const char *conffile = kPROOF_ConfFile,
@@ -836,6 +844,8 @@ public:
 
    const char *GetDataPoolUrl() const { return fDataPoolUrl; }
    void        SetDataPoolUrl(const char *url) { fDataPoolUrl = url; }
+
+   void        SetPrintProgress(PrintProgress_t pp) { fPrintProgress = pp; }
 
    // Opening and managing PROOF connections
    static TProof       *Open(const char *url = 0, const char *conffile = 0,

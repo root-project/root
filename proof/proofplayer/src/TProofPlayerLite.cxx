@@ -328,6 +328,9 @@ Long64_t TProofPlayerLite::Process(TDSet *dset, const char *selector_file,
    PDB(kLoop,1) Info("Process","Call Begin(0)");
    fSelector->Begin(0);
 
+   // Send large input data objects, if any
+   gProof->SendInputDataFile();
+
    PDB(kPacketizer,1) Info("Process","Create Proxy TDSet");
    TDSet *set = new TDSetProxy(dset->GetType(), dset->GetObjName(),
                                dset->GetDirectory());
