@@ -32,17 +32,17 @@ The syntax of the rules is the following:
 
    * For CINT dictionaries:
 
-#pragma read                                               \
-    sourceClass="ClassA"                                   \
-    source="double m_a; double m_b; double m_c"            \
-    version="[4-5,7,9,12-]"                                \
-    checksum="[12345,123456]"                              \
-    targetClass="ClassB"                                   \
-    target="m_x"                                           \
-    targetType="int"                                       \
-    embed="true"                                           \
-    include="iostream;cstdlib"                             \
-    code="{m_x = onfile.m_a * onfile.m_b * onfile.m_c; } " \
+#pragma read                                              \
+    sourceClass="ClassA"                                  \
+    source="double m_a; double m_b; double m_c"           \
+    version="[4-5,7,9,12-]"                               \
+    checksum="[12345,123456]"                             \
+    targetClass="ClassB"                                  \
+    target="m_x"                                          \
+    targetType="int"                                      \
+    embed="true"                                          \
+    include="iostream;cstdlib"                            \
+    code="{m_x = onfile.m_a * onfile.m_b * onfile.m_c; }" \
 
 
 #pragma readraw           \
@@ -57,7 +57,7 @@ The syntax of the rules is the following:
 Float_t * xbins=0; \
 Int_t n = buffer.ReadArray( xbins ); \
 fXbins.Set( xbins ); \
-}”
+}"
 
 
    * For REFLEX dictionaries:
@@ -76,12 +76,12 @@ fXbins.Set( xbins ); \
 ]] >
 </ioread>
 
-<ioreadraw sourceClass=”TAxis ”
-           source=”fXbins”
-           targetClass=”TAxis”
-           target=”fXbins”
-           version=”[-5]”
-           include=”TAxis.h”>
+<ioreadraw sourceClass="TAxis"
+           source="fXbins"
+           targetClass="TAxis"
+           target="fXbins"
+           version="[-5]"
+           include="TAxis.h">
 <![CDATA[
       Float_t *xbins = 0;
       Int_t n = buffer.ReadArray( xbins ) ;
@@ -91,12 +91,12 @@ fXbins.Set( xbins ); \
 
    The vairables in the rules have the following meaning:
 
-  * sourceClass - The ﬁeld deﬁnes the on-disk class that is the input for the rule.
-  * source      - A semicolon-separated list of values deﬁning the source class data members
+  * sourceClass - The field defines the on-disk class that is the input for the rule.
+  * source      - A semicolon-separated list of values defining the source class data members
                   that need to be cached and accessible via object proxy when the rule is
                   executed. The values are either the names of the data members or the type-name
-                  pairs (separated by a space). If types are speciﬁed then the ondisk structure
-                  can be generated and used in the code snippet deﬁned by the user.
+                  pairs (separated by a space). If types are specified then the ondisk structure
+                  can be generated and used in the code snippet defined by the user.
   * version     - A list of versions of the source class that can be an input for this rule.
                   The list has to be enclosed in a square bracket and be a comma-separated
                   list of versions or version ranges. The version is an integer number, whereas
@@ -110,40 +110,40 @@ fXbins.Set( xbins ); \
   * checksum    - A list of checksums of the source class that can be an input for this
                   rule. The list has to be enclosed in a square brackets and is a
                   comma-separated list of integers.
-  * targetClass - The ﬁeld is obligatory and deﬁnes the name of the in-memory class that
+  * targetClass - The field is obligatory and defines the name of the in-memory class that
                   this rule can be applied to.
   * target      - A semicolon-separated list of target class data member names that this rule
                   is capable of calculating.
-  * targetType  - This property is meant to deﬁne the target type if used without dictio-
-                  naries (when the rule was serialized to a ﬁle), it is ignored otherwise.
+  * targetType  - This property is meant to define the target type if used without dictio-
+                  naries (when the rule was serialized to a file), it is ignored otherwise.
   * embed       - This property tells the system if the rule should be written in the output
-                  ﬁle is some objects of this class are serialized.
-  * include     - A list of header ﬁles that should be included in order to provide the func-
+                  file is some objects of this class are serialized.
+  * include     - A list of header files that should be included in order to provide the func-
                   tionality used in the code snippet.
-  * code        - An user speciﬁed code snippet
+  * code        - An user specified code snippet
 
    The user can assume that in the provided code snippet the following variables
 will be defined:
 
     The user provided code snippets have to consist of valid C++ code. The system can do
 some preprocessing before wrapping the code into function calls and declare some variables to
-facilitate the rule deﬁnitions. The user can expect the following variables being predeclared:
+facilitate the rule definitions. The user can expect the following variables being predeclared:
 
-   * newObj    - variable representing the target in-memory object, it’s type is that of the
-                 target object
-   * oldObj    - in normal conversion rules, an object of TVirtualObject class representing the
-                 input data, guaranteed to hold the data members declared in the source property
-                 of the rule
-   * buffer    - in raw conversion rules, an object of TBuﬀer class holding the data member
-                 declared in source property of the rule
+   * newObj     - variable representing the target in-memory object, it’s type is that of the
+                  target object
+   * oldObj     - in normal conversion rules, an object of TVirtualObject class representing the
+                  input data, guaranteed to hold the data members declared in the source property
+                  of the rule
+   * buffer     - in raw conversion rules, an object of TBuﬀer class holding the data member
+                  declared in source property of the rule
    * names of the data members of the target object declared in the target property of the
-                 rule declared to be the appropriate type
-   * onﬁle.xxx - in normal conversion rules, names of the variables of basic types declared
-                 in the source property of the rule
+                  rule declared to be the appropriate type
+   * onfile.xxx - in normal conversion rules, names of the variables of basic types declared
+                  in the source property of the rule
 
 3. The C++ API
 
-   The schema evolution C++ API consists of two classes: TSchemaRuleSet and TSchemaRule.
+   The schema evolution C++ API consists of two classes: ROOT::TSchemaRuleSet and ROOT::TSchemaRule.
 Objects of the TSchemaRule class represent the rules and their fields have exactly the same
 meaning as the ones of rules specified in the dictionaries. TSchemaRuleSet objects
 manage the sets of rules and ensure their consistency. There can be no conflicting
