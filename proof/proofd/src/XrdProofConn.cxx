@@ -989,9 +989,10 @@ bool XrdProofConn::Login()
          fLoginBuffer += ug;
       }
    } else if (ug.length() >= 0) {
-      strcpy( (char *)reqhdr.login.username, (char *)(ug.c_str()) );
+      memcpy((void *)reqhdr.login.username, (void *)(ug.c_str()), ug.length());
+      if (ug.length() < 8) reqhdr.login.username[ug.length()] = '\0';
    } else {
-      strcpy( (char *)reqhdr.login.username, "????" );
+      strcpy((char *)reqhdr.login.username, "????" );
    }
 
    // This is the place to send a token for fast authentication
@@ -1173,142 +1174,111 @@ XrdSecProtocol *XrdProofConn::Authenticate(char *plist, int plsiz)
    XrdSecCredentials *credentials = 0;
 
    //
-   // Now try in turn the available protocols (first preferred)
-   bool resp = FALSE;
-   int lp = 0;
-   char *pp = strstr(plist+lp,"&P=");
-   while (pp && pp <= (plist + plsiz - 3)) {
-      //
-      // The delimitation id next protocol string or the end ...
-      char *pn = pp+3;
-      while (pn <= (plist + plsiz - 3)) {
-         if ((*pn) == '&')
-            if (!strncmp(pn+1,"P=",2)) break;
-         pn++;
-      }
-      pn = (pn > (plist + plsiz - 3)) ? 0 : pn;
-      //
-      // Token length
-      int lpar = (pn) ? ((int)(pn-pp)) : (plsiz - (int)(pp-plist));
-      //
-      // Prepare the parms object
-      char *bpar = (char *)malloc(lpar+1);
-      if (bpar)
-         memcpy(bpar, pp, lpar);
-      bpar[lpar] = 0;
-      XrdSecParameters Parms(bpar,lpar+1);
+   // Prepare the parms object
+   char *bpar = (char *)malloc(plsiz + 1);
+   if (bpar)
+      memcpy(bpar, plist, plsiz);
+   bpar[plsiz] = 0;
+   XrdSecParameters Parms(bpar, plsiz + 1);
 
-      // We need to load the protocol getter the first time we are here
-      if (!fgSecGetProtocol) {
-         static XrdSysError err(0, "XrdProofConn_");
-         // Initialize the security library plugin, if needed
-         if (!fgSecPlugin)
-            fgSecPlugin = new XrdSysPlugin(&err, "libXrdSec.so");
+   // We need to load the protocol getter the first time we are here
+   if (!fgSecGetProtocol) {
+      static XrdSysError err(0, "XrdProofConn_");
+      // Initialize the security library plugin, if needed
+      if (!fgSecPlugin)
+         fgSecPlugin = new XrdSysPlugin(&err, "libXrdSec.so");
 
-         // Get the client protocol getter
-         if (!(fgSecGetProtocol = fgSecPlugin->getPlugin("XrdSecGetProtocol"))) {
-            TRACE(XERR, "unable to load XrdSecGetProtocol()");
-            return protocol;
-         }
+      // Get the client protocol getter
+      if (!(fgSecGetProtocol = fgSecPlugin->getPlugin("XrdSecGetProtocol"))) {
+         TRACE(XERR, "unable to load XrdSecGetProtocol()");
+         return protocol;
       }
-      //
-      // Retrieve the security protocol context from the xrootd server
-      if (!(protocol = (*((XrdSecGetProt_t)fgSecGetProtocol))((char *)fUrl.Host.c_str(),
-                               (const struct sockaddr &)netaddr, Parms, 0))) {
-         TRACE(XERR, "unable to get protocol object.");
-         // Set error, in case of need
-         fLastErr = kXR_NotAuthorized;
-         fLastErrMsg = "unable to get protocol object.";
-         pp = pn;
-         continue;
-      }
+   }
+   //
+   // Retrieve the security protocol context from the xrootd server
+   if (!(protocol = (*((XrdSecGetProt_t)fgSecGetProtocol))((char *)fUrl.Host.c_str(),
+                              (const struct sockaddr &)netaddr, Parms, 0))) {
+      TRACE(XERR, "unable to get protocol object.");
+      // Set error, in case of need
+      fLastErr = kXR_NotAuthorized;
+      fLastErrMsg = "unable to get protocol object.";
+      return protocol;
+   }
 
-      //
-      // Protocol name
-      XrdOucString protname = protocol->Entity.prot;
-      //
-      // Once we have the protocol, get the credentials
-      XrdOucErrInfo ei;
-      credentials = protocol->getCredentials(0, &ei);
-      if (!credentials) {
-         TRACE(XERR, "cannot obtain credentials (protocol: "<<protname<<")");
-         // Set error, in case of need
-         fLastErr = kXR_NotAuthorized;
-         fLastErrMsg = "cannot obtain credentials for protocol: ";
-         fLastErrMsg += ei.getErrText();
-         pp = pn;
-         protocol->Delete();
-         protocol = 0;
-         continue;
-      } else {
-         TRACE(HDBG, "credentials size: " << credentials->size);
-      }
-      //
-      // We fill the header struct containing the request for login
-      XPClientRequest reqhdr;
-      memset(reqhdr.auth.reserved, 0, 12);
-      memcpy(reqhdr.auth.credtype, protname.c_str(), protname.length());
+   //
+   // Protocol name
+   XrdOucString protname = protocol->Entity.prot;
+   //
+   // Once we have the protocol, get the credentials
+   XrdOucErrInfo ei;
+   credentials = protocol->getCredentials(0, &ei);
+   if (!credentials) {
+      TRACE(XERR, "cannot obtain credentials (protocol: "<<protname<<")");
+      // Set error, in case of need
+      fLastErr = kXR_NotAuthorized;
+      fLastErrMsg = "cannot obtain credentials for protocol: ";
+      fLastErrMsg += ei.getErrText();
+      protocol->Delete();
+      protocol = 0;
+      return protocol;
+   } else {
+      TRACE(HDBG, "credentials size: " << credentials->size);
+   }
+   //
+   // We fill the header struct containing the request for login
+   XPClientRequest reqhdr;
+   memset(reqhdr.auth.reserved, 0, 12);
+   memcpy(reqhdr.auth.credtype, protname.c_str(), protname.length());
 
-      int status = kXR_authmore;
-      int dlen = 0;
-      char *srvans = 0;
-      resp = FALSE;
-      XrdClientMessage *xrsp = 0;
-      while (status == kXR_authmore) {
+   int status = kXR_authmore;
+   int dlen = 0;
+   char *srvans = 0;
+   XrdClientMessage *xrsp = 0;
+   while (status == kXR_authmore) {
+      //
+      // Length of the credentials buffer
+      SetSID(reqhdr.header.streamid);
+      reqhdr.header.requestid = kXP_auth;
+      reqhdr.header.dlen = credentials->size;
+      xrsp = SendReq(&reqhdr, credentials->buffer,
+                              &srvans, "XrdProofConn::Authenticate");
+      SafeDelete(credentials);
+      status = (xrsp) ? xrsp->HeaderStatus() : kXR_error;
+      dlen = (xrsp) ? xrsp->DataLen() : 0;
+      TRACE(HDBG, "server reply: status: "<<status<<" dlen: "<<dlen);
+
+      if (xrsp && (status == kXR_authmore)) {
          //
-         // Length of the credentials buffer
-         SetSID(reqhdr.header.streamid);
-         reqhdr.header.requestid = kXP_auth;
-         reqhdr.header.dlen = credentials->size;
-         xrsp = SendReq(&reqhdr, credentials->buffer,
-                                 &srvans, "XrdProofConn::Authenticate");
-         SafeDelete(credentials);
-         status = (xrsp) ? xrsp->HeaderStatus() : kXR_error;
-         dlen = (xrsp) ? xrsp->DataLen() : 0;
-         TRACE(HDBG, "server reply: status: "<<status<<" dlen: "<<dlen);
-
-         if (xrsp && (status == kXR_authmore)) {
-            //
-            // We are required to send additional information
-            // First assign the security token that we have received
-            // at the login request
-            secToken = new XrdSecParameters(srvans, dlen);
-            //
-            // then get next part of the credentials
-            credentials = protocol->getCredentials(secToken, &ei);
-            SafeDelete(secToken); // nb: srvans is released here
-            srvans = 0;
-            if (!credentials) {
-               TRACE(XERR, "cannot obtain credentials");
-               // Set error, in case of need
-               fLastErr = kXR_NotAuthorized;
-               fLastErrMsg = "cannot obtain credentials: ";
-               fLastErrMsg += ei.getErrText();
-               protocol->Delete();
-               protocol = 0;
-               break;
-            } else {
-               TRACE(HDBG, "credentials size " << credentials->size);
-            }
-         } else if (status == kXR_ok) {
-            // Success
-            resp = TRUE;
-         } else {
-            // Print error msg, if any
-            if (GetLastErr())
-               TRACE(XERR, fHost << ": "<< GetLastErr());
+         // We are required to send additional information
+         // First assign the security token that we have received
+         // at the login request
+         secToken = new XrdSecParameters(srvans, dlen);
+         //
+         // then get next part of the credentials
+         credentials = protocol->getCredentials(secToken, &ei);
+         SafeDelete(secToken); // nb: srvans is released here
+         srvans = 0;
+         if (!credentials) {
+            TRACE(XERR, "cannot obtain credentials");
+            // Set error, in case of need
+            fLastErr = kXR_NotAuthorized;
+            fLastErrMsg = "cannot obtain credentials: ";
+            fLastErrMsg += ei.getErrText();
             protocol->Delete();
             protocol = 0;
+            return protocol;
+         } else {
+            TRACE(HDBG, "credentials size " << credentials->size);
          }
-         // Cleanup message
-         SafeDelete(xrsp);
+      } else if (status != kXR_ok) {
+         // Unexpected reply; print error msg, if any
+         if (GetLastErr())
+            TRACE(XERR, fHost << ": "<< GetLastErr());
+         protocol->Delete();
+         protocol = 0;
       }
-      if (!resp)
-         // Get next
-         pp = pn;
-      else
-        // We are done
-         break;
+      // Cleanup message
+      SafeDelete(xrsp);
    }
 
    // Return the result of the negotiation
