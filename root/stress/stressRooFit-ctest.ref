@@ -20,7 +20,7 @@ Test 10 : Extended ML fits to addition operator p.d.f.s..........OK
 Test 11 : Basic fitting and plotting in ranges...................OK
 Test 12 : Extended ML fit in sub range...........................OK
 Test 13 : Component plotting variations..........................OK
-Test 14 : FFT Convolution operator p.d.f.........................SKIPPED
+Test 14 : FFT Convolution operator p.d.f.........................OK
 Test 15 : Analytical convolution operator........................OK
 Test 16 : Composition extension of basic p.d.f...................OK
 Test 17 : Sum and product utility functions......................OK
