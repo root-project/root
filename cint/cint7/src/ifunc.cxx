@@ -242,6 +242,10 @@ int Cint::G__compile_function_bytecode(const ::Reflex::Member& ifunc)
    ) {
       para.paran = 0;
       para.para[0] = G__null;
+      if (!G__struct.alltag) { // If bytecode arena not yet created, then create it and the global namespace.
+         G__create_global_namespace();
+         G__create_bytecode_arena();
+      }
       static int bytecodeTagnum = G__defined_tagname("% CINT byte code scratch arena %", 0); // Find the arena.
       static ::Reflex::Scope bytecodeArena = G__Dict::GetDict().GetScope(bytecodeTagnum);
       G__tagdefining = bytecodeArena;
@@ -6277,6 +6281,7 @@ static int G__call_cppfunc(G__value* return_value, G__param* libp, const ::Refle
 #endif // G__ASM
    //
    //  Initialize the type of the return value to G__null.
+   //
    *return_value = G__null;
    char retval_type = '\0';
    int retval_tagnum = -1;
@@ -6375,10 +6380,35 @@ static int G__call_cppfunc(G__value* return_value, G__param* libp, const ::Refle
 #endif // G__EXCEPTIONWRAPPER
    G__store_struct_offset = save_offset;
    G__CurrentCall(G__NOP, 0, 0);
-   //if (G__value_typenum(*return_value)) { // if return_value is not G__null
-   //   G__value_typenum(*return_value) = ifunc.TypeOf().ReturnType();
+   //
+   //  Function call changed the type of the return value,
+   //  so we must retranslate it.
+   //
+   //G__get_cint5_type_tuple(G__value_typenum(*return_value), &retval_type, &retval_tagnum, &retval_typenum, &retval_reftype, &retval_isconst);
+   //if ( // keep return value type code if func return type is void or, func is a constructor call
+   //   (type != 'y') && // return type is not void, and
+   //   (ifunc.Name() != ifunc.DeclaringScope().Name()) // not a constructor
+   //) { // keep return value type code if func return type is void or, func is a constructor call
+   //   retval_type = type;
    //}
+   //retval_tagnum = tagnum;
+   //retval_typenum = typenum;
+   if (typenum != -1) { // return type is a typedef
+      if (G__Dict::GetDict().GetTypedef(typenum).ToType().IsArray()) { // return type is typedef, and the typedef is to an array, change return type to a pointer
+         G__get_cint5_type_tuple(G__value_typenum(*return_value), &retval_type, &retval_tagnum, &retval_typenum, &retval_reftype, &retval_isconst);
+         retval_type = toupper(retval_type);
+         G__value_typenum(*return_value) = G__cint5_tuple_to_type(retval_type, retval_tagnum, retval_typenum, retval_reftype, retval_isconst);
+      }
+   }
+   //if (isupper(type) && reftype) { // ignore refness of return type if it is not also a pointer
+   //   retval_reftype = reftype;
+   //}
+   //G__value_typenum(*return_value) = G__cint5_tuple_to_type(retval_type, retval_tagnum, retval_typenum, retval_reftype, retval_isconst);
+   //
+   //
+   //
    if (isupper(type)) { // If function return type is a pointer, then copy pointer levels and refness to type of result.
+      G__get_cint5_type_tuple(G__value_typenum(*return_value), &retval_type, &retval_tagnum, &retval_typenum, &retval_reftype, &retval_isconst);
       retval_reftype = reftype;
       G__value_typenum(*return_value) = G__cint5_tuple_to_type(retval_type, retval_tagnum, retval_typenum, retval_reftype, retval_isconst);
    }

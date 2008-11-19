@@ -92,21 +92,62 @@ extern "C" void G__loadlonglong(int* ptag, int* ptype, int which)
    return;
 }
 
-/******************************************************************
-* int G__sizeof(G__value *object)
-******************************************************************/
-extern "C" int G__sizeof(G__value *object)
+//______________________________________________________________________________
+extern "C" int G__sizeof(G__value* object)
 {
-   ::Reflex::Type type( G__value_typenum(*object) );
-   int result = type.SizeOf();
-   if (G__get_type(type)=='g') {
-#ifdef G__BOOL4BYTE
-      assert(G__INTALLOC==result);
-#else
-      assert(G__CHARALLOC==result);
-#endif
+   ::Reflex::Type ty = G__value_typenum(*object);
+   //int result = ty.SizeOf();
+   //return result;
+   char type = G__get_type(ty);
+   int reftype = G__get_reftype(ty);
+   if (isupper(type) && (reftype != G__PARANORMAL)) {
+      return G__LONGALLOC;
    }
-   return result;      
+   switch (toupper(type)) {
+      case 'B': // unsigned char*
+      case 'C': // char*
+      case 'E': // FILE*
+      case 'Y': // void
+#ifndef G__OLDIMPLEMENTATION2191
+      case '1': // pointer to function
+#else // G__OLDIMPLEMENTATION2191
+      case 'Q': // pointer to function
+#endif // G__OLDIMPLEMENTATION2191
+         return G__CHARALLOC;
+      case 'R':
+      case 'S':
+         return G__SHORTALLOC;
+      case 'H':
+      case 'I':
+         return G__INTALLOC;
+      case 'K':
+      case 'L':
+         return G__LONGALLOC;
+      case 'F':
+         return G__FLOATALLOC;
+      case 'D':
+         return G__DOUBLEALLOC;
+      case 'U':
+         return ty.RawType().SizeOf();
+      case 'A': // pointer to member function
+         return G__P2MFALLOC;
+      case 'G': // bool
+         // --
+#ifdef G__BOOL4BYTE
+         return G__INTALLOC;
+#else // G__BOOL4BYTE
+         return G__CHARALLOC;
+#endif // G__BOOL4BYTE
+      case 'N':
+      case 'M':
+         return G__LONGLONGALLOC;
+#ifndef G__OLDIMPLEMENTATION2191
+      case 'Q':
+         return G__LONGDOUBLEALLOC;
+#endif // G__OLDIMPLEMENTATION2191
+      // --
+   }
+   return 1;
 }
 
 /******************************************************************

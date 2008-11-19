@@ -30,7 +30,6 @@ using namespace Cint::Internal;
 // Static functions.
 static void G__add_anonymousunion(const ::Reflex::Type uniontype, int def_struct_member, ::Reflex::Scope envtagnum);
 static int G__check_semicolumn_after_classdef(int isclassdef);
-static void G__create_global_namespace();
 
 // Cint internal functions.
 namespace Cint {
@@ -45,6 +44,8 @@ char* G__find_last_scope_operator(char* name);
 ::Reflex::Type G__find_type(const char* type_name, int /*errorflag*/, int /*templateflag*/);
 ::Reflex::Member G__add_scopemember(::Reflex::Scope envvar, const char* varname, const ::Reflex::Type type, int reflex_modifiers, size_t reflex_offset, char* offset, int var_access, int var_statictype);
 void G__define_struct(char type);
+void G__create_global_namespace();
+void G__create_bytecode_arena();
 #ifndef G__OLDIMPLEMENTATION2030
 int G__callfunc0(G__value* result, const ::Reflex::Member ifunc, G__param* libp, void* p, int funcmatch);
 int G__calldtor(void* p, const Reflex::Scope tagnum, int isheap);
@@ -145,70 +146,6 @@ static int G__check_semicolumn_after_classdef(int isclassdef)
       return(1);
    }
    return(0);
-}
-
-//______________________________________________________________________________
-static void G__create_global_namespace()
-{
-   // add global scope as namespace
-#ifdef __GNUC__
-#else
-#pragma message (FIXME("Remove this once scopes are in reflex!"))
-#endif
-   int i = G__struct.alltag;
-   G__struct.name[i] = "";
-   G__struct.parent_tagnum[i] = -1;
-   G__struct.userparam[i] = 0;
-   G__struct.hash[i] = 0;
-   G__struct.size[i] = 0;
-   G__struct.type[i] = 'n';
-
-   G__struct.baseclass[i] = (struct G__inheritance *)malloc(sizeof(struct G__inheritance));
-   memset(G__struct.baseclass[i], 0, sizeof(struct G__inheritance));
-   G__struct.virtual_offset[i] = G__PVOID;
-   G__struct.isabstract[i] = 0;
-
-   G__struct.globalcomp[i] = G__NOLINK;
-   G__struct.iscpplink[i] = 0;
-   G__struct.protectedaccess[i] = 0;
-
-   G__struct.line_number[i] = -1;
-   G__struct.filenum[i] = -1;
-
-   G__struct.istypedefed[i] = 0;
-
-   G__struct.funcs[i] = 0;
-
-   G__struct.istrace[i] = 0;
-   G__struct.isbreak[i] = 0;
-
-#ifdef G__FRIEND
-   G__struct.friendtag[i] = (struct G__friendtag*)NULL;
-#endif
-
-   G__struct.comment[i].p.com = (char*)NULL;
-   G__struct.comment[i].filenum = -1;
-
-   G__struct.incsetup_memvar[i] = 0;
-   G__struct.incsetup_memfunc[i] = 0;
-   G__struct.rootflag[i] = 0;
-   G__struct.rootspecial[i] = (struct G__RootSpecial*)NULL;
-
-   G__struct.isctor[i] = 0;
-
-#ifndef G__OLDIMPLEMENTATION1503
-   G__struct.defaulttypenum[i] = ::Reflex::Type();
-#endif
-   G__struct.vtable[i] = (void*)NULL;
-
-   G__RflxProperties *prop = G__get_properties(Reflex::Scope::GlobalScope());
-   if (prop) {
-      prop->typenum = -1;
-      prop->tagnum = i;
-      prop->globalcomp = G__NOLINK;
-      prop->autoload = 0;
-   }
-   G__struct.alltag++;
 }
 
 //______________________________________________________________________________
@@ -1503,6 +1440,120 @@ void Cint::Internal::G__define_struct(char type)
    G__def_tagnum = store_def_tagnum;
 }
 
+//______________________________________________________________________________
+void Cint::Internal::G__create_global_namespace()
+{
+   // add global scope as namespace
+#ifdef __GNUC__
+#else
+#pragma message (FIXME("Remove this once scopes are in reflex!"))
+#endif
+   int i = G__struct.alltag;
+   G__struct.name[i] = "";
+   G__struct.parent_tagnum[i] = -1;
+   G__struct.userparam[i] = 0;
+   G__struct.hash[i] = 0;
+   G__struct.size[i] = 0;
+   G__struct.type[i] = 'n';
+
+   G__struct.baseclass[i] = (struct G__inheritance *)malloc(sizeof(struct G__inheritance));
+   memset(G__struct.baseclass[i], 0, sizeof(struct G__inheritance));
+   G__struct.virtual_offset[i] = G__PVOID;
+   G__struct.isabstract[i] = 0;
+
+   G__struct.globalcomp[i] = G__NOLINK;
+   G__struct.iscpplink[i] = 0;
+   G__struct.protectedaccess[i] = 0;
+
+   G__struct.line_number[i] = -1;
+   G__struct.filenum[i] = -1;
+
+   G__struct.istypedefed[i] = 0;
+
+   G__struct.funcs[i] = 0;
+
+   G__struct.istrace[i] = 0;
+   G__struct.isbreak[i] = 0;
+
+#ifdef G__FRIEND
+   G__struct.friendtag[i] = (struct G__friendtag*)NULL;
+#endif
+
+   G__struct.comment[i].p.com = (char*)NULL;
+   G__struct.comment[i].filenum = -1;
+
+   G__struct.incsetup_memvar[i] = 0;
+   G__struct.incsetup_memfunc[i] = 0;
+   G__struct.rootflag[i] = 0;
+   G__struct.rootspecial[i] = (struct G__RootSpecial*)NULL;
+
+   G__struct.isctor[i] = 0;
+
+#ifndef G__OLDIMPLEMENTATION1503
+   G__struct.defaulttypenum[i] = ::Reflex::Type();
+#endif
+   G__struct.vtable[i] = (void*)NULL;
+
+   G__RflxProperties *prop = G__get_properties(Reflex::Scope::GlobalScope());
+   if (prop) {
+      prop->typenum = -1;
+      prop->tagnum = i;
+      prop->globalcomp = G__NOLINK;
+      prop->autoload = 0;
+   }
+   G__struct.alltag++;
+}
+
+//______________________________________________________________________________
+void Cint::Internal::G__create_bytecode_arena()
+{
+   // Create an artificial variable whose contents will be the storage area for bytecode.
+   ::Reflex::ClassBuilder* builder = new ::Reflex::ClassBuilder("% CINT byte code scratch arena %", typeid(::Reflex::UnknownType), 0, ::Reflex::CLASS);
+   ::Reflex::Type ty = builder->ToType();
+   G__RflxProperties* prop = G__get_properties(ty);
+   prop->builder.Set(builder);
+   prop->builder.Class().SetSizeOf(0);
+   prop->typenum = -1;
+   prop->tagnum = 1;
+   prop->globalcomp = G__NOLINK;
+   prop->autoload = 0;
+   prop->isBytecodeArena = true;
+   G__struct.parent_tagnum[1] = -1;
+   G__struct.userparam[1] = 0;
+   G__struct.name[1] = (char*) "% CINT byte code scratch arena %";
+   G__struct.hash[1] = strlen(G__struct.name[1]);
+   G__struct.size[1] = 0;
+   G__struct.type[1] = 'c';
+   G__struct.baseclass[1] = (G__inheritance*) malloc(sizeof(G__inheritance));
+   memset(G__struct.baseclass[1], 0, sizeof(G__inheritance));
+   G__struct.virtual_offset[1] = G__PVOID;
+   G__struct.isabstract[1] = 0;
+   G__struct.globalcomp[1] = G__NOLINK;
+   G__struct.iscpplink[1] = 0;
+   G__struct.protectedaccess[1] = 0;
+   G__struct.line_number[1] = -1;
+   G__struct.filenum[1] = -1;
+   G__struct.istypedefed[1] = 0;
+   G__struct.funcs[1] = 0;
+   G__struct.istrace[1] = 0;
+   G__struct.isbreak[1] = 0;
+#ifdef G__FRIEND
+   G__struct.friendtag[1] = 0;
+#endif // G__FRIEND
+   G__struct.comment[1].p.com = 0;
+   G__struct.comment[1].filenum = -1;
+   G__struct.incsetup_memvar[1] = 0;
+   G__struct.incsetup_memfunc[1] = 0;
+   G__struct.rootflag[1] = 0;
+   G__struct.rootspecial[1] = 0;
+   G__struct.isctor[1] = 0;
+#ifndef G__OLDIMPLEMENTATION1503
+   G__struct.defaulttypenum[1] = ::Reflex::Type();
+#endif // G__OLDIMPLEMENTATION1503
+   G__struct.vtable[1] = 0;
+   G__struct.alltag++;
+}
+
 #ifndef G__OLDIMPLEMENTATION2030
 //______________________________________________________________________________
 int Cint::Internal::G__callfunc0(G__value* result, const ::Reflex::Member ifunc, G__param* libp, void* p, int funcmatch)
@@ -2087,14 +2138,7 @@ extern "C" int G__search_tagname(const char* tagname, int type)
       // Make sure first entry is the global namespace, and second entry is the bytecode arena.
       if (!G__struct.alltag) {
          G__create_global_namespace();
-         int bytecode_tagnum = G__search_tagname("% CINT byte code scratch arena %", 'c' + 0x100); // Create the arena.
-         G__struct.size[bytecode_tagnum] = 0;
-         {
-            ::Reflex::Scope bytecode_scope = G__Dict::GetDict().GetScope(bytecode_tagnum);
-            G__RflxProperties* prop = G__get_properties(bytecode_scope);
-            prop->builder.Class().SetSizeOf(0);
-            prop->isBytecodeArena = true;
-         }
+         G__create_bytecode_arena();
       }
       i = G__struct.alltag;
       if (i == G__MAXSTRUCT) {

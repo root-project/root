@@ -427,6 +427,8 @@ int G__isenclosingclassbase(const ::Reflex::Scope enclosingtagnum, const ::Refle
 char* G__find_first_scope_operator(char* name);
 char* G__find_last_scope_operator(char* name);
 void G__define_struct(char type);
+void G__create_global_namespace();
+void G__create_bytecode_arena();
 G__value G__classassign(char *pdest,const ::Reflex::Type &tagnum,G__value result);
 int G__fgetname_template(char *string,char *endmark);
 int G__fgetstream_newtemplate(char *string,char *endmark);

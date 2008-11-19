@@ -311,24 +311,19 @@ static void G__getindexedvalue(G__value* result3, char* cindex)
    int size;
    int index;
    G__StrBuf sindex_sb(G__ONELINE);
-   char *sindex = sindex_sb;
+   char* sindex = sindex_sb;
    strcpy(sindex, cindex);
    char* p = strstr(sindex, "][");
    if (p) {
-      *(p + 1) = 0;
+      p[1] = 0;
       G__getindexedvalue(result3, sindex);
       p = strstr(cindex, "][");
       strcpy(sindex, p + 1);
    }
    int len = strlen(sindex);
    sindex[len-1] = '\0';
-   ::Reflex::Type valtype( G__value_typenum(*result3).FinalType() );
-   if (
-      valtype.IsClass() ||
-      valtype.IsUnion() ||
-      valtype.IsEnum()
-   ) {
-      struct G__param fpara;
+   if (G__get_type(G__value_typenum(*result3)) == 'u') {
+      G__param fpara;
 #ifdef G__ASM
       if (G__asm_noverflow) {
          G__gen_PUSHSTROS_SETSTROS();
@@ -340,26 +335,23 @@ static void G__getindexedvalue(G__value* result3, char* cindex)
       return;
    }
    index = G__int(G__getexpr(sindex + 1));
-   size = G__value_typenum(*result3).FinalType().ToType().SizeOf();
+   size = G__sizeof(result3);
 #ifdef G__ASM
-   if (G__asm_noverflow) {
-      // -- We are generating bytecode.
-      // Size arithmetic is done by OP2 in bytecode execution.
+   if (G__asm_noverflow) { // We are generating bytecode.
+      //
+      //  Size arithmetic is done by OP2 in bytecode execution.
+      //
 #ifdef G__ASM_DBG
       if (G__asm_dbg) {
          G__fprinterr(G__serr, "%3x,%3x: OP2  '+'  %s:%d\n", G__asm_cp, G__asm_dt, __FILE__, __LINE__);
       }
 #endif // G__ASM_DBG
       G__asm_inst[G__asm_cp] = G__OP2;
-      G__asm_inst[G__asm_cp+1] = (long)('+');
+      G__asm_inst[G__asm_cp+1] = (long) '+';
       G__inc_cp_asm(2, 0);
    }
 #endif // G__ASM
    result3->obj.i += (size * index);
-   // FIXME this is bad manner, the G__tovalue code will (at least pretend to) call operator*
-   if (G__value_typenum(*result3).FinalType().IsArray()) {
-      G__value_typenum(*result3) = Reflex::PointerBuilder(G__strip_one_array(G__value_typenum(*result3)));
-   }
    *result3 = G__tovalue(*result3);
 }
 
