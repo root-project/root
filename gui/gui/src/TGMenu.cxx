@@ -1724,6 +1724,19 @@ void TGPopupMenu::UnCheckEntry(Int_t id)
 }
 
 //______________________________________________________________________________
+void TGPopupMenu::UnCheckEntries()
+{
+   // Uncheck all entries.
+
+   TGMenuEntry *ptr;
+   TIter next(fEntryList);
+
+   while ((ptr = (TGMenuEntry *) next())) {
+      ptr->fStatus &= ~kMenuCheckedMask;
+   }
+}
+
+//______________________________________________________________________________
 void TGPopupMenu::UnCheckEntryByData(void *user_data)
 {
    // Uncheck a menu entry (i.e. remove check mark in front of it).

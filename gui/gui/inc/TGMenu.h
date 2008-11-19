@@ -203,6 +203,7 @@ public:
    virtual void   CheckEntryByData(void *user_data);
    virtual void   UnCheckEntry(Int_t id);
    virtual void   UnCheckEntryByData(void *user_data);
+   virtual void   UnCheckEntries();
    virtual Bool_t IsEntryChecked(Int_t id);
    virtual void   RCheckEntry(Int_t id, Int_t IDfirst, Int_t IDlast);
    virtual Bool_t IsEntryRChecked(Int_t id);
