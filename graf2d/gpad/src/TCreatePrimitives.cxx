@@ -368,6 +368,7 @@ void TCreatePrimitives::Pave(Int_t event, Int_t px, Int_t py, Int_t mode)
       pave->Draw();
       gPad->GetCanvas()->Selected((TPad*)gPad, pave, event);
       gROOT->SetEditorMode();
+      gPad->Update();
       break;
    }
 }
@@ -517,6 +518,7 @@ void TCreatePrimitives::Text(Int_t event, Int_t px, Int_t py, Int_t mode)
       gPad->Modified(kTRUE);
       gPad->GetCanvas()->Selected((TPad*)gPad, newtext, event);
       gROOT->SetEditorMode();
+      gPad->Update();
       break;
    }
 }
