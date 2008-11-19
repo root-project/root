@@ -2338,7 +2338,7 @@ void TH2::Streamer(TBuffer &R__b)
 ClassImp(TH2C)
 
 //______________________________________________________________________________
-TH2C::TH2C(): TH2()
+TH2C::TH2C(): TH2(), TArrayC(1)
 {
    // Constructor.
 }
@@ -2610,7 +2610,7 @@ TH2C operator/(TH2C &h1, TH2C &h2)
 ClassImp(TH2S)
 
 //______________________________________________________________________________
-TH2S::TH2S(): TH2()
+TH2S::TH2S(): TH2(), TArrayS(1)
 {
    // Constructor.
 }
@@ -2882,7 +2882,7 @@ TH2S operator/(TH2S &h1, TH2S &h2)
 ClassImp(TH2I)
 
 //______________________________________________________________________________
-TH2I::TH2I(): TH2()
+TH2I::TH2I(): TH2(), TArrayI(1)
 {
    // Constructor.
 }
@@ -3120,7 +3120,7 @@ TH2I operator/(TH2I &h1, TH2I &h2)
 ClassImp(TH2F)
 
 //______________________________________________________________________________
-TH2F::TH2F(): TH2()
+TH2F::TH2F(): TH2(), TArrayF(1)
 {
    // Constructor.
 }
@@ -3401,7 +3401,7 @@ TH2F operator/(TH2F &h1, TH2F &h2)
 ClassImp(TH2D)
 
 //______________________________________________________________________________
-TH2D::TH2D(): TH2()
+TH2D::TH2D(): TH2(), TArrayD(1)
 {
    // Constructor.
 }
