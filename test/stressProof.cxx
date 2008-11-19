@@ -1066,7 +1066,7 @@ Int_t PT_Event(void *)
    // Check the mean values
    Double_t ave = histo->GetMean();
    Double_t rms = histo->GetRMS();
-   if (TMath::Abs(ave - 50) > 5 * rms / TMath::Sqrt(histo->GetEntries())) {
+   if (TMath::Abs(ave - 50) > 10 * rms / TMath::Sqrt(histo->GetEntries())) {
       printf("\n >>> Test failure: 'histo': mean > 5 * RMS/Sqrt(N)\n");
       return -1;
    }
