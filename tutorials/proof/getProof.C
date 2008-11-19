@@ -14,13 +14,33 @@ Int_t getXrootdPid(Int_t port);
 // By default we start a cluster on the local machine
 const char *refloc = "proof://localhost:11093";
 
-TProof *getProof(const char *url, Int_t nwrks, const char *dir, const char *opt = "ask")
+TProof *getProof(const char *url, Int_t nwrks, const char *dir,
+                 const char *opt = "ask", Bool_t dyn = kFALSE)
 {
+   // Arguments:
+   //     'url'      URL of the master where to start/attach the PROOF session;
+   //                this is also the place where to force creation of a new session,
+   //                if needed (use option 'N', e.g. "proof://mymaster:myport/?N")
+   //
+   // The following arguments apply to local sessions only:
+   //     'nwrks'    Number of workers to be started. []
+   //     'dir'      Directory to be used for the files and working areas [].
+   //     'opt'      Defines what to do if an existing xrootd usese the same ports; possible
+   //                options are: "ask", ask the user; "force", kill the xrootd and start
+   //                a new one; if any other string is specified the existing xrootd will be
+   //                used ["ask"].
+   //                NB: for a change in 'nwrks' to be effective you need to specify opt = "force"
+   //     'dyn'      This flag can be used to switch on dynamic, per-job worker setup scheduling
+   //                [kFALSE].
+   //
+
    TProof *p = 0;
    TProof *pold = gProof;
 
    // If an URL has specified get a session there
-   if (url && strlen(url) > 0 && strcmp(url, refloc)) {
+   TUrl uu(url), uref(refloc);
+   if (url && strlen(url) > 0 &&
+      (strcmp(uu.GetHost(), uref.GetHost()) || (uu.GetPort() != uref.GetPort()))) {
       p = TProof::Open(url);
       if (p && p->IsValid()) {
          // Done
@@ -136,8 +156,14 @@ TProof *getProof(const char *url, Int_t nwrks, const char *dir, const char *opt 
       }
       fprintf(fcf,"### Root path for working dir\n");
       fprintf(fcf,"xpd.workdir %s\n", workarea.Data());
+      fprintf(fcf,"### Allow different users to connect\n");
+      fprintf(fcf,"xpd.multiuser 1\n");
       fprintf(fcf,"### Limit the number of query results kept in the master sandbox\n");
       fprintf(fcf,"xpd.putrc ProofServ.UserQuotas: maxquerykept=10\n");
+      if (dyn) {
+         fprintf(fcf,"### Use dynamic, per-job scheduling\n");
+         fprintf(fcf,"xpd.putrc Proof.DynamicStartup 1\n");
+      }
       fclose(fcf);
       Printf("getProof: xrootd config file at %s", xpdcf.Data());
 
