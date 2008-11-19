@@ -190,9 +190,9 @@ public:
    virtual void AddLabel(const char *s, const TGPicture *p = 0,
                          TGMenuEntry *before = 0);
    virtual void AddPopup(TGHotString *s, TGPopupMenu *popup,
-                         TGMenuEntry *before = 0);
+                         TGMenuEntry *before = 0, const TGPicture *p = 0);
    virtual void AddPopup(const char *s, TGPopupMenu *popup,
-                         TGMenuEntry *before = 0);
+                         TGMenuEntry *before = 0, const TGPicture *p = 0);
    virtual void   EnableEntry(Int_t id);
    virtual void   DisableEntry(Int_t id);
    virtual Bool_t IsEntryEnabled(Int_t id);
