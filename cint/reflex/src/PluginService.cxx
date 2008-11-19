@@ -97,7 +97,10 @@ void* Reflex::PluginService::Create( const string & name,
                                        const Type & ret, 
                                        const vector<ValueObject> & arg) {
 //-------------------------------------------------------------------------------
-// Create a Plugin. Pass ownership of created object (i.e. returned value) to caller.
+// Create a Plugin. Pass ownership of created object (i.e. returned value) to caller,
+// UNLESS it's a pointer or a reference - then it's up to the plugin creator function
+// and the caller to define the ownership.
+
    static Object dummy; 
    vector<void*> argv;
    vector<Type>  argt;
@@ -123,10 +126,19 @@ void* Reflex::PluginService::Create( const string & name,
       return 0; 
    }
    else {
-      Object rett = m.TypeOf().ReturnType().Construct();
-      m.Invoke(dummy, &rett, argv);
-      return rett.Address();
+      Type retType = m.TypeOf().ReturnType();
+      if (retType.IsPointer() || retType.IsReference()) {
+         void* ret = 0;
+         m.Invoke(dummy, ret, argv);
+         return ret;
+      } else {
+         Object rett = retType.Construct();
+         m.Invoke(dummy, &rett, argv);
+         return rett.Address();
+      }
    }
+   // to make compilers happy - we should never get here:
+   return 0;
 }
 
 
@@ -177,9 +189,16 @@ void* Reflex::PluginService::CreateWithId(const Any& id,
       return 0; 
    }
    else {
-      Object rett = m.TypeOf().ReturnType().Construct();
-      m.Invoke(dummy, &rett, argv);
-      return rett.Address();
+      Type retType = m.TypeOf().ReturnType();
+      if (retType.IsPointer() || retType.IsReference()) {
+         void* ret = 0;
+         m.Invoke(dummy, ret, argv);
+         return ret;
+      } else {
+         Object rett = retType.Construct();
+         m.Invoke(dummy, &rett, argv);
+         return rett.Address();
+      }
    }
 }
 
