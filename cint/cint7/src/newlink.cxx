@@ -730,8 +730,8 @@ void Cint::Internal::G__clink_header(FILE* fp)
    G__getcintsysdir();
    fprintf(fp, "#include \"%s/%s/inc/G__ci.h\"\n", G__cintsysdir, G__CFG_COREVERSION);
 #elif defined(G__ROOT)
-   //fprintf(fp,"#include \"cint7/G__ci.h\"\n");
-   fprintf(fp, "#include \"G__ci.h\"\n");
+   fprintf(fp,"#include \"cint7/G__ci.h\"\n");
+   //fprintf(fp, "#include \"G__ci.h\"\n");
 #else
    fprintf(fp, "#include \"G__ci.h\"\n");
 #endif
@@ -786,8 +786,8 @@ void Cint::Internal::G__cpplink_header(FILE* fp)
    G__getcintsysdir();
    fprintf(fp, "#include \"%s/%s/inc/G__ci.h\"\n", G__cintsysdir, G__CFG_COREVERSION);
 #elif defined(G__ROOT)
-   //fprintf(fp,"#include \"cint7/G__ci.h\"\n");
-   fprintf(fp, "#include \"G__ci.h\"\n");
+   fprintf(fp,"#include \"cint7/G__ci.h\"\n");
+   //fprintf(fp, "#include \"G__ci.h\"\n");
 #else
    fprintf(fp, "#include \"G__ci.h\"\n");
 #endif
