@@ -590,6 +590,11 @@ void* G__GetShlHandle();
 int G__GetShlFilenum();
 void* G__FindSym(const char *filename,const char *funcname);
 
+int G__register_sharedlib(const char *libname);
+int G__unregister_sharedlib(const char *libname);
+void *G__RegisterLibrary (void (*func) ());
+void *G__UnregisterLibrary (void (*func) ());
+      
 int G__loadfile_tmpfile(FILE *fp);
 
 int G__class_autoloading(int *tagnum);

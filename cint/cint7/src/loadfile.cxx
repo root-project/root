@@ -580,6 +580,9 @@ int Cint::Internal::G__matchfilename(int i1, char* filename)
    struct stat statBufItem;
    struct stat statBuf;
 # endif // G__WIN32
+   if (G__srcfile[i1].filename==0) {
+      return 0;
+   }
    if (!strcmp(filename, G__srcfile[i1].filename)) {
       return 1;
    }
@@ -3002,6 +3005,206 @@ extern "C" G__input_file* G__get_ifile()
 {
    return &G__ifile;
 }
+
+//______________________________________________________________________________
+int Cint::Internal::G__register_sharedlib(const char *libname)
+{
+   // Register (if not already registered) in G__srcfile a library that
+   // is indirectly loaded (via a hard link) and has a CINT dictionary.
+   
+   int null_entry = -1;
+   int i1 = 0;
+   int hash,temp;
+   
+   G__LockCriticalSection();
+   
+   /*************************************************
+    * store current input file information
+    *************************************************/
+   G__setdebugcond();
+   
+   /******************************************************************
+    * check if number of loaded file exceeds G__MAXFILE
+    * if so, restore G__ifile reset G__eof and return.
+    ******************************************************************/
+   if(G__nfile==G__MAXFILE) {
+      G__fprinterr(G__serr,"Limitation: Sorry, can not load any more files\n");
+      G__setdebugcond();
+      G__UnlockCriticalSection();
+      return(G__LOADFILE_FATAL);
+   }
+   
+   G__hash(libname,hash,temp);
+   
+   
+   /******************************************************************
+    * check if file is already loaded.
+    * if so, restore G__ifile reset G__eof and return.
+    ******************************************************************/
+   while(i1<G__nfile) {
+      /***************************************************
+       * This entry was unloaded by G__unloadfile()
+       * Then remember the entry index into 'null_entry'.
+       ***************************************************/
+      if((char*)NULL==G__srcfile[i1].filename) {
+         if(null_entry == -1) {
+            null_entry = i1;
+         }
+      }
+      /***************************************************
+       * check if alreay loaded
+       ***************************************************/
+      if(G__matchfilename(i1,libname)
+         &&G__get_envtagnum()==G__srcfile[i1].parent_tagnum
+         ){
+         if(G__prerun==0 || G__debugtrace)
+            if(G__dispmsg>=G__DISPNOTE) {
+               static const char *excludelist [] = {
+                  "stdfunc.dll","stdcxxfunc.dll","posix.dll","ipc.dll","posix.dll"
+                  "string.dll","vector.dll","vectorbool.dll","list.dll","deque.dll",
+                  "map.dll", "map2.dll","set.dll","multimap.dll","multimap2.dll",
+                  "multiset.dll","stack.dll","queue.dll","valarray.dll",
+               "exception.dll","stdexcept.dll","complex.dll","climits.dll" };
+               static const unsigned int excludelistsize = sizeof(excludelist)/sizeof(excludelist[0]);
+               static int excludelen[excludelistsize] = {-1};
+               if (excludelen[0] == -1) {
+                  for (unsigned int i = 0; i < excludelistsize; ++i)
+                     excludelen[i] = strlen(excludelist[i]);
+               }
+               bool cintdlls = false;
+               int len = strlen(libname);
+               for (unsigned int i = 0; !cintdlls && i < excludelistsize; ++i) {
+                  if (len>=excludelen[i]) {
+                     cintdlls = (!strncmp(libname+len-excludelen[i], excludelist[i], excludelen[i]));
+                  }
+               }
+            }
+         /******************************************************
+          * restore input file information to G__ifile
+          * and reset G__eof to 0.
+          ******************************************************/
+         G__UnlockCriticalSection();
+         return(G__LOADFILE_DUPLICATE);
+      }
+      else {
+         ++i1;
+      }
+   }
+   
+   int fentry;
+   if (null_entry != -1) {
+      fentry = null_entry;
+   } else {
+      fentry = G__nfile;
+      ++G__nfile;
+   }
+   
+   G__srcfile[fentry].dictpos
+   = (struct G__dictposition*)malloc(sizeof(struct G__dictposition));
+   G__srcfile[fentry].dictpos->ptype = (char*)NULL;
+   G__store_dictposition(G__srcfile[fentry].dictpos);
+   
+   G__srcfile[fentry].hdrprop = G__NONCINTHDR;
+   
+   G__srcfile[fentry].security = G__security;
+   
+   G__srcfile[fentry].prepname = (char*)NULL;
+   G__srcfile[fentry].hash = hash;
+   G__srcfile[fentry].filename = (char*)malloc(strlen(libname)+1);
+   strcpy(G__srcfile[fentry].filename,libname);
+   G__srcfile[fentry].fp=0;
+   
+   G__srcfile[fentry].included_from = G__ifile.filenum;
+   
+   G__srcfile[fentry].ispermanentsl = 2;
+   G__srcfile[fentry].initsl = 0;
+   G__srcfile[fentry].hasonlyfunc = (struct G__dictposition*)NULL;
+   G__srcfile[fentry].parent_tagnum = G__get_envtagnum();
+   G__srcfile[fentry].slindex = -1;
+   
+   G__UnlockCriticalSection();
+   return(fentry);
+}
+
+//______________________________________________________________________________
+int Cint::Internal::G__unregister_sharedlib(const char *libname)
+{
+   // Unregister (if and only if it has been registered by G__register_sharedlib) 
+   // in G__srcfile a library.
+   
+   G__LockCriticalSection();
+   
+   int envtagnum = -1;
+   
+   /******************************************************************
+    * check if file is already loaded.
+    * if not so, return
+    ******************************************************************/
+   int i2;
+   int hash;
+   G__hash(libname,hash,i2);
+   
+   bool flag = false;
+   int ifn;
+   for(ifn = G__nfile-1; ifn>0; --ifn) {
+      if(G__srcfile[ifn].ispermanentsl == 2 
+         && G__matchfilename(ifn,libname)
+         && (-1==envtagnum||(envtagnum==G__srcfile[ifn].parent_tagnum))){
+         flag = true;
+         break;
+      }
+   }
+   
+   if (flag) {
+      // File found
+      
+      if(G__isfilebusy(ifn)) {
+         G__fprinterr(G__serr,
+                      "Error: G__unloadfile() Can not unload \"%s\", file busy " ,libname);
+         G__genericerror((char*)NULL);
+         G__UnlockCriticalSection();
+         return(G__UNLOADFILE_FAILURE);
+      }
+      
+      // No active unload to do, since we did not load this file directly.
+      
+      if (G__srcfile[ifn].dictpos) {
+         free((void*) G__srcfile[ifn].dictpos);
+         G__srcfile[ifn].dictpos = 0;
+      }
+      if (G__srcfile[ifn].hasonlyfunc) {
+         free((void*) G__srcfile[ifn].hasonlyfunc);
+         G__srcfile[ifn].hasonlyfunc = 0;
+      }
+      if (G__srcfile[ifn].filename) {
+         // --
+#ifndef G__OLDIMPLEMENTATION1546
+         unsigned int len = strlen(G__srcfile[ifn].filename);
+         if (
+             (len > strlen(G__NAMEDMACROEXT2)) &&
+             !strcmp(G__srcfile[ifn].filename len - strlen(G__NAMEDMACROEXT2), G__NAMEDMACROEXT2)
+             ) {
+            remove(G__srcfile[ifn].filename);
+         }
+#endif // G__OLDIMPLEMENTATION1546
+         free((void*) G__srcfile[ifn].filename);
+         G__srcfile[ifn].filename = 0;
+      }
+      G__srcfile[ifn].hash = 0;      
+      
+      if(G__debug) {
+         G__fprinterr(G__serr,"File=%s unregistered\n",libname);
+      }
+      while(G__nfile && G__srcfile[G__nfile-1].filename==0) {
+         --G__nfile;
+      }
+   }
+   
+   G__UnlockCriticalSection(); 
+   return G__UNLOADFILE_SUCCESS;
+   
+}
+
 
 /*
  * Local Variables:

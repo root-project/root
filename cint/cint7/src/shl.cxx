@@ -662,7 +662,11 @@ int Cint::Internal::G__shl_load(char *shlfile)
   else G__initpermanentsl->clear();
 #endif
 
+  // The dlopen might induce (via the autoloader) calls to G__load[system]file
+  int store_ispermanentsl = G__ispermanentsl;
+  G__ispermanentsl = 0;
   G__sl_handle.push_back( G__CintSlHandle(G__dlopen(shlfile)) );
+  G__ispermanentsl = store_ispermanentsl;
   int allsl = G__allsl;
   ++G__allsl;
 
@@ -1899,6 +1903,62 @@ void* Cint::Internal::G__FindSym(const char *filename,const char *funcname)
   return((void*)0);
 #endif
 }
+
+const char *Cint::Internal::G__dladdr(void (*func)())
+{
+   // Wrapper around dladdr (and friends)
+#if defined(G__WIN32)
+#if 0
+   MEMORY_BASIC_INFORMATION mbi;
+   if (!VirtualQuery (addr, &mbi, sizeof (mbi)))
+   {
+      return 0;
+   }
+   
+   HMODULE hMod = (HMODULE) mbi.AllocationBase;
+   static char moduleName[MAX_PATH];
+   
+   if (!GetModuleFileNameA (hMod, moduleName, sizeof (moduleName)))
+   {
+      return 0;
+   }
+   return moduleName;
+#endif
+#else
+   Dl_info info;
+   if (dladdr((void*)func,&info)==0) {
+      // Not in a known share library, let's give up
+      return 0;
+   } else {
+      //fprintf(stdout,"Found address in %s\n",info.dli_fname);
+      return info.dli_fname;
+   }
+#endif 
+}
+
+// G__RegisterLibrary
+void *Cint::Internal::G__RegisterLibrary(void (*func)()) {
+   // This function makes sure that the library that contains 'func' is
+   // known to have been laoded by the CINT system.
+   
+   const char *libname = G__dladdr( func );
+   if (libname) {
+      G__register_sharedlib( libname );
+   }
+   return 0;
+}   
+
+// G__RegisterLibrary
+void *Cint::Internal::G__UnregisterLibrary(void (*func)()) {
+   // This function makes sure that the library that contains 'func' is
+   // known to have been laoded by the CINT system.
+   
+   const char *libname = G__dladdr( func );
+   if (libname) {
+      G__unregister_sharedlib( libname );
+   }
+   return 0;
+}   
 
 /*
  * Local Variables:

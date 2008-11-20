@@ -1453,29 +1453,34 @@ int G__display_macro(FILE *fout,const char *name)
 ****************************************************************/
 int G__display_files(FILE *fout)
 {
-  char msg[G__ONELINE];
-  int i;
-  for(i=0;i<G__nfile;i++) {
-    if(G__srcfile[i].hasonlyfunc)
-      sprintf(msg,"%3d fp=0x%8lx lines=%-4d*file=\"%s\" "
-              ,i,(long)G__srcfile[i].fp,G__srcfile[i].maxline 
-              ,G__srcfile[i].filename);
-    else
-      sprintf(msg,"%3d fp=0x%8lx lines=%-4d file=\"%s\" "
-              ,i,(long)G__srcfile[i].fp,G__srcfile[i].maxline 
-              ,G__srcfile[i].filename);
-    if(G__more(fout,msg)) return(1);
-    if(G__srcfile[i].prepname) {
-      sprintf(msg,"cppfile=\"%s\"",G__srcfile[i].prepname);
+   char msg[G__ONELINE];
+   int i;
+   for(i=0;i<G__nfile;i++) {
+      if (G__srcfile[i].ispermanentsl==2) {
+         sprintf(msg,"%3d fp=%14s lines=%-4d*file=\"%s\" "
+                 ,i,"via hard link",G__srcfile[i].maxline 
+                 ,G__srcfile[i].filename);
+      } else if(G__srcfile[i].hasonlyfunc) {
+         sprintf(msg,"%3d fp=0x%012lx lines=%-4d*file=\"%s\" "
+                 ,i,(long)G__srcfile[i].fp,G__srcfile[i].maxline 
+                 ,G__srcfile[i].filename);
+      } else {
+         sprintf(msg,"%3d fp=0x%012lx lines=%-4d file=\"%s\" "
+                 ,i,(long)G__srcfile[i].fp,G__srcfile[i].maxline 
+                 ,G__srcfile[i].filename);
+      }
       if(G__more(fout,msg)) return(1);
-    }
-    if(G__more(fout,"\n")) return(1);
-  }
-  sprintf(msg,"G__MAXFILE = %d\n",G__MAXFILE);
-  if(G__more(fout,"\n")) return(1);
-  return(0);
+      if(G__srcfile[i].prepname) {
+         sprintf(msg,"cppfile=\"%s\"",G__srcfile[i].prepname);
+         if(G__more(fout,msg)) return(1);
+      }
+      if(G__more(fout,"\n")) return(1);
+   }
+   sprintf(msg,"G__MAXFILE = %d\n",G__MAXFILE);
+   if(G__more(fout,"\n")) return(1);
+   return(0);
 }
-
+   
 /********************************************************************
 * G__pr
 *

@@ -712,6 +712,11 @@ void G__setmemtestbreak(int n,int m);
 
 void G__clear_errordictpos();
 
+int G__register_sharedlib(const char *libname);
+int G__unregister_sharedlib(const char *libname);
+void *G__RegisterLibrary (void (*func) ());
+void *G__UnregisterLibrary (void (*func) ());
+  
 #ifdef __cplusplus
 } // extern "C"
 #endif

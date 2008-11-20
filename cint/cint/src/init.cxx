@@ -104,6 +104,8 @@ void G__add_setup_func(const char* libname, G__incsetup func)
    G__setup_func_list[islot]->func    = func;
    G__setup_func_list[islot]->inited  = 0;
    strcpy(G__setup_func_list[islot]->libname, libname);
+   
+   G__RegisterLibrary(func);
 }
 
 //______________________________________________________________________________
@@ -114,6 +116,7 @@ void G__remove_setup_func(const char* libname)
    for (i = 0; i < G__nlibs; i++)
       if (G__setup_func_list[i] &&
             !strcmp(G__setup_func_list[i]->libname, libname)) {
+         G__UnregisterLibrary( G__setup_func_list[i]->func );
          free(G__setup_func_list[i]->libname);
          free(G__setup_func_list[i]);
          G__setup_func_list[i] = 0;
