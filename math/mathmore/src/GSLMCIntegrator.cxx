@@ -32,6 +32,7 @@ namespace Math {
       
 GSLMCIntegrator::GSLMCIntegrator(MCIntegration::Type type, double absTol, double relTol, unsigned int calls):
    fType(type),
+   fMode(MCIntegration::kIMPORTANCE),
    fAbsTol(absTol),
    fRelTol(relTol),
    fDim(0),
@@ -50,6 +51,7 @@ GSLMCIntegrator::GSLMCIntegrator(MCIntegration::Type type, double absTol, double
 }
 
 GSLMCIntegrator::GSLMCIntegrator(const char * type, double absTol, double relTol, unsigned int calls):
+   fMode(MCIntegration::kIMPORTANCE),
    fAbsTol(absTol),
    fRelTol(relTol),
    fDim(0),
@@ -138,9 +140,9 @@ double GSLMCIntegrator::Integral(const double* a, const double* b)
    {
       GSLVegasIntegrationWorkspace * ws = dynamic_cast<GSLVegasIntegrationWorkspace *>(fWorkspace); 
       assert(ws != 0);
-      if(fMode == MCIntegration::kIMPORTANCE) ws->GetWS()->mode = 0;
-      else if(fMode == MCIntegration::kSTRATIFIED) ws->GetWS()->mode = 1;
-      else if(fMode == MCIntegration::kIMPORTANCE_ONLY) ws->GetWS()->mode = 2;
+      if(fMode == MCIntegration::kIMPORTANCE) ws->GetWS()->mode = GSL_VEGAS_MODE_IMPORTANCE;
+      else if(fMode == MCIntegration::kSTRATIFIED) ws->GetWS()->mode = GSL_VEGAS_MODE_STRATIFIED;
+      else if(fMode == MCIntegration::kIMPORTANCE_ONLY) ws->GetWS()->mode = GSL_VEGAS_MODE_IMPORTANCE_ONLY;
 
       fStatus = gsl_monte_vegas_integrate( fFunction->GetFunc(), (double *) a, (double*) b , fDim, fCalls, fr, ws->GetWS(),  &fResult, &fError);
    }

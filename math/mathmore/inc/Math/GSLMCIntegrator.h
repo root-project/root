@@ -234,6 +234,10 @@ public:
 
       /**
 	 set integration mode for VEGAS method
+         The possible MODE are : 
+         MCIntegration::kIMPORTANCE (default) : VEGAS will use importance sampling 
+         MCIntegration::kSTRATIFIED           : VEGAS will use stratified sampling  if certain condition are satisfied 
+         MCIntegration::kIMPORTANCE_ONLY      : VEGAS will always use importance smapling
       */
 
       void SetMode(MCIntegration::Mode mode);
