@@ -304,7 +304,7 @@ ROOFITLIBEXTRA          = lib/libRooFitCore.lib lib/libTree.lib lib/libRIO.lib \
 ROOSTATSLIBEXTRA        = lib/libRooFit.lib lib/libRooFitCore.lib \
                           lib/libTree.lib lib/libRIO.lib lib/libHist.lib \
                           lib/libMatrix.lib lib/libMathCore.lib \
-                          lib/libGraf.lib lib/libGPad.lib
+                          lib/libGraf.lib lib/libGpad.lib
 CINT7LIBEXTRA           = lib/libReflex.lib
 CINTEXLIBEXTRA          = lib/libReflex.lib
 REFLEXDICTLIBEXTRA      = lib/libReflex.lib
@@ -415,7 +415,7 @@ ROOFITCORELIBEXTRA      = -Llib -lHist -lGraf -lMatrix -lTree -lMinuit -lRIO \
                           -lMathCore
 ROOFITLIBEXTRA          = -Llib -lRooFitCore -lTree -lRIO -lMatrix -lMathCore
 ROOSTATSLIBEXTRA        = -Llib -lRooFit -lRooFitCore -lTree -lRIO -lMatrix \
-                          -lHist -lMathCore -lGraf -lGPad
+                          -lHist -lMathCore -lGraf -lGpad
 CINT7LIBEXTRA           = -Llib -lReflex
 CINTEXLIBEXTRA          = -Llib -lReflex
 REFLEXDICTLIBEXTRA      = -Llib -lReflex
