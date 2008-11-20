@@ -23,15 +23,23 @@
   //  Z   = Z-value or significance in Sigma (one-sided convention)
   //////////////////////////////////
 
-#include "NumberCountingUtils.h"
-
-
-// Without this macro the THtml doc for TMath can not be generated
-#if !defined(R__ALPHA) && !defined(R__SOLARIS) && !defined(R__ACC) && !defined(R__FBSD)
-NamespaceImp(NumberCountingUtils)
+#ifndef RooStats_NumberCountingUtils
+#include "RooStats/NumberCountingUtils.h"
 #endif
 
-Double_t NumberCountingUtils::BinomialExpP(Double_t signalExp, Double_t backgroundExp, Double_t relativeBkgUncert){
+#ifndef RooStats_RooStatsUtils
+#include "RooStats/RooStatsUtils.h"
+#endif
+
+// // Without this macro the THtml doc  can not be generated
+// #if !defined(R__ALPHA) && !defined(R__SOLARIS) && !defined(R__ACC) && !defined(R__FBSD)
+// NamespaceImp(RooStats)
+// //NamespaceImp(NumberCountingUtils)
+// #endif
+
+//using namespace RooStats;
+
+Double_t RooStats::NumberCountingUtils::BinomialExpP(Double_t signalExp, Double_t backgroundExp, Double_t relativeBkgUncert){
   // Expected P-value for s=0 in a ratio of Poisson means.  
   // Here the background and its uncertainty are provided directly and 
   // assumed to be from the double Poisson counting setup described in the 
@@ -93,7 +101,7 @@ S = sqrt(2)*TMath::ErfInverse(1 - 2*Z_Bi)
 }
 
 
-Double_t NumberCountingUtils::BinomialWithTauExpP(Double_t signalExp, Double_t backgroundExp, Double_t tau){
+Double_t RooStats::NumberCountingUtils::BinomialWithTauExpP(Double_t signalExp, Double_t backgroundExp, Double_t tau){
   // Expected P-value for s=0 in a ratio of Poisson means.  
   // Based on two expectations, a main measurement that might have signal
   // and an auxiliarly measurement for the background that is signal free.
@@ -109,7 +117,7 @@ Double_t NumberCountingUtils::BinomialWithTauExpP(Double_t signalExp, Double_t b
   
 }
 
-Double_t NumberCountingUtils::BinomialObsP(Double_t mainObs, Double_t backgroundObs, Double_t relativeBkgUncert){
+Double_t RooStats::NumberCountingUtils::BinomialObsP(Double_t mainObs, Double_t backgroundObs, Double_t relativeBkgUncert){
   // P-value for s=0 in a ratio of Poisson means.  
   // Here the background and its uncertainty are provided directly and 
   // assumed to be from the double Poisson counting setup.  
@@ -130,7 +138,7 @@ Double_t NumberCountingUtils::BinomialObsP(Double_t mainObs, Double_t background
 }
 
 
-Double_t NumberCountingUtils::BinomialWithTauObsP(Double_t mainObs, Double_t auxiliaryObs, Double_t tau){
+Double_t RooStats::NumberCountingUtils::BinomialWithTauObsP(Double_t mainObs, Double_t auxiliaryObs, Double_t tau){
   // P-value for s=0 in a ratio of Poisson means.  
   // Based on two observations, a main measurement that might have signal
   // and an auxiliarly measurement for the background that is signal free.
@@ -145,191 +153,23 @@ Double_t NumberCountingUtils::BinomialWithTauObsP(Double_t mainObs, Double_t aux
   
 }
 
-Double_t NumberCountingUtils::BinomialExpZ(Double_t signalExp, Double_t backgroundExp, Double_t relativeBkgUncert) {    
+Double_t RooStats::NumberCountingUtils::BinomialExpZ(Double_t signalExp, Double_t backgroundExp, Double_t relativeBkgUncert) {    
   // See BinomialExpP
-  return Statistics::PValueToSignificance( BinomialExpP(signalExp,backgroundExp,relativeBkgUncert) ) ;
+  return RooStats::PValueToSignificance( BinomialExpP(signalExp,backgroundExp,relativeBkgUncert) ) ;
   }
 
-Double_t NumberCountingUtils::BinomialWithTauExpZ(Double_t signalExp, Double_t backgroundExp, Double_t tau){
+Double_t RooStats::NumberCountingUtils::BinomialWithTauExpZ(Double_t signalExp, Double_t backgroundExp, Double_t tau){
   // See BinomialWithTauExpP
-  return Statistics::PValueToSignificance( BinomialWithTauExpP(signalExp,backgroundExp,tau) ) ;
+  return RooStats::PValueToSignificance( BinomialWithTauExpP(signalExp,backgroundExp,tau) ) ;
 }
 
 
-Double_t NumberCountingUtils::BinomialObsZ(Double_t mainObs, Double_t backgroundObs, Double_t relativeBkgUncert){
+Double_t RooStats::NumberCountingUtils::BinomialObsZ(Double_t mainObs, Double_t backgroundObs, Double_t relativeBkgUncert){
   // See BinomialObsZ
-  return Statistics::PValueToSignificance( BinomialObsP(mainObs,backgroundObs,relativeBkgUncert) ) ;
+  return RooStats::PValueToSignificance( BinomialObsP(mainObs,backgroundObs,relativeBkgUncert) ) ;
 }
 
-Double_t NumberCountingUtils::BinomialWithTauObsZ(Double_t mainObs, Double_t auxiliaryObs, Double_t tau){
+Double_t RooStats::NumberCountingUtils::BinomialWithTauObsZ(Double_t mainObs, Double_t auxiliaryObs, Double_t tau){
   // See BinomialWithTauObsZ
-  return Statistics::PValueToSignificance( BinomialWithTauObsP(mainObs,auxiliaryObs,tau) ) ;  
-}
-
-/////////////////////////////////////////////////////////////
-//
-//  RooFit based Functions
-//
-/////////////////////////////////////////////////////////////
-#include "RooRealVar.h"
-#include "RooAddition.h"
-#include "RooProduct.h"
-#include "RooDataSet.h"
-#include "RooProdPdf.h"
-#include "RooFitResult.h"
-#include "RooPoisson.h"
-#include "RooGlobalFunc.h"
-#include "RooCmdArg.h"
-//#include "RooConstVar.h"
-//#include "RooPlot.h"
-//#include "TMath.h"
-//#include "TCanvas.h"
-//#include "RooNLLVar.h"
-//#include "RooGaussian.h"
-//#include "RooMinuit.h"
-//#include "TH2F.h"
-#include "TTree.h"
-#include <sstream>
-
-
-Double_t NumberCountingUtils::ProfileCombinationExpZ(Double_t* sig, 
-						     Double_t* back, 
-						     Double_t* back_syst, 
-						     Int_t nbins){
-
-  // A number counting combination for N channels with uncorrelated background 
-  //  uncertainty.  
-  // Background uncertainty taken into account via the profile likelihood ratio.
-  // Arguements are an array of expected signal, expected background, and relative 
-  // background uncertainty (eg. 0.1 for 10% uncertainty), and the number of channels.
-
-  using namespace RooFit;
-  using std::vector;
-
-  vector<RooRealVar*> backVec, tauVec, xVec, yVec;
-  vector<RooProduct*> sigVec;
-  vector<RooFormulaVar*> splusbVec;
-  vector<RooPoisson*> sigRegions, sidebands;
-  TList likelihoodFactors;
-  TList observablesCollection;
-
-  TTree* tree = new TTree();
-  Double_t* xForTree = new Double_t[nbins];
-  Double_t* yForTree = new Double_t[nbins];
-
-  Double_t MaxSigma = 8; // Needed to set ranges for varaibles.
-
-  RooRealVar*   masterSignal = 
-    new RooRealVar("masterSignal","masterSignal",1., 0., 3.);
-  for(Int_t i=0; i<nbins; ++i){
-    std::stringstream str;
-    str<<"_"<<i;
-    RooRealVar*   expectedSignal = 
-      new RooRealVar(("expected_s"+str.str()).c_str(),("expected_s"+str.str()).c_str(),sig[i], 0., 2*sig[i]);
-    expectedSignal->setConstant(kTRUE);
-
-    RooProduct*   s = 
-      new RooProduct(("s"+str.str()).c_str(),("s"+str.str()).c_str(), RooArgSet(*masterSignal, *expectedSignal)); 
-
-    RooRealVar*   b = 
-      new RooRealVar(("b"+str.str()).c_str(),("b"+str.str()).c_str(),back[i],  0., 1.2*back[i]+MaxSigma*(sqrt(back[i])+back[i]*back_syst[i]));
-    b->Print();
-    Double_t _tau = 1./back[i]/back_syst[i]/back_syst[i];
-    RooRealVar*  tau = 
-      new RooRealVar(("tau"+str.str()).c_str(),("tau"+str.str()).c_str(),_tau,0,2*_tau); 
-    tau->setConstant(kTRUE);
-
-    RooAddition*  splusb = 
-      new RooAddition(("splusb"+str.str()).c_str(),("s"+str.str()+"+"+"b"+str.str()).c_str(),   
-		      RooArgSet(*s,*b)); 
-    RooProduct*   bTau = 
-      new RooProduct(("bTau"+str.str()).c_str(),("b*tau"+str.str()).c_str(),   RooArgSet(*b, *tau)); 
-    RooRealVar*   x = 
-      new RooRealVar(("x"+str.str()).c_str(),("x"+str.str()).c_str(),  sig[i]+back[i], 0., 1.2*sig[i]+back[i]+MaxSigma*sqrt(sig[i]+back[i]));
-    RooRealVar*   y = 
-      new RooRealVar(("y"+str.str()).c_str(),("y"+str.str()).c_str(),  back[i]*_tau,  0., 1.2*back[i]*_tau+MaxSigma*sqrt(back[i]*_tau));
-
-
-    RooPoisson* sigRegion = 
-      new RooPoisson(("sigRegion"+str.str()).c_str(),("sigRegion"+str.str()).c_str(), *x,*splusb);
-    RooPoisson* sideband = 
-      new RooPoisson(("sideband"+str.str()).c_str(),("sideband"+str.str()).c_str(), *y,*bTau);
-
-    sigVec.push_back(s);
-    backVec.push_back(b);
-    tauVec.push_back(tau);
-    xVec.push_back(x);
-    yVec.push_back(y);
-    sigRegions.push_back(sigRegion);
-    sidebands.push_back(sideband);
-
-    likelihoodFactors.Add(sigRegion);
-    likelihoodFactors.Add(sideband);
-    observablesCollection.Add(x);
-    observablesCollection.Add(y);
-    
-    // print to see range on variables
-    //    x->Print();
-    //    y->Print();
-    //    b->Print();
-
-
-    xForTree[i] = sig[i]+back[i];
-    yForTree[i] = back[i]*_tau;
-    tree->Branch(("x"+str.str()).c_str(), xForTree+i ,("x"+str.str()+"/D").c_str());
-    tree->Branch(("y"+str.str()).c_str(), yForTree+i ,("y"+str.str()+"/D").c_str());
-  }
-  tree->Fill();
-  //  tree->Print();
-  //  tree->Scan();
-
-  RooArgSet likelihoodFactorSet(likelihoodFactors);
-  RooProdPdf joint("joint","joint", likelihoodFactorSet );
-  //  likelihoodFactorSet.Print();
-
-  //  cout << "\n print model" << endl;
-  //  joint.Print();
-  //  joint.printCompactTree();
-
-  //  RooArgSet* observableSet = new RooArgSet(observablesCollection);
-  RooArgList* observableList = new RooArgList(observablesCollection);
-
-  //  observableSet->Print();
-  //  observableList->Print();
-
-  //  cout << "Make hypothetical dataset:" << endl;
-  RooDataSet* toyMC = new RooDataSet("data","data", tree, *observableList); // one experiment
-  toyMC->Scan();
-
-  //  cout << "about to do fit \n\n" << endl;
-  RooFitResult* fit = joint.fitTo(*toyMC,Extended(kFALSE),Strategy(0),Hesse(kFALSE),Save(kTRUE),PrintLevel(-1));
-
-  //RooFitResult* fit = joint.fitTo(*toyMC,"sr");
-  //  fit->Print();
-
-  //  joint.Print("v");
-
-  ////////////////////////////////////////
-  /// Calculate significance
-  //////////////////////////////
-  //  cout << "\nFit to signal plus background:" << endl;
-  masterSignal->Print();
-  for(Int_t i=0; i<nbins; ++i) backVec.at(i)->Print();
-  fit->Print();
-  Double_t NLLatMLE= fit->minNll();
-
-
-
-  //  cout << "\nFit to background only:" << endl;
-  masterSignal->setVal(0);
-  masterSignal->setConstant();
-  RooFitResult* fit2 = joint.fitTo(*toyMC,Extended(kFALSE),Hesse(kFALSE),Strategy(0), Minos(kFALSE), Save(kTRUE),PrintLevel(-1));
-
-  masterSignal->Print();
-  for(Int_t i=0; i<nbins; ++i) backVec.at(i)->Print();
-  Double_t NLLatCondMLE= fit2->minNll();
-  fit2->Print();
-
-  return sqrt( 2*(NLLatCondMLE-NLLatMLE)); 
-
+  return RooStats::PValueToSignificance( BinomialWithTauObsP(mainObs,auxiliaryObs,tau) ) ;  
 }

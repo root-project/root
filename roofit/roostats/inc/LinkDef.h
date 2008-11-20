@@ -14,28 +14,40 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
-#pragma link C++ namespace NumberCountingUtils;
-#pragma link C++ namespace Statistics;
+#pragma link C++ namespace RooStats;
+#pragma link C++ namespace RooStats::NumberCountingUtils;
 
 // for auto-loading namespaces
 #ifdef USE_FOR_AUTLOADING
-#pragma link C++ class NumberCountingUtils;
-#pragma link C++ class Statistics;
+#pragma link C++ class RooStats::NumberCountingUtils;
+#pragma link C++ class RooStats;
 #endif
 
-#pragma link C++ class SPlot+;
+#pragma link C++ class RooStats::SPlot+;
+#pragma link C++ class RooStats::NumberCountingPdfFactory+;
+#pragma link C++ class RooStats::SimpleInterval+;
+#pragma link C++ class RooStats::LikelihoodInterval+;
+#pragma link C++ class RooStats::HypoTestResult+;
+#pragma link C++ class RooStats::ConfInterval+; // interface, not concrete
+#pragma link C++ class RooStats::IntervalCalculator+; // interface, not concrete
+#pragma link C++ class RooStats::HypoTestCalculator+; // interface, not concrete
+#pragma link C++ class RooStats::CombinedCalculator+; // interface, not concrete
+#pragma link C++ class RooStats::ProfileLikelihoodCalculator+; 
 
-#pragma link C++ function NumberCountingUtils::BinomialExpZ(Double_t,Double_t,Double_t);
-#pragma link C++ function NumberCountingUtils::BinomialWithTauExpZ(Double_t,Double_t,Double_t);
-#pragma link C++ function NumberCountingUtils::BinomialObsZ(Double_t,Double_t,Double_t);
-#pragma link C++ function NumberCountingUtils::BinomialWithTauObsZ(Double_t,Double_t,Double_t);
-#pragma link C++ function NumberCountingUtils::BinomialExpP(Double_t,Double_t,Double_t);
-#pragma link C++ function NumberCountingUtils::BinomialWithTauExpP(Double_t,Double_t,Double_t);
-#pragma link C++ function NumberCountingUtils::BinomialObsP(Double_t,Double_t,Double_t);
-#pragma link C++ function NumberCountingUtils::BinomialWithTauObsP(Double_t,Double_t,Double_t);
+#pragma link C++ class RooStats::HybridCalculator+;
+#pragma link C++ class RooStats::HybridPlot+;
+#pragma link C++ class RooStats::HybridResult+;
 
-#pragma link C++ function NumberCountingUtils::ProfileCombinationExpZ(Double_t*,Double_t*,Double_t*,Int_t);
+#pragma link C++ function RooStats::NumberCountingUtils::BinomialExpZ(Double_t,Double_t,Double_t);
+#pragma link C++ function RooStats::NumberCountingUtils::BinomialWithTauExpZ(Double_t,Double_t,Double_t);
+#pragma link C++ function RooStats::NumberCountingUtils::BinomialObsZ(Double_t,Double_t,Double_t);
+#pragma link C++ function RooStats::NumberCountingUtils::BinomialWithTauObsZ(Double_t,Double_t,Double_t);
+#pragma link C++ function RooStats::NumberCountingUtils::BinomialExpP(Double_t,Double_t,Double_t);
+#pragma link C++ function RooStats::NumberCountingUtils::BinomialWithTauExpP(Double_t,Double_t,Double_t);
+#pragma link C++ function RooStats::NumberCountingUtils::BinomialObsP(Double_t,Double_t,Double_t);
+#pragma link C++ function RooStats::NumberCountingUtils::BinomialWithTauObsP(Double_t,Double_t,Double_t);
 
-#pragma link C++ function Statistics::PValueToSignificance(Double_t);
+#pragma link C++ function RooStats::PValueToSignificance(Double_t);
+#pragma link C++ function RooStats::SignificanceToPValue(Double_t);
 
 #endif

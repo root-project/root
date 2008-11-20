@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_SPlot
-#define ROOT_SPlot
+#ifndef RooStats_SPlot
+#define RooStats_SPlot
 
 class RooAbsReal;
 class RooAbsPdf;
@@ -27,29 +27,32 @@ class RooSimultaneous;
 #include "RooPlot.h"
 #include "RooDataSet.h"
 
-class SPlot : public TH1F {
-public:
-  SPlot();
-  SPlot(const SPlot &other);
-  SPlot(const char* name, const char *title, Int_t nbins, Double_t xmin, Double_t xmax);
+namespace RooStats{
 
-  static RooDataSet* 
-  AddSWeightToData(const RooSimultaneous* pdf, const RooArgList &yieldsTmp, 
-		   RooDataSet &data, const RooArgSet &projDeps=RooArgSet()) ;
-  
+ class SPlot : public TH1F {
+  public:
+    SPlot();
+    SPlot(const SPlot &other);
+    SPlot(const char* name, const char *title, Int_t nbins, Double_t xmin, Double_t xmax);
+    
+    static RooDataSet* 
+      AddSWeightToData(const RooSimultaneous* pdf, const RooArgList &yieldsTmp, 
+		       RooDataSet &data, const RooArgSet &projDeps=RooArgSet()) ;
+    
+    
+    void FillSPlot(const RooDataSet &data, TString varname, TString weightname);
+ 
+    void FillSPlot(const RooAbsReal &x, RooAbsReal &nstar, RooDataSet data, const RooFitResult &fitRes, const RooArgList &pdfList, const RooArgList &yields, Bool_t doErrors, const RooArgSet &projDeps=RooArgSet() );
+    void FillSPlot(const RooAbsReal &x, RooAbsReal &nstar, RooDataSet data, const RooFitResult &fitRes, const RooArgList &pdfList, const RooArgList &yields, RooAbsPdf &totalPdf, Bool_t doErrors, const RooArgSet &projDeps=RooArgSet() );
+    
+    void FillSPlot(const RooAbsReal &x, RooAbsReal &nstar, RooDataSet data, const RooFitResult &fitRes, RooAbsPdf &totalPdf, RooArgList &yields, Bool_t doErrors, const RooArgSet &projDeps=RooArgSet() );
+    
+    Double_t GetComponentValue(RooAbsPdf &pdf, RooArgList &yieldsTmp, Int_t igood, RooArgSet &normSet);
+    
+  protected:
 
- void FillSPlot(const RooDataSet &data, TString varname, TString weightname);
+    ClassDef(SPlot,1)   // Class used for making sPlots
+   };
 
-  void FillSPlot(const RooAbsReal &x, RooAbsReal &nstar, RooDataSet data, const RooFitResult &fitRes, const RooArgList &pdfList, const RooArgList &yields, Bool_t doErrors, const RooArgSet &projDeps=RooArgSet() );
-  void FillSPlot(const RooAbsReal &x, RooAbsReal &nstar, RooDataSet data, const RooFitResult &fitRes, const RooArgList &pdfList, const RooArgList &yields, RooAbsPdf &totalPdf, Bool_t doErrors, const RooArgSet &projDeps=RooArgSet() );
-
-  void FillSPlot(const RooAbsReal &x, RooAbsReal &nstar, RooDataSet data, const RooFitResult &fitRes, RooAbsPdf &totalPdf, RooArgList &yields, Bool_t doErrors, const RooArgSet &projDeps=RooArgSet() );
-
-  Double_t GetComponentValue(RooAbsPdf &pdf, RooArgList &yieldsTmp, Int_t igood, RooArgSet &normSet);
-
-protected:
-
-  ClassDef(SPlot,1)   // Make sPlot
-};
-
+}
 #endif

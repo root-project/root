@@ -1,0 +1,7 @@
+This directory contains the RooStats toolkit classes. For documentation see: 
+BEGIN_HTML
+<ul>
+<li><a href="https://twiki.cern.ch/twiki/bin/view/RooStats/WebHome">The RooStats TWiki pages
+    </a></li>
+</ul>
+END_HTML
