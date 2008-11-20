@@ -38,9 +38,9 @@ ClassImp(RooProfileLL)
 
 //_____________________________________________________________________________
 RooProfileLL::RooProfileLL(const char *name, const char *title, 
-			   RooAbsReal& nll, const RooArgSet& observables) :
+			   RooAbsReal& nllIn, const RooArgSet& observables) :
   RooAbsReal(name,title), 
-  _nll("nll","-log(L) function",this,nll),
+  _nll("nll","-log(L) function",this,nllIn),
   _obs("obs","observables",this),
   _par("par","parameters",this,kFALSE,kFALSE),
   _startFromMin(kTRUE),
@@ -54,8 +54,8 @@ RooProfileLL::RooProfileLL(const char *name, const char *title,
   // value of the global log likelihood minimum is always subtracted.
 
   // Determine actual parameters and observables
-  RooArgSet* actualObs = nll.getObservables(observables) ;
-  RooArgSet* actualPars = nll.getParameters(observables) ;
+  RooArgSet* actualObs = nllIn.getObservables(observables) ;
+  RooArgSet* actualPars = nllIn.getParameters(observables) ;
 
   _obs.add(*actualObs) ;
   _par.add(*actualPars) ;
