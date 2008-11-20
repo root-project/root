@@ -1904,7 +1904,7 @@ void* Cint::Internal::G__FindSym(const char *filename,const char *funcname)
 #endif
 }
 
-const char *Cint::Internal::G__dladdr(void (*func)())
+static const char *G__dladdr(void (*func)())
 {
    // Wrapper around dladdr (and friends)
 #if defined(G__WIN32)

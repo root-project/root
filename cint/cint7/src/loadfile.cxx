@@ -569,7 +569,7 @@ int Cint::Internal::G__isfilebusy(int ifn)
 }
 
 //______________________________________________________________________________
-int Cint::Internal::G__matchfilename(int i1, char* filename)
+int Cint::Internal::G__matchfilename(int i1, const char* filename)
 {
    // --
 #ifndef __CINT__
@@ -3182,7 +3182,7 @@ int Cint::Internal::G__unregister_sharedlib(const char *libname)
          unsigned int len = strlen(G__srcfile[ifn].filename);
          if (
              (len > strlen(G__NAMEDMACROEXT2)) &&
-             !strcmp(G__srcfile[ifn].filename len - strlen(G__NAMEDMACROEXT2), G__NAMEDMACROEXT2)
+             !strcmp(G__srcfile[ifn].filename+len - strlen(G__NAMEDMACROEXT2), G__NAMEDMACROEXT2)
              ) {
             remove(G__srcfile[ifn].filename);
          }
