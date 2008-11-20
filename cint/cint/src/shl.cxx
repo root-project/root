@@ -2124,6 +2124,7 @@ const char *G__dladdr(void (*func)())
    }
    return moduleName;
 #endif
+   return 0;
 #else
    Dl_info info;
    if (dladdr((void*)func,&info)==0) {
