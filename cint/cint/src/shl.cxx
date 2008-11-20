@@ -2143,7 +2143,7 @@ void* G__RegisterLibrary(void (*func)()) {
 
    const char *libname = G__dladdr( func );
    if (libname) {
-      G__register_sharedlib( libname );
+      // G__register_sharedlib( libname );
    }
    return 0;
 }   
