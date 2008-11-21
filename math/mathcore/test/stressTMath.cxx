@@ -103,7 +103,7 @@ template <typename T> double stressVector(unsigned int size, const char* type)
    totalUnitTime += Time(w)/ntest;
    totalTime += Time(w);
 
-   Int_t * index =new Int_t[size];
+   UInt_t * index =new UInt_t[size];
    ntest = NUMTEST/10;
    w.Start( kTRUE );
    for ( unsigned int i = 0; i < ntest; ++i )

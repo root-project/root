@@ -149,8 +149,10 @@ templateClassImp(TKDTree)
 //     TKDTree::GetLeft(Index inode), TKDTree::GetRight(Index inode) and TKDTree::GetParent(Index inode)
 //     allow to find the children and the parent of a given node.   
 //
-//     For a given terminal node, one can find the indexes of the original points, contained in this node, 
-//     by calling TKDTree::GetPointsIndexes(Index inode). To find the number of point in the node 
+//     For a given node, one can find the indexes of the original points, contained in this node, 
+//     by calling the GetNodePointsIndexes(Index inode) function. Additionally, for terminal nodes,
+//     there is a function GetPointsIndexes(Index inode) that returns a pointer to the relevant
+//     part of the index array. To find the number of point in the node 
 //     (not only terminal), call TKDTree::GetNpointsNode(Index inode).
 //     
 // 4.  TKDtree implementation details - internal information, not needed to use the kd-tree. 
@@ -164,7 +166,7 @@ templateClassImp(TKDTree)
 // example, the fit function parameters.  
 //
 // Drawback:   Insertion to the TKDtree is not supported.  
-// Advantage:  Random access is supported -  simple formulas  
+// Advantage:  Random access is supported
 //
 // As noted above, the construction of the kd-tree involves choosing the axis and the point on 
 // that axis to divide the remaining points approximately in half. The exact algorithm for choosing
@@ -259,11 +261,6 @@ TKDTree<Index, Value>::TKDTree() :
    ,fRowT0(0)
    ,fCrossNode(0)
    ,fOffset(0)
-   ,fkNNdim(0)
-   ,fkNN(0x0)
-   ,fkNNdist(0x0)
-   ,fDistBuffer(0x0)
-   ,fIndBuffer(0x0)
 {
 // Default constructor. Nothing is built
 }
@@ -286,11 +283,6 @@ TKDTree<Index, Value>::TKDTree(Index npoints, Index ndim, UInt_t bsize) :
    ,fRowT0(0)
    ,fCrossNode(0)
    ,fOffset(0)
-   ,fkNNdim(0)
-   ,fkNN(0x0)
-   ,fkNNdist(0x0)
-   ,fDistBuffer(0x0)
-   ,fIndBuffer(0x0)
 {
 // Create the kd-tree of npoints from ndim-dimensional space. Parameter bsize stands for the
 // maximal number of points in the terminal nodes (buckets). 
@@ -319,11 +311,6 @@ TKDTree<Index, Value>::TKDTree(Index npoints, Index ndim, UInt_t bsize, Value **
    ,fRowT0(0)
    ,fCrossNode(0)
    ,fOffset(0)
-   ,fkNNdim(0)
-   ,fkNN(0x0)
-   ,fkNNdist(0x0)
-   ,fDistBuffer(0x0)
-   ,fIndBuffer(0x0)
 {
    // Create a kd-tree from the provided data array. This function only sets the data, 
    // call Build() to build the tree!!!
@@ -360,10 +347,6 @@ TKDTree<Index, Value>::~TKDTree()
    // By default, the original data is not owned by kd-tree and is not deleted with it.
    // If you want to delete the data along with the kd-tree, call SetOwner(kTRUE).
    
-   if (fIndBuffer) delete [] fIndBuffer;
-   if (fDistBuffer) delete [] fDistBuffer;
-   if (fkNNdist) delete [] fkNNdist;
-   if (fkNN) delete [] fkNN;
    if (fAxis) delete [] fAxis;
    if (fValue) delete [] fValue;
    if (fIndPoints) delete [] fIndPoints;
@@ -405,7 +388,7 @@ void TKDTree<Index, Value>::Build()
    //1.
    fNNodes = fNPoints/fBucketSize-1;
    if (fNPoints%fBucketSize) fNNodes++;
-   
+   fTotalNodes = fNNodes + fNPoints/fBucketSize + ((fNPoints%fBucketSize)?1:0);
    //2.
    fRowT0=0;
    for ( ;(fNNodes+1)>(1<<fRowT0);fRowT0++) {}
@@ -433,6 +416,7 @@ void TKDTree<Index, Value>::Build()
    Int_t   over   = (fNNodes+1)-(1<<fRowT0);
    Int_t   filled = ((1<<fRowT0)-over)*fBucketSize;
    fOffset = fNPoints-filled;
+
    //
    // 	printf("Row0      %d\n", fRowT0);
    // 	printf("CrossNode %d\n", fCrossNode);
@@ -530,185 +514,140 @@ void TKDTree<Index, Value>::Build()
    }    
 }
 
-
 //_________________________________________________________________
 template <typename  Index, typename Value>
-Bool_t	TKDTree<Index, Value>::FindNearestNeighbors(const Value *point, const Int_t k, Index *&in, Value *&d)
+void TKDTree<Index, Value>::FindNearestNeighbors(const Value *point, const Int_t kNN, Index *ind, Value *dist)
 {
-   // Find "k" nearest neighbors to "point".
-   //
-   // Return true in case of success and false in case of failure.
-   // The indexes of the nearest k points are stored in the array "in" in
-   // increasing order of the distance to "point" and the maxim distance
-   // in "d".
-   //
-   // The arrays "in" and "d" are managed internally by the TKDTree.
-   
-   Index inode = FindNode(point);
-   if(inode < fNNodes){
-      Error("FindNearestNeighbors()", "Point outside data range.");
-      return kFALSE;
+   //Find kNN nearest neighbors to the point in the first argument
+   //Returns 1 on success, 0 on failure
+   //Arrays ind and dist are provided by the user and are assumed to be at least kNN elements long
+
+
+   if (!ind || !dist) {
+      Error("FindNearestNeighbors", "Working arrays must be allocated by the user!");
+      return;
    }
-   
-   UInt_t debug = 0;
-   Int_t nCalculations = 0;
-   
-   // allocate working memory
-   if(!fDistBuffer){
-      fDistBuffer = new Value[fBucketSize];
-      fIndBuffer  = new Index[fBucketSize];
+   for (Int_t i=0; i<kNN; i++){
+      dist[i]=std::numeric_limits<Value>::max();
+      ind[i]=-1;
    }
-   if(fkNNdim < k){
-      if(debug>=1){
-         if(fkNN) printf("Reallocate memory %d -> %d \n", fkNNdim, 2*k);
-         else printf("Allocate %d memory\n", 2*k);
-      }
-      fkNNdim  = 2*k;
-      if(fkNN){
-         delete [] fkNN; 
-         delete [] fkNNdist;
-      }
-      fkNN     = new Index[fkNNdim];
-      fkNNdist = new Value[fkNNdim];
-   }
-   memset(fkNN, -1, k*sizeof(Index));
-   for(int i=0; i<k; i++) fkNNdist[i] = 9999.;
-   Index itmp, jtmp; Value ftmp, gtmp;
+   MakeBoundariesExact();
+   UpdateNearestNeighbors(0, point, kNN, ind, dist);
    
-   // calculate number of boundaries with the data domain.	
-   if(!fBoundaries) MakeBoundaries();
-   Value *bounds = &fBoundaries[inode*2*fNDim];
-   Index nBounds = 0;
-   for(int idim=0; idim<fNDim; idim++){
-      if((bounds[2*idim] - fRange[2*idim]) < 1.E-10) nBounds++;
-      if((bounds[2*idim+1] - fRange[2*idim+1]) < 1.E-10) nBounds++;
-   }
-   if(debug>=1) printf("Calculate boundaries [nBounds = %d]\n", nBounds);
-   
-   
-   // traverse tree
-   UChar_t ax;
-   Value   val, dif;
-   Int_t nAllNodes = fNNodes + fNPoints/fBucketSize + ((fNPoints%fBucketSize)?1:0);
-   Int_t nodeStack[128], nodeIn[128];
-   Index currentIndex = 0;
-   nodeStack[0]   = inode;
-   nodeIn[0] = inode;
-   while(currentIndex>=0){
-      Int_t tnode = nodeStack[currentIndex];
-      Int_t entry = nodeIn[currentIndex];
-      currentIndex--;
-      if(debug>=1) printf("Analyse tnode %d entry %d\n", tnode, entry);
-      
-      // check if node is still eligible
-      Int_t inode1 = (tnode-1)>>1; //tnode/2 + (tnode%2) - 1;
-      ax = fAxis[inode1];
-      val = fValue[inode1];
-      dif = point[ax] - val;
-      if((TMath::Abs(dif) > fkNNdist[k-1]) &&
-         ((dif > 0. && (tnode&1)) || (dif < 0. && !(tnode&1)))) {
-         if(debug>=1) printf("\tremove %d\n", (tnode-1)>>1);
-         
-         // mark bound
-         nBounds++;
-         // end all recursions
-         if(nBounds==2 * fNDim) break;
-         continue;
-      }
-      
-      if(IsTerminal(tnode)){
-         if(debug>=2) printf("\tProcess terminal node %d\n", tnode);
-         // Link data to terminal node
-         Int_t offset = (tnode >= fCrossNode) ? (tnode-fCrossNode)*fBucketSize : fOffset+(tnode-fNNodes)*fBucketSize;
-         Index *indexPoints = &fIndPoints[offset];
-         Int_t nbs = (tnode == 2*fNNodes) ? fNPoints%fBucketSize : fBucketSize;
-         nbs = nbs ? nbs : fBucketSize;
-         nCalculations += nbs;
-         
-         Int_t npoints = 0;
-         for(int idx=0; idx<nbs; idx++){
-            // calculate distance in the L1 metric
-            fDistBuffer[npoints] = 0.;
-            for(int idim=0; idim<fNDim; idim++) fDistBuffer[npoints] += TMath::Abs(point[idim] - fData[idim][indexPoints[idx]]);
-            // register candidate neighbor
-            if(fDistBuffer[npoints] < fkNNdist[k-1]){
-               fIndBuffer[npoints] = indexPoints[idx];
-               npoints++;
-            }
-         }
-         for(int ibrowse=0; ibrowse<npoints; ibrowse++){
-            if(fDistBuffer[ibrowse] >= fkNNdist[k-1]) continue;
-            //insert neighbor
-            int iNN=0;
-            while(fDistBuffer[ibrowse] >= fkNNdist[iNN]) iNN++;
-            if(debug>=2) printf("\t\tinsert data %d @ %d distance %f\n", fIndBuffer[ibrowse], iNN, fDistBuffer[ibrowse]);
-            
-            itmp = fkNN[iNN]; ftmp = fkNNdist[iNN];
-            fkNN[iNN]     = fIndBuffer[ibrowse];
-            fkNNdist[iNN] = fDistBuffer[ibrowse];
-            for(int ireplace=iNN+1; ireplace<k; ireplace++){
-               jtmp = fkNN[ireplace]; gtmp = fkNNdist[ireplace];
-               fkNN[ireplace]     = itmp; fkNNdist[ireplace] = ftmp;
-               itmp = jtmp; ftmp = gtmp;
-               if(ftmp == 9999.) break;
-            }
-            if(debug>=3){
-               for(int i=0; i<k; i++){
-                  if(fkNNdist[i] == 9999.) break;
-                  printf("\t\tfkNNdist[%d] = %f\n", i, fkNNdist[i]);
-               }
-            }				
-         }
-      }
-      
-      // register parent
-      Int_t pn = (tnode-1)>>1;//tnode/2 + (tnode%2) - 1;
-      if(pn >= 0 && entry != pn){
-         // check if parent node is eligible at all
-         if(TMath::Abs(point[fAxis[pn]] - fValue[pn]) > fkNNdist[k-1]){
-            // mark bound
-            nBounds++;
-            // end all recursions
-            if(nBounds==2 * fNDim) break;
-         }
-         currentIndex++;
-         nodeStack[currentIndex]=pn;
-         nodeIn[currentIndex]=tnode;
-         if(debug>=2) printf("\tregister %d\n", nodeStack[currentIndex]);
-      }
-      if(IsTerminal(tnode)) continue;
-      
-      // register children nodes
-      Int_t cn;
-      Bool_t kAllow[] = {kTRUE, kTRUE};
-      ax = fAxis[tnode];
-      val = fValue[tnode];
-      if(TMath::Abs(point[ax] - val) > fkNNdist[k-1]){
-         if(point[ax] > val) kAllow[0] = kFALSE;
-         else kAllow[1] = kFALSE;
-      }
-      for(int ic=1; ic<=2; ic++){
-         if(!kAllow[ic-1]) continue;
-         cn = (tnode<<1)+ic;
-         if(cn < nAllNodes && entry != cn){
-            currentIndex++;
-            nodeStack[currentIndex] = cn;
-            nodeIn[currentIndex]=tnode;
-            if(debug>=2) printf("\tregister %d\n", nodeStack[currentIndex]);
-         }
-      }		
-   }
-   // save results
-   in = fkNN;
-   d  = fkNNdist;  
-   return kTRUE;
 }
 
+//_________________________________________________________________
+template <typename Index, typename Value>
+void TKDTree<Index, Value>::UpdateNearestNeighbors(Index inode, const Value *point, Int_t kNN, Index *ind, Value *dist)
+{
+   //Update the nearest neighbors values by examining the node inode
 
+   Value min=0;
+   Value max=0;
+   DistanceToNode(point, inode, min, max);
+   if (min > dist[kNN-1]){
+      //there are no closer points in this node
+      return;
+   }
+   if (IsTerminal(inode)) {
+      //examine points one by one
+      Index f1, l1, f2, l2;
+      GetNodePointsIndexes(inode, f1, l1, f2, l2);
+      for (Int_t ipoint=f1; ipoint<=l1; ipoint++){
+         Double_t d = Distance(point, fIndPoints[ipoint]);
+         if (d<dist[kNN-1]){
+            //found a closer point
+            Int_t ishift=0;
+            while(ishift<kNN && d>dist[ishift])
+               ishift++;
+            //replace the neighbor #ishift with the found point
+            //and shift the rest 1 index value to the right
+            for (Int_t i=kNN-1; i>ishift; i--){
+               dist[i]=dist[i-1];
+               ind[i]=ind[i-1];
+            }
+            dist[ishift]=d;
+            ind[ishift]=fIndPoints[ipoint];
+         }
+      }
+      return;
+   }
+   if (point[fAxis[inode]]<fValue[inode]){
+      //first examine the node that contains the point
+      UpdateNearestNeighbors(GetLeft(inode), point, kNN, ind, dist);
+      UpdateNearestNeighbors(GetRight(inode), point, kNN, ind, dist);
+   } else {
+      UpdateNearestNeighbors(GetRight(inode), point, kNN, ind, dist);
+      UpdateNearestNeighbors(GetLeft(inode), point, kNN, ind, dist);
+   }
+}
+
+//_________________________________________________________________
+template <typename Index, typename Value>
+Double_t TKDTree<Index, Value>::Distance(const Value *point, Index ind, Int_t type) const
+{
+//Find the distance between point of the first argument and the point at index value ind
+//Type argument specifies the metric: type=2 - L2 metric, type=1 - L1 metric
+
+   Double_t dist = 0;
+   if (type==2){
+      for (Int_t idim=0; idim<fNDim; idim++){
+         dist+=(point[idim]-fData[idim][ind])*(point[idim]-fData[idim][ind]);
+      }
+      return TMath::Sqrt(dist);
+   } else {
+      for (Int_t idim=0; idim<fNDim; idim++){
+         dist+=TMath::Abs(point[idim]-fData[idim][ind]);
+      }
+      return dist;
+   }
+   return -1;
+
+}
+
+//_________________________________________________________________
+template <typename Index, typename Value>
+void TKDTree<Index, Value>::DistanceToNode(const Value *point, Index inode, Value &min, Value &max, Int_t type)
+{
+//Find the minimal and maximal distance from a given point to a given node.
+//Type argument specifies the metric: type=2 - L2 metric, type=1 - L1 metric
+//If the point is inside the node, both min and max are set to 0.
+
+   Value *bound = GetBoundaryExact(inode);
+   min = 0;
+   max = 0;
+   Double_t dist1, dist2;
+
+   if (type==2){
+      for (Int_t idim=0; idim<fNDimm; idim+=2){
+         if (point[idim/2]>bound[idim] && point[idim/2]<bound[idim+1]){
+            // printf("this point is inside the node on coord. %d\n", idim);
+            continue;
+         }
+         dist1 = (point[idim/2]-bound[idim])*(point[idim/2]-bound[idim]);
+         dist2 = (point[idim/2]-bound[idim+1])*(point[idim/2]-bound[idim+1]);
+         //min+=TMath::Min(dist1, dist2);
+         min+= (dist1>dist2)? dist2 : dist1;
+         // max+=TMath::Max(dist1, dist2);
+         max+= (dist1>dist2)? dist1 : dist2;         
+      }
+      min = TMath::Sqrt(min);
+      max = TMath::Sqrt(max);
+   } else {
+      for (Int_t idim=0; idim<fNDimm; idim+=2){
+         dist1 = TMath::Abs(point[idim/2]-bound[idim]);
+         dist2 = TMath::Abs(point[idim/2]-bound[idim+1]);
+         //min+=TMath::Min(dist1, dist2);
+         min+= (dist1>dist2)? dist2 : dist1;
+         // max+=TMath::Max(dist1, dist2);
+         max+= (dist1>dist2)? dist1 : dist2;         
+      }
+   }
+}
 
 //_________________________________________________________________
 template <typename  Index, typename Value>
-Index TKDTree<Index, Value>::FindNode(const Value * point)
+Index TKDTree<Index, Value>::FindNode(const Value * point) const
 {
    // returns the index of the terminal node to which point belongs
    // (index in the fAxis, fValue, etc arrays)
@@ -724,11 +663,11 @@ Index TKDTree<Index, Value>::FindNode(const Value * point)
       currentIndex--;
       if (point[fAxis[inode]]<=fValue[inode]){
          currentIndex++;
-         stackNode[currentIndex]=(inode<<1)+1;
+         stackNode[currentIndex]=(inode<<1)+1; //GetLeft()
       }
       if (point[fAxis[inode]]>=fValue[inode]){
          currentIndex++;
-         stackNode[currentIndex]=(inode+1)<<1;
+         stackNode[currentIndex]=(inode+1)<<1; //GetRight()
       }
    }
    
@@ -936,32 +875,105 @@ Index*  TKDTree<Index, Value>::GetPointsIndexes(Int_t node) const
    //for all the nodes except last, the size is fBucketSize
    //for the last node it's fOffset%fBucketSize
 
-   if(node < fNNodes) return 0x0;
+   if (!IsTerminal(node)){
+      printf("GetPointsIndexes() only for terminal nodes, use GetNodePointsIndexes() instead\n");
+      return 0;
+   }
    Int_t offset = (node >= fCrossNode) ? (node-fCrossNode)*fBucketSize : fOffset+(node-fNNodes)*fBucketSize;
    return &fIndPoints[offset];
 }
 
 //_________________________________________________________________
 template <typename Index, typename Value>
+void  TKDTree<Index, Value>::GetNodePointsIndexes(Int_t node, Int_t &first1, Int_t &last1, Int_t &first2, Int_t &last2) const 
+{
+   //Return the indices of points in that node
+   //Indices are returned as the first and last value of the part of indices array, that belong to this node
+   //Sometimes points are in 2 intervals, then the first and last value for the second one are returned in
+   //third and fourth parameter, otherwise first2 is set to 0 and last2 is set to -1
+   //To iterate over all the points of the node #inode, one can do, for example:
+   //Index *indices = kdtree->GetPointsIndexes();
+   //Int_t first1, last1, first2, last2;
+   //kdtree->GetPointsIndexes(inode, first1, last1, first2, last2);
+   //for (Int_t ipoint=first1; ipoint<=last1; ipoint++){
+   //   point = indices[ipoint];
+   //   //do something with point;
+   //}
+   //for (Int_t ipoint=first2; ipoint<=last2; ipoint++){
+   //   point = indices[ipoint];
+   //   //do something with point;
+   //}
+
+
+   if (IsTerminal(node)){
+      //the first point in the node is computed by the following formula:
+      Index offset = (node >= fCrossNode) ? (node-fCrossNode)*fBucketSize : fOffset+(node-fNNodes)*fBucketSize;
+      first1 = offset;
+      last1 = offset + GetNPointsNode(node)-1;
+      first2 = 0;
+      last2 = -1;
+      return;
+   }
+
+   Index firsttermnode = fNNodes;
+   Index ileft = node;
+   Index iright = node;
+   Index f1, l1, f2, l2;
+//this is the left-most node
+   while (ileft<firsttermnode)
+      ileft = GetLeft(ileft);
+//this is the right-most node
+   while (iright<firsttermnode)
+      iright = GetRight(iright);
+
+   if (ileft>iright){
+//      first1 = firsttermnode;
+//      last1 = iright;
+//      first2 = ileft;
+//      last2 = fTotalNodes-1;
+      GetNodePointsIndexes(firsttermnode, f1, l1, f2, l2);
+      first1 = f1;
+      GetNodePointsIndexes(iright, f1, l1, f2, l2);
+      last1 = l1;
+      GetNodePointsIndexes(ileft, f1, l1, f2, l2);
+      first2 = f1;
+      GetNodePointsIndexes(fTotalNodes-1, f1, l1, f2, l2);
+      last2 = l1;
+
+   }  else {
+      GetNodePointsIndexes(ileft, f1, l1, f2, l2);
+      first1 = f1;
+      GetNodePointsIndexes(iright, f1, l1, f2, l2);
+      last1 = l1;
+      first2 = 0;
+      last2 = -1;
+   }
+}
+
+//_________________________________________________________________
+template <typename Index, typename Value>
 Index TKDTree<Index, Value>::GetNPointsNode(Int_t inode) const 
 {
-   //Return the number of points in this node
+   //Get number of points in this node
+   //for all the terminal nodes except last, the size is fBucketSize
+   //for the last node it's fOffset%fBucketSize, or if fOffset%fBucketSize==0, it's also fBucketSize
 
-   Index sum = 0; 
    if (IsTerminal(inode)){
-      if (inode==fNNodes*2){
-         sum+= ((fOffset%fBucketSize) ? fOffset%fBucketSize : fBucketSize );
+      
+      if (inode!=fTotalNodes-1) return fBucketSize;
+      else {
+         if (fOffset%fBucketSize==0) return fBucketSize;
+         else return fOffset%fBucketSize;
       }
-      else 
-         sum+=fBucketSize;
    }
-   else {
-      sum+=GetNPointsNode(GetLeft(inode));
-      sum+=GetNPointsNode(GetRight(inode));
-   }
-   return sum;
 
+   Int_t f1, l1, f2, l2;
+   GetNodePointsIndexes(inode, f1, l1, f2, l2);
+   Int_t sum = l1-f1+1;
+   sum += l2-f2+1;
+   return sum;
 }
+
 
 //_________________________________________________________________
 template <typename  Index, typename Value>
@@ -1166,11 +1178,15 @@ void TKDTree<Index, Value>::MakeBoundariesExact()
       
 
    // total number of nodes including terminal nodes
-   Int_t totNodes = fNNodes + fNPoints/fBucketSize + ((fNPoints%fBucketSize)?1:0);
-   if (!fBoundaries) fBoundaries = new Value[totNodes*fNDimm];
+   //Int_t totNodes = fNNodes + fNPoints/fBucketSize + ((fNPoints%fBucketSize)?1:0);
+   if (fBoundaries){
+      //boundaries were already computed for this tree
+      return;
+   }
+   fBoundaries = new Value[fTotalNodes*fNDimm];
    Value *min = new Value[fNDim];
    Value *max = new Value[fNDim];
-   for (Index inode=fNNodes; inode<totNodes; inode++){
+   for (Index inode=fNNodes; inode<fTotalNodes; inode++){
       //go through the terminal nodes
       for (Index idim=0; idim<fNDim; idim++){
          min[idim]= std::numeric_limits<Value>::max();
@@ -1256,6 +1272,7 @@ Value* TKDTree<Index, Value>::GetBoundaryExact(const Int_t node)
    if(!fBoundaries) MakeBoundariesExact();
    return &fBoundaries[node*2*fNDim];
 }
+
 
 //______________________________________________________________________
 TKDTreeIF *TKDTreeTestBuild(const Int_t npoints, const Int_t bsize){  

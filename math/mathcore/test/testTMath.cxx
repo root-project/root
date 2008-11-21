@@ -36,13 +36,13 @@ void testNormCross()
 }
 
 
-template <typename T>
+template <typename T, typename U>
 void testArrayFunctions()
 {
-   const Long64_t n = 10;
-   const Long64_t k = 3;
-   Int_t index[n];
-   Long64_t is;
+   const U n = 10;
+   const U k = 3;
+   U index[n];
+   U is;
 
    T sa[n] = { 2, 55 ,23, 57, -9, 24, 6, 82, -4, 10};
 
@@ -151,12 +151,13 @@ void testTMath()
 
    cout << "\nArray functions tests: " << endl;
 
-   testArrayFunctions<Short_t>();
-   testArrayFunctions<Int_t>();
-   testArrayFunctions<Float_t>();
-   testArrayFunctions<Double_t>();
-   testArrayFunctions<Long_t>();
-   testArrayFunctions<Long64_t>();
+   testArrayFunctions<Short_t,Long64_t>();
+   testArrayFunctions<Int_t,Long64_t>();
+   testArrayFunctions<Float_t,Long64_t>();
+   testArrayFunctions<Double_t,Long64_t>();
+   testArrayFunctions<Double_t,Int_t>();
+   testArrayFunctions<Long_t,Long64_t>();
+   testArrayFunctions<Long64_t,Long64_t>();
 
    cout << "\nIterator functions tests: " << endl;
 

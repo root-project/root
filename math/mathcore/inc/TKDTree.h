@@ -19,16 +19,21 @@ public:
    
    void            Build();  // build the tree
    
+   Double_t        Distance(const Value *point, Index ind, Int_t type=2) const;
+   void            DistanceToNode(const Value *point, Index inode, Value &min, Value &max, Int_t type=2);
+
    // Get indexes of left and right daughter nodes
-   Int_t GetLeft(Int_t inode)  const    {return inode*2+1;}
-   Int_t GetRight(Int_t inode) const    {return (inode+1)*2;}
-   Int_t GetParent(Int_t inode) const  {return inode/2;}
+   Int_t   GetLeft(Int_t inode)  const    {return inode*2+1;}
+   Int_t   GetRight(Int_t inode) const    {return (inode+1)*2;}
+   Int_t   GetParent(Int_t inode) const  {return (inode-1)/2;}
    //  
    // Other getters
    Index*  GetPointsIndexes(Int_t node) const;
+   void    GetNodePointsIndexes(Int_t node, Int_t &first1, Int_t &last1, Int_t &first2, Int_t &last2) const;
    UChar_t GetNodeAxis(Int_t id) const {return (id < 0 || id >= fNNodes) ? 0 : fAxis[id];}
    Value   GetNodeValue(Int_t id) const {return (id < 0 || id >= fNNodes) ? 0 : fValue[id];}
    Int_t   GetNNodes() const {return fNNodes;}
+   Int_t   GetTotalNodes() const {return fTotalNodes;}
    Value*  GetBoundaries();
    Value*  GetBoundariesExact();
    Value*  GetBoundary(const Int_t node);
@@ -44,8 +49,8 @@ public:
    Index*  GetIndPoints() {return fIndPoints;}
    Index   GetBucketSize() {return fBucketSize;}
 
-   Bool_t  FindNearestNeighbors(const Value *point, const Int_t kNN, Index *&i, Value *&d);
-   Index   FindNode(const Value * point);
+   void    FindNearestNeighbors(const Value *point, const Int_t k, Index *ind, Value *dist);
+   Index   FindNode(const Value * point) const;
    void    FindPoint(Value * point, Index &index, Int_t &iter);
    void    FindInRangeA(Value * point, Value * delta, Index *res , Index &npoints,Index & iter, Int_t bnode);
    void    FindInRangeB(Value * point, Value * delta, Index *res , Index &npoints,Index & iter, Int_t bnode);
@@ -53,6 +58,8 @@ public:
    Bool_t  IsTerminal(Index inode) const {return (inode>=fNNodes);}
    Int_t   IsOwner() { return fDataOwner; }
    Value   KOrdStat(Index ntotal, Value *a, Index k, Index *index) const;
+
+
    void    MakeBoundaries(Value *range = 0x0);
    void    MakeBoundariesExact();
    void    SetData(Index npoints, Index ndim, UInt_t bsize, Value **data);
@@ -64,11 +71,12 @@ public:
    TKDTree(const TKDTree &); // not implemented
    TKDTree<Index, Value>& operator=(const TKDTree<Index, Value>&); // not implemented
    void CookBoundaries(const Int_t node, Bool_t left);
-   
+   void UpdateNearestNeighbors(Index inode, const Value *point, Int_t kNN, Index *ind, Value *dist);
    
  protected:
    Int_t   fDataOwner;  //! 0 - not owner, 2 - owner of the pointer array, 1 - owner of the whole 2-d array
    Int_t   fNNodes;     // size of node array
+   Int_t   fTotalNodes; // total number of nodes (fNNodes + terminal nodes)
    Index   fNDim;       // number of dimensions
    Index   fNDimm;      // dummy 2*fNDim
    Index   fNPoints;    // number of multidimensional points
@@ -88,12 +96,6 @@ public:
                         //  fOffset returns the index in the fIndPoints array of the first point
                         //  that belongs to the first node on the second row.
 
-   // kNN related data
-   Int_t   fkNNdim;     //! current kNN arrays allocated dimension
-   Index   *fkNN;       //! k nearest neighbors indexes
-   Value   *fkNNdist;   //! k nearest neighbors distances
-   Value   *fDistBuffer;//! working space for kNN
-   Index   *fIndBuffer; //! working space for kNN
 
    ClassDef(TKDTree, 1)  // KD tree
 };

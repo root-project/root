@@ -268,7 +268,7 @@ void TestSizeIF(Int_t nsec, Int_t nrows, Int_t npoints,  Int_t bsize, Int_t mode
 
 
 
-
+//______________________________________________________________________
 void  TestkdtreeIF(Int_t npoints, Int_t bsize, Int_t nloop, Int_t mode)
 {
 //
@@ -314,7 +314,7 @@ void  TestkdtreeIF(Int_t npoints, Int_t bsize, Int_t nloop, Int_t mode)
   
   if (mode ==2){
     if (nloop) timer.Start(kTRUE);
-    Int_t res[npoints];
+    Int_t *res = new Int_t[npoints];
     Int_t nfound = 0;
     for (Int_t kloop = 0;kloop<nloop;kloop++){
       if (kloop==0){
@@ -351,6 +351,8 @@ void  TestkdtreeIF(Int_t npoints, Int_t bsize, Int_t nloop, Int_t mode)
       timer.Stop();
       timer.Print();
     }
+
+    delete [] res; 
   }
   delete [] data0;
   
@@ -359,6 +361,96 @@ void  TestkdtreeIF(Int_t npoints, Int_t bsize, Int_t nloop, Int_t mode)
   if (nloop) printf("Find nearest point:\t%f\t%f\t%f\n",countern, counteriter, counterfound);
 }
 
+//______________________________________________________________________
+void TestNeighbors()
+{
+
+//Generate some 3d points
+   Int_t npoints = 10000;
+   Int_t nn = 100;
+   Int_t ntimes = 100;
+   Int_t bsize = 10; //bucket size of the kd-tree
+
+   Double_t *x = new Double_t[npoints];
+   Double_t *y = new Double_t[npoints];
+   Double_t *z = new Double_t[npoints];
+   for (Int_t i=0; i<npoints; i++){
+      x[i] = gRandom->Uniform(-100, 100);
+      y[i] = gRandom->Uniform(-100, 100);
+      z[i] = gRandom->Uniform(-100, 100);
+   }
+
+   Int_t diff1=0;
+
+//for the distances brute-force:
+   Double_t *dist = new Double_t[npoints];
+   Int_t *index = new Int_t[npoints];
+      
+//Build the tree
+   TKDTreeID *kdtree = new TKDTreeID(npoints, 3, bsize);
+   kdtree->SetData(0, x);
+   kdtree->SetData(1, y);
+   kdtree->SetData(2, z);
+   kdtree->Build();
+   Int_t *index2 = new Int_t[nn];
+   Double_t *dist2 = new Double_t[nn];
+   Double_t point[3];
+//Select a random point
+   for (Int_t itime=0; itime<ntimes; itime++){
+      Int_t ipoint = Int_t(gRandom->Uniform(0, npoints));
+
+      for (Int_t i=0; i<npoints; i++){
+         dist[i]=0;
+
+         dist[i]+=(x[i]-x[ipoint])*(x[i]-x[ipoint]);
+         dist[i]+=(y[i]-y[ipoint])*(y[i]-y[ipoint]);
+         dist[i]+=(z[i]-z[ipoint])*(z[i]-z[ipoint]);
+         dist[i]=TMath::Sqrt(dist[i]);
+
+      }
+      TMath::Sort(npoints, dist, index, kFALSE);
+
+      point[0]=x[ipoint];
+      point[1]=y[ipoint];
+      point[2]=z[ipoint];
+
+      kdtree->FindNearestNeighbors(point, nn, index2, dist2);
+      
+
+      for (Int_t inn=0; inn<nn; inn++){
+         if (TMath::Abs(dist2[inn]-dist[index[inn]])>1E-8) {
+            diff1++;
+            // printf("dist1=%f, dist2=%f, in1=%lld, in2=%d\n", dist[index[inn]], dist2[inn], index[inn], index2[inn]);
+         }
+
+
+      }
+   }
+
+   printf("Nearest neighbors found for %d random points\n", ntimes);
+   printf("%d neighbors are wrong compared to brute-force method\n", diff1);
+//   printf("Old: %d neighbors are wrong compared to brute-force method\n", diff2);
+
+//    printf("\n");
+//    for (Int_t i=0; i<nn; i++){
+//       printf("ind[%d]=%d, dist[%d]=%f\n", i, index2[i], i, dist2[i]);
+//    }
+      
+      
+      
+
+   delete [] x;
+   delete [] y;
+   delete [] z;
+   delete [] index;
+   delete [] dist;
+   delete [] index2;
+   delete [] dist2;
+}
+
+
+
+//______________________________________________________________________
 int main() { 
    kDTreeTest();
    return 0; 
