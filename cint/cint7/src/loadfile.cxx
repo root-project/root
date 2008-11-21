@@ -3157,15 +3157,10 @@ int Cint::Internal::G__unregister_sharedlib(const char *libname)
    
    if (flag) {
       // File found
-      
-      if(G__isfilebusy(ifn)) {
-         G__fprinterr(G__serr,
-                      "Error: G__unloadfile() Can not unload \"%s\", file busy " ,libname);
-         G__genericerror((char*)NULL);
-         G__UnlockCriticalSection();
-         return(G__UNLOADFILE_FAILURE);
-      }
-      
+
+      // No check for busy-ness is need.  If we get there the library
+      // is already being unloaded.
+
       // No active unload to do, since we did not load this file directly.
       
       if (G__srcfile[ifn].dictpos) {
