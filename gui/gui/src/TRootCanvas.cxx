@@ -1099,7 +1099,7 @@ again:
                         // use plugin manager to create instance of TFitEditor
                         TPluginHandler *handler = gROOT->GetPluginManager()->FindHandler("TFitEditor");
                         if (handler && handler->LoadPlugin() != -1) {
-                           if (handler->ExecPlugin(2, this, 0) == 0)
+                           if (handler->ExecPlugin(2, fCanvas, 0) == 0)
                               Error("FitPanel", "Unable to crate the FitPanel");
                         }
                         else

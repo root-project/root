@@ -1053,7 +1053,7 @@ void TFitEditor::DisconnectSlots()
 }
 
 //______________________________________________________________________________
-void TFitEditor::SetCanvas(TCanvas */*newcan*/)
+void TFitEditor::SetCanvas(TCanvas * /*newcan*/)
 {
    // Connect to another canvas.
 
