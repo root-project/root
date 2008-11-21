@@ -1907,10 +1907,11 @@ void* Cint::Internal::G__FindSym(const char *filename,const char *funcname)
 static const char *G__dladdr(void (*func)())
 {
    // Wrapper around dladdr (and friends)
-#if defined(G__WIN32)
-#if 0
+#if defined(__CYGWIN__) && defined(__GNUC__)
+   return 0;
+#elif defined(G__WIN32)
    MEMORY_BASIC_INFORMATION mbi;
-   if (!VirtualQuery (addr, &mbi, sizeof (mbi)))
+   if (!VirtualQuery (func, &mbi, sizeof (mbi)))
    {
       return 0;
    }
@@ -1923,8 +1924,6 @@ static const char *G__dladdr(void (*func)())
       return 0;
    }
    return moduleName;
-#endif
-   return 0;
 #else
    Dl_info info;
    if (dladdr((void*)func,&info)==0) {
