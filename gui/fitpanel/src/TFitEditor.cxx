@@ -148,8 +148,8 @@
 #include "TTimer.h"
 #include "THStack.h"
 #include "TMath.h"
-#include "Fit/BinData.h"
 #include "Fit/UnBinData.h"
+#include "Fit/BinData.h"
 #include "Fit/BinData.h"
 #include "TMultiGraph.h"
 #include "TTree.h"
@@ -343,20 +343,31 @@ TFitEditor::TFitEditor(TVirtualPad* pad, TObject *obj) :
                               kMWMFuncMinimize,
                kMWMInputModeless);
 
-   if (pad && obj) {
-      fParentPad = (TPad *)pad;
-      fFitObject = (TObject *)obj;
+   ConnectSlots();
+   SetFitObject(pad, obj, kButton1Down);
+
+   // In case we want to make it without a default canvas. This will
+   // be implemented after the 5.21/06 Release. Remember to take out
+   // any reference to the pad/canvas when the fitpanel is shown
+   // and/or built.
+
+   //SetCanvas(0 /*pad->GetCanvas()*/); 
+
+   if ( pad ) {
       SetCanvas(pad->GetCanvas());
-      pad->GetCanvas()->Selected(pad, obj, kButton1Down);
-   } else {
-      Error("FitPanel", "need to have an object drawn first");
-      return;
+      if ( obj )
+         pad->GetCanvas()->Selected(pad, obj, kButton1Down);
    }
    UInt_t dw = fClient->GetDisplayWidth();
-   UInt_t cw = pad->GetCanvas()->GetWindowWidth();
-   UInt_t cx = (UInt_t)pad->GetCanvas()->GetWindowTopX();
-   UInt_t cy = (UInt_t)pad->GetCanvas()->GetWindowTopY();
-
+   UInt_t cw = 0;
+   UInt_t cx = 0;
+   UInt_t cy = 0;
+   if ( pad->GetCanvas() ) {
+      cw = pad->GetCanvas()->GetWindowWidth();
+      cx = (UInt_t)pad->GetCanvas()->GetWindowTopX();
+      cy = (UInt_t)pad->GetCanvas()->GetWindowTopY();
+   }
+      
    if (cw + size.fWidth < dw) {
       Int_t gedx = 0, gedy = 0;
       gedx = cx+cw+4;
@@ -1042,12 +1053,20 @@ void TFitEditor::DisconnectSlots()
 }
 
 //______________________________________________________________________________
-void TFitEditor::SetCanvas(TCanvas *newcan)
+void TFitEditor::SetCanvas(TCanvas */*newcan*/)
 {
    // Connect to another canvas.
 
-   newcan->Connect("Selected(TVirtualPad*,TObject*,Int_t)", "TFitEditor",
-                   this, "SetFitObject(TVirtualPad *, TObject *, Int_t)");
+   // The next line is commented because it is stablishing a
+   // connection with the particular canvas, while right the following
+   // line will connect all the canvas in a general way.
+
+   // It would also make the fitpanel crash if there is no object
+   // defined to be fitted in the construction (as a side effect of
+   // it).
+
+//    newcan->Connect("Selected(TVirtualPad*,TObject*,Int_t)", "TFitEditor",
+//                    this, "SetFitObject(TVirtualPad *, TObject *, Int_t)");
 
    TQObject::Connect("TCanvas", "Selected(TVirtualPad *, TObject *, Int_t)", 
                      "TFitEditor",this, 
