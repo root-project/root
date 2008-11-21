@@ -7,6 +7,11 @@
 void runConversionOp() {
    gSystem->Setenv("LINES","-1");
 
+   // Make sure the library is not loaded instead of 
+   // the script.
+   gInterpreter->UnloadLibraryMap("ConversionOp_h");
+   gInterpreter->UnloadLibraryMap("equal_C");
+   
    gROOT->ProcessLine(".x ConversionOp.C");
    gROOT->ProcessLine(".class A<C>");
    gROOT->ProcessLine(".class B");
