@@ -26,11 +26,11 @@ autoloadNamespace.log : MyClass_cxx.$(DllSuf)
 autoload_test : autoload
 
 autoload : autoload.log
-ifeq ($(ARCH),macosx)
-	$(WarnFailTest) [Mac OS specific]
-else
 	$(TestDiff) && touch $@
-endif
 
 autoload.log : autoloadtest_C.$(DllSuf)
 
+autoloadNamespace.log: MyClass_cxx.$(DllSuf)
+
+linktest_C.$(DllSuf): linktest.C $(ROOT_LOC)/lib/libPhysics.so
+	$(BuildWithLib)
