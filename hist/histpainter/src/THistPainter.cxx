@@ -1132,7 +1132,7 @@ Begin_Html
 
 For each bin the content is printed. The text attributes are:
 <ul>
-<li> text font = current TStyle font.
+<li> text font = current TStyle font (<tt>gStyle->SetTextFont()</tt>).
 <li> text size = 0.02*padheight*markersize.
 <li> text color = marker color.
 </ul>
