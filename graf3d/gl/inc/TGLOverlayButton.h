@@ -52,7 +52,7 @@ protected:
    mutable TGLFont   fFont;         // font used to render text
 
 public:
-   TGLOverlayButton(TGLViewerBase *parent, const char *text, Float_t posx, 
+   TGLOverlayButton(TGLViewerBase *parent, const char *text, Float_t posx,
                     Float_t posy, Float_t width, Float_t height);
    virtual ~TGLOverlayButton() { }
 

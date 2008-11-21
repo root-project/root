@@ -195,6 +195,18 @@ TEveManager::~TEveManager()
    fHighlight->DecDenyDestroy();
    fSelection->DecDenyDestroy();
 
+   fGlobalScene->DecDenyDestroy();
+   fEventScene->DecDenyDestroy();
+   fScenes->DestroyScenes();
+   fScenes->DecDenyDestroy();
+   fScenes->Destroy();
+
+   fViewer->DecDenyDestroy();
+   fViewers->DestroyElements();
+   fViewers->DecDenyDestroy();
+   fViewers->Destroy();
+
+   delete fMacroFolder;
    delete fGeometryAliases;
    delete fGeometries;
    delete fVizDB;
@@ -853,14 +865,17 @@ void TEveManager::Terminate()
 
    if (!gEve) return;
 
-   delete gEve->fViewers;
-   delete gEve->fViewer->GetGLViewer();
-   delete gEve->fViewer;
+   TGLViewer                *v  = gEve->fViewer->GetGLViewer();
    TEveGListTreeEditorFrame *lf = gEve->fLTEFrame;
-   TEveBrowser              * b = gEve->GetBrowser();
+   TEveBrowser              *b  = gEve->GetBrowser();
+
    delete gEve;
+
+   delete v;
    delete lf;
-   delete b; 
+   delete b;
+
+   gEve = 0;
 }
 
 //==============================================================================

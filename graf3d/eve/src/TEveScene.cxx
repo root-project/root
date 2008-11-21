@@ -26,7 +26,9 @@
 
 //______________________________________________________________________________
 //
-// Reve representation of TGLScene.
+// Eve representation of TGLScene.
+// The GLScene is owned by this class - it is created on construction
+// time and deleted at destruction.
 
 ClassImp(TEveScene);
 
@@ -54,6 +56,8 @@ TEveScene::~TEveScene()
    // Destructor.
 
    gEve->GetViewers()->SceneDestructing(this);
+   delete fGLScene;
+   delete fPad;
 }
 
 /******************************************************************************/
@@ -82,7 +86,7 @@ void TEveScene::Repaint(Bool_t dropLogicals)
 
    // Hack to propagate selection state to physical shapes.
    //
-   // Should actually be published in PadPaint() followinf a direct
+   // Should actually be published in PadPaint() following a direct
    // AddObject() call, but would need some other stuff for that.
    // Optionally, this could be exported via the TAtt3D and everything
    // would be sweet.
@@ -176,6 +180,21 @@ TEveSceneList::TEveSceneList(const Text_t* n, const Text_t* t) :
    // Constructor.
 
    SetChildClass(TEveScene::Class());
+}
+
+//______________________________________________________________________________
+void TEveSceneList::DestroyScenes()
+{
+   // Destroy all scenes and their contents.
+   // Tho object with non-zero deny-destroy will still survive.
+
+   List_i i = fChildren.begin();
+   while (i != fChildren.end())
+   {
+      TEveScene* s = (TEveScene*) *(i++);
+      s->DestroyElements();
+      s->DestroyOrWarn();
+   }
 }
 
 /******************************************************************************/

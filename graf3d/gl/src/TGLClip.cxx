@@ -83,7 +83,7 @@ public:
 // interactive clipping using OpenGL clip planes.                       //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(TGLClip)
+ClassImp(TGLClip);
 
 //______________________________________________________________________________
 TGLClip::TGLClip(const TGLLogicalShape & logical, const TGLMatrix & transform, const float color[4]) :
@@ -132,7 +132,7 @@ void TGLClip::Draw(TGLRnrCtx & rnrCtx) const
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(TGLClipPlane)
+ClassImp(TGLClipPlane);
 
 const float TGLClipPlane::fgColor[4] = { 1.0, 0.6, 0.2, 0.5 };
 
@@ -207,7 +207,7 @@ void TGLClipPlane::PlaneSet(TGLPlaneSet_t & set) const
 //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(TGLClipBox)
+ClassImp(TGLClipBox);
 
 const float TGLClipBox::fgColor[4] = { 1.0, 0.6, 0.2, 0.3 };
 
@@ -264,7 +264,7 @@ void TGLClipBox::PlaneSet(TGLPlaneSet_t & set) const
 //////////////////////////////////////////////////////////////////////////
 
 
-ClassImp(TGLClipSet)
+ClassImp(TGLClipSet);
 
 //______________________________________________________________________________
 TGLClipSet::TGLClipSet() :

@@ -30,7 +30,7 @@ private:
    Bool_t SetSliderVal(Event_t* event,TGLRnrCtx& rnrCtx );
 
    TString        fHeaderTxt;
-   Bool_t         fHeaderSelected; 
+   Bool_t         fHeaderSelected;
 
 protected:
    TEveCaloLego*  fCalo;
@@ -40,7 +40,7 @@ protected:
    Bool_t         fShowCamera;
    Bool_t         fShowPlane;
 
-   // plane-value  
+   // plane-value
    Float_t        fMenuW;
    Float_t        fButtonW;
    Float_t        fSliderH;    // slider height in % of viewport

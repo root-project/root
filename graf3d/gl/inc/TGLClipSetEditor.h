@@ -63,7 +63,7 @@ public:
    void UpdateViewerClip();
    void ResetViewerClip();
 
-   ClassDef(TGLClipSetSubEditor, 0) // Sub-editor for TGLClipSet
+   ClassDef(TGLClipSetSubEditor, 0); // Sub-editor for TGLClipSet.
 };
 
 
@@ -83,7 +83,7 @@ public:
 
    virtual void SetModel(TObject* obj);
 
-   ClassDef(TGLClipSetEditor, 0) // Editor for TGLClipSet
+   ClassDef(TGLClipSetEditor, 0); // GUI editor for TGLClipSet.
 };
 
 #endif

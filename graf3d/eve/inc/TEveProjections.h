@@ -100,7 +100,7 @@ public:
 
    void     PreScalePoint(Float_t& x, Float_t& y);
    void     AddPreScaleEntry(Int_t coord, Float_t max_val, Float_t scale);
-   void     ChangePreScaleEntry(Int_t coord, Int_t entry, Float_t new_scale); 
+   void     ChangePreScaleEntry(Int_t coord, Int_t entry, Float_t new_scale);
    void     ClearPreScales();
 
    void     SetDistortion(Float_t d);

@@ -712,7 +712,7 @@ Bool_t TGLEventHandler::HandleMotion(Event_t * event)
 
    if (fMouseTimerRunning) StopMouseTimer();
 
-   if (fTooltipShown && 
+   if (fTooltipShown &&
        ( TMath::Abs(event->fXRoot - fTooltipPos.fX) > fTooltipPixelTolerance ||
          TMath::Abs(event->fYRoot - fTooltipPos.fY) > fTooltipPixelTolerance ))
    {

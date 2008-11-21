@@ -55,6 +55,7 @@ TGLScenePad::TGLScenePad(TVirtualPad* pad) :
    fPad               (pad),
    fInternalPIDs      (kFALSE),
    fNextInternalPID   (1), // 0 reserved
+   fLastPID           (0), // 0 reserved
    fAcceptedPhysicals (0),
    fComposite         (0),
    fCSLevel           (0),
@@ -169,7 +170,7 @@ void TGLScenePad::ObjectPaint(TObject* obj, Option_t* opt)
    else
    {
       // Handle 2D primitives here.
-      // printf("TGLScenePad::PadPaint skipping %p, %s, %s.\n",
+      // printf("TGLScenePad::ObjectPaint skipping %p, %s, %s.\n",
       //        obj, obj->GetName(), obj->ClassName());
       obj->Paint(opt);
    }
@@ -255,6 +256,7 @@ void TGLScenePad::BeginScene()
 
    // Reset internal physical ID counter
    fNextInternalPID = 1;
+   fLastPID         = 0;
 
    // Reset tracing info
    fAcceptedPhysicals = 0;
@@ -286,7 +288,7 @@ void TGLScenePad::EndScene()
 }
 
 //______________________________________________________________________________
-Int_t TGLScenePad::AddObject(const TBuffer3D & buffer, Bool_t * addChildren)
+Int_t TGLScenePad::AddObject(const TBuffer3D& buffer, Bool_t* addChildren)
 {
    // Add an object to the viewer, using internal physical IDs
    // TVirtualViewer3D interface overload - see base/src/TVirtualViewer3D.cxx
@@ -299,23 +301,24 @@ Int_t TGLScenePad::AddObject(const TBuffer3D & buffer, Bool_t * addChildren)
 }
 
 //______________________________________________________________________________
-// TODO: Cleanup addChildren to UInt_t flag for full termination - how returned?
-Int_t TGLScenePad::AddObject(UInt_t physicalID, const TBuffer3D & buffer, Bool_t * addChildren)
+Int_t TGLScenePad::AddObject(UInt_t physicalID, const TBuffer3D& buffer, Bool_t* addChildren)
 {
    // Add an object to the scene, using an external physical ID
    // TVirtualViewer3D interface overload - see base/src/TVirtualViewer3D.cxx
    // for description of viewer architecture
 
-   // TODO: Break this up and make easier to understand. This is pretty convoluted
-   // due to the large number of cases it has to deal with:
-   // i)   Exisiting physical and/or logical
-   // ii)  External provider can supply bounding box or not?
-   // iii) Local/global reference frame
-   // iv)  Defered filling of some sections of the buffer
-   // v)   Internal or external physical IDs
-   // vi)  Composite components as special case
+   // TODO: Break this up and make easier to understand. This is
+   // pretty convoluted due to the large number of cases it has to
+   // deal with:
+   // i)   exisiting physical and/or logical;
+   // ii)  external provider may or may not supply bounding box;
+   // iii) local/global reference frame;
+   // iv)  deferred filling of some sections of the buffer;
+   // v)   internal or external physical IDs;
+   // vi)  composite components as special case.
    //
-   // The buffer filling means the function is re-entrant which adds to complication.
+   // The buffer filling means the function is re-entrant which adds
+   // to complication.
 
    if (physicalID == 0) {
       Error("TGLScenePad::AddObject", "0 physical ID reserved");
@@ -349,64 +352,61 @@ Int_t TGLScenePad::AddObject(UInt_t physicalID, const TBuffer3D & buffer, Bool_t
       return TBuffer3D::kNone;
    }
 
-   // TODO: Could be static and save possible double lookup?
-   TGLPhysicalShape * physical = FindPhysical(physicalID);
-   TGLLogicalShape  * logical  = 0;
+   // TODO: Could be a data member - save possible double lookup?
+   TGLPhysicalShape *physical = FindPhysical(physicalID);
+   TGLLogicalShape  *logical  = 0;
 
-   // If we have a valid (non-zero) ID in buffer see if the logical is already cached
-   if (buffer.fID) {
+   // If we have a valid (non-zero) ID, see if the logical is already cached.
+   // If it is not, try to create a direct renderer object.
+   if (buffer.fID)
+   {
       logical = FindLogical(buffer.fID);
-      // If not, attempt direct rendering via <ClassName>GL object.
-      if (logical == 0) {
+      if (!logical)
          logical = AttemptDirectRenderer(buffer.fID);
-      }
    }
 
-   // Function can be called twice if extra buffer filling for logical
-   // is required - record last physical ID to detect
-   static UInt_t lastPID = 0;
-
-   // First attempt to add this physical
-   if (physicalID != lastPID) {
-      // Existing physical
-      if (physical) {
-         // If we have physical we should have logical cached too
+   // First attempt to add this physical.
+   if (physicalID != fLastPID)
+   {
+      // Existing physical.
+      // MT comment: I don't think this should ever happen.
+      if (physical)
+      {
+         // If we have physical we should have logical cached, too.
          if (!logical) {
             Error("TGLScenePad::AddObject", "cached physical with no assocaited cached logical");
          }
 
-         // Always increment the internal physical ID so they
-         // match external object sequence
-         if (fInternalPIDs) {
-            fNextInternalPID++;
-         }
+         // Since we already have logical no need for further checks.
+         // Done ... prepare for next object.
+         if (fInternalPIDs)
+            ++fNextInternalPID;
 
-         // We don't need anything more for this object
          return TBuffer3D::kNone;
       }
 
       // Need any extra sections in buffer?
-      // If we have logical already we don't need to check raw sections
-      Int_t extraSections = ValidateObjectBuffer(buffer, logical == 0); // Check raw?
-      if (extraSections != TBuffer3D::kNone) {
+      Bool_t includeRaw    = (logical == 0);
+      Int_t  extraSections = ValidateObjectBuffer(buffer, includeRaw);
+      if (extraSections != TBuffer3D::kNone)
          return extraSections;
-      } else {
-         lastPID = physicalID;
-      }
+
+      fLastPID = physicalID;
    }
 
-   if(lastPID != physicalID)
-   {
+   if (fLastPID != physicalID) {
       Error("TGLScenePad::AddObject", "internal physical ID tracking error?");
    }
-   // By now we should need to add a physical at least
+
+   // Being here means we need to add a physical, maybe logical as well.
    if (physical) {
       Error("TGLScenePad::AddObject", "expecting to require physical");
       return TBuffer3D::kNone;
    }
 
-   // Create logical if required
-   if (!logical) {
+   // Create logical if required.
+   if (!logical)
+   {
       logical = CreateNewLogical(buffer);
       if (!logical) {
          Error("TGLScenePad::AddObject", "failed to create logical");
@@ -416,33 +416,32 @@ Int_t TGLScenePad::AddObject(UInt_t physicalID, const TBuffer3D & buffer, Bool_t
       AdoptLogical(*logical);
    }
 
-   // Finally create the physical, binding it to the logical, and add to scene
+   // Create the physical, bind it to the logical and add it to the scene.
    physical = CreateNewPhysical(physicalID, buffer, *logical);
 
-   if (physical) {
+   if (physical)
+   {
       AdoptPhysical(*physical);
       buffer.fPhysicalID = physicalID;
       ++fAcceptedPhysicals;
       if (gDebug>3 && fAcceptedPhysicals%1000 == 0) {
          Info("TGLScenePad::AddObject", "added %d physicals", fAcceptedPhysicals);
       }
-   } else {
+   }
+   else
+   {
       Error("TGLScenePad::AddObject", "failed to create physical");
    }
 
-   // Always increment the internal physical ID so they
-   // match external object sequence
-   if (fInternalPIDs) {
+   // Done ... prepare for next object.
+   if (fInternalPIDs)
       fNextInternalPID++;
-   }
 
-   // Reset last physical ID so can detect new one
-   lastPID = 0;
    return TBuffer3D::kNone;
 }
 
 //______________________________________________________________________________
-Bool_t TGLScenePad::OpenComposite(const TBuffer3D & buffer, Bool_t * addChildren)
+Bool_t TGLScenePad::OpenComposite(const TBuffer3D& buffer, Bool_t* addChildren)
 {
    // Open new composite container.
    // TVirtualViewer3D interface overload - see base/src/TVirtualViewer3D.cxx
@@ -501,7 +500,7 @@ void TGLScenePad::AddCompositeOp(UInt_t operation)
 // Protected methods
 
 //______________________________________________________________________________
-Int_t TGLScenePad::ValidateObjectBuffer(const TBuffer3D & buffer, Bool_t includeRaw) const
+Int_t TGLScenePad::ValidateObjectBuffer(const TBuffer3D& buffer, Bool_t includeRaw) const
 {
    // Validate if the passed 'buffer' contains all sections we require to add object.
    // Returns Int_t combination of TBuffer::ESection flags still required - or
@@ -530,12 +529,14 @@ Int_t TGLScenePad::ValidateObjectBuffer(const TBuffer3D & buffer, Bool_t include
        buffer.Type() != TBuffer3DTypes::kTube    &&
        buffer.Type() != TBuffer3DTypes::kTubeSeg &&
        buffer.Type() != TBuffer3DTypes::kCutTube &&
-       buffer.Type() != TBuffer3DTypes::kComposite) {
+       buffer.Type() != TBuffer3DTypes::kComposite)
+   {
       needRaw = kTRUE;
    }
    // 2. Sphere type is kSPHE, but the sphere is hollow and/or cut - we
    //    do not support native drawing of these currently
-   else if (buffer.Type() == TBuffer3DTypes::kSphere) {
+   else if (buffer.Type() == TBuffer3DTypes::kSphere)
+   {
       const TBuffer3DSphere * sphereBuffer = dynamic_cast<const TBuffer3DSphere *>(&buffer);
       if (sphereBuffer) {
          if (!sphereBuffer->IsSolidUncut()) {
@@ -547,16 +548,19 @@ Int_t TGLScenePad::ValidateObjectBuffer(const TBuffer3D & buffer, Bool_t include
       }
    }
    // 3. kBoundingBox is not filled - we generate a bounding box from
-   else if (!buffer.SectionsValid(TBuffer3D::kBoundingBox)) {
+   else if (!buffer.SectionsValid(TBuffer3D::kBoundingBox))
+   {
       needRaw = kTRUE;
    }
    // 4. kShapeSpecific is not filled - except in case of top level composite
    else if (!buffer.SectionsValid(TBuffer3D::kShapeSpecific) &&
-             buffer.Type() != TBuffer3DTypes::kComposite) {
+             buffer.Type() != TBuffer3DTypes::kComposite)
+   {
       needRaw = kTRUE;
    }
    // 5. We are a component (not the top level) of a composite shape
-   else if (fComposite) {
+   else if (fComposite)
+   {
       needRaw = kTRUE;
    }
 
@@ -568,7 +572,7 @@ Int_t TGLScenePad::ValidateObjectBuffer(const TBuffer3D & buffer, Bool_t include
 }
 
 //______________________________________________________________________________
-TGLLogicalShape * TGLScenePad::CreateNewLogical(const TBuffer3D & buffer) const
+TGLLogicalShape* TGLScenePad::CreateNewLogical(const TBuffer3D& buffer) const
 {
    // Create and return a new TGLLogicalShape from the supplied buffer
    TGLLogicalShape * newLogical = 0;
@@ -642,9 +646,8 @@ TGLLogicalShape * TGLScenePad::CreateNewLogical(const TBuffer3D & buffer) const
 
 //______________________________________________________________________________
 TGLPhysicalShape*
-TGLScenePad::CreateNewPhysical(      UInt_t            ID,
-                               const TBuffer3D       & buffer,
-                               const TGLLogicalShape & logical) const
+TGLScenePad::CreateNewPhysical(UInt_t ID, const TBuffer3D& buffer,
+                               const TGLLogicalShape& logical) const
 {
    // Create and return a new TGLPhysicalShape with id 'ID', using
    // 'buffer' placement information (translation etc), and bound to
@@ -661,7 +664,7 @@ TGLScenePad::CreateNewPhysical(      UInt_t            ID,
 }
 
 //______________________________________________________________________________
-RootCsg::TBaseMesh *TGLScenePad::BuildComposite()
+RootCsg::TBaseMesh* TGLScenePad::BuildComposite()
 {
    // Build and return composite shape mesh
    const CSPart_t &currToken = fCSTokens[fCSLevel];

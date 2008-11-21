@@ -106,7 +106,7 @@ TGLWidget* TGLWidget::Create(const TGLFormat &format,
    glw->fInnerData   = innerData;
 #endif
    glw->fGLFormat  = format;
-   
+
    try
    {
       glw->SetFormat();
@@ -165,7 +165,7 @@ TGLWidget::~TGLWidget()
    }
    delete fGLContext;
 
-   gVirtualX->SelectWindow(fWindowIndex); 	 
+   gVirtualX->SelectWindow(fWindowIndex);
    gVirtualX->CloseWindow();
 }
 

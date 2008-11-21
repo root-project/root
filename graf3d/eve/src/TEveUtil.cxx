@@ -127,7 +127,7 @@ void ChompTail(TString& s, char c='.')
    // occurrence of character 'c'.
 
    Ssiz_t p = s.Last(c);
-   if(p != kNPOS)
+   if (p != kNPOS)
       s.Remove(p);
 }
 }
@@ -162,7 +162,7 @@ void TEveUtil::AssertMacro(const Text_t* mac)
 {
    // Load and execute macro 'mac' if it has not been loaded yet.
 
-   if(CheckMacro(mac) == kFALSE) {
+   if( CheckMacro(mac) == kFALSE) {
       gROOT->Macro(mac);
    }
 }
@@ -172,7 +172,7 @@ void TEveUtil::Macro(const Text_t* mac)
 {
    // Execute macro 'mac'. Do not reload the macro.
 
-   if(CheckMacro(mac) == kFALSE) {
+   if (CheckMacro(mac) == kFALSE) {
       gROOT->LoadMacro(mac);
    }
    TString foo(mac); ChompTail(foo); foo += "()";
@@ -184,7 +184,7 @@ void TEveUtil::LoadMacro(const Text_t* mac)
 {
    // Makes sure that macro 'mac' is loaded, but do not reload it.
 
-   if(CheckMacro(mac) == kFALSE) {
+   if (CheckMacro(mac) == kFALSE) {
       gROOT->LoadMacro(mac);
    }
 }
@@ -468,7 +468,7 @@ TEvePadHolder::~TEvePadHolder()
 {
    // Destructor.
 
-   if(fModifyUpdateP && gPad != 0) {
+   if (fModifyUpdateP && gPad != 0) {
       gPad->Modified();
       gPad->Update();
    }

@@ -25,8 +25,7 @@
 // GUI sub-editor for TGLClipSet.
 
 
-ClassImp(TGLClipSetSubEditor)
-
+ClassImp(TGLClipSetSubEditor);
 
 //______________________________________________________________________________
 TGLClipSetSubEditor::TGLClipSetSubEditor(const TGWindow *p) :
@@ -234,8 +233,7 @@ void TGLClipSetSubEditor::ResetViewerClip()
 //
 // GUI editor for TGLClipSet.
 
-ClassImp(TGLClipSetEditor)
-
+ClassImp(TGLClipSetEditor);
 
 //______________________________________________________________________________
 TGLClipSetEditor::TGLClipSetEditor(const TGWindow *p, Int_t width, Int_t height,

@@ -217,6 +217,7 @@ public:
    virtual void RemoveElementsLocal();
 
    virtual void Destroy();                      // *MENU*
+   virtual void DestroyOrWarn();
    virtual void DestroyElements();              // *MENU*
 
    virtual Bool_t HandleElementPaste(TEveElement* el);

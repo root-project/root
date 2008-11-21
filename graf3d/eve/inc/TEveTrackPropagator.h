@@ -126,7 +126,7 @@ public:
       Float_t fPhiStep;     // Caluclated from fMinAng and fDelta.
       Float_t fSin, fCos;   // Current sin/cos(phistep).
 
-      // cached 
+      // cached
       TEveVector fB;        // Current magnetic field, cached.
       TEveVector fE1, fE2, fE3; // Base vectors: E1 -> B dir, E2->pT dir, E3 = E1xE2.
       TEveVector fPt, fPl;  // Transverse and longitudinal momentum.
@@ -201,6 +201,10 @@ public:
    TEveTrackPropagator(const Text_t* n="TEveTrackPropagator", const Text_t* t="",
                        TEveMagField* field=0);
    virtual ~TEveTrackPropagator();
+
+   virtual void OnZeroRefCount();
+
+   virtual void CheckReferenceCount(const TEveException& eh="TEveElement::CheckReferenceCount ");
 
    virtual void ElementChanged(Bool_t update_scenes=kTRUE, Bool_t redraw=kFALSE);
 
@@ -283,8 +287,8 @@ inline Bool_t TEveTrackPropagator::IsOutsideBounds(const TEveVector& point,
 inline Bool_t TEveTrackPropagator::PointOverVertex(const TEveVector4 &v0,
                                                    const TEveVector4 &v)
 {
-   Float_t dotV = fH.fB.fX*(v0.fX-v.fX) 
-                + fH.fB.fY*(v0.fY-v.fY) 
+   Float_t dotV = fH.fB.fX*(v0.fX-v.fX)
+                + fH.fB.fY*(v0.fY-v.fY)
                 + fH.fB.fZ*(v0.fZ-v.fZ);
 
    return (fH.fPlDir > 0 && dotV < 0) || (fH.fPlDir < 0 && dotV >0);

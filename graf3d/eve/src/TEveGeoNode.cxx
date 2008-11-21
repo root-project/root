@@ -478,7 +478,7 @@ namespace
 {
 TGeoManager* init_geo_mangeur()
 {
-   // Create a phony geo manager that 
+   // Create a phony geo manager that
    TGeoManager* old = gGeoManager;
    gGeoManager = 0;
    TGeoManager* mgr = new TGeoManager();
@@ -566,7 +566,7 @@ void TEveGeoShape::Paint(Option_t* /*option*/)
    RefMainTrans().SetBuffer3D(buff);
    buff.fLocalFrame   = kTRUE; // Always enforce local frame (no geo manager).
 
-                          
+
    Int_t sections = TBuffer3D::kBoundingBox | TBuffer3D::kShapeSpecific;
    if (fNSegments > 2)
       sections |= TBuffer3D::kRawSizes | TBuffer3D::kRaw;

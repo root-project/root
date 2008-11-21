@@ -30,7 +30,9 @@
 
 //______________________________________________________________________________
 //
-// Reve representation of TGLViewer.
+// Eve representation of TGLViewer.
+// The GLViewer is NOT owned this class as it is also part of the GUI.
+// It should be delted there.
 
 ClassImp(TEveViewer);
 
@@ -49,7 +51,8 @@ TEveViewer::TEveViewer(const Text_t* n, const Text_t* t) :
 //______________________________________________________________________________
 const TGPicture* TEveViewer::GetListTreeIcon(Bool_t)
 {
-   //return eveviewer icon
+   // Return TEveViewer icon.
+
    return TEveElement::fgListTreeIcons[1];
 }
 
@@ -245,7 +248,7 @@ void TEveViewerList::SceneDestructing(TEveScene* scene)
          TEveSceneInfo* sinfo = (TEveSceneInfo*) *j;
          ++j;
          if (sinfo->GetScene() == scene)
-            gEve->RemoveElement(sinfo, viewer);
+            viewer->RemoveElement(sinfo);
       }
    }
 }

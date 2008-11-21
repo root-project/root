@@ -405,7 +405,7 @@ void TEveTrack::WriteVizParams(ostream& out, const TString& var)
    // Write visualization parameters.
 
    TEveLine::WriteVizParams(out, var);
-   
+
    TString t = "   " + var + "->";
    out << t << "SetBreakProjectedTracks(" << fBreakProjectedTracks << ");\n";
 }

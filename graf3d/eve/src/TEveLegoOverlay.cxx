@@ -52,7 +52,7 @@ TEveLegoOverlay::TEveLegoOverlay() :
    fActiveID(-1),
    fActiveCol(kRed-4)
 {
-   // Constructor.  
+   // Constructor.
   fMainColorPtr = &fMainColor;
 
 }
@@ -77,7 +77,7 @@ void TEveLegoOverlay::DrawSlider(TGLRnrCtx& rnrCtx)
       glVertex2f(-w, fSliderH);
       glEnd();
    }
-   
+
    // drawing
    if ( fCalo->GetData() && fCalo->GetData()->Empty() == kFALSE)
    {
@@ -230,7 +230,7 @@ void TEveLegoOverlay::Render(TGLRnrCtx& rnrCtx)
       glMatrixMode(GL_MODELVIEW);
       glPushMatrix();
       glLoadIdentity();
-   
+
       glTranslatef(-1, -1, 0);
 
       glScalef(2, 2, 1);
@@ -264,7 +264,7 @@ void TEveLegoOverlay::Render(TGLRnrCtx& rnrCtx)
 
          GLdouble x, y, z;
          gluProject(x0, y0, 0, mm, pm, (Int_t*)vp.CArr(), &x, &y, &z);
-         // viewport height goes from top to bottom 
+         // viewport height goes from top to bottom
          if ( x > vp.Left() && y > vp.Top())
             skip = kTRUE;
       }

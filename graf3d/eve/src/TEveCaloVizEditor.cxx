@@ -68,7 +68,7 @@ TEveCaloVizEditor::TEveCaloVizEditor(const TGWindow *p, Int_t width, Int_t heigh
 
    label = new TGLabel(scf, "ScaleAbsolute:");
    scf->AddFrame(label, new TGLayoutHints(kLHintsLeft  | kLHintsBottom));
- 
+
    fScaleAbs  = new TGCheckButton(scf);
    scf->AddFrame(fScaleAbs, new TGLayoutHints(kLHintsLeft, 3, 5, 3, 0));
    fScaleAbs->Connect("Toggled(Bool_t)", "TEveCaloVizEditor", this, "DoScaleAbs()");
@@ -96,7 +96,7 @@ TEveCaloVizEditor::TEveCaloVizEditor(const TGWindow *p, Int_t width, Int_t heigh
    fMaxTowerH->Connect("ValueSet(Double_t)", "TEveCaloVizEditor", this, "DoMaxTowerH()");
    AddFrame(fMaxTowerH, new TGLayoutHints(kLHintsTop, 4, 1, 1, 1));
 
-   
+
    //______________________________________________________________________________
 
    fDataFrame = CreateEditorTabSubFrame("Data");
@@ -168,7 +168,7 @@ void TEveCaloVizEditor::MakeSliceInfo()
       for (Int_t i=nf; i<ns; ++i)
       {
          TGHorizontalFrame* f = new TGHorizontalFrame(fSliceFrame);
-  
+
          TEveGValuator* threshold = new TEveGValuator(f,"", 90, 0, i);
          threshold->SetLabelWidth(50);
          threshold->SetNELength(6);
@@ -305,7 +305,7 @@ void TEveCaloVizEditor::DoPlot()
    TGButton *btn = (TGButton *) gTQSender;
    Int_t id = btn->WidgetId();
 
-   if (id == fPlotE->WidgetId()) 
+   if (id == fPlotE->WidgetId())
       fPlotEt->SetState(kButtonUp);
    else
       fPlotE->SetState(kButtonUp);
@@ -346,7 +346,7 @@ void TEveCaloVizEditor::DoSliceThreshold()
 void TEveCaloVizEditor::DoSliceColor(Pixel_t pixel)
 {
    // Slot for slice info Color.
-   
+
    TGColorSelect *cs = (TGColorSelect *) gTQSender;
    fM->SetDataSliceColor(cs->WidgetId(), Color_t(TColor::GetColor(pixel)));
    Update();

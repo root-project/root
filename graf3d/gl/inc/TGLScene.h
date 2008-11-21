@@ -34,19 +34,19 @@ private:
    TGLScene& operator=(const TGLScene&); // Not implemented
 
    // Compare physical-shape volumes/diagonals -- for draw-vec sorting
-   static Bool_t ComparePhysicalVolumes(const TGLPhysicalShape * shape1,
-                                        const TGLPhysicalShape * shape2);
-   static Bool_t ComparePhysicalDiagonals(const TGLPhysicalShape * shape1,
-                                          const TGLPhysicalShape * shape2);
+   static Bool_t ComparePhysicalVolumes(const TGLPhysicalShape* shape1,
+                                        const TGLPhysicalShape* shape2);
+   static Bool_t ComparePhysicalDiagonals(const TGLPhysicalShape* shape1,
+                                          const TGLPhysicalShape* shape2);
 public:
    // Logical shapes
-   typedef std::map<TObject*, TGLLogicalShape *>   LogicalShapeMap_t;
+   typedef std::map<TObject*, TGLLogicalShape*>    LogicalShapeMap_t;
    typedef LogicalShapeMap_t::value_type           LogicalShapeMapValueType_t;
    typedef LogicalShapeMap_t::iterator             LogicalShapeMapIt_t;
    typedef LogicalShapeMap_t::const_iterator       LogicalShapeMapCIt_t;
 
    // Physical Shapes
-   typedef std::map<UInt_t, TGLPhysicalShape *>    PhysicalShapeMap_t;
+   typedef std::map<UInt_t, TGLPhysicalShape*>     PhysicalShapeMap_t;
    typedef PhysicalShapeMap_t::value_type          PhysicalShapeMapValueType_t;
    typedef PhysicalShapeMap_t::iterator            PhysicalShapeMapIt_t;
    typedef PhysicalShapeMap_t::const_iterator      PhysicalShapeMapCIt_t;
@@ -71,7 +71,7 @@ public:
    typedef std::vector<DrawElement_t*>::iterator   DrawElementPtrVec_i;
 
    // List of physical shapes ordered by volume/diagonal
-   typedef std::vector<const TGLPhysicalShape *>   ShapeVec_t;
+   typedef std::vector<const TGLPhysicalShape*>    ShapeVec_t;
    typedef ShapeVec_t::iterator                    ShapeVec_i;
 
    // ----------------------------------------------------------------
@@ -117,7 +117,7 @@ public:
       std::map<TClass*, UInt_t> fByShapeCnt;
 
       void ResetDrawStats();
-      void UpdateDrawStats(const TGLPhysicalShape & shape, Short_t lod);
+      void UpdateDrawStats(const TGLPhysicalShape& shape, Short_t lod);
       void DumpDrawStats(); // Debug
    };
    friend class TSceneInfo; // for solaris cc
@@ -154,37 +154,37 @@ public:
 
 
    // Rendering
-   virtual void PreDraw   (TGLRnrCtx & rnrCtx);
-   // virtual void PreRender (TGLRnrCtx & rnrCtx);
-   // virtual void Render    (TGLRnrCtx & rnrCtx);
-   virtual void RenderOpaque    (TGLRnrCtx & rnrCtx);
-   virtual void RenderTransp    (TGLRnrCtx & rnrCtx);
-   virtual void RenderSelOpaque (TGLRnrCtx & rnrCtx);
-   virtual void RenderSelTransp (TGLRnrCtx & rnrCtx);
-   // virtual void PostRender(TGLRnrCtx & rnrCtx);
-   virtual void PostDraw  (TGLRnrCtx & rnrCtx);
+   virtual void PreDraw   (TGLRnrCtx& rnrCtx);
+   // virtual void PreRender (TGLRnrCtx& rnrCtx);
+   // virtual void Render    (TGLRnrCtx& rnrCtx);
+   virtual void RenderOpaque    (TGLRnrCtx& rnrCtx);
+   virtual void RenderTransp    (TGLRnrCtx& rnrCtx);
+   virtual void RenderSelOpaque (TGLRnrCtx& rnrCtx);
+   virtual void RenderSelTransp (TGLRnrCtx& rnrCtx);
+   // virtual void PostRender(TGLRnrCtx& rnrCtx);
+   virtual void PostDraw  (TGLRnrCtx& rnrCtx);
 
-   virtual void RenderAllPasses(TGLRnrCtx           & rnrCtx,
-                                DrawElementPtrVec_t & elVec,
-                                Bool_t                check_timeout);
+   virtual void RenderAllPasses(TGLRnrCtx&           rnrCtx,
+                                DrawElementPtrVec_t& elVec,
+                                Bool_t               check_timeout);
 
 
-   virtual void RenderElements (TGLRnrCtx           & rnrCtx,
-                                DrawElementPtrVec_t & elVec,
-                                Bool_t                check_timeout,
-                                const TGLPlaneSet_t * clipPlanes = 0);
+   virtual void RenderElements (TGLRnrCtx&           rnrCtx,
+                                DrawElementPtrVec_t& elVec,
+                                Bool_t               check_timeout,
+                                const TGLPlaneSet_t* clipPlanes = 0);
 
    // Selection
    virtual Bool_t ResolveSelectRecord(TGLSelectRecord& rec, Int_t curIdx);
 
    // Basic logical shape management
-   virtual void              AdoptLogical(TGLLogicalShape & shape);
+   virtual void              AdoptLogical(TGLLogicalShape& shape);
    virtual Bool_t            DestroyLogical(TObject* logid, Bool_t mustFind=kTRUE);
    virtual Int_t             DestroyLogicals();
    virtual TGLLogicalShape*  FindLogical(TObject* logid)  const;
 
    // Basic physical shape management
-   virtual void              AdoptPhysical(TGLPhysicalShape & shape);
+   virtual void              AdoptPhysical(TGLPhysicalShape& shape);
    virtual Bool_t            DestroyPhysical(UInt_t phid);
    virtual Int_t             DestroyPhysicals(Bool_t incModified, const TGLCamera* camera=0);
    virtual TGLPhysicalShape* FindPhysical(UInt_t phid) const;
@@ -220,7 +220,7 @@ public:
    // ----------------------------------------------------------------
    // GL-context holding display-list definitions
 
-   TGLContextIdentity * GetGLCtxIdentity() const { return fGLCtxIdentity; }
+   TGLContextIdentity* GetGLCtxIdentity() const { return fGLCtxIdentity; }
 
 
    // ----------------------------------------------------------------
@@ -231,11 +231,11 @@ public:
 
    static void RGBAFromColorIdx(Float_t rgba[4], Color_t ci, Char_t transp=0);
 
-   static Bool_t IsOutside(const TGLBoundingBox & box,
-                           const TGLPlaneSet_t & planes);
+   static Bool_t IsOutside(const TGLBoundingBox& box,
+                           const TGLPlaneSet_t& planes);
 
-   ClassDef(TGLScene, 0) // Standard ROOT OpenGL scene with logial/physical shapes.
-}; // endclass TGLScene
+   ClassDef(TGLScene, 0); // Standard ROOT OpenGL scene with logial/physical shapes.
+};
 
 
 #endif

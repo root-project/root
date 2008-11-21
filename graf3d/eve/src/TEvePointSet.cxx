@@ -598,7 +598,7 @@ void TEvePointSetArray::InitBins(const Text_t* quant_name,
 
    fBins[0]->SetName("Underflow");
    fBins[0]->SetRnrSelf(kFALSE);
-   
+
    fBins[fNBins-1]->SetName("Overflow");
    fBins[fNBins-1]->SetRnrSelf(kFALSE);
 }

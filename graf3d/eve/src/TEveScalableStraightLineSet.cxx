@@ -52,7 +52,7 @@ Double_t TEveScalableStraightLineSet::GetScale() const
 {
    // Return current scale.
 
-   return fCurrentScale; 
+   return fCurrentScale;
 }
 
 //______________________________________________________________________________

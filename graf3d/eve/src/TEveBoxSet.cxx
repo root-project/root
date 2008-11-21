@@ -261,7 +261,7 @@ void TEveBoxSet::ComputeBBox()
       }
       case kBT_Cone:
       {
-         Float_t mag2=0, mag2Max=0, rMax=0;  
+         Float_t mag2=0, mag2Max=0, rMax=0;
          while (bi.next()) {
             BCone_t& b = * (BCone_t*) bi();
             BBoxCheckPoint(b.fPos.fX, b.fPos.fY, b.fPos.fZ);
@@ -276,7 +276,7 @@ void TEveBoxSet::ComputeBBox()
       }
       case kBT_EllipticCone:
       {
-         Float_t mag2=0, mag2Max=0, rMax=0;  
+         Float_t mag2=0, mag2Max=0, rMax=0;
          while (bi.next()) {
             BEllipticCone_t& b = * (BEllipticCone_t*) bi();
             BBoxCheckPoint(b.fPos.fX, b.fPos.fY, b.fPos.fZ);

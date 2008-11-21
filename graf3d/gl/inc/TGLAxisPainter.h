@@ -122,7 +122,7 @@ public:
    void SetTextFormat(Double_t binWidth);
    void SetAxisAtt(TGLAxisAttrib* axa){ fAtt = axa; }
    void FormAxisValue(Float_t x, char* lab) const;
-   
+
    ClassDef(TGLAxisPainter, 0); // GL axis painter.
 };
 

@@ -387,7 +387,7 @@ void TEveCalo3D::ComputeBBox()
    // If member 'TEveFrameBox* fFrame' is set, frame's corners are used as bbox.
 
    BBoxInit();
-  
+
    Float_t th = (fData) ? GetValToHeight() * fData->GetMaxVal(fPlotEt) : 0;
 
    fBBox[0] = -fBarrelRadius - th;

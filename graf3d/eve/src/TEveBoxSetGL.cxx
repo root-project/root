@@ -146,9 +146,9 @@ void TEveBoxSetGL::MakeDisplayList() const
          fBoxDL = glGenLists(1);
 
       glNewList(fBoxDL, GL_COMPILE);
-  
+
       if (fM->fBoxType < TEveBoxSet::kBT_Cone)
-      { 
+      {
          glBegin(PrimitiveType());
          Float_t p[24];
          if (fM->fBoxType == TEveBoxSet::kBT_AABox)
@@ -158,7 +158,7 @@ void TEveBoxSetGL::MakeDisplayList() const
          RenderBox(p);
          glEnd();
       }
-      else 
+      else
       {
          static TGLQuadric quad;
          Int_t nt = 15; // number of corners

@@ -29,8 +29,8 @@
 ClassImp(TGLOverlayButton);
 
 //______________________________________________________________________________
-TGLOverlayButton::TGLOverlayButton(TGLViewerBase *parent, const char *text, 
-   Float_t posx, Float_t posy, Float_t width, Float_t height) : 
+TGLOverlayButton::TGLOverlayButton(TGLViewerBase *parent, const char *text,
+   Float_t posx, Float_t posy, Float_t width, Float_t height) :
    TGLOverlayElement(),
    fText(text),
    fActiveID(-1),
@@ -144,11 +144,11 @@ void TGLOverlayButton::Render(TGLRnrCtx& rnrCtx)
 
 //______________________________________________________________________________
 void TGLOverlayButton::Clicked(TGLViewerBase *viewer)
-{ 
+{
    // Emits "Clicked(TGLViewerBase*)" signal.
    // Called when user click on the GL button.
 
-   Emit("Clicked(TGLViewerBase*)", (Long_t)viewer); 
+   Emit("Clicked(TGLViewerBase*)", (Long_t)viewer);
 }
 
 /******************************************************************************/

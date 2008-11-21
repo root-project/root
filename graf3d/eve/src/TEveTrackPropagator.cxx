@@ -89,7 +89,7 @@ void TEveTrackPropagator::Helix_t::Step(const TEveVector4& v, const TEveVector& 
 {
    // Step helix for given momentum p from vertex v.
 
-   vOut = v; 
+   vOut = v;
 
    if (fValid)
    {
@@ -191,6 +191,26 @@ TEveTrackPropagator::~TEveTrackPropagator()
 }
 
 //______________________________________________________________________________
+void TEveTrackPropagator::OnZeroRefCount()
+{
+   // Virtual from TEveRefBackPtr - track reference count has reached zero.
+
+   CheckReferenceCount("TEveTrackPropagator::OnZeroRefCount ");
+}
+
+//______________________________________________________________________________
+void TEveTrackPropagator::CheckReferenceCount(const TEveException& eh)
+{
+   // Check reference count - virtual from TEveElement.
+   // Must also take into account references from TEveRefBackPtr.
+
+   if (fRefCount <= 0)
+   {
+      TEveElementList::CheckReferenceCount(eh);
+   }
+}
+
+//______________________________________________________________________________
 void TEveTrackPropagator::ElementChanged(Bool_t update_scenes, Bool_t redraw)
 {
    // Element-change notification.
@@ -239,7 +259,7 @@ void TEveTrackPropagator::ResetTrack()
 Bool_t TEveTrackPropagator::GoToVertex(TEveVector& v, TEveVector& p)
 {
    // Propagate particle with momentum p to vertex v.
-  
+
    fH.Update(p, fMagFieldObj->GetField(fV), kTRUE);
 
    Bool_t hit;
@@ -364,7 +384,7 @@ Bool_t TEveTrackPropagator::HelixToVertex(TEveVector& v, TEveVector& p)
    {
       StepHelix(currV, p, forwV, forwP);
 
-      if (IsOutsideBounds(forwV, maxRsq, fMaxZ)) 
+      if (IsOutsideBounds(forwV, maxRsq, fMaxZ))
       {
          hitBounds = kTRUE;
          TEveVector d = v-forwV;

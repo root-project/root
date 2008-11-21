@@ -575,8 +575,8 @@ void TEveElement::CheckReferenceCount(const TEveException& eh)
    // Check external references to this and eventually auto-destruct
    // the render-element.
 
-   if(NumParents() <= fParentIgnoreCnt && fTopItemCnt  <= 0 &&
-      fDestroyOnZeroRefCnt             && fDenyDestroy <= 0)
+   if (NumParents() <= fParentIgnoreCnt && fTopItemCnt  <= 0 &&
+       fDestroyOnZeroRefCnt             && fDenyDestroy <= 0)
    {
       if (gEve->GetUseOrphanage())
       {
@@ -605,7 +605,7 @@ void TEveElement::CollectSceneParents(List_t& scenes)
    //
    // Overriden in TEveScene to include itself and return.
 
-   for(List_i p=fParents.begin(); p!=fParents.end(); ++p)
+   for (List_i p=fParents.begin(); p!=fParents.end(); ++p)
       (*p)->CollectSceneParents(scenes);
 }
 
@@ -776,7 +776,7 @@ Int_t TEveElement::RemoveFromListTrees(TEveElement* parent)
          j->fTree->ClearViewPort();
          fItems.erase(j);
          if (parent == 0)
-            --fTopItemCnt;            
+            --fTopItemCnt;
          ++count;
       }
    }
@@ -1370,9 +1370,24 @@ void TEveElement::DisableListElements(Bool_t rnr_self,  Bool_t rnr_children)
 //______________________________________________________________________________
 void TEveElement::Destroy()
 {
-   // Destroy this element.
+   // Destroy this element. Throws an exception if deny-destroy is in force.
 
    static const TEveException eh("TEveElement::Destroy ");
+
+   if (fDenyDestroy > 0)
+      throw(eh + "this element '%s' is protected against destruction.", GetElementName());
+
+   gEve->PreDeleteElement(this);
+   delete this;
+   gEve->Redraw3D();
+}
+
+//______________________________________________________________________________
+void TEveElement::DestroyOrWarn()
+{
+   // Destroy this element. Prints a warning if deny-destroy is in force.
+
+   static const TEveException eh("TEveElement::DestroyOrWarn ");
 
    if (fDenyDestroy > 0)
       throw(eh + "this element '%s' is protected against destruction.", GetElementName());
@@ -1634,7 +1649,7 @@ TObject* TEveElementObjectPtr::GetObject(const TEveException& eh) const
    // Return external object.
    // Virtual from TEveElement.
 
-   if(fObject == 0)
+   if (fObject == 0)
       throw(eh + "fObject not set.");
    return fObject;
 }
@@ -1657,7 +1672,7 @@ TEveElementObjectPtr::~TEveElementObjectPtr()
 {
    // Destructor.
 
-   if(fOwnObject)
+   if (fOwnObject)
       delete fObject;
 }
 
@@ -1690,7 +1705,7 @@ TEveElementList::TEveElementList(const Text_t* n, const Text_t* t, Bool_t doColo
 {
    // Constructor.
 
-   if(fDoColor) {
+   if (fDoColor) {
       SetMainColorPtr(&fColor);
    }
 }

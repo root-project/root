@@ -39,19 +39,20 @@ protected:
    // For building via VV3D
    Bool_t             fInternalPIDs;          //! using internal physical IDs
    UInt_t             fNextInternalPID;       //! next internal physical ID (from 1 - 0 reserved)
+   UInt_t             fLastPID;               //! last physical ID that was processed in AddObject()
    Int_t              fAcceptedPhysicals;
 
-   Int_t              ValidateObjectBuffer(const TBuffer3D & buffer, Bool_t includeRaw) const;
-   TGLLogicalShape  * CreateNewLogical(const TBuffer3D & buffer) const;
-   TGLPhysicalShape * CreateNewPhysical(UInt_t physicalID, const TBuffer3D & buffer,
-                                        const TGLLogicalShape & logical) const;
+   Int_t              ValidateObjectBuffer(const TBuffer3D& buffer, Bool_t includeRaw) const;
+   TGLLogicalShape*   CreateNewLogical(const TBuffer3D & buffer) const;
+   TGLPhysicalShape*  CreateNewPhysical(UInt_t physicalID, const TBuffer3D& buffer,
+                                        const TGLLogicalShape& logical) const;
 
    // Composite shape specific
-   typedef std::pair<UInt_t, RootCsg::TBaseMesh *> CSPart_t;
+   typedef std::pair<UInt_t, RootCsg::TBaseMesh*> CSPart_t;
    mutable TGLFaceSet     *fComposite; //! Paritally created composite
    UInt_t                  fCSLevel;
    std::vector<CSPart_t>   fCSTokens;
-   RootCsg::TBaseMesh *    BuildComposite();
+   RootCsg::TBaseMesh*     BuildComposite();
 
    TGLLogicalShape* AttemptDirectRenderer(TObject* id);
 
@@ -91,13 +92,13 @@ public:
    virtual Bool_t BuildingScene() const { return CurrentLock() == kModifyLock; }
    virtual void   EndScene();
 
-   virtual Int_t  AddObject(const TBuffer3D & buffer, Bool_t * addChildren = 0);
-   virtual Int_t  AddObject(UInt_t physicalID, const TBuffer3D & buffer, Bool_t * addChildren = 0);
-   virtual Bool_t OpenComposite(const TBuffer3D & buffer, Bool_t * addChildren = 0);
+   virtual Int_t  AddObject(const TBuffer3D& buffer, Bool_t* addChildren = 0);
+   virtual Int_t  AddObject(UInt_t physicalID, const TBuffer3D& buffer, Bool_t* addChildren = kFALSE);
+   virtual Bool_t OpenComposite(const TBuffer3D& buffer, Bool_t* addChildren = kFALSE);
    virtual void   CloseComposite();
    virtual void   AddCompositeOp(UInt_t operation);
 
-   ClassDef(TGLScenePad, 0) // GL-scene filled via TPad-TVirtualViewer interface.
+   ClassDef(TGLScenePad, 0); // GL-scene filled via TPad-TVirtualViewer interface.
 };
 
 #endif

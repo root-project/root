@@ -67,13 +67,13 @@ public:
    static Bool_t IsU1IntervalOverlappingByMinMax(Float_t minM, Float_t maxM,
                                                  Float_t minQ, Float_t maxQ);
 
-   static Bool_t IsU1IntervalContainedByMeanDelta  (Float_t meanM, Float_t deltaM, 
+   static Bool_t IsU1IntervalContainedByMeanDelta  (Float_t meanM, Float_t deltaM,
                                                     Float_t meanQ, Float_t deltaQ);
    static Bool_t IsU1IntervalOverlappingByMeanDelta(Float_t meanM, Float_t deltaM,
                                                     Float_t meanQ, Float_t deltaQ);
 
    static Float_t GetFraction(Float_t minM, Float_t maxM, Float_t minQ, Float_t maxQ);
- 
+
 
    ClassDef(TEveUtil, 0); // Standard utility functions for Reve.
 };

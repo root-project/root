@@ -131,7 +131,7 @@ protected:
 
    // Debug tracing (for scene rebuilds)
    Bool_t         fDebugMode;            //! debug mode (forced rebuild + draw scene/frustum/interest boxes)
-   Bool_t         fIsPrinting;           //! 
+   Bool_t         fIsPrinting;           //!
    TString        fPictureFileName;      //! default file-name for SavePicture()
    Float_t        fFader;                //! fade the view (0 - no fade/default, 1 - full fade/no rendering done)
 

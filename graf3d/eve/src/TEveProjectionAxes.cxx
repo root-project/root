@@ -43,7 +43,7 @@ TEveProjectionAxes::TEveProjectionAxes(TEveProjectionManager* m) :
 {
    // Constructor.
 
-   fNdivisions = 1006; // primary np = n/100, secondary ns = n -np*100 
+   fNdivisions = 1006; // primary np = n/100, secondary ns = n -np*100
    fLabelSize = 0.015;
 
    fCanEditMainTrans = kFALSE;

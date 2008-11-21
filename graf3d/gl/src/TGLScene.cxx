@@ -179,7 +179,8 @@ void TGLScene::TSceneInfo::ResetDrawStats()
 }
 
 //______________________________________________________________________________
-void TGLScene::TSceneInfo::UpdateDrawStats(const TGLPhysicalShape & shape, Short_t lod)
+void TGLScene::TSceneInfo::UpdateDrawStats(const TGLPhysicalShape& shape,
+                                           Short_t lod)
 {
    // Update draw stats, for newly drawn 'shape'
 
@@ -552,7 +553,7 @@ void TGLScene::LodifySceneInfo(TGLRnrCtx& rnrCtx)
 /**************************************************************************/
 
 //______________________________________________________________________________
-void TGLScene::PreDraw(TGLRnrCtx & rnrCtx)
+void TGLScene::PreDraw(TGLRnrCtx& rnrCtx)
 {
    // Initialize rendering.
    // Pass to base-class where most work is done.
@@ -585,7 +586,7 @@ void TGLScene::PreDraw(TGLRnrCtx & rnrCtx)
 }
 
 //______________________________________________________________________________
-void TGLScene::RenderOpaque(TGLRnrCtx & rnrCtx)
+void TGLScene::RenderOpaque(TGLRnrCtx& rnrCtx)
 {
    // Render opaque elements.
 
@@ -595,7 +596,7 @@ void TGLScene::RenderOpaque(TGLRnrCtx & rnrCtx)
 }
 
 //______________________________________________________________________________
-void TGLScene::RenderTransp(TGLRnrCtx & rnrCtx)
+void TGLScene::RenderTransp(TGLRnrCtx& rnrCtx)
 {
    // Render transparent elements.
 
@@ -605,7 +606,7 @@ void TGLScene::RenderTransp(TGLRnrCtx & rnrCtx)
 }
 
 //______________________________________________________________________________
-void TGLScene::RenderSelOpaque(TGLRnrCtx & rnrCtx)
+void TGLScene::RenderSelOpaque(TGLRnrCtx& rnrCtx)
 {
    // Render selected opaque elements.
 
@@ -615,7 +616,7 @@ void TGLScene::RenderSelOpaque(TGLRnrCtx & rnrCtx)
 }
 
 //______________________________________________________________________________
-void TGLScene::RenderSelTransp(TGLRnrCtx & rnrCtx)
+void TGLScene::RenderSelTransp(TGLRnrCtx& rnrCtx)
 {
    // Render selected transparent elements.
 
@@ -625,7 +626,7 @@ void TGLScene::RenderSelTransp(TGLRnrCtx & rnrCtx)
 }
 
 //______________________________________________________________________________
-void TGLScene::PostDraw(TGLRnrCtx & rnrCtx)
+void TGLScene::PostDraw(TGLRnrCtx& rnrCtx)
 {
    // Called after the rendering is finished.
    // In debug mode draw statistcs is dumped.
@@ -642,9 +643,9 @@ void TGLScene::PostDraw(TGLRnrCtx & rnrCtx)
 }
 
 //______________________________________________________________________________
-void TGLScene::RenderAllPasses(TGLRnrCtx           & rnrCtx,
-                               DrawElementPtrVec_t & elVec,
-                               Bool_t                check_timeout)
+void TGLScene::RenderAllPasses(TGLRnrCtx&           rnrCtx,
+                               DrawElementPtrVec_t& elVec,
+                               Bool_t               check_timeout)
 {
    // Do full rendering of scene.
    //
@@ -802,10 +803,10 @@ void TGLScene::RenderAllPasses(TGLRnrCtx           & rnrCtx,
 }
 
 //______________________________________________________________________________
-void TGLScene::RenderElements(TGLRnrCtx           & rnrCtx,
-                              DrawElementPtrVec_t & elVec,
-                              Bool_t                check_timeout,
-                              const TGLPlaneSet_t * clipPlanes)
+void TGLScene::RenderElements(TGLRnrCtx&           rnrCtx,
+                              DrawElementPtrVec_t& elVec,
+                              Bool_t               check_timeout,
+                              const TGLPlaneSet_t* clipPlanes)
 {
    // Render DrawElements in elementVec with given timeout.
    // If clipPlanes is non-zero, test each element against its
@@ -926,7 +927,7 @@ void TGLScene::CalcBoundingBox() const
 /**************************************************************************/
 
 //______________________________________________________________________________
-void TGLScene::AdoptLogical(TGLLogicalShape & shape)
+void TGLScene::AdoptLogical(TGLLogicalShape& shape)
 {
    // Adopt dynamically created logical 'shape' - add to internal map
    // and take responsibility for deleting.
@@ -1140,7 +1141,7 @@ Int_t TGLScene::DestroyPhysicals(Bool_t incModified, const TGLCamera* camera)
 }
 
 //______________________________________________________________________________
-TGLPhysicalShape * TGLScene::FindPhysical(UInt_t phid) const
+TGLPhysicalShape* TGLScene::FindPhysical(UInt_t phid) const
 {
    // Find and return physical shape identified by unqiue 'ID'.
    // Returns 0 if not found.
