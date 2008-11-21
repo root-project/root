@@ -2747,7 +2747,7 @@ else
 	  LDFLAGS="$LDFLAGS -pg"
 	fi
 		if test "x$enable_warn" = "xyes"; then
-	  CFLAGS="$CFLAGS -Wuninitialized -Wwrite-strings -Wcast-qual -Wbad-function-cast -Wpointer-arith -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wnested-externs -Wconversion -Wcomment -Wcast-align -Winline -Wshadow -Wredundant-decls"
+	  CFLAGS="$CFLAGS -Wuninitialized -Wwrite-strings -Wcast-qual -Wbad-function-cast -Wpointer-arith -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wnested-externs -Wconversion -Wcomment -Wcast-align -Wshadow -Wredundant-decls"
 	fi
 	# Find a good install program.  We prefer a C program (faster),
 # so one script is as good as another.  But avoid the broken or
@@ -3248,7 +3248,7 @@ if test "x$enable_gdb" = "xno"; then
 fi
 
 
-MMX_CFLAGS="-mmmx -Winline --param inline-unit-growth=10000 --param large-function-growth=10000"
+MMX_CFLAGS="-mmmx --param inline-unit-growth=10000 --param large-function-growth=10000"
 have_mmx_intrinsics=no
 
 if test "x$enable_mmx_optimization" = "xyes"; then
