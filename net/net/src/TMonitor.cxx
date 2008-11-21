@@ -103,7 +103,7 @@ Bool_t TTimeOutTimer::Notify()
 ClassImp(TMonitor)
 
 //______________________________________________________________________________
-TMonitor::TMonitor(Bool_t mainloop)
+TMonitor::TMonitor(Bool_t mainloop) : TObject() , TQObject()
 {
    // Create a monitor object. If mainloop is true the monitoring will be
    // done in the main event loop.
@@ -114,6 +114,36 @@ TMonitor::TMonitor(Bool_t mainloop)
    fDeActive = new TList;
    fMainLoop = mainloop;
    fInterrupt = kFALSE;
+}
+
+//______________________________________________________________________________
+TMonitor::TMonitor(const TMonitor &m) : TObject() , TQObject() 
+{
+   // Copy constructor
+
+   TSocketHandler *sh = 0;
+   // Active list
+   fActive   = new TList;
+   TIter nxa(m.fActive);
+   while ((sh = (TSocketHandler *)nxa())) {
+      Int_t mask = 0;
+      if (sh->HasReadInterest()) mask |= 0x1;
+      if (sh->HasWriteInterest()) mask |= 0x2;
+      fActive->Add(new TSocketHandler(this, sh->GetSocket(), mask, m.fMainLoop));
+   }
+   // Deactive list
+   fDeActive = new TList;
+   TIter nxd(m.fDeActive);
+   while ((sh = (TSocketHandler *)nxd())) {
+      Int_t mask = 0;
+      if (sh->HasReadInterest()) mask |= 0x1;
+      if (sh->HasWriteInterest()) mask |= 0x2;
+      fDeActive->Add(new TSocketHandler(this, sh->GetSocket(), mask, m.fMainLoop));
+   }
+   // Other members
+   fMainLoop = m.fMainLoop;
+   fInterrupt = m.fInterrupt;
+   fReady = 0;
 }
 
 //______________________________________________________________________________

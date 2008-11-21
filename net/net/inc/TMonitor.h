@@ -59,6 +59,7 @@ public:
    enum EInterest { kRead = 1, kWrite = 2 };
 
    TMonitor(Bool_t mainloop = kTRUE);
+   TMonitor(const TMonitor &m);
    virtual ~TMonitor();
 
    virtual void Add(TSocket *sock, Int_t interest = kRead);
