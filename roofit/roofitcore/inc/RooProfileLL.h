@@ -32,8 +32,14 @@ public:
   Bool_t alwaysStartFromMin() const { return _startFromMin ; }
 
   RooAbsReal& nll() { return (RooAbsReal&) _nll.arg() ; }
+  const RooArgSet& bestFitParams() const ;
+
+  virtual RooAbsReal* createProfile(const RooArgSet& paramsOfInterest) ;
+
 
 protected:
+
+  void validateAbsMin() const ;
 
   RooRealProxy _nll ;    // Input -log(L) function
   RooSetProxy _obs ;     // Parameters of profile likelihood

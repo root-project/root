@@ -481,6 +481,7 @@ void RooMinuit::setNoWarn()
 
   Double_t arg(0) ;
   _theFitter->ExecuteCommand("SET NOWARNINGS",&arg,1);
+  _warnLevel = -1 ;
 }
 
 
@@ -489,6 +490,11 @@ void RooMinuit::setNoWarn()
 Int_t RooMinuit::setWarnLevel(Int_t newLevel) 
 {
   // Set MINUIT warning level to given level
+
+  if (newLevel==_warnLevel) {
+    return _warnLevel ;
+  }
+
   Int_t ret = _warnLevel ;
   Double_t arg(newLevel) ;
 

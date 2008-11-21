@@ -74,7 +74,6 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *tit
 					       const RooArgSet& projDeps, const char* rangeName, const char* addCoefRangeName,
 					       Int_t nCPU, Bool_t interleave, Bool_t verbose, Bool_t splitCutRange) : 
   RooAbsTestStatistic(name,title,real,data,projDeps,rangeName, addCoefRangeName, nCPU, interleave, verbose, splitCutRange),
-  _blah("blah","blah",this,kFALSE,kFALSE),
   _projDeps(0)
 {
   // Constructor taking function (real), a dataset (data), a set of projected observables (projSet). If 
@@ -298,8 +297,7 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *tit
 
 //_____________________________________________________________________________
 RooAbsOptTestStatistic::RooAbsOptTestStatistic(const RooAbsOptTestStatistic& other, const char* name) : 
-  RooAbsTestStatistic(other,name),
-  _blah("blah","blah",this,kFALSE,kFALSE)
+  RooAbsTestStatistic(other,name)
 {
   // Copy constructor
 
@@ -329,8 +327,6 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const RooAbsOptTestStatistic& oth
 
   // Explicit attach function clone to current parameter instances
   _funcClone->recursiveRedirectServers(_paramSet) ;
-
-  //_blah.add(*_funcClone) ;
 
   _normSet = (RooArgSet*) other._normSet->snapshot() ;
   

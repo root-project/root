@@ -13,10 +13,10 @@
 //
 // BEGIN_HTML
 // Class RooProfileLL implements the profile likelihood estimator for
-// a given likelihood and set of observables. The value return by 
-// RooProfileLL is the input likelihood nll minimized w.r.t all parameters
-// except for those listed in the constructor subtracted by the input -log(likelihood)
-// minimized w.r.t. all parameters. Note that this function is slow to evaluate
+// a given likelihood and set of parameters of interest. The value return by 
+// RooProfileLL is the input likelihood nll minimized w.r.t all nuisance parameters
+// (which are all parameters except for those listed in the constructor) minus
+// the -log(L) of the best fit. Note that this function is slow to evaluate
 // as a MIGRAD minimization step is executed for each function evaluation
 // END_HTML
 //
@@ -40,9 +40,9 @@ ClassImp(RooProfileLL)
 RooProfileLL::RooProfileLL(const char *name, const char *title, 
 			   RooAbsReal& nllIn, const RooArgSet& observables) :
   RooAbsReal(name,title), 
-  _nll("nll","-log(L) function",this,nllIn),
-  _obs("obs","observables",this),
-  _par("par","parameters",this,kFALSE,kFALSE),
+  _nll("input","-log(L) function",this,nllIn),
+  _obs("paramOfInterest","Parameters of interest",this),
+  _par("nuisanceParam","Nuisance parameters",this,kFALSE,kFALSE),
   _startFromMin(kTRUE),
   _minuit(0),
   _absMinValid(kFALSE),
@@ -105,6 +105,30 @@ RooProfileLL::~RooProfileLL()
 
 
 
+
+//_____________________________________________________________________________
+const RooArgSet& RooProfileLL::bestFitParams() const 
+{
+  validateAbsMin() ;
+  return _paramAbsMin ;
+}
+
+
+
+
+//_____________________________________________________________________________
+RooAbsReal* RooProfileLL::createProfile(const RooArgSet& paramsOfInterest) 
+{
+  // Optimized implementation of createProfile for profile likelihoods.
+  // Return profile of original function in terms of stated parameters 
+  // of interest rather than profiling recursively.
+
+  return nll().createProfile(paramsOfInterest) ;
+}
+
+
+
+
 //_____________________________________________________________________________
 Double_t RooProfileLL::evaluate() const 
 { 
@@ -121,6 +145,46 @@ Double_t RooProfileLL::evaluate() const
     // _minuit->setVerbose(0) ;
   }
 
+  // Save current value of observables
+  RooArgSet* obsSetOrig = (RooArgSet*) _obs.snapshot() ;
+
+  validateAbsMin() ;
+
+  
+  // Set all observables constant in the minimization
+  const_cast<RooSetProxy&>(_obs).setAttribAll("Constant",kTRUE) ;  
+  ccoutP(Eval) << "." ; ccoutP(Eval).flush() ;
+
+  // If requested set initial parameters to those corresponding to absolute minimum
+  if (_startFromMin) {
+    const_cast<RooProfileLL&>(*this)._par = _paramAbsMin ;
+  }
+
+  _minuit->migrad() ;
+
+  // Restore original values and constant status of observables
+  TIterator* iter = obsSetOrig->createIterator() ;
+  RooRealVar* var ;
+  while((var=(RooRealVar*)iter->Next())) {
+    RooRealVar* target = (RooRealVar*) _obs.find(var->GetName()) ;
+    target->setVal(var->getVal()) ;
+    target->setConstant(var->isConstant()) ;
+  }
+  delete iter ;
+  delete obsSetOrig ;
+
+  return _nll - _absMin ; 
+} 
+
+
+
+//_____________________________________________________________________________
+void RooProfileLL::validateAbsMin() const 
+{
+  // Check that parameters and likelihood value for 'best fit' are still valid. If not,
+  // because the best fit has never been calculated, or because constant parameters have
+  // changed value or parameters have changed const/float status, the minimum is recalculated
+
   // Check if constant status of any of the parameters have changed
   if (_absMinValid) {
     _piter->Reset() ;
@@ -136,8 +200,6 @@ Double_t RooProfileLL::evaluate() const
     }
   }
 
-  // Save current value of observables
-  RooArgSet* obsSetOrig = (RooArgSet*) _obs.snapshot() ;
 
   // If we don't have the absolute minimum w.r.t all observables, calculate that first
   if (!_absMinValid) {
@@ -178,31 +240,4 @@ Double_t RooProfileLL::evaluate() const
     }
 
   }
-  
-  // Set all observables constant in the minimization
-  const_cast<RooSetProxy&>(_obs).setAttribAll("Constant",kTRUE) ;  
-  ccoutP(Eval) << "." ; ccoutP(Eval).flush() ;
-
-  // If requested set initial parameters to those corresponding to absolute minimum
-  if (_startFromMin) {
-    const_cast<RooProfileLL&>(*this)._par = _paramAbsMin ;
-  }
-
-  _minuit->migrad() ;
-
-  // Restore original values and constant status of observables
-  TIterator* iter = obsSetOrig->createIterator() ;
-  RooRealVar* var ;
-  while((var=(RooRealVar*)iter->Next())) {
-    RooRealVar* target = (RooRealVar*) _obs.find(var->GetName()) ;
-    target->setVal(var->getVal()) ;
-    target->setConstant(var->isConstant()) ;
-  }
-  delete iter ;
-  delete obsSetOrig ;
-
-  return _nll - _absMin ; 
-} 
-
-
-
+}

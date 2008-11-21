@@ -61,6 +61,7 @@
 #include "RooNumRunningInt.h"
 #include "RooGlobalFunc.h"
 #include "RooParamBinning.h"
+#include "RooProfileLL.h"
 
 #include "Riostream.h"
 
@@ -383,6 +384,39 @@ Bool_t RooAbsReal::isValidReal(Double_t /*value*/, Bool_t /*printError*/) const
 
   return kTRUE ;
 }
+
+
+
+
+//_____________________________________________________________________________
+RooAbsReal* RooAbsReal::createProfile(const RooArgSet& paramsOfInterest) 
+{
+  // Create a RooProfileLL object that eliminates all nuisance parameters in the
+  // present function. The nuisance parameters are defined as all parameters
+  // of the function except the stated paramsOfInterest
+
+  // Construct name of profile object
+  TString name(Form("%s_Profile[",GetName())) ;
+  TIterator* iter = paramsOfInterest.createIterator() ;
+  RooAbsArg* arg ;
+  Bool_t first(kTRUE) ;
+  while((arg=(RooAbsArg*)iter->Next())) {
+    if (first) {
+      first=kFALSE ;
+    } else {
+      name.Append(",") ;
+    }
+    name.Append(arg->GetName()) ;
+  }
+  delete iter ;
+  name.Append("]") ;
+  
+  // Create and return profile object
+  return new RooProfileLL(name.Data(),Form("Profile of %s",GetTitle()),*this,paramsOfInterest) ;
+}
+       
+
+
 
 
 

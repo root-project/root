@@ -92,6 +92,9 @@ public:
     _forceNumInt = flag ; 
   }
 
+  virtual RooAbsReal* createProfile(const RooArgSet& paramsOfInterest) ;
+
+
   RooAbsReal* createIntegral(const RooArgSet& iset, const RooCmdArg arg1, const RooCmdArg arg2=RooCmdArg::none(),
                              const RooCmdArg arg3=RooCmdArg::none(), const RooCmdArg arg4=RooCmdArg::none(), 
 			     const RooCmdArg arg5=RooCmdArg::none(), const RooCmdArg arg6=RooCmdArg::none(), 
