@@ -119,6 +119,7 @@ enum ERootCanvasCommands {
 
    kInspectRoot,
    kClassesTree,
+   kFitPanel,
    kToolsBrowser,
    kToolsBuilder,
    kToolsRecorder,
@@ -433,6 +434,7 @@ void TRootCanvas::CreateCanvas(const char *name)
    fToolsMenu = new TGPopupMenu(fClient->GetDefaultRoot());
    fToolsMenu->AddEntry("&Inspect ROOT",   kInspectRoot);
    fToolsMenu->AddEntry("&Class Tree",     kClassesTree);
+   fToolsMenu->AddEntry("&Fit Panel",      kFitPanel);
    fToolsMenu->AddEntry("&Start Browser",  kToolsBrowser);
    fToolsMenu->AddEntry("&Gui Builder",    kToolsBuilder);
    fToolsMenu->AddEntry("&Event Recorder", kToolsRecorder);
@@ -1089,6 +1091,19 @@ again:
                         }
                         new TClassTree(cdef,"TObject");
                         fCanvas->Update();
+                     }
+                     break;
+
+               case kFitPanel:
+                     {
+                        // use plugin manager to create instance of TFitEditor
+                        TPluginHandler *handler = gROOT->GetPluginManager()->FindHandler("TFitEditor");
+                        if (handler && handler->LoadPlugin() != -1) {
+                           if (handler->ExecPlugin(2, this, 0) == 0)
+                              Error("FitPanel", "Unable to crate the FitPanel");
+                        }
+                        else
+                           Error("FitPanel", "Unable to find the FitPanel plug-in");
                      }
                      break;
 
