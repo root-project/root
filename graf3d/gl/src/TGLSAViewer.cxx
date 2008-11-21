@@ -251,7 +251,6 @@ TGLSAViewer::~TGLSAViewer()
    delete fFileSaveMenu;
    delete fFileMenu;
    delete fFrame;
-   delete fMenuBar;
    fGLWidget = 0;
 }
 
