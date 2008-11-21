@@ -4,7 +4,6 @@
 #include "TBufferFile.h"
 
 #include <vector>
-class PlexCalib;
 
 class PlexItem {
 public:
