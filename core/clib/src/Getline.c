@@ -1356,11 +1356,11 @@ hist_init()
 {
     int i;
 
-    if (hist_buf != 0) 
+    if (hist_buf != 0)
        return;
 
     i = num_hist_size;
-    if (i == 0) 
+    if (i == 0)
        i = 1;
     hist_buf = malloc(i * sizeof(char*));
     hist_buf[0] = "";
@@ -1420,7 +1420,7 @@ Gl_histadd(char *buf)
     char *p = buf;
     int len;
 
-    if (num_hist_size == 0)
+    if (num_hist_size == 0 || hist_buf == 0)
        return;
 
     while (*p == ' ' || *p == '\t' || *p == '\n')
@@ -1496,7 +1496,7 @@ hist_prev()
 {
     char *p = 0;
     int   next;
-    
+
     if (num_hist_size > 0) {
        next = (hist_pos - 1 + num_hist_size) % num_hist_size;
 
