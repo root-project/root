@@ -242,8 +242,10 @@ bool TMinuitMinimizer::SetFixedVariable(unsigned int ivar, const std::string & n
       std::cerr << "TMinuitMinimizer: ERROR : invalid TMinuit pointer. Set function first " << std::endl;
    }
 
-
-   fMinuit->DefineParameter(ivar, name.c_str(), val, 0., val, val ); 
+   // put an arbitrary step (0.1) otherwise TMinuit consider the parameter as constant
+   // constant parameters are treated differently (they are ignored inside TMinuit and not considered in the
+   // total list of parameters) 
+   fMinuit->DefineParameter(ivar, name.c_str(), val, 0.1, 0., 0. ); 
    fMinuit->FixParameter(ivar);
    return true; 
 }
