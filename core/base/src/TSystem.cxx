@@ -2968,6 +2968,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    if (result) {
       TString linkedlibs = GetLibraries("", "S");
       TString libtoload;
+      TString all_libtoload;
       ifstream liblist(mapfileout);
 
       ofstream libmapfile;
@@ -2981,9 +2982,24 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
          if (libtoload != library && libtoload != libname && libtoload != libname_ext) {
             gROOT->LoadClass("", libtoload);
             if (produceRootmap) {
-               if (!linkedlibs.Contains(libtoload))
+               if (!linkedlibs.Contains(libtoload)) {
                   libmapfile << " " << libtoload;
+                  all_libtoload.Append(" ").Append(libtoload);
+               }
             }
+         }
+         char c = liblist.peek();
+         if (c=='\n' || c=='\r') {
+            break;
+         }
+      }
+      if (produceRootmap) {
+         TString clname;
+         while ( liblist >> clname ) {
+            clname.ReplaceAll(":","@");
+            clname.ReplaceAll(" ","_");
+            libmapfile << endl;
+            libmapfile << "Library." << clname << ": " << libname << " " << all_libtoload;
          }
       }
 

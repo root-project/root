@@ -56,7 +56,9 @@
 // read the content of xxx.in for a list of rootmap files (see          //
 // rlibmap). Rootcint will read these files and use them to deduce a    //
 // list of libraries that are needed to properly link and load this     //
-// dictionary. This list of libraries is saved in the file xxx.out.     //
+// dictionary. This list of libraries is saved in the first line of the //
+// file xxx.out; the remaining lines contains the list of classes for   //
+// which this run of rootcint produced a dictionary.                    //
 // This feature is used by ACliC (the automatic library generator).     //
 // The verbose flags have the following meaning:                        //
 //      -v   Display all messages                                       //
@@ -5403,7 +5405,16 @@ int main(int argc, char **argv)
       if (!outputfile) {
          Error(0,"%s: Unable to open output lib file %s\n",
                argv[0], liblist_filename.c_str());
-      } else outputfile << gLibsNeeded << endl;
+      } else {
+         outputfile << gLibsNeeded << endl;
+         G__ClassInfo clFile;
+         clFile.Init();
+         while (clFile.Next()) {
+            if (clFile.Linkage() == G__CPPLINK) {
+               outputfile << clFile.Fullname() << endl;
+            }
+         }
+      }
    }
 
    G__setglobalcomp(-1);  // G__CPPLINK
