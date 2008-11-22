@@ -25,7 +25,7 @@ inheritTest.log: runInherit.C inherit_C.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l runInherit.C > inheritTest.log 2>&1
 
 inheritTest: inheritTest.log
-	$(CMDECHO) diff -ubw inheritTest.log inheritTest.ref
+	$(CMDECHO) diff -ubw inheritTest.ref inheritTest.log
 
 header_h.$(DllSuf): header.h buildHeader.C
 
