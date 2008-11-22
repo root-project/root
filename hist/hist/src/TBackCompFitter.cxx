@@ -61,8 +61,6 @@ TBackCompFitter::TBackCompFitter(ROOT::Fit::Fitter & fitter,ROOT::Fit::FitData *
    // will create a dummy fitter copying configuration and parameter settings
    fFitter = fitter; 
    SetName("LastFitter");
-   // set in case of minuit the fcn
-   printf(" fitoption %d \n",GetFitOption().User );
 
 }
 
