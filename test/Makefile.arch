@@ -539,9 +539,11 @@ ExeSuf        = .exe
 CXX           = g++
 CXXFLAGS      = $(OPT) -pipe -Wall -Woverloaded-virtual -I/usr/X11R6/include
 LD            = g++
-LDFLAGS       = $(OPT) -Wl,--enable-auto-import -Wl,--enable-runtime-pseudo-reloc \
+LDFLAGS       = $(OPT) -Wl,--enable-auto-import \
+                -Wl,--enable-runtime-pseudo-reloc \
 		-L/usr/X11R6/lib
-SOFLAGS       = -shared -D_DLL -Wl,--export-all-symbols
+SOFLAGS       = -shared -D_DLL -Wl,--enable-auto-image-base \
+                -Wl,--export-all-symbols
 EXPLLINKLIBS  = $(ROOTLIBS) $(ROOTGLIBS)
 endif
 

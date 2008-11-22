@@ -36,7 +36,8 @@ LDFLAGS       = $(OPT) -Wl,--enable-auto-import \
                 -Wl,--enable-runtime-pseudo-reloc \
                 -L/usr/X11R6/lib \
                 $(EXTRA_LDFLAGS)
-SOFLAGS       = -shared -Wl,--export-all-symbols -Wl,-soname=
+SOFLAGS       = -shared -Wl,--export-all-symbols -Wl,--enable-auto-image-base \
+                -Wl,-soname=
 # that's what cygwin ld looks for when searching for shared libs
 SOEXT         = dll
 EXEEXT        = .exe

@@ -3674,7 +3674,7 @@ void *TUnixSystem::UnixOpendir(const char *dir)
    return (void*) opendir(edir);
 }
 
-#if defined(_POSIX_SOURCE) || defined(__CYGWIN__)
+#if defined(_POSIX_SOURCE)
 // Posix does not require that the d_ino field be present, and some
 // systems do not provide it.
 #   define REAL_DIR_ENTRY(dp) 1
