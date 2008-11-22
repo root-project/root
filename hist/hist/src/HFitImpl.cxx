@@ -317,6 +317,8 @@ int HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const ROOT::Math
          // for interpreted FCN functions
          if (lastFitter->GetMethodCall() ) bcfitter->SetMethodCall(lastFitter->GetMethodCall() );
       }
+      // in case of TMinuit recreate minimizer for printing results and correct use of gMinuit 
+      if (fitter->Config().MinimizerType() == "Minuit") bcfitter->ReCreateMinimizer(); 
          
       if (lastFitter) delete lastFitter; 
       TVirtualFitter::SetFitter( bcfitter ); 

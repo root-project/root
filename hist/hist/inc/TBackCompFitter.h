@@ -90,6 +90,9 @@ public:
 
    // set FCN using new interface
    virtual void SetObjFunction(  ROOT::Math::IMultiGenFunction * f);
+
+   // recreate minimizer and FCN for TMinuit fits and standard printout 
+   void ReCreateMinimizer();
    
 
 protected: 
@@ -100,7 +103,6 @@ protected:
   
    void DoSetDimension(); 
    
-   void SetMinimizerFunction(const ROOT::Fit::FitData * data);
    
 private:
 
