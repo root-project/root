@@ -198,7 +198,7 @@ Int_t TProofLite::Init(const char *, const char *conffile,
       Warning("Init", "problems initializing the dataset manager");
 
    // Status of cluster
-   fIdle = kTRUE;
+   fNotIdle = 0;
 
    // Query type
    fSync = kTRUE;
@@ -855,6 +855,35 @@ TList *TProofLite::GetDataSet(const char *name)
 }
 
 //______________________________________________________________________________
+Long64_t TProofLite::DrawSelect(TDSet *dset, const char *varexp,
+                                const char *selection, Option_t *option,
+                                Long64_t nentries, Long64_t first)
+{
+   // Execute the specified drawing action on a data set (TDSet).
+   // Event- or Entry-lists should be set in the data set object using
+   // TDSet::SetEntryList.
+   // Returns -1 in case of error or number of selected events otherwise.
+
+   if (!IsValid()) return -1;
+
+   // Make sure that asynchronous processing is not active
+   if (!IsIdle()) {
+      Info("DrawSelect","not idle, asynchronous Draw not supported");
+      return -1;
+   }
+   TString opt(option);
+   Int_t idx = opt.Index("ASYN", 0, TString::kIgnoreCase);
+   if (idx != kNPOS)
+      opt.Replace(idx,4,"");
+
+   // Prepare the description string
+   TString q;
+   q.Form("draw|%s|%s", varexp, selection);
+
+   return Process(dset, q.Data(), opt, nentries, first);
+}
+
+//______________________________________________________________________________
 Long64_t TProofLite::Process(TDSet *dset, const char *selector, Option_t *option,
                              Long64_t nentries, Long64_t first)
 {
@@ -866,10 +895,24 @@ Long64_t TProofLite::Process(TDSet *dset, const char *selector, Option_t *option
 
    // For the time being cannot accept other queries if not idle, even if in async
    // mode; needs to set up an event handler to manage that
+
+   // Resolve query mode
+   fSync = (GetQueryMode(option) == kSync);
+   if (!fSync) {
+      Info("Process","asynchronous mode not yet supported in PROOF-Lite");
+      return -1;
+   }
+
    if (!IsIdle()) {
       // Notify submission
       Info("Process", "not idle: cannot accept queries");
       return -1;
+   }
+
+   // Cleanup old temporary datasets
+   if (IsIdle() && fRunningDSets && fRunningDSets->GetSize() > 0) {
+      fRunningDSets->SetOwner(kTRUE);
+      fRunningDSets->Delete();
    }
 
    if (!IsValid() || !fQMgr) {
@@ -893,10 +936,35 @@ Long64_t TProofLite::Process(TDSet *dset, const char *selector, Option_t *option
          Error("Process", "from AssertDataSet: %s", emsg.Data());
          return -1;
       }
+      if (dset->GetListOfElements()->GetSize() == 0) {
+         Error("Process", "no files to process!");
+         return -1;
+      }
+   }
+
+   TString selec(selector), varexp, selection, objname;
+   // If a draw query, extract the relevant info
+   if (selec.BeginsWith("draw|")) {
+      TString ss(selector), s;
+      Ssiz_t from = 0;
+      ss.Tokenize(s, from, "|");
+      // The expression is mandatory
+      if (!ss.Tokenize(varexp, from, "|")) {
+         Error("Process", "draw query: badly formed expression: %s", selector);
+         return -1;
+      }
+      // Check if a section is present
+      ss.Tokenize(selection, from, "|");
+      // Decode not the expression
+      if (fPlayer->GetDrawArgs(varexp, selection, option, selec, objname) != 0) {
+         Error("Process", "draw query: error parsing arguments %s, %s, %s",
+                          varexp.Data(), selection.Data(), option);
+         return -1;
+      }
    }
 
    // Create instance of query results (the data set is added after Process)
-   TProofQueryResult *pq = MakeQueryResult(nentries, option, first, 0, selector);
+   TProofQueryResult *pq = MakeQueryResult(nentries, option, first, 0, selec);
 
    // If not a draw action add the query to the main list
    if (!(pq->IsDraw())) {
@@ -917,17 +985,16 @@ Long64_t TProofLite::Process(TDSet *dset, const char *selector, Option_t *option
    else
       fQMgr->IncrementDrawQueries();
 
-
    // Start or reset the progress dialog
    if (!gROOT->IsBatch()) {
       Int_t dsz = dset->GetListOfElements()->GetSize();
       if (fProgressDialog && !TestBit(kUsingSessionGui)) {
          if (!fProgressDialogStarted) {
-            fProgressDialog->ExecPlugin(5, this, selector, dsz,
+            fProgressDialog->ExecPlugin(5, this, selec.Data(), dsz,
                                            first, nentries);
             fProgressDialogStarted = kTRUE;
          } else {
-            ResetProgressDialog(selector, dsz, first, nentries);
+            ResetProgressDialog(selec.Data(), dsz, first, nentries);
          }
       }
       ResetBit(kUsingSessionGui);
@@ -952,14 +1019,6 @@ Long64_t TProofLite::Process(TDSet *dset, const char *selector, Option_t *option
    // Set PROOF to running state
    SetRunStatus(TProof::kRunning);
 
-   // Resolve query mode
-   fSync = (GetQueryMode(option) == kSync);
-
-   if (fSync && !IsIdle()) {
-      Info("Process","not idle, cannot submit synchronous query");
-      return -1;
-   }
-
    // deactivate the default application interrupt handler
    // ctrl-c's will be forwarded to PROOF to stop the processing
    TSignalHandler *sh = 0;
@@ -976,7 +1035,12 @@ Long64_t TProofLite::Process(TDSet *dset, const char *selector, Option_t *option
       SetupWorkers(1, startedWorkers);
    }
 
-   Long64_t rv = fPlayer->Process(dset, selector, option, nentries, first);
+   Long64_t rv = 0;
+   if (!(pq->IsDraw())) {
+      rv = fPlayer->Process(dset, selec, option, nentries, first);
+   } else {
+      rv = fPlayer->DrawSelect(dset, varexp, selection, option, nentries, first);
+   }
 
    if (fSync) {
 
@@ -1140,6 +1204,15 @@ Int_t TProofLite::InitDataSetManager()
          Warning("InitDataSetManager", "default dataset manager plug-in initialization failed");
          SafeDelete(fDataSetManager);
       }
+   }
+
+   if (gDebug > 0 && fDataSetManager) {
+      Info("InitDataSetManager", "datasetmgr Cq: %d, Ar: %d, Av: %d, As: %d, Sb: %d",
+            fDataSetManager->TestBit(TProofDataSetManager::kCheckQuota),
+            fDataSetManager->TestBit(TProofDataSetManager::kAllowRegister),
+            fDataSetManager->TestBit(TProofDataSetManager::kAllowVerify),
+            fDataSetManager->TestBit(TProofDataSetManager::kAllowStaging),
+            fDataSetManager->TestBit(TProofDataSetManager::kIsSandbox));
    }
 
    // Done
@@ -1463,3 +1536,60 @@ void TProofLite::SendInputDataFile()
       AddInput(new TNamed("PROOF_InputDataFile", Form("%s", gSystem->BaseName(dataFile))));
    }
 }
+
+//______________________________________________________________________________
+Int_t TProofLite::Remove(const char *ref, Bool_t all)
+{
+   // Handle remove request.
+
+   PDB(kGlobal, 1)
+      Info("Remove", "Enter: %s, %d", ref, all);
+
+   if (all) {
+      // Remove also local copies, if any
+      if (fPlayer)
+         fPlayer->RemoveQueryResult(ref);
+   }
+
+   TString queryref(ref);
+
+   if (queryref == "cleanupdir") {
+
+      // Cleanup previous sessions results
+      Int_t nd = (fQMgr) ? fQMgr->CleanupQueriesDir() : -1;
+
+      // Notify
+      Info("Remove", "%d directories removed", nd);
+      // We are done
+      return 0;
+   }
+
+
+   if (fQMgr) {
+      TProofLockPath *lck = 0;
+      if (fQMgr->LockSession(queryref, &lck) == 0) {
+
+         // Remove query
+         fQMgr->RemoveQuery(queryref, 0);
+
+         // Unlock and remove the lock file
+         if (lck) {
+            gSystem->Unlink(lck->GetName());
+            SafeDelete(lck);
+         }
+
+         // We are done
+         return 0;
+      }
+   } else {
+      Warning("Remove", "query result manager undefined!");
+   }
+
+   // Notify failure
+   Info("Remove",
+        "query %s could not be removed (unable to lock session)", queryref.Data());
+
+   // Done
+   return -1;
+}
+

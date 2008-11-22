@@ -370,7 +370,8 @@ Long64_t TProofPlayerLite::Process(TDSet *dset, const char *selector_file,
    // Broadcast main message
    PDB(kGlobal,1) Info("Process","Calling Broadcast");
    mesg << set << fn << fInput << opt << num << fst << evl << sync << enl;
-   fProof->Broadcast(mesg);
+   Int_t nb = fProof->Broadcast(mesg);
+   fProof->fNotIdle += nb;
 
    // Redirect logs from master to special log frame
    fProof->fRedirLog = kTRUE;
@@ -404,7 +405,7 @@ Long64_t TProofPlayerLite::Process(TDSet *dset, const char *selector_file,
                                        fPacketizer->GetProcTime());
       StopFeedback();
 
-      if (GetExitStatus() != TProofPlayer::kAborted)
+      if (GetExitStatus() != TProofPlayer::kAborted && !TSelector::IsStandardDraw(fn))
          return Finalize(kFALSE, sync);
       else
          return -1;

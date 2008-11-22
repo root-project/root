@@ -59,6 +59,8 @@ public:
    virtual Long64_t  DrawSelect(TDSet *set, const char *varexp,
                                 const char *selection, Option_t *option = "",
                                 Long64_t nentries = -1, Long64_t firstentry = 0) = 0;
+   virtual Int_t     GetDrawArgs(const char *var, const char *sel, Option_t *opt,
+                                 TString &selector, TString &objname) = 0;
    virtual void      HandleGetTreeHeader(TMessage *mess) = 0;
    virtual void      HandleRecvHisto(TMessage *mess) = 0;
 
