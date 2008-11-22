@@ -33,7 +33,10 @@ MasterDict.C: MyClass.hh MasterLinkDef.hh $(ROOTCINT)
 libmaster.$(DllSuf): MasterDict.o MyClass.o
 	$(LD) $(SOFLAGS) $(LDFLAGS) $^ -o $@
 
-lotsRef.root: lotsRef_C.$(DllSuf) $(ROOTCORELIBS)
+lotsRef_C.$(DllSuf): A_C.$(DllSuf) lotsRef.C create.C
+	$(CMDECHO) root -q -b -l create.C > lotsRef_C.build.log 2>&1 
+
+lotsRef.root: lotsRef_C.$(DllSuf) $(ROOTCORELIBS) 
 	$(CMDECHO) (root -q -b -l 'lotsRef.C+(300)' && root -q -b -l 'lotsRef.C+(2)' && root -q -b -l 'lotsRef.C+(1)' ) > logRef_root.log 2>&1 && \
 	diff -bw logRef_root.ref logRef_root.log
 

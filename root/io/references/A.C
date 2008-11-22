@@ -9,6 +9,3 @@ TRef _o;
 ClassDef(A, 1)
 };
 
-#if defined(__MAKECINT__)
-#pragma link C++ class A+;
-#endif
