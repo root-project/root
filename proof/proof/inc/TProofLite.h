@@ -120,6 +120,9 @@ public:
    Int_t    RemoveDataSet(const char *uri, const char * = 0);
    Int_t    VerifyDataSet(const char *uri, const char * = 0);
 
+   // Browsing
+   TTree *GetTreeHeader(TDSet *tdset);
+
    static Int_t GetNumberOfWorkers(const char *url = 0);
 
    ClassDef(TProofLite,0)  //PROOF control class

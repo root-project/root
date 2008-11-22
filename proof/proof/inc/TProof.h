@@ -828,7 +828,7 @@ public:
 
    void        ResetProgressDialogStatus() { fProgressDialogStarted = kFALSE; }
 
-   TTree      *GetTreeHeader(TDSet *tdset);
+   virtual TTree *GetTreeHeader(TDSet *tdset);
    TList      *GetOutputNames();
 
    void        AddChain(TChain *chain);

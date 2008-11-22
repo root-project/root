@@ -44,6 +44,7 @@
 #include "TServerSocket.h"
 #include "TSlave.h"
 #include "TSortedList.h"
+#include "TTree.h"
 #include "TVirtualProofPlayer.h"
 
 #include "TH3F.h"
@@ -1593,3 +1594,50 @@ Int_t TProofLite::Remove(const char *ref, Bool_t all)
    return -1;
 }
 
+//______________________________________________________________________________
+TTree *TProofLite::GetTreeHeader(TDSet *dset)
+{
+   // Creates a tree header (a tree with nonexisting files) object for
+   // the DataSet.
+
+   TTree *t = 0;
+   if (!dset) {
+      Error("GetTreeHeader", "undefined TDSet");
+      return t;
+   }
+
+   dset->Reset();
+   TDSetElement *e = dset->Next();
+   Long64_t entries = 0;
+   TFile *f = 0;
+   if (!e) {
+      PDB(kGlobal, 1) Info("GetTreeHeader", "empty TDSet");
+   } else {
+      f = TFile::Open(e->GetFileName());
+      t = 0;
+      if (f) {
+         t = (TTree*) f->Get(e->GetObjName());
+         if (t) {
+            t->SetMaxVirtualSize(0);
+            t->DropBaskets();
+            entries = t->GetEntries();
+
+            // compute #entries in all the files
+            while ((e = dset->Next()) != 0) {
+               TFile *f1 = TFile::Open(e->GetFileName());
+               if (f1) {
+                  TTree *t1 = (TTree*) f1->Get(e->GetObjName());
+                  if (t1) {
+                     entries += t1->GetEntries();
+                     delete t1;
+                  }
+                  delete f1;
+               }
+            }
+            t->SetMaxEntryLoop(entries);   // this field will hold the total number of entries ;)
+         }
+      }
+   }
+   // Done
+   return t;
+}
