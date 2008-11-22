@@ -13,9 +13,16 @@ void build(const char *filename,const char *lib = 0, const char *obj = 0) {
       TObjArray *libs = liblist.Tokenize(" ");
       TIter iter(libs);
       TObjString *objstr;
+      TString libstolink(" $ObjectFiles ");
       while ( (objstr=(TObjString*)iter.Next()) ) {
          gSystem->Load(objstr->String());
+         TString libfile( gSystem->GetLibraries(objstr->String(),"DSL",kFALSE));
+         libstolink.Append(libfile);
+         libstolink.Append(" ");
       }
+      TString s = gSystem->GetMakeSharedLib();
+      s.ReplaceAll(" $ObjectFiles",libstolink);
+      gSystem->SetMakeSharedLib(s);
    }
    int result = gSystem->CompileMacro(filename,"kc");
    if (!result) gApplication->Terminate(1);
