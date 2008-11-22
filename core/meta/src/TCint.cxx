@@ -1591,10 +1591,10 @@ Int_t TCint::UnloadLibraryMap(const char *library)
                Error("UnloadLibraryMap", "entry for <%s,%s> not found in library map table", cls.Data(), lib);
                ret = -1;
             }
+            G__set_class_autoloading_table((char*)cls.Data(), (char*)-1);
+            G__security_recover(stderr); // Ignore any error during this setting.
          }
 
-         G__set_class_autoloading_table((char*)cls.Data(), (char*)"");
-         G__security_recover(stderr); // Ignore any error during this setting.
          delete tokens;
       }
    }

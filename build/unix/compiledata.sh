@@ -31,6 +31,8 @@ ARCH=$9
 shift
 ROOTBUILD=$9
 shift
+EXPLICITLINK=$9
+shift
 
 MACOSXTARGET=""
 
@@ -41,7 +43,12 @@ if [ "$LIBDIR" = "$ROOTSYS/lib" ]; then
    LIBDIR=\$ROOTSYS/lib
 fi
 
-EXPLLINKLIBS="\$LinkedLibs"
+if [ "$EXPLICITLINK" = "yes" ]; then
+   EXPLLINKLIBS="\$LinkedLibs"
+else
+   EXPLLINKLIBS="\$DepLibs"
+fi
+
 if [ "$ARCH" = "macosx" ] || [ "$ARCH" = "macosxxlc" ] || \
    [ "$ARCH" = "macosx64" ] || [ "$ARCH" = "macosxicc" ]; then
    macosx_minor=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`

@@ -232,6 +232,13 @@ ACLiC.Linkdef:          _linkdef
 #ACLiC.BuildDir:        /where/I/would/like/my/compiled/scripts
 # Add additional include directives for ACLiC compilations.
 #ACLiC.IncludePaths:     -I/where/the/includes/are
+# Select whether and how ACLiC tracks the dependency of the libraries.
+#  0 - No tracking
+#  1 - [Default] New libraries are explicitly linked to all currently loaded libraries
+#  2 - Generate and use rootmap file for each library
+#  3 - Generate rootmap file for each library _and_ explicitly link to the
+#      needed libraries.
+#ACLiC.LinkLibs:      1
 
 # PROOF related variables
 #

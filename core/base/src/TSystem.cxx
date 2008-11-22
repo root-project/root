@@ -2261,8 +2261,8 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    // directive fMakeExe to do so.
    // For both directives, before passing them to TSystem::Exec, it expands the
    // variables $SourceFiles, $SharedLib, $LibName, $IncludePath, $LinkedLibs,
-   // $ExeName and $ObjectFiles. See SetMakeSharedLib() for more information on
-   // those variables.
+   // $DepLibs, $ExeName and $ObjectFiles. See SetMakeSharedLib() for more 
+   // information on those variables.
    //
    // This method is used to implement the following feature:
    //
@@ -2753,6 +2753,18 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 #else
    Bool_t produceRootmap = kFALSE;
 #endif
+   Bool_t linkDepLibraries = !produceRootmap;
+   if (gEnv) {
+#if (defined(R__MACOSX) && !defined(MAC_OS_X_VERSION_10_5))
+      Int_t linkLibs = gEnv->GetValue("ACLiC.LinkLibs",2);
+#elif defined(R__WIN32)
+      Int_t linkLibs = gEnv->GetValue("ACLiC.LinkLibs",3);
+#else
+      Int_t linkLibs = gEnv->GetValue("ACLiC.LinkLibs",1);
+#endif
+      produceRootmap = linkLibs & 0x2;
+      linkDepLibraries = linkLibs & 0x1;
+   }
 
    if (!recompile) {
       // The library already exist, let's just load it.
@@ -2944,6 +2956,9 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    rcint += mapfile;
    rcint += " -f ";
    rcint.Append(dict).Append(" -c -p ").Append(GetIncludePath()).Append(" ");
+   if (produceRootmap) {
+      rcint.Append("-DR__ACLIC_ROOTMAP ");
+   }
    if (gEnv) {
       TString fromConfig = gEnv->GetValue("ACLiC.IncludePaths","");
       rcint.Append(fromConfig).Append(" ");
@@ -2963,7 +2978,8 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    }
 
    Bool_t result = !dictResult;
-
+   TString depLibraries;
+   
    // ======= Load the library the script might depend on
    if (result) {
       TString linkedlibs = GetLibraries("", "S");
@@ -2980,33 +2996,41 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       while ( liblist >> libtoload ) {
          // Load the needed library except for the library we are currently building!
          if (libtoload != library && libtoload != libname && libtoload != libname_ext) {
-            gROOT->LoadClass("", libtoload);
             if (produceRootmap) {
+               if (loadLib) gROOT->LoadClass("", libtoload);
                if (!linkedlibs.Contains(libtoload)) {
                   libmapfile << " " << libtoload;
                   all_libtoload.Append(" ").Append(libtoload);
+                  depLibraries.Append(" ");
+                  depLibraries.Append(GetLibraries(libtoload,"DSL",kFALSE));
                }
+            } else {
+               gROOT->LoadClass("", libtoload);
             }
          }
-         char c = liblist.peek();
+         unsigned char c = liblist.peek();
          if (c=='\n' || c=='\r') {
+            // Consume the character
+            liblist.get();
             break;
          }
       }
       if (produceRootmap) {
-         TString clname;
-         while ( liblist >> clname ) {
-            clname.ReplaceAll(":","@");
-            clname.ReplaceAll(" ","_");
+
+         std::string clname;
+         while ( std::getline(liblist,clname) ) {
+            std::replace(clname.begin(), clname.end(), ':', '@');
+            std::replace(clname.begin(), clname.end(), ' ', '_');
             libmapfile << endl;
             libmapfile << "Library." << clname << ": " << libname << " " << all_libtoload;
          }
-      }
 
-      if (produceRootmap) {
          libmapfile << endl;
          libmapfile.close();
       }
+//      depLibraries = all_libtoload;
+//      depLibraries.ReplaceAll(" lib"," -l");
+//      depLibraries.ReplaceAll(TString::Format(".%s",fSoExt.Data()),"");
    }
 
    // ======= Calculate the libraries for linking:
@@ -3028,14 +3052,21 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    cmd.ReplaceAll("$ObjectFiles",dictObj);
    cmd.ReplaceAll("$IncludePath",includes);
    cmd.ReplaceAll("$SharedLib",library);
+   if (linkDepLibraries) { 
+      if (produceRootmap) {
+         cmd.ReplaceAll("$DepLibs",depLibraries);
+      } else {
+         cmd.ReplaceAll("$DepLibs",linkLibraries);         
+      }
+   }
    cmd.ReplaceAll("$LinkedLibs",linkLibraries);
    cmd.ReplaceAll("$LibName",libname);
    cmd.ReplaceAll("$BuildDir",build_loc);
-   if (mode==kDebug)
+   if (mode==kDebug) {
       cmd.ReplaceAll("$Opt",fFlagsDebug);
-   else
+   } else {
       cmd.ReplaceAll("$Opt",fFlagsOpt);
-
+   }
 #ifdef WIN32
    R__FixLink(cmd);
 #endif
@@ -3429,6 +3460,7 @@ void TSystem::SetMakeSharedLib(const char *directives)
    //   $BuildDir           Directory where the files will be created
    //   $IncludePath        value of fIncludePath
    //   $LinkedLibs         value of fLinkedLibs
+   //   $DepLibs            libraries on which this library depends on
    //   $ObjectFiles        Name of source files to be compiler with
    //                       their extension changed to .o or .obj
    //   $Opt                location of the optimization/debug options
