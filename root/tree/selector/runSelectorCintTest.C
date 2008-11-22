@@ -1,4 +1,7 @@
 {
+   // Avoid loading the library
+   gInterpreter->UnloadLibraryMap("sel01_C");
+
    gROOT->ProcessLine(".L sel01.C");
    sel01 isel;
    TFile *f = TFile::Open("Event1.root");

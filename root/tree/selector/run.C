@@ -1,4 +1,6 @@
 {
+// Avoid loading the library
+gInterpreter->UnloadLibraryMap("sel_C");
 new TFile("Event1.root");
 tree1 = T1;
 new TFile("Event2.root");
