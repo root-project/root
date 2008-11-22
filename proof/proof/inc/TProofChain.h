@@ -39,7 +39,7 @@ protected:
 
 public:
    TProofChain();
-   TProofChain(TChain *chain);
+   TProofChain(TChain *chain, Bool_t gettreeheader);
    TProofChain(TDSet *dset, Bool_t gettreeheader);
    virtual ~TProofChain();
 

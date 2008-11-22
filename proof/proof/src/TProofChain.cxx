@@ -42,7 +42,7 @@ TProofChain::TProofChain() : TChain()
 }
 
 //______________________________________________________________________________
-TProofChain::TProofChain(TChain *chain) : TChain()
+TProofChain::TProofChain(TChain *chain, Bool_t gettreeheader) : TChain()
 {
    // Crates a new Proof chain proxy containing the files from the TDSet.
 
@@ -51,8 +51,12 @@ TProofChain::TProofChain(TChain *chain) : TChain()
    fSet          = chain ? new TDSet((const TChain &)(*chain)) : 0;
    fDirectory    = gDirectory;
    fDrawFeedback = 0;
-   if (gProof)
+   if (gProof) {
       gProof->AddChain(chain);
+      ConnectProof();
+      if (gettreeheader && fSet)
+         fTree = gProof->GetTreeHeader(fSet);
+   }
 }
 
 //______________________________________________________________________________
@@ -205,12 +209,6 @@ TVirtualTreePlayer *TProofChain::GetPlayer()
    // Forwards the execution to the dummy tree header.
    // See TTree::GetPlayer().
 
-   if (!fTree)
-      if (gProof) {
-         fTree = gProof->GetTreeHeader(fSet);
-         ConnectProof();
-      }
-
    return (fTree ? fTree->GetPlayer() : (TVirtualTreePlayer *)0);
 }
 
@@ -279,7 +277,8 @@ Long64_t TProofChain::GetEntries(const char *)
    // See TTree::GetEntries(const char *selection)
    // Not implemented in TProofChain. Shouldn't be used.
 
-   return Long64_t(-1);
+   Warning("GetEntries", "selection not yet implemented: return total entries");
+   return GetEntries();
 }
 
 //______________________________________________________________________________
