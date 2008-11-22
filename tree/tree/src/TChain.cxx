@@ -2427,8 +2427,8 @@ void TChain::SetProof(Bool_t on, Bool_t refresh, Bool_t gettreeheader)
       TPluginHandler *h;
       if ((h = gROOT->GetPluginManager()->FindHandler("TChain", "proof"))) {
          if (h->LoadPlugin() == -1)
-           return;
-         if (!(fProofChain = reinterpret_cast<TChain *>(h->ExecPlugin(1, this))))
+         return;
+         if (!(fProofChain = reinterpret_cast<TChain *>(h->ExecPlugin(2, this, gettreeheader))))
             Error("SetProof", "creation of TProofChain failed");
          // Set related bits
          SetBit(kProofUptodate);
