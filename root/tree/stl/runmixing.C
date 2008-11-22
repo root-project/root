@@ -9,7 +9,7 @@ namespace std {}; using namespace std;
 #include "MyClass.h"
 #endif
 
-#if defined(__MAKECINT__)
+#if defined(__MAKECINT__) && !defined(R__ACLIC_ROOTMAP)
 #pragma link C++ class MyClass+;
 #endif
 #if defined(__MAKECINT__) && defined(VECTOR_DICT)
