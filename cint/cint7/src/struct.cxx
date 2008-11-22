@@ -1702,15 +1702,30 @@ extern "C" char* G__get_class_autoloading_table(char* classname)
 //______________________________________________________________________________
 extern "C" void G__set_class_autoloading_table(char* classname, char* libname)
 {
-   ::Reflex::Scope tagnum;
+   // Register the class named 'classname' as being available in library
+   // 'libname' (I.e. the implementation or at least the dictionary for 
+   // the class is in the given library.  The class is marked as 
+   // 'autoload' to indicated that we known about it but have not yet
+   // loaded its dictionary.
+   // If libname==-1 then we 'undo' this behavior instead.
+   
+   int ntagnum = G__search_tagname(classname, G__CLASS_AUTOLOAD)
+   if (libname == (void*)-1) {
+      if (G__struct.name[ntagnum][0]) {
+         G__struct.name[ntagnum][0] = '@';
+      }
+      G__Dict::GetDict().GetType( ntagnum ).ToTypeBase()->HideName();
+      G__enable_autoloading = store_enable_autoloading;
+      return;
+   }
+   int store_enable_autoloading = G__enable_autoloading;
    G__enable_autoloading = 0;
-   tagnum = G__Dict::GetDict().GetScope(G__search_tagname(classname, G__CLASS_AUTOLOAD));
+   ::Reflex::Scope tagnum = G__Dict::GetDict().GetScope(ntagnum);
    if (G__struct.libname[G__get_tagnum(tagnum)]) {
       free((void*)G__struct.libname[G__get_tagnum(tagnum)]);
    }
    G__struct.libname[G__get_tagnum(tagnum)] = (char*)malloc(strlen(libname) + 1);
    strcpy(G__struct.libname[G__get_tagnum(tagnum)], libname);
-   G__enable_autoloading = 1;
 
    char *p = 0;
    if ((p = strchr(classname, '<'))) {
@@ -1741,6 +1756,7 @@ extern "C" void G__set_class_autoloading_table(char* classname, char* libname)
       }
       delete [] buf;
    }
+   G__enable_autoloading = store_enable_autoloading;
 }
 
 //______________________________________________________________________________

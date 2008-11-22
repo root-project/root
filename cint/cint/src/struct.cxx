@@ -1417,20 +1417,33 @@ char* G__get_class_autoloading_table(char* classname)
 //______________________________________________________________________________
 void G__set_class_autoloading_table(char* classname, char* libname)
 {
-   // -- FIXME: Describe this function!
+   // Register the class named 'classname' as being available in library
+   // 'libname' (I.e. the implementation or at least the dictionary for 
+   // the class is in the given library.  The class is marked as 
+   // 'autoload' to indicated that we known about it but have not yet
+   // loaded its dictionary.
+   // If libname==-1 then we 'undo' this behavior instead.
+
    int tagnum;
+   int store_enable_autoloading = G__enable_autoloading;
    G__enable_autoloading = 0;
    tagnum = G__search_tagname(classname, G__CLASS_AUTOLOAD);
+   if (libname == (void*)-1) {
+      if (G__struct.name[tagnum][0]) {
+         G__struct.name[tagnum][0] = '@';
+      }
+      G__enable_autoloading = store_enable_autoloading;
+      return;
+   }
    if (G__struct.libname[tagnum]) {
       free((void*)G__struct.libname[tagnum]);
    }
    G__struct.libname[tagnum] = (char*)malloc(strlen(libname) + 1);
    strcpy(G__struct.libname[tagnum], libname);
-   G__enable_autoloading = 1;
    char* p = strchr(classname, '<');
    if (p) {
       // If the class is a template instantiation we need
-      // to also register the template itself so that the
+      // to also register the template itself so that we
       // properly recognize it.
       char* buf = new char[strlen(classname)+1];
       strcpy(buf, classname);
@@ -1457,6 +1470,7 @@ void G__set_class_autoloading_table(char* classname, char* libname)
       delete[] buf;
       buf = 0;
    }
+   G__enable_autoloading = store_enable_autoloading;
 }
 
 //______________________________________________________________________________
