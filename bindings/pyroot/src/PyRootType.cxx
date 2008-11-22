@@ -92,6 +92,8 @@ namespace {
                PyErr_Clear();
             // get class name to look up CINT tag info ... 
                attr = GetRootGlobalFromString( name /*, tag */ );
+               if ( attr )
+                  PyObject_SetAttr( pyclass, pyname, attr );
             }
 
          }
