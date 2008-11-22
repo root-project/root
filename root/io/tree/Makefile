@@ -19,7 +19,7 @@ missingClass: read.out
 	$(CMDECHO) diff -bw read.ref read.out
 
 
-read.out: test.root copy.root
+read.out: test.root copy.root read.C
 	$(CMDECHO) $(CALLROOTEXE) -q -l -b read.C > read.out 2>&1 
 
 testWithFailure:

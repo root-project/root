@@ -1,4 +1,6 @@
 {
+// Make sure we do not autoload the library!
+gInterpreter->UnloadLibraryMap("classes_C");
 
 //TFile *file = new TFile("test.root");
 TFile *file = new TFile("copy.root");
