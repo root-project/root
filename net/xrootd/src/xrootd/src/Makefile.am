@@ -7,7 +7,7 @@
 ##              DE-AC03-76-SFO0515 with the Department of Energy
 ##
 ##
-## Version info: $Id: Makefile.am,v 1.11 2008/05/17 13:34:07 dfeich Exp $
+## Version info: $Id: Makefile.am,v 1.13 2008/10/12 10:25:32 dfeich Exp $
 ## Checked in by $Author: dfeich $
 ################################################################################
 
@@ -28,6 +28,7 @@ endif
 
 if ENABLE_OPENSSL
 XRDSECPWD = XrdSecpwd
+XRDSECSSS = XrdSecsss
 endif
 
 if ENABLE_KRB4
@@ -57,6 +58,7 @@ endif
 if ENABLE_POSIX
 XRDPOSIX = XrdPosix
 XRDPSS = XrdPss
+XRDCNS = XrdCns
 endif
 
 
@@ -72,6 +74,7 @@ SUBDIRS = XrdSys \
           $(XRDSECKRB4) \
           $(XRDSECKRB5) \
           $(XRDSECGSI) \
+          $(XRDSECSSS) \
           XrdSecunix \
           XrdSfs \
           XrdAcc \
@@ -87,6 +90,7 @@ SUBDIRS = XrdSys \
           XrdClient \
           $(XRDPOSIX) \
           $(XRDPSS) \
+          $(XRDCNS) \
           $(XRDMON) \
           $(CASTOR) \
           $(TOKENAUTHZ)

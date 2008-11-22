@@ -175,6 +175,7 @@ char *XrdPosixXrootPath::URL(const char *path, char *buff, int blen)
 
 // Check if this path starts with one or our known paths
 //
+   while(*(path+1) == '/') path++;
    while(xpnow)
         if (!strncmp(path, xpnow->path, xpnow->plen)) break;
            else xpnow = xpnow->next;

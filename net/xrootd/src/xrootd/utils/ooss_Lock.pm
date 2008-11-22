@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 #******************************************************************************
 #                                                                             *
 #                           o o s s _ L o c k . p m                           *
@@ -9,7 +9,7 @@
 #            DE-AC03-76-SFO0515 with the Department of Energy                 *
 #******************************************************************************
 
-#  $Id: ooss_Lock.pm,v 1.5 2006/10/03 01:10:15 abh Exp $
+#  $Id: ooss_Lock.pm,v 1.6 2008/10/14 09:25:01 furano Exp $
 
 # Perform cache lock management. This package of routines is usable by
 # ooss_Stage as well as ooss_CacheMgr.

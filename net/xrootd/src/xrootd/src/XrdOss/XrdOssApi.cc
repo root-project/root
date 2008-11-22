@@ -396,7 +396,7 @@ int XrdOssDir::Opendir(const char *dir_path)
 // Generate remote path
 //
    if (XrdOssSS->rmt_N2N)
-      if ((retc = XrdOssSS->rmt_N2N->lfn2pfn(dir_path, actual_path, sizeof(actual_path))))
+      if ((retc = XrdOssSS->rmt_N2N->lfn2rfn(dir_path, actual_path, sizeof(actual_path))))
          return retc;
          else remote_path = actual_path;
       else remote_path = (char *)dir_path;

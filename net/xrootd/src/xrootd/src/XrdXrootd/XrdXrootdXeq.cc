@@ -1307,7 +1307,7 @@ int XrdXrootdProtocol::do_Qopaque(short qopt)
    XrdOucErrInfo myError(Link->ID);
    XrdSfsFSctl myData;
    const char *opaque, *Act, *AData;
-   int fsctl_cmd, rc, dlen = ntohl(Request.query.dlen);
+   int fsctl_cmd, rc, dlen = Request.query.dlen;
 
 // Process unstructured as well as structured (path/opaque) requests
 //

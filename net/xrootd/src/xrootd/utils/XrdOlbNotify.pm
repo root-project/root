@@ -1,5 +1,5 @@
 #******************************************************************************
-#   $Id: XrdOlbNotify.pm,v 1.3 2005/06/07 05:52:51 abh Exp $
+#   $Id: XrdOlbNotify.pm,v 1.4 2008/10/14 09:24:40 furano Exp $
 #*                                                                            *
 #*                       X r d O l b N o t i f y . p m                        *
 #*                                                                            *
@@ -9,7 +9,8 @@
 #            DE-AC03-76-SFO0515 with the Department of Energy                 *
 #******************************************************************************
   
-#!/usr/local/bin/perl
+#!/usr/bin/env perl
+
 package  XrdOlbNotify;
 require  Exporter;
 @ISA   = qw(Exporter);

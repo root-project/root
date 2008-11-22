@@ -152,9 +152,18 @@ bool XrdClientAbs::Query(kXR_int16 ReqCode, const kXR_char *Args, kXR_char *Resp
    if (ret) {
 
       if (Args) {
-         Info(XrdClientDebug::kHIDEBUG,
-              "XrdClientAdmin::Query",
-              "Query(" << ReqCode << ", '" << Args << "') returned '" << rsp << "'" );
+
+         if (rsp) {
+            Info(XrdClientDebug::kHIDEBUG,
+                 "XrdClientAdmin::Query",
+                 "Query(" << ReqCode << ", '" << Args << "') returned '" << rsp << "'" );
+         }
+         else {
+            Info(XrdClientDebug::kHIDEBUG,
+                 "XrdClientAdmin::Query",
+                 "Query(" << ReqCode << ", '" << Args << "') returned a null string" );
+         }
+
       }
       else {
          Info(XrdClientDebug::kHIDEBUG,
@@ -162,11 +171,13 @@ bool XrdClientAbs::Query(kXR_int16 ReqCode, const kXR_char *Args, kXR_char *Resp
               "Query(" << ReqCode << ", NULL') returned '" << rsp << "'" );
       }
       
-      int l = xrdmin(MaxResplen, LastServerResp()->dlen);
-      strncpy((char *)Resp, (char *)rsp, l);
-      if (l >= 0) Resp[l-1] = '\0';
-      free(rsp);
-      rsp = 0;
+      if ( rsp && (LastServerResp()->status == kXR_ok) ) {
+         int l = xrdmin(MaxResplen, LastServerResp()->dlen);
+         strncpy((char *)Resp, (char *)rsp, l);
+         if (l >= 0) Resp[l-1] = '\0';
+         free(rsp);
+         rsp = 0;
+      }
    }
 
    return ret;

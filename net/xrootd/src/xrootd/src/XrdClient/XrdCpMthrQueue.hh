@@ -24,7 +24,7 @@ struct XrdCpMessage {
 
 // The max allowed size for this queue
 // If this value is reached, then the writer has to wait...
-#define CPMTQ_BUFFSIZE            2000000
+#define CPMTQ_BUFFSIZE            50000000
 
 class XrdCpMthrQueue {
  private:

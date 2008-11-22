@@ -13,8 +13,8 @@ BUILDDIR=`pwd`/autotools-build
 INSTALLDIR=`pwd`/install
 
 VAUTOCONF=2.60
-VAUTOMAKE=1.10
-VLIBTOOL=1.5.22
+VAUTOMAKE=1.10.1
+VLIBTOOL=1.5.26
 
 WGETSRC="http://ftp.gnu.org/gnu/"
 
@@ -186,7 +186,7 @@ INSTALLATION SETTINGS:
        build directory   : $BUILDDIR
        install directory : $INSTALLDIR
 
-Is this ok?   (Y/n)
+Is this ok?   (n/Y)
 EOF
     read a
     if test x"$a" != xy -a x"$a" != xY; then

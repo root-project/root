@@ -4,19 +4,34 @@
 ##
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id: Makefile.am,v 1.10 2008/03/18 23:16:49 dfeich Exp $
+## Version info: $Id: Makefile.am,v 1.11 2008/10/12 10:25:46 dfeich Exp $
 ## Checked in by $Author: dfeich $
 #######################################################################
 
-lib_LTLIBRARIES = libXrdPosix.la libXrdPosixPreload.la
+# TODO: solve libXrdPosixPreload build problem. The classic build "solves" the
+#       multiply defined symbol problems between XrdPosixPreload.cc and
+#       XrdPosixPreload32.cc by compiling the latter with -fPIC, so compiler
+#       behavior somehow deals with the symbol clash. This is surely a source
+#       of portability problems. I do not yet know hot to best solve it here
 
+# preprocessor flags
+AM_CPPFLAGS = -I$(top_srcdir)/src
+
+#############################################################################
+## extra directory definitions for install area
 # N.B.: XrdPosixXrootd.hh includes XrdSysPthread.hh!
 xrootdposixincdir = $(includedir)/xrootd/XrdPosix
 xrootdposixinc_HEADERS = XrdPosixXrootd.hh XrdPosixOsDep.hh XrdPosixLinkage.hh \
                         XrdPosix.hh XrdPosixExtern.hh
 
+#############################################################################
+## deliverables
 
-INCLUDES = -I$(top_srcdir)/src
+lib_LTLIBRARIES = libXrdPosix.la
+#lib_LTLIBRARIES = libXrdPosix.la libXrdPosixPreload.la
+
+#############################################################################
+## Build rules
 
 libXrdPosix_la_SOURCES = \
         XrdPosix.cc  \
@@ -30,15 +45,14 @@ libXrdPosix_la_LIBADD = ../XrdClient/libXrdClient.la \
                         ../XrdSys/libXrdSys.la
 
 libXrdPosixPreload_la_SOURCES = \
+         XrdPosixPreload32.cc \
          XrdPosixPreload.cc  \
-         XrdPosixPreload32.cc  \
          XrdPosixLinkage.cc \
          XrdPosixXrootd.cc \
          XrdPosix.cc
 
-# TODO: What to do with XrdPosixPreload32.cc?
-
-libXrdPosixPreload_la_LIBADD = ../XrdClient/libXrdClient.la \
+libXrdPosixPreload_la_LIBADD = \
+                         ../XrdClient/libXrdClient.la \
                          ../XrdNet/libXrdNet.la \
                          ../XrdOuc/libXrdOuc.la \
                          ../XrdSec/libXrdSec.la \

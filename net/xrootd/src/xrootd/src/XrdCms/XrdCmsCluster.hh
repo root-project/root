@@ -17,6 +17,7 @@
 #include <strings.h>
   
 #include "XrdCms/XrdCmsTypes.hh"
+#include "XrdOuc/XrdOucTList.hh"
 #include "XrdSys/XrdSysPthread.hh"
 
 class XrdLink;
@@ -102,6 +103,10 @@ SMask_t         Broadcast(SMask_t smask, XrdCms::CmsRRHdr &Hdr,
 //
 SMask_t         getMask(unsigned int IPv4adr);
 
+// Returns the node mask matching the given cluster ID
+//
+SMask_t         getMask(const char *Cid);
+
 // Extracts out node information. Opts are one or more of CmsLSOpts
 //
 enum            CmsLSOpts {LS_Best = 0x0001, LS_All  = 0x0002,
@@ -148,6 +153,7 @@ int             Stats(char *bfr, int bln);
                ~XrdCmsCluster() {} // This object should never be deleted
 
 private:
+int         Assign(const char *Cid);
 XrdCmsNode *calcDelay(int nump, int numd, int numf, int numo,
                       int nums, int &delay, const char **reason);
 int         Drop(int sent, int sinst, XrdCmsDrop *djp=0);
@@ -164,6 +170,9 @@ void        setAltMan(int snum, unsigned int ipaddr, int port);
 
 
 static const  int AltSize = 24; // Number of IP:Port characters per entry
+
+XrdSysMutex   cidMutex;         // Protects to cid list
+XrdOucTList  *cidFirst;         // Cluster ID to cluster number map
 
 XrdSysMutex   XXMutex;          // Protects cluster summary state variables
 XrdSysMutex   STMutex;          // Protects all node information  variables

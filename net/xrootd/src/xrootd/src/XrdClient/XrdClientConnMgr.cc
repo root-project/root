@@ -432,6 +432,7 @@ int XrdClientConnectionMgr::Connect(XrdClientUrlInfo RemoteServ)
    // The physical connection can be old or newly created
    {
       XrdSysMutexHelper mtx(fMutex);
+      phyconn->WipeStreamid(logconn->Streamid());
 
       // Then, if needed, we push the physical connection into its vector
       if (!phyfound) {
@@ -461,7 +462,7 @@ int XrdClientConnectionMgr::Connect(XrdClientUrlInfo RemoteServ)
          if (newid == -1) {
             delete logconn;
             Error("Connect", "Critical error - Out of allocated resources:"
-                  " max number allowed of logical connection reached ("<<XRC_MAXVECTSIZE<<")");
+                  " max number allowed of logical connections reached ("<<XRC_MAXVECTSIZE<<")");
             return -1;
          }
       }
@@ -535,6 +536,8 @@ void XrdClientConnectionMgr::Disconnect(int LogConnectionID,
 	 fLogVec[LogConnectionID]->GetPhyConnection()->Disconnect();
 	 GarbageCollect();
       }
+      else
+         fLogVec[LogConnectionID]->GetPhyConnection()->WipeStreamid(fLogVec[LogConnectionID]->Streamid());
     
       fLogVec[LogConnectionID]->GetPhyConnection()->Touch();
       delete fLogVec[LogConnectionID];

@@ -63,6 +63,8 @@ public:
                        return fSyncobjRepo.Num();
                        }
 
+   int             WipeStreamid(int streamid);
+
    XrdClientMessage      *GetMsg(int streamid, int secstimeout);
 };
 

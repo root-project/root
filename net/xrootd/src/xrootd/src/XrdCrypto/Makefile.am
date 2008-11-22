@@ -4,7 +4,7 @@
 ##
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id: Makefile.am,v 1.5 2007/08/08 14:23:16 dfeich Exp $
+## Version info: $Id: Makefile.am,v 1.8 2008/10/12 10:25:41 dfeich Exp $
 ## Checked in by $Author: dfeich $
 #######################################################################
 
@@ -12,8 +12,8 @@
 ## include them in the distribution via the EXTRA_DIST keyword
 EXTRA_DIST = XrdCryptosslX509Store.cc XrdCryptosslX509Store.hh
 
-lib_LTLIBRARIES = libXrdCrypto.la
-noinst_LTLIBRARIES = libXrdSSLutil.la
+lib_LTLIBRARIES = libXrdCrypto.la libXrdCryptossl.la libXrdCryptoLite.la
+noinst_LTLIBRARIES = libXrdSSLutil.la 
 
 xrdcryptoincdir = $(includedir)/xrootd/XrdCrypto
 xrdcryptoinc_HEADERS = \
@@ -23,7 +23,7 @@ xrdcryptoinc_HEADERS = \
       XrdCryptoBasic.hh        XrdCryptosslAux.hh        XrdCryptosslTrace.hh         XrdCryptoX509Crl.hh \
       XrdCryptoCipher.hh       XrdCryptosslCipher.hh     XrdCryptosslX509Crl.hh       XrdCryptoX509.hh \
       XrdCryptoFactory.hh      XrdCryptosslFactory.hh    XrdCryptosslX509.hh          XrdCryptoX509Req.hh \
-      XrdCryptolocalCipher.hh  XrdCryptosslgsiAux.hh     XrdCryptosslX509Req.hh
+      XrdCryptolocalCipher.hh  XrdCryptosslgsiAux.hh     XrdCryptosslX509Req.hh       XrdCryptoLite.hh
 
 
 check_PROGRAMS = xrdcryptotest
@@ -46,8 +46,6 @@ libXrdSSLutil_la_LIBADD = ../XrdSut/libXrdSut.la \
                           $(OPENSSL_LIBDIR) -lssl -lcrypto
 libXrdSSLutil_la_CXXFLAGS = $(SSLCXXFLAGS)
 
-
-
 libXrdCrypto_la_SOURCES = \
         PC1.cc PC1.hh    \
         PC3.cc PC3.hh    \
@@ -67,6 +65,28 @@ libXrdCrypto_la_LIBADD = libXrdSSLutil.la \
                          ../XrdOuc/libXrdOuc.la \
                          ../XrdSys/libXrdSys.la \
                          ../XrdNet/libXrdNet.la
+
+libXrdCryptoLite_la_SOURCES = \
+        XrdCryptoLite.hh \
+        XrdCryptoLite.cc \
+        XrdCryptoLite_bf32.cc
+libXrdCrytoLite_la_CXXFLAGS = $(SSLCXXFLAGS)
+
+
+libXrdCryptossl_la_SOURCES = \
+        XrdCryptosslAux.cc         \
+        XrdCryptosslCipher.cc         \
+        XrdCryptosslFactory.cc      \
+        XrdCryptosslMsgDigest.cc      \
+        XrdCryptosslRSA.cc      \
+        XrdCryptosslX509.cc      \
+        XrdCryptosslX509Crl.cc      \
+        XrdCryptosslX509Req.cc    \
+        XrdCryptosslgsiAux.cc      \
+        XrdCryptosslgsiX509Chain.cc
+libXrdCryptossl_la_LIBADD = ../XrdSut/libXrdSut.la \
+                            $(OPENSSL_LIBDIR) -lssl -lcrypto
+libXrdCryptossl_la_CXXFLAGS = $(SSLCXXFLAGS)
 
 
 xrdcryptotest_SOURCES = XrdCryptotest.cc

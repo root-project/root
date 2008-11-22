@@ -96,6 +96,7 @@ XrdCmsNode::XrdCmsNode(XrdLink *lnkp, int port,
     myCost   =  0;
     myLoad   =  0;
     myMass   =  0;
+    myCNUM   = -3;
     DiskTotal=  0;
     DiskFree =  0;
     DiskMinF =  0;
@@ -113,7 +114,9 @@ XrdCmsNode::XrdCmsNode(XrdLink *lnkp, int port,
     myNlen   =  0;
     Ident    =  0;
     Port     =  0;
-    myNID    = strdup(nid ? nid : "?");
+    myCID    = strdup(nid ? nid : "?");
+    if (!(myNID = index(myCID, ' '))) myNID = myCID;
+       else {*myNID = '\0'; myNID++;}
     myLevel  = lvl;
     ConfigID =  0;
 
@@ -138,7 +141,7 @@ XrdCmsNode::~XrdCmsNode()
 // Delete other appendages
 //
    if (Ident) free(Ident);
-   if (myNID) free(myNID);
+   if (myCID) free(myCID);
 }
 
 /******************************************************************************/
@@ -978,7 +981,7 @@ const char *XrdCmsNode::do_Select(XrdCmsRRData &Arg)
    XrdCmsRRQInfo reqInfo(Instance, RSlot, Arg.Request.streamid);
    XrdCmsSelect Sel(XrdCmsSelect::Peers, Arg.Path, Arg.PathLen-1);
    struct iovec ioV[2];
-   char theopts[16], *toP = theopts;
+   char theopts[16], *Avoid, *toP = theopts;
    int rc, bytes;
 
 // Do a callout to the external manager if we have one
@@ -1024,12 +1027,18 @@ const char *XrdCmsNode::do_Select(XrdCmsRRData &Arg)
 
 // Check if an avoid node present. If so, this is ineligible for fast redirect.
 //
-   if (Arg.Avoid) 
+   Sel.nmask = SMask_t(0);
+   if ((Avoid = Arg.Avoid))
       {unsigned int IPaddr;
-       if (XrdNetDNS::Host2IP(Arg.Avoid, &IPaddr))
-          Sel.nmask = Cluster.getMask(IPaddr);
+       char *Comma;
        Sel.InfoP = 0;
-      } else Sel.nmask = SMask_t(0);
+       do {if ((Comma = index(Avoid,','))) *Comma = '\0';
+           if (*Avoid == '+') Sel.nmask |= Cluster.getMask(Avoid+1);
+              else if (XrdNetDNS::Host2IP(Avoid, &IPaddr))
+                              Sel.nmask |= Cluster.getMask(IPaddr);
+           Avoid = Comma+1;
+          } while(Comma && *Avoid);
+      }
 
 // Perform selection
 //

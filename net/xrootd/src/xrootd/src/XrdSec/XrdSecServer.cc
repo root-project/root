@@ -65,9 +65,9 @@ int                    Match(const char *hname);
   
 XrdSecProtBind::XrdSecProtBind(char *th, char *st, XrdSecPMask_t pmask)
 {
-    char *starp;
-    next     = 0;
-    thost    = th; 
+   char *starp;
+   next     = 0;
+   thost    = th; 
    if (!(starp = index(thost, '*')))
       {tsfxlen = -1;
        thostsfx = (char *)0;
@@ -91,7 +91,7 @@ XrdSecProtBind *XrdSecProtBind::Find(const char *hname)
 {
    XrdSecProtBind *bp = this;
 
-   while(!bp->Match(hname)) bp = bp->next;
+   while(bp && !bp->Match(hname)) bp = bp->next;
 
    return bp;
 }
@@ -104,7 +104,7 @@ int XrdSecProtBind::Match(const char *hname)
 {
     int i;
 
-// If an exact match wanted, return the reult
+// If an exact match wanted, return the result
 //
    if (tsfxlen < 0) return !strcmp(thost, hname);
 

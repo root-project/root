@@ -43,6 +43,33 @@ int XrdClientInputBuffer::MsgForStreamidCnt(int streamid)
     return cnt;
 }
 
+
+
+//________________________________________________________________________
+int XrdClientInputBuffer::WipeStreamid(int streamid)
+{
+    // Remove all the pending messages for the given streamid
+    // Healthy after connection shutdowns
+
+    int cnt = 0;
+    XrdClientMessage *m = 0;
+   {
+      XrdSysMutexHelper mtx(fMutex);
+
+      for (fMsgIter = fMsgQue.GetSize()-1; fMsgIter >= 0; --fMsgIter) {
+         m = fMsgQue[fMsgIter];
+         if (m->MatchStreamid(streamid)) {
+            delete m;
+            fMsgQue.Erase(fMsgIter);
+            cnt++;
+         }
+
+      }
+   }
+
+    return cnt;
+}
+
 //________________________________________________________________________
 XrdSysSemWait *XrdClientInputBuffer::GetSyncObjOrMakeOne(int streamid) {
    // Gets the right sync obj to wait for messages for a given streamid

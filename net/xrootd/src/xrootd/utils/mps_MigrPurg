@@ -1,6 +1,7 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
+
 #
-#   $Id: mps_MigrPurg,v 1.14 2008/01/23 02:52:44 abh Exp $
+#   $Id: mps_MigrPurg,v 1.15 2008/10/14 09:24:45 furano Exp $
 #
 # ooss_MigrPurg
 #	-M			do migrate function

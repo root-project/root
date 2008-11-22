@@ -4258,3 +4258,4 @@ bool XrdSecProtocolgsi::ServerCertNameOK(const char *subject, XrdOucString &emsg
    // Done
    return allowed;
 }
+

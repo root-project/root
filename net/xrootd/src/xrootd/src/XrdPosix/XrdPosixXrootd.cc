@@ -291,6 +291,13 @@ XrdPosixFile::XrdPosixFile(int fd, const char *path)
                currOffset(0),
                doClose(0)
 {
+   static int initDone = 0;
+
+// Initialize environment if not done before. This avoid static initialization
+// dependencies as we need to do it once but we must be the last ones to do it.
+//
+   if (!initDone) {XrdPosixXrootd::initEnv(); initDone = 1;}
+
 // Allocate a new client object
 //
    if (!(XClient = new XrdClient(path))) stat.size = 0;
@@ -321,31 +328,8 @@ XrdPosixFile::~XrdPosixFile()
 XrdPosixXrootd::XrdPosixXrootd(int fdnum, int dirnum)
 {
    extern XrdPosixLinkage Xunix;
-
-   struct XrdPosix_Env {const char *eName; const char *xName; int *vDest;}
-          Posix_Env[] =
-          {
-          {"XRDPOSIX_DEBUG",       NAME_DEBUG,                &Debug},
-          {"XRDPOSIX_DSTTL",       NAME_DATASERVERCONN_TTL,   0},
-          {"XRDPOSIX_POPEN",       "",                        &pllOpen},
-          {"XRDPOSIX_RASZ",        NAME_READAHEADSIZE,        0},
-          {"XRDPOSIX_RCSZ",        NAME_READCACHESIZE,        0},
-          {"XRDPOSIX_RCRP",        NAME_READCACHEBLKREMPOLICY,0},
-          {"XRDPOSIX_RCUP",        NAME_REMUSEDCACHEBLKS,     0},
-          {"XRDPOSIX_RDTTL",       NAME_LBSERVERCONN_TTL,     0},
-          {"XRDPOSIX_RTO",         NAME_REQUESTTIMEOUT,       0},
-          {"XRDPSOIX_PSPC",        NAME_MULTISTREAMCNT,       0},
-          {"XRDPSOIX_CTO",         NAME_CONNECTTIMEOUT,       0},
-          {"XRDPSOIX_CTOWAN",      NAME_CONNECTTIMEOUTWAN,    0},
-          {"XRDPSOIX_CRDELAY",     NAME_RECONNECTTIMEOUT,     0},
-          {"XRDPSOIX_CRETRY",      NAME_FIRSTCONNECTMAXCNT,   0},
-          {"XRDPSOIX_TCPWSZ",      NAME_DFLTTCPWINDOWSIZE,    0}
-          };
-   int    Posix_Num = sizeof(Posix_Env)/sizeof(XrdPosix_Env);
    struct rlimit rlim;
-   char *cvar, *evar;
-   int i, doEcho;
-   long isize, nval;
+   long isize;
 
 // Initialize the linkage table first
 //
@@ -372,30 +356,6 @@ XrdPosixXrootd::XrdPosixXrootd(int fdnum, int dirnum)
 // Open /dev/null as we will be allocating file descriptors based on this fd
 //
    devNull = open("/dev/null", O_RDWR, 0744);
-
-// Establish wether we need to echo any envars
-//
-   if ((cvar = getenv("XRDPOSIX_ECHO"))) doEcho = strcmp(cvar, "0");
-      else doEcho = 0;
-
-// Establish the default debugging level (none)
-//
-   setEnv(NAME_DEBUG, Debug);
-
-// Run through all of the numeric envars that may be set
-//
-   for (i = 0; i < Posix_Num; i++)
-       if ((cvar = getenv(Posix_Env[i].eName)) && *cvar)
-          {nval = strtol(cvar, &evar, 10);
-           if (*evar) cerr <<"XrdPosix: Invalid " <<Posix_Env[i].eName
-                           <<" value - " <<cvar <<endl;
-              else {if (Posix_Env[i].xName[0]) setEnv(Posix_Env[i].xName, nval);
-                    if (Posix_Env[i].vDest)
-                       *Posix_Env[i].vDest = static_cast<int>(nval);
-                    if (doEcho) cerr <<"XrdPosix: " <<Posix_Env[i].eName <<" = "
-                                <<nval <<'(' <<Posix_Env[i].xName <<')' <<endl;
-                   }
-          }
 }
  
 /******************************************************************************/
@@ -1256,6 +1216,61 @@ ssize_t XrdPosixXrootd::Writev(int fildes, const struct iovec *iov, int iovcnt)
    return totbytes;
 }
   
+/******************************************************************************/
+/*                               i n i t E n v                                */
+/******************************************************************************/
+  
+void XrdPosixXrootd::initEnv()
+{
+   struct XrdPosix_Env {const char *eName; const char *xName; int *vDest;}
+          Posix_Env[] =
+          {
+          {"XRDPOSIX_DEBUG",       NAME_DEBUG,                &Debug},
+          {"XRDPOSIX_DSTTL",       NAME_DATASERVERCONN_TTL,   0},
+          {"XRDPOSIX_POPEN",       "",                        &pllOpen},
+          {"XRDPOSIX_RASZ",        NAME_READAHEADSIZE,        0},
+          {"XRDPOSIX_RCSZ",        NAME_READCACHESIZE,        0},
+          {"XRDPOSIX_RCRP",        NAME_READCACHEBLKREMPOLICY,0},
+          {"XRDPOSIX_RCUP",        NAME_REMUSEDCACHEBLKS,     0},
+          {"XRDPOSIX_RDTTL",       NAME_LBSERVERCONN_TTL,     0},
+          {"XRDPOSIX_RTO",         NAME_REQUESTTIMEOUT,       0},
+          {"XRDPSOIX_PSPC",        NAME_MULTISTREAMCNT,       0},
+          {"XRDPSOIX_CTO",         NAME_CONNECTTIMEOUT,       0},
+          {"XRDPSOIX_CTOWAN",      NAME_CONNECTTIMEOUTWAN,    0},
+          {"XRDPSOIX_CRDELAY",     NAME_RECONNECTTIMEOUT,     0},
+          {"XRDPSOIX_CRETRY",      NAME_FIRSTCONNECTMAXCNT,   0},
+          {"XRDPSOIX_TCPWSZ",      NAME_DFLTTCPWINDOWSIZE,    0}
+          };
+   int    Posix_Num = sizeof(Posix_Env)/sizeof(XrdPosix_Env);
+   char *cvar, *evar;
+   int i, doEcho;
+   long nval;
+
+// Establish wether we need to echo any envars
+//
+   if ((cvar = getenv("XRDPOSIX_ECHO"))) doEcho = strcmp(cvar, "0");
+      else doEcho = 0;
+
+// Establish the default debugging level (none)
+//
+   setEnv(NAME_DEBUG, Debug);
+
+// Run through all of the numeric envars that may be set
+//
+   for (i = 0; i < Posix_Num; i++)
+       if ((cvar = getenv(Posix_Env[i].eName)) && *cvar)
+          {nval = strtol(cvar, &evar, 10);
+           if (*evar) cerr <<"XrdPosix: Invalid " <<Posix_Env[i].eName
+                           <<" value - " <<cvar <<endl;
+              else {if (Posix_Env[i].xName[0]) setEnv(Posix_Env[i].xName, nval);
+                    if (Posix_Env[i].vDest)
+                       *Posix_Env[i].vDest = static_cast<int>(nval);
+                    if (doEcho) cerr <<"XrdPosix: " <<Posix_Env[i].eName <<" = "
+                                <<nval <<'(' <<Posix_Env[i].xName <<')' <<endl;
+                   }
+          }
+}
+
 /******************************************************************************/
 /*                             i s X r o o t d D i r                          */
 /******************************************************************************/

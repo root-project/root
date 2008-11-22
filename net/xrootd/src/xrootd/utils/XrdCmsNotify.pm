@@ -1,5 +1,5 @@
 #******************************************************************************
-#   $Id: XrdCmsNotify.pm,v 1.1 2007/11/16 01:10:21 abh Exp $
+#   $Id: XrdCmsNotify.pm,v 1.2 2008/10/14 09:24:36 furano Exp $
 #*                                                                            *
 #*                       X r d C m s N o t i f y . p m                        *
 #*                                                                            *
@@ -9,7 +9,8 @@
 #            DE-AC03-76-SFO0515 with the Department of Energy                 *
 #******************************************************************************
   
-#!/usr/local/bin/perl
+#!/usr/bin/env perl
+
 package  XrdCmsNotify;
 require  Exporter;
 @ISA   = qw(Exporter);

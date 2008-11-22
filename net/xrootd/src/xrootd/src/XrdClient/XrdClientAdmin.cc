@@ -991,6 +991,7 @@ int XrdClientAdmin::LocalLocate(kXR_char *path, XrdClientVector<XrdClientLocate_
    return retval;
 }
 
+
 //_____________________________________________________________________________
 bool XrdClientAdmin::Locate(kXR_char *path, XrdClientLocate_Info &resp, bool writable)
 {
@@ -1001,7 +1002,6 @@ bool XrdClientAdmin::Locate(kXR_char *path, XrdClientLocate_Info &resp, bool wri
    //  if there is one
 
    bool found = false;
-   int depth = 0;
    memset(&resp, 0, sizeof(resp));
 
    if (!fConnModule) return 0;
@@ -1036,67 +1036,52 @@ bool XrdClientAdmin::Locate(kXR_char *path, XrdClientLocate_Info &resp, bool wri
    hosts.Push_back(nfo);
    bool firsthost = true;
    XrdClientLocate_Info currnfo;
-   bool stoprecursion = true;
 
-   do {
+   int pos = 0;
+
+   // Expand a level, i.e. ask to all the masters and remove items from the list
+   while  (pos < hosts.GetSize()) {
      
-     // Figure out how many checks at max we have to do to accomodate this level
-     int qrytodo = hosts.GetSize();
-     int pos = 0;
-
-     stoprecursion = true;
-
-     // Expand a level, i.e. ask to all the masters and remove items from the list
-     for (int ii = 0; ii < qrytodo; ii++) {
-
-       // Take the first item to process
-       currnfo = hosts[pos];
-
-       // If it's a master, we have to contact it, otherwise take the next
-       if ((currnfo.Infotype == XrdClientLocate_Info::kXrdcLocDataServer) ||
-	   (currnfo.Infotype == XrdClientLocate_Info::kXrdcLocDataServerPending)) {
-	 pos++;
+     // Take the first item to process
+     currnfo = hosts[pos];
+     
+     // If it's a master, we have to contact it, otherwise take the next
+     if ((currnfo.Infotype == XrdClientLocate_Info::kXrdcLocDataServer) ||
+	 (currnfo.Infotype == XrdClientLocate_Info::kXrdcLocDataServerPending)) {
+       pos++;
+       continue;
+     }
+     
+     // Here, currnfo is pointing to a master we have to contact
+     currurl.TakeUrl((char *)currnfo.Location);
+     if (currurl.HostAddr == "") currurl.HostAddr = currurl.Host;
+     
+     // Connect to the given host. At the beginning we are connected to the starting point
+     // A failed connection is just ignored. Only one attempt is performed. Timeouts are
+     // honored.
+     if (!firsthost) {
+       fConnModule->Disconnect(false);
+       if (fConnModule->GoToAnotherServer(currurl) != kOK) {
+	 hosts.Erase(pos);
 	 continue;
        }
-
-       stoprecursion = false;
-	 
-       // Here, currnfo is pointing to a master we have to contact
-       currurl.TakeUrl((char *)currnfo.Location);
-
-       // Connect to the given host. At the beginning we are connected to the starting point
-       // A failed connection is just ignored. Only one attempt is performed. Timeouts are
-       // honored.
-       if (!firsthost) {
-	 firsthost = false;
-
-	 fConnModule->Disconnect(false);
-	 if (fConnModule->GoToAnotherServer(currurl) != kOK) {
-	   pos++;
-	   continue;
-	 }
-       }
-
-       // We are connected, do the locate
-       int posds = LocalLocate(path, hosts, writable, true);
-
-       found = (posds > -1) ? 1 : 0;
-
-       if (found) {
-          resp = hosts[posds];
-          break;
-       }
-
-       // We did not finish, take the next
-       hosts.Erase(pos);
      }
-
-     depth++;
-   } while ( !found && (depth <= 4) && !stoprecursion);
-   
-   if (depth > 4)
-     Error("Locate",
-	   "The cluster exposes too many levels.");
+     
+     if (firsthost) firsthost = false;
+     
+     // We are connected, do the locate
+     int posds = LocalLocate(path, hosts, writable, true);
+     
+     found = (posds > -1) ? 1 : 0;
+     
+     if (found) {
+       resp = hosts[posds];
+       break;
+     }
+     
+     // We did not finish, take the next
+     hosts.Erase(pos);
+   }
 
    if (!found && hosts.GetSize()) {
      // If not found, we check anyway in the remaining list
@@ -1133,7 +1118,6 @@ bool XrdClientAdmin::Locate(kXR_char *path, XrdClientVector<XrdClientLocate_Info
    // URL in resp.
    // Returns true if found at least one
 
-   int depth = 0;
    hosts.Clear();
 
    if (!fConnModule) return 0;
@@ -1168,61 +1152,47 @@ bool XrdClientAdmin::Locate(kXR_char *path, XrdClientVector<XrdClientLocate_Info
    hosts.Push_back(nfo);
    bool firsthost = true;
    XrdClientLocate_Info currnfo;
-   bool stoprecursion = true;
 
-   do {
+   int pos = 0;
+
+   // Expand a level, i.e. ask to all the masters and remove items from the list
+   while (pos < hosts.GetSize()) {
      
-     // Figure out how many checks at max we have to do to accomodate this level
-     int qrytodo = hosts.GetSize();
-     int pos = 0;
-
-     stoprecursion = true;
-
-     // Expand a level, i.e. ask to all the masters and remove items from the list
-     for (int ii = 0; ii < qrytodo; ii++) {
-
-       // Take the first item to process
-       currnfo = hosts[pos];
-
-       // If it's a master, we have to contact it, otherwise take the next
-       if ((currnfo.Infotype == XrdClientLocate_Info::kXrdcLocDataServer) ||
-	   (currnfo.Infotype == XrdClientLocate_Info::kXrdcLocDataServerPending)) {
-	 pos++;
+     // Take the first item to process
+     currnfo = hosts[pos];
+     
+     // If it's a master, we have to contact it, otherwise take the next
+     if ((currnfo.Infotype == XrdClientLocate_Info::kXrdcLocDataServer) ||
+	 (currnfo.Infotype == XrdClientLocate_Info::kXrdcLocDataServerPending)) {
+       pos++;
+       continue;
+     }
+     
+     // Here, currnfo is pointing to a master we have to contact
+     currurl.TakeUrl((char *)currnfo.Location);
+     if (currurl.HostAddr == "") currurl.HostAddr = currurl.Host;
+     
+     // Connect to the given host. At the beginning we are connected to the starting point
+     // A failed connection is just ignored. Only one attempt is performed. Timeouts are
+     // honored.
+     if (!firsthost) {
+       
+       fConnModule->Disconnect(false);
+       if (fConnModule->GoToAnotherServer(currurl) != kOK) {
+	 hosts.Erase(pos);
 	 continue;
        }
-
-       stoprecursion = false;
-	 
-       // Here, currnfo is pointing to a master we have to contact
-       currurl.TakeUrl((char *)currnfo.Location);
-
-       // Connect to the given host. At the beginning we are connected to the starting point
-       // A failed connection is just ignored. Only one attempt is performed. Timeouts are
-       // honored.
-       if (!firsthost) {
-	 firsthost = false;
-
-	 fConnModule->Disconnect(false);
-	 if (fConnModule->GoToAnotherServer(currurl) != kOK) {
-	   pos++;
-	   continue;
-	 }
-       }
-
-       // We are connected, do the locate
-       LocalLocate(path, hosts, true, false, true);
-
-       // We did not finish, take the next
-       hosts.Erase(pos);
      }
-
-     depth++;
-   } while ( (depth <= 4) && !stoprecursion);
+     
+     if (firsthost) firsthost = false;
+     
+     // We are connected, do the locate
+     LocalLocate(path, hosts, true, false, true);
+     
+     // We did not finish, take the next
+     hosts.Erase(pos);
+   }
    
-   if (depth > 4)
-     Error("Locate",
-	   "The cluster exposes too many levels.");
-
    // At the end we want to rewind to the main redirector in any case
    fConnModule->GoBackToRedirector();
 

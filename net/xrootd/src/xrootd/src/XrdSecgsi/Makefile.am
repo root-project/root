@@ -4,11 +4,11 @@
 ##
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id: Makefile.am,v 1.8 2008/09/27 09:17:45 ganis Exp $
-## Checked in by $Author: ganis $
+## Version info: $Id: Makefile.am,v 1.9 2008/10/12 10:25:51 dfeich Exp $
+## Checked in by $Author: dfeich $
 #######################################################################
 
-lib_LTLIBRARIES = libXrdSecgsi.la
+lib_LTLIBRARIES = libXrdSecgsi.la libXrdSecgsiGMAPLADP.la
 
 bin_PROGRAMS = xrdgsiproxy
 

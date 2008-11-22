@@ -147,6 +147,8 @@ int                NodeID;
 int                Instance;
 int                Port;
 int                myLevel;
+int                myCNUM;
+char              *myCID;
 char              *myNID;
 char              *myName;
 int                myNlen;

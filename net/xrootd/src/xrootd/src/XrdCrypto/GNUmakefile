@@ -1,4 +1,4 @@
-# $Id: GNUmakefile,v 1.10 2007/11/20 09:42:53 ganis Exp $
+# $Id: GNUmakefile,v 1.11 2008/10/12 02:00:04 abh Exp $
 #-----------------------------------------------------------------------------#
 #                            E n v i r o n m e n t                            #
 #-----------------------------------------------------------------------------#
@@ -18,6 +18,8 @@ SOURCES = \
         XrdCryptoBasic.cc      \
         XrdCryptoCipher.cc      \
 	XrdCryptoFactory.cc \
+        XrdCryptoLite.cc \
+        XrdCryptoLite_bf32.cc \
         XrdCryptoMsgDigest.cc \
         XrdCryptoRSA.cc \
         XrdCryptoX509.cc \
@@ -69,7 +71,12 @@ OBJCSSL = \
 OBJECTA = \
         $(OBJDIR)/XrdCryptotest.o
 
+OBJECTL = \
+        $(OBJDIR)/XrdCryptoLite.o \
+        $(OBJDIR)/XrdCryptoLite_bf32.o \
+
 LIBARCH = $(LIBDIR)/libXrdCrypto.a
+LIBARCL = $(LIBDIR)/libXrdCryptoLite.a
 LIBRARY = $(LIBDIR)/libXrdCrypto.$(TYPESHLIB)
 LIBCSSL = $(LIBDIR)/libXrdCryptossl.$(TYPESHLIB)
 
@@ -82,9 +89,9 @@ CRYPTOTEST = $(BINDIR)/xrdcryptotest
 CRYPTOSSLEXTRACFLAGS = -DOPENSSL_NO_KRB5 -DPERL5 $(SSLEXTRACFLAGS)
 
 ifneq ($(LIBSSL),)
-TARGETS = $(LIBARCH) $(LIBRARY) $(LIBASSL) $(LIBCSSL)
+TARGETS = $(LIBARCH) $(LIBARCL) $(LIBRARY) $(LIBASSL) $(LIBCSSL)
 else
-TARGETS = $(LIBARCH) $(LIBRARY)
+TARGETS = $(LIBARCH) $(LIBARCL) $(LIBRARY)
 endif
 
 #------------------------------------------------------------------------------#
@@ -117,6 +124,7 @@ anything: $(TARGETS)
 #------------------------------------------------------------------------------#
 #                           D e p e n d e n c i e s                            #
 #------------------------------------------------------------------------------#
+
 $(LIBARCH): $(OBJECTS)
 	@echo Creating archive $(LIBARCH) 
 	$(ECHO)rm -f $(LIBARCH)
@@ -131,9 +139,19 @@ $(LIBARCH): $(OBJECTS)
 	          ranlib $(LIBARCH); \
                fi
 
-
-
-
+$(LIBARCL): $(OBJECTL)
+	@echo Creating archive $(LIBARCL) 
+	$(ECHO)rm -f $(LIBARCL)
+	$(ECHO)if [ "$(TYPE)" = "SunOS" -a "$(CC)" = "CC" ]; then \
+	          if [ "x$(SUNCACHE)" != "x" ]; then \
+	             $(CC) -xar -o $(LIBARCL) $(OBJDIR)$(SUNCACHE)/*/*.o; \
+		  else \
+	             $(CC) -xar -o $(LIBARCL) $(OBJECTL); \
+		  fi; \
+	       else \
+	          ar -rc $(LIBARCL) $(OBJECTL); \
+	          ranlib $(LIBARCL); \
+               fi
 
 $(LIBRARY): $(OBJECTS) $(LIBUTIL)
 	@echo Creating shared library $(LIBRARY) 
@@ -195,6 +213,15 @@ $(OBJDIR)/XrdCryptoFactory.o: XrdCryptoFactory.cc \
 			XrdCryptoFactory.hh XrdCryptolocalFactory.hh
 	@echo Compiling XrdCryptoFactory.cc 
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdCryptoFactory.o XrdCryptoFactory.cc
+
+$(OBJDIR)/XrdCryptoLite.o: XrdCryptoLite.cc    XrdCryptoLite.hh
+	@echo Compiling XrdCryptoLite.cc 
+	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdCryptoLite.o XrdCryptoLite.cc
+
+$(OBJDIR)/XrdCryptoLite_bf32.o: XrdCryptoLite_bf32.cc    XrdCryptoLite.hh  \
+                                XrdOucCRC.hh
+	@echo Compiling XrdCryptoLite_bf32.cc 
+	$(ECHO)$(CC) -c $(CFLAGS) $(SSLEXTRACFLAGS) $(INCLUDE) $(INCSSL) -o $(OBJDIR)/XrdCryptoLite_bf32.o XrdCryptoLite_bf32.cc
 
 $(OBJDIR)/XrdCryptoMsgDigest.o: XrdCryptoMsgDigest.cc \
 			XrdCryptoAux.hh XProtocol.hh \

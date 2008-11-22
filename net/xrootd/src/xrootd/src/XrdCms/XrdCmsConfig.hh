@@ -106,6 +106,7 @@ const char  *myInsName;
 const char  *myInstance;
 const char  *mySID;
 XrdOucTList *ManList;     // From manager directive
+XrdOucTList *NanList;     // From manager directive (managers only)
 
 XrdOucProg  *ProgCH;      // Server only chmod
 XrdOucProg  *ProgMD;      // Server only mkdir
@@ -137,6 +138,7 @@ int  MergeP(void);
 int  PidFile(void);
 int  setupManager(void);
 int  setupServer(void);
+char *setupSid();
 int  setupXmi(void);
 void Usage(int rc);
 int  xapath(XrdSysError *edest, XrdOucStream &CFile);

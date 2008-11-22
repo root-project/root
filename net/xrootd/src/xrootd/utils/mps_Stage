@@ -1,6 +1,6 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 
-# $Id: mps_Stage,v 1.13 2008/01/23 02:53:14 abh Exp $
+# $Id: mps_Stage,v 1.14 2008/10/14 09:24:50 furano Exp $
 
 # (C) 1999 by the Board of Trustees of the Leland Stanford, Jr., University
 #                          All Rights Reserved

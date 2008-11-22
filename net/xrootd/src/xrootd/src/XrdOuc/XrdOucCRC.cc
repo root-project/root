@@ -150,7 +150,7 @@ unsigned int XrdOucCRC::CRC32(const unsigned char *p, int reclen)
 
 // Process each byte
 //
-   while(reclen-- >= 0) crc = crctable[(crc ^ *p++) & 0xff] ^ (crc >> 8);
+   while(reclen-- > 0) crc = crctable[(crc ^ *p++) & 0xff] ^ (crc >> 8);
 
 // Return XOR out value
 //

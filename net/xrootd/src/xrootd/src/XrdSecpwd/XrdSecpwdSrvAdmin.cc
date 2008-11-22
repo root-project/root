@@ -1955,7 +1955,7 @@ bool ReadPasswd(XrdOucString &tag, XrdOucString &pwd, int &st)
    }
    //
    // Open file in read mode
-   FILE *fd = fopen(PwdFile.c_str(), "r");
+   FILE *fd = fopen(PwdFile.c_str(),"r");
    if (fd == 0) {
       PRT("ReadPasswd: could not open file: "<<PwdFile.c_str());
       PRT("ReadPasswd: errno: "<<errno);
@@ -2042,7 +2042,7 @@ bool ReadPuk(int &ipuk, XrdOucString *tpuk, XrdOucString *puk)
    }
    //
    // Open file in read mode
-   FILE *fd = fopen(PukFile.c_str(), "r");
+   FILE *fd = fopen(PukFile.c_str(),"r");
    if (fd == 0) {
       PRT("ReadPuk: could not open file: "<<PukFile.c_str());
       PRT("ReadPuk: errno: "<<errno);
@@ -2124,7 +2124,7 @@ bool SavePuk()
    delete tstr;
    //
    // Open file, truncating if it exists already
-   int fd = open(PukFile.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0600);
+   int fd = open(PukFile.c_str(),O_WRONLY | O_CREAT | O_TRUNC, 0600);
    if (fd < 0) {
       PRT("SavePuk: could not open/create file: "<<PukFile);
       PRT("SavePuk: errno: "<<errno);
@@ -2212,7 +2212,7 @@ bool ReadPuk()
    }
    //
    // Open file in read mode
-   int fd = open(PukFile.c_str(), O_RDONLY);
+   int fd = open(PukFile.c_str(),O_RDONLY);
    if (fd < 0) {
       PRT("ReadPuk: could not open file: "<<PukFile.c_str());
       PRT("ReadPuk: errno: "<<errno);

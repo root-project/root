@@ -8,9 +8,9 @@
 /*              DE-AC03-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
-//         $Id: XrdPollDev.icc,v 1.13 2008/06/03 01:49:47 abh Exp $
+//         $Id: XrdPollDev.icc,v 1.14 2008/10/12 03:29:03 abh Exp $
 
-const char *XrdPollDevCVSID = "cvsid: $Id: XrdPollDev.icc,v 1.13 2008/06/03 01:49:47 abh Exp $";
+const char *XrdPollDevCVSID = "cvsid: $Id: XrdPollDev.icc,v 1.14 2008/10/12 03:29:03 abh Exp $";
 
 #include <unistd.h>
 #include <stdlib.h>
@@ -70,6 +70,7 @@ XrdPoll *XrdPoll::newPoller(int pollid, int maxfd)
 //
    if ((pfd = open("/dev/poll", O_RDWR)) < 0)
       {XrdLog.Emsg("Poll", errno, "open /dev/poll"); return 0;}
+   fcntl(pfd, F_SETFD, FD_CLOEXEC);
 
 // Calculate the size of the poll table and allocate it
 //

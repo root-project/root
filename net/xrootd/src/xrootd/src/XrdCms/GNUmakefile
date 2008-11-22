@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.15 2008/09/07 04:30:49 abh Exp $
+#              $Id: GNUmakefile,v 1.16 2008/11/01 21:34:05 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -205,6 +205,7 @@ $(OBJDIR)/XrdCmsCluster.o:   XrdCmsCluster.cc    XrdCmsCluster.hh \
                              XrdCmsSelect.hh     XrdCmsState.hh \
                              XrdCmsTrace.hh      XrdCmsTypes.hh \
                              XrdNetDNS.hh        XrdOucPup.hh \
+                             XrdOucTList.hh \
                              XrdSysPlatform.hh   XrdSysPthread.hh \
                              XrdSysTimer.hh \
                              XrdJob.hh           XrdLink.hh \

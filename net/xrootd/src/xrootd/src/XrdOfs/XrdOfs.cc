@@ -459,7 +459,9 @@ int XrdOfsFile::open(const char          *path,      // In
                return XrdOfsFS.fsError(error, retc);
               }
            if (retc != -ENOTSUP)
-              return XrdOfsFS.Emsg(epname, error, retc, "create", path);
+              {if (XrdOfsFS.Balancer) XrdOfsFS.Balancer->Removed(path);
+               return XrdOfsFS.Emsg(epname, error, retc, "create", path);
+              }
           } else {
             if (XrdOfsFS.Balancer) XrdOfsFS.Balancer->Added(path);
             open_flag  = O_RDWR|O_TRUNC;
@@ -1555,7 +1557,7 @@ int XrdOfs::stat(const char             *path,        // In
 // Find out where we should stat this file
 //
    if (Finder && Finder->isRemote()
-   &&  (retc = Finder->Locate(einfo, path, SFS_O_RDONLY|SFS_O_STAT)))
+   &&  (retc = Finder->Locate(einfo, path, SFS_O_RDONLY|SFS_O_STAT, &stat_Env)))
       return fsError(einfo, retc);
 
 // Now try to find the file or directory
@@ -1601,7 +1603,8 @@ int XrdOfs::stat(const char             *path,        // In
 // Find out where we should stat this file
 //
    if (Finder && Finder->isRemote()
-   &&  (retc = Finder->Locate(einfo,path,SFS_O_NOWAIT|SFS_O_RDONLY|SFS_O_STAT)))
+   &&  (retc = Finder->Locate(einfo,path,SFS_O_NOWAIT|SFS_O_RDONLY|SFS_O_STAT,
+                              &stat_Env)))
       return fsError(einfo, retc);
 
 // Now try to find the file or directory

@@ -368,7 +368,7 @@ kXR_int32 XrdSutPFile::Open(kXR_int32 opt, bool *wasopen,
             return Err(kPFErrBadOp,"Open",copt.c_str());
       }
 
-      // Open file
+      // Open file (createmode is only used if O_CREAT is set)
       fd = open(fnam, mode, createmode);
       if (fd <= -1)
          return Err(kPFErrFileOpen,"Open",fnam);

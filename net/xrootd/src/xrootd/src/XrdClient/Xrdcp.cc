@@ -81,7 +81,7 @@ struct XrdCpInfo {
 
 #define XRDCP_BLOCKSIZE          (4*1024*1024)
 #define XRDCP_XRDRASIZE          (10*XRDCP_BLOCKSIZE)
-#define XRDCP_VERSION            "(C) 2004 SLAC INFN $Revision: 1.85 $ - Xrootd version: "XrdVSTRING
+#define XRDCP_VERSION            "(C) 2004 SLAC INFN $Revision: 1.86 $ - Xrootd version: "XrdVSTRING
 
 ///////////////////////////////////////////////////////////////////////
 // Coming from parameters on the cmd line
@@ -171,7 +171,6 @@ void print_md5(const char* src, unsigned long long bytesread, XrdCryptoMsgDigest
 #endif
   }
 }
-
 
 
 
@@ -405,17 +404,19 @@ int doCp_xrd2xrd(XrdClient **xrddest, const char *src, const char *dst) {
       // if xrddest if nonzero, then the file is already opened for writing
       if (!*xrddest) {
 	 *xrddest = new XrdClient(dst);
-	 if (!(*xrddest)->Open(kXR_ur | kXR_uw | kXR_gw | kXR_gr | kXR_or,
-			       xrd_wr_flags)) {
-	    cerr << "Error opening remote destination file " << dst << endl;
-	    PrintLastServerError(*xrddest);
 
-	    delete cpnfo.XrdCli;
-	    delete *xrddest;
-	    *xrddest = 0;
-	    cpnfo.XrdCli = 0;
-	    return -1;
-	 }
+         if (!PedanticOpen4Write(*xrddest, kXR_ur | kXR_uw | kXR_gw | kXR_gr | kXR_or,
+                              xrd_wr_flags)) {
+            cerr << "Error opening remote destination file " << dst << endl;
+            PrintLastServerError(*xrddest);
+                  
+            delete cpnfo.XrdCli;
+            delete *xrddest;
+            *xrddest = 0;
+            cpnfo.XrdCli = 0;
+            return -1;
+         }
+
       }
 
       // Start reader on xrdc
@@ -735,11 +736,11 @@ int doCp_loc2xrd(XrdClient **xrddest, const char *src, const char * dst) {
    if (!*xrddest) {
 
       *xrddest = new XrdClient(dst);
-      if (!(*xrddest)->Open(kXR_ur | kXR_uw | kXR_gw | kXR_gr | kXR_or,
-			    xrd_wr_flags)) {
+      if (!PedanticOpen4Write(*xrddest, kXR_ur | kXR_uw | kXR_gw | kXR_gr | kXR_or,
+                           xrd_wr_flags) ) {
 	 cerr << "Error opening remote destination file " << dst << endl;
 	 PrintLastServerError(*xrddest);
-
+         
 	 close(cpnfo.localfile);
 	 delete *xrddest;
 	 *xrddest = 0;

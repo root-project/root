@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile.in,v 1.29 2008/10/07 11:10:56 ganis Exp $
+#              $Id: GNUmakefile.in,v 1.30 2008/10/12 01:59:35 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                             C o m p o n e n t s                              #
@@ -180,6 +180,11 @@ XrdSec: FORCE
 	$(ECHO)cd src/XrdSec;\
 	$(MAKE) $(MAKEXEQ) ARCH=$(ARCH) --no-print-directory
 
+XrdSecgsi: FORCE
+	@echo $(XMSG) secgsi $(XDBG) component...
+	$(ECHO)cd src/XrdSecgsi;\
+	$(MAKE) $(MAKEXEQ) ARCH=$(ARCH) --no-print-directory
+
 XrdSeckrb4: FORCE
 	@echo $(XMSG) seckrb4 $(XDBG) component...
 	$(ECHO)cd src/XrdSeckrb4;\
@@ -195,9 +200,9 @@ XrdSecpwd: FORCE
 	$(ECHO)cd src/XrdSecpwd;\
 	$(MAKE) $(MAKEXEQ) ARCH=$(ARCH) --no-print-directory
 
-XrdSecgsi: FORCE
-	@echo $(XMSG) secgsi $(XDBG) component...
-	$(ECHO)cd src/XrdSecgsi;\
+XrdSecsss: FORCE
+	@echo $(XMSG) secsss $(XDBG) component...
+	$(ECHO)cd src/XrdSecsss;\
 	$(MAKE) $(MAKEXEQ) ARCH=$(ARCH) --no-print-directory
 
 XrdSecunix: FORCE

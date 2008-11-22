@@ -86,6 +86,7 @@ XrdCmsCluster::XrdCmsCluster()
 {
      memset((void *)NodeTab, 0, sizeof(NodeTab));
      memset((void *)AltMans, (int)' ', sizeof(AltMans));
+     cidFirst=  0;
      AltMend = AltMans;
      AltMent = -1;
      NodeCnt =  0;
@@ -207,10 +208,16 @@ XrdCmsNode *XrdCmsCluster::Add(XrdLink *lp, int port, int Status,
       else         peerHost &= ~nP->NodeMask;
    peerMask = ~peerHost;
 
+// Assign a unique cluster number
+//
+   nP->myCNUM = Assign(nP->myCID);
+
 // Document login
 //
-   DEBUG(act <<nP->Ident <<" to cluster; id=" <<Slot <<'.' <<nP->Instance
+   DEBUG(act <<nP->Ident <<" to cluster; ref=" <<Slot <<'.' <<nP->Instance
          <<"; num=" <<NodeCnt <<"; min=" <<Config.SUPCount);
+   DEBUG(act <<nP->Ident <<" cluster " <<nP->myCNUM <<" ID=" <<nP->myCID
+         <<'[' <<nP->myNID <<']');
 
 // Compute new state of all nodes if we are a reporting manager.
 //
@@ -306,6 +313,45 @@ SMask_t XrdCmsCluster::getMask(unsigned int IPv4adr)
    for (i = 0; i <= STHi; i++)
        if ((nP = NodeTab[i]) && nP->isNode(IPv4adr))
           {smask = nP->NodeMask; break;}
+
+// All done
+//
+   STMutex.UnLock();
+   return smask;
+}
+
+/******************************************************************************/
+
+SMask_t XrdCmsCluster::getMask(const char *Cid)
+{
+   XrdCmsNode *nP;
+   SMask_t smask = 0;
+   XrdOucTList *cP;
+   int i = 1, Cnum = -1;
+
+// Lock the cluster ID list
+//
+   cidMutex.Lock();
+
+// Now find the cluster
+//
+   cP = cidFirst;
+   while(cP && (i = strcmp(Cid, cP->text)) < 0) cP = cP->next;
+
+// If we didn't find the cluster, return a mask of zeroes
+//
+   if (cP) Cnum = cP->val;
+   cidMutex.UnLock();
+   if (i) return smask;
+
+// Obtain a lock on the table
+//
+   STMutex.Lock();
+
+// Run through the table looking for a node with matching cluster number
+//
+   for (i = 0; i <= STHi; i++)
+       if ((nP = NodeTab[i]) && nP->myCNUM == Cnum) smask |= nP->NodeMask;
 
 // All done
 //
@@ -876,6 +922,42 @@ int XrdCmsCluster::Stats(char *bfr, int bln)
 /******************************************************************************/
 /*                       P r i v a t e   M e t h o d s                        */
 /******************************************************************************/
+/******************************************************************************/
+/*                                A s s i g n                                 */
+/******************************************************************************/
+  
+int XrdCmsCluster::Assign(const char *Cid)
+{
+   static int cNum = 0;
+   XrdOucTList *cP, *cPP, *cNew;
+   int n = -1;
+
+// Lock the cluster ID list
+//
+   cidMutex.Lock();
+
+// Now find the cluster
+//
+   cP = cidFirst; cPP = 0;
+   while(cP && (n = strcmp(Cid, cP->text)) < 0) {cPP = cP; cP = cP->next;}
+
+// If an exiting cluster simply return the cluster number
+//
+   if (!n && cP) {n = cP->val; cidMutex.UnLock(); return n;}
+
+// Add this cluster
+//
+   n = ++cNum;
+   cNew = new XrdOucTList(Cid, cNum, cP);
+   if (cPP) cPP->next = cNew;
+      else  cidFirst  = cNew;
+
+// Return the cluster number
+//
+   cidMutex.UnLock();
+   return n;
+}
+
 /******************************************************************************/
 /*                             c a l c D e l a y                              */
 /******************************************************************************/

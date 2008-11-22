@@ -195,8 +195,8 @@ public:
                      if (Chain) Chain->Cleanup(1);
                      SafeDelete(Chain);
                   }
-                  // The proxy chain is owned by the cache; invalid proxies are detected
-                  // (and eventually removed) by QueryProxy
+                  // The proxy chain is owned by the proxy cache; invalid proxies are
+                  // detected (and eventually removed) by QueryProxy
                   PxyChain = 0;
                   SafeDelete(Parms); }
    void Dump(XrdSecProtocolgsi *p = 0);

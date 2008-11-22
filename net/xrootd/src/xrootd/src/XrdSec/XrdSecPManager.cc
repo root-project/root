@@ -117,6 +117,7 @@ XrdSecProtocol *XrdSecPManager::Get(const char     *hname,
                                     char           *sectoken)
 {
    char *nscan, *pname, *pargs, *bp = sectoken;
+   const char *wantProt = getenv("XrdSecPROTOCOL");
    XrdSecProtList *pl;
    XrdSecProtocol *pp;
    XrdOucErrInfo   erp;
@@ -136,13 +137,14 @@ XrdSecProtocol *XrdSecPManager::Get(const char     *hname,
                               else nscan = 0;
                           }
                   }
-         if ((pl = Lookup(pname)) || (pl = ldPO(&erp, 'c', pname)))
-            {DEBUG("Using " <<pname <<" protocol, args='"
-                   <<(pargs ? pargs : "") <<"'");
-             if ((pp = pl->ep('c', hname, netaddr, pargs, &erp))) return pp;
-            }
-         if (erp.getErrInfo() != ENOENT)
-            cerr <<erp.getErrText() <<endl;
+         if (!wantProt or !strcmp(pname, wantProt))
+            {if ((pl = Lookup(pname)) || (pl = ldPO(&erp, 'c', pname)))
+                {DEBUG("Using " <<pname <<" protocol, args='"
+                       <<(pargs ? pargs : "") <<"'");
+                 if ((pp = pl->ep('c', hname, netaddr, pargs, &erp))) return pp;
+                }
+             if (erp.getErrInfo() != ENOENT) cerr <<erp.getErrText() <<endl;
+            } else {DEBUG("Skipping " <<pname <<" only want " <<wantProt);}
          if (!nscan) break;
          *nscan = '&'; bp = nscan;
          }

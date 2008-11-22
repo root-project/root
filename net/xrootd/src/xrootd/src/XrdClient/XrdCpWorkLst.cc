@@ -36,6 +36,37 @@ void PrintLastServerError(XrdClient *cli) {
 }
 
 
+
+bool PedanticOpen4Write(XrdClient *cli, kXR_unt16 mode, kXR_unt16 options) {
+   // To be really pedantic we must disable the parallel open
+   bool paropen = !(options & kXR_delete);
+
+   if (!cli) return false;
+
+   if ( !cli->Open(mode, options, paropen) ) {
+
+      if ( (cli->LastServerError()->errnum == kXR_NotFound)
+           && (options & kXR_delete) ) {
+         // We silently try to remove the dest file, ignoring the result
+         XrdClientAdmin adm(cli->GetCurrentUrl().GetUrl().c_str());
+         if (adm.Connect()) {
+            adm.Rm( cli->GetCurrentUrl().File.c_str() );
+         }
+
+         // And then we try again
+         if ( !cli->Open(mode, options, paropen) )
+            return false;
+
+      }
+      else return false;
+   }
+
+   return true;
+}
+
+
+
+
 XrdCpWorkLst::XrdCpWorkLst() {
    fWorkList.Clear();
    xrda_src = 0;
@@ -172,8 +203,8 @@ int XrdCpWorkLst::SetDest(XrdClient **xrddest, const char *url,
 	 // let's see if url can be opened as a file (file-to-file copy)
 	 *xrddest = new XrdClient(fullurl.c_str());
 
-	 if ( (*xrddest)->Open(kXR_ur | kXR_uw | kXR_gw | kXR_gr | kXR_or,
-			       xrdopenflags) &&
+	 if ( PedanticOpen4Write(*xrddest, kXR_ur | kXR_uw | kXR_gw | kXR_gr | kXR_or,
+                                 xrdopenflags) &&
 	      ((*xrddest)->LastServerResp()->status == kXR_ok) ) {
 
 	    return 0;

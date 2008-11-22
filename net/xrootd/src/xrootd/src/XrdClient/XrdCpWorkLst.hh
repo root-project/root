@@ -16,6 +16,7 @@
 
 class XrdSysDir;
 void PrintLastServerError(XrdClient *cli);
+bool PedanticOpen4Write(XrdClient *cli, kXR_unt16 mode, kXR_unt16 options);
 
 class XrdCpWorkLst {
 

@@ -161,6 +161,8 @@ public:
 
     void ReadLock() { fMultireadMutex.Lock(); }
     void ReadUnLock() { fMultireadMutex.UnLock(); }
+
+   int WipeStreamid(int streamid) { return fMsgQ.WipeStreamid(streamid); }
 };
 
 

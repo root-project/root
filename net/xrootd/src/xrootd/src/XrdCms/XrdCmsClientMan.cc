@@ -192,7 +192,7 @@ int XrdCmsClientMan::Send(const struct iovec *iov, int iovcnt, int iotot)
           {if (!(allok = Link->Send(iov, iovcnt, iotot) > 0))
               {Active = 0;
                Link->Close(1);
-              }
+              } else SendCnt++;
           }
        myData.UnLock();
       }

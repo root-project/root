@@ -12,8 +12,8 @@
 ## Author: Derek Feichtinger <derek.feichtinger@cern.ch>
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id: configure.ac,v 1.36 2008/08/20 02:36:19 abh Exp $
-## Checked in by $Author: abh $
+## Version info: $Id: configure.ac,v 1.41 2008/11/19 17:10:58 dfeich Exp $
+## Checked in by $Author: dfeich $
 #######################################################################
 
 # Note: All macros with the prefix ACX_ are custom macros. Their usage
@@ -21,7 +21,7 @@
 
 
 AC_PREREQ(2.57)
-AC_INIT(xrootd,CVS20080517,xrootd-l@slac.stanford.edu)
+AC_INIT(xrootd,CVS20081118,xrootd-l@slac.stanford.edu)
 AC_CONFIG_SRCDIR([src/XrdVersion.hh])
 
 # use C++ for the compilation of tests
@@ -298,7 +298,7 @@ ACX_COLLECT_OPTION(pwd,$enable_pwd)
 
 ####################################################################
 # Kerberos IV support
-ACX_LIBOPTION(krb4,[Kerberos4 support],yes)
+ACX_LIBOPTION(krb4,[   Kerberos4 support],yes)
 if test x"$acx_krb4_incdir" != x ; then
    AC_MSG_CHECKING([for kerberosIV/krb.h in $acx_krb4_incdir])
    if test ! -f "$acx_krb4_incdir"/kerberosIV/krb.h ; then
@@ -309,14 +309,14 @@ if test x"$acx_krb4_incdir" != x ; then
          AC_MSG_WARN([disabling krb4 support])
          activate_krb4=disabled
       fi
-   else      
+   else
       AC_MSG_RESULT([found])
    fi
 fi
 
 ####################################################################
 # Kerberos 5 support
-ACX_LIBOPTION(krb5,[Kerberos5 support],yes)
+ACX_LIBOPTION(krb5,[   Kerberos5 support],yes)
 if test x"$acx_krb5_incdir" != x ; then
    AC_MSG_CHECKING([for krb5.h in $acx_krb5_incdir])
    if test ! -f "$acx_krb5_incdir"/krb5.h ; then
@@ -338,7 +338,7 @@ if test x"$activate_gsi" = x; then
    activate_gsi=default_no
 fi
 AC_ARG_ENABLE(gsi,
-              [  --enable-gsi     GSI authentication support, requires OpenSSL [[default=no]] ],
+              [  --enable-gsi            GSI authentication support, requires OpenSSL [[default=no]] ],
               [],[enable_gsi=$activate_gsi]
               )
 ACX_COLLECT_OPTION(gsi,$enable_gsi)
@@ -439,7 +439,7 @@ if test x"$activate_posix" = x; then
    activate_posix=default_yes
 fi
 AC_ARG_ENABLE(posix,
-              [  --enable-posix     Enable/disable building of the posix preload library [[default=yes]] ],
+              [  --enable-posix          Enable/disable building of the posix preload library [[default=yes]] ],
               [],[enable_posix=$activate_posix]
              )
 ACX_COLLECT_OPTION(posix,$enable_posix)
@@ -452,7 +452,7 @@ if test x"$activate_mon" = x; then
    activate_mon=default_no
 fi
 AC_ARG_ENABLE(mon,
-              [  --enable-mon     Enable/disable building of monitoring services [[default=no]] ],
+              [  --enable-mon            Enable/disable building of monitoring services [[default=no]] ],
               [],[enable_mon=$activate_mon]
              )
 ACX_COLLECT_OPTION(mon,$enable_mon)
@@ -464,7 +464,7 @@ if test x"$activate_perlint" = x; then
    activate_perlint=default_yes
 fi
 AC_ARG_ENABLE(perlint,
-              [  --enable-perlint      build perl interface [[default=yes]] ],
+              [  --enable-perlint        build perl interface [[default=yes]] ],
               [],[enable_perlint=$activate_perlint]
              )
 ACX_COLLECT_OPTION(perlint,$enable_perlint)
@@ -501,9 +501,38 @@ if test x"$activate_perlint" = xyes -o x"$activate_perlint" = xdefault_yes ; the
         ;;
     esac
   done
+  PERL_CCOPTS=`${PERL} -MExtUtils::Embed -e ccopts`
+
+  # since MacOS now allows packing several archs into one file and
+  # this results in link errors for the unwanted arch, we need to filter
+  # the wrong flags out. This present solution is not nice!
+  twoarchsld=`expr "$PERL_LDOPTS" : '.*\(-arch  *[[a-z0-9]]*.*-arch  *[[a-z0-9]]*\)'`
+  if test x"$twoarchsld" != x; then
+    AC_MSG_WARN([perl says it was linked with multiple -arch flags ($twoarchsld)! Will try to remove one])
+    if test x"$target_cpu" = xi386 -o x"$target_cpu" = xi686; then
+      PERL_LDOPTS=`echo $PERL_LDOPTS | sed -e 's/-arch  *ppc//'` 
+    fi
+    twoarchsld=`expr "$PERL_LDOPTS" : '.*\(-arch  *[[a-z0-9]]*.*-arch  *[[a-z0-9]]*\)'`
+  fi
+
+  twoarchscc=`expr "$PERL_CCOPTS" : '.*\(-arch  *[[a-z0-9]]*.*-arch  *[[a-z0-9]]*\)'`
+  if test x"$twoarchscc" != x; then
+    AC_MSG_WARN([perl says it was compiled with multiple -arch flags ($twoarchscc)! Will try to remove one])
+    if test x"$target_cpu" = xi386 -o x"$target_cpu" = xi686; then
+      PERL_CCOPTS=`echo $PERL_CCOPTS | sed -e 's/-arch  *ppc//'` 
+    fi
+    twoarchscc=`expr "$PERL_CCOPTS" : '.*\(-arch  *[[a-z0-9]]*.*-arch  *[[a-z0-9]]*\)'`
+  fi
+
+  if test x"$twoarchsld" != x -o x"$twoarchscc" != x; then
+     AC_MSG_ERROR([Failed to remove extra -arch flags
+                     LD: $PERL_LDOPTS
+                     CC: $PERL_CCOPTS
+!!!!!!  Please notify maintainers at $PACKAGE_BUGREPORT !!!!!!])
+  fi
+
   AC_MSG_NOTICE([perlembed libraries to link: $PERL_LIBS])
   AC_MSG_NOTICE([perlembed link flags: $PERL_LDOPTS])
-  PERL_CCOPTS=`${PERL} -MExtUtils::Embed -e ccopts`
   AC_MSG_NOTICE([perlembed cc options: $PERL_CCOPTS])
   AC_SUBST(PERL_LIBS)
   AC_SUBST(PERL_LDOPTS)
@@ -514,7 +543,7 @@ if test x"$activate_perlint" = xyes -o x"$activate_perlint" = xdefault_yes ; the
      activate_swig=default_yes
   fi
   AC_ARG_ENABLE(swig,
-              [  --enable-swig     enable rebuilding of Perl wrapper with SWIG [[default=yes]] ],
+              [  --enable-swig           enable rebuilding of Perl wrapper with SWIG [[default=yes]] ],
               [],[enable_swig=$activate_swig])
   if test $enable_swig = "yes"; then activate_swig=yes; fi
   if test $enable_swig = "no"; then activate_swig=no; fi
@@ -550,7 +579,7 @@ if test x"$activate_javaint" = x; then
    activate_javaint=default_no
 fi
 AC_ARG_ENABLE(javaint,
-              [  --enable-javaint      build java interface [[default=no]] ],
+              [  --enable-javaint        build java interface [[default=no]] ],
               [],[enable_javaint=$activate_javaint])
 ACX_COLLECT_OPTION(javaint,$enable_javaint)
 AM_CONDITIONAL(ENABLE_JAVAINT, test x"$activate_javaint" = xyes -o x"$activate_javaint" = xdefault_yes)
@@ -638,7 +667,7 @@ AC_PROG_LIBTOOL
 # Doxygen documentation
 if test x"$activate_doc" = x; then activate_doc=default_no; fi
 AC_ARG_ENABLE(doc,
-              [  --enable-doc      build Doxygen documentation [[default=no]] ],
+              [  --enable-doc            build Doxygen documentation [[default=no]] ],
               [],[enable_doc=$activate_doc])
 ACX_COLLECT_OPTION(doc,$enable_doc)
 AC_PATH_PROGS(DOXYGEN,[doxygen],
@@ -648,6 +677,28 @@ if test x"$DOXYGEN" = x; then
    activate_doc=disabled
 fi
 AM_CONDITIONAL(ENABLE_DOC, test x"$activate_doc" = xyes -o x"$activate_doc" = xdefault_yes)
+
+####################################################################
+# Test for old STL headers (<header.h>) usage 
+# Rather than testing for the availability of old headers, we test for the new headers and only
+# if they do not exist, switch to old header format. If these also do not exist, the error will
+# show up at compile time (well... We do not need to catch everything....)
+AC_CHECK_HEADER([iostream],
+                [],[AC_MSG_WARN([header <iostream> not found. Using old STL header style <iostream.h>])
+                    AC_DEFINE(HAS_OLD_HDRS)]
+               )
+
+#  commented out the following code which implements the header based on a configure switch:
+#if test x"$activate_oldhdrs" = x; then activate_oldhdrs=default_no; fi
+#AC_ARG_ENABLE(oldhdrs,
+#              [  --enable-oldhdrs        Enable/disable usage of std headers
+#                          in form of <name.h> instead of <name>, e.g. <iostream.h>  [[default=disabled]]],
+#              [],[enable_oldhdrs=$activate_oldhdrs]
+#             )
+#ACX_COLLECT_OPTION(oldhdrs,$enable_oldhdrs)
+#if test x"$enable_oldhdrs" = xyes; then
+#   AC_DEFINE(HAS_OLD_HDRS)
+#fi
 
 #################################################################
 # additional architecture dependent compiler flags
@@ -759,6 +810,7 @@ AC_CHECK_FUNC([getprotobyname_r],[AC_DEFINE(HAS_PROTOR)],
               ])
 
 AC_CHECK_FUNC([strlcpy],[AC_DEFINE(HAS_STRLCPY)])
+AC_CHECK_FUNC([sendfile],[AC_DEFINE(HAS_SENDFILE)])
 
 AC_CHECK_FUNC([sendfile],[AC_DEFINE(HAS_SENDFILE)])
 
@@ -795,8 +847,9 @@ AC_SYS_DEV_POLL(AC_DEFINE(_DEVPOLL),[])
 
 ###########################################
 # GNU Readline checks
+enable_readline=yes
 AC_CHECK_HEADERS([readline/readline.h readline/history.h curses.h term.h],
-                  [enable_readline="yes"]
+                  [],[enable_readline="no"]
 		 )
 if test x"$enable_readline" = xyes; then
    AC_CHECK_LIB([readline],[readline],
@@ -809,7 +862,6 @@ AC_SUBST(READLINE_LIBS)
 if test x"$enable_readline" != xyes; then
    AC_MSG_WARN([xrd application will be built without GNU readline support])
 fi
-
 ###########################################
 # Kerberos 4 checks
 krb4tests=ok
@@ -907,6 +959,7 @@ AC_OUTPUT(Makefile
 	  src/XrdSeckrb4/Makefile
 	  src/XrdSeckrb5/Makefile
 	  src/XrdSecgsi/Makefile
+          src/XrdSecsss/Makefile
 	  src/XrdSecunix/Makefile
 	  src/XrdSfs/Makefile
           src/XrdAcc/Makefile

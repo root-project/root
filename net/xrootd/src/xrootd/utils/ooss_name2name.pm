@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 #******************************************************************************
 # (c) 2002 by the Board of Trustees of the Leland Stanford, Jr., University   *
 #                          All Rights Reserved                                *
@@ -6,7 +6,7 @@
 #            DE-AC03-76-SFO0515 with the Department of Energy                 *
 #******************************************************************************
 
-#  $Id: ooss_name2name.pm,v 1.3 2006/10/03 01:10:16 abh Exp $
+#  $Id: ooss_name2name.pm,v 1.5 2008/10/22 14:13:42 furano Exp $
 
 # Generate file name for local and mss systems
 
@@ -20,6 +20,32 @@ require  Exporter;
 @ISA   = qw(Exporter);
 @EXPORT= qw(local2mss mss2local mss2none none2mss);
 
+
+#
+# If mssdir is an URL, this mechanism works only if we make sure that
+# mssdir ends with a double slash, if the url does not contain a path.
+# e.g.
+#  root://host//
+#  root://host//path
+#
+sub fixURLmssdir {
+    my($d) = @_;
+    
+    if ( $d =~ m/^(http\:|root\:|xroot\:)\/\// )  {
+       chop($d) if (substr($d,length($d)-1,1) eq '/');
+       chop($d) if (substr($d,length($d)-1,1) eq '/');
+       chop($d) if (substr($d,length($d)-1,1) eq '/');
+    
+       # now $d should be without any trailing slash, we add two
+       # in the case the path after the hostname is empty
+       return $d if ( $d =~ m|//(.*)//(.*)| );
+       
+       return "$d//";
+    }
+
+    return $d;
+}
+
 # Assumption is that basedir and mssdir are directory paths which may
 # or may not be specified with a trailing '/'. There are four combinations
 # which we must handle:
@@ -31,6 +57,8 @@ require  Exporter;
 
 sub local2mss {
     my($fn) = @_;
+    my($mssdir) = fixURLmssdir($mssdir);
+
     if (substr($basedir,length($basedir)-1,1) eq '/') {
 	if ($fn =~ m|^$basedir(.*)|) {
 	    if (substr($mssdir,length($mssdir)-1,1) eq '/') {
@@ -55,6 +83,8 @@ sub local2mss {
 }
 sub mss2local {
     my($fn) = @_;
+    my($mssdir) = fixURLmssdir($mssdir);
+
     if (substr($mssdir,length($mssdir)-1,1) eq '/') {
 	if ($fn =~ m|^$mssdir(.*)|) {
 	    if (substr($basedir,length($basedir)-1,1) eq '/') {
@@ -79,6 +109,8 @@ sub mss2local {
 }
 sub mss2none {
     my($fn) = @_;
+    my($mssdir) = fixURLmssdir($mssdir);
+
     if (substr($mssdir,length($mssdir)-1,1) eq '/') {
 	return "/$1" if ($fn =~ m|^$mssdir(.*)|);
     }
@@ -89,6 +121,9 @@ sub mss2none {
 }
 sub none2mss {
     my($fn) = @_;
+    my($mssdir) = fixURLmssdir($mssdir);
+
+
     if (substr($mssdir,length($mssdir)-1,1) eq '/') {
         my($tfn) = $mssdir;
 	chop($tfn);

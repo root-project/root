@@ -252,6 +252,7 @@ void XrdCmsProtocol::Pander(const char *manager, int mport)
    unsigned int Mode, Role = 0;
    int Lvl=0, Netopts=0, waits=6, tries=6, fails=0, xport=mport;
    int rc, fsUtil, KickedOut, myNID = ManTree.Register();
+   int chk4Suspend = 0;
    char manbuff[256];
    const char *manp = manager;
    const int manblen = sizeof(manbuff);
@@ -287,12 +288,14 @@ void XrdCmsProtocol::Pander(const char *manager, int mport)
 // If we are a simple server, permanently add the nostage option if we are
 // not able to stage any files.
 //
-   if (Role == CmsLoginData::kYR_server && !Config.DiskSS)
-      Role |=  CmsLoginData::kYR_nostage;
+   if (Role == CmsLoginData::kYR_server)
+      {chk4Suspend = 1;
+       if (!Config.DiskSS) Role |=  CmsLoginData::kYR_nostage;
+      }
 
 // Keep connecting to our manager. If suspended, wait for a resumption first
 //
-   do {if (Config.doWait) 
+   do {if (Config.doWait && chk4Suspend)
           while(CmsState.Suspended)
                {if (!waits--)
                    {Say.Emsg("Pander", "Suspend state still active."); waits=6;}

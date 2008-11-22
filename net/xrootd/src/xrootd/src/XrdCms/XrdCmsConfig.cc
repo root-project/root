@@ -286,7 +286,7 @@ int XrdCmsConfig::Configure1(int argc, char **argv, char *cfn)
 //
    if (!NoGo)
       {if ((isManager && !isServer) || isPeer)
-          {if (PortTCP < 0)
+          {if (PortTCP <= 0)
               {Say.Emsg("Config", myRole, "port not specified."); NoGo = 1;}
           }
           else PortTCP = 0;
@@ -313,6 +313,7 @@ int XrdCmsConfig::Configure2()
 
   Output:   0 upon success or !0 otherwise.
 */
+   EPNAME("Configure2");
    int NoGo = 0;
    char *p, buff[512];
 
@@ -345,11 +346,10 @@ int XrdCmsConfig::Configure2()
 
 // Develop a stable unique identifier for this cmsd independent of the port
 //
-   if (!NoGo)
-      {char sidbuf[1024];
-       sprintf(sidbuf, "%s%c", AdminPath, (isManager ? 'm' : 's'));
-       mySID = strdup(sidbuf);
-      }
+   if (!NoGo && !(mySID = setupSid()))
+      {Say.Emsg("cmsd", "Unable to generate system ID; too many managers.");
+       NoGo = 1;
+      } else {DEBUG("Cluster/Node ID = " <<mySID);}
 
 // If we need a name library, load it now
 //
@@ -534,6 +534,7 @@ void XrdCmsConfig::DoIt()
 
 // All done
 //
+   if (!SUPCount) CmsState.Update(XrdCmsState::Counts, 0, 0);
    CmsState.Enable();
    Say.Emsg("Config", myRole, "service enabled.");
 }
@@ -619,6 +620,7 @@ void XrdCmsConfig::ConfigDefaults(void)
    myInsName= 0;
    myRole    =0;
    ManList   =0;
+   NanList   =0;
    mySID    = 0;
    perfint  = 3*60;
    perfpgm  = 0;
@@ -867,10 +869,11 @@ int XrdCmsConfig::MergeP()
   
 int XrdCmsConfig::PidFile()
 {
+    static const char *envPIDFN = "XRDCMSPIDFN=";
     int rc, xfd;
-    char buff[1024];
+    char buff[1024], *Space;
     char pidFN[1200], *ppath=XrdOucUtils::genPath(pidPath,
-                                        (strcmp("anon",myInsName)?myInsName:0));
+                              (strcmp("anon",myInsName)?myInsName:0));
     const char *xop = 0;
 
     if ((rc = XrdOucUtils::makePath(ppath, XrdOucUtils::pathMode)))
@@ -879,6 +882,8 @@ int XrdCmsConfig::PidFile()
         return 1;
        }
 
+    if ((Space = index(mySID, ' '))) *Space = '\0';
+
          if (isManager && isServer)
             snprintf(pidFN, sizeof(pidFN), "%s/cmsd.super.pid", ppath);
     else if (isServer)
@@ -886,16 +891,27 @@ int XrdCmsConfig::PidFile()
     else    snprintf(pidFN, sizeof(pidFN), "%s/cmsd.mangr.pid", ppath);
 
     if ((xfd = open(pidFN, O_WRONLY|O_CREAT|O_TRUNC,0644)) < 0) xop = "open";
-       else {if ((write(xfd, buff, snprintf(buff,sizeof(buff),"%d",getpid())) < 0)
-             || (LocalRoot && (write(xfd,(void *)"\n&pfx=",6)  < 0 ||
-                               write(xfd,(void *)LocalRoot,strlen(LocalRoot)) < 0))
-             || (AdminPath && (write(xfd,(void *)"\n&ap=", 5)  < 0 ||
-                               write(xfd,(void *)AdminPath,strlen(AdminPath)) < 0))
+       else {if ((write(xfd,buff,snprintf(buff,sizeof(buff),"%d",getpid()))<0)
+             || (LocalRoot && 
+                           (write(xfd,(void *)"\n&pfx=",6)  < 0 ||
+                            write(xfd,(void *)LocalRoot,strlen(LocalRoot)) < 0
+                )          )
+             || (AdminPath && 
+                           (write(xfd,(void *)"\n&ap=", 5)  < 0 ||
+                            write(xfd,(void *)AdminPath,strlen(AdminPath)) < 0
+                )          )
+             ||             write(xfd,(void *)"\n&cn=", 5)  < 0
+             ||             write(xfd,(void *)mySID,    strlen(mySID))     < 0
                 ) xop = "write";
              close(xfd);
             }
 
      if (xop) Say.Emsg("Config", errno, xop, pidFN);
+        else {char *benv = (char *) malloc(strlen(envPIDFN) + strlen(pidFN) + 2);
+              sprintf(benv,"%s=%s", envPIDFN, pidFN); putenv(benv);
+             }
+
+     if (Space) *Space = ' ';
      return xop != 0;
 }
 
@@ -1041,6 +1057,56 @@ int XrdCmsConfig::setupServer()
 // All done
 //
    return 0;
+}
+
+/******************************************************************************/
+/*                              s e t u p S i d                               */
+/******************************************************************************/
+  
+char *XrdCmsConfig::setupSid()
+{
+   static const char *envCNAME = "XRDCMSCLUSTERID";
+   XrdOucTList *tpF, *tp = (NanList ? NanList : ManList);
+   const char *insName = (myInsName ? myInsName : "anon");
+   char sidbuff[8192], *sidend = sidbuff+sizeof(sidbuff)-32, *sp = sidbuff;
+   char *fMan, *fp, *xp, sfx; 
+   int n;
+
+// Develop a unique cluster name for this cluster
+//
+   if (!tp) {strcpy(sidbuff, myInstance); sp += strlen(myInstance);}
+      else {tpF = tp;
+            fMan = tp->text + strlen(tp->text) - 1;
+            while((tp = tp->next))
+                 {fp = fMan; xp = tp->text + strlen(tp->text) - 1;
+                  do {if (*fp != *xp) break;
+                      xp--;
+                     } while(fp-- != tpF->text);
+                  if ((n = xp - tp->text + 1) > 0)
+                     {sp += sprintf(sp, "%d", tp->val);
+                      if (sp+n >= sidend) return (char *)0;
+                      strncpy(sp, tp->text, n); sp += n;
+                     }
+                 }
+            sp += sprintf(sp, "%d", tpF->val);
+            n = strlen(tpF->text);
+            if (sp+n >= sidend) return (char *)0;
+            strcpy(sp, tpF->text); sp += n;
+           }
+
+// Set envar to hold the cluster name
+//
+   *sp = '\0';
+   char *benv = (char *) malloc(strlen(envCNAME) + strlen(sidbuff) + 2);
+   sprintf(benv,"%s=%s", envCNAME, sidbuff); putenv(benv);
+
+// Add semi-unique name for this node in the cluster
+//
+   if (sp+strlen(myInstance) >= sidend) return (char *)0;
+   if (isManager && isServer) sfx = 'u';
+      else sfx = (isManager ? 'm' : 's');
+   sprintf(sp, " %s-%c", insName, sfx);
+   return  strdup(sidbuff);
 }
 
 /******************************************************************************/
@@ -1347,7 +1413,7 @@ int XrdCmsConfig::Fsysadd(XrdSysError *eDest, int chk, char *fn)
 int XrdCmsConfig::xdelay(XrdSysError *eDest, XrdOucStream &CFile)
 {   char *val;
     const char *etxt = "invalid delay option";
-    int  i, ppp, ispercent = 0;
+    int  i, ppp, minV = 1, ispercent = 0;
     static struct delayopts {const char *opname; int *oploc; int istime;}
            dyopts[] =
        {
@@ -1389,11 +1455,11 @@ int XrdCmsConfig::xdelay(XrdSysError *eDest, XrdOucStream &CFile)
                                   return 1;
                               } else {
                                if (*dyopts[i].opname == 's')
-                                  {ppp = strlen(val); SUPLevel = 0;
+                                  {ppp = strlen(val); SUPLevel = 0; minV = 0;
                                    if (val[ppp-1] == '%')
                                       {ispercent = 1; val[ppp-1] = '\0';}
-                                  }
-                               if (XrdOuca2x::a2i( *eDest,etxt,val,&ppp,1))
+                                  } else minV = 1;
+                               if (XrdOuca2x::a2i( *eDest,etxt,val,&ppp,minV))
                                   return 1;
                               }
                    if (!ispercent) *dyopts[i].oploc = ppp;
@@ -1661,10 +1727,10 @@ int XrdCmsConfig::xmang(XrdSysError *eDest, XrdOucStream &CFile)
     };
 
     struct sockaddr InetAddr[8];
-    XrdOucTList *tp = 0;
+    XrdOucTList *tp = 0, *tpp = 0, *tpnew;
     char *val, *bval = 0, *mval = 0;
     StorageHelper SHelp(&bval, &mval);
-    int j, i, port = 0, xMeta = 0, xPeer = 0, xProxy = 0;
+    int j, i, multi = 0, port = 0, xMeta = 0, xPeer = 0, xProxy = 0, Prt = 1;
 
 //  Process the optional "peer" or "proxy"
 //
@@ -1720,45 +1786,54 @@ int XrdCmsConfig::xmang(XrdSysError *eDest, XrdOucStream &CFile)
 
     i = strlen(mval);
     if (mval[i-1] != '+') 
-       {i = 0;
+       {i = 1;
         if (!XrdNetDNS::getHostAddr(mval, InetAddr))
            {eDest->Emsg("CFile","Manager host", mval, "not found");
             return 1;
            }
+        free(mval); mval = XrdNetDNS::getHostName(InetAddr[0]);
        }
-        else {bval = strdup(mval); mval[i-1] = '\0';
+        else {bval = strdup(mval); mval[i-1] = '\0'; multi = 1;
               if (!(i = XrdNetDNS::getHostAddr(mval, InetAddr, 8)))
                  {eDest->Emsg("CFile","Manager host", mval, "not found");
                   return 1;
                  }
              }
 
+// Now try to determine our port number if we are a [meta] manager
+//
     if (isManager && !isServer)
        {if ((xMeta && isMeta) || (!xMeta && !isMeta))
-           for (j = 0; j <= i; j++)
+           for (j = 0; j < i; j++)
                 if (!memcmp(&InetAddr[j], &myAddr, sizeof(struct sockaddr)))
-                   {PortTCP = port; return 0;}
-        if (!xMeta || isMeta) return 0;
+                   {PortTCP = port; break;}
+        if (isMeta) return (xMeta ? 0: CFile.noEcho());
+        if (!xMeta) Prt = 0;
        }
 
-    do {if (i)
-           {i--; free(mval);
+    do {if (multi)
+           {free(mval);
             char mvBuff[1024];
-            sprintf(mvBuff, "%s -> all.manager ", bval);
-            mval = XrdNetDNS::getHostName(InetAddr[i]);
-            eDest->Say("Config ", mvBuff, mval);
+            if (Prt) sprintf(mvBuff, "%s -> all.manager ", bval);
+            mval = XrdNetDNS::getHostName(InetAddr[i-1]);
+            if (Prt) eDest->Say("Config ", mvBuff, mval);
            }
-        tp = ManList;
+        tp = (Prt ? ManList : NanList); tpp = 0; j = 1;
         while(tp) 
-             if (strcmp(tp->text, mval) || tp->val != port) tp = tp->next;
-                else {eDest->Say("Config warning: duplicate manager ",mval);
+             if ((j = strcmp(tp->text, mval)) < 0 || tp->val != port)
+                {tpp = tp; tp = tp->next;}
+                else {if (Prt && !j)
+                         eDest->Say("Config warning: duplicate manager ",mval);
                       break;
                      }
-        if (tp) break;
-        ManList = new XrdOucTList(mval, port, ManList);
-       } while(i);
+        if (j) {tpnew = new XrdOucTList(mval, port, tp);
+                if (tpp) tpp->next = tpnew;
+                   else if (Prt) ManList = tpnew;
+                           else  NanList = tpnew;
+               }
+       } while(--i);
 
-    return tp != 0;
+    return 0;
 }
   
 /******************************************************************************/

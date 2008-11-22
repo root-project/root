@@ -8,9 +8,9 @@
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
-//         $Id: XrdPollE.icc,v 1.5 2008/07/14 11:51:08 ganis Exp $
+//         $Id: XrdPollE.icc,v 1.6 2008/10/12 03:29:03 abh Exp $
 
-const char *XrdPollECVSID = "cvsid: $Id: XrdPollE.icc,v 1.5 2008/07/14 11:51:08 ganis Exp $";
+const char *XrdPollECVSID = "cvsid: $Id: XrdPollE.icc,v 1.6 2008/10/12 03:29:03 abh Exp $";
 
 #ifndef __macos__
 #include <malloc.h>
@@ -73,6 +73,7 @@ XrdPoll *XrdPoll::newPoller(int pollid, int maxfd)
 //
    if ((pfd = epoll_create(maxfd)) < 0)
       {XrdLog.Emsg("Poll", errno, "create epoll device"); return 0;}
+   fcntl(pfd, F_SETFD, FD_CLOEXEC);
 
 // Calculate the size of the poll table and allocate it
 //

@@ -75,7 +75,7 @@ int XrdOssSys::Stat(const char *path, struct stat *buff, int resonly)
 // Generate remote path
 //
    if (rmt_N2N)
-      if ((retc = rmt_N2N->lfn2pfn(path, actual_path, sizeof(actual_path))))
+      if ((retc = rmt_N2N->lfn2rfn(path, actual_path, sizeof(actual_path))))
          return retc;
          else remote_path = actual_path;
       else remote_path = (char *)path;

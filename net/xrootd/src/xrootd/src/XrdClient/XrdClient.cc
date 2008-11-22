@@ -69,7 +69,7 @@ XrdClient::XrdClient(const char *url) {
     if (!ConnectionManager)
 	Info(XrdClientDebug::kNODEBUG,
 	     "Create",
-	     "(C) 2004 SLAC INFN XrdClient $Revision: 1.124 $ - Xrootd version: " << XrdVSTRING);
+	     "(C) 2004 SLAC INFN XrdClient $Revision: 1.128 $ - Xrootd version: " << XrdVSTRING);
 
 #ifndef WIN32
     signal(SIGPIPE, SIG_IGN);
@@ -966,7 +966,7 @@ bool XrdClient::LowOpen(const char *file, kXR_unt16 mode, kXR_unt16 options,
     ClientRequest openFileRequest;
 
     char buf[1024];
-    struct ServerResponseBody_Open *openresp = (struct ServerResponseBody_Open *)buf;;
+    struct ServerResponseBody_Open *openresp = (struct ServerResponseBody_Open *)buf;
 
     memset(&openFileRequest, 0, sizeof(openFileRequest));
 
@@ -988,28 +988,34 @@ bool XrdClient::LowOpen(const char *file, kXR_unt16 mode, kXR_unt16 options,
 					    (const void *)finalfilename.c_str(),
 					    0, openresp, false, (char *)"Open");
 
-    if (resp) {
-	// Get the file handle to use for future read/write...
-	memcpy( fHandle, openresp->fhandle, sizeof(fHandle) );
+    if (resp && (fConnModule->LastServerResp.status == 0)) {
+       // Get the file handle to use for future read/write...
+       if (fConnModule->LastServerResp.dlen >= (kXR_int32)sizeof(fHandle)) {
 
-	fOpenPars.opened = TRUE;
-	fOpenPars.options = options;
-	fOpenPars.mode = mode;
+          memcpy( fHandle, openresp->fhandle, sizeof(fHandle) );
 
-	if (fConnModule->LastServerResp.dlen > 12) {
+          fOpenPars.opened = TRUE;
+          fOpenPars.options = options;
+          fOpenPars.mode = mode;
+       }
+       else
+          Error("Open",
+                "Server did not return a filehandle. Protocol error.");
+
+       if (fConnModule->LastServerResp.dlen > 12) {
 	  // Get the stats
 	  Info(XrdClientDebug::kHIDEBUG,
 	       "Open", "Returned stats=" << ((char *)openresp + sizeof(struct ServerResponseBody_Open)));
-
+          
 	  sscanf((char *)openresp + sizeof(struct ServerResponseBody_Open), "%ld %lld %ld %ld",
 		 &fStatInfo.id,
 		 &fStatInfo.size,
 		 &fStatInfo.flags,
 		 &fStatInfo.modtime);
-
+          
 	  fStatInfo.stated = true;
-	}
-
+       }
+       
     }
 
 
@@ -1092,14 +1098,12 @@ bool XrdClient::Close() {
 
     // Use the sync one only if the file was opened for writing
     // To enforce the server side correct data flushing
-    if (IsOpenedForWrite()) {
+    if (IsOpenedForWrite())
       fConnModule->DoWriteHardCheckPoint();
-      fConnModule->SendGenCommand(&closeFileRequest,
-				  0,
-				  0, 0 , FALSE, (char *)"Close");
-    }
-    else
-      fConnModule->WriteToServer_Async(&closeFileRequest, 0, 0); 
+
+    fConnModule->SendGenCommand(&closeFileRequest,
+				0,
+				0, 0 , FALSE, (char *)"Close");
   
     // No file is opened for now
     fOpenPars.opened = FALSE;
@@ -1170,7 +1174,7 @@ bool XrdClient::Copy(const char *localpath) {
     }
 
     Stat(0);
-    int f = open(localpath, O_CREAT | O_RDWR);   
+    int f = open(localpath, O_CREAT | O_RDWR, 0);   
     if (f < 0) {
 	Error("Copy", "Error opening local file.");
 	return FALSE;
@@ -1327,6 +1331,14 @@ UnsolRespProcResult XrdClient::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *se
                                                              unsolmsg->HeaderSID()) ) {
 		struct SidInfo *si =
                    ConnectionManager->SidManager()->GetSidInfo(unsolmsg->HeaderSID());
+
+                if (!si) {
+                   Error("ProcessUnsolicitedMsg",
+                         "Orphaned streamid detected: " << unsolmsg->HeaderSID());
+                   return kUNSOL_DISPOSE;
+                }
+
+
 		ClientRequest *req = &(si->outstandingreq);
 	 
 		Info(XrdClientDebug::kHIDEBUG,
@@ -1334,7 +1346,7 @@ UnsolRespProcResult XrdClient::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *se
 		     "Processing async response from streamid " <<
 		     unsolmsg->HeaderSID() << " father=" <<
 		     si->fathersid );
-
+                
 		// We are interested in data, not errors...
 		if ( (unsolmsg->HeaderStatus() == kXR_oksofar) || 
 		     (unsolmsg->HeaderStatus() == kXR_ok) ) {

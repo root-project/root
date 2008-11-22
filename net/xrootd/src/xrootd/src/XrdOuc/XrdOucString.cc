@@ -441,7 +441,7 @@ int XrdOucString::matches(const char *s, char wch)
    while (next) {
 
       // token end
-      int te = ps ? (ps - s) : ls;  
+      int te = ps ? (ps - s) : ls;
       // token size
       int ts = te - tb;
 
@@ -462,7 +462,7 @@ int XrdOucString::matches(const char *s, char wch)
       }
       // next token begin, if any
       tb = te + 1;
-      ps = (char *)strchr(s+tb,wch);
+      ps = (tb < ls) ? (char *)strchr(s+tb, wch) : 0;
       next = (ps || (tb < ls)) ? 1 : 0;
    }
 

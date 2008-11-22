@@ -45,6 +45,8 @@ ppc_linux       gccppc64  all    for PPC Linux egcs/gcc and glibc - 64 bit
 ppc_darwin_70   macos     all    for MacOSX gcc
 macosx_74       macos     all    for MacOSX gcc
 macosx          macos     all    for MacOSX gcc
+x86_macosx      macos     all    for MacOSX gcc
+x86_64_macosx      macos64     all    for MacOSX gcc
 macosx          macos64   all    for MacOSX gcc
 sgi             sgiCC     no     for SGI IRIX 6.x with CC (opt -n32)
 sgi             gcc       no     for SGI IRIX 6.x with gcc and glibc

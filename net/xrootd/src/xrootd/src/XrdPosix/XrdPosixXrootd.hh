@@ -103,6 +103,8 @@ static ssize_t Writev(int fildes, const struct iovec *iov, int iovcnt);
 //
 static int     Access(const char *path, int amode);
 
+static void    initEnv();
+
 static bool    isXrootdDir(DIR *dirp);
 
 static int     mapError(int rc);
