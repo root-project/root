@@ -112,9 +112,10 @@ class TProofDataSetManager;
 // 17 -> 18: support for reconnection on daemon restarts
 // 18 -> 19: TProofProgressStatus used in kPROOF_PROGRESS, kPROOF_STOPPROCESS
 //           and kPROOF_GETNEXTPACKET messages in Master - worker communication
+// 19 -> 20: Fix the asynchronous mode (required changes in some messages)
 
 // PROOF magic constants
-const Int_t       kPROOF_Protocol        = 19;            // protocol version number
+const Int_t       kPROOF_Protocol        = 20;            // protocol version number
 const Int_t       kPROOF_Port            = 1093;          // IANA registered PROOF port
 const char* const kPROOF_ConfFile        = "proof.conf";  // default config file
 const char* const kPROOF_ConfDir         = "/usr/local/root";  // default config dir
@@ -393,6 +394,7 @@ private:
    TString         fWorkDir;         //current work directory on remote servers
    Int_t           fLogLevel;        //server debug logging level
    Int_t           fStatus;          //remote return status (part of kPROOF_LOGDONE)
+   Int_t           fCheckFileStatus; //remote return status after kPROOF_CHECKFILE
    TList          *fRecvMessages;    //Messages received during collect not yet processed
    TList          *fSlaveInfo;       //!list returned by kPROOF_GETSLAVEINFO
    Bool_t          fMasterServ;      //true if we are a master server
@@ -423,7 +425,7 @@ private:
    FileMap_t       fFileMap;         //map keeping track of a file's md5 and mod time
    TDSet          *fDSet;            //current TDSet being validated
 
-   Bool_t          fIdle;            //on clients, true if no PROOF jobs running
+   Int_t           fNotIdle;         //Number of non-idle sub-nodes
    Bool_t          fSync;            //true if type of currently processed query is sync
    ERunStatus      fRunStatus;       //run status
 
@@ -473,6 +475,7 @@ protected:
    Long64_t        fTotalBytes;     //number of bytes to be analyzed
    TList          *fAvailablePackages; //list of available packages
    TList          *fEnabledPackages;   //list of enabled packages
+   TList          *fRunningDSets;   // Temporary datasets used for async running
 
    Int_t           fCollectTimeout; // Timeout for (some) collect actions
 
@@ -535,10 +538,13 @@ private:
    Int_t    BroadcastObject(const TObject *obj, Int_t kind = kMESS_OBJECT, ESlaves list = kActive);
    Int_t    BroadcastRaw(const void *buffer, Int_t length, TList *slaves);
    Int_t    BroadcastRaw(const void *buffer, Int_t length, ESlaves list = kActive);
-   Int_t    Collect(const TSlave *sl, Long_t timeout = -1);
-   Int_t    Collect(TMonitor *mon, Long_t timeout = -1);
-   Int_t    CollectInputFrom(TSocket *s);
+   Int_t    Collect(const TSlave *sl, Long_t timeout = -1, Int_t endtype = -1);
+   Int_t    Collect(TMonitor *mon, Long_t timeout = -1, Int_t endtype = -1);
+   Int_t    CollectInputFrom(TSocket *s, Int_t endtype = -1);
+   Int_t    HandleInputMessage(TSlave *wrk, TMessage *m);
    void     SetMonitor(TMonitor *mon = 0, Bool_t on = kTRUE);
+
+   void     ReleaseMonitor(TMonitor *mon);
 
    void     FindUniqueSlaves();
    TSlave  *FindSlave(TSocket *s) const;
@@ -567,7 +573,7 @@ private:
 
    void     ActivateAsyncInput();
    void     DeActivateAsyncInput();
-   void     HandleAsyncInput(TSocket *s);
+
    Int_t    GetQueryReference(Int_t qry, TString &ref);
 
    void     PrintProgress(Long64_t total, Long64_t processed, Float_t procTime = -1.);
@@ -597,8 +603,8 @@ protected:
 
    virtual void SaveWorkerInfo();
 
-   Int_t    Collect(ESlaves list = kActive, Long_t timeout = -1);
-   Int_t    Collect(TList *slaves, Long_t timeout = -1);
+   Int_t    Collect(ESlaves list = kActive, Long_t timeout = -1, Int_t endtype = -1);
+   Int_t    Collect(TList *slaves, Long_t timeout = -1, Int_t endtype = -1);
 
    void         SetDSet(TDSet *dset) { fDSet = dset; }
    virtual void ValidateDSet(TDSet *dset);
@@ -643,7 +649,7 @@ public:
    virtual Long64_t Process(const char *selector, Long64_t nentries,
                             Option_t *option = "");
 
-   Long64_t    DrawSelect(TDSet *dset, const char *varexp,
+   virtual Long64_t DrawSelect(TDSet *dset, const char *varexp,
                           const char *selection = "",
                           Option_t *option = "", Long64_t nentries = -1,
                           Long64_t firstentry = 0);
@@ -751,7 +757,7 @@ public:
    Bool_t      IsMaster() const { return fMasterServ; }
    Bool_t      IsValid() const { return fValid; }
    Bool_t      IsParallel() const { return GetParallel() > 0 ? kTRUE : kFALSE; }
-   Bool_t      IsIdle() const { return fIdle; }
+   Bool_t      IsIdle() const { return (fNotIdle <= 0) ? kTRUE : kFALSE; }
 
    ERunStatus  GetRunStatus() const { return fRunStatus; }
    TList      *GetLoadedMacros() const { return fLoadedMacros; }

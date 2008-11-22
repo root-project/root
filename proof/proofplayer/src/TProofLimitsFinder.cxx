@@ -36,25 +36,39 @@ void TProofLimitsFinder::AutoBinFunc(TString& key,
    // Get bining information. Send current min and max and receive common
    // min max in return.
 
-   if ( gProofServ == 0 ) return;
+   if (!gProofServ) return;
 
    TSocket *s = gProofServ->GetSocket();
    TMessage mess(kPROOF_AUTOBIN);
 
    PDB(kGlobal, 2) {
-      ::Info("TProofLimitsFinder::AutoBinFunc", Form("Sending %f, %f, %f, %f, %f, %f", xmin, xmax, ymin, ymax, zmin, zmax));
+      ::Info("TProofLimitsFinder::AutoBinFunc",
+             "Sending %f, %f, %f, %f, %f, %f", xmin, xmax, ymin, ymax, zmin, zmax);
    }
    mess << key << xmin << xmax << ymin << ymax << zmin << zmax;
 
    s->Send(mess);
 
-   TMessage *answ;
-   if (s->Recv(answ) <= 0)
-      return;
+   Bool_t notdone = kTRUE;
+   while (notdone) {
+      TMessage *answ;
+      if (s->Recv(answ) <= 0 || !answ)
+         return;
 
-   (*answ) >> key >> xmin >> xmax >> ymin >> ymax >> zmin >> zmax;
-
-   delete answ;
+      Int_t what = answ->What();
+      if (what == kPROOF_AUTOBIN) {
+         (*answ) >> key >> xmin >> xmax >> ymin >> ymax >> zmin >> zmax;
+         notdone = kFALSE;
+      } else {
+         Int_t xrc = gProofServ->HandleSocketInput(answ, kFALSE);
+         if (xrc == -1) {
+            ::Error("TProofLimitsFinder::AutoBinFunc", "command %d cannot be executed while processing", what);
+         } else if (xrc == -2) {
+            ::Error("TProofLimitsFinder::AutoBinFunc", "unknown command %d ! Protocol error?", what);
+         }
+      }
+      delete answ;
+   }
 }
 
 //______________________________________________________________________________

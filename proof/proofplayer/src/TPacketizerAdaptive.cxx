@@ -1035,49 +1035,21 @@ void TPacketizerAdaptive::ValidateFiles(TDSet *dset, TList *slaves)
          Error("ValidateFiles", "Recv failed! for worker-%s (%s)",
                slave->GetOrdinal(), slave->GetName());
          continue;
-         }
+      }
 
-      if (reply->What() == kPROOF_FATAL) {
-         Error("ValidateFiles", "kPROOF_FATAL from worker-%s (%s)",
-               slave->GetOrdinal(), slave->GetName());
-         ((TProof*)gProof)->MarkBad(slave, "received kPROOF_FATAL during validation");
-         fValid = kFALSE;
-         continue;
-      } else if (reply->What() == kPROOF_LOGFILE) {
-         PDB(kPacketizer,3) Info("ValidateFiles", "got logfile");
-         Int_t size;
-         (*reply) >> size;
-         ((TProof*)gProof)->RecvLogFile(sock, size);
-         mon.Activate(sock);
-         continue;
-      } else if (reply->What() == kPROOF_LOGDONE) {
-         PDB(kPacketizer,3) Info("ValidateFiles", "got logdone");
-         mon.Activate(sock);
-         continue;
-      } else if (reply->What() == kPROOF_TOUCH) {
-         PDB(kPacketizer,3) Info("ValidateFiles", "got logdone");
-         slave->Touch();
-         mon.Activate(sock);
-         continue;
-      } else if ( reply->What() == kPROOF_MESSAGE ) {
-         // Send one level up
-         TString s;
-         (*reply) >> s;
-         Bool_t lfeed = kTRUE;
-         if ((reply->BufferSize() > reply->Length()))
-            (*reply) >> lfeed;
-         TMessage m(kPROOF_MESSAGE);
-         m << s << lfeed;
-         gProofServ->GetSocket()->Send(m);
-         mon.Activate(sock);
-         continue;
-      } else if (reply->What() != kPROOF_GETENTRIES) {
-         // Help! unexpected message type
-         Error("ValidateFiles",
-               "unexpected message type (%d) from worker-%s (%s)",
-               reply->What(), slave->GetOrdinal(), slave->GetName());
-         ((TProof*)gProof)->MarkBad(slave, "unexpected message type during validation");
-         fValid = kFALSE;
+      if (reply->What() != kPROOF_GETENTRIES) {
+         // Not what we want: handover processing to the central machinery
+         Int_t what = reply->What();
+         ((TProof*)gProof)->HandleInputMessage(slave, reply);
+         if (what == kPROOF_FATAL) {
+             Error("ValidateFiles", "kPROOF_FATAL from worker-%s (%s)",
+                                    slave->GetOrdinal(), slave->GetName());
+             fValid = kFALSE;
+         } else {
+            // Reactivate the socket
+            mon.Activate(sock);
+         }
+         // Get next message
          continue;
       }
 

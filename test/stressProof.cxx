@@ -47,6 +47,7 @@
 // *   Test  9 : Package management with 'event' .................. OK *   * //
 // *   Test 10 : Simple 'event' generation ........................ OK *   * //
 // *   Test 11 : Input data propagation ........................... OK *   * //
+// *   Test 12 : H1, Simple: async mode :.......................... OK *   * //
 // *  * All registered tests have been passed  :-)                     *   * //
 // *  ******************************************************************   * //
 // *                                                                       * //
@@ -55,6 +56,8 @@
 // * the caller is asked if she/he wants to keep the log file; if the      * //
 // * specifies a log file path of her/his choice, the log file is never    * //
 // * deleted.                                                              * //
+// *                                                                       * //
+// * SKIPPED means that the test cannot be run.                            * //
 // *                                                                       * //
 // * New tests can be easily added by providing a function performing the  * //
 // * test and a name for the test; see examples below.                     * //
@@ -78,6 +81,7 @@
 #include "TProofLog.h"
 #include "TProofMgr.h"
 #include "TQueryResult.h"
+#include "TStopwatch.h"
 #include "TString.h"
 #include "TSystem.h"
 #include "TROOT.h"
@@ -90,6 +94,12 @@ static TString glogfile = 0;
 static Int_t gpoints = 0;
 static Int_t totpoints = 53;
 static RedirectHandle_t gRH;
+static Double_t gH1Time = 0;
+static Double_t gSimpleTime = 0;
+static Int_t gH1Cnt = 0;
+static Int_t gSimpleCnt = 0;
+static TStopwatch gTimer;
+static Bool_t gTimedOut = kFALSE;
 
 void stressProof(const char *url = "proof://localhost:11093",
                  Int_t nwrks = -1, Int_t verbose = 0, const char *logfile = 0);
@@ -186,17 +196,6 @@ void PrintStressProgress(Long64_t total, Long64_t processed, Float_t)
    static int lstpc = 1;
 
    int ns = 0;
-   for (int l = 0; l < 5; l++) {
-      if (total > 0) {
-         if (l < (5*processed)/total) {
-            ns++;
-            if (processed >= total)
-               PutPoint();
-            else
-               fprintf(stderr, ".");
-         }
-      }
-   }
    if (processed < total) {
       ns += 6;
       fprintf(stderr, "%c %2.0f %%", pc[(lstpc++)%2],
@@ -225,6 +224,31 @@ public:
    Int_t Run();
 };
 
+//
+// Timer to stop asynchronous actions
+//
+class TTimeOutTimer : public TTimer {
+public:
+   TTimeOutTimer(Long_t ms);
+   Bool_t  Notify();
+};
+
+TTimeOutTimer::TTimeOutTimer(Long_t ms)
+              : TTimer(ms, kTRUE)
+{
+   //constructor
+   gSystem->AddTimer(this);
+}
+
+Bool_t TTimeOutTimer::Notify()
+{
+   //notifier
+   gTimedOut = kTRUE;
+   Remove();       // one shot only
+   return kTRUE;
+}
+//------------------------------------------------------------------------------
+
 //_____________________________________________________________________________
 Int_t ProofTest::Run()
 {
@@ -240,6 +264,11 @@ Int_t ProofTest::Run()
       Int_t np = totpoints - strlen(GetName()) - strlen(" OK *");
       while (np--) { printf("."); }
       printf(" OK *\n");
+   } else if (rc == 1) {
+      Int_t np = totpoints - strlen(GetName()) - strlen(" SKIPPED *");
+      while (np--) { printf("."); }
+      printf(" SKIPPED *\n");
+      gSystem->ShowOutput(&gRH);
    } else {
       Int_t np = totpoints - strlen(GetName()) - strlen(" FAILED *");
       while (np--) { printf("."); }
@@ -261,6 +290,7 @@ Int_t PT_DataSets(void *);
 Int_t PT_Packages(void *);
 Int_t PT_Event(void *);
 Int_t PT_InputData(void *);
+Int_t PT_H1SimpleAsync(void *arg);
 
 // Arguments structures
 typedef struct {            // Open
@@ -343,6 +373,8 @@ void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfil
    testList->Add(new ProofTest("Simple 'event' generation", 10, &PT_Event));
    // Test input data propagation
    testList->Add(new ProofTest("Input data propagation", 11, &PT_InputData));
+   // Test asynchronous running
+   testList->Add(new ProofTest("H1, Simple: async mode", 12, &PT_H1SimpleAsync));
 
    //
    // Run the tests
@@ -351,7 +383,7 @@ void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfil
    TIter nxt(testList);
    ProofTest *t = 0;
    while ((t = (ProofTest *)nxt()))
-      if (t->Run() != 0) {
+      if (t->Run() < 0) {
          failed = kTRUE;
          break;
       }
@@ -377,6 +409,124 @@ void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfil
    }
    printf("******************************************************************\n");
 
+}
+
+//_____________________________________________________________________________
+Int_t PT_CheckSimple(TQueryResult *qr, Long64_t nevt, Int_t nhist)
+{
+   // Check the result of the ProofSimple analysis
+
+   if (!qr) {
+      printf("\n >>> Test failure: query result not found\n");
+      return -1;
+   }
+
+   // Make sure the number of processed entries is the one expected
+   PutPoint();
+   if (qr->GetEntries() != nevt) {
+      printf("\n >>> Test failure: wrong number of entries processed: %lld (expected %lld)\n",
+             qr->GetEntries(), nevt);
+      return -1;
+   }
+
+   // Make sure the output list is there
+   PutPoint();
+   TList *out = qr->GetOutputList();
+   if (!out) {
+      printf("\n >>> Test failure: output list not found\n");
+      return -1;
+   }
+
+   // Get the histos
+   PutPoint();
+   TH1F **hist = new TH1F*[nhist];
+   for (Int_t i=0; i < nhist; i++) {
+      hist[i] = dynamic_cast<TH1F *>(out->FindObject(Form("h%d",i)));
+      if (!hist[i]) {
+         printf("\n >>> Test failure: 'h%d' histo not found\n", i);
+         return -1;
+      }
+   }
+
+   // Check the mean values
+   PutPoint();
+   for (Int_t i=0; i < nhist; i++) {
+      Double_t ave = hist[i]->GetMean();
+      Double_t rms = hist[i]->GetRMS();
+      if (TMath::Abs(ave) > 5 * rms / TMath::Sqrt(hist[i]->GetEntries())) {
+         printf("\n >>> Test failure: 'h%d' histo: mean > 5 * RMS/Sqrt(N)\n", i);
+         return -1;
+      }
+   }
+
+   // Done
+   PutPoint();
+   return 0;
+}
+
+//_____________________________________________________________________________
+Int_t PT_CheckH1(TQueryResult *qr)
+{
+   // Check the result of the H1 analysis
+
+   if (!qr) {
+      printf("\n >>> Test failure: output list not found\n");
+      return -1;
+   }
+
+   // Make sure the number of processed entries is the one expected
+   PutPoint();
+   if (qr->GetEntries() != 283813) {
+      printf("\n >>> Test failure: wrong number of entries processed: %lld (expected 283813)\n", qr->GetEntries());
+      return -1;
+   }
+
+   // Make sure the output list is there
+   PutPoint();
+   TList *out = qr->GetOutputList();
+   if (!out) {
+      printf("\n >>> Test failure: output list not found\n");
+      return -1;
+   }
+
+   // Check the 'hdmd' histo
+   PutPoint();
+   TH1F *hdmd = dynamic_cast<TH1F*>(out->FindObject("hdmd"));
+   if (!hdmd) {
+      printf("\n >>> Test failure: 'hdmd' histo not found\n");
+      return -1;
+   }
+   if ((Int_t)(hdmd->GetEntries()) != 7525) {
+      printf("\n >>> Test failure: 'hdmd' histo: wrong number"
+             " of entries (%d: expected 7525) \n",(Int_t)(hdmd->GetEntries()));
+      return -1;
+   }
+   if (TMath::Abs((hdmd->GetMean() - 0.15512023) / 0.15512023) > 0.001) {
+      printf("\n >>> Test failure: 'hdmd' histo: wrong mean"
+             " (%f: expected 0.15512023) \n", hdmd->GetMean());
+      return -1;
+   }
+
+   PutPoint();
+   TH2F *h2 = dynamic_cast<TH2F*>(out->FindObject("h2"));
+   if (!h2) {
+      printf("\n >>> Test failure: 'h2' histo not found\n");
+      return -1;
+   }
+   if ((Int_t)(h2->GetEntries()) != 7525) {
+      printf("\n >>> Test failure: 'h2' histo: wrong number"
+             " of entries (%d: expected 7525) \n",(Int_t)(h2->GetEntries()));
+      return -1;
+   }
+   if (TMath::Abs((h2->GetMean() - 0.15245688) / 0.15245688) > 0.001) {
+      printf("\n >>> Test failure: 'h2' histo: wrong mean"
+             " (%f: expected 0.15245688) \n", h2->GetMean());
+      return -1;
+   }
+
+   // Done
+   PutPoint();
+   return 0;
 }
 
 //_____________________________________________________________________________
@@ -407,7 +557,7 @@ Int_t PT_Open(void *args)
 
    // String to initialize the dataset manager
    TString dsetmgrstr;
-   dsetmgrstr.Form("file dir:%s/datasets Cq:-Av:Sb:", tutdir.Data());
+   dsetmgrstr.Form("file dir:%s/datasets opt:-Cq:As:Sb:", tutdir.Data());
    gEnv->SetValue("Proof.DataSetManager", dsetmgrstr.Data());
 
    // String to initialize the package dir
@@ -489,56 +639,18 @@ Int_t PT_Simple(void *)
    // Process
    PutPoint();
    gProof->SetPrintProgress(&PrintStressProgress);
+   gTimer.Start();
    gProof->Process("../tutorials/proof/ProofSimple.C++", nevt);
+   gTimer.Stop();
    gProof->SetPrintProgress(0);
 
-   // Make sure the query result is there
-   PutPoint();
-   TQueryResult *qr = 0;
-   if (!(qr = gProof->GetQueryResult())) {
-      printf("\n >>> Test failure: query result not found\n");
-      return -1;
-   }
+   // Count
+   gSimpleCnt++;
+   gSimpleTime += gTimer.RealTime();
 
-   // Make sure the number of processed entries is the one expected
+   // Check the results
    PutPoint();
-   if (qr->GetEntries() != nevt) {
-      printf("\n >>> Test failure: wrong number of entries processed: %lld (expected %lld)\n", qr->GetEntries(), nevt);
-      return -1;
-   }
-
-   // Make sure the output list is there
-   PutPoint();
-   if (!(gProof->GetOutputList())) {
-      printf("\n >>> Test failure: output list not found\n");
-      return -1;
-   }
-
-   // Get the histos
-   PutPoint();
-   TH1F **hist = new TH1F*[nhist];
-   for (Int_t i=0; i < nhist; i++) {
-      hist[i] = dynamic_cast<TH1F *>(gProof->GetOutputList()->FindObject(Form("h%d",i)));
-      if (!hist[i]) {
-         printf("\n >>> Test failure: 'h%d' histo not found\n", i);
-         return -1;
-      }
-   }
-
-   // Check the mean values
-   PutPoint();
-   for (Int_t i=0; i < nhist; i++) {
-      Double_t ave = hist[i]->GetMean();
-      Double_t rms = hist[i]->GetRMS();
-      if (TMath::Abs(ave) > 5 * rms / TMath::Sqrt(hist[i]->GetEntries())) {
-         printf("\n >>> Test failure: 'h%d' histo: mean > 5 * RMS/Sqrt(N)\n", i);
-         return -1;
-      }
-   }
-
-   // Done
-   PutPoint();
-   return 0;
+   return PT_CheckSimple(gProof->GetQueryResult(), nevt, nhist);
 }
 
 //_____________________________________________________________________________
@@ -569,70 +681,19 @@ Int_t PT_H1Http(void *)
    chain->SetProof();
    PutPoint();
    gProof->SetPrintProgress(&PrintStressProgress);
+   gTimer.Start();
    chain->Process("../tutorials/tree/h1analysis.C++");
+   gTimer.Stop();
    gProof->SetPrintProgress(0);
    gProof->RemoveChain(chain);
 
-   // Make sure the query result is there
-   PutPoint();
-   TQueryResult *qr = 0;
-   if (!(qr = gProof->GetQueryResult())) {
-      printf("\n >>> Test failure: query result not found\n");
-      return -1;
-   }
+   // Count
+   gH1Cnt++;
+   gH1Time += gTimer.RealTime();
 
-   // Make sure the number of processed entries is the one expected
+   // Check the results
    PutPoint();
-   if (qr->GetEntries() != 283813) {
-      printf("\n >>> Test failure: wrong number of entries processed: %lld (expected 283813)\n", qr->GetEntries());
-      return -1;
-   }
-
-   // Make sure the output list is there
-   PutPoint();
-   if (!(gProof->GetOutputList())) {
-      printf("\n >>> Test failure: output list not found\n");
-      return -1;
-   }
-
-   // Check the 'hdmd' histo
-   PutPoint();
-   TH1F *hdmd = dynamic_cast<TH1F*>(gProof->GetOutputList()->FindObject("hdmd"));
-   if (!hdmd) {
-      printf("\n >>> Test failure: 'hdmd' histo not found\n");
-      return -1;
-   }
-   if ((Int_t)(hdmd->GetEntries()) != 7525) {
-      printf("\n >>> Test failure: 'hdmd' histo: wrong number"
-             " of entries (%d: expected 7525) \n",(Int_t)(hdmd->GetEntries()));
-      return -1;
-   }
-   if (TMath::Abs((hdmd->GetMean() - 0.15512023) / 0.15512023) > 0.001) {
-      printf("\n >>> Test failure: 'hdmd' histo: wrong mean"
-             " (%f: expected 0.15512023) \n", hdmd->GetMean());
-      return -1;
-   }
-
-   PutPoint();
-   TH2F *h2 = dynamic_cast<TH2F*>(gProof->GetOutputList()->FindObject("h2"));
-   if (!h2) {
-      printf("\n >>> Test failure: 'h2' histo not found\n");
-      return -1;
-   }
-   if ((Int_t)(h2->GetEntries()) != 7525) {
-      printf("\n >>> Test failure: 'h2' histo: wrong number"
-             " of entries (%d: expected 7525) \n",(Int_t)(h2->GetEntries()));
-      return -1;
-   }
-   if (TMath::Abs((h2->GetMean() - 0.15245688) / 0.15245688) > 0.001) {
-      printf("\n >>> Test failure: 'h2' histo: wrong mean"
-             " (%f: expected 0.15245688) \n", h2->GetMean());
-      return -1;
-   }
-
-   // Done
-   PutPoint();
-   return 0;
+   return PT_CheckH1(gProof->GetQueryResult());
 }
 
 //_____________________________________________________________________________
@@ -661,69 +722,18 @@ Int_t PT_H1FileCollection(void *)
    // Process
    PutPoint();
    gProof->SetPrintProgress(&PrintStressProgress);
+   gTimer.Start();
    gProof->Process(fc, "../tutorials/tree/h1analysis.C++");
+   gTimer.Stop();
    gProof->SetPrintProgress(0);
 
-   // Make sure the query result is there
-   PutPoint();
-   TQueryResult *qr = 0;
-   if (!(qr = gProof->GetQueryResult())) {
-      printf("\n >>> Test failure: query result not found\n");
-      return -1;
-   }
+   // Count
+   gH1Cnt++;
+   gH1Time += gTimer.RealTime();
 
-   // Make sure the number of processed entries is the one expected
+   // Check the results
    PutPoint();
-   if (qr->GetEntries() != 283813) {
-      printf("\n >>> Test failure: wrong number of entries processed: %lld (expected 283813)\n", qr->GetEntries());
-      return -1;
-   }
-
-   // Make sure the output list is there
-   PutPoint();
-   if (!(gProof->GetOutputList())) {
-      printf("\n >>> Test failure: output list not found\n");
-      return -1;
-   }
-
-   // Check the 'hdmd' histo
-   PutPoint();
-   TH1F *hdmd = dynamic_cast<TH1F*>(gProof->GetOutputList()->FindObject("hdmd"));
-   if (!hdmd) {
-      printf("\n >>> Test failure: 'hdmd' histo not found\n");
-      return -1;
-   }
-   if ((Int_t)(hdmd->GetEntries()) != 7525) {
-      printf("\n >>> Test failure: 'hdmd' histo: wrong number"
-             " of entries (%d: expected 7525) \n",(Int_t)(hdmd->GetEntries()));
-      return -1;
-   }
-   if (TMath::Abs((hdmd->GetMean() - 0.15512023) / 0.15512023) > 0.001) {
-      printf("\n >>> Test failure: 'hdmd' histo: wrong mean"
-             " (%f: expected 0.15512023) \n", hdmd->GetMean());
-      return -1;
-   }
-
-   PutPoint();
-   TH2F *h2 = dynamic_cast<TH2F*>(gProof->GetOutputList()->FindObject("h2"));
-   if (!h2) {
-      printf("\n >>> Test failure: 'h2' histo not found\n");
-      return -1;
-   }
-   if ((Int_t)(h2->GetEntries()) != 7525) {
-      printf("\n >>> Test failure: 'h2' histo: wrong number"
-             " of entries (%d: expected 7525) \n",(Int_t)(h2->GetEntries()));
-      return -1;
-   }
-   if (TMath::Abs((h2->GetMean() - 0.15245688) / 0.15245688) > 0.001) {
-      printf("\n >>> Test failure: 'h2' histo: wrong mean"
-             " (%f: expected 0.15245688) \n", h2->GetMean());
-      return -1;
-   }
-
-   // Done
-   PutPoint();
-   return 0;
+   return PT_CheckH1(gProof->GetQueryResult());
 }
 
 //_____________________________________________________________________________
@@ -758,73 +768,22 @@ Int_t PT_H1DataSet(void *arg)
    // Process the dataset by name
    PutPoint();
    gProof->SetPrintProgress(&PrintStressProgress);
+   gTimer.Start();
    gProof->Process(dsname, "../tutorials/tree/h1analysis.C++");
+   gTimer.Stop();
    gProof->SetPrintProgress(0);
 
    // Restore settings
    gProof->DeleteParameters("PROOF_Packetizer");
    gProof->DeleteParameters("PROOF_PacketizerStrategy");
 
-   // Make sure the query result is there
-   PutPoint();
-   TQueryResult *qr = 0;
-   if (!(qr = gProof->GetQueryResult())) {
-      printf("\n >>> Test failure: query result not found\n");
-      return -1;
-   }
+   // Count
+   gH1Cnt++;
+   gH1Time += gTimer.RealTime();
 
-   // Make sure the number of processed entries is the one expected
+   // Check the results
    PutPoint();
-   if (qr->GetEntries() != 283813) {
-      printf("\n >>> Test failure: wrong number of entries processed: %lld (expected 283813)\n", qr->GetEntries());
-      return -1;
-   }
-
-   // Make sure the output list is there
-   PutPoint();
-   if (!(gProof->GetOutputList())) {
-      printf("\n >>> Test failure: output list not found\n");
-      return -1;
-   }
-
-   // Check the 'hdmd' histo
-   PutPoint();
-   TH1F *hdmd = dynamic_cast<TH1F*>(gProof->GetOutputList()->FindObject("hdmd"));
-   if (!hdmd) {
-      printf("\n >>> Test failure: 'hdmd' histo not found\n");
-      return -1;
-   }
-   if ((Int_t)(hdmd->GetEntries()) != 7525) {
-      printf("\n >>> Test failure: 'hdmd' histo: wrong number"
-             " of entries (%d: expected 7525) \n",(Int_t)(hdmd->GetEntries()));
-      return -1;
-   }
-   if (TMath::Abs((hdmd->GetMean() - 0.15512023) / 0.15512023) > 0.001) {
-      printf("\n >>> Test failure: 'hdmd' histo: wrong mean"
-             " (%f: expected 0.15512023) \n", hdmd->GetMean());
-      return -1;
-   }
-
-   PutPoint();
-   TH2F *h2 = dynamic_cast<TH2F*>(gProof->GetOutputList()->FindObject("h2"));
-   if (!h2) {
-      printf("\n >>> Test failure: 'h2' histo not found\n");
-      return -1;
-   }
-   if ((Int_t)(h2->GetEntries()) != 7525) {
-      printf("\n >>> Test failure: 'h2' histo: wrong number"
-             " of entries (%d: expected 7525) \n",(Int_t)(h2->GetEntries()));
-      return -1;
-   }
-   if (TMath::Abs((h2->GetMean() - 0.15245688) / 0.15245688) > 0.001) {
-      printf("\n >>> Test failure: 'h2' histo: wrong mean"
-             " (%f: expected 0.15245688) \n", h2->GetMean());
-      return -1;
-   }
-
-   // Done
-   PutPoint();
-   return 0;
+   return PT_CheckH1(gProof->GetQueryResult());
 }
 
 //_____________________________________________________________________________
@@ -919,6 +878,7 @@ Int_t PT_DataSets(void *)
       printf("\n >>> Test failure: could not verify '%s'!\n", dsname);
       return -1;
    }
+   gProof->ShowDataSets();
 
    // Remove the file collection
    delete fc;
@@ -1190,4 +1150,108 @@ Int_t PT_InputData(void *)
    PutPoint();
    return 0;
 }
+
+//_____________________________________________________________________________
+Int_t PT_H1SimpleAsync(void *arg)
+{
+   // Test run for the H1 and Simple analysis in asynchronous mode 
+
+   // Checking arguments
+   PutPoint();
+   if (!gProof) {
+      printf("\n >>> Test failure: no PROOF session found\n");
+      return -1;
+   }
+
+   // Not yet supported for PROOF-Lite
+   PutPoint();
+   if (gProof->IsLite()) {
+      return 1;
+   }
+
+   // Are we asked to change the packetizer strategy?
+   if (arg) {
+      PT_Packetizer_t *strategy = (PT_Packetizer_t *)arg;
+      if (strcmp(strategy->fName, "TPacketizerAdaptive")) {
+         gProof->SetParameter("PROOF_Packetizer", strategy->fName);
+      } else {
+         if (strategy->fType != 1)
+            gProof->SetParameter("PROOF_PacketizerStrategy", strategy->fType);
+      }
+   }
+
+   // Name for the target dataset
+   const char *dsname = "h1http";
+
+   // Clear the list of query results
+   if (gProof->GetQueryResults()) {
+      gProof->GetQueryResults()->Clear();
+      gProof->Remove("cleanupdir");
+   }
+
+   // Submit the processing requests
+   PutPoint();
+   gProof->SetPrintProgress(&PrintStressProgress);
+   gProof->Process(dsname, "../tutorials/tree/h1analysis.C++", "ASYN");
+
+   // Define the number of events and histos
+   Long64_t nevt = 1000000;
+   Int_t nhist = 16;
+   // The number of histograms is added as parameter in the input list
+   gProof->SetParameter("ProofSimple_NHist", (Long_t)nhist);
+   gProof->Process("../tutorials/proof/ProofSimple.C++", nevt, "ASYN");
+
+   // Wait a bit as a function of previous runnings
+   Double_t dtw = 10;
+   if (gH1Cnt > 0 && gSimpleTime > 0) {
+      dtw = gH1Time / gH1Cnt + gSimpleTime / gSimpleCnt + 1;
+      if (dtw < 10) dtw = 10;
+   }
+   Int_t tw = (Int_t) (5 * dtw);
+
+   gTimedOut = kFALSE;
+   TTimeOutTimer t(tw*1000);
+
+   // Wait for the processing
+   while (!gProof->IsIdle() && !gTimedOut)
+      gSystem->InnerLoop();
+
+   gProof->SetPrintProgress(0);
+   PutPoint();
+
+   // Retrieve the list of available query results
+   TList *ql = gProof->GetListOfQueries();
+   if (ql && ql->GetSize() > 0) {
+      ql->Print();
+   }
+
+   TString ref;
+   TIter nxq(ql);
+   TQueryResult *qr = 0;
+   while ((qr = (TQueryResult *)nxq())) {
+      ref.Form("%s:%s", qr->GetTitle(), qr->GetName());
+      gProof->Retrieve(ref);
+      qr = gProof->GetQueryResult(ref);
+      if (qr && qr->GetSelecImp()) {
+         if (!strcmp(qr->GetSelecImp()->GetTitle(), "h1analysis")) {
+            PutPoint();
+            if (PT_CheckH1(qr) != 0) return -1;
+         } else if (!strcmp(qr->GetSelecImp()->GetTitle(), "ProofSimple")) {
+            PutPoint();
+            if (PT_CheckSimple(qr, nevt, nhist) != 0) return -1;
+         } else {
+            printf("\n >>> Test failure: query with unexpected selector '%s'\n", qr->GetSelecImp()->GetTitle());
+            return -1;
+         }
+      } else {
+         printf("\n >>> Test failure: query undefined (%p) or with empty selector macro ('%s')\n", qr, ref.Data());
+         return -1;
+      }
+   }
+
+   // Done
+   PutPoint();
+   return 0;
+}
+
 

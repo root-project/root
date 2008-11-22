@@ -394,7 +394,7 @@ TProof::TProof() : fUrl(""), fServType(TProofMgr::kXProofd)
    fFeedback = 0;
    fChains = 0;
    fDSet = 0;
-   fIdle = kFALSE;
+   fNotIdle = 0;
    fSync = kTRUE;
    fRunStatus = kRunning;
    fRedirLog = kFALSE;
@@ -431,6 +431,7 @@ TProof::TProof() : fUrl(""), fServType(TProofMgr::kXProofd)
    fTotalBytes = 0;
    fAvailablePackages = 0;
    fEnabledPackages = 0;
+   fRunningDSets = 0;
 
    fCollectTimeout = -1;
 
@@ -495,6 +496,7 @@ TProof::~TProof()
    SafeDelete(fGlobalPackageDirList);
    SafeDelete(fRecvMessages);
    SafeDelete(fInputData);
+   SafeDelete(fRunningDSets);
 
    // remove file with redirected logs
    if (TestBit(TProof::kIsClient)) {
@@ -572,6 +574,7 @@ Int_t TProof::Init(const char *, const char *conffile,
    fChains         = new TList;
    fAvailablePackages = 0;
    fEnabledPackages = 0;
+   fRunningDSets   = 0;
    fEndMaster      = TestBit(TProof::kIsMaster) ? kTRUE : kFALSE;
    fInputData      = 0;
    ResetBit(TProof::kNewInputData);
@@ -608,7 +611,7 @@ Int_t TProof::Init(const char *, const char *conffile,
    fLogToWindowOnly = kFALSE;
 
    // Status of cluster
-   fIdle = kTRUE;
+   fNotIdle = 0;
 
    // Query type
    fSync = kTRUE;
@@ -2166,34 +2169,63 @@ Int_t TProof::BroadcastFile(const char *file, Int_t opt, const char *rfile, ESla
 }
 
 //______________________________________________________________________________
-Int_t TProof::Collect(const TSlave *sl, Long_t timeout)
+void TProof::ReleaseMonitor(TMonitor *mon)
+{
+   // Release the used monitor to be used, making sure to delete newly created
+   // monitors.
+
+   if (mon && (mon != fAllMonitor) && (mon != fActiveMonitor)
+           && (mon != fUniqueMonitor) && (mon != fAllUniqueMonitor)) {
+      delete mon;
+   }
+}
+
+//______________________________________________________________________________
+Int_t TProof::Collect(const TSlave *sl, Long_t timeout, Int_t endtype)
 {
    // Collect responses from slave sl. Returns the number of slaves that
    // responded (=1).
    // If timeout >= 0, wait at most timeout seconds (timeout = -1 by default,
    // which means wait forever).
+   // If defined (>= 0) endtype is the message that stops this collection.
 
+   Int_t rc = 0;
+
+   TMonitor *mon = 0;
    if (!sl->IsValid()) return 0;
 
-   TMonitor *mon = fAllMonitor;
-
-   mon->DeActivateAll();
+   if (fCurrentMonitor == fAllMonitor) {
+      mon = new TMonitor;
+   } else {
+      mon = fAllMonitor;
+      mon->DeActivateAll();
+   }
    mon->Activate(sl->GetSocket());
 
-   return Collect(mon, timeout);
+   rc = Collect(mon, timeout, endtype);
+   ReleaseMonitor(mon);
+   return rc;
 }
 
 //______________________________________________________________________________
-Int_t TProof::Collect(TList *slaves, Long_t timeout)
+Int_t TProof::Collect(TList *slaves, Long_t timeout, Int_t endtype)
 {
    // Collect responses from the slave servers. Returns the number of slaves
    // that responded.
    // If timeout >= 0, wait at most timeout seconds (timeout = -1 by default,
    // which means wait forever).
+   // If defined (>= 0) endtype is the message that stops this collection.
 
-   TMonitor *mon = fAllMonitor;
-   mon->DeActivateAll();
+   Int_t rc = 0;
 
+   TMonitor *mon = 0;
+
+   if (fCurrentMonitor == fAllMonitor) {
+      mon = new TMonitor;
+   } else {
+      mon = fAllMonitor;
+      mon->DeActivateAll();
+   }
    TIter next(slaves);
    TSlave *sl;
    while ((sl = (TSlave*) next())) {
@@ -2201,35 +2233,46 @@ Int_t TProof::Collect(TList *slaves, Long_t timeout)
          mon->Activate(sl->GetSocket());
    }
 
-   return Collect(mon, timeout);
+   rc = Collect(mon, timeout, endtype);
+   ReleaseMonitor(mon);
+   return rc;
 }
 
 //______________________________________________________________________________
-Int_t TProof::Collect(ESlaves list, Long_t timeout)
+Int_t TProof::Collect(ESlaves list, Long_t timeout, Int_t endtype)
 {
    // Collect responses from the slave servers. Returns the number of slaves
    // that responded.
    // If timeout >= 0, wait at most timeout seconds (timeout = -1 by default,
    // which means wait forever).
+   // If defined (>= 0) endtype is the message that stops this collection.
 
+   Int_t rc = 0;
    TMonitor *mon = 0;
+
    if (list == kAll)       mon = fAllMonitor;
    if (list == kActive)    mon = fActiveMonitor;
    if (list == kUnique)    mon = fUniqueMonitor;
    if (list == kAllUnique) mon = fAllUniqueMonitor;
-
+   if (fCurrentMonitor == mon) {
+      // Get a copy
+      mon = new TMonitor(*mon);
+   }
    mon->ActivateAll();
 
-   return Collect(mon, timeout);
+   rc = Collect(mon, timeout, endtype);
+   ReleaseMonitor(mon);
+   return rc;
 }
 
 //______________________________________________________________________________
-Int_t TProof::Collect(TMonitor *mon, Long_t timeout)
+Int_t TProof::Collect(TMonitor *mon, Long_t timeout, Int_t endtype)
 {
    // Collect responses from the slave servers. Returns the number of messages
    // received. Can be 0 if there are no active slaves.
    // If timeout >= 0, wait at most timeout seconds (timeout = -1 by default,
    // which means wait forever).
+   // If defined (>= 0) endtype is the message that stops this collection.
 
    // Reset the status flag and clear the messages in the list, if any
    fStatus = 0;
@@ -2242,7 +2285,16 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout)
    DeActivateAsyncInput();
 
    // Used by external code to know what we are monitoring
-   fCurrentMonitor = mon;
+   TMonitor *savedMonitor = 0;
+   if (fCurrentMonitor) {
+      savedMonitor = fCurrentMonitor;
+      fCurrentMonitor = mon;
+   } else {
+      fCurrentMonitor = mon;
+      fBytesRead = 0;
+      fRealTime  = 0.0;
+      fCpuTime   = 0.0;
+   }
 
    // We want messages on the main window during synchronous collection,
    // but we save the present status to restore it at the end
@@ -2251,10 +2303,6 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout)
       fRedirLog = kFALSE;
 
    int cnt = 0, rc = 0;
-
-   fBytesRead = 0;
-   fRealTime  = 0.0;
-   fCpuTime   = 0.0;
 
    // Timeout counter
    Long_t nto = timeout;
@@ -2275,13 +2323,24 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout)
 
       if (s && s != (TSocket *)(-1)) {
          // Get and analyse the info it did receive
-         if ((rc = CollectInputFrom(s)) == 1) {
+         rc = CollectInputFrom(s, endtype);
+         if (rc  == 1) {
             // Deactivate it if we are done with it
             mon->DeActivate(s);
             if (gDebug > 2)
                Info("Collect","deactivating %p (active: %d, %p)",
                               s, mon->GetActive(),
                               mon->GetListOfActives()->First());
+         } else if (rc == 2) {
+            // This end message was for the saved monitor
+            // Deactivate it if we are done with it
+            if (savedMonitor) {
+               savedMonitor->DeActivate(s);
+               if (gDebug > 2)
+                  Info("Collect","deactivating %p (active: %d, %p)",
+                                 s, savedMonitor->GetActive(),
+                                 savedMonitor->GetListOfActives()->First());
+            }
          }
 
          // Update counter (if no error occured)
@@ -2336,8 +2395,8 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout)
    // Restore redirection setting
    fRedirLog = saveRedirLog;
 
-   // To avoid useless loops in external code
-   fCurrentMonitor = 0;
+   // Restore the monitor
+   fCurrentMonitor = savedMonitor;
 
    ActivateAsyncInput();
 
@@ -2358,25 +2417,19 @@ void TProof::CleanGDirectory(TList *ol)
 }
 
 //______________________________________________________________________________
-Int_t TProof::CollectInputFrom(TSocket *s)
+Int_t TProof::CollectInputFrom(TSocket *s, Int_t endtype)
 {
    // Collect and analyze available input from socket s.
    // Returns 0 on success, -1 if any failure occurs.
 
    TMessage *mess;
-   Int_t rc = 0;
 
-   char      str[512];
-   TSlave   *sl;
-   TObject  *obj;
-   Int_t     what;
-   Bool_t    delete_mess = kTRUE;
-
-   if ((rc = s->Recv(mess)) < 0) {
+   Int_t recvrc = 0;
+   if ((recvrc = s->Recv(mess)) < 0) {
       PDB(kGlobal,2)
-         Info("CollectInputFrom","%p: got %d from Recv()", s, rc);
+         Info("CollectInputFrom","%p: got %d from Recv()", s, recvrc);
       Bool_t bad = kTRUE;
-      if (rc == -5) {
+      if (recvrc == -5) {
          // Broken connection: try reconnection
          if (fCurrentMonitor) fCurrentMonitor->Remove(s);
          if (s->Reconnect() == 0) {
@@ -2394,13 +2447,46 @@ Int_t TProof::CollectInputFrom(TSocket *s)
       MarkBad(s, "undefined message in TProof::CollectInputFrom(...)");
       return -1;
    }
+   Int_t rc = 0;
 
-   what = mess->What();
+   Int_t what = mess->What();
+   TSlave *sl = FindSlave(s);
+   rc = HandleInputMessage(sl, mess);
+   if (rc == 1 && (endtype >= 0) && (what != endtype))
+      // This message was for the base monitor in recursive case
+      rc = 2;
 
-   PDB(kGlobal,3) {
-      sl = FindSlave(s);
-      Info("CollectInputFrom","got type %d from '%s'", what, (sl ? sl->GetOrdinal() : "undef"));
+   // We are done successfully
+   return rc;
+}
+
+//______________________________________________________________________________
+Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
+{
+   // Analyze the received message.
+   // Returns 0 on success (1 if this the last message from this socket), -1 if
+   // any failure occurs.
+
+   char str[512];
+   TObject *obj;
+   Int_t rc = 0;
+
+   if (!mess || !sl) {
+      Warning("HandleInputMessage", "given an empty message or undefined worker");
+      return -1;
    }
+   Bool_t delete_mess = kTRUE;
+   TSocket *s = sl->GetSocket();
+   if (!s) {
+      Warning("HandleInputMessage", "worker socket is undefined");
+      return -1;
+   }
+
+   // The message type
+   Int_t what = mess->What();
+
+   PDB(kGlobal,3)
+      Info("HandleInputMessage", "got type %d from '%s'", what, (sl ? sl->GetOrdinal() : "undef"));
 
    switch (what) {
 
@@ -2422,9 +2508,16 @@ Int_t TProof::CollectInputFrom(TSocket *s)
          }
          break;
 
+      case kPROOF_GETTREEHEADER:
+         // Add the message to the list
+         fRecvMessages->Add(mess);
+         delete_mess = kFALSE;
+         rc = 1;
+         break;
+
       case kPROOF_TOUCH:
          // send a request for touching the remote admin file
-         {  sl = FindSlave(s);
+         {
             sl->Touch();
          }
          break;
@@ -2442,7 +2535,6 @@ Int_t TProof::CollectInputFrom(TSocket *s)
       case kPROOF_GETPACKET:
          {
             TDSetElement *elem = 0;
-            sl = FindSlave(s);
             elem = fPlayer->GetNextPacket(sl, mess);
 
             if (elem != (TDSetElement*) -1) {
@@ -2453,7 +2545,6 @@ Int_t TProof::CollectInputFrom(TSocket *s)
                while (fWaitingSlaves != 0 && fWaitingSlaves->GetSize()) {
                   TPair *p = (TPair*) fWaitingSlaves->First();
                   s = (TSocket*) p->Key();
-                  sl = FindSlave(s);
                   TMessage *m = (TMessage*) p->Value();
 
                   elem = fPlayer->GetNextPacket(sl, m);
@@ -2484,16 +2575,15 @@ Int_t TProof::CollectInputFrom(TSocket *s)
             Int_t size;
             (*mess) >> size;
             PDB(kGlobal,2)
-               Info("CollectInputFrom","kPROOF_LOGFILE: size: %d", size);
+               Info("HandleInputMessage","kPROOF_LOGFILE: size: %d", size);
             RecvLogFile(s, size);
          }
          break;
 
       case kPROOF_LOGDONE:
-         sl = FindSlave(s);
          (*mess) >> sl->fStatus >> sl->fParallel;
          PDB(kGlobal,2)
-            Info("CollectInputFrom","kPROOF_LOGDONE:%s: status %d  parallel %d",
+            Info("HandleInputMessage","kPROOF_LOGDONE:%s: status %d  parallel %d",
                  sl->GetOrdinal(), sl->fStatus, sl->fParallel);
          if (sl->fStatus != 0) fStatus = sl->fStatus; //return last nonzero status
          rc = 1;
@@ -2501,7 +2591,6 @@ Int_t TProof::CollectInputFrom(TSocket *s)
 
       case kPROOF_GETSTATS:
          {
-            sl = FindSlave(s);
             (*mess) >> sl->fBytesRead >> sl->fRealTime >> sl->fCpuTime
                   >> sl->fWorkDir >> sl->fProofWorkDir;
             TString img;
@@ -2516,7 +2605,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
                sl->fImage = img;
             }
             PDB(kGlobal,2)
-               Info("CollectInputFrom",
+               Info("HandleInputMessage",
                         "kPROOF_GETSTATS:%s image: %s", sl->GetOrdinal(), sl->GetImage());
 
             fBytesRead += sl->fBytesRead;
@@ -2527,7 +2616,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
          break;
 
       case kPROOF_GETPARALLEL:
-         {  sl = FindSlave(s);
+         {
             Bool_t async = kFALSE;
             (*mess) >> sl->fParallel;
             if ((mess->BufferSize() > mess->Length()))
@@ -2536,9 +2625,22 @@ Int_t TProof::CollectInputFrom(TSocket *s)
          }
          break;
 
+      case kPROOF_CHECKFILE:
+         {  // New servers (>= 5.22) send the status
+            if ((mess->BufferSize() > mess->Length())) {
+               (*mess) >> fCheckFileStatus;
+            } else {
+               // Form old servers this meant success (failure was signaled with the
+               // dangerous kPROOF_FATAL)
+               fCheckFileStatus = 1;
+            }
+            rc = 1;
+         }
+         break;
+
       case kPROOF_PACKAGE_LIST:
          {
-            PDB(kGlobal,2) Info("CollectInputFrom","kPROOF_PACKAGE_LIST: enter");
+            PDB(kGlobal,2) Info("HandleInputMessage","kPROOF_PACKAGE_LIST: enter");
             Int_t type = 0;
             (*mess) >> type;
             switch (type) {
@@ -2553,7 +2655,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
                fAvailablePackages->SetOwner();
                break;
             default:
-               Info("CollectInputFrom","kPROOF_PACKAGE_LIST: unknown type: %d", type);
+               Info("HandleInputMessage","kPROOF_PACKAGE_LIST: unknown type: %d", type);
             }
          }
          break;
@@ -2561,7 +2663,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
       case kPROOF_OUTPUTOBJECT:
          {
             PDB(kGlobal,2)
-               Info("CollectInputFrom","kPROOF_OUTPUTOBJECT: enter");
+               Info("HandleInputMessage","kPROOF_OUTPUTOBJECT: enter");
             Int_t type = 0;
             (*mess) >> type;
             // If a query result header, add it to the player list
@@ -2578,7 +2680,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
                   fPlayer->AddInput(new TNamed("PROOF_QueryTag",
                                     Form("%s:%s",pq->GetTitle(),pq->GetName())));
                } else {
-                  Warning("CollectInputFrom","kPROOF_OUTPUTOBJECT: query result missing");
+                  Warning("HandleInputMessage","kPROOF_OUTPUTOBJECT: query result missing");
                }
             } else if (type > 0) {
                // Read object
@@ -2606,7 +2708,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
       case kPROOF_OUTPUTLIST:
          {
             PDB(kGlobal,2)
-               Info("CollectInputFrom","kPROOF_OUTPUTLIST: enter");
+               Info("HandleInputMessage","kPROOF_OUTPUTLIST: enter");
             TList *out = 0;
             if (TestBit(TProof::kIsMaster) || fProtocol < 7) {
                out = (TList *) mess->ReadObject(TList::Class());
@@ -2626,7 +2728,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
                   QueryResultReady(Form("%s:%s", pq->GetTitle(), pq->GetName()));
                } else {
                   PDB(kGlobal,2)
-                     Info("CollectInputFrom","kPROOF_OUTPUTLIST: query result missing");
+                     Info("HandleInputMessage","kPROOF_OUTPUTLIST: query result missing");
                }
             }
             if (out) {
@@ -2634,7 +2736,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
                fPlayer->AddOutput(out); // Incorporate the list
                SafeDelete(out);
             } else {
-               PDB(kGlobal,2) Info("CollectInputFrom","kPROOF_OUTPUTLIST: ouputlist is empty");
+               PDB(kGlobal,2) Info("HandleInputMessage","kPROOF_OUTPUTLIST: ouputlist is empty");
             }
 
             // On clients at this point processing is over
@@ -2645,7 +2747,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
 
       case kPROOF_QUERYLIST:
          {
-            PDB(kGlobal,2) Info("CollectInputFrom","kPROOF_QUERYLIST: enter");
+            PDB(kGlobal,2) Info("HandleInputMessage","kPROOF_QUERYLIST: enter");
             (*mess) >> fOtherQueries >> fDrawQueries;
             if (fQueries) {
                fQueries->Delete();
@@ -2658,7 +2760,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
 
       case kPROOF_RETRIEVE:
          {
-            PDB(kGlobal,2) Info("CollectInputFrom","kPROOF_RETRIEVE: enter");
+            PDB(kGlobal,2) Info("HandleInputMessage","kPROOF_RETRIEVE: enter");
             TQueryResult *pq =
                (TQueryResult *) mess->ReadObject(TQueryResult::Class());
             if (pq) {
@@ -2667,14 +2769,14 @@ Int_t TProof::CollectInputFrom(TSocket *s)
                QueryResultReady(Form("%s:%s", pq->GetTitle(), pq->GetName()));
             } else {
                PDB(kGlobal,2)
-                  Info("CollectInputFrom","kPROOF_RETRIEVE: query result missing");
+                  Info("HandleInputMessage","kPROOF_RETRIEVE: query result missing");
             }
          }
          break;
 
       case kPROOF_MAXQUERIES:
          {
-            PDB(kGlobal,2) Info("CollectInputFrom","kPROOF_MAXQUERIES: enter");
+            PDB(kGlobal,2) Info("HandleInputMessage","kPROOF_MAXQUERIES: enter");
             Int_t max = 0;
 
             (*mess) >> max;
@@ -2684,7 +2786,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
 
       case kPROOF_SERVERSTARTED:
          {
-            PDB(kGlobal,2) Info("CollectInputFrom","kPROOF_SERVERSTARTED: enter");
+            PDB(kGlobal,2) Info("HandleInputMessage","kPROOF_SERVERSTARTED: enter");
 
             UInt_t tot = 0, done = 0;
             TString action;
@@ -2724,7 +2826,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
 
       case kPROOF_DATASET_STATUS:
          {
-            PDB(kGlobal,2) Info("CollectInputFrom","kPROOF_DATASET_STATUS: enter");
+            PDB(kGlobal,2) Info("HandleInputMessage","kPROOF_DATASET_STATUS: enter");
 
             UInt_t tot = 0, done = 0;
             TString action;
@@ -2763,9 +2865,12 @@ Int_t TProof::CollectInputFrom(TSocket *s)
 
       case kPROOF_STARTPROCESS:
          {
-            PDB(kGlobal,2) Info("CollectInputFrom","kPROOF_STARTPROCESS: enter");
+            PDB(kGlobal,2) Info("HandleInputMessage","kPROOF_STARTPROCESS: enter");
 
-            fIdle = kFALSE;
+            // For Proof-Lite this variable is the number of workers and is set
+            // by the player
+            if (!IsLite())
+               fNotIdle = 1;
 
             // The signal is used on masters by XrdProofdProtocol to catch
             // the start of processing; on clients it allows to update the
@@ -2795,7 +2900,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
 
       case kPROOF_ENDINIT:
          {
-            PDB(kGlobal,2) Info("CollectInputFrom","kPROOF_ENDINIT: enter");
+            PDB(kGlobal,2) Info("HandleInputMessage","kPROOF_ENDINIT: enter");
 
             if (TestBit(TProof::kIsMaster)) {
                if (fPlayer)
@@ -2806,16 +2911,26 @@ Int_t TProof::CollectInputFrom(TSocket *s)
 
       case kPROOF_SETIDLE:
          {
-            PDB(kGlobal,2) Info("CollectInputFrom","kPROOF_SETIDLE: enter");
+//            PDB(kGlobal,2)
+             Info("HandleInputMessage","kPROOF_SETIDLE: enter");
 
             // The session is idle
-            fIdle = kTRUE;
+            if (IsLite()) {
+               if (fNotIdle > 0) {
+                  fNotIdle--;
+                  Warning("HandleInputMessage", "fNotIdle = %d", fNotIdle);
+               } else {
+                  Warning("HandleInputMessage", "got kPROOF_SETIDLE but no running workers ! protocol error?");
+               }
+            } else {
+               fNotIdle = 0;
+            }
          }
          break;
 
       case kPROOF_QUERYSUBMITTED:
          {
-            PDB(kGlobal,2) Info("CollectInputFrom","kPROOF_QUERYSUBMITTED: enter");
+            PDB(kGlobal,2) Info("HandleInputMessage","kPROOF_QUERYSUBMITTED: enter");
 
             // We have received the sequential number
             (*mess) >> fSeqNum;
@@ -2826,7 +2941,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
 
       case kPROOF_SESSIONTAG:
          {
-            PDB(kGlobal,2) Info("CollectInputFrom","kPROOF_SESSIONTAG: enter");
+            PDB(kGlobal,2) Info("HandleInputMessage","kPROOF_SESSIONTAG: enter");
 
             // We have received the unique tag and save it as name of this object
             TString stag;
@@ -2837,10 +2952,9 @@ Int_t TProof::CollectInputFrom(TSocket *s)
 
       case kPROOF_FEEDBACK:
          {
-            PDB(kGlobal,2) Info("CollectInputFrom","kPROOF_FEEDBACK: enter");
+            PDB(kGlobal,2) Info("HandleInputMessage","kPROOF_FEEDBACK: enter");
             TList *out = (TList *) mess->ReadObject(TList::Class());
             out->SetOwner();
-            sl = FindSlave(s);
             if (fPlayer)
                fPlayer->StoreFeedback(sl, out); // Adopts the list
             else
@@ -2851,7 +2965,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
 
       case kPROOF_AUTOBIN:
          {
-            PDB(kGlobal,2) Info("CollectInputFrom","kPROOF_AUTOBIN: enter");
+            PDB(kGlobal,2) Info("HandleInputMessage","kPROOF_AUTOBIN: enter");
 
             TString name;
             Double_t xmin, xmax, ymin, ymax, zmin, zmax;
@@ -2870,9 +2984,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
 
       case kPROOF_PROGRESS:
          {
-            PDB(kGlobal,2) Info("CollectInputFrom","kPROOF_PROGRESS: enter");
-
-            sl = FindSlave(s);
+            PDB(kGlobal,2) Info("HandleInputMessage","kPROOF_PROGRESS: enter");
 
             if (GetRemoteProtocol() > 11) {
                // New format
@@ -2900,7 +3012,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
             // packetizer or stopped during processing a packet
             // (by TProof::RemoveWorkers() or by an external signal).
             // In the later case call packetizer->MarkBad.
-            PDB(kGlobal,2) Info("CollectInputFrom","kPROOF_STOPPROCESS: enter");
+            PDB(kGlobal,2) Info("HandleInputMessage","kPROOF_STOPPROCESS: enter");
 
             Long64_t events = 0;
             Bool_t abort = kFALSE;
@@ -2915,7 +3027,6 @@ Int_t TProof::CollectInputFrom(TSocket *s)
             }
             if (!abort) {
                if (fProtocol > 18) {
-                  sl = FindSlave(s);
                   TList *listOfMissingFiles = 0;
                   if (!(listOfMissingFiles = (TList *)GetOutput("MissingFiles"))) {
                      listOfMissingFiles = new TList();
@@ -2938,15 +3049,14 @@ Int_t TProof::CollectInputFrom(TSocket *s)
 
       case kPROOF_GETSLAVEINFO:
          {
-            PDB(kGlobal,2) Info("CollectInputFrom","kPROOF_GETSLAVEINFO: enter");
+            PDB(kGlobal,2) Info("HandleInputMessage","kPROOF_GETSLAVEINFO: enter");
 
-            sl = FindSlave(s);
             Bool_t active = (GetListOfActiveSlaves()->FindObject(sl) != 0);
             Bool_t bad = (GetListOfBadSlaves()->FindObject(sl) != 0);
             TList* tmpinfo = 0;
             (*mess) >> tmpinfo;
             if (tmpinfo == 0) {
-               Error("CollectInputFrom","kPROOF_GETSLAVEINFO: no list received!");
+               Error("HandleInputMessage","kPROOF_GETSLAVEINFO: no list received!");
             } else {
                tmpinfo->SetOwner(kFALSE);
                Int_t nentries = tmpinfo->GetSize();
@@ -2971,11 +3081,11 @@ Int_t TProof::CollectInputFrom(TSocket *s)
       case kPROOF_VALIDATE_DSET:
          {
             PDB(kGlobal,2)
-               Info("CollectInputFrom","kPROOF_VALIDATE_DSET: enter");
+               Info("HandleInputMessage","kPROOF_VALIDATE_DSET: enter");
             TDSet* dset = 0;
             (*mess) >> dset;
             if (!fDSet)
-               Error("CollectInputFrom","kPROOF_VALIDATE_DSET: fDSet not set");
+               Error("HandleInputMessage","kPROOF_VALIDATE_DSET: fDSet not set");
             else
                fDSet->Validate(dset);
             delete dset;
@@ -2984,7 +3094,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
 
       case kPROOF_DATA_READY:
          {
-            PDB(kGlobal,2) Info("CollectInputFrom","kPROOF_DATA_READY: enter");
+            PDB(kGlobal,2) Info("HandleInputMessage","kPROOF_DATA_READY: enter");
             Bool_t dataready = kFALSE;
             Long64_t totalbytes, bytesready;
             (*mess) >> dataready >> totalbytes >> bytesready;
@@ -3000,7 +3110,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
 
       case kPROOF_MESSAGE:
          {
-            PDB(kGlobal,2) Info("CollectInputFrom","kPROOF_MESSAGE: enter");
+            PDB(kGlobal,2) Info("HandleInputMessage","kPROOF_MESSAGE: enter");
 
             // We have received the unique tag and save it as name of this object
             TString msg;
@@ -3037,24 +3147,21 @@ Int_t TProof::CollectInputFrom(TSocket *s)
          {
             TString vac;
             (*mess) >> vac;
-            PDB(kGlobal,2) Info("CollectInputFrom","kPROOF_VERSARCHCOMP: %s", vac.Data());
+            PDB(kGlobal,2) Info("HandleInputMessage","kPROOF_VERSARCHCOMP: %s", vac.Data());
             Int_t from = 0;
             TString vers, archcomp;
             if (vac.Tokenize(vers, from, "|"))
                vac.Tokenize(archcomp, from, "|");
-            if ((sl = FindSlave(s))) {
-               sl->SetArchCompiler(archcomp);
-               vers.ReplaceAll(":","|");
-               sl->SetROOTVersion(vers);
-            }
+            sl->SetArchCompiler(archcomp);
+            vers.ReplaceAll(":","|");
+            sl->SetROOTVersion(vers);
          }
          break;
 
       default:
          {
-            sl = FindSlave(s);
-            Error("Collect", "unknown command received from '%s' (what = %d)",
-                            (sl ? sl->GetOrdinal() : "undef"), what);
+            Error("HandleInputMessage", "unknown command received from '%s' (what = %d)",
+                                      (sl ? sl->GetOrdinal() : "undef"), what);
          }
          break;
    }
@@ -3141,36 +3248,6 @@ void TProof::DeActivateAsyncInput()
    while ((sl = (TSlave*) next()))
       if (sl->GetInputHandler())
          sl->GetInputHandler()->Remove();
-}
-
-//______________________________________________________________________________
-void TProof::HandleAsyncInput(TSocket *sl)
-{
-   // Handle input coming from the master server (when this is a client)
-   // or from a slave server (when this is a master server). This is mainly
-   // for a-synchronous communication. Normally when PROOF issues a command
-   // the (slave) server messages are directly handle by Collect().
-
-   TMessage *mess;
-   Int_t     what;
-
-   if (sl->Recv(mess) <= 0)
-      return;                // do something more intelligent here
-
-   what = mess->What();
-
-   switch (what) {
-
-      case kPROOF_PING:
-         // do nothing (ping is already acknowledged)
-         break;
-
-      default:
-         Error("HandleAsyncInput", "unknown command (what = %d)", what);
-         break;
-   }
-
-   delete mess;
 }
 
 //______________________________________________________________________________
@@ -3515,6 +3592,12 @@ Long64_t TProof::Process(TDSet *dset, const char *selector, Option_t *option,
       return -1;
    }
 
+   // Cleanup old temporary datasets
+   if (IsIdle() && fRunningDSets && fRunningDSets->GetSize() > 0) {
+      fRunningDSets->SetOwner(kTRUE);
+      fRunningDSets->Delete();
+   }
+
    // deactivate the default application interrupt handler
    // ctrl-c's will be forwarded to PROOF to stop the processing
    TSignalHandler *sh = 0;
@@ -3558,6 +3641,14 @@ Long64_t TProof::Process(TFileCollection *fc, const char *selector,
    fPlayer->AddInput(fc);
    Long64_t retval = Process(dset, selector, option, nentries, first);
    fPlayer->GetInputList()->Remove(fc); // To avoid problems in future
+
+   // Cleanup
+   if (IsLite() && !fSync) {
+      if (!fRunningDSets) fRunningDSets = new TList;
+      fRunningDSets->Add(dset);
+   } else {
+      delete dset;
+   }
 
    return retval;
 }
@@ -3613,7 +3704,13 @@ Long64_t TProof::Process(const char *dsetname, const char *selector,
    // Set entry list
    dset->SetEntryList(enl);
    Long64_t retval = Process(dset, selector, option, nentries, first);
-   delete dset;
+   // Cleanup
+   if (IsLite() && !fSync) {
+      if (!fRunningDSets) fRunningDSets = new TList;
+      fRunningDSets->Add(dset);
+   } else {
+      delete dset;
+   }
    return retval;
 }
 
@@ -3637,7 +3734,14 @@ Long64_t TProof::Process(const char *selector, Long64_t n, Option_t *option)
    dset->SetBit(TDSet::kEmpty);
 
    Long64_t retval = Process(dset, selector, option, n);
-   delete dset;
+
+   // Cleanup
+   if (IsLite() && !fSync) {
+      if (!fRunningDSets) fRunningDSets = new TList;
+      fRunningDSets->Add(dset);
+   } else {
+      delete dset;
+   }
    return retval;
 }
 
@@ -3683,7 +3787,7 @@ Long64_t TProof::Finalize(Int_t qry, Bool_t force)
          }
       } else {
          // The last query
-         return fPlayer->Finalize(force);
+         return Finalize("", force);
       }
    }
    return -1;
@@ -3699,31 +3803,35 @@ Long64_t TProof::Finalize(const char *ref, Bool_t force)
    // Return 0 on success, -1 on error
 
    if (fPlayer) {
-      if (ref) {
-         // Get the pointer to the query
-         TQueryResult *qr = fPlayer->GetQueryResult(ref);
-         // If not found, try retrieving it
-         Bool_t retrieve = kFALSE;
-         if (!qr) {
-            retrieve = kTRUE;
-         } else {
-            if (qr->IsFinalized()) {
-               if (force) {
-                  retrieve = kTRUE;
-               } else {
-                  Info("Finalize","query already finalized:"
-                       " use Finalize(<qry>,kTRUE) to force new retrieval");
-                  qr = 0;
-               }
+      // Get the pointer to the query
+      TQueryResult *qr = (ref && strlen(ref) > 0) ? fPlayer->GetQueryResult(ref)
+                                                  : GetQueryResult();
+      Bool_t retrieve = kFALSE;
+      TString xref(ref);
+      if (!qr) {
+         if (!xref.IsNull()) {
+            retrieve =  kTRUE;
+         }
+      } else {
+         if (qr->IsFinalized()) {
+            if (force) {
+               retrieve = kTRUE;
+            } else {
+               Info("Finalize","query already finalized:"
+                     " use Finalize(<qry>,kTRUE) to force new retrieval");
+               qr = 0;
             }
+         } else {
+            retrieve = kTRUE;
+            xref.Form("%s:%s", qr->GetTitle(), qr->GetName());
          }
-         if (retrieve) {
-            Retrieve(ref);
-            qr = fPlayer->GetQueryResult(ref);
-         }
-         if (qr)
-            return fPlayer->Finalize(qr);
       }
+      if (retrieve) {
+         Retrieve(xref.Data());
+         qr = fPlayer->GetQueryResult(xref.Data());
+      }
+      if (qr)
+         return fPlayer->Finalize(qr);
    }
    return -1;
 }
@@ -4411,11 +4519,9 @@ Bool_t TProof::CheckFile(const char *file, TSlave *slave, Long_t modtime, Int_t 
                   mess << TString(gSystem->BaseName(file)) << md.fMD5 << cpopt;
                   slave->GetSocket()->Send(mess);
 
-                  TMessage *reply;
-                  slave->GetSocket()->Recv(reply);
-                  if (reply->What() != kPROOF_CHECKFILE)
-                     sendto = kTRUE;
-                  delete reply;
+                  fCheckFileStatus = 0;
+                  Collect(slave, fCollectTimeout, kPROOF_CHECKFILE);
+                  sendto = (fCheckFileStatus == 0) ? kTRUE : kFALSE;
                }
             }
             delete md5;
@@ -4441,13 +4547,9 @@ Bool_t TProof::CheckFile(const char *file, TSlave *slave, Long_t modtime, Int_t 
       mess << TString(gSystem->BaseName(file)) << md.fMD5 << cpopt;
       slave->GetSocket()->Send(mess);
 
-      TMessage *reply;
-      slave->GetSocket()->Recv(reply);
-      sendto = (!reply || reply->What() != kPROOF_CHECKFILE) ? kTRUE : kFALSE;
-      if (reply)
-         delete reply;
-      else
-         Error("CheckFile", "received empty message from worker: %s", slave->GetName());
+      fCheckFileStatus = 0;
+      Collect(slave, fCollectTimeout, kPROOF_CHECKFILE);
+      sendto = (fCheckFileStatus == 0) ? kTRUE : kFALSE;
    }
 
    return sendto;
@@ -4481,7 +4583,7 @@ Int_t TProof::SendFile(const char *file, Int_t opt, const char *rfile, TSlave *w
    if (!IsValid()) return -1;
 
    // Use the active slaves list ...
-   TList *slaves = fActiveSlaves;
+   TList *slaves = (rfile && !strcmp(rfile, "cache")) ? fUniqueSlaves : fActiveSlaves;
    // ... or the specified slave, if any
    if (wrk) {
       slaves = new TList();
@@ -4593,7 +4695,7 @@ Int_t TProof::SendFile(const char *file, Int_t opt, const char *rfile, TSlave *w
    close(fd);
 
    // Cleanup temporary list, if any
-   if (slaves != fActiveSlaves)
+   if (slaves != fActiveSlaves && slaves != fUniqueSlaves)
       SafeDelete(slaves);
 
    return nsl;
@@ -5633,14 +5735,9 @@ Int_t TProof::UploadPackage(const char *pack, EUploadPackageOpt opt)
 
       sl->GetSocket()->Send(mess);
 
-      TMessage *reply;
-      sl->GetSocket()->Recv(reply);
-      if (!reply) {
-         Error("UploadPackage",
-               "problems receiving message from server while uploading %s", par.Data());
-         return -1;
-      }
-      if (reply->What() != kPROOF_CHECKFILE) {
+      fCheckFileStatus = 0;
+      Collect(sl, fCollectTimeout, kPROOF_CHECKFILE);
+      if (fCheckFileStatus == 0) {
 
          if (fProtocol > 5) {
             // remote directory is locked, upload file over the open channel
@@ -5648,7 +5745,6 @@ Int_t TProof::UploadPackage(const char *pack, EUploadPackageOpt opt)
                          sl->GetProofWorkDir(), kPROOF_PackDir,
                          gSystem->BaseName(par)), sl) < 0) {
                Error("UploadPackage", "problems uploading file %s", par.Data());
-               SafeDelete(reply);
                return -1;
             }
          } else {
@@ -5662,15 +5758,13 @@ Int_t TProof::UploadPackage(const char *pack, EUploadPackageOpt opt)
 
          // install package and unlock dir
          sl->GetSocket()->Send(mess2);
-         SafeDelete(reply);
-         sl->GetSocket()->Recv(reply);
-         if (!reply || reply->What() != kPROOF_CHECKFILE) {
+         fCheckFileStatus = 0;
+         Collect(sl, fCollectTimeout, kPROOF_CHECKFILE);
+         if (fCheckFileStatus == 0) {
             Error("UploadPackage", "unpacking of package %s failed", par.Data());
-            SafeDelete(reply);
             return -1;
          }
       }
-      SafeDelete(reply);
    }
 
    // loop over all other master nodes
@@ -5682,16 +5776,14 @@ Int_t TProof::UploadPackage(const char *pack, EUploadPackageOpt opt)
 
       ma->GetSocket()->Send(mess3);
 
-      TMessage *reply = 0;
-      ma->GetSocket()->Recv(reply);
-      if (!reply || reply->What() != kPROOF_CHECKFILE) {
+      fCheckFileStatus = 0;
+      Collect(sl, fCollectTimeout, kPROOF_CHECKFILE);
+      if (fCheckFileStatus == 0) {
          // error -> package should have been found
          Error("UploadPackage", "package %s did not exist on submaster %s",
                par.Data(), ma->GetOrdinal());
-         SafeDelete(reply);
          return -1;
       }
-      SafeDelete(reply);
    }
 
    return 0;
@@ -6959,23 +7051,30 @@ TTree *TProof::GetTreeHeader(TDSet *dset)
    soc->Send(msg);
 
    TMessage *reply;
-   Int_t d = soc->Recv(reply);
-   if (reply <= 0) {
+   Int_t d = -1;
+   if (fProtocol >= 20) {
+      Collect(sl, fCollectTimeout, kPROOF_GETTREEHEADER);
+      reply = (TMessage *) fRecvMessages->First();
+   } else {
+      d = soc->Recv(reply);
+   }
+   if (!reply) {
       Error("GetTreeHeader", "Error getting a replay from the master.Result %d", (int) d);
       return 0;
    }
 
    TString s1;
-   TTree * t;
+   TTree *t = 0;
    (*reply) >> s1;
-   (*reply) >> t;
+   if (s1 == "Success")
+      (*reply) >> t;
 
    PDB(kGlobal, 1) {
       if (t) {
-         Info("GetTreeHeader", Form("%s, message size: %d, entries: %d\n",
-             s1.Data(), reply->BufferSize(), (int) t->GetMaxEntryLoop()));
+         Info("GetTreeHeader", "%s, message size: %d, entries: %d",
+                               s1.Data(), reply->BufferSize(), (int) t->GetMaxEntryLoop());
       } else {
-         Info("GetTreeHeader", Form("%s, message size: %d\n", s1.Data(), reply->BufferSize()));
+         Info("GetTreeHeader", "tree header retrieval failed");
       }
    }
    delete reply;
@@ -8682,7 +8781,7 @@ Int_t TProof::AssertDataSet(TDSet *dset, TList *input,
    if (dataset) {
       TList *missingFiles = new TList;
       TSeqCollection* files = dataset->GetList();
-      files->Print();
+      if (gDebug > 0) files->Print();
       Bool_t availableOnly = (lookupopt != "all") ? kTRUE : kFALSE;
       if (!dset->Add(files, dsTree, availableOnly, missingFiles)) {
          emsg.Form("error retrieving dataset %s", dset->GetName());

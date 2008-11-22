@@ -839,49 +839,21 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
          Error("ValidateFiles", "Recv failed! for worker-%s (%s)",
                slave->GetOrdinal(), slave->GetName());
          continue;
+      }
+
+      if (reply->What() != kPROOF_GETENTRIES) {
+         // Not what we want: handover processing to the central machinery
+         Int_t what = reply->What();
+         ((TProof*)gProof)->HandleInputMessage(slave, reply);
+         if (what == kPROOF_FATAL) {
+             Error("ValidateFiles", "kPROOF_FATAL from worker-%s (%s)",
+                                    slave->GetOrdinal(), slave->GetName());
+             fValid = kFALSE;
+         } else {
+            // Reactivate the socket
+            mon.Activate(sock);
          }
-
-      if ( reply->What() == kPROOF_FATAL ) {
-         Error("ValidateFiles", "kPROOF_FATAL from worker-%s (%s)",
-               slave->GetOrdinal(), slave->GetName());
-         ((TProof*)gProof)->MarkBad(slave);
-         fValid = kFALSE;
-         continue;
-      } else if ( reply->What() == kPROOF_LOGFILE ) {
-         PDB(kPacketizer,3) Info("ValidateFiles", "got kPROOF_LOGFILE");
-         Int_t size;
-         (*reply) >> size;
-         ((TProof*)gProof)->RecvLogFile(sock, size);
-         mon.Activate(sock);
-         continue;
-      } else if ( reply->What() == kPROOF_LOGDONE ) {
-         PDB(kPacketizer,3) Info("ValidateFiles", "got kPROOF_LOGDONE");
-         mon.Activate(sock);
-         continue;
-      } else if (reply->What() == kPROOF_TOUCH) {
-         PDB(kPacketizer,3) Info("ValidateFiles", "got logdone");
-         slave->Touch();
-         mon.Activate(sock);
-         continue;
-      } else if ( reply->What() == kPROOF_MESSAGE ) {
-         // Send one level up
-         TString s;
-         (*reply) >> s;
-         Bool_t lfeed = kTRUE;
-         if ((reply->BufferSize() > reply->Length()))
-            (*reply) >> lfeed;
-         TMessage m(kPROOF_MESSAGE);
-         m << s << lfeed;
-         gProofServ->GetSocket()->Send(m);
-         mon.Activate(sock);
-         continue;
-
-      } else if ( reply->What() != kPROOF_GETENTRIES ) {
-         // Help! unexpected message type
-         Error("ValidateFiles", "unexpected message type (%d) from worker-%s (%s)",
-               reply->What(), slave->GetOrdinal(), slave->GetName());
-         ((TProof*)gProof)->MarkBad(slave);
-         fValid = kFALSE;
+         // Get next message
          continue;
       }
 
@@ -1089,27 +1061,27 @@ TDSetElement *TPacketizer::GetNextPacket(TSlave *sl, TMessage *r)
       file = 0;
    }
 
-   if ( file == 0 ) {
+   if (!file) {
 
       // Try its own node first
       if (slstat->GetFileNode() != 0) {
          file = GetNextUnAlloc(slstat->GetFileNode());
-         if ( file == 0 ) {
+         if (!file) {
             slstat->SetFileNode(0);
          }
       }
 
       // try to find an unused filenode first
-      if(file == 0) {
+      if (!file) {
          file = GetNextUnAlloc();
       }
 
       // then look at the active filenodes
-      if(file == 0) {
+      if (!file) {
          file = GetNextActive();
       }
 
-      if ( file == 0 ) return 0;
+      if (!file) return 0;
 
       slstat->fCurFile = file;
       file->GetNode()->IncSlaveCnt(slstat->GetName());

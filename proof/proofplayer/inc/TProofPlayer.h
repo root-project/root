@@ -101,8 +101,6 @@ protected:
    void         *GetSender() { return this; }  //used to set gTQSender
 
    virtual Int_t DrawCanvas(TObject *obj); // Canvas drawing via libProofDraw
-   virtual Int_t GetDrawArgs(const char *var, const char *sel, Option_t *opt,
-                             TString &selector, TString &objname);
 
    virtual void SetupFeedback();  // specialized setup
 
@@ -133,6 +131,8 @@ public:
    Long64_t  DrawSelect(TDSet *set, const char *varexp,
                         const char *selection, Option_t *option = "",
                         Long64_t nentries = -1, Long64_t firstentry = 0);
+   Int_t     GetDrawArgs(const char *var, const char *sel, Option_t *opt,
+                         TString &selector, TString &objname);
    void      HandleGetTreeHeader(TMessage *mess);
    void      HandleRecvHisto(TMessage *mess);
 

@@ -141,6 +141,7 @@ private:
    Long64_t      fHWMBoxSize;       //High-Water-Mark on the sandbox size
 
    static FILE  *fgErrorHandlerFile; // File where to log 
+   static Int_t  fgRecursive;       // Keep track of recursive inputs during processing
 
    void          RedirectOutput(const char *dir = 0, const char *mode = "w");
    Int_t         CatMotd();
@@ -168,7 +169,6 @@ protected:
    virtual void  HandleRetrieve(TMessage *mess);
    virtual void  HandleWorkerLists(TMessage *mess);
 
-   virtual void  HandleSocketInputDuringProcess();
    virtual Int_t Setup();
    Int_t         SetupCommon();
    virtual void  MakePlayer();
@@ -216,6 +216,7 @@ public:
    virtual EQueryAction GetWorkers(TList *workers, Int_t &prioritychange);
 
    virtual void   HandleException(Int_t sig);
+   virtual Int_t  HandleSocketInput(TMessage *mess, Bool_t all);
    virtual void   HandleSocketInput();
    virtual void   HandleUrgentData();
    virtual void   HandleSigPipe();

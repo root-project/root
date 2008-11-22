@@ -1528,7 +1528,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
       if (IsClient())
          fProof->fRedirLog = kFALSE;
 
-      if (!IsClient()) {
+      if (!IsClient() || TSelector::IsStandardDraw(fn)) {
          HandleTimer(0); // force an update of final result
          // Store process info
          if (fPacketizer && fQuery)
@@ -2491,10 +2491,7 @@ Bool_t TProofPlayerRemote::HandleTimer(TTimer *)
 
    PDB(kFeedback,2) Info("HandleTimer","Entry");
 
-   R__ASSERT(!IsClient());
-
    if (fFeedbackTimer == 0) return kFALSE; // timer already switched off
-
 
    // process local feedback objects
 
@@ -2580,16 +2577,17 @@ Long64_t TProofPlayerRemote::DrawSelect(TDSet *set, const char *varexp,
    TNamed *varexpobj = new TNamed("varexp", varexp);
    TNamed *selectionobj = new TNamed("selection", selection);
 
-   // save the feedback list
+   // Save the current input list
+   TObject *o = 0;
+   TList *savedInput = new TList;
+   TIter nxi(fInput);
+   while ((o = nxi()))
+      savedInput->Add(o);
+   // The feedback list, if any, is kept
    TList *fb = (TList*) fInput->FindObject("FeedbackList");
-   if (fb)
-      fInput->Remove(fb);
-
-   fInput->Clear();  // good idea? what about a feedbacklist, but old query
-                     // could have left objs? clear at end? no, may want to
-                     // rerun, separate player?
-   if (fb)
-      fInput->Add(fb);
+   if (fb) fInput->Remove(fb);
+   fInput->Clear();
+   if (fb) fInput->Add(fb);
 
    fInput->Add(varexpobj);
    fInput->Add(selectionobj);
@@ -2609,6 +2607,14 @@ Long64_t TProofPlayerRemote::DrawSelect(TDSet *set, const char *varexp,
 
    delete varexpobj;
    delete selectionobj;
+
+   // Restore the input list
+   fInput->Clear();
+   TIter nxsi(savedInput);
+   while ((o = nxsi()))
+      fInput->Add(o);
+   savedInput->SetOwner(kFALSE);
+   delete savedInput;
 
    return r;
 }
@@ -2720,7 +2726,7 @@ void TProofPlayerSlave::HandleGetTreeHeader(TMessage *mess)
 {
    // Handle tree header request.
 
-   TMessage answ(kMESS_OBJECT);
+   TMessage answ(kPROOF_GETTREEHEADER);
 
    TDSet *dset;
    (*mess) >> dset;
