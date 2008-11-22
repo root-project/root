@@ -1,4 +1,7 @@
 {
+   // Avoid loading the library too soon
+   gInterpreter->UnloadLibraryMap("RunMyClass_C");
+
    // Testing TClassRef.
 
    bool success = true;
