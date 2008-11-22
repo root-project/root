@@ -28,6 +28,7 @@
 #endif
 #include <stdlib.h>
 #include <errno.h>
+#include <algorithm>
 
 #include "Riostream.h"
 #include "TSystem.h"
