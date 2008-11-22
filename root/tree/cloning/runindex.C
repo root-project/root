@@ -2,7 +2,7 @@
 #include "TChain.h"
 #include "TVirtualIndex.h"
 
-struct Event {
+struct MiniEvent {
    int run;
    int event;
    float value;
@@ -20,7 +20,7 @@ void writeFile(const char *prefix, int index, int size)
    TString filename = Form("%s-%d.root",prefix,index);
    TFile f(filename,"RECREATE");
    TTree *tree = new TTree("tree","with index");
-   Event *e = new Event;
+   MiniEvent *e = new MiniEvent;
    tree->Branch("event.",&e);
 
    for(int i = 0; i<size; ++i) {
