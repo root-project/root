@@ -336,6 +336,7 @@ Long64_t TProofPlayerLite::Process(TDSet *dset, const char *selector_file,
                                dset->GetDirectory());
    if (dset->TestBit(TDSet::kEmpty))
       set->SetBit(TDSet::kEmpty);
+   fProof->SetParameter("PROOF_MaxSlavesPerNode", (Long_t) ((TProofLite *)fProof)->fNWorkers);
    if (InitPacketizer(dset, nentries, first, "TPacketizerUnit", "TPacketizer") != 0) {
       Error("Process", "cannot init the packetizer");
       fExitStatus = kAborted;
@@ -397,7 +398,8 @@ Long64_t TProofPlayerLite::Process(TDSet *dset, const char *selector_file,
       // at the time it was called)
       fProof->fRedirLog = kFALSE;
 
-      HandleTimer(0); // force an update of final result
+      if (!TSelector::IsStandardDraw(fn))
+         HandleTimer(0); // force an update of final result
       // Store process info
       if (fPacketizer && fQuery)
          fQuery->SetProcessInfo(0, 0., fPacketizer->GetBytesRead(),
@@ -405,7 +407,7 @@ Long64_t TProofPlayerLite::Process(TDSet *dset, const char *selector_file,
                                        fPacketizer->GetProcTime());
       StopFeedback();
 
-      if (GetExitStatus() != TProofPlayer::kAborted && !TSelector::IsStandardDraw(fn))
+      if (GetExitStatus() != TProofPlayer::kAborted)
          return Finalize(kFALSE, sync);
       else
          return -1;

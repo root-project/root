@@ -1528,7 +1528,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
       if (IsClient())
          fProof->fRedirLog = kFALSE;
 
-      if (!IsClient() || TSelector::IsStandardDraw(fn)) {
+      if (!IsClient()) {
          HandleTimer(0); // force an update of final result
          // Store process info
          if (fPacketizer && fQuery)

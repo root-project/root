@@ -2911,14 +2911,13 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
 
       case kPROOF_SETIDLE:
          {
-//            PDB(kGlobal,2)
+            PDB(kGlobal,2)
              Info("HandleInputMessage","kPROOF_SETIDLE: enter");
 
             // The session is idle
             if (IsLite()) {
                if (fNotIdle > 0) {
                   fNotIdle--;
-                  Warning("HandleInputMessage", "fNotIdle = %d", fNotIdle);
                } else {
                   Warning("HandleInputMessage", "got kPROOF_SETIDLE but no running workers ! protocol error?");
                }

@@ -276,7 +276,7 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
    Long_t maxSlaveCnt = 0;
    if (TProof::GetParameter(input, "PROOF_MaxSlavesPerNode", maxSlaveCnt) == 0) {
       if (maxSlaveCnt < 1) {
-         Info("TPacketizer", "PROOF_MaxSlavesPerNode must be grater than 0");
+         Warning("TPacketizer", "PROOF_MaxSlavesPerNode must be grater than 0");
          maxSlaveCnt = 0;
       }
    } else {
@@ -284,7 +284,7 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
       Int_t mxslcnt = -1;
       if (TProof::GetParameter(input, "PROOF_MaxSlavesPerNode", mxslcnt) == 0) {
          if (mxslcnt < 1) {
-            Info("TPacketizer", "PROOF_MaxSlavesPerNode must be grater than 0");
+            Warning("TPacketizer", "PROOF_MaxSlavesPerNode must be grater than 0");
             mxslcnt = 0;
          }
          maxSlaveCnt = (Long_t) mxslcnt;
@@ -294,7 +294,8 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
       maxSlaveCnt = gEnv->GetValue("Packetizer.MaxWorkersPerNode", 4);
    if (maxSlaveCnt > 0) {
       fMaxSlaveCnt = maxSlaveCnt;
-      Info("TPacketizer", "setting max number of workers per node to %ld", fMaxSlaveCnt);
+      PDB(kPacketizer,1)
+         Info("TPacketizer", "setting max number of workers per node to %ld", fMaxSlaveCnt);
    } else {
       // Use number of CPUs as default cutting at 2
       SysInfo_t si;
