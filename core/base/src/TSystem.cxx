@@ -2998,7 +2998,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
          // Load the needed library except for the library we are currently building!
          if (libtoload != library && libtoload != libname && libtoload != libname_ext) {
             if (produceRootmap) {
-               if (loadLib) gROOT->LoadClass("", libtoload);
+               if (loadLib || linkDepLibraries /* For GetLibraries to Work */) gROOT->LoadClass("", libtoload);
                if (!linkedlibs.Contains(libtoload)) {
                   libmapfile << " " << libtoload;
                   all_libtoload.Append(" ").Append(libtoload);
