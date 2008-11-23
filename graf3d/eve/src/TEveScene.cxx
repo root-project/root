@@ -55,7 +55,10 @@ TEveScene::~TEveScene()
 {
    // Destructor.
 
+   fDestructing = kTRUE;
+
    gEve->GetViewers()->SceneDestructing(this);
+   gEve->GetScenes()->RemoveElement(this);
    delete fGLScene;
    delete fPad;
 }

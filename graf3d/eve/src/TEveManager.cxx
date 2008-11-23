@@ -191,20 +191,22 @@ TEveManager::~TEveManager()
 {
    // Destructor.
 
-   fOrphanage->DecDenyDestroy();
-   fHighlight->DecDenyDestroy();
-   fSelection->DecDenyDestroy();
-
    fGlobalScene->DecDenyDestroy();
    fEventScene->DecDenyDestroy();
    fScenes->DestroyScenes();
    fScenes->DecDenyDestroy();
    fScenes->Destroy();
+   fScenes = 0;
 
    fViewer->DecDenyDestroy();
    fViewers->DestroyElements();
    fViewers->DecDenyDestroy();
    fViewers->Destroy();
+   fViewers = 0;
+
+   fOrphanage->DecDenyDestroy();
+   fHighlight->DecDenyDestroy();
+   fSelection->DecDenyDestroy();
 
    delete fMacroFolder;
    delete fGeometryAliases;
@@ -516,7 +518,8 @@ void TEveManager::PreDeleteElement(TEveElement* element)
    if (fEditor->GetEveElement() == element)
       EditElement(0);
 
-   fScenes->DestroyElementRenderers(element);
+   if (fScenes)
+      fScenes->DestroyElementRenderers(element);
 
    TEveElement::Set_i sei = fStampedElements.find(element);
    if (sei != fStampedElements.end())

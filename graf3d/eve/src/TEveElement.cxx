@@ -575,6 +575,9 @@ void TEveElement::CheckReferenceCount(const TEveException& eh)
    // Check external references to this and eventually auto-destruct
    // the render-element.
 
+   if (fDestructing)
+      return;
+
    if (NumParents() <= fParentIgnoreCnt && fTopItemCnt  <= 0 &&
        fDestroyOnZeroRefCnt             && fDenyDestroy <= 0)
    {
