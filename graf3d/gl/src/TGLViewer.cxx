@@ -903,7 +903,7 @@ void TGLViewer::ApplySelection()
 
    fCurrentSelRec = fSelRec;
 
-   TGLPhysicalShape * selPhys = fSelRec.GetPhysShape();
+   TGLPhysicalShape *selPhys = fSelRec.GetPhysShape();
    fSelectedPShapeRef->SetPShape(selPhys);
 
    // Inform external client selection has been modified.

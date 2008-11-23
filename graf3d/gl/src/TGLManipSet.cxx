@@ -25,7 +25,6 @@
 #include <TVirtualX.h>
 
 //______________________________________________________________________
-// TGLManipSet
 //
 // Combine all available manipulators in a collection.
 //
@@ -33,7 +32,7 @@
 // single class) but then it seemed somehow messy.
 // Maybe next time.
 
-ClassImp(TGLManipSet)
+ClassImp(TGLManipSet);
 
 TGLManipSet::TGLManipSet() :
    fType     (kTrans),
@@ -56,7 +55,7 @@ TGLManipSet::~TGLManipSet()
 }
 
 //______________________________________________________________________
-void TGLManipSet::SetPShape(TGLPhysicalShape * shape)
+void TGLManipSet::SetPShape(TGLPhysicalShape* shape)
 {
    // Set phys-shape, override of virtual from TGLPShapeRef.
    // Forward to all managed manipulators.
@@ -82,9 +81,9 @@ Bool_t TGLManipSet::MouseEnter(TGLOvlSelectRecord& /*selRec*/)
 }
 
 //______________________________________________________________________
-Bool_t TGLManipSet::Handle(TGLRnrCtx          & rnrCtx,
-                           TGLOvlSelectRecord & selRec,
-                           Event_t            * event)
+Bool_t TGLManipSet::Handle(TGLRnrCtx&          rnrCtx,
+                           TGLOvlSelectRecord& selRec,
+                           Event_t*            event)
 {
    // Handle overlay event.
    // Return TRUE if event was handled.

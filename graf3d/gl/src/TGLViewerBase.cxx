@@ -27,7 +27,6 @@
 #include <stdexcept>
 
 //______________________________________________________________________
-// TGLViewerBase
 //
 // Base class for GL viewers. Provides a basic scene management and a
 // small set of control variables (camera, LOD, style, clip) that are
@@ -42,7 +41,7 @@
 // Each viewer automatically creates a TGLRnrCtx and passes it down
 // all render functions.
 
-ClassImp(TGLViewerBase)
+ClassImp(TGLViewerBase);
 
 //______________________________________________________________________
 TGLViewerBase::TGLViewerBase() :

@@ -177,7 +177,7 @@ void TGLClipPlane::Setup(const TGLBoundingBox & bbox)
 }
 
 //______________________________________________________________________________
-void TGLClipPlane::Set(const TGLPlane & plane)
+void TGLClipPlane::Set(const TGLPlane& plane)
 {
    // Update clip plane object to follow passed 'plane' equation. Center pivot
    // is shifted to nearest point on new plane.
@@ -189,7 +189,7 @@ void TGLClipPlane::Set(const TGLPlane & plane)
 }
 
 //______________________________________________________________________________
-void TGLClipPlane::PlaneSet(TGLPlaneSet_t & set) const
+void TGLClipPlane::PlaneSet(TGLPlaneSet_t& set) const
 {
    // Return set of planes (actually a single) describing this clip plane.
 
@@ -227,7 +227,7 @@ TGLClipBox::~TGLClipBox()
 }
 
 //______________________________________________________________________________
-void TGLClipBox::Setup(const TGLBoundingBox & bbox)
+void TGLClipBox::Setup(const TGLBoundingBox& bbox)
 {
    // Setup the clip object for scene encompassed by bbox.
 
@@ -241,7 +241,7 @@ void TGLClipBox::Setup(const TGLBoundingBox & bbox)
 }
 
 //______________________________________________________________________________
-void TGLClipBox::PlaneSet(TGLPlaneSet_t & set) const
+void TGLClipBox::PlaneSet(TGLPlaneSet_t& set) const
 {
    // Return set of 6 planes describing faces of the box but invert them
    // so that they point inside of box.
@@ -287,6 +287,7 @@ TGLClipSet::~TGLClipSet()
    delete fClipBox;
    delete fManip;
 }
+
 //______________________________________________________________________
 Bool_t TGLClipSet::MouseEnter(TGLOvlSelectRecord& selRec)
 {
@@ -343,7 +344,7 @@ void TGLClipSet::Render(TGLRnrCtx& rnrCtx)
 }
 
 //______________________________________________________________________________
-void TGLClipSet::FillPlaneSet(TGLPlaneSet_t & set) const
+void TGLClipSet::FillPlaneSet(TGLPlaneSet_t& set) const
 {
    // Forward request to fill the plane-set to the current clip.
 
@@ -352,7 +353,7 @@ void TGLClipSet::FillPlaneSet(TGLPlaneSet_t & set) const
 }
 
 //______________________________________________________________________________
-void TGLClipSet::SetupClips(const TGLBoundingBox & sceneBBox)
+void TGLClipSet::SetupClips(const TGLBoundingBox& sceneBBox)
 {
    // Setup clipping objects for current scene bounding box.
 
@@ -417,7 +418,7 @@ void TGLClipSet::SetClipState(EClipType type, const Double_t data[6])
          break;
       }
       case kClipPlane: {
-         TGLPlane newPlane(-data[0], -data[1], -data[2], data[3]);
+         TGLPlane newPlane(-data[0], -data[1], -data[2], -data[3]);
          fClipPlane->Set(newPlane);
          break;
       }

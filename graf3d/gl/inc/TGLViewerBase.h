@@ -136,8 +136,8 @@ public:
 
    TGLRnrCtx* GetRnrCtx() const { return fRnrCtx;}
 
-   ClassDef(TGLViewerBase, 0) // GL Viewer base-class.
-}; // endclass TGLViewerBase
+   ClassDef(TGLViewerBase, 0); // GL Viewer base-class.
+};
 
 
 #endif

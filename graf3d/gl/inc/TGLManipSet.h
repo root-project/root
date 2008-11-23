@@ -29,7 +29,7 @@ private:
    TGLManipSet& operator=(const TGLManipSet&); // Not implemented
 
 protected:
-   TGLManip * fManip[3]; //! manipulator store
+   TGLManip  *fManip[3]; //! manipulator store
    EManip     fType;     //! current manipulator
 
    Bool_t     fDrawBBox; //! also draw bounding-box around physical
@@ -38,7 +38,7 @@ public:
    TGLManipSet();
    virtual ~TGLManipSet();
 
-   virtual void SetPShape(TGLPhysicalShape * shape);
+   virtual void SetPShape(TGLPhysicalShape* shape);
 
    virtual Bool_t MouseEnter(TGLOvlSelectRecord& selRec);
    virtual Bool_t Handle(TGLRnrCtx& rnrCtx, TGLOvlSelectRecord& selRec,
@@ -54,7 +54,7 @@ public:
    Bool_t GetDrawBBox()    const { return fDrawBBox; }
    void   SetDrawBBox(Bool_t bb) { fDrawBBox = bb; }
 
-   ClassDef(TGLManipSet, 0) // A collection of available manipulators.
+   ClassDef(TGLManipSet, 0); // A collection of available manipulators.
 }; // endclass TGLManipSet
 
 

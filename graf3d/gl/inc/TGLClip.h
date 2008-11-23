@@ -122,13 +122,13 @@ public:
 class TGLClipSet : public TGLOverlayElement
 {
 protected:
-   TGLClipPlane         * fClipPlane;
-   TGLClipBox           * fClipBox;
-   TGLClip              * fCurrentClip;  //! the current clipping shape
+   TGLClipPlane          *fClipPlane;
+   TGLClipBox            *fClipBox;
+   TGLClip               *fCurrentClip;  //! the current clipping shape
 
    Bool_t                 fShowClip;
    Bool_t                 fShowManip;
-   TGLManipSet          * fManip;
+   TGLManipSet           *fManip;
 
 public:
    TGLClipSet();
@@ -143,11 +143,11 @@ public:
    virtual void Render(TGLRnrCtx& rnrCtx);
 
    Bool_t    IsClipping()     const { return fCurrentClip != 0; }
-   TGLClip * GetCurrentClip() const { return fCurrentClip; }
-   void      FillPlaneSet(TGLPlaneSet_t & set) const;
+   TGLClip*  GetCurrentClip() const { return fCurrentClip; }
+   void      FillPlaneSet(TGLPlaneSet_t& set) const;
 
    // Clipping
-   void  SetupClips(const TGLBoundingBox & sceneBBox);
+   void  SetupClips(const TGLBoundingBox& sceneBBox);
 
    void  GetClipState(EClipType type, Double_t data[6]) const;
    void  SetClipState(EClipType type, const Double_t data[6]);

@@ -18,21 +18,18 @@
 
 #include "TVirtualX.h"
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGLManip                                                             //
-//                                                                      //
-// Abstract base class for viewer manipulators, which allow direct in   //
-// viewer manipulation of a (TGlPhysicalShape) object - currently       //
-// translation, scaling and rotation along/round objects local axes.    //
-// See derived classes for these implementations.                       //
-//                                                                      //
-// This class provides binding to the zero or one manipulated physical, //
-// hit testing (selection) for manipulator sub component (widget), and  //
-// some common mouse action handling/tracking.                          //
-//////////////////////////////////////////////////////////////////////////
+//______________________________________________________________________________
+//                                                                      
+// Abstract base class for viewer manipulators, which allow direct in   
+// viewer manipulation of a (TGlPhysicalShape) object - currently       
+// translation, scaling and rotation along/round objects local axes.    
+// See derived classes for these implementations.                       
+//                                                                      
+// This class provides binding to the zero or one manipulated physical, 
+// hit testing (selection) for manipulator sub component (widget), and  
+// some common mouse action handling/tracking.                          
 
-ClassImp(TGLManip)
+ClassImp(TGLManip);
 
 Float_t TGLManip::fgRed[4]    = { 0.8, 0.0, 0.0, 1.0 };
 Float_t TGLManip::fgGreen[4]  = { 0.0, 0.8, 0.0, 1.0 };
@@ -53,7 +50,7 @@ TGLManip::TGLManip() :
 }
 
 //______________________________________________________________________________
-TGLManip::TGLManip(TGLPhysicalShape * shape) :
+TGLManip::TGLManip(TGLPhysicalShape* shape) :
    fShape(shape),
    fSelectedWidget(0), fActive(kFALSE),
    fFirstMouse(0, 0),
@@ -105,7 +102,7 @@ TGLManip::~TGLManip()
 }
 
 //______________________________________________________________________________
-Bool_t TGLManip::HandleButton(const Event_t & event, const TGLCamera & /*camera*/)
+Bool_t TGLManip::HandleButton(const Event_t& event, const TGLCamera& /*camera*/)
 {
    // Handle a mouse button event - return kTRUE if processed, kFALSE otherwise
 
@@ -131,8 +128,8 @@ Bool_t TGLManip::HandleButton(const Event_t & event, const TGLCamera & /*camera*
 }
 
 //______________________________________________________________________________
-Bool_t TGLManip::HandleMotion(const Event_t        & /*event*/,
-                              const TGLCamera      & /*camera*/)
+Bool_t TGLManip::HandleMotion(const Event_t&   /*event*/,
+                              const TGLCamera& /*camera*/)
 {
    // Handle a mouse button event - return kTRUE if widget selection change
    // kFALSE otherwise
@@ -141,10 +138,10 @@ Bool_t TGLManip::HandleMotion(const Event_t        & /*event*/,
 }
 
 //______________________________________________________________________________
-void TGLManip::CalcDrawScale(const TGLBoundingBox & box,
-                             const TGLCamera      & camera,
-                             Double_t             & base,
-                             TGLVector3           axis[3]) const
+void TGLManip::CalcDrawScale(const TGLBoundingBox& box,
+                             const TGLCamera&      camera,
+                             Double_t&             base,
+                             TGLVector3            axis[3]) const
 {
    // Calculates base and axis scale factor (in world units) for
    // drawing manipulators with reasonable size range in current

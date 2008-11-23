@@ -32,24 +32,11 @@ class TGLCamera;
 class TGLRect;
 class TGLBoundingBox;
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGLManip                                                             //
-//                                                                      //
-// Abstract base class for viewer manipulators, which allow direct in   //
-// viewer manipulation of a TGLPhysicalShape derv. object - currently   //
-// translation, scaling and rotation along/round objects local axes.    //
-// See derived classes for these implementations.                       //
-//                                                                      //
-// This class provides binding to the zero or one manipulated physical, //
-// hit testing (selection) for manipulator sub component (widget), and  //
-// some common mouse action handling/tracking.                          //
-//////////////////////////////////////////////////////////////////////////
 
 class TGLManip : public TVirtualGLManip
 {
 protected:
-   TGLPhysicalShape * fShape;             //! manipulated shape
+   TGLPhysicalShape  *fShape;             //! manipulated shape
    UInt_t             fSelectedWidget;    //! active width (axis) component
    Bool_t             fActive;            //! manipulator is active?
 
@@ -67,12 +54,12 @@ protected:
    TGLManip(const TGLManip&);
    TGLManip& operator=(const TGLManip&);
 
-   void CalcDrawScale(const TGLBoundingBox & box, const TGLCamera & camera,
-                      Double_t & base, TGLVector3 axis[3]) const;
+   void CalcDrawScale(const TGLBoundingBox& box, const TGLCamera& camera,
+                      Double_t& base, TGLVector3 axis[3]) const;
 
 public:
    TGLManip();
-   TGLManip(TGLPhysicalShape * shape);
+   TGLManip(TGLPhysicalShape* shape);
    virtual ~TGLManip();
 
    UInt_t GetSelectedWidget()   const { return fSelectedWidget; }
@@ -81,17 +68,17 @@ public:
    Bool_t GetActive()   const { return fActive; }
    void   SetActive(Bool_t a) { fActive = a; }
 
-   void               Attach(TGLPhysicalShape * shape) { fShape = shape; }
+   void               Attach(TGLPhysicalShape* shape) { fShape = shape; }
    TGLPhysicalShape * GetAttached() const { return fShape; }
 
-   virtual void   Draw(const TGLCamera & camera) const = 0;
+   virtual void   Draw(const TGLCamera& camera) const = 0;
    // CRAPPY TVirtualGLManip TTTT, just override it here
-   virtual Bool_t Select(const TGLCamera &, const TGLRect &, const TGLBoundingBox &) { return kFALSE; }
+   virtual Bool_t Select(const TGLCamera&, const TGLRect&, const TGLBoundingBox&) { return kFALSE; }
 
-   virtual Bool_t HandleButton(const Event_t & event, const TGLCamera & camera);
-   virtual Bool_t HandleMotion(const Event_t & event, const TGLCamera & camera);
+   virtual Bool_t HandleButton(const Event_t& event, const TGLCamera& camera);
+   virtual Bool_t HandleMotion(const Event_t& event, const TGLCamera& camera);
 
-   ClassDef(TGLManip,0) // abstract base GL manipulator widget
+   ClassDef(TGLManip, 0); // abstract base GL manipulator widget
 };
 
 #endif

@@ -13,13 +13,12 @@
 #include "TGLPhysicalShape.h"
 
 //______________________________________________________________________
-// TGLPShapeRef
 //
 // Base class for references to TGLPysicalShape that need to be notified
 // when the shape is destroyed.
 // Could also deliver 'change' notifications.
 
-ClassImp(TGLPShapeRef)
+ClassImp(TGLPShapeRef);
 
 //______________________________________________________________________
 TGLPShapeRef::TGLPShapeRef() :

@@ -37,7 +37,7 @@ public:
    virtual void SetPShape(TGLPhysicalShape * shape);
    virtual void PShapeModified();
 
-   ClassDef(TGLPShapeRef, 0) // Reference to a TGLPhysicalShape object.
+   ClassDef(TGLPShapeRef, 0); // Reference to a TGLPhysicalShape object.
 }; // endclass TGLPShapeRef
 
 

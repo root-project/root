@@ -16,29 +16,26 @@
 #include "TMath.h"
 #include "TError.h"
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGLRotateManip                                                       //
-//                                                                      //
-// Rotate manipulator - attaches to physical shape and draws local axes //
-// widgets - rings drawn from attached physical center, in plane defined//
-// by axis. User can mouse over (turns yellow) and L click/drag to      //
-// rotate attached physical round the ring center.                      //
-// Widgets use standard 3D package axes colours: X red, Y green, Z blue.//
-//////////////////////////////////////////////////////////////////////////
+//______________________________________________________________________________
+//                                                                      
+// Rotate manipulator - attaches to physical shape and draws local axes 
+// widgets - rings drawn from attached physical center, in plane defined
+// by axis. User can mouse over (turns yellow) and L click/drag to      
+// rotate attached physical round the ring center.                      
+// Widgets use standard 3D package axes colours: X red, Y green, Z blue.
 
-ClassImp(TGLRotateManip)
-
+ClassImp(TGLRotateManip);
 
 //______________________________________________________________________________
-Double_t Angle(const TGLVector3 & v1, const TGLVector3 & v2)
+Double_t TGLRotateManip::Angle(const TGLVector3& v1, const TGLVector3& v2)
 {
    // Calculate unsigned angle between vectors v1 and v2
    return TMath::ACos(Dot(v1, v2) / (v1.Mag() * v2.Mag()));
 }
 
 //______________________________________________________________________________
-Double_t Angle(const TGLVector3 & v1, const TGLVector3 & v2, const TGLVector3 & ref)
+Double_t TGLRotateManip::Angle(const TGLVector3& v1, const TGLVector3& v2,
+                               const TGLVector3& ref)
 {
    // Calculate signed angle between vectors v1 and v2, using ref to define right handed coord system
    // If v1.v2 parallel to ref vector: +ive for clockwise, -ive for anticlockwise
@@ -50,7 +47,6 @@ Double_t Angle(const TGLVector3 & v1, const TGLVector3 & v2, const TGLVector3 & 
       return -Angle(v1, v2);
    }
 }
-
 
 //______________________________________________________________________________
 TGLRotateManip::TGLRotateManip() :
@@ -64,7 +60,7 @@ TGLRotateManip::TGLRotateManip() :
 }
 
 //______________________________________________________________________________
-TGLRotateManip::TGLRotateManip(TGLPhysicalShape * shape) :
+TGLRotateManip::TGLRotateManip(TGLPhysicalShape* shape) :
    TGLManip(shape),
    fShallowRing(kFALSE), fShallowFront(kTRUE),
    fActiveRingPlane(TGLVector3(1.0, 0.0, 0.0), TGLVertex3(0.0, 0.0, 0.0)),
@@ -82,18 +78,19 @@ TGLRotateManip::~TGLRotateManip()
 }
 
 //______________________________________________________________________________
-void TGLRotateManip::Draw(const TGLCamera & camera) const
+void TGLRotateManip::Draw(const TGLCamera& camera) const
 {
-   // Draw rotate manipulator - axis rings drawn from attached physical center,
-   // in plane defined by axis as normal, in red(X), green(Y) and blue(Z), with
-   // white center sphere. If selected widget (mouse over) this is drawn in active
-   // colour (yellow).
+   // Draw rotate manipulator - axis rings drawn from attached
+   // physical center, in plane defined by axis as normal, in red(X),
+   // green(Y) and blue(Z), with white center sphere. If selected
+   // widget (mouse over) this is drawn in active colour (yellow).
+
    if (!fShape) {
       return;
    }
 
    // Get draw scales
-   const TGLBoundingBox & box = fShape->BoundingBox();
+   const TGLBoundingBox& box = fShape->BoundingBox();
    Double_t baseScale;
    TGLVector3 axisScale[3];
    CalcDrawScale(box, camera, baseScale, axisScale);
@@ -168,11 +165,11 @@ void TGLRotateManip::Draw(const TGLCamera & camera) const
 }
 
 //______________________________________________________________________________
-Bool_t TGLRotateManip::HandleButton(const Event_t   & event,
-                                    const TGLCamera & camera)
+Bool_t TGLRotateManip::HandleButton(const Event_t& event, const TGLCamera& camera)
 {
-   // Handle mouse button event over manipulator - returns kTRUE if redraw required
-   // kFALSE otherwise.
+   // Handle mouse button event over manipulator - returns kTRUE if
+   // redraw required kFALSE otherwise.
+
    Bool_t captured = TGLManip::HandleButton(event, camera);
 
    if (captured) {
@@ -214,12 +211,12 @@ Bool_t TGLRotateManip::HandleButton(const Event_t   & event,
 }
 
 //______________________________________________________________________________
-Bool_t TGLRotateManip::HandleMotion(const Event_t   & event,
-                                    const TGLCamera & camera)
+Bool_t TGLRotateManip::HandleMotion(const Event_t& event, const TGLCamera& camera)
 {
-   // Handle mouse motion over manipulator - if active (selected widget) rotate
-   // physical around selected ring widget plane normal. Returns kTRUE if redraw
-   // required kFALSE otherwise.
+   // Handle mouse motion over manipulator - if active (selected
+   // widget) rotate physical around selected ring widget plane
+   // normal. Returns kTRUE if redraw required kFALSE otherwise.
+
    if (fActive) {
       TPoint newMouse(event.fX, event.fY);
 
@@ -233,9 +230,10 @@ Bool_t TGLRotateManip::HandleMotion(const Event_t   & event,
 }
 
 //______________________________________________________________________________
-Double_t TGLRotateManip::CalculateAngleDelta(const TPoint & mouse, const TGLCamera & camera)
+Double_t TGLRotateManip::CalculateAngleDelta(const TPoint& mouse, const TGLCamera& camera)
 {
-   // Calculate angle delta for rotation based on new mouse position
+   // Calculate angle delta for rotation based on new mouse position.
+
    if (fShallowRing) {
       std::pair<Bool_t, TGLLine3> nearLineIntersection = Intersection(fActiveRingPlane,
                                                                       camera.FrustumPlane(TGLCamera::kNear));
@@ -264,10 +262,12 @@ Double_t TGLRotateManip::CalculateAngleDelta(const TPoint & mouse, const TGLCame
 }
 
 //______________________________________________________________________________
-TGLLine3 TGLRotateManip::CalculateRingLine(const TPoint & mouse, const TGLCamera & camera) const
+TGLLine3 TGLRotateManip::CalculateRingLine(const TPoint& mouse, const TGLCamera& camera) const
 {
-   // Calculated interaction line between 'mouse' viewport point, and current selected
-   // widget (ring), under supplied 'camera' projection.
+   // Calculated interaction line between 'mouse' viewport point, and
+   // current selected widget (ring), under supplied 'camera'
+   // projection.
+
    // Find mouse position in viewport coords
    TPoint mouseViewport(mouse);
    camera.WindowToViewport(mouseViewport);
