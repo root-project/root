@@ -585,7 +585,7 @@ RemoveLeadingDirs := sed -e 's?^[A-Za-z/\].*[/\]??' -e 's/.dll/.so/'
 ifeq ($(SED_VERSION),macosx)
    RemoveDirs := sed -E -e 's,([[:alpha:]]:\\|/)[^[:space:]]*[/\\],,g' 
 else
-   RemoveDirs := sed -e 's?\([A-Za-z]:\|[/]\).*[/\]??'
+   RemoveDirs := sed -e 's?\([A-Za-z]:\\\|[/]\).*[/\\]??'
 endif
 RemoveSizes := sed -e 's?size=0x[0-9a-fA-F]*?size=n/a?'
 
