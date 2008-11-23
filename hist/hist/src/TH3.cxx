@@ -1585,6 +1585,14 @@ TH1 *TH3::Project3D(Option_t *option) const
    //
    //  NOTE 2: The number of entries in the projected histogram is estimated from the number of 
    //  effective entries for all the cells included in the projection. 
+   //
+   //  NOTE 3: underflow/overflow are included by default in the projection 
+   //  To exclude underflow and/or overflow (for both axis in case of a projection to a 1D histogram) use option "NUF" and/or "NOF"
+   //  With SetRange() you can have all bin except underflow/overflow only if you set the axis bit range as 
+   // following after having called SetRange: 
+   //    axis->SetRange(1, axis->GetNbins());
+   //    axis->SetBit(TAxis::kAxisRange);  
+   //          
 
    TString opt = option; opt.ToLower();
    Int_t ixmin = fXaxis.GetFirst();
@@ -1921,10 +1929,23 @@ TH1 *TH3::Project3D(Option_t *option) const
    Bool_t computeErrors = kFALSE;
    if (opt.Contains("e") || GetSumw2N() ) {h->Sumw2(); computeErrors = kTRUE;}
 
-   // Fill the projected histogram taking into accounts underflow/overflows
-   if (!fXaxis.TestBit(TAxis::kAxisRange)) {ixmin--; ixmax++;}
-   if (!fYaxis.TestBit(TAxis::kAxisRange)) {iymin--; iymax++;}
-   if (!fZaxis.TestBit(TAxis::kAxisRange)) {izmin--; izmax++;}
+   bool useUF = !opt.Contains("nuf");
+   bool useOF = !opt.Contains("nof");
+   // Fill the projected histogram excluding underflow/overflows if considered in the option
+   // if specified in the option (by default they considered)
+   if (!fXaxis.TestBit(TAxis::kAxisRange)) {
+      if (useUF) ixmin--; 
+      if (useOF) ixmax++; 
+   }
+   if (!fYaxis.TestBit(TAxis::kAxisRange)) {
+      if (useUF) iymin--; 
+      if (useOF) iymax++;
+   }
+   if (!fZaxis.TestBit(TAxis::kAxisRange)) {
+      if (useUF) izmin--; 
+      if (useOF) izmax++;
+   }
+
    Double_t cont,e,e1;
    Double_t entries  = 0;
    Double_t newerror = 0;
@@ -2095,6 +2116,10 @@ TProfile2D *TH3::Project3DProfile(Option_t *option) const
    //
    //  NOTE 2: The number of entries in the projected profile is estimated from the number of 
    //  effective entries for all the cells included in the projection. 
+   //
+   //  NOTE 3: underflow/overflow are by default excluded from the projection 
+   //  (Note that this is a different default behavior compared to the projection to an histogram) 
+   //  To exclude underflow and/or overflow (for both axis in case of a projection to a 1D histogram) use option "UF" and/or "OF"
 
    TString opt = option; opt.ToLower();
    Int_t ixmin = fXaxis.GetFirst();
@@ -2241,10 +2266,21 @@ TProfile2D *TH3::Project3DProfile(Option_t *option) const
    delete [] title;
    if (p2 == 0) return 0;
 
+   bool useUF = opt.Contains("uf");
+   bool useOF = opt.Contains("of");
    // Fill the projected histogram taking into accounts underflow/overflows
-   if (!fXaxis.TestBit(TAxis::kAxisRange)) {ixmin--; ixmax++;}
-   if (!fYaxis.TestBit(TAxis::kAxisRange)) {iymin--; iymax++;}
-   if (!fZaxis.TestBit(TAxis::kAxisRange)) {izmin--; izmax++;}
+   if (!fXaxis.TestBit(TAxis::kAxisRange)) {
+      if (useUF) ixmin--; 
+      if (useOF) ixmax++; 
+   }
+   if (!fYaxis.TestBit(TAxis::kAxisRange)) {
+      if (useUF) iymin--; 
+      if (useOF) iymax++;
+   }
+   if (!fZaxis.TestBit(TAxis::kAxisRange)) {
+      if (useUF) izmin--; 
+      if (useOF) izmax++;
+   }
    Double_t cont;
    Double_t entries  = 0;
    for (Int_t ixbin=0;ixbin<=1+fXaxis.GetNbins();ixbin++){
