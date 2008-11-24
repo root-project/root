@@ -17,6 +17,7 @@
 #include "TFile.h"
 
 #include "TROOT.h"
+#include <algorithm>
 
 const unsigned int __DRAW__ = 0;
 
@@ -39,6 +40,8 @@ enum compareOptions {
 };
 
 TRandom2 r;
+
+typedef bool ( * pointer2Test) ();
 
 // Methods for histogram comparisions (later implemented)
 
@@ -63,13 +66,13 @@ bool testAdd1()
 
    for ( Int_t e = 0; e < nEvents; ++e ) {
       Double_t value = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      h1->Fill(value,  1);
+      h1->Fill(value,  1.0);
       h3->Fill(value, c1);
    }
 
    for ( Int_t e = 0; e < nEvents; ++e ) {
       Double_t value = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      h2->Fill(value,  1);
+      h2->Fill(value,  1.0);
       h3->Fill(value, c2);
    }
 
@@ -95,13 +98,13 @@ bool testAdd2()
 
    for ( Int_t e = 0; e < nEvents; ++e ) {
       Double_t value = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      h6->Fill(value, 1);
-      h5->Fill(value, 1);
+      h6->Fill(value, 1.0);
+      h5->Fill(value, 1.0);
    }
 
    for ( Int_t e = 0; e < nEvents; ++e ) {
       Double_t value = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      h7->Fill(value,  1);
+      h7->Fill(value,  1.0);
       h5->Fill(value, c2);
    }
 
@@ -135,14 +138,14 @@ bool testAdd2D1()
    for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      h1->Fill(x, y,  1);
+      h1->Fill(x, y,  1.0);
       h3->Fill(x, y, c1);
    }
 
    for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      h2->Fill(x, y,  1);
+      h2->Fill(x, y,  1.0);
       h3->Fill(x, y, c2);
    }
 
@@ -178,14 +181,14 @@ bool testAdd2D2()
    for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      h1->Fill(x, y,  1);
-      h3->Fill(x, y,  1);
+      h1->Fill(x, y,  1.0);
+      h3->Fill(x, y,  1.0);
    }
 
    for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      h2->Fill(x, y,  1);
+      h2->Fill(x, y,  1.0);
       h3->Fill(x, y, c2);
    }
 
@@ -222,7 +225,7 @@ bool testAdd3D1()
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t z = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      h1->Fill(x, y, z,  1);
+      h1->Fill(x, y, z,  1.0);
       h3->Fill(x, y, z, c1);
    }
 
@@ -230,7 +233,7 @@ bool testAdd3D1()
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t z = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      h2->Fill(x, y, z,  1);
+      h2->Fill(x, y, z,  1.0);
       h3->Fill(x, y, z, c2);
    }
 
@@ -271,15 +274,15 @@ bool testAdd3D2()
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t z = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      h1->Fill(x, y, z,  1);
-      h3->Fill(x, y, z,  1);
+      h1->Fill(x, y, z,  1.0);
+      h3->Fill(x, y, z,  1.0);
    }
 
    for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t z = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      h2->Fill(x, y, z,  1);
+      h2->Fill(x, y, z,  1.0);
       h3->Fill(x, y, z, c2);
    }
 
@@ -306,12 +309,12 @@ bool testMul1()
    r.SetSeed(seed);
    for ( Int_t e = 0; e < nEvents; ++e ) {
       Double_t value = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      h1->Fill(value, 1);
+      h1->Fill(value, 1.0);
    }
 
    for ( Int_t e = 0; e < nEvents; ++e ) {
       Double_t value = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      h2->Fill(value,  1);
+      h2->Fill(value,  1.0);
       h3->Fill(value,  c1*c2*h1->GetBinContent( h1->GetXaxis()->FindBin(value) ) );
    }
 
@@ -350,12 +353,12 @@ bool testMul2()
    r.SetSeed(seed);
    for ( Int_t e = 0; e < nEvents; ++e ) {
       Double_t value = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      h1->Fill(value, 1);
+      h1->Fill(value, 1.0);
    }
 
    for ( Int_t e = 0; e < nEvents; ++e ) {
       Double_t value = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      h2->Fill(value,  1);
+      h2->Fill(value,  1.0);
       h3->Fill(value,  h1->GetBinContent( h1->GetXaxis()->FindBin(value) ) );
    }
 
@@ -400,13 +403,13 @@ bool testMul2D1()
    for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      h1->Fill(x, y, 1);
+      h1->Fill(x, y, 1.0);
    }
 
    for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      h2->Fill(x, y,  1);
+      h2->Fill(x, y,  1.0);
       h3->Fill(x, y,  c1*c2*h1->GetBinContent( h1->GetXaxis()->FindBin(x),
                                                h1->GetYaxis()->FindBin(y) ) );
    }
@@ -459,13 +462,13 @@ bool testMul2D2()
    for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      h1->Fill(x, y, 1);
+      h1->Fill(x, y, 1.0);
    }
 
    for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      h2->Fill(x, y,  1);
+      h2->Fill(x, y,  1.0);
       h3->Fill(x, y,  h1->GetBinContent( h1->GetXaxis()->FindBin(x),
                                          h1->GetYaxis()->FindBin(y) ) );
    }
@@ -521,14 +524,14 @@ bool testMul3D1()
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t z = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      h1->Fill(x, y, z, 1);
+      h1->Fill(x, y, z, 1.0);
    }
 
    for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t z = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      h2->Fill(x, y, z,  1);
+      h2->Fill(x, y, z,  1.0);
       h3->Fill(x, y, z,  c1*c2*h1->GetBinContent( h1->GetXaxis()->FindBin(x),
                                                   h1->GetYaxis()->FindBin(y),
                                                   h1->GetZaxis()->FindBin(z) ) );
@@ -591,14 +594,14 @@ bool testMul3D2()
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t z = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      h1->Fill(x, y, z, 1);
+      h1->Fill(x, y, z, 1.0);
    }
 
    for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t z = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      h2->Fill(x, y, z,  1);
+      h2->Fill(x, y, z,  1.0);
       h3->Fill(x, y, z, h1->GetBinContent( h1->GetXaxis()->FindBin(x),
                                            h1->GetYaxis()->FindBin(y),
                                            h1->GetZaxis()->FindBin(z) ) );
@@ -648,16 +651,16 @@ bool testDivide1()
    for ( Int_t e = 0; e < nEvents; ++e ) {
       Double_t value;
       value = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      h1->Fill(value, 1);
+      h1->Fill(value, 1.0);
       value = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      h2->Fill(value,  1);
+      h2->Fill(value,  1.0);
    }
 
    TH1D* h3 = new TH1D("d1D1-h3", "h3=(c1*h1)/(c2*h2)", numberOfBins, minRange, maxRange);
    h3->Divide(h1, h2, c1, c2);
       
    TH1D* h4 = new TH1D("d1D1-h4", "h4=h3*h2)", numberOfBins, minRange, maxRange);
-   h4->Multiply(h2, h3, 1, 1);
+   h4->Multiply(h2, h3, 1, 1.0);
    for ( Int_t bin = 0; bin <= h4->GetNbinsX() + 1; ++bin ) {
       Double_t error = h1->GetBinError(bin) * h1->GetBinError(bin);
       error += 2 * h3->GetBinContent(bin)*h3->GetBinContent(bin)*h3->GetBinError(bin)*h3->GetBinError(bin);
@@ -678,7 +681,7 @@ bool stressAssign1D()
 
    for ( Int_t e = 0; e < nEvents; ++e ) {
       Double_t value = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      h1->Fill(value, 1);
+      h1->Fill(value, 1.0);
    }
 
    TH1D* h2 = new TH1D("=1D-h2", "h2-Title", numberOfBins, minRange, maxRange);
@@ -693,12 +696,12 @@ bool stressAssignProfile1D()
 {
    TProfile* p1 = new TProfile("=1D-p1", "p1-Title", numberOfBins, minRange, maxRange);
 
-   p1->Sumw2();
+   //p1->Sumw2();
 
    for ( Int_t e = 0; e < nEvents; ++e ) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      p1->Fill(x, y, 1);
+      p1->Fill(x, y, 1.0);
    }
 
    TProfile* p2 = new TProfile("=1D-p2", "p2-Title", numberOfBins, minRange, maxRange);
@@ -717,7 +720,7 @@ bool stressCopyConstructor1D()
 
    for ( Int_t e = 0; e < nEvents; ++e ) {
       Double_t value = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      h1->Fill(value, 1);
+      h1->Fill(value, 1.0);
    }
 
    TH1D* h2 = new TH1D(*h1);
@@ -731,12 +734,12 @@ bool stressCopyConstructorProfile1D()
 {
    TProfile* p1 = new TProfile("cc1D-p1", "p1-Title", numberOfBins, minRange, maxRange);
 
-   p1->Sumw2();
+   //p1->Sumw2();
 
    for ( Int_t e = 0; e < nEvents; ++e ) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      p1->Fill(x, y, 1);
+      p1->Fill(x, y, 1.0);
    }
 
    TProfile* p2 = new TProfile(*p1);
@@ -754,7 +757,7 @@ bool stressClone1D()
 
    for ( Int_t e = 0; e < nEvents; ++e ) {
       Double_t value = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      h1->Fill(value, 1);
+      h1->Fill(value, 1.0);
    }
 
    TH1D* h2 = static_cast<TH1D*> ( h1->Clone() );
@@ -768,12 +771,12 @@ bool stressCloneProfile1D()
 {
    TProfile* p1 = new TProfile("cl1D-p1", "p1-Title", numberOfBins, minRange, maxRange);
 
-   p1->Sumw2();
+   //p1->Sumw2();
 
    for ( Int_t e = 0; e < nEvents; ++e ) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      p1->Fill(x, y, 1);
+      p1->Fill(x, y, 1.0);
    }
 
    TProfile* p2 = static_cast<TProfile*> ( p1->Clone() );
@@ -794,7 +797,7 @@ bool stressAssign2D()
    for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      h1->Fill(x, y, 1);
+      h1->Fill(x, y, 1.0);
    }
    
    TH2D* h2 = new TH2D("=2D-h2", "h2-Title", 
@@ -817,7 +820,7 @@ bool stressAssignProfile2D()
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t z = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      p1->Fill(x, y, z, 1);
+      p1->Fill(x, y, z, 1.0);
    }
 
    TProfile2D* p2 = new TProfile2D("=2D-p2", "p2-Title", 
@@ -842,7 +845,7 @@ bool stressCopyConstructor2D()
    for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      h1->Fill(x, y, 1);
+      h1->Fill(x, y, 1.0);
    }
 
    TH2D* h2 = new TH2D(*h1);
@@ -862,7 +865,7 @@ bool stressCopyConstructorProfile2D()
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t z = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      p1->Fill(x, y, z, 1);
+      p1->Fill(x, y, z, 1.0);
    }
 
    TProfile2D* p2 = new TProfile2D(*p1);
@@ -883,7 +886,7 @@ bool stressClone2D()
    for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      h1->Fill(x, y, 1);
+      h1->Fill(x, y, 1.0);
    }
 
    TH2D* h2 = static_cast<TH2D*> ( h1->Clone() );
@@ -903,7 +906,7 @@ bool stressCloneProfile2D()
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t z = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      p1->Fill(x, y, z, 1);
+      p1->Fill(x, y, z, 1.0);
    }
 
    TProfile2D* p2 = static_cast<TProfile2D*> ( p1->Clone() );
@@ -926,7 +929,7 @@ bool stressAssign3D()
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t z = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      h1->Fill(x, y, z, 1);
+      h1->Fill(x, y, z, 1.0);
    }
 
    TH3D* h2 = new TH3D("=3D-h2", "h2-Title", 
@@ -952,7 +955,7 @@ bool stressAssignProfile3D()
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t z = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t t = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      p1->Fill(x, y, z, t, 1);
+      p1->Fill(x, y, z, t, 1.0);
    }
 
    TProfile3D* p2 = new TProfile3D("=3D-p2", "p2-Title", 
@@ -979,7 +982,7 @@ bool stressCopyConstructor3D()
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t z = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      h1->Fill(x, y, z, 1);
+      h1->Fill(x, y, z, 1.0);
    }
 
    TH3D* h2 = new TH3D(*h1);
@@ -1001,7 +1004,7 @@ bool stressCopyConstructorProfile3D()
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t z = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t t = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      p1->Fill(x, y, z, t, 1);
+      p1->Fill(x, y, z, t, 1.0);
    }
 
    TProfile3D* p2 = new TProfile3D(*p1);
@@ -1024,7 +1027,7 @@ bool stressClone3D()
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t z = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      h1->Fill(x, y, z, 1);
+      h1->Fill(x, y, z, 1.0);
    }
 
    TH3D* h2 = static_cast<TH3D*> ( h1->Clone() );
@@ -1046,7 +1049,7 @@ bool stressCloneProfile3D()
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t z = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t t = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      p1->Fill(x, y, z, t, 1);
+      p1->Fill(x, y, z, t, 1.0);
    }
 
    TProfile3D* p2 = static_cast<TProfile3D*> ( p1->Clone() );
@@ -1064,7 +1067,7 @@ bool testWriteRead1D()
 
    for ( Int_t e = 0; e < nEvents; ++e ) {
       Double_t value = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      h1->Fill(value, 1);
+      h1->Fill(value, 1.0);
    }
 
    TFile f("tmpHist.root", "RECREATE");
@@ -1083,12 +1086,12 @@ bool testWriteReadProfile1D()
 {
    TProfile* p1 = new TProfile("wr1D-p1", "p1-Title", numberOfBins, minRange, maxRange);
 
-   p1->Sumw2();
+   //p1->Sumw2();
 
    for ( Int_t e = 0; e < nEvents; ++e ) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      p1->Fill(x, y, 1);
+      p1->Fill(x, y, 1.0);
    }
 
    TFile f("tmpHist.root", "RECREATE");
@@ -1114,7 +1117,7 @@ bool testWriteRead2D()
    for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      h1->Fill(x, y, 1);
+      h1->Fill(x, y, 1.0);
    }
 
    TFile f("tmpHist.root", "RECREATE");
@@ -1139,7 +1142,7 @@ bool testWriteReadProfile2D()
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t z = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      p1->Fill(x, y, z, 1);
+      p1->Fill(x, y, z, 1.0);
    }
 
    TFile f("tmpHist.root", "RECREATE");
@@ -1167,7 +1170,7 @@ bool testWriteRead3D()
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t z = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      h1->Fill(x, y, z, 1);
+      h1->Fill(x, y, z, 1.0);
    }
 
    TFile f("tmpHist.root", "RECREATE");
@@ -1194,7 +1197,7 @@ bool testWriteReadProfile3D()
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t z = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t t = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      p1->Fill(x, y, z, t, 1);
+      p1->Fill(x, y, z, t, 1.0);
    }
 
    TFile f("tmpHist.root", "RECREATE");
@@ -1215,8 +1218,7 @@ bool testWriteReadProfile3D()
 
 bool stressHistOpts()
 {
-   r.SetSeed(time(0));
-   typedef bool (*pointer2Test)();
+   r.SetSeed(0);
    const unsigned int numberOfTests = 36;
    pointer2Test testPointer[numberOfTests] = {  testAdd1,                testAdd2, 
                                                 testAdd2D1,              testAdd2D2,
@@ -1263,7 +1265,7 @@ bool stressHistOpts()
 bool testIntegerRebin()
 {
    const int rebin = TMath::Nint( r.Uniform(minRebin, maxRebin) );
-   Int_t seed = 4632;//time(0);
+   Int_t seed = 4632;//0;
    TH1D* h1 = new TH1D("h1","Original Histogram", TMath::Nint( r.Uniform(1, 5) ) * rebin, minRange, maxRange);
    r.SetSeed(seed);
    for ( Int_t i = 0; i < nEvents; ++i )
@@ -1283,7 +1285,7 @@ bool testIntegerRebin()
 bool testIntegerRebinNoName()
 {
    const int rebin = TMath::Nint( r.Uniform(minRebin, maxRebin) );
-   Int_t seed = 4632;//time(0);
+   Int_t seed = 4632;//0;
    TH1D* h1 = new TH1D("h2","Original Histogram", TMath::Nint( r.Uniform(1, 5) ) * rebin, minRange, maxRange);
    r.SetSeed(seed);
    for ( Int_t i = 0; i < nEvents; ++i )
@@ -1308,19 +1310,19 @@ bool testIntegerRebinNoName()
 bool testArrayRebin()
 {
    const int rebin = TMath::Nint( r.Uniform(minRebin, maxRebin) ) + 1;
-   Int_t seed = 4632;//time(0);
+   Int_t seed = 4632;//0;
    TH1D* h1 = new TH1D("h3","Original Histogram", TMath::Nint( r.Uniform(1, 5) ) * rebin * 2, minRange, maxRange);
    r.SetSeed(seed);
    for ( Int_t i = 0; i < nEvents; ++i )
       h1->Fill( r.Uniform( minRange * .9 , maxRange * 1.1 ) );
 
    // Create vector 
-   Double_t rebinArray[rebin];
+   Double_t * rebinArray = new Double_t[rebin];
    r.RndmArray(rebin, rebinArray);
    std::sort(rebinArray, rebinArray + rebin);
    for ( Int_t i = 0; i < rebin; ++i ) {
       rebinArray[i] = TMath::Nint( rebinArray[i] * ( h1->GetNbinsX() - 2 ) + 2 );
-      rebinArray[i] = h1->GetBinLowEdge( rebinArray[i] );
+      rebinArray[i] = h1->GetBinLowEdge( h1->FindBin(rebinArray[i]) );
    }
    
 
@@ -1339,6 +1341,8 @@ bool testArrayRebin()
    r.SetSeed(seed);
    for ( Int_t i = 0; i < nEvents; ++i )
       h3->Fill( r.Uniform( minRange * .9 , maxRange * 1.1 ) );
+
+   delete [] rebinArray;
       
    return equals("TestArrayRebin", h2, h3, cmpOptStats);
 }
@@ -1351,7 +1355,7 @@ bool test2DRebin()
                        xrebin * TMath::Nint( r.Uniform(1, 5) ), minRange, maxRange, 
                        yrebin * TMath::Nint( r.Uniform(1, 5) ), minRange, maxRange);
    
-   Int_t seed = 4632;//time(0);
+   Int_t seed = 4632;//0;
    r.SetSeed(seed);
    for ( Int_t i = 0; i < nEvents; ++i )
       h2d->Fill( r.Uniform( minRange * .9 , maxRange * 1.1 ), r.Uniform( minRange * .9 , maxRange * 1.1 ) );
@@ -1370,7 +1374,6 @@ bool test2DRebin()
 
 bool stressHistRebin()
 {
-   typedef bool (*pointer2Test)();
    const unsigned int numberOfTests = 4;
    pointer2Test testPointer[numberOfTests] = { testIntegerRebin, 
                                                testIntegerRebinNoName,
@@ -2093,7 +2096,7 @@ int stressHistProj(bool testWithoutWeights = true,
 
 int main(int argc, char** argv)
 {
-   r.SetSeed(time(0));
+   r.SetSeed(0);
 
    TApplication* theApp = 0;
 
@@ -2181,17 +2184,17 @@ int equals(const char* msg, TH3D* h1, TH3D* h2, int options, double ERRORLIMIT)
                  << " "   << (fabs(h1->GetBinContent(i,j,h) - h2->GetBinContent(i,j,h)))
                  << endl;
          }
-         differents |= equals(x, h2->GetXaxis()->GetBinCenter(i), ERRORLIMIT);
-         differents |= equals(y, h2->GetYaxis()->GetBinCenter(j), ERRORLIMIT);
-         differents |= equals(z, h2->GetZaxis()->GetBinCenter(h), ERRORLIMIT);
-         differents |= equals(h1->GetBinContent(i,j,h), h2->GetBinContent(i,j,h), ERRORLIMIT);
+         differents |= (bool) equals(x, h2->GetXaxis()->GetBinCenter(i), ERRORLIMIT);
+         differents |= (bool) equals(y, h2->GetYaxis()->GetBinCenter(j), ERRORLIMIT);
+         differents |= (bool) equals(z, h2->GetZaxis()->GetBinCenter(h), ERRORLIMIT);
+         differents |= (bool) equals(h1->GetBinContent(i,j,h), h2->GetBinContent(i,j,h), ERRORLIMIT);
          if ( compareError )
-            differents |= equals(h1->GetBinError(i,j,h)  , h2->GetBinError(i,j,h), ERRORLIMIT);
+            differents |= (bool) equals(h1->GetBinError(i,j,h)  , h2->GetBinError(i,j,h), ERRORLIMIT);
       }
    
    // Statistical tests:
    if ( compareStats )
-      differents |= compareStatistics( h1, h2, debug, ERRORLIMIT);
+     differents |= (bool) compareStatistics( h1, h2, debug, ERRORLIMIT);
    
    cout << msg << ": \t" << (differents?"FAILED":"OK") << endl;
    
@@ -2231,16 +2234,16 @@ int equals(const char* msg, TH2D* h1, TH2D* h2, int options, double ERRORLIMIT)
                  << " "   << (fabs(h1->GetBinContent(i,j) - h2->GetBinContent(i,j)))
                  << endl;
          }
-         differents |= equals(x, h2->GetXaxis()->GetBinCenter(i), ERRORLIMIT);
-         differents |= equals(y, h2->GetYaxis()->GetBinCenter(j), ERRORLIMIT);
-         differents |= equals(h1->GetBinContent(i,j), h2->GetBinContent(i,j), ERRORLIMIT);
+         differents |= (bool) equals(x, h2->GetXaxis()->GetBinCenter(i), ERRORLIMIT);
+         differents |= (bool) equals(y, h2->GetYaxis()->GetBinCenter(j), ERRORLIMIT);
+         differents |= (bool) equals(h1->GetBinContent(i,j), h2->GetBinContent(i,j), ERRORLIMIT);
          if ( compareError )
-            differents |= equals(h1->GetBinError(i,j)  , h2->GetBinError(i,j), ERRORLIMIT);
+            differents |= (bool) equals(h1->GetBinError(i,j)  , h2->GetBinError(i,j), ERRORLIMIT);
       }
    
    // Statistical tests:
    if ( compareStats )
-      differents |= compareStatistics( h1, h2, debug, ERRORLIMIT);
+     differents |= (bool) compareStatistics( h1, h2, debug, ERRORLIMIT);
    
    cout << msg << ": \t" << (differents?"FAILED":"OK") << endl;
    
@@ -2275,16 +2278,16 @@ int equals(const char* msg, TH1D* h1, TH1D* h2, int options, double ERRORLIMIT)
               << " "   << differents
               << endl;
       }
-      differents |= equals(x, h2->GetXaxis()->GetBinCenter(i), ERRORLIMIT);
-      differents |= equals(h1->GetBinContent(i), h2->GetBinContent(i), ERRORLIMIT);
+      differents |= (bool) equals(x, h2->GetXaxis()->GetBinCenter(i), ERRORLIMIT);
+      differents |= (bool) equals(h1->GetBinContent(i), h2->GetBinContent(i), ERRORLIMIT);
       
       if ( compareError )
-         differents |= equals(h1->GetBinError(i),   h2->GetBinError(i), ERRORLIMIT);
+         differents |= (bool) equals(h1->GetBinError(i),   h2->GetBinError(i), ERRORLIMIT);
    }
    
    // Statistical tests:
    if ( compareStats )
-      differents |= compareStatistics( h1, h2, debug, ERRORLIMIT);
+     differents |= (bool) compareStatistics( h1, h2, debug, ERRORLIMIT);
    
    cout << msg << ": \t" << (differents?"FAILED":"OK") << endl;
    
@@ -2312,7 +2315,7 @@ int compareStatistics( TH1* h1, TH1* h2, bool debug, double ERRORLIMIT)
    const char * opt = option.c_str(); 
    differents |= (h1->Chi2Test(h2, opt) < 1);
    differents |= (h2->Chi2Test(h1,opt) < 1);         
-   differents |= equals(h1->Chi2Test(h2,opt), h2->Chi2Test(h1,opt), ERRORLIMIT);
+   differents |= (bool) equals(h1->Chi2Test(h2,opt), h2->Chi2Test(h1,opt), ERRORLIMIT);
    if ( debug )
       cout << "Chi2Test " << h1->Chi2Test(h2, opt) << " " << h2->Chi2Test(h1, opt) 
            << " | " << differents
@@ -2321,7 +2324,7 @@ int compareStatistics( TH1* h1, TH1* h2, bool debug, double ERRORLIMIT)
    if (!debug) gErrorIgnoreLevel = precLevel; 
 
    // Mean
-   differents |= equals(h1->GetMean(1), h2->GetMean(1), ERRORLIMIT);
+   differents |= (bool) equals(h1->GetMean(1), h2->GetMean(1), ERRORLIMIT);
    if ( debug )
       cout << "Mean: " << h1->GetMean(1) << " " << h2->GetMean(1) 
            << " | " << fabs( h1->GetMean(1) - h2->GetMean(1) ) 
@@ -2329,7 +2332,7 @@ int compareStatistics( TH1* h1, TH1* h2, bool debug, double ERRORLIMIT)
            << endl;
    
    // RMS
-   differents |= equals( h1->GetRMS(1), h2->GetRMS(1), ERRORLIMIT);
+   differents |= (bool) equals( h1->GetRMS(1), h2->GetRMS(1), ERRORLIMIT);
    if ( debug )
       cout << "RMS: " << h1->GetRMS(1) << " " << h2->GetRMS(1) 
            << " | " << fabs( h1->GetRMS(1) - h2->GetRMS(1) ) 
