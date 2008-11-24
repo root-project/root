@@ -13,12 +13,17 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-///////////////////////////////////////////////////////////////////////////
-/// BEGIN_HTML
-/// HybridResult class: this class is a fresh rewrite in RooStats of
-/// 	RooStatsCms/LimitResults developped by D. Piparo and G. Schott
-/// END_HTML
-///////////////////////////////////////////////////////////////////////////
+//____________________________________________________________________
+/*
+HybridResult class: this class is a fresh rewrite in RooStats of
+	RooStatsCms/LimitResults developped by D. Piparo and G. Schott
+
+The objects of this class store and access with lightweight methods the
+information calculated by LimitResults through a Lent calculation using
+MC toy experiments.
+In some ways can be considered an extended and extensible implementation of the
+TConfidenceLevel class (http://root.cern.ch/root/html/TConfidenceLevel.html).
+*/
 
 #include "RooDataHist.h"
 #include "RooDataSet.h"
@@ -39,15 +44,16 @@ using namespace RooStats;
 ///////////////////////////////////////////////////////////////////////////
 
 HybridResult::HybridResult( const char *name, const char *title,
-                            std::vector<float>& testStat_sb_vals,
-                            std::vector<float>& testStat_b_vals,
-                            float testStat_data_val ) :
-   /*HypoTestCalculator(name,title),*/ /// TO DO
-   fName(name),
-   fTitle(title),
-   fTestStat_data(testStat_data_val)
+                            std::vector<double>& testStat_sb_vals,
+                            std::vector<double>& testStat_b_vals) :
+  //TNamed(name,title),
+   HypoTestResult(name,title,0,0),
+   fTestStat_data(-999.),
+   fComputationsNulDoneFlag(false),
+   fComputationsAltDoneFlag(false)
 {
-   /// HybridResult constructor:
+   // HybridResult constructor (with name, title and vectors of S+B and B values)
+
    int vector_size_sb = testStat_sb_vals.size();
    assert(vector_size_sb>0);
 
@@ -55,101 +61,133 @@ HybridResult::HybridResult( const char *name, const char *title,
    assert(vector_size_b>0);
 
    fTestStat_sb.reserve(vector_size_sb);
-   fTestStat_b.reserve(vector_size_b);
-
    for (int i=0;i<vector_size_sb;++i)
       fTestStat_sb.push_back(testStat_sb_vals[i]);
 
+   fTestStat_b.reserve(vector_size_b);
    for (int i=0;i<vector_size_b;++i)
       fTestStat_b.push_back(testStat_b_vals[i]);
+}
 
-//  _testStat_data = -999;
+///////////////////////////////////////////////////////////////////////////
+
+HybridResult::HybridResult( const char *name, const char *title) :
+   //TNamed(name,title),
+   HypoTestResult(name,title,0,0),
+   fTestStat_data(-999.),
+   fComputationsNulDoneFlag(false),
+   fComputationsAltDoneFlag(false)
+{
+   // HybridResult constructor (with name and title)
+}
+
+///////////////////////////////////////////////////////////////////////////
+
+HybridResult::HybridResult( ) :
+   HypoTestResult("HybridResult_DefaultName","HybridResult",0,0),
+//   TNamed("HybridResult_DefaultName","HybridResult"),
+   fTestStat_data(-999.),
+   fComputationsNulDoneFlag(false),
+   fComputationsAltDoneFlag(false)
+{
+   // HybridResult default constructor
 }
 
 ///////////////////////////////////////////////////////////////////////////
 
 HybridResult::~HybridResult()
 {
-   /// HybridResult destructor
+   // HybridResult destructor
+
    fTestStat_sb.clear();
    fTestStat_b.clear();
 }
 
 ///////////////////////////////////////////////////////////////////////////
 
-double HybridResult::CLb()
+void HybridResult::SetDataTestStatistics(double testStat_data_val)
 {
-   /// return CL_b
+   // set the value of the test statistics on data
 
-   int nToys = fTestStat_b.size();
-   if (nToys==0) {
-      std::cout << "Error: no toy data present. Returning -1.\n";
-      // TO DO: assert
-      return -1;
-   }
-
-   double larger_than_measured=0;
-   for (int iToy=0;iToy<nToys;++iToy)
-      if ( fTestStat_b[iToy] > fTestStat_data ) ++larger_than_measured;
-
-   if (larger_than_measured==0) std::cout << "Warning: CLb = 0 ... maybe more toys are needed!\n";
-   return larger_than_measured/nToys;
+   fComputationsAltDoneFlag = false;
+   fComputationsNulDoneFlag = false;
+   fTestStat_data = testStat_data_val;
+   return;
 }
 
 ///////////////////////////////////////////////////////////////////////////
 
-double HybridResult::CLsplusb()
+double HybridResult::NullPValue() const
 {
-   /// return CL_s+b
-   int nToys = fTestStat_b.size();
-   if (nToys==0) {
-      std::cout << "Error: no toy data present. Returning -1.\n";
-      // TO DO: assert!
-      return -1;
+   // return 1-CL_b : the B p-value
+
+   if (fComputationsNulDoneFlag==false) {
+      int nToys = fTestStat_b.size();
+      if (nToys==0) {
+         std::cout << "Error: no toy data present. Returning -1.\n";
+         return -1;
+      }
+
+      double larger_than_measured=0;
+      for (int iToy=0;iToy<nToys;++iToy)
+         if ( fTestStat_b[iToy] > fTestStat_data ) ++larger_than_measured;
+
+      if (larger_than_measured==0) std::cout << "Warning: CLb = 0 ... maybe more toys are needed!\n";
+
+      fComputationsNulDoneFlag = true;
+      fNullPValue = 1-larger_than_measured/nToys;
    }
 
-   double larger_than_measured=0;
-   for (int iToy=0;iToy<nToys;++iToy)
-      if ( fTestStat_sb[iToy] > fTestStat_data ) ++larger_than_measured;
-
-   if (larger_than_measured==0) std::cout << "Warning: CLsb = 0 ... maybe more toys are needed!\n";
-   return larger_than_measured/nToys;
+   return fNullPValue;
 }
 
 ///////////////////////////////////////////////////////////////////////////
 
-double HybridResult::CLs()
+double HybridResult::AlternatePValue() const
 {
-   /// returns CL_s = CL_s+b / CL_b
-   double thisCLb = CLb();
-   if (thisCLb==0) {
-      std::cout << "Error: Cannot compute CLs because CLb = 0. Returning CLs = -1\n";
-      // TO DO: assert!
-      return -1;
-   }
-   double thisCLsb = CLsplusb();
+   // return CL_s+b : the S+B p-value
 
-   return thisCLsb/thisCLb;
+   if (fComputationsAltDoneFlag==false) {
+      int nToys = fTestStat_b.size();
+      if (nToys==0) {
+         std::cout << "Error: no toy data present. Returning -1.\n";
+         return -1;
+      }
+
+      double larger_than_measured=0;
+      for (int iToy=0;iToy<nToys;++iToy)
+         if ( fTestStat_sb[iToy] > fTestStat_data ) ++larger_than_measured;
+
+      if (larger_than_measured==0) std::cout << "Warning: CLsb = 0 ... maybe more toys are needed!\n";
+
+      fComputationsAltDoneFlag = true;
+      fAlternatePValue = larger_than_measured/nToys;
+   }
+
+   return fAlternatePValue;
 }
 
 ///////////////////////////////////////////////////////////////////////////
 
 void HybridResult::Add(HybridResult* other)
 {
-/// TO DO: to complete
-   other->Print("");
+   // add additional toy-MC experiments to the current results
+   // use the data test statistics of the added object if none is already present (otherwise, ignore the new one)
 
-//   int other_size_sb = _testStat_sb.size();
-//   for (int i=0;i<other_size_sb;++i)
-//     _testStat_sb.push_back(other->getTestStat_sb()[i]);
-// 
-//   int other_size_b = _testStat_b.size();
-//   for (int i=0;i<other_size_b;++i)
-//     _testStat_b.push_back(other->getTestStat_b()[i]);
-// 
-//   // if no data is present use the other's HybridResult's data
-//   if (_testStat_data==-999)
-//     _testStat_data = other->getTestStat_data();
+   int other_size_sb = other->GetTestStat_sb().size();
+   for (int i=0;i<other_size_sb;++i)
+      fTestStat_sb.push_back(other->GetTestStat_sb()[i]);
+
+   int other_size_b = other->GetTestStat_b().size();
+   for (int i=0;i<other_size_b;++i)
+      fTestStat_b.push_back(other->GetTestStat_b()[i]);
+
+   // if no data is present use the other's HybridResult's data
+   if (fTestStat_data==-999.)
+      fTestStat_data = other->GetTestStat_data();
+
+   fComputationsAltDoneFlag = false;
+   fComputationsNulDoneFlag = false;
 
    return;
 }
@@ -158,19 +196,20 @@ void HybridResult::Add(HybridResult* other)
 
 HybridPlot* HybridResult::GetPlot(const char* name,const char* title, int n_bins)
 {
-   // TO DO: migrate to roostats
+   // prepare a plot showing a result and return a pointer to a HybridPlot object
+   // the needed arguments are: an object name, a title and the number of bins in the plot
 
    // default plot name
    TString plot_name;
    if ( TString(name)=="" ) {
-      plot_name += fName; //GetName();
+      plot_name += GetName();
       plot_name += "_plot";
    } else plot_name = name;
 
    // default plot title
    TString plot_title;
    if ( TString(title)=="" ) {
-      plot_title += fTitle; //GetTitle();
+      plot_title += GetTitle();
       plot_title += "_plot (";
       plot_title += fTestStat_b.size();
       plot_title += " toys)";
@@ -188,14 +227,11 @@ HybridPlot* HybridResult::GetPlot(const char* name,const char* title, int n_bins
 
 ///////////////////////////////////////////////////////////////////////////
 
-void HybridResult::Print(const char* options)
+void HybridResult::PrintMore(const char* /*options */)
 {
-   /// Print out some information about the results
+   // Print out some information about the results
 
-   std::cout << options << std::endl;
-
-
-   std::cout << "\nResults " << fName /*GetName()*/ << ":\n"
+   std::cout << "\nResults " << GetName() << ":\n"
              << " - Number of S+B toys: " << fTestStat_b.size() << std::endl
              << " - Number of B toys: " << fTestStat_sb.size() << std::endl
              << " - test statistics evaluated on data: " << fTestStat_data << std::endl

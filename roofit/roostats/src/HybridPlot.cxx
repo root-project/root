@@ -1,5 +1,17 @@
 // @(#)root/hist:$Id$
-// Author: Danilo.Piparo@cern.ch   01/06/2008
+
+//___________________________________
+/**
+Class HybridPlot
+Authors: D. Piparo, G. Schott - Universitaet Karlsruhe
+
+This class provides the plots for the result of a study performed with the 
+HybridCalculator class.
+
+An example plot is available here:
+   http://www-ekp.physik.uni-karlsruhe.de/~schott/roostats/hybridplot_example.png
+*/
+
 
 #include "assert.h"
 #include <cmath>
@@ -22,15 +34,13 @@ ClassImp(RooStats::HybridPlot)
 
 using namespace RooStats;
 
-//TRandom3 random_generator;
-
 /*----------------------------------------------------------------------------*/
 
 HybridPlot::HybridPlot(const char* name,
                        const  char* title,
-                       std::vector<float> sb_vals,
-                       std::vector<float> b_vals,
-                       float m2lnQ_data,
+                       std::vector<double> sb_vals,
+                       std::vector<double> b_vals,
+                       double m2lnQ_data,
                        int n_bins,
                        bool verbosity):
    TNamed(name,title),
@@ -38,7 +48,7 @@ HybridPlot::HybridPlot(const char* name,
    fB_histo_shaded(NULL),
    fVerbose(verbosity)
 {
-   // constructor
+   // HybridPlot constructor
 
    // Get the max and the min of the plots
    int n_toys=sb_vals.size();
@@ -197,12 +207,6 @@ void HybridPlot::Draw(const char* options){
 
 /*----------------------------------------------------------------------------*/
 
-//void HybridPlot::print(const char* options){
-//    std::cout << "\nHybridPlot " << GetName() << std::endl;
-//    }
-
-/*----------------------------------------------------------------------------*/
-
 void HybridPlot::DumpToFile (const char* RootFileName, const char* options){
    // All the objects are written to rootfile
 
@@ -231,10 +235,7 @@ void HybridPlot::DumpToFile (const char* RootFileName, const char* options){
 
 /*----------------------------------------------------------------------------*/
 
-
 // from Rsc.cxx
-
-
 
 
 /**
@@ -297,7 +298,6 @@ double HybridPlot::GetHistoCenter(TH1* histo_orig, double n_rms, bool display_re
 
 
 }
-
 
 /**
    We let an orizzontal bar go down and we stop when we have the integral 

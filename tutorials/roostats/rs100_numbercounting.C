@@ -29,6 +29,7 @@
 #include "RooStats/ProfileLikelihoodCalculator.h"
 #include "RooStats/NumberCountingPdfFactory.h"
 #include "RooStats/ConfInterval.h"
+#include "RooStats/LikelihoodInterval.h"
 #include "RooStats/HypoTestResult.h"
 #include "RooRealVar.h"
 
@@ -163,7 +164,7 @@ void rs100_numbercounting()
   else
     std::cout << "It is NOT in the interval."  << std::endl;
   cout << "-------------------------------------------------\n\n" << endl;
-
+  
   // Step 9b, We also ask about the parameter point masterSignal=2, which is inside the interval.
   paramsOfInterest->setRealValue("masterSignal",2.); 
   cout << "-------------------------------------------------" << endl;
@@ -174,18 +175,21 @@ void rs100_numbercounting()
   else
     std::cout << "It is NOT in the interval."  << std::endl;
   cout << "-------------------------------------------------\n\n" << endl;
-  
-
+    
+  /*
+  x->setVal(1.);
+  LikelihoodInterval* Int = (LikelihoodInterval*) lrint;
+  cout << "check int" <<   Int << endl;;
+  cout << "check lower limit" <<   Int->LowerLimit(*x ) << endl;
+  cout << "check upper limit" <<   Int->UpperLimit(*x ) << endl;
+  */
 
   delete lrint;
 
   delete wspace;
   delete nullParams;
 
-
-  //  LikelihoodInterval* int = (LikelihoodInterval*) lrint;
-  //  cout << "check int" <<   int << endl;;
-  //  cout << "check lower limit" <<   int->LowerLimit(*x ) << endl;;
+  
 
   /*
   // Here's an example of what is in the workspace 

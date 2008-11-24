@@ -49,7 +49,8 @@ namespace RooStats {
 
 
       // Method to return lower limit on a given parameter 
-      //    Double_t LowerLimit(RooRealVar& param) ;
+      Double_t LowerLimit(RooRealVar& param) ;
+      Double_t UpperLimit(RooRealVar& param) ;
     
 
    private:

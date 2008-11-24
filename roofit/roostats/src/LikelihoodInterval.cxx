@@ -175,63 +175,109 @@ Bool_t LikelihoodInterval::CheckParameters(RooArgSet &parameterPoint) const
 }
 
 
-/*
-//Not complete.  Add a binary search to get lower/upper limit for a given parameter.
-//Need to be careful because of a few issues:
-// - Need to profile other parameters of interest, and the fLikelihoodRatio may keep the other POI fixed to their current values.  Probably need to make a custom POI.
-// - Need to cut on the profile LR based on a chi^2 dist with the correct number of number of POI.
+
 //____________________________________________________________________
 Double_t LikelihoodInterval::LowerLimit(RooRealVar& param ) 
 {  
-  // check that param is in the list of parameters of interest
-  RooRealVar *myarg = (RooRealVar *) fParameters->find(param.GetName());
-  if( ! myarg ){
-    std::cout << "couldn't find parameter " << param.GetName() << " in parameters of interest " << std::endl;
-    return param.getMin();
-  }
-  // Keep track of values before hand
-  RooAbsArg* snapshot = (RooAbsArg*) fParameters->snapshot();
+// A binary search to get lower/upper limit for a given parameter.  Slow.
 
-  // free all parameters
-  TIter it = fParameters->createIterator();
-  while ((myarg = (RooRealVar *)it.Next())) { 
-    myarg->setConstant(kFALSE);
-  }    
+  RooAbsReal* newProfile = fLikelihoodRatio->createProfile(RooArgSet(param));
+  RooRealVar* myarg = (RooRealVar *) newProfile->getVariables()->find(param.GetName());
 
-  // fix parameter of interest
-  myarg = (RooRealVar *) fParameters->find(param.GetName());
-  myarg->setConstant(kTRUE);
+  // to do this cleanly, should start at minimum.  Either need minimum from somewhere else, or need to find it via Minuit.
+  // for testing, have param use min value
 
   // do binary search for minimum
-  double target = 1.64; // FIX THIS: target of sqrt(-2log lambda)
-  std::cout << "FIX THIS: target is not correct for general case" << std::endl;
-  double lastDiff = -target, diff=-target, step = myarg->getMax() - myarg->getMin();
-  double thisArgVal = myarg->getMin();
+  double target = TMath::ChisquareQuantile(fConfidenceLevel,fParameters->getSize());
+
+  Double_t thisArgVal = param.getVal(); // need this to be MLE
+  myarg->setVal( thisArgVal );
+  //  std::cout << "lambda("<<thisArgVal<<") = " << newProfile->getVal() << std::endl;;
+
+
+  double step = thisArgVal - myarg->getMin();
+  double lastDiff = newProfile->getVal() - target, diff=lastDiff;
   int nIterations = 0, maxIterations = 20;
   std::cout << "about to do binary search" << std::endl;
   while(fabs(diff) > 0.01 && nIterations < maxIterations){
     nIterations++;
     if(diff<0)
-      thisArgVal += step;
+      thisArgVal -= step; // LR too small, reduce myarg
     else
-      thisArgVal -= step;
-    if(lastDiff*diff < 0) step /=2; 
+      thisArgVal += step; // LR too big, increase myarg
+
+    if(lastDiff*diff < 0) // crossed target, reduce step size
+      step /=2; 
+
     myarg->setVal( thisArgVal );
-    myarg->Print();
-    std::cout << "lambda("<<thisArgVal<<") = " << fLikelihoodRatio->getVal() << std::endl;;
+    //    myarg->Print();
+    //    std::cout << "lambda("<<thisArgVal<<") = " << newProfile->getVal() << std::endl;;
     lastDiff = diff;
     // abs below to protect small negative numbers from numerical precision
-    diff = sqrt(2.*fabs(fLikelihoodRatio->getVal())) - target; 
-    std::cout << "diff = " << diff << std::endl;
+    diff = 2.*(newProfile->getVal()) - target; 
+    //    std::cout << "diff = " << diff << std::endl;
   }
   
 
 
   // put the parameters back to the way they were
-  (*fParameters) = (*snapshot);
+  //  (*fParameters) = (*snapshot);
 
   return myarg->getVal();
 
 }
 
-*/
+
+
+//____________________________________________________________________
+Double_t LikelihoodInterval::UpperLimit(RooRealVar& param ) 
+{  
+
+// A binary search to get lower/upper limit for a given parameter.  Slow.
+  RooAbsReal* newProfile = fLikelihoodRatio->createProfile(RooArgSet(param));
+  RooRealVar* myarg = (RooRealVar *) newProfile->getVariables()->find(param.GetName());
+
+  // to do this cleanly, should start at minimum.  Either need minimum from somewhere else, or need to find it via Minuit.
+  // for testing, have param use min value
+
+  // do binary search for minimum
+  double target = TMath::ChisquareQuantile(fConfidenceLevel,fParameters->getSize());
+
+  Double_t thisArgVal = param.getVal(); // need this to be MLE
+  myarg->setVal( thisArgVal );
+
+
+  double step = thisArgVal - myarg->getMin();
+  double lastDiff = newProfile->getVal() - target, diff=lastDiff;
+  int nIterations = 0, maxIterations = 20;
+  //  std::cout << "about to do binary search" << std::endl;
+  while(fabs(diff) > 0.01 && nIterations < maxIterations){
+    nIterations++;
+    if(diff<0)
+      thisArgVal += step; // LR too small, increase myarg
+    else
+      thisArgVal -= step; // LR too big, reduce myarg
+
+    if(lastDiff*diff < 0) // crossed target, reduce step size
+      step /=2; 
+
+    myarg->setVal( thisArgVal );
+    //    myarg->Print();
+    //    std::cout << "lambda("<<thisArgVal<<") = " << newProfile->getVal() << std::endl;;
+    lastDiff = diff;
+    // abs below to protect small negative numbers from numerical precision
+    diff = 2.*(newProfile->getVal()) - target; 
+    //    std::cout << "diff = " << diff << std::endl;
+  }
+  
+
+
+  // put the parameters back to the way they were
+  //  (*fParameters) = (*snapshot);
+
+  return myarg->getVal();
+
+}
+
+
+

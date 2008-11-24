@@ -29,7 +29,7 @@ As such, it stores a p-value for the null-hypothesis (eg. background-only)
 and an alternate hypothesis (eg. signal+background).  
 The p-values can also be transformed into confidence levels (CLb, CLsplusb) in a trivial way.
 The ratio of the CLsplusb to CLb is often called CLs, and is considered useful, though it is 
-not a probability.  
+not a probability.
 Finally, the p-value of the null can be transformed into a number of equivalent Gaussian sigma using the 
 Significance method.
 END_HTML

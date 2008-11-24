@@ -20,10 +20,15 @@
 #include "RooStats/HypoTestCalculator.h"
 #endif
 
+#include <vector>
+
+#include "TH1.h"
+
+#include "RooStats/HybridResult.h"
 
 namespace RooStats {
 
-   class HybridCalculator /*: public HypoTestCalculator*/ {  /// TO DO: inheritance
+   class HybridCalculator : /*public HypoTestCalculator ,*/ public TNamed {
 
    public:
       /// Constructor for HybridCalculator
@@ -32,26 +37,27 @@ namespace RooStats {
                        RooAbsPdf& sb_model,
                        RooAbsPdf& b_model,
                        RooArgList& observables,
-                       RooArgSet& parameters,
+                       RooArgSet& nuisance_parameters,
                        RooAbsPdf& prior_pdf);
 
       /// Destructor of HybridCalculator
       virtual ~HybridCalculator();
 
       void SetTestStatistics(int index);
-      void Calculate(RooAbsData& data, unsigned int nToys, bool usePriors);
-      void RunToys(unsigned int nToys, bool usePriors); // private?
-      void Print(const char* options);
+      HybridResult* Calculate(TH1& data, unsigned int nToys, bool usePriors);
+      HybridResult* Calculate(RooTreeData& data, unsigned int nToys, bool usePriors);
+      HybridResult* Calculate(unsigned int nToys, bool usePriors);
+      void PrintMore(const char* options);
 
    private:
-      const char* fName; /// TO DO: put to TNamed inherited
-      const char* fTitle; /// TO DO: put to TNamed inherited
-      RooAbsPdf& fSbModel;
-      RooAbsPdf& fBModel;
-      RooArgList& fObservables;
-      RooArgSet& fParameters;
-      RooAbsPdf& fPriorPdf;
-      unsigned int fTestStatisticsIdx;
+      void RunToys(std::vector<double>& bVals, std::vector<double>& sbVals, unsigned int nToys, bool usePriors);
+
+      RooAbsPdf& fSbModel; // The pdf of the signal+background model
+      RooAbsPdf& fBModel; // The pdf of the background model
+      RooArgList& fObservables; // Collection of the observables of the model
+      RooArgSet& fParameters; // Collection of the nuisance parameters in the model
+      RooAbsPdf& fPriorPdf; // Prior PDF of the nuisance parameters
+      unsigned int fTestStatisticsIdx; // Index of the test statistics to use
 
    protected:
       ClassDef(HybridCalculator,1)  // Hypothesis test calculator using a Bayesian-frequentist hybrid method
