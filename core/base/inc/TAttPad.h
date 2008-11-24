@@ -73,6 +73,7 @@ public:
    virtual void     SetLeftMargin(Float_t leftmargin);
    virtual void     SetRightMargin(Float_t rightmargin);
    virtual void     SetTopMargin(Float_t topmargin);
+   virtual void     SetMargin(Float_t left, Float_t right, Float_t bottom, Float_t top);
    virtual void     SetAfile(Float_t afile) { fAfile=afile;}
    virtual void     SetXfile(Float_t xfile) { fXfile=xfile;}
    virtual void     SetYfile(Float_t yfile) { fYfile=yfile;}

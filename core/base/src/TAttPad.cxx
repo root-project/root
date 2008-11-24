@@ -128,6 +128,17 @@ void TAttPad::SetTopMargin(Float_t margin)
 }
 
 //______________________________________________________________________________
+void TAttPad::SetMargin(Float_t left, Float_t right, Float_t bottom, Float_t top)
+{
+//*-*-*-*-*-*-*-*-*Set all margins
+
+   SetLeftMargin(left);
+   SetRightMargin(left);
+   SetBottomMargin(left);
+   SetTopMargin(left);
+}
+
+//______________________________________________________________________________
 void TAttPad::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TAttPad.
