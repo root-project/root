@@ -871,10 +871,20 @@ Bool_t TDSet::Add(const char *file, const char *objname, const char *dir,
       return kFALSE;
    }
 
+   TString fn = file;
+   if (gProof && gProof->IsLite()) {
+      TUrl u(file, kTRUE);
+      if (!strcmp(u.GetProtocol(), "file")) {
+         gSystem->ExpandPathName(fn);
+         if (!gSystem->IsAbsoluteFileName(fn))
+            gSystem->PrependPathName(gSystem->WorkingDirectory(), fn);
+      }
+   }
+
    // check, if it already exists in the TDSet
-   TDSetElement *el = (TDSetElement *) fElements->FindObject(file);
+   TDSetElement *el = (TDSetElement *) fElements->FindObject(fn);
    if (el) {
-      Warning("Add", "duplicate, %40s is already in dataset, ignored", file);
+      Warning("Add", "duplicate, %40s is already in dataset, ignored", fn.Data());
       return kFALSE;
    }
    if (!objname)
@@ -882,7 +892,7 @@ Bool_t TDSet::Add(const char *file, const char *objname, const char *dir,
    if (!dir)
       dir = GetDirectory();
 
-   fElements->Add(new TDSetElement(file, objname, dir, first, num, msd));
+   fElements->Add(new TDSetElement(fn, objname, dir, first, num, msd));
 
    return kTRUE;
 }
