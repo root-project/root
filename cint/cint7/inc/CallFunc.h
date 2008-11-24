@@ -62,6 +62,7 @@ public: // -- Member Functions.
    void SetArgRef(G__uint64&);
    void SetArgRef(long double&);
 #endif // G__NATIVELONGLONG
+
    G__value Execute(void * pobject);
    void Exec(void* pobject);
    long ExecInt(void* pobject);
@@ -71,6 +72,7 @@ public: // -- Member Functions.
 #endif // G__NATIVELONGLONG
    G__InterfaceMethod InterfaceMethod();
    void SetArgs(const char* args);
+   void SetArgs(const G__param &p);
    G__MethodInfo GetMethodInfo();
 private: // -- Private utility functions.
    void SetFuncType();

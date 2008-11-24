@@ -101,6 +101,7 @@ G__CallFunc {
 
   G__InterfaceMethod InterfaceMethod() { return pfunc; }
   void SetArgs(const char* args);
+  void SetArgs(const G__param &p);
   G__MethodInfo GetMethodInfo() { return method; }
 
  private:

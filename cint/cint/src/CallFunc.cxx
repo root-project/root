@@ -332,6 +332,14 @@ void Cint::G__CallFunc::SetArgs(const char* args)
 }
 
 ///////////////////////////////////////////////////////////////////////////
+void G__CallFunc::SetArgs(const G__param &p) 
+{
+   // Set the arguments for the function calls.
+
+   para = p;
+}
+
+///////////////////////////////////////////////////////////////////////////
 void Cint::G__CallFunc::SetFuncProto(G__ClassInfo* cls
 			       ,const char* fname  ,const char* argtype
 			       ,long* poffset)

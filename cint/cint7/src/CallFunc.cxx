@@ -487,6 +487,14 @@ void Cint::G__CallFunc::SetArgs(const char* args)
 }
 
 //______________________________________________________________________________
+void G__CallFunc::SetArgs(const G__param &p)
+{
+   // Set the arguments for the function calls.
+
+   para = p;
+}
+
+//______________________________________________________________________________
 G__MethodInfo Cint::G__CallFunc::GetMethodInfo()
 {
    return method;
