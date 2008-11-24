@@ -29,7 +29,7 @@ void CALLBACK ftglVertex( void* data, FTMesh* mesh)
 }
 
 
-void CALLBACK ftglCombine( FTGL_DOUBLE coords[3], void* /*vertex_data[4]*/, GLfloat /*weight[4]*/, void** outData, FTMesh* mesh)
+void CALLBACK ftglCombine( FTGL_DOUBLE coords[3], void* /*vertex_data*/[4], GLfloat /*weight*/[4], void** outData, FTMesh* mesh)
 {
     const FTGL_DOUBLE* vertex = static_cast<const FTGL_DOUBLE*>(coords);
     *outData = const_cast<FTGL_DOUBLE*>(mesh->Combine( vertex[0], vertex[1], vertex[2]));
