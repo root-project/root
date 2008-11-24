@@ -88,6 +88,27 @@ namespace {
 }
 
 //______________________________________________________________________________
+namespace {
+   Bool_t CanSelfReference(TClass *cl) {
+      if (cl) {
+         if (cl->GetCollectionProxy()) {
+            TClass *inside = cl->GetCollectionProxy()->GetValueClass();
+            if (inside) {
+               return CanSelfReference(inside);
+            } else {
+               return kFALSE;
+            }
+         }
+         // Here we could scan through the TStreamerInfo to see if there
+         // is any pointer anywhere and know whether this is a possibility
+         // of selfreference (but watch out for very indirect cases).
+         return kTRUE;
+      }
+      return kFALSE;
+   }
+}
+
+//______________________________________________________________________________
 TBranchElement::TBranchElement()
 : TBranch()
 , fClassName()
@@ -291,11 +312,12 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
       // -- We are a top-level branch.  Don't split a top-level branch, TTree::Bronch will do that work.
       if (fBranchClass.GetClass()) {
          Bool_t hasCustomStreamer = kFALSE;
+         Bool_t canSelfReference = CanSelfReference(fBranchClass);
          if (fBranchClass.GetClass()->InheritsFrom(TObject::Class())) {
-            SetBit(kBranchObject);
+            if (canSelfReference) SetBit(kBranchObject);
             hasCustomStreamer = (!fBranchClass.GetClass()->GetCollectionProxy() && (gCint->ClassInfo_RootFlag(fBranchClass.GetClass()->GetClassInfo()) & 1));
          } else {
-            SetBit(kBranchAny);
+            if (canSelfReference) SetBit(kBranchAny);
             hasCustomStreamer = !fBranchClass.GetClass()->GetCollectionProxy() && (fBranchClass.GetClass()->GetStreamer() != 0 || (gCint->ClassInfo_RootFlag(fBranchClass.GetClass()->GetClassInfo()) & 1));
          }
          if (hasCustomStreamer) {
@@ -310,7 +332,7 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
          // -- If we are an object data member which inherits from TObject,
          // flag it so that later during i/o we will register the object
          // with the buffer so that pointers are handled correctly.
-         if (fBranchClass.GetClass()) {
+         if (CanSelfReference(fBranchClass)) {
             if (fBranchClass.GetClass()->InheritsFrom(TObject::Class())) {
                SetBit(kBranchObject);
             } else {
@@ -656,8 +678,9 @@ void TBranchElement::Init(TTree *tree, TBranch *parent, const char* bname, TClon
       return;
    }
 
-   SetBit(kBranchObject);
-
+   if (!clones->GetClass() || CanSelfReference(clones->GetClass())) {
+      SetBit(kBranchObject);
+   }
    TLeaf *leaf = new TLeafElement(this, GetTitle(), fID, fStreamerType);
    leaf->SetTitle(GetTitle());
    fNleaves = 1;
@@ -2112,7 +2135,7 @@ void TBranchElement::InitializeOffsets()
 
    if (fID < 0) {
       // -- We are a top-level branch.  Let's mark whether we need to use MapObject.
-      if (fBranchClass.GetClass()) {
+      if (CanSelfReference(fBranchClass)) {
          if (fBranchClass.GetClass()->InheritsFrom(TObject::Class())) {
             SetBit(kBranchObject);
          } else {
