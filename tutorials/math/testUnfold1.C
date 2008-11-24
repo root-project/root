@@ -167,12 +167,12 @@ int testUnfold1()
   Double_t const luminosityMC=1000000;
   Double_t const crossSection=1.0;
 
-  Int_t const &nDet=250;
-  Int_t const &nGen=100;
-  Double_t const &xminDet=0.0;
-  Double_t const &xmaxDet=10.0;
-  Double_t const &xminGen=0.0;
-  Double_t const &xmaxGen=10.0;
+  Int_t const nDet=250;
+  Int_t const nGen=100;
+  Double_t const xminDet=0.0;
+  Double_t const xmaxDet=10.0;
+  Double_t const xminGen=0.0;
+  Double_t const xmaxGen=10.0;
 
   //============================================
   // generate MC distribution
@@ -252,6 +252,7 @@ int testUnfold1()
   Int_t iBest;
   TSpline *logTauX,*logTauY;
   TGraph *lCurve;
+ 
   // this method scans the parameter tau and finds the kink in the L curve
   // finally, the unfolding is done for the best choice of tau
   iBest=unfold.ScanLcurve(nScan,tauMin,tauMax,&lCurve,&logTauX,&logTauY);

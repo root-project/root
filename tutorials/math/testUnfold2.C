@@ -234,12 +234,12 @@ int testUnfold2()
   Double_t const luminosityMC=1000000;
   Double_t const crossSection=1.0;
 
-  Int_t const &nDet=250;
-  Int_t const &nGen=100;
-  Double_t const &xminDet=0.0;
-  Double_t const &xmaxDet=10.0;
-  Double_t const &xminGen=0.0;
-  Double_t const &xmaxGen=10.0;
+  Int_t const nDet=250;
+  Int_t const nGen=100;
+  Double_t const xminDet=0.0;
+  Double_t const xmaxDet=10.0;
+  Double_t const xminGen=0.0;
+  Double_t const xmaxGen=10.0;
 
   //============================================
   // generate MC distribution
