@@ -116,7 +116,7 @@ RooMinuit::RooMinuit(RooAbsReal& function)
   _handleLocalErrors = kTRUE ;
   _printLevel = 1 ;
   _printEvalErrors = 10 ;
-  _warnLevel = -1 ;
+  _warnLevel = -999 ;
   _doEvalErrorWall = kTRUE ;
 
   // Examine parameter list
