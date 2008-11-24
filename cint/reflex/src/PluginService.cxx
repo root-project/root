@@ -128,9 +128,9 @@ void* Reflex::PluginService::Create( const string & name,
    else {
       Type retType = m.TypeOf().ReturnType();
       if (retType.IsPointer() || retType.IsReference()) {
-         void* ret = 0;
-         m.Invoke(dummy, ret, argv);
-         return ret;
+         void* return_value = 0;
+         m.Invoke(dummy, return_value, argv);
+         return return_value;
       } else {
          Object rett = retType.Construct();
          m.Invoke(dummy, &rett, argv);
@@ -191,9 +191,9 @@ void* Reflex::PluginService::CreateWithId(const Any& id,
    else {
       Type retType = m.TypeOf().ReturnType();
       if (retType.IsPointer() || retType.IsReference()) {
-         void* ret = 0;
-         m.Invoke(dummy, ret, argv);
-         return ret;
+         void* retval = 0;
+         m.Invoke(dummy, retval, argv);
+         return retval;
       } else {
          Object rett = retType.Construct();
          m.Invoke(dummy, &rett, argv);
