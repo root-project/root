@@ -35,7 +35,8 @@
 #define USE_STATIC_TMINUIT
 
 ROOT::Math::IMultiGenFunction * TMinuitMinimizer::fgFunc = 0; 
-TMinuit * TMinuitMinimizer::fgMinuit = 0; 
+TMinuit * TMinuitMinimizer::fgMinuit = 0;
+bool TMinuitMinimizer::fgUsed = false; 
 
 ClassImp(TMinuitMinimizer)
 
@@ -71,6 +72,7 @@ TMinuitMinimizer::TMinuitMinimizer(const char *  type ) :
    if (algoname == "simplex")   algoType = ROOT::Minuit::kSimplex; 
    if (algoname == "minimize" ) algoType = ROOT::Minuit::kCombined; 
    if (algoname == "migradimproved" ) algoType = ROOT::Minuit::kMigradImproved; 
+   if (algoname == "scan" )           algoType = ROOT::Minuit::kScan; 
 
    fType = algoType; 
 }
@@ -109,10 +111,13 @@ void TMinuitMinimizer::SetFunction(const  ROOT::Math::IMultiGenFunction & func) 
    fDim = func.NDim(); 
 
 #ifdef USE_STATIC_TMINUIT
-   if (fgMinuit == 0) 
+   if (fgMinuit == 0) {
+      fgUsed = false;
       fgMinuit =  new TMinuit(fDim);
+   }
    else if (fgMinuit->GetNumPars() != int(fDim) ) { 
       delete fgMinuit; 
+      fgUsed = false;
       fgMinuit =  new TMinuit(fDim);
    }
 
@@ -149,10 +154,13 @@ void TMinuitMinimizer::SetFunction(const  ROOT::Math::IMultiGradFunction & func)
    fDim = func.NDim(); 
 
 #ifdef USE_STATIC_TMINUIT
-   if (fgMinuit == 0) 
+   if (fgMinuit == 0) {
+      fgUsed = false; 
       fgMinuit =  new TMinuit(fDim);
+   }
    else if (fgMinuit->GetNumPars() != int(fDim) ) { 
       delete fgMinuit; 
+      fgUsed = false; 
       fgMinuit =  new TMinuit(fDim);
    }
 
@@ -206,8 +214,13 @@ bool TMinuitMinimizer::SetVariable(unsigned int ivar, const std::string & name, 
       std::cerr << "TMinuitMinimizer: ERROR : invalid TMinuit pointer. Set function first " << std::endl;
    }
 
+#ifdef USE_STATIC_TMINUIT
+   fUsed = fgUsed; 
+#endif
+
    // clear after minimization when setting params
    if (fUsed) DoClear(); 
+
 
    fMinuit->DefineParameter(ivar , name.c_str(), val, step, 0., 0. ); 
    return true; 
@@ -219,6 +232,10 @@ bool TMinuitMinimizer::SetLimitedVariable(unsigned int ivar, const std::string &
       std::cerr << "TMinuitMinimizer: ERROR : invalid TMinuit pointer. Set function first " << std::endl;
    }
 
+#ifdef USE_STATIC_TMINUIT
+   fUsed = fgUsed; 
+#endif
+
    // clear after minimization when setting params
    if (fUsed) DoClear(); 
 
@@ -228,6 +245,14 @@ bool TMinuitMinimizer::SetLimitedVariable(unsigned int ivar, const std::string &
 #ifdef LATER
 bool Minuit2Minimizer::SetLowerLimitedVariable(unsigned int ivar , const std::string & name , double val , double step , double lower ) {
     // add a lower bounded variable as a double bound one, using a very large number for the upper limit
+
+#ifdef USE_STATIC_TMINUIT
+   fUsed = fgUsed; 
+#endif
+
+   // clear after minimization when setting params
+   if (fUsed) DoClear(); 
+
    double s = val-lower; 
    double upper = s*1.0E15; 
    if (s != 0)  upper = 1.0E15;
@@ -241,6 +266,14 @@ bool TMinuitMinimizer::SetFixedVariable(unsigned int ivar, const std::string & n
    if (fMinuit == 0) { 
       std::cerr << "TMinuitMinimizer: ERROR : invalid TMinuit pointer. Set function first " << std::endl;
    }
+
+   // clear after minimization when setting params
+#ifdef USE_STATIC_TMINUIT
+   fUsed = fgUsed; 
+#endif
+
+   // clear after minimization when setting params
+   if (fUsed) DoClear(); 
 
    // put an arbitrary step (0.1) otherwise TMinuit consider the parameter as constant
    // constant parameters are treated differently (they are ignored inside TMinuit and not considered in the
@@ -296,13 +329,22 @@ bool TMinuitMinimizer::Minimize() {
       // case of Simlex
       fMinuit->mnexcm("SIMPLEX",arglist,nargs,ierr);
       break; 
+   case ROOT::Minuit::kScan: 
+      // case of Scan (scan all parameters with default values)
+      nargs = 0; 
+      fMinuit->mnexcm("SCAN",arglist,nargs,ierr);
+      break; 
    default: 
       // default: use Migrad 
       fMinuit->mnexcm("MIGRAD",arglist,nargs,ierr);
 
    }
 
+#ifdef USE_STATIC_TMINUIT
+   fgUsed = true; 
+#endif
    fUsed = true;
+
    fStatus = ierr; 
    int minErrStatus = ierr;
 
@@ -428,7 +470,12 @@ void TMinuitMinimizer::DoClear() {
    double val = 3;
    int inseed = 12345;
    fMinuit->mnrn15(val,inseed);
+
    fUsed = false; 
+
+#ifdef USE_STATIC_TMINUIT
+   fgUsed = false; 
+#endif
 
 }
 

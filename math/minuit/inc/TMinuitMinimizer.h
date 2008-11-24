@@ -35,7 +35,8 @@ namespace ROOT {
          kMigrad, 
          kSimplex, 
          kCombined, 
-         kMigradImproved
+         kMigradImproved, 
+         kScan
       };
 
    }
@@ -183,6 +184,8 @@ private:
    static ROOT::Math::IMultiGenFunction * fgFunc;
 
    static TMinuit * fgMinuit; 
+
+   static bool fgUsed;  // flag to control if static instance has done minimization
 
    ClassDef(TMinuitMinimizer,1)  //Implementation of Minimizer interface using TMinuit 
 
