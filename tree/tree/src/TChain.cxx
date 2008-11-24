@@ -85,6 +85,7 @@ TChain::TChain()
 
    // Reset PROOF-related bits
    ResetBit(kProofUptodate);
+   ResetBit(kProofLite);
 
    // Add to the global list
    gROOT->GetListOfDataSets()->Add(this);
@@ -150,6 +151,7 @@ TChain::TChain(const char* name, const char* title)
 
    // Reset PROOF-related bits
    ResetBit(kProofUptodate);
+   ResetBit(kProofLite);
 
    // Add to the global list
    gROOT->GetListOfDataSets()->Add(this);
@@ -297,7 +299,7 @@ Int_t TChain::Add(const char* name, Long64_t nentries /* = kBigNumber */)
          next_dot = basename.Index(".root",dotslashpos+1);
       }
       if (basename[dotslashpos+5]!='/') {
-         // We found the 'last' .root in the name and it is not followed by 
+         // We found the 'last' .root in the name and it is not followed by
          // a '/', so the tree name is _not_ specified in the name.
          dotslashpos = -1;
       }
@@ -399,7 +401,7 @@ Int_t TChain::AddFile(const char* name, Long64_t nentries /* = kBigNumber */, co
    //      }
    //
    // The function returns 1 if the file is successfully connected, 0 otherwise.
-   
+
 
    const char *treename = GetName();
    if (tname && strlen(tname) > 0) treename = tname;
@@ -410,7 +412,7 @@ Int_t TChain::AddFile(const char* name, Long64_t nentries /* = kBigNumber */, co
          dot = nextdot;
          nextdot = (char*)strstr(dot+1,".root");
       }
-   }    
+   }
    //the ".root" is mandatory only if one wants to specify a treename
    //if (!dot) {
    //   Error("AddFile","a chain element name must contain the string .root");
@@ -718,7 +720,7 @@ void TChain::CreatePackets()
 void TChain::DirectoryAutoAdd(TDirectory * /* dir */)
 {
    // Override the TTree::DirectoryAutoAdd behavior:
-   // we never auto add. 
+   // we never auto add.
 
 }
 
@@ -771,7 +773,7 @@ TBranch* TChain::FindBranch(const char* branchname)
 {
    // -- See TTree::GetReadEntry().
 
-   if (fProofChain) {
+   if (fProofChain && !(fProofChain->TestBit(kProofLite))) {
       // Make sure the element list is uptodate
       if (!TestBit(kProofUptodate))
          SetProof(kTRUE, kTRUE);
@@ -792,7 +794,7 @@ TLeaf* TChain::FindLeaf(const char* searchname)
 {
    // -- See TTree::GetReadEntry().
 
-   if (fProofChain) {
+   if (fProofChain && !(fProofChain->TestBit(kProofLite))) {
       // Make sure the element list is uptodate
       if (!TestBit(kProofUptodate))
          SetProof(kTRUE, kTRUE);
@@ -832,7 +834,7 @@ TBranch* TChain::GetBranch(const char* name)
 {
    // -- Return pointer to the branch name in the current tree.
 
-   if (fProofChain) {
+   if (fProofChain && !(fProofChain->TestBit(kProofLite))) {
       // Make sure the element list is uptodate
       if (!TestBit(kProofUptodate))
          SetProof(kTRUE, kTRUE);
@@ -852,7 +854,7 @@ TBranch* TChain::GetBranch(const char* name)
 Bool_t TChain::GetBranchStatus(const char* branchname) const
 {
    // -- See TTree::GetReadEntry().
-   if (fProofChain) {
+   if (fProofChain && !(fProofChain->TestBit(kProofLite))) {
       // Make sure the element list is uptodate
       if (!TestBit(kProofUptodate))
          Warning("GetBranchStatus", "PROOF proxy not up-to-date:"
@@ -879,11 +881,11 @@ Long64_t TChain::GetEntries() const
    // In case the number of entries in each tree is not yet known,
    // the offset table is computed.
 
-   if (fProofChain) {
+   if (fProofChain && !(fProofChain->TestBit(kProofLite))) {
       // Make sure the element list is uptodate
       if (!TestBit(kProofUptodate))
-         Warning("GetBranchStatus", "PROOF proxy not up-to-date:"
-                                    " run TChain::SetProof(kTRUE, kTRUE) first");
+         Warning("GetEntries", "PROOF proxy not up-to-date:"
+                               " run TChain::SetProof(kTRUE, kTRUE) first");
       return fProofChain->GetEntries();
    }
    if (fEntries >= theBigNumber || fEntries==kBigNumber) {
@@ -984,7 +986,7 @@ TLeaf* TChain::GetLeaf(const char* name)
 {
    // -- Return a pointer to the leaf name in the current tree.
 
-   if (fProofChain) {
+   if (fProofChain && !(fProofChain->TestBit(kProofLite))) {
       // Make sure the element list is uptodate
       if (!TestBit(kProofUptodate))
          SetProof(kTRUE, kTRUE);
@@ -1008,7 +1010,7 @@ TObjArray* TChain::GetListOfBranches()
    // Warning: May set current tree!
    //
 
-   if (fProofChain) {
+   if (fProofChain && !(fProofChain->TestBit(kProofLite))) {
       // Make sure the element list is uptodate
       if (!TestBit(kProofUptodate))
          SetProof(kTRUE, kTRUE);
@@ -1032,7 +1034,7 @@ TObjArray* TChain::GetListOfLeaves()
    // Warning: May set the current tree!
    //
 
-   if (fProofChain) {
+   if (fProofChain && !(fProofChain->TestBit(kProofLite))) {
       // Make sure the element list is uptodate
       if (!TestBit(kProofUptodate))
          SetProof(kTRUE, kTRUE);
@@ -1105,7 +1107,7 @@ Long64_t TChain::GetReadEntry() const
 {
    // -- See TTree::GetReadEntry().
 
-   if (fProofChain) {
+   if (fProofChain && !(fProofChain->TestBit(kProofLite))) {
       // Make sure the element list is uptodate
       if (!TestBit(kProofUptodate))
          Warning("GetBranchStatus", "PROOF proxy not up-to-date:"
@@ -2358,7 +2360,7 @@ void TChain::SetEventList(TEventList *evlist)
    const char *filename;
    if (fTreeOffset[fNtrees-1]==theBigNumber){
       //Load all the tree headers if the tree offsets are not known
-      //It is assumed here, that loading the last tree will load all 
+      //It is assumed here, that loading the last tree will load all
       //previous ones
       printf("loading trees\n");
       (const_cast<TChain*>(this))->LoadTree(evlist->GetEntry(evlist->GetN()-1));
@@ -2367,7 +2369,7 @@ void TChain::SetEventList(TEventList *evlist)
       globalentry = evlist->GetEntry(i);
       //add some protection from globalentry<0 here
       Int_t treenum = 0;
-      while (globalentry>=fTreeOffset[treenum]) 
+      while (globalentry>=fTreeOffset[treenum])
          treenum++;
       treenum--;
       localentry = globalentry - fTreeOffset[treenum];
@@ -2401,14 +2403,13 @@ void TChain::SetProof(Bool_t on, Bool_t refresh, Bool_t gettreeheader)
 {
    // Enable/Disable PROOF processing on the current default Proof (gProof).
    //
-   // "Draw" and "Processed" commands will be handled by the proof.
+   // "Draw" and "Processed" commands will be handled by PROOF.
    // The refresh and gettreeheader are meaningfull only if on == kTRUE.
-   // If refresh is kTRUE the underline fProofChain (chain proxy) is always
+   // If refresh is kTRUE the underlying fProofChain (chain proxy) is always
    // rebuilt (even if already existing).
    // If gettreeheader is kTRUE the header of the tree will be read from the
    // PROOF cluster: this is only needed for browsing and should be used with
    // care because it may take a long time to execute.
-   //
 
    if (!on) {
       // Disable
@@ -2499,4 +2500,3 @@ void TChain::UseCache(Int_t /* maxCacheSize */, Int_t /* pageSize */)
    // -- Dummy function kept for back compatibility.
    // The cache is now activated automatically when processing TTrees/TChain.
 }
-

@@ -1002,7 +1002,8 @@ Long64_t TProofLite::Process(TDSet *dset, const char *selector, Option_t *option
    }
 
    // Add query results to the player lists
-   fPlayer->AddQueryResult(pq);
+   if (!(pq->IsDraw()))
+      fPlayer->AddQueryResult(pq);
 
    // Set query currently processed
    fPlayer->SetCurrentQuery(pq);
@@ -1080,10 +1081,12 @@ Long64_t TProofLite::Process(TDSet *dset, const char *selector, Option_t *option
 
       // Complete filling of the TQueryResult instance
       AskStatistics();
-      if (fQMgr->FinalizeQuery(pq, this, fPlayer)) {
-         // Automatic saving is controlled by ProofLite.AutoSaveQueries
-         if (!strcmp(gEnv->GetValue("ProofLite.AutoSaveQueries", "off"), "on"))
-            fQMgr->SaveQuery(pq, -1);
+      if (!(pq->IsDraw())) {
+         if (fQMgr->FinalizeQuery(pq, this, fPlayer)) {
+            // Automatic saving is controlled by ProofLite.AutoSaveQueries
+            if (!strcmp(gEnv->GetValue("ProofLite.AutoSaveQueries", "off"), "on"))
+               fQMgr->SaveQuery(pq, -1);
+         }
       }
 
       // Remove aborted queries from the list

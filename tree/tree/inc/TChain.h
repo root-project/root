@@ -59,6 +59,7 @@ public:
       kGlobalWeight   = BIT(15),
       kAutoDelete     = BIT(16),
       kProofUptodate  = BIT(17),
+      kProofLite      = BIT(18),
       kBigNumber      = 1234567890
    };
 

@@ -32,19 +32,20 @@ ClassImp(TProofChain)
 //______________________________________________________________________________
 TProofChain::TProofChain() : TChain()
 {
-   // Crates a new Proof chain proxy containing the files from the TDSet.
+   // Crates a new PROOF chain proxy.
 
    fChain        = 0;
    fTree         = 0;
    fSet          = 0;
    fDirectory    = gDirectory;
    fDrawFeedback = 0;
+   ResetBit(kOwnsChain);
 }
 
 //______________________________________________________________________________
 TProofChain::TProofChain(TChain *chain, Bool_t gettreeheader) : TChain()
 {
-   // Crates a new Proof chain proxy containing the files from the TDSet.
+   // Crates a new PROOF chain proxy containing the files from the chain.
 
    fChain        = chain;
    fTree         = 0;
@@ -54,39 +55,21 @@ TProofChain::TProofChain(TChain *chain, Bool_t gettreeheader) : TChain()
    if (gProof) {
       gProof->AddChain(chain);
       ConnectProof();
-      if (gettreeheader && fSet)
-         fTree = gProof->GetTreeHeader(fSet);
+      if (gProof->IsLite()) {
+         SetBit(kProofLite);
+         fTree = fChain;
+      } else {
+         if (gettreeheader && fSet)
+            fTree = gProof->GetTreeHeader(fSet);
+      }
    }
+   ResetBit(kOwnsChain);
 }
 
 //______________________________________________________________________________
-TProofChain::~TProofChain()
+TProofChain::TProofChain(TDSet *dset, Bool_t gettreeheader) : TChain()
 {
-   // Destructor
-
-   if (fChain) {
-      SafeDelete(fSet);
-      // Remove the chain from the private lists in the TProof objects
-      TIter nxp(gROOT->GetListOfSockets());
-      TObject *o = 0;
-      TProof *p = 0;
-      while ((o = nxp()))
-         if ((p = dynamic_cast<TProof *>(o)))
-            p->RemoveChain(fChain);
-      fChain = 0;
-   } else {
-      // Not owner
-      fSet = 0;
-   }
-   SafeDelete(fTree);
-   fDirectory    = 0;
-
-}
-
-//______________________________________________________________________________
-TProofChain::TProofChain(TDSet *dset, Bool_t gettreeheader)
-{
-   // Constructor from existing data set
+   // Creates a new PROOF chain proxy containing the files from the dset.
 
    fChain        = 0;
    fTree         = 0;
@@ -97,7 +80,49 @@ TProofChain::TProofChain(TDSet *dset, Bool_t gettreeheader)
       ConnectProof();
       if (gettreeheader && dset)
          fTree = gProof->GetTreeHeader(dset);
+      if (gProof->IsLite())
+         SetBit(kProofLite);
    }
+   if (fTree && fSet) {
+      fChain = new TChain(fTree->GetName());
+      TIter nxe(fSet->GetListOfElements());
+      TDSetElement *e = 0;
+      while ((e = (TDSetElement *) nxe())) {
+         fChain->AddFile(e->GetName());
+      }
+      SetBit(kOwnsChain);
+      if (TestBit(kProofLite))
+         fTree = fChain;
+   }
+}
+
+//______________________________________________________________________________
+TProofChain::~TProofChain()
+{
+   // Destructor.
+
+   if (fChain) {
+      SafeDelete(fSet);
+      // Remove the chain from the private lists in the TProof objects
+      TIter nxp(gROOT->GetListOfSockets());
+      TObject *o = 0;
+      TProof *p = 0;
+      while ((o = nxp()))
+         if ((p = dynamic_cast<TProof *>(o)))
+            p->RemoveChain(fChain);
+      if (fTree == fChain) fTree = 0;
+      if (TestBit(kOwnsChain)) {
+         SafeDelete(fChain);
+      } else {
+         fChain = 0;
+      }
+   } else {
+      // Not owner
+      fSet = 0;
+   }
+   SafeDelete(fTree);
+   fDirectory    = 0;
+
 }
 
 //______________________________________________________________________________
@@ -268,17 +293,25 @@ Long64_t TProofChain::GetEntries() const
    // the number of entries in the TDSet that it holds.
 
    // this was used for holding the total number of entries
-   return (fTree ? fTree->GetMaxEntryLoop() : (Long64_t)(-1));
+   if (TestBit(kProofLite)) {
+      return (fTree ? fTree->GetEntries() : (Long64_t)(-1));
+   } else {
+      return (fTree ? fTree->GetMaxEntryLoop() : (Long64_t)(-1));
+   }
 }
 
 //______________________________________________________________________________
-Long64_t TProofChain::GetEntries(const char *)
+Long64_t TProofChain::GetEntries(const char *selection)
 {
    // See TTree::GetEntries(const char *selection)
    // Not implemented in TProofChain. Shouldn't be used.
 
-   Warning("GetEntries", "selection not yet implemented: return total entries");
-   return GetEntries();
+   if (TestBit(kProofLite)) {
+      return (fTree ? fTree->GetEntries(selection) : (Long64_t)(-1));
+   } else {
+      Warning("GetEntries", "GetEntries(selection) not yet implemented");
+      return ((Long64_t)(-1));
+   }
 }
 
 //______________________________________________________________________________

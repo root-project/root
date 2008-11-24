@@ -52,7 +52,7 @@ Int_t TProofPlayerLite::MakeSelector(const char *selfile)
       return -1;
    }
 
-   // If we are just given a name, initi the selector and return
+   // If we are just given a name, init the selector and return
    if (!strchr(gSystem->BaseName(selfile), '.')) {
       if (gDebug > 1)
          Info("MakeSelector", "selector name '%s' does not contain a '.':"
@@ -122,7 +122,7 @@ Int_t TProofPlayerLite::MakeSelector(const char *selfile)
    Bool_t useCacheBinaries = kFALSE;
    TString cachedname = Form("%s/%s", cacheDir.Data(), gSystem->BaseName(name));
    TString cachedhname = Form("%s/%s", cacheDir.Data(), gSystem->BaseName(hname));
-   if (!gSystem->AccessPathName(cachedname, kReadPermission) && 
+   if (!gSystem->AccessPathName(cachedname, kReadPermission) &&
        !gSystem->AccessPathName(cachedhname, kReadPermission)) {
       TMD5 *md5 = TMD5::FileChecksum(name);
       TMD5 *md5cache = TMD5::FileChecksum(cachedname);

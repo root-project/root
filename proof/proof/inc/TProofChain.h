@@ -32,6 +32,10 @@ class TList;
 
 class TProofChain : public TChain {
 
+public:
+   // TProofChain constants
+   enum { kOwnsChain   = BIT(19) };
+
 protected:
    TChain        *fChain;            // mother chain: needed for the browsing list
    TDSet         *fSet;              // TDSet
