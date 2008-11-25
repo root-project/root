@@ -5,7 +5,7 @@
 # Simply type ./runtest              to run the test
 #             ./runtest clean        to clean
 
-CURDIR=$ROOTSYS/g4root/test
+CURDIR=$ROOTSYS/montecarlo/g4root/test
 CPDIR=$G4INSTALL/examples/novice/N06
 
 run() {

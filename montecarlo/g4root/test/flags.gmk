@@ -1,4 +1,3 @@
 # Extra include files and library path
 INCFLAGS += -I$(ROOTSYS)/include
-LDLIBS   += -L$(ROOTSYS)/lib -ldl -lCint -lCore -lGpad -lRIO -lGeom -lG4root -lMatrix \
-            -lGraf -lHist -lGraf3d
+LDLIBS   += $(shell root-config --libs) -lGeom -lVMC -lEG -lG4root

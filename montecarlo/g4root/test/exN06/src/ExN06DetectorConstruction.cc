@@ -53,7 +53,7 @@ ExN06DetectorConstruction::ExN06DetectorConstruction()
 {
   expHall_x = expHall_y = expHall_z = 10*m;
   tank_x    = tank_y    = tank_z    = 5*m;
-  bubble_x  = bubble_y  = bubble_z  = 0.5*m;
+  bubble_x  = bubble_y  = bubble_z  = 1*m;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -198,6 +198,28 @@ G4VPhysicalVolume* ExN06DetectorConstruction::Construct()
 //G4VPhysicalVolume* bubbleAir_phys =
       new G4PVPlacement(0,G4ThreeVector(3.*m,2.*m,0),bubbleAir_log,"Bubble",
                         waterTank_log,false,0);
+      new G4PVPlacement(0,G4ThreeVector(3.*m,-2.*m,0),bubbleAir_log,"Bubble",
+                        waterTank_log,false,1);
+      new G4PVPlacement(0,G4ThreeVector(-3.*m,-2.*m,0),bubbleAir_log,"Bubble",
+                        waterTank_log,false,2);
+      new G4PVPlacement(0,G4ThreeVector(-3.*m,2.*m,0),bubbleAir_log,"Bubble",
+                        waterTank_log,false,3);
+      new G4PVPlacement(0,G4ThreeVector(3.*m,2.*m,-2*m),bubbleAir_log,"Bubble",
+                        waterTank_log,false,4);
+      new G4PVPlacement(0,G4ThreeVector(3.*m,-2.*m,-2*m),bubbleAir_log,"Bubble",
+                        waterTank_log,false,5);
+      new G4PVPlacement(0,G4ThreeVector(-3.*m,-2.*m,-2*m),bubbleAir_log,"Bubble",
+                        waterTank_log,false,6);
+      new G4PVPlacement(0,G4ThreeVector(-3.*m,2.*m,-2*m),bubbleAir_log,"Bubble",
+                        waterTank_log,false,7);
+      new G4PVPlacement(0,G4ThreeVector(3.*m,2.*m,2*m),bubbleAir_log,"Bubble",
+                        waterTank_log,false,8);
+      new G4PVPlacement(0,G4ThreeVector(3.*m,-2.*m,2*m),bubbleAir_log,"Bubble",
+                        waterTank_log,false,9);
+      new G4PVPlacement(0,G4ThreeVector(-3.*m,-2.*m,2*m),bubbleAir_log,"Bubble",
+                        waterTank_log,false,10);
+      new G4PVPlacement(0,G4ThreeVector(-3.*m,2.*m,2*m),bubbleAir_log,"Bubble",
+                        waterTank_log,false,11);
 
 //	------------- Surfaces --------------
 //

@@ -6,5 +6,5 @@
 #/process/inactivate Scintillation
 /gun/particle e+
 /gun/energy 500 keV
-/run/beamOn 10
+/run/beamOn 20
 #
