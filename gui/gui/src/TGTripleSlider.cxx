@@ -105,6 +105,7 @@ void TGTripleVSlider::DoRedraw()
 
    TGDoubleVSlider::DoRedraw();
    // Draw Pointer
+   SetPointerPosition(fSCz);
    DrawPointer();
 }
 
@@ -367,6 +368,7 @@ void TGTripleHSlider::DoRedraw()
 
    TGDoubleHSlider::DoRedraw();
    // Draw Pointer
+   SetPointerPosition(fSCz);
    DrawPointer();
 }
 
