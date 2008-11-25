@@ -3,11 +3,11 @@
 <a name="cint"></a> 
 <h3>CINT</h3>
 <ul>
-<li>improve initialization of class static variable that are objects until a more comprehensive solution (after the cint7 initial release).</li>
+<li>Improved initialization of class static variable that are objects until a more comprehensive solution (after the cint7 initial release).</li>
 <li>Dictionaries for templated functions are now accessible both as <tt>func&lt;int&gt;(int)</tt> and <tt>func(int)</tt>.</li>
 <li>Several small bug fixes, e.g. for template parameters being arrays, functions returning templated classes, allowing CINT to parse <tt>T*const&</tt>.
 <li>Support qt cintdll for Qt4.</li>
-<li>Improve support for permanent library (in particular for <tt>TSystem::DynFindSymbol</tt>.)</li>
+<li>Improved support for permanent library (in particular for <tt>TSystem::DynFindSymbol</tt>.)</li>
 <li>Correctly the handle of function parameter type 'reference to bool'.</li>
 <li>Avoid incorrectly matching a non-static class member function when called without an object 
 (i.e. typically <tt>TString::Form(...));</tt>).  Previously this was allowed and lead to a segfault.</li>
@@ -15,7 +15,9 @@
 <li>CINT can now autmatically generate dictionary for templated classes, e.g. A&lt;B&gt; if the header file for A and B is known.
 This allows to interpret vector&lt;MyClass&gt; by transparently generating a
 dictionary for it. This feature can be toggeled on or off by ".autodict".</li>
-<li>Add support for cintdlls using the new default STL implementation of MSVC8, 9 that implement additional runtime asserts.</li>
+<li>Added support for cintdlls using the new default STL implementation of MSVC8, 9 that implement additional runtime asserts.</li>
+<li>Extended <pre>#pragma link C++ defined_in filename;</pre>to look for the file name in the same include paths as G__loadfile 
+(i.e. previously defined_in was restrict to full path names and relative path names)</li>
 </ul>
 <h4>Reflex</h4>
 <ul>
