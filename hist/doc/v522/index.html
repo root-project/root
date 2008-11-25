@@ -4,7 +4,7 @@
 <h3>Histogram package</h3>
 <uL>
   <li>
-Modify implementation of the Fit function in the histograms and data classes to use a new common implementation, defned in the file <tt>HFitImpl.cxx</tt>.
+Modify implementation of the Fit function in the histograms and data classes to use a new common implementation, defined in the file <tt>HFitImpl.cxx</tt>.
   <li>Combine files <tt>THistFitInterface.cxx</tt>  and
 	  <tt>TGraphFitInterface.cxx</tt> (and *.h) in the new file <tt>HFitInterface.cxx</tt> and <tt>HFitInterface.h</tt>. 
 In addition HFitInterface defines a function <tt>ROOT::Fit::FitObject</tt>
@@ -22,7 +22,7 @@ In addition HFitInterface defines a function <tt>ROOT::Fit::FitObject</tt>
 	  can be used to retrieve the fit information (result and
 	  configuration) via the
 	  TVirtualFitter API from <tt>FitConfig</tt> and <tt>FitResult</tt>. A static instance of this class 
-	  is created afte calling the histograms and graph Fit methods in order to retrieve the full fit information after having fit. This gives full backward compatibility functionality in fitting. 
+	  is created after calling the histograms and graph Fit methods in order to retrieve the full fit information after having fit. This gives full backward compatibility functionality in fitting. 
   </ul>
 
   <h4>TH1</h4>
@@ -30,11 +30,11 @@ In addition HFitInterface defines a function <tt>ROOT::Fit::FitObject</tt>
   Re-implement <tt>TH1::Fit</tt> using the functions defined in <tt>HFitImpl.cxx</tt>.
     <li>Add new function <tt>TH1::Interpolate</tt> to approximate the value via linear interpolation. Implementation from Any Mastbaum. </li>
     <li>Fixed a bug in rebinning in a new variable bin histogram.
-    <li>Fixed a bug in copy constructore of histograms
+    <li>Fixed a bug in copy constructor of histograms
     </ul>
   <h4>TH2</h4>
     <ul>
-<li>  Share a common implementatin for (FitSlicesX,FitSclicesY) and (ProfileX, ProfileY) using a common protected method.
+<li>  Share a common implementation for (FitSlicesX,FitSclicesY) and (ProfileX, ProfileY) using a common protected method.
       <li>Add possibility to be used in the FitPanel (add a <tt>TH2::FitPanel()</tt> method).
     <li>Add also here the new function <tt>TH2::Interpolate</tt>. </li>
       </ul>

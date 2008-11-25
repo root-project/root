@@ -5,7 +5,7 @@
 <hr>
 <h4>MathCore</h4>
 <ul>
- <li><bf><tt>TKDTree</tt></bf>: new class for represeting a kd-tree (a k-dimensional tree). See the <a href="http://root.cern.ch/root/htmldoc/TKDTree.html">TKDTree class documentation</a> for a detailed description of the method.
+ <li><bf><tt>TKDTree</tt></bf>: new class for representing a kd-tree (a k-dimensional tree). See the <a href="http://root.cern.ch/root/htmldoc/TKDTree.html">TKDTree class documentation</a> for a detailed description of the method.
   </li>
   <li><bf><tt>TMath</tt></bf>: change slightly the signature of <tt>TMath::Sort(n,x,w)</tt>. Now the type of the index array (w) and the type of the size (n) have to be the same. Before the type of (n) was not templated and was a Long64_t, therefore, due to automatic compiler conversion one could instantiate for example a TMath::Sort by having as unsigned int for the size for the array and int for the array. Now this is not possible anymore and one must pass the same type. This is now consistent with other similar TMath functions.  Now in the CINT dictionary contains also the instantiations for both cases of Long64_t and Int_t for the size (and index array) types.  
   </li>
@@ -30,22 +30,22 @@
   <h4>Minuit</h4>
   <ul>
     <li>
-  In  <tt>TMinuitMinimizer</tt>: do not delete the contained TMinuit reference, but maintain it alife, and accessable outside as gMinuit. It can then be used after fitting, for example for drawing contour plots.
+  In  <tt>TMinuitMinimizer</tt>: do not delete the contained TMinuit reference, but maintain it alive, and accessible outside as gMinuit. It can then be used after fitting, for example for drawing contour plots.
  <li>
 <tt>    TLinearMinimizer</tt>: add support for robust fitting
     </li>
     </ul>
 <h4>Minuit2</h4>
     <ul>
-      <li>Add support to perform parallel minimization using a thread for each gradient calculation  with openMP. In the ROOT environment the Minuit2 library can be build using openMP ( <em>-fopenmp</em> compilaiton flag for gcc) if the environment variables <em>USE_PARALLEL_MINUIT2</em> and <em>USE_OPENMP</em> are set.
+      <li>Add support to perform parallel minimization using a thread for each gradient calculation  with openMP. In the ROOT environment the Minuit2 library can be build using openMP ( <em>-fopenmp</em> compilation flag for gcc) if the environment variables <em>USE_PARALLEL_MINUIT2</em> and <em>USE_OPENMP</em> are set.
       In the Minuit2 standalone built libraries (using autoconf) support for openMP is automatically enabled, whenever the compiler supports it (for example for gcc version >= 4.2). Some small changes have been applied in Minuit2 to make it thread safe. For example, when transforming from internal to external values, the parameter values are not cached anymore in MnUserTransformation class. 
- <li><tt>DavidonErrorUpdator</tt>: add an additonal check to avoid a divison by zero.
+ <li><tt>DavidonErrorUpdator</tt>: add an additional check to avoid a division by zero.
  <li>In <tt>Minuit2Minimizer</tt> fill the status information according to the minimizer result
       </ul>
 
   <h4>GenVector</h4>
 <ul>
-  <li>Change the way the exception are thrown in the package (class <tt>GenVector_exception</tt>). Now, the GenVector_exception class is created only when the throwing of exception is enabled. This avoids the allocation of an un-needed <tt>std::string</tt>. This problem was observed in CMS when converting from 4D-vectors based on mass  to standard (x,y,z,t) vectors, when the mass is zero. In this case, a numerical error creates artifically small negative masses returned by the (x,y,z,t) vector. Eventually a protection could be added when calcuting M2(), to avoid negative values due to numerical rounding.
+  <li>Change the way the exception are thrown in the package (class <tt>GenVector_exception</tt>). Now, the GenVector_exception class is created only when the throwing of exception is enabled. This avoids the allocation of an un-needed <tt>std::string</tt>. This problem was observed in CMS when converting from 4D-vectors based on mass  to standard (x,y,z,t) vectors, when the mass is zero. In this case, a numerical error creates artificially small negative masses returned by the (x,y,z,t) vector. Eventually a protection could be added when calculating M2(), to avoid negative values due to numerical rounding.
   </li>  
  <li>Fix a problem in the assignment operator of the <tt>ROOT::Math::PxPyPzM4D</tt> class. Avoid having nan when converting for example from PxPyPzME4D to PxPyPzM4D when the mass is negative. </li> 
 <li>Throw always exception in the non-supported setters (i.e. SetPt on a PxPyPzEVector) methods, which are generated only for the CINT dictionary. These methods flag a compiled-error when running in C++ mode.</li>
@@ -54,7 +54,7 @@
 <h4>Physics</h4>
 <ul>
   <li>
-  <bf><tt>TLorentzVector</tt></bf>:Change in the implementation of the funciton SetPtEtaPhi and SetPtEtaPhiM the algorithm to calculate z from pt and eta. Use now, as in the GenVector package, the expression <em>z = pt * sinh(eta)</em> instead of using the tangent and the arc-tangent. This is is more efficient and avoids a problem found on 64 bit machines when eta=0. by Dariusz Miskowiec. 
+  <bf><tt>TLorentzVector</tt></bf>:Change in the implementation of the function SetPtEtaPhi and SetPtEtaPhiM the algorithm to calculate z from pt and eta. Use now, as in the GenVector package, the expression <em>z = pt * sinh(eta)</em> instead of using the tangent and the arc-tangent. This is is more efficient and avoids a problem found on 64 bit machines when eta=0. by Dariusz Miskowiec. 
 </li>
 </ul>
   
