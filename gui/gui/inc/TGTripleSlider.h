@@ -93,6 +93,7 @@ public:
       else return fSCz;
    }
    virtual Bool_t    HandleButton(Event_t *event);
+   virtual Bool_t    HandleConfigureNotify(Event_t* event);
    virtual Bool_t    HandleMotion(Event_t *event);
    virtual void      SetConstrained(Bool_t on = kTRUE);
    virtual void      SetPointerPosition(Float_t pos);
@@ -133,6 +134,7 @@ public:
       else return fSCz;
    }
    virtual Bool_t    HandleButton(Event_t *event);
+   virtual Bool_t    HandleConfigureNotify(Event_t* event);
    virtual Bool_t    HandleMotion(Event_t *event);
    virtual void      SetConstrained(Bool_t on = kTRUE);
    virtual void      SetPointerPosition(Float_t pos);

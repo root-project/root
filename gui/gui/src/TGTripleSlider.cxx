@@ -87,6 +87,7 @@ TGTripleVSlider::TGTripleVSlider(const TGWindow *p, UInt_t h, UInt_t type, Int_t
    fRelative = relative;
    fCz = 0;
    fSCz = 0;
+   AddInput(kStructureNotifyMask);
    SetWindowName();
 }
 
@@ -105,7 +106,6 @@ void TGTripleVSlider::DoRedraw()
 
    TGDoubleVSlider::DoRedraw();
    // Draw Pointer
-   SetPointerPosition(fSCz);
    DrawPointer();
 }
 
@@ -164,6 +164,16 @@ Bool_t TGTripleVSlider::HandleButton(Event_t *event)
    } else
       fMove = 0;
 
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TGTripleVSlider::HandleConfigureNotify(Event_t* event)
+{
+   // Handles resize events for this widget.
+
+   TGFrame::HandleConfigureNotify(event);
+   SetPointerPosition(fSCz);
    return kTRUE;
 }
 
@@ -350,6 +360,7 @@ TGTripleHSlider::TGTripleHSlider(const TGWindow *p, UInt_t w, UInt_t type, Int_t
    fRelative = relative;
    fCz = 0;
    fSCz = 0;
+   AddInput(kStructureNotifyMask);
    SetWindowName();
 }
 
@@ -368,7 +379,6 @@ void TGTripleHSlider::DoRedraw()
 
    TGDoubleHSlider::DoRedraw();
    // Draw Pointer
-   SetPointerPosition(fSCz);
    DrawPointer();
 }
 
@@ -427,6 +437,16 @@ Bool_t TGTripleHSlider::HandleButton(Event_t *event)
    } else
       fMove = 0;
 
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TGTripleHSlider::HandleConfigureNotify(Event_t* event)
+{
+   // Handles resize events for this widget.
+
+   TGFrame::HandleConfigureNotify(event);
+   SetPointerPosition(fSCz);
    return kTRUE;
 }
 
