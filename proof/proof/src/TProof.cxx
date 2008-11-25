@@ -876,6 +876,10 @@ Int_t TProof::AddWorkers(TList *workerList)
    Int_t ord = 0;
 
    // Loop over all workers and start them
+
+   // a list of TSlave objects for workers that are being added
+   TList *addedWorkers = new TList();
+   addedWorkers->SetOwner(kFALSE);
    TListIter next(workerList);
    TObject *to;
    TProofNodeInfo *worker;
@@ -911,6 +915,7 @@ Int_t TProof::AddWorkers(TList *workerList)
       Bool_t slaveOk = kTRUE;
       if (slave->IsValid()) {
          fSlaves->Add(slave);
+         addedWorkers->Add(slave);
       } else {
          slaveOk = kFALSE;
          fBadSlaves->Add(slave);
@@ -937,7 +942,7 @@ Int_t TProof::AddWorkers(TList *workerList)
 
    // Here we finalize the server startup: in this way the bulk
    // of remote operations are almost parallelized
-   TIter nxsl(fSlaves);
+   TIter nxsl(addedWorkers);
    TSlave *sl = 0;
    while ((sl = (TSlave *) nxsl())) {
 
@@ -961,6 +966,7 @@ Int_t TProof::AddWorkers(TList *workerList)
         << nSlavesDone << slaveOk;
       gProofServ->GetSocket()->Send(m);
    }
+   delete addedWorkers;
 
    // Now set new state on the added workers (on all workers for simplicity)
    // use fEnabledPackages, fLoadedMacros,
@@ -2933,6 +2939,14 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
 
             // We have received the sequential number
             (*mess) >> fSeqNum;
+            Bool_t sync = fSync;
+            if ((mess->BufferSize() > mess->Length()))
+               (*mess) >> sync;
+            if (sync !=  fSync && fSync) {
+               // The server required to switch to asynchronous mode
+               Activate();
+               fSync = kFALSE;
+            }
 
             rc = 1;
          }
@@ -3033,10 +3047,12 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
                      if (fPlayer)
                         fPlayer->AddOutputObject(listOfMissingFiles);
                   }
-                  Int_t ret =
-                     fPlayer->GetPacketizer()->AddProcessed(sl, status, 0, &listOfMissingFiles);
-                  if (ret > 0)
-                     fPlayer->GetPacketizer()->MarkBad(sl, status, &listOfMissingFiles);
+                  if (fPlayer->GetPacketizer()) {
+                     Int_t ret =
+                        fPlayer->GetPacketizer()->AddProcessed(sl, status, 0, &listOfMissingFiles);
+                     if (ret > 0)
+                        fPlayer->GetPacketizer()->MarkBad(sl, status, &listOfMissingFiles);
+                  }
                } else {
                   fPlayer->AddEventsProcessed(events);
                }
@@ -3310,6 +3326,7 @@ void TProof::MarkBad(TSlave *wrk, const char *reason)
    }
 
    if (IsMaster() && reason && strcmp(reason, kPROOF_TerminateWorker)) {
+      // if the reason was not a planned termination
       TList *listOfMissingFiles = 0;
       if (!(listOfMissingFiles = (TList *)GetOutput("MissingFiles"))) {
          listOfMissingFiles = new TList();
@@ -3330,16 +3347,22 @@ void TProof::MarkBad(TSlave *wrk, const char *reason)
 
    fActiveSlaves->Remove(wrk);
    FindUniqueSlaves();
-   fBadSlaves->Add(wrk);
 
    fAllMonitor->Remove(wrk->GetSocket());
    fActiveMonitor->Remove(wrk->GetSocket());
 
-   wrk->Close();
-
    fSendGroupView = kTRUE;
 
    if (IsMaster()) {
+      if (reason && !strcmp(reason, kPROOF_TerminateWorker)) {
+         // if the reason was a planned termination then delete the worker
+         fSlaves->Remove(wrk);
+         delete wrk;
+      } else {
+         fBadSlaves->Add(wrk);
+         wrk->Close();
+      }
+
       // Update session workers files
       SaveWorkerInfo();
    } else {

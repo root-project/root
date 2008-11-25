@@ -324,7 +324,7 @@ int XrdProofdAux::GetUserInfo(int uid, XrdProofUI &ui)
    // Retur 0 on success, -errno on error
 
    // Make sure input make sense
-   if (uid <= 0)
+   if (uid < 0)
       return -EINVAL;
 
    // Call getpwuid_r ...

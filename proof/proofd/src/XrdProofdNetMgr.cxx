@@ -30,6 +30,7 @@
 #include "XrdOuc/XrdOucStream.hh"
 #include "XrdSys/XrdSysPlatform.hh"
 
+#include "XrdProofdClient.h"
 #include "XrdProofdManager.h"
 #include "XrdProofdProtocol.h"
 #include "XrdProofdResponse.h"
@@ -279,8 +280,8 @@ int XrdProofdNetMgr::DoDirectiveWorker(char *val, XrdOucStream *cfg, bool)
 }
 
 //__________________________________________________________________________
-int XrdProofdNetMgr::Broadcast(int type, const char *msg,
-                                XrdProofdResponse *r, bool notify)
+int XrdProofdNetMgr::Broadcast(int type, const char *msg, const char *usr,
+                               XrdProofdResponse *r, bool notify)
 {
    // Broadcast request to known potential sub-nodes.
    // Return 0 on success, -1 on error
@@ -301,7 +302,7 @@ int XrdProofdNetMgr::Broadcast(int type, const char *msg,
                     (w->fPort == -1 || w->fPort == fMgr->Port())) ? 1 : 0;
          if (!us) {
             // Create 'url'
-            XrdOucString u = fMgr->EffectiveUser();
+            XrdOucString u = (usr) ? usr : fMgr->EffectiveUser();
             u += '@';
             u += w->fHost;
             if (w->fPort != -1) {
@@ -567,7 +568,9 @@ int XrdProofdNetMgr::ReadBuffer(XrdProofdProtocol *p)
       }
    } else {
       // Read portion of remote file
-      buf = ReadBufferRemote(url, file, ofs, lout, grep);
+      XrdClientUrlInfo u(url);
+      u.User = p->Client()->User() ? p->Client()->User() : fMgr->EffectiveUser();
+      buf = ReadBufferRemote(u.GetUrl().c_str(), file, ofs, lout, grep);
    }
 
    if (!buf) {
@@ -827,15 +830,14 @@ char *XrdProofdNetMgr::ReadBufferRemote(const char *url, const char *file,
       TRACE(XERR, "file undefined!");
       return (char *)0;
    }
+   XrdClientUrlInfo u(url);
    if (!url || strlen(url) <= 0) {
       // Use file as url
-      url = file;
+      u.TakeUrl(XrdOucString(file));
+      if (u.User.length() <= 0) u.User = fMgr->EffectiveUser();
    }
 
-   // We log in as the effective user to minimize the number of connections to the
-   // other servers
-   XrdClientUrlInfo u(url);
-   u.User = fMgr->EffectiveUser();
+   // Get a connection (logs in)
    XrdProofConn *conn = GetProofConn(u.GetUrl().c_str());
 
    char *buf = 0;
@@ -889,11 +891,8 @@ char *XrdProofdNetMgr::ReadLogPaths(const char *url, const char *msg, int isess)
       return (char *)0;
    }
 
-   // We log in as the effective user to minimize the number of connections to the
-   // other servers
-   XrdClientUrlInfo u(url);
-   u.User = fMgr->EffectiveUser();
-   XrdProofConn *conn = GetProofConn(u.GetUrl().c_str());
+   // Get a connection (logs in)
+   XrdProofConn *conn = GetProofConn(url);
 
    char *buf = 0;
    if (conn && conn->IsValid()) {

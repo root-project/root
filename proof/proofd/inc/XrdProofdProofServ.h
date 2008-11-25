@@ -127,7 +127,7 @@ public:
    inline XrdProofdResponse *Response() const { XrdSysMutexHelper mhp(fMutex); return fResponse; }
    int                 SendData(int cid, void *buff, int len);
    int                 SendDataN(void *buff, int len);
-   void                SetAdminPath(const char *a) { XrdSysMutexHelper mhp(fMutex); fAdminPath = a; }
+   int                 SetAdminPath(const char *a);
    void                SetAlias(const char *a) { XrdSysMutexHelper mhp(fMutex); fAlias = a; }
    void                SetClient(const char *c) { XrdSysMutexHelper mhp(fMutex); fClient = c; }
    inline void         SetConnection(XrdProofdResponse *r) { XrdSysMutexHelper mhp(fMutex); fResponse = r;}

@@ -106,6 +106,7 @@ class XrdProofdProofServMgr : public XrdProofdConfig {
    int                fReconnectTimeOut;
    int                fRecoverTimeOut;
    int                fRecoverDeadline;
+   bool               fCheckLost;
 
    int                fNextSessionsCheck; // Time of next sessions check
 

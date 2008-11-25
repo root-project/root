@@ -100,6 +100,7 @@ public:
    inline void   SetSuperUser(bool su = 1) { fSuperUser = su; }
 
    static XrdProofdManager *Mgr() { return fgMgr; }
+   static int    EffectiveUid() { return fgEffectiveUid; }
 
  private:
 
@@ -160,6 +161,7 @@ public:
    static XrdSysError            fgEDest;     // Error message handler
    static XrdSysLogger          *fgLogger;    // Error logger
 
+   static int                    fgEffectiveUid;
 
    //
    // Static area: protocol configuration section

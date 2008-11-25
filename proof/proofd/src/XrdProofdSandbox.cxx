@@ -519,6 +519,8 @@ int XrdProofdSandbox::RemoveSession(const char *tag)
       TRACE(XERR, "cannot truncate file "<<fna<<" (errno: "<<errno<<")");
       lseek(fileno(fact), 0, SEEK_SET);
       lockf(fileno(fact), F_ULOCK, 0);
+      if (lockf(fileno(fact), F_ULOCK, 0) != 0)
+         TRACE(XERR, "cannot lockf file "<<fna<<" (errno: "<<errno<<")");
       fclose(fact);
       return -1;
    }
@@ -643,7 +645,8 @@ int XrdProofdSandbox::TrimSessionDirs()
             rmcmd += fDir;
             rmcmd += '/';
             rmcmd += s->c_str();
-            system(rmcmd.c_str());
+            if (system(rmcmd.c_str()) == -1)
+               TRACE(XERR, "cannot invoke system("<<rmcmd<<") (errno: "<<errno<<")");
             // Delete the string
             delete s;
          }

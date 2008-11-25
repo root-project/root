@@ -612,13 +612,14 @@ int XrdProofdProofServ::CreateUNIXSock(XrdSysError *edest)
    // Create the path
    int fd = 0;
    if (!ok) {
-      if ((fd = open(fUNIXSockPath.c_str(), O_EXCL | O_RDWR | O_CREAT)) < 0) {
+      if ((fd = open(fUNIXSockPath.c_str(), O_EXCL | O_RDWR | O_CREAT, 0700)) < 0) {
          TRACE(XERR, "unable to create path: " <<fUNIXSockPath);
          return -1;
       }
       close(fd);
    }
    if (fd > -1) {
+      // Change ownership
       if (fUNIXSock->Bind((char *)fUNIXSockPath.c_str())) {
          TRACE(XERR, " problems binding to UNIX socket; path: " <<fUNIXSockPath);
          return -1;
@@ -629,7 +630,44 @@ int XrdProofdProofServ::CreateUNIXSock(XrdSysError *edest)
       return -1;
    }
 
+   // Change ownership if running as super-user
+   if (!geteuid()) {
+      XrdProofUI ui;
+      XrdProofdAux::GetUserInfo(fClient.c_str(), ui);
+      if (chown(fUNIXSockPath.c_str(), ui.fUid, ui.fGid) != 0) {
+         TRACE(XERR, "unable to change ownership of the UNIX socket"<<fUNIXSockPath);
+         return -1;
+      }
+   }
+
    // We are done
    return 0;
 }
+
+//__________________________________________________________________________
+int XrdProofdProofServ::SetAdminPath(const char *a)
+{
+   // Set the admin path and make sure the file exists
+
+   XPDLOC(SMGR, "ProofServ::SetAdminPath")
+
+   XrdSysMutexHelper mhp(fMutex);
+
+   fAdminPath = a;
+
+   struct stat st;
+   if (stat(a, &st) != 0 && errno == ENOENT) {
+      // Create the file
+      FILE *fpid = fopen(a, "w");
+      if (fpid) {
+         fclose(fpid);
+         return 0;
+      }
+      TRACE(XERR, "unable to open / create admin path "<< fAdminPath << "; errno = "<<errno);
+      return -1;
+   }
+   // Done
+   return 0;
+}
+
 

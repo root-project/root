@@ -332,9 +332,11 @@ int XrdProofdPriorityMgr::SetNiceValues(int opt)
 
    TRACE(REQ, "opt: "<<opt);
 
-   if (!fMgr->GroupsMgr() || fMgr->GroupsMgr()->Num() <= 1 || !IsSchedOn())
+   if (!fMgr->GroupsMgr() || fMgr->GroupsMgr()->Num() <= 1 || !IsSchedOn()) {
       // Nothing to do
+      TRACE(REQ, "------------------- End ------------------------");
       return 0;
+   }
 
    // At least two active session
    int nact = fSessions.Num();

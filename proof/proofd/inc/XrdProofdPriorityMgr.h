@@ -91,8 +91,7 @@ public:
    void              SetGroupPriority(const char *grp, int priority);
 
    // Scheduling
-   bool              IsSchedOn() { XrdSysMutexHelper mhp(&fMutex);
-                                   return ((fSchedOpt != kXPD_sched_off) ? 1 : 0); }
+   bool              IsSchedOn() { return ((fSchedOpt != kXPD_sched_off) ? 1 : 0); }
    int               SetNiceValues(int opt = 0);
    void              SetSchedOpt(int opt) { XrdSysMutexHelper mhp(&fMutex);
                                             fSchedOpt = opt; }

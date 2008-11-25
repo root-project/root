@@ -118,12 +118,14 @@ void *XrdProofdClientCron(void *p)
             }
 
             // Remove the client admin path
-            adminpath.erase(adminpath.rfind("/cid"));
-            if ((rc = XrdProofdAux::RmDir(adminpath.c_str())) != 0) {
-               TRACE(XERR, "kClientDisconnect: problems removing admin path; errno: "<<-rc);
-               continue;
+            if (adminpath != "????") {
+               adminpath.erase(adminpath.rfind("/cid"));
+               if ((rc = XrdProofdAux::RmDir(adminpath.c_str())) != 0) {
+                  TRACE(XERR, "kClientDisconnect: problems removing admin path; errno: "<<-rc);
+                  continue;
+               }
             }
-
+            
             // Tell the session manager that a client has gone
             buf.form("%d", pid);
             smgr->Pipe()->Post(XrdProofdProofServMgr::kClientDisconnect, buf.c_str());
@@ -1361,7 +1363,7 @@ void XrdProofdClientMgr::Broadcast(XrdProofdClient *clnt, const char *msg)
 
 //______________________________________________________________________________
 void XrdProofdClientMgr::TerminateSessions(XrdProofdClient *clnt, const char *msg,
-                                           int srvtype)
+                                           int srvtype, bool hard)
 {
    // Terminate sessions of client 'clnt' or to of all clients if clnt == 0.
    // The list of process IDs having been signalled is returned.
@@ -1401,6 +1403,14 @@ void XrdProofdClientMgr::TerminateSessions(XrdProofdClient *clnt, const char *ms
       if ((rc = fMgr->SessionMgr()->Pipe()->Post(XrdProofdProofServMgr::kCleanSessions,
                                                  buf.c_str())) != 0) {
          TRACE(XERR, "problem posting the pipe; errno: "<<-rc);
+      }
+   }
+
+   // Reset the client instances
+   if (hard) {
+      for (i = clnts->begin(); i != clnts->end(); ++i) {
+         if ((c = *i))
+            c->Reset();
       }
    }
 

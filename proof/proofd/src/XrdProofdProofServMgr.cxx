@@ -262,6 +262,7 @@ XrdProofdProofServMgr::XrdProofdProofServMgr(XrdProofdManager *mgr,
    fTerminationTimeOut = fCheckFrequency - 10;
    fVerifyTimeOut = 3 * fCheckFrequency;
    fRecoverTimeOut = 10;
+   fCheckLost = 1;
 
    // Recover-related quantities
    fRecoverClients = 0;
@@ -1088,6 +1089,7 @@ int XrdProofdProofServMgr::DoDirectiveProofServMgr(char *val, XrdOucStream *cfg,
    int termto = -1;
    int verifyto = -1;
    int recoverto = -1;
+   int checklost = 0;
 
    while (val) {
       XrdOucString tok(val);
@@ -1103,6 +1105,9 @@ int XrdProofdProofServMgr::DoDirectiveProofServMgr(char *val, XrdOucStream *cfg,
       } else if (tok.beginswith("recoverto:")) {
          tok.replace("recoverto:", "");
          recoverto = strtol(tok.c_str(), 0, 10);
+      } else if (tok.beginswith("checklost:")) {
+         tok.replace("checklost:", "");
+         checklost = strtol(tok.c_str(), 0, 10);
       }
       // Get next
       val = cfg->GetToken();
@@ -1119,10 +1124,11 @@ int XrdProofdProofServMgr::DoDirectiveProofServMgr(char *val, XrdOucStream *cfg,
    fVerifyTimeOut = (XPD_LONGOK(verifyto) && (verifyto > fCheckFrequency + 1))
                   ? verifyto : fVerifyTimeOut;
    fRecoverTimeOut = (XPD_LONGOK(recoverto) && recoverto > 0) ? recoverto : fRecoverTimeOut;
+   if (XPD_LONGOK(checklost)) fCheckLost = (checklost != 0) ? 1 : 0;
 
    XrdOucString msg;
-   msg.form("checkfq: %d s, termto: %d s, verifyto: %d s, recoverto: %d s",
-            fCheckFrequency, fTerminationTimeOut, fVerifyTimeOut, fRecoverTimeOut);
+   msg.form("checkfq: %d s, termto: %d s, verifyto: %d s, recoverto: %d s, checklost: %d",
+            fCheckFrequency, fTerminationTimeOut, fVerifyTimeOut, fRecoverTimeOut, fCheckLost);
    TRACE(ALL, msg);
 
    return 0;
@@ -1495,6 +1501,10 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
       // Log to the session log file from now on
       if (fLogger) fLogger->Bind(in.fLogFile.c_str());
 
+      // These files belongs to the client
+      chown(in.fLogFile.c_str(), p->Client()->UI().fUid, p->Client()->UI().fGid);
+      chown(sockpath.c_str(), p->Client()->UI().fUid, p->Client()->UI().fGid);
+
       int setupOK = 0;
 
       XrdOucString pmsg = "child process ";
@@ -1504,7 +1514,8 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
       // We set to the user environment
       if (SetUserEnvironment(p) != 0) {
          TRACE(XERR, "SetUserEnvironment did not return OK - EXIT");
-         write(fp[1], &setupOK, sizeof(setupOK));
+         if (write(fp[1], &setupOK, sizeof(setupOK)) != sizeof(setupOK))
+            TRACE(XERR, "cannot write to internal pipe");
          close(fp[0]);
          close(fp[1]);
          exit(1);
@@ -1539,7 +1550,8 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
       // Set environment for proofserv
       if (SetProofServEnv(p, (void *)&in) != 0) {
          TRACE(XERR, "SetProofServEnv did not return OK - EXIT");
-         write(fp[1], &setupOK, sizeof(setupOK));
+         if (write(fp[1], &setupOK, sizeof(setupOK) != sizeof(setupOK)))
+            TRACE(XERR, "cannot write to internal pipe");
          close(fp[0]);
          close(fp[1]);
          exit(1);
@@ -1555,7 +1567,8 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
          for (n = 0; n < lfout; n += ns) {
             if ((ns = write(fp[1], xbuf + n, lfout - n)) <= 0) {
                TRACE(XERR, "SetProofServEnv did not return OK - EXIT");
-               write(fp[1], &setupOK, sizeof(setupOK));
+               if (write(fp[1], &setupOK, sizeof(setupOK) != sizeof(setupOK)))
+                  TRACE(XERR, "cannot write to internal pipe");
                close(fp[0]);
                close(fp[1]);
                exit(1);
@@ -2758,6 +2771,11 @@ int XrdProofdProofServMgr::CleanupLostProofServ()
    // Return number of process killed or -1 in case of any error.
    XPDLOC(SMGR, "ProofServMgr::CleanupLostProofServ")
 
+   if (!fCheckLost) {
+      TRACE(REQ,  "disabled ...");
+      return 0;
+   }
+
    TRACE(REQ,  "checking for orphalin proofserv processes ...");
    int nk = 0;
 
@@ -3263,17 +3281,10 @@ int XrdProofdProofServMgr::SaveAFSkey(XrdSecCredentials *c, const char *dir)
    XrdOucString fn = dir;
    fn += "/.afs";
    // Open the file, truncatin g if already existing
-   int fd = open(fn.c_str(), O_WRONLY | O_CREAT | O_TRUNC);
+   int fd = open(fn.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0600);
    if (fd <= 0) {
       TRACE(XERR, "problems creating file - errno: " << errno);
       delete [] out;
-      return -1;
-   }
-   // Make sure it is protected
-   if (fchmod(fd, 0600) != 0) {
-      TRACE(XERR, "problems setting file permissions to 0600 - errno: " << errno);
-      delete [] out;
-      close(fd);
       return -1;
    }
    // Write out the key

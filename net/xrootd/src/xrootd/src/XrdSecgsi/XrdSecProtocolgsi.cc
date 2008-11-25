@@ -2976,7 +2976,7 @@ int XrdSecProtocolgsi::ServerDoSigpxy(XrdSutBuffer *br,  XrdSutBuffer **bm,
    proxyChain = pxyc;
    hs->PxyChain = 0;
    // Notify
-   proxyChain->Dump();
+   if (QTRACE(Authen)) { proxyChain->Dump(); }
 
    // Dump to file if required
    if ((PxyReqOpts & kOptsPxFile)) {

@@ -2840,21 +2840,6 @@ void TProofServ::HandleProcess(TMessage *mess)
    if (!IsTopMaster() && !fIdle)
       return;
 
-   if (IsMaster() && fProof->UseDynamicStartup()) {
-      // get the a list of workers and start them
-      TList* workerList = new TList();
-      Int_t pc = 0;
-      if (GetWorkers(workerList, pc) == TProofServ::kQueryStop) {
-         Error("HandleProcess", "getting list of worker nodes");
-         return;
-      }
-      if (Int_t ret = fProof->AddWorkers(workerList) < 0) {
-         Error("HandleProcess", "Adding a list of worker nodes returned: %d",
-               ret);
-         return;
-      }
-   }
-
    TDSet *dset;
    TString filename, opt;
    TList *input;
@@ -2923,12 +2908,12 @@ void TProofServ::HandleProcess(TMessage *mess)
       // Add anyhow to the waiting lists
       fWaitingQueries->Add(pq);
 
-      // If the client submission was asynchronous, signal the submission of
-      // the query and communicate the assigned sequential number for later
-      // identification
+      // If the client submission was asynchronous or if we switched to asynchronous,
+      // signal the submission of the query and communicate the assigned sequential
+      // number for later identification
+      TMessage m(kPROOF_QUERYSUBMITTED);
       if (!sync) {
-         TMessage m(kPROOF_QUERYSUBMITTED);
-         m << pq->GetSeqNum();
+         m << pq->GetSeqNum() << kFALSE;
          fSocket->Send(m);
       }
 
@@ -2949,6 +2934,22 @@ void TProofServ::HandleProcess(TMessage *mess)
          // Get query info
          pq = (TProofQueryResult *)(fWaitingQueries->First());
          if (pq) {
+
+            if (IsMaster() && fProof->UseDynamicStartup()) {
+               // get the a list of workers and start them
+               TList* workerList = new TList();
+               Int_t pc = 0;
+               if (GetWorkers(workerList, pc) == TProofServ::kQueryStop) {
+                  Error("HandleProcess", "getting list of worker nodes");
+                  return;
+               }
+               if (Int_t ret = fProof->AddWorkers(workerList) < 0) {
+                  Error("HandleProcess", "Adding a list of worker nodes returned: %d",
+                        ret);
+                  return;
+               }
+            }
+
             opt      = pq->GetOptions();
             input    = pq->GetInputList();
             nentries = pq->GetEntries();
@@ -2999,7 +3000,7 @@ void TProofServ::HandleProcess(TMessage *mess)
          fQMgr->ResetTime();
 
          // Signal the client that we are starting a new query
-         TMessage m(kPROOF_STARTPROCESS);
+         m.Reset(kPROOF_STARTPROCESS);
          m << TString(pq->GetSelecImp()->GetName())
            << dset->GetListOfElements()->GetSize()
            << pq->GetFirst() << pq->GetEntries();

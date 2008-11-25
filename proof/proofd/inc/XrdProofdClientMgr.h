@@ -98,7 +98,7 @@ public:
                                            return fProofdClients.size(); }
 
    void              Broadcast(XrdProofdClient *c, const char *msg);
-   void              TerminateSessions(XrdProofdClient *c, const char *msg, int srvtype);
+   void              TerminateSessions(XrdProofdClient *c, const char *msg, int srvtype, bool hard);
 
    int               Process(XrdProofdProtocol *p);
 

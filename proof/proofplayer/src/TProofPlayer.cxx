@@ -1522,6 +1522,11 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
 
       PDB(kGlobal,1) Info("Process","Synchronous processing: calling Collect");
       fProof->Collect();
+      if (!(fProof->IsSync())) {
+         // The server required to switch to asynchronous mode
+         Info("Process", "switching to asynchronous mode following the server reply");
+         return fProof->fSeqNum;
+      }
 
       // Restore prompt logging, for clients (Collect leaves things as they were
       // at the time it was called)

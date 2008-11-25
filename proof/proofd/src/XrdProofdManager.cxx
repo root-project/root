@@ -431,7 +431,7 @@ int XrdProofdManager::Config(bool rcf)
    XrdProofUI ui;
    if (!rcf) {
       // Effective user
-      if (XrdProofdAux::GetUserInfo(geteuid(), ui) == 0) {
+      if (XrdProofdAux::GetUserInfo(XrdProofdProtocol::EffectiveUid(), ui) == 0) {
          fEffectiveUser = ui.fUser;
       } else {
          msg.form("could not resolve effective user (getpwuid, errno: %d)",errno);

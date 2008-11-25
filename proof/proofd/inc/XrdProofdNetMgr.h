@@ -77,7 +77,8 @@ public:
    const char        *PROOFcfg() const { return fPROOFcfg.fName.c_str(); }
    bool               WorkerUsrCfg() const { return fWorkerUsrCfg; }
 
-   int                Broadcast(int type, const char *msg, XrdProofdResponse *r, bool notify = 0);
+   int                Broadcast(int type, const char *msg, const char *usr = 0,
+                                XrdProofdResponse *r = 0, bool notify = 0);
    XrdProofConn      *GetProofConn(const char *url);
    XrdClientMessage  *Send(const char *url, int type,
                            const char *msg, int srvtype, XrdProofdResponse *r, bool notify = 0);

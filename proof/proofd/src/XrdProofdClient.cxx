@@ -37,6 +37,7 @@ XrdProofdClient::XrdProofdClient(XrdProofUI ui, bool master, bool changeown,
                 : fSandbox(ui, master, changeown)
 {
    // Constructor
+   XPDLOC(CMGR, "Client::Client")
 
    fProofServs.clear();
    fClients.clear();
@@ -49,8 +50,10 @@ XrdProofdClient::XrdProofdClient(XrdProofUI ui, bool master, bool changeown,
    // Make sure the admin path exists
    fAdminPath.form("%s/%s.%s", adminpath, ui.fUser.c_str(), ui.fGroup.c_str());
    struct stat st;
-   if (stat(adminpath, &st) != 0)
+   if (stat(adminpath, &st) != 0) {
+      TRACE(XERR, "problems stating admin path "<<adminpath<<"; errno = "<<errno);
       return;
+   }
    XrdProofUI effui;
    XrdProofdAux::GetUserInfo(st.st_uid, effui);
    if (XrdProofdAux::AssertDir(fAdminPath.c_str(), effui, 1) != 0)
@@ -692,5 +695,20 @@ void XrdProofdClient::PostSessionRemoval(int fd, int pid)
    }
    // Done
    return;
+}
+
+//__________________________________________________________________________
+void XrdProofdClient::Reset()
+{
+   // Reset this instance
+
+   fAskedToTouch = 0;
+
+   XrdSysMutexHelper mh(fMutex);
+   std::vector<XrdProofdProofServ *>::iterator ip;
+   for (ip = fProofServs.begin(); ip != fProofServs.end();) {
+      delete *ip;
+      ip = fProofServs.erase(ip);
+   }
 }
 

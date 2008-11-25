@@ -199,7 +199,7 @@ int XrdProofdAdmin::SetROOTVersion(XrdProofdProtocol *p)
          buf += " ";
          buf += tag;
          int type = ntohl(p->Request()->proof.int1);
-         fMgr->NetMgr()->Broadcast(type, buf.c_str(),response);
+         fMgr->NetMgr()->Broadcast(type, buf.c_str(), p->Client()->User(), response);
       }
       // Acknowledge user
       response->Send();
@@ -573,12 +573,14 @@ int XrdProofdAdmin::QueryLogPaths(XrdProofdProtocol *p)
                   // about its workers
                   bool ismst = (strstr(pp, "master-")) ? 1 : 0;
                   if (ismst) {
+                     XrdClientUrlInfo u((const char *)&ln[0]);
                      XrdOucString msg(stag);
                      msg += "|master:";
                      msg += ln;
                      msg += "|user:";
-                     msg += XrdClientUrlInfo(ln).User;
-                     char *bmst = fMgr->NetMgr()->ReadLogPaths((const char *)&ln[0], msg.c_str(), ridx);
+                     msg += u.User;
+                     u.User = p->Client()->User() ? p->Client()->User() : fMgr->EffectiveUser();
+                     char *bmst = fMgr->NetMgr()->ReadLogPaths(u.GetUrl().c_str(), msg.c_str(), ridx);
                      if (bmst) {
                         rmsg += bmst;
                         free(bmst);
@@ -680,7 +682,7 @@ int XrdProofdAdmin::CleanupSessions(XrdProofdProtocol *p)
    // Send a termination request to client sessions
    cmsg.form("CleanupSessions: %s: cleaning up client: requested by: %s", lab, p->Link()->ID);
    int srvtype = ntohl(p->Request()->proof.int2);
-   fMgr->ClientMgr()->TerminateSessions(tgtclnt, cmsg.c_str(), srvtype);
+   fMgr->ClientMgr()->TerminateSessions(tgtclnt, cmsg.c_str(), srvtype, hard);
 
    // Forward down the tree only if not leaf
    if (hard && fMgr->SrvType() != kXPD_Worker) {
@@ -695,7 +697,7 @@ int XrdProofdAdmin::CleanupSessions(XrdProofdProtocol *p)
       response->Send(kXR_attn, kXPD_srvmsg, 0, (char *) cmsg.c_str(), cmsg.length());
 
       int type = ntohl(p->Request()->proof.int1);
-      fMgr->NetMgr()->Broadcast(type, usr, response, 1);
+      fMgr->NetMgr()->Broadcast(type, usr, p->Client()->User(), response, 1);
 
       // We wait for the next sessions check, if it was not too close
       int twait = fMgr->SessionMgr()->NextSessionsCheck() - time(0);

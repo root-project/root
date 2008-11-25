@@ -28,6 +28,7 @@
 #  include "XrdSys/XrdSysError.hh"
 #  include "XrdSys/XrdSysLogger.hh"
 #endif
+#include "XrdSys/XrdSysPriv.hh"
 
 #include "XrdVersion.hh"
 #include "Xrd/XrdBuffer.hh"
@@ -67,6 +68,9 @@ bool                  XrdProofdProtocol::fgConfigDone = 0;
 int                   XrdProofdProtocol::fgReadWait = 0;
 // Cluster manager
 XrdProofdManager     *XrdProofdProtocol::fgMgr = 0;
+
+// Effective uid
+int                   XrdProofdProtocol::fgEffectiveUid = -1;
 
 // Local definitions
 #define MAX_ARGS 128
@@ -279,6 +283,7 @@ int XrdProofdProtocol::Stats(char *buff, int blen, int)
 void XrdProofdProtocol::Reset()
 {
    // Reset static and local vars
+   XrdSysMutexHelper mh(fMutex);
 
    // Init local vars
    fLink      = 0;
@@ -341,6 +346,11 @@ int XrdProofdProtocol::Configure(char *, XrdProtocol_Config *pi)
    TRACESET(RSP, 0);
    if (pi->DebugON)
       XrdProofdTrace->What |= (TRACE_REQ | TRACE_FORK);
+
+   // Work as root to avoid contineous changes of the effective user
+   // (users are logged in their box after forking)
+   fgEffectiveUid = geteuid();
+   if (!getuid()) XrdSysPriv::ChangePerm((uid_t)0, (gid_t)0);
 
    // Process the config file for directives meaningful to us
    if (pi->ConfigFN) {
@@ -495,6 +505,8 @@ void XrdProofdProtocol::Recycle(XrdLink *, int, const char *)
                              "ClientMaster", "Internal", "Admin"};
    XrdOucString buf;
 
+   XrdSysMutexHelper mh(fMutex);
+
    // Document the disconnect
    if (fPClient)
       buf.form("user %s disconnected; type: %s", fPClient->User(),
@@ -593,14 +605,16 @@ int XrdProofdProtocol::GetData(const char *dtype, char *buff, int blen)
    // data within the timeout interval.
    TRACEP(this, HDBG, "dtype: "<<(dtype ? dtype : " - ")<<", blen: "<<blen);
 
-   rlen = fLink->Recv(buff, blen, fgReadWait);
+   {  XrdSysMutexHelper mh(fMutex);
+      rlen = fLink->Recv(buff, blen, fgReadWait);
+   }
 
    if (rlen  < 0) {
       if (rlen != -ENOMSG && rlen != -ECONNRESET) {
          XrdOucString emsg = "link read error: errno: ";
          emsg += -rlen;
          TRACEP(this, XERR, emsg.c_str());
-         return fLink->setEtext(emsg.c_str());
+         return (fLink ? fLink->setEtext(emsg.c_str()) : -1);
       } else {
          TRACEP(this, HDBG, "connection closed by peer (errno: "<<-rlen<<")");
          return -1;
@@ -874,6 +888,7 @@ int XrdProofdProtocol::Urgent()
    XPDLOC(ALL, "Protocol::Urgent")
 
    unsigned int rc = 0;
+   XrdSysMutexHelper mh(fMutex);
 
    XPD_SETRESP(this, "Urgent");
 
@@ -935,6 +950,7 @@ int XrdProofdProtocol::Interrupt()
    XPDLOC(ALL, "Protocol::Interrupt")
 
    int rc = 0;
+   XrdSysMutexHelper mh(fMutex);
 
    XPD_SETRESP(this, "Interrupt");
 
@@ -988,6 +1004,7 @@ int XrdProofdProtocol::Ping()
    // problems; the session checker verifies that the admin file has been touched
    // recently enough; touching is done in Process2, so we have nothing to do here
    XPDLOC(ALL, "Protocol::Ping")
+   XrdSysMutexHelper mh(fMutex);
 
    int rc = 0;
    if (Internal()) {
