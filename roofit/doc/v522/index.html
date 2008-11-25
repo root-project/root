@@ -130,3 +130,59 @@
    <li><tt>RooWorkspace</tt> - Add private expensive object cache to workspace<br><br>
    <li><tt>RooBinningCategory</tt> - New real-to-category function that maps values of input <tt>RooRealVar</tt> to categories with labels that correspond to bins of input <tt>RooRealVar</tt>. See <tt>rf405_realtocatfuncs.C</tt> for details <br><br>
    </ul>
+
+
+<br> 
+<hr> 
+<a name="roostats"></a> 
+<h3>RooStats</h3>
+This is a new package introduced in this version for statistical tools built on top of RooFit. It is a joint effort between the LHC experiments and the ROOT team.
+This version provides interfaces for performing t he statistical calculations and dealing with the obtained results and concrete classes implementing the statistical methods.
+   <br>
+   All the classes and functions in RooStats are provided in the namespace <tt>RooStats</tt>.
+   <br>
+
+   <h4>RooStats interfaces</h4>
+
+   <ul>
+     <li><tt>ConfInterval</tt>: interface  for describing a confidence interval. 
+     <li><tt>IntervalCalculator</tt>: interface for a statistical tool producing confidence intervals (class ConfInterval).
+     <li><tt>HypoTestResult</tt>: interface for representing results of a hypothesis test
+     <li><tt>HypoTestCalculator</tt>: interface for a statistical tool performing an hypothesis test. 
+     <li><tt>CombinedCalculator</tt>: interface for a statistical tool which can produce both hypothesis test results and confidence intervals.
+
+     </ul>
+
+ <h4>RooStats concrete classes</h4>
+
+The concrete classes describing statistical tools implementing the above interfaces are:
+     <ul> 
+       <li><tt>ProfileLikelihoodCalculator</tt>: it is an implementation of a CombinedCalculator using the profile likelihood ratio as a test statistics. After configuring the calculator, one only needs to ask GetHypoTest() (which will return a HypoTestResult pointer) or GetInterval() (which will return an ConfInterval pointer).
+       <li><tt>LikelihoodInterval</tt>: concrete implementation of a ConfInterval interface. It implements a connected N-dimensional intervals based on the contour of a likelihood ratio. The boundary of the interval is equivalent to a MINUIT/MINOS contour about the maximum likelihood estimator. </li>
+
+       </li>
+       <li><tt>HybridCalculator</tt>: Hypothesis test calculator using a Bayesian-frequentist hybrid method (often called in HEP as CLs method). This class extends the functionality of TLimit by taking advantage of the RooFit package. The result of the calculator is returned as an <tt>HybridResult</tt> pointer. <tt>HybridResult</tt> implements the <tt>HypoTestResult</tt> interface.
+       </li>
+       
+      </ul> 
+
+Additional classes or functions provided by RooStats are:  
+      <ul>
+	<li><tt>NumberCountingUtils</tt>: a collection of number counting statistical utilities
+	<li><tt>NumberCountingPdfFactory</tt>: a factory for building 
+	the PDF and the data for a number counting combination and adding them in a RooWorkspace. 
+	<li><tt>SPlot</tt>: implementation of the SPlot statistical tool to unfold data distribution based on RooFit.
+	</ul>
+<p>
+ <h4>RooStats tutorials macros</h4>
+	Tutorials are provided in the tutorials/roostats directory:
+
+	<ul>
+	  <li><tt>rs100_numbercounting.C</tt>: an example of a combination of two searches using number counting with background uncertainty.
+	  <li><tt>rs102_hypotestwithshapes.C</tt>: example of usage of  ProfileLikleihoodCalculator to do a hypothesis test of the background-only and signal+background hypotheses.
+	  <li><tt>rs201_hybridcalculator.C</tt>: example how to use the HybridCalculator. 
+	</ul>
+	
+
+   
+   
