@@ -42,19 +42,22 @@ connections.&nbsp;</li>
     </ul>
 
     <li>Dynamic "per-query" scheduling</li>
-
       <ul>
 
+
         <li>Dynamic worker startup. It can be enabled by the cluster
-        administrator or by a user with 'Proof.DynamicStartup'
-        environment variable. The effect is that a session starts only on
-        the master. When a query processing starts at the master
-        TXProofServ::GetWorkers is called. It receives a list of machines
-        from the scheduler and the worker processes are started.
-        The environment is copied from the master to the workers.
-        It includes: the include and library paths, the set of enabled
+        administrator with the 'xpd.putrc Proof.DynamicStartup 1' directive
+        in the config file. The effect is that a session starts only on
+        the master. When a query is submitted (call to TProof::Process),
+        the session master contacts the scheduler.
+        In response it receives a list of workers and starts the worker
+        processes. The environment is copied from the master to the workers.
+        It consist of: the include and library paths, the set of enabled
         packages as well as the macros loaded by the user. </li>
 
+      </ul>
+    <li>Flexible and fault-tolerant workers</li>
+      <ul>
         <li> A packet resubmitting mechanism. When a worker dies all the
         packets that it processed are resubmitted.</li>
     <li>Added the possibility to handle dynamically removed workers and partly processed
