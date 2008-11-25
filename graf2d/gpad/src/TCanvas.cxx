@@ -231,7 +231,10 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t form)
    }
    fCanvasID = -1;
    TCanvas *old = (TCanvas*)gROOT->GetListOfCanvases()->FindObject(name);
-   if (old && old->IsOnHeap()) delete old;
+   if (old && old->IsOnHeap()) {
+      Warning("Constructor","Deleting canvas with same name: %s",name);
+      delete old;
+   }
    if (strlen(name) == 0 || gROOT->IsBatch()) {   //We are in Batch mode
       fWindowTopX   = fWindowTopY = 0;
       fWindowWidth  = gStyle->GetCanvasDefW()-4;
@@ -307,7 +310,10 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t ww, Int_t w
    fCh       = wh;
    fCanvasID = -1;
    TCanvas *old = (TCanvas*)gROOT->GetListOfCanvases()->FindObject(name);
-   if (old && old->IsOnHeap()) delete old;
+   if (old && old->IsOnHeap()) {
+      Warning("Constructor","Deleting canvas with same name: %s",name);
+      delete old;
+   }
    if (strlen(name) == 0 || gROOT->IsBatch()) {   //We are in Batch mode
       fWindowTopX   = fWindowTopY = 0;
       fWindowWidth  = ww;
@@ -375,7 +381,10 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t wtopx,
    fCh       = wh;
    fCanvasID = -1;
    TCanvas *old = (TCanvas*)gROOT->GetListOfCanvases()->FindObject(name);
-   if (old && old->IsOnHeap()) delete old;
+   if (old && old->IsOnHeap()) {
+      Warning("Constructor","Deleting canvas with same name: %s",name);
+      delete old;
+   }
    if (strlen(name) == 0 || gROOT->IsBatch()) {   //We are in Batch mode
       fWindowTopX   = fWindowTopY = 0;
       fWindowWidth  = ww;
