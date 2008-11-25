@@ -208,9 +208,10 @@ int XrdProofSched::GetNumWorkers(XrdProofdProofServ *xps)
    std::list<XrdProofWorker *>::iterator iter;
    for (iter = wrks->begin(); iter != wrks->end(); ++iter) {
       TRACE(DBG, (*iter)->fImage<<" : # act: "<<(*iter)->fProofServs.size());
-      if ((*iter)->fType != 'M'
-         && (int) (*iter)->fProofServs.size() < fOptWrksPerUnit)
-         nFreeCPUs++;
+      if ((*iter)->fType != 'M' && (*iter)->fType != 'S'
+          && (int) (*iter)->fProofServs.size() < fOptWrksPerUnit)
+         // add number of free slots
+         nFreeCPUs += fOptWrksPerUnit - (*iter)->fProofServs.size();
    }
 
    float priority = 1;

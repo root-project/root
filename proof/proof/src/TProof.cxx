@@ -6862,7 +6862,8 @@ TObject *TProof::GetOutput(const char *name)
    // Get specified object that has been produced during the processing
    // (see Process()).
 
-   return fPlayer->GetOutput(name);
+   // Can be called by MarkBad on the master before the player is initialized
+   return (fPlayer) ? fPlayer->GetOutput(name) : (TObject *)0;
 }
 
 //______________________________________________________________________________
