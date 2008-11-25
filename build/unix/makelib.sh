@@ -49,6 +49,7 @@ VERSION=
 EXPLLNKCORE=
 if [ "x$EXPLICIT" = "xyes" ]; then
    if [ $LIB != "lib/libCint.$soext" ] \
+       && [ $LIB != "lib/libCint7.$soext" ] \
        && [ $LIB != "lib/libReflex.$soext" ] \
        && [ $LIB != "lib/libminicern.$soext" ]; then
       NEEDREFLEX=""
