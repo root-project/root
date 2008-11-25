@@ -133,9 +133,9 @@ void TAttPad::SetMargin(Float_t left, Float_t right, Float_t bottom, Float_t top
 //*-*-*-*-*-*-*-*-*Set all margins
 
    SetLeftMargin(left);
-   SetRightMargin(left);
-   SetBottomMargin(left);
-   SetTopMargin(left);
+   SetRightMargin(right);
+   SetBottomMargin(bottom);
+   SetTopMargin(top);
 }
 
 //______________________________________________________________________________
