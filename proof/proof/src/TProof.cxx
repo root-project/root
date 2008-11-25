@@ -2920,7 +2920,7 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
       case kPROOF_SETIDLE:
          {
             PDB(kGlobal,2)
-             Info("HandleInputMessage","kPROOF_SETIDLE: enter");
+               Info("HandleInputMessage","kPROOF_SETIDLE: enter");
 
             // The session is idle
             if (IsLite()) {
