@@ -19,7 +19,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TCint.h"
+#include "TInterpreter.h"
 #include "TMutex.h"
 #include "TThreadFactory.h"
 #include <errno.h>

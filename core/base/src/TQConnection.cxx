@@ -36,7 +36,6 @@
 #include "Riostream.h"
 #include "TVirtualMutex.h"
 #include "THashTable.h"
-//#include "TCint.h"
 
 ClassImpQ(TQConnection)
 

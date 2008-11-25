@@ -30,7 +30,6 @@
 #include "TROOT.h"
 #include "Strlen.h"
 #include "TVirtualMutex.h"
-//#include "TCint.h"
 
 ClassImp(TMethodCall)
 

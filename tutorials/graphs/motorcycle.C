@@ -1,5 +1,5 @@
 #include "TString.h"
-#include "TCint.h"
+#include "TInterpreter.h"
 #include <fstream>
 #include "TH1.h"
 #include "TGraphSmooth.h"

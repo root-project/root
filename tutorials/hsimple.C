@@ -8,7 +8,7 @@
 #include <TSystem.h>
 #include <TRandom.h>
 #include <TBenchmark.h>
-#include <TCint.h>
+#include <TInterpreter.h>
 
 TFile *hsimple(Int_t get=0)
 {

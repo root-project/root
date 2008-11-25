@@ -76,7 +76,7 @@
 #include "RQ_OBJECT.h"
 #include "TVirtualMutex.h"
 #include "Varargs.h"
-#include "TCint.h"
+#include "TInterpreter.h"
 #include "RConfigure.h"
 
 void *gTQSender; // A pointer to the object that sent the last signal.
