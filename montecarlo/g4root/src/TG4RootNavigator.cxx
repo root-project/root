@@ -392,6 +392,16 @@ void TG4RootNavigator::LocateGlobalPointWithinVolume(const G4ThreeVector& pGloba
 
 //______________________________________________________________________________
 G4double TG4RootNavigator::ComputeSafety(const G4ThreeVector &globalpoint, 
+                                         const G4double pProposedMaxLength,
+                                         const G4bool /*keepState*/)
+{
+// Compute safety and keep state on demand.
+   G4double saf = ComputeSafety(globalpoint, pProposedMaxLength);
+   return saf;
+}
+
+//______________________________________________________________________________
+G4double TG4RootNavigator::ComputeSafety(const G4ThreeVector &globalpoint, 
                                          const G4double /*pProposedMaxLength*/)
 {
 // Calculate the isotropic distance to the nearest boundary from the
