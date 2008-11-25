@@ -21,13 +21,17 @@
 // *   -l logfile  file where to redirect the processing logs; default is  * //
 // *               a temporary file deleted at the end of the test; in     * //
 // *               case of success                                         * //
+// *   -d          run the test in dynamic startup mode                    * //
 // *                                                                       * //
 // * To run interactively:                                                 * //
 // * $ root                                                                * //
 // * root[] .L stressProof.cxx                                             * //
-// * root[] stressProof(master, wrks, verbose, logfile)                    * //
+// * root[] stressProof(master, wrks, verbose, logfile, dyn)               * //
 // *                                                                       * //
-// * The arguments have the same meaning as above.                         * //
+// * The arguments have the same meaning as above except for               * //
+// *     verbose [Int_t]   increasing verbosity (0 == minimal)             * //
+// *     dyn     [Bool_t]  if kTRUE run in dynamic startup mode            * //
+// *                                                                       * //
 // *                                                                       * //
 // * The successful output looks like this:                                * //
 // *                                                                       * //
@@ -100,9 +104,11 @@ static Int_t gH1Cnt = 0;
 static Int_t gSimpleCnt = 0;
 static TStopwatch gTimer;
 static Bool_t gTimedOut = kFALSE;
+static Bool_t gDynamicStartup = kFALSE;
 
 void stressProof(const char *url = "proof://localhost:11093",
-                 Int_t nwrks = -1, Int_t verbose = 0, const char *logfile = 0);
+                 Int_t nwrks = -1, Int_t verbose = 0,
+                 const char *logfile = 0, Bool_t dyn = kFALSE);
 
 //_____________________________batch only_____________________
 #ifndef __CINT__
@@ -128,6 +134,7 @@ int main(int argc,const char *argv[])
       printf("   -l logfile    file where to redirect the processing logs; must be writable;\n");
       printf("                 default is a temporary file deleted at the end of the test\n");
       printf("                 in case of success\n");
+      printf("   -d            run the test in dynamicStartup mode\n");
       printf(" \n");
       gSystem->Exit(0);
    }
@@ -163,6 +170,9 @@ int main(int argc,const char *argv[])
          if (!strncmp(argv[i],"-vv",3)) verbose++;
          if (!strncmp(argv[i],"-vvv",4)) verbose++;
          i++;
+      } else if (!strncmp(argv[i],"-d",2)) {
+         gDynamicStartup = kTRUE;
+         i++;
       } else {
          url = argv[i];
          i++;
@@ -171,7 +181,7 @@ int main(int argc,const char *argv[])
    // Use defaults where required
    if (!url) url = urldef;
 
-   stressProof(url, nWrks, verbose, logfile);
+   stressProof(url, nWrks, verbose, logfile, gDynamicStartup);
 
    gSystem->Exit(0);
 }
@@ -307,11 +317,15 @@ typedef struct {
 static PT_Packetizer_t gStd_Old = { "TPacketizer", 0 };
 
 //_____________________________________________________________________________
-void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfile)
+void stressProof(const char *url, Int_t nwrks,
+                 Int_t verbose, const char *logfile, Bool_t dyn)
 {
    printf("******************************************************************\n");
    printf("*  Starting  P R O O F - S T R E S S  suite                      *\n");
    printf("******************************************************************\n");
+
+   // Set dynamic mode
+   gDynamicStartup = (!strcmp(url,"lite")) ? kFALSE : dyn;
 
    // Set verbosity
    gverbose = verbose;
@@ -346,6 +360,14 @@ void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfil
       printf("******************************************************************\n");
    }
 
+   if (gDynamicStartup) {
+      printf("*  Dynamic per-job worker startup ON (test 11 skipped)          **\n");
+      printf("******************************************************************\n");
+   }
+   if (!strcmp(url,"lite")) {
+      printf("*  PROOF-Lite session (test 12 skipped)                         **\n");
+      printf("******************************************************************\n");
+   }
    //
    // Register tests
    //
@@ -371,7 +393,7 @@ void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfil
    testList->Add(new ProofTest("Package management with 'event'", 9, &PT_Packages));
    // Simple event analysis
    testList->Add(new ProofTest("Simple 'event' generation", 10, &PT_Event));
-   // Test input data propagation
+   // Test input data propagation (it only works in the static startup mode)
    testList->Add(new ProofTest("Input data propagation", 11, &PT_InputData));
    // Test asynchronous running
    testList->Add(new ProofTest("H1, Simple: async mode", 12, &PT_H1SimpleAsync));
@@ -567,7 +589,7 @@ Int_t PT_Open(void *args)
 
    // Get the PROOF Session
    PutPoint();
-   TProof *p = getProof(PToa->url, PToa->nwrks, tutdir.Data(), "force");
+   TProof *p = getProof(PToa->url, PToa->nwrks, tutdir.Data(), "force", gDynamicStartup);
    if (!p || !(p->IsValid())) {
       printf("\n >>> Test failure: could not start the session\n");
       return -1;
@@ -1048,6 +1070,11 @@ Int_t PT_InputData(void *)
       return -1;
    }
 
+   // Not yet supported for PROOF-Lite
+   if (gDynamicStartup) {
+      return 1;
+   }
+
    // Create the test information to be send via input and retrieved
    TH1F *h1 = new TH1F("h1data","Input data from file",100,-5.,5.);
    h1->FillRandom("gaus", 1000);
@@ -1100,6 +1127,8 @@ Int_t PT_InputData(void *)
 
    // Cleanup
    gSystem->Unlink(datafile.Data());
+   gProof->ClearInputData(h1list);
+   gProof->ClearInputData(h2list);
    delete h1list;
    delete h2list;
 
@@ -1164,7 +1193,6 @@ Int_t PT_H1SimpleAsync(void *arg)
    }
 
    // Not yet supported for PROOF-Lite
-   PutPoint();
    if (gProof->IsLite()) {
       return 1;
    }
@@ -1220,15 +1248,16 @@ Int_t PT_H1SimpleAsync(void *arg)
    PutPoint();
 
    // Retrieve the list of available query results
-   TList *ql = gProof->GetListOfQueries();
+   TList *ql = gProof->GetQueryResults();
    if (ql && ql->GetSize() > 0) {
       ql->Print();
    }
 
    TString ref;
-   TIter nxq(ql);
+   TIter nxq(ql, kIterBackward);
+   Int_t nd = 2;
    TQueryResult *qr = 0;
-   while ((qr = (TQueryResult *)nxq())) {
+   while ((qr = (TQueryResult *)nxq()) && nd > 0) {
       ref.Form("%s:%s", qr->GetTitle(), qr->GetName());
       gProof->Retrieve(ref);
       qr = gProof->GetQueryResult(ref);
@@ -1236,9 +1265,11 @@ Int_t PT_H1SimpleAsync(void *arg)
          if (!strcmp(qr->GetSelecImp()->GetTitle(), "h1analysis")) {
             PutPoint();
             if (PT_CheckH1(qr) != 0) return -1;
+            nd--;
          } else if (!strcmp(qr->GetSelecImp()->GetTitle(), "ProofSimple")) {
             PutPoint();
             if (PT_CheckSimple(qr, nevt, nhist) != 0) return -1;
+            nd--;
          } else {
             printf("\n >>> Test failure: query with unexpected selector '%s'\n", qr->GetSelecImp()->GetTitle());
             return -1;

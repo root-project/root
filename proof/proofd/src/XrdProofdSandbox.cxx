@@ -518,7 +518,6 @@ int XrdProofdSandbox::RemoveSession(const char *tag)
    if (ftruncate(fileno(fact), 0) == -1) {
       TRACE(XERR, "cannot truncate file "<<fna<<" (errno: "<<errno<<")");
       lseek(fileno(fact), 0, SEEK_SET);
-      lockf(fileno(fact), F_ULOCK, 0);
       if (lockf(fileno(fact), F_ULOCK, 0) != 0)
          TRACE(XERR, "cannot lockf file "<<fna<<" (errno: "<<errno<<")");
       fclose(fact);

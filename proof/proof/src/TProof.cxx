@@ -2681,6 +2681,8 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
                   // Add query to the result list in TProofPlayer
                   fPlayer->AddQueryResult(pq);
                   fPlayer->SetCurrentQuery(pq);
+                  // And clear the output list, as we start merging a new set of results
+                  fPlayer->GetOutputList()->Clear();
                   // Add the unique query tag as TNamed object to the input list
                   // so that it is available in TSelectors for monitoring
                   fPlayer->AddInput(new TNamed("PROOF_QueryTag",
@@ -4278,7 +4280,8 @@ void TProof::NotifyLogMsg(const char *msg, const char *sfx)
          }
          // Add a suffix, if requested
          if (lsfx > 0)
-            write(fdout, sfx, lsfx);
+            if (write(fdout, sfx, lsfx) != lsfx)
+               SysError("NotifyLogMsg", "error writing to unit: %d", fdout);
       }
    }
    if (len > 0) {
@@ -7483,7 +7486,8 @@ void TProof::ShowLog(Int_t qry)
    }
    if (!SendingLogToWindow()) {
       // Avoid screwing up the prompt
-      write(fileno(stdout), "\n", 1);
+      if (write(fileno(stdout), "\n", 1) != 1)
+         SysError("ShowLogFile", "error writing to stdout");
    }
 
    // Restore original pointer

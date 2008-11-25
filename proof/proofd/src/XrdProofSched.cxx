@@ -302,7 +302,9 @@ int XrdProofSched::GetWorkers(XrdProofdProofServ *xps,
             int fd;
             unsigned int seed;
             if ((fd = open(randdev, O_RDONLY)) != -1) {
-               read(fd, &seed, sizeof(seed));
+               if (read(fd, &seed, sizeof(seed)) != sizeof(seed)) {
+                  TRACE(XERR, "problems reading seed; errno: "<< errno);
+               }
                srand(seed);
                close(fd);
                rndmInit = 1;
