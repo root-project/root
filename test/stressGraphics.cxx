@@ -445,6 +445,10 @@ TCanvas *StartTest(Int_t w, Int_t h)
 
    gTestNum++;
    gStyle->Reset();
+   TCanvas *old = (TCanvas*)gROOT->GetListOfCanvases()->FindObject("C");
+   if (old) {
+      if (old->IsOnHeap()) delete old;
+   }
    TCanvas *C = new TCanvas("C","C",0,0,w,h);
    return C;
 }
