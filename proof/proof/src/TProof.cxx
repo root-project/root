@@ -5569,7 +5569,6 @@ Int_t TProof::UnloadPackageOnClient(const char *package)
    if (TestBit(TProof::kIsClient)) {
       TObjString *pack = (TObjString *) fEnabledPackagesOnClient->FindObject(package);
       if (pack) {
-
          // Remove entry from include path
          TString aclicincpath = gSystem->GetIncludePath();
          TString cintincpath = gInterpreter->GetIncludePath();
@@ -5582,13 +5581,16 @@ Int_t TProof::UnloadPackageOnClient(const char *package)
          //TODO reset interpreter include path
 
          // remove entry from enabled packages list
-         delete fEnabledPackagesOnClient->Remove(pack);
+         fEnabledPackagesOnClient->Remove(pack);
       }
 
       // cleanup the link
       if (!gSystem->AccessPathName(package))
          if (gSystem->Unlink(package) != 0)
             Warning("UnloadPackageOnClient", "unable to remove symlink to %s", package);
+
+      // delete entry
+      delete pack;
    }
    return 0;
 }
