@@ -1709,16 +1709,17 @@ extern "C" void G__set_class_autoloading_table(char* classname, char* libname)
    // loaded its dictionary.
    // If libname==-1 then we 'undo' this behavior instead.
    
+   int store_enable_autoloading = G__enable_autoloading;
+   G__enable_autoloading = 0;
    int ntagnum = G__search_tagname(classname, G__CLASS_AUTOLOAD);
    if (libname == (void*)-1) {
       if (G__struct.name[ntagnum][0]) {
          G__struct.name[ntagnum][0] = '@';
       }
       G__Dict::GetDict().GetType( ntagnum ).ToTypeBase()->HideName();
+      G__enable_autoloading = store_enable_autoloading;
       return;
    }
-   int store_enable_autoloading = G__enable_autoloading;
-   G__enable_autoloading = 0;
    ::Reflex::Scope tagnum = G__Dict::GetDict().GetScope(ntagnum);
    if (G__struct.libname[G__get_tagnum(tagnum)]) {
       free((void*)G__struct.libname[G__get_tagnum(tagnum)]);
