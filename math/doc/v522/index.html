@@ -7,13 +7,22 @@
 <ul>
  <li><bf><tt>TKDTree</tt></bf>: new class for represeting a kd-tree (a k-dimensional tree). See the <a href="http://root.cern.ch/root/htmldoc/TKDTree.html">TKDTree class documentation</a> for a detailed description of the method.
   </li>
+  <li><bf><tt>TMath</tt></bf>: change slightly the signature of <tt>TMath::Sort(n,x,w)</tt>. Now the type of the index array (w) and the type of the size (n) have to be the same. Before the type of (n) was not templated and was a Long64_t, therefore, due to automatic compiler conversion one could instantiate for example a TMath::Sort by having as unsigned int for the size for the array and int for the array. Now this is not possible anymore and one must pass the same type. This is now consistent with other similar TMath functions.  Now in the CINT dictionary contains also the instantiations for both cases of Long64_t and Int_t for the size (and index array) types.  
+  </li>
   <li>
-  Fixed a bug in the <tt>ROOT::Math::landau_pdf</tt> function. Now it evaluates to the correct normalized distribution when the scale factor is different than 1.</li>
-  <li><bf><tt>TVirtualFitter</tt></bf>: move TVirtualFitter from base to mathcore. Setting the minimizer parameters is done via the new class <tt>ROOT::Math::MinimizerOptions</tt>.
+  Fixed a bug in the <tt>ROOT::Math::landau_pdf</tt> function. Now it evaluates to the correct normalized distribution when the scale factor is different than 1.</li>  
+  <li><bf><tt>TVirtualFitter</tt></bf>: move TVirtualFitter from base to mathcore. Setting the minimizer parameters is done via the new class <tt>ROOT::Math::MinimizerOptions</tt>. Fixed also a bug in the TVirtualFitter destructor, which was preventing the deletion of the static instance and causing in same cases memory leaks.  
   <li><bf><tt>ROOT::Math::MinimizerOptions</tt></bf>: new class keeping the minimizer control parameters, minimizer name and algorithms. Static values of the parameter exist and can be set and retrieved via corresponding static methods. 
   <li><bf>Fitting Classes</bf>: improve in general all classes in view of using them in the histogram and graph fitting routines. Few bugs have been as well fixed (see the <a href="http://root.cern.ch/viewcvs?rev=25486&root=root&view=rev">cvs log</a> for details).
  </li> 
   </ul>
+
+  <h4>MathCore</h4>
+<ul>
+ <li>Fixed a bug in setting the VEGAS integration mode in the <tt>GSLMCIntegrator</tt> class.
+  </li>
+  </ul>
+  
   <h4>Fumili</h4>
   <ul>
  <li> Add implementation of Minimizer interface using TFumili.
@@ -28,6 +37,8 @@
     </ul>
 <h4>Minuit2</h4>
     <ul>
+      <li>Add support to perform parallel minimization using a thread for each gradient calculation  with openMP. In the ROOT environment the Minuit2 library can be build using openMP ( <em>-fopenmp</em> compilaiton flag for gcc) if the environment variables <em>USE_PARALLEL_MINUIT2</em> and <em>USE_OPENMP</em> are set.
+      In the Minuit2 standalone built libraries (using autoconf) support for openMP is automatically enabled, whenever the compiler supports it (for example for gcc version >= 4.2). Some small changes have been applied in Minuit2 to make it thread safe. For example, when transforming from internal to external values, the parameter values are not cached anymore in MnUserTransformation class. 
  <li><tt>DavidonErrorUpdator</tt>: add an additonal check to avoid a divison by zero.
  <li>In <tt>Minuit2Minimizer</tt> fill the status information according to the minimizer result
       </ul>
@@ -39,3 +50,17 @@
  <li>Fix a problem in the assignment operator of the <tt>ROOT::Math::PxPyPzM4D</tt> class. Avoid having nan when converting for example from PxPyPzME4D to PxPyPzM4D when the mass is negative. </li> 
 <li>Throw always exception in the non-supported setters (i.e. SetPt on a PxPyPzEVector) methods, which are generated only for the CINT dictionary. These methods flag a compiled-error when running in C++ mode.</li>
 </ul>
+
+<h4>Physics</h4>
+<ul>
+  <li>
+  <bf><tt>TLorentzVector</tt></bf>:Change in the implementation of the funciton SetPtEtaPhi and SetPtEtaPhiM the algorithm to calculate z from pt and eta. Use now, as in the GenVector package, the expression <em>z = pt * sinh(eta)</em> instead of using the tangent and the arc-tangent. This is is more efficient and avoids a problem found on 64 bit machines when eta=0. by Dariusz Miskowiec. 
+</li>
+</ul>
+  
+<h4>Unuran</h4>
+<ul>
+  <li>New version (1.3) from Josef Leydold  fixing some warnings on Windows Visual Studio 9.</li>
+  </ul>
+
+  

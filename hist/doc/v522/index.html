@@ -12,6 +12,8 @@ In addition HFitInterface defines a function <tt>ROOT::Fit::FitObject</tt>
 	  option directly via Foption class and not by a string. They are
 	  used by the FitPanel.
 
+  <li>Add in <tt>HFitImpl.cxx</tt> a new function for fitting unbin data set. This function is now used by the TTree::UnbinnedFit for performing maximum likelihood unbinned fits.
+  </li>
   <li>
   Add new class <tt>TBackCompFitter</tt>, providing a backward compatible
 	  implementation of
@@ -26,22 +28,33 @@ In addition HFitInterface defines a function <tt>ROOT::Fit::FitObject</tt>
   <h4>TH1</h4>
   <ul><li>
   Re-implement <tt>TH1::Fit</tt> using the functions defined in <tt>HFitImpl.cxx</tt>.
+    <li>Add new function <tt>TH1::Interpolate</tt> to approximate the value via linear interpolation. Implementation from Any Mastbaum. </li>
+    <li>Fixed a bug in rebinning in a new variable bin histogram.
+    <li>Fixed a bug in copy constructore of histograms
     </ul>
   <h4>TH2</h4>
     <ul>
 <li>  Share a common implementatin for (FitSlicesX,FitSclicesY) and (ProfileX, ProfileY) using a common protected method.
       <li>Add possibility to be used in the FitPanel (add a <tt>TH2::FitPanel()</tt> method).
+    <li>Add also here the new function <tt>TH2::Interpolate</tt>. </li>
       </ul>
 
   <h4>TH3</h4>
 
 <ul>
+  <li>Add new option "NUF" and "NOF" in TH3::Project to have excluded the underflow/overflow  (they are included by default).
+  <li>Add option "UF" and "OF" in TH3::ProjectProfile to include the underflow/overflow. By default they are now excluded while in the previous version they were included. This is consistent with the projection from a TH2.
   <li>
     Fixed a bug in <tt>TH3::Project</tt> reported by Marco Van Leeuwen in setting the bin error in the projected histogram when a range was set in the projected axis.
   </li>
         <li>Add possibility to be used in the FitPanel (add a <tt>TH3::FitPanel()</tt> method).
 
 </ul>
+
+ <h4>TProfile3D</h4>
+<ul>
+  <li>Fix a bug in the copy constructor
+  </ul>
 
 <h4>TGraph</h4>
 
@@ -112,6 +125,9 @@ In addition HFitInterface defines a function <tt>ROOT::Fit::FitObject</tt>
 <ul>
   <li>
     Fixed a bug in the calculation of the integral of multi-dimensional interpreted functions. The method <tt>TF1::operator() (const double *x, const double *p)</tt> calls now <tt>TF1::InitArgs</tt> in the case of CINT functions.
+  <li>Fixed a bug in using the <tt>TF1::GetMinimum(), TF1::GetMaximum(), TF1::GetMinimumX, TF1::GetMaximumX, TF1::GetX</tt> with default arguments. </li>
+  <li>Fixed a bug when copying functions obtained from member functions of interpreted classes
+  </li>
   </li>
 
 </ul>
@@ -144,12 +160,39 @@ The simple following macro was enough to show the problem:
      now optimized to make sure there is no empty line.  </li>
 </ul>
 
-<h4>FitPanel</h4>
+<h4>TUnfold</h4>
 <ul>
- <li> Add interfaces for TH2, TH3, TMultiGraph and TGraph2D
-  <li> Fix various bugs in setting the fit model function and in setting the parameters (values, limits, etc..)
-  <li> Allow the opening of the  parameter dialog in case of linear fitter. This is needed for example for fixing some of the parameters
-  <li>Improve minimization panel by adding some extra methods, like combined for a combined migrad-simplex minimization (option "MINIMIZE" in Minuit).
+  <li>
+Introduces this new class for solving inverse problems:
+<b>
+     data histograms with Gaussian errors are decomposed into
+     several template distributions ("generator level" bins).
+</b><br>
+The result are new normalisation constants for the template
+distributions (the unfolded "generator level" distribution).
+<br>
+The solution can be tuned by properly adjusting the
+regularisation parameter tau. A standard method, the L-curve scan is
+implemented to help finding a good choice of this parameter.
+</li>
+<li>Two example tutorials are included to show the usage of this class: <em>tutorials/math/testUnfiold1.C</em> and <em>tutorials/math/testUnfiold2.C</em>
   </ul>
 
+
+<br> 
+<hr> 
+
+<h3>FitPanel</h3>
+Add a new revised version of the Fit Panel with the following functionality: 
+<ul>
+ <li> Add support now for fitting, in addition to the TH1 and TGraph also for TH2, TH3, TMultiGraph and TGraph2D and TTree (with un-binned fits)
+  <li>Add possibility to select the data object directly from the Fit panel. The Fit Panel can also be open directly from the TCanvas menu (under Tools)
+  <li>Improve the function selection by having the possibility to support user defined function, predefined functions and functions used before for fitting. 
+  <li> Allow the opening of the  parameter dialog in case of linear fitter. This is needed for example for fixing some of the parameters
+  <li>Improve minimization panel by adding some extra methods, like combined for a combined migrad-simplex minimization (option "MINIMIZE" in Minuit).
+  <li>Improve the slider by adding a numeric entry. 
+  <li> Fix various bugs in setting the fit model function and in setting the parameters (values, limits, etc..)
+  </ul>
+Here is how the fit panel is now: 
+  <p><img alt="Fit Panel" src="FitPanel.gif"></img>
   
