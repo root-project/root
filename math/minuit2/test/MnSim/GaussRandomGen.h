@@ -10,7 +10,8 @@
 #ifndef MN_GaussRandomGen_H_
 #define MN_GaussRandomGen_H_
 
-#include <math.h>
+#include <cmath>
+#include <cstdlib>
 
 namespace ROOT {
 

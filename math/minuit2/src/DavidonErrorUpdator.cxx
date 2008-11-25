@@ -50,12 +50,16 @@ MinimumError DavidonErrorUpdator::Update(const MinimumState& s0,
    std::cout<<"delgam= "<<delgam<<" gvg= "<<gvg<<std::endl;
 #endif
    if (delgam <= 0 ) { 
+#ifdef WARNINGMSG
        MN_INFO_MSG("DavidonErrorUpdator: delgam < 0 : cannot update - return same matrix ");
+#endif
        return s0.Error();
    }
    if (gvg <= 0 ) { 
       // since v0 is pos def this gvg can be only = 0 if  dg = 0 - should never be here
+#ifdef WARNINGMSG
       MN_INFO_MSG("DavidonErrorUpdator: gvg <= 0 : cannot update - return same matrix "); 
+#endif
       return s0.Error();
    }
 

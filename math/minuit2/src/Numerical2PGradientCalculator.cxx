@@ -16,10 +16,11 @@
 #include "Minuit2/FunctionGradient.h"
 #include "Minuit2/MnStrategy.h"
 
+
 //#define DEBUG
 #if defined(DEBUG) || defined(WARNINGMSG)
 #include "Minuit2/MnPrint.h" 
-#ifdef MINUIT2_PARALLEL_OPENMP
+#ifdef _OPENMP
 #include <omp.h>
 #include <iomanip>
 #ifdef DEBUG
@@ -101,7 +102,7 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
    std::cout << "Calculating Gradient at x =   " << par.Vec() << std::endl;
 #endif
 
-#ifndef MINUIT2_PARALLEL_OPENMP
+#ifndef _OPENMP
    // for serial execution this can be outside the loop
    MnAlgebraicVector x = par.Vec();
 #else
@@ -121,7 +122,7 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
       //std::cout << "Thread number " << ith << "  " << i << std::endl;
 #endif
 
-#ifdef MINUIT2_PARALLEL_OPENMP
+#ifdef _OPENMP
        // create in loop since each thread will use its own copy
       MnAlgebraicVector x = par.Vec();
 #endif

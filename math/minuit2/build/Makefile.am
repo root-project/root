@@ -17,7 +17,6 @@ SUBDIRS =					\
 	doc					
 
 
-
 #EXTRA_DIST = BuildFile makefile.msc
 
 # The following is for platforms where automake dependencies don't work.

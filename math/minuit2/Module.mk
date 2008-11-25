@@ -117,6 +117,6 @@ $(MINUIT2DO): CXXFLAGS += -DWARNINGMSG -DUSE_ROOT_ERROR
 ifneq ($(USE_PARALLEL_MINUIT2),)
 ifneq ($(USE_OPENMP),)
 #$(MINUIT2O): CXXFLAGS += -DMINUIT2_THREAD_SAFE -DMINUIT2_PARALLEL_OPENMP
-math/minuit2/src/Numerical2PGradientCalculator.o: CXXFLAGS += -DMINUIT2_PARALLEL_OPENMP -D_GLIBCXX_PARALLEL -fopenmp 
+math/minuit2/src/Numerical2PGradientCalculator.o: CXXFLAGS +=  -D_GLIBCXX_PARALLEL -fopenmp 
 endif
 endif

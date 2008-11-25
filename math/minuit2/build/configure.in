@@ -40,6 +40,10 @@ AC_SUBST(GMAKE)
 
 AC_PROG_RANLIB
 
+AC_OPENMP
+CFLAGS="$CFLAGS $OPENMP_CFLAGS"
+CXXFLAGS="$CFLAGS $OPENMP_CXXFLAGS"
+
 dnl files to be generated 
 AC_OUTPUT(Makefile inc/Makefile inc/Minuit2/Makefile inc/Math/Makefile src/Makefile 
   doc/Doxyfile doc/Makefile test/Makefile test/MnSim/Makefile 
