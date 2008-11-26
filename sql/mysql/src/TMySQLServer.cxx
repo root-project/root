@@ -759,3 +759,36 @@ Bool_t TMySQLServer::Rollback()
 #endif
 
 }
+//______________________________________________________________________________
+Bool_t TMySQLServer::PingVerify()
+{
+   // Execute Ping to SQL Connection.
+   // Since mysql_ping tries to reconnect by itself, 
+   // a double call to the mysql function
+   // is implemented.
+   // Returns kTRUE if successful
+
+   CheckConnect("Ping", kFALSE);
+
+   if (mysql_ping(fMySQL)!=0){
+       if (mysql_ping(fMySQL)!=0){
+	   printf(" Not able to automatically reconnect the second time \n ");
+           CheckErrNo("Ping", kTRUE, kFALSE);
+       }
+       else printf(" Connection was lost, able to automatically reconnect \n ");
+   }
+
+   return !IsError();
+}
+//______________________________________________________________________________
+Int_t TMySQLServer::Ping()
+{
+   // Execute Ping to SQL Connection
+   // using the mysql_ping function.
+   // Returns kTRUE if successful.
+
+   CheckConnect("PingInt", kFALSE);
+
+   return mysql_ping(fMySQL);
+
+}

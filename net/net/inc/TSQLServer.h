@@ -108,6 +108,8 @@ public:
    virtual Bool_t      StartTransaction();
    virtual Bool_t      Commit();
    virtual Bool_t      Rollback();
+   virtual Bool_t      PingVerify() { return kFALSE; }
+   virtual Int_t       Ping() { return -9999; }
 
    static TSQLServer *Connect(const char *db, const char *uid, const char *pw);
 
