@@ -99,7 +99,20 @@ namespace ROOT { namespace Cintex {
       fRet_tag  = CintTag( fRet_desc.second );
       fRet_byvalue = !fRet_byref && !rt.IsFundamental() && !rt.IsPointer() &&
          !rt.IsArray() && !rt.IsEnum(); 
-      if ( rt.IsPointer() ) fRet_desc.first = (fRet_desc.first - ('a'-'A'));
+      int plevel = 0;
+      Type frt = rt.FinalType();
+      while (frt.IsPointer()) {
+         // Note: almost right (does not handle array or reference in between)
+         ++plevel;
+         frt = frt.ToType();
+      }
+      if (fRet_byref) {
+         fRet_desc.first = (fRet_desc.first - ('a'-'A'));
+      } else if ( rt.IsPointer() ) {
+         fRet_desc.first = (fRet_desc.first - ('a'-'A'));
+         --plevel;
+      }
+      fRet_plevel = plevel;
 
       // for constructor the result block is the class itself
       if( fClass) fClass_tag = CintTag( CintType(fClass).second );
@@ -129,8 +142,10 @@ namespace ROOT { namespace Cintex {
    void* StubContext_t::GetReturnAddress(G__value* result) const {
       // Extract the memory location of the return value given the return type of fMethod
       Type ret = fMember.TypeOf().ReturnType().FinalType();
-      if (ret.IsPointer() || ret.IsReference())
+      if (ret.IsPointer())
          return &result->obj.i;
+      if (ret.IsReference())
+         return &result->ref;
       switch (Tools::FundamentalType(ret)) {
       case kFLOAT:
       case kDOUBLE: return &result->obj.d;
@@ -143,57 +158,71 @@ namespace ROOT { namespace Cintex {
       return &result->obj.i;
    }
 
-   void StubContext_t::ProcessResult(G__value* result, void* obj) { 
+   void StubContext_t::ProcessResult(G__value* result, void* objaddr) { 
       // Process ctx result.
+      
       char t = fRet_desc.first;
-      if ( t == 'u' )
-         t = 'U';
       result->type = t;
+      void *obj = objaddr;
       if ( fRet_byref ) { 
-         result->ref = (long)obj;
+         result->ref = (long) *(void**)objaddr;
+         obj = *(void**)objaddr;
+         result->tagnum = fRet_tag;
+         if (fRet_plevel == 0) {
+            t = tolower(t);
+         }
       } else {
          result->ref = 0;
       }
       switch( t ) {
       case 'y': G__setnull(result); break;
-      case 'Y': Converter<long>::toCint          (result, obj); break;
       case 'g': Converter<bool>::toCint          (result, obj); break;
-      case 'G': Converter<int>::toCint           (result, obj); break;
       case 'c': Converter<char>::toCint          (result, obj); break;
-      case 'C': Converter<int>::toCint           (result, obj); break;
+
+      case 'Y': Converter<long>::toCint           (result, *(void**)obj); break;
+      case 'G': Converter<long>::toCint           (result, *(void**)obj); break;
+      case 'C': Converter<long>::toCint           (result, *(void**)obj); break;
+      case 'B': Converter<long>::toCint           (result, *(void**)obj); break;
+      case 'R': Converter<long>::toCint           (result, *(void**)obj); break;
+      case 'I': Converter<long>::toCint           (result, *(void**)obj); break;
+      case 'H': Converter<long>::toCint           (result, *(void**)obj); break;
+      case 'K': Converter<long>::toCint           (result, *(void**)obj); break;
+      case 'M': Converter<long>::toCint           (result, *(void**)obj); break;
+      case 'N': Converter<long>::toCint           (result, *(void**)obj); break;
+      case 'S': Converter<long>::toCint           (result, *(void**)obj); break;
+      case 'F': Converter<long>::toCint           (result, *(void**)obj); break;
+      case 'D': Converter<long>::toCint           (result, *(void**)obj); break;
+      case 'L': Converter<long>::toCint           (result, *(void**)obj); break;
+
       case 'b': Converter<unsigned char>::toCint (result, obj); break;
-      case 'B': Converter<int>::toCint           (result, obj); break;
       case 's': Converter<short>::toCint         (result, obj); break;
-      case 'S': Converter<int>::toCint           (result, obj); break;
       case 'r': Converter<unsigned short>::toCint(result, obj); break;
-      case 'R': Converter<int>::toCint           (result, obj); break;
       case 'i': Converter<int>::toCint           (result, obj); break;
-      case 'I': Converter<int>::toCint           (result, obj); break;
       case 'h': Converter<unsigned int>::toCint  (result, obj); break;
-      case 'H': Converter<int>::toCint           (result, obj); break;
       case 'l': Converter<long>::toCint          (result, obj); break;
-      case 'L': Converter<int>::toCint           (result, obj); break;
       case 'k': Converter<unsigned long>::toCint (result, obj); break;
-      case 'K': Converter<int>::toCint           (result, obj); break;
       case 'n': Converter<long long>::toCint     (result, obj); break;
-      case 'N': Converter<int>::toCint           (result, obj); break;
       case 'm': Converter<unsigned long long>::toCint (result, obj); break;
-      case 'M': Converter<int>::toCint           (result, obj); break;
       case 'f': Converter<float>::toCint         (result, obj); break;
-      case 'F': Converter<int>::toCint           (result, obj); break;
       case 'd': Converter<double>::toCint        (result, obj); break;
-      case 'D': Converter<int>::toCint           (result, obj); break;
       case 'q': Converter<long double>::toCint   (result, obj); break;
       case 'Q': Converter<int>::toCint           (result, obj); break;
-      case 'u': Converter<long>::toCint          (result, obj);
-         result->ref = (long)obj;
+      case 'u': 
+         Converter<long>::toCint(result, obj);
+         if ( !fRet_byref ) {
+            // Cint stores the address of the object in .ref even if
+            // the value is not a reference.
+            result->ref = (long)obj;
+         }
          result->tagnum = fRet_tag;
          break;
       case 'U': 
-         if ( fRet_byref ) Converter<long>::toCint(result, *(void**)obj);
-         else              Converter<long>::toCint(result, obj);
+         Converter<long>::toCint(result, *(void**)obj);
          result->tagnum = fRet_tag;
          break;
+      }
+      if (isupper(t) && fRet_plevel) {
+         result->obj.reftype.reftype = fRet_plevel;
       }
    }
 

@@ -152,14 +152,7 @@ namespace ROOT { namespace Cintex {
    }
 
    Type CleanType(const Type& typ)  {
-      if ( typ )  {
-         Type t( typ );
-         while ( t.IsTypedef()   ) t = CleanType(t.ToType());
-         while ( t.IsPointer()   ) t = CleanType(t.ToType());
-         while ( t.IsArray()     ) t = CleanType(t.ToType());
-         return t;
-      }
-      return typ;
+      return typ.RawType();
    }
 
    bool IsTypeOf(Type& typ, const std::string& base_name)  {

@@ -61,6 +61,7 @@ namespace ROOT {
          int            fRet_tag;          ///< Return TypeNth tag number
          bool           fRet_byvalue;      ///< Return by value flag
          bool           fRet_byref;        ///< Return by reference flag
+         int            fRet_plevel;       ///< Pointer/Reference level
          int            fClass_tag;        ///< Class TypeNth tag number
          ROOT::Reflex::Member fMember;     ///< Reflex FunctionMember 
          ROOT::Reflex::Type   fClass;      ///< Declaring Reflex class
