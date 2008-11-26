@@ -1814,7 +1814,7 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
                rxp += prefix;
                if (astr.Contains(TRegexp(rxp))) {
                   astr.Remove(0, prefix.Length());
-                  TString s = str("^[^: ]*");
+                  TString s = astr("^[^: ]*");
                   TObjString *ostr = new TObjString(s);
                   if (!pList->Contains(ostr))
                      pList->Add(ostr);
@@ -1831,7 +1831,7 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
                rxp += prefix;
                if (astr.Contains(TRegexp(rxp))) {
                   astr.Remove(0, prefix.Length());
-                  TString s = str("^[^: ]*");
+                  TString s = astr("^[^: ]*");
                   TObjString *ostr = new TObjString(s);
                   if (!pList->Contains(ostr))
                      pList->Add(ostr);
