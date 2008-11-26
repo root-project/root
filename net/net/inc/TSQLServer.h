@@ -108,6 +108,7 @@ public:
    virtual Bool_t      StartTransaction();
    virtual Bool_t      Commit();
    virtual Bool_t      Rollback();
+
    virtual Bool_t      PingVerify() { return kFALSE; }
    virtual Int_t       Ping() { return -9999; }
 

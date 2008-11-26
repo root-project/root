@@ -92,6 +92,7 @@ public:
    Bool_t         StartTransaction();
    Bool_t         Commit();
    Bool_t         Rollback();
+
    Bool_t         PingVerify();
    Int_t          Ping();
 

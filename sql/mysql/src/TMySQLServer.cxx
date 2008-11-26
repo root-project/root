@@ -136,8 +136,8 @@ TMySQLServer::TMySQLServer(const char *db, const char *uid, const char *pw)
             }
             #else
             Warning("TMySQLServer","MYSQL_OPT_READ_TIMEOUT option not supported by this version of MySql");
-            #endif 
-             
+            #endif
+
          } else
          if (opt.Contains("write_timeout=")) {
             #if MYSQL_VERSION_ID >= 40101
@@ -150,10 +150,10 @@ TMySQLServer::TMySQLServer(const char *db, const char *uid, const char *pw)
             }
             #else
             Warning("TMySQLServer","MYSQL_OPT_WRITE_TIMEOUT option not supported by this version of MySql");
-            #endif 
+            #endif
          } else
-         
-         
+
+
          if (opt.Contains("socket=")) {
             socket = (obj->GetName()+7);
             if (gDebug) Info("TMySQLServer","Use socket %s", socket.Data());
@@ -759,36 +759,35 @@ Bool_t TMySQLServer::Rollback()
 #endif
 
 }
+
 //______________________________________________________________________________
 Bool_t TMySQLServer::PingVerify()
 {
    // Execute Ping to SQL Connection.
-   // Since mysql_ping tries to reconnect by itself, 
-   // a double call to the mysql function
-   // is implemented.
+   // Since mysql_ping tries to reconnect by itself,
+   // a double call to the mysql function is implemented.
    // Returns kTRUE if successful
 
    CheckConnect("Ping", kFALSE);
 
-   if (mysql_ping(fMySQL)!=0){
-       if (mysql_ping(fMySQL)!=0){
-	   printf(" Not able to automatically reconnect the second time \n ");
-           CheckErrNo("Ping", kTRUE, kFALSE);
-       }
-       else printf(" Connection was lost, able to automatically reconnect \n ");
+   if (mysql_ping(fMySQL)) {
+      if (mysql_ping(fMySQL)) {
+         Error("PingVerify", "not able to automatically reconnect a second time");
+         CheckErrNo("Ping", kTRUE, kFALSE);
+      } else
+         Info("PingVerify", "connection was lost, but could automatically reconnect");
    }
 
    return !IsError();
 }
+
 //______________________________________________________________________________
 Int_t TMySQLServer::Ping()
 {
-   // Execute Ping to SQL Connection
-   // using the mysql_ping function.
-   // Returns kTRUE if successful.
+   // Execute Ping to SQL Connection using the mysql_ping function.
+   // Returns 0 if successful, non-zero in case an error occured.
 
    CheckConnect("PingInt", kFALSE);
 
    return mysql_ping(fMySQL);
-
 }
