@@ -51,9 +51,9 @@ MinimumError DavidonErrorUpdator::Update(const MinimumState& s0,
 #endif
    if (delgam <= 0 ) { 
 #ifdef WARNINGMSG
-       MN_INFO_MSG("DavidonErrorUpdator: delgam < 0 : cannot update - return same matrix ");
+      MN_INFO_MSG("DavidonErrorUpdator: delgam < 0 : cannot update - return same matrix ");
 #endif
-       return s0.Error();
+      return s0.Error();
    }
    if (gvg <= 0 ) { 
       // since v0 is pos def this gvg can be only = 0 if  dg = 0 - should never be here
