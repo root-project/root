@@ -41,7 +41,7 @@ double MinimStep(const IGenFunction* function, int type, double &xmin, double &x
    else
       yymin = fabs((*function)(xmin)-fy);
 
-   for (Int_t i=1; i<=fNpx-1; i++) {
+   for (int i=1; i<=fNpx-1; i++) {
       x = xmin + i*dx;
       if (type < 2)
          y = (*function)(x);
@@ -73,17 +73,17 @@ double MinimBrent(const IGenFunction* function, int type, double &xmin, double &
    //      4-returns X corresponding to fy
    //if ok=true the method has converged
 
-   Double_t eps = 1e-10;
-   Double_t t = 1e-8;
-   Int_t itermax = 100;
+   double eps = 1e-10;
+   double t = 1e-8;
+   int itermax = 100;
 
-   Double_t c = (3.-sqrt(5.))/2.; //comes from golden section
-   Double_t u, v, w, x, fv, fu, fw, fx, e, p, q, r, t2, d=0, m, tol;
+   double c = (3.-sqrt(5.))/2.; //comes from golden section
+   double u, v, w, x, fv, fu, fw, fx, e, p, q, r, t2, d=0, m, tol;
    v = w = x = xmiddle;
    e=0;
 
-   Double_t a=xmin;
-   Double_t b=xmax;
+   double a=xmin;
+   double b=xmax;
    if (type < 2)
       fv = fw = fx = (*function)(x);
    else if (type < 4)
@@ -91,13 +91,13 @@ double MinimBrent(const IGenFunction* function, int type, double &xmin, double &
    else
       fv = fw = fx = fabs((*function)(x)-fy);
 
-   for (Int_t i=0; i<itermax; i++){
+   for (int i=0; i<itermax; i++){
       m=0.5*(a + b);
       tol = eps*(fabs(x))+t;
       t2 = 2*tol;
       if (fabs(x-m) <= (t2-0.5*(b-a))) {
          //converged, return x
-         ok=kTRUE;
+         ok=true;
          if (type==1)
             return fx;
          else if (type==3)
@@ -156,7 +156,7 @@ double MinimBrent(const IGenFunction* function, int type, double &xmin, double &
       }
    }
    //didn't converge
-   ok = kFALSE;
+   ok = false;
    xmin = a;
    xmax = b;
    return x;

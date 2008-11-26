@@ -11,6 +11,8 @@
 #include "Math/RootFinder.h"
 #include "Math/BrentRootFinder.h"
 
+#include "RConfigure.h"
+
 #ifndef MATH_NO_PLUGIN_MANAGER
 
 #include "TROOT.h"

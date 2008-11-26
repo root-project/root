@@ -6,9 +6,9 @@
 #ifdef HAVE_ROOTLIBS
 #include "TStopwatch.h"
 #include "TF1.h"
+#include "TError.h"
 #endif
 
-#include "TError.h"
 
 #include "Math/GSLIntegrator.h"
 // temp before having new Integrator class 
@@ -48,7 +48,10 @@ int testIntegration() {
 
   int status = 0;
 
+
+#ifdef HAVE_ROOTLIBS
   gErrorIgnoreLevel = 5000;
+#endif
 
   ROOT::Math::Polynomial * f = new ROOT::Math::Polynomial(2);
 

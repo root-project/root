@@ -2,7 +2,18 @@
 #include "Math/Functor.h"
 #include "Math/RootFinder.h"
 #include "Math/RootFinderAlgorithms.h"
+
+#ifdef HAVE_ROOTLIBS
 #include "TStopwatch.h"
+#else 
+struct TStopwatch { 
+   void Start(){} 
+   void Stop(){} 
+   void Reset(){} 
+   double RealTime() { return 0; }
+   double CpuTime() { return 0; }
+};
+#endif
 
 #include <iostream>
 

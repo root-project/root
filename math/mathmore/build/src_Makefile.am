@@ -15,7 +15,7 @@ libMathMore_la_SOURCES =	       \
          Chebyshev.cxx                 \
          complex_quartic.h             \
          Derivator.cxx                 \
-         GSL1DMinimizer.h              \
+         GSL1DMinimizerWrapper.h       \
          GSLChebSeries.h               \
          GSLDerivator.cxx              \
          GSLDerivator.h                \
@@ -27,6 +27,7 @@ libMathMore_la_SOURCES =	       \
          GSLInterpolator.h             \
          GSLMCIntegrationWorkspace.h   \
          GSLMCIntegrator.cxx           \
+         GSLMinimizer1D.cxx            \
          GSLMinimizer.cxx              \
          GSLMonteFunctionAdapter.h     \
          GSLMonteFunctionWrapper.h     \
@@ -48,8 +49,6 @@ libMathMore_la_SOURCES =	       \
          GSLSimAnnealing.cxx           \
          Interpolator.cxx              \
          KelvinFunctions.cxx           \
-         Minimizer1D.cxx               \
-         ParamFunction.cxx             \
          Polynomial.cxx                \
          QuantFuncMathMore.cxx         \
          RootFinderAlgorithms.cxx      \
@@ -59,37 +58,24 @@ libMathMore_la_SOURCES =	       \
 #include also Factory.cxx to ccreate GSL minimizers
 
 libMathMore_la_SOURCES +=	       \
-         3DConversions.cxx              \
-         3DDistances.cxx                \
          AdaptiveIntegratorMultiDim.cxx \
-         AxisAngle.cxx                  \
-         AxisAngleXother.cxx            \
-         BitReproducible.cxx            \
-         Boost.cxx                      \
-         BoostX.cxx                     \
-         BoostY.cxx                     \
-         BoostZ.cxx                     \
-         EulerAngles.cxx                \
+         BrentMethods.cxx               \
+         BrentMinimizer1D.cxx           \
+         BrentRootFinder.cxx           \
          Factory.cxx                    \
-         GenVector_exception.cxx        \
          Integrator.cxx                 \
-         LorentzRotation.cxx            \
+	 GaussIntegrator.cxx            \
+         GaussLegendreIntegrator.cxx    \
          PdfFuncMathCore.cxx            \
-	 Plane3D.cxx                    \
          ProbFuncMathCore.cxx           \
          QuantFuncMathCore.cxx          \
-         Quaternion.cxx                 \
-         QuaternionXaxial.cxx           \
-         Rotation3D.cxx                 \
-         Rotation3DxAxial.cxx           \
-         RotationZYX.cxx                \
+	 RichardsonDerivator.cxx        \
+	 RootFinder.cxx                 \
          SpecFuncCephes.h               \
          SpecFuncCephes.cxx             \
          SpecFuncCephesInv.cxx          \
-         SpecFuncMathCore.cxx           \
-         Transform3D.cxx                \
-         Translation3D.cxx              \
-         VectorUtil.cxx        
+         SpecFuncMathCore.cxx           
+
 
 
 INCLUDES = -I$(top_srcdir)/inc

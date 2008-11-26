@@ -17,6 +17,7 @@ math_HEADERS =           	       \
          GSLFunctionAdapter.h          \
          GSLIntegrator.h               \
          GSLMCIntegrator.h             \
+         GSLMinimizer1D.h              \
          GSLMinimizer.h                \
          GSLNLSMinimizer.h             \
 	 GSLRndmEngines.h	       \
@@ -31,7 +32,6 @@ math_HEADERS =           	       \
          KelvinFunctions.h             \
          MCIntegrationTypes.h          \
          MCParameters.h                \
-         Minimizer1D.h                 \
          NumGradFunction.h             \
          ParamFunction.h               \
          Polynomial.h                  \
@@ -39,30 +39,18 @@ math_HEADERS =           	       \
 	 Random.h                      \
          RootFinder.h                  \
          RootFinderAlgorithms.h        \
-         SpecFuncMathMore.h            \
-         WrappedMultiTF1.h             \
-         WrappedTF1.h                  
+         SpecFuncMathMore.h            
+#          WrappedMultiTF1.h             \
+#          WrappedTF1.h                  
 
 # add mathcore files 
 
 math_HEADERS +=           	        \
 	 AdaptiveIntegratorMultiDim.h   \
          AllIntegrationTypes.h          \
-         AxisAngle.h                    \
-         Boost.h                        \
-         BoostX.h                       \
-         BoostY.h                       \
-         BoostZ.h                       \
-         Cartesian2D.h                  \
-         Cartesian3D.h                  \
-         Cylindrical3D.h                \
-         CylindricalEta3D.h             \
-         DisplacementVector2D.h         \
-         DisplacementVector3D.h         \
          DistFunc.h                     \
          DistFuncMathCore.h             \
          Error.h                        \
-         EulerAngles.h                  \
          FitMethodFunction.h            \
          Functor.h                      \
          IFunction.h                    \
@@ -71,51 +59,20 @@ math_HEADERS +=           	        \
          IParamFunctionfwd.h            \
          Integrator.h                   \
          IntegratorMultiDim.h           \
-         LorentzRotation.h              \
-         LorentzVector.h                \
          Math.h                         \
          Minimizer.h                    \
          OneDimFunctionAdapter.h        \
          PdfFunc.h                      \
          PdfFuncMathCore.h              \
-         Plane3D.h                      \
-         Point2D.h                      \
-         Point3D.h                      \
-         Point2Dfwd.h                   \
-         Point3Dfwd.h                   \
-         Polar2D.h                      \
-         Polar3D.h                      \
-         PositionVector2D.h             \
-         PositionVector3D.h             \
          ProbFunc.h                     \
          ProbFuncMathCore.h             \
-         PtEtaPhiE4D.h                  \
-         PtEtaPhiM4D.h                  \
-         PxPyPzE4D.h                    \
-         PxPyPzM4D.h                    \
          QuantFunc.h                    \
          QuantFuncMathCore.h            \
-         Quaternion.h                   \
-         Rotation3D.h                   \
-         RotationX.h                    \
-         RotationY.h                    \
-         RotationZ.h                    \
-         RotationZYX.h                  \
          SpecFunc.h                     \
          SpecFuncMathCore.h             \
-         Transform3D.h                  \
-         Translation3D.h                \
          Util.h                         \
-         Vector2D.h                     \
-         Vector2Dfwd.h                  \
-         Vector3D.h                     \
-         Vector3Dfwd.h                  \
-         Vector4D.h                     \
-         Vector4Dfwd.h                  \
-         VectorUtil.h                   \
-         VectorUtil_Cint.h              \
          VirtualIntegrator.h            \
          WrappedFunction.h              \
          WrappedParamFunction.h
 
-SUBDIRS = GenVector
+#SUBDIRS = GenVector

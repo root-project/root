@@ -24,7 +24,7 @@
 
 #else 
 // all the minimizer implementation classes 
-#define HAS_MINUIT2
+//#define HAS_MINUIT2
 #ifdef HAS_MINUIT2
 #include "Minuit2/Minuit2Minimizer.h"
 #endif
