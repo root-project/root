@@ -201,7 +201,8 @@ void TPRegexp::Optimize()
       Info("Optimize", "PREGEX studying %s", fPattern.Data());
 
    const char *errstr;
-   fPriv->fPCREExtra = pcre_study(fPriv->fPCRE, fPCREOpts & kPCRE_INTMASK, &errstr);
+   // pcre_study allows less options - see pcre_internal.h PUBLIC_STUDY_OPTIONS.
+   fPriv->fPCREExtra = pcre_study(fPriv->fPCRE, 0, &errstr);
 
    if (!fPriv->fPCREExtra && errstr) {
       Error("Optimize", "Optimization of TPRegexp(%s) failed: %s",
@@ -272,8 +273,9 @@ Int_t TPRegexp::MatchInternal(const TString &s, Int_t start,
    // Perform the actual matching - protected method.
 
    Int_t *offVec = new Int_t[3*nMaxMatch];
+   // pcre_exec allows less options - see pcre_internal.h PUBLIC_EXEC_OPTIONS.
    Int_t nrMatch = pcre_exec(fPriv->fPCRE, fPriv->fPCREExtra, s.Data(),
-                             s.Length(), start, fPCREOpts & kPCRE_INTMASK,
+                             s.Length(), start, 0,
                              offVec, 3*nMaxMatch);
 
    if (nrMatch == PCRE_ERROR_NOMATCH)
@@ -367,8 +369,9 @@ Int_t TPRegexp::SubstituteInternal(TString &s, const TString &replacePattern,
    while (kTRUE) {
 
       // find next matching subs
+      // pcre_exec allows less options - see pcre_internal.h PUBLIC_EXEC_OPTIONS.
       Int_t nrMatch = pcre_exec(fPriv->fPCRE, fPriv->fPCREExtra, s.Data(),
-                                s.Length(), offset, fPCREOpts & kPCRE_INTMASK,
+                                s.Length(), offset, 0,
                                 offVec, 3*nMaxMatch);
 
       if (nrMatch == PCRE_ERROR_NOMATCH) {
