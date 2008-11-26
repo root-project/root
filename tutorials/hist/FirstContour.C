@@ -1,3 +1,4 @@
+// make a contour plot and get the first contour in a TPolyMarker
 void FirstContour()
 {
    //this macro generates a color contour plot by selecting entries

@@ -1,4 +1,4 @@
-// Example of bar charts
+// Example of bar charts with 1-d histograms
 // Author: Rene Brun
 {
    TString dir = gSystem->UnixPathName(gInterpreter->GetCurrentMacroName());

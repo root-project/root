@@ -1,3 +1,4 @@
+// histograms filled and drawn in a loop
 void hsum() {
 //
 // To see the output of this macro, click begin_html <a href="gif/hsum.gif" >here</a> end_html

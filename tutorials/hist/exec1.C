@@ -1,3 +1,4 @@
+// echo object at mouse position
 void exec1()
 {
    //example of macro called when a pad is redrawn

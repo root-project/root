@@ -1,4 +1,4 @@
-// example illustrating histograms with alphanumeric labels
+// 1-D histograms with alphanumeric labels
 // author; Rene Brun
 void hlabels1()
 {

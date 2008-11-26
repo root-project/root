@@ -1,3 +1,4 @@
+// Show the slice of a TH2 following the mouse position
 void DynamicSlice()
 {
    // Create a new canvas.

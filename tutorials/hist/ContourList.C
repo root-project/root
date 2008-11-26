@@ -1,4 +1,4 @@
-// TEST SCRIPT FOR: Getting Contours From TH2D
+// Getting Contours From TH2D
 // Author: Josh de Bever
 //         CSI Medical Physics Group
 //         The University of Western Ontario

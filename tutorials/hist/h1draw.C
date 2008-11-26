@@ -1,3 +1,4 @@
+// 1-D histogram drawing options
 #include "TInterpreter.h"
 #include "TCanvas.h"
 #include "TSystem.h"

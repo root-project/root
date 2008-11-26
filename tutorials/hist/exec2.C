@@ -1,3 +1,4 @@
+// echo object at mouse position and show a graphics line
 void exec2()
 {
    //example of macro called when a mouse event occurs in a pad.

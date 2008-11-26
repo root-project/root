@@ -1,10 +1,8 @@
+// Illustrates the advantages of a TH1K histogram
+//Author: Victor Perevovchikov
 void padRefresh(TPad *pad,int flag=0);
 void hksimple()
 {
-//This script illustrates the advantages of a TH1K histogram
-//Author: Victor Perevovchikov
-
-
 // Create a new canvas.
   c1 = new TCanvas("c1","Dynamic Filling Example",200,10,600,900);
   c1->SetFillColor(42);

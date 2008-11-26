@@ -1,3 +1,4 @@
+//example of macro illustrating how to superimpose two histograms
 #include "TCanvas.h"
 #include "TStyle.h"
 #include "TH1.h"
