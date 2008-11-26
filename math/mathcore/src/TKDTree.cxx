@@ -599,12 +599,13 @@ Double_t TKDTree<Index, Value>::Distance(const Value *point, Index ind, Int_t ty
       for (Int_t idim=0; idim<fNDim; idim++){
          dist+=TMath::Abs(point[idim]-fData[idim][ind]);
       }
+      
       return dist;
    }
    return -1;
-
+   
 }
-
+ 
 //_________________________________________________________________
 template <typename Index, typename Value>
 void TKDTree<Index, Value>::DistanceToNode(const Value *point, Index inode, Value &min, Value &max, Int_t type)
@@ -620,14 +621,11 @@ void TKDTree<Index, Value>::DistanceToNode(const Value *point, Index inode, Valu
 
    if (type==2){
       for (Int_t idim=0; idim<fNDimm; idim+=2){
-         if (point[idim/2]>bound[idim] && point[idim/2]<bound[idim+1]){
-            // printf("this point is inside the node on coord. %d\n", idim);
-            continue;
-         }
          dist1 = (point[idim/2]-bound[idim])*(point[idim/2]-bound[idim]);
          dist2 = (point[idim/2]-bound[idim+1])*(point[idim/2]-bound[idim+1]);
          //min+=TMath::Min(dist1, dist2);
-         min+= (dist1>dist2)? dist2 : dist1;
+         if (point[idim/2]<bound[idim] || point[idim/2]>bound[idim+1])
+            min+= (dist1>dist2)? dist2 : dist1;
          // max+=TMath::Max(dist1, dist2);
          max+= (dist1>dist2)? dist1 : dist2;         
       }
@@ -723,147 +721,65 @@ void TKDTree<Index, Value>::FindPoint(Value * point, Index &index, Int_t &iter){
 
 //_________________________________________________________________
 template <typename  Index, typename Value>
-void TKDTree<Index, Value>::FindInRangeA(Value * point, Value * delta, Index *res , Index &npoints, Index & iter, Int_t bnode)
+void TKDTree<Index, Value>::FindInRange(Value * point, Value range, std::vector<Index> &res)
 {
- //
-  // Find all points in the range specified by    (point +- range)
-  // res     - Resulting indexes are stored in res array 
-  // npoints - Number of selected indexes in range
-  // NOTICE:
-  // For some cases it is better to not keep the original data - because of memory consumption
-  // If the data are not kept - only boundary conditions are investigated
-  // In that case, if the size of buckets(terminal nodes) is > 1, some of the returned data points can be 
-  // outside the range
-  // What is guranteed in this mode: All of the points in the range are selected + some fraction of others (but close)
+//Find all points in the sphere of a given radius "range" around the given point
+//1st argument - the point 
+//2nd argument - radius of the shere
+//3rd argument - a vector, in which the results will be returned
 
-   Index stackNode[128];
-   iter=0;
-   Index currentIndex = 0;
-   stackNode[currentIndex] = bnode; 
-   while (currentIndex>=0){
-      iter++;
-      Int_t inode    = stackNode[currentIndex];
-      //
-      currentIndex--;
-      if (!IsTerminal(inode)){
-         // not terminal
-         //TKDNode<Index, Value> * node = &(fNodes[inode]);
-         if (point[fAxis[inode]] - delta[fAxis[inode]] <  fValue[inode]) {
-            currentIndex++; 
-            stackNode[currentIndex]= (inode*2)+1;
-         }
-         if (point[fAxis[inode]] + delta[fAxis[inode]] >= fValue[inode]){
-            currentIndex++; 
-            stackNode[currentIndex]= (inode*2)+2;
-         }
-      }else{
-         Int_t indexIP  = 
-            (inode >= fCrossNode) ? (inode-fCrossNode)*fBucketSize : (inode-fNNodes)*fBucketSize+fOffset;
-         for (Int_t ibucket=0;ibucket<fBucketSize;ibucket++){
-            if (indexIP+ibucket>=fNPoints) break;
-            res[npoints]   = fIndPoints[indexIP+ibucket];
-            npoints++;
-         }
-      }
-   }
-   if (fData){
-      //
-      //  compress rest if data still accesible
-      //
-      Index npoints2 = npoints;
-      npoints=0;
-      for (Index i=0; i<npoints2;i++){
-         Bool_t isOK = kTRUE;
-         for (Index idim = 0; idim< fNDim; idim++){
-            if (TMath::Abs(fData[idim][res[i]]- point[idim])>delta[idim]) 
-               isOK = kFALSE;	
-         }
-         if (isOK){
-            res[npoints] = res[i];
-            npoints++;
-         }
-      }    
-   }
+   MakeBoundariesExact();
+   UpdateRange(0, point, range, res);
 }
-
 
 //_________________________________________________________________
 template <typename  Index, typename Value>
-void TKDTree<Index, Value>::FindInRangeB(Value * point, Value * delta, Index *res , Index &npoints,Index & iter, Int_t bnode)
+void TKDTree<Index, Value>::UpdateRange(Index inode, Value* point, Value range, std::vector<Index> &res)
 {
-   //
-   Long64_t  goldStatus = (1<<(2*fNDim))-1;  // gold status
-   Index stackNode[128];
-   Long64_t   stackStatus[128]; 
-   iter=0;
-   Index currentIndex   = 0;
-   stackNode[currentIndex]   = bnode; 
-   stackStatus[currentIndex] = 0;
-   while (currentIndex>=0){
-      Int_t inode     = stackNode[currentIndex];
-      Long64_t status = stackStatus[currentIndex];
-      currentIndex--;
-      iter++;
-      if (IsTerminal(inode)){
-         Int_t indexIP  = 
-            (inode >= fCrossNode) ? (inode-fCrossNode)*fBucketSize : (inode-fNNodes)*fBucketSize+fOffset;
-         for (Int_t ibucket=0;ibucket<fBucketSize;ibucket++){
-            if (indexIP+ibucket>=fNPoints) break;
-            res[npoints]   = fIndPoints[indexIP+ibucket];
-            npoints++;
-         }
-         continue;
-      }      
-      // not terminal    
-      if (status == goldStatus){
-         Int_t ileft  = inode;
-         Int_t iright = inode;
-         for (;ileft<fNNodes; ileft   = (ileft<<1)+1) {}
-         for (;iright<fNNodes; iright = (iright<<1)+2) {}
-         Int_t indexL  = 
-            (ileft >= fCrossNode) ? (ileft-fCrossNode)*fBucketSize : (ileft-fNNodes)*fBucketSize+fOffset;
-         Int_t indexR  = 
-            (iright >= fCrossNode) ? (iright-fCrossNode)*fBucketSize : (iright-fNNodes)*fBucketSize+fOffset;
-         if (indexL<=indexR){
-            Int_t endpoint = indexR+fBucketSize;
-            if (endpoint>fNPoints) endpoint=fNPoints;
-            for (Int_t ipoint=indexL;ipoint<endpoint;ipoint++){
-               res[npoints]   = fIndPoints[ipoint];
-               npoints++;
-            }	  
-            continue;
-         }
-      }
-      //
-      // TKDNode<Index, Value> * node = &(fNodes[inode]);
-      if (point[fAxis[inode]] - delta[fAxis[inode]] <  fValue[inode]) {
-         currentIndex++; 
-         stackNode[currentIndex]= (inode<<1)+1;
-         if (point[fAxis[inode]] + delta[fAxis[inode]] > fValue[inode])
-            stackStatus[currentIndex]= status | (Long64_t) (1 <<(2*fAxis[inode]));
-      }
-      if (point[fAxis[inode]] + delta[fAxis[inode]] >= fValue[inode]){
-         currentIndex++; 
-         stackNode[currentIndex]= (inode<<1)+2;
-         if (point[fAxis[inode]] - delta[fAxis[inode]]<fValue[inode])
-            stackStatus[currentIndex]= status | (Long64_t) (1<<(2*fAxis[inode]+1));
-      }
+//Internal recursive function with the implementation of range searches
+
+   Value min, max;
+   DistanceToNode(point, inode, min, max);
+   if (min>range) {
+      //all points of this node are outside the range
+      return;
    }
-   if (fData){
-      // compress rest
-      Index npoints2 = npoints;
-      npoints=0;
-      for (Index i=0; i<npoints2;i++){
-         Bool_t isOK = kTRUE;
-         for (Index idim = 0; idim< fNDim; idim++){
-            if (TMath::Abs(fData[idim][res[i]]- point[idim])>delta[idim]) 
-               isOK = kFALSE;	
+   if (max<range && max>0) {
+      //all points of this node are inside the range
+      
+      Index f1, l1, f2, l2;
+      GetNodePointsIndexes(inode, f1, l1, f2, l2);
+
+      for (Int_t ipoint=f1; ipoint<=l1; ipoint++){
+         res.push_back(fIndPoints[ipoint]);
+      }
+      for (Int_t ipoint=f2; ipoint<=l2; ipoint++){
+         res.push_back(fIndPoints[ipoint]);
+      }
+      return;
+   }
+
+   //this node intersects with the range
+   if (IsTerminal(inode)){
+      //examine the points one by one
+      Index f1, l1, f2, l2;
+      Double_t d;
+      GetNodePointsIndexes(inode, f1, l1, f2, l2);
+      for (Int_t ipoint=f1; ipoint<=l1; ipoint++){
+         d = Distance(point, fIndPoints[ipoint]);
+         if (d <= range){
+            res.push_back(fIndPoints[ipoint]);
          }
-         if (isOK){
-            res[npoints] = res[i];
-            npoints++;
-         }
-      }    
+      }
+      return;
+   }
+   if (point[fAxis[inode]]<=fValue[inode]){
+      //first examine the node that contains the point
+      UpdateRange(GetLeft(inode),point, range, res);
+      UpdateRange(GetRight(inode),point, range, res);
+   } else {
+      UpdateRange(GetLeft(inode),point, range, res);
+      UpdateRange(GetRight(inode),point, range, res);
    }
 }
 

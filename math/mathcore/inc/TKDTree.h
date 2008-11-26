@@ -6,7 +6,7 @@
 #endif
 
 #include "TMath.h"
-
+#include <vector>
 
 template <typename Index, typename Value> class TKDTree : public TObject
 {
@@ -52,9 +52,9 @@ public:
    void    FindNearestNeighbors(const Value *point, const Int_t k, Index *ind, Value *dist);
    Index   FindNode(const Value * point) const;
    void    FindPoint(Value * point, Index &index, Int_t &iter);
-   void    FindInRangeA(Value * point, Value * delta, Index *res , Index &npoints,Index & iter, Int_t bnode);
-   void    FindInRangeB(Value * point, Value * delta, Index *res , Index &npoints,Index & iter, Int_t bnode);
+   void    FindInRange(Value *point, Value range, std::vector<Index> &res);
    void    FindBNodeA(Value * point, Value * delta, Int_t &inode);
+
    Bool_t  IsTerminal(Index inode) const {return (inode>=fNNodes);}
    Int_t   IsOwner() { return fDataOwner; }
    Value   KOrdStat(Index ntotal, Value *a, Index k, Index *index) const;
@@ -71,8 +71,10 @@ public:
    TKDTree(const TKDTree &); // not implemented
    TKDTree<Index, Value>& operator=(const TKDTree<Index, Value>&); // not implemented
    void CookBoundaries(const Int_t node, Bool_t left);
+
    void UpdateNearestNeighbors(Index inode, const Value *point, Int_t kNN, Index *ind, Value *dist);
-   
+   void UpdateRange(Index inode, Value *point, Value range, std::vector<Index> &res); 
+
  protected:
    Int_t   fDataOwner;  //! 0 - not owner, 2 - owner of the pointer array, 1 - owner of the whole 2-d array
    Int_t   fNNodes;     // size of node array
