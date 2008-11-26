@@ -273,7 +273,6 @@ extern char *get_current_dir_name(void);
 #endif
 extern pid_t getpgid(pid_t pid);
 #endif
-extern char *getwd(char *buf);
 
 #if (defined(G__APPLE) || defined(__APPLE__))
 #if __DARWIN_UNIX03
