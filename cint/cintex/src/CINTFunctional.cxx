@@ -146,6 +146,8 @@ namespace ROOT { namespace Cintex {
    void StubContext_t::ProcessResult(G__value* result, void* obj) { 
       // Process ctx result.
       char t = fRet_desc.first;
+      if ( t == 'u' )
+         t = 'U';
       result->type = t;
       if ( fRet_byref ) { 
          result->ref = (long)obj;
