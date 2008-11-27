@@ -110,6 +110,26 @@ FILE *TProofServ::fgErrorHandlerFile = 0;
 // To control allowed actions while processing
 Int_t TProofServ::fgRecursive = 0;
 
+//----- Termination signal handler ---------------------------------------------
+//______________________________________________________________________________
+class TProofServTerminationHandler : public TSignalHandler {
+   TProofServ  *fServ;
+public:
+   TProofServTerminationHandler(TProofServ *s)
+      : TSignalHandler(kSigTermination, kFALSE) { fServ = s; }
+   Bool_t  Notify();
+};
+
+//______________________________________________________________________________
+Bool_t TProofServTerminationHandler::Notify()
+{
+   // Handle this interrupt
+
+   Printf("Received SIGTERM: terminating");
+   fServ->HandleTermination();
+   return kTRUE;
+}
+
 //----- Interrupt signal handler -----------------------------------------------
 //______________________________________________________________________________
 class TProofServInterruptHandler : public TSignalHandler {
@@ -657,6 +677,7 @@ Int_t TProofServ::CreateServer()
    gInterpreter->SaveGlobalsContext();
 
    // Install interrupt and message input handlers
+   gSystem->AddSignalHandler(new TProofServTerminationHandler(this));
    gSystem->AddSignalHandler(new TProofServInterruptHandler(this));
    gSystem->AddFileHandler(new TProofServInputHandler(this, sock));
 
