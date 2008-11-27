@@ -89,7 +89,7 @@ public:
 //______________________________________________________________________________
 Bool_t TXProofServTerminationHandler::Notify()
 {
-   Printf("TXProofServTerminationHandler::Notify: wake up!");
+   Printf("Received SIGTERM: terminating");
 
    fServ->HandleTermination();
    return kTRUE;
