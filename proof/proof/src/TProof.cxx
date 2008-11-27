@@ -616,6 +616,11 @@ Int_t TProof::Init(const char *, const char *conffile,
    // Query type
    fSync = kTRUE;
 
+   // Counters
+   fBytesRead = 0;
+   fRealTime = 0;
+   fCpuTime = 0;
+
    // List of queries
    fQueries = 0;
    fOtherQueries = 0;
