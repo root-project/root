@@ -2141,10 +2141,14 @@ Int_t TGListTree::Sort(TGListTreeItem *item)
          list[i]->fPrevsibling = list[i - 1];
    }
    list[count - 1]->fNextsibling = 0;
-   if (parent)
+   if (parent) {
       parent->fFirstchild = list[0];
-   else
+      parent->fLastchild  = list[count-1];
+   }
+   else {
       fFirst = list[0];
+      fLast  = list[count-1];
+   }
 
    delete [] list;
 
