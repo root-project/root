@@ -286,8 +286,8 @@ private:
    std::vector<double>         fCovMatrix;  // covariance matrix (size is npar*(npar+1)/2) where npar is total parameters
    std::vector<double>         fGlobalCC;   // global Correlation coefficient
    std::vector<std::pair<double,double> > fMinosErrors;   // vector contains the two Minos errors 
-   std::string fMinimType;          // string indicating type of minimizer
-
+   std::string fMinimType;              // string indicating type of minimizer
+   std::vector<std::string> fParNames;  // parameter names (only with FCN only fites, when fFitFunc=0)
 
 }; 
 

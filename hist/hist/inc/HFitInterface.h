@@ -8,7 +8,11 @@
  *                                                                    *
  **********************************************************************/
 
-// Header file for class TH1Interface
+// Header file for class HFitInterface
+// set of free functions used to couple the ROOT data object with the fitting classes
+
+// avoid including this file when running CINT since free functions cannot be re-defined
+#if !defined(__CINT__) || defined(__MAKECINT__)
 
 #ifndef ROOT_HFitInterface
 #define ROOT_HFitInterface
@@ -116,3 +120,6 @@ namespace ROOT {
 
 
 #endif /* ROOT_Fit_TH1Interface */
+
+
+#endif  /* not CINT OR MAKE_CINT */

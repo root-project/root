@@ -126,7 +126,7 @@ bool Fitter::FitFCN(const BaseFunc & fcn, const double * params, unsigned int da
    // fit a user provided FCN function
    // create fit parameter settings
    unsigned int npar  = fcn.NDim(); 
-   if (params != 0  ) 
+   if (params != 0 ) 
       fConfig.SetParamsSettings(npar, params);
    else {
       if ( fConfig.ParamsSettings().size() != npar) { 

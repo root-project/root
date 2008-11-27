@@ -149,14 +149,34 @@ public:
    }
 
    /**
-      fit using the given FCN function. Give optionally initial parameter values and data size to get  Ndf. If parameters are not given it is assumed that the parameter settings are used 
+      fit using the given FCN function represented by a multi-dimensional function interface 
+      (ROOT::Math::IMultiGenFunction). 
+      Give optionally initial the parameter values and data size to have the fit Ndf correctly 
+      set in the FitResult. 
+      If the parameters values are not given (parameter pointers=0) the 
+      current parameter settings are used. The parameter settings can be created before 
+      by using the FitConfig::SetParamsSetting. If they have not been created they are created 
+      automatically when the params pointer is not zero
     */
    bool FitFCN(const ROOT::Math::IMultiGenFunction & fcn, const double * params = 0, unsigned int dataSize = 0 ); 
+
    /**
-      fit using the given gradient FCN function. Give also initial parameter values and data size to get  Ndf
+      Fit using the given FCN function representing a multi-dimensional gradient function 
+      interface (ROOT::Math::IMultiGradFunction). In this case the minimizer will use the 
+      gradient information provided by the function. 
+      For the other arguments same consideration as in the previous method
     */
    bool FitFCN(const ROOT::Math::IMultiGradFunction & fcn, const double * params = 0, unsigned int dataSize = 0); 
 
+   /**
+      Fit using the a generic FCN function as a C++ callable object implementing 
+      double () (const double *) 
+      The function dimension (i.e. the number of parameter) is needed in this case
+      For the other arguments same consideration as in the previous methods
+    */
+   template <class Function>
+   bool FitFCN(unsigned int npar, Function  fcn, const double * params = 0, unsigned int dataSize = 0);
+      
    /**
       fit using user provided FCN with Minuit-like interface
       Parameter Settings must have be created before
@@ -236,5 +256,22 @@ private:
 
 } // end namespace ROOT
 
+// implementation of inline methods
+
+
+#ifndef __CINT__
+
+
+#ifndef ROOT_Math_WrappedFunction
+#include "Math/WrappedFunction.h"
+#endif
+
+template<class Function>
+bool ROOT::Fit::Fitter::FitFCN(unsigned int npar, Function f, const double * par, unsigned int datasize) {
+   ROOT::Math::WrappedMultiFunction<Function> wf(f,npar); 
+   return FitFCN(wf,par,datasize);
+}
+
+#endif  // endif __CINT__
 
 #endif /* ROOT_Fit_Fitter */
