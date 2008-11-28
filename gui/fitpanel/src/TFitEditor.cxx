@@ -464,8 +464,8 @@ void TFitEditor::CreateFunctionGroup()
 
    TGCompositeFrame *tf2 = new TGCompositeFrame(gf1, 350, 26,
                                                 kHorizontalFrame);
-   fEnteredFunc = new TGTextEntry(tf2, new TGTextBuffer(50), kFP_FILE);
-   fEnteredFunc->SetMaxLength(250);
+   fEnteredFunc = new TGTextEntry(tf2, new TGTextBuffer(0), kFP_FILE);
+   //fEnteredFunc->SetMaxLength(4000);  // use default value (~4000)
    fEnteredFunc->SetAlignment(kTextLeft);
    TGTextLBEntry *te = (TGTextLBEntry *)fFuncList->GetSelectedEntry();
    assert(te);
