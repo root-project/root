@@ -420,13 +420,15 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
 
    // Local processing ...
    if (!m) {
-      Error("ProcessUnsolicitedMsg","undefined message");
+      Error("ProcessUnsolicitedMsg", "undefined message - disabling");
+      PostMsg(kPROOF_STOP);
       return rc;
    }
 
    Int_t len = 0;
    if ((len = m->DataLen()) < (int)sizeof(kXR_int32)) {
-      Error("ProcessUnsolicitedMsg","empty or bad-formed message");
+      Error("ProcessUnsolicitedMsg", "empty or bad-formed message - disabling");
+      PostMsg(kPROOF_STOP);
       return rc;
    }
 
@@ -436,6 +438,9 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
    // The first 4 bytes contain the action code
    kXR_int32 acod = 0;
    memcpy(&acod, m->GetData(), sizeof(kXR_int32));
+   if (acod > 10000)
+         Info("ProcessUnsolicitedMsg", "%p: got acod %d (%x): message has status: %d, len: %d bytes (ID: %d)",
+              this, acod, acod, m->GetStatusCode(), m->DataLen(), m->HeaderSID());
    //
    // Update pointer to data
    void *pdata = (void *)((char *)(m->GetData()) + sizeof(kXR_int32));
@@ -771,8 +776,10 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
          PostMsg(kPROOF_TOUCH);
          break;
      default:
-         Error("ProcessUnsolicitedMsg","%p: unknown action code: %d received from '%s'",
+         Error("ProcessUnsolicitedMsg","%p: unknown action code: %d received from '%s' - disabling",
                                        this, acod, GetTitle());
+         PostMsg(kPROOF_STOP);
+         break;
    }
 
    // We are done
