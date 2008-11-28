@@ -19,7 +19,6 @@
 #include "TError.h"
 #include "TClass.h"
 
-const Int_t kNstat = 11;
 Bool_t TProfile::fgApproximate = kFALSE;
 
 ClassImp(TProfile)

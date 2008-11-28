@@ -137,6 +137,15 @@ public:
       kNoTitle     = BIT(17), // don't draw the histogram title
       kIsAverage   = BIT(18)  // Bin contents are average (used by Add)
    };
+   // size of statistics data (size of  array used in GetStats()/ PutStats ) 
+   // s[0]  = sumw       s[1]  = sumw2
+   // s[2]  = sumwx      s[3]  = sumwx2                     
+   // s[4]  = sumwy      s[5]  = sumwy2   s[6]  = sumwxy
+   // s[7]  = sumwz      s[8]  = sumwz2   s[9]  = sumwxz   s[10]  = sumwyz  
+   // s[11] = sumwt      s[12] = sumwt2                 (11 and 12 used only by TProfile3D)
+   enum { 
+      kNstat       = 13  // size of statistics data (up to TProfile3D)
+   };
 
    TH1(const TH1&);
    virtual ~TH1();

@@ -507,7 +507,6 @@ End_Html */
 
 
 TF1 *gF1=0;  //left for back compatibility (use TVirtualFitter::GetUserFunc instead)
-const Int_t kNstat = 11;
 
 Int_t  TH1::fgBufferSize   = 1000;
 Bool_t TH1::fgAddDirectory = kTRUE;

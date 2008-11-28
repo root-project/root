@@ -1433,7 +1433,6 @@ Long64_t TH2::Merge(TCollection *list)
    }
 
    //merge bin contents and errors
-   const Int_t kNstat = 11;
    Double_t stats[kNstat], totstats[kNstat];
    for (Int_t i=0;i<kNstat;i++) {totstats[i] = stats[i] = 0;}
    GetStats(totstats);

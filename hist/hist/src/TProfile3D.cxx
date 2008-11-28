@@ -18,7 +18,6 @@
 #include "TError.h"
 #include "TClass.h"
 
-const Int_t kNstat = 13;
 Bool_t TProfile3D::fgApproximate = kFALSE;
 
 ClassImp(TProfile3D)
