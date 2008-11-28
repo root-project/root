@@ -8,7 +8,8 @@
 // *                                                                       * //
 // *  $ cd $ROOTSYS/test                                                   * //
 // *  $ make stressProof                                                   * //
-// *  $ ./stressProof [-h] [-n <wrks>] [-v[v[v]]] [-l logfile] [master]    * //
+// *  $ ./stressProof [-h] [-n <wrks>] [-v[v[v]]] [-l logfile]             * //
+// *                  [-dyn] [-ds] [master]                                * //
 // *                                                                       * //
 // * Optional arguments:                                                   * //
 // *   -h          show help info                                          * //
@@ -21,16 +22,18 @@
 // *   -l logfile  file where to redirect the processing logs; default is  * //
 // *               a temporary file deleted at the end of the test; in     * //
 // *               case of success                                         * //
-// *   -d          run the test in dynamic startup mode                    * //
+// *   -dyn        run the test in dynamic startup mode                    * //
+// *   -ds        force the dataset test if skipped by default             * //
 // *                                                                       * //
 // * To run interactively:                                                 * //
 // * $ root                                                                * //
 // * root[] .L stressProof.cxx                                             * //
-// * root[] stressProof(master, wrks, verbose, logfile, dyn)               * //
+// * root[] stressProof(master, wrks, verbose, logfile, dyn, skipds)       * //
 // *                                                                       * //
 // * The arguments have the same meaning as above except for               * //
 // *     verbose [Int_t]   increasing verbosity (0 == minimal)             * //
 // *     dyn     [Bool_t]  if kTRUE run in dynamic startup mode            * //
+// *     skipds  [Bool_t]  if kTRUE the dataset related tests are skipped  * //
 // *                                                                       * //
 // *                                                                       * //
 // * The successful output looks like this:                                * //
@@ -46,8 +49,8 @@
 // *   Test  4 : Dataset handling with H1 files ................... OK *   * //
 // *   Test  5 : H1: chain processing ............................. OK *   * //
 // *   Test  6 : H1: file collection processing ................... OK *   * //
-// *   Test  7 : H1: by-name processing ........................... OK *   * //
-// *   Test  8 : H1: by-name, TPacketizer ......................... OK *   * //
+// *   Test  7 : H1: file collection, TPacketizer ................. OK *   * //
+// *   Test  8 : H1: by-name processing ........................... OK *   * //
 // *   Test  9 : Package management with 'event' .................. OK *   * //
 // *   Test 10 : Simple 'event' generation ........................ OK *   * //
 // *   Test 11 : Input data propagation ........................... OK *   * //
@@ -105,10 +108,11 @@ static Int_t gSimpleCnt = 0;
 static TStopwatch gTimer;
 static Bool_t gTimedOut = kFALSE;
 static Bool_t gDynamicStartup = kFALSE;
+static Bool_t gSkipDataSetTest = kTRUE;
 
 void stressProof(const char *url = "proof://localhost:11093",
                  Int_t nwrks = -1, Int_t verbose = 0,
-                 const char *logfile = 0, Bool_t dyn = kFALSE);
+                 const char *logfile = 0, Bool_t dyn = kFALSE, Bool_t skipds = kTRUE);
 
 //_____________________________batch only_____________________
 #ifndef __CINT__
@@ -122,7 +126,7 @@ int main(int argc,const char *argv[])
       printf(" \n");
       printf(" Usage:\n");
       printf(" \n");
-      printf(" $ ./stressProof [-h] [-n <wrks>] [-v[v[v]]] [-l logfile] [master]\n");
+      printf(" $ ./stressProof [-h] [-n <wrks>] [-v[v[v]]] [-l logfile] [-dyn] [-ds] [master]\n");
       printf(" \n");
       printf(" Optional arguments:\n");
       printf("   -h            prints this menu\n");
@@ -134,7 +138,8 @@ int main(int argc,const char *argv[])
       printf("   -l logfile    file where to redirect the processing logs; must be writable;\n");
       printf("                 default is a temporary file deleted at the end of the test\n");
       printf("                 in case of success\n");
-      printf("   -d            run the test in dynamicStartup mode\n");
+      printf("   -dyn          run the test in dynamicStartup mode\n");
+      printf("   -ds           force the dataset test if skipped by default\n");
       printf(" \n");
       gSystem->Exit(0);
    }
@@ -170,8 +175,11 @@ int main(int argc,const char *argv[])
          if (!strncmp(argv[i],"-vv",3)) verbose++;
          if (!strncmp(argv[i],"-vvv",4)) verbose++;
          i++;
-      } else if (!strncmp(argv[i],"-d",2)) {
+      } else if (!strncmp(argv[i],"-dyn",4)) {
          gDynamicStartup = kTRUE;
+         i++;
+      } else if (!strncmp(argv[i],"-ds",3)) {
+         gSkipDataSetTest = kFALSE;
          i++;
       } else {
          url = argv[i];
@@ -181,7 +189,7 @@ int main(int argc,const char *argv[])
    // Use defaults where required
    if (!url) url = urldef;
 
-   stressProof(url, nWrks, verbose, logfile, gDynamicStartup);
+   stressProof(url, nWrks, verbose, logfile, gDynamicStartup, gSkipDataSetTest);
 
    gSystem->Exit(0);
 }
@@ -278,7 +286,6 @@ Int_t ProofTest::Run()
       Int_t np = totpoints - strlen(GetName()) - strlen(" SKIPPED *");
       while (np--) { printf("."); }
       printf(" SKIPPED *\n");
-      gSystem->ShowOutput(&gRH);
    } else {
       Int_t np = totpoints - strlen(GetName()) - strlen(" FAILED *");
       while (np--) { printf("."); }
@@ -318,7 +325,7 @@ static PT_Packetizer_t gStd_Old = { "TPacketizer", 0 };
 
 //_____________________________________________________________________________
 void stressProof(const char *url, Int_t nwrks,
-                 Int_t verbose, const char *logfile, Bool_t dyn)
+                 Int_t verbose, const char *logfile, Bool_t dyn, Bool_t skipds)
 {
    printf("******************************************************************\n");
    printf("*  Starting  P R O O F - S T R E S S  suite                      *\n");
@@ -329,6 +336,13 @@ void stressProof(const char *url, Int_t nwrks,
 
    // Set verbosity
    gverbose = verbose;
+
+   // Dataset option
+   if (!skipds) {
+      gSkipDataSetTest = kFALSE;
+   } else {
+      gSkipDataSetTest = (!strcmp(url, urldef) || !strcmp(url, "lite")) ? kFALSE : kTRUE;
+   }
 
    // Log file path
    Bool_t usedeflog = kTRUE;
@@ -360,6 +374,10 @@ void stressProof(const char *url, Int_t nwrks,
       printf("******************************************************************\n");
    }
 
+   if (gSkipDataSetTest) {
+      printf("*  Test for dataset handling (#4, #8) skipped                   **\n");
+      printf("******************************************************************\n");
+   }
    if (gDynamicStartup) {
       printf("*  Dynamic per-job worker startup ON (test 11 skipped)          **\n");
       printf("******************************************************************\n");
@@ -385,10 +403,10 @@ void stressProof(const char *url, Int_t nwrks,
    testList->Add(new ProofTest("H1: chain processing", 5, &PT_H1Http));
    // H1 analysis over HTTP (file collection)
    testList->Add(new ProofTest("H1: file collection processing", 6, &PT_H1FileCollection));
-   // H1 analysis over HTTP by dataset name
-   testList->Add(new ProofTest("H1: by-name processing", 7, &PT_H1DataSet));
    // H1 analysis over HTTP: classic packetizer
-   testList->Add(new ProofTest("H1: by-name, TPacketizer", 8, &PT_H1DataSet, (void *)&gStd_Old));
+   testList->Add(new ProofTest("H1: file collection, TPacketizer", 7, &PT_H1FileCollection, (void *)&gStd_Old));
+   // H1 analysis over HTTP by dataset name
+   testList->Add(new ProofTest("H1: by-name processing", 8, &PT_H1DataSet));
    // Test of data set handling with the H1 http files
    testList->Add(new ProofTest("Package management with 'event'", 9, &PT_Packages));
    // Simple event analysis
@@ -719,7 +737,7 @@ Int_t PT_H1Http(void *)
 }
 
 //_____________________________________________________________________________
-Int_t PT_H1FileCollection(void *)
+Int_t PT_H1FileCollection(void *arg)
 {
    // Test run for the H1 analysis as a file collection reading the data from HTTP
 
@@ -728,6 +746,17 @@ Int_t PT_H1FileCollection(void *)
    if (!gProof) {
       printf("\n >>> Test failure: no PROOF session found\n");
       return -1;
+   }
+
+   // Are we asked to change the packetizer strategy?
+   if (arg) {
+      PT_Packetizer_t *strategy = (PT_Packetizer_t *)arg;
+      if (strcmp(strategy->fName, "TPacketizerAdaptive")) {
+         gProof->SetParameter("PROOF_Packetizer", strategy->fName);
+      } else {
+         if (strategy->fType != 1)
+            gProof->SetParameter("PROOF_PacketizerStrategy", strategy->fType);
+      }
    }
 
    // Create the file collection
@@ -749,6 +778,10 @@ Int_t PT_H1FileCollection(void *)
    gTimer.Stop();
    gProof->SetPrintProgress(0);
 
+   // Restore settings
+   gProof->DeleteParameters("PROOF_Packetizer");
+   gProof->DeleteParameters("PROOF_PacketizerStrategy");
+
    // Count
    gH1Cnt++;
    gH1Time += gTimer.RealTime();
@@ -759,27 +792,20 @@ Int_t PT_H1FileCollection(void *)
 }
 
 //_____________________________________________________________________________
-Int_t PT_H1DataSet(void *arg)
+Int_t PT_H1DataSet(void *)
 {
    // Test run for the H1 analysis as a named dataset reading the data from HTTP
 
    // Checking arguments
-   PutPoint();
    if (!gProof) {
       printf("\n >>> Test failure: no PROOF session found\n");
       return -1;
    }
-
-   // Are we asked to change the packetizer strategy?
-   if (arg) {
-      PT_Packetizer_t *strategy = (PT_Packetizer_t *)arg;
-      if (strcmp(strategy->fName, "TPacketizerAdaptive")) {
-         gProof->SetParameter("PROOF_Packetizer", strategy->fName);
-      } else {
-         if (strategy->fType != 1)
-            gProof->SetParameter("PROOF_PacketizerStrategy", strategy->fType);
-      }
+   // Not yet supported for PROOF-Lite
+   if (gSkipDataSetTest) {
+      return 1;
    }
+   PutPoint();
 
    // Name for the target dataset
    const char *dsname = "h1http";
@@ -794,10 +820,6 @@ Int_t PT_H1DataSet(void *arg)
    gProof->Process(dsname, "../tutorials/tree/h1analysis.C++");
    gTimer.Stop();
    gProof->SetPrintProgress(0);
-
-   // Restore settings
-   gProof->DeleteParameters("PROOF_Packetizer");
-   gProof->DeleteParameters("PROOF_PacketizerStrategy");
 
    // Count
    gH1Cnt++;
@@ -815,11 +837,15 @@ Int_t PT_DataSets(void *)
    // Use H1 analysis files on HTTP as example
 
    // Checking arguments
-   PutPoint();
    if (!gProof) {
       printf("\n >>> Test failure: no PROOF session found\n");
       return -1;
    }
+   // Not yet supported for PROOF-Lite
+   if (gSkipDataSetTest) {
+      return 1;
+   }
+   PutPoint();
 
    // Cleanup the area
    PutPoint();
@@ -1064,16 +1090,15 @@ Int_t PT_InputData(void *)
    // Test input data functionality
 
    // Checking arguments
-   PutPoint();
    if (!gProof) {
       printf("\n >>> Test failure: no PROOF session found\n");
       return -1;
    }
-
    // Not yet supported for PROOF-Lite
    if (gDynamicStartup) {
       return 1;
    }
+   PutPoint();
 
    // Create the test information to be send via input and retrieved
    TH1F *h1 = new TH1F("h1data","Input data from file",100,-5.,5.);
@@ -1186,16 +1211,15 @@ Int_t PT_H1SimpleAsync(void *arg)
    // Test run for the H1 and Simple analysis in asynchronous mode 
 
    // Checking arguments
-   PutPoint();
    if (!gProof) {
       printf("\n >>> Test failure: no PROOF session found\n");
       return -1;
    }
-
    // Not yet supported for PROOF-Lite
    if (gProof->IsLite()) {
       return 1;
    }
+   PutPoint();
 
    // Are we asked to change the packetizer strategy?
    if (arg) {
@@ -1208,10 +1232,16 @@ Int_t PT_H1SimpleAsync(void *arg)
       }
    }
 
-   // Name for the target dataset
-   const char *dsname = "h1http";
+   // Create the file collection
+   PutPoint();
+   TFileCollection *fc = new TFileCollection("h42");
+   fc->Add(new TFileInfo("http://root.cern.ch/files/h1/dstarmb.root"));
+   fc->Add(new TFileInfo("http://root.cern.ch/files/h1/dstarp1a.root"));
+   fc->Add(new TFileInfo("http://root.cern.ch/files/h1/dstarp1b.root"));
+   fc->Add(new TFileInfo("http://root.cern.ch/files/h1/dstarp2.root"));
 
    // Clear the list of query results
+   PutPoint();
    if (gProof->GetQueryResults()) {
       gProof->GetQueryResults()->Clear();
       gProof->Remove("cleanupdir");
@@ -1220,7 +1250,7 @@ Int_t PT_H1SimpleAsync(void *arg)
    // Submit the processing requests
    PutPoint();
    gProof->SetPrintProgress(&PrintStressProgress);
-   gProof->Process(dsname, "../tutorials/tree/h1analysis.C++", "ASYN");
+   gProof->Process(fc, "../tutorials/tree/h1analysis.C++", "ASYN");
 
    // Define the number of events and histos
    Long64_t nevt = 1000000;
