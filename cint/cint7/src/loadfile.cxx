@@ -3055,7 +3055,7 @@ int Cint::Internal::G__register_sharedlib(const char *libname)
        * check if alreay loaded
        ***************************************************/
       if(G__matchfilename(i1,libname)
-         &&G__get_envtagnum()==G__srcfile[i1].parent_tagnum
+         &&G__get_tagnum(G__get_envtagnum())==G__srcfile[i1].parent_tagnum
          ){
          if(G__prerun==0 || G__debugtrace)
             if(G__dispmsg>=G__DISPNOTE) {
@@ -3119,7 +3119,7 @@ int Cint::Internal::G__register_sharedlib(const char *libname)
    G__srcfile[fentry].ispermanentsl = 2;
    G__srcfile[fentry].initsl = 0;
    G__srcfile[fentry].hasonlyfunc = (struct G__dictposition*)NULL;
-   G__srcfile[fentry].parent_tagnum = G__get_envtagnum();
+   G__srcfile[fentry].parent_tagnum = G__get_tagnum(G__get_envtagnum());
    G__srcfile[fentry].slindex = -1;
    
    G__UnlockCriticalSection();
