@@ -3646,10 +3646,8 @@ void TProofServ::HandleCheckFile(TMessage *mess)
             // par file did not unpack itself in the expected directory, failure
             reply << (Int_t)0;
             err = kTRUE;
-            PDB(kPackage, 1)
-               Info("HandleCheckFile",
-                    "package %s did not unpack into %s", filenam.Data(),
-                    packnam.Data());
+            Error("HandleCheckFile", "package %s did not unpack into %s",
+                                     filenam.Data(), packnam.Data());
          } else {
             // store md5 in package/PROOF-INF/md5.txt
             TString md5f = fPackageDir + "/" + packnam + "/PROOF-INF/md5.txt";
@@ -3663,6 +3661,9 @@ void TProofServ::HandleCheckFile(TMessage *mess)
       } else {
          reply << (Int_t)0;
          err = kTRUE;
+         PDB(kPackage, 1)
+            Info("HandleCheckFile",
+                 "package %s not yet on node", filenam.Data());
       }
       fSocket->Send(reply);
 
