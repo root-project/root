@@ -48,6 +48,7 @@ FitResult::FitResult() :
    fValid(isValid),
    fNormalized(false),
    fNFree(min.NFree() ),
+   fNdf(0),
    fNCalls(min.NCalls()),
    fStatus(min.Status() ),
    fVal (min.MinValue()),  
@@ -59,7 +60,7 @@ FitResult::FitResult() :
    // Constructor from a minimizer, fill the data. ModelFunction  is passed as non const 
    // since it will be managed by the FitResult
 
-   if (sizeOfData > 0) fNdf = sizeOfData - min.NFree(); 
+   if (sizeOfData >  min.NFree() ) fNdf = sizeOfData - min.NFree(); 
 
 
    // set right parameters in function (in case minimizer did not do before)

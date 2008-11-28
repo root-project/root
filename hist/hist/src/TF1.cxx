@@ -1674,7 +1674,7 @@ Int_t TF1::GetNDF() const
    // The number of degrees of freedom corresponds to the number of points
    // used in the fit minus the number of free parameters.
 
-   if (fNDF == 0) return fNpfits-fNpar;
+   if (fNDF == 0 && (fNpfits > fNpar) ) return fNpfits-fNpar;
    return fNDF;
 }
 
