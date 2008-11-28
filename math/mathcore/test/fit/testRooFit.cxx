@@ -249,7 +249,7 @@ int DoFit(TTree * tree, Func & func, bool debug = false, bool = false ) {
 
    ROOT::Fit::Fitter fitter; 
    fitter.Config().MinimizerOptions().SetPrintLevel(2);
-   fitter.Config().SetMinimizer(MinType::name(),MinType::name2());
+   fitter.Config().SetMinimizer(MinType::name().c_str(),MinType::name2().c_str());
    fitter.Config().MinimizerOptions().SetTolerance(1.); // to be consistent with RooFit
 
    if (debug) 

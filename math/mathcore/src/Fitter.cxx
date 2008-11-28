@@ -293,7 +293,7 @@ bool Fitter::DoLinearFit(const BinData & data ) {
    std::string  prevminimizer = fConfig.MinimizerType();  
    fConfig.SetMinimizer("Linear"); 
    bool ret =  DoLeastSquareFit(data); 
-   fConfig.SetMinimizer(prevminimizer);
+   fConfig.SetMinimizer(prevminimizer.c_str());
    return ret; 
 }
 

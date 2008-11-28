@@ -30,7 +30,7 @@ public:
 
    // static methods for setting and retrieving the default options 
 
-   static void SetDefaultMinimizer(const std::string & type, const std::string & algo);
+   static void SetDefaultMinimizer(const char * type, const char * algo = 0);
    static void SetDefaultErrorDef( double up); 
    static void SetDefaultTolerance(double tol); 
    static void SetDefaultMaxFunctionCalls(int maxcall);

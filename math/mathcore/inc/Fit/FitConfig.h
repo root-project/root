@@ -121,9 +121,9 @@ public:
    /**
       set minimizer type 
    */
-   void SetMinimizer(const std::string & type, std::string algo = "") { 
-      fMinimizerType = type; 
-      fMinimAlgoType = algo; 
+   void SetMinimizer(const char * type, const char * algo = 0) { 
+      if (type) fMinimizerType = type; 
+      if (algo) fMinimAlgoType = algo; 
    } 
 
    /**
@@ -164,7 +164,7 @@ public:
    /**
       static function to control default minimizer type and algorithm
    */
-   static void SetDefaultMinimizer(const std::string & type, const std::string & algo = ""); 
+   static void SetDefaultMinimizer(const char * type, const char * algo = 0); 
 
 
 protected: 

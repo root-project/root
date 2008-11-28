@@ -33,10 +33,10 @@ namespace Math {
 
 
 
-void MinimizerOptions::SetDefaultMinimizer(const std::string & type, const std::string & algo = "") {   
+void MinimizerOptions::SetDefaultMinimizer(const char * type, const char * algo ) {   
    // set the default minimizer type and algorithm
-   if (type != "") gDefaultMinimizer = type; 
-   if (algo != "") gDefaultMinimAlgo = algo;
+   if (type) gDefaultMinimizer = std::string(type); 
+   if (algo) gDefaultMinimAlgo = std::string(algo);
 }
 void MinimizerOptions::SetDefaultErrorDef(double up) {
    // set the default error definition 

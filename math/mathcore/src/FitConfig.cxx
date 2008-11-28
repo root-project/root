@@ -169,7 +169,7 @@ ROOT::Math::Minimizer * FitConfig::CreateMinimizer() {
    return min; 
 } 
 
-void FitConfig::SetDefaultMinimizer(const std::string & type, const std::string & algo ) { 
+void FitConfig::SetDefaultMinimizer(const char * type, const char *algo ) { 
    // set the default minimizer type and algorithms
    ROOT::Math::MinimizerOptions::SetDefaultMinimizer(type, algo); 
 } 

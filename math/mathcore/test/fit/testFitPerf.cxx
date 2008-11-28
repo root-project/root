@@ -223,7 +223,7 @@ int DoBinFit(T * hist, Func & func, bool debug = false, bool useGrad = false) {
    // create the fitter 
 
    ROOT::Fit::Fitter fitter; 
-   fitter.Config().SetMinimizer(MinType::name(),MinType::name2());
+   fitter.Config().SetMinimizer(MinType::name().c_str(),MinType::name2().c_str());
 
    if (debug) 
       fitter.Config().MinimizerOptions().SetPrintLevel(3);
@@ -284,7 +284,7 @@ int DoUnBinFit(T * tree, Func & func, bool debug = false, bool copyData = false 
    //std::cout << "Fit parameter 2  " << f.Parameters()[2] << std::endl;
 
    ROOT::Fit::Fitter fitter; 
-   fitter.Config().SetMinimizer(MinType::name(),MinType::name2());
+   fitter.Config().SetMinimizer(MinType::name().c_str(),MinType::name2().c_str());
 
    if (debug) 
       fitter.Config().MinimizerOptions().SetPrintLevel(3);
