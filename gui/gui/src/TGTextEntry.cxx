@@ -328,7 +328,8 @@ void TGTextEntry::Init()
    fSelbackGC   = GetDefaultSelectedBackgroundGC()();
 
    fOffset = 0;
-   fMaxLen = 255;             // TString::Length() can not exceed 255 characters
+   // Set default maximum lenght to 4096. Can be changed with SetMaxLength() 
+   fMaxLen = 4096;
    fFrameDrawn = kTRUE;
    fEdited = kFALSE;
    fEchoMode = kNormal;
@@ -618,10 +619,10 @@ void TGTextEntry::SetMaxLength(Int_t maxlen)
    // Set the maximum length of the text in the editor.  If the text is
    // currently too long, it is chopped off at the limit. Any marked text will
    // be unmarked.  The cursor position is set to 0 and the first part of the
-   // string is shown.   The range  of maxlen  is (0,255)
+   // string is shown.
    // See  also GetMaxLength().
 
-   fMaxLen = maxlen<0 ? 0 : TMath::Min(255,maxlen) ; // safety check for maxlen<0 and maxlen>255
+   fMaxLen = maxlen < 0 ? 0 : maxlen; // safety check for maxlen < 0
 
    Int_t dif = fText->GetTextLength() - fMaxLen;
    if (dif > 0) fText->RemoveText(fMaxLen, dif);    // truncate
