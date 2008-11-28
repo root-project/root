@@ -567,14 +567,17 @@ int XrdProofdResponse::LinkSend(const struct iovec *iov,
    // Return 0 on success, -1 on failure.
 
    int rc = 0;
-   int i = 0;
-   for (; i < iocnt; i++) {
-      if ((rc = LinkSend((const char *)iov[i].iov_base, iov[i].iov_len, emsg)) < 0)
-         break;
+
+   // If we fail we close the link, and ask the client to reconnect
+   if ((rc = fLink->Send(iov, iocnt, 0)) < 0) {
+      int bytes = 0;
+      for (int i = 0; i < iocnt; i++) bytes += iov[i].iov_len;
+      emsg.form("problems sending %d bytes (writev)", bytes);
+      fLink->Close();
    }
 
    // Done
-   return rc;
+   return ((rc < 0) ? fLink->setEtext("send (writev) failure") : 0);
 }
 
 //______________________________________________________________________________

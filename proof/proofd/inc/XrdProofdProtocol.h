@@ -100,7 +100,7 @@ public:
    inline void   SetSuperUser(bool su = 1) { fSuperUser = su; }
 
    static XrdProofdManager *Mgr() { return fgMgr; }
-   static int    EffectiveUid() { return fgEffectiveUid; }
+   static int    EUidAtStartup() { return fgEUidAtStartup; }
 
  private:
 
@@ -118,8 +118,8 @@ public:
    int           Urgent();
 
    //
-   // Local area
-   //
+   // Protocol variables
+
    XrdObject<XrdProofdProtocol>  fProtLink;
    XrdBuffer                    *fArgp;
 
@@ -131,22 +131,27 @@ public:
    unsigned char                 fClntCapVer;
    short int                     fProofProtocol;   // PROOF protocol version run by client
 
-   kXR_int32                     fConnType;        // Type of connection: Clnt-Mst, Mst-Mst, Mst-Wrk
    bool                          fSuperUser;       // TRUE for privileged clients (admins)
-   //
+
    XrdProofdClient              *fPClient;         // Our reference XrdProofdClient
-   kXR_int32                     fCID;             // Reference ID of this client
    XrdOucString                  fAdminPath;       // Admin path for this client
-   //
+
    XrdOucString                  fTraceID;          // Tracing ID
-   //
+
    XrdSecEntity                 *fSecClient;
    XrdSecProtocol               *fAuthProt;
    XrdSecEntity                  fSecEntity;
+
+   kXR_int32                     fConnType;        // Type of connection: Clnt-Mst, Mst-Mst, Mst-Wrk
+
+   kXR_int32                     fCID;             // Reference ID of this client
+
+   XrdSysRecMutex                fMutex;    // Local mutex
+
    //
+   // These depend on the logical connection
    XPClientRequest               fRequest;  // handle client requests
    std::vector<XrdProofdResponse *> fResponses; // One per each logical connection
-   XrdSysRecMutex                fMutex;    // Local mutex
 
    //
    // Static area: general protocol managing section
@@ -154,14 +159,14 @@ public:
    static bool                   fgConfigDone;
    static int                    fgCount;
    static XrdObjectQ<XrdProofdProtocol> fgProtStack;
-   static XrdBuffManager        *fgBPool;     // Buffer manager
+   static XrdBuffManager        *fgBPool;        // Buffer manager
    static int                    fgMaxBuffsz;    // Maximum buffer size we can have
-   static XrdSysRecMutex         fgBMutex;    // Buffer management mutex
+   static XrdSysRecMutex         fgBMutex;       // Buffer management mutex
 
    static XrdSysError            fgEDest;     // Error message handler
    static XrdSysLogger          *fgLogger;    // Error logger
 
-   static int                    fgEffectiveUid;
+   static int                    fgEUidAtStartup; // Effective uid at startup
 
    //
    // Static area: protocol configuration section

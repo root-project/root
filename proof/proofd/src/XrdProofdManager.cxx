@@ -429,12 +429,13 @@ int XrdProofdManager::Config(bool rcf)
    TRACE(ALL, msg);
 
    XrdProofUI ui;
+   uid_t effuid = geteuid();
    if (!rcf) {
-      // Effective user
-      if (XrdProofdAux::GetUserInfo(XrdProofdProtocol::EffectiveUid(), ui) == 0) {
+      // Save Effective user
+      if (XrdProofdAux::GetUserInfo(effuid, ui) == 0) {
          fEffectiveUser = ui.fUser;
       } else {
-         msg.form("could not resolve effective user (getpwuid, errno: %d)",errno);
+         msg.form("could not resolve effective uid %d (errno: %d)", effuid, errno);
          XPDERR(msg);
          return -1;
       }
@@ -471,8 +472,9 @@ int XrdProofdManager::Config(bool rcf)
       fprintf(fpid, "%d", getpid());
       fclose(fpid);
    } else {
-      if (XrdProofdAux::GetUserInfo(fEffectiveUser.c_str(), ui) == 0) {
-         XPDERR("unable to get user info for "<<fEffectiveUser);
+      if (XrdProofdAux::GetUserInfo(effuid, ui) == 0) {
+         msg.form("could not resolve effective uid %d (errno: %d)", effuid, errno);
+         XPDERR(msg);
       }
    }
 
@@ -520,10 +522,17 @@ int XrdProofdManager::Config(bool rcf)
       TRACE(ALL, "user config files are "<<st[fNetMgr->WorkerUsrCfg()]);
    }
 
-   // Superusers: add default
-   if (fSuperUsers.length() > 0)
-      fSuperUsers += ",";
-   fSuperUsers += fEffectiveUser;
+   // Superusers: add the effective user at startup
+   XrdProofUI sui;
+   if (XrdProofdAux::GetUserInfo(XrdProofdProtocol::EUidAtStartup(), sui) == 0) {
+      if (fSuperUsers.find(sui.fUser.c_str()) == STR_NPOS) {
+        if (fSuperUsers.length() > 0) fSuperUsers += ",";
+         fSuperUsers += sui.fUser;
+      }
+   } else {
+      msg.form("could not resolve effective uid %d (errno: %d)", XrdProofdProtocol::EUidAtStartup(), errno);
+      XPDERR(msg);
+   }
    msg.form("list of superusers: %s", fSuperUsers.c_str());
    TRACE(ALL, msg);
 

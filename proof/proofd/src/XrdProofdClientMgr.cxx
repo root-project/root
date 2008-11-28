@@ -1278,53 +1278,67 @@ XrdProofdClient *XrdProofdClientMgr::GetClient(const char *usr, const char *grp,
 
    TRACE(DBG, "usr: "<< (usr ? usr : "undef")<<", grp:"<<(grp ? grp : "undef"));
 
-   XrdSysMutexHelper mh(fMutex);
-
+   XrdOucString dmsg;
    XrdProofdClient *c = 0;
-   std::list<XrdProofdClient *>::iterator i;
-   for (i = fProofdClients.begin(); i != fProofdClients.end(); ++i) {
-      if ((c = *i) && c->Match(usr,grp))
-         break;
-      c = 0;
-   }
 
-   if (!c && create) {
-      // Is this a potential user?
-      XrdProofUI ui;
-      XrdOucString emsg;
-      bool su;
-      if (fMgr->CheckUser(usr, ui, emsg, su) == 0) {
-         // Yes: create an (invalid) instance of XrdProofdClient:
-         // It would be validated on the first valid login
-         ui.fUser = usr;
-         ui.fGroup = grp;
-         bool full = (fMgr->SrvType() != kXPD_Worker)  ? 1 : 0;
-         XrdOucString tmp(fMgr->TMPdir());
-         if (sock)
-            // Use existing unix socket
-            tmp.form("sock:%s", sock);
-         c = new XrdProofdClient(ui, full, fMgr->ChangeOwn(), fEDest, fClntAdminPath.c_str());
-         if (c && c->IsValid()) {
-            // Locate and set the group, if any
-            if (fMgr->GroupsMgr() && fMgr->GroupsMgr()->Num() > 0) {
-               XrdProofGroup *g = fMgr->GroupsMgr()->GetUserGroup(usr, grp);
-               if (g)
-                  c->SetGroup(g->Name());
-               else
-                  TRACE(XERR, "group = "<<grp<<" nor found");
+   {  XrdSysMutexHelper mh(fMutex);
+
+      std::list<XrdProofdClient *>::iterator i;
+      for (i = fProofdClients.begin(); i != fProofdClients.end(); ++i) {
+         if ((c = *i) && c->Match(usr,grp))
+            break;
+         c = 0;
+      }
+
+      if (!c && create) {
+         // Is this a potential user?
+         XrdProofUI ui;
+         XrdOucString emsg;
+         bool su;
+         if (fMgr->CheckUser(usr, ui, emsg, su) == 0) {
+            // Yes: create an (invalid) instance of XrdProofdClient:
+            // It would be validated on the first valid login
+            ui.fUser = usr;
+            ui.fGroup = grp;
+            bool full = (fMgr->SrvType() != kXPD_Worker)  ? 1 : 0;
+            XrdOucString tmp(fMgr->TMPdir());
+            if (sock)
+               // Use existing unix socket
+               tmp.form("sock:%s", sock);
+            c = new XrdProofdClient(ui, full, fMgr->ChangeOwn(), fEDest, fClntAdminPath.c_str());
+            if (c && c->IsValid()) {
+               // Locate and set the group, if any
+               if (fMgr->GroupsMgr() && fMgr->GroupsMgr()->Num() > 0) {
+                  XrdProofGroup *g = fMgr->GroupsMgr()->GetUserGroup(usr, grp);
+                  if (g)
+                     c->SetGroup(g->Name());
+                  else
+                     TRACE(XERR, "group = "<<grp<<" nor found");
+               }
+               // Add to the list
+               fProofdClients.push_back(c);
+               if (TRACING(DBG)) {
+                  dmsg.form("instance for {client, group} = {%s, %s} created"
+                            " and added to the list (%p)", usr, grp, c);
+               }
+            } else {
+               if (TRACING(XERR)) {
+                  dmsg.form("instance for {client, group} = {%s, %s} is invalid", usr, grp);
+               }
+               SafeDelete(c);
             }
-            // Add to the list
-            fProofdClients.push_back(c);
-            TRACE(DBG, "instance for {client, group} = {"<<usr<<", "<<
-                        grp<<"} created and added to the list ("<<c<<")");
          } else {
-            TRACE(XERR, "instance for {client, group} = {"<<usr<<", "<<
-                        grp<<"} is invalid");
-            SafeDelete(c);
+            if (TRACING(XERR)) {
+               dmsg.form("instance for {client, group} = {%s, %s} could not be created: %s", usr, grp, emsg.c_str());
+            }
          }
+      }
+   }
+   if (dmsg.length() > 0) {
+      if (TRACING(DBG)) {
+         TRACE(DBG, dmsg);
       } else {
-         TRACE(XERR, "instance for {client, group} = {"<<usr<<", "<<
-                      grp<<"} could not be created: "<<emsg);
+         TRACE(XERR, dmsg);
       }
    }
 
