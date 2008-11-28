@@ -86,10 +86,10 @@ namespace ROOT { namespace Cintex {
                         ROOT::Reflex::StubFunction stubFP, void*  stubCtx, int );
       TClass* IsA(const void* obj);
       static void* Stub_IsA2(void* ctxt, void* obj);
-      static void Stub_IsA(void*, void* ret, const std::vector<void*>&, void*);
+      static void Stub_IsA(void* ret, void*, const std::vector<void*>&, void*);
       static void Stub_Streamer(void*, void*, const std::vector<void*>&, void*);
       static void Stub_StreamerNVirtual(void*, void*, const std::vector<void*>&, void*);
-      static void Stub_Dictionary(void*, void* ret, const std::vector<void*>&, void*);
+      static void Stub_Dictionary(void* ret, void*, const std::vector<void*>&, void*);
       static void Stub_ShowMembers(void*, void*, const std::vector<void*>&, void*);
       static void Stub_ShowMembers(TClass*, const ROOT::Reflex::Type&, void*, TMemberInspector&, char*);
       static void Stub_Dictionary( void* ctx );
@@ -318,7 +318,7 @@ namespace ROOT { namespace Cintex {
    }
 
 
-   void ROOTClassEnhancerInfo::Stub_IsA(void* obj, void* ret, const vector<void*>&, void* ctx) {
+   void ROOTClassEnhancerInfo::Stub_IsA(void* ret, void* obj, const vector<void*>&, void* ctx) {
       // Root IsA.
       *((TClass**)ret) = context(ctx).IsA(obj);
    }
@@ -464,7 +464,7 @@ namespace ROOT { namespace Cintex {
    }
 
 
-   void ROOTClassEnhancerInfo::Stub_Streamer(void* obj, void*, const vector<void*>& args, void* ctx) {
+   void ROOTClassEnhancerInfo::Stub_Streamer(void*, void* obj, const vector<void*>& args, void* ctx) {
       //  Create streamer info.
       TBuffer& b = *(TBuffer*)args[0];
       TClass* cl = context(ctx).Tclass();
@@ -482,7 +482,7 @@ namespace ROOT { namespace Cintex {
       }
    }
 
-   void ROOTClassEnhancerInfo::Stub_StreamerNVirtual(void* obj, void*, const vector<void*>& args, void* ctx) {
+   void ROOTClassEnhancerInfo::Stub_StreamerNVirtual(void*, void* obj, const vector<void*>& args, void* ctx) {
       // Create streamer info.
       TBuffer& b = *(TBuffer*)args[0];
       TClass* cl = context(ctx).Tclass();
@@ -500,7 +500,7 @@ namespace ROOT { namespace Cintex {
       }
    }
 
-   void ROOTClassEnhancerInfo::Stub_ShowMembers(void* obj, void*, const vector<void*>& args, void* ctx) {
+   void ROOTClassEnhancerInfo::Stub_ShowMembers(void*, void* obj, const vector<void*>& args, void* ctx) {
       // Create show members.
       Type typ = context(ctx).TypeGet();
       TClass* tcl = context(ctx).Tclass();

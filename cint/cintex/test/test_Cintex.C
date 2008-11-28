@@ -1,4 +1,10 @@
 #include <stdio.h>
+#ifndef __CINT__
+#include "dict/CintexTest.h"
+#include "TSystem.h"
+#include "Cintex/Cintex.h"
+#endif
+
 template <class T1, class T2> 
 void failUnlessEqual( T1 r, T2 e, const char* c = "") { 
   if( r != e ) {
@@ -97,7 +103,7 @@ bool test_UnknownTypes() {
   //---Returning unknown types
   void* rp = calling.retUnkownTypePointer();
   failUnless( rp );
-  void* rr = calling.retUnkownTypeReference();
+  void* rr = (void*)&(calling.retUnkownTypeReference());
   failUnless( rr );
   //---Passing unknown types
   failUnlessEqual( calling.setByUnknownTypePointer(rp), 0x12345678);
@@ -129,7 +135,8 @@ bool test_CallingModes() {
   failUnlessEqual( calling.retByPointer()->magic(), 44445555 , "CallingModes: fail set by reference");
   failUnlessEqual( myobj.magic(),  44445555 , "CallingModes: fail set by reference");
   myobj.setMagic(55555555);
-  calling.setByRefPointer(&myobj);
+  A::B::C::MyClass *p = &myobj;
+  calling.setByRefPointer(p);
   failUnlessEqual( calling.retByPointer()->magic(), 55555555 , "CallingModes: fail set by reference pointer");
   failUnlessEqual( myobj.magic(), 999999 , "CallingModes: fail set by reference pointer");
   failUnlessEqual( calling.retStrByValue(), "value" );
@@ -137,8 +144,10 @@ bool test_CallingModes() {
   failUnlessEqual( calling.retStrByConstRef(), "const reference" );
   failUnless( strcmp(calling.retConstCStr(), "const pointer") == 0, "CallingModes: fail return C string");
   failUnless( strcmp(calling.retCStr(), "pointer") == 0 );
-  //  del myobj, calling
-  failUnlessEqual( A::B::C::MyClass::instances(), 2,  "CallingModes: MyClass instances not deleted");
+  // del myobj, calling
+  // Currently there is one __extra__ call to the default constructor to insure the memory is
+   // properly allocated in the case of return value.
+  failUnlessEqual( A::B::C::MyClass::instances(), 3,  "CallingModes: MyClass instances not deleted");
   return true;
 }
 
@@ -212,8 +221,9 @@ bool test_MethodOverloading() {
   return true;
 }
 
+using namespace A::B::C;
+
 bool test_MethodOperators() {
-  using namespace A::B::C;
   failUnlessEqual(Number(20) + Number(10), Number(30) );
   failUnlessEqual(Number(20) - Number(10), Number(10) );
   failUnlessEqual(Number(20) / Number(10), Number(2) );
@@ -264,6 +274,7 @@ bool test_IsA() {
   Diamond real;
   Diamond* d = &real;
   Virtual* v = &real;
+ 
   failUnless(strcmp(d->IsA()->GetName(), "A::B::C::Diamond")==0);
   failUnless(strcmp(v->IsA()->GetName(), "A::B::C::Diamond")==0);
   
@@ -302,7 +313,7 @@ bool test_FunctionPointer() {
 bool test_ObjectArrays() {
   int instances = A::B::C::MyClass::instances();
   failUnlessEqual( A::B::C::MyClass::instances(), instances,  "ObjectArrays: MyClass instances not zero");
-  A::B::C::MyClass* myarray = new MyClass[10];
+  A::B::C::MyClass* myarray = new A::B::C::MyClass[10];
   failUnlessEqual( A::B::C::MyClass::instances(), instances+10,  "ObjectArrays: MyClass instances not 10");
   delete [] myarray;
   failUnlessEqual( A::B::C::MyClass::instances(), instances,  "ObjectArrays: MyClass instances not clean");
@@ -319,7 +330,7 @@ bool test_Enums() {
 
 bool test_Variables() {
   failUnlessEqual( gMyInt, 123,  "Variables: global int");
-  failUnlessEqual( A::gMyPointer, 0,  "Variables: namespace pointer");
+  failUnlessEqual( A::gMyPointer, (void*)0,  "Variables: namespace pointer");
   return true;
 }
 
@@ -350,6 +361,7 @@ void test_Cintex()
   cout << "ShowMembers: "        << (test_ShowMembers()        ? "OK" : "FAIL") << endl;
   cout << "NestedClasses: "      << (test_NestedClasses()      ? "OK" : "FAIL") << endl;
   cout << "FunctionPointer: "    << (test_FunctionPointer()    ? "OK" : "FAIL") << endl;
+
   cout << "ObjectArrays: "       << (test_ObjectArrays()       ? "OK" : "FAIL") << endl;
   cout << "Enums: "              << (test_Enums()              ? "OK" : "FAIL") << endl;
   cout << "Variables: "          << (test_Variables()          ? "OK" : "FAIL") << endl;

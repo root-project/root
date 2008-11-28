@@ -56,8 +56,8 @@ namespace ROOT { namespace Cintex {
       if ( mem.IsConstructor() || mem.IsDestructor() ) {
          Member getnewdelfuncs = fClass.MemberByName("__getNewDelFunctions");
          if( getnewdelfuncs ) {
-            static Type tNewdelfuncs = Type::ByTypeInfo(typeid(&fNewdelfuncs));
-            Object ret = tNewdelfuncs.Construct();
+            static Type tNewdelfuncs = Type::ByTypeInfo(typeid(fNewdelfuncs));
+            Object ret( tNewdelfuncs, (void*)&fNewdelfuncs);
             getnewdelfuncs.Invoke(&ret);
          }
       }

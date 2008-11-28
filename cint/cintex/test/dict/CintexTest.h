@@ -190,14 +190,17 @@ private:
 };
 
 MyClass::MyClass() : m_magic( 987654321 ){
+  //fprintf(stderr,"Default construct %p %d\n",this,m_magic);
   s_instances++;
 }
 
 MyClass::MyClass(const MyClass& c) {
+  // fprintf(stderr,"Copy construct from %p to %p from %d to %d \n",&c,this,c.m_magic,m_magic);
   m_magic = c.m_magic;
   s_instances++;
 }
 MyClass::~MyClass() {
+  // fprintf(stderr,"Destruct %p %d\n",this,m_magic);
   s_instances--;
 }
 MyClass& MyClass::operator=(const MyClass& c) {
