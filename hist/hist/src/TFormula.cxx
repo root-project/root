@@ -679,6 +679,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
    Int_t inter2 = 0;
    SetNumber(0);
    Int_t actionCode,actionParam;
+   Int_t err_hint;
 
 //*-*- Verify correct matching of parenthesis and remove unnecessary parenthesis.
 //*-*  ========================================================================
@@ -1782,7 +1783,10 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                               if (nomb == 1 && virgule == 0) virgule = compt;
                            }
                         }
-                        if (nomb != 1) err = 22; // There are plus or minus than 2 arguments for pow
+                        if (nomb != 1) {
+                           err = 44; // There are plus or minus than 2 arguments for min
+                           err_hint = 3;
+                        }
                         else {
                            ctemp = chaine(4,virgule-5);
                            Analyze(ctemp.Data(),err,offset); if (err) return;
@@ -1804,7 +1808,10 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                               if (nomb == 1 && virgule == 0) virgule = compt;
                            }
                         }
-                        if (nomb != 1) err = 22; // There are plus or minus than 2 arguments for pow
+                        if (nomb != 1) {
+                           err = 44; // There are plus or minus than 2 arguments for min
+                           err_hint = 3;
+                        }
                         else {
                            ctemp = chaine(4,virgule-5);
                            Analyze(ctemp.Data(),err,offset); if (err) return;
@@ -1849,7 +1856,10 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                               if (nomb == 1 && virgule == 0) virgule = compt;
                            }
                         }
-                        if (nomb != 1) err = 21;  //{ There are plus or minus than 2 arguments for fmod
+                        if (nomb != 1) {
+                           err = 44; // There are plus or minus than 2 arguments for fmod
+                           err_hint = 4;
+                        }
                         else {
                            ctemp = chaine(5,virgule-6);
                            Analyze(ctemp.Data(),err,offset); if (err) return;
@@ -1954,6 +1964,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
          case 41 : er = " ')' is expected"; break;
          case 42 : er = " '[' is expected"; break;
          case 43 : er = " ']' is expected"; break;
+         case 44 : er = " The function '" + chaine(0,err_hint) + "' requires two arguments."; break;
       }
       Error("Compile",er.Data());
       err=1;
