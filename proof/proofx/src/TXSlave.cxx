@@ -580,7 +580,7 @@ Bool_t TXSlave::HandleError(const void *in)
       Warning("HandleError", "%p: reference to PROOF missing", this);
    }
 
-   Info("HandleError", "%p: DONE ... ", this);
+   Printf("TXSlave::HandleError: %p: DONE ... ", this);
 
    // We are done
    return kTRUE;
@@ -617,7 +617,9 @@ Bool_t TXSlave::HandleInput(const void *)
                                    this, GetOrdinal());
             }
          }
-         fProof->CollectInputFrom(fSocket);
+         if (fProof->CollectInputFrom(fSocket) < 0)
+            // Something wrong on the line: flush it
+            FlushSocket();
       }
    } else {
       Warning("HandleInput", "%p: %s: reference to PROOF missing", this, GetOrdinal());
