@@ -456,6 +456,8 @@ private:
 
    PrintProgress_t fPrintProgress;   //Function function to display progress info in batch mode
 
+   TVirtualMutex  *fCloseMutex;      // Avoid crashes in MarkBad or alike while closing
+
    TList          *fLoadedMacros;    // List of loaded macros (just file names)
    static TList   *fgProofEnvList;   // List of TNameds defining environment
                                      // variables to pass to proofserv

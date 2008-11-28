@@ -274,6 +274,9 @@ TProof::TProof(const char *masterurl, const char *conffile, const char *confdir,
    // Loglevel is the log level (default = 1). User specified custom config
    // files will be first looked for in $HOME/.conffile.
 
+   // Synchronize closing with actions like MarkBad
+   fCloseMutex = 0;
+
    // This may be needed during init
    fManager = mgr;
 
@@ -439,6 +442,8 @@ TProof::TProof() : fUrl(""), fServType(TProofMgr::kXProofd)
    fQueryMode = kSync;
    fDynamicStartup = kFALSE;
 
+   fCloseMutex = 0;
+
    gROOT->GetListOfProofs()->Add(this);
 
    gProof = this;
@@ -497,6 +502,7 @@ TProof::~TProof()
    SafeDelete(fRecvMessages);
    SafeDelete(fInputData);
    SafeDelete(fRunningDSets);
+   SafeDelete(fCloseMutex);
 
    // remove file with redirected logs
    if (TestBit(TProof::kIsClient)) {
@@ -1402,21 +1408,25 @@ void TProof::Close(Option_t *opt)
    // or 's'. Default for clients is detach, if supported. Masters always
    // shutdown the remote counterpart.
 
-   if (fSlaves) {
-      if (fIntHandler)
-         fIntHandler->Remove();
+   {  R__LOCKGUARD2(fCloseMutex);
 
-      TIter nxs(fSlaves);
-      TSlave *sl = 0;
-      while ((sl = (TSlave *)nxs()))
-         sl->Close(opt);
+      fValid = kFALSE;
+      if (fSlaves) {
+         if (fIntHandler)
+            fIntHandler->Remove();
 
-      fActiveSlaves->Clear("nodelete");
-      fUniqueSlaves->Clear("nodelete");
-      fAllUniqueSlaves->Clear("nodelete");
-      fNonUniqueMasters->Clear("nodelete");
-      fBadSlaves->Clear("nodelete");
-      fSlaves->Delete();
+         TIter nxs(fSlaves);
+         TSlave *sl = 0;
+         while ((sl = (TSlave *)nxs()))
+            sl->Close(opt);
+
+         fActiveSlaves->Clear("nodelete");
+         fUniqueSlaves->Clear("nodelete");
+         fAllUniqueSlaves->Clear("nodelete");
+         fNonUniqueMasters->Clear("nodelete");
+         fBadSlaves->Clear("nodelete");
+         fSlaves->Delete();
+      }
    }
 
    {
@@ -2519,6 +2529,13 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
          }
          break;
 
+      case kPROOF_STOP:
+         // Stop collection from this worker
+         Info("HandleInputMessage", "received kPROOF_STOP from %s: disabling any further collection this worker",
+                                    (sl ? sl->GetOrdinal() : "undef"));
+         rc = 1;
+         break;
+
       case kPROOF_GETTREEHEADER:
          // Add the message to the list
          fRecvMessages->Add(mess);
@@ -3279,6 +3296,12 @@ void TProof::MarkBad(TSlave *wrk, const char *reason)
    // the active list and from the two monitor objects. Assume that the work
    // done by this worker was lost and ask packerizer to reassign it.
 
+   R__LOCKGUARD2(fCloseMutex);
+
+
+   // We may have been invalidated in the meanwhile: nothing to do in such a case
+   if (!IsValid()) return;
+
    if (!wrk) {
       Error("MarkBad", "worker instance undefined: protocol error? ");
       return;
@@ -3386,6 +3409,11 @@ void TProof::MarkBad(TSocket *s, const char *reason)
 {
    // Add slave with socket s to the bad slave list and remove if from
    // the active list and from the two monitor objects.
+
+   R__LOCKGUARD2(fCloseMutex);
+
+   // We may have been invalidated in the meanwhile: nothing to do in such a case
+   if (!IsValid()) return;
 
    TSlave *wrk = FindSlave(s);
    MarkBad(wrk, reason);
