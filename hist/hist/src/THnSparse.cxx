@@ -23,6 +23,7 @@
 #include "TInterpreter.h"
 #include "TMath.h"
 #include "TRandom.h"
+#include <cassert>
 
 //______________________________________________________________________________
 //
@@ -1247,6 +1248,12 @@ void THnSparse::SetBinError(const Int_t* coord, Double_t e)
    Long_t bin = GetBinIndexForCurrentBin(kTRUE);
 
    THnSparseArrayChunk* chunk = GetChunk(bin / fChunkSize);
+   if (!chunk->fSumw2 ) {
+      // if fSumw2 is zero GetCalcualteErrors should return false
+      assert(!GetCalculateErrors() );
+      Sumw2(); // enable error calculation
+   }
+   
    chunk->fSumw2->SetAt(e*e, bin % fChunkSize);
 }
 
