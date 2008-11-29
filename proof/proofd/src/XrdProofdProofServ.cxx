@@ -579,8 +579,7 @@ int XrdProofdProofServ::CreateUNIXSock(XrdSysError *edest)
 
    // Make sure we do not have already a socket
    if (fUNIXSock) {
-       TRACE(DBG,"UNIX socket exists already! (" <<
-             fUNIXSockPath<<")");
+       TRACE(DBG,"UNIX socket exists already! ("<<fUNIXSockPath<<")");
        return 0;
    }
 
