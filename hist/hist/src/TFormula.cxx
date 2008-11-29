@@ -679,7 +679,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
    Int_t inter2 = 0;
    SetNumber(0);
    Int_t actionCode,actionParam;
-   Int_t err_hint;
+   Int_t err_hint = 0;
 
 //*-*- Verify correct matching of parenthesis and remove unnecessary parenthesis.
 //*-*  ========================================================================
