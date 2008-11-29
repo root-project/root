@@ -257,6 +257,8 @@ XrdProofdProofServMgr::XrdProofdProofServMgr(XrdProofdManager *mgr,
    fReconnectTime = -1;
    fReconnectTimeOut = 300;
    fNextSessionsCheck = -1;
+   fNCreate = 0;
+
    // Defaults can be changed via 'proofservmgr'
    fCheckFrequency = 30;
    fTerminationTimeOut = fCheckFrequency - 10;
@@ -415,8 +417,11 @@ bool XrdProofdProofServMgr::IsSessionSocket(const char *fpid)
    // Check the admin path
    struct stat st;
    if (stat(apath.c_str(), &st) != 0 && (errno == ENOENT)) {
-      // Remove the socket path
-      unlink(spath.c_str());
+      // Remove the socket path if not during creation
+      if (NCreate() <= 0) {
+         unlink(spath.c_str());
+         TRACE(REQ, "missing admin path: removing "<<spath<<" ...");
+      }
    }
 
    // Done
@@ -1371,6 +1376,13 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
 
    TRACEP(p, DBG, "enter");
 
+   // Update counter to control checks during creation
+   XpdSrvMgrCreateCnt cnt(this);
+   if (TRACING(DBG)) {
+      int nc = NCreate();
+      TRACEP(p, DBG, nc << " threads are creating a new session");
+   }
+
    // Allocate next free server ID and fill in the basic stuff
    XrdProofdProofServ *xps = p->Client()->GetFreeServObj();
    xps->SetClient(p->Client()->User());
@@ -1916,12 +1928,12 @@ int XrdProofdProofServMgr::Accept(XrdProofdProofServ *xps,
    XrdNetPeer peerpsrv;
    XrdLink   *linkpsrv = 0;
    XrdProtocol *xp = 0;
-   int lnkopts = XRDLINK_RDLOCK;
+   int lnkopts = 0;
    bool go = 1;
 
    // Check inputs
-   if (!xps) {
-      TRACE(XERR, "invalid inputs: "<<xps);
+   if (!xps || !xps->IsValid()) {
+      TRACE(XERR, "session pointer undefined or session invalid: "<<xps);
       return -1;
    }
    TRACE(REQ, "waiting for server callback for "<<to<<" secs ... on "<<xps->UNIXSockPath());

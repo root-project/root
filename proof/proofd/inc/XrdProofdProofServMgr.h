@@ -108,6 +108,8 @@ class XrdProofdProofServMgr : public XrdProofdConfig {
    int                fRecoverDeadline;
    bool               fCheckLost;
 
+   int                fNCreate;        // Number of threads in Create
+
    int                fNextSessionsCheck; // Time of next sessions check
 
    XrdOucString       fActiAdminPath; // Active sessions admin area
@@ -167,6 +169,9 @@ public:
    int               Detach(XrdProofdProtocol *p);
    int               Recover(XpdClientSessions *cl);
 
+   void              CountCreate(int n) { XrdSysMutexHelper mhp(fMutex); fNCreate += n; }
+   int               NCreate() { XrdSysMutexHelper mhp(fMutex); return fNCreate; }
+
    int               BroadcastPriorities();
    void              DisconnectFromProofServ(int pid);
 
@@ -198,4 +203,12 @@ public:
    int               CleanupLostProofServ();
    int               RecoverActiveSessions();
 };
+
+class XpdSrvMgrCreateCnt {
+public:
+   XrdProofdProofServMgr *fMgr;
+   XpdSrvMgrCreateCnt(XrdProofdProofServMgr *m) { fMgr = m; if (m) m->CountCreate(1); }
+   ~XpdSrvMgrCreateCnt() { if (fMgr) fMgr->CountCreate(-1); }
+};
+
 #endif
