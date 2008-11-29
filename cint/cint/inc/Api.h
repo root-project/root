@@ -121,6 +121,12 @@ G__EXPORT
 #endif
 void G__delete_interpreted_object(void* p);
 
+extern "C" {
+#ifndef __CINT__
+G__EXPORT
+#endif
+int G__Lsizeof(const char *typenamein);
+}
 
 /*********************************************************************
 * Generate dictionary.

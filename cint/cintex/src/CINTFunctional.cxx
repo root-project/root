@@ -23,9 +23,6 @@
 using namespace ROOT::Reflex;
 using namespace std;
 
-extern "C" int G__GetCatchException();
-extern "C" int G__Lsizeof(const char *typenamein);
-
 namespace ROOT { namespace Cintex {
 
    class StubContexts : public vector<StubContext_t*>  {

@@ -414,7 +414,6 @@ G__value G__pointer2func(G__value* obj_p2f,char *parameter0,char *parameter1,int
 char *G__search_func(const char *funcname,G__value *buf);
 char *G__search_next_member(const char *text,int state);
 int G__Loffsetof(const char *tagname,const char *memname);
-int G__Lsizeof(const char *typenamein);
 long *G__typeid(const char *typenamein);
 void G__getcomment(char *buf,struct G__comment_info *pcomment,int tagnum);
 void G__getcommenttypedef(char *buf,struct G__comment_info *pcomment,int typenum);

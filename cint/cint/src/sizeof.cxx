@@ -129,6 +129,7 @@ int G__Loffsetof(const char *tagname,const char *memname)
 *
 * Called by
 *   G__special_func()
+*   and cintex
 *
 ******************************************************************/
 int G__Lsizeof(const char *type_name)

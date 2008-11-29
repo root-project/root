@@ -18,6 +18,8 @@
 
 extern "C" {
 
+int G__Lsizeof(const char *typenamein);
+
 /****************************************************************
 * G__letdouble(G__value buf,char type,double value)
 *   macro in G__ci.h
