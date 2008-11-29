@@ -1707,6 +1707,7 @@ extern G__EXPORT G__parse_hook_t* G__set_beforeparse_hook G__P((G__parse_hook_t*
 extern G__EXPORT void G__set_ioctortype_handler G__P((int (*p2f) G__P((const char*))));
 extern G__EXPORT void G__SetCatchException G__P((int mode));
 extern G__EXPORT int G__GetCatchException G__P((void));
+extern G__EXPORT int G__Lsizeof G__P((const char *typenamein));
 
 #ifdef G__ASM_WHOLEFUNC
 /**************************************************************************
