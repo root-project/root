@@ -52,6 +52,13 @@
 struct G__includepath;
 #endif
 
+extern "C" {
+#ifndef __CINT__
+G__EXPORT
+#endif
+int G__Lsizeof(const char *typenamein);
+}
+
 namespace Cint {
 
 /*********************************************************************
@@ -120,13 +127,6 @@ void* G__new_interpreted_object(int size);
 G__EXPORT
 #endif
 void G__delete_interpreted_object(void* p);
-
-extern "C" {
-#ifndef __CINT__
-G__EXPORT
-#endif
-int G__Lsizeof(const char *typenamein);
-}
 
 /*********************************************************************
 * Generate dictionary.
