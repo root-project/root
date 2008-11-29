@@ -469,7 +469,8 @@ int Cint::Internal::G__class_autoloading(int* ptagnum)
          G__def_tagnum = store_def_tagnum;
          G__tagdefining = store_tagdefining;
          if (G__struct.type[tagnum] == G__CLASS_AUTOLOAD) {
-            if (strstr(G__struct.name[tagnum], "<") != 0) {
+            // if (strstr(G__struct.name[tagnum], "<") != 0) 
+            {
                // Kill this entry.
                store_def_tagnum = G__def_tagnum;
                store_tagdefining = G__tagdefining;
@@ -482,6 +483,7 @@ int Cint::Internal::G__class_autoloading(int* ptagnum)
                // "hide" tagnum's name: we want to check whether this auto-loading loaded
                // another version of the same class, e.g. because of vector<Long64_t>
                // being requested but vector<long long> being loaded:
+               std::string fullname( autoloadcl.Name( Reflex::SCOPED ) );
                std::string origName(G__struct.name[tagnum]);
                if (G__struct.name[tagnum][0]) {
                   G__struct.name[tagnum][0] = '@';
@@ -491,7 +493,7 @@ int Cint::Internal::G__class_autoloading(int* ptagnum)
                   autoloadcl.ToTypeBase()->HideName();
                }
                
-               int found_tagnum = G__defined_tagname(origName.c_str(), 3);
+               int found_tagnum = G__defined_tagname(fullname.c_str(), 3);
  
                G__def_tagnum = store_def_tagnum;
                G__tagdefining = store_tagdefining;

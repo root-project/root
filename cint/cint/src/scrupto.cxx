@@ -164,10 +164,11 @@ static void G__close_inputfiles_upto(G__dictposition* pos)
       // reset autoload struct entries
       for (int itag = 0; itag < pos->tagnum; ++itag) {
          if (G__struct.filenum[itag] == G__nfile) {
-            // -- Keep name, libname; reset everything else.
+            // -- Keep name, libname, parent; reset everything else.
             char* name = G__struct.name[itag];
             int hash = G__struct.hash[itag];
             char* libname = G__struct.libname[itag];
+            int parent_tagnum = G__struct.parent_tagnum[itag];
             G__struct.name[itag] = 0; // autoload entry - must not delete it, just set it to 0
             G__struct.libname[itag] = 0; // same here
             int alltag = G__struct.alltag;
@@ -210,7 +211,7 @@ static void G__close_inputfiles_upto(G__dictposition* pos)
             G__struct.protectedaccess[itag] = 0;
             G__struct.line_number[itag] = -1;
             G__struct.filenum[itag] = -1;
-            G__struct.parent_tagnum[itag] = -1;
+            G__struct.parent_tagnum[itag] = parent_tagnum;
             G__struct.funcs[itag] = 0;
             G__struct.istypedefed[itag] = 0;
             G__struct.istrace[itag] = 0;
