@@ -260,7 +260,7 @@ int XrdProofdProofServ::GetNClients(bool check)
       // Remove this from the list of clients
       std::vector<XrdClientID *>::iterator i;
       for (i = fClients.begin(); i != fClients.end(); ++i) {
-         if ((*i) && (*i)->P() && !(*i)->P()->Link()) {
+         if ((*i) && (!(*i)->P() || !(*i)->P()->Link())) {
             (*i)->Reset();
             fNClients--;
          }
@@ -371,7 +371,7 @@ int XrdProofdProofServ::TerminateProofServ(bool changeown)
    // or other errors occured.
    XPDLOC(SMGR, "ProofServ::TerminateProofServ")
 
-   TRACE(DBG, "ord: " << Ordinal() << ", pid: " << fSrvPID);
+   TRACE(DBG, "ord: " << fOrdinal << ", pid: " << fSrvPID);
 
    // Send a terminate signal to the proofserv
    int pid = SrvPID();

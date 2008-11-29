@@ -155,6 +155,9 @@ XrdProofdProtocol::XrdProofdProtocol()
 XrdProofdResponse *XrdProofdProtocol::Response(kXR_unt16 sid)
 {
    // Get response instance corresponding to stream ID 'sid'
+   XPDLOC(ALL, "Protocol::Response")
+
+   TRACE(HDBG, "sid: "<<sid<<", size: "<<fResponses.size());
 
    if (sid > 0)
       if (sid <= fResponses.size())
@@ -392,10 +395,10 @@ int XrdProofdProtocol::Process(XrdLink *)
          TRACEP(this, XERR, "could not get Response instance for rid: "<< sid);
          return rc;
       }
-      // Set the stream ID for the reply
-      response->Set(fRequest.header.streamid);
-      response->Set(fLink);
    }
+   // Set the stream ID for the reply
+   response->Set(fRequest.header.streamid);
+   response->Set(fLink);
 
    TRACEP(this, REQ, "sid: " << sid << ", req id: " << fRequest.header.requestid <<
                 " (" << XrdProofdAux::ProofRequestTypes(fRequest.header.requestid)<<

@@ -1505,8 +1505,6 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
       // These files belongs to the client
       if (chown(in.fLogFile.c_str(), p->Client()->UI().fUid, p->Client()->UI().fGid) != 0)
          TRACE(XERR, "chown on '"<<in.fLogFile.c_str()<<"'; errno: "<<errno);
-      if (chown(sockpath.c_str(), p->Client()->UI().fUid, p->Client()->UI().fGid) != 0)
-         TRACE(XERR, "chown on '"<<sockpath.c_str()<<"'; errno: "<<errno);
 
       int setupOK = 0;
 
@@ -1628,6 +1626,8 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
       return 0;
    }
    TRACEP(p, FORK,"UNIX sock: "<<xps->UNIXSockPath());
+   if (chown(sockpath.c_str(), p->Client()->UI().fUid, p->Client()->UI().fGid) != 0)
+      TRACEP(p, XERR, "chown on '"<<sockpath.c_str()<<"'; errno: "<<errno);
 
    // Read status-of-setup from pipe
    int setupOK = 0;
