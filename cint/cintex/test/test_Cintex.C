@@ -146,6 +146,7 @@ bool test_CallingModes() {
   failUnless( strcmp(calling.retCStr(), "pointer") == 0 );
   // del myobj, calling
   failUnlessEqual( A::B::C::MyClass::instances(), 2,  "CallingModes: MyClass instances not deleted");
+  failUnlessEqual( A::B::C::s_public_instances, 2,  "CallingModes: MyClass s_public_instances not correctly read");
   return true;
 }
 

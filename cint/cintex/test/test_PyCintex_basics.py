@@ -27,6 +27,8 @@ class BasicsTestCase(unittest.TestCase):
     result = object.doSomething('Hello World')
     self.failUnless( result == len('Hello World'),
                      'incorrect return value from doSomething')
+    self.failUnlessEqual( self.A.B.C.ValidityKeyMin, 0)  
+    
   
   def test02PrimitiveArgTypes(self):
     p = self.A.B.C.Primitives()
@@ -124,6 +126,7 @@ class BasicsTestCase(unittest.TestCase):
 
   def test06CallingModes(self):
     self.failUnlessEqual( self.A.B.C.MyClass.instances(), 0)  
+    self.failUnlessEqual( self.A.B.C.s_public_instances, 0)  
     myobj = self.A.B.C.MyClass()
     calling = self.A.B.C.Calling()
     myobj.setMagic(22222222)

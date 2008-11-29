@@ -62,6 +62,8 @@
 
   <variable name="gMyInt"/>
   <variable pattern="A::g*"/>
+  <variable name="A::B::C::s_public_instances"/>
+  <variable name="A::B::C::ValidityKeyMin"/>
 
   <class pattern="*MyA*"/>
   <class pattern="SpecialET<*>"/>

@@ -120,14 +120,46 @@ public:
   void setMagic(int v) { m_magic = v; }
   static int instances() { return s_instances; }
   Answer answer() { return m_answer; }
-  void setAnswer(Answer a) { m_answer = a; } 
+  void setAnswer(Answer a) { m_answer = a; }
+   
 private:
   Answer m_answer;
   int m_magic;
 };
 
 int MyClass::s_instances = 0;
+int s_public_instances = 0;
 
+   typedef long long                 Int64;
+   typedef unsigned long long        UInt64;   
+   typedef UInt64                    UInt63;
+   typedef UInt63 ValidityKey;
+#ifdef WIN32 
+   const Int64  Int64Min  = 0x8000000000000000ll;       // -9223372036854775808
+   const Int64  Int64Max  = 0x7fffffffffffffffll;       // +9223372036854775807
+   const UInt64 UInt64Min = 0;
+   const UInt64 UInt64Max = 0xffffffffffffffffll;       // +18446744073709551615
+#else 
+#  if defined LONG_LONG_MAX
+   // Supported platforms: slc3_ia32, slc4_ia32, slc4_amd64
+   const Int64  Int64Min  = LONG_LONG_MIN;              // -9223372036854775808
+   const Int64  Int64Max  = LONG_LONG_MAX;              // +9223372036854775807
+   const UInt64 UInt64Min = 0;
+   const UInt64 UInt64Max = ULONG_LONG_MAX;             // +18446744073709551615
+#  else
+   // Supported platforms: osx104_ppc (why is LONG_LONG_MAX not defined?...)
+   // See /usr/lib/gcc/powerpc-apple-darwin8/4.0.1/include/limits.h
+   const Int64  Int64Min  = -__LONG_LONG_MAX__-1LL;     // -9223372036854775808
+   const Int64  Int64Max  = __LONG_LONG_MAX__;          // +9223372036854775807
+   const UInt64 UInt64Min = 0;
+   const UInt64 UInt64Max = __LONG_LONG_MAX__*2ULL+1ULL;// +18446744073709551615
+#  endif
+#endif
+   const UInt63 UInt63Min = UInt64Min;
+   const UInt63 UInt63Max = Int64Max;
+   const ValidityKey ValidityKeyMin = UInt63Min; // 0
+   const ValidityKey ValidityKeyMax = UInt63Max; // +9223372036854775807
+   
 struct Abstract {
   virtual double vf() = 0;
   virtual ~Abstract() {}
@@ -192,16 +224,19 @@ private:
 MyClass::MyClass() : m_magic( 987654321 ){
   //fprintf(stderr,"Default construct %p %d\n",this,m_magic);
   s_instances++;
+  s_public_instances++;
 }
 
 MyClass::MyClass(const MyClass& c) {
   // fprintf(stderr,"Copy construct from %p to %p from %d to %d \n",&c,this,c.m_magic,m_magic);
   m_magic = c.m_magic;
   s_instances++;
+  s_public_instances++;
 }
 MyClass::~MyClass() {
   // fprintf(stderr,"Destruct %p %d\n",this,m_magic);
   s_instances--;
+  s_public_instances--;
 }
 MyClass& MyClass::operator=(const MyClass& c) {
   m_magic = c.m_magic;
