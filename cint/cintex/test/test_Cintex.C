@@ -145,9 +145,7 @@ bool test_CallingModes() {
   failUnless( strcmp(calling.retConstCStr(), "const pointer") == 0, "CallingModes: fail return C string");
   failUnless( strcmp(calling.retCStr(), "pointer") == 0 );
   // del myobj, calling
-  // Currently there is one __extra__ call to the default constructor to insure the memory is
-   // properly allocated in the case of return value.
-  failUnlessEqual( A::B::C::MyClass::instances(), 3,  "CallingModes: MyClass instances not deleted");
+  failUnlessEqual( A::B::C::MyClass::instances(), 2,  "CallingModes: MyClass instances not deleted");
   return true;
 }
 

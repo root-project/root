@@ -19,10 +19,12 @@
 #include <sys/mman.h>
 #endif
 
+
 using namespace ROOT::Reflex;
 using namespace std;
 
 extern "C" int G__GetCatchException();
+extern "C" int G__Lsizeof(const char *typenamein);
 
 namespace ROOT { namespace Cintex {
 
@@ -93,6 +95,11 @@ namespace ROOT { namespace Cintex {
 
       // pre-process result block
       Type rt = fFunction.ReturnType();
+      fRet_Sizeof = rt.SizeOf();
+      if (fRet_Sizeof==0) {
+         // Humm a type with sizeof 0 ... more likely to be a type unknown to reflex ...
+         fRet_Sizeof = G__Lsizeof( rt.Name( Reflex::SCOPED ).c_str() );
+      }
       fRet_byref   = rt.IsReference();
       while ( rt.IsTypedef() ) rt = rt.ToType();
       fRet_desc = CintType( rt );
@@ -241,9 +248,12 @@ namespace ROOT { namespace Cintex {
 
          // Stub Calling
          void* retaddr = 0;
-         if ( context->fRet_byvalue )
-            retaddr = context->fMember.TypeOf().ReturnType().Construct().Address();
-         else
+         if ( context->fRet_byvalue ) {
+            // Intentionally use malloc here, we do NOT need to run
+            // the constructor since the function itself will run 
+            // a new with placement.
+            retaddr = malloc( context->fRet_Sizeof );
+         } else
             retaddr = context->GetReturnAddress(result);
          (*context->fStub)(retaddr, (void*)G__getstructoffset(), context->fParam, context->fStubctx);
          context->ProcessResult(result, retaddr);
@@ -257,9 +267,12 @@ namespace ROOT { namespace Cintex {
       // does not transmit the exception 
       try {
          void* retaddr = 0;
-         if ( context->fRet_byvalue )
-            retaddr = context->fMember.TypeOf().ReturnType().Construct().Address();
-         else
+         if ( context->fRet_byvalue ) {
+            // Intentionally use malloc here, we do NOT need to run
+            // the constructor since the function itself will run 
+            // a new with placement.
+            retaddr = malloc( context->fRet_Sizeof );
+         } else
             retaddr = context->GetReturnAddress(result);
          (*context->fStub)(retaddr, (void*)G__getstructoffset(), context->fParam, context->fStubctx);
          context->ProcessResult(result, retaddr);
