@@ -11,7 +11,7 @@
 
 #ifdef WIN32
 #include "Windows4Root.h"
-#include "RConfig.h"
+#include "RVersion.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <ocidl.h>
