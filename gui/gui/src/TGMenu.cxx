@@ -2021,7 +2021,11 @@ void TGMenuTitle::DoRedraw()
       gVirtualX->SetForeground(fNormGC, GetForeground());
       fLabel->Draw(fId, fSelGC, x, y + max_ascent);
    } else {
-      gVirtualX->SetForeground(fNormGC,GetDefaultFrameBackground());
+      // Use same background color than the menu bar
+      Pixel_t back = GetDefaultFrameBackground();
+      if (fMenu && fMenu->fMenuBar && fMenu->fMenuBar->GetBackground() != back)
+         back = fMenu->fMenuBar->GetBackground();
+      gVirtualX->SetForeground(fNormGC, back);
       gVirtualX->FillRectangle(fId,fNormGC, 0, 0, fWidth, fHeight);
       gVirtualX->SetForeground(fNormGC, GetForeground());
       fLabel->Draw(fId, fNormGC, x, y + max_ascent);
