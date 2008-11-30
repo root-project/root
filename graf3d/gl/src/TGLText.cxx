@@ -17,6 +17,7 @@
 #include "TColor.h"
 #include "TSystem.h"
 #include "TEnv.h"
+#include "TGLIncludes.h"
 
 #include "FTGLExtrdFont.h"
 #include "FTGLOutlineFont.h"
