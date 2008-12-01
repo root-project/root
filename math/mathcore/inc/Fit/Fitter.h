@@ -223,6 +223,11 @@ public:
    */
    FitConfig & Config() { return fConfig; } 
 
+   /**
+      query if fit is binned. In cse of false teh fit can be unbinned 
+      or is not defined (like in case of fitting through a ::FitFCN)
+    */
+   bool IsBinFit() const { return fBinFit; } 
 
 
 protected: 
@@ -243,6 +248,8 @@ protected:
 private: 
 
    bool fUseGradient;       // flag to indicate if using gradient or not
+
+   bool fBinFit;            // flag to indicate if fit is binned (in case of false the fit is unbinned or undefined)
 
    IModelFunction * fFunc;  // copy of the fitted  function containing on output the fit result
 

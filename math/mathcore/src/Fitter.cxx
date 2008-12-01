@@ -36,6 +36,8 @@ namespace ROOT {
 
 
 Fitter::Fitter() : 
+   fUseGradient(false),
+   fBinFit(false),
    fFunc(0)
 {
    // Default constructor implementation.
@@ -60,6 +62,7 @@ Fitter & Fitter::operator = (const Fitter &rhs)
    // Implementation of assignment operator.
    if (this == &rhs) return *this;  // time saving self-test
    fUseGradient = rhs.fUseGradient; 
+   fBinFit = rhs.fBinFit; 
    fResult = rhs.fResult;
    fConfig = rhs.fConfig; 
    // function is copied and managed by FitResult (maybe should use an auto_ptr)
@@ -134,6 +137,8 @@ bool Fitter::FitFCN(const BaseFunc & fcn, const double * params, unsigned int da
          return false;
       }
    }
+   fBinFit = false; 
+
    // create Minimizer  
    std::auto_ptr<ROOT::Math::Minimizer> minimizer = std::auto_ptr<ROOT::Math::Minimizer> ( fConfig.CreateMinimizer() );
    if (minimizer.get() == 0) return false; 
@@ -155,6 +160,8 @@ bool Fitter::FitFCN(const BaseGradFunc & fcn, const double * params, unsigned in
          return false;
       }
    }
+   fBinFit = false; 
+
    // create Minimizer  (need to be done afterwards)
    std::auto_ptr<ROOT::Math::Minimizer> minimizer = std::auto_ptr<ROOT::Math::Minimizer> ( fConfig.CreateMinimizer() );
    if (minimizer.get() == 0) return false; 
@@ -174,6 +181,8 @@ bool Fitter::FitFCN(MinuitFCN_t fcn ) {
       MATH_ERROR_MSG("Fitter::FitFCN","wrong fit parameter settings - npar = 0 ");
       return false;
    }
+   fBinFit = false; 
+
    ROOT::Fit::FcnAdapter  newFcn(fcn,npar); 
    return FitFCN(newFcn); 
 }
@@ -193,6 +202,7 @@ bool Fitter::DoLeastSquareFit(const BinData & data) {
    std::cout << "Fitter ParamSettings " << Config().ParamsSettings()[3].IsBound() << " lower limit " <<  Config().ParamsSettings()[3].LowerLimit() << " upper limit " <<  Config().ParamsSettings()[3].UpperLimit() << std::endl;
 #endif
 
+   fBinFit = true; 
 
    // check if fFunc provides gradient
    if (!fUseGradient) { 
@@ -227,6 +237,8 @@ bool Fitter::DoLikelihoodFit(const BinData & data) {
          minimizer->SetErrorUp(0.5);
    }
 
+   fBinFit = true; 
+
    // create a chi2 function to be used for the equivalent chi-square
    Chi2FCN<BaseFunc> chi2(data,*fFunc); 
 
@@ -258,6 +270,8 @@ bool Fitter::DoLikelihoodFit(const UnBinData & data) {
    if (minimizer.get() == 0) return false; 
    
    if (fFunc == 0) return false; 
+
+   fBinFit = false; 
 
 #ifdef DEBUG
    int ipar = 0;
@@ -292,6 +306,9 @@ bool Fitter::DoLinearFit(const BinData & data ) {
    // perform a linear fit on a set of binned data 
    std::string  prevminimizer = fConfig.MinimizerType();  
    fConfig.SetMinimizer("Linear"); 
+
+   fBinFit = true; 
+
    bool ret =  DoLeastSquareFit(data); 
    fConfig.SetMinimizer(prevminimizer.c_str());
    return ret; 
@@ -340,10 +357,8 @@ bool Fitter::DoMinimization(ROOT::Math::Minimizer & minimizer, const ObjFunc & o
    
    unsigned int ncalls =  ObjFuncTrait<ObjFunc>::NCalls(objFunc);
    int fitType =  ObjFuncTrait<ObjFunc>::Type(objFunc);
-   bool binFit = true;
-   if (fitType == ROOT::Math::FitMethodFunction::kLogLikelihood) binFit = false; 
 
-   fResult = FitResult(minimizer,fConfig, fFunc, ret, dataSize, binFit, chi2func, fConfig.MinosErrors(), ncalls );
+   fResult = FitResult(minimizer,fConfig, fFunc, ret, dataSize, fBinFit, chi2func, fConfig.MinosErrors(), ncalls );
 
    if (fConfig.NormalizeErrors() && fitType == ROOT::Math::FitMethodFunction::kLeastSquare ) fResult.NormalizeErrors(); 
    return ret; 

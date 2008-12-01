@@ -193,6 +193,11 @@ private:
 
 }; 
 
+      // define useful typedef's
+      typedef Chi2FCN<ROOT::Math::IMultiGenFunction> Chi2Function; 
+      typedef Chi2FCN<ROOT::Math::IMultiGradFunction> Chi2GradFunction; 
+
+
    } // end namespace Fit
 
 } // end namespace ROOT

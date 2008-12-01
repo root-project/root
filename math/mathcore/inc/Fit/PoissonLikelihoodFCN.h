@@ -154,6 +154,11 @@ private:
 
 }; 
 
+      // define useful typedef's
+      typedef PoissonLikelihoodFCN<ROOT::Math::IMultiGenFunction> PoissonLLFunction; 
+      typedef PoissonLikelihoodFCN<ROOT::Math::IMultiGradFunction> PoissonLLGradFunction; 
+
+
    } // end namespace Fit
 
 } // end namespace ROOT

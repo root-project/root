@@ -45,7 +45,8 @@ ClassImp(TBackCompFitter);
 TBackCompFitter::TBackCompFitter( ) : 
    fFitData(0), 
    fMinimizer(0), 
-   fObjFunc(0)
+   fObjFunc(0),
+   fModelFunc(0)
 {
    // Constructur needed by TVirtualFitter interface. Same behavior as default constructor.
    // initialize setting name and the global pointer
@@ -55,7 +56,8 @@ TBackCompFitter::TBackCompFitter( ) :
 TBackCompFitter::TBackCompFitter(ROOT::Fit::Fitter & fitter,ROOT::Fit::FitData * data) : 
    fFitData(data),
    fMinimizer(0),
-   fObjFunc(0)
+   fObjFunc(0),
+   fModelFunc(0)
 {
    // constructor used after having fit using directly ROOT::Fit::Fitter
    // will create a dummy fitter copying configuration and parameter settings
@@ -72,6 +74,7 @@ TBackCompFitter::~TBackCompFitter() {
    if (fFitData) delete fFitData; 
    if (fMinimizer) delete fMinimizer; 
    if (fObjFunc) delete fObjFunc; 
+   if (fModelFunc) delete fModelFunc;
 }
 
 Double_t TBackCompFitter::Chisquare(Int_t npar, Double_t *params) const {
@@ -645,21 +648,22 @@ void TBackCompFitter::ReCreateMinimizer() {
    // case of standard fits (not made fia Fitter::FitFCN) 
    if (fFitter.Result().FittedFunction() != 0) {
 
-      ROOT::Math::IParamMultiFunction * func =  dynamic_cast<ROOT::Math::IParamMultiFunction *>((fFitter.Result().FittedFunction())->Clone());
-      assert(func);
+      if (fModelFunc) delete fModelFunc; 
+      fModelFunc =  dynamic_cast<ROOT::Math::IParamMultiFunction *>((fFitter.Result().FittedFunction())->Clone());
+      assert(fModelFunc);
 
       // create fcn functions, should consider also gradient case
       const ROOT::Fit::BinData * bindata = dynamic_cast<const ROOT::Fit::BinData *>(fFitData); 
       if (bindata) { 
          if (GetFitOption().Like ) 
-            fObjFunc = new ROOT::Fit::PoissonLikelihoodFCN<ROOT::Math::IMultiGenFunction>(*bindata, *func);
+            fObjFunc = new ROOT::Fit::PoissonLikelihoodFCN<ROOT::Math::IMultiGenFunction>(*bindata, *fModelFunc);
          else
-            fObjFunc = new ROOT::Fit::Chi2FCN<ROOT::Math::IMultiGenFunction>(*bindata, *func);
+            fObjFunc = new ROOT::Fit::Chi2FCN<ROOT::Math::IMultiGenFunction>(*bindata, *fModelFunc);
       }
       else { 
          const ROOT::Fit::UnBinData * unbindata = dynamic_cast<const ROOT::Fit::UnBinData *>(fFitData); 
          assert(unbindata); 
-         fObjFunc = new ROOT::Fit::LogLikelihoodFCN<ROOT::Math::IMultiGenFunction>(*unbindata, *func);
+         fObjFunc = new ROOT::Fit::LogLikelihoodFCN<ROOT::Math::IMultiGenFunction>(*unbindata, *fModelFunc);
       }
    }
 

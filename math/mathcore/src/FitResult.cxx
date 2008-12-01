@@ -148,6 +148,11 @@ FitResult::FitResult() :
 
 }
 
+FitResult::~FitResult() { 
+   // destructor. FitResult manages the fit Function pointer
+   if (fFitFunc) delete fFitFunc;   
+}
+
 FitResult::FitResult(const FitResult &rhs) { 
    // Implementation of copy constructor
    (*this) = rhs; 

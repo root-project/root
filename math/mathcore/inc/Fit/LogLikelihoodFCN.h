@@ -163,6 +163,10 @@ private:
 
 }; 
 
+      // define useful typedef's
+      typedef LogLikelihoodFCN<ROOT::Math::IMultiGenFunction>  LogLikelihoodFunction; 
+      typedef LogLikelihoodFCN<ROOT::Math::IMultiGradFunction> LogLikelihoodGradFunction; 
+
    } // end namespace Fit
 
 } // end namespace ROOT

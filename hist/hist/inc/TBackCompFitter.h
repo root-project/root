@@ -111,6 +111,7 @@ private:
    ROOT::Math::Minimizer * fMinimizer;
    ROOT::Fit::Fitter fFitter; 
    ROOT::Math::IMultiGenFunction * fObjFunc; 
+   ROOT::Math::IParamMultiFunction * fModelFunc; 
    mutable std::vector<double> fCovar; // cached covariance matrix (NxN)
 
 

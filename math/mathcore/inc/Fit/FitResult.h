@@ -73,9 +73,9 @@ public:
    FitResult & operator = (const FitResult & rhs);  
 
    /** 
-      Destructor (no operations)
+      Destructor 
    */ 
-   ~FitResult ()  {}  
+   ~FitResult (); 
 
 
 public: 
