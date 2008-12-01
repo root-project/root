@@ -1135,6 +1135,7 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
                tilde.PaintText(xx,yy,"~");
                if (saveps) {
                   y2 -= 4*sub;
+                  xx  = gPad->AbsPixeltoX(Int_t((x2-xOrigin)*cosang+(y2-yOrigin)*sinang+xOrigin));
                   yy  = gPad->AbsPixeltoY(Int_t((x2-xOrigin)*-sinang+(y2-yOrigin)*cosang+yOrigin));
                   gVirtualPS = saveps;
                   gVirtualPS->SetTextAlign(22);
