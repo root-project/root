@@ -178,8 +178,8 @@ a time if there is no cyclic symbol dependency.
 .fi
 You can link the DLL by '#include' or '#pragma include' statement in
 the source code. '#include' and '#pragma include' behaves exactly the
-same except that when you try to compile the source code by a compiler
-'#include' will cause an error.
+same except that when you try to compile the source code by a 
+compiler '#include' will cause an error.
 .br
 For example,
 .nf
@@ -289,7 +289,7 @@ G__double(G__value val)' functions. For example,
 .nf
 
 long G__int(G__value buf)
-.fo
+.fi
 This  function converts G__value object to a long int value.
 .nf
 
@@ -341,7 +341,7 @@ function defined in the unloading files are busy.
 int G__pause(void)
 .fi
 This function starts debugger interface. It returns 0 except
-'i'(ignore) or 'q'(quit) command is used. You can start interactive
+\& 'i'(ignore) or 'q'(quit) command is used. You can start interactive
 interface as follows.
 .nf
     G__init_cint("cint source.c");
@@ -494,7 +494,7 @@ If appropriate header file is given by '-H' option, those compiled
 object can be accessed from the interpreter.  At least one header file
 must be given by -H option when using -C++ option.  Otherwise,
 makecint fails.  Multiple source files can be given after one
-'-C++'.  Suffix of the C++ source files must be  properly set in 
+\& '-C++'.  Suffix of the C++ source files must be  properly set in 
 the $CINTSYSDIR/MAKEINFO file.
 .TP
 .B \-C SUT.c

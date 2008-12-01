@@ -114,41 +114,39 @@ itself.
 \fIrootd\fR can also be configured for anonymous usage (like anonymous
 ftp). To setup \fIrootd\fR to accept anonymous logins do the following
 (while being logged in as root): 
-.TP 
-.Bl \-enum
-.It 
+.IP 1
 Add the following line to /etc/passwd:
 .sp 1
-.RS
+.RS 10
 .nf
 rootd:*:71:72:Anonymous rootd:/var/spool/rootd:/bin/false
 .fi
-.RE
-.sp 1
+.RE 
+.IP
 where you may modify the uid, gid (71, 72) and the home directory to
 suite your system. 
-.Ic 
+.IP 2
 Add the following line to /etc/group:
 .sp 1
-.RS
+.RS 10
 .nf
 rootd:*:72:rootd
 .fi
 .RE
-.sp 1
+.IP
 where the gid must match the gid in 
 .I /etc/passwd
-.Ic
+.IP 3
  Create the directories:
 .sp 1
-.RS
+.RS 10
 .nf
 /var/spool/rootd
 mkdir /var/spool/rootd/tmp
 chmod 777 /var/spool/rootd/tmp
 .fi
 .RE
-.sp 1
+.IP
 Where 
 .I /var/spool/rootd 
 must match the 
@@ -157,17 +155,17 @@ home directory as specified in the
 .B rootd 
 .I /etc/passwd 
 entry.
-.It 
+.IP 4 
 To make writable directories for anonymous do, for example:
 .sp 1
-.RS
+.RS 10
 .nf
 mkdir /var/spool/rootd/pub
 chown rootd:rootd /var/spool/rootd/pub
 .fi
 .RE
 .sp 1
-.El
+.IP
 That's all.
 .PP
 If you installed \fBROOT\fR using some pre-compiled package (for
@@ -250,7 +248,7 @@ do not check /etc/hosts.equiv, $HOME/.rhosts for password-based authentication; 
 \fIroot\fR(1), \fIproofd\fR(1), \fIsystem.rootdaemonrc\fR(1)
 .PP
 For more information on the \fBROOT\fR system, please refer to 
-.US http://root.cern.ch/
+.UR http://root.cern.ch/
 .I http://root.cern.ch
 .UE
 .SH "ORIGINAL AUTHORS"
