@@ -552,7 +552,7 @@ TEveBrowser::TEveBrowser(UInt_t w, UInt_t h) :
    // Construct Eve menu.
 
    fEvePopup = new TGPopupMenu(gClient->GetRoot());
-   // fEvePopup->AddEntry("New &MainFrame Slot", kNewMainFrameSlot);
+   fEvePopup->AddEntry("New &MainFrame Slot", kNewMainFrameSlot);
    fEvePopup->AddEntry("New &Tab Slot",       kNewTabSlot);
    fEvePopup->AddSeparator();
    fEvePopup->AddEntry("New &Viewer",         kNewViewer);
@@ -618,12 +618,13 @@ void TEveBrowser::EveMenu(Int_t id)
    switch (id)
    {
       case kNewMainFrameSlot: {
-         // XXXX
+         TEveWindowSlot* ew_slot = TEveWindow::CreateWindowMainFrame(0);
+         ew_slot->TitleBarClicked();
          break;
       }
       case kNewTabSlot: {
          TEveWindowSlot* ew_slot = TEveWindow::CreateWindowInTab(GetTabRight(), 0);
-         ew_slot->SetCurrent(kTRUE);
+         ew_slot->TitleBarClicked();
          break;
       }
       case kNewViewer: {

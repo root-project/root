@@ -18,6 +18,7 @@
 
 class TEveWindow;
 class TEveWindowSlot;
+class TEveWindowFrame;
 class TEveWindowMainFrame;
 class TEveWindowPack;
 class TEveWindowTab;
@@ -75,7 +76,36 @@ public:
    void FlipTitleBarState();
    void TitleBarClicked();
 
-   ClassDef(TEveCompositeFrame, 0); // Short description.
+   ClassDef(TEveCompositeFrame, 0); // Composite frame containing eve-window-controls and eve-windows.
+};
+
+
+//==============================================================================
+// TEveCompositeFrameInMainFrame
+//==============================================================================
+
+class TEveCompositeFrameInMainFrame : public TEveCompositeFrame
+{
+private:
+   TEveCompositeFrameInMainFrame(const TEveCompositeFrameInMainFrame&);            // Not implemented
+   TEveCompositeFrameInMainFrame& operator=(const TEveCompositeFrameInMainFrame&); // Not implemented
+
+protected:
+   TGMainFrame      *fMainFrame;
+
+public:
+   TEveCompositeFrameInMainFrame(TGCompositeFrame* parent, TEveWindow* eve_parent,
+                                 TGMainFrame* mf);
+   virtual ~TEveCompositeFrameInMainFrame();
+
+   virtual void Destroy();
+
+   virtual void        AcquireEveWindow(TEveWindow* ew);
+   virtual TEveWindow* RelinquishEveWindow();
+
+   void MainFrameClosed();
+
+   ClassDef(TEveCompositeFrameInMainFrame, 0); // Eve-composite-frame that is contained in one tab of a TGTab.
 };
 
 
@@ -99,7 +129,7 @@ public:
 
    virtual void Destroy();
 
-   ClassDef(TEveCompositeFrameInPack, 0); // Short description.
+   ClassDef(TEveCompositeFrameInPack, 0); // Eve-composite-frame that is contained in a TGPack.
 };
 
 
@@ -131,7 +161,7 @@ public:
 
    virtual void SetCurrent(Bool_t curr);
 
-   ClassDef(TEveCompositeFrameInTab, 0); // Short description.
+   ClassDef(TEveCompositeFrameInTab, 0); // Eve-composite-frame that is contained in one tab of a TGTab.
 };
 
 
@@ -162,18 +192,21 @@ public:
    TEveWindow(const Text_t* n="TEveWindow", const Text_t* t="");
    virtual ~TEveWindow();
 
+   virtual TGFrame*        GetGUIFrame() = 0;
+
+   virtual Bool_t          CanMakeNewSlots() const { return kFALSE; }
+   virtual TEveWindowSlot* NewSlot() { return 0; }
+
+   void PopulateSlot(TEveCompositeFrame* ef); 
+
    void SwapWindow(TEveWindow* w);
    void SwapWindowWithCurrent();        // *MENU*
 
    virtual void DestroyWindow();        // *MENU*
    virtual void DestroyWindowAndSlot(); // *MENU*
 
-   virtual TGFrame*            GetGUIFrame() { return 0; } // XXXX should be abstract
-
    TEveCompositeFrame* GetEveFrame()  { return fEveFrame; }
    void                ClearEveFrame();
-
-   void   PopulateSlot(TEveCompositeFrame* ef); 
 
    void   FlipShowTitleBar()      { SetShowTitleBar(!fShowTitleBar); }
    Bool_t GetShowTitleBar() const { return fShowTitleBar; }
@@ -187,12 +220,16 @@ public:
    // Static helper functions for common window management scenarios.
 
    static TEveWindowSlot* CreateDefaultWindowSlot();
+   static TEveWindowSlot* CreateWindowMainFrame(TEveWindow* eve_parent=0);
    static TEveWindowSlot* CreateWindowInTab(TGTab* tab, TEveWindow* eve_parent=0);
+
+   static UInt_t  fgMainFrameDefWidth;
+   static UInt_t  fgMainFrameDefHeight;
 
    static Pixel_t fgCurrentBackgroundColor;
    static Pixel_t fgMiniBarBackgroundColor;
 
-   ClassDef(TEveWindow, 0); // Short description.
+   ClassDef(TEveWindow, 0); // Abstract base-class for eve-windows.
 };
 
 
@@ -208,6 +245,7 @@ private:
 
 protected:
    TGTextButton      *fEmptyButt;
+   TGCompositeFrame  *fEmbedBuffer;
 
 public:
    TEveWindowSlot(const Text_t* n="TEveWindowSlot", const Text_t* t="");
@@ -220,30 +258,33 @@ public:
    TEveWindowPack* MakePack(); // *MENU*
    TEveWindowTab*  MakeTab();  // *MENU*
 
-   ClassDef(TEveWindowSlot, 0); // Short description.
+   void             StartEmbedding();
+   TEveWindowFrame* StopEmbedding();
+
+   ClassDef(TEveWindowSlot, 0); // An unoccupied eve-window slot.
 };
 
 
 //==============================================================================
-// TEveWindowMainFrame
+// TEveWindowFrame
 //==============================================================================
 
-class TEveWindowMainFrame : public TEveWindow
+class TEveWindowFrame : public TEveWindow
 {
 private:
-   TEveWindowMainFrame(const TEveWindowMainFrame&);            // Not implemented
-   TEveWindowMainFrame& operator=(const TEveWindowMainFrame&); // Not implemented
+   TEveWindowFrame(const TEveWindowFrame&);            // Not implemented
+   TEveWindowFrame& operator=(const TEveWindowFrame&); // Not implemented
 
 protected:
-   TGMainFrame         *fMainFrame;
+   TGFrame         *fGUIFrame;
 
 public:
-   TEveWindowMainFrame(const Text_t* n="TEveWindowMainFrame", const Text_t* t="");
-   virtual ~TEveWindowMainFrame() {}
+   TEveWindowFrame(TGFrame* f, const Text_t* n="TEveWindowFrame", const Text_t* t="");
+   virtual ~TEveWindowFrame();
 
-   virtual TGFrame* GetGUIFrame();
+   virtual TGFrame* GetGUIFrame() { return fGUIFrame; }
 
-   ClassDef(TEveWindowMainFrame, 0); // Short description.
+   ClassDef(TEveWindowFrame, 0); // Eve-window containing any TGFrame.
 };
 
 
@@ -251,28 +292,29 @@ public:
 // TEveWindowPack
 //==============================================================================
 
-class TEveWindowPack : public TEveWindow // , public TGPack
+class TEveWindowPack : public TEveWindow
 {
 private:
    TEveWindowPack(const TEveWindowPack&);            // Not implemented
    TEveWindowPack& operator=(const TEveWindowPack&); // Not implemented
 
 protected:
-   TGPack              *fPack;
+   TGPack          *fPack;
 
 public:
    TEveWindowPack(TGPack* p, const Text_t* n="TEveWindowPack", const Text_t* t="");
    virtual ~TEveWindowPack();
 
-   virtual TGFrame* GetGUIFrame();
+   virtual TGFrame*        GetGUIFrame();
 
-   TGPack* GetPack() const { return fPack; }
-
-   TEveWindowSlot* NewSlot(); // *MENU*
+   virtual Bool_t          CanMakeNewSlots() const { return kTRUE; }
+   virtual TEveWindowSlot* NewSlot(); // *MENU*
 
    void FlipOrientation(); // *MENU*
 
-   ClassDef(TEveWindowPack, 0); // Short description.
+   TGPack* GetPack() const { return fPack; }
+
+   ClassDef(TEveWindowPack, 0); // Eve-window containing a TGPack.
 };
 
 
@@ -287,19 +329,20 @@ private:
    TEveWindowTab& operator=(const TEveWindowTab&); // Not implemented
 
 protected:
-   TGTab               *fTab;
+   TGTab           *fTab;
 
 public:
    TEveWindowTab(TGTab* tab, const Text_t* n="TEveWindowTab", const Text_t* t="");
-   virtual ~TEveWindowTab() {}
+   virtual ~TEveWindowTab();
 
-   virtual TGFrame* GetGUIFrame();
+   virtual TGFrame*        GetGUIFrame();
+
+   virtual Bool_t          CanMakeNewSlots() const { return kTRUE; }
+   virtual TEveWindowSlot* NewSlot(); // *MENU*
 
    TGTab* GetTab() const { return fTab; }
 
-   TEveWindowSlot* NewSlot(); // *MENU*
-
-   ClassDef(TEveWindowTab, 0); // Short description.
+   ClassDef(TEveWindowTab, 0); // Eve-window containing a TGTab.
 };
 
 #endif

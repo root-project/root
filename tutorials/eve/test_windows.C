@@ -1,3 +1,5 @@
+TEveWindowSlot *s = 0;
+
 void test_windows()
 {
    TEveManager::Create();
@@ -9,7 +11,7 @@ void test_windows()
    slot = TEveWindow::CreateWindowInTab(gEve->GetBrowser()->GetTabRight());
 
    TEveWindowPack* pack1 = slot->MakePack();
-   pack1->NewSlot();
+   s = pack1->NewSlot();
    slot = pack1->NewSlot();
    
    TEveWindowPack* pack2 = slot->MakePack();
