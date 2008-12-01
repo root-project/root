@@ -43,14 +43,17 @@ protected:
 
    void           FindFrames(TGFrame* splitter, TGFrame*& f0, TGFrame*& f1);
 
+   void           AddFrameInternal(TGFrame *f, TGLayoutHints* l = 0);
+   Int_t          RemoveFrameInternal(TGFrame *f);
+
 public:
-   TGPack(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
-          UInt_t options = 0,
+   TGPack(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1, UInt_t options = 0,
           Pixel_t back = GetDefaultFrameBackground());
    TGPack(TGClient *c, Window_t id, const TGWindow *parent = 0);
    virtual ~TGPack();
 
    virtual void   AddFrame(TGFrame *f, TGLayoutHints *l = 0);
+   virtual void   DeleteFrame(TGFrame *f);
    virtual void   RemoveFrame(TGFrame *f);
    virtual void   ShowFrame(TGFrame *f);
    virtual void   HideFrame(TGFrame *f);
@@ -65,10 +68,8 @@ public:
 
    // ----------------------------------------------------------------
 
-   // Once children are present, this should be kept fixed, or rewritten.
-   // OK to change when there is one child.
    Bool_t GetVertical() const { return fVertical; }
-   void SetVertical(Bool_t x) { fVertical = x; }
+   void   SetVertical(Bool_t x);
 
    // For now assume this is always true. Lenght of splitter = 4 pixels.
    //Bool_t GetUseSplitters() const { return fUseSplitters; }
