@@ -333,12 +333,15 @@ TGCompositeFrame *TGTab::AddTab(TGString *text)
    // Add a tab to the tab widget. Returns the new container, which
    // is owned by the tab widget. The text is adopted by the tab widget.
 
-   TGCompositeFrame *cf;
-
-   AddFrame(new TGTabElement(this, text, 50, 20, fNormGC, fFontStruct), 0);
-   cf = new TGCompositeFrame(this, fWidth, fHeight-21);
+   TGTabElement *te = new TGTabElement(this, text, 50, 20, fNormGC, fFontStruct);
+   AddFrame(te, 0);
+   
+   TGCompositeFrame* cf = new TGCompositeFrame(this, fWidth, fHeight-21);
    AddFrame(cf, 0);
    cf->SetEditDisabled(kEditDisableResize);
+
+   te->MapWindow();
+   cf->MapWindow();
 
    return cf;
 }
@@ -365,9 +368,14 @@ void TGTab::AddTab(TGString *text, TGCompositeFrame *cf)
 {
    // Add a tab to the tab widget and fill it with given TGCompositeFrame.
 
-   AddFrame(new TGTabElement(this, text, 50, 20, fNormGC, fFontStruct), 0);
+   TGTabElement *te = new TGTabElement(this, text, 50, 20, fNormGC, fFontStruct);
+   AddFrame(te, 0);
+
    AddFrame(cf, 0);
    cf->SetEditDisabled(kEditDisableResize);
+
+   te->MapWindow();
+   cf->MapWindow();
 }
 
 //______________________________________________________________________________
@@ -682,7 +690,7 @@ void TGTab::NewTab(const char *text)
 
    TString name = text ? text : Form("tab%d", GetNumberOfTabs()+1);
    AddTab(name.Data());
-   MapSubwindows();
+
    GetLayoutManager()->Layout();
 }
 
