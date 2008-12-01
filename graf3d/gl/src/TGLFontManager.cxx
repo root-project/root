@@ -1,3 +1,14 @@
+// @(#)root/gl:$Id$
+// Author:  Olivier Couet  12/04/2007
+
+/*************************************************************************
+ * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #include "RConfigure.h"
 #include "TGLFontManager.h"
 
@@ -7,13 +18,19 @@
 #include "TGLUtil.h"
 #include "TGLIncludes.h"
 
-#include "FTFont.h"
-#include "FTGLExtrdFont.h"
-#include "FTGLOutlineFont.h"
-#include "FTGLPolygonFont.h"
-#include "FTGLTextureFont.h"
-#include "FTGLPixmapFont.h"
-#include "FTGLBitmapFont.h"
+#include <GL/gl.h>
+// direct inclussion of FTGL headers is deprecated
+#ifndef BUILTIN_FTGL
+# include <FTGL/ftgl.h>
+#else
+# include "FTFont.h"
+# include "FTGLExtrdFont.h"
+# include "FTGLOutlineFont.h"
+# include "FTGLPolygonFont.h"
+# include "FTGLTextureFont.h"
+# include "FTGLPixmapFont.h"
+# include "FTGLBitmapFont.h"
+#endif
 
 //______________________________________________________________________________
 // TGLFont

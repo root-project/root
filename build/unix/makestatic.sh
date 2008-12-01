@@ -12,6 +12,7 @@ LD=$4
 LDFLAGS=$5
 XLIBS=$6
 SYSLIBS=$7
+EXTRALIBS=$8
 
 ROOTALIB=lib/libRoot.a
 ROOTAEXE=bin/roota
@@ -75,9 +76,9 @@ fi
 
 echo "Making $ROOTAEXE..."
 echo $LD $LDFLAGS -o $ROOTAEXE main/src/rmain.o $dummyo $gobjs $ROOTALIB \
-   $XLIBS $SYSLIBS lib/libfreetype.a lib/libpcre.a
+   $XLIBS $SYSLIBS $EXTRALIBS
 $LD $LDFLAGS -o $ROOTAEXE main/src/rmain.o $dummyo $gobjs $ROOTALIB \
-   $XLIBS $SYSLIBS lib/libfreetype.a lib/libpcre.a
+   $XLIBS $SYSLIBS $EXTRALIBS
 
 linkstat=$?
 if [ $linkstat -ne 0 ]; then
@@ -86,9 +87,9 @@ fi
 
 echo "Making $PROOFAEXE..."
 echo $LD $LDFLAGS -o $PROOFAEXE main/src/pmain.o  $dummyo $gobjs $ROOTALIB \
-   $XLIBS $SYSLIBS lib/libfreetype.a lib/libpcre.a
+   $XLIBS $SYSLIBS $EXTRALIBS
 $LD $LDFLAGS -o $PROOFAEXE main/src/pmain.o  $dummyo $gobjs $ROOTALIB \
-   $XLIBS $SYSLIBS lib/libfreetype.a lib/libpcre.a
+   $XLIBS $SYSLIBS $EXTRALIBS
 
 linkstat=$?
 if [ $linkstat -ne 0 ]; then

@@ -770,7 +770,9 @@ Int_t TUnixSystem::GetFPEMask()
    if (oldmask & FE_DIVBYZERO)   mask |= kDivByZero;
    if (oldmask & FE_OVERFLOW )   mask |= kOverflow;
    if (oldmask & FE_UNDERFLOW)   mask |= kUnderflow;
+# ifdef FE_INEXACT
    if (oldmask & FE_INEXACT  )   mask |= kInexact;
+# endif
 #endif
 #endif
 
@@ -784,7 +786,9 @@ Int_t TUnixSystem::GetFPEMask()
    if (oldmask & FE_DIVBYZERO)   mask |= kDivByZero;
    if (oldmask & FE_OVERFLOW )   mask |= kOverflow;
    if (oldmask & FE_UNDERFLOW)   mask |= kUnderflow;
+# ifdef FE_INEXACT
    if (oldmask & FE_INEXACT  )   mask |= kInexact;
+# endif
 #endif
 
 #if defined(R__MACOSX) && !defined(__xlC__) && !defined(__i386__) && \
@@ -796,7 +800,9 @@ Int_t TUnixSystem::GetFPEMask()
    if (oldmask & FE_ENABLE_DIVBYZERO)   mask |= kDivByZero;
    if (oldmask & FE_ENABLE_OVERFLOW )   mask |= kOverflow;
    if (oldmask & FE_ENABLE_UNDERFLOW)   mask |= kUnderflow;
+# ifdef FE_INEXACT
    if (oldmask & FE_ENABLE_INEXACT  )   mask |= kInexact;
+# endif
 #endif
 
    return mask;
@@ -2130,7 +2136,7 @@ void TUnixSystem::StackTrace()
       }
 
       // open tmp file for demangled stack trace
-      TString tmpf1 = "gdb-backtrace"; 
+      TString tmpf1 = "gdb-backtrace";
       ofstream file1;
       if (demangle) {
          FILE *f = TempFileName(tmpf1);

@@ -19,12 +19,19 @@
 #include "TEnv.h"
 #include "TGLIncludes.h"
 
-#include "FTGLExtrdFont.h"
-#include "FTGLOutlineFont.h"
-#include "FTGLPolygonFont.h"
-#include "FTGLTextureFont.h"
-#include "FTGLPixmapFont.h"
-#include "FTGLBitmapFont.h"
+#include <GL/gl.h>
+// direct inclussion of FTGL headers is deprecated
+#ifndef BUILTIN_FTGL
+# include <FTGL/ftgl.h>
+#else
+# include "FTFont.h"
+# include "FTGLExtrdFont.h"
+# include "FTGLOutlineFont.h"
+# include "FTGLPolygonFont.h"
+# include "FTGLTextureFont.h"
+# include "FTGLPixmapFont.h"
+# include "FTGLBitmapFont.h"
+#endif
 
 #define FTGL_BITMAP  0
 #define FTGL_PIXMAP  1

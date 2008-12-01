@@ -136,14 +136,14 @@ distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(MATHCOREDEP) $(MATHCOREDS) $(MATHCOREDH) \
 		   $(MATHCORELIB) $(MATHCOREMAP)
 		@rm -rf include/Math include/Fit
-		@cd $(MATHCOREDIR)/test; $(MAKE) distclean
-		@cd $(MATHCOREDIR)/test/fit; $(MAKE) distclean
+		@cd $(MATHCOREDIR)/test; $(MAKE) distclean ROOTCONFIG=../../../bin/root-config
+		@cd $(MATHCOREDIR)/test/fit; $(MAKE) distclean ROOTCONFIG=../../../../bin/root-config
 
 distclean::     distclean-$(MODNAME)
 
 test-$(MODNAME): all-$(MODNAME)
-		@cd $(MATHCOREDIR)/test; $(MAKE)
-		@cd $(MATHCOREDIR)/test/fit; $(MAKE)
+		@cd $(MATHCOREDIR)/test; $(MAKE) ROOTCONFIG=../../../bin/root-config
+		@cd $(MATHCOREDIR)/test/fit; $(MAKE) ROOTCONFIG=../../../bin/root-config
 
 ##### extra rules ######
 $(MATHCOREO): CXXFLAGS += -DUSE_ROOT_ERROR

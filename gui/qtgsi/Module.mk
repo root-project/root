@@ -41,6 +41,7 @@ QTTESTOPTS    := -f Makefile.win
 else
 QTTESTOPTS    :=
 endif
+QTTESTPATH    := $(PATH):$(abspath ./bin)
 
 # used in the main Makefile
 ALLHDRS       += $(patsubst $(MODDIRI)/%.h,include/%.h,$(QTGSIH))
@@ -78,7 +79,7 @@ test-$(MODNAME): $(QTGSILIB)
 
 clean-$(MODNAME):
 		@rm -f $(QTGSIO) $(QTGSIMOCO)
-		-@cd $(QTGSIDIR)/test; $(MAKE) clean
+		-@cd $(QTGSIDIR)/test; $(MAKE) ROOTCONFIG=../../../bin/root-config clean
 
 clean::         clean-$(MODNAME)
 

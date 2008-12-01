@@ -841,6 +841,7 @@ guess_architecture() {
         linux:ppc64*:*)        arch=linuxppc64gcc   ;;
         linux:ppc*:*)          arch=linuxppcgcc     ;;
         linux:i*86:*)          arch=linux           ;;
+        linux:s39*:*)          arch=linux           ;;
         openbsd*:*:*)          arch=openbsd         ;;
         lynx:*:*)              arch=lynxos          ;;
         darwin:power*:*)       arch=macosx          ;;
@@ -4500,45 +4501,102 @@ fi
 # system.
 #
 if test "x$show_pkglist" = "xyes" ; then
-    test "x$enable_alien"   = "xyes" && pkglist="$pkglist root-plugin-alien"
-    test "x$enable_asimage" = "xyes" && pkglist="$pkglist root-plugin-asimage"
-    test "x$enable_castor"  = "xyes" && pkglist="$pkglist root-plugin-castor"
-    test "x$enable_cern"    = "xyes" && pkglist="$pkglist root-plugin-hbook"
-    test "x$enable_chirp"   = "xyes" && pkglist="$pkglist root-plugin-chirp"
-    test "x$enable_cint7"   = "xyes" && pkglist="$pkglist root-plugin-cint7"
-    test "x$enable_clarens" = "xyes" && pkglist="$pkglist libroot-clarens"
-    test "x$enable_dcache"  = "xyes" && pkglist="$pkglist root-plugin-dcache"
-    test "x$enable_fftw3"   = "xyes" && pkglist="$pkglist root-plugin-fftw3"
-    test "x$enable_gfal"    = "xyes" && pkglist="$pkglist root-plugin-gfal"
-    test "x$enable_g4root"  = "xyes" && pkglist="$pkglist root-plugin-g4root"
-    test "x$enable_globus"  = "xyes" && pkglist="$pkglist root-plugin-globus"
-    test "x$enable_krb5"    = "xyes" && pkglist="$pkglist root-plugin-krb5"
-    test "x$enable_ldap"    = "xyes" && pkglist="$pkglist libroot-ldap"
-    test "x$enable_minuit2" = "xyes" && pkglist="$pkglist root-plugin-minuit2"
-    test "x$enable_mathmore" = "xyes" && pkglist="$pkglist libroot-mathmore"
-    test "x$enable_monalisa" = "xyes" && pkglist="$pkglist root-plugin-monalisa"
-    test "x$enable_mysql"   = "xyes" && pkglist="$pkglist root-plugin-mysql"
-    test "x$enable_odbc"    = "xyes" && pkglist="$pkglist root-plugin-odbc"
-    test "x$enable_opengl"  = "xyes" && pkglist="$pkglist root-plugin-gl"
-    test "x$enable_oracle"  = "xyes" && pkglist="$pkglist root-plugin-oracle"
-    test "x$enable_peac"    = "xyes" && pkglist="$pkglist root-plugin-peac"
-    test "x$enable_pgsql"   = "xyes" && pkglist="$pkglist root-plugin-pgsql"
-    test "x$enable_pythia6" = "xyes" && pkglist="$pkglist root-plugin-pythia6"
-    test "x$enable_python"  = "xyes" && pkglist="$pkglist libroot-python"
-    test "x$enable_qt"      = "xyes" && pkglist="$pkglist root-plugin-qt"
-    test "x$enable_roofit"  = "xyes" && pkglist="$pkglist libroot-roofit"
-    test "x$enable_ruby"    = "xyes" && pkglist="$pkglist libroot-ruby"
-    test "x$enable_rfio"    = "xyes" && pkglist="$pkglist root-plugin-rfio"
-    test "x$enable_sapdb"   = "xyes" && pkglist="$pkglist root-plugin-maxdb"
-    test "x$enable_srp"     = "xyes" && pkglist="$pkglist root-plugin-srp"
-    test "x$enable_unuran"  = "xyes" && pkglist="$pkglist libroot-unuran"
-    test "x$enable_xml"     = "xyes" && pkglist="$pkglist root-plugin-xml"
-    test "x$enable_xrootd"  = "xyes" && pkglist="$pkglist root-system-xrootd root-plugin-netx"
+    test "x$enable_python"   = "xyes" && pl="$pl libroot-bindings-python"
+    test "x$enable_ruby"     = "xyes" && pl="$pl libroot-bindings-ruby"
+    test "x$enable_opengl"   = "xyes" && pl="$pl libroot-graf3d-gl"
+    test "x$enable_xml"      = "xyes" && pl="$pl libroot-io-xmlparser"
+    test "x$enable_mathmore" = "xyes" && pl="$pl libroot-math-mathmore"
+    test "x$enable_unuran"   = "xyes" && pl="$pl libroot-math-unuran"
+    test "x$enable_table"    = "xyes" && pl="$pl libroot-misc-table"
+    test "x$enable_g4root"   = "xyes" && pl="$pl libroot-montecarlo-g4root"
+    test "x$enable_ldap"     = "xyes" && pl="$pl libroot-net-ldap"
+    test "x$enable_clarens"  = "xyes" && pl="$pl libroot-proof-clarens"
+    test "x$enable_roofit"   = "xyes" && pl="$pl libroot-roofit"
+    test "x$enable_cint7"    = "xyes" && pl="$pl root-plugin-cint7"
+    test "x$enable_asimage"  = "xyes" && pl="$pl root-plugin-graf2d-asimage"
+    test "x$enable_gdml"     = "xyes" && pl="$pl root-plugin-geom-gdml"
+    test "x$enable_qt"       = "xyes" && pl="$pl root-plugin-gui-qt root-plugin-graf2d-qt"
+    test "x$enable_castor"   = "xyes" && pl="$pl root-plugin-io-castor"
+    test "x$enable_chirp"    = "xyes" && pl="$pl root-plugin-io-chirp"
+    test "x$enable_dcache"   = "xyes" && pl="$pl root-plugin-io-dcache"
+    test "x$enable_gfal"     = "xyes" && pl="$pl root-plugin-io-gfal"
+    test "x$enable_rfio"     = "xyes" && pl="$pl root-plugin-io-rfio"
+    test "x$enable_fftw3"    = "xyes" && pl="$pl root-plugin-math-fftw3"
+    test "x$enable_minuit2"  = "xyes" && pl="$pl root-plugin-math-minuit2"
+    test "x$enable_g4root"   = "xyes" && pl="$pl root-plugin-montecarlo-g4root"
+    test "x$enable_pythia6"  = "xyes" && pl="$pl root-plugin-montecarlo-pythia6"
+    test "x$enable_alien"    = "xyes" && pl="$pl root-plugin-net-alien"
+    test "x$enable_globus"   = "xyes" && pl="$pl root-plugin-net-globus"
+    test "x$enable_krb5"     = "xyes" && pl="$pl root-plugin-net-krb5"
+    test "x$enable_monalisa" = "xyes" && pl="$pl root-plugin-net-monalisa"
+    test "x$enable_srp"      = "xyes" && pl="$pl root-plugin-net-srp"
+    test "x$enable_peac"     = "xyes" && pl="$pl root-plugin-proof-peac"
+    test "x$enable_mysql"    = "xyes" && pl="$pl root-plugin-sql-mysql"
+    test "x$enable_odbc"     = "xyes" && pl="$pl root-plugin-sql-odbc"
+    test "x$enable_oracle"   = "xyes" && pl="$pl root-plugin-sql-oracle"
+    test "x$enable_pgsql"    = "xyes" && pl="$pl root-plugin-sql-pgsql"
+    test "x$enable_sapdb"    = "xyes" && pl="$pl root-plugin-sql-maxdb"
+    test "x$enable_xrootd"   = "xyes" && pl="$pl root-system-xrootd root-plugin-net-netx root-plugin-net-xrootd"
 
-    pkglist="$pkglist root-plugin-fumili libroot-minuit libroot-mlp libroot-tmva root-plugin-proof root-plugin-xproof root-plugin-sql libroot-quadp root-system-proofd root-system-rootd root-system-doc root-system-bin libroot root-system-common ttf-root-installer"
+    pl="$pl \
+        libroot-geom \
+        libroot-graf2d-gpad \
+        libroot-graf2d-graf \
+        libroot-graf2d-postscript \
+        libroot-graf3d-eve \
+        libroot-graf3d-g3d \
+        libroot-gui \
+        libroot-gui-ged \
+        libroot-hist \
+        libroot-hist-spectrum \
+        libroot-io \
+        libroot-math-foam \
+        libroot-math-genvector \
+        libroot-math-mathcore \
+        libroot-math-matrix \
+        libroot-math-minuit \
+        libroot-math-mlp \
+        libroot-math-physics \
+        libroot-math-quadp \
+        libroot-math-smatrix \
+        libroot-math-splot \
+        libroot-misc-minicern \
+        libroot-montecarlo-eg \
+        libroot-montecarlo-vmc \
+        libroot-net \
+        libroot-net-auth \
+        libroot-proof \
+        libroot-tmva \
+        libroot-tree \
+        libroot-tree-treeplayer \
+        root-plugin-geom-geombuilder \
+        root-plugin-geom-geompainter \
+        root-plugin-graf2d-x11 \
+        root-plugin-graf3d-x3d \
+        root-plugin-gui-fitpanel \
+        root-plugin-gui-guibuilder \
+        root-plugin-gui-sessionviewer \
+        root-plugin-hist-hbook \
+        root-plugin-hist-histpainter \
+        root-plugin-hist-spectrumpainter \
+        root-plugin-io-sql \
+        root-plugin-io-xml \
+        root-plugin-math-fumili \
+        root-plugin-proof-proofplayer \
+        root-plugin-proof-xproof \
+        root-plugin-tree-treeviewer \
+        root-system-proofd \
+        root-system-rootd \
+        root-system-doc \
+        root-system-bin \
+        libroot-core \
+        root-system-common \
+        ttf-root-installer"
+    pl=`echo $pl | tr -s ' '`
+
     # If we're called from the package preparation script, then
     # print out the package list and exit
-    result "packages: $pkglist"
+    result "packages: $pl"
     exit 0
 fi
 
@@ -4623,6 +4681,9 @@ if test -d freetype/src/freetype-2.1.9 ; then
 fi
 if test -d pcre/src/pcre-6.4 ; then
    rm -rf pcre/src/pcre-6.4
+fi
+if test -d core/pcre/src/pcre-7.4 ; then
+   rm -rf core/pcre/src/pcre-7.4
 fi
 rm -f lib/libRXML* bin/libRXML* bin/xproofd etc/system.rootmap
 rm -f lib/libProofGui* bin/libProofGui* bin/xrdgsiproxy

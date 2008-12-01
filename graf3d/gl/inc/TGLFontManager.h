@@ -1,3 +1,14 @@
+// @(#)root/gl:$Id$
+// Author:  Olivier Couet 12/04/2007
+
+/*************************************************************************
+ * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #ifndef ROOT_TGLFontManager
 #define ROOT_TGLFontManager
 

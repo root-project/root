@@ -21,6 +21,7 @@ dnl    ROOTEXEC           full path to root
 dnl    ROOTCINT           full path to rootcint
 dnl    ROOTLIBDIR         Where the ROOT libraries are 
 dnl    ROOTINCDIR         Where the ROOT headers are 
+dnl    ROOTETCDIR         Where the ROOT configuration is
 dnl    ROOTCFLAGS         Extra compiler flags
 dnl    ROOTLIBS           ROOT basic libraries 
 dnl    ROOTGLIBS          ROOT basic + GUI libraries
@@ -34,10 +35,11 @@ dnl Christian Holm Christensen <cholm@nbi.dk>
 dnl
 AC_DEFUN([ROOT_PATH],
 [
-  AC_ARG_WITH(rootsys,
-  [  --with-rootsys          top of the ROOT installation directory],
-    user_rootsys=$withval,
-    user_rootsys="none")
+  AC_ARG_WITH([rootsys],
+              [AC_HELP_STRING([--with-rootsys],
+			      [top of the ROOT installation directory])],
+    			      [user_rootsys=$withval],
+			      [user_rootsys="none"])
   if test ! x"$user_rootsys" = xnone; then
     rootbin="$user_rootsys/bin"
   elif test ! x"$ROOTSYS" = x ; then 
@@ -55,6 +57,7 @@ AC_DEFUN([ROOT_PATH],
     # define some variables 
     ROOTLIBDIR=`$ROOTCONF --libdir`
     ROOTINCDIR=`$ROOTCONF --incdir`
+    ROOTINCDIR=`$ROOTCONF --etcdir`
     ROOTCFLAGS=`$ROOTCONF --noauxcflags --cflags` 
     ROOTLIBS=`$ROOTCONF --noauxlibs --noldflags --libs`
     ROOTGLIBS=`$ROOTCONF --noauxlibs --noldflags --glibs`
@@ -82,6 +85,7 @@ AC_DEFUN([ROOT_PATH],
 
   AC_SUBST(ROOTLIBDIR)
   AC_SUBST(ROOTINCDIR)
+  AC_SUBST(ROOTETCDIR)
   AC_SUBST(ROOTCFLAGS)
   AC_SUBST(ROOTLIBS)
   AC_SUBST(ROOTGLIBS) 

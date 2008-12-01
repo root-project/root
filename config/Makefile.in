@@ -122,6 +122,9 @@ BUILDFTGL      := @buildftgl@
 FTGLLIBDIR     := @ftgllibdir@
 FTGLLIBS       := @ftgllibs@
 FTGLINCDIR     := $(filter-out /usr/include, @ftglincdir@)
+ifeq ($(BUILDFTGL), yes)
+FTGLCPPFLAGS   := -DBUILTIN_FTGL
+endif
 
 BUILDGFAL      := @buildgfal@
 GFALLIBDIR     := @gfallibdir@

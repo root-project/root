@@ -7,7 +7,7 @@ lib: $(SUBDIRS)
 all: lib
 
 clean:
-	@for dir in $(SUBDIRS); do cd $$dir ; $(MAKE) clean ; cd .. ; done
+	@for dir in $(SUBDIRS); do cd $$dir ; $(MAKE) clean ROOTCONFIG=../../../../bin/root-config; cd .. ; done
 
 $(SUBDIRS):
 	@cd $@; $(MAKE) all

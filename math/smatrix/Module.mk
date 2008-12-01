@@ -108,12 +108,12 @@ distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(SMATRIXDEP) $(SMATRIXDS) $(SMATRIXDS32) $(SMATRIXDH) \
 		   $(SMATRIXDH32) $(SMATRIXLIB) $(SMATRIXMAP)
 		@rm -rf include/Math
-		-@cd $(SMATRIXDIR)/test && $(MAKE) distclean
+		-@cd $(SMATRIXDIR)/test && $(MAKE) distclean ROOTCONFIG=../../../bin/root-config
 
 distclean::     distclean-$(MODNAME)
 
 test-$(MODNAME): all-$(MODNAME)
-		@cd $(SMATRIXDIR)/test && $(MAKE)
+		@cd $(SMATRIXDIR)/test && $(MAKE) ROOTCONFIG=../../../bin/root-config
 
 check-$(MODNAME): test-$(MODNAME)
-		@cd $(SMATRIXDIR)/test && $(MAKE)
+		@cd $(SMATRIXDIR)/test && $(MAKE) ROOTCONFIG=../../../bin/root-config

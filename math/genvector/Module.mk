@@ -120,12 +120,12 @@ distclean-$(MODNAME): clean-$(MODNAME)
 		   $(GENVECTORDH) $(GENVECTORDH32) \
 		   $(GENVECTORLIB) $(GENVECTORMAP)
 		@rm -rf include/Math
-		@cd $(GENVECTORDIR)/test; $(MAKE) distclean
+		@cd $(GENVECTORDIR)/test; $(MAKE) distclean ROOTCONFIG=../../../bin/root-config
 
 distclean::     distclean-$(MODNAME)
 
 test-$(MODNAME): all-$(MODNAME)
-		@cd $(GENVECTORDIR)/test; $(MAKE)
+		@cd $(GENVECTORDIR)/test; $(MAKE) ROOTCONFIG=../../../bin/root-config
 
 ##### extra rules ######
 

@@ -68,7 +68,7 @@ distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 ifeq ($(ARCH),win32)
-$(EVEO) $(EVEDO): CXXFLAGS += $(OPENGLINCDIR:%=-I%) $(FTGLINCDIR:%=-I%)
+$(EVEO) $(EVEDO): CXXFLAGS += $(OPENGLINCDIR:%=-I%) $(FTGLINCDIR:%=-I%) $(FTGLCPPFLAGS)
 else
-$(EVEO) $(EVEDO): CXXFLAGS += $(OPENGLINCDIR:%=-I%) $(FTGLINCDIR:%=-I%)
+$(EVEO) $(EVEDO): CXXFLAGS += $(OPENGLINCDIR:%=-I%) $(FTGLINCDIR:%=-I%) $(FTGLCPPFLAGS)
 endif

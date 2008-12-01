@@ -183,7 +183,7 @@ ifeq ($(BUILDMATHMORE),yes)
 MODULES      += math/mathmore
 endif
 ifeq ($(BUILDREFLEX),yes)
-# put reflex right in front of CINT; CINT needs it 
+# put reflex right in front of CINT; CINT needs it
 MODULES      := $(subst cint/cint,cint/reflex cint/cint,$(MODULES))
 endif
 ifeq ($(BUILDMINUIT2),yes)
@@ -266,7 +266,8 @@ MODULES      += core/unix core/winnt graf2d/x11 graf2d/x11ttf \
                 sql/oracle io/xmlparser math/mathmore cint/reflex cint/cintex \
                 cint/cint7 roofit/roofitcore roofit/roofit roofit/roostats \
                 math/minuit2 net/monalisa math/fftw sql/odbc math/unuran \
-                geom/gdml graf3d/eve montecarlo/g4root net/glite misc/memstat
+                geom/gdml graf3d/eve montecarlo/g4root net/glite misc/memstat \
+                math/genvector
 MODULES      := $(sort $(MODULES))   # removes duplicates
 endif
 
@@ -458,6 +459,11 @@ COMPILEDATA   = include/compiledata.h
 ROOTRC        = etc/system.rootrc
 ROOTMAP       = etc/system.rootmap
 
+##### Extra libs needed for "static" target #####
+
+STATICEXTRALIBS = $(PCRELDFLAGS) $(PCRELIB) \
+                  $(FREETYPELDFLAGS) $(FREETYPELIB)
+
 ##### libCore #####
 
 COREL         = $(BASEL1) $(BASEL2) $(BASEL3) $(CONTL) $(METAL) \
@@ -471,6 +477,7 @@ CORELIB      := $(LPATH)/libCore.$(SOEXT)
 COREMAP      := $(CORELIB:.$(SOEXT)=.rootmap)
 ifneq ($(BUILTINZLIB),yes)
 CORELIBEXTRA += $(ZLIBCLILIB)
+STATICEXTRALIBS += -lz
 endif
 
 ##### In case shared libs need to resolve all symbols (e.g.: aix, win32) #####
@@ -717,6 +724,41 @@ redhat:
 #	rpm -bb --rcfile rpm/rpmrc --buildroot `pwd`/rpm/tmp rpm/root.spec
 #	@echo "Redhat Linux packages done. They are put in '../<arch>'"
 
+redhat-tar:
+	@if [ ! -x `which rpm` ]; then \
+	   echo "You must have rpm installed to make the Redhat package"; \
+	   exit 1; fi
+	@echo "OK, you have RPM on your system - good"
+	build/package/lib/makerpmspec.sh
+	-@$(MAKE) distclean
+	-@$(MAKE) maintainer-clean
+	@vers=`sed 's|\(.*\)/\(.*\)|\1.\2|' < build/version_number` && \
+	  rm -f root_v$$vers.source.tar.gz && \
+	  (cd ../ && tar 		\
+		--exclude=\\.svn 	\
+		--exclude=root/debian 	\
+		--exclude=root/bin	\
+		--exclude=root/lib	\
+		--exclude=root/include	\
+	     -czf root_v$$vers.source.tar.gz root) && \
+	  mv ../root_v$$vers.source.tar.gz .
+	@echo "To build the packages, run "
+	@echo ""
+	@vers=`sed 's|\(.*\)/\(.*\)|\1.\2|' < build/version_number` ; \
+	  echo "  rpmbuild -ta root_v$$vers.source.tar.gz"
+	@echo ""
+	@echo "as user root (or similar). If you want to build outside"
+	@echo "the regular tree (as a normal user), please refer to the"
+	@echo "RPM documentation."
+
+redhat-rpm: redhat-tar
+	@rm -rf rpm
+	@mkdir -p rpm/SOURCES rpm/SPECS rpm/BUILD rpm/RPMS rpm/SRPMS
+	@vers=`sed 's|\(.*\)/\(.*\)|\1.\2|' < build/version_number` && \
+	  rpmbuild --define "_topdir `pwd`/rpm" -ta root_v$$vers.source.tar.gz
+	@rm -rf rpm/SOURCES rpm/SPECS
+	@echo "Packages build in rpm/RPMS and rpm/SPRMS"
+
 rootdrpm:
 	@if [ ! -x `which rpm` ]; then \
 	   echo "You must have rpm installed to make the root-rootd package"; \
@@ -825,11 +867,12 @@ endif
 	-@mv -f tutorials/mlp/mlpHiggs.root- tutorials/mlp/mlpHiggs.root
 	-@mv -f tutorials/quadp/stock.root- tutorials/quadp/stock.root
 	@rm -f bin/roota bin/proofserva lib/libRoot.a
-	@rm -f $(CINTDIR)/include/*.dll $(CINTDIR)/include/sys/*.dll
-	@rm -f $(CINTDIR)/stl/*.dll build/dummy.d
-	@rm -f README/ChangeLog
+	@rm -f $(CINTDIR)/include/*.dll $(CINTDIR)/include/*.so*
+	@rm -f $(CINTDIR)/stl/*.dll $(CINTDIR)/stl/*.so*
+	@rm -f $(CINTDIR)/include/sys/*.dll $(CINTDIR)/include/sys/*.so.*
+	@rm -f $(CINTDIR)/lib/posix/a.out $(CINTDIR)/lib/posix/mktypes
+	@rm -f README/ChangeLog build/dummy.d
 	@rm -rf README/ReleaseNotes
-	@rm -f $(CINTDIR)/lib/posix/a.out $(CINTDIR)/include/*.so*
 	@rm -f etc/daemons/rootd.rc.d etc/daemons/rootd.xinetd
 	@rm -f etc/daemons/proofd.rc.d etc/daemons/proofd.xinetd
 	@rm -f etc/daemons/olbd.rc.d etc/daemons/xrootd.rc.d
@@ -850,7 +893,7 @@ version: $(CINTTMP)
 
 static: rootlibs
 	@$(MAKESTATIC) $(PLATFORM) "$(CXX)" "$(CC)" "$(LD)" "$(LDFLAGS)" \
-	   "$(XLIBS)" "$(SYSLIBS)"
+	   "$(XLIBS)" "$(SYSLIBS)" "$(STATICEXTRALIBS)"
 
 changelog:
 	@$(MAKECHANGELOG)

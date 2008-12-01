@@ -25,6 +25,8 @@ if [ $PLATFORM != "clean" ]; then
    SOEXT=$1         ; shift
    COMPILER=$1      ; shift
    CXXOUT=$1        ; shift
+else
+   DLLNAME=$1       ; shift
 fi
 if [ $PLATFORM = "macosx" ]; then
    macosx_minor=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`
