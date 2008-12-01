@@ -139,7 +139,7 @@ void TGPack::ExpandExistingFrames(Int_t amount)
          Int_t d = (l * amount) / len;
          SetFrameLength(el->fFrame, l + d);
          remainder -= d;
-      
+
          if (fUseSplitters)
             next();
       }
@@ -181,7 +181,7 @@ void TGPack::ShrinkExistingFrames(Int_t amount)
       Int_t d = (l * amount) / len;
       SetFrameLength(el->fFrame, l - d);
       remainder -= d;
-      
+
       if (fUseSplitters)
          next();
    }
@@ -258,7 +258,7 @@ void TGPack::AddFrameInternal(TGFrame* f, TGLayoutHints* l)
    if (n > 0)
    {
       ShrinkExistingFrames(nflen);
-      
+
       if (fUseSplitters) {
          nflen -= fSplitterLen;
          TGSplitter* s = 0;
@@ -473,7 +473,7 @@ void TGPack::HandleSplitterResize(Int_t delta)
    else
    {
       Int_t l = GetFrameLength(f1);
-      if (l - 1 < delta) 
+      if (l - 1 < delta)
       {
          fDragOverflow += delta - l + 1;
          delta = l - 1;
