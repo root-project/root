@@ -1974,7 +1974,13 @@ void TDocParser::WriteMethod(std::ostream& out, TString& ret,
 
    TMethod* guessedMethod = 0;
    int nparams = params.CountChar(',');
-   if (params.Length()) ++nparams;
+   TString strippedParams(params);
+   if (strippedParams[0] == '(') {
+      strippedParams.Remove(0, 1);
+      strippedParams.Remove(strippedParams.Length() - 1);
+   }
+   if (strippedParams.Strip(TString::kBoth).Length())
+      ++nparams;
 
    TMethod* method = 0;
    TIter nextMethod(fCurrentClass->GetListOfMethods());
