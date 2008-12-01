@@ -241,11 +241,20 @@ namespace ROOT { namespace Cintex {
          while ( (occ=s.find(", ")) != std::string::npos )    {
             s.replace(occ, 2, ",");
          }
+         /// remove optional spaces to be conformant with CINT
+         while ( (occ=s.find("* const")) != std::string::npos )    {
+            if (!isalnum(s[occ + 7]))
+               s.replace(occ, 7, "*const");
+         }
+         /// remove optional spaces to be conformant with CINT
+         while ( (occ=s.find("& const")) != std::string::npos )    {
+            if (!isalnum(s[occ + 7]))
+               s.replace(occ, 7, "&const");
+         }
 
          //
          // Perform naming normalization for primitives
-         // since GCC-XML, this pile of shit just generates
-         // anything.
+         // since GCC-XML just generates anything.
          //
          // Let's hope this will not kick us back sometimes.
          //
