@@ -39,6 +39,18 @@
 <ul>
 <li> Since the new font endocing (June release) the hyphen was longer than
      before. Now fixed.
+<li> When drawn with an angle, the "tilde" character as an acceent was not
+     correctly placed in a PostScript file. For instance:
+<pre>
+   {
+      TCanvas *c1 = new TCanvas("c1", "c1",15,49,700,530);
+      TLatex *tex1 = new TLatex(0.5,0.5,"#tilde{C}");
+      tex1->SetTextSize(0.2);
+      tex1->SetTextAngle(90);
+      tex1->Draw();
+      c1->Print("tilde.ps");
+   }
+</pre>
 </ul>
 
 <h4>TASImage / libAfterImage</h4>
