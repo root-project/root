@@ -17,7 +17,7 @@
 
 class TGTableFrame : public TQObject {
 
-private:
+protected:
    TGCompositeFrame *fFrame;  // Composite frame used as a container
    TGCanvas         *fCanvas; // Pointer to the canvas that used this frame.
 
@@ -35,12 +35,11 @@ public:
 };
 
 class TGTableHeaderFrame: public TGCompositeFrame {
-private:
+
+protected:
    Int_t    fX0;     // X coordinate of the header frame 
    Int_t    fY0;     // Y coordinate of the header frame
    TGTable *fTable;  // Table that this frame belongs to
-
-protected:
 
 public:
    TGTableHeaderFrame(const TGWindow *p, TGTable *table = 0, UInt_t w = 1, 

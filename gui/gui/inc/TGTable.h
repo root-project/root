@@ -39,7 +39,7 @@ class TTableRange;
 
 class TGTable : public TGCompositeFrame, public TGWidget {
 
-private:
+protected:
    TObjArray     *fRows;          // Array of rows
    TObjArray     *fRowHeaders;    // Array of row headers
    TObjArray     *fColumnHeaders; // Array of column headers
@@ -94,7 +94,7 @@ private:
 
    // Add rows and/or colums to the edge of the table.
 
-   void Init();
+   virtual void Init();
 
    // Remove rows and/or colums from the edge of the table.
 protected:

@@ -25,7 +25,7 @@ class TGWindow;
 
 class TGTableHeader : public TGTableCell {
 
-private:
+protected:
    EHeaderType fType;        // Type of header
    UInt_t      fWidth;       // Width for the column
    UInt_t      fHeight;      // Height of the row
@@ -33,9 +33,7 @@ private:
    Bool_t      fEnabled;     // Cell enabled state
    Bool_t      fHasOwnLabel; // Flag on default or specific label usage
 
-   void Init();
-
-protected:
+   virtual void Init();
 
 public:
    TGTableHeader(const TGWindow *p = 0, TGTable *table = 0, 

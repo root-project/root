@@ -27,8 +27,6 @@ class TGTableCell : public TGFrame {
 
 friend class TGTable;
 
-private:
-   void Init(Bool_t resize);
 protected:
    TGString      *fLabel;      // Text as shown in the cell
    TGToolTip     *fTip;        // Possible Tooltip
@@ -55,7 +53,8 @@ protected:
    virtual void Resize(UInt_t width, UInt_t height);
    virtual void Resize(TGDimension newsize);
 
-   void Highlight();
+   virtual void Highlight();
+   virtual void Init(Bool_t resize);
 
 public:
    static FontStruct_t GetDefaultFontStruct();
