@@ -45,7 +45,7 @@ namespace ROOT {
         fImplFileName(0), fImplFileLine(0),
         fIsA(isa), fShowMembers(showmembers),
         fVersion(1),
-        fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0), fStreamer(0),
+        fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0), fDirAutoAdd(0), fStreamer(0),
         fCollectionProxy(0), fSizeof(sizof),
         fCollectionProxyInfo(0), fCollectionStreamerInfo(0)
    {
@@ -65,7 +65,7 @@ namespace ROOT {
         fImplFileName(0), fImplFileLine(0),
         fIsA(isa), fShowMembers(showmembers),
         fVersion(version),
-        fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0), fStreamer(0),
+        fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0), fDirAutoAdd(0), fStreamer(0),
         fCollectionProxy(0), fSizeof(sizof),
         fCollectionProxyInfo(0), fCollectionStreamerInfo(0)
    {
@@ -85,7 +85,7 @@ namespace ROOT {
         fImplFileName(0), fImplFileLine(0),
         fIsA(isa), fShowMembers(0),
         fVersion(version),
-        fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0), fStreamer(0),
+        fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0), fDirAutoAdd(0), fStreamer(0),
         fCollectionProxy(0), fSizeof(sizof),
         fCollectionProxyInfo(0), fCollectionStreamerInfo(0)
 
@@ -107,7 +107,7 @@ namespace ROOT {
         fImplFileName(0), fImplFileLine(0),
         fIsA(0), fShowMembers(0),
         fVersion(version),
-        fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0), fStreamer(0),
+        fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0), fDirAutoAdd(0), fStreamer(0),
         fCollectionProxy(0), fSizeof(0),
         fCollectionProxyInfo(0), fCollectionStreamerInfo(0)
 
