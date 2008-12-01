@@ -136,8 +136,7 @@ TEveCaloDataVec* MakeVecData(TH2* h1, TH2* h2)
     }
   }
 
-  data->SetEtaBins(new TAxis(100, ax->GetBinLowEdge(1), ax->GetBinUpEdge(ax->GetLast())));
-  data->SetPhiBins(new TAxis(100, ay->GetBinLowEdge(1), ay->GetBinUpEdge(ay->GetLast())));
+  data->SetAxisFromBins();
   data->DataChanged();
 
   return data;

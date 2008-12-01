@@ -92,6 +92,7 @@ private:
 
    TFolder                  *fMacroFolder;
 
+   TEveElementList          *fWindows;
    TEveViewerList           *fViewers;
    TEveSceneList            *fScenes;
 
@@ -138,6 +139,7 @@ public:
    TEveGedEditor*    GetEditor()    const { return fEditor;    }
    TGStatusBar*      GetStatusBar() const { return fStatusBar; }
 
+   TEveElementList*  GetWindows()  const { return fWindows; }
    TEveSceneList*    GetScenes()   const { return fScenes;  }
    TEveViewerList*   GetViewers()  const { return fViewers; }
 

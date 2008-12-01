@@ -1378,7 +1378,8 @@ void TEveElement::Destroy()
    static const TEveException eh("TEveElement::Destroy ");
 
    if (fDenyDestroy > 0)
-      throw(eh + "this element '%s' is protected against destruction.", GetElementName());
+      throw eh + TString::Format("element '%s' (%s*) 0x%lx is protected against destruction.",
+                                 GetElementName(), IsA()->GetName(), this);
 
    gEve->PreDeleteElement(this);
    delete this;
@@ -1392,12 +1393,14 @@ void TEveElement::DestroyOrWarn()
 
    static const TEveException eh("TEveElement::DestroyOrWarn ");
 
-   if (fDenyDestroy > 0)
-      throw(eh + "this element '%s' is protected against destruction.", GetElementName());
-
-   gEve->PreDeleteElement(this);
-   delete this;
-   gEve->Redraw3D();
+   try
+   {
+      Destroy();
+   }
+   catch (TEveException& exc)
+   {
+      Warning(eh, exc);
+   }
 }
 
 //______________________________________________________________________________

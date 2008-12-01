@@ -19,6 +19,7 @@
 #include "TList.h"
 
 #include <cassert>
+#include <algorithm>
 
 
 
@@ -201,7 +202,7 @@ void TEveCaloData::CellGeom_t::Configure(Float_t etaMin, Float_t etaMax, Float_t
 
 //______________________________________________________________________________
 //
-// Blabla.
+// Calo data for universal cell geometry. 
 
 ClassImp(TEveCaloDataVec);
 
@@ -331,6 +332,8 @@ void TEveCaloDataVec::GetCellList(Float_t eta, Float_t etaD,
 //______________________________________________________________________________
 void TEveCaloDataVec::Rebin(TAxis* ax, TAxis* ay, vCellId_t &ids, Bool_t et, RebinData_t& rdata) const
 {
+   // Rebin cells.
+
    rdata.fNSlices = GetNSlices();
    rdata.fBinData.assign((ax->GetNbins()+2)*(ay->GetNbins()+2), -1);
 
@@ -406,6 +409,89 @@ void TEveCaloDataVec::DataChanged()
    TEveCaloData::DataChanged();
 }
 
+
+//______________________________________________________________________________
+void  TEveCaloDataVec::SetAxisFromBins(Double_t epsX, Double_t epsY)
+{
+   // Set XY axis from cells geometry.
+
+   std::vector<Double_t> binX;
+   std::vector<Double_t> binY;
+
+   for(vCellGeom_ci i=fGeomVec.begin(); i!=fGeomVec.end(); i++)
+   {
+      const CellGeom_t &ch = *i;
+
+      binX.push_back(ch.EtaMin());
+      binX.push_back(ch.EtaMax());
+      binY.push_back(ch.PhiMin());
+      binY.push_back(ch.PhiMax());
+   }
+
+   std::sort(binX.begin(), binX.end());
+   std::sort(binY.begin(), binY.end());
+
+   Int_t cnt = 0;
+   Double_t sum = 0;
+   Double_t val;
+
+   // X axis
+   Double_t dx = binX.back() - binX.front();
+   epsX *= dx;
+   std::vector<Double_t> newX;
+   newX.push_back(binX.front()); // underflow
+   Int_t nX = binX.size()-1;
+   for(Int_t i=0; i<nX; i++) 
+   { 
+      val = (sum +binX[i])/(cnt+1);
+      if (binX[i+1] -val > epsX)
+      {
+         newX.push_back(val);
+         cnt = 0;
+         sum = 0;
+      }
+      else 
+      {
+         sum += binX[i];
+         cnt++;
+      }
+   }
+   newX.push_back(binX.back()); // overflow
+
+   // Y axis
+   cnt = 0;
+   sum = 0;
+   std::vector<Double_t> newY;
+   Double_t dy = binY.back() - binY.front();
+   epsY *= dy;
+   newY.push_back(binY.front());// underflow
+   Int_t nY = binY.size()-1;
+   for(Int_t i=0 ; i<nY; i++) 
+   {
+      val = (sum +binY[i])/(cnt+1);
+      if (binY[i+1] -val > epsY )
+      {
+         newY.push_back(val);
+         cnt = 0;
+         sum = 0;
+      }
+      else 
+      {
+         sum += binY[i];
+         cnt++;
+      }
+
+   }
+   newY.push_back(binY.back()); // overflow
+
+   if (fEtaAxis) delete fEtaAxis;
+   if (fPhiAxis) delete fPhiAxis;
+
+   fEtaAxis = new TAxis(newX.size()-1, &newX[0]);
+   fPhiAxis = new TAxis(newY.size()-1, &newY[0]);
+   fEtaAxis->SetNdivisions(510);
+   fPhiAxis->SetNdivisions(510);
+}
 
 //==============================================================================
 // TEveCaloDataHist

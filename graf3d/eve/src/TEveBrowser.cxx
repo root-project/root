@@ -16,6 +16,7 @@
 #include "TEveManager.h"
 #include "TEveSelection.h"
 #include "TEveGedEditor.h"
+#include "TEveWindow.h"
 
 #include "TGFileBrowser.h"
 #include "TBrowser.h"
@@ -261,6 +262,8 @@ void TEveGListTreeEditorFrame::ReconfToHorizontal()
    {
       if (el->fFrame == fSplitter)
       {
+         // This is needed so that splitter window gets destroyed on server.
+         fSplitter->ReparentWindow(fClient->GetDefaultRoot());
          delete fSplitter;
          el->fFrame = fSplitter = new TGVSplitter(fFrame);
          el->fLayout->SetLayoutHints(kLHintsLeft | kLHintsExpandY);
@@ -304,6 +307,8 @@ void TEveGListTreeEditorFrame::ReconfToVertical()
    {
       if (el->fFrame == fSplitter)
       {
+         // This is needed so that splitter window gets destroyed on server.
+         fSplitter->ReparentWindow(fClient->GetDefaultRoot());
          delete fSplitter;
          el->fFrame = fSplitter = new TGHSplitter(fFrame);
          el->fLayout->SetLayoutHints(kLHintsTop | kLHintsExpandX);
@@ -522,6 +527,7 @@ void TEveBrowser::CalculateReparentXY(TGObject* parent, Int_t& x, Int_t& y)
 namespace
 {
 enum EEveMenu_e {
+   kNewMainFrameSlot, kNewTabSlot,
    kNewViewer,  kNewScene,  kNewProjector,
    kNewBrowser, kNewCanvas, kNewCanvasExt, kNewTextEditor, kNewHtmlBrowser,
    kVerticalBrowser,
@@ -546,14 +552,17 @@ TEveBrowser::TEveBrowser(UInt_t w, UInt_t h) :
    // Construct Eve menu.
 
    fEvePopup = new TGPopupMenu(gClient->GetRoot());
-   fEvePopup->AddEntry("New &Viewer",      kNewViewer);
-   fEvePopup->AddEntry("New &Scene",       kNewScene);
-   fEvePopup->AddEntry("New &Projector",   kNewProjector);
+   // fEvePopup->AddEntry("New &MainFrame Slot", kNewMainFrameSlot);
+   fEvePopup->AddEntry("New &Tab Slot",       kNewTabSlot);
    fEvePopup->AddSeparator();
-   fEvePopup->AddEntry("New &Browser",     kNewBrowser);
-   fEvePopup->AddEntry("New &Canvas",      kNewCanvas);
-   fEvePopup->AddEntry("New Canvas Ext",   kNewCanvasExt);
-   fEvePopup->AddEntry("New Text Editor",  kNewTextEditor);
+   fEvePopup->AddEntry("New &Viewer",         kNewViewer);
+   fEvePopup->AddEntry("New &Scene",          kNewScene);
+   fEvePopup->AddEntry("New &Projector",      kNewProjector);
+   fEvePopup->AddSeparator();
+   fEvePopup->AddEntry("New &Browser",        kNewBrowser);
+   fEvePopup->AddEntry("New &Canvas",         kNewCanvas);
+   fEvePopup->AddEntry("New Canvas Ext",      kNewCanvasExt);
+   fEvePopup->AddEntry("New Text &Editor",    kNewTextEditor);
    // fEvePopup->AddEntry("New HTML Browser", kNewHtmlBrowser);
    fEvePopup->AddSeparator();
 
@@ -608,43 +617,52 @@ void TEveBrowser::EveMenu(Int_t id)
 
    switch (id)
    {
-      case kNewViewer:
+      case kNewMainFrameSlot: {
+         // XXXX
+         break;
+      }
+      case kNewTabSlot: {
+         TEveWindowSlot* ew_slot = TEveWindow::CreateWindowInTab(GetTabRight(), 0);
+         ew_slot->SetCurrent(kTRUE);
+         break;
+      }
+      case kNewViewer: {
          gEve->SpawnNewViewer("Viewer Pepe");
          break;
-
-      case kNewScene:
+      }
+      case kNewScene: {
          gEve->SpawnNewScene("Scena Mica");
          break;
-
+      }
       case kNewProjector: {
          TEveElement* pr = (TEveElement*) (gROOT->GetClass("TEveProjectionManager")->New());
          pr->SetElementNameTitle("Projector", "User-created projector.");
          gEve->AddToListTree(pr, kTRUE);
          break;
       }
-      case kNewBrowser:
+      case kNewBrowser: {
          gROOT->ProcessLineFast("new TBrowser");
          break;
-
-      case kNewCanvas:
+      }
+      case kNewCanvas: {
          StartEmbedding(1);
          gROOT->ProcessLineFast("new TCanvas");
          StopEmbedding();
          SetTabTitle("Canvas", 1);
          break;
-
-      case kNewCanvasExt:
+      }
+      case kNewCanvasExt: {
          gROOT->ProcessLineFast("new TCanvas");
          break;
-
-      case kNewTextEditor:
+      }
+      case kNewTextEditor: {
          StartEmbedding(1);
          gROOT->ProcessLineFast(Form("new TGTextEditor((const char *)0, (const TGWindow *)0x%lx)", gClient->GetRoot()));
          StopEmbedding();
          SetTabTitle("Editor", 1);
          break;
-
-      case kNewHtmlBrowser:
+      }
+      case kNewHtmlBrowser: {
          gSystem->Load("libGuiHtml");
          if (gSystem->Load("libRHtml") >= 0)
          {
@@ -655,30 +673,30 @@ void TEveBrowser::EveMenu(Int_t id)
             SetTabTitle("HTML", 1);
          }
          break;
-
+      }
       case kSel_PS_Ignore:
       case kSel_PS_Element:
       case kSel_PS_Projectable:
       case kSel_PS_Compound:
       case kSel_PS_PableCompound:
-      case kSel_PS_Master:
+      case kSel_PS_Master: {
          gEve->GetSelection()->SetPickToSelect(id - kSel_PS_Ignore);
          fSelPopup->RCheckEntry(kSel_PS_Ignore + gEve->GetSelection()->GetPickToSelect(),
                                 kSel_PS_Ignore, kSel_PS_END - 1);
          break;
-
+      }
       case kHil_PS_Ignore:
       case kHil_PS_Element:
       case kHil_PS_Projectable:
       case kHil_PS_Compound:
       case kHil_PS_PableCompound:
-      case kHil_PS_Master:
+      case kHil_PS_Master: {
          gEve->GetHighlight()->SetPickToSelect(id - kHil_PS_Ignore);
          fHilPopup->RCheckEntry(kHil_PS_Ignore + gEve->GetHighlight()->GetPickToSelect(),
                                 kHil_PS_Ignore, kHil_PS_END - 1);
          break;
-
-      case kVerticalBrowser:
+      }
+      case kVerticalBrowser: {
          if (fEvePopup->IsEntryChecked(kVerticalBrowser)) {
             gEve->GetLTEFrame()->ReconfToHorizontal();
             fEvePopup->UnCheckEntry(kVerticalBrowser);
@@ -687,11 +705,11 @@ void TEveBrowser::EveMenu(Int_t id)
             fEvePopup->CheckEntry(kVerticalBrowser);
          }
          break;
+      }
 
-
-
-      default:
+      default: {
          break;
+      }
    }
 }
 

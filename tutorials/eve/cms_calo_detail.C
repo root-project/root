@@ -112,19 +112,16 @@ void cms_calo_detail()
   data->FillSlice(0, 6);
   data->FillSlice(1, 0);
 
-  data->SetEtaBins(new TAxis(10, 0.08, 0.16));
-  data->SetPhiBins(new TAxis(10, 0.40, 0.50));
-
+  data->SetAxisFromBins();
   data->DataChanged();
 
   // lego
 
   TEveCaloLego* lego = new TEveCaloLego(data);
+  lego->SetAutoRebin(kFALSE);
   lego->SetPlaneColor(kBlue-5);
   lego->Set2DMode(TEveCaloLego::kValSize);
-  lego->SetName("TwoHistLego");
-  lego->SetEta(0.08, 0.16); // eta min, max
-  lego->SetPhiWithRng(0.45, 0.05); // phi, half-range
+  lego->SetName("Calo Detail");
   gEve->AddElement(lego);
 
   // overlay lego

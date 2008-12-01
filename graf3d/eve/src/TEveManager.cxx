@@ -68,6 +68,7 @@ TEveManager::TEveManager(UInt_t w, UInt_t h, Bool_t map_window, Option_t* opt) :
 
    fMacroFolder (0),
 
+   fWindows        (0),
    fViewers        (0),
    fScenes         (0),
    fViewer         (0),
@@ -123,6 +124,8 @@ TEveManager::TEveManager(UInt_t w, UInt_t h, Bool_t map_window, Option_t* opt) :
    gROOT->GetListOfBrowsables()->Add(fMacroFolder);
 
 
+   fWindows = new TEveElementList("Windows", "List of EVE windows");
+
    // Build GUI
    fBrowser   = new TEveBrowser(w, h);
    fStatusBar = fBrowser->GetStatusBar();
@@ -151,6 +154,9 @@ TEveManager::TEveManager(UInt_t w, UInt_t h, Bool_t map_window, Option_t* opt) :
       fBrowser->MapWindow();
 
    // --------------------------------
+
+   fWindows->IncDenyDestroy();
+   AddToListTree(fWindows, kTRUE);
 
    fViewers = new TEveViewerList("Viewers");
    fViewers->IncDenyDestroy();
@@ -203,6 +209,11 @@ TEveManager::~TEveManager()
    fViewers->DecDenyDestroy();
    fViewers->Destroy();
    fViewers = 0;
+
+   fWindows->DestroyElements();
+   fWindows->DecDenyDestroy();
+   fWindows->Destroy();
+   fWindows = 0;
 
    fOrphanage->DecDenyDestroy();
    fHighlight->DecDenyDestroy();

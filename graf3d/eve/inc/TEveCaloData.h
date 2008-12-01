@@ -241,6 +241,7 @@ public:
    virtual void GetPhiLimits(Double_t &min, Double_t &max) const { min=fPhiMin; max=fPhiMax;}
 
    virtual void  DataChanged();
+   void          SetAxisFromBins(Double_t epsX=0.001, Double_t epsY=0.001);
 
    ClassDef(TEveCaloDataVec, 0); // Manages calorimeter event data.
 };

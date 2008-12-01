@@ -73,7 +73,8 @@ private:
    TString            fDirName;
    Int_t              fTypeIdx;
    Bool_t             fOverwrite;
-   TGMenuBar          *fMenuBar;
+   TGMenuBar         *fMenuBar;
+   Bool_t             fDeleteMenuBar;
 
    // Initial window positioning
    static const Int_t fgInitX;
@@ -81,8 +82,8 @@ private:
    static const Int_t fgInitW;
    static const Int_t fgInitH;
 
-   static const char * fgHelpText1;
-   static const char * fgHelpText2;
+   static const char *fgHelpText1;
+   static const char *fgHelpText2;
 
    void CreateMenus();
    void CreateFrames();
@@ -105,6 +106,7 @@ public:
 
    void   Show();
    void   Close();
+   void   DeleteMenuBar();
 
    // GUI events - editors, frame etc
    Bool_t ProcessFrameMessage(Long_t msg, Long_t parm1, Long_t);

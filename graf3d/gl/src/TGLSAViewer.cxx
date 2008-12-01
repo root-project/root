@@ -168,7 +168,8 @@ TGLSAViewer::TGLSAViewer(TVirtualPad *pad) :
    fDirName("."),
    fTypeIdx(0),
    fOverwrite(kFALSE),
-   fMenuBar(0)
+   fMenuBar(0),
+   fDeleteMenuBar(kFALSE)
 {
    // Construct a standalone viewer, bound to supplied 'pad'.
    fFrame = new TGLSAFrame(*this);
@@ -208,7 +209,8 @@ TGLSAViewer::TGLSAViewer(const TGWindow *parent, TVirtualPad *pad, TGedEditor *g
    fGedEditor(ged),
    fPShapeWrap(0),
    fTypeIdx(0),
-   fMenuBar(0)
+   fMenuBar(0),
+   fDeleteMenuBar(kFALSE)
 {
    // Construct an embedded standalone viewer, bound to supplied 'pad'.
    //
@@ -250,6 +252,9 @@ TGLSAViewer::~TGLSAViewer()
    delete fCameraMenu;
    delete fFileSaveMenu;
    delete fFileMenu;
+   if(fDeleteMenuBar) {
+      delete fMenuBar;
+   }
    delete fFrame;
    fGLWidget = 0;
 }
@@ -377,6 +382,13 @@ void TGLSAViewer::Close()
 
    // Commit suicide when contained GUI is closed.
    delete this;
+}
+
+//______________________________________________________________________________
+void TGLSAViewer::DeleteMenuBar()
+{
+   // Delete the menu bar.
+   fDeleteMenuBar=kTRUE;
 }
 
 //______________________________________________________________________________
