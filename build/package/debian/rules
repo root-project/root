@@ -31,39 +31,20 @@ endif
 ifeq (,$(findstring nostrip,$(DEB_BUILD_OPTIONS)))
 INSTALL_PROGRAM = -s
 endif
-SAPDB		= --disable-sapdb
-ifneq (,$(findstring linux-gnu,$(DEB_BUILD_GNU_SYSTEM)))
-ifneq (,$(findstring i386,$(DEB_BUILD_ARCH)))
-SAPDB		= --enable-sapdb
-endif
-ifneq (,$(findstring ia64,$(DEB_BUILD_ARCH)))
-SAPDB		= --enable-sapdb
-endif
-ifneq (,$(findstring amd64,$(DEB_BUILD_ARCH)))
-SAPDB		= --enable-sapdb
-endif
-endif
-HBOOK		= --enable-cern
-ifneq (,$(findstring kfreebsd-i386,$(DEB_BUILD_GNU_SYSTEM)))
-HBOOK		= --disable-cern
-endif
-ifneq (,$(findstring kfreebsd-amd64,$(DEB_BUILD_GNU_SYSTEM)))
-HBOOK		= --disable-cern
-endif
 UNUR		= --enable-unuran
-ifneq (,$(findstring alpha, $(DEB_BUILD_ARCH)))
-UNUR		= --disable-unuran
-endif
+#ifneq (,$(findstring alpha, $(DEB_BUILD_ARCH)))
+#UNUR		= --disable-unuran
+#endif
 XRD		= --enable-xrootd
-ifneq (,$(findstring sparc, $(DEB_BUILD_ARCH)))
-XRD		= --disable-xrootd
-endif
+#ifneq (,$(findstring sparc, $(DEB_BUILD_ARCH)))
+#XRD		= --disable-xrootd
+#endif
 
 DTMP		= debian/tmp
 PREFIX		= /usr
 SYSCONFDIR	= /etc
 PKGDOCDIR	= $(PREFIX)/share/doc/root
-CINTDIR		= $(PREFIX)/lib/root/$(SOVERS)/cint
+CINTDIR		= $(PREFIX)/lib/root/$(SOVERS)
 ICONTHEME	= $(PREFIX)/share/icons/hicolor/48x48
 CONFOPTIONS	:=--enable-cintex				\
 		  --enable-clarens				\
@@ -105,11 +86,11 @@ CONFOPTIONS	:=--enable-cintex				\
 		  --disable-oracle				\
 		  --disable-pythia6				\
 		  --disable-rfio				\
+		  --disable-sapdb				\
+		  --disable-cint7				\
 		  --fail-on-missing				\
 		  $(UNUR)					\
 		  $(XRD)					\
-		  $(SAPDB)					\
-		  $(HBOOK)					\
 		  $(BUILDOPT)					
 #
 # Things for the future 
@@ -126,54 +107,93 @@ MAJOR		:= $(shell echo $(VERSION) | tr '.' ' ' | cut -f1 -d' ')
 MINOR		:= $(shell echo $(VERSION) | tr '.' ' ' | cut -f2 -d' ')
 SOVERS		:= $(MAJOR).$(MINOR)
 PKGLIST		:= $(shell ./configure $(PLATFORM) --pkglist $(CONFOPTIONS) | sed -n -e 's/packages: //p')
-ESSENTIALS	:= libroot-dev			\
-		   libroot			\
-		   root-system-bin		\
-		   root-system-common		\
+ESSENTIALS	:= libroot-core-dev			\
+		   libroot-core				\
+		   root-system-bin			\
+		   root-system-common			\
 		   ttf-root-installer		
-PLUGINS		:= libroot-ldap			\
-		   libroot-mathmore		\
-		   libroot-minuit		\
-		   libroot-mlp			\
-		   libroot-quadp		\
-		   libroot-tmva			\
-		   libroot-unuran		\
-		   root-system-doc		\
-		   root-plugin-asimage		\
-		   root-plugin-fftw3		\
-		   root-plugin-fumili		\
-		   root-plugin-gl		\
-		   root-plugin-hbook		\
-		   root-plugin-krb5		\
-		   root-plugin-minuit2		\
-		   root-plugin-netx		\
-		   root-plugin-odbc		\
-		   root-plugin-proof		\
-		   root-plugin-qt		\
-		   root-plugin-sql		\
-		   root-plugin-xml		\
-		   root-plugin-xproof		\
-		   root-system-proofd		\
-		   root-system-rootd		\
+PLUGINS		:= libroot-geom				\
+		   libroot-graf2d-gpad			\
+		   libroot-graf2d-graf			\
+		   libroot-graf2d-postscript		\
+		   libroot-graf3d-eve			\
+		   libroot-graf3d-g3d			\
+		   libroot-graf3d-gl			\
+		   libroot-gui				\
+		   libroot-gui-ged			\
+		   libroot-hist				\
+		   libroot-hist-spectrum		\
+		   libroot-io				\
+		   libroot-io-xmlparser			\
+		   libroot-math-foam			\
+		   libroot-math-genvector		\
+		   libroot-math-mathcore		\
+		   libroot-math-mathmore		\
+		   libroot-math-matrix			\
+		   libroot-math-minuit			\
+		   libroot-math-mlp			\
+		   libroot-math-quadp			\
+		   libroot-math-physics			\
+		   libroot-math-smatrix			\
+		   libroot-math-splot			\
+		   libroot-math-unuran			\
+		   libroot-misc-minicern		\
+		   libroot-misc-table			\
+		   libroot-montecarlo-eg		\
+		   libroot-montecarlo-vmc		\
+		   libroot-net				\
+		   libroot-net-auth			\
+		   libroot-net-ldap			\
+		   libroot-proof			\
+		   libroot-tmva				\
+		   libroot-tree				\
+		   libroot-tree-treeplayer		\
+		   root-plugin-geom-geombuilder		\
+		   root-plugin-geom-geompainter		\
+		   root-plugin-graf2d-asimage		\
+		   root-plugin-graf2d-qt		\
+		   root-plugin-graf2d-x11		\
+		   root-plugin-graf3d-x3d		\
+		   root-plugin-gui-fitpanel		\
+		   root-plugin-gui-guibuilder		\
+		   root-plugin-gui-qt			\
+		   root-plugin-gui-sessionviewer	\
+		   root-plugin-hist-hbook		\
+		   root-plugin-hist-histpainter		\
+		   root-plugin-hist-spectrumpainter	\
+		   root-plugin-io-sql			\
+		   root-plugin-io-xml			\
+		   root-plugin-math-fftw3		\
+		   root-plugin-math-fumili		\
+		   root-plugin-math-minuit2		\
+		   root-plugin-net-krb5			\
+		   root-plugin-net-netx			\
+		   root-plugin-net-xrootd		\
+		   root-plugin-proof-xproof		\
+		   root-plugin-proof-proofplayer	\
+		   root-plugin-sql-odbc			\
+		   root-plugin-tree-treeviewer		\
+		   root-system-proofd			\
+		   root-system-doc			\
+		   root-system-rootd			\
 		   root-system-xrootd		
-EXTRAS		:= libroot-clarens		\
-		   libroot-python		\
-		   libroot-roofit		\
-		   libroot-ruby			\
-		   root-plugin-alien		\
-		   root-plugin-castor		\
-		   root-plugin-chirp		\
-		   root-plugin-dcache		\
-		   root-plugin-globus		\
-		   root-plugin-peac		\
-		   root-plugin-maxdb		\
-		   root-plugin-mysql		\
-		   root-plugin-oracle		\
-		   root-plugin-pgsql		\
-		   root-plugin-pythia5		\
-		   root-plugin-pythia6		\
-		   root-plugin-srp		\
-		   root-plugin-venus		
+EXTRAS		:= libroot-proof-clarens		\
+		   libroot-bindings-python		\
+		   libroot-roofit			\
+		   libroot-bindings-ruby		\
+		   root-plugin-geom-gdml		\
+		   root-plugin-io-castor		\
+		   root-plugin-io-chirp			\
+		   root-plugin-io-dcache		\
+		   root-plugin-montecarlo-pythia8	\
+		   root-plugin-net-globus		\
+		   root-plugin-net-alien		\
+		   root-plugin-net-srp			\
+		   root-plugin-proof-peac		\
+		   root-plugin-sql-maxdb		\
+		   root-plugin-sql-mysql		\
+		   root-plugin-sql-oracle		\
+		   root-plugin-sql-pgsql		
 PLUGINLIST	:= $(filter-out $(EXTRAS) $(ESSENTIALS), $(PKGLIST))
 EXTRALIST	:= $(filter-out $(PLUGINS) $(ESSENTIALS), $(PKGLIST))
 PLUGINLIST	:= $(PLUGINLIST:libroot%=libroot%-dev)
@@ -183,21 +203,21 @@ PLUGINLIST	:= $(PLUGINHEAD:%=%,) $(lastword $(PLUGINLIST))
 EXTRAHEAD	:= $(filter-out $(lastword $(EXTRALIST)), $(EXTRALIST))
 EXTRALIST	:= $(EXTRAHEAD:%=%,) $(lastword $(EXTRALIST))
 TEMPLATES	:= $(wildcard debian/*.in)
-SPKGLIST	:= $(filter-out root-system-doc root-system-common ttf-root-installer, $(PKGLIST:libroot%=libroot%$(SOVERS))) $(filter libroot%, $(PKGLIST:libroot%=libroot%-dev))
+SPKGLIST	:= $(filter-out root-system-doc root-system-common ttf-root-installer, $(PKGLIST:libroot%=libroot%$(SOVERS))) $(filter libroot%, $(PKGLIST:libroot%=libroot%-dev)) libroot-static
 IPKGLIST	:= root-system-doc ttf-root-installer root-system-common root-system
 DPKGLIST	:= $(SPKGLIST:%=%,) root-system-doc, root-ttf
 #root-plugins root-extra-plugins
 SPKGOPTS	:= $(SPKGLIST:%=-p%) 
 IPKGOPTS	:= $(IPKGLIST:%=-p%) 
 PKGOPTS		:= $(IPKGOPTS) $(SPKGOPTS)
-HAVERUBY	:= $(filter libroot-ruby, $(PKGLIST))
-ifeq ($(HAVERUBY), libroot-ruby)
+HAVERUBY	:= $(filter libroot-bindings-ruby, $(PKGLIST))
+ifeq ($(HAVERUBY), libroot-bindings-ruby)
 RUBYARCHDIR	:= $(shell ruby -rrbconfig -e 'puts Config::CONFIG["archdir"]' | sed 's,/,,')
 else
 RUBYARCHDIR	:= 
 endif
-HAVEPYTHON	:= $(filter libroot-python, $(PKGLIST))
-ifeq ($(HAVEPYTHON), libroot-python)
+HAVEPYTHON	:= $(filter libroot-bindings-python, $(PKGLIST))
+ifeq ($(HAVEPYTHON), libroot-bindings-python)
 PYVERS		:= $(shell pyversions -vs)
 PYVER		:= $(shell python -c 'import sys; print "%d.%d" % (sys.version_info[0], sys.version_info[1])')
 PYTHONDIR	:= /usr/lib/python-support/root/python$(PYVER)
@@ -223,7 +243,7 @@ show_libpkgs:
 show_conf:
 	./configure $(PLATFORM) --pkglist $(CONFOPTIONS)
 
-debian/%:debian/%.in  
+debian/%:debian/%.in debian/rules
 	@echo "Making $@ from $< "
 	@sed -e 's,@prefix@,$(PREFIX),g' \
 		-e 's,@sysconfdir@,$(SYSCONFDIR),g' \
@@ -232,14 +252,14 @@ debian/%:debian/%.in
 		-e 's,@pythondir@,$(PYTHONDIR),g' \
 		-e 's,@libvers@,$(SOVERS),g' < $< > $@ 
 
-debian/control:debian/control.in 
+debian/control:debian/control.in  debian/rules
 	@echo "Making $@ (special)"
 	@cp $< $@.tmp
 	@for p in $(PKGLIST) ; do \
 	  if test -f build/package/common/$$p.control ; then \
 	    echo "Adding package $$p to control file" ; \
 	    cat build/package/common/$$p.control >> $@.tmp ; fi ; done 
-	@builddep="$(shell ./build/package/lib/makebuilddepend.sh $(PKGLIST))";\
+	@builddep="$(shell ./build/package/lib/makebuilddepend.sh $(PKGLIST))" && \
 	    sed -e 's,@prefix@,$(PREFIX),g' \
 		-e 's,@libvers@,$(SOVERS),g' \
 		-e 's,@sysconfdir@,$(SYSCONFDIR),g' \
@@ -247,9 +267,25 @@ debian/control:debian/control.in
 		-e "s/@builddepends@/$${builddep}/" \
 		-e 's/@pyvers@/$(PYVER)/g' \
 		-e 's/@pkglist@/$(DPKGLIST)/'	\
-		-e 's/@plugins@/$(PLUGINLIST)/'	\
-		-e 's/@extras@/$(EXTRALIST)/' < $@.tmp > $@
+		-e 's/@plugins@/$(PLUGINLIST:%,=% (>= $${binary:Version}),)  (>= $${binary:Version})/'	\
+		-e 's/@extras@/$(EXTRALIST:%,=% (>= $${binary:Version}),) (>= $${binary:Version})/' < $@.tmp > $@
 	rm -rf $@.tmp 
+
+debian/html.C:
+	rm -f $@
+	@echo "{" 						>> $@
+	@echo "  THtml html;"   				>> $@
+	@echo "  html.SetProductName(\"ROOT\");"		>> $@
+	@echo "  html.SetEtcDir(\"$(CURDIR)/etc/html\");"	>> $@
+	@echo "  html.SetHomepage(\"http://root.cern.ch\");"	>> $@
+	@echo "  html.LoadAllLibs();"				>> $@
+	@echo "  html.MakeAll();"				>> $@
+	@echo "}"						>> $@
+
+htmldoc:debian/html.C
+	-LD_LIBRARY_PATH=$(CURDIR)/lib:$(CURDIR)/cint/cint/include:$(CURDIR)/cint/cint/stl:$(LD_LIBRARY_PATH) \
+		$(CURDIR)/bin/roota -l -b -q $^
+	rm -f debian/html.C
 
 configure-stamp:$(TEMPLATES:%.in=%) config.status
 config.status: configure 
@@ -264,20 +300,20 @@ config.status: configure
 		    --with-sys-iconpath=$(PREFIX)/share/pixmaps		\
 		    --libdir=$(PREFIX)/lib/root/$(SOVERS)		\
 		    $(CONFOPTIONS)
-	touch xrootd/src/headers.d 
-	touch asimage/src/headers.d 
-	touch unuran/src/headers.d 
+	touch math/unuran/src/headers.d 
 	touch configure-stamp
 
 #	  --fontdir=%_datadir/root/fonts/truetype
 #Architecture 
 build: build-arch build-indep
 
-build-arch: build-arch-cint-stamp
+build-arch: build-arch-cint-stamp 
 build-arch-stamp:  configure-stamp
 
 	# Add here commands to compile the arch part of the package.
-	$(MAKE) ASTEPETAG= XROOTDETAG= UNURANETAG=
+	#$(MAKE) ASTEPETAG= XROOTDETAG= UNURANETAG=
+	$(MAKE) UNURANETAG=
+	$(MAKE) static UNURANETAG=
 	touch build-arch-stamp
 
 build-arch-cint-stamp:build-arch-stamp
@@ -285,7 +321,7 @@ build-arch-cint-stamp:build-arch-stamp
 	touch build-arch-cint-stamp
 
 build-indep: build-indep-stamp
-build-indep-stamp:  configure-stamp
+build-indep-stamp:  configure-stamp htmldoc
 
 	# Add here commands to compile the indep part of the package.
 	#$(MAKE) doc
@@ -313,17 +349,17 @@ clean:	$(TEMPLATES:%.in=%)
 	-rm -f	qtgsi/src/G__QtGSI.cxx qtgsi/src/G__QtGSI.h
 	-rm -f	qt/src/moc_*.cxx
 	-rm -f	G__genreflex_rootcint.h
-	-rm -f	asimage/src/libAfterImage/Makefile
-	-rm -f	asimage/src/libAfterImage/afterbase.h
-	-rm -f	asimage/src/libAfterImage/afterimage-config
-	-rm -f	asimage/src/libAfterImage/afterimage-libs
-	-rm -f	asimage/src/libAfterImage/config.h
-	-rm -f	asimage/src/libAfterImage/config.log
-	-rm -f	asimage/src/libAfterImage/config.status
-	-rm -f	asimage/src/libAfterImage/libAfterImage.a
-	-rm -f	xrootd/src/xrootd/GNUmakefile
-	-rm -f	xrootd/src/xrootd/src/GNUmake.env
-	-rm -f	xrootd/src/xrootd/src/GNUmake.options
+	-rm -f	graf2d/asimage/src/libAfterImage/Makefile
+	-rm -f	graf2d/asimage/src/libAfterImage/afterbase.h
+	-rm -f	graf2d/asimage/src/libAfterImage/afterimage-config
+	-rm -f	graf2d/asimage/src/libAfterImage/afterimage-libs
+	-rm -f	graf2d/asimage/src/libAfterImage/config.h
+	-rm -f	graf2d/asimage/src/libAfterImage/config.log
+	-rm -f	graf2d/asimage/src/libAfterImage/config.status
+	-rm -f	graf2d/asimage/src/libAfterImage/libAfterImage.a
+	#-rm -f	net/xrootd/src/xrootd/GNUmakefile
+	#-rm -f	net/xrootd/src/xrootd/src/GNUmake.env
+	#-rm -f	net/xrootd/src/xrootd/src/GNUmake.options
 	-find . -name ".#*" | xargs rm -rf
 	-find . \( -name "G__*.cxx" 			\
 		   -or -name "G__*.h" 			\
@@ -336,42 +372,58 @@ clean:	$(TEMPLATES:%.in=%)
 		-and -not -name "G__security.h"  	\
 		| xargs rm -rf
 	# Add here commands to clean up after the build process.
-	touch unuran/src/.bogus.tar.gz
-	-$(MAKE) distclean ASTEPVERS=.bogus  ASTEPETAG= \
-			   XROOTDDIRD=	     XROOTDETAG= \
-			   UNRVERS=.bogus    UNURANETAG=
-	rm -f unuran/src/.bogus.tar.gz
-	build/unix/makecintdll.sh clean
-	rm -rf bin lib include				\
-		system.rootrc				\
-		config/Makefile.config			\
-		README/Changelog			\
-		etc/system.rootrc			\
-		etc/system.rootauthrc			\
-		etc/system.rootdaemonrc			\
-		etc/root.mimes				\
-		build/misc/root-help.el			\
-		debian/*.files				\
-		debian/*.install			\
-		debian/shlibs.local			\
-		freetype/src/freetype-2.1.3		\
-		cint/lib/posix/a.out			\
-		cint/include/*.so*			\
-		cint/include/*.dll			\
-		cint/include/sys/*.so*			\
-		cint/include/sys/*.dll			\
-		cint/stl/*.so*				\
-		cint/stl/*.dll				\
-		pcre/src/pcre-6.4			\
-		unuran/src/unuran-*-root/config.status	\
-		unuran/src/unuran-*-root/config.log	\
-		xrootd/src/xrootd/lib			\
-		xrootd/src/xrootd/obj			\
-		xrootd/src/xrootd/bin
+	[ ! -f config/Makefile.config ] || $(MAKE) distclean \
+		UNURANETAG= \
+		UNURKEEP=yes
+	-for i in climits complex deque exception list map2 map multimap2 \
+		 multimap multiset queue set stack stdexcept valarray \
+		 vectorbool vector ; do \
+		build/unix/makecintdll.sh clean $$i ; done
+	rm -rf bin lib include htmldoc				\
+		system.rootrc					\
+		config/Makefile.config				\
+		README/Changelog				\
+		etc/system.rootrc				\
+		etc/system.rootauthrc				\
+		etc/system.rootdaemonrc				\
+		etc/root.mimes					\
+		build/misc/root-help.el				\
+		debian/*.files					\
+		debian/*.install				\
+		debian/shlibs.local				\
+		graf2d/freetype/src/freetype-2.1.3		\
+		cint/cint/lib/posix/a.out			\
+		cint/cint/lib/posix/mktypes			\
+		cint/cint/include/*.so*				\
+		cint/cint/include/*.dll				\
+		cint/cint/include/sys/*.so*			\
+		cint/cint/include/sys/*.dll			\
+		cint/cint/stl/*.so*				\
+		cint/cint/stl/*.dll				\
+		core/pcre/src/pcre-6.4				\
+		math/unuran/src/unuran-*-root/config.status	\
+		math/unuran/src/unuran-*-root/config.log	\
+		net/xrootd/src/xrootd/lib			\
+		net/xrootd/src/xrootd/obj			\
+		net/xrootd/src/xrootd/bin			\
+		htmldoc						\
+		math/unuran/src/unuran-*-root/config.h		\
+		math/unuran/src/unuran-*-root/Makefile		\
+		math/unuran/src/unuran-*-root/libtool		\
+		math/unuran/src/unuran-*-root/stamp-h1		\
+		math/unuran/src/unuran-*-root/src/Makefile		\
+		math/unuran/src/unuran-*-root/src/distr/Makefile	\
+		math/unuran/src/unuran-*-root/src/utils/Makefile	\
+		math/unuran/src/unuran-*-root/src/distributions/Makefile \
+		math/unuran/src/unuran-*-root/src/tests/Makefile	\
+		math/unuran/src/unuran-*-root/src/methods/Makefile	\
+		math/unuran/src/unuran-*-root/src/specfunct/Makefile	\
+		math/unuran/src/unuran-*-root/src/urng/Makefile		\
+		math/unuran/src/unuran-*-root/src/uniform/Makefile	\
+		math/unuran/src/unuran-*-root/src/parser/Makefile	
 	# touch the headers for xrootd and asimage 
-	touch xrootd/src/headers.d 
-	touch asimage/src/headers.d 
-	touch unuran/src/headers.d 
+	# touch net/xrootd/src/headers.d 
+	# touch graf2d/asimage/src/headers.d 
 	-rm -f  $(filter-out debian/control, $(TEMPLATES:%.in=%))
 	dh_clean 
 
@@ -400,6 +452,7 @@ install-indep:
 
 	# dh_install $(IPKGOPTS) --sourcedir=$(DTMP)
 	dh_install -i --sourcedir=$(DTMP)
+	-cp -a htmldoc/ $(CURDIR)/debian/root-system-doc/usr/share/doc/root/html
 
 	# Fix some permissions 
 	-find debian/root-system-common/$(PREFIX)/share/root/icons \
@@ -423,8 +476,9 @@ install-arch:
 
 	# Add here commands to install the arch part of the package into 
 	# $(DTMP).
-	$(MAKE) install DESTDIR=$(CURDIR)/$(DTMP) \
-		ASTEPETAG= XROOTDETAG= UNURANETAG=
+	#$(MAKE) install DESTDIR=$(CURDIR)/$(DTMP) \
+	#	ASTEPETAG= XROOTDETAG= UNURANETAG=
+	$(MAKE) install DESTDIR=$(CURDIR)/$(DTMP) UNURANETAG=
 
 	# Install desktop entry and icon 
 	mkdir -p $(DTMP)/$(PREFIX)/share/applications
@@ -445,9 +499,14 @@ install-arch:
 		< $(DTMP)/$(PREFIX)/bin/root-config > root-config.tmp 
 	mv root-config.tmp $(DTMP)/$(PREFIX)/bin/root-config
 
-	# Make default ZIP mode be new library (system library)
+	# Make default ZIP mode be new library (system library),
+	# remove ROOT plug-in library from load path, since this file
+	# is supposed to be version independent. 
+	# and set start-up url of TBrowser embedded HTML renderer to
+	# be local install of documentation
 	sed -e 's,Root\.ZipMode:.*,Root.ZipMode: 1,' \
-	    -e 's,\(.*\.DynamicPath:.*\):$(PREFIX)/lib/root[^:]*\(.*\),\1\2,'\
+	    -e 's,\(.*\.DynamicPath:.*\):$(PREFIX)/lib/root[^:]*\(.*\),\1\2,' \
+	    -e 's,\(Browser.StartUrl: *\).*,\1http://localhost/doc/root/html/index.html,'\
 		< $(DTMP)$(SYSCONFDIR)/root/system.rootrc  > rootrc.tmp 
 	mv rootrc.tmp $(DTMP)$(SYSCONFDIR)/root/system.rootrc
 
@@ -478,14 +537,17 @@ install-arch:
 	rm -rf $(DTMP)$(PREFIX)/share/doc/root/COPYING.CINT
 	rm -rf $(DTMP)$(PREFIX)/share/doc/root/cfortran.doc
 	rm -rf $(DTMP)$(PREFIX)/share/root/fonts/LICENSE
-	rm -rf $(DTMP)$(CINTDIR)/lib/posix/a.out
-	rm -rf $(DTMP)$(CINTDIR)/lib/posix/mktypes
-	rm -rf $(DTMP)$(CINTDIR)/lib/dll_stl/setup
-	rm -rf $(DTMP)$(CINTDIR)/lib/G__*
-	rm -rf $(DTMP)$(CINTDIR)/lib/dll_stl/G__*
-	rm -rf $(DTMP)$(CINTDIR)/lib/dll_stl/rootcint_*
-	rm -rf $(DTMP)$(CINTDIR)/lib/posix/exten.o
-	rm -rf $(DTMP)$(CINTDIR)/include/makehpib
+	rm -rf $(DTMP)$(CINTDIR)/cint/lib/posix/a.out
+	rm -rf $(DTMP)$(CINTDIR)/cint/lib/posix/mktypes
+	rm -rf $(DTMP)$(CINTDIR)/cint/lib/dll_stl/setup
+	rm -rf $(DTMP)$(CINTDIR)/cint/lib/G__*
+	rm -rf $(DTMP)$(CINTDIR)/cint/lib/dll_stl/G__*
+	rm -rf $(DTMP)$(CINTDIR)/cint/lib/dll_stl/rootcint_*
+	rm -rf $(DTMP)$(CINTDIR)/cint/lib/posix/exten.o
+	rm -rf $(DTMP)$(CINTDIR)/cint/include/makehpib
+	rm -rf $(DTMP)$(CINTDIR)/cint/lib/WildCard/ARCHIVE
+	rm -rf $(DTMP)$(CINTDIR)/cint/lib/wintcldl83/wildc/wildc.dsw
+	rm -rf $(DTMP)$(CINTDIR)/cint/lib/wintcldl83/wildc/wildc.dsp
 
 	# Remove MacOSX service descriptions 
 	rm -rf $(DTMP)$(SYSCONFDIR)/root/*.plist
@@ -505,8 +567,10 @@ install-arch:
 	find $(DTMP) -name ".cvsignore" | xargs rm -fr
 
 	# Fix some permissions 
-	-find $(DTMP)$(CINTDIR) -perm 755 -and -not -type d | xargs chmod a-x 
-	-chmod a+x $(DTMP)$(CINTDIR)/lib/pthread/setup
+	-find $(DTMP)$(CINTDIR)/cint \
+	   -perm 755 -and -not -type d | xargs chmod a-x 
+	-chmod a+x $(DTMP)$(CINTDIR)/cint/lib/pthread/setup
+	-chmod a+x $(DTMP)$(CINTDIR)/cint/lib/WildCard/setup
 	-chmod a-x $(DTMP)$(PREFIX)/lib/root/$(SOVERS)/*.py
 	-chmod a-x $(DTMP)$(SYSCONFDIR)/root/html/*
 	# -chmod a+x $(DTMP)$(PREFIX)/lib/root/$(SOVERS)/GDMLROOT.py
@@ -564,6 +628,13 @@ install-arch:
 #		    -X$(i:$(DTMP)/%=%) )
 
 	# Install Lintian overrides files 
+	for i in $(filter libroot%$(SOVERS), $(SPKGLIST)) ; do \
+	  t=debian/$$i/usr/share/lintian/overrides/ ; \
+	  rm -rf $$t ; \
+	  mkdir -p $$t ; \
+	  echo "$$i: postinst-has-useless-call-to-ldconfig" > $$t/$$i; \
+	  echo "$$i: postrm-has-useless-call-to-ldconfig" >> $$t/$$i; \
+	done
 	for i in debian/*.overrides ; do	\
 	  if test ! -f $$i ; then continue; fi;	\
 	  b=`basename $$i .overrides` ; \
@@ -605,7 +676,10 @@ binary-common:
 	dh_installman
 	dh_link
 	dh_strip
-	dh_compress -Xusr/share/doc/root/test -Xusr/share/doc/root/tutorials
+	dh_compress 				\
+		-Xusr/share/doc/root/test 	\
+		-Xusr/share/doc/root/tutorials	\
+		-Xusr/share/doc/root/html
 	dh_fixperms
 #	dh_perl
 
@@ -620,24 +694,27 @@ binary-indep: build-indep install-indep
 # Build architecture dependent packages using the common target.
 binary-arch: build-arch install-arch
 	$(MAKE) -f debian/rules DH_OPTIONS=-s binary-common
-ifeq ($(HAVEPYTHON), libroot-python)
+ifeq ($(HAVEPYTHON), libroot-bindings-python)
 	# We make this here, so that we get the right python version on the 
 	# system compiling. 
 	echo "$(PYVER)-" > debian/pyversions
 endif
-	dh_pysupport -plibroot-python-dev 
+	dh_pysupport -plibroot-bindings-python-dev 
 	#	$(PREFIX)/lib/root/$(SOVERS) $(PREFIX)/lib/root
-	dh_pysupport -plibroot-dev \
+	dh_pysupport -plibroot-core-dev \
 		$(PREFIX)/lib/root/$(SOVERS)/python/genreflex
-ifeq ($(HAVEPYTHON), libroot-python)
+ifeq ($(HAVEPYTHON), libroot-bindings-python)
 	# dh_pysupport will only write this field if the package is 
 	# named something like 'python-*', so we make it ourselves. 
-	echo "python:Provides=python$(PYVER)-pyroot" >> debian/libroot-python-dev.substvars
+	echo "python:Provides=python$(PYVER)-pyroot" >> debian/libroot-bindings-python-dev.substvars
 endif
-	dh_makeshlibs -V $(patsubst %, -p%, $(filter libroot%$(SOVERS),$(SPKGLIST))) -proot-plugin-proof
+	dh_makeshlibs -V \
+	  $(patsubst %, -p%, $(filter libroot%$(SOVERS),$(SPKGLIST)))
+	dh_makeshlibs -V -n \
+	  $(patsubst %, -p%, $(filter root-plugin%,$(SPKGLIST)))
 	dh_installdeb -s
 	dh_shlibdeps -s $(SPKGLIST:%=-L%) \
-	  -l$(shell echo $(SPKGLIST:%=debian/%/$(PREFIX)/lib/root/$(SOVERS)) | tr ' ' ':')
+	  -l$(shell echo $(SPKGLIST:%=$(CURDIR)/debian/%$(PREFIX)/lib/root/$(SOVERS)) | tr ' ' ':')
 	dh_gencontrol -s
 	dh_md5sums -s 
 	dh_builddeb -s 

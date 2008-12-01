@@ -1,0 +1,20 @@
+Package: libroot-proof@libvers@
+Architecture: any
+Depends: ${shlibs:Depends}
+Suggests: root-plugin-net-netx, root-plugin-proof-xproof
+Homepage: http://root.cern.ch
+Description: PROOF library for ROOT
+ This package contains the PROOF library for ROOT.  This provides a
+ client to use in a PROOF environment.
+
+Package: libroot-proof-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-proof@libvers@ (= ${binary:Version}), libroot-math-mathcore-dev, libroot-tree-dev
+Replaces: root-plugin-proof
+Conflicts: root-plugin-proof (<< 5.19.01-1)
+Homepage: http://root.cern.ch
+Description: PROOF library for ROOT
+ This package contains the PROOF library for ROOT.  This provides a
+ client to use in a PROOF environment.
+

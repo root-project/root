@@ -1,0 +1,18 @@
+Package: libroot-misc-table@libvers@
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}
+Homepage: http://root.cern.ch
+Description: Table library for ROOT
+ This package contains the Table library for ROOT. 
+
+Package: libroot-misc-table-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-misc-table@libvers@ (= ${binary:Version}), libroot-graf3d-g3d-dev, libroot-graf2d-gpad-dev, libroot-tree-dev
+Replaces: libroot-dev
+Conflicts: libroot-dev (<< 5.19.01-1)
+Homepage: http://root.cern.ch
+Description: Table library for ROOT
+ This package contains the Table library for ROOT. 
+

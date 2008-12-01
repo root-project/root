@@ -1,0 +1,18 @@
+Package: libroot-math-smatrix@libvers@
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}
+Homepage: http://root.cern.ch
+Description: Sparse matrix library for ROOT
+ This package contains the Smatrix library for ROOT. 
+
+Package: libroot-math-smatrix-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-math-smatrix@libvers@ (= ${binary:Version}), libroot-core-dev
+Replaces: libroot-dev
+Conflicts: libroot-dev (<< 5.19.01-1)
+Homepage: http://root.cern.ch
+Description: Sparse matrix library for ROOT
+ This package contains the Smatrix library for ROOT. 
+

@@ -29,7 +29,8 @@ Source:        ftp://root.cern.ch/root/root_v%{ver}.source.tar.gz
 Group:         Applications/Physics
 BuildRoot:     /tmp/rootrpm
 Summary:       Numerical data analysis framework (OO)
-BuildRequires: XFree86-devel
+BuildRequires: libX11-devel
+BuildRequires: libXext-devel
 BuildRequires: pcre-devel
 BuildRequires: freetype-devel
 BuildRequires: openssl-devel
@@ -61,16 +62,19 @@ ROOT web-site: http://root.cern.ch
 # The actual build
 #
 # Configure the ROOT source tree. You may want to disable some
-# features here, though it is STRONGLY DEPRECIATED. 
+# features here, though it is STRONGLY DISCOURAGED
 #
 #
 %build
+test "x$QTDIR" = "x" || unset QTDIR
+test "x$QTLIB" = "x" || unset QTLIB
+test "x$QTINC" = "x" || unset QTINC
 ./configure @confargs@						\
 	    --prefix=%_prefix 					\
 	    --libdir=%_prefix/lib/root/%{sovers}		\
 	    --mandir=%_prefix/share/man/man1			\
 	    --docdir=%_defaultdocdir				\
-	    --cintincdir=%_prefix/lib/root/%{sovers}/cint 	\
+	    --cintincdir=%_prefix/lib/root/%{sovers}		\
 	    --etcdir=%_sysconfdir/root				\
             --with-sys-iconpath=%_datadir/pixmaps 		
 
@@ -80,6 +84,19 @@ ROOT web-site: http://root.cern.ch
 
 make 
 make cintdlls
+make static 
+# cat > html.C <<EOF
+# {
+#   THtml html;
+#   html.SetProductName("ROOT");
+#   html.SetHomepage("http://root.cern.ch");
+#   html.LoadAllLibs();
+#   html.MakeAll();
+# }
+# EOF
+# LD_LIBRARY_PATH=`pwd`/lib:`pwd`/cint/cint/include:`pwd`/cint/cint/stl:$LD_LIBRARY_PATH \
+#     ./bin/roota -l -b -q html.C
+# rm -f html.C
 
 #---------------------------------------------------------------------
 # The installation 

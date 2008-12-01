@@ -1,0 +1,11 @@
+Package: root-plugin-sql-oracle
+Architecture: any
+Depends: oracle-instantclient-basic, ${shlibs:Depends}
+Provides: root-db-client
+Description: Oracle client plugin for ROOT
+ This package contains the Oracle plug-in for ROOT.  This plugin
+ provides a thin client (interface) to Oracle servers. Using this
+ client, one can obtain information from a Oracle database into the
+ ROOT environment.
+
+

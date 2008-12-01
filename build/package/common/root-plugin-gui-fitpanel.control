@@ -1,0 +1,9 @@
+Package: root-plugin-gui-fitpanel
+Architecture: any
+Conflicts: libroot-dev (<< 5.19.01-1)
+Replaces: libroot-dev
+Depends: ${shlibs:Depends}
+Description: GUI element for fits plugin for ROOT
+ This package contains a plug-in to show a pop-up dialog when fitting
+ various kinds of data.
+

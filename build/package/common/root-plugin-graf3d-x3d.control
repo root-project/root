@@ -1,0 +1,11 @@
+Package: root-plugin-graf3d-x3d
+Architecture: any
+Conflicts: libroot-dev (<< 5.19.01-1)
+Replaces: libroot-dev
+Depends: ${shlibs:Depends}
+Recommends: root-plugin-graf3d-gl
+Description: X 3D plugin for ROOT
+ This package contains the X 3D plug-in for ROOT.  This plugin provides
+ 3D rendering of volumes and shapes defined in ROOT.  Included is also
+ a low quality 3D viewer for ROOT defined geometries.
+

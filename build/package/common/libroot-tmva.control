@@ -2,7 +2,7 @@ Package: libroot-tmva@libvers@
 Architecture: any
 Section: libs
 Depends: ${shlibs:Depends}
-Provides: libroot-tmva, root-plugin-tmva
+Homepage: http://tmva.sourceforge.net
 Description: Toolkit for multivariate data analysis
  The Toolkit for Multivariate Analysis (TMVA) provides a
  ROOT-integrated environment for the parallel processing and
@@ -22,14 +22,13 @@ Description: Toolkit for multivariate data analysis
  evaluation). In addition all these methods can be tested in parallel,
  and hence their performance on a particular data set may easily be
  compared.
- .
- ROOT web-site: http://root.cern.ch
- TMVA web-site: http://tmva.sourceforge.net
+
 
 Package: libroot-tmva-dev
 Architecture: any
 Section: libdevel
-Depends: libroot-tmva@libvers@ (= ${binary:Version}), libroot-dev
+Depends: libroot-tmva@libvers@ (= ${binary:Version}), libroot-math-mlp-dev
+Homepage: http://tmva.sourceforge.net
 Description: Toolkit for multivariate data analysis - development files
  The Toolkit for Multivariate Analysis (TMVA) provides a
  ROOT-integrated environment for the parallel processing and
@@ -49,7 +48,4 @@ Description: Toolkit for multivariate data analysis - development files
  evaluation). In addition all these methods can be tested in parallel,
  and hence their performance on a particular data set may easily be
  compared.
- .
- ROOT web-site: http://root.cern.ch
- TMVA web-site: http://tmva.sourceforge.net
 

@@ -1,0 +1,9 @@
+Package: root-plugin-geom-geombuilder
+Architecture: any
+Conflicts: libroot-dev (<< 5.19.01-1)
+Replaces: libroot-dev
+Depends: ${shlibs:Depends}
+Homepage: http://root.cern.ch
+Description: Geometry builder plugin for ROOT
+ This package contains a geometry builder plugin for ROOT.
+

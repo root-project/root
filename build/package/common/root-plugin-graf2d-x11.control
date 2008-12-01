@@ -1,0 +1,10 @@
+Package: root-plugin-graf2d-x11
+Architecture: any
+Replaces: libroot-dev
+Conflicts: libroot-dev (<< 5.19.01-1)
+Provides: root-system-display
+Depends: ${shlibs:Depends}
+Description: X window system plugin for ROOT
+ This package contains the X11 plug-in for ROOT, which allows using an 
+ X display for showing graphics. 
+

@@ -15,11 +15,41 @@ for i in build/package/common/*.install ; do
     cp $i $outdir
 done
 
+set_lib_names()
+{
+    base=$1 ; shift
+    sub=$1 ; shift
+    
+    lib=libroot-${base}
+    if test "x$sub" != "x" ; then lib=${lib}-${sub} ; fi
+    dev=${lib}-dev
+    if test "x$1" != "x" ; then 
+	bin=$1
+    else
+	bin=${lib}
+    fi
+}
+
+set_plugin_names()
+{
+    base=$1 ; shift
+    sub=$1 ; shift 
+    lib=root-plugin-${base}-${sub}
+    dev=${lib}
+    if test "x$1" != "x" ; then 
+	bin=$1
+    else
+	bin=${lib}
+    fi
+}
+   
+    
 #
 # Loop over the directories, and update the file lists based on the 
 # information in Module.mk files in each subdirectory
 #
-for d in * ; do 
+l=`find . -name "Module.mk" -print0 | xargs -L 1 -0 dirname | sort -u | sed 's,./,,'`
+for d in $l ; do 
     # 
     # If there's no Module.mk file in the currently inspected
     # directory, continue  
@@ -33,69 +63,93 @@ for d in * ; do
     lib= 
     bin= 
     extra= 
-    
+    base=`dirname $d`
+    sub=`basename $d`
+
     #
     # Deal with some special directories.  For each directory, check
     # if it's libraries and such should go into some special package. 
     # 
     case $d in 		
-	auth)       lib=libroot             ; dev=libroot-dev; 
-	            bin=root-system-bin     ;;
-	base)       lib=libroot             ; dev=libroot-dev; 
-	            bin=root-system-bin
-	            extra="ALLMAPS=${prefix}/lib/root/libCore.rootmap "
-                    extra="$extra ALLLIBS=${prefix}/lib/root/libCore.so" ;; 
-	cint)	    lib=libroot             ; dev=libroot-dev; 
-	            bin=root-system-bin     ;
-	    	    extra="ALLLIBS=${prefix}/lib/root/libCint.so" ;;   
-	    	    # extra="NOMAP=1 ALLLIBS=${prefix}/lib/root/libCint.so" ;; 
-        clib|cont|eg|foam|fitpanel|g3d|gdml|ged*|geom*|gpad|graf|gui*|hist*)
-	            lib=libroot             ; dev=libroot-dev; 
-		    bin=root-system-bin ;;
-        html|io|math|mathcore|matrix|meta*|net|physics|postscript|rint)
- 	            lib=libroot             ; dev=libroot-dev; 
-		    bin=root-system-bin ;;
-        spectrum*|table|thread|tree*|unix|utils|vmc|x11*|x3d|zip)
-	            lib=libroot             ; dev=libroot-dev; 
-		    bin=root-system-bin ;;
-	rpdutils)   lib=libroot             ; dev=libroot-dev; 
-		    bin=root-system-bin     ;; # extra="NOMAP=1"  ;;
-        rootx|sessionviewer|smatrix|splot|xml)    
-	            lib=libroot             ; dev=libroot-dev; 
-		    bin=root-system-bin ;;
-	newdelete)  lib=libroot		    ; dev=libroot-dev; 
-	    	    bin=libroot-dev         ;; # extra="NOMAP=1" ;;
-	reflex)     lib=libroot		    ; dev=libroot-dev; 
-	    	    bin=libroot-dev         ;; # extra="NOMAP=1" ;;
-	cintex)     lib=libroot		    ; dev=libroot-dev; 
-	    	    bin=libroot-dev         ;;
-	globusauth) lib=root-plugin-globus  ; dev=$lib       ; bin=$lib ;;  
-	qtroot)     lib=root-plugin-qt      ; dev=$lib       ; bin=$lib ;;
-	pythia)     lib=root-plugin-pythia5 ; dev=$lib       ; bin=$lib ;;  
-	rfio)       lib=root-plugin-castor  ; dev=$lib       ; bin=$lib ;;  
-	srputils)   lib=root-plugin-srp     ; dev=$lib       ; bin=$lib ;;  
-	xmlparser)  lib=root-plugin-xml     ; dev=$lib       ; bin=$lib ;;
-	krb5auth)   lib=root-plugin-krb5    ; dev=$lib       ; bin=$lib ;;
-	proofd)	    lib=root-plugin-xproof  ; dev=$lib       ; 
-	            bin=root-system-proofd  ;; 
-	proofplayer)	    
-	            lib=root-plugin-proof   ; dev=$lib       ; bin=$lib ;; 
-	rootd)      lib=root-system-$d      ; dev=$lib       ; bin=$lib ;;
-	xrootd)     lib=root-system-$d      ; dev=$lib       ; bin=$lib ;
-	            xrdlibs=                ; extra="ALLLIBS= NOVERS=1" ;; 
-                    # NOMAP=1" ;;     
-	pyroot)     lib=libroot-python      ; dev=${lib}-dev ; bin=$lib ;; 
-	roofitcore) lib=libroot-roofit	    ; dev=${lib}-dev ; bin=$lib ;;
-	clarens|ldap|mlp|quadp|roofit|ruby|mathmore|minuit|tmva|unuran)
-	            lib=libroot-$d          ; dev=${lib}-dev ; bin=$lib ;;  
-	build|freetype|win*|main) continue ;; 			
-	eve)        lib=root-plugin-gl	    ; dev=$lib       ; bin=$lib ;;  
-	proofx)     lib=root-plugin-xproof  ; dev=$lib       ; bin=$lib ;;  
-	sapdb)      lib=root-plugin-maxdb   ; dev=$lib       ; bin=$lib ;;  
-	qtgsi)      lib=root-plugin-qt      ; dev=$lib       ; bin=$lib ;;  
-	fftw)       lib=root-plugin-${d}3   ; dev=$lib       ; bin=$lib ;;
-	            # extra="NOMAP=1"         ;;  
-	*)          lib=root-plugin-$d      ; dev=$lib       ; bin=$lib ;;  
+	bindings/pyroot)set_lib_names    $base python 	;;
+	bindings/*)     set_lib_names    $base $sub 	;;
+	build)          continue ;;
+	core/winnt)     continue ;; 
+	core/newdelete) set_lib_names    $base "" root-system-bin
+	                extra="ALLMAPS=${prefix}/lib/root/libCore.rootmap ";;
+	core/rint)      set_lib_names    $base "" root-system-bin ;;
+	core/thread)    set_lib_names    $base "" root-system-bin ;;
+	core/*)         set_lib_names    $base "" root-system-bin
+	                extra="ALLMAPS=${prefix}/lib/root/libCore.rootmap "
+                        extra="$extra ALLLIBS=${prefix}/lib/root/libCore.so" ;; 
+	cint/cint)	set_lib_names    core  "" root-system-bin
+	    	        extra="ALLLIBS=${prefix}/lib/root/libCint.so" ;;   
+	    	        # extra="NOMAP=1 ALLLIBS=${prefix}/lib/root/libCint.so" 
+	cint/cint7)	continue ;;
+	cint/reflex)	set_lib_names    core  "" libroot-core-dev
+	    	        extra="REFLEXLIB=${prefix}/lib/root/libReflex.so" ;;   
+	cint/*)	        set_lib_names    core  "" root-system-bin	;;
+	geom/geom)	set_lib_names	 $base 		;;
+	geom/*)	        set_plugin_names $base $sub	;;
+	graf2d/gpad)    set_lib_names    $base $sub	;;
+	graf2d/graf)    set_lib_names    $base $sub	;;
+	graf2d/postscript) set_lib_names    $base $sub	;;
+	graf2d/asimage) set_plugin_names $base $sub	;;
+	graf2d/freetype)continue;;
+	graf2d/win32gdk)continue;;
+	graf2d/x11*)    set_plugin_names $base x11	;;
+	graf2d/*)       set_plugin_names $base $sub	;;
+	graf3d/ftgl)    set_lib_names    $base gl       ;;
+	graf3d/gl)      set_lib_names    $base $sub	;;
+	graf3d/g3d)     set_lib_names    $base $sub	;;
+	graf3d/eve)     set_lib_names    $base $sub	;;
+	graf3d/*)       set_plugin_names $base $sub	;;
+	gui/gui)        set_lib_names    $base 		;;
+	gui/guihtml)    set_lib_names    $base 		;;
+	gui/ged)        set_lib_names    $base $sub	;;
+	gui/qt*)        set_plugin_names $base qt	;;
+	gui/*)          set_plugin_names $base $sub	;;
+	hist/hist)      set_lib_names    $base		;;
+	hist/spectrum)  set_lib_names    $base $sub	;;
+	hist/*)         set_plugin_names $base $sub	;;
+        html)           set_lib_names    $sub 		;;
+	io/io)          set_lib_names    $base 		;;
+	io/xmlparser)   set_lib_names    $base $sub	;;
+	io/rfio)	continue;;
+	io/*)           set_plugin_names $base $sub	;;
+	main)           continue;;
+        math/fftw)      set_plugin_names $base ${sub}3	;;
+        math/fumili)    set_plugin_names $base $sub	;;
+        math/minuit2)   set_plugin_names $base $sub	;;
+	math/*)         set_lib_names    $base $sub	;;
+        misc/*)         set_lib_names	 $base $sub	;; 
+        montecarlo/pythia*)   
+	                set_plugin_names $base $sub	;;
+        montecarlo/*)   set_lib_names    $base $sub	;;
+        net/auth)       set_lib_names    $base $sub	;;
+	net/net)        set_lib_names    $base 		;;
+	net/ldap)       set_lib_names    $base $sub	;;
+	net/rootd)      lib=root-system-$sub    ; dev=$lib       ; bin=$lib ;;
+	net/xrootd)     set_plugin_names $base $sub	;;
+        net/globusauth) set_plugin_names $base globus	;;
+        net/krb5auth)   set_plugin_names $base krb5	;;
+        net/srputils)   set_plugin_names $base srp	;;
+        net/rpdutils)   set_lib_names    core  ""	root-system-bin	;;
+        net/*)          set_plugin_names $base $sub	;;
+	proof/proofd)   set_plugin_names $base xproof   root-system-${base}d ;;
+	proof/proofx)   set_plugin_names $base xproof   ;;
+        proof/clarens)  set_lib_names    $base $sub	;;
+        proof/proof)    set_lib_names    $base 		;;
+        proof/*)        set_plugin_names $base $sub	;;
+        roofit/*)       set_lib_names    $base  	;; 
+	rootx)	        set_lib_names    core  ""	root-system-bin ;;
+	sql/sapdb)      set_plugin_names $base maxdb	;;
+	sql/*)          set_plugin_names $base $sub	;;
+        tmva)           set_lib_names    $sub 		;;
+        tree/tree)      set_lib_names    $base 		;;
+        tree/treeplayer)set_lib_names    $base $sub	;;
+	tree/*)         set_plugin_names $base $sub	;;
+	*)              set_plugin_names $base $sub	;;  
     esac 
 
     # 
@@ -117,9 +171,10 @@ for i in build/package/common/*.install.in ; do
     if test ! -f $i ; then continue ; fi
     b=`basename $i .install.in`
     case $b in 
-	lib*-dev) b=$outdir/${b}          ;; 
-	lib*)     b=$outdir/${b}${sovers} ;;
-	*)        b=$outdir/${b}          ;; 
+	lib*static*)  b=$outdir/${b}          ;;
+	lib*-dev)     b=$outdir/${b}          ;; 
+	lib*)         b=$outdir/${b}${sovers} ;;
+	*)            b=$outdir/${b}          ;; 
     esac
     grep -v "^#" $i | 					\
 	sed -e "s|@prefix@|${prefix}|g" 		\

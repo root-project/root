@@ -1,0 +1,8 @@
+Package: root-plugin-tree-treeplayer
+Architecture: any
+Conflicts: libroot-dev (<< 5.19.01-1)
+Replaces: libroot-dev
+Depends: ${shlibs:Depends}
+Description: Plug-in to loop over a ROOT tree 
+ Plug-in to loop over a ROOT tree.
+

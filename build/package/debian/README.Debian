@@ -71,7 +71,7 @@ built depends on your system.
 * root-plugin-pythia5   Wrapper for Pythia event generator (version 5) (***)
 * root-plugin-pythia6   Wrapper for Pythia event generator (version 6) (***)
 * root-plugin-qt        ROOT GUIs using QT
-* root-plugin-qaudp     Quadratic Programming plugin 
+* root-plugin-quadp     Quadratic Programming plugin 
 * root-plugin-maxdb     MaxDB/SapDB client for ROOT
 * root-plugin-venus     Wrapper for Venus event generator  (***)
 * root-plugin-xml       XML plugin for ROOT

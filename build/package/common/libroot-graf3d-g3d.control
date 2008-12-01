@@ -1,0 +1,25 @@
+Package: libroot-graf3d-g3d@libvers@
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}
+Recommends: libroot-graf3d-gl@libvers@ (>= ${binary:Version})
+Suggests: libroot-geom@libvers@
+Homepage: http://root.cern.ch
+Description: Basic 3D shapes for ROOT
+ This library contains the basic 3D shapes and classes for ROOT.  For
+ a more full-blown geometry library, see libroot-geom-dev.
+
+Package: libroot-graf3d-g3d-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-graf3d-g3d@libvers@ (= ${binary:Version}), libroot-graf2d-gpad-dev
+Recommends: libroot-graf3d-gl-dev
+Replaces: libroot-dev
+Conflicts: libroot-dev (<= 5.19.01-1)
+Suggests: libroot-geom-dev
+Homepage: http://root.cern.ch
+Description: Basic 3D shapes for ROOT
+ This library contains the basic 3D shapes and classes for ROOT.  For
+ a more full-blown geometry library, see libroot-geom-dev.
+  
+

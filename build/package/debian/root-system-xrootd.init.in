@@ -22,11 +22,14 @@
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 XDAEMON=@prefix@/bin/xrootd
 ODAEMON=@prefix@/bin/olbd
+CDAEMON=@prefix@/bin/cmsd
 XNAME=xrootd
 ONAME=olbd
+CNAME=cmsd
 DESC="Extended ROOT file server"
 XDESC="Extended ROOT file server" 
 ODESC="Open Load Balancer server"
+CDESC="Cluster Management System server"
 USER=root
 test -x $DAEMON || exit 0
 
@@ -44,6 +47,7 @@ fi
 # Check enables 
 enable_xrootd=`echo $ENABLE_XROOTD | tr '[:upper:]' '[:lower:]'`
 enable_olbd=`echo $ENABLE_OLBD| tr '[:upper:]' '[:lower:]'`
+enable_cmsd=`echo $ENABLE_CMSD| tr '[:upper:]' '[:lower:]'`
 
 # xrood options 
 # Configuration file
@@ -85,6 +89,20 @@ if test "x$OLBD_REDIRECTOR" != "xyes" ; then
     ODAEMON_OPTS="$ODAEMON_OPTS -r" 
 fi
 
+# cmsd options 
+# Confguration file 
+if test "x$CMSD_CONFIG_FILE" != "x" ; then 
+    CDAEMON_OPTS="$CDAEMON_OPTS -c $CMSD_CONFIG_FILE" 
+fi
+# Log file 
+if test "x$CMSD_LOG_FILE" != "x" ; then 
+    CDAEMON_OPTS="$CDAEMON_OPTS -l $CMSD_LOG_FILE" 
+fi
+# Port to listen to
+if test "x$CMSD_PORT" != "x" ; then 
+    CDAEMON_OPTS="$CDAEMON_OPTS -p $CMSD_PORT" 
+fi
+
 # User 
 if test "x$XROOTD_USER" = "xroot" ; then 
     :
@@ -93,9 +111,10 @@ elif test "x$XROOTD_USER" != "x" ; then
 fi
 
 # Check if we're enabled
-case $enable_rootd:$enable_olbd in 
-    yes:*) ;;
-    *:yes) ;;
+case $enable_rootd:$enable_olbd:$enable_cmsd in 
+    yes:*:*) ;;
+    *:yes:*) ;;
+    *:*:yes) ;;
     *) exit 0;;
 esac
 
@@ -114,6 +133,13 @@ startito ()
 	--pidfile /var/run/$ONAME.pid --exec $ODAEMON \
 	--background -- $ODAEMON_OPTS
 }
+startitc ()
+{
+    [ "$VERBOSE" != no ] && log_progress_msg "$CNAME" 
+    start-stop-daemon --make-pidfile --chuid $USER --start --quiet \
+	--pidfile /var/run/$CNAME.pid --exec $CDAEMON \
+	--background -- $CDAEMON_OPTS
+}
 
 stopitx() 
 {
@@ -124,6 +150,11 @@ stopito()
 {
     start-stop-daemon --user $USER --stop --oknodo --quiet --pidfile \
 	/var/run/$ONAME.pid --exec $ODAEMON 
+}
+stopitc()
+{
+    start-stop-daemon --user $USER --stop --oknodo --quiet --pidfile \
+	/var/run/$CNAME.pid --exec $CDAEMON 
 }
 
 # executable code 

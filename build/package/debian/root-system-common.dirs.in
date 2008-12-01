@@ -1,4 +1,2 @@
-@prefix@/lib/root
-@sysconfdir@/root
 @sysconfdir@/root
 @sysconfdir@/ld.so.conf.d

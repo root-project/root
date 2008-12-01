@@ -1,0 +1,9 @@
+Package: root-plugin-math-minuit2
+Architecture: any
+Depends: ${shlibs:Depends}
+Provides: root-fitter
+Description: Minuit version 2 plugin for ROOT
+ This package contains the MINUIT version 2 plug-in for ROOT.  This 
+ provides an fitting algorithm for ROOT.
+
+

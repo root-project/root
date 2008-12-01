@@ -1,0 +1,5 @@
+@prefix@/lib/root/@version@/libRoot.a
+@prefix@/bin/roota
+@prefix@/bin/proofserva
+@prefix@/share/man/man1/roota.1*
+@prefix@/share/man/man1/proofserva.1*

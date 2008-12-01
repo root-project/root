@@ -1,0 +1,18 @@
+Package: libroot-montecarlo-g4root@libvers@
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}
+Homepage: http://root.cern.ch
+Description: Geant4 interface library for ROOT
+ This package contains the G4root library for ROOT. 
+
+Package: libroot-montecarlo-g4root-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-montecarlo-g4root@libvers@ (= ${binary:Version}), libroot-core-dev
+Replaces: libroot-dev
+Conflicts: libroot-dev (<< 5.19.01-1)
+Homepage: http://root.cern.ch
+Description: Geant4 interface library for ROOT
+ This package contains the G4root library for ROOT. 
+

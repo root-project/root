@@ -1,0 +1,17 @@
+Package: libroot-gui-ged@libvers@
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: GUI element for editing various ROOT objecs
+ This package contains a library to show a pop-up window for editing 
+ various ROOT objects.
+
+Package: libroot-gui-ged-dev
+Architecture: any
+Section: libdevel
+Conflicts: libroot-dev (<< 5.19.01-1)
+Replaces: libroot-dev
+Depends: libroot-gui-ged@libvers@ (= ${binary:Version}), libroot-gui-dev, libroot-tree-treeplayer-dev
+Description: GUI element for editing various ROOT objecs
+ This package contains a library to show a pop-up window for editing 
+ various ROOT objects.
+

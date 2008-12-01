@@ -1,0 +1,18 @@
+Package: libroot-montecarlo-eg@libvers@
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}
+Homepage: http://root.cern.ch
+Description: Event generator library for ROOT
+ This package contains the Eg library for ROOT. 
+
+Package: libroot-montecarlo-eg-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-montecarlo-eg@libvers@ (= ${binary:Version}), libroot-graf2d-gpad-dev, libroot-graf3d-g3d-dev
+Replaces: libroot-dev
+Conflicts: libroot-dev (<< 5.19.01-1)
+Homepage: http://root.cern.ch
+Description: Event generator library for ROOT
+ This package contains the Eg library for ROOT. 
+

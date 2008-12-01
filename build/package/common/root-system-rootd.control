@@ -9,6 +9,5 @@ Description: ROOT remote file server
  files, serving files over the Internet. Using this daemon, you can
  access files on the machine from anywhere on the Internet, using a
  transparent interface.
- .
- ROOT web-site: http://root.cern.ch
+
 

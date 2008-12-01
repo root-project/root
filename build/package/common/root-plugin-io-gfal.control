@@ -1,0 +1,7 @@
+Package: root-plugin-io-gfal
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: GFal plugin for ROOT
+ This package contains the GFal plug-in for ROOT, that allows
+ transparent access to files data via various Grid file services.
+

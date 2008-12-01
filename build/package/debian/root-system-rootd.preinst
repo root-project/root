@@ -51,10 +51,10 @@ case "$1" in
 	fi
 
 	# modifying the user
-	usermod -c "Anonymous rootd"    rootd
-	usermod -d "/var/spool/rootd"   rootd
-	usermod -g "rootd"              rootd
-	usermod -s "/bin/false"         rootd
+	usermod -c "Anonymous rootd"    rootd > /dev/null
+	usermod -d "/var/spool/rootd"   rootd > /dev/null
+	usermod -g "rootd"              rootd > /dev/null
+	usermod -s "/bin/false"         rootd > /dev/null
 
 	# Since the home directory was created before putting the user
 	# into the rootd group and moreover we cannot guarantee that

@@ -27,11 +27,20 @@ endif
 # Include general and directory specific make rules 
 ifneq ($(DIRS),)
 include config/Makefile.config 
+include config/Makefile.$(ARCH)
 include $(foreach i, $(DIRS), $(i)/Module.mk)
-endif
-ifneq ($(filter cint,$(DIRS)),)
-include cint/cintdlls.mk
+# Special case of xrootd 
+ifeq ($(DIRS), net/xrootd)
+XRDLIBS := $(patsubst lib/%, $(LPATH)/%, \
+		$(filter-out lib/libXrdProofd.so, $(wildcard lib/libXrd*.so)))
+ALLLIBS	:= $(XRDLIBS:$(RLIBD)/%=$(RLIBD)/%)
+ALLEXECS:= $(filter-out bin/xrootd bin/olbd, $(ALLEXECS))
+endif # $(DIRS) = xrootd
+endif # ! $(DIRS) = 
+ifneq ($(filter cint/cint,$(DIRS)),)
+include cint/ROOT/cintdlls.mk
 DICTLIBS += $(patsubst lib/%, $(RLIBD)/%, $(filter lib/%, $(CINTDICTDLLS)))
+ALLMAPS  =  $(patsubst lib/%, $(RLIBD)/%, $(filter lib/%, $(CINTDICTMAPS)))
 endif
 
 # Default target and message 
@@ -61,23 +70,13 @@ DEVLIBS := $(ALLLIBS)
 else # ! $(LIB) = $(DEV)
 # If the development and library package is the same (plugins), then we need
 # only add the soversion to the library directory 
-ifneq ($(NOVERS),1)
+ifeq ($(DIRS), net/xrootd)
+PKGLIBS := $(ALLLIBS:$(RLIBD)/%=$(RLIBD)/$(SOVER)/%)
+else
 PKGLIBS	:= $(ALLLIBS:$(RLIBD)/%=$(RLIBD)/$(SOVER)/%.$(SOVER)) 	\
 	   $(ALLLIBS:$(RLIBD)/%=$(RLIBD)/$(SOVER)/%.$(MAJOR)) 	\
 	   $(ALLLIBS:$(RLIBD)/%=$(RLIBD)/$(SOVER)/%) 		
-else # ! $(NOVERS) != 1
-# Special case of xrootd 
-ifeq ($(DIRS), xrootd)
-XRDLIBS := $(patsubst lib/%, $(LPATH)/%, \
-		$(filter-out lib/libXrdProofd.so, $(wildcard lib/libXrd*.so)))
-PKGLIBS	:= $(XRDLIBS:$(RLIBD)/%=$(RLIBD)/$(SOVER)/%)
-# In case we do not have a library package 
-else  # ! $(DIR) = xrootd
-PKGLIBS	:= $(ALLLIBS) \
-	   $(ALLLIBS:$(RLIBD)/%=$(RLIBD)/$(SOVER)/%) 		\
-	   $(ALLLIBS:$(RLIBD)/%=$(RLIBD)/%.$(SOVER))		
-endif # $(DIRS) = xrootd
-endif # $(NOVERS) != 1
+endif # $(DIRS) = net/xrootd
 endif # $(LIB) = $(DEV)
 endif # $(LIB)
 ifneq ($(NOMAP),1) 
@@ -90,22 +89,12 @@ endif
 liblist:
 ifneq ($(LIB),)
 	@for f in $(PKGLIBS)  ; do echo $$f ; done >> $(OUT)/$(SLIB).install
-ifneq ($(LIB),$(DEV))
+ifneq ($(LIB), $(DEV))
 	@(cd $(BUILD)/$(RLIBD) && \
 	   for i in $(ALLLIBS) ; do \
 	      b=`basename $$i` ; \
 	      ln -fs $(SOVER)/$$b . ; \
 	      ln -fs $(SOVER)/$$b.$(SOVER) . ; done)
-
-#	      mv $(SOVER)/$$b.$(SOVER) . ; \
-#	      (cd $(SOVER) && ln -sf ../$$b.$(SOVER) .) ; done)
-#else 
-#ifneq ($(DIRS), xrootd) 
-#	@(cd $(BUILD)/$(RLIBD) && \
-#	   for i in $(ALLLIBS) ; do \
-#	      b=`basename $$i` ; \
-#	      ln -fs $(SOVER)/$$b.$(SOVER) .; done)
-#endif
 endif # $(LIB) = $(DEV)
 endif # $(LIB)
 
@@ -117,8 +106,10 @@ endif # $(DEV)
 # Rule to make development package list 
 devlist:
 ifneq ($(DEV),)
+ifneq ($(DEV),$(LIB))
 	@for f in $(filter-out %.cw %.pri, $(PKGHDRS)) ; \
 		do echo $$f ; done >> $(OUT)/$(DEV).install
+endif
 endif
 
 # If we have a binary package, then get list of programs and man pages

@@ -1,0 +1,3 @@
+root-plugin-net-xrootd: binary-without-manpage usr/bin/xrdpwdadmin.bin
+root-plugin-net-xrootd: binary-without-manpage usr/bin/xrd.bin
+root-plugin-net-xrootd: binary-without-manpage usr/bin/xrdcp.bin

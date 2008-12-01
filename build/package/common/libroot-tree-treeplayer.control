@@ -1,0 +1,15 @@
+Package: libroot-tree-treeplayer@libvers@
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: Library to loop over a ROOT tree 
+ Plug-in to loop over a ROOT tree.
+
+Package: libroot-tree-treeplayer-dev
+Architecture: any
+Section: libdevel
+Conflicts: libroot-dev (<< 5.19.01-1)
+Replaces: libroot-dev
+Depends: libroot-tree-treeplayer@libvers@ (= ${binary:Version}), libroot-tree-dev, libroot-graf2d-gpad-dev, libroot-graf3d-g3d-dev
+Description: Library to loop over a ROOT tree 
+ Plug-in to loop over a ROOT tree.
+

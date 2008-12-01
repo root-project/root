@@ -1,3 +1,55 @@
+root-system (5.21.07-1) unstable; urgency=low
+
+  * New upstream version
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Fri, 28 Nov 2008 19:28:17 +0100
+
+root-system (5.21.05-1) unstable; urgency=low
+
+  * New upstream version
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Tue, 07 Oct 2008 09:26:04 +0200
+
+root-system (5.19.05-1) unstable; urgency=low
+
+  * New upstream version
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Wed, 14 May 2008 23:16:12 +0200
+
+root-system (5.19.03-2) unstable; urgency=low
+
+  * Moved root-plugin-graf3d-gl to libroot-graf3d-gl and 
+    libroot-graf3d-dev, since the code needs to be callable for custom 
+    EVE implementations of quads, etc. 
+  * Fixed problem with startup URL - points to 
+    http://localhost/doc/root/html - implies recommendation of a 
+    web-server.  Aparently, the TGHtml gui element does not really know 
+    how to resolve relative links from a "file:///" URL.
+  * Added "--etcdir" option to root-config script - should be useful
+    for VMC and the like implementations.
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Thu, 08 May 2008 08:09:44 +0200
+
+root-system (5.19.03-1) unstable; urgency=low
+
+  * New upstream version (Closes: #478956)
+  * Added prober build dependencies on fortran compiler on all 
+    platforms (Closes: #429186)
+  * With the kind help of Thiemo Seufer <ths@networkno.de>, 
+    Dirk Van Hertem <dirk.vanhertem@ieee.org>, and Boris <boris@mogwitz.eu>
+    we managed to get ROOT to compile on mips/mipsel.   This is a new ROOT 
+    platform too. (Closes: #434855, #425257)
+  * Fixed GSL version recognision. (Closes: #450507, #450508)
+  * ROOT now builds against Qt 4. (Closes: #476324)
+  * Fixed download URL of TTF files (Closes: #451510)
+  * Split package root-system-xrootd into 2 packages: root-system-xrootd and 
+    root-plugin-net-xrootd.  
+  * Follow new source directory structure in package structure.  Several new
+    packages that split older libroot<version> package.  
+  * libroot-proof replaces root-plugin-proof
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Fri, 02 May 2008 08:21:48 +0200
+
 root-system (5.17.07-1) unstable; urgency=low
 
   * New upstream version
