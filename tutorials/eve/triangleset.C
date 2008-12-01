@@ -20,7 +20,7 @@ void triangleset()
       ts1->SetName("RandomColors");
       ts1->GenerateTriangleNormals();
       ts1->GenerateRandomColors();
-      ts1->SetColor(0);
+      ts1->SetMainColor(0);
       TGeoHMatrix m;
       Double_t scale[3] = { 0.5, 0.5, 0.5 };
       m.SetScale(scale);
@@ -31,7 +31,7 @@ void triangleset()
       ts2 = TEveTriangleSet::ReadTrivialFile("broken_torus.tring");
       ts2->SetName("SmallBlue");
       ts2->GenerateTriangleNormals();
-      ts2->SetColor(4);
+      ts2->SetMainColor(4);
       TGeoHMatrix m;
       m.RotateY(90);
       Double_t scale[3] = { 0.8, 0.8, 1.2 };
@@ -45,7 +45,7 @@ void triangleset()
       ts3->GenerateTriangleNormals();
       gStyle->SetPalette(1, 0);
       ts3->GenerateZNormalColors(50, -50, 50, kTRUE, kTRUE);
-      ts3->SetColor(0);
+      ts3->SetMainColor(0);
       TGeoHMatrix m;
       m.RotateZ(90);
       Double_t scale[3] = { 1.3, 1.0, 1.6 };
