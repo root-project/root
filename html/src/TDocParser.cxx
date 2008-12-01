@@ -328,7 +328,7 @@ void TDocParser::AddClassDataMembersRecursively(TBaseClass* bc) {
 
 
 //______________________________________________________________________________
-void TDocParser::AnchorFromLine(TString& anchor) {
+void TDocParser::AnchorFromLine(const TString& line, TString& anchor) {
    // Create an anchor from the given line, by hashing it and
    // convertig the hash into a custom base64 string.
 
@@ -337,7 +337,7 @@ void TDocParser::AnchorFromLine(TString& anchor) {
    // use hash of line instead of e.g. line number.
    // advantages: more stable (lines can move around, we still find them back),
    // no need for keeping a line number context
-   UInt_t hash = ::Hash(fLineStripped);
+   UInt_t hash = ::Hash(line);
    anchor.Remove(0);
    // force first letter to be [A-Za-z], to be id compatible
    anchor += base64String[hash % 52];
@@ -1385,7 +1385,7 @@ TMethod* TDocParser::LocateMethodInCurrentLine(Ssiz_t &posMethodName, TString& r
          // gotta write out this line before it gets lost
          if (!anchor.Length()) {
             // request an anchor, just in case...
-            AnchorFromLine(anchor);
+            AnchorFromLine(fLineStripped, anchor);
             if (srcOut)
                srcOut << "<a name=\"" << anchor << "\"></a>";
          }
@@ -1673,7 +1673,7 @@ void TDocParser::LocateMethods(std::ostream& out, const char* filename,
             fComment.Remove(0);
 
          if (needAnchor || fExtraLinesWithAnchor.find(fLineNo) != fExtraLinesWithAnchor.end()) {
-            AnchorFromLine(anchor);
+            AnchorFromLine(fLineStripped, anchor);
             if (sourceExt)
                srcHtmlOut << "<a name=\"" << anchor << "\"></a>";
          }
