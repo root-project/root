@@ -444,7 +444,7 @@ TEveWindow::~TEveWindow()
 //==============================================================================
 
 //______________________________________________________________________________
-void TEveWindow::SwapWindow(TEveWindow* w)
+void TEveWindow::SwapWindow(TEveWindow* /*w*/)
 {
    printf ("Swapping ... yeah, right :)\n");
 }
