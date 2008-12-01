@@ -1955,6 +1955,7 @@ TGMenuTitle::TGMenuTitle(const TGWindow *p, TGHotString *s, TGPopupMenu *menu,
    fNormGC     = norm;
    fState      = kFALSE;
    fTitleId    = -1;
+   fTextColor  = GetForeground();
 
    Int_t hotchar;
    if (s && (hotchar = s->GetHotChar()) != 0)
@@ -1977,7 +1978,6 @@ TGMenuTitle::TGMenuTitle(const TGWindow *p, TGHotString *s, TGPopupMenu *menu,
 }
 
 //______________________________________________________________________________
-
 void TGMenuTitle::SetState(Bool_t state)
 {
    // Set state of menu title.
@@ -2027,8 +2027,10 @@ void TGMenuTitle::DoRedraw()
          back = fMenu->fMenuBar->GetBackground();
       gVirtualX->SetForeground(fNormGC, back);
       gVirtualX->FillRectangle(fId,fNormGC, 0, 0, fWidth, fHeight);
-      gVirtualX->SetForeground(fNormGC, GetForeground());
+      gVirtualX->SetForeground(fNormGC, fTextColor);
       fLabel->Draw(fId, fNormGC, x, y + max_ascent);
+      if (fTextColor != GetForeground())
+         gVirtualX->SetForeground(fNormGC, GetForeground());
    }
 }
 

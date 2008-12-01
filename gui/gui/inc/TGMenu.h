@@ -260,6 +260,7 @@ protected:
    Bool_t          fState;            // menu title state (active/not active)
    Int_t           fHkeycode;         // hot key code
    FontStruct_t    fFontStruct;       // font
+   Pixel_t         fTextColor;        // text color
    GContext_t      fNormGC, fSelGC;   // normal and selection graphics contexts
 
    virtual void DoRedraw();
@@ -283,6 +284,8 @@ public:
                UInt_t options = 0);
    virtual ~TGMenuTitle() { if (fLabel) delete fLabel; }
 
+   Pixel_t      GetTextColor() const { return fTextColor; }
+   void         SetTextColor(Pixel_t col) { fTextColor = col; }
    virtual void SetState(Bool_t state);
    Bool_t       GetState() const { return fState; }
    Int_t        GetHotKeyCode() const { return fHkeycode; }
@@ -347,6 +350,7 @@ public:
    virtual TGPopupMenu *GetPopup(const char *s);
    virtual TGPopupMenu *RemovePopup(const char *s);
 
+   virtual TList  *GetTitles() const { return fTitles; }
    virtual Bool_t  HandleButton(Event_t *event);
    virtual Bool_t  HandleMotion(Event_t *event);
    virtual Bool_t  HandleKey(Event_t *event);
