@@ -33,7 +33,7 @@ protected:
    Bool_t      fEnabled;     // Cell enabled state
    Bool_t      fHasOwnLabel; // Flag on default or specific label usage
 
-   virtual void Init();
+   void        Init();
 
 public:
    TGTableHeader(const TGWindow *p = 0, TGTable *table = 0, 

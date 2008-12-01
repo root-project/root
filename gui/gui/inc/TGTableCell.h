@@ -54,7 +54,7 @@ protected:
    virtual void Resize(TGDimension newsize);
 
    virtual void Highlight();
-   virtual void Init(Bool_t resize);
+   void         Init(Bool_t resize);
 
 public:
    static FontStruct_t GetDefaultFontStruct();
