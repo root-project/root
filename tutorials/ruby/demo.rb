@@ -48,6 +48,9 @@ bar.AddButton('hstack', 'TRuby::Exec("load \'hstack.rb\'");',
 bar.AddButton('ntuple1', 'TRuby::Exec("load \'ntuple1.rb\'");',
     'Using ntuples')
 
+bar.AddButton('tornado', 'TRuby::Exec("load \'tornado.rb\'");',
+    'Examples of 3-D PolyMarkers')
+
 bar.AddButton('latex', 'TRuby::Exec("load \'latex.rb\'");',
     'Creating LaTeX documents')
 

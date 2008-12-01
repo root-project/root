@@ -1,18 +1,11 @@
 // @(#)root/ruby:$Id$
 // Author:  Elias Athanasopoulos, May 2004
 
-/*  dynamic ruby-root
- *  (http://null.edunet.uoa.gr/~elathan/rr/)
+/*  Ruby bindings 
  *
- *  Elias Athanasopoulos            <elathan@phys.uoa.gr>
- *  George Tzanakos                 <tzanakos@cc.uoa.gr>
+ *  Elias Athanasopoulos  <elathan@ics.forth.gr> 
  *
- *  University of Athens
- *  Department of Physics
- *  HEPA Lab
- *  (http://daedalus.phys.uoa.gr)
- *
- *  (c) 2003, 2004
+ *  (c) 2003, 2004, 2006, 2007, 2008
 */
 
 #include "RConfigOptions.h"
@@ -230,7 +223,6 @@ double rr_ctf1_fcn (double *x, double* par)
       }
 
     double res = NUM2DBL(rb_funcall (rb_cObject, info->id, 2, vx, vpar));
-    // DEBUG! printf("got: %f\n", res);
     return res;
 }
 
@@ -277,7 +269,6 @@ double rr_ctf2_fcn (double *x, double* par)
       }
 
     double res = NUM2DBL(rb_funcall (rb_cObject, info->id, 2, vx, vpar));
-    // DEBUG! printf("got: %f\n", res);
     return res;
 }
 
@@ -495,7 +486,7 @@ unsigned int drr_map_args2(VALUE inargs, char *cproto, G__CallFunc *f, long int 
 
 void drr_find_method_prototype( G__ClassInfo *klass, char *methname, VALUE inargs, char *cproto, long int offset=1 )
 {
-    /* FIXME: Brute force checkin of all combinations of * and & for
+    /* FIXME: Brute force checking of all combinations of * and & for
      * T_Objects Since we cannot tell which one is needed (we get the type
      * from the ruby objects, which don't know) we try all.
      */
@@ -534,34 +525,13 @@ void drr_set_method_args( VALUE inargs, G__CallFunc *func, long int offset=1 )
     drr_map_args2( inargs, 0, func, offset );
 }
 
-/* FIXME. Err... enum is the correct word? :-) */
-#define kint        0
-#define kfloat      1
-#define kchar       2
-#define kunknown    3
-#define kvoid       4
-#define kintary     5
-#define kfloatary   6
-#define kstring     7
-#define kroot       8
-#define kbool       9
+enum ktype {kint, kfloat, kchar, kunknown, kvoid, kintary, kfloatary, kstring, kroot, kbool};
 
 int drr_parse_ret_type (const char *ret)
 {
-    /*
-        0: int
-        1: float
-        2: char
-        3: Unknown
-        4: void
-        5: Array of ints
-        6: Array of floats
-        7: String
-        8: ROOT Object
-    */
-
     char *realtype = strdup(ret), *t = realtype;
-    int plevel = 0, type;
+    int plevel = 0;
+	enum ktype type;
 
     while (*(t++)) {
         if (*t == '*')
@@ -593,7 +563,10 @@ int drr_parse_ret_type (const char *ret)
         type = kunknown;
 
     if (plevel)
-        type += 5;
+		/* Quick hack to move from ordinary types to pointer types,
+		 * which are essntially arrays of values. For example an integer
+		 * (kint) is transformed to an array of integers (kintary).  */
+        type = (enum ktype)(type + 5);
 
     free (realtype);
 
@@ -689,8 +662,6 @@ static VALUE drr_init(int argc, VALUE argv[], VALUE self)
 
     rb_scan_args (argc, argv, "0*", &inargs);
 
-    //rb_warn("You tried to call: %s#%s with %d arguments", classname, classname, RARRAY(inargs)->len);
-
     G__CallFunc func;
     G__ClassInfo klass(classname);
 
@@ -716,13 +687,53 @@ static VALUE drr_init(int argc, VALUE argv[], VALUE self)
     return self;
 }
 
+static VALUE drr_return(int rtype, long value_address, double dvalue_address, VALUE self)
+{
+	VALUE vret;
+
+	switch (rtype)
+      {
+        case kint:
+            vret = INT2NUM(value_address);
+            break;
+        case kfloat:
+            vret = rb_float_new(dvalue_address);
+            break;
+        case kstring:
+            vret = rb_str_new2((char *)value_address);
+            break;
+        case kbool:
+            vret = rr_bool((bool)value_address);
+            break;
+        case kroot:
+            if (!value_address)
+        return Qnil;
+
+            if (!strcmp(((TObject*)(value_address))->ClassName(), "TList"))
+                vret = rr_ary_new((TList*)value_address);
+ 			else
+              {
+                VALUE res;
+                RRNEW(res, cTObject);
+                rb_iv_set(res, "__rr__", Data_Wrap_Struct(cTObject, 0, 0, (TObject*)value_address));
+                rb_iv_set(res, "__rr_class__", rb_str_new2 (((TObject*)(value_address))->ClassName()));
+                vret = res;
+              }
+
+            break;
+
+        default:
+            vret = self;
+            break;
+      }
+
+	return vret;
+}
+
+
 static VALUE drr_const_missing(VALUE self, VALUE klass)
 {
     /* Define a new ROOT Class dynammically.  */
-
-    /* Silence a silly gcc warning...  */
-    if (NIL_P(self))
-        return Qnil;
 
     char *name = (char*) rb_id2name (rb_to_id(klass));
 
@@ -738,6 +749,51 @@ static VALUE drr_const_missing(VALUE self, VALUE klass)
         return rb_funcall(self,rb_intern("__drr_orig_const_missing"),1,klass);
     }
 }
+
+static VALUE drr_singleton_missing(int argc, VALUE argv[], VALUE self)
+{
+	VALUE inargs;
+  	char cproto[1024] = "";
+    int nargs;
+  	long offset, address = 0;
+    double dbladdr = 0;
+
+    /* Call a singleton method.  */
+	char * methname = (char*) rb_id2name (rb_to_id(argv[0]));
+    char * classname = (char *) rb_class2name(self);
+	
+  	rb_scan_args (argc, argv, "0*", &inargs);
+    nargs = RARRAY(inargs)->len - 1;
+
+  	G__CallFunc *func = new G__CallFunc();
+    G__ClassInfo *klass = new G__ClassInfo (classname);
+    G__MethodInfo *minfo = 0;
+
+ 	if (nargs) {
+        drr_find_method_prototype( klass, methname, inargs, cproto, 1 );
+        drr_set_method_args( inargs, func, 1 );
+    }
+
+ 	/* FIXME: minfo is really used only for the return type.  */
+    minfo = new G__MethodInfo(klass->GetMethod(methname, cproto, &offset));
+    if (minfo->InterfaceMethod())
+        func->SetFunc(*minfo);
+    else
+        rb_raise( rb_eArgError, "You provided an unknown prototype (%s) for (%s#%s).",
+                    cproto, classname, methname);
+
+	delete minfo;
+
+ 	int rtype = drr_parse_ret_type (minfo->Type()->TrueName());
+
+    if (rtype != kfloat)
+        address = func->ExecInt((void*)(offset));
+    else
+        dbladdr = func->ExecDouble((void*)(offset));
+
+	return(drr_return(rtype, address, dbladdr, self));
+}
+
 
 static VALUE drr_method_missing(int argc, VALUE argv[], VALUE self)
 {
@@ -763,8 +819,6 @@ static VALUE drr_method_missing(int argc, VALUE argv[], VALUE self)
 
     nargs = RARRAY(inargs)->len - 1;
     VALUE rklass = rb_class_of (self);
-
-    // rb_warn("(mm) - You tried to call: %s#%s with %d arguments", classname, methname, nargs);
 
     G__CallFunc *func = new G__CallFunc();
     G__ClassInfo *klass = new G__ClassInfo (classname);
@@ -813,44 +867,7 @@ static VALUE drr_method_missing(int argc, VALUE argv[], VALUE self)
     /* Define method.  */
     rb_define_method (rklass, methname, VALUEFUNC(drr_generic_method), -1);
 
-    VALUE vret;
-
-    switch (entry->rtype)
-      {
-        case kint:
-            vret = INT2NUM(address);
-            break;
-        case kfloat:
-            vret = rb_float_new(dbladdr);
-            break;
-        case kstring:
-            vret = rb_str_new2((char *)address);
-            break;
-        case kbool:
-            vret = rr_bool((bool)address);
-            break;
-        case kroot:
-            if (!address)
-                return Qnil;
-
-            if (!strcmp(((TObject*)(address))->ClassName(), "TList"))
-                vret = rr_ary_new((TList*)address);
-            else
-              {
-                VALUE res;
-                RRNEW(res, cTObject);
-                rb_iv_set(res, "__rr__", Data_Wrap_Struct(cTObject, 0, 0, (TObject*)address));
-                rb_iv_set(res, "__rr_class__", rb_str_new2 (((TObject*)(address))->ClassName()));
-                vret = res;
-              }
-            break;
-
-        default:
-            vret = self;
-            break;
-      }
-
-    return vret;
+	return(drr_return(entry->rtype, address, dbladdr, self));
 }
 
 static VALUE drr_generic_method(int argc, VALUE argv[], VALUE self)
@@ -870,8 +887,6 @@ static VALUE drr_generic_method(int argc, VALUE argv[], VALUE self)
     rb_scan_args (argc, argv, "0*", &inargs);
 
     nargs = RARRAY(inargs)->len;
-
-    // rb_warn("(gm) - You tried to call: %s#%s with %d arguments", rb_obj_classname (self), methname, nargs);
 
     G__CallFunc *func = NULL;
 
@@ -902,43 +917,7 @@ static VALUE drr_generic_method(int argc, VALUE argv[], VALUE self)
     else
         dbladdr = func->ExecDouble((void*)((long)caller + offset));
 
-    VALUE vret;
-    switch (entry->rtype)
-      {
-        case kint:
-            vret = INT2NUM(address);
-            break;
-        case kfloat:
-            vret = rb_float_new(dbladdr);
-            break;
-        case kstring:
-            vret = rb_str_new2((char *)address);
-            break;
-        case kbool:
-            vret = rr_bool((bool)address);
-            break;
-        case kroot:
-            if (!address)
-                return Qnil;
-
-            if (!strcmp(((TObject*)(address))->ClassName(), "TList"))
-                vret = rr_ary_new((TList*)address);
-            else
-              {
-                VALUE res;
-                RRNEW(res, cTObject);
-                rb_iv_set(res, "__rr__", Data_Wrap_Struct(cTObject, 0, 0, (TObject*)address));
-                rb_iv_set(res, "__rr_class__", rb_str_new2 (((TObject*)(address))->ClassName()));
-                vret = res;
-              }
-            break;
-
-        default:
-            vret = self;
-            break;
-      }
-
-    return vret;
+	return(drr_return(entry->rtype, address, dbladdr, self));
 }
 
 extern "C"
@@ -976,6 +955,8 @@ void Init_libRuby() {
        Object::__drr_orig_const_missing will be called if Cint is unable to resolve the class name */
     rb_eval_string("Object.instance_eval { alias __drr_orig_const_missing const_missing }");
     rb_define_singleton_method (rb_cObject, "const_missing", VALUEFUNC(drr_const_missing), 1);
+	/* For singleton function calls.  */
+    rb_define_singleton_method (rb_cObject, "method_missing", VALUEFUNC(drr_singleton_missing), -1);
 
     /* usefull globals */
     rb_define_method (rb_cObject, "gSystem", VALUEFUNC(rr_gsystem), 0);
