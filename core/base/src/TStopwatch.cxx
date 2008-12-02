@@ -41,8 +41,8 @@ TStopwatch::TStopwatch()
    // Create a stopwatch and start it.
 
 #ifdef R__UNIX
-   if (gTicks > 0)
-      gTicks = (Double_t)sysconf(_SC_CLK_TCK);
+   //if (!gTicks) gTicks = (Double_t)sysconf(_SC_CLK_TCK);
+   gTicks = (Double_t)sysconf(_SC_CLK_TCK);
 #endif
 
    Start();
