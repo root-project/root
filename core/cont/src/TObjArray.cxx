@@ -13,16 +13,41 @@
 //                                                                      //
 // TObjArray                                                            //
 //                                                                      //
-// An array of TObjects. The array expands automatically when           //
-// objects are added (shrinking can be done by hand using Expand(),     //
-// how nice to have meaningful names -:)).                              //
-// Use operator[] to have "real" array behaviour.                       //
+// An array of TObjects. The array expands automatically when
+// objects are added (shrinking can be done by hand using Expand(),
+// how nice to have meaningful names -:)).
+// Use operator[] to have "real" array behaviour.
+//
+// Note on ownership and copy:
+// By default the TObjArray does not own the objects it points to and 
+// will not delete them unless explicitly asked (via a call to the
+// Delete member function).   To assign ownership of the content to
+// the array, call:
+//     myarr->SetOwner(kTRUE);
+// When the array owns its content a call to Clear or the deletion of 
+// the array itself will lead to the deletion of its contents.
+//
+// You can either make a shallow copy of the array:
+//     otherarr = new TObjArray(*myarr);
+//    *otherarr = *myarr;
+// in which case ownership (if any) is not transfered but the other
+// array points to the same object as the original array.  Note that
+// if the content of either array is deleted the other array is not 
+// notified in any way (i.e. still points to the now deleted objects).
+//
+// You can also make a deep copy of the array:
+//     otherarr = (TObjArray*)myarr->Clone();
+// in which case the array and the content are both duplicated (i.e.
+// otherarr and myarr do not point to the same objects).  If myarr
+// is set to the be the owner of its content, otherarr will also be
+// set to the owner of its own conent.
+//  
 //Begin_Html
 /*
 <img src=gif/tobjarray.gif>
 */
 //End_Html
-//                                                                      //
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "TObjArray.h"
