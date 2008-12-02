@@ -99,25 +99,29 @@ TString CompressName(const char *method_name)
 {
    // Removes "const" words and blanks from full (with prototype)
    // method name and resolve any typedefs in the method signature.
+   // If a null or empty string is passed in, an empty string
+   // is returned.
    //
    // Example: CompressName(" Draw(const char *, const char *,
    //                              Option_t * , Int_t , Int_t)");
    // returns the string "Draw(char*,char*,char*,int,int)".
 
-   static TPRegexp *constRe = 0, *wspaceRe = 0;
+   static TPMERegexp *constRe = 0, *wspaceRe = 0;
    static TVirtualMutex *lock = 0;
 
    R__LOCKGUARD2(lock);
 
    if (constRe == 0) {
-      constRe  = new TPRegexp("(?<=\\(|\\s|,|&|\\*)const(?=\\s|,|\\)|&|\\*)");
-      wspaceRe = new TPRegexp("\\s+");
+      constRe  = new TPMERegexp("(?<=\\(|\\s|,|&|\\*)const(?=\\s|,|\\)|&|\\*)", "go");
+      wspaceRe = new TPMERegexp("\\s+", "go");
    }
 
-   TString res = method_name;
+   TString res(method_name);
+   if (res.IsNull())
+      return res;
 
-   constRe ->Substitute(res, "", "go");
-   wspaceRe->Substitute(res, "", "go");
+   constRe ->Substitute(res, "");
+   wspaceRe->Substitute(res, "");
 
    TStringToken methargs(res, "\\(|\\)", kTRUE);
 
