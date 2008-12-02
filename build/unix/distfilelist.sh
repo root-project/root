@@ -42,7 +42,7 @@ WILDCARDS="LICENSE README bin \
    test/*.C test/*.sh test/dt_Makefile test/linearIO.root \
    test/RootShower/*.h test/RootShower/*.cxx \
    test/RootShower/*.rc test/RootShower/*.ico \
-   test/RootShower/*.png test/RootShower/Makefile \
+   test/RootShower/*.png test/RootShower/Makefile* \
    test/RootShower/anim test/RootShower/icons \
    test/ProofBench test/RootIDE \
    tmva/test/*.gif tmva/test/*.png tmva/test/*.C tmva/test/README \
