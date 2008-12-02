@@ -17,6 +17,9 @@
 // CINT
 #include "Api.h"
 
+// Standard
+#include <string.h>
+
 
 //______________________________________________________________________________
 //                        Setup interactive application
@@ -94,8 +97,15 @@ Bool_t PyROOT::TPyROOTApplication::CreatePyROOTApplication( Bool_t bLoadLibs )
 
       int argc = argl ? PyList_Size( argl ) : 1;
       char** argv = new char*[ argc ];
-      for ( int i = 1; i < argc; ++i )
-         argv[ i ] = PyString_AS_STRING( PyList_GET_ITEM( argl, i ) );
+      for ( int i = 1; i < argc; ++i ) {
+         char* argi = PyString_AS_STRING( PyList_GET_ITEM( argl, i ) );
+         if ( strcmp( argi, "-" ) == 0 || strcmp( argi, "--" ) == 0 ) {
+         // stop collecting options, the remaining are for the python script
+            argc = i;    // includes program name
+            break;
+         }
+         argv[ i ] = argi;
+      }
       argv[ 0 ] = Py_GetProgramName();
 
       gApplication = new TPyROOTApplication( "PyROOT", &argc, argv, bLoadLibs );
