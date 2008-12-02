@@ -58,7 +58,8 @@ TGlobal &TGlobal::operator=(const TGlobal &rhs)
       fInfo = gCint->DataMemberInfo_FactoryCopy(rhs.fInfo);
       SetName(gCint->DataMemberInfo_Name(fInfo));
       SetTitle(gCint->DataMemberInfo_Title(fInfo));
-   }   
+   }
+   return *this;   
 }
 
 //______________________________________________________________________________
