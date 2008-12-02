@@ -245,6 +245,11 @@ STRESSITERO    = stressIterators.$(ObjSuf)
 STRESSITERS    = stressIterators.$(SrcSuf)
 STRESSITER     = stressIterators$(ExeSuf)
 
+STRESSHISTO   = stressHistogram.$(ObjSuf)
+STRESSHISTS   = stressHistogram.$(SrcSuf)
+STRESSHIST    = stressHistogram$(ExeSuf)
+
+
 OBJS          = $(EVENTO) $(MAINEVENTO) $(HWORLDO) $(HSIMPLEO) $(MINEXAMO) \
                 $(TSTRINGO) $(TCOLLEXO) $(VVECTORO) $(VMATRIXO) $(VLAZYO) \
                 $(HELLOO) $(ACLOCKO) $(STRESSO) $(TBENCHO) $(BENCHO) \
@@ -253,7 +258,8 @@ OBJS          = $(EVENTO) $(MAINEVENTO) $(HWORLDO) $(HSIMPLEO) $(MINEXAMO) \
                 $(CTORTUREO) $(QPRANDOMO) $(THREADSO) $(STRESSVECO) \
                 $(STRESSMATHO) $(STRESSFITO) $(STRESSHEPIXO) \
                 $(STRESSENTRYLISTO) $(STRESSROOFITO) $(STRESSPROOFO) \
-                $(STRESSMATHMOREO) $(STRESSITERO)
+                $(STRESSMATHMOREO) $(STRESSITERO) $(STRESSHISTO) \
+                $(GUITESTO) $(GUIVIEWERO) $(TETRISO)
 
 PROGRAMS      = $(EVENT) $(HWORLD) $(HSIMPLE) $(MINEXAM) $(TSTRING) \
                 $(TCOLLEX) $(TCOLLBM) $(VVECTOR) $(VMATRIX) $(VLAZY) \
@@ -262,7 +268,8 @@ PROGRAMS      = $(EVENT) $(HWORLD) $(HSIMPLE) $(MINEXAM) $(TSTRING) \
                 $(TESTBITS) $(CTORTURE) $(QPRANDOM) $(THREADS) $(STRESSSP) \
                 $(STRESSVEC) $(STRESSFIT) $(STRESSHEPIX) $(STRESSENTRYLIST) \
                 $(STRESSROOFIT) $(STRESSPROOF) $(STRESSMATH) $(STRESSTMVA) \
-                $(STRESSMATHMORE) $(STRESSITER)
+                $(STRESSMATHMORE) $(STRESSITER) $(STRESSHIST) \
+                $(GUITEST) $(GUIVIEWER) $(TETRISSO)
 
 all:            $(PROGRAMS)
 
@@ -470,8 +477,13 @@ $(TBENCHSO):    $(TBENCHO)
                 $(LD) $(SOFLAGS) $(LDFLAGS) $(TBENCHO) $(LIBS) $(OutPutOpt)$@
                 $(MT_DLL)
 
-$(STRESSITER):	$(STRESSITERO) 
+$(STRESSITER):  $(STRESSITERO) 
                 $(LD) $(LDFLAGS) $(STRESSITERO) $(LIBS) $(OutPutOpt)$@
+                $(MT_EXE)
+                @echo "$@ done"
+
+$(STRESSHIST):  $(STRESSHISTO)
+                $(LD) $(LDFLAGS) $(STRESSHISTO) $(LIBS) $(OutPutOpt)$@
                 $(MT_EXE)
                 @echo "$@ done"
 
