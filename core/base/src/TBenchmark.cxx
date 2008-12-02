@@ -55,7 +55,7 @@ TBenchmark::TBenchmark(const TBenchmark& bm) :
    fCpuTime  = new Float_t[fNmax];
    fTimer    = new TStopwatch[fNmax];
 
-   for(UInt_t i = 0; i<fNmax; ++i) {
+   for(Int_t i = 0; i<fNmax; ++i) {
       fNames[i] = bm.fNames[i];
       fRealTime[i] = bm.fRealTime[i];
       fCpuTime[i] = bm.fCpuTime[i];
@@ -82,7 +82,7 @@ TBenchmark& TBenchmark::operator=(const TBenchmark& bm)
       fCpuTime  = new Float_t[fNmax];
       fTimer    = new TStopwatch[fNmax];
       
-      for(UInt_t i = 0; i<fNmax; ++i) {
+      for(Int_t i = 0; i<fNmax; ++i) {
          fNames[i] = bm.fNames[i];
          fRealTime[i] = bm.fRealTime[i];
          fCpuTime[i] = bm.fCpuTime[i];
