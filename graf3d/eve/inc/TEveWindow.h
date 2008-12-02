@@ -57,6 +57,7 @@ protected:
    TEveWindow        *fEveWindow;
 
    static TContextMenu *fgCtxMenu;
+   static const TString fgkEmptyFrameName;
 
 public:
    TEveCompositeFrame(TGCompositeFrame* gui_parent, TEveWindow* eve_parent);
