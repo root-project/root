@@ -72,10 +72,10 @@ public:
    void   SetVertical(Bool_t x);
 
    // For now assume this is always true. Lenght of splitter = 4 pixels.
-   //Bool_t GetUseSplitters() const { return fUseSplitters; }
-   //void SetUseSplitters(Bool_t x) { fUseSplitters = x; }
+   // Bool_t GetUseSplitters() const { return fUseSplitters; }
+   // void SetUseSplitters(Bool_t x) { fUseSplitters = x; }
 
-   ClassDef(TGPack, 0); // Short description.
+   ClassDef(TGPack, 0); // Horizontal or vertical stack of frames.
 };
 
 #endif

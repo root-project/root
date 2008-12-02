@@ -13,7 +13,12 @@
 #include "TGSplitter.h"
 
 //______________________________________________________________________________
-// Description of TGPack
+//
+// Stack of frames in horizontal (default) or vertical stack.
+// The splitters are placed between the neighbouring frames so that
+// they can be resized by the user.
+// When the whole pack is resized, frames are scaled proportionally to
+// their previous size.
 //
 // When frames are left in pack at destruction time, they will be
 // deleted via deep-cleanup.
@@ -356,7 +361,8 @@ void TGPack::RemoveFrame(TGFrame* f)
 //______________________________________________________________________________
 void TGPack::ShowFrame(TGFrame* /*f*/)
 {
-   // Blabla blu.
+   // Virtual from TGCompositeFrame.
+   // This operation not supported by pack.
 
    Error("ShowFrame", "not yet supported.");
 }
@@ -364,7 +370,8 @@ void TGPack::ShowFrame(TGFrame* /*f*/)
 //______________________________________________________________________________
 void TGPack::HideFrame(TGFrame* /*f*/)
 {
-   // Blabla blu.
+   // Virtual from TGCompositeFrame.
+   // This operation not supported by pack.
 
    Error("HideFrame", "not yet supported.");
 }
@@ -489,6 +496,9 @@ void TGPack::HandleSplitterResize(Int_t delta)
 //______________________________________________________________________________
 void TGPack::SetVertical(Bool_t x)
 {
+   // Sets the vertical flag and reformats the back to new stacking
+   // direction.
+
    if (x == fVertical)
       return;
 
