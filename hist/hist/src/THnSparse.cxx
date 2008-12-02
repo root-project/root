@@ -1348,7 +1348,7 @@ THnSparse* THnSparse::Rebin(const Int_t* group) const
    for (Long64_t i = 0; i < GetNbins(); ++i) {
       v = GetBinContent(i, coord);
       for (Int_t d = 0; d < ndim; ++d)
-         bins[d] = (coord[d] - 1) / group[d] + 1;
+         bins[d] = TMath::CeilNint( (double) coord[d]/group[d] );
 
       if (wantErrors) {
          if (haveErrors) {
