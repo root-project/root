@@ -1094,7 +1094,9 @@ Bool_t TProof::StartSlaves(Bool_t parallel, Bool_t attach)
       TList *workerList = new TList;
       // Get list of workers
       if (gProofServ->GetWorkers(workerList, pc) == TProofServ::kQueryStop) {
-         Error("StartSlaves", "getting list of worker nodes");
+         TString emsg("no resource currently available for this session: please retry later");
+         Error("StartSlaves", emsg.Data());
+         gProofServ->SendAsynMessage(emsg.Data());
          return kFALSE;
       }
       fImage = gProofServ->GetImage();
@@ -2563,7 +2565,7 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
       case kPROOF_GETPACKET:
          {
             TDSetElement *elem = 0;
-            elem = fPlayer->GetNextPacket(sl, mess);
+            elem = fPlayer ? fPlayer->GetNextPacket(sl, mess) : 0;
 
             if (elem != (TDSetElement*) -1) {
                TMessage answ(kPROOF_GETPACKET);
@@ -2704,7 +2706,8 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
                   fPlayer->AddQueryResult(pq);
                   fPlayer->SetCurrentQuery(pq);
                   // And clear the output list, as we start merging a new set of results
-                  fPlayer->GetOutputList()->Clear();
+                  if (fPlayer->GetOutputList())
+                     fPlayer->GetOutputList()->Clear();
                   // Add the unique query tag as TNamed object to the input list
                   // so that it is available in TSelectors for monitoring
                   fPlayer->AddInput(new TNamed("PROOF_QueryTag",
@@ -3365,13 +3368,12 @@ void TProof::MarkBad(TSlave *wrk, const char *reason)
             fPlayer->AddOutputObject(listOfMissingFiles);
       }
 
-      // Assume that the work done by the worker was lost and needs to reassigned.
+      // if a query is being processed, assume that the work done by
+      // the worker was lost and needs to be reassigned.
       TVirtualPacketizer *packetizer = fPlayer ? fPlayer->GetPacketizer() : 0;
       if (packetizer) {
          // the worker was lost so do resubmit the packets
          packetizer->MarkBad(wrk, 0, &listOfMissingFiles);
-      } else {
-         Error("MarkBad", "packetizer is undefined: protocol error?");
       }
    }
 
