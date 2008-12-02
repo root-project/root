@@ -319,6 +319,8 @@ int XrdProofdNetMgr::Broadcast(int type, const char *msg, const char *usr,
             }
             // Cleanup answer
             SafeDelete(xrsp);
+         } else {
+            TRACE(DBG, "broadcast request for ourselves: ignore");
          }
       }
       // Next worker
