@@ -1580,8 +1580,8 @@ TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname)
    }
 
    // save original statistics
-   const Int_t kNstat = 7;
-   Double_t stat[kNstat]; 
+   const Int_t kNstat2D = 7;
+   Double_t stat[kNstat2D]; 
    GetStats(stat); 
    bool resetStat = false; 
 
@@ -1753,6 +1753,7 @@ TProfile *TH2::DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastb
    TObject *h1obj = gROOT->FindObject(pname);
    if (h1obj && h1obj->InheritsFrom("TProfile")) {
       h1 = (TProfile*)h1obj;
+      // tb.d. check if number of bin is consistent ?
       h1->Reset();
    }
 
@@ -1764,9 +1765,9 @@ TProfile *TH2::DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastb
    opt.ToLower();  //must be called after MakeCuts
 
    if (!h1) {
-      const TArrayD *bins = fXaxis.GetXbins();
+      const TArrayD *bins = outAxis.GetXbins();
       if (bins->fN == 0) {
-         h1 = new TProfile(pname,GetTitle(),outN,fXaxis.GetXmin(),fXaxis.GetXmax(),option);
+         h1 = new TProfile(pname,GetTitle(),outN,outAxis.GetXmin(),outAxis.GetXmax(),option);
       } else {
          h1 = new TProfile(pname,GetTitle(),outN,bins->fArray,option);
       }
@@ -1774,7 +1775,7 @@ TProfile *TH2::DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastb
    if (pname != name)  delete [] pname;
 
    // Copy attributes
-   h1->GetXaxis()->ImportAttributes(this->GetXaxis());
+   h1->GetXaxis()->ImportAttributes( &outAxis);
    h1->SetLineColor(this->GetLineColor());
    h1->SetFillColor(this->GetFillColor());
    h1->SetMarkerColor(this->GetMarkerColor());
@@ -1793,7 +1794,7 @@ TProfile *TH2::DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastb
          cont =  GetCellContent(binx,biny);
 
          if (cont) {
-            h1->Fill(fXaxis.GetBinCenter(outBin),fYaxis.GetBinCenter(inBin), cont );
+            h1->Fill(outAxis.GetBinCenter(outBin),inAxis.GetBinCenter(inBin), cont );
          }
       }
    }
@@ -2026,8 +2027,8 @@ TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbi
    }
 
 
-   if ( ( fgStatOverflows == false && firstbin == 1 && lastbin == outAxis->GetNbins()     ) ||
-        ( fgStatOverflows == true  && firstbin == 0 && lastbin == outAxis->GetNbins() + 1 ) )
+   if ( ( fgStatOverflows == false && firstbin == 1 && lastbin == inNbin     ) ||
+        ( fgStatOverflows == true  && firstbin == 0 && lastbin == inNbin + 1 ) )
    h1->PutStats(&th1Stats[0]);
 
    return h1;
