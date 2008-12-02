@@ -811,10 +811,11 @@ Int_t TPMERegexp::Split(const TString& s, Int_t maxfields)
 }
 
 //______________________________________________________________________________
-TString TPMERegexp::Substitute(const TString& s, const TString& r, Bool_t doDollarSubst)
+Int_t TPMERegexp::Substitute(TString& s, const TString& r, Bool_t doDollarSubst)
 {
    // Substitute matching part of s with r, dollar back-ref
    // substitution is performed if doDollarSubst is true (default).
+   // Returns the number of substitutions made.
    //
    // After the substitution, another pass is made over the resulting
    // string and the following special tokens are interpreted:
@@ -824,13 +825,12 @@ TString TPMERegexp::Substitute(const TString& s, const TString& r, Bool_t doDoll
    // \U - uppercase till \E, and
    // \E - end case modification.
 
-   TString newstring(s);
-   SubstituteInternal(newstring, r, 0, fNMaxMatches, doDollarSubst);
+   Int_t cnt = SubstituteInternal(s, r, 0, fNMaxMatches, doDollarSubst);
 
    TString ret;
    Int_t   state = 0;
-   Ssiz_t  pos = 0, len = newstring.Length();
-   const Char_t *data = newstring.Data();
+   Ssiz_t  pos = 0, len = s.Length();
+   const Char_t *data = s.Data();
    while (pos < len) {
       Char_t c = data[pos];
       if (c == '\\') {
@@ -858,7 +858,9 @@ TString TPMERegexp::Substitute(const TString& s, const TString& r, Bool_t doDoll
       }
    }
 
-   return ret;
+   s = ret;
+
+   return cnt;
 }
 
 //______________________________________________________________________________

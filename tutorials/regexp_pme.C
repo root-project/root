@@ -101,7 +101,7 @@ void regexp_pme()
       TPMERegexp re("(\\d+)\\.(\\d+)\\.(\\d+)\\.(\\d+)");
       TString m("137.138.170.210");
       TString r("$4.$3.$2.$1");
-      TString s(re.Substitute(m, r));
+      TString s(m); re.Substitute(s, r);
       re.Print();
       printf("Substitute '%s','%s' => '%s'\n", m.Data(), r.Data(), s.Data());
       printf("\n");
@@ -112,7 +112,7 @@ void regexp_pme()
       TPMERegexp re("(\\w+)\\.(\\w+)@[\\w\\.-]+", "g");
       TString m("rene.brun@cern.ch, philippe.canal@fnal.gov, fons.rademakers@cern.ch");
       TString r("\\u$1 \\U$2\\E");
-      TString s(re.Substitute(m, r));
+      TString s(m); re.Substitute(s, r);
       re.Print();
       printf("Substitute '%s','%s' => '%s'\n", m.Data(), r.Data(), s.Data());
       printf("\n");

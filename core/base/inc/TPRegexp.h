@@ -128,7 +128,7 @@ public:
 
    Int_t   Match(const TString& s, UInt_t start = 0);
    Int_t   Split(const TString& s, Int_t maxfields = 0);
-   TString Substitute(const TString& s, const TString& r, Bool_t doDollarSubst=kTRUE);
+   Int_t   Substitute(TString& s, const TString& r, Bool_t doDollarSubst=kTRUE);
 
    Int_t   NMatches() const { return fNMatches; }
    TString operator[](Int_t);
