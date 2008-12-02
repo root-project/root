@@ -193,6 +193,14 @@ XrdSecCredentials *XrdSecProtocolkrb5::getCredentials(XrdSecParameters *noparm,
        return new XrdSecCredentials(0,0);
       }
 
+// Set KRB5CCNAME to its dfault value, if not done
+//
+   if (!getenv("KRB5CCNAME")) {
+      char ccname[128];
+      sprintf(ccname, "KRB5CCNAME=FILE:/tmp/krb5cc_%d", geteuid());
+      putenv(strdup(ccname));
+   }
+
 // Initialize the context and get the cache default.
 //
    if ((rc = krb5_init_context(&krb_context)))
@@ -711,12 +719,6 @@ int XrdSecProtocolkrb5::exp_krbTkn(XrdSecCredentials *cred, XrdOucErrInfo *erp)
 // Terminate to the new length
 //
     ccfile[nlen] = 0;
-
-// Indicate the next application what to do with the new file
-//
-    char *secenvs = new char[strlen("XrdSecENVS=KRB5CCNAME=")+strlen(ccfile)+1];
-    sprintf(secenvs,"XrdSecENVS=KRB5CCNAME=%s",ccfile);
-    putenv(secenvs);
 
 // Point the received creds
 //
