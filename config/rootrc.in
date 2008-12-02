@@ -94,7 +94,7 @@ Root.Fitter:             Minuit
 # on mouse and key events.
 Canvas.MoveOpaque:          false
 Canvas.ResizeOpaque:        false
-Canvas.UseScreenFactor:     true
+Canvas.UseScreenFactor:     false
 Canvas.HighLightColor:      2
 Canvas.ShowEventStatus:     false
 Canvas.ShowToolBar:         false
