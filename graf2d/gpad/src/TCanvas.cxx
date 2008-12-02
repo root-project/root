@@ -52,60 +52,74 @@ ClassImpQ(TCanvas)
 
 
 //______________________________________________________________________________
-//
-//   A Canvas is an area mapped to a window directly under
-//   the control of the display manager.
-//   A ROOT session may have several canvases open at any given time.
-//
-//   A Canvas may be subdivided into independent graphical areas: the PADs
-//   A canvas has a default pad which has the name of the canvas itself.
-//   An example of a Canvas layout is sketched in the picture below.
-//
-//   ***********************************************************************
-//   *          Tool Bar menus    for Canvas                               *
-//   ***********************************************************************
-//   *                                                                     *
-//   *  ************************************    *************************  *
-//   *  *                                  *    *                       *  *
-//   *  *                                  *    *                       *  *
-//   *  *                                  *    *                       *  *
-//   *  *                                  *    *                       *  *
-//   *  *                                  *    *                       *  *
-//   *  *                                  *    *                       *  *
-//   *  *              P1                  *    *        P2             *  *
-//   *  *                                  *    *                       *  *
-//   *  *                                  *    *                       *  *
-//   *  *                                  *    *                       *  *
-//   *  *                                  *    *                       *  *
-//   *  *                                  *    *                       *  *
-//   *  *                                  *    *                       *  *
-//   *  ************************************    *************************  *
-//   *                                                                     *
-//   ***********************************************************************
-//
-//   This canvas contains two pads named P1 and P2.
-//   Both Canvas, P1 and P2 can be moved, grown, shrinked using the
-//   normal rules of the Display manager.
-//   A copy of a real canvas with 4 pads is shown in the picture below.
-//Begin_Html
-/*
-<img src="gif/canvas_layout.gif">
-*/
-//End_Html
-//
-//  Once objects have been drawn in a canvas, they can be edited/moved
-//  by pointing directly to them. The cursor shape is changed
-//  to suggest the type of action that one can do on this object.
-//  Clicking with the right mouse button on an object pops-up
-//  a contextmenu with a complete list of actions possible on this object.
-//
-//  A graphical editor may be started from the canvas "View" menu.
-//  An interactive HELP is available by clicking on the HELP button
-//  at the top right of the canvas.
-//
-//  A canvas may be automatically divided into pads via TPad::Divide.
-//
+/* Begin_Html
+<center><h2>The Canvas class</h2></center>
 
+A Canvas is an area mapped to a window directly under the control of the display
+manager. A ROOT session may have several canvases open at any given time.
+<p>
+A Canvas may be subdivided into independent graphical areas: the <b>Pads</b>.
+A canvas has a default pad which has the name of the canvas itself.
+An example of a Canvas layout is sketched in the picture below.
+
+<pre>
+     ***********************************************************************
+     *                       Menus bar for Canvas                          *
+     ***********************************************************************
+     *                                                                     *
+     *  ************************************    *************************  *
+     *  *                                  *    *                       *  *
+     *  *                                  *    *                       *  *
+     *  *                                  *    *                       *  *
+     *  *                                  *    *                       *  *
+     *  *                                  *    *                       *  *
+     *  *                                  *    *                       *  *
+     *  *              Pad 1               *    *        Pad 2          *  *
+     *  *                                  *    *                       *  *
+     *  *                                  *    *                       *  *
+     *  *                                  *    *                       *  *
+     *  *                                  *    *                       *  *
+     *  *                                  *    *                       *  *
+     *  *                                  *    *                       *  *
+     *  ************************************    *************************  *
+     *                                                                     *
+     ***********************************************************************
+</pre>
+
+This canvas contains two pads named P1 and P2. Both Canvas, P1 and P2 can be
+moved, grown, shrinked using the normal rules of the Display manager.
+<p>
+The image below shows a canvas with 4 pads:
+
+<center>
+<img src="gif/canvas_layout.gif">
+</center>
+
+Once objects have been drawn in a canvas, they can be edited/moved by pointing
+directly to them. The cursor shape is changed to suggest the type of action that
+one can do on this object. Clicking with the right mouse button on an object
+pops-up a contextmenu with a complete list of actions possible on this object.
+<p>
+A graphical editor may be started from the canvas "View" menu under the menu
+entry "Toolbar".
+<p>
+An interactive HELP is available by clicking on the HELP button at the top right
+of the canvas. It gives a short explanation about the canvas' menus.
+<p>
+A canvas may be automatically divided into pads via <tt>TPad::Divide</tt>.
+<p>
+At creation time, the canvas size defines the size of the canvas window 
+(including the window manager's decoration). To define precisely the graphics
+area size of a canvas, the following four lines of code should be used:
+<pre>
+   {
+      Double_t w = 600;
+      Double_t h = 600;
+      TCanvas * c1 = new TCanvas("c", "c", w, h);
+      c->SetWindowSize(w + (w - c->GetWw()), h + (h - c->GetWh()));
+   }
+</pre>
+End_Html */
 
 //______________________________________________________________________________
 TCanvas::TCanvas(Bool_t build) : TPad()
