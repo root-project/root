@@ -22,8 +22,8 @@
 
 
 //______________________________________________________________________________
-//                        Setup interactive application
-//                        =============================
+//                   Setup interactive application for python
+//                   ========================================
 //
 // The TPyROOTApplication sets up the nuts and bolts for interactive ROOT use
 // from python, closely following TRint. Note that not everything is done here,
@@ -36,6 +36,10 @@
 //
 // The static InitXYZ functions are used in conjunction with TPyROOTApplication
 // in ROOT.py, but they can be used independently.
+//
+// NOTE: This class will receive the command line arguments from sys.argv. A
+// distinction between arguments for TApplication and user arguments can be
+// made by using "-" or "--" as a separator on the command line.
 
 
 //- data ---------------------------------------------------------------------

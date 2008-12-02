@@ -7,7 +7,7 @@
 //                                                                          //
 // TPyROOTApplication                                                       //
 //                                                                          //
-// Setup interactive application.                                           //
+// Setup interactive application for python.                                //
 //                                                                          //
 //////////////////////////////////////////////////////////////////////////////
 
