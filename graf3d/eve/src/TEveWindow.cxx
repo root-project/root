@@ -36,7 +36,21 @@
 
 //______________________________________________________________________________
 // 
-// Base-class for EVE window slots.
+// Abstract base-class for frame-slots that encompass EVE-windows
+// (sub-classes of TEveWindow).
+//
+// The EVE-frame classes are managed by their embedded EVE-windows and
+// mostly serve as an interface to particular ROOT widgets
+// (sub-classes of TGCompositeFrame) they are embedded into.
+//
+// This base-class, a sub-class of a vertical composite-frame, creates
+// also the title-bar which can be used to interact with the embedded
+// window. Optionally, the title-bar can be replaced with a mini-bar
+// (a 4-pixel thin bar at the top). By clicking on the mini-bar, the
+// title-bar is restored.
+//
+// Sub-classes provide for specific behaviour and expectations of
+// individual ROOT GUI container frames.
 //
 
 ClassImp(TEveCompositeFrame);
@@ -57,8 +71,8 @@ TEveCompositeFrame::TEveCompositeFrame(TGCompositeFrame* parent,
 
    fMiniBar     (0),
 
-   fEveParentWindow (eve_parent),
-   fEveWindow       (0)
+   fEveParent   (eve_parent),
+   fEveWindow   (0)
 {
    // Constructor.
 
@@ -94,7 +108,7 @@ TEveCompositeFrame::TEveCompositeFrame(TGCompositeFrame* parent,
    fMiniBar = new TGButton(this);
    fMiniBar->ChangeOptions(kRaisedFrame | kFixedHeight);
    fMiniBar->Resize(20, miniH);
-   fMiniBar->SetBackgroundColor(TEveWindow::fgMiniBarBackgroundColor);
+   fMiniBar->SetBackgroundColor(TEveWindow::GetMiniBarBackgroundColor());
    AddFrame(fMiniBar, new TGLayoutHints(kLHintsNormal | kLHintsExpandX));
 
    fMiniBar->Connect("Clicked()", "TEveCompositeFrame", this, "FlipTitleBarState()");
@@ -105,6 +119,7 @@ TEveCompositeFrame::TEveCompositeFrame(TGCompositeFrame* parent,
 
    MapSubwindows();
    HideFrame(fMiniBar);
+   SetMapSubwindows(kFALSE);
 
    // Layout for embedded windows.
    fEveWindowLH = new TGLayoutHints(kLHintsNormal | kLHintsExpandX | kLHintsExpandY);
@@ -125,16 +140,6 @@ TEveCompositeFrame::~TEveCompositeFrame()
    }
 
    delete fEveWindowLH;
-}
-
-//______________________________________________________________________________
-void TEveCompositeFrame::Destroy()
-{
-   // Virtual function called from eve side when the frame should be
-   // destroyed. This means we expect that fEveWindow is null.
-   //
-   // See implementations in TEveCompositeFrameInPack and
-   // TEveCompositeFrameInTab.
 }
 
 //==============================================================================
@@ -257,7 +262,7 @@ void TEveCompositeFrame::SetCurrent(Bool_t curr)
    // This is called by the management functions in TEveWindow.
 
    if (curr) {
-      fTitleBar->SetBackgroundColor(TEveWindow::fgCurrentBackgroundColor);
+      fTitleBar->SetBackgroundColor(TEveWindow::GetCurrentBackgroundColor());
    } else {
       fTitleBar->SetBackgroundColor(GetDefaultFrameBackground());
    }
@@ -313,7 +318,12 @@ TEveCompositeFrameInMainFrame::~TEveCompositeFrameInMainFrame()
 //______________________________________________________________________________
 void TEveCompositeFrameInMainFrame::Destroy()
 {
-   // Destroy the frame - the containing main-frame will be deleted as well.
+   // Virtual function called from eve side when the frame should be
+   // destroyed. This means we expect that fEveWindow is null.
+   //
+   // We simply call CloseWindow() on the main-frame which will in
+   // turn generate the "CloseWindow()" signal.
+   // This is then handled in MainFrameClosed().
 
    printf("TEveCompositeFrameInMainFrame::Destroy()\n");
 
@@ -385,7 +395,10 @@ TEveCompositeFrameInPack::~TEveCompositeFrameInPack()
 //______________________________________________________________________________
 void TEveCompositeFrameInPack::Destroy()
 {
-   // Destroy the frame.
+   // Virtual function called from eve side when the frame should be
+   // destroyed. This means we expect that fEveWindow is null.
+   //
+   // Remove the frame from pack and delete it.
 
    printf("TEveCompositeFrameInPack::Destroy()\n");
 
@@ -445,7 +458,10 @@ Int_t TEveCompositeFrameInTab::FindTabIndex()
 //______________________________________________________________________________
 void TEveCompositeFrameInTab::Destroy()
 {
-   // Destroy the frame.
+   // Virtual function called from eve side when the frame should be
+   // destroyed. This means we expect that fEveWindow is null.
+   //
+   // Remove the frame from tab and delete it.
 
    printf("TEveCompositeFrameInTab::Destroy()\n");
 
@@ -498,7 +514,7 @@ void TEveCompositeFrameInTab::SetCurrent(Bool_t curr)
    Int_t t = FindTabIndex();
    TGTabElement* te = fTab->GetTabTab(t);
    if (curr) {
-      te->SetBackgroundColor(TEveWindow::fgCurrentBackgroundColor);
+      te->SetBackgroundColor(TEveWindow::GetCurrentBackgroundColor());
    } else {
       te->SetBackgroundColor(GetDefaultFrameBackground());
    }
@@ -556,11 +572,16 @@ TEveWindow::~TEveWindow()
 //==============================================================================
 
 //______________________________________________________________________________
-void TEveWindow::SwapWindow(TEveWindow* /*w*/)
+void TEveWindow::SwapWindow(TEveWindow* w)
 {
    // Swap frames with the given window.
 
-   printf ("Swapping ... yeah, right :)\n");
+   static const TEveException eh("TEveWindow::SwapWindow ");
+
+   if (w == 0)
+      throw eh + "Called with null argument.";
+
+   SwapWindows(this, w);
 }
 
 //______________________________________________________________________________
@@ -576,7 +597,7 @@ void TEveWindow::SwapWindowWithCurrent()
    if (fgCurrentWindow == this)
       throw eh + "This is the current window ... nothing changed.";
 
-   SwapWindow(fgCurrentWindow);
+   SwapWindows(this, fgCurrentWindow);
 }
 
 //______________________________________________________________________________
@@ -638,14 +659,14 @@ void TEveWindow::PopulateSlot(TEveCompositeFrame* ef)
    //
    // This will be replaced with function: SwapWindow(TEveWindow* w).
 
-   TEveWindow* my_ex_parent = fEveFrame ? fEveFrame->fEveParentWindow : 0;
+   TEveElement* my_ex_parent = fEveFrame ? fEveFrame->fEveParent : 0;
 
    TEveWindow* ex_win = ef->fEveWindow;
 
-   if (ef->fEveParentWindow)
+   if (ef->fEveParent)
    {
-      if (ex_win) ef->fEveParentWindow->RemoveElement(ex_win);
-      ef->fEveParentWindow->AddElement(this);
+      if (ex_win) ef->fEveParent->RemoveElement(ex_win);
+      ef->fEveParent->AddElement(this);
    }
    else
    {
@@ -770,6 +791,24 @@ TEveWindowSlot* TEveWindow::CreateWindowInTab(TGTab* tab, TEveWindow* eve_parent
    tab->Layout();
 
    return ew_slot;
+}
+
+//______________________________________________________________________________
+void TEveWindow::SwapWindows(TEveWindow* w1, TEveWindow* w2)
+{
+   // Swap windows w1 and w2. They are properly reparented in the eve
+   // hierarch as well.
+   // Layout is called on both frames.
+
+   static const TEveException eh("TEveWindow::SwapWindows ");
+
+   if (w1 == 0 || w2 == 0)
+      throw eh + "Called with null argument.";
+
+   if (w1 == w2)
+      throw eh + "Arguments are equal ... nothing to change.";
+
+   ::Warning("TEveWindow::SwapWindows", "Implementation in progress!"); // !!!!
 }
 
 

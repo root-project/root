@@ -53,7 +53,7 @@ protected:
 
    TGButton          *fMiniBar;
 
-   TEveWindow        *fEveParentWindow;
+   TEveElement       *fEveParent;
    TEveWindow        *fEveWindow;
 
    static TContextMenu *fgCtxMenu;
@@ -63,7 +63,7 @@ public:
    TEveCompositeFrame(TGCompositeFrame* gui_parent, TEveWindow* eve_parent);
    virtual ~TEveCompositeFrame();
 
-   virtual void Destroy();
+   virtual void Destroy() = 0;
 
    virtual void        AcquireEveWindow(TEveWindow* ew);
    virtual TEveWindow* RelinquishEveWindow();
@@ -189,6 +189,12 @@ protected:
 
    static TEveWindow   *fgCurrentWindow;
 
+   static UInt_t        fgMainFrameDefWidth;
+   static UInt_t        fgMainFrameDefHeight;
+
+   static Pixel_t       fgCurrentBackgroundColor;
+   static Pixel_t       fgMiniBarBackgroundColor;
+
 public:
    TEveWindow(const Text_t* n="TEveWindow", const Text_t* t="");
    virtual ~TEveWindow();
@@ -218,17 +224,26 @@ public:
 
    void TitleBarClicked();
 
+
    // Static helper functions for common window management scenarios.
 
    static TEveWindowSlot* CreateDefaultWindowSlot();
    static TEveWindowSlot* CreateWindowMainFrame(TEveWindow* eve_parent=0);
    static TEveWindowSlot* CreateWindowInTab(TGTab* tab, TEveWindow* eve_parent=0);
 
-   static UInt_t  fgMainFrameDefWidth;
-   static UInt_t  fgMainFrameDefHeight;
+   static void            SwapWindows(TEveWindow* w1, TEveWindow* w2);
 
-   static Pixel_t fgCurrentBackgroundColor;
-   static Pixel_t fgMiniBarBackgroundColor;
+   // Access to static data-members.
+
+   static UInt_t  GetMainFrameDefWidth()  { return fgMainFrameDefWidth;  }
+   static UInt_t  GetMainFrameDefHeight() { return fgMainFrameDefHeight; }
+   static void SetMainFrameDefWidth (UInt_t x) { fgMainFrameDefWidth  = x; }
+   static void SetMainFrameDefHeight(UInt_t x) { fgMainFrameDefHeight = x; }
+
+   static Pixel_t GetCurrentBackgroundColor() { return fgCurrentBackgroundColor; }
+   static Pixel_t GetMiniBarBackgroundColor() { return fgMiniBarBackgroundColor; }
+   static void SetCurrentBackgroundColor(Pixel_t p) { fgCurrentBackgroundColor = p; }
+   static void SetMiniBarBackgroundColor(Pixel_t p) { fgMiniBarBackgroundColor = p; }
 
    ClassDef(TEveWindow, 0); // Abstract base-class for eve-windows.
 };
