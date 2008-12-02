@@ -392,7 +392,8 @@ TFitEditor::~TFitEditor()
 
    DisconnectSlots();
    fCloseButton->Disconnect("Clicked()");
-   TQObject::Disconnect("TCanvas", "Selected(TVirtualPad *, TObject *, Int_t)");
+   TQObject::Disconnect("TCanvas", "Selected(TVirtualPad *, TObject *, Int_t)",
+                        this, "SetFitObject(TVirtualPad *, TObject *, Int_t)");
    gROOT->GetListOfCleanups()->Remove(this);
 
    Cleanup();
