@@ -33,17 +33,10 @@ G__EXPORT
 G__DataMemberInfo {
  public:
   ~G__DataMemberInfo() {}
-  G__DataMemberInfo(): handle(0), index(0), belongingclass(NULL), type() 
-    { Init(); }
-  G__DataMemberInfo(const G__DataMemberInfo& dmi): 
-    handle(dmi.handle), index(dmi.index), belongingclass(dmi.belongingclass), 
-    type(dmi.type) {}
-  G__DataMemberInfo(class G__ClassInfo &a): handle(0), index(0), belongingclass(NULL), type()  
-    { Init(a); }
-  G__DataMemberInfo& operator=(const G__DataMemberInfo& dmi) {
-    handle=dmi.handle; index=dmi.index; belongingclass=dmi.belongingclass;
-    type=dmi.type; return *this;}
-
+   G__DataMemberInfo();
+   G__DataMemberInfo(const G__DataMemberInfo& dmi);
+   G__DataMemberInfo(class G__ClassInfo &a);
+   G__DataMemberInfo& operator=(const G__DataMemberInfo& dmi);
 
   void Init();
   void Init(class G__ClassInfo &a);
@@ -51,15 +44,15 @@ G__DataMemberInfo {
 
   long Handle() { return(handle); }
   int Index() { return ((int)index); }
-  const char *Name() ;
-  const char *Title() ;
-  G__TypeInfo* Type() { return(&type); }
+  const char *Name();
+  const char *Title();
+  G__TypeInfo* Type();
   long Property();
   long Offset() ;
   int Bitfield();
   int ArrayDim() ;
   int MaxIndex(int dim) ;
-  G__ClassInfo* MemberOf() { return(belongingclass); }
+  G__ClassInfo* MemberOf();
   void SetGlobalcomp(int globalcomp);
   int IsValid();
   int SetFilePos(const char* fname);

@@ -24,6 +24,28 @@
 *
 *********************************************************************/
 ///////////////////////////////////////////////////////////////////////////
+Cint::G__DataMemberInfo::G__DataMemberInfo():
+   handle(0), index(0), belongingclass(NULL), type() 
+{ Init(); }
+///////////////////////////////////////////////////////////////////////////
+Cint::G__DataMemberInfo::G__DataMemberInfo(const G__DataMemberInfo& dmi): 
+   handle(dmi.handle), index(dmi.index), belongingclass(dmi.belongingclass), 
+   type(dmi.type)
+{}
+///////////////////////////////////////////////////////////////////////////
+Cint::G__DataMemberInfo::G__DataMemberInfo(class G__ClassInfo &a):
+   handle(0), index(0), belongingclass(NULL), type()  
+{ Init(a); }
+///////////////////////////////////////////////////////////////////////////
+Cint::G__DataMemberInfo& Cint::G__DataMemberInfo::operator=(const G__DataMemberInfo& dmi)
+{
+   handle=dmi.handle;
+   index=dmi.index;
+   belongingclass=dmi.belongingclass;
+   type=dmi.type;
+   return *this;
+}
+///////////////////////////////////////////////////////////////////////////
 void Cint::G__DataMemberInfo::Init()
 {
   belongingclass = (G__ClassInfo*)NULL;
@@ -102,6 +124,16 @@ const char* Cint::G__DataMemberInfo::Title()
   else {
     return((char*)NULL);
   }
+}
+///////////////////////////////////////////////////////////////////////////
+Cint::G__TypeInfo* Cint::G__DataMemberInfo::Type()
+{
+   return &type;
+}
+///////////////////////////////////////////////////////////////////////////
+Cint::G__ClassInfo* Cint::G__DataMemberInfo::MemberOf()
+{
+   return belongingclass;
 }
 ///////////////////////////////////////////////////////////////////////////
 long Cint::G__DataMemberInfo::Property()
