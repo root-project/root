@@ -190,6 +190,8 @@ Browser.SortBy:              name
 Browser.GroupView:           10000
 Browser.ShowHidden:          no
 Browser.AutoThumbnail:       yes
+# Start URL for the TRootBrowser embedded HTML renderer
+Browser.StartUrl:            http://root.cern.ch/root/html/ClassIndex.html
 
 # Rint (interactive ROOT executable) specific alias, logon and logoff macros.
 Rint.Load:               rootalias.C

@@ -67,6 +67,7 @@
 #include "TGFileDialog.h"
 #include "TObjString.h"
 #include "TVirtualPad.h"
+#include "TEnv.h"
 #include <KeySymbols.h>
 
 #include "TRootBrowser.h"
@@ -724,7 +725,9 @@ void TRootBrowser::HandleMenu(Int_t id)
          ExecPlugin("", "", "new TCanvas()", 1);
          break;
       case kNewHtml:
-         ExecPlugin("HTML", "", "new TGHtmlBrowser(\"http://root.cern.ch\",gClient->GetRoot())", 1);
+         cmd.Form("new TGHtmlBrowser(\"%s\", gClient->GetRoot())",
+                  gEnv->GetValue("Browser.StartUrl", "http://root.cern.ch"));
+         ExecPlugin("HTML", "", cmd.Data(), 1);
          break;
       case kExecPluginMacro:
          {
@@ -803,8 +806,9 @@ void TRootBrowser::InitPlugins(Option_t *opt)
    // HTML plugin...
    if (strchr(opt, 'H')) {
       if (gSystem->Load("libGuiHtml") >= 0) {
-         cmd.Form("new TGHtmlBrowser(\"http://root.cern.ch/root/html/ClassIndex.html\", \
-                  gClient->GetRoot());");
+         cmd.Form("new TGHtmlBrowser(\"%s\", gClient->GetRoot());", 
+                  gEnv->GetValue("Browser.StartUrl",
+                  "http://root.cern.ch/root/html/ClassIndex.html"));
          ExecPlugin("HTML", 0, cmd.Data(), 1);
          ++fNbInitPlugins;
       }
