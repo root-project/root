@@ -89,6 +89,7 @@ $(UNURANETAG):	$(UNRSRCS)
 		   etag=`basename $(UNURANETAG)` ; \
 		   touch $$etag ; \
 		fi); 
+#configure unuran (required for creating the config.h used by unuran source files)
 $(UNRCFG):	$(UNRANETAG)
 		@echo "** configure unuran"
 		@(cd $(UNURANDIRS)/$(UNRVERS) ; \
@@ -114,7 +115,7 @@ $(UNRCFG):	$(UNRANETAG)
 			ACC="cl.exe"; \
 			ACFLAGS="-MD -G5 -GX"; \
 		fi; \
-		GNUMAKE=$(MAKE) ./configure --prefix=`pwd`/$(MODDIRS)/$(UNRVERS) CC="$$ACC"  \
+		GNUMAKE=$(MAKE) ./configure  CC="$$ACC"  \
 		CFLAGS="$$ACFLAGS");
 
 $(UNURANLIB):   $(UNRCFG) $(UNRO) $(UNURANO) $(UNURANDO) $(ORDER_) $(MAINLIBS) $(UNURANLIBDEP)
