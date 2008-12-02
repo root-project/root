@@ -91,6 +91,7 @@ static const char *gGSErrStr[] = {
 
 // One day in secs
 static const int kOneDay = 86400; 
+static const char *gUsrPxyDef = "/tmp/x509up_u";
 
 /******************************************************************************/
 /*                     S t a t i c   C l a s s   D a t a                      */
@@ -103,7 +104,7 @@ String XrdSecProtocolgsi::DefCRLext= ".r0";
 String XrdSecProtocolgsi::GMAPFile = "/etc/grid-security/grid-mapfile";
 String XrdSecProtocolgsi::SrvCert  = "/etc/grid-security/xrd/xrdcert.pem";
 String XrdSecProtocolgsi::SrvKey   = "/etc/grid-security/xrd/xrdkey.pem";
-String XrdSecProtocolgsi::UsrProxy = "/tmp/x509up_u";
+String XrdSecProtocolgsi::UsrProxy;
 String XrdSecProtocolgsi::UsrCert  = "/.globus/usercert.pem";
 String XrdSecProtocolgsi::UsrKey   = "/.globus/userkey.pem";;
 String XrdSecProtocolgsi::PxyValid = "12:00";
@@ -741,6 +742,20 @@ char *XrdSecProtocolgsi::Init(gsiOptions opt, XrdOucErrInfo *erp)
       DEBUG("Delegated proxies options: "<<PxyReqOpts);
 
       //
+      // Template for the created proxy files
+      if ((PxyReqOpts & kOptsPxFile)) {
+         String TmpProxy = gUsrPxyDef;
+         if (opt.exppxy) TmpProxy = opt.exppxy;
+         if (XrdSutExpand(TmpProxy) == 0) {
+            UsrProxy = TmpProxy;
+         } else {
+            UsrProxy = gUsrPxyDef;
+            UsrProxy += "u<uid>";
+         }
+         DEBUG("Template for exported proxy files: "<<UsrProxy);
+      }
+
+      //
       // Parms in the form:
       //     &P=gsi,v:<version>,c:<cryptomod>,ca:<list_of_srv_cert_ca>
       Parms = new char[cryptlist.length()+3+12+certcalist.length()+5];
@@ -783,6 +798,7 @@ char *XrdSecProtocolgsi::Init(gsiOptions opt, XrdOucErrInfo *erp)
       }
       //
       // Define user proxy file
+      UsrProxy = gUsrPxyDef;
       if (opt.proxy) {
          String TmpProxy = opt.proxy;
          if (XrdSutExpand(TmpProxy) == 0) {
@@ -1343,6 +1359,14 @@ XrdSecCredentials *XrdSecProtocolgsi::getCredentials(XrdSecParameters *parm,
       // Add the proxy certificate
       bmai->AddBucket(hs->Cbck);
       //
+      // Add login name if any, needed while chosing where to export the proxies
+      if (getenv("XrdSecUSER")) {
+         String u(getenv("XrdSecUSER"));
+         if (bmai->AddBucket(u, kXRS_user) != 0)
+            return ErrC(ei,bpar,bmai,0, kGSErrCreateBucket,
+                        XrdSutBuckStr(kXRS_user),stepstr);
+      }
+      //
       nextstep = kXGC_cert;
       break;
 
@@ -1353,6 +1377,14 @@ XrdSecCredentials *XrdSecProtocolgsi::getCredentials(XrdSecParameters *parm,
          if (bmai->AddBucket(Emsg,kXRS_message) != 0)
             return ErrC(ei,bpar,bmai,0, kGSErrCreateBucket,
                         XrdSutBuckStr(kXRS_message),stepstr);
+      }
+      //
+      // Add login name if any, needed while chosing where to export the proxies
+      if (getenv("XrdSecUSER")) {
+         String u(getenv("XrdSecUSER"));
+         if (bmai->AddBucket(u, kXRS_user) != 0)
+            return ErrC(ei,bpar,bmai,0, kGSErrCreateBucket,
+                        XrdSutBuckStr(kXRS_user),stepstr);
       }
       //
       // The relevant buckets should already be in the buffers
@@ -1551,7 +1583,35 @@ int XrdSecProtocolgsi::Authenticate(XrdSecCredentials *cred,
                DEBUG("WARNING: grid map lookup failed - use DN as name");
             }
          } else {
-            DEBUG("grid map lookup successful: name is '"<<name<<"'");
+            //
+            // Extract user login name, if any
+            XrdSutBucket *bck = 0;
+            String user;
+            if ((bck = bmai->GetBucket(kXRS_user))) {
+               bck->ToString(user);
+               bmai->Deactivate(kXRS_user);
+            }
+            if (user.length() > 0) {
+               // Check if the wanted username is authorized
+               String u;
+               int from = 0;
+               bool ok = 0;
+               while (name.tokenize(u, from, ',') != -1) {
+                  if (user == u) { ok = 1; break; }
+               }
+               if (ok) {
+                  name = u;
+                  DEBUG("grid map: requested user is authorized: name is '"<<name<<"'");
+               } else {
+                  // It was required, so we fail
+                  kS_rc = kgST_error;
+                  PRINT("ERROR: grid map lookup ok, but the requested user is not"
+                        " authorized ("<<name<<")");
+                  break;
+               }
+            } else {
+               DEBUG("grid map lookup successful: name is '"<<name<<"'");
+            }
             Entity.name = strdup(name.c_str());
          }
       }
@@ -1844,6 +1904,7 @@ char *XrdSecProtocolgsiInit(const char mode,
       //              [-gmapto:<grid_map_cache_entry_validity_in_secs>]
       //              [-gmapopt:<grid_map_check_option>]
       //              [-dlgpxy:<proxy_req_option>]
+      //              [-exppxy:<filetemplate>]
       //
       int debug = -1;
       String clist = "";
@@ -1857,6 +1918,7 @@ char *XrdSecProtocolgsiInit(const char mode,
       String gridmap = "";
       String gmapfun = "";
       String gmapfunparms = "";
+      String exppxy = "";
       int ca = 1;
       int crl = 1;
       int ogmap = 1;
@@ -1899,6 +1961,8 @@ char *XrdSecProtocolgsiInit(const char mode,
                gmapto = atoi(op+8);
             } else if (!strncmp(op, "-dlgpxy:",8)) {
                dlgpxy = atoi(op+8);
+            } else if (!strncmp(op, "-exppxy:",8)) {
+               exppxy = (const char *)(op+8);
             }
          }
       }
@@ -1934,6 +1998,8 @@ char *XrdSecProtocolgsiInit(const char mode,
          opts.gmapfun = (char *)gmapfun.c_str();
       if (gmapfunparms.length() > 0)
          opts.gmapfunparms = (char *)gmapfunparms.c_str();
+      if (exppxy.length() > 0)
+         opts.exppxy = (char *)exppxy.c_str();
       //
       // Setup the plug-in with the chosen options
       return XrdSecProtocolgsi::Init(opts,erp);
@@ -2978,26 +3044,40 @@ int XrdSecProtocolgsi::ServerDoSigpxy(XrdSutBuffer *br,  XrdSutBuffer **bm,
    // Notify
    if (QTRACE(Authen)) { proxyChain->Dump(); }
 
+   //
+   // Extract user login name, if any
+   String user;
+   if ((bck = (*bm)->GetBucket(kXRS_user))) {
+      bck->ToString(user);
+      (*bm)->Deactivate(kXRS_user);
+   }
+   if (user.length() <= 0) user = Entity.name;
+
    // Dump to file if required
    if ((PxyReqOpts & kOptsPxFile)) {
-      if (Entity.name && strlen(Entity.name)) {
+      if (user.length() > 0) {
          String pxfile = UsrProxy;
-         // File name will be using uid or subject hash
-         struct passwd *pw = getpwnam(Entity.name);
+         struct passwd *pw = getpwnam(user.c_str());
+         // Replace <user> and <uid> containers
          if (pw) {
-            // Use the standard format /tmp/x509up_u<uid>
-            pxfile += (int) pw->pw_uid;
+            if (pxfile.find("<user>") != STR_NPOS)
+               pxfile.replace("<user>", pw->pw_name);
+            if (pxfile.find("<uid>") != STR_NPOS) {
+               String suid; suid += (int) pw->pw_uid;
+               pxfile.replace("<uid>", suid.c_str());
+            }
          } else {
             // Get Hash of the subject
             XrdCryptoX509 *c =
                proxyChain->SearchBySubject(proxyChain->EECname());
             if (c) {
-               pxfile += c->SubjectHash();
+               pxfile.replace("<user>", c->SubjectHash());
             } else {
                cmsg = "proxy chain not dumped to file: could not find subject hash";
                return 0;
             }
          }
+
          // Get the function
          XrdCryptoX509ChainToFile_t ctofile = sessionCF->X509ChainToFile();
          if ((*ctofile)(proxyChain,pxfile.c_str()) != 0) {
