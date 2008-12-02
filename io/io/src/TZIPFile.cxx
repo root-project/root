@@ -177,6 +177,7 @@ Int_t TZIPFile::ReadEndHeader(Long64_t pos)
    if (fFile->ReadBuffer(comment, commlen)) {
       Error("ReadEndHeader", "error reading %d end header comment bytes from %s",
             commlen, fArchiveName.Data());
+      delete [] comment;
       return -1;
    }
    comment[commlen] = '\0';
@@ -255,6 +256,9 @@ Int_t TZIPFile::ReadDirectory()
           fFile->ReadBuffer(comment, commlen)) {
          Error("ReadDirectory", "error reading additional directory data from %s",
                fArchiveName.Data());
+         delete [] name;
+         delete [] extra;
+         delete [] comment;
          return -1;
       }
       name[namelen]    = '\0';

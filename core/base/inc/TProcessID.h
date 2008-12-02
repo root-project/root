@@ -33,6 +33,10 @@ class TExMap;
 
 class TProcessID : public TNamed {
 
+private:
+   TProcessID(const TProcessID &ref);            // TProcessID are not copiable.
+   TProcessID& operator=(const TProcessID &ref); // TProcessID are not copiable.
+
 protected:
    Int_t              fCount;     //!Reference count to this object (from TFile)
    TObjArray         *fObjects;   //!Array pointing to the referenced objects
@@ -44,8 +48,6 @@ protected:
   
 public:
    TProcessID();
-   TProcessID(const TProcessID &ref);
-   TProcessID& operator=(const TProcessID &ref);
    virtual ~TProcessID();
    void             CheckInit();
    virtual void     Clear(Option_t *option="");

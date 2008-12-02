@@ -1032,6 +1032,8 @@ TClass::TClass(const TClass& cl) :
   fRefStart(cl.fRefStart)
 {
    //copy constructor
+   
+   R__ASSERT(0 /* TClass Object are not copyable */ );
 }
 
 //______________________________________________________________________________
@@ -1039,48 +1041,7 @@ TClass& TClass::operator=(const TClass& cl)
 {
    //assignement operator
    if(this!=&cl) {
-      TDictionary::operator=(cl);
-      fStreamerInfo=cl.fStreamerInfo;
-      fRealData=cl.fRealData;
-      fBase=cl.fBase;
-      fData=cl.fData;
-      fMethod=cl.fMethod;
-      fAllPubData=cl.fAllPubData;
-      fAllPubMethod=cl.fAllPubMethod;
-      fDeclFileName=cl.fDeclFileName;
-      fImplFileName=cl.fImplFileName;
-      fDeclFileLine=cl.fDeclFileLine;
-      fImplFileLine=cl.fImplFileLine;
-      fInstanceCount=cl.fInstanceCount;
-      fOnHeap=cl.fOnHeap;
-      fCheckSum=cl.fCheckSum;
-      fCollectionProxy=cl.fCollectionProxy;
-      fClassVersion=cl.fClassVersion;
-      fClassInfo=cl.fClassInfo;
-      fContextMenuTitle=cl.fContextMenuTitle;
-      fClassMenuList=cl.fClassMenuList;
-      fTypeInfo=cl.fTypeInfo;
-      fShowMembers=cl.fShowMembers;
-      fStreamer=cl.fStreamer;
-      fSharedLibs=cl.fSharedLibs;
-      fIsA=cl.fIsA;
-      fGlobalIsA=cl.fGlobalIsA;
-      fIsAMethod=cl.fIsAMethod;
-      fNew=cl.fNew;
-      fNewArray=cl.fNewArray;
-      fDelete=cl.fDelete;
-      fDeleteArray=cl.fDeleteArray;
-      fDestructor=cl.fDestructor;
-      fDirAutoAdd=cl.fDirAutoAdd;
-      fSizeof=cl.fSizeof;
-      fVersionUsed=cl.fVersionUsed;
-      fProperty=cl.fProperty;
-      fInterStreamer=cl.fInterStreamer;
-      fOffsetStreamer=cl.fOffsetStreamer;
-      fStreamerType=cl.fStreamerType;
-      fCurrentInfo=cl.fCurrentInfo;
-      fRefStart=cl.fRefStart;
-      fConversionStreamerInfo=cl.fConversionStreamerInfo;
+      R__ASSERT(0 /* TClass Object are not copyable */ );
    }
    return *this;
 }

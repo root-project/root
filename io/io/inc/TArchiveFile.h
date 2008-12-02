@@ -39,10 +39,12 @@ class TObjArray;
 
 class TArchiveFile : public TObject {
 
+private:
+   TArchiveFile(const TArchiveFile&);            // Not implemented because TArchiveFile can not be copied.
+   TArchiveFile& operator=(const TArchiveFile&); // Not implemented because TArchiveFile can not be copied.
+
 protected:
 
-   TArchiveFile(const TArchiveFile&); // Not implemented
-   TArchiveFile& operator=(const TArchiveFile&); // Not implemented
 
    TString         fArchiveName;  // Archive file name
    TString         fMemberName;   // Sub-file name

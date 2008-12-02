@@ -45,6 +45,10 @@ class TContextMenu : public TNamed {
 
 friend class  TContextMenuImp;
 
+private:
+   TContextMenu(const TContextMenu&); 
+   TContextMenu& operator=(const TContextMenu&);  // TContextMenu can not be copied since we do not know the time of the TContextMenuImp 
+   
 protected:
    TContextMenuImp *fContextMenuImp;      //!Context menu system specific implementation
    TFunction       *fSelectedMethod;      //selected method
@@ -54,9 +58,6 @@ protected:
    TVirtualPad     *fSelectedCanvas;      //selected canvas (if exist)
    TVirtualPad     *fSelectedPad;         //selected pad (if exist)
    TBrowser        *fBrowser;             //selected browser (if exist)
-
-   TContextMenu(const TContextMenu&); 
-   TContextMenu& operator=(const TContextMenu&); 
 
    virtual void DisplayPopUp(Int_t x, Int_t y)
       { if (fContextMenuImp) fContextMenuImp->DisplayPopup(x, y); }

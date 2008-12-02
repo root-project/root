@@ -37,6 +37,10 @@ class TBranch;
 
 class TBasket : public TKey {
 
+private:
+   TBasket(const TBasket&);            // TBasket objects are not copiable.
+   TBasket& operator=(const TBasket&); // TBasket objects are not copiable.
+      
 protected:
    Int_t       fBufferSize;      //fBuffer length in bytes
    Int_t       fNevBufSize;      //Length in Int_t of fEntryOffset OR fixed length of each entry if fEntryOffset is null!

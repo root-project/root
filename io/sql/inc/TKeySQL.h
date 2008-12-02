@@ -29,6 +29,10 @@ class TSQLFile;
 
 class TKeySQL : public TKey {
     
+private:
+   TKeySQL(const TKeySQL&);            // TKeySQL objects are not copiable.
+   TKeySQL& operator=(const TKeySQL&); // TKeySQL objects are not copiable.
+   
 protected:
    TKeySQL();
 

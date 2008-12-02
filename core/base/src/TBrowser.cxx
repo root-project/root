@@ -239,34 +239,6 @@ TBrowser::TBrowser(const char *name,void *obj,  TClass *cl,
 }
 
 //______________________________________________________________________________
-TBrowser::TBrowser(const TBrowser& br) :
-   TNamed(br),
-   fLastSelectedObject(br.fLastSelectedObject),
-   fImp(br.fImp),
-   fTimer(br.fTimer),
-   fContextMenu(br.fContextMenu),
-   fNeedRefresh(br.fNeedRefresh)
-{
-   // Copy constructor.
-}
-
-//______________________________________________________________________________
-TBrowser& TBrowser::operator=(const TBrowser& br)
-{
-   // Assignment operator.
-
-   if (this != &br) {
-      TNamed::operator=(br);
-      fLastSelectedObject=br.fLastSelectedObject;
-      fImp=br.fImp;
-      fTimer=br.fTimer;
-      fContextMenu=br.fContextMenu;
-      fNeedRefresh=br.fNeedRefresh;
-   }
-   return *this;
-}
-
-//______________________________________________________________________________
 TBrowser::~TBrowser()
 {
    // Delete the browser.

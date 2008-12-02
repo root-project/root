@@ -118,7 +118,8 @@ TMacro& TMacro::operator=(const TMacro &macro)
 
    if(this!=&macro) {
       TNamed::operator=(macro);
-      if(fLines) delete fLines;
+      if (fLines) fLines->Delete();
+      delete fLines;
       fLines = new TList();
       TIter next(macro.GetListOfLines());
       TObjString *obj;

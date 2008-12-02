@@ -112,11 +112,9 @@ private:
    void              GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subClasses, Bool_t top = kTRUE);
    void              InsertArtificialElements(const TObjArray *rules);
 
-protected:
-   TStreamerInfo(const TStreamerInfo&);
-   TStreamerInfo& operator=(const TStreamerInfo&);
-
-
+private:
+   TStreamerInfo(const TStreamerInfo&);            // TStreamerInfo are copiable.  Not Implemented.
+   TStreamerInfo& operator=(const TStreamerInfo&); // TStreamerInfo are copiable.  Not Implemented.
 
 public:
 

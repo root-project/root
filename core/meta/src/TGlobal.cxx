@@ -25,16 +25,40 @@
 ClassImp(TGlobal)
 
 //______________________________________________________________________________
-TGlobal::TGlobal(DataMemberInfo_t *info) : TDictionary()
+TGlobal::TGlobal(DataMemberInfo_t *info) : TDictionary(), fInfo(info)
 {
    // Default TGlobal ctor. TGlobals are constructed in TROOT via
    // a call to TCint::UpdateListOfGlobals().
 
-   fInfo = info;
    if (fInfo) {
       SetName(gCint->DataMemberInfo_Name(fInfo));
       SetTitle(gCint->DataMemberInfo_Title(fInfo));
    }
+}
+
+//______________________________________________________________________________
+TGlobal::TGlobal(const TGlobal &rhs) : TDictionary( ), fInfo(0)
+{
+   // Copy constructor
+   
+   if (rhs.fInfo) {
+      fInfo = gCint->DataMemberInfo_FactoryCopy(rhs.fInfo);
+      SetName(gCint->DataMemberInfo_Name(fInfo));
+      SetTitle(gCint->DataMemberInfo_Title(fInfo));
+   }
+}
+
+//______________________________________________________________________________
+TGlobal &TGlobal::operator=(const TGlobal &rhs)
+{
+   // Assignment operator.
+   
+   gCint->DataMemberInfo_Delete(fInfo);
+   if (rhs.fInfo) {
+      fInfo = gCint->DataMemberInfo_FactoryCopy(rhs.fInfo);
+      SetName(gCint->DataMemberInfo_Name(fInfo));
+      SetTitle(gCint->DataMemberInfo_Title(fInfo));
+   }   
 }
 
 //______________________________________________________________________________
@@ -58,6 +82,7 @@ Int_t TGlobal::GetArrayDim() const
 {
    // Return number of array dimensions.
 
+   if (!fInfo) return 0;
    return gCint->DataMemberInfo_ArrayDim(fInfo);
 }
 
@@ -66,6 +91,7 @@ Int_t TGlobal::GetMaxIndex(Int_t dim) const
 {
    // Return maximum index for array dimension "dim".
 
+   if (!fInfo) return 0;
    return gCint->DataMemberInfo_MaxIndex(fInfo,dim);
 }
 
@@ -75,6 +101,7 @@ const char *TGlobal::GetTypeName() const
    // Get type of global variable, e,g.: "class TDirectory*" -> "TDirectory".
    // Result needs to be used or copied immediately.
 
+   if (!fInfo) return 0;
    return gCint->TypeName(gCint->DataMemberInfo_TypeName(fInfo));
 }
 
@@ -83,6 +110,7 @@ const char *TGlobal::GetFullTypeName() const
 {
    // Get full type description of global variable, e,g.: "class TDirectory*".
 
+   if (!fInfo) return 0;
    return gCint->DataMemberInfo_TypeName(fInfo);
 }
 
@@ -91,5 +119,6 @@ Long_t TGlobal::Property() const
 {
    // Get property description word. For meaning of bits see EProperty.
 
+   if (!fInfo) return 0;
    return gCint->DataMemberInfo_Property(fInfo);
 }

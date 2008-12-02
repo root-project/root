@@ -32,6 +32,10 @@ class TClass;
 class TBaseClass : public TDictionary {
 
 private:
+   TBaseClass(const TBaseClass &);          // Not implemented
+   TBaseClass&operator=(const TBaseClass&); // Not implemented
+   
+private:
    BaseClassInfo_t   *fInfo;      //pointer to CINT base class info
    TClass            *fClassPtr;  //pointer to the base class TClass
    TClass            *fClass;     //pointer to parent class

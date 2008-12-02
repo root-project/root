@@ -73,39 +73,6 @@ TContextMenu::TContextMenu(const char *name, const char *title)
 }
 
 //______________________________________________________________________________
-TContextMenu::TContextMenu(const TContextMenu& cm) :
-  TNamed(cm),
-  fContextMenuImp(cm.fContextMenuImp),
-  fSelectedMethod(cm.fSelectedMethod),
-  fSelectedObject(cm.fSelectedObject),
-  fCalledObject(cm.fCalledObject),
-  fSelectedMenuItem(cm.fSelectedMenuItem),
-  fSelectedCanvas(cm.fSelectedCanvas),
-  fSelectedPad(cm.fSelectedPad),
-  fBrowser(cm.fBrowser)
-{ 
-   //copy constructor
-}
-
-//______________________________________________________________________________
-TContextMenu& TContextMenu::operator=(const TContextMenu& cm)
-{
-   //assignment operator
-   if(this!=&cm) {
-      TNamed::operator=(cm);
-      fContextMenuImp=cm.fContextMenuImp;
-      fSelectedMethod=cm.fSelectedMethod;
-      fSelectedObject=cm.fSelectedObject;
-      fCalledObject=cm.fCalledObject;
-      fSelectedMenuItem=cm.fSelectedMenuItem;
-      fSelectedCanvas=cm.fSelectedCanvas;
-      fSelectedPad=cm.fSelectedPad;
-      fBrowser=cm.fBrowser;
-   } 
-   return *this;
-}
-
-//______________________________________________________________________________
 TContextMenu::~TContextMenu()
 {
    // Destroy a context menu.

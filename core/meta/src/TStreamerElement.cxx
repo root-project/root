@@ -542,6 +542,7 @@ void TStreamerBase::Init(TObject *)
    fBaseClass = TClass::GetClass(GetName());
    if (!fBaseClass) return;
    if (!fBaseClass->GetMethodAny("StreamerNVirtual")) return;
+   delete fMethod;
    fMethod = new TMethodCall();
    fMethod->InitWithPrototype(fBaseClass,"StreamerNVirtual","TBuffer &");
    //fBaseClass = TClass::GetClass(GetName());

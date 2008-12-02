@@ -25,13 +25,30 @@
 ClassImp(TToggleGroup)
 
 //______________________________________________________________________________
-   TToggleGroup::TToggleGroup()
+TToggleGroup::TToggleGroup()
 {
    // Constructor.
 
-   fSelected = 0;
    fToggles  = new TOrdCollection();
 }
+
+//______________________________________________________________________________
+TToggleGroup::TToggleGroup(const TToggleGroup& rhs) : TNamed(rhs),fToggles(0)
+{
+   // Copy constructor
+   fToggles = (TOrdCollection*)rhs.fToggles->Clone();
+}
+
+//______________________________________________________________________________
+TToggleGroup &TToggleGroup::operator=(const TToggleGroup &rhs)
+{
+   // Assignment operastor.
+   
+   delete fToggles;
+   fToggles = (TOrdCollection*)rhs.fToggles->Clone();
+   return *this;
+}
+
 
 //______________________________________________________________________________
 TToggleGroup::~TToggleGroup()

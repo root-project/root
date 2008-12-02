@@ -66,6 +66,8 @@ TClassMenuItem::TClassMenuItem(Int_t type, TClass *parentcl,
    // selfobjposition, if non zero, indicates the position in the arguments
    // list of the argument corresponding to the selected (clicked) object.
    // This argument in the calling method should be a TObject*
+   // Note: It is the responsability of the caller/creator to add to to the
+   // menu list.
 
    fType          = (EClassMenuItemType) type;
    fSelf          = self;
@@ -94,12 +96,16 @@ TClassMenuItem::TClassMenuItem(const TClassMenuItem& cmi) :
   fParent(cmi.fParent)
 { 
    //copy constructor
+   // Note: It is the responsability of the caller/creator to add to to the
+   // menu list.
 }
 
 //______________________________________________________________________________
 TClassMenuItem& TClassMenuItem::operator=(const TClassMenuItem& cmi) 
 {
    //assignement operator
+   // Note: It is the responsability of the caller/creator to add to to the
+   // menu list.
    if(this!=&cmi) {
       TObject::operator=(cmi);
       fType=cmi.fType;

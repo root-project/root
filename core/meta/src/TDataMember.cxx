@@ -434,7 +434,7 @@ TDataMember::TDataMember(DataMemberInfo_t *info, TClass *cl) : TDictionary()
 //______________________________________________________________________________
 TDataMember::TDataMember(const TDataMember& dm) :
   TDictionary(dm),
-  fInfo(dm.fInfo),
+  fInfo(gCint->DataMemberInfo_FactoryCopy(dm.fInfo)),
   fClass(dm.fClass),
   fDataType(dm.fDataType),
   fOffset(dm.fOffset),
@@ -442,7 +442,8 @@ TDataMember::TDataMember(const TDataMember& dm) :
   fProperty(dm.fProperty),
   fTypeName(dm.fTypeName),
   fFullTypeName(dm.fFullTypeName),
-  fTrueTypeName(dm.fTrueTypeName)
+  fTrueTypeName(dm.fTrueTypeName),
+  fOptions(dm.fOptions ? (TList*)dm.fOptions->Clone() : 0)
 { 
    //copy constructor
 }
@@ -455,6 +456,11 @@ TDataMember& TDataMember::operator=(const TDataMember& dm)
       gCint->DataMemberInfo_Delete(fInfo);
       delete fValueSetter;
       delete fValueGetter;
+      if (fOptions) {
+         fOptions->Delete();
+         delete fOptions;
+         fOptions = 0;
+      }
 
       TDictionary::operator=(dm);
       fInfo= gCint->DataMemberInfo_FactoryCopy(dm.fInfo);
@@ -466,6 +472,7 @@ TDataMember& TDataMember::operator=(const TDataMember& dm)
       fTypeName=dm.fTypeName;
       fFullTypeName=dm.fFullTypeName;
       fTrueTypeName=dm.fTrueTypeName;
+      fOptions = dm.fOptions ? (TList*)dm.fOptions->Clone() : 0;
    } 
    return *this;
 }

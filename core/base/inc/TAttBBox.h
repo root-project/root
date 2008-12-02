@@ -30,9 +30,10 @@ protected:
 
    void AssertBBoxExtents(Float_t epsilon=0.005);
 
-   TAttBBox(const TAttBBox& tab)
-     : fBBox(tab.fBBox) { }
-
+   TAttBBox(const TAttBBox& tab) : fBBox(0) {
+      BBoxInit(); if(tab.fBBox) for(Int_t i=0; i<6; i++) fBBox[i]=tab.fBBox[i];
+   }
+   
 public:
    TAttBBox(): fBBox(0) { }
    virtual ~TAttBBox() { BBoxClear(); }

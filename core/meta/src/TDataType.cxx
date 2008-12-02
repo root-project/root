@@ -60,7 +60,7 @@ TDataType::TDataType(const char *typenam) : fInfo(0), fProperty(kIsFundamental)
 //______________________________________________________________________________
 TDataType::TDataType(const TDataType& dt) :
   TDictionary(dt),
-  fInfo(dt.fInfo),
+  fInfo(gCint->TypedefInfo_FactoryCopy(dt.fInfo)),
   fSize(dt.fSize),
   fType(dt.fType),
   fProperty(dt.fProperty),
@@ -75,7 +75,8 @@ TDataType& TDataType::operator=(const TDataType& dt)
    //assignement operator
    if(this!=&dt) {
       TDictionary::operator=(dt);
-      fInfo=dt.fInfo;
+      gCint->TypedefInfo_Delete(fInfo);
+      fInfo=gCint->TypedefInfo_FactoryCopy(dt.fInfo);
       fSize=dt.fSize;
       fType=dt.fType;
       fProperty=dt.fProperty;

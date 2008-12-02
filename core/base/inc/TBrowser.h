@@ -42,15 +42,15 @@ class TBrowser : public TNamed {
 
 private:
    TObject       *fLastSelectedObject; //!The last TObject selected by user
-
+   
+   TBrowser(const TBrowser&);             // TBrowser can not be copied since we do not know the time of the TBrowserImp 
+   TBrowser& operator=(const TBrowser&);  // TBrowser can not be copied since we do not know the time of the TBrowserImp 
+   
 protected:
    TBrowserImp   *fImp;                //!Window system specific browser implementation
    TBrowserTimer *fTimer;              //!Browser's timer
    TContextMenu  *fContextMenu;        //!Context menu pointer
    Bool_t         fNeedRefresh;        //True if the browser needs refresh
-
-   TBrowser(const TBrowser&);
-   TBrowser& operator=(const TBrowser&);
 
 public:
    enum {

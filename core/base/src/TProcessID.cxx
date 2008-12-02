@@ -87,23 +87,6 @@ TProcessID::~TProcessID()
 }
 
 //______________________________________________________________________________
-TProcessID::TProcessID(const TProcessID &ref) : TNamed(ref)
-{
-   // TProcessID copy ctor.
-}
-
-//______________________________________________________________________________
-TProcessID& TProcessID::operator=(const TProcessID &ref)
-{
-   // TProcessID assigment operator.
-
-   if (this!=&ref) {
-      TNamed::operator=(ref);
-   }
-   return *this;
-}
-
-//______________________________________________________________________________
 TProcessID *TProcessID::AddProcessID()
 {
    // Static function to add a new TProcessID to the list of PIDs.

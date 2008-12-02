@@ -33,6 +33,9 @@ private:
 
 public:
    TGlobal(DataMemberInfo_t *info = 0);
+   TGlobal (const TGlobal &);
+   TGlobal &operator=(const TGlobal &);
+   
    virtual       ~TGlobal();
    Int_t          GetArrayDim() const;
    Int_t          GetMaxIndex(Int_t dim) const;

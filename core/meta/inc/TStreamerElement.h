@@ -31,6 +31,10 @@ class TStreamerBasicType;
 
 class TStreamerElement : public TNamed {
 
+private:
+   TStreamerElement(const TStreamerElement &);          // Not implemented
+   TStreamerElement&operator=(const TStreamerElement&); // Not implemented
+
 protected:
    Int_t            fType;            //element type
    Int_t            fSize;            //sizeof element
@@ -112,6 +116,10 @@ public:
 //________________________________________________________________________
 class TStreamerBase : public TStreamerElement {
 
+private:
+   TStreamerBase(const TStreamerBase &);          // Not implemented
+   TStreamerBase&operator=(const TStreamerBase&); // Not implemented
+   
 protected:
    Int_t            fBaseVersion;         //version number of the base class FIXME: What for? What about the schema evolution issues?
    TClass          *fBaseClass;           //!pointer to base class
@@ -143,6 +151,10 @@ public:
 //________________________________________________________________________
 class TStreamerBasicPointer : public TStreamerElement {
 
+private:
+   TStreamerBasicPointer(const TStreamerBasicPointer &);          // Not implemented
+   TStreamerBasicPointer&operator=(const TStreamerBasicPointer&); // Not implemented
+   
 protected:
    Int_t               fCountVersion;   //version number of the class with the counter
    TString             fCountName;      //name of data member holding the array count
@@ -174,6 +186,10 @@ public:
 //________________________________________________________________________
 class TStreamerLoop : public TStreamerElement {
 
+private:
+   TStreamerLoop(const TStreamerLoop&);          // Not implemented
+   TStreamerLoop&operator=(const TStreamerLoop&); // Not implemented
+   
 protected:
    Int_t               fCountVersion;   //version number of the class with the counter
    TString             fCountName;      //name of data member holding the array count
@@ -204,6 +220,10 @@ public:
 //________________________________________________________________________
 class TStreamerBasicType : public TStreamerElement {
 
+private:
+   TStreamerBasicType(const TStreamerBasicType&);          // Not implemented
+   TStreamerBasicType&operator=(const TStreamerBasicType&); // Not implemented
+   
 protected:
    Int_t             fCounter;     //!value of data member when referenced by an array
 
@@ -222,6 +242,10 @@ public:
 //________________________________________________________________________
 class TStreamerObject : public TStreamerElement {
 
+private:
+   TStreamerObject(const TStreamerObject&);          // Not implemented
+   TStreamerObject&operator=(const TStreamerObject&); // Not implemented
+   
 public:
 
    TStreamerObject();
@@ -237,6 +261,10 @@ public:
 //________________________________________________________________________
 class TStreamerObjectAny : public TStreamerElement {
 
+private:
+   TStreamerObjectAny(const TStreamerObjectAny&);          // Not implemented
+   TStreamerObjectAny&operator=(const TStreamerObjectAny&); // Not implemented
+   
 public:
 
    TStreamerObjectAny();
@@ -252,6 +280,10 @@ public:
 //________________________________________________________________________
 class TStreamerObjectPointer : public TStreamerElement {
 
+private:
+   TStreamerObjectPointer(const TStreamerObjectPointer&);          // Not implemented
+   TStreamerObjectPointer&operator=(const TStreamerObjectPointer&); // Not implemented
+   
 public:
 
    TStreamerObjectPointer();
@@ -269,6 +301,10 @@ public:
 //________________________________________________________________________
 class TStreamerObjectAnyPointer : public TStreamerElement {
 
+private:
+   TStreamerObjectAnyPointer(const TStreamerObjectAnyPointer&);          // Not implemented
+   TStreamerObjectAnyPointer&operator=(const TStreamerObjectAnyPointer&); // Not implemented
+   
 public:
 
    TStreamerObjectAnyPointer();
@@ -286,6 +322,10 @@ public:
 //________________________________________________________________________
 class TStreamerString : public TStreamerElement {
 
+private:
+   TStreamerString(const TStreamerString&);          // Not implemented
+   TStreamerString&operator=(const TStreamerString&); // Not implemented
+   
 public:
 
    TStreamerString();
@@ -299,6 +339,10 @@ public:
 //________________________________________________________________________
 class TStreamerSTL : public TStreamerElement {
 
+private:
+   TStreamerSTL(const TStreamerSTL&);          // Not implemented
+   TStreamerSTL&operator=(const TStreamerSTL&); // Not implemented
+   
 protected:
    Int_t       fSTLtype;       //type of STL vector
    Int_t       fCtype;         //STL contained type
@@ -327,6 +371,10 @@ public:
 //________________________________________________________________________
 class TStreamerSTLstring : public TStreamerSTL {
 
+private:
+   TStreamerSTLstring(const TStreamerSTLstring&);          // Not implemented
+   TStreamerSTLstring&operator=(const TStreamerSTLstring&); // Not implemented
+   
 public:
 
    TStreamerSTLstring();
@@ -346,6 +394,10 @@ class TBuffer;
 
 //________________________________________________________________________
 class TStreamerArtificial : public TStreamerElement {
+private:
+   TStreamerArtificial(const TStreamerArtificial&);          // Not implemented
+   TStreamerArtificial&operator=(const TStreamerArtificial&); // Not implemented
+   
 protected:
    ROOT::TSchemaRule::ReadFuncPtr_t     fReadFunc;    //!
    ROOT::TSchemaRule::ReadRawFuncPtr_t  fReadRawFunc; //!

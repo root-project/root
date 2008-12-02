@@ -37,6 +37,11 @@ class TDirectory;
 class TFile;
 
 class TKey : public TNamed {
+
+private:
+   TKey(const TKey&);            // TKey objects are not copiable.
+   TKey& operator=(const TKey&); // TKey objects are not copiable.
+
 protected:
    Int_t       fVersion;     //Key version identifier
    Int_t       fNbytes;      //Number of bytes for the object on file
@@ -57,8 +62,6 @@ protected:
    virtual void     Create(Int_t nbytes, TFile* f = 0);
            void     Build(TDirectory* motherDir, const char* classname, Long64_t filepos);
 
-   TKey(const TKey&);
-   TKey& operator=(const TKey&);
 
  public:
    TKey();

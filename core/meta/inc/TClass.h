@@ -180,9 +180,11 @@ private:
    static THashTable* fgClassTypedefHash;
    static THashTable* fgClassShortTypedefHash;
 
-protected:
+private:
    TClass(const TClass& tc);
    TClass& operator=(const TClass&);   
+
+protected:
    TVirtualStreamerInfo     *FindStreamerInfo(TObjArray* arr, UInt_t checksum) const;
 
 public:

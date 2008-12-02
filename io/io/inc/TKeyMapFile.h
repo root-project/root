@@ -31,7 +31,9 @@ class TMapFile;
 class TKeyMapFile : public TNamed {
 
 private:
-
+   TKeyMapFile(const TKeyMapFile&);            // TKeyMapFile objects are not copiable.
+   TKeyMapFile& operator=(const TKeyMapFile&); // TKeyMapFile objects are not copiable.
+      
    TMapFile      *fMapFile;       //pointer to map file
 
 public:

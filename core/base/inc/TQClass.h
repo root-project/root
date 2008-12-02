@@ -36,6 +36,10 @@
 // all objects of the same class
 class TQClass : public TQObject, public TClass {
 
+private:
+   TQClass(const TClass&) : TQObject(), TClass() {};
+   TQClass& operator=(const TQClass&) { return *this; }
+      
 friend class TQObject;
 
 public:

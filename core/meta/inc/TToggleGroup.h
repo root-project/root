@@ -37,10 +37,11 @@ class TToggleGroup : public TNamed {
 
 private:
    TOrdCollection *fToggles;        // list of TToggle objects
-   TToggle        *fSelected;       //  currently selected object
 
 public:
    TToggleGroup();
+   TToggleGroup(const TToggleGroup&);
+   TToggleGroup &operator=(const TToggleGroup&);
    virtual ~TToggleGroup();
    virtual Int_t       GetTogglesCount() {return fToggles->GetSize();};
    virtual TToggle    *At(Int_t idx) {return (TToggle*)fToggles->At(idx);};

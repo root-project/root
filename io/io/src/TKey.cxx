@@ -93,41 +93,6 @@ TKey::TKey() : TNamed(), fDatime((UInt_t)0)
 }
 
 //______________________________________________________________________________
-TKey::TKey(const TKey& tk) :
-  TNamed(tk), fVersion(tk.fVersion), fNbytes(tk.fNbytes), fObjlen(tk.fObjlen),
-  fDatime(tk.fDatime), fKeylen(tk.fKeylen), fCycle(tk.fCycle), fSeekKey(tk.fSeekKey),
-  fSeekPdir(tk.fSeekPdir), fClassName(tk.fClassName), fLeft(tk.fLeft), fBuffer(tk.fBuffer),
-  fBufferRef(tk.fBufferRef), fPidOffset(tk.fPidOffset), fMotherDir(tk.fMotherDir)
-{
-  // copy constructor
-}
-
-//______________________________________________________________________________
-TKey& TKey::operator=(const TKey& tk)
-{
-   // assignment operator
-
-   if(this!=&tk) {
-      TNamed::operator=(tk);
-      fVersion=tk.fVersion;
-      fNbytes=tk.fNbytes;
-      fObjlen=tk.fObjlen;
-      fDatime=tk.fDatime;
-      fKeylen=tk.fKeylen;
-      fCycle=tk.fCycle;
-      fSeekKey=tk.fSeekKey;
-      fSeekPdir=tk.fSeekPdir;
-      fClassName=tk.fClassName;
-      fLeft=tk.fLeft;
-      fBuffer=tk.fBuffer;
-      fBufferRef=tk.fBufferRef;
-      fPidOffset=tk.fPidOffset;
-      fMotherDir=tk.fMotherDir;
-   }
-   return *this;
-}
-
-//______________________________________________________________________________
 TKey::TKey(TDirectory* motherDir) : TNamed(), fDatime((UInt_t)0)
 {
    // TKey default constructor.

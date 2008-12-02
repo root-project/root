@@ -232,6 +232,18 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
 TRint::~TRint()
 {
    // Destructor.
+   
+   delete gTabCom;
+   Gl_in_key = 0;
+   Gl_beep_hook = 0;
+   fInputHandler->Remove();
+   delete fInputHandler;
+   // We can't know where the signal handler was changed since we started ...
+   // so for now let's now delete it.
+//   TSignalHandler *ih  = GetSignalHandler();
+//   ih->Remove();
+//   SetSignalHandler(0);
+//   delete ih;
 }
 
 //______________________________________________________________________________
@@ -567,8 +579,13 @@ void TRint::Terminate(Int_t status)
    Getlinem(kCleanUp, 0);
 
    if (ReturnFromRun()) {
+      delete gTabCom;
+      gTabCom = 0;
       gSystem->ExitLoop();
    } else {
+      delete gTabCom;
+      gTabCom = 0;
+
       //Execute logoff macro
       const char *logoff;
       logoff = gEnv->GetValue("Rint.Logoff", (char*)0);

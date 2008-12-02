@@ -29,10 +29,15 @@ class TBufferSQL;
 
 class TBasketSQL : public TBasket
 {
+
+private:
+   TBasketSQL(const TBasketSQL&);            // TBasketSQL objects are not copiable.
+   TBasketSQL& operator=(const TBasketSQL&); // TBasketSQL objects are not copiable.
+
 protected:
-   TSQLResult **fResultPtr;  //!
-   TSQLRow    **fRowPtr;     //!
-   TString *fInsertQuery;    //!
+   TSQLResult **fResultPtr;    //!
+   TSQLRow    **fRowPtr;       //!
+   TString      *fInsertQuery; //!
 
 public:
    TBasketSQL();

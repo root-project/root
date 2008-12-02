@@ -150,9 +150,9 @@ public:
    virtual Long_t    CallFunc_ExecInt(CallFunc_t * /* func */, void * /* address */) const {return 0;}
    virtual Long_t    CallFunc_ExecInt64(CallFunc_t * /* func */, void * /* address */) const {return 0;}
    virtual Double_t  CallFunc_ExecDouble(CallFunc_t * /* func */, void * /* address */) const {return 0;}
-   virtual void  *CallFunc_Factory() const {return 0;}
-   virtual void  *CallFunc_FactoryCopy(CallFunc_t * /* func */) const {return 0;}
-   virtual void  *CallFunc_FactoryMethod(CallFunc_t * /* func */) const {return 0;}
+   virtual CallFunc_t   *CallFunc_Factory() const {return 0;}
+   virtual CallFunc_t   *CallFunc_FactoryCopy(CallFunc_t * /* func */) const {return 0;}
+   virtual MethodInfo_t *CallFunc_FactoryMethod(CallFunc_t * /* func */) const {return 0;}
    virtual void   CallFunc_Init(CallFunc_t * /* func */) const {;}
    virtual bool   CallFunc_IsValid(CallFunc_t * /* func */) const {return 0;}
    virtual void   CallFunc_ResetArg(CallFunc_t * /* func */) const {;}
@@ -173,9 +173,9 @@ public:
    virtual void   ClassInfo_Delete(ClassInfo_t * /* info */, void * /* arena */) const {;}
    virtual void   ClassInfo_DeleteArray(ClassInfo_t * /* info */, void * /* arena */, bool /* dtorOnly */) const {;}
    virtual void   ClassInfo_Destruct(ClassInfo_t * /* info */, void * /* arena */) const {;}
-   virtual void  *ClassInfo_Factory() const {return 0;}
-   virtual void  *ClassInfo_Factory(ClassInfo_t * /* cl */) const {return 0;}
-   virtual void  *ClassInfo_Factory(const char * /* name */) const {return 0;}
+   virtual ClassInfo_t  *ClassInfo_Factory() const {return 0;}
+   virtual ClassInfo_t  *ClassInfo_Factory(ClassInfo_t * /* cl */) const {return 0;}
+   virtual ClassInfo_t  *ClassInfo_Factory(const char * /* name */) const {return 0;}
    virtual int    ClassInfo_GetMethodNArg(ClassInfo_t * /* info */, const char * /* method */,const char * /* proto */) const {return 0;}
    virtual bool   ClassInfo_HasDefaultConstructor(ClassInfo_t * /* info */) const {return 0;}             
    virtual bool   ClassInfo_HasMethod(ClassInfo_t * /* info */, const char * /* name */) const {return 0;}             
@@ -204,7 +204,7 @@ public:
                   
    // G__BaseClassInfo interface            
    virtual void   BaseClassInfo_Delete(BaseClassInfo_t * /* bcinfo */) const {;}
-   virtual void  *BaseClassInfo_Factory(ClassInfo_t * /* info */) const {return 0;}
+   virtual BaseClassInfo_t  *BaseClassInfo_Factory(ClassInfo_t * /* info */) const {return 0;}
    virtual int    BaseClassInfo_Next(BaseClassInfo_t * /* bcinfo */) const {return 0;}
    virtual int    BaseClassInfo_Next(BaseClassInfo_t * /* bcinfo */, int  /* onlyDirect */) const {return 0;}
    virtual Long_t BaseClassInfo_Offset(BaseClassInfo_t * /* bcinfo */) const {return 0;}
@@ -217,8 +217,8 @@ public:
    // G__DataMemberInfo interface            
    virtual int    DataMemberInfo_ArrayDim(DataMemberInfo_t * /* dminfo */) const {return 0;}
    virtual void   DataMemberInfo_Delete(DataMemberInfo_t * /* dminfo */) const {;}
-   virtual void  *DataMemberInfo_Factory(ClassInfo_t * /* clinfo */ = 0) const {return 0;}
-   virtual void  *DataMemberInfo_FactoryCopy(DataMemberInfo_t * /* dminfo */) const {return 0;}
+   virtual DataMemberInfo_t  *DataMemberInfo_Factory(ClassInfo_t * /* clinfo */ = 0) const {return 0;}
+   virtual DataMemberInfo_t  *DataMemberInfo_FactoryCopy(DataMemberInfo_t * /* dminfo */) const {return 0;}
    virtual bool   DataMemberInfo_IsValid(DataMemberInfo_t * /* dminfo */) const {return 0;}
    virtual int    DataMemberInfo_MaxIndex(DataMemberInfo_t * /* dminfo */, Int_t  /* dim */) const {return 0;}
    virtual int    DataMemberInfo_Next(DataMemberInfo_t * /* dminfo */) const {return 0;}
@@ -235,15 +235,15 @@ public:
    // G__MethodInfo interface            
    virtual void   MethodInfo_CreateSignature(MethodInfo_t * /* minfo */, TString & /* signature */) const {;}
    virtual void   MethodInfo_Delete(MethodInfo_t * /* minfo */) const {;}
-   virtual void  *MethodInfo_Factory() const {return 0;}
-   virtual void  *MethodInfo_FactoryCopy(MethodInfo_t * /* minfo */) const {return 0;}
-   virtual void  *MethodInfo_InterfaceMethod(MethodInfo_t * /* minfo */) const {return 0;}
+   virtual MethodInfo_t  *MethodInfo_Factory() const {return 0;}
+   virtual MethodInfo_t  *MethodInfo_FactoryCopy(MethodInfo_t * /* minfo */) const {return 0;}
+   virtual MethodInfo_t  *MethodInfo_InterfaceMethod(MethodInfo_t * /* minfo */) const {return 0;}
    virtual bool   MethodInfo_IsValid(MethodInfo_t * /* minfo */) const {return 0;}
    virtual int    MethodInfo_NArg(MethodInfo_t * /* minfo */) const {return 0;}
    virtual int    MethodInfo_NDefaultArg(MethodInfo_t * /* minfo */) const {return 0;}
    virtual int    MethodInfo_Next(MethodInfo_t * /* minfo */) const {return 0;}
    virtual Long_t MethodInfo_Property(MethodInfo_t * /* minfo */) const {return 0;}
-   virtual void  *MethodInfo_Type(MethodInfo_t * /* minfo */) const {return 0;}
+   virtual TypeInfo_t  *MethodInfo_Type(MethodInfo_t * /* minfo */) const {return 0;}
    virtual const char *MethodInfo_GetMangledName(MethodInfo_t * /* minfo */) const {return 0;}
    virtual const char *MethodInfo_GetPrototype(MethodInfo_t * /* minfo */) const {return 0;}
    virtual const char *MethodInfo_Name(MethodInfo_t * /* minfo */) const {return 0;}
@@ -252,8 +252,8 @@ public:
                
    // G__MethodArgInfo interface            
    virtual void   MethodArgInfo_Delete(MethodArgInfo_t * /* marginfo */) const {;}
-   virtual void  *MethodArgInfo_Factory() const {return 0;}
-   virtual void  *MethodArgInfo_FactoryCopy(MethodArgInfo_t * /* marginfo */) const {return 0;}
+   virtual MethodArgInfo_t  *MethodArgInfo_Factory() const {return 0;}
+   virtual MethodArgInfo_t  *MethodArgInfo_FactoryCopy(MethodArgInfo_t * /* marginfo */) const {return 0;}
    virtual bool   MethodArgInfo_IsValid(MethodArgInfo_t * /* marginfo */) const {return 0;}
    virtual int    MethodArgInfo_Next(MethodArgInfo_t * /* marginfo */) const {return 0;}
    virtual Long_t MethodArgInfo_Property(MethodArgInfo_t * /* marginfo */) const {return 0;}
@@ -263,8 +263,9 @@ public:
 
                   
    // G__TypeInfo interface            
-   virtual void   TypeInfo_Delete(TypeInfo_t * /* tinfo */) const {;}
-   virtual void  *TypeInfo_Factory() const {return 0;}
+   virtual void    TypeInfo_Delete(TypeInfo_t * /* tinfo */) const {;}
+   virtual TypeInfo_t *TypeInfo_Factory() const {return 0;}
+   virtual TypeInfo_t *TypeInfo_FactoryCopy(TypeInfo_t * /* tinfo */) const {return 0;}
    virtual void   TypeInfo_Init(TypeInfo_t * /* tinfo */, const char * /* funcname */) const {;}
    virtual bool   TypeInfo_IsValid(TypeInfo_t * /* tinfo */) const {return 0;}
    virtual Long_t TypeInfo_Property(TypeInfo_t * /* tinfo */) const {return 0;}
@@ -274,7 +275,8 @@ public:
                   
    // G__TypedefInfo interface            
    virtual void   TypedefInfo_Delete(TypedefInfo_t * /* tinfo */) const {;}
-   virtual void  *TypedefInfo_Factory() const {return 0;}
+   virtual TypedefInfo_t  *TypedefInfo_Factory() const {return 0;}
+   virtual TypedefInfo_t  *TypedefInfo_FactoryCopy(TypedefInfo_t * /* tinfo */) const {return 0;}
    virtual void   TypedefInfo_Init(TypedefInfo_t * /* tinfo */, const char * /* funcname */) const {;}
    virtual bool   TypedefInfo_IsValid(TypedefInfo_t * /* tinfo */) const {return 0;}
    virtual Long_t TypedefInfo_Property(TypedefInfo_t * /* tinfo */) const {return 0;}

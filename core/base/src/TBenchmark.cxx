@@ -44,12 +44,23 @@ TBenchmark::TBenchmark(const TBenchmark& bm) :
   TNamed(bm),
   fNbench(bm.fNbench),
   fNmax(bm.fNmax),
-  fNames(bm.fNames),
-  fRealTime(bm.fRealTime),
-  fCpuTime(bm.fCpuTime),
-  fTimer(bm.fTimer)
+  fNames(0),
+  fRealTime(0),
+  fCpuTime(0),
+  fTimer(0)
 { 
    //copy constructor
+   fNames    = new TString[fNmax];
+   fRealTime = new Float_t[fNmax];
+   fCpuTime  = new Float_t[fNmax];
+   fTimer    = new TStopwatch[fNmax];
+
+   for(UInt_t i = 0; i<fNmax; ++i) {
+      fNames[i] = bm.fNames[i];
+      fRealTime[i] = bm.fRealTime[i];
+      fCpuTime[i] = bm.fCpuTime[i];
+      fTimer[i] = bm.fTimer[i];
+   }
 }
 
 //______________________________________________________________________________
@@ -60,10 +71,23 @@ TBenchmark& TBenchmark::operator=(const TBenchmark& bm)
       TNamed::operator=(bm);
       fNbench=bm.fNbench;
       fNmax=bm.fNmax;
-      fNames=bm.fNames;
-      fRealTime=bm.fRealTime;
-      fCpuTime=bm.fCpuTime;
-      fTimer=bm.fTimer;
+      
+      delete [] fNames;
+      delete [] fRealTime;
+      delete [] fCpuTime;
+      delete [] fTimer;
+      
+      fNames    = new TString[fNmax];
+      fRealTime = new Float_t[fNmax];
+      fCpuTime  = new Float_t[fNmax];
+      fTimer    = new TStopwatch[fNmax];
+      
+      for(UInt_t i = 0; i<fNmax; ++i) {
+         fNames[i] = bm.fNames[i];
+         fRealTime[i] = bm.fRealTime[i];
+         fCpuTime[i] = bm.fCpuTime[i];
+         fTimer[i] = bm.fTimer[i];
+      }
    } 
    return *this;
 }

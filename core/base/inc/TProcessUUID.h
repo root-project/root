@@ -33,6 +33,10 @@ class TObjString;
 
 class TProcessUUID : public TProcessID {
 
+private:
+   TProcessUUID(const TProcessID&);              // TProcessUUID are not copiable.
+   TProcessUUID &operator=(const TProcessUUID&); // TProcessUUID are not copiable.
+
 protected:
    THashList   *fUUIDs;        //Global list of TUUIDs
    TBits       *fActive;       //Table of active UUIDs
