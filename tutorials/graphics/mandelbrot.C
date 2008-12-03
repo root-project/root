@@ -7,8 +7,7 @@
 
 //==================================================================
 //
-// Example macro of using TExec to handle keyboard events.
-// Uses TComplex to draw the Mandelbrot set.
+// Using TExec to handle keyboard events. Uses TComplex to draw the Mandelbrot set.
 // Author : Luigi Bardelli [ bardelli@fi.infn.it ]
 //
 // Pressing the keys 'z' and 'u' will zoom and unzoom the picture

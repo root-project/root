@@ -1,17 +1,17 @@
-////////////////////////////////////////////////////////////////////////////////
-//                                                                            //
-// ROOT implementation of a simple SAX Handler.                               //
-//                                                                            //
-// This handler uses TSAXParser, a SAX Parser using the SAX interface         //
-// of libxml2. This script will output all elements of the original xml       //
-// file, if sucessfully parsed.                                               //
-//                                                                            //
-// To run this program do:                                                    //
-// .x SAXHandler.C                                                            //
-//                                                                            //
-// Requires: saxexample.xml                                                   //
-//                                                                            //
-////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+//
+// ROOT implementation of a simple SAX Handler.
+//
+// This handler uses TSAXParser, a SAX Parser using the SAX interface
+// of libxml2. This script will output all elements of the original xml
+// file, if sucessfully parsed.
+//
+// To run this program do:
+// .x SAXHandler.C 
+// 
+// Requires: saxexample.xml
+//
+//////////////////////////////////////////////////////////////////////////////
 
 #include <Riostream.h>
 #include <TList.h>

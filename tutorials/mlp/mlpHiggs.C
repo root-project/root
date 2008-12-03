@@ -1,4 +1,5 @@
 void mlpHiggs(Int_t ntrain=100) {
+// Example of a Multi Layer Perceptron
 // For a LEP search for invisible Higgs boson, a neural network 
 // was used to separate the signal from the background passing 
 // some selection cuts. Here is a simplified version of this network, 

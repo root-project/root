@@ -1,4 +1,5 @@
 {
+   // show several TGaxis formats
 
   gROOT.Reset();
 

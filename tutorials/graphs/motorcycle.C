@@ -19,10 +19,6 @@ void DrawSmooth(Int_t pad, const char *title, const char *xt, const char *yt)
    vFrame->SetXTitle(xt);
    vFrame->SetYTitle(yt);
    grin->Draw("P");
-//   grout->SetMarkerColor(kRed);
-//   grout->SetMarkerStyle(21);
-//   grout->SetMarkerSize(0.5);
-//   grout->DrawClone("P");
    grout->DrawClone("LPX");
 }
 

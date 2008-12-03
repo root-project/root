@@ -1,5 +1,6 @@
 //____________________________________________________________________
 //
+// Using Pythia6 with ROOT
 // To make an event sample (of size 100) do
 //
 //    shell> root
