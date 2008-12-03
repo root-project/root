@@ -48,7 +48,7 @@ const Reflex::Class * Reflex::Base::BaseClass() const {
 std::string Reflex::Base::Name( unsigned int mod ) const {
 //-------------------------------------------------------------------------------
 // Construct the name of the base. Qualify if requested.
-   std::string s = "";
+   std::string s;
    if ( 0 != ( mod & ( QUALIFIED | Q ))) {
       if ( IsPublic())    { s += "public "; }
       if ( IsProtected()) { s += "protected "; }
