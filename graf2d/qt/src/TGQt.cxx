@@ -2080,7 +2080,7 @@ void  TGQt::SetDoubleBuffer(int wid, int mode)
    //        999 means all the opened windows.
    // mode : 1 double buffer is on
    //        0 double buffer is off
-   if (wid == -1 && wid == kDefault) return;
+   if (wid == -1 || wid == kDefault) return;
    QPaintDevice *dev = iwid(wid);
    if ( TQtWidget *widget = (TQtWidget *)IsWidget(dev) ) {
       widget->SetDoubleBuffer(mode);
