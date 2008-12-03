@@ -13,10 +13,14 @@ PYROOTDIRS   := $(PYROOTDIR)/src
 PYROOTDIRI   := $(PYROOTDIR)/inc
 
 ##### python64 #####
+ifeq ($(ARCH),macosx64)
+ifeq ($(MACOSX_MINOR),5)
 PYTHON64S    := $(MODDIRS)/python64.c
 PYTHON64O    := $(PYTHON64S:.c=.o)
 PYTHON64     := bin/python64
 PYTHON64DEP  := $(PYTHON64O:.o=.d)
+endif
+endif
 
 ##### libPyROOT #####
 PYROOTL      := $(MODDIRI)/LinkDef.h
@@ -51,10 +55,9 @@ ROOTPYO      := $(ROOTPY:.py=.pyo)
 ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(PYROOTH))
 ALLLIBS      += $(PYROOTLIB)
 ALLMAPS      += $(PYROOTMAP)
-ifeq ($(ARCH),macosx64)
+
 ALLEXECS     += $(PYTHON64)
 INCLUDEFILES += $(PYTHON64DEP)
-endif
 
 # include all dependency files
 INCLUDEFILES += $(PYROOTDEP)
@@ -91,11 +94,7 @@ $(PYTHON64):    $(PYTHON64O)
 		$(CC) $(LDFLAGS) -o $@ $(PYTHON64O) \
 		   $(PYTHONLIBDIR) $(PYTHONLIB)
 
-ifeq ($(ARCH),macosx64)
 all-$(MODNAME): $(PYROOTLIB) $(PYROOTMAP) $(PYTHON64)
-else
-all-$(MODNAME): $(PYROOTLIB) $(PYROOTMAP)
-endif
 
 clean-$(MODNAME):
 		@rm -f $(PYROOTO) $(PYROOTDO) $(PYTHON64O)

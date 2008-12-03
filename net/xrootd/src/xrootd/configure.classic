@@ -521,7 +521,7 @@ guess_architecture () {
        # the default for macosx is NOT to build xrdposix unless required
        enable_posix=no
 
-       if [ `sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2` = 5 ]; then
+       if [ `sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2` -ge 5 ]; then
           if `sysctl machdep.cpu.extfeatures | grep "64" > /dev/null  2>&1` ; then
              ccflv=macos64
 	     arch=${arch/macosx/64_macosx}
