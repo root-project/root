@@ -589,13 +589,13 @@ inline Reflex::TYPE Reflex::MemberBase::MemberType() const {
 //-------------------------------------------------------------------------------
 inline std::string Reflex::MemberBase::Name( unsigned int mod ) const {
 //-------------------------------------------------------------------------------
-   std::string s = "";
    if ( 0 != ( mod & ( SCOPED | S ))) {
-      s += DeclaringScope().Name( mod );
+      std::string s(DeclaringScope().Name( mod ));
       if ( ! DeclaringScope().IsTopScope()) s += "::";
+      s += fName;
+      return s;
    }
-   s += fName;
-   return s;
+   return fName;
 }
 
 

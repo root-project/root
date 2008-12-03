@@ -28,25 +28,6 @@
 
 using namespace Reflex;
 
-namespace FTypes {
-   static const std::type_info & Char()       { static const std::type_info & t = Type::ByName("char").TypeInfo();               return t; }
-   static const std::type_info & SigChar()    { static const std::type_info & t = Type::ByName("signed char").TypeInfo();        return t; }
-   static const std::type_info & ShoInt()     { static const std::type_info & t = Type::ByName("short int").TypeInfo();          return t; }
-   static const std::type_info & Int()        { static const std::type_info & t = Type::ByName("int").TypeInfo();                return t; }
-   static const std::type_info & LonInt()     { static const std::type_info & t = Type::ByName("long int").TypeInfo();           return t; }
-   static const std::type_info & UnsChar()    { static const std::type_info & t = Type::ByName("unsigned char").TypeInfo();      return t; }
-   static const std::type_info & UnsShoInt()  { static const std::type_info & t = Type::ByName("unsigned short int").TypeInfo(); return t; }
-   static const std::type_info & UnsInt()     { static const std::type_info & t = Type::ByName("unsigned int").TypeInfo();       return t; }
-   static const std::type_info & UnsLonInt()  { static const std::type_info & t = Type::ByName("unsigned long int").TypeInfo();  return t; }
-   static const std::type_info & Bool()       { static const std::type_info & t = Type::ByName("bool").TypeInfo();               return t; }
-   static const std::type_info & Float()      { static const std::type_info & t = Type::ByName("float").TypeInfo();              return t; }
-   static const std::type_info & Double()     { static const std::type_info & t = Type::ByName("double").TypeInfo();             return t; }
-   static const std::type_info & LonDouble()  { static const std::type_info & t = Type::ByName("long double").TypeInfo();        return t; }
-   static const std::type_info & Void()       { static const std::type_info & t = Type::ByName("void").TypeInfo();               return t; }
-   static const std::type_info & LonLong()    { static const std::type_info & t = Type::ByName("long long").TypeInfo();          return t; }
-   static const std::type_info & UnsLonLong() { static const std::type_info & t = Type::ByName("unsigned long long").TypeInfo(); return t; }
-}
-
 //-------------------------------------------------------------------------------
 static std::string splitScopedName(const std::string& nam, bool returnScope, bool startFromLeft = false)
 {
@@ -92,24 +73,55 @@ std::string Tools::GetBaseName(const std::string& name, bool startFromLeft /*= f
 EFUNDAMENTALTYPE Tools::FundamentalType( const Type & typ ) {
 //-------------------------------------------------------------------------------
 // Return an enum representing the fundamental type passed in.
-   const std::type_info & tid = typ.FinalType().TypeInfo();
+#define RFLX_COMBINE(A,B) A##B
+#define RFLX_COMBINE1(A) A
+#if RFLX_COMBINE(1,0) != 10
+# undef RFLX_COMBINE(A,B) A##B
+# define RFLX_COMBINE(A,B) RFLX_COMBINE1(A)B
+#endif
+
+#define RFLX_DECL_STATIC_TB(NAME, WHAT) \
+   static const TypeBase* RFLX_COMBINE(stb_,NAME) = Type::ByName(#WHAT).ToTypeBase();
+
+   RFLX_DECL_STATIC_TB(Char, char);
+   RFLX_DECL_STATIC_TB(SigChar, signed char);
+   RFLX_DECL_STATIC_TB(ShoInt, short int);
+   RFLX_DECL_STATIC_TB(Int, int);
+   RFLX_DECL_STATIC_TB(LonInt, long int);
+   RFLX_DECL_STATIC_TB(UnsChar, unsigned char);
+   RFLX_DECL_STATIC_TB(UnsShoInt, unsigned short int);
+   RFLX_DECL_STATIC_TB(UnsInt, unsigned int);
+   RFLX_DECL_STATIC_TB(UnsLonInt, unsigned long int);
+   RFLX_DECL_STATIC_TB(Bool, bool);
+   RFLX_DECL_STATIC_TB(Float, float);
+   RFLX_DECL_STATIC_TB(Double, double);
+   RFLX_DECL_STATIC_TB(LonDouble, long double);
+   RFLX_DECL_STATIC_TB(Void, void);
+   RFLX_DECL_STATIC_TB(LonLong, long long);
+   RFLX_DECL_STATIC_TB(UnsLonLong, unsigned long long);
+
+#undef RFLX_DECL_STATIC_TB
+#undef RFLX_COMBINE1
+#undef RFLX_COMBINE
+
+   const TypeBase* tbType = typ.FinalType().ToTypeBase();
    
-   if ( tid == FTypes::Char() )         return kCHAR;
-   if ( tid == FTypes::SigChar() )      return kSIGNED_CHAR; 
-   if ( tid == FTypes::ShoInt() )       return kSHORT_INT; 
-   if ( tid == FTypes::Int() )          return kINT; 
-   if ( tid == FTypes::LonInt() )       return kLONG_INT; 
-   if ( tid == FTypes::UnsChar() )      return kUNSIGNED_CHAR; 
-   if ( tid == FTypes::UnsShoInt() )    return kUNSIGNED_SHORT_INT; 
-   if ( tid == FTypes::UnsInt() )       return kUNSIGNED_INT; 
-   if ( tid == FTypes::UnsLonInt() )    return kUNSIGNED_LONG_INT; 
-   if ( tid == FTypes::Bool() )         return kBOOL; 
-   if ( tid == FTypes::Float() )        return kFLOAT; 
-   if ( tid == FTypes::Double() )       return kDOUBLE; 
-   if ( tid == FTypes::LonDouble() )    return kLONG_DOUBLE; 
-   if ( tid == FTypes::Void() )         return kVOID; 
-   if ( tid == FTypes::LonLong() )      return kLONGLONG; 
-   if ( tid == FTypes::UnsLonLong() )   return kULONGLONG; 
+   if ( tbType == stb_Char)         return kCHAR;
+   if ( tbType == stb_SigChar)      return kSIGNED_CHAR; 
+   if ( tbType == stb_ShoInt)       return kSHORT_INT; 
+   if ( tbType == stb_Int)          return kINT; 
+   if ( tbType == stb_LonInt)       return kLONG_INT; 
+   if ( tbType == stb_UnsChar)      return kUNSIGNED_CHAR; 
+   if ( tbType == stb_UnsShoInt)    return kUNSIGNED_SHORT_INT; 
+   if ( tbType == stb_UnsInt)       return kUNSIGNED_INT; 
+   if ( tbType == stb_UnsLonInt)    return kUNSIGNED_LONG_INT; 
+   if ( tbType == stb_Bool)         return kBOOL; 
+   if ( tbType == stb_Float)        return kFLOAT; 
+   if ( tbType == stb_Double)       return kDOUBLE; 
+   if ( tbType == stb_LonDouble)    return kLONG_DOUBLE; 
+   if ( tbType == stb_Void)         return kVOID; 
+   if ( tbType == stb_LonLong)      return kLONGLONG; 
+   if ( tbType == stb_UnsLonLong)   return kULONGLONG; 
    
    return kNOTFUNDAMENTAL;
 

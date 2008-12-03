@@ -49,7 +49,8 @@ Reflex::FunctionMember::FunctionMember( const char *  nam,
 std::string Reflex::FunctionMember::Name( unsigned int mod ) const {
 //-------------------------------------------------------------------------------
 // Construct the qualified (if requested) name of the function member.
-   std::string s = "";
+   std::string s;
+   s.reserve(30); // an arbitrary, reasonable number
 
    if ( 0 != ( mod & ( QUALIFIED | Q ))) {
       if ( IsPublic())          { s += "public ";    }

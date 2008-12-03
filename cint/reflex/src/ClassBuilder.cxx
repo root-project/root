@@ -139,8 +139,8 @@ void Reflex::ClassBuilderImpl::AddEnum(const char* nam, const char* values, cons
       it != valVec.end();
       ++it
    ) {
-      std::string name = "";
-      std::string value = "";
+      std::string name;
+      std::string value;
       Tools::StringSplitPair(name, value, *it, "=");
       unsigned long int valInt = atol(value.c_str());
       e->AddDataMember(Member(new DataMember(name.c_str(), Type::ByName("int"), valInt, 0)));

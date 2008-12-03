@@ -53,8 +53,8 @@ Reflex::ScopeBase::ScopeBase( const char * scope,
    // Construct the dictionary information for a scope.
    std::string sname(scope);
 
-   std::string declScope = "";
-   std::string currScope = sname;
+   std::string declScope;
+   std::string currScope(sname);
 
    if ( fBasePosition ) {
       declScope = sname.substr( 0, fBasePosition-2);
@@ -222,7 +222,7 @@ Reflex::ScopeBase::FunctionMemberByName( const std::string & name,
 //-------------------------------------------------------------------------------
    // Return function member by name and signature.
    for (Members::const_iterator it = fFunctionMembers.begin(); it != fFunctionMembers.end(); ++it ) {
-      if (it->Name() == name) {
+      if (it->ToMemberBase()->MemberBase::Name() == name) {
          if (signature) {
             if (signature.IsEquivalentTo(it->TypeOf(),modifiers_mask)) return (*it);
          }
@@ -243,7 +243,7 @@ Reflex::ScopeBase::FunctionMemberByNameAndSignature( const std::string & name,
 //-------------------------------------------------------------------------------
    // Return function member by name and signature.
    for (Members::const_iterator it = fFunctionMembers.begin(); it != fFunctionMembers.end(); ++it ) {
-      if (it->Name() == name) {
+      if (it->ToMemberBase()->MemberBase::Name() == name) {
          if (signature) {
             if (signature.IsSignatureEquivalentTo(it->TypeOf(),modifiers_mask)) return (*it);
          }

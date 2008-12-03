@@ -490,6 +490,13 @@ namespace Reflex {
 
 
       /** 
+      * ToMemberBase returns the underlying, internal MemberBase
+      * @return memberbase pointer
+      */
+      MemberBase* ToMemberBase() const;
+
+
+      /** 
       * TypeOf returns the member type 
       * @return member type
       */
@@ -1015,6 +1022,12 @@ inline Reflex::MemberTemplate Reflex::Member::TemplateFamily() const {
    return Dummy::MemberTemplate();
 }
 
+
+//-------------------------------------------------------------------------------
+inline Reflex::MemberBase* Reflex::Member::ToMemberBase() const {
+//-------------------------------------------------------------------------------
+   return fMemberBase;
+}
 
 //-------------------------------------------------------------------------------
 inline Reflex::Type Reflex::Member::TypeOf() const {

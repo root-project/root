@@ -47,7 +47,8 @@ Reflex::DataMember::~DataMember() {
 std::string Reflex::DataMember::Name( unsigned int mod ) const {
 //-------------------------------------------------------------------------------
 // Return the scoped and qualified (if requested with mod) name of the data member
-   std::string s = "";
+   std::string s;
+   s.reserve(30); // an arbitrary, reasonable number
 
    if ( 0 != ( mod & ( QUALIFIED | Q ))) {
       if ( IsPublic())          { s += "public ";    }

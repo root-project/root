@@ -177,62 +177,99 @@ template<class T> T Reflex::NameLookup::LookupInScope()
       return Dummy::Get<T>();
    }
 
-   int len = fCurrentScope.SubTypeSize();
-   int i = 0;
-   for (Type_Iterator it = fCurrentScope.SubType_Begin(); i < len; ++it, ++i) {
-      const Type& type = *it;
-      const TypeBase* base = type.ToTypeBase();
-      if (base) {
-         size_t pos;
-         const std::string &name(base->SimpleName(pos));
-         //fprintf(stderr, "Reflex::NameLookup::LookupInScope<T>: looking up '%s', considering subscope '%s' ...\n", fLookupName.c_str(), name.c_str());
-         if (
-            (fLookupName[fPosNamePart] == name[pos]) &&
-            !fLookupName.compare(fPosNamePart, fPosNamePartLen, name, pos, name.length())
-         ) {
-            //fprintf(stderr, "Reflex::NameLookup::LookupInScope<T>: lookup up '%s', partial success with subscope '%s' ...\n", fLookupName.c_str(), name.c_str());
-            fPartialSuccess = true;
-            fLookedAtUsingDir.clear();
-            FindNextScopePos();
-            if (fPosNamePart == std::string::npos) {
-               return type;
-            }
-            if (it->IsTypedef()) {
-               fCurrentScope = it->FinalType();
-            }
-            else {
-               fCurrentScope = type;
-            }
-            return LookupInScope< T >();
+   // global scope can use hashed containers:
+   if (fCurrentScope == Scope::GlobalScope()) {
+      Type freeType = Type::ByName(fLookupName.c_str() + fPosNamePart);
+      if (freeType.Id()) {
+         //fprintf(stderr, "Reflex::NameLookup::LookupInScope<T>: lookup up '%s', partial success with subscope '%s' ...\n", fLookupName.c_str(), name.c_str());
+         fPartialSuccess = true;
+         fLookedAtUsingDir.clear();
+         FindNextScopePos();
+         if (fPosNamePart == std::string::npos) {
+            return freeType;
          }
+         if (freeType.IsTypedef()) {
+            fCurrentScope = freeType.FinalType();
+         }
+         else {
+            fCurrentScope = freeType;
+         }
+         return LookupInScope< T >();
       }
-   }
 
-   Scope_Iterator subscope_end(fCurrentScope.SubScope_End());
-   for (Scope_Iterator in = fCurrentScope.SubScope_Begin(); in != subscope_end; ++in) {
+      Scope freeScope = Scope::ByName(fLookupName.c_str() + fPosNamePart);
       // only take namespaces into account - classes were checked as part of SubType
-      if (in->IsNamespace()) {
-         const Scope& scope = *in;
-         const ScopeBase* base = scope.ToScopeBase();
+      if (freeScope.Id() && freeScope.IsNamespace()) {
+         fPartialSuccess = true;
+         fLookedAtUsingDir.clear();
+         FindNextScopePos();
+         if (fPosNamePart == std::string::npos) {
+            return (T) (freeScope);
+         }
+         fCurrentScope = freeScope;
+         return LookupInScope<T>();
+      }
+   } // end of: if global scope
+   else {
+      // if not global scope
+
+      int len = fCurrentScope.SubTypeSize();
+      int i = 0;
+      for (Type_Iterator it = fCurrentScope.SubType_Begin(); i < len; ++it, ++i) {
+         const Type& type = *it;
+         const TypeBase* base = type.ToTypeBase();
          if (base) {
             size_t pos;
-            const std::string& name(base->SimpleName(pos));
+            const std::string &name(base->SimpleName(pos));
+            //fprintf(stderr, "Reflex::NameLookup::LookupInScope<T>: looking up '%s', considering subscope '%s' ...\n", fLookupName.c_str(), name.c_str());
             if (
-               (fLookupName[fPosNamePart] == name[pos]) &&
-               !fLookupName.compare(fPosNamePart, fPosNamePartLen, name, pos, name.length())
-            ) {
+                (fLookupName[fPosNamePart] == name[pos]) &&
+                !fLookupName.compare(fPosNamePart, fPosNamePartLen, name, pos, name.length())
+                ) {
+               //fprintf(stderr, "Reflex::NameLookup::LookupInScope<T>: lookup up '%s', partial success with subscope '%s' ...\n", fLookupName.c_str(), name.c_str());
                fPartialSuccess = true;
                fLookedAtUsingDir.clear();
                FindNextScopePos();
                if (fPosNamePart == std::string::npos) {
-                  return (T) (*in);
+                  return type;
                }
-               fCurrentScope = (Scope) (*in);
-               return LookupInScope<T>();
+               if (it->IsTypedef()) {
+                  fCurrentScope = it->FinalType();
+               }
+               else {
+                  fCurrentScope = type;
+               }
+               return LookupInScope< T >();
             }
          }
       }
-   }
+
+      Scope_Iterator subscope_end(fCurrentScope.SubScope_End());
+      for (Scope_Iterator in = fCurrentScope.SubScope_Begin(); in != subscope_end; ++in) {
+         // only take namespaces into account - classes were checked as part of SubType
+         if (in->IsNamespace()) {
+            const Scope& scope = *in;
+            const ScopeBase* base = scope.ToScopeBase();
+            if (base) {
+               size_t pos;
+               const std::string& name(base->SimpleName(pos));
+               if (
+                   (fLookupName[fPosNamePart] == name[pos]) &&
+                   !fLookupName.compare(fPosNamePart, fPosNamePartLen, name, pos, name.length())
+                   ) {
+                  fPartialSuccess = true;
+                  fLookedAtUsingDir.clear();
+                  FindNextScopePos();
+                  if (fPosNamePart == std::string::npos) {
+                     return (T) (*in);
+                  }
+                  fCurrentScope = (Scope) (*in);
+                  return LookupInScope<T>();
+               }
+            }
+         }
+      }
+   } // end of: if not global scope
 
    if (fCurrentScope.UsingDirectiveSize()) {
       fLookedAtUsingDir.insert(fCurrentScope);
