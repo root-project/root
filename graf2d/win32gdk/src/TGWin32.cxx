@@ -1067,7 +1067,7 @@ Int_t TGWin32::OpenDisplay(const char *dpyName)
       fCursors[kArrowHor] = gdk_cursor_new(GDK_SB_H_DOUBLE_ARROW);
       fCursors[kArrowVer] = gdk_cursor_new(GDK_SB_V_DOUBLE_ARROW);
       fCursors[kHand] = gdk_cursor_new(GDK_HAND2);
-      fCursors[kPointer] = gdk_cursor_new( GDK_LEFT_PTR);
+      fCursors[kPointer] = gdk_cursor_new(GDK_LEFT_PTR);
       fCursors[kCaret] =  gdk_cursor_new(GDK_XTERM);
       //fCursors[kWatch] = gdk_cursor_new(GDK_WATCH);
       fCursors[kWatch] = gdk_cursor_new(GDK_BUSY);
@@ -6177,6 +6177,7 @@ void TGWin32::GrabPointer(Window_t id, UInt_t evmask, Window_t confine,
                        GDK_CURRENT_TIME);
    } else {
       gdk_pointer_ungrab(GDK_CURRENT_TIME);
+      ::SetCursor((HCURSOR)GDK_CURSOR_XID(fCursors[kPointer]));
    }
 }
 
