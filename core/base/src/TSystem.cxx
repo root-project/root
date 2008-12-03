@@ -2491,7 +2491,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       }
    }
    {
-       // I need to replace the -I"somerelativepath" by -I"../ (or -I"..\ on NT)
+       // I need to replace the -I"somerelativepath" by -I"$cwd/ (or -I"$cwd\ on NT)
       TRegexp rel_inc("-I\"[^/\\$%-][^:-]+");
       Int_t len,pos;
       pos = rel_inc.Index(includes,&len);
@@ -2504,9 +2504,10 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
          pos = rel_inc.Index(includes,&len);
       }
    }
-   includes += " -I" + build_loc;
-   includes += " -I";
+   includes += " -I\"" + build_loc;
+   includes += "\" -I\"";
    includes += WorkingDirectory();
+   includes += "\"";
    if (gEnv) {
       TString fromConfig = gEnv->GetValue("ACLiC.IncludePaths","");
       includes.Append(" ").Append(fromConfig).Append(" ");
@@ -2883,7 +2884,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
          delete [] name;
       }
    }
-   linkdefFile << "#pragma link C++ defined_in "<<filename_fullpath << ";" << endl;
+   linkdefFile << "#pragma link C++ defined_in \""<<filename_fullpath << "\";" << endl;
    linkdefFile << endl;
    linkdefFile << "#endif" << endl;
    linkdefFile.close();
@@ -2952,19 +2953,19 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 #ifdef G__NOSTUBS
    rcint += "rootcint_nostubs.sh --lib-list-prefix=";
 #else
-   rcint += "rootcint --lib-list-prefix=";
+   rcint += "rootcint \"--lib-list-prefix=";
 #endif
    rcint += mapfile;
-   rcint += " -f ";
-   rcint.Append(dict).Append(" -c -p ").Append(GetIncludePath()).Append(" ");
+   rcint += "\" -f \"";
+   rcint.Append(dict).Append("\" -c -p ").Append(GetIncludePath()).Append(" ");
    if (produceRootmap) {
       rcint.Append("-DR__ACLIC_ROOTMAP ");
    }
    if (gEnv) {
       TString fromConfig = gEnv->GetValue("ACLiC.IncludePaths","");
-      rcint.Append(fromConfig).Append(" ");
+      rcint.Append(fromConfig).Append(" \"");
    }
-   rcint.Append(filename_fullpath).Append(" ").Append(linkdef);
+   rcint.Append(filename_fullpath).Append("\" \"").Append(linkdef).Append("\"");;
 
    // ======= Run rootcint
    if (gDebug>3) {
@@ -3049,9 +3050,12 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    TString cmd = fMakeSharedLib;
    // we do not add filename because it is already included via the dictionary(in dicth) !
    // dict.Append(" ").Append(filename);
+   cmd.ReplaceAll("$SourceFiles","\"$SourceFiles\"");
    cmd.ReplaceAll("$SourceFiles",dict);
+   cmd.ReplaceAll("$ObjectFiles","\"$ObjectFiles\"");
    cmd.ReplaceAll("$ObjectFiles",dictObj);
    cmd.ReplaceAll("$IncludePath",includes);
+   cmd.ReplaceAll("$SharedLib","\"$SharedLib\"");
    cmd.ReplaceAll("$SharedLib",library);
    if (linkDepLibraries) { 
       if (produceRootmap) {
@@ -3062,6 +3066,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    }
    cmd.ReplaceAll("$LinkedLibs",linkLibraries);
    cmd.ReplaceAll("$LibName",libname);
+   cmd.ReplaceAll("$BuildDir","\"$BuildDir\"");
    cmd.ReplaceAll("$BuildDir",build_loc);
    if (mode==kDebug) {
       cmd.ReplaceAll("$Opt",fFlagsDebug);
