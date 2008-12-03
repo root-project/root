@@ -66,12 +66,12 @@ public:
    virtual void Destroy() = 0;
 
    virtual void        AcquireEveWindow(TEveWindow* ew);
-   virtual TEveWindow* RelinquishEveWindow();
-
-   virtual TEveWindow* ChangeEveWindow(TEveWindow* ew);
+   virtual TEveWindow* RelinquishEveWindow(Bool_t reparent=kTRUE);
 
    virtual void SetCurrent(Bool_t curr);
    virtual void SetShowTitleBar(Bool_t show);
+
+   void ReplaceIconBox(TGFrame* icon_box);
 
    void ActionPressed();
    void FlipTitleBarState();
@@ -102,7 +102,7 @@ public:
    virtual void Destroy();
 
    virtual void        AcquireEveWindow(TEveWindow* ew);
-   virtual TEveWindow* RelinquishEveWindow();
+   virtual TEveWindow* RelinquishEveWindow(Bool_t reparent=kTRUE);
 
    void MainFrameClosed();
 
@@ -158,7 +158,7 @@ public:
    virtual void Destroy();
 
    virtual void        AcquireEveWindow(TEveWindow* ew);
-   virtual TEveWindow* RelinquishEveWindow();
+   virtual TEveWindow* RelinquishEveWindow(Bool_t reparent=kTRUE);
 
    virtual void SetCurrent(Bool_t curr);
 
@@ -204,10 +204,12 @@ public:
    virtual Bool_t          CanMakeNewSlots() const { return kFALSE; }
    virtual TEveWindowSlot* NewSlot() { return 0; }
 
-   void PopulateSlot(TEveCompositeFrame* ef); 
+   void PopulateEmptyFrame(TEveCompositeFrame* ef); 
 
    void SwapWindow(TEveWindow* w);
    void SwapWindowWithCurrent();        // *MENU*
+
+   void ReplaceWindow(TEveWindow* w);
 
    virtual void DestroyWindow();        // *MENU*
    virtual void DestroyWindowAndSlot(); // *MENU*
@@ -221,6 +223,8 @@ public:
 
    Bool_t       IsCurrent() const { return fgCurrentWindow == this; }
    virtual void SetCurrent(Bool_t curr);
+
+   Bool_t IsAncestorOf(TEveWindow* win);
 
    void TitleBarClicked();
 
@@ -271,11 +275,14 @@ public:
 
    virtual void SetCurrent(Bool_t curr);
 
-   TEveWindowPack* MakePack(); // *MENU*
-   TEveWindowTab*  MakeTab();  // *MENU*
+   TEveWindowPack*   MakePack(); // *MENU*
+   TEveWindowTab*    MakeTab();  // *MENU*
 
-   void             StartEmbedding();
-   TEveWindowFrame* StopEmbedding();
+   TEveWindowFrame*  MakeFrame();
+   TEveWindowFrame*  MakeFrame(TGFrame* frame);
+
+   TGCompositeFrame* StartEmbedding();
+   TEveWindowFrame*  StopEmbedding(const Text_t* name=0);
 
    ClassDef(TEveWindowSlot, 0); // An unoccupied eve-window slot.
 };

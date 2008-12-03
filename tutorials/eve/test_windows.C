@@ -4,21 +4,49 @@ void test_windows()
 {
    TEveManager::Create();
 
-   TEveWindowSlot *slot = 0;
+   TEveUtil::Macro("pointset_test.C");
+
+   TEveWindowSlot  *slot = 0;
+   TEveWindowFrame *evef = 0;
+
+   TEveViewer *v = 0;
+
+   TGCompositeFrame *cf = 0;
 
    // ----------------------------------------------------------------
 
    slot = TEveWindow::CreateWindowInTab(gEve->GetBrowser()->GetTabRight());
 
    TEveWindowPack* pack1 = slot->MakePack();
-   s = pack1->NewSlot();
+
    slot = pack1->NewSlot();
-   
+   // Embedded viewer.
+   v = new TEveViewer("BarViewer");
+   TGLEmbeddedViewer* xx = new TGLEmbeddedViewer(0, 0, 0);
+   v->SetGLViewer(xx);
+   evef = slot->MakeFrame(xx->GetFrame());
+   evef->SetName("Bar Embedded Viewer");
+
+   gEve->GetViewers()->AddElement(v);
+   v->AddScene(gEve->GetEventScene());
+
+   slot = pack1->NewSlot();   
    TEveWindowPack* pack2 = slot->MakePack();
    pack2->FlipOrientation();
 
-   pack2->NewSlot();
-   pack2->NewSlot();
+   slot = pack2->NewSlot();
+   slot->StartEmbedding();
+   new TCanvas;
+   slot->StopEmbedding();
+
+   slot = pack2->NewSlot();
+   // SA viewer.
+   v = new TEveViewer("FooViewer");
+   slot->StartEmbedding();
+   v->SpawnGLViewer(gClient->GetRoot(), gEve->GetEditor());
+   v->AddScene(gEve->GetEventScene());   
+   slot->StopEmbedding("Foo StandAlone Viewer");
+   gEve->GetViewers()->AddElement(v);
 
    // ----------------------------------------------------------------
 

@@ -85,17 +85,17 @@ TEveCompositeFrame::TEveCompositeFrame(TGCompositeFrame* parent,
    fToggleBar = new TGTextButton(fTopFrame, "Hide");
    fToggleBar->ChangeOptions(kRaisedFrame);
    fToggleBar->Resize(40, topH);
-   fTopFrame->AddFrame(fToggleBar, new TGLayoutHints(kLHintsNormal, 0,0,0,0));//1,1,1,1));
+   fTopFrame->AddFrame(fToggleBar, new TGLayoutHints(kLHintsNormal));
 
    fTitleBar = new TGTextButton(fTopFrame, "Title Bar");
    fTitleBar->ChangeOptions(kRaisedFrame);
    fTitleBar->Resize(40, topH);
-   fTopFrame->AddFrame(fTitleBar, new TGLayoutHints(kLHintsNormal | kLHintsExpandX,  0,0,0,0));//1,1,1,1));
+   fTopFrame->AddFrame(fTitleBar, new TGLayoutHints(kLHintsNormal | kLHintsExpandX));
 
    fIconBar = new TGTextButton(fTopFrame, "Actions");
    fIconBar->ChangeOptions(kRaisedFrame);
    fIconBar->Resize(40, topH);
-   fTopFrame->AddFrame(fIconBar, new TGLayoutHints(kLHintsNormal,  0,0,0,0));//1,1,1,1));
+   fTopFrame->AddFrame(fIconBar, new TGLayoutHints(kLHintsNormal));
 
    AddFrame(fTopFrame, new TGLayoutHints(kLHintsNormal | kLHintsExpandX));
 
@@ -123,6 +123,12 @@ TEveCompositeFrame::TEveCompositeFrame(TGCompositeFrame* parent,
 
    // Layout for embedded windows.
    fEveWindowLH = new TGLayoutHints(kLHintsNormal | kLHintsExpandX | kLHintsExpandY);
+
+   // !!! The following should actually be done somewhere else, in
+   // some not-yet-existing static method of TEveWindow. Right now the
+   // eve-frame-creation code is still a little bit everywhere.
+   if (fEveParent == 0)
+      fEveParent = gEve->GetWindows();
 }
 
 //______________________________________________________________________________
@@ -220,10 +226,11 @@ void TEveCompositeFrame::AcquireEveWindow(TEveWindow* ew)
 }
 
 //______________________________________________________________________________
-TEveWindow* TEveCompositeFrame::RelinquishEveWindow()
+TEveWindow* TEveCompositeFrame::RelinquishEveWindow(Bool_t reparent)
 {
    // Remove window and decrease its deny-destroy count.
-   // Window's gui-frame is unmapped, removed and reparented to default-root.
+   // Window's gui-frame is unmapped, removed and, if reparent flag is
+   // true (default), reparented to default-root.
 
    TEveWindow* ex_ew = fEveWindow;
 
@@ -232,25 +239,12 @@ TEveWindow* TEveCompositeFrame::RelinquishEveWindow()
       TGFrame* gui_frame = fEveWindow->GetGUIFrame();
       gui_frame->UnmapWindow();
       RemoveFrame(gui_frame);
-      gui_frame->ReparentWindow(fClient->GetDefaultRoot());
+      if (reparent)
+         gui_frame->ReparentWindow(fClient->GetDefaultRoot());
       fEveWindow->DecDenyDestroy();
       fEveWindow = 0;
       fTitleBar->SetText(fgkEmptyFrameName);
    }
-
-   return ex_ew;
-}
-
-//______________________________________________________________________________
-TEveWindow* TEveCompositeFrame::ChangeEveWindow(TEveWindow* ew)
-{
-   // Replace current eve-window with the given one.
-   // Current GUI window is unmapped, removed and reparented to default-root.
-   // New GUI window is reparented to this, added and mapped.
-
-   TEveWindow* ex_ew = RelinquishEveWindow();
-
-   AcquireEveWindow(ew);
 
    return ex_ew;
 }
@@ -282,6 +276,29 @@ void TEveCompositeFrame::SetShowTitleBar(Bool_t show)
       HideFrame(fTopFrame);
       ShowFrame(fMiniBar);
    }
+}
+
+
+//______________________________________________________________________________
+void TEveCompositeFrame::ReplaceIconBox(TGFrame* icon_box)
+{
+   // Replace default action-button with the provided frame.
+   // The contents will erased with deep-cleanup so layout-hints should
+   // be owned by the passed frame.
+   // MapWindow is called on the passed frame but not map-subwindows.
+
+   if (fIconBar)
+   {
+      fTopFrame->RemoveFrame(fIconBar);
+      fIconBar->DestroyWindow();
+      delete fIconBar;
+      fIconBar = 0;
+   }
+
+   icon_box->ReparentWindow(fTopFrame);
+   fTopFrame->AddFrame(icon_box, new TGLayoutHints(kLHintsNormal));
+   fTopFrame->Layout();
+   icon_box->MapWindow();
 }
 
 
@@ -344,14 +361,14 @@ void TEveCompositeFrameInMainFrame::AcquireEveWindow(TEveWindow* ew)
 }
 
 //______________________________________________________________________________
-TEveWindow* TEveCompositeFrameInMainFrame::RelinquishEveWindow()
+TEveWindow* TEveCompositeFrameInMainFrame::RelinquishEveWindow(Bool_t reparent)
 {
    // Virtual from TEveCompositeFrame.
    // Set also main-frame-name to "<relinquished>".
 
    fMainFrame->SetWindowName(fgkEmptyFrameName);
 
-   return TEveCompositeFrame::RelinquishEveWindow();
+   return TEveCompositeFrame::RelinquishEveWindow(reparent);
 }
 
 //______________________________________________________________________________
@@ -491,7 +508,7 @@ void TEveCompositeFrameInTab::AcquireEveWindow(TEveWindow* ew)
 }
 
 //______________________________________________________________________________
-TEveWindow* TEveCompositeFrameInTab::RelinquishEveWindow()
+TEveWindow* TEveCompositeFrameInTab::RelinquishEveWindow(Bool_t reparent)
 {
    // Virtual from TEveCompositeFrame.
    // Set also tab-name to "<relinquished>" and call tab-layout.
@@ -500,7 +517,7 @@ TEveWindow* TEveCompositeFrameInTab::RelinquishEveWindow()
    fTab->GetTabTab(t)->SetText(new TGString(fgkEmptyFrameName));
    fTab->Layout();
 
-   return TEveCompositeFrame::RelinquishEveWindow();
+   return TEveCompositeFrame::RelinquishEveWindow(reparent);
 }
 
 //______________________________________________________________________________
@@ -572,6 +589,18 @@ TEveWindow::~TEveWindow()
 //==============================================================================
 
 //______________________________________________________________________________
+void TEveWindow::PopulateEmptyFrame(TEveCompositeFrame* ef)
+{
+   // Populate given frame-slot - intended for initial population
+   // of a new slot or low-level window-swapping.
+   // No layout or window-mapping is done.
+
+   ef->fEveParent->AddElement(this);
+   ef->AcquireEveWindow(this);
+   fEveFrame = ef;
+}
+
+//______________________________________________________________________________
 void TEveWindow::SwapWindow(TEveWindow* w)
 {
    // Swap frames with the given window.
@@ -601,6 +630,25 @@ void TEveWindow::SwapWindowWithCurrent()
 }
 
 //______________________________________________________________________________
+void TEveWindow::ReplaceWindow(TEveWindow* w)
+{
+   // Replace this window with the passed one.
+   // Eve parentship is properly handled.
+   // This will most likely lead to the destruction of this window.
+   // Layout is called on the frame.
+
+   fEveFrame->RelinquishEveWindow();
+
+   fEveFrame->fEveParent->AddElement(w);
+   fEveFrame->AcquireEveWindow(w);
+   w->fEveFrame = fEveFrame;
+
+   fEveFrame->fEveParent->RemoveElement(this);
+
+   w->fEveFrame->Layout();
+}
+
+//______________________________________________________________________________
 void TEveWindow::DestroyWindow()
 {
    // Destroy eve-window - replace it with an empty frame-slot.
@@ -610,9 +658,14 @@ void TEveWindow::DestroyWindow()
    if (fEveFrame != 0 && fDenyDestroy == 1)
    {
       TEveWindowSlot* ew_slot = TEveWindow::CreateDefaultWindowSlot();
+
       Bool_t dozrc = fDestroyOnZeroRefCnt;
       fDestroyOnZeroRefCnt = kFALSE;
-      ew_slot->PopulateSlot(fEveFrame);
+
+      fEveFrame->RelinquishEveWindow();
+      ew_slot->PopulateEmptyFrame(fEveFrame);
+      fEveFrame->fEveParent->RemoveElement(this);
+
       fDestroyOnZeroRefCnt = dozrc;
       fEveFrame = 0;
    }
@@ -646,45 +699,6 @@ void TEveWindow::ClearEveFrame()
    // In particular, this happens when TRootBrowser closes a tab.
 
    fEveFrame = 0;
-}
-
-//______________________________________________________________________________
-void TEveWindow::PopulateSlot(TEveCompositeFrame* ef)
-{
-   // Populate given frame-slot.
-   //
-   // This function does all the eve-element side management of
-   // removing the old eve-window from the eve-window-parent of the
-   // frame-slot and adding a new one.
-   //
-   // This will be replaced with function: SwapWindow(TEveWindow* w).
-
-   TEveElement* my_ex_parent = fEveFrame ? fEveFrame->fEveParent : 0;
-
-   TEveWindow* ex_win = ef->fEveWindow;
-
-   if (ef->fEveParent)
-   {
-      if (ex_win) ef->fEveParent->RemoveElement(ex_win);
-      ef->fEveParent->AddElement(this);
-   }
-   else
-   {
-      if (ex_win) gEve->GetWindows()->RemoveElement(ex_win);
-      gEve->GetWindows()->AddElement(this);
-   }
-
-   if (my_ex_parent)
-   {
-      my_ex_parent->RemoveElement(this);
-   }
-
-   if (ex_win)
-      ex_win->fEveFrame = 0;
-   ef->ChangeEveWindow(this);
-   fEveFrame = ef;
-
-   fEveFrame->Layout();
 }
 
 //______________________________________________________________________________
@@ -733,6 +747,25 @@ void TEveWindow::SetCurrent(Bool_t curr)
    fEveFrame->SetCurrent(curr);
 }
 
+//______________________________________________________________________________
+Bool_t TEveWindow::IsAncestorOf(TEveWindow* win)
+{
+   // Returns true if this is an ancestor of win.
+
+   TEveWindow* parent = dynamic_cast<TEveWindow*>(win->fEveFrame->fEveParent);
+   if (parent)
+   {
+      if (parent == this)
+         return kTRUE;
+      else
+         return IsAncestorOf(parent);
+   }
+   else
+   {
+      return kFALSE;
+   }
+}
+
 //------------------------------------------------------------------------------
 // Static helper functions.
 //------------------------------------------------------------------------------
@@ -759,11 +792,11 @@ TEveWindowSlot* TEveWindow::CreateWindowMainFrame(TEveWindow* eve_parent)
    TEveCompositeFrameInMainFrame *slot = new TEveCompositeFrameInMainFrame
       (mf, eve_parent, mf);
 
+   TEveWindowSlot* ew_slot = TEveWindow::CreateDefaultWindowSlot();
+   ew_slot->PopulateEmptyFrame(slot);
+
    mf->AddFrame(slot, new TGLayoutHints(kLHintsNormal | kLHintsExpandX | kLHintsExpandY));
    slot->MapWindow();
-
-   TEveWindowSlot* ew_slot = TEveWindow::CreateDefaultWindowSlot();
-   ew_slot->PopulateSlot(slot);
 
    mf->Layout();
    mf->MapWindow();
@@ -783,12 +816,14 @@ TEveWindowSlot* TEveWindow::CreateWindowInTab(TGTab* tab, TEveWindow* eve_parent
    TEveCompositeFrameInTab *slot = new TEveCompositeFrameInTab(parent, eve_parent, tab);
 
    TEveWindowSlot* ew_slot = TEveWindow::CreateDefaultWindowSlot();
-   ew_slot->PopulateSlot(slot);
+
+   ew_slot->PopulateEmptyFrame(slot);
 
    parent->AddFrame(slot, new TGLayoutHints(kLHintsNormal | kLHintsExpandX | kLHintsExpandY));
-   slot->MapWindow();
 
    tab->Layout();
+
+   slot->MapWindow();
 
    return ew_slot;
 }
@@ -803,12 +838,35 @@ void TEveWindow::SwapWindows(TEveWindow* w1, TEveWindow* w2)
    static const TEveException eh("TEveWindow::SwapWindows ");
 
    if (w1 == 0 || w2 == 0)
-      throw eh + "Called with null argument.";
+      throw eh + "Called with null window.";
 
    if (w1 == w2)
-      throw eh + "Arguments are equal ... nothing to change.";
+      throw eh + "Windows are equal ... nothing to change.";
 
-   ::Warning("TEveWindow::SwapWindows", "Implementation in progress!"); // !!!!
+   if (w1->IsAncestorOf(w2) || w2->IsAncestorOf(w1))
+      throw eh + "Windows are in direct ancestry.";
+
+   TEveCompositeFrame *f1 = w1->fEveFrame,  *f2 = w2->fEveFrame;
+   TEveElement        *p1 = f1->fEveParent, *p2 = f2->fEveParent;
+
+   if (p1 != p2)
+   {
+      p1->AddElement(w2);
+      p2->AddElement(w1);
+   }
+
+   f1->RelinquishEveWindow(kFALSE);
+   f2->RelinquishEveWindow(kFALSE);
+   f1->AcquireEveWindow(w2); w2->fEveFrame = f1;
+   f2->AcquireEveWindow(w1); w1->fEveFrame = f2;
+
+   if (p1 != p2)
+   {
+      p1->RemoveElement(w1);
+      p2->RemoveElement(w2);
+   }
+
+   f1->Layout(); f2->Layout();
 }
 
 
@@ -880,7 +938,7 @@ TEveWindowPack* TEveWindowSlot::MakePack()
    TEveWindowPack* eve_pack = new TEveWindowPack
       (pack, "Pack", "Window container for horizontal and vertical stacking.");
 
-   eve_pack->PopulateSlot(fEveFrame);
+   ReplaceWindow(eve_pack);
 
    return eve_pack;
 }
@@ -893,16 +951,49 @@ TEveWindowTab* TEveWindowSlot::MakeTab()
 
    TGTab* tab = new TGTab();
 
-   TEveWindowTab* eve_tab= new TEveWindowTab
+   TEveWindowTab* eve_tab = new TEveWindowTab
       (tab, "Tab", "Window container for horizontal and vertical stacking.");
 
-   eve_tab->PopulateSlot(fEveFrame);
+   ReplaceWindow(eve_tab);
 
    return eve_tab;
 }
 
 //______________________________________________________________________________
-void TEveWindowSlot::StartEmbedding()
+TEveWindowFrame* TEveWindowSlot::MakeFrame()
+{
+   // An eve-window-frame with an empty composite-frame is created in
+   // place of this window-slot. The cmposite-frame's cleanup policy is
+   // set to kLocalCleanup.
+   // This window-slot will auto-destruct.
+
+   TGCompositeFrame* frame = new TGCompositeFrame();
+   frame->SetCleanup(kLocalCleanup);
+
+   TEveWindowFrame* eve_frame = new TEveWindowFrame
+      (frame, "Composite frame", "");
+
+   ReplaceWindow(eve_frame);
+
+   return eve_frame;
+}
+
+//______________________________________________________________________________
+TEveWindowFrame* TEveWindowSlot::MakeFrame(TGFrame* frame)
+{
+   // An eve-window-frame is created and frame is passed into it.
+   // This window-slot will auto-destruct.
+
+   TEveWindowFrame* eve_frame = new TEveWindowFrame
+      (frame, "External frame", "");
+
+   ReplaceWindow(eve_frame);
+
+   return eve_frame;
+}
+
+//______________________________________________________________________________
+TGCompositeFrame* TEveWindowSlot::StartEmbedding()
 {
    // Start embedding a window that will replace the current slot.
    // It is expected that a main-frame will be created and then
@@ -914,12 +1005,13 @@ void TEveWindowSlot::StartEmbedding()
       throw eh + "Already embedding.";
 
    fEmbedBuffer = new TGCompositeFrame(gClient->GetDefaultRoot());
-   fEmbedBuffer->SetCleanup(kLocalCleanup);
    fEmbedBuffer->SetEditable(kTRUE);
+
+   return fEmbedBuffer;
 }
 
 //______________________________________________________________________________
-TEveWindowFrame* TEveWindowSlot::StopEmbedding()
+TEveWindowFrame* TEveWindowSlot::StopEmbedding(const Text_t* name)
 {
    // An embedded window is created in place of this window-slot.
    // This window-slot will auto-destruct.
@@ -956,10 +1048,14 @@ TEveWindowFrame* TEveWindowSlot::StopEmbedding()
    TGMainFrame *mf = dynamic_cast<TGMainFrame*>(f);
    assert(mf != 0);
 
-   TEveWindowFrame* eve_frame= new TEveWindowFrame
+   if (name) {
+      mf->SetWindowName(name);
+   }
+
+   TEveWindowFrame* eve_frame = new TEveWindowFrame
       (f, mf->GetWindowName(), mf->ClassName());
 
-   eve_frame->PopulateSlot(fEveFrame);
+   ReplaceWindow(eve_frame);
 
    return eve_frame;
 }
@@ -1034,7 +1130,7 @@ TEveWindowSlot* TEveWindowPack::NewSlot()
    TEveCompositeFrame* slot = new TEveCompositeFrameInPack(fPack, this, fPack);
 
    TEveWindowSlot* ew_slot = TEveWindow::CreateDefaultWindowSlot();
-   ew_slot->PopulateSlot(slot);
+   ew_slot->PopulateEmptyFrame(slot);
 
    fPack->AddFrame(slot);
    slot->MapWindow();

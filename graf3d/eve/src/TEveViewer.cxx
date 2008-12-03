@@ -17,6 +17,7 @@
 #include "TEveSelection.h"
 
 #include "TGLSAViewer.h"
+#include "TGLEmbeddedViewer.h"
 #include "TGLScenePad.h"
 
 #include "TGLPhysicalShape.h" // For handling OnMouseIdle signal
@@ -75,6 +76,16 @@ void TEveViewer::SpawnGLViewer(const TGWindow* parent, TGedEditor* ged)
 
    TGLSAViewer* v = new TGLSAViewer(parent, 0, ged);
    v->ToggleEditObject();
+   SetGLViewer(v);
+}
+
+//______________________________________________________________________________
+void TEveViewer::SpawnGLEmbeddedViewer(const TGWindow* parent, Int_t border)
+{
+   // Spawn new GLViewer and adopt it.
+
+   TGLEmbeddedViewer* v = new TGLEmbeddedViewer(parent, 0, border);
+   // v->ToggleEditObject();
    SetGLViewer(v);
 }
 

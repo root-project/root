@@ -274,12 +274,12 @@ void TGLSAViewer::CreateMenus()
 {
    //File/Camera/Help menus.
 
-   fFileMenu = new TGPopupMenu(fFrame->GetClient()->GetRoot());
+   fFileMenu = new TGPopupMenu(fFrame->GetClient()->GetDefaultRoot());
    fFileMenu->AddEntry("&Edit Object", kGLEditObject);
    fFileMenu->AddSeparator();
    fFileMenu->AddEntry("&Close Viewer", kGLCloseViewer);
    fFileMenu->AddSeparator();
-   fFileSaveMenu = new TGPopupMenu(fFrame->GetClient()->GetRoot());
+   fFileSaveMenu = new TGPopupMenu(fFrame->GetClient()->GetDefaultRoot());
    fFileSaveMenu->AddEntry("viewer.&eps", kGLSaveEPS);
    fFileSaveMenu->AddEntry("viewer.&pdf", kGLSavePDF);
    fFileSaveMenu->AddEntry("viewer.&gif", kGLSaveGIF);
@@ -292,7 +292,7 @@ void TGLSAViewer::CreateMenus()
    fFileMenu->AddEntry("&Quit ROOT", kGLQuitROOT);
    fFileMenu->Associate(fFrame);
 
-   fCameraMenu = new TGPopupMenu(fFrame->GetClient()->GetRoot());
+   fCameraMenu = new TGPopupMenu(fFrame->GetClient()->GetDefaultRoot());
    fCameraMenu->AddEntry("Perspective (Floor XOZ)", kGLPerspXOZ);
    fCameraMenu->AddEntry("Perspective (Floor YOZ)", kGLPerspYOZ);
    fCameraMenu->AddEntry("Perspective (Floor XOY)", kGLPerspXOY);
@@ -307,7 +307,7 @@ void TGLSAViewer::CreateMenus()
    fCameraMenu->AddEntry("Ortho allow dolly",  kGLOrthoDolly);
    fCameraMenu->Associate(fFrame);
 
-   fHelpMenu = new TGPopupMenu(fFrame->GetClient()->GetRoot());
+   fHelpMenu = new TGPopupMenu(fFrame->GetClient()->GetDefaultRoot());
    fHelpMenu->AddEntry("Help on GL Viewer...", kGLHelpViewer);
    fHelpMenu->AddSeparator();
    fHelpMenu->AddEntry("&About ROOT...", kGLHelpAbout);
