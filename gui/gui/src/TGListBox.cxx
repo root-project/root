@@ -906,6 +906,10 @@ Bool_t TGLBContainer::HandleButton(Event_t *event)
    }
    if (fChangeStatus || (last != fLastActive)) 
       ClearViewPort();
+   // trick to avoid mouse move events between the mouse click
+   // and the unmapping...
+   if (fListBox->GetParent()->InheritsFrom("TGComboBoxPopup"))
+      fListBox->GetContainer()->RemoveInput(kPointerMotionMask);
    return kTRUE;
 }
 
