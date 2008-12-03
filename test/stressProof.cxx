@@ -378,10 +378,6 @@ void stressProof(const char *url, Int_t nwrks,
       printf("*  Test for dataset handling (#4, #8) skipped                   **\n");
       printf("******************************************************************\n");
    }
-   if (gDynamicStartup) {
-      printf("*  Dynamic per-job worker startup ON (test 11 skipped)          **\n");
-      printf("******************************************************************\n");
-   }
    if (!strcmp(url,"lite")) {
       printf("*  PROOF-Lite session (test 12 skipped)                         **\n");
       printf("******************************************************************\n");
@@ -1094,10 +1090,6 @@ Int_t PT_InputData(void *)
       printf("\n >>> Test failure: no PROOF session found\n");
       return -1;
    }
-   // Not yet supported for PROOF-Lite
-   if (gDynamicStartup) {
-      return 1;
-   }
    PutPoint();
 
    // Create the test information to be send via input and retrieved
@@ -1181,22 +1173,22 @@ Int_t PT_InputData(void *)
    }
 
    // Test how many workers got everything successfully
-   Int_t nw = gProof->GetParallel();
+   Int_t nw = (Int_t) stat->GetBinContent(1);
    PutPoint();
 
-   if (TMath::Abs(stat->GetBinContent(1) - nw) > .1) {
-      printf("\n >>> Test failure: histo 'h1' not correctly received on all workers (%.0f/%d)\n",
-             stat->GetBinContent(1), nw);
-      return -1;
-   }
    if (TMath::Abs(stat->GetBinContent(2) - nw) > .1) {
-      printf("\n >>> Test failure: histo 'h2' not correctly received on all workers (%.0f/%d)\n",
+      printf("\n >>> Test failure: histo 'h1' not correctly received on all workers (%.0f/%d)\n",
              stat->GetBinContent(2), nw);
       return -1;
    }
    if (TMath::Abs(stat->GetBinContent(3) - nw) > .1) {
-      printf("\n >>> Test failure: test input object not correctly received on all workers (%.0f/%d)\n",
+      printf("\n >>> Test failure: histo 'h2' not correctly received on all workers (%.0f/%d)\n",
              stat->GetBinContent(3), nw);
+      return -1;
+   }
+   if (TMath::Abs(stat->GetBinContent(4) - nw) > .1) {
+      printf("\n >>> Test failure: test input object not correctly received on all workers (%.0f/%d)\n",
+             stat->GetBinContent(4), nw);
       return -1;
    }
 

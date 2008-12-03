@@ -80,6 +80,9 @@ void ProofTests::SlaveBegin(TTree * /*tree*/)
    fStat = new TH1I("TestStat", "Test results", 20, .5, 20.5);
    fOutput->Add(fStat);
 
+   // We were started
+   fStat->Fill(1.);
+
    // Depends on the test
    if (fTestType == 0) {
       // Retrieve objects from the input list and copy them to the output
@@ -94,7 +97,7 @@ void ProofTests::SlaveBegin(TTree * /*tree*/)
             if (h1avg && h1rms) {
                if (TMath::Abs(h1avg->GetVal() - h1->GetMean()) < 0.0001) {
                   if (TMath::Abs(h1rms->GetVal() - h1->GetRMS()) < 0.0001) {
-                     fStat->Fill(1.);
+                     fStat->Fill(2.);
                   }
                }
             } else {
@@ -117,7 +120,7 @@ void ProofTests::SlaveBegin(TTree * /*tree*/)
             if (h2avg && h2rms) {
                if (TMath::Abs(h2avg->GetVal() - h2->GetMean()) < 0.0001) {
                   if (TMath::Abs(h2rms->GetVal() - h2->GetRMS()) < 0.0001) {
-                     fStat->Fill(2.);
+                     fStat->Fill(3.);
                   }
                }
             } else {
@@ -132,7 +135,7 @@ void ProofTests::SlaveBegin(TTree * /*tree*/)
 
       TNamed *iob = dynamic_cast<TNamed*>(fInput->FindObject("InputObject"));
       if (iob) {
-         fStat->Fill(3.);
+         fStat->Fill(4.);
       } else {
          Info("BeginSlave", "input histo 'InputObject' not found!");
       }
