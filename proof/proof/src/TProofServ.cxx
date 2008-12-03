@@ -1070,7 +1070,7 @@ void TProofServ::HandleSocketInput()
    if (fProof) {
       // If something wrong went on during processing and we do not have
       // any worker anymore, we shutdown this session
-      if (parallel != IsParallel()) {
+      if (rc == 0 && parallel != IsParallel()) {
          SendAsynMessage(" *** No workers left: cannot continue! Terminating ... *** ");
          Terminate(0);
       }
@@ -1086,6 +1086,9 @@ void TProofServ::HandleSocketInput()
 Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
 {
    // Process input coming from the client or from the master server.
+   // Returns -1 if the message could not be processed, <-1 if something went
+   // wrong. Returns 1 if the action may have changed the parallel state.
+   // Returns 0 otherwise
 
    static TStopwatch timer;
    char str[2048];
@@ -1419,6 +1422,7 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
                   (*mess) >> random;
                fProof->SetParallel(nodes, random);
                SendLogFile();
+               rc = 1;
             }
          } else {
             rc = -1;
@@ -4556,10 +4560,16 @@ Int_t TProofServ::CopyFromCache(const char *macro, Bool_t cpbin)
    if (!locked) fCacheLock->Lock();
 
    // Get source from the cache
+   TString srcname = name;
+   Int_t dot = srcname.Last('.');
+   if (dot != kNPOS) {
+      srcname.Remove(dot);
+      srcname += ".*";
+   }
    PDB(kCache,1)
       Info("CopyFromCache",
-           "retrieving %s/%s from cache", fCacheDir.Data(), name.Data());
-   gSystem->Exec(Form("%s %s/%s .", kCP, fCacheDir.Data(), name.Data()));
+           "retrieving %s/%s from cache", fCacheDir.Data(), srcname.Data());
+   gSystem->Exec(Form("%s %s/%s .", kCP, fCacheDir.Data(), srcname.Data()));
 
    // Check if we are done
    if (!cpbin) {
@@ -4570,7 +4580,7 @@ Int_t TProofServ::CopyFromCache(const char *macro, Bool_t cpbin)
 
    // Create binary name template
    TString binname = name;
-   Int_t dot = binname.Last('.');
+   dot = binname.Last('.');
    if (dot != kNPOS) {
       binname.Replace(dot,1,"_");
       binname += ".";

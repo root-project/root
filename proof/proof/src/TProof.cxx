@@ -1287,7 +1287,7 @@ Bool_t TProof::StartSlaves(Bool_t parallel, Bool_t attach)
    } else {
 
       // create master server
-      fprintf(stderr,"Starting master: opening connection ... \n");
+      Printf("Starting master: opening connection ... ");
       TSlave *slave = CreateSubmaster(fUrl.GetUrl(), "0", "master", 0);
 
       if (slave->IsValid()) {
@@ -1308,7 +1308,7 @@ Bool_t TProof::StartSlaves(Bool_t parallel, Bool_t attach)
             if (slave->IsValid()) {
 
                // Notify
-               fprintf(stderr,"Starting master: OK                                     \n");
+               Printf("Starting master: OK                                     ");
                StartupMessage("Master started", kTRUE, 1, 1);
 
                // check protocol compatibility
@@ -1366,13 +1366,13 @@ Bool_t TProof::StartSlaves(Bool_t parallel, Bool_t attach)
                }
             } else {
                // Notify
-               fprintf(stderr,"Starting master: failure\n");
+               Printf("Starting master: failure");
             }
          } else {
 
             // Notify
             if (attach) {
-               fprintf(stderr,"Starting master: OK                                     \n");
+               Printf("Starting master: OK                                     ");
                StartupMessage("Master attached", kTRUE, 1, 1);
 
                if (!gROOT->IsBatch()) {
@@ -1382,7 +1382,7 @@ Bool_t TProof::StartSlaves(Bool_t parallel, Bool_t attach)
                         fProgressDialog = 0;
                }
             } else {
-               fprintf(stderr,"Starting manager: OK                                    \n");
+               Printf("Starting manager: OK                                    ");
                StartupMessage("Manager started", kTRUE, 1, 1);
             }
 
@@ -2347,7 +2347,7 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout, Int_t endtype)
       if (s && s != (TSocket *)(-1)) {
          // Get and analyse the info it did receive
          rc = CollectInputFrom(s, endtype);
-         if (rc  == 1) {
+         if (rc  == 1 || (rc == 2 && !savedMonitor)) {
             // Deactivate it if we are done with it
             mon->DeActivate(s);
             if (gDebug > 2)
@@ -5990,12 +5990,12 @@ Int_t TProof::Load(const char *macro, Bool_t notOnClient)
 
       // Send files now; the md5 check is run here; see SendFile for more
       // details.
-      if (SendFile(implname) == -1) {
+      if (SendFile(implname, kAscii | kForward , "cache") == -1) {
          Info("Load", "problems sending implementation file %s", implname.Data());
          return -1;
       }
       if (hasHeader)
-         if (SendFile(headname) == -1) {
+         if (SendFile(headname, kAscii | kForward , "cache") == -1) {
             Info("Load", "problems sending header file %s", headname.Data());
             return -1;
          }
