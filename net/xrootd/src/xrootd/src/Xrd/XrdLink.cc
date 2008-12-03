@@ -13,6 +13,7 @@
 const char *XrdLinkCVSID = "$Id$";
 
 #include <poll.h>
+#include <signal.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
@@ -118,6 +119,8 @@ extern XrdOucTrace     XrdTrace;
 #define XRDLINK_FREE 0x00
 #define XRDLINK_USED 0x01
 #define XRDLINK_IDLE 0x02
+
+pthread_t theThread;
   
 /******************************************************************************/
 /*                           C o n s t r u c t o r                            */
@@ -153,6 +156,7 @@ void XrdLink::Reset()
   isEnabled= 0;
   isIdle   = 0;
   inQ      = 0;
+  tBound   = 0;
   BytesOut = BytesIn = BytesOutTot = BytesInTot = 0;
   doPost   = 0;
   LockReads= 0;
@@ -245,6 +249,39 @@ XrdLink *XrdLink::Alloc(XrdNetPeer &Peer, int opts)
 }
   
 /******************************************************************************/
+/*                                  B i n d                                   */
+/******************************************************************************/
+  
+void XrdLink::Bind(pthread_t tid)
+{
+
+// For bind operations, it's quite simple
+//
+   TID = tid; 
+   tBound = 1; 
+}
+
+/******************************************************************************/
+
+void XrdLink::Bind()
+{
+   pthread_t curTID = (tBound ? TID : XrdSysThread::ID());
+
+// For unbind operations, we need to do some additional work. This is specific
+// to Linux. See the discussion under defered close in the Close() method.
+//
+   if (tBound)
+      {tBound = 0;
+#ifdef __linux__
+       if (!XrdSysThread::Same(curTID, XrdSysThread::ID()))
+          {XrdSysThread::Signal(curTID, SIGSTOP);
+           XrdSysThread::Signal(curTID, SIGCONT);
+          }
+#endif
+      }
+}
+
+/******************************************************************************/
 /*                                C l i e n t                                 */
 /******************************************************************************/
   
@@ -273,13 +310,23 @@ int XrdLink::Close(int defer)
 
 // If a defer close is requested, we can close the descriptor but we must
 // keep the slot number to prevent a new client getting the same fd number.
+// Linux is peculiar in that any in-progress operations will remain in that
+// state even after the FD is closed unless there is some activity either on
+// the connection or an event occurs that causes an operation restart. We
+// accomplish this in Linux by stopping and then starting the thread that may
+// be bound to this link (see Bind()). Ugly, but that's what happens in Linux.
 //
    opMutex.Lock();
    if (defer)
-      {TRACE(DEBUG, "Defered close " <<ID <<" FD=" <<FD);
+      {TRACE(DEBUG, "Closing FD only " <<ID <<" FD=" <<FD);
        if (FD > 1)
-          {fd = FD; FD = -FD; Instance = 0;
-           if (!KeepFD) dup2(devNull, fd);
+          {fd = FD; FD = -FD; csec = Instance; Instance = 0;
+           if (!KeepFD)
+              {if (dup2(devNull, fd) < 0)
+                  {FD = fd; Instance = csec;
+                   XrdLog.Emsg("Link",errno,"close FD for",ID);
+                  } else Bind();
+              }
           }
        opMutex.UnLock();
        return 0;
@@ -576,6 +623,7 @@ int XrdLink::RecvAll(char *Buff, int Blen)
 //
    if (LockReads) rdMutex.Lock();
    isIdle = 0;
+   theThread = pthread_self();
    do {rlen = recv(FD,Buff,Blen,MSG_WAITALL);} while(rlen < 0 && errno == EINTR);
    if (LockReads) rdMutex.UnLock();
 

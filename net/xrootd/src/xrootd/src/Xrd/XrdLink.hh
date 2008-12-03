@@ -49,6 +49,9 @@ friend class XrdPollE;
 
 static XrdLink *Alloc(XrdNetPeer &Peer, int opts=0);
 
+void          Bind();
+void          Bind(pthread_t tid);
+
 int           Client(char *buff, int blen);
 
 int           Close(int defer=0);
@@ -192,6 +195,7 @@ char                Uname[24];  // Uname and Lname must be adjacent!
 char                Lname[232];
 char               *HostName;
 int                 HNlen;
+pthread_t           TID;
 
 XrdSysMutex         opMutex;
 XrdSysMutex         rdMutex;
@@ -214,5 +218,6 @@ char                KeepFD;
 char                isEnabled;
 char                isIdle;
 char                inQ;
+char                tBound;
 };
 #endif

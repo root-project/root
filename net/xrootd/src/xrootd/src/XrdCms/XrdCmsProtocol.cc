@@ -738,6 +738,10 @@ void XrdCmsProtocol::Dispatch()
    const char *myArgs, *myArgt;
    char        buff[8];
 
+// Dispatch runs with the current thread bound to the link.
+//
+   Link->Bind(XrdSysThread::ID());
+
 // Read in the request header
 //
 do{if (Link->RecvAll((char *)&Data->Request, sizeof(Data->Request)) < 0) return;

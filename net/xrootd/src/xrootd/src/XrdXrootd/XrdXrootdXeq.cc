@@ -1056,6 +1056,7 @@ int XrdXrootdProtocol::do_Prepare()
    XrdOucTokenizer pathlist(argp->buff);
    XrdOucTList *pFirst=0, *pP, *pLast = 0;
    XrdOucTList *oFirst=0, *oP, *oLast = 0;
+   XrdOucTListHelper pHelp(&pFirst), oHelp(&oFirst);
    XrdXrootdPrepArgs pargs(0, 1);
    XrdSfsPrep fsprep;
 

@@ -29,4 +29,17 @@ int          val;
 
             ~XrdOucTList() {if (text) free(text);}
 };
+
+class XrdOucTListHelper
+{
+public:
+
+XrdOucTList **Anchor;
+
+      XrdOucTListHelper(XrdOucTList **p) : Anchor(p) {}
+     ~XrdOucTListHelper() {XrdOucTList *tp;
+                           while((tp = *Anchor))
+                                {*Anchor = tp->next; delete tp;}
+                          }
+};
 #endif

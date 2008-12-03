@@ -335,6 +335,9 @@ static unsigned long Num(void)
 static int          Run(pthread_t *, void *(*proc)(void *), void *arg, 
                         int opts=0, const char *desc = 0);
 
+static int          Same(pthread_t t1, pthread_t t2)
+                        {return pthread_equal(t1, t2);}
+
 static void         setDebug(XrdSysError *erp) {eDest = erp;}
 
 static void         setStackSize(size_t stsz) {stackSize = stsz;}
