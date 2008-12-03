@@ -97,7 +97,7 @@ extern struct dirent *readdir(DIR *dir);
 #if defined(G__KCC) || defined(__KCC)
 extern void seekdir(DIR* dir,off_t loc);
 
-#elif defined(G__alpha) || defined(__alpha)
+#elif (defined(G__alpha) || defined(__alpha)) && !(defined(G__LINUX) || defined(__linux__))
 
 extern int seekdir(DIR *, long);
 
@@ -174,7 +174,8 @@ int uname(struct utsname *buf);
  * unistd.h
  ********************************************************************/
 extern int close(int fd);
-#if (defined(G__alpha) || defined(__alpha)) && !defined(G__GNUC)
+#if (defined(G__alpha) || defined(__alpha)) && \
+  !(defined(G__GNUC) || defined(G__LINUX) || defined(__linux__))
 extern int     read();
 extern int     write();
 #else
@@ -273,7 +274,7 @@ extern int setpgrp(pid_t _pid,pid_t _pgrp);
 #endif
 #elif defined(G__SUN) || defined(__sun)
 extern long setpgrp(void);
-#elif defined(G__FBSD)||defined(__FreeBSD__)||defined(G__OBSD)||defined(__OpenBSD__)||((defined(G__alpha)||defined(__alpha))&&defined(G__GNUC))||((defined(G__alpha)||defined(__alpha))&&defined(G__GNUC))
+#elif defined(G__FBSD)||defined(__FreeBSD__)||defined(G__OBSD)||defined(__OpenBSD__)||((defined(G__alpha)||defined(__alpha))&&(defined(G__GNUC) || defined(G__LINUX) || defined(__linux__)))||((defined(G__alpha)||defined(__alpha))&&defined(G__GNUC))
 extern int setpgrp(pid_t _pid, pid_t _pgrp);
 #elif defined(G__KCC) || defined(__KCC)
 extern pid_t setpgrp(void);
