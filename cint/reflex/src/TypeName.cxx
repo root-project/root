@@ -115,9 +115,10 @@ Reflex::TypeName::ByName( const std::string & key ) {
 // Lookup a type by name.
    size_t pos =  key.substr(0,2) == "::" ?  2 : 0;
    const std::string & k = key.substr(pos);
-   Name2Type_t::iterator it = sTypes().find(&k);
-   if( it != sTypes().end() ) return it->second->ThisType();
-   else                       return Dummy::Type();
+   const Name2Type_t& n2t = sTypes();
+   Name2Type_t::const_iterator it = n2t.find(&k);
+   if( it != n2t.end() ) return it->second->ThisType();
+   else                  return Dummy::Type();
 }
 
 
@@ -126,9 +127,10 @@ Reflex::Type
 Reflex::TypeName::ByTypeInfo( const std::type_info & ti ) {
 //-------------------------------------------------------------------------------
 // Lookup a type by type_info.
-   TypeId2Type_t::iterator it = sTypeInfos().find(ti.name());
-   if( it != sTypeInfos().end() ) return it->second->ThisType();
-   else                           return Dummy::Type();
+   const TypeId2Type_t& id2t = sTypeInfos();
+   TypeId2Type_t::const_iterator it = id2t.find(ti.name());
+   if( it != id2t.end() ) return it->second->ThisType();
+   else                   return Dummy::Type();
 }
 
 
