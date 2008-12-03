@@ -8124,6 +8124,14 @@ void Cint::Internal::G__specify_link(int link_stub)
       else {
          fsetpos(G__ifile.fp, &pos);
          c = G__fgetstream_template(buf, ";\n\r<>");
+         unsigned int buflen = strlen(buf) - 1;
+         if (buf[0]=='"' && buf[buflen]=='"') {
+            // Skip the quotes (that allowed us to keep the spaces.
+            for(unsigned int bufind = 1; bufind < buflen; ++bufind) {
+               buf[bufind-1] = buf[bufind];
+            }
+            buf[buflen-1]='\0';
+         }
       }
       if (
          0 == tagflag &&
