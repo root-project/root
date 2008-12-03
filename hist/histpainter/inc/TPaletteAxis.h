@@ -45,11 +45,13 @@ public:
    TPaletteAxis(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2, TH1 *h);
    TPaletteAxis(const TPaletteAxis &palette);
    virtual ~TPaletteAxis();
-   void  Copy(TObject &palette) const;
+   void Copy(TObject &palette) const;
+
    virtual Int_t DistancetoPrimitive(Int_t px, Int_t py);
    virtual void  ExecuteEvent(Int_t event, Int_t px, Int_t py);
-   TGaxis *GetAxis() {return &fAxis;}
-   Option_t   *GetName() const {return fName.Data();}
+   TGaxis       *GetAxis() {return &fAxis;}
+   Int_t         GetBinColor(Int_t i, Int_t j);
+   Option_t     *GetName() const {return fName.Data();}
    virtual char *GetObjectInfo(Int_t px, Int_t py) const;
    virtual void  Paint(Option_t *option="");
    virtual void  SavePrimitive(ostream &out, Option_t *option = "");
