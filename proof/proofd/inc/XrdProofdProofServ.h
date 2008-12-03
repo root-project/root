@@ -113,7 +113,7 @@ public:
    int                 IdleTime();
    inline short int    ID() const { XrdSysMutexHelper mhp(fMutex); return fID; }
    inline bool         IsShutdown() const { XrdSysMutexHelper mhp(fMutex); return fIsShutdown; }
-   bool                IsValid();
+   inline bool         IsValid() const { XrdSysMutexHelper mhp(fMutex); return fIsValid; }
    inline bool         Match(short int id) const { XrdSysMutexHelper mhp(fMutex); return (id == fID); }
    inline XrdSysRecMutex *Mutex() const { return fMutex; }
    inline const char  *Ordinal() const { XrdSysMutexHelper mhp(fMutex); return fOrdinal.c_str(); }
@@ -165,6 +165,7 @@ public:
                       { XrdSysMutexHelper mhp(fMutex); return (std::list<XrdProofWorker *> *)&fWorkers; }
 
    int                 CreateUNIXSock(XrdSysError *edest);
+   void                DeleteUNIXSock();
    XrdNet             *UNIXSock() const { return fUNIXSock; }
    const char         *UNIXSockPath() const { return fUNIXSockPath.c_str(); }
 

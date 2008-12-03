@@ -44,6 +44,9 @@ class XrdROOTMgr;
 class XrdScheduler;
 class XrdSysLogger;
 
+#define PSMMAXCNTS  3
+#define PSMCNTOK(t) (t >= 0 && t < PSMMAXCNTS)
+
 class XpdClientSessions {
 public:
    XrdSysRecMutex   fMutex;
@@ -87,6 +90,7 @@ class XrdProofdProofServMgr : public XrdProofdConfig {
    XrdSysRecMutex     fMutex;
    XrdSysRecMutex     fRecoverMutex;
    XrdSysSemWait      fForkSem;   // To serialize fork requests
+   XrdSysSemWait      fProcessSem;   // To serialize process requests
    XrdScheduler      *fSched;     // System scheduler
    XrdSysLogger      *fLogger;    // Error logger
    int                fInternalWait;   // Timeout on replies from proofsrv
@@ -108,7 +112,7 @@ class XrdProofdProofServMgr : public XrdProofdConfig {
    int                fRecoverDeadline;
    bool               fCheckLost;
 
-   int                fNCreate;        // Number of threads in Create
+   int                fCounters[PSMMAXCNTS];  // Internal counters (see enum PSMCounters)
 
    int                fNextSessionsCheck; // Time of next sessions check
 
@@ -138,7 +142,8 @@ public:
    XrdProofdProofServMgr(XrdProofdManager *mgr, XrdProtocol_Config *pi, XrdSysError *e);
    virtual ~XrdProofdProofServMgr() { }
 
-   enum PSMProtocol { kSessionRemoval = 0, kClientDisconnect = 1, kCleanSessions = 2} ;
+   enum PSMProtocol { kSessionRemoval = 0, kClientDisconnect = 1, kCleanSessions = 2, kProcessReq = 3} ;
+   enum PSMCounters { kCreateCnt = 0, kCleanSessionsCnt = 1, kProcessCnt = 2} ;
 
    XrdSysRecMutex   *Mutex() { return &fMutex; }
 
@@ -161,6 +166,7 @@ public:
    void              SetReconnectTime(bool on = 1);
 
    int               Process(XrdProofdProtocol *p);
+   XrdSysSemWait    *ProcessSem() { return &fProcessSem; }
 
    int               Accept(XrdProofdProofServ *xps, int to, XrdOucString &e);
    int               Attach(XrdProofdProtocol *p);
@@ -169,8 +175,11 @@ public:
    int               Detach(XrdProofdProtocol *p);
    int               Recover(XpdClientSessions *cl);
 
-   void              CountCreate(int n) { XrdSysMutexHelper mhp(fMutex); fNCreate += n; }
-   int               NCreate() { XrdSysMutexHelper mhp(fMutex); return fNCreate; }
+   void              UpdateCounter(int t, int n) { if (PSMCNTOK(t)) {
+                                 XrdSysMutexHelper mhp(fMutex); fCounters[t] += n;} }
+   int               CheckCounter(int t) { int cnt = -1; if (PSMCNTOK(t)) {
+                                 XrdSysMutexHelper mhp(fMutex); cnt = fCounters[t];}
+                                 return cnt; }
 
    int               BroadcastPriorities();
    void              DisconnectFromProofServ(int pid);
@@ -206,9 +215,11 @@ public:
 
 class XpdSrvMgrCreateCnt {
 public:
+   int                    fType;
    XrdProofdProofServMgr *fMgr;
-   XpdSrvMgrCreateCnt(XrdProofdProofServMgr *m) { fMgr = m; if (m) m->CountCreate(1); }
-   ~XpdSrvMgrCreateCnt() { if (fMgr) fMgr->CountCreate(-1); }
+   XpdSrvMgrCreateCnt(XrdProofdProofServMgr *m, int t) : fType(t), fMgr(m)
+                                        { if (m && PSMCNTOK(t)) m->UpdateCounter(t,1); }
+   ~XpdSrvMgrCreateCnt() { if (fMgr && PSMCNTOK(fType)) fMgr->UpdateCounter(fType,-1); }
 };
 
 #endif

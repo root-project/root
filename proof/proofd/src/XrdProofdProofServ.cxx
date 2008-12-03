@@ -139,6 +139,14 @@ void XrdProofdProofServ::Reset()
    fOrdinal = "";
    fTag = "";
    fUserEnvs = "";
+   DeleteUNIXSock();
+}
+
+//__________________________________________________________________________
+void XrdProofdProofServ::DeleteUNIXSock()
+{
+   // Delete the current UNIX socket
+
    SafeDelete(fUNIXSock);
    unlink(fUNIXSockPath.c_str());
    fUNIXSockPath = "";
@@ -215,13 +223,14 @@ int XrdProofdProofServ::FreeClientID(int pid)
    // Free instance corresponding to protocol connecting process 'pid'
    XPDLOC(SMGR, "ProofServ::FreeClientID")
 
-   TRACE(DBG, "pid: "<<pid<<", session status: "<<
+   TRACE(DBG, "svrPID: "<<fSrvPID<< ", pid: "<<pid<<", session status: "<<
               fStatus<<", # clients: "<< fClients.size());
    int rc = -1;
    if (pid <= 0) {
       TRACE(XERR, "undefined pid!");
       return rc;
    }
+   if (!IsValid()) return rc;
 
    {  XrdSysMutexHelper mhp(fMutex);
 
@@ -257,13 +266,11 @@ int XrdProofdProofServ::GetNClients(bool check)
    XrdSysMutexHelper mhp(fMutex);
 
    if (check) {
+      fNClients = 0;
       // Remove this from the list of clients
       std::vector<XrdClientID *>::iterator i;
       for (i = fClients.begin(); i != fClients.end(); ++i) {
-         if ((*i) && (!(*i)->P() || !(*i)->P()->Link())) {
-            (*i)->Reset();
-            fNClients--;
-         }
+         if ((*i) && (*i)->P() && (*i)->P()->Link()) fNClients++;
       }
    }
 
@@ -371,10 +378,10 @@ int XrdProofdProofServ::TerminateProofServ(bool changeown)
    // or other errors occured.
    XPDLOC(SMGR, "ProofServ::TerminateProofServ")
 
-   TRACE(DBG, "ord: " << fOrdinal << ", pid: " << fSrvPID);
+   int pid = fSrvPID;
+   TRACE(DBG, "ord: " << fOrdinal << ", pid: " << pid);
 
    // Send a terminate signal to the proofserv
-   int pid = SrvPID();
    if (pid > -1) {
       XrdProofUI ui;
       XrdProofdAux::GetUserInfo(fClient.c_str(), ui);
@@ -548,25 +555,6 @@ void XrdProofdProofServ::ExportBuf(XrdOucString &buf)
 
    // Done
    return;
-}
-
-//______________________________________________________________________________
-bool XrdProofdProofServ::IsValid()
-{
-   // Returns true if the session is valid, i.e. active an not shutdown
-
-   XrdSysMutexHelper mhp(fMutex);
-
-   if (fIsValid) {
-      struct stat st;
-      if (!fIsShutdown && stat(fAdminPath.c_str(), &st) == 0) {
-         // Look good
-         return 1;
-      }
-   }
-
-   // Done
-   return 0;
 }
 
 //__________________________________________________________________________

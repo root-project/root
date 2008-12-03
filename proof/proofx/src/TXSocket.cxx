@@ -1752,7 +1752,8 @@ TObjString *TXSocket::SendCoordinator(Int_t kind, const char *msg, Int_t int2,
          vout = (char **)&bout;
          break;
       case kCleanupSessions:
-         reqhdr.proof.int2 = (kXR_int32) kXPD_TopMaster;
+         reqhdr.proof.int2 = (int2 == 1) ? (kXR_int32) kXPD_AnyServer
+                                         : (kXR_int32) kXPD_TopMaster;
          reqhdr.proof.int3 = int2;
          reqhdr.proof.sid = fSessionID;
          reqhdr.header.dlen = (msg) ? strlen(msg) : 0;

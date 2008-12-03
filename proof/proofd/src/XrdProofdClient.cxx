@@ -262,28 +262,6 @@ XrdProofdProofServ *XrdProofdClient::GetServObj(int id)
 }
 
 //______________________________________________________________________________
-XrdProofdProofServ *XrdProofdClient::GetServer(int psid)
-{
-   // Get from the vector server instance with id psid
-   XPDLOC(CMGR, "Client::GetServer")
-
-   TRACE(DBG, "psid: " << psid <<", size: "<<fProofServs.size());
-
-   XrdSysMutexHelper mh(fMutex);
-
-   XrdProofdProofServ *xps = 0;
-   std::vector<XrdProofdProofServ *>::iterator ip;
-   for (ip = fProofServs.begin(); ip != fProofServs.end(); ++ip) {
-      xps = *ip;
-      if (xps && xps->Match(psid))
-         break;
-      xps = 0;
-   }
-   // Done
-   return xps;
-}
-
-//______________________________________________________________________________
 XrdProofdProofServ *XrdProofdClient::GetServer(XrdProofdProtocol *p)
 {
    // Get server instance connected via 'p'
@@ -306,7 +284,7 @@ XrdProofdProofServ *XrdProofdClient::GetServer(XrdProofdProtocol *p)
 }
 
 //______________________________________________________________________________
-XrdProofdProofServ *XrdProofdClient::GetProofServ(int psid)
+XrdProofdProofServ *XrdProofdClient::GetServer(int psid)
 {
    // Get from the vector server instance with ID psid
 
@@ -332,7 +310,8 @@ void XrdProofdClient::EraseServer(int psid)
    for (ip = fProofServs.begin(); ip != fProofServs.end(); ++ip) {
       xps = *ip;
       if (xps && xps->Match(psid)) {
-         fProofServs.erase(ip);
+         // Reset (invalidate)
+         xps->Reset();
          break;
       }
    }
@@ -357,10 +336,10 @@ void XrdProofdClient::CheckServerSlots()
 
 
 //______________________________________________________________________________
-int XrdProofdClient::GetTopProofServ()
+int XrdProofdClient::GetTopServers()
 {
    // Return the number of valid proofserv topmaster sessions in the list
-   XPDLOC(CMGR, "Client::GetTopProofServ")
+   XPDLOC(CMGR, "Client::GetTopServers")
 
    int nv = 0;
 
@@ -455,10 +434,12 @@ void XrdProofdClient::Broadcast(const char *msg)
       for (ic = 0; ic < (int) fClients.size(); ic++) {
          if ((cid = fClients.at(ic)) && cid->P() && cid->P()->ConnType() == kXPD_ClientMaster) {
 
-            TRACE(ALL," sending to: "<<cid->P()->Link()->ID);
-            XrdProofdResponse *response = cid->R();
-            if (response)
-               response->Send(kXR_attn, kXPD_srvmsg, (char *) msg, len);
+            if (cid->P()->Link()) {
+               TRACE(ALL," sending to: "<<cid->P()->Link()->ID);
+               XrdProofdResponse *response = cid->R();
+               if (response)
+                  response->Send(kXR_attn, kXPD_srvmsg, (char *) msg, len);
+            }
          }
       }
    }
@@ -644,7 +625,7 @@ void XrdProofdClient::TerminateSessions(int srvtype, XrdProofdProofServ *ref,
           (s->SrvType() == srvtype || (srvtype == kXPD_AnyServer))) {
          TRACE(DBG, "terminating " << s->SrvPID());
 
-         if (msg && strlen(msg) > 0)
+         if (srvtype == kXPD_TopMaster && msg && strlen(msg) > 0)
             // Tell other attached clients, if any, that this session is gone
             Broadcast(msg);
 
@@ -706,9 +687,9 @@ void XrdProofdClient::Reset()
 
    XrdSysMutexHelper mh(fMutex);
    std::vector<XrdProofdProofServ *>::iterator ip;
-   for (ip = fProofServs.begin(); ip != fProofServs.end();) {
-      delete *ip;
-      ip = fProofServs.erase(ip);
+   for (ip = fProofServs.begin(); ip != fProofServs.end(); ip++) {
+     // Reset (invalidate) the server instance
+     (*ip)->Reset();
    }
 }
 

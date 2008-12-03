@@ -528,9 +528,8 @@ void XrdProofdProtocol::Recycle(XrdLink *, int, const char *)
          if (fgMgr && fgMgr->ClientMgr()) {
             TRACE(HDBG, "fAdminPath: "<<fAdminPath);
             buf.form("%s %p %d %d", fAdminPath.c_str(), pmgr, fCID, fPid);
-            fgMgr->ClientMgr()->Pipe()->Post(XrdProofdClientMgr::kClientDisconnect,
-                                             buf.c_str());
             TRACE(DBG, "sending to ClientMgr: "<<buf);
+            fgMgr->ClientMgr()->Pipe()->Post(XrdProofdClientMgr::kClientDisconnect, buf.c_str());
          }
 
       } else {
@@ -541,8 +540,8 @@ void XrdProofdProtocol::Recycle(XrdLink *, int, const char *)
          if (fgMgr && fgMgr->SessionMgr()) {
             TRACE(HDBG, "fAdminPath: "<<fAdminPath);
             buf.assign(fAdminPath, fAdminPath.rfind('/') + 1, -1);
-            fgMgr->SessionMgr()->Pipe()->Post(XrdProofdProofServMgr::kSessionRemoval, buf.c_str());
             TRACE(DBG, "sending to ProofServMgr: "<<buf);
+            fgMgr->SessionMgr()->Pipe()->Post(XrdProofdProofServMgr::kSessionRemoval, buf.c_str());
          }
       }
    }
@@ -765,7 +764,7 @@ int XrdProofdProtocol::SendMsg()
    XrdOucString msg;
    // Find server session
    XrdProofdProofServ *xps = 0;
-   if (!fPClient || !(xps = fPClient->GetProofServ(psid))) {
+   if (!fPClient || !(xps = fPClient->GetServer(psid))) {
       msg.form("%s: session ID not found: %d", (Internal() ? "INT" : "EXT"), psid);
       TRACEP(this, XERR, msg.c_str());
       response->Send(kXR_InvalidRequest, msg.c_str());
@@ -892,7 +891,7 @@ int XrdProofdProtocol::Urgent()
 
    // Find server session
    XrdProofdProofServ *xps = 0;
-   if (!fPClient || !(xps = fPClient->GetProofServ(psid))) {
+   if (!fPClient || !(xps = fPClient->GetServer(psid))) {
       TRACEP(this, XERR, "session ID not found");
       response->Send(kXR_InvalidRequest,"Urgent: session ID not found");
       return 0;
@@ -903,6 +902,12 @@ int XrdProofdProtocol::Urgent()
    // Check ID matching
    if (!xps->Match(psid)) {
       response->Send(kXP_InvalidRequest,"Urgent: IDs do not match - do nothing");
+      return 0;
+   }
+
+   // Check the link to the session
+   if (!xps->Response()) {
+      response->Send(kXP_InvalidRequest,"Urgent: session response object undefined - do nothing");
       return 0;
    }
 
@@ -950,7 +955,7 @@ int XrdProofdProtocol::Interrupt()
 
    // Find server session
    XrdProofdProofServ *xps = 0;
-   if (!fPClient || !(xps = fPClient->GetProofServ(psid))) {
+   if (!fPClient || !(xps = fPClient->GetServer(psid))) {
       TRACEP(this, XERR, "session ID not found");
       response->Send(kXR_InvalidRequest,"nterrupt: session ID not found");
       return 0;
@@ -1012,7 +1017,7 @@ int XrdProofdProtocol::Ping()
 
    // Find server session
    XrdProofdProofServ *xps = 0;
-   if (!fPClient || !(xps = fPClient->GetProofServ(psid))) {
+   if (!fPClient || !(xps = fPClient->GetServer(psid))) {
       TRACEP(this,  XERR, "session ID not found");
       response->Send(kXR_InvalidRequest,"session ID not found");
       return 0;

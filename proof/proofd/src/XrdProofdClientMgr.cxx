@@ -1059,6 +1059,10 @@ int XrdProofdClientMgr::Auth(XrdProofdProtocol *p)
       p->SetAuthProt(ap);
       p->AuthProt()->Entity.tident = p->Link()->ID;
    }
+   // Set the wanted login name
+   char *u = new char[strlen("XrdSecLOGINUSER=")+strlen(p->Client()->User())+2];
+   sprintf(u, "XrdSecLOGINUSER=%s", p->Client()->User());
+   putenv(u);
 
    // Now try to authenticate the client using the current protocol
    XrdOucString namsg;
@@ -1377,7 +1381,7 @@ void XrdProofdClientMgr::Broadcast(XrdProofdClient *clnt, const char *msg)
 
 //______________________________________________________________________________
 void XrdProofdClientMgr::TerminateSessions(XrdProofdClient *clnt, const char *msg,
-                                           int srvtype, bool hard)
+                                           int srvtype)
 {
    // Terminate sessions of client 'clnt' or to of all clients if clnt == 0.
    // The list of process IDs having been signalled is returned.
@@ -1421,11 +1425,9 @@ void XrdProofdClientMgr::TerminateSessions(XrdProofdClient *clnt, const char *ms
    }
 
    // Reset the client instances
-   if (hard) {
-      for (i = clnts->begin(); i != clnts->end(); ++i) {
-         if ((c = *i))
-            c->Reset();
-      }
+   for (i = clnts->begin(); i != clnts->end(); ++i) {
+      if ((c = *i))
+         c->Reset();
    }
 
    // Cleanup, if needed
