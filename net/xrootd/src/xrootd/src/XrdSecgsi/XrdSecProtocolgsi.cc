@@ -1571,7 +1571,9 @@ int XrdSecProtocolgsi::Authenticate(XrdSecCredentials *cred,
 
       if (GMAPOpt > 0) {
          // Get name from gridmap
-         String name = QueryGMAP(hs->Chain->EECname(), hs->TimeStamp);
+         String name; 
+         QueryGMAP(hs->Chain->EECname(), hs->TimeStamp, name);
+         DEBUG("username(s) associated with this DN: "<<name);
          if (name.length() <= 0) {
             // Grid map lookup failure
             if (GMAPOpt == 2) {
@@ -1591,12 +1593,13 @@ int XrdSecProtocolgsi::Authenticate(XrdSecCredentials *cred,
                bck->ToString(user);
                bmai->Deactivate(kXRS_user);
             }
+            DEBUG("target user: "<<user);
             if (user.length() > 0) {
                // Check if the wanted username is authorized
                String u;
                int from = 0;
                bool ok = 0;
-               while (name.tokenize(u, from, ',') != -1) {
+               while ((from = name.tokenize(u, from, ',')) != -1) {
                   if (user == u) { ok = 1; break; }
                }
                if (ok) {
@@ -4156,7 +4159,7 @@ int XrdSecProtocolgsi::LoadGMAP(int now)
 }
 
 //__________________________________________________________________________
-XrdOucString XrdSecProtocolgsi::QueryGMAP(const char *dn, int now)
+void XrdSecProtocolgsi::QueryGMAP(const char *dn, int now, String &usrs)
 {
    // Lookup for 'dn' in the grid mapfile and return the associated username
    // or 0. The cache is refreshed if the grid map file has been modified
@@ -4164,7 +4167,7 @@ XrdOucString XrdSecProtocolgsi::QueryGMAP(const char *dn, int now)
    EPNAME("QueryGMAP");
 
    // List of user names attached to the entity
-   XrdOucString usrs;
+   usrs = "";
 
    XrdSutPFEntry *cent = 0;
    // We set the client name from the map function first, if any
@@ -4211,7 +4214,7 @@ XrdOucString XrdSecProtocolgsi::QueryGMAP(const char *dn, int now)
    // Try also the map file, if any
    if (LoadGMAP(now) != 0) {
       DEBUG("error loading/ refreshing grid map file");
-      return (char *)0;
+      return;
    }
 
    // Lookup for 'dn' in the cache
@@ -4224,7 +4227,7 @@ XrdOucString XrdSecProtocolgsi::QueryGMAP(const char *dn, int now)
    }
 
    // Done
-   return usrs;
+   return;
 }
 
 //_____________________________________________________________________________

@@ -397,5 +397,5 @@ private:
    static int     LoadGMAP(int now); // Init or refresh the cache
    static XrdSecgsiGMAP_t            // Load alternative function for mapping
                   LoadGMAPFun(const char *plugin, const char *parms);
-   static String  QueryGMAP(const char *dn, int now); //Lookup info for DN
+   static void    QueryGMAP(const char *dn, int now, String &name); //Lookup info for DN
 };
