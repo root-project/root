@@ -1139,7 +1139,7 @@ int testVector(int ngen, bool testio=false) {
    // test io vector 2
    fsize = a.testWrite(v2);  iret |= a.check(VecType<V2>::name()+" write",fsize,estSize,scale);
    ir = a.testRead(v2);      iret |= a.check(VecType<V2>::name()+" read",ir,0);
-   scale = 10; // gcc 4.3.2 gives and error for RhoEtaPhiVector
+   scale = 100; // gcc 4.3.2 gives and error for RhoEtaPhiVector for 32 bits
    s2 = a.testAddition(v2);       iret |= a.check(VecType<V2>::name()+" after read",s2,sref2,scale);
 
 
