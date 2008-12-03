@@ -111,6 +111,29 @@ In addition HFitInterface defines a function <tt>ROOT::Fit::FitObject</tt>
 </pre>
 </ul>
 
+<h4>TPaletteAxis</h4>
+<ul>
+<li> New method <tt>Int_t TPaletteAxis::GetBinColor(Int_t i, Int_t j)</tt> to
+     return the color index of the bin (i,j).
+     <br>
+     This funtion should be used after an histogram has been plotted with the
+     option COL or COLZ like in the following example:  
+     <pre> 
+       h2->Draw("COLZ");
+       gPad->Update();
+       TPaletteAxis *palette =
+          (TPaletteAxis*)h2->GetListOfFunctions()->FindObject("palette");
+       Int_t ci = palette->GetBinColor(20,15);
+     </pre>
+     Then it is possible to retrieve the RGB components in the following way:
+     <pre> 
+       TColor *c = gROOT->GetColor(ci);
+       float x,y,z;
+       c->GetRGB(x,y,z);
+     </pre>
+</li>
+</ul>
+
 <h4>TFormula</h4>
 
 <ul>
