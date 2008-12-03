@@ -43,8 +43,8 @@ class TBrowser : public TNamed {
 private:
    TObject       *fLastSelectedObject; //!The last TObject selected by user
    
-   TBrowser(const TBrowser&);             // TBrowser can not be copied since we do not know the time of the TBrowserImp 
-   TBrowser& operator=(const TBrowser&);  // TBrowser can not be copied since we do not know the time of the TBrowserImp 
+   TBrowser(const TBrowser&);             // TBrowser can not be copied since we do not know the type of the TBrowserImp (and it can not be 'Cloned')
+   TBrowser& operator=(const TBrowser&);  // TBrowser can not be copied since we do not know the type of the TBrowserImp (and it can not be 'Cloned')
    
 protected:
    TBrowserImp   *fImp;                //!Window system specific browser implementation
