@@ -399,11 +399,16 @@ int Cint::Internal::G__get_type(const ::Reflex::Type in)
             return 0;
       } // switch fundamental
    }
-   if (raw.IsEnum()) return ((int)'i') + pointerThusUppercase;
+
+   static Reflex::Type stFile;
+   if (!stFile.Id()) stFile = Reflex::Type::ByName("FILE");
+   if ((stFile.Id() && raw.Id() == stFile.Id())
+       || (!stFile.Id() && raw.Name() == "FILE"))
+      return ((int) 'e') + pointerThusUppercase;
    if (raw.IsClass()|| raw.IsStruct() ||
        /* raw.IsEnum() || */ raw.IsUnion())
        return ((int) 'u') + pointerThusUppercase;
-   if (raw.Name() == "FILE") return ((int) 'e') + pointerThusUppercase;
+   if (raw.IsEnum()) return ((int)'i') + pointerThusUppercase;
 
    return 0;
 }
