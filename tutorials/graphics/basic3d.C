@@ -1,5 +1,5 @@
 {
-   //
+   // Show 3-D polylines and markers
    // To see the output of this macro, click begin_html <a href="gif/basic3d.gif">here</a> end_html
    //
    gROOT->Reset();

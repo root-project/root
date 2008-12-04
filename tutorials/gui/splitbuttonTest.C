@@ -1,5 +1,5 @@
-// A simple example that shows the usage of a TGSplitButton. The
-// checkbutton is used to change the split state of the button.
+// A simple example that shows the usage of a TGSplitButton. 
+// The checkbutton is used to change the split state of the button.
 //
 // author, Roel Aaij 13/07/2007
 

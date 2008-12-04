@@ -1,7 +1,6 @@
 // Author: Valeriy Onuchin   17/07/2007
 //
-// This macro gives an example of how to set/change
-// text button attributes. 
+// This macro gives an example of how to set/change text button attributes. 
 //
 // To run it do either:
 // .x buttonTest.C

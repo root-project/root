@@ -1,15 +1,15 @@
-/*********************************************************************
- * Example of how to convert a THnSparse to a TTree using efficient 
- * iteration through the THnSparse, and how to draw a THnSparse using
- * TParallelCoord. The plot will contain one line for each filled bin,
- * with the bin's coordinates on each axis, and the bin's content on
- * the rightmost axis.
- *
- * Run as
- *   .L $ROOTSYS/tutorials/tree/drawsparse.C+
- *
- * Axel.Naumann@cern.ch (2007-09-14)
- *********************************************************************/
+//*********************************************************************
+// Convert a THnSparse to a TTree using efficient iteration through the THnSparse
+//   and draw a THnSparse using TParallelCoord. 
+//  The plot will contain one line for each filled bin,
+//  with the bin's coordinates on each axis, and the bin's content on
+//  the rightmost axis.
+// 
+//  Run as
+//    .L $ROOTSYS/tutorials/tree/drawsparse.C+
+// 
+//  Axel.Naumann@cern.ch (2007-09-14)
+// ********************************************************************
 
 #include "TParallelCoord.h"
 #include "TParallelCoordVar.h"

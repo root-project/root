@@ -1,7 +1,3 @@
-// Author: Richard Maunder
-
-// As we overload TObject::Paint which is called directly from compiled
-// code, this script must also be compiled to work correctly.
 
 #if defined(__CINT__) && !defined(__MAKECINT__)
 {
@@ -20,8 +16,7 @@
 
 #include <vector>
 
-// This demonstrates use of the 3D viewer architecture
-// TVirtualViewer3D and TBuffer3D in the LOCAL frame
+// This demonstrates use of the 3D viewer architecture TVirtualViewer3D and TBuffer3D in the LOCAL frame
 // Here each shape is described in a TBuffer3D class, 
 // with a suitible translation matrix to place each
 // instance c.f. viewer3DLocal.C
@@ -31,6 +26,10 @@
 // Shows that viewers can at least deal gracefully with these cases
 
 // Our abstract base shape class.
+// Author: Richard Maunder
+
+// As we overload TObject::Paint which is called directly from compiled
+// code, this script must also be compiled to work correctly.
 
 class Shape : public TObject
 {

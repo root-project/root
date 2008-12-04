@@ -2,12 +2,12 @@
    
 void cheongwadae() 
 {
-  // Name: cheongwadae.C
+  // Drawing the Cheongwadae building which is the Presidential Residence of the Republic of Korea, using ROOT geometry class.
+  //
   // Author: Hee Jun Shin (s-heejun@hanmail.net), Dept. of Physics, Univ. of Seoul
   // Reviewed by Sunman Kim (sunman98@hanmail.net)
   // Supervisor: Prof. Inkyu Park (icpark@physics.uos.ac.kr)
   // 
-  // Description: drawing the Cheongwadae building which is the Presidential Residence of the Republic of Korea, using ROOT geometry class.
   // How to run: .x cheongwadae.C in ROOT terminal, then use OpenGL
   //
   // This macro was created for the evaluation of Computational Physics course in 2006.

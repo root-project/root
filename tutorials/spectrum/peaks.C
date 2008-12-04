@@ -1,3 +1,4 @@
+// Illustrates how to find peaks in histograms.
 // This script generates a random number of gaussian peaks
 // on top of a linear background.
 // The position of the peaks is found via TSpectrum and injected

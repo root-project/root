@@ -1,5 +1,4 @@
-// Example macro describing how to use
-// different kinds of Bessel functions
+// Example macro describing how to use different kinds of Bessel functions
 // To execute the macro type in:
 //
 // root[0]: .x Bessel.C 

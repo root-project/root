@@ -2,13 +2,12 @@
    
 void south_gate() 
 { 
-  //
+  // Drawing a famous Korean gate, the South gate, called Namdeamoon in Korean, using ROOT geometry class.
   // Name: south_gate.C
   // Author: Lan Hee Yang(yangd5d5@hotmail.com), Dept. of Physics, Univ. of Seoul
   // Reviewed by Sunman Kim (sunman98@hanmail.net)
   // Supervisor: Prof. Inkyu Park (icpark@physics.uos.ac.kr)
   // 
-  // Description: drawing a famous Korean gate, the South gate, called Namdeamoon in Korean, using ROOT geometry class.
   // How to run: .x south_gate.C in ROOT terminal, then use OpenGL
   //
   // This macro was created for the evaluation of Computational Physics course in 2006.

@@ -1,6 +1,5 @@
-// Example of performing a fit to a set of data which have binomial errors like those 
-// derived from the division of two histograms. 
-// Thre different fits are performed and compared:  
+// Perform a fit to a set of data with binomial errors like those derived from the division of two histograms. 
+// Three different fits are performed and compared:  
 //
 //   -  simple least square fit to the divided histogram obtained from TH1::Divide with option b
 //   -  least square fit to the TGraphAsymmErrors obtained from TGraphAsymmErrors::BayesDivide

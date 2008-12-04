@@ -1,7 +1,6 @@
 // Author: Valeriy Onuchin   25/08/2007
 //
-// This macro gives an example of how to set/change
-// text entry attributes. 
+// This macro gives an example of how to set/change text entry attributes. 
 //
 // To run it do either:
 // .x textEntries.C

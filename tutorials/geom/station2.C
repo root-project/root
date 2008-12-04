@@ -2,12 +2,12 @@
    
 void station2() 
 {
+  // Drawing a space station (version 2), using ROOT geometry class.
   // Name: station2.C
   // Author: Dong Ryeol Lee (leedr2580@hanmail.net), Dept. of Physics, Univ. of Seoul
   // Reviewed by Sunman Kim (sunman98@hanmail.net)
   // Supervisor: Prof. Inkyu Park (icpark@physics.uos.ac.kr)
   // 
-  // Description: drawing a space station, using ROOT geometry class.
   // How to run: .x station2.C in ROOT terminal, then use OpenGL
   //
   // This macro was created for the evaluation of Computational Physics course in 2006.

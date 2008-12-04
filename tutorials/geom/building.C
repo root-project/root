@@ -2,12 +2,12 @@
    
 void building() 
 {
-  // Name: building.C
+  // Drawing a building where Dept. of Physics is, using ROOT geometry class.
+  //
   // Author: Hyung Ju Lee (laccalus@nate.com), Dept. of Physics, Univ. of Seoul
   // Reviewed by Sunman Kim (sunman98@hanmail.net)
   // Supervisor: Prof. Inkyu Park (icpark@physics.uos.ac.kr)
   // 
-  // Description: drawing a building where Dept. of Physics is, using ROOT geometry class.
   // How to run: .x building.C in ROOT terminal, then use OpenGL
   //
   // This macro was created for the evaluation of Computational Physics course in 2006.

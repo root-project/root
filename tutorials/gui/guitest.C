@@ -1,5 +1,5 @@
-// Test program for ROOT native GUI classes exactly like
-// $ROOTSYS/test/guitest.cxx but using the new signal and slots
+// Test program for ROOT native GUI classes 
+// exactly like $ROOTSYS/test/guitest.cxx but using the new signal and slots
 // communication mechanism. It is now possible to run this entire
 // test program in the interpreter. Do either:
 // .x guitest.C

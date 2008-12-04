@@ -3,13 +3,12 @@
    
 void lego() 
 {
-  //
+  // Drawing a figure, made of lego block, using ROOT geometry class.
   // Name: lego.C
   // Author: Soon Gi Kwon(1116won@hanmail.net), Dept. of Physics, Univ. of Seoul
   // Reviewed by Sunman Kim (sunman98@hanmail.net)
   // Supervisor: Prof. Inkyu Park (icpark@physics.uos.ac.kr)
   // 
-  // Description: drawing a figure, made of lego block, using ROOT geometry class.
   // How to run: .x lego.C in ROOT terminal, then use OpenGL
   //
   // This macro was created for the evaluation of Computational Physics course in 2006.

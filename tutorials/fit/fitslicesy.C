@@ -1,7 +1,7 @@
 void fitslicesy() {
 //
+// Illustrates how to use the TH1::FitSlicesY function
 // To see the output of this macro, click begin_html <a href="gif/fitslicesy.gif" >here</a> end_html
-//    This macro illustrates how to use the TH1::FitSlicesY function
 //    It uses the TH2F histogram generated in macro hsimple.C
 //    It invokes FitSlicesY and draw the fitted "mean" and "sigma"
 //    in 2 sepate pads.

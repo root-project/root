@@ -1,6 +1,6 @@
-// This TableTest class is a simple example of how to use a
-// TGSimpleTable that creates and owns it's own
-// TGSimpleTableInterface. TableTest inherits from TGMainFrame to
+// This TableTest class is a simple example of how to use a TGSimpleTable 
+// that creates and owns it's own TGSimpleTableInterface. 
+// TableTest inherits from TGMainFrame to
 // create a top level frame to embed the TGTable in. First the data
 // needed is created. Then the TGSimpleTable is created using this
 // data. In the end, the table is added to the TGMainFrame that is the

@@ -1,5 +1,4 @@
-// This macro gets in memory an histogram from a root file
-// and fits a user defined function.
+// Get in memory an histogram from a root file and fit a user defined function.
 // Note that a user defined function must always be defined
 // as in this example:
 //  - first parameter: array of variables (in this example only 1-dimension)

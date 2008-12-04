@@ -1,3 +1,4 @@
+//  Test program for the class MyUnfold, derived from TUnfold
 // Author: Stefan Schmitt
 // DESY, 14.10.2008
 

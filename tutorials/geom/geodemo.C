@@ -1,3 +1,4 @@
+// GUI to draw the geometry shapes
 // Author: M.Gheata  06/16/03
 Bool_t comments = kTRUE;
 Bool_t raytracing = kFALSE;

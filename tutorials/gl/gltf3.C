@@ -1,4 +1,5 @@
 void gltf3(){
+   // Draw the Klein bottle(closed nonorientable surface that has no inside or outside).
    // TF3 can be drawn in several styles,
    // default // (like surface4)
    // kMaple0 (very nice colours)

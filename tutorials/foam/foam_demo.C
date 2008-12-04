@@ -1,3 +1,4 @@
+// Demonstrate the TFoam class.
 //
 //  To run this macro type from CINT command line
 //

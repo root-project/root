@@ -1,5 +1,4 @@
-// example of macro to read data from an ascii file and
-// create a root file with a Tree.
+// Read data (CERN staff) from an ascii file and create a root file with a Tree.
 // see also a variant in staff.C
 // Author: Rene Brun
    

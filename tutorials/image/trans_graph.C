@@ -1,5 +1,4 @@
-//  This tutorial demonstrates:
-//  - how to directly access and manipulate ARGB pixel values of an image.
+//  Demonstrates how to access and manipulate ARGB pixel values of an image +...
 //  - how to make a part of an image to be transparent.
 //  - how to merge/alphablend an image with transparent colors
 //    with some background image.

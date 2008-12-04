@@ -1,5 +1,5 @@
-// This TableTest class is a simple example of how to use a
-// TGTreeTable. TableTest inherits from TGMainFrame to create a top
+// This TableTest class is a simple example of how to use a TGTreeTable. 
+// TableTest inherits from TGMainFrame to create a top
 // level frame to embed the TGTreeTable in. First, the staff.root file
 // is opened to obtain a tree. A TGTreeTable is then created using the
 // tree. In the end, the table is added to the TGMainFrame that is the

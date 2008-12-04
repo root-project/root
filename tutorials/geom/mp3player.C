@@ -8,13 +8,12 @@
    
 void mp3player()
 {
-  //
+  // Drawing a mp3 type music player, using ROOT geometry class.
   // Name: mp3player.C
   // Author: Eun Young Kim, Dept. of Physics, Univ. of Seoul
   // Reviewed by Sunman Kim (sunman98@hanmail.net)
   // Supervisor: Prof. Inkyu Park (icpark@physics.uos.ac.kr)
   // 
-  // Description: drawing a mp3 type music player, using ROOT geometry class.
   // How to run: .x mp3player.C in ROOT terminal, then use OpenGL
   //
   // This macro was created for the evaluation of Computational Physics course in 2006.

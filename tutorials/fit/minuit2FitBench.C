@@ -1,3 +1,4 @@
+// Fitting 1-D histograms with minuit2
 // @(#)root/minuit2:$Id$
 // Author: L. Moneta    10/2005  
 
