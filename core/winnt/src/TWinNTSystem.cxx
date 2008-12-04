@@ -326,11 +326,15 @@ namespace {
          dynpath += ";"; dynpath += gRootDir; dynpath += "/lib";
       }
 #endif
+      
 #ifdef CINTINCDIR
-         dynpath += ";"; dynpath += CINTINCDIR; dynpath += "/cint/stl";
+      TString cintinc( Form("%s/cint/stl",CINTINCDIR) );
 #else
-         dynpath += ";"; dynpath += gRootDir; dynpath += "/cint/cint/stl";
+      TString cintinc( Form("%s/cint/cint/stl",gRootDir) );
 #endif
+      if (!dynpath.Contains( cintinc)) {
+         dynpath += ";"; dynpath += cintinc;
+      }
       return dynpath;
    }
 
