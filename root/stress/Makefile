@@ -128,9 +128,11 @@ $(STRESSFILESCOPIEDTAG): $(STRESSFILESHERE)
 # $(CALLROOTEXE) so it works with valgrind.
 # $(STRESSFLAGS) can be a target-specific variable holding optional
 # arguments to the test; see below for stress-ctest.log
+CALLSTRESSEXE := $(CALLROOTEXE:root.exe=)
+CALLSTRESSEXE := $(CALLSTRESSEXE:root7.exe=)
 $(addsuffix .log,$(STRESSTESTSCOMP)): %-ctest.log: test/%$(ExeSuf)
 	$(CMDECHO) unset DISPLAY; \
-	  $(CALLROOTEXE:root.exe=) test/$*$(ExeSuf) $(STRESSFLAGS) > $@ 2>&1
+	   $(CALLSTRESSEXE) test/$*$(ExeSuf) $(STRESSFLAGS) > $@ 2>&1
 
 # To run an interpreted test we need the source + includes. We don't know
 # the exact dependencies, to we trust the binary: if we have it we have
