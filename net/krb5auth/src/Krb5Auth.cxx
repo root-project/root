@@ -56,6 +56,11 @@
 #include "NetErrors.h"
 #include "Getline.h"
 
+#if defined(R__MACOSX) && defined(MAC_OS_X_VERSION_10_6)
+#define valid_cksumtype krb5_c_valid_cksumtype
+#endif
+
+
 Int_t Krb5Authenticate(TAuthenticate *, TString &, TString &, Int_t);
 
 static Int_t Krb5InitCred(const char *clientPrincipal, Bool_t promptPrinc = kFALSE);
@@ -422,8 +427,8 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det,
    cleanup.fSignal = kFALSE;
 
    // test for CRC-32
-   if (!krb5_c_valid_cksumtype(CKSUMTYPE_CRC32)) {
-      Error("Krb5Authenticate","failed <krb5_c_valid_cksumtype>: %s\n",
+   if (!valid_cksumtype(CKSUMTYPE_CRC32)) {
+      Error("Krb5Authenticate","failed <valid_cksumtype>: %s\n",
                   error_message(KRB5_PROG_SUMTYPE_NOSUPP));
       return 0;
    }
