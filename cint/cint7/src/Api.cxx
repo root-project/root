@@ -90,7 +90,7 @@ int G__display_replacesymbol(FILE* fout, const char* name);
 
 // C Interface Global Variables
 extern "C" int G__EnableAutoDictionary; // Boolean flag, enable automatic dictionary generation.
-int G__EnableAutoDictionary = 0;
+int G__EnableAutoDictionary = 1;
 
 // Cint Internal Global Variables.
 namespace Cint {
