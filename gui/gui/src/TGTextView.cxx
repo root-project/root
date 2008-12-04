@@ -1570,9 +1570,9 @@ void TGTextView::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 
    if (fromfile) {
       const char *filename = txt->GetFileName();
-      sprintf(fn, gSystem->ExpandPathName(gSystem->UnixPathName(filename)));
+      sprintf(fn, "%s", gSystem->ExpandPathName(gSystem->UnixPathName(filename)));
    } else {
-      sprintf(fn,"Txt%s",GetName()+5);
+      sprintf(fn, "Txt%s", GetName()+5);
       txt->Save(fn);
    }
    out << "   " << GetName() << "->LoadFile(" << quote << fn << quote << ");" << endl;
