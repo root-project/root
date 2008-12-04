@@ -374,7 +374,7 @@ void TGMenuBar::BindHotKey(Int_t keycode, Bool_t on)
 
    const TGMainFrame *main = (TGMainFrame *) GetMainFrame();
 
-   if (!main) return;
+   if (!main || !main->InheritsFrom("TGMainFrame")) return;
 
    if (on) {
       // case unsensitive bindings
