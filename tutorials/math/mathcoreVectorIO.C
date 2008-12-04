@@ -1,6 +1,6 @@
 //
-// Cint macro to test I/O of mathcore Lorentz Vectors in a Tree and compare with a 
-// TLorentzVector. A ROOT tree is written and read in both using either a XYZTVector or /// a TLorentzVector. 
+// Example of  I/O of a mathcore Lorentz Vectors in a Tree and comparison with a TLorentzVector
+// A ROOT tree is written and read in both using either a XYZTVector or /// a TLorentzVector. 
 // 
 //  To execute the macro type in: 
 //

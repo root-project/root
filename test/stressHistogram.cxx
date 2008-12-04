@@ -34,6 +34,7 @@ const int nEvents = 1000;
 const int numberOfBins = 10;
 
 enum compareOptions {
+   cmpOptNone=0,
    cmpOptPrint=1,
    cmpOptDebug=2,
    cmpOptNoError=4,
@@ -57,7 +58,7 @@ void printResult(const char* msg, bool status);
 int equals(const char* msg, TH1D* h1, TH1D* h2, int options = 0, double ERRORLIMIT = 1E-13);
 int equals(const char* msg, TH2D* h1, TH2D* h2, int options = 0, double ERRORLIMIT = 1E-13);
 int equals(const char* msg, TH3D* h1, TH3D* h2, int options = 0, double ERRORLIMIT = 1E-13);
-int equals(const char* msg, THnSparse* h1, THnSparse* h2, int options, double ERRORLIMIT = 1E-13);
+int equals(const char* msg, THnSparse* h1, THnSparse* h2, int options = 0, double ERRORLIMIT = 1E-13);
 int equals(Double_t n1, Double_t n2, double ERRORLIMIT = 1E-13);
 int compareStatistics( TH1* h1, TH1* h2, bool debug, double ERRORLIMIT = 1E-13);
 ostream& operator<<(ostream& out, TH1D* h);
@@ -543,6 +544,47 @@ bool testAdd3DProfile2()
    return ret;
 }
 
+bool testAddSparse()
+{
+   Double_t c = r.Rndm();
+
+   Int_t bsize[] = { TMath::Nint( r.Uniform(1, 5) ),
+                          TMath::Nint( r.Uniform(1, 5) ),
+                          TMath::Nint( r.Uniform(1, 5) )};
+   Double_t xmin[] = {minRange, minRange, minRange};
+   Double_t xmax[] = {maxRange, maxRange, maxRange};
+
+   THnSparseD* s1 = new THnSparseD("tS-s1", "s1", 3, bsize, xmin, xmax);
+   THnSparseD* s2 = new THnSparseD("tS-s2", "s2", 3, bsize, xmin, xmax);
+   THnSparseD* s3 = new THnSparseD("tS-s3", "s3=s1+c*s2", 3, bsize, xmin, xmax);
+
+   s1->Sumw2();s2->Sumw2();s3->Sumw2();
+
+   for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
+      Double_t points[3];
+      points[0] = r.Uniform( minRange * .9 , maxRange * 1.1 );
+      points[1] = r.Uniform( minRange * .9 , maxRange * 1.1 );
+      points[2] = r.Uniform( minRange * .9 , maxRange * 1.1 );
+      s1->Fill(points);
+      s3->Fill(points);
+   }
+
+   for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
+      Double_t points[3];
+      points[0] = r.Uniform( minRange * .9 , maxRange * 1.1 );
+      points[1] = r.Uniform( minRange * .9 , maxRange * 1.1 );
+      points[2] = r.Uniform( minRange * .9 , maxRange * 1.1 );
+      s2->Fill(points);
+      s3->Fill(points, c);
+   }
+
+   s1->Add(s2, c);
+   bool ret = equals("AddSparse", s3, s1, cmpOptStats , 1E-10);
+   delete s2;
+   delete s3;
+   return ret;
+}
+
 bool testMul1() 
 {
    Double_t c1 = r.Rndm();
@@ -857,7 +899,7 @@ bool testMul3D2()
                                            h1->GetZaxis()->FindBin(z) ) );
    }
 
-   // h3 has to be filled again so that the erros are properly calculated
+   // h3 has to be filled again so that the errors are properly calculated
    r.SetSeed(seed);
    for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
@@ -882,6 +924,73 @@ bool testMul3D2()
    bool ret = equals("Multiply3D2", h3, h1, cmpOptStats, 1E-13);
    delete h2;
    delete h3;
+   return ret;
+}
+
+bool testMulSparse()
+{
+   Int_t bsize[] = { TMath::Nint( r.Uniform(1, 5) ),
+                          TMath::Nint( r.Uniform(1, 5) ),
+                          TMath::Nint( r.Uniform(1, 5) )};
+   Double_t xmin[] = {minRange, minRange, minRange};
+   Double_t xmax[] = {maxRange, maxRange, maxRange};
+
+   THnSparseD* s1 = new THnSparseD("m3D2-s1", "s1-Title", 3, bsize, xmin, xmax);
+   THnSparseD* s2 = new THnSparseD("m3D2-s2", "s2-Title", 3, bsize, xmin, xmax);
+   THnSparseD* s3 = new THnSparseD("m3D2-s3", "s3=s1*s2", 3, bsize, xmin, xmax);
+
+//   s1->Sumw2();s2->Sumw2();s3->Sumw2();
+
+   UInt_t seed = r.GetSeed();
+   // For possible problems
+   r.SetSeed(seed);
+   for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
+      Double_t points[3];
+      points[0] = r.Uniform( minRange * .9 , maxRange * 1.1 );
+      points[1] = r.Uniform( minRange * .9 , maxRange * 1.1 );
+      points[2] = r.Uniform( minRange * .9 , maxRange * 1.1 );
+      s1->Fill(points, 1.0);
+   }
+
+   for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
+      Double_t points[3];
+      points[0] = r.Uniform( minRange * .9 , maxRange * 1.1 );
+      points[1] = r.Uniform( minRange * .9 , maxRange * 1.1 );
+      points[2] = r.Uniform( minRange * .9 , maxRange * 1.1 );
+      s2->Fill(points, 1.0);
+      Int_t points_s1[3];
+      points_s1[0] = s1->GetAxis(0)->FindBin( points[0] );
+      points_s1[1] = s1->GetAxis(1)->FindBin( points[1] );
+      points_s1[2] = s1->GetAxis(2)->FindBin( points[2] );
+      s3->Fill(points, s1->GetBinContent( points_s1 ) );
+   }
+
+   // s3 has to be filled again so that the errors are properly calculated
+   r.SetSeed(seed);
+   for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
+      Double_t points[3];
+      points[0] = r.Uniform( minRange * .9 , maxRange * 1.1 );
+      points[1] = r.Uniform( minRange * .9 , maxRange * 1.1 );
+      points[2] = r.Uniform( minRange * .9 , maxRange * 1.1 );
+      Int_t points_s2[3];
+      points_s2[0] = s2->GetAxis(0)->FindBin( points[0] );
+      points_s2[1] = s2->GetAxis(1)->FindBin( points[1] );
+      points_s2[2] = s2->GetAxis(2)->FindBin( points[2] );
+      s3->Fill(points, s2->GetBinContent( points_s2 ) );
+   }
+
+   // No the bin contents has to be reduced, as it was filled twice!
+   for ( Long64_t i = 0; i < s3->GetNbins(); ++i ) {
+      Int_t bin[3];
+      Double_t v = s3->GetBinContent(i, bin);
+      s3->SetBinContent( bin, v / 2 );
+   }
+
+   s1->Multiply(s2);
+
+   bool ret = equals("MultSparse", s3, s1, cmpOptNone, 1E-13);
+   delete s2;
+   delete s3;
    return ret;
 }
 
@@ -1205,7 +1314,7 @@ bool testAssignProfile3D()
                                    numberOfBins, minRange, maxRange);
    *p2 = *p1;
 
-   bool ret = equals("Assign Oper Prof '='  3D", p1, p2/*, cmpOptDebug | cmpOptStats*/);
+   bool ret = equals("Assign Oper Prof '='  3D", p1, p2);
    delete p1;
    return ret;
 }
@@ -1295,8 +1404,34 @@ bool testCloneProfile3D()
 
    TProfile3D* p2 = static_cast<TProfile3D*> ( p1->Clone() );
 
-   bool ret = equals("Clone Function Prof   3D", p1, p2/*, cmpOptStats*/);
+   bool ret = equals("Clone Function Prof   3D", p1, p2);
    delete p1;
+   return ret;
+}
+
+bool testCloneSparse()
+{
+   Int_t bsize[] = { TMath::Nint( r.Uniform(1, 5) ),
+                     TMath::Nint( r.Uniform(1, 5) ),
+                     TMath::Nint( r.Uniform(1, 5) )
+   };
+   Double_t xmin[] = {minRange, minRange, minRange};
+   Double_t xmax[] = {maxRange, maxRange, maxRange};
+
+   THnSparseD* s1 = new THnSparseD("clS-s1","s1-Title", 3, bsize, xmin, xmax);
+
+   for ( Int_t i = 0; i < nEvents * nEvents; ++i ) {
+      Double_t points[3];
+      points[0] = r.Uniform( minRange * .9, maxRange * 1.1);
+      points[1] = r.Uniform( minRange * .9, maxRange * 1.1);
+      points[2] = r.Uniform( minRange * .9, maxRange * 1.1);
+      s1->Fill(points);
+   }
+
+   THnSparseD* s2 = (THnSparseD*) s1->Clone();
+
+   bool ret = equals("Clone Function THnSparse", s1, s2);
+   delete s1;
    return ret;
 }
 
@@ -1454,6 +1589,39 @@ bool testWriteReadProfile3D()
    delete p1;
    return ret;
 }
+
+bool testWriteReadSparse()
+{
+   Int_t bsize[] = { TMath::Nint( r.Uniform(1, 5) ),
+                     TMath::Nint( r.Uniform(1, 5) ),
+                     TMath::Nint( r.Uniform(1, 5) )
+   };
+   Double_t xmin[] = {minRange, minRange, minRange};
+   Double_t xmax[] = {maxRange, maxRange, maxRange};
+   
+   THnSparseD* s1 = new THnSparseD("wrS-s1","s1-Title", 3, bsize, xmin, xmax);
+   s1->Sumw2();
+
+   for ( Int_t i = 0; i < nEvents * nEvents; ++i ) {
+      Double_t points[3];
+      points[0] = r.Uniform( minRange * .9, maxRange * 1.1);
+      points[1] = r.Uniform( minRange * .9, maxRange * 1.1);
+      points[2] = r.Uniform( minRange * .9, maxRange * 1.1);
+      s1->Fill(points);
+   }
+
+   TFile f("tmpHist.root", "RECREATE");
+   s1->Write();
+   f.Close();
+
+   TFile f2("tmpHist.root");
+   THnSparseD* s2 = static_cast<THnSparseD*> ( f2.Get("wrS-s1") );
+
+   bool ret = equals("Read/Write Hist 3D", s1, s2, cmpOptNone);
+   delete s1;
+   return ret;
+}
+
 
 bool testMerge1D() 
 {
@@ -1756,6 +1924,62 @@ bool testMergeProf3D()
    return ret;
 }
 
+bool testMergeSparse() 
+{
+   Int_t bsize[] = { TMath::Nint( r.Uniform(1, 5) ),
+                     TMath::Nint( r.Uniform(1, 5) ),
+                     TMath::Nint( r.Uniform(1, 5) )
+   };
+   Double_t xmin[] = {minRange, minRange, minRange};
+   Double_t xmax[] = {maxRange, maxRange, maxRange};
+
+   THnSparseD* s1 = new THnSparseD("mergeS-s1", "s1-Title", 3, bsize, xmin, xmax);
+   THnSparseD* s2 = new THnSparseD("mergeS-s2", "s2-Title", 3, bsize, xmin, xmax);
+   THnSparseD* s3 = new THnSparseD("mergeS-s3", "s3-Title", 3, bsize, xmin, xmax);
+   THnSparseD* s4 = new THnSparseD("mergeS-s4", "s4-Title", 3, bsize, xmin, xmax);
+
+   s1->Sumw2();s2->Sumw2();s3->Sumw2();
+
+   for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
+      Double_t points[3];
+      points[0] = r.Uniform( minRange * .9, maxRange * 1.1);
+      points[1] = r.Uniform( minRange * .9, maxRange * 1.1);
+      points[2] = r.Uniform( minRange * .9, maxRange * 1.1);
+      s1->Fill(points, 1.0);
+      s4->Fill(points, 1.0);
+   }
+
+   for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
+      Double_t points[3];
+      points[0] = r.Uniform( minRange * .9, maxRange * 1.1);
+      points[1] = r.Uniform( minRange * .9, maxRange * 1.1);
+      points[2] = r.Uniform( minRange * .9, maxRange * 1.1);
+      s2->Fill(points, 1.0);
+      s4->Fill(points, 1.0);
+   }
+
+   for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
+      Double_t points[3];
+      points[0] = r.Uniform( minRange * .9, maxRange * 1.1);
+      points[1] = r.Uniform( minRange * .9, maxRange * 1.1);
+      points[2] = r.Uniform( minRange * .9, maxRange * 1.1);
+      s3->Fill(points, 1.0);
+      s4->Fill(points, 1.0);
+   }
+
+   TList *list = new TList;
+   list->Add(s2);
+   list->Add(s3);
+
+   s1->Merge(list);
+
+   bool ret = equals("MergeSparse", s1, s4, cmpOptNone, 1E-10);
+   delete s1;
+   delete s2;
+   delete s3;
+   return ret;
+}
+
 bool testLabel()
 {
    TH1D* h1 = new TH1D("lD1-h1", "h1-Title", numberOfBins, minRange, maxRange);
@@ -1785,7 +2009,7 @@ bool testLabel()
 bool testIntegerRebin()
 {
    const int rebin = TMath::Nint( r.Uniform(minRebin, maxRebin) );
-   Int_t seed = 4632;//0;
+   UInt_t seed = r.GetSeed();
    TH1D* h1 = new TH1D("h1","Original Histogram", TMath::Nint( r.Uniform(1, 5) ) * rebin, minRange, maxRange);
    r.SetSeed(seed);
    for ( Int_t i = 0; i < nEvents; ++i )
@@ -1799,13 +2023,37 @@ bool testIntegerRebin()
    for ( Int_t i = 0; i < nEvents; ++i )
       h3->Fill( r.Uniform( minRange * .9 , maxRange * 1.1 ) );
 
-   return equals("TestIntegerRebin", h2, h3, cmpOptStats  );
+   bool ret = equals("TestIntegerRebinHist", h2, h3, cmpOptStats  );
+   delete h1;
+   delete h2;
+   return ret;
+}
+
+bool testIntegerRebinProfile()
+{
+   const int rebin = TMath::Nint( r.Uniform(minRebin, maxRebin) );
+   TProfile* p1 = new TProfile("p1","p1-Title", TMath::Nint( r.Uniform(1, 5) ) * rebin, minRange, maxRange);
+   TProfile* p3 = new TProfile("testIntRebProf", "testIntRebProf", p1->GetNbinsX() / rebin, minRange, maxRange);
+
+   for ( Int_t i = 0; i < nEvents; ++i ) {
+      Double_t x = r.Uniform( minRange * .9 , maxRange * 1.1 );
+      Double_t y = r.Uniform( minRange * .9 , maxRange * 1.1 );
+      p1->Fill( x, y );
+      p3->Fill( x, y );
+   }
+
+   TProfile* p2 = static_cast<TProfile*>( p1->Rebin(rebin, "testIntegerRebin") );
+
+   bool ret = equals("TestIntegerRebinProf", p2, p3, cmpOptStats );
+   delete p1;
+   delete p2;
+   return ret;
 }
 
 bool testIntegerRebinNoName()
 {
    const int rebin = TMath::Nint( r.Uniform(minRebin, maxRebin) );
-   Int_t seed = 4632;//0;
+   UInt_t seed = r.GetSeed();
    TH1D* h1 = new TH1D("h2","Original Histogram", TMath::Nint( r.Uniform(1, 5) ) * rebin, minRange, maxRange);
    r.SetSeed(seed);
    for ( Int_t i = 0; i < nEvents; ++i )
@@ -1820,17 +2068,37 @@ bool testIntegerRebinNoName()
    for ( Int_t i = 0; i < nEvents; ++i )
       h3->Fill( r.Uniform( minRange * .9 , maxRange * 1.1 ) );
 
-   return equals("TestIntRebinNoName", h2, h3, cmpOptStats );
+   bool ret = equals("TestIntRebinNoName", h2, h3, cmpOptStats );
+   delete h1;
+   delete h2;
+   return ret;
+}
 
-   // This method fails because the Chi2Test is different of 1 for
-   // both of them. We need to look into both the Rebin method and the
-   // Chi2Test method to understand better what is going wrong.
+bool testIntegerRebinNoNameProfile()
+{
+   const int rebin = TMath::Nint( r.Uniform(minRebin, maxRebin) );
+   TProfile* p1 = new TProfile("p1","p1-Title", TMath::Nint( r.Uniform(1, 5) ) * rebin, minRange, maxRange);
+   TProfile* p3 = new TProfile("testIntRebNNProf", "testIntRebNNProf", int(p1->GetNbinsX() / rebin + 0.1), minRange, maxRange);
+
+   for ( Int_t i = 0; i < nEvents; ++i ) {
+      Double_t x = r.Uniform( minRange * .9 , maxRange * 1.1 );
+      Double_t y = r.Uniform( minRange * .9 , maxRange * 1.1 );
+      p1->Fill( x, y );
+      p3->Fill( x, y );
+   }
+
+   TProfile* p2 = dynamic_cast<TProfile*>( p1->Clone() );
+   p2->Rebin(rebin);
+   bool ret = equals("TestIntRebNoNamProf", p2, p3, cmpOptStats);
+   delete p1;
+   delete p2;
+   return ret;
 }
 
 bool testArrayRebin()
 {
    const int rebin = TMath::Nint( r.Uniform(minRebin, maxRebin) ) + 1;
-   Int_t seed = 4632;//0;
+   UInt_t seed = r.GetSeed();
    TH1D* h1 = new TH1D("h3","Original Histogram", TMath::Nint( r.Uniform(1, 5) ) * rebin * 2, minRange, maxRange);
    r.SetSeed(seed);
    for ( Int_t i = 0; i < nEvents; ++i )
@@ -1864,7 +2132,58 @@ bool testArrayRebin()
 
    delete [] rebinArray;
       
-   return equals("TestArrayRebin", h2, h3, cmpOptStats);
+   bool ret = equals("TestArrayRebin", h2, h3, cmpOptStats);
+   delete h1;
+   delete h2;
+   return ret;
+}
+
+bool testArrayRebinProfile()
+{
+   const int rebin = TMath::Nint( r.Uniform(minRebin, maxRebin) ) + 1;
+   UInt_t seed = r.GetSeed();
+   TProfile* p1 = new TProfile("p3","Original Histogram", TMath::Nint( r.Uniform(1, 5) ) * rebin * 2, minRange, maxRange);
+   r.SetSeed(seed);
+   for ( Int_t i = 0; i < nEvents; ++i ) {
+      Double_t x = r.Uniform( minRange * .9 , maxRange * 1.1 );
+      Double_t y = r.Uniform( minRange * .9 , maxRange * 1.1 ); 
+      p1->Fill( x, y );
+   }
+
+   // Create vector 
+   Double_t * rebinArray = new Double_t[rebin];
+   r.RndmArray(rebin, rebinArray);
+   std::sort(rebinArray, rebinArray + rebin);
+   for ( Int_t i = 0; i < rebin; ++i ) {
+      rebinArray[i] = TMath::Nint( rebinArray[i] * ( p1->GetNbinsX() - 2 ) + 2 );
+      rebinArray[i] = p1->GetBinLowEdge( p1->GetXaxis()->FindBin( rebinArray[i] ) );
+   }
+
+   rebinArray[0] = minRange;
+   rebinArray[rebin-1] = maxRange;
+
+   #ifdef __DEBUG__
+   for ( Int_t i = 0; i < rebin; ++i ) 
+      cout << rebinArray[i] << endl;
+   cout << "rebin: " << rebin << endl;
+   #endif
+
+   TProfile* p2 = static_cast<TProfile*>( p1->Rebin(rebin - 1, "testArrayRebinProf", rebinArray) );
+
+   TProfile* p3 = new TProfile("testArrayRebinProf2", "testArrayRebinProf2", rebin - 1, rebinArray );
+   r.SetSeed(seed);
+   for ( Int_t i = 0; i < nEvents; ++i ) {
+      Double_t x = r.Uniform( minRange * .9 , maxRange * 1.1 );
+      Double_t y = r.Uniform( minRange * .9 , maxRange * 1.1 );
+      p3->Fill( x, y );
+   }
+
+   delete [] rebinArray;
+      
+   bool ret = equals("TestArrayRebinProf", p2, p3, cmpOptStats );
+   delete p1;
+   delete p2;
+   return ret;
 }
 
 bool test2DRebin()
@@ -1875,7 +2194,7 @@ bool test2DRebin()
                        xrebin * TMath::Nint( r.Uniform(1, 5) ), minRange, maxRange, 
                        yrebin * TMath::Nint( r.Uniform(1, 5) ), minRange, maxRange);
    
-   Int_t seed = 4632;//0;
+   UInt_t seed = r.GetSeed();
    r.SetSeed(seed);
    for ( Int_t i = 0; i < nEvents; ++i )
       h2d->Fill( r.Uniform( minRange * .9 , maxRange * 1.1 ), r.Uniform( minRange * .9 , maxRange * 1.1 ) );
@@ -1889,16 +2208,19 @@ bool test2DRebin()
    for ( Int_t i = 0; i < nEvents; ++i )
       h3->Fill( r.Uniform( minRange * .9 , maxRange * 1.1 ), r.Uniform( minRange * .9 , maxRange * 1.1 ) );
 
-   return equals("TestIntRebin2D", h2d2, h3, cmpOptStats);
+   bool ret = equals("TestIntRebin2D", h2d2, h3, cmpOptStats);
+   delete h2d;
+   delete h2d2;
+   return ret;
 }
 
 bool testSparseRebin1() 
 {
-   const int rebin = 2;//TMath::Nint( r.Uniform(minRebin, maxRebin) );
+   const int rebin = TMath::Nint( r.Uniform(minRebin, maxRebin) );
 
-   Int_t bsizeRebin[] = { 2,//TMath::Nint( r.Uniform(1, 5) ),
-                          2,//TMath::Nint( r.Uniform(1, 5) ),
-                          2};//TMath::Nint( r.Uniform(1, 5) )};
+   Int_t bsizeRebin[] = { TMath::Nint( r.Uniform(1, 5) ),
+                          TMath::Nint( r.Uniform(1, 5) ),
+                          TMath::Nint( r.Uniform(1, 5) )};
 
    Int_t bsize[] = { bsizeRebin[0] * rebin,
                      bsizeRebin[1] * rebin,
@@ -1920,8 +2242,9 @@ bool testSparseRebin1()
 
    THnSparse* s3 = s1->Rebin(rebin);
 
-   bool ret = equals("THnSparse Rebin 1", s2, s3, cmpOptStats | cmpOptPrint );
+   bool ret = equals("THnSparse Rebin 1", s2, s3);
    delete s1;
+   delete s2;
    return ret;
 }
 
@@ -2658,29 +2981,26 @@ int main(int argc, char** argv)
    delete ht2;
    
    // Test 3
-   const unsigned int numberOfRebin = 4;
-   pointer2Test rebinTestPointer[numberOfRebin] = { testIntegerRebin, 
-                                                    testIntegerRebinNoName,
-                                                    testArrayRebin,
+   const unsigned int numberOfRebin = 8;
+   pointer2Test rebinTestPointer[numberOfRebin] = { testIntegerRebin,       testIntegerRebinProfile,
+                                                    testIntegerRebinNoName, testIntegerRebinNoNameProfile,
+                                                    testArrayRebin,         testArrayRebinProfile,
                                                     test2DRebin,
-                                                    /*testSparseRebin1*/};
+                                                    testSparseRebin1};
    struct TTestSuite rebinTestSuite = { numberOfRebin, 
                                         "Histogram Rebinning..............................................",
                                         rebinTestPointer };
 
-   // testSparseRebin1 fails. To be looked. Also to be done the
-   // testSparseRebin2, but this is calling the first method, so also
-   // frozen until fixed.
-
    // Test 4
    // Add Tests
-   const unsigned int numberOfAdds = 12;
+   const unsigned int numberOfAdds = 13;
    pointer2Test addTestPointer[numberOfAdds] = { testAdd1,    testAddProfile1, 
                                                  testAdd2,    testAddProfile2,
                                                  testAdd2D1,  testAdd2DProfile1,
                                                  testAdd2D2,  testAdd2DProfile2,
                                                  testAdd3D1,  testAdd3DProfile1,
-                                                 testAdd3D2,  testAdd3DProfile2
+                                                 testAdd3D2,  testAdd3DProfile2,
+                                                 testAddSparse
    };
    struct TTestSuite addTestSuite = { numberOfAdds, 
                                       "Add tests for 1D, 2D and 3D Histograms and Profiles..............",
@@ -2688,10 +3008,11 @@ int main(int argc, char** argv)
 
    // Test 5
    // Multiply Tests
-   const unsigned int numberOfMultiply = 6;
+   const unsigned int numberOfMultiply = 7;
    pointer2Test multiplyTestPointer[numberOfMultiply] = { testMul1,    testMul2,
                                                           testMul2D1,  testMul2D2,
-                                                          testMul3D1,  testMul3D2
+                                                          testMul3D1,  testMul3D2,
+                                                          testMulSparse
    };
    struct TTestSuite multiplyTestSuite = { numberOfMultiply, 
                                            "Multiply tests for 1D, 2D and 3D Histograms......................",
@@ -2709,7 +3030,7 @@ int main(int argc, char** argv)
 
    // Test 6
    // Copy Tests
-   const unsigned int numberOfCopy = 18;
+   const unsigned int numberOfCopy = 19;
    pointer2Test copyTestPointer[numberOfCopy] = { testAssign1D,          testAssignProfile1D, 
                                                   testCopyConstructor1D, testCopyConstructorProfile1D, 
                                                   testClone1D,           testCloneProfile1D,
@@ -2719,6 +3040,7 @@ int main(int argc, char** argv)
                                                   testAssign3D,          testAssignProfile3D,
                                                   testCopyConstructor3D, testCopyConstructorProfile3D,
                                                   testClone3D,           testCloneProfile3D,
+                                                  testCloneSparse
    };
    struct TTestSuite copyTestSuite = { numberOfCopy, 
                                        "Copy tests for 1D, 2D and 3D Histograms and Profiles.............",
@@ -2726,10 +3048,11 @@ int main(int argc, char** argv)
 
    // Test 7
    // Readwrite Tests
-   const unsigned int numberOfReadwrite = 6;
+   const unsigned int numberOfReadwrite = 7;
    pointer2Test readwriteTestPointer[numberOfReadwrite] = { testWriteRead1D,  testWriteReadProfile1D,
                                                             testWriteRead2D,  testWriteReadProfile2D,
                                                             testWriteRead3D,  testWriteReadProfile3D, 
+                                                            testWriteReadSparse
    };
    struct TTestSuite readwriteTestSuite = { numberOfReadwrite, 
                                             "Read/Write tests for 1D, 2D and 3D Histograms and Profiles.......",
@@ -2737,10 +3060,11 @@ int main(int argc, char** argv)
 
    // Test 8
    // Merge Tests
-   const unsigned int numberOfMerge = 6;
+   const unsigned int numberOfMerge = 7;
    pointer2Test mergeTestPointer[numberOfMerge] = { testMerge1D,  testMergeProf1D,
                                                     testMerge2D,  testMergeProf2D,
-                                                    testMerge3D,  testMergeProf3D
+                                                    testMerge3D,  testMergeProf3D,
+                                                    testMergeSparse
    };
    struct TTestSuite mergeTestSuite = { numberOfMerge, 
                                         "Merge tests for 1D, 2D and 3D Histograms and Profiles............",
@@ -2811,6 +3135,8 @@ void printResult(const char* msg, bool status)
 
 int equals(const char* msg, THnSparse* h1, THnSparse* h2, int options, double ERRORLIMIT)
 {
+   options = options | defaultEqualOptions;
+   bool print = options & cmpOptPrint;
    bool debug = options & cmpOptDebug;
    bool compareError = ! (options & cmpOptNoError);
    
@@ -2852,7 +3178,7 @@ int equals(const char* msg, THnSparse* h1, THnSparse* h2, int options, double ER
 //    if ( compareStats )
 //       differents += compareStatistics( h1, h2, debug, ERRORLIMIT);
    
-   cout << msg << ": \t" << (differents?"FAILED":"OK") << endl;
+   if ( print || debug ) cout << msg << ": \t" << (differents?"FAILED":"OK") << endl;
    
    delete h2;
    
@@ -3057,7 +3383,15 @@ int compareStatistics( TH1* h1, TH1* h2, bool debug, double ERRORLIMIT)
       cout << "RMS: " << h1->GetRMS(1) << " " << h2->GetRMS(1) 
            << " | " << fabs( h1->GetRMS(1) - h2->GetRMS(1) ) 
            << " " << differents
-           << endl;      
+           << endl;  
+
+   // Number of Entries
+//    differents += (bool) equals( h1->GetEffectiveEntries(), h2->GetEffectiveEntries(), 100*ERRORLIMIT);
+//    if ( debug )
+//       cout << "Entries: " << h1->GetEffectiveEntries() << " " << h2->GetEffectiveEntries() 
+//            << " | " << fabs( h1->GetEffectiveEntries() - h2->GetEffectiveEntries() ) 
+//            << " " << differents
+//            << endl;  
    
    return differents;
 }

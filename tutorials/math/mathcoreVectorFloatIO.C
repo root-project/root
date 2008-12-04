@@ -1,6 +1,5 @@
 //
-// Cint macro to test automatic generation of dictionary and I/O for  
-// mathcore Lorentz Vectors of floats 
+// Macro illustrating automatic dictionary generation and I/O with Lorentz Vectors of floats  
 // The dictionary for LorentzVector of float is not in the libMathCore, therefore 
 // is generated when parsed the file with CINT. 
 //

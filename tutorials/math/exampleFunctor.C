@@ -1,5 +1,5 @@
-// tutorial illustrating the use of functor and class member functions for 
-//  creating a TF1 class
+// Tutorial illustrating how creating a TF1 class using functor or class member functions 
+//
 //  can be run with:
 //  root > .x exampleFunctor.C
 //  root > .x exampleFunctor.C+ with ACLIC

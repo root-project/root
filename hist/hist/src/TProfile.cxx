@@ -1570,19 +1570,31 @@ TH1 *TProfile::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
       return 0;
    }
 
-      Int_t newbins = nbins/ngroup;
-   if (xbins) newbins = ngroup;
+   Int_t newbins = nbins/ngroup;
+   if (!xbins) { 
+      Int_t nbg = nbins/ngroup;
+      if (nbg*ngroup != nbins) {
+         Warning("Rebin", "ngroup=%d must be an exact divider of nbins=%d",ngroup,nbins);
+      }
+   }
+   else {   
+   // in the case of xbins given (rebinning in variable bins) ngroup is the new number of bins.
+   //  and number of grouped bins is not constant. 
+   // when looping for setting the contents for the new histogram we 
+   // need to loop on all bins of original histogram. Set then ngroup=nbins
+      newbins = ngroup;
+      ngroup = nbins;
+   }
 
    // Save old bin contents into a new array
-   Double_t entries = fEntries;
-   Double_t *oldBins   = new Double_t[nbins+1];
-   Double_t *oldCount  = new Double_t[nbins+1];
-   Double_t *oldErrors = new Double_t[nbins+1];
+   Double_t *oldBins   = new Double_t[nbins+2];
+   Double_t *oldCount  = new Double_t[nbins+2];
+   Double_t *oldErrors = new Double_t[nbins+2];
    Int_t bin, i;
    Double_t *cu1 = GetW();
    Double_t *er1 = GetW2();
    Double_t *en1 = GetB();
-   for (bin=1;bin<=nbins;bin++) {
+   for (bin=0;bin<=nbins+1;bin++) {
       oldBins[bin]   = cu1[bin];
       oldCount[bin]  = en1[bin];
       oldErrors[bin] = er1[bin];
@@ -1594,25 +1606,28 @@ TH1 *TProfile::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
       hnew = (TProfile*)Clone(newname);
    }
 
-   // change axis specs and rebuild bin contents array
+   // in case of ngroup not an excat divider of nbins, 
+   // top limit is changed (see NOTE in method comment) 
    if(!xbins && (newbins*ngroup != nbins)) {
       xmax = fXaxis.GetBinUpEdge(newbins*ngroup);
       hnew->fTsumw = 0; //stats must be reset because top bins will be moved to overflow bin
    }
 
-   if(!xbins && (fXaxis.GetXbins()->GetSize() > 0)){ // variable bin sizes
+   // set correctly the axis and resizes the bin arrays
+   if(!xbins && (fXaxis.GetXbins()->GetSize() > 0)){ 
+      // for rebinning of variable bins in a constant group 
       Double_t *bins = new Double_t[newbins+1];
       for(i = 0; i <= newbins; ++i) bins[i] = fXaxis.GetBinLowEdge(1+i*ngroup);
-      hnew->SetBins(newbins,bins); //this also changes errors array (if any)
+      hnew->SetBins(newbins,bins); //this also changes the bin array's
       delete [] bins;
-   } else if (xbins) {
-      ngroup = newbins;
+   } else if (xbins) { 
+      // when rebinning in variable bins
       hnew->SetBins(newbins,xbins);
    } else {
       hnew->SetBins(newbins,xmin,xmax);
    }
 
-   // copy merged bin contents (ignore under/overflows)
+   // merge bin contents ignoring now underflow/overflows
    Double_t *cu2 = hnew->GetW();
    Double_t *er2 = hnew->GetW2();
    Double_t *en2 = hnew->GetB();
@@ -1642,8 +1657,13 @@ TH1 *TProfile::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
       en2[bin] = binCount;
       oldbin += imax;
    }
-
-   hnew->SetEntries(entries); //was modified by SetBinContent
+   // set bin statistics for underflow/overflow bins by copying intact from original histogram
+   hnew->fArray[0] = oldBins[0];
+   hnew->fArray[newbins+1] = oldBins[nbins+1];
+   hnew->fBinEntries[0] = oldCount[0];
+   hnew->fBinEntries[newbins+1] = oldCount[nbins+1];
+   hnew->fSumw2[0] = oldErrors[0];
+   hnew->fSumw2[newbins+1] = oldErrors[nbins+1];
 
    delete [] oldBins;
    delete [] oldCount;

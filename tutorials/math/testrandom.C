@@ -1,6 +1,7 @@
 //______________________________________________________________________________
-// testrandom.C tests the generator TRandom3 against some ref values
-// and creates a timing table against TRandom and TRandom2.
+// Performance test of all the ROOT random generator (TRandom, TRandom1, TRandom2 and TRandom3)  
+// Tests the generator TRandom3 against some ref values
+// and creates a timing table against TRandom, TRandom1 and TRandom2.
 //
 // E.g. on an MacOSX with 2 GHz Intel Dual Core and compiled with gcc 4.0.1
 //

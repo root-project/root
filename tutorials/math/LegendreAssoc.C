@@ -1,4 +1,4 @@
-// Example macro describing how to use different kinds of Associate Legendre Polynomials
+// Example describing the usage of different kinds of Associate Legendre Polynomials
 // To execute the macro type in:
 //
 // root[0]: .x LegendreAssoc.C 

@@ -1,4 +1,4 @@
-// tutorial illustrating the various distributions available in MathCore and MathMore
+// tutorial illustrating the new statistical  distributions functions (pdf, cdf and quantile) 
 
 #ifndef __CINT__
 #include "Math/DistFunc.h"

@@ -1,6 +1,5 @@
 //
-// Cint macro as an example to write a std vector of ROOT::Math LorentzVector 
-// (XYZTVector) in a tree and to read back. 
+// Example showing how to write and read a std vector of ROOT::Math LorentzVector in a ROOT tree. 
 // In the write() function a variable number of track Vectors is generated 
 // according to a Poisson distribution with random momentum uniformly distributed 
 // in phi and eta. 

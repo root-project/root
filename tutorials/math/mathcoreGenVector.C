@@ -1,5 +1,5 @@
-// Example macro to test available methods and operation on the 
-// mathcore GenVector classes. The results are compared and check at the 
+// Example macro testing available methods and operation of the GenVector classes. 
+// The results are compared and check at the 
 // numerical precision levels. 
 // Some small discrepancy can appear when the macro 
 // is executed on different architectures where it has been calibrated (Power PC G5)
