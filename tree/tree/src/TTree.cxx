@@ -2045,9 +2045,6 @@ TStreamerInfo* TTree::BuildStreamerInfo(TClass* cl, void* pointer /* = 0 */)
    }
    cl->BuildRealData(pointer);
    TStreamerInfo* sinfo = (TStreamerInfo*)cl->GetStreamerInfo(cl->GetClassVersion());
-   if (fDirectory) {
-      sinfo->ForceWriteInfo(fDirectory->GetFile());
-   }
    // Create StreamerInfo for all base classes.
    TBaseClass* base = 0;
    TIter nextb(cl->GetListOfBases());
@@ -2056,7 +2053,10 @@ TStreamerInfo* TTree::BuildStreamerInfo(TClass* cl, void* pointer /* = 0 */)
          continue;
       }
       TClass* clm = TClass::GetClass(base->GetName());
-      BuildStreamerInfo(clm);
+      BuildStreamerInfo(clm, pointer);
+   }
+   if (fDirectory) {
+      sinfo->ForceWriteInfo(fDirectory->GetFile());
    }
    return sinfo;
 }

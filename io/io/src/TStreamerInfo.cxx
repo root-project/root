@@ -1662,7 +1662,16 @@ void TStreamerInfo::ForceWriteInfo(TFile* file, Bool_t force)
    for (; element; element = (TStreamerElement*) next()) {
       TClass* cl = element->GetClassPointer();
       if (cl) {
-         TVirtualStreamerInfo* si = cl->GetStreamerInfo();
+         TVirtualStreamerInfo* si = 0;
+         if (cl->Property() & kIsAbstract) {
+            // If the class of the element is abstract, register the
+            // TStreamerInfo only if it has already been built.
+            // Otherwise call cl->GetStreamerInfo() would generate an
+            // incorrect StreamerInfo.
+            si = cl->GetCurrentStreamerInfo();
+         } else {
+            si = cl->GetStreamerInfo();
+         }
          if (si) {
             si->ForceWriteInfo(file, force);
          }
