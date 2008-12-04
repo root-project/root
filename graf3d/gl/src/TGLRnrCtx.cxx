@@ -216,7 +216,7 @@ void TGLRnrCtx::EndSelection(Int_t glResult)
 
    if (glResult < 0)
    {
-      if (fSelectBuffer->CanGrow())
+      if (fSelectBuffer->CanGrow() && fSelectBuffer->GetBufSize() > 0x10000)
       {
          Warning("TGLRnrCtx::EndSelection",
                  "Select buffer size (%d) insufficient, doubling it.",

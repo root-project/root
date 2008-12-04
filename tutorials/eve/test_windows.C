@@ -25,7 +25,7 @@ void test_windows()
    TGLEmbeddedViewer* xx = new TGLEmbeddedViewer(0, 0, 0);
    v->SetGLViewer(xx);
    evef = slot->MakeFrame(xx->GetFrame());
-   evef->SetName("Bar Embedded Viewer");
+   evef->SetElementName("Bar Embedded Viewer");
 
    gEve->GetViewers()->AddElement(v);
    v->AddScene(gEve->GetEventScene());
@@ -44,9 +44,10 @@ void test_windows()
    v = new TEveViewer("FooViewer");
    slot->StartEmbedding();
    v->SpawnGLViewer(gClient->GetRoot(), gEve->GetEditor());
-   v->AddScene(gEve->GetEventScene());   
    slot->StopEmbedding("Foo StandAlone Viewer");
+
    gEve->GetViewers()->AddElement(v);
+   v->AddScene(gEve->GetEventScene());   
 
    // ----------------------------------------------------------------
 

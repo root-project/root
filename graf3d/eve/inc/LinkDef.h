@@ -114,7 +114,7 @@
 // TEvePad
 #pragma link C++ class TEvePad+;
 
-// TEveBrowser, TEveCompositeFrame, TEveWindow
+// TEveBrowser, TEveCompositeFrame, TEveWindow, TEveWindowManager
 #pragma link C++ class TEveListTreeItem+;
 #pragma link C++ class TEveGListTreeEditorFrame+;
 #pragma link C++ class TEveBrowser+;
@@ -128,6 +128,7 @@
 #pragma link C++ class TEveWindowFrame+;
 #pragma link C++ class TEveWindowPack+;
 #pragma link C++ class TEveWindowTab+;
+#pragma link C++ class TEveWindowManager+;
 
 // TEveGedEditor
 #pragma link C++ class TEveGedEditor+;

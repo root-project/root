@@ -98,6 +98,7 @@ protected:
    TRef             fSource;               //  External object that is represented by this element.
    void            *fUserData;             //! Externally assigned and controlled user data.
 
+   virtual void PreDeleteElement();
    virtual void RemoveElementsInternal();
 
 public:
@@ -115,6 +116,7 @@ public:
    virtual void SetElementName (const Text_t* name);
    virtual void SetElementTitle(const Text_t* title);
    virtual void SetElementNameTitle(const Text_t* name, const Text_t* title);
+   virtual void NameTitleChanged();
 
    const TString& GetVizTag() const             { return fVizTag; }
    void           SetVizTag(const TString& tag) { fVizTag = tag;  }
@@ -403,12 +405,17 @@ public:
 
    virtual TEveElementList* CloneElement() const { return new TEveElementList(*this); }
 
-   virtual const Text_t* GetElementName()  const { return TNamed::GetName(); }
-   virtual const Text_t* GetElementTitle() const { return TNamed::GetTitle(); }
-   virtual void SetElementName (const Text_t* name)  { TNamed::SetName(name); }
-   virtual void SetElementTitle(const Text_t* title) { TNamed::SetTitle(title); }
+   virtual const Text_t* GetElementName()  const { return GetName();  }
+   virtual const Text_t* GetElementTitle() const { return GetTitle(); }
+
+   virtual void SetElementName (const Text_t* name)
+   { TNamed::SetName(name); NameTitleChanged(); }
+
+   virtual void SetElementTitle(const Text_t* title)
+   { TNamed::SetTitle(title); NameTitleChanged(); }
+
    virtual void SetElementNameTitle(const Text_t* name, const Text_t* title)
-   { TNamed::SetNameTitle(name, title); }
+   { TNamed::SetNameTitle(name, title); NameTitleChanged(); }
 
    virtual Bool_t CanEditMainColor() const { return fDoColor; }
 

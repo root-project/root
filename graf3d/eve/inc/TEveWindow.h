@@ -63,10 +63,14 @@ public:
    TEveCompositeFrame(TGCompositeFrame* gui_parent, TEveWindow* eve_parent);
    virtual ~TEveCompositeFrame();
 
+   virtual void WindowNameChanged(const TString& name);
+
    virtual void Destroy() = 0;
 
    virtual void        AcquireEveWindow(TEveWindow* ew);
    virtual TEveWindow* RelinquishEveWindow(Bool_t reparent=kTRUE);
+
+   TEveWindow* GetEveWindow() const { return fEveWindow; }
 
    virtual void SetCurrent(Bool_t curr);
    virtual void SetShowTitleBar(Bool_t show);
@@ -99,10 +103,9 @@ public:
                                  TGMainFrame* mf);
    virtual ~TEveCompositeFrameInMainFrame();
 
-   virtual void Destroy();
+   virtual void WindowNameChanged(const TString& name);
 
-   virtual void        AcquireEveWindow(TEveWindow* ew);
-   virtual TEveWindow* RelinquishEveWindow(Bool_t reparent=kTRUE);
+   virtual void Destroy();
 
    void MainFrameClosed();
 
@@ -155,10 +158,9 @@ public:
                            TGTab* tab);
    virtual ~TEveCompositeFrameInTab();
 
-   virtual void Destroy();
+   virtual void WindowNameChanged(const TString& name);
 
-   virtual void        AcquireEveWindow(TEveWindow* ew);
-   virtual TEveWindow* RelinquishEveWindow(Bool_t reparent=kTRUE);
+   virtual void Destroy();
 
    virtual void SetCurrent(Bool_t curr);
 
@@ -179,6 +181,8 @@ public:
 
 class TEveWindow : public TEveElementList
 {
+   friend class TEveWindowManager;
+
 private:
    TEveWindow(const TEveWindow&);            // Not implemented
    TEveWindow& operator=(const TEveWindow&); // Not implemented
@@ -187,7 +191,7 @@ protected:
    TEveCompositeFrame  *fEveFrame;
    Bool_t               fShowTitleBar;
 
-   static TEveWindow   *fgCurrentWindow;
+   virtual void SetCurrent(Bool_t curr);
 
    static UInt_t        fgMainFrameDefWidth;
    static UInt_t        fgMainFrameDefHeight;
@@ -195,9 +199,13 @@ protected:
    static Pixel_t       fgCurrentBackgroundColor;
    static Pixel_t       fgMiniBarBackgroundColor;
 
+   virtual void PreDeleteElement();
+
 public:
    TEveWindow(const Text_t* n="TEveWindow", const Text_t* t="");
    virtual ~TEveWindow();
+
+   virtual void NameTitleChanged();
 
    virtual TGFrame*        GetGUIFrame() = 0;
 
@@ -221,12 +229,11 @@ public:
    Bool_t GetShowTitleBar() const { return fShowTitleBar; }
    void   SetShowTitleBar(Bool_t x);
 
-   Bool_t       IsCurrent() const { return fgCurrentWindow == this; }
-   virtual void SetCurrent(Bool_t curr);
+   Bool_t IsCurrent() const;
 
    Bool_t IsAncestorOf(TEveWindow* win);
 
-   void TitleBarClicked();
+   void   TitleBarClicked();
 
 
    // Static helper functions for common window management scenarios.

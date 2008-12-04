@@ -42,6 +42,7 @@ class TEveViewer; class TEveViewerList;
 class TEveScene;  class TEveSceneList;
 
 class TEveEventManager;
+class TEveWindowManager;
 
 
 class TEveManager
@@ -92,7 +93,7 @@ private:
 
    TFolder                  *fMacroFolder;
 
-   TEveElementList          *fWindows;
+   TEveWindowManager        *fWindowManager;
    TEveViewerList           *fViewers;
    TEveSceneList            *fScenes;
 
@@ -139,7 +140,8 @@ public:
    TEveGedEditor*    GetEditor()    const { return fEditor;    }
    TGStatusBar*      GetStatusBar() const { return fStatusBar; }
 
-   TEveElementList*  GetWindows()  const { return fWindows; }
+   TEveWindowManager* GetWindowManager() const { return fWindowManager; }
+
    TEveSceneList*    GetScenes()   const { return fScenes;  }
    TEveViewerList*   GetViewers()  const { return fViewers; }
 

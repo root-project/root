@@ -16,6 +16,7 @@
 #include "TEveScene.h"
 #include "TEvePad.h"
 #include "TEveEventManager.h"
+#include "TEveWindowManager.h"
 
 #include "TEveBrowser.h"
 #include "TEveGedEditor.h"
@@ -68,7 +69,7 @@ TEveManager::TEveManager(UInt_t w, UInt_t h, Bool_t map_window, Option_t* opt) :
 
    fMacroFolder (0),
 
-   fWindows        (0),
+   fWindowManager  (0),
    fViewers        (0),
    fScenes         (0),
    fViewer         (0),
@@ -124,7 +125,7 @@ TEveManager::TEveManager(UInt_t w, UInt_t h, Bool_t map_window, Option_t* opt) :
    gROOT->GetListOfBrowsables()->Add(fMacroFolder);
 
 
-   fWindows = new TEveElementList("Windows", "List of EVE windows");
+   fWindowManager = new TEveWindowManager("WindowManager", "Manager of EVE windows");
 
    // Build GUI
    fBrowser   = new TEveBrowser(w, h);
@@ -155,8 +156,8 @@ TEveManager::TEveManager(UInt_t w, UInt_t h, Bool_t map_window, Option_t* opt) :
 
    // --------------------------------
 
-   fWindows->IncDenyDestroy();
-   AddToListTree(fWindows, kTRUE);
+   fWindowManager->IncDenyDestroy();
+   AddToListTree(fWindowManager, kTRUE);
 
    fViewers = new TEveViewerList("Viewers");
    fViewers->IncDenyDestroy();
@@ -210,10 +211,10 @@ TEveManager::~TEveManager()
    fViewers->Destroy();
    fViewers = 0;
 
-   fWindows->DestroyElements();
-   fWindows->DecDenyDestroy();
-   fWindows->Destroy();
-   fWindows = 0;
+   fWindowManager->DestroyElements();
+   fWindowManager->DecDenyDestroy();
+   fWindowManager->Destroy();
+   fWindowManager = 0;
 
    fOrphanage->DecDenyDestroy();
    fHighlight->DecDenyDestroy();
