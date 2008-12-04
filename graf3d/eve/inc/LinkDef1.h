@@ -13,29 +13,25 @@
 #pragma link off all globals;
 #pragma link off all classes;
 
+//==============================================================================
+// LinkDef1.h - Core EVE objects and services.
+//==============================================================================
 
-// Utilities
+// TEveUtil
 #pragma link C++ class TEveUtil+;
-
-// TEveManager
-#pragma link C++ class TEveManager+;
-#pragma link C++ global gEve;
-
-#pragma link C++ class TEveManager::TExceptionHandler+;
-
-
-#pragma link C++ class TEveMagField+;
-#pragma link C++ class TEveMagFieldConst+;
-#pragma link C++ class TEveMagFieldDuo+;
-
-// Basic helper classes
 #pragma link C++ class TEveException+;
 #pragma link C++ class TEvePadHolder+;
 #pragma link C++ class TEveGeoManagerHolder+;
 #pragma link C++ class TEveRefCnt+;
 #pragma link C++ class TEveRefBackPtr+;
 
-// TEveVSD structs
+// TEveManager
+#pragma link C++ class TEveManager+;
+#pragma link C++ global gEve;
+#pragma link C++ class TEveManager::TExceptionHandler+;
+
+// TEveVSD
+#pragma link C++ class TEveVSD+;
 #pragma link C++ class TEveVector+;
 #pragma link C++ class TEveVector4+;
 #pragma link C++ class TEvePathMark+;
@@ -53,25 +49,14 @@
 #pragma link C++ class TEveTransSubEditor+;
 #pragma link C++ class TEveTransEditor+;
 
-// Stepper
-#pragma link C++ class TEveGridStepper+;
-#pragma link C++ class TEveGridStepperSubEditor+;
-#pragma link C++ class TEveGridStepperEditor+;
-
-// TEveRGBAPalette
-#pragma link C++ class TEveRGBAPalette+;
-#pragma link C++ class TEveRGBAPaletteEditor+;
-#pragma link C++ class TEveRGBAPaletteSubEditor+;
-
-// Plexes
+// TEveChunkManager
 #pragma link C++ class TEveChunkManager+;
 #pragma link C++ class TEveChunkManager::iterator-;
 
-// TEveEventManager, VSDEvent, TEveVSD
+// TEveEventManager
 #pragma link C++ class TEveEventManager+;
-#pragma link C++ class TEveVSD+;
 
-// TTreeTools
+// TEveTreeTools
 #pragma link C++ class TEveSelectorToEventList+;
 #pragma link C++ class TEvePointSelectorConsumer+;
 #pragma link C++ class TEvePointSelector+;
@@ -142,74 +127,6 @@
 #pragma link C++ class TEveGDoubleValuator+;
 #pragma link C++ class TEveGTriVecValuator+;
 
-// TEveTrack
-#pragma link C++ class TEveTrack+;
-#pragma link C++ class TEveTrackGL+;
-#pragma link C++ class TEveTrackEditor+;
-#pragma link C++ class TEveTrackList+;
-#pragma link C++ class TEveTrackListEditor+;
-#pragma link C++ class TEveTrackPropagatorSubEditor+;
-#pragma link C++ class TEveTrackPropagatorEditor+;
-#pragma link C++ class TEveTrackPropagator+;
-
-// TEveText
-#pragma link C++ class TEveText+;
-#pragma link C++ class TEveTextGL+;
-#pragma link C++ class TEveTextEditor+;
-
-// TEvePointSet
-#pragma link C++ class TEvePointSet+;
-#pragma link C++ class TEvePointSetArray+;
-#pragma link C++ class TEvePointSetArrayEditor+;
-
-// TEveLine
-#pragma link C++ class TEveLine+;
-#pragma link C++ class TEveLineEditor+;
-#pragma link C++ class TEveLineGL+;
-
-// TEveArrow
-#pragma link C++ class TEveArrow+;
-#pragma link C++ class TEveArrowEditor+;
-#pragma link C++ class TEveArrowGL+;
-
-// TEveFrameBox
-#pragma link C++ class TEveFrameBox+;
-#pragma link C++ class TEveFrameBoxGL+;
-
-// TEveDigitSet
-#pragma link C++ class TEveDigitSet+;
-#pragma link C++ class TEveDigitSetEditor+;
-#pragma link C++ typedef TEveDigitSet::Callback_foo;
-
-// TEveQuadSet
-#pragma link C++ class TEveQuadSet+;
-#pragma link C++ class TEveQuadSetGL+;
-
-// TEveBoxSet
-#pragma link C++ class TEveBoxSet+;
-#pragma link C++ class TEveBoxSetGL+;
-
-// GeoNode
-#pragma link C++ class TEveGeoNode+;
-#pragma link C++ class TEveGeoTopNode+;
-#pragma link C++ class TEveGeoNodeEditor+;
-#pragma link C++ class TEveGeoTopNodeEditor+;
-
-#pragma link C++ class TEveGeoShapeExtract+;
-#pragma link C++ class TEveGeoShape+;
-
-// TrianlgeSet
-#pragma link C++ class TEveTriangleSet+;
-#pragma link C++ class TEveTriangleSetEditor+;
-#pragma link C++ class TEveTriangleSetGL+;
-
-// TEveStraightLineSet
-#pragma link C++ class TEveStraightLineSet+;
-#pragma link C++ class TEveStraightLineSetGL+;
-#pragma link C++ class TEveStraightLineSetEditor+;
-#pragma link C++ class TEveStraightLineSetProjected+;
-#pragma link C++ class TEveScalableStraightLineSet+;
-
 // Projections / non-linear transformations
 #pragma link C++ class TEveProjectable+;
 #pragma link C++ class TEveProjected+;
@@ -227,33 +144,6 @@
 #pragma link C++ class TEveProjectionAxes+;
 #pragma link C++ class TEveProjectionAxesEditor+;
 #pragma link C++ class TEveProjectionAxesGL+;
-
-#pragma link C++ class TEvePointSetProjected+;
-#pragma link C++ class TEveLineProjected+;
-#pragma link C++ class TEveTrackProjected+;
-#pragma link C++ class TEveTrackProjectedGL+;
-#pragma link C++ class TEveTrackListProjected+;
-
-#pragma link C++ class TEvePolygonSetProjected+;
-#pragma link C++ class TEvePolygonSetProjectedEditor+;
-#pragma link C++ class TEvePolygonSetProjectedGL+;
-
-// Generic calorimeter representation
-#pragma link C++ class TEveCaloData+;
-#pragma link C++ class TEveCaloData::SliceInfo_t+;
-#pragma link C++ class TEveCaloDataVec;
-#pragma link C++ class TEveCaloDataHist+;
-#pragma link C++ class TEveCaloViz+;
-#pragma link C++ class TEveCaloVizEditor+;
-#pragma link C++ class TEveCalo3D+;
-#pragma link C++ class TEveCalo3DGL+;
-#pragma link C++ class TEveCalo2D+;
-#pragma link C++ class TEveCalo2DGL+;
-#pragma link C++ class TEveCaloLego+;
-#pragma link C++ class TEveCaloLegoEditor+;
-#pragma link C++ class TEveCaloLegoGL+;
-#pragma link C++ class TEveLegoEventHandler+;
-#pragma link C++ class TEveLegoOverlay+;
 
 // Generic configuration
 #pragma link C++ class TEveParamList;

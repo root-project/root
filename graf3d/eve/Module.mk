@@ -13,12 +13,36 @@ EVEDIRS   := $(EVEDIR)/src
 EVEDIRI   := $(EVEDIR)/inc
 
 ##### libEve #####
-EVEL      := $(MODDIRI)/LinkDef.h
-EVEDS     := $(MODDIRS)/G__Eve.cxx
-EVEDO     := $(EVEDS:.cxx=.o)
+EVEL1     := $(MODDIRI)/LinkDef1.h
+EVEL2     := $(MODDIRI)/LinkDef2.h
+EVEDS1    := $(MODDIRS)/G__Eve1.cxx
+EVEDS2    := $(MODDIRS)/G__Eve2.cxx
+EVEDO1    := $(EVEDS1:.cxx=.o)
+EVEDO2    := $(EVEDS2:.cxx=.o)
+EVEDH     := $(EVEDS:.cxx=.h)
+EVEL      := $(EVEL1) $(EVEL2)
+EVEDS     := $(EVEDS1) $(EVEDS2)
+EVEDO     := $(EVEDO1) $(EVEDO2)
 EVEDH     := $(EVEDS:.cxx=.h)
 
-EVEH      := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
+EVEH1     := TEveBrowser TEveChunkManager TEveCompound \
+             TEveElement TEveEventManager TEveGValuators \
+             TEveGedEditor TEveMacro TEveManager TEvePad TEveParamList \
+             TEveProjectionAxes TEveProjectionBases TEveProjectionManager \
+             TEveProjections TEveScene TEveSelection TEveTrans TEveTreeTools \
+             TEveUtil TEveVSD TEveViewer TEveWindow
+
+EVEH2     := TEveArrow TEveBoxSet TEveCalo \
+             TEveDigitSet TEveFrameBox TEveGeoNode TEveGeoShapeExtract \
+             TEveGridStepper TEveLegoEventHandler TEveLegoOverlay \
+             TEveLine TEvePointSet TEvePolygonSetProjected TEveQuadSet \
+             TEveRGBAPalette TEveScalableStraightLineSet TEveStraightLineSet \
+             TEveText TEveTrack TEveTriangleSet 
+
+EVEH1     := $(foreach stem, $(EVEH1), $(wildcard $(MODDIRI)/$(stem)*.h))
+EVEH2     := $(foreach stem, $(EVEH2), $(wildcard $(MODDIRI)/$(stem)*.h))
+
+EVEH      := $(EVEH1) $(EVEH2)
 EVES      := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 EVEO      := $(EVES:.cxx=.o)
 
@@ -46,9 +70,12 @@ $(EVELIB):      $(EVEO) $(EVEDO) $(ORDER_) $(MAINLIBS) $(EVELIBDEP)
 		   "$(SOFLAGS)" libEve.$(SOEXT) $@ "$(EVEO) $(EVEDO)" \
 		   "$(EVELIBEXTRA) $(FTGLLIBDIR) $(FTGLLIBS) $(GLLIBS)"
 
-$(EVEDS):       $(EVEH) $(EVEL) $(ROOTCINTTMPDEP)
+$(EVEDS1):      $(EVEH1) $(EVEL1) $(ROOTCINTTMPDEP)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(EVEH) $(EVEDIRS)/SolarisCCDictHack.h $(EVEL)
+		$(ROOTCINTTMP) -f $@ -c $(EVEH1) $(EVEDIRS)/SolarisCCDictHack.h $(EVEL1)
+$(EVEDS2):      $(EVEH2) $(EVEL2) $(ROOTCINTTMPDEP)
+		@echo "Generating dictionary $@..."
+		$(ROOTCINTTMP) -f $@ -c $(EVEH2) $(EVEDIRS)/SolarisCCDictHack.h $(EVEL2)
 
 $(EVEMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(EVEL)
 		$(RLIBMAP) -o $(EVEMAP) -l $(EVELIB) \
@@ -72,3 +99,9 @@ $(EVEO) $(EVEDO): CXXFLAGS += $(OPENGLINCDIR:%=-I%) $(FTGLINCDIR:%=-I%) $(FTGLCP
 else
 $(EVEO) $(EVEDO): CXXFLAGS += $(OPENGLINCDIR:%=-I%) $(FTGLINCDIR:%=-I%) $(FTGLCPPFLAGS)
 endif
+
+$(MODNAME)-echo-h1:
+	@echo $(EVEH1)
+
+$(MODNAME)-echo-h2:
+	@echo $(EVEH2)
