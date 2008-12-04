@@ -93,8 +93,8 @@ public:
    virtual void   EndScene();
 
    virtual Int_t  AddObject(const TBuffer3D& buffer, Bool_t* addChildren = 0);
-   virtual Int_t  AddObject(UInt_t physicalID, const TBuffer3D& buffer, Bool_t* addChildren = kFALSE);
-   virtual Bool_t OpenComposite(const TBuffer3D& buffer, Bool_t* addChildren = kFALSE);
+   virtual Int_t  AddObject(UInt_t physicalID, const TBuffer3D& buffer, Bool_t* addChildren = 0);
+   virtual Bool_t OpenComposite(const TBuffer3D& buffer, Bool_t* addChildren = 0);
    virtual void   CloseComposite();
    virtual void   AddCompositeOp(UInt_t operation);
 
