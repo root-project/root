@@ -1,13 +1,13 @@
 # This is a template for all makefiles.
 
 #Set the list of files to be deleted by clean (Targets can also be specified).:
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog  branch.root treeobj.root
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog  branch.root treeobj.root abc*.root abc_rflx.cpp *.success
 
 # Set the list of target to make while testing.  By default, mytest is the
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += noname simple i_simple separate
+TEST_TARGETS += noname simple i_simple separate abc
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -30,6 +30,7 @@ ifeq ($(strip $(ROOTTEST_HOME)),)
 endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk
+include $(ROOTTEST_HOME)/scripts/Reflex.mk
 
 
 # The name of this target should be changed according to the test being run.  Any name changes
@@ -72,3 +73,47 @@ i_simple: simple.log
 
 separate: separate.log
 	$(TestDiff)
+
+abc_rflx.cpp: abc.h
+	$(CMDECHO) genreflex abc.h
+
+libabc_reflex.$(DllSuf): abc_rflx.o
+	$(BuildFromObj)
+
+abc_cint.root: abc_h.$(DllSuf)
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q abcwrite.C\(\"cint\"\) > abc_cint.log 2>&1
+	 
+abc_reflex.root: libabc_reflex.$(DllSuf)
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q abcwrite.C\(\"reflex\"\) > abc_cint.log 2>&1
+
+
+abc.cintcint.log: abc_cint.root
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q abcread.C\(\"cint\",\"cint\"\) 2>&1 | grep -v Processing > abc.cintcint.log 
+
+abc.reflexcint.log: abc_cint.root libabc_reflex.$(DllSuf)
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q abcread.C\(\"cint\",\"reflex\"\) 2>&1 | grep -v Processing > abc.reflexcint.log 
+
+abc.cintreflex.log: abc_reflex.root abc_h.$(DllSuf)
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q abcread.C\(\"reflex\",\"cint\"\) 2>&1 | grep -v Processing > abc.cintreflex.log 
+
+abc.reflexreflex.log: abc_reflex.root
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q abcread.C\(\"reflex\",\"reflex\"\) 2>&1 | grep -v Processing > abc.reflexreflex.log 
+
+
+abc.cintcint.success: abc.cintcint.log
+	$(CMDECHO) diff -b -u abc.cintcint.log abc.ref && touch abc.cintcint.success
+
+abc.reflexcint.success: abc.reflexcint.log
+	$(CMDECHO) diff -b -u abc.reflexcint.log abc.ref && touch abc.reflexcint.success
+
+abc.cintreflex.success: abc.cintreflex.log
+	$(CMDECHO) diff -b -u abc.cintreflex.log abc.ref && touch abc.cintreflex.success
+
+abc.reflexreflex.success: abc.reflexreflex.log
+	$(CMDECHO) diff -b -u abc.reflexreflex.log abc.ref && touch abc.reflexreflex.success
+
+ifeq ($(findstring disable-gccxml,$(notdir $(HAVEGCCXML))),gccxml)
+abc: abc.cintcint.success abc.cintreflex.success abc.reflexcint.success abc.reflexreflex.success
+else
+abc: abc.cintcint.success
+endif
