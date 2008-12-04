@@ -75,7 +75,7 @@ separate: separate.log
 	$(TestDiff)
 
 abc_rflx.cpp: abc.h
-	$(CMDECHO) genreflex abc.h
+	$(CMDECHO) genreflex abc.h > abc_reflex_cpp.log 2>&1
 
 libabc_reflex.$(DllSuf): abc_rflx.o
 	$(BuildFromObj)
@@ -84,7 +84,7 @@ abc_cint.root: abc_h.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -b -l -q abcwrite.C\(\"cint\"\) > abc_cint.log 2>&1
 	 
 abc_reflex.root: libabc_reflex.$(DllSuf)
-	$(CMDECHO) $(CALLROOTEXE) -b -l -q abcwrite.C\(\"reflex\"\) > abc_cint.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q abcwrite.C\(\"reflex\"\) > abc_reflex.log 2>&1
 
 
 abc.cintcint.log: abc_cint.root
@@ -112,7 +112,7 @@ abc.cintreflex.success: abc.cintreflex.log
 abc.reflexreflex.success: abc.reflexreflex.log
 	$(CMDECHO) diff -b -u abc.reflexreflex.log abc.ref && touch abc.reflexreflex.success
 
-ifeq ($(findstring disable-gccxml,$(notdir $(HAVEGCCXML))),gccxml)
+ifeq ($(findstring gccxml,$(notdir $(HAVEGCCXML))),gccxml)
 abc: abc.cintcint.success abc.cintreflex.success abc.reflexcint.success abc.reflexreflex.success
 else
 abc: abc.cintcint.success
