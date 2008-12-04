@@ -984,7 +984,7 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
       theGraph->SetMarkerStyle(3);
       npt = 0;
       for (i=1;i<=npoints;i++) {
-         if (y[i-1] >= minimum && y[i-1] <= maximum && x[i-1] >= uxmin  && x[i-1] <= uxmax) {
+         if (y[i-1] >= rwymin && y[i-1] <= rwymax && x[i-1] >= rwxmin  && x[i-1] <= rwxmax) {
             gxwork[npt] = x[i-1];      gywork[npt] = y[i-1];
             npt++;
          }
@@ -1001,7 +1001,7 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
    if (optionMark) {
       npt = 0;
       for (i=1;i<=npoints;i++) {
-         if (y[i-1] >= minimum && y[i-1] <= maximum && x[i-1] >= uxmin  && x[i-1] <= uxmax) {
+         if (y[i-1] >= rwymin && y[i-1] <= rwymax && x[i-1] >= rwxmin  && x[i-1] <= rwxmax) {
             gxwork[npt] = x[i-1];      gywork[npt] = y[i-1];
             npt++;
          }
