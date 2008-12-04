@@ -1646,7 +1646,7 @@ Int_t TGraph::RemovePoint()
    for (i=0;i<fNpoints;i++) {
       Int_t dpx = px - gPad->XtoAbsPixel(gPad->XtoPad(fX[i]));
       Int_t dpy = py - gPad->YtoAbsPixel(gPad->YtoPad(fY[i]));
-      if (dpx*dpx+dpy*dpy < 25) {ipoint = i; break;}
+      if (dpx*dpx+dpy*dpy < 100) {ipoint = i; break;}
    }
    return RemovePoint(ipoint);
 }
