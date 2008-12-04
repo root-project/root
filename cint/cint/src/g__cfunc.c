@@ -46,8 +46,8 @@ int getopt();
 
 
 #if defined(G__ANSI) || defined(G__ANSIHEADER)
-int memcmp(const void *region1,const void *region2,size_t count);
-void* memcpy(void *region1,const void *region2,size_t n);
+//int memcmp(const void *region1,const void *region2,size_t count);
+//void* memcpy(void *region1,const void *region2,size_t n);
 #elif defined(_AIX)
 /* IBM AIX */
 int memcmp(const void *region1,const void *region2,size_t count);
