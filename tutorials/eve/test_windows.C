@@ -1,4 +1,11 @@
-TEveWindowSlot *s = 0;
+#include "TEveWindow.h"
+#include "TEveViewer.h"
+#include "TEveManager.h"
+#include "TEveBrowser.h"
+#include "TEveGedEditor.h"
+#include "TGLEmbeddedViewer.h"
+#include "TCanvas.h"
+#include "TGTab.h"
 
 void test_windows()
 {
@@ -10,8 +17,6 @@ void test_windows()
    TEveWindowFrame *evef = 0;
 
    TEveViewer *v = 0;
-
-   TGCompositeFrame *cf = 0;
 
    // ----------------------------------------------------------------
 
@@ -36,7 +41,7 @@ void test_windows()
 
    slot = pack2->NewSlot();
    slot->StartEmbedding();
-   new TCanvas;
+   new TCanvas(); // Sometimes crashes on destroy - should use embedded canvas?
    slot->StopEmbedding();
 
    slot = pack2->NewSlot();
