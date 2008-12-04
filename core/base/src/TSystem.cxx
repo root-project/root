@@ -2588,27 +2588,41 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
             // Generate the dependency via standard output, not searching the
             // standard include directories,
 #ifdef WIN32
-            TString touch = "echo # > "; touch += depfilename;
+            TString touch = "echo # > "; touch += "\"" + depfilename + "\"";
 #else
-            TString touch = "echo > "; touch += depfilename;
+            TString touch = "echo > "; touch += "\"" + depfilename + "\"";
 #endif
-            TString builddep = "rmkdepend -f";
+            TString builddep = "rmkdepend \"-f";
             builddep += depfilename;
-            builddep += " -Y -- ";
-            builddep += " -I$ROOTSYS/include "; // cflags
+            builddep += "\" -Y -- ";
+#ifndef ROOTINCDIR
+            TString rootsys = gSystem->Getenv("ROOTSYS");
+#else
+            TString rootsys = ROOTINCDIR;
+#endif
+            builddep += " \"-I"+rootsys+"/include\" "; // cflags
             builddep += includes;
             builddep += defines;
-            builddep += " -- ";
-            builddep += " cintdictversion.h ";
+            builddep += " -- \"";
             builddep += filename;
-            builddep += " > ";
+            builddep += "\" > ";
             builddep += stderrfile;
             builddep += " 2>&1 ";
+            
+            TString adddictdep = "echo ";
+            adddictdep += filename;
+            adddictdep += ": "+rootsys+"/include/cintdictversion.h ";
+            adddictdep += " >> \""+depfilename+"\"";
 
-            if (gDebug > 4)  ::Info("ACLiC",builddep.Data());
-
+            if (gDebug > 4)  {
+               ::Info("ACLiC",touch.Data());
+               ::Info("ACLiC",builddep.Data());
+               ::Info("ACLiC",adddictdep.Data());
+            }
+            
             Int_t depbuilt = !gSystem->Exec(touch);
             if (depbuilt) depbuilt = !gSystem->Exec(builddep);
+            if (depbuilt) depbuilt = !gSystem->Exec(adddictdep);
 
 
             if (!depbuilt) {
