@@ -265,7 +265,9 @@ void XrdLink::Bind(pthread_t tid)
 
 void XrdLink::Bind()
 {
+#ifdef __linux__
    pthread_t curTID = (tBound ? TID : XrdSysThread::ID());
+#endif
 
 // For unbind operations, we need to do some additional work. This is specific
 // to Linux. See the discussion under defered close in the Close() method.
