@@ -966,10 +966,10 @@ void TThread::XAction()
 
             case 5:
                //((TCanvas*)fgXArr[1])->Constructor(
-               //                 (Text_t*)fgXArr[2],
-               //                 (Text_t*)fgXArr[3],
+               //                 (char*)fgXArr[2],
+               //                 (char*)fgXArr[3],
                //                *((Int_t*)(fgXArr[4])));
-               cmd = Form("((TCanvas *)0x%lx)->Constructor((Text_t*)0x%lx,(Text_t*)0x%lx,*((Int_t*)(0x%lx)));",(Long_t)fgXArr[1],(Long_t)fgXArr[2],(Long_t)fgXArr[3],(Long_t)fgXArr[4]);
+               cmd = Form("((TCanvas *)0x%lx)->Constructor((char*)0x%lx,(char*)0x%lx,*((Int_t*)(0x%lx)));",(Long_t)fgXArr[1],(Long_t)fgXArr[2],(Long_t)fgXArr[3],(Long_t)fgXArr[4]);
                gROOT->ProcessLine(cmd);
                break;
             case 6:
@@ -978,7 +978,7 @@ void TThread::XAction()
                //                 (char*)fgXArr[3],
                //                *((Int_t*)(fgXArr[4])),
                //                *((Int_t*)(fgXArr[5])));
-               cmd = Form("((TCanvas *)0x%lx)->Constructor((Text_t*)0x%lx,(Text_t*)0x%lx,*((Int_t*)(0x%lx)),*((Int_t*)(0x%lx)));",(Long_t)fgXArr[1],(Long_t)fgXArr[2],(Long_t)fgXArr[3],(Long_t)fgXArr[4],(Long_t)fgXArr[5]);
+               cmd = Form("((TCanvas *)0x%lx)->Constructor((char*)0x%lx,(char*)0x%lx,*((Int_t*)(0x%lx)),*((Int_t*)(0x%lx)));",(Long_t)fgXArr[1],(Long_t)fgXArr[2],(Long_t)fgXArr[3],(Long_t)fgXArr[4],(Long_t)fgXArr[5]);
                gROOT->ProcessLine(cmd);
                break;
 
@@ -990,7 +990,7 @@ void TThread::XAction()
                //               *((Int_t*)(fgXArr[5])),
                //               *((Int_t*)(fgXArr[6])),
                //               *((Int_t*)(fgXArr[7])));
-               cmd = Form("((TCanvas *)0x%lx)->Constructor((Text_t*)0x%lx,(Text_t*)0x%lx,*((Int_t*)(0x%lx)),*((Int_t*)(0x%lx)),*((Int_t*)(0x%lx)),*((Int_t*)(0x%lx)));",(Long_t)fgXArr[1],(Long_t)fgXArr[2],(Long_t)fgXArr[3],(Long_t)fgXArr[4],(Long_t)fgXArr[5],(Long_t)fgXArr[6],(Long_t)fgXArr[7]);
+               cmd = Form("((TCanvas *)0x%lx)->Constructor((char*)0x%lx,(char*)0x%lx,*((Int_t*)(0x%lx)),*((Int_t*)(0x%lx)),*((Int_t*)(0x%lx)),*((Int_t*)(0x%lx)));",(Long_t)fgXArr[1],(Long_t)fgXArr[2],(Long_t)fgXArr[3],(Long_t)fgXArr[4],(Long_t)fgXArr[5],(Long_t)fgXArr[6],(Long_t)fgXArr[7]);
                gROOT->ProcessLine(cmd);
                break;
 
