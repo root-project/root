@@ -117,7 +117,7 @@ protected:
    static Int_t  fgMaxPickDistance;//  Maximum Pick Distance
 
    // 3D Viewer support
-   TVirtualViewer3D *fViewer3D;    //! Current 3D viewer 
+   TVirtualViewer3D *fViewer3D;    //! Current 3D viewer
 
    void          DestroyExternalViewer3D();
    virtual Int_t DistancetoPrimitive(Int_t px, Int_t py);
@@ -159,8 +159,8 @@ public:
    virtual void      AddExec(const char *name, const char *command);
    virtual void      AutoExec();
    virtual void      Browse(TBrowser *b);
-   virtual TLegend  *BuildLegend(Double_t x1=0.5, Double_t y1=0.67, Double_t x2=0.88, Double_t y2=0.88, const char *title=""); // *MENU* 
-   TVirtualPad*      cd(Int_t subpadnumber=0);
+   virtual TLegend  *BuildLegend(Double_t x1=0.5, Double_t y1=0.67, Double_t x2=0.88, Double_t y2=0.88, const char *title=""); // *MENU*
+   TVirtualPad*      cd(Int_t subpadnumber=0); // *MENU*
    void              Clear(Option_t *option="");
    virtual Int_t     Clip(Float_t *x, Float_t *y, Float_t xclipl, Float_t yclipb, Float_t xclipr, Float_t yclipt);
    virtual Int_t     Clip(Double_t *x, Double_t *y, Double_t xclipl, Double_t yclipb, Double_t xclipr, Double_t yclipt);
@@ -340,7 +340,7 @@ public:
 
    virtual void      SetCopyGLDevice(Bool_t copy) {fCopyGLDevice = copy;}
 
-   
+
    virtual void      Update();
 ///   virtual void      UpdateFillAttributes(Int_t col, Int_t sty);
 ///   virtual void      UpdateLineAttributes(Int_t col, Int_t sty, Int_t width);
@@ -492,4 +492,3 @@ inline void TPad::SetDrawOption(Option_t *)
 { }
 
 #endif
-
