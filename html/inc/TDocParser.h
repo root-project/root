@@ -101,6 +101,7 @@ protected:
    TString        fFirstClassDoc;   // first class-doc found - per file, taken if fLastClassDoc is empty
    TString        fLastClassDoc;    // last class-doc found - becomes class doc at ClassImp or first method
    TClass*        fCurrentClass;    // current class context of sources being parsed
+   TClass*        fRecentClass;     // recently seen class context of sources being parsed, e.g. for Convert()
    TString        fCurrentModule;   // current module context of sources being parsed
    TString        fCurrentMethodTag;// name_idx of the currently parsed method
    Int_t          fDirectiveCount;  // index of directive for current method

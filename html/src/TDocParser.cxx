@@ -131,7 +131,8 @@ std::set<std::string>  TDocParser::fgKeywords;
 //______________________________________________________________________________
 TDocParser::TDocParser(TClassDocOutput& docOutput, TClass* cl):
    fHtml(docOutput.GetHtml()), fDocOutput(&docOutput), fLineNo(0),
-   fCurrentClass(cl), fCurrentModule(0), fDirectiveCount(0), fDocContext(kIgnore), 
+   fCurrentClass(cl), fRecentClass(0), fCurrentModule(0),
+   fDirectiveCount(0), fDocContext(kIgnore), 
    fCheckForMethod(kFALSE), fClassDocState(kClassDoc_Uninitialized), 
    fCommentAtBOL(kFALSE)
 {
@@ -166,7 +167,7 @@ TDocParser::TDocParser(TClassDocOutput& docOutput, TClass* cl):
 //______________________________________________________________________________
 TDocParser::TDocParser(TDocOutput& docOutput):
    fHtml(docOutput.GetHtml()), fDocOutput(&docOutput), fLineNo(0),
-   fCurrentClass(0), fDirectiveCount(0), fDocContext(kIgnore), 
+   fCurrentClass(0), fRecentClass(0), fDirectiveCount(0), fDocContext(kIgnore), 
    fCheckForMethod(kFALSE), fClassDocState(kClassDoc_Uninitialized),
    fCommentAtBOL(kFALSE)
 {
@@ -617,8 +618,12 @@ void TDocParser::DecorateKeywords(TString& line)
       }
       TClass* lookupScope = currentType.back();
 
-      if (scoping == kNada)
-         lookupScope = fCurrentClass;
+      if (scoping == kNada) {
+         if (fCurrentClass)
+            lookupScope = fCurrentClass;
+         else
+            lookupScope = fRecentClass;
+      }
 
       if (scoping == kNada) {
          subType = gROOT->GetType(word);
@@ -724,6 +729,7 @@ void TDocParser::DecorateKeywords(TString& line)
             globalTypeName ? globalTypeName : subClass->GetName());
 
          currentType.back() = subClass;
+         fRecentClass = subClass;
       } else if (datamem || meth) {
             if (datamem) {
                fDocOutput->ReferenceEntity(substr, datamem);
