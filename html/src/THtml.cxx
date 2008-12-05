@@ -1340,7 +1340,8 @@ void THtml::HelperDeleted(THtml::THelperBase* who)
 
 //______________________________________________________________________________
 void THtml::Convert(const char *filename, const char *title,
-                    const char *dirname /*= ""*/, const char *relpath /*= "../"*/)
+                    const char *dirname /*= ""*/, const char *relpath /*= "../"*/,
+                    Bool_t includeOutput /*= kFALSE */)
 {
 // It converts a single text file to HTML
 //
@@ -1351,6 +1352,9 @@ void THtml::Convert(const char *filename, const char *title,
 //                   be placed in htmldoc/examples directory.
 //        relpath  - optional parameter pointing to the THtml generated doc 
 //                   on the server, relative to the current page.
+//        includeOutput - if true, run the script passed as filename and
+//                   store all created canvases in PNG files that are
+//                   shown next to the converted source.
 //
 //  NOTE: Output file name is the same as filename, but with extension .html
 //
@@ -1372,23 +1376,24 @@ void THtml::Convert(const char *filename, const char *title,
       gSystem->MakeDirectory(dir);
 
    // find a file
-   char *realFilename =
+   char *cRealFilename =
        gSystem->Which(fPathInfo.fInputPath, filename, kReadPermission);
 
-   if (!realFilename) {
+   if (!cRealFilename) {
       Error("Convert", "Can't find file '%s' !", filename);
       return;
    }
+
+   TString realFilename(cRealFilename);
+   delete[] cRealFilename;
+   cRealFilename = 0;
 
    // open source file
    ifstream sourceFile;
    sourceFile.open(realFilename, ios::in);
 
-   delete[]realFilename;
-   realFilename = 0;
-
    if (!sourceFile.good()) {
-      Error("Convert", "Can't open file '%s' !", realFilename);
+      Error("Convert", "Can't open file '%s' !", realFilename.Data());
       return;
    }
 
@@ -1401,7 +1406,7 @@ void THtml::Convert(const char *filename, const char *title,
        gSystem->ConcatFileName(dir, gSystem->BaseName(filename));
 
    TDocOutput output(*this);
-   output.Convert(sourceFile, tmp1, title, relpath);
+   output.Convert(sourceFile, realFilename, tmp1, title, relpath, includeOutput);
 
    if (tmp1)
       delete[]tmp1;

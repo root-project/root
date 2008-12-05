@@ -25,6 +25,7 @@
 #include "TSystem.h"
 #include "TUrl.h"
 #include "TVirtualMutex.h"
+#include "TVirtualPad.h"
 #include <vector>
 #include <list>
 #include <set>
@@ -295,13 +296,14 @@ void TDocOutput::AdjustSourcePath(TString& line, const char* relpath /*= "../"*/
 }
 
 //______________________________________________________________________________
-void TDocOutput::Convert(std::istream& in, const char* outfilename, const char *title,
-                         const char *relpath /*= "../"*/)
+void TDocOutput::Convert(std::istream& in, const char* infilename,
+                         const char* outfilename, const char *title,
+                         const char *relpath /*= "../"*/, Bool_t includeOutput /*=kFALSE*/)
 {
    // Convert a text file into a html file.
    // outfilename doesn't have an extension yet; up to us to decide.
    // We generate HTML, so our extension is ".html".
-   // See THtml::Convert() for the otehr parameters.
+   // See THtml::Convert() for the other parameters.
 
    TString htmlFilename(outfilename);
    htmlFilename += ".html";
@@ -313,18 +315,116 @@ void TDocOutput::Convert(std::istream& in, const char* outfilename, const char *
       return;
    }
 
-   Printf("Convert: %s", htmlFilename.Data());
-
    // write a HTML header
    WriteHtmlHeader(out, title, relpath);
 
    out << "<h1>" << title << "</h1>" << endl;
+
+   Int_t numReuseCanvases = 0;
+   if (includeOutput) {
+      void* dirHandle = gSystem->OpenDirectory(gSystem->DirName(htmlFilename));
+      if (dirHandle) {
+         FileStat_t infile_stat;
+         if (!gSystem->GetPathInfo(infilename, infile_stat)) {
+            // can stat.
+            const char* outfile = 0;
+            TString firstCanvasFileBase(gSystem->BaseName(outfilename));
+            firstCanvasFileBase += "_0.png";
+            // first check whether the firstCanvasFile exists:
+            Bool_t haveFirstCanvasFile = false;
+            while ((outfile = gSystem->GetDirEntry(dirHandle))) {
+               if (firstCanvasFileBase == outfile) {
+                  haveFirstCanvasFile = true;
+                  break;
+               }
+            }
+            gSystem->FreeDirectory(dirHandle);
+
+            FileStat_t outfile_stat;
+            TString firstCanvasFile = outfilename;
+            firstCanvasFile += "_0.png";
+            Int_t maxIdx = -1;
+            if (haveFirstCanvasFile && !gSystem->GetPathInfo(firstCanvasFile, outfile_stat)
+                && outfile_stat.fMtime > infile_stat.fMtime) {
+               // the first canvas file exists and it is newer than the script, so we reuse
+               // the canvas files. We need to know how many there are:
+               dirHandle = gSystem->OpenDirectory(gSystem->DirName(htmlFilename));
+               TString stem(gSystem->BaseName(outfilename));
+               stem += "_";
+               TString dir(gSystem->DirName(htmlFilename));
+               while ((outfile = gSystem->GetDirEntry(dirHandle))) {
+                  if (strncmp(outfile, stem, stem.Length()))
+                     continue;
+                  const char* posext = strrchr(outfile, '.');
+                  if (!posext || strcmp(posext, ".png"))
+                     continue;
+
+                  // extract the mod time of the PNG file
+                  if (gSystem->GetPathInfo(dir + "/" + outfile, outfile_stat))
+                     // can't stat!
+                     continue;
+
+                  if (outfile_stat.fMtime > infile_stat.fMtime) {
+                     ++numReuseCanvases;
+                     // The canvas PNG is newer than the script, so
+                     // extract the index of the canvas
+                     TString idxStr(outfile + stem.Length());
+                     idxStr.Remove(idxStr.Length() - 4);
+                     Int_t idx = idxStr.Atoi();
+                     if (maxIdx < idx)
+                        maxIdx = idx;
+                  }
+               }
+               gSystem->FreeDirectory(dirHandle);
+               if (maxIdx + 1 != numReuseCanvases)
+                  // bad: the number of canvases to reuse noes not correspond to the highest index we saw.
+                  // we will need to regenerate evrything.
+                  numReuseCanvases = 0;
+            }
+         } // infile can be stat'ed
+      } // can open output directory
+   } // canvases wanted
+
+   if (numReuseCanvases)
+      Printf("Convert: %s (reusing %d saved canvas%s)", htmlFilename.Data(), numReuseCanvases, (numReuseCanvases > 1 ? "es" : ""));
+   else
+      Printf("Convert: %s", htmlFilename.Data());
+
+   UInt_t nCanvases = numReuseCanvases;
+   if (includeOutput) {
+      out << "<table><tr><td>" << endl;
+      if (!numReuseCanvases) {
+         // need to run the script
+         TVirtualPad* lastCanvas = (TVirtualPad*) gROOT->GetListOfCanvases()->Last();
+         TString cmd(".x ");
+         cmd += infilename;
+         gROOT->ProcessLine(cmd);
+         TIter iCanvas(gROOT->GetListOfCanvases());
+         TVirtualPad* canv = 0;
+         while ((canv = (TVirtualPad*) iCanvas())) {
+            if (lastCanvas) {
+               if (lastCanvas != canv) continue;
+               else lastCanvas = 0;
+            }
+            canv->Print(TString::Format("%s_%d.png", outfilename, nCanvases));
+            delete canv;
+            ++nCanvases;
+         }
+      }
+   }
    out << "<pre>" << endl;
 
    TDocParser parser(*this);
    parser.Convert(out, in, relpath);
 
    out << "</pre>" << endl;
+
+   if (includeOutput) {
+      out << "</td><td>" << endl;
+      for (UInt_t i = 0; i < nCanvases; ++i)
+         out << "<img src=\"" << gSystem->BaseName(outfilename) << "_" << i << ".png\" alt=\"canvas\"/>" << endl;
+      out << "</td></tr></table>" << endl;
+   }
 
    // write a HTML footer
    WriteHtmlFooter(out, relpath);

@@ -209,7 +209,8 @@ public:
 
    // Functions to generate documentation
    void          Convert(const char *filename, const char *title, 
-                         const char *dirname = "", const char *relpath="../");
+                         const char *dirname = "", const char *relpath="../",
+                         Bool_t includeOutput = kFALSE);
    void          CreateHierarchy();
    void          MakeAll(Bool_t force=kFALSE, const char *filter="*",
                          int numthreads = 1);

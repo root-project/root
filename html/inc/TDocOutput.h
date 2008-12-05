@@ -73,8 +73,9 @@ public:
    virtual ~TDocOutput();
 
    virtual void   AdjustSourcePath(TString& line, const char* relpath = "../");
-   void           Convert(std::istream& in, const char* outfilename, const char *title,
-                          const char *relpath = "../");
+   void           Convert(std::istream& in, const char* infilename,
+                          const char* outfilename, const char *title,
+                          const char *relpath = "../", Bool_t includeOutput = kFALSE);
    Bool_t         CopyHtmlFile(const char *sourceName, const char *destName="");
 
    virtual void   CreateClassIndex();
