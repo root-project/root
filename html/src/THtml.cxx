@@ -10,7 +10,7 @@
  *************************************************************************/
 
 #include "THtml.h"
-
+#include "RConfigure.h"
 #include "Riostream.h"
 #include "TBaseClass.h"
 #include "TClass.h"
@@ -1106,7 +1106,7 @@ THtml::THtml():
    fProductName("(UNKNOWN PRODUCT)"),
    fThreadedClassIter(0), fMakeClassMutex(0),
    fPathDef(0), fModuleDef(0), fFileDef(0),
-   fLocalFiles(0)
+   fLocalFiles(0), fBatch(kFALSE)
 {
    // Create a THtml object.
    // In case output directory does not exist an error

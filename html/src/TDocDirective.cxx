@@ -295,6 +295,11 @@ Bool_t TDocMacroDirective::GetResult(TString& result)
    if (!wasBatch && !fNeedGraphics)
       gROOT->SetBatch();
    else if (fNeedGraphics) {
+      if (fHtml->IsBatch()) {
+         Warning("GetResult()", "Will not initialize the graphics system; skipping macro %s!", GetName());
+         result = "";
+         return kFALSE;
+      }
       gROOT->SetBatch(0);
       TApplication::NeedGraphicsLibs();
       gApplication->InitializeGraphics();

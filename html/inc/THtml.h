@@ -309,7 +309,8 @@ public:
    void                SetDeclFileName(TClass* cl, const char* filename);
    void                SetFoundDot(Bool_t found = kTRUE);
    void                SetImplFileName(TClass* cl, const char* filename);
-
+   void                SetBatch(Bool_t batch = kTRUE) { fBatch = batch; }
+   Bool_t              IsBatch() const { return fBatch; }
    // unused
    void                ReplaceSpecialChars(std::ostream&, const char*) {
       Error("ReplaceSpecialChars",
@@ -377,6 +378,7 @@ protected:
    mutable TModuleDefinition *fModuleDef; // object translating classes to module names
    mutable TFileDefinition* fFileDef; // object translating classes to file names
    mutable TFileSysDB    *fLocalFiles; // files found locally for a given source path
+   Bool_t		fBatch; // Whether to enable GUI output
 
    ClassDef(THtml,0)  //Convert class(es) into HTML file(s)
 };
