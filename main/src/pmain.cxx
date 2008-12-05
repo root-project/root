@@ -25,7 +25,11 @@
 #include <stdio.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <sys/types.h>
+#include <sys/time.h>
+#include <sys/resource.h>
 
+#include "RConfig.h"
 #include "RConfigure.h"
 #ifdef R__AFS
 #include "TAFS.h"
@@ -35,9 +39,20 @@
 #include "TROOT.h"
 #include "TSystem.h"
 
+// Macros to check memory ranges
+#ifdef R__B64
+#  define P_LONGOK(x) (1)
+#else
+#  define P_LONGOK(x) (x > LONG_MIN && x < LONG_MAX)
+#endif
+#define P_MBTOBYTES  (1024*1024)
+
+static int gLogLevel = 0;
+
 // Special type for the hook to the TXProofServ constructor, needed to avoid
 // using the plugin manager
 typedef TApplication *(*TProofServ_t)(Int_t *argc, char **argv, FILE *flog);
+
 #ifdef R__AFS
 // Special type for the hook to the TAFS constructor, needed to avoid
 // using the plugin manager
@@ -122,6 +137,47 @@ static FILE *RedirectOutput(const char *logfile, const char *loc)
    return fLog;
 }
 
+//______________________________________________________________________________
+static void SetMaxMemLimits(const char *prog)
+{
+   // Set limits on the address space (virtual memory) if required.
+
+   const char *assoft = gSystem->Getenv("ROOTPROOFASSOFT");
+   const char *ashard = gSystem->Getenv("ROOTPROOFASHARD");
+
+   if (assoft || ashard) {
+      struct rlimit aslim, aslimref;
+      if (getrlimit(RLIMIT_AS, &aslimref) != 0) {
+         fprintf(stderr,"%s: problems getting RLIMIT_AS values (errno: %d)\n", prog, errno);
+         exit(1);
+      }
+      if (gLogLevel > 0)
+         fprintf(stderr, "%s: memory limits currently set to %lld (soft) and %lld (hard) bytes\n",
+                         prog, (Long64_t)aslimref.rlim_cur, (Long64_t)aslimref.rlim_max);
+      aslim.rlim_cur = aslimref.rlim_cur;
+      aslim.rlim_max = aslimref.rlim_max;
+      if (assoft) {
+         long rlim_cur = strtol(assoft, 0, 10);
+         if (P_LONGOK(rlim_cur) && rlim_cur > 0)
+            aslim.rlim_cur = (unsigned long) rlim_cur * P_MBTOBYTES;
+      }
+      if (ashard) {
+         long rlim_max = strtol(ashard, 0, 10);
+         if (P_LONGOK(rlim_max) && rlim_max > 0)
+            aslim.rlim_max = (unsigned long) rlim_max * P_MBTOBYTES;
+      }
+      // Change the limits, if required
+      if (aslim.rlim_cur != aslimref.rlim_cur || aslim.rlim_max != aslimref.rlim_max) {
+         fprintf(stderr, "%s: setting memory limits to %lld (soft) and %lld (hard) bytes\n",
+                         prog, (Long64_t)aslim.rlim_cur, (Long64_t)aslim.rlim_max);
+         if (setrlimit(RLIMIT_AS, &aslim) != 0) {
+            fprintf(stderr,"%s: problems setting RLIMIT_AS values (errno: %d)\n", prog, errno);
+            exit(1);
+         }
+      }
+   }
+}
+
 #ifdef R__AFS
 //______________________________________________________________________________
 static Int_t InitAFS(const char *fileafs, const char *loc)
@@ -179,36 +235,38 @@ int main(int argc, char **argv)
       ReadPutEnvs(argv[5]);
    }
 
-   int loglevel = (argc >= 5) ? strtol(argv[4], 0, 10) : -1;
-   if (loglevel < 0 && getenv("ROOTPROOFLOGLEVEL"))
-      loglevel = atoi(getenv("ROOTPROOFLOGLEVEL"));
-   if (loglevel > 0)
+   gLogLevel = (argc >= 5) ? strtol(argv[4], 0, 10) : -1;
+   if (gLogLevel < 0 && gSystem->Getenv("ROOTPROOFLOGLEVEL"))
+      gLogLevel = atoi(gSystem->Getenv("ROOTPROOFLOGLEVEL"));
+   if (gLogLevel > 0)
       fprintf(stderr,"%s: starting %s\n", argv[1], argv[0]);
 
    // Redirect the output
    FILE *fLog = 0;
-   char *loc = 0;
-   char *logfile = (char *)getenv("ROOTPROOFLOGFILE");
-   if (logfile && !getenv("ROOTPROOFDONOTREDIR")) {
-      loc = (loglevel > 0) ? argv[1] : 0;
-      if (loglevel > 0)
+   const char *loc = 0;
+   const char *logfile = gSystem->Getenv("ROOTPROOFLOGFILE");
+   if (logfile && !gSystem->Getenv("ROOTPROOFDONOTREDIR")) {
+      loc = (gLogLevel > 0) ? argv[1] : 0;
+      if (gLogLevel > 0)
          fprintf(stderr,"%s: redirecting output to %s\n", argv[1], logfile);
       if (!(fLog = RedirectOutput(logfile, loc))) {
          fprintf(stderr,"%s: problems redirecting output to file %s\n", argv[1], logfile);
          exit(1);
       }
    }
-   if (loglevel > 0)
+   if (gLogLevel > 0)
       fprintf(stderr,"%s: output redirected to: %s\n",
              argv[1], (logfile ? logfile : "+++not redirected+++"));
 
+   SetMaxMemLimits(argv[1]);
+
 #ifdef R__AFS
    // Init AFS, if required
-   if (getenv("ROOTPROOFAFSCREDS")) {
-      if (InitAFS(getenv("ROOTPROOFAFSCREDS"), loc) != 0) {
+   if (gSystem->Getenv("ROOTPROOFAFSCREDS")) {
+      if (InitAFS(gSystem->Getenv("ROOTPROOFAFSCREDS"), loc) != 0) {
           fprintf(stderr,"%s: unable to initialize the AFS token\n", argv[1]);
       } else {
-         if (loglevel > 0)
+         if (gLogLevel > 0)
             fprintf(stderr,"%s: AFS token initialized\n", argv[1]);
       }
    }
@@ -254,7 +312,7 @@ int main(int argc, char **argv)
    }
 
    // Ready to run
-   if (loglevel > 0)
+   if (gLogLevel > 0)
       fprintf(stderr,"%s: running the TProofServ application\n", argv[1]);
 
    theApp->Run();
