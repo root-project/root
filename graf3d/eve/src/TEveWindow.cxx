@@ -214,6 +214,7 @@ TEveWindow* TEveCompositeFrame::RelinquishEveWindow(Bool_t reparent)
          gui_frame->ReparentWindow(fClient->GetDefaultRoot());
       fEveWindow->DecDenyDestroy();
       fEveWindow = 0;
+      SetCurrent(kFALSE);
       WindowNameChanged(fgkEmptyFrameName);
    }
 

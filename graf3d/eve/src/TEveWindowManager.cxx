@@ -50,7 +50,10 @@ void TEveWindowManager::WindowDeleted(TEveWindow* window)
    // Called by a window before it gets deleted.
 
    if (window == fCurrentWindow)
-      WindowSelected(0);
+   {
+      fCurrentWindow = 0;
+      CurrentWindowChanged(fCurrentWindow);
+   }
 }
 
 //______________________________________________________________________________
@@ -76,9 +79,9 @@ void TEveWindowManager::WindowSelected(TEveWindow* window)
    fCurrentWindow = window;
 
    if (fCurrentWindow)
-      window->SetCurrent(kTRUE);
+      fCurrentWindow->SetCurrent(kTRUE);
 
-   CurrentWindowChanged(fCurrentWindow);  
+   CurrentWindowChanged(fCurrentWindow);
 }
 
 //______________________________________________________________________________
