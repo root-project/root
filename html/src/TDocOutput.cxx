@@ -395,10 +395,14 @@ void TDocOutput::Convert(std::istream& in, const char* infilename,
       out << "<table><tr><td>" << endl;
       if (!numReuseCanvases) {
          // need to run the script
+         TString pwd(gSystem->pwd());
+         gSystem->cd(gSystem->DirName(infilename));
          TVirtualPad* lastCanvas = (TVirtualPad*) gROOT->GetListOfCanvases()->Last();
          TString cmd(".x ");
-         cmd += infilename;
+         cmd += gSystem->BaseName(infilename);
          gROOT->ProcessLine(cmd);
+         gSystem->cd(pwd);
+
          TIter iCanvas(gROOT->GetListOfCanvases());
          TVirtualPad* canv = 0;
          while ((canv = (TVirtualPad*) iCanvas())) {
