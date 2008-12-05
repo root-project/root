@@ -97,8 +97,9 @@ enum EAdminMsgType {
    kROOTVersion       = 1009,
    kGroupProperties   = 1010,
    kSendMsgToUser     = 1011,
+   kReleaseWorker     = 1012,
 //
-   kUndef             = 1012    // This should always be last: do not touch it
+   kUndef             = 1013    // This should always be last: do not touch it
 };
 
 // XPROOFD Worker CPU load sharing options

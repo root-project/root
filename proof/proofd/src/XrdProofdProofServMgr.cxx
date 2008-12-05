@@ -1991,8 +1991,8 @@ int XrdProofdProofServMgr::Accept(XrdProofdProofServ *xps,
    bool go = 1;
 
    // Check inputs
-   if (!xps || !xps->IsValid()) {
-      TRACE(XERR, "session pointer undefined or session invalid: "<<xps);
+   if (!xps || !xps->UNIXSock()) {
+      TRACE(XERR, "session pointer undefined or socket invalid: "<<xps);
       return -1;
    }
    TRACE(REQ, "waiting for server callback for "<<to<<" secs ... on "<<xps->UNIXSockPath());

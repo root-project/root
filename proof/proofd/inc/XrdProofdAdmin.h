@@ -47,6 +47,7 @@ public:
    int               SetROOTVersion(XrdProofdProtocol *p);
    int               SetSessionAlias(XrdProofdProtocol *p);
    int               SetSessionTag(XrdProofdProtocol *p);
+   int               ReleaseWorker(XrdProofdProtocol *p);
 };
 
 #endif

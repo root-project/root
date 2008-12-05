@@ -31,7 +31,7 @@
 
 class TXSocketHandler : public TFileHandler {
 
-friend class TXSocket;
+// friend class TXSocket;
 
    TFileHandler   *fHandler;    // Handler associated to the input socket
    TSocket        *fInputSock;  // Input socket from client or master
@@ -42,7 +42,7 @@ friend class TXSocket;
    static TXSocketHandler *fgSocketHandler; // Input socket handler
 
    TXSocketHandler(TFileHandler *h, TSocket *s) :
-                   TFileHandler(TXSocket::GetPipeRead(), 1)
+                   TFileHandler(TXSocket::fgPipe.GetRead(), 1)
                    { fHandler = h; fInputSock = s; }
 public:
    virtual ~TXSocketHandler() { }

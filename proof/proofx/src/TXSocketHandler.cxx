@@ -38,16 +38,13 @@ Bool_t TXSocketHandler::Notify()
    // Set readiness on the monitor
 
    if (gDebug > 2)
-      TXSocket::DumpReadySock();
+      TXSocket::fgPipe.DumpReadySock();
 
    // Get the socket
-   TXSocket *s = 0;
-   {  R__LOCKGUARD(&TXSocket::fgReadyMtx);
-      s = (TXSocket *) TXSocket::fgReadySock.Last();
-      if (gDebug > 2)
-         Info("Notify", "ready socket %p (%s) (input socket: %p)",
-                        s, (s ? s->GetTitle() : "***undef***"), fInputSock);
-   }
+   TXSocket *s = TXSocket::fgPipe.GetLastReady();
+   if (gDebug > 2)
+      Info("Notify", "ready socket %p (%s) (input socket: %p)",
+                     s, (s ? s->GetTitle() : "***undef***"), fInputSock);
 
    // If empty, nothing to do
    if (!s) {

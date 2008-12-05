@@ -117,7 +117,7 @@ TXSlave::TXSlave(const char *url, const char *ord, Int_t perf,
    TXSocketHandler *sh = TXSocketHandler::GetSocketHandler();
    gSystem->AddFileHandler(sh);
 
-   TXSocket::fgLoc = (fProof->IsMaster()) ? "master" : "client" ;
+   TXSocket::SetLocation((fProof->IsMaster()) ? "master" : "client");
 
    Init(url, stype);
 }
@@ -657,5 +657,5 @@ void TXSlave::FlushSocket()
       Info("FlushSocket", "enter: %p", fSocket);
 
    if (fSocket)
-      TXSocket::FlushPipe(fSocket);
+      TXSocket::fgPipe.Flush(fSocket);
 }

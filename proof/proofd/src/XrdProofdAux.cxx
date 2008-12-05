@@ -47,7 +47,7 @@ const char *XrdProofdAux::AdminMsgType(int type)
    static const char *msgtypes[] = { "Undef",
      "QuerySessions", "SessionTag", "SessionAlias", "GetWorkers", "QueryWorkers",
      "CleanupSessions", "QueryLogPaths", "ReadBuffer", "QueryROOTVersions",
-     "ROOTVersion", "GroupProperties", "SendMsgToUser" };
+     "ROOTVersion", "GroupProperties", "SendMsgToUser", "ReleaseWorker" };
 
    if (type < 1000 || type >= kUndef) {
       return msgtypes[0];

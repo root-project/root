@@ -52,6 +52,13 @@
 #endif
 #endif
 
+// Macros to check ranges
+#ifdef R__B64
+#  define P_LONGOK(x) (1)
+#else
+#  define P_LONGOK(x) (x > LONG_MIN && x < LONG_MAX)
+#endif
+
 #include "TProofServ.h"
 #include "TDSetProxy.h"
 #include "TEnv.h"
@@ -461,6 +468,20 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
                                                   : "session.rootrc";
    if (!gSystem->AccessPathName(rcfile, kReadPermission))
       gEnv->ReadFile(rcfile, kEnvChange);
+
+   // Set Memory limits, if any (in kB)
+   fVirtMemHWM = -1;
+   fVirtMemMax = -1;
+   if (gSystem->Getenv("ROOTPROOFASSOFT")) {
+      Long_t hwm = strtol(gSystem->Getenv("ROOTPROOFASSOFT"), 0, 10);
+      if (P_LONGOK(hwm) && hwm > 0)
+         fVirtMemHWM = (unsigned long) hwm * 1024;
+   }
+   if (gSystem->Getenv("ROOTPROOFASHARD")) {
+      Long_t mmx = strtol(gSystem->Getenv("ROOTPROOFASHARD"), 0, 10);
+      if (P_LONGOK(mmx) && mmx > 0)
+         fVirtMemMax = (unsigned long) mmx * 1024;
+   }
 
    // Wait (loop) to allow debugger to connect
    Bool_t test = (*argc >= 4 && !strcmp(argv[3], "test")) ? kTRUE : kFALSE;
@@ -1420,7 +1441,7 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
                (*mess) >> nodes;
                if ((mess->BufferSize() > mess->Length()))
                   (*mess) >> random;
-               fProof->SetParallel(nodes, random);
+               if (fProof) fProof->SetParallel(nodes, random);
                SendLogFile();
                rc = 1;
             }
@@ -2576,6 +2597,17 @@ Int_t TProofServ::SetupCommon()
 void TProofServ::Terminate(Int_t status)
 {
    // Terminate the proof server.
+
+   // Notify the memory footprint
+   ProcInfo_t pi;
+   if (!gSystem->GetProcInfo(&pi)){
+      Info("Terminate", "process memory footprint: %ld kB virtual, %ld kB resident ",
+                        pi.fMemVirtual, pi.fMemResident);
+      if (fVirtMemHWM > 0 || fVirtMemMax > 0) {
+         Info("Terminate", "process virtual memory limits: %ld kB HWM, %ld kB max ",
+                           fVirtMemHWM, fVirtMemMax);
+      }
+   }
 
    // Cleanup session directory
    if (status == 0) {

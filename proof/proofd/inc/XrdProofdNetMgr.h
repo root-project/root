@@ -74,6 +74,8 @@ public:
                                   char *val, XrdOucStream *cfg, bool rcf);
    void               RegisterDirectives();
 
+   void               Dump();
+
    const char        *PROOFcfg() const { return fPROOFcfg.fName.c_str(); }
    bool               WorkerUsrCfg() const { return fWorkerUsrCfg; }
 

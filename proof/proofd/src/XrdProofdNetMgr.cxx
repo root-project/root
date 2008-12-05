@@ -977,7 +977,31 @@ std::list<XrdProofWorker *> *XrdProofdNetMgr::GetActiveWorkers()
    }
    TRACE(DBG,  "returning list with "<<fWorkers.size()<<" entries");
 
+   if (TRACING(HDBG)) Dump();
+
    return &fWorkers;
+}
+
+//__________________________________________________________________________
+void XrdProofdNetMgr::Dump()
+{
+   // Dump status
+   XPDLOC(NMGR, "NetMgr::Dump")
+
+   XrdSysMutexHelper mhp(fMutex);
+
+   XPDPRT("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+   XPDPRT("+ Active workers status");
+   XPDPRT("+ Size: "<<fWorkers.size());
+   XPDPRT("+ ");
+
+   std::list<XrdProofWorker *>::iterator iw;
+   for (iw = fWorkers.begin(); iw != fWorkers.end(); iw++) {
+      XPDPRT("+ wrk: "<<(*iw)->fHost.c_str()<<":"<<(*iw)->fPort<<" type:"<<(*iw)->fType<<
+             " sessions: act:"<<(*iw)->Active()<<", susp:"<<(*iw)->Suspended());
+   }
+   XPDPRT("+ ");
+   XPDPRT("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 }
 
 //__________________________________________________________________________

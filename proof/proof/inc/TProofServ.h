@@ -140,6 +140,10 @@ private:
    Long64_t      fMaxBoxSize;       //Max size of the sandbox
    Long64_t      fHWMBoxSize;       //High-Water-Mark on the sandbox size
 
+   // Memory limits (-1 to disable) set by envs ROOTPROOFASSOFT and RPPTPROFOASHARD
+   Long_t        fVirtMemHWM;       //Above this we terminate gently (in kB)
+   Long_t        fVirtMemMax;       //Hard limit enforced by the system (in kB)
+
    static FILE  *fgErrorHandlerFile; // File where to log 
    static Int_t  fgRecursive;       // Keep track of recursive inputs during processing
 
@@ -206,6 +210,8 @@ public:
 
    Int_t          GetInflateFactor() const { return fInflateFactor; }
 
+   Long_t         GetVirtMemHWM() const { return fVirtMemHWM; }
+
    const char    *GetPrefix()     const { return fPrefix; }
 
    void           FlushLogFile();
@@ -233,6 +239,7 @@ public:
 
    TObject       *Get(const char *namecycle);
    TDSetElement  *GetNextPacket(Long64_t totalEntries = -1);
+   virtual void   ReleaseWorker(const char *) { }
    void           Reset(const char *dir);
    Int_t          ReceiveFile(const char *file, Bool_t bin, Long64_t size);
    virtual Int_t  SendAsynMessage(const char *msg, Bool_t lf = kTRUE);

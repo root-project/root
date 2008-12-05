@@ -19,7 +19,8 @@
 #include <sched.h>
 #endif
 
-#include <list>
+// #include <list>
+// #include <map>
 #include <vector>
 
 #ifdef OLDXRDOUC
@@ -32,9 +33,11 @@
 #endif
 
 #include "Xrd/XrdLink.hh"
+#include "XrdOuc/XrdOucHash.hh"
 
 #include "XProofProtocol.h"
 #include "XrdProofdClient.h"
+#include "XrdProofWorker.h"
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -85,7 +88,6 @@ class XrdROOT;
 #define kXPROOFSRVALIASMAX 256
 
 class XrdProofGroup;
-class XrdProofWorker;
 class XrdSysSemWait;
 
 class XrdProofdProofServ
@@ -95,7 +97,7 @@ public:
    XrdProofdProofServ();
    ~XrdProofdProofServ();
 
-   void                AddWorker(XrdProofWorker *w) { XrdSysMutexHelper mhp(fMutex); fWorkers.push_back(w); }
+   void                AddWorker(const char *o, XrdProofWorker *w);
    inline const char  *AdminPath() const { XrdSysMutexHelper mhp(fMutex); return fAdminPath.c_str(); }
    inline const char  *Alias() const { XrdSysMutexHelper mhp(fMutex); return fAlias.c_str(); }
    void                Broadcast(const char *msg, int type = kXPD_srvmsg);
@@ -122,6 +124,9 @@ public:
    inline XrdProofdProtocol *Protocol() const { XrdSysMutexHelper mhp(fMutex); return fProtocol; }
    inline XrdSrvBuffer *QueryNum() const { XrdSysMutexHelper mhp(fMutex); return fQueryNum; }
 
+#if 1
+   void                RemoveWorker(const char *o);
+#endif
    void                Reset();
    inline XrdROOT     *ROOT() const { XrdSysMutexHelper mhp(fMutex); return fROOT; }
    inline XrdProofdResponse *Response() const { XrdSysMutexHelper mhp(fMutex); return fResponse; }
@@ -161,8 +166,8 @@ public:
    int                 TerminateProofServ(bool changeown);
    inline const char  *UserEnvs() const { XrdSysMutexHelper mhp(fMutex); return fUserEnvs.c_str(); }
    int                 VerifyProofServ(bool fw);
-   inline std::list<XrdProofWorker *> *Workers() const
-                      { XrdSysMutexHelper mhp(fMutex); return (std::list<XrdProofWorker *> *)&fWorkers; }
+   inline XrdOucHash<XrdProofWorker> *Workers() const
+                      { XrdSysMutexHelper mhp(fMutex); return (XrdOucHash<XrdProofWorker> *)&fWorkers; }
 
    int                 CreateUNIXSock(XrdSysError *edest);
    void                DeleteUNIXSock();
@@ -178,7 +183,7 @@ public:
    XrdClientID              *fParent;    // Parent creating this session
    int                       fNClients;   // Number of attached clients
    std::vector<XrdClientID *> fClients;  // Attached clients stream ids
-   std::list<XrdProofWorker *> fWorkers; // Workers assigned to the session
+   XrdOucHash<XrdProofWorker> fWorkers; // Workers assigned to the session
 
    XrdSysSemWait            *fPingSem;   // To sychronize ping requests
 

@@ -817,6 +817,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
    // Get the frequency for logging memory consumption information
    TParameter<Long64_t> *par = (TParameter<Long64_t>*)fInput->FindObject("PROOF_MemLogFreq");
    volatile Long64_t memlogfreq = (par) ? par->GetVal() : 100;
+   Long_t memlim = (gProofServ) ? gProofServ->GetVirtMemHWM() : -1;
 
    TRY {
 
@@ -839,7 +840,10 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
             PDB(kLoop,3)
                Info("Process","Call Process(%lld)", entry);
             fSelector->Process(entry);
-            if (fSelector->GetAbort() == TSelector::kAbortProcess) break;
+            if (fSelector->GetAbort() == TSelector::kAbortProcess) {
+               SetProcessing(kFALSE);
+               break;
+            }
          }
 
          if (fSelStatus->IsOk()) {
@@ -848,12 +852,32 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
             if (gMonitoringWriter)
                gMonitoringWriter->SendProcessingProgress(fProgressStatus->GetEntries(),
                        TFile::GetFileBytesRead()-readbytesatstart, kFALSE);
-            if (memlogfreq > 0 && GetEventsProcessed()%memlogfreq == 0){
+            if (memlogfreq > 0 && GetEventsProcessed()%memlogfreq == 0) {
                // Record the memory information
                ProcInfo_t pi;
                if (!gSystem->GetProcInfo(&pi)){
                   Info("Process|Svc", "Memory %ld virtual %ld resident event %d",
                                       pi.fMemVirtual, pi.fMemResident, GetEventsProcessed());
+                  // Apply limit, if any: warn if above 80%, stop if above 95% of the HWM
+                  TString wmsg;
+                  if (memlim > 0) {
+                     if (pi.fMemVirtual > 0.95 * memlim) {
+                        wmsg.Form("using more than 95% of allowed memory (%ld kB) - STOP processing", pi.fMemVirtual);
+                        Error("Process", wmsg.Data());
+                        wmsg.Insert(0, "ERROR: ");
+                        if (gProofServ) gProofServ->SendAsynMessage(wmsg.Data());
+                        fExitStatus = kStopped;
+                        SetProcessing(kFALSE);
+                        break;
+                     } else if (pi.fMemVirtual > 0.80 * memlim) {
+                        // Refine monitoring
+                        memlogfreq = 1;
+                        wmsg.Form("using more than 80% of allowed memory (%ld kB)", pi.fMemVirtual);
+                        Warning("Process", wmsg.Data());
+                        wmsg.Insert(0, "WARNING: ");
+                        if (gProofServ) gProofServ->SendAsynMessage(wmsg.Data());
+                     }
+                  }
                }
             }
          }
@@ -862,8 +886,8 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
             gSystem->DispatchOneEvent(kTRUE);
             ResetBit(TProofPlayer::kDispatchOneEvent);
          }
-         if (!fSelStatus->IsOk() || gROOT->IsInterrupted()) break;
          SetProcessing(kFALSE);
+         if (!fSelStatus->IsOk() || gROOT->IsInterrupted()) break;
       }
 
    } CATCH(excode) {

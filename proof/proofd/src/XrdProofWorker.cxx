@@ -35,10 +35,12 @@
 
 //__________________________________________________________________________
 XrdProofWorker::XrdProofWorker(const char *str)
-               : fActive (0), fSuspended(0),
-                 fExport(256), fType('W'), fPort(-1), fPerfIdx(100)
+               : fExport(256), fType('W'), fPort(-1), fPerfIdx(100),
+                 fActive (0), fSuspended(0)
 {
    // Constructor from a config file-like string
+
+   fMutex = new XrdSysRecMutex;
 
    // Make sure we got something to parse
    if (!str || strlen(str) <= 0)
@@ -47,12 +49,20 @@ XrdProofWorker::XrdProofWorker(const char *str)
    // The actual work is done by Reset()
    Reset(str);
 }
+//__________________________________________________________________________
+XrdProofWorker::~XrdProofWorker()
+{
+   // Destructor
+
+   SafeDelete(fMutex);
+}
 
 //__________________________________________________________________________
 void XrdProofWorker::Reset(const char *str)
 {
    // Set content from a config file-like string
    XPDLOC(NMGR, "Worker::Reset")
+
 
    // Reinit vars
    fActive = 0;

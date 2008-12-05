@@ -180,7 +180,7 @@ Int_t TXProofServ::CreateServer()
    }
 
    // Global location string in TXSocket
-   TXSocket::fgLoc = (IsMaster()) ? "master" : "slave" ;
+   TXSocket::SetLocation((IsMaster()) ? "master" : "slave");
 
    // Set debug level in XrdClient
    EnvPutInt(NAME_DEBUG, gEnv->GetValue("XNet.Debug", 0));
@@ -388,6 +388,7 @@ Int_t TXProofServ::CreateServer()
                                                           fTopSessionTag.Data()));
       if (!fProof || !fProof->IsValid()) {
          Error("CreateServer", "plugin for TProof could not be executed");
+         FlushLogFile();
          delete fProof;
          fProof = 0;
          SendLogFile(-99);
@@ -692,11 +693,12 @@ TProofServ::EQueryAction TXProofServ::GetWorkers(TList *workers,
       return kQueryStop;
    }
 
+   TProofServ::EQueryAction rc = kQueryStop;
+
    // If user config files are enabled, check them first
    if (gEnv->GetValue("ProofServ.UseUserCfg", 0) != 0) {
       Int_t pc = 1;
-      TProofServ::EQueryAction rc = TProofServ::GetWorkers(workers, pc);
-      if (rc == kQueryOK)
+      if ((rc = TProofServ::GetWorkers(workers, pc)) == kQueryOK)
          return rc;
    }
 
@@ -724,15 +726,18 @@ TProofServ::EQueryAction TXProofServ::GetWorkers(TList *workers,
             }
             // Now the workers
             while (fl.Tokenize(tok, from, "&")) {
-               if (!tok.IsNull())
+               if (!tok.IsNull()) {
                   workers->Add(new TProofNodeInfo(tok));
+                  // We have the minimal set of information to start
+                  rc = kQueryOK;
+               }
             }
          }
       }
    }
 
    // We are done
-   return kQueryOK;
+   return rc;
 }
 
 //_____________________________________________________________________________
@@ -872,6 +877,17 @@ void TXProofServ::Terminate(Int_t status)
    // Notify
    Info("Terminate", "starting session termination operations ...");
 
+   // Notify the memory footprint
+   ProcInfo_t pi;
+   if (!gSystem->GetProcInfo(&pi)){
+      Info("Terminate", "process memory footprint: %ld kB virtual, %ld kB resident ",
+                        pi.fMemVirtual, pi.fMemResident);
+      if (fVirtMemHWM > 0 || fVirtMemMax > 0) {
+         Info("Terminate", "process virtual memory limits: %ld kB HWM, %ld kB max ",
+                           fVirtMemHWM, fVirtMemMax);
+      }
+   }
+
    // Deactivate current monitor, if any
    if (fProof)
       fProof->SetMonitor(0, kFALSE);
@@ -919,7 +935,7 @@ void TXProofServ::Terminate(Int_t status)
    // We post the pipe once to wake up the main thread which is waiting for
    // activity on this socket; this fake activity will make it return and
    // eventually exit the loop.
-   TXSocket::PostPipe((TXSocket *)fSocket);
+   TXSocket::fgPipe.Post((TXSocket *)fSocket);
 
    // Notify
    Printf("Terminate: termination operations ended: quitting!");
@@ -981,4 +997,15 @@ Int_t TXProofServ::LockSession(const char *sessiontag, TProofLockPath **lck)
 
    // We are done
    return 0;
+}
+
+//______________________________________________________________________________
+void TXProofServ::ReleaseWorker(const char *ord)
+{
+   // Send message to intermediate coordinator to release worker of last ordinal
+   // ord.
+
+   Info("ReleaseWorker","releasing: %s", ord);
+
+   ((TXSocket *)fSocket)->SendCoordinator(TXSocket::kReleaseWorker, ord);
 }

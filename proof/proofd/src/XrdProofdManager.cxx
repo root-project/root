@@ -362,6 +362,8 @@ int XrdProofdManager::GetWorkers(XrdOucString &lw, XrdProofdProofServ *xps)
    TRACE(DBG, "list size: " << wrks.size());
 
    // The full list
+   XrdOucString ord;
+   int ii = -1;
    std::list<XrdProofWorker *>::iterator iw;
    for (iw = wrks.begin(); iw != wrks.end() ; iw++) {
       XrdProofWorker *w = *iw;
@@ -370,11 +372,17 @@ int XrdProofdManager::GetWorkers(XrdOucString &lw, XrdProofdProofServ *xps)
          lw += '&';
       // Add export version of the info
       lw += w->Export();
-      // Count
-      xps->AddWorker(w);
+      // Count (fActive is increased inside here)
+      if (ii == -1) 
+         ord.form("master");
+      else
+         ord.form("%d", ii);
+      ii++;
+      xps->AddWorker(ord.c_str(), w);
       w->fProofServs.push_back(xps);
-      w->fActive++;
    }
+
+   if (TRACING(REQ)) fNetMgr->Dump();
 
    return rc;
 }

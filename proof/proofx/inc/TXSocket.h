@@ -31,6 +31,9 @@
 #ifndef ROOT_TString
 #include "TString.h"
 #endif
+#ifndef ROOT_TList
+#include "TList.h"
+#endif
 #ifndef ROOT_TMessage
 #include "TMessage.h"
 #endif
@@ -51,6 +54,7 @@
 
 class TObjString;
 class TXSockBuf;
+class TXSockPipe;
 class TXHandler;
 class TXSocketHandler;
 class XrdClientMessage;
@@ -73,6 +77,7 @@ friend class TXProofMgr;
 friend class TXProofServ;
 friend class TXSlave;
 friend class TXSocketHandler;
+friend class TXSockPipe;
 friend class TXUnixSocket;
 
 private:
@@ -115,9 +120,7 @@ private:
    Int_t               fXrdProofdVersion;
 
    // Static area for input handling
-   static TList        fgReadySock;    // Static list of sockets ready to be read
-   static TMutex       fgReadyMtx;     // Protect access to the sockets-ready list
-   static Int_t        fgPipe[2];      // Pipe for input monitoring
+   static TXSockPipe   fgPipe;         //  Pipe for input monitoring
    static TString      fgLoc;          // Location string
    static Bool_t       fgInitDone;     // Avoid initializing more than once
 
@@ -136,14 +139,9 @@ private:
    // Auxilliary
    Int_t               GetLowSocket() const { return (fConn ? fConn->GetLowSocket() : -1); }
 
-   static Int_t        GetPipeRead(); // Return the read-descriptor of the global pipe
-   static Int_t        PostPipe(TSocket *s=0);  // Notify socket ready via global pipe
-   static Int_t        CleanPipe(TSocket *s=0); // Clean previous pipe notification
-   static Int_t        FlushPipe(TSocket *s=0); // Remove any instance of 's' from the pipe
+   static void         SetLocation(const char *loc = ""); // Set location string
 
    static void         InitEnvs(); // Initialize environment variables
-
-   static void         DumpReadySock(); // Dump content of the ready-socket list
 
 public:
    // Should be the same as in proofd/inc/XProofProtocol.h (local definitions)
@@ -155,7 +153,8 @@ public:
                         kQueryROOTVersions,
                         kROOTVersion,
                         kGroupProperties,
-                        kSendMsgToUser};
+                        kSendMsgToUser,
+                        kReleaseWorker};
    // Should be the same as in proofd/src/XrdProofdProtocol::Urgent
    enum EUrgentMsgType { kStopProcess = 2000 };
 
@@ -273,6 +272,35 @@ private:
    Char_t *fMem;
    static Long64_t fgBuffMem; // Total allocated memory
    static Long64_t fgMemMax;  // Max allocated memory allowed
+};
+
+//
+// The following class describes internal pipes
+//
+class TXSockPipe {
+public:
+
+   TXSockPipe(const char *loc = "");
+   virtual ~TXSockPipe();
+
+   Bool_t       IsValid() const { return ((fPipe[0] >= 0 && fPipe[1] >= 0) ? kTRUE : kFALSE); }
+
+   TXSocket    *GetLastReady();
+
+   Int_t        GetRead() const { return fPipe[0]; }
+   Int_t        Post(TSocket *s=0);  // Notify socket ready via global pipe
+   Int_t        Clean(TSocket *s=0); // Clean previous pipe notification
+   Int_t        Flush(TSocket *s=0); // Remove any instance of 's' from the pipe
+   void         DumpReadySock();
+
+   void         SetLoc(const char *loc = "") { fLoc = loc; }
+
+private:
+   TMutex       fMutex;     // Protect access to the sockets-ready list
+   Int_t        fPipe[2];   // Pipe for input monitoring
+   TString      fLoc;       // Location string
+   TList        fReadySock;    // List of sockets ready to be read
+   TMutex       fReadyMtx;     // Protect access to the sockets-ready list
 };
 
 #endif

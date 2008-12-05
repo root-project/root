@@ -1043,40 +1043,45 @@ Int_t TProof::RemoveWorkers(TList *workerList)
          // Shut down the worker assumig that it is not processing
          TerminateWorker(sl);
       }
-      return 0;
-   } else if (!(workerList->GetSize())) {
-      Error("RemoveWorkers", "The list of workers should not be empty!");
-      return -2;
+
+   } else {
+      if (!(workerList->GetSize())) {
+         Error("RemoveWorkers", "The list of workers should not be empty!");
+         return -2;
+      }
+
+      // Loop over all the workers and stop them
+      TListIter next(workerList);
+      TObject *to;
+      TProofNodeInfo *worker;
+      while ((to = next())) {
+         TSlave *sl = 0;
+         if (!strcmp(to->ClassName(), "TProofNodeInfo")) {
+            // Get the next worker from the list
+            worker = (TProofNodeInfo *)to;
+            TIter nxsl(fSlaves);
+            while ((sl = (TSlave *) nxsl())) {
+               // Shut down the worker assumig that it is not processing
+               if (sl->GetName() == worker->GetNodeName())
+                  break;
+            }
+         } else if (to->InheritsFrom("TSlave")) {
+            sl = (TSlave *) to;
+         } else {
+            Warning("RemoveWorkers","unknown object type: %s - it should be"
+                  " TProofNodeInfo or inheriting from TSlave", to->ClassName());
+         }
+         // Shut down the worker assumig that it is not processing
+         if (sl) {
+            if (gDebug > 0)
+               Info("RemoveWorkers","terminating worker %s", sl->GetOrdinal());
+            TerminateWorker(sl);
+         }
+      }
    }
 
-   // Loop over all the workers and stop them
-   TListIter next(workerList);
-   TObject *to;
-   TProofNodeInfo *worker;
-   while ((to = next())) {
-      TSlave *sl = 0;
-      if (!strcmp(to->ClassName(), "TProofNodeInfo")) {
-         // Get the next worker from the list
-         worker = (TProofNodeInfo *)to;
-         TIter nxsl(fSlaves);
-         while ((sl = (TSlave *) nxsl())) {
-            // Shut down the worker assumig that it is not processing
-            if (sl->GetName() == worker->GetNodeName())
-               break;
-         }
-      } else if (to->InheritsFrom("TSlave")) {
-         sl = (TSlave *) to;
-      } else {
-         Warning("RemoveWorkers","unknown object type: %s - it should be"
-                 " TProofNodeInfo or inheriting from TSlave", to->ClassName());
-      }
-      // Shut down the worker assumig that it is not processing
-      if (sl) {
-         if (gDebug > 0)
-            Info("RemoveWorkers","terminating worker %s", sl->GetOrdinal());
-         TerminateWorker(sl);
-      }
-   }
+   // Update also the master counter
+   if (gProofServ && fSlaves->GetSize() <= 0) gProofServ->ReleaseWorker("master");
 
    return 0;
 }
@@ -1095,7 +1100,7 @@ Bool_t TProof::StartSlaves(Bool_t parallel, Bool_t attach)
       // Get list of workers
       if (gProofServ->GetWorkers(workerList, pc) == TProofServ::kQueryStop) {
          TString emsg("no resource currently available for this session: please retry later");
-         Error("StartSlaves", emsg.Data());
+         if (gDebug > 0) Info("StartSlaves", emsg.Data());
          gProofServ->SendAsynMessage(emsg.Data());
          return kFALSE;
       }
@@ -1338,7 +1343,7 @@ Bool_t TProof::StartSlaves(Bool_t parallel, Bool_t attach)
                   fSlaves->Remove(slave);
                   fAllMonitor->Remove(slave->GetSocket());
                   if (slStatus == -99)
-                     Error("StartSlaves", "not allowed to connect to PROOF master server");
+                     Error("StartSlaves", "no resources available or problems setting up workers (check logs)");
                   else if (slStatus == -98)
                      Error("StartSlaves", "could not setup output redirection on master");
                   else
@@ -3358,22 +3363,31 @@ void TProof::MarkBad(TSlave *wrk, const char *reason)
       }
    }
 
-   if (IsMaster() && reason && strcmp(reason, kPROOF_TerminateWorker)) {
-      // if the reason was not a planned termination
-      TList *listOfMissingFiles = 0;
-      if (!(listOfMissingFiles = (TList *)GetOutput("MissingFiles"))) {
-         listOfMissingFiles = new TList();
-         listOfMissingFiles->SetName("MissingFiles");
-         if (fPlayer)
-            fPlayer->AddOutputObject(listOfMissingFiles);
-      }
-
-      // if a query is being processed, assume that the work done by
-      // the worker was lost and needs to be reassigned.
-      TVirtualPacketizer *packetizer = fPlayer ? fPlayer->GetPacketizer() : 0;
-      if (packetizer) {
-         // the worker was lost so do resubmit the packets
-         packetizer->MarkBad(wrk, 0, &listOfMissingFiles);
+   if (IsMaster() && reason) {
+      if (strcmp(reason, kPROOF_TerminateWorker)) {
+         // if the reason was not a planned termination
+         TList *listOfMissingFiles = 0;
+         if (!(listOfMissingFiles = (TList *)GetOutput("MissingFiles"))) {
+            listOfMissingFiles = new TList();
+            listOfMissingFiles->SetName("MissingFiles");
+            if (fPlayer)
+               fPlayer->AddOutputObject(listOfMissingFiles);
+         }
+         // if a query is being processed, assume that the work done by
+         // the worker was lost and needs to be reassigned.
+         TVirtualPacketizer *packetizer = fPlayer ? fPlayer->GetPacketizer() : 0;
+         if (packetizer) {
+            // the worker was lost so do resubmit the packets
+            packetizer->MarkBad(wrk, 0, &listOfMissingFiles);
+         }
+      } else {
+         // Tell the coordinator that we are gone
+         if (gProofServ) {
+            TString ord(wrk->GetOrdinal());
+            Int_t id = ord.Last('.');
+            if (id != kNPOS) ord.Remove(0, id+1);
+            gProofServ->ReleaseWorker(ord.Data());
+         }
       }
    }
 
@@ -3387,8 +3401,15 @@ void TProof::MarkBad(TSlave *wrk, const char *reason)
 
    if (IsMaster()) {
       if (reason && !strcmp(reason, kPROOF_TerminateWorker)) {
-         // if the reason was a planned termination then delete the worker
+         // if the reason was a planned termination then delete the worker and
+         // remove it from all the lists
          fSlaves->Remove(wrk);
+         fBadSlaves->Remove(wrk);
+         fActiveSlaves->Remove(wrk);
+         fInactiveSlaves->Remove(wrk);
+         fUniqueSlaves->Remove(wrk);
+         fAllUniqueSlaves->Remove(wrk);
+         fNonUniqueMasters->Remove(wrk);
          delete wrk;
       } else {
          fBadSlaves->Add(wrk);

@@ -234,7 +234,7 @@ int XrdProofSched::GetNumWorkers(XrdProofdProofServ *xps)
    }
 
    int nWrks = (int)(nFreeCPUs * fNodesFraction * priority);
-   if (nWrks < fMinForQuery) {
+   if (nWrks <= fMinForQuery) {
       nWrks = fMinForQuery;
    } else if (nWrks >= (int) wrks->size()) {
       nWrks = wrks->size() - 1;
@@ -257,11 +257,12 @@ int XrdProofSched::GetWorkers(XrdProofdProofServ *xps,
    if (!wrks)
       return -1;
 
-   if (!fMgr || !(fMgr->NetMgr()->GetActiveWorkers()))
+   // The current, full list
+   std::list<XrdProofWorker *> *acws = 0;
+
+   if (!fMgr || !(acws = fMgr->NetMgr()->GetActiveWorkers()))
       return -1;
 
-   // The current, full list
-   std::list<XrdProofWorker *> *acws = fMgr->NetMgr()->GetActiveWorkers();
 
    // Point to the master element
    XrdProofWorker *mst = acws->front();
@@ -281,6 +282,12 @@ int XrdProofSched::GetWorkers(XrdProofdProofServ *xps,
       // Get the advised number
       int nw = GetNumWorkers(xps);
 
+      // Make sure that something has been found
+      if (nw <= 0) {
+         TRACE(XERR, "no worker available: do nothing");
+         return -1;
+      }
+
       std::list<XrdProofWorker *>::iterator nxWrk = acws->begin();
       while (nw--) {
          nxWrk++;
@@ -290,6 +297,37 @@ int XrdProofSched::GetWorkers(XrdProofdProofServ *xps,
       }
       // Done
       return 0;
+   }
+
+   // Check if the check on the max number of sessions is enabled
+   // We need at least 1 master and a worker
+   std::list<XrdProofWorker *> *acwseff = 0;
+   if (fMaxSessions > 0) {
+      bool ok = 0;
+      acwseff = new std::list<XrdProofWorker *>;
+      std::list<XrdProofWorker *>::iterator xWrk = acws->begin();
+      if ((*xWrk)->Active() < fMaxSessions) {
+         acwseff->push_back(*xWrk);
+         xWrk++;
+         for (; xWrk != acws->end(); xWrk++) {
+            if ((*xWrk)->Active() < fMaxSessions) {
+               acwseff->push_back(*xWrk);
+               ok = 1;
+            }
+         }
+      } else {
+         TRACE(REQ, "max number of sessions reached - ("<< fMaxSessions <<")");
+      }
+      // Check the result
+      if (!ok) { delete acwseff; acwseff = 0; }
+      acws = acwseff;
+   }
+
+   // Make sure that something has been found
+   if (!acws || acws->size() <= 1) {
+      TRACE(XERR, "no worker available: do nothing");
+      if (acwseff) { delete acwseff; acwseff = 0; }
+      return -1;
    }
 
    if (fWorkerMax > 0 && fWorkerMax < (int) acws->size()) {
@@ -323,7 +361,7 @@ int XrdProofSched::GetWorkers(XrdProofdProofServ *xps,
          iwk++; // Skip master
          for ( ; iwk != acws->end(); iwk++) {
             vwrk[i] = *iwk;
-            int na = (*iwk)->fActive;
+            int na = (*iwk)->Active();
             printf(" %d", na);
             walloc[i] = na + walloc[i-1];
             i++;
@@ -407,10 +445,13 @@ int XrdProofSched::GetWorkers(XrdProofdProofServ *xps,
    }
 
    // Make sure that something has been found
-   if (acws->size() <= 1) {
+   if (wrks->size() <= 1) {
       TRACE(XERR, "no worker found: do nothing");
       rc = -1;
    }
+
+   // Cleanup
+   if (acwseff) { delete acwseff; acwseff = 0; }
 
    return rc;
 }
@@ -440,7 +481,7 @@ int XrdProofSched::ExportInfo(XrdOucString &sbuf)
          sbuf += ":"; sbuf += (*iw)->fPort;
       } else
          sbuf += "     ";
-      sbuf += "  sessions: "; sbuf += (*iw)->fActive;
+      sbuf += "  sessions: "; sbuf += (*iw)->Active();
       sbuf += " &";
    }
 
@@ -509,6 +550,11 @@ int XrdProofSched::DoDirectiveSchedParam(char *val, XrdOucStream *cfg, bool)
       }
       val = cfg->GetToken();
    }
+
+   // If the max number of sessions is limited then there is no lower bound
+   // the number of workers per query
+   if (fMaxSessions > 0) fMinForQuery = 0;
+
    return 0;
 }
 

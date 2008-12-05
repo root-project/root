@@ -83,6 +83,8 @@ int XrdProofdAdmin::Process(XrdProofdProtocol *p, int type)
          return SetSessionAlias(p);
       case kSessionTag:
          return SetSessionTag(p);
+      case kReleaseWorker:
+         return ReleaseWorker(p);
       default:
          emsg += "Invalid type: ";
          emsg += type;
@@ -794,6 +796,44 @@ int XrdProofdAdmin::SetSessionTag(XrdProofdProtocol *p)
          XrdOucString tag(xps->Tag());
          TRACEP(p, DBG, "session tag set to: "<<tag);
       }
+   }
+
+   // Acknowledge user
+   response->Send();
+
+   // Over
+   return 0;
+}
+
+//______________________________________________________________________________
+int XrdProofdAdmin::ReleaseWorker(XrdProofdProtocol *p)
+{
+   // Handle request for releasing a worker
+   XPDLOC(ALL, "Admin::ReleaseWorker")
+
+   int rc = 0;
+   XPD_SETRESP(p, "ReleaseWorker");
+   //
+   // Specific info about a session
+   int psid = ntohl(p->Request()->proof.sid);
+   XrdProofdProofServ *xps = 0;
+   if (!p->Client() || !(xps = p->Client()->GetServer(psid))) {
+      TRACEP(p, XERR, "session ID not found");
+      response->Send(kXR_InvalidRequest,"ReleaseWorker: session ID not found");
+      return 0;
+   }
+
+   // Set session tag
+   const char *msg = (const char *) p->Argp()->buff;
+   int   len = p->Request()->header.dlen;
+   if (len > kXPROOFSRVTAGMAX - 1)
+      len = kXPROOFSRVTAGMAX - 1;
+
+   // Save tag
+   if (len > 0 && msg) {
+      xps->RemoveWorker(msg);
+      TRACEP(p, DBG, "worker \""<<msg<<"\" released");
+      if (TRACING(HDBG)) fMgr->NetMgr()->Dump();
    }
 
    // Acknowledge user

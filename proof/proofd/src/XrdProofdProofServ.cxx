@@ -89,6 +89,39 @@ XrdProofdProofServ::~XrdProofdProofServ()
 }
 
 //__________________________________________________________________________
+static int DecreaseWorkerCounters(const char *, XrdProofWorker *w, void *)
+{
+   // Decrease active session counters on worker w
+   XPDLOC(PMGR, "DecreaseWorkerCounters")
+
+   if (w) {
+      w->CountActive(-1);
+      TRACE(ALL, w->fHost.c_str() <<" done");
+      // Check next
+      return 0;
+   }
+
+   // Not enough info: stop
+   return 1;
+}
+
+//__________________________________________________________________________
+static int DumpWorkerCounters(const char *k, XrdProofWorker *w, void *)
+{
+   // Decrease active session counters on worker w
+   XPDLOC(PMGR, "DumpWorkerCounters")
+
+   if (w) {
+      TRACE(ALL, k <<" : "<<w->fHost.c_str()<<":"<<w->fPort <<" act: "<<w->Active());
+      // Check next
+      return 0;
+   }
+
+   // Not enough info: stop
+   return 1;
+}
+
+//__________________________________________________________________________
 void XrdProofdProofServ::ClearWorkers()
 {
    // Decrease worker counters and clean-up the list
@@ -96,11 +129,39 @@ void XrdProofdProofServ::ClearWorkers()
    XrdSysMutexHelper mhp(fMutex);
 
    // Decrease worker counters
-   std::list<XrdProofWorker *>::iterator i;
-   for (i = fWorkers.begin(); i != fWorkers.end(); i++)
-       if (*i)
-          (*i)->fActive--;
-   fWorkers.clear();
+   fWorkers.Apply(DecreaseWorkerCounters, 0);
+   fWorkers.Purge();
+}
+
+//__________________________________________________________________________
+void XrdProofdProofServ::AddWorker(const char *o, XrdProofWorker *w)
+{
+   // Add a worker aasigned to this session with label 'o'
+
+   if (!o || !w) return;
+
+   XrdSysMutexHelper mhp(fMutex);
+
+   fWorkers.Add(o, w, 0, Hash_keepdata);
+   w->CountActive(1);
+}
+
+//__________________________________________________________________________
+void XrdProofdProofServ::RemoveWorker(const char *o)
+{
+   // Release worker assigned to this session with label 'o'
+   XPDLOC(SMGR, "ProofServ::RemoveWorker")
+
+   if (!o) return;
+
+   TRACE(DBG,"removing: "<<o);
+
+   XrdSysMutexHelper mhp(fMutex);
+
+   XrdProofWorker *w = fWorkers.Find(o);
+   if (w) w->CountActive(-1);
+   fWorkers.Del(o);
+   if (TRACING(HDBG)) fWorkers.Apply(DumpWorkerCounters, 0);
 }
 
 //__________________________________________________________________________
