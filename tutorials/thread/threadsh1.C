@@ -1,9 +1,5 @@
 // Example of a simple script creating 3 threads.
 // This script can only be executed via ACliC .x threadsh1.C++.
-// Before executing the script, load the Thread library with:
-//  gSystem->Load("libThread");
-// This is not needed anymore due to the rootmap facility which
-// automatically loads the needed libraries.
 
 #include "TCanvas.h"
 #include "TFrame.h"
