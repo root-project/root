@@ -234,6 +234,7 @@ TRint::~TRint()
    // Destructor.
    
    delete gTabCom;
+   gTabCom = 0;
    Gl_in_key = 0;
    Gl_beep_hook = 0;
    fInputHandler->Remove();
@@ -579,8 +580,6 @@ void TRint::Terminate(Int_t status)
    Getlinem(kCleanUp, 0);
 
    if (ReturnFromRun()) {
-      delete gTabCom;
-      gTabCom = 0;
       gSystem->ExitLoop();
    } else {
       delete gTabCom;
