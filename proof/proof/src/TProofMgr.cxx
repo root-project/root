@@ -319,7 +319,7 @@ TProof *TProofMgr::CreateSession(const char *cfg,
 
    } else {
       // Session creation failed
-      Error("CreateSession", "creating PROOF session");
+      if (gDebug > 0) Error("CreateSession", "PROOF session creation failed");
       SafeDelete(p);
    }
 
