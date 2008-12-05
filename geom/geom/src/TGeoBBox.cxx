@@ -92,8 +92,7 @@ TGeoBBox::TGeoBBox()
 // Default constructor
    SetShapeBit(TGeoShape::kGeoBox);
    fDX = fDY = fDZ = 0;
-   for (Int_t i=0; i<3; i++)
-      fOrigin[i] = 0;
+   fOrigin[0] = fOrigin[1] = fOrigin[2] = 0.0;
 }   
 
 //_____________________________________________________________________________
@@ -102,6 +101,7 @@ TGeoBBox::TGeoBBox(Double_t dx, Double_t dy, Double_t dz, Double_t *origin)
 {
 // Constructor where half-lengths are provided.
    SetShapeBit(TGeoShape::kGeoBox);
+   fOrigin[0] = fOrigin[1] = fOrigin[2] = 0.0;
    SetBoxDimensions(dx, dy, dz, origin);
 }
 
@@ -111,6 +111,7 @@ TGeoBBox::TGeoBBox(const char *name, Double_t dx, Double_t dy, Double_t dz, Doub
 {
 // Constructor with shape name.
    SetShapeBit(TGeoShape::kGeoBox);
+   fOrigin[0] = fOrigin[1] = fOrigin[2] = 0.0;
    SetBoxDimensions(dx, dy, dz, origin);
 }
 
@@ -123,6 +124,7 @@ TGeoBBox::TGeoBBox(Double_t *param)
 // param[1] - half-length in y
 // param[2] - half-length in z
    SetShapeBit(TGeoShape::kGeoBox);
+   fOrigin[0] = fOrigin[1] = fOrigin[2] = 0.0;
    SetDimensions(param);
 }   
 
@@ -821,13 +823,11 @@ void TGeoBBox::SetBoxDimensions(Double_t dx, Double_t dy, Double_t dz, Double_t 
    fDX = dx;
    fDY = dy;
    fDZ = dz;
-   for (Int_t i=0; i<3; i++) {
-      if (!origin) {
-         fOrigin[i] = 0.0;
-      } else {
-         fOrigin[i] = origin[i];
-      }
-   }
+   if (origin) {
+      fOrigin[0] = origin[0];
+      fOrigin[1] = origin[1];
+      fOrigin[2] = origin[2];
+   }   
    if ((fDX==0) && (fDY==0) && (fDZ==0)) return;
    if ((fDX<0) || (fDY<0) || (fDZ<0)) SetShapeBit(kGeoRunTimeShape);
 }        
@@ -840,7 +840,7 @@ void TGeoBBox::SetDimensions(Double_t *param)
 // param[1] - half-length in y
 // param[2] - half-length in z
    if (!param) {
-      Error("ctor", "null parameters");
+      Error("SetDimensions", "null parameters");
       return;
    }
    fDX = param[0];

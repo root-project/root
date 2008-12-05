@@ -617,7 +617,6 @@ Bool_t TGeoXtru::DefinePolygon(Int_t nvert, const Double_t *xv, const Double_t *
    fPoly = new TGeoPolygon(nvert);
    fPoly->SetXY(fXc,fYc); // initialize with current coordinates
    fPoly->FinishPolygon();
-   if (TestShapeBit(TGeoShape::kGeoBad)) InspectShape();
    return kTRUE;
 }
 
@@ -638,7 +637,10 @@ void TGeoXtru::DefineSection(Int_t snum, Double_t z, Double_t x0, Double_t y0, D
          return;
       }   
    }
-   if (snum==(fNz-1)) ComputeBBox();
+   if (snum==(fNz-1)) {
+      ComputeBBox();
+      if (TestShapeBit(TGeoShape::kGeoBad)) InspectShape();
+   }   
 }
             
 //_____________________________________________________________________________

@@ -866,7 +866,10 @@ void TGeoElementTable::ImportElementsRN()
       if (line[0]=='#') continue;
       elem = TGeoElementRN::ReadElementRN(line, ndecays);
       for (i=0; i<ndecays; i++) {
-         fgets(&line[0],140,fp);
+         if (!fgets(&line[0],140,fp)) {
+            Error("ImportElementsRN", "Error parsing RadioNuclides.txt file");
+            return;
+         }   
          TGeoDecayChannel *dc = TGeoDecayChannel::ReadDecay(line);
          elem->AddDecay(dc);
       }
