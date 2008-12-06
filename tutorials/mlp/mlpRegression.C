@@ -30,7 +30,8 @@ void mlpRegression() {
    }
 
    // create ANN
-   TMultiLayerPerceptron* mlp=new TMultiLayerPerceptron("x,y:10:8:f",t,"Entry$%2","(Entry$%2)==0");
+   TMultiLayerPerceptron* mlp=new TMultiLayerPerceptron("x,y:10:8:f",t,
+      "Entry$%2","(Entry$%2)==0");
    mlp->Train(150,"graph update=10");
 
    // analyze it
