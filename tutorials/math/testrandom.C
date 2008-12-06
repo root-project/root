@@ -47,7 +47,7 @@ void testAll() {
   int i, N = 10000000;
   float cpn = 1000000000./N;
   double x,y;
-
+  TRandom *rsave = gRandom;
   TRandom *r0 = new TRandom();
   TRandom *r1 = new TRandom1();
   TRandom *r2 = new TRandom2();
@@ -439,6 +439,7 @@ void testAll() {
   delete r1;
   delete r2;
   delete r3;
+  gRandom = rsave;
 
 #ifdef LATER  
   // Binomial
