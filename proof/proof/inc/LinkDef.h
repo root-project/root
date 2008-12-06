@@ -54,9 +54,6 @@
 #pragma link C++ class TProofDataSetManager;
 #pragma link C++ class TProofDataSetManagerFile;
 
-#pragma link C++ class TProofDataSetManager;
-#pragma link C++ class TProofDataSetManagerFile;
-
 // For backward compatibility with old client / masters
 #pragma link C++ class std::pair<TDSetElement*, TString>;
 #pragma link C++ class std::list<std::pair<TDSetElement*,TString> >;

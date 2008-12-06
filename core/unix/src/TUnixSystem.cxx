@@ -800,9 +800,7 @@ Int_t TUnixSystem::GetFPEMask()
    if (oldmask & FE_ENABLE_DIVBYZERO)   mask |= kDivByZero;
    if (oldmask & FE_ENABLE_OVERFLOW )   mask |= kOverflow;
    if (oldmask & FE_ENABLE_UNDERFLOW)   mask |= kUnderflow;
-# ifdef FE_INEXACT
    if (oldmask & FE_ENABLE_INEXACT  )   mask |= kInexact;
-# endif
 #endif
 
    return mask;
@@ -825,7 +823,9 @@ Int_t TUnixSystem::SetFPEMask(Int_t mask)
    if (mask & kDivByZero)   newm |= FE_DIVBYZERO;
    if (mask & kOverflow )   newm |= FE_OVERFLOW;
    if (mask & kUnderflow)   newm |= FE_UNDERFLOW;
+# ifdef FE_INEXACT
    if (mask & kInexact  )   newm |= FE_INEXACT;
+# endif
 
 #if __GLIBC_MINOR__>=3
 
