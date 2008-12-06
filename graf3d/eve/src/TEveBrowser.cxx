@@ -17,6 +17,7 @@
 #include "TEveSelection.h"
 #include "TEveGedEditor.h"
 #include "TEveWindow.h"
+#include "TEveWindowManager.h"
 
 #include "TGFileBrowser.h"
 #include "TBrowser.h"
@@ -619,12 +620,12 @@ void TEveBrowser::EveMenu(Int_t id)
    {
       case kNewMainFrameSlot: {
          TEveWindowSlot* ew_slot = TEveWindow::CreateWindowMainFrame(0);
-         ew_slot->TitleBarClicked();
+         gEve->GetWindowManager()->WindowSelected(ew_slot);
          break;
       }
       case kNewTabSlot: {
          TEveWindowSlot* ew_slot = TEveWindow::CreateWindowInTab(GetTabRight(), 0);
-         ew_slot->TitleBarClicked();
+         gEve->GetWindowManager()->WindowSelected(ew_slot);
          break;
       }
       case kNewViewer: {
