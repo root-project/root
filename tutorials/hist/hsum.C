@@ -16,7 +16,7 @@ void hsum() {
   main   = new TH1F("main","Main contributor",100,-4,4);
   s1     = new TH1F("s1","This is the first signal",100,-4,4);
   s2     = new TH1F("s2","This is the second signal",100,-4,4);
-  total->Sumw2();   // this makes sure that the sum of squares of weights will be stored
+  total->Sumw2();  // store the sum of squares of weights
   total->SetMarkerStyle(21);
   total->SetMarkerSize(0.7);
   main->SetFillColor(16);
@@ -45,7 +45,8 @@ void hsum() {
            s1->Draw("same");
            s2->Draw("same");
            c1->Update();
-           slider = new TSlider("slider","test",4.2,0,4.6,total->GetMaximum(),38);
+           slider = new TSlider("slider",
+              "test",4.2,0,4.6,total->GetMaximum(),38);
            slider->SetFillColor(46);
         }
         if (slider) slider->SetRange(0,Float_t(i)/10000.);

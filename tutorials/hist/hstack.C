@@ -30,7 +30,8 @@ TCanvas *hstack() {
    // in top left pad, draw the stack with defaults
    cst->cd(1);
    hs->Draw();
-   // in top right pad, draw the stack in non-stack mode and errors option
+   // in top right pad, draw the stack in non-stack mode 
+   // and errors option
    cst->cd(2);
    gPad->SetGrid();
    hs->Draw("nostack,e1p");
@@ -45,8 +46,10 @@ TCanvas *hstack() {
    //create two 2-D histograms and draw them in stack mode
    gPad->SetFrameFillColor(17);
    THStack *a = new THStack("a","Stacked 2D histograms");
-   TF2 *f1 = new TF2("f1","xygaus + xygaus(5) + xylandau(10)",-4,4,-4,4);
-   Double_t params[] = {130,-1.4,1.8,1.5,1, 150,2,0.5,-2,0.5, 3600,-2,0.7,-3,0.3};
+   TF2 *f1 = new TF2("f1",
+      "xygaus + xygaus(5) + xylandau(10)",-4,4,-4,4);
+   Double_t params[] = {130,-1.4,1.8,1.5,1, 150,2,0.5,-2,0.5, 
+      3600,-2,0.7,-3,0.3};
    f1->SetParameters(params);
    TH2F *h2sta = new TH2F("h2sta","h2sta",20,-4,4,20,-4,4);
    h2sta->SetFillColor(38);

@@ -1,4 +1,4 @@
-// Use a THStack to show a 2-D histogram with cells drawn with different colors
+// Use a THStack to show a 2-D hist with cells with different colors
 // run this example with the two options
 //  root > .x multicolor.C
 //  root > .x multicolor.C(1)

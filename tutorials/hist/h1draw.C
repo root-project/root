@@ -13,7 +13,8 @@
    
 void h1draw()
 {
-   // We attach (or generate) the ROOT file in $ROOTSYS/tutorials/hsimple.root or $PWD/hsimple.root
+   // We attach (or generate) the ROOT file in $ROOTSYS/tutorials/hsimple.root 
+   // or $PWD/hsimple.root
    // We draw one histogram in different formats
    //Author: Rene Brun
    
@@ -28,9 +29,12 @@ void h1draw()
    TH1 *hpx = (TH1*)example->Get("hpx");
    
    TCanvas *c1 = new TCanvas("c1","Histogram Drawing Options",200,10,700,900);
-   TPad *pad1 = new TPad("pad1","The pad with the function",0.03,0.62,0.50,0.92,21);
-   TPad *pad2 = new TPad("pad2","The pad with the histogram",0.51,0.62,0.98,0.92,21);
-   TPad *pad3 = new TPad("pad3","The pad with the histogram",0.03,0.02,0.97,0.57,21);
+   TPad *pad1 = new TPad("pad1",
+      "The pad with the function",0.03,0.62,0.50,0.92,21);
+   TPad *pad2 = new TPad("pad2",
+      "The pad with the histogram",0.51,0.62,0.98,0.92,21);
+   TPad *pad3 = new TPad("pad3",
+      "The pad with the histogram",0.03,0.02,0.97,0.57,21);
    pad1->Draw();
    pad2->Draw();
    pad3->Draw();
@@ -58,7 +62,8 @@ void h1draw()
    TPaveLabel *label2 = new TPaveLabel(-0.72,0.74,-0.22,0.88,"option Lego1");
    label2->SetFillColor(42);
    label2->Draw();
-   TPaveLabel *label2a = new TPaveLabel(-0.93,-1.08,0.25,-0.92,"Click on lego to rotate");
+   TPaveLabel *label2a = new TPaveLabel(-0.93,-1.08,0.25,-0.92,
+      "Click on lego to rotate");
    label2a->SetFillColor(42);
    label2a->Draw();
 

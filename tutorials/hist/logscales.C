@@ -2,7 +2,8 @@ void logscales() {
 //Draw parametric functions with log scales
 //Author: Olivier Couet
    
-   TCanvas *c1 = new TCanvas("c1","Various options on LOG scales plots",0,0,700,900);
+   TCanvas *c1 = new TCanvas("c1",
+      "Various options on LOG scales plots",0,0,700,900);
    c1->SetFillColor(30);
 
    pad1 = new TPad("pad1","pad1",0.03,0.62,0.50,0.92,32);
@@ -10,7 +11,8 @@ void logscales() {
    pad3 = new TPad("pad3","pad3",0.03,0.02,0.97,0.535,38);
    pad1->Draw(); pad2->Draw(); pad3->Draw();
 
-   title = new TPaveLabel(0.1,0.94,0.9,0.98,"Various options on LOG scales plots");
+   title = new TPaveLabel(0.1,0.94,0.9,0.98,
+      "Various options on LOG scales plots");
    title->SetFillColor(16);
    title->SetTextFont(42);
    title->Draw();
@@ -19,7 +21,8 @@ void logscales() {
    pave->SetFillColor(42);
    pave->SetTextAlign(12);
    pave->SetTextFont(42);
-   pave->AddText("When more Log labels are requested, the overlaping labels are removed");
+   pave->AddText("When more Log labels are requested, the overlaping \
+      labels are removed");
    pave->Draw();
 
    pad1->cd();
@@ -71,12 +74,15 @@ void logscales() {
    pad3->SetGridy();
    pad3->SetLogy();
    pad3->SetLogx();
-   TF1 *f4 = new TF1("f4a","x*sin(x+10)+25",1,21); f4->SetLineWidth(1); f4->Draw();
+   TF1 *f4 = new TF1("f4a","x*sin(x+10)+25",1,21); 
+   f4->SetLineWidth(1); 
+   f4->Draw();
    f4->SetNpx(200);
    //f4->SetTitle("");
    f4->GetYaxis()->SetMoreLogLabels();
    f4->GetXaxis()->SetMoreLogLabels();
-   f4 = new TF1("f4b","x*cos(x+10)*sin(x+10)+25",1,21); f4->SetLineWidth(1); f4->Draw("same");
+   f4 = new TF1("f4b","x*cos(x+10)*sin(x+10)+25",1,21); 
+   f4->SetLineWidth(1); f4->Draw("same");
    f4->SetNpx(200);
    Int_t a = 20;
    for (int i=a; i>=1; i--) {
@@ -84,7 +90,8 @@ void logscales() {
      f4->SetParameter(0,i);
      f4->SetParameter(1,a);
 	f4->SetNpx(200);
-     f4->SetLineWidth(1); f4->SetLineColor(i+10); f4->Draw("same");
+     f4->SetLineWidth(1); f4->SetLineColor(i+10); 
+     f4->Draw("same");
      f4 = new TF1(Form("f4c_%d",i),"x*cos(x+10)*sin(x+10)*[0]/[1]+25",1,25);
      f4->SetParameter(0,i);
      f4->SetParameter(1,a);
@@ -97,6 +104,6 @@ void logscales() {
    pave3->SetTextFont(42);
    pave3->SetTextAlign(12);
    pave3->AddText("More Log labels on both.");
-   pave3->AddText("The labels have no exponents because they would be 0 or 1");
+   pave3->AddText("The labels have no exponents (they would be 0 or 1)");
    pave3->Draw();
 }
