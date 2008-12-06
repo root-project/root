@@ -1,13 +1,16 @@
-void glsurfaces() {
-   // This example draws 6 surfaces using OpenGL in pad (one is remake of a classic surfaces.C, another contains 4 surfaces). 
+void glsurfaces()
+{
+   // This example draws 6 surfaces using OpenGL in pad (one is remake
+   // of a classic surfaces.C, another contains 4 surfaces).
+
    // The commands used are exactly the same as with a normal pad. 
    // The only command to add is: gStyle->SetCanvasPreferGL(true);
    //Authors: Rene Brun, Timur Pocheptsov
 
    gStyle->SetPalette(0);
    
-   // after this command all legos surfaces (surf/srf1/surf2/surf4/tf3 options)
-   // are automatically rendered with OpenGL.
+   // after this command all legos surfaces (surf/srf1/surf2/surf4/tf3
+   // options) are automatically rendered with OpenGL.
 
    TCanvas *c1 = new TCanvas("glc1","Surfaces Drawing Options",200,10,700,900);
    c1->SetFillColor(42);
@@ -29,7 +32,8 @@ void glsurfaces() {
    f2->SetFillColor(45);
    f2->Draw("glsurf4");
 
-   TF2 *f2clone = new TF2("f2clone","x**2 + y**2 - x**3 -8*x*y**4", -1., 1.2, -1.5, 1.5);
+   TF2 *f2clone = new TF2("f2clone","x**2 + y**2 - x**3 -8*x*y**4",
+                          -1., 1.2, -1.5, 1.5);
    // Draw this function in pad2 with color mesh option
    pad2->cd();
    pad2->SetLogz();
@@ -50,21 +54,24 @@ void glsurfaces() {
    pad1->Modified();
    pad2->Modified();
 
-   TCanvas *c2 = new TCanvas("glc2","Surfaces Drawing Options with gl",700,10,700,700);
+   TCanvas *c2 = new TCanvas("glc2","Surfaces Drawing Options with gl",
+                             700,10,700,700);
    c2->SetFillColor(42);
    gStyle->SetFrameFillColor(42);
 
    c2->Divide(2, 2);
 
    c2->cd(1);
-   TF2 *fun1 = new TF2("fun1","1000*((sin(x)/x)*(sin(y)/y))+200", -6., 6., -6., 6.);
+   TF2 *fun1 = new TF2("fun1","1000*((sin(x)/x)*(sin(y)/y))+200",
+                       -6., 6., -6., 6.);
    fun1->SetNpx(30);
    fun1->SetNpy(30);
    fun1->SetFillColor(kGreen);
    fun1->Draw("glsurf3");
 
    c2->cd(2);
-   TF2 *fun2 = new TF2("fun2","cos(y)*sin(x)+cos(x)*sin(y)", -6., 6., -6., 6.);
+   TF2 *fun2 = new TF2("fun2","cos(y)*sin(x)+cos(x)*sin(y)",
+                       -6., 6., -6., 6.);
    fun2->Draw("glsurf1cyl");
 
    c2->cd(3);
@@ -72,7 +79,8 @@ void glsurfaces() {
    fun3->Draw("glsurfpol");
 
    c2->cd(4);
-   TF3 *fun4 = new TF3("TF3 sample","sin(x * x + y * y + z * z - 4)", -2.5, 2.5, -2.5, 2.5, -2.5, 2.5);
+   TF3 *fun4 = new TF3("TF3 sample","sin(x * x + y * y + z * z - 4)",
+                       -2.5, 2.5, -2.5, 2.5, -2.5, 2.5);
    Int_t colInd = TColor::GetColor(1.f, 0.5f, 0.f);
    fun4->SetFillColor(colInd);
    fun4->Draw("gl");//tf3 option

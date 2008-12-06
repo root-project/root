@@ -1,7 +1,8 @@
 //To set the Level Of Details when rendering geometry shapes
 //Author: Richard Maunder
 
-void glViewerLOD(Int_t reqNodes = 1000, Bool_t randomDist = kTRUE, Bool_t reqSpheres = kTRUE, Bool_t reqTubes = kTRUE)
+void glViewerLOD(Int_t reqNodes = 1000, Bool_t randomDist = kTRUE,
+                 Bool_t reqSpheres = kTRUE, Bool_t reqTubes = kTRUE)
 {
    TGeoManager * geom = new TGeoManager("LODTest", "GL viewer LOD test");
    geom->SetNsegments(4); // Doesn't matter keep low
@@ -19,12 +20,14 @@ void glViewerLOD(Int_t reqNodes = 1000, Bool_t randomDist = kTRUE, Bool_t reqSph
       worldRadius = pow(reqNodes,.3)*sizeBase;
    }
 
-   TGeoVolume *top = geom->MakeBox("WORLD", medEmptySpace, worldRadius, worldRadius, worldRadius);
+   TGeoVolume *top = geom->MakeBox
+      ("WORLD", medEmptySpace, worldRadius, worldRadius, worldRadius);
    geom->SetTopVolume(top);
 
    gRandom->SetSeed();
 
-   // Create random number of unique sphere shapes - up to 25% of total placed sphere requested
+   // Create random number of unique sphere shapes - up to 25% of
+   // total placed sphere requested
    UInt_t volumeCount = gRandom->Integer(reqNodes/4)+1;
    TGeoVolume ** volumes = new TGeoVolume[volumeCount];
    TGeoVolume * volume;
@@ -59,7 +62,7 @@ void glViewerLOD(Int_t reqNodes = 1000, Bool_t randomDist = kTRUE, Bool_t reqSph
       if (color == kBlack) color += 1;
 
       switch (type) {
-        case (0): {
+        case 0: {
             // GL viewer only supports solid spheres (0. inner radius)
             volumes[i] = geom->MakeSphere(name,  medSolid,  0., rMax);
             printf("Volume %d : Color %d, Sphere, Radius %f\n", i, color, rMax);
@@ -67,23 +70,34 @@ void glViewerLOD(Int_t reqNodes = 1000, Bool_t randomDist = kTRUE, Bool_t reqSph
          }
          case 1: {
             volumes[i] = geom->MakeTube(name,  medSolid,  rMin, rMax, dz);
-            printf("Volume %d : Color %d, Tube, Inner Radius %f, Outer Radius %f, Length %f\n", i, color, rMin, rMax, dz);
+            printf("Volume %d : Color %d, Tube, Inner Radius %f, "
+                   "Outer Radius %f, Length %f\n",
+                   i, color, rMin, rMax, dz);
             break;
          }
          case 2: {
-            volumes[i] = geom->MakeTubs(name,  medSolid,  rMin, rMax, dz, phi1, phi2);
-            printf("Volume %d : Color %d, Tube Seg, Inner Radius %f, Outer Radius %f, Length %f, Phi1 %f, Phi2 %f\n",
+            volumes[i] = geom->MakeTubs(name,  medSolid,  rMin, rMax, dz,
+                                        phi1, phi2);
+            printf("Volume %d : Color %d, Tube Seg, Inner Radius %f, "
+                   "Outer Radius %f, Length %f, Phi1 %f, Phi2 %f\n",
                    i, color, rMin, rMax, dz, phi1, phi2);
             break;
          }
          case 3: {
             Double_t n1[3], n2[3];
-            n1[0] = gRandom->Rndm()*.5; n1[1] = gRandom->Rndm()*.5; n1[2] = -1.0 + gRandom->Rndm()*.5;
-            n2[0] = gRandom->Rndm()*.5; n2[1] = gRandom->Rndm()*.5; n2[2] =  1.0 - gRandom->Rndm()*.5;
+            n1[0] = gRandom->Rndm()*.5;
+            n1[1] = gRandom->Rndm()*.5; n1[2] = -1.0 + gRandom->Rndm()*.5;
+            n2[0] = gRandom->Rndm()*.5;
+            n2[1] = gRandom->Rndm()*.5; n2[2] =  1.0 - gRandom->Rndm()*.5;
 
-            volumes[i] = geom->MakeCtub(name,  medSolid,  rMin, rMax, dz, phi1, phi2, n1[0], n1[1], n1[2], n2[0], n2[1], n2[2]);
-            printf("Volume %d : Color %d, Cut Tube, Inner Radius %f, Outer Radius %f, Length %f, Phi1 %f, Phi2 %f, n1 (%f,%f,%f), n2 (%f,%f,%f)\n",
-                   i, color, rMin, rMax, dz, phi1, phi2, n1[0], n1[1], n1[2], n2[0], n2[1], n2[2]);
+            volumes[i] = geom->MakeCtub(name,  medSolid,  rMin, rMax, dz,
+                                        phi1, phi2, n1[0], n1[1], n1[2],
+                                        n2[0], n2[1], n2[2]);
+            printf("Volume %d : Color %d, Cut Tube, Inner Radius %f, "
+                   "Outer Radius %f, Length %f, Phi1 %f, Phi2 %f, "
+                   "n1 (%f,%f,%f), n2 (%f,%f,%f)\n",
+                   i, color, rMin, rMax, dz, phi1, phi2,
+                   n1[0], n1[1], n1[2], n2[0], n2[1], n2[2]);
             break;
          }
          default: {
