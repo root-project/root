@@ -5,7 +5,8 @@ void assembly()
 {
 //--- Definition of a simple geometry
    gSystem->Load("libGeom");
-   TGeoManager *geom = new TGeoManager("Assemblies", "Geometry using assemblies");
+   TGeoManager *geom = new TGeoManager("Assemblies", 
+      "Geometry using assemblies");
    Int_t i;
    //--- define some materials
    TGeoMaterial *matVacuum = new TGeoMaterial("Vacuum", 0,0,0);
@@ -60,7 +61,8 @@ void assembly()
    }   
    
    // Make a row as an assembly of cells, then combine rows in a honeycomb
-   // structure. This again works without any need to define rows as "overlapping"
+   // structure. This again works without any need to define rows as 
+   // "overlapping"
    TGeoVolume *row = new TGeoVolumeAssembly("ROW");
    Int_t ncells = 5;
    for (i=0; i<ncells; i++) {

@@ -85,7 +85,8 @@ void RadioNuclides()
    tex->SetTextSize(0.0388601);
    tex->SetLineWidth(2);
    tex->Draw();
-   tex = new TLatex(9.4e11,0.098,"C_{X}=#frac{N_{X}(t)}{N_{0}(t=0)}=#sum_{j}#alpha_{j}e^{-#lambda_{j}t}");
+   tex = new TLatex(9.4e11,0.098,"C_{X}=#frac{N_{X}(t)}{N_{0}(t=0)}=\
+   #sum_{j}#alpha_{j}e^{-#lambda_{j}t}");
    tex->SetTextSize(0.0388601);
    tex->SetLineWidth(2);
    tex->Draw();
@@ -153,7 +154,8 @@ void RadioNuclides()
    tex->SetTextSize(0.0388601);
    tex->SetTextColor(3);
    tex->Draw();
-   tex = new TLatex(117.,1.52,"C_{X}=#frac{N_{X}(t)}{N_{0}(t=0)}=#sum_{j}#alpha_{j}e^{-#lambda_{j}t}");
+   tex = new TLatex(117.,1.52,"C_{X}=#frac{N_{X}(t)}{N_{0}(t=0)}=#sum_{j}\
+   #alpha_{j}e^{-#lambda_{j}t}");
    tex->SetTextSize(0.03);
    tex->SetLineWidth(2);
    tex->Draw();
@@ -219,7 +221,8 @@ void RadioNuclides()
    arrow->Draw();
 }
 
-void DrawPopulation(TObjArray *vect, TCanvas *can, Double_t tmin=0., Double_t tmax=0., Bool_t logx=kFALSE)
+void DrawPopulation(TObjArray *vect, TCanvas *can, Double_t tmin=0., 
+   Double_t tmax=0., Bool_t logx=kFALSE)
 {
    Int_t n = vect->GetEntriesFast();
    TGeoElementRN *elem;
@@ -240,10 +243,14 @@ void DrawPopulation(TObjArray *vect, TCanvas *can, Double_t tmin=0., Double_t tm
          if (tmax>0.) sol->SetRange(tmin,tmax);
          if (i==0) {
             sol->Draw();
-            TF1 *func = (TF1*)can->FindObject(Form("conc%s",sol->GetElement()->GetName()));
+            TF1 *func = (TF1*)can->FindObject(
+               Form("conc%s",sol->GetElement()->GetName()));
             if (func) {
-               if (!strcmp(can->GetName(),"c1")) func->SetTitle("Concentration of C14 derived elements;time[s];Ni/N0(C14)");
-               else func->SetTitle("Concentration of elements derived from mixture Ca53+Sr78;time[s];Ni/N0(Ca53)");
+               if (!strcmp(can->GetName(),"c1")) func->SetTitle(
+                  "Concentration of C14 derived elements;time[s];Ni/N0(C14)");
+               else func->SetTitle(
+                  "Concentration of elements derived from mixture Ca53+Sr78;\
+                  time[s];Ni/N0(Ca53)");
             }   
          }   
          else      sol->Draw("SAME");
