@@ -50,12 +50,14 @@ void fitMultiGraph()
    gr3->SetMarkerSize(0.3);
 
    //add the graphs to the multigraph
-   TMultiGraph *mg=new TMultiGraph("mg", "TMultiGraph of 3 TGraphErrors");
+   TMultiGraph *mg=new TMultiGraph("mg", 
+      "TMultiGraph of 3 TGraphErrors");
    mg->Add(gr1);
    mg->Add(gr2);
    mg->Add(gr3);
 
-   TCanvas *myc = new TCanvas("myc", "Fitting a MultiGraph of 3 TGraphErrors");
+   TCanvas *myc = new TCanvas("myc", 
+      "Fitting a MultiGraph of 3 TGraphErrors");
    myc->SetFillColor(42);
    myc->SetGrid();
    
@@ -99,9 +101,12 @@ void fitminuit()
       e3[i] = 0.00001;
       y3[i] = TMath::Gaus(x3[i], 0, 1);
    }
-   for (i=0; i<n; i++) {xtotal[i]=x1[i]; ytotal[i]=y1[i]; etotal[i]=0.00001;}
-   for (i=n; i<2*n; i++) {xtotal[i] = x2[i-n]; ytotal[i]=y2[i-n]; etotal[i]=0.00001;}
-   for (i=2*n; i<3*n; i++) {xtotal[i] = x3[i-2*n]; ytotal[i]=y3[i-2*n]; etotal[i]=0.00001;}
+   for (i=0; i<n; i++) 
+      {xtotal[i]=x1[i]; ytotal[i]=y1[i]; etotal[i]=0.00001;}
+   for (i=n; i<2*n; i++) 
+      {xtotal[i] = x2[i-n]; ytotal[i]=y2[i-n]; etotal[i]=0.00001;}
+   for (i=2*n; i<3*n; i++) 
+      {xtotal[i] = x3[i-2*n]; ytotal[i]=y3[i-2*n]; etotal[i]=0.00001;}
 
    //create the graphs and set their drawing options
    TGraphErrors *gr1 = new TGraphErrors(n, x1, y1, 0, e1);

@@ -1,4 +1,4 @@
-//Example of script top generate points distributed with some errors around a circle
+//Generate points distributed with some errors around a circle
 //Fit a circle through the points and draw 
 //To run the script, do, eg
 //   root > .x fitCircle.C   (10000 points by default)
@@ -16,7 +16,7 @@
 
 TGraph *gr;
 
-//______________________________________________________________________________
+//____________________________________________________________________
 void myfcn(Int_t &, Double_t *, Double_t &f, Double_t *par, Int_t) {
    //minimisation function computing the sum of squares of residuals
    Int_t np = gr->GetN();
@@ -31,7 +31,7 @@ void myfcn(Int_t &, Double_t *, Double_t &f, Double_t *par, Int_t) {
    }
 }
 
-//______________________________________________________________________________
+//____________________________________________________________________
 void fitCircle(Int_t n=10000) {
    //generates n points around a circle and fit them
    TCanvas *c1 = new TCanvas("c1","c1",600,600);
@@ -61,7 +61,8 @@ void fitCircle(Int_t n=10000) {
    fitter->ExecuteCommand("MIGRAD", arglist, 0);
 
    //Draw the circle on top of the points
-   TArc *arc = new TArc(fitter->GetParameter(0),fitter->GetParameter(1),fitter->GetParameter(2));
+   TArc *arc = new TArc(fitter->GetParameter(0),
+      fitter->GetParameter(1),fitter->GetParameter(2));
    arc->SetLineColor(kRed);
    arc->SetLineWidth(4);
    arc->Draw();

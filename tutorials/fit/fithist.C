@@ -35,7 +35,7 @@ void fithist() {
    histgen();
    
    TFile *f = new TFile("background.root");
-   background = (TH1F*)f->Get("background"); //global pointer used in ftotal
+   background = (TH1F*)f->Get("background"); //pointer used in ftotal
    TH1F *result = (TH1F*)f->Get("result");
    
    TF1 *ftot = new TF1("ftot",ftotal,0,10,4);

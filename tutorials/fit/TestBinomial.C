@@ -1,17 +1,24 @@
-// Perform a fit to a set of data with binomial errors like those derived from the division of two histograms. 
+// Perform a fit to a set of data with binomial errors 
+// like those derived from the division of two histograms. 
 // Three different fits are performed and compared:  
 //
-//   -  simple least square fit to the divided histogram obtained from TH1::Divide with option b
-//   -  least square fit to the TGraphAsymmErrors obtained from TGraphAsymmErrors::BayesDivide
-//   -  likelihood fit performed on the dividing histograms using binomial statistics with the TBinomialEfficiency class
+//   -  simple least square fit to the divided histogram obtained 
+//      from TH1::Divide with option b
+//   -  least square fit to the TGraphAsymmErrors obtained from 
+//      TGraphAsymmErrors::BayesDivide
+//   -  likelihood fit performed on the dividing histograms using 
+//      binomial statistics with the TBinomialEfficiency class
 // 
 // The first two methods are biased while the last one  is statistical correct. 
-// Running the script passing an integer value n larger than 1, n fits are performed and the bias are also shown.   
+// Running the script passing an integer value n larger than 1, n fits are 
+// performed and the bias are also shown.   
 // To run the script : 
 // 
+//  to show the bias performing 100 fits for 1000 events per "experiment"
 //  root[0]: .x TestBinomial.C+
 // 
-//           .x TestBinomial.C+(100, 1000)  to show the bias performing 100 fits for 1000 events per "experiment"
+//  to show the bias performing 100 fits for 1000 events per "experiment"
+//           .x TestBinomial.C+(100, 1000)
 // 
 //
 #include "TBinomialEfficiencyFitter.h"
@@ -41,7 +48,8 @@ void TestBinomial(int nloop = 100, int nevts = 100, bool plot=false)
    TObjArray hbiasWidth;
    hbiasWidth.Add(new TH1D("h0Width", "Bias Histogram fit",100,-5,5));
    hbiasWidth.Add(new TH1D("h1Width","Bias Binomial fit",100,-5,5));
-   TH1D* hChisquared = new TH1D("hChisquared", "#chi^{2} probability (Baker-Cousins)", 200, 0.0, 1.0);
+   TH1D* hChisquared = new TH1D("hChisquared", 
+      "#chi^{2} probability (Baker-Cousins)", 200, 0.0, 1.0);
 
    //TVirtualFitter::SetDefaultFitter("Minuit2");
 
@@ -56,13 +64,19 @@ void TestBinomial(int nloop = 100, int nevts = 100, bool plot=false)
    // Here: assume a x^(-2) distribution. Boundaries: [10, 100].
 
    Double_t xmin =10, xmax = 100;
-   TH1D* hM2D = new TH1D("hM2D", "x^(-2) denominator distribution", 45, xmin, xmax);
-   TH1D* hM2N = new TH1D("hM2N", "x^(-2) numerator distribution",   45, xmin, xmax);
-   TH1D* hM2E = new TH1D("hM2E", "x^(-2) efficiency",               45, xmin, xmax);
+   TH1D* hM2D = new TH1D("hM2D", "x^(-2) denominator distribution", 
+      45, xmin, xmax);
+   TH1D* hM2N = new TH1D("hM2N", "x^(-2) numerator distribution",   
+      45, xmin, xmax);
+   TH1D* hM2E = new TH1D("hM2E", "x^(-2) efficiency",               
+      45, xmin, xmax);
 
-   TF1*  fM2D = new TF1("fM2D", "(1-[0]/(1+exp(([1]-x)/[2])))/(x*x)", xmin, xmax);
-   TF1*  fM2N = new TF1("fM2N", "[0]/(1+exp(([1]-x)/[2]))/(x*x)",     xmin, xmax);
-   TF1*  fM2Fit = new TF1("fM2Fit", "[0]/(1+exp(([1]-x)/[2]))",       xmin, xmax);
+   TF1*  fM2D = new TF1("fM2D", "(1-[0]/(1+exp(([1]-x)/[2])))/(x*x)", 
+      xmin, xmax);
+   TF1*  fM2N = new TF1("fM2N", "[0]/(1+exp(([1]-x)/[2]))/(x*x)",     
+      xmin, xmax);
+   TF1*  fM2Fit = new TF1("fM2Fit", "[0]/(1+exp(([1]-x)/[2]))",       
+      xmin, xmax);
    TF1*  fM2Fit2 = 0;
 
    TRandom3 rb(0);
@@ -184,7 +198,8 @@ void TestBinomial(int nloop = 100, int nevts = 100, bool plot=false)
    }
    
 
-   TCanvas* c1 = new TCanvas("c1","Efficiency fit biases",10,10,1000,800); 
+   TCanvas* c1 = new TCanvas("c1",
+      "Efficiency fit biases",10,10,1000,800); 
    c1->Divide(2,2);
 
    TH1D *h0, *h1;
@@ -194,9 +209,12 @@ void TestBinomial(int nloop = 100, int nevts = 100, bool plot=false)
    h1 = dynamic_cast<TH1D*>(hbiasNorm[1]);
    h1->SetLineColor(kRed);
    h1->Draw("HIST SAMES");
-   TLegend* l1 = new TLegend(0.1, 0.75, 0.5, 0.9, "plateau parameter", "ndc");
-   l1->AddEntry(h0, Form("histogram: mean = %4.2f RMS = %4.2f", h0->GetMean(), h0->GetRMS()), "l");
-   l1->AddEntry(h1, Form("binomial : mean = %4.2f RMS = %4.2f", h1->GetMean(), h1->GetRMS()), "l");
+   TLegend* l1 = new TLegend(0.1, 0.75, 0.5, 0.9, 
+      "plateau parameter", "ndc");
+   l1->AddEntry(h0, Form("histogram: mean = %4.2f RMS = %4.2f", \
+      h0->GetMean(), h0->GetRMS()), "l");
+   l1->AddEntry(h1, Form("binomial : mean = %4.2f RMS = %4.2f", \
+      h1->GetMean(), h1->GetRMS()), "l");
    l1->Draw();
 
    c1->cd(2);
@@ -205,9 +223,12 @@ void TestBinomial(int nloop = 100, int nevts = 100, bool plot=false)
    h1 = dynamic_cast<TH1D*>(hbiasThreshold[1]);
    h1->SetLineColor(kRed);
    h1->Draw("HIST SAMES");
-   TLegend* l2 = new TLegend(0.1, 0.75, 0.5, 0.9, "threshold parameter", "ndc");
-   l2->AddEntry(h0, Form("histogram: mean = %4.2f RMS = %4.2f", h0->GetMean(), h0->GetRMS()), "l");
-   l2->AddEntry(h1, Form("binomial : mean = %4.2f RMS = %4.2f", h1->GetMean(), h1->GetRMS()), "l");
+   TLegend* l2 = new TLegend(0.1, 0.75, 0.5, 0.9, 
+      "threshold parameter", "ndc");
+   l2->AddEntry(h0, Form("histogram: mean = %4.2f RMS = %4.2f", \
+      h0->GetMean(), h0->GetRMS()), "l");
+   l2->AddEntry(h1, Form("binomial : mean = %4.2f RMS = %4.2f", \
+      h1->GetMean(), h1->GetRMS()), "l");
    l2->Draw();
 
    c1->cd(3);
@@ -217,8 +238,10 @@ void TestBinomial(int nloop = 100, int nevts = 100, bool plot=false)
    h1->SetLineColor(kRed);
    h1->Draw("HIST SAMES");
    TLegend* l3 = new TLegend(0.1, 0.75, 0.5, 0.9, "width parameter", "ndc");
-   l3->AddEntry(h0, Form("histogram: mean = %4.2f RMS = %4.2f", h0->GetMean(), h0->GetRMS()), "l");
-   l3->AddEntry(h1, Form("binomial : mean = %4.2f RMS = %4.2f", h1->GetMean(), h1->GetRMS()), "l");
+   l3->AddEntry(h0, Form("histogram: mean = %4.2f RMS = %4.2f", \
+      h0->GetMean(), h0->GetRMS()), "l");
+   l3->AddEntry(h1, Form("binomial : mean = %4.2f RMS = %4.2f", \
+      h1->GetMean(), h1->GetRMS()), "l");
    l3->Draw();
 
    c1->cd(4);

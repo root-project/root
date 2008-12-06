@@ -24,7 +24,8 @@ TCanvas* graph2dfit()
 
    TRandom r;
    Double_t fl = 6;
-   TF2  *f2 = new TF2("f2","1000*(([0]*sin(x)/x)*([1]*sin(y)/y))+200",-fl,fl,-fl,fl);
+   TF2  *f2 = new TF2("f2","1000*(([0]*sin(x)/x)*([1]*sin(y)/y))+200",
+      -fl,fl,-fl,fl);
    f2->SetParameters(1,1);
    TGraph2D *dt = new TGraph2D();
 
@@ -40,9 +41,13 @@ TCanvas* graph2dfit()
    }
 
    Double_t hr = 350;
-   TH1D *h1 = new TH1D("h1", "#splitline{Difference between Original function}{and Function with noise}", 100, -hr, hr);
-   TH1D *h2 = new TH1D("h2", "#splitline{Difference between Original function}{and Interpolation with Delaunay triangles}", 100, -hr, hr);
-   TH1D *h3 = new TH1D("h3", "#splitline{Difference between Original function}{and Minuit fit}", 500, -hr, hr);
+   TH1D *h1 = new TH1D("h1", "#splitline{Difference between Original function}\
+   {and Function with noise}", 100, -hr, hr);
+   TH1D *h2 = new TH1D("h2", 
+      "#splitline{Difference between Original function}\
+      {and Interpolation with Delaunay triangles}", 100, -hr, hr);
+   TH1D *h3 = new TH1D("h3", "#splitline{Difference between Original function}\
+   {and Minuit fit}", 500, -hr, hr);
 
    f2->SetParameters(0.5,1.5);
    dt->Fit(f2);

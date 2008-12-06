@@ -1,4 +1,5 @@
-//Example for fitting signal/background. This example can be executed with:
+//Example for fitting signal/background. 
+// This example can be executed with:
 // root > .x FittingDemo.C  (using the CINT interpreter)
 // root > .x FittingDemo.C+ (using the native complier via ACLIC)
 //Author: Rene Brun
@@ -18,7 +19,8 @@ Double_t background(Double_t *x, Double_t *par) {
 // Lorenzian Peak function
 Double_t lorentzianPeak(Double_t *x, Double_t *par) {
   return (0.5*par[0]*par[1]/TMath::Pi()) / 
-    TMath::Max( 1.e-10,(x[0]-par[2])*(x[0]-par[2]) + .25*par[1]*par[1]);
+    TMath::Max( 1.e-10,(x[0]-par[2])*(x[0]-par[2]) 
+   + .25*par[1]*par[1]);
 }
 
 // Sum of background and peak function
@@ -42,7 +44,8 @@ void FittingDemo() {
    c1->SetFrameFillColor(41);
    c1->SetGrid();
    
-   TH1F *histo = new TH1F("histo","Lorentzian Peak on Quadratic Background",60,0,3);
+   TH1F *histo = new TH1F("histo",
+      "Lorentzian Peak on Quadratic Background",60,0,3);
    histo->SetMarkerStyle(21);
    histo->SetMarkerSize(0.8);
    histo->SetStats(0);

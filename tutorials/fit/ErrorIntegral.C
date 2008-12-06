@@ -1,5 +1,7 @@
-// Estimate the error in the integral of a fitted function taking into account the errors in the parameters resulting from the fit. 
-// The error is estimated also using the correlations values obtained from the fit
+// Estimate the error in the integral of a fitted function 
+// taking into account the errors in the parameters resulting from the fit. 
+// The error is estimated also using the correlations values obtained from 
+// the fit
 //
 // run the macro doing: 
 //  .x ErrorIntegral.C
@@ -45,9 +47,10 @@ double df_dPar(double * x, double * p) {
 }
 
 //____________________________________________________________________
-double IntegralError(int npar, double * c, double * errPar, double * covMatrix = 0) {   
-// calculate the error on the integral given the parameter error and the integrals of 
-// the gradient functions c[] 
+double IntegralError(int npar, double * c, double * errPar, 
+   double * covMatrix = 0) {   
+// calculate the error on the integral given the parameter error and 
+// the integrals of the gradient functions c[] 
 
    double err2 = 0; 
    for (int i = 0; i < npar; ++i) { 
@@ -89,7 +92,8 @@ void ErrorIntegral() {
 
 #ifdef HAVE_OLD_ROOT_VERSION
 
-   // calculate now the error (needs the derivatives of the function w..r.t the parameters)
+   // calculate now the error (needs the derivatives of the function 
+   // w..r.t the parameters)
    TF1 * deriv_par0 = new TF1("dfdp0",df_dPar,0,1,1);
    deriv_par0->SetParameter(0,0);
 
@@ -118,7 +122,8 @@ void ErrorIntegral() {
 
 #endif
 
-   std::cout << "Integral = " << integral << " +/- " << sigma_integral << std::endl;
+   std::cout << "Integral = " << integral << " +/- " << sigma_integral 
+             << std::endl;
 
    // estimated integral  and error analytically
 
@@ -128,8 +133,10 @@ void ErrorIntegral() {
    double c1c = (1-std::cos(p[0]) )/p[0];
 
    // estimated error with correlations
-   double sic = std::sqrt( c0c*c0c * covMatrix[0] + c1c*c1c * covMatrix[3] + 2.* c0c*c1c * covMatrix[1]); 
+   double sic = std::sqrt( c0c*c0c * covMatrix[0] + c1c*c1c * covMatrix[3] 
+      + 2.* c0c*c1c * covMatrix[1]); 
 
    if ( std::fabs(sigma_integral-sic) > 1.E-6*sic ) 
-      std::cout << " ERROR: test failed : different analytical  integral : " << ic << " +/- " << sic << std::endl;
+      std::cout << " ERROR: test failed : different analytical  integral : " 
+                << ic << " +/- " << sic << std::endl;
 }
