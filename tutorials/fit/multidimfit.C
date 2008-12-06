@@ -200,7 +200,7 @@ Int_t multidimfit()
     else
       i--;
   }
-  delete gRandom;
+  //delete gRandom;
 
   // Test the parameterizatio and coefficents using the test sample. 
   fit->Fit();
