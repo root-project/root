@@ -2223,18 +2223,18 @@ if test ! "x$enable_qt" = "xno" || \
     else
         check_header "Qt/qglobal.h" "$qtincdir" \
             /usr/local/include/ /usr/local/qt/include  \
-            /usr/include /usr/include/qt4
+            /usr/include /usr/include/qt4 /usr/lib/qt4/include
     fi
     qtvers=0
     if test ! "x$found_hdr" = "x"; then
-	qtvers=4
+        qtvers=4
         qt4="yes"
         qtinc=$found_hdr
         qtmainincdir=$found_dir
         qtincdir=$qtmainincdir
         for i in `ls -d $qtmainincdir/Qt*` ; do
             if test -d $i ; then
-		qtincdir="$qtincdir $i"
+                qtincdir="$qtincdir $i"
             fi
         done
 	qtverneed="4.3.0"
@@ -2278,18 +2278,15 @@ if test ! "x$enable_qt" = "xno" || \
     fi
 
     message "Checking for moc or moc.exe"
-    if `$cwhich moc > /dev/null 2>&1` ; then
-        mocdir=`$cwhich moc`
-        mocdir=`dirname $mocdir`
-    fi
     for i in $QTDIR $QTDIR/bin "$mocdir" /usr/local/bin /usr/local/qt/bin \
-        /usr/bin /usr/qt4/bin /usr/lib/qt4/bin /usr/share/qt4/bin ; do
-	logmsg " Checking for moc in $i"
+             /usr/bin /usr/qt4/bin /usr/lib/qt4/bin /usr/share/qt4/bin ; do
+    logmsg " Checking for $qtmocexe in $i"
+
 	for j in $i/moc-qt${qtvers} $i/moc-qt${qtvers}.exe $i/moc $i/moc.exe ;
 	do
 	    if test -x $j ; then
-		moc_vers=`$j -v >/dev/stdout 2>&1 | \
-		    sed -e 's/.*(Qt //' -e 's/\.[0-9]*\.[0-9]*)//'`
+          moc_vers=`$j -v >/dev/stdout 2>&1 | \
+          sed -e 's/.*(Qt //' -e 's/\.[0-9]*\.[0-9][-0-9a-z]*)//'`
                 if test ! "$moc_vers" = "$qtvers" ; then
 		    logmsg "$j: moc version ${moc_vers} does not match Qt version ${qtvers}"
 		    continue
