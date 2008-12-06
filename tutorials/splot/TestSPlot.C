@@ -12,7 +12,7 @@ void TestSPlot()
 {
 //This tutorial illustrates the use of class TSPlot and of the sPlots method
 //
-//It is an example of analysis of charmless B decays, performed for the BABAR experiment.
+//It is an example of analysis of charmless B decays, performed for BABAR.
 //One is dealing with a data sample in which two species are present:
 //the first is termed signal and the second background. 
 //A maximum Likelihood fit is performed to obtain the two yields N1 and N2
@@ -35,18 +35,22 @@ void TestSPlot()
    
    //Read the data and initialize a TSPlot object
    TTree *datatree = new TTree("datatree", "datatree");
-   datatree->ReadFile(dataFile, "Mes/D:dE/D:F/D:MesSignal/D:MesBackground/D:dESignal/D:dEBackground/D:FSignal/D:FBackground/D");
+   datatree->ReadFile(dataFile, "Mes/D:dE/D:F/D:MesSignal/D:MesBackground/D:\
+      dESignal/D:dEBackground/D:FSignal/D:FBackground/D");
 
    TSPlot *splot = new TSPlot(0, 3, 5420, 2, datatree);
 
    //Set the selection for data tree
-   //Note the order of the variables: first the control variables (not presented in this example),
-   //then the 3 discriminating variables, then their probability distribution functions for 
-   //the first species(signal) and then their pdfs for the second species(background)
-   splot->SetTreeSelection("Mes:dE:F:MesSignal:dESignal:FSignal:MesBackground:dEBackground:FBackground");
+   //Note the order of the variables: 
+   //first the control variables (not presented in this example),
+   //then the 3 discriminating variables, then their probability distribution 
+   //functions for the first species(signal) and then their pdfs for the 
+   //second species(background)
+   splot->SetTreeSelection("Mes:dE:F:MesSignal:dESignal:FSignal:MesBackground:\
+      dEBackground:FBackground");
 
-   //Set the initial estimates of the number of events in each species - used as initial 
-   //parameter values for the Minuit likelihood fit
+   //Set the initial estimates of the number of events in each species 
+   //- used as initial parameter values for the Minuit likelihood fit
    Int_t ne[2];
    ne[0]=500; ne[1]=5000;
    splot->SetInitialNumbersOfSpecies(ne);
@@ -58,19 +62,20 @@ void TestSPlot()
    splot->FillSWeightsHists(25);
 
    //Now let's look at the sPlots
-   //The first two histograms are sPlots for the Mes variable signal and background. 
-   //dE and F were chosen as discriminating variables to determine N1 and N2, through a 
-   //maximum Likelihood fit, and thus the sPlots for the control variable Mes, unknown
-   //to the fit, was contructed.
+   //The first two histograms are sPlots for the Mes variable signal and 
+   //background. dE and F were chosen as discriminating variables to determine 
+   //N1 and N2, through a maximum Likelihood fit, and thus the sPlots for the 
+   //control variable Mes, unknown to the fit, was contructed.
    //One can see that the sPlot for signal reproduces the PDF correctly, 
    //even when the latter vanishes.
    //
-   //The lower two histograms are sPlots for the F variables signal and background.
-   //dE and Mes were chosen as discriminating variables to determine N1 and N2, through a 
-   //maximum Likelihood fit, and thus the sPlots for the control variable F, unknown
-   //to the fit, was contructed.
+   //The lower two histograms are sPlots for the F variables signal and 
+   //background. dE and Mes were chosen as discriminating variables to 
+   //determine N1 and N2, through a maximum Likelihood fit, and thus the 
+   //sPlots for the control variable F, unknown to the fit, was contructed.
 
-   TCanvas *myc = new TCanvas("myc", "sPlots of Mes and F signal and background", 800, 600);
+   TCanvas *myc = new TCanvas("myc", 
+   "sPlots of Mes and F signal and background", 800, 600);
    myc->SetFillColor(40);
 
    TPaveText *pt = new TPaveText(0.02,0.85,0.98,0.98);
@@ -78,8 +83,10 @@ void TestSPlot()
    pt->SetTextFont(20);
    pt->SetTextColor(4);
    pt->AddText("sPlots of Mes and F signal and background,");
-   pt->AddText("obtained by running the tutorial TestSPlot.C on BABAR Monte Carlo data (sPlot_toyMC.fit)");
-   TText *t3=pt->AddText("M. Pivk and F. R. Le Diberder, Nucl.Inst.Meth.A (in press), physics/0402083");
+   pt->AddText("obtained by the tutorial TestSPlot.C on BABAR MC \
+      data (sPlot_toyMC.fit)");
+   TText *t3=pt->AddText(
+      "M. Pivk and F. R. Le Diberder, Nucl.Inst.Meth.A, physics/0402083");
    t3->SetTextColor(1);
    t3->SetTextFont(30);
    pt->Draw();
