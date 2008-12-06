@@ -77,7 +77,7 @@ separate: separate.log
 abc_rflx.cpp: abc.h
 	$(CMDECHO) genreflex abc.h > abc_reflex_cpp.log 2>&1
 
-libabc_reflex.$(DllSuf): abc_rflx.o
+libabc_reflex.$(DllSuf): abc_rflx.$(ObjSuf)
 	$(BuildFromObj)
 
 abc_cint.root: abc_h.$(DllSuf)
