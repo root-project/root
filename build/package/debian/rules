@@ -50,6 +50,7 @@ CONFOPTIONS	:=--enable-cintex				\
 		  --enable-clarens				\
 		  --enable-explicitlink				\
 		  --enable-gdml					\
+		  --enable-gsl-shared				\
 		  --enable-fftw3				\
 		  --enable-ldap					\
 		  --enable-qt					\
@@ -279,12 +280,14 @@ debian/html.C:
 	@echo "  html.SetEtcDir(\"$(CURDIR)/etc/html\");"	>> $@
 	@echo "  html.SetHomepage(\"http://root.cern.ch\");"	>> $@
 	@echo "  html.LoadAllLibs();"				>> $@
+	@echo "  html.SetHeadless();"				>> $@
+#	@echo "  gDebug = 4;"   				>> $@
 	@echo "  html.MakeAll();"				>> $@
 	@echo "}"						>> $@
 
 htmldoc:debian/html.C
-	-LD_LIBRARY_PATH=$(CURDIR)/lib:$(CURDIR)/cint/cint/include:$(CURDIR)/cint/cint/stl:$(LD_LIBRARY_PATH) \
-		$(CURDIR)/bin/roota -l -b -q $^
+	-LD_LIBRARY_PATH=$(CURDIR)/lib:$(CURDIR)/cint/cint/include:$(CURDIR)/cint/cint/stl:$(LD_LIBRARY_PATH) ROOTSYS=$(CURDIR) \
+		$(CURDIR)/bin/root.exe -l -b -q $^
 	rm -f debian/html.C
 
 configure-stamp:$(TEMPLATES:%.in=%) config.status
@@ -339,6 +342,8 @@ clean:	$(TEMPLATES:%.in=%)
 	#-rm -rf asimage/src/libAfterImage 
 	-rm -rf debian/*.files	debian/*.install	
 	-rm -f	macros/html.C 
+	-rm -f  memstat.root
+	-rm -f  *.Cexec
 	-rm -f	cint/MAKEINFO
 	-rm -f	etc/daemons/proofd.rc.d
 	-rm -f	etc/daemons/proofd.xinetd

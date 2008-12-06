@@ -14,9 +14,10 @@ confargs="--enable-cintex			\
     --disable-clarens				\
     --enable-explicitlink			\
     --enable-gdml				\
+    --enable-gsl-shared				\
     --disable-fftw3				\
     --enable-ldap				\
-    --disable-qt					\
+    --disable-qt				\
     --disable-qtgsi				\
     --enable-mathcore				\
     --enable-mathmore				\

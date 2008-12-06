@@ -1,3 +1,17 @@
+root-system (5.21.07-2) unstable; urgency=low
+
+  * Discovery of s390x implemented - should check if this works also in 
+    terms of code (Closes: #487935)
+  * Do not modify rootd user after creation.  Perhaps this fixes 
+    #498398
+  * FTBFS with GCC 4.4: wrong #elif - fixed upstream (Closes: #505015)
+  * can FTBFS due to incomplete calls to open - fixed upstream 
+    (Closes: #502873)
+  * incomplete ftgl-dev => libftgl-dev transition fixed 
+    (Closes: #498677)
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Wed, 03 Dec 2008 10:45:16 +0100
+
 root-system (5.21.07-1) unstable; urgency=low
 
   * New upstream version

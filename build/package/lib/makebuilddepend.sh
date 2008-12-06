@@ -193,7 +193,8 @@ for i in $* ; do
 	libroot-graf3d-g3d)						;;
 	libroot-graf3d-gl)					        
 	    echo -n ", libglu1-mesa-dev | libglu1-xorg-dev "
-	    echo -n "| xlibmesa-glu-dev |  libglu-dev, ftgl-dev"	;;
+	    echo -n "| xlibmesa-glu-dev |  libglu-dev"			
+	    echo -n ", libftgl-dev | ftgl-dev"				;;
 	libroot-gui)  							;;
 	libroot-gui-ged)        					;;
 	libroot-hist) 							;;

@@ -35,14 +35,19 @@ case "$1" in
 	# Now we have to ensure the following state:
 	#   /etc/passwd: rootd:x:Anonymous rootd:/var/spool/rootd:/bin/false
 	#   /etc/group:  rootd:x:72:rootd
-	if ! grep -q ^rootd: /etc/group; then 
+	if ! getent group rootd > /dev/null; then 
 	    addgroup --system rootd 
 	fi
-	if ! grep -q ^rootd: /etc/passwd; then
+	if ! getent passwd rootd > /dev/null; then
 	    #echo Adding system user: rootd.
-	    adduser --system --ingroup rootd \
-		--gecos "Anonymous rootd" \
-		--home /var/spool/rootd rootd  >/dev/null
+	    adduser 				\
+		--system 			\
+		--disable-login			\
+		--ingroup rootd 		\
+		--gecos "Anonymous rootd" 	\
+		--shell /bin/false		\
+		--home /var/spool/rootd 	\
+		rootd >/dev/null
 	fi
 
 	# creating rootd home directory
@@ -51,10 +56,10 @@ case "$1" in
 	fi
 
 	# modifying the user
-	usermod -c "Anonymous rootd"    rootd > /dev/null
-	usermod -d "/var/spool/rootd"   rootd > /dev/null
-	usermod -g "rootd"              rootd > /dev/null
-	usermod -s "/bin/false"         rootd > /dev/null
+	# usermod -c "Anonymous rootd"    rootd > /dev/null
+	# usermod -d "/var/spool/rootd"   rootd > /dev/null
+	# usermod -g "rootd"              rootd > /dev/null
+	# usermod -s "/bin/false"         rootd > /dev/null
 
 	# Since the home directory was created before putting the user
 	# into the rootd group and moreover we cannot guarantee that
