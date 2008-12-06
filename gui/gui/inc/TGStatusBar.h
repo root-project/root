@@ -63,6 +63,7 @@ public:
    virtual void SetText(const char *text, Int_t partidx = 0);
            void AddText(const char *text, Int_t partidx = 0)
                   { SetText(text, partidx); }                  //*MENU*
+   const char  *GetText(Int_t partidx = 0) const;
    virtual void SetParts(Int_t npart);                         //*MENU*
    virtual void SetParts(Int_t *parts, Int_t npart);
    void         Draw3DCorner(Bool_t corner) { f3DCorner = corner; }
