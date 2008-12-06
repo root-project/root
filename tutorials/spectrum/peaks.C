@@ -87,7 +87,8 @@ void peaks(Int_t np=10) {
    printf("Found %d useful peaks to fit\n",npeaks);
    printf("Now fitting: Be patient\n");
    TF1 *fit = new TF1("fit",fpeaks,0,1000,2+3*npeaks);
-   TVirtualFitter::Fitter(h2,10+3*npeaks); //we may have more than the default 25 parameters
+   //we may have more than the default 25 parameters
+   TVirtualFitter::Fitter(h2,10+3*npeaks);
    fit->SetParameters(par);
    fit->SetNpx(1000);
    h2->Fit("fit");             
