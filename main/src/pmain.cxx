@@ -39,15 +39,8 @@
 #include "TROOT.h"
 #include "TSystem.h"
 
-// Macros to check memory ranges
-#ifdef R__B64
-#  define P_LONGOK(x) (1)
-#else
-#  define P_LONGOK(x) (x > LONG_MIN && x < LONG_MAX)
-#endif
-#define P_MBTOBYTES  (1024*1024)
 
-static int gLogLevel = 0;
+static Int_t gLogLevel = 0;
 
 // Special type for the hook to the TXProofServ constructor, needed to avoid
 // using the plugin manager
@@ -157,17 +150,17 @@ static void SetMaxMemLimits(const char *prog)
       aslim.rlim_cur = aslimref.rlim_cur;
       aslim.rlim_max = aslimref.rlim_max;
       if (assoft) {
-         long rlim_cur = strtol(assoft, 0, 10);
-         if (P_LONGOK(rlim_cur) && rlim_cur > 0)
-            aslim.rlim_cur = (unsigned long) rlim_cur * P_MBTOBYTES;
+         Long_t rlim_cur = strtol(assoft, 0, 10);
+         if (rlim_cur < kMaxLong && rlim_cur > 0)
+            aslim.rlim_cur = (rlim_t) rlim_cur * (1024 * 1024);
       }
       if (ashard) {
-         long rlim_max = strtol(ashard, 0, 10);
-         if (P_LONGOK(rlim_max) && rlim_max > 0)
-            aslim.rlim_max = (unsigned long) rlim_max * P_MBTOBYTES;
+         Long_t rlim_max = strtol(ashard, 0, 10);
+         if (rlim_max < kMaxLong && rlim_max > 0)
+            aslim.rlim_max = (rlim_t) rlim_max * (1024 * 1024);
       }
       // Change the limits, if required
-      if (aslim.rlim_cur != aslimref.rlim_cur || aslim.rlim_max != aslimref.rlim_max) {
+      if ((aslim.rlim_cur != aslimref.rlim_cur) || (aslim.rlim_max != aslimref.rlim_max)) {
          fprintf(stderr, "%s: setting memory limits to %lld (soft) and %lld (hard) bytes\n",
                          prog, (Long64_t)aslim.rlim_cur, (Long64_t)aslim.rlim_max);
          if (setrlimit(RLIMIT_AS, &aslim) != 0) {

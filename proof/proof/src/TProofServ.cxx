@@ -52,13 +52,6 @@
 #endif
 #endif
 
-// Macros to check ranges
-#ifdef R__B64
-#  define P_LONGOK(x) (1)
-#else
-#  define P_LONGOK(x) (x > LONG_MIN && x < LONG_MAX)
-#endif
-
 #include "TProofServ.h"
 #include "TDSetProxy.h"
 #include "TEnv.h"
@@ -474,13 +467,13 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
    fVirtMemMax = -1;
    if (gSystem->Getenv("ROOTPROOFASSOFT")) {
       Long_t hwm = strtol(gSystem->Getenv("ROOTPROOFASSOFT"), 0, 10);
-      if (P_LONGOK(hwm) && hwm > 0)
-         fVirtMemHWM = (unsigned long) hwm * 1024;
+      if (hwm < kMaxLong && hwm > 0)
+         fVirtMemHWM = hwm * 1024;
    }
    if (gSystem->Getenv("ROOTPROOFASHARD")) {
       Long_t mmx = strtol(gSystem->Getenv("ROOTPROOFASHARD"), 0, 10);
-      if (P_LONGOK(mmx) && mmx > 0)
-         fVirtMemMax = (unsigned long) mmx * 1024;
+      if (mmx < kMaxLong && mmx > 0)
+         fVirtMemMax = mmx * 1024;
    }
 
    // Wait (loop) to allow debugger to connect
