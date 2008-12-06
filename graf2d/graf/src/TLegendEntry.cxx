@@ -36,7 +36,7 @@ TLegendEntry::TLegendEntry(): TAttText(), TAttLine(), TAttFill(), TAttMarker()
 
 
 //____________________________________________________________________________
-TLegendEntry::TLegendEntry(TObject* obj, const char* label, Option_t* option )
+TLegendEntry::TLegendEntry(const TObject* obj, const char* label, Option_t* option )
              :TAttText(0,0,0,0,0), TAttLine(1,1,1), TAttFill(0,0), TAttMarker(1,21,1)
 {
    // TLegendEntry normal constructor for one entry in a TLegend
@@ -51,10 +51,11 @@ TLegendEntry::TLegendEntry(TObject* obj, const char* label, Option_t* option )
    //    F draw a box with fill associated w/ TAttFill if obj inherits TAttFill
    //   default is object = "LPF"
  
-   fObject = obj;
+   fObject = 0;
    if ( !label && obj ) fLabel = obj->GetTitle();
    else                 fLabel = label;
    fOption = option;
+   SetObject((TObject*)obj);
 }
 
 

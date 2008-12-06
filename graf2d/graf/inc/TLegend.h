@@ -44,7 +44,7 @@ public:
    virtual ~TLegend();
    TLegend( const TLegend &legend );
 
-   TLegendEntry   *AddEntry(TObject* obj, const char* label = "", Option_t* option = "lpf" );
+   TLegendEntry   *AddEntry(const TObject* obj, const char* label = "", Option_t* option = "lpf" );
    TLegendEntry   *AddEntry(const char *name, const char* label = "", Option_t* option = "lpf" );
    virtual void    Clear( Option_t* option = "" ); // *MENU*
    virtual void    Copy( TObject &obj ) const;

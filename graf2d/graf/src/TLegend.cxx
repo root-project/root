@@ -142,7 +142,7 @@ TLegend::~TLegend()
 
 
 //____________________________________________________________________________
-TLegendEntry *TLegend::AddEntry(TObject *obj, const char *label, Option_t *option)
+TLegendEntry *TLegend::AddEntry(const TObject *obj, const char *label, Option_t *option)
 {
    // Add a new entry to this legend
    // obj is the object to be represented

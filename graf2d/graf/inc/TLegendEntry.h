@@ -45,7 +45,7 @@ class TLegendEntry : public TObject, public TAttText, public TAttLine,
                      public TAttFill, public TAttMarker {
 public:
    TLegendEntry();
-   TLegendEntry(TObject *obj, const char *label = 0, Option_t *option="lpf" );
+   TLegendEntry(const TObject *obj, const char *label = 0, Option_t *option="lpf" );
    TLegendEntry( const TLegendEntry &entry );
    virtual ~TLegendEntry();
    virtual void          Copy( TObject &obj ) const;
