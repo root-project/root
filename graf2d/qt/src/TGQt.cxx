@@ -498,6 +498,7 @@ QPaintDevice *TGQt::iwid(Int_t wid)
    QPaintDevice *topDevice = 0;
    if (0 <= wid && wid <= int(fWidgetArray->MaxId()) )
      topDevice = (*fWidgetArray)[wid];
+     if (topDevice == (QPaintDevice *)(-1) ) topDevice = 0;
 	else {
      assert(wid <= Int_t(fWidgetArray->MaxTotalId()));
      // this is allowed from the embedded TCanvas dtor only.
@@ -2082,7 +2083,8 @@ void  TGQt::SetDoubleBuffer(int wid, int mode)
    //        0 double buffer is off
    if (wid == -1 || wid == kDefault) return;
    QPaintDevice *dev = iwid(wid);
-   if ( TQtWidget *widget = (TQtWidget *)IsWidget(dev) ) {
+   TQtWidget *widget = 0;
+   if ( dev && (widget = (TQtWidget *)IsWidget(dev)) ) {
       widget->SetDoubleBuffer(mode);
       // fprintf(stderr," TGQt::SetDoubleBuffer \n");
    }
