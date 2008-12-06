@@ -145,9 +145,21 @@ clean::         clean-$(MODNAME)
 
 distclean-$(MODNAME): 
 		@rm -f $(UNURANO) $(UNURANDO) $(UNURANETAG) $(UNURANDEP) $(UNURANDS) $(UNURANDH) $(UNURANLIB) $(UNURANMAP)
+ifneq ($(wildcard $(UNRSRCS)), )
+		@echo "Moving $(UNRSRCS) out of the way"
 		@mv $(UNRSRCS) $(UNURANDIRS)/-$(UNRVERS).tar.gz
+endif
+ifeq ($(UNURKEEP),yes)
+		@echo "Moving $(UNRVERS) out of the way"
+		@mv $(UNURANDIRS)/$(UNRVERS) $(UNURANDIRS)/$(UNRVERS).keep
+endif
 		@rm -rf $(UNURANDIRS)/unuran-*-root
+ifeq ($(UNURKEEP),yes)
+		@mv $(UNURANDIRS)/$(UNRVERS).keep $(UNURANDIRS)/$(UNRVERS)
+endif
+ifneq ($(wildcard $(UNRSRCS)), )
 		@mv $(UNURANDIRS)/-$(UNRVERS).tar.gz $(UNRSRCS)
+endif
 
 distclean::     distclean-$(MODNAME)
 
