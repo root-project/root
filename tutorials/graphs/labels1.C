@@ -3,10 +3,12 @@
 void labels1()
 {
    const Int_t nx = 20;
-   char *people[nx] = {"Jean","Pierre","Marie","Odile","Sebastien","Fons","Rene",
-      "Nicolas","Xavier","Greg","Bjarne","Anton","Otto","Eddy","Peter","Pasha",
+   char *people[nx] = {"Jean","Pierre","Marie","Odile",
+      "Sebastien","Fons","Rene","Nicolas","Xavier","Greg",
+      "Bjarne","Anton","Otto","Eddy","Peter","Pasha",
       "Philippe","Suzanne","Jeff","Valery"};
-   TCanvas *c1 = new TCanvas("c1","demo bin labels",10,10,900,500);
+   TCanvas *c1 = new TCanvas("c1","demo bin labels",
+      10,10,900,500);
    c1->SetGrid();
    c1->SetBottomMargin(0.15);
    TH1F *h = new TH1F("h","test",nx,0,nx);

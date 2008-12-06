@@ -11,7 +11,8 @@ void bent() {
    Double_t eyld[n] = {.0,.0,.05,.0,.0,.0,.0,.0,.0,.0};
    Double_t exhd[n] = {.0,.0,.0,.0,.0,.0,.0,.0,.0,.0};
    Double_t eyhd[n] = {.0,.0,.0,.0,.0,.0,.0,.0,.05,.0};
-   TGraphBentErrors *gr = new TGraphBentErrors(n,x,y,exl,exh,eyl,eyh,exld,exhd,eyld,eyhd);
+   TGraphBentErrors *gr = new TGraphBentErrors(
+      n,x,y,exl,exh,eyl,eyh,exld,exhd,eyld,eyhd);
    gr->SetTitle("TGraphBentErrors Example");
    gr->SetMarkerColor(4);
    gr->SetMarkerStyle(21);

@@ -3,7 +3,8 @@ void exclusiongraph2()
    // Draw several graphs with an exclusion zones.
    //Author: Olivier Couet
    
-   TCanvas *c = new TCanvas("c","Charged Higgs L300 Contour",0,0,700,700);
+   TCanvas *c = new TCanvas("c",
+      "Charged Higgs L300 Contour",0,0,700,700);
    c->SetTickx();
    c->SetTicky();
    c->SetGridx();
@@ -39,7 +40,8 @@ void exclusiongraph2()
    gr1->SetPoint(8,140,40);
    gr1->SetPoint(9,135,60);
    gr1->Draw("C");
-   TLatex *tex = new TLatex(140.841,37.9762,"#leftarrow t #rightarrow bH^{+}, H^{+} #rightarrow #tau#nu");
+   TLatex *tex = new TLatex(140.841,37.9762,
+      "#leftarrow t #rightarrow bH^{+}, H^{+} #rightarrow #tau#nu");
    tex->SetTextColor(6);
    tex->Draw();
 
@@ -99,7 +101,8 @@ void exclusiongraph2()
    gr3->SetPoint(8,425.673,16.1651);
    gr3->SetPoint(9,499.192,18.1635);
    gr3->Draw("C");
-   tex = new TLatex(188.151,9.36035,"gb #rightarrow tH^{+}, H^{+} #rightarrow #tau#nu");
+   tex = new TLatex(188.151,9.36035,
+      "gb #rightarrow tH^{+}, H^{+} #rightarrow #tau#nu");
    tex->SetTextColor(2);
    tex->Draw();
 
@@ -121,7 +124,8 @@ void exclusiongraph2()
    gr4->SetPoint(8,441.023,2.16454);
    gr4->SetPoint(9,499.677,1.76145);
    gr4->Draw("C");
-   tex = new TLatex(165.,1.15498,"gb #rightarrow tH^{+}, H^{+} #rightarrow tb");
+   tex = new TLatex(165.,1.15498,
+      "gb #rightarrow tH^{+}, H^{+} #rightarrow tb");
    tex->SetTextColor(4);
    tex->Draw();
 

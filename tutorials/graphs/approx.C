@@ -3,12 +3,12 @@ TGraph *grxy, *grin, *grout;
 
 void approx()
 {
-/******************************************************************************
-* Author: Christian Stratowa, Vienna, Austria.                                *
-* Created: 26 Aug 2001                            Last modified: 29 Sep 2001  *
-******************************************************************************/
+//**********************************************
+// Macro to test interpolation function Approx
+// Author: Christian Stratowa, Vienna, Austria.
+// Created: 26 Aug 2001                           
+//**********************************************
 
-// Macro to test interpolation function Approx()
 
 // test data (square)
    Int_t n = 11;
@@ -18,7 +18,8 @@ void approx()
 
 // x values, for which y values should be interpolated
    Int_t nout = 14;
-   Double_t xout[] = {1.2,1.7,2.5,3.2,4.4,5.2,5.7,6.5,7.6,8.3,9.7,10.4,11.3,13};
+   Double_t xout[] = 
+      {1.2,1.7,2.5,3.2,4.4,5.2,5.7,6.5,7.6,8.3,9.7,10.4,11.3,13};
 
 // create Canvas
    vC1 = new TCanvas("vC1","square",200,10,700,700);
@@ -31,7 +32,8 @@ void approx()
    grout = gs->Approx(grin,"linear");
    DrawSmooth(1,"Approx: ties = mean","X-axis","Y-axis");
 
-// re-initialize graph with data (since graph points were set to unique vales)
+// re-initialize graph with data 
+// (since graph points were set to unique vales)
    grin = new TGraph(n,x,y);
 // interpolate at given points xout
    grout = gs->Approx(grin,"linear", 14, xout, 0, 130);
@@ -63,7 +65,8 @@ void approx()
    delete gs;
 }
 
-void DrawSmooth(Int_t pad, const char *title, const char *xt, const char *yt)
+void DrawSmooth(Int_t pad, const char *title, const char *xt, 
+   const char *yt)
 {
    vC1->cd(pad);
    TH1F *vFrame = gPad->DrawFrame(0,0,15,150);

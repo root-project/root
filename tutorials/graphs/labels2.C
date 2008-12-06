@@ -4,18 +4,22 @@ void labels2()
 {
    const Int_t nx = 12;
    const Int_t ny = 20;
-   char *month[nx]  = {"January","February","March","April","May","June","July",
-                      "August","September","October","November","December"};
-   char *people[ny] = {"Jean","Pierre","Marie","Odile","Sebastien","Fons","Rene",
-      "Nicolas","Xavier","Greg","Bjarne","Anton","Otto","Eddy","Peter","Pasha",
+   char *month[nx]  = {"January","February","March","April",
+      "May","June","July","August","September","October",
+      "November","December"};
+   char *people[ny] = {"Jean","Pierre","Marie","Odile",
+      "Sebastien","Fons","Rene","Nicolas","Xavier","Greg",
+      "Bjarne","Anton","Otto","Eddy","Peter","Pasha",
       "Philippe","Suzanne","Jeff","Valery"};
-   TCanvas *c1 = new TCanvas("c1","demo bin labels",10,10,800,800);
+   TCanvas *c1 = new TCanvas("c1","demo bin labels",
+      10,10,800,800);
    c1->SetGrid();
    c1->SetLeftMargin(0.15);
    c1->SetBottomMargin(0.15);
    TH2F *h = new TH2F("h","test",nx,0,nx,ny,0,ny);
    for (Int_t i=0;i<5000;i++) {
-      h->Fill(gRandom->Gaus(0.5*nx,0.2*nx), gRandom->Gaus(0.5*ny,0.2*ny));
+      h->Fill(gRandom->Gaus(0.5*nx,0.2*nx), 
+         gRandom->Gaus(0.5*ny,0.2*ny));
    }
    h->SetStats(0);
    for (i=1;i<=nx;i++) h->GetXaxis()->SetBinLabel(i,month[i-1]);

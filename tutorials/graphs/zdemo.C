@@ -26,7 +26,7 @@ Float_t Z[NMAX], HZ[NMAX], PT[NMAX], INVSIG[NMAX];
 
 void hz_calc(Float_t, Float_t, Float_t, Float_t, Float_t, Float_t);
 
-//______________________________________________________________________________
+//__________________________________________________________________
 void zdemo()
 {
 
@@ -38,11 +38,13 @@ void zdemo()
    Float_t delp;
 
    // Create a new canvas.
-   TCanvas *c1 = new TCanvas("zdemo","Monte Carlo Study of Z scaling",10,40,800,600);
+   TCanvas *c1 = new TCanvas("zdemo",
+      "Monte Carlo Study of Z scaling",10,40,800,600);
    c1->Range(0,0,25,18);
    c1->SetFillColor(40);
 
-   TPaveLabel *pl = new TPaveLabel(1,16.3,24,17.5,"Z-scaling of Direct Photon Productions in pp Collisions at RHIC Energies","br");
+   TPaveLabel *pl = new TPaveLabel(1,16.3,24,17.5,"Z-scaling of \
+      Direct Photon Productions in pp Collisions at RHIC Energies","br");
    pl->SetFillColor(18);
    pl->SetTextFont(32);
    pl->SetTextColor(49);
@@ -63,7 +65,8 @@ void zdemo()
    pad2->Draw();
 
 //
-// Cross-section of direct photon production in pp collisions at 500 GeV vs Pt
+// Cross-section of direct photon production in pp collisions 
+// at 500 GeV vs Pt
 //
    energ = 63;
    dens  = 1.766;
@@ -116,7 +119,8 @@ void zdemo()
    gr1->Draw("LP");
 
 //
-// Cross-section of direct photon production in pp collisions at 200 GeV vs Pt
+// Cross-section of direct photon production in pp collisions 
+// at 200 GeV vs Pt
 //
 
    energ = 200;
@@ -135,7 +139,8 @@ void zdemo()
    gr2->Draw("LP");
 
 //
-// Cross-section of direct photon production in pp collisions at 500 GeV vs Pt
+// Cross-section of direct photon production in pp collisions 
+// at 500 GeV vs Pt
 //
    energ = 500;
    dens  = 2.73;
@@ -222,7 +227,8 @@ void zdemo()
    c1->Update();
 }
 
-void hz_calc(Float_t ENERG, Float_t DENS, Float_t TGRAD, Float_t PTMIN, Float_t PTMAX, Float_t DELP)
+void hz_calc(Float_t ENERG, Float_t DENS, Float_t TGRAD, Float_t PTMIN, 
+   Float_t PTMAX, Float_t DELP)
 {
   Int_t I;
 
@@ -248,8 +254,6 @@ void hz_calc(Float_t ENERG, Float_t DENS, Float_t TGRAD, Float_t PTMIN, Float_t 
   Float_t H1;
 
   Float_t PTOT, THET, ETOT, X1, X2;
-
-  //   printf("ENR=  %f DENS= %f PTMIN= %f PTMAX= %f DELP= %f \n",ENERG,DENS,PTMIN,PTMAX, DELP);
 
   DNDETA= DENS;
   MB1   = MN*A1;
