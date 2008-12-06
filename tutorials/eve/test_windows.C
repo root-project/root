@@ -23,6 +23,7 @@ void test_windows()
    slot = TEveWindow::CreateWindowInTab(gEve->GetBrowser()->GetTabRight());
 
    TEveWindowPack* pack1 = slot->MakePack();
+   pack1->SetHorizontal();
 
    slot = pack1->NewSlot();
    // Embedded viewer.
@@ -37,7 +38,6 @@ void test_windows()
 
    slot = pack1->NewSlot();   
    TEveWindowPack* pack2 = slot->MakePack();
-   pack2->FlipOrientation();
 
    slot = pack2->NewSlot();
    slot->StartEmbedding();

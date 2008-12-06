@@ -930,11 +930,8 @@ TEveWindowPack* TEveWindowSlot::MakePack()
    // A pack is created in place of this window-slot.
    // This window-slot will auto-destruct.
 
-   TGPack* pack = new TGPack();
-   pack->SetVertical(kFALSE);
-
    TEveWindowPack* eve_pack = new TEveWindowPack
-      (pack, "Pack", "Window container for horizontal and vertical stacking.");
+      (0, "Pack", "Window container for horizontal and vertical stacking.");
 
    ReplaceWindow(eve_pack);
 
@@ -947,10 +944,8 @@ TEveWindowTab* TEveWindowSlot::MakeTab()
    // A tab is created in place of this window-slot.
    // This window-slot will auto-destruct.
 
-   TGTab* tab = new TGTab();
-
    TEveWindowTab* eve_tab = new TEveWindowTab
-      (tab, "Tab", "Window container for horizontal and vertical stacking.");
+      (0, "Tab", "Window container for horizontal and vertical stacking.");
 
    ReplaceWindow(eve_tab);
 
@@ -958,28 +953,11 @@ TEveWindowTab* TEveWindowSlot::MakeTab()
 }
 
 //______________________________________________________________________________
-TEveWindowFrame* TEveWindowSlot::MakeFrame()
-{
-   // An eve-window-frame with an empty composite-frame is created in
-   // place of this window-slot. The cmposite-frame's cleanup policy is
-   // set to kLocalCleanup.
-   // This window-slot will auto-destruct.
-
-   TGCompositeFrame* frame = new TGCompositeFrame();
-   frame->SetCleanup(kLocalCleanup);
-
-   TEveWindowFrame* eve_frame = new TEveWindowFrame
-      (frame, "Composite frame", "");
-
-   ReplaceWindow(eve_frame);
-
-   return eve_frame;
-}
-
-//______________________________________________________________________________
 TEveWindowFrame* TEveWindowSlot::MakeFrame(TGFrame* frame)
 {
    // An eve-window-frame is created and frame is passed into it.
+   // If frame is 0 (the default), a default composite-frame will be created
+   // in TEveWindowFrame() constructor.
    // This window-slot will auto-destruct.
 
    TEveWindowFrame* eve_frame = new TEveWindowFrame
@@ -1064,17 +1042,26 @@ TEveWindowFrame* TEveWindowSlot::StopEmbedding(const Text_t* name)
 //==============================================================================
 
 //______________________________________________________________________________
-// Description of TEveWindowFrame
 //
+// Encapsulates TGFrame into an eve-window.
+// The frame is owned by the eve-window.
 
 ClassImp(TEveWindowFrame);
 
 //______________________________________________________________________________
-TEveWindowFrame::TEveWindowFrame(TGFrame* f, const Text_t* n, const Text_t* t) :
+TEveWindowFrame::TEveWindowFrame(TGFrame* frame, const Text_t* n, const Text_t* t) :
    TEveWindow (n, t),
-   fGUIFrame  (f)
+   fGUIFrame  (frame)
 {
    // Constructor.
+   // If the passed frame is 0, a default TGCompositeFrame frame is instantiated
+   // and set to local-cleanup.
+
+   if (fGUIFrame == 0)
+   {
+      fGUIFrame = new TGCompositeFrame();
+      fGUIFrame->SetCleanup(kLocalCleanup);
+   }
 }
 
 //______________________________________________________________________________
@@ -1091,17 +1078,19 @@ TEveWindowFrame::~TEveWindowFrame()
 //==============================================================================
 
 //______________________________________________________________________________
-// Description of TEveWindowPack
 //
+// Encapsulates TGPack into an eve-window.
+// The pack is owned by the eve-window.
 
 ClassImp(TEveWindowPack);
 
 //______________________________________________________________________________
 TEveWindowPack::TEveWindowPack(TGPack* p, const Text_t* n, const Text_t* t) :
    TEveWindow   (n, t),
-   fPack        (p)
+   fPack        (p ? p : new TGPack())
 {
    // Constructor.
+   // If passed pack is 0, a defualt one is instantiated.
 }
 
 //______________________________________________________________________________
@@ -1141,28 +1130,37 @@ TEveWindowSlot* TEveWindowPack::NewSlot()
 //______________________________________________________________________________
 void TEveWindowPack::FlipOrientation()
 {
-   // Flip orientation of the pack (horizontal / vertical).
+   // Flip orientation of the pack (vertical / horizontal).
 
    fPack->SetVertical( ! fPack->GetVertical());
 }
 
+//______________________________________________________________________________
+void TEveWindowPack::SetVertical(Bool_t x)
+{
+   // Set orientation of the pack (vertical / horizontal).
+
+   fPack->SetVertical(x);
+}
 
 //==============================================================================
 // TEveWindowTab
 //==============================================================================
 
 //______________________________________________________________________________
-// Description of TEveWindowTab
 //
+// Encapsulates TGTab into an eve-window.
+// The tab is owned by the eve-window.
 
 ClassImp(TEveWindowTab);
 
 //______________________________________________________________________________
 TEveWindowTab::TEveWindowTab(TGTab* tab, const Text_t* n, const Text_t* t) :
    TEveWindow(n, t),
-   fTab (tab)
+   fTab (tab ? tab : new TGTab())
 {
    // Constructor.
+   // If passed tab is 0, a defualt one is instantiated.
 }
 
 //______________________________________________________________________________
