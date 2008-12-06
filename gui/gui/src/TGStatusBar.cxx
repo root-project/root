@@ -159,6 +159,20 @@ void TGStatusBar::SetText(const char *text, Int_t partidx)
 }
 
 //______________________________________________________________________________
+const char *TGStatusBar::GetText(Int_t partidx) const
+{
+   // return text in the part partidx
+
+   if (partidx < 0 || partidx >= fNpart) {
+      Error("GetText", "partidx out of range (0,%d)", fNpart-1);
+      return 0;
+   }
+
+   const TGString *str = fStatusPart[partidx]->GetText();
+   return str->Data();
+}
+
+//______________________________________________________________________________
 void TGStatusBar::DrawBorder()
 {
    // Draw the status bar border (including cute 3d corner).
