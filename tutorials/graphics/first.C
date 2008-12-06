@@ -7,7 +7,8 @@ void first() {
    nut->SetFillColor(10);
    nut->SetBorderSize(2);
 
-   TPaveLabel *pl = new TPaveLabel(3,22,17,23.7,"My first ROOT interactive session","br");
+   TPaveLabel *pl = new TPaveLabel(3,22,17,23.7,
+      "My first ROOT interactive session","br");
    pl->SetFillColor(18);
    pl->Draw();
 
@@ -23,7 +24,8 @@ void first() {
    t.SetTextSize(0.026);
    t.DrawText(3,17,"Root >  float x=5; float y=7;");
    t.DrawText(3,16,"Root >  x*sqrt(y)");
-   t.DrawText(3,14,"Root >  for (int i=2;i<7;i++) printf(\"sqrt(%d) = %f\",i,sqrt(i));");
+   t.DrawText(3,14,
+      "Root >  for (int i=2;i<7;i++) printf(\"sqrt(%d) = %f\",i,sqrt(i));");
    t.DrawText(3,10,"Root >  TF1 f1(\"f1\",\"sin(x)/x\",0,10)");
    t.DrawText(3, 9,"Root >  f1.Draw()");
    t.SetTextFont(81);

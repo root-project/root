@@ -29,7 +29,8 @@ void anim()
 }   
 void Animate()
 {
-   if (!gROOT->GetListOfCanvases()->FindObject("glc1")) return; //just in case the canvas has been deleted
+   //just in case the canvas has been deleted
+   if (!gROOT->GetListOfCanvases()->FindObject("glc1")) return;
    t += 0.05*pi;
    f2->SetParameter(0,TMath::Cos(t));
    phi += 2;

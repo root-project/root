@@ -7,7 +7,7 @@
 
 //==================================================================
 //
-// Using TExec to handle keyboard events. Uses TComplex to draw the Mandelbrot set.
+// Using TExec to handle keyboard events and TComplex to draw the Mandelbrot set.
 // Author : Luigi Bardelli [ bardelli@fi.infn.it ]
 //
 // Pressing the keys 'z' and 'u' will zoom and unzoom the picture
@@ -48,7 +48,8 @@ void mygenerate(double factor, double cen_x, double cen_y)
     {
       if(last_histo!=NULL) delete last_histo;
       // allocate first view...
-      last_histo= new TH2F("h2","Mandelbrot [move mouse and  press z to zoom, u to unzoom, r to reset]",
+      last_histo= new TH2F("h2",
+         "Mandelbrot [move mouse and  press z to zoom, u to unzoom, r to reset]",
 			   200,-2,2,200,-2,2);
       last_histo->SetStats(0);            
     }

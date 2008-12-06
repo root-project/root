@@ -1,17 +1,22 @@
-// This script illustrates the danger of using asymmetric symbols. Non-symmetric
-// symbols should be used carefully in plotting. These two graphs show how
-// misleading a careless use of symbols can be. The two plots represent the
-// same data sets but because of a bad symbol choice, the two plots on the top
-// appear further apart than for the bottom example.
+// This script illustrates the danger of using asymmetric symbols. 
+// Non-symmetric symbols should be used carefully in plotting. 
+// These two graphs show how misleading a careless use of symbols can be. 
+// The two plots represent the same data sets but because of a bad symbol 
+// choice, the two plots on the top appear further apart than for the bottom 
+// example.
 //Author: Olivier Couet
    
 void markerwarning()
 {
    const int Nph = 14;
-   double np_ph[Nph]  = {353.4,300.2,254.3,215.2,181.0,151.3,125.2,102.7, 83.3, 66.7, 52.5, 40.2, 30.2, 22.0};
-   double nc_ph[Nph]  = {3.890,3.734,3.592,3.453,3.342,3.247,3.151,3.047,2.965,2.858,2.701,2.599,2.486,2.328};
-   double npe_ph[Nph] = {10.068,9.004,8.086,7.304,6.620,6.026,5.504,5.054,4.666,4.334,4.050,3.804,3.604,3.440};
-   double nce_ph[Nph] = {0.235,0.217,0.210,0.206,0.213,0.223,0.239,0.260,0.283,0.318,0.356,0.405,0.465,0.545};
+   double np_ph[Nph]  = {353.4,300.2,254.3,215.2,181.0,151.3,125.2,102.7, 
+      83.3, 66.7, 52.5, 40.2, 30.2, 22.0};
+   double nc_ph[Nph]  = {3.890,3.734,3.592,3.453,3.342,3.247,3.151,3.047,
+      2.965,2.858,2.701,2.599,2.486,2.328};
+   double npe_ph[Nph] = {10.068,9.004,8.086,7.304,6.620,6.026,5.504,5.054,
+      4.666,4.334,4.050,3.804,3.604,3.440};
+   double nce_ph[Nph] = {0.235,0.217,0.210,0.206,0.213,0.223,0.239,0.260,
+      0.283,0.318,0.356,0.405,0.465,0.545};
 
    const int Nbr = 6;
    double np_br[Nbr]  = {357.0,306.0,239.0,168.0,114.0, 73.0};
@@ -111,9 +116,12 @@ void markerwarning()
 
    TLatex t1;
    t1.SetTextFont(12); t1.SetTextSize(0.0525);
-   t1.DrawLatex(-5,0.6,"Non-symmetric symbols should be used carefully in plotting. These two graphs show how misleading");
-   t1.DrawLatex(-5,0.4,"a careless use of symbols can be. The two plots represent the same data sets but because of a bad");
-   t1.DrawLatex(-5,0.2,"symbol choice, the two plots on the top appear further apart than for the bottom example.");
+   t1.DrawLatex(-5,0.6,"Non-symmetric symbols should be used carefully in plotting. \
+      These two graphs show how misleading");
+   t1.DrawLatex(-5,0.4,"a careless use of symbols can be. The two plots represent \
+      the same data sets but because of a bad");
+   t1.DrawLatex(-5,0.2,"symbol choice, the two plots on the top appear further apart \
+      than for the bottom example.");
 
    canvasNc->cd();
 }

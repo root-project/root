@@ -1,7 +1,8 @@
-//Example of script showing how to shade an area between two graphs
+//Show how to shade an area between two graphs
 //Author: Rene Brun
 void graphShade() {
-   TCanvas *c1 = new TCanvas("c1","A Simple Graph Example",200,10,700,500);
+   TCanvas *c1 = new TCanvas("c1",
+      "A Simple Graph Example",200,10,700,500);
 
    c1->SetGrid();
    c1->DrawFrame(0,0,2.2,12);

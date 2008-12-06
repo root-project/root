@@ -10,10 +10,14 @@ void piechart()
    TCanvas *cpie = new TCanvas("cpie","TPie test",700,700);
    cpie->Divide(2,2);
 
-   TPie *pie1 = new TPie("pie1","Pie with offset and no colors",nvals,vals);
-   TPie *pie2 = new TPie("pie2","Pie with radial labels",nvals,vals,colors);
-   TPie *pie3 = new TPie("pie3","Pie with tangential labels",nvals,vals,colors);
-   TPie *pie4 = new TPie("pie4","Pie with verbose labels",nvals,vals,colors);
+   TPie *pie1 = new TPie("pie1",
+      "Pie with offset and no colors",nvals,vals);
+   TPie *pie2 = new TPie("pie2",
+      "Pie with radial labels",nvals,vals,colors);
+   TPie *pie3 = new TPie("pie3",
+      "Pie with tangential labels",nvals,vals,colors);
+   TPie *pie4 = new TPie("pie4",
+      "Pie with verbose labels",nvals,vals,colors);
 
    cpie->cd(1);
    pie1->SetAngularOffset(30.);
