@@ -211,10 +211,10 @@ void TestBinomial(int nloop = 100, int nevts = 100, bool plot=false)
    h1->Draw("HIST SAMES");
    TLegend* l1 = new TLegend(0.1, 0.75, 0.5, 0.9, 
       "plateau parameter", "ndc");
-   l1->AddEntry(h0, Form("histogram: mean = %4.2f RMS = %4.2f", \
-      h0->GetMean(), h0->GetRMS()), "l");
-   l1->AddEntry(h1, Form("binomial : mean = %4.2f RMS = %4.2f", \
-      h1->GetMean(), h1->GetRMS()), "l");
+   l1->AddEntry(h0, Form("histogram: mean = %4.2f RMS = \
+      %4.2f", h0->GetMean(), h0->GetRMS()), "l");
+   l1->AddEntry(h1, Form("binomial : mean = %4.2f RMS = \
+      %4.2f", h1->GetMean(), h1->GetRMS()), "l");
    l1->Draw();
 
    c1->cd(2);
@@ -225,10 +225,10 @@ void TestBinomial(int nloop = 100, int nevts = 100, bool plot=false)
    h1->Draw("HIST SAMES");
    TLegend* l2 = new TLegend(0.1, 0.75, 0.5, 0.9, 
       "threshold parameter", "ndc");
-   l2->AddEntry(h0, Form("histogram: mean = %4.2f RMS = %4.2f", \
-      h0->GetMean(), h0->GetRMS()), "l");
-   l2->AddEntry(h1, Form("binomial : mean = %4.2f RMS = %4.2f", \
-      h1->GetMean(), h1->GetRMS()), "l");
+   l2->AddEntry(h0, Form("histogram: mean = %4.2f RMS = \
+      %4.2f", h0->GetMean(), h0->GetRMS()), "l");
+   l2->AddEntry(h1, Form("binomial : mean = %4.2f RMS = \
+      %4.2f", h1->GetMean(), h1->GetRMS()), "l");
    l2->Draw();
 
    c1->cd(3);
@@ -238,10 +238,10 @@ void TestBinomial(int nloop = 100, int nevts = 100, bool plot=false)
    h1->SetLineColor(kRed);
    h1->Draw("HIST SAMES");
    TLegend* l3 = new TLegend(0.1, 0.75, 0.5, 0.9, "width parameter", "ndc");
-   l3->AddEntry(h0, Form("histogram: mean = %4.2f RMS = %4.2f", \
-      h0->GetMean(), h0->GetRMS()), "l");
-   l3->AddEntry(h1, Form("binomial : mean = %4.2f RMS = %4.2f", \
-      h1->GetMean(), h1->GetRMS()), "l");
+   l3->AddEntry(h0, Form("histogram: mean = %4.2f RMS = \
+      %4.2f", h0->GetMean(), h0->GetRMS()), "l");
+   l3->AddEntry(h1, Form("binomial : mean = %4.2f RMS = \
+      %4.2f", h1->GetMean(), h1->GetRMS()), "l");
    l3->Draw();
 
    c1->cd(4);
