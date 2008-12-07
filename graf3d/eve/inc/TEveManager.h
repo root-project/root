@@ -97,7 +97,6 @@ private:
    TEveViewerList           *fViewers;
    TEveSceneList            *fScenes;
 
-   TEveViewer               *fViewer;   // First / default gl-viewer.
    TEveScene                *fGlobalScene;
    TEveScene                *fEventScene;
    TEveEventManager         *fCurrentEvent;
@@ -145,7 +144,6 @@ public:
    TEveSceneList*    GetScenes()   const { return fScenes;  }
    TEveViewerList*   GetViewers()  const { return fViewers; }
 
-   TEveViewer*       GetDefViewer()    const { return fViewer; }
    TEveScene*        GetGlobalScene()  const { return fGlobalScene; }
    TEveScene*        GetEventScene()   const { return fEventScene; }
    TEveEventManager* GetCurrentEvent() const { return fCurrentEvent; }
@@ -154,7 +152,8 @@ public:
 
    TCanvas*     AddCanvasTab(const char* name);
    TGWindow*    GetMainWindow() const;
-   TGLViewer*   GetGLViewer() const;
+   TEveViewer*  GetDefaultViewer() const;
+   TGLViewer*   GetDefaultGLViewer() const;
    TEveViewer*  SpawnNewViewer(const Text_t* name, const Text_t* title="", Bool_t embed=kTRUE);
    TEveScene*   SpawnNewScene(const Text_t* name, const Text_t* title="");
 
@@ -228,7 +227,7 @@ public:
 
    void CloseEveWindow();
 
-   static TEveManager* Create(Bool_t map_window=kTRUE, Option_t* opt="FI");
+   static TEveManager* Create(Bool_t map_window=kTRUE, Option_t* opt="FIV");
    static void         Terminate();
 
    ClassDef(TEveManager, 0); // Eve application manager.

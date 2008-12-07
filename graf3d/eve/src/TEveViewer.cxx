@@ -32,19 +32,41 @@
 //______________________________________________________________________________
 //
 // Eve representation of TGLViewer.
-// The GLViewer is NOT owned this class as it is also part of the GUI.
-// It should be delted there.
+//
+// The gl-viewer is owned by this class and is deleted in destructor.
+//
+// The frame is not deleted, it is expected that the gl-viewer implementation
+// will delete that. TGLSAViewer and TGEmbeddedViewer both do so.
+// This could be an optional argument to SetGLViewer. A frame could be
+// passed as well.
 
 ClassImp(TEveViewer);
 
 //______________________________________________________________________________
 TEveViewer::TEveViewer(const Text_t* n, const Text_t* t) :
-   TEveElementList(n, t),
-   fGLViewer (0)
+   TEveWindowFrame(0, n, t),
+   fGLViewer      (0),
+   fGLViewerFrame (0)
 {
    // Constructor.
+   // The base-class TEveWindowFrame is constructed without a frame so
+   // a default composite-frame is instantiated and stored in fGUIFrame.
+   // Cleanup is set to no-cleanup as viewers need to be zapped with some
+   // more care.
 
    SetChildClass(TEveSceneInfo::Class());
+   fGUIFrame->SetCleanup(kNoCleanup); // the gl-viewer's frame deleted elsewhere.
+}
+
+//______________________________________________________________________________
+TEveViewer::~TEveViewer()
+{
+   // Destructor.
+
+   fGLViewerFrame->UnmapWindow();
+   GetGUICompositeFrame()->RemoveFrame(fGLViewerFrame);
+   fGLViewerFrame->ReparentWindow(gClient->GetDefaultRoot());
+   TTimer::SingleShot(150, "TGLViewer", fGLViewer, "Delete()");
 }
 
 /******************************************************************************/
@@ -58,35 +80,50 @@ const TGPicture* TEveViewer::GetListTreeIcon(Bool_t)
 }
 
 //______________________________________________________________________________
-void TEveViewer::SetGLViewer(TGLViewer* s)
+void TEveViewer::SetGLViewer(TGLViewer* viewer, TGFrame* frame)
 {
    // Set TGLViewer that is represented by this object.
+   // The old gl-viewer is deleted.
 
    delete fGLViewer;
-   fGLViewer = s;
+   fGLViewer      = viewer;
+   fGLViewerFrame = frame;
 
    fGLViewer->SetSmartRefresh(kTRUE);
    fGLViewer->SetResetCameraOnDoubleClick(kFALSE);
 }
 
 //______________________________________________________________________________
-void TEveViewer::SpawnGLViewer(const TGWindow* parent, TGedEditor* ged)
+void TEveViewer::SpawnGLViewer(TGedEditor* ged)
 {
    // Spawn new GLViewer and adopt it.
 
-   TGLSAViewer* v = new TGLSAViewer(parent, 0, ged);
+   static const TEveException kEH("TEveViewer::SpawnGLViewer ");
+
+   TGCompositeFrame* cf = GetGUICompositeFrame();
+
+   TGLSAViewer* v = new TGLSAViewer(cf, 0, ged);
    v->ToggleEditObject();
-   SetGLViewer(v);
+   SetGLViewer(v, v->GetFrame());
+
+   cf->AddFrame(fGLViewerFrame, new TGLayoutHints(kLHintsNormal | kLHintsExpandX | kLHintsExpandY));
 }
 
 //______________________________________________________________________________
-void TEveViewer::SpawnGLEmbeddedViewer(const TGWindow* parent, Int_t border)
+void TEveViewer::SpawnGLEmbeddedViewer(Int_t border)
 {
    // Spawn new GLViewer and adopt it.
 
-   TGLEmbeddedViewer* v = new TGLEmbeddedViewer(parent, 0, border);
-   // v->ToggleEditObject();
-   SetGLViewer(v);
+   static const TEveException kEH("TEveViewer::SpawnGLEmbeddedViewer ");
+
+   TGCompositeFrame* cf = GetGUICompositeFrame();
+
+   TGLEmbeddedViewer* v = new TGLEmbeddedViewer(cf, 0, border);
+   SetGLViewer(v, v->GetFrame());
+
+   cf->AddFrame(fGLViewerFrame, new TGLayoutHints(kLHintsNormal | kLHintsExpandX | kLHintsExpandY));
+
+   fGLViewerFrame->MapWindow();
 }
 
 //______________________________________________________________________________
@@ -186,6 +223,43 @@ TEveViewerList::TEveViewerList(const Text_t* n, const Text_t* t) :
 
    SetChildClass(TEveViewer::Class());
 }
+
+//==============================================================================
+
+//______________________________________________________________________________
+void TEveViewerList::AddElement(TEveElement* el)
+{
+   // Call base-class implementation.
+   // If compund is open and compound of the new element is not set,
+   // the el's compound is set to this.
+
+   TEveElementList::AddElement(el);
+   el->IncParentIgnoreCnt();
+}
+
+//______________________________________________________________________________
+void TEveViewerList::RemoveElementLocal(TEveElement* el)
+{
+   // Decompoundofy el, call base-class version.
+
+   el->DecParentIgnoreCnt();
+   TEveElementList::RemoveElementLocal(el);
+}
+
+//______________________________________________________________________________
+void TEveViewerList::RemoveElementsLocal()
+{
+   // Decompoundofy children, call base-class version.
+
+   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
+   {
+      (*i)->DecParentIgnoreCnt();
+   }
+
+   TEveElementList::RemoveElementsLocal();
+}
+
+//==============================================================================
 
 //______________________________________________________________________________
 void TEveViewerList::Connect()

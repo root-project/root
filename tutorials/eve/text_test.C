@@ -32,8 +32,8 @@ TEveText* text_test()
 
    // TEveText does not know its bounding box before first rendering.
    gEve->FullRedraw3D(kTRUE);
-   gEve->GetGLViewer()->ResetCurrentCamera();
-   gEve->GetGLViewer()->RequestDraw(TGLRnrCtx::kLODHigh);
+   gEve->GetDefaultGLViewer()->ResetCurrentCamera();
+   gEve->GetDefaultGLViewer()->RequestDraw(TGLRnrCtx::kLODHigh);
 
    return t;
 }

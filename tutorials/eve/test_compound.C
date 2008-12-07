@@ -47,7 +47,7 @@ void test_compound()
    TEveScene  *scene  = gEve->SpawnNewScene("Projected Event");
    viewer->AddScene(scene);
    {
-      TGLViewer* v = viewer->GetGLViewer();
+      TGLViewer* v = viewer->GetDefaultGLViewer();
       v->SetCurrentCamera(TGLViewer::kCameraOrthoXOY);
    }
 

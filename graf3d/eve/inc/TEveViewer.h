@@ -13,6 +13,7 @@
 #define ROOT_TEveViewer
 
 #include "TEveElement.h"
+#include "TEveWindow.h"
 
 class TGWindow;
 class TGedEditor;
@@ -25,7 +26,7 @@ class TEveScene;
 // TEveViewer
 /******************************************************************************/
 
-class TEveViewer : public TEveElementList
+class TEveViewer : public TEveWindowFrame
 {
 private:
    TEveViewer(const TEveViewer&);            // Not implemented
@@ -33,15 +34,16 @@ private:
 
 protected:
    TGLViewer *fGLViewer;
+   TGFrame   *fGLViewerFrame;
 
 public:
    TEveViewer(const Text_t* n="TEveViewer", const Text_t* t="");
-   virtual ~TEveViewer() {}
+   virtual ~TEveViewer();
 
    TGLViewer* GetGLViewer() const { return fGLViewer; }
-   void SetGLViewer(TGLViewer* s);
-   void SpawnGLViewer(const TGWindow* parent, TGedEditor* ged);
-   void SpawnGLEmbeddedViewer(const TGWindow* parent, Int_t border=0);
+   void SetGLViewer(TGLViewer* viewer, TGFrame* frame);
+   void SpawnGLViewer(TGedEditor* ged);
+   void SpawnGLEmbeddedViewer(Int_t border=0);
    void Redraw(Bool_t resetCameras=kFALSE);
 
    virtual void AddScene(TEveScene* scene);
@@ -75,6 +77,12 @@ protected:
 public:
    TEveViewerList(const Text_t* n="TEveViewerList", const Text_t* t="");
    virtual ~TEveViewerList() {}
+
+   virtual void AddElement(TEveElement* el);
+   virtual void RemoveElementLocal(TEveElement* el);
+   virtual void RemoveElementsLocal();
+
+   // --------------------------------
 
    virtual void Connect();
 

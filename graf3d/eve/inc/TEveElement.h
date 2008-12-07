@@ -177,6 +177,10 @@ public:
    void   IncDenyDestroy()       { ++fDenyDestroy; }
    void   DecDenyDestroy()       { if (--fDenyDestroy <= 0) CheckReferenceCount("TEveElement::DecDenyDestroy "); }
 
+   Int_t  GetParentIgnoreCnt() const { return fParentIgnoreCnt; }
+   void   IncParentIgnoreCnt()       { ++fParentIgnoreCnt; }
+   void   DecParentIgnoreCnt()       { if (--fParentIgnoreCnt <= 0) CheckReferenceCount("TEveElement::DecParentIgnoreCnt "); }
+
    virtual void PadPaint(Option_t* option);
 
    virtual TObject* GetObject      (const TEveException& eh="TEveElement::GetObject ") const;

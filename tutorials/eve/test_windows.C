@@ -14,7 +14,6 @@ void test_windows()
    TEveUtil::Macro("pointset_test.C");
 
    TEveWindowSlot  *slot = 0;
-   TEveWindowFrame *evef = 0;
 
    TEveViewer *v = 0;
 
@@ -28,10 +27,9 @@ void test_windows()
    slot = pack1->NewSlot();
    // Embedded viewer.
    v = new TEveViewer("BarViewer");
-   TGLEmbeddedViewer* xx = new TGLEmbeddedViewer(0, 0, 0);
-   v->SetGLViewer(xx);
-   evef = slot->MakeFrame(xx->GetFrame());
-   evef->SetElementName("Bar Embedded Viewer");
+   v->SpawnGLEmbeddedViewer();
+   slot->ReplaceWindow(v);
+   v->SetElementName("Bar Embedded Viewer");
 
    gEve->GetViewers()->AddElement(v);
    v->AddScene(gEve->GetEventScene());
@@ -47,9 +45,8 @@ void test_windows()
    slot = pack2->NewSlot();
    // SA viewer.
    v = new TEveViewer("FooViewer");
-   slot->StartEmbedding();
-   v->SpawnGLViewer(gClient->GetRoot(), gEve->GetEditor());
-   slot->StopEmbedding("Foo StandAlone Viewer");
+   v->SpawnGLViewer(gEve->GetEditor());
+   slot->ReplaceWindow(v);
 
    gEve->GetViewers()->AddElement(v);
    v->AddScene(gEve->GetEventScene());   
@@ -69,4 +66,6 @@ void test_windows()
    // ----------------------------------------------------------------
 
    gEve->GetBrowser()->GetTabRight()->SetTab(1);
+
+   gDebug = 1;
 }

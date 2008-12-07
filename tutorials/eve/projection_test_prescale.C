@@ -7,8 +7,8 @@ void projection_test_prescale()
 
    // camera
    TEveScene* s = gEve->SpawnNewScene("Projected Event");
-   gEve->GetDefViewer()->AddScene(s);
-   TGLViewer* v = (TGLViewer *)gEve->GetGLViewer();
+   gEve->GetDefaultViewer()->AddScene(s);
+   TGLViewer* v = gEve->GetDefaultGLViewer();
    v->SetCurrentCamera(TGLViewer::kCameraOrthoXOY);
    TGLOrthoCamera* cam = (TGLOrthoCamera*) v->CurrentCamera();
    cam->SetZoomMinMax(0.2, 20);

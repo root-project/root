@@ -313,6 +313,8 @@ public:
 
    virtual TGFrame* GetGUIFrame() { return fGUIFrame; }
 
+   TGCompositeFrame* GetGUICompositeFrame();
+
    ClassDef(TEveWindowFrame, 0); // Eve-window containing any TGFrame.
 };
 

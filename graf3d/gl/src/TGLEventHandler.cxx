@@ -105,7 +105,7 @@ void TGLEventHandler::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    kColormapNotify, kButtonDoubleClick, kOtherEvent*/
 
    // Map our event EEventType (base/inc/Buttons.h) back to Event_t (base/inc/GuiTypes.h)
-   // structure, and call appropriate HandleXXX() function
+   // structure, and call appropriate HandleXyzz() function
    Event_t eventSt;
    eventSt.fX = px;
    eventSt.fY = py;

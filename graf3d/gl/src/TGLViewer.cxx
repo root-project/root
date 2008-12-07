@@ -67,9 +67,9 @@
 // GL. Contains core viewer objects :
 //
 // GL scene - collection of main drawn objects - see TGLStdScene
-// Cameras (fXXXXCamera) - ortho and perspective cameras - see TGLCamera
-// Clipping (fClipXXXX) - collection of clip objects - see TGLClip
-// Manipulators (fXXXXManip) - collection of manipulators - see TGLManip
+// Cameras (fXyzzCamera) - ortho and perspective cameras - see TGLCamera
+// Clipping (fClipXyzz) - collection of clip objects - see TGLClip
+// Manipulators (fXyzzManip) - collection of manipulators - see TGLManip
 //
 // It maintains the current active draw styles, clipping object,
 // manipulator, camera etc.
@@ -79,6 +79,9 @@
 // GUI style methods HandleButton() etc to which GUI events can be
 // directed from standalone frame or embedding pad to perform
 // interaction.
+//
+// Also, the TGLWidget needs to be created externally. It is not owned
+// by the viewer.
 //
 // For embedded (pad) GL this viewer is created directly by plugin
 // manager. For standalone the derived TGLSAViewer is.
@@ -1425,7 +1428,7 @@ void TGLViewer::PrintObjects()
 //______________________________________________________________________________
 void TGLViewer::SetEventHandler(TGEventHandler *handler)
 {
-   // Set the event-handler.
+   // Set the event-handler. The event-handler is owned by the viewer.
    // If GLWidget is set, the handler is propagated to it.
 
    if (fEventHandler)

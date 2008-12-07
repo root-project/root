@@ -172,19 +172,21 @@ TGLSAViewer::TGLSAViewer(TVirtualPad *pad) :
    fDeleteMenuBar(kFALSE)
 {
    // Construct a standalone viewer, bound to supplied 'pad'.
-   fFrame = new TGLSAFrame(*this);
+
+   TGLSAFrame* gl_frame = new TGLSAFrame(*this);
+   fFrame = gl_frame;
 
    CreateMenus();
    CreateFrames();
 
-   fFrame->SetWindowName("ROOT's GL viewer");
-   fFrame->SetClassHints("GLViewer", "GLViewer");
-   fFrame->SetMWMHints(kMWMDecorAll, kMWMFuncAll, kMWMInputModeless);
-   fFrame->MapSubwindows();
+   gl_frame->SetWindowName("ROOT's GL viewer");
+   gl_frame->SetClassHints("GLViewer", "GLViewer");
+   gl_frame->SetMWMHints(kMWMDecorAll, kMWMFuncAll, kMWMInputModeless);
+   gl_frame->MapSubwindows();
 
-   fFrame->Resize(fFrame->GetDefaultSize());
-   fFrame->MoveResize(fgInitX, fgInitY, fgInitW, fgInitH);
-   fFrame->SetWMPosition(fgInitX, fgInitY);
+   gl_frame->Resize(fFrame->GetDefaultSize());
+   gl_frame->MoveResize(fgInitX, fgInitY, fgInitW, fgInitH);
+   gl_frame->SetWMPosition(fgInitX, fgInitY);
 
    fPShapeWrap = new TGLPShapeObj(0, this);
 

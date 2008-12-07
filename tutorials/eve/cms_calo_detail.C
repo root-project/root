@@ -89,7 +89,7 @@ void cms_calo_detail()
 {
   TEveManager::Create();
 
-  TGLViewer* v = gEve->GetGLViewer(); // Default
+  TGLViewer* v = gEve->GetDefaultGLViewer(); // Default
   v->SetCurrentCamera(TGLViewer::kCameraPerspXOY);
   v->SetEventHandler(new TEveLegoEventHandler("Lego", (TGWindow*)v->GetGLWidget(), (TObject*)v));
 
