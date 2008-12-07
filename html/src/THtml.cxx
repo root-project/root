@@ -654,7 +654,7 @@ Overview:
   <li><a href="#conf:classdoc">Recognizing class documentation</a></li>
   <li><a href="#conf:tags">Author, copyright, etc.</a></li>
   <li><a href="#conf:header">Header and footer</a></li>
-  <li><a href="#conf:search">Links to searches, home page, ViewCVS</a></li>
+  <li><a href="#conf:search">Links to searches, home page, ViewVC</a></li>
   <li><a href="#conf:charset">HTML Charset</a></li>
   </ol></li>
   <li><a href="#syntax">Documentation syntax</a>
@@ -851,14 +851,14 @@ replaced by the exact string that follows Root.Html.Author, no link
 generation will occur.</p>
 
 
-<h4><a name="conf:search">II.7 Links to searches, home page, ViewCVS</a></h4>
+<h4><a name="conf:search">II.7 Links to searches, home page, ViewVC</a></h4>
 
 <p>Additional parameters can be set by Root.Html.Homepage (address of the
 user's home page), Root.Html.SearchEngine (search engine for the class
 documentation), Root.Html.Search (search URL, where %u is replaced by the 
-referer and %s by the escaped search expression), and a ViewCVS base URL 
+referer and %s by the escaped search expression), and a ViewVC base URL 
 Root.Html.ViewCVS. For the latter, the file name is appended or, if 
-the ViewCVS contains %f, it %f is replaced by the file name.
+the URL contains %f, %f is replaced by the file name.
 All values default to "".</p>
 
 <p>Examples:</p><pre>
