@@ -1014,9 +1014,11 @@ void TASImage::FromPad(TVirtualPad *pad, Int_t x, Int_t y, UInt_t w, UInt_t h)
    }
    // syncronization
    gVirtualX->Update(1);
-   gSystem->ProcessEvents();
-   gSystem->Sleep(10);
-   gSystem->ProcessEvents();
+   if (!gThreadXAR) {
+      gSystem->ProcessEvents();
+      gSystem->Sleep(10);
+      gSystem->ProcessEvents();
+   }
 
    TVirtualPad *canvas = (TVirtualPad*)pad->GetCanvas();
    Int_t wid = (pad == canvas) ? pad->GetCanvasID() : pad->GetPixmapID();
@@ -6462,9 +6464,11 @@ void TASImage::FromWindow(Drawable_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h)
 
    // syncronization
    gVirtualX->Update(1);
-   gSystem->ProcessEvents();
-   gSystem->Sleep(10);
-   gSystem->ProcessEvents();
+   if (!gThreadXAR) {
+      gSystem->ProcessEvents();
+      gSystem->Sleep(10);
+      gSystem->ProcessEvents();
+   }
 
    if (!w || !h) {
       gVirtualX->GetWindowSize(wid, xy, xy, w, h);
