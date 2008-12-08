@@ -215,7 +215,7 @@ Int_t TPRegexp::ReplaceSubs(const TString &s, TString &final,
                             const TString &replacePattern,
                             Int_t *offVec, Int_t nrMatch) const
 {
-   // Return the number of substitutions.
+   // Returns the number of expanded '$' constructs.
 
    Int_t nrSubs = 0;
    const char *p = replacePattern;
@@ -251,12 +251,12 @@ Int_t TPRegexp::ReplaceSubs(const TString &s, TString &final,
                if (fPCREOpts & kPCRE_DEBUG_MSGS)
                   Info("ReplaceSubs", "PREGEX appending substr #%d", subnum);
                if (subnum < 0 || subnum > nrMatch-1) {
-                  Error("ReplaceSubs","bad string number :%d",subnum);
+                  Error("ReplaceSubs","bad string number: %d",subnum);
+               } else {
+                  const TString subStr = s(offVec[2*subnum],offVec[2*subnum+1]-offVec[2*subnum]);
+                  final += subStr;
+                  nrSubs++;
                }
-               const TString subStr = s(offVec[2*subnum],offVec[2*subnum+1]-offVec[2*subnum]);
-               final += subStr;
-               nrSubs++;
-
                state = 0;
                continue;  // send char to start state
             }
@@ -390,11 +390,11 @@ Int_t TPRegexp::SubstituteInternal(TString &s, const TString &replacePattern,
 
       // replace stuff in s
       if (doDollarSubst) {
-         nrSubs += ReplaceSubs(s, final, replacePattern, offVec, nrMatch);
+         ReplaceSubs(s, final, replacePattern, offVec, nrMatch);
       } else {
          final += replacePattern;
-         ++nrSubs;
       }
+      ++nrSubs;
 
       // if global gotta check match at every pos
       if (!(fPCREOpts & kPCRE_GLOBAL))
