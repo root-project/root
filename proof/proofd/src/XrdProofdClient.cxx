@@ -510,6 +510,9 @@ bool XrdProofdClient::VerifySession(XrdProofdProofServ *xps, XrdProofdResponse *
       TRACE(XERR, "cannot stat admin path: "<<path);
       return 0;
    }
+   int now = time(0);
+   if (now >= st0.st_mtime && (now - st0.st_mtime) <= 1) return 1;
+      TRACE(ALL, "admin path: "<<path<<", mtime: "<< st0.st_mtime << ", now: "<< now);
 
    // Take the pid
    int pid = xps->SrvPID();
