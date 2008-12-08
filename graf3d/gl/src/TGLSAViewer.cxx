@@ -219,7 +219,12 @@ TGLSAViewer::TGLSAViewer(const TGWindow *parent, TVirtualPad *pad, TGedEditor *g
    // Modified version of the previous constructor for embedding the
    // viewer into another frame (parent).
 
-   fFrame = new TGLSAFrame(parent, *this);
+   Bool_t is_main = (parent == 0 || parent == gClient->GetDefaultRoot());
+
+   if (is_main)      
+      fFrame = new TGLSAFrame(parent, *this);
+   else
+      fFrame = new TGCompositeFrame(parent);
 
    CreateMenus();
    CreateFrames();
@@ -240,7 +245,10 @@ TGLSAViewer::TGLSAViewer(const TGWindow *parent, TVirtualPad *pad, TGedEditor *g
       fLeftVerticalFrame->GetList()->AddFirst(fe);
    }
 
-   Show();
+   if (is_main)
+      Show();
+   else
+      fFrame->MapWindow();
 }
 
 //______________________________________________________________________________
