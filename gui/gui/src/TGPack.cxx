@@ -24,7 +24,7 @@
 // their previous size.
 //
 // When frames are left in pack at destruction time, they will be
-// deleted via deep-cleanup.
+// deleted via local-cleanup.
 
 ClassImp(TGPack);
 
@@ -37,6 +37,8 @@ TGPack::TGPack(const TGWindow *p, UInt_t w, UInt_t h, UInt_t options, Pixel_t ba
    fDragOverflow (0)
 {
    // Constructor.
+
+   SetCleanup(kLocalCleanup);
 }
 
 //______________________________________________________________________________
@@ -49,7 +51,7 @@ TGPack::TGPack(TGClient *c, Window_t id, const TGWindow *parent) :
 {
    // Constructor.
 
-   SetCleanup(kDeepCleanup);
+   SetCleanup(kLocalCleanup);
 }
 
 //______________________________________________________________________________
