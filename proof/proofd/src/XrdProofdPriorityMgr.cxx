@@ -140,7 +140,7 @@ XrdProofdPriorityMgr::XrdProofdPriorityMgr(XrdProofdManager *mgr,
 static int DumpPriorityChanges(const char *, XrdProofdPriority *p, void *s)
 {
    // Reset the priority on entries
-   XPDLOC(PMGR, "PriorityMgr::Config")
+   XPDLOC(PMGR, "DumpPriorityChanges")
 
    XrdSysError *e = (XrdSysError *)s;
 
