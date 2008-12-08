@@ -176,21 +176,22 @@ enum XProofQueryStatus {
 //_______________________________________________
 //
 enum XPErrorCode {
-   kXP_ArgInvalid = 3100,
-   kXP_ArgMissing,
-   kXP_ArgTooLong,
-   kXP_InvalidRequest,
-   kXP_IOError,
-   kXP_NoMemory,
-   kXP_NoSpace,
-   kXP_NotAuthorized,
-   kXP_NotFound,
-   kXP_ServerError,
-   kXP_Unsupported,
-   kXP_noserver,
-   kXP_nosession,
-   kXP_nomanager,
-   kXP_reconnecting
+   kXP_ArgInvalid         = 3100,
+   kXP_ArgMissing,       // 3101
+   kXP_ArgTooLong,       // 3102
+   kXP_InvalidRequest,   // 3103
+   kXP_IOError,          // 3104
+   kXP_NoMemory,         // 3105
+   kXP_NoSpace,          // 3106
+   kXP_NotAuthorized,    // 3107
+   kXP_NotFound,         // 3108
+   kXP_ServerError,      // 3109
+   kXP_Unsupported,      // 3110
+   kXP_noserver,         // 3111
+   kXP_nosession,        // 3112
+   kXP_nomanager,        // 3113
+   kXP_reconnecting,     // 3114
+   kXP_TooManySess       // 3115
 };
 
 

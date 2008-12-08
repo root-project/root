@@ -46,6 +46,7 @@
 #include "XrdProofdProofServMgr.h"
 #include "XrdProofdProtocol.h"
 #include "XrdProofGroup.h"
+#include "XrdProofSched.h"
 #include "XrdROOT.h"
 
 #include <map>
@@ -1420,6 +1421,20 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
    XPD_SETRESP(p, "Create");
 
    TRACEP(p, DBG, "enter");
+   XrdOucString msg;
+
+   // Check if we are allowed to start a new session
+   int mxsess = fMgr->ProofSched() ? fMgr->ProofSched()->MaxSessions() : -1;
+   if (p->ConnType() == kXPD_ClientMaster && mxsess > 0) {
+      XrdSysMutexHelper mhp(fMutex);
+      int cursess = CurrentSessions();
+      if (mxsess <= cursess) {
+         msg.form(" ++++ Max number of sessions reached (%d) - please retry later ++++ \n", cursess); 
+         response->Send(kXR_attn, kXPD_srvmsg, (char *) msg.c_str(), msg.length());
+         response->Send(kXP_TooManySess, "cannot start a new session");
+         return 0;
+      }
+   }
 
    // Update counter to control checks during creation
    XpdSrvMgrCreateCnt cnt(this, kCreateCnt);
@@ -1496,7 +1511,6 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
       uenvs = "";
 
    // The ROOT version to be used
-   XrdOucString msg;
    xps->SetROOT(p->Client()->ROOT());
    msg.form("using ROOT version: %s", xps->ROOT()->Export());
    TRACEP(p, REQ, msg);
@@ -3434,6 +3448,45 @@ int XrdProofdProofServMgr::BroadcastPriorities()
    fSessions.Apply(BroadcastPriority, (void *)&bp);
    // Done
    return nb;
+}
+
+//__________________________________________________________________________
+static int CountTopMasters(const char *, XrdProofdProofServ *ps, void *s)
+{
+   // Run thorugh entries to count top-masters
+   XPDLOC(SMGR, "CountTopMasters")
+
+   int *ntm = (int *)s;
+
+   XrdOucString emsg;
+   if (ps) {
+      if (ps->SrvType() == kXPD_TopMaster) (*ntm)++;
+      // Go to next
+      return 0;
+   } else {
+      emsg = "input entry undefined";
+   }
+
+   // Some problem
+   TRACE(XERR,"protocol error: "<<emsg);
+   return 1;
+}
+
+//__________________________________________________________________________
+int XrdProofdProofServMgr::CurrentSessions()
+{
+   // Return the number of current sessions (top masters)
+
+   XPDLOC(SMGR, "ProofServMgr::CurrentSessions")
+
+   TRACE(REQ, "enter");
+
+   int ns = 0;
+   XrdSysMutexHelper mhp(fMutex);
+   fSessions.Apply(CountTopMasters, (void *)&ns);
+
+   // Done
+   return ns;
 }
 
 //__________________________________________________________________________

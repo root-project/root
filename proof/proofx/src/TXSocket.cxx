@@ -1061,9 +1061,16 @@ Bool_t TXSocket::Create(Bool_t attach)
          // Notify
          return kTRUE;
       } else {
-         // Print error mag, if any
-         if ((retriesleft <= 0 || gDebug > 0) && fConn->GetLastErr())
-            Printf("%s: %s", fHost.Data(), fConn->GetLastErr());
+         // If not free resources now, just give up
+         if (fConn->GetOpenError() == kXP_TooManySess) {
+            // Avoid to contact the server any more
+            fSessionID = -1;
+            return kFALSE;
+         } else {
+            // Print error mag, if any
+            if ((retriesleft <= 0 || gDebug > 0) && fConn->GetLastErr())
+               Printf("%s: %s", fHost.Data(), fConn->GetLastErr());
+         }
       }
 
       if (gDebug > 0)

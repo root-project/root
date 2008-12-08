@@ -70,6 +70,9 @@ public:
    virtual int GetWorkers(XrdProofdProofServ *xps,
                           std::list<XrdProofWorker *> */*wrks*/);
 
+   // Max number of essions we are allowed to start
+   virtual int MaxSessions() const { return fMaxSessions; }
+
    // Update group properties according to the current state
    virtual int UpdateProperties() { return 0; }
 
@@ -88,7 +91,7 @@ protected:
    XrdProofdManager *fMgr;    // Cluster manager
    XrdProofGroupMgr *fGrpMgr;  // Groups manager
 
-   int               fMaxSessions; // max number of sessions per client
+   int               fMaxSessions; // max number of sessions
    int               fWorkerMax;   // max number or workers per user
    int               fWorkerSel;   // selection option
    int               fNextWrk;     // Reference index for RR sel option

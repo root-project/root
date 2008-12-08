@@ -182,6 +182,7 @@ public:
                                  return cnt; }
 
    int               BroadcastPriorities();
+   int               CurrentSessions();
    void              DisconnectFromProofServ(int pid);
 
    std::list<XrdProofdProofServ *> *ActiveSessions() { return &fActiveSessions; }
