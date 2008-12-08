@@ -11,7 +11,11 @@ ROOTCFLAGS   := $(CXXFLAGS) -DUSE_ROOT
 ROOTLIBS     += -lGui
 
 sepDictLibs: run.log
-	$(CMDECHO) diff -b -w run.good.output run.log
+	$(CMDECHO) if [ -f run.good-$(CINT_VERSION).output ]; then \
+                diff -b -w run.good-$(CINT_VERSION).output run.log ; \
+                else \
+                diff -b -w run.good.output run.log ; \
+                fi
 
 run.log: run.C libmaster.$(DllSuf) libslave1.$(DllSuf) libslave2.$(DllSuf) run.good.output 
 	$(CMDECHO)$(CALLROOTEXE) -q -l -b run.C 2>&1 | grep -v tagnum | $(RemoveLeadingDirs) | $(RemoveSizes) | sed -e 's?FILE:[A-Za-z]:.*[/\]?FILE:?' > run.log
