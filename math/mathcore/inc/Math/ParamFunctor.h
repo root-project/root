@@ -234,7 +234,7 @@ public:
       construct from another generic Functor of multi-dimension 
     */
    template <typename Func> 
-   ParamFunctor( const Func & f) : 
+   explicit ParamFunctor( const Func & f) : 
       fImpl(new ParamFunctorHandler<ParamFunctor,Func>(f) )
    {}
 
