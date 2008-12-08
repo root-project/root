@@ -155,6 +155,7 @@ void TMLPAnalyzer::CheckNetwork()
       sprintf(sel,"inNeuron==%d",i);
       fAnalysisTree->Draw(var, sel, "goff");
       TH1F* tmp = (TH1F*)gDirectory->Get(Form("tmp%d",i));
+      if (!tmp) continue;
       cout << GetInputNeuronTitle(i)
            << " -> " << tmp->GetMean()
            << " +/- " << tmp->GetRMS() << endl;
