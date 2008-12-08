@@ -1399,7 +1399,9 @@ Bool_t TProof::StartSlaves(Bool_t parallel, Bool_t attach)
 
       } else {
          delete slave;
-         Error("StartSlaves", "failed to connect to a PROOF master server");
+         // Notify only if verbosity is on: most likely the failure has already been notified
+         if (gDebug > 0)
+            Error("StartSlaves", "failed to create (or connect to) the PROOF master server");
          return kFALSE;
       }
    }
@@ -1703,7 +1705,7 @@ TList *TProof::GetQueryResults()
 {
    // Return pointer to the list of query results in the player
 
-   return fPlayer->GetListOfResults();
+   return (fPlayer ? fPlayer->GetListOfResults() : (TList *)0);
 }
 
 //______________________________________________________________________________
@@ -1712,7 +1714,7 @@ TQueryResult *TProof::GetQueryResult(const char *ref)
    // Return pointer to the full TQueryResult instance owned by the player
    // and referenced by 'ref'. If ref = 0 or "", return the last query result.
 
-   return fPlayer->GetQueryResult(ref);
+   return (fPlayer ? fPlayer->GetQueryResult(ref) : (TQueryResult *)0);
 }
 
 //______________________________________________________________________________
@@ -1787,7 +1789,7 @@ void TProof::ShowQueries(Option_t *opt)
               GetNumberOfQueries(), fDrawQueries);
 
       // Queries available locally
-      TList *listlocal = fPlayer->GetListOfResults();
+      TList *listlocal = fPlayer ? fPlayer->GetListOfResults() : (TList *)0;
       if (listlocal) {
          Printf("+++");
          Printf("+++ Queries available locally: %d", listlocal->GetSize());
@@ -2525,7 +2527,7 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
          break;
 
       case kMESS_OBJECT:
-         fPlayer->HandleRecvHisto(mess);
+         if (fPlayer) fPlayer->HandleRecvHisto(mess);
          break;
 
       case kPROOF_FATAL:
@@ -2682,15 +2684,25 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
             case TProof::kListEnabledPackages:
                SafeDelete(fEnabledPackages);
                fEnabledPackages = (TList *) mess->ReadObject(TList::Class());
-               fEnabledPackages->SetOwner();
+               if (fEnabledPackages) {
+                  fEnabledPackages->SetOwner();
+               } else {
+                  Error("HandleInputMessage",
+                        "kPROOF_PACKAGE_LIST: kListEnabledPackages: TList not found in message!");
+               }
                break;
             case TProof::kListPackages:
                SafeDelete(fAvailablePackages);
                fAvailablePackages = (TList *) mess->ReadObject(TList::Class());
-               fAvailablePackages->SetOwner();
+               if (fAvailablePackages) {
+                  fAvailablePackages->SetOwner();
+               } else {
+                  Error("HandleInputMessage",
+                        "kPROOF_PACKAGE_LIST: kListPackages: TList not found in message!");
+               }
                break;
             default:
-               Info("HandleInputMessage","kPROOF_PACKAGE_LIST: unknown type: %d", type);
+               Error("HandleInputMessage", "kPROOF_PACKAGE_LIST: unknown type: %d", type);
             }
          }
          break;
@@ -2702,43 +2714,46 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
             Int_t type = 0;
             (*mess) >> type;
             // If a query result header, add it to the player list
-            if (type == 0) {
-               // Retrieve query result instance (output list not filled)
-               TQueryResult *pq =
-                  (TQueryResult *) mess->ReadObject(TQueryResult::Class());
-               if (pq) {
-                  // Add query to the result list in TProofPlayer
-                  fPlayer->AddQueryResult(pq);
-                  fPlayer->SetCurrentQuery(pq);
-                  // And clear the output list, as we start merging a new set of results
-                  if (fPlayer->GetOutputList())
-                     fPlayer->GetOutputList()->Clear();
-                  // Add the unique query tag as TNamed object to the input list
-                  // so that it is available in TSelectors for monitoring
-                  fPlayer->AddInput(new TNamed("PROOF_QueryTag",
-                                    Form("%s:%s",pq->GetTitle(),pq->GetName())));
-               } else {
-                  Warning("HandleInputMessage","kPROOF_OUTPUTOBJECT: query result missing");
+            if (fPlayer) {
+               if (type == 0) {
+                  // Retrieve query result instance (output list not filled)
+                  TQueryResult *pq =
+                     (TQueryResult *) mess->ReadObject(TQueryResult::Class());
+                  if (pq) {
+                     // Add query to the result list in TProofPlayer
+                     fPlayer->AddQueryResult(pq);
+                     fPlayer->SetCurrentQuery(pq);
+                     // And clear the output list, as we start merging a new set of results
+                     if (fPlayer->GetOutputList())
+                        fPlayer->GetOutputList()->Clear();
+                     // Add the unique query tag as TNamed object to the input list
+                     // so that it is available in TSelectors for monitoring
+                     fPlayer->AddInput(new TNamed("PROOF_QueryTag",
+                                       Form("%s:%s",pq->GetTitle(),pq->GetName())));
+                  } else {
+                     Warning("HandleInputMessage","kPROOF_OUTPUTOBJECT: query result missing");
+                  }
+               } else if (type > 0) {
+                  // Read object
+                  TObject *o = mess->ReadObject(TObject::Class());
+                  // Add or merge it
+                  if ((fPlayer->AddOutputObject(o) == 1)) {
+                     // Remove the object if it has been merged
+                     SafeDelete(o);
+                  }
+                  if (type > 1 && TestBit(TProof::kIsClient) && !IsLite()) {
+                     // In PROOFLite this has to be done once only in TProofLite::Process
+                     TQueryResult *pq = fPlayer->GetCurrentQuery();
+                     pq->SetOutputList(fPlayer->GetOutputList(), kFALSE);
+                     pq->SetInputList(fPlayer->GetInputList(), kFALSE);
+                     // If the last object, notify the GUI that the result arrived
+                     QueryResultReady(Form("%s:%s", pq->GetTitle(), pq->GetName()));
+                     // Processing is over
+                     UpdateDialog();
+                  }
                }
-            } else if (type > 0) {
-               // Read object
-               TObject *o = mess->ReadObject(TObject::Class());
-               // Add or merge it
-               if ((fPlayer->AddOutputObject(o) == 1)) {
-                  // Remove the object if it has been merged
-                  SafeDelete(o);
-               }
-
-               if (type > 1 && TestBit(TProof::kIsClient) && !IsLite()) {
-                  // In PROOFLite this has to be done once only in TProofLite::Process
-                  TQueryResult *pq = fPlayer->GetCurrentQuery();
-                  pq->SetOutputList(fPlayer->GetOutputList(), kFALSE);
-                  pq->SetInputList(fPlayer->GetInputList(), kFALSE);
-                  // If the last object, notify the GUI that the result arrived
-                  QueryResultReady(Form("%s:%s", pq->GetTitle(), pq->GetName()));
-                  // Processing is over
-                  UpdateDialog();
-               }
+            } else {
+               Warning("HandleInputMessage", "kPROOF_OUTPUTOBJECT: player undefined!");
             }
          }
          break;
@@ -2748,35 +2763,38 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
             PDB(kGlobal,2)
                Info("HandleInputMessage","kPROOF_OUTPUTLIST: enter");
             TList *out = 0;
-            if (TestBit(TProof::kIsMaster) || fProtocol < 7) {
-               out = (TList *) mess->ReadObject(TList::Class());
-            } else {
-               TQueryResult *pq =
-                  (TQueryResult *) mess->ReadObject(TQueryResult::Class());
-               if (pq) {
-                  // Add query to the result list in TProofPlayer
-                  fPlayer->AddQueryResult(pq);
-                  fPlayer->SetCurrentQuery(pq);
-                  // To avoid accidental cleanups from anywhere else
-                  // remove objects from gDirectory and clone the list
-                  out = pq->GetOutputList();
-                  CleanGDirectory(out);
-                  out = (TList *) out->Clone();
-                  // Notify the GUI that the result arrived
-                  QueryResultReady(Form("%s:%s", pq->GetTitle(), pq->GetName()));
+            if (fPlayer) {
+               if (TestBit(TProof::kIsMaster) || fProtocol < 7) {
+                  out = (TList *) mess->ReadObject(TList::Class());
                } else {
-                  PDB(kGlobal,2)
-                     Info("HandleInputMessage","kPROOF_OUTPUTLIST: query result missing");
+                  TQueryResult *pq =
+                     (TQueryResult *) mess->ReadObject(TQueryResult::Class());
+                  if (pq) {
+                     // Add query to the result list in TProofPlayer
+                     fPlayer->AddQueryResult(pq);
+                     fPlayer->SetCurrentQuery(pq);
+                     // To avoid accidental cleanups from anywhere else
+                     // remove objects from gDirectory and clone the list
+                     out = pq->GetOutputList();
+                     CleanGDirectory(out);
+                     out = (TList *) out->Clone();
+                     // Notify the GUI that the result arrived
+                     QueryResultReady(Form("%s:%s", pq->GetTitle(), pq->GetName()));
+                  } else {
+                     PDB(kGlobal,2)
+                        Info("HandleInputMessage","kPROOF_OUTPUTLIST: query result missing");
+                  }
                }
-            }
-            if (out) {
-               out->SetOwner();
-               fPlayer->AddOutput(out); // Incorporate the list
-               SafeDelete(out);
+               if (out) {
+                  out->SetOwner();
+                  fPlayer->AddOutput(out); // Incorporate the list
+                  SafeDelete(out);
+               } else {
+                  PDB(kGlobal,2) Info("HandleInputMessage","kPROOF_OUTPUTLIST: ouputlist is empty");
+               }
             } else {
-               PDB(kGlobal,2) Info("HandleInputMessage","kPROOF_OUTPUTLIST: ouputlist is empty");
+               Warning("HandleInputMessage", "kPROOF_OUTPUTLIST: player undefined!");
             }
-
             // On clients at this point processing is over
             if (TestBit(TProof::kIsClient) && !IsLite())
                UpdateDialog();
@@ -2801,13 +2819,13 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
             PDB(kGlobal,2) Info("HandleInputMessage","kPROOF_RETRIEVE: enter");
             TQueryResult *pq =
                (TQueryResult *) mess->ReadObject(TQueryResult::Class());
-            if (pq) {
+            if (pq && fPlayer) {
                fPlayer->AddQueryResult(pq);
                // Notify the GUI that the result arrived
                QueryResultReady(Form("%s:%s", pq->GetTitle(), pq->GetName()));
             } else {
                PDB(kGlobal,2)
-                  Info("HandleInputMessage","kPROOF_RETRIEVE: query result missing");
+                  Info("HandleInputMessage","kPROOF_RETRIEVE: query result missing or player undefined");
             }
          }
          break;
@@ -3017,7 +3035,7 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
 
             (*mess) >> name >> xmin >> xmax >> ymin >> ymax >> zmin >> zmax;
 
-            fPlayer->UpdateAutoBin(name,xmin,xmax,ymin,ymax,zmin,zmax);
+            if (fPlayer) fPlayer->UpdateAutoBin(name,xmin,xmax,ymin,ymax,zmin,zmax);
 
             TMessage answ(kPROOF_AUTOBIN);
 
@@ -3038,14 +3056,16 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
                (*mess) >> total >> processed >> bytesread
                        >> initTime >> procTime
                        >> evtrti >> mbrti;
-               fPlayer->Progress(sl, total, processed, bytesread,
-                                 initTime, procTime, evtrti, mbrti);
+               if (fPlayer)
+                  fPlayer->Progress(sl, total, processed, bytesread,
+                                    initTime, procTime, evtrti, mbrti);
 
             } else {
                // Old format
                Long64_t total, processed;
                (*mess) >> total >> processed;
-               fPlayer->Progress(sl, total, processed);
+               if (fPlayer)
+                  fPlayer->Progress(sl, total, processed);
             }
          }
          break;
@@ -3070,7 +3090,7 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
             } else {
                (*mess) >> events;
             }
-            if (!abort) {
+            if (!abort && fPlayer) {
                if (fProtocol > 18) {
                   TList *listOfMissingFiles = 0;
                   if (!(listOfMissingFiles = (TList *)GetOutput("MissingFiles"))) {
@@ -3659,7 +3679,7 @@ Long64_t TProof::Process(TDSet *dset, const char *selector, Option_t *option,
    // The return value is -1 in case of error and TSelector::GetStatus() in
    // in case of success.
 
-   if (!IsValid()) return -1;
+   if (!IsValid() || !fPlayer) return -1;
 
    // Set PROOF to running state
    SetRunStatus(TProof::kRunning);
@@ -3707,7 +3727,7 @@ Long64_t TProof::Process(TFileCollection *fc, const char *selector,
    // The return value is -1 in case of error and TSelector::GetStatus() in
    // in case of success.
 
-   if (!IsValid()) return -1;
+   if (!IsValid() || !fPlayer) return -1;
 
    if (fProtocol < 17) {
       Info("Process", "server version < 5.18/00:"
@@ -4122,7 +4142,7 @@ Long64_t TProof::DrawSelect(TDSet *dset, const char *varexp,
    // TDSet::SetEntryList.
    // Returns -1 in case of error or number of selected events otherwise.
 
-   if (!IsValid()) return -1;
+   if (!IsValid() || !fPlayer) return -1;
 
    // Make sure that asynchronous processing is not active
    if (!IsIdle()) {
@@ -4659,6 +4679,7 @@ Int_t TProof::SendFile(const char *file, Int_t opt, const char *rfile, TSlave *w
    //                          or submaster (meaningless for slave servers).
    //       kCpBin   (0x8)     Retrieve from the cache the binaries associated
    //                          with the file
+   //       kCp      (0x10)    Retrieve the files from the cache
    //
 
    if (!IsValid()) return -1;
@@ -4717,6 +4738,8 @@ Int_t TProof::SendFile(const char *file, Int_t opt, const char *rfile, TSlave *w
    } else if (fnam.IsNull()) {
       fnam = gSystem->BaseName(file);
    }
+   // List on which we will collect the results
+   TList wsent;
    while ((sl = (TSlave *)next())) {
       if (!sl->IsValid())
          continue;
@@ -4743,37 +4766,42 @@ Int_t TProof::SendFile(const char *file, Int_t opt, const char *rfile, TSlave *w
          MarkBad(sl, "could not send kPROOF_SENDFILE request");
          continue;
       }
+      // Record
+      wsent.Add(sl);
 
-      if (!sendto)
-         continue;
+      if (sendto) {
 
-      lseek(fd, 0, SEEK_SET);
+         lseek(fd, 0, SEEK_SET);
 
-      Int_t len;
-      do {
-         while ((len = read(fd, buf, kMAXBUF)) < 0 && TSystem::GetErrno() == EINTR)
-            TSystem::ResetErrno();
+         Int_t len;
+         do {
+            while ((len = read(fd, buf, kMAXBUF)) < 0 && TSystem::GetErrno() == EINTR)
+               TSystem::ResetErrno();
 
-         if (len < 0) {
-            SysError("SendFile", "error reading from file %s", file);
-            Interrupt(kSoftInterrupt, kActive);
-            close(fd);
-            return -1;
-         }
+            if (len < 0) {
+               SysError("SendFile", "error reading from file %s", file);
+               Interrupt(kSoftInterrupt, kActive);
+               close(fd);
+               return -1;
+            }
 
-         if (len > 0 && sl->GetSocket()->SendRaw(buf, len) == -1) {
-            SysError("SendFile", "error writing to slave %s:%s (now offline)",
-                     sl->GetName(), sl->GetOrdinal());
-            MarkBad(sl, "sendraw failure");
-            break;
-         }
+            if (len > 0 && sl->GetSocket()->SendRaw(buf, len) == -1) {
+               SysError("SendFile", "error writing to slave %s:%s (now offline)",
+                        sl->GetName(), sl->GetOrdinal());
+               MarkBad(sl, "sendraw failure");
+               break;
+            }
 
-      } while (len > 0);
+         } while (len > 0);
 
-      nsl++;
+         nsl++;
+      }
    }
 
    close(fd);
+
+   // Wait for the operation to be done
+   Collect(&wsent, fCollectTimeout);
 
    // Cleanup temporary list, if any
    if (slaves != fActiveSlaves && slaves != fUniqueSlaves)
@@ -5794,12 +5822,18 @@ Int_t TProof::UploadPackage(const char *pack, EUploadPackageOpt opt)
    // Nothing more to do if we are a Lite-session
    if (IsLite()) return 0;
 
+   TString smsg;
+   smsg.Form("+%s", gSystem->BaseName(par));
+
    TMessage mess(kPROOF_CHECKFILE);
-   mess << TString("+")+TString(gSystem->BaseName(par)) << (*md5);
+   mess << smsg << (*md5);
    TMessage mess2(kPROOF_CHECKFILE);
-   mess2 << TString("-")+TString(gSystem->BaseName(par)) << (*md5);
+   smsg.Replace(0, 1, "-");
+   mess2 << smsg << (*md5);
    TMessage mess3(kPROOF_CHECKFILE);
-   mess3 << TString("=")+TString(gSystem->BaseName(par)) << (*md5);
+   smsg.Replace(0, 1, "=");
+   mess3 << smsg << (*md5);
+
    delete md5;
 
    if (fProtocol > 8) {
@@ -5824,9 +5858,9 @@ Int_t TProof::UploadPackage(const char *pack, EUploadPackageOpt opt)
 
          if (fProtocol > 5) {
             // remote directory is locked, upload file over the open channel
-            if (SendFile(par, (kBinary | kForce | kCpBin), Form("%s/%s/%s",
-                         sl->GetProofWorkDir(), kPROOF_PackDir,
-                         gSystem->BaseName(par)), sl) < 0) {
+            smsg.Form("%s/%s/%s", sl->GetProofWorkDir(), kPROOF_PackDir,
+                                  gSystem->BaseName(par));
+            if (SendFile(par, (kBinary | kForce | kCpBin), smsg.Data(), sl) < 0) {
                Error("UploadPackage", "problems uploading file %s", par.Data());
                return -1;
             }
@@ -5834,7 +5868,8 @@ Int_t TProof::UploadPackage(const char *pack, EUploadPackageOpt opt)
             // old servers receive it via TFTP
             TFTP ftp(TString("root://")+sl->GetName(), 1);
             if (!ftp.IsZombie()) {
-               ftp.cd(Form("%s/%s", sl->GetProofWorkDir(), kPROOF_PackDir));
+               smsg.Form("%s/%s", sl->GetProofWorkDir(), kPROOF_PackDir);
+               ftp.cd(smsg.Data());
                ftp.put(par, gSystem->BaseName(par));
             }
          }
@@ -6777,7 +6812,7 @@ void TProof::SendInputDataFile()
    if (dataFile.Length() > 0) {
 
       Info("SendInputDataFile", "broadcasting %s", dataFile.Data());
-      BroadcastFile(dataFile.Data(), kBinary, "cache",kActive);
+      BroadcastFile(dataFile.Data(), kBinary, "cache", kActive);
 
       // Set the name in the input list
       AddInput(new TNamed("PROOF_InputDataFile", Form("cache:%s", gSystem->BaseName(dataFile))));
@@ -6890,7 +6925,7 @@ void TProof::AddInput(TObject *obj)
    // Add objects that might be needed during the processing of
    // the selector (see Process()).
 
-   fPlayer->AddInput(obj);
+   if (fPlayer) fPlayer->AddInput(obj);
 }
 
 //______________________________________________________________________________
@@ -6898,7 +6933,7 @@ void TProof::ClearInput()
 {
    // Clear input object list.
 
-   fPlayer->ClearInput();
+   if (fPlayer) fPlayer->ClearInput();
 
    // the system feedback list is always in the input list
    AddInput(fFeedback);
@@ -6909,7 +6944,7 @@ TList *TProof::GetInputList()
 {
    // Get input list.
 
-   return fPlayer->GetInputList();
+   return (fPlayer ? fPlayer->GetInputList() : (TList *)0);
 }
 
 //______________________________________________________________________________
@@ -6927,7 +6962,7 @@ TList *TProof::GetOutputList()
 {
    // Get list with all object created during processing (see Process()).
 
-   return fPlayer->GetOutputList();
+   return (fPlayer ? fPlayer->GetOutputList() : (TList *)0);
 }
 
 //______________________________________________________________________________
@@ -6935,6 +6970,11 @@ void TProof::SetParameter(const char *par, const char *value)
 {
    // Set input list parameter. If the parameter is already
    // set it will be set to the new value.
+
+   if (!fPlayer) {
+      Warning("SetParameter", "player undefined! Ignoring");
+      return;
+   }
 
    TList *il = fPlayer->GetInputList();
    TObject *item = il->FindObject(par);
@@ -6950,6 +6990,11 @@ void TProof::SetParameter(const char *par, Int_t value)
 {
    // Set an input list parameter.
 
+   if (!fPlayer) {
+      Warning("SetParameter", "player undefined! Ignoring");
+      return;
+   }
+
    TList *il = fPlayer->GetInputList();
    TObject *item = il->FindObject(par);
    if (item) {
@@ -6963,6 +7008,11 @@ void TProof::SetParameter(const char *par, Int_t value)
 void TProof::SetParameter(const char *par, Long_t value)
 {
    // Set an input list parameter.
+
+   if (!fPlayer) {
+      Warning("SetParameter", "player undefined! Ignoring");
+      return;
+   }
 
    TList *il = fPlayer->GetInputList();
    TObject *item = il->FindObject(par);
@@ -6978,6 +7028,11 @@ void TProof::SetParameter(const char *par, Long64_t value)
 {
    // Set an input list parameter.
 
+   if (!fPlayer) {
+      Warning("SetParameter", "player undefined! Ignoring");
+      return;
+   }
+
    TList *il = fPlayer->GetInputList();
    TObject *item = il->FindObject(par);
    if (item) {
@@ -6991,6 +7046,11 @@ void TProof::SetParameter(const char *par, Long64_t value)
 void TProof::SetParameter(const char *par, Double_t value)
 {
    // Set an input list parameter.
+
+   if (!fPlayer) {
+      Warning("SetParameter", "player undefined! Ignoring");
+      return;
+   }
 
    TList *il = fPlayer->GetInputList();
    TObject *item = il->FindObject(par);
@@ -7007,6 +7067,11 @@ TObject *TProof::GetParameter(const char *par) const
    // Get specified parameter. A parameter set via SetParameter() is either
    // a TParameter or a TNamed or 0 in case par is not defined.
 
+   if (!fPlayer) {
+      Warning("GetParameter", "player undefined! Ignoring");
+      return (TObject *)0;
+   }
+
    TList *il = fPlayer->GetInputList();
    return il->FindObject(par);
 }
@@ -7016,6 +7081,8 @@ void TProof::DeleteParameters(const char *wildcard)
 {
    // Delete the input list parameters specified by a wildcard (e.g. PROOF_*)
    // or exact name (e.g. PROOF_MaxSlavesPerNode).
+
+   if (!fPlayer) return;
 
    if (!wildcard) wildcard = "";
    TRegexp re(wildcard, kTRUE);
@@ -7037,6 +7104,8 @@ void TProof::ShowParameters(const char *wildcard) const
 {
    // Show the input list parameters specified by the wildcard.
    // Default is the special PROOF control parameters (PROOF_*).
+
+   if (!fPlayer) return;
 
    if (!wildcard) wildcard = "";
    TRegexp re(wildcard, kTRUE);
@@ -7172,7 +7241,7 @@ TDrawFeedback *TProof::CreateDrawFeedback()
    // Draw feedback creation proxy. When accessed via TProof avoids
    // link dependency on libProofPlayer.
 
-   return fPlayer->CreateDrawFeedback(this);
+   return (fPlayer ? fPlayer->CreateDrawFeedback(this) : (TDrawFeedback *)0);
 }
 
 //______________________________________________________________________________
@@ -7180,7 +7249,7 @@ void TProof::SetDrawFeedbackOption(TDrawFeedback *f, Option_t *opt)
 {
    // Set draw feedback option.
 
-   fPlayer->SetDrawFeedbackOption(f, opt);
+   if (fPlayer) fPlayer->SetDrawFeedbackOption(f, opt);
 }
 
 //______________________________________________________________________________
@@ -7188,7 +7257,7 @@ void TProof::DeleteDrawFeedback(TDrawFeedback *f)
 {
    // Delete draw feedback object.
 
-   fPlayer->DeleteDrawFeedback(f);
+   if (fPlayer) fPlayer->DeleteDrawFeedback(f);
 }
 
 //______________________________________________________________________________
@@ -7262,12 +7331,14 @@ void TProof::Browse(TBrowser *b)
    b->Add(fFeedback, fFeedback->Class(), "fFeedback");
    b->Add(fChains, fChains->Class(), "fChains");
 
-   b->Add(fPlayer->GetInputList(), fPlayer->GetInputList()->Class(), "InputList");
-   if (fPlayer->GetOutputList())
-      b->Add(fPlayer->GetOutputList(), fPlayer->GetOutputList()->Class(), "OutputList");
-   if (fPlayer->GetListOfResults())
-      b->Add(fPlayer->GetListOfResults(),
-             fPlayer->GetListOfResults()->Class(), "ListOfResults");
+   if (fPlayer) {
+      b->Add(fPlayer->GetInputList(), fPlayer->GetInputList()->Class(), "InputList");
+      if (fPlayer->GetOutputList())
+         b->Add(fPlayer->GetOutputList(), fPlayer->GetOutputList()->Class(), "OutputList");
+      if (fPlayer->GetListOfResults())
+         b->Add(fPlayer->GetListOfResults(),
+               fPlayer->GetListOfResults()->Class(), "ListOfResults");
+   }
 }
 
 //______________________________________________________________________________
