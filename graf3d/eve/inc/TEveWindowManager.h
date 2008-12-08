@@ -16,6 +16,7 @@
 #include "TQObject.h"
 
 class TEveWindow;
+class TEveWindowSlot;
 
 class TEveWindowManager : public TEveElementList,
                           public TQObject
@@ -34,8 +35,10 @@ public:
    void WindowDeleted (TEveWindow* w);
    void WindowSelected(TEveWindow* w);
 
-   TEveWindow* GetCurrentWindow()             const { return fCurrentWindow; }
+   TEveWindow* GetCurrentWindow() const { return fCurrentWindow; }
    Bool_t      IsCurrentWindow(const TEveWindow* w) const { return w == fCurrentWindow; }
+
+   TEveWindowSlot* GetCurrentWindowAsSlot() const;
 
    void CurrentWindowChanged(TEveWindow* window); // *SIGNAL*
 

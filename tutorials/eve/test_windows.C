@@ -13,7 +13,8 @@ void test_windows()
 
    TEveUtil::Macro("pointset_test.C");
 
-   TEveWindowSlot  *slot = 0;
+   TEveWindowSlot  *slot  = 0;
+   TEveWindowFrame *frame = 0;
 
    TEveViewer *v = 0;
 
@@ -39,7 +40,7 @@ void test_windows()
 
    slot = pack2->NewSlot();
    slot->StartEmbedding();
-   new TCanvas(); // Sometimes crashes on destroy - should use embedded canvas?
+   new TCanvas("Root Canvas");
    slot->StopEmbedding();
 
    slot = pack2->NewSlot();
@@ -56,7 +57,10 @@ void test_windows()
    slot = TEveWindow::CreateWindowInTab(gEve->GetBrowser()->GetTabRight());
 
    TEveWindowTab* tab1 = slot->MakeTab();
-   tab1->NewSlot();
+   slot = tab1->NewSlot();
+   frame = slot->MakeFrame(new TRootEmbeddedCanvas());
+   frame->SetElementName("Embedded Canvas");
+
    slot = tab1->NewSlot();
 
    TEveWindowTab* tab2 = slot->MakeTab();

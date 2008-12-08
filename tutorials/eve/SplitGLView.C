@@ -730,7 +730,7 @@ SplitGLView::SplitGLView(const TGWindow *p, UInt_t w, UInt_t h, Bool_t embed) :
    fViewer0->Connect("Clicked(TObject*)", "SplitGLView", this, 
                       "OnClicked(TObject*)");
    fViewer[0] = new TEveViewer("SplitGLViewer[0]");
-   fViewer[0]->SetGLViewer(fViewer0);
+   fViewer[0]->SetGLViewer(fViewer0, fViewer0->GetFrame());
    fViewer[0]->IncDenyDestroy();
    if (fIsEmbedded && gEve) {
       fViewer[0]->AddScene(gEve->GetGlobalScene());
@@ -771,7 +771,7 @@ SplitGLView::SplitGLView(const TGWindow *p, UInt_t w, UInt_t h, Bool_t embed) :
    fViewer1->Connect("Clicked(TObject*)", "SplitGLView", this, 
                       "OnClicked(TObject*)");
    fViewer[1] = new TEveViewer("SplitGLViewer[1]");
-   fViewer[1]->SetGLViewer(fViewer1);
+   fViewer[1]->SetGLViewer(fViewer1, fViewer1->GetFrame());
    fViewer[1]->IncDenyDestroy();
    if (fIsEmbedded && gEve) {
       fRhoZMgr->ImportElements((TEveElement *)gEve->GetGlobalScene());
@@ -816,7 +816,7 @@ SplitGLView::SplitGLView(const TGWindow *p, UInt_t w, UInt_t h, Bool_t embed) :
    fViewer2->Connect("Clicked(TObject*)", "SplitGLView", this, 
                       "OnClicked(TObject*)");
    fViewer[2] = new TEveViewer("SplitGLViewer[2]");
-   fViewer[2]->SetGLViewer(fViewer2);
+   fViewer[2]->SetGLViewer(fViewer2, fViewer2->GetFrame());
    fViewer[2]->IncDenyDestroy();
    if (fIsEmbedded && gEve) {
       fRPhiMgr->ImportElements((TEveElement *)gEve->GetGlobalScene());

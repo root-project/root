@@ -285,9 +285,20 @@ TEveViewer* TEveManager::SpawnNewViewer(const Text_t* name, const Text_t* title,
 
    TEveWindowSlot* slot = 0;
    if (embed)
-      slot = TEveWindow::CreateWindowInTab(fBrowser->GetTabRight());
+   {
+      slot = fWindowManager->GetCurrentWindowAsSlot();
+      if (slot == 0)
+      {
+         // In principle should have some default/current container
+         // in TEveWindowManager.
+         // Also to store closed windows.
+         slot = TEveWindow::CreateWindowInTab(fBrowser->GetTabRight());
+      }
+   }
    else
+   {
       slot = TEveWindow::CreateWindowMainFrame();
+   }
 
    TEveViewer* v = new TEveViewer(name, title);
    v->SpawnGLViewer(embed ? fEditor : 0);

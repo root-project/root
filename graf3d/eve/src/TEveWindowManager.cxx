@@ -84,6 +84,18 @@ void TEveWindowManager::WindowSelected(TEveWindow* window)
    CurrentWindowChanged(fCurrentWindow);
 }
 
+//==============================================================================
+
+//______________________________________________________________________________
+TEveWindowSlot* TEveWindowManager::GetCurrentWindowAsSlot() const
+{
+   // Return current window dynamic-casted to TEveWindowSlot.
+
+   return dynamic_cast<TEveWindowSlot*>(fCurrentWindow);
+}
+
+//==============================================================================
+
 //______________________________________________________________________________
 void TEveWindowManager::CurrentWindowChanged(TEveWindow* window)
 {

@@ -230,6 +230,8 @@ public:
    void   SetShowTitleBar(Bool_t x);
 
    Bool_t IsCurrent() const;
+   void   MakeCurrent();
+
 
    Bool_t IsAncestorOf(TEveWindow* win);
 

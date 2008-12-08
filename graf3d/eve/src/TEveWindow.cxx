@@ -750,10 +750,19 @@ Bool_t TEveWindow::IsCurrent() const
 }
 
 //______________________________________________________________________________
+void TEveWindow::MakeCurrent()
+{
+   // Make this window current.
+
+   if ( ! gEve->GetWindowManager()->IsCurrentWindow(this))
+      gEve->GetWindowManager()->WindowSelected(this);
+}
+
+//______________________________________________________________________________
 void TEveWindow::SetCurrent(Bool_t curr)
 {
    // Set current state of this eve-window.
-   // Called by window-manager.
+   // Protected method - called by window-manager.
 
    fEveFrame->SetCurrent(curr);
 }
