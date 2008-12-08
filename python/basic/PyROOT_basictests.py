@@ -1,7 +1,7 @@
 # File: roottest/python/basic/PyROOT_basictests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 11/23/04
-# Last: 10/18/05
+# Last: 11/07/08
 
 """Basic unit tests for PyROOT package."""
 
@@ -121,7 +121,7 @@ class Basic4PythonizationTestCase( unittest.TestCase ):
       self.assertEqual( s2, pyteststr )
 
    def test2Lists( self ):
-      """Test list/TList behaviour and compatibility"""
+      """Test list/TList behavior and compatibility"""
 
       l = TList()
       l.Add( TObjString('a') )
@@ -218,6 +218,21 @@ class Basic4PythonizationTestCase( unittest.TestCase ):
       self.assertEqual( i.next(), 'i' )
       self.assertEqual( i.next(), 'b' )
       self.assertRaises( StopIteration, i.next )
+
+   def test3TVector( self ):
+      """Test TVector2/3/T behavior"""
+
+      import math
+
+      N = 51
+
+    # TVectorF is a typedef of floats
+      v = TVectorF(N)
+      for i in xrange( N ):
+          v[i] = i*i
+
+      for j in v:
+         self.assertEqual( round( v[ int(math.sqrt(j)+0.5) ] - j, 5 ), 0 )
 
 
 ## actual test run
