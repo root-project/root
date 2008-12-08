@@ -392,7 +392,6 @@ void TDocOutput::Convert(std::istream& in, const char* infilename,
 
    UInt_t nCanvases = numReuseCanvases;
    if (includeOutput) {
-      out << "<table><tr><td>" << endl;
       if (!numReuseCanvases) {
          // need to run the script
          TString pwd(gSystem->pwd());
@@ -415,6 +414,26 @@ void TDocOutput::Convert(std::istream& in, const char* infilename,
             ++nCanvases;
          }
       }
+      out << "<table><tr><td>" << endl;
+      if (nCanvases > 1) {
+         out << "<table><tr><td>" << endl;
+         out << "<table>" << endl;
+         for (UInt_t i = 0; i < nCanvases; ++i) {
+            TString pngname = TString::Format("%s_%d.png", gSystem->BaseName(outfilename), i);
+            out << "<tr><td><a href=\"" << pngname << "\">" << endl
+                << "<img src=\"" << pngname << "\" alt=\"thumb\" style=\"border:none;\" "
+               "width=\"100\" onmouseover=\"javascript:zoomed_canvas.src='" << pngname << "'/>" << endl
+                << "</a></td></tr>" << endl;
+         }
+         out << "</table></td><td>" << endl
+             << "<img id=\"zoomed_canvas\" src=\"" << gSystem->BaseName(outfilename) << "_0.png\" alt=\"cancas\" />" << endl
+             << "</td></tr></table>" << endl;
+      } else {
+         if(nCanvases)
+            out << "<img src=\"" << gSystem->BaseName(outfilename) << "_0.png\" alt=\"cancas\" />" << endl;
+      }
+      out << "</td></tr><tr><td>" << endl;
+      
    }
    out << "<pre>" << endl;
 
@@ -424,9 +443,6 @@ void TDocOutput::Convert(std::istream& in, const char* infilename,
    out << "</pre>" << endl;
 
    if (includeOutput) {
-      out << "</td><td>" << endl;
-      for (UInt_t i = 0; i < nCanvases; ++i)
-         out << "<img src=\"" << gSystem->BaseName(outfilename) << "_" << i << ".png\" alt=\"canvas\"/>" << endl;
       out << "</td></tr></table>" << endl;
    }
 
