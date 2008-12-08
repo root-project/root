@@ -682,7 +682,7 @@ int G__exec_asm(int start, int stack, G__value* presult, char* localmem)
                if (flag == 0) {
                   //FIXME: By going through Type::Id we lose the modifiers.
                   //however the Cint5 code was not really passing it either!
-                  G__value_typenum(*result) = G__Dict::G__Dict().GetTypeFromId(G__asm_inst[pc+2]); 
+                  G__value_typenum(*result) = G__Dict::GetDict().GetTypeFromId(G__asm_inst[pc+2]); 
                }
                // Restore state.
                G__store_struct_offset -= G__asm_inst[pc+5];

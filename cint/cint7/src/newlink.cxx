@@ -385,7 +385,7 @@ static void G__ctordtor_initialize()
       /* If link for this class is turned off but one or more member functions
       * are explicitly turned on, set G__ONLYMETHODLINK flag for the class */
       if (G__NOLINK == G__struct.globalcomp[i]) {
-         ::Reflex::Scope scope = G__Dict::G__Dict().GetScope(i);
+         ::Reflex::Scope scope = G__Dict::GetDict().GetScope(i);
          for (::Reflex::Member_Iterator ifunc = scope.FunctionMember_Begin();
                ifunc != scope.FunctionMember_End();
                ++ifunc) {
@@ -981,7 +981,7 @@ char* Cint::Internal::G__map_cpp_funcname(int tagnum, char* /*funcname*/, long i
 //______________________________________________________________________________
 static void G__cpplink_protected_stub_ctor(int tagnum, FILE* hfp)
 {
-   ::Reflex::Scope scope = G__Dict::G__Dict().GetScope(tagnum);
+   ::Reflex::Scope scope = G__Dict::GetDict().GetScope(tagnum);
    for (::Reflex::Member_Iterator func_mbr_iter = scope.FunctionMember_Begin(); func_mbr_iter != scope.FunctionMember_End(); ++func_mbr_iter) {
       if (func_mbr_iter->Name() == G__struct.name[tagnum]) {
          unsigned int i = 0;
@@ -1031,7 +1031,7 @@ static void G__cpplink_protected_stub(FILE* fp, FILE* hfp)
             G__cpplink_protected_stub_ctor(i, hfp);
          }
          /* member function */
-         ::Reflex::Scope scope = G__Dict::G__Dict().GetScope(i);
+         ::Reflex::Scope scope = G__Dict::GetDict().GetScope(i);
 
          for (::Reflex::Member_Iterator memfunc = scope.FunctionMember_Begin();
                memfunc != scope.FunctionMember_End();
@@ -2044,7 +2044,7 @@ static int G__isnonpublicnew(int tagnum)
 
    G__hash(namenew, hash, i);
 
-   ::Reflex::Scope scope = G__Dict::G__Dict().GetScope(tagnum);
+   ::Reflex::Scope scope = G__Dict::GetDict().GetScope(tagnum);
    for (::Reflex::Member_Iterator ifunc = scope.FunctionMember_Begin();
          ifunc != scope.FunctionMember_End();
          ++ifunc) {
@@ -2143,7 +2143,7 @@ void Cint::Internal::G__cppif_memfunc(FILE* fp, FILE* hfp)
          // Print class name for reference (help the poor human who has to read the dictionary!).
          fprintf(fp, "\n/* %s */\n", G__fulltagname(i, 0));
          // Get the corresponding Reflex scope.
-         ::Reflex::Scope scope = G__Dict::G__Dict().GetScope(i);
+         ::Reflex::Scope scope = G__Dict::GetDict().GetScope(i);
          //
          //  Loop over all of the member functions.
          //
@@ -2419,7 +2419,7 @@ static int G__isprotecteddestructoronelevel(int tagnum)
    dtorname[0] = '~';
    strcpy(dtorname + 1, G__struct.name[tagnum]);
 
-   ::Reflex::Scope scope = G__Dict::G__Dict().GetScope(tagnum);
+   ::Reflex::Scope scope = G__Dict::GetDict().GetScope(tagnum);
    for (::Reflex::Member_Iterator ifunc = scope.FunctionMember_Begin();
          ifunc != scope.FunctionMember_End();
          ++ifunc) {
@@ -3150,7 +3150,7 @@ static int G__isprivateconstructorclass(int tagnum, int iscopy);
 //______________________________________________________________________________
 static int G__isprivateconstructorifunc(int tagnum, int iscopy)
 {
-   ::Reflex::Scope scope = G__Dict::G__Dict().GetScope(tagnum);
+   ::Reflex::Scope scope = G__Dict::GetDict().GetScope(tagnum);
    for (
       ::Reflex::Member_Iterator ifunc = scope.FunctionMember_Begin();
       ifunc != scope.FunctionMember_End();
@@ -3191,7 +3191,7 @@ static int G__isprivateconstructorifunc(int tagnum, int iscopy)
 static int G__isprivateconstructorvar(int tagnum, int iscopy)
 {
    // -- Check if private constructor exists in this particular class.
-   ::Reflex::Scope scope = G__Dict::G__Dict().GetScope(tagnum);
+   ::Reflex::Scope scope = G__Dict::GetDict().GetScope(tagnum);
    for (
       ::Reflex::Member_Iterator var = scope.DataMember_Begin();
       var != scope.DataMember_End();
@@ -3275,7 +3275,7 @@ static int G__isprivatedestructorifunc(int tagnum)
    char* dtorname = (char*) malloc(strlen(G__struct.name[tagnum]) + 2);
    dtorname[0] = '~';
    strcpy(dtorname + 1, G__struct.name[tagnum]);
-   ::Reflex::Scope scope = G__Dict::G__Dict().GetScope(tagnum);
+   ::Reflex::Scope scope = G__Dict::GetDict().GetScope(tagnum);
    for (
       ::Reflex::Member_Iterator ifunc = scope.FunctionMember_Begin();
       ifunc != scope.FunctionMember_End();
@@ -3302,7 +3302,7 @@ static int G__isprivatedestructorifunc(int tagnum)
 static int G__isprivatedestructorvar(int tagnum)
 {
    // -- Check if private destructor exists in this particular class.
-   ::Reflex::Scope scope = G__Dict::G__Dict().GetScope(tagnum);
+   ::Reflex::Scope scope = G__Dict::GetDict().GetScope(tagnum);
    for (
       ::Reflex::Member_Iterator var = scope.DataMember_Begin();
       var != scope.DataMember_End();
@@ -3403,7 +3403,7 @@ static int G__isprivateassignoprifunc(const ::Reflex::Type& scope)
 static int G__isprivateassignoprvar(int given_tagnum)
 {
    // Check if private operator= exists in this particular class.
-   ::Reflex::Scope scope = G__Dict::G__Dict().GetScope(given_tagnum);
+   ::Reflex::Scope scope = G__Dict::GetDict().GetScope(given_tagnum);
    for (
       ::Reflex::Member_Iterator mbr_iter = scope.DataMember_Begin();
       mbr_iter != scope.DataMember_End();
@@ -3585,7 +3585,7 @@ void Cint::Internal::G__cppif_gendefault(FILE* fp, FILE* /*hfp*/, int tagnum, in
       bool has_own_new2arg = false;
 
       {
-         ::Reflex::Scope scope = G__Dict::G__Dict().GetScope(tagnum);
+         ::Reflex::Scope scope = G__Dict::GetDict().GetScope(tagnum);
          struct G__ifunc_table* ifunc;
          long index;
          long offset;
@@ -3735,7 +3735,7 @@ void Cint::Internal::G__cppif_gendefault(FILE* fp, FILE* /*hfp*/, int tagnum, in
       bool has_own_delete2arg = false;
 
       {
-         ::Reflex::Scope scope = G__Dict::G__Dict().GetScope(tagnum);
+         ::Reflex::Scope scope = G__Dict::GetDict().GetScope(tagnum);
          struct G__ifunc_table* ifunc;
          long index;
          long offset;
@@ -3833,7 +3833,7 @@ void Cint::Internal::G__cppif_gendefault(FILE* fp, FILE* /*hfp*/, int tagnum, in
       fprintf(fp,   "\n{\n");
       strcpy(temp, G__type2string('u', tagnum, -1, 0, 0));
       fprintf(fp,   "   %s* dest = (%s*) G__getstructoffset();\n", temp, temp);
-      if ((1 >= G__struct.size[tagnum]) && (0 == G__Dict::G__Dict().GetScope(tagnum).DataMemberSize())) {}
+      if ((1 >= G__struct.size[tagnum]) && (0 == G__Dict::GetDict().GetScope(tagnum).DataMemberSize())) {}
       else {
          fprintf(fp, "   *dest = *(%s*) libp->para[0].ref;\n", temp);
       }
@@ -5182,7 +5182,7 @@ static int G__hascompiledoriginalbase(int tagnum)
    for (basen = 0;basen < baseclass->basen;basen++) {
       if (G__CPPLINK != G__struct.iscpplink[baseclass->basetagnum[basen]])
          continue;
-      ::Reflex::Scope scope = G__Dict::G__Dict().GetScope(baseclass->basetagnum[basen]);
+      ::Reflex::Scope scope = G__Dict::GetDict().GetScope(baseclass->basetagnum[basen]);
       for (::Reflex::Member_Iterator ifunc = scope.FunctionMember_Begin();
             ifunc != scope.FunctionMember_End();
             ++ifunc) {
@@ -5535,7 +5535,7 @@ void Cint::Internal::G__cpplink_memfunc(FILE* fp)
             continue;
          }
 
-         ::Reflex::Scope scope = G__Dict::G__Dict().GetScope(i);
+         ::Reflex::Scope scope = G__Dict::GetDict().GetScope(i);
          for (::Reflex::Member_Iterator ifunc = scope.FunctionMember_Begin();
                ifunc != scope.FunctionMember_End();
                ++ifunc) {
@@ -6525,18 +6525,18 @@ extern "C" int G__tagtable_setup(int tagnum, int size, int cpplink, int isabstra
 
 if (
 #ifndef G__OLDIMPLEMENTATION2027
-      0 /* was 1 */ == G__Dict::G__Dict().GetScope(tagnum).FunctionMemberSize()
+    0 /* was 1 */ == G__Dict::GetDict().GetScope(tagnum).FunctionMemberSize()
 #else // G__OLDIMPLEMENTATION2027
-      0 == G__Dict::G__Dict().GetScope(tagnum).FunctionMemberSize()
+    0 == G__Dict::GetDict().GetScope(tagnum).FunctionMemberSize()
 #endif // G__OLDIMPLEMENTATION2027
       || 'n' == G__struct.type[tagnum]
       || (
 #ifndef G__OLDIMPLEMENTATION2027
-         - 1 != G__get_funcproperties(G__Dict::G__Dict().GetScope(tagnum).FunctionMemberAt(0))->entry.size // G__struct.memfunc[tagnum]->pentry[1]->size
+          - 1 != G__get_funcproperties(G__Dict::GetDict().GetScope(tagnum).FunctionMemberAt(0))->entry.size // G__struct.memfunc[tagnum]->pentry[1]->size
 #else // G__OLDIMPLEMENTATION2027
          - 1 != G__struct.memfunc[tagnum]->pentry[0]->size
 #endif // G__OLDIMPLEMENTATION2027
-         && 2 >= G__Dict::G__Dict().GetScope(tagnum).FunctionMemberSize()))
+          && 2 >= G__Dict::GetDict().GetScope(tagnum).FunctionMemberSize()))
       {
          char found = 0;
          found = G__incsetup_exist(G__struct.incsetup_memfunc[tagnum], setup_memfunc);
@@ -7905,7 +7905,7 @@ void Cint::Internal::G__specify_link(int link_stub)
          else {
             int tagnum = G__defined_tagname(buf, 0);
             if (-1 != tagnum) {
-               var = G__Dict::G__Dict().GetScope(tagnum);
+               var = G__Dict::GetDict().GetScope(tagnum);
             }
             else { /* must be an error */
                return;
@@ -7940,7 +7940,7 @@ void Cint::Internal::G__specify_link(int link_stub)
          else {
             int tagnum = G__defined_tagname(buf, 0);
             if (-1 != tagnum) {
-               ifunc = G__Dict::G__Dict().GetScope(tagnum);
+               ifunc = G__Dict::GetDict().GetScope(tagnum);
             }
             else { /* must be an error */
                return;

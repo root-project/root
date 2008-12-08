@@ -1503,6 +1503,7 @@ void Cint::Internal::G__create_global_namespace()
       prop->globalcomp = G__NOLINK;
       prop->autoload = 0;
    }
+   G__Dict::GetDict().RegisterScope(i,Reflex::Scope::GlobalScope());
    G__struct.alltag++;
 }
 
@@ -1512,6 +1513,7 @@ void Cint::Internal::G__create_bytecode_arena()
    // Create an artificial variable whose contents will be the storage area for bytecode.
    ::Reflex::ClassBuilder* builder = new ::Reflex::ClassBuilder("% CINT byte code scratch arena %", typeid(::Reflex::UnknownType), 0, ::Reflex::CLASS);
    ::Reflex::Type ty = builder->ToType();
+   G__Dict::GetDict().RegisterScope(1,ty);
    G__RflxProperties* prop = G__get_properties(ty);
    prop->builder.Set(builder);
    prop->builder.Class().SetSizeOf(0);
@@ -2235,6 +2237,7 @@ extern "C" int G__search_tagname(const char* tagname, int type)
                      ::Reflex::ClassBuilder *b = new ::Reflex::ClassBuilder(fullname.c_str(), typeid(::Reflex::UnknownType), 0, ::Reflex::CLASS);
                      cl =  b->ToType();
                      G__get_properties(cl)->builder.Set(b);
+                     G__Dict::GetDict().RegisterScope(i,cl);
                      break;
                   }
                case 'a':
@@ -2244,6 +2247,7 @@ extern "C" int G__search_tagname(const char* tagname, int type)
                      ::Reflex::ClassBuilder *b = new ::Reflex::ClassBuilder(fullname.c_str(), typeid(::Reflex::UnknownType), 0, ::Reflex::CLASS);
                      cl =  b->ToType();
                      G__get_properties(cl)->builder.Set(b);
+                     G__Dict::GetDict().RegisterScope(i,cl);
                      break;
                   }
                case 'c':
@@ -2253,6 +2257,7 @@ extern "C" int G__search_tagname(const char* tagname, int type)
                      ::Reflex::ClassBuilder *b = new ::Reflex::ClassBuilder(fullname.c_str(), typeid(::Reflex::UnknownType), 0, ::Reflex::CLASS);   // Should also add the privacy with the containing class.
                      cl =  b->ToType();
                      G__get_properties(cl)->builder.Set(b);
+                     G__Dict::GetDict().RegisterScope(i,cl);
                      break;
                   }
                case 's':
@@ -2262,6 +2267,7 @@ extern "C" int G__search_tagname(const char* tagname, int type)
                      ::Reflex::ClassBuilder *b = new ::Reflex::ClassBuilder(fullname.c_str(), typeid(::Reflex::UnknownType), 0, ::Reflex::STRUCT);   // Should also add the privacy with the containing class.
                      cl =  b->ToType();
                      G__get_properties(cl)->builder.Set(b);
+                     G__Dict::GetDict().RegisterScope(i,cl);
                      break;
                   }
                case 'n':
@@ -2271,7 +2277,8 @@ extern "C" int G__search_tagname(const char* tagname, int type)
                      ::Reflex::NamespaceBuilder *b = new ::Reflex::NamespaceBuilder(fullname.c_str());
                      newscope =  b->ToScope();
                      G__get_properties(newscope)->builder.Set(b);
-                     break;
+                     G__Dict::GetDict().RegisterScope(i,newscope);
+                    break;
                   }
                case 'e':
                   // -- Enum.
@@ -2279,6 +2286,7 @@ extern "C" int G__search_tagname(const char* tagname, int type)
                      //fprintf(stderr, "G__search_tagname: New enum type: '%s'\n", fullname.c_str());
                      cl = ::Reflex::EnumTypeBuilder(fullname.c_str());
                      //G__get_properties(cl)->builder.Set(b);
+                     G__Dict::GetDict().RegisterScope(i,cl);
                      break;
                   }
                case 'u':
@@ -2290,6 +2298,7 @@ extern "C" int G__search_tagname(const char* tagname, int type)
                      ::Reflex::UnionBuilder* b = new ::Reflex::UnionBuilder(fullname.c_str(), typeid(::Reflex::UnknownType), 0, ::Reflex::UNION);
                      cl = b->ToType();
                      G__get_properties(cl)->builder.Set(b);
+                     G__Dict::GetDict().RegisterScope(i,cl);
                      break;
                   }
                default:

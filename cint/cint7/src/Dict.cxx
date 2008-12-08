@@ -36,8 +36,11 @@ Cint::Internal::G__Dict &Cint::Internal::G__Dict::GetDict()
    // to the CINT tagnum.
    static ::Reflex::Type null_type;
    if (-1 == tagnum) return null_type;
+   ::Reflex::Type t = mScopes[tagnum];
+   if (t) return t;
+   // In case of non scope entity:
    std::string fulltagname(G__fulltagname(tagnum,0));
-   ::Reflex::Type t = ::Reflex::Type::ByName(fulltagname); // We stored the dollar (at least for now)
+   t = ::Reflex::Type::ByName(fulltagname); // We stored the dollar (at least for now)
    if (!t) {
 #ifdef __GNUC__
 #else
@@ -61,15 +64,15 @@ Cint::Internal::G__Dict &Cint::Internal::G__Dict::GetDict()
 {
    // Return the Reflex type (class or namespace) corresponding 
    // to the CINT tagnum.
-   if (-1 == tagnum) 
+   if (-1 == tagnum) {
       return ::Reflex::Scope::GlobalScope();
+   } else {
+      return mScopes[tagnum];
+   }
    std::string fulltagname(G__fulltagname(tagnum,0));
    ::Reflex::Scope s = ::Reflex::Scope::ByName(fulltagname);
    if (!s) {
-#ifdef __GNUC__
-#else
-#pragma message (FIXME("This is very bad we need to fix the std lookup more globabaly"))
-#endif
+      // Note: "This is very bad we need to fix the std lookup more globabaly"
       fulltagname.insert(0, "std::");
       s = ::Reflex::Type::ByName(fulltagname); 
    }
@@ -134,6 +137,19 @@ Cint::Internal::G__Dict &Cint::Internal::G__Dict::GetDict()
 {
    // FIXME this should be made inline for performance.
    return Reflex::Member(reinterpret_cast< const Reflex::MemberBase* >(handle));
+}
+
+///////////////////////////////////////////////////////////////////////////
+bool Cint::Internal::G__Dict::RegisterScope(int tagnum, const ::Reflex::Scope &in) 
+{
+   // Register a Reflex Scope corresponding to a tagnum.
+   // Return false is tagnum is out of range.
+   
+   if (tagnum<0 || tagnum>G__MAXSTRUCT) {
+      return false;
+   }
+   mScopes[tagnum] = in;
+   return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////

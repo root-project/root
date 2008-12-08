@@ -748,7 +748,7 @@ int rflx_gensrc::gen_stubfuncdecl_header(std::ostringstream & s,
    std::string fmname = fm.Name();
    std::string retname = rflx_tools::rm_end_ref(fm.Type()->Name());
 
-   ::Reflex::Member var( G__Dict::G__Dict().GetFunction( (G__ifunc_table *) fm.Handle(), fm.Handle() ));
+   ::Reflex::Member var( G__Dict::GetDict().GetFunction( (G__ifunc_table *) fm.Handle(), fm.Handle() ));
    G__SIGNEDCHAR_T retT = G__get_type(var.TypeOf());
    // pointer
    if (isupper(retT)) {
@@ -858,7 +858,7 @@ void rflx_gensrc::gen_stubfuncdecl_trailer(std::ostringstream & s,
    if (argNum < 0)
       argNum = 0;
 
-   ::Reflex::Member var( G__Dict::G__Dict().GetFunction( (G__ifunc_table *) fm.Handle(), fm.Index() ));
+   ::Reflex::Member var( G__Dict::GetDict().GetFunction( (G__ifunc_table *) fm.Handle(), fm.Index() ));
    G__SIGNEDCHAR_T retT = G__get_type(var.TypeOf().ReturnType()); 
    // reference 
    if (fm.Type()->Reftype()) {
@@ -1141,7 +1141,7 @@ void rflx_gensrc::gen_freefundicts()
    while (mi.Next()) {
 
       std::string fmname = mi.Name();
-      ::Reflex::Member ifunc( G__Dict::G__Dict().GetFunction( (G__ifunc_table *) mi.Handle(), mi.Index()));
+      ::Reflex::Member ifunc( G__Dict::GetDict().GetFunction( (G__ifunc_table *) mi.Handle(), mi.Index()));
 
       if ((fmname.length()) 
          && G__get_properties(ifunc)->globalcomp == G__CPPLINK) {
@@ -1295,7 +1295,7 @@ void rflx_gensrc::gen_freevardicts()
       if (var.MemberOf() && var.MemberOf()->IsValid())
          continue;
 
-      ::Reflex::Member varArr( G__Dict::G__Dict().GetDataMember( (G__var_array*)var.Handle(), var.Index()));
+      ::Reflex::Member varArr( G__Dict::GetDict().GetDataMember( (G__var_array*)var.Handle(), var.Index()));
       if (G__get_properties(varArr)->globalcomp != G__CPPLINK) continue;
 
       if (var.Type() && strchr("pT", var.Type()->Type())) {
@@ -1334,7 +1334,7 @@ void rflx_gensrc::gen_freevardicts()
          iCPP!=cppMacros.end(); ++iCPP) {
             m_fv << ind() << "cppMacroEnum.AddDataMember(\"" << iCPP->Name()
                << "\", typeCPPMacro, (size_t)\"";
-            ::Reflex::Member va( G__Dict::G__Dict().GetDataMember( (G__var_array*)iCPP->Handle(), iCPP->Index() ) );
+            ::Reflex::Member va( G__Dict::GetDict().GetDataMember( (G__var_array*)iCPP->Handle(), iCPP->Index() ) );
             if (G__get_type(va.TypeOf()) == 'p') m_fv << *(int*)G__get_offset(va);
             else m_fv << *(const char**)G__get_offset(va);
             m_fv << "\", ARTIFICIAL);" << std::endl;
