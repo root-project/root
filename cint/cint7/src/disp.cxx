@@ -1684,7 +1684,6 @@ int Cint::Internal::G__varmonitor(FILE* fout, const ::Reflex::Scope scope, const
          int constvar = 0;
          G__get_cint5_type_tuple(mbr.TypeOf(), &type, &tagnum, &typenum, &reftype, &constvar);
          sprintf(msg, "%s", G__type2string(type, tagnum, typenum, reftype, constvar));
-         //sprintf(msg, "%s::%s", ty.DeclaringScope().Name(::Reflex::SCOPED).c_str(), ty.Name(::Reflex::SCOPED).c_str());
       }
       if (G__more(fout, msg)) {
          return 1;
@@ -1697,7 +1696,6 @@ int Cint::Internal::G__varmonitor(FILE* fout, const ::Reflex::Scope scope, const
       //  Print member name.
       //
       sprintf(msg, "%s", mbr.Name().c_str());
-      //sprintf(msg, "%s", mbr.Name(::Reflex::SCOPED).c_str());
       if (G__more(fout, msg)) {
          return 1;
       }

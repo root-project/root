@@ -198,6 +198,9 @@ void Cint::Internal::G__get_cint5_type_tuple(const ::Reflex::Type in_type, char*
       for (; current && current.IsTypedef();) {
          current = current.ToType();
       }
+      for (; current && current.IsArray();) {
+         current = current.ToType();
+      }
       // Count pointer levels.
       int pointers = 0;
       for (; current && current.IsPointer(); current = current.ToType()) {
@@ -512,6 +515,9 @@ int Cint::Internal::G__get_reftype(const ::Reflex::Type in)
    while (!isref && current && current.IsTypedef()) {
       current = current.ToType();
       isref = current.IsReference();
+   }
+   while (current && current.IsArray()) {
+      current = current.ToType();
    }
 
    // Count pointer levels.
@@ -1236,29 +1242,6 @@ Reflex::Type Cint::Internal::G__deref(const Reflex::Type typein)
    if (ispointer) { // Apply the first level of pointers.
       result = ::Reflex::PointerBuilder(result);
    }
-   if (nindex) { // Now make an array.
-      // Build the array type chain in the reverse order
-      // of the dimensions, starting from the right and
-      // moving left towards the variable name.
-      //
-      // Note: This means that any unspecified length
-      //       flag will be next-to-last in the chain,
-      //       just before the type of the array elements.
-      //
-      // For example:
-      //
-      //      int a[2][3];
-      //
-      // gives:
-      //
-      //      a --> array[2] --> array[3] --> int
-      //
-      // That is: a is an array of two arrays of 3 ints.
-      //
-      for (int i = nindex - 1; i >= 0; --i) {
-         result = ::Reflex::ArrayBuilder(result, index[i]);
-      }
-   }
    switch (reftype) { // Apply the rest of the pointer levels, and the reference.
       case G__PARANORMAL:
          break;
@@ -1292,6 +1275,29 @@ Reflex::Type Cint::Internal::G__deref(const Reflex::Type typein)
    }
    if (ref) { // Apply reference.
       result = ::Reflex::Type(result, ::Reflex::REFERENCE, Reflex::Type::APPEND);
+   }
+   if (nindex) { // Now make an array.
+      // Build the array type chain in the reverse order
+      // of the dimensions, starting from the right and
+      // moving left towards the variable name.
+      //
+      // Note: This means that any unspecified length
+      //       flag will be next-to-last in the chain,
+      //       just before the type of the array elements.
+      //
+      // For example:
+      //
+      //      int a[2][3];
+      //
+      // gives:
+      //
+      //      a --> array[2] --> array[3] --> int
+      //
+      // That is: a is an array of two arrays of 3 ints.
+      //
+      for (int i = nindex - 1; i >= 0; --i) {
+         result = ::Reflex::ArrayBuilder(result, index[i]);
+      }
    }
    return result;
 }

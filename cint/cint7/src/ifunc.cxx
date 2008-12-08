@@ -795,6 +795,10 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
    builder.fProp.entry.busy = 0;
    builder.fProp.iscpplink = (char) G__iscpp;
    //
+   //  Get function parameter types.
+   //
+   //-
+   //
    //  Remember the file position of the beginning of the parameters.
    //
    fpos_t temppos;
@@ -805,19 +809,22 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
    //
    int isparam = 0;
    G__StrBuf paraname_sb(G__LONGLINE);
-   char *paraname = paraname_sb;
+   char* paraname = paraname_sb;
    int cin = G__fgetname_template(paraname, "<*&,()=");
    if (strlen(paraname) && isspace(cin)) {
       // -- There was an argument and the parsing was stopped by whitespace.
       // It is possible that we have a namespace name followed by '::', in
       // which case we have to grab more before stopping!
       G__StrBuf more_sb(G__LONGLINE);
-      char *more = more_sb;
+      char* more = more_sb;
       int namespace_tagnum = G__defined_tagname(paraname, 2);
       while (
          isspace(cin) &&
          (
-            ((namespace_tagnum != -1) && (G__struct.type[namespace_tagnum] == 'n')) ||
+            (
+               (namespace_tagnum != -1) &&
+               (G__struct.type[namespace_tagnum] == 'n')
+            ) ||
             !strcmp("std", paraname) ||
             (paraname[strlen(paraname)-1] == ':')
          )
@@ -835,16 +842,7 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
    //
    int isvoid = 0;
    builder.fProp.entry.ansi = 0;
-   if (!paraname[0]) {
-      // -- No parameters given.
-      isvoid = 1;
-      if (G__iscpp || G__def_struct_member) {
-         // -- We are C++, force ansi.
-         builder.fProp.entry.ansi = 1;
-      }
-   }
-   else {
-      // -- We have parameters.
+   if (paraname[0]) { // We have parameters.
       if (!strcmp("void", paraname)) {
          // -- Check, we may have the special case of myfunc(void).
          if (isspace(cin)) {
@@ -862,7 +860,7 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
                builder.fProp.entry.ansi = 1;
                break;
             default:
-               G__genericerror("G__make_ifunctable: 823: Syntax error");
+               G__genericerror("G__make_ifunctable: 863: Syntax error");
                isvoid = 1;
                break;
          }
@@ -870,7 +868,7 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
       else if (!strcmp("register", paraname)) {
          builder.fProp.entry.ansi = 1;
       }
-      else if (G__istypename(paraname) || strchr(paraname, '[') || G__friendtagnum) {
+      else if (G__istypename(paraname) || strchr(paraname, '[') || (G__get_tagnum(G__friendtagnum) != -1)) {
          builder.fProp.entry.ansi = 1;
       }
       else {
@@ -878,16 +876,26 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
             G__fprinterr(G__serr, "Error: unrecognized parameter type '%s'\n", paraname);
             G__genericerror("G__make_ifunctable: 836: Syntax error");
          }
-         if ((G__globalcomp < G__NOLINK) && !G__nonansi_func
+         if (
+            (G__globalcomp < G__NOLINK) &&
+            !G__nonansi_func
 #ifdef G__ROOT
-               && strncmp(funcheader, "ClassDef", 8)
+            && strncmp(funcheader, "ClassDef", 8)
 #endif // G__ROOT
+            // --
          ) {
             if (G__dispmsg >= G__DISPWARN) {
                G__fprinterr(G__serr, "Warning: Unknown type %s in function argument", paraname);
                G__printlinenum();
             }
          }
+      }
+   }
+   else { // No parameters given.
+      isvoid = 1;
+      if (G__iscpp || G__def_struct_member) {
+         // -- We are C++, force ansi.
+         builder.fProp.entry.ansi = 1;
       }
    }
    //
@@ -897,7 +905,6 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
       cin = G__fignorestream(")");
    }
    G__static_alloc = 0; // FIXME: Do we need to reset this global state here?  Most likely not!
-   // to get type of function parameter
    //
    // If ANSI style header, rewind file position to
    //       func(int a ,double b )   ANSI
@@ -905,6 +912,7 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
    // and check type of paramaters and store it into G__ifunc
    //
    if (builder.fProp.entry.ansi) {
+      // -- ANSI style function header
       if (isvoid | (funcheader[0] == '~')) {
          // -- No parameters, initialize builder.fParams_type,
          //    builder.fParams_names, and builder.fDefault_vals
@@ -913,8 +921,7 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
       else {
          // -- We are an ansi-style function which takes parameters, rewind and parse them.
          if (G__dispsource) {
-            // -- Do not display the next 1000 characters read.  // FIXME: This is arbitrary and may fail!
-            G__disp_mask = 1000;
+            //G__disp_mask = 1000; // Do not display the next 1000 characters read.
          }
          //
          //  Rewind the file position.
@@ -924,10 +931,10 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
          // Parse the parameter declarations.
          //fprintf(stderr, "G__make_ifunctable: calling G__readansiproto for '%s'\n", funcheader);
          G__readansiproto(builder.fParams_type, builder.fParams_name, builder.fDefault_vals, &builder.fProp.entry.ansi);
+         //fprintf(stderr, "\nEnd of proto read.\n");
          cin = ')';
          if (G__dispsource) {
-            // -- Allow read characters to be seen again.
-            G__disp_mask = 0;
+            G__disp_mask = 0; // Allow read characters to be seen again.
          }
       }
    }
@@ -954,9 +961,9 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
    // if header ignore following headers, else read func body
    if (
       (
-         paraname[0] == '\0'
+         !paraname[0]
 #ifndef G__OLDIMPLEMETATION817
-         || ((strncmp(paraname, "throw", 5) == 0 || strncmp(paraname, "const throw", 11) == 0) && 0 == strchr(paraname, '='))
+         || ((!strncmp(paraname, "throw", 5) || !strncmp(paraname, "const throw", 11)) && !strchr(paraname, '='))
 #endif // G__OLDIMPLEMETATION817
          // --
       ) &&
@@ -984,7 +991,8 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
       // Key the class comment off of DeclFileLine rather than ClassDef
       // because ClassDef is removed by a preprocessor
       if (
-         G__fons_comment && G__def_struct_member &&
+         G__fons_comment &&
+         G__def_struct_member &&
          (
             !strncmp(funcname.c_str(), "DeclFileLine", 12) ||
             !strncmp(funcname.c_str(), "DeclFileLine(", 13) ||
@@ -1138,10 +1146,13 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
          G__readansiproto(builder.fParams_type, builder.fParams_name, builder.fDefault_vals, &builder.fProp.entry.ansi);
          cin = G__fignorestream("{");
       }
-      if (!strcmp(funcname.c_str(), "main") && (G__def_tagnum == ::Reflex::Scope::GlobalScope())) {
+      if (
+         !strcmp(funcname.c_str(), "main") &&
+         (G__get_tagnum(G__def_tagnum) == -1)
+      ) {
          G__ismain = G__MAINEXIST;
       }
-      // following part is needed to detect inline new/delete in header
+      // Following part is needed to detect inline new/delete in header.
       if ((G__globalcomp == G__CPPLINK) || (G__globalcomp == R__CPPLINK)) {
          if (
             !strcmp(funcname.c_str(), "operator new") &&
@@ -1309,7 +1320,11 @@ static int Cint::Internal::G__readansiproto(std::vector<Reflex::Type>& i_params_
    int iin = 0;
    int c = 0;
    for (; c != ')'; ++iin) {
-      // --
+      //{
+      //   char buf[128];
+      //   G__fgetstream_peek(buf, 30);
+      //   fprintf(stderr, "\nG__readansiproto: begin of param, peek ahead: '%s'\n", buf);
+      //}
       if (iin == G__MAXFUNCPARA) {
          G__fprinterr(G__serr, "Limitation: cint can not accept more than %d function arguments", G__MAXFUNCPARA);
          G__printlinenum();
@@ -1924,6 +1939,11 @@ static int Cint::Internal::G__readansiproto(std::vector<Reflex::Type>& i_params_
       default_val = 0;
       default_str = "";
    }
+   //{
+   //   char buf[128];
+   //   G__fgetstream_peek(buf, 30);
+   //   fprintf(stderr, "\nG__readansiproto: finished, peek ahead: '%s'\n", buf);
+   //}
    return 0;
 }
 
@@ -5363,76 +5383,55 @@ int Cint::Internal::G__interpret_func(G__value* return_value, char* funcname, G_
    //
    store_doingconstruction = G__doingconstruction;
    if (!G__get_funcproperties(ifn)->entry.ansi) {
-      /**************************************************************
-       * K&R C
-       *
-       *   func( para1 ,para2 ,,, )
-       *        ^
-       **************************************************************/
-      /* read pass parameters , standard C */
+      // -- K&R C.
       ipara = 0;
       while (cin != ')') {
-#ifndef G__OLDIMPLEMENTATION1802
          G__StrBuf temp_sb(G__ONELINE);
-         char *temp = temp_sb;
-#endif
+         char* temp = temp_sb;
          cin = G__fgetstream(temp, ",)");
          if (temp[0] != '\0') {
             strcpy(paraname[ipara], temp);
-            ipara++;
+            ++ipara;
          }
       }
-
-      /* read and exec pass parameter declaration , standard C
-       * G__exec_statement(&brace_level); returns at '{' if G__funcheader==1
-       */
+      // read and exec parameter declaration, K&R C
+      // G__exec_statement() returns at '{' if G__funcheader==1
+      // Flag that we are initializing function parameters.
       G__funcheader = 1;
       do {
          int brace_level = 0;
          buf = G__exec_statement(&brace_level);
       }
-      while (!G__value_typenum(buf) /* buf.type==G__null.type */ && G__return < G__RETURN_EXIT1);
-
-      /* set pass parameters , standard C
-       * Parameters can be constant. When G__funcheader==1,
-       * error message of changing const doesn't appear.
-       */
-
-      for (itemp = 0;itemp < (int)ipara;itemp++) {
-         G__letvariable(paraname[itemp], libp->para[itemp]
-                        ,::Reflex::Scope::GlobalScope(), G__p_local);
+      while (!G__value_typenum(buf) && (G__return < G__RETURN_EXIT1));
+      // Set function parameters, K&R C.
+      // Parameters can be constant. When G__funcheader==1,
+      // error message of changing const doesn't appear.
+      for (itemp = 0; itemp < (int) ipara; ++itemp) {
+         G__letvariable(paraname[itemp], libp->para[itemp], ::Reflex::Scope::GlobalScope(), G__p_local);
       }
-
+      // Flag that we are done initializing function parameters.
       G__funcheader = 0;
-      /* fsetpos(G__ifile.fp,&temppos) ; */
-      /* G__ifile.line_number=store_linenumber; */
+      // Backup one character so that the opening '{'
+      // of the function body will be read again.
       fseek(G__ifile.fp, -1, SEEK_CUR);
-      if (G__dispsource) G__disp_mask = 1;
+      if (G__dispsource) {
+         G__disp_mask = 1;
+      }
    }
    else {
-      /**************************************************************
-       * ANSI C
-       *
-       *   type func( type para1, type para2 ,,, )
-       *             ^
-       **************************************************************/
+      // -- ANSI C.
       G__value store_ansipara;
       store_ansipara = G__ansipara;
-      G__ansiheader = 1;
-      G__funcheader = 1;
-
+      G__ansiheader = 1; // Flag that we processing an ANSI-style function header.
+      G__funcheader = 1; // Flag that we are initializing function parameters.
       ipara = 0;
-      while (G__ansiheader != 0 && G__return < G__RETURN_EXIT1) {
-         /****************************************
-          * for default parameter
-          ****************************************/
-         /****************************************
-          * if parameter exists, set G__ansipara
-          ****************************************/
-         if ((int)ipara < libp->paran) {
+      while (G__ansiheader && (G__return < G__RETURN_EXIT1)) {
+         // -- Set G__ansipara and G__refansipara to pass argument value and text.
+         if ((int) ipara < libp->paran) {
+            // -- We have an argument for the parameter.
             G__ansipara = libp->para[ipara];
-            /* assigning reference for fundamental type reference argument */
-            if (0 == G__ansipara.ref) {
+            // Assigning reference for fundamental type reference argument.
+            if (!G__ansipara.ref) {
                switch (G__get_type(ifn.TypeOf().FunctionParameterAt(ipara))) {
                   case 'f':
                      G__Mfloat(libp->para[ipara]);
@@ -5462,13 +5461,14 @@ int Cint::Internal::G__interpret_func(G__value* return_value, char* funcname, G_
                      break;
                   case 'b':
                   case 'g':
+                     // --
 #ifdef G__BOOL4BYTE
                      G__Mint(libp->para[ipara]);
                      G__ansipara.ref = (long)(&libp->para[ipara].obj.i);
-#else
+#else // G__BOOL4BYTE
                      G__Muchar(libp->para[ipara]);
                      G__ansipara.ref = (long)(&libp->para[ipara].obj.uch);
-#endif
+#endif // G__BOOL4BYTE
                      G__value_typenum(libp->para[ipara]) = ifn.TypeOf().FunctionParameterAt(ipara);
                      break;
                   case 'r':
@@ -5501,52 +5501,45 @@ int Cint::Internal::G__interpret_func(G__value* return_value, char* funcname, G_
                }
             }
          }
-         /****************************************
-          * if not, set null.
-          * Default value will be used
-          *  type func(type paraname=default,...)
-          ****************************************/
          else {
-            if (
-               ifn.FunctionParameterSize() > ipara &&
-               ifn.FunctionParameterDefaultAt(ipara).c_str()[0]) {
+            // -- We do not have an argument for the parameter.
+            if ((ipara < ifn.FunctionParameterSize()) && ifn.FunctionParameterDefaultAt(ipara).c_str()[0]) {
+               // -- We have a default value for the parameter, use it.
                if (G__get_type(ifn.TypeOf().FunctionParameterAt(ipara)) == G__DEFAULT_FUNCCALL) {
                   G__ASSERT(G__get_funcproperties(ifn)->entry.para_default[ipara]->ref);
                   *G__get_funcproperties(ifn)->entry.para_default[ipara] = G__getexpr((char*) G__get_funcproperties(ifn)->entry.para_default[ipara]->ref);
                   G__ansiheader = 1;
                   G__funcheader = 1;
-#define G__OLDIMPLEMENTATION1558
                }
                G__ansipara = *G__get_funcproperties(ifn)->entry.para_default[ipara];
             }
-            else
+            else {
+               // -- Flag that no argument was provided.
                G__ansipara = G__null;
+            }
          }
          G__refansipara = libp->parameter[ipara];
-
-         if (G__ASM_FUNC_COMPILE == G__asm_wholefunction &&
-               !G__get_funcproperties(ifn)->entry.para_default.empty()
-               && G__get_funcproperties(ifn)->entry.para_default.size() > ipara
-               && G__get_funcproperties(ifn)->entry.para_default.at(ipara)) {
+         if (
+            (G__asm_wholefunction == G__ASM_FUNC_COMPILE) &&
+            !G__get_funcproperties(ifn)->entry.para_default.empty() &&
+            (ipara < G__get_funcproperties(ifn)->entry.para_default.size()) &&
+            G__get_funcproperties(ifn)->entry.para_default.at(ipara)
+         ) {
+            // -- Generate bytecode for stacking default parameter value.
 #ifdef G__ASM_DBG
             if (G__asm_dbg) {
-               G__fprinterr(G__serr, "%3x: ISDEFAULTPARA %x\n", G__asm_cp, G__asm_cp + 4);
-               G__fprinterr(G__serr, "%3x: LD %ld %g\n", G__asm_cp + 2
-                            , (G__get_funcproperties(ifn)->entry.para_default)[ipara]->obj.i
-                            , (G__get_funcproperties(ifn)->entry.para_default)[ipara]->obj.d
-                           );
+               G__fprinterr(G__serr, "%3x,%3x: ISDEFAULTPARA %x  %s:%d\n", G__asm_cp, G__asm_dt, G__asm_cp + 4, __FILE__, __LINE__);
+               G__fprinterr(G__serr, "%3x,%3x: LD %ld %g  %s:%d\n", G__asm_cp + 2, G__asm_dt, (G__get_funcproperties(ifn)->entry.para_default)[ipara]->obj.i, (G__get_funcproperties(ifn)->entry.para_default)[ipara]->obj.d, __FILE__, __LINE__);
             }
-#endif
+#endif // G__ASM_DBG
             G__asm_inst[G__asm_cp] = G__ISDEFAULTPARA;
             G__asm_wholefunc_default_cp = G__asm_cp + 1;
             G__inc_cp_asm(2, 0);
-
-            /* set default param in stack */
+            // Set default param in stack.
             G__asm_inst[G__asm_cp] = G__LD;
             G__asm_inst[G__asm_cp+1] = G__asm_dt;
             G__asm_stack[G__asm_dt] = *G__get_funcproperties(ifn)->entry.para_default[ipara];
             G__inc_cp_asm(2, 1);
-
             G__asm_inst[G__asm_wholefunc_default_cp] = G__asm_cp;
             G__asm_noverflow = 0;
             int brace_level = 0;
@@ -5560,35 +5553,30 @@ int Cint::Internal::G__interpret_func(G__value* return_value, char* funcname, G_
             G__asm_noverflow = 1;
          }
          else {
+            // -- Initialize function parameter.
             int brace_level = 0;
             G__exec_statement(&brace_level);
          }
-         ipara++;
+         ++ipara;
       }
-
+      // Flag that we are done initializing function parameters.
       G__funcheader = 0;
-
+      // Process any base and member initialization part.
       switch (memfunc_flag) {
          case G__CALLCONSTRUCTOR:
          case G__TRYCONSTRUCTOR:
-#ifndef G__OLDIMPLEMENTATIO1250
          case G__TRYIMPLICITCONSTRUCTOR:
-#endif
-            /* read parameters for base constructors and
-             * constructor for base calss and class members
-             * maybe with some parameters
-             */
             G__baseconstructorwp();
             G__doingconstruction = 1;
       }
-
       G__ansipara = store_ansipara;
    }
 #ifdef G__SECURITY
-   if ((G__security&G__SECURE_STACK_DEPTH) &&
-         G__max_stack_depth &&
-         G__calldepth > G__max_stack_depth
-      ) {
+   if (
+      (G__security & G__SECURE_STACK_DEPTH) &&
+      G__max_stack_depth &&
+      (G__calldepth > G__max_stack_depth)
+   ) {
       G__fprinterr(G__serr, "Error: Stack depth exceeded %d", G__max_stack_depth);
       G__genericerror(0);
       G__pause();
@@ -5599,9 +5587,9 @@ int Cint::Internal::G__interpret_func(G__value* return_value, char* funcname, G_
       G__security = store_security;
       G__memberfunc_tagnum = store_memberfunc_tagnum;
       G__memberfunc_struct_offset = store_memberfunc_struct_offset;
-      return(1);
+      return 1;
    }
-#endif
+#endif // G__SECURITY
    G__setclassdebugcond(G__get_tagnum(G__memberfunc_tagnum), 1);
    //
    //  Now get ready to execute the function body.
@@ -6196,8 +6184,7 @@ int Cint::Internal::G__interpret_func(G__value* return_value, char* funcname, G_
       fsetpos(G__ifile.fp, &prev_pos);
    }
    if (G__dispsource) {
-      if ((G__debug || G__break) && ((G__prerun != 0) || (G__no_exec == 0)) &&
-            (G__disp_mask == 0)) {
+      if ((G__debug || G__break) && (G__prerun || !G__no_exec) && !G__disp_mask) {
          G__fprinterr(G__serr, "\n");
       }
    }
