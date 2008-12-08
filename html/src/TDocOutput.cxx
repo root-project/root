@@ -298,7 +298,8 @@ void TDocOutput::AdjustSourcePath(TString& line, const char* relpath /*= "../"*/
 //______________________________________________________________________________
 void TDocOutput::Convert(std::istream& in, const char* infilename,
                          const char* outfilename, const char *title,
-                         const char *relpath /*= "../"*/, Bool_t includeOutput /*=kFALSE*/)
+                         const char *relpath /*= "../"*/, Int_t includeOutput /*=0*/,
+                         const char* context /*= ""*/)
 {
    // Convert a text file into a html file.
    // outfilename doesn't have an extension yet; up to us to decide.
@@ -318,10 +319,13 @@ void TDocOutput::Convert(std::istream& in, const char* infilename,
    // write a HTML header
    WriteHtmlHeader(out, title, relpath);
 
-   out << "<h1>" << title << "</h1>" << endl;
+   out << context << endl;
+
+   if (title && title[0])
+      out << "<h2>" << title << "</h2>" << endl;
 
    Int_t numReuseCanvases = 0;
-   if (includeOutput) {
+   if (includeOutput && !(includeOutput & THtml::kForceOutput)) {
       void* dirHandle = gSystem->OpenDirectory(gSystem->DirName(htmlFilename));
       if (dirHandle) {
          FileStat_t infile_stat;
@@ -399,6 +403,8 @@ void TDocOutput::Convert(std::istream& in, const char* infilename,
          TVirtualPad* lastCanvas = (TVirtualPad*) gROOT->GetListOfCanvases()->Last();
          TString cmd(".x ");
          cmd += gSystem->BaseName(infilename);
+         if (includeOutput & THtml::kCompiledOutput)
+            cmd += "+";
          gROOT->ProcessLine(cmd);
          gSystem->cd(pwd);
 
@@ -414,26 +420,7 @@ void TDocOutput::Convert(std::istream& in, const char* infilename,
             ++nCanvases;
          }
       }
-      out << "<table><tr><td>" << endl;
-      if (nCanvases > 1) {
-         out << "<table><tr><td>" << endl;
-         out << "<table>" << endl;
-         for (UInt_t i = 0; i < nCanvases; ++i) {
-            TString pngname = TString::Format("%s_%d.png", gSystem->BaseName(outfilename), i);
-            out << "<tr><td><a href=\"" << pngname << "\">" << endl
-                << "<img src=\"" << pngname << "\" alt=\"thumb\" style=\"border:none;\" "
-               "width=\"100\" onmouseover=\"javascript:zoomed_canvas.src='" << pngname << "'/>" << endl
-                << "</a></td></tr>" << endl;
-         }
-         out << "</table></td><td>" << endl
-             << "<img id=\"zoomed_canvas\" src=\"" << gSystem->BaseName(outfilename) << "_0.png\" alt=\"cancas\" />" << endl
-             << "</td></tr></table>" << endl;
-      } else {
-         if(nCanvases)
-            out << "<img src=\"" << gSystem->BaseName(outfilename) << "_0.png\" alt=\"cancas\" />" << endl;
-      }
-      out << "</td></tr><tr><td>" << endl;
-      
+      out << "<table><tr><td style=\"vertical-align:top;padding-right:2em;\">" << endl;
    }
    out << "<pre>" << endl;
 
@@ -443,6 +430,16 @@ void TDocOutput::Convert(std::istream& in, const char* infilename,
    out << "</pre>" << endl;
 
    if (includeOutput) {
+      out << "</td><td style=\"vertical-align:top;\">" << endl;
+      out << "<table>" << endl;
+      for (UInt_t i = 0; i < nCanvases; ++i) {
+         TString pngname = TString::Format("%s_%d.png", gSystem->BaseName(outfilename), i);
+         out << "<tr><td><a href=\"" << pngname << "\">" << endl
+             << "<img src=\"" << pngname << "\" id=\"canv" << i << "\" alt=\"thumb\" style=\"border:none;width:15em;\" "
+            "onmouseover=\"javascript:canv" << i << ".style.width='auto';\" />" << endl
+             << "</a></td></tr>" << endl;
+         }
+      out << "</table>" << endl;
       out << "</td></tr></table>" << endl;
    }
 

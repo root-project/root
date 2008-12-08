@@ -75,7 +75,9 @@ public:
    virtual void   AdjustSourcePath(TString& line, const char* relpath = "../");
    void           Convert(std::istream& in, const char* infilename,
                           const char* outfilename, const char *title,
-                          const char *relpath = "../", Bool_t includeOutput = kFALSE);
+                          const char *relpath = "../",
+                          Int_t includeOutput = 0,
+                          const char* context = "");
    Bool_t         CopyHtmlFile(const char *sourceName, const char *destName="");
 
    virtual void   CreateClassIndex();

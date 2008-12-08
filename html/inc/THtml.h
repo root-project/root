@@ -202,6 +202,13 @@ public:
 
 
 public:
+   enum EConvertOutput {
+      kNoOutput, // do not run the source, do not show its output
+      kInterpretedOutput, // interpret the source and show output
+      kCompiledOutput, // run the source through ACLiC and show output
+      kForceOutput = 0x10 // re-generate the output files (canvas PNGs)
+   };
+
    THtml();
    virtual      ~THtml();
 
@@ -210,7 +217,8 @@ public:
    // Functions to generate documentation
    void          Convert(const char *filename, const char *title, 
                          const char *dirname = "", const char *relpath="../",
-                         Bool_t includeOutput = kFALSE);
+                         Int_t includeOutput = kNoOutput,
+                         const char* context = "");
    void          CreateHierarchy();
    void          MakeAll(Bool_t force=kFALSE, const char *filter="*",
                          int numthreads = 1);
