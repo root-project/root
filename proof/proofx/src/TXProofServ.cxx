@@ -472,6 +472,9 @@ void TXProofServ::HandleUrgentData()
             // Update file time stamps
             if (utime(fAdminPath.Data(), 0) != 0)
                Info("HandleUrgentData", "problems touching path: %s", fAdminPath.Data());
+            else
+               if (gDebug > 0)
+                  Info("HandleUrgentData", "touching path: %s", fAdminPath.Data());
          } else {
             Info("HandleUrgentData", "admin path undefined");
          }
