@@ -986,8 +986,7 @@ std::list<XrdProofWorker *> *XrdProofdNetMgr::GetActiveWorkers()
 void XrdProofdNetMgr::Dump()
 {
    // Dump status
-/*
-   XPDLOC(NMGR, "NetMgr::Dump")
+   const char *xpdloc = "NetMgr::Dump";
 
    XrdSysMutexHelper mhp(fMutex);
 
@@ -1003,7 +1002,6 @@ void XrdProofdNetMgr::Dump()
    }
    XPDPRT("+ ");
    XPDPRT("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-*/
 }
 
 //__________________________________________________________________________
