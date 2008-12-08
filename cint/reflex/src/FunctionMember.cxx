@@ -101,7 +101,7 @@ Reflex::FunctionMember::Invoke( const Object & obj, Object* ret,
    void * mem = CalculateBaseObject( obj );
    static Type tVoid = Type::ByName("void");
    void* retaddr = 0;
-   if (TypeOf().ReturnType() != tVoid)
+   if (ret && TypeOf().ReturnType() != tVoid)
       retaddr = ret->Address();
    // parameters need more checking FIXME
    fStubFP( retaddr, mem, paramList, fStubCtx );
@@ -129,7 +129,7 @@ Reflex::FunctionMember::Invoke( Object* ret, const std::vector < void * > & para
 
    static Type tVoid = Type::ByName("void");
    void* retaddr = 0;
-   if (TypeOf().ReturnType() != tVoid)
+   if (ret && TypeOf().ReturnType() != tVoid)
       retaddr = ret->Address();
    // parameters need more checking FIXME
    fStubFP( retaddr, 0, paramList, fStubCtx );
