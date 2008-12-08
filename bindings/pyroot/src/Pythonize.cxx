@@ -158,7 +158,7 @@ namespace {
       return result;
    }
 
-//- "smart pointer" behaviour --------------------------------------------------
+//- "smart pointer" behavior ---------------------------------------------------
    PyObject* DeRefGetAttr( PyObject*, PyObject* args )
    {
       PyObject* self = 0; PyObject* name = 0;
@@ -203,7 +203,7 @@ namespace {
       return result;
    }
 
-//- TObject behaviour ----------------------------------------------------------
+//- TObject behavior -----------------------------------------------------------
    PyObject* TObjectContains( PyObject*, PyObject* args )
    {
       PyObject* self = 0, *obj = 0;
@@ -245,7 +245,7 @@ namespace {
       return CallPyObjMethod( self, "IsEqual", obj );
    }
 
-//- TClass behaviour -----------------------------------------------------------
+//- TClass behavior ------------------------------------------------------------
    PyObject* TClassStaticCast( PyObject*, PyObject* args )
    {
    // Implemented somewhat different than TClass::DynamicClass, in that "up" is
@@ -344,7 +344,7 @@ namespace {
       return result;
    }
 
-//- TCollection behaviour ------------------------------------------------------
+//- TCollection behavior -------------------------------------------------------
    PyObject* TCollectionExtend( PyObject*, PyObject* args )
    {
       PyObject* self = 0, *obj = 0;
@@ -482,7 +482,7 @@ namespace {
    }
 
 
-//- TSeqCollection behaviour ---------------------------------------------------
+//- TSeqCollection behavior ----------------------------------------------------
    PyObject* TSeqCollectionGetItem( PyObject*, PyObject* args )
    {
       ObjectProxy* self = 0; PySliceObject* index = 0;
@@ -696,7 +696,7 @@ namespace {
       return index;
    }
 
-//- TClonesArray behaviour -----------------------------------------------------
+//- TClonesArray behavior ------------------------------------------------------
    PyObject* TClonesArraySetItem( PyObject*, PyObject* args )
    {
    // TClonesArray sets objects by constructing them in-place; which is impossible
@@ -744,7 +744,7 @@ namespace {
       return Py_None;
    }
 
-//- vector behaviour as primitives --------------------------------------------
+//- vector behavior as primitives ----------------------------------------------
    PyObject* VectorGetItem( PyObject*, PyObject* args )
    {
       ObjectProxy* self = 0; PySliceObject* index = 0;
@@ -829,7 +829,7 @@ namespace {
       return 0;
    }
 
-//- string behaviour as primitives --------------------------------------------
+//- string behavior as primitives ----------------------------------------------
 #define PYROOT_IMPLEMENT_STRING_PYTHONIZATION( name, func )                   \
    PyObject* name##StringRepr( PyObject*, PyObject* args )                    \
    {                                                                          \
@@ -863,7 +863,7 @@ namespace {
    PYROOT_IMPLEMENT_STRING_PYTHONIZATION(   T, Data )
 
 
-//- TObjString behaviour -------------------------------------------------------
+//- TObjString behavior --------------------------------------------------------
    PYROOT_IMPLEMENT_STRING_PYTHONIZATION( TObj, GetName )
 
 //____________________________________________________________________________
@@ -876,7 +876,7 @@ namespace {
    }
 
 
-//- TIter behaviour ------------------------------------------------------------
+//- TIter behavior -------------------------------------------------------------
    PyObject* TIterIter( PyObject*, PyObject* args )
    {
       PyObject* iter = PyTuple_GET_ITEM( args, 0 );
@@ -902,7 +902,7 @@ namespace {
    }
 
 
-//- STL iterator behaviour -----------------------------------------------------
+//- STL iterator behavior ------------------------------------------------------
    PyObject* StlIterCompare( PyObject*, PyObject* args )
    {
       ObjectProxy* self = 0, *pyobj = 0;
@@ -1015,7 +1015,7 @@ namespace {
 
 namespace PyROOT {      // workaround for Intel icc on Linux
 
-//- TTree behaviour ----------------------------------------------------------
+//- TTree behavior ------------------------------------------------------------
    PyObject* TTreeGetAttr( PyObject*, PyObject* args )
    {
    // allow access to branches/leaves as if they are data members
@@ -1294,7 +1294,7 @@ namespace {
    }
 
 
-//- TFN behaviour ------------------------------------------------------------
+//- TFN behavior --------------------------------------------------------------
    int TFNPyCallback( G__value* res, G__CONST char*, struct G__param* libp, int hash )
    {
       PyObject* result = 0;
@@ -1333,7 +1333,7 @@ namespace {
       return ( 1 || hash || res || libp );
    }
 
-//- TMinuit behaviour --------------------------------------------------------
+//- TMinuit behavior ----------------------------------------------------------
    int TMinuitPyCallback( G__value* res, G__CONST char*, struct G__param* libp, int hash )
    {
       PyObject* result = 0;
@@ -1509,7 +1509,7 @@ namespace {
    };
 
 
-//- TFunction behaviour --------------------------------------------------------
+//- TFunction behavior ---------------------------------------------------------
    PyObject* TFunctionCall( PyObject*, PyObject* args ) {
       if ( PyTuple_GET_SIZE( args ) < 1 || ! ObjectProxy_Check( PyTuple_GET_ITEM( args, 0 ) ) ) {
          PyErr_SetString( PyExc_TypeError,
@@ -1526,7 +1526,7 @@ namespace {
    }
 
 
-//- TMinuit behaviour ----------------------------------------------------------
+//- TMinuit behavior -----------------------------------------------------------
    class TMinuitSetFCN : public TPretendInterpreted {
    public:
       TMinuitSetFCN() : TPretendInterpreted( 1 ) {}
@@ -1582,6 +1582,8 @@ namespace {
          return result;
       }
    };
+
+//- TMinuit behavior -----------------------------------------------------------
 
 
 } // unnamed namespace
@@ -1828,6 +1830,12 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 
    if ( name == "TFile" )     // allow member-style access to entries in file
       return Utility::AddToClass( pyclass, "__getattr__", "Get" );
+
+   if ( name.substr(0,8) == "TVectorT" ) {  // allow proper iteration
+      Utility::AddToClass( pyclass, "__len__", "GetNoElements" );
+      Utility::AddToClass( pyclass, "_getitem__unchecked", "__getitem__" );
+      Utility::AddToClass( pyclass, "__getitem__", (PyCFunction) CheckedGetItem );
+   }
 
 // default (no pythonization) is by definition ok
    return kTRUE;
