@@ -116,12 +116,12 @@ G__defined_templatememfunc expr.cxx
 
 
 // Static Functions
-static struct G__IntList* G__IntList_new(long iin, G__IntList* prev);
+static G__IntList* G__IntList_new(long iin, G__IntList* prev);
 static void G__IntList_init(G__IntList* body, long iin, G__IntList* prev);
 static void G__IntList_add(G__IntList* body, long iin); // UNUSED
 static void G__IntList_addunique(G__IntList* body, long iin);
 static void G__IntList_delete(G__IntList* body); // UNUSED
-static struct G__IntList* G__IntList_find(G__IntList* body, long iin); // UNUSED
+static G__IntList* G__IntList_find(G__IntList* body, long iin); // UNUSED
 static void G__IntList_free(G__IntList* body);
 
 static int G__generate_template_dict(const char* template_id, G__Definedtemplateclass* class_tmpl, G__Charlist* tmpl_arg_list);
@@ -135,11 +135,11 @@ static int G__templatesubstitute(char* symbol, G__Charlist* callpara, G__Templat
 static int G__gettemplatearglist(char* tmpl_arg_string, G__Charlist* tmpl_arg_list_in, G__Templatearg* tmpl_para_list, int* pnpara, int parent_tagnum);
 static void G__templatemaptypename(char* string);
 static char* G__expand_def_template_arg(char* str_in, G__Templatearg* def_para, G__Charlist* charlist);
-static G__Templatearg* G__read_specializationarg(char* source);
+static G__Templatearg* G__read_specializationarg(G__Templatearg* tmpl_params, char* source);
 static int G__checkset_charlist(char* type_name, G__Charlist* pcall_para, int narg, int ftype);
 static int G__matchtemplatefunc(G__Definetemplatefunc* deftmpfunc, G__param* libp, G__Charlist* pcall_para, int funcmatch);
 
-static struct G__Templatearg* G__read_formal_templatearg();
+static G__Templatearg* G__read_formal_templatearg();
 static void G__explicit_template_specialization();
 static void G__instantiate_templateclasslater(G__Definedtemplateclass* deftmpclass);
 static int G__createtemplatefunc(char* funcname, G__Templatearg* targ, int line_number, fpos_t* ppos);
@@ -151,8 +151,8 @@ static void G__freetemplatememfunc(G__Definedtemplatememfunc* memfunctmplt);
 
 static void G__cattemplatearg(char* template_id, G__Charlist* tmpl_arg_list, int npara = 0);
 static void G__settemplatealias(const char* scope_name, const char* template_id, int tagnum, G__Charlist* tmpl_arg_list, G__Templatearg* tmpl_param, int create_in_envtagnum);
-static struct G__Definedtemplateclass* G__resolve_specialization(char* tmpl_args_string, G__Definedtemplateclass* class_tmpl, G__Charlist* expanded_tmpl_arg_list);
-static void G__modify_callpara(G__Templatearg* spec_arg, G__Templatearg* tmpl_arg, G__Charlist* expanded_tmpl_arg);
+static G__Definedtemplateclass* G__resolve_specialization(char* tmpl_args_string, G__Definedtemplateclass* class_tmpl, G__Charlist* expanded_tmpl_arg_list);
+static void G__modify_callpara(G__Templatearg* spec_arg_in, G__Templatearg* given_spec_arg_in, G__Charlist* expanded_tmpl_arg_in);
 static void G__delete_string(char* str, char* del);
 static void G__delete_end_string(char* str, char* del);
 
@@ -168,15 +168,15 @@ void G__freedeftemplateclass(G__Definedtemplateclass* deftmpclass);
 void G__freetemplatefunc(G__Definetemplatefunc* deftmpfunc);
 int G__instantiate_templateclass(char* tagnamein, int noerror);
 int G__templatefunc(G__value* result, char* funcname, G__param* libp, int hash, int funcmatch);
-struct G__funclist* G__add_templatefunc(char* funcnamein, G__param* libp, int hash, G__funclist* funclist, const ::Reflex::Scope p_ifunc, int isrecursive);
+G__funclist* G__add_templatefunc(char* funcnamein, G__param* libp, int hash, G__funclist* funclist, const ::Reflex::Scope p_ifunc, int isrecursive);
 char* G__gettemplatearg(int n, G__Templatearg* def_para);
-struct G__Definetemplatefunc* G__defined_templatefunc(const char* name);
-struct G__Definetemplatefunc* G__defined_templatememfunc(char* name);
+G__Definetemplatefunc* G__defined_templatefunc(const char* name);
+G__Definetemplatefunc* G__defined_templatememfunc(char* name);
 }
 }
 
 // Functions in the C interface.
-extern "C" struct G__Definedtemplateclass* G__defined_templateclass(char* name);
+extern "C" G__Definedtemplateclass* G__defined_templateclass(char* name);
 
 
 static int G__templatearg_enclosedscope = 0; // Used only to determine parent_tagnum parameter to G__settemplatealias.
@@ -188,9 +188,9 @@ static int G__templatearg_enclosedscope = 0; // Used only to determine parent_ta
 //
 
 //______________________________________________________________________________
-static struct G__IntList* G__IntList_new(long iin, G__IntList* prev)
+static G__IntList* G__IntList_new(long iin, G__IntList* prev)
 {
-   struct G__IntList* body = new G__IntList;
+   G__IntList* body = new G__IntList;
    G__IntList_init(body, iin, prev);
    return body;
 }
@@ -244,7 +244,7 @@ static void G__IntList_delete(G__IntList* body)
 }
 
 //______________________________________________________________________________
-static struct G__IntList* G__IntList_find(G__IntList* body, long iin)
+static G__IntList* G__IntList_find(G__IntList* body, long iin)
 {
    while (body->next) {
       if (body->i == iin) {
@@ -505,7 +505,7 @@ static void G__replacetemplate(char* templatename, char* tagname, G__Charlist* t
    char* symbol = symbol_sb;
    int double_quote = 0;
    int single_quote = 0;
-   struct G__input_file store_ifile;
+   G__input_file store_ifile;
    int store_prerun;
    ::Reflex::Scope store_tagnum;
    ::Reflex::Scope store_def_tagnum;
@@ -577,7 +577,7 @@ static void G__replacetemplate(char* templatename, char* tagname, G__Charlist* t
    G__ifile.filenum = filenum;
    in_pos = *pdef_pos;
    //
-   //  Note the current output file position.
+   //  Note the current template source file position.
    //
    ++G__mline;
    fprintf(G__mfp, "# %d \"%s\"\n", G__ifile.line_number, G__srcfile[G__ifile.filenum].filename);
@@ -605,6 +605,7 @@ static void G__replacetemplate(char* templatename, char* tagname, G__Charlist* t
       SET_READINGFILE;
       c = G__fgetstream(symbol, punctuation);
       SET_WRITINGFILE;
+      //fprintf(stderr, "read symbol: '%s' stopped at char: '%c'\n", symbol, c);
       if (c == '~') { // Word is terminated by a tilde
          isnew = 1;
       }
@@ -742,7 +743,23 @@ static void G__replacetemplate(char* templatename, char* tagname, G__Charlist* t
          //  but check if we need to reverse the position of a
          //  "const" keyword while doing this.
          //
-         if (const_c && symbol[strlen(symbol)-1] == '*') { // Change "const var*" to "var const*".
+         if (const_c && symbol[strlen(symbol)-1] == '*') { // The type substituted was a pointer type.
+            //
+            //  To preserve the meaning of:
+            //
+            //       typedef int* MyType;
+            //       const MyType p;
+            //
+            //  After the symbol substitution we have:
+            //
+            //       const int* p;
+            //
+            //  So we must move the const so that we have:
+            //
+            //       int* const p;
+            //
+            //  which restores the intended meaning.
+            //
             fsetpos(G__mfp, &const_pos);
             fprintf(G__mfp, "%s", symbol);
             //
@@ -751,7 +768,7 @@ static void G__replacetemplate(char* templatename, char* tagname, G__Charlist* t
             if (G__dispsource) {
                G__fprinterr(G__serr, "%s", symbol);
             }
-            fprintf(G__mfp, " const%c", const_c); // printing %c is not perfect
+            fprintf(G__mfp, " const%c", const_c); // Reverse the position of the const.
             //
             //  Handle any requested tracing.
             //
@@ -760,9 +777,26 @@ static void G__replacetemplate(char* templatename, char* tagname, G__Charlist* t
             }
             const_c = 0; // Reset "const" word seen state.
          }
-         else if (const_c && (strstr(symbol, "*const") || strstr(symbol, "* const"))) { // Change "const var*const" or "const var* const" to "var*const" or "var* const".
+         else if (const_c && (strstr(symbol, "*const") || strstr(symbol, "* const"))) { // The substituted type was a const pointer, we have duplicated const qualifiers, remove the duplicate.
+            //
+            //  Given:
+            //
+            //       typedef int* const MyType;
+            //       const MyType p;
+            //
+            //  After the symbol substitution we have:
+            //
+            //       const int* const p;
+            //
+            //  So we move the first const so that we have:
+            //
+            //       int* const const p;
+            //
+            //  and then we drop the extra const.  This preserves
+            //  the intended meaning.
+            //
             fsetpos(G__mfp, &const_pos);
-            fprintf(G__mfp, "%s", symbol);
+            fprintf(G__mfp, "%s", symbol); // Remove the duplicate const.
             //
             //  Handle any requested tracing.
             //
@@ -792,6 +826,16 @@ static void G__replacetemplate(char* templatename, char* tagname, G__Charlist* t
                G__fprinterr(G__serr, "%s", symbol);
             }
          }
+#if 0
+         fprintf(G__mfp, "%s", symbol); // Output word, it may have been substituted with a template argument above.
+         //
+         //  Handle any requested tracing.
+         //
+         if (G__dispsource) {
+            G__fprinterr(G__serr, "%s", symbol);
+         }
+#endif // 0
+         // --
       }
       //
       //  Now handle the whitespace or punctuation
@@ -970,6 +1014,23 @@ static void G__replacetemplate(char* templatename, char* tagname, G__Charlist* t
    fgetpos(G__mfp, &G__nextmacro);
    fflush(G__mfp);
    //
+   //  Rewind tmpfile and echo it.
+   //
+#if 0
+   if (G__dispsource) {
+      G__fprinterr(G__serr, "!!! Dumping generated template instantiation %s\n", tagname);
+   }
+   fsetpos(G__mfp, &pos);
+   {
+      char mybuf[2048];
+      char* p = fgets(mybuf, 2048, G__mfp);
+      while (p) {
+         fprintf(stderr, "%s", p);
+         p = fgets(mybuf, 2048, G__mfp);
+      }
+   }
+#endif // 0
+   //
    //  Rewind tmpfile and parse template class or function.
    //
    if (G__dispsource) {
@@ -1088,7 +1149,7 @@ static int G__templatesubstitute(char* symbol, G__Charlist* tmpl_arg_list, G__Te
          //  Substitute symbol with template argument
          //  or with default value.
          //
-         if (tmpl_arg_list->string) {
+         if (tmpl_arg_list && tmpl_arg_list->string) {
             strcpy(symbol, tmpl_arg_list->string);
          }
          else if (tmpl_para_list->default_parameter) {
@@ -1181,8 +1242,8 @@ static int G__gettemplatearglist(char* tmpl_arg_string, G__Charlist* tmpl_arg_li
    if (!tmpl_arg_string[0] || ((tmpl_arg_string[0] == '>') && !tmpl_arg_string[1])) {
       c = '>';
    }
-   struct G__Charlist* tmpl_arg = tmpl_arg_list_in;
-   struct G__Templatearg* tmpl_param = tmpl_para_list;
+   G__Charlist* tmpl_arg = tmpl_arg_list_in;
+   G__Templatearg* tmpl_param = tmpl_para_list;
    for ( ; c == ','; tmpl_param = tmpl_param->next) { // Loop over all given arguments.
       if (!tmpl_param) { // too many template arguments, error
          G__genericerror("Error: Too many template arguments");
@@ -1263,7 +1324,7 @@ static int G__gettemplatearglist(char* tmpl_arg_string, G__Charlist* tmpl_arg_li
       //
       //  And allocate a new empty entry to mark the end.
       //
-      tmpl_arg->next = (struct G__Charlist*) malloc(sizeof(struct G__Charlist));
+      tmpl_arg->next = (G__Charlist*) malloc(sizeof(G__Charlist));
       tmpl_arg->next->next = 0;
       tmpl_arg->next->string = 0;
       tmpl_arg = tmpl_arg->next;
@@ -1481,8 +1542,8 @@ static char* G__expand_def_template_arg(char* str_in, G__Templatearg* def_para, 
       char* reslt = temp;
       c = G__getstream(str_in, &iin, temp, punctuation);
       if (*reslt && !single_quote && !double_quote) {
-         struct G__Charlist* cl = charlist;
-         struct G__Templatearg* ta = def_para;
+         G__Charlist* cl = charlist;
+         G__Templatearg* ta = def_para;
          while (cl && cl->string) {
             G__ASSERT(ta && ta->string);
             if (!strcmp(ta->string, reslt)) {
@@ -1543,12 +1604,12 @@ static char* G__expand_def_template_arg(char* str_in, G__Templatearg* def_para, 
 }
 
 //______________________________________________________________________________
-static G__Templatearg* G__read_specializationarg(char* source)
+static G__Templatearg* G__read_specializationarg(G__Templatearg* tmpl_params, char* source)
 {
    // template<class T,class E,int S> ...
    //          ^
-   struct G__Templatearg* targ = 0;
-   struct G__Templatearg* p = 0;
+   G__Templatearg* targ = 0;
+   G__Templatearg* p = 0;
    G__StrBuf type_sb(G__MAXNAME);
    char* type = type_sb;
    bool done = false;
@@ -1562,23 +1623,24 @@ static G__Templatearg* G__read_specializationarg(char* source)
       if (!p) {
          p = new G__Templatearg;
          p->next = 0;
+         p->type = 0;
+         p->string = 0;
          p->default_parameter = 0;
-         // store entry of the template argument list
          targ = p;
       }
       else {
          p->next = new G__Templatearg;
          p = p->next;
+         p->type = 0;
+         p->string = 0;
          p->default_parameter = 0;
          p->next = 0;
       }
-      p->type = 0;
       //  templatename<T*,E,int> ...
       //                ^
-      // We need to insure to get the real arguments and nothing else!
-      if (!strncmp(source + isrc, "const ", strlen("const "))) {
+      if (!strncmp(source + isrc, "const ", 6)) {
          p->type |= G__TMPLT_CONSTARG;
-         isrc += strlen("const ");
+         isrc += 6;
       }
       len = strlen(source);
       for (i = isrc, j = 0, nest = 0; i < len; ++i) {
@@ -1606,36 +1668,114 @@ static G__Templatearg* G__read_specializationarg(char* source)
       }
       type[j] = 0;
       len = strlen(type);
+      //
+      //  Accumulate and remove a possible reference qualifier.
+      //
       if (type[len-1] == '&') {
          p->type |= G__TMPLT_REFERENCEARG;
          type[--len] = 0;
       }
+      //
+      //  Accumulate and remove any pointer qualifiers.
+      //
       while (type[len-1] == '*') {
          p->type += G__TMPLT_POINTERARG1;
          type[--len] = 0;
       }
-      if      (!strcmp(type, "int")) p->type |= G__TMPLT_INTARG;
-      else if (!strcmp(type, "size_t")) p->type |= G__TMPLT_SIZEARG;
-      else if (!strcmp(type, "unsigned int")) p->type |= G__TMPLT_UINTARG;
-      else if (!strcmp(type, "unsigned")) p->type |= G__TMPLT_UINTARG;
-      else if (!strcmp(type, "char")) p->type |= G__TMPLT_CHARARG;
-      else if (!strcmp(type, "unsigned char")) p->type |= G__TMPLT_UCHARARG;
-      else if (!strcmp(type, "short")) p->type |= G__TMPLT_SHORTARG;
-      else if (!strcmp(type, "unsigned short")) p->type |= G__TMPLT_USHORTARG;
-      else if (!strcmp(type, "long")) p->type |= G__TMPLT_LONGARG;
-      else if (!strcmp(type, "unsigned long")) p->type |= G__TMPLT_ULONGARG;
-      else if (!strcmp(type, "float")) p->type |= G__TMPLT_FLOATARG;
-      else if (!strcmp(type, "double")) p->type |= G__TMPLT_DOUBLEARG;
-      else if (!strcmp(type, ">")) {
+      //
+      //  Exit if no arguments.
+      //
+      if (!strcmp(type, ">")) {
          delete targ;
-         targ = 0;
-         return targ;
+         return 0;
+      }
+      //
+      //  FIXME: long long and unsigned long long are missing!
+      //
+      //  TODO: template template arguments are not handled yet.
+      //
+      if (!strcmp(type, "char")) {
+         p->type |= G__TMPLT_CHARARG;
+      }
+      else if (!strcmp(type, "unsigned char")) {
+         p->type |= G__TMPLT_UCHARARG;
+      }
+      else if (!strcmp(type, "short")) {
+         p->type |= G__TMPLT_SHORTARG;
+      }
+      else if (!strcmp(type, "unsigned short")) {
+         p->type |= G__TMPLT_USHORTARG;
+      }
+      else if (!strcmp(type, "int")) {
+         p->type |= G__TMPLT_INTARG;
+      }
+      else if (!strcmp(type, "unsigned int")) {
+         p->type |= G__TMPLT_UINTARG;
+      }
+      else if (!strcmp(type, "long")) {
+         p->type |= G__TMPLT_LONGARG;
+      }
+      else if (!strcmp(type, "unsigned long")) {
+         p->type |= G__TMPLT_ULONGARG;
+      }
+      else if (!strcmp(type, "unsigned")) {
+         p->type |= G__TMPLT_UINTARG;
+      }
+      else if (!strcmp(type, "size_t")) { // FIXME: Cint extension!
+         p->type |= G__TMPLT_SIZEARG;
+      }
+      else if (!strcmp(type, "float")) { // FIXME: Cint extension!
+         p->type |= G__TMPLT_FLOATARG;
+      }
+      else if (!strcmp(type, "double")) { // FIXME: Cint extension!
+         p->type |= G__TMPLT_DOUBLEARG;
       }
       else {
-         p->type |= G__TMPLT_CLASSARG;
+         p->type |= G__TMPLT_CLASSARG; // TODO: Could be a template template argument instead of a type template argument here!
       }
-      p->string = (char*) malloc(strlen(type) + 1);
-      strcpy(p->string, type);
+      //
+      //  Check first if this is a reference to
+      //  a specialization parameter by name.
+      //
+      bool found = false;
+      int i = 1;
+      for (G__Templatearg* param = tmpl_params; param; param = param->next, ++i) {
+         if (strstr(type, param->string)) { // FIXME: Terrible, terrible hack.  Checking for a type name that is dependent on the specialization parameters using a substring match, way too broad, lots of false positives.
+            found = true; // Make sure we do not attempt to canonicalize the argument.
+            if (!strcmp(type, param->string)) { // The specialization argument is a reference to a specialization parameter by name.
+               G__StrBuf temp_sb(G__LONGLINE);
+               char* temp = temp_sb;
+               sprintf(temp, "%s,//P%d//", type, i);
+               p->string = (char*) malloc(strlen(temp) + 1);
+               strcpy(p->string, temp);
+               break;
+            }
+            else { // Not an exact match, just copy it.  It will not be found at instantiation time and the specialization instantiation attempt will fail.  We cannot handle it yet.
+               p->string = (char*) malloc(strlen(type) + 1);
+               strcpy(p->string, type);
+               break;
+            }
+         }
+      }
+      if (!found) {// Not a reference to a specialization parameter by name.
+         if ( // Rewrite the type name in canonical form.
+            ((p->type & 0xff) == G__TMPLT_CLASSARG) ||
+            ((p->type & 0xff) == G__TMPLT_TMPLTARG)
+         ) { // Rewrite the type name in canonical form.
+            if (!found) { // Not a reference to a specialization template parameter.
+               G__StrBuf temp_sb(G__LONGLINE);
+               char* temp = temp_sb;
+               strcpy(temp, type);
+               G__templatemaptypename(temp); // Rewrite the type name in canonical form.
+               p->string = (char*) malloc(strlen(temp) + 1);
+               strcpy(p->string, temp);
+            }
+         }
+         else { // A non-type specialization argument, type name is already canonical.
+            p->string = (char*) malloc(strlen(type) + 1);
+            strcpy(p->string, type);
+         }
+      }
       //  template<T*,E,int> ...
       //              ^
    }
@@ -1812,8 +1952,8 @@ static int G__matchtemplatefunc(G__Definetemplatefunc* deftmpfunc, G__param* lib
             }
             else if (fnt < cnt) { // unmatch, check default template argument
                int ix;
-               struct G__Templatearg* tmparg;
-               struct G__Definedtemplateclass* tmpcls;
+               G__Templatearg* tmparg;
+               G__Definedtemplateclass* tmpcls;
                tmpcls = G__defined_templateclass(paratype);
                if (!tmpcls) {
                   if (funcmatch == G__EXACT) {
@@ -1958,7 +2098,7 @@ void Cint::Internal::G__declare_template()
    char* temp = temp_sb;
    fpos_t pos;
    int store_line_number;
-   struct G__Templatearg *targ;
+   G__Templatearg *targ;
    int c;
    char *p;
    G__StrBuf temp2_sb(G__LONGLINE);
@@ -2296,7 +2436,7 @@ void Cint::Internal::G__declare_template()
 }
 
 //______________________________________________________________________________
-static struct G__Templatearg* G__read_formal_templatearg()
+static G__Templatearg* G__read_formal_templatearg()
 {
    // Read and parse a template parameter list.
    //
@@ -2305,101 +2445,142 @@ static struct G__Templatearg* G__read_formal_templatearg()
    //      template <class T,class E,int S> ...
    //                ^
    //--
-   struct G__Templatearg* targ = 0;
-   struct G__Templatearg* p = 0;
+   G__Templatearg* tmpl_arg_list = new G__Templatearg; // This is our return value.
+   tmpl_arg_list->type = 0;
+   tmpl_arg_list->string = 0;
+   tmpl_arg_list->default_parameter = 0;
+   tmpl_arg_list->next = 0;
    G__StrBuf type_sb(G__MAXNAME);
    char* type = type_sb;
    G__StrBuf name_sb(G__MAXNAME);
    char* name = name_sb;
+   G__Templatearg* p = tmpl_arg_list;
+   bool first = true;
    int c = ',';
-   int stat = 1;
    while (c == ',') {
-      // allocate entry of template argument list
-      if (stat) {
-         p = new G__Templatearg;
-         p->next = 0;
-         // store entry of the template argument list
-         targ = p;
-         stat = 0;
+      // Allocate next entry in the template argument list.
+      if (first) {
+         first = false;
       }
       else {
          p->next = new G__Templatearg;
          p = p->next;
+         p->type = 0;
+         p->string = 0;
+         p->default_parameter = 0;
          p->next = 0;
       }
       //  template<class T,class E,int S> ...
       //           ^
       c = G__fgetname(type, "<");
-      if (!strcmp(type, "const") && (c == ' ')) { // FIXME: We ignore const in a template parameter!
+      if (!strcmp(type, ">")) { // All done, argument list is empty (explicit specialization case).
+         delete tmpl_arg_list;
+         return 0; // Flag this is an explicit specialization.
+      }
+      if (!strcmp(type, "const") && (c == ' ')) { // Ignore const in a template parameter.  FIXME: We must ignore volatile as well!
          c = G__fgetname(type, "<");
       }
-      if (!strcmp(type, "class") || !strcmp(type, "typename")) {
+      //
+      //  FIXME: unsigned long long is missing from this list!
+      //
+      if (!strcmp(type, "class") || !strcmp(type, "typename")) { // This is a type template parameter.
          p->type = G__TMPLT_CLASSARG;
       }
-      else if ((c == '<') && !strcmp(type, "template")) {
+      else if ((c == '<') && !strcmp(type, "template")) { // This is a template template parameter.
          c = G__fignorestream(">");
          c = G__fgetname(type, "");
          G__ASSERT(!strcmp(type, "class") || !strcmp(type, "typename"));
-         p->type = G__TMPLT_TMPLTARG; // FIXME: This is wrong, we have just seen a template id as a type, not a template template parameter.
+         p->type = G__TMPLT_TMPLTARG;
       }
-      else {
-         if (strcmp(type, "int") == 0) p->type = G__TMPLT_INTARG;
-         else if (strcmp(type, "size_t") == 0) p->type = G__TMPLT_SIZEARG;
-         else if (strcmp(type, "unsignedint") == 0) p->type = G__TMPLT_UINTARG;
-         else if (strcmp(type, "unsigned") == 0) {
-            fpos_t pos;
-            int linenum;
+      else if (!strcmp(type, "char")) {
+         p->type = G__TMPLT_CHARARG;
+      }
+      else if (!strcmp(type, "unsignedchar")) {
+         p->type = G__TMPLT_UCHARARG;
+      }
+      else if (!strcmp(type, "short")) {
+         p->type = G__TMPLT_SHORTARG;
+      }
+      else if (!strcmp(type, "unsignedshort")) {
+         p->type = G__TMPLT_USHORTARG;
+      }
+      else if (!strcmp(type, "int")) {
+         p->type = G__TMPLT_INTARG;
+      }
+      else if (!strcmp(type, "unsignedint")) {
+         p->type = G__TMPLT_UINTARG;
+      }
+      else if (!strcmp(type, "long")) {
+         p->type = G__TMPLT_LONGARG;
+      }
+      else if (!strcmp(type, "unsignedlong")) {
+         p->type = G__TMPLT_ULONGARG;
+      }
+      else if (!strcmp(type, "unsigned")) {
+         fpos_t pos;
+         int linenum;
+         fgetpos(G__ifile.fp, &pos);
+         linenum = G__ifile.line_number;
+         c = G__fgetname(name, ",>=");
+         if (!strcmp(name, "char")) {
+            p->type = G__TMPLT_UCHARARG;
+         }
+         else if (!strcmp(name, "short")) {
+            p->type = G__TMPLT_USHORTARG;
+         }
+         else if (!strcmp(name, "int")) {
+            p->type = G__TMPLT_UINTARG;
+         }
+         else if (!strcmp(name, "long")) {
+            p->type = G__TMPLT_ULONGARG;
             fgetpos(G__ifile.fp, &pos);
             linenum = G__ifile.line_number;
             c = G__fgetname(name, ",>=");
-            if (strcmp(name, "int") == 0) p->type = G__TMPLT_UINTARG;
-            else if (strcmp(name, "short") == 0) p->type = G__TMPLT_USHORTARG;
-            else if (strcmp(name, "char") == 0) p->type = G__TMPLT_UCHARARG;
-            else if (strcmp(name, "long") == 0) {
+            if (!strcmp(name, "int")) {
                p->type = G__TMPLT_ULONGARG;
-               fgetpos(G__ifile.fp, &pos);
-               linenum = G__ifile.line_number;
-               c = G__fgetname(name, ",>=");
-               if (strcmp(name, "int") == 0) {
-                  p->type = G__TMPLT_ULONGARG;
-               }
-               else {
-                  p->type = G__TMPLT_ULONGARG;
-                  fsetpos(G__ifile.fp, &pos);
-                  G__ifile.line_number = linenum;
-               }
             }
             else {
-               p->type = G__TMPLT_UINTARG;
+               p->type = G__TMPLT_ULONGARG;
                fsetpos(G__ifile.fp, &pos);
                G__ifile.line_number = linenum;
             }
          }
-         else if (strcmp(type, "char") == 0) p->type = G__TMPLT_CHARARG;
-         else if (strcmp(type, "unsignedchar") == 0) p->type = G__TMPLT_UCHARARG;
-         else if (strcmp(type, "short") == 0) p->type = G__TMPLT_SHORTARG;
-         else if (strcmp(type, "unsignedshort") == 0) p->type = G__TMPLT_USHORTARG;
-         else if (strcmp(type, "long") == 0) p->type = G__TMPLT_LONGARG;
-         else if (strcmp(type, "unsignedlong") == 0) p->type = G__TMPLT_ULONGARG;
-         else if (strcmp(type, "float") == 0) p->type = G__TMPLT_FLOATARG;
-         else if (strcmp(type, "double") == 0) p->type = G__TMPLT_DOUBLEARG;
-         else if (strcmp(type, ">") == 0) {
-            if (targ) delete targ; // free((void*)targ);
-            targ = (struct G__Templatearg *)NULL;
-            return(targ);
-         }
          else {
-            if (G__dispsource) {
-               G__fprinterr(G__serr, "Limitation: template argument type '%s' may cause problem", type);
-               G__printlinenum();
-            }
-            p->type = G__TMPLT_INTARG;
+            p->type = G__TMPLT_UINTARG;
+            fsetpos(G__ifile.fp, &pos);
+            G__ifile.line_number = linenum;
          }
       }
+      else if (!strcmp(type, "size_t")) { // FIXME: This is a cint extension!
+         p->type = G__TMPLT_SIZEARG;
+      }
+      else if (!strcmp(type, "float")) { // FIXME: This is a cint extension!
+         p->type = G__TMPLT_FLOATARG;
+      }
+      else if (!strcmp(type, "double")) { // FIXME: This is a cint extension!
+         p->type = G__TMPLT_DOUBLEARG;
+      }
+      else {
+         if (G__dispsource) {
+            G__fprinterr(G__serr, "Limitation: template argument type '%s' may cause problem", type);
+            G__printlinenum();
+         }
+         p->type = G__TMPLT_INTARG;
+      }
+      //
+      //  Now get the parameter name, if there is one.
+      //
       //  template<class T,class E,int S> ...
       //                 ^
       c = G__fgetstream(name, ",>="); // FIXME: G__fgetstream_tmplt() ???
-      while (name[0] && (name[strlen(name)-1] == '*')) {
+      //
+      //  FIXME: We need to accumulate a reference qualifier here, if any.
+      //
+      //--
+      //
+      //  Accumulate pointer qualifiers from a type template parameter name.
+      //
+      while (name[0] && (name[strlen(name)-1] == '*')) { // Parameter type is pointer qualified.
          if (p->type == G__TMPLT_CLASSARG) {
             p->type = G__TMPLT_POINTERARG1;
          }
@@ -2410,20 +2591,26 @@ static struct G__Templatearg* G__read_formal_templatearg()
       }
       p->string = (char*) malloc(strlen(name) + 1);
       strcpy(p->string, name);
+      //
+      //  Now get the parameter default if there is one.
+      //
+      //  template<class T=int,class E,int S> ...
+      //                   ^
+      p->default_parameter = 0;
       if (c == '=') {
          c = G__fgetstream_template(name, ",>"); // FIXME: G__fgetstream_tmplt() ???
          p->default_parameter = (char*) malloc(strlen(name) + 1);
          strcpy(p->default_parameter, name);
       }
-      else {
-         p->default_parameter = 0;
-      }
+      //
+      //  c is now either "," or ">".
+      //
       //  template<class T,class E,int S> ...
       //                   ^
    }
    //  template<class T,class E,int S> ...
    //                                 ^
-   return targ;
+   return tmpl_arg_list;
 }
 
 //______________________________________________________________________________
@@ -2458,7 +2645,7 @@ static void G__explicit_template_specialization()
       char* templatename = templatename_sb;
       int npara = 0;
       ::Reflex::Scope envtagnum = G__get_envtagnum();
-      struct G__Charlist call_para;
+      G__Charlist call_para;
       fpos_t posend;
       int lineend;
       call_para.string = 0;
@@ -2534,11 +2721,11 @@ int Cint::Internal::G__createtemplateclass(char* new_name, G__Templatearg* targ,
    //
    //  Read any specialization arguments given.
    //
-   struct G__Templatearg* spec_arg = 0;
+   G__Templatearg* spec_arg = 0;
    char* spec = strchr(new_name, '<');
    if (spec) {
       *spec = 0; // Remove the specialization args from the name.
-      spec_arg = G__read_specializationarg(spec + 1); // Parse the spec args into a list.
+      spec_arg = G__read_specializationarg(targ, spec + 1); // Parse the spec args into a list.
    }
    //
    //  Search for any previous declaration
@@ -2549,7 +2736,7 @@ int Cint::Internal::G__createtemplateclass(char* new_name, G__Templatearg* targ,
    G__hash(new_name, hash, i)
    ::Reflex::Scope env_tagnum = G__get_envtagnum();
    int override = 0; // Are we overriding a forward declaration or precompiled definition?
-   struct G__Definedtemplateclass* deftmpclass = &G__definedtemplateclass;
+   G__Definedtemplateclass* deftmpclass = &G__definedtemplateclass;
    for ( ; deftmpclass->next; deftmpclass = deftmpclass->next) {
       if ( // Name and scope match.
          (deftmpclass->hash == hash) &&
@@ -2637,8 +2824,8 @@ int Cint::Internal::G__createtemplateclass(char* new_name, G__Templatearg* targ,
       deftmpclass->def_para = targ;
    }
    else {
-      struct G__Templatearg* t1 = deftmpclass->def_para;
-      struct G__Templatearg* t2 = targ;
+      G__Templatearg* t1 = deftmpclass->def_para;
+      G__Templatearg* t2 = targ;
       while (t1 && t2) {
          if (strcmp(t1->string, t2->string)) {
             char* tmp = t2->string;
@@ -2736,7 +2923,7 @@ static void G__instantiate_templateclasslater(G__Definedtemplateclass* deftmpcla
    int store_def_struct_member = G__def_struct_member;
    G__StrBuf tagname_sb(G__LONGLINE);
    char* tagname = tagname_sb;
-   struct G__IntList* ilist = deftmpclass->instantiatedtagnum;
+   G__IntList* ilist = deftmpclass->instantiatedtagnum;
    for ( ; ilist; ilist = ilist->next) {
       strcpy(tagname, G__struct.name[ilist->i]);
       if (G__struct.parent_tagnum[ilist->i] != -1) {
@@ -2764,7 +2951,7 @@ static int G__createtemplatefunc(char* funcname, G__Templatearg* targ, int line_
    //                                      ^
    // Note: Parsing function, worker for G__declare_template.
    //
-   struct G__Definetemplatefunc* deftmpfunc;
+   G__Definetemplatefunc* deftmpfunc;
    G__StrBuf paraname_sb(G__MAXNAME);
    char* paraname = paraname_sb;
    G__StrBuf temp_sb(G__LONGLINE);
@@ -3124,8 +3311,8 @@ static int G__createtemplatememfunc(char* new_name)
    //                                        ^
    // Note: Parsing function, worker for G__declare_template.
    //
-   struct G__Definedtemplateclass* deftmpclass;
-   struct G__Definedtemplatememfunc* deftmpmemfunc;
+   G__Definedtemplateclass* deftmpclass;
+   G__Definedtemplatememfunc* deftmpmemfunc;
    int os = 0;
    // funcname="*f()" "&f()"
    while ((new_name[os] == '*') || (new_name[os] == '&')) {
@@ -3165,8 +3352,8 @@ static int G__createtemplatememfunc(char* new_name)
 static void G__instantiate_templatememfunclater(G__Definedtemplateclass* deftmpclass, G__Definedtemplatememfunc* deftmpmemfunc)
 {
    // instantiation of forward declared template class member function
-   struct G__IntList* ilist = deftmpclass->instantiatedtagnum;
-   struct G__Charlist call_para;
+   G__IntList* ilist = deftmpclass->instantiatedtagnum;
+   G__Charlist call_para;
    G__StrBuf templatename_sb(G__LONGLINE);
    char* templatename = templatename_sb;
    G__StrBuf tagname_sb(G__LONGLINE);
@@ -3287,430 +3474,432 @@ void Cint::Internal::G__freetemplatefunc(G__Definetemplatefunc* deftmpfunc)
 }
 
 #if 0
-//______________________________________________________________________________
-int Cint::Internal::G__instantiate_templateclass(char* tagnamein, int noerror)
 {
-   // Instantiate a class template if needed.
-   //
-   // Note: If noerror then we print no error messages if the template does not exist.
-   //
-   int store_constvar = G__constvar;
-   //
-   //  Return if this instantiation already exists.
-   //
-   {
-      int typenum = G__defined_typename(tagnamein);
-      if (typenum != -1) {
-         ::Reflex::Type ty = G__Dict::GetDict().GetTypedef(typenum);
-         int intTagnum = G__get_tagnum(ty);
-         return intTagnum;
-      }
-   }
-#ifdef G__ASM
-   G__abortbytecode(); // Bytecode cannot perform template instantiations.
-#endif // G__ASM
-   //
-   //  Parse out template name and template argument list.
-   //
-   G__StrBuf templatename_sb(G__LONGLINE);
-   char* templatename = templatename_sb;
-   strcpy(templatename, tagnamein);
-   char* tmpl_args_string = strchr(templatename, '<');
-   if (tmpl_args_string) {
-      *tmpl_args_string = '\0';
-      ++tmpl_args_string;
-   }
-   else {
-      tmpl_args_string = "";
-   }
-   //
-   //  Collect any using directives in our enclosing scope.
-   //
-   struct G__inheritance* baseclass = 0;
-   ::Reflex::Scope env_tagnum = G__get_envtagnum();
-   int int_env_tagnum = G__get_tagnum(env_tagnum);
-   if (env_tagnum && !env_tagnum.IsTopScope() && G__struct.baseclass[int_env_tagnum]->basen) {
-      baseclass = G__struct.baseclass[int_env_tagnum];
-   }
-   //
-   //  Parse out the given scope and the template name.
-   //  Lookup the given scope.
-   //
-   G__StrBuf atom_name_sb(G__LONGLINE);
-   char* atom_name = atom_name_sb;
-   ::Reflex::Scope given_scope = ::Reflex::Scope::GlobalScope();
-   int hash = 0;
-   int temp = 0;
-   {
-      strcpy(atom_name, templatename);
-      char* patom = atom_name;
-      //
-      //  Advance to the final component of a scoped name.
-      //
-      char* p = G__find_first_scope_operator(patom);
-      while (p) {
-         patom = p + 2;
-         p = G__find_first_scope_operator(patom);
-      }
-      //
-      //  Get given scope, if any.
-      //
-      if (patom != atom_name) { // A scope was given.
-         *(patom - 2) = 0; // terminate scope name
-         if (strcmp(atom_name, "::")) { // not given as global scope
-            int int_tagnum = G__defined_tagname(atom_name, 0); // Get specified scope.  WARNING: This may cause a template instantiation!
-            given_scope = G__Dict::GetDict().GetScope(int_tagnum);
-         }
-         // Copy the atom name down.
-         p = atom_name;
-         while (*patom) {
-            *p++ = *patom++;
-         }
-         *p = 0;
-      }
-      G__hash(atom_name, hash, temp)
-   }
-   //
-   //  Search for the class template definition.
-   //
-   //  FIXME: Move this all to Reflex.
-   //
-   struct G__Definedtemplateclass* class_tmpl = &G__definedtemplateclass;
-   for ( ; class_tmpl->next; class_tmpl = class_tmpl->next) {
-      if ( // no match on name, next entry
-         (hash != class_tmpl->hash) ||
-         (atom_name[0] != class_tmpl->name[0]) ||
-         strcmp(atom_name, class_tmpl->name)
-      ) {
-         continue;
-      }
-      //
-      //  Look for ordinary scope resolution.
-      //
-      if (
-         (given_scope == G__Dict::GetDict().GetScope(class_tmpl->parent_tagnum)) ||
-         (
-            (!given_scope || given_scope.IsTopScope()) &&
-            (
-               (class_tmpl->parent_tagnum == -1) ||
-               (env_tagnum == G__Dict::GetDict().GetScope(class_tmpl->parent_tagnum))
-            )
-         )
-      ) {
-         break;
-      }
-      if (given_scope && given_scope.IsTopScope()) {
-         continue;
-      }
-      if (baseclass) {
-         // look for using directive scope resolution
-         bool found = false;
-         for (temp = 0; temp < baseclass->basen; ++temp) {
-            if (baseclass->basetagnum[temp] == class_tmpl->parent_tagnum) {
-               found = true;
-               break;
-            }
-         }
-         if (found) {
-            break;
-         }
-      }
-      // look for enclosing scope resolution
-      {
-         bool found = false;
-         ::Reflex::Scope env_parent_tagnum = env_tagnum;
-         while (env_parent_tagnum && !env_parent_tagnum.IsTopScope()) {
-            env_parent_tagnum = env_parent_tagnum.DeclaringScope();
-            if (env_parent_tagnum == G__Dict::GetDict().GetScope(class_tmpl->parent_tagnum)) {
-               found = true;
-               break;
-            }
-            if (G__struct.baseclass[G__get_tagnum(env_parent_tagnum)]) {
-               for (temp = 0; temp < G__struct.baseclass[G__get_tagnum(env_parent_tagnum)]->basen; ++temp) {
-                  if (G__struct.baseclass[G__get_tagnum(env_parent_tagnum)]->basetagnum[temp] == class_tmpl->parent_tagnum) {
-                     found = true;
-                     break;
-                  }
-               }
-               if (found) {
-                  break;
-               }
-            }
-         }
-         if (found) {
-            break;
-         }
-      }
-      // look in global scope (handle using declaration)
-      {
-         bool found = false;
-         for (temp = 0; temp < G__globalusingnamespace.basen; ++temp) {
-            if (G__globalusingnamespace.basetagnum[temp] == class_tmpl->parent_tagnum) {
-               found = true;
-               break;
-            }
-         }
-         if (found) {
-            break;
-         }
-      }
-   }
-   //
-   //  Exit if class template not found.
-   //
-   if (!class_tmpl->next) { // No such template, error.
-      if (!noerror) {
-         G__fprinterr(G__serr, "Error: no such template %s", tagnamein);
-         G__genericerror(0);
-      }
-      return -1;
-   }
-   //
-   //  Class template exists but we have no file pointer
-   //  to the definition, it must be precompiled, exit.
-   //
-   if (!class_tmpl->def_fp) { // No file pointer to source code of template.
-      if (!noerror) {
-         G__fprinterr(G__serr, "Limitation: Can't instantiate precompiled template %s", tagnamein);
-         G__genericerror(0);
-      }
-      return -1;
-   }
-   //
-   //  Parse the template argument string into a template argument list.
-   //  Insert defaults for any omitted args.  Apply specialization
-   //  arguments.  Count the number of arguments provided.
-   //
-   int store_templatearg_enclosedscope = G__templatearg_enclosedscope;
-   G__templatearg_enclosedscope = 0;
-   struct G__Charlist tmpl_arg_list;
-   tmpl_arg_list.string = 0;
-   tmpl_arg_list.next = 0;
-   int npara = 0;
-   //858//int defarg = G__gettemplatearglist(tmpl_args_string, &tmpl_arg_list, class_tmpl->def_para, &npara, class_tmpl->parent_tagnum, class_tmpl->specialization); // FIXME: Port the addition of the specialization args to cint5?
-   int defarg = G__gettemplatearglist(tmpl_args_string, &tmpl_arg_list, class_tmpl->def_para, &npara, class_tmpl->parent_tagnum);
-   if (defarg) { // We have modified or defaulted template arguments.
-      // If the default-completed template argument list is not
-      // identical character-by-character to the provided argument
-      // list, then create a typedef to map the name as provided
-      // to the actual name with all the default arguments filled in.
-#if 0
-         ::Reflex::Type typenum;
-         int templatearg_enclosedscope = G__templatearg_enclosedscope;
-         G__templatearg_enclosedscope = store_templatearg_enclosedscope;
-         G__StrBuf tagname_sb(G__LONGLINE);
-         char* tagname = tagname_sb;
-         strcpy(tagname, tagnamein);
-         std::string tmp = tagname;
-         G__cattemplatearg(tagname, &tmpl_arg_list, npara);
-         std::string short_name = tagname;
-         strcpy(tagname, tmp.c_str());
-         G__cattemplatearg(tagname, &tmpl_arg_list);
-         ::Reflex::Scope tagnum;
-         long intTagnum = G__defined_tagname(tagname, 1);
-         if (intTagnum != -1) {
-            tagnum = G__Dict::GetDict().GetScope(intTagnum);
-         }
-         else {
-            tagnum = Reflex::Dummy::Scope();
-         }
-         G__settemplatealias(tagnamein, tagname, intTagnum, &tmpl_arg_list, class_tmpl->def_para, 0); // FIXME: No enclosedscope?
-         ::Reflex::Scope parent_tagnum;
-         if ((short_name != tagname) && !G__find_typedef(short_name.c_str())) {
-            parent_tagnum = tagnum.DeclaringScope();
-            typenum = G__declare_typedef(short_name.c_str(), 'u', G__get_tagnum(tagnum), G__PARANORMAL, 0, G__globalcomp, G__get_tagnum(parent_tagnum), false);
-            if (defarg == 3) {
-               G__struct.defaulttypenum[G__get_tagnum(tagnum)] = typenum; // FIXME: This should be G__get_typenum(typenum)!
-            }
-         }
-#endif // 0
-      int templatearg_enclosedscope = G__templatearg_enclosedscope;
-      G__templatearg_enclosedscope = store_templatearg_enclosedscope;
-      // Replace the provided name, by rewriting the template arguments
-      // with versions that have "std::" removed, and by filling in all
-      // of the default arguments, again with "std::" removed.
-      G__StrBuf tagname_sb(G__LONGLINE);
-      char* tagname = tagname_sb;
-      strcpy(tagname, tagnamein);
-      G__cattemplatearg(tagname, &tmpl_arg_list);
-      //
-      // Lookup and create, if it does not exist,
-      // this template instantiation, which is the
-      // canonical name.
-      //
-      // Note: We will call ourselves here if we must
-      //       create the canonical instantiation.
-      int int_tagnum = G__defined_tagname(tagname, 1);
-      //
-      //  Create a typedef mapping the provided name to
-      //  the canonical name in the scope of the canonical
-      //  name's parent.
-      //
-      int parent_tagnum = -1;
-      if (templatearg_enclosedscope) {
-         parent_tagnum = G__get_tagnum(G__get_envtagnum());
-      }
-      else {
-         parent_tagnum = G__struct.parent_tagnum[int_tagnum];
-         //::Reflex::Scope tagnum = G__Dict::GetDict().GetScope(int_tagnum);
-         //if (!tagnum.DeclaringScope().IsTopScope()) { // We do not want parent_tagnum to be zero!
-         //   parent_tagnum = G__get_tagnum(tagnum.DeclaringScope());
-         //}
-      }
-      ::Reflex::Type typenum = G__declare_typedef(tagnamein, 'u', int_tagnum, G__PARANORMAL, 0, G__globalcomp, parent_tagnum, false);
-      // Create a set of typedefs which map to the canonical
-      // instantiation we just looked up or created.
-      //
-      // The constructed typedefs start from a base name constructed
-      // by taking the provided name, adding in all default template
-      // arguments, and then removing any and all "std::" from the
-      // resulting set of template arguments.  Note that this base
-      // name should be the same as the canonical instantiation we
-      // just looked up or created.
-      //
-      // For example, given:
-      //
-      //      vector<std::string>
-      //
-      // the base name will be:
-      //
-      //      vector<string,allocator<string> >
-      //
-      // The first typedef created has only the required template
-      // arguments, and further typedefs are created by adding the
-      // default arguments one-by-one until one before the last
-      // argument.
-      //
-      // So continuing the example we will make this set of typedefs:
-      //
-      //      vector<string>
-      //
-      // but not:
-      //
-      //      vector<string,allocator<string> >
-      //
-      // Warning: tagname is modified by this routine.
-      //          All template arguments are rewritten with
-      //          any and all "std::" removed and defaults
-      //          are filled in.
-      // FIXME: the resulting tagname has ">>" at the end instead of "> >" if the last argument or default argument ends with ">".
-      G__settemplatealias(tagnamein, tagname, int_tagnum, &tmpl_arg_list, class_tmpl->def_para, templatearg_enclosedscope);
-      if (defarg == 3) {
-         G__struct.defaulttypenum[int_tagnum] = typenum;
-      }
-      G__freecharlist(&tmpl_arg_list);
-      return int_tagnum;
-   }
-   //
-   //  No template arguments were modified
-   //  or defaulted.  We can instantiate
-   //  exactly as given.
-   //
-   G__StrBuf tagname_sb(G__LONGLINE);
-   char* tagname = tagname_sb;
-   strcpy(tagname, tagnamein);
-   if (given_scope && !given_scope.IsTopScope() || (templatename[0] == ':')) {
-      int i = 0;
-      char* p = strrchr(templatename, ':');
-      while (p && *p) {
-         templatename[i++] = *(++p);
-      }
-      sprintf(tagname, "%s<%s", templatename, tmpl_args_string);
-   }
-   // resolve template specialization
-   if (class_tmpl->specialization) {
-      class_tmpl = G__resolve_specialization(tmpl_args_string, class_tmpl, &tmpl_arg_list);
-   }
-   // store tagnum
-   int intTagnum = G__struct.alltag;
-   //
-   ::Reflex::Scope store_tagdefining = G__tagdefining;
-   ::Reflex::Scope store_def_tagnum = G__def_tagnum;
-   G__tagdefining = G__Dict::GetDict().GetScope(class_tmpl->parent_tagnum);
-   G__def_tagnum = G__tagdefining;
-   //
-   //  Perform the actual instantiation operation
-   //  by string substituting the given template arguments
-   //  in the template source into a temporary file and
-   //  then parsing the result as input.
-   //
-   G__replacetemplate(templatename, tagname, &tmpl_arg_list, class_tmpl->def_fp, class_tmpl->line, class_tmpl->filenum, &(class_tmpl->def_pos), class_tmpl->def_para, class_tmpl->isforwarddecl ? 2 : 1, npara, class_tmpl->parent_tagnum);
-   //
-   //  Now instantiate all the member function templates.
-   //
-   //  FIXME: Member function templates should not be expanded unless they are used.
-   //
-   ::Reflex::Scope parent_tagnum = G__Dict::GetDict().GetScope(class_tmpl->parent_tagnum);
-   while (parent_tagnum && !parent_tagnum.IsNamespace()) {
-      parent_tagnum = parent_tagnum.DeclaringScope();
-   }
-   struct G__Definedtemplatememfunc* tmpl_mbrfunc = &class_tmpl->memfunctmplt;
-   for ( ; tmpl_mbrfunc->next; tmpl_mbrfunc = tmpl_mbrfunc->next) {
-      G__replacetemplate(templatename, tagname, &tmpl_arg_list, tmpl_mbrfunc->def_fp, tmpl_mbrfunc->line, tmpl_mbrfunc->filenum, &(tmpl_mbrfunc->def_pos), class_tmpl->def_para, 0, npara, G__get_tagnum(parent_tagnum));
-   }
-   //
-   //
-   //
-   if (
-      (intTagnum < G__struct.alltag) && // At least one of our attempted instantiations happened, and
-      G__struct.name[intTagnum] && // the first one has a name, and
-      strcmp(tagname, G__struct.name[intTagnum]) // it is not what we requested.
-   ) {
-      char* p1 = strchr(tagname, '<');
-      char* p2 = strchr(G__struct.name[intTagnum], '<');
-      if (
-         p1 &&
-         p2 &&
-         ((p1 - tagname) == (p2 - G__struct.name[intTagnum])) &&
-         !strncmp(tagname, G__struct.name[intTagnum], p1 - tagname)
-      ) { // the first instantiation's template args match all of what was requested (so defaults must have been added)
-         // For example, in t987, template <...,false> gets added to G__struct
-         // but we know we want template <...,0>. We can't rename reflex types,
-         // so we create a typedef to it.
-         Reflex::Type origType = G__Dict::GetDict().GetType(intTagnum);
-         if (origType) {
-            std::string typedef_fullname = origType.DeclaringScope().Name(Reflex::SCOPED);
-            if (typedef_fullname.length()) {
-               typedef_fullname += "::";
-            }
-            typedef_fullname += tagname;
-            //fprintf(stderr, "G__instantiate_templateclass: calling Reflex::TypedefTypeBuilder for '%s'\n", typedef_fullname.c_str());
-            ::Reflex::Type result = ::Reflex::TypedefTypeBuilder(typedef_fullname.c_str(), origType);
-            G__RflxProperties* prop = G__get_properties(result);
-            if (prop) {
-               prop->globalcomp = G__NOLINK;
-               //fprintf(stderr, "G__instantiate_templateclass: registering typedef '%s'\n", result.Name().c_str());
-               prop->typenum = G__Dict::GetDict().Register(result);
-#ifdef G__TYPEDEFFPOS
-               prop->filenum = G__ifile.filenum;
-               prop->linenum = G__ifile.line_number;
-#endif // G__TYPEDEFFPOS
-               prop->tagnum = G__get_tagnum(origType.RawType()); // FIXME: I think this is wrong, I think it should be -1 always.
-            }
-         }
-      }
-      else { // no "else" in the old days, but:
-         // we won't find it back with tagname, as it's now a typedef called "tagname".
-         intTagnum = G__defined_tagname(tagname, 2);
-      }
-   }
-   else { // no "else" in the old days, but:
-      // we won't find it back with tagname, as it's now a typedef called "tagname".
-      intTagnum = G__defined_tagname(tagname, 2);
-   }
-   if (intTagnum != -1) {
-      if (class_tmpl->instantiatedtagnum) {
-         G__IntList_addunique(class_tmpl->instantiatedtagnum, intTagnum);
-      }
-      else {
-         class_tmpl->instantiatedtagnum = G__IntList_new(intTagnum, NULL);
-      }
-   }
-   G__def_tagnum = store_def_tagnum;
-   G__tagdefining = store_tagdefining;
-   G__constvar = store_constvar;
-   G__freecharlist(&tmpl_arg_list); // free template argument list
-   return intTagnum; // return instantiated class template id
+   ////______________________________________________________________________________
+   //int Cint::Internal::G__instantiate_templateclass(char* tagnamein, int noerror)
+   //{
+   //   // Instantiate a class template if needed.
+   //   //
+   //   // Note: If noerror then we print no error messages if the template does not exist.
+   //   //
+   //   int store_constvar = G__constvar;
+   //   //
+   //   //  Return if this instantiation already exists.
+   //   //
+   //   {
+   //      int typenum = G__defined_typename(tagnamein);
+   //      if (typenum != -1) {
+   //         ::Reflex::Type ty = G__Dict::GetDict().GetTypedef(typenum);
+   //         int intTagnum = G__get_tagnum(ty);
+   //         return intTagnum;
+   //      }
+   //   }
+   //#ifdef G__ASM
+   //   G__abortbytecode(); // Bytecode cannot perform template instantiations.
+   //#endif // G__ASM
+   //   //
+   //   //  Parse out template name and template argument list.
+   //   //
+   //   G__StrBuf templatename_sb(G__LONGLINE);
+   //   char* templatename = templatename_sb;
+   //   strcpy(templatename, tagnamein);
+   //   char* tmpl_args_string = strchr(templatename, '<');
+   //   if (tmpl_args_string) {
+   //      *tmpl_args_string = '\0';
+   //      ++tmpl_args_string;
+   //   }
+   //   else {
+   //      tmpl_args_string = "";
+   //   }
+   //   //
+   //   //  Collect any using directives in our enclosing scope.
+   //   //
+   //   G__inheritance* baseclass = 0;
+   //   ::Reflex::Scope env_tagnum = G__get_envtagnum();
+   //   int int_env_tagnum = G__get_tagnum(env_tagnum);
+   //   if (env_tagnum && !env_tagnum.IsTopScope() && G__struct.baseclass[int_env_tagnum]->basen) {
+   //      baseclass = G__struct.baseclass[int_env_tagnum];
+   //   }
+   //   //
+   //   //  Parse out the given scope and the template name.
+   //   //  Lookup the given scope.
+   //   //
+   //   G__StrBuf atom_name_sb(G__LONGLINE);
+   //   char* atom_name = atom_name_sb;
+   //   ::Reflex::Scope given_scope = ::Reflex::Scope::GlobalScope();
+   //   int hash = 0;
+   //   int temp = 0;
+   //   {
+   //      strcpy(atom_name, templatename);
+   //      char* patom = atom_name;
+   //      //
+   //      //  Advance to the final component of a scoped name.
+   //      //
+   //      char* p = G__find_first_scope_operator(patom);
+   //      while (p) {
+   //         patom = p + 2;
+   //         p = G__find_first_scope_operator(patom);
+   //      }
+   //      //
+   //      //  Get given scope, if any.
+   //      //
+   //      if (patom != atom_name) { // A scope was given.
+   //         *(patom - 2) = 0; // terminate scope name
+   //         if (strcmp(atom_name, "::")) { // not given as global scope
+   //            int int_tagnum = G__defined_tagname(atom_name, 0); // Get specified scope.  WARNING: This may cause a template instantiation!
+   //            given_scope = G__Dict::GetDict().GetScope(int_tagnum);
+   //         }
+   //         // Copy the atom name down.
+   //         p = atom_name;
+   //         while (*patom) {
+   //            *p++ = *patom++;
+   //         }
+   //         *p = 0;
+   //      }
+   //      G__hash(atom_name, hash, temp)
+   //   }
+   //   //
+   //   //  Search for the class template definition.
+   //   //
+   //   //  FIXME: Move this all to Reflex.
+   //   //
+   //   G__Definedtemplateclass* class_tmpl = &G__definedtemplateclass;
+   //   for ( ; class_tmpl->next; class_tmpl = class_tmpl->next) {
+   //      if ( // no match on name, next entry
+   //         (hash != class_tmpl->hash) ||
+   //         (atom_name[0] != class_tmpl->name[0]) ||
+   //         strcmp(atom_name, class_tmpl->name)
+   //      ) {
+   //         continue;
+   //      }
+   //      //
+   //      //  Look for ordinary scope resolution.
+   //      //
+   //      if (
+   //         (given_scope == G__Dict::GetDict().GetScope(class_tmpl->parent_tagnum)) ||
+   //         (
+   //            (!given_scope || given_scope.IsTopScope()) &&
+   //            (
+   //               (class_tmpl->parent_tagnum == -1) ||
+   //               (env_tagnum == G__Dict::GetDict().GetScope(class_tmpl->parent_tagnum))
+   //            )
+   //         )
+   //      ) {
+   //         break;
+   //      }
+   //      if (given_scope && given_scope.IsTopScope()) {
+   //         continue;
+   //      }
+   //      if (baseclass) {
+   //         // look for using directive scope resolution
+   //         bool found = false;
+   //         for (temp = 0; temp < baseclass->basen; ++temp) {
+   //            if (baseclass->basetagnum[temp] == class_tmpl->parent_tagnum) {
+   //               found = true;
+   //               break;
+   //            }
+   //         }
+   //         if (found) {
+   //            break;
+   //         }
+   //      }
+   //      // look for enclosing scope resolution
+   //      {
+   //         bool found = false;
+   //         ::Reflex::Scope env_parent_tagnum = env_tagnum;
+   //         while (env_parent_tagnum && !env_parent_tagnum.IsTopScope()) {
+   //            env_parent_tagnum = env_parent_tagnum.DeclaringScope();
+   //            if (env_parent_tagnum == G__Dict::GetDict().GetScope(class_tmpl->parent_tagnum)) {
+   //               found = true;
+   //               break;
+   //            }
+   //            if (G__struct.baseclass[G__get_tagnum(env_parent_tagnum)]) {
+   //               for (temp = 0; temp < G__struct.baseclass[G__get_tagnum(env_parent_tagnum)]->basen; ++temp) {
+   //                  if (G__struct.baseclass[G__get_tagnum(env_parent_tagnum)]->basetagnum[temp] == class_tmpl->parent_tagnum) {
+   //                     found = true;
+   //                     break;
+   //                  }
+   //               }
+   //               if (found) {
+   //                  break;
+   //               }
+   //            }
+   //         }
+   //         if (found) {
+   //            break;
+   //         }
+   //      }
+   //      // look in global scope (handle using declaration)
+   //      {
+   //         bool found = false;
+   //         for (temp = 0; temp < G__globalusingnamespace.basen; ++temp) {
+   //            if (G__globalusingnamespace.basetagnum[temp] == class_tmpl->parent_tagnum) {
+   //               found = true;
+   //               break;
+   //            }
+   //         }
+   //         if (found) {
+   //            break;
+   //         }
+   //      }
+   //   }
+   //   //
+   //   //  Exit if class template not found.
+   //   //
+   //   if (!class_tmpl->next) { // No such template, error.
+   //      if (!noerror) {
+   //         G__fprinterr(G__serr, "Error: no such template %s", tagnamein);
+   //         G__genericerror(0);
+   //      }
+   //      return -1;
+   //   }
+   //   //
+   //   //  Class template exists but we have no file pointer
+   //   //  to the definition, it must be precompiled, exit.
+   //   //
+   //   if (!class_tmpl->def_fp) { // No file pointer to source code of template.
+   //      if (!noerror) {
+   //         G__fprinterr(G__serr, "Limitation: Can't instantiate precompiled template %s", tagnamein);
+   //         G__genericerror(0);
+   //      }
+   //      return -1;
+   //   }
+   //   //
+   //   //  Parse the template argument string into a template argument list.
+   //   //  Insert defaults for any omitted args.  Apply specialization
+   //   //  arguments.  Count the number of arguments provided.
+   //   //
+   //   int store_templatearg_enclosedscope = G__templatearg_enclosedscope;
+   //   G__templatearg_enclosedscope = 0;
+   //   G__Charlist tmpl_arg_list;
+   //   tmpl_arg_list.string = 0;
+   //   tmpl_arg_list.next = 0;
+   //   int npara = 0;
+   //   //858//int defarg = G__gettemplatearglist(tmpl_args_string, &tmpl_arg_list, class_tmpl->def_para, &npara, class_tmpl->parent_tagnum, class_tmpl->specialization); // FIXME: Port the addition of the specialization args to cint5?
+   //   int defarg = G__gettemplatearglist(tmpl_args_string, &tmpl_arg_list, class_tmpl->def_para, &npara, class_tmpl->parent_tagnum);
+   //   if (defarg) { // We have modified or defaulted template arguments.
+   //      // If the default-completed template argument list is not
+   //      // identical character-by-character to the provided argument
+   //      // list, then create a typedef to map the name as provided
+   //      // to the actual name with all the default arguments filled in.
+   //#if 0
+   //         ::Reflex::Type typenum;
+   //         int templatearg_enclosedscope = G__templatearg_enclosedscope;
+   //         G__templatearg_enclosedscope = store_templatearg_enclosedscope;
+   //         G__StrBuf tagname_sb(G__LONGLINE);
+   //         char* tagname = tagname_sb;
+   //         strcpy(tagname, tagnamein);
+   //         std::string tmp = tagname;
+   //         G__cattemplatearg(tagname, &tmpl_arg_list, npara);
+   //         std::string short_name = tagname;
+   //         strcpy(tagname, tmp.c_str());
+   //         G__cattemplatearg(tagname, &tmpl_arg_list);
+   //         ::Reflex::Scope tagnum;
+   //         long intTagnum = G__defined_tagname(tagname, 1);
+   //         if (intTagnum != -1) {
+   //            tagnum = G__Dict::GetDict().GetScope(intTagnum);
+   //         }
+   //         else {
+   //            tagnum = Reflex::Dummy::Scope();
+   //         }
+   //         G__settemplatealias(tagnamein, tagname, intTagnum, &tmpl_arg_list, class_tmpl->def_para, 0); // FIXME: No enclosedscope?
+   //         ::Reflex::Scope parent_tagnum;
+   //         if ((short_name != tagname) && !G__find_typedef(short_name.c_str())) {
+   //            parent_tagnum = tagnum.DeclaringScope();
+   //            typenum = G__declare_typedef(short_name.c_str(), 'u', G__get_tagnum(tagnum), G__PARANORMAL, 0, G__globalcomp, G__get_tagnum(parent_tagnum), false);
+   //            if (defarg == 3) {
+   //               G__struct.defaulttypenum[G__get_tagnum(tagnum)] = typenum; // FIXME: This should be G__get_typenum(typenum)!
+   //            }
+   //         }
+   //#endif // 0
+   //      int templatearg_enclosedscope = G__templatearg_enclosedscope;
+   //      G__templatearg_enclosedscope = store_templatearg_enclosedscope;
+   //      // Replace the provided name, by rewriting the template arguments
+   //      // with versions that have "std::" removed, and by filling in all
+   //      // of the default arguments, again with "std::" removed.
+   //      G__StrBuf tagname_sb(G__LONGLINE);
+   //      char* tagname = tagname_sb;
+   //      strcpy(tagname, tagnamein);
+   //      G__cattemplatearg(tagname, &tmpl_arg_list);
+   //      //
+   //      // Lookup and create, if it does not exist,
+   //      // this template instantiation, which is the
+   //      // canonical name.
+   //      //
+   //      // Note: We will call ourselves here if we must
+   //      //       create the canonical instantiation.
+   //      int int_tagnum = G__defined_tagname(tagname, 1);
+   //      //
+   //      //  Create a typedef mapping the provided name to
+   //      //  the canonical name in the scope of the canonical
+   //      //  name's parent.
+   //      //
+   //      int parent_tagnum = -1;
+   //      if (templatearg_enclosedscope) {
+   //         parent_tagnum = G__get_tagnum(G__get_envtagnum());
+   //      }
+   //      else {
+   //         parent_tagnum = G__struct.parent_tagnum[int_tagnum];
+   //         //::Reflex::Scope tagnum = G__Dict::GetDict().GetScope(int_tagnum);
+   //         //if (!tagnum.DeclaringScope().IsTopScope()) { // We do not want parent_tagnum to be zero!
+   //         //   parent_tagnum = G__get_tagnum(tagnum.DeclaringScope());
+   //         //}
+   //      }
+   //      ::Reflex::Type typenum = G__declare_typedef(tagnamein, 'u', int_tagnum, G__PARANORMAL, 0, G__globalcomp, parent_tagnum, false);
+   //      // Create a set of typedefs which map to the canonical
+   //      // instantiation we just looked up or created.
+   //      //
+   //      // The constructed typedefs start from a base name constructed
+   //      // by taking the provided name, adding in all default template
+   //      // arguments, and then removing any and all "std::" from the
+   //      // resulting set of template arguments.  Note that this base
+   //      // name should be the same as the canonical instantiation we
+   //      // just looked up or created.
+   //      //
+   //      // For example, given:
+   //      //
+   //      //      vector<std::string>
+   //      //
+   //      // the base name will be:
+   //      //
+   //      //      vector<string,allocator<string> >
+   //      //
+   //      // The first typedef created has only the required template
+   //      // arguments, and further typedefs are created by adding the
+   //      // default arguments one-by-one until one before the last
+   //      // argument.
+   //      //
+   //      // So continuing the example we will make this set of typedefs:
+   //      //
+   //      //      vector<string>
+   //      //
+   //      // but not:
+   //      //
+   //      //      vector<string,allocator<string> >
+   //      //
+   //      // Warning: tagname is modified by this routine.
+   //      //          All template arguments are rewritten with
+   //      //          any and all "std::" removed and defaults
+   //      //          are filled in.
+   //      // FIXME: the resulting tagname has ">>" at the end instead of "> >" if the last argument or default argument ends with ">".
+   //      G__settemplatealias(tagnamein, tagname, int_tagnum, &tmpl_arg_list, class_tmpl->def_para, templatearg_enclosedscope);
+   //      if (defarg == 3) {
+   //         G__struct.defaulttypenum[int_tagnum] = typenum;
+   //      }
+   //      G__freecharlist(&tmpl_arg_list);
+   //      return int_tagnum;
+   //   }
+   //   //
+   //   //  No template arguments were modified
+   //   //  or defaulted.  We can instantiate
+   //   //  exactly as given.
+   //   //
+   //   G__StrBuf tagname_sb(G__LONGLINE);
+   //   char* tagname = tagname_sb;
+   //   strcpy(tagname, tagnamein);
+   //   if (given_scope && !given_scope.IsTopScope() || (templatename[0] == ':')) {
+   //      int i = 0;
+   //      char* p = strrchr(templatename, ':');
+   //      while (p && *p) {
+   //         templatename[i++] = *(++p);
+   //      }
+   //      sprintf(tagname, "%s<%s", templatename, tmpl_args_string);
+   //   }
+   //   // resolve template specialization
+   //   if (class_tmpl->specialization) {
+   //      class_tmpl = G__resolve_specialization(tmpl_args_string, class_tmpl, &tmpl_arg_list);
+   //   }
+   //   // store tagnum
+   //   int intTagnum = G__struct.alltag;
+   //   //
+   //   ::Reflex::Scope store_tagdefining = G__tagdefining;
+   //   ::Reflex::Scope store_def_tagnum = G__def_tagnum;
+   //   G__tagdefining = G__Dict::GetDict().GetScope(class_tmpl->parent_tagnum);
+   //   G__def_tagnum = G__tagdefining;
+   //   //
+   //   //  Perform the actual instantiation operation
+   //   //  by string substituting the given template arguments
+   //   //  in the template source into a temporary file and
+   //   //  then parsing the result as input.
+   //   //
+   //   G__replacetemplate(templatename, tagname, &tmpl_arg_list, class_tmpl->def_fp, class_tmpl->line, class_tmpl->filenum, &(class_tmpl->def_pos), class_tmpl->def_para, class_tmpl->isforwarddecl ? 2 : 1, npara, class_tmpl->parent_tagnum);
+   //   //
+   //   //  Now instantiate all the member function templates.
+   //   //
+   //   //  FIXME: Member function templates should not be expanded unless they are used.
+   //   //
+   //   ::Reflex::Scope parent_tagnum = G__Dict::GetDict().GetScope(class_tmpl->parent_tagnum);
+   //   while (parent_tagnum && !parent_tagnum.IsNamespace()) {
+   //      parent_tagnum = parent_tagnum.DeclaringScope();
+   //   }
+   //   G__Definedtemplatememfunc* tmpl_mbrfunc = &class_tmpl->memfunctmplt;
+   //   for ( ; tmpl_mbrfunc->next; tmpl_mbrfunc = tmpl_mbrfunc->next) {
+   //      G__replacetemplate(templatename, tagname, &tmpl_arg_list, tmpl_mbrfunc->def_fp, tmpl_mbrfunc->line, tmpl_mbrfunc->filenum, &(tmpl_mbrfunc->def_pos), class_tmpl->def_para, 0, npara, G__get_tagnum(parent_tagnum));
+   //   }
+   //   //
+   //   //
+   //   //
+   //   if (
+   //      (intTagnum < G__struct.alltag) && // At least one of our attempted instantiations happened, and
+   //      G__struct.name[intTagnum] && // the first one has a name, and
+   //      strcmp(tagname, G__struct.name[intTagnum]) // it is not what we requested.
+   //   ) {
+   //      char* p1 = strchr(tagname, '<');
+   //      char* p2 = strchr(G__struct.name[intTagnum], '<');
+   //      if (
+   //         p1 &&
+   //         p2 &&
+   //         ((p1 - tagname) == (p2 - G__struct.name[intTagnum])) &&
+   //         !strncmp(tagname, G__struct.name[intTagnum], p1 - tagname)
+   //      ) { // the first instantiation's template args match all of what was requested (so defaults must have been added)
+   //         // For example, in t987, template <...,false> gets added to G__struct
+   //         // but we know we want template <...,0>. We can't rename reflex types,
+   //         // so we create a typedef to it.
+   //         Reflex::Type origType = G__Dict::GetDict().GetType(intTagnum);
+   //         if (origType) {
+   //            std::string typedef_fullname = origType.DeclaringScope().Name(Reflex::SCOPED);
+   //            if (typedef_fullname.length()) {
+   //               typedef_fullname += "::";
+   //            }
+   //            typedef_fullname += tagname;
+   //            //fprintf(stderr, "G__instantiate_templateclass: calling Reflex::TypedefTypeBuilder for '%s'\n", typedef_fullname.c_str());
+   //            ::Reflex::Type result = ::Reflex::TypedefTypeBuilder(typedef_fullname.c_str(), origType);
+   //            G__RflxProperties* prop = G__get_properties(result);
+   //            if (prop) {
+   //               prop->globalcomp = G__NOLINK;
+   //               //fprintf(stderr, "G__instantiate_templateclass: registering typedef '%s'\n", result.Name().c_str());
+   //               prop->typenum = G__Dict::GetDict().Register(result);
+   //#ifdef G__TYPEDEFFPOS
+   //               prop->filenum = G__ifile.filenum;
+   //               prop->linenum = G__ifile.line_number;
+   //#endif // G__TYPEDEFFPOS
+   //               prop->tagnum = G__get_tagnum(origType.RawType()); // FIXME: I think this is wrong, I think it should be -1 always.
+   //            }
+   //         }
+   //      }
+   //      else { // no "else" in the old days, but:
+   //         // we won't find it back with tagname, as it's now a typedef called "tagname".
+   //         intTagnum = G__defined_tagname(tagname, 2);
+   //      }
+   //   }
+   //   else { // no "else" in the old days, but:
+   //      // we won't find it back with tagname, as it's now a typedef called "tagname".
+   //      intTagnum = G__defined_tagname(tagname, 2);
+   //   }
+   //   if (intTagnum != -1) {
+   //      if (class_tmpl->instantiatedtagnum) {
+   //         G__IntList_addunique(class_tmpl->instantiatedtagnum, intTagnum);
+   //      }
+   //      else {
+   //         class_tmpl->instantiatedtagnum = G__IntList_new(intTagnum, NULL);
+   //      }
+   //   }
+   //   G__def_tagnum = store_def_tagnum;
+   //   G__tagdefining = store_tagdefining;
+   //   G__constvar = store_constvar;
+   //   G__freecharlist(&tmpl_arg_list); // free template argument list
+   //   return intTagnum; // return instantiated class template id
+   //}
 }
 #endif // 0
 
@@ -3761,7 +3950,7 @@ int Cint::Internal::G__instantiate_templateclass(char* tagnamein, int noerror)
    //
    //  Collect any using directives in our enclosing scope.
    //
-   struct G__inheritance* baseclass = 0;
+   G__inheritance* baseclass = 0;
    ::Reflex::Scope env_tagnum = G__get_envtagnum();
    int int_env_tagnum = G__get_tagnum(env_tagnum);
    if (env_tagnum && !env_tagnum.IsTopScope() && G__struct.baseclass[int_env_tagnum]->basen) {
@@ -3933,17 +4122,17 @@ int Cint::Internal::G__instantiate_templateclass(char* tagnamein, int noerror)
    //  that match specialization arguments exactly.  Count the number of
    //  arguments provided.
    //
-   struct G__Charlist tmpl_arg_list;
-   tmpl_arg_list.string = 0;
-   tmpl_arg_list.next = 0;
+   G__Charlist* tmpl_arg_list = new G__Charlist;
+   tmpl_arg_list->string = 0;
+   tmpl_arg_list->next = 0;
    int npara = 0;
    int defarg = 0;
    int create_in_envtagnum = 0;
    {
       int store_templatearg_enclosedscope = G__templatearg_enclosedscope;
       G__templatearg_enclosedscope = 0;
-      //858//defarg = G__gettemplatearglist(tmpl_args_string, &tmpl_arg_list, class_tmpl->def_para, &npara, class_tmpl->parent_tagnum, class_tmpl->specialization); // FIXME: Port the addition of the specialization args to cint5?
-      defarg = G__gettemplatearglist(tmpl_args_string, &tmpl_arg_list, class_tmpl->def_para, &npara, class_tmpl->parent_tagnum);
+      //858//defarg = G__gettemplatearglist(tmpl_args_string, tmpl_arg_list, class_tmpl->def_para, &npara, class_tmpl->parent_tagnum, class_tmpl->specialization); // FIXME: Port the addition of the specialization args to cint5?
+      defarg = G__gettemplatearglist(tmpl_args_string, tmpl_arg_list, class_tmpl->def_para, &npara, class_tmpl->parent_tagnum);
       create_in_envtagnum = G__templatearg_enclosedscope;
       G__templatearg_enclosedscope = store_templatearg_enclosedscope;
    }
@@ -3976,7 +4165,7 @@ int Cint::Internal::G__instantiate_templateclass(char* tagnamein, int noerror)
       G__StrBuf scoped_name_sb(G__LONGLINE);
       char* scoped_name = scoped_name_sb;
       strcpy(scoped_name, tagnamein);
-      G__cattemplatearg(scoped_name, &tmpl_arg_list);
+      G__cattemplatearg(scoped_name, tmpl_arg_list);
       //
       //  Lookup instantiation name and return it it already exists.
       //
@@ -3984,6 +4173,8 @@ int Cint::Internal::G__instantiate_templateclass(char* tagnamein, int noerror)
          //::Reflex::Scope existing_scope = ::Reflex::Scope::Lookup(scoped_name);
          //if (existing_scope) {
          //   int ret = G__get_tagnum(existing_scope);
+         //   G__freecharlist(tmpl_arg_list);
+         //   delete tmpl_arg_list;
          //   return ret;
          //}
          int intTagnum = G__defined_tagname(scoped_name, 2); // Try to find it, with autoloading enabled.
@@ -4028,7 +4219,8 @@ int Cint::Internal::G__instantiate_templateclass(char* tagnamein, int noerror)
             //  Restore global state and return.
             //
             G__constvar = store_constvar;
-            G__freecharlist(&tmpl_arg_list);
+            G__freecharlist(tmpl_arg_list);
+            delete tmpl_arg_list;
             return intTagnum;
          }
       }
@@ -4038,13 +4230,14 @@ int Cint::Internal::G__instantiate_templateclass(char* tagnamein, int noerror)
    //  for the requested template-id.
    //
    if (Cint::G__GetGenerateDictionary()) {
-      int int_tagnum = G__generate_template_dict(tagnamein, class_tmpl, &tmpl_arg_list);
+      int int_tagnum = G__generate_template_dict(tagnamein, class_tmpl, tmpl_arg_list);
       if (int_tagnum != -1) {
          //
          //  Restore global state and return.
          //
          G__constvar = store_constvar;
-         G__freecharlist(&tmpl_arg_list);
+         G__freecharlist(tmpl_arg_list);
+         delete tmpl_arg_list; 
          return int_tagnum;
       }
    }
@@ -4058,32 +4251,36 @@ int Cint::Internal::G__instantiate_templateclass(char* tagnamein, int noerror)
    char* tagname = tagname_sb;
    strcpy(tagname, simple_templatename);
    strcat(tagname, "<");
-   G__cattemplatearg(tagname, &tmpl_arg_list);
+   G__cattemplatearg(tagname, tmpl_arg_list);
    //
    //  If the class template has any specializations,
    //  search to see if we match one of them, if so
    //  switch to using that specialization.
    //
    //  WARNING: If a match is found, tmpl_arg_list will be modified by
-   //           having all pointer, reference, and const modifiers removed.
+   //           having pointer, reference, and const modifiers removed
+   //           that are part of the specialization arguments.
+   //
+   //           Also tmpl_arg_list will be modified to be appropriate
+   //           for the specialized template.
    //
    G__Definedtemplateclass* primary_class_tmpl = class_tmpl;
    if (primary_class_tmpl->specialization) {
       G__StrBuf expanded_tmpl_args_string_sb(G__LONGLINE);
       char* expanded_tmpl_args_string = expanded_tmpl_args_string_sb;
       strcpy(expanded_tmpl_args_string, "<");
-      G__cattemplatearg(expanded_tmpl_args_string, &tmpl_arg_list);
-      G__freecharlist(&tmpl_arg_list);
-      tmpl_arg_list.string = 0;
-      tmpl_arg_list.next = 0;
+      G__cattemplatearg(expanded_tmpl_args_string, tmpl_arg_list);
+      G__freecharlist(tmpl_arg_list);
+      tmpl_arg_list->string = 0;
+      tmpl_arg_list->next = 0;
       npara = 0;
       int store_templatearg_enclosedscope = G__templatearg_enclosedscope;
       G__templatearg_enclosedscope = 0;
-      //858//G__gettemplatearglist(expanded_tmpl_args_string + 1, &tmpl_arg_list, class_tmpl->def_para, &npara, class_tmpl->parent_tagnum, class_tmpl->specialization); // FIXME: Port the addition of the specialization args to cint5?
-      G__gettemplatearglist(expanded_tmpl_args_string + 1, &tmpl_arg_list, class_tmpl->def_para, &npara, class_tmpl->parent_tagnum);
+      //858//G__gettemplatearglist(expanded_tmpl_args_string + 1, tmpl_arg_list, class_tmpl->def_para, &npara, class_tmpl->parent_tagnum, class_tmpl->specialization); // FIXME: Port the addition of the specialization args to cint5?
+      G__gettemplatearglist(expanded_tmpl_args_string + 1, tmpl_arg_list, class_tmpl->def_para, &npara, class_tmpl->parent_tagnum);
       create_in_envtagnum = G__templatearg_enclosedscope;
       G__templatearg_enclosedscope = store_templatearg_enclosedscope;
-      class_tmpl = G__resolve_specialization(expanded_tmpl_args_string + 1, class_tmpl, &tmpl_arg_list);
+      class_tmpl = G__resolve_specialization(expanded_tmpl_args_string + 1, class_tmpl, tmpl_arg_list);
    }
    //
    //  Switch current scope to declaring scope of template.
@@ -4107,7 +4304,7 @@ int Cint::Internal::G__instantiate_templateclass(char* tagnamein, int noerror)
    //  then parsing the result as input.
    //
    //fprintf(stderr, "G__instantiate_templateclass: templatename: '%s' tagname '%s' parent: '%s'\n", simple_templatename, tagname, (class_tmpl->parent_tagnum == -1) ? "" : G__struct.name[class_tmpl->parent_tagnum]);
-   G__replacetemplate(simple_templatename, tagname, &tmpl_arg_list, class_tmpl->def_fp, class_tmpl->line, class_tmpl->filenum, &class_tmpl->def_pos, class_tmpl->def_para, class_tmpl->isforwarddecl ? 2 : 1, npara, class_tmpl->parent_tagnum);
+   G__replacetemplate(simple_templatename, tagname, tmpl_arg_list, class_tmpl->def_fp, class_tmpl->line, class_tmpl->filenum, &class_tmpl->def_pos, class_tmpl->def_para, class_tmpl->isforwarddecl ? 2 : 1, npara, class_tmpl->parent_tagnum);
    //
    //  Get new number of classes to compare against the
    //  old number to see if we actually created any
@@ -4125,9 +4322,9 @@ int Cint::Internal::G__instantiate_templateclass(char* tagnamein, int noerror)
    while (parent_tagnum && !parent_tagnum.IsNamespace()) {
       parent_tagnum = parent_tagnum.DeclaringScope();
    }
-   struct G__Definedtemplatememfunc* tmpl_mbrfunc = &class_tmpl->memfunctmplt;
+   G__Definedtemplatememfunc* tmpl_mbrfunc = &class_tmpl->memfunctmplt;
    for ( ; tmpl_mbrfunc->next; tmpl_mbrfunc = tmpl_mbrfunc->next) {
-      G__replacetemplate(simple_templatename, tagname, &tmpl_arg_list, tmpl_mbrfunc->def_fp, tmpl_mbrfunc->line, tmpl_mbrfunc->filenum, &(tmpl_mbrfunc->def_pos), class_tmpl->def_para, 0, npara, G__get_tagnum(parent_tagnum));
+      G__replacetemplate(simple_templatename, tagname, tmpl_arg_list, tmpl_mbrfunc->def_fp, tmpl_mbrfunc->line, tmpl_mbrfunc->filenum, &(tmpl_mbrfunc->def_pos), class_tmpl->def_para, 0, npara, G__get_tagnum(parent_tagnum));
    }
    //
    //  Restore state.
@@ -4302,17 +4499,18 @@ int Cint::Internal::G__instantiate_templateclass(char* tagnamein, int noerror)
    //
    if (intTagnum != -1) {
       if (!class_tmpl->spec_arg) {
-         G__settemplatealias(scope_name, tagname, intTagnum, &tmpl_arg_list, class_tmpl->def_para, create_in_envtagnum);
+         G__settemplatealias(scope_name, tagname, intTagnum, tmpl_arg_list, class_tmpl->def_para, create_in_envtagnum);
       }
       else {
-         G__settemplatealias(scope_name, tagname, intTagnum, &tmpl_arg_list, primary_class_tmpl->def_para, create_in_envtagnum);
+         G__settemplatealias(scope_name, tagname, intTagnum, tmpl_arg_list, primary_class_tmpl->def_para, create_in_envtagnum);
       }
    }
    //
    //  Restore global state and return.
    //
    G__constvar = store_constvar;
-   G__freecharlist(&tmpl_arg_list);
+   G__freecharlist(tmpl_arg_list);
+   delete tmpl_arg_list;
    return intTagnum;
 }
 
@@ -4423,7 +4621,7 @@ static void G__settemplatealias(const char* scope_name, const char* template_id,
 }
 
 //______________________________________________________________________________
-static struct G__Definedtemplateclass* G__resolve_specialization(char* tmpl_args_string, G__Definedtemplateclass* class_tmpl, G__Charlist* expanded_tmpl_arg_list)
+static G__Definedtemplateclass* G__resolve_specialization(char* tmpl_args_string, G__Definedtemplateclass* class_tmpl, G__Charlist* expanded_tmpl_arg_list)
 {
    // Attempt to find a matching specialization for the given template and the given template argument string.
    //
@@ -4431,26 +4629,26 @@ static struct G__Definedtemplateclass* G__resolve_specialization(char* tmpl_args
    // pointer, reference, or const qualifiers.
    //
    //--
-   struct G__Definedtemplateclass* best_match = class_tmpl; // return value
-   struct G__Templatearg* tmpl_arg_list = G__read_specializationarg(tmpl_args_string); // Refetch the given template arguments, expanded_tmpl_arg_list already has defaults inserted.
+   G__Definedtemplateclass* best_match = class_tmpl; // return value
    //
    //  Loop over all known specializations looking for a match.
    //
    int best_rating = 0;
-   struct G__Definedtemplateclass* spec = class_tmpl->specialization;
+   G__Definedtemplateclass* spec = class_tmpl->specialization;
    for ( ; spec->next; spec = spec->next) { // Search all available specializations for a best match.
       //
       //  Loop over all specialization arguments,
       //  and rate the match.
       //
       int rating = 0;
-      struct G__Templatearg* tmpl_param = class_tmpl->def_para; // parameters of the class template
-      struct G__Templatearg* spec_arg = spec->spec_arg; // specialization's arguments
-      struct G__Templatearg* given_spec_arg = tmpl_arg_list; // given spec arguments
+      G__Templatearg* tmpl_param = class_tmpl->def_para; // parameters of the class template
+      G__Templatearg* spec_arg = spec->spec_arg; // specialization's arguments
+      G__Templatearg* given_spec_arg = G__read_specializationarg(spec->def_para, tmpl_args_string); // given spec arguments
       while (spec_arg && given_spec_arg) { // FIXME: We need to match *all* of the specialization's arguments, not just some of them.
          if (given_spec_arg->type == spec_arg->type) { // Possible exact match.
             rating += 10;
             if ((tmpl_param->type & 0xff) != G__TMPLT_CLASSARG) {
+               // FIXME: We do not handle template template parameters correctly here!
                // Values must match.
                std::string buf;
                buf.reserve(G__LONGLINE);
@@ -4473,14 +4671,31 @@ static struct G__Definedtemplateclass* G__resolve_specialization(char* tmpl_args
                }
                G__const_noerror = old;
             }
+            else { // This is a type template parameter.
+               // Type names must match.
+               if (!strstr(spec_arg->string, "//P")) { // The specialization argument does not refer to a specialization parameter.
+                  if (strcmp(given_spec_arg->string, spec_arg->string)) { // Error, no type name match.
+                     rating = 0;
+                     break;
+                  }
+               }
+            }
          }
          else { // check reference, pointer, and const modifiers
+            if (
+               ((tmpl_param->type & 0xff) != G__TMPLT_CLASSARG) &&
+               ((tmpl_param->type & 0xff) != G__TMPLT_TMPLTARG) &&
+               (given_spec_arg->type & 0xff) != (spec_arg->type & 0xff)
+            ) { // No match, base types do not match.
+               rating = 0;
+               break;
+            }
             int spec_r = spec_arg->type & G__TMPLT_REFERENCEARG;
-            int call_r = tmpl_arg_list->type & G__TMPLT_REFERENCEARG;
+            int call_r = given_spec_arg->type & G__TMPLT_REFERENCEARG;
             int spec_p = spec_arg->type & G__TMPLT_POINTERARGMASK;
-            int call_p = tmpl_arg_list->type & G__TMPLT_POINTERARGMASK;
+            int call_p = given_spec_arg->type & G__TMPLT_POINTERARGMASK;
             int spec_c = spec_arg->type & G__TMPLT_CONSTARG;
-            int call_c = tmpl_arg_list->type & G__TMPLT_CONSTARG;
+            int call_c = given_spec_arg->type & G__TMPLT_CONSTARG;
             if (call_r == spec_r) {
                ++rating;
             }
@@ -4514,28 +4729,91 @@ static struct G__Definedtemplateclass* G__resolve_specialization(char* tmpl_args
          best_rating = rating;
          best_match = spec;
       }
+      G__freetemplatearg(given_spec_arg);
    }
    //
    //  If we found a matching specialization, then
+   //  remove the specialization argument modifiers
+   //  (pointer, reference, const) from the default-expanded
+   //  given arguments, so they are not duplicated during
+   //  the instantiation of the specialization.
+   //
+   //  Then construct a new template argument list
+   //  appropriate for the selected specialization
+   //  using the given arguments (which are appropriate
+   //  for the primary template, but not the specialization).
    //
    if (best_match != class_tmpl) { // We found a matching specialization
-      G__modify_callpara(best_match->spec_arg, tmpl_arg_list, expanded_tmpl_arg_list); // Remove any spec arg modifers (pointer, reference, const) from the expanded_tmpl_arg_list.
+      G__Templatearg* given_spec_arg = G__read_specializationarg(best_match->def_para, tmpl_args_string); // given spec arguments (which are default-expanded).
+      G__modify_callpara(best_match->spec_arg, given_spec_arg, expanded_tmpl_arg_list); // Remove any spec arg modifers (pointer, reference, const) from the expanded_tmpl_arg_list so that they are not duplicated during instantiation of the specialization.
+      G__freetemplatearg(given_spec_arg);
+      //
+      //  Construct a new template argument list
+      //  appropriate for the selected specialization.
+      //
+      G__Charlist* new_tmpl_arg_head = new G__Charlist;
+      new_tmpl_arg_head->string = 0;
+      new_tmpl_arg_head->next = 0;
+      int i = 1;
+      G__Charlist* new_tmpl_arg = new_tmpl_arg_head;
+      for (G__Templatearg* spec_def_para = best_match->def_para; spec_def_para; spec_def_para = spec_def_para->next) { // Create an argument for each specialization parameter.
+         G__StrBuf temp_sb(G__LONGLINE);
+         char* temp = temp_sb;
+         sprintf(temp, "//P%d//", i);
+         bool found = false;
+         G__Templatearg* spec_arg = best_match->spec_arg;
+         G__Charlist* expanded_tmpl_arg = expanded_tmpl_arg_list;
+         for ( ; spec_arg; ) { // Find a specialization argument that matches the current specialization parameter (could be more than one).
+            if (strstr(spec_arg->string, temp)) { // Found the arg corresponding to this param.
+               found = true;
+               if (i != 1) {
+                  new_tmpl_arg->next = new G__Charlist;
+                  new_tmpl_arg = new_tmpl_arg->next;
+                  new_tmpl_arg->string = 0;
+                  new_tmpl_arg->next = 0;
+               }
+               new_tmpl_arg->string = (char*) malloc(strlen(expanded_tmpl_arg->string) + 1);
+               strcpy(new_tmpl_arg->string, expanded_tmpl_arg->string);
+               break;
+            }
+            spec_arg = spec_arg->next;
+            expanded_tmpl_arg = expanded_tmpl_arg->next;
+         }
+         if (!found) {
+            fprintf(stderr, "G__resolve_specialization: Could not match specialization parameter #%d!\n", i);
+            return class_tmpl; // Give up on best-match specialization.
+         }
+      }
+      new_tmpl_arg = 0;
+      G__freecharlist(expanded_tmpl_arg_list);
+      if (expanded_tmpl_arg_list->string) {
+         free(expanded_tmpl_arg_list->string);
+      }
+      expanded_tmpl_arg_list->string = (char*) malloc(strlen(new_tmpl_arg_head->string) + 1);
+      strcpy(expanded_tmpl_arg_list->string, new_tmpl_arg_head->string);
+      expanded_tmpl_arg_list->next = new_tmpl_arg_head->next;
+      free(new_tmpl_arg_head->string);
+      new_tmpl_arg_head->next = 0;
+      free(new_tmpl_arg_head);
+      new_tmpl_arg_head = 0;
    }
-   G__freetemplatearg(tmpl_arg_list);
    return best_match;
 }
 
 //______________________________________________________________________________
-static void G__modify_callpara(G__Templatearg* spec_arg, G__Templatearg* tmpl_arg, G__Charlist* expanded_tmpl_arg)
+static void G__modify_callpara(G__Templatearg* spec_arg_in, G__Templatearg* given_spec_arg_in, G__Charlist* expanded_tmpl_arg_in)
 {
    // Remove any pointer, reference, or const modifiers from the expanded_tmp_arg.
-   while (spec_arg && tmpl_arg && expanded_tmpl_arg) {
+   G__Templatearg* spec_arg = spec_arg_in;
+   G__Templatearg* given_spec_arg = given_spec_arg_in;
+   G__Charlist* expanded_tmpl_arg = expanded_tmpl_arg_in;
+   while (spec_arg && given_spec_arg && expanded_tmpl_arg) {
       int spec_p = spec_arg->type & G__TMPLT_POINTERARGMASK;
-      int call_p = tmpl_arg->type & G__TMPLT_POINTERARGMASK;
+      int call_p = given_spec_arg->type & G__TMPLT_POINTERARGMASK;
       int spec_r = spec_arg->type & G__TMPLT_REFERENCEARG;
-      int call_r = tmpl_arg->type & G__TMPLT_REFERENCEARG;
+      int call_r = given_spec_arg->type & G__TMPLT_REFERENCEARG;
       int spec_c = spec_arg->type & G__TMPLT_CONSTARG;
-      int call_c = tmpl_arg->type & G__TMPLT_CONSTARG;
+      int call_c = given_spec_arg->type & G__TMPLT_CONSTARG;
       if ((spec_p > 0) && (spec_p <= call_p)) {
          int n = spec_p / G__TMPLT_POINTERARG1;
          char buf[10];
@@ -4552,9 +4830,12 @@ static void G__modify_callpara(G__Templatearg* spec_arg, G__Templatearg* tmpl_ar
          G__delete_string(expanded_tmpl_arg->string, "const ");
       }
       spec_arg = spec_arg->next;
-      tmpl_arg = tmpl_arg->next;
+      given_spec_arg = given_spec_arg->next;
       expanded_tmpl_arg = expanded_tmpl_arg->next;
    }
+   spec_arg = spec_arg_in;
+   given_spec_arg = given_spec_arg_in;
+   expanded_tmpl_arg = expanded_tmpl_arg_in;
 }
 
 //______________________________________________________________________________
@@ -4594,13 +4875,13 @@ int Cint::Internal::G__templatefunc(G__value* result, char* funcname, G__param* 
 {
    // Search matching template function, search by name then parameter.
    // If match found, expand template, parse as pre-run and execute it.
-   struct G__Definetemplatefunc* deftmpfunc;
-   struct G__Charlist call_para;
+   G__Definetemplatefunc* deftmpfunc;
+   G__Charlist call_para;
    int store_exec_memberfunc;
    char* pexplicitarg;
    ::Reflex::Scope env_tagnum = G__get_envtagnum();
    ::Reflex::Scope store_friendtagnum = G__friendtagnum;
-   struct G__inheritance* baseclass = 0;
+   G__inheritance* baseclass = 0;
    if (env_tagnum && !env_tagnum.IsTopScope() && G__struct.baseclass[G__get_tagnum(env_tagnum)]->basen) {
       baseclass = G__struct.baseclass[G__get_tagnum(env_tagnum)];
    }
@@ -4708,7 +4989,7 @@ int Cint::Internal::G__templatefunc(G__value* result, char* funcname, G__param* 
 #define G__NOMATCH 0xffffffff
 
 //______________________________________________________________________________
-struct G__funclist* Cint::Internal::G__add_templatefunc(char* funcnamein, G__param* libp, int hash, G__funclist* funclist, const ::Reflex::Scope p_ifunc, int isrecursive)
+G__funclist* Cint::Internal::G__add_templatefunc(char* funcnamein, G__param* libp, int hash, G__funclist* funclist, const ::Reflex::Scope p_ifunc, int isrecursive)
 {
    // Attempt a function template instantiation by name and argument list, if we succeed, parse as pre-run.
    //
@@ -4724,7 +5005,7 @@ struct G__funclist* Cint::Internal::G__add_templatefunc(char* funcnamein, G__par
    //
    //  Check for possible base classes of search starting scope.
    //
-   struct G__inheritance* baseclass = &G__globalusingnamespace;
+   G__inheritance* baseclass = &G__globalusingnamespace;
    if (env_tagnum != -1) {
       baseclass = G__struct.baseclass[env_tagnum];
    }
@@ -4751,7 +5032,7 @@ struct G__funclist* Cint::Internal::G__add_templatefunc(char* funcnamein, G__par
       }
       else {
          *ptmplt = 0;
-         struct G__Definetemplatefunc* p = G__defined_templatefunc(funcname);
+         G__Definetemplatefunc* p = G__defined_templatefunc(funcname);
          if (p) {
             int tmp = 0;
             G__hash(funcname, hash, tmp);
@@ -4772,11 +5053,11 @@ struct G__funclist* Cint::Internal::G__add_templatefunc(char* funcnamein, G__par
    //
    //  Search for a matching template function by name.
    //
-   struct G__Charlist call_para;
+   G__Charlist call_para;
    call_para.string = 0;
    call_para.next = 0;
    int idx = 0;
-   struct G__Definetemplatefunc* f = &G__definedtemplatefunc;
+   G__Definetemplatefunc* f = &G__definedtemplatefunc;
    for (; f->next; f = f->next, ++idx) {
       G__freecharlist(&call_para);
       //fprintf(stderr, "G__add_templatefunc: idx: %03d hash: %04x name: '%s'\n", idx, f->hash, f->name);
@@ -4877,11 +5158,11 @@ char* Cint::Internal::G__gettemplatearg(int n, G__Templatearg* def_para)
 }
 
 //______________________________________________________________________________
-extern "C" struct G__Definedtemplateclass* G__defined_templateclass(char* name)
+extern "C" G__Definedtemplateclass* G__defined_templateclass(char* name)
 {
    // Check if the template class is declared
    // but maybe in future I might need this to handle case 4,5
-   struct G__Definedtemplateclass* deftmplt;
+   G__Definedtemplateclass* deftmplt;
    int hash;
    int temp;
    char* dmy_struct_offset = 0;
@@ -4889,7 +5170,7 @@ extern "C" struct G__Definedtemplateclass* G__defined_templateclass(char* name)
    char* atom_name = atom_name_sb;
    ::Reflex::Scope env_tagnum = G__get_envtagnum();
    ::Reflex::Scope scope_tagnum;
-   struct G__inheritance* baseclass = 0;
+   G__inheritance* baseclass = 0;
    // return if no name
    if (
       !name[0] ||
@@ -4998,10 +5279,10 @@ extern "C" struct G__Definedtemplateclass* G__defined_templateclass(char* name)
 }
 
 //______________________________________________________________________________
-struct G__Definetemplatefunc* Cint::Internal::G__defined_templatefunc(const char* name)
+G__Definetemplatefunc* Cint::Internal::G__defined_templatefunc(const char* name)
 {
    // Check if the template function is declared
-   struct G__Definetemplatefunc* deftmplt;
+   G__Definetemplatefunc* deftmplt;
    int hash;
    int temp;
    char* dmy_struct_offset = 0;
@@ -5009,7 +5290,7 @@ struct G__Definetemplatefunc* Cint::Internal::G__defined_templatefunc(const char
    char* atom_name = atom_name_sb;
    ::Reflex::Scope env_tagnum = G__get_envtagnum();
    ::Reflex::Scope scope_tagnum;
-   struct G__inheritance* baseclass;
+   G__inheritance* baseclass;
    // return if no name
    if (!name[0] || strchr(name, '.') || strchr(name, '-') || strchr(name, '(')) {
       return 0;
@@ -5111,7 +5392,7 @@ struct G__Definetemplatefunc* Cint::Internal::G__defined_templatefunc(const char
 }
 
 //______________________________________________________________________________
-struct G__Definetemplatefunc* Cint::Internal::G__defined_templatememfunc(char* name)
+G__Definetemplatefunc* Cint::Internal::G__defined_templatememfunc(char* name)
 {
    //
    // t.Handle<int>();
@@ -5124,7 +5405,7 @@ struct G__Definetemplatefunc* Cint::Internal::G__defined_templatememfunc(char* n
    G__StrBuf atom_name_sb(G__LONGLINE);
    char* atom_name = atom_name_sb;
    int store_asm_noverflow = G__asm_noverflow;
-   struct G__Definetemplatefunc* result = 0;
+   G__Definetemplatefunc* result = 0;
    // separate "t" and "Handle"
    strcpy(atom_name, name);
    p1 = strrchr(atom_name, '.');
@@ -5159,7 +5440,7 @@ struct G__Definetemplatefunc* Cint::Internal::G__defined_templatememfunc(char* n
             p[len] = 0;
             for (::Reflex::Member_Iterator f = tagnum.FunctionMember_Begin(); f != tagnum.FunctionMember_End(); ++f) {
                if (!strncmp(f->Name().c_str(), p, len)) {
-                  result = (struct G__Definetemplatefunc*) G__PVOID;
+                  result = (G__Definetemplatefunc*) G__PVOID;
                }
             }
             p[len-1] = 0;
@@ -5215,8 +5496,8 @@ static ::Reflex::Type G__getobjecttagnum(char *name)
       result = G__getobjecttagnum(name);
       if (result) {
          // TO BE IMPLEMENTED
-         // struct G__var_array* var = G__struct.memvar[result];
-         // struct G__ifunc_table* ifunc = G__struct.memfunc[result];
+         // G__var_array* var = G__struct.memvar[result];
+         // G__ifunc_table* ifunc = G__struct.memfunc[result];
       }
    }
    if (p1 && !(*p1)) {
