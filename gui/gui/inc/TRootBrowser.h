@@ -68,6 +68,7 @@ protected:
    TGTab             *fTabBottom;                  // Bottom Tab
    TGTab             *fEditTab;                    // Tab in "Edit" mode
    Int_t              fEditPos;                    // Id of tab in "Edit" mode
+   Int_t              fEditSubPos;                 // Id of subtab in "Edit" mode
    TGVerticalFrame   *fVf;                         // Vertical frame
    TGHorizontalFrame *fHf;                         // Horizontal frame
    TGHorizontalFrame *fH1;                         // Horizontal frame
