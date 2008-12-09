@@ -1764,7 +1764,7 @@ extern "C" void G__set_class_autoloading_table(char* classname, char* libname)
 }
 
 //______________________________________________________________________________
-extern "C" int G__defined_tagname(const char* tagname_in, int noerror)
+extern "C" int G__defined_tagname(const char* tagname, int noerror)
 {
    // Scan tagname table and return tagnum.  WARNING: tagname may be modified if there is a template instantiation.
    //
@@ -1799,9 +1799,6 @@ extern "C" int G__defined_tagname(const char* tagname_in, int noerror)
    char* temp = temp_sb;
    G__StrBuf atom_tagname_sb(G__LONGLINE);
    char* atom_tagname = atom_tagname_sb;
-   G__StrBuf tagname_sb(G__LONGLINE);
-   char* tagname = tagname_sb;
-   strcpy(tagname, tagname_in);
    switch (tagname[0]) {
       case '"':
       case '\'':
@@ -2064,14 +2061,14 @@ extern "C" int G__defined_tagname(const char* tagname_in, int noerror)
       }
       // CAUTION: tagname may be modified in following function.
       char store_var_type = G__var_type;
-      i = G__instantiate_templateclass(tagname, noerror);
+      i = G__instantiate_templateclass((char*) tagname, noerror);
       G__var_type = store_var_type;
       return i;
    }
    else if (noerror < 2) {
-      G__Definedtemplateclass* deftmplt = G__defined_templateclass(tagname);
+      G__Definedtemplateclass* deftmplt = G__defined_templateclass((char*) tagname);
       if (deftmplt && deftmplt->def_para && deftmplt->def_para->default_parameter) {
-         i = G__instantiate_templateclass(tagname, noerror);
+         i = G__instantiate_templateclass((char*) tagname, noerror);
          return i;
       }
    }
