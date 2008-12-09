@@ -50,7 +50,7 @@ void Cint::G__ClassInfo::Init(const char* classname)
 {
    {
       // G__defined_tagnum might modify classname.
-      char *tmp = new char[strlen(classname)+1];
+      char *tmp = new char[strlen(classname)*2];
       strcpy(tmp,classname);
       fTagnum = G__defined_tagname(tmp,1);
       delete [] tmp;
