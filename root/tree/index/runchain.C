@@ -27,7 +27,11 @@ int runchain(){
   ////////////////////////////////////////////////////
   TChain *chain = new TChain("testTree");
   chain->Add("newTestFile.root");
-  return !test(chain);
+  bool result = !test(chain);
+
+  delete chain;
+
+  return result;
   
 }
 
