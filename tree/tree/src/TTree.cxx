@@ -1909,7 +1909,7 @@ TBranch* TTree::BronchExec(const char* name, const char* classname, void* addr, 
    // Do splitting, if requested.
    //
 
-   if (splitlevel%100 > 0 && branch->GetType() != -1 /* Do not split the unsplitable */ ) {
+   if (splitlevel%100 > 0) {
       // Loop on all public data members of the class and its base classes and create branches for each one.
       TObjArray* blist = branch->GetListOfBranches();
       TIter next(sinfo->GetElements());
