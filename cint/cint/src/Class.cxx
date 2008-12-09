@@ -37,8 +37,14 @@ void Cint::G__ClassInfo::Init()
 ///////////////////////////////////////////////////////////////////////////
 void Cint::G__ClassInfo::Init(const char *classname)
 {
-  tagnum = G__defined_tagname(classname,1);
-  class_property = 0;
+   {
+      // G__defined_tagnum might modify classname.
+      char *tmp = new char[strlen(classname)+1];
+      strcpy(tmp,classname);
+      tagnum = G__defined_tagname(tmp,1);
+      delete [] tmp;
+   }
+   class_property = 0;
 }
 ///////////////////////////////////////////////////////////////////////////
 Cint::G__ClassInfo::G__ClassInfo(const G__value &value_for_type) : tagnum(0), class_property(0)
