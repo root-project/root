@@ -6210,6 +6210,9 @@ void TTree::SetTreeIndex(TVirtualIndex* index)
    // tree.SetTreeIndex(oldIndex);
    // tree.Draw(); etc
 
+   if (fTreeIndex) {
+      fTreeIndex->SetTree(0);
+   }
    fTreeIndex = index;
 }
 
