@@ -68,11 +68,11 @@ void readfile(const char*filename="pairs.root",int debug = 0) {
    TFile *f = new TFile(filename);
    if (debug) {
       whatis(TClass::GetClass("vector<Int_t>")->GetCollectionProxy());
-      whatis(TClass::GetClass("vector<std::pair<Char_t, UChar_t>")->GetCollectionProxy());
+      whatis(TClass::GetClass("vector<std::pair<Char_t, UChar_t> >")->GetCollectionProxy());
       cout << "tp<Int_t> " << (void*) TClass::GetClass("tp<Int_t>") << endl;
    }
    check(TClass::GetClass("vector<Int_t>"));
-   check(TClass::GetClass("vector<std::pair<Char_t, UChar_t>"));
+   check(TClass::GetClass("vector<std::pair<Char_t, UChar_t> >"));
    regular *r;
    f->GetObject("myr",r);
 }
