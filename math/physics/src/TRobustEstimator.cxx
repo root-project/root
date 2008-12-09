@@ -661,6 +661,7 @@ void TRobustEstimator::EvaluateUni(Int_t nvectors, Double_t *data, Double_t &mea
    delete [] aw;
    delete [] aw2;
    delete [] slutn;
+   delete [] index;
 }
 
 //_______________________________________________________________________
