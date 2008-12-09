@@ -318,7 +318,7 @@ int PyROOT::Utility::GetBuffer( PyObject* pyobject, char tc, int size, void*& bu
             PyObject* pytype = 0, *pyvalue = 0, *pytrace = 0;
             PyErr_Fetch( &pytype, &pyvalue, &pytrace );
             PyObject* pyvalue2 = PyString_FromFormat(
-               (char*)"%s and given element size (%d) does not match needed (%d)",
+               (char*)"%s and given element size (%ld) does not match needed (%d)",
                PyString_AS_STRING( pyvalue ),
                seqmeths->sq_length ? (int)(buflen / (*(seqmeths->sq_length))( pyobject )) : buflen,
                size );
