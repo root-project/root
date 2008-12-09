@@ -127,8 +127,10 @@ Int_t TQueryResultManager::CleanupQueriesDir()
          continue;
 
       // Remove the directory
-      TString qdir = Form("%s/%s", queriesdir.Data(), sess);
-      Info("RemoveQuery", "removing directory: %s", qdir.Data());
+      TString qdir;
+      qdir.Form("%s/%s", queriesdir.Data(), sess);
+      PDB(kGlobal, 1)
+         Info("RemoveQuery", "removing directory: %s", qdir.Data());
       gSystem->Exec(Form("%s %s", kRM, qdir.Data()));
       nd++;
    }
@@ -265,7 +267,8 @@ Int_t TQueryResultManager::ApplyMaxQueries(Int_t mxq)
 
          FileStat_t st;
          if (gSystem->GetPathInfo(fn, st)) {
-            Info("ApplyMaxQueries","file '%s' cannot be stated: remove it", fn.Data());
+            PDB(kGlobal, 1)
+               Info("ApplyMaxQueries","file '%s' cannot be stated: remove it", fn.Data());
             gSystem->Unlink(gSystem->DirName(fn));
             continue;
          }
@@ -334,7 +337,7 @@ Int_t TQueryResultManager::LockSession(const char *sessiontag, TProofLockPath **
       return 0;
 
    if (!lck) {
-      Info("LockSession","locker space undefined");
+      Error("LockSession","locker space undefined");
       return -1;
    }
    *lck = 0;
@@ -344,7 +347,7 @@ Int_t TQueryResultManager::LockSession(const char *sessiontag, TProofLockPath **
    TRegexp re("session-.*-.*-.*-.*");
    Int_t i1 = stag.Index(re);
    if (i1 == kNPOS) {
-      Info("LockSession","bad format: %s", sessiontag);
+      Error("LockSession","bad format: %s", sessiontag);
       return -1;
    }
    stag.ReplaceAll("session-","");
@@ -359,7 +362,8 @@ Int_t TQueryResultManager::LockSession(const char *sessiontag, TProofLockPath **
    parlog = parlog.Remove(parlog.Index("master-")+strlen("master-"));
    parlog += stag;
    if (!gSystem->AccessPathName(parlog)) {
-      Info("LockSession","parent still running: do nothing");
+      PDB(kGlobal, 1)
+         Info("LockSession", "parent still running: do nothing");
       return -1;
    }
 
@@ -371,7 +375,7 @@ Int_t TQueryResultManager::LockSession(const char *sessiontag, TProofLockPath **
       if (!gSystem->AccessPathName(qlock)) {
          *lck = new TProofLockPath(qlock);
          if (((*lck)->Lock()) < 0) {
-            Info("LockSession","problems locking query lock file");
+            Error("LockSession","problems locking query lock file");
             SafeDelete(*lck);
             return -1;
          }
@@ -388,7 +392,7 @@ Int_t TQueryResultManager::CleanupSession(const char *sessiontag)
    // Cleanup query dir qdir.
 
    if (!sessiontag) {
-      Info("CleanupSession","session tag undefined");
+      Error("CleanupSession","session tag undefined");
       return -1;
    }
 
@@ -477,7 +481,8 @@ void TQueryResultManager::RemoveQuery(const char *queryref, TList *otherlist)
    }
 
    // Remove the directory
-   Info("RemoveQuery", "removing directory: %s", qdir.Data());
+   PDB(kGlobal, 1)
+      Info("RemoveQuery", "removing directory: %s", qdir.Data());
    gSystem->Exec(Form("%s %s", kRM, qdir.Data()));
 
    // Done
@@ -692,14 +697,13 @@ void TQueryResultManager::SaveQuery(TProofQueryResult *pq, Int_t mxq)
          SaveQuery(pq);
          fKeptQueries++;
       } else {
+         TString emsg;
+         emsg.Form("Too many saved queries (%d): cannot save %s:%s",
+                   fKeptQueries, pq->GetTitle(), pq->GetName());
          if (gProofServ) {
-            gProofServ->SendAsynMessage(Form("Too many saved queries (%d):"
-                                             " cannot save %s:%s",
-                                             fKeptQueries, pq->GetTitle(),
-                                             pq->GetName()));
+            gProofServ->SendAsynMessage(emsg.Data());
          } else {
-            Info("SaveQuery", "Too many saved queries (%d): cannot save %s:%s",
-                  fKeptQueries, pq->GetTitle(),  pq->GetName());
+            Warning("SaveQuery", emsg.Data());
          }
       }
    } else {
