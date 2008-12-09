@@ -302,7 +302,7 @@ void TEveTrack::MakeTrack(Bool_t recurse)
    {
       TEveVector currP = fP;
       Bool_t decay = kFALSE;
-      fPropagator->InitTrack(fV, fP, fBeta, fCharge);
+      fPropagator->InitTrack(fV, fCharge);
       for (vPathMark_i pm = fPathMarks.begin(); pm != fPathMarks.end(); ++pm)
       {
          if (rTP.GetFitReferences() && pm->fType == TEvePathMark::kReference)

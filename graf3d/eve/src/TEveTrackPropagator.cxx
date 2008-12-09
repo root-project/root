@@ -27,7 +27,7 @@ TEveTrackPropagator::Helix_t::Helix_t() :
 }
 
 //______________________________________________________________________________
-void TEveTrackPropagator::Helix_t::Update(const TEveVector& p, const TEveVector& b,
+void TEveTrackPropagator::Helix_t::UpdateHelix(const TEveVector& p, const TEveVector& b,
                                           Bool_t fullUpdate, Float_t fraction)
 {
    // Update helix parameters.
@@ -116,6 +116,34 @@ void TEveTrackPropagator::Helix_t::Step(const TEveVector4& v, const TEveVector& 
 }
 
 
+//______________________________________________________________________________
+void TEveTrackPropagator::Helix_t::UpdateRG(const TEveVector& p,  const TEveVector& b, Float_t bMax, Float_t maxStep)
+{
+  // Update helix for stepper RungeKutta.
+
+  if (bMax > 0)
+  {
+    // full update
+    Float_t a  = fgkB2C * bMax * fCharge;
+    if (a)
+    {
+      fR      = TMath::Abs(p.Mag() / a);
+      fTStep   = TMath::Min(fR*fPhiStep, maxStep);
+      printf("step %f %f \n", fR, maxStep);
+      fValid = kTRUE;
+    }
+    else 
+    {
+      fValid = kFALSE;
+      fTStep = maxStep;
+    }
+  }
+
+  fB = b;
+  fPlDir = p.Dot(fB);
+}
+
+
 //==============================================================================
 // TEveTrackPropagator
 //==============================================================================
@@ -144,12 +172,14 @@ TEveTrackPropagator::TEveTrackPropagator(const Text_t* n, const Text_t* t,
    TEveElementList(n, t),
    TEveRefBackPtr(),
 
+   fStepper(kHelix),
    fMagFieldObj(field),
    fMaxR    (350),
    fMaxZ    (450),
 
    fNMax     (4096),
    fMaxOrbs  (0.5),
+   fMaxStepRG  (1),
 
    fEditPathMarks (kTRUE),
    fFitDaughters  (kTRUE),
@@ -231,8 +261,7 @@ void TEveTrackPropagator::ElementChanged(Bool_t update_scenes, Bool_t redraw)
 //==============================================================================
 
 //______________________________________________________________________________
-void TEveTrackPropagator::InitTrack(TEveVector &v, TEveVector& /*p*/,
-                                    Float_t /*beta*/,  Int_t charge)
+void TEveTrackPropagator::InitTrack(TEveVector &v,  Int_t charge)
 {
    // Initialize internal data-members for given particle parameters.
 
@@ -253,6 +282,9 @@ void TEveTrackPropagator::ResetTrack()
    // Reset cache holding particle trajectory.
 
    fPoints.clear();
+
+   // reset helix
+   fH.fPhi = 0;
 }
 
 //______________________________________________________________________________
@@ -260,61 +292,95 @@ Bool_t TEveTrackPropagator::GoToVertex(TEveVector& v, TEveVector& p)
 {
    // Propagate particle with momentum p to vertex v.
 
-   fH.Update(p, fMagFieldObj->GetField(fV), kTRUE);
-
-   Bool_t hit;
-   if (fH.fValid)
-      hit = HelixToVertex(v, p);
+   if (fStepper == kHelix)
+      fH.UpdateHelix(p, fMagFieldObj->GetField(fV), kTRUE);
    else
-      hit = LineToVertex(v);
-   return hit;
+      fH.UpdateRG(p, fMagFieldObj->GetField(fV), fMagFieldObj->GetMaxFieldMag(), fMaxStepRG);
+
+
+   if ((v-fV).Mag() < 1e-3)
+   {
+      fPoints.push_back(v);
+      return kTRUE;
+   }
+
+   return fH.fValid ? LoopToVertex(v, p): LineToVertex(v);
 }
 
 //______________________________________________________________________________
 void TEveTrackPropagator::GoToBounds(TEveVector& p)
 {
    // Propagate particle to bounds.
-
-   fH.Update(p, fMagFieldObj->GetField(fV), kTRUE);
-
-   if (fH.fValid)
-      HelixToBounds(p);
+   // Return TRUE if hit bounds.
+  
+   if (fStepper == kHelix)
+      fH.UpdateHelix(p, fMagFieldObj->GetField(fV), kTRUE);
    else
-      LineToBounds(p);
+      fH.UpdateRG(p, fMagFieldObj->GetField(fV), fMagFieldObj->GetMaxFieldMag(), fMaxStepRG);
+
+    
+   fH.fValid ? LoopToBounds(p): LineToBounds(p);
 }
 
-
 //______________________________________________________________________________
-void TEveTrackPropagator::StepHelix(TEveVector4 &v, TEveVector &p, TEveVector4 &vOut, TEveVector &pOut)
+void TEveTrackPropagator::Step(TEveVector4 &v, TEveVector &p, TEveVector4 &vOut, TEveVector &pOut,
+                               Float_t fraction = -1)
 {
    // Wrapper to step helix.
 
-   if (fMagFieldObj->IsConst())
+   if (fStepper == kHelix)
    {
-      fH.Update(p, fH.fB, kFALSE);
+      fH.UpdateHelix(p, fH.fB, !fMagFieldObj->IsConst(), fraction);
+      fH.Step(v, p, vOut, pOut);
    }
    else
    {
-      fH.Update(p, fMagFieldObj->GetField(v), kTRUE);
+      fH.UpdateRG(p, fMagFieldObj->GetField(fV));
+      Float_t step = 1;//fH.fTStep;
+      if (fraction > 0)
+         step *= fraction;
+
+      Double_t vecRGI[7];
+      vecRGI[0] = v.fX;
+      vecRGI[1] = v.fY;
+      vecRGI[2] = v.fZ;
+      Float_t nm = 1/p.Mag();
+      vecRGI[3] = p.fX*nm;
+      vecRGI[4] = p.fY*nm;
+      vecRGI[5] = p.fZ*nm;
+      vecRGI[6] = p.Mag();
+
+      Double_t vecRGO[7];
+      OneStepRungeKutta(fH.fCharge, step, vecRGI, vecRGO);
+
+      vOut.fX = vecRGO[0];
+      vOut.fY = vecRGO[1];
+      vOut.fZ = vecRGO[2];
+      vOut.fT += step;
+      Double_t pm = vecRGO[6];
+      pOut.fX = vecRGO[3]*pm;
+      pOut.fY = vecRGO[4]*pm;
+      pOut.fZ = vecRGO[5]*pm;
    }
-   fH.Step(v, p, vOut, pOut);
 }
 
 //______________________________________________________________________________
-void TEveTrackPropagator::HelixToBounds(TEveVector& p)
+void TEveTrackPropagator::LoopToBounds(TEveVector& p)
 {
    // Propagate charged particle with momentum p to bounds.
+
+   const Float_t maxRsq = fMaxR*fMaxR;
 
    TEveVector4 currV(fV);
    TEveVector4 forwV(fV);
    TEveVector  forwP (p);
 
    Int_t np = fPoints.size();
-   Float_t maxRsq = fMaxR*fMaxR;
    Float_t maxPhi = fMaxOrbs*TMath::TwoPi();
+
    while (fH.fPhi < maxPhi && np<fNMax)
    {
-      StepHelix(currV, p, forwV, forwP);
+      Step(currV, p, forwV, forwP);
 
       // cross R
       if (forwV.Perp2() > maxRsq)
@@ -362,12 +428,9 @@ void TEveTrackPropagator::HelixToBounds(TEveVector& p)
 }
 
 //______________________________________________________________________________
-Bool_t TEveTrackPropagator::HelixToVertex(TEveVector& v, TEveVector& p)
+Bool_t TEveTrackPropagator::LoopToVertex(TEveVector& v, TEveVector& p)
 {
    // Propagate charged particle with momentum p to vertex v.
-
-   if (fMagFieldObj->IsConst())
-      fH.Update(p, fMagFieldObj->GetField(fV), kTRUE);
 
    const Float_t maxRsq = fMaxR*fMaxR;
 
@@ -375,26 +438,22 @@ Bool_t TEveTrackPropagator::HelixToVertex(TEveVector& v, TEveVector& p)
    TEveVector4 forwV(fV);
    TEveVector  forwP(p);
 
-   Int_t new_points  = 0;
    Int_t first_point = fPoints.size();
-   Int_t np = fPoints.size();
+   Int_t np = first_point;
    Bool_t hitBounds = kFALSE;
 
    while ( ! PointOverVertex(v, currV) && np < fNMax)
    {
-      StepHelix(currV, p, forwV, forwP);
-
+      Step(currV, p, forwV, forwP);
       if (IsOutsideBounds(forwV, maxRsq, fMaxZ))
       {
          hitBounds = kTRUE;
-         TEveVector d = v-forwV;
          break;
       }
       currV = forwV;
       p = forwP;
       fPoints.push_back(currV);
       ++ np;
-      ++new_points;
    }
 
    /* Debug
@@ -407,22 +466,26 @@ Bool_t TEveTrackPropagator::HelixToVertex(TEveVector& v, TEveVector& p)
    */
 
    // make the remaining fractional step
-   Float_t af = (v - currV).Mag() / fH.fTStep;
-   fH.Update(p, fH.fB, kTRUE, af);
-   StepHelix(currV, p, forwV, forwP);
+   Float_t frac = (v - currV).Mag() /(fPoints[np-2]-currV).Mag();
+   // set step fraction
+   if (fStepper == kHelix)
+      fH.UpdateHelix(p, fH.fB, kTRUE, frac);
+   else
+      fH.fTStep *= frac; 
+
+   Step(currV, p, forwV, forwP);
    p = forwP;
 
    // correct for offset
    TEveVector off(v); off -= currV;
    off *= 1.0f / currV.fT;
-   for(UInt_t i = first_point; i < fPoints.size(); ++i)
+   for (Int_t i = first_point; i < np; ++i)
    {
       fPoints[i] += off * fPoints[i].fT;
    }
 
    fPoints.push_back(v);
-   fV = fPoints.back();
-
+   fV = v;
    return ! hitBounds;
 }
 
@@ -486,7 +549,7 @@ Bool_t TEveTrackPropagator::HelixIntersectPlane(const TEveVector& p,
    TEveVector pos(fV);
    TEveVector mom(p);
    if (fMagFieldObj->IsConst())
-      fH.Update(mom, fMagFieldObj->GetField(pos), kTRUE);
+      fH.UpdateHelix(mom, fMagFieldObj->GetField(pos), fH.fCharge,  kTRUE);
 
    TEveVector n(normal);
    TEveVector delta = pos - point;
@@ -501,7 +564,7 @@ Bool_t TEveTrackPropagator::HelixIntersectPlane(const TEveVector& p,
    TEveVector4 pos4(pos);
    while (1)
    {
-      StepHelix(pos4, mom, forwV , forwP);
+      Step(pos4, mom, forwV , forwP);
       Float_t new_d = (forwV - point).Dot(n);
       if (new_d < d)
       {
@@ -741,4 +804,265 @@ void TEveTrackPropagator::SetRnrReferences(Bool_t rnr)
 
    fRnrReferences = rnr;
    RebuildTracks();
+}
+
+
+//______________________________________________________________________________
+void TEveTrackPropagator::OneStepRungeKutta(Double_t charge, Double_t step,
+					Double_t* vect, Double_t* vout)
+{
+
+  // Wrapper to step with method RungeKutta.
+
+  ///	******************************************************************
+  ///	*								 *
+  ///	*  Runge-Kutta method for tracking a particle through a magnetic *
+  ///	*  field. Uses Nystroem algorithm (See Handbook Nat. Bur. of	 *
+  ///	*  Standards, procedure 25.5.20)				 *
+  ///	*								 *
+  ///	*  Input parameters						 *
+  ///	*	CHARGE    Particle charge				 *
+  ///	*	STEP	  Step size					 *
+  ///	*	VECT	  Initial co-ords,direction cosines,momentum	 *
+  ///	*  Output parameters						 *
+  ///	*	VOUT	  Output co-ords,direction cosines,momentum	 *
+  ///	*  User routine called  					 *
+  ///	*	CALL GUFLD(X,F) 					 *
+  ///	*								 *
+  ///	*    ==>Called by : <USER>, GUSWIM				 *
+  ///	*	Authors    R.Brun, M.Hansroul  *********		 *
+  ///	*		   V.Perevoztchikov (CUT STEP implementation)	 *
+  ///	*								 *
+  ///	*								 *
+  ///	******************************************************************
+
+  Double_t h2, h4, f[4];
+  Double_t xyzt[3], a, b, c, ph,ph2;
+  Double_t secxs[4],secys[4],seczs[4],hxp[3];
+  Double_t g1, g2, g3, g4, g5, g6, ang2, dxt, dyt, dzt;
+  Double_t est, at, bt, ct, cba;
+  Double_t f1, f2, f3, f4, rho, tet, hnorm, hp, rho1, sint, cost;
+
+  Double_t x;
+  Double_t y;
+  Double_t z;
+
+  Double_t xt;
+  Double_t yt;
+  Double_t zt;
+
+  // Double_t maxit = 1992;
+  Double_t maxit = 10;
+  Double_t maxcut = 11;
+
+  const Double_t hmin   = 1e-4; // !!! MT ADD,  should be member
+  const Double_t kdlt   = 1e-3; // !!! MT CHANGE from 1e-4, should be member
+  const Double_t kdlt32 = kdlt/32.;
+  const Double_t kthird = 1./3.;
+  const Double_t khalf  = 0.5;
+  const Double_t kec    = 2.9979251e-3;
+
+  const Double_t kpisqua = 9.86960440109;
+  const Int_t kix  = 0;
+  const Int_t kiy  = 1;
+  const Int_t kiz  = 2;
+  const Int_t kipx = 3;
+  const Int_t kipy = 4;
+  const Int_t kipz = 5;
+
+  // *.
+  // *.    ------------------------------------------------------------------
+  // *.
+  // *             this constant is for units cm,gev/c and kgauss
+  // *
+  Int_t iter = 0;
+  Int_t ncut = 0;
+  for(Int_t j = 0; j < 7; j++)
+    vout[j] = vect[j];
+
+  Double_t  pinv   = kec * charge / vect[6];
+  Double_t tl = 0.;
+  Double_t h = step;
+  Double_t rest;
+
+
+  do {
+    rest  = step - tl;
+    if (TMath::Abs(h) > TMath::Abs(rest)) h = rest;
+    //cmodif: call gufld(vout,f) changed into:
+    // GetField(vout,f);
+    f[0] = -fH.fB.fX;
+    f[1] = -fH.fB.fY;
+    f[2] = -fH.fB.fZ;
+
+
+    // *
+    // *             start of integration
+    // *
+    x      = vout[0];
+    y      = vout[1];
+    z      = vout[2];
+    a      = vout[3];
+    b      = vout[4];
+    c      = vout[5];
+
+    h2     = khalf * h;
+    h4     = khalf * h2;
+    ph     = pinv * h;
+    ph2    = khalf * ph;
+    secxs[0] = (b * f[2] - c * f[1]) * ph2;
+    secys[0] = (c * f[0] - a * f[2]) * ph2;
+    seczs[0] = (a * f[1] - b * f[0]) * ph2;
+    ang2 = (secxs[0]*secxs[0] + secys[0]*secys[0] + seczs[0]*seczs[0]);
+    if (ang2 > kpisqua) break;
+
+    dxt    = h2 * a + h4 * secxs[0];
+    dyt    = h2 * b + h4 * secys[0];
+    dzt    = h2 * c + h4 * seczs[0];
+    xt     = x + dxt;
+    yt     = y + dyt;
+    zt     = z + dzt;
+    // *
+    // *              second intermediate point
+    // *
+
+    est = TMath::Abs(dxt) + TMath::Abs(dyt) + TMath::Abs(dzt);
+    if (est > h) {
+      if (ncut++ > maxcut) break;
+      h *= khalf;
+      continue;
+    }
+
+    xyzt[0] = xt;
+    xyzt[1] = yt;
+    xyzt[2] = zt;
+
+    //cmodif: call gufld(xyzt,f) changed into:
+    f[0] = -fH.fB.fX;
+    f[1] = -fH.fB.fY;
+    f[2] = -fH.fB.fZ;
+
+    at     = a + secxs[0];
+    bt     = b + secys[0];
+    ct     = c + seczs[0];
+
+    secxs[1] = (bt * f[2] - ct * f[1]) * ph2;
+    secys[1] = (ct * f[0] - at * f[2]) * ph2;
+    seczs[1] = (at * f[1] - bt * f[0]) * ph2;
+    at     = a + secxs[1];
+    bt     = b + secys[1];
+    ct     = c + seczs[1];
+    secxs[2] = (bt * f[2] - ct * f[1]) * ph2;
+    secys[2] = (ct * f[0] - at * f[2]) * ph2;
+    seczs[2] = (at * f[1] - bt * f[0]) * ph2;
+    dxt    = h * (a + secxs[2]);
+    dyt    = h * (b + secys[2]);
+    dzt    = h * (c + seczs[2]);
+    xt     = x + dxt;
+    yt     = y + dyt;
+    zt     = z + dzt;
+    at     = a + 2.*secxs[2];
+    bt     = b + 2.*secys[2];
+    ct     = c + 2.*seczs[2];
+
+    est = TMath::Abs(dxt)+TMath::Abs(dyt)+TMath::Abs(dzt);
+    if (est > 2.*TMath::Abs(h)) {
+      if (ncut++ > maxcut) break;
+      h *= khalf;
+      continue;
+    }
+
+    xyzt[0] = xt;
+    xyzt[1] = yt;
+    xyzt[2] = zt;
+
+    //cmodif: call gufld(xyzt,f) changed into:
+    f[0] = -fH.fB.fX;
+    f[1] = -fH.fB.fY;
+    f[2] = -fH.fB.fZ;
+
+    z      = z + (c + (seczs[0] + seczs[1] + seczs[2]) * kthird) * h;
+    y      = y + (b + (secys[0] + secys[1] + secys[2]) * kthird) * h;
+    x      = x + (a + (secxs[0] + secxs[1] + secxs[2]) * kthird) * h;
+
+    secxs[3] = (bt*f[2] - ct*f[1])* ph2;
+    secys[3] = (ct*f[0] - at*f[2])* ph2;
+    seczs[3] = (at*f[1] - bt*f[0])* ph2;
+    a      = a+(secxs[0]+secxs[3]+2. * (secxs[1]+secxs[2])) * kthird;
+    b      = b+(secys[0]+secys[3]+2. * (secys[1]+secys[2])) * kthird;
+    c      = c+(seczs[0]+seczs[3]+2. * (seczs[1]+seczs[2])) * kthird;
+
+    est    = TMath::Abs(secxs[0]+secxs[3] - (secxs[1]+secxs[2]))
+      + TMath::Abs(secys[0]+secys[3] - (secys[1]+secys[2]))
+      + TMath::Abs(seczs[0]+seczs[3] - (seczs[1]+seczs[2]));
+
+    if (est > kdlt && TMath::Abs(h) > hmin) {
+      if (ncut++ > maxcut) break;
+      h *= khalf;
+      continue;
+    }
+
+    ncut = 0;
+    // *               if too many iterations, go to helix
+    if (iter++ > maxit) break;
+
+    // printf("write value \n");
+    tl += h;
+    if (est < kdlt32)
+      h *= 2.;
+    cba    = 1./ TMath::Sqrt(a*a + b*b + c*c);
+    vout[0] = x;
+    vout[1] = y;
+    vout[2] = z;
+    vout[3] = cba*a;
+    vout[4] = cba*b;
+    vout[5] = cba*c;
+    rest = step - tl;
+    if (step < 0.) rest = -rest;
+    if (rest < 1.e-5*TMath::Abs(step)) return;
+
+  } while(1);
+
+  //  printf("MAKE HELIX \n");
+
+  // angle too big, use helix
+
+  f1  = f[0];
+  f2  = f[1];
+  f3  = f[2];
+  f4  = TMath::Sqrt(f1*f1+f2*f2+f3*f3);
+  rho = -f4*pinv;
+  tet = rho * step;
+
+  hnorm = 1./f4;
+  f1 = f1*hnorm;
+  f2 = f2*hnorm;
+  f3 = f3*hnorm;
+
+  hxp[0] = f2*vect[kipz] - f3*vect[kipy];
+  hxp[1] = f3*vect[kipx] - f1*vect[kipz];
+  hxp[2] = f1*vect[kipy] - f2*vect[kipx];
+
+  hp = f1*vect[kipx] + f2*vect[kipy] + f3*vect[kipz];
+
+  rho1 = 1./rho;
+  sint = TMath::Sin(tet);
+  cost = 2.*TMath::Sin(khalf*tet)*TMath::Sin(khalf*tet);
+
+  g1 = sint*rho1;
+  g2 = cost*rho1;
+  g3 = (tet-sint) * hp*rho1;
+  g4 = -cost;
+  g5 = sint;
+  g6 = cost * hp;
+
+  vout[kix] = vect[kix] + g1*vect[kipx] + g2*hxp[0] + g3*f1;
+  vout[kiy] = vect[kiy] + g1*vect[kipy] + g2*hxp[1] + g3*f2;
+  vout[kiz] = vect[kiz] + g1*vect[kipz] + g2*hxp[2] + g3*f3;
+
+  vout[kipx] = vect[kipx] + g4*vect[kipx] + g5*hxp[0] + g6*f1;
+  vout[kipy] = vect[kipy] + g4*vect[kipy] + g5*hxp[1] + g6*f2;
+  vout[kipz] = vect[kipz] + g4*vect[kipz] + g5*hxp[2] + g6*f3; 
+
+  fH.fPhi += tet;
 }

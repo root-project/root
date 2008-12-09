@@ -44,8 +44,9 @@ public:
    }
 
    virtual TEveVector GetField(const TEveVector &v) const { return GetField(v.fX, v.fY, v.fZ);}
-
    virtual TEveVector GetField(Float_t x, Float_t y, Float_t z) const = 0;
+  
+   virtual Float_t    GetMaxFieldMag() const = 0;
 
    ClassDef(TEveMagField, 0); // Abstract interface to magnetic field
 };
@@ -67,6 +68,8 @@ public:
 
    using   TEveMagField::GetField;
    virtual TEveVector GetField(Float_t /*x*/, Float_t /*y*/, Float_t /*z*/) const { return fB; }
+
+   virtual Float_t    GetMaxFieldMag() const { return fB.Mag(); }
 
    ClassDef(TEveMagFieldConst, 0); // Interface to constant magnetic field.
 };
@@ -94,6 +97,8 @@ public:
    using   TEveMagField::GetField;
    virtual TEveVector GetField(Float_t x, Float_t y, Float_t /*z*/) const
    { return  ((x*x+y*y)<fR2) ? fBIn : fBOut; }
+
+   virtual Float_t    GetMaxFieldMag() const { return TMath::Max(fBIn.Mag(), fBOut.Mag()); }
 
    ClassDef(TEveMagFieldDuo, 0); // Interface to magnetic field with two different values depending of radius.
 };
@@ -138,19 +143,22 @@ public:
 
       Helix_t();
 
-      void Update(const TEveVector & p, const TEveVector& b, Bool_t fullUpdate, Float_t fraction = -1);
+      void UpdateHelix(const TEveVector & p, const TEveVector& b, Bool_t fullUpdate, Float_t fraction = -1);
+      void UpdateRG   (const TEveVector & p, const TEveVector& b, Float_t bMax = -1, Float_t maxStep = -1);
       void Step  (const TEveVector4& v, const TEveVector& p, TEveVector4& vOut, TEveVector& pOut);
 
       Float_t GetStep()  { return fTStep * TMath::Sqrt(1 + fLam*fLam); }
       Float_t GetStep2() { return fTStep * fTStep * (1 + fLam*fLam);   }
    };
 
+   enum EStepper_e    { kHelix, kRungeKutta };
 private:
    TEveTrackPropagator(const TEveTrackPropagator&);            // Not implemented
    TEveTrackPropagator& operator=(const TEveTrackPropagator&); // Not implemented
 
 protected:
-   // Magnetic field
+   EStepper_e              fStepper; 
+
    TEveMagField*            fMagFieldObj;
 
    // Track extrapolation limits
@@ -159,6 +167,8 @@ protected:
    Int_t                    fNMax;          // max steps
    // Helix limits
    Float_t                  fMaxOrbs;       // Maximal angular path of tracks' orbits (1 ~ 2Pi).
+
+   Float_t                  fMaxStepRG;     // Maximum step size in stepper RungeKuta.
 
    // Path-mark / first-vertex control
    Bool_t                   fEditPathMarks; // Show widgets for path-mark control in GUI editor.
@@ -182,13 +192,15 @@ protected:
    Helix_t                  fH;             // Helix.
 
    void    RebuildTracks();
-   void    StepHelix(TEveVector4 &v, TEveVector &p, TEveVector4 &vOut, TEveVector &pOut);
+   void    Step(TEveVector4 &v, TEveVector &p, TEveVector4 &vOut, TEveVector &pOut, Float_t fraction);
 
-   Bool_t  HelixToVertex(TEveVector& v, TEveVector& p);
-   void    HelixToBounds(TEveVector& p);
+   Bool_t  LoopToVertex(TEveVector& v, TEveVector& p);
+   void    LoopToBounds(TEveVector& p);
 
    Bool_t  LineToVertex (TEveVector& v);
    void    LineToBounds (TEveVector& p);
+
+   void    OneStepRungeKutta(Double_t charge, Double_t step, Double_t* vect, Double_t* vout);
 
    Bool_t  HelixIntersectPlane(const TEveVector& p, const TEveVector& point, const TEveVector& normal,
                                TEveVector& itsect);
@@ -209,7 +221,7 @@ public:
    virtual void ElementChanged(Bool_t update_scenes=kTRUE, Bool_t redraw=kFALSE);
 
    // propagation
-   void   InitTrack(TEveVector &v, TEveVector &p, Float_t beta, Int_t charge);
+   void   InitTrack(TEveVector& v, Int_t charge);
    void   ResetTrack();
    void   GoToBounds(TEveVector& p);
    Bool_t GoToVertex(TEveVector& v, TEveVector& p);
@@ -218,6 +230,8 @@ public:
                          TEveVector& itsect);
 
    void   FillPointSet(TEvePointSet* ps) const;
+
+   void   SetStepper(EStepper_e s) { fStepper = s; }
 
    void   SetMagField(Float_t bX, Float_t bY, Float_t bZ);
    void   SetMagField(Float_t b) { SetMagField(0.f, 0.f, b); }
@@ -242,6 +256,8 @@ public:
 
    TEveVector GetMagField(Float_t x, Float_t y, Float_t z) { return fMagFieldObj->GetField(x, y, z); }
    void PrintMagField(Float_t x, Float_t y, Float_t z) const;
+
+   EStepper_e   GetStepper()  const { return fStepper;}
 
    Float_t GetMaxR()     const { return fMaxR;     }
    Float_t GetMaxZ()     const { return fMaxZ;     }
@@ -272,7 +288,7 @@ public:
    ClassDef(TEveTrackPropagator, 0); // Calculates path of a particle taking into account special path-marks and imposed boundaries.
 };
 
-
+//______________________________________________________________________________
 inline Bool_t TEveTrackPropagator::IsOutsideBounds(const TEveVector& point,
                                                    Float_t           maxRsqr,
                                                    Float_t           maxZ)
@@ -284,6 +300,7 @@ inline Bool_t TEveTrackPropagator::IsOutsideBounds(const TEveVector& point,
           point.fX*point.fX + point.fY*point.fY > maxRsqr;
 }
 
+//______________________________________________________________________________
 inline Bool_t TEveTrackPropagator::PointOverVertex(const TEveVector4 &v0,
                                                    const TEveVector4 &v)
 {
