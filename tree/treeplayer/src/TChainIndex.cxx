@@ -142,11 +142,13 @@ void TChainIndex::DeleteIndices()
    // Delete all the indices which were built by this object
    for (unsigned int i = 0; i < fEntries.size(); i++) {
       if (fEntries[i].fTreeIndex) {
-         if (fTree->GetTree()->GetTreeIndex() == fEntries[i].fTreeIndex) {
+         if (fTree->GetTree() && fTree->GetTree()->GetTreeIndex() == fEntries[i].fTreeIndex) {
             fTree->GetTree()->SetTreeIndex(0);
+            SafeDelete(fEntries[i].fTreeIndex);
+         } else {
+            // Since we did not explicitly detach this index from a TTree, it
+            // still belongs to that TTree object and the TTree will delete the index.
          }
-         //do not delete the vector element (deleted by ~TChainIndex)
-         //SafeDelete(fEntries[i].fTreeIndex);
       }
    }
 }
