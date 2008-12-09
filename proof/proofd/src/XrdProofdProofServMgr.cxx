@@ -402,11 +402,7 @@ int XrdProofdProofServMgr::AddSession(XrdProofdProtocol *p, XrdProofdProofServ *
    // Save session info to file
    XrdProofSessionInfo info(c, s);
    int rc = info.SaveToFile(path.c_str());
-   if (rc == 0) {
-      // Save path into the protocol instance, if successful 
-      s->SetAdminPath(path.c_str());
-      s->Protocol()->SetAdminPath(path.c_str());
-   } 
+
    return rc;
 }
 
@@ -1649,6 +1645,13 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
          }
       }
 
+      // Unblock SIGUSR1 and SIGUSR2
+      sigset_t myset;
+      sigemptyset(&myset);
+      sigaddset(&myset, SIGUSR1);
+      sigaddset(&myset, SIGUSR2);
+      pthread_sigmask(SIG_UNBLOCK, &myset, 0);
+
       // Cleanup
       close(fp[0]);
       close(fp[1]);
@@ -2045,6 +2048,9 @@ int XrdProofdProofServMgr::Accept(XrdProofdProofServ *xps,
    }
 
    if (go) {
+      // Save path into the protocol instance: it may be needed during Process
+      XrdOucString apath(xps->AdminPath());
+      ((XrdProofdProtocol *)xp)->SetAdminPath(apath.c_str());
       // Take a short-cut and process the initial request as a sticky request
       if (xp->Process(linkpsrv) != 0) {
          msg = "handshake with internal link failed: ";
@@ -3495,8 +3501,6 @@ bool XrdProofdProofServMgr::IsReconnecting()
    // Return true if in reconnection state, i.e. during
    // that period during which clients are expected to reconnect.
    // Return false if the session is fully effective
-
-   XrdSysMutexHelper mhp(fMutex);
 
    int rect = -1;
    if (fReconnectTime >= 0) {
