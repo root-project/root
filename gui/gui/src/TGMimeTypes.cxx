@@ -44,12 +44,12 @@ TGMimeTypes::TGMimeTypes(TGClient *client, const char *filename)
    // Create a mime type cache. Read the mime types file "filename" and
    // built a list of mime types.
 
-   char     line[1024];
-   char     mime[1024];
-   char     pattern[256];
-   char     icon[256];
-   char     sicon[256];
-   char     action[256];
+   char     line[1024]   = {0};
+   char     mime[1024]   = {0};
+   char     pattern[256] = {0};
+   char     icon[256]    = {0};
+   char     sicon[256]   = {0};
+   char     action[256]  = {0};
    char    *s;
 
    fClient   = client;
