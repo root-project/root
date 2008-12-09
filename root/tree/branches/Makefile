@@ -77,40 +77,39 @@ separate: separate.log
 abc_rflx.cpp: abc.h
 	$(CMDECHO) genreflex abc.h > abc_reflex_cpp.log 2>&1
 
-libabc_reflex.$(DllSuf): abc_rflx.$(ObjSuf)
-	$(BuildFromObj)
+libabc_rflx_C.$(DllSuf): abc_rflx.cpp
 
 abc_cint.root: abc_h.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -b -l -q abcwrite.C\(\"cint\"\) > abc_cint.log 2>&1
 	 
-abc_reflex.root: libabc_reflex.$(DllSuf)
+abc_reflex.root: libabc_rflx_C.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -b -l -q abcwrite.C\(\"reflex\"\) > abc_reflex.log 2>&1
 
 
-abc.cintcint.log: abc_cint.root
+abc.cintcint.log: abc_cint.root abc_h.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -b -l -q abcread.C\(\"cint\",\"cint\"\) 2>&1 | grep -v Processing > abc.cintcint.log 
 
-abc.reflexcint.log: abc_cint.root libabc_reflex.$(DllSuf)
-	$(CMDECHO) $(CALLROOTEXE) -b -l -q abcread.C\(\"cint\",\"reflex\"\) 2>&1 | grep -v Processing > abc.reflexcint.log 
+abc.cintreflex.log: abc_cint.root libabc_rflx_C.$(DllSuf)
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q abcread.C\(\"cint\",\"reflex\"\) 2>&1 | grep -v Processing > abc.cintreflex.log 
 
-abc.cintreflex.log: abc_reflex.root abc_h.$(DllSuf)
-	$(CMDECHO) $(CALLROOTEXE) -b -l -q abcread.C\(\"reflex\",\"cint\"\) 2>&1 | grep -v Processing > abc.cintreflex.log 
+abc.reflexcint.log: abc_reflex.root abc_h.$(DllSuf)
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q abcread.C\(\"reflex\",\"cint\"\) 2>&1 | grep -v Processing > abc.reflexcint.log 
 
-abc.reflexreflex.log: abc_reflex.root
+abc.reflexreflex.log: abc_reflex.root libabc_rflx_C.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -b -l -q abcread.C\(\"reflex\",\"reflex\"\) 2>&1 | grep -v Processing > abc.reflexreflex.log 
 
 
 abc.cintcint.success: abc.cintcint.log
-	$(CMDECHO) diff -b -u abc.cintcint.log abc.ref && touch abc.cintcint.success
+	$(CMDECHO) diff -b -u abc.ref abc.cintcint.log && touch abc.cintcint.success
 
 abc.reflexcint.success: abc.reflexcint.log
-	$(CMDECHO) diff -b -u abc.reflexcint.log abc.ref && touch abc.reflexcint.success
+	$(CMDECHO) diff -b -u abc.ref abc.reflexcint.log && touch abc.reflexcint.success
 
 abc.cintreflex.success: abc.cintreflex.log
-	$(CMDECHO) diff -b -u abc.cintreflex.log abc.ref && touch abc.cintreflex.success
+	$(CMDECHO) diff -b -u abc.ref abc.cintreflex.log && touch abc.cintreflex.success
 
 abc.reflexreflex.success: abc.reflexreflex.log
-	$(CMDECHO) diff -b -u abc.reflexreflex.log abc.ref && touch abc.reflexreflex.success
+	$(CMDECHO) diff -b -u abc.ref abc.reflexreflex.log && touch abc.reflexreflex.success
 
 ifeq ($(findstring gccxml,$(notdir $(HAVEGCCXML))),gccxml)
 abc: abc.cintcint.success abc.cintreflex.success abc.reflexcint.success abc.reflexreflex.success

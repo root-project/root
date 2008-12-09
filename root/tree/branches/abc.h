@@ -25,8 +25,3 @@ public:
    ABC* fABC;
 };
 
-#ifdef __CINT__
-#pragma link C++ class ABC+;
-#pragma link C++ class Derived+;
-#pragma link C++ class Holder+;
-#endif
