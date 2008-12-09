@@ -26,6 +26,7 @@
 #include "TUrl.h"
 #include "TVirtualMutex.h"
 #include "TVirtualPad.h"
+#include "TVirtualViewer3D.h"
 #include <vector>
 #include <list>
 #include <set>
@@ -400,7 +401,29 @@ void TDocOutput::Convert(std::istream& in, const char* infilename,
          // need to run the script
          TString pwd(gSystem->pwd());
          gSystem->cd(gSystem->DirName(infilename));
-         TVirtualPad* lastCanvas = (TVirtualPad*) gROOT->GetListOfCanvases()->Last();
+
+         Bool_t haveGClient = false;
+         TList* gClientGetListOfWindows = 0;
+         TObject* gClientGetDefaultRoot = 0;
+         gROOT->ProcessLine(TString::Format("*((Bool_t*)0x%lx) = gClient;",
+                                               &haveGClient));
+         std::set<TObject*> previousWindows;
+         if (haveGClient) {
+            gROOT->ProcessLine(TString::Format("*((TList**)0x%lx) = gClient->GetListOfWindows();",
+                                               &gClientGetListOfWindows));
+            gROOT->ProcessLine(TString::Format("*((TObject**)0x%lx) = gClient->GetDefaultRoot();",
+                                               &gClientGetDefaultRoot));
+            TObject* win = 0;
+            TIter iWin(gClientGetListOfWindows);
+            while((win = iWin())) {
+               TObject* winGetParent = 0;
+               gROOT->ProcessLine(TString::Format("*((TObject**)0x%lx) = ((TGWindow*)0x%lx)->GetParent();",
+                                                  &winGetParent, win));
+               if (winGetParent == gClientGetDefaultRoot)
+                  previousWindows.insert(win);
+            }
+         }
+
          TString cmd(".x ");
          cmd += gSystem->BaseName(infilename);
          if (includeOutput & THtml::kCompiledOutput)
@@ -409,15 +432,45 @@ void TDocOutput::Convert(std::istream& in, const char* infilename,
          gSystem->cd(pwd);
 
          TIter iCanvas(gROOT->GetListOfCanvases());
-         TVirtualPad* canv = 0;
-         while ((canv = (TVirtualPad*) iCanvas())) {
-            if (lastCanvas) {
-               if (lastCanvas != canv) continue;
-               else lastCanvas = 0;
+
+         if (haveGClient) {
+            TList listOfCanvasesToDelete;
+            listOfCanvasesToDelete.SetOwner();
+            TClass* clRootCanvas = TClass::GetClass("TRootCanvas");
+            TClass* clGMainFrame = TClass::GetClass("TGMainFrame");
+            TObject* win = 0;
+            TIter iWin(gClientGetListOfWindows);
+            while((win = iWin())) {
+               TObject* winGetParent = 0;
+               gROOT->ProcessLine(TString::Format("*((TObject**)0x%lx) = ((TGWindow*)0x%lx)->GetParent();",
+                                                  &winGetParent, win));
+               Bool_t winIsMapped = kFALSE;
+               gROOT->ProcessLine(TString::Format("*((Bool_t*)0x%lx) = ((TGWindow*)0x%lx)->IsMapped();",
+                                                  &winIsMapped, win));
+               if (winGetParent == gClientGetDefaultRoot
+                   && previousWindows.find(win) == previousWindows.end()
+                   && win->InheritsFrom(clGMainFrame)
+                   && winIsMapped) {
+                  gROOT->ProcessLine(TString::Format("((TGWindow*)0x%lx)->MapRaised();", win));
+                  Bool_t isRootCanvas = win->InheritsFrom(clRootCanvas);
+                  Bool_t hasEditor = false;
+                  if (isRootCanvas) {
+                     gROOT->ProcessLine(TString::Format("*((Bool_t*)0x%lx) = ((TRootCanvas*)0x%lx)->HasEditor();",
+                                                        &hasEditor, win));
+                  }
+                  if (isRootCanvas && !hasEditor) {
+                     TVirtualPad* pad = 0;
+                     gROOT->ProcessLine(TString::Format("*((TVirtualPad**)0x%lx) = ((TRootCanvas*)0x%lx)->Canvas();",
+                                                        &pad, win));
+                     if (!pad->HasViewer3D() || pad->GetViewer3D()->InheritsFrom("TViewer3DPad")) {
+                        pad->SaveAs(TString::Format("%s_%d.png", outfilename, nCanvases++));
+                     }
+                     listOfCanvasesToDelete.AddLast(pad);
+                  } else
+                     gROOT->ProcessLine(TString::Format("((TGWindow*)0x%lx)->SaveAs(\"%s_%d.png\");",
+                                                        win, outfilename, nCanvases++));
+               }
             }
-            canv->Print(TString::Format("%s_%d.png", outfilename, nCanvases));
-            delete canv;
-            ++nCanvases;
          }
       }
       out << "<table><tr><td style=\"vertical-align:top;padding-right:2em;\">" << endl;
