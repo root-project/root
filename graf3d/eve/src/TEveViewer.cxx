@@ -107,8 +107,6 @@ void TEveViewer::SpawnGLViewer(TGedEditor* ged)
    cf->SetEditable(kFALSE);
    v->ToggleEditObject();
    SetGLViewer(v, v->GetFrame());
-
-//   cf->AddFrame(fGLViewerFrame, new TGLayoutHints(kLHintsNormal | kLHintsExpandX | kLHintsExpandY));
 }
 
 //______________________________________________________________________________
