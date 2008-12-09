@@ -740,7 +740,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
                      mom->GetName());
                return -2;
             }
-            if ((mom->GetType()) < 0 && !mom->GetAddress()) {
+            if ((mom->GetType()) < -1 && !mom->GetAddress()) {
                Error("DefinedVariable", "Address not set when the type of the branch is negative for for %s.  We will be unable to read!", mom->GetName());
                return -2;
             }
