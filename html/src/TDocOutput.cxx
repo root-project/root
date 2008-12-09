@@ -435,7 +435,7 @@ void TDocOutput::Convert(std::istream& in, const char* infilename,
       for (UInt_t i = 0; i < nCanvases; ++i) {
          TString pngname = TString::Format("%s_%d.png", gSystem->BaseName(outfilename), i);
          out << "<tr><td><a href=\"" << pngname << "\">" << endl
-             << "<img src=\"" << pngname << "\" id=\"canv" << i << "\" alt=\"thumb\" style=\"border:none;width:15em;\" "
+             << "<img src=\"" << pngname << "\" id=\"canv" << i << "\" alt=\"thumb\" style=\"border:none;width:22em;\" "
             "onmouseover=\"javascript:canv" << i << ".style.width='auto';\" />" << endl
              << "</a></td></tr>" << endl;
          }
