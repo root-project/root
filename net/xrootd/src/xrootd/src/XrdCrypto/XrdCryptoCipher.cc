@@ -132,8 +132,10 @@ int XrdCryptoCipher::Encrypt(XrdSutBucket &bck)
    // Return size of encoded bucket or -1 in case of error
    int snew = -1;
 
-   char *newbck = new char[EncOutLength(bck.size)];
+   int sz = EncOutLength(bck.size);
+   char *newbck = new char[sz];
    if (newbck) {
+      memset(newbck, 0, sz);
       snew = Encrypt(bck.buffer,bck.size,newbck);
       if (snew > -1)
          bck.Update(newbck,snew);
@@ -148,8 +150,10 @@ int XrdCryptoCipher::Decrypt(XrdSutBucket &bck)
    // Return size of encoded bucket or -1 in case of error
    int snew = -1;
 
-   char *newbck = new char[DecOutLength(bck.size)];
+   int sz = DecOutLength(bck.size);
+   char *newbck = new char[sz];
    if (newbck) {
+      memset(newbck, 0, sz);
       snew = Decrypt(bck.buffer,bck.size,newbck);
       if (snew > -1)
          bck.Update(newbck,snew);

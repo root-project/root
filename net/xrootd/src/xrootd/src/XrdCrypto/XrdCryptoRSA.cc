@@ -101,6 +101,7 @@ int XrdCryptoRSA::ExportPublic(XrdOucString &s)
    if (newlen > 0) {
       char *newbuf = new char[newlen+1];
       if (newbuf) {
+         memset(newbuf, 0, newlen+1);
          if (ExportPublic(newbuf,newlen+1) > -1) {
             s = (const char *)newbuf;
             delete[] newbuf;
@@ -121,6 +122,7 @@ int XrdCryptoRSA::ExportPrivate(XrdOucString &s)
    if (newlen > 0) {
       char *newbuf = new char[newlen+1];
       if (newbuf) {
+         memset(newbuf, 0, newlen+1);
          if (ExportPrivate(newbuf,newlen+1) > -1) {
             s = (const char *)newbuf;
             delete[] newbuf;
@@ -171,9 +173,11 @@ int XrdCryptoRSA::EncryptPrivate(XrdSutBucket &bck)
    // Return new bucket size, or -1 in case of error
    int snew = -1;
 
-   char *newbuf = new char[GetOutlen(bck.size)];
+   int sz = GetOutlen(bck.size);
+   char *newbuf = new char[sz];
    if (newbuf) {
-      snew = EncryptPrivate(bck.buffer,bck.size,newbuf,GetOutlen(bck.size));
+      memset(newbuf, 0, sz);
+      snew = EncryptPrivate(bck.buffer,bck.size,newbuf,sz);
       if (snew > -1)
          bck.Update(newbuf,snew);
    }
@@ -187,9 +191,11 @@ int XrdCryptoRSA::EncryptPublic(XrdSutBucket &bck)
    // Return new bucket size, or -1 in case of error
    int snew = -1;
 
-   char *newbuf = new char[GetOutlen(bck.size)];
+   int sz = GetOutlen(bck.size);
+   char *newbuf = new char[sz];
    if (newbuf) {
-      snew = EncryptPublic(bck.buffer,bck.size,newbuf,GetOutlen(bck.size));
+      memset(newbuf, 0, sz);
+      snew = EncryptPublic(bck.buffer,bck.size,newbuf,sz);
       if (snew > -1)
          bck.Update(newbuf,snew);
    }
@@ -203,9 +209,11 @@ int XrdCryptoRSA::DecryptPrivate(XrdSutBucket &bck)
    // Return new bucket size, or -1 in case of error
    int snew = -1;
 
-   char *newbuf = new char[GetOutlen(bck.size)];
+   int sz = GetOutlen(bck.size);
+   char *newbuf = new char[sz];
    if (newbuf) {
-      snew = DecryptPrivate(bck.buffer,bck.size,newbuf,GetOutlen(bck.size));
+      memset(newbuf, 0, sz);
+      snew = DecryptPrivate(bck.buffer,bck.size,newbuf,sz);
       if (snew > -1)
          bck.Update(newbuf,snew);
    }
@@ -219,9 +227,11 @@ int XrdCryptoRSA::DecryptPublic(XrdSutBucket &bck)
    // Return new bucket size, or -1 in case of error
    int snew = -1;
 
-   char *newbuf = new char[GetOutlen(bck.size)];
+   int sz = GetOutlen(bck.size);
+   char *newbuf = new char[sz];
    if (newbuf) {
-      snew = DecryptPublic(bck.buffer,bck.size,newbuf,GetOutlen(bck.size));
+      memset(newbuf, 0, sz);
+      snew = DecryptPublic(bck.buffer,bck.size,newbuf,sz);
       if (snew > -1)
          bck.Update(newbuf,snew);
    }
