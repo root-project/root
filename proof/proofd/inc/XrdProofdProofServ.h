@@ -73,6 +73,25 @@ private:
 };
 
 
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// XrdProofQuery                                                        //
+//                                                                      //
+// Helper class describing a query. Used for scheduling.                //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+class XrdProofQuery
+{
+   XrdOucString      fDSName;
+   long              fDSSize;
+public:
+   XrdProofQuery(const char *n = 0, long s = 0) : fDSName(n), fDSSize(s) { }
+
+   const char       *GetDSName()  { return fDSName.c_str(); }
+   long              GetDSSize()  { return fDSSize; }
+};
+
+
 class XrdROOT;
 
 //////////////////////////////////////////////////////////////////////////
@@ -124,10 +143,9 @@ public:
    inline XrdProofdProtocol *Protocol() const { XrdSysMutexHelper mhp(fMutex); return fProtocol; }
    inline XrdSrvBuffer *QueryNum() const { XrdSysMutexHelper mhp(fMutex); return fQueryNum; }
 
-#if 1
    void                RemoveWorker(const char *o);
-#endif
    void                Reset();
+
    inline XrdROOT     *ROOT() const { XrdSysMutexHelper mhp(fMutex); return fROOT; }
    inline XrdProofdResponse *Response() const { XrdSysMutexHelper mhp(fMutex); return fResponse; }
    int                 SendData(int cid, void *buff, int len);
@@ -173,6 +191,8 @@ public:
    void                DeleteUNIXSock();
    XrdNet             *UNIXSock() const { return fUNIXSock; }
    const char         *UNIXSockPath() const { return fUNIXSockPath.c_str(); }
+   inline std::list<XrdProofQuery *> *GetQueries() const
+                       { return (std::list<XrdProofQuery *> *)&fQueries; }
 
  private:
 
@@ -212,7 +232,7 @@ public:
    XrdOucString              fTag;       // Session unique tag
    XrdOucString              fOrdinal;   // Session ordinal number
    XrdOucString              fUserEnvs;  // List of envs received from the user
-   XrdOucString              fAdminPath; // Admin file in the form "<active-sessions>/<usr>.<grp>.<pid>" 
+   XrdOucString              fAdminPath; // Admin file in the form "<active-sessions>/<usr>.<grp>.<pid>"
 
    XrdROOT                  *fROOT;      // ROOT version run by this session
 
@@ -224,5 +244,6 @@ public:
                              { XrdSysMutexHelper mhp(fMutex); fPingSem = new XrdSysSemWait(0);}
    void                      DeletePingSem()
                              { XrdSysMutexHelper mhp(fMutex); if (fPingSem) delete fPingSem; fPingSem = 0;}
+   std::list<XrdProofQuery *> fQueries;  // the enqueued queries of this session
 };
 #endif

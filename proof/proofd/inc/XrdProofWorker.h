@@ -53,10 +53,10 @@ class XrdProofWorker {
    static void             Sort(std::list<XrdProofWorker *> *lst,
                                 bool (*f)(XrdProofWorker *&lhs,
                                           XrdProofWorker *&rhs));
-   inline int              Active() const { XrdSysMutexHelper mhp(fMutex); return fActive; }
-   inline void             CountActive(int n) { XrdSysMutexHelper mhp(fMutex); fActive += n; }
-   inline int              Suspended() const { XrdSysMutexHelper mhp(fMutex); return fSuspended; }
-   inline void             CountSuspended(int n) { XrdSysMutexHelper mhp(fMutex); fSuspended += n; }
+
+   inline int              Active() const { XrdSysMutexHelper mhp(fMutex); return fProofServs.size(); }
+   inline void             AddProofServ(XrdProofdProofServ *xps) { XrdSysMutexHelper mhp(fMutex); return fProofServs.push_back(xps); }
+   inline void             RemoveProofServ(XrdProofdProofServ *xps) { XrdSysMutexHelper mhp(fMutex); return fProofServs.remove(xps); }
 
    std::list<XrdProofdProofServ *> fProofServs; // ProofServ sessions using
                                                // this worker
@@ -75,9 +75,6 @@ class XrdProofWorker {
 
 private:
    XrdSysRecMutex         *fMutex;       // Local mutex
-   // Counters
-   int                     fActive;      // number of active sessions
-   int                     fSuspended;   // number of suspended sessions 
 };
 
 #endif

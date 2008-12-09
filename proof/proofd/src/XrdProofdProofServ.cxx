@@ -82,6 +82,9 @@ XrdProofdProofServ::~XrdProofdProofServ()
    // Cleanup worker info
    ClearWorkers();
 
+   // Cleanup queries info
+   fQueries.clear();
+
    // Remove the associated UNIX socket path
    unlink(fUNIXSockPath.c_str());
 
@@ -89,14 +92,16 @@ XrdProofdProofServ::~XrdProofdProofServ()
 }
 
 //__________________________________________________________________________
-static int DecreaseWorkerCounters(const char *, XrdProofWorker *w, void *)
+static int DecreaseWorkerCounters(const char *, XrdProofWorker *w, void *x)
 {
    // Decrease active session counters on worker w
    XPDLOC(PMGR, "DecreaseWorkerCounters")
 
-   if (w) {
-      w->CountActive(-1);
-      TRACE(ALL, w->fHost.c_str() <<" done");
+   XrdProofdProofServ *xps = (XrdProofdProofServ *)x;
+
+   if (w && xps) {
+      w->RemoveProofServ(xps);
+      TRACE(REQ, w->fHost.c_str() <<" done");
       // Check next
       return 0;
    }
@@ -125,25 +130,26 @@ static int DumpWorkerCounters(const char *k, XrdProofWorker *w, void *)
 void XrdProofdProofServ::ClearWorkers()
 {
    // Decrease worker counters and clean-up the list
+   // If called for a worker will do nothing (fWorkers.size() == 0)
+   // In normal operation the workers are cleared already before.
 
    XrdSysMutexHelper mhp(fMutex);
 
-   // Decrease worker counters
-   fWorkers.Apply(DecreaseWorkerCounters, 0);
+   // Decrease workers' counters and remove this from workers
+   fWorkers.Apply(DecreaseWorkerCounters, this);
    fWorkers.Purge();
 }
 
 //__________________________________________________________________________
 void XrdProofdProofServ::AddWorker(const char *o, XrdProofWorker *w)
 {
-   // Add a worker aasigned to this session with label 'o'
+   // Add a worker assigned to this session with label 'o'
 
    if (!o || !w) return;
 
    XrdSysMutexHelper mhp(fMutex);
 
    fWorkers.Add(o, w, 0, Hash_keepdata);
-   w->CountActive(1);
 }
 
 //__________________________________________________________________________
@@ -159,7 +165,8 @@ void XrdProofdProofServ::RemoveWorker(const char *o)
    XrdSysMutexHelper mhp(fMutex);
 
    XrdProofWorker *w = fWorkers.Find(o);
-   if (w) w->CountActive(-1);
+   if (w)
+      w->RemoveProofServ(this);
    fWorkers.Del(o);
    if (TRACING(HDBG)) fWorkers.Apply(DumpWorkerCounters, 0);
 }
@@ -191,6 +198,8 @@ void XrdProofdProofServ::Reset()
    fROOT = 0;
    // Cleanup worker info
    ClearWorkers();
+   // Cleanup queries info
+   fQueries.clear();
    // Strings
    fAdminPath = "";
    fAlias = "";
@@ -618,7 +627,7 @@ void XrdProofdProofServ::ExportBuf(XrdOucString &buf)
    return;
 }
 
-//__________________________________________________________________________
+//______________________________________________________________________________
 int XrdProofdProofServ::CreateUNIXSock(XrdSysError *edest)
 {
    // Create UNIX socket for internal connections
@@ -717,5 +726,3 @@ int XrdProofdProofServ::SetAdminPath(const char *a)
    // Done
    return 0;
 }
-
-
