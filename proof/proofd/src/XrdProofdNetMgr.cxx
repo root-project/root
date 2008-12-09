@@ -985,7 +985,7 @@ void XrdProofdNetMgr::Dump()
    std::list<XrdProofWorker *>::iterator iw;
    for (iw = fWorkers.begin(); iw != fWorkers.end(); iw++) {
       XPDPRT("+ wrk: "<<(*iw)->fHost.c_str()<<":"<<(*iw)->fPort<<" type:"<<(*iw)->fType<<
-             " sessions: act:"<<(*iw)->Active()<<", susp:"<<(*iw)->Suspended());
+             " active sessions:"<<(*iw)->Active());
    }
    XPDPRT("+ ");
    XPDPRT("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
