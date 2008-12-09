@@ -613,6 +613,8 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject
 
    // fill the dictionary, if successful
       if ( pyclass != 0 ) {
+      // get the class anew, to cover the case where it was updated by the autoloading mechanism
+         klass =  T::ByName( klass.Name( ROOT::Reflex::FINAL | ROOT::Reflex::SCOPED ) );
          if ( BuildRootClassDict< T, B, M >( klass, pyclass ) != 0 ) {
          // something failed in building the dictionary
             Py_DECREF( pyclass );
