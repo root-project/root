@@ -241,6 +241,7 @@ public:
    virtual void     CloseToolTip(TObject *tip) = 0;
 
    virtual TVirtualViewer3D *GetViewer3D(Option_t * type = "") = 0;
+   virtual Bool_t            HasViewer3D() const = 0;
    virtual void              ReleaseViewer3D(Option_t * type = "")  = 0;
 
    virtual Int_t    GetGLDevice() = 0;

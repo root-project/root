@@ -1490,6 +1490,38 @@ void TRootCanvas::ShowToolBar(Bool_t show)
 }
 
 //______________________________________________________________________________
+Bool_t TRootCanvas::HasEditor() const
+{
+   // Returns kTRUE if the editor is shown.
+
+   return (fEditor) && fViewMenu->IsEntryChecked(kViewEditor);
+}
+
+//______________________________________________________________________________
+Bool_t TRootCanvas::HasMenuBar() const
+{
+   // Returns kTRUE if the menu bar is shown.
+
+   return (fMenuBar) && fMenuBar->IsMapped();
+}
+
+//______________________________________________________________________________
+Bool_t TRootCanvas::HasStatusBar() const
+{
+   // Returns kTRUE if the status bar is shown.
+
+   return (fStatusBar) && fStatusBar->IsMapped();
+}
+
+//______________________________________________________________________________
+Bool_t TRootCanvas::HasToolBar() const
+{
+   // Returns kTRUE if the tool bar is shown.
+
+   return (fToolBar) && fToolBar->IsMapped();
+}
+
+//______________________________________________________________________________
 void TRootCanvas::AdjustSize()
 {
    // Keep the same canvas size while docking/undocking toolbar.

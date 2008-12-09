@@ -135,6 +135,11 @@ public:
    void     ShowEditor(Bool_t show = kTRUE);
    void     ShowToolBar(Bool_t show = kTRUE);
 
+   Bool_t   HasEditor() const;
+   Bool_t   HasMenuBar() const;
+   Bool_t   HasStatusBar() const;
+   Bool_t   HasToolBar() const;
+
    TGMenuBar     *GetMenuBar() const { return fMenuBar; }
    TGLayoutHints *GetMenuBarItemLayout() const { return fMenuBarItemLayout; }
    TGStatusBar   *GetStatusBar() const { return fStatusBar; }

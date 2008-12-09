@@ -368,6 +368,7 @@ public:
    virtual void      x3d(Option_t *type=""); // Depreciated
 
    virtual TVirtualViewer3D *GetViewer3D(Option_t * type = "");
+   virtual Bool_t            HasViewer3D() const { return (fViewer3D); }
    virtual void              ReleaseViewer3D(Option_t * type = "");
 
    ClassDef(TPad,10)  //A Graphics pad

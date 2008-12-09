@@ -70,6 +70,11 @@ public:
    virtual void   ShowEditor(Bool_t show = kTRUE);
    virtual void   ShowToolBar(Bool_t show = kTRUE);
 
+   virtual Bool_t HasEditor() const { return kFALSE; }
+   virtual Bool_t HasMenuBar() const { return kFALSE; }
+   virtual Bool_t HasStatusBar() const { return kFALSE; }
+   virtual Bool_t HasToolBar() const { return kFALSE; }
+
    ClassDef(TCanvasImp,0)  //ABC describing main window protocol
 };
 
