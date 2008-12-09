@@ -102,11 +102,13 @@ void TEveViewer::SpawnGLViewer(TGedEditor* ged)
 
    TGCompositeFrame* cf = GetGUICompositeFrame();
 
+   cf->SetEditable(kTRUE);
    TGLSAViewer* v = new TGLSAViewer(cf, 0, ged);
+   cf->SetEditable(kFALSE);
    v->ToggleEditObject();
    SetGLViewer(v, v->GetFrame());
 
-   cf->AddFrame(fGLViewerFrame, new TGLayoutHints(kLHintsNormal | kLHintsExpandX | kLHintsExpandY));
+//   cf->AddFrame(fGLViewerFrame, new TGLayoutHints(kLHintsNormal | kLHintsExpandX | kLHintsExpandY));
 }
 
 //______________________________________________________________________________
