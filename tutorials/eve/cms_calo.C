@@ -34,6 +34,11 @@ void cms_calo(Bool_t hdata = kTRUE)
    {
       data = MakeVecData(ecalHist, hcalHist);
    }
+   // set eta, phi axis title with symbol.ttf font
+   data->GetEtaBins()->SetTitleFont(120);
+   data->GetEtaBins()->SetTitle("h");
+   data->GetPhiBins()->SetTitleFont(120);
+   data->GetPhiBins()->SetTitle("f");
 
    TEveCalo3D* calo3d = MakeCalo3D(data);
    MakeCalo2D(calo3d);
@@ -112,6 +117,9 @@ void MakeCaloLego(TEveCaloData* data)
    v->AddOverlayElement(overlay);
    overlay->SetCaloLego(lego);
    gEve->AddElement(overlay, s2);
+
+
+
 }
 
 //______________________________________________________________________________

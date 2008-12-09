@@ -148,12 +148,24 @@ private:
 protected:
    TEveCaloData::vCellId_t fCellList;
 
+   Bool_t    fRnrEndCapFrame;
+   Bool_t    fRnrBarrelFrame;
+
+   Color_t   fFrameColor;
+   UChar_t   fFrameTransparency;
+
    virtual void BuildCellIdCache();
 
 public:
-   TEveCalo3D(TEveCaloData* d=0, const Text_t* n="TEveCalo3D", const Text_t* t="xx"):TEveCaloViz(d, n, t){}
+   TEveCalo3D(TEveCaloData* d=0, const Text_t* n="TEveCalo3D", const Text_t* t="xx");
    virtual ~TEveCalo3D() {}
    virtual void ComputeBBox();
+
+   virtual Bool_t CanEditMainColor() const  { return kTRUE; }
+   virtual Bool_t CanEditMainTransparency() const { return kTRUE; }
+
+   void SetRnrFrame(Bool_t e, Bool_t b)         { fRnrEndCapFrame = e; fRnrBarrelFrame = b; }
+   void GetRnrFrame(Bool_t &e, Bool_t &b) const { e = fRnrEndCapFrame; b = fRnrBarrelFrame; }
 
    ClassDef(TEveCalo3D, 0); // Class for 3D visualization of calorimeter event data.
 };

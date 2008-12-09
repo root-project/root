@@ -26,6 +26,9 @@ private:
    void    CrossProduct(const Float_t a[3], const Float_t b[3], const Float_t c[3], Float_t out[3]) const;
 
    void    RenderBox(const Float_t pnts[8]) const;
+   void    RenderGridEndCap() const;
+   void    RenderGridBarrel() const;
+   void    RenderGrid(TGLRnrCtx & rnrCtx) const;
    Float_t RenderBarrelCell(const TEveCaloData::CellData_t &cell, Float_t towerH, Float_t offset) const;
    Float_t RenderEndCapCell(const TEveCaloData::CellData_t &cell, Float_t towerH, Float_t offset) const;
 
@@ -41,6 +44,7 @@ public:
 
    virtual void   DirectDraw(TGLRnrCtx & rnrCtx) const;
 
+   virtual Bool_t ShouldDLCache(const TGLRnrCtx& rnrCtx) const;
    virtual Bool_t SupportsSecondarySelect() const { return kTRUE; }
    virtual void   ProcessSelection(TGLRnrCtx & rnrCtx, TGLSelectRecord & rec);
 

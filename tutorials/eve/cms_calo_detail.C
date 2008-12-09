@@ -113,13 +113,28 @@ void cms_calo_detail()
   data->FillSlice(1, 0);
 
   data->SetAxisFromBins();
+ // set eta, phi axis title with symbol.ttf font
+  data->GetEtaBins()->SetTitle("X[cm]");
+  data->GetEtaBins()->SetTitleSize(0.1);
+  data->GetPhiBins()->SetTitle("Y[cm]");
+  data->GetPhiBins()->SetTitleColor(kGreen);
   data->DataChanged();
 
-  // lego
+  // add offset
+  Double_t etaMin, etaMax;
+  Double_t phiMin, phiMax;
+  data->GetEtaLimits(etaMin, etaMax);
+  data->GetPhiLimits(phiMin, phiMax);
+  Float_t offe = 0.1*(etaMax -etaMin);
+  Float_t offp = 0.1*(etaMax -etaMin);
+  data->AddTower(etaMin -offe, etaMax +offe, phiMin -offp , phiMax +offp);
 
+
+  // lego
   TEveCaloLego* lego = new TEveCaloLego(data);
   lego->SetAutoRebin(kFALSE);
   lego->SetPlaneColor(kBlue-5);
+  lego->SetFontColor(kGray);
   lego->Set2DMode(TEveCaloLego::kValSize);
   lego->SetName("Calo Detail");
   gEve->AddElement(lego);

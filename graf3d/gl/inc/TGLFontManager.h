@@ -138,6 +138,7 @@ public:
    static FontSizeVec_t*    GetFontSizeArray();
 
    static Int_t             GetFontSize(Float_t ds, Int_t min = -1, Int_t max = -1);
+   static const char*       GetFontNameFromId(Int_t);
 
    void   ClearFontTrash();
 

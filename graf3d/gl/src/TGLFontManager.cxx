@@ -311,6 +311,8 @@ void TGLFontManager::RegisterFont(Int_t size, Int_t fileID, TGLFont::EMode mode,
 //______________________________________________________________________________
 void TGLFontManager::RegisterFont(Int_t size, const Text_t* name, TGLFont::EMode mode, TGLFont &out)
 {
+   // Get mapping from ttf id to font names. Table taken from TTF.cxx.
+
    TObjArray* farr = GetFontFileArray();
    TIter next(farr);
    TObjString* os;
@@ -390,6 +392,30 @@ Int_t TGLFontManager::GetFontSize(Float_t ds, Int_t min, Int_t max)
       fs = max;
 
    return fs;
+}
+
+//______________________________________________________________________________
+const char* TGLFontManager::GetFontNameFromId(Int_t id)
+{
+   static const char *fonttable[] = {
+      /* 0 */  "arialbd",
+      /* 1 */  "timesi",
+      /* 2 */  "timesbd",
+      /* 3 */  "timesbi",
+      /* 4 */  "arial",
+      /* 5 */  "ariali",
+      /* 6 */  "arialbd",
+      /* 7 */  "arialbi",
+      /* 8 */  "cour",
+      /* 9 */  "couri",
+      /*10 */  "courbd",
+      /*11 */  "courbi",
+      /*12 */  "symbol",
+      /*13 */  "times",
+      /*14 */  "wingding"
+   };
+
+   return fonttable[id / 10];
 }
 
 //______________________________________________________________________________

@@ -64,13 +64,10 @@ TEveCaloLegoGL::TEveCaloLegoGL() :
    fXAxisAtt.SetNdivisions(710);
    fXAxisAtt.SetLabelSize(0.03);
    fXAxisAtt.SetTitleSize(0.03);
-   fXAxisAtt.SetTitleFontName("symbol");
-   fXAxisAtt.SetTitle("h");
 
    fYAxisAtt = fXAxisAtt;
    fYAxisAtt.RefDir().Set(0., 1., 0.);
    fYAxisAtt.SetNdivisions(510);
-   fYAxisAtt.SetTitle("f");
 
    fZAxisAtt.RefDir().Set(0., 0., 1.);
    fZAxisAtt.SetTextAlign(TGLFont::kLeft);
@@ -593,6 +590,10 @@ void TEveCaloLegoGL::DrawXYScales(TGLRnrCtx & rnrCtx,
       fXAxisAtt.SetAbsTitleFontSize(Int_t(fZAxisAtt.GetAbsTitleFontSize()*0.8));
    }
 
+   TAxis* ax = fM->GetData()->GetEtaBins();
+   const char* titleFontXY = TGLFontManager::GetFontNameFromId(ax->GetTitleFont());
+
+   fXAxisAtt.SetTitleFontName(titleFontXY);
    fXAxisAtt.SetRng(x0, x1);
    fXAxisAtt.SetAxisColor(fM->fGridColor);
    fXAxisAtt.SetLabelColor(fM->fFontColor);
@@ -600,12 +601,15 @@ void TEveCaloLegoGL::DrawXYScales(TGLRnrCtx & rnrCtx,
    fXAxisAtt.RefTMOff(0).Set(0, yOff, 0);
    fXAxisAtt.RefTMOff(1).Set(0, 0, zOff);
    fXAxisAtt.RefTitlePos().Set(axtX, 0, 0);
+   fXAxisAtt.SetTitle(ax->GetTitle());
    glPushMatrix();
    glTranslatef(0, axY, 0);
    fAxisPainter.Paint(rnrCtx, fXAxisAtt);
    glPopMatrix();
 
 
+   ax = fM->GetData()->GetPhiBins();
+   fYAxisAtt.SetTitleFontName(titleFontXY);
    fYAxisAtt.SetRng(y0, y1);
    fYAxisAtt.SetAxisColor(fM->fGridColor);
    fYAxisAtt.SetLabelColor(fM->fFontColor);
@@ -615,6 +619,7 @@ void TEveCaloLegoGL::DrawXYScales(TGLRnrCtx & rnrCtx,
    fYAxisAtt.SetAbsLabelFontSize(fXAxisAtt.GetAbsLabelFontSize());
    fYAxisAtt.SetAbsTitleFontSize(fXAxisAtt.GetAbsTitleFontSize());
    fYAxisAtt.RefTitlePos().Set(0, aytY, 0);
+   fYAxisAtt.SetTitle(ax->GetTitle());
    glPushMatrix();
    glTranslatef(ayX, 0, 0);
    fAxisPainter.Paint(rnrCtx, fYAxisAtt);
