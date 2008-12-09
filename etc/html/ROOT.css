@@ -216,6 +216,52 @@ a.descrheadentry:hover {
    text-decoration: underline;
 }
 
+/* convert */
+a.contextheadentry {
+   text-decoration: none;
+   font-size: small;
+   font-weight: normal;
+}
+a.contextheadentry:visited {
+   color: #0000ff;
+   background-color: inherit;
+   text-decoration: inherit;
+}
+a.contextheadentry:hover {
+   color: #0000ff;
+   background-color: #eeeeff;
+   text-decoration: underline;
+}
+td.contextheadentry {
+   color: #0000ff;
+   background-color: inherit;
+   margin-left: 0.0em;
+   margin-right: 0.0em;
+   border-bottom: none;
+   padding-left: 0.5em;
+   padding-right: 0.5em;
+}
+
+td.contextheadarrow {
+   font-size:xx-large;
+   border-left: dotted 1px #000077;
+   padding-left: 0.3em;
+}
+
+a.contextheadarrow {
+   text-decoration: none;
+   color: inherit;
+}
+
+#contextheadentry_next {
+   border-left: dotted 1px #000077;
+}
+#contextheadarrow_next {
+   border-left: none;
+}
+
+
+
 /* TOC */
 div.toc {
    font-weight: bold;
@@ -401,7 +447,7 @@ td.funcname {
    margin: 0px 0px 0px 0px;
    width: 100%;
 }
-span.funcprop 
+span.funcprop
 {
 	margin-left: 1em;
 	background-color: #FFFFCC;
