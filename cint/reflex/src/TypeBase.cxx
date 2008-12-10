@@ -433,7 +433,7 @@ Reflex::Type Reflex::TypeBase::RawType() const {
       case UNRESOLVED:
          return Dummy::Type();
       default:
-         fRawType = new Type(rawType);
+         fRawType = new Type(* rawType.ToTypeBase());
          return *fRawType;
       }     
    }
