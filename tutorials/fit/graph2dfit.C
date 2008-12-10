@@ -1,6 +1,6 @@
 //Fitting a TGraph2D
 //Author: Olivier Couet
-   
+
 #include <TMath.h>
 #include <TGraph2D.h>
 #include <TRandom.h>
@@ -34,31 +34,33 @@ TCanvas* graph2dfit()
    for (Int_t N=0; N<nd; N++) {
       f2->GetRandom2(x,y);
       // Generate a random number in [-e,e]
-      rnd = 2*r.Rndm()*e-e; 
+      rnd = 2*r.Rndm()*e-e;
       z = f2->Eval(x,y)*(1+rnd);
       if (z>zmax) zmax = z;
       dt->SetPoint(N,x,y,z);
    }
 
    Double_t hr = 350;
-   TH1D *h1 = new TH1D("h1", "#splitline{Difference between Original function}\
-   {and Function with noise}", 100, -hr, hr);
-   TH1D *h2 = new TH1D("h2", 
-      "#splitline{Difference between Original function}\
-      {and Interpolation with Delaunay triangles}", 100, -hr, hr);
-   TH1D *h3 = new TH1D("h3", "#splitline{Difference between Original function}\
-   {and Minuit fit}", 500, -hr, hr);
+   TH1D *h1 = new TH1D("h1",
+   "#splitline{Difference between Original function}{and Function with noise}",
+   100, -hr, hr);
+   TH1D *h2 = new TH1D("h2",
+   "#splitline{Difference between Original function}{and Interpolation with Delaunay triangles}",
+   100, -hr, hr);
+   TH1D *h3 = new TH1D("h3",
+   "#splitline{Difference between Original function}{and Minuit fit}",
+   500, -hr, hr);
 
    f2->SetParameters(0.5,1.5);
    dt->Fit(f2);
    TF2 *fit2 = (TF2*)dt->FindObject("f2");
-   
+
    f2->SetParameters(1,1);
 
    for (Int_t N=0; N<np; N++) {
       f2->GetRandom2(x,y);
       // Generate a random number in [-e,e]
-      rnd = 2*r.Rndm()*e-e; 
+      rnd = 2*r.Rndm()*e-e;
       z = f2->Eval(x,y)*(1+rnd);
       h1->Fill(f2->Eval(x,y)-z);
       z = dt->Interpolate(x,y);
@@ -71,7 +73,7 @@ TCanvas* graph2dfit()
    c->cd(1);
    f2->SetTitle("Original function with Graph2D points on top");
    f2->SetMaximum(zmax);
-   gStyle->SetHistTopMargin(0); 
+   gStyle->SetHistTopMargin(0);
    f2->Draw("surf1");
    dt->Draw("same p0");
 
