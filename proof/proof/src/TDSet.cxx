@@ -1418,6 +1418,9 @@ void TDSet::Lookup(Bool_t removeMissing, TList **listOfMissingFiles)
    if (ng < tot && gProofServ) {
       msg = Form("Files with entries to be processed: %d (out of %d)\n", ng, tot);
       gProofServ->SendAsynMessage(msg);
+   } else {
+      // Final notification to the client
+      if (gProof) gProof->SendDataSetStatus(msg, n, tot, st);
    }
    // Done
    return;
