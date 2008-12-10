@@ -17,6 +17,8 @@
 /*                                                                            */
 /* ************************************************************************** */
 
+#include <string.h>
+
 #include <XrdCrypto/XrdCryptoAux.hh>
 #include <XrdCrypto/XrdCryptoCipher.hh>
 

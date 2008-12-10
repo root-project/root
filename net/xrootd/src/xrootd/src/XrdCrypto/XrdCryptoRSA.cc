@@ -17,6 +17,8 @@
 /*                                                                            */
 /* ************************************************************************** */
 
+#include <string.h>
+
 #include <XrdCrypto/XrdCryptoRSA.hh>
 
 const char *XrdCryptoRSA::cstatus[3] = { "Invalid", "Public", "Complete" };
