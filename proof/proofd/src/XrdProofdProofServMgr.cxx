@@ -864,8 +864,9 @@ int XrdProofdProofServMgr::CheckActiveSessions(bool verify)
          if (!rmsession) {
             XrdSysMutexHelper mh(xps->Mutex());
             if ((nc = xps->GetNClients(1)) <= 0 && (!IsReconnecting() || oldvers)) {
-               if ((fShutdownOpt == 1 && (xps->IdleTime() >= fShutdownDelay)) ||
-                  (fShutdownOpt == 2 && (xps->DisconnectTime() >= fShutdownDelay))) {
+               if ((xps->SrvType() != kXPD_TopMaster) || 
+                   (fShutdownOpt == 1 && (xps->IdleTime() >= fShutdownDelay)) ||
+                   (fShutdownOpt == 2 && (xps->DisconnectTime() >= fShutdownDelay))) {
                   xps->TerminateProofServ(fMgr->ChangeOwn());
                   rmsession = 1;
                }
