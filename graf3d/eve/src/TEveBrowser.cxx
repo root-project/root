@@ -531,11 +531,12 @@ enum EEveMenu_e {
    kNewMainFrameSlot, kNewTabSlot,
    kNewViewer,  kNewScene,  kNewProjector,
    kNewBrowser, kNewCanvas, kNewCanvasExt, kNewTextEditor, kNewHtmlBrowser,
-   kVerticalBrowser,
    kSel_PS_Ignore, kSel_PS_Element, kSel_PS_Projectable, kSel_PS_Compound,
    kSel_PS_PableCompound, kSel_PS_Master, kSel_PS_END,
    kHil_PS_Ignore, kHil_PS_Element, kHil_PS_Projectable, kHil_PS_Compound,
-   kHil_PS_PableCompound, kHil_PS_Master, kHil_PS_END
+   kHil_PS_PableCompound, kHil_PS_Master, kHil_PS_END,
+   kVerticalBrowser,
+   kWinDecorNormal, kWinDecorHide, kWinDecorTitleBar, kWinDecorMiniBar
 };
 
 }
@@ -597,7 +598,14 @@ TEveBrowser::TEveBrowser(UInt_t w, UInt_t h) :
    fEvePopup->AddSeparator();
    fEvePopup->AddEntry("Vertical browser", kVerticalBrowser);
    fEvePopup->CheckEntry(kVerticalBrowser);
-
+   {
+      TGPopupMenu *wd = new TGPopupMenu(gClient->GetRoot());
+      wd->AddEntry("Normal",     kWinDecorNormal);
+      wd->AddEntry("Hide",       kWinDecorHide);
+      wd->AddEntry("Title bars", kWinDecorTitleBar);
+      wd->AddEntry("Mini bars",  kWinDecorMiniBar);
+      fEvePopup->AddPopup("Window decorations", wd);
+   }
 
    fEvePopup->Connect("Activated(Int_t)", "TEveBrowser",
                        this, "EveMenu(Int_t)");
@@ -620,12 +628,12 @@ void TEveBrowser::EveMenu(Int_t id)
    {
       case kNewMainFrameSlot: {
          TEveWindowSlot* ew_slot = TEveWindow::CreateWindowMainFrame(0);
-         gEve->GetWindowManager()->WindowSelected(ew_slot);
+         gEve->GetWindowManager()->SelectWindow(ew_slot);
          break;
       }
       case kNewTabSlot: {
          TEveWindowSlot* ew_slot = TEveWindow::CreateWindowInTab(GetTabRight(), 0);
-         gEve->GetWindowManager()->WindowSelected(ew_slot);
+         gEve->GetWindowManager()->SelectWindow(ew_slot);
          break;
       }
       case kNewViewer: {
@@ -706,6 +714,22 @@ void TEveBrowser::EveMenu(Int_t id)
             gEve->GetLTEFrame()->ReconfToVertical();
             fEvePopup->CheckEntry(kVerticalBrowser);
          }
+         break;
+      }
+      case kWinDecorNormal: {
+         gEve->GetWindowManager()->ShowNormalEveDecorations();
+         break;
+      }
+      case kWinDecorHide: {
+         gEve->GetWindowManager()->HideAllEveDecorations();
+         break;
+      }
+      case kWinDecorTitleBar: {
+         gEve->GetWindowManager()->SetShowTitleBars(kTRUE);
+         break;
+      }
+      case kWinDecorMiniBar: {
+         gEve->GetWindowManager()->SetShowTitleBars(kFALSE);
          break;
       }
 

@@ -27,20 +27,31 @@ private:
 
 protected:
    TEveWindow   *fCurrentWindow;
+   TEveWindow   *fDefaultContainer;
 
 public:
    TEveWindowManager(const Text_t* n="TEveWindowManager", const Text_t* t="");
    virtual ~TEveWindowManager();
 
-   void WindowDeleted (TEveWindow* w);
-   void WindowSelected(TEveWindow* w);
+   void SelectWindow(TEveWindow* w);
+   void DeleteWindow(TEveWindow* w);
 
-   TEveWindow* GetCurrentWindow() const { return fCurrentWindow; }
-   Bool_t      IsCurrentWindow(const TEveWindow* w) const { return w == fCurrentWindow; }
+   void WindowSelected(TEveWindow* window); // *SIGNAL*
+   void WindowDeleted (TEveWindow* window); // *SIGNAL*
 
+   TEveWindow*     GetCurrentWindow() const { return fCurrentWindow; }
+   Bool_t          IsCurrentWindow(const TEveWindow* w) const { return w == fCurrentWindow; }
    TEveWindowSlot* GetCurrentWindowAsSlot() const;
 
-   void CurrentWindowChanged(TEveWindow* window); // *SIGNAL*
+   TEveWindow*     GetDefaultContainer() const { return fDefaultContainer; }
+   Bool_t          HasDefaultContainer() const { return fDefaultContainer != 0; }
+   void            SetDefaultContainer(TEveWindow* w);
+
+   // Global frame decoration control.
+
+   void HideAllEveDecorations();
+   void ShowNormalEveDecorations();
+   void SetShowTitleBars(Bool_t state);
 
    ClassDef(TEveWindowManager, 0); // Manager for EVE windows.
 };
