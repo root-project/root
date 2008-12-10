@@ -1336,30 +1336,79 @@ static void G__OP1_postfixinc(G__value* pbuf)
       return;
    }
    Reflex::EFUNDAMENTALTYPE fundType = G__value_fundamental(*pbuf);
+#if 0
+      case kCHAR:
+      case kSIGNED_CHAR:
+      case kSHORT_INT:
+      case kINT:
+      case kLONG_INT:
+      case kUNSIGNED_CHAR:
+      case kUNSIGNED_SHORT_INT:
+      case kUNSIGNED_INT:
+      case kUNSIGNED_LONG_INT:
+      case kBOOL:
+      case kFLOAT:
+      case kDOUBLE:
+      case kLONG_DOUBLE:
+      case kVOID:
+      case kLONGLONG:
+      case kULONGLONG:
+      case kNOTFUNDAMENTAL:
+#endif // 0
    switch (fundType) {
-      case Reflex::kLONG_DOUBLE:
-         G__OP1_postfixinc_T<long double>(pbuf);
+      case ::Reflex::kCHAR:
+         G__OP1_postfixinc_T<char>(pbuf);
          break;
-      case Reflex::kDOUBLE:
-         G__OP1_postfixinc_T<double>(pbuf);
+      case ::Reflex::kSIGNED_CHAR: // cannot happen
+         //G__OP1_postfixinc_T<signed char>(pbuf);
          break;
-      case Reflex::kFLOAT:
-         G__OP1_postfixinc_T<float>(pbuf);
+      case ::Reflex::kSHORT_INT:
+         G__OP1_postfixinc_T<short>(pbuf);
          break;
-      case Reflex::kULONGLONG:
-         G__OP1_postfixinc_T<G__uint64>(pbuf);
+      case ::Reflex::kINT:
+         G__OP1_postfixinc_T<int>(pbuf);
          break;
-      case Reflex::kLONGLONG:
-         G__OP1_postfixinc_T<G__int64>(pbuf);
+      case ::Reflex::kLONG_INT:
+         G__OP1_postfixinc_T<long>(pbuf);
          break;
-      case Reflex::kUNSIGNED_CHAR:
-      case Reflex::kUNSIGNED_SHORT_INT:
-      case Reflex::kUNSIGNED_INT:
-      case Reflex::kUNSIGNED_LONG_INT:
+      case ::Reflex::kUNSIGNED_CHAR:
+         G__OP1_postfixinc_T<unsigned char>(pbuf);
+         break;
+      case ::Reflex::kUNSIGNED_SHORT_INT:
+         G__OP1_postfixinc_T<unsigned short>(pbuf);
+         break;
+      case ::Reflex::kUNSIGNED_INT:
+         G__OP1_postfixinc_T<unsigned int>(pbuf);
+         break;
+      case ::Reflex::kUNSIGNED_LONG_INT:
          G__OP1_postfixinc_T<unsigned long>(pbuf);
          break;
-      default:
-         G__OP1_postfixinc_T<long>(pbuf);
+      case ::Reflex::kBOOL:
+         // --
+#ifdef G__BOOL4BYTE
+         G__OP1_postfixinc_T<int>(pbuf);
+#else // G__BOOL4BYTE
+         G__OP1_postfixinc_T<unsigned char>(pbuf);
+#endif // G__BOOL4BYTE
+         break;
+      case ::Reflex::kFLOAT:
+         G__OP1_postfixinc_T<float>(pbuf);
+         break;
+      case ::Reflex::kDOUBLE:
+         G__OP1_postfixinc_T<double>(pbuf);
+         break;
+      case ::Reflex::kLONG_DOUBLE:
+         G__OP1_postfixinc_T<long double>(pbuf);
+         break;
+      case ::Reflex::kVOID: // not possible
+         break;
+      case ::Reflex::kLONGLONG:
+         G__OP1_postfixinc_T<G__int64>(pbuf);
+         break;
+      case ::Reflex::kULONGLONG:
+         G__OP1_postfixinc_T<G__uint64>(pbuf);
+         break;
+      case ::Reflex::kNOTFUNDAMENTAL: // not possible
          break;
    }
 }
@@ -1373,29 +1422,59 @@ static void G__OP1_postfixdec(G__value* pbuf)
    }
    Reflex::EFUNDAMENTALTYPE fundType = G__value_fundamental(*pbuf);
    switch (fundType) {
-      case Reflex::kLONG_DOUBLE:
-         G__OP1_postfixdec_T<long double>(pbuf);
+      case ::Reflex::kCHAR:
+         G__OP1_postfixdec_T<char>(pbuf);
          break;
-      case Reflex::kDOUBLE:
-         G__OP1_postfixdec_T<double>(pbuf);
+      case ::Reflex::kSIGNED_CHAR: // not possible
+         //G__OP1_postfixdec_T<signed char>(pbuf);
          break;
-      case Reflex::kFLOAT:
-         G__OP1_postfixdec_T<float>(pbuf);
+      case ::Reflex::kSHORT_INT:
+         G__OP1_postfixdec_T<short>(pbuf);
          break;
-      case Reflex::kULONGLONG:
-         G__OP1_postfixdec_T<G__uint64>(pbuf);
+      case ::Reflex::kINT:
+         G__OP1_postfixdec_T<int>(pbuf);
          break;
-      case Reflex::kLONGLONG:
-         G__OP1_postfixdec_T<G__int64>(pbuf);
+      case ::Reflex::kLONG_INT:
+         G__OP1_postfixdec_T<long>(pbuf);
          break;
-      case Reflex::kUNSIGNED_CHAR:
-      case Reflex::kUNSIGNED_SHORT_INT:
-      case Reflex::kUNSIGNED_INT:
-      case Reflex::kUNSIGNED_LONG_INT:
+      case ::Reflex::kUNSIGNED_CHAR:
+         G__OP1_postfixdec_T<unsigned char>(pbuf);
+         break;
+      case ::Reflex::kUNSIGNED_SHORT_INT:
+         G__OP1_postfixdec_T<unsigned short>(pbuf);
+         break;
+      case ::Reflex::kUNSIGNED_INT:
+         G__OP1_postfixdec_T<unsigned int>(pbuf);
+         break;
+      case ::Reflex::kUNSIGNED_LONG_INT:
          G__OP1_postfixdec_T<unsigned long>(pbuf);
          break;
-      default:
-         G__OP1_postfixdec_T<long>(pbuf);
+      case ::Reflex::kBOOL:
+         // --
+#ifdef G__BOOL4BYTE
+         G__OP1_postfixdec_T<int>(pbuf);
+#else // G__BOOL4BYTE
+         G__OP1_postfixdec_T<unsigned char>(pbuf);
+#endif // G__BOOL4BYTE
+         break;
+      case ::Reflex::kFLOAT:
+         G__OP1_postfixdec_T<float>(pbuf);
+         break;
+      case ::Reflex::kDOUBLE:
+         G__OP1_postfixdec_T<double>(pbuf);
+         break;
+      case ::Reflex::kLONG_DOUBLE:
+         G__OP1_postfixdec_T<long double>(pbuf);
+         break;
+      case ::Reflex::kVOID: // not possible
+         break;
+      case ::Reflex::kLONGLONG:
+         G__OP1_postfixdec_T<G__int64>(pbuf);
+         break;
+      case ::Reflex::kULONGLONG:
+         G__OP1_postfixdec_T<G__uint64>(pbuf);
+         break;
+      case ::Reflex::kNOTFUNDAMENTAL: // not possible
          break;
    }
 }
@@ -1412,29 +1491,59 @@ static void G__OP1_prefixinc(G__value* pbuf)
    }
    Reflex::EFUNDAMENTALTYPE fundType = G__value_fundamental(*pbuf);
    switch (fundType) {
-      case Reflex::kLONG_DOUBLE:
-         G__OP1_prefixinc_T<long double>(pbuf);
+      case ::Reflex::kCHAR:
+         G__OP1_prefixinc_T<char>(pbuf);
          break;
-      case Reflex::kDOUBLE:
-         G__OP1_prefixinc_T<double>(pbuf);
+      case ::Reflex::kSIGNED_CHAR: // not possible
+         //G__OP1_prefixinc_T<signed char>(pbuf);
          break;
-      case Reflex::kFLOAT:
-         G__OP1_prefixinc_T<float>(pbuf);
+      case ::Reflex::kSHORT_INT:
+         G__OP1_prefixinc_T<short>(pbuf);
          break;
-      case Reflex::kULONGLONG:
-         G__OP1_prefixinc_T<G__uint64>(pbuf);
+      case ::Reflex::kINT:
+         G__OP1_prefixinc_T<int>(pbuf);
          break;
-      case Reflex::kLONGLONG:
-         G__OP1_prefixinc_T<G__int64>(pbuf);
+      case ::Reflex::kLONG_INT:
+         G__OP1_prefixinc_T<long>(pbuf);
          break;
-      case Reflex::kUNSIGNED_CHAR:
-      case Reflex::kUNSIGNED_SHORT_INT:
-      case Reflex::kUNSIGNED_INT:
-      case Reflex::kUNSIGNED_LONG_INT:
+      case ::Reflex::kUNSIGNED_CHAR:
+         G__OP1_prefixinc_T<unsigned char>(pbuf);
+         break;
+      case ::Reflex::kUNSIGNED_SHORT_INT:
+         G__OP1_prefixinc_T<unsigned short>(pbuf);
+         break;
+      case ::Reflex::kUNSIGNED_INT:
+         G__OP1_prefixinc_T<unsigned int>(pbuf);
+         break;
+      case ::Reflex::kUNSIGNED_LONG_INT:
          G__OP1_prefixinc_T<unsigned long>(pbuf);
          break;
-      default:
-         G__OP1_prefixinc_T<long>(pbuf);
+      case ::Reflex::kBOOL:
+         // --
+#ifdef G__BOOL4BYTE
+         G__OP1_prefixinc_T<int>(pbuf);
+#else // G__BOOL4BYTE
+         G__OP1_prefixinc_T<unsigned char>(pbuf);
+#endif // G__BOOL4BYTE
+         break;
+      case ::Reflex::kFLOAT:
+         G__OP1_prefixinc_T<float>(pbuf);
+         break;
+      case ::Reflex::kDOUBLE:
+         G__OP1_prefixinc_T<double>(pbuf);
+         break;
+      case ::Reflex::kLONG_DOUBLE:
+         G__OP1_prefixinc_T<long double>(pbuf);
+         break;
+      case ::Reflex::kVOID: // cannot happen
+         break;
+      case ::Reflex::kLONGLONG:
+         G__OP1_prefixinc_T<G__int64>(pbuf);
+         break;
+      case ::Reflex::kULONGLONG:
+         G__OP1_prefixinc_T<G__uint64>(pbuf);
+         break;
+      case ::Reflex::kNOTFUNDAMENTAL: // cannot happen
          break;
    }
 }
@@ -1451,29 +1560,59 @@ static void G__OP1_prefixdec(G__value* pbuf)
    }
    Reflex::EFUNDAMENTALTYPE fundType = G__value_fundamental(*pbuf);
    switch (fundType) {
-      case Reflex::kLONG_DOUBLE:
-         G__OP1_prefixdec_T<long double>(pbuf);
+      case ::Reflex::kCHAR:
+         G__OP1_prefixdec_T<char>(pbuf);
          break;
-      case Reflex::kDOUBLE:
-         G__OP1_prefixdec_T<double>(pbuf);
+      case ::Reflex::kSIGNED_CHAR: // not possible
+         //G__OP1_prefixdec_T<signed char>(pbuf);
          break;
-      case Reflex::kFLOAT:
-         G__OP1_prefixdec_T<float>(pbuf);
+      case ::Reflex::kSHORT_INT:
+         G__OP1_prefixdec_T<short>(pbuf);
          break;
-      case Reflex::kULONGLONG:
-         G__OP1_prefixdec_T<G__uint64>(pbuf);
+      case ::Reflex::kINT:
+         G__OP1_prefixdec_T<int>(pbuf);
          break;
-      case Reflex::kLONGLONG:
-         G__OP1_prefixdec_T<G__int64>(pbuf);
+      case ::Reflex::kLONG_INT:
+         G__OP1_prefixdec_T<long>(pbuf);
          break;
-      case Reflex::kUNSIGNED_CHAR:
-      case Reflex::kUNSIGNED_SHORT_INT:
-      case Reflex::kUNSIGNED_INT:
-      case Reflex::kUNSIGNED_LONG_INT:
+      case ::Reflex::kUNSIGNED_CHAR:
+         G__OP1_prefixdec_T<unsigned char>(pbuf);
+         break;
+      case ::Reflex::kUNSIGNED_SHORT_INT:
+         G__OP1_prefixdec_T<unsigned short>(pbuf);
+         break;
+      case ::Reflex::kUNSIGNED_INT:
+         G__OP1_prefixdec_T<unsigned int>(pbuf);
+         break;
+      case ::Reflex::kUNSIGNED_LONG_INT:
          G__OP1_prefixdec_T<unsigned long>(pbuf);
          break;
-      default:
-         G__OP1_prefixdec_T<long>(pbuf);
+      case ::Reflex::kBOOL:
+         // --
+#ifdef G__BOOL4BYTE
+         G__OP1_prefixdec_T<int>(pbuf);
+#else // G__BOOL4BYTE
+         G__OP1_prefixdec_T<unsigned char>(pbuf);
+#endif // G__BOOL4BYTE
+         break;
+      case ::Reflex::kFLOAT:
+         G__OP1_prefixdec_T<float>(pbuf);
+         break;
+      case ::Reflex::kDOUBLE:
+         G__OP1_prefixdec_T<double>(pbuf);
+         break;
+      case ::Reflex::kLONG_DOUBLE:
+         G__OP1_prefixdec_T<long double>(pbuf);
+         break;
+      case ::Reflex::kVOID: // cannot happen
+         break;
+      case ::Reflex::kLONGLONG:
+         G__OP1_prefixdec_T<G__int64>(pbuf);
+         break;
+      case ::Reflex::kULONGLONG:
+         G__OP1_prefixdec_T<G__uint64>(pbuf);
+         break;
+      case ::Reflex::kNOTFUNDAMENTAL: // cannot happen
          break;
    }
 }
@@ -3356,20 +3495,24 @@ static long G__indexconst[G__MAXINDEXCONST] =
 //______________________________________________________________________________
 static int G__LD_VAR_int_optimize(int* ppc, long* pi)
 {
-   Reflex::Member var;
+   // G__LDST_VAR_INDEX optimization
    int ig15;
-   int pc;
    int done = 0;
-   pc = *ppc;
-
-   /********************************************************************
-    * G__LDST_VAR_INDEX optimization
-    ********************************************************************/
-   if (1 == G__asm_inst[pc+7] && 'p' == G__asm_inst[pc+8] &&
-         (var = G__Dict::GetDict().GetDataMember((size_t)G__asm_inst[pc+9])) &&
-         1 == G__get_paran(var) &&
-         (!var.TypeOf().FinalType().IsPointer() ||
-          G__PARANORMAL == G__get_reftype(var.TypeOf()))) {
+   int pc = *ppc;
+   ::Reflex::Member var;
+   if (G__asm_inst[pc+9]) {
+      var = G__Dict::GetDict().GetDataMember((size_t) G__asm_inst[pc+9]);
+   }
+   if (
+      (G__asm_inst[pc+7] == 1) &&
+      (G__asm_inst[pc+8] == 'p') &&
+      G__asm_inst[pc+9] &&
+      (G__get_paran(var) == 1) &&
+      (
+         islower(G__get_type(var.TypeOf())) ||
+         (G__get_reftype(var.TypeOf()) == G__PARANORMAL)
+      )
+   ) {
       ig15 = G__asm_inst[pc+6];
       /********************************************************************
        * 0 G__LD_VAR,LVAR                    G__LDST_VAR_INDEX
@@ -3383,30 +3526,38 @@ static int G__LD_VAR_int_optimize(int* ppc, long* pi)
        * 8 point_level == p
        * 9 var2 id
        ********************************************************************/
-      if (G__LD_VAR == G__asm_inst[pc+5] || G__LD_LVAR == G__asm_inst[pc+5]) {
-         int flag;
-         if (G__LD_LVAR == G__asm_inst[pc]) flag = 1;
-         else                            flag = 0;
-         if (G__LD_LVAR == G__asm_inst[pc+5]) flag |= 2;
-         if (0 == G__get_LD_p1_p2f(G__get_type(var.TypeOf()), &G__asm_inst[pc+2])) {
+      if ((G__asm_inst[pc+5] == G__LD_VAR) || (G__asm_inst[pc+5] == G__LD_LVAR)) {
+         int flag = 0;
+         if (G__asm_inst[pc] == G__LD_LVAR) {
+            flag = 1;
+         }
+         if (G__asm_inst[pc+5] == G__LD_LVAR) {
+            flag |= 2;
+         }
+         if (!G__get_LD_p1_p2f(G__get_type(var.TypeOf()), &G__asm_inst[pc+2])) {
+            // --
 #ifdef G__ASM_DBG
-            if (G__asm_dbg)
-               G__fprinterr(G__serr, "Error: LD_VAR,LD_VAR[1] optimize error %s\n"
-                            , var.Name().c_str());
-#endif
+            if (G__asm_dbg) {
+               G__fprinterr(G__serr, "Error: LD_VAR,LD_VAR[1] optimize error %s  %s:%d\n", var.Name().c_str(), __FILE__, __LINE__);
+            }
+#endif // G__ASM_DBG
+            // --
          }
          else {
             done = 1;
             G__asm_inst[pc+5] = flag;
             G__asm_inst[pc] = G__LDST_VAR_INDEX;
-            G__asm_inst[pc+1] = (long)pi;
+            G__asm_inst[pc+1] = (long) pi;
             G__asm_inst[pc+3] = G__asm_inst[pc+6];
             G__asm_inst[pc+4] = 10;
             G__asm_inst[pc+6] = G__asm_inst[pc+9];
-            *ppc = pc + 5; /* other 2 is incremented one level up */
+            *ppc = pc + 5; // other 2 is incremented one level up
 #ifdef G__ASM_DBG
-            if (G__asm_dbg) G__fprinterr(G__serr, "LDST_VAR_INDEX (1) optimized\n");
-#endif
+            if (G__asm_dbg) {
+               G__fprinterr(G__serr, "LDST_VAR_INDEX (1) optimized  %s:%d\n", __FILE__, __LINE__);
+            }
+#endif // G__ASM_DBG
+            // --
          }
       }
 
@@ -4566,33 +4717,35 @@ int Cint::Internal::G__asm_optimize3(int* start)
             * sp    G__null     <-
             ***************************************/
 #ifdef G__ASM_DBG
-            if (G__asm_inst[pc+1] < 256 && isprint(G__asm_inst[pc+1])) {
-               if (G__asm_dbg) G__fprinterr(G__serr, "%3lx: OP1 '%c'%d\n", pc
-                                               , G__asm_inst[pc+1], G__asm_inst[pc+1]);
+            if ((G__asm_inst[pc+1] < 256) && isprint(G__asm_inst[pc+1])) {
+               if (G__asm_dbg) {
+                  G__fprinterr(G__serr, "%3lx: OP1 '%c'%d\n", pc, G__asm_inst[pc+1], G__asm_inst[pc+1]);
+               }
             }
             else {
-               if (G__asm_dbg) G__fprinterr(G__serr, "%3lx: OP1 %d\n", pc, G__asm_inst[pc+1]);
+               if (G__asm_dbg) {
+                  G__fprinterr(G__serr, "%3lx: OP1 %d\n", pc, G__asm_inst[pc+1]);
+               }
             }
-#endif
+#endif // G__ASM_DBG
             /* need optimization */
             typedef void(*OP1_func_t)(G__value*);
             switch (G__asm_inst[pc+1]) {
-
                case G__OPR_POSTFIXINC_I:
                   G__asm_inst[pc] = G__OP1_OPTIMIZED;
-                  G__asm_inst[pc+1] = (long)(OP1_func_t) G__OP1_postfixinc_T<long>;
+                  G__asm_inst[pc+1] = (long)(OP1_func_t) G__OP1_postfixinc_T<int>;
                   break;
                case G__OPR_POSTFIXDEC_I:
                   G__asm_inst[pc] = G__OP1_OPTIMIZED;
-                  G__asm_inst[pc+1] = (long)(OP1_func_t) G__OP1_postfixdec_T<long>;
+                  G__asm_inst[pc+1] = (long)(OP1_func_t) G__OP1_postfixdec_T<int>;
                   break;
                case G__OPR_PREFIXINC_I:
                   G__asm_inst[pc] = G__OP1_OPTIMIZED;
-                  G__asm_inst[pc+1] = (long)(OP1_func_t) G__OP1_prefixinc_T<long>;
+                  G__asm_inst[pc+1] = (long)(OP1_func_t) G__OP1_prefixinc_T<int>;
                   break;
                case G__OPR_PREFIXDEC_I:
                   G__asm_inst[pc] = G__OP1_OPTIMIZED;
-                  G__asm_inst[pc+1] = (long)(OP1_func_t) G__OP1_prefixdec_T<long>;
+                  G__asm_inst[pc+1] = (long)(OP1_func_t) G__OP1_prefixdec_T<int>;
                   break;
 
                case G__OPR_POSTFIXINC_D:
@@ -4705,7 +4858,6 @@ int Cint::Internal::G__asm_optimize3(int* start)
             ++pc;
             break;
 
-
          case G__GETRSVD:
             /***************************************
             * 0 GETRSVD
@@ -4804,13 +4956,18 @@ int Cint::Internal::G__asm_optimize3(int* start)
             * sp-1
             * sp
             ***************************************/
-            var = G__Dict::GetDict().GetDataMember((size_t)G__asm_inst[pc+4]);
+            var = G__Dict::GetDict().GetDataMember((size_t) G__asm_inst[pc+4]);
             ig15 = G__asm_inst[pc+1];
             paran = G__asm_inst[pc+2];
             var_type = G__asm_inst[pc+3];
 #ifdef G__ASM_DBG
             if (G__asm_dbg) {
-               G__fprinterr(G__serr, "%3x: LD_LVAR name: '%s' index: %d paran: %d point '%c'  %s:%d\n", pc, var.Name(::Reflex::SCOPED).c_str(), G__asm_inst[pc+1], G__asm_inst[pc+2], G__asm_inst[pc+3], __FILE__, __LINE__);
+               if ((var_type < 256) && isprint(var_type)) {
+                  G__fprinterr(G__serr, "%3x: LD_LVAR name: '%s' index: %d paran: %d point %ld '%c'  %s:%d\n", pc, var.Name(::Reflex::SCOPED).c_str(), G__asm_inst[pc+1], G__asm_inst[pc+2], G__asm_inst[pc+3], G__asm_inst[pc+3], __FILE__, __LINE__);
+               }
+               else {
+                  G__fprinterr(G__serr, "%3x: LD_LVAR name: '%s' index: %d paran: %d point %ld  %s:%d\n", pc, var.Name(::Reflex::SCOPED).c_str(), G__asm_inst[pc+1], G__asm_inst[pc+2], G__asm_inst[pc+3], __FILE__, __LINE__);
+               }
             }
 #endif // G__ASM_DBG
             // need optimization
@@ -4923,7 +5080,7 @@ int Cint::Internal::G__asm_optimize3(int* start)
                }
             pc += 5;
             break;
-#endif
+#endif // G__ASM_WHOLEFUNC
 
          case G__REWINDSTACK:
             /***************************************
@@ -5050,7 +5207,7 @@ int Cint::Internal::G__asm_optimize3(int* start)
             ++pc;
             break;
 
-#endif /* G__ASM_IFUNC */
+#endif // G__ASM_IFUNC
 
          case G__BASECONV:
             /***************************************
@@ -5330,7 +5487,7 @@ int Cint::Internal::G__asm_optimize3(int* start)
             /* no optimization */
             pc += 4;
             break;
-#endif
+#endif // G__OLDIMPLEMENTATION1073
 
          case G__TOPVALUE:
             /***************************************
@@ -5526,8 +5683,6 @@ int Cint::Internal::G__asm_optimize3(int* start)
             pc += 2;
             break;
 
-
-
          case G__MEMCPY:
             /***************************************
             * inst
@@ -5647,11 +5802,10 @@ int Cint::Internal::G__asm_optimize3(int* start)
             * This is a double check and should
             * never happen.
             ***************************************/
-            G__fprinterr(G__serr, "%3x: illegal instruction 0x%lx\t%ld\n"
-                         , pc, G__asm_inst[pc], G__asm_inst[pc]);
+            G__fprinterr(G__serr, "%3x: illegal instruction 0x%lx\t%ld\n", pc, G__asm_inst[pc], G__asm_inst[pc]);
             ++pc;
             ++illegal;
-            return(1);
+            return 1;
             break;
       }
    }
@@ -5661,18 +5815,15 @@ int Cint::Internal::G__asm_optimize3(int* start)
 //______________________________________________________________________________
 int Cint::Internal::G__dasm(FILE* fout, int isthrow)
 {
-   // -- Disassembler
-   unsigned int pc;               /* instruction program counter */
+   // Disassembler
+   unsigned int pc = 0; // instruction program counter
    int illegal = 0;
    Reflex::Member var;
-
-   if (!fout) fout = G__serr;
-   pc = 0;
-
+   if (!fout) {
+      fout = G__serr;
+   }
    while (pc < G__MAXINST) {
-
       switch (G__INST(G__asm_inst[pc])) {
-
          case G__LDST_VAR_P:
             /***************************************
             * inst
@@ -5693,7 +5844,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += 5;
             break;
-
          case G__LDST_MSTR_P:
             /***************************************
             * inst
@@ -5714,7 +5864,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += 5;
             break;
-
          case G__LDST_VAR_INDEX:
             /***************************************
             * inst
@@ -5737,7 +5886,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += G__asm_inst[pc+4];
             break;
-
          case G__LDST_VAR_INDEX_OPR:
             /***************************************
             * inst
@@ -5762,7 +5910,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += G__asm_inst[pc+6];
             break;
-
          case G__OP2_OPTIMIZED:
             /***************************************
             * inst
@@ -5778,7 +5925,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += 2;
             break;
-
          case G__OP1_OPTIMIZED:
             /***************************************
             * inst
@@ -5793,7 +5939,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += 2;
             break;
-
          case G__LD_VAR:
             /***************************************
             * inst
@@ -5808,17 +5953,15 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             * sp-1
             * sp
             ***************************************/
-            if (0 == isthrow) {
-               var = G__Dict::GetDict().GetDataMember((size_t)G__asm_inst[pc+4]);
-               if (!var) return(1);
-               fprintf(fout, "%3x: LD_VAR index=%ld paran=%ld point %c %s\n"
-                       , pc, G__asm_inst[pc+1], G__asm_inst[pc+2]
-                       , (char)G__asm_inst[pc+3]
-                       , var.Name(Reflex::SCOPED).c_str());
+            if (!isthrow) {
+               var = G__Dict::GetDict().GetDataMember((size_t) G__asm_inst[pc+4]);
+               if (!var) {
+                  return 1;
+               }
+               fprintf(fout, "%3x: LD_VAR index=%ld paran=%ld point %c %s\n", pc, G__asm_inst[pc+1], G__asm_inst[pc+2], (char) G__asm_inst[pc+3], var.Name(Reflex::SCOPED).c_str());
             }
             pc += 5;
             break;
-
          case G__LD:
             /***************************************
             * inst
@@ -5836,7 +5979,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += 2;
             break;
-
          case G__CL:
             /***************************************
             * 0 CL
@@ -5849,7 +5991,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += 2;
             break;
-
          case G__OP2:
             /***************************************
             * inst
@@ -5869,7 +6010,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += 2;
             break;
-
          case G__ST_VAR:
             /***************************************
             * inst
@@ -5894,7 +6034,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += 5;
             break;
-
          case G__LD_MSTR:
             /***************************************
             * inst
@@ -5919,7 +6058,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += 5;
             break;
-
          case G__CMPJMP:
             /***************************************
             * 0 CMPJMP
@@ -5937,7 +6075,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += 5;
             break;
-
          case G__PUSHSTROS:
             /***************************************
             * inst
@@ -5950,7 +6087,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             ++pc;
             break;
-
          case G__SETSTROS:
             /***************************************
             * inst
@@ -5964,7 +6100,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             ++pc;
             break;
-
          case G__POPSTROS:
             /***************************************
             * inst
@@ -5977,7 +6112,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             ++pc;
             break;
-
          case G__ST_MSTR:
             /***************************************
             * inst
@@ -6002,7 +6136,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += 5;
             break;
-
          case G__INCJMP:
             /***************************************
             * 0 INCJMP
@@ -6017,7 +6150,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += 4;
             break;
-
          case G__CNDJMP:
             /***************************************
             * 0 CNDJMP   (jump if 0)
@@ -6031,7 +6163,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += 2;
             break;
-
          case G__CMP2:
             /***************************************
             * 0 CMP2
@@ -6045,7 +6176,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += 2;
             break;
-
          case G__JMP:
             /***************************************
             * 0 JMP
@@ -6056,7 +6186,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += 2;
             break;
-
          case G__PUSHCPY:
             /***************************************
             * inst
@@ -6070,7 +6199,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             ++pc;
             break;
-
          case G__POP:
             /***************************************
             * inst
@@ -6084,7 +6212,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             ++pc;
             break;
-
          case G__LD_FUNC:
             /***************************************
             * inst
@@ -6113,7 +6240,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += 6;
             break;
-
          case G__RETURN:
             /***************************************
             * 0 RETURN
@@ -6124,7 +6250,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             pc++;
             return(0);
             break;
-
          case G__CAST:
             /***************************************
             * 0 CAST
@@ -6141,7 +6266,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += 5;
             break;
-
          case G__OP1:
             /***************************************
             * inst
@@ -6160,7 +6284,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += 2;
             break;
-
          case G__LETVVAL:
             /***************************************
             * inst
@@ -6175,7 +6298,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             ++pc;
             break;
-
          case G__ADDSTROS:
             /***************************************
             * inst
@@ -6187,7 +6309,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += 2;
             break;
-
          case G__LETPVAL:
             /***************************************
             * inst
@@ -6202,7 +6323,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             ++pc;
             break;
-
          case G__FREETEMP:
             /***************************************
             * 0 FREETEMP
@@ -6212,7 +6332,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             ++pc;
             break;
-
          case G__SETTEMP:
             /***************************************
             * 0 SETTEMP
@@ -6222,8 +6341,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             ++pc;
             break;
-
-
          case G__GETRSVD:
             /***************************************
             * 0 GETRSVD
@@ -6233,7 +6350,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             ++pc;
             break;
-
          case G__TOPNTR:
             /***************************************
             * inst
@@ -6247,7 +6363,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             ++pc;
             break;
-
          case G__NOT:
             /***************************************
             * 0 NOT
@@ -6257,7 +6372,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             ++pc;
             break;
-
          case G__BOOL:
             /***************************************
             * 0 BOOL
@@ -6267,7 +6381,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             ++pc;
             break;
-
          case G__ISDEFAULTPARA:
             /***************************************
             * 0 ISDEFAULTPARA
@@ -6278,7 +6391,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += 2;
             break;
-
 #ifdef G__ASM_WHOLEFUNC
          case G__LDST_LVAR_P:
             /***************************************
@@ -6300,7 +6412,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += 5;
             break;
-
          case G__LD_LVAR:
             /***************************************
             * inst
@@ -6325,7 +6436,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += 5;
             break;
-
          case G__ST_LVAR:
             /***************************************
             * inst
@@ -6350,8 +6460,7 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += 5;
             break;
-#endif
-
+#endif // G__ASM_WHOLEFUNC
          case G__REWINDSTACK:
             /***************************************
             * inst
@@ -6367,7 +6476,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += 2;
             break;
-
          case G__CND1JMP:
             /***************************************
             * 0 CND1JMP   (jump if 1)
@@ -6381,7 +6489,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += 2;
             break;
-
 #ifdef G__ASM_IFUNC
          case G__LD_IFUNC:
             /***************************************
@@ -6406,7 +6513,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += 8;
             break;
-
          case G__NEWALLOC:
             /***************************************
             * inst
@@ -6422,7 +6528,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += 3;
             break;
-
          case G__SET_NEWALLOC:
             /***************************************
             * inst
@@ -6438,7 +6543,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += 3;
             break;
-
          case G__DELETEFREE:
             /***************************************
             * inst
@@ -6450,7 +6554,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += 2;
             break;
-
          case G__SWAP:
             /***************************************
             * inst
@@ -6465,9 +6568,7 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             ++pc;
             break;
-
-#endif /* G__ASM_IFUNC */
-
+#endif // G__ASM_IFUNC
          case G__BASECONV:
             /***************************************
             * inst
@@ -6485,7 +6586,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += 3;
             break;
-
          case G__STORETEMP:
             /***************************************
             * 0 STORETEMP
@@ -6498,7 +6598,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             ++pc;
             break;
-
          case G__ALLOCTEMP:
             /***************************************
             * 0 ALLOCTEMP
@@ -6512,7 +6611,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += 2;
             break;
-
          case G__POPTEMP:
             /***************************************
             * 0 POPTEMP
@@ -6530,7 +6628,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += 2;
             break;
-
          case G__REORDER:
             /***************************************
             * 0 REORDER
@@ -6548,7 +6645,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += 3;
             break;
-
          case G__LD_THIS:
             /***************************************
             * 0 LD_THIS
@@ -6564,7 +6660,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += 2;
             break;
-
          case G__RTN_FUNC:
             /***************************************
             * 0 RTN_FUNC
@@ -6578,7 +6673,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += 2;
             break;
-
          case G__SETMEMFUNCENV:
             /***************************************
             * 0 SETMEMFUNCENV:
@@ -6588,7 +6682,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += 1;
             break;
-
          case G__RECMEMFUNCENV:
             /***************************************
             * 0 RECMEMFUNCENV:
@@ -6598,7 +6691,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += 1;
             break;
-
          case G__ADDALLOCTABLE:
             /***************************************
             * 0 ADDALLOCTABLE:
@@ -6608,7 +6700,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += 1;
             break;
-
          case G__DELALLOCTABLE:
             /***************************************
             * 0 DELALLOCTABLE:
@@ -6618,7 +6709,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += 1;
             break;
-
          case G__BASEDESTRUCT:
             /***************************************
             * 0 BASEDESTRUCT:
@@ -6631,7 +6721,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += 3;
             break;
-
          case G__REDECL:
             /***************************************
             * 0 REDECL:
@@ -6643,7 +6732,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += 3;
             break;
-
          case G__TOVALUE:
             /***************************************
             * 0 TOVALUE:
@@ -6653,7 +6741,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += 2;
             break;
-
          case G__INIT_REF:
             /***************************************
             * inst
@@ -6675,7 +6762,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += 5;
             break;
-
          case G__LETNEWVAL:
             /***************************************
             * inst
@@ -6690,7 +6776,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             ++pc;
             break;
-
          case G__SETGVP:
             /***************************************
             * inst
@@ -6706,7 +6791,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += 2;
             break;
-
          case G__TOPVALUE:
             /***************************************
             * 0 TOPVALUE:
@@ -6716,7 +6800,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             ++pc;
             break;
-
 #ifndef G__OLDIMPLEMENTATION1073
          case G__CTOR_SETGVP:
             /***************************************
@@ -6731,8 +6814,7 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += 4;
             break;
-#endif
-
+#endif // G__OLDIMPLEMENTATION1073
          case G__TRY:
             /***************************************
             * inst
@@ -6746,7 +6828,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += 3;
             break;
-
          case G__TYPEMATCH:
             /***************************************
             * inst
@@ -6761,7 +6842,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += 2;
             break;
-
          case G__ALLOCEXCEPTION:
             /***************************************
             * inst
@@ -6776,7 +6856,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += 2;
             break;
-
          case G__DESTROYEXCEPTION:
             /***************************************
             * inst
@@ -6787,7 +6866,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             ++pc;
             break;
-
          case G__THROW:
             /***************************************
             * inst
@@ -6801,7 +6879,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += 1;
             break;
-
          case G__CATCH:
             /***************************************
             * inst
@@ -6844,7 +6921,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += 5;
             break;
-
          case G__SETARYINDEX:
             /***************************************
             * inst
@@ -6856,7 +6932,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += 2;
             break;
-
          case G__RESETARYINDEX:
             /***************************************
             * inst
@@ -6868,7 +6943,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             pc += 2;
             break;
-
          case G__GETARYINDEX:
             /***************************************
             * inst
@@ -6879,7 +6953,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             ++pc;
             break;
-
          case G__ENTERSCOPE:
             /***************************************
             * inst
@@ -6891,7 +6964,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             /* no optimization */
             ++pc;
             break;
-
          case G__EXITSCOPE:
             /***************************************
             * inst
@@ -6903,7 +6975,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             /* no optimization */
             ++pc;
             break;
-
          case G__PUTAUTOOBJ:
             /***************************************
             * inst
@@ -6917,7 +6988,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             /* no optimization */
             pc += 3;
             break;
-
          case G__CASE:
             /***************************************
             * inst
@@ -6933,8 +7003,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             /* no optimization */
             pc += 2;
             break;
-
-
          case G__MEMCPY:
             /***************************************
             * inst
@@ -6950,7 +7018,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             ++pc;
             break;
-
          case G__MEMSETINT:
             /***************************************
             * inst
@@ -6969,7 +7036,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
 #endif
             pc += G__asm_inst[pc+2] * 2 + 3;
             break;
-
          case G__JMPIFVIRTUALOBJ:
             /***************************************
             * inst
@@ -6983,7 +7049,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
 #endif
             pc += 3;
             break;
-
          case G__VIRTUALADDSTROS:
             /***************************************
             * inst
@@ -6998,7 +7063,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
 #endif
             pc += 4;
             break;
-
          case G__ROOTOBJALLOCBEGIN:
             /***************************************
             * 0 ROOTOBJALLOCBEGIN
@@ -7008,7 +7072,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             ++pc;
             break;
-
          case G__ROOTOBJALLOCEND:
             /***************************************
             * 0 ROOTOBJALLOCEND
@@ -7018,7 +7081,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             ++pc;
             break;
-
          case G__PAUSE:
             /***************************************
             * inst
@@ -7029,8 +7091,6 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             ++pc;
             break;
-
-
          case G__NOP:
             /***************************************
             * 0 NOP
@@ -7040,23 +7100,21 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             }
             ++pc;
             break;
-
          default:
             /***************************************
             * Illegal instruction.
             * This is a double check and should
             * never happen.
             ***************************************/
-            fprintf(fout, "%3x: illegal instruction 0x%lx\t%ld\n"
-                    , pc, G__asm_inst[pc], G__asm_inst[pc]);
+            fprintf(fout, "%3x: illegal instruction 0x%lx\t%ld\n", pc, G__asm_inst[pc], G__asm_inst[pc]);
             ++pc;
             ++illegal;
-            if (illegal > 20) return(0);
+            if (illegal > 20) {
+               return 0;
+            }
             break;
       }
-
    }
-
    return 0;
 }
 
