@@ -350,11 +350,14 @@ void TDocParser::AnchorFromLine(const TString& line, TString& anchor) {
 }
 
 //______________________________________________________________________________
-void TDocParser::Convert(std::ostream& out, std::istream& in, const char* relpath)
+void TDocParser::Convert(std::ostream& out, std::istream& in, const char* relpath,
+                         Bool_t isCode)
 {
-   // Parse text file in, add links etc, and write output file to out.
+   // Parse text file "in", add links etc, and write output to "out".
+   // If "isCode", "in" is assumed to be C++ code.
    fParseContext.clear();
-   fParseContext.push_back(kComment); // so we can find "BEGIN_HTML"/"END_HTML" in plain text
+   if (isCode) fParseContext.push_back(kCode);
+   else        fParseContext.push_back(kComment); // so we can find "BEGIN_HTML"/"END_HTML" in plain text
 
    while (!in.eof()) {
       fLineRaw.ReadLine(in, kFALSE);

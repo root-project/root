@@ -1105,7 +1105,7 @@ THtml::THtml():
    fCounterFormat("%12s %5s %s"),
    fProductName("(UNKNOWN PRODUCT)"),
    fThreadedClassIter(0), fMakeClassMutex(0),
-   fPathDef(0), fModuleDef(0), fFileDef(0),
+   fGClient(0), fPathDef(0), fModuleDef(0), fFileDef(0),
    fLocalFiles(0), fBatch(kFALSE)
 {
    // Create a THtml object.
@@ -1359,7 +1359,9 @@ void THtml::Convert(const char *filename, const char *title,
 //                   re-runs the script even if output PNGs exist that are newer
 //                   than the script. If kCompiledOutput is passed, the script is
 //                   run through ACLiC (.x filename+)
-//        context  - line shown verbatim at the top of the page; e.g. for links
+//        context  - line shown verbatim at the top of the page; e.g. for links.
+//                   If context is non-empty it is expected to also print the
+//                   title.
 //
 //  NOTE: Output file name is the same as filename, but with extension .html
 //
@@ -1411,7 +1413,12 @@ void THtml::Convert(const char *filename, const char *title,
        gSystem->ConcatFileName(dir, gSystem->BaseName(filename));
 
    TDocOutput output(*this);
-   output.Convert(sourceFile, realFilename, tmp1, title, relpath, includeOutput, context);
+   if (!fGClient)
+      gROOT->ProcessLine(TString::Format("*((TGClient**)0x%lx) = gClient;",
+                                         &fGClient));
+   if (includeOutput && !fGClient)
+      Warning("Convert", "Output requested but cannot initialize graphics: GUI  and GL windows not be available");
+   output.Convert(sourceFile, realFilename, tmp1, title, relpath, includeOutput, context, fGClient);
 
    if (tmp1)
       delete[]tmp1;

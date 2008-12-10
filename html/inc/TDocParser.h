@@ -164,7 +164,8 @@ public:
    virtual       ~TDocParser();
 
    static void   AnchorFromLine(const TString& line, TString& anchor);
-   void          Convert(std::ostream& out, std::istream& in, const char* relpath);
+   void          Convert(std::ostream& out, std::istream& in, const char* relpath,
+                         Bool_t isCode);
    void          DecrementMethodCount(const char* name);
    virtual void  DecorateKeywords(std::ostream& out, const char* text);
    virtual void  DecorateKeywords(TString& text);
