@@ -104,8 +104,8 @@ all-$(MODNAME): $(PCRELIB)
 
 clean-pcre:
 ifeq ($(PLATFORM),win32)
-		-@(if [ -d $(PCREDIRS)/$(PCREVERS)/win32 ]; then \
-			cd $(PCREDIRS)/$(PCREVERS)/win32; \
+		-@(if [ -d $(PCREDIRS)/win32 ]; then \
+			cd $(PCREDIRS)/win32; \
 			unset MAKEFLAGS; \
 			nmake -nologo -f Makefile.msc clean; \
 		fi)
@@ -119,6 +119,13 @@ endif
 clean::         clean-$(MODNAME)
 
 distclean-$(MODNAME): clean-$(MODNAME)
+ifeq ($(PLATFORM),win32)
+		-@(if [ -d $(PCREDIRS)/win32 ]; then \
+			cd $(PCREDIRS)/win32; \
+			unset MAKEFLAGS; \
+			nmake -nologo -f Makefile.msc distclean; \
+		fi)
+endif
 		@mv $(PCRELIBS) $(PCREDIRS)/-$(PCREVERS).tar.gz
 		@rm -rf $(PCRELIB) $(PCREDIRS)/pcre-*
 		@mv $(PCREDIRS)/-$(PCREVERS).tar.gz $(PCRELIBS)
