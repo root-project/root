@@ -2764,8 +2764,8 @@ static int G__param_match(char formal_type, const ::Reflex::Scope& formal_tagnum
 #define G__PROMOTIONMATCH 0x00000100
 #define G__STDCONVMATCH   0x00010000
 #define G__USRCONVMATCH   0x01000000
-//#define G__CVCONVMATCH    0x00000001
-#define G__CVCONVMATCH    0x00000000
+#define G__CVCONVMATCH    0x00000001
+//#define G__CVCONVMATCH    0x00000000
 #define G__BASECONVMATCH  0x00000001
 #define G__C2P2FCONVMATCH 0x00000001
 #define G__I02PCONVMATCH  0x00000002
@@ -2921,7 +2921,7 @@ void Cint::Internal::G__rate_parameter_match(G__param* libp, const ::Reflex::Mem
       arg_final = arg_tagnum.FinalType();
       arg_type = G__get_type(arg_tagnum);
       formal_type = G__get_type(formal_tagnum);
-      arg_isconst = G__get_isconst(arg_tagnum);
+      arg_isconst = G__get_isconst(arg_tagnum); // NOTE: to match "Section 13.3.3.1" of the C++ standard, we might want to filter out PCONST
       formal_isconst = G__get_isconst(formal_tagnum);
       arg_reftype = G__get_reftype(arg_final);
       formal_reftype = G__get_reftype(formal_final);
@@ -3266,8 +3266,9 @@ void Cint::Internal::G__rate_parameter_match(G__param* libp, const ::Reflex::Mem
       //
       //  TODO: This is unnecessary and should be removed.
       //
-      if (arg_isconst != formal_isconst) { // notice const/volatile conversion
-         funclist->p_rate[i] += G__CVCONVMATCH; // FIXME: Remove this!  This currently does nothing!  And it should not!
+      if (G__NOMATCH != funclist->p_rate[i] && (arg_isconst != formal_isconst)) 
+      { // notice const/volatile conversion
+         funclist->p_rate[i] += G__CVCONVMATCH;
       }
       //
       //  Check for const passed to non-const ref.
