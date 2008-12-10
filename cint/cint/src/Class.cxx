@@ -37,7 +37,7 @@ void Cint::G__ClassInfo::Init()
 ///////////////////////////////////////////////////////////////////////////
 void Cint::G__ClassInfo::Init(const char *classname)
 {
-   if (strstr(classname,'<')) {
+   if (strchr(classname,'<')) {
       // G__defined_tagnum might modify classname.
       char *tmp = new char[1+strlen(classname)*2];
       strcpy(tmp,classname);
