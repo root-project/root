@@ -37,12 +37,14 @@ void Cint::G__ClassInfo::Init()
 ///////////////////////////////////////////////////////////////////////////
 void Cint::G__ClassInfo::Init(const char *classname)
 {
-   {
+   if (strstr(classname,'<')) {
       // G__defined_tagnum might modify classname.
       char *tmp = new char[1+strlen(classname)*2];
       strcpy(tmp,classname);
       tagnum = G__defined_tagname(tmp,1);
       delete [] tmp;
+   } else {
+      tagnum = G__defined_tagname(classname,1);
    }
    class_property = 0;
 }
