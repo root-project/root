@@ -54,6 +54,14 @@
 // Sub-classes provide for specific behaviour and expectations of
 // individual ROOT GUI container frames.
 //
+//
+// POSSIBLE EXTENSIONS
+//
+// No frame is drawn around this composite-frame - frame style could be
+// available as a (static) member.
+//
+// Menus of embedded windows could also be managed - hidden or transposed
+// to a top-level menubar.
 
 ClassImp(TEveCompositeFrame);
 
@@ -638,8 +646,11 @@ void TEveCompositeFrameInTab::SetCurrent(Bool_t curr)
 //==============================================================================
 
 //______________________________________________________________________________
-// Description of TEveWindow
 //
+// Abstract base-class for representing eve-windows.
+// Sub-classes define a particular GUI frame that gets show
+// in the window.
+// 
 
 ClassImp(TEveWindow);
 
@@ -1317,6 +1328,15 @@ void TEveWindowPack::SetVertical(Bool_t x)
    // Set orientation of the pack (vertical / horizontal).
 
    fPack->SetVertical(x);
+}
+
+//______________________________________________________________________________
+void TEveWindowPack::EqualizeFrames()
+{
+   // Refit existing frames so that their lengths are equal.
+
+   fPack->EqualizeFrames();
+   fPack->Layout();
 }
 
 //==============================================================================

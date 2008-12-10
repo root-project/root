@@ -363,6 +363,8 @@ public:
    void SetVertical(Bool_t x=kTRUE);
    void SetHorizontal() { SetVertical(kFALSE); }
 
+   void EqualizeFrames();  // *MENU*
+
    TGPack* GetPack() const { return fPack; }
 
    ClassDef(TEveWindowPack, 0); // Eve-window containing a TGPack.
