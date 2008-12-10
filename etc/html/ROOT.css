@@ -217,6 +217,9 @@ a.descrheadentry:hover {
 }
 
 /* convert */
+table.descrtitle {
+   width: 100%;
+}
 a.contextheadentry {
    text-decoration: none;
    font-size: small;
@@ -238,29 +241,47 @@ td.contextheadentry {
    margin-left: 0.0em;
    margin-right: 0.0em;
    border-bottom: none;
-   padding-left: 0.5em;
-   padding-right: 0.5em;
-}
-
-td.contextheadarrow {
-   font-size:xx-large;
-   border-left: dotted 1px #000077;
    padding-left: 0.3em;
+   padding-right: 0.3em;
+   width: 40%;
+   text-align: center;
 }
 
 a.contextheadarrow {
+   font-size:xx-large;
    text-decoration: none;
    color: inherit;
+   padding-left: 0.3em;
+}
+#contexttitle div {
+   margin-top: -0.9em;
+   margin-bottom: -0.5em;
 }
 
 #contextheadentry_next {
    border-left: dotted 1px #000077;
+   text-align: right;
 }
 #contextheadarrow_next {
    border-left: none;
 }
-
-
+#divcontextheadarrow_up {
+   margin-top: -0.4em;
+}
+#contextheadarrow_up {
+   border-left: dotted 1px #000077;
+}
+#contextheadentry_up {
+   width: 20%;
+}
+#contextheadentry_prev {
+   text-align: left;
+}
+#toplinks h1 {
+   font-size: x-large;
+   padding: 0em 0em 0em 0em;
+   margin: 0.3em 1em 0.1em 1em;
+}
 
 /* TOC */
 div.toc {
