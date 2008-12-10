@@ -21,7 +21,7 @@ void arrow_standalone()
    evf->AddFrame(ev->GetFrame(), new TGLayoutHints(kLHintsNormal | kLHintsExpandX | kLHintsExpandY));
 
    TEveViewer* eve_v = new TEveViewer("YourViewer");
-   eve_v->SetGLViewer(ev);
+   eve_v->SetGLViewer(ev, ev->GetFrame());
    eve_v->IncDenyDestroy();
    eve_v->AddScene(gEve->GetEventScene());
    gEve->AddElement(eve_v, gEve->GetViewers());
