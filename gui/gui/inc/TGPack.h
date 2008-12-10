@@ -29,6 +29,7 @@ protected:
 
    Int_t          GetFrameLength(const TGFrame* f) const { return fVertical ? f->GetHeight() : f->GetWidth(); }
    Int_t          GetLength()                      const { return GetFrameLength(this); }
+   Int_t          GetAvailableLength()             const;
 
    void           SetFrameLength  (TGFrame* f, Int_t len);
    void           SetFramePosition(TGFrame* f, Int_t pos);
@@ -62,6 +63,8 @@ public:
    virtual void   Resize(UInt_t w = 0, UInt_t h = 0);
    virtual void   MoveResize(Int_t x, Int_t y, UInt_t w = 0, UInt_t h = 0);
    virtual void   Layout();
+
+   void           EqualizeFrames();
 
    void HandleSplitterStart();
    void HandleSplitterResize(Int_t delta);

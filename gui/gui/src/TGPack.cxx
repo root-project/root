@@ -63,6 +63,17 @@ TGPack::~TGPack()
 //------------------------------------------------------------------------------
 
 //______________________________________________________________________________
+Int_t TGPack::GetAvailableLength() const
+{
+   // Return length of entire frame without splitters.
+
+   Int_t len = fVertical ? GetHeight() : GetWidth();
+   if (fUseSplitters)
+      len -= fSplitterLen * (fList->GetSize() - 1) / 2;
+   return len;
+}
+
+//______________________________________________________________________________
 void TGPack::SetFrameLength(TGFrame* f, Int_t len)
 {
    // Set pack-wise length of frame f.
@@ -437,6 +448,32 @@ void TGPack::Layout()
    }
 }
 
+//______________________________________________________________________________
+void TGPack::EqualizeFrames()
+{
+   // Refit existing frames so that their lengths are equal.
+
+   if (fList->IsEmpty())
+      return;
+
+   Int_t length = GetAvailableLength();
+   Int_t nf     = NumberOfRealFrames();
+   Int_t lpf    = (Int_t) (((Double_t) length) / nf);
+   Int_t extra  = length - nf*lpf;
+
+   TGFrameElement *el;
+   TIter next(fList);
+
+   while ((el = (TGFrameElement *) next()))
+   {
+      SetFrameLength(el->fFrame, lpf + extra);
+      extra = 0;
+
+      if (fUseSplitters)
+         next();
+   }
+}
+
 //------------------------------------------------------------------------------
 
 //______________________________________________________________________________
@@ -451,6 +488,10 @@ void TGPack::HandleSplitterStart()
 void TGPack::HandleSplitterResize(Int_t delta)
 {
    // Handle resize events from splitters.
+
+   Int_t min_dec = - (GetAvailableLength() + NumberOfRealFrames());
+   if (delta <  min_dec)
+      delta = min_dec;
 
    TGSplitter *s = dynamic_cast<TGSplitter*>((TGFrame*) gTQSender);
 
