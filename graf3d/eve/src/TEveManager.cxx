@@ -156,16 +156,16 @@ TEveManager::TEveManager(UInt_t w, UInt_t h, Bool_t map_window, Option_t* opt) :
    // --------------------------------
 
    fWindowManager->IncDenyDestroy();
-   AddToListTree(fWindowManager, kTRUE);
+   AddToListTree(fWindowManager, kFALSE);
 
    fViewers = new TEveViewerList("Viewers");
    fViewers->IncDenyDestroy();
    fViewers->Connect();
-   AddToListTree(fViewers, kTRUE);
+   AddToListTree(fViewers, kFALSE);
 
    fScenes  = new TEveSceneList ("Scenes");
    fScenes->IncDenyDestroy();
-   AddToListTree(fScenes, kTRUE);
+   AddToListTree(fScenes, kFALSE);
 
    fGlobalScene = new TEveScene("Geometry scene");
    fGlobalScene->IncDenyDestroy();
