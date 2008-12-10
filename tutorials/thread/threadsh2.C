@@ -1,5 +1,5 @@
 // Example of a simple script creating 2 threads each with one canvas.
-// The canvases are saved in a gif file.
+// The canvases are saved in a animated gif file.
 // This script can only be executed via ACliC .x threadsh2.C++.
 
 #include "TROOT.h"
@@ -10,92 +10,118 @@
 #include "TThread.h"
 #include "TMethodCall.h"
 
-TH1F    *hpx[2];
+TH1F    *hpx, *total, *hmain, *s1, *s2;
 TThread *thread1, *thread2, *threadj;
-Bool_t finished;
+Bool_t   finished;
 
-void *handle1(void *ptr)
+void *handle1(void *)
 {
-   long nr = (long) ptr;
-   int nfills = 250000;
-   int upd = 5000;
+   int nfills = 10000;
+   int upd = 500;
 
-   TCanvas *c0 = new TCanvas("c0","Dynamic Filling Example", 100, 20, 400, 300);
+   TCanvas *c0 = new TCanvas("c0","Dynamic Filling Example", 100, 30, 400, 300);
    c0->SetFillColor(42);
    c0->GetFrame()->SetFillColor(21);
    c0->GetFrame()->SetBorderSize(6);
    c0->GetFrame()->SetBorderMode(-1);
 
-   char name[32];
-   sprintf(name,"hpx%ld",nr);
    TThread::Lock();
-   hpx[nr] = new TH1F(name,"This is the px distribution",100,-4,4);
-   hpx[nr]->SetFillColor(48);
+   hpx = new TH1F("hpx", "This is the px distribution", 100, -4, 4);
+   hpx->SetFillColor(48);
    TThread::UnLock();
    Float_t px, py, pz;
    gRandom->SetSeed();
    for (Int_t i = 0; i < nfills; i++) {
-      gRandom->Rannor(px,py);
+      gRandom->Rannor(px, py);
       pz = px*px + py*py;
-      hpx[nr]->Fill(px);
+      hpx->Fill(px);
       if (i && (i%upd) == 0) {
          if (i == upd) {
             c0->cd();
-            hpx[nr]->Draw();
+            hpx->Draw();
          }
          c0->Modified();
          c0->Update();
          gSystem->Sleep(10);
+         TMethodCall c(c0->IsA(), "Print", "");
+         void *arr[4];
+         arr[1] = &c;
+         arr[2] = (void *)c0;
+         arr[3] = (void*)"\"hpxanim.gif+50\"";
+         (*gThreadXAR)("METH", 4, arr, NULL);
       }
    }
+   c0->Modified();
+   c0->Update();
    TMethodCall c(c0->IsA(), "Print", "");
    void *arr[4];
    arr[1] = &c;
    arr[2] = (void *)c0;
-   arr[3] = (void*)"\"c0.gif\"";
+   arr[3] = (void*)"\"hpxanim.gif++\"";
    (*gThreadXAR)("METH", 4, arr, NULL);
    return 0;
 }
 
-void *handle2(void *ptr)
+void *handle2(void *)
 {
-   long nr = (long) ptr;
-   int nfills = 250000;
-   int upd = 5000;
+   int nfills = 10000;
+   int upd = 500;
 
-   TCanvas *c1 = new TCanvas("c1","Dynamic Filling Example", 100, 350, 400, 300);
-   c1->SetFillColor(42);
-   c1->GetFrame()->SetFillColor(21);
-   c1->GetFrame()->SetBorderSize(6);
-   c1->GetFrame()->SetBorderMode(-1);
+   TCanvas *c1 = new TCanvas("c1","Dynamic Filling Example", 515, 30, 400, 300);
+   c1->SetGrid();
 
-   char name[32];
-   sprintf(name,"hpx%ld",nr);
    TThread::Lock();
-   hpx[nr] = new TH1F(name,"This is the px distribution",100,-4,4);
-   hpx[nr]->SetFillColor(48);
+   total  = new TH1F("total","This is the total distribution",100,-4,4);
+   hmain  = new TH1F("hmain","Main contributor",100,-4,4);
+   s1     = new TH1F("s1","This is the first signal",100,-4,4);
+   s2     = new TH1F("s2","This is the second signal",100,-4,4);
+   total->Sumw2();   // this makes sure that the sum of squares of weights will be stored
+   total->SetMarkerStyle(21);
+   total->SetMarkerSize(0.7);
+   hmain->SetFillColor(16);
+   s1->SetFillColor(42);
+   s2->SetFillColor(46);
    TThread::UnLock();
-   Float_t px, py, pz;
+   Float_t xs1, xs2, xmain;
    gRandom->SetSeed();
    for (Int_t i = 0; i < nfills; i++) {
-      gRandom->Rannor(px,py);
-      pz = px*px + py*py;
-      hpx[nr]->Fill(px);
+      xmain = gRandom->Gaus(-1,1.5);
+      xs1   = gRandom->Gaus(-0.5,0.5);
+      xs2   = gRandom->Landau(1,0.15);
+      hmain->Fill(xmain);
+      s1->Fill(xs1,0.3);
+      s2->Fill(xs2,0.2);
+      total->Fill(xmain);
+      total->Fill(xs1,0.3);
+      total->Fill(xs2,0.2);
       if (i && (i%upd) == 0) {
          if (i == upd) {
             c1->cd();
-            hpx[nr]->Draw();
+            total->Draw("e1p");
+            hmain->Draw("same");
+            s1->Draw("same");
+            s2->Draw("same");
          }
          c1->Modified();
          c1->Update();
          gSystem->Sleep(10);
+         TMethodCall c(c1->IsA(), "Print", "");
+         void *arr[4];
+         arr[1] = &c;
+         arr[2] = (void *)c1;
+         arr[3] = (void*)"\"hsumanim.gif+50\"";
+         (*gThreadXAR)("METH", 4, arr, NULL);
       }
    }
+   total->Draw("sameaxis"); // to redraw axis hidden by the fill area
+   c1->Modified();
+   c1->Update();
+   // make infinite animation by adding "++" to the file name
    TMethodCall c(c1->IsA(), "Print", "");
    void *arr[4];
    arr[1] = &c;
    arr[2] = (void *)c1;
-   arr[3] = (void*)"\"c1.gif\"";
+   arr[3] = (void*)"\"hsumanim.gif++\"";
    (*gThreadXAR)("METH", 4, arr, NULL);
    return 0;
 }
@@ -119,6 +145,8 @@ void threadsh2()
 
    finished = kFALSE;
    //gDebug = 1;
+   gSystem->Unlink("hpxanim.gif");
+   gSystem->Unlink("hsumanim.gif");
 
    printf("Starting Thread 0\n");
    thread1 = new TThread("t0", handle1, (void*) 0);
