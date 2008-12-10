@@ -144,6 +144,7 @@ void TChainIndex::DeleteIndices()
       if (fEntries[i].fTreeIndex) {
          if (fTree->GetTree() && fTree->GetTree()->GetTreeIndex() == fEntries[i].fTreeIndex) {
             fTree->GetTree()->SetTreeIndex(0);
+            SafeDelete(fEntries[i].fTreeIndex);
          }
          SafeDelete(fEntries[i].fTreeIndex);
       }
@@ -154,9 +155,9 @@ void TChainIndex::DeleteIndices()
 TChainIndex::~TChainIndex()
 {
    // The destructor.
+   DeleteIndices();
    if (fTree && fTree->GetTreeIndex() == this)
       fTree->SetTreeIndex(0);
-   DeleteIndices();
 }
 
 //______________________________________________________________________________
@@ -342,7 +343,7 @@ void TChainIndex::UpdateFormulaLeaves(const TTree *parent)
 void TChainIndex::SetTree(const TTree *T)
 {
    // See TTreeIndex::SetTree.
-   // Used only by the streamer.
-   R__ASSERT(fTree == 0 || fTree == T);
+
+   R__ASSERT(fTree == 0 || fTree == T || T==0);
 }
 
