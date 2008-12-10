@@ -358,7 +358,7 @@ static void G__getpointer2pointer(G__value* presult, const ::Reflex::Member& var
             for (; ty.IsPointer(); ty = ty.ToType()) {
                ++var_ptr_count;
             }
-            ::Reflex::Type result_type = G__value_typenum(*presult).RawType();
+            ::Reflex::Type result_type(G__value_typenum(*presult).RawType(),ty.IsConst() ? Reflex::CONST : 0); // Try to preserve some constness!
             for (int i = 0; i < var_ptr_count; ++i) {
                result_type = ::Reflex::PointerBuilder(result_type);
             }
@@ -382,7 +382,7 @@ static void G__getpointer2pointer(G__value* presult, const ::Reflex::Member& var
                   for (; ty.IsPointer(); ty = ty.ToType()) {
                      ++var_ptr_count;
                   }
-                  ::Reflex::Type result_type = G__value_typenum(*presult).RawType();
+                  ::Reflex::Type result_type(G__value_typenum(*presult).RawType(), ty.IsConst() ? Reflex::CONST : 0);
                   for (int i = 0; i < (var_ptr_count + 1); ++i) {
                      result_type = ::Reflex::PointerBuilder(result_type);
                   }
