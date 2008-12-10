@@ -1348,11 +1348,11 @@ int G__search_typename(const char *typenamein,int typein
             // The type we found is an autoload entry, let's replace it!
             int old_inttagnum = G__get_tagnum(typedf);
             if (old_inttagnum>=0) {
-               char *old = G__struct.name[tagnum];
+               char *old = G__struct.name[old_inttagnum];
                
-               G__struct.name[tagnum] = (char*)malloc(strlen(old) + 50);
-               strcpy(G__struct.name[tagnum], "@@ ex autload entry @@");
-               strcat(G__struct.name[tagnum], old);
+               G__struct.name[old_inttagnum] = (char*)malloc(strlen(old) + 50);
+               strcpy(G__struct.name[old_inttagnum], "@@ ex autload entry @@");
+               strcat(G__struct.name[old_inttagnum], old);
                G__struct.type[old_inttagnum] = 0;
                free(old);
             }
