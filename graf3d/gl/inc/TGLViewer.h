@@ -194,6 +194,9 @@ public:
 
    TGLWidget* GetGLWidget() { return fGLWidget; }
 
+   virtual void  CreateGLWidget()  {}
+   virtual void  DestroyGLWidget() {}
+
    Int_t   GetDev()          const           { return fGLDevice; }
    Color_t GetClearColor()   const           { return fClearColor; }
    void    SetClearColor(Color_t col)        { fClearColor = col; }

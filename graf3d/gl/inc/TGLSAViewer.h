@@ -63,6 +63,8 @@ private:
    TGedEditor        *fGedEditor;
    TGLPShapeObj      *fPShapeWrap;
 
+   TGCompositeFrame  *fRightVerticalFrame;
+
    TString            fDirName;
    Int_t              fTypeIdx;
    Bool_t             fOverwrite;
@@ -89,6 +91,9 @@ public:
    TGLSAViewer(TVirtualPad *pad);
    TGLSAViewer(const TGWindow *parent, TVirtualPad *pad, TGedEditor *ged = 0);
    ~TGLSAViewer();
+
+   virtual void CreateGLWidget();
+   virtual void DestroyGLWidget();
 
    virtual const char* GetName() const { return "GLViewer"; }
 

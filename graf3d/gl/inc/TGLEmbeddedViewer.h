@@ -28,8 +28,9 @@ class TGLEmbeddedViewer : public TGLViewer
 private:
    // GUI components
    TGCompositeFrame  *fFrame;
+   Int_t              fBorder;
 
-   void CreateFrames(Int_t border);
+   void CreateFrames();
 
    TGLEmbeddedViewer(const TGLEmbeddedViewer&); // Not implemented
    TGLEmbeddedViewer& operator=(const TGLEmbeddedViewer&); // Not implemented
@@ -37,6 +38,9 @@ private:
 public:
    TGLEmbeddedViewer(const TGWindow *parent, TVirtualPad *pad=0, Int_t border=2);
    ~TGLEmbeddedViewer();
+
+   virtual void CreateGLWidget();
+   virtual void DestroyGLWidget();
 
    virtual const char *GetName() const { return "GLViewer"; }
 

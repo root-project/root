@@ -33,7 +33,8 @@ ClassImp(TGLEmbeddedViewer);
 //______________________________________________________________________________
 TGLEmbeddedViewer::TGLEmbeddedViewer(const TGWindow *parent, TVirtualPad *pad, Int_t border) :
    TGLViewer(pad, 0, 0, 400, 300),
-   fFrame(0)
+   fFrame(0),
+   fBorder(border)
 {
    // Constructor.
    // Argument 'border' specifies how many pixels to pad on each side of the
@@ -41,7 +42,7 @@ TGLEmbeddedViewer::TGLEmbeddedViewer(const TGWindow *parent, TVirtualPad *pad, I
 
    fFrame = new TGCompositeFrame(parent);
 
-   CreateFrames(border);
+   CreateFrames();
 
    fFrame->MapSubwindows();
    fFrame->Resize(fFrame->GetDefaultSize());
@@ -58,16 +59,55 @@ TGLEmbeddedViewer::~TGLEmbeddedViewer()
 }
 
 //______________________________________________________________________________
-void TGLEmbeddedViewer::CreateFrames(Int_t border)
+void TGLEmbeddedViewer::CreateGLWidget()
+{
+   // Create a GLwidget, it is an error if it is already created.
+   // This is needed for frame-swapping on mac.
+
+   if (fGLWidget) {
+      Error("CreateGLWidget", "Widget already exists.");
+      return;
+   }
+
+   fGLWidget = TGLWidget::Create(fFrame, kTRUE, kTRUE, 0, 10, 10);
+   fGLWidget->SetEventHandler(fEventHandler);
+
+   fFrame->AddFrame(fGLWidget, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY,
+                                                 fBorder, fBorder, fBorder, fBorder));
+   fFrame->Layout();
+
+   fGLWidget->MapWindow();
+}
+
+//______________________________________________________________________________
+void TGLEmbeddedViewer::DestroyGLWidget()
+{
+   // Destroy the GLwidget, it is an error if it does not exist.
+   // This is needed for frame-swapping on mac.
+
+   if (fGLWidget == 0) {
+      Error("DestroyGLWidget", "Widget does not exist.");
+      return;
+   }
+
+   fGLWidget->UnmapWindow();
+
+   fFrame->RemoveFrame(fGLWidget);
+   fGLWidget->DeleteWindow();
+   fGLWidget = 0;
+}
+
+//______________________________________________________________________________
+void TGLEmbeddedViewer::CreateFrames()
 {
    // Internal frames creation.
 
    fGLWidget = TGLWidget::Create(fFrame, kTRUE, kTRUE, 0, 10, 10);
-   // Direct events from the TGWindow directly to the base viewer
 
-   fEventHandler = new TGLEventHandler("Default", fGLWidget, this);
+   // Direct events from the TGWindow directly to the base viewer
+   fEventHandler = new TGLEventHandler("Default", 0, this);
    fGLWidget->SetEventHandler(fEventHandler);
 
    fFrame->AddFrame(fGLWidget, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY,
-                                                 border, border, border, border));
+                                                 fBorder, fBorder, fBorder, fBorder));
 }
