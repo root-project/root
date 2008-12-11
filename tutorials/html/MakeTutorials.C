@@ -429,7 +429,7 @@ void scandir(THtml& html, const char *dir, const char *title, TObjLink* toplnk) 
       tutTitle += ": ";
       tutTitle += named->GetTitle();
       MakeTopLinks(links,tutTitle,"index",title,lnk);
-      html.Convert(atut,named->GetTitle(),inpath,"../../",includeOutput,links);
+      html.Convert(atut,named->GetTitle(),outpath,"../../",includeOutput,links);
       gROOT->GetListOfCanvases()->Delete();
       gROOT->GetListOfFiles()->Delete();
       gROOT->GetListOfFunctions()->Delete();
