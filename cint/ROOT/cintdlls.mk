@@ -3,7 +3,7 @@
 #
 # Author: Axel Naumann, 2006-09-14
 
-.PHONY: cintdlls distclean-cintdlls clean-cintdlls
+.PHONY: cintdlls distclean-cintdll distclean-cint7dll clean-cintdll distclean-cint7dll
 
 # no: iterator pair
 # already in libCore (core/base/inc/Linkdef2.h): string 
@@ -280,7 +280,7 @@ clean:: clean-$(CLEANCINTDLLSTARGET)
 # remove generated code, too.
 distclean-$(CLEANCINTDLLSTARGET): clean-$(CLEANCINTDLLSTARGET)
 	@(for cintdll in $(CINTDLLNAMES); do \
-	  rm -f $(patsubst distclean-%dll,cint/%,$@)/dll_stl/rootcint_$${cintdll}.* \
+	  rm -f $(patsubst distclean-%dll,cint/%,$@)/lib/dll_stl/rootcint_$${cintdll}.* \
 	  $(patsubst distclean-%dll,cint/%,$@)/lib/dll_stl/G__cpp_$${cintdll}.* \
 	  $(patsubst distclean-%dll,cint/%,$@)/lib/G__c_$${cintdll}.* \
 	  $(patsubst distclean-%dll,cint/%,$@)/lib/G__cpp_$${cintdll}.* \
