@@ -14,6 +14,7 @@
  ************************************************************************/
 
 #include "common.h"
+#include "Api.h"
 
 #include <set>
 #include <string>
@@ -206,7 +207,7 @@ G__value Cint::Internal::G__strip_quotation(char *string)
   else {
     if(G__isvalue(string)) {
       /* string is a pointer */
-      G__letint(&result,'C',atol(string));
+       Cint::G__letpointer(&result,(long)string,G__value_typenum(result));
       free((void*)temp);
       return(result);
     }
@@ -217,7 +218,7 @@ G__value Cint::Internal::G__strip_quotation(char *string)
   }
 
 
-  G__letint(&result,'C',(long)G__saveconststring(temp));
+  G__letpointer(&result,(long)G__saveconststring(temp),G__value_typenum(result));
 
   free((void*)temp);
   return(result);
