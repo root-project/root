@@ -2928,6 +2928,8 @@ void Cint::Internal::G__rate_parameter_match(G__param* libp, const ::Reflex::Mem
       arg_tagnum = arg_tagnum.RawType();
       formal_tagnum = formal_tagnum.RawType();
       funclist->p_rate[i] = G__NOMATCH;
+      bool arg_isfunction = (arg_final.TypeType()==Reflex::FUNCTION || arg_final.TypeType()==Reflex::FUNCTIONMEMBER);
+      bool arg_isptrfunction = arg_final.IsPointer() &&  (arg_final.ToType().TypeType()==Reflex::FUNCTION || arg_final.ToType().TypeType()==Reflex::FUNCTIONMEMBER);
       //
       //  Exact Match.
       //
@@ -3040,6 +3042,8 @@ void Cint::Internal::G__rate_parameter_match(G__param* libp, const ::Reflex::Mem
 #ifndef G__OLDIMPLEMENTATION2191
                 || '1' == arg_type
 #endif // G__OLDIMPLEMENTATION2191
+                ||  (   (arg_final.IsPointer() && arg_final.ToType().IsFunction() )
+                     || (arg_final.IsFunction() ) )
              ) {
                funclist->p_rate[i] = G__PROMOTIONMATCH + G__TOVOIDPMATCH;
             }
@@ -3133,11 +3137,14 @@ void Cint::Internal::G__rate_parameter_match(G__param* libp, const ::Reflex::Mem
 #else // G__OLDIMPLEMENTATION2191
                      'Q' == arg_type
 #endif // G__OLDIMPLEMENTATION2191
+                      || arg_isfunction
                      // --
                   ) {
                      funclist->p_rate[i] = G__STDCONVMATCH;
                   }
-                  else if ('Y' == arg_type) {
+                  else if ('Y' == arg_type
+                           || arg_isptrfunction
+                          ) {
                      funclist->p_rate[i] = G__STDCONVMATCH + G__V2P2FCONVMATCH;
                   }
                   else if ('C' == arg_type) {
@@ -3201,7 +3208,7 @@ void Cint::Internal::G__rate_parameter_match(G__param* libp, const ::Reflex::Mem
                default:
                   // --
 #ifndef G__OLDIMPLEMENTATION2191
-                  if ((arg_type == 'Y' || arg_type == '1') && (isupper(formal_type) || 'a' == formal_type)) {
+                  if ((arg_type == 'Y' || arg_type == '1' || arg_isfunction) && (isupper(formal_type) || 'a' == formal_type)) {
                      funclist->p_rate[i] = G__STDCONVMATCH;
                   }
 #else // G__OLDIMPLEMENTATION2191

@@ -5098,7 +5098,11 @@ inline void G__get_pvar(CONVFUNC f, char TYPE, char PTYPE, ::Reflex::Member& var
          if (G__get_paran(variable) == paran) {
             /* MyType* var[ddd]; MyType* v = var[xxx]; */
             result->ref = (long) (local_G__struct_offset + ((size_t) G__get_offset(variable)) + (linear_index * G__LONGALLOC));
-            G__letint(result, PTYPE, *((long*) result->ref));
+            if (PTYPE=='1') {
+               G__letpointer(result, *((long*) result->ref), G__value_typenum(*result));
+            } else {
+               G__letint(result, PTYPE, *((long*) result->ref));
+            }
          }
          else if (paran > G__get_paran(variable)) {
             /* -- Pointer to array reimplementation. */

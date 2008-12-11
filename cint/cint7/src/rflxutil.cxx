@@ -412,7 +412,13 @@ int Cint::Internal::G__get_type(const ::Reflex::Type in)
        /* raw.IsEnum() || */ raw.IsUnion())
        return ((int) 'u') + pointerThusUppercase;
    if (raw.IsEnum()) return ((int)'i') + pointerThusUppercase;
-
+   // Handle function and function pointer (both '1'):
+   Reflex::Type fn( in );
+   if (fn.IsPointer()) {
+      fn = fn.ToType();
+   }
+   if (fn.TypeType() == Reflex::FUNCTION || fn.TypeType() == Reflex::FUNCTIONMEMBER) return '1';
+   
    return 0;
 }
 

@@ -900,20 +900,22 @@ void Cint::Internal::G__listshl(FILE * /* G__temp */)
 ******************************************************************/
 extern "C" struct G__ifunc_table* G__p2f2funchandle(void *p2f,struct G__ifunc_table* p_ifunc,int* pindex)
 {
-  ::Reflex::Scope ifunc = G__Dict::GetDict().GetScope(p_ifunc);
+   ::Reflex::Scope ifunc = G__Dict::GetDict().GetScope(p_ifunc);
   
-  for(size_t ig15 = 0; ig15 < ifunc.FunctionMemberSize(); ++ig15) {
-     const ::Reflex::Member func( ifunc.FunctionMemberAt(ig15) );
-     if (func) {
-        G__RflxFuncProperties *prop = G__get_funcproperties(func);
-        if (prop->entry.tp2f==p2f || prop->entry.bytecode==p2f) {
-           *pindex = -2; // since we return the id of the function itself and not its scope's id [we had: ig15];
-           return (G__ifunc_table*)func.Id();
-        }
-     }
-  }
-  *pindex = -1;
-  return(0);
+   if (ifunc) {
+      for(size_t ig15 = 0; ig15 < ifunc.FunctionMemberSize(); ++ig15) {
+         const ::Reflex::Member func( ifunc.FunctionMemberAt(ig15) );
+         if (func) {
+            G__RflxFuncProperties *prop = G__get_funcproperties(func);
+            if (prop->entry.tp2f==p2f || prop->entry.bytecode==p2f) {
+               *pindex = -2; // since we return the id of the function itself and not its scope's id [we had: ig15];
+               return (G__ifunc_table*)func.Id();
+            }
+         }
+      }
+   }
+   *pindex = -1;
+   return(0);
 }
 
 /******************************************************************
@@ -1072,14 +1074,14 @@ G__value Cint::Internal::G__pointer2func(G__value *obj_p2f,char *parameter0 ,cha
   }
 #ifdef G__PTR2MEMFUNC
   else {
-     for(::Reflex::Type_Iterator iter = ::Reflex::Type::Type_Begin();
-         iter != ::Reflex::Type::Type_End(); ++iter) {
-  
+     for(::Reflex::Scope_Iterator iter = ::Reflex::Scope::Scope_Begin();
+         iter != ::Reflex::Scope::Scope_End(); ++iter) {
+        
         ifunc = G__p2f2funchandle((void*)result3.obj.i,(G__ifunc_table*)iter->Id(),&ig15);
         if(ifunc) {
            ::Reflex::Member func( G__Dict::GetDict().GetFunction(ifunc, ig15));
            if (func.IsStatic()) {
-              sprintf(result7,"%s%s",func.Name(::Reflex::SCOPED).c_str(),parameter1);
+                 sprintf(result7,"%s%s",func.Name(::Reflex::SCOPED).c_str(),parameter1);
               break;
            }
         }
