@@ -442,6 +442,7 @@ Bool_t TEveTrackPropagator::LoopToVertex(TEveVector& v, TEveVector& p)
    Int_t np = first_point;
    Bool_t hitBounds = kFALSE;
 
+   // XXXX Matevz has some ideas about this code.
    while ( ! PointOverVertex(v, currV) && np < fNMax)
    {
       Step(currV, p, forwV, forwP);
@@ -453,28 +454,23 @@ Bool_t TEveTrackPropagator::LoopToVertex(TEveVector& v, TEveVector& p)
       currV = forwV;
       p = forwP;
       fPoints.push_back(currV);
-      ++ np;
+      ++np;
    }
-
-   /* Debug
-   {
-      TEveVector d  = v - currV;
-      Float_t    af = d.Mag2() / fH.GetStepSize2();
-      if (af > 1)
-         printf("Helix propagation %d ended with %f of step distance \n", np, af);
-   }
-   */
 
    // make the remaining fractional step
-   Float_t frac = (v - currV).Mag() /(fPoints[np-2]-currV).Mag();
-   // set step fraction
-   if (fStepper == kHelix)
-      fH.UpdateHelix(p, fH.fB, kTRUE, frac);
-   else
-      fH.fTStep *= frac; 
+   if (!hitBounds && np > 1)
+   {
+      Float_t frac = (v - currV).Mag() / (fPoints[np-2]- fPoints[np-1]).Mag();
+  
+      // set step fraction
+      if (fStepper == kHelix)
+         fH.UpdateHelix(p, fH.fB, kTRUE, frac);
+      else
+         fH.fTStep *= frac; 
 
-   Step(currV, p, forwV, forwP);
-   p = forwP;
+      Step(currV, p, forwV, forwP);
+      p = forwP;
+   }
 
    // correct for offset
    TEveVector off(v); off -= currV;
@@ -484,7 +480,6 @@ Bool_t TEveTrackPropagator::LoopToVertex(TEveVector& v, TEveVector& p)
       fPoints[i] += off * fPoints[i].fT;
    }
 
-   fPoints.push_back(v);
    fV = v;
    return ! hitBounds;
 }
