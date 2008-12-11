@@ -38,6 +38,8 @@ class TGSplitButton;
 class TProofProgressLog : public TGTransientFrame {
 
 private:
+   enum ETextType { kRaw = 0, kStd = 1, kGrep = 2 };
+
    TGTextView           *fText;      // text widget
    TGTextButton         *fClose;     // close button
    TGListBox            *fLogList;   // list of workers
@@ -51,9 +53,12 @@ private:
    TGTextButton         *fSave;      // save button
    TGTextButton         *fGrepButton; //grep button
    TGCheckButton        *fAllLines;  // display all lines button
+   TGCheckButton        *fRawLines;  // display raw lines button
    TGSplitButton        *fAllWorkers; // display all workers button
 
-   Bool_t               fFullText;    // 0 - when grep was called
+   Bool_t                fFullText;    // 0 - when grep was called
+   Int_t                 fTextType;   // Type of retrieval
+
 public:
    TProofProgressLog(TProofProgressDialog *d, Int_t w = 700, Int_t h = 300);
    virtual ~TProofProgressLog();

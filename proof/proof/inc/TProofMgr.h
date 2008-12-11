@@ -78,7 +78,7 @@ public:
    virtual void        DetachSession(Int_t, Option_t * = "");
    virtual TProofDesc *GetProofDesc(Int_t id);
    virtual Int_t       GetRemoteProtocol() const { return fRemoteProtocol; }
-   virtual TProofLog  *GetSessionLogs(Int_t = 0, const char * = 0, const char * = 0)
+   virtual TProofLog  *GetSessionLogs(Int_t = 0, const char * = 0, const char * = "-v | SvcMsg")
                                                       { return (TProofLog *)0; }
    virtual const char *GetUrl() { return fUrl.GetUrl(); }
    virtual Bool_t      MatchUrl(const char *url);

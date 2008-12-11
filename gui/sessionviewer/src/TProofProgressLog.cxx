@@ -44,6 +44,7 @@ TProofProgressLog::TProofProgressLog(TProofProgressDialog *d, Int_t w, Int_t h) 
    fDialog = d;
    fProofLog = 0;
    fFullText = kTRUE;
+   fTextType = kStd;
    // use hierarchical cleaning
    SetCleanup(kDeepCleanup);
 
@@ -116,10 +117,15 @@ TProofProgressLog::TProofProgressLog(TProofProgressDialog *d, Int_t w, Int_t h) 
    vlines_buttons->AddFrame(label2, new TGLayoutHints(kLHintsCenterY | kLHintsLeft, 2, 2, 2, 2));
 
    fAllLines = new TGCheckButton(vlines_buttons, "all");
+   fAllLines->SetToolTipText("Retrieve all lines (service messages excluded)");
    fAllLines->SetState(kButtonUp);
    fAllLines->Connect("Clicked()", "TProofProgressLog", this, "NoLineEntry()");
    vlines_buttons->AddFrame(fAllLines, new TGLayoutHints(kLHintsCenterY | kLHintsLeft, 2, 2, 2, 2));
 
+   fRawLines = new TGCheckButton(vlines_buttons, "svcmsg");
+   fRawLines->SetToolTipText("Retrieve all type of lines, service messages included");
+   fRawLines->SetState(kButtonUp);
+   vlines_buttons->AddFrame(fRawLines, new TGLayoutHints(kLHintsCenterY | kLHintsLeft, 2, 2, 2, 2));
 
    TGLabel *label11 = new TGLabel(vlines_buttons, "From");
    vlines_buttons->AddFrame(label11, new TGLayoutHints(kLHintsCenterY | kLHintsLeft, 2, 2, 2, 2));
@@ -301,15 +307,24 @@ void TProofProgressLog::DoLog(Bool_t grep)
 
    TProofMgr *mgr = 0;
    if (!grep) {
-      if (!fProofLog || !fFullText || fDialog->fStatus==TProofProgressDialog::kRunning){
+      if (!fProofLog || !fFullText ||
+          ((fTextType != kRaw && fRawLines->IsOn())   ||
+           (fTextType != kStd && !fRawLines->IsOn())) ||
+          fDialog->fStatus==TProofProgressDialog::kRunning) {
          SafeDelete(fProofLog);
          if ((mgr = TProof::Mgr(fDialog->fSessionUrl.Data()))) {
-            fProofLog = mgr->GetSessionLogs();
+            if (fRawLines->IsOn()) {
+               fProofLog = mgr->GetSessionLogs(0, 0, 0);
+               fTextType = kRaw;
+            } else {
+               fProofLog = mgr->GetSessionLogs();
+               fTextType = kStd;
+            }
          } else {
             Warning("DoLog", "unable to instantiate a TProofMgr for %s",
                              fDialog->fSessionUrl.Data());
          }
-         if (!fDialog->fStatus==TProofProgressDialog::kRunning)
+         if (fDialog->fStatus != TProofProgressDialog::kRunning)
             fFullText = kTRUE;
       }
    } else {
@@ -320,7 +335,9 @@ void TProofProgressLog::DoLog(Bool_t grep)
          Warning("DoLog", "unable to instantiate a TProofMgr for %s",
                           fDialog->fSessionUrl.Data());
       }
-      fFullText = kFALSE;
+      fTextType = kGrep;
+      if (fDialog->fStatus != TProofProgressDialog::kRunning)
+         fFullText = kTRUE;
    }
    if (fProofLog) {
       TList *selected = new TList;
