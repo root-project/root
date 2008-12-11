@@ -3271,6 +3271,13 @@ void Cint::Internal::G__rate_parameter_match(G__param* libp, const ::Reflex::Mem
          }
       }
       //
+      //  Check for const passed to non-const ref.
+      //
+      if (funclist->p_rate[i] != G__USRCONVMATCH && arg_isconst && !formal_isconst && formal_final.IsReference()) { // const passed to non-const ref is bad
+         //fprintf(stderr, "G__rate_parameter_match: %d No match, const passed to non-const ref.\n", depth);
+         funclist->p_rate[i] = G__NOMATCH;
+      }
+      //
       //  Notice a const/volatile conversion (this should rank Exact Match)
       //
       //  TODO: This is unnecessary and should be removed.
@@ -3278,13 +3285,6 @@ void Cint::Internal::G__rate_parameter_match(G__param* libp, const ::Reflex::Mem
       if (G__NOMATCH != funclist->p_rate[i] && (arg_isconst != formal_isconst)) 
       { // notice const/volatile conversion
          funclist->p_rate[i] += G__CVCONVMATCH;
-      }
-      //
-      //  Check for const passed to non-const ref.
-      //
-      if (arg_isconst && !formal_isconst && formal_final.IsReference()) { // const passed to non-const ref is bad
-         //fprintf(stderr, "G__rate_parameter_match: %d No match, const passed to non-const ref.\n", depth);
-         funclist->p_rate[i] = G__NOMATCH;
       }
       //fprintf(stderr, "G__rate_parameter_match: %d rate: %08X  function ", depth, funclist->p_rate[i]);
       //fprintf(stderr, "%s ", funclist->ifunc.TypeOf().ReturnType().Name(::Reflex::SCOPED |::Reflex::QUALIFIED).c_str());
