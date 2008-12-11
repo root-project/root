@@ -2983,6 +2983,15 @@ void Cint::Internal::G__rate_parameter_match(G__param* libp, const ::Reflex::Mem
       ) {
          funclist->p_rate[i] = G__EXACTMATCH;
       }
+      else if ( // special hack for matching function pointer to void*
+               formal_type == 'Y' 
+               && (   (arg_final.IsPointer() && arg_final.ToType().IsFunction() )
+                   || (arg_final.IsFunction() )
+               )
+            )
+      {
+         funclist->p_rate[i] = G__EXACTMATCH;
+      }
       //
       //  Promotion.
       //

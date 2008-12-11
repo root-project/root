@@ -1166,7 +1166,7 @@ static ::Reflex::Type G__getp2ftype(const ::Reflex::Member &func)
 #if 0
    char *p;
    int i;
- 
+   
    std::string temp1( func.TypeOf().ReturnType().Name(::Reflex::SCOPED) );
    G__removetagid(temp1);
 
@@ -1179,28 +1179,23 @@ static ::Reflex::Type G__getp2ftype(const ::Reflex::Member &func)
 
    p = temp + strlen(temp);
    for(i=0;i<ifunc->para_nu[ifn];i++) {
-    if(i) *p++ = ',';
-    strcpy(temp1,G__type2string(ifunc->para_type[ifn][i]
-                                ,ifunc->para_p_tagtable[ifn][i]
-                                ,G__get_typenum(ifunc->para_p_typetable[ifn][i])
-                                ,ifunc->para_reftype[ifn][i]
-                                ,ifunc->para_isconst[ifn][i]));
-    G__removetagid(temp1);
-    strcpy(p,temp1);
-    p = temp + strlen(temp);
-  }
-  strcpy(p,")");
+      if(i) *p++ = ',';
+      strcpy(temp1,G__type2string(ifunc->para_type[ifn][i]
+                                  ,ifunc->para_p_tagtable[ifn][i]
+                                  ,G__get_typenum(ifunc->para_p_typetable[ifn][i])
+                                  ,ifunc->para_reftype[ifn][i]
+                                  ,ifunc->para_isconst[ifn][i]));
+      G__removetagid(temp1);
+      strcpy(p,temp1);
+      p = temp + strlen(temp);
+   }
+   strcpy(p,")");
 #endif
-  Reflex::Type functype( func.TypeOf() );
-  if (!functype.IsPointer()) {
-     functype = Reflex::PointerBuilder( functype );
-  } 
-  std::string name( functype.Name() );
-  if (name.length()>6 && strcmp(name.c_str()+name.length()-6,"(void)")==0) 
-  {
-     name.replace(name.length()-6,name.length(),"()");
-  }
-  return G__find_typedef(name.c_str());
+   Reflex::Type functype( func.TypeOf() );
+   if (!functype.IsPointer()) {
+      functype = Reflex::PointerBuilder( functype );
+   }
+   return functype;
 }
 
 /******************************************************************
@@ -1248,9 +1243,11 @@ char *Cint::Internal::G__search_func(char *funcname,G__value *buf)
 #endif
         else { /* interpreted function */
           G__letint(buf,'C',(long)prop->entry.tp2f);
+           G__value_typenum(*buf) = G__getp2ftype(*iter);
         }
 #else
         G__letint(buf,'C',(long)iter->Name().c_str());
+        G__value_typenum(*buf) = G__getp2ftype(*iter);
 #endif
         return((char*)iter->Name().c_str());
      }
