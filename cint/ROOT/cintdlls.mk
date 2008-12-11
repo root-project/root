@@ -265,30 +265,31 @@ endif
 
 clean-$(CLEANCINTDLLSTARGET):
 	@(for cintdll in $(CINTDLLNAMES); do \
-	  rm -f $(patsubst clean-%dlls,,)/dll_stl/rootcint_$${cintdll}.o \
-	  $(patsubst clean-%dlls,,)/dll_stl/G__cpp_$${cintdll}.o \
-	  $(patsubst clean-%dlls,,)/lib/G__c_$${cintdll}.o \
+	  rm -f $(patsubst clean-%dll,cint/%,$@)/lib/dll_stl/rootcint_$${cintdll}.o \
+	  $(patsubst clean-%dll,cint/%,$@)/lib/dll_stl/G__cpp_$${cintdll}.o \
+	  $(patsubst clean-%dll,cint/%,$@)/lib/G__c_$${cintdll}.o \
+	  $(patsubst clean-%dll,cint/%,$@)/lib/G__cpp_$${cintdll}.o \
 	  core/metautils/src/stlLoader_$${cintdll}.o; done)
 	@rm -f $(ALLCINTDLLS) \
-	  $(patsubst clean-%dlls,,)/lib//posix/exten.o \
-	  $(patsubst clean-%dlls,,)/include/posix.* \
-	  $(patsubst clean-%dlls,,)/include/ipc.*
+	  $(patsubst clean-%dll,cint/%,$@)/lib//posix/exten.o \
+	  $(patsubst clean-%dll,cint/%,$@)/include/posix.* \
+	  $(patsubst clean-%dll,cint/%,$@)/include/ipc.*
 
 clean:: clean-$(CLEANCINTDLLSTARGET)
 
 # remove generated code, too.
 distclean-$(CLEANCINTDLLSTARGET): clean-$(CLEANCINTDLLSTARGET)
 	@(for cintdll in $(CINTDLLNAMES); do \
-	  rm -f $(patsubst clean-%dlls,,)/dll_stl/rootcint_$${cintdll}.* \
-	  $(patsubst clean-%dlls,,)/dll_stl/G__cpp_$${cintdll}.* \
-	  $(patsubst clean-%dlls,,)/lib/G__cpp_$${cintdll}.* \
-	  $(patsubst clean-%dlls,,)/lib/G__c_$${cintdll}.* \
+	  rm -f $(patsubst distclean-%dll,cint/%,$@)/dll_stl/rootcint_$${cintdll}.* \
+	  $(patsubst distclean-%dll,cint/%,$@)/lib/dll_stl/G__cpp_$${cintdll}.* \
+	  $(patsubst distclean-%dll,cint/%,$@)/lib/G__c_$${cintdll}.* \
+	  $(patsubst distclean-%dll,cint/%,$@)/lib/G__cpp_$${cintdll}.* \
 	  core/metautils/src/stlLoader_$${cintdll}.*; done)
 	@rm -f $(ALLCINTDLLS) $(CINTDICTMAPS) \
-	  $(patsubst clean-%dlls,,)/lib/posix/mktypes$(EXEEXT)
+	  $(patsubst distclean-%dll,cint/%,$@)/lib/posix/mktypes$(EXEEXT)
 ifeq ($(PLATFORM),macosx)
-	@rm -f  $(patsubst clean-%dlls,,)/stl/*.so
-	@rm -rf $(patsubst clean-%dlls,,)/lib/posix/mktypes.dSYM
+	@rm -f  $(patsubst distclean-%dll,cint/%,$@)/stl/*.so
+	@rm -rf $(patsubst distclean-%dll,cint/%,$@)/lib/posix/mktypes.dSYM
 endif
 
 distclean:: distclean-$(CLEANCINTDLLSTARGET)

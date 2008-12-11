@@ -287,7 +287,7 @@ $(IOSENUMA):    $(CINTTMP)
 			touch $@; \
 		fi)
 
-all-$(MODNAME): $(CINTLIB) $(CINT) $(CINTTMP) $(MAKECINT) $(IOSENUM)
+all-$(MODNAME): $(CINTLIB) $(CINTTMP) $(IOSENUM)
 
 clean-$(MODNAME):
 		@rm -f $(CINTTMPO) $(CINTALLO) $(CINTEXEO) $(MAKECINTO) \
