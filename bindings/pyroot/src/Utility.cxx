@@ -318,9 +318,9 @@ int PyROOT::Utility::GetBuffer( PyObject* pyobject, char tc, int size, void*& bu
             PyObject* pytype = 0, *pyvalue = 0, *pytrace = 0;
             PyErr_Fetch( &pytype, &pyvalue, &pytrace );
             PyObject* pyvalue2 = PyString_FromFormat(
-               (char*)"%s and given element size (%ld) does not match needed (%d)",
+               (char*)"%s and given element size (%ld) do not match needed (%d)",
                PyString_AS_STRING( pyvalue ),
-               seqmeths->sq_length ? (int)(buflen / (*(seqmeths->sq_length))( pyobject )) : buflen,
+               seqmeths->sq_length ? (long)(buflen / (*(seqmeths->sq_length))( pyobject )) : (long)buflen,
                size );
             Py_DECREF( pyvalue );
             PyErr_Restore( pytype, pyvalue2, pytrace );
@@ -444,7 +444,7 @@ void PyROOT::Utility::ErrMsgCallback( char* msg )
       return;
    }
 
-// else, tranlate known errors and warnings, or simply accept the default
+// else, translate known errors and warnings, or simply accept the default
    char* format = (char*)"(file \"%s\", line %d) %s";
    char* p = 0;
    if ( ( p = strstr( msg, "Syntax Error:" ) ) )
