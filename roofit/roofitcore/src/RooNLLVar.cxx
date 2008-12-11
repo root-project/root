@@ -148,6 +148,11 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t s
     
     // get the data values for this event
     _dataClone->get(i);
+
+    if (!_dataClone->valid()) {
+      continue ;
+    }
+
     if (_dataClone->weight()==0) continue ;
 
     // cout << "evaluating nll for event #" << i << " of " << lastEvent-firstEvent << endl ;

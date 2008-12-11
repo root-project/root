@@ -61,6 +61,7 @@ public:
     return &_vars ; 
   } 
   virtual Double_t weight() const = 0 ; 
+  virtual Bool_t valid() const = 0 ;
   enum ErrorType { Poisson, SumW2, None } ;
   virtual Double_t weightError(ErrorType etype=Poisson) const ;
   virtual void weightError(Double_t& lo, Double_t& hi, ErrorType etype=Poisson) const ; 

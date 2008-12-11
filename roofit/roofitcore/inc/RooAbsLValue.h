@@ -36,8 +36,7 @@ public:
   virtual void randomize(const char* rangeName=0) = 0 ;
 
   virtual const RooAbsBinning* getBinningPtr(const char* rangeName) const = 0 ;
-  virtual Int_t getBin(const RooAbsBinning*) const = 0 ;
-		       
+  virtual Int_t getBin(const RooAbsBinning*) const = 0 ;		       
 
 protected:
 

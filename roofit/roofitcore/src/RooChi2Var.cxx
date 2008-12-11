@@ -38,6 +38,8 @@
 
 #include "Riostream.h"
 
+#include "RooRealVar.h"
+
 
 ClassImp(RooChi2Var)
 ;
@@ -72,6 +74,7 @@ RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsPdf& pdf, RooD
   RooCmdConfig pc("RooChi2Var::RooChi2Var") ;
   pc.defineInt("extended","Extended",0,kFALSE) ;
   pc.defineInt("etype","DataError",0,(Int_t)RooDataHist::SumW2) ;  
+  pc.allowUndefined() ;
 
   pc.process(arg1) ;  pc.process(arg2) ;  pc.process(arg3) ;
   pc.process(arg4) ;  pc.process(arg5) ;  pc.process(arg6) ;
@@ -177,6 +180,11 @@ Double_t RooChi2Var::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t 
     
     // get the data values for this event
     data->get(i);
+
+    if (!data->valid()) {
+      continue ;
+    }
+
     Double_t nData = data->weight() ;
     Double_t nPdf = pdfClone->getVal(_normSet) * nDataTotal * data->binVolume() ;
 

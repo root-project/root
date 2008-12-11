@@ -2419,7 +2419,19 @@ void RooAbsReal::attachToTree(TTree& t, Int_t bufSize)
   if (branch) { 
     
     // Determine if existing branch is Float_t or Double_t
-    TString typeName(((TLeaf*)branch->GetListOfLeaves()->At(0))->GetTypeName()) ;
+    TLeaf* leaf = (TLeaf*)branch->GetListOfLeaves()->At(0) ;
+
+    // Check that leaf is _not_ an array
+    Int_t dummy ;
+    TLeaf* counterLeaf = leaf->GetLeafCounter(dummy) ;
+    if (counterLeaf) {
+      coutE(Eval) << "RooAbsReal::attachToTree(" << GetName() << ") ERROR: TTree branch " << GetName() 
+		  << " is an array and cannot be attached to a RooAbsReal" << endl ;      
+      return ;
+    }
+    
+    TString typeName(leaf->GetTypeName()) ;
+
     if (!typeName.CompareTo("Float_t")) {
       coutI(Eval) << "RooAbsReal::attachToTree(" << GetName() << ") TTree Float_t branch " << GetName() 
 		  << " will be converted to double precision" << endl ;

@@ -66,6 +66,7 @@ RooDataHist::RooDataHist()
   _curWeight = 0 ;
   _curIndex = -1 ;
   _realIter = 0 ;
+  _binValid = 0 ;
   _binningName = 0 ;
 }
 
@@ -73,7 +74,7 @@ RooDataHist::RooDataHist()
 
 //_____________________________________________________________________________
 RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& vars, const char* binningName) : 
-  RooTreeData(name,title,vars), _wgt(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10), _binningName(0)
+  RooTreeData(name,title,vars), _wgt(0), _binValid(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10), _binningName(0)
 {
   // Constructor of an empty data hist from a RooArgSet defining the dimensions
   // of the data space. The range and number of bins in each dimensions are taken
@@ -104,7 +105,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& v
 
 //_____________________________________________________________________________
 RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& vars, const RooAbsData& data, Double_t wgt) :
-  RooTreeData(name,title,vars), _wgt(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10), _binningName(0)
+  RooTreeData(name,title,vars), _wgt(0), _binValid(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10), _binningName(0)
 {
   // Constructor of a data hist from an existing data collection (binned or unbinned)
   // The RooArgSet 'vars' defines the dimensions of the histogram. 
@@ -135,7 +136,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& v
 
 //_____________________________________________________________________________
 RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& vars, RooCategory& indexCat, map<string,TH1*> histMap, Double_t wgt) :
-  RooTreeData(name,title,RooArgSet(vars,&indexCat)), _wgt(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10), _binningName(0)
+  RooTreeData(name,title,RooArgSet(vars,&indexCat)), _wgt(0), _binValid(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10), _binningName(0)
 {
   // Constructor of a data hist from a map of TH1,TH2 or TH3 that are collated into a x+1 dimensional
   // RooDataHist where the added dimension is a category that labels the input source as defined
@@ -152,7 +153,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
 
 //_____________________________________________________________________________
 RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& vars, const TH1* hist, Double_t wgt) :
-  RooTreeData(name,title,vars), _wgt(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10), _binningName(0)
+  RooTreeData(name,title,vars), _wgt(0), _binValid(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10), _binningName(0)
 {
   // Constructor of a data hist from an TH1,TH2 or TH3
   // The RooArgSet 'vars' defines the dimensions of the histogram. The ranges
@@ -175,7 +176,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
 RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& vars, RooCmdArg arg1, RooCmdArg arg2, RooCmdArg arg3,
 			 RooCmdArg arg4,RooCmdArg arg5,RooCmdArg arg6,RooCmdArg arg7,RooCmdArg arg8) :
   RooTreeData(name,title,RooArgSet(vars,(RooAbsArg*)RooCmdConfig::decodeObjOnTheFly("RooDataHist::RooDataHist", "IndexCat",0,0,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8))), 
-  _wgt(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10), _binningName(0)
+  _wgt(0), _binValid(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10), _binningName(0)
 {
   // Constructor of a binned dataset from a RooArgSet defining the dimensions
   // of the data space. The range and number of bins in each dimensions are taken
@@ -675,7 +676,7 @@ void RooDataHist::initialize(Bool_t fillTree)
 
 //_____________________________________________________________________________
 RooDataHist::RooDataHist(const RooDataHist& other, const char* newname) :
-  RooTreeData(other,newname), RooDirItem(), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(other._pbinvCacheMgr,0)
+  RooTreeData(other,newname), RooDirItem(), _binValid(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(other._pbinvCacheMgr,0)
 {
   // Copy constructor
 
@@ -732,7 +733,7 @@ RooDataHist::RooDataHist(const RooDataHist& other, const char* newname) :
 RooDataHist::RooDataHist(const char* name, const char* title, RooDataHist* h, const RooArgSet& varSubset, 
 			 const RooFormulaVar* cutVar, const char* cutRange, Int_t nStart, Int_t nStop, Bool_t copyCache) :
   RooTreeData(name,title,h,varSubset,cutVar,cutRange,nStart,nStop,copyCache), 
-  _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10)
+  _binValid(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10)
 {
   // Constructor of a data hist from (part of) an existing data hist. The dimensions
   // of the data set are defined by the 'vars' RooArgSet, which can be identical
@@ -854,6 +855,7 @@ RooDataHist::~RooDataHist()
   if (_binv) delete[] _binv ;
   if (_idxMult) delete[] _idxMult ;
   if (_realIter) delete _realIter ;
+  if (_binValid) delete[] _binValid ;
 
    removeFromDir(this) ;
 }
@@ -1466,11 +1468,13 @@ Double_t RooDataHist::sumEntries(const char* cutSpec, const char* cutRange) cons
     Int_t i ;
     Double_t n(0) ;
     for (i=0 ; i<_arrSize ; i++) {
-      n+= _wgt[i] ;
+      if (!_binValid || _binValid[i]) {
+	n+= _wgt[i] ;
+      }
     }
     return n ;
   } else {
-
+    
     // Setup RooFormulaVar for cutSpec if it is present
     RooFormula* select = 0 ;
     if (cutSpec) {
@@ -1484,7 +1488,10 @@ Double_t RooDataHist::sumEntries(const char* cutSpec, const char* cutRange) cons
       get(i) ;
       if (select && select->eval()==0.) continue ;
       if (cutRange && !_vars.allInRange(cutRange)) continue ;
-      sumw += weight() ;
+
+      if (!_binValid || _binValid[i]) {
+	sumw += weight() ;
+      }
     }
     
     if (select) delete select ;
@@ -1637,6 +1644,46 @@ void RooDataHist::printArgs(ostream& os) const
     os << arg->GetName() ;
   }
   os << "]" ;
+}
+
+
+
+//_____________________________________________________________________________
+void RooDataHist::cacheValidEntries() 
+{
+  // Cache the datahist entries with bin centers that are inside/outside the
+  // current observable definition
+
+  if (!_binValid) {
+    _binValid = new Bool_t[_arrSize] ;
+  }
+  TIterator* iter = _vars.createIterator() ;
+  RooAbsArg* arg ;
+  for (Int_t i=0 ; i<_arrSize ; i++) {
+    get(i) ;
+    _binValid[i] = kTRUE ;
+    iter->Reset() ;
+    while((arg=(RooAbsArg*)iter->Next())) {
+      _binValid[i] &= arg->inRange(0) ;      
+    }
+  }
+  delete iter ;
+
+}
+
+
+//_____________________________________________________________________________
+Bool_t RooDataHist::valid() const 
+{
+  // Return true if currently loaded coordinate is considered valid within
+  // the current range definitions of all observables
+
+  // If caching is enabled, use the precached result
+  if (_binValid) {
+    return _binValid[_curIndex] ;
+  }
+
+  return kTRUE ;
 }
 
 

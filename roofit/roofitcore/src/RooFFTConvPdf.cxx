@@ -241,9 +241,26 @@ RooFFTConvPdf::FFTCacheElem::FFTCacheElem(const RooFFTConvPdf& self, const RooAr
 
   // Attach cloned pdf to all original parameters of self
   RooArgSet* fftParams = self.getParameters(*convObs) ;
+
+  // Remove all cache histogram from fftParams as these
+  // observable need to remain attached to the histogram
+  fftParams->remove(*hist()->get(),kTRUE,kTRUE) ;
+
   pdf1Clone->recursiveRedirectServers(*fftParams) ;
   pdf2Clone->recursiveRedirectServers(*fftParams) ;
+
   delete fftParams ;
+
+  //   cout << "FFT pdf 1 clone = " << endl ;
+  //   pdf1Clone->Print("t") ;
+  //   cout << "FFT pdf 2 clone = " << endl ;
+  //   pdf2Clone->Print("t") ;
+  //
+  //   RooAbsReal* int1 = pdf1Clone->createIntegral(self._x.arg()) ;
+  //   RooAbsReal* int2 = pdf2Clone->createIntegral(self._x.arg()) ;
+  //   int1->Print("v") ;
+  //   int2->Print("v") ;
+
 
   // Deactivate dirty state propagation on datahist observables
   // and set all nodes on both pdfs to operMode AlwaysDirty
@@ -332,6 +349,8 @@ void RooFFTConvPdf::fillCacheObject(RooAbsCachedPdf::PdfCacheElem& cache) const
   while(loop) {
     // Set current slice position
     for (Int_t j=0 ; j<n ; j++) { obsLV[j]->setBin(binCur[j],binningName()) ; }
+
+    // cout << "filling slice: bin of obsLV[0] = " << obsLV[0]->getBin() << endl ;
 
     // Fill current slice
     fillCacheSlice((FFTCacheElem&)cache,otherObs) ;
@@ -483,10 +502,14 @@ Double_t*  RooFFTConvPdf::scanPdf(RooRealVar& obs, RooAbsPdf& pdf, const RooData
   TIterator* iter = const_cast<RooDataHist&>(hist).sliceIterator(obs,slicePos) ;
   Int_t k=0 ;
   RooAbsArg* arg ;
+  Double_t tmpSum(0) ;
   while((arg=(RooAbsArg*)iter->Next())) {
     tmp[k++] = pdf.getVal(hist.get()) ;
+    tmpSum += tmp[k-1] ;
   }
   delete iter ;
+
+//   cout << "scanPdf " << pdf.GetName() << " sum = " << tmpSum << endl ;
 
   // Get underflow and overflow values
   Double_t valFirst = tmp[0] ;

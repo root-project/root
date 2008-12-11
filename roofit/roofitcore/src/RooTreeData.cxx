@@ -2335,4 +2335,12 @@ Bool_t RooTreeData::allClientsCached(RooAbsArg* var, const RooArgSet& cacheList)
 
 
 
+//_____________________________________________________________________________
+Bool_t RooTreeData::valid() const 
+{
+  // Return true if currently loaded coordinate is considered valid within
+  // the current range definitions of all observables
+  return kTRUE ;
+}
+
 

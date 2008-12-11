@@ -95,6 +95,7 @@ public:
   Double_t weight(const RooArgSet& bin, Int_t intOrder=1, Bool_t correctForBinSize=kFALSE, Bool_t cdfBoundaries=kFALSE) ;   
   Double_t binVolume() const { return _curVolume ; }
   Double_t binVolume(const RooArgSet& bin) ; 
+  virtual Bool_t valid() const ;
 
   TIterator* sliceIterator(RooAbsArg& sliceArg, const RooArgSet& otherArgs) ;
   
@@ -124,6 +125,10 @@ protected:
   friend class RooAbsCachedPdf ;
   friend class RooAbsCachedReal ;
   friend class RooDataHistSliceIter ;
+  friend class RooAbsOptTestStatistic ;
+
+  void cacheValidEntries() ;
+
   void setAllWeights(Double_t value) ;
  
   void initialize(Bool_t fillTree=kTRUE) ;
@@ -151,8 +156,7 @@ protected:
   Double_t*      _binv ; //[_arrSize] Bin volume array  
   RooArgSet  _realVars ; // Real dimensions of the dataset 
   TIterator* _realIter ; //! Iterator over realVars
-
-
+  Bool_t*    _binValid ; //! Valid bins with current range definition
  
   mutable Double_t _curWeight ; // Weight associated with the current coordinate
   mutable Double_t _curWgtErrLo ; // Error on weight associated with the current coordinate

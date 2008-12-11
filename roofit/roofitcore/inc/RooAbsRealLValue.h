@@ -53,7 +53,6 @@ public:
   virtual const RooAbsBinning* getBinningPtr(const char* rangeName) const { return &getBinning(rangeName) ; }
   virtual Int_t getBin(const RooAbsBinning* ptr) const { return ptr->binNumber(getVal()) ; }
 
-
   virtual void setBin(Int_t ibin, const RooAbsBinning& binning) ;
   virtual Int_t getBin(const RooAbsBinning& binning) const { return binning.binNumber(getVal()) ; }
   virtual Int_t numBins(const RooAbsBinning& binning) const { return binning.numBins() ; }

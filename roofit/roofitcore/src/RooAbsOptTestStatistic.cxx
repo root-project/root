@@ -49,6 +49,7 @@
 #include "RooRealVar.h"
 #include "RooErrorHandler.h"
 #include "RooGlobalFunc.h"
+#include "RooBinning.h"
 
 ClassImp(RooAbsOptTestStatistic)
 ;
@@ -173,11 +174,10 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *tit
     }
   }
   delete iter9 ;
-  
 
   if (rangeName && strlen(rangeName)) {
     
-    cxcoutI(Fitting) << "RooAbsOptTestStatistic::ctor(" << GetName() << ") constructing likelihood for sub-range named " << rangeName << endl ;
+    cxcoutI(Fitting) << "RooAbsOptTestStatistic::ctor(" << GetName() << ") constructing test statistic for sub-range named " << rangeName << endl ;
 
     // Adjust FUNC normalization ranges to requested fitRange, store original ranges for RooAddPdf coefficient interpretation
     TIterator* iter2 = _dataClone->get()->createIterator() ;
@@ -187,9 +187,18 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *tit
         if (!(addCoefRangeName && strlen(addCoefRangeName))) {
 	  realReal->setRange(Form("NormalizationRangeFor%s",rangeName),realReal->getMin(),realReal->getMax()) ;
 	}
-	realReal->setRange(realReal->getMin(rangeName),realReal->getMax(rangeName)) ;
+
+	realReal->setRange(realReal->getMin(rangeName),realReal->getMax(rangeName)) ;	
       }
     }
+
+    // If dataset is binned, activate caching of bins that are invalid because the're outside the
+    // updated range definition (WVE need to add virtual interface here)
+    RooDataHist* tmp = dynamic_cast<RooDataHist*>(_dataClone) ;
+    if (tmp) {
+      tmp->cacheValidEntries() ;
+    }
+
 
     // Mark fitted range in original FUNC dependents for future use
     if (!_splitRange) {
@@ -197,10 +206,11 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *tit
       while((arg=(RooAbsArg*)iter->Next())) {      
 	RooRealVar* realReal = dynamic_cast<RooRealVar*>(arg) ;
 	if (realReal) {
+	  realReal->setStringAttribute("fitrange",Form("fit_%s",GetName())) ;
 	  realReal->setRange(Form("fit_%s",GetName()),realReal->getMin(rangeName),realReal->getMax(rangeName)) ;
 
 	  // Keep track of list of fit ranges in string attribute fit range of original p.d.f.
-	  const char* origAttrib = real.getStringAttribute("fitrange") ;
+	  const char* origAttrib = real.getStringAttribute("fitrange") ;	  
 	  if (origAttrib) {
 	    real.setStringAttribute("fitrange",Form("%s,fit_%s",origAttrib,GetName())) ;
 	  } else {
@@ -230,7 +240,7 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *tit
     // WVE Remove projected dependents from normalization
     _funcClone->fixAddCoefNormalization(*_dataClone->get()) ;
     
-    if (addCoefRangeName) {
+    if (addCoefRangeName && strlen(addCoefRangeName)) {
       cxcoutI(Fitting) << "RooAbsOptTestStatistic::ctor(" << GetName() 
 		       << ") fixing interpretation of coefficients of any RooAddPdf component to range " << addCoefRangeName << endl ;
       _funcClone->fixAddCoefRange(addCoefRangeName,kFALSE) ;
