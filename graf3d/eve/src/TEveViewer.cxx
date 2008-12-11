@@ -71,6 +71,24 @@ TEveViewer::~TEveViewer()
 
 /******************************************************************************/
 
+void TEveViewer::PreUndock()
+{
+   // Virtual function called before a window is undocked.
+   // On mac we have to force recreation of gl-context.
+
+	fGLViewer->DestroyGLWidget();
+}
+
+void TEveViewer::PostDock()
+{
+   // Virtual function called before a window is undocked.
+   // On mac we have to force recreation of gl-context.
+
+	fGLViewer->CreateGLWidget();
+}
+
+/******************************************************************************/
+
 //______________________________________________________________________________
 const TGPicture* TEveViewer::GetListTreeIcon(Bool_t)
 {

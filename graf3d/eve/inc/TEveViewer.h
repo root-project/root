@@ -40,6 +40,9 @@ public:
    TEveViewer(const Text_t* n="TEveViewer", const Text_t* t="");
    virtual ~TEveViewer();
 
+   virtual void PreUndock();
+   virtual void PostDock();
+
    TGLViewer* GetGLViewer() const { return fGLViewer; }
    void SetGLViewer(TGLViewer* viewer, TGFrame* frame);
    void SpawnGLViewer(TGedEditor* ged);

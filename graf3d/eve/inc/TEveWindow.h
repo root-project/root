@@ -221,6 +221,8 @@ public:
    virtual void NameTitleChanged();
 
    virtual TGFrame*        GetGUIFrame() = 0;
+   virtual void            PreUndock() {}
+   virtual void            PostDock()  {}
 
    virtual Bool_t          CanMakeNewSlots() const { return kFALSE; }
    virtual TEveWindowSlot* NewSlot() { return 0; }

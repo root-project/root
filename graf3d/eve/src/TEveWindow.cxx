@@ -208,6 +208,7 @@ void TEveCompositeFrame::AcquireEveWindow(TEveWindow* ew)
    TGFrame* gui_frame = fEveWindow->GetGUIFrame();
    gui_frame->ReparentWindow(this);
    AddFrame(gui_frame, fEveWindowLH);
+   fEveWindow->PostDock();
    gui_frame->MapWindow();
 
    SetCurrent(fEveWindow->IsCurrent());
@@ -228,6 +229,7 @@ TEveWindow* TEveCompositeFrame::RelinquishEveWindow(Bool_t reparent)
    {
       TGFrame* gui_frame = fEveWindow->GetGUIFrame();
       gui_frame->UnmapWindow();
+      fEveWindow->PreUndock();
       RemoveFrame(gui_frame);
       if (reparent)
          gui_frame->ReparentWindow(fClient->GetDefaultRoot());
