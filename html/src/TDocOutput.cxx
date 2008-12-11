@@ -425,6 +425,8 @@ void TDocOutput::Convert(std::istream& in, const char* infilename,
             if (gROOT->GetListOfCanvases()->GetSize())
                previousWindows.insert(gROOT->GetListOfCanvases()->Last());
          }
+         TIter iTimer(gSystem->GetListOfTimers());
+         std::set<TObject*> timersBefore(iTimer.Begin(), iTimer.End());
 
          TString cmd(".x ");
          cmd += gSystem->BaseName(infilename);
@@ -488,6 +490,11 @@ void TDocOutput::Convert(std::istream& in, const char* infilename,
             }
             gInterpreter->Reset();
             gInterpreter->ResetGlobals();
+            TIter iTimer(gSystem->GetListOfTimers());
+            TTimer* timer = 0;
+            while ((timer = (TTimer*) iTimer()))
+               if (timersBefore.find(timer) == timersBefore.end())
+                  gSystem->RemoveTimer(timer);
          }
       }
       out << "<table><tr><td style=\"vertical-align:top;padding-right:2em;\">" << endl;
