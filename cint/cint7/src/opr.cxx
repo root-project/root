@@ -2809,9 +2809,7 @@ int Cint::Internal::G__parenthesisovld(G__value* result3, char* funcname, G__par
    if (
       (known != 1) ||
       (
-         !G__value_typenum(result).IsClass() &&
-         !G__value_typenum(result).IsStruct() &&
-         !G__value_typenum(result).IsUnion()
+         G__get_type(G__value_typenum(result)) != 'u'
       )
    ) {
       return 0;
