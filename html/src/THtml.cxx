@@ -1980,8 +1980,8 @@ void THtml::LoadAllLibs()
    TEnv* mapfile = gInterpreter->GetMapfile();
    if (!mapfile || !mapfile->GetTable()) return;
 
-   std::set<std::string> direct;
-   std::set<std::string> indirect;
+   std::set<std::string> slibs;
+   std::vector<std::string> vlibs;
    
    TEnvRec* rec = 0;
    TIter iEnvRec(mapfile->GetTable());
@@ -1989,38 +1989,29 @@ void THtml::LoadAllLibs()
       TString libs = rec->GetValue();
       TString lib;
       Ssiz_t pos = 0;
-      bool first = true;
-      while (libs.Tokenize(lib, pos))
-         if (first) {
-            // ignore libCore - it's already loaded
-            if (lib.BeginsWith("libCore"))
-               continue;
+      while (libs.Tokenize(lib, pos)) {
+         // ignore libCore - it's already loaded
+         if (lib.BeginsWith("libCore"))
+            continue;
 
-            // first one, i.e. direct
-            direct.insert(lib.Data());
-            first = false;
-         } else
-            indirect.insert(lib.Data());
+         if (slibs.find(lib.Data()) == slibs.end()) {
+            slibs.insert(lib.Data());
+            vlibs.push_back(lib.Data());
+         }
+      }
    }
    TString allLibs;
-   for (std::set<std::string>::iterator iDirect = direct.begin();
-        iDirect != direct.end();) {
-      std::set<std::string>::iterator next = iDirect;
-      ++next;
-      if (indirect.find(*iDirect) != indirect.end())
-         direct.erase(iDirect);
-      else allLibs += *iDirect + "* ";
-      iDirect = next;
+   for (std::vector<std::string>::const_iterator iLibs = vlibs.begin();
+        iLibs != vlibs.end(); ++iLibs) {
+      allLibs += *iLibs;
    }
-   for (std::set<std::string>::iterator iIndirect = indirect.begin();
-        iIndirect != indirect.end(); ++iIndirect)
-      allLibs += *iIndirect + " ";
+   
    if (gHtml && gDebug > 2)
       gHtml->Info("LoadAllLibs", "Loading libraries %s\n", allLibs.Data());
 
-   for (std::set<std::string>::iterator iDirect = direct.begin();
-        iDirect != direct.end(); ++iDirect)
-      gSystem->Load(iDirect->c_str());
+   for (std::vector<std::string>::iterator iLibs = vlibs.begin();
+        iLibs != vlibs.end(); ++iLibs)
+      gSystem->Load(iLibs->c_str());
 }
 
 
