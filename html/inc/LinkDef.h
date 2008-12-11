@@ -34,5 +34,6 @@
 #pragma link C++ class THtml::TPathDefinition;
 #pragma link C++ class THtml::TFileSysEntry;
 #pragma link C++ class THtml::TFileSysDir;
+#pragma link C++ class THtml::TFileSysRoot;
 #pragma link C++ class THtml::TFileSysDB;
 #endif

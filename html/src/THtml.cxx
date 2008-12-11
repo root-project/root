@@ -323,14 +323,14 @@ bool THtml::TFileDefinition::GetFileName(const TClass* cl, bool decl, TString& o
          filesysname += ".cxx";
       TFileSysEntry* fsentry = (TFileSysEntry*) GetOwner()->GetLocalFiles()->GetEntries().FindObject(filesysname);
       if (fsentry) {
-         fsentry->GetFullName(filesysname);
+         fsentry->GetFullName(filesysname, kFALSE);
          clfile = filesysname;
          out_filename = filesysname;
       }
    }
 
    if (!decl && !clfile.Length()) {
-      // determine possiblt impl file name from the decl file name,
+      // determine possible impl file name from the decl file name,
       // replacing ".whatever" by ".cxx", and looking for it in the known
       // file names
       TString declSysFileName;
@@ -342,7 +342,7 @@ bool THtml::TFileDefinition::GetFileName(const TClass* cl, bool decl, TString& o
          filesysname += ".cxx";
          TFileSysEntry* fsentry = (TFileSysEntry*) GetOwner()->GetLocalFiles()->GetEntries().FindObject(filesysname);
          if (fsentry) {
-            fsentry->GetFullName(filesysname);
+            fsentry->GetFullName(filesysname, kFALSE);
             clfile = filesysname;
             out_filename = filesysname;
          }
@@ -570,7 +570,7 @@ bool THtml::TPathDefinition::GetFileNameFromInclude(const char* included, TStrin
       }
       if (parent) {
          // entry found!
-         entry->GetFullName(out_fsname);
+         entry->GetFullName(out_fsname, kFALSE);
          delete arrSubDirs;
          return true;
       }
@@ -582,52 +582,83 @@ bool THtml::TPathDefinition::GetFileNameFromInclude(const char* included, TStrin
 //______________________________________________________________________________
 void THtml::TFileSysDir::Recurse(TFileSysDB* db, const char* path)
 {
-   // Recursively fill entries by parsing the path;
-   // can be a THtml::GetDirDelimiter() delimited list of paths.
+   // Recursively fill entries by parsing the contents of path.
 
-   TString sPath(path);
+   TString dir(path);
    if (gDebug > 0 || GetLevel() < 2)
       Info("Recurse", "scanning %s...", path);
+   TPMERegexp regexp(db->GetIgnore());
+   dir += "/";
+   void* hDir = gSystem->OpenDirectory(dir);
+   const char* direntry = 0;
+   while ((direntry = gSystem->GetDirEntry(hDir))) {
+      if (!direntry[0] || direntry[0] == '.' || regexp.Match(direntry)) continue;
+      TString entryPath(dir + direntry);
+      if (gSystem->AccessPathName(entryPath, kReadPermission))
+         continue;
+      FileStat_t buf;
+      gSystem->GetPathInfo(entryPath, buf);
+      if (R_ISDIR(buf.fMode)) {
+         // skip if we would nest too deeply,  and skip soft links:
+         if (GetLevel() > db->GetMaxLevel()
+#ifndef R__WIN32
+             || db->GetMapIno().GetValue(buf.fIno)
+#endif
+             ) continue;
+         TFileSysDir* subdir = new TFileSysDir(direntry, this);
+         fDirs.Add(subdir);
+#ifndef R__WIN32
+         db->GetMapIno().Add(buf.fIno, (Long_t)subdir);
+#endif
+         subdir->Recurse(db, entryPath);
+      } else {
+         int delen = strlen(direntry);
+         // only .cxx and .h are taken
+         if (strcmp(direntry + delen - 4, ".cxx")
+             && strcmp(direntry + delen - 2, ".h"))
+            continue;
+         TFileSysEntry* entry = new TFileSysEntry(direntry, this);
+         db->GetEntries().Add(entry);
+         fFiles.Add(entry);
+      }
+   } // while dir entry
+   gSystem->FreeDirectory(hDir);
+}
+
+
+//______________________________________________________________________________
+void THtml::TFileSysDB::Fill()
+{
+   // Recursively fill entries by parsing the path specified in GetName();
+   // can be a THtml::GetDirDelimiter() delimited list of paths.
+
    TString dir;
    Ssiz_t posPath = 0;
-   TPMERegexp regexp(db->GetIgnore());
-   while (sPath.Tokenize(dir, posPath, THtml::GetDirDelimiter())) {
-      dir += "/";
-      void* hDir = gSystem->OpenDirectory(dir);
-      const char* direntry = 0;
-      while ((direntry = gSystem->GetDirEntry(hDir))) {
-         if (!direntry[0] || direntry[0] == '.' || regexp.Match(direntry)) continue;
-         TString entryPath(dir + direntry);
-         if (gSystem->AccessPathName(entryPath, kReadPermission))
+   while (fName.Tokenize(dir, posPath, THtml::GetDirDelimiter())) {
+      if (gSystem->AccessPathName(dir, kReadPermission)) {
+         Warning("Fill", "Cannot read InputPath \"%s\"!", dir.Data());
+         continue;
+      }
+      FileStat_t buf;
+      gSystem->GetPathInfo(dir, buf);
+      if (R_ISDIR(buf.fMode)) {
+#ifndef R__WIN32
+         TFileSysRoot* prevroot = (TFileSysRoot*) GetMapIno().GetValue(buf.fIno);
+         if (prevroot != 0) {
+            Warning("Fill", "InputPath \"%s\" already present as \"%s\"!", dir.Data(), prevroot->GetName());
             continue;
-         FileStat_t buf;
-         gSystem->GetPathInfo(entryPath, buf);
-         if (R_ISDIR(buf.fMode)) {
-            // skip if we would nest too deeply,  and skip soft links:
-            if (GetLevel() > db->GetMaxLevel()
-#ifndef R__WIN32
-               || db->GetMapIno().GetValue(buf.fIno)
-#endif
-               ) continue;
-            TFileSysDir* subdir = new TFileSysDir(direntry, this);
-            fDirs.Add(subdir);
-#ifndef R__WIN32
-            db->GetMapIno().Add(buf.fIno, (Long_t)subdir);
-#endif
-            subdir->Recurse(db, entryPath);
-         } else {
-            int delen = strlen(direntry);
-            // only .cxx and .h are taken
-            if (strcmp(direntry + delen - 4, ".cxx")
-               && strcmp(direntry + delen - 2, ".h"))
-               continue;
-            TFileSysEntry* entry = new TFileSysEntry(direntry, this);
-            db->GetEntries().Add(entry);
-            fFiles.Add(entry);
          }
-      } // while dir entry
-      gSystem->FreeDirectory(hDir);
-   } // while sPath token
+#endif
+         TFileSysRoot* root = new TFileSysRoot(dir, this);
+         fDirs.Add(root);
+#ifndef R__WIN32
+         GetMapIno().Add(buf.fIno, (Long_t)root);
+#endif
+         root->Recurse(this, dir);
+      } else {
+         Warning("Fill", "Cannot read InputPath \"%s\"!", dir.Data());
+      }
+   }
 }
 
 
