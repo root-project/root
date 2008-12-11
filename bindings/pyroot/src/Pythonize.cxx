@@ -1028,6 +1028,11 @@ namespace PyROOT {      // workaround for Intel icc on Linux
       TTree* tree =
          (TTree*)self->ObjectIsA()->DynamicCast( TTree::Class(), self->GetObject() );
 
+      if ( ! tree ) {
+         PyErr_SetString( PyExc_ReferenceError, "attempt to access a null-pointer" );
+         return 0;
+      }
+
    // search for branch first (typical for objects)
       TBranch* branch = tree->GetBranch( name );
       if ( branch ) {
