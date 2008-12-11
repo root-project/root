@@ -10,5 +10,6 @@ using namespace std;
 #pragma create TClass deque<double>;
 #pragma create TClass deque<void*>;
 #pragma create TClass deque<char*>;
-#pragma create TClass deque<string>;
+//Current not generate in cintdll 
+//#pragma create TClass deque<string>;
 
