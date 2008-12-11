@@ -5,17 +5,60 @@
 #include "TPySelector.h"
 #include "TPyReturn.h"
 #include "ObjectProxy.h"
+#include "MethodProxy.h"
 #include "RootWrapper.h"
 
 //- ROOT
 #include "TPython.h"
 #include "TString.h"
 
-
 //______________________________________________________________________________
 //                      Python equivalent PROOF base class
 //                      ==================================
 //
+// The problem with deriving a python class from a PyROOT bound class and then
+// handing it back to a C++ framework, is that the virtual function dispatching
+// of C++ is completely oblivious to the methods overridden in python. To work
+// within the PROOF (C++) framework, a python class should derive from the class
+// TPySelector. This class provides the proper overrides on the C++ side, and
+// then forwards them, as apropriate, to python.
+//
+// This is an example set of scripts:
+//
+// ### PROOF running script, very close to equivalent .C (prooftest.py)
+// import time
+// from ROOT import *
+//
+// dataset = TDSet( 'TTree', 'h42' )
+// dataset.Add( 'root:// .... myfile.root' )
+//
+// proof = TProof.Open('')
+// time.sleep(1)                     # needed for GUI to settle
+// print dataset.Process( 'TPySelector', 'aapje' )
+// ### EOF
+//
+// ### selector module (aapje.py, name has to match as per above)
+// from ROOT import TPySelector
+//
+// class MyPySelector( TPySelector ):
+//    def Begin( self ):
+//       print 'py: beginning'
+//
+//    def SlaveBegin( self, tree ):
+//       print 'py: slave beginning'
+//
+//    def Process( self, entry ):
+//       if self.fChain.GetEntry( entry ) <= 0:
+//          return 0
+//       print 'py: processing', self.fChain.MyVar
+//       return 1
+//
+//   def SlaveTerminate( self ):
+//       print 'py: slave terminating'
+//
+//   def Terminate( self ):
+//       print 'py: terminating'
+// ### EOF
 
 
 //- data ---------------------------------------------------------------------
@@ -98,23 +141,43 @@ void TPySelector::SetupPySelf()
 }
 
 //____________________________________________________________________________
-void TPySelector::CallSelf( const char* method )
+PyObject* TPySelector::CallSelf( const char* method, PyObject* pyobject )
 {
 // Forward <method> to python.
-   if ( ! fPySelf || fPySelf == Py_None )
-      return;
+   if ( ! fPySelf || fPySelf == Py_None ) {
+      Py_INCREF( Py_None );
+      return Py_None;
+   }
 
-   PyObject* result = PyObject_CallMethod(
-      fPySelf, const_cast< char* >( method ), const_cast< char* >( "" ) );
+   PyObject* result = 0;
+
+// get the named method and check for python side overload by not accepting the
+// binding's methodproxy
+   PyObject* pymethod = PyObject_GetAttrString( fPySelf, const_cast< char* >( method ) );
+   if ( ! PyROOT::MethodProxy_CheckExact( pymethod ) ) {
+      if ( pyobject )
+         result = PyObject_CallFunction( pymethod, const_cast< char* >( "O" ), pyobject );
+      else
+         result = PyObject_CallFunction( pymethod, const_cast< char* >( "" ) );
+   } else {
+   // silently ignore if method not overridden (note that the above can't lead
+   // to a python exception, since this (TPySelector) class contains the method
+   // so it is always to be found)
+      Py_INCREF( Py_None );
+      result = Py_None;
+   }
+
+   Py_XDECREF( pymethod );
+
    if ( ! result )
       Abort( 0 );
 
-   Py_XDECREF( result );
+   return result;
 }
 
 
 //- constructors/destructor --------------------------------------------------
-TPySelector::TPySelector( TTree*, PyObject* self ) : fPySelf( 0 )
+TPySelector::TPySelector( TTree*, PyObject* self ) : fChain( 0 ), fPySelf( 0 )
 {
 // Construct a TSelector derived with <self> as the underlying, which is
 // generally 0 to start out with in the current PROOF framework.
@@ -134,10 +197,20 @@ TPySelector::~TPySelector()
    Py_DECREF( fPySelf );
 }
 
+
 //- public functions ---------------------------------------------------------
 Int_t TPySelector::Version() const {
-// Need some forwarding implementation here ...
-   return 2;
+// Return version number of this selector. First forward; if not overridden, then
+// yield an obvious "undefined" number, 
+   PyObject* result = const_cast< TPySelector* >( this )->CallSelf( "Version" );
+   if ( result && result != Py_None ) {
+      Int_t ires = (Int_t)PyLong_AsLong( result );
+      Py_DECREF( result );
+      return ires;
+   } else if ( result == Py_None )
+      Py_DECREF( result );
+
+   return -99;
 }
 
 //____________________________________________________________________________
@@ -155,13 +228,34 @@ void TPySelector::Init( TTree* tree )
    if ( ! tree )
       return;
 
+// set the fChain beforehand so that the python side may correct if needed
    fChain = tree;
+
+// forward call
+   PyObject* pytree = PyROOT::BindRootObject( (void*)tree, tree->IsA() );
+   PyObject* result = CallSelf( "Init", pytree );
+   Py_DECREF( pytree );
+
+   if ( ! result )
+      Abort( 0 );
+
+   Py_XDECREF( result );
 }
 
 //____________________________________________________________________________
 Bool_t TPySelector::Notify()
 {
-// Need some implementation here ...
+// Forward call to derived Notify() if available.
+   PyObject* result = CallSelf( "Notify" );
+
+   if ( ! result )
+      Abort( 0 );
+
+   Py_XDECREF( result );
+
+// by default, return kTRUE, b/c the Abort will stop the processing anyway on
+// a real error, so if we get here it usually means that there is no Notify()
+// override on the python side of things
    return kTRUE;
 }
 
@@ -170,7 +264,15 @@ void TPySelector::Begin( TTree* )
 {
 // First function called, and used to setup the python self; forward call.
    SetupPySelf();
-   CallSelf( "Begin" );
+
+// As per the generated code: the tree argument is deprecated (on PROOF 0 is
+// passed), and hence not forwarded.
+   PyObject* result = CallSelf( "Begin" );
+
+   if ( ! result )
+      Abort( 0 );
+
+   Py_XDECREF( result );
 }
 
 //____________________________________________________________________________
@@ -183,13 +285,11 @@ void TPySelector::SlaveBegin( TTree* tree )
 
    PyObject* result = 0;
    if ( tree ) {
-      PyObject* pyobject = PyROOT::BindRootObject( (void*)tree, tree->IsA() );
-      result = PyObject_CallMethod( fPySelf,
-         const_cast< char* >( "SlaveBegin" ), const_cast< char* >( "O" ), pyobject );
-      Py_DECREF( pyobject );
+      PyObject* pytree = PyROOT::BindRootObject( (void*)tree, tree->IsA() );
+      result = CallSelf( "SlaveBegin", pytree );
+      Py_DECREF( pytree );
    } else {
-      result = PyObject_CallMethod( fPySelf,
-         const_cast< char* >( "SlaveBegin" ), const_cast< char* >( "O" ), Py_None );
+      result = CallSelf( "SlaveBegin", Py_None );
    }
 
    if ( ! result )
@@ -227,14 +327,24 @@ Bool_t TPySelector::Process( Long64_t entry )
 void TPySelector::SlaveTerminate()
 {
 // End of client; call is forwarded to python self.
-   CallSelf( "SlaveTerminate" );
+   PyObject* result = CallSelf( "SlaveTerminate" );
+
+   if ( ! result )
+      Abort( 0 );
+
+   Py_XDECREF( result );
 }
 
 //____________________________________________________________________________
 void TPySelector::Terminate()
 {
 // End of job; call is forwarded to python self.
-   CallSelf( "Terminate" );
+   PyObject* result = CallSelf( "Terminate" );
+
+   if ( ! result )
+      Abort( 0 );
+
+   Py_XDECREF( result );
 }
 
 //____________________________________________________________________________

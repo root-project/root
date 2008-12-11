@@ -41,7 +41,7 @@ public:
    virtual Bool_t Notify();
 
    virtual void   Init( TTree* tree );
-   virtual void   Begin( TTree* /* tree */ );
+   virtual void   Begin( TTree* tree = 0 /* not used */ );
    virtual void   SlaveBegin( TTree* tree );
    virtual Bool_t Process( Long64_t entry );
    virtual void   SlaveTerminate();
@@ -54,7 +54,7 @@ public:
 private:
 // private helpers for forwarding to python
    void SetupPySelf();
-   void CallSelf( const char* method );
+   PyObject* CallSelf( const char* method, PyObject* pyobject = 0 );
 
 private:
    PyObject* fPySelf;              //! actual python object
