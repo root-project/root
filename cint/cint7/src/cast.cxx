@@ -286,7 +286,7 @@ G__value Cint::Internal::G__castvalue_bc(char* casttype, G__value result3, int b
          hasstar = casttype[lenitem];
          casttype[lenitem] = '\0';
       }
-      if (-1 == G__defined_tagname(casttype, 2) && G__find_typedef(casttype)) {
+      if (-1 == G__defined_tagname(casttype, 2) && !G__find_typedef(casttype)) {
          isconst = 1;
          if (hasstar) casttype[lenitem] = hasstar;
          G__SlideString(casttype, 5);
