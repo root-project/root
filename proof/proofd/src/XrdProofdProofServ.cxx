@@ -172,6 +172,24 @@ void XrdProofdProofServ::RemoveWorker(const char *o)
 }
 
 //__________________________________________________________________________
+int XrdProofdProofServ::Reset(const char *msg, int type)
+{
+   // Reset this instance, broadcasting a message to the clients.
+   // return 1 if top master, 0 otherwise
+
+   int rc = 0;
+   XrdSysMutexHelper mhp(fMutex);
+   // Broadcast msg
+   Broadcast(msg, type);
+   // What kind of server is this?
+   if (fSrvType == kXPD_TopMaster) rc = 1;
+   // Reset instance
+   Reset();
+   // Done
+   return rc;
+}
+
+//__________________________________________________________________________
 void XrdProofdProofServ::Reset()
 {
    // Reset this instance

@@ -145,6 +145,7 @@ public:
 
    void                RemoveWorker(const char *o);
    void                Reset();
+   int                 Reset(const char *msg, int type);
 
    inline XrdROOT     *ROOT() const { XrdSysMutexHelper mhp(fMutex); return fROOT; }
    inline XrdProofdResponse *Response() const { XrdSysMutexHelper mhp(fMutex); return fResponse; }

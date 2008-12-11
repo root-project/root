@@ -113,6 +113,7 @@ class XrdProofdProofServMgr : public XrdProofdConfig {
    bool               fCheckLost;
 
    int                fCounters[PSMMAXCNTS];  // Internal counters (see enum PSMCounters)
+   int                fCurrentSessions;       // Number of sessions (top masters)
 
    int                fNextSessionsCheck; // Time of next sessions check
 
@@ -182,7 +183,7 @@ public:
                                  return cnt; }
 
    int               BroadcastPriorities();
-   int               CurrentSessions();
+   int               CurrentSessions() { XrdSysMutexHelper mhp(fMutex); return fCurrentSessions; }
    void              DisconnectFromProofServ(int pid);
 
    std::list<XrdProofdProofServ *> *ActiveSessions() { return &fActiveSessions; }
@@ -221,6 +222,14 @@ public:
    XpdSrvMgrCreateCnt(XrdProofdProofServMgr *m, int t) : fType(t), fMgr(m)
                                         { if (m && PSMCNTOK(t)) m->UpdateCounter(t,1); }
    ~XpdSrvMgrCreateCnt() { if (fMgr && PSMCNTOK(fType)) fMgr->UpdateCounter(fType,-1); }
+};
+
+class XpdSrvMgrCreateGuard {
+public:
+   int *fCnt;
+   XpdSrvMgrCreateGuard(int *c = 0) { Set(c); }
+   ~XpdSrvMgrCreateGuard() { if (fCnt) (*fCnt)--; }
+   void Set(int *c) { fCnt = c; if (fCnt) (*fCnt)++;}
 };
 
 #endif
