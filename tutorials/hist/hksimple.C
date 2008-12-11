@@ -10,8 +10,8 @@ void hksimple()
 // Create a normal histogram and two TH1K histograms
   TH1 *hpx[3];
   hpx[0]    = new TH1F("hp0","Normal histogram",1000,-4,4);
-  hpx[1]    = new TH1K("hk1","Nearest Neighboor of order 3",1000,-4,4);
-  hpx[2]    = new TH1K("hk2","Nearest Neighboor of order 16",1000,-4,4,16);
+  hpx[1]    = new TH1K("hk1","Nearest Neighbor of order 3",1000,-4,4);
+  hpx[2]    = new TH1K("hk2","Nearest Neighbor of order 16",1000,-4,4,16);
   c1->Divide(1,3);
   Int_t j;
   for (j=0;j<3;j++) {
