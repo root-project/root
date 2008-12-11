@@ -490,9 +490,9 @@ void TDocOutput::Convert(std::istream& in, const char* infilename,
             }
             gInterpreter->Reset();
             gInterpreter->ResetGlobals();
-            TIter iTimer(gSystem->GetListOfTimers());
+            TIter iTimerRemove(gSystem->GetListOfTimers());
             TTimer* timer = 0;
-            while ((timer = (TTimer*) iTimer()))
+            while ((timer = (TTimer*) iTimerRemove()))
                if (timersBefore.find(timer) == timersBefore.end())
                   gSystem->RemoveTimer(timer);
          }
