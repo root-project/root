@@ -324,8 +324,18 @@ TObjString *TProofMgrLite::ReadBuffer(const char *fin, const char *pattern)
    }
    TString fn = TUrl(fin).GetFile();
 
+   TString pat(pattern);
+   // Check if "-v"
+   Bool_t excl = kFALSE;
+   if (pat.Contains("-v ")) {
+      pat.ReplaceAll("-v ", "");
+      excl = kTRUE;
+   }
+   pat.Strip(TString::kLeading, ' ');
+   pat.Strip(TString::kTrailing, ' ');
+
    // Use a regular expression
-   TRegexp re(pattern);
+   TRegexp re(pat);
 
    // Open file with file info
    ifstream in;
@@ -341,7 +351,8 @@ TObjString *TProofMgrLite::ReadBuffer(const char *fin, const char *pattern)
       line.ReadLine(in);
 
       // Keep only lines with pattern
-      if (line.Index(re) == kNPOS) continue;
+      if ((excl && line.Index(re) != kNPOS) ||
+          (!excl && line.Index(re) == kNPOS)) continue;
 
       // Remove trailing '\n', if any
       if (!line.EndsWith("\n")) line.Append('\n');
@@ -354,4 +365,3 @@ TObjString *TProofMgrLite::ReadBuffer(const char *fin, const char *pattern)
    // Done
    return new TObjString(outbuf.Data());
 }
-
