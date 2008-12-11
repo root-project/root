@@ -1220,7 +1220,11 @@ template <typename Common, class Oper> static void G__OP2_apply_common(G__value*
       default:
          if (G__value_typenum(*bufm2).FinalType().IsPointer()) {
             G__OP2_apply_left_right<Common, long, Oper>(bufm1, bufm2);
-         } else {
+         }
+         else if (G__value_typenum(*bufm2).FinalType().IsEnum()) {
+            G__OP2_apply_left_right<Common, int, Oper>(bufm1, bufm2);
+         }
+         else {
             assert(0);
          }
    }
