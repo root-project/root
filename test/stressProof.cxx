@@ -337,6 +337,18 @@ void stressProof(const char *url, Int_t nwrks,
    // Set verbosity
    gverbose = verbose;
 
+   // Check url
+   TUrl uu(url), udef(urldef);
+   if (strcmp(uu.GetHost(), udef.GetHost()) || (uu.GetPort() != udef.GetPort())) {
+      if (gDynamicStartup) {
+         printf("*   WARNING: request to run a test with per-job scheduling on    *\n");
+         printf("*            an external cluster: %s .\n", url);
+         printf("*            Make sure the dynamic option is set.                *\n");
+         printf("******************************************************************\n");
+         gDynamicStartup = kFALSE;
+      }
+   }
+
    // Dataset option
    if (!skipds) {
       gSkipDataSetTest = kFALSE;
@@ -580,9 +592,15 @@ Int_t PT_Open(void *args)
 
    // Temp dir for PROOF tutorials
    PutPoint();
-   TString tutdir;
+   TString tutdir, tmpdir(gSystem->TempDirectory()), us;
    UserGroup_t *ug = gSystem->GetUserInfo(gSystem->GetUid());
-   tutdir.Form("%s/%s/.proof-tutorial", gSystem->TempDirectory(), ug->fUser.Data());
+   if (!ug) {
+      printf("\n >>> Test failure: could not get user info");
+      return -1;
+   }
+   us.Form("/%s", ug->fUser.Data());
+   if (!tmpdir.EndsWith(us.Data())) tmpdir += us;
+   tutdir.Form("%s/.proof-tutorial", tmpdir.Data());
    if (gSystem->AccessPathName(tutdir)) {
       if (gSystem->mkdir(tutdir, kTRUE) != 0) {
          printf("\n >>> Test failure: could not assert/create the temporary directory"
