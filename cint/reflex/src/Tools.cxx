@@ -919,7 +919,7 @@ void Tools::StringStrip( std::string & str ) {
 //-------------------------------------------------------------------------------
 // Strip spaces at the beginning and the end from a string.
    size_t sPos = 0;
-   size_t ePos = str.length();
+   size_t ePos = str.length() - 1;
    while ( str[sPos] == ' ' ) { ++sPos; }
    while ( str[ePos] == ' ' ) { --ePos; }
    str = str.substr( sPos, ePos - sPos );
