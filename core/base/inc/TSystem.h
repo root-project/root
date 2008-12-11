@@ -375,6 +375,7 @@ public:
 
    //---- Time & Date
    virtual TTime           Now();
+           TSeqCollection *GetListOfTimers() const { return fTimers;}
    virtual void            AddTimer(TTimer *t);
    virtual TTimer         *RemoveTimer(TTimer *t);
    virtual void            ResetTimer(TTimer *) { }
