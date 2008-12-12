@@ -129,7 +129,7 @@ $(STRESSFILESCOPIEDTAG): $(STRESSFILESHERE)
 # $(STRESSFLAGS) can be a target-specific variable holding optional
 # arguments to the test; see below for stress-ctest.log
 CALLSTRESSEXE := $(CALLROOTEXE:root.exe=)
-CALLSTRESSEXE := $(CALLSTRESSEXE:root7.exe=)
+CALLSTRESSEXE := $(CALLSTRESSEXE:rootc7.exe=)
 $(addsuffix .log,$(STRESSTESTSCOMP)): %-ctest.log: test/%$(ExeSuf)
 	$(CMDECHO) unset DISPLAY; \
 	   $(CALLSTRESSEXE) test/$*$(ExeSuf) $(STRESSFLAGS) > $@ 2>&1
