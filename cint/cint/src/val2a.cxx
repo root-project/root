@@ -137,10 +137,17 @@ char* G__valuemonitor(G__value buf, char* temp)
 
                   else
 #endif
-                     sprintf(temp, "(%s)(%ld)"
-                             , G__type2string(buf.type , buf.tagnum , buf.typenum
-                                              , buf.obj.reftype.reftype, 0)
-                             , G__convertT<long>(&buf));
+                     if (buf.obj.i < 0) {
+                        sprintf(temp, "(%s)(%ld)"
+                                , G__type2string(buf.type , buf.tagnum , buf.typenum
+                                                 , buf.obj.reftype.reftype, 0)
+                                , G__convertT<long>(&buf));
+                     } else {
+                        sprintf(temp, "(%s)%ld"
+                                , G__type2string(buf.type , buf.tagnum , buf.typenum
+                                                 , buf.obj.reftype.reftype, 0)
+                                , G__convertT<long>(&buf));
+                     }
             }
             else {
                if ('C' == buf.type && G__in_pause && buf.obj.i > 0x10000 &&
