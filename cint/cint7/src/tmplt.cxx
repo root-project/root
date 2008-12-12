@@ -4134,7 +4134,9 @@ int Cint::Internal::G__instantiate_templateclass(char* tagnamein, int noerror)
       //858//defarg = G__gettemplatearglist(tmpl_args_string, tmpl_arg_list, class_tmpl->def_para, &npara, class_tmpl->parent_tagnum, class_tmpl->specialization); // FIXME: Port the addition of the specialization args to cint5?
       defarg = G__gettemplatearglist(tmpl_args_string, tmpl_arg_list, class_tmpl->def_para, &npara, class_tmpl->parent_tagnum);
       create_in_envtagnum = G__templatearg_enclosedscope;
-      G__templatearg_enclosedscope = store_templatearg_enclosedscope;
+      if (defarg) {
+         G__templatearg_enclosedscope = store_templatearg_enclosedscope;
+      }
    }
    //
    //  Remove any given scope qualifiers from the template name
@@ -4225,6 +4227,10 @@ int Cint::Internal::G__instantiate_templateclass(char* tagnamein, int noerror)
          }
       }
    }
+   //
+   //  We are going to instantiate, must zero this.
+   //
+   G__templatearg_enclosedscope = 0;
    //
    //  Attempt to use ACLiC to generate a dictionary
    //  for the requested template-id.
