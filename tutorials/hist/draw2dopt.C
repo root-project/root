@@ -30,7 +30,6 @@
    c2h.cd(4);
    h2.Draw("colz"); pl.DrawPaveLabel(x1,y1,x2,y2,"COLZ","brNDC");
    c2h.Update();
-   // see the canvas begin_html <a href="gif/h2_c2h.gif" >c2h</a> end_html
    
    //text option
    TCanvas ctext("ctext","text option",50,50,800,600);
@@ -39,7 +38,6 @@
    ctext->SetGrid();
    h2.Draw("text"); pl.DrawPaveLabel(x1,y1,x2,y2,"TEXT","brNDC");
    ctext.Update();
-   // see the canvas begin_html <a href="gif/h2_text.gif" >ctext</a> end_html
    
    //contour options
    TCanvas cont("contours","contours",100,100,800,600);
@@ -58,7 +56,6 @@
    gPad->SetGrid();
    h2.Draw("cont3"); pl.DrawPaveLabel(x1,y1,x2,y2,"CONT3","brNDC");
    cont.Update();
-   // see the canvas begin_html <a href="gif/h2_cont.gif" >contours</a> end_html
    
    //lego options
    TCanvas lego("lego","lego options",150,150,800,600);
@@ -75,7 +72,6 @@
    gPad->SetTheta(21); gPad->SetPhi(-90);
    h2.Draw("surf1cyl"); pl.DrawPaveLabel(x1,y1,x2+0.05,y2,"SURF1CYL","brNDC");
    lego.Update();
-   // see the canvas begin_html <a href="gif/h2_lego.gif" >lego</a> end_html
    
    //surface options
    TCanvas surf("surfopt","surface options",200,200,800,600);
@@ -90,5 +86,4 @@
    surf.cd(4);
    h2.Draw("surf4");   pl.DrawPaveLabel(x1,y1,x2,y2,"SURF4","brNDC");
    surf.Update();
-   // see the canvas begin_html <a href="gif/h2_surf.gif" >surfaces</a> end_html
 }
