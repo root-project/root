@@ -485,10 +485,6 @@
 #endif
 
 #ifdef _MSC_VER
-#   if !defined(__CINT__) && !defined(ROOT_w32pragma)
-      /* needed for compatibility with ROOT's STL usage */
-#     error Missing #include of %ROOTSYS%\include\w32pragma.h!
-#   endif
 #   define R__VISUAL_CPLUSPLUS
 #   define NEED_STRING
 #   define NEED_STRCASECMP
