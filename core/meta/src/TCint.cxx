@@ -1994,6 +1994,16 @@ const char *TCint::GetIncludePath()
       const char *pathname = path.Name();
       fIncludePath.Append(" -I\"").Append(pathname).Append("\" ");
    }
+#ifdef ROOTINCDIR
+   fIncludePath.Append(" -I\"").Append(ROOTINCDIR);
+#else 
+   fIncludePath.Append(" -I\"").Append(gRootDir).Append("/include");
+#endif
+#ifdef R__BUILDING_CINT7
+   fIncludePath.Append("/cint7\" ");
+#else
+   fIncludePath.Append("/cint\" ");
+#endif
 
    return fIncludePath;
 }
