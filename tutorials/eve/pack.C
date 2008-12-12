@@ -1,3 +1,8 @@
+// @(#)root/eve:$Id: triangleset.C 26568 2008-12-01 20:55:50Z matevz $
+// Author: Matevz Tadel
+
+// Demonstrates usage of class TGPack.
+
 TGPack *hp = 0;
 TGPack *vp = 0;
 

@@ -1,3 +1,8 @@
+// @(#)root/eve:$Id: text_test.C 26717 2008-12-07 22:07:55Z matevz $
+// Author: Matevz Tadel
+
+// Demonstates usage of EVE compound objects - class TEveCompound.
+
 TEveLine* random_line(TRandom& rnd, Int_t n, Float_t delta)
 {
    TEveLine* line = new TEveLine;

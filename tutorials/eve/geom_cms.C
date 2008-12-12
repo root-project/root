@@ -1,3 +1,8 @@
+// @(#)root/eve:$Id$
+// Author: Matevz Tadel
+
+// Shows CMS geometry.
+
 void geom_cms()
 {
    TEveManager::Create();

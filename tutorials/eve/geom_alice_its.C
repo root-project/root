@@ -1,3 +1,8 @@
+// @(#)root/eve:$Id$
+// Author: Matevz Tadel
+
+// Shows geometry of ALICE ITS.
+
 void geom_alice_its()
 {
    TEveManager::Create();

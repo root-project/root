@@ -1,3 +1,8 @@
+// @(#)root/eve:$Id$
+// Author: Matevz Tadel
+
+// Shows ATLAS geometry.
+
 void geom_atlas()
 {
    TEveManager::Create();

@@ -1,6 +1,8 @@
 // @(#)root/eve:$Id$
 // Author: Matevz Tadel
 
+// Demonstrates usage of class TEveTriangleSet.
+
 #include "TCanvas.h"
 #include "TStyle.h"
 #include "TFile.h"

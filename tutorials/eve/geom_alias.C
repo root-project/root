@@ -1,5 +1,7 @@
-// Demonstates usage of geometry aliases.
-// Merge ALICE ITS with ATLAS MUON.
+// @(#)root/eve:$Id$
+// Author: Matevz Tadel
+
+// Demonstates usage of geometry aliases - merge ALICE ITS with ATLAS MUON.
 
 void geom_alias()
 {

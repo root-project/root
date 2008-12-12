@@ -1,3 +1,7 @@
+// @(#)root/eve:$Id$
+// Author: Bertrand Bellenot
+
+// Helper classes for the alice_esd_split.C demo.
 
 #include "TApplication.h"
 #include "TSystem.h"

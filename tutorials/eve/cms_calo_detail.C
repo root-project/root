@@ -1,3 +1,8 @@
+// @(#)root/eve:$Id: triangleset.C 26568 2008-12-01 20:55:50Z matevz $
+// Author: Alja Mrak-Tadel
+
+// Calorimeter detailed view by using TEveCaloDataVec as data-source.
+
 #if defined(__CINT__) && !defined(__MAKECINT__)
 
 {
@@ -113,7 +118,7 @@ void cms_calo_detail()
   data->FillSlice(1, 0);
 
   data->SetAxisFromBins();
- // set eta, phi axis title with symbol.ttf font
+  // set eta, phi axis title with symbol.ttf font
   data->GetEtaBins()->SetTitle("X[cm]");
   data->GetEtaBins()->SetTitleSize(0.1);
   data->GetPhiBins()->SetTitle("Y[cm]");

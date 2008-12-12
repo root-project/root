@@ -1,3 +1,8 @@
+// @(#)root/eve:$Id: text_test.C 26717 2008-12-07 22:07:55Z matevz $
+// Author: Matevz Tadel
+
+// Demonstrates usage of simple configuration via TEveParamList class.
+
 // Must run in compiled mode for dynamic_cast to work properly.
 
 #if defined(__CINT__) && !defined(__MAKECINT__)

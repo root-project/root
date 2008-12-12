@@ -1,6 +1,8 @@
 // @(#)root/eve:$Id$
 // Author: Matevz Tadel
 
+// Demonstates usage of 2D digit class TEveQuadSet.
+
 TEveQuadSet* quad_test(Float_t x=0, Float_t y=0, Float_t z=0,
                        Int_t num=100, Bool_t register=kTRUE)
 {

@@ -1,3 +1,6 @@
+// @(#)root/eve:$Id: text_test.C 26717 2008-12-07 22:07:55Z matevz $
+// Author: Matevz Tadel
+
 // Test signals from TEveSelection class.
 
 #include "TEveSelection.h" // To enforce auto-loading of libEve.

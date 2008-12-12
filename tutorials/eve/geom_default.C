@@ -1,3 +1,6 @@
+// @(#)root/eve:$Id$
+// Author: Matevz Tadel
+
 // Demonstrates usage of "Default" geometry alias.
 
 void geom_default()

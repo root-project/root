@@ -1,6 +1,9 @@
 // @(#)root/eve:$Id$
 // Author: Alja Mrak-Tadel
 
+// Demonstrates usage of class TEveText - 2D & 3D text in GL.
+
+
 TEveText* text_test()
 {
    gSystem->IgnoreSignal(kSigSegmentationViolation, true);

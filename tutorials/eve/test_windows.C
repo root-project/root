@@ -1,3 +1,8 @@
+// @(#)root/eve:$Id$
+// Author: Matevz Tadel
+
+// Demonstrates usage of EVE window-manager.
+
 #include "TEveWindow.h"
 #include "TEveViewer.h"
 #include "TEveManager.h"

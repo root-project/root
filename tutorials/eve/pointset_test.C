@@ -1,4 +1,7 @@
+// @(#)root/eve:$Id$
 // Author: Matevz Tadel
+
+// Demonstrates usage of class TEvePointSet.
 
 #ifndef __CINT__
 

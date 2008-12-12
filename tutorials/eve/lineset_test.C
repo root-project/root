@@ -1,4 +1,7 @@
+// @(#)root/eve:$Id$
 // Author: Matevz Tadel
+
+// Demonstrates usage of class TEveStraightLineSet.
 
 TEveStraightLineSet* lineset_test(Int_t nlines = 40, Int_t nmarkers = 4) 
 {

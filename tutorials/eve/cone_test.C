@@ -1,6 +1,7 @@
 // @(#)root/eve:$Id$
 // Author: Alja Mrak-Tadel
-// Demonstrates usage of TEveBoxSet class.
+
+// Demonstrates usage of 'cone' mode in TEveBoxSet class.
 
 TEveBoxSet* cone_test(Float_t x=0, Float_t y=0, Float_t z=0,
 		      Int_t num=100, Bool_t register=kTRUE)

@@ -1,3 +1,8 @@
+// @(#)root/eve:$Id$
+// Author: Matevz Tadel
+
+// Shows geometry of ALICE TPC.
+
 void geom_alice_tpc()
 {
    TEveManager::Create();

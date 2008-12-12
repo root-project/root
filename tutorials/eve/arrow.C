@@ -1,6 +1,8 @@
 // @(#)root/eve:$Id: text_test.C 23896 2008-05-18 17:42:32Z matevz $
 // Author: Alja Mrak-Tadel
 
+// Demonstrates usage of TEveArrow class.
+
 void arrow()
 {
    gSystem->IgnoreSignal(kSigSegmentationViolation, true);

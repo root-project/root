@@ -1,3 +1,8 @@
+// @(#)root/eve:$Id: triangleset.C 26568 2008-12-01 20:55:50Z matevz $
+// Author: Alja Mrak-Tadel
+
+// Demonstrates usage of EVE calorimetry classes.
+
 #include "TEveProjections.h"
 
 const char* histFile = "http://amraktad.web.cern.ch/amraktad/cms_calo_hist.root";

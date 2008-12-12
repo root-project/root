@@ -1,3 +1,8 @@
+// @(#)root/eve:$Id$
+// Author: Matevz Tadel
+
+// Demonstates usage of automatic 2D projections - class TEveProjectionManager.
+
 const char* esd_geom_file_name = "http://root.cern.ch/files/alice_ESDgeometry.root";
 
 void projection_test()

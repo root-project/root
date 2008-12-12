@@ -1,4 +1,7 @@
-// Makes track with three different magnetic field types.
+// @(#)root/eve:$Id: text_test.C 26717 2008-12-07 22:07:55Z matevz $
+// Author: Alja Mrak-Tadel
+
+// Makes some tracks with three different magnetic field types.
 
 void track(Int_t bCase = 2)
 {

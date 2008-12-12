@@ -1,6 +1,8 @@
 // @(#)root/eve:$Id$
 // Author: Bertrand Bellenot
 
+// Loading and display of basic 3DS models.
+
 #include "TCanvas.h"
 #include "TStyle.h"
 #include "TFile.h"

@@ -1,3 +1,8 @@
+// @(#)root/eve:$Id: text_test.C 26717 2008-12-07 22:07:55Z matevz $
+// Author: Matevz Tadel
+
+// Demonstates how to use EVE as a histogram browser.
+
 TGFileBrowser *g_hlt_browser = 0;
 TCanvas       *g_hlt_canvas  = 0;
 
