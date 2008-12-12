@@ -207,9 +207,9 @@ Int_t TPySelector::Version() const {
       Int_t ires = (Int_t)PyLong_AsLong( result );
       Py_DECREF( result );
       return ires;
-   } else if ( result == Py_None )
+   } else if ( result == Py_None ) {
       Py_DECREF( result );
-
+   }
    return -99;
 }
 
