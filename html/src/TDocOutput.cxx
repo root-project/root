@@ -426,7 +426,10 @@ void TDocOutput::Convert(std::istream& in, const char* infilename,
                previousWindows.insert(gROOT->GetListOfCanvases()->Last());
          }
          TIter iTimer(gSystem->GetListOfTimers());
-         std::set<TObject*> timersBefore(iTimer.Begin(), iTimer.End());
+         std::set<TObject*> timersBefore;
+         TObject* timerOld = 0;
+         while ((timerOld = iTimer()))
+            timersBefore.insert(timerOld);
 
          TString cmd(".x ");
          cmd += gSystem->BaseName(infilename);
