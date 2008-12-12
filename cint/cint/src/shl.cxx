@@ -2139,11 +2139,27 @@ const char *G__dladdr(void (*func)())
 // G__RegisterLibrary
 void* G__RegisterLibrary(void (*func)()) {
    // This function makes sure that the library that contains 'func' is
-   // known to have been laoded by the CINT system.
+   // known to have been loaded by the CINT system.
 
    const char *libname = G__dladdr( func );
-   if (libname) {
-      G__register_sharedlib( libname );
+   if (libname && libname[0]) {
+      size_t lenLibName = strlen(libname);
+      G__StrBuf sbLibName(lenLibName);
+      strcpy(sbLibName, libname);
+      // remove soversion at the end: .12.34
+      size_t cutat = lenLibName - 1;
+      while (cutat > 2) {
+         if (!isdigit(sbLibName[cutat])) { break; }
+         // Skip first digit
+         --cutat;
+         // Skip 2nd digit if any
+         if (isdigit(sbLibName[cutat])) { --cutat; }
+         if (sbLibName[cutat] != '.') { break;  }
+         // Skip period
+         --cutat;
+         sbLibName[cutat + 1] = 0;
+      }
+      G__register_sharedlib( sbLibName );
    }
    return 0;
 }   
