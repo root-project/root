@@ -18,6 +18,10 @@
 #include "Fit/Fitter.h"
 #endif
 
+#ifndef ROOT_Fit_DataVector
+#include "Fit/DataVector.h"
+#endif
+
 #ifndef ROOT_Math_IFunctionfwd
 #include "Math/IFunctionfwd.h"
 #endif
@@ -28,6 +32,8 @@
 /**
     TVirtualFitter backward compatibility implementation using new ROOT::Fit::Fitter
 */
+
+class TGraph; 
 
 namespace ROOT { 
    namespace Fit { 
@@ -44,7 +50,8 @@ public:
 
    TBackCompFitter();
 
-   TBackCompFitter(ROOT::Fit::Fitter & fitter, ROOT::Fit::FitData * ); 
+   //TBackCompFitter(ROOT::Fit::Fitter & fitter, ROOT::Fit::FitData * ); 
+   TBackCompFitter( std::auto_ptr<ROOT::Fit::Fitter>  fitter, std::auto_ptr<ROOT::Fit::FitData> data  ); 
 
    virtual ~TBackCompFitter();
 
@@ -87,7 +94,26 @@ public:
    // for using interpreted function passed by the user
    virtual void SetMethodCall(TMethodCall * m) { fMethodCall = m; }
 
+   ///!!!! new method (of this interface) 
 
+
+   // get reference to Fit configuration (NOTE: it will be invalid when class is deleted) 
+   ROOT::Fit::FitConfig & GetFitConfig()  { return fFitter->Config(); }
+
+   // get reference to Fit Result object (NOTE: it will be invalid when class is deleted) 
+   const ROOT::Fit::FitResult & GetFitResult() const { return fFitter->Result(); }
+   
+   // scan likelihood value of  parameter and fill the given graph. 
+   bool  Scan(unsigned int ipar, TGraph * gr, double xmin = 0, double xmax = 0);
+
+//    // scan likelihood value for two  parameters and fill the given graph. 
+//    bool  Scan2D(unsigned int ipar, unsigned int jpar, TGraph2D * gr, 
+//                         double xmin = 0, double xmax = 0, double ymin = 0, double ymax = 0);
+
+   // create contour of two parameters around the minimum
+   // pass as option confidence level:  default is a value of 0.683 
+   bool  Contour(unsigned int ipar, unsigned int jpar, TGraph * gr , double confLevel = 0.683); 
+   
    // set FCN using new interface
    virtual void SetObjFunction(  ROOT::Math::IMultiGenFunction * f);
 
@@ -107,9 +133,10 @@ protected:
 private:
 
 
-   ROOT::Fit::FitData * fFitData;
+   //ROOT::Fit::FitData * fFitData;
+   std::auto_ptr<ROOT::Fit::FitData>  fFitData;  //! data of the fit (managed by TBackCompFitter)
+   std::auto_ptr<ROOT::Fit::Fitter>   fFitter;   //! pointer to fitter object (managed by TBackCompFitter)
    ROOT::Math::Minimizer * fMinimizer;
-   ROOT::Fit::Fitter fFitter; 
    ROOT::Math::IMultiGenFunction * fObjFunc; 
    ROOT::Math::IParamMultiFunction * fModelFunc; 
    mutable std::vector<double> fCovar; // cached covariance matrix (NxN)

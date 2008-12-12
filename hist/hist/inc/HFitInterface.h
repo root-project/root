@@ -70,7 +70,7 @@ namespace ROOT {
           using a TF1 pointer and fit options.
           N.B. ownership of fit data is passed to the UnBinFit function which will be responsible of 
           deleting the data after the fit. User calling this function MUST NOT delete UnBinData after 
-          calling it
+          calling it.
       */
       int UnBinFit(ROOT::Fit::UnBinData * data, TF1 * f1 , Foption_t & option , const ROOT::Math::MinimizerOptions & moption); 
 

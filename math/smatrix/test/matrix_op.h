@@ -198,6 +198,7 @@ void  testInv_S( const M & m,  double & time, M& result){
   for (int l = 0; l < NLOOP; l++) 	
     {
       mtmp(0,0) = gV[l]; 
+      //result = mtmp.InverseFast(ifail);
       result = mtmp.Inverse(ifail);
       // assert(ifail == 0);
     }

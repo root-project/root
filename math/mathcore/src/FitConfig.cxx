@@ -163,7 +163,7 @@ ROOT::Math::Minimizer * FitConfig::CreateMinimizer() {
    min->SetTolerance( fMinimizerOpts.Tolerance() ); 
    min->SetValidError( fParabErrors );
    min->SetStrategy( fMinimizerOpts.Strategy() );
-   min->SetErrorUp( fMinimizerOpts.ErrorDef() );
+   min->SetErrorDef( fMinimizerOpts.ErrorDef() );
 
 
    return min; 

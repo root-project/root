@@ -1,12 +1,13 @@
 // @(#)root/smatrix:$Id$
 // Authors: CLHEP authors, L. Moneta    2006  
 
+#ifndef ROOT_Math_MatrixInversion_icc
+#define ROOT_Math_MatrixInversion_icc
+
+
 #include "Math/SVector.h"
 #include <limits>
 
-
-#ifndef ROOT_Math_MatrixInversion_icc
-#define ROOT_Math_MatrixInversion_icc
 
 // inversion algorithms for matrices
 // taken  from CLHEP (L. Moneta May 2006)

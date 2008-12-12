@@ -35,7 +35,7 @@ namespace ROOT {
    Inversion for a 3x3 symmetric matrix
  */
 template <class T> 
-bool Inverter<3>::Dinv(MatRepSym<T,3> & rhs) { 
+bool FastInverter<3>::Dinv(MatRepSym<T,3> & rhs) { 
 
   typedef T  Scalar; 
 
@@ -121,7 +121,7 @@ bool Inverter<3>::Dinv(MatRepSym<T,3> & rhs) {
    Inversion for a 4x4 symmetric matrix
  */
 template <class T> 
-bool Inverter<4>::Dinv(MatRepSym<T,4> & rhs) { 
+bool FastInverter<4>::Dinv(MatRepSym<T,4> & rhs) { 
 
   typedef T  Scalar; 
 
@@ -238,7 +238,7 @@ bool Inverter<4>::Dinv(MatRepSym<T,4> & rhs) {
    Inversion for a 5x5 symmetric matrix
  */
 template <class T> 
-bool Inverter<5>::Dinv(MatRepSym<T,5> & rhs) { 
+bool FastInverter<5>::Dinv(MatRepSym<T,5> & rhs) { 
 
   typedef T  Scalar; 
 

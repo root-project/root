@@ -31,6 +31,8 @@
 #include "Minuit2/CombinedMinimizer.h"
 #include "Minuit2/ScanMinimizer.h"
 #include "Minuit2/FumiliMinimizer.h"
+#include "Minuit2/MnParameterScan.h"
+#include "Minuit2/MnContours.h"
  
 
 
@@ -143,9 +145,10 @@ bool Minuit2Minimizer::SetVariable(unsigned int ivar, const std::string & name, 
    //   std::cout << " add parameter " << name << "  " <<  val << std::endl;
    fState.Add(name.c_str(), val, step); 
    unsigned int minuit2Index = fState.Index(name.c_str() ); 
-   if ( minuit2Index != ivar) 
-      std::cout << "Minuit2Minimizer:  WARNING: variable " << name 
-                << " has a different index. Correct index is " <<  minuit2Index << std::endl;
+   if ( minuit2Index != ivar) {
+      std::string txtmsg("Wrong index used for the variable " + name);
+      MN_INFO_MSG2("Minuit2Minimizer::SetVariable",txtmsg);  
+   }
    return true; 
 }
 
@@ -180,7 +183,24 @@ bool Minuit2Minimizer::SetFixedVariable(unsigned int ivar , const std::string & 
 }
 
 std::string Minuit2Minimizer::VariableName(unsigned int ivar) const { 
+   // return the variable name
    return fState.GetName(ivar);
+}
+
+bool Minuit2Minimizer::SetVariableValue(unsigned int ivar, double val) { 
+   // set value for variable ivar (only for existing parameters)
+   if (ivar >= fState.MinuitParameters().size() ) return false; 
+   fState.SetValue(ivar, val);
+   return true; 
+}
+
+bool Minuit2Minimizer::SetVariableValues(const double * x)  { 
+   // set value for variable ivar (only for existing parameters)
+   unsigned int n =  fState.MinuitParameters().size(); 
+   if (n== 0) return false; 
+   for (unsigned int ivar = 0; ivar < n; ++ivar) 
+      fState.SetValue(ivar, x[ivar]);
+   return true; 
 }
 
 
@@ -189,7 +209,7 @@ void Minuit2Minimizer::SetFunction(const  ROOT::Math::IMultiGenFunction & func) 
    if (fMinuitFCN) delete fMinuitFCN;
    fDim = func.NDim(); 
    if (!fUseFumili) {
-      fMinuitFCN = new ROOT::Minuit2::FCNAdapter<ROOT::Math::IMultiGenFunction> (func, ErrorUp() );
+      fMinuitFCN = new ROOT::Minuit2::FCNAdapter<ROOT::Math::IMultiGenFunction> (func, ErrorDef() );
    }
    else { 
       // for Fumili the fit method function interface is required
@@ -198,7 +218,7 @@ void Minuit2Minimizer::SetFunction(const  ROOT::Math::IMultiGenFunction & func) 
          MN_ERROR_MSG("Minuit2Minimizer: Wrong Fit method function for Fumili");
          return;
       }
-      fMinuitFCN = new ROOT::Minuit2::FumiliFCNAdapter<ROOT::Math::FitMethodFunction> (*fcnfunc, fDim, ErrorUp() );
+      fMinuitFCN = new ROOT::Minuit2::FumiliFCNAdapter<ROOT::Math::FitMethodFunction> (*fcnfunc, fDim, ErrorDef() );
    }
 }
 
@@ -207,7 +227,7 @@ void Minuit2Minimizer::SetFunction(const  ROOT::Math::IMultiGradFunction & func)
    fDim = func.NDim(); 
    if (fMinuitFCN) delete fMinuitFCN;
    if (!fUseFumili) { 
-      fMinuitFCN = new ROOT::Minuit2::FCNGradAdapter<ROOT::Math::IMultiGradFunction> (func, ErrorUp() );
+      fMinuitFCN = new ROOT::Minuit2::FCNGradAdapter<ROOT::Math::IMultiGradFunction> (func, ErrorDef() );
    }
    else { 
       // for Fumili the fit method function interface is required
@@ -216,7 +236,7 @@ void Minuit2Minimizer::SetFunction(const  ROOT::Math::IMultiGradFunction & func)
          MN_ERROR_MSG("Minuit2Minimizer: Wrong Fit method function for Fumili");
          return;
       }
-      fMinuitFCN = new ROOT::Minuit2::FumiliFCNAdapter<ROOT::Math::FitMethodGradFunction> (*fcnfunc, fDim, ErrorUp() );
+      fMinuitFCN = new ROOT::Minuit2::FumiliFCNAdapter<ROOT::Math::FitMethodGradFunction> (*fcnfunc, fDim, ErrorDef() );
    }
 }
                                    
@@ -233,7 +253,7 @@ bool Minuit2Minimizer::Minimize() {
    int maxfcn = MaxFunctionCalls(); 
    double tol = Tolerance();
    int strategy = Strategy(); 
-   fMinuitFCN->SetErrorDef(ErrorUp() );
+   fMinuitFCN->SetErrorDef(ErrorDef() );
 
    if (PrintLevel() >=1)
       std::cout << "Minuit2Minimizer: Minimize with max iterations " << maxfcn << " edmval " << tol << " strategy " 
@@ -316,7 +336,7 @@ bool  Minuit2Minimizer::ExamineMinimum(const ROOT::Minuit2::FunctionMinimum & mi
          std::cout << "Nfcn  = " << fState.NFcn() << std::endl;
          std::vector<double> par = fState.Params();
          std::vector<double> err = fState.Errors();
-         for (unsigned int i = 0; i < fState.Params().size(); ++i) 
+         for (unsigned int i = 0; i < fState.MinuitParameters().size(); ++i) 
             std::cout << fState.Parameter(i).Name() << "\t  = " << par[i] << "\t  +/-  " << err[i] << std::endl; 
       }
       fStatus = 0; 
@@ -395,7 +415,8 @@ double Minuit2Minimizer::GlobalCC(unsigned int i) const {
 
 
 bool Minuit2Minimizer::GetMinosError(unsigned int i, double & errLow, double & errUp) { 
-
+   // return the minos error for parameter i
+   // if a minimum does not exist an error is returned
    errLow = 0; errUp = 0; 
 
    assert( fMinuitFCN );
@@ -413,20 +434,19 @@ bool Minuit2Minimizer::GetMinosError(unsigned int i, double & errLow, double & e
 //       GetMinimizer()->Minimize(*GetFCN(),fState, ROOT::Minuit2::MnStrategy(strategy), MaxFunctionCalls(), Tolerance());
 //    fState = min.UserState();
    if (fMinimum == 0) { 
-      std::cout << "Minuit2Minimizer::GetMinosErrors:  failed - no function minimum existing" << std::endl;
+      MN_ERROR_MSG("Minuit2Minimizer::GetMinosErrors:  failed - no function minimum existing");
       return false;
    }
    
    if (!fMinimum->IsValid() ) { 
-      std::cout << "Minuit2Minimizer::MINOS failed due to invalid function minimum" << std::endl;
+      MN_ERROR_MSG("Minuit2Minimizer::MINOS failed due to invalid function minimum");
       return false;
    }
 
-   fMinuitFCN->SetErrorDef(ErrorUp() );
-
+   fMinuitFCN->SetErrorDef(ErrorDef() );
    // if error def has been changed update it in FunctionMinimum
-   if (ErrorUp() != fMinimum->Up() ) 
-      fMinimum->SetErrorDef(ErrorUp() );
+   if (ErrorDef() != fMinimum->Up() ) 
+      fMinimum->SetErrorDef(ErrorDef() );
 
 
    ROOT::Minuit2::MnMinos minos( *fMinuitFCN, *fMinimum);
@@ -474,6 +494,90 @@ bool Minuit2Minimizer::GetMinosError(unsigned int i, double & errLow, double & e
 
    return true;
 } 
+
+bool Minuit2Minimizer::Scan(unsigned int ipar, unsigned int & nstep, double * x, double * y, double xmin, double xmax) { 
+   // scan a parameter (variable) around the minimum value
+   // the parameters must have been set before 
+   // if xmin=0 && xmax == 0  by default scan around 2 sigma of the error
+   // if the errors  are also zero then scan from min and max of parameter range
+
+   if (!fMinuitFCN) { 
+      MN_ERROR_MSG2("Minuit2Minimizer::Scan"," Function must be set before using Scan");
+      return false;
+   }
+   
+   if ( ipar > fState.MinuitParameters().size() ) { 
+      MN_ERROR_MSG2("Minuit2Minimizer::Scan"," Invalid number. Minimizer variables must be set before using Scan");
+      return false;
+   }
+
+   MnParameterScan scan( *fMinuitFCN, fState.Parameters() );
+   double amin = scan.Fval(); // fcn value of the function before scan 
+
+   // first value is param value
+   std::vector<std::pair<double, double> > result = scan(ipar, nstep-1, xmin, xmax);
+
+   if (result.size() != nstep) { 
+      MN_ERROR_MSG2("Minuit2Minimizer::Scan"," Invalid result from MnParameterScan");
+      return false; 
+   }
+   // sort also the returned points in x
+   std::sort(result.begin(), result.end() );
+
+
+   for (unsigned int i = 0; i < nstep; ++i ) { 
+      x[i] = result[i].first; 
+      y[i] = result[i].second; 
+   }
+
+   // what to do if a new minimum has been found ? 
+   // use that as new minimum
+   if (scan.Fval() < amin ) { 
+      MN_INFO_MSG2("Minuit2Minimizer::Scan","A new minimum has been found");
+      fState.SetValue(ipar, scan.Parameters().Value(ipar) );
+         
+   }
+
+
+   return true; 
+}
+
+bool Minuit2Minimizer::Contour(unsigned int ipar, unsigned int jpar, unsigned int & npoints, double * x, double * y) {
+   // contour plot for parameter i and j
+   // need a valid FuncitonMinimum otherwise exits
+   if (fMinimum == 0) { 
+      MN_ERROR_MSG2("Minuit2Minimizer::Contour"," no function minimum existing. Must minimize funciton before");
+      return false;
+   }
+
+   if (!fMinimum->IsValid() ) { 
+      MN_ERROR_MSG2("Minuit2Minimizer::Contour","invalid funciton minimum");
+      return false;
+   }
+   assert(fMinuitFCN); 
+
+   fMinuitFCN->SetErrorDef(ErrorDef() );
+   // if error def has been changed update it in FunctionMinimum
+   if (ErrorDef() != fMinimum->Up() ) 
+      fMinimum->SetErrorDef(ErrorDef() );
+
+   MnContours contour(*fMinuitFCN, *fMinimum, Strategy() ); 
+   
+   std::vector<std::pair<double,double> >  result = contour(ipar,jpar, npoints);
+   if (result.size() != npoints) { 
+      MN_ERROR_MSG2("Minuit2Minimizer::Contour"," Invalid result from MnContours");
+      return false; 
+   }
+   for (unsigned int i = 0; i < npoints; ++i ) { 
+      x[i] = result[i].first; 
+      y[i] = result[i].second; 
+   }
+
+
+   return true;
+   
+
+}
 
 } // end namespace Minuit2
 

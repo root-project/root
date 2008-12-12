@@ -35,6 +35,7 @@ Classes used for fitting (regression analysis) and estimation of parameter value
 #include "Math/IParamFunctionfwd.h"
 #endif
 
+#include <memory>
 
 
 namespace ROOT { 
@@ -92,14 +93,15 @@ public:
    */ 
    ~Fitter (); 
 
+private: 
 
    /** 
-      Copy constructor
+      Copy constructor (disabled, class is not copyable)
    */ 
    Fitter(const Fitter &);
 
    /** 
-      Assignment operator
+      Assignment operator (disabled, class is not copyable) 
    */ 
    Fitter & operator = (const Fitter & rhs);  
 
@@ -211,7 +213,10 @@ public:
    /**
       get fit result
    */
-   const FitResult & Result() const { return fResult; } 
+   const FitResult & Result() const { 
+      assert( fResult.get() );
+      return *fResult; 
+   } 
 
    /**
       access to the fit configuration (const method)
@@ -229,6 +234,24 @@ public:
     */
    bool IsBinFit() const { return fBinFit; } 
 
+   /**
+      return pointer to last used minimizer 
+      (is NULL in case fit is not yet done)
+      This pointer will be valid as far as the data, the objective function
+      and the fitter class  have not been deleted.  
+      To be used only after fitting.
+      
+    */
+   ROOT::Math::Minimizer * GetMinimizer() { return fMinimizer.get(); } 
+
+   /**
+      return pointer to last used objective function 
+      (is NULL in case fit is not yet done)
+      This pointer will be valid as far as the data and the fitter class
+      have not been deleted. To be used after the fitting
+    */
+   ROOT::Math::IMultiGenFunction * GetFCN() { return fObjFunction.get(); } 
+
 
 protected: 
 
@@ -243,7 +266,7 @@ protected:
 
    /// do minimization
    template<class ObjFunc> 
-   bool DoMinimization(ROOT::Math::Minimizer & min, const ObjFunc & f, unsigned int dataSize, const ROOT::Math::IMultiGenFunction * chifunc = 0); 
+   bool DoMinimization(const ObjFunc & f, unsigned int dataSize, const ROOT::Math::IMultiGenFunction * chifunc = 0); 
 
 private: 
 
@@ -251,11 +274,15 @@ private:
 
    bool fBinFit;            // flag to indicate if fit is binned (in case of false the fit is unbinned or undefined)
 
-   IModelFunction * fFunc;  // copy of the fitted  function containing on output the fit result
-
-   FitResult fResult;       // object containing the result of the fit
+   IModelFunction * fFunc;  // copy of the fitted  function containing on output the fit result (managed by FitResult)
 
    FitConfig fConfig;       // fitter configuration (options and parameter settings)
+
+   std::auto_ptr<ROOT::Fit::FitResult>  fResult;  //! pointer to the object containing the result of the fit
+
+   std::auto_ptr<ROOT::Math::Minimizer>  fMinimizer;  //! pointer to used minimizer
+
+   std::auto_ptr<ROOT::Math::IMultiGenFunction>  fObjFunction;  //! pointer to used objective function
 
 }; 
 

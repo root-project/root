@@ -43,7 +43,7 @@ namespace ROOT {
 
 
 /** 
-    Matrix Inverter class (generic class used for matrix sizes larger than 6x6)
+    Matrix Inverter class 
     Class to specialize calls to Dinv. Dinv computes the inverse of a square
     matrix if dimension idim and order n. The content of the matrix will be
     replaced by its inverse. In case the inversion fails, the matrix content is
@@ -147,6 +147,34 @@ public:
 
 }; // class Inverter
 
+// fast inverter class using Cramer inversion 
+// by default use other default inversion
+/** 
+    Fast Matrix Inverter class 
+    Class to specialize calls to Dinv. Dinv computes the inverse of a square
+    matrix if dimension idim and order n. The content of the matrix will be
+    replaced by its inverse. In case the inversion fails, the matrix content is
+    destroyed. Invert specializes Dinv by the matrix order. E.g. if the order
+    of the matrix is less than 5 , the class implements
+    Cramers rule. 
+    Be careful that for matrix with high condition the accuracy of the Cramer rule is much poorer
+
+    @author L. Moneta
+*/
+template <unsigned int idim, unsigned int n = idim>
+class FastInverter {
+public:
+  ///
+  template <class MatrixRep>
+  static bool Dinv(MatrixRep& rhs) {
+     return Inverter<idim,n>::Dinv(rhs); 
+  }
+  template <class T>
+  static bool Dinv(MatRepSym<T,idim> & rhs) {
+     return Inverter<idim,n>::Dinv(rhs); 
+  }
+};
+
 
 /** Inverter<0>.
     In case of zero order, do nothing.
@@ -248,15 +276,15 @@ public:
 
 
 /** 
-    3x3 direct matrix inversion 
-    @author T. Glebe
+    3x3 direct matrix inversion  suing Cramer Rule
+    use only for FastInverter
 */
 //==============================================================================
-// Inverter<3>
+// FastInverter<3>
 //==============================================================================
 
 template <>
-class Inverter<3> {
+class FastInverter<3> {
 public:
   ///
   // use Cramer Rule
@@ -272,7 +300,7 @@ public:
     4x4 matrix inversion using Cramers rule.
 */
 template <>
-class Inverter<4> {
+class FastInverter<4> {
 public:
   ///
   template <class MatrixRep>
@@ -287,7 +315,7 @@ public:
     5x5 Matrix inversion using Cramers rule.
 */
 template <>
-class Inverter<5> {
+class FastInverter<5> {
 public:
   ///
   template <class MatrixRep>

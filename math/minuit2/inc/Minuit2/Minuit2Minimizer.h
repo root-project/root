@@ -115,6 +115,9 @@ public:
    virtual bool SetLimitedVariable(unsigned int ivar , const std::string & name , double val , double step , double /* lower */, double /* upper */); 
    /// set fixed variable (override if minimizer supports them )
    virtual bool SetFixedVariable(unsigned int /* ivar */, const std::string & /* name */, double /* val */);  
+   /// set variable
+   virtual bool SetVariableValue(unsigned int ivar, double val);
+   virtual bool SetVariableValues(const double * val);
 
    /// get name of variables (override if minimizer support storing of variable names)
    virtual std::string VariableName(unsigned int ivar) const;
@@ -181,8 +184,23 @@ public:
     */
    virtual double GlobalCC(unsigned int i) const;
 
-   /// minos error for parameter i, return false if Minos failed
+   /**
+      get the minos error for parameter i, return false if Minos failed
+      A minimizaiton must be performed befre, return false if no minimization has been done
+   */
    virtual bool GetMinosError(unsigned int i, double & errLow, double & errUp); 
+
+   /**
+      scan a parameter i around the minimum. A minimization must have been done before, 
+      return false if it is not the case
+    */
+   virtual bool Scan(unsigned int i, unsigned int & nstep, double * x, double * y, double xmin = 0, double xmax = 0); 
+
+   /**
+      find the contour points (xi,xj) of the function for parameter i and j around the minimum
+      The contour will be find for value of the function = Min + ErrorUp();
+    */
+   virtual bool Contour(unsigned int i, unsigned int j, unsigned int & npoints, double *xi, double *xj); 
 
    
    /// return reference to the objective function

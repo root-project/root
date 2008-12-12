@@ -157,7 +157,7 @@ class WrappedMultiFunction : public IMultiGenFunction {
    /**
       construct from the pointer to the object and the member function
     */
-   WrappedMultiFunction( Func f , unsigned int dim) : 
+   WrappedMultiFunction( Func f , unsigned int dim = 1) : 
       fFunc( f ), 
       fDim( dim)
    { /* no op */ }
@@ -186,6 +186,45 @@ private:
 
 }; // WrappedMultiFunction
 
+
+template<typename FuncObj, typename MemFuncPtr >
+class WrappedMemMultiFunction : public IMultiGenFunction {
+
+
+ public:
+
+   /**
+      construct from the pointer to the object and the member function
+    */
+   WrappedMemMultiFunction( FuncObj & obj, MemFuncPtr memFn, unsigned int dim = 1 ) : 
+      fObj(&obj), 
+      fMemFunc( memFn ),
+      fDim(dim)
+   { /* no op */ }
+
+   // use default  copy contructor and assignment operator
+
+   /// clone (required by the interface)
+   WrappedMemMultiFunction * Clone() const {
+      return new WrappedMemMultiFunction(*fObj,fMemFunc,fDim);
+   }
+   
+
+   unsigned int NDim() const { return fDim; }
+
+private:
+
+   virtual double DoEval (const double * x) const {
+      return ((*fObj).*fMemFunc)( x );
+   }
+
+
+   FuncObj * fObj; 
+   MemFuncPtr fMemFunc;
+   unsigned int fDim;
+
+
+}; // WrappedMemMultiFunction
 
 
 } // namespace Math

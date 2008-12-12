@@ -154,7 +154,7 @@
 #include "TMultiGraph.h"
 #include "TTree.h"
 #include "TTreeInput.h"
-#include "TGInputDialog.h"
+#include "TAdvancedGraphicsDialog.h"
 
 #include <vector>
 #include <queue>
@@ -192,6 +192,8 @@ enum EParStruct {
    PAR_MIN = 1,
    PAR_MAX = 2
 };
+
+void SearchCanvases(TSeqCollection* canvases, vector<TObject*>& objects);
 
 void GetParameters(TFitEditor::FuncParams_t & pars, TF1* func)
 {
@@ -344,6 +346,17 @@ TFitEditor::TFitEditor(TVirtualPad* pad, TObject *obj) :
                kMWMInputModeless);
 
    ConnectSlots();
+
+   if (!obj) {
+      TList* l = new TList();
+      l->Add(pad);
+      vector<TObject*> v;
+      SearchCanvases(l, v);
+      if ( v.size() ) 
+         obj = v[0];
+      delete l;
+   }
+
    SetFitObject(pad, obj, kButton1Down);
 
    // In case we want to make it without a default canvas. This will
@@ -358,6 +371,7 @@ TFitEditor::TFitEditor(TVirtualPad* pad, TObject *obj) :
       if ( obj )
          pad->GetCanvas()->Selected(pad, obj, kButton1Down);
    }
+
    UInt_t dw = fClient->GetDisplayWidth();
    UInt_t cw = 0;
    UInt_t cx = 0;
@@ -490,7 +504,8 @@ void TFitEditor::CreateFunctionGroup()
    TGCompositeFrame *tf4 = new TGCompositeFrame(gf1, 350, 26,
                                                 kHorizontalFrame);
    TGTextLBEntry *txt = (TGTextLBEntry *)fFuncList->GetSelectedEntry();
-   fSelLabel = new TGLabel(tf4, Form("%s", txt->GetTitle()));
+   TString s = txt->GetTitle();
+   fSelLabel = new TGLabel(tf4, s.Sizeof()>30?s(0,30)+"...":s);
    tf4->AddFrame(fSelLabel, new TGLayoutHints(kLHintsNormal |
                                               kLHintsCenterY, 0, 6, 2, 0));
    Pixel_t color;
@@ -673,7 +688,7 @@ void TFitEditor::CreateGeneralTab()
    TGVerticalFrame *v6 = new TGVerticalFrame(h6);
    TGCompositeFrame *v61 = new TGCompositeFrame(v6, 120, 20,
                                                 kHorizontalFrame | kFixedWidth);
-   fDrawAdvanced = new TGTextButton(v61, "Advanced...", kFP_DADVB);
+   fDrawAdvanced = new TGTextButton(v61, "&Advanced...", kFP_DADVB);
    v61->AddFrame(fDrawAdvanced, new TGLayoutHints(kLHintsRight   |
                                                   kLHintsCenterY |
                                                   kLHintsExpandX));
@@ -1367,8 +1382,10 @@ void TFitEditor::SetFitObject(TVirtualPad *pad, TObject *obj, Int_t event)
          // If there is no space, an error message is shown:
          // Error in <TString::AssertElement>: out of bounds: i = -1, Length = 0
          fEnteredFunc->SetText(" ");
-      fEnteredFunc->SelectAll();
    }
+   fEnteredFunc->Home();
+   fEnteredFunc->SelectAll();
+
 
    // Update the information about the selected object.
    if (fSetParam->GetState() == kButtonDisabled)
@@ -1580,9 +1597,7 @@ void TFitEditor::DoAdvancedOptions()
 {
    // Slot connected to advanced option button (opens a dialog).
 
-   new TGMsgBox(fClient->GetRoot(), GetMainFrame(),
-                "Info", "Advanced option dialog is not implemented yet",
-                kMBIconAsterisk,kMBOk, 0);
+   new TAdvancedGraphicsDialog( fClient->GetRoot(), GetMainFrame());
 }
 
 //______________________________________________________________________________
@@ -1678,38 +1693,20 @@ void TFitEditor::DoFit()
    Foption_t fitOpts;
    TString strDrawOpts;
 
-   TF1 *fitFunc = 0;
-   if ( fNone->GetState() == kButtonDisabled )
-   {
-      TGTextLBEntry *te = (TGTextLBEntry *)fFuncList->GetSelectedEntry();
-      TF1* tmpF1 = (TF1*) gROOT->GetListOfFunctions()->FindObject(te->GetTitle());
-      if ( tmpF1 == 0 )
-      {
-               new TGMsgBox(fClient->GetRoot(), GetMainFrame(),
-                            "Error...", "DoFit\nVerify the entered function string!",
-                            kMBIconStop,kMBOk, 0);
-               return;
-      }
-      fitFunc = (TF1*)tmpF1->IsA()->New();
-      tmpF1->Copy(*fitFunc);
-   }
-
    // Get the ranges from the sliders
    ROOT::Fit::DataRange drange; 
    GetRanges(drange);
 
-   if ( fitFunc == 0 )
-   {
-      // create function with saved range values 
-      if ( fDim == 1 || fDim == 0 )
-         fitFunc = new TF1("lastFitFunc",fEnteredFunc->GetText(),fFuncXmin,fFuncXmax);
-      else if ( fDim == 2 )
-         fitFunc = new TF2("lastFitFunc",fEnteredFunc->GetText(),fFuncXmin,fFuncXmax, fFuncYmin, fFuncYmax);
-      else if ( fDim == 3 )
-         fitFunc =  new TF3("lastFitFunc",fEnteredFunc->GetText(),fFuncXmin,fFuncXmax, fFuncYmin, fFuncYmax, fFuncZmin, fFuncZmax);
-   }
-   
-   //if ( fFuncPars ) 
+   // Create a static pointer to fitFunc. Every second call to the
+   // DoFit method, the old fitFunc is deleted. We need not to delete
+   // the function after the fitting in case we want to do Advaced
+   // graphics. The VirtualFitter need the function to be alived. One
+   // problem, after the last fit the function is never deleted, but
+   // ROOT's garbaga collector will do the job for us.
+   static TF1 *fitFunc = 0;
+   if ( fitFunc )
+      delete fitFunc;
+   fitFunc = GetFitFunction();
    // set parameters from panel in function
    assert(fitFunc);
    SetParameters(fFuncPars, fitFunc);
@@ -1777,8 +1774,6 @@ void TFitEditor::DoFit()
    //if (!fFuncPars) fFuncPars = new Double_t[fitFunc->GetNpar()][3];
    GetParameters(fFuncPars,fitFunc);
 
-   delete fitFunc;
-
    float xmin, xmax, ymin, ymax, zmin, zmax;
    if ( fParentPad ) {
       fParentPad->Modified();
@@ -1815,6 +1810,8 @@ void TFitEditor::DoFit()
 
    if ( !fTypeFit->FindEntry("Prev. Fit") )
       fTypeFit->InsertEntry("Prev. Fit",kFP_PREVFIT, kFP_UFUNC);
+
+   fDrawAdvanced->SetState(kButtonUp);
 }
 
 //______________________________________________________________________________
@@ -1845,8 +1842,8 @@ void TFitEditor::DoAddition(Bool_t on)
    TString s = fEnteredFunc->GetText();
    if (on) {
       if (!first) {
+         fSelLabel->SetText(s.Sizeof()>30?s(0,30)+"...":s);
          s += "(0)";
-         fSelLabel->SetText(fEnteredFunc->GetText());
          fEnteredFunc->SetText(s.Data());
          first = kTRUE;
          ((TGCompositeFrame *)fSelLabel->GetParent())->Layout();
@@ -1862,6 +1859,7 @@ void TFitEditor::DoDataSet(Int_t selected)
    // Selects the data set to be fitted
    if ( selected == kFP_NOSEL ) {
       DoNoSelection();
+      fDataSet->Connect("Selected(Int_t)", "TFitEditor", this, "DoDataSet(Int_t)");
       return;
    }
 
@@ -1974,28 +1972,12 @@ void TFitEditor::DoFunction(Int_t selected)
    }
 
    fEnteredFunc->SelectAll();
-   fSelLabel->SetText(fEnteredFunc->GetText());
+   fSelLabel->SetText(tmpStr.Sizeof()>30?tmpStr(0,30)+"...":tmpStr);
    ((TGCompositeFrame *)fSelLabel->GetParent())->Layout();
 
    // reset function parameters if the number of parameters of the new
    // function is different from the old one!
-   TF1* fitFunc = 0;
-   // If it's not editable that means the function is from a C
-   // function and it exists in gROOT.
-   if ( !editable ) {
-      TF1* tmpF1 = (TF1*) gROOT->GetListOfFunctions()->FindObject(te->GetTitle());
-      fitFunc = (TF1*)tmpF1->IsA()->New();
-      tmpF1->Copy(*fitFunc);
-   }
-   else {
-      // Otherwise, we can create a new one with the text
-      if ( fDim == 1 || fDim == 0 ) 
-         fitFunc = new TF1("tmpPars2",fEnteredFunc->GetText(),fFuncXmin,fFuncXmax);
-      else if ( fDim == 2 )
-         fitFunc = new TF2("tmpPars2",fEnteredFunc->GetText());
-      else if ( fDim == 3 )
-         fitFunc =  new TF3("tmpPars2",fEnteredFunc->GetText());
-   }
+   TF1* fitFunc = GetFitFunction();
 
    if ( fitFunc && (unsigned int) fitFunc->GetNpar() != fFuncPars.size() )
       fFuncPars.clear();
@@ -2018,7 +2000,8 @@ void TFitEditor::DoEnteredFunction()
       return;
    }
 
-   fSelLabel->SetText(fEnteredFunc->GetText());
+   TString s = fEnteredFunc->GetText();
+   fSelLabel->SetText(s.Sizeof()>30?s(0,30)+"...":s);
    ((TGCompositeFrame *)fSelLabel->GetParent())->Layout();
 }
 
@@ -2160,27 +2143,7 @@ void TFitEditor::DoSetParameters()
 {
    // Open set parameters dialog.
 
-   TF1 * fitFunc = 0;
-   if ( fNone->GetState() == kButtonDisabled )
-   {
-      TGTextLBEntry *te = (TGTextLBEntry *)fFuncList->GetSelectedEntry();
-      TF1* tmpF1 = (TF1*) gROOT->GetListOfFunctions()->FindObject(te->GetTitle());
-      fitFunc = (TF1*)tmpF1->IsA()->New();
-      tmpF1->Copy(*fitFunc);
-   }
-   else {
-      ROOT::Fit::DataRange drange; 
-      GetRanges(drange);
-      double xmin, xmax, ymin, ymax, zmin, zmax;
-      drange.GetRange(xmin, xmax, ymin, ymax, zmin, zmax);
-
-      if ( fDim == 1 || fDim == 0 )
-         fitFunc = new TF1("tmpPars",fEnteredFunc->GetText(), xmin, xmax );
-      else if ( fDim == 2 )
-         fitFunc = new TF2("tmpPars",fEnteredFunc->GetText(), xmin, xmax, ymin, ymax );
-      else if ( fDim == 3 )
-         fitFunc = new TF3("tmpPars",fEnteredFunc->GetText(), xmin, xmax, ymin, ymax, zmin, zmax );
-   }
+   TF1* fitFunc = GetFitFunction();
 
    if (!fitFunc) { Error("DoSetParameters","NUll function"); return; }
 
@@ -2897,4 +2860,40 @@ TList* TFitEditor::GetFitObjectListOfFunctions()
       }
    }
    return listOfFunctions;
+}
+
+TF1* TFitEditor::GetFitFunction() 
+{
+   TF1 *fitFunc = 0;
+   if ( fNone->GetState() == kButtonDisabled )
+   {
+      TGTextLBEntry *te = (TGTextLBEntry *)fFuncList->GetSelectedEntry();
+      TF1* tmpF1 = (TF1*) gROOT->GetListOfFunctions()->FindObject(te->GetTitle());
+      if ( tmpF1 == 0 )
+      {
+               new TGMsgBox(fClient->GetRoot(), GetMainFrame(),
+                            "Error...", "DoFit\nVerify the entered function string!",
+                            kMBIconStop,kMBOk, 0);
+               return 0;
+      }
+      fitFunc = (TF1*)tmpF1->IsA()->New();
+      tmpF1->Copy(*fitFunc);
+   }
+
+   if ( fitFunc == 0 )
+   {
+      ROOT::Fit::DataRange drange; 
+      GetRanges(drange);
+      double xmin, xmax, ymin, ymax, zmin, zmax;
+      drange.GetRange(xmin, xmax, ymin, ymax, zmin, zmax);
+
+      if ( fDim == 1 || fDim == 0 )
+         fitFunc = new TF1("lastFitFunc",fEnteredFunc->GetText(), xmin, xmax );
+      else if ( fDim == 2 )
+         fitFunc = new TF2("lastFitFunc",fEnteredFunc->GetText(), xmin, xmax, ymin, ymax );
+      else if ( fDim == 3 )
+         fitFunc = new TF3("lastFitFunc",fEnteredFunc->GetText(), xmin, xmax, ymin, ymax, zmin, zmax );
+   }
+
+   return fitFunc;
 }

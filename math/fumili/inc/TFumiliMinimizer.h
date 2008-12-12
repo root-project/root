@@ -96,6 +96,9 @@ public:
    /// set fixed variable (override if minimizer supports them )
    virtual bool SetFixedVariable(unsigned int /* ivar */, const std::string & /* name */, double /* val */);  
 
+   /// set the value of an existing variable 
+   virtual bool SetVariableValue(unsigned int ivar, double val );
+
    /// method to perform the minimization
    virtual  bool Minimize(); 
 

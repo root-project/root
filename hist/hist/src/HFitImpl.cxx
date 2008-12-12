@@ -132,7 +132,7 @@ int HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const ROOT::Math
 
 
    // create the fitter
-   std::auto_ptr<ROOT::Fit::Fitter> fitter = std::auto_ptr<ROOT::Fit::Fitter> (new ROOT::Fit::Fitter() );
+   std::auto_ptr<ROOT::Fit::Fitter> fitter(new ROOT::Fit::Fitter() );
    ROOT::Fit::FitConfig & fitConfig = fitter->Config();
 
    // create options 
@@ -166,8 +166,7 @@ int HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const ROOT::Math
 #endif
 
    // fill data  
-   //std::auto_ptr<ROOT::Fit::BinData> fitdata = std::auto_ptr<ROOT::Fit::BinData> (new ROOT::Fit::BinData(opt,range) );
-   ROOT::Fit::BinData * fitdata = new ROOT::Fit::BinData(opt,range);
+   std::auto_ptr<ROOT::Fit::BinData> fitdata(new ROOT::Fit::BinData(opt,range) );
    ROOT::Fit::FillData(*fitdata, h1, f1); 
 
 #ifdef DEBUG
@@ -307,8 +306,8 @@ int HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const ROOT::Math
 
       // store result in the backward compatible VirtualFitter
       TVirtualFitter * lastFitter = TVirtualFitter::GetFitter(); 
-      // pass ownership of fitdata to TBackCompFitter (should do also fitter)
-      TBackCompFitter * bcfitter = new TBackCompFitter(*fitter,fitdata);
+      // pass ownership of Fitter and Fitdata to TBackCompFitter (fitter pointer cannot be used afterwards)
+      TBackCompFitter * bcfitter = new TBackCompFitter(fitter, std::auto_ptr<ROOT::Fit::FitData>(fitdata));
       bcfitter->SetFitOption(fitOption); 
       bcfitter->SetObjectFit(h1);
       bcfitter->SetUserFunc(f1);
@@ -317,8 +316,6 @@ int HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const ROOT::Math
          // for interpreted FCN functions
          if (lastFitter->GetMethodCall() ) bcfitter->SetMethodCall(lastFitter->GetMethodCall() );
       }
-      // in case of TMinuit recreate minimizer for printing results and correct use of gMinuit 
-      if (fitter->Config().MinimizerType() == "Minuit") bcfitter->ReCreateMinimizer(); 
          
       if (lastFitter) delete lastFitter; 
       TVirtualFitter::SetFitter( bcfitter ); 
@@ -530,6 +527,7 @@ void HFit::CheckGraphFitOptions(Foption_t & foption) {
 // implementation of unbin fit function (defined in HFitInterface)
 
 int ROOT::Fit::UnBinFit(ROOT::Fit::UnBinData * fitdata, TF1 * fitfunc, Foption_t & fitOption , const ROOT::Math::MinimizerOptions & minOption) { 
+   // do unbin fit, ownership of fitdata is passed later to the TBackFitter class
 
 #ifdef DEBUG
    printf("tree data size is %d \n",fitdata->Size());
@@ -539,7 +537,7 @@ int ROOT::Fit::UnBinFit(ROOT::Fit::UnBinData * fitdata, TF1 * fitfunc, Foption_t
 #endif   
       
    // create the fitter
-   std::auto_ptr<ROOT::Fit::Fitter> fitter = std::auto_ptr<ROOT::Fit::Fitter> (new ROOT::Fit::Fitter() );
+   std::auto_ptr<ROOT::Fit::Fitter> fitter(new ROOT::Fit::Fitter() );
    ROOT::Fit::FitConfig & fitConfig = fitter->Config();
 
 
@@ -600,8 +598,9 @@ int ROOT::Fit::UnBinFit(ROOT::Fit::UnBinData * fitdata, TF1 * fitfunc, Foption_t
 
    // store result in the backward compatible VirtualFitter
    TVirtualFitter * lastFitter = TVirtualFitter::GetFitter(); 
-   // pass ownership of fitdata to TBackCompFitter (should do also fitter)
-   TBackCompFitter * bcfitter = new TBackCompFitter(*fitter,fitdata);
+   // pass ownership of Fitter and Fitdata to TBackCompFitter (fitter pointer cannot be used afterwards)
+   TBackCompFitter * bcfitter = new TBackCompFitter(fitter, std::auto_ptr<ROOT::Fit::FitData>(fitdata));
+
    bcfitter->SetFitOption(fitOption); 
    //bcfitter->SetObjectFit(fTree);
    bcfitter->SetUserFunc(fitfunc);

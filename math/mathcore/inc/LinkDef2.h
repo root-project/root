@@ -92,6 +92,10 @@
 // problem due to virtual inheritance
 #pragma link C++ class ROOT::Math::BasicFitMethodFunction<ROOT::Math::IGradientFunctionMultiDim>-;
 #endif
+// typedef's
+#pragma link C++ typedef ROOT::Math::FitMethodFunction;
+#pragma link C++ typedef ROOT::Math::FitMethodGradFunction;
+
 
 #pragma link C++ class ROOT::Math::Factory+;
 

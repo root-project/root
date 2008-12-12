@@ -143,6 +143,10 @@ public:
    /// set fixed variable (override if minimizer supports them )
    virtual bool SetFixedVariable(unsigned int /* ivar */, const std::string & /* name */, double /* val */);  
 #endif
+   /// set the value of an existing variable 
+   virtual bool SetVariableValue(unsigned int ivar, double val );
+   /// set the values of all existing variables (array must be dimensioned to the size of existing parameters)
+   virtual bool SetVariableValues(const double * x);
 
    /// method to perform the minimization
    virtual  bool Minimize(); 

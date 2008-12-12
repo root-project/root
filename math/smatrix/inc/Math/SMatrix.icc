@@ -412,8 +412,26 @@ inline bool SMatrix<T,D1,D2,R>::Invert() {
    return Inverter<D1,D2>::Dinv((*this).fRep);
 }
 
+// invert returning a new matrix
 template <class T, unsigned int D1, unsigned int D2, class R>
 inline SMatrix<T,D1,D2,R> SMatrix<T,D1,D2,R>::Inverse(int & ifail) const {
+   SMatrix<T,D1,D2,R> tmp(*this);
+   bool ok = tmp.Invert();
+   ifail = 0; 
+   if (!ok) ifail = 1;  
+   return tmp;
+}
+
+// fast inversion
+template <class T, unsigned int D1, unsigned int D2, class R>
+inline bool SMatrix<T,D1,D2,R>::InvertFast() {
+   STATIC_CHECK( D1 == D2,SMatrix_not_square); 
+   return FastInverter<D1,D2>::Dinv((*this).fRep);
+}
+
+// fast inversion returning a new matrix
+template <class T, unsigned int D1, unsigned int D2, class R>
+inline SMatrix<T,D1,D2,R> SMatrix<T,D1,D2,R>::InverseFast(int & ifail) const {
    SMatrix<T,D1,D2,R> tmp(*this);
    bool ok = tmp.Invert();
    ifail = 0; 

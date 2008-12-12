@@ -44,7 +44,7 @@ FitResult::FitResult() :
    // Default constructor implementation.
 }
 
-      FitResult::FitResult(ROOT::Math::Minimizer & min, const FitConfig & fconfig, IModelFunction * func,  bool isValid,  unsigned int sizeOfData, bool binnedFit, const  ROOT::Math::IMultiGenFunction * chi2func, bool minosErr, unsigned int ncalls ) : 
+      FitResult::FitResult(ROOT::Math::Minimizer & min, const FitConfig & fconfig, const IModelFunction * func,  bool isValid,  unsigned int sizeOfData, bool binnedFit, const  ROOT::Math::IMultiGenFunction * chi2func, bool minosErr, unsigned int ncalls ) : 
    fValid(isValid),
    fNormalized(false),
    fNFree(min.NFree() ),
@@ -54,7 +54,7 @@ FitResult::FitResult() :
    fVal (min.MinValue()),  
    fEdm (min.Edm()), 
    fChi2(-1),
-   fFitFunc(func), 
+   fFitFunc(0), 
    fParams(std::vector<double>(min.X(), min.X() + min.NDim() ) )
 {
    // Constructor from a minimizer, fill the data. ModelFunction  is passed as non const 
@@ -65,7 +65,9 @@ FitResult::FitResult() :
 
    // set right parameters in function (in case minimizer did not do before)
    // do also when fit is not valid
-   if (fFitFunc) { 
+   if (func) { 
+      fFitFunc = dynamic_cast<IModelFunction *>( func->Clone() ); 
+      assert(fFitFunc);
       fFitFunc->SetParameters(&fParams.front());
    }
    else { 

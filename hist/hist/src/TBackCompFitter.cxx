@@ -15,6 +15,7 @@
 #include "TH1.h"
 #include "TH2.h"
 #include "TH3.h"
+#include "TMath.h"
 #include "TGraph.h"
 #include "TGraphErrors.h"
 #include "TGraph2DErrors.h"
@@ -43,7 +44,6 @@ ClassImp(TBackCompFitter);
 
 
 TBackCompFitter::TBackCompFitter( ) : 
-   fFitData(0), 
    fMinimizer(0), 
    fObjFunc(0),
    fModelFunc(0)
@@ -53,17 +53,16 @@ TBackCompFitter::TBackCompFitter( ) :
    SetName("BCFitter");
 }
 
-TBackCompFitter::TBackCompFitter(ROOT::Fit::Fitter & fitter,ROOT::Fit::FitData * data) : 
+TBackCompFitter::TBackCompFitter(std::auto_ptr<ROOT::Fit::Fitter> fitter, std::auto_ptr<ROOT::Fit::FitData>  data) : 
    fFitData(data),
+   fFitter(fitter),
    fMinimizer(0),
    fObjFunc(0),
    fModelFunc(0)
 {
    // constructor used after having fit using directly ROOT::Fit::Fitter
    // will create a dummy fitter copying configuration and parameter settings
-   fFitter = fitter; 
    SetName("LastFitter");
-
 }
 
 
@@ -71,7 +70,8 @@ TBackCompFitter::TBackCompFitter(ROOT::Fit::Fitter & fitter,ROOT::Fit::FitData *
 
 TBackCompFitter::~TBackCompFitter() { 
    // data are own here
-   if (fFitData) delete fFitData; 
+   //if (fFitData) delete fFitData; 
+
    if (fMinimizer) delete fMinimizer; 
    if (fObjFunc) delete fObjFunc; 
    if (fModelFunc) delete fModelFunc;
@@ -80,7 +80,7 @@ TBackCompFitter::~TBackCompFitter() {
 Double_t TBackCompFitter::Chisquare(Int_t npar, Double_t *params) const {
    // do chisquare calculations in case of likelihood fits 
    // do evaluation a the minimum only 
-   const std::vector<double> & minpar = fFitter.Result().Parameters(); 
+   const std::vector<double> & minpar = fFitter->Result().Parameters(); 
    assert (npar == (int) minpar.size() ); 
    double diff = 0; 
    double s = 0; 
@@ -90,7 +90,7 @@ Double_t TBackCompFitter::Chisquare(Int_t npar, Double_t *params) const {
    }
 
    if (diff > s * 1.E-12 ) Warning("Chisquare","given parameter values are not at minimum - chi2 at minimum is returned"); 
-   return fFitter.Result().Chi2(); 
+   return fFitter->Result().Chi2(); 
 }
 
 void TBackCompFitter::Clear(Option_t*) {
@@ -130,8 +130,8 @@ Int_t TBackCompFitter::ExecuteCommand(const char *command, Double_t *args, Int_t
          return -1; 
       }
 
-      fFitter.Config().SetMinimizer(GetDefaultFitter(), "Migrad");
-      bool ret = fFitter.FitFCN(*fObjFunc); 
+      fFitter->Config().SetMinimizer(GetDefaultFitter(), "Migrad");
+      bool ret = fFitter->FitFCN(*fObjFunc); 
       return  (ret) ? 0 : -1;
       
       
@@ -143,12 +143,12 @@ Int_t TBackCompFitter::ExecuteCommand(const char *command, Double_t *args, Int_t
       if (nargs > 0) nfcn = int ( args[0] );
       if (nargs > 1) edmval = args[1];
 
-      fFitter.Config().SetMinimizer(GetDefaultFitter(), "Minimize");
+      fFitter->Config().SetMinimizer(GetDefaultFitter(), "Minimize");
       if (!fObjFunc) { 
          Error("ExecuteCommand","FCN must set before executing this command"); 
          return -1; 
       }
-      bool ret = fFitter.FitFCN(*fObjFunc); 
+      bool ret = fFitter->FitFCN(*fObjFunc); 
       return  (ret) ? 0 : -1;
    }
    //Simplex
@@ -161,8 +161,8 @@ Int_t TBackCompFitter::ExecuteCommand(const char *command, Double_t *args, Int_t
          return -1; 
       }
 
-      fFitter.Config().SetMinimizer(GetDefaultFitter(), "Simplex");
-      bool ret = fFitter.FitFCN(*fObjFunc); 
+      fFitter->Config().SetMinimizer(GetDefaultFitter(), "Simplex");
+      bool ret = fFitter->FitFCN(*fObjFunc); 
       return  (ret) ? 0 : -1;
    }
    //SCan
@@ -175,32 +175,32 @@ Int_t TBackCompFitter::ExecuteCommand(const char *command, Double_t *args, Int_t
          return -1; 
       }
 
-      fFitter.Config().SetMinimizer(GetDefaultFitter(), "Scan");
-      bool ret = fFitter.FitFCN(*fObjFunc); 
+      fFitter->Config().SetMinimizer(GetDefaultFitter(), "Scan");
+      bool ret = fFitter->FitFCN(*fObjFunc); 
       return  (ret) ? 0 : -1;
    }
    // MINOS 
    else if (scommand.Contains("MINO"))   {
 
-      if (fFitter.Config().MinosErrors() ) return 0; 
+      if (fFitter->Config().MinosErrors() ) return 0; 
 
       if (!fObjFunc) { 
          Error("ExecuteCommand","FCN must set before executing this command"); 
          return -1; 
       }
       // do only MINOS. need access to minimizer. For the moment re-run fitting with minos options 
-      fFitter.Config().SetMinosErrors(true);
+      fFitter->Config().SetMinosErrors(true);
       // set new parameter values
 
-      fFitter.Config().SetMinimizer(GetDefaultFitter(), "Migrad"); // redo -minimization with Minos
-      bool ret = fFitter.FitFCN(*fObjFunc); 
+      fFitter->Config().SetMinimizer(GetDefaultFitter(), "Migrad"); // redo -minimization with Minos
+      bool ret = fFitter->FitFCN(*fObjFunc); 
       return  (ret) ? 0 : -1;
 
    } 
    //HESSE
    else if (scommand.Contains("HES"))   {
 
-      if (fFitter.Config().ParabErrors() ) return 0; 
+      if (fFitter->Config().ParabErrors() ) return 0; 
 
       if (!fObjFunc) { 
          Error("ExecuteCommand","FCN must set before executing this command"); 
@@ -208,9 +208,9 @@ Int_t TBackCompFitter::ExecuteCommand(const char *command, Double_t *args, Int_t
       }
 
       // do only HESSE. need access to minimizer. For the moment re-run fitting with hesse options 
-      fFitter.Config().SetParabErrors(true);
-      fFitter.Config().SetMinimizer(GetDefaultFitter(), "Migrad"); // redo -minimization with Minos
-      bool ret = fFitter.FitFCN(*fObjFunc); 
+      fFitter->Config().SetParabErrors(true);
+      fFitter->Config().SetMinimizer(GetDefaultFitter(), "Migrad"); // redo -minimization with Minos
+      bool ret = fFitter->FitFCN(*fObjFunc); 
       return  (ret) ? 0 : -1;
    } 
    
@@ -231,25 +231,25 @@ Int_t TBackCompFitter::ExecuteCommand(const char *command, Double_t *args, Int_t
       if (!ValidParameterIndex(ipar) )  return -1;   
       double low = args[1];
       double up = args[2];
-      fFitter.Config().ParSettings(ipar).SetLimits(low,up);
+      fFitter->Config().ParSettings(ipar).SetLimits(low,up);
       return 0; 
    } 
    // SET PRINT
    else if (scommand.Contains("SET PRIN"))   {
       if (nargs < 1) return -1;  
-      fFitter.Config().MinimizerOptions().SetPrintLevel(int(args[0]) );
+      fFitter->Config().MinimizerOptions().SetPrintLevel(int(args[0]) );
       return 0; 
    } 
    // SET ERR
    else if (scommand.Contains("SET ERR"))   {
       if (nargs < 1) return -1;  
-      fFitter.Config().MinimizerOptions().SetPrintLevel(int( args[0]) );
+      fFitter->Config().MinimizerOptions().SetPrintLevel(int( args[0]) );
       return 0; 
    } 
    // SET STRATEGY
    else if (scommand.Contains("SET STR"))   {
       if (nargs < 1) return -1;  
-      fFitter.Config().MinimizerOptions().SetStrategy(int(args[0]) );
+      fFitter->Config().MinimizerOptions().SetStrategy(int(args[0]) );
       return 0; 
    } 
    //SET GRAD (not impl.) 
@@ -290,7 +290,7 @@ Int_t TBackCompFitter::ExecuteCommand(const char *command, Double_t *args, Int_t
 
 bool TBackCompFitter::ValidParameterIndex(int ipar) const  { 
    // check if ipar is a valid parameter index
-   int nps  = fFitter.Config().ParamsSettings().size(); 
+   int nps  = fFitter->Config().ParamsSettings().size(); 
    if (ipar  < 0 || ipar >= nps ) { 
       std::string msg = ROOT::Math::Util::ToString(ipar) + " is an invalid Parameter index";
       Error("ValidParameterIndex",msg.c_str());
@@ -303,7 +303,7 @@ void TBackCompFitter::FixParameter(Int_t ipar) {
    // fix the paramter
    //   std::cout<<"FixParameter"<<std::endl;
    if (ValidParameterIndex(ipar) )    
-      fFitter.Config().ParSettings(ipar).Fix();
+      fFitter->Config().ParSettings(ipar).Fix();
 }
 
 
@@ -320,12 +320,12 @@ void TBackCompFitter::GetConfidenceIntervals(Int_t n, Int_t ndim, const Double_t
 //cl - confidence level, default=0.95
 //NOTE, that the intervals are approximate for nonlinear(in parameters) models
    
-   if (!fFitter.Result().IsValid()) { 
+   if (!fFitter->Result().IsValid()) { 
       Error("GetConfidenceIntervals","Cannot compute confidence intervals with an invalide fit result");
       return; 
    }
    
-   fFitter.Result().GetConfidenceIntervals(n,ndim,1,x,ci,cl);         
+   fFitter->Result().GetConfidenceIntervals(n,ndim,1,x,ci,cl);         
 }
 
 void TBackCompFitter::GetConfidenceIntervals(TObject *obj, Double_t cl)
@@ -351,7 +351,7 @@ void TBackCompFitter::GetConfidenceIntervals(TObject *obj, Double_t cl)
 //TH2                         TGraph2DErrors, TH2
 //TH3                         TH3
 
-   if (!fFitter.Result().IsValid() ) { 
+   if (!fFitter->Result().IsValid() ) { 
       Error("GetConfidenceIntervals","Cannot compute confidence intervals with an invalide fit result");
       return; 
    }
@@ -406,11 +406,11 @@ void TBackCompFitter::GetConfidenceIntervals(TObject *obj, Double_t cl)
    unsigned int n = data.Size(); 
    std::vector<double> ci( n ); 
 
-   fFitter.Result().GetConfidenceIntervals(data,&ci[0],cl);         
+   fFitter->Result().GetConfidenceIntervals(data,&ci[0],cl);         
 
    
 
-   const ROOT::Math::IParamMultiFunction * func =  fFitter.Result().FittedFunction(); 
+   const ROOT::Math::IParamMultiFunction * func =  fFitter->Result().FittedFunction(); 
    assert(func != 0); 
 
    // fill now the object with cl data
@@ -451,7 +451,7 @@ Double_t* TBackCompFitter::GetCovarianceMatrix() const {
    unsigned int nfreepar =   GetNumberFreeParameters();
    unsigned int ntotpar =   GetNumberTotalParameters();
    
-   if (!fFitter.Result().IsValid() ) { 
+   if (!fFitter->Result().IsValid() ) { 
       Warning("GetCovarianceMatrix","Invalid fit result");
       return 0; 
    }
@@ -461,13 +461,13 @@ Double_t* TBackCompFitter::GetCovarianceMatrix() const {
 
    unsigned int l = 0; 
    for (unsigned int i = 0; i < ntotpar; ++i) { 
-      if (fFitter.Config().ParSettings(i).IsFixed() ) continue;
+      if (fFitter->Config().ParSettings(i).IsFixed() ) continue;
       unsigned int m = 0; 
       for (unsigned int j = 0; j < ntotpar; ++j) {
-         if (fFitter.Config().ParSettings(j).IsFixed() ) continue;
+         if (fFitter->Config().ParSettings(j).IsFixed() ) continue;
          unsigned int index = nfreepar*l + m;
          assert(index < fCovar.size() );
-         fCovar[index] = fFitter.Result().CovMatrix(i,j);
+         fCovar[index] = fFitter->Result().CovMatrix(i,j);
          m++;
       }
       l++;
@@ -490,7 +490,7 @@ Int_t TBackCompFitter::GetErrors(Int_t ipar,Double_t &eplus, Double_t &eminus, D
 
    if (!ValidParameterIndex(ipar) )   return -1; 
    
-   const ROOT::Fit::FitResult & result = fFitter.Result(); 
+   const ROOT::Fit::FitResult & result = fFitter->Result(); 
    if (!result.IsValid() ) { 
       Warning("GetErrors","Invalid fit result");
       return -1; 
@@ -505,30 +505,30 @@ Int_t TBackCompFitter::GetErrors(Int_t ipar,Double_t &eplus, Double_t &eminus, D
 
 Int_t TBackCompFitter::GetNumberTotalParameters() const {
    // number of total parameters 
-   return fFitter.Result().NTotalParameters();  
+   return fFitter->Result().NTotalParameters();  
 }
 Int_t TBackCompFitter::GetNumberFreeParameters() const {
    // number of variable parameters
-   return fFitter.Result().NFreeParameters();  
+   return fFitter->Result().NFreeParameters();  
 }
 
 
 Double_t TBackCompFitter::GetParError(Int_t ipar) const {
    // parameter error
-   if (fFitter.Result().IsEmpty() ) {
-      if (ValidParameterIndex(ipar) )  return  fFitter.Config().ParSettings(ipar).StepSize();
+   if (fFitter->Result().IsEmpty() ) {
+      if (ValidParameterIndex(ipar) )  return  fFitter->Config().ParSettings(ipar).StepSize();
       else return 0; 
    }
-   return fFitter.Result().Error(ipar);  
+   return fFitter->Result().Error(ipar);  
 }
 
 Double_t TBackCompFitter::GetParameter(Int_t ipar) const {
    // parameter value
-   if (fFitter.Result().IsEmpty() ) {
-      if (ValidParameterIndex(ipar) )  return  fFitter.Config().ParSettings(ipar).Value();
+   if (fFitter->Result().IsEmpty() ) {
+      if (ValidParameterIndex(ipar) )  return  fFitter->Config().ParSettings(ipar).Value();
       else return 0; 
    }
-   return fFitter.Result().Value(ipar);  
+   return fFitter->Result().Value(ipar);  
 }
 
 Int_t TBackCompFitter::GetParameter(Int_t ipar,char *name,Double_t &value,Double_t &verr,Double_t &vlow, Double_t &vhigh) const {
@@ -536,22 +536,22 @@ Int_t TBackCompFitter::GetParameter(Int_t ipar,char *name,Double_t &value,Double
    if (!ValidParameterIndex(ipar) )    {
       return -1; 
    }
-   const std::string & pname = fFitter.Config().ParSettings(ipar).Name(); 
+   const std::string & pname = fFitter->Config().ParSettings(ipar).Name(); 
    const char * c = pname.c_str(); 
    std::copy(c,c + pname.size(),name);
 
-   if (fFitter.Result().IsEmpty() ) { 
-      value = fFitter.Config().ParSettings(ipar).Value(); 
-      verr  = fFitter.Config().ParSettings(ipar).Value();  // error is step size in this case 
-      vlow  = fFitter.Config().ParSettings(ipar).LowerLimit();  // vlow is lower limit in this case 
-      vhigh   = fFitter.Config().ParSettings(ipar).UpperLimit();  // vlow is lower limit in this case 
+   if (fFitter->Result().IsEmpty() ) { 
+      value = fFitter->Config().ParSettings(ipar).Value(); 
+      verr  = fFitter->Config().ParSettings(ipar).Value();  // error is step size in this case 
+      vlow  = fFitter->Config().ParSettings(ipar).LowerLimit();  // vlow is lower limit in this case 
+      vhigh   = fFitter->Config().ParSettings(ipar).UpperLimit();  // vlow is lower limit in this case 
       return 1; 
    }
    else { 
-      value =  fFitter.Result().Value(ipar);  
-      verr = fFitter.Result().Error(ipar);  
-      vlow = fFitter.Result().LowerError(ipar);  
-      vhigh = fFitter.Result().UpperError(ipar);  
+      value =  fFitter->Result().Value(ipar);  
+      verr = fFitter->Result().Error(ipar);  
+      vlow = fFitter->Result().LowerError(ipar);  
+      vhigh = fFitter->Result().UpperError(ipar);  
    }
    return 0; 
 }
@@ -561,15 +561,15 @@ const char *TBackCompFitter::GetParName(Int_t ipar) const {
    if (!ValidParameterIndex(ipar) )    {
       return 0; 
    }
-   return fFitter.Config().ParSettings(ipar).Name().c_str(); 
+   return fFitter->Config().ParSettings(ipar).Name().c_str(); 
 }
 
 Int_t TBackCompFitter::GetStats(Double_t &amin, Double_t &edm, Double_t &errdef, Int_t &nvpar, Int_t &nparx) const {
    // get fit statistical information
-   const ROOT::Fit::FitResult & result = fFitter.Result(); 
+   const ROOT::Fit::FitResult & result = fFitter->Result(); 
    amin = result.MinFcnValue(); 
    edm = result.Edm(); 
-   errdef = fFitter.Config().MinimizerOptions().ErrorDef(); 
+   errdef = fFitter->Config().MinimizerOptions().ErrorDef(); 
    nvpar = result.NFreeParameters();  
    nparx = result.NTotalParameters();  
    return 0;
@@ -587,18 +587,18 @@ Bool_t TBackCompFitter::IsFixed(Int_t ipar) const {
    if (!ValidParameterIndex(ipar) )    {
       return false; 
    }
-   return fFitter.Config().ParSettings(ipar).IsFixed(); 
+   return fFitter->Config().ParSettings(ipar).IsFixed(); 
 }
 
 
 void TBackCompFitter::PrintResults(Int_t level, Double_t ) const {
    // print the fit result
-   if (!fMinimizer) {
-      if (level > 0) fFitter.Result().Print(std::cout); 
-      if (level > 3)  fFitter.Result().PrintCovMatrix(std::cout);    
-   }
+   // use PrintResults function in case of Minuit for old -style printing
+   if (fFitter->GetMinimizer() && fFitter->Config().MinimizerType() == "Minuit")
+      fFitter->GetMinimizer()->PrintResults();
    else { 
-      fMinimizer->PrintResults();
+      if (level > 0) fFitter->Result().Print(std::cout); 
+      if (level > 3)  fFitter->Result().PrintCovMatrix(std::cout);    
    }
    // need to print minos errors and globalCC + other info
 }
@@ -606,7 +606,7 @@ void TBackCompFitter::PrintResults(Int_t level, Double_t ) const {
 void TBackCompFitter::ReleaseParameter(Int_t ipar) {
    // release a fit parameter
    if (ValidParameterIndex(ipar) )    
-      fFitter.Config().ParSettings(ipar).Release(); 
+      fFitter->Config().ParSettings(ipar).Release(); 
 }
 
 
@@ -622,7 +622,7 @@ Int_t TBackCompFitter::SetParameter(Int_t ipar,const char *parname,Double_t valu
    // if vlow > vhigh the parameter is unbounded
    // if the stepsize (verr) == 0 the parameter is treated as fixed   
 
-   std::vector<ROOT::Fit::ParameterSettings> & parlist = fFitter.Config().ParamsSettings(); 
+   std::vector<ROOT::Fit::ParameterSettings> & parlist = fFitter->Config().ParamsSettings(); 
    if ( ipar >= (int) parlist.size() ) parlist.resize(ipar); 
    ROOT::Fit::ParameterSettings ps(parname, value, verr); 
    if (verr == 0) ps.Fix(); 
@@ -643,17 +643,17 @@ Int_t TBackCompFitter::SetParameter(Int_t ipar,const char *parname,Double_t valu
 
 void TBackCompFitter::ReCreateMinimizer() { 
    // set objective function in minimizers function to re-create FCN from stored data object and fit options
-   assert(fFitData);
+   assert(fFitData.get());
 
    // case of standard fits (not made fia Fitter::FitFCN) 
-   if (fFitter.Result().FittedFunction() != 0) {
+   if (fFitter->Result().FittedFunction() != 0) {
 
       if (fModelFunc) delete fModelFunc; 
-      fModelFunc =  dynamic_cast<ROOT::Math::IParamMultiFunction *>((fFitter.Result().FittedFunction())->Clone());
+      fModelFunc =  dynamic_cast<ROOT::Math::IParamMultiFunction *>((fFitter->Result().FittedFunction())->Clone());
       assert(fModelFunc);
 
       // create fcn functions, should consider also gradient case
-      const ROOT::Fit::BinData * bindata = dynamic_cast<const ROOT::Fit::BinData *>(fFitData); 
+      const ROOT::Fit::BinData * bindata = dynamic_cast<const ROOT::Fit::BinData *>(fFitData.get()); 
       if (bindata) { 
          if (GetFitOption().Like ) 
             fObjFunc = new ROOT::Fit::PoissonLikelihoodFCN<ROOT::Math::IMultiGenFunction>(*bindata, *fModelFunc);
@@ -661,7 +661,7 @@ void TBackCompFitter::ReCreateMinimizer() {
             fObjFunc = new ROOT::Fit::Chi2FCN<ROOT::Math::IMultiGenFunction>(*bindata, *fModelFunc);
       }
       else { 
-         const ROOT::Fit::UnBinData * unbindata = dynamic_cast<const ROOT::Fit::UnBinData *>(fFitData); 
+         const ROOT::Fit::UnBinData * unbindata = dynamic_cast<const ROOT::Fit::UnBinData *>(fFitData.get()); 
          assert(unbindata); 
          fObjFunc = new ROOT::Fit::LogLikelihoodFCN<ROOT::Math::IMultiGenFunction>(*unbindata, *fModelFunc);
       }
@@ -669,9 +669,9 @@ void TBackCompFitter::ReCreateMinimizer() {
 
 
    // recreate the minimizer
-   fMinimizer = fFitter.Config().CreateMinimizer(); 
+   fMinimizer = fFitter->Config().CreateMinimizer(); 
    if (fMinimizer == 0) { 
-      Error("SetMinimizerFunction","cannot create minimizer %s",fFitter.Config().MinimizerType().c_str() );
+      Error("SetMinimizerFunction","cannot create minimizer %s",fFitter->Config().MinimizerType().c_str() );
    }
    else {
       if (!fObjFunc) {
@@ -761,6 +761,98 @@ void TBackCompFitter::DoSetDimension() {
    if (!fObjFunc) return; 
    ROOT::Fit::FcnAdapter * fobj = dynamic_cast<ROOT::Fit::FcnAdapter*>(fObjFunc); 
    assert(fobj != 0); 
-   int ndim = fFitter.Config().ParamsSettings().size(); 
+   int ndim = fFitter->Config().ParamsSettings().size(); 
    if (ndim != 0) fobj->SetDimension(ndim); 
 }
+
+//________________________________________________________________________________
+bool TBackCompFitter::Scan(unsigned int ipar, TGraph * gr, double xmin, double xmax )
+{
+   //     scan parameter ipar between value of xmin and xmax
+   //     a graph must be given which will be on return filled with the scan resul 
+   //     If the graph size is zero, a default size n = 40 will be used
+   //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
+
+   if (!gr) return false; 
+   ROOT::Math::Minimizer * minimizer = fFitter->GetMinimizer(); 
+   if (!minimizer) {
+      Error("Scan","Minimizer is not available - cannot scan before fitting");
+      return false;
+   }
+
+
+   unsigned int npoints = gr->GetN(); 
+   if (npoints == 0)  { 
+      npoints = 40; 
+      gr->Set(npoints);
+   }
+   bool ret = minimizer->Scan( ipar, npoints, gr->GetX(), gr->GetY(), xmin, xmax); 
+   if ((int) npoints < gr->GetN() ) gr->Set(npoints); 
+   return ret; 
+}
+   
+// bool  TBackCompFitter::Scan2D(unsigned int ipar, unsigned int jpar, TGraph2D * gr, 
+//                       double xmin = 0, double xmax = 0, double ymin = 0, double ymax = 0) { 
+//    //     scan the parameters ipar between values of [xmin,xmax] and 
+//    //     jpar between values of [ymin,ymax] and 
+//    //     a graph2D must be given which will be on return filled with the scan resul 
+//    //     If the graph size is zero, a default size n = 20x20 will be used
+//    //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
+//    if (!gr) return false; 
+//    if (!fMinimizer) {
+//       Error("Scan","Minimizer is not available - cannot scan before fitting");
+//       return false;
+//    }
+//    unsigned int npoints = gr->GetN(); 
+//    if (npoints == 0)  { 
+//       npoints = 40; 
+//       gr->Set(npoints);
+//    }
+//    // to be implemented 
+//    for (unsigned int ix = 0; ix < npoints; ++ix) {       
+//       return fMinimizer->Scan( ipar, npoints, gr->GetX(), gr->GetY(), xmin, xmax); 
+
+// }
+
+bool  TBackCompFitter::Contour(unsigned int ipar, unsigned int jpar, TGraph * gr, double confLevel) { 
+   //  create a 2D contour around the minimum for the parameter ipar and jpar
+   // if a minimum does not exist or is invalid it will return false
+   // on exit a TGraph is filled with the contour points 
+   // the number of contur points is determined by the size of the TGraph. 
+   // if the size is zero a default number of points = 20 is used 
+   // pass optionally the confidence level, default is 0.683
+   // it is assumed that ErrorDef() defines the right error definition 
+   // (i.e 1 sigma error for one parameter). If not the confidence level are scaled to new level
+
+   if (!gr) return false; 
+   ROOT::Math::Minimizer * minimizer = fFitter->GetMinimizer(); 
+   if (!minimizer) {
+      Error("Scan","Minimizer is not available - cannot scan before fitting");
+      return false;
+   }
+
+   // get error level used for fitting
+   double upScale = fFitter->Config().MinimizerOptions().ErrorDef();
+
+   double upVal = TMath::ChisquareQuantile( confLevel, 2);  // 2 is number of parameter we do the contour
+   
+   // set required error definition in minimizer
+   minimizer->SetErrorDef (upScale * upVal);    
+
+   unsigned int npoints = gr->GetN(); 
+   if (npoints == 0)  { 
+      npoints = 40; 
+      gr->Set(npoints);
+   }
+   bool ret =  minimizer->Contour( ipar, jpar, npoints, gr->GetX(), gr->GetY()); 
+   if ((int) npoints < gr->GetN() ) gr->Set(npoints); 
+
+   // restore the error level used for fitting
+   minimizer->SetErrorDef ( upScale);
+
+   return ret; 
+}
+
+

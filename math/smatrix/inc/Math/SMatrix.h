@@ -469,6 +469,24 @@ public:
    SMatrix<T,D1,D2,R> Inverse(int & ifail ) const;
 
    /**
+      Fast Invertion of a square Matrix ( this method changes the current matrix).
+      Return true if inversion is successfull.
+      The method used is based on direct inversion using the Cramer rule for 
+      matrices upto 5x5. Afterwards the same defult algorithm of Invert() is used. 
+      Note that this method is faster but can suffer from much larger numerical accuracy 
+      when the condition of the matrix is large
+   */
+   bool InvertFast();
+
+   /**
+      Invert a square Matrix and  returns a new matrix. In case the inversion fails
+      the current matrix is returned. 
+      \param ifail . ifail will be set to 0 when inversion is successfull.  
+      See ROOT::Math::SMatrix::InverseFast for the inversion algorithm
+   */
+   SMatrix<T,D1,D2,R> InverseFast(int & ifail ) const;
+
+   /**
       determinant of square Matrix via Dfact. 
       Return true when the calculation is successfull.
       \param det will contain the calculated determinant value

@@ -442,7 +442,7 @@ int testHisto1DPolFit() {
 
    // create the fitter 
    //std::cout << "Fit parameter 2  " << f.Parameters()[2] << std::endl;
-   std::cout << "\n\nTest histo polynomial fit (Minuit2)" << std::endl; 
+   std::cout << "\n\nTest histo polynomial fit using Fitter" << std::endl; 
 
    ROOT::Fit::Fitter fitter; 
    bool ret = fitter.Fit(d, f);
@@ -455,7 +455,7 @@ int testHisto1DPolFit() {
    chi2ref = fitter.Result().Chi2(); 
 
    // compare with TH1::Fit
-   std::cout << "\n******************************\n\t TH1::Fit(pol2) Result with TMinuit \n" << std::endl; 
+   std::cout << "\n******************************\n\t TH1::Fit(pol2) Result   \n" << std::endl; 
    func->SetParameters(p);   
    h2->Fit(func,"F"); 
    iret |= compareResult(func->GetChisquare(),chi2ref,"TH1::Fit ",0.001);

@@ -42,6 +42,7 @@
 #include "TPaveLabel.h"
 #include "TLegend.h"
 #include "TH1.h"
+#include "TCanvas.h"
 //#include "TLegend.h"
 
 bool showGraphics = true;
@@ -220,6 +221,10 @@ void performance()
 
    if ( showGraphics )
    {
+
+      TCanvas * c1 = new TCanvas(); 
+      c1->SetFillColor(kYellow-10);
+
       num_performance->SetBarWidth(0.45);
       num_performance->SetBarOffset(0.05);
       num_performance->SetFillColor(49);

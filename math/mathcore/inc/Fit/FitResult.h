@@ -60,7 +60,7 @@ public:
    /**
       Construct from a Minimizer instance 
     */
-   FitResult(ROOT::Math::Minimizer & min, const FitConfig & fconfig, IModelFunction * f, bool isValid, unsigned int sizeOfData = 0, bool binFit = true, const ROOT::Math::IMultiGenFunction * chi2func = 0, bool minosErr = false, unsigned int ncalls = 0);
+   FitResult(ROOT::Math::Minimizer & min, const FitConfig & fconfig, const IModelFunction * f, bool isValid, unsigned int sizeOfData = 0, bool binFit = true, const ROOT::Math::IMultiGenFunction * chi2func = 0, bool minosErr = false, unsigned int ncalls = 0);
 
    /** 
       Copy constructor. 
@@ -278,7 +278,7 @@ private:
    double fVal;             // minimum function value
    double fEdm;             // expected distance from mimimum
    double fChi2;            // fit chi2 value (different than fval in case of chi2 fits)
-   IModelFunction * fFitFunc; // model function result of the fit. It is given by Fitter but it is managed by FitResult
+   IModelFunction * fFitFunc; // model function resulting  from the fit. It is given by Fitter but it is managed by FitResult
    std::vector<unsigned int>   fFixedParams; // list of fixed parameters
    std::vector<unsigned int>   fBoundParams; // list of limited parameters
    std::vector<double>         fParams;  // parameter values. Size is total number of parameters

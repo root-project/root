@@ -110,6 +110,21 @@ bool GSLMinimizer::SetVariable(unsigned int ivar, const std::string & name, doub
    }
    return true; 
 }
+
+bool GSLMinimizer::SetVariableValue(unsigned int ivar, double val) { 
+   // set variable value in minimizer 
+   // no transformation implemented - so far
+   if (ivar > fValues.size() ) return false; 
+   fValues[ivar] = val; 
+   return true; 
+}
+
+bool GSLMinimizer::SetVariableValues( const double * x) { 
+   // set all variable values in minimizer 
+   if (x == 0) return false; 
+   std::copy(x,x+fValues.size(), fValues.begin() );
+   return true; 
+}
       
 void GSLMinimizer::SetFunction(const ROOT::Math::IMultiGenFunction & func) { 
    // set the function to minimizer 

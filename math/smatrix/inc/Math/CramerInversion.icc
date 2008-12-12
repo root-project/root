@@ -37,7 +37,7 @@ namespace ROOT {
    Inversion for a 3x3 matrix
  */
 template <class MatrixRep>
-bool Inverter<3>::Dinv(MatrixRep & rhs) { 
+bool FastInverter<3>::Dinv(MatrixRep & rhs) { 
 
   typedef typename MatrixRep::value_type Scalar; 
 
@@ -128,7 +128,7 @@ bool Inverter<3>::Dinv(MatrixRep & rhs) {
    Inversion for a 4x4 matrix
  */
 template <class MatrixRep>
-bool Inverter<4>::Dinv(MatrixRep & rhs) { 
+bool FastInverter<4>::Dinv(MatrixRep & rhs) { 
 
   typedef typename MatrixRep::value_type Scalar; 
 
@@ -270,7 +270,7 @@ bool Inverter<4>::Dinv(MatrixRep & rhs) {
    Inversion for a 5x5 matrix
  */
 template <class MatrixRep>
-bool Inverter<5>::Dinv(MatrixRep & rhs) { 
+bool FastInverter<5>::Dinv(MatrixRep & rhs) { 
 
   typedef typename MatrixRep::value_type Scalar; 
 

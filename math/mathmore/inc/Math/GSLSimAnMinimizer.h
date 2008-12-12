@@ -117,6 +117,12 @@ public:
    virtual bool SetLimitedVariable(unsigned int ivar , const std::string & name , double val , double step , double /* lower */, double /* upper */); 
 #endif
 
+   /// set the value of an existing variable 
+   virtual bool SetVariableValue(unsigned int ivar, double val );
+   /// set the values of all existing variables (array must be dimensioned to the size of the existing parameters)
+   virtual bool SetVariableValues(const double * x);
+
+
    /// method to perform the minimization
    virtual  bool Minimize(); 
 

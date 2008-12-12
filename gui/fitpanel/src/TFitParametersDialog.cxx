@@ -337,6 +337,17 @@ TFitParametersDialog::~TFitParametersDialog()
    delete [] fPmin;
    delete [] fPmax;
    delete [] fPerr;
+   delete [] fPstp;
+
+   delete [] fParNam;
+   delete [] fParFix;
+   delete [] fParBnd;
+   delete [] fParVal;
+   delete [] fParMin;
+   delete [] fParMax;
+   delete [] fParSld;
+   delete [] fParStp;
+   delete [] fParErr;
 }
 
 //______________________________________________________________________________

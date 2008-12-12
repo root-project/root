@@ -155,6 +155,7 @@ protected:
    TGComboBox* BuildDataSetList(TGFrame *parent, Int_t id);
    TGComboBox* BuildMethodList(TGFrame *parent, Int_t id);
    void        GetRanges(ROOT::Fit::DataRange&);
+   TF1*        GetFitFunction();
    TList*      GetFitObjectListOfFunctions();
    void        DrawSelection(bool restore = false);
    Int_t       CheckFunctionString(const char* str);

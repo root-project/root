@@ -22,7 +22,7 @@ MnParameterScan::MnParameterScan(const FCNBase& fcn, const MnUserParameters& par
 std::vector<std::pair<double, double> > MnParameterScan::operator()(unsigned int par, unsigned int maxsteps, double low, double high) {
    // do the scan for parameter par between low and high values 
    
-   if(maxsteps > 101) maxsteps = 101;
+   //if(maxsteps > 101) maxsteps = 101;
    std::vector<std::pair<double, double> > result; result.reserve(maxsteps+1);
    std::vector<double> params = fParameters.Params();
    result.push_back(std::pair<double, double>(params[par], fAmin));
