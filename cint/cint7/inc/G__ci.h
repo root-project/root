@@ -830,7 +830,11 @@ struct G__DUMMY_FOR_CINT5 {
    G__SIGNEDCHAR_T isconst;
 #endif
 };
+#ifdef __cplusplus
+struct G__value {
+#else
 typedef struct {
+#endif
   union {
     double d;
     long    i; /* used to be int */
@@ -852,8 +856,12 @@ typedef struct {
 #endif
   struct G__DUMMY_FOR_CINT5 dummyFotCint5;
   struct G__REFLEXTYPE_C_PLACEHOLDER buf_typenum;
-} G__value;
-
+#ifdef __cplusplus
+};
+#else
+} G__value ;
+#endif
+   
 /**************************************************************************
 * structure for function and array parameter
 *

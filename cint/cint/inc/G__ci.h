@@ -915,7 +915,11 @@ struct G__DUMMY_FOR_CINT7 {
    void* fTypeName;
    unsigned int fModifiers;
 };
+#ifdef __cplusplus
+struct G__value {
+#else
 typedef struct {
+#endif
   union {
     double d;
     long    i; /* used to be int */
@@ -958,8 +962,11 @@ private:
   G__SIGNEDCHAR_T isconst;
 #endif
   struct G__DUMMY_FOR_CINT7 dummyForCint7;
+#ifdef __cplusplus
+};
+#else
 } G__value ;
-
+#endif
 
 /**************************************************************************
 * reference type argument for precompiled function

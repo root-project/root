@@ -2410,6 +2410,13 @@ ClassInfo_t *TCint::ClassInfo_Factory(const char *name) const
    return new G__ClassInfo(name);
 }
 //______________________________________________________________________________
+ClassInfo_t *TCint::ClassInfo_Factory(G__value *pvalue) const
+{
+   // Interface to CINT function 
+   
+   return new G__ClassInfo(*pvalue);
+}
+//______________________________________________________________________________
 int TCint::ClassInfo_GetMethodNArg(ClassInfo_t *cinfo, const char *method,const char *proto) const
 {
    // Interface to CINT function 
@@ -3082,6 +3089,14 @@ TypeInfo_t *TCint::TypeInfo_Factory() const
    return info;
 }
 //______________________________________________________________________________
+TypeInfo_t *TCint::TypeInfo_Factory(G__value *pvalue) const
+{
+   // Interface to CINT function 
+   
+   G__TypeInfo *info = new G__TypeInfo(*pvalue);
+   return info;
+}
+//______________________________________________________________________________
 TypeInfo_t *TCint::TypeInfo_FactoryCopy(TypeInfo_t *tinfo) const
 {
    // Interface to CINT function 
@@ -3106,12 +3121,28 @@ bool  TCint::TypeInfo_IsValid(TypeInfo_t *tinfo) const
    return info->IsValid();
 }
 //______________________________________________________________________________
+const char *TCint::TypeInfo_Name(TypeInfo_t *tinfo) const
+{
+   // Interface to CINT function 
+   
+   G__TypeInfo *info = (G__TypeInfo*)tinfo;
+   return info->Name();
+}
+//______________________________________________________________________________
 Long_t  TCint::TypeInfo_Property(TypeInfo_t *tinfo) const
 {
    // Interface to CINT function 
    
    G__TypeInfo *info = (G__TypeInfo*)tinfo;
    return info->Property();
+}
+//______________________________________________________________________________
+int   TCint::TypeInfo_RefType(TypeInfo_t *tinfo) const
+{
+   // Interface to CINT function 
+   
+   G__TypeInfo *info = (G__TypeInfo*)tinfo;
+   return info->Reftype();
 }
 //______________________________________________________________________________
 int   TCint::TypeInfo_Size(TypeInfo_t *tinfo) const
