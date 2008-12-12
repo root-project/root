@@ -699,6 +699,34 @@ void TEveWindow::PreDeleteElement()
 //==============================================================================
 
 //______________________________________________________________________________
+void TEveWindow::PreUndock()
+{
+   // Virtual function called before a window is undocked.
+
+   for (List_ci i=fChildren.begin(); i!=fChildren.end(); ++i)
+   {
+      TEveWindow* w = dynamic_cast<TEveWindow*>(*i);
+      if (w)
+	 w->PreUndock();
+   }
+}
+
+//______________________________________________________________________________
+void TEveWindow::PostDock()
+{
+   // Virtual function called before a window is undocked.
+
+   for (List_ci i=fChildren.begin(); i!=fChildren.end(); ++i)
+   {
+      TEveWindow* w = dynamic_cast<TEveWindow*>(*i);
+      if (w)
+	 w->PostDock();
+   }
+}
+
+//==============================================================================
+
+//______________________________________________________________________________
 void TEveWindow::NameTitleChanged()
 {
    // Name or title of the window changed - propagate to frames.
