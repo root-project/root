@@ -374,8 +374,10 @@ void TDocParser::Convert(std::ostream& out, std::istream& in, const char* relpat
       ProcessComment();
 
       GetDocOutput()->AdjustSourcePath(fLineComment, relpath);
-      if (fLineComment.Length() || !InContext(kDirective))
+      if (fLineComment.Length() || InContext(kDirective))
          out << fLineComment << endl;
+      else
+         out << fLineSource << endl;
    }
 }
 
