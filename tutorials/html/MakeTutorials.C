@@ -126,9 +126,9 @@ void writeItem(ostream& out, Int_t numb, const char *ref, const char *name, cons
    //
    const char *imagenew = "";
    cout << "writingItem: " << numb << ", ref=" << ref << ", name=" << name << ", title=" << title << endl;
-   if (isnew) imagenew = " <img src=\"http://root.cern.ch/root/images/new01.gif\" alt=\"new\" align=\"top\">";
+   if (isnew) imagenew = " <img src=\"http://root.cern.ch/root/images/new01.gif\" alt=\"new\" align=\"top\" />";
    out << "<li class=\"idxl" << numb%2 << "\">";
-   out << "<a href=\"" << ref << "\"><span class=\"typename\">" << numb << ". " << name << "</span></a>"
+   out << "<a href=\"" << ref << "\"><span class=\"typename\">" << numb << ". " << name << "</span></a> "
        << title << imagenew << "</li>" << endl;
 }
 
@@ -285,25 +285,26 @@ Bool_t IsNew(const char *filename) {
    return isnew;
 }
 
-Bool_t CreateOutput_Dir(const char* /*dir*/) {
+Bool_t CreateOutput_Dir(const char* dir) {
    // Whether THtml::Convert() should run the tutorials in the
    // directory "dir" and store their output
+
+     if (strstr(dir,"net")) return kFALSE;
+     if (strstr(dir,"xml")) return kFALSE;
+     if (strstr(dir,"sql")) return kFALSE;
+     if (strstr(dir,"proof")) return kFALSE;
+     if (strstr(dir,"foam"))  return kFALSE;
+     if (strstr(dir,"unuran"))  return kFALSE;
 
    /* They should all work now:
 
      if (strstr(dir,"image") && gROOT->IsBatch()) return kFALSE;
-     if (strstr(dir,"net")) return kFALSE;
      if (strstr(dir,"geom")) return kFALSE;
      if (strstr(dir,"gl")) return kFALSE;
      if (strstr(dir,"eve")) return kFALSE;
-     if (strstr(dir,"xml")) return kFALSE;
-     if (strstr(dir,"sql")) return kFALSE;
-     if (strstr(dir,"proof")) return kFALSE;
      if (strstr(dir,"tree")) return kFALSE;
      if (strstr(dir,"gui")) return kFALSE;
      if (strstr(dir,"io"))  return kFALSE;
-     if (strstr(dir,"foam"))  return kFALSE;
-     if (strstr(dir,"unuran"))  return kFALSE;
    */
    return kTRUE;
 }
@@ -335,8 +336,34 @@ Bool_t CreateOutput_Tutorial(const char* tut) {
       "event",
       "exec1",
       "exec2",
+      "exec3",
       "quantiles",
+      "gui",
       "TwoHistoFit2D",
+      "CPUMeter",
+      "games",
+      "guiWithCINT",
+      "statusBar",
+      "shapesAnim",
+      "glVierExercise",
+      "viewer3DMaster.C",
+      "anim",
+      "pack",
+      "hsumTimer",
+      "jets",
+      "bill",
+      "tcl",
+      "tree2a",
+      "copytree",
+      "clones",
+      "copyFiles",
+      "geom_",
+      "test_compound",
+      "test_paramlist",
+      "test_windows",
+      "text_test",
+      "FFT",
+      "foam",
       "Qt",
       "TableTest",
       0
@@ -387,6 +414,7 @@ void scandir(THtml& html, const char *dir, const char *title, TObjLink* toplnk) 
       const char *CC = strstr(direntry,".C");
       // must end on ".C"
       if (!CC || *(CC+2)) continue;
+      // do not even document these; they are part of another tutorial:
       if(strstr(direntry,"h1analysisProxyCut")) continue;
       if(strstr(direntry,"hsimpleProxy")) continue;
       if(strstr(direntry,"tv3")) continue;
