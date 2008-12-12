@@ -128,27 +128,14 @@ $(XRDCP):  $(XRDCPDIR)/Xrdcp.obj
    $(MT_EXE)
 
 clean :
-	-@erase /q "$(XRDCPDIR)\*.obj"
-	-@erase /q "$(XRDCLIENTOUTDIR)\*.obj"
-	-@erase /q "$(XRDNETOUTDIR)\*.obj"
-	-@erase /q "$(XRDOUCOUTDIR)\*.obj"
-	-@erase /q "$(XRDSYSOUTDIR)\*.obj"
+	-@erase /q /s *.obj
+	-@erase /q /s *.def
+	-@erase /q /s *.ilk
+	-@erase /q /s *.idb
+	-@erase /q /s *.exp
+	-@erase /q /s *.manifest
 
 distclean:: clean
-	-@erase /q *.pdb
-	-@erase /q *.idb
-	-@erase /q "$(XRDSYSDIR)\*.pdb"
-	-@erase /q "$(XRDSYSDIR)\*.idb"
-	-@erase /q "$(XRDOUCDIR)\*.pdb"
-	-@erase /q "$(XRDOUCDIR)\*.idb"
-	-@erase /q "$(XRDNETDIR)\*.pdb"
-	-@erase /q "$(XRDNETDIR)\*.idb"
-	-@erase /q "$(XRDCLIENTDIR)\*.pdb"
-	-@erase /q "$(XRDCLIENTDIR)\*.idb"
-	-@erase /q "$(LIBDIR)\*.lib"
-	-@erase /q "$(BINDIR)\*.exe"
-	-@erase /q "$(BINDIR)\*.ilk"
-	-@erase /q "$(BINDIR)\*.pdb"
-	-@erase /q "$(BINDIR)\*.exp"
-	-@erase /q "$(BINDIR)\*.lib"
-	-@erase /q "$(BINDIR)\*.manifest"
+	-@erase /q /s *.pdb
+	-@erase /q "$(LIBDIR)\*.*"
+	-@erase /q "$(BINDIR)\*.*"
