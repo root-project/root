@@ -11,6 +11,7 @@
 #include "TProfile3D.h"
 
 #include "TApplication.h"
+#include "TBenchmark.h"
 #include "Riostream.h"
 #include "TMath.h"
 #include "TRandom2.h"
@@ -43,6 +44,17 @@ enum compareOptions {
 
 const int defaultEqualOptions = 0; //cmpOptPrint;
 
+const double defaultErrorLimit = 1.E-10;
+
+enum RefFileEnum {
+   refFileRead = 1,
+   refFileWrite = 2
+};
+
+const int refFileOption = 1;
+TFile * refFile = 0;
+const char* refFileName = "http://root.cern.ch/files/stressHistogram.5.18.00.root";
+
 TRandom2 r;
 
 typedef bool ( * pointer2Test) ();
@@ -55,12 +67,12 @@ struct TTestSuite {
 
 // Methods for histogram comparisions (later implemented)
 void printResult(const char* msg, bool status);
-int equals(const char* msg, TH1D* h1, TH1D* h2, int options = 0, double ERRORLIMIT = 1E-13);
-int equals(const char* msg, TH2D* h1, TH2D* h2, int options = 0, double ERRORLIMIT = 1E-13);
-int equals(const char* msg, TH3D* h1, TH3D* h2, int options = 0, double ERRORLIMIT = 1E-13);
-int equals(const char* msg, THnSparse* h1, THnSparse* h2, int options = 0, double ERRORLIMIT = 1E-13);
-int equals(Double_t n1, Double_t n2, double ERRORLIMIT = 1E-13);
-int compareStatistics( TH1* h1, TH1* h2, bool debug, double ERRORLIMIT = 1E-13);
+int equals(const char* msg, TH1D* h1, TH1D* h2, int options = 0, double ERRORLIMIT = defaultErrorLimit);
+int equals(const char* msg, TH2D* h1, TH2D* h2, int options = 0, double ERRORLIMIT = defaultErrorLimit);
+int equals(const char* msg, TH3D* h1, TH3D* h2, int options = 0, double ERRORLIMIT = defaultErrorLimit);
+int equals(const char* msg, THnSparse* h1, THnSparse* h2, int options = 0, double ERRORLIMIT = defaultErrorLimit);
+int equals(Double_t n1, Double_t n2, double ERRORLIMIT = defaultErrorLimit);
+int compareStatistics( TH1* h1, TH1* h2, bool debug, double ERRORLIMIT = defaultErrorLimit);
 ostream& operator<<(ostream& out, TH1D* h);
 // old stresHistOpts.cxx file
 
@@ -2006,6 +2018,248 @@ bool testLabel()
    return status;
 }
 
+bool testRefRead1D()
+{
+   if ( refFileOption == refFileWrite ) {
+      TH1D* h1 = new TH1D("rr1D-h1", "h1-Title", numberOfBins, minRange, maxRange);
+      h1->Sumw2();
+   
+      for ( Int_t e = 0; e < nEvents; ++e ) {
+         Double_t value = r.Uniform(0.9 * minRange, 1.1 * maxRange);
+         h1->Fill(value, 1.0);
+      }  
+      h1->Write();
+      return 0;
+   } else {
+      TH1D* h1 = static_cast<TH1D*> ( refFile->Get("rr1D-h1") );
+      TH1D* h2 = new TH1D("rr1D-h2", "h2-Title", numberOfBins, minRange, maxRange);
+      h2->Sumw2();
+   
+      for ( Int_t e = 0; e < nEvents; ++e ) {
+         Double_t value = r.Uniform(0.9 * minRange, 1.1 * maxRange);
+         h2->Fill(value, 1.0);
+      }  
+
+      bool ret = equals("Ref Read Hist 1D", h1, h2, cmpOptStats);
+      delete h1;
+      return ret;
+   }
+}
+
+bool testRefReadProf1D()
+{
+   if ( refFileOption == refFileWrite ) {
+      TProfile* p1 = new TProfile("rr1D-p1", "p1-Title", numberOfBins, minRange, maxRange);
+//      p1->Sumw2();
+   
+      for ( Int_t e = 0; e < nEvents; ++e ) {
+         Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
+         Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
+         p1->Fill(x, y, 1.0);
+      }  
+      p1->Write();
+      return 0;
+   } else {
+      TProfile* p1 = static_cast<TProfile*> ( refFile->Get("rr1D-p1") );
+      TProfile* p2 = new TProfile("rr1D-p2", "p2-Title", numberOfBins, minRange, maxRange);
+//      p2->Sumw2();
+   
+      for ( Int_t e = 0; e < nEvents; ++e ) {
+         Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
+         Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
+         p2->Fill(x, y, 1.0);
+      }  
+
+      bool ret = equals("Ref Read Prof 1D", p1, p2, cmpOptStats);
+      delete p1;
+      return ret;
+   }
+}
+
+bool testRefRead2D()
+{
+   if ( refFileOption == refFileWrite ) {
+      TH2D* h1 = new TH2D("rr2D-h1", "h1-Title", 
+                          numberOfBins, minRange, maxRange,
+                          numberOfBins, minRange, maxRange);
+      h1->Sumw2();
+   
+      for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
+         Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
+         Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
+         h1->Fill(x, y, 1.0);
+      }  
+      h1->Write();
+      return 0;
+   } else {
+      TH2D* h1 = static_cast<TH2D*> ( refFile->Get("rr2D-h1") );
+      TH2D* h2 = new TH2D("rr2D-h2", "h2-Title", 
+                          numberOfBins, minRange, maxRange,
+                          numberOfBins, minRange, maxRange);
+      h2->Sumw2();
+   
+      for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
+         Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
+         Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
+         h2->Fill(x, y, 1.0);
+      }  
+
+      bool ret = equals("Ref Read Hist 2D", h1, h2, cmpOptStats);
+      delete h1;
+      return ret;
+   }
+}
+
+bool testRefReadProf2D()
+{
+   if ( refFileOption == refFileWrite ) {
+      TProfile2D* p1 = new TProfile2D("rr2D-p1", "p1-Title", 
+                                      numberOfBins, minRange, maxRange,
+                                      numberOfBins, minRange, maxRange);
+   
+      for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
+         Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
+         Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
+         Double_t z = r.Uniform(0.9 * minRange, 1.1 * maxRange);
+         p1->Fill(x, y, z, 1.0);
+      }  
+      p1->Write();
+      return 0;
+   } else {
+      TProfile2D* p1 = static_cast<TProfile2D*> ( refFile->Get("rr2D-p1") );
+      TProfile2D* p2 = new TProfile2D("rr2D-p2", "p2-Title", 
+                                      numberOfBins, minRange, maxRange,
+                                      numberOfBins, minRange, maxRange);
+   
+      for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
+         Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
+         Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
+         Double_t z = r.Uniform(0.9 * minRange, 1.1 * maxRange);
+         p2->Fill(x, y, z, 1.0);
+      }  
+
+      bool ret = equals("Ref Read Prof 2D", p1, p2, cmpOptStats);
+      delete p1;
+      return ret;
+   }
+}
+
+bool testRefRead3D()
+{
+   if ( refFileOption == refFileWrite ) {
+      TH3D* h1 = new TH3D("rr3D-h1", "h1-Title", 
+                          numberOfBins, minRange, maxRange,
+                          numberOfBins, minRange, maxRange,
+                          numberOfBins, minRange, maxRange);
+      h1->Sumw2();
+   
+      for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
+         Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
+         Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
+         Double_t z = r.Uniform(0.9 * minRange, 1.1 * maxRange);
+         h1->Fill(x, y, z, 1.0);
+      }  
+      h1->Write();
+      return 0;
+   } else {
+      TH3D* h1 = static_cast<TH3D*> ( refFile->Get("rr3D-h1") );
+      TH3D* h2 = new TH3D("rr3D-h2", "h2-Title", 
+                          numberOfBins, minRange, maxRange,
+                          numberOfBins, minRange, maxRange,
+                          numberOfBins, minRange, maxRange);
+      h2->Sumw2();
+   
+      for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
+         Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
+         Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
+         Double_t z = r.Uniform(0.9 * minRange, 1.1 * maxRange);
+         h2->Fill(x, y, z, 1.0);
+      }  
+
+      bool ret = equals("Ref Read Hist 3D", h1, h2, cmpOptStats);
+      delete h1;
+      return ret;
+   }
+}
+
+bool testRefReadProf3D()
+{
+   if ( refFileOption == refFileWrite ) {
+      TProfile3D* p1 = new TProfile3D("rr3D-p1", "p1-Title", 
+                                      numberOfBins, minRange, maxRange,
+                                      numberOfBins, minRange, maxRange,
+                                      numberOfBins, minRange, maxRange);
+
+      for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
+         Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
+         Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
+         Double_t z = r.Uniform(0.9 * minRange, 1.1 * maxRange);
+         Double_t t = r.Uniform(0.9 * minRange, 1.1 * maxRange);
+         p1->Fill(x, y, z, t, 1.0);
+      }  
+      p1->Write();
+      return 0;
+   } else {
+      TProfile3D* p1 = static_cast<TProfile3D*> ( refFile->Get("rr3D-p1") );
+      TProfile3D* p2 = new TProfile3D("rr3D-p2", "p2-Title", 
+                          numberOfBins, minRange, maxRange,
+                          numberOfBins, minRange, maxRange,
+                          numberOfBins, minRange, maxRange);
+
+      for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
+         Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
+         Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
+         Double_t z = r.Uniform(0.9 * minRange, 1.1 * maxRange);
+         Double_t t = r.Uniform(0.9 * minRange, 1.1 * maxRange);
+         p2->Fill(x, y, z, t, 1.0);
+      }  
+
+      bool ret = equals("Ref Read Prof 3D", p1, p2, cmpOptStats);
+      delete p1;
+      return ret;
+   }
+}
+
+bool testRefReadSparse()
+{
+   Int_t bsize[] = { TMath::Nint( r.Uniform(1, 5) ),
+                     TMath::Nint( r.Uniform(1, 5) ),
+                     TMath::Nint( r.Uniform(1, 5) )};
+   Double_t xmin[] = {minRange, minRange, minRange};
+   Double_t xmax[] = {maxRange, maxRange, maxRange};
+
+   if ( refFileOption == refFileWrite ) {
+      THnSparseD* s1 = new THnSparseD("rr-s1", "s1-Title", 3, bsize, xmin, xmax);
+      s1->Sumw2();
+
+      for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
+         Double_t points[3];
+         points[0] = r.Uniform( minRange * .9 , maxRange * 1.1 );
+         points[1] = r.Uniform( minRange * .9 , maxRange * 1.1 );
+         points[2] = r.Uniform( minRange * .9 , maxRange * 1.1 );
+         s1->Fill(points);
+      }  
+      s1->Write();
+      return 0;
+   } else {
+      THnSparseD* s1 = static_cast<THnSparseD*> ( refFile->Get("rr-s1") );
+      THnSparseD* s2 = new THnSparseD("rr-s1", "s1-Title", 3, bsize, xmin, xmax);
+      s2->Sumw2();
+
+      for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
+         Double_t points[3];
+         points[0] = r.Uniform( minRange * .9 , maxRange * 1.1 );
+         points[1] = r.Uniform( minRange * .9 , maxRange * 1.1 );
+         points[2] = r.Uniform( minRange * .9 , maxRange * 1.1 );
+         s2->Fill(points);
+      }  
+
+      bool ret = equals("Ref Read Sparse", s1, s2, cmpOptStats);
+      delete s1;
+      return ret;
+   }
+}
+
 bool testIntegerRebin()
 {
    const int rebin = TMath::Nint( r.Uniform(minRebin, maxRebin) );
@@ -2935,17 +3189,15 @@ public:
    
 };
 
-int main(int argc, char** argv)
+int stressHistogram()
 {
    r.SetSeed(0);
 
-   TApplication* theApp = 0;
-
-   if ( __DRAW__ )
-      theApp = new TApplication("App",&argc,argv);
-
    int GlobalStatus = false;
    int status = false;
+
+   TBenchmark bm;
+   bm.Start("stressHistogram");
 
    cout << "****************************************************************************" <<endl;
    cout << "*  Starting  stress  H I S T O G R A M                                     *" <<endl;
@@ -3047,7 +3299,7 @@ int main(int argc, char** argv)
                                        copyTestPointer };
 
    // Test 7
-   // Readwrite Tests
+   // WriteRead Tests
    const unsigned int numberOfReadwrite = 7;
    pointer2Test readwriteTestPointer[numberOfReadwrite] = { testWriteRead1D,  testWriteReadProfile1D,
                                                             testWriteRead2D,  testWriteReadProfile2D,
@@ -3078,7 +3330,6 @@ int main(int argc, char** argv)
                                         "Label tests for 1D Histograms (TAxis)............................",
                                         labelTestPointer };
 
-
    // Combination of tests
    const unsigned int numberOfSuits = 7;
    struct TTestSuite* testSuite[numberOfSuits];
@@ -3101,11 +3352,46 @@ int main(int argc, char** argv)
    }
    GlobalStatus += status;
 
-   if ( __DRAW__ ) {
-      theApp->Run();
-      delete theApp;
-      theApp = 0;
+   // Test 10
+   // Merge Tests
+   const unsigned int numberOfRefRead = 7;
+   pointer2Test refReadTestPointer[numberOfRefRead] = { testRefRead1D,  testRefReadProf1D,
+                                                        testRefRead2D,  testRefReadProf2D,
+                                                        testRefRead3D,  testRefReadProf3D,
+                                                        testRefReadSparse
+   };
+   struct TTestSuite refReadTestSuite = { numberOfRefRead, 
+                                          "Reference File Read for Histograms and Profiles..................",
+                                          refReadTestPointer };
+   
+
+   if ( refFileOption == refFileWrite ) {
+      refFile = TFile::Open(refFileName, "RECREATE");
    }
+   else {
+      refFile = TFile::Open(refFileName);
+   }
+
+   if ( refFile != 0 ) {
+      r.SetSeed(8652);
+      status = 0;
+      for ( unsigned int j = 0; j < refReadTestSuite.nTests; ++j ) {
+         status |= refReadTestSuite.tests[j]();
+      }
+      printResult( refReadTestSuite.suiteName, status);
+      GlobalStatus += status;
+   } else {
+      Warning("stressHistogram", "No reference file found");
+   }
+
+   bm.Stop("stressHistogram");
+   std::cout <<"****************************************************************************\n";
+   bm.Print("stressHistogram");
+   const double reftime = 7.1; // needs to be updated // ref time on  pcbrun4
+   double rootmarks = 860 * reftime / bm.GetCpuTime("stressHistogram");
+   std::cout << " ROOTMARKS = " << rootmarks << " ROOT version: " << gROOT->GetVersion() << "\t" 
+             << gROOT->GetSvnBranch() << "@" << gROOT->GetSvnRevision() << std::endl;
+   std::cout <<"****************************************************************************\n";
 
    return GlobalStatus;
 }
@@ -3394,4 +3680,22 @@ int compareStatistics( TH1* h1, TH1* h2, bool debug, double ERRORLIMIT)
 //            << endl;  
    
    return differents;
+}
+
+int main(int argc, char** argv)
+{
+   TApplication* theApp = 0;
+
+   if ( __DRAW__ )
+      theApp = new TApplication("App",&argc,argv);
+
+   int ret = stressHistogram();
+
+   if ( __DRAW__ ) {
+      theApp->Run();
+      delete theApp;
+      theApp = 0;
+   }
+
+   return ret;
 }
