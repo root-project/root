@@ -640,6 +640,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   pc.defineInt("ext","Extended",0,2) ;
   pc.defineInt("numcpu","NumCPU",0,1) ;
   pc.defineInt("verbose","Verbose",0,0) ;
+  pc.defineInt("optConst","Optimize",0,1) ;
   pc.defineObject("projDepSet","ProjectedObservables",0,0) ;
   pc.defineObject("cPars","Constrain",0,0) ;
   pc.defineObject("extCons","ExternalConstraints",0,0) ;
@@ -658,6 +659,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   Int_t numcpu   = pc.getInt("numcpu") ;
   Int_t splitr   = pc.getInt("splitRange") ;
   Bool_t verbose = pc.getInt("verbose") ;
+  Int_t optConst = pc.getInt("optConst") ;
   const RooArgSet* cPars = static_cast<RooArgSet*>(pc.getObject("cPars")) ;
   const RooArgSet* extCons = static_cast<RooArgSet*>(pc.getObject("extCons")) ;
 
@@ -697,6 +699,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   if (!rangeName || strchr(rangeName,',')==0) {
     // Simple case: default range, or single restricted range
     nll = new RooNLLVar("nll","-log(likelihood)",*this,data,projDeps,ext,rangeName,addCoefRangeName,numcpu,kFALSE,verbose,splitr) ;
+
   } else {
     // Composite case: multiple ranges
     RooArgList nllList ;
@@ -734,6 +737,10 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
     RooAbsReal* orignll = nll ;
     nll = new RooAddition("nllWithCons","nllWithCons",RooArgSet(*nll,*nllCons)) ;
     nll->addOwnedComponents(RooArgSet(*orignll,*nllCons)) ;
+  }
+
+  if (optConst) {
+    nll->constOptimizeTestStatistic(RooAbsArg::Activate) ;
   }
 
   return nll ;

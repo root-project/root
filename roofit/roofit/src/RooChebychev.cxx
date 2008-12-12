@@ -102,8 +102,13 @@ Double_t RooChebychev::evaluate() const
 
 
 //_____________________________________________________________________________
-Int_t RooChebychev::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const 
+Int_t RooChebychev::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
 {
+  // No analytical calculation available (yet) of integrals over subranges
+  if (rangeName && strlen(rangeName)) {
+    return 0 ;
+  }
+
   if (matchArgs(allVars, analVars, _x)) return 1;
   return 0;
 }

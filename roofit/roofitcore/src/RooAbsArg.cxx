@@ -1872,6 +1872,8 @@ void RooAbsArg::graphVizTree(const char* fileName)
   // Create a GraphViz .dot file visualizing the expression tree headed by
   // this RooAbsArg object. Use the GraphViz tool suite to make e.g. a gif
   // or ps file from the .dot file
+  //
+  // Based on concept developed by Kyle Cranmer
 
   ofstream ofs(fileName) ;
   if (!ofs) {
@@ -1886,6 +1888,8 @@ void RooAbsArg::graphVizTree(ostream& os)
 {
   // Write the GraphViz representation of the expression tree headed by
   // this RooAbsArg object to the given ostream.
+  //
+  // Based on concept developed by Kyle Cranmer
 
   if (!os) {
     coutE(InputArguments) << "RooAbsArg::graphVizTree() ERROR: output stream provided as input argument is in invalid state" << endl ;

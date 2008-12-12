@@ -737,7 +737,7 @@ Double_t RooRealIntegral::evaluate() const
 	_saveSum = _sumList ;
 	
 	// Evaluate sum/integral
-	retVal = sum() / jacobianProduct() ;
+	retVal = sum() ;
 	
 	// Restore integral dependent values
 	_intList=_saveInt ;
@@ -839,8 +839,6 @@ Double_t RooRealIntegral::sum() const
     // Add integrals for all permutations of categories summed over
     Double_t total(0) ;
 
-//     RooSuperCategory sumCat("sumCat","sumCat",_sumList) ;
-//     TIterator* sumIter = sumCat.typeIterator() ;
     _sumCatIter->Reset() ;
     RooCatType* type ;
     RooSuperCategory* sumCat = (RooSuperCategory*) _sumCat.first() ;
@@ -851,7 +849,6 @@ Double_t RooRealIntegral::sum() const
       }
     }
 
-//     delete sumIter ;
     return total ;
 
   } else {
@@ -875,11 +872,6 @@ Double_t RooRealIntegral::integrate() const
     return ((RooAbsReal&)_function.arg()).analyticalIntegralWN(_mode,_funcNormSet,RooNameReg::str(_rangeName)) ;
   }
   else {
-    // Partial or complete numerical integration
-//     if(_intList.getSize() > 1) {
-//       cout << "RooRealIntegral: Integrating out ";
-//       _intList.printStream(cout,OneLine);
-//     }
     return _numIntEngine->calculate() ;
   }
 }

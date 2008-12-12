@@ -306,7 +306,7 @@ public:
   RooAbsCache* getCache(Int_t index) const ;
 
   enum OperMode { Auto=0, AClean=1, ADirty=2 } ;
-  inline OperMode operMode() const { return _operMode ; }
+  inline OperMode operMode() const { return _operMode==AClean ? (flipAClean() ? ADirty : AClean ) : _operMode  ; }
   void setOperMode(OperMode mode, Bool_t recurseADirty=kTRUE) ; 
 
   static UInt_t crc32(const char* data) ;
