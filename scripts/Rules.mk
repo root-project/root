@@ -24,6 +24,13 @@ valgrind: scripts/analyze_valgrind
 	&& scripts/analyze_valgrind.sh $$valgrindlogfile > $$valgrindlogfile.summary.txt \
 	)
 
+ifneq ($(ROOTC7),)
+CALLROOTEXE:=rootc7.exe
+CALLROOTEXEBUILD:=$(CALLROOTEXE)
+else
+CALLROOTEXEBUILD:=root.exe
+endif
+
 # The user directory should define
 # SUBDIRS listing any activated subdirectory
 # TEST_TARGETS with the list of activated test
@@ -402,7 +409,7 @@ ROOTCINT = $(ROOT_LOC)/bin/rootcint$(ExeSuf)
 UTILS_LIBS =  $(ROOTTEST_LOC)scripts/utils_cc.$(DllSuf) $(ROOTTEST_LOC)scripts/recordtiming_cc.$(DllSuf)
 
 $(ROOTTEST_LOC)scripts/utils_cc.$(DllSuf) : $(ROOTTEST_LOC)scripts/utils.cc $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$(ROOTTEST_HOME)scripts/utils.cc\"\) > $(ROOTTEST_LOC)scripts/utils_cc.build.log 2>&1 ; \
+	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$(ROOTTEST_HOME)scripts/utils.cc\"\) > $(ROOTTEST_LOC)scripts/utils_cc.build.log 2>&1 ; \
 	if test $$? -ne 0 ; \
 	then \
 	  cat $(ROOTTEST_LOC)scripts/utils_cc.build.log ; \
@@ -414,7 +421,7 @@ $(ROOTTEST_LOC)scripts/utils_cc.$(DllSuf) : $(ROOTTEST_LOC)scripts/utils.cc $(RO
 	fi
 
 $(ROOTTEST_LOC)scripts/recordtiming_cc.$(DllSuf) : $(ROOTTEST_LOC)scripts/recordtiming.cc $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$(ROOTTEST_HOME)scripts/recordtiming.cc\"\) > $(ROOTTEST_LOC)scripts/recordtiming_cc.build.log 2>&1 ; \
+	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$(ROOTTEST_HOME)scripts/recordtiming.cc\"\) > $(ROOTTEST_LOC)scripts/recordtiming_cc.build.log 2>&1 ; \
 	if test $$? -ne 0 ; \
 	then \
 	  cat $(ROOTTEST_LOC)scripts/recordtiming_cc.build.log ; \
@@ -471,19 +478,19 @@ endif
 	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_obj_cpp.build.log 2>&1
 
 %_cpp.$(DllSuf) : %.cpp $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_cpp.build.log 2>&1 || cat $*_cpp.build.log
+	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_cpp.build.log 2>&1 || cat $*_cpp.build.log
 
 %_C.$(DllSuf) : %.C $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_C.build.log 2>&1 || cat $*_C.build.log 
+	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_C.build.log 2>&1 || cat $*_C.build.log 
 
 %_cxx.$(DllSuf) : %.cxx $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_cxx.build.log 2>&1 || cat $*_cxx.build.log 
+	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_cxx.build.log 2>&1 || cat $*_cxx.build.log 
 
 %_cc.$(DllSuf) : %.cc $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_cc.build.log 2>&1 || cat $*_cc.build.log 
+	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_cc.build.log 2>&1 || cat $*_cc.build.log 
 
 %_h.$(DllSuf) : %.h $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_h.build.log 2>&1 || cat $*_h.build.log 
+	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_h.build.log 2>&1 || cat $*_h.build.log 
 
 %.log : run%.C $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 	$(CMDECHO) $(CALLROOTEXE) -q -l -b $< > $@ 2>&1
@@ -509,13 +516,13 @@ endif
 ifneq ($(PLATFORM),macosx)
 
 define BuildWithLib
-	$(CMDECHO) root.exe -q -l -b "$(ROOTTEST_HOME)/scripts/build.C(\"$<\",\"$(filter %.$(DllSuf),$^)\",\"\")" > $*.build.log 2>&1 || cat $*.build.log 
+	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b "$(ROOTTEST_HOME)/scripts/build.C(\"$<\",\"$(filter %.$(DllSuf),$^)\",\"\")" > $*.build.log 2>&1 || cat $*.build.log 
 endef
 
 else
 
 define BuildWithLib
-        $(CMDECHO) root.exe -q -l -b "$(ROOTTEST_HOME)/scripts/build.C(\"$<\",\"$(filter %.$(DllSuf),$^)\",\"\")" > $*.build.log 2>&1 || cat $*.build.log
+        $(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b "$(ROOTTEST_HOME)/scripts/build.C(\"$<\",\"$(filter %.$(DllSuf),$^)\",\"\")" > $*.build.log 2>&1 || cat $*.build.log
 endef
 
 endif
@@ -555,7 +562,7 @@ endef
 
 define BuildFromObj
 $(CMDECHO) ( touch dummy$$$$.C && \
-	(root.exe -q -l -b "$(ROOTTEST_HOME)/scripts/build.C(\"dummy$$$$.C\",\"\",\"$<\")" > $@.build.log 2>&1 || cat $@.build.log ) && \
+	($(CALLROOTEXEBUILD) -q -l -b "$(ROOTTEST_HOME)/scripts/build.C(\"dummy$$$$.C\",\"\",\"$<\")" > $@.build.log 2>&1 || cat $@.build.log ) && \
 	mv dummy$$$$_C.$(DllSuf) $@ && \
 	rm -f dummy$$$$.C dummy$$$$_C.* \
 )
@@ -563,7 +570,7 @@ endef
 
 define BuildFromObjs
 $(CMDECHO) ( touch dummy$$$$.C && \
-	(root.exe -q -l -b "$(ROOTTEST_HOME)/scripts/build.C(\"dummy$$$$.C\",\"\",\"$(filter %.$(ObjSuf),$^)\")" > $@.build.log 2>&1 || cat $@.build.log ) && \
+	($(CALLROOTEXEBUILD) -q -l -b "$(ROOTTEST_HOME)/scripts/build.C(\"dummy$$$$.C\",\"\",\"$(filter %.$(ObjSuf),$^)\")" > $@.build.log 2>&1 || cat $@.build.log ) && \
 	mv dummy$$$$_C.$(DllSuf) $@ && \
 	rm dummy$$$$.C \
 )
