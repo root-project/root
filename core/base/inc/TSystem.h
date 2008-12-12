@@ -362,6 +362,7 @@ public:
    virtual void            ResetSignal(ESignals sig, Bool_t reset = kTRUE);
    virtual void            IgnoreSignal(ESignals sig, Bool_t ignore = kTRUE);
    virtual void            IgnoreInterrupt(Bool_t ignore = kTRUE);
+   virtual TSeqCollection *GetListOfSignalHandlers() const { return fSignalHandler; }
    virtual void            AddFileHandler(TFileHandler *fh);
    virtual TFileHandler   *RemoveFileHandler(TFileHandler *fh);
    virtual TSeqCollection *GetListOfFileHandlers() const { return fFileHandler; }
@@ -375,7 +376,7 @@ public:
 
    //---- Time & Date
    virtual TTime           Now();
-           TSeqCollection *GetListOfTimers() const { return fTimers;}
+   virtual TSeqCollection *GetListOfTimers() const { return fTimers; }
    virtual void            AddTimer(TTimer *t);
    virtual TTimer         *RemoveTimer(TTimer *t);
    virtual void            ResetTimer(TTimer *) { }
