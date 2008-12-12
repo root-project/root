@@ -10,3 +10,6 @@ Test  6: Copy tests for 1D, 2D and 3D Histograms and Profiles.............OK
 Test  7: Read/Write tests for 1D, 2D and 3D Histograms and Profiles.......OK
 Test  8: Merge tests for 1D, 2D and 3D Histograms and Profiles............OK
 Test  9: Label tests for 1D Histograms (TAxis)............................OK
+Test 10: Reference File Read for Histograms and Profiles..................OK
+****************************************************************************
+****************************************************************************
