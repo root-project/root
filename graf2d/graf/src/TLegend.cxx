@@ -108,10 +108,21 @@ TLegend::TLegend( Double_t x1, Double_t y1,Double_t x2, Double_t y2, const char 
 
 
 //____________________________________________________________________________
-TLegend::TLegend( const TLegend &legend ) : TPave(legend), TAttText(legend)
+TLegend::TLegend( const TLegend &legend ) : TPave(legend), TAttText(legend),
+					    fPrimitives(0)
 {
    // copy constuctor
 
+  if (legend.fPrimitives)
+    {
+      fPrimitives = new TList();
+      TListIter it(legend.fPrimitives);
+      while (TLegendEntry *e = (TLegendEntry *)it.Next())
+	{
+	  TLegendEntry *newentry = new TLegendEntry(*e);
+	  fPrimitives->Add(newentry);
+	}
+    }
    ((TLegend&)legend).Copy(*this);
 }
 
