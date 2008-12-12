@@ -104,7 +104,7 @@ void G__add_setup_func(const char* libname, G__incsetup func)
    G__setup_func_list[islot]->func    = func;
    G__setup_func_list[islot]->inited  = 0;
    strcpy(G__setup_func_list[islot]->libname, libname);
-   
+
    G__RegisterLibrary(func);
 }
 
@@ -134,6 +134,18 @@ int G__call_setup_funcs()
    if (!G__initpermanentsl) {
       G__initpermanentsl = new std::list<G__DLLINIT>;
    }
+   // Call G__RegisterLibrary() again, after it got called already
+   // in G__init_setup_funcs(), because G__scratchall might have been
+   // called in between.
+   // Do a separate loop so we don't re-load because of A->B->A
+   // dependencies introduced by autoloading during dictionary
+   // initialization
+   for (i = 0; i < G__nlibs; ++i) {
+      if (G__setup_func_list[i] && !G__setup_func_list[i]->inited) {
+         G__RegisterLibrary(G__setup_func_list[i]->func);
+      }
+   }
+
    for (i = 0; i < G__nlibs; ++i)
       if (G__setup_func_list[i] && !G__setup_func_list[i]->inited) {
          (G__setup_func_list[i]->func)();
