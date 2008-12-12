@@ -987,7 +987,7 @@ TDSetElement *TPacketizer::GetNextPacket(TSlave *sl, TMessage *r)
 
       fPackets->Add(slstat->fCurElem);
 
-      if (!gProofServ || gProofServ->GetProtocol() > 18) {
+      if (sl->GetProtocol() > 18) {
          TProofProgressStatus *status = 0;
          (*r) >> latency;
          (*r) >> status;

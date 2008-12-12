@@ -241,7 +241,7 @@ TDSetElement *TPacketizerUnit::GetNextPacket(TSlave *sl, TMessage *r)
    Long64_t numev = -1;
 
    TProofProgressStatus *status = 0;
-   if (!gProofServ || gProofServ->GetProtocol() > 18) {
+   if (sl->GetProtocol() > 18) {
       (*r) >> latency;
       (*r) >> status;
 

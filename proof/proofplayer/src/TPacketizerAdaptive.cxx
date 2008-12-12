@@ -1312,7 +1312,7 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
       Double_t latency, proctime, proccpu;
       TProofProgressStatus *status = 0;
 
-      if (!gProofServ || gProofServ->GetProtocol() > 18) {
+      if (sl->GetProtocol() > 18) {
 
          (*r) >> latency;
          (*r) >> status;

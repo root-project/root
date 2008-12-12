@@ -1386,7 +1386,7 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
                   opt |= TProof::kBinary;
                fProof->SendFile(fnam, opt, (copytocache ? "cache" : ""));
             }
-            SendLogFile();
+            if (fProtocol > 19) SendLogFile();
          }
          break;
 
@@ -3656,6 +3656,7 @@ void TProofServ::HandleCheckFile(TMessage *mess)
          if (gSystem->AccessPathName(fPackageDir + "/" + packnam, kWritePermission)) {
             // par file did not unpack itself in the expected directory, failure
             reply << (Int_t)0;
+            if (fProtocol <= 19) reply.Reset(kPROOF_FATAL);
             err = kTRUE;
             Error("HandleCheckFile", "package %s did not unpack into %s",
                                      filenam.Data(), packnam.Data());
@@ -3671,6 +3672,7 @@ void TProofServ::HandleCheckFile(TMessage *mess)
          }
       } else {
          reply << (Int_t)0;
+         if (fProtocol <= 19) reply.Reset(kPROOF_FATAL);
          err = kTRUE;
          PDB(kPackage, 1)
             Info("HandleCheckFile",
@@ -3718,6 +3720,7 @@ void TProofServ::HandleCheckFile(TMessage *mess)
             fProof->UploadPackage(fPackageDir + "/" + filenam);
       } else {
          reply << (Int_t)0;
+         if (fProtocol <= 19) reply.Reset(kPROOF_FATAL);
          PDB(kPackage, 1)
             Info("HandleCheckFile",
                  "package %s not yet on node", filenam.Data());
@@ -3744,6 +3747,7 @@ void TProofServ::HandleCheckFile(TMessage *mess)
             fProof->UploadPackage(fPackageDir + "/" + filenam);
       } else {
          reply << (Int_t)0;
+         if (fProtocol <= 19) reply.Reset(kPROOF_FATAL);
          PDB(kPackage, 1)
             Info("HandleCheckFile",
                  "package %s not yet on node", filenam.Data());
@@ -3759,7 +3763,7 @@ void TProofServ::HandleCheckFile(TMessage *mess)
 
       if (md5local && md5 == (*md5local)) {
          // copy file from cache to working directory
-         Bool_t cp = (opt & TProof::kCp) ? kTRUE : kFALSE;
+         Bool_t cp = ((opt & TProof::kCp) || (fProtocol <= 19)) ? kTRUE : kFALSE;
          if (cp) {
             Bool_t cpbin = (opt & TProof::kCpBin) ? kTRUE : kFALSE;
             CopyFromCache(filenam, cpbin);
@@ -3769,6 +3773,7 @@ void TProofServ::HandleCheckFile(TMessage *mess)
             Info("HandleCheckFile", "file %s already on node", filenam.Data());
       } else {
          reply << (Int_t)0;
+         if (fProtocol <= 19) reply.Reset(kPROOF_FATAL);
          PDB(kCache, 1)
             Info("HandleCheckFile", "file %s not yet on node", filenam.Data());
       }
