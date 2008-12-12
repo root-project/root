@@ -23,7 +23,7 @@ else
 ROOTEXE      := bin/root.exe
 endif
 ifneq ($(BUILDCINT7),)
-ROOT7EXE     := $(subst root,root7,$(ROOTEXE))
+ROOT7EXE     := $(subst root,rootc7,$(ROOTEXE))
 endif
 ifneq ($(PLATFORM),win32)
 ROOTNEXE     := bin/rootn.exe
@@ -191,7 +191,7 @@ distclean-$(MODNAME): clean-$(MODNAME)
 		   $(PROOFSERVEXE) $(PROOFSERVSH) $(HADDDEP) $(HADD) \
 		   $(H2ROOTDEP) $(H2ROOT) $(G2ROOT) \
 		   $(SSH2RPDDEP) $(SSH2RPD) $(ROOTSEXEDEP) $(ROOTSEXE) \
-		   $(ROOTSSH) $(subst root,root7,$(ROOTEXE))
+		   $(ROOTSSH) $(subst root,rootc7,$(ROOTEXE))
 
 distclean::     distclean-$(MODNAME)
 
