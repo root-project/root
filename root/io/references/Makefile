@@ -34,16 +34,16 @@ libmaster.$(DllSuf): MasterDict.o MyClass.o
 	$(LD) $(SOFLAGS) $(LDFLAGS) $^ -o $@
 
 lotsRef_C.$(DllSuf): A_C.$(DllSuf) lotsRef.C create.C
-	$(CMDECHO) root -q -b -l create.C > lotsRef_C.build.log 2>&1 
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l create.C > lotsRef_C.build.log 2>&1 
 
 lotsRef.root: lotsRef_C.$(DllSuf) $(ROOTCORELIBS) 
-	$(CMDECHO) (root -q -b -l 'lotsRef.C+(300)' && root -q -b -l 'lotsRef.C+(2)' && root -q -b -l 'lotsRef.C+(1)' ) > logRef_root.log 2>&1 && \
+	$(CMDECHO) ($(CALLROOTEXE) -q -b -l 'lotsRef.C+(300)' && $(CALLROOTEXE) -q -b -l 'lotsRef.C+(2)' && $(CALLROOTEXE) -q -b -l 'lotsRef.C+(1)' ) > logRef_root.log 2>&1 && \
 	diff -bw logRef_root.ref logRef_root.log
 
 lotsRef.log: lotsRef.root lotsRef_C.$(DllSuf) A_C.$(DllSuf)
 
 lotsRef: lotsRef.log
-	$(TestDiff) && diff -bw logRef_root.ref logRef_root.log
+	$(TestDiff) && diff -bw logRef_root.log logRef_root.ref
 
 refarray.root: refarray_C.$(DllSuf) $(ROOTCORELIBS) 
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l 'refarray.C+(1)' > refarray_root.log 2>&1
