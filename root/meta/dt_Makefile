@@ -67,7 +67,7 @@ Event.old.split.root : Event_cxx.$(DllSuf) MainEvent_cxx.$(DllSuf) makeEvent.C
 	echo  "$@ made"
 
 $(REFFILE) : dt_MakeRef.C dt_DrawTest.C Event_cxx.$(DllSuf)  Event.h Event.new.split9.root
-	@root -b -q 'dt_MakeRef.C("Event.new.split9.root",0);' $(OUTPUT) && \
+	$(CMDECHO) $(CALLROOTEXE) -b -q 'dt_MakeRef.C("Event.new.split9.root",0);' $(OUTPUT) && \
 	echo "$@ made"
 
 ClassWarning='Warning in <TClass::TClass>: no dictionary for class'
@@ -76,9 +76,9 @@ Streamer="Event::Streamer not available,"
 
 
 dt_RunDrawTest_C.$(DllSuf) : dt_RunDrawTest.C dt_DrawTest.C
-	@root -l -b -q dt_build.C  2>&1 $(OUTPUT)| grep -v _cint.cxx && \
+	$(CMDECHO) $(CALLROOTEXE) -l -b -q dt_build.C  2>&1 $(OUTPUT)| grep -v _cint.cxx && \
 	echo "$@ made"
 
 #Windows does not like piping 
-#	@echo 'gSystem->Exit(!gSystem->CompileMacro("dt_RunDrawTest.C","kf"))' | root -l -b $(OUTPUT) && \
+#	@echo 'gSystem->Exit(!gSystem->CompileMacro("dt_RunDrawTest.C","kf"))' | $(CALLROOTEXE)  -b $(OUTPUT) && \
 
