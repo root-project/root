@@ -963,10 +963,11 @@ private:
 #endif
   struct G__DUMMY_FOR_CINT7 dummyForCint7;
 #ifdef __cplusplus
-};
+}
 #else
-} G__value ;
+} G__value
 #endif
+;
 
 /**************************************************************************
 * reference type argument for precompiled function
