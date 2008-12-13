@@ -20,11 +20,11 @@ DICTS_H = $(PACKAGES:%=%dict.h)
 
 main: $(SHARED_LIBS) array_cxx.$(DllSuf)
 
-current_test.log : main Run.C $(ROOTV) $(ROOTCORELIBS) 
-	$(CMDECHO)root -q -l -b "Run.C" > current_test.log 2>&1 
+current_test.log : Run.C $(SHARED_LIBS) array_cxx.$(DllSuf) $(ROOTV) $(ROOTCORELIBS) 
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b "Run.C" > current_test.log 2>&1 
 
 currentTest: current_test.log
-	$(CMDECHO) diff -b current_test.log current_test.ref
+	$(CMDECHO) diff -b -u current_test.ref current_test.log 
 
 $(DICTS) : %dict.C : %.h %linkdef.h $(ROOTCINT)
 	$(CMDECHO)rootcint -f $@ -c $(filter %.h,$^)
