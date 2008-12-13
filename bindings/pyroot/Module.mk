@@ -51,6 +51,14 @@ endif
 ROOTPYC      := $(ROOTPY:.py=.pyc)
 ROOTPYO      := $(ROOTPY:.py=.pyo)
 
+ifeq ($(BUILDCINT7),yes)
+ifeq ($(ARCH),win32)
+PYROOTEXTRALIB   := $(LPATH)/libCint.lib
+else
+PYROOTEXTRALIB   := -lMetaTCint
+endif
+endif
+
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(PYROOTH))
 ALLLIBS      += $(PYROOTLIB)
@@ -76,7 +84,7 @@ $(PYROOTLIB):   $(PYROOTO) $(PYROOTDO) $(ROOTPY) $(ROOTPYC) $(ROOTPYO) \
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		  "$(SOFLAGS)" libPyROOT.$(SOEXT) $@ \
 		  "$(PYROOTO) $(PYROOTDO)" \
-		  "$(ROOTULIBS) $(RPATH) $(ROOTLIBS) \
+		  "$(ROOTULIBS) $(RPATH) $(ROOTLIBS) $(PYROOTEXTRALIB) \
 		   $(PYTHONLIBDIR) $(PYTHONLIB)" "$(PYTHONLIBFLAGS)"
 ifeq ($(ARCH),win32)
 		cp -f bin/$(notdir $@) $(PYROOTPYD)
