@@ -33,31 +33,31 @@ endif
 # To run a diff and ignore whitespacing use $(TestDiffW)
 
 lib1.$(DllSuf) : compile.cxx myclass.cxx myclass.h
-	$(CMDECHO) root.exe -b -l -q 'compile.cxx("1")' > lib1.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE)  -b -l -q 'compile.cxx("1")' > lib1.log 2>&1
 
 lib2.$(DllSuf) : compile.cxx myclass.cxx myclass.h
-	$(CMDECHO) root.exe -b -l -q 'compile.cxx("2")' > lib2.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'compile.cxx("2")' > lib2.log 2>&1
 
 lib3.$(DllSuf) : compile.cxx myclass.cxx myclass.h
-	$(CMDECHO) root.exe -b -l -q 'compile.cxx("3")' > lib3.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'compile.cxx("3")' > lib3.log 2>&1
 
 lib4.$(DllSuf) : compile.cxx myclass.cxx myclass.h
-	$(CMDECHO) root.exe -b -l -q 'compile.cxx("4")' > lib4.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'compile.cxx("4")' > lib4.log 2>&1
 
 lib5.$(DllSuf) : compile.cxx myclass.cxx myclass.h
-	$(CMDECHO) root.exe -b -l -q 'compile.cxx("5")' > lib5.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'compile.cxx("5")' > lib5.log 2>&1
 
 lib6.$(DllSuf) : compile.cxx myclass.cxx myclass.h
-	$(CMDECHO) root.exe -b -l -q 'compile.cxx("6")' > lib6.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'compile.cxx("6")' > lib6.log 2>&1
 
 myclass1.root: wcomp.cxx lib1.$(DllSuf) 
-	$(CMDECHO) root.exe -b -l -q 'wcomp.cxx("1")' > myclass1.log 2>&1 
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'wcomp.cxx("1")' > myclass1.log 2>&1 
 
 myclass2.root: wcomp.cxx lib2.$(DllSuf) 
-	$(CMDECHO) root.exe -b -l -q 'wcomp.cxx("2")' > myclass2.log 2>&1 
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'wcomp.cxx("2")' > myclass2.log 2>&1 
 
 myclass3.root: wcomp.cxx lib3.$(DllSuf) 
-	$(CMDECHO) root.exe -b -l -q 'wcomp.cxx("3")' > myclass3.log 2>&1 
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'wcomp.cxx("3")' > myclass3.log 2>&1 
 
 FILES = myclass1.root myclass2.root myclass3.root
 LIBS = lib1.$(DllSuf) lib2.$(DllSuf) lib3.$(DllSuf) lib4.$(DllSuf) lib5.$(DllSuf) \

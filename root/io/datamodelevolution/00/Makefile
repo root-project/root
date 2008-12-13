@@ -66,7 +66,7 @@ test1.root: test1.clog
 test1_cxx.$(DllSuf): DataModelV1.h
 
 test1.clog: test1_cxx.$(DllSuf)
-	$(CMDECHO) root.exe -b -q -l test1.cxx+ > test1.clog 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -b -q -l test1.cxx+ > test1.clog 2>&1
 
 test1: test1.clog
 	$(TestDiff)
@@ -74,13 +74,13 @@ test1: test1.clog
 test2_cxx.$(DllSuf): DataModelV2.h
 
 test2.clog: test2_cxx.$(DllSuf) test1
-	$(CMDECHO) root.exe -b -q -l test2.cxx+ > test2.clog 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -b -q -l test2.cxx+ > test2.clog 2>&1
 
 test2: test2.clog
 	$(TestDiff)
 
 test3.clog: test3_cxx.$(DllSuf) test2
-	$(CMDECHO) root.exe -b -q -l test3.cxx+ > test3.clog 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -b -q -l test3.cxx+ > test3.clog 2>&1
 
 test3: test3.clog
 	$(TestDiff)

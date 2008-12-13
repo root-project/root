@@ -37,7 +37,7 @@ defaultParams: defaultParams.log
 endif
 
 staticfunc.log: staticfunc.C
-	$(CMDECHO) root.exe -b -q -l runstaticfunc.C 2>&1 | $(RemoveDirs) -e 's?[(]20[)]?:20:?' > staticfunc.log
+	$(CMDECHO) $(CALLROOTEXE) -b -q -l runstaticfunc.C 2>&1 | $(RemoveDirs) -e 's?[(]20[)]?:20:?' > staticfunc.log
 
 staticfunc: staticfunc.log
 	$(TestDiff)

@@ -26,10 +26,10 @@ ifeq ($(FAIL),)
 endif
 
 abstract.root: abstract_cxx.$(DllSuf)
-	$(CMDECHO) root.exe -b -q -l 'runabstract.cxx(0)' > abstract_root.log
+	$(CMDECHO) $(CALLROOTEXE)  -b -q -l 'runabstract.cxx(0)' > abstract_root.log
 
 abstract.log: abstract.root
-	$(CMDECHO) root.exe -b -q -l 'runabstract.cxx(1)' > abstract.log
+	$(CMDECHO) $(CALLROOTEXE)  -b -q -l 'runabstract.cxx(1)' > abstract.log
 
 abstract: abstract.log
 	$(TestDiff)

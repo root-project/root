@@ -67,13 +67,13 @@ rflx_test1.root: rtest1.clog
 test1_cxx.$(DllSuf): DataModelV1.h
 
 test1.clog: test1_cxx.$(DllSuf) libDataModelV1_dictcint.$(DllSuf)
-	$(CMDECHO) root.exe -b -q -l test1.cxx+ > test1.clog 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -b -q -l test1.cxx+ > test1.clog 2>&1
 
 test1: test1.clog
 	$(TestDiff)
 
 rtest1.clog: test1_cxx.$(DllSuf) libDataModelV1_dictrflx.$(DllSuf)
-	$(CMDECHO) root.exe -b -q -l test1.cxx+\(\"r\"\) > rtest1.clog 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -b -q -l test1.cxx+\(\"r\"\) > rtest1.clog 2>&1
 
 rtest1: rtest1.clog
 	$(TestDiff)
@@ -81,25 +81,28 @@ rtest1: rtest1.clog
 test2_cxx.$(DllSuf): DataModelV2.h
 
 test2.clog: test2_cxx.$(DllSuf) test1
-	$(CMDECHO) root.exe -b -q -l test2.cxx+ > test2.clog 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -b -q -l test2.cxx+ > test2.clog 2>&1
 
-test2: test2.clog
+test2.comp.log: test2.clog
+	$(CMDECHO) (cd ../logs/01; ../../common/compare.sh -s 1) > test2.comp.log
+
+test2: test2.comp.log
 	$(TestDiff)
 
 rtest2.clog: test2_cxx.$(DllSuf) rtest1
-	$(CMDECHO) root.exe -b -q -l test2.cxx+\(\"r\"\) > rtest2.clog 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -b -q -l test2.cxx+\(\"r\"\) > rtest2.clog 2>&1
 
 rtest2: rtest2.clog
 	$(TestDiff)
 
 test3.clog: test3_cxx.$(DllSuf) test2  libDataModelV2_dictcint.$(DllSuf)
-	$(CMDECHO) root.exe -b -q -l test3.cxx+ > test3.clog 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -b -q -l test3.cxx+ > test3.clog 2>&1
 
 test3: test3.clog
 	$(TestDiff)
 
 rtest3.clog: test3_cxx.$(DllSuf) rtest2 libDataModelV2_dictrflx.$(DllSuf)
-	$(CMDECHO) root.exe -b -q -l test3.cxx+\(\"r\"\) > rtest3.clog 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -b -q -l test3.cxx+\(\"r\"\) > rtest3.clog 2>&1
 
 rtest3: rtest3.clog
 	$(TestDiff)

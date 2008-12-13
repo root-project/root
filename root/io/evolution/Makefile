@@ -133,13 +133,13 @@ logs: $(LOGS)
 NumericalTypeEvolution: $(SUCCESSES)
 
 $(LIBS): lib%.$(DllSuf): rootalias.C float16.cxx float16.h compile.C
-	$(CMDECHO) root.exe -b -l -q 'compile.C(0, "$*")' > $*.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'compile.C(0, "$*")' > $*.log 2>&1
 
 %.root: lib%.$(DllSuf) rootalias.C run.C
-	$(CMDECHO) root.exe -b -l -q 'run.C("$*")' > lib$*.log 2>&1 
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'run.C("$*")' > lib$*.log 2>&1 
 
 $(LOGS) : check.%.log: %.root $(FILES) read.C
-	$(CMDECHO) root.exe -b -l -q 'read.C(0, "$*")' 2>&1 | grep -v Processing > $@
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'read.C(0, "$*")' 2>&1 | grep -v Processing > $@
 
 $(SUCCESSES) : check%.success: check.%.log
 	$(CMDECHO) diff -b check.ref $< && touch $@
@@ -161,10 +161,10 @@ stl_logs: $(STL_LOGS)
 StlTypeEvolution: $(patsubst %.root,check%.success,$(STL_FILES))
 
 $(STL_LIBS): lib%.$(DllSuf): rootalias.C maptovector.cxx maptovector.h compile.C
-	$(CMDECHO) root.exe -b -l -q 'compile.C(1, "$*")' > $*.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'compile.C(1, "$*")' > $*.log 2>&1
 
 $(STL_LOGS) : check.%.log: %.root $(STL_FILES) read.C
-	$(CMDECHO) root.exe -b -l -q 'read.C(1, "$*")' 2>&1 | grep -v Processing > $@
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'read.C(1, "$*")' 2>&1 | grep -v Processing > $@
 
 $(STL_SUCCESSES) : check%.success: check.%.log
 	$(CMDECHO) diff -b check.stl.ref $< && touch $@

@@ -20,7 +20,7 @@ endif
 
 # special case for Scott.C: link with python library
 Scott_C.$(DllSuf): Scott.C $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\",\"$(pylib)\"\) > Scott_C.build.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\",\"$(pylib)\"\) > Scott_C.build.log 2>&1
 
 
 testWithFailure:
@@ -29,7 +29,7 @@ ifeq ($(FAIL),)
 endif
 
 %_C.$(DllSuf): %.C $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\",\"libPyROOT\"\) > $*_C.build.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\",\"libPyROOT\"\) > $*_C.build.log 2>&1
 
 LoKiNamespace_C.clean.log: LoKiNamespace_C.$(DllSuf)
 	$(CMDECHO) rm -f LoKiNamespace_C.rootmap > LoKiNamespace_C.clean.log
