@@ -15,6 +15,7 @@
 
 
 #include "common.h"
+#include "Api.h"
 
 extern "C" {
 

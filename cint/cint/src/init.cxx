@@ -14,6 +14,7 @@
  ************************************************************************/
 
 #include "common.h"
+#include "Api.h"
 #include <list>
 #include <typeinfo>
 #include <string>

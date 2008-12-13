@@ -32,6 +32,7 @@
 #endif
 
 #include "common.h"
+#include "Api.h"
 
 #ifndef G__TESTMAIN
 #include <sys/stat.h>

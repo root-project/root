@@ -1127,41 +1127,7 @@ struct G__va_list_para;
 **************************************************************************/
 struct G__ifunc_table;
 struct G__var_array;
-
-/*********************************************************************
-* scratch upto dictionary position
-*********************************************************************/
-struct G__dictposition {
-  /* global variable table position */
-  struct G__var_array *var;
-  int ig15;
-  /* struct tagnum */
-  int tagnum;
-  /* const string table */
-  struct G__ConstStringList *conststringpos;
-  /* typedef table */
-  int typenum;
-  /* global function table position */
-  struct G__ifunc_table *ifunc;
-  int ifn;
-  /* include path */
-  struct G__includepath *ipath;
-  /* shared library file */
-  int allsl;
-  /* preprocessfilekey */
-  struct G__Preprocessfilekey *preprocessfilekey;
-  /* input file */
-  int nfile;
-  /* macro table */
-  struct G__Deffuncmacro *deffuncmacro;
-  /* template class */
-  struct G__Definedtemplateclass *definedtemplateclass;
-  /* function template */
-  struct G__Definetemplatefunc *definedtemplatefunc;
-
-  char* ptype; /* struct,union,enum,class */
-};
-
+struct G__dictposition; // decl in Api.h because of Cint7's having C++ content
 
 /**************************************************************************
 * comment information
