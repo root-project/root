@@ -38,10 +38,10 @@ dist:
 	$(CMDECHO)rm -rf treeproblem 
 
 reader.log: Foo.$(DllSuf) reader.C writer.log
-	$(CMDECHO)root -b -l -q reader.C > reader.log 2>&1
+	$(CMDECHO)$(CALLROOTEXE) -b -l -q reader.C > reader.log 2>&1
 
 writer.log: Foo.$(DllSuf) writer.C 
-	$(CMDECHO)root -b -l -q writer.C > writer.log 2>&1
+	$(CMDECHO)$(CALLROOTEXE) -b -l -q writer.C > writer.log 2>&1
 
 check: writer.log reader.log
 	$(CMDECHO) diff -buw reader.ref reader.log && diff -ubw writer.ref writer.log
