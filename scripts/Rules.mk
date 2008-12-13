@@ -27,6 +27,8 @@ valgrind: scripts/analyze_valgrind
 ifneq ($(ROOTC7),)
 CALLROOTEXE:=rootc7.exe
 CALLROOTEXEBUILD:=$(CALLROOTEXE)
+# Explicitly disable the python test (pyroot only works with cint5)
+export HAS_PYTHON:=no
 else
 CALLROOTEXEBUILD:=root.exe
 endif
