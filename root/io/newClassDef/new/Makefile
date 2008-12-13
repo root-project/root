@@ -40,9 +40,9 @@ main: $(SHARED_LIBS)
 #	echo $(SHARED_LIBS)
 
 newTest: newTest.log
-	$(CMDECHO) diff -b newTest.log newTest.ref
-newTest.log : main Run.C
-	$(CMDECHO)root -q -l -b "Run.C" > newTest.log 2>&1
+	$(CMDECHO) diff -b -u newTest.ref newTest.log 
+newTest.log : Run.C $(SHARED_LIBS)
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b "Run.C" > newTest.log 2>&1
 #@echo "All test succeeded in `pwd`"
 
 $(DICTS) : %dict.C : %.h %linkdef.h $(ROOTCINT)
