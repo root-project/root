@@ -125,11 +125,11 @@ void TEveTrackPropagator::Helix_t::UpdateRG(const TEveVector& p,  const TEveVect
   {
     // full update
     Float_t a  = fgkB2C * bMax * fCharge;
+    fPhiStep = fMinAng * TMath::DegToRad();
     if (a)
     {
       fR      = TMath::Abs(p.Mag() / a);
       fTStep   = TMath::Min(fR*fPhiStep, maxStep);
-      printf("step %f %f \n", fR, maxStep);
       fValid = kTRUE;
     }
     else 
@@ -179,7 +179,7 @@ TEveTrackPropagator::TEveTrackPropagator(const Text_t* n, const Text_t* t,
 
    fNMax     (4096),
    fMaxOrbs  (0.5),
-   fMaxStepRG  (1),
+   fMaxStepRG  (10),
 
    fEditPathMarks (kTRUE),
    fFitDaughters  (kTRUE),
@@ -336,7 +336,7 @@ void TEveTrackPropagator::Step(TEveVector4 &v, TEveVector &p, TEveVector4 &vOut,
    else
    {
       fH.UpdateRG(p, fMagFieldObj->GetField(fV));
-      Float_t step = 1;//fH.fTStep;
+      Float_t step = fH.fTStep;
       if (fraction > 0)
          step *= fraction;
 
@@ -439,49 +439,66 @@ Bool_t TEveTrackPropagator::LoopToVertex(TEveVector& v, TEveVector& p)
    TEveVector  forwP(p);
 
    Int_t first_point = fPoints.size();
-   Int_t np = first_point;
-   Bool_t hitBounds = kFALSE;
+   Int_t np          = first_point;
 
-   // XXXX Matevz has some ideas about this code.
-   while ( ! PointOverVertex(v, currV) && np < fNMax)
+   do
    {
       Step(currV, p, forwV, forwP);
+
+      if (PointOverVertex(v, forwV))
+         break;
+
       if (IsOutsideBounds(forwV, maxRsq, fMaxZ))
       {
-         hitBounds = kTRUE;
-         break;
+         fV = currV;
+         return kFALSE;
       }
+
+      fPoints.push_back(forwV);
       currV = forwV;
-      p = forwP;
-      fPoints.push_back(currV);
+      p     = forwP;
       ++np;
-   }
+   } while (np < fNMax);
 
    // make the remaining fractional step
-   if (!hitBounds && np > 1)
+   if (np > first_point)
    {
-      Float_t frac = (v - currV).Mag() / (fPoints[np-2]- fPoints[np-1]).Mag();
-  
-      // set step fraction
-      if (fStepper == kHelix)
-         fH.UpdateHelix(p, fH.fB, kTRUE, frac);
-      else
-         fH.fTStep *= frac; 
+      TEveVector d1 = v;     d1 -= currV;
+      TEveVector d2 = forwV; d2 -= currV;
+      TEveVector pln =  fH.fPl;
+      pln.Normalize();
 
-      Step(currV, p, forwV, forwP);
-      p = forwP;
+      if (pln.Dot(d2) > 1e-10)
+      {
+         // set step fraction
+         Float_t frac = pln.Dot(d1)/pln.Dot(d2);
+         //  printf("frac %f %d p (%f %f %f)\n", frac, np-first_point, fH.fPl.fX, fH.fPl.fY, fH.fPl.fZ);
+
+         if (fStepper == kHelix)
+            fH.UpdateHelix(p, fH.fB, kTRUE, frac);
+         else
+            fH.fTStep *= frac; 
+
+         Step(currV, p, forwV, forwP);
+         p = forwP;
+         currV = forwV;
+         fPoints.push_back(currV); np++;
+
+         TEveVector off(v); off -= currV;
+         off *= 1.0f / currV.fT;
+         for (Int_t i = first_point; i < np; ++i)
+         {
+            fPoints[i] += off * fPoints[i].fT;
+         }
+
+         fV = v;
+         return kTRUE;
+      }
    }
 
-   // correct for offset
-   TEveVector off(v); off -= currV;
-   off *= 1.0f / currV.fT;
-   for (Int_t i = first_point; i < np; ++i)
-   {
-      fPoints[i] += off * fPoints[i].fT;
-   }
-
+   fPoints.push_back(v);
    fV = v;
-   return ! hitBounds;
+   return kTRUE;
 }
 
 //______________________________________________________________________________

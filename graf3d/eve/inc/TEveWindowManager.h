@@ -29,6 +29,8 @@ protected:
    TEveWindow   *fCurrentWindow;
    TEveWindow   *fDefaultContainer;
 
+   void DestroyWindowRecurively(TEveWindow* window);
+
 public:
    TEveWindowManager(const Text_t* n="TEveWindowManager", const Text_t* t="");
    virtual ~TEveWindowManager();
@@ -46,6 +48,8 @@ public:
    TEveWindow*     GetDefaultContainer() const { return fDefaultContainer; }
    Bool_t          HasDefaultContainer() const { return fDefaultContainer != 0; }
    void            SetDefaultContainer(TEveWindow* w);
+
+   void            DestroyWindows();
 
    // Global frame decoration control.
 

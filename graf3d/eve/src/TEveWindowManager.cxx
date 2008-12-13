@@ -126,6 +126,39 @@ void TEveWindowManager::SetDefaultContainer(TEveWindow* w)
    fDefaultContainer = w;
 }
 
+//______________________________________________________________________________
+void TEveWindowManager::DestroyWindowRecurively(TEveWindow* window)
+{
+   // Destroy window's children and then the window itself.
+   // Protected method used during shutdown.
+
+   while (window->HasChildren())
+   {
+      TEveWindow* w = dynamic_cast<TEveWindow*>(window->FirstChild());
+      if (w)
+	 DestroyWindowRecurively(w);
+      else
+         window->RemoveElement(window->FirstChild());
+   }
+   window->DestroyWindowAndSlot();
+}
+
+//______________________________________________________________________________
+void TEveWindowManager::DestroyWindows()
+{
+   // Wait for all windows to shut-down.
+
+   while (HasChildren())
+   {
+      TEveWindow* w = dynamic_cast<TEveWindow*>(FirstChild());
+      if (w)
+	 DestroyWindowRecurively(w);
+      else
+         RemoveElement(FirstChild());
+   }
+
+}
+
 //==============================================================================
 
 //______________________________________________________________________________

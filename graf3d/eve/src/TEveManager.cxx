@@ -198,6 +198,10 @@ TEveManager::~TEveManager()
 {
    // Destructor.
 
+   // Stop timer and deny further redraw requests.
+   fRedrawTimer.Stop();
+   fTimerActive = kTRUE;
+
    fGlobalScene->DecDenyDestroy();
    fEventScene->DecDenyDestroy();
    fScenes->DestroyScenes();
@@ -210,7 +214,7 @@ TEveManager::~TEveManager()
    fViewers->Destroy();
    fViewers = 0;
 
-   fWindowManager->DestroyElements();
+   fWindowManager->DestroyWindows();
    fWindowManager->DecDenyDestroy();
    fWindowManager->Destroy();
    fWindowManager = 0;
@@ -356,7 +360,7 @@ void TEveManager::RegisterRedraw3D()
    // Register a request for 3D redraw.
 
    fRedrawTimer.Start(0, kTRUE);
-   fTimerActive = true;
+   fTimerActive = kTRUE;
 }
 
 //______________________________________________________________________________
