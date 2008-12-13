@@ -1442,7 +1442,7 @@ void TClass::CalculateStreamerOffset()
    // its base class TObject. The pointer can be adjusted by
    // that offset to access any virtual method of TObject like
    // Streamer() and ShowMembers().
-   if (!fInterStreamer) {
+   if (!fInterStreamer && fClassInfo) {
       CallFunc_t *f  = gCint->CallFunc_Factory();
       gCint->CallFunc_SetFuncProto(f,fClassInfo,"Streamer","TBuffer&",&fOffsetStreamer);
       fInterStreamer = f;
