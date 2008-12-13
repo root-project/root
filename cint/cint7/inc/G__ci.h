@@ -856,12 +856,14 @@ typedef struct {
 #endif
   struct G__DUMMY_FOR_CINT5 dummyFotCint5;
   struct G__REFLEXTYPE_C_PLACEHOLDER buf_typenum;
+}
 #ifdef __cplusplus
-};
+
 #else
-} G__value ;
+  G__value
 #endif
-   
+;  
+
 /**************************************************************************
 * structure for function and array parameter
 *
