@@ -1846,7 +1846,7 @@ const char* TCint::GetSharedLibs()
       Int_t len = strlen(filename);
       const char *end = filename+len;
       Bool_t needToSkip = kFALSE;
-      if ( len>5 && ( (strcmp(end-4,".dll") == 0 ) || (strstr(filename,"Dict.")!=0) ) ) {
+      if ( len>5 && ( (strcmp(end-4,".dll") == 0 ) || (strstr(filename,"Dict.")!=0)  || (strstr(filename,"MetaTCint")!=0)  ) ) {
          // Filter out the cintdlls
          static const char *excludelist [] = {
             "stdfunc.dll","stdcxxfunc.dll","posix.dll","ipc.dll","posix.dll"
@@ -1856,7 +1856,9 @@ const char* TCint::GetSharedLibs()
             "exception.dll","stdexcept.dll","complex.dll","climits.dll",
             "libvectorDict.","libvectorboolDict.","liblistDict.","libdequeDict.",
             "libmapDict.", "libmap2Dict.","libsetDict.","libmultimapDict.","libmultimap2Dict.",
-            "libmultisetDict.","libstackDict.","libqueueDict.","libvalarrayDict."};
+            "libmultisetDict.","libstackDict.","libqueueDict.","libvalarrayDict.",
+            "libMetaTCint.","libMetaTCint7."
+         };
          static const unsigned int excludelistsize = sizeof(excludelist)/sizeof(excludelist[0]);
          static int excludelen[excludelistsize] = {-1};
          if (excludelen[0] == -1) {
