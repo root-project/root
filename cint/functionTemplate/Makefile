@@ -12,7 +12,11 @@ ifeq ($(HAVEREFLEX),yes)
 endif
 
 # also in Rules.mk, but that needs TEST_TARGETS to be defined first.
-HAVEPYTHON := $(shell root-config --has-python)
+ifneq ($(HAS_PYTHON),)
+   HAVEPYTHON := $(HAS_PYTHON)
+else
+   HAVEPYTHON := $(shell root-config --has-python)
+endif
 
 ifeq ($(HAVEPYTHON),yes)
  TEST_TARGETS += pythoncintrun
