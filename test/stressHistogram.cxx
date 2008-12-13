@@ -3376,7 +3376,7 @@ int stressHistogram()
       r.SetSeed(8652);
       status = 0;
       for ( unsigned int j = 0; j < refReadTestSuite.nTests; ++j ) {
-         status |= refReadTestSuite.tests[j]();
+         status += refReadTestSuite.tests[j]();
       }
       printResult( refReadTestSuite.suiteName, status);
       GlobalStatus += status;
