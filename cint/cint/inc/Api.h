@@ -59,6 +59,12 @@ G__EXPORT
 int G__Lsizeof(const char *typenamein);
 }
 
+struct G__ConstStringList;
+struct G__Preprocessfilekey;
+struct G__Deffuncmacro;
+struct G__Definedtemplateclass;
+struct G__Definetemplatefunc;
+
 /*********************************************************************
  * scratch upto dictionary position
  *********************************************************************/
