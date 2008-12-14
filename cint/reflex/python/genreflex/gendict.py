@@ -197,7 +197,7 @@ class genDictionary(object) :
           cid = it['id']
           funname = 'addCpp'+self.xref[cid]['elem']+'Select'
           if funname in dir(self):
-            self.__class__.__dict__[funname](self, self.genTypeName(cid)[cppsellen:], cid)
+            self.__class__.__dict__[funname](self, self.genTypeName(cid, _useCache=False)[cppsellen:], cid)
     self.tryCppSelections()
     self.findSpecialNamespace()
 #----------------------------------------------------------------------------------
@@ -1448,7 +1448,7 @@ class genDictionary(object) :
         s += "*"
     else :
       if 'name' in attrs : s += attrs['name']
-      s = normalizeClass(s,alltempl)                   # Normalize STL class names, primitives, etc.
+      s = normalizeClass(s,alltempl,_useCache=_useCache) # Normalize STL class names, primitives, etc.
     return s
 #----------------------------------------------------------------------------------
   def genTypeID(self, id ) :
@@ -2278,11 +2278,9 @@ def normalizeClass(name,alltempl,_useCache=True,_cache={}) :
     if cnt == 0 : names.append(s)
     else        : names[-1] += '::' + s
     cnt += s.count('<')+s.count('(')-s.count('>')-s.count(')')
-  if alltempl : return string.join(map(normalizeFragmentAllTempl,names),'::')
-  else        : return string.join(map(normalizeFragmentNoDefTempl,names),'::')
+  normlist = [normalizeFragment(frag,alltempl,_useCache) for frag in names]
+  return string.join(normlist, '::')
 #--------------------------------------------------------------------------------------
-def normalizeFragmentAllTempl(name)   : return normalizeFragment(name,True)
-def normalizeFragmentNoDefTempl(name) : return normalizeFragment(name) 
 def normalizeFragment(name,alltempl=False,_useCache=True,_cache={}) :
   name = name.strip()
   if _useCache:
