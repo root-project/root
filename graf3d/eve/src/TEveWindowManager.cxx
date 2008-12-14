@@ -136,7 +136,7 @@ void TEveWindowManager::DestroyWindowRecurively(TEveWindow* window)
    {
       TEveWindow* w = dynamic_cast<TEveWindow*>(window->FirstChild());
       if (w)
-	 DestroyWindowRecurively(w);
+         DestroyWindowRecurively(w);
       else
          window->RemoveElement(window->FirstChild());
    }
@@ -152,7 +152,7 @@ void TEveWindowManager::DestroyWindows()
    {
       TEveWindow* w = dynamic_cast<TEveWindow*>(FirstChild());
       if (w)
-	 DestroyWindowRecurively(w);
+         DestroyWindowRecurively(w);
       else
          RemoveElement(FirstChild());
    }

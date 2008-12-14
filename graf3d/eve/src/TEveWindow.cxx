@@ -707,7 +707,7 @@ void TEveWindow::PreUndock()
    {
       TEveWindow* w = dynamic_cast<TEveWindow*>(*i);
       if (w)
-	 w->PreUndock();
+         w->PreUndock();
    }
 }
 
@@ -720,7 +720,7 @@ void TEveWindow::PostDock()
    {
       TEveWindow* w = dynamic_cast<TEveWindow*>(*i);
       if (w)
-	 w->PostDock();
+         w->PostDock();
    }
 }
 
