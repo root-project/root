@@ -80,6 +80,7 @@ TAdvancedGraphicsDialog::TAdvancedGraphicsDialog(const TGWindow *p, const TGWind
 //______________________________________________________________________________
 void TAdvancedGraphicsDialog::CreateContourFrame()
 {
+   // t.b.d.:  add method description
    fContourFrame = new TGVerticalFrame(fTab);
    TGHorizontalFrame* frame = new TGHorizontalFrame(fContourFrame);
 
@@ -142,6 +143,7 @@ void TAdvancedGraphicsDialog::CreateContourFrame()
 //______________________________________________________________________________
 void TAdvancedGraphicsDialog::CreateScanFrame()
 {
+   // t.b.d.:  add method description
    fScanFrame = new TGVerticalFrame(fTab);
    TGHorizontalFrame* frame = new TGHorizontalFrame(fScanFrame);
 
@@ -200,6 +202,7 @@ void TAdvancedGraphicsDialog::CreateScanFrame()
 
 void TAdvancedGraphicsDialog::AddParameters(TGComboBox* comboBox) 
 {
+   // t.b.d.:  add method description
    for ( Int_t i = 0; i < fFitter->GetNumberTotalParameters(); ++i ) {
       comboBox->AddEntry(fFitter->GetParName(i), kAGD_PARCOUNTER + i);
    }
@@ -209,6 +212,7 @@ void TAdvancedGraphicsDialog::AddParameters(TGComboBox* comboBox)
 //______________________________________________________________________________
 void TAdvancedGraphicsDialog::ConnectSlots()
 {
+   // t.b.d.:  add method description
    fClose->Connect("Clicked()", "TAdvancedGraphicsDialog", this, "CloseWindow()");
    fDraw->Connect("Clicked()", "TAdvancedGraphicsDialog", this, "DoDraw()");
    fScanPar->Connect("Selected(Int_t)", "TAdvancedGraphicsDialog", this, "DoChangedScanPar(Int_t)");
@@ -217,6 +221,7 @@ void TAdvancedGraphicsDialog::ConnectSlots()
 //______________________________________________________________________________
 void TAdvancedGraphicsDialog::DoChangedScanPar(Int_t selected)
 {
+   // t.b.d.:  add method description
    double val = fFitter->GetParameter( selected - kAGD_PARCOUNTER );
    double err = fFitter->GetParError(  selected - kAGD_PARCOUNTER ); 
    fScanMin->SetNumber( val -2 * err );
@@ -226,6 +231,7 @@ void TAdvancedGraphicsDialog::DoChangedScanPar(Int_t selected)
 //______________________________________________________________________________
 void TAdvancedGraphicsDialog::DoDraw()
 {
+   // t.b.d.:  add method description
    if ( fTab->GetCurrent() == 0 ) {
       DrawContour();
    } else if ( fTab->GetCurrent() == 1 ) {
@@ -236,6 +242,7 @@ void TAdvancedGraphicsDialog::DoDraw()
 //______________________________________________________________________________
 void TAdvancedGraphicsDialog::DrawContour()
 {
+   // t.b.d.:  add method description
    static TGraph * graph = 0;
    if ( graph )
       delete graph;
@@ -259,6 +266,7 @@ void TAdvancedGraphicsDialog::DrawContour()
 //______________________________________________________________________________
 void TAdvancedGraphicsDialog::DrawScan()
 {
+   // t.b.d.:  add method description
    static TGraph * graph = 0;
    if ( graph )
       delete graph;

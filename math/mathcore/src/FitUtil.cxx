@@ -81,13 +81,13 @@ namespace ROOT {
                // set parameters in function
                //fFunc->SetParameters(p); 
                if (fDim == 1) { 
-                  fFunc1Dim = new ROOT::Math::WrappedMemFunction< IntegralEvaluator, double (IntegralEvaluator::*)(double ) const > (*this, &IntegralEvaluator::f1);
+                  fFunc1Dim = new ROOT::Math::WrappedMemFunction< IntegralEvaluator, double (IntegralEvaluator::*)(double ) const > (*this, &IntegralEvaluator::F1);
                   fIg1Dim = new ROOT::Math::IntegratorOneDim(); 
                   //fIg1Dim->SetFunction( static_cast<const ROOT::Math::IMultiGenFunction & >(*fFunc),false);
                   fIg1Dim->SetFunction(*fFunc1Dim);
                } 
                else if (fDim > 1) {
-                  fFuncNDim = new ROOT::Math::WrappedMemMultiFunction< IntegralEvaluator, double (IntegralEvaluator::*)(const double *) const >  (*this, &IntegralEvaluator::fN);
+                  fFuncNDim = new ROOT::Math::WrappedMemMultiFunction< IntegralEvaluator, double (IntegralEvaluator::*)(const double *) const >  (*this, &IntegralEvaluator::FN);
                   fIgNDim = new ROOT::Math::IntegratorMultiDim();
                   fIgNDim->SetFunction(*fFuncNDim);
                }
@@ -109,12 +109,12 @@ namespace ROOT {
             }
             
             // evaluation of integrand function (one-dim)
-            double f1 (double x) const { 
+            double F1 (double x) const { 
                double xx[1]; xx[0] = x;
                return (*fFunc)( xx, fParams);
             }
             // evaluation of integrand function (multi-dim)
-            double fN(const double * x) const { 
+            double FN(const double * x) const { 
                return (*fFunc)( x, fParams);
             }
 
