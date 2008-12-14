@@ -3387,7 +3387,7 @@ int stressHistogram()
    bm.Stop("stressHistogram");
    std::cout <<"****************************************************************************\n";
    bm.Print("stressHistogram");
-   const double reftime = 7.1; // needs to be updated // ref time on  pcbrun4
+   const double reftime = 32; // needs to be updated // ref time on  pcbrun4
    double rootmarks = 860 * reftime / bm.GetCpuTime("stressHistogram");
    std::cout << " ROOTMARKS = " << rootmarks << " ROOT version: " << gROOT->GetVersion() << "\t" 
              << gROOT->GetSvnBranch() << "@" << gROOT->GetSvnRevision() << std::endl;
