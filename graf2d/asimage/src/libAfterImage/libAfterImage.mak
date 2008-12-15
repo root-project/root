@@ -328,7 +328,7 @@ LIB32_OBJS= \
 !IF EXISTS("libAfterImage.dep")
 !INCLUDE "libAfterImage.dep"
 !ELSE 
-!MESSAGE Warning: cannot find "libAfterImage.dep"
+!MESSAGE Cannot find "libAfterImage.dep"
 !ENDIF 
 !ENDIF 
 
