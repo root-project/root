@@ -127,7 +127,7 @@ void TEveWindowManager::SetDefaultContainer(TEveWindow* w)
 }
 
 //______________________________________________________________________________
-void TEveWindowManager::DestroyWindowRecurively(TEveWindow* window)
+void TEveWindowManager::DestroyWindowRecursively(TEveWindow* window)
 {
    // Destroy window's children and then the window itself.
    // Protected method used during shutdown.
@@ -136,7 +136,7 @@ void TEveWindowManager::DestroyWindowRecurively(TEveWindow* window)
    {
       TEveWindow* w = dynamic_cast<TEveWindow*>(window->FirstChild());
       if (w)
-         DestroyWindowRecurively(w);
+         DestroyWindowRecursively(w);
       else
          window->RemoveElement(window->FirstChild());
    }
@@ -152,7 +152,7 @@ void TEveWindowManager::DestroyWindows()
    {
       TEveWindow* w = dynamic_cast<TEveWindow*>(FirstChild());
       if (w)
-         DestroyWindowRecurively(w);
+         DestroyWindowRecursively(w);
       else
          RemoveElement(FirstChild());
    }

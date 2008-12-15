@@ -10,8 +10,6 @@ TEveBoxSet* cone_test(Float_t x=0, Float_t y=0, Float_t z=0,
 
   using namespace TMath;
 
-  TEveManager::Create();
-
   TEveStraightLineSet* lines = new TEveStraightLineSet("StraightLines");
   lines->SetLineColor(kYellow);
   lines->SetLineWidth(2);
