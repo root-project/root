@@ -7,7 +7,8 @@ TAdvancedGraphicsDialog::TAdvancedGraphicsDialog(const TGWindow *p, const TGWind
    TGTransientFrame(p, main, 10, 10, kVerticalFrame), 
    fFitter((TBackCompFitter *) TVirtualFitter::GetFitter())
 {
-   // Create simple input dialog.
+   // Creates the Advanced Graphics Dialog.
+
 
    if (!p && !main) {
       MakeZombie();
@@ -22,9 +23,11 @@ TAdvancedGraphicsDialog::TAdvancedGraphicsDialog(const TGWindow *p, const TGWind
    fTab->SetCleanup(kDeepCleanup);
    fTab->Associate(this);
 
+   // Add the first method to the dialog (Contour)
    CreateContourFrame();
    fTab->AddTab("Contour", fContourFrame);
 
+   // Add the second method to the dialog (Scan)
    CreateScanFrame();
    fTab->AddTab("Scan", fScanFrame);
 
@@ -80,7 +83,9 @@ TAdvancedGraphicsDialog::TAdvancedGraphicsDialog(const TGWindow *p, const TGWind
 //______________________________________________________________________________
 void TAdvancedGraphicsDialog::CreateContourFrame()
 {
-   // t.b.d.:  add method description
+   // Create the frame that contains all the necessary information for
+   // the Contour method.
+
    fContourFrame = new TGVerticalFrame(fTab);
    TGHorizontalFrame* frame = new TGHorizontalFrame(fContourFrame);
 
@@ -143,7 +148,9 @@ void TAdvancedGraphicsDialog::CreateContourFrame()
 //______________________________________________________________________________
 void TAdvancedGraphicsDialog::CreateScanFrame()
 {
-   // t.b.d.:  add method description
+   // Create the frame that contains all the necessary information for
+   // the Scan method.
+
    fScanFrame = new TGVerticalFrame(fTab);
    TGHorizontalFrame* frame = new TGHorizontalFrame(fScanFrame);
 
@@ -202,7 +209,9 @@ void TAdvancedGraphicsDialog::CreateScanFrame()
 
 void TAdvancedGraphicsDialog::AddParameters(TGComboBox* comboBox) 
 {
-   // t.b.d.:  add method description
+   // Add all the parameters of the VirtualFitter into a comboBox
+   // (helper method)
+
    for ( Int_t i = 0; i < fFitter->GetNumberTotalParameters(); ++i ) {
       comboBox->AddEntry(fFitter->GetParName(i), kAGD_PARCOUNTER + i);
    }
@@ -212,16 +221,22 @@ void TAdvancedGraphicsDialog::AddParameters(TGComboBox* comboBox)
 //______________________________________________________________________________
 void TAdvancedGraphicsDialog::ConnectSlots()
 {
-   // t.b.d.:  add method description
+   // Connect the slots (buttons mainly + specific methods)
+
+   // Buttons
    fClose->Connect("Clicked()", "TAdvancedGraphicsDialog", this, "CloseWindow()");
    fDraw->Connect("Clicked()", "TAdvancedGraphicsDialog", this, "DoDraw()");
+
+   // Slots for the Scan method
    fScanPar->Connect("Selected(Int_t)", "TAdvancedGraphicsDialog", this, "DoChangedScanPar(Int_t)");
 }
 
 //______________________________________________________________________________
 void TAdvancedGraphicsDialog::DoChangedScanPar(Int_t selected)
 {
-   // t.b.d.:  add method description
+   // Changes the Min and Max default values of the scan method,
+   // depending on the selected parameter.
+
    double val = fFitter->GetParameter( selected - kAGD_PARCOUNTER );
    double err = fFitter->GetParError(  selected - kAGD_PARCOUNTER ); 
    fScanMin->SetNumber( val -2 * err );
@@ -231,7 +246,8 @@ void TAdvancedGraphicsDialog::DoChangedScanPar(Int_t selected)
 //______________________________________________________________________________
 void TAdvancedGraphicsDialog::DoDraw()
 {
-   // t.b.d.:  add method description
+   // Calls the correspoding method, depending on the selected tab.
+
    if ( fTab->GetCurrent() == 0 ) {
       DrawContour();
    } else if ( fTab->GetCurrent() == 1 ) {
@@ -242,7 +258,9 @@ void TAdvancedGraphicsDialog::DoDraw()
 //______________________________________________________________________________
 void TAdvancedGraphicsDialog::DrawContour()
 {
-   // t.b.d.:  add method description
+   // Generates all necessary data for the Contour method from its
+   // tab. Then it call Virtual Fitter to perform it.
+
    static TGraph * graph = 0;
    if ( graph )
       delete graph;
@@ -266,7 +284,9 @@ void TAdvancedGraphicsDialog::DrawContour()
 //______________________________________________________________________________
 void TAdvancedGraphicsDialog::DrawScan()
 {
-   // t.b.d.:  add method description
+   // Generates all necessary data for the Scan method from its
+   // tab. Then it call Virtual Fitter to perform it.
+
    static TGraph * graph = 0;
    if ( graph )
       delete graph;
