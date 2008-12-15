@@ -719,7 +719,7 @@ TGHtmlElement *TGHtml::FillOutBlock(TGHtmlBlock *p)
                break;
             }
             if (txt->spaceWidth <= 0) {
-               CANT_HAPPEN;
+               //CANT_HAPPEN;
                break;
             }
             if (y != txt->y 
