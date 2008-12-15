@@ -50,22 +50,22 @@ TGHtmlElement *TGHtml::TokenByIndex(int N, int /*flag*/)
    TGHtmlElement *p;
    int n;
 
-   if (N == 0) return pFirst;
+   if (N == 0) return fPFirst;
 
-   if (N > nToken / 2) {
+   if (N > fNToken / 2) {
       // Start at the end and work back toward the beginning
-      for (p = pLast, n = nToken; p; p = p->pPrev) {
-         if (p->type != Html_Block) {
-            if (p->id == N) break;
+      for (p = fPLast, n = fNToken; p; p = p->fPPrev) {
+         if (p->fType != Html_Block) {
+            if (p->fElId == N) break;
             --n;
          }
       }
    } else {
       // Start at the beginning and work forward
-      for (p = pFirst; p; p = p->pNext) {
-         if (p->type != Html_Block) {
+      for (p = fPFirst; p; p = p->fPNext) {
+         if (p->fType != Html_Block) {
             --N;
-            if (N == p->id) break;
+            if (N == p->fElId) break;
          }
       }
    }
@@ -81,11 +81,11 @@ int TGHtml::TokenNumber(TGHtmlElement *p)
    //int n = 0;
 
    if (!p) return -1;
-   return p->id;
+   return p->fElId;
 
 ///  while (p) {
-///    if (p->type != Html_Block) ++n;
-///    p = p->pPrev;
+///    if (p->fType != Html_Block) ++n;
+///    p = p->fPPrev;
 ///  }
 ///
 ///  return n;
@@ -99,14 +99,14 @@ void TGHtml::maxIndex(TGHtmlElement *p, int *pIndex, int isLast)
    if (p == 0) {
       *pIndex = 0;
    } else {
-      switch (p->type) {
+      switch (p->fType) {
          case Html_Text:
-            *pIndex = p->count - isLast;
+            *pIndex = p->fCount - isLast;
             break;
 
          case Html_Space:
-            if (p->style.flags & STY_Preformatted) {
-               *pIndex = p->count - isLast;
+            if (p->fStyle.fFlags & STY_Preformatted) {
+               *pIndex = p->fCount - isLast;
             } else {
                *pIndex = 0;
             }
@@ -137,53 +137,53 @@ void TGHtml::FindIndexInBlock(TGHtmlBlock *pBlock, int x,
    int len;
    int n;
 
-   p = pBlock->pNext;
-   font = GetFont(p->style.font);
-   if (x <= pBlock->left) {
+   p = pBlock->fPNext;
+   font = GetFont(p->fStyle.fFont);
+   if (x <= pBlock->fLeft) {
       *ppToken = p;
       *pIndex = 0;
       return;
-   } else if (x >= pBlock->right) {
+   } else if (x >= pBlock->fRight) {
       *ppToken = p;
       *pIndex = 0;
-      while (p && p->type != Html_Block) {
+      while (p && p->fType != Html_Block) {
          *ppToken = p;
-         p = p->pNext;
+         p = p->fPNext;
       }
       p = *ppToken;
-      if (p && p->type == Html_Text) {
-         *pIndex = p->count - 1;
+      if (p && p->fType == Html_Text) {
+         *pIndex = p->fCount - 1;
       }
       return;
    }
-   if (pBlock->n == 0) {
+   if (pBlock->fN == 0) {
       *ppToken = p;
       *pIndex = 0;
    }
-   n = font->MeasureChars(pBlock->z, pBlock->n, x - pBlock->left, 0, &len);
+   n = font->MeasureChars(pBlock->fZ, pBlock->fN, x - pBlock->fLeft, 0, &len);
    *pIndex = 0;
    *ppToken = 0;
    while (p && n >= 0) {
-      switch (p->type) {
+      switch (p->fType) {
          case Html_Text:
-            if (n < p->count) {
+            if (n < p->fCount) {
                *pIndex = n;
             } else {
-               *pIndex = p->count - 1;
+               *pIndex = p->fCount - 1;
             }
             *ppToken = p;
-            n -= p->count;
+            n -= p->fCount;
             break;
 
          case Html_Space:
-            if (p->style.flags & STY_Preformatted) {
-               if (n < p->count) {
+            if (p->fStyle.fFlags & STY_Preformatted) {
+               if (n < p->fCount) {
                   *pIndex = n;
                } else {
-                  *pIndex = p->count - 1;
+                  *pIndex = p->fCount - 1;
                }
                *ppToken = p;
-               n -= p->count;
+               n -= p->fCount;
             } else {
                *pIndex = 0;
                *ppToken = p;
@@ -194,12 +194,12 @@ void TGHtml::FindIndexInBlock(TGHtmlBlock *pBlock, int x,
          default:
             break;
       }
-      if (p) p = p->pNext;
+      if (p) p = p->fPNext;
    }
 }
 
 //______________________________________________________________________________
-void TGHtml::IndexToBlockIndex(SHtmlIndex sIndex,
+void TGHtml::IndexToBlockIndex(SHtmlIndex_t sIndex,
                                TGHtmlBlock **ppBlock, int *piIndex)
 {
    // Convert an Element-based index into a Block-based index.
@@ -209,23 +209,23 @@ void TGHtml::IndexToBlockIndex(SHtmlIndex sIndex,
    // pointer to the TGHtmlBlock used to display that character and
    // the index in the TGHtmlBlock of the character.
 
-   int n = sIndex.i;
+   int n = sIndex.fI;
    TGHtmlElement *p;
 
-   if (sIndex.p == 0) {
+   if (sIndex.fP == 0) {
       *ppBlock = 0;
       *piIndex = 0;
       return;
    }
-   p = sIndex.p->pPrev;
-   while (p && p->type != Html_Block) {
-      switch (p->type) {
+   p = sIndex.fP->fPPrev;
+   while (p && p->fType != Html_Block) {
+      switch (p->fType) {
          case Html_Text:
-            n += p->count;
+            n += p->fCount;
             break;
          case Html_Space:
-            if (p->style.flags & STY_Preformatted) {
-               n += p->count;
+            if (p->fStyle.fFlags & STY_Preformatted) {
+               n += p->fCount;
             } else {
                n++;
             }
@@ -233,14 +233,14 @@ void TGHtml::IndexToBlockIndex(SHtmlIndex sIndex,
          default:
             break;
       }
-      p = p->pPrev;
+      p = p->fPPrev;
    }
    if (p) {
       *ppBlock = (TGHtmlBlock *) p;
       *piIndex = n;
       return;
    }
-   for (p = sIndex.p; p && p->type != Html_Block; p = p->pNext) {}
+   for (p = sIndex.fP; p && p->fType != Html_Block; p = p->fPNext) {}
    *ppBlock = (TGHtmlBlock *) p;
    *piIndex = 0;
 }
@@ -278,18 +278,18 @@ int TGHtml::IndexMod(TGHtmlElement **pp, int *ip, char *cp)
       ++x;
    }
    if (ccnt[0] > 0) {
-      for (i = 0; i < ccnt[0] && (*pp)->pNext; ++i) {
-         *pp = (*pp)->pNext;
-         while ((*pp)->type == Html_Block && (*pp)->pNext) {
-            *pp = (*pp)->pNext;
+      for (i = 0; i < ccnt[0] && (*pp)->fPNext; ++i) {
+         *pp = (*pp)->fPNext;
+         while ((*pp)->fType == Html_Block && (*pp)->fPNext) {
+            *pp = (*pp)->fPNext;
          }
       }
    } else if (ccnt[0] < 0) {
-      for (i = 0; ccnt[0] < i && (*pp)->pPrev; --i) {
+      for (i = 0; ccnt[0] < i && (*pp)->fPPrev; --i) {
          //printf("i=%d, cnt=%d\n", i, ccnt[0]);
-         *pp = (*pp)->pPrev;
-         while ((*pp)->type == Html_Block && (*pp)->pPrev) {
-            *pp = (*pp)->pPrev;
+         *pp = (*pp)->fPPrev;
+         while ((*pp)->fType == Html_Block && (*pp)->fPPrev) {
+            *pp = (*pp)->fPPrev;
          }
       }
    }
@@ -380,7 +380,7 @@ int TGHtml::DecodeBaseIndex(const char *baseIx,
                (*pIndex)++;
             } else {
                if (n == 1 && p && p->IsMarkup() && base[i] == '.' &&
-                   p->MarkupArg(zBase + i + 1, 0)) {
+                   p->MarkupArg(fZBase + i + 1, 0)) {
                   *pIndex = 0;
                } else {
                   rc = 1;
@@ -391,7 +391,7 @@ int TGHtml::DecodeBaseIndex(const char *baseIx,
 
       case 'b':
          if (strcmp(base, "begin") == 0) {
-            p = *ppToken = pFirst;
+            p = *ppToken = fPFirst;
             *pIndex = 0;
          } else {
             rc = 1;
@@ -400,7 +400,7 @@ int TGHtml::DecodeBaseIndex(const char *baseIx,
 
       case 'e':
          if (strcmp(base, "end") == 0) {
-            p = *ppToken = pLast;
+            p = *ppToken = fPLast;
             maxIndex(p, pIndex, 0);
          } else {
             rc = 1;
@@ -409,7 +409,7 @@ int TGHtml::DecodeBaseIndex(const char *baseIx,
 
       case 'l':
          if (strcmp(base, "last") == 0) {
-            p = *ppToken = pLast;
+            p = *ppToken = fPLast;
             maxIndex(p, pIndex, 1);
          } else {
             rc = 1;
@@ -418,14 +418,14 @@ int TGHtml::DecodeBaseIndex(const char *baseIx,
 
       case 's':
          if (strcmp(base, "sel.first") == 0) {
-            *ppToken = selBegin.p;
-            *pIndex = selBegin.i;
+            *ppToken = fSelBegin.fP;
+            *pIndex = fSelBegin.fI;
          } else if (strcmp(base, "sel.last") == 0) {
-            *ppToken = selEnd.p;
-            *pIndex = selEnd.i;
+            *ppToken = fSelEnd.fP;
+            *pIndex = fSelEnd.fI;
          } else if (strcmp(base, "sel.end") == 0) {
-            *ppToken = selEnd.p;
-            *pIndex = selEnd.i + 1;
+            *ppToken = fSelEnd.fP;
+            *pIndex = fSelEnd.fI + 1;
          } else {
             rc = 1;
          }
@@ -433,18 +433,18 @@ int TGHtml::DecodeBaseIndex(const char *baseIx,
 
       case 'i':
          if (strcmp(baseIx, "insert") == 0) {
-            *ppToken = ins.p;
-            *pIndex = ins.i;
+            *ppToken = fIns.fP;
+            *pIndex = fIns.fI;
          } else {
             rc = 1;
          }
          break;
 
 #if 0
-    case '&':
-      *pIndex = 0;
-      if (DomIdLookup("id", base + 1, ppToken)) rc = 1;
-      break;
+      case '&':
+         *pIndex = 0;
+         if (DomIdLookup("id", base + 1, ppToken)) rc = 1;
+         break;
 #endif
 
       case '@':
@@ -456,12 +456,12 @@ int TGHtml::DecodeBaseIndex(const char *baseIx,
          x += fVisible.fX;
          y += fVisible.fY;
          pNearby = 0;
-         *ppToken = pLast;
+         *ppToken = fPLast;
          *pIndex = 0;
-         for (pBlock = firstBlock; pBlock; pBlock = pBlock->bNext) {
+         for (pBlock = fFirstBlock; pBlock; pBlock = pBlock->fBNext) {
             int dotest;
-            if (pBlock->n == 0) {
-               switch (pBlock->pNext->type) {
+            if (pBlock->fN == 0) {
+               switch (pBlock->fPNext->fType) {
                   case Html_LI:
                   case Html_IMG:
                   case Html_INPUT:
@@ -477,15 +477,15 @@ int TGHtml::DecodeBaseIndex(const char *baseIx,
                dotest = 1;
             }
             if (dotest) {
-               if (pBlock->top <= y && pBlock->bottom >= y) {
-                  if (pBlock->left > x) {
-                     if (pBlock->left - x < dist) {
-                        dist = pBlock->left - x;
+               if (pBlock->fTop <= y && pBlock->fBottom >= y) {
+                  if (pBlock->fLeft > x) {
+                     if (pBlock->fLeft - x < dist) {
+                        dist = pBlock->fLeft - x;
                         pNearby = pBlock;
                      }
-                  } else if (pBlock->right < x) {
-                     if (x - pBlock->right < dist) {
-                        dist = x - pBlock->right;
+                  } else if (pBlock->fRight < x) {
+                     if (x - pBlock->fRight < dist) {
+                        dist = x - pBlock->fRight;
                         pNearby = pBlock;
                      }
                   } else {
@@ -496,15 +496,15 @@ int TGHtml::DecodeBaseIndex(const char *baseIx,
                   int distY;
                   int distX;
 
-                  if (pBlock->bottom < y) {
-                     distY = y - pBlock->bottom;
+                  if (pBlock->fBottom < y) {
+                     distY = y - pBlock->fBottom;
                   } else {
-                     distY = pBlock->top - y;
+                     distY = pBlock->fTop - y;
                   }
-                  if (pBlock->left > x) {
-                     distX = pBlock->left - x;
-                  } else if (pBlock->right < x) {
-                     distX = x - pBlock->right;
+                  if (pBlock->fLeft > x) {
+                     distX = pBlock->fLeft - x;
+                  } else if (pBlock->fRight < x) {
+                     distX = x - pBlock->fRight;
                   } else {
                      distX = 0;
                   }

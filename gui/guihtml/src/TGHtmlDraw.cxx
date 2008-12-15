@@ -45,11 +45,11 @@ TGHtmlBlock::TGHtmlBlock() : TGHtmlElement(Html_Block)
 {
    // ctor.
 
-   z = NULL;
-   top = bottom = 0;
-   left = right = 0;
-   n = 0;
-   pPrev = pNext = 0;
+   fZ = NULL;
+   fTop = fBottom = 0;
+   fLeft = fRight = 0;
+   fN = 0;
+   fPPrev = fPNext = 0;
 }
 
 //______________________________________________________________________________
@@ -57,7 +57,7 @@ TGHtmlBlock::~TGHtmlBlock()
 {
    // dtor.
 
-   if (z) delete[] z;
+   if (fZ) delete[] fZ;
 }
 
 //______________________________________________________________________________
@@ -67,17 +67,17 @@ void TGHtml::UnlinkAndFreeBlock(TGHtmlBlock *pBlock)
    // Note that this unlinks the block from the element list only -- not from
    // the block list.
 
-   if (pBlock->pNext) {
-      pBlock->pNext->pPrev = pBlock->pPrev;
+   if (pBlock->fPNext) {
+      pBlock->fPNext->fPPrev = pBlock->fPPrev;
    } else {
-      pLast = pBlock->pPrev;
+      fPLast = pBlock->fPPrev;
    }
-   if (pBlock->pPrev) {
-      pBlock->pPrev->pNext = pBlock->pNext;
+   if (pBlock->fPPrev) {
+      pBlock->fPPrev->fPNext = pBlock->fPNext;
    } else {
-      pFirst = pBlock->pNext;
+      fPFirst = pBlock->fPNext;
    }
-   pBlock->pPrev = pBlock->pNext = 0;
+   pBlock->fPPrev = pBlock->fPNext = 0;
    delete pBlock;
 }
 
@@ -90,22 +90,22 @@ void TGHtml::AppendBlock(TGHtmlElement *pToken, TGHtmlBlock *pBlock)
    // pToken - The token that comes after pBlock
    // pBlock - The block to be appended
 
-   pBlock->pPrev = pToken->pPrev;
-   pBlock->pNext = pToken;
-   pBlock->bPrev = lastBlock;
-   pBlock->bNext = 0;
-   if (lastBlock) {
-      lastBlock->bNext = pBlock;
+   pBlock->fPPrev = pToken->fPPrev;
+   pBlock->fPNext = pToken;
+   pBlock->fBPrev = fLastBlock;
+   pBlock->fBNext = 0;
+   if (fLastBlock) {
+      fLastBlock->fBNext = pBlock;
    } else {
-      firstBlock = pBlock;
+      fFirstBlock = pBlock;
    }
-   lastBlock = pBlock;
-   if (pToken->pPrev) {
-      pToken->pPrev->pNext = (TGHtmlElement *) pBlock;
+   fLastBlock = pBlock;
+   if (pToken->fPPrev) {
+      pToken->fPPrev->fPNext = (TGHtmlElement *) pBlock;
    } else {
-      pFirst = (TGHtmlElement *) pBlock;
+      fPFirst = (TGHtmlElement *) pBlock;
    }
-   pToken->pPrev = (TGHtmlElement *) pBlock;
+   pToken->fPPrev = (TGHtmlElement *) pBlock;
 }
 
 //______________________________________________________________________________
@@ -218,33 +218,33 @@ void TGHtml::DrawSelectionBackground(TGHtmlBlock *pBlock, Drawable_t drawable,
    TGFont *font=0;           // Font
    GContext_t gc;            // GC for drawing
 
-   if (pBlock == 0 || (pBlock->flags & HTML_Selected) == 0) return;
+   if (pBlock == 0 || (pBlock->fFlags & HTML_Selected) == 0) return;
 
-   xLeft = pBlock->left - x;
-   if (pBlock == pSelStartBlock && selStartIndex > 0) {
-      if (selStartIndex >= pBlock->n) return;
-      p = pBlock->pNext;
-      font = GetFont(p->style.font);
+   xLeft = pBlock->fLeft - x;
+   if (pBlock == fPSelStartBlock && fSelStartIndex > 0) {
+      if (fSelStartIndex >= pBlock->fN) return;
+      p = pBlock->fPNext;
+      font = GetFont(p->fStyle.fFont);
       if (font == 0) return;
-      if (p->type == Html_Text) {
+      if (p->fType == Html_Text) {
          TGHtmlTextElement *tp = (TGHtmlTextElement *) p;
-         xLeft = tp->x - x + font->TextWidth(pBlock->z, selStartIndex);
+         xLeft = tp->fX - x + font->TextWidth(pBlock->fZ, fSelStartIndex);
       }
    }
-   xRight = pBlock->right - x;
-   if (pBlock == pSelEndBlock && selEndIndex < pBlock->n) {
+   xRight = pBlock->fRight - x;
+   if (pBlock == fPSelEndBlock && fSelEndIndex < pBlock->fN) {
       if (p == 0) {
-         p = pBlock->pNext;
-         font = GetFont(p->style.font);
+         p = pBlock->fPNext;
+         font = GetFont(p->fStyle.fFont);
          if (font == 0) return;
       }
-      if (p->type == Html_Text) {
+      if (p->fType == Html_Text) {
          TGHtmlTextElement *tp = (TGHtmlTextElement *) p;
-         xRight = tp->x - x + font->TextWidth(pBlock->z, selEndIndex);
+         xRight = tp->fX - x + font->TextWidth(pBlock->fZ, fSelEndIndex);
       }
    }
-   yTop = pBlock->top - y;
-   yBottom = pBlock->bottom - y;
+   yTop = pBlock->fTop - y;
+   yBottom = pBlock->fBottom - y;
    gc = GetGC(COLOR_Selection, FONT_Any);
    Int_t xx = xLeft;
    Int_t yy = yTop;
@@ -271,9 +271,9 @@ void TGHtml::DrawRect(Drawable_t drawable, TGHtmlElement *src,
 
       if (relief != HTML_RELIEF_FLAT) {
          int iLight1, iDark1;
-         iLight1 = GetLightShadowColor(src->style.bgcolor);
+         iLight1 = GetLightShadowColor(src->fStyle.fBgcolor);
          gcLight = GetGC(iLight1, FONT_Any);
-         iDark1 = GetDarkShadowColor(src->style.bgcolor);
+         iDark1 = GetDarkShadowColor(src->fStyle.fBgcolor);
          gcDark = GetGC(iDark1, FONT_Any);
          if (relief == HTML_RELIEF_SUNKEN) {
             GContext_t gcTemp = gcLight;
@@ -281,7 +281,7 @@ void TGHtml::DrawRect(Drawable_t drawable, TGHtmlElement *src,
             gcDark = gcTemp;
          }
       } else {
-         gcLight = GetGC(src->style.color, FONT_Any);
+         gcLight = GetGC(src->fStyle.fColor, FONT_Any);
          gcDark = gcLight;
       }
       xx = x;
@@ -298,7 +298,7 @@ void TGHtml::DrawRect(Drawable_t drawable, TGHtmlElement *src,
    }
    if (h > depth*2 && w > depth*2) {
       GContext_t gcBg;
-      gcBg = GetGC(src->style.bgcolor, FONT_Any);
+      gcBg = GetGC(src->fStyle.fBgcolor, FONT_Any);
       xx = x + depth;
       yy = y + depth;
       width = w - depth*2;
@@ -324,51 +324,51 @@ void TGHtml::BlockDraw(TGHtmlBlock *pBlock, Drawable_t drawable,
 
    if (pBlock == 0) return;
 
-   src = pBlock->pNext;
-   while (src && (src->flags & HTML_Visible) == 0) src = src->pNext;
+   src = pBlock->fPNext;
+   while (src && (src->fFlags & HTML_Visible) == 0) src = src->fPNext;
 
    if (src == 0) return;
 
-   if (pBlock->n > 0) {
+   if (pBlock->fN > 0) {
       // We must be dealing with plain old text
-      if (src->type == Html_Text) {
+      if (src->fType == Html_Text) {
          TGHtmlTextElement *tsrc = (TGHtmlTextElement *) src;
-         x = tsrc->x;
-         y = tsrc->y;
+         x = tsrc->fX;
+         y = tsrc->fY;
       } else {
          CANT_HAPPEN;
          return;
       }
-      if (pBlock->flags & HTML_Selected) {
+      if (pBlock->fFlags & HTML_Selected) {
          DrawSelectionBackground(pBlock, drawable, drawableLeft, drawableTop);
       }
-      gc = GetGC(src->style.color, src->style.font);
-      font = GetFont(src->style.font);
+      gc = GetGC(src->fStyle.fColor, src->fStyle.fFont);
+      font = GetFont(src->fStyle.fFont);
       if (font == 0) return;
-      font->DrawChars(drawable, gc, pBlock->z, pBlock->n,
+      font->DrawChars(drawable, gc, pBlock->fZ, pBlock->fN,
                       x - drawableLeft, y - drawableTop);
-      if (src->style.flags & STY_Underline) {
-         font->UnderlineChars(drawable, gc, pBlock->z,
-                              x - drawableLeft, y-drawableTop, 0, pBlock->n);
+      if (src->fStyle.fFlags & STY_Underline) {
+         font->UnderlineChars(drawable, gc, pBlock->fZ,
+                              x - drawableLeft, y-drawableTop, 0, pBlock->fN);
       }
-      if (src->style.flags & STY_StrikeThru) {
-         x = pBlock->left - drawableLeft;
-         y = (pBlock->top + pBlock->bottom) / 2 - drawableTop;
-         width = pBlock->right - pBlock->left;
-         height = 1 + (pBlock->bottom - pBlock->top > 15);
+      if (src->fStyle.fFlags & STY_StrikeThru) {
+         x = pBlock->fLeft - drawableLeft;
+         y = (pBlock->fTop + pBlock->fBottom) / 2 - drawableTop;
+         width = pBlock->fRight - pBlock->fLeft;
+         height = 1 + (pBlock->fBottom - pBlock->fTop > 15);
          gVirtualX->FillRectangle(drawable, gc, x, y, width, height);
       }
-      if (pBlock == pInsBlock && insStatus > 0) {
-         if (insIndex < pBlock->n) {
+      if (pBlock == fPInsBlock && fInsStatus > 0) {
+         if (fInsIndex < pBlock->fN) {
             TGHtmlTextElement *tsrc = (TGHtmlTextElement *) src;
-            x = tsrc->x - drawableLeft;
-            x += font->TextWidth(pBlock->z, insIndex);
+            x = tsrc->fX - drawableLeft;
+            x += font->TextWidth(pBlock->fZ, fInsIndex);
          } else {
-            x = pBlock->right - drawableLeft;
+            x = pBlock->fRight - drawableLeft;
          }
          if (x > 0) --x;
-            gVirtualX->FillRectangle(drawable, gc, x, pBlock->top - drawableTop,
-                                     2, pBlock->bottom - pBlock->top);
+            gVirtualX->FillRectangle(drawable, gc, x, pBlock->fTop - drawableTop,
+                                     2, pBlock->fBottom - pBlock->fTop);
          }
    } else {
       // We are dealing with a single TGHtmlElement which contains something
@@ -377,33 +377,33 @@ void TGHtml::BlockDraw(TGHtmlBlock *pBlock, Drawable_t drawable,
       char zBuf[30];
       TGHtmlLi *li;
       TGHtmlImageMarkup *image;
-      switch (src->type) {
+      switch (src->fType) {
          case Html_LI:
             li = (TGHtmlLi *) src;
-            x = li->x;
-            y = li->y;
-            switch (li->ltype) {
+            x = li->fX;
+            y = li->fY;
+            switch (li->fLtype) {
                case LI_TYPE_Enum_1:
-                  sprintf(zBuf, "%d.", li->cnt);
+                  sprintf(zBuf, "%d.", li->fCnt);
                   break;
                case LI_TYPE_Enum_A:
-                  GetLetterIndex(zBuf, li->cnt, 1);
+                  GetLetterIndex(zBuf, li->fCnt, 1);
                   break;
                case LI_TYPE_Enum_a:
-                  GetLetterIndex(zBuf, li->cnt, 0);
+                  GetLetterIndex(zBuf, li->fCnt, 0);
                   break;
                case LI_TYPE_Enum_I:
-                  GetRomanIndex(zBuf, li->cnt, 1);
+                  GetRomanIndex(zBuf, li->fCnt, 1);
                   break;
                case LI_TYPE_Enum_i:
-                  GetRomanIndex(zBuf, li->cnt, 0);
+                  GetRomanIndex(zBuf, li->fCnt, 0);
                   break;
                default:
                   zBuf[0] = 0;
                   break;
             }
-            gc = GetGC(src->style.color, src->style.font);
-            switch (li->ltype) {
+            gc = GetGC(src->fStyle.fColor, src->fStyle.fFont);
+            switch (li->fLtype) {
                case LI_TYPE_Undefined:
                case LI_TYPE_Bullet1:
                   //gVirtualX->FillArc(drawable, gc,
@@ -428,7 +428,7 @@ void TGHtml::BlockDraw(TGHtmlBlock *pBlock, Drawable_t drawable,
                case LI_TYPE_Enum_I:
                case LI_TYPE_Enum_i:
                   cnt = strlen(zBuf);
-                  font = GetFont(src->style.font);
+                  font = GetFont(src->fStyle.fFont);
                   if (font == 0) return;
                   w = font->TextWidth(zBuf, cnt);
                   font->DrawChars(drawable, gc, zBuf, cnt, 
@@ -439,7 +439,7 @@ void TGHtml::BlockDraw(TGHtmlBlock *pBlock, Drawable_t drawable,
 
          case Html_HR: {
             TGHtmlHr *hr = (TGHtmlHr *) src;
-            int relief = ruleRelief;
+            int relief = fRuleRelief;
             switch (relief) {
                case HTML_RELIEF_RAISED: 
                case HTML_RELIEF_SUNKEN:
@@ -448,15 +448,15 @@ void TGHtml::BlockDraw(TGHtmlBlock *pBlock, Drawable_t drawable,
                   relief = HTML_RELIEF_FLAT;
                   break;
             }
-            DrawRect(drawable, src, hr->x - drawableLeft, hr->y - drawableTop,
-                     hr->w, hr->h, 1, relief);
+            DrawRect(drawable, src, hr->fX - drawableLeft, hr->fY - drawableTop,
+                     hr->fW, hr->fH, 1, relief);
             break;
          }
 
          case Html_TABLE: {
             TGHtmlTable *table = (TGHtmlTable *) src;
-            int relief = tableRelief;
-            if ((!bgImage || src->style.expbg) && !table->hasbg) {
+            int relief = fTableRelief;
+            if ((!fBgImage || src->fStyle.fExpbg) && !table->fHasbg) {
                switch (relief) {
                   case HTML_RELIEF_RAISED: 
                   case HTML_RELIEF_SUNKEN:
@@ -466,14 +466,14 @@ void TGHtml::BlockDraw(TGHtmlBlock *pBlock, Drawable_t drawable,
                      break;
                }
 
-               DrawRect(drawable, src, table->x - drawableLeft,
-                        table->y - drawableTop, table->w, table->h, 
-                        table->borderWidth, relief);
+               DrawRect(drawable, src, table->fX - drawableLeft,
+                        table->fY - drawableTop, table->fW, table->fH, 
+                        table->fBorderWidth, relief);
             }
 
-            if (table->bgImage) {
-               DrawTableBgnd(table->x, table->y, table->w, table->h, pixmap,
-                             table->bgImage);
+            if (table->fBgImage) {
+               DrawTableBgnd(table->fX, table->fY, table->fW, table->fH, pixmap,
+                             table->fBgImage);
             }
             break;
          }
@@ -483,42 +483,42 @@ void TGHtml::BlockDraw(TGHtmlBlock *pBlock, Drawable_t drawable,
             TGHtmlCell *cell = (TGHtmlCell *) src;
             int depth, relief;
             TImage *bgImg;
-            pTable = cell->pTable;
-            if ((!bgImage || src->style.expbg) && !(pTable && pTable->hasbg)) {
-               depth = pTable && (pTable->borderWidth > 0);
-               switch (tableRelief) {
+            pTable = cell->fPTable;
+            if ((!fBgImage || src->fStyle.fExpbg) && !(pTable && pTable->fHasbg)) {
+               depth = pTable && (pTable->fBorderWidth > 0);
+               switch (fTableRelief) {
                   case HTML_RELIEF_RAISED:  relief = HTML_RELIEF_SUNKEN; break;
                   case HTML_RELIEF_SUNKEN:  relief = HTML_RELIEF_RAISED; break;
                   default:                  relief = HTML_RELIEF_FLAT;   break;
                }
                DrawRect(drawable, src,
-                        cell->x - drawableLeft, cell->y - drawableTop,
-                        cell->w, cell->h, depth, relief);
+                        cell->fX - drawableLeft, cell->fY - drawableTop,
+                        cell->fW, cell->fH, depth, relief);
             }
             // See if row has an image
-            if (cell->bgImage) {
-               DrawTableBgnd(cell->x, cell->y, cell->w, cell->h, pixmap,
-                             cell->bgImage);
-            } else if (cell->pRow && (bgImg = ((TGHtmlRef *)cell->pRow)->bgImage)) {
-               DrawTableBgnd(cell->x, cell->y, cell->w, cell->h, pixmap, bgImg);
+            if (cell->fBgImage) {
+               DrawTableBgnd(cell->fX, cell->fY, cell->fW, cell->fH, pixmap,
+                             cell->fBgImage);
+            } else if (cell->fPRow && (bgImg = ((TGHtmlRef *)cell->fPRow)->fBgImage)) {
+               DrawTableBgnd(cell->fX, cell->fY, cell->fW, cell->fH, pixmap, bgImg);
             }
             break;
          }
 
          case Html_IMG:
             image = (TGHtmlImageMarkup *) src;
-            if (image->pImage) {
+            if (image->fPImage) {
                DrawImage(image, drawable, drawableLeft, drawableTop,
                          drawableLeft + drawableWidth,
                          drawableTop + drawableHeight);
-            } else if (image->zAlt) {
-               gc = GetGC(src->style.color, src->style.font);
-               font = GetFont(src->style.font);
+            } else if (image->fZAlt) {
+               gc = GetGC(src->fStyle.fColor, src->fStyle.fFont);
+               font = GetFont(src->fStyle.fFont);
                if (font == 0) return;
                font->DrawChars(drawable, gc,
-                               image->zAlt, strlen(image->zAlt),
-                               image->x - drawableLeft, 
-                               image->y - drawableTop);
+                               image->fZAlt, strlen(image->fZAlt),
+                               image->fX - drawableLeft, 
+                               image->fY - drawableTop);
             }    
             break;
 
@@ -540,12 +540,12 @@ void TGHtml::DrawImage(TGHtmlImageMarkup *image, Drawable_t drawable,
    int imageX, imageY;    // \__  Subset of image that fits
    int imageW, imageH;    // /    on the drawable
 
-   imageTop = image->y - image->ascent;
+   imageTop = image->fY - image->fAscent;
    y = imageTop - drawableTop;
-   if (imageTop + image->h > drawableBottom) {
+   if (imageTop + image->fH > drawableBottom) {
       imageH = drawableBottom - imageTop;
    } else {
-      imageH = image->h;
+      imageH = image->fH;
    }
    if (y < 0) {
       imageY = -y;
@@ -554,11 +554,11 @@ void TGHtml::DrawImage(TGHtmlImageMarkup *image, Drawable_t drawable,
    } else {
       imageY = 0;
    }
-   x = image->x - drawableLeft;
-   if (image->x + image->w > drawableRight) {
-      imageW = drawableRight - image->x;
+   x = image->fX - drawableLeft;
+   if (image->fX + image->fW > drawableRight) {
+      imageW = drawableRight - image->fX;
    } else {
-      imageW = image->w;
+      imageW = image->fW;
    }
    if (x < 0) {
       imageX = -x;
@@ -568,7 +568,7 @@ void TGHtml::DrawImage(TGHtmlImageMarkup *image, Drawable_t drawable,
       imageX = 0;
    }
 
-   TImage *img = image->pImage->image;
+   TImage *img = image->fPImage->fImage;
 
    imageH = imageH < 0 ? -imageH : imageH;
    imageW = imageW < 0 ? -imageW : imageW;
@@ -576,7 +576,7 @@ void TGHtml::DrawImage(TGHtmlImageMarkup *image, Drawable_t drawable,
    img->PaintImage(drawable, x, y, imageX, imageY, imageW, imageH);
    //gVirtualX->Update(kFALSE);
 
-   image->redrawNeeded = 0;
+   image->fRedrawNeeded = 0;
 }
 
 //______________________________________________________________________________
@@ -589,7 +589,7 @@ void TGHtml::AnimateImage(TGHtmlImage * /*image*/)
   //img->NextFrame();
   //delete image->timer;
   //image->timer = new TTimer(this, img->GetAnimDelay());
-  //ImageChanged(image, image->w, image->h);
+  //ImageChanged(image, image->fW, image->fH);
 }
 
 //______________________________________________________________________________
@@ -614,154 +614,154 @@ TGHtmlElement *TGHtml::FillOutBlock(TGHtmlBlock *p)
 
    TGHtmlElement *pElem;
    int go, i, n, x, y;
-   SHtmlStyle style;
+   SHtmlStyle_t style;
    int firstSelected;      // First selected character in this block
    int lastSelected;       // Last selected character in this block
    char zBuf[2000];
 
    // Reset n and z
 
-   if (p->n) p->n = 0;
+   if (p->fN) p->fN = 0;
 
-   if (p->z) delete[] p->z;
-   p->z = 0;
+   if (p->fZ) delete[] p->fZ;
+   p->fZ = 0;
 
    firstSelected = 1000000;
    lastSelected = -1;
 
    // Skip over TGHtmlElements that aren't directly displayed.
 
-   pElem = p->pNext;
-   p->count = 0;
-   while (pElem && (pElem->flags & HTML_Visible) == 0) {
-      TGHtmlElement *pNext = pElem->pNext;
-      if (pElem->type == Html_Block) {
+   pElem = p->fPNext;
+   p->fCount = 0;
+   while (pElem && (pElem->fFlags & HTML_Visible) == 0) {
+      TGHtmlElement *fPNext = pElem->fPNext;
+      if (pElem->fType == Html_Block) {
          UnlinkAndFreeBlock((TGHtmlBlock *) pElem);
       } else {
-         p->count++;
+         p->fCount++;
       }
-      pElem = pNext;
+      pElem = fPNext;
    }
    if (pElem == 0) return 0;
 
    // Handle "special" elements.
 
-   if (pElem->type != Html_Text) {
-      switch (pElem->type) {
+   if (pElem->fType != Html_Text) {
+      switch (pElem->fType) {
          case Html_HR: {
             TGHtmlHr *hr = (TGHtmlHr *) pElem;
-            p->top    = hr->y - hr->h;
-            p->bottom = hr->y;
-            p->left   = hr->x;
-            p->right  = hr->x + hr->w;
+            p->fTop    = hr->fY - hr->fH;
+            p->fBottom = hr->fY;
+            p->fLeft   = hr->fX;
+            p->fRight  = hr->fX + hr->fW;
             break;
          }
 
          case Html_LI: {
             TGHtmlLi *li = (TGHtmlLi *) pElem;
-            p->top    = li->y - li->ascent;
-            p->bottom = li->y + li->descent;
-            p->left   = li->x - 10;
-            p->right  = li->x + 10;
+            p->fTop    = li->fY - li->fAscent;
+            p->fBottom = li->fY + li->fDescent;
+            p->fLeft   = li->fX - 10;
+            p->fRight  = li->fX + 10;
             break;
          }
 
          case Html_TD:
          case Html_TH: {
             TGHtmlCell *cell = (TGHtmlCell *) pElem;
-            p->top    = cell->y;
-            p->bottom = cell->y + cell->h;
-            p->left   = cell->x;
-            p->right  = cell->x + cell->w;
+            p->fTop    = cell->fY;
+            p->fBottom = cell->fY + cell->fH;
+            p->fLeft   = cell->fX;
+            p->fRight  = cell->fX + cell->fW;
             break;
          }
 
          case Html_TABLE: {
             TGHtmlTable *table = (TGHtmlTable *) pElem;
-            p->top    = table->y;
-            p->bottom = table->y + table->h;
-            p->left   = table->x;
-            p->right  = table->x + table->w;
+            p->fTop    = table->fY;
+            p->fBottom = table->fY + table->fH;
+            p->fLeft   = table->fX;
+            p->fRight  = table->fX + table->fW;
             break;
          }
 
          case Html_IMG: {
             TGHtmlImageMarkup *image = (TGHtmlImageMarkup *) pElem;
-            p->top    = image->y - image->ascent;
-            p->bottom = image->y + image->descent;
-            p->left   = image->x;
-            p->right  = image->x + image->w;
+            p->fTop    = image->fY - image->fAscent;
+            p->fBottom = image->fY + image->fDescent;
+            p->fLeft   = image->fX;
+            p->fRight  = image->fX + image->fW;
             break;
          }
       }
-      p->count++;
+      p->fCount++;
 
-      return pElem->pNext;
+      return pElem->fPNext;
    }
 
    // If we get this far, we must be dealing with text.
 
    TGHtmlTextElement *text = (TGHtmlTextElement *) pElem;
    n = 0;
-   x = text->x;
-   y = text->y;
-   p->top = y - text->ascent;
-   p->bottom = y + text->descent;
-   p->left = x;
-   style = pElem->style;
+   x = text->fX;
+   y = text->fY;
+   p->fTop = y - text->fAscent;
+   p->fBottom = y + text->fDescent;
+   p->fLeft = x;
+   style = pElem->fStyle;
    go = 1;
    while (pElem) {
-      TGHtmlElement *pNext = pElem->pNext;
-      switch (pElem->type) {
+      TGHtmlElement *fPNext = pElem->fPNext;
+      switch (pElem->fType) {
          case Html_Text: {
             TGHtmlTextElement *txt = (TGHtmlTextElement *) pElem;
-            if (pElem->flags & STY_Invisible) {
+            if (pElem->fFlags & STY_Invisible) {
                break;
             }
-            if (txt->spaceWidth <= 0) {
+            if (txt->fSpaceWidth <= 0) {
                //CANT_HAPPEN;
                break;
             }
-            if (y != txt->y 
-                ||  style.font != pElem->style.font
-                ||  style.color != pElem->style.color
-                ||  (style.flags & STY_FontMask) 
-                != (pElem->style.flags & STY_FontMask)) {
+            if (y != txt->fY 
+                  ||  style.fFont != pElem->fStyle.fFont
+                  ||  style.fColor != pElem->fStyle.fColor
+                  ||  (style.fFlags & STY_FontMask) 
+                  != (pElem->fStyle.fFlags & STY_FontMask)) {
                go = 0;
             } else {
-               int sw = txt->spaceWidth;
-               int nSpace = (txt->x - x) / sw;
-               if (nSpace * sw + x != txt->x) {
+               int sw = txt->fSpaceWidth;
+               int nSpace = (txt->fX - x) / sw;
+               if (nSpace * sw + x != txt->fX) {
                   go = 0;
-               } else if ((n + nSpace + pElem->count) >= (int)sizeof(zBuf)) {
+               } else if ((n + nSpace + pElem->fCount) >= (int)sizeof(zBuf)) {
                   // go = 0; - this caused a hang, instead lets do what we can
                   for (i = 0; i < nSpace && (n+1) < (int)sizeof(zBuf); ++i) {
                      zBuf[n++] = ' ';
                   }
-                  strncpy(&zBuf[n], txt->zText, sizeof(zBuf) - n - 1);
+                  strncpy(&zBuf[n], txt->fZText, sizeof(zBuf) - n - 1);
                   zBuf[sizeof(zBuf)-1] = 0;
                   n += i;
-                  x = txt->x + txt->w;
+                  x = txt->fX + txt->fW;
                } else {
                   for (i = 0; i < nSpace && (n+1) < (int)sizeof(zBuf); ++i) {
                      zBuf[n++] = ' ';
                   }
-                  strncpy(&zBuf[n], txt->zText, sizeof(zBuf) - n - 1);
+                  strncpy(&zBuf[n], txt->fZText, sizeof(zBuf) - n - 1);
                   zBuf[sizeof(zBuf)-1] = 0;
-                  n += pElem->count;
-                  x = txt->x + txt->w;
+                  n += pElem->fCount;
+                  x = txt->fX + txt->fW;
                }
             }
             break;
          }
 
          case Html_Space:
-            if (pElem->style.font != style.font) {
-               pElem = pElem->pNext;
+            if (pElem->fStyle.fFont != style.fFont) {
+               pElem = pElem->fPNext;
                go = 0;
-            } else if ((style.flags & STY_Preformatted) != 0 &&
-                       (pElem->flags & HTML_NewLine) != 0) {
-               pElem = pElem->pNext;
+            } else if ((style.fFlags & STY_Preformatted) != 0 &&
+                       (pElem->fFlags & HTML_NewLine) != 0) {
+               pElem = pElem->fPNext;
                go = 0;
             }
             break;
@@ -776,20 +776,20 @@ TGHtmlElement *TGHtml::FillOutBlock(TGHtmlBlock *p)
             break;
 
          default:
-            if (pElem->flags & HTML_Visible) go = 0;
+            if (pElem->fFlags & HTML_Visible) go = 0;
             break;
       }
       if (go == 0) break;
-      p->count++;
-      pElem = pNext;
+      p->fCount++;
+      pElem = fPNext;
    }
-   p->right = x;
+   p->fRight = x;
 
    while (n > 0 && zBuf[n-1] == ' ') n--;
-   p->z = new char[n+1];
-   strncpy(p->z, zBuf, n);
-   p->z[n] = 0;
-   p->n = n;
+   p->fZ = new char[n+1];
+   strncpy(p->fZ, zBuf, n);
+   p->fZ[n] = 0;
+   p->fN = n;
 
    return pElem;
 }
@@ -807,14 +807,14 @@ TGHtmlElement *TGHtml::FindStartOfNextBlock(TGHtmlElement *p, int *pCnt)
 
    int cnt = 0;
 
-   while (p && (p->flags & HTML_Visible) == 0) {
-      TGHtmlElement *pNext = p->pNext;
-      if (p->type == Html_Block) {
+   while (p && (p->fFlags & HTML_Visible) == 0) {
+      TGHtmlElement *fPNext = p->fPNext;
+      if (p->fType == Html_Block) {
          UnlinkAndFreeBlock((TGHtmlBlock *) p);
       } else {
          cnt++;
       }
-      p = pNext;
+      p = fPNext;
    }
    if (pCnt) *pCnt = cnt;
 
@@ -832,18 +832,18 @@ void TGHtml::FormBlocks()
 
    TGHtmlElement *pElem;
 
-   if (lastBlock) {
-      pElem = FillOutBlock(lastBlock);
+   if (fLastBlock) {
+      pElem = FillOutBlock(fLastBlock);
    } else {
-      pElem = pFirst;
+      pElem = fPFirst;
    }
    while (pElem) {
       int cnt;
       pElem = FindStartOfNextBlock(pElem, &cnt);
       if (pElem) {
          TGHtmlBlock *pNew = new TGHtmlBlock();
-         if (lastBlock) {
-            lastBlock->count += cnt;
+         if (fLastBlock) {
+            fLastBlock->fCount += cnt;
          }
          AppendBlock(pElem, pNew);
          pElem = FillOutBlock(pNew);
@@ -863,10 +863,10 @@ void TGHtml::DrawTableBgnd(int l, int t, int w, int h,
    left = l - fVisible.fX;
    top  = t - fVisible.fY;
 
-   dl = dirtyLeft;
-   dt = dirtyTop;
-   dr = dirtyRight;
-   db = dirtyBottom;
+   dl = fDirtyLeft;
+   dt = fDirtyTop;
+   dr = fDirtyRight;
+   db = fDirtyBottom;
 
    right = left + w - 1;
    bottom = top + h - 1;
@@ -876,21 +876,21 @@ void TGHtml::DrawTableBgnd(int l, int t, int w, int h,
    ih = image->GetHeight();
 
 #if 0
-  if (iw < 4 && ih < 4) return;  // CPU burners we ignore.
-  sx = (left + _visibleStart.x) % iw;   // X offset within image to start from
-  sw = iw - sx;                         // Width of section of image to draw.
-  for (mx = left - dl; w > 0; mx += sw, sw = iw, sx = 0) {
-    if (sw > w) sw = w;
-    sy = (top + _visibleStart.y) % ih;  // Y offset within image to start from
-    sh = ih - sy;                       // Height of section of image to draw.
-    for (my = top - dt, hd = h; hd > 0; my += sh, sh = ih, sy = 0) {
-      if (sh > hd) sh = hd;
-      // printf("image: %d %d %d %d %d %d\n", sx, sy, sw, sh, mx,my);
-      image->Draw(pixmap, GetAnyGC(), sx, sy, sw, sh, mx, my);
-      hd -= sh;
-    }
-    w -= sw;
-  }
+   if (iw < 4 && ih < 4) return;  // CPU burners we ignore.
+   sx = (left + _visibleStart.x) % iw;   // X offset within image to start from
+   sw = iw - sx;                         // Width of section of image to draw.
+   for (mx = left - dl; w > 0; mx += sw, sw = iw, sx = 0) {
+      if (sw > w) sw = w;
+      sy = (top + _visibleStart.y) % ih;  // Y offset within image to start from
+      sh = ih - sy;                       // Height of section of image to draw.
+      for (my = top - dt, hd = h; hd > 0; my += sh, sh = ih, sy = 0) {
+         if (sh > hd) sh = hd;
+         // printf("image: %d %d %d %d %d %d\n", sx, sy, sw, sh, mx,my);
+         image->Draw(pixmap, GetAnyGC(), sx, sy, sw, sh, mx, my);
+         hd -= sh;
+      }
+      w -= sw;
+   }
 #else
    if (!image->GetPixmap()) return;
    GContext_t gc = GetAnyGC();
@@ -899,8 +899,8 @@ void TGHtml::DrawTableBgnd(int l, int t, int w, int h,
                        kGCTileStipXOrigin | kGCTileStipYOrigin;
    gcv.fTile      = image->GetPixmap();
    gcv.fFillStyle = kFillTiled;
-   gcv.fTsXOrigin = -fVisible.fX - dirtyLeft;
-   gcv.fTsYOrigin = -fVisible.fY - dirtyTop;
+   gcv.fTsXOrigin = -fVisible.fX - fDirtyLeft;
+   gcv.fTsYOrigin = -fVisible.fY - fDirtyTop;
    gVirtualX->ChangeGC(gc, &gcv);
 
    gVirtualX->FillRectangle(pixmap, gc, left - dl, top - dt, w, h);

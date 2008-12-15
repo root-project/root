@@ -70,130 +70,130 @@ int HtmlDepth = 0;
 //______________________________________________________________________________
 TGHtml::TGHtml(const TGWindow *p, int w, int h, int id) : TGView(p, w, h, id)
 {
-   //
+   // HTML Widget constructor.
 
    int i;
 
-   _exiting = 0;
-   pFirst = 0;
-   pLast = 0;
-   nToken = 0;
-   lastSized = 0;
-   nextPlaced = 0;
-   firstBlock = 0;
-   lastBlock = 0;
-   firstInput = 0;
-   lastInput = 0;
-   nInput = 0;
-   nForm = 0;
-   varId = 0;  // do we need this??
-   inputIdx = 0;
-   radioIdx = 0;
-   selBegin.p = 0;
-   selEnd.p = 0;
-   pSelStartBlock = 0;
-   pSelEndBlock = 0;
-   insOnTime = DEF_HTML_INSERT_ON_TIME;
-   insOffTime = DEF_HTML_INSERT_OFF_TIME;
-   insStatus = 0;
-   insTimer = 0;
-   ins.p = 0;
-   pInsBlock = 0;
-   insIndex = 0;
-   zText = 0;
-   nText = 0;
-   nAlloc = 0;
-   nComplete = 0;
-   iCol = 0;
-   iPlaintext = 0;
-   pScript = 0;
+   fExiting = 0;
+   fPFirst = 0;
+   fPLast = 0;
+   fNToken = 0;
+   fLastSized = 0;
+   fNextPlaced = 0;
+   fFirstBlock = 0;
+   fLastBlock = 0;
+   fFirstInput = 0;
+   fLastInput = 0;
+   fNInput = 0;
+   fNForm = 0;
+   fVarId = 0;  // do we need this??
+   fInputIdx = 0;
+   fRadioIdx = 0;
+   fSelBegin.fP = 0;
+   fSelEnd.fP = 0;
+   fPSelStartBlock = 0;
+   fPSelEndBlock = 0;
+   fInsOnTime = DEF_HTML_INSERT_ON_TIME;
+   fInsOffTime = DEF_HTML_INSERT_OFF_TIME;
+   fInsStatus = 0;
+   fInsTimer = 0;
+   fIns.fP = 0;
+   fPInsBlock = 0;
+   fInsIndex = 0;
+   fZText = 0;
+   fNText = 0;
+   fNAlloc = 0;
+   fNComplete = 0;
+   fICol = 0;
+   fIPlaintext = 0;
+   fPScript = 0;
    fIdle = 0;
-   styleStack = 0;
-   paraAlignment = ALIGN_None;
-   rowAlignment = ALIGN_None;
-   anchorFlags = 0;
-   inDt = 0;
-   inTr = 0;
-   inTd = 0;
-   anchorStart = 0;
-   formStart = 0;
-   formElemStart = 0;
-   formElemLast = 0;
-   loEndPtr = 0;
-   loFormStart = 0;
-   innerList = 0;
+   fStyleStack = 0;
+   fParaAlignment = ALIGN_None;
+   fRowAlignment = ALIGN_None;
+   fAnchorFlags = 0;
+   fInDt = 0;
+   fInTr = 0;
+   fInTd = 0;
+   fAnchorStart = 0;
+   fFormStart = 0;
+   fFormElemStart = 0;
+   fFormElemLast = 0;
+   fLoEndPtr = 0;
+   fLoFormStart = 0;
+   fInnerList = 0;
    ResetLayoutContext();
-   highlightWidth = 0;
-   highlightBgColorPtr = 0;
-   highlightColorPtr = 0;
-   for (i = 0; i < N_FONT; ++i) aFont[i] = 0;
-   memset(fontValid, 0, sizeof(fontValid));
+   fHighlightWidth = 0;
+   fHighlightBgColorPtr = 0;
+   fHighlightColorPtr = 0;
+   for (i = 0; i < N_FONT; ++i) fAFont[i] = 0;
+   memset(fFontValid, 0, sizeof(fFontValid));
    for (i = 0; i < N_COLOR; ++i) {
-      apColor[i] = 0;
-      iDark[i] = 0;
-      iLight[i] = 0;
+      fApColor[i] = 0;
+      fIDark[i] = 0;
+      fILight[i] = 0;
    }
-   fgColor = AllocColor("black");
-   bgColor = AllocColor("white"); //AllocColor("#c0c0c0");
-   newLinkColor = AllocColor(DEF_HTML_UNVISITED);
-   oldLinkColor = AllocColor(DEF_HTML_VISITED);
-   selectionColor = AllocColor(DEF_HTML_SELECTION_COLOR);
+   fFgColor = AllocColor("black");
+   fBgColor = AllocColor("white"); //AllocColor("#c0c0c0");
+   fNewLinkColor = AllocColor(DEF_HTML_UNVISITED);
+   fOldLinkColor = AllocColor(DEF_HTML_VISITED);
+   fSelectionColor = AllocColor(DEF_HTML_SELECTION_COLOR);
 
-   apColor[COLOR_Normal] = fgColor;
-   apColor[COLOR_Visited] = oldLinkColor;
-   apColor[COLOR_Unvisited] = newLinkColor;
-   apColor[COLOR_Selection] = selectionColor;
-   apColor[COLOR_Background] = bgColor;
+   fApColor[COLOR_Normal] = fFgColor;
+   fApColor[COLOR_Visited] = fOldLinkColor;
+   fApColor[COLOR_Unvisited] = fNewLinkColor;
+   fApColor[COLOR_Selection] = fSelectionColor;
+   fApColor[COLOR_Background] = fBgColor;
 
-   bgImage = 0;
+   fBgImage = 0;
 
-   SetBackgroundColor(apColor[COLOR_Background]->fPixel);
+   SetBackgroundColor(fApColor[COLOR_Background]->fPixel);
    SetBackgroundPixmap(0);  // force usage of solid color
 
-   colorUsed = 0;
+   fColorUsed = 0;
 
-   for (i = 0; i < N_CACHE_GC; ++i) aGcCache[i].index = 0;
-   GcNextToFree = 0;
-   imageList = 0;
-   zBaseHref = 0;
-   innerList = 0;
-   formPadding = 5;
-   overrideFonts = 0;
-   overrideColors = 0;
-   HasScript = 0;
-   HasFrames = 0;
-   AddEndTags = 0;
-   TableBorderMin = 0;
-   varind = 0;
-   idind = 0;
-   inParse = 0;
-   zGoto = 0;
-   exts = 0;
-   underlineLinks = kTRUE;
-   exportSelection = DEF_HTML_EXPORT_SEL;
-   tableRelief = HTML_RELIEF_RAISED;
-   ruleRelief = HTML_RELIEF_SUNKEN;
-   rulePadding = 5;
-   zBase = 0;
-   zBaseHref = 0;
-   cursor = kPointer;
-   maxX = 0;
-   maxY = 0;
+   for (i = 0; i < N_CACHE_GC; ++i) fAGcCache[i].fIndex = 0;
+   fGcNextToFree = 0;
+   fImageList = 0;
+   fZBaseHref = 0;
+   fInnerList = 0;
+   fFormPadding = 5;
+   fOverrideFonts = 0;
+   fOverrideColors = 0;
+   fHasScript = 0;
+   fHasFrames = 0;
+   fAddEndTags = 0;
+   fTableBorderMin = 0;
+   fVarind = 0;
+   fIdind = 0;
+   fInParse = 0;
+   fZGoto = 0;
+   fExts = 0;
+   fUnderlineLinks = kTRUE;
+   fExportSelection = DEF_HTML_EXPORT_SEL;
+   fTableRelief = HTML_RELIEF_RAISED;
+   fRuleRelief = HTML_RELIEF_SUNKEN;
+   fRulePadding = 5;
+   fZBase = 0;
+   fZBaseHref = 0;
+   fCursor = kPointer;
+   fMaxX = 0;
+   fMaxY = 0;
 
    fXMargin = fYMargin = 0; //HTML_INDENT/4;
 
-   flags = RESIZE_ELEMENTS | RELAYOUT;
+   fFlags = RESIZE_ELEMENTS | RELAYOUT;
 
-   dirtyLeft = LARGE_NUMBER;
-   dirtyRight = 0;
-   dirtyTop = LARGE_NUMBER;
-   dirtyBottom = 0;
+   fDirtyLeft = LARGE_NUMBER;
+   fDirtyRight = 0;
+   fDirtyTop = LARGE_NUMBER;
+   fDirtyBottom = 0;
 
 
    fVsb->SetAccelerated();
    fHsb->SetAccelerated();
 
-   _lastUri = 0;
+   fLastUri = 0;
 
    AddInput(kExposureMask | kFocusChangeMask);
    AddInput(kButtonPressMask | kButtonReleaseMask | kPointerMotionMask);
@@ -204,16 +204,16 @@ TGHtml::TGHtml(const TGWindow *p, int w, int h, int id) : TGView(p, w, h, id)
 //______________________________________________________________________________
 TGHtml::~TGHtml()
 {
-   //
+   // HTML widget destructor.
 
    int i;
 
-   _exiting = 1;
-   _Clear();
+   fExiting = 1;
+   HClear();
    for (i = 0; i < N_FONT; i++) {
-      if (aFont[i] != 0) fClient->FreeFont(aFont[i]);
+      if (fAFont[i] != 0) fClient->FreeFont(fAFont[i]);
    }
-   if (insTimer) delete insTimer;
+   if (fInsTimer) delete fInsTimer;
    if (fIdle) delete fIdle;
 
   // TODO: should also free colors!
@@ -222,7 +222,7 @@ TGHtml::~TGHtml()
 //______________________________________________________________________________
 void TGHtml::UpdateBackgroundStart()
 {
-   //
+   // Start background update.
 
    //GCValues_t gcv;
    //unsigned int mask = GCTileStipXOrigin | GCTileStipYOrigin;
@@ -235,7 +235,7 @@ void TGHtml::UpdateBackgroundStart()
 //______________________________________________________________________________
 void TGHtml::FreeColor(ColorStruct_t *color)
 {
-   //
+   // Free system color.
 
    gVirtualX->FreeColor(gClient->GetDefaultColormap(), color->fPixel);
    delete color;
@@ -244,7 +244,7 @@ void TGHtml::FreeColor(ColorStruct_t *color)
 //______________________________________________________________________________
 ColorStruct_t *TGHtml::AllocColor(const char *name)
 {
-   //
+   // Allocate system color by name.
 
    ColorStruct_t *color = new ColorStruct_t;
 
@@ -263,7 +263,7 @@ ColorStruct_t *TGHtml::AllocColor(const char *name)
 //______________________________________________________________________________
 ColorStruct_t *TGHtml::AllocColorByValue(ColorStruct_t *color)
 {
-   //
+   // Allocate system color by value.
 
    ColorStruct_t *c = new ColorStruct_t;
    *c = *color;
@@ -284,9 +284,9 @@ void TGHtml::Clear(Option_t *)
    // Erase all HTML from this widget and clear the screen. This is
    // typically done before loading a new document.
 
-   _Clear();
+   HClear();
    TGView::Clear();
-   flags |= REDRAW_TEXT | VSCROLL | HSCROLL;
+   fFlags |= REDRAW_TEXT | VSCROLL | HSCROLL;
    ScheduleRedraw();
 }
 
@@ -299,55 +299,55 @@ int TGHtml::ParseText(char *text, const char *index)
    // possible with the text that is available. The display is updated
    // appropriately.
 
-   SHtmlIndex iStart;
+   SHtmlIndex_t iStart;
    TGHtmlElement *savePtr=0;
 
-   iStart.p = 0;
-   iStart.i = 0;
+   iStart.fP = 0;
+   iStart.fI = 0;
 
-   loEndPtr = pLast;
+   fLoEndPtr = fPLast;
 
    if (index) {
-      int rc = GetIndex(index, &iStart.p, &iStart.i);
+      int rc = GetIndex(index, &iStart.fP, &iStart.fI);
       if (rc != 0) return kFALSE;  // malformed index
-      if (iStart.p) {
-         savePtr = iStart.p->pNext;
-         pLast = iStart.p;
-         iStart.p->pNext = 0;
+      if (iStart.fP) {
+         savePtr = iStart.fP->fPNext;
+         fPLast = iStart.fP;
+         iStart.fP->fPNext = 0;
       }
    }
 
    TokenizerAppend(text);
 
-   if (loEndPtr) {
-      formStart = loFormStart;
-      if (iStart.p && savePtr) {
-         AddStyle(loEndPtr);
-         pLast->pNext = savePtr;
-         savePtr->pPrev = pLast;
-         pLast = loEndPtr;
-         flags |= REDRAW_TEXT | RELAYOUT;
+   if (fLoEndPtr) {
+      fFormStart = fLoFormStart;
+      if (iStart.fP && savePtr) {
+         AddStyle(fLoEndPtr);
+         fPLast->fPNext = savePtr;
+         savePtr->fPPrev = fPLast;
+         fPLast = fLoEndPtr;
+         fFlags |= REDRAW_TEXT | RELAYOUT;
          ScheduleRedraw();
-      } else if (loEndPtr->pNext) {
-         AddStyle(loEndPtr->pNext);
+      } else if (fLoEndPtr->fPNext) {
+         AddStyle(fLoEndPtr->fPNext);
       }
-   } else if (pFirst) {
-      paraAlignment = ALIGN_None;
-      rowAlignment = ALIGN_None;
-      anchorFlags = 0;
-      inDt = 0;
-      anchorStart = 0;
-      formStart = 0;
-      innerList = 0;
-      nInput = 0;
-      AddStyle(pFirst);
+   } else if (fPFirst) {
+      fParaAlignment = ALIGN_None;
+      fRowAlignment = ALIGN_None;
+      fAnchorFlags = 0;
+      fInDt = 0;
+      fAnchorStart = 0;
+      fFormStart = 0;
+      fInnerList = 0;
+      fNInput = 0;
+      AddStyle(fPFirst);
    }
 #if 1
-   loEndPtr = pLast;
-   loFormStart = formStart;
+   fLoEndPtr = fPLast;
+   fLoFormStart = fFormStart;
 #endif
 
-   flags |= EXTEND_LAYOUT;
+   fFlags |= EXTEND_LAYOUT;
    ScheduleRedraw();
 
    return kTRUE;
@@ -356,11 +356,11 @@ int TGHtml::ParseText(char *text, const char *index)
 //______________________________________________________________________________
 void TGHtml::SetTableRelief(int relief)
 {
-   //
+   // Sets relief mode of html table.
 
-   if (tableRelief != relief) {
-      tableRelief = relief;
-      flags |= RELAYOUT;
+   if (fTableRelief != relief) {
+      fTableRelief = relief;
+      fFlags |= RELAYOUT;
       RedrawEverything();
    }
 }
@@ -368,11 +368,11 @@ void TGHtml::SetTableRelief(int relief)
 //______________________________________________________________________________
 void TGHtml::SetRuleRelief(int relief)
 {
-   //
+   // Sets relief mode of html rule.
 
-   if (ruleRelief != relief) {
-      ruleRelief = relief;
-      flags |= RELAYOUT;
+   if (fRuleRelief != relief) {
+      fRuleRelief = relief;
+      fFlags |= RELAYOUT;
       RedrawEverything();
    }
 }
@@ -380,40 +380,40 @@ void TGHtml::SetRuleRelief(int relief)
 //______________________________________________________________________________
 void TGHtml::UnderlineLinks(int onoff)
 {
-   //
+   // Set/reset html links underline.
 
-   if (underlineLinks != onoff) {
-      underlineLinks = onoff;
-//    flags |= RESIZE_ELEMENTS | RELAYOUT;
-//    AddStyle(pFirst);
+   if (fUnderlineLinks != onoff) {
+      fUnderlineLinks = onoff;
+//    fFlags |= RESIZE_ELEMENTS | RELAYOUT;
+//    AddStyle(fPFirst);
 
       TGHtmlElement *p;
-      SHtmlStyle style = GetCurrentStyle();
-      for (p = pFirst; p; p = p->pNext) {
-         if (p->type == Html_A) {
-            if (anchorStart) {
+      SHtmlStyle_t style = GetCurrentStyle();
+      for (p = fPFirst; p; p = p->fPNext) {
+         if (p->fType == Html_A) {
+            if (fAnchorStart) {
                style = PopStyleStack(Html_EndA);
-               anchorStart = 0;
-               anchorFlags = 0;
+               fAnchorStart = 0;
+               fAnchorFlags = 0;
             }
             const char *z = p->MarkupArg("href", 0);
             if (z) {
-               style.color = GetLinkColor(z);
-               if (underlineLinks) style.flags |= STY_Underline;
-               anchorFlags |= STY_Anchor;
+               style.fColor = GetLinkColor(z);
+               if (fUnderlineLinks) style.fFlags |= STY_Underline;
+               fAnchorFlags |= STY_Anchor;
                PushStyleStack(Html_EndA, style);
-               anchorStart = (TGHtmlAnchor *) p;
+               fAnchorStart = (TGHtmlAnchor *) p;
             }
-         } else if (p->type == Html_EndA) {
-            if (anchorStart) {
-               ((TGHtmlRef *)p)->pOther = anchorStart;
+         } else if (p->fType == Html_EndA) {
+            if (fAnchorStart) {
+               ((TGHtmlRef *)p)->fPOther = fAnchorStart;
                style = PopStyleStack(Html_EndA);
-               anchorStart = 0;
-               anchorFlags = 0;
+               fAnchorStart = 0;
+               fAnchorFlags = 0;
             }
          }
-         p->style.flags &= ~STY_Underline;
-         p->style.flags |= (style.flags & STY_Underline);
+         p->fStyle.fFlags &= ~STY_Underline;
+         p->fStyle.fFlags |= (style.fFlags & STY_Underline);
       }
 
       RedrawEverything();
@@ -423,26 +423,26 @@ void TGHtml::UnderlineLinks(int onoff)
 //______________________________________________________________________________
 void TGHtml::SetBaseUri(const char *uri)
 {
-   //
+   // Sets base URI.
 
-   if (zBase) delete[] zBase;
-   zBase = 0;
-   if (uri) zBase = StrDup(uri);
+   if (fZBase) delete[] fZBase;
+   fZBase = 0;
+   if (uri) fZBase = StrDup(uri);
 }
 
 //______________________________________________________________________________
 int TGHtml::GotoAnchor(const char *name)
 {
-   //
+   // Go to anchor position.
 
    const char *z;
    TGHtmlElement *p;
 
-   for (p = pFirst; p; p = p->pNext) {
-      if (p->type == Html_A) {
+   for (p = fPFirst; p; p = p->fPNext) {
+      if (p->fType == Html_A) {
          z = p->MarkupArg("name", 0);
          if (z && strcmp(z, name) == 0) {
-            ScrollToPosition(TGLongPosition(fVisible.fX, ((TGHtmlAnchor *)p)->y));
+            ScrollToPosition(TGLongPosition(fVisible.fX, ((TGHtmlAnchor *)p)->fY));
             return kTRUE;
          }
       }
@@ -480,9 +480,9 @@ const char *TGHtml::GetUid(const char *string)
 //______________________________________________________________________________
 void TGHtml::ComputeVirtualSize()
 {
-   //
+   // Computes virtual size of html area.
 
-   fVirtualSize = TGDimension(maxX, maxY);
+   fVirtualSize = TGDimension(fMaxX, fMaxY);
 }
 
 //______________________________________________________________________________
@@ -493,12 +493,12 @@ void TGHtml::ClearGcCache()
    int i;
 
    for (i = 0; i < N_CACHE_GC; i++) {
-      if (aGcCache[i].index) {
-         gVirtualX->DeleteGC(aGcCache[i].gc);
-         aGcCache[i].index = 0;
+      if (fAGcCache[i].fIndex) {
+         gVirtualX->DeleteGC(fAGcCache[i].fGc);
+         fAGcCache[i].fIndex = 0;
       }
    }
-   GcNextToFree = 0;
+   fGcNextToFree = 0;
 }
 
 //______________________________________________________________________________
@@ -507,7 +507,7 @@ void TGHtml::ResetLayoutContext()
    // Reset the main layout context in the main widget.  This happens
    // before we redo the layout, or just before deleting the widget.
 
-   layoutContext.Reset();
+   fLayoutContext.Reset();
 }
 
 //______________________________________________________________________________
@@ -527,8 +527,8 @@ void TGHtml::Redraw()
 
    // Don't do anything if we are in the middle of a parse.
 
-   if (inParse) {
-      flags &= ~REDRAW_PENDING;
+   if (fInParse) {
+      fFlags &= ~REDRAW_PENDING;
       return;
    }
 
@@ -541,14 +541,14 @@ void TGHtml::Redraw()
    // *  Do not remove the REDRAW_PENDING flag until after LayoutDoc()
    //    has been called, to prevent a recursive call to Redraw().
 
-   if ((flags & RESIZE_ELEMENTS) != 0 && (flags & STYLER_RUNNING) == 0) {
+   if ((fFlags & RESIZE_ELEMENTS) != 0 && (fFlags & STYLER_RUNNING) == 0) {
       TGHtmlImage *pImage;
-      for (pImage = imageList; pImage; pImage = pImage->pNext) {
-         pImage->pList = 0;
+      for (pImage = fImageList; pImage; pImage = pImage->fPNext) {
+         pImage->fPList = 0;
       }
-      lastSized = 0;
-      flags &= ~RESIZE_ELEMENTS;
-      flags |= RELAYOUT;
+      fLastSized = 0;
+      fFlags &= ~RESIZE_ELEMENTS;
+      fFlags |= RELAYOUT;
    }
 
    // We used to make a distinction between RELAYOUT and EXTEND_LAYOUT.
@@ -561,32 +561,32 @@ void TGHtml::Redraw()
    // a complete RELAYOUT.  Someday, we need to fix EXTEND_LAYOUT so
    // that it works right...
 
-   if ((flags & (RELAYOUT | EXTEND_LAYOUT)) != 0
-      && (flags & STYLER_RUNNING) == 0) {
-      nextPlaced = 0;
-      //nInput = 0;
-      varId = 0;
-      maxX = 0;
-      maxY = 0;
+   if ((fFlags & (RELAYOUT | EXTEND_LAYOUT)) != 0
+      && (fFlags & STYLER_RUNNING) == 0) {
+      fNextPlaced = 0;
+      //fNInput = 0;
+      fVarId = 0;
+      fMaxX = 0;
+      fMaxY = 0;
       ResetLayoutContext();
-      firstBlock = 0;
-      lastBlock = 0;
+      fFirstBlock = 0;
+      fLastBlock = 0;
       redoSelection = 1;
-      flags &= ~RELAYOUT;
-      flags |= HSCROLL | VSCROLL | REDRAW_TEXT | EXTEND_LAYOUT;
+      fFlags &= ~RELAYOUT;
+      fFlags |= HSCROLL | VSCROLL | REDRAW_TEXT | EXTEND_LAYOUT;
    }
 
-   if ((flags & EXTEND_LAYOUT) && pFirst != 0) {
+   if ((fFlags & EXTEND_LAYOUT) && fPFirst != 0) {
       LayoutDoc();
-      flags &= ~EXTEND_LAYOUT;
+      fFlags &= ~EXTEND_LAYOUT;
       FormBlocks();
       MapControls();
-      if (redoSelection && selBegin.p && selEnd.p) {
+      if (redoSelection && fSelBegin.fP && fSelEnd.fP) {
          UpdateSelection(1);
          UpdateInsert();
       }
    }
-   flags &= ~REDRAW_PENDING;
+   fFlags &= ~REDRAW_PENDING;
 
    // No need to do any actual drawing if we aren't mapped
 
@@ -594,35 +594,35 @@ void TGHtml::Redraw()
 
    // Update the scrollbars.
 
-   if ((flags & (HSCROLL | VSCROLL)) != 0) {
+   if ((fFlags & (HSCROLL | VSCROLL)) != 0) {
       ComputeVirtualSize();
-      flags &= ~(HSCROLL | VSCROLL);
+      fFlags &= ~(HSCROLL | VSCROLL);
 
-      if (flags & REDRAW_PENDING) return;
+      if (fFlags & REDRAW_PENDING) return;
    }
 
    // Redraw the focus highlight, if requested
-   hw = highlightWidth;
-   if (flags & REDRAW_FOCUS) {
+   hw = fHighlightWidth;
+   if (fFlags & REDRAW_FOCUS) {
       if (hw > 0) {
 #if 0
       unsigned long color;
 
-      if (flags & GOT_FOCUS) {
-        color = highlightColorPtr;
+      if (fFlags & GOT_FOCUS) {
+         color = highlightColorPtr;
       } else {
-        color = highlightBgColorPtr;
+         color = highlightBgColorPtr;
       }
       _DrawFocusHighlight(color);
 #endif
       }
-      flags &= ~REDRAW_FOCUS;
+      fFlags &= ~REDRAW_FOCUS;
    }
 
    // If the styler is in a callback, abort further processing.
    // TODO: check this!
 
-   if (flags & STYLER_RUNNING) {
+   if (fFlags & STYLER_RUNNING) {
       goto earlyOut;
    }
 
@@ -633,23 +633,23 @@ void TGHtml::Redraw()
 
    clipwinW = fCanvas->GetWidth();
    clipwinH = fCanvas->GetHeight();
-   if (flags & REDRAW_TEXT) {
+   if (fFlags & REDRAW_TEXT) {
       w = clipwinW;
       h = clipwinH;
       x = fVisible.fX;
       y = fVisible.fY;
-      dirtyLeft = 0;
-      dirtyTop = 0;
-      flags &= ~REDRAW_TEXT;
+      fDirtyLeft = 0;
+      fDirtyTop = 0;
+      fFlags &= ~REDRAW_TEXT;
    } else {
-      if (dirtyLeft < 0) dirtyLeft = 0;
-      if (dirtyRight > clipwinW) dirtyRight = clipwinW;
-      if (dirtyTop < 0) dirtyTop = 0;
-      if (dirtyBottom > clipwinH) dirtyBottom = clipwinH;
-      w = dirtyRight - dirtyLeft;
-      h = dirtyBottom - dirtyTop;
-      x = fVisible.fX + dirtyLeft;
-      y = fVisible.fY + dirtyTop;
+      if (fDirtyLeft < 0) fDirtyLeft = 0;
+      if (fDirtyRight > clipwinW) fDirtyRight = clipwinW;
+      if (fDirtyTop < 0) fDirtyTop = 0;
+      if (fDirtyBottom > clipwinH) fDirtyBottom = clipwinH;
+      w = fDirtyRight - fDirtyLeft;
+      h = fDirtyBottom - fDirtyTop;
+      x = fVisible.fX + fDirtyLeft;
+      y = fVisible.fY + fDirtyTop;
    }
 
    // Skip the rest of the drawing process if the area to be refreshed is
@@ -669,28 +669,28 @@ void TGHtml::Redraw()
 #if 0
 
 //old--    XFillRectangles(GetDisplay(), pixmap, gcBg, &xrec, 1);
-//new--    if (bgImage)
-//           BGDraw(fVisible.fX, fVisible.fY, w, h, bgImage);
+//new--    if (fBgImage)
+//           BGDraw(fVisible.fX, fVisible.fY, w, h, fBgImage);
 #else
 
-      fWhiteGC.SetTileStipXOrigin(-fVisible.fX - dirtyLeft);
-      fWhiteGC.SetTileStipYOrigin(-fVisible.fY - dirtyTop);
+      fWhiteGC.SetTileStipXOrigin(-fVisible.fX - fDirtyLeft);
+      fWhiteGC.SetTileStipYOrigin(-fVisible.fY - fDirtyTop);
 
       gVirtualX->FillRectangle(pixmap, fWhiteGC.GetGC(), 0, 0, w, h);
       UpdateBackgroundStart();  // back to original
 #endif
 
       // Render all visible HTML onto the pixmap
-      for (pBlock = firstBlock; pBlock; pBlock = pBlock->bNext) {
-         if (pBlock->top <= y+h && pBlock->bottom >= y-10 &&
-            pBlock->left <= x+w && pBlock->right >= x-10) {
+      for (pBlock = fFirstBlock; pBlock; pBlock = pBlock->fBNext) {
+         if (pBlock->fTop <= y+h && pBlock->fBottom >= y-10 &&
+            pBlock->fLeft <= x+w && pBlock->fRight >= x-10) {
             BlockDraw(pBlock, pixmap, x, y, w, h, pixmap);
          }
       }
 
       // Finally, copy the pixmap onto the window and delete the pixmap
       gVirtualX->CopyArea(pixmap, fCanvas->GetId(),
-                          gcBg, 0, 0, w, h, dirtyLeft, dirtyTop);
+                          gcBg, 0, 0, w, h, fDirtyLeft, fDirtyTop);
       gVirtualX->Update(kFALSE);
 
       gVirtualX->DeletePixmap(pixmap);
@@ -698,7 +698,7 @@ void TGHtml::Redraw()
    }
 
    // Redraw images, if requested
-   if (flags & REDRAW_IMAGES) {
+   if (fFlags & REDRAW_IMAGES) {
       TGHtmlImage *pImage;
       TGHtmlImageMarkup *pElem;
       int top, bottom, left, right;     // Coordinates of the clipping window
@@ -708,25 +708,25 @@ void TGHtml::Redraw()
       bottom = top + fCanvas->GetHeight();
       left = fVisible.fX;
       right = left + fCanvas->GetWidth();
-      for (pImage = imageList; pImage; pImage = pImage->pNext) {
-         for (pElem = pImage->pList; pElem; pElem = pElem->iNext) {
-            if (pElem->redrawNeeded == 0) continue;
-            imageTop = pElem->y - pElem->ascent;
-            if (imageTop > bottom || imageTop + pElem->h < top
-               || pElem->x > right || pElem->x + pElem->w < left) continue;
+      for (pImage = fImageList; pImage; pImage = pImage->fPNext) {
+         for (pElem = pImage->fPList; pElem; pElem = pElem->fINext) {
+            if (pElem->fRedrawNeeded == 0) continue;
+            imageTop = pElem->fY - pElem->fAscent;
+            if (imageTop > bottom || imageTop + pElem->fH < top
+               || pElem->fX > right || pElem->fX + pElem->fW < left) continue;
 
             DrawImage(pElem, fCanvas->GetId(), left, top, right, bottom);
          }
       }
-      flags &= ~(REDRAW_IMAGES | ANIMATE_IMAGES);
+      fFlags &= ~(REDRAW_IMAGES | ANIMATE_IMAGES);
    }
 
    // Set the dirty region to the empty set.
 earlyOut:
-   dirtyTop = LARGE_NUMBER;
-   dirtyLeft = LARGE_NUMBER;
-   dirtyBottom = 0;
-   dirtyRight = 0;
+   fDirtyTop = LARGE_NUMBER;
+   fDirtyLeft = LARGE_NUMBER;
+   fDirtyBottom = 0;
+   fDirtyRight = 0;
 
    return;
 }
@@ -736,16 +736,16 @@ void TGHtml::ScheduleRedraw()
 {
    // Make sure that a call to the Redraw() routine has been queued.
 
-   if ((flags & REDRAW_PENDING) == 0 /*&& IsMapped()*/) {
+   if ((fFlags & REDRAW_PENDING) == 0 /*&& IsMapped()*/) {
       if (!fIdle) fIdle = new TGIdleHandler(this);
-      flags |= REDRAW_PENDING;
+      fFlags |= REDRAW_PENDING;
    }
 }
 
 //______________________________________________________________________________
 Bool_t TGHtml::HandleIdleEvent(TGIdleHandler *idle)
 {
-   //
+   // Handles idle event.
 
    if (idle != fIdle) return kFALSE;
    Redraw();
@@ -767,22 +767,22 @@ void TGHtml::RedrawArea(int left, int top, int right, int bottom)
    if (top > (int)fCanvas->GetHeight()) return;
    if (right < 0) return;
    if (left > (int)fCanvas->GetWidth()) return;
-   if (dirtyTop > top) dirtyTop = top;
-   if (dirtyLeft > left) dirtyLeft = left;
-   if (dirtyBottom < bottom) dirtyBottom = bottom;
-   if (dirtyRight < right) dirtyRight = right;
+   if (fDirtyTop > top) fDirtyTop = top;
+   if (fDirtyLeft > left) fDirtyLeft = left;
+   if (fDirtyBottom < bottom) fDirtyBottom = bottom;
+   if (fDirtyRight < right) fDirtyRight = right;
    ScheduleRedraw();
 }
 
 //______________________________________________________________________________
 void TGHtml::DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
-   //
+   // Draw region defined by [x,y] [w,h].
 
    TGView::DrawRegion(x, y, w, h);
 
 #if 0
-  RedrawArea(x, y, x + w + 1, y + h + 1);
+   RedrawArea(x, y, x + w + 1, y + h + 1);
 #else
    int left = x;
    int top = y;
@@ -792,12 +792,12 @@ void TGHtml::DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h)
    if (top > (int) fCanvas->GetHeight()) return;
    if (right < 0) return;
    if (left > (int)fCanvas->GetWidth()) return;
-   if (dirtyTop > top) dirtyTop = top;
-   if (dirtyLeft > left) dirtyLeft = left;
-   if (dirtyBottom < bottom) dirtyBottom = bottom;
-   if (dirtyRight < right) dirtyRight = right;
+   if (fDirtyTop > top) fDirtyTop = top;
+   if (fDirtyLeft > left) fDirtyLeft = left;
+   if (fDirtyBottom < bottom) fDirtyBottom = bottom;
+   if (fDirtyRight < right) fDirtyRight = right;
 
-   flags |= REDRAW_PENDING;
+   fFlags |= REDRAW_PENDING;
    Redraw();
 #endif
    return;
@@ -806,24 +806,25 @@ void TGHtml::DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h)
 //______________________________________________________________________________
 Bool_t TGHtml::ItemLayout()
 {
-   //
+   // Layout html widget.
+
 #if 0
-  flags |= RELAYOUT | VSCROLL | HSCROLL;
-  Redraw(); //RedrawEverything();
+   fFlags |= RELAYOUT | VSCROLL | HSCROLL;
+   Redraw(); //RedrawEverything();
 #else
-   nextPlaced = 0;
-   //nInput = 0;
-   varId = 0;
-   maxX = 0;
-   maxY = 0;
+   fNextPlaced = 0;
+   //fNInput = 0;
+   fVarId = 0;
+   fMaxX = 0;
+   fMaxY = 0;
    ResetLayoutContext();
-   firstBlock = 0;
-   lastBlock = 0;
-   if (pFirst != 0) {
+   fFirstBlock = 0;
+   fLastBlock = 0;
+   if (fPFirst != 0) {
       LayoutDoc();
       FormBlocks();
       MapControls();
-      if (selBegin.p && selEnd.p) {
+      if (fSelBegin.fP && fSelEnd.fP) {
          UpdateSelection(1);
          UpdateInsert();
       }
@@ -840,8 +841,8 @@ void TGHtml::RedrawBlock(TGHtmlBlock *p)
    // Redraw the TGHtmlBlock given.
 
    if (p) {
-      RedrawArea(p->left - fVisible.fX, p->top - fVisible.fY,
-                 p->right - fVisible.fX + 1, p->bottom - fVisible.fY);
+      RedrawArea(p->fLeft - fVisible.fX, p->fTop - fVisible.fY,
+                 p->fRight - fVisible.fX + 1, p->fBottom - fVisible.fY);
    }
 }
 
@@ -850,7 +851,7 @@ void TGHtml::RedrawEverything()
 {
    // Call this routine to force the entire widget to be redrawn.
 
-   flags |= REDRAW_FOCUS | REDRAW_TEXT;
+   fFlags |= REDRAW_FOCUS | REDRAW_TEXT;
    ScheduleRedraw();
 }
 
@@ -870,120 +871,122 @@ void TGHtml::RedrawText(int y)
 }
 
 //______________________________________________________________________________
-void TGHtml::_Clear()
+void TGHtml::HClear()
 {
    // Erase all data from the HTML widget. Bring it back to an empty screen.
 
    int i;
-   TGHtmlElement *p, *pNext;
+   TGHtmlElement *p, *fPNext;
 
    fXMargin = fYMargin = 0; //HTML_INDENT/4;
 
    DeleteControls();
-   for (p = pFirst; p; p = pNext) {
-      pNext = p->pNext;
+   for (p = fPFirst; p; p = fPNext) {
+      fPNext = p->fPNext;
       delete p;
    }
-   pFirst = 0;
-   pLast = 0;
-   nToken = 0;
-   if (zText) delete[] zText;
-   zText = 0;
-   nText = 0;
-   nAlloc = 0;
-   nComplete = 0;
-   iPlaintext = 0;
+   fPFirst = 0;
+   fPLast = 0;
+   fNToken = 0;
+   if (fZText) delete[] fZText;
+   fZText = 0;
+   fNText = 0;
+   fNAlloc = 0;
+   fNComplete = 0;
+   fIPlaintext = 0;
 
    for (i = 0; i < N_COLOR; ++i) {
-      if (apColor[i] != 0) FreeColor(apColor[i]);
-      apColor[i] = 0;
-      iDark[i] = 0;
-      iLight[i] = 0;
+      if (fApColor[i] != 0) FreeColor(fApColor[i]);
+      fApColor[i] = 0;
+      fIDark[i] = 0;
+      fILight[i] = 0;
    }
 
-   if (!_exiting) {
-      fgColor = AllocColor("black");
-      bgColor = AllocColor("white"); //AllocColor("#c0c0c0");
-      newLinkColor = AllocColor(DEF_HTML_UNVISITED);
-      oldLinkColor = AllocColor(DEF_HTML_VISITED);
-      selectionColor = AllocColor(DEF_HTML_SELECTION_COLOR);
+   if (!fExiting) {
+      fFgColor = AllocColor("black");
+      fBgColor = AllocColor("white"); //AllocColor("#c0c0c0");
+      fNewLinkColor = AllocColor(DEF_HTML_UNVISITED);
+      fOldLinkColor = AllocColor(DEF_HTML_VISITED);
+      fSelectionColor = AllocColor(DEF_HTML_SELECTION_COLOR);
 
-      apColor[COLOR_Normal] = fgColor;
-      apColor[COLOR_Visited] = oldLinkColor;
-      apColor[COLOR_Unvisited] = newLinkColor;
-      apColor[COLOR_Selection] = selectionColor;
-      apColor[COLOR_Background] = bgColor;
+      fApColor[COLOR_Normal] = fFgColor;
+      fApColor[COLOR_Visited] = fOldLinkColor;
+      fApColor[COLOR_Unvisited] = fNewLinkColor;
+      fApColor[COLOR_Selection] = fSelectionColor;
+      fApColor[COLOR_Background] = fBgColor;
 
-      SetBackgroundColor(apColor[COLOR_Background]->fPixel);
+      SetBackgroundColor(fApColor[COLOR_Background]->fPixel);
       SetBackgroundPixmap(0);  // use solid color
    }
 
-   colorUsed = 0;
-   while (imageList) {
-      TGHtmlImage *p2 = imageList;
-      imageList = p2->pNext;
+   fColorUsed = 0;
+   while (fImageList) {
+      TGHtmlImage *p2 = fImageList;
+      fImageList = p2->fPNext;
       delete p2;
    }
 
-   if (bgImage) delete bgImage;
-   bgImage = 0;
+   if (fBgImage) delete fBgImage;
+   fBgImage = 0;
 
-   while (styleStack) {
-      SHtmlStyleStack *p2 = styleStack;
-      styleStack = p2->pNext;
+   while (fStyleStack) {
+      SHtmlStyleStack_t *p2 = fStyleStack;
+      fStyleStack = p2->fPNext;
       delete p2;
    }
    ClearGcCache();
    ResetLayoutContext();
-//  if (zBase) delete[] zBase;
-//  zBase = 0;
+//  if (fZBase) delete[] fZBase;
+//  fZBase = 0;
 
-   if (zBaseHref) delete [] zBaseHref;
-   zBaseHref = 0;
-   lastSized = 0;
-   nextPlaced = 0;
-   firstBlock = 0;
-   lastBlock = 0;
-   nInput = 0;
-   nForm = 0;
-   varId = 0;
-   paraAlignment = ALIGN_None;
-   rowAlignment = ALIGN_None;
-   anchorFlags = 0;
-   inDt = 0;
-   anchorStart = 0;
-   formStart = 0;
-   innerList = 0;
-   maxX = 0;
-   maxY = 0;
+   if (fZBaseHref) delete [] fZBaseHref;
+   fZBaseHref = 0;
+   fLastSized = 0;
+   fNextPlaced = 0;
+   fFirstBlock = 0;
+   fLastBlock = 0;
+   fNInput = 0;
+   fNForm = 0;
+   fVarId = 0;
+   fParaAlignment = ALIGN_None;
+   fRowAlignment = ALIGN_None;
+   fAnchorFlags = 0;
+   fInDt = 0;
+   fAnchorStart = 0;
+   fFormStart = 0;
+   fInnerList = 0;
+   fMaxX = 0;
+   fMaxY = 0;
 #if 0  // in OXView::Clear()
-  fVisible = TGPosition(0, 0);
-  _virtualSize = TGDimension(0, 0);
-  ScrollTTGPosition(fVisible);
+   fVisible = TGPosition(0, 0);
+   _virtualSize = TGDimension(0, 0);
+   ScrollTTGPosition(fVisible);
 #endif
-   pInsBlock = 0;
-   ins.p = 0;
-   selBegin.p = 0;
-   selEnd.p = 0;
-   pSelStartBlock = 0;
-   pSelEndBlock = 0;
-   HasScript = 0;
-   HasFrames = 0;
-   _lastUri = 0;
+   fPInsBlock = 0;
+   fIns.fP = 0;
+   fSelBegin.fP = 0;
+   fSelEnd.fP = 0;
+   fPSelStartBlock = 0;
+   fPSelEndBlock = 0;
+   fHasScript = 0;
+   fHasFrames = 0;
+   fLastUri = 0;
 }
 
 //______________________________________________________________________________
 Bool_t TGHtml::HandleTimer(TTimer *t)
 {
-   if (t == insTimer) {
-      if (insTimer) delete insTimer;
-      insTimer = NULL;
+   // Handle timer event. 
+
+   if (t == fInsTimer) {
+      if (fInsTimer) delete fInsTimer;
+      fInsTimer = NULL;
       FlashCursor();
       return kTRUE;
    } else {
       TGHtmlImage *pImage;
-      for (pImage = imageList; pImage; pImage = pImage->pNext) {
-         if (pImage->timer == t) {
+      for (pImage = fImageList; pImage; pImage = pImage->fPNext) {
+         if (pImage->fTimer == t) {
             AnimateImage(pImage);
             return kTRUE;
          }
@@ -997,16 +1000,16 @@ void TGHtml::FlashCursor()
 {
    // Flash the insertion cursor.
 
-   if (pInsBlock == 0 || insOnTime <= 0 || insOffTime <= 0) return;
-   RedrawBlock(pInsBlock);
-   if ((flags & GOT_FOCUS) == 0) {
-      insStatus = 0;
-   } else if (insStatus) {
-      insTimer = new TTimer(this, insOffTime);
-      insStatus = 0;
+   if (fPInsBlock == 0 || fInsOnTime <= 0 || fInsOffTime <= 0) return;
+   RedrawBlock(fPInsBlock);
+   if ((fFlags & GOT_FOCUS) == 0) {
+      fInsStatus = 0;
+   } else if (fInsStatus) {
+      fInsTimer = new TTimer(this, fInsOffTime);
+      fInsStatus = 0;
    } else {
-      insTimer = new TTimer(this, insOnTime);
-      insStatus = 1;
+      fInsTimer = new TTimer(this, fInsOnTime);
+      fInsStatus = 1;
    }
 }
 
@@ -1019,7 +1022,7 @@ GContext_t TGHtml::GetGC(int color, int font)
    // A value of FONT_Any (-1) for the font means "don't care".
 
    int i, j;
-   GcCache *p = aGcCache;
+   GcCache_t *p = fAGcCache;
    GCValues_t gcValues;
    TGFont *xfont;
 
@@ -1029,33 +1032,33 @@ GContext_t TGHtml::GetGC(int color, int font)
    if (font < FONT_Any || font >= N_FONT) font = FONT_Default;
 
    for (i = 0; i < N_CACHE_GC; i++, p++) {
-      if (p->index == 0) continue;
-      if ((font < 0 || p->font == font) && p->color == color) {
-         if (p->index > 1) {
+      if (p->fIndex == 0) continue;
+      if ((font < 0 || p->fFont == font) && p->fColor == color) {
+         if (p->fIndex > 1) {
             for (j = 0; j < N_CACHE_GC; j++) {
-               if (aGcCache[j].index && aGcCache[j].index < p->index ) {
-                  aGcCache[j].index++;
+               if (fAGcCache[j].fIndex && fAGcCache[j].fIndex < p->fIndex ) {
+                  fAGcCache[j].fIndex++;
                }
             }
-            p->index = 1;
+            p->fIndex = 1;
          }
-         return aGcCache[i].gc;
+         return fAGcCache[i].fGc;
       }
    }
 
    // No GC matches. Find a place to allocate a new GC.
 
-   p = aGcCache;
+   p = fAGcCache;
    for (i = 0; i < N_CACHE_GC; i++, p++) {
-      if (p->index == 0 || p->index == N_CACHE_GC) break;
+      if (p->fIndex == 0 || p->fIndex == N_CACHE_GC) break;
    }
    if (i >= N_CACHE_GC) {  // No slot, so free one (round-robin)
-      p = aGcCache;
-      for (i = 0; i < N_CACHE_GC && i < GcNextToFree; ++i, ++p) {}
-         GcNextToFree = (GcNextToFree + 1) % N_CACHE_GC;
-         gVirtualX->DeleteGC(p->gc);
+      p = fAGcCache;
+      for (i = 0; i < N_CACHE_GC && i < fGcNextToFree; ++i, ++p) {}
+         fGcNextToFree = (fGcNextToFree + 1) % N_CACHE_GC;
+         gVirtualX->DeleteGC(p->fGc);
    }
-   gcValues.fForeground = apColor[color]->fPixel;
+   gcValues.fForeground = fApColor[color]->fPixel;
    gcValues.fGraphicsExposures = kTRUE;
    gcValues.fMask = kGCForeground | kGCGraphicsExposures;
 
@@ -1067,19 +1070,19 @@ GContext_t TGHtml::GetGC(int color, int font)
       gcValues.fMask |= kGCFont;
    }
 
-   p->gc = gVirtualX->CreateGC(fId, &gcValues);
+   p->fGc = gVirtualX->CreateGC(fId, &gcValues);
 
-   if (p->index == 0) p->index = N_CACHE_GC + 1;
+   if (p->fIndex == 0) p->fIndex = N_CACHE_GC + 1;
    for (j = 0; j < N_CACHE_GC; j++) {
-      if (aGcCache[j].index && aGcCache[j].index < p->index) {
-         aGcCache[j].index++;
+      if (fAGcCache[j].fIndex && fAGcCache[j].fIndex < p->fIndex) {
+         fAGcCache[j].fIndex++;
       }
    }
-   p->index = 1;
-   p->font = font;
-   p->color = color;
+   p->fIndex = 1;
+   p->fFont = font;
+   p->fColor = color;
 
-   return p->gc;
+   return p->fGc;
 }
 
 //______________________________________________________________________________
@@ -1089,10 +1092,10 @@ GContext_t TGHtml::GetAnyGC()
    // GC will only be used for copying.
 
    int i;
-   GcCache *p = aGcCache;
+   GcCache_t *p = fAGcCache;
 
    for (i = 0; i < N_CACHE_GC; i++, p++) {
-      if (p->index) return p->gc;
+      if (p->fIndex) return p->fGc;
    }
 
    return GetGC(COLOR_Normal, FONT_Default);
@@ -1101,19 +1104,18 @@ GContext_t TGHtml::GetAnyGC()
 //______________________________________________________________________________
 Bool_t TGHtml::HandleFocusChange(Event_t *event)
 {
-   //
+   // Handle focus change event.
 
    if (event->fType == kFocusIn) {
-      flags |= GOT_FOCUS | REDRAW_FOCUS;
+      fFlags |= GOT_FOCUS | REDRAW_FOCUS;
       ScheduleRedraw();
       UpdateInsert();
    } else {  // FocusOut
-      flags &= ~GOT_FOCUS;
-      flags |= REDRAW_FOCUS;
+      fFlags &= ~GOT_FOCUS;
+      fFlags |= REDRAW_FOCUS;
       ScheduleRedraw();
-  }
-
-  return kTRUE;
+   }
+   return kTRUE;
 }
 
 //______________________________________________________________________________
@@ -1130,12 +1132,12 @@ TGHtmlInput *TGHtml::GetInputElement(int x, int y)
    vy = fVisible.fY;
    vw = fCanvas->GetWidth();
    vh = fCanvas->GetHeight();
-   for (p = firstInput; p; p = p->iNext) {
-      if (p->frame == 0) continue;
-      if (p->y < vy + vh && p->y + p->h > vy &&
-          p->x < vx + vw && p->x + p->w > vx) {
-         if ((x > p->x) && (y > p->y) && (x < (p->x + p->w)) &&
-             (y < (p->y + p->h)) ) {
+   for (p = fFirstInput; p; p = p->fINext) {
+      if (p->fFrame == 0) continue;
+      if (p->fY < vy + vh && p->fY + p->fH > vy &&
+          p->fX < vx + vw && p->fX + p->fW > vx) {
+         if ((x > p->fX) && (y > p->fY) && (x < (p->fX + p->fW)) &&
+             (y < (p->fY + p->fH)) ) {
             return p;         
          }
       }
@@ -1146,6 +1148,7 @@ TGHtmlInput *TGHtml::GetInputElement(int x, int y)
 //______________________________________________________________________________
 Bool_t TGHtml::HandleHtmlInput(TGHtmlInput *pr, Event_t *event)
 {
+   // Handle html input (button, checkbox, ...) event.
 
    Window_t childdum;
    Event_t eventSt;
@@ -1169,21 +1172,21 @@ Bool_t TGHtml::HandleHtmlInput(TGHtmlInput *pr, Event_t *event)
    eventSt.fUser[2]   = event->fUser[2];
    eventSt.fUser[3]   = event->fUser[3];
    eventSt.fUser[4]   = event->fUser[4];
-   gVirtualX->TranslateCoordinates(GetId(), pr->frame->GetId(),
+   gVirtualX->TranslateCoordinates(GetId(), pr->fFrame->GetId(),
                                    event->fX, event->fY, eventSt.fX, 
                                    eventSt.fY, childdum);
 
    const char *name = pr->MarkupArg("name", 0);
    const char *val = pr->MarkupArg("value", 0);
-   switch (pr->itype) {
+   switch (pr->fItype) {
       case INPUT_TYPE_Submit:
       case INPUT_TYPE_Button: {
-         TGButton *b = (TGButton *) pr->frame;
+         TGButton *b = (TGButton *) pr->fFrame;
          Bool_t was = !b->IsDown();
          b->HandleButton(&eventSt);
          Bool_t now = !b->IsDown();
          if (!was && now) {
-            if (pr->itype == INPUT_TYPE_Submit)
+            if (pr->fItype == INPUT_TYPE_Submit)
                SubmitClicked(val);   // emit SubmitClicked
             else
                ButtonClicked(name, val);   // emit ButtonClicked
@@ -1191,7 +1194,7 @@ Bool_t TGHtml::HandleHtmlInput(TGHtmlInput *pr, Event_t *event)
          break;
       }
       case INPUT_TYPE_Radio: {
-         TGRadioButton *rb = (TGRadioButton *) pr->frame;
+         TGRadioButton *rb = (TGRadioButton *) pr->fFrame;
          Bool_t was = !rb->IsDown();
          rb->HandleButton(&eventSt);
          Bool_t now = !rb->IsDown();
@@ -1202,7 +1205,7 @@ Bool_t TGHtml::HandleHtmlInput(TGHtmlInput *pr, Event_t *event)
          break;
       }
       case INPUT_TYPE_Checkbox: {
-         TGCheckButton *cb = (TGCheckButton *) pr->frame;
+         TGCheckButton *cb = (TGCheckButton *) pr->fFrame;
          Bool_t was = !cb->IsDown();
          cb->HandleButton(&eventSt);
          Bool_t now = !cb->IsDown();
@@ -1212,17 +1215,17 @@ Bool_t TGHtml::HandleHtmlInput(TGHtmlInput *pr, Event_t *event)
       }
       case INPUT_TYPE_Text:
       case INPUT_TYPE_Password: {
-         TGTextEntry *te = (TGTextEntry *) pr->frame;
+         TGTextEntry *te = (TGTextEntry *) pr->fFrame;
          te->SetFocus();
          break;
       }
       case INPUT_TYPE_Select: {
          RemoveInput(kButtonPressMask | kButtonReleaseMask | kPointerMotionMask);
          eventSt.fUser[0] = childdum;
-         if (pr->frame->InheritsFrom("TGComboBox"))
-            ((TGComboBox *)pr->frame)->HandleButton(&eventSt);
-         else if (pr->frame->InheritsFrom("TGListBox"))
-            ((TGListBox *)pr->frame)->HandleButton(&eventSt);
+         if (pr->fFrame->InheritsFrom("TGComboBox"))
+            ((TGComboBox *)pr->fFrame)->HandleButton(&eventSt);
+         else if (pr->fFrame->InheritsFrom("TGListBox"))
+            ((TGListBox *)pr->fFrame)->HandleButton(&eventSt);
          InputSelected(name, val); // emit InputSelected
          AddInput(kButtonPressMask | kButtonReleaseMask | kPointerMotionMask);
          break;
@@ -1236,17 +1239,19 @@ Bool_t TGHtml::HandleHtmlInput(TGHtmlInput *pr, Event_t *event)
 //______________________________________________________________________________
 Bool_t TGHtml::HandleRadioButton(TGHtmlInput *p)
 {
+   // Handle radio button event.
 
    TGHtmlInput *pr;
-   for (pr = firstInput; pr; pr = pr->iNext) {
-      if ((pr->pForm == p->pForm) && (pr->itype == INPUT_TYPE_Radio)) {
+   for (pr = fFirstInput; pr; pr = pr->fINext) {
+      if ((pr->fPForm == p->fPForm) && (pr->fItype == INPUT_TYPE_Radio)) {
          if (pr != p) {
             if (strcmp(pr->MarkupArg("name", ""), p->MarkupArg("name", "")) == 0) {
-               ((TGRadioButton *)pr->frame)->SetState(kButtonUp);
+               ((TGRadioButton *)pr->fFrame)->SetState(kButtonUp);
             }
          }
       }
    }
+
    return kTRUE;
 }
 
@@ -1314,7 +1319,7 @@ void TGHtml::SubmitClicked(const char *val)
 //______________________________________________________________________________
 Bool_t TGHtml::HandleButton(Event_t *event)
 {
-   //
+   // Handle mouse button event.
 
    int amount, ch;
 
@@ -1351,8 +1356,8 @@ Bool_t TGHtml::HandleButton(Event_t *event)
       ScrollToPosition(TGLongPosition(fVisible.fX, fVisible.fY / fScrollVal.fY + amount));
    } else {
       return TGView::HandleButton(event);
-  }
-  return kTRUE;
+   }
+   return kTRUE;
 }
 
 //______________________________________________________________________________
@@ -1370,8 +1375,8 @@ Bool_t TGHtml::HandleMotion(Event_t *event)
       gVirtualX->SetCursor(fId, gVirtualX->CreateCursor(kPointer));
    }
 
-   if (uri != _lastUri) {
-      _lastUri = uri;
+   if (uri != fLastUri) {
+      fLastUri = uri;
       if (uri) uri = ResolveUri(uri);
       MouseOver(uri);
       //!!if (uri) delete [] uri;
@@ -1397,15 +1402,15 @@ TGFont *TGHtml::GetFont(int iFont)
    // a policy of allocate-before-free because xclass' font cache operates
    // much more efficiently that way.
 
-   if (!FontIsValid(iFont) && aFont[iFont] != 0) {
-      toFree = aFont[iFont];
-      aFont[iFont] = 0;
+   if (!FontIsValid(iFont) && fAFont[iFont] != 0) {
+      toFree = fAFont[iFont];
+      fAFont[iFont] = 0;
    }
 
    // If we need to allocate a font, first construct the font name then
    // allocate it.
 
-   if (aFont[iFont] == 0) {
+   if (fAFont[iFont] == 0) {
       char name[200];         // Name of the font
       const char *familyStr = "";
       int iFamily;
@@ -1440,16 +1445,16 @@ TGFont *TGHtml::GetFont(int iFont)
 #endif
       }
 #if 0
-    switch (iSize) {
-      case 1:  size = 6+finc/*8*/;   break;
-      case 2:  size = 10+finc/*10*/;  break;
-      case 3:  size = 12+finc/*12*/;  break;
-      case 4:  size = 14+finc/*14*/;  break;
-      case 5:  size = 20+finc/*16*/;  break;
-      case 6:  size = 24+finc/*18*/;  break;
-      case 7:  size = 30+finc/*24*/;  break;
-      default: size = 14+finc/*14*/;  CANT_HAPPEN;
-    }
+      switch (iSize) {
+         case 1:  size = 6+finc/*8*/;   break;
+         case 2:  size = 10+finc/*10*/;  break;
+         case 3:  size = 12+finc/*12*/;  break;
+         case 4:  size = 14+finc/*14*/;  break;
+         case 5:  size = 20+finc/*16*/;  break;
+         case 6:  size = 24+finc/*18*/;  break;
+         case 7:  size = 30+finc/*24*/;  break;
+         default: size = 14+finc/*14*/;  CANT_HAPPEN;
+      }
 #else
       switch (iSize) {
          case 1:  size = 8;   break;
@@ -1469,17 +1474,17 @@ TGFont *TGHtml::GetFont(int iFont)
       sprintf(name, familyStr, size);
 
       // Get the named font
-      aFont[iFont] = fClient->GetFont(name);\
+      fAFont[iFont] = fClient->GetFont(name);\
 
-      if (aFont[iFont] == 0) {
+      if (fAFont[iFont] == 0) {
          fprintf(stderr, "TGHtml: could not get font \"%s\", trying fixed\n",
                       name);
-         aFont[iFont] = fClient->GetFont("fixed");
+         fAFont[iFont] = fClient->GetFont("fixed");
       }
-      if (aFont[iFont]==0 ){
+      if (fAFont[iFont]==0 ){
          fprintf(stderr, "TGHtml: could not get font \"fixed\", trying "
                       "\"helvetica -12\"\n");
-         aFont[iFont] = fClient->GetFont("helvetica -12");
+         fAFont[iFont] = fClient->GetFont("helvetica -12");
       }
       FontSetValid(iFont);
    }
@@ -1488,7 +1493,7 @@ TGFont *TGHtml::GetFont(int iFont)
 
    if (toFree) fClient->FreeFont(toFree);
 
-   return aFont[iFont];
+   return fAFont[iFont];
 }
 
 //______________________________________________________________________________
@@ -1496,13 +1501,13 @@ int TGHtml::InArea(TGHtmlMapArea *p, int left, int top, int x, int y)
 {
    // Only support rect and circles for now
 
-   int *ip = p->coords;
+   int *ip = p->fCoords;
    if (!ip) return 0;
 
-   if (p->mType == HTML_MAP_RECT) {
+   if (p->fMType == HTML_MAP_RECT) {
       return ((left + ip[0]) <= x && (left + ip[2]) >= x &&
-               (top  + ip[1]) <= y && (top  + ip[3]) >= y);
-   } else if (p->mType == HTML_MAP_CIRCLE) {
+              (top  + ip[1]) <= y && (top  + ip[3]) >= y);
+   } else if (p->fMType == HTML_MAP_CIRCLE) {
       int dx = left + ip[0] - x;
       int dy = top + ip[1] - y;
       return (dx * dx + dy * dy <= ip[2] * ip[2]);
@@ -1513,27 +1518,26 @@ int TGHtml::InArea(TGHtmlMapArea *p, int left, int top, int x, int y)
 //______________________________________________________________________________
 TGHtmlElement *TGHtml::GetMap(const char *name)
 {
-   //
+   // Returns html map element.
 
-   TGHtmlElement *p = pFirst;
+   TGHtmlElement *p = fPFirst;
    const char *z, *zb;
 
    while (p) {
-      if (p->type == Html_MAP) {
+      if (p->fType == Html_MAP) {
          z = p->MarkupArg("name", 0);
          zb = p->MarkupArg("shape", 0);
          if (zb && *zb != 'r') return 0;
          if (z && !strcmp(z, name)) return p;
       }
-      p = p->pNext;
-  }
-  return 0;
+      p = p->fPNext;
+   }
+   return 0;
 }
 
 //______________________________________________________________________________
 float TGHtml::colorDistance(ColorStruct_t *pA, ColorStruct_t *pB)
 {
-
    // Compute the squared distance between two colors
 
    float x, y, z;
@@ -1549,7 +1553,7 @@ float TGHtml::colorDistance(ColorStruct_t *pA, ColorStruct_t *pB)
 int TGHtml::GetColorByName(const char *zColor)
 {
    // This routine returns an index between 0 and N_COLOR-1 which indicates
-   // which ColorStruct_t structure in the apColor[] array should be used to describe
+   // which ColorStruct_t structure in the fApColor[] array should be used to describe
    // the color specified by the given name.
 
    ColorStruct_t *pNew;
@@ -1615,9 +1619,9 @@ int TGHtml::GetDarkShadowColor(int iBgColor)
    // Given that the background color is iBgColor, figure out an
    // appropriate color for the dark part of a 3D shadow.
 
-   if (iDark[iBgColor] == 0) {
+   if (fIDark[iBgColor] == 0) {
       ColorStruct_t *pRef, val;
-      pRef = apColor[iBgColor];
+      pRef = fApColor[iBgColor];
       if (isDarkColor(pRef)) {
          int t1, t2;
          t1 = (int) MIN(MAX_COLOR, pRef->fRed * 1.2);
@@ -1634,10 +1638,10 @@ int TGHtml::GetDarkShadowColor(int iBgColor)
          val.fGreen = (unsigned short) (pRef->fGreen * 0.6);
          val.fBlue = (unsigned short) (pRef->fBlue * 0.6);
       }
-      iDark[iBgColor] = GetColorByValue(&val) + 1;
+      fIDark[iBgColor] = GetColorByValue(&val) + 1;
    }
 
-   return iDark[iBgColor] - 1;
+   return fIDark[iBgColor] - 1;
 }
 
 //______________________________________________________________________________
@@ -1655,9 +1659,9 @@ int TGHtml::GetLightShadowColor(int iBgColor)
    // Given that the background color is iBgColor, figure out an
    // appropriate color for the bright part of the 3D shadow.
 
-   if (iLight[iBgColor] == 0) {
+   if (fILight[iBgColor] == 0) {
       ColorStruct_t *pRef, val;
-      pRef = apColor[iBgColor];
+      pRef = fApColor[iBgColor];
       if (isLightColor(pRef)) {
          val.fRed = (unsigned short) (pRef->fRed * 0.9);
          val.fGreen = (unsigned short) (pRef->fGreen * 0.9);
@@ -1674,10 +1678,10 @@ int TGHtml::GetLightShadowColor(int iBgColor)
          t2 = (pRef->fBlue + MAX_COLOR) / 2;
          val.fBlue = MAX(t1, t2);
       }
-      iLight[iBgColor] = GetColorByValue(&val) + 1;
+      fILight[iBgColor] = GetColorByValue(&val) + 1;
    }
 
-   return iLight[iBgColor] - 1;
+   return fILight[iBgColor] - 1;
 }
 
 //______________________________________________________________________________
@@ -1698,21 +1702,21 @@ int TGHtml::GetColorByValue(ColorStruct_t *pRef)
    g = pRef->fGreen & COLOR_MASK;
    b = pRef->fBlue & COLOR_MASK;
    for (i = 0; i < N_COLOR; i++) {
-      ColorStruct_t *p = apColor[i];
+      ColorStruct_t *p = fApColor[i];
       if (p &&
          ((p->fRed & COLOR_MASK) == r) &&
          ((p->fGreen & COLOR_MASK) == g) &&
          ((p->fBlue & COLOR_MASK) == b)) {
-         colorUsed |= (1<<i);
+         fColorUsed |= (1<<i);
          return i;
       }
    }
 
    // No exact matches. Look for a completely unused slot
    for (i = N_PREDEFINED_COLOR; i < N_COLOR; i++) {
-      if (apColor[i] == 0) {
-         apColor[i] = AllocColorByValue(pRef);
-         colorUsed |= (1<<i);
+      if (fApColor[i] == 0) {
+         fApColor[i] = AllocColorByValue(pRef);
+         fColorUsed |= (1<<i);
          return i;
       }
    }
@@ -1720,10 +1724,10 @@ int TGHtml::GetColorByValue(ColorStruct_t *pRef)
    // No empty slots. Look for a slot that contains a color that
    // isn't currently in use.
    for (i = N_PREDEFINED_COLOR; i < N_COLOR; i++) {
-      if (((colorUsed >> i) & 1) == 0) {
-         FreeColor(apColor[i]);
-         apColor[i] = AllocColorByValue(pRef);
-         colorUsed |= (1<<i);
+      if (((fColorUsed >> i) & 1) == 0) {
+         FreeColor(fApColor[i]);
+         fApColor[i] = AllocColorByValue(pRef);
+         fColorUsed |= (1<<i);
          return i;
       }
    }
@@ -1731,9 +1735,9 @@ int TGHtml::GetColorByValue(ColorStruct_t *pRef)
    // Ok, find the existing color that is closest to the color requested
    // and use it.
    closest = 0;
-   closestDist = colorDistance(pRef, apColor[0]);
+   closestDist = colorDistance(pRef, fApColor[0]);
    for (i = 1; i < N_COLOR; i++) {
-      dist = colorDistance(pRef, apColor[i]);
+      dist = colorDistance(pRef, fApColor[i]);
       if (dist < closestDist) {
          closestDist = dist;
          closest = i;
@@ -1753,42 +1757,42 @@ const char *TGHtml::GetHref(int x, int y, const char **target)
    TGHtmlBlock *pBlock;
    TGHtmlElement *pElem;
 
-   for (pBlock = firstBlock; pBlock; pBlock = pBlock->bNext) {
-      if (pBlock->top > y || pBlock->bottom < y ||
-          pBlock->left > x || pBlock->right < x) continue;
-      pElem = pBlock->pNext;
-      if (pElem->type == Html_IMG) {
+   for (pBlock = fFirstBlock; pBlock; pBlock = pBlock->fBNext) {
+      if (pBlock->fTop > y || pBlock->fBottom < y ||
+          pBlock->fLeft > x || pBlock->fRight < x) continue;
+      pElem = pBlock->fPNext;
+      if (pElem->fType == Html_IMG) {
          TGHtmlImageMarkup *image = (TGHtmlImageMarkup *) pElem;
-         if (image->pMap) {
-            pElem = image->pMap->pNext;
-            while (pElem && pElem->type != Html_EndMAP) {
-               if (pElem->type == Html_AREA) {
-                  if (InArea((TGHtmlMapArea *) pElem, pBlock->left, pBlock->top, x, y)) {
+         if (image->fPMap) {
+            pElem = image->fPMap->fPNext;
+            while (pElem && pElem->fType != Html_EndMAP) {
+               if (pElem->fType == Html_AREA) {
+                  if (InArea((TGHtmlMapArea *) pElem, pBlock->fLeft, pBlock->fTop, x, y)) {
                      if (target) *target = pElem->MarkupArg("target", 0);
                      return pElem->MarkupArg("href", 0);
                   }
                }
-               pElem = pElem->pNext;
+               pElem = pElem->fPNext;
             }
             continue;
          }
       }
-      if ((pElem->style.flags & STY_Anchor) == 0) continue;
-      switch (pElem->type) {
+      if ((pElem->fStyle.fFlags & STY_Anchor) == 0) continue;
+      switch (pElem->fType) {
          case Html_Text:
          case Html_Space:
          case Html_IMG:
-            while (pElem && pElem->type != Html_A) pElem = pElem->pPrev;
-            if (pElem == 0 || pElem->type != Html_A) break;
+            while (pElem && pElem->fType != Html_A) pElem = pElem->fPPrev;
+            if (pElem == 0 || pElem->fType != Html_A) break;
             if (target) *target = pElem->MarkupArg("target", 0);
             return pElem->MarkupArg("href", 0);
 
             default:
                break;
       }
-  }
+   }
 
-  return 0;
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -1798,25 +1802,25 @@ int TGHtml::ElementCoords(TGHtmlElement *p, int /*i*/, int pct, int *coords)
 
    TGHtmlBlock *pBlock;
 
-   while (p && p->type != Html_Block) p = p->pPrev;
+   while (p && p->fType != Html_Block) p = p->fPPrev;
    if (!p) return 1;
 
    pBlock = (TGHtmlBlock *) p;
    if (pct) {
-      TGHtmlElement *pEnd = pLast;
+      TGHtmlElement *pEnd = fPLast;
       TGHtmlBlock *pb2;
-      while (pEnd && pEnd->type != Html_Block) pEnd = pEnd->pPrev;
+      while (pEnd && pEnd->fType != Html_Block) pEnd = pEnd->fPPrev;
       pb2 = (TGHtmlBlock *) pEnd;
 #define HGCo(dir) pb2->dir ? pBlock->dir * 100 / pb2->dir : 0
-      coords[0] = HGCo(left);
-      coords[1] = HGCo(top);
-      coords[3] = HGCo(right);
-      coords[4] = HGCo(bottom);
+      coords[0] = HGCo(fLeft);
+      coords[1] = HGCo(fTop);
+      coords[3] = HGCo(fRight);
+      coords[4] = HGCo(fBottom);
    } else {
-      coords[0] = pBlock->left;
-      coords[1] = pBlock->top;
-      coords[2] = pBlock->right;
-      coords[3] = pBlock->bottom;
+      coords[0] = pBlock->fLeft;
+      coords[1] = pBlock->fTop;
+      coords[2] = pBlock->fRight;
+      coords[3] = pBlock->fBottom;
    }
    return 0;
 }
@@ -1824,11 +1828,13 @@ int TGHtml::ElementCoords(TGHtmlElement *p, int /*i*/, int pct, int *coords)
 //______________________________________________________________________________
 TGHtmlElement *TGHtml::AttrElem(const char *name, char *value)
 {
+   // Returns html element matching attribute name and value.
+
    TGHtmlElement *p;
    const char *z;
 
-   for (p = pFirst; p; p = p->pNext) {
-      if (p->type != Html_A) continue;
+   for (p = fPFirst; p; p = p->fPNext) {
+      if (p->fType != Html_A) continue;
       z = p->MarkupArg(name, 0);
       if (z && (strcmp(z, value) == 0)) return p;
    }
@@ -1838,8 +1844,8 @@ TGHtmlElement *TGHtml::AttrElem(const char *name, char *value)
 //______________________________________________________________________________
 void TGHtml::UpdateSelection(int forceUpdate)
 {
-   // Given the selection end-points in selBegin and selEnd, recompute
-   // pSelBeginBlock and pSelEndBlock, then call UpdateSelectionDisplay()
+   // Given the selection end-points in fSelBegin and fSelEnd, recompute
+   // pSelBeginBlock and fPSelEndBlock, then call UpdateSelectionDisplay()
    // to update the display.
    //
    // This routine should be called whenever the selection changes or
@@ -1850,89 +1856,89 @@ void TGHtml::UpdateSelection(int forceUpdate)
    int needUpdate = forceUpdate;
    int temp;
 
-   if (selEnd.p == 0) selBegin.p = 0;
+   if (fSelEnd.fP == 0) fSelBegin.fP = 0;
 
-   IndexToBlockIndex(selBegin, &pBlock, &index);
-   if (needUpdate || pBlock != pSelStartBlock) {
+   IndexToBlockIndex(fSelBegin, &pBlock, &index);
+   if (needUpdate || pBlock != fPSelStartBlock) {
       needUpdate = 1;
-      RedrawBlock(pSelStartBlock);
-      pSelStartBlock = pBlock;
-      selStartIndex = index;
-   } else if (index != selStartIndex) {
+      RedrawBlock(fPSelStartBlock);
+      fPSelStartBlock = pBlock;
+      fSelStartIndex = index;
+   } else if (index != fSelStartIndex) {
       RedrawBlock(pBlock);
-      selStartIndex = index;
+      fSelStartIndex = index;
    }
 
-   if (selBegin.p == 0) selEnd.p = 0;
+   if (fSelBegin.fP == 0) fSelEnd.fP = 0;
 
-   IndexToBlockIndex(selEnd, &pBlock, &index);
-   if (needUpdate || pBlock != pSelEndBlock) {
+   IndexToBlockIndex(fSelEnd, &pBlock, &index);
+   if (needUpdate || pBlock != fPSelEndBlock) {
       needUpdate = 1;
-      RedrawBlock(pSelEndBlock);
-      pSelEndBlock = pBlock;
-      selEndIndex = index;
-   } else if (index != selEndIndex) {
+      RedrawBlock(fPSelEndBlock);
+      fPSelEndBlock = pBlock;
+      fSelEndIndex = index;
+   } else if (index != fSelEndIndex) {
       RedrawBlock(pBlock);
-      selEndIndex = index;
+      fSelEndIndex = index;
    }
 
-  if (pSelStartBlock && pSelStartBlock == pSelEndBlock &&
-      selStartIndex > selEndIndex) {
-    temp = selStartIndex;
-    selStartIndex = selEndIndex;
-    selEndIndex = temp;
-  }
+   if (fPSelStartBlock && fPSelStartBlock == fPSelEndBlock &&
+       fSelStartIndex > fSelEndIndex) {
+      temp = fSelStartIndex;
+      fSelStartIndex = fSelEndIndex;
+      fSelEndIndex = temp;
+   }
 
-  if (needUpdate) {
-    flags |= ANIMATE_IMAGES;
-    UpdateSelectionDisplay();
-  }
+   if (needUpdate) {
+      fFlags |= ANIMATE_IMAGES;
+      UpdateSelectionDisplay();
+   }
 }
 
 //______________________________________________________________________________
 void TGHtml::UpdateSelectionDisplay()
 {
-   // The pSelStartBlock and pSelEndBlock values have been changed.
+   // The fPSelStartBlock and fPSelEndBlock values have been changed.
    // This routine's job is to loop over all TGHtmlBlocks and either
-   // set or clear the HTML_Selected bits in the .flags field
+   // set or clear the HTML_Selected bits in the .fFlags field
    // as appropriate.  For every TGHtmlBlock where the bit changes,
    // mark that block for redrawing.
 
    int selected = 0;
-   SHtmlIndex tempIndex;
+   SHtmlIndex_t tempIndex;
    TGHtmlBlock *pTempBlock;
    int temp;
    TGHtmlBlock *p;
 
-   for (p = firstBlock; p; p = p->bNext) {
-      if (p == pSelStartBlock) {
+   for (p = fFirstBlock; p; p = p->fBNext) {
+      if (p == fPSelStartBlock) {
          selected = 1;
          RedrawBlock(p);
-      } else if (!selected && p == pSelEndBlock) {
+      } else if (!selected && p == fPSelEndBlock) {
          selected = 1;
-         tempIndex = selBegin;
-         selBegin = selEnd;
-         selEnd = tempIndex;
-         pTempBlock = pSelStartBlock;
-         pSelStartBlock = pSelEndBlock;
-         pSelEndBlock = pTempBlock;
-         temp = selStartIndex;
-         selStartIndex = selEndIndex;
-         selEndIndex = temp;
+         tempIndex = fSelBegin;
+         fSelBegin = fSelEnd;
+         fSelEnd = tempIndex;
+         pTempBlock = fPSelStartBlock;
+         fPSelStartBlock = fPSelEndBlock;
+         fPSelEndBlock = pTempBlock;
+         temp = fSelStartIndex;
+         fSelStartIndex = fSelEndIndex;
+         fSelEndIndex = temp;
          RedrawBlock(p);
       }
-      if (p->flags & HTML_Selected) {
+      if (p->fFlags & HTML_Selected) {
          if (!selected) {
-            p->flags &= ~HTML_Selected;
+            p->fFlags &= ~HTML_Selected;
             RedrawBlock(p);
          }
       } else {
          if (selected) {
-            p->flags |= HTML_Selected;
+            p->fFlags |= HTML_Selected;
             RedrawBlock(p);
          }
       }
-      if (p == pSelEndBlock) {
+      if (p == fPSelEndBlock) {
          selected = 0;
          RedrawBlock(p);
       }
@@ -1942,14 +1948,14 @@ void TGHtml::UpdateSelectionDisplay()
 //______________________________________________________________________________
 void TGHtml::LostSelection()
 {
-   //
+   // Clear selection.
 
-   if (exportSelection) {
+   if (fExportSelection) {
       // clear selection
-      pSelStartBlock = 0;
-      pSelEndBlock = 0;
-      selBegin.p = 0;
-      selEnd.p = 0;
+      fPSelStartBlock = 0;
+      fPSelEndBlock = 0;
+      fSelBegin.fP = 0;
+      fSelEnd.fP = 0;
       UpdateSelectionDisplay();
    }
 }
@@ -1957,36 +1963,36 @@ void TGHtml::LostSelection()
 //______________________________________________________________________________
 int TGHtml::SelectionSet(const char *startIx, const char *endIx)
 {
-   //
+   // Set selection.
 
-   SHtmlIndex sBegin, sEnd;
+   SHtmlIndex_t sBegin, sEnd;
    int bi, ei;
 
-   if (GetIndex(startIx, &sBegin.p, &sBegin.i)) {
+   if (GetIndex(startIx, &sBegin.fP, &sBegin.fI)) {
       // malformed start index
       return kFALSE;
    }
 
-   if (GetIndex(endIx, &sEnd.p, &sEnd.i)) {
+   if (GetIndex(endIx, &sEnd.fP, &sEnd.fI)) {
       // malformed end index
       return kFALSE;
    }
 
-   bi = TokenNumber(sBegin.p);
-   ei = TokenNumber(sEnd.p);
+   bi = TokenNumber(sBegin.fP);
+   ei = TokenNumber(sEnd.fP);
 
-   if (!(sBegin.p && sEnd.p)) return kTRUE;
+   if (!(sBegin.fP && sEnd.fP)) return kTRUE;
 
-   if (bi < ei || (bi == ei && sBegin.i <= sEnd.i)) {
-      selBegin = sBegin;
-      selEnd = sEnd;
+   if (bi < ei || (bi == ei && sBegin.fI <= sEnd.fI)) {
+      fSelBegin = sBegin;
+      fSelEnd = sEnd;
    } else {
-      selBegin = sEnd;
-      selEnd = sBegin;
+      fSelBegin = sEnd;
+      fSelEnd = sBegin;
    }
 
    UpdateSelection(0);
-   if (exportSelection) {
+   if (fExportSelection) {
       // TODO:
       // get selection ownership ... fId, XA_PRIMARY
       // selection lost handler must directly call LostSelection()
@@ -1999,12 +2005,12 @@ int TGHtml::SelectionSet(const char *startIx, const char *endIx)
 void TGHtml::UpdateInsert()
 {
    // Recompute the position of the insertion cursor based on the
-   // position in ins.
+   // position in fIns.
 
-   IndexToBlockIndex(ins, &pInsBlock, &insIndex);
-   RedrawBlock(pInsBlock);
-   if (insTimer == 0) {
-      insStatus = 0;
+   IndexToBlockIndex(fIns, &fPInsBlock, &fInsIndex);
+   RedrawBlock(fPInsBlock);
+   if (fInsTimer == 0) {
+      fInsStatus = 0;
       FlashCursor();
    }
 }
@@ -2012,22 +2018,22 @@ void TGHtml::UpdateInsert()
 //______________________________________________________________________________
 int TGHtml::SetInsert(const char *insIx)
 {
-   //
+   // Set the position of the insertion cursor.
 
-   SHtmlIndex i;
+   SHtmlIndex_t i;
 
    if (!insIx) {
-      RedrawBlock(pInsBlock);
-      insStatus = 0;
-      pInsBlock = 0;
-      ins.p = 0;
+      RedrawBlock(fPInsBlock);
+      fInsStatus = 0;
+      fPInsBlock = 0;
+      fIns.fP = 0;
    } else {
-      if (GetIndex(insIx, &i.p, &i.i)) {
+      if (GetIndex(insIx, &i.fP, &i.fI)) {
          // malformed index
          return kFALSE;
       }
-      RedrawBlock(pInsBlock);
-      ins = i;
+      RedrawBlock(fPInsBlock);
+      fIns = i;
       UpdateInsert();
    }
 

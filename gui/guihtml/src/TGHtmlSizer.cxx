@@ -33,47 +33,47 @@
 #include "TImage.h"
 
 //______________________________________________________________________________
-SHtmlStyle TGHtml::GetCurrentStyle()
+SHtmlStyle_t TGHtml::GetCurrentStyle()
 {
    // Get the current rendering style. In other words, get the style
    // that is currently on the top of the style stack.
 
-   SHtmlStyle style;
+   SHtmlStyle_t style;
 
-   if (styleStack) {
-      style = styleStack->style;
+   if (fStyleStack) {
+      style = fStyleStack->fStyle;
    } else {
-      style.font = NormalFont(2);
-      style.color = COLOR_Normal;
-      style.bgcolor = COLOR_Background;
-      style.subscript = 0;
-      style.align = ALIGN_Left;
-      style.flags = 0;
-      style.expbg = 0;
+      style.fFont = NormalFont(2);
+      style.fColor = COLOR_Normal;
+      style.fBgcolor = COLOR_Background;
+      style.fSubscript = 0;
+      style.fAlign = ALIGN_Left;
+      style.fFlags = 0;
+      style.fExpbg = 0;
    }
 
    return style;
 }
 
 //______________________________________________________________________________
-void TGHtml::PushStyleStack(int tag, SHtmlStyle style)
+void TGHtml::PushStyleStack(int tag, SHtmlStyle_t style)
 {
    // Push a new rendering style onto the stack.
    //
    //  tag   - Tag for this style. Normally the end-tag such as </h3> or </em>.
    //  style - The style to push
 
-   SHtmlStyleStack *p;
+   SHtmlStyleStack_t *p;
 
-   p = new SHtmlStyleStack;
-   p->pNext = styleStack;
-   p->type = tag;
-   p->style = style;
-   styleStack = p;
+   p = new SHtmlStyleStack_t;
+   p->fPNext = fStyleStack;
+   p->fType = tag;
+   p->fStyle = style;
+   fStyleStack = p;
 }
 
 //______________________________________________________________________________
-SHtmlStyle TGHtml::PopStyleStack(int tag)
+SHtmlStyle_t TGHtml::PopStyleStack(int tag)
 {
    // Pop a rendering style off of the stack.
    //
@@ -85,8 +85,8 @@ SHtmlStyle TGHtml::PopStyleStack(int tag)
    // we find the correct tag, or until the stack is empty.
 
    int i, type;
-   SHtmlStyleStack *p;
-   static Html_u8 priority[Html_TypeCount+1];
+   SHtmlStyleStack_t *p;
+   static Html_u8_t priority[Html_TypeCount+1];
 
    if (priority[Html_TABLE] == 0) {
       for (i = 0; i <= Html_TypeCount; i++) priority[i] = 1;
@@ -103,8 +103,8 @@ SHtmlStyle TGHtml::PopStyleStack(int tag)
       CANT_HAPPEN;
       return GetCurrentStyle();
    }
-   while ((p = styleStack) != 0) {
-      type = p->type;
+   while ((p = fStyleStack) != 0) {
+      type = p->fType;
       if (type <= 0 || type > Html_TypeCount) {
          CANT_HAPPEN;
          return GetCurrentStyle();
@@ -112,7 +112,7 @@ SHtmlStyle TGHtml::PopStyleStack(int tag)
       if (type != tag && priority[type] > priority[tag]) {
          return GetCurrentStyle();
       }
-      styleStack = p->pNext;
+      fStyleStack = p->fPNext;
       delete p;
       if (type == tag) break;
    }
@@ -121,11 +121,11 @@ SHtmlStyle TGHtml::PopStyleStack(int tag)
 }
 
 //______________________________________________________________________________
-static void ScaleFont(SHtmlStyle *pStyle, int delta)
+static void ScaleFont(SHtmlStyle_t *pStyle, int delta)
 {
    // Change the font size on the given style by the delta-amount given
 
-   int size = FontSize(pStyle->font) + delta;
+   int size = FontSize(pStyle->fFont) + delta;
 
    if (size < 0) {
       delta -= size;
@@ -133,7 +133,7 @@ static void ScaleFont(SHtmlStyle *pStyle, int delta)
       delta -= size-6;
    }
 
-   pStyle->font += delta;
+   pStyle->fFont += delta;
 }
 
 //______________________________________________________________________________
@@ -142,10 +142,10 @@ void TGHtml::MakeInvisible(TGHtmlElement *p_first, TGHtmlElement *p_last)
    // Add the STY_Invisible style to every token between p_first and p_last.
 
    if (p_first == 0) return;
-   p_first = p_first->pNext;
+   p_first = p_first->fPNext;
    while (p_first && p_first != p_last) {
-      p_first->style.flags |= STY_Invisible;
-      p_first = p_first->pNext;
+      p_first->fStyle.fFlags |= STY_Invisible;
+      p_first = p_first->fPNext;
    }
 }
 
@@ -162,7 +162,7 @@ int TGHtml::GetLinkColor(const char *zURL)
 //______________________________________________________________________________
 static int *GetCoords(const char *str, int *nptr)
 {
-   //
+   // Returns coordinates of string str.
 
    const char *cp = str;
    char *ncp;
@@ -213,12 +213,12 @@ void TGHtml::AddStyle(TGHtmlElement *p)
    // what we said above, that this routine is only run once, is not
    // strictly true.
 
-   SHtmlStyle style;         // Current style
+   SHtmlStyle_t style;       // Current style
    int size;                 // A new font size
    int i;                    // Loop counter
    int paraAlign;            // Current paragraph alignment
    int rowAlign;             // Current table row alignment
-   SHtmlStyle nextStyle;     // Style for next token if useNextStyle==1
+   SHtmlStyle_t nextStyle;   // Style for next token if useNextStyle==1
    int useNextStyle = 0;     // True if nextStyle is valid
    const char *z;            // A tag parameter's value
 
@@ -226,42 +226,42 @@ void TGHtml::AddStyle(TGHtmlElement *p)
    static int header_sizes[] = { +2, +1, 1, 1, -1, -1 };
 
    // Don't allow recursion
-   if (flags & STYLER_RUNNING) return;
-   flags |= STYLER_RUNNING;
+   if (fFlags & STYLER_RUNNING) return;
+   fFlags |= STYLER_RUNNING;
 
    // Load the style state out of the TGHtml object and into local
    // variables. This is purely a matter of convenience...
 
    style = GetCurrentStyle();
    nextStyle = style;   //ia: nextStyle was not initialized
-   paraAlign = paraAlignment;
-   rowAlign = rowAlignment;
+   paraAlign = fParaAlignment;
+   rowAlign = fRowAlignment;
 
    // Loop over tokens
-   while (pFirst && p) {
-      switch (p->type) {
+   while (fPFirst && p) {
+      switch (p->fType) {
          case Html_A:
-            if (anchorStart) {
+            if (fAnchorStart) {
                style = PopStyleStack(Html_EndA);
-               anchorStart = 0;
-               anchorFlags = 0;
+               fAnchorStart = 0;
+               fAnchorFlags = 0;
             }
             z = p->MarkupArg("href", 0);
             if (z) {
-               style.color = GetLinkColor(z);
-               if (underlineLinks) style.flags |= STY_Underline;
-               anchorFlags |= STY_Anchor;
+               style.fColor = GetLinkColor(z);
+               if (fUnderlineLinks) style.fFlags |= STY_Underline;
+               fAnchorFlags |= STY_Anchor;
                PushStyleStack(Html_EndA, style);
-               anchorStart = (TGHtmlAnchor *) p;
+               fAnchorStart = (TGHtmlAnchor *) p;
             }
             break;
 
          case Html_EndA:
-            if (anchorStart) {
-               ((TGHtmlRef *)p)->pOther = anchorStart;
+            if (fAnchorStart) {
+               ((TGHtmlRef *)p)->fPOther = fAnchorStart;
                style = PopStyleStack(Html_EndA);
-               anchorStart = 0;
-               anchorFlags = 0;
+               fAnchorStart = 0;
+               fAnchorFlags = 0;
             }
             break;
 
@@ -274,17 +274,17 @@ void TGHtml::AddStyle(TGHtmlElement *p)
          case Html_AREA: {
             TGHtmlMapArea *area = (TGHtmlMapArea *) p;
             z = p->MarkupArg("shape", 0);
-            area->mType = HTML_MAP_RECT;
+            area->fMType = HTML_MAP_RECT;
             if (z) {
                if (strcasecmp(z, "circle") == 0) {
-                  area->mType = HTML_MAP_CIRCLE;
+                  area->fMType = HTML_MAP_CIRCLE;
                } else if (strcasecmp(z,"poly") == 0) {
-                  area->mType = HTML_MAP_POLY;
+                  area->fMType = HTML_MAP_POLY;
                }
             }
             z = p->MarkupArg("coords", 0);
             if (z) {
-               area->coords = GetCoords(z, &area->num);
+               area->fCoords = GetCoords(z, &area->fNum);
             }
             break;
          }
@@ -299,7 +299,7 @@ void TGHtml::AddStyle(TGHtmlElement *p)
          case Html_APPLET:
             if (0 /* has ProcessApplet() */) {
                nextStyle = style;
-               nextStyle.flags |= STY_Invisible;
+               nextStyle.fFlags |= STY_Invisible;
                PushStyleStack(Html_EndAPPLET, nextStyle);
                useNextStyle = 1;
             } else {
@@ -308,32 +308,32 @@ void TGHtml::AddStyle(TGHtmlElement *p)
             break;
 
          case Html_B:
-            style.font = BoldFont(style.font);
+            style.fFont = BoldFont(style.fFont);
             PushStyleStack(Html_EndB, style);
             break;
 
          case Html_BODY:
             z = p->MarkupArg("text", 0);
             if (z) {
-               //FreeColor(apColor[COLOR_Normal]);
-               apColor[COLOR_Normal] = AllocColor(z);
+               //FreeColor(fApColor[COLOR_Normal]);
+               fApColor[COLOR_Normal] = AllocColor(z);
             }
             z = p->MarkupArg("bgcolor", 0);
             if (z) {
-               //FreeColor(apColor[COLOR_Background]);
-               apColor[COLOR_Background] = AllocColor(z);
-               SetBackgroundColor(apColor[COLOR_Background]->fPixel);
+               //FreeColor(fApColor[COLOR_Background]);
+               fApColor[COLOR_Background] = AllocColor(z);
+               SetBackgroundColor(fApColor[COLOR_Background]->fPixel);
                SetBackgroundPixmap(0);
             }
             z = p->MarkupArg("link", 0);
             if (z) {
-               //FreeColor(apColor[COLOR_Unvisited]);
-               apColor[COLOR_Unvisited] = AllocColor(z);
+               //FreeColor(fApColor[COLOR_Unvisited]);
+               fApColor[COLOR_Unvisited] = AllocColor(z);
             }
             z = p->MarkupArg("vlink", 0);
             if (z) {
-               //FreeColor(apColor[COLOR_Visited]);
-               apColor[COLOR_Visited] = AllocColor(z);
+               //FreeColor(fApColor[COLOR_Visited]);
+               fApColor[COLOR_Visited] = AllocColor(z);
             }
             z = p->MarkupArg("alink", 0);
             if (z) {
@@ -345,7 +345,7 @@ void TGHtml::AddStyle(TGHtmlElement *p)
                   TImage *img = LoadImage(z, 0, 0);
                   if (img) {
 #if 0
-              SetupBackgroundPic(img->GetPicture());
+                     SetupBackgroundPic(img->GetPicture());
 #else
                      GCValues_t gcv;
                      unsigned int mask;
@@ -358,9 +358,9 @@ void TGHtml::AddStyle(TGHtmlElement *p)
 
                      gVirtualX->ChangeGC(fWhiteGC.GetGC(), &gcv);
 
-              //NeedRedraw(TGRectangle(fVisible, fCanvas->GetSize()));
+                     //NeedRedraw(TGRectangle(fVisible, fCanvas->GetSize()));
 #endif
-                     bgImage = img;//delete img;
+                     fBgImage = img;//delete img;
                   }
                   delete [] z;
                }
@@ -398,7 +398,7 @@ void TGHtml::AddStyle(TGHtmlElement *p)
          case Html_EndTT:
          case Html_EndU:
          case Html_EndVAR:
-            style = PopStyleStack(p->type);
+            style = PopStyleStack(p->fType);
             break;
 
          case Html_BASE:
@@ -406,20 +406,20 @@ void TGHtml::AddStyle(TGHtmlElement *p)
             if (z) {
                char *z1 = ResolveUri(z);
                if (z1 != 0) {
-                  if (zBaseHref) delete[] zBaseHref;
-                  zBaseHref = z1;
+                  if (fZBaseHref) delete[] fZBaseHref;
+                  fZBaseHref = z1;
                }
             }
             break;
 
          case Html_EndDIV:
             paraAlign = ALIGN_None;
-            style = PopStyleStack(p->type);
+            style = PopStyleStack(p->fType);
             break;
 
          case Html_EndBASEFONT:
             style = PopStyleStack(Html_EndBASEFONT);
-            style.font = FontFamily(style.font) + 2;
+            style.fFont = FontFamily(style.fFont) + 2;
             break;
 
          case Html_BIG:
@@ -437,36 +437,36 @@ void TGHtml::AddStyle(TGHtmlElement *p)
 
          case Html_CENTER:
             paraAlign = ALIGN_None;
-            style.align = ALIGN_Center;
+            style.fAlign = ALIGN_Center;
             PushStyleStack(Html_EndCENTER, style);
             break;
 
          case Html_CITE:
-            style.font = ItalicFont(style.font);
+            style.fFont = ItalicFont(style.fFont);
             PushStyleStack(Html_EndCITE, style);
             break;
 
          case Html_CODE:
-            style.font = CWFont(style.font);
+            style.fFont = CWFont(style.fFont);
             PushStyleStack(Html_EndCODE, style);
             break;
 
          case Html_COMMENT:
-            style.flags |= STY_Invisible;
+            style.fFlags |= STY_Invisible;
             PushStyleStack(Html_EndCOMMENT, style);
             break;
 
          case Html_DD:
-            if (innerList && innerList->type == Html_DL) {
-               ((TGHtmlRef *)p)->pOther = innerList;
+            if (fInnerList && fInnerList->fType == Html_DL) {
+               ((TGHtmlRef *)p)->fPOther = fInnerList;
             } else {
-               ((TGHtmlRef *)p)->pOther = 0;
+               ((TGHtmlRef *)p)->fPOther = 0;
             }
-            inDt = 0;
+            fInDt = 0;
             break;
 
          case Html_DFN:
-            style.font = ItalicFont(style.font);
+            style.fFont = ItalicFont(style.fFont);
             PushStyleStack(Html_EndDFN, style);
             break;
 
@@ -474,66 +474,66 @@ void TGHtml::AddStyle(TGHtmlElement *p)
          case Html_MENU:
          case Html_UL: {
             TGHtmlListStart *list = (TGHtmlListStart *) p;
-            list->lPrev = innerList;
-            list->cnt = 0;
-            innerList = list;
-            if (list->lPrev == 0) {
-               list->ltype = LI_TYPE_Bullet1;
-               list->compact = (list->MarkupArg("compact", 0) != 0);
-            } else if (list->lPrev->lPrev == 0) {
-               list->ltype = LI_TYPE_Bullet2;
-               list->compact = 1;
+            list->fLPrev = fInnerList;
+            list->fCnt = 0;
+            fInnerList = list;
+            if (list->fLPrev == 0) {
+               list->fLtype = LI_TYPE_Bullet1;
+               list->fCompact = (list->MarkupArg("compact", 0) != 0);
+            } else if (list->fLPrev->fLPrev == 0) {
+               list->fLtype = LI_TYPE_Bullet2;
+               list->fCompact = 1;
             } else {
-               list->ltype = LI_TYPE_Bullet3;
-               list->compact = 1;
+               list->fLtype = LI_TYPE_Bullet3;
+               list->fCompact = 1;
             }
-            list->ltype = list->GetUnorderedListType(list->ltype);
+            list->fLtype = list->GetUnorderedListType(list->fLtype);
             break;
          }
 
          case Html_EndDL:
-            inDt = 0;
+            fInDt = 0;
             /* Fall thru into the next case */
          case Html_EndDIR:
          case Html_EndMENU:
          case Html_EndOL:
          case Html_EndUL:
-            ((TGHtmlRef *)p)->pOther = innerList;
-            if (innerList) innerList = innerList->lPrev;
+            ((TGHtmlRef *)p)->fPOther = fInnerList;
+            if (fInnerList) fInnerList = fInnerList->fLPrev;
             break;
 
          case Html_DIV:
             paraAlign = ALIGN_None;
-            style.align = p->GetAlignment(style.align);
+            style.fAlign = p->GetAlignment(style.fAlign);
             PushStyleStack(Html_EndDIV, style);
             break;
 
          case Html_DT:
-            if (innerList && innerList->type == Html_DL) {
-               ((TGHtmlRef *)p)->pOther = innerList;
+            if (fInnerList && fInnerList->fType == Html_DL) {
+               ((TGHtmlRef *)p)->fPOther = fInnerList;
             } else {
-               ((TGHtmlRef *)p)->pOther = 0;
+               ((TGHtmlRef *)p)->fPOther = 0;
             }
-            inDt = STY_DT;
+            fInDt = STY_DT;
             break;
 
          case Html_EndDD:
          case Html_EndDT:
-            inDt = 0;
+            fInDt = 0;
             break;
 
          case Html_DL: {
             TGHtmlListStart *list = (TGHtmlListStart *) p;
-            list->lPrev = innerList;
-            list->cnt = 0;
-            innerList = list;
-            list->compact = (list->MarkupArg("compact", 0) != 0);
-            inDt = 0;
+            list->fLPrev = fInnerList;
+            list->fCnt = 0;
+            fInnerList = list;
+            list->fCompact = (list->MarkupArg("compact", 0) != 0);
+            fInDt = 0;
             break;
          }
 
          case Html_EM:
-            style.font = ItalicFont(style.font);
+            style.fFont = ItalicFont(style.fFont);
             PushStyleStack(Html_EndEM, style);
             break;
 
@@ -543,21 +543,21 @@ void TGHtml::AddStyle(TGHtmlElement *p)
          case Html_BASEFONT:
          case Html_FONT:
             z = p->MarkupArg("size", 0);
-            if (z && !overrideFonts) {
+            if (z && !fOverrideFonts) {
                if (*z == '-') {
-                  size = FontSize(style.font) - atoi(&z[1]) +1;
+                  size = FontSize(style.fFont) - atoi(&z[1]) +1;
                } else if (*z == '+') {
-                  size = FontSize(style.font) + atoi(&z[1]) +1;
+                  size = FontSize(style.fFont) + atoi(&z[1]) +1;
                } else {
                   size = atoi(z);
                }
                if (size <= 0) size = 1;
                if (size >= N_FONT_SIZE) size = N_FONT_SIZE - 1;
-               style.font = FontFamily(style.font) + size - 1;
+               style.fFont = FontFamily(style.fFont) + size - 1;
             }
             z = p->MarkupArg("color", 0);
-            if (z && *z && !overrideColors) style.color = GetColorByName(z);
-            PushStyleStack(p->type == Html_FONT ?
+            if (z && *z && !fOverrideColors) style.fColor = GetColorByName(z);
+            PushStyleStack(p->fType == Html_FONT ?
                            Html_EndFONT : Html_EndBASEFONT, style);
             break;
 
@@ -570,15 +570,15 @@ void TGHtml::AddStyle(TGHtmlElement *p)
             int result;
             char zToken[50];
 
-            formStart = 0;
-            //form->formId = 0;
+            fFormStart = 0;
+            //form->fFormId = 0;
 
             zUrl = p->MarkupArg("action", 0);
-            if (zUrl == 0) zUrl = zBase;
+            if (zUrl == 0) zUrl = fZBase;
             zUrl = ResolveUri(zUrl);
             if (zUrl == 0) zUrl = StrDup("");
             zMethod = p->MarkupArg("method", "GET");
-            sprintf(zToken, " %d form ", form->formId);
+            sprintf(zToken, " %d form ", form->fFormId);
             cmd.Append("Form:");
             cmd.Append(zToken);
             cmd.Append(zUrl);
@@ -590,15 +590,15 @@ void TGHtml::AddStyle(TGHtmlElement *p)
             result = FormCreate(form, zUrl, cmd.GetString());
             delete[] zUrl;
 
-            /*if (result)*/ formStart = form;
+            /*if (result)*/ fFormStart = form;
 
             break;
          }
 
          case Html_EndFORM:
-            ((TGHtmlRef *)p)->pOther = formStart;
-            if (formStart) formStart->pEnd = p;
-            formStart = 0;
+            ((TGHtmlRef *)p)->fPOther = fFormStart;
+            if (fFormStart) fFormStart->fPEnd = p;
+            fFormStart = 0;
             break;
 
          case Html_H1:
@@ -607,13 +607,13 @@ void TGHtml::AddStyle(TGHtmlElement *p)
          case Html_H4:
          case Html_H5:
          case Html_H6:
-            if (!inTr) paraAlign = ALIGN_None;
-            i = (p->type - Html_H1) / 2 + 1;
+            if (!fInTr) paraAlign = ALIGN_None;
+            i = (p->fType - Html_H1) / 2 + 1;
             if (i >= 1 && i <= 6) {
                ScaleFont(&style, header_sizes[i-1]);
             }
-            style.font = BoldFont(style.font);
-            style.align = p->GetAlignment(style.align);
+            style.fFont = BoldFont(style.fFont);
+            style.fAlign = p->GetAlignment(style.fAlign);
             PushStyleStack(Html_EndH1, style);
             break;
 
@@ -629,71 +629,71 @@ void TGHtml::AddStyle(TGHtmlElement *p)
 
          case Html_HR:
             nextStyle = style;
-            style.align = p->GetAlignment(ALIGN_None);
+            style.fAlign = p->GetAlignment(ALIGN_None);
             useNextStyle = 1;
             break;
 
          case Html_I:
-            style.font = ItalicFont(style.font);
+            style.fFont = ItalicFont(style.fFont);
             PushStyleStack(Html_EndI, style);
             break;
 
          case Html_IMG:
-            if (style.flags & STY_Invisible) break;
-            ((TGHtmlImageMarkup *)p)->pImage = GetImage((TGHtmlImageMarkup *) p);
+            if (style.fFlags & STY_Invisible) break;
+            ((TGHtmlImageMarkup *)p)->fPImage = GetImage((TGHtmlImageMarkup *) p);
             break;
 
          case Html_OPTION:
             break;
 
          case Html_INPUT:
-            ((TGHtmlInput *)p)->pForm = formStart;
+            ((TGHtmlInput *)p)->fPForm = fFormStart;
             ////ControlSize((TGHtmlInput *) p);
             break;
 
          case Html_KBD:
-            style.font = CWFont(style.font);
+            style.fFont = CWFont(style.fFont);
             PushStyleStack(Html_EndKBD, style);
             break;
 
          case Html_LI:
-            if (innerList) {
+            if (fInnerList) {
                TGHtmlLi *li = (TGHtmlLi *) p;
-               li->ltype = innerList->ltype;
-               if (innerList->type == Html_OL) {
+               li->fLtype = fInnerList->fLtype;
+               if (fInnerList->fType == Html_OL) {
                   z = li->MarkupArg("value", 0);
                   if (z) {
                      int n = atoi(z);
                      if (n > 0) {
-                        li->cnt = n;
-                        innerList->cnt = n+1;
+                        li->fCnt = n;
+                        fInnerList->fCnt = n+1;
                      }
                   } else {
-                     li->cnt = innerList->cnt++;
+                     li->fCnt = fInnerList->fCnt++;
                   }
-                  li->ltype = li->GetOrderedListType(li->ltype);
+                  li->fLtype = li->GetOrderedListType(li->fLtype);
                } else {
-                  li->ltype = li->GetUnorderedListType(li->ltype);
+                  li->fLtype = li->GetUnorderedListType(li->fLtype);
                }
             } else {
-               p->flags &= ~HTML_Visible;
+               p->fFlags &= ~HTML_Visible;
             }
             break;
 
          case Html_MARQUEE:
-            style.flags |= STY_Invisible;
+            style.fFlags |= STY_Invisible;
             PushStyleStack(Html_EndMARQUEE, style);
             break;
 
          case Html_NOBR:
-            style.flags |= STY_NoBreak;
+            style.fFlags |= STY_NoBreak;
             PushStyleStack(Html_EndNOBR, style);
             break;
 
          case Html_NOFRAMES:
             if (0 /* has ProcessFrame()*/) {
                nextStyle = style;
-               nextStyle.flags |= STY_Invisible;
+               nextStyle.fFlags |= STY_Invisible;
                PushStyleStack(Html_EndNOFRAMES, nextStyle);
                useNextStyle = 1;
             } else {
@@ -704,7 +704,7 @@ void TGHtml::AddStyle(TGHtmlElement *p)
          case Html_NOEMBED:
             if (0 /* has ProcessScript() && HasScript */) {
                nextStyle = style;
-               nextStyle.flags |= STY_Invisible;
+               nextStyle.fFlags |= STY_Invisible;
                PushStyleStack(Html_EndNOEMBED, nextStyle);
                useNextStyle = 1;
             } else {
@@ -715,7 +715,7 @@ void TGHtml::AddStyle(TGHtmlElement *p)
          case Html_NOSCRIPT:
             if (0 /* has ProcessScript() && HasScript */) {
                nextStyle = style;
-               nextStyle.flags |= STY_Invisible;
+               nextStyle.fFlags |= STY_Invisible;
                PushStyleStack(Html_EndNOSCRIPT, nextStyle);
                useNextStyle = 1;
             } else {
@@ -725,16 +725,16 @@ void TGHtml::AddStyle(TGHtmlElement *p)
 
          case Html_OL: {
             TGHtmlListStart *list = (TGHtmlListStart *) p;
-            list->lPrev = innerList;
-            list->ltype = list->GetOrderedListType(LI_TYPE_Enum_1);
-            list->cnt = 1;
+            list->fLPrev = fInnerList;
+            list->fLtype = list->GetOrderedListType(LI_TYPE_Enum_1);
+            list->fCnt = 1;
             z = list->MarkupArg("start", 0);
             if (z) {
                int n = atoi(z);
-               if (n > 0) list->cnt = n;
+               if (n > 0) list->fCnt = n;
             }
-            list->compact = (innerList != 0 || list->MarkupArg("compact", 0) != 0);
-            innerList = list;
+            list->fCompact = (fInnerList != 0 || list->MarkupArg("compact", 0) != 0);
+            fInnerList = list;
             break;
          }
 
@@ -751,8 +751,8 @@ void TGHtml::AddStyle(TGHtmlElement *p)
          case Html_XMP:
          case Html_PLAINTEXT:
             paraAlign = ALIGN_None;
-            style.font = CWFont(style.font);
-            style.flags |= STY_Preformatted;
+            style.fFont = CWFont(style.fFont);
+            style.fFlags |= STY_Preformatted;
             PushStyleStack(Html_EndPRE, style);
             break;
 
@@ -763,52 +763,52 @@ void TGHtml::AddStyle(TGHtmlElement *p)
             break;
 
          case Html_S:
-            style.flags |= STY_StrikeThru;
+            style.fFlags |= STY_StrikeThru;
             PushStyleStack(Html_EndS, style);
             break;
 
          case Html_SCRIPT: {
             char *result;
-            result = ProcessScript((TGHtmlScript *) p);   // zText[script->nStart .. script->nScript]
+            result = ProcessScript((TGHtmlScript *) p);   // fZText[script->nStart .. script->nScript]
             if (result) {
-               TGHtmlElement *b2 = p->pNext, *b3, *e1 = p, *e2 = b2, *e3;
-               if (e2) while (e2->pNext) e2 = e2->pNext;
+               TGHtmlElement *b2 = p->fPNext, *b3, *e1 = p, *e2 = b2, *e3;
+               if (e2) while (e2->fPNext) e2 = e2->fPNext;
                TokenizerAppend(result);
-               if (e2 && e2 != p && ((e3 = b3 = e2->pNext))) {
-                  while (e3->pNext) e3 = e3->pNext;
-                  e1->pNext = b3;
-                  e2->pNext = 0;   b2->pPrev = e3;
-                  e3->pNext = b2;  b3->pPrev = e1;
+               if (e2 && e2 != p && ((e3 = b3 = e2->fPNext))) {
+                  while (e3->fPNext) e3 = e3->fPNext;
+                  e1->fPNext = b3;
+                  e2->fPNext = 0;   b2->fPPrev = e3;
+                  e3->fPNext = b2;  b3->fPPrev = e1;
                }
                delete[] result;
             }
             nextStyle = style;
-            style.flags |= STY_Invisible;
+            style.fFlags |= STY_Invisible;
             useNextStyle = 1;
             break;
          }
 
          case Html_SELECT:
-            ((TGHtmlInput *)p)->pForm = formStart;
-            nextStyle.flags |= STY_Invisible;
+            ((TGHtmlInput *)p)->fPForm = fFormStart;
+            nextStyle.fFlags |= STY_Invisible;
             useNextStyle = 1;
             PushStyleStack(Html_EndSELECT, style);
-            formElemStart = (TGHtmlInput *) p;
+            fFormElemStart = (TGHtmlInput *) p;
             break;
 
          case Html_EndSELECT:
             style = PopStyleStack(Html_EndSELECT);
-            if (formElemStart && formElemStart->type == Html_SELECT) {
-                ((TGHtmlRef *)p)->pOther = formElemStart;
-               MakeInvisible(((TGHtmlRef *)p)->pOther, p);
+            if (fFormElemStart && fFormElemStart->fType == Html_SELECT) {
+                ((TGHtmlRef *)p)->fPOther = fFormElemStart;
+               MakeInvisible(((TGHtmlRef *)p)->fPOther, p);
             } else {
-               ((TGHtmlRef *)p)->pOther = 0;
+               ((TGHtmlRef *)p)->fPOther = 0;
             }
-            formElemStart = 0;
+            fFormElemStart = 0;
             break;
 
          case Html_STRIKE:
-            style.flags |= STY_StrikeThru;
+            style.fFlags |= STY_StrikeThru;
             PushStyleStack(Html_EndSTRIKE, style);
             break;
 
@@ -817,7 +817,7 @@ void TGHtml::AddStyle(TGHtmlElement *p)
             break;
 
          case Html_SAMP:
-            style.font = CWFont(style.font);
+            style.fFont = CWFont(style.fFont);
             PushStyleStack(Html_EndSAMP, style);
             break;
 
@@ -827,129 +827,129 @@ void TGHtml::AddStyle(TGHtmlElement *p)
             break;
 
          case Html_STRONG:
-            style.font = BoldFont(style.font);
+            style.fFont = BoldFont(style.fFont);
             PushStyleStack(Html_EndSTRONG, style);
             break;
 
          case Html_SUB:
             ScaleFont(&style, -1);
-            if (style.subscript > -6 ) style.subscript--;
+            if (style.fSubscript > -6 ) style.fSubscript--;
             PushStyleStack(Html_EndSUB, style);
             break;
 
          case Html_SUP:
             ScaleFont(&style, -1);
-            if (style.subscript < 6) style.subscript++;
+            if (style.fSubscript < 6) style.fSubscript++;
             PushStyleStack(Html_EndSUP, style);
             break;
 
          case Html_TABLE:
             paraAlign = ALIGN_None;
             nextStyle = style;
-            if (style.flags & STY_Preformatted) {
-               nextStyle.flags &= ~STY_Preformatted;
-               style.flags |= STY_Preformatted;
+            if (style.fFlags & STY_Preformatted) {
+               nextStyle.fFlags &= ~STY_Preformatted;
+               style.fFlags |= STY_Preformatted;
             }
-            nextStyle.align = ALIGN_Left;
+            nextStyle.fAlign = ALIGN_Left;
             z = p->MarkupArg("bgcolor", 0);
-            if (z && *z && !overrideColors) {
-               style.bgcolor = nextStyle.bgcolor = GetColorByName(z);
-               style.expbg = 1;
-//        } else {
-//          nextStyle.bgcolor = COLOR_Background;
+            if (z && *z && !fOverrideColors) {
+               style.fBgcolor = nextStyle.fBgcolor = GetColorByName(z);
+               style.fExpbg = 1;
+//            } else {
+//               nextStyle.fBgcolor = COLOR_Background;
             }
             TableBgndImage(p);
             PushStyleStack(Html_EndTABLE, nextStyle);
             useNextStyle = 1;
-            inTd = 0;
-            inTr = 0;
+            fInTd = 0;
+            fInTr = 0;
             break;
 
          case Html_EndTABLE:
             paraAlign = ALIGN_None;
-            if (inTd) {
+            if (fInTd) {
                style = PopStyleStack(Html_EndTD);
-               inTd = 0;
+               fInTd = 0;
             }
-            if (inTr) {
+            if (fInTr) {
                style = PopStyleStack(Html_EndTR);
-               inTr = 0;
+               fInTr = 0;
             }
-            style = PopStyleStack(p->type);
+            style = PopStyleStack(p->fType);
             break;
 
          case Html_TD:
-            if (inTd) style = PopStyleStack(Html_EndTD);
-            inTd = 1;
+            if (fInTd) style = PopStyleStack(Html_EndTD);
+            fInTd = 1;
             paraAlign = p->GetAlignment(rowAlign);
             z = p->MarkupArg("bgcolor", 0);
-            if (z && *z && !overrideColors) {
-               style.bgcolor = GetColorByName(z);
-               style.expbg = 1;
+            if (z && *z && !fOverrideColors) {
+               style.fBgcolor = GetColorByName(z);
+               style.fExpbg = 1;
             }
             TableBgndImage(p);
             PushStyleStack(Html_EndTD, style);
             break;
 
          case Html_TEXTAREA:
-            ((TGHtmlInput *)p)->pForm = formStart;
+            ((TGHtmlInput *)p)->fPForm = fFormStart;
             nextStyle = style;
-            nextStyle.flags |= STY_Invisible;
+            nextStyle.fFlags |= STY_Invisible;
             PushStyleStack(Html_EndTEXTAREA, nextStyle);
-            formElemStart = (TGHtmlInput *) p;
+            fFormElemStart = (TGHtmlInput *) p;
             useNextStyle = 1;
             break;
 
          case Html_EndTEXTAREA:
             style = PopStyleStack(Html_EndTEXTAREA);
-            if (formElemStart && formElemStart->type == Html_TEXTAREA) {
-               ((TGHtmlRef *)p)->pOther = formElemStart;
+            if (fFormElemStart && fFormElemStart->fType == Html_TEXTAREA) {
+               ((TGHtmlRef *)p)->fPOther = fFormElemStart;
             } else {
-               ((TGHtmlRef *)p)->pOther = 0;
+               ((TGHtmlRef *)p)->fPOther = 0;
             }
-            formElemStart = 0;
+            fFormElemStart = 0;
             break;
 
          case Html_TH:
             //paraAlign = p->GetAlignment(rowAlign);
-            if (inTd) style = PopStyleStack(Html_EndTD);
+            if (fInTd) style = PopStyleStack(Html_EndTD);
             paraAlign = p->GetAlignment(ALIGN_Center);
-            style.font = BoldFont(style.font);
+            style.fFont = BoldFont(style.fFont);
             z = p->MarkupArg("bgcolor", 0);
-            if (z && *z && !overrideColors) {
-               style.bgcolor = GetColorByName(z);
-               style.expbg = 1;
+            if (z && *z && !fOverrideColors) {
+               style.fBgcolor = GetColorByName(z);
+               style.fExpbg = 1;
             }
             PushStyleStack(Html_EndTD, style);
-            inTd = 1;
+            fInTd = 1;
             break;
 
          case Html_TR:
-            if (inTd) {
+            if (fInTd) {
                style = PopStyleStack(Html_EndTD);
-               inTd = 0;
+               fInTd = 0;
             }
-            if (inTr) {
+            if (fInTr) {
                style = PopStyleStack(Html_EndTR);
             }
             rowAlign = p->GetAlignment(ALIGN_None);
             z = p->MarkupArg("bgcolor", 0);
-            if (z && *z && !overrideColors) {
-               style.bgcolor = GetColorByName(z);
-               style.expbg = 1;
+            if (z && *z && !fOverrideColors) {
+               style.fBgcolor = GetColorByName(z);
+               style.fExpbg = 1;
             }
             TableBgndImage(p);
             PushStyleStack(Html_EndTR, style);
-            inTr = 1;
+            fInTr = 1;
             break;
 
          case Html_EndTR:
-            if (inTd) {
+            if (fInTd) {
                style = PopStyleStack(Html_EndTD);
-               inTd = 0;
+               fInTd = 0;
             }
             style = PopStyleStack(Html_EndTR);
-            inTr = 0;
+            fInTr = 0;
             paraAlign = ALIGN_None;
             rowAlign = ALIGN_None;
             break;
@@ -957,28 +957,28 @@ void TGHtml::AddStyle(TGHtmlElement *p)
          case Html_EndTD:
          case Html_EndTH:
             style = PopStyleStack(Html_EndTD);
-            inTd = 0;
+            fInTd = 0;
             paraAlign = ALIGN_None;
             //rowAlign = ALIGN_None;
             break;
 
          case Html_TITLE:
-            style.flags |= STY_Invisible;
+            style.fFlags |= STY_Invisible;
             PushStyleStack(Html_EndTITLE, style);
             break;
 
          case Html_TT:
-            style.font = CWFont(style.font);
+            style.fFont = CWFont(style.fFont);
             PushStyleStack(Html_EndTT, style);
             break;
 
          case Html_U:
-            style.flags |= STY_Underline;
+            style.fFlags |= STY_Underline;
             PushStyleStack(Html_EndU, style);
             break;
 
          case Html_VAR:
-            style.font = ItalicFont(style.font);
+            style.fFont = ItalicFont(style.fFont);
             PushStyleStack(Html_EndVAR, style);
             break;
 
@@ -986,32 +986,32 @@ void TGHtml::AddStyle(TGHtmlElement *p)
             break;
       }
 
-      p->style = style;
-      p->style.flags |= anchorFlags | inDt;
+      p->fStyle = style;
+      p->fStyle.fFlags |= fAnchorFlags | fInDt;
       if (paraAlign != ALIGN_None) {
-         p->style.align = paraAlign;
+         p->fStyle.fAlign = paraAlign;
       }
       if (useNextStyle) {
          style = nextStyle;
-         style.expbg = 0;
+         style.fExpbg = 0;
          useNextStyle = 0;
       }
 
       TRACE(HtmlTrace_Style,
           ("Style font=%02d color=%02d bg=%02d "
            "align=%d flags=0x%04x token=%s\n",
-            p->style.font, p->style.color, p->style.bgcolor,
-           p->style.align, p->style.flags, DumpToken(p)));
+           p->fStyle.fFont, p->fStyle.fColor, p->fStyle.fBgcolor,
+           p->fStyle.fAlign, p->fStyle.fFlags, DumpToken(p)));
 
-      p = p->pNext;
+      p = p->fPNext;
    }
 
    // Copy state information back into the TGHtml object for safe keeping.
 
-   paraAlignment = paraAlign;
-   rowAlignment = rowAlign;
+   fParaAlignment = paraAlign;
+   fRowAlignment = rowAlign;
 
-   flags &= ~STYLER_RUNNING;
+   fFlags &= ~STYLER_RUNNING;
 }
 
 //______________________________________________________________________________
@@ -1028,24 +1028,24 @@ void TGHtml::TableBgndImage(TGHtmlElement *p)
    TImage *img = LoadImage(z1, 0, 0);
    delete [] z1;
 
-   switch (p->type) {
+   switch (p->fType) {
       case Html_TABLE: {
          TGHtmlTable *table = (TGHtmlTable *) p;
-         if (table->bgImage) delete table->bgImage;
-         table->bgImage = img;
+         if (table->fBgImage) delete table->fBgImage;
+         table->fBgImage = img;
          break;
       }
       case Html_TR: {
          TGHtmlRef *ref = (TGHtmlRef *) p;
-         if (ref->bgImage) delete ref->bgImage;
-            ref->bgImage = img;
+         if (ref->fBgImage) delete ref->fBgImage;
+            ref->fBgImage = img;
             break;
       }
       case Html_TH:
       case Html_TD: {
          TGHtmlCell *cell = (TGHtmlCell *) p;
-         if (cell->bgImage) delete cell->bgImage;
-            cell->bgImage = img;
+         if (cell->fBgImage) delete cell->fBgImage;
+            cell->fBgImage = img;
             break;
          }
       default:
@@ -1061,8 +1061,8 @@ void TGHtml::Sizer()
    // already been assigned to all elements.
    //
    // Some of the elements might have already been sized. Refer to the
-   // lastSized and only compute sizes for elements that follow this one. If
-   // lastSized is 0, then size everything.
+   // fLastSized and only compute sizes for elements that follow this one. If
+   // fLastSized is 0, then size everything.
    //
    // This routine only computes the sizes of individual elements. The size of
    // aggregate elements (like tables) are computed separately.
@@ -1081,44 +1081,44 @@ void TGHtml::Sizer()
    const char *z;
    int stop = 0;
 
-   if (pFirst == 0) return;
+   if (fPFirst == 0) return;
 
-   if (lastSized == 0) {
-      p = pFirst;
+   if (fLastSized == 0) {
+      p = fPFirst;
    } else {
-      p = lastSized->pNext;
+      p = fLastSized->fPNext;
    }
 
-   for (; !stop && p; p = p ? p->pNext : 0) {
-      if (p->style.flags & STY_Invisible) {
-         p->flags &= ~HTML_Visible;
+   for (; !stop && p; p = p ? p->fPNext : 0) {
+      if (p->fStyle.fFlags & STY_Invisible) {
+         p->fFlags &= ~HTML_Visible;
          continue;
       }
-      if (iFont != (int)p->style.font) {
-         iFont = p->style.font;
+      if (iFont != (int)p->fStyle.fFont) {
+         iFont = p->fStyle.fFont;
          font = GetFont(iFont);
          font->GetFontMetrics(&fontMetrics);
          spaceWidth = 0;
       }
-      switch (p->type) {
+      switch (p->fType) {
          case Html_Text: {
             TGHtmlTextElement *text = (TGHtmlTextElement *) p;
-            text->w = font->TextWidth(text->zText, p->count);
-            p->flags |= HTML_Visible;
-            text->descent = fontMetrics.fDescent;
-            text->ascent = fontMetrics.fAscent;
+            text->fW = font->TextWidth(text->fZText, p->fCount);
+            p->fFlags |= HTML_Visible;
+            text->fDescent = fontMetrics.fDescent;
+            text->fAscent = fontMetrics.fAscent;
             if (spaceWidth == 0) spaceWidth = font->TextWidth(" ", 1);
-            text->spaceWidth = spaceWidth;
+            text->fSpaceWidth = spaceWidth;
             break;
          }
 
          case Html_Space: {
             TGHtmlSpaceElement *space = (TGHtmlSpaceElement *) p;
             if (spaceWidth == 0) spaceWidth = font->TextWidth(" ", 1);
-            space->w = spaceWidth;
-            space->descent = fontMetrics.fDescent;
-            space->ascent = fontMetrics.fAscent;
-            p->flags &= ~HTML_Visible;
+            space->fW = spaceWidth;
+            space->fDescent = fontMetrics.fDescent;
+            space->fAscent = fontMetrics.fAscent;
+            p->fFlags &= ~HTML_Visible;
             break;
          }
 
@@ -1126,18 +1126,18 @@ void TGHtml::Sizer()
          case Html_TH: {
             TGHtmlCell *cell = (TGHtmlCell *) p;
             z = p->MarkupArg("rowspan", "1");
-            cell->rowspan = atoi(z);
+            cell->fRowspan = atoi(z);
             z = p->MarkupArg("colspan", "1");
-            cell->colspan = atoi(z);
-            p->flags |= HTML_Visible;
+            cell->fColspan = atoi(z);
+            p->fFlags |= HTML_Visible;
             break;
          }
 
          case Html_LI: {
             TGHtmlLi *li = (TGHtmlLi *) p;
-            li->descent = fontMetrics.fDescent;
-            li->ascent = fontMetrics.fAscent;
-            p->flags |= HTML_Visible;
+            li->fDescent = fontMetrics.fDescent;
+            li->fAscent = fontMetrics.fAscent;
+            p->fFlags |= HTML_Visible;
             break;
          }
 
@@ -1145,64 +1145,64 @@ void TGHtml::Sizer()
             TGHtmlImageMarkup *image = (TGHtmlImageMarkup *) p;
             z = p->MarkupArg("usemap", 0);
             if (z && *z == '#') {
-               image->pMap = GetMap(z+1);
+               image->fPMap = GetMap(z+1);
             } else {
-               image->pMap = 0;
+               image->fPMap = 0;
             }
-            p->flags |= HTML_Visible;
-            image->redrawNeeded = 0;
-            image->textAscent = fontMetrics.fAscent;
-            image->textDescent = fontMetrics.fDescent;
-            image->align = GetImageAlignment(p);
-            if (image->pImage == 0) {
-               image->ascent = fontMetrics.fAscent;
-               image->descent = fontMetrics.fDescent;
-               image->zAlt = p->MarkupArg("alt", "<image>");
-               image->w = font->TextWidth(image->zAlt, strlen(image->zAlt));
+            p->fFlags |= HTML_Visible;
+            image->fRedrawNeeded = 0;
+            image->fTextAscent = fontMetrics.fAscent;
+            image->fTextDescent = fontMetrics.fDescent;
+            image->fAlign = GetImageAlignment(p);
+            if (image->fPImage == 0) {
+               image->fAscent = fontMetrics.fAscent;
+               image->fDescent = fontMetrics.fDescent;
+               image->fZAlt = p->MarkupArg("alt", "<image>");
+               image->fW = font->TextWidth(image->fZAlt, strlen(image->fZAlt));
             } else {
                int w, h;
-               image->iNext = image->pImage->pList;
-               image->pImage->pList = image;
-               w = image->pImage->image->GetWidth();
-               h = image->pImage->image->GetHeight();
-               image->h = h;
-               image->w = w;
-               image->ascent = h / 2;
-               image->descent = h - image->ascent;
+               image->fINext = image->fPImage->fPList;
+               image->fPImage->fPList = image;
+               w = image->fPImage->fImage->GetWidth();
+               h = image->fPImage->fImage->GetHeight();
+               image->fH = h;
+               image->fW = w;
+               image->fAscent = h / 2;
+               image->fDescent = h - image->fAscent;
             }
             if ((z = p->MarkupArg("width", 0)) != 0) {
                int w = atoi(z);
                if (z[strlen(z)-1] == '%') w = 0; //// -- HP
-               if (w > 0) image->w = w;
+               if (w > 0) image->fW = w;
             }
             if ((z = p->MarkupArg("height", 0)) != 0) {
                int h = atoi(z);
-               if (h > 0) image->h = h;
+               if (h > 0) image->fH = h;
             }
 
 #if 1  // --HP
-            if (image->pImage == 0 && !*image->zAlt) {
-               image->ascent = image->h / 2;
-               image->descent = image->h - image->ascent;
+            if (image->fPImage == 0 && !*image->fZAlt) {
+               image->fAscent = image->fH / 2;
+               image->fDescent = image->fH - image->fAscent;
             }
 #endif
             break;
          }
 
          case Html_TABLE:
-            p->flags |= HTML_Visible;
+            p->fFlags |= HTML_Visible;
             break;
 
          case Html_HR:
-            p->flags |= HTML_Visible;
+            p->fFlags |= HTML_Visible;
             break;
 
          case Html_APPLET:
          case Html_EMBED:
          case Html_INPUT: {
             TGHtmlInput *input = (TGHtmlInput *) p;
-            input->textAscent = fontMetrics.fAscent;
-            input->textDescent = fontMetrics.fDescent;
+            input->fTextAscent = fontMetrics.fAscent;
+            input->fTextDescent = fontMetrics.fDescent;
             stop = ControlSize(input);
             break;
          }
@@ -1210,30 +1210,30 @@ void TGHtml::Sizer()
          case Html_SELECT:
          case Html_TEXTAREA: {
             TGHtmlInput *input = (TGHtmlInput *) p;
-            input->textAscent = fontMetrics.fAscent;
-            input->textDescent = fontMetrics.fDescent;
+            input->fTextAscent = fontMetrics.fAscent;
+            input->fTextDescent = fontMetrics.fDescent;
             break;
          }
 
          case Html_EndSELECT:
          case Html_EndTEXTAREA: {
             TGHtmlRef *ref = (TGHtmlRef *) p;
-            if (ref->pOther) {
-               ((TGHtmlInput *)ref->pOther)->pEnd = p;
-               stop = ControlSize((TGHtmlInput *) ref->pOther);
+            if (ref->fPOther) {
+               ((TGHtmlInput *)ref->fPOther)->fPEnd = p;
+               stop = ControlSize((TGHtmlInput *) ref->fPOther);
             }
             break;
          }
 
          default:
-            p->flags &= ~HTML_Visible;
+            p->fFlags &= ~HTML_Visible;
             break;
       }
    }
 
    if (p) {
-      lastSized = p;
+      fLastSized = p;
    } else {
-      lastSized = pLast;
+      fLastSized = fPLast;
    }
 }

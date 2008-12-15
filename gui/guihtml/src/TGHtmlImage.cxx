@@ -49,16 +49,16 @@ TGHtmlImage::TGHtmlImage(TGHtml *htm, const char *url, const char *width,
 {
    // ctor.
 
-   _html = htm;
-   zUrl = StrDup(url);
-   zWidth = StrDup(width);
-   zHeight = StrDup(height);
-   image = NULL;
-   pNext = NULL;
-   pList = NULL;
-   w = 0;
-   h = 0;
-   timer = NULL;
+   fHtml = htm;
+   fZUrl = StrDup(url);
+   fZWidth = StrDup(width);
+   fZHeight = StrDup(height);
+   fImage = NULL;
+   fPNext = NULL;
+   fPList = NULL;
+   fW = 0;
+   fH = 0;
+   fTimer = NULL;
 }
 
 //______________________________________________________________________________
@@ -66,12 +66,12 @@ TGHtmlImage::~TGHtmlImage()
 {
    //  dtor.
 
-   delete [] zUrl;
-   delete [] zWidth;
-   delete [] zHeight;
+   delete [] fZUrl;
+   delete [] fZWidth;
+   delete [] fZHeight;
 
-   if (image) delete image;
-   if (timer) delete timer;
+   if (fImage) delete fImage;
+   if (fTimer) delete fTimer;
 }
 
 //______________________________________________________________________________
@@ -124,28 +124,28 @@ void TGHtml::ImageChanged(TGHtmlImage *pImage, int newWidth, int newHeight)
 
    TGHtmlImageMarkup *pElem;
 
-   if (pImage->w != newWidth || pImage->h != newHeight) {
+   if (pImage->fW != newWidth || pImage->fH != newHeight) {
       // We have to completely redo the layout after adjusting the size
       // of the images
-      for (pElem = pImage->pList; pElem; pElem = pElem->iNext) {
-         pElem->w = newWidth;
-         pElem->h = newHeight;
+      for (pElem = pImage->fPList; pElem; pElem = pElem->fINext) {
+         pElem->fW = newWidth;
+         pElem->fH = newHeight;
       }
-      flags |= RELAYOUT;
-      pImage->w = newWidth;
-      pImage->h = newHeight;
+      fFlags |= RELAYOUT;
+      pImage->fW = newWidth;
+      pImage->fH = newHeight;
       RedrawEverything();
    } else {
 #if 0
-    for (pElem = pImage->pList; pElem; pElem = pElem->iNext) {
-      pElem->redrawNeeded = 1;
-    }
-    flags |= REDRAW_IMAGES;
-    ScheduleRedraw();
+      for (pElem = pImage->fPList; pElem; pElem = pElem->fINext) {
+         pElem->fRedrawNeeded = 1;
+      }
+      fFlags |= REDRAW_IMAGES;
+      ScheduleRedraw();
 #else
-      for (pElem = pImage->pList; pElem; pElem = pElem->iNext) {
-         pElem->redrawNeeded = 1;
-         DrawRegion(pElem->x, pElem->y - pElem->ascent, pElem->w, pElem->h);
+      for (pElem = pImage->fPList; pElem; pElem = pElem->fINext) {
+         pElem->fRedrawNeeded = 1;
+         DrawRegion(pElem->fX, pElem->fY - pElem->fAscent, pElem->fW, pElem->fH);
       }
 #endif
    }
@@ -162,7 +162,7 @@ TGHtmlImage *TGHtml::GetImage(TGHtmlImageMarkup *p)
    const char *zSrc;
    TGHtmlImage *pImage;
 
-   if (p->type != Html_IMG) { CANT_HAPPEN; return 0; }
+   if (p->fType != Html_IMG) { CANT_HAPPEN; return 0; }
 
    zSrc = p->MarkupArg("src", 0);
    if (zSrc == 0) return 0;
@@ -173,13 +173,13 @@ TGHtmlImage *TGHtml::GetImage(TGHtmlImageMarkup *p)
    zWidth = p->MarkupArg("width", "");
    zHeight = p->MarkupArg("height", "");
 
-   //p->w = atoi(zWidth);
+   //p->w = atoi(fZWidth);
    //p->h = atoi(zHeight);
 
-   for (pImage = imageList; pImage; pImage = pImage->pNext) {
-      if (strcmp(pImage->zUrl, zSrc) == 0
-          &&  strcmp(pImage->zWidth, zWidth) == 0
-          &&  strcmp(pImage->zHeight, zHeight) == 0) {
+   for (pImage = fImageList; pImage; pImage = pImage->fPNext) {
+      if (strcmp(pImage->fZUrl, zSrc) == 0
+          &&  strcmp(pImage->fZWidth, zWidth) == 0
+          &&  strcmp(pImage->fZHeight, zHeight) == 0) {
          delete [] zSrc;
          return pImage;
       }
@@ -189,13 +189,13 @@ TGHtmlImage *TGHtml::GetImage(TGHtmlImageMarkup *p)
 
    if (img) {
       pImage = new TGHtmlImage(this, zSrc, zWidth, zHeight);
-      pImage->image = img;
+      pImage->fImage = img;
     //if (img->IsAnimated()) {
     //  pImage->timer = new TTimer(this, img->GetAnimDelay());
     //}
       ImageChanged(pImage, img->GetWidth(), img->GetHeight());
-      pImage->pNext = imageList;
-      imageList = pImage;
+      pImage->fPNext = fImageList;
+      fImageList = pImage;
    } else {
       pImage = 0;
    }
@@ -305,17 +305,17 @@ const char *TGHtml::GetPctWidth(TGHtmlElement *p, char *opt, char *ret)
    } else {
       val = fCanvas->GetWidth() * 100;
    }
-   if (!inTd) {
+   if (!fInTd) {
       sprintf(ret, "%d", val / n);
    } else {
-      while (pElem && pElem->type != Html_TD) pElem = pElem->pPrev;
+      while (pElem && pElem->fType != Html_TD) pElem = pElem->fPPrev;
       if (!pElem) return z;
       tz = pElem->MarkupArg(opt, 0);
       if (tz && !strchr(tz, '%') && sscanf(tz, "%d", &m)) {
          sprintf(ret, "%d", m * 100 / n);
          return ret;
       }
-      pElem = ((TGHtmlCell *)pElem)->pTable;
+      pElem = ((TGHtmlCell *)pElem)->fPTable;
       if (!pElem) return z;
       tz = pElem->MarkupArg(opt, 0);
       if (tz && !strchr(tz, '%') && sscanf(tz, "%d", &m)) {
@@ -338,14 +338,14 @@ int TGHtml::GetImageAt(int x, int y)
    TGHtmlElement *pElem;
    //int n;
 
-   for (pBlock = firstBlock; pBlock; pBlock = pBlock->bNext) {
-      if (pBlock->top > y || pBlock->bottom < y ||
-          pBlock->left > x || pBlock->right < x) {
+   for (pBlock = fFirstBlock; pBlock; pBlock = pBlock->fBNext) {
+      if (pBlock->fTop > y || pBlock->fBottom < y ||
+          pBlock->fLeft > x || pBlock->fRight < x) {
          continue;
       }
-      for (pElem = pBlock->pNext; pElem; pElem = pElem->pNext) {
-         if (pBlock->bNext && pElem == pBlock->bNext->pNext) break;
-         if (pElem->type == Html_IMG) {
+      for (pElem = pBlock->fPNext; pElem; pElem = pElem->fPNext) {
+         if (pBlock->fBNext && pElem == pBlock->fBNext->fPNext) break;
+         if (pElem->fType == Html_IMG) {
             return TokenNumber(pElem);
          }
       }

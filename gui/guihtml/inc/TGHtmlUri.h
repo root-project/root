@@ -52,21 +52,21 @@
 
 class TGHtmlUri : public TObject {
 public:
-  TGHtmlUri(const char *zUri = 0);
-  TGHtmlUri(const TGHtmlUri *uri);
-  virtual ~TGHtmlUri();
+   TGHtmlUri(const char *zUri = 0);
+   TGHtmlUri(const TGHtmlUri *uri);
+   virtual ~TGHtmlUri();
 
-  char *BuildUri();
-  int  EqualsUri(const TGHtmlUri *uri, int field_mask = URI_FULL_MASK);
+   char *BuildUri();
+   int  EqualsUri(const TGHtmlUri *uri, int field_mask = URI_FULL_MASK);
 
 public:
-  int ComponentLength(const char *z, const char *zInit, const char *zTerm);
+   int ComponentLength(const char *z, const char *zInit, const char *zTerm);
   
-  char *zScheme;             // Ex: "http"
-  char *zAuthority;          // Ex: "192.168.1.1:8080"
-  char *zPath;               // Ex: "cgi-bin/printenv"
-  char *zQuery;              // Ex: "name=xyzzy&addr=none"
-  char *zFragment;           // Ex: "frag"
+   char *fZScheme;             // Ex: "http"
+   char *fZAuthority;          // Ex: "192.168.1.1:8080"
+   char *fZPath;               // Ex: "cgi-bin/printenv"
+   char *fZQuery;              // Ex: "name=xyzzy&addr=none"
+   char *fZFragment;           // Ex: "frag"
 };
 
 

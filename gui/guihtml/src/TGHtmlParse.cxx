@@ -44,7 +44,7 @@
 
 //----------------------------------------------------------------------
 
-extern SHtmlTokenMap HtmlMarkupMap[];
+extern SHtmlTokenMap_t HtmlMarkupMap[];
 
 
 /****************** Begin Escape Sequence Translator *************/
@@ -62,116 +62,116 @@ extern SHtmlTokenMap HtmlMarkupMap[];
 // Each escape sequence is recorded as an instance of the following
 // structure
 
-struct sgEsc {
-   const char *zName;      // The name of this escape sequence.  ex:  "amp"
-   const char  value[8];   // The value for this sequence.       ex:  "&"
-   sgEsc *pNext;           // Next sequence with the same hash on zName
+struct sgEsc_t {
+   const char *fZName;      // The name of this escape sequence.  ex:  "amp"
+   const char  fValue[8];   // The value for this sequence.       ex:  "&"
+   sgEsc_t *fPNext;           // Next sequence with the same hash on zName
 };
 
 // The following is a table of all escape sequences.  Add new sequences
 // by adding entries to this table.
 
-static struct sgEsc esc_sequences[] = {
-  { "quot",      "\"",    0 },
-  { "amp",       "&",     0 },
-  { "lt",        "<",     0 },
-  { "gt",        ">",     0 },
-  { "nbsp",      " ",     0 },
-  { "iexcl",     "\241",  0 },
-  { "cent",      "\242",  0 },
-  { "pound",     "\243",  0 },
-  { "curren",    "\244",  0 },
-  { "yen",       "\245",  0 },
-  { "brvbar",    "\246",  0 },
-  { "sect",      "\247",  0 },
-  { "uml",       "\250",  0 },
-  { "copy",      "\251",  0 },
-  { "ordf",      "\252",  0 },
-  { "laquo",     "\253",  0 },
-  { "not",       "\254",  0 },
-  { "shy",       "\255",  0 },
-  { "reg",       "\256",  0 },
-  { "macr",      "\257",  0 },
-  { "deg",       "\260",  0 },
-  { "plusmn",    "\261",  0 },
-  { "sup2",      "\262",  0 },
-  { "sup3",      "\263",  0 },
-  { "acute",     "\264",  0 },
-  { "micro",     "\265",  0 },
-  { "para",      "\266",  0 },
-  { "middot",    "\267",  0 },
-  { "cedil",     "\270",  0 },
-  { "sup1",      "\271",  0 },
-  { "ordm",      "\272",  0 },
-  { "raquo",     "\273",  0 },
-  { "frac14",    "\274",  0 },
-  { "frac12",    "\275",  0 },
-  { "frac34",    "\276",  0 },
-  { "iquest",    "\277",  0 },
-  { "Agrave",    "\300",  0 },
-  { "Aacute",    "\301",  0 },
-  { "Acirc",     "\302",  0 },
-  { "Atilde",    "\303",  0 },
-  { "Auml",      "\304",  0 },
-  { "Aring",     "\305",  0 },
-  { "AElig",     "\306",  0 },
-  { "Ccedil",    "\307",  0 },
-  { "Egrave",    "\310",  0 },
-  { "Eacute",    "\311",  0 },
-  { "Ecirc",     "\312",  0 },
-  { "Euml",      "\313",  0 },
-  { "Igrave",    "\314",  0 },
-  { "Iacute",    "\315",  0 },
-  { "Icirc",     "\316",  0 },
-  { "Iuml",      "\317",  0 },
-  { "ETH",       "\320",  0 },
-  { "Ntilde",    "\321",  0 },
-  { "Ograve",    "\322",  0 },
-  { "Oacute",    "\323",  0 },
-  { "Ocirc",     "\324",  0 },
-  { "Otilde",    "\325",  0 },
-  { "Ouml",      "\326",  0 },
-  { "times",     "\327",  0 },
-  { "Oslash",    "\330",  0 },
-  { "Ugrave",    "\331",  0 },
-  { "Uacute",    "\332",  0 },
-  { "Ucirc",     "\333",  0 },
-  { "Uuml",      "\334",  0 },
-  { "Yacute",    "\335",  0 },
-  { "THORN",     "\336",  0 },
-  { "szlig",     "\337",  0 },
-  { "agrave",    "\340",  0 },
-  { "aacute",    "\341",  0 },
-  { "acirc",     "\342",  0 },
-  { "atilde",    "\343",  0 },
-  { "auml",      "\344",  0 },
-  { "aring",     "\345",  0 },
-  { "aelig",     "\346",  0 },
-  { "ccedil",    "\347",  0 },
-  { "egrave",    "\350",  0 },
-  { "eacute",    "\351",  0 },
-  { "ecirc",     "\352",  0 },
-  { "euml",      "\353",  0 },
-  { "igrave",    "\354",  0 },
-  { "iacute",    "\355",  0 },
-  { "icirc",     "\356",  0 },
-  { "iuml",      "\357",  0 },
-  { "eth",       "\360",  0 },
-  { "ntilde",    "\361",  0 },
-  { "ograve",    "\362",  0 },
-  { "oacute",    "\363",  0 },
-  { "ocirc",     "\364",  0 },
-  { "otilde",    "\365",  0 },
-  { "ouml",      "\366",  0 },
-  { "divide",    "\367",  0 },
-  { "oslash",    "\370",  0 },
-  { "ugrave",    "\371",  0 },
-  { "uacute",    "\372",  0 },
-  { "ucirc",     "\373",  0 },
-  { "uuml",      "\374",  0 },
-  { "yacute",    "\375",  0 },
-  { "thorn",     "\376",  0 },
-  { "yuml",      "\377",  0 },
+static struct sgEsc_t gEscSequences[] = {
+   { "quot",      "\"",    0 },
+   { "amp",       "&",     0 },
+   { "lt",        "<",     0 },
+   { "gt",        ">",     0 },
+   { "nbsp",      " ",     0 },
+   { "iexcl",     "\241",  0 },
+   { "cent",      "\242",  0 },
+   { "pound",     "\243",  0 },
+   { "curren",    "\244",  0 },
+   { "yen",       "\245",  0 },
+   { "brvbar",    "\246",  0 },
+   { "sect",      "\247",  0 },
+   { "uml",       "\250",  0 },
+   { "copy",      "\251",  0 },
+   { "ordf",      "\252",  0 },
+   { "laquo",     "\253",  0 },
+   { "not",       "\254",  0 },
+   { "shy",       "\255",  0 },
+   { "reg",       "\256",  0 },
+   { "macr",      "\257",  0 },
+   { "deg",       "\260",  0 },
+   { "plusmn",    "\261",  0 },
+   { "sup2",      "\262",  0 },
+   { "sup3",      "\263",  0 },
+   { "acute",     "\264",  0 },
+   { "micro",     "\265",  0 },
+   { "para",      "\266",  0 },
+   { "middot",    "\267",  0 },
+   { "cedil",     "\270",  0 },
+   { "sup1",      "\271",  0 },
+   { "ordm",      "\272",  0 },
+   { "raquo",     "\273",  0 },
+   { "frac14",    "\274",  0 },
+   { "frac12",    "\275",  0 },
+   { "frac34",    "\276",  0 },
+   { "iquest",    "\277",  0 },
+   { "Agrave",    "\300",  0 },
+   { "Aacute",    "\301",  0 },
+   { "Acirc",     "\302",  0 },
+   { "Atilde",    "\303",  0 },
+   { "Auml",      "\304",  0 },
+   { "Aring",     "\305",  0 },
+   { "AElig",     "\306",  0 },
+   { "Ccedil",    "\307",  0 },
+   { "Egrave",    "\310",  0 },
+   { "Eacute",    "\311",  0 },
+   { "Ecirc",     "\312",  0 },
+   { "Euml",      "\313",  0 },
+   { "Igrave",    "\314",  0 },
+   { "Iacute",    "\315",  0 },
+   { "Icirc",     "\316",  0 },
+   { "Iuml",      "\317",  0 },
+   { "ETH",       "\320",  0 },
+   { "Ntilde",    "\321",  0 },
+   { "Ograve",    "\322",  0 },
+   { "Oacute",    "\323",  0 },
+   { "Ocirc",     "\324",  0 },
+   { "Otilde",    "\325",  0 },
+   { "Ouml",      "\326",  0 },
+   { "times",     "\327",  0 },
+   { "Oslash",    "\330",  0 },
+   { "Ugrave",    "\331",  0 },
+   { "Uacute",    "\332",  0 },
+   { "Ucirc",     "\333",  0 },
+   { "Uuml",      "\334",  0 },
+   { "Yacute",    "\335",  0 },
+   { "THORN",     "\336",  0 },
+   { "szlig",     "\337",  0 },
+   { "agrave",    "\340",  0 },
+   { "aacute",    "\341",  0 },
+   { "acirc",     "\342",  0 },
+   { "atilde",    "\343",  0 },
+   { "auml",      "\344",  0 },
+   { "aring",     "\345",  0 },
+   { "aelig",     "\346",  0 },
+   { "ccedil",    "\347",  0 },
+   { "egrave",    "\350",  0 },
+   { "eacute",    "\351",  0 },
+   { "ecirc",     "\352",  0 },
+   { "euml",      "\353",  0 },
+   { "igrave",    "\354",  0 },
+   { "iacute",    "\355",  0 },
+   { "icirc",     "\356",  0 },
+   { "iuml",      "\357",  0 },
+   { "eth",       "\360",  0 },
+   { "ntilde",    "\361",  0 },
+   { "ograve",    "\362",  0 },
+   { "oacute",    "\363",  0 },
+   { "ocirc",     "\364",  0 },
+   { "otilde",    "\365",  0 },
+   { "ouml",      "\366",  0 },
+   { "divide",    "\367",  0 },
+   { "oslash",    "\370",  0 },
+   { "ugrave",    "\371",  0 },
+   { "uacute",    "\372",  0 },
+   { "ucirc",     "\373",  0 },
+   { "uuml",      "\374",  0 },
+   { "yacute",    "\375",  0 },
+   { "thorn",     "\376",  0 },
+   { "yuml",      "\377",  0 },
 };
 
 
@@ -179,32 +179,32 @@ static struct sgEsc esc_sequences[] = {
 // be a prime number which is about the same size as the number of
 // escape sequences known to the system.
 
-#define ESC_HASH_SIZE (sizeof(esc_sequences)/sizeof(esc_sequences[0])+7)
+#define ESC_HASH_SIZE (sizeof(gEscSequences)/sizeof(gEscSequences[0])+7)
 
 
 // The hash table
 //
 // If the name of an escape sequence hashes to the value H, then
-// apEscHash[H] will point to a linked list of Esc structures, one of
+// gApEscHash[H] will point to a linked list of Esc structures, one of
 // which will be the Esc structure for that escape sequence.
 
-static struct sgEsc *apEscHash[ESC_HASH_SIZE];
+static struct sgEsc_t *gApEscHash[ESC_HASH_SIZE];
 
 
 // Hash a escape sequence name. The value returned is an integer
 // between 0 and ESC_HASH_SIZE-1, inclusive.
 
 static int EscHash(const char *zName) {
-  int h = 0;      // The hash value to be returned
-  char c;         // The next character in the name being hashed
+   int h = 0;      // The hash value to be returned
+   char c;         // The next character in the name being hashed
 
-  while ((c = *zName) != 0) {
-    h = h<<5 ^ h ^ c;
-    zName++;
-  }
-  if (h < 0) h = -h;
+   while ((c = *zName) != 0) {
+      h = h<<5 ^ h ^ c;
+      zName++;
+   }
+   if (h < 0) h = -h;
 
-  return h % ESC_HASH_SIZE;
+   return h % ESC_HASH_SIZE;
 }
 
 #ifdef TEST
@@ -217,15 +217,15 @@ static void EscHashStats() {
   int max = 0;
   int cnt;
   int notempty = 0;
-  struct sgEsc *p;
+  struct sgEsc_t *p;
 
-  for (i = 0; i < sizeof(esc_sequences) / sizeof(esc_sequences[0]); i++) {
+  for (i = 0; i < sizeof(gEscSequences) / sizeof(gEscSequences[0]); i++) {
     cnt = 0;
-    p = apEscHash[i];
+    p = gApEscHash[i];
     if (p) notempty++;
     while (p) {
       ++cnt;
-      p = p->pNext;
+      p = p->fPNext;
     }
     sum += cnt;
     if (cnt > max) max = cnt;
@@ -239,23 +239,22 @@ static void EscHashStats() {
 // Initialize the escape sequence hash table
 
 static void EscInit() {
-  int i;  /* For looping thru the list of escape sequences */
-  int h;  /* The hash on a sequence */
+   int i;  /* For looping thru the list of escape sequences */
+   int h;  /* The hash on a sequence */
 
-  for (i = 0; i < int(sizeof(esc_sequences) / sizeof(esc_sequences[i])); i++) {
+   for (i = 0; i < int(sizeof(gEscSequences) / sizeof(gEscSequences[i])); i++) {
 /* #ifdef XCLASS_UTF_MAX */
 #if 0
-    {
-      int c = esc_sequences[i].value[0];
-      xclass::UniCharToUtf(c, esc_sequences[i].value);
-    }
+      int c = gEscSequences[i].value[0];
+      xclass::UniCharToUtf(c, gEscSequences[i].value);
+   }
 #endif
-    h = EscHash(esc_sequences[i].zName);
-    esc_sequences[i].pNext = apEscHash[h];
-    apEscHash[h] = &esc_sequences[i];
-  }
+      h = EscHash(gEscSequences[i].fZName);
+      gEscSequences[i].fPNext = gApEscHash[h];
+      gApEscHash[h] = &gEscSequences[i];
+   }
 #ifdef TEST
-  EscHashStats();
+   EscHashStats();
 #endif
 }
 
@@ -265,7 +264,7 @@ static void EscInit() {
 // systems. Care is taken to translate the characters into values less than
 // 0x80, to avoid UTF-8 problems.
 
-static char acMsChar[] = {
+static char gAcMsChar[] = {
    /* 0x80 */ 'C',
    /* 0x81 */ ' ',
    /* 0x82 */ ',',
@@ -317,7 +316,7 @@ void HtmlTranslateEscapes(char *z)
    int from;   // Read characters from this position in z[]
    int to;     // Write characters into this position in z[]
    int h;      // A hash on the escape sequence
-   struct sgEsc *p;  // For looping down the escape sequence collision chain
+   struct sgEsc_t *p;  // For looping down the escape sequence collision chain
    static int isInit = 0;   // True after initialization
 
    from = to = 0;
@@ -340,7 +339,7 @@ void HtmlTranslateEscapes(char *z)
             // 0x80 to 0x9f into something we can see.
 
             if (v >= 0x80 && v < 0xa0) {
-               v = acMsChar[v & 0x1f];
+               v = gAcMsChar[v & 0x1f];
             }
 
             // Put the character in the output stream in place of the "&#000;".
@@ -355,12 +354,12 @@ void HtmlTranslateEscapes(char *z)
             c = z[i];
             z[i] = 0;
             h = EscHash(&z[from+1]);
-            p = apEscHash[h];
-            while (p && strcmp(p->zName, &z[from+1]) != 0) p = p->pNext;
+            p = gApEscHash[h];
+            while (p && strcmp(p->fZName, &z[from+1]) != 0) p = p->fPNext;
             z[i] = c;
             if (p) {
                int j;
-               for (j = 0; p->value[j]; ++j) z[to++] = p->value[j];
+               for (j = 0; p->fValue[j]; ++j) z[to++] = p->fValue[j];
                from = i;
                if (c == ';') from++;
             } else {
@@ -374,7 +373,7 @@ void HtmlTranslateEscapes(char *z)
 
       } else if (((unsigned char) z[from]) >= 0x80 &&
                  ((unsigned char) z[from]) < 0xa0) {
-         z[to++] = acMsChar[z[from++] & 0x1f];
+         z[to++] = gAcMsChar[z[from++] & 0x1f];
       } else {
          z[to++] = z[from++];
       }
@@ -389,15 +388,15 @@ void HtmlTranslateEscapes(char *z)
 // The following variable becomes TRUE when the markup hash table
 // (stored in HtmlMarkupMap[]) is initialized.
 
-static int isInit = 0;
+static int gIsInit = 0;
 
 // The hash table for HTML markup names.
 //
-// If an HTML markup name hashes to H, then apMap[H] will point to
+// If an HTML markup name hashes to H, then gApMap[H] will point to
 // a linked list of sgMap structure, one of which will describe the
 // the particular markup (if it exists.)
 
-static SHtmlTokenMap *apMap[HTML_MARKUP_HASH_SIZE];
+static SHtmlTokenMap_t *gApMap[HTML_MARKUP_HASH_SIZE];
 
 // Hash a markup name
 //
@@ -440,11 +439,11 @@ static void HtmlHashStats() {
 
    for (i = 0; i < HTML_MARKUP_COUNT; i++) {
       cnt = 0;
-      p = apMap[i];
+      p = gApMap[i];
       if (p) notempty++;
       while (p) {
          cnt++;
-         p = p->pCollide;
+         p = p->fPCollide;
       }
       sum += cnt;
       if (cnt > max) max = cnt;
@@ -464,9 +463,9 @@ static void HtmlHashInit(void){
   int h;  // The hash on a markup name
 
   for (i = 0; i < HTML_MARKUP_COUNT; i++) {
-    h = HtmlHash(HtmlMarkupMap[i].zName);
-    HtmlMarkupMap[i].pCollide = apMap[h];
-    apMap[h] = &HtmlMarkupMap[i];
+    h = HtmlHash(HtmlMarkupMap[i].fZName);
+    HtmlMarkupMap[i].fPCollide = gApMap[h];
+    gApMap[h] = &HtmlMarkupMap[i];
   }
 #ifdef TEST
   HtmlHashStats();
@@ -478,15 +477,15 @@ void TGHtml::AppendElement(TGHtmlElement *pElem)
 {
    // Append the given TGHtmlElement to the tokenizers list of elements
 
-   pElem->pNext = 0;
-   pElem->pPrev = pLast;
-   if (pFirst == 0) {
-      pFirst = pElem;
+   pElem->fPNext = 0;
+   pElem->fPPrev = fPLast;
+   if (fPFirst == 0) {
+      fPFirst = pElem;
    } else {
-      pLast->pNext = pElem;
+      fPLast->fPNext = pElem;
    }
-   pLast = pElem;
-   nToken++;
+   fPLast = pElem;
+   fNToken++;
 }
 
 //______________________________________________________________________________
@@ -496,29 +495,29 @@ void TGHtml::AppToken(TGHtmlElement *pNew, TGHtmlElement *p, int offs)
 
    if (offs < 0) {
       if (p) {
-         offs = p->offs;
+         offs = p->fOffs;
       } else {
-         offs = nText;
+         offs = fNText;
       }
    }
 
-////if (p) { pNew->style = p->style; pNew->flags = p->flags; }
+////if (p) { pNew->fStyle = p->fStyle; pNew->fFlags = p->fFlags; }
 
-//  pNew->count = 0;
-   pNew->offs = offs;
-   pNew->pNext = p;
+//  pNew->fCount = 0;
+   pNew->fOffs = offs;
+   pNew->fPNext = p;
    if (p) {
-      pNew->id = p->id;
-      p->id = ++idind;
-      pNew->pPrev = p->pPrev;
-      if (p->pPrev) p->pPrev->pNext = pNew;
-      if (pFirst == p) pFirst = pNew;
-      p->pPrev = pNew;
+      pNew->fElId = p->fElId;
+      p->fElId = ++fIdind;
+      pNew->fPPrev = p->fPPrev;
+      if (p->fPPrev) p->fPPrev->fPNext = pNew;
+      if (fPFirst == p) fPFirst = pNew;
+      p->fPPrev = pNew;
    } else {
-      pNew->id = ++idind;
+      pNew->fElId = ++fIdind;
       AppendElement(pNew);
    }
-   nToken++;
+   fNToken++;
 }
 
 //______________________________________________________________________________
@@ -556,9 +555,9 @@ int TGHtml::Tokenize()
    // the HTML widget.
    //
    // This routine is not reentrant for the same HTML widget.  To
-   // prevent reentrancy (during a callback), the p->iCol field is
+   // prevent reentrancy (during a callback), the p->fICol field is
    // set to a negative number. This is a flag to future invocations
-   // not to reentry this routine. The p->iCol field is restored
+   // not to reentry this routine. The p->fICol field is restored
    // before exiting, of course.
 
    char *z;             // The input HTML text
@@ -570,7 +569,7 @@ int TGHtml::Tokenize()
    TGHtmlElement *pElem;// A new HTML element
    int selfClose;       // True for content free elements. Ex: <br/>
    int argc;            // The number of arguments on a markup
-   SHtmlTokenMap *pMap; // For searching the markup name hash table
+   SHtmlTokenMap_t *pMap; // For searching the markup name hash table
 # define mxARG 200      // Maximum number of parameters in a single markup
    char *argv[mxARG];   // Pointers to each markup argument.
    int arglen[mxARG];   // Length of each markup argument
@@ -583,11 +582,11 @@ int TGHtml::Tokenize()
    
    static char null[1] = { "" };
 
-   inpCol = iCol;
-   n = nComplete;
-   z = zText;
+   inpCol = fICol;
+   n = fNComplete;
+   z = fZText;
    if (inpCol < 0) return n;   // Prevents recursion
-   iCol = -1;
+   fICol = -1;
    pElem = 0;
 
    while ((c = z[n]) != 0) {
@@ -598,36 +597,36 @@ int TGHtml::Tokenize()
          continue;
       }
 
-      if (pScript) {
+      if (fPScript) {
 
          // We are in the middle of <SCRIPT>...</SCRIPT>.  Just look for
          // the </SCRIPT> markup.  (later:)  Treat <STYLE>...</STYLE> the
          // same way.
 
-         TGHtmlScript *pScr = pScript;
+         TGHtmlScript *pScr = fPScript;
          const char *zEnd;
          int nEnd;
          //int curline, curch, curlast = n;
          int sqcnt;
-         if (pScr->type == Html_SCRIPT) {
+         if (pScr->fType == Html_SCRIPT) {
             zEnd = "</script>";
             nEnd = 9;
-         } else if (pScr->type == Html_NOSCRIPT) {
+         } else if (pScr->fType == Html_NOSCRIPT) {
             zEnd = "</noscript>";
             nEnd = 11;
-         } else if (pScr->type == Html_NOFRAMES) {
+         } else if (pScr->fType == Html_NOFRAMES) {
             zEnd = "</noframes>";
             nEnd = 11;
          } else {
             zEnd = "</style>";
             nEnd = 8;
          }
-         if (pScr->nStart < 0) {
-            pScr->nStart = n;
-            pScr->nScript = 0;
+         if (pScr->fNStart < 0) {
+            pScr->fNStart = n;
+            pScr->fNScript = 0;
          }
          sqcnt = 0;
-         for (i = n /*pScr->nStart + pScr->nScript*/; z[i]; i++) {
+         for (i = n /*pScr->fNStart + pScr->fNScript*/; z[i]; i++) {
             if (z[i] == '\'' || z[i] == '"') {
                sqcnt++; // Skip if odd # quotes
             } else if (z[i] == '\n') {
@@ -636,15 +635,15 @@ int TGHtml::Tokenize()
             if (z[i] == '<' && z[i+1] == '/' &&
                strncasecmp(&z[i], zEnd, nEnd) == 0) {
                if (zEnd[3] == 'c' && ((sqcnt % 2) == 1)) continue;
-               pScr->nScript = i - n;
-               pScript = 0;
+               pScr->fNScript = i - n;
+               fPScript = 0;
                n = i + nEnd;
                break;
             }
          }
          if (z[i] == 0) goto incomplete;
-         if (pScript) {
-            pScr->nScript = i - n;
+         if (fPScript) {
+            pScr->fNScript = i - n;
             n = i;
          } else {
 #if 0
@@ -660,19 +659,19 @@ int TGHtml::Tokenize()
           // Inline scripts can contain unmatched brackets :-)
           //char varind[50];
           //sprintf(varind, "HtmlScrVar%d", p->varind++);
-          //char savech = zText[pScr->nStart + pScr->nScript];
-          //zText[pScr->nStart + pScr->nScript] = 0;
-          //char *scriptBody = StrDup(zText[pScr->nStart]);
-          //zText[pScr->nStart + pScr->nScript] = savech;
+          //char savech = fZText[pScr->fNStart + pScr->fNScript];
+          //fZText[pScr->fNStart + pScr->fNScript] = 0;
+          //char *scriptBody = StrDup(fZText[pScr->fNStart]);
+          //fZText[pScr->fNStart + pScr->fNScript] = savech;
           AdvanceLayout(p);
           inParse++;
           char *result = ProcessScript((TGHtmlScript *) pElem);  // pElem or pScr??
           inParse--;
           if (result) {
-            ol = nAlloc;
+            ol = fNAlloc;
             rl = strlen(result);
-            nAlloc += rl;
-            z = zText = HtmlRealloc(z, ol+rl);
+            fNAlloc += rl;
+            z = fZText = HtmlRealloc(z, ol+rl);
             memmove(z + n + rl, z+n, ol - n);
             memmove(z + n, result, rl);
           }
@@ -694,60 +693,60 @@ int TGHtml::Tokenize()
 #if 0  // this is certainly NOT OK, since it alters pre-formatted text
       if (sawdot == 1) {
         pElem = new TGHtmlTextElement(2);
-        strcpy(((TGHtmlTextElement *)pElem)->zText, " ");
-        pElem->id = ++idind;
-        pElem->offs = n;
-        pElem->count = 1;
+        strcpy(((TGHtmlTextElement *)pElem)->fZText, " ");
+        pElem->fElId = ++fIdind;
+        pElem->fOffs = n;
+        pElem->fCount = 1;
         AppendElement(pElem);
       }
 #endif
       pElem = new TGHtmlSpaceElement;
       if (pElem == 0) goto incomplete;
-      ((TGHtmlSpaceElement *)pElem)->w = 0;
-      pElem->offs = n;
-      pElem->id = ++idind;
+      ((TGHtmlSpaceElement *)pElem)->fW = 0;
+      pElem->fOffs = n;
+      pElem->fElId = ++fIdind;
       if (c == '\n' || c == '\r') {
-         pElem->flags = HTML_NewLine;
-         pElem->count = 1;
+         pElem->fFlags = HTML_NewLine;
+         pElem->fCount = 1;
          i++;
          inpCol = 0;
       } else {
          int iColStart = inpCol;
-         pElem->flags = 0;
+         pElem->fFlags = 0;
          for (j = 0; j < i; j++) {
             inpCol = NextColumn(inpCol, z[n+j]);
          }
-         pElem->count = inpCol - iColStart;
+         pElem->fCount = inpCol - iColStart;
       }
       AppendElement(pElem);
       n += i;
 
-      } else if (c != '<' || iPlaintext != 0 ||
+      } else if (c != '<' || fIPlaintext != 0 ||
          (!isalpha(z[n+1]) && z[n+1] != '/' && z[n+1] != '!' && z[n+1] != '?')) {
 
       // Ordinary text
       for (i = 1; (c = z[n+i]) != 0 && !isspace((unsigned char)c) && c != '<'; i++) {}
       if (z[n+i-1] == '.' || z[n+i-1] == '!' || z[n+i-1] == '?') sawdot = 2;
       if (c == 0) goto incomplete;
-      if (iPlaintext != 0 && z[n] == '<') {
-         switch (iPlaintext) {
+      if (fIPlaintext != 0 && z[n] == '<') {
+         switch (fIPlaintext) {
             case Html_LISTING:
                if (i >= 10 && strncasecmp(&z[n], "</listing>", 10) == 0) {
-                  iPlaintext = 0;
+                  fIPlaintext = 0;
                   goto doMarkup;
                }
                break;
 
             case Html_XMP:
                if (i >= 6 && strncasecmp(&z[n], "</xmp>", 6) == 0) {
-                  iPlaintext = 0;
+                  fIPlaintext = 0;
                   goto doMarkup;
                }
                break;
 
             case Html_TEXTAREA:
                if (i >= 11 && strncasecmp(&z[n], "</textarea>", 11) == 0) {
-                  iPlaintext = 0;
+                  fIPlaintext = 0;
                   goto doMarkup;
                }
                break;
@@ -759,15 +758,15 @@ int TGHtml::Tokenize()
       pElem = new TGHtmlTextElement(i);
       if (pElem == 0) goto incomplete;
       TGHtmlTextElement *tpElem = (TGHtmlTextElement *) pElem;
-      tpElem->id = ++idind;
-      tpElem->offs = n;
-      strncpy(tpElem->zText, &z[n], i);
-      tpElem->zText[i] = 0;
+      tpElem->fElId = ++fIdind;
+      tpElem->fOffs = n;
+      strncpy(tpElem->fZText, &z[n], i);
+      tpElem->fZText[i] = 0;
       AppendElement(pElem);
-      if (iPlaintext == 0 || iPlaintext == Html_TEXTAREA) {
-         HtmlTranslateEscapes(tpElem->zText);
+      if (fIPlaintext == 0 || fIPlaintext == Html_TEXTAREA) {
+         HtmlTranslateEscapes(tpElem->fZText);
       }
-      pElem->count = strlen(tpElem->zText);
+      pElem->fCount = strlen(tpElem->fZText);
       n += i;
       inpCol += i;
 
@@ -782,12 +781,12 @@ int TGHtml::Tokenize()
       pElem = new TGHtmlTextElement(i);
       if (pElem == 0) goto incomplete;
       TGHtmlTextElement *tpElem = (TGHtmlTextElement *) pElem;
-      tpElem->type = Html_COMMENT;
-      tpElem->id = ++idind;
-      tpElem->offs = n;
-      strncpy(tpElem->zText, &z[n+4], i-4);
-      tpElem->zText[i-4] = 0;
-      tpElem->count = 0;
+      tpElem->fType = Html_COMMENT;
+      tpElem->fElId = ++fIdind;
+      tpElem->fOffs = n;
+      strncpy(tpElem->fZText, &z[n+4], i-4);
+      tpElem->fZText[i-4] = 0;
+      tpElem->fCount = 0;
       AppendElement(pElem);
 
       pElem = new TGHtmlElement(Html_EndCOMMENT);
@@ -876,15 +875,15 @@ doMarkup:
 
       // Lookup the markup name in the hash table
 
-      if (!isInit) {
+      if (!gIsInit) {
          HtmlHashInit();
-         isInit = 1;
+         gIsInit = 1;
       }
       c = argv[0][arglen[0]];
       argv[0][arglen[0]] = 0;
       h = HtmlHash(argv[0]);
-      for (pMap = apMap[h]; pMap; pMap = pMap->pCollide) {
-        if (strcasecmp(pMap->zName, argv[0]) == 0) break;
+      for (pMap = gApMap[h]; pMap; pMap = pMap->fPCollide) {
+        if (strcasecmp(pMap->fZName, argv[0]) == 0) break;
       }
       argv[0][arglen[0]] = c;
       if (pMap == 0) continue;  // Ignore unknown markup
@@ -892,11 +891,11 @@ doMarkup:
 makeMarkupEntry:
       // Construct a TGHtmlMarkupElement object for this markup.
 
-      pElem = MakeMarkupEntry(pMap->objType, pMap->type, argc, arglen, argv);
+      pElem = MakeMarkupEntry(pMap->fObjType, pMap->fType, argc, arglen, argv);
       if (pElem == 0) goto incomplete;
 
-      pElem->id = ++idind;
-      pElem->offs = n;
+      pElem->fElId = ++fIdind;
+      pElem->fOffs = n;
 
       AddFormInfo(pElem);
 
@@ -904,13 +903,13 @@ makeMarkupEntry:
       // appending it to the list, check to see if there is a special
       // handler for this markup type.
 
-      if (ProcessToken(pElem, pMap->zName, pMap->type)) {
+      if (ProcessToken(pElem, pMap->fZName, pMap->fType)) {
         // delete pElem;
 
-        // Tricky, tricky. The user function might have caused the p->zText
+        // Tricky, tricky. The user function might have caused the p->fZText
         // pointer to change, so renew our copy of that pointer.
 
-        z = zText;
+        z = fZText;
         if (z == 0) {
           n = 0;
           inpCol = 0;
@@ -923,7 +922,7 @@ makeMarkupEntry:
       // list of all tokens.
 
       AppendElement(pElem);
-      switch (pMap->type) {
+      switch (pMap->fType) {
         case Html_TABLE:
           break;
 
@@ -931,24 +930,24 @@ makeMarkupEntry:
         case Html_LISTING:
         case Html_XMP:
         case Html_TEXTAREA:
-          iPlaintext = pMap->type;
+          fIPlaintext = pMap->fType;
           break;
 
         case Html_NOFRAMES:
-          if (!HasFrames) break;
+          if (!fHasFrames) break;
           pIsInNoFrames = 1;
         case Html_NOSCRIPT:
           break;
-          if (!HasScript) break;
+          if (!fHasScript) break;
           pIsInNoScript = 1;
         case Html_SCRIPT:
           pIsInScript = 1;
         case Html_STYLE:
-          pScript = (TGHtmlScript *) pElem;
+          fPScript = (TGHtmlScript *) pElem;
           break;
 
         case Html_LI:
-          if (!AddEndTags) break;
+          if (!fAddEndTags) break;
           if (inLi) {
             TGHtmlElement *e = new TGHtmlMarkupElement(Html_EndLI, 1, 0, 0);
             AppToken(e, pElem, n);
@@ -963,7 +962,7 @@ makeMarkupEntry:
 
         case Html_EndOL:
         case Html_EndUL:
-          if (!AddEndTags) break;
+          if (!fAddEndTags) break;
           if (inLi) {
             TGHtmlElement *e = new TGHtmlMarkupElement(Html_EndLI, 1, 0, 0);
             AppToken(e, pElem, n);
@@ -980,7 +979,7 @@ makeMarkupEntry:
       // synthesize a closing token.
 
       if (selfClose && argv[0][0] != '/' &&
-          strcmp(&pMap[1].zName[1], pMap->zName) == 0) {
+          strcmp(&pMap[1].fZName[1], pMap->fZName) == 0) {
         selfClose = 0;
         pMap++;
         argc = 1;
@@ -990,8 +989,8 @@ makeMarkupEntry:
   }
 
 incomplete:
-  iCol = inpCol;
-  ////pScript = 0;
+  fICol = inpCol;
+  ////fPScript = 0;
 
   return n;
 }
@@ -1070,26 +1069,26 @@ void TGHtml::TokenizerAppend(const char *text)
 
    int len = strlen(text);
 
-   if (nText == 0) {
-      nAlloc = len + 100;
-      zText = new char [nAlloc];
-   } else if (nText + len >= nAlloc) {
-      nAlloc += len + 100;
-      char *tmp = new char[nAlloc];
-      strcpy(tmp, zText);
-      delete[] zText;
-      zText = tmp;
+   if (fNText == 0) {
+      fNAlloc = len + 100;
+      fZText = new char [fNAlloc];
+   } else if (fNText + len >= fNAlloc) {
+      fNAlloc += len + 100;
+      char *tmp = new char[fNAlloc];
+      strcpy(tmp, fZText);
+      delete[] fZText;
+      fZText = tmp;
    }
 
-  if (zText == 0) {
-    nText = 0;
+  if (fZText == 0) {
+    fNText = 0;
     UNTESTED;
     return;
   }
 
-  strcpy(&zText[nText], text);
-  nText += len;
-  nComplete = Tokenize();
+  strcpy(&fZText[fNText], text);
+  fNText += len;
+  fNComplete = Tokenize();
 }
 
 //______________________________________________________________________________
@@ -1109,39 +1108,39 @@ TGHtmlElement *TGHtml::InsertToken(TGHtmlElement *pToken,
    //  pToken  - Insert before this. Append if pToken == 0
    //  zType   - Type of markup. Ex: "/a" or "table"
    //  zArgs   - List of arguments
-   //  offs    - Calculate offset, and insert changed text into zText!
+   //  offs    - Calculate offset, and insert changed text into fZText!
 
-   SHtmlTokenMap *pMap;     // For searching the markup name hash table
+   SHtmlTokenMap_t *pMap;     // For searching the markup name hash table
    int h;                   // The hash on zType
    TGHtmlElement *pElem;     // The new element
    //int nByte;               // How many bytes to allocate
    //int i;                   // Loop counter
 
-   if (!isInit) {
+   if (!gIsInit) {
       HtmlHashInit();
-      isInit = 1;
+      gIsInit = 1;
    }
 
    if (strcmp(zType, "Text") == 0) {
       pElem = new TGHtmlTextElement(zArgs ? strlen(zArgs) : 0);
       if (pElem == 0) return 0;
       if (zArgs) {
-         strcpy (((TGHtmlTextElement *)pElem)->zText, zArgs);
-         pElem->count = strlen(zArgs);
+         strcpy (((TGHtmlTextElement *)pElem)->fZText, zArgs);
+         pElem->fCount = strlen(zArgs);
       }
    } else if (!strcmp(zType, "Space")) {
       pElem = new TGHtmlSpaceElement();
       if (pElem == 0) return 0;
    } else {
       h = HtmlHash(zType);
-      for (pMap = apMap[h]; pMap; pMap = pMap->pCollide) {
-         if (strcasecmp(pMap->zName, zType) == 0) break;
+      for (pMap = gApMap[h]; pMap; pMap = pMap->fPCollide) {
+         if (strcasecmp(pMap->fZName, zType) == 0) break;
       }
       if (pMap == 0) return 0;
       if (zArgs == 0 || *zArgs == 0) {
          // Special case of no arguments. This is a lot easier...
          // well... now its the same thing!
-         pElem = MakeMarkupEntry(pMap->objType, pMap->type, 1, 0, 0);
+         pElem = MakeMarkupEntry(pMap->fObjType, pMap->fType, 1, 0, 0);
          if (pElem == 0) return 0;
       } else {
          // The general case. There are arguments that need to be parsed
@@ -1155,7 +1154,7 @@ TGHtmlElement *TGHtml::InsertToken(TGHtmlElement *pToken,
 
       // shall we insert a dummy argv[0]?
 
-      pElem = MakeMarkupEntry(pMap->objType, pMap->type, argc/*+1??*/, 0, argv);
+      pElem = MakeMarkupEntry(pMap->fObjType, pMap->fType, argc/*+1??*/, 0, argv);
       if (pElem == 0) return 1;
 
       while (--argc >= 0) if (argv[argc]) delete[] argv[argc];
@@ -1166,7 +1165,7 @@ TGHtmlElement *TGHtml::InsertToken(TGHtmlElement *pToken,
       }
    }
 
-   pElem->id = ++idind;
+   pElem->fElId = ++fIdind;
 
    AppToken(pElem, pToken, offs);
 
@@ -1193,18 +1192,18 @@ int TGHtml::TextInsertCmd(int /*argc*/, char ** /*argv*/)
     return 0;
   }
   if (p) {
-    ptyp = p->type;
+    ptyp = p->fType;
     if ((istxt = (ptyp == Html_Text))) {
-      l = p->count;
-      cp = ((TGHtmlTextElement *)p)->zText;
+      l = p->fCount;
+      cp = ((TGHtmlTextElement *)p)->fZText;
     }
   }
   if (argv[2][0] == 'b') {  // Break text token into two.
     if (!istxt) return 1;
     if (i == 0 || i == l) return 1;
-    pElem = InsertToken(p->pNext, "Text", cp + i, -1);
+    pElem = InsertToken(p->fPNext, "Text", cp + i, -1);
     cp[i] = 0;
-    p->count = i;
+    p->fCount = i;
     return 1;
   }
   c = argv[4][0];
@@ -1212,7 +1211,7 @@ int TGHtml::TextInsertCmd(int /*argc*/, char ** /*argv*/)
   if (c == '\b') {
     if ((!istxt) || (!l) || (!i)) {
       if (!p) return 1;
-      if (p->type == Html_BR)
+      if (p->fType == Html_BR)
         RemoveElements(p, p);
       return 1;
     }
@@ -1221,11 +1220,11 @@ int TGHtml::TextInsertCmd(int /*argc*/, char ** /*argv*/)
       return 1;
     }
     if (i == l)
-      cp[p->count] = 0;
+      cp[p->fCount] = 0;
     else
       memcpy(cp+i-1, cp+i, l-i+1);
 
-    cp[--p->count] = 0;
+    cp[--p->fCount] = 0;
     if (ins.i-- <= 0) ins.i = 0;
     ins.p = p;
     return 1;
@@ -1239,12 +1238,12 @@ int TGHtml::TextInsertCmd(int /*argc*/, char ** /*argv*/)
 
     TGHtmlTextElement *text = (TGHtmlTextElement *) p;
 
-    if (text->zText == (char*) ((&text->zText)+1)) {
+    if (text->fZText == (char*) ((&text->fZText)+1)) {
       cp = new char[n+1];
-      strcpy(cp, text->zText);
+      strcpy(cp, text->fZText);
     } else {
       cp = new char[n+1];
-      strcpy(cp, text->zText);
+      strcpy(cp, text->fZText);
     }
     cp2 = new char[alen+1];
     memcpy(cp2, argv[4], alen+1);
@@ -1253,13 +1252,13 @@ int TGHtml::TextInsertCmd(int /*argc*/, char ** /*argv*/)
     memmove(cp+alen+i, cp+i, l-i+1);
     for (j = 0; j < alen; j++) cp[i+j] = cp2[j];
     delete[] cp2;
-    delete[] text->zText;
-    text->zText = cp;
-    p->count = strlen(cp);
+    delete[] text->fZText;
+    text->fZText = cp;
+    p->fCount = strlen(cp);
     ins.p = p;
     ins.i = i+alen;
   } else {
-    p = InsertToken(p ? p->pNext : 0, "Text", argv[4], -1);
+    p = InsertToken(p ? p->fPNext : 0, "Text", argv[4], -1);
     AddStyle(p);
     i = 0;
     ins.p = p;
@@ -1274,20 +1273,20 @@ int TGHtml::TextInsertCmd(int /*argc*/, char ** /*argv*/)
 }
 
 //______________________________________________________________________________
-SHtmlTokenMap *TGHtml::NameToPmap(char *zType)
+SHtmlTokenMap_t *TGHtml::NameToPmap(char *zType)
 {
-   //
+   // Returns token map matching zType name.
 
-   SHtmlTokenMap *pMap;     // For searching the markup name hash table
+   SHtmlTokenMap_t *pMap;     // For searching the markup name hash table
    int h;                   // The hash on zType
 
-   if (!isInit) {
+   if (!gIsInit) {
       HtmlHashInit();
-      isInit = 1;
+      gIsInit = 1;
    }
    h = HtmlHash(zType);
-   for (pMap = apMap[h]; pMap; pMap = pMap->pCollide) {
-      if (strcasecmp(pMap->zName, zType) == 0) break;
+   for (pMap = gApMap[h]; pMap; pMap = pMap->fPCollide) {
+      if (strcasecmp(pMap->fZName, zType) == 0) break;
    }
 
    return pMap;
@@ -1298,8 +1297,8 @@ int TGHtml::NameToType(char *zType)
 {
    // Convert a markup name into a type integer
 
-   SHtmlTokenMap *pMap = NameToPmap(zType);
-   return pMap ? pMap->type : (int)Html_Unknown;
+   SHtmlTokenMap_t *pMap = NameToPmap(zType);
+   return pMap ? pMap->fType : (int)Html_Unknown;
 }
 
 //______________________________________________________________________________
@@ -1308,8 +1307,8 @@ const char *TGHtml::TypeToName(int type)
    // Convert a type into a symbolic name
 
    if (type >= Html_A && type <= Html_EndXMP) {
-      SHtmlTokenMap *pMap = apMap[type - Html_A];
-      return pMap->zName;
+      SHtmlTokenMap_t *pMap = gApMap[type - Html_A];
+      return pMap->fZName;
    } else {
       return "???";
    }
@@ -1329,13 +1328,13 @@ char *TGHtml::DumpToken(TGHtmlElement *p)
       sprintf(zBuf, "NULL");
       return zBuf;
    }
-   switch (p->type) {
+   switch (p->fType) {
       case Html_Text:
-         sprintf(zBuf, "text: \"%.*s\"", p->count, ((TGHtmlTextElement *)p)->zText);
+         sprintf(zBuf, "text: \"%.*s\"", p->fCount, ((TGHtmlTextElement *)p)->fZText);
          break;
 
       case Html_Space:
-         if (p->flags & HTML_NewLine) {
+         if (p->fFlags & HTML_NewLine) {
             sprintf(zBuf, "space: \"\\n\"");
          } else {
             sprintf(zBuf, "space: \" \"");
@@ -1344,10 +1343,10 @@ char *TGHtml::DumpToken(TGHtmlElement *p)
 
       case Html_Block: {
          TGHtmlBlock *block = (TGHtmlBlock *) p;
-         if (block->n > 0) {
-            int n = block->n;
+         if (block->fN > 0) {
+            int n = block->fN;
             if (n > 150) n = 150;
-               sprintf(zBuf, "<Block z=\"%.*s\">", n, block->z);
+               sprintf(zBuf, "<Block z=\"%.*s\">", n, block->fZ);
             } else {
                sprintf(zBuf, "<Block>");
             }
@@ -1355,17 +1354,17 @@ char *TGHtml::DumpToken(TGHtmlElement *p)
       }
 
       default:
-         if (p->type >= HtmlMarkupMap[0].type
-             && p->type <= HtmlMarkupMap[HTML_MARKUP_COUNT-1].type) {
-            zName = HtmlMarkupMap[p->type - HtmlMarkupMap[0].type].zName;
+         if (p->fType >= HtmlMarkupMap[0].fType
+             && p->fType <= HtmlMarkupMap[HTML_MARKUP_COUNT-1].fType) {
+            zName = HtmlMarkupMap[p->fType - HtmlMarkupMap[0].fType].fZName;
          } else {
             zName = "Unknown";
          }
-         sprintf(zBuf, "markup (%d) <%s", p->type, zName);
-         for (j = 1 ; j < p->count; j += 2) {
+         sprintf(zBuf, "markup (%d) <%s", p->fType, zName);
+         for (j = 1 ; j < p->fCount; j += 2) {
             sprintf(&zBuf[strlen(zBuf)], " %s=\"%s\"",
-                    ((TGHtmlMarkupElement *)p)->argv[j-1],
-                    ((TGHtmlMarkupElement *)p)->argv[j]);
+                    ((TGHtmlMarkupElement *)p)->fArgv[j-1],
+                    ((TGHtmlMarkupElement *)p)->fArgv[j]);
          }
          strcat(zBuf, ">");
          break;
@@ -1391,10 +1390,10 @@ void TGHtml::AppendArglist(TGString *str, TGHtmlMarkupElement *pElem)
 
    int i;
 
-   for (i = 0; i + 1 < pElem->count; i += 2) {
-      str->Append(pElem->argv[i]);
+   for (i = 0; i + 1 < pElem->fCount; i += 2) {
+      str->Append(pElem->fArgv[i]);
       str->Append("=");
-      str->Append(pElem->argv[i+1]);
+      str->Append(pElem->fArgv[i+1]);
       str->Append(" ");
    }
 }
@@ -1402,7 +1401,7 @@ void TGHtml::AppendArglist(TGString *str, TGHtmlMarkupElement *pElem)
 //______________________________________________________________________________
 char *TGHtml::GetTokenName(TGHtmlElement *p)
 {
-   //
+   // Returns token name of html element p.
 
    static char zBuf[200];
    //int j;
@@ -1413,7 +1412,7 @@ char *TGHtml::GetTokenName(TGHtmlElement *p)
       strcpy(zBuf, "NULL");
       return zBuf;
    }
-   switch (p->type) {
+   switch (p->fType) {
       case Html_Text:
       case Html_Space:
          break;
@@ -1422,9 +1421,9 @@ char *TGHtml::GetTokenName(TGHtmlElement *p)
          break;
 
       default:
-         if (p->type >= HtmlMarkupMap[0].type &&
-             p->type <= HtmlMarkupMap[HTML_MARKUP_COUNT-1].type) {
-            zName = HtmlMarkupMap[p->type - HtmlMarkupMap[0].type].zName;
+         if (p->fType >= HtmlMarkupMap[0].fType &&
+             p->fType <= HtmlMarkupMap[HTML_MARKUP_COUNT-1].fType) {
+            zName = HtmlMarkupMap[p->fType - HtmlMarkupMap[0].fType].fZName;
          } else {
             zName = "Unknown";
          }
@@ -1436,9 +1435,9 @@ char *TGHtml::GetTokenName(TGHtmlElement *p)
 }
 
 //______________________________________________________________________________
-SHtmlTokenMap* TGHtml::GetMarkupMap(int n)
+SHtmlTokenMap_t* TGHtml::GetMarkupMap(int n)
 {
-   //
+   // Returns token map at location n.
 
    return HtmlMarkupMap+n;
 }
@@ -1455,19 +1454,19 @@ TGString *TGHtml::ListTokens(TGHtmlElement *p, TGHtmlElement *pEnd)
 
    str = new TGString("");
    while (p && p != pEnd) {
-      switch (p->type) {
+      switch (p->fType) {
          case Html_Block:
             break;
 
          case Html_Text:
             str->Append("{ Text \"");
-            str->Append(((TGHtmlTextElement *)p)->zText);
+            str->Append(((TGHtmlTextElement *)p)->fZText);
             str->Append("\" } ");
             break;
 
          case Html_Space:
             sprintf(zLine, "Space %d %d ",
-                    p->count, (p->flags & HTML_NewLine) != 0);
+                    p->fCount, (p->fFlags & HTML_NewLine) != 0);
             str->Append(zLine);
             break;
 
@@ -1477,22 +1476,22 @@ TGString *TGHtml::ListTokens(TGHtmlElement *p, TGHtmlElement *pEnd)
 
          default:
             str->Append("{ Markup ");
-            if (p->type >= HtmlMarkupMap[0].type &&
-                p->type <= HtmlMarkupMap[HTML_MARKUP_COUNT-1].type) {
-               zName = HtmlMarkupMap[p->type - HtmlMarkupMap[0].type].zName;
+            if (p->fType >= HtmlMarkupMap[0].fType &&
+                p->fType <= HtmlMarkupMap[HTML_MARKUP_COUNT-1].fType) {
+               zName = HtmlMarkupMap[p->fType - HtmlMarkupMap[0].fType].fZName;
             } else {
                zName = "Unknown";
             }
             str->Append(zName);
             str->Append(" ");
-            for (i = 0; i < p->count; ++i) {
-               str->Append(((TGHtmlMarkupElement *)p)->argv[i]);
+            for (i = 0; i < p->fCount; ++i) {
+               str->Append(((TGHtmlMarkupElement *)p)->fArgv[i]);
                str->Append(" ");
             }
             str->Append("} ");
             break;
       }
-      p = p->pNext;
+      p = p->fPNext;
    }
 
    return str;
@@ -1505,22 +1504,22 @@ void TGHtml::PrintList(TGHtmlElement *first, TGHtmlElement *last)
 
    TGHtmlElement *p;
 
-   for (p = first; p != last; p = p->pNext) {
-      if (p->type == Html_Block) {
+   for (p = first; p != last; p = p->fPNext) {
+      if (p->fType == Html_Block) {
          TGHtmlBlock *block = (TGHtmlBlock *) p;
-         const char *z = block->z;
-         int n = block->n;
+         const char *z = block->fZ;
+         int n = block->fN;
          if (n == 0 || z == 0) {
             n = 1;
             z = "";
          }
          printf("Block flags=%02x cnt=%d x=%d..%d y=%d..%d z=\"%.*s\"\n",
-                 p->flags, p->count, block->left, block->right,
-         block->top, block->bottom, n, z);
+                p->fFlags, p->fCount, block->fLeft, block->fRight,
+                block->fTop, block->fBottom, n, z);
       } else {
          printf("Token font=%2d color=%2d align=%d flags=0x%04x name=%s\n",
-                p->style.font, p->style.color,
-                p->style.align, p->style.flags, DumpToken(p));
+                p->fStyle.fFont, p->fStyle.fColor,
+                p->fStyle.fAlign, p->fStyle.fFlags, DumpToken(p));
       }
    }
 }

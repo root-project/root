@@ -46,16 +46,16 @@
 ClassImp(TGHtmlBrowser)
 
 enum EMyMessageTypes {
-   M_FILE_OPEN,
-   M_FILE_SAVEAS,
-   M_FILE_BROWSE,
-   M_FILE_EXIT,
-   M_FAVORITES_ADD,
-   M_TOOLS_CLEARHIST,
-   M_HELP_ABOUT
+   kM_FILE_OPEN,
+   kM_FILE_SAVEAS,
+   kM_FILE_BROWSE,
+   kM_FILE_EXIT,
+   kM_FAVORITES_ADD,
+   kM_TOOLS_CLEARHIST,
+   kM_HELP_ABOUT
 };
 
-static const char *filetypes[] = {
+static const char *gHtmlFTypes[] = {
    "HTML files",    "*.html",
    "All files",     "*",
     0,               0
@@ -124,18 +124,18 @@ TGHtmlBrowser::TGHtmlBrowser(const char *filename, const TGWindow *p, UInt_t w, 
    fMenuBar = new TGMenuBar(this, 35, 50, kHorizontalFrame);
 
    fMenuFile = new TGPopupMenu(gClient->GetDefaultRoot());
-   fMenuFile->AddEntry(" &Open...            Ctrl+O", M_FILE_OPEN, 0,
+   fMenuFile->AddEntry(" &Open...            Ctrl+O", kM_FILE_OPEN, 0,
                        gClient->GetPicture("ed_open.png"));
-   fMenuFile->AddEntry(" Save &As...       Ctrl+A", M_FILE_SAVEAS, 0,
+   fMenuFile->AddEntry(" Save &As...       Ctrl+A", kM_FILE_SAVEAS, 0,
                        gClient->GetPicture("ed_save.png"));
-   fMenuFile->AddEntry(" &Browse...         Ctrl+B", M_FILE_BROWSE);
+   fMenuFile->AddEntry(" &Browse...         Ctrl+B", kM_FILE_BROWSE);
    fMenuFile->AddSeparator();
-   fMenuFile->AddEntry(" E&xit                   Ctrl+Q", M_FILE_EXIT, 0,
+   fMenuFile->AddEntry(" E&xit                   Ctrl+Q", kM_FILE_EXIT, 0,
                        gClient->GetPicture("bld_exit.png"));
    fMenuFile->Associate(this);
 
    fMenuFavorites = new TGPopupMenu(gClient->GetDefaultRoot());
-   fMenuFavorites->AddEntry("&Add to Favorites", M_FAVORITES_ADD, 0,
+   fMenuFavorites->AddEntry("&Add to Favorites", kM_FAVORITES_ADD, 0,
                             gClient->GetPicture("bld_plus.png"));
    fMenuFavorites->AddSeparator();
    fMenuFavorites->AddEntry("http://root.cern.ch", fNbFavorites++, 0,
@@ -143,12 +143,12 @@ TGHtmlBrowser::TGHtmlBrowser(const char *filename, const TGWindow *p, UInt_t w, 
    fMenuFavorites->Associate(this);
 
    fMenuTools = new TGPopupMenu(gClient->GetDefaultRoot());
-   fMenuTools->AddEntry("&Clear History", M_TOOLS_CLEARHIST, 0,
+   fMenuTools->AddEntry("&Clear History", kM_TOOLS_CLEARHIST, 0,
                         gClient->GetPicture("ed_delete.png"));
    fMenuTools->Associate(this);
 
    fMenuHelp = new TGPopupMenu(gClient->GetDefaultRoot());
-   fMenuHelp->AddEntry(" &About...", M_HELP_ABOUT, 0, gClient->GetPicture("about.xpm"));
+   fMenuHelp->AddEntry(" &About...", kM_HELP_ABOUT, 0, gClient->GetPicture("about.xpm"));
    fMenuHelp->Associate(this);
 
    fMenuBar->AddPopup("&File", fMenuFile, new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 4, 0, 0));
@@ -446,15 +446,15 @@ Bool_t TGHtmlBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 
                switch(parm1) {
 
-                  case M_FILE_EXIT:
+                  case kM_FILE_EXIT:
                      CloseWindow();
                      break;
 
-                  case M_FILE_OPEN:
+                  case kM_FILE_OPEN:
                      {
                         static TString dir(".");
                         TGFileInfo fi;
-                        fi.fFileTypes = filetypes;
+                        fi.fFileTypes = gHtmlFTypes;
                         fi.fIniDir    = StrDup(dir);
                         new TGFileDialog(fClient->GetRoot(), this,
                                          kFDOpen, &fi);
@@ -466,11 +466,11 @@ Bool_t TGHtmlBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      }
                      break;
 
-                  case M_FILE_SAVEAS:
+                  case kM_FILE_SAVEAS:
                      {
                         static TString sdir(".");
                         TGFileInfo fi;
-                        fi.fFileTypes = filetypes;
+                        fi.fFileTypes = gHtmlFTypes;
                         fi.fIniDir    = StrDup(sdir);
                         new TGFileDialog(fClient->GetRoot(), this,
                                          kFDSave, &fi);
@@ -482,21 +482,21 @@ Bool_t TGHtmlBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      }
                      break;
 
-                  case M_FAVORITES_ADD:
+                  case kM_FAVORITES_ADD:
                      fMenuFavorites->AddEntry(Form("%s",
                            fURL->GetText()), fNbFavorites++, 0,
                            gClient->GetPicture("htmlfile.gif"));
                      break;
 
-                  case M_TOOLS_CLEARHIST:
+                  case kM_TOOLS_CLEARHIST:
                      fComboBox->RemoveEntries(1,fComboBox->GetNumberOfEntries());
                      break;
 
-                  case M_FILE_BROWSE:
+                  case kM_FILE_BROWSE:
                      new TBrowser();
                      break;
 
-                  case M_HELP_ABOUT:
+                  case kM_HELP_ABOUT:
                      {
 #ifdef R__UNIX
                         TString rootx;

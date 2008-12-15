@@ -55,33 +55,33 @@ TGHtmlUri::TGHtmlUri(const char *zUri)
    
    int n;
 
-   zScheme = zAuthority = zPath = zQuery = zFragment = (char *) 0;
+   fZScheme = fZAuthority = fZPath = fZQuery = fZFragment = (char *) 0;
 
    if (zUri && *zUri) {
       while (isspace(*zUri)) ++zUri;
       n = ComponentLength(zUri, "", ":/?# ");
       if (n > 0 && zUri[n] == ':') {
-         zScheme = StrNDup(zUri, n);
+         fZScheme = StrNDup(zUri, n);
          zUri += n+1;
       }
       n = ComponentLength(zUri, "//", "/?# ");
       if (n > 0) {
-         zAuthority = StrNDup(&zUri[2], n-2);
+         fZAuthority = StrNDup(&zUri[2], n-2);
          zUri += n;
       }
       n = ComponentLength(zUri, "", "?# ");
       if (n > 0) {
-         zPath = StrNDup(zUri, n);
+         fZPath = StrNDup(zUri, n);
          zUri += n;
       }
       n = ComponentLength(zUri, "?", "# ");
       if (n > 0) {
-         zQuery = StrNDup(&zUri[1], n-1);
+         fZQuery = StrNDup(&zUri[1], n-1);
          zUri += n;
       }
       n = ComponentLength(zUri, "#", " ");
       if (n > 0) {
-         zFragment = StrNDup(&zUri[1], n-1);
+         fZFragment = StrNDup(&zUri[1], n-1);
       }
    }
 }
@@ -89,71 +89,74 @@ TGHtmlUri::TGHtmlUri(const char *zUri)
 //______________________________________________________________________________
 TGHtmlUri::TGHtmlUri(const TGHtmlUri *uri)
 {
+   // Html uri copy constructor.
 
-   zScheme = zAuthority = zPath = zQuery = zFragment = (char *) 0;
+   fZScheme = fZAuthority = fZPath = fZQuery = fZFragment = (char *) 0;
 
    if (uri) {
-      if (uri->zScheme)    zScheme    = StrDup(uri->zScheme);
-      if (uri->zAuthority) zAuthority = StrDup(uri->zAuthority);
-      if (uri->zPath)      zPath      = StrDup(uri->zPath);
-      if (uri->zQuery)     zQuery     = StrDup(uri->zQuery);
-      if (uri->zFragment)  zFragment  = StrDup(uri->zFragment);
+      if (uri->fZScheme)    fZScheme    = StrDup(uri->fZScheme);
+      if (uri->fZAuthority) fZAuthority = StrDup(uri->fZAuthority);
+      if (uri->fZPath)      fZPath      = StrDup(uri->fZPath);
+      if (uri->fZQuery)     fZQuery     = StrDup(uri->fZQuery);
+      if (uri->fZFragment)  fZFragment  = StrDup(uri->fZFragment);
    }
 }
 
 //______________________________________________________________________________
 TGHtmlUri::~TGHtmlUri()
 {
+   // Html uri destructor.
 
-   if (zScheme) delete[] zScheme;
-   if (zAuthority) delete[] zAuthority;
-   if (zPath) delete[] zPath;
-   if (zQuery) delete[] zQuery;
-   if (zFragment) delete[] zFragment;
+   if (fZScheme) delete[] fZScheme;
+   if (fZAuthority) delete[] fZAuthority;
+   if (fZPath) delete[] fZPath;
+   if (fZQuery) delete[] fZQuery;
+   if (fZFragment) delete[] fZFragment;
 }
 
 //______________________________________________________________________________
 int TGHtmlUri::EqualsUri(const TGHtmlUri *uri, int field_mask)
 {
+   // Compare another uri with given field mask.
 
    if (!uri) return 0;
 
    if (field_mask & URI_SCHEME_MASK) {
-      if (uri->zScheme && zScheme) {
-         if (strcmp(uri->zScheme, zScheme) != 0) return 0;
-      } else if (uri->zScheme != zScheme) {  // one of them null?
+      if (uri->fZScheme && fZScheme) {
+         if (strcmp(uri->fZScheme, fZScheme) != 0) return 0;
+      } else if (uri->fZScheme != fZScheme) {  // one of them null?
          return 0;
       }
    }
 
    if (field_mask & URI_AUTH_MASK) {
-      if (uri->zAuthority && zAuthority) {
-         if (strcmp(uri->zAuthority, zAuthority) != 0) return 0;
-      } else if (uri->zAuthority != zAuthority) {
+      if (uri->fZAuthority && fZAuthority) {
+         if (strcmp(uri->fZAuthority, fZAuthority) != 0) return 0;
+      } else if (uri->fZAuthority != fZAuthority) {
          return 0;
       }
    }
 
    if (field_mask & URI_PATH_MASK) {
-      if (uri->zPath && zPath) {
-         if (strcmp(uri->zPath, zPath) != 0) return 0;
-      } else if (uri->zPath != zPath) {
+      if (uri->fZPath && fZPath) {
+         if (strcmp(uri->fZPath, fZPath) != 0) return 0;
+      } else if (uri->fZPath != fZPath) {
          return 0;
       }
    }
 
    if (field_mask & URI_QUERY_MASK) {
-      if (uri->zQuery && zQuery) {
-         if (strcmp(uri->zQuery, zQuery) != 0) return 0;
-      } else if (uri->zQuery != zQuery) {
+      if (uri->fZQuery && fZQuery) {
+         if (strcmp(uri->fZQuery, fZQuery) != 0) return 0;
+      } else if (uri->fZQuery != fZQuery) {
          return 0;
       }
    }
 
    if (field_mask & URI_FRAGMENT_MASK) {
-      if (uri->zFragment && zFragment) {
-         if (strcmp(uri->zFragment, zFragment) != 0) return 0;
-      } else if (uri->zFragment != zFragment) {
+      if (uri->fZFragment && fZFragment) {
+         if (strcmp(uri->fZFragment, fZFragment) != 0) return 0;
+      } else if (uri->fZFragment != fZFragment) {
          return 0;
       }
    }
@@ -202,37 +205,37 @@ char *TGHtmlUri::BuildUri()
    int n = 1;
    char *z;
 
-   if (zScheme)    n += strlen(zScheme) + 1;
-   if (zAuthority) n += strlen(zAuthority) + 3;
-   if (zPath)      n += strlen(zPath) + 1;
-   if (zQuery)     n += strlen(zQuery) + 1;
-   if (zFragment)  n += strlen(zFragment) + 1;
+   if (fZScheme)    n += strlen(fZScheme) + 1;
+   if (fZAuthority) n += strlen(fZAuthority) + 3;
+   if (fZPath)      n += strlen(fZPath) + 1;
+   if (fZQuery)     n += strlen(fZQuery) + 1;
+   if (fZFragment)  n += strlen(fZFragment) + 1;
    z = new char[n];
    if (z == 0) return 0;
    n = 0;
-   if (zScheme) {
-      sprintf(z, "%s:", zScheme);
+   if (fZScheme) {
+      sprintf(z, "%s:", fZScheme);
       n = strlen(z);
    }
-   if (zAuthority) {
-      sprintf(&z[n], "//%s", zAuthority);
+   if (fZAuthority) {
+      sprintf(&z[n], "//%s", fZAuthority);
       n += strlen(&z[n]);
    }
-   if (zAuthority && zAuthority[strlen(zAuthority)-1] != '/' &&
-      !(zPath && zPath[0] == '/')) {
+   if (fZAuthority && fZAuthority[strlen(fZAuthority)-1] != '/' &&
+      !(fZPath && fZPath[0] == '/')) {
       strcat(z, "/");
       ++n;
    }
-   if (zPath) {
-      sprintf(&z[n], "%s", zPath);
+   if (fZPath) {
+      sprintf(&z[n], "%s", fZPath);
       n += strlen(&z[n]);
    }
-   if (zQuery) {
-      sprintf(&z[n], "?%s", zQuery);
+   if (fZQuery) {
+      sprintf(&z[n], "?%s", fZQuery);
       n += strlen(&z[n]);
    }
-   if (zFragment) {
-      sprintf(&z[n], "#%s", zFragment);
+   if (fZFragment) {
+      sprintf(&z[n], "#%s", fZFragment);
    } else {
       z[n] = 0;
    }
@@ -244,8 +247,8 @@ char *TGHtmlUri::BuildUri()
 //______________________________________________________________________________
 static char *StrNDup(const char *z, int n) 
 {
-
    // Duplicate a string of length n.
+
    char *zResult;
 
    if (n <= 0) n = strlen(z);
@@ -301,44 +304,44 @@ char *TGHtml::ResolveUri(const char *zUri)
 
    if (zUri == 0 || *zUri == 0) return 0;
 
-   if (zBaseHref && *zBaseHref) {
-      base = new TGHtmlUri(zBaseHref);
+   if (fZBaseHref && *fZBaseHref) {
+      base = new TGHtmlUri(fZBaseHref);
    } else {
-      base = new TGHtmlUri(zBase);
+      base = new TGHtmlUri(fZBase);
    }
 
    term = new TGHtmlUri(zUri);
 
-   if (term->zScheme == 0 &&
-       term->zAuthority == 0 &&
-       term->zPath == 0 &&
-       term->zQuery == 0 &&
-       term->zFragment) {
-      ReplaceStr(&base->zFragment, term->zFragment);
-   } else if (term->zScheme) {
+   if (term->fZScheme == 0 &&
+       term->fZAuthority == 0 &&
+       term->fZPath == 0 &&
+       term->fZQuery == 0 &&
+       term->fZFragment) {
+      ReplaceStr(&base->fZFragment, term->fZFragment);
+   } else if (term->fZScheme) {
       TGHtmlUri *temp;
       temp = term;
       term = base;
       base = temp;
-   } else if (term->zAuthority) {
-      ReplaceStr(&base->zAuthority, term->zAuthority);
-      ReplaceStr(&base->zPath, term->zPath);
-      ReplaceStr(&base->zQuery, term->zQuery);
-      ReplaceStr(&base->zFragment, term->zFragment);
-   } else if (term->zPath && (term->zPath[0] == '/' || base->zPath == 0)) {
-      ReplaceStr(&base->zPath, term->zPath);
-      ReplaceStr(&base->zQuery, term->zQuery);
-      ReplaceStr(&base->zFragment, term->zFragment);
-   } else if (term->zPath && base->zPath) {
+   } else if (term->fZAuthority) {
+      ReplaceStr(&base->fZAuthority, term->fZAuthority);
+      ReplaceStr(&base->fZPath, term->fZPath);
+      ReplaceStr(&base->fZQuery, term->fZQuery);
+      ReplaceStr(&base->fZFragment, term->fZFragment);
+   } else if (term->fZPath && (term->fZPath[0] == '/' || base->fZPath == 0)) {
+      ReplaceStr(&base->fZPath, term->fZPath);
+      ReplaceStr(&base->fZQuery, term->fZQuery);
+      ReplaceStr(&base->fZFragment, term->fZFragment);
+   } else if (term->fZPath && base->fZPath) {
       char *zBuf;
       int i, j;
-      zBuf = new char[strlen(base->zPath) + strlen(term->zPath) + 2];
+      zBuf = new char[strlen(base->fZPath) + strlen(term->fZPath) + 2];
       if (zBuf) {
-         sprintf(zBuf, "%s", base->zPath);
+         sprintf(zBuf, "%s", base->fZPath);
          for (i = strlen(zBuf) - 1; i >= 0 && zBuf[i] != '/'; --i) {
             zBuf[i] = 0;
          }
-         strcat(zBuf, term->zPath);
+         strcat(zBuf, term->fZPath);
          for (i = 0; zBuf[i]; i++) {
             if (zBuf[i] == '/' && zBuf[i+1] == '.' && zBuf[i+2] == '/') {
                strcpy(&zBuf[i+1], &zBuf[i+3]);
@@ -362,11 +365,11 @@ char *TGHtml::ResolveUri(const char *zUri)
                continue;
             }
          }
-         delete[] base->zPath;
-         base->zPath = zBuf;
+         delete[] base->fZPath;
+         base->fZPath = zBuf;
       }
-      ReplaceStr(&base->zQuery, term->zQuery);
-      ReplaceStr(&base->zFragment, term->zFragment);
+      ReplaceStr(&base->fZQuery, term->fZQuery);
+      ReplaceStr(&base->fZFragment, term->fZFragment);
    }
    delete term;
   

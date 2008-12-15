@@ -139,22 +139,22 @@ extern int HtmlDepth;
 // to unpack the data is not normally an issue since we expect the speed of
 // the memory bus to be the limiting factor.
 
-typedef unsigned char  Html_u8;      // 8-bit unsigned integer
-typedef short          Html_16;      // 16-bit signed integer
-typedef unsigned short Html_u16;     // 16-bit unsigned integer
-typedef int            Html_32;      // 32-bit signed integer
+typedef unsigned char  Html_u8_t;      // 8-bit unsigned integer
+typedef short          Html_16_t;      // 16-bit signed integer
+typedef unsigned short Html_u16_t;     // 16-bit unsigned integer
+typedef int            Html_32_t;      // 32-bit signed integer
 
 // An instance of the following structure is used to record style
 // information on each Html element.
 
-struct SHtmlStyle {
-  unsigned int font    : 6;      // Font to use for display
-  unsigned int color   : 6;      // Foreground color
-  signed int subscript : 4;      // Positive for <sup>, negative for <sub>
-  unsigned int align   : 2;      // Horizontal alignment
-  unsigned int bgcolor : 6;      // Background color
-  unsigned int expbg   : 1;      // Set to 1 if bgcolor explicitely set
-  unsigned int flags   : 7;      // the STY_ flags below
+struct SHtmlStyle_t {
+  unsigned int fFont      : 6;      // Font to use for display
+  unsigned int fColor     : 6;      // Foreground color
+  signed int   fSubscript : 4;      // Positive for <sup>, negative for <sub>
+  unsigned int fAlign     : 2;      // Horizontal alignment
+  unsigned int fBgcolor   : 6;      // Background color
+  unsigned int fExpbg     : 1;      // Set to 1 if bgcolor explicitely set
+  unsigned int fFlags     : 7;      // the STY_ flags below
 };
 
 
@@ -183,9 +183,9 @@ struct SHtmlStyle {
 
 // Macros for manipulating the fontValid bitmap of an TGHtml object.
 
-#define FontIsValid(I)     ((fontValid[(I)>>3] & (1<<((I)&3)))!=0)
-#define FontSetValid(I)    (fontValid[(I)>>3] |= (1<<((I)&3)))
-#define FontClearValid(I)  (fontValid[(I)>>3] &= ~(1<<((I)&3)))
+#define FontIsValid(I)     ((fFontValid[(I)>>3] &   (1<<((I)&3)))!=0)
+#define FontSetValid(I)     (fFontValid[(I)>>3] |=  (1<<((I)&3)))
+#define FontClearValid(I)   (fFontValid[(I)>>3] &= ~(1<<((I)&3)))
 
 
 // Information about available colors.
@@ -195,7 +195,7 @@ struct SHtmlStyle {
 // (Ex: <font color=red>)
 //
 // All colors are stored in the apColor[] array of the main widget object.
-// The ".color" field of the SHtmlStyle is an integer between 0 and
+// The ".color" field of the SHtmlStyle_t is an integer between 0 and
 // N_COLOR-1 which indicates which of these colors to use.
 
 #define N_COLOR             32      // Total number of colors
@@ -218,7 +218,7 @@ struct SHtmlStyle {
 #define ALIGN_None   0
 
 
-// Possible value of the "flags" field of SHtmlStyle are shown below.
+// Possible value of the "flags" field of SHtmlStyle_t are shown below.
 //
 //  STY_Preformatted       If set, the current text occurred within
 //                         <pre>..</pre>
@@ -231,10 +231,10 @@ struct SHtmlStyle {
 //
 //  STY_Anchor             This text occurs within <a href=X>..</a>.
 //
-//  STY_DT                 This text occurs within <dt>..</dt>.                
+//  STY_DT                 This text occurs within <dt>..</dt>.
 //
 //  STY_Invisible          This text should not appear in the main HTML
-//                         window. (For example, it might be within 
+//                         window. (For example, it might be within
 //                         <title>..</title> or <marquee>..</marquee>.)
 
 #define STY_Preformatted    0x001
@@ -255,24 +255,24 @@ struct SHtmlStyle {
 
 class TGHtmlElement : public TObject {
 public:
-  TGHtmlElement(int etype = 0);
+   TGHtmlElement(int etype = 0);
 
-  virtual int  IsMarkup() const { return (type > Html_Block); }
-  virtual const char *MarkupArg(const char * /*tag*/, const char * /*zDefault*/) { return 0; }
-  virtual int  GetAlignment(int dflt) { return dflt; }
-  virtual int  GetOrderedListType(int dflt) { return dflt; }
-  virtual int  GetUnorderedListType(int dflt) { return dflt; }
-  virtual int  GetVerticalAlignment(int dflt) { return dflt; }
+   virtual int  IsMarkup() const { return (fType > Html_Block); }
+   virtual const char *MarkupArg(const char * /*tag*/, const char * /*zDefault*/) { return 0; }
+   virtual int  GetAlignment(int dflt) { return dflt; }
+   virtual int  GetOrderedListType(int dflt) { return dflt; }
+   virtual int  GetUnorderedListType(int dflt) { return dflt; }
+   virtual int  GetVerticalAlignment(int dflt) { return dflt; }
 
 public:
-  TGHtmlElement *pNext;        // Next input token in a list of them all
-  TGHtmlElement *pPrev;        // Previous token in a list of them all
-  SHtmlStyle style;           // The rendering style for this token
-  Html_u8 type;               // The token type.
-  Html_u8 flags;              // The HTML_ flags below
-  Html_16 count;              // Various uses, depending on "type"
-  int id;                     // Unique identifier
-  int offs;                   // Offset within zText
+   TGHtmlElement *fPNext;        // Next input token in a list of them all
+   TGHtmlElement *fPPrev;        // Previous token in a list of them all
+   SHtmlStyle_t   fStyle;        // The rendering style for this token
+   Html_u8_t      fType;         // The token type.
+   Html_u8_t      fFlags;        // The HTML_ flags below
+   Html_16_t      fCount;        // Various uses, depending on "type"
+   int            fElId;         // Unique identifier
+   int            fOffs;         // Offset within zText
 };
 
 
@@ -291,16 +291,16 @@ public:
 
 class TGHtmlTextElement : public TGHtmlElement {
 public:
-  TGHtmlTextElement(int size);
-  virtual ~TGHtmlTextElement();
+   TGHtmlTextElement(int size);
+   virtual ~TGHtmlTextElement();
 
-  Html_32 y;                  // y coordinate where text should be rendered
-  Html_16 x;                  // x coordinate where text should be rendered
-  Html_16 w;                  // width of this token in pixels
-  Html_u8 ascent;             // height above the baseline
-  Html_u8 descent;            // depth below the baseline
-  Html_u8 spaceWidth;         // Width of one space in the current font
-  char *zText;                // Text for this element. Null terminated
+   Html_32_t    fY;                // y coordinate where text should be rendered
+   Html_16_t    fX;                // x coordinate where text should be rendered
+   Html_16_t    fW;                // width of this token in pixels
+   Html_u8_t    fAscent;           // height above the baseline
+   Html_u8_t    fDescent;          // depth below the baseline
+   Html_u8_t    fSpaceWidth;       // Width of one space in the current font
+   char        *fZText;            // Text for this element. Null terminated
 };
 
 
@@ -308,11 +308,11 @@ public:
 
 class TGHtmlSpaceElement : public TGHtmlElement {
 public:
-  TGHtmlSpaceElement() : TGHtmlElement(Html_Space) {}
+   TGHtmlSpaceElement() : TGHtmlElement(Html_Space) {}
 
-  Html_16 w;                  // Width of a single space in current font
-  Html_u8 ascent;             // height above the baseline
-  Html_u8 descent;            // depth below the baseline
+   Html_16_t fW;                  // Width of a single space in current font
+   Html_u8_t fAscent;             // height above the baseline
+   Html_u8_t fDescent;            // depth below the baseline
 };
 
 
@@ -325,17 +325,17 @@ public:
 
 class TGHtmlMarkupElement : public TGHtmlElement {
 public:
-  TGHtmlMarkupElement(int type, int argc, int arglen[], char *argv[]);
-  virtual ~TGHtmlMarkupElement();
+   TGHtmlMarkupElement(int type, int argc, int arglen[], char *argv[]);
+   virtual ~TGHtmlMarkupElement();
 
-  virtual const char *MarkupArg(const char *tag, const char *zDefault);
-  virtual int  GetAlignment(int dflt);
-  virtual int  GetOrderedListType(int dflt);
-  virtual int  GetUnorderedListType(int dflt);
-  virtual int  GetVerticalAlignment(int dflt);
+   virtual const char *MarkupArg(const char *tag, const char *zDefault);
+   virtual int  GetAlignment(int dflt);
+   virtual int  GetOrderedListType(int dflt);
+   virtual int  GetUnorderedListType(int dflt);
+   virtual int  GetVerticalAlignment(int dflt);
 
 public://protected:
-  char **argv;
+   char **fArgv;
 };
 
 
@@ -348,33 +348,33 @@ public://protected:
 // This class is used for each <table> element.
 //
 // In the minW[] and maxW[] arrays, the [0] element is the overall
-// minimum and maximum width, including cell padding, spacing and 
-// the "hspace". All other elements are the minimum and maximum 
+// minimum and maximum width, including cell padding, spacing and
+// the "hspace". All other elements are the minimum and maximum
 // width for the contents of individual cells without any spacing or
 // padding.
 
 class TGHtmlTable : public TGHtmlMarkupElement {
 public:
-  TGHtmlTable(int type, int argc, int arglen[], char *argv[]);
-  ~TGHtmlTable();
+   TGHtmlTable(int type, int argc, int arglen[], char *argv[]);
+   ~TGHtmlTable();
 
 public:
-  Html_u8 borderWidth;           // Width of the border
-  Html_u8 nCol;                  // Number of columns
-  Html_u16 nRow;                 // Number of rows
-  Html_32 y;                     // top edge of table border
-  Html_32 h;                     // height of the table border
-  Html_16 x;                     // left edge of table border
-  Html_16 w;                     // width of the table border
-  int minW[HTML_MAX_COLUMNS+1];  // minimum width of each column
-  int maxW[HTML_MAX_COLUMNS+1];  // maximum width of each column
-  TGHtmlElement *pEnd;            // Pointer to the end tag element
-  TImage *bgImage;               // A background for the entire table
-  int hasbg;                     // 1 if a table above has bgImage
+   Html_u8_t      fBorderWidth;              // Width of the border
+   Html_u8_t      fNCol;                     // Number of columns
+   Html_u16_t     fNRow;                     // Number of rows
+   Html_32_t      fY;                        // top edge of table border
+   Html_32_t      fH;                        // height of the table border
+   Html_16_t      fX;                        // left edge of table border
+   Html_16_t      fW;                        // width of the table border
+   int            fMinW[HTML_MAX_COLUMNS+1]; // minimum width of each column
+   int            fMaxW[HTML_MAX_COLUMNS+1]; // maximum width of each column
+   TGHtmlElement *fPEnd;                     // Pointer to the end tag element
+   TImage        *fBgImage;                  // A background for the entire table
+   int            fHasbg;                    // 1 if a table above has bgImage
 };
 
 
-// Each <td> or <th> markup is represented by an instance of the 
+// Each <td> or <th> markup is represented by an instance of the
 // following class.
 //
 // Drawing for a cell is a sunken 3D border with the border width given
@@ -382,20 +382,20 @@ public:
 
 class TGHtmlCell : public TGHtmlMarkupElement {
 public:
-  TGHtmlCell(int type, int argc, int arglen[], char *argv[]);
-  ~TGHtmlCell();
+   TGHtmlCell(int type, int argc, int arglen[], char *argv[]);
+   ~TGHtmlCell();
 
 public:
-  Html_16 rowspan;          // Number of rows spanned by this cell
-  Html_16 colspan;          // Number of columns spanned by this cell
-  Html_16 x;                // X coordinate of left edge of border
-  Html_16 w;                // Width of the border
-  Html_32 y;                // Y coordinate of top of border indentation
-  Html_32 h;                // Height of the border
-  TGHtmlTable *pTable;       // Pointer back to the <table>
-  TGHtmlElement *pRow;       // Pointer back to the <tr>
-  TGHtmlElement *pEnd;       // Element that ends this cell
-  TImage *bgImage;          // Background for the cell
+   Html_16_t      fRowspan;      // Number of rows spanned by this cell
+   Html_16_t      fColspan;      // Number of columns spanned by this cell
+   Html_16_t      fX;            // X coordinate of left edge of border
+   Html_16_t      fW;            // Width of the border
+   Html_32_t      fY;            // Y coordinate of top of border indentation
+   Html_32_t      fH;            // Height of the border
+   TGHtmlTable   *fPTable;       // Pointer back to the <table>
+   TGHtmlElement *fPRow;         // Pointer back to the <tr>
+   TGHtmlElement *fPEnd;         // Element that ends this cell
+   TImage        *fBgImage;      // Background for the cell
 };
 
 
@@ -406,12 +406,12 @@ public:
 
 class TGHtmlRef : public TGHtmlMarkupElement {
 public:
-  TGHtmlRef(int type, int argc, int arglen[], char *argv[]);
-  ~TGHtmlRef();
+   TGHtmlRef(int type, int argc, int arglen[], char *argv[]);
+   ~TGHtmlRef();
 
 public:
-  TGHtmlElement *pOther;         // Pointer to some other Html element
-  TImage *bgImage;              // A background for the entire row
+   TGHtmlElement *fPOther;      // Pointer to some other Html element
+   TImage        *fBgImage;     // A background for the entire row
 };
 
 
@@ -420,19 +420,19 @@ public:
 
 class TGHtmlLi : public TGHtmlMarkupElement {
 public:
-  TGHtmlLi(int type, int argc, int arglen[], char *argv[]);
+   TGHtmlLi(int type, int argc, int arglen[], char *argv[]);
 
 public:
-  Html_u8 ltype;    // What type of list is this?
-  Html_u8 ascent;   // height above the baseline
-  Html_u8 descent;  // depth below the baseline
-  Html_16 cnt;      // Value for this element (if inside <OL>)
-  Html_16 x;        // X coordinate of the bullet
-  Html_32 y;        // Y coordinate of the bullet
+   Html_u8_t fLtype;    // What type of list is this?
+   Html_u8_t fAscent;   // height above the baseline
+   Html_u8_t fDescent;  // depth below the baseline
+   Html_16_t fCnt;      // Value for this element (if inside <OL>)
+   Html_16_t fX;        // X coordinate of the bullet
+   Html_32_t fY;        // Y coordinate of the bullet
 };
 
 
-// The ltype field of an TGHtmlLi or TGHtmlListStart object can take on 
+// The ltype field of an TGHtmlLi or TGHtmlListStart object can take on
 // any of the following values to indicate what type of bullet to draw.
 // The value in TGHtmlLi will take precedence over the value in
 // TGHtmlListStart if the two values differ.
@@ -452,14 +452,14 @@ public:
 
 class TGHtmlListStart : public TGHtmlMarkupElement {
 public:
-  TGHtmlListStart(int type, int argc, int arglen[], char *argv[]);
+   TGHtmlListStart(int type, int argc, int arglen[], char *argv[]);
 
 public:
-  Html_u8 ltype;           // One of the LI_TYPE_ defines above
-  Html_u8 compact;         // True if the COMPACT flag is present
-  Html_u16 cnt;            // Next value for <OL>
-  Html_u16 width;          // How much space to allow for indentation
-  TGHtmlListStart *lPrev;   // Next higher level list, or NULL
+   Html_u8_t         fLtype;     // One of the LI_TYPE_ defines above
+   Html_u8_t         fCompact;   // True if the COMPACT flag is present
+   Html_u16_t        fCnt;       // Next value for <OL>
+   Html_u16_t        fWidth;     // How much space to allow for indentation
+   TGHtmlListStart  *fLPrev;     // Next higher level list, or NULL
 };
 
 
@@ -469,24 +469,24 @@ public:
 
 class TGHtmlMapArea : public TGHtmlMarkupElement {
 public:
-  TGHtmlMapArea(int type, int argc, int arglen[], char *argv[]);
-  
+   TGHtmlMapArea(int type, int argc, int arglen[], char *argv[]);
+
 public:
-  int mType;
-  int *coords;
-  int num;
-};  
+   int    fMType;
+   int   *fCoords;
+   int    fNum;
+};
 
 
 //----------------------------------------------------------------------
 
 // Structure to chain extension data onto.
 
-struct SHtmlExtensions {
-  void *exts;
-  int typ;
-  int flags;
-  SHtmlExtensions *next;
+struct SHtmlExtensions_t {
+   void              *fExts;
+   int                fTyp;
+   int                fFlags;
+   SHtmlExtensions_t *fNext;
 };
 
 
@@ -508,21 +508,21 @@ class TGHtmlImageMarkup;
 
 class TGHtmlImage : public TObject {
 public:
-  TGHtmlImage(TGHtml *htm, const char *url, const char *width,
-             const char *height);
-  virtual ~TGHtmlImage();
+   TGHtmlImage(TGHtml *htm, const char *url, const char *width,
+               const char *height);
+   virtual ~TGHtmlImage();
 
 public:
-  TGHtml *_html;           // The owner of this image
-  TImage *image;           // The image token
-  Html_32 w;               // Requested width of this image (0 if none)
-  Html_32 h;               // Requested height of this image (0 if none)
-  char *zUrl;              // The URL for this image.
-  char *zWidth, *zHeight;  // Width and height in the <img> markup.
-  TGHtmlImage *pNext;       // Next image on the list
-  TGHtmlImageMarkup *pList; // List of all <IMG> markups that use this 
-                           // same image
-  TTimer *timer;           // for animations
+   TGHtml            *fHtml;              // The owner of this image
+   TImage            *fImage;             // The image token
+   Html_32_t          fW;                 // Requested width of this image (0 if none)
+   Html_32_t          fH;                 // Requested height of this image (0 if none)
+   char              *fZUrl;              // The URL for this image.
+   char              *fZWidth, *fZHeight; // Width and height in the <img> markup.
+   TGHtmlImage       *fPNext;             // Next image on the list
+   TGHtmlImageMarkup *fPList;             // List of all <IMG> markups that use this
+                                          // same image
+   TTimer            *fTimer;             // for animations
 };
 
 // Each <img> markup is represented by an instance of the following
@@ -532,24 +532,24 @@ public:
 
 class TGHtmlImageMarkup : public TGHtmlMarkupElement {
 public:
-  TGHtmlImageMarkup(int type, int argc, int arglen[], char *argv[]);
+   TGHtmlImageMarkup(int type, int argc, int arglen[], char *argv[]);
 
 public:
-  Html_u8 align;            // Alignment. See IMAGE_ALIGN_ defines below
-  Html_u8 textAscent;       // Ascent of text font in force at the <IMG>
-  Html_u8 textDescent;      // Descent of text font in force at the <IMG>
-  Html_u8 redrawNeeded;     // Need to redraw this image because the image
-                            // content changed.
-  Html_16 h;                // Actual height of the image
-  Html_16 w;                // Actual width of the image
-  Html_16 ascent;           // How far image extends above "y"
-  Html_16 descent;          // How far image extends below "y"
-  Html_16 x;                // X coordinate of left edge of the image
-  Html_32 y;                // Y coordinate of image baseline
-  const char *zAlt;         // Alternative text
-  TGHtmlImage *pImage;      // Corresponding TGHtmlImage object
-  TGHtmlElement *pMap;      // usemap
-  TGHtmlImageMarkup *iNext; // Next markup using the same TGHtmlImage object
+   Html_u8_t          fAlign;          // Alignment. See IMAGE_ALIGN_ defines below
+   Html_u8_t          fTextAscent;     // Ascent of text font in force at the <IMG>
+   Html_u8_t          fTextDescent;    // Descent of text font in force at the <IMG>
+   Html_u8_t          fRedrawNeeded;   // Need to redraw this image because the image
+                                       // content changed.
+   Html_16_t          fH;              // Actual height of the image
+   Html_16_t          fW;              // Actual width of the image
+   Html_16_t          fAscent;         // How far image extends above "y"
+   Html_16_t          fDescent;        // How far image extends below "y"
+   Html_16_t          fX;              // X coordinate of left edge of the image
+   Html_32_t          fY;              // Y coordinate of image baseline
+   const char        *fZAlt;           // Alternative text
+   TGHtmlImage       *fPImage;         // Corresponding TGHtmlImage object
+   TGHtmlElement     *fPMap;           // usemap
+   TGHtmlImageMarkup *fINext;          // Next markup using the same TGHtmlImage object
 };
 
 
@@ -579,28 +579,28 @@ class TGHtmlForm;
 
 class TGHtmlInput : public TGHtmlMarkupElement {
 public:
-  TGHtmlInput(int type, int argc, int arglen[], char *argv[]);
+   TGHtmlInput(int type, int argc, int arglen[], char *argv[]);
 
-  void Empty();
+   void Empty();
 
 public:
-  TGHtmlForm *pForm;        // The <FORM> to which this belongs
-  TGHtmlInput *iNext;       // Next element in a list of all input elements
-  TGFrame *frame;          // The xclass window that implements this control
-  TGHtml *html;            // The HTML widget this control is attached to
-  TGHtmlElement *pEnd;      // End tag for <TEXTAREA>, etc.
-  Html_u16 inpId;          // Unique id for this element
-  Html_u16 subId;          // For radio - an id, for select - option count
-  Html_32  y;              // Baseline for this input element
-  Html_u16 x;              // Left edge
-  Html_u16 w, h;           // Width and height of this control
-  Html_u8 padLeft;         // Extra padding on left side of the control
-  Html_u8 align;           // One of the IMAGE_ALIGN_xxx types
-  Html_u8 textAscent;      // Ascent for the current font
-  Html_u8 textDescent;     // descent for the current font
-  Html_u8 itype;           // What type of input is this?
-  Html_u8 sized;           // True if this input has been sized already
-  Html_u16 cnt;            // Used to derive widget name. 0 if no widget
+   TGHtmlForm     *fPForm;       // The <FORM> to which this belongs
+   TGHtmlInput    *fINext;       // Next element in a list of all input elements
+   TGFrame        *fFrame;       // The xclass window that implements this control
+   TGHtml         *fHtml;        // The HTML widget this control is attached to
+   TGHtmlElement  *fPEnd;        // End tag for <TEXTAREA>, etc.
+   Html_u16_t      fInpId;       // Unique id for this element
+   Html_u16_t      fSubId;       // For radio - an id, for select - option count
+   Html_32_t       fY;           // Baseline for this input element
+   Html_u16_t      fX;           // Left edge
+   Html_u16_t      fW, fH;       // Width and height of this control
+   Html_u8_t       fPadLeft;     // Extra padding on left side of the control
+   Html_u8_t       fAlign;       // One of the IMAGE_ALIGN_xxx types
+   Html_u8_t       fTextAscent;  // Ascent for the current font
+   Html_u8_t       fTextDescent; // descent for the current font
+   Html_u8_t       fItype;       // What type of input is this?
+   Html_u8_t       fSized;       // True if this input has been sized already
+   Html_u16_t      fCnt;         // Used to derive widget name. 0 if no widget
 };
 
 
@@ -631,14 +631,14 @@ public:
 
 class TGHtmlForm : public TGHtmlMarkupElement {
 public:
-  TGHtmlForm(int type, int argc, int arglen[], char *argv[]);
+   TGHtmlForm(int type, int argc, int arglen[], char *argv[]);
 
 public:
-  Html_u16 formId;         // Unique number assigned to this form
-  unsigned int elements;   // Number of elements
-  unsigned int hasctl;     // Has controls
-  TGHtmlElement *pFirst;    // First form element
-  TGHtmlElement *pEnd;      // Pointer to end tag element
+   Html_u16_t     fFormId;    // Unique number assigned to this form
+   unsigned int   fElements;  // Number of elements
+   unsigned int   fHasctl;    // Has controls
+   TGHtmlElement *fPFirst;    // First form element
+   TGHtmlElement *fPEnd;      // Pointer to end tag element
 };
 
 
@@ -646,13 +646,13 @@ public:
 
 class TGHtmlHr : public TGHtmlMarkupElement {
 public:
-  TGHtmlHr(int type, int argc, int arglen[], char *argv[]);
+   TGHtmlHr(int type, int argc, int arglen[], char *argv[]);
 
 public:
-  Html_32  y;              // Baseline for this input element
-  Html_u16 x;              // Left edge
-  Html_u16 w, h;           // Width and height of this control
-  Html_u8 is3D;            // Is it drawn 3D?
+   Html_32_t   fY;      // Baseline for this input element
+   Html_u16_t  fX;      // Left edge
+   Html_u16_t  fW, fH;  // Width and height of this control
+   Html_u8_t   fIs3D;   // Is it drawn 3D?
 };
 
 
@@ -660,10 +660,10 @@ public:
 
 class TGHtmlAnchor : public TGHtmlMarkupElement {
 public:
-  TGHtmlAnchor(int type, int argc, int arglen[], char *argv[]);
+   TGHtmlAnchor(int type, int argc, int arglen[], char *argv[]);
 
 public:
-  Html_32  y;              // Top edge for this element
+   Html_32_t  fY;   // Top edge for this element
 };
 
 
@@ -676,12 +676,12 @@ public:
 
 class TGHtmlScript : public TGHtmlMarkupElement {
 public:
-  TGHtmlScript(int type, int argc, int arglen[], char *argv[]);
+   TGHtmlScript(int type, int argc, int arglen[], char *argv[]);
 
 public:
-  int nStart;              // Start of the script (index into TGHtml::zText)
-  int nScript;             // Number of characters of text in zText holding
-                           // the complete text of this script
+   int   fNStart;    // Start of the script (index into TGHtml::zText)
+   int   fNScript;   // Number of characters of text in zText holding
+                     // the complete text of this script
 };
 
 
@@ -700,23 +700,23 @@ public:
 // speeds things up in the common case.
 //
 // Much of the information needed for display is held in the original
-// TGHtmlElement objects. "pNext" points to the first object in the list
+// TGHtmlElement objects. "fPNext" points to the first object in the list
 // which can be used to find the "style" "x" and "y".
 //
-// If n is zero, then "pNext" might point to a special TGHtmlElement
+// If n is zero, then "fPNext" might point to a special TGHtmlElement
 // that defines some other kind of drawing, like <LI> or <IMG> or <INPUT>.
 
 class TGHtmlBlock : public TGHtmlElement {
 public:
-  TGHtmlBlock();
-  virtual ~TGHtmlBlock();
+   TGHtmlBlock();
+   virtual ~TGHtmlBlock();
 
 public:
-  char *z;                    // Space to hold text when n > 0
-  int top, bottom;            // Extremes of y coordinates
-  Html_u16 left, right;       // Left and right boundry of this object
-  Html_u16 n;                 // Number of characters in z[]
-  TGHtmlBlock *bPrev, *bNext;  // Linked list of all Blocks
+   char        *fZ;                 // Space to hold text when n > 0
+   int          fTop, fBottom;      // Extremes of y coordinates
+   Html_u16_t   fLeft, fRight;      // Left and right boundry of this object
+   Html_u16_t   fN;                 // Number of characters in z[]
+   TGHtmlBlock *fBPrev, *fBNext;    // Linked list of all Blocks
 };
 
 
@@ -728,21 +728,21 @@ public:
 // the list of elements. After all elements have been assigned a style,
 // the information in this stack is no longer used.
 
-struct SHtmlStyleStack {
-  SHtmlStyleStack *pNext;  // Next style on the stack
-  int type;                // A markup that ends this style. Ex: Html_EndEM
-  SHtmlStyle style;        // The currently active style.
+struct SHtmlStyleStack_t {
+   SHtmlStyleStack_t *fPNext;   // Next style on the stack
+   int                fType;    // A markup that ends this style. Ex: Html_EndEM
+   SHtmlStyle_t       fStyle;   // The currently active style.
 };
 
 
 // A stack of the following structures is used to remember the
 // left and right margins within a layout context.
 
-struct SHtmlMargin {
-  int indent;              // Size of the current margin
-  int bottom;              // Y value at which this margin expires
-  int tag;                 // Markup that will cancel this margin
-  SHtmlMargin *pNext;      // Previous margin
+struct SHtmlMargin_t {
+   int            fIndent;    // Size of the current margin
+   int            fBottom;    // Y value at which this margin expires
+   int            fTag;       // Markup that will cancel this margin
+   SHtmlMargin_t *fPNext;     // Previous margin
 };
 
 
@@ -758,50 +758,50 @@ struct SHtmlMargin {
 
 class TGHtmlLayoutContext : public TObject {
 public:
-  TGHtmlLayoutContext();
+   TGHtmlLayoutContext();
 
-  void LayoutBlock();
-  void Reset();
-  
-  void PopIndent();
-  void PushIndent();
-  
+   void LayoutBlock();
+   void Reset();
+
+   void PopIndent();
+   void PushIndent();
+
 protected:
-  void PushMargin(SHtmlMargin **ppMargin, int indent, int bottom, int tag);
-  void PopOneMargin(SHtmlMargin **ppMargin);
-  void PopMargin(SHtmlMargin **ppMargin, int tag);
-  void PopExpiredMargins(SHtmlMargin **ppMarginStack, int y);
-  void ClearMarginStack(SHtmlMargin **ppMargin);
-  
-  TGHtmlElement *GetLine(TGHtmlElement *pStart, TGHtmlElement *pEnd,
-                        int width, int minX, int *actualWidth);
+   void PushMargin(SHtmlMargin_t **ppMargin, int indent, int bottom, int tag);
+   void PopOneMargin(SHtmlMargin_t **ppMargin);
+   void PopMargin(SHtmlMargin_t **ppMargin, int tag);
+   void PopExpiredMargins(SHtmlMargin_t **ppMarginStack, int y);
+   void ClearMarginStack(SHtmlMargin_t **ppMargin);
 
-  void FixAnchors(TGHtmlElement *p, TGHtmlElement *pEnd, int y);
-  int  FixLine(TGHtmlElement *pStart, TGHtmlElement *pEnd,
-               int bottom, int width, int actualWidth, int leftMargin,
-               int *maxX);
-  void Paragraph(TGHtmlElement *p);
-  void ComputeMargins(int *pX, int *pY, int *pW);
-  void ClearObstacle(int mode);
-  TGHtmlElement *DoBreakMarkup(TGHtmlElement *p);
-  int  InWrapAround();
-  void WidenLine(int reqWidth, int *pX, int *pY, int *pW);
-  
-  TGHtmlElement *TableLayout(TGHtmlTable *p);
+   TGHtmlElement *GetLine(TGHtmlElement *pStart, TGHtmlElement *pEnd,
+                          int width, int minX, int *actualWidth);
+
+   void FixAnchors(TGHtmlElement *p, TGHtmlElement *pEnd, int y);
+   int  FixLine(TGHtmlElement *pStart, TGHtmlElement *pEnd,
+                int bottom, int width, int actualWidth, int leftMargin,
+                int *maxX);
+   void Paragraph(TGHtmlElement *p);
+   void ComputeMargins(int *pX, int *pY, int *pW);
+   void ClearObstacle(int mode);
+   TGHtmlElement *DoBreakMarkup(TGHtmlElement *p);
+   int  InWrapAround();
+   void WidenLine(int reqWidth, int *pX, int *pY, int *pW);
+
+   TGHtmlElement *TableLayout(TGHtmlTable *p);
 
 public:
-  TGHtml *html;                // The html widget undergoing layout
-  TGHtmlElement *pStart;        // Start of elements to layout
-  TGHtmlElement *pEnd;          // Stop when reaching this element
-  int headRoom;                // Extra space wanted above this line
-  int top;                     // Absolute top of drawing area
-  int bottom;                  // Bottom of previous line
-  int left, right;             // Left and right extremes of drawing area
-  int pageWidth;               // Width of the layout field, including
-                               // the margins
-  int maxX, maxY;              // Maximum X and Y values of paint
-  SHtmlMargin *leftMargin;     // Stack of left margins
-  SHtmlMargin *rightMargin;    // Stack of right margins
+   TGHtml           *fHtml;            // The html widget undergoing layout
+   TGHtmlElement    *fPStart;          // Start of elements to layout
+   TGHtmlElement    *fPEnd;            // Stop when reaching this element
+   int               fHeadRoom;        // Extra space wanted above this line
+   int               fTop;             // Absolute top of drawing area
+   int               fBottom;          // Bottom of previous line
+   int               fLeft, fRight;    // Left and right extremes of drawing area
+   int               fPageWidth;       // Width of the layout field, including
+                                       // the margins
+   int               fMaxX, fMaxY;     // Maximum X and Y values of paint
+   SHtmlMargin_t    *fLeftMargin;      // Stack of left margins
+   SHtmlMargin_t    *fRightMargin;     // Stack of right margins
 };
 
 
@@ -815,30 +815,31 @@ public:
 // main widget object.
 
 #define N_CACHE_GC 32
-struct GcCache {
-  GContext_t gc;                // The graphics context
-  Html_u8 font;         // Font used for this context
-  Html_u8 color;        // Color used for this context
-  Html_u8 index;        // Index used for LRU replacement
+
+struct GcCache_t {
+   GContext_t  fGc;        // The graphics context
+   Html_u8_t   fFont;      // Font used for this context
+   Html_u8_t   fColor;     // Color used for this context
+   Html_u8_t   fIndex;     // Index used for LRU replacement
 };
 
 
-// An SHtmlIndex is a reference to a particular character within a
-// particular Text or Space token. 
+// An SHtmlIndex_t is a reference to a particular character within a
+// particular Text or Space token.
 
-struct SHtmlIndex {
-  TGHtmlElement *p;      // The token containing the character
-  int i;                // Index of the character
+struct SHtmlIndex_t {
+   TGHtmlElement *fP;     // The token containing the character
+   int            fI;     // Index of the character
 };
 
 
 // Used by the tokenizer
 
-struct SHtmlTokenMap {
-  const char *zName;          // Name of a markup
-  Html_16 type;               // Markup type code
-  Html_16 objType;            // Which kind of TGHtml... object to alocate
-  SHtmlTokenMap *pCollide;    // Hash table collision chain
+struct SHtmlTokenMap_t {
+   const char       *fZName;        // Name of a markup
+   Html_16_t         fType;         // Markup type code
+   Html_16_t         fObjType;      // Which kind of TGHtml... object to alocate
+   SHtmlTokenMap_t  *fPCollide;     // Hash table collision chain
 };
 
 
@@ -862,427 +863,427 @@ struct SHtmlTokenMap {
 
 //----------------------------------------------------------------------
 
-// The HTML widget. A derivate of OXView.
+// The HTML widget. A derivate of TGView.
 
 class TGListBox;
 class THashTable;
 
 class TGHtml : public TGView {
 public:
-  TGHtml(const TGWindow *p, int w, int h, int id = -1);
-  virtual ~TGHtml();
-  
-  virtual Bool_t HandleFocusChange(Event_t *event);
-  virtual Bool_t HandleButton(Event_t *event);
-  virtual Bool_t HandleMotion(Event_t *event);
+   TGHtml(const TGWindow *p, int w, int h, int id = -1);
+   virtual ~TGHtml();
 
-  virtual Bool_t HandleIdleEvent(TGIdleHandler *i);
-  virtual Bool_t HandleTimer(TTimer *timer);
-  
-  virtual Bool_t ProcessMessage(Long_t, Long_t, Long_t);
+   virtual Bool_t HandleFocusChange(Event_t *event);
+   virtual Bool_t HandleButton(Event_t *event);
+   virtual Bool_t HandleMotion(Event_t *event);
 
-  virtual void   DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h);
-  virtual Bool_t ItemLayout();
+   virtual Bool_t HandleIdleEvent(TGIdleHandler *i);
+   virtual Bool_t HandleTimer(TTimer *timer);
 
-  Bool_t         HandleHtmlInput(TGHtmlInput *pr, Event_t *event);
-  Bool_t         HandleRadioButton(TGHtmlInput *p);
+   virtual Bool_t ProcessMessage(Long_t, Long_t, Long_t);
+
+   virtual void   DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h);
+   virtual Bool_t ItemLayout();
+
+   Bool_t         HandleHtmlInput(TGHtmlInput *pr, Event_t *event);
+   Bool_t         HandleRadioButton(TGHtmlInput *p);
 
 public:   // user commands
 
-  int  ParseText(char *text, const char *index = 0);
-  
-  void SetTableRelief(int relief);
-  int  GetTableRelief() const { return tableRelief; }
+   int  ParseText(char *text, const char *index = 0);
 
-  void SetRuleRelief(int relief);
-  int  GetRuleRelief() const { return ruleRelief; }
-  int  GetRulePadding() const { return rulePadding; }
-  
-  void UnderlineLinks(int onoff);
-  
-  void SetBaseUri(const char *uri);
-  const char *GetBaseUri() const { return zBase; }
-  
-  int GotoAnchor(const char *name);
+   void SetTableRelief(int relief);
+   int  GetTableRelief() const { return fTableRelief; }
+
+   void SetRuleRelief(int relief);
+   int  GetRuleRelief() const { return fRuleRelief; }
+   int  GetRulePadding() const { return fRulePadding; }
+
+   void UnderlineLinks(int onoff);
+
+   void SetBaseUri(const char *uri);
+   const char *GetBaseUri() const { return fZBase; }
+
+   int GotoAnchor(const char *name);
 
 public:   // reloadable methods
 
-  // called when the widget is cleared
-  virtual void Clear(Option_t * = "");
+   // called when the widget is cleared
+   virtual void Clear(Option_t * = "");
 
-  // User function to resolve URIs
-  virtual char *ResolveUri(const char *uri);
+   // User function to resolve URIs
+   virtual char *ResolveUri(const char *uri);
 
-  // User function to get an image from a URL
-  virtual TImage *LoadImage(const char *uri, int w = 0, int h = 0) ;//
-//    { return 0; }
+   // User function to get an image from a URL
+   virtual TImage *LoadImage(const char *uri, int w = 0, int h = 0) ;//
+   //    { return 0; }
 
-  // User function to tell if a hyperlink has already been visited
-  virtual int IsVisited(const char * /*url*/)
-    { return kFALSE; }
+   // User function to tell if a hyperlink has already been visited
+   virtual int IsVisited(const char * /*url*/)
+      { return kFALSE; }
 
-  // User function to to process tokens of the given type
-  virtual int ProcessToken(TGHtmlElement * /*pElem*/, const char * /*name*/, int /*type*/)
-    { return kFALSE; }
+   // User function to to process tokens of the given type
+   virtual int ProcessToken(TGHtmlElement * /*pElem*/, const char * /*name*/, int /*type*/)
+      { return kFALSE; }
 
-  virtual TGFont *GetFont(int iFont);
+   virtual TGFont *GetFont(int iFont);
 
-  // The HTML parser will invoke the following methods from time
-  // to time to find out information it needs to complete formatting of
-  // the document.
+   // The HTML parser will invoke the following methods from time
+   // to time to find out information it needs to complete formatting of
+   // the document.
 
-  // Method for handling <frameset> markup
-  virtual int ProcessFrame()
-    { return kFALSE; }
+   // Method for handling <frameset> markup
+   virtual int ProcessFrame()
+      { return kFALSE; }
 
-  // Method to process applets
-  virtual TGFrame *ProcessApplet(TGHtmlInput * /*input*/)
-    { return 0; }
+   // Method to process applets
+   virtual TGFrame *ProcessApplet(TGHtmlInput * /*input*/)
+      { return 0; }
 
-  // Called when parsing forms
-  virtual int FormCreate(TGHtmlForm * /*form*/, const char * /*zUrl*/, const char * /*args*/)
-    { return kFALSE; }
+   // Called when parsing forms
+   virtual int FormCreate(TGHtmlForm * /*form*/, const char * /*zUrl*/, const char * /*args*/)
+      { return kFALSE; }
 
-  // Called when user presses Submit
-  virtual int FormAction(TGHtmlForm * /*form*/, int /*id*/)
-    {  return kFALSE; }
+   // Called when user presses Submit
+   virtual int FormAction(TGHtmlForm * /*form*/, int /*id*/)
+      { return kFALSE; }
 
-  // Invoked to find font names
-  virtual char *GetFontName()
-    { return 0; }
+   // Invoked to find font names
+   virtual char *GetFontName()
+      { return 0; }
 
-  // Invoked for each <SCRIPT> markup
-  virtual char *ProcessScript(TGHtmlScript * /*script*/)
-    { return 0; }
+   // Invoked for each <SCRIPT> markup
+   virtual char *ProcessScript(TGHtmlScript * /*script*/)
+      { return 0; }
 
 public:
-  const char *GetText() const { return zText; }
+   const char *GetText() const { return fZText; }
 
-  int GetMarginWidth() { return margins.fL + margins.fR; }
-  int GetMarginHeight() { return margins.fT + margins.fB; }
+   int GetMarginWidth() { return fMargins.fL + fMargins.fR; }
+   int GetMarginHeight() { return fMargins.fT + fMargins.fB; }
 
-  TGHtmlInput *GetInputElement(int x, int y);
-  const char *GetHref(int x, int y, const char **target = 0);
-  
-  TGHtmlImage *GetImage(TGHtmlImageMarkup *p);
-  
-  int  InArea(TGHtmlMapArea *p, int left, int top, int x, int y);
-  TGHtmlElement *GetMap(const char *name);
+   TGHtmlInput *GetInputElement(int x, int y);
+   const char *GetHref(int x, int y, const char **target = 0);
 
-  void ResetBlocks() { firstBlock = lastBlock = 0; }
-  int  ElementCoords(TGHtmlElement *p, int i, int pct, int *coords);
+   TGHtmlImage *GetImage(TGHtmlImageMarkup *p);
 
-  TGHtmlElement *TableDimensions(TGHtmlTable *pStart, int lineWidth);
-  int  CellSpacing(TGHtmlElement *pTable);
-  void MoveVertically(TGHtmlElement *p, TGHtmlElement *pLast, int dy);
+   int  InArea(TGHtmlMapArea *p, int left, int top, int x, int y);
+   TGHtmlElement *GetMap(const char *name);
 
-  void PrintList(TGHtmlElement *first, TGHtmlElement *last);
+   void ResetBlocks() { fFirstBlock = fLastBlock = 0; }
+   int  ElementCoords(TGHtmlElement *p, int i, int pct, int *coords);
 
-  char *GetTokenName(TGHtmlElement *p);
-  char *DumpToken(TGHtmlElement *p);
+   TGHtmlElement *TableDimensions(TGHtmlTable *pStart, int lineWidth);
+   int  CellSpacing(TGHtmlElement *pTable);
+   void MoveVertically(TGHtmlElement *p, TGHtmlElement *pLast, int dy);
 
-  void EncodeText(TGString *str, const char *z);
+   void PrintList(TGHtmlElement *first, TGHtmlElement *last);
+
+   char *GetTokenName(TGHtmlElement *p);
+   char *DumpToken(TGHtmlElement *p);
+
+   void EncodeText(TGString *str, const char *z);
 
 protected:
-  void _Clear();
-  void ClearGcCache();
-  void ResetLayoutContext();
-  void Redraw();
-  void ComputeVirtualSize();
-  
-  void ScheduleRedraw();
-  
-  void RedrawArea(int left, int top, int right, int bottom);
-  void RedrawBlock(TGHtmlBlock *p);
-  void RedrawEverything();
-  void RedrawText(int y);
-  
-  float colorDistance(ColorStruct_t *pA, ColorStruct_t *pB);
-  int isDarkColor(ColorStruct_t *p);
-  int isLightColor(ColorStruct_t *p);
-  int GetColorByName(const char *zColor);
-  int GetDarkShadowColor(int iBgColor);
-  int GetLightShadowColor(int iBgColor);
-  int GetColorByValue(ColorStruct_t *pRef);
-  
-  void FlashCursor();
-  
-  GContext_t GetGC(int color, int font);
-  GContext_t GetAnyGC();
-  
-  void AnimateImage(TGHtmlImage *image);
-  void ImageChanged(TGHtmlImage *image, int newWidth, int newHeight);
-  int  GetImageAlignment(TGHtmlElement *p);
-  int  GetImageAt(int x, int y);
-  const char *GetPctWidth(TGHtmlElement *p, char *opt, char *ret);
-  void TableBgndImage(TGHtmlElement *p);
-  
-  TGHtmlElement *FillOutBlock(TGHtmlBlock *p);
-  void UnlinkAndFreeBlock(TGHtmlBlock *pBlock);
-  void AppendBlock(TGHtmlElement *pToken, TGHtmlBlock *pBlock);
+   void HClear();
+   void ClearGcCache();
+   void ResetLayoutContext();
+   void Redraw();
+   void ComputeVirtualSize();
 
-  void StringHW(const char *str, int *h, int *w);
-  TGHtmlElement *MinMax(TGHtmlElement *p, int *pMin, int *pMax,
-                       int lineWidth, int hasbg);
+   void ScheduleRedraw();
 
-  void DrawSelectionBackground(TGHtmlBlock *pBlock, Drawable_t Drawable_t,  
-                               int x, int y);
-  void DrawRect(Drawable_t drawable, TGHtmlElement *src,
-                int x, int y, int w, int h, int depth, int relief);
-  void BlockDraw(TGHtmlBlock *pBlock, Drawable_t wid,
-                 int left, int top,
-                 int width, int height, Pixmap_t pixmap);
-  void DrawImage(TGHtmlImageMarkup *image, Drawable_t wid,
-                 int left, int top,
-                 int right, int bottom);
-  void DrawTableBgnd(int x, int y, int w, int h, Drawable_t d, TImage *image);
-                          
-  TGHtmlElement *FindStartOfNextBlock(TGHtmlElement *p, int *pCnt);
-  void FormBlocks();
-  
-  void AppendElement(TGHtmlElement *pElem);
-  int  Tokenize();
-  void AppToken(TGHtmlElement *pNew, TGHtmlElement *p, int offs);
-  TGHtmlMarkupElement *MakeMarkupEntry(int objType, int type, int argc,
-                                      int arglen[], char *argv[]);
-  void TokenizerAppend(const char *text);
-  TGHtmlElement *InsertToken(TGHtmlElement *pToken,
-                            char *zType, char *zArgs, int offs);
-  SHtmlTokenMap *NameToPmap(char *zType);
-  int  NameToType(char *zType);
-  const char *TypeToName(int type);
-  int  TextInsertCmd(int argc, char **argv);
-  SHtmlTokenMap* GetMarkupMap(int n);
-  
-  TGHtmlElement *TokenByIndex(int N, int flag);
-  int  TokenNumber(TGHtmlElement *p);
+   void RedrawArea(int left, int top, int right, int bottom);
+   void RedrawBlock(TGHtmlBlock *p);
+   void RedrawEverything();
+   void RedrawText(int y);
 
-  void maxIndex(TGHtmlElement *p, int *pIndex, int isLast);
-  int  IndexMod(TGHtmlElement **pp, int *ip, char *cp);
-  void FindIndexInBlock(TGHtmlBlock *pBlock, int x,
+   float colorDistance(ColorStruct_t *pA, ColorStruct_t *pB);
+   int isDarkColor(ColorStruct_t *p);
+   int isLightColor(ColorStruct_t *p);
+   int GetColorByName(const char *zColor);
+   int GetDarkShadowColor(int iBgColor);
+   int GetLightShadowColor(int iBgColor);
+   int GetColorByValue(ColorStruct_t *pRef);
+
+   void FlashCursor();
+
+   GContext_t GetGC(int color, int font);
+   GContext_t GetAnyGC();
+
+   void AnimateImage(TGHtmlImage *image);
+   void ImageChanged(TGHtmlImage *image, int newWidth, int newHeight);
+   int  GetImageAlignment(TGHtmlElement *p);
+   int  GetImageAt(int x, int y);
+   const char *GetPctWidth(TGHtmlElement *p, char *opt, char *ret);
+   void TableBgndImage(TGHtmlElement *p);
+
+   TGHtmlElement *FillOutBlock(TGHtmlBlock *p);
+   void UnlinkAndFreeBlock(TGHtmlBlock *pBlock);
+   void AppendBlock(TGHtmlElement *pToken, TGHtmlBlock *pBlock);
+
+   void StringHW(const char *str, int *h, int *w);
+   TGHtmlElement *MinMax(TGHtmlElement *p, int *pMin, int *pMax,
+                         int lineWidth, int hasbg);
+
+   void DrawSelectionBackground(TGHtmlBlock *pBlock, Drawable_t Drawable_t,
+                                int x, int y);
+   void DrawRect(Drawable_t drawable, TGHtmlElement *src,
+                 int x, int y, int w, int h, int depth, int relief);
+   void BlockDraw(TGHtmlBlock *pBlock, Drawable_t wid,
+                  int left, int top,
+                  int width, int height, Pixmap_t pixmap);
+   void DrawImage(TGHtmlImageMarkup *image, Drawable_t wid,
+                  int left, int top,
+                  int right, int bottom);
+   void DrawTableBgnd(int x, int y, int w, int h, Drawable_t d, TImage *image);
+
+   TGHtmlElement *FindStartOfNextBlock(TGHtmlElement *p, int *pCnt);
+   void FormBlocks();
+
+   void AppendElement(TGHtmlElement *pElem);
+   int  Tokenize();
+   void AppToken(TGHtmlElement *pNew, TGHtmlElement *p, int offs);
+   TGHtmlMarkupElement *MakeMarkupEntry(int objType, int type, int argc,
+                                        int arglen[], char *argv[]);
+   void TokenizerAppend(const char *text);
+   TGHtmlElement *InsertToken(TGHtmlElement *pToken,
+                              char *zType, char *zArgs, int offs);
+   SHtmlTokenMap_t *NameToPmap(char *zType);
+   int  NameToType(char *zType);
+   const char *TypeToName(int type);
+   int  TextInsertCmd(int argc, char **argv);
+   SHtmlTokenMap_t* GetMarkupMap(int n);
+
+   TGHtmlElement *TokenByIndex(int N, int flag);
+   int  TokenNumber(TGHtmlElement *p);
+
+   void maxIndex(TGHtmlElement *p, int *pIndex, int isLast);
+   int  IndexMod(TGHtmlElement **pp, int *ip, char *cp);
+   void FindIndexInBlock(TGHtmlBlock *pBlock, int x,
+                         TGHtmlElement **ppToken, int *pIndex);
+   void IndexToBlockIndex(SHtmlIndex_t sIndex,
+                          TGHtmlBlock **ppBlock, int *piIndex);
+   int  DecodeBaseIndex(const char *zBase,
                         TGHtmlElement **ppToken, int *pIndex);
-  void IndexToBlockIndex(SHtmlIndex sIndex,
-                         TGHtmlBlock **ppBlock, int *piIndex);
-  int  DecodeBaseIndex(const char *zBase,
-                       TGHtmlElement **ppToken, int *pIndex);
-  int  GetIndex(const char *zIndex, TGHtmlElement **ppToken, int *pIndex);
-  
-  void LayoutDoc();
-  
-  int  MapControls();
-  void UnmapControls();
-  void DeleteControls();
-  int  ControlSize(TGHtmlInput *p);
-  void SizeAndLink(TGFrame *frame, TGHtmlInput *pElem);
-  int  FormCount(TGHtmlInput *p, int radio);
-  void AddFormInfo(TGHtmlElement *p);
-  void AddSelectOptions(TGListBox *lb, TGHtmlElement *p, TGHtmlElement *pEnd);
-  void AppendText(TGString *str, TGHtmlElement *pFirst, TGHtmlElement *pEnd);
-                                                       
-  void UpdateSelection(int forceUpdate);
-  void UpdateSelectionDisplay();
-  void LostSelection();
-  int  SelectionSet(const char *startIx, const char *endIx);
-  void UpdateInsert();
-  int  SetInsert(const char *insIx);
-  
-  const char *GetUid(const char *string);
-  ColorStruct_t *AllocColor(const char *name);
-  ColorStruct_t *AllocColorByValue(ColorStruct_t *color);
-  void FreeColor(ColorStruct_t *color);
-  
-  SHtmlStyle GetCurrentStyle();
-  void PushStyleStack(int tag, SHtmlStyle style);
-  SHtmlStyle PopStyleStack(int tag);
-  
-  void MakeInvisible(TGHtmlElement *p_first, TGHtmlElement *p_last);
-  int  GetLinkColor(const char *zURL);
-  void AddStyle(TGHtmlElement *p);
-  void Sizer();
-  
-  int  NextMarkupType(TGHtmlElement *p);
+   int  GetIndex(const char *zIndex, TGHtmlElement **ppToken, int *pIndex);
 
-  TGHtmlElement *AttrElem(const char *name, char *value);
-  
+   void LayoutDoc();
+
+   int  MapControls();
+   void UnmapControls();
+   void DeleteControls();
+   int  ControlSize(TGHtmlInput *p);
+   void SizeAndLink(TGFrame *frame, TGHtmlInput *pElem);
+   int  FormCount(TGHtmlInput *p, int radio);
+   void AddFormInfo(TGHtmlElement *p);
+   void AddSelectOptions(TGListBox *lb, TGHtmlElement *p, TGHtmlElement *pEnd);
+   void AppendText(TGString *str, TGHtmlElement *pFirst, TGHtmlElement *pEnd);
+
+   void UpdateSelection(int forceUpdate);
+   void UpdateSelectionDisplay();
+   void LostSelection();
+   int  SelectionSet(const char *startIx, const char *endIx);
+   void UpdateInsert();
+   int  SetInsert(const char *insIx);
+
+   const char *GetUid(const char *string);
+   ColorStruct_t *AllocColor(const char *name);
+   ColorStruct_t *AllocColorByValue(ColorStruct_t *color);
+   void FreeColor(ColorStruct_t *color);
+
+   SHtmlStyle_t GetCurrentStyle();
+   void PushStyleStack(int tag, SHtmlStyle_t style);
+   SHtmlStyle_t PopStyleStack(int tag);
+
+   void MakeInvisible(TGHtmlElement *p_first, TGHtmlElement *p_last);
+   int  GetLinkColor(const char *zURL);
+   void AddStyle(TGHtmlElement *p);
+   void Sizer();
+
+   int  NextMarkupType(TGHtmlElement *p);
+
+   TGHtmlElement *AttrElem(const char *name, char *value);
+
 public:
-  void AppendArglist(TGString *str, TGHtmlMarkupElement *pElem);
-  TGHtmlElement *FindEndNest(TGHtmlElement *sp, int en, TGHtmlElement *lp);
-  TGString *ListTokens(TGHtmlElement *p, TGHtmlElement *pEnd);
-  TGString *TableText(TGHtmlTable *pTable, int flags);
+   void AppendArglist(TGString *str, TGHtmlMarkupElement *pElem);
+   TGHtmlElement *FindEndNest(TGHtmlElement *sp, int en, TGHtmlElement *lp);
+   TGString *ListTokens(TGHtmlElement *p, TGHtmlElement *pEnd);
+   TGString *TableText(TGHtmlTable *pTable, int flags);
 
-  virtual void MouseOver(const char *uri) { Emit("MouseOver(const char *)",uri); } // *SIGNAL*
-  virtual void MouseDown(const char *uri)  { Emit("MouseDown(const char *)",uri); } // *SIGNAL*
-  virtual void ButtonClicked(const char *name, const char *val); // *SIGNAL*
-  virtual void SubmitClicked(const char *val); // *SIGNAL*
-  virtual void CheckToggled(const char *name, Bool_t on, const char *val); // *SIGNAL*
-  virtual void RadioChanged(const char *name, const char *val); // *SIGNAL*
-  virtual void InputSelected(const char *name, const char *val);   //*SIGNAL*
-  virtual void SavePrimitive(ostream &out, Option_t * = "");
-
-protected:
-  virtual void UpdateBackgroundStart();
+   virtual void MouseOver(const char *uri) { Emit("MouseOver(const char *)",uri); } // *SIGNAL*
+   virtual void MouseDown(const char *uri)  { Emit("MouseDown(const char *)",uri); } // *SIGNAL*
+   virtual void ButtonClicked(const char *name, const char *val); // *SIGNAL*
+   virtual void SubmitClicked(const char *val); // *SIGNAL*
+   virtual void CheckToggled(const char *name, Bool_t on, const char *val); // *SIGNAL*
+   virtual void RadioChanged(const char *name, const char *val); // *SIGNAL*
+   virtual void InputSelected(const char *name, const char *val);   //*SIGNAL*
+   virtual void SavePrimitive(ostream &out, Option_t * = "");
 
 protected:
-  TGHtmlElement *pFirst;         // First HTML token on a list of them all
-  TGHtmlElement *pLast;          // Last HTML token on the list
-  int nToken;                   // Number of HTML tokens on the list.
-                                // Html_Block tokens don't count.
-  TGHtmlElement *lastSized;      // Last HTML element that has been sized
-  TGHtmlElement *nextPlaced;     // Next HTML element that needs to be 
-                                // positioned on canvas.
-  TGHtmlBlock *firstBlock;       // List of all TGHtmlBlock tokens
-  TGHtmlBlock *lastBlock;        // Last TGHtmlBlock in the list
-  TGHtmlInput *firstInput;       // First <INPUT> element
-  TGHtmlInput *lastInput;        // Last <INPUT> element
-  int nInput;                   // The number of <INPUT> elements
-  int nForm;                    // The number of <FORM> elements
-  int varId;                    // Used to construct a unique name for a
-                                // global array used by <INPUT> elements
-  int inputIdx;                 // Unique input index
-  int radioIdx;                 // Unique radio index
+   virtual void UpdateBackgroundStart();
 
-  // Information about the selected region of text
+protected:
+   TGHtmlElement *fPFirst;          // First HTML token on a list of them all
+   TGHtmlElement *fPLast;           // Last HTML token on the list
+   int            fNToken;          // Number of HTML tokens on the list.
+                                    // Html_Block tokens don't count.
+   TGHtmlElement *fLastSized;       // Last HTML element that has been sized
+   TGHtmlElement *fNextPlaced;      // Next HTML element that needs to be
+                                    // positioned on canvas.
+   TGHtmlBlock   *fFirstBlock;      // List of all TGHtmlBlock tokens
+   TGHtmlBlock   *fLastBlock;       // Last TGHtmlBlock in the list
+   TGHtmlInput   *fFirstInput;      // First <INPUT> element
+   TGHtmlInput   *fLastInput;       // Last <INPUT> element
+   int            fNInput;          // The number of <INPUT> elements
+   int            fNForm;           // The number of <FORM> elements
+   int            fVarId;           // Used to construct a unique name for a
+                                    // global array used by <INPUT> elements
+   int            fInputIdx;        // Unique input index
+   int            fRadioIdx;        // Unique radio index
 
-  SHtmlIndex selBegin;          // Start of the selection
-  SHtmlIndex selEnd;            // End of the selection
-  TGHtmlBlock *pSelStartBlock;   // Block in which selection starts
-  Html_16 selStartIndex;        // Index in pSelStartBlock of first selected
-                                // character
-  Html_16 selEndIndex;          // Index of last selecte char in pSelEndBlock
-  TGHtmlBlock *pSelEndBlock;     // Block in which selection ends
+   // Information about the selected region of text
 
-  // Information about the insertion cursor 
+   SHtmlIndex_t   fSelBegin;        // Start of the selection
+   SHtmlIndex_t   fSelEnd;          // End of the selection
+   TGHtmlBlock   *fPSelStartBlock;  // Block in which selection starts
+   Html_16_t      fSelStartIndex;   // Index in pSelStartBlock of first selected
+                                    // character
+   Html_16_t      fSelEndIndex;     // Index of last selecte char in pSelEndBlock
+   TGHtmlBlock   *fPSelEndBlock;    // Block in which selection ends
 
-  int insOnTime;                // How long the cursor states one (millisec)
-  int insOffTime;               // How long it is off (milliseconds)
-  int insStatus;                // Is it visible?
-  TTimer *insTimer;             // Timer used to flash the insertion cursor
-  SHtmlIndex ins;               // The insertion cursor position
-  TGHtmlBlock *pInsBlock;        // The TGHtmlBlock containing the cursor
-  int insIndex;                 // Index in pInsBlock of the cursor
+   // Information about the insertion cursor
 
-  // The following fields hold state information used by the tokenizer.
+   int            fInsOnTime;       // How long the cursor states one (millisec)
+   int            fInsOffTime;      // How long it is off (milliseconds)
+   int            fInsStatus;       // Is it visible?
+   TTimer        *fInsTimer;        // Timer used to flash the insertion cursor
+   SHtmlIndex_t   fIns;             // The insertion cursor position
+   TGHtmlBlock   *fPInsBlock;       // The TGHtmlBlock containing the cursor
+   int            fInsIndex;        // Index in pInsBlock of the cursor
 
-  char *zText;                  // Complete text of the unparsed HTML
-  int nText;                    // Number of characters in zText
-  int nAlloc;                   // Space allocated for zText
-  int nComplete;                // How much of zText has actually been
-                                // converted into tokens
-  int iCol;                     // The column in which zText[nComplete]
-                                // occurs. Used to resolve tabs in input
-  int iPlaintext;               // If not zero, this is the token type that
-                                // caused us to go into plaintext mode. One
-                                // of Html_PLAINTEXT, Html_LISTING or
-                                // Html_XMP
-  TGHtmlScript *pScript;            // <SCRIPT> currently being parsed
+   // The following fields hold state information used by the tokenizer.
 
-  TGIdleHandler *fIdle;
+   char          *fZText;           // Complete text of the unparsed HTML
+   int            fNText;           // Number of characters in zText
+   int            fNAlloc;          // Space allocated for zText
+   int            fNComplete;       // How much of zText has actually been
+                                    // converted into tokens
+   int            fICol;            // The column in which zText[nComplete]
+                                    // occurs. Used to resolve tabs in input
+   int            fIPlaintext;      // If not zero, this is the token type that
+                                    // caused us to go into plaintext mode. One
+                                    // of Html_PLAINTEXT, Html_LISTING or
+                                    // Html_XMP
+   TGHtmlScript  *fPScript;         // <SCRIPT> currently being parsed
 
-  // These fields hold state information used by the HtmlAddStyle routine.
-  // We have to store this state information here since HtmlAddStyle
-  // operates incrementally. This information must be carried from
-  // one incremental execution to the next.
+   TGIdleHandler *fIdle;
 
-  SHtmlStyleStack *styleStack;  // The style stack
-  int paraAlignment;            // Justification associated with <p>
-  int rowAlignment;             // Justification associated with <tr>
-  int anchorFlags;              // Style flags associated with <A>...</A>
-  int inDt;                     // Style flags associated with <DT>...</DT>
-  int inTr;                     // True if within <tr>..</tr>
-  int inTd;                     // True if within <td>..</td> or <th>..</th>
-  TGHtmlAnchor *anchorStart;     // Most recent <a href=...>
-  TGHtmlForm *formStart;         // Most recent <form>
-  TGHtmlInput *formElemStart;    // Most recent <textarea> or <select>
-  TGHtmlInput *formElemLast;     // Most recent <input>, <textarea> or <select>
-  TGHtmlListStart *innerList;    // The inner most <OL> or <UL>
-  TGHtmlElement *loEndPtr;       // How far AddStyle has gone to
-  TGHtmlForm *loFormStart;       // For AddStyle
+   // These fields hold state information used by the HtmlAddStyle routine.
+   // We have to store this state information here since HtmlAddStyle
+   // operates incrementally. This information must be carried from
+   // one incremental execution to the next.
 
-  // These fields are used to hold the state of the layout engine.
-  // Because the layout is incremental, this state must be held for
-  // the life of the widget.
+   SHtmlStyleStack_t *fStyleStack;     // The style stack
+   int               fParaAlignment;   // Justification associated with <p>
+   int               fRowAlignment;    // Justification associated with <tr>
+   int               fAnchorFlags;     // Style flags associated with <A>...</A>
+   int               fInDt;            // Style flags associated with <DT>...</DT>
+   int               fInTr;            // True if within <tr>..</tr>
+   int               fInTd;            // True if within <td>..</td> or <th>..</th>
+   TGHtmlAnchor     *fAnchorStart;     // Most recent <a href=...>
+   TGHtmlForm       *fFormStart;       // Most recent <form>
+   TGHtmlInput      *fFormElemStart;   // Most recent <textarea> or <select>
+   TGHtmlInput      *fFormElemLast;    // Most recent <input>, <textarea> or <select>
+   TGHtmlListStart  *fInnerList;       // The inner most <OL> or <UL>
+   TGHtmlElement    *fLoEndPtr;        // How far AddStyle has gone to
+   TGHtmlForm       *fLoFormStart;     // For AddStyle
 
-  TGHtmlLayoutContext layoutContext;
+   // These fields are used to hold the state of the layout engine.
+   // Because the layout is incremental, this state must be held for
+   // the life of the widget.
 
-  // Information used when displaying the widget:
+   TGHtmlLayoutContext fLayoutContext;
 
-  int highlightWidth;		// Width in pixels of highlight to draw
-				// around widget when it has the focus.
-				// <= 0 means don't draw a highlight.
-  TGInsets margins;              // document margins (separation between the
-                                // edge of the clip window and rendered HTML).
-  ColorStruct_t *highlightBgColorPtr;  // Color for drawing traversal highlight
-				// area when highlight is off.
-  ColorStruct_t *highlightColorPtr;	// Color for drawing traversal highlight.
-  TGFont *aFont[N_FONT];        // Information about all screen fonts
-  char fontValid[(N_FONT+7)/8]; // If bit N%8 of work N/8 of this field is 0
-                                // if aFont[N] needs to be reallocated before
-                                // being used.
-  ColorStruct_t *apColor[N_COLOR];     // Information about all colors
-  long colorUsed;               // bit N is 1 if color N is in use. Only
-                                // applies to colors that aren't predefined
-  int iDark[N_COLOR];           // Dark 3D shadow of color K is iDark[K]
-  int iLight[N_COLOR];          // Light 3D shadow of color K is iLight[K]
-  ColorStruct_t *bgColor;              // Background color of the HTML document
-  ColorStruct_t *fgColor;              // Color of normal text. apColor[0]
-  ColorStruct_t *newLinkColor;         // Color of unvisitied links. apColor[1]
-  ColorStruct_t *oldLinkColor;         // Color of visitied links. apColor[2]
-  ColorStruct_t *selectionColor;       // Background color for selections
-  GcCache aGcCache[N_CACHE_GC]; // A cache of GCs for general use
-  int GcNextToFree;
-  int lastGC;                   // Index of recently used GC
-  TGHtmlImage *imageList;        // A list of all images
-  TImage *bgImage;              // Background image
+   // Information used when displaying the widget:
 
-  int formPadding;              // Amount to pad form elements by
-  int overrideFonts;            // TRUE if we should override fonts
-  int overrideColors;           // TRUE if we should override colors
-  int underlineLinks;           // TRUE if we should underline hyperlinks
-  int HasScript;                // TRUE if we can do scripts for this page
-  int HasFrames;                // TRUE if we can do frames for this page
-  int AddEndTags;               // TRUE if we add /LI etc.
-  int TableBorderMin;           // Force tables to have min border size
-  int varind;                   // Index suffix for unique global var name
+   int               fHighlightWidth;        // Width in pixels of highlight to draw
+                                             // around widget when it has the focus.
+                                             // <= 0 means don't draw a highlight.
+   TGInsets          fMargins;               // document margins (separation between the
+                                             // edge of the clip window and rendered HTML).
+   ColorStruct_t    *fHighlightBgColorPtr;   // Color for drawing traversal highlight
+                                             // area when highlight is off.
+   ColorStruct_t    *fHighlightColorPtr;     // Color for drawing traversal highlight.
+   TGFont           *fAFont[N_FONT];         // Information about all screen fonts
+   char              fFontValid[(N_FONT+7)/8]; // If bit N%8 of work N/8 of this field is 0
+                                             // if aFont[N] needs to be reallocated before
+                                             // being used.
+   ColorStruct_t    *fApColor[N_COLOR];      // Information about all colors
+   Long_t            fColorUsed;             // bit N is 1 if color N is in use. Only
+                                             // applies to colors that aren't predefined
+   int               fIDark[N_COLOR];        // Dark 3D shadow of color K is iDark[K]
+   int               fILight[N_COLOR];       // Light 3D shadow of color K is iLight[K]
+   ColorStruct_t    *fBgColor;               // Background color of the HTML document
+   ColorStruct_t    *fFgColor;               // Color of normal text. apColor[0]
+   ColorStruct_t    *fNewLinkColor;          // Color of unvisitied links. apColor[1]
+   ColorStruct_t    *fOldLinkColor;          // Color of visitied links. apColor[2]
+   ColorStruct_t    *fSelectionColor;        // Background color for selections
+   GcCache_t         fAGcCache[N_CACHE_GC];  // A cache of GCs for general use
+   int               fGcNextToFree;
+   int               fLastGC;                // Index of recently used GC
+   TGHtmlImage      *fImageList;             // A list of all images
+   TImage           *fBgImage;               // Background image
 
-  // Information about the selection
+   int               fFormPadding;           // Amount to pad form elements by
+   int               fOverrideFonts;         // TRUE if we should override fonts
+   int               fOverrideColors;        // TRUE if we should override colors
+   int               fUnderlineLinks;        // TRUE if we should underline hyperlinks
+   int               fHasScript;             // TRUE if we can do scripts for this page
+   int               fHasFrames;             // TRUE if we can do frames for this page
+   int               fAddEndTags;            // TRUE if we add /LI etc.
+   int               fTableBorderMin;        // Force tables to have min border size
+   int               fVarind;                // Index suffix for unique global var name
 
-  int exportSelection;          // True if the selection is automatically
-                                // exported to the clipboard
+   // Information about the selection
 
-  // Miscellaneous information:
+   int               fExportSelection;       // True if the selection is automatically
+                                             // exported to the clipboard
 
-  int tableRelief;              // 3d effects on <TABLE>
-  int ruleRelief;               // 3d effects on <HR>
-  int rulePadding;              // extra pixels above and below <HR>
-  const char *zBase;            // The base URI
-  char *zBaseHref;              // zBase as modified by <BASE HREF=..> markup
-  Cursor_t cursor;		// Current cursor for window, or None.
-  int maxX, maxY;               // Maximum extent of any "paint" that appears
-                                // on the virtual canvas. Used to compute 
-                                // scrollbar positions.
-  int dirtyLeft, dirtyTop;      // Top left corner of region to redraw. These
-                                // are physical screen coordinates relative to
-                                // the clip win, not main window.
-  int dirtyRight, dirtyBottom;  // Bottom right corner of region to redraw
-  int flags;                    // Various flags; see below for definitions.
-  int idind;
-  int inParse;                  // Prevent update if parsing
-  char *zGoto;                  // Label to goto right after layout
-  
-  SHtmlExtensions *exts;        // Pointer to user extension data
+   // Miscellaneous information:
 
-  THashTable *fUidTable;        // Hash table for some used string values
-                                // like color names, etc.
-  const char *_lastUri;         // Used in HandleMotion
-  int _exiting;                 // True if the widget is being destroyed
+   int               fTableRelief;           // 3d effects on <TABLE>
+   int               fRuleRelief;            // 3d effects on <HR>
+   int               fRulePadding;           // extra pixels above and below <HR>
+   const char       *fZBase;                 // The base URI
+   char             *fZBaseHref;             // zBase as modified by <BASE HREF=..> markup
+   Cursor_t          fCursor;                // Current cursor for window, or None.
+   int               fMaxX, fMaxY;           // Maximum extent of any "paint" that appears
+                                             // on the virtual canvas. Used to compute
+                                             // scrollbar positions.
+   int               fDirtyLeft, fDirtyTop;  // Top left corner of region to redraw. These
+                                             // are physical screen coordinates relative to
+                                             // the clip win, not main window.
+   int               fDirtyRight, fDirtyBottom;  // Bottom right corner of region to redraw
+   int               fFlags;                 // Various flags; see below for definitions.
+   int               fIdind;
+   int               fInParse;               // Prevent update if parsing
+   char             *fZGoto;                 // Label to goto right after layout
 
-ClassDef(TGHtml, 0);
+   SHtmlExtensions_t *fExts;                 // Pointer to user extension data
+
+   THashTable       *fUidTable;              // Hash table for some used string values
+                                             // like color names, etc.
+   const char       *fLastUri;               // Used in HandleMotion
+   int               fExiting;               // True if the widget is being destroyed
+
+   ClassDef(TGHtml, 0); // HTML widget
 };
 
 
 // Flag bits "flags" field of the Html widget:
 //
-// REDRAW_PENDING         An idle handler has already been queued to 
+// REDRAW_PENDING         An idle handler has already been queued to
 //                        call the TGHtml::Redraw() method.
 //
 // GOT_FOCUS              This widget currently has input focus.
@@ -1293,7 +1294,7 @@ ClassDef(TGHtml, 0);
 // VSCROLL                Vertical scrollbar position needs to be
 //                        recomputed.
 //
-// RELAYOUT               We need to reposition every element on the 
+// RELAYOUT               We need to reposition every element on the
 //                        virtual canvas. (This happens, for example,
 //                        when the size of the widget changes and we
 //                        need to recompute the line breaks.)

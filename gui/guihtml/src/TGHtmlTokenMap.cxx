@@ -30,7 +30,7 @@
 // modifications to it, you'll have to modify also the TGHtmlTokens.h
 // file accordingly.
 
-SHtmlTokenMap HtmlMarkupMap[] = {
+SHtmlTokenMap_t HtmlMarkupMap[] = {
   { "a",            Html_A,                 O_HtmlAnchor,        0 },
   { "/a",           Html_EndA,              O_HtmlRef,           0 },
   { "address",      Html_ADDRESS,           O_HtmlMarkupElement, 0 },
