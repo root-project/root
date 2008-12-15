@@ -74,7 +74,7 @@ inline float G__getvalue_raw<float>(const G__value& val)
 template <typename CASTTYPE>
 inline void G__asm_deref_cast(const G__value* from, G__value* to)
 {
-  G__setvalue(to, (long)(*(CASTTYPE *)(from->obj.i)));
+  G__setvalue(to, (*(CASTTYPE *)(from->obj.i)));
 }
 template<>
 inline void G__asm_deref_cast<G__int64>(const G__value* from, G__value* to)
