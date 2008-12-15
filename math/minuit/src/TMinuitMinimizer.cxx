@@ -321,8 +321,8 @@ bool TMinuitMinimizer::Minimize() {
    arglist[0] = printlevel - 1;
    fMinuit->mnexcm("SET PRINT",arglist,1,ierr);
 
-   // suppress warning in case Printlevel() == 0 (not needed done by TMinuit already)
-   //if (printlevel == 0)    fMinuit->mnexcm("SET NOW",arglist,0,ierr);
+   // suppress warning in case Printlevel() == 0 
+   if (printlevel == 0)    fMinuit->mnexcm("SET NOW",arglist,0,ierr);
 
 
    arglist[0] = MaxFunctionCalls(); 
@@ -453,6 +453,9 @@ bool TMinuitMinimizer::GetMinosError(unsigned int i, double & errLow, double & e
       arglist[0] = PrintLevel()-1; 
       fMinuit->mnexcm("SET PRINT",arglist,1,ierr);
 
+      // suppress warning in case Printlevel() == 0 
+      if (PrintLevel() == 0)    fMinuit->mnexcm("SET NOW",arglist,0,ierr);
+
       arglist[0] = MaxFunctionCalls(); 
       arglist[1] = Tolerance(); 
    
@@ -522,6 +525,8 @@ bool TMinuitMinimizer::Contour(unsigned int ipar, unsigned int jpar, unsigned in
       
    arglist[0] = PrintLevel()-1; 
    fMinuit->mnexcm("SET PRINT",arglist,1,ierr);
+   // suppress warning in case Printlevel() == 0 
+   if (PrintLevel() == 0)    fMinuit->mnexcm("SET NOW",arglist,0,ierr);
 
    if (npoints < 4) { 
       Error("Contour","Cannot make contour with so few points");
@@ -579,6 +584,8 @@ bool TMinuitMinimizer::Scan(unsigned int ipar, unsigned int & nstep, double * x,
 
    arglist[0] = PrintLevel()-1; 
    fMinuit->mnexcm("SET PRINT",arglist,1,ierr);
+   // suppress warning in case Printlevel() == 0 
+   if (PrintLevel() == 0)    fMinuit->mnexcm("SET NOW",arglist,0,ierr);
 
 
    if (nstep == 0) return false; 
