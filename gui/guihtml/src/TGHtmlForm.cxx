@@ -466,7 +466,7 @@ int TGHtml::ControlSize(TGHtmlInput *pElem) {
         TGListBox *lb = cb->GetListBox();
         AddSelectOptions(lb, pElem, pElem->pEnd);
         TGLBEntry *e = lb->GetSelectedEntry();
-        lb->Select(e->EntryId(), kFALSE);
+        if (e) lb->Select(e->EntryId(), kFALSE);
         lb->MapSubwindows();
         lb->Layout();
         for (int i=0;i<lb->GetNumberOfEntries();++i) {
