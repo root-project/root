@@ -4690,8 +4690,11 @@ struct G__ifunc_table_internal* G__overload_match(const char* funcname, G__param
    int scopetagnum = p_ifunc->tagnum;
    struct G__ifunc_table_internal *store_ifunc = p_ifunc;
    int ix = 0;
-   int active_run = doconvert && !G__asm_wholefunction;
-
+#ifdef G__ASM
+   int active_run = doconvert && !G__asm_wholefunction && !G__asm_noverflow;
+#else
+   int active_run = doconvert;
+#endif
 
    /* Search for name match
     *  if reserved func or K&R, match immediately
@@ -4854,8 +4857,9 @@ end_of_function:
       G__fprinterr(G__serr, "  ");
       G__display_func(G__serr, p_ifunc, *pifn);
       G__display_ambiguous(scopetagnum, funcname, libp, funclist, bestmatch);
-      *pifn = -1;
       G__funclist_delete(funclist);
+      return p_ifunc;
+      *pifn = -1;
       return((struct G__ifunc_table_internal*)NULL);
    } 
    
