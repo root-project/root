@@ -203,179 +203,313 @@ int Cint::Internal::G__Loffsetof(char *tagname,char *memname)
 *   G__special_func()
 *
 ******************************************************************/
-int Cint::Internal::G__Lsizeof(const char *type_name)
+int Cint::Internal::G__Lsizeof(const char* type_name_in)
 {
-  int hash;
-  int ig15;
-  G__value buf;
-  int tagnum;
-  ::Reflex::Type typenum;
-  int result;
-  int pointlevel=0;
-  G__StrBuf namebody_sb(G__MAXNAME+20);
-  char *namebody = namebody_sb;
-  char *p;
-  int i;
-
-
-  /* return size of pointer if xxx* */
-  if('*'==type_name[strlen(type_name)-1]) {
-    return(sizeof(void *));
-  }
-
-  /* searching for struct/union tagtable */
-  if((strncmp(type_name,"struct",6)==0)
-     || strncmp(type_name,"signed",6)==0
-     ) {
-    type_name = type_name+6;
-  }
-  else if((strncmp(type_name,"class",5)==0)) {
-    type_name = type_name+5;
-  }
-  else if((strncmp(type_name,"union",5)==0)) {
-    type_name = type_name+5;
-  }
-
-  tagnum = G__defined_tagname(type_name,1); /* case 8) */
-  if(-1 != tagnum) {
-    if('e'!=G__struct.type[tagnum]) return(G__struct.size[tagnum]);
-    else                            return(G__INTALLOC);
-  }
-
-  typenum = G__find_typedef(type_name);
-  if(typenum) {
-    switch(G__get_type(typenum)) {
-    case 'n':
-    case 'm':
-      result = sizeof(G__int64);
-      break;
-    case 'q':
-      result = sizeof(long double);
-      break;
-    case 'g':
+   const char* type_name = type_name_in;
+   //
+   //  If the type name ends with '*', then
+   //  return the size of a pointer to void.
+   //
+   if (type_name[strlen(type_name)-1] == '*') {
+      return sizeof(void*);
+   }
+   //
+   //  Remove some possible qualifiers from
+   //  the type name.
+   //
+   if (
+      !strncmp(type_name, "struct", 6) ||
+      !strncmp(type_name, "signed", 6)
+   ) {
+      type_name = type_name + 6;
+   }
+   else if (!strncmp(type_name, "class", 5)) {
+      type_name = type_name + 5;
+   }
+   else if (!strncmp(type_name, "union", 5)) {
+      type_name = type_name + 5;
+   }
+   //
+   //  Handle a class name now.
+   //
+   {
+      int tagnum = G__defined_tagname(type_name, 1);
+      if (tagnum != -1) {
+         if (G__struct.type[tagnum] == 'e') {
+            return G__INTALLOC;
+         }
+         return G__struct.size[tagnum];
+      }
+   }
+   //
+   //  Handle a typedef now.
+   //
+   {
+      ::Reflex::Type typenum = G__find_typedef(type_name);
+      if (typenum) {
+         int result = -1;
+         switch (G__get_type(typenum)) {
+            case 'n':
+            case 'm':
+               result = sizeof(G__int64);
+               break;
+            case 'q':
+               result = sizeof(long double);
+               break;
+            case 'g':
 #ifdef G__BOOL4BYTE
-      result = sizeof(int);
-      break;
-#endif
-    case 'b':
-    case 'c':
-      result = sizeof(char);
-      break;
-    case 'h':
-    case 'i':
-      result = sizeof(int);
-      break;
-    case 'r':
-    case 's':
-      result = sizeof(short);
-      break;
-    case 'k':
-    case 'l':
-      result = sizeof(long);
-      break;
-    case 'f':
-      result = sizeof(float);
-      break;
-    case 'd':
-      result = sizeof(double);
-      break;
-    case 'v':
-      return(-1);
-    default:
-      /* if struct or union */
-      if(isupper(G__get_type(typenum))) {
-        result = sizeof(void *);
+               result = sizeof(int);
+               break;
+#endif // G__BOOL4BYTE
+            case 'b':
+            case 'c':
+               result = sizeof(char);
+               break;
+            case 'h':
+            case 'i':
+               result = sizeof(int);
+               break;
+            case 'r':
+            case 's':
+               result = sizeof(short);
+               break;
+            case 'k':
+            case 'l':
+               result = sizeof(long);
+               break;
+            case 'f':
+               result = sizeof(float);
+               break;
+            case 'd':
+               result = sizeof(double);
+               break;
+            case 'v':
+               return -1;
+            default:
+               // if struct or union
+               if (isupper(G__get_type(typenum))) {
+                  result = sizeof(void *);
+               }
+               else if (G__get_tagnum(typenum) != -1) {
+                  result = G__struct.size[G__get_tagnum(typenum)];
+               }
+               return 0;
+         }
+         if (G__get_nindex(typenum)) {
+            std::vector<int> ind = G__get_index(typenum);
+            for (unsigned int ig15 = 0; ig15 < ind.size(); ++ig15) {
+               result *= ind[ig15];
+            }
+         }
+         return result;
       }
-      else if(G__get_tagnum(typenum)>=0) {
-        result = G__struct.size[G__get_tagnum(typenum)];
-      }
-      else {
-        return(0);
-      }
-      break;
-    }
-    if(G__get_nindex(typenum)) {
-       std::vector<int> ind = G__get_index(typenum);
-       for(unsigned int ig15=0;ig15<ind.size();ig15++) {
-          result *= ind[ig15] ;
-       }
-    }
-    return(result);
-  }
-
-  if((strcmp(type_name,"int")==0)||
-     (strcmp(type_name,"unsignedint")==0))
-    return(sizeof(int));
-  if((strcmp(type_name,"long")==0)||
-     (strcmp(type_name,"longint")==0)||
-     (strcmp(type_name,"unsignedlong")==0)||
-     (strcmp(type_name,"unsignedlongint")==0))
-    return(sizeof(long));
-  if((strcmp(type_name,"short")==0)||
-     (strcmp(type_name,"shortint")==0)||
-     (strcmp(type_name,"unsignedshort")==0)||
-     (strcmp(type_name,"unsignedshortint")==0))
-    return(sizeof(short));
-  if((strcmp(type_name,"char")==0)||
-     (strcmp(type_name,"unsignedchar")==0))
-    return(sizeof(char));
-  if((strcmp(type_name,"float")==0)||
-     (strcmp(type_name,"float")==0))
-    return(sizeof(float));
-  if((strcmp(type_name,"double")==0)
-     )
-    return(sizeof(double));
-  if(strcmp(type_name,"longdouble")==0) {
-     return(sizeof(long double));
-  }
-  if(strcmp(type_name,"longlong")==0
-     || strcmp(type_name,"longlongint")==0
-     ) {
-     return(sizeof(G__int64));
-  }
-  if(strcmp(type_name,"unsignedlonglong")==0
-     || strcmp(type_name,"unsignedlonglongint")==0
-     ) {
-     return(sizeof(G__uint64));
-  }
-  if(strcmp(type_name,"void")==0)
-    return(sizeof(void*));
-  if(strcmp(type_name,"FILE")==0)
-    return(sizeof(FILE));
+   }
+   //
+   //  Handle a fundamental type now.
+   //
+   if (
+      !strcmp(type_name, "int") ||
+      !strcmp(type_name, "unsignedint")
+   ) {
+      return sizeof(int);
+   }
+   else if (
+     !strcmp(type_name, "long") ||
+     !strcmp(type_name, "longint") ||
+     !strcmp(type_name, "unsignedlong") ||
+     !strcmp(type_name, "unsignedlongint")
+   ) {
+      return sizeof(long);
+   }
+   else if (
+      !strcmp(type_name, "short") ||
+      !strcmp(type_name, "shortint") ||
+      !strcmp(type_name, "unsignedshort") ||
+      !strcmp(type_name, "unsignedshortint")
+   ) {
+      return sizeof(short);
+   }
+   else if (
+      !strcmp(type_name, "char") ||
+      !strcmp(type_name, "unsignedchar")
+   ) {
+      return sizeof(char);
+   }
+   else if (
+      !strcmp(type_name, "float") ||
+      !strcmp(type_name, "float")
+   ) {
+      return sizeof(float);
+   }
+   else if (!strcmp(type_name, "double")) {
+      return sizeof(double);
+   }
+   else if (!strcmp(type_name, "longdouble")) {
+      return sizeof(long double);
+   }
+   else if (
+      !strcmp(type_name, "longlong") ||
+      !strcmp(type_name, "longlongint")
+   ) {
+      return sizeof(G__int64);
+   }
+   else if (
+      !strcmp(type_name, "unsignedlonglong") ||
+      !strcmp(type_name, "unsignedlonglongint")
+   ) {
+      return sizeof(G__uint64);
+   }
+   else if (!strcmp(type_name, "void")) {
+      return sizeof(void*);
+   }
+   else if (!strcmp(type_name, "FILE")) {
+      return sizeof(FILE);
+   }
+   else if (!strcmp(type_name, "bool")) {
+      // --
 #ifdef G__BOOL4BYTE
-  if(strcmp(type_name,"bool")==0) return(sizeof(int));
-#else
-  if(strcmp(type_name,"bool")==0) return(sizeof(unsigned char));
-#endif
-
-  while('*'==type_name[pointlevel]) ++pointlevel;
-  strcpy(namebody,type_name+pointlevel);
-  while((char*)NULL!=(p=strrchr(namebody,'['))) {
-    *p='\0';
-    ++pointlevel;
-  }
-
-  G__hash(namebody,hash,ig15);
-  ::Reflex::Member var = G__getvarentry(namebody,hash,::Reflex::Scope::GlobalScope(),G__p_local);
-  if(!var) {
-     std::string temp;
-     G__get_stack_varname(temp,namebody,G__func_now,G__get_tagnum(G__memberfunc_tagnum));
-     G__hash(temp.c_str(),hash,i);
-     var = G__getvarentry(temp.c_str(),hash,::Reflex::Scope::GlobalScope(),G__p_local);
-  }
-  if(var) {
-     return var.TypeOf().SizeOf();
-  }
-
-  buf = G__getexpr((char*)type_name);
-  if(G__get_type(G__value_typenum(buf))) {
-    if('C'==G__get_type(G__value_typenum(buf)) 
-       && '"'==type_name[0]) return(strlen((char*)buf.obj.i)+1);
-    return(G__sizeof(&buf));
-  }
-
-  return(-1);
-
+      return sizeof(int);
+#else // G__BOOL4BYTE
+      return sizeof(unsigned char);
+#endif // G__BOOL4BYTE
+      // --
+   }
+   //
+   //  Handle a variable name now.
+   //
+   {
+      int pointlevel = 0;
+      while (type_name[pointlevel] == '*') {
+         ++pointlevel;
+      }
+      G__StrBuf namebody_sb(G__MAXNAME + 20);
+      char* namebody = namebody_sb;
+      strcpy(namebody, type_name + pointlevel);
+      {
+         char* p = strrchr(namebody, '[');
+         while (p) {
+            *p = '\0';
+            ++pointlevel;
+            p = strrchr(namebody, '[');
+         }
+      }
+      ::Reflex::Member var;
+      {
+         int hash = 0;
+         int junk = 0;
+         G__hash(namebody, hash, junk)
+         var = G__getvarentry(namebody, hash, ::Reflex::Scope::GlobalScope(), G__p_local);
+      }
+      if (!var) {
+         std::string temp;
+         G__get_stack_varname(temp, namebody, G__func_now, G__get_tagnum(G__memberfunc_tagnum));
+         int hash = 0;
+         int junk = 0;
+         G__hash(temp.c_str(), hash, junk);
+         var = G__getvarentry(temp.c_str(), hash, ::Reflex::Scope::GlobalScope(), G__p_local);
+      }
+      if (var) {
+         char type = '\0';
+         int tagnum = -1;
+         int typenum = -1;
+         int reftype = 0;
+         int isconst = 0;
+         G__get_cint5_type_tuple(var.TypeOf(), &type, &tagnum, &typenum, &reftype, &isconst);
+         int paran = G__get_nindex(var.TypeOf());
+         if (G__get_varlabel(var.TypeOf(), 1) == INT_MAX /* unspecified size array flag */) {
+            if (type == 'c') {
+               return strlen((char*) G__get_offset(var)) + 1;
+            }
+            else {
+               return sizeof(void *);
+            }
+         }
+         char buf_type = type;
+         int buf_tagnum = tagnum;
+         int buf_typenum = typenum;
+         int buf_reftype = 0;
+         int buf_isconst = 0;
+         if (isupper(type)) {
+            buf_reftype = reftype;
+         }
+         int num_of_elements = 0;
+         if (pointlevel > paran) {
+            switch (pointlevel) {
+               case 0:
+                  break;
+               case 1:
+                  if (buf_reftype == G__PARANORMAL) {
+                     buf_type = tolower(buf_type);
+                  }
+                  else if (buf_reftype == G__PARAP2P) {
+                     buf_reftype = G__PARANORMAL;
+                  }
+                  else {
+                     --buf_reftype;
+                  }
+                  break;
+               case 2:
+                  if (buf_reftype == G__PARANORMAL) {
+                     buf_type = tolower(buf_type);
+                  }
+                  else if (buf_reftype == G__PARAP2P) {
+                     buf_type = tolower(buf_type);
+                     buf_reftype = G__PARANORMAL;
+                  }
+                  else if (buf_reftype == G__PARAP2P2P) {
+                     buf_reftype = G__PARANORMAL;
+                  }
+                  else {
+                     buf_reftype -= 2;
+                  }
+                  break;
+            }
+            G__value buf;
+            G__value_typenum(buf) = G__cint5_tuple_to_type(buf_type, buf_tagnum, buf_typenum, buf_reftype, buf_isconst);
+            return G__sizeof(&buf);
+         }
+         switch (pointlevel) {
+            case 0:
+               num_of_elements = G__get_varlabel(var.TypeOf(), 1) /* num of elements */;
+               if (!num_of_elements) {
+                  num_of_elements = 1;
+               }
+               break;
+            case 1:
+               num_of_elements = G__get_varlabel(var.TypeOf(), 0) /* stride */;
+               break;
+            default:
+               num_of_elements = G__get_varlabel(var.TypeOf(), 0) /* stride */;
+               for (int i = 1; i < pointlevel; ++i) {
+                  num_of_elements /= G__get_varlabel(var.TypeOf(), i + 1);
+               }
+               break;
+         }
+         if (isupper(type)) {
+            return num_of_elements * sizeof(void*);
+         }
+         G__value buf;
+         G__value_typenum(buf) = G__cint5_tuple_to_type(buf_type, buf_tagnum, buf_typenum, buf_reftype, buf_isconst);
+         return num_of_elements * G__sizeof(&buf);
+      }
+   }
+   //
+   //  Handle an expression now.
+   //
+   G__value buf = G__getexpr((char*) type_name);
+   if (G__get_type(G__value_typenum(buf))) {
+      if (
+         (G__get_type(G__value_typenum(buf)) == 'C') &&
+         (type_name[0] == '"')
+      ) {
+         return strlen((char*) buf.obj.i) + 1;
+      }
+      return G__sizeof(&buf);
+   }
+   //
+   //  We have completely failed.
+   //
+   return -1;
 }
 
 #ifdef G__TYPEINFO
