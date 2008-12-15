@@ -3,13 +3,45 @@
 <a name="gui"></a> 
 <h3>GUI</h3>
 
+<h4>New Classes: TRecorder TGRecorder</h4>
+TRecorder classes provide interface for recording and replaying events in ROOT.
+Recorded events are:
+<li> Commands typed by user in command line (e.g. 'new TCanvas')
+<li> GUI events (mouse movement, button clicks, ...)
+<br>All the recorded events from one session are stored in one TFile and can be replayed again anytime.
+<br>Modifications in TRootCanvas menu:
+<li> Renamed 'Inspect' menu title to 'Tools'
+<li> Added 'Event Recorder' menu entry
+<br>
+<br> Here is a screenshot of TGRecorder (GUI interface of the recorder):
+<p>
+<p><img alt="TGRecorder screenshot." src="gui_tgrecorder.png">
+<p>
+
+
 <h4>New Class: TGPack</h4>
 New Container class for vertical and horizontal grouping of frames. 
 It enforces a predictable resizing behaviour on children.
 For an example of how to use it, see <tt>tutorials/eve/pack.C</tt>.
 <p>
-<p><img alt="TGPack class example." src="gui_tgpack.gif">
+<p><img alt="TGPack class example." src="gui_tgpack.png">
 <p>
+
+<h4>TRootBrowser</h4>
+<ul>
+<li> Make the default url for the HTML plugin of TRootBrowser configurable via rootrc.
+</ul>
+
+<h4>TGTab</h4>
+<ul>
+<li> Added a 'Close Tab' icon in TGTabElement, allowing to close a tab element, and emitting a <tt>CloseTab(Int_t id)</tt> signal. The icon is active only on the actually activated tab.
+<li> Implement CloseTab slot usage in TRootBrowser and in TGRootIDE.
+</ul>
+
+<h4>TGTextEditor</h4>
+<ul>
+<li> Allow to execute a macro without having to save it first.
+</ul>
 
 <h4>TGSplitFrame</h4>
 <ul>
@@ -56,3 +88,17 @@ If neither fWindow nor fPad are set use global fX, fY that was passed from outsi
 <li> Added new method virtual TGFrameElement* FindFrameElement(TGFrame *f) const; and use it in several TGCompositeFrame methods to simplify the code.
 </ul>
 
+<br> 
+<hr> 
+<a name="gui"></a> 
+<h3>GUIHTML</h3>
+
+<h4>TGHtml</h4>
+<ul>
+<li> Implemented HTML <tt>&lt;select&gt;</tt> with TGListBox/TGCombobox and emit <tt>InputSelected(const char *name, const char *val)</tt> when changing selection.
+</ul>
+
+<h4>TGHtmlBrowser</h4>
+<ul>
+<li> Added the possibility to save current html page in a local file.
+</ul>
