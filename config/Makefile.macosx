@@ -102,13 +102,19 @@ CILIBS        = -lm $(EXTRA_LDFLAGS) $(FINK_LDFLAGS) -ldl
 
 # Fortran:
 ifneq ($(findstring gfortran, $(F77)),)
+ifeq ($(F77),)
+# only needed to get default compiler in ./configure
 F77           = gfortran
+endif
 F77LIBS      := $(shell $(F77) -print-file-name=libgfortran.dylib)
 F77LIBS      += $(shell $(F77) -print-file-name=libgfortranbegin.a)
 endif
 
 ifneq ($(findstring g77, $(F77)),)
+ifeq ($(F77),)
+# only needed to get default compiler in ./configure
 F77           = g77
+endif
 F77LIBS       = -L$(FINK_DIR)/lib -lg2c
 endif
 

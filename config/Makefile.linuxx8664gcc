@@ -48,14 +48,20 @@ CRYPTLIBS     = -lcrypt
 
 # Fortran:
 ifneq ($(findstring gfortran, $(F77)),)
+ifeq ($(F77),)
+# only needed to get default compiler in ./configure
 F77           = gfortran
+endif
 F77FLAGS      = -fPIC -m64 -std=legacy
 F77LIBS      := $(shell $(F77) -m64 -print-file-name=libgfortran.$(SOEXT))
 F77LIBS      += $(shell $(F77) -m64 -print-file-name=libgfortranbegin.a)
 endif
 
 ifneq ($(findstring g77, $(F77)),)
+ifeq ($(F77),)
+# only needed to get default compiler in ./configure
 F77           = g77
+endif
 F77FLAGS      = -fPIC -m64
 ifneq ($(shell $(F77) -print-file-name=libg2c.so),libg2c.so)
 F77LIBS      := $(shell $(F77) -m64 -print-file-name=libg2c.so) -lnsl
