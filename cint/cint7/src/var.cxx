@@ -104,7 +104,7 @@ static void G__class_2nd_decl(const ::Reflex::Member& var)
    char *temp = temp_sb;
    sprintf(temp, "~%s()", tagnum.Name().c_str());
    if (G__dispsource) {
-      G__fprinterr(G__serr, "\n!!!Calling destructor 0x%lx.%s for declaration of %s", G__store_struct_offset, temp, var.Name().c_str());
+      G__fprinterr(G__serr, "\n!!!Calling destructor 0x%lx.%s for declaration of %s", G__store_struct_offset, temp, var.Name(::Reflex::SCOPED).c_str());
    }
    if (G__struct.iscpplink[G__get_tagnum(tagnum)] == G__CPPLINK) {
       // Delete current object.
@@ -162,7 +162,7 @@ static void G__class_2nd_decl_i(const ::Reflex::Member& var)
    G__globalvarpointer = G__PVOID;
 #ifdef G__ASM_DBG
    if (G__asm_dbg) {
-      G__fprinterr(G__serr, "%3x,%3x: LD_VAR  %s paran=%d  %s:%d\n", G__asm_cp, G__asm_dt, var.Name().c_str(), 0, __FILE__, __LINE__);
+      G__fprinterr(G__serr, "%3x,%3x: LD_VAR  %s paran=%d  %s:%d\n", G__asm_cp, G__asm_dt, var.Name(::Reflex::SCOPED).c_str(), 0, __FILE__, __LINE__);
    }
 #endif // G__ASM_DBG
    G__asm_inst[G__asm_cp] = G__LD_VAR;
@@ -237,7 +237,7 @@ static void G__class_2nd_decl_c(const ::Reflex::Member& var)
    char* store_struct_offset = G__store_struct_offset;
 #ifdef G__ASM_DBG
    if (G__asm_dbg) {
-      G__fprinterr(G__serr, "%3x,%3x: LD_VAR  %s paran=%d  %s:%d\n", G__asm_cp, G__asm_dt, var.Name().c_str(), 0, __FILE__, __LINE__);
+      G__fprinterr(G__serr, "%3x,%3x: LD_VAR  %s paran=%d  %s:%d\n", G__asm_cp, G__asm_dt, var.Name(::Reflex::SCOPED).c_str(), 0, __FILE__, __LINE__);
    }
 #endif // G__ASM_DBG
    G__asm_inst[G__asm_cp] = G__LD_VAR;
@@ -1205,7 +1205,7 @@ G__value Cint::Internal::G__letvariable(char* item, G__value expression, const :
             // --
 #ifdef G__ASM_DBG
             if (G__asm_dbg) {
-               G__fprinterr(G__serr, "%3x,%3x: LD_VAR  %s paran=%d  %s:%d\n", G__asm_cp, G__asm_dt, var.Name().c_str(), 0, __FILE__, __LINE__);
+               G__fprinterr(G__serr, "%3x,%3x: LD_VAR  %s paran=%d  %s:%d\n", G__asm_cp, G__asm_dt, var.Name(::Reflex::SCOPED).c_str(), 0, __FILE__, __LINE__);
             }
 #endif // G__ASM_DBG
             G__asm_inst[G__asm_cp] = G__LD_VAR;
@@ -1315,7 +1315,7 @@ G__value Cint::Internal::G__letvariable(char* item, G__value expression, const :
                 ((G__var_type == 'v') && (constvar & G__CONSTVAR))
                  )
                ) {
-              G__changeconsterror(var.Name().c_str(), "ignored const");
+              G__changeconsterror(var.Name(::Reflex::SCOPED).c_str(), "ignored const");
               G__var_type = 'p';
 
               return result;
@@ -2156,7 +2156,7 @@ void Cint::Internal::G__letstruct(G__value* result, int linear_index, const ::Re
             G__ASSERT(!G__decl || (G__decl == 1));
             if (G__decl) {
                // -- Copy constructor.
-               sprintf(result7, "%s(%s)", var.TypeOf().RawType().Name().c_str(), tmp);
+               sprintf(result7, "%s(%s)", var.TypeOf().RawType().Name(::Reflex::SCOPED).c_str(), tmp);
                store_tagnum = G__tagnum;
                G__set_G__tagnum(var.TypeOf().RawType());
                store_struct_offset = G__store_struct_offset;
@@ -2256,7 +2256,7 @@ void Cint::Internal::G__letstruct(G__value* result, int linear_index, const ::Re
                para = G__getfunction(result7, &ig2, G__TRYMEMFUNC);
                if (!ig2 && (G__tagnum != G__value_typenum(*result).RawType())) {
                   // -- Copy constructor.
-                  sprintf(result7, "%s(%s)", G__tagnum.Name().c_str(), tmp);
+                  sprintf(result7, "%s(%s)", G__tagnum.Name(::Reflex::SCOPED).c_str(), tmp);
                   if (G__struct.iscpplink[G__get_tagnum(G__tagnum)] == G__CPPLINK) {
                      G__abortbytecode();
                      char* store_globalvarpointer = G__globalvarpointer;
@@ -2287,10 +2287,10 @@ void Cint::Internal::G__letstruct(G__value* result, int linear_index, const ::Re
 #endif // G__ASM
                   addr = (long) (arg_G__struct_offset + ((size_t) G__get_offset(var)) + (linear_index * var.TypeOf().RawType().SizeOf()));
                   if (addr < 0) {
-                     sprintf(result7, "operator=((%s)(%ld),%s)", var.TypeOf().RawType().Name().c_str(), addr, tmp);
+                     sprintf(result7, "operator=((%s)(%ld),%s)", var.TypeOf().RawType().Name(::Reflex::SCOPED).c_str(), addr, tmp);
                   }
                   else {
-                     sprintf(result7, "operator=((%s)%ld,%s)", var.TypeOf().RawType().Name().c_str(), addr, tmp);
+                     sprintf(result7, "operator=((%s)%ld,%s)", var.TypeOf().RawType().Name(::Reflex::SCOPED).c_str(), addr, tmp);
                   }
                   para = G__getfunction(result7, &ig2, G__TRYNORMAL);
                }
@@ -2409,7 +2409,7 @@ void Cint::Internal::G__letstruct(G__value* result, int linear_index, const ::Re
                // --
 #ifdef G__ASM_DBG
                if (G__asm_dbg) {
-                  G__fprinterr(G__serr, "%3x,%3x: LD_VAR  %s paran=%d  %s:%d\n", G__asm_cp, G__asm_dt, var.Name().c_str(), 0, __FILE__, __LINE__);
+                  G__fprinterr(G__serr, "%3x,%3x: LD_VAR  %s paran=%d  %s:%d\n", G__asm_cp, G__asm_dt, var.Name(::Reflex::SCOPED).c_str(), 0, __FILE__, __LINE__);
                }
 #endif // G__ASM_DBG
                if (arg_G__struct_offset) {
@@ -2648,10 +2648,10 @@ G__value Cint::Internal::G__classassign(char* pdest, const ::Reflex::Type& tagnu
       G__setiparseobject(&result, ttt);
 #else // G__OLDIMPLEMENTATION1823
       if (result.obj.i < 0) {
-         sprintf(ttt, "(%s)(%ld)", G__value_typenum(result).Name(), result.obj.i);
+         sprintf(ttt, "(%s)(%ld)", G__value_typenum(result).Name(::Reflex::SCOPED), result.obj.i);
       }
       else {
-         sprintf(ttt, "(%s)%ld", G__value_typenum(result).Name(), result.obj.i);
+         sprintf(ttt, "(%s)%ld", G__value_typenum(result).Name(::Reflex::SCOPED), result.obj.i);
       }
 #endif // G__OLDIMPLEMENTATION1823
       // --
@@ -2748,7 +2748,7 @@ G__value Cint::Internal::G__classassign(char* pdest, const ::Reflex::Type& tagnu
       }
       sprintf(result7, "%s(%s)", xp2.c_str(), ttt);
 #else // G__OLDIMPLEMENTATION1823
-      sprintf(result7, "%s(%s)", tagnum.Name().c_str(), ttt);
+      sprintf(result7, "%s(%s)", tagnum.Name(::Reflex::SCOPED).c_str(), ttt);
 #endif // G__OLDIMPLEMENTATION1823
       if (G__get_properties(tagnum)->iscpplink == G__CPPLINK) {
          G__abortbytecode();
@@ -2940,7 +2940,7 @@ int Cint::Internal::G__class_conversion_operator(const ::Reflex::Type& tagnum, G
          G__StrBuf tmp_sb(G__ONELINE);
          char *tmp = tmp_sb;
          strcpy(tmp, "operator ");
-         strcpy(tmp + 9, tagnum.Name().c_str());
+         strcpy(tmp + 9, tagnum.Name(::Reflex::SCOPED).c_str());
          strcpy(tmp + strlen(tmp), "()");
          // Call conversion operator.
          conv_result = G__getfunction(tmp, &conv_done, G__TRYMEMFUNC);
@@ -4080,7 +4080,7 @@ static G__value Cint::Internal::G__allocvariable(G__value result, G__value para[
    //
    if (var_type.IsAbstract()) {
       // -- Do *not* create abstract class variable!
-      G__fprinterr(G__serr, "Error: 4018: abstract class object '%s %s' declared", G__tagnum.Name().c_str(), item);
+      G__fprinterr(G__serr, "Error: 4018: abstract class object '%s %s' declared", G__tagnum.Name(::Reflex::SCOPED).c_str(), item);
       G__genericerror(0);
       G__display_purevirtualfunc(G__get_tagnum(G__tagnum));
       return result;
@@ -4558,7 +4558,7 @@ static G__value Cint::Internal::G__allocvariable(G__value result, G__value para[
                // --
 #ifdef G__ASM_DBG
                if (G__asm_dbg) {
-                  G__fprinterr(G__serr, "%3x,%3x: LD_VAR '%s' paran: %d type: 'P'  %s:%d\n", G__asm_cp, G__asm_dt, var.Name().c_str(), 0, __FILE__, __LINE__);
+                  G__fprinterr(G__serr, "%3x,%3x: LD_VAR '%s' paran: %d type: 'P'  %s:%d\n", G__asm_cp, G__asm_dt, var.Name(::Reflex::SCOPED).c_str(), 0, __FILE__, __LINE__);
                }
 #endif // G__ASM_DBG
                G__asm_inst[G__asm_cp] = G__LD_LVAR;
