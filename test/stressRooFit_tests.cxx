@@ -1480,6 +1480,7 @@ public:
     TPluginHandler *h;
     if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualFFT"))) {
       if (h->LoadPlugin() == -1) {
+	gROOT->ProcessLine("new TNamed ;") ;
 	return kFALSE;
       } else {
 	return kTRUE ;
