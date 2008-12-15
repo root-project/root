@@ -1,19 +1,9 @@
-sizeof(long long)=8
-sizeof(long long int)=8
-sizeof(unsigned long long)=8
-sizeof(unsigned long long int)=8
-sizeof(long double)=12
 typeid(long long).name()=9long long
 typeid(unsigned long long).name()=18unsigned long long
 typeid(long double).name()=11long double
 'long long' 'long long' 20
 'unsigned long long' 'unsigned long long' 20
 'long double' 'long double' 20
-sizeof(long long)=8
-sizeof(long long int)=8
-sizeof(unsigned long long)=8
-sizeof(unsigned long long int)=8
-sizeof(long double)=12
 typeid(long long).name()=9long long
 typeid(unsigned long long).name()=18unsigned long long
 typeid(long double).name()=11long double

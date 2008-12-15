@@ -19,12 +19,6 @@ public:
 
 int main() {
   for(int i=0;i<2;i++) {
-    // sizeof
-    printf("sizeof(long long)=%d\n",sizeof(long long));
-    printf("sizeof(long long int)=%d\n",sizeof(long long int));
-    printf("sizeof(unsigned long long)=%d\n",sizeof(unsigned long long));
-    printf("sizeof(unsigned long long int)=%d\n",sizeof(unsigned long long int));
-    printf("sizeof(long double)=%d\n",sizeof(long double));
     
     // typeid
     printf("typeid(long long).name()=%s\n",typeid(long long).name());

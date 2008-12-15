@@ -881,6 +881,9 @@ int main(int argc, char** argv)
    //ret += mkci(kLangCXX,"t1027.cxx","t1027.h",difffile);
    ret += ci(kLangCXX, "t1032.cxx", difffile);
    ret += ci(kLangCXX, "t1032.cxx", difffile);
+   
+   ret += ci(kLangCXX, "t1034a.cxx", difffile);
+   
 #if !defined(G__WIN32) || defined(FORCEWIN32)
    if (sizeof(long double)==16) {
       ret += io("t1034.cxx", "t1034.ref64", difffile); // sizeof(long double)==16      
