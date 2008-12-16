@@ -39,6 +39,15 @@ the eye.
 
 <ul>
 
+<li> Added support for internal window management. Windows can be
+arranged in horizontal/vertical stacks, tabs and main windows.
+The containers and individaul windows can be moved to arbitrary
+window-slot.
+
+See classes <tt>TEveWindow</tt> and <tt>TEveWindowManager</tt>.
+
+See tutorial <tt>tutorials/eve/test_windows.C</tt>.
+
 <li> <tt>TEveQuadSet</tt> -- Add flag 'Bool_t fAntiFlick'. If on (now the
 default) it causes each quad to be also rendered as a pixel, thus
 preventing it from disappearing when zoomed away.
@@ -59,7 +68,8 @@ class.
 limits.
 
 <li> <tt>TEveTrackPropagator</tt> now supports propagation of charged
-particles in arbitrary / external magnetic field.
+particles in arbitrary / external magnetic field. Propagation can be
+done with the helix-stepper or with the Runge-Kutta method.
 
 New abstract interface to magnetic field <tt>TEveMagField</tt> to get
 field vector at given position. Implement two interfaces:
