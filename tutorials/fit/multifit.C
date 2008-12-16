@@ -1,3 +1,6 @@
+#include "TH1.h"
+#include "TF1.h"
+
 void multifit() {
 //  Fitting multiple functions to different ranges of a 1-D histogram
 // To see the output of this macro, click begin_html <a href="gif/multifit.gif" >here</a> end_html
@@ -47,3 +50,4 @@ void multifit() {
    total->SetParameters(par);
    h->Fit(total,"R+");
 }
+
