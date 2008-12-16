@@ -225,7 +225,7 @@ int XrdProofSched::GetNumWorkers(XrdProofdProofServ *xps)
       for (sesIter = sessions->begin(); sesIter != sessions->end(); ++sesIter) {
          if ((*sesIter)->Group()) {
             XrdProofGroup *g = fGrpMgr->GetGroup((*sesIter)->Group());
-            if (grp)
+            if (g)
                summedPriority += g->Priority();
          }
       }

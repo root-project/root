@@ -206,6 +206,9 @@ void *XrdProofdProofServCron(void *p)
             } else{
                clnlostscale--;
             }
+            // How many active sessions do we have
+            int cursess = mgr->CurrentSessions(1);
+            TRACE(ALL, cursess << " sessions are currently active");
             // Remember when ...
             lastcheck = now;
             mgr->SetNextSessionsCheck(lastcheck + mgr->CheckFrequency());
@@ -279,6 +282,7 @@ XrdProofdProofServMgr::XrdProofdProofServMgr(XrdProofdManager *mgr,
    for (int i = 0; i < PSMMAXCNTS; i++) {
       fCounters[i] = 0;
    }
+   fCurrentSessions = 0;
 
    // Defaults can be changed via 'proofservmgr'
    fCheckFrequency = 30;
@@ -3530,6 +3534,47 @@ void XrdProofdProofServMgr::DisconnectFromProofServ(int pid)
    XrdSysMutexHelper mhp(fMutex);
 
    fSessions.Apply(FreeClientID, (void *)&pid);
+}
+
+//__________________________________________________________________________
+static int CountTopMasters(const char *, XrdProofdProofServ *ps, void *s)
+{
+   // Run thorugh entries to count top-masters
+   XPDLOC(SMGR, "CountTopMasters")
+
+   int *ntm = (int *)s;
+
+   XrdOucString emsg;
+   if (ps) {
+      if (ps->SrvType() == kXPD_TopMaster) (*ntm)++;
+      // Go to next
+      return 0;
+   } else {
+      emsg = "input entry undefined";
+   }
+
+   // Some problem
+   TRACE(XERR,"protocol error: "<<emsg);
+   return 1;
+}
+
+//__________________________________________________________________________
+int XrdProofdProofServMgr::CurrentSessions(bool recalculate)
+{
+   // Return the number of current sessions (top masters)
+
+   XPDLOC(SMGR, "ProofServMgr::CurrentSessions")
+
+   TRACE(REQ, "enter");
+
+   XrdSysMutexHelper mhp(fMutex);
+   if (recalculate) {
+      fCurrentSessions = 0;
+      fSessions.Apply(CountTopMasters, (void *)&fCurrentSessions);
+   }
+
+   // Done
+   return fCurrentSessions;
 }
 
 //

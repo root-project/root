@@ -689,7 +689,7 @@ public:
    Int_t       ClearPackage(const char *package);
    Int_t       EnablePackage(const char *package, Bool_t notOnClient = kFALSE);
    Int_t       UploadPackage(const char *par, EUploadPackageOpt opt = kUntar);
-   Int_t       Load(const char *macro, Bool_t notOnClient = kFALSE);
+   Int_t       Load(const char *macro, Bool_t notOnClient = kFALSE, Bool_t uniqueOnly = kTRUE);
 
    Int_t       AddDynamicPath(const char *libpath, Bool_t onClient = kFALSE);
    Int_t       AddIncludePath(const char *incpath, Bool_t onClient = kFALSE);

@@ -547,6 +547,8 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
 
    fDataSetManager  = 0; // Initialized in Setup()
 
+   fInputHandler    = 0;
+
    // Quotas disabled by default
    fMaxQueries      = -1;
    fMaxBoxSize      = -1;
@@ -693,7 +695,8 @@ Int_t TProofServ::CreateServer()
    // Install interrupt and message input handlers
    gSystem->AddSignalHandler(new TProofServTerminationHandler(this));
    gSystem->AddSignalHandler(new TProofServInterruptHandler(this));
-   gSystem->AddFileHandler(new TProofServInputHandler(this, sock));
+   fInputHandler = new TProofServInputHandler(this, sock);
+   gSystem->AddFileHandler(fInputHandler);
 
    // if master, start slave servers
    if (IsMaster()) {
@@ -1384,9 +1387,13 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
                Int_t opt = TProof::kForward | TProof::kCp;
                if (bin)
                   opt |= TProof::kBinary;
+               // Old clients do not wait for the termination of SendFile, so we need
+               // to disable new inputs while doing this
+               if (fProtocol <= 19) SetInputSocket(kFALSE);
                fProof->SendFile(fnam, opt, (copytocache ? "cache" : ""));
+               if (fProtocol <= 19) SetInputSocket(kTRUE);
             }
-            if (fProtocol > 19) SendLogFile();
+            if (fProtocol > 19) fSocket->Send(kPROOF_SENDFILE);
          }
          break;
 
@@ -3678,7 +3685,6 @@ void TProofServ::HandleCheckFile(TMessage *mess)
             Info("HandleCheckFile",
                  "package %s not yet on node", filenam.Data());
       }
-      fSocket->Send(reply);
 
       // Note: Originally an fPackageLock->Unlock() call was made
       // after the if-else statement below. With multilevel masters,
@@ -3700,6 +3706,7 @@ void TProofServ::HandleCheckFile(TMessage *mess)
          fPackageLock->Unlock();
       }
       delete md5local;
+      fSocket->Send(reply);
 
    } else if (filenam.BeginsWith("+")) {
       // check file in package directory
@@ -4226,10 +4233,10 @@ Int_t TProofServ::HandleCache(TMessage *mess)
 
          (*mess) >> package;
 
-         // By first forwarding the load command to the master and workers
+         // By first forwarding the load command to the unique workers
          // and only then loading locally we load/build in parallel
          if (IsMaster())
-            fProof->Load(package);
+            fProof->Load(package, kFALSE, kTRUE);
 
          // Atomic action
          fCacheLock->Lock();
@@ -4248,9 +4255,10 @@ Int_t TProofServ::HandleCache(TMessage *mess)
          // Release atomicity
          fCacheLock->Unlock();
 
-         // Wait for workers to be done
+         // Now we collect the result from the unique workers and send the load request
+         // to the other workers (no compilation)
          if (IsMaster())
-            fProof->Collect();
+            fProof->Load(package, kFALSE, kFALSE);
 
          // Notify the upper level
          LogToMaster();
@@ -5085,6 +5093,17 @@ void TProofServ::HandleFork(TMessage *)
    // Cloning itself via fork. Not implemented
 
    Info("HandleFork", "fork cloning not implemented");
+}
+
+//______________________________________________________________________________
+void TProofServ::SetInputSocket(Bool_t on)
+{
+   // Switch on / off input from the parent
+
+   if (on)
+      gSystem->AddFileHandler(fInputHandler);
+   else
+      gSystem->RemoveFileHandler(fInputHandler);
 }
 
 //______________________________________________________________________________

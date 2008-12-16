@@ -74,8 +74,10 @@ class XrdProofdManager : public XrdProofdConfig {
    const char       *AdminPath() const { return fAdminPath.c_str(); }
    const char       *BareLibPath() const { return fBareLibPath.c_str(); }
    bool              ChangeOwn() const { return fChangeOwn; }
+   void              CheckLogFileOwnership();
    bool              CheckMaster(const char *m);
    int               CheckUser(const char *usr, XrdProofUI &ui, XrdOucString &e, bool &su);
+   int               CronFrequency() { return fCronFrequency; }
    const char       *Host() const { return fHost.c_str(); }
    const char       *Image() const { return fImage.c_str(); }
    bool              IsSuperMst() const { return fSuperMst; }
@@ -115,6 +117,7 @@ class XrdProofdManager : public XrdProofdConfig {
    int               fPort;           // Port for client-like connections
    XrdOucString      fImage;          // image name for these servers
    XrdOucString      fWorkDir;        // working dir for these servers
+   int               fCronFrequency;  // Frequency of cron checks
 
    XrdOucString      fBareLibPath;    // LIBPATH cleaned from ROOT dists
    XrdOucString      fTMPdir;         // directory for temporary files

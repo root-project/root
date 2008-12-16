@@ -58,6 +58,7 @@ class TReaperTimer;
 class TMutex;
 class TFileCollection;
 class TProofDataSetManager;
+class TFileHandler;
 
 // Hook to external function setting up authentication related stuff
 // for old versions.
@@ -115,6 +116,8 @@ private:
    Float_t       fCpuTime;          //CPU time spent executing commands
    TStopwatch    fLatency;          //measures latency of packet requests
    TStopwatch    fCompute;          //measures time spend processing a packet
+
+   TFileHandler *fInputHandler;     //Input socket handler
 
    TQueryResultManager *fQMgr;      //Query-result manager
 
@@ -177,6 +180,8 @@ protected:
    Int_t         SetupCommon();
    virtual void  MakePlayer();
    virtual void  DeletePlayer();
+
+   virtual void  SetInputSocket(Bool_t on = kTRUE);
 
    virtual Int_t Fork();
 

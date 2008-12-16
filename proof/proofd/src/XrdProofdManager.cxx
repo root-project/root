@@ -52,6 +52,53 @@
 // Tracing utilities
 #include "XrdProofdTrace.h"
 
+//--------------------------------------------------------------------------
+//
+// XrdProofdManagerCron
+//
+// Function run in separate thread doing regular checks
+//
+//--------------------------------------------------------------------------
+void *XrdProofdManagerCron(void *p)
+{
+   // This is an endless loop to periodically check the system
+   XPDLOC(PMGR, "ManagerCron")
+
+   XrdProofdManager *mgr = (XrdProofdManager *)p;
+   if (!(mgr)) {
+      TRACE(REQ, "undefined manager: cannot start");
+      return (void *)0;
+   }
+
+   TRACE(REQ, "started with frequency "<<mgr->CronFrequency()<<" sec");
+
+   // Get Midnight time
+   int now = time(0);
+   int mid = XrdSysTimer::Midnight(now);
+   while (mid < now) {
+      mid += 86400;
+   }
+   TRACE(REQ, "midnight in  "<<(mid - now)<<" secs");
+
+   while(1) {
+      // Do something here
+      TRACE(REQ, "running periodical checks");
+      // Check the log file ownership
+      mgr->CheckLogFileOwnership();
+      // Wait a while
+      int tw = mgr->CronFrequency();
+      now = time(0);
+      if ((mid - now) <= tw) {
+         tw = mid - now + 2; // Always run a check just after midnight
+         mid += 86400;
+      }
+      XrdSysTimer::Wait(tw * 1000);
+   }
+
+   // Should never come here
+   return (void *)0;
+}
+
 //__________________________________________________________________________
 XrdProofdManager::XrdProofdManager(XrdProtocol_Config *pi, XrdSysError *edest)
                 : XrdProofdConfig(pi->ConfigFN, edest)
@@ -71,6 +118,7 @@ XrdProofdManager::XrdProofdManager(XrdProtocol_Config *pi, XrdSysError *edest)
    fOperationMode = kXPD_OpModeOpen;
    fMultiUser = 0;
    fChangeOwn = 0;
+   fCronFrequency = 30;
 
    // Proof admin path
    fAdminPath = pi->AdmPath;
@@ -120,6 +168,41 @@ XrdProofdManager::~XrdProofdManager()
    SafeDelete(fProofSched);
    SafeDelete(fROOTMgr);
    SafeDelete(fSessionMgr);
+}
+
+//__________________________________________________________________________
+void XrdProofdManager::CheckLogFileOwnership()
+{
+   // Make sure that the log file belongs to the original effective user
+   XPDLOC(ALL, "Manager::CheckLogFileOwnership")
+
+   // Nothing to do if not priviledged
+   if (getuid()) return;
+
+   struct stat st;
+   if (fstat(STDERR_FILENO, &st) != 0) {
+      if (errno != ENOENT) {
+         TRACE(XERR, "could not stat log file; errno: "<< errno);
+         return;
+      }
+   }
+
+   TRACE(HDBG,"uid: "<<st.st_uid<<", gid: "<<st.st_gid);
+
+   // Get original effective user identity
+   struct passwd *epwd = getpwuid(XrdProofdProtocol::EUidAtStartup());
+   if (!epwd) {
+      TRACE(XERR, "could not get effective user identity; errno: "<< errno);
+      return;
+   }
+ 
+   // Set ownership of the log file to the effective user
+   if (st.st_uid != epwd->pw_uid || st.st_gid != epwd->pw_gid) {
+      if (fchown(STDERR_FILENO, epwd->pw_uid, epwd->pw_gid) != 0) {
+         TRACE(XERR, "could not set stderr ownership; errno: "<< errno);
+         return;
+      }
+   }
 }
 
 //______________________________________________________________________________
@@ -637,6 +720,17 @@ int XrdProofdManager::Config(bool rcf)
    if (fSessionMgr && fSessionMgr->Config(rcf) != 0) {
       XPDERR("problems configuring the session manager");
       return -1;
+   }
+
+   if (!rcf) {
+      // Start cron thread
+      pthread_t tid;
+      if (XrdSysThread::Run(&tid, XrdProofdManagerCron,
+                           (void *)this, 0, "ProofdManager cron thread") != 0) {
+         XPDERR("could not start cron thread");
+         return 0;
+      }
+      TRACE(ALL, "manager cron thread started");
    }
 
    // Done

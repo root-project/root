@@ -489,63 +489,68 @@ int XrdProofdNetMgr::ReadBuffer(XrdProofdProtocol *p)
 
    XrdOucString emsg;
 
+   // Unmarshall the data
+   //
+   kXR_int64 ofs = ntohll(p->Request()->readbuf.ofs);
+   int len = ntohl(p->Request()->readbuf.len);
+
    // Find out the file name
    char *file = 0;
+   char *filen = 0;
+   char *pattern = 0;
    int dlen = p->Request()->header.dlen;
+   int grep = ntohl(p->Request()->readbuf.int1);
+   int blen = dlen;
+   bool local = 0;
    if (dlen > 0 && p->Argp()->buff) {
       file = new char[dlen+1];
       memcpy(file, p->Argp()->buff, dlen);
       file[dlen] = 0;
+      // Check if local
+      XrdClientUrlInfo ui(file);
+      if (ui.Host.length() > 0) {
+         // Fully qualified name
+         char *fqn = XrdNetDNS::getHostName(ui.Host.c_str());
+         if (fqn && (strstr(fqn, "localhost") ||
+                    !strcmp(fqn, "127.0.0.1") ||
+                    !strcmp(fMgr->Host(),fqn))) {
+            memcpy(file, ui.File.c_str(), ui.File.length());
+            file[ui.File.length()] = 0;
+            blen = ui.File.length();
+            local = 1;
+            TRACEP(p, DBG, "file is LOCAL");
+         }
+         SafeFree(fqn);
+      }
+      // If grep, extract the pattern
+      if (grep > 0) {
+         // 'grep' operation: len is the length of the 'pattern' to be grepped
+         pattern = new char[len + 1];
+         int j = blen - len;
+         int i = 0;
+         while (j < blen)
+            pattern[i++] = file[j++];
+         pattern[i] = 0;
+         filen = strdup(file);
+         filen[blen - len] = 0;
+         TRACEP(p, DBG, "grep operation "<<grep<<", pattern:"<<pattern);
+      }
    } else {
       emsg = "file name not not found";
       TRACEP(p, XERR, emsg);
       response->Send(kXR_InvalidRequest, emsg.c_str());
       return 0;
    }
-
-   // Unmarshall the data
-   //
-   kXR_int64 ofs = ntohll(p->Request()->readbuf.ofs);
-   int len = ntohl(p->Request()->readbuf.len);
-   TRACEP(p, REQ, "file: "<<file<<", ofs: "<<ofs<<", len: "<<len);
-
-   // Check if local
-   bool local = 0;
-   int blen = dlen;
-   XrdClientUrlInfo ui(file);
-   if (ui.Host.length() > 0) {
-      // Fully qualified name
-      char *fqn = XrdNetDNS::getHostName(ui.Host.c_str());
-      if (fqn && (strstr(fqn, "localhost") ||
-                 !strcmp(fqn, "127.0.0.1") ||
-                 !strcmp(fMgr->Host(),fqn))) {
-         memcpy(file, ui.File.c_str(), ui.File.length());
-         file[ui.File.length()] = 0;
-         blen = ui.File.length();
-         local = 1;
-         TRACEP(p, DBG, "file is LOCAL");
-      }
-      SafeFree(fqn);
+   if (grep) {
+      TRACEP(p, REQ, "file: "<<filen<<", ofs: "<<ofs<<", len: "<<len<<
+                     ", pattern: "<<pattern);
+   } else {
+      TRACEP(p, REQ, "file: "<<file<<", ofs: "<<ofs<<", len: "<<len);
    }
 
    // Get the buffer
    int lout = len;
    char *buf = 0;
-   char *filen = 0;
-   char *pattern = 0;
-   int grep = ntohl(p->Request()->readbuf.int1);
-   if (grep > 0) {
-      // 'grep' operation: len is the length of the 'pattern' to be grepped
-      pattern = new char[len + 1];
-      int j = blen - len;
-      int i = 0;
-      while (j < blen)
-         pattern[i++] = file[j++];
-      pattern[i] = 0;
-      filen = strdup(file);
-      filen[blen - len] = 0;
-      TRACEP(p, DBG, "grep operation "<<grep<<", pattern:"<<pattern);
-   }
    if (local) {
       if (grep > 0) {
          // Grep local file

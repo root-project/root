@@ -103,6 +103,8 @@ private:
    Int_t               fByteLeft;      // bytes left in the first buffer
    Int_t               fByteCur;       // current position in the first buffer
    TXSockBuf          *fBufCur;        // current read buffer
+   Bool_t              fEnabled;       // kTRUE if input from this socket is enabled
+   Int_t               fAQueued;       // Number of messages received while disabled
 
    // Interrupts
    TMutex             *fIMtx;          // To protect interrupt queue
@@ -240,6 +242,13 @@ public:
    // Disable / Enable read timeout
    void                DisableTimeout() { fDontTimeout = kTRUE; }
    void                EnableTimeout() { fDontTimeout = kFALSE; }
+
+   // Disable / Enable / Test input from this socket
+   inline Bool_t       IsEnabled() const { R__LOCKGUARD(fAMtx); return fEnabled; }
+   inline void         Enqueue() { R__LOCKGUARD(fAMtx); fAQueued++; }
+   inline Int_t        Enqueued() const { R__LOCKGUARD(fAMtx); return fAQueued; }
+   inline void         Disable() { R__LOCKGUARD(fAMtx); fEnabled = kFALSE; }
+   void                Enable();
 
    // Try reconnection after error
    virtual Int_t       Reconnect();

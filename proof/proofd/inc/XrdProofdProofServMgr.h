@@ -183,7 +183,7 @@ public:
                                  return cnt; }
 
    int               BroadcastPriorities();
-   int               CurrentSessions() { XrdSysMutexHelper mhp(fMutex); return fCurrentSessions; }
+   int               CurrentSessions(bool recalculate = 0);
    void              DisconnectFromProofServ(int pid);
 
    std::list<XrdProofdProofServ *> *ActiveSessions() { return &fActiveSessions; }

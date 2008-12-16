@@ -1012,3 +1012,15 @@ void TXProofServ::ReleaseWorker(const char *ord)
 
    ((TXSocket *)fSocket)->SendCoordinator(TXSocket::kReleaseWorker, ord);
 }
+
+//______________________________________________________________________________
+void TXProofServ::SetInputSocket(Bool_t on)
+{
+   // Switch on / off input from the parent
+
+   if (!fSocket) return;
+   if (on)
+      ((TXSocket *)fSocket)->Enable();
+   else
+      ((TXSocket *)fSocket)->Disable();
+}

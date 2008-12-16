@@ -114,8 +114,8 @@ Long64_t     TXSockBuf::fgMemMax = 10485760; // Max allowed allocated memory [10
 TXSocket::TXSocket(const char *url, Char_t m, Int_t psid, Char_t capver,
                    const char *logbuf, Int_t loglevel, TXHandler *handler)
          : TSocket(), fMode(m), fLogLevel(loglevel),
-           fBuffer(logbuf), fASem(0), fDontTimeout(kFALSE), fRDInterrupt(kFALSE),
-           fXrdProofdVersion(-1)
+           fBuffer(logbuf), fASem(0), fEnabled(kTRUE), fAQueued(0),
+           fDontTimeout(kFALSE), fRDInterrupt(kFALSE), fXrdProofdVersion(-1)
 {
    // Constructor
    // Open the connection to a remote XrdProofd instance and start a PROOF
@@ -651,7 +651,7 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
       case kXPD_msg:
          //
          // Data message
-         { R__LOCKGUARD(fAMtx);
+         {  R__LOCKGUARD(fAMtx);
 
             // Get a spare buffer
             TXSockBuf *b = PopUpSpare(len);
@@ -927,6 +927,8 @@ Int_t TXSocket::Flush()
             fASem.TryWait();
          fAQue.clear();
       }
+      // Reset the queued counter
+      fAQueued = 0;
    }
 
    // Move spares to the spare queue
@@ -1961,6 +1963,19 @@ Int_t TXSocket::Reconnect()
    return ((fConn && fConn->IsValid()) ? 0 : -1);
 }
 
+//______________________________________________________________________________
+void TXSocket::Enable()
+{
+   // Renable the socket reposting all messages received in the meantime
+   R__LOCKGUARD(fAMtx);
+
+   while (fAQueued > 0) {
+      fgPipe.Post();
+      fAQueued++;
+   }
+   fEnabled= kTRUE;
+}
+
 //_____________________________________________________________________________
 TXSockBuf::TXSockBuf(Char_t *bp, Int_t sz, Bool_t own)
 {
@@ -2031,7 +2046,7 @@ void TXSockBuf::SetMemMax(Long64_t memmax)
 //
 
 //_____________________________________________________________________________
-TXSockPipe::TXSockPipe(const char *loc) : fMutex(kTRUE), fLoc(loc), fReadyMtx(kTRUE)
+TXSockPipe::TXSockPipe(const char *loc) : fMutex(kTRUE), fLoc(loc)
 {
    // Constructor
 
@@ -2063,24 +2078,23 @@ Int_t TXSockPipe::Post(TSocket *s)
    if (!IsValid()) return -1;
 
    // This must be an atomic action
-   { R__LOCKGUARD(&fReadyMtx);
-     // Add this one
-     fReadySock.Add(s);
-   }
+   Int_t sz = 0;
+   {  R__LOCKGUARD(&fMutex);
+      // Add this one
+      fReadySock.Add(s);
 
-   // Only one char
-   Char_t c = 1;
-   { R__LOCKGUARD(&fMutex);
+      // Only one char
+      Char_t c = 1;
       if (write(fPipe[1],(const void *)&c, sizeof(Char_t)) < 1) {
          Printf("TXSockPipe::Post: %s: can't notify pipe", fLoc.Data());
          return -1;
       }
+      if (gDebug > 2) sz = fReadySock.GetSize();
    }
 
    if (gDebug > 2)
       Printf("TXSockPipe::Post: %s: %p: pipe posted (pending %d)",
-                                   fLoc.Data(), s, fReadySock.GetSize());
-
+                                   fLoc.Data(), s, sz);
    // We are done
    return 0;
 }
@@ -2094,23 +2108,22 @@ Int_t TXSockPipe::Clean(TSocket *s)
    if (!IsValid()) return -1;
 
    // Only one char
+   Int_t sz = 0;
    Char_t c = 0;
    { R__LOCKGUARD(&fMutex);
       if (read(fPipe[0],(void *)&c, sizeof(Char_t)) < 1) {
          Printf("TXSockPipe::Clean: %s: can't read from pipe", fLoc.Data());
          return -1;
       }
-   }
-
-   // This must be an atomic action
-   {  R__LOCKGUARD(&fReadyMtx);
       // Remove this one
       fReadySock.Remove(s);
+
+      if (gDebug > 2) sz = fReadySock.GetSize();
    }
 
    if (gDebug > 2)
       Printf("TXSockPipe::Clean: %s: %p: pipe cleaned (pending %d)",
-                               fLoc.Data(), s, fReadySock.GetSize());
+                               fLoc.Data(), s, sz);
 
    // We are done
    return 0;
@@ -2123,27 +2136,32 @@ Int_t TXSockPipe::Flush(TSocket *s)
    // ready-socket queue
 
    // Pipe must have been created
-   if (!IsValid()) return -1;
+   if (!IsValid() || !s) return -1;
 
+   // Get number of enqueued
+   Int_t sque = ((TXSocket *)s)->Enqueued();
    TObject *o = 0;
    // This must be an atomic action
-   {  R__LOCKGUARD(&fReadyMtx);
+   {  R__LOCKGUARD(&fMutex);
       o = fReadySock.FindObject(s);
-   }
 
-   while (o) {
-      // Remove from the list
-      {  R__LOCKGUARD(&fReadyMtx);
+      while (o) {
+         // Remove from the list
          fReadySock.Remove(s);
          o = fReadySock.FindObject(s);
-      }
-      // Remove one notification from the pipe
-      Char_t c = 0;
-      {  R__LOCKGUARD(&fMutex);
-         if (read(fPipe[0],(void *)&c, sizeof(Char_t)) < 1)
-            Printf("TXSockPipe::Flush: %s: can't read from pipe", fLoc.Data());
+         if (sque > 0) {
+            // There were no pipe posting fro enqueued messages
+            sque--;
+         } else {
+            // Remove one notification from the pipe
+            Char_t c = 0;
+            if (read(fPipe[0],(void *)&c, sizeof(Char_t)) < 1)
+               Printf("TXSockPipe::Flush: %s: can't read from pipe", fLoc.Data());
+         }
       }
    }
+   // Flush also the socket
+   ((TXSocket *)s)->Flush();
 
    // Notify
    if (gDebug > 0)
@@ -2158,7 +2176,7 @@ void TXSockPipe::DumpReadySock()
 {
    // Dump content of the ready socket list
 
-   R__LOCKGUARD(&fReadyMtx);
+   R__LOCKGUARD(&fMutex);
 
    TString buf = Form("%d |", fReadySock.GetSize());
    TIter nxs(&fReadySock);
@@ -2173,7 +2191,7 @@ TXSocket *TXSockPipe::GetLastReady()
 {
    // Return last ready socket
 
-   R__LOCKGUARD(&fReadyMtx);
+   R__LOCKGUARD(&fMutex);
 
    return (TXSocket *) fReadySock.Last();
 }
