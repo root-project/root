@@ -708,7 +708,7 @@ void G__outputmakefile(int argc,char **argv)
   // new code
   std::string maindiru = "$(patsubst %/bin/,%/,$(dir $(CINT)))";
   std::string maindirw =
-        std::string("$(shell ") + std::string(G__CFG_MANGLEPATHS) +
+        std::string("$(shell ") + std::string(G__CFG_MANGLEPATHS)
       + std::string(" $(patsubst %/bin/,%/,$(dir $(shell which cint") 
       + std::string(G__CFG_EXEEXT) + std::string("))))");
 # endif
