@@ -14,6 +14,7 @@
 #include "Math/IParamFunction.h"
 #include "TF1.h"
 #include "TUUID.h"
+#include "TROOT.h"
 #include "Fit/Chi2FCN.h"
 
 #include "TLinearFitter.h"
@@ -148,6 +149,9 @@ void TLinearMinimizer::SetFunction(const  ROOT::Math::IMultiGradFunction & objfu
          std::string(u.AsString() );
       TF1 * f = new TF1(fname.c_str(),ROOT::Math::ParamFunctor(bf));
       flist.Add(f);
+      // remove this functions from gROOT
+      gROOT->GetListOfFunctions()->Remove(f); 
+      
    }
 
    // create TLinearFitter (do it now because olny now now the coordinate dimensions)
