@@ -13,7 +13,9 @@
   Fixed a bug in the <tt>ROOT::Math::landau_pdf</tt> function. Now it evaluates to the correct normalized distribution when the scale factor is different than 1.</li>  
   <li><bf><tt>TVirtualFitter</tt></bf>: move TVirtualFitter from base to mathcore. Setting the minimizer parameters is done via the new class <tt>ROOT::Math::MinimizerOptions</tt>. Fixed also a bug in the TVirtualFitter destructor, which was preventing the deletion of the static instance and causing in same cases memory leaks.  
   <li><bf><tt>ROOT::Math::MinimizerOptions</tt></bf>: new class keeping the minimizer control parameters, minimizer name and algorithms. Static values of the parameter exist and can be set and retrieved via corresponding static methods. 
-  <li><bf>Fitting Classes</bf>: improve in general all classes in view of using them in the histogram and graph fitting routines. Few bugs have been as well fixed (see the <a href="http://root.cern.ch/viewcvs?rev=25486&root=root&view=rev">cvs log</a> for details).
+  <li><bf>Fitting Classes</bf>: improve in general all classes in view of using them in the histogram and graph fitting routines. Few bugs have been as well fixed (see the <a href="http://root.cern.ch/viewcvs?rev=25486&root=root&view=rev">cvs log</a> for details). The fitter class are used now to implement the Fit funcitonality of the Hist library.
+  <br>
+  The Fitter has been changed to retain a pointer to the Minimizer and Objective function of the last fit. The objective funciton depends on a reference to the data and the model function, therefore the objective function pointer is valid as far the data and the model function are mantained alive. 
  </li> 
   </ul>
 
@@ -30,7 +32,7 @@
   <h4>Minuit</h4>
   <ul>
     <li>
-  In  <tt>TMinuitMinimizer</tt>: do not delete the contained TMinuit reference, but maintain it alive, and accessible outside as gMinuit. It can then be used after fitting, for example for drawing contour plots.
+  In  <tt>TMinuitMinimizer</tt>: do not delete the contained TMinuit reference, but maintain it alive, and accessible outside as gMinuit. It can then be used after fitting, for example for drawing contour plots. Add also support for Scan and Contour plots. 
  <li>
 <tt>    TLinearMinimizer</tt>: add support for robust fitting
     </li>
@@ -41,6 +43,7 @@
       In the Minuit2 standalone built libraries (using autoconf) support for openMP is automatically enabled, whenever the compiler supports it (for example for gcc version >= 4.2). Some small changes have been applied in Minuit2 to make it thread safe. For example, when transforming from internal to external values, the parameter values are not cached anymore in MnUserTransformation class. 
  <li><tt>DavidonErrorUpdator</tt>: add an additional check to avoid a division by zero.
  <li>In <tt>Minuit2Minimizer</tt> fill the status information according to the minimizer result
+      <li>Add Scan and Contour methods in the Minuit2Minimizer class
       </ul>
 
   <h4>GenVector</h4>
@@ -50,6 +53,12 @@
  <li>Fix a problem in the assignment operator of the <tt>ROOT::Math::PxPyPzM4D</tt> class. Avoid having nan when converting for example from PxPyPzME4D to PxPyPzM4D when the mass is negative. </li> 
 <li>Throw always exception in the non-supported setters (i.e. SetPt on a PxPyPzEVector) methods, which are generated only for the CINT dictionary. These methods flag a compiled-error when running in C++ mode.</li>
 </ul>
+
+<h4>SMatrix</h4>
+<ul>
+ <li>Change implementation of the <tt>SMatrix::Invert</tt> and <tt>SMatrix::Inverse</tt> methods. Now the optimized method based on the Cramer rule is used only for matrix up to sizes 2x2. The standard methods based on LU  (for ordinary square matrix) or Bunch-Kaufman factorization (for square matrix) are used. The factorization method, although slower for small size matrices, they suffer much less from numerical precision problems.
+  <li>New methods  <tt>SMatrix::Invert</tt> and  <tt>SMatrix::InverseFast</tt> are added for using the Cramer rule for up to matrix of sizes 5x5. This method has exactly the same implementation as the Invert and Inverse of the previous ROOT version.
+  </ul>
 
 <h4>Physics</h4>
 <ul>
