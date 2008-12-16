@@ -1408,6 +1408,7 @@ void TFitEditor::DoNoSelection()
    }
    
    DisconnectSlots();
+   fDataSet->Connect("Selected(Int_t)", "TFitEditor", this, "DoDataSet(Int_t)");
    fParentPad = 0;
    fFitObject = 0;
    fStatusBar->SetText("No selection",0);
@@ -1859,7 +1860,6 @@ void TFitEditor::DoDataSet(Int_t selected)
    // Selects the data set to be fitted
    if ( selected == kFP_NOSEL ) {
       DoNoSelection();
-      fDataSet->Connect("Selected(Int_t)", "TFitEditor", this, "DoDataSet(Int_t)");
       return;
    }
 
@@ -1878,7 +1878,7 @@ void TFitEditor::DoDataSet(Int_t selected)
       strcpy(variables, "Sin input!");
       new TTreeInput( fClient->GetRoot(), GetMainFrame(), variables, cuts );
       if ( strcmp ( variables, "" ) == 0 ) {
-         fDataSet->Select( kFP_NOSEL, kTRUE );
+         DoNoSelection();
          return;
       }
 

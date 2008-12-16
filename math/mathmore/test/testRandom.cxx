@@ -6,6 +6,7 @@
 #include "TRandom3.h"
 #include <iostream>
 #include <cmath>
+#include <cstdlib>
 #include <typeinfo>
 #include <iomanip>
 #include <fstream> 

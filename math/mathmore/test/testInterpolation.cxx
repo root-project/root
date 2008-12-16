@@ -13,6 +13,7 @@
 #include "Math/Interpolator.h"
 #include <iostream>
 #include <string>
+#include <cstdlib>
 
 #include <cmath>
 

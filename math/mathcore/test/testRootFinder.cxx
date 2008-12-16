@@ -1,11 +1,11 @@
 #include "TF1.h"
-#include "Math/Polynomial.h"
 #include "Math/Functor.h"
 #include "TStopwatch.h"
 
 #include "Math/BrentRootFinder.h"
 
 #include <iostream>
+#include <cmath>
 
 const double ERRORLIMIT = 1E-8;
 const int iterTest = 10000;
@@ -19,7 +19,7 @@ double myfunc ( double x ) {
 int printStats(TStopwatch& timer, double root) {
 
    //std::cout << "Return code:  " << status << std::endl; 
-   double difference = root - sqrt(5.0);
+   double difference = root - std::sqrt(5.0);
    std::cout << "Result:       " << root << std::endl; 
    std::cout << "Exact result: " << sqrt(5.0) << " difference: " << difference << std::endl; 
    std::cout << "Time: " << timer.RealTime()/(double) iterTest << std::endl; 
@@ -34,15 +34,6 @@ int testRootFinder() {
    double root;
    int status = 0;
 
-   ROOT::Math::Polynomial polyf(2);
-   std::vector<double> p(3);
-   p[0] = -5; 
-   p[1] = 0; 
-   p[2] = 1; 
-   
-   polyf.SetParameters(&p[0]); 
-   
-   //ROOT::Math::IGenFunction *func = &polyf;
    ROOT::Math::Functor1D    *func = new ROOT::Math::Functor1D (&myfunc);
    
    ROOT::Math::BrentRootFinder brf;

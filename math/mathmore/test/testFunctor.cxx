@@ -429,13 +429,14 @@ void testMore() {
    TestTime(f8);
 
 // this does not compile oin Windows, since it does not understand the default arguments
-#ifndef _WIN32
-   ROOT::Math::Functor1D f9(&tf1,&TF1::Eval);
-   TestTime(f9);
+// It does not work for gcc 4.3 either.
+// #ifndef _WIN32
+//    ROOT::Math::Functor1D f9(&tf1,&TF1::Eval);
+//    TestTime(f9);
 
-   ROOT::Math::Functor f10(&tf1,&TF1::EvalPar,tf1.GetNdim());
-   TestTime(f10);
-#endif
+//    ROOT::Math::Functor f10(&tf1,&TF1::EvalPar,tf1.GetNdim());
+//    TestTime(f10);
+// #endif
    
 
 

@@ -11,13 +11,6 @@ include $(ROOTSYS)/test/Makefile.arch
 
 #------------------------------------------------------------------------------
 
-ifeq ($(PLATFORM),win32)
-EXTRALIBS        = -include:_G__cpp_setupG__MathCore  "$(ROOTSYS)/lib/libMathMore.lib"
-else
-EXTRALIBS        = -lMathMore
-CXXFLAGS += -g
-endif
-
 ifeq ($(DIM),2)
 CXXFLAGS += -DDIM_2
 endif

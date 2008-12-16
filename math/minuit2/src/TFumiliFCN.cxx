@@ -226,7 +226,7 @@ void TFumiliFCN::Calculate_numerical_gradient( const std::vector<double> & x, do
 
 
 void TFumiliFCN::Calculate_numerical_gradient_of_integral( const std::vector<double> & x1, const std::vector<double> & x2, double f0) {   
-   // calculate the numerical gradient when the intergral of the model function is used in the fit
+   // calculate the numerical gradient when the integral of the model function is used in the fit
     // Different method (5 point r 2 points) according to the strategy set
    // use a cache for parameters to avoid to copy parameters each time this function is called
    

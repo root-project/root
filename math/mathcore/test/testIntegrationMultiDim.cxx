@@ -19,7 +19,6 @@
 #include "Math/WrappedParamFunction.h"
 #include "Math/AdaptiveIntegratorMultiDim.h"
 #include "Math/IFunctionfwd.h"
-#include "Math/GSLMCIntegrator.h"
 #include "TF1.h"
 
 // for graphical comparison of performance

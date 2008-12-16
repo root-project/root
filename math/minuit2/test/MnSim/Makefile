@@ -52,9 +52,14 @@ RTESTSRC    = ReneTest.$(SrcSuf)
 RTESTOBJ    = ReneTest.$(ObjSuf)
 RTEST       = test_Minuit2_ReneTest$(ExeSuf)
 
-OBJS          = $(DEMOGAUSSSIMOBJ) $(DEMOFUMILIOBJ) $(PTESTOBJ) $(PTEST2OBJ) $(PTEST3OBJ) $(PTEST4OBJ) $(RTESTOBJ)
+PARATESTSRC    = ParallelTest.$(SrcSuf) GaussDataGen.$(SrcSuf)
+PARATESTOBJ    = ParallelTest.$(ObjSuf) GaussDataGen.$(ObjSuf)
+PARATEST       = test_Minuit2_Parallel$(ExeSuf)
 
-PROGRAMS      = $(DEMOGAUSSSIM) $(DEMOFUMILI) $(PTEST) $(PTEST2) $(PTEST3) $(PTEST4) $(RTEST)
+
+OBJS          = $(DEMOGAUSSSIMOBJ) $(DEMOFUMILIOBJ) $(PTESTOBJ) $(PTEST2OBJ) $(PTEST3OBJ) $(PTEST4OBJ) $(RTESTOBJ) $(PARATESTOBJ)
+
+PROGRAMS      = $(DEMOGAUSSSIM) $(DEMOFUMILI) $(PTEST) $(PTEST2) $(PTEST3) $(PTEST4) $(RTEST) $(PARATEST)
 
 .SUFFIXES: .$(SrcSuf) .$(ObjSuf) $(ExeSuf)
 
@@ -91,6 +96,11 @@ $(PTEST4): 	$(PTEST4OBJ)
 		@echo "$@ done"
 
 $(RTEST): 	$(RTESTOBJ)
+		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
+		@echo "$@ done"
+
+$(PARATESTOBJ): 	GaussRandomGen.h
+$(PARATEST): 	$(PARATESTOBJ) 
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
 		@echo "$@ done"
 

@@ -6,13 +6,15 @@
 #include "TGTextEntry.h"
 #include "TGNumberEntry.h"
 #include "TGTab.h"
+#include "TGColorSelect.h"
 
 #include "TBackCompFitter.h"
 #include "TF1.h"
 
 enum EAdvanceGraphicsDialog {
-   kAGD_TMETHOD, kAGD_CONTOURMETHOD, kAGD_SCANMETHOD,
-   kAGD_CONTPAR1, kAGD_CONTPAR2, kAGD_CONTERR,
+   kAGD_TMETHOD,  kAGD_CONTOURMETHOD, kAGD_SCANMETHOD,
+   kAGD_CONTPAR1, kAGD_CONTPAR2,      kAGD_CONTERR,
+   kAGD_CONTOVER, kAGD_CONTCOLOR,
    kAGD_BDRAW, kAGD_BCLOSE,
    kAGD_SCANPAR, kAGD_SCANMIN, kAGD_SCANMAX,
 
@@ -33,6 +35,8 @@ private:
    TGComboBox       *fContourPar1;   // Parameter 1 for Contour
    TGComboBox       *fContourPar2;   // Parameter 2 for Contour
    TGNumberEntry    *fContourError;  // Error Level for Contour
+   TGCheckButton    *fContourOver;   // Superimpose the graphics
+   TGColorSelect    *fContourColor;  // Color for the graph
 
    TGVerticalFrame  *fScanFrame;     // Scan Frame
    TGNumberEntry    *fScanPoints; // Number of points for the graph
