@@ -25,6 +25,7 @@
 #include "TFile.h"
 #include "TProcessID.h"
 
+
 extern "C" void R__zip (Int_t cxlevel, Int_t *nin, char *bufin, Int_t *lout, char *bufout, Int_t *nout);
 extern "C" void R__unzip(Int_t *nin, UChar_t *bufin, Int_t *lout, char *bufout, Int_t *nout);
 const Int_t kMAXBUF = 0xffffff;
@@ -61,6 +62,8 @@ TMessage::TMessage(UInt_t what) : TBufferFile(TBuffer::kWrite)
    fCompPos    = 0;
    fInfos      = 0;
    fEvolution  = kFALSE;
+
+   SetBit(kCannotHandleMemberWiseStreaming);
 }
 
 //______________________________________________________________________________
@@ -128,9 +131,9 @@ Bool_t TMessage::UsesSchemaEvolutionForAll()
 //______________________________________________________________________________
 void TMessage::ForceWriteInfo(TVirtualStreamerInfo *info, Bool_t /* force */)
 {
-   // force writing the TStreamerInfo to the message
+   // Force writing the TStreamerInfo to the message.
 
-   if (fgEvolution) fInfos->Add(info);
+   if (fgEvolution || fEvolution) fInfos->Add(info);
 }
 
 //______________________________________________________________________________
@@ -142,6 +145,7 @@ void TMessage::Forward()
    if (IsReading()) {
       SetWriteMode();
       SetBufferOffset(fBufSize);
+      SetBit(kCannotHandleMemberWiseStreaming);
 
       if (fBufComp) {
          fCompPos = fBufCur;
@@ -150,13 +154,13 @@ void TMessage::Forward()
 }
 
 //______________________________________________________________________________
-void TMessage::IncrementLevel(TVirtualStreamerInfo* info)
+void TMessage::IncrementLevel(TVirtualStreamerInfo *info)
 {
    // Increment level.
 
    TBufferFile::IncrementLevel(info);
 
-   if (fgEvolution) fInfos->Add(info);
+   if (fgEvolution || fEvolution) fInfos->Add(info);
 }
 
 //______________________________________________________________________________
@@ -356,18 +360,21 @@ Int_t TMessage::Uncompress()
 void TMessage::WriteObject(const TObject *obj)
 {
    // Write object to message buffer.
-   // when support for schema evolution is enabled the list of TStreamerInfo
+   // When support for schema evolution is enabled the list of TStreamerInfo
    // used to stream this object is kept in fInfos. This information is used
-   // by TSocket::Send that sends this list through the socket. This list is in turn
-   // used by TSocket::Recv to store the TStreamerInfo objects in the relevant TClass
-   // in case the TClass does not know yet about a particular class version.
-   // This feature is implemented to support clients and servers with either different
-   // ROOT versions or different user classes versions.
+   // by TSocket::Send that sends this list through the socket. This list is in
+   // turn used by TSocket::Recv to store the TStreamerInfo objects in the
+   // relevant TClass in case the TClass does not know yet about a particular
+   // class version. This feature is implemented to support clients and servers
+   // with either different ROOT versions or different user classes versions.
 
-   if (fgEvolution) {
-      if (fInfos) fInfos->Clear();
-      else        fInfos = new TList();
+   if (fgEvolution || fEvolution) {
+      if (fInfos)
+         fInfos->Clear();
+      else
+         fInfos = new TList();
    }
+
    fBitsPIDs.ResetAllBits();
    WriteObjectAny(obj, TObject::Class());
 }
