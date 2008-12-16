@@ -3492,6 +3492,11 @@ int G__library_func(G__value *result7, char *funcname, G__param *libp, int hash)
       G__CHECKNONULL(1, 'C');
       if (G__checkscanfarg("sscanf", libp, 2)) return(1);
       switch (libp->paran) {
+         case 2:
+            G__letint(result7, 'i'
+                  , sscanf((char *)G__int(libp->para[0])
+                     , (char *)G__int(libp->para[1]))) ;
+            break;
          case 3:
             G__letint(result7, 'i'
                   , sscanf((char *)G__int(libp->para[0])
@@ -3613,6 +3618,11 @@ int G__library_func(G__value *result7, char *funcname, G__param *libp, int hash)
       G__CHECKNONULL(1, 'C');
       if (G__checkscanfarg("fscanf", libp, 2)) return(1);
       switch (libp->paran) {
+         case 2:
+            G__letint(result7, 'i'
+                  , fscanf((FILE *)G__int(libp->para[0])
+                     , (char *)G__int(libp->para[1]))) ;
+            break;
          case 3:
             G__letint(result7, 'i'
                   , fscanf((FILE *)G__int(libp->para[0])
@@ -3733,6 +3743,10 @@ int G__library_func(G__value *result7, char *funcname, G__param *libp, int hash)
       G__CHECKNONULL(0, 'C');
       if (G__checkscanfarg("scanf", libp, 1)) return(1);
       switch (libp->paran) {
+         case 1:
+            G__letint(result7, 'i'
+                  , fscanf(G__intp_sin, (char *)G__int(libp->para[0]))) ;
+            break;
          case 2:
             G__letint(result7, 'i'
                   , fscanf(G__intp_sin, (char *)G__int(libp->para[0])
