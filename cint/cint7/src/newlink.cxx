@@ -5688,7 +5688,6 @@ void Cint::Internal::G__cpplink_memfunc(FILE* fp)
                   }
 
                   if (typenum != -1) {
-                     fprintf(stderr, "%d '%s'\n", G__fulltypename(G__Dict::GetDict().GetTypedef(typenum)).c_str());
                      fprintf(fp, "'%s' ", G__fulltypename(G__Dict::GetDict().GetTypedef(typenum)).c_str());
                   }
                   else {
