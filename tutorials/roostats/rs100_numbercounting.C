@@ -94,7 +94,7 @@ void rs100_numbercounting()
 
   // Step 4, Create a calculator for doing the hypothesis test.
   ProfileLikelihoodCalculator plc;
-  plc.SetWorkspace(wspace);
+  plc.SetWorkspace(*wspace);
   plc.SetCommonPdf("TopLevelPdf");
 
   // Step 5, Specify the data set 
@@ -124,7 +124,7 @@ void rs100_numbercounting()
   nullParams->addClone(*x);
   // here we explicitly set the value of the parameters for the null
   nullParams->setRealValue("masterSignal",0); 
-  plc.SetNullParameters(nullParams);
+  plc.SetNullParameters(*nullParams);
 
   // Step 7, Use the Calculator to get a HypoTestResult
   HypoTestResult* htr = plc.GetHypoTest();
@@ -146,7 +146,7 @@ void rs100_numbercounting()
   // Step 8, Here we re-use the ProfileLikelihoodCalculator to return a confidence interval.
   // We need to specify what are our parameters of interest
   RooArgSet* paramsOfInterest = nullParams; // they are the same as before in this case
-  plc.SetParameters(paramsOfInterest);
+  plc.SetParameters(*paramsOfInterest);
   ConfInterval* lrint = plc.GetInterval();  // that was easy.
   lrint->SetConfidenceLevel(0.95);
 

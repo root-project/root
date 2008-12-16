@@ -78,7 +78,7 @@ void rs102_hypotestwithshapes() {
 }
  
 //____________________________________
-void AddModel(RooWorkspace* ws){
+void AddModel(RooWorkspace* wks){
 
   // Make models for signal (Higgs) and background (Z+jets and QCD)
   // In real life, this part requires an intellegent modeling 
@@ -154,40 +154,40 @@ void AddModel(RooWorkspace* ws){
   //  model.printCompactTree("","fullModel.txt");
   //  model.graphVizTree("fullModel.dot");
 
-  ws->import(model);
+  wks->import(model);
 }
 
 //____________________________________
-void AddData(RooWorkspace* ws){
+void AddData(RooWorkspace* wks){
   // Add a toy dataset
 
   Int_t nEvents = 150;
-  RooAbsPdf* model = ws->pdf("model");
-  RooRealVar* invMass = ws->var("invMass");
+  RooAbsPdf* model = wks->pdf("model");
+  RooRealVar* invMass = wks->var("invMass");
  
   RooDataSet* data = model->generate(*invMass,nEvents);
   
-  ws->import(*data, RenameDataset("data"));
+  wks->import(*data, RenameDataset("data"));
 
 }
 
 //____________________________________
-void DoHypothesisTest(RooWorkspace* ws){
+void DoHypothesisTest(RooWorkspace* wks){
 
 
   // Use a RooStats ProfileLikleihoodCalculator to do the hypothesis test.
   ProfileLikelihoodCalculator plc;
-  plc.SetWorkspace(ws);
+  plc.SetWorkspace(*wks);
   plc.SetCommonPdf("model");
   plc.SetData("data"); 
 
   // here we explicitly set the value of the parameters for the null.  
   // We want no signal contribution, eg. mu = 0
-  RooRealVar* mu = ws->var("mu");
+  RooRealVar* mu = wks->var("mu");
   RooArgSet* nullParams = new RooArgSet("nullParams");
   nullParams->addClone(*mu);
   nullParams->setRealValue("mu",0); 
-  plc.SetNullParameters(nullParams);
+  plc.SetNullParameters(*nullParams);
 
   // We get a HypoTestResult out of the calculator, and we can query it.
   HypoTestResult* htr = plc.GetHypoTest();
@@ -200,21 +200,21 @@ void DoHypothesisTest(RooWorkspace* ws){
 }
 
 //____________________________________
-void MakePlots(RooWorkspace* ws) {
+void MakePlots(RooWorkspace* wks) {
 
   // Make plots of the data and the best fit model in two cases:
   // first the signal+background case
   // second the background-only case.
 
   // get some things out of workspace
-  RooAbsPdf* model = ws->pdf("model");
-  RooAbsPdf* sigModel = ws->pdf("sigModel");
-  RooAbsPdf* zjjModel = ws->pdf("zjjModel");
-  RooAbsPdf* qcdModel = ws->pdf("qcdModel");
+  RooAbsPdf* model = wks->pdf("model");
+  RooAbsPdf* sigModel = wks->pdf("sigModel");
+  RooAbsPdf* zjjModel = wks->pdf("zjjModel");
+  RooAbsPdf* qcdModel = wks->pdf("qcdModel");
 
-  RooRealVar* mu = ws->var("mu");
-  RooRealVar* invMass = ws->var("invMass");
-  RooAbsData* data = ws->data("data");
+  RooRealVar* mu = wks->var("mu");
+  RooRealVar* invMass = wks->var("invMass");
+  RooAbsData* data = wks->data("data");
 
 
   //////////////////////////////////////////////////////////
