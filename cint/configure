@@ -144,7 +144,7 @@ function config_macos {
 
     EXTRA_LIB_DIR="/sw/lib/ncurses"
 
-#    PLATFORMO=v6_macos
+#    PLATFORMO=macos
 
     AR="ar -q -cs "
     IMPLIBEXT=.dylib
@@ -255,10 +255,12 @@ function config_msvc7 {
 
     MANGLEPATHS="cygpath -m"
     STREAMDIR=vc7strm
-    PLATFORMO=v6_winnt
+    PLATFORMO=winnt
     RM="rm -f"
     MV="mv -f"
     AR="lib /OUT:"
+
+    NOREADLINE=1
 }
 
 function config_msvc8 {
@@ -266,9 +268,9 @@ function config_msvc8 {
     CFLAGS="${CFLAGS/-G5/}"
     CXXFLAGS="${CXXFLAGS/-G5/}"
     CFLAGS="${CFLAGS/-GX/-EHs}"
-    CMACROS="$CMACROS -D_CRT_SECURE_NO_DEPRECATE=1 -D_SECURE_SCL=0 -D_HAS_ITERATOR_DEBUGGING=0"
+    CMACROS="$CMACROS -D_CRT_SECURE_NO_DEPRECATE=1"
     CXXFLAGS="${CXXFLAGS/-GX/-EHs}"
-    CXXMACROS="$CXXMACROS -D_CRT_SECURE_NO_DEPRECATE=1 -D_SECURE_SCL=0 -D_HAS_ITERATOR_DEBUGGING=0"
+    CXXMACROS="$CXXMACROS -D_CRT_SECURE_NO_DEPRECATE=1"
 }
 
 function config_msvc9 {
@@ -276,9 +278,9 @@ function config_msvc9 {
     CFLAGS="${CFLAGS/-G5/}"
     CXXFLAGS="${CXXFLAGS/-G5/}"
     CFLAGS="${CFLAGS/-GX/-EHs}"
-    CMACROS="$CMACROS -D_CRT_SECURE_NO_DEPRECATE=1 -D_SECURE_SCL=0 -D_HAS_ITERATOR_DEBUGGING=0"
+    CMACROS="$CMACROS -D_CRT_SECURE_NO_DEPRECATE=1"
     CXXFLAGS="${CXXFLAGS/-GX/-EHs}"
-    CXXMACROS="$CXXMACROS -D_CRT_SECURE_NO_DEPRECATE=1 -D_SECURE_SCL=0 -D_HAS_ITERATOR_DEBUGGING=0"
+    CXXMACROS="$CXXMACROS -D_CRT_SECURE_NO_DEPRECATE=1"
 }
 
 function config_solarisgcc {
@@ -618,7 +620,7 @@ fi
 CMACROS="$CMACROS -DG__HAVE_CONFIG -DG__NOMAKEINFO"
 CXXMACROS="$CXXMACROS -DG__HAVE_CONFIG -DG__NOMAKEINFO"
 
-if [ "$READLINELIB" = "" ]; then
+if [ "$NOREADLINE" = "" -a "$READLINELIB" = "" ]; then
     for ext in $IMPLIBEXT $SOEXT; do
         for d in $EXTRA_LIB_DIR /usr/local/lib /usr/lib /sw/lib; do 
             if [ -f ${d}/libreadline$ext ]; then

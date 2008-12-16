@@ -27,7 +27,6 @@
 #include <locale.h>
 #include <stddef.h>
 #include <signal.h>
-#include "G__ci.h"
 
 #ifdef G__NEWSOS4
 #include <ctype.h>
