@@ -370,10 +370,10 @@ static void G__fileerror(char* fname)
 }
 
 //______________________________________________________________________________
-const char* Cint::Internal::G__fulltypename(::Reflex::Type typenum)
+const std::string Cint::Internal::G__fulltypename(::Reflex::Type typenum)
 {
    if (!typenum) return("");
-   return typenum.Name(::Reflex::SCOPED).c_str();
+   return typenum.Name(::Reflex::SCOPED);
 }
 
 //______________________________________________________________________________
@@ -5688,7 +5688,8 @@ void Cint::Internal::G__cpplink_memfunc(FILE* fp)
                   }
 
                   if (typenum != -1) {
-                     fprintf(fp, "'%s' ", G__fulltypename(G__Dict::GetDict().GetTypedef(typenum)));
+                     fprintf(stderr, "%d '%s'\n", G__fulltypename(G__Dict::GetDict().GetTypedef(typenum)).c_str());
+                     fprintf(fp, "'%s' ", G__fulltypename(G__Dict::GetDict().GetTypedef(typenum)).c_str());
                   }
                   else {
                      fprintf(fp, "- ");
@@ -6374,7 +6375,7 @@ void Cint::Internal::G__cpplink_func(FILE* fp)
             }
 
             if (typenum != -1) {
-               fprintf(fp, "'%s' ", G__fulltypename(G__Dict::GetDict().GetTypedef(typenum)));
+               fprintf(fp, "'%s' ", G__fulltypename(G__Dict::GetDict().GetTypedef(typenum)).c_str());
             }
             else {
                fprintf(fp, "- ");

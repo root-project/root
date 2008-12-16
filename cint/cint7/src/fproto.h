@@ -453,7 +453,7 @@ char *G__valuemonitor(G__value buf,char *temp);
 char *G__access2string(int caccess);
 char *G__tagtype2string(int tagtype);
 bool G__rename_templatefunc(std::string &funcname);
-const char *G__fulltypename(::Reflex::Type typenum);
+const std::string G__fulltypename(::Reflex::Type typenum);
 int G__val2pointer(G__value *result7);
 char *G__getbase(unsigned int expression,int base,int digit,char *result1);
 int G__getdigit(unsigned int number);
