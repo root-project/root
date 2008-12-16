@@ -33,7 +33,8 @@ typedef enum {kRootino=0,kDown=1,kDownBar=-1,kUp=2,kUpBar=-2,kStrange=3,
 	  kK0Bar=-311,kKPlus=321,kKMinus=-321,kLambda0=3122,
 	  kLambda0Bar=-3122,kSigmaMinus=3112,kSigmaBarPlus=-3112,
 	  kSigmaPlus=3222,kSigmaBarMinus=-3222,kSigma0=3212,
-	  kSigma0Bar=-3212}
+	  kSigma0Bar=-3212,kXiMinus=3312,kXiPlusBar=-3312,
+          kOmegaMinus=3334,kOmegaPlusBar=-3334}
 PDG_t;
 
 /*
