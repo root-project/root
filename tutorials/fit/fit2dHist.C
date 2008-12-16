@@ -1,5 +1,5 @@
 //
-//   Example to fit two histograms at the same time via TVirtualFitter
+//+   Example to fit two histograms at the same time via TVirtualFitter
 //
 // To execute this tutorial, you can do:
 //

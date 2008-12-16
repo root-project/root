@@ -1,5 +1,5 @@
 //*********************************************************************
-//  Evaluate the performance of THnSparse vs THnF (or Float_t arrays)
+//+ Evaluate the performance of THnSparse vs THnF (or Float_t arrays)
 //  for different numbers of dimensions and bins per dimension.
 // 
 //  The script calculates the bandwidth for filling and retrieving
