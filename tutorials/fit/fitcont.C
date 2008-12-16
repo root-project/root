@@ -9,6 +9,9 @@ void fitcont()
    // The TGraph object is created via the interpreter. The user must cast it
    // to a TGraph*
    // Author:  Rene Brun
+
+   //be sure default is Minuit since we will use gMinuit 
+   TVirtualFitter::SetDefaultFitter("Minuit");  
       
    TCanvas *c1 = new TCanvas("c1");
    TH1F *h = new TH1F("h","My histogram",100,-3,3);

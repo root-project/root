@@ -68,7 +68,7 @@ public:
       if (fFunc->IsLinear() ) { 
          unsigned int ip = 0; 
          fLinear = true;
-         while (fLinear)  { 
+         while (fLinear && ip < fParams.size() )  { 
             fLinear &= (fFunc->GetLinearPart(ip) != 0) ; 
             ip++;
          }

@@ -49,7 +49,7 @@ void fitCircle(Int_t n=10000) {
    gr->Draw("p");
    
    //Fit a circle to the graph points
-   TVirtualFitter::SetDefaultFitter("Minuit2");  //default is Minuit
+   TVirtualFitter::SetDefaultFitter("Minuit");  //default is Minuit
    TVirtualFitter *fitter = TVirtualFitter::Fitter(0, 3);
    fitter->SetFCN(myfcn);
 
