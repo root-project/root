@@ -295,6 +295,8 @@ Bool_t CreateOutput_Dir(const char* dir) {
      if (strstr(dir,"proof")) return kFALSE;
      if (strstr(dir,"foam"))  return kFALSE;
      if (strstr(dir,"unuran"))  return kFALSE;
+     if (strstr(dir,"roofit"))  return kFALSE;
+     if (strstr(dir,"threads"))  return kFALSE;
 
    /* They should all work now:
 
@@ -330,7 +332,10 @@ Bool_t CreateOutput_Tutorial(const char* tut) {
       "importCode",
       "analyze",
       "hadd",
+      "langaus",
+      "fithist",
       "fit2dHist",
+      "fitLinearRobust",
       "line3Dfit",
       "gtime",
       "event",
@@ -338,7 +343,7 @@ Bool_t CreateOutput_Tutorial(const char* tut) {
       "exec2",
       "exec3",
       "quantiles",
-      "gui",
+      //"gui",
       "TwoHistoFit2D",
       "CPUMeter",
       "games",
@@ -350,10 +355,12 @@ Bool_t CreateOutput_Tutorial(const char* tut) {
       "anim",
       "pack",
       "hsumTimer",
+      "htest",
       "jets",
       "bill",
       "tcl",
-      "tree2a",
+      "tree",
+      "tree3",
       "copytree",
       "clones",
       "copyFiles",
@@ -448,6 +455,11 @@ void scandir(THtml& html, const char *dir, const char *title, TObjLink* toplnk) 
             includeOutput = THtml::kCompiledOutput;
          else
             includeOutput = THtml::kInterpretedOutput;
+         if (!strcmp(dir,"gui")
+             || !strcmp(dir,"eve")
+             || !strcmp(dir,"geom")
+             || !strcmp(dir,"image"))
+            includeOutput |= THtml::kSeparateProcessOutput;
       }
       if (!CreateOutput_Dir(dir) || !CreateOutput_Tutorial(direntry))
          includeOutput = THtml::kNoOutput;
@@ -485,6 +497,7 @@ void MakeTutorials() {
    gEnv->SetValue("Root.Html.Search", "http://www.google.com/search?q=%s+site%3A%u");
    THtml html;
    html.LoadAllLibs();
+   //gROOT->ProcessLine(".x htmlLoadlibs.C");
    html.CreateAuxiliaryFiles();
    writeTutorials(html);
 }

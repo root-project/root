@@ -225,7 +225,8 @@ public:
       kNoOutput, // do not run the source, do not show its output
       kInterpretedOutput, // interpret the source and show output
       kCompiledOutput, // run the source through ACLiC and show output
-      kForceOutput = 0x10 // re-generate the output files (canvas PNGs)
+      kForceOutput = 0x10, // re-generate the output files (canvas PNGs)
+      kSeparateProcessOutput = 0x20 // run the script in a separate process
    };
 
    THtml();
