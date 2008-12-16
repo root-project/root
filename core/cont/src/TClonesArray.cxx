@@ -93,10 +93,6 @@ TClonesArray::TClonesArray(const char *classname, Int_t s, Bool_t) : TObjArray(s
    //
    // The third argument is not used anymore and only there for backward
    // compatibility reasons.
-   //
-   // In case you want to send a TClonesArray (or object containing a
-   // TClonesArray) via a TMessage over a TSocket don't forget to call
-   // BypassStreamer(kFALSE). See TClonesArray::BypassStreamer().
 
    fKeep = 0;
    SetClass(classname,s);
@@ -123,10 +119,6 @@ TClonesArray::TClonesArray(const TClass *cl, Int_t s, Bool_t) : TObjArray(s)
    //
    // The third argument is not used anymore and only there for backward
    // compatibility reasons.
-   //
-   // In case you want to send a TClonesArray (or object containing a
-   // TClonesArray) via a TMessage over a TSocket don't forget to call
-   // BypassStreamer(kFALSE). See TClonesArray::BypassStreamer().
 
    fKeep = 0;
    SetClass(cl,s);
@@ -243,8 +235,6 @@ void TClonesArray::BypassStreamer(Bool_t bypass)
    // for the TClonesArray. In this case, the normal Bar::Streamer function
    // will be called. The Bar::Streamer function works OK independently
    // if the Bar StreamerInfo had been generated in optimized mode or not.
-   // In case you want to send Foo via a TMessage over a TSocket you also
-   // need to disable the streamer bypass.
 
    if (bypass)
       SetBit(kBypassStreamer);
@@ -544,7 +534,7 @@ void TClonesArray::SetClass(const TClass *cl, Int_t s)
 void TClonesArray::SetClass(const char *classname, Int_t s)
 {
    //see TClonesArray::SetClass(const TClass*)
-   
+
    SetClass(TClass::GetClass(classname),s);
 }
 
@@ -593,8 +583,7 @@ void TClonesArray::Streamer(TBuffer &b)
 
    Int_t   nobjects;
    char    nch;
-   TString s;
-   char classv[256];
+   TString s, classv;
    UInt_t R__s, R__c;
 
    if (b.IsReading()) {
@@ -608,16 +597,17 @@ void TClonesArray::Streamer(TBuffer &b)
       if (v > 1)
          fName.Streamer(b);
       s.Streamer(b);
-      strcpy(classv,s.Data());
+      classv = s;
       Int_t clv = 0;
-      char *semicolon = strchr(classv,';');
-      if (semicolon) {
-         *semicolon = 0;
-         clv = atoi(semicolon+1);
+      Ssiz_t pos = s.Index(";");
+      if (pos != kNPOS) {
+         classv = s(0, pos);
+         s = s(pos+1, s.Length()-pos-1);
+         clv = s.Atoi();
       }
       TClass *cl = TClass::GetClass(classv);
       if (!cl) {
-         printf("TClonesArray::Streamer expecting class %s\n", classv);
+         printf("TClonesArray::Streamer expecting class %s\n", classv.Data());
          b.CheckByteCount(R__s, R__c,TClonesArray::IsA());
          return;
       }
@@ -654,7 +644,7 @@ void TClonesArray::Streamer(TBuffer &b)
             if (!fKeep->fCont[i]) {
                fKeep->fCont[i] = (TObject*)fClass->New();
             } else if (!fKeep->fCont[i]->TestBit(kNotDeleted)) {
-               // The object has been delete (or never initilized)
+               // The object has been delete (or never initialized)
                fClass->New(fKeep->fCont[i]);
             }
 
@@ -670,7 +660,7 @@ void TClonesArray::Streamer(TBuffer &b)
                if (!fKeep->fCont[i])
                   fKeep->fCont[i] = (TObject*)fClass->New();
                else if (!fKeep->fCont[i]->TestBit(kNotDeleted)) {
-                  // The object has been deleted (or never initiliazed)
+                  // The object has been deleted (or never initialized)
                   fClass->New(fKeep->fCont[i]);
                }
 
@@ -695,16 +685,26 @@ void TClonesArray::Streamer(TBuffer &b)
       //if (sinfo->IsOptimized()) BypassStreamer(kFALSE);
       b.ForceWriteInfoClones(this);
 
+      // make sure the status of bypass streamer is part of the buffer
+      // (bits in TObject), so that when reading the object the right
+      // mode is used, independent of the method (e.g. written via
+      // TMessage, received and stored to a file and then later read via
+      // TBufferFile)
+      Bool_t bypass = kFALSE;
+      if (b.TestBit(TBuffer::kCannotHandleMemberWiseStreaming)) {
+         bypass = CanBypassStreamer();
+         BypassStreamer(kFALSE);
+      }
+
       R__c = b.WriteVersion(TClonesArray::IsA(), kTRUE);
       TObject::Streamer(b);
       fName.Streamer(b);
-      sprintf(classv,"%s;%d",fClass->GetName(),fClass->GetClassVersion());
-      s = classv;
+      s.Form("%s;%d", fClass->GetName(), fClass->GetClassVersion());
       s.Streamer(b);
       nobjects = GetEntriesFast();
       b << nobjects;
       b << fLowerBound;
-      if (CanBypassStreamer() && !b.TestBit(TBuffer::kCannotHandleMemberWiseStreaming)) {
+      if (CanBypassStreamer()) {
          b.WriteClones(this,nobjects);
       } else {
          for (Int_t i = 0; i < nobjects; i++) {
@@ -719,6 +719,9 @@ void TClonesArray::Streamer(TBuffer &b)
          }
       }
       b.SetByteCount(R__c, kTRUE);
+
+      if (bypass)
+         BypassStreamer();
    }
 }
 
