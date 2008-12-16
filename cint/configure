@@ -35,7 +35,7 @@ ARCHS=(linux linuxicc macos macosx64 djgpp cygwin mingw mwerks hpux aix msvc7 ms
 EXPORTS=(CINTVERSION ARCH COREVERSION CC CFLAGS CMACROS COMP CPP COUT COUTEXE INCP CXX CXXFLAGS CXXMACROS \
     LD LDFLAGS LDOUT LIBP LIBL SOFLAGS SOOUT OBJEXT EXEEXT \
     SOEXT LIBEXT IMPLIBEXT DEBUG DEFAULTLIBS \
-    MANGLEPATHS STREAMDIR PLATFORMO EXPLLINK \
+    MANGLEPATHS MANGLEPATHSU STREAMDIR PLATFORMO EXPLLINK \
     READLINELIB CURSESLIB LINK_READLINELIB LINK_CURSESLIB READLINELIB4SHLIB CURSESLIB4SHLIB RM MV WITHPREFIX \
     INPUTMODE INPUTMODELOCK AR EXTRACTSYMBOLS MAKEIMPLIB)
 unset ${EXPORTS[*]}
@@ -64,12 +64,12 @@ function config_GCC_defaults {
     COPTFLAGS=-O2
     CMACROS="$CMACROS -DG__SHAREDLIB -DG__OSFDLL -DG__ANSI -DG__ERRORCALLBACK -DG__SIGNEDCHAR -DG__NEWSTDHEADER -DG__CINT_VER6 -DG__NATIVELONGLONG -DG__P2FCAST -DG__STD_EXCEPTION"
 
-    CXX=g++
+    CXX="g++ -fno-stack-protector"
     CXXDBGFLAGS="$CDBGFLAGS"
     CXXOPTFLAGS="$COPTFLAGS"
     CXXMACROS="$CXXMACROS $CMACROS"
 
-    LD=g++
+    LD="g++ -fno-stack-protector"
     DEFAULTLIBS="-lm -ldl"
     LDOUT="-o "
     SOOUT="$LDOUT"
@@ -223,7 +223,7 @@ function config_msvc7 {
     IMPLIBEXT=.lib
 
     CC=cl
-    CFLAGS="-G5 -nologo -wd4996 -GX"
+    CFLAGS="-G5 -nologo -wd4996 -wd4190 -GX"
     CMACROS="-DG__REDIRECTIO -DG__SHAREDLIB -DG__UNIX -DG__WIN32 -DWIN32 -D_WIN32 -DG__NEWSTDHEADER"
     CPP="cl -E -C -nologo"
     COUT=-Fo
@@ -254,6 +254,7 @@ function config_msvc7 {
     EXTRACTSYMBOLS="dumpbin.exe /SYMBOLS @obj@ | grep -e ' notype ()[[:space:]]\{4\}External '| grep -v ' UNDEF ' | grep -v 'AEPAXI@Z ('| sed 's!^[[:xdigit:]]\{3,\}[[:space:]]\+\([[:xdigit:]]\{8\}\)[[:space:]]\+.*\+External[[:space:]]\+|[[:space:]]\+\([^(]\+\).*\$!\1 \2!'| cut -d' ' -f2"
 
     MANGLEPATHS="cygpath -m"
+    MANGLEPATHSU="cygpath -u"
     STREAMDIR=vc7strm
     PLATFORMO=winnt
     RM="rm -f"
@@ -676,6 +677,7 @@ fi
 
 [ "$STREAMDIR" = "" ]   && STREAMDIR=stream
 [ "$MANGLEPATHS" = "" ] && MANGLEPATHS="echo "
+[ "$MANGLEPATHSU" = "" ] && MANGLEPATHSU="echo "
 
 HAVE_CONFIG=1
 
@@ -759,7 +761,7 @@ done
 
 $RM bin/cint-config
 echo Writing bin/cint-config...
-[ "x$INCLUDEDIR" = "x" ] && INCLUDEDIR='$CINTSYSDIR/include' && INCLUDEDIRCINT=$INCLUDEDIR/cint
+[ "x$INCLUDEDIR" = "x" ] && INCLUDEDIR='$CINTSYSDIR'/${COREVERSION}/inc && INCLUDEDIRCINT='$CINTSYSDIR'/${COREVERSION}/include
 [ "x$LIBDIR" = "x" ] && LIBDIR='$CINTSYSDIR/lib'
 [ "x$DATADIR" = "x" ] && DATADIR='$CINTSYSDIR/'${COREVERSION}'/'
 
@@ -773,7 +775,11 @@ Usage: cint-config [options]
   --incdir         print the directory of cint header files
   --cflags         print the necessary flags for the compiler
   --libs           print the necessary libs for linking 
+  --libdir         print the directory of cint libraries
   --datadir        print the location of cint data files
+  --arch           print architecture
+  -u|--unix        print unix-like paths (makes sense only on win)
+                   this arg has effect only on the following args
   -v|--version     print cint version
   -h|--help        print this help
 
@@ -785,13 +791,18 @@ if [ \$# -eq 0 ]; then
    exit 1
 fi
 
+pathconvert=echo
+
 while [ \$# -gt 0 ] ; do
   case \$1 in
-    --incdir) echo "${INCLUDEDIR}/cint" ;;
-    --cflags) echo "${INCP}${INCLUDEDIR}/cint" ;;
-    --libs)   echo "${LIBP}${LIBDIR} -lcint -lReflex" ;;
-    --datadir) echo "${DATADIR}/cint" ;;
+    --unix|-u) pathconvert="$MANGLEPATHSU" ;;
+    --incdir)  \$pathconvert "${INCLUDEDIR}" ;;
+    --cflags)  \$pathconvert "${INCP}${INCLUDEDIR}" ;;
+    --libs)    \$pathconvert "${LIBP}${LIBDIR} -lcint -lReflex" ;;
+    --libdir)  \$pathconvert "${LIBDIR}" ;;
+    --datadir) \$pathconvert "${DATADIR}/cint" ;;
     --version|-v) echo "$CINTVERSION" ;;
+    --arch)   echo "${ARCH}" ;;
     -h|--help) printhelp;;
     *)        echo "Unknown option: \$1"; exit 1;;
   esac

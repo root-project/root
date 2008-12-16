@@ -18,6 +18,9 @@ export __CINT_BUILDDIR
 
 include Makefile.conf
 
+CINTSYSDIR := $(shell $(G__CFG_MANGLEPATHS) "${CINTSYSDIR}" )
+__CINT_BUILDDIR := $(shell $(G__CFG_MANGLEPATHS) "${__CINT_BUILDDIR}" )
+
 # set up order target if available
 MAKE_VERSION_MAJOR := $(word 1,$(subst ., ,$(MAKE_VERSION)))
 MAKE_VERSION_MINOR := $(shell echo $(word 2,$(subst ., ,$(MAKE_VERSION))) | \
