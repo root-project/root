@@ -85,6 +85,8 @@ SpyServ::SpyServ()
    // on a specified port
    //TServerSocket *ss = new TServerSocket("spyserv", kTRUE);
    fServ = new TServerSocket(9090, kTRUE);
+   if (!fServ->IsValid())
+      gSystem->Exit(1);
 
    // Add server socket to monitor so we are notified when a client needs to be
    // accepted
