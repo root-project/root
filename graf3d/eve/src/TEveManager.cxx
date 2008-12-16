@@ -202,6 +202,9 @@ TEveManager::~TEveManager()
    fRedrawTimer.Stop();
    fTimerActive = kTRUE;
 
+   delete fCurrentEvent;
+   fCurrentEvent = 0;
+
    fGlobalScene->DecDenyDestroy();
    fEventScene->DecDenyDestroy();
    fScenes->DestroyScenes();
