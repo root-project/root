@@ -2513,6 +2513,21 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       includes.Append(" ").Append(fromConfig).Append(" ");
    }
 
+   // Get the include directory list in the dir1:dir2:dir3 format
+   // [Used for generating the .d file and to look for header files for
+   // the linkdef file]
+   TString incPath = GetIncludePath(); // of the form -Idir1  -Idir2 -Idir3
+   incPath.Append(":").Prepend(" ");
+   if (gEnv) {
+      TString fromConfig = gEnv->GetValue("ACLiC.IncludePaths","");
+      incPath.Append(fromConfig);
+   }
+   incPath.ReplaceAll(" -I",":");       // of form :dir1 :dir2:dir3
+   while ( incPath.Index(" :") != -1 ) {
+      incPath.ReplaceAll(" :",":");
+   }
+   incPath.Prepend(file_location+":.:");
+   
    // Extract the -D for the dependency generation.
    TString defines = " ";
    {
@@ -2611,7 +2626,16 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
             
             TString adddictdep = "echo ";
             adddictdep += filename;
-            adddictdep += ": "+rootsys+"/include/cintdictversion.h ";
+            adddictdep += ": ";
+            {
+               char *cintdictversion = Which(incPath,"cintdictversion.h");
+               if (cintdictversion) {
+                  adddictdep += cintdictversion;
+                  delete [] cintdictversion;
+               } else {
+                  adddictdep += rootsys+"/include/cintdictversion.h ";
+               }
+            }
             adddictdep += " >> \""+depfilename+"\"";
 
             if (gDebug > 4)  {
@@ -2858,18 +2882,6 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    linkdefFile << endl;
 
    // We want to look for a header file that has the same name as the macro
-   // First lets get the include directory list in the dir1:dir2:dir3 format
-   TString incPath = GetIncludePath(); // of the form -Idir1  -Idir2 -Idir3
-   incPath.Append(":").Prepend(" ");
-   if (gEnv) {
-      TString fromConfig = gEnv->GetValue("ACLiC.IncludePaths","");
-      incPath.Append(fromConfig);
-   }
-   incPath.ReplaceAll(" -I",":");       // of form :dir1 :dir2:dir3
-   while ( incPath.Index(" :") != -1 ) {
-      incPath.ReplaceAll(" :",":");
-   }
-   incPath.Prepend(file_location+":.:");
 
    const char * extensions[] = { ".h", ".hh", ".hpp", ".hxx",  ".hPP", ".hXX" };
 
