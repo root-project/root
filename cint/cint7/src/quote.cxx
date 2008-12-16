@@ -54,9 +54,9 @@ using namespace std;
 ******************************************************************/
 static const char* G__saveconststring(const char* s)
 {
-   static std::set<std::string> conststring;
+   static std::set<std::string> static_conststring;
    std::string str(s);
-   return conststring.insert(str).first->c_str();
+   return static_conststring.insert(str).first->c_str();
 }
 
 /******************************************************************

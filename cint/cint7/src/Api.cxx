@@ -433,6 +433,8 @@ const char* Cint::Internal::G__replacesymbol(const char* s)
 {
    map<string, string>::iterator pos = G__get_symbolmacro().find(s);
    if (pos != G__get_symbolmacro().end()) {
+      // This assumes the iterator does not copy the string object inside
+      // the map (which is a static variable of the function G__get_symbolmacro).
       return pos->second.c_str();
    }
    return s;

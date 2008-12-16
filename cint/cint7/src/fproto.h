@@ -410,7 +410,7 @@ void G__listshlfunc(FILE *fout);
 void G__listshl(FILE *G__temp);
 int G__free_shl_upto(int allsl);
 G__value G__pointer2func(G__value* obj_p2f,char *parameter0,char *parameter1,int *known3);
-char *G__search_func(char *funcname,G__value *buf);
+bool G__search_func(char *funcname,G__value *buf);
 char *G__search_next_member(char *text,int state);
 int G__Loffsetof(char *tagname,char *memname);
 int G__Lsizeof(const char *typenamein);

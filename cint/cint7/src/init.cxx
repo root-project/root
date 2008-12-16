@@ -1151,9 +1151,9 @@ extern "C" void G__set_stdio_handle(FILE* sout, FILE* serr, FILE* sin)
 //______________________________________________________________________________
 extern "C" const char* G__cint_version()
 {
-   static std::string version;
-   version = G__CINTVERSIONSTR;
-   return version.c_str(); // For example: "5.14.34, Mar 10 2000"
+   static std::string static_version;
+   static_version = G__CINTVERSIONSTR;
+   return static_version.c_str(); // For example: "5.14.34, Mar 10 2000"
 }
 
 //______________________________________________________________________________
@@ -1352,7 +1352,6 @@ extern "C" int G__main(int argc, char** argv)
 {
    // Main entry of the C/C++ interpreter.
    int stepfrommain = 0;
-   int ii;
    char* forceassignment = 0;
    int xfileflag = 0;
    G__StrBuf sourcefile_sb(G__MAXFILENAME);

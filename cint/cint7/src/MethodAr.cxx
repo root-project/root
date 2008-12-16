@@ -70,7 +70,13 @@ const char* Cint::G__MethodArgInfo::Name()
       return 0;
    }
    // TODO: Remove use of friendship.
-   return belongingmethod->fFunc.FunctionParameterNameAt(argn).c_str();
+   
+   // Note: We need a static buffer because the string must continue
+   //       to exist after we exit and FunctionParameterNameAt returns
+   //       a std::string by value.     
+   static std::string static_buf;
+   static_buf = belongingmethod->fFunc.FunctionParameterNameAt(argn);
+   return static_buf.c_str();
 }
 
 //______________________________________________________________________________
@@ -114,7 +120,12 @@ const char* Cint::G__MethodArgInfo::DefaultValue()
       return 0;
    }
    // TODO: Remove use of friendship.
-   return belongingmethod->fFunc.FunctionParameterDefaultAt(argn).c_str();
+   // Note: We need a static buffer because the string must continue
+   //       to exist after we exit and FunctionParameterDefaultAt returns
+   //       a std::string by value.     
+   static std::string static_buf;
+   static_buf = belongingmethod->fFunc.FunctionParameterDefaultAt(argn);
+   return static_buf.c_str();
 }
 
 //______________________________________________________________________________

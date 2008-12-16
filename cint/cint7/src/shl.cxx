@@ -1209,7 +1209,7 @@ static ::Reflex::Type G__getp2ftype(const ::Reflex::Member &func)
 *  Used to return pointer to function. Cint handles pointer to
 * function as pointer to char which contains function name.
 ******************************************************************/
-char *Cint::Internal::G__search_func(char *funcname,G__value *buf)
+bool Cint::Internal::G__search_func(char *funcname,G__value *buf)
 {
   int i=0;
 #ifdef G__SHAREDLIB
@@ -1248,17 +1248,19 @@ char *Cint::Internal::G__search_func(char *funcname,G__value *buf)
            G__value_typenum(*buf) = G__getp2ftype(*iter);
         }
 #else
+        // This is wrong! ... However there is (hopefully) no reason
+        // to use the old implementation (2191)
         G__letint(buf,'C',(long)iter->Name().c_str());
         G__value_typenum(*buf) = G__getp2ftype(*iter);
 #endif
-        return((char*)iter->Name().c_str());
+        return true;
      }
   }
 
 #ifdef __CINT__
   if(NULL==G__completionlist) {
     *buf = G__null;
-    return(NULL);
+    return false;
   }
 #endif
 
@@ -1284,7 +1286,7 @@ char *Cint::Internal::G__search_func(char *funcname,G__value *buf)
   }
 
   *buf = G__null;
-  return(NULL);
+  return false;
 
 }
 
