@@ -62,16 +62,16 @@ extern SHtmlTokenMap_t HtmlMarkupMap[];
 // Each escape sequence is recorded as an instance of the following
 // structure
 
-struct sgEsc_t {
+struct SgEsc_t {
    const char *fZName;      // The name of this escape sequence.  ex:  "amp"
    const char  fValue[8];   // The value for this sequence.       ex:  "&"
-   sgEsc_t *fPNext;           // Next sequence with the same hash on zName
+   SgEsc_t *fPNext;         // Next sequence with the same hash on zName
 };
 
 // The following is a table of all escape sequences.  Add new sequences
 // by adding entries to this table.
 
-static struct sgEsc_t gEscSequences[] = {
+static struct SgEsc_t gEscSequences[] = {
    { "quot",      "\"",    0 },
    { "amp",       "&",     0 },
    { "lt",        "<",     0 },
@@ -188,7 +188,7 @@ static struct sgEsc_t gEscSequences[] = {
 // gApEscHash[H] will point to a linked list of Esc structures, one of
 // which will be the Esc structure for that escape sequence.
 
-static struct sgEsc_t *gApEscHash[ESC_HASH_SIZE];
+static struct SgEsc_t *gApEscHash[ESC_HASH_SIZE];
 
 
 // Hash a escape sequence name. The value returned is an integer
@@ -211,28 +211,29 @@ static int EscHash(const char *zName) {
 // Compute the longest and average collision chain length for the
 // escape sequence hash table
 
-static void EscHashStats() {
-  int i;
-  int sum = 0;
-  int max = 0;
-  int cnt;
-  int notempty = 0;
-  struct sgEsc_t *p;
+static void EscHashStats()
+{
+   int i;
+   int sum = 0;
+   int max = 0;
+   int cnt;
+   int notempty = 0;
+   struct SgEsc_t *p;
 
-  for (i = 0; i < sizeof(gEscSequences) / sizeof(gEscSequences[0]); i++) {
-    cnt = 0;
-    p = gApEscHash[i];
-    if (p) notempty++;
-    while (p) {
-      ++cnt;
-      p = p->fPNext;
-    }
-    sum += cnt;
-    if (cnt > max) max = cnt;
-  }
-  printf("Longest chain=%d  avg=%g  slots=%d  empty=%d (%g%%)\n",
-     max, (double)sum/(double)notempty, i, i-notempty,
-     100.0*(i-notempty)/(double)i);
+   for (i = 0; i < sizeof(gEscSequences) / sizeof(gEscSequences[0]); i++) {
+      cnt = 0;
+      p = gApEscHash[i];
+      if (p) notempty++;
+      while (p) {
+         ++cnt;
+         p = p->fPNext;
+      }
+      sum += cnt;
+      if (cnt > max) max = cnt;
+   }
+   printf("Longest chain=%d  avg=%g  slots=%d  empty=%d (%g%%)\n",
+          max, (double)sum/(double)notempty, i, i-notempty,
+          100.0*(i-notempty)/(double)i);
 }
 #endif
 
@@ -316,7 +317,7 @@ void HtmlTranslateEscapes(char *z)
    int from;   // Read characters from this position in z[]
    int to;     // Write characters into this position in z[]
    int h;      // A hash on the escape sequence
-   struct sgEsc_t *p;  // For looping down the escape sequence collision chain
+   struct SgEsc_t *p;  // For looping down the escape sequence collision chain
    static int isInit = 0;   // True after initialization
 
    from = to = 0;
@@ -579,7 +580,7 @@ int TGHtml::Tokenize()
    int pIsInNoFrames = 0;
    int sawdot = 0;
    int inLi = 0;
-   
+
    static char null[1] = { "" };
 
    inpCol = fICol;
@@ -645,363 +646,367 @@ int TGHtml::Tokenize()
          if (fPScript) {
             pScr->fNScript = i - n;
             n = i;
-         } else {
+         }
+         else {
 #if 0
-        // If there is a script, execute it now and insert any output
-        // to the html stream for parsing as html. (ie. client side scripting)
+            // If there is a script, execute it now and insert any output
+            // to the html stream for parsing as html. (ie. client side scripting)
 
-        if (pIsInScript && !pIsInNoScript && !pIsInNoFrames) {
+            if (pIsInScript && !pIsInNoScript && !pIsInNoFrames) {
 
-          //for (curch = 0, curline = 1; curch <= curlast; curch++)
-          //  if (z[curch] == '\n') curline++;
+               //for (curch = 0, curline = 1; curch <= curlast; curch++)
+               //  if (z[curch] == '\n') curline++;
 
-          // arglist in pElem and text pointers in pScr?
-          // Inline scripts can contain unmatched brackets :-)
-          //char varind[50];
-          //sprintf(varind, "HtmlScrVar%d", p->varind++);
-          //char savech = fZText[pScr->fNStart + pScr->fNScript];
-          //fZText[pScr->fNStart + pScr->fNScript] = 0;
-          //char *scriptBody = StrDup(fZText[pScr->fNStart]);
-          //fZText[pScr->fNStart + pScr->fNScript] = savech;
-          AdvanceLayout(p);
-          inParse++;
-          char *result = ProcessScript((TGHtmlScript *) pElem);  // pElem or pScr??
-          inParse--;
-          if (result) {
-            ol = fNAlloc;
-            rl = strlen(result);
-            fNAlloc += rl;
-            z = fZText = HtmlRealloc(z, ol+rl);
-            memmove(z + n + rl, z+n, ol - n);
-            memmove(z + n, result, rl);
-          }
-        }
+               // arglist in pElem and text pointers in pScr?
+               // Inline scripts can contain unmatched brackets :-)
+               //char varind[50];
+               //sprintf(varind, "HtmlScrVar%d", p->varind++);
+               //char savech = fZText[pScr->fNStart + pScr->fNScript];
+               //fZText[pScr->fNStart + pScr->fNScript] = 0;
+               //char *scriptBody = StrDup(fZText[pScr->fNStart]);
+               //fZText[pScr->fNStart + pScr->fNScript] = savech;
+               AdvanceLayout(p);
+               inParse++;
+               char *result = ProcessScript((TGHtmlScript *) pElem);  // pElem or pScr??
+               inParse--;
+               if (result) {
+                  ol = fNAlloc;
+                  rl = strlen(result);
+                  fNAlloc += rl;
+                  z = fZText = HtmlRealloc(z, ol+rl);
+                  memmove(z + n + rl, z+n, ol - n);
+                  memmove(z + n, result, rl);
+               }
+            }
 #endif
-         pIsInScript = 0;
-         pIsInNoScript = 0;
-         pIsInNoFrames = 0;
+            pIsInScript = 0;
+            pIsInNoScript = 0;
+            pIsInNoFrames = 0;
+         }
+         //continue;
+
       }
-      //continue;
+      else if (isspace((unsigned char)c)) {
 
-   } else if (isspace((unsigned char)c)) {
-
-      // White space
-      for (i = 0;
-           (c = z[n+i]) != 0 && isspace((unsigned char)c) && c != '\n' && c != '\r';
-           i++) {}
-      if (c == '\r' && z[n+i+1] == '\n') ++i;
+         // White space
+         for (i = 0;
+             (c = z[n+i]) != 0 && isspace((unsigned char)c) && c != '\n' && c != '\r';
+              i++) { }
+         if (c == '\r' && z[n+i+1] == '\n') ++i;
 #if 0  // this is certainly NOT OK, since it alters pre-formatted text
-      if (sawdot == 1) {
-        pElem = new TGHtmlTextElement(2);
-        strcpy(((TGHtmlTextElement *)pElem)->fZText, " ");
-        pElem->fElId = ++fIdind;
-        pElem->fOffs = n;
-        pElem->fCount = 1;
-        AppendElement(pElem);
-      }
+         if (sawdot == 1) {
+            pElem = new TGHtmlTextElement(2);
+            strcpy(((TGHtmlTextElement *)pElem)->fZText, " ");
+            pElem->fElId = ++fIdind;
+            pElem->fOffs = n;
+            pElem->fCount = 1;
+            AppendElement(pElem);
+         }
 #endif
-      pElem = new TGHtmlSpaceElement;
-      if (pElem == 0) goto incomplete;
-      ((TGHtmlSpaceElement *)pElem)->fW = 0;
-      pElem->fOffs = n;
-      pElem->fElId = ++fIdind;
-      if (c == '\n' || c == '\r') {
-         pElem->fFlags = HTML_NewLine;
-         pElem->fCount = 1;
-         i++;
-         inpCol = 0;
-      } else {
-         int iColStart = inpCol;
-         pElem->fFlags = 0;
-         for (j = 0; j < i; j++) {
+         pElem = new TGHtmlSpaceElement;
+         if (pElem == 0) goto incomplete;
+         ((TGHtmlSpaceElement *)pElem)->fW = 0;
+         pElem->fOffs = n;
+         pElem->fElId = ++fIdind;
+         if (c == '\n' || c == '\r') {
+            pElem->fFlags = HTML_NewLine;
+            pElem->fCount = 1;
+            i++;
+            inpCol = 0;
+         } else {
+            int iColStart = inpCol;
+            pElem->fFlags = 0;
+            for (j = 0; j < i; j++) {
+               inpCol = NextColumn(inpCol, z[n+j]);
+            }
+            pElem->fCount = inpCol - iColStart;
+         }
+         AppendElement(pElem);
+         n += i;
+
+      }
+      else if (c != '<' || fIPlaintext != 0 ||
+              (!isalpha(z[n+1]) && z[n+1] != '/' && z[n+1] != '!' && z[n+1] != '?')) {
+
+         // Ordinary text
+         for (i = 1; (c = z[n+i]) != 0 && !isspace((unsigned char)c) && c != '<'; i++) {}
+         if (z[n+i-1] == '.' || z[n+i-1] == '!' || z[n+i-1] == '?') sawdot = 2;
+         if (c == 0) goto incomplete;
+         if (fIPlaintext != 0 && z[n] == '<') {
+            switch (fIPlaintext) {
+               case Html_LISTING:
+                  if (i >= 10 && strncasecmp(&z[n], "</listing>", 10) == 0) {
+                     fIPlaintext = 0;
+                     goto doMarkup;
+                  }
+                  break;
+
+               case Html_XMP:
+                  if (i >= 6 && strncasecmp(&z[n], "</xmp>", 6) == 0) {
+                     fIPlaintext = 0;
+                     goto doMarkup;
+                  }
+                  break;
+
+               case Html_TEXTAREA:
+                  if (i >= 11 && strncasecmp(&z[n], "</textarea>", 11) == 0) {
+                     fIPlaintext = 0;
+                     goto doMarkup;
+                  }
+                  break;
+
+               default:
+                  break;
+            }
+         }
+         pElem = new TGHtmlTextElement(i);
+         if (pElem == 0) goto incomplete;
+         TGHtmlTextElement *tpElem = (TGHtmlTextElement *) pElem;
+         tpElem->fElId = ++fIdind;
+         tpElem->fOffs = n;
+         strncpy(tpElem->fZText, &z[n], i);
+         tpElem->fZText[i] = 0;
+         AppendElement(pElem);
+         if (fIPlaintext == 0 || fIPlaintext == Html_TEXTAREA) {
+            HtmlTranslateEscapes(tpElem->fZText);
+         }
+         pElem->fCount = strlen(tpElem->fZText);
+         n += i;
+         inpCol += i;
+
+      } else if (strncmp(&z[n], "<!--", 4) == 0) {
+
+         // An HTML comment. Just skip it.
+         for (i = 4; z[n+i]; i++) {
+            if (z[n+i] == '-' && strncmp(&z[n+i], "-->", 3) == 0) break;
+         }
+         if (z[n+i] == 0) goto incomplete;
+
+         pElem = new TGHtmlTextElement(i);
+         if (pElem == 0) goto incomplete;
+         TGHtmlTextElement *tpElem = (TGHtmlTextElement *) pElem;
+         tpElem->fType = Html_COMMENT;
+         tpElem->fElId = ++fIdind;
+         tpElem->fOffs = n;
+         strncpy(tpElem->fZText, &z[n+4], i-4);
+         tpElem->fZText[i-4] = 0;
+         tpElem->fCount = 0;
+         AppendElement(pElem);
+
+         pElem = new TGHtmlElement(Html_EndCOMMENT);
+         AppToken(pElem, 0, n+4);
+
+         for (j = 0; j < i+3; j++) {
+           inpCol = NextColumn(inpCol, z[n+j]);
+         }
+         n += i + 3;
+
+      }
+      else {
+
+         // Markup.
+         //
+         // First get the name of the markup
+doMarkup:
+         argc = 1;
+         argv[0] = &z[n+1];
+         for (i = 1;
+             (c = z[n+i]) != 0 && !isspace((unsigned char)c) && c != '>' && (i < 2 || c != '/');
+             i++) {}
+         arglen[0] = i - 1;
+         if (c == 0) goto incomplete;
+
+         // Now parse up the arguments
+
+         while (isspace((unsigned char)z[n+i])) ++i;
+         while ((c = z[n+i]) != 0 && c != '>' && (c != '/' || z[n+i+1] != '>')) {
+            if (argc > mxARG - 3) argc = mxARG - 3;
+            argv[argc] = &z[n+i];
+            j = 0;
+            while ((c = z[n+i+j]) != 0 && !isspace((unsigned char)c) && c != '>' &&
+                    c != '=' && (c != '/' || z[n+i+j+1] != '>')) ++j;
+            arglen[argc] = j;
+            if (c == 0) goto incomplete;
+            i += j;
+            while (isspace((unsigned char)c)) {
+               i++;
+               c = z[n+i];
+            }
+            if (c == 0) goto incomplete;
+            argc++;
+            if (c != '=') {
+               argv[argc] = null;
+               arglen[argc] = 0;
+               argc++;
+               continue;
+            }
+            i++;
+            c = z[n+i];
+            while (isspace((unsigned char)c)) {
+               i++;
+               c = z[n+i];
+            }
+            if (c == 0) goto incomplete;
+            if (c == '\'' || c == '"') {
+               int cQuote = c;
+               i++;
+               argv[argc] = &z[n+i];
+               for (j = 0; (c = z[n+i+j]) != 0 && c != cQuote; j++) {}
+               if (c == 0) goto incomplete;
+               arglen[argc] = j;
+               i += j+1;
+            } else {
+               argv[argc] = &z[n+i];
+               for (j = 0; (c = z[n+i+j]) != 0 && !isspace((unsigned char)c) && c != '>'; j++) {}
+               if (c == 0) goto incomplete;
+               arglen[argc] = j;
+               i += j;
+            }
+            argc++;
+            while (isspace(z[n+i])) ++i;
+         }
+         if (c == '/') {
+            i++;
+            c = z[n+i];
+            selfClose = 1;
+         } else {
+            selfClose = 0;
+         }
+         if (c == 0) goto incomplete;
+         for (j = 0; j < i+1; j++) {
             inpCol = NextColumn(inpCol, z[n+j]);
          }
-         pElem->fCount = inpCol - iColStart;
-      }
-      AppendElement(pElem);
-      n += i;
+         n += i + 1;
 
-      } else if (c != '<' || fIPlaintext != 0 ||
-         (!isalpha(z[n+1]) && z[n+1] != '/' && z[n+1] != '!' && z[n+1] != '?')) {
+         // Lookup the markup name in the hash table
 
-      // Ordinary text
-      for (i = 1; (c = z[n+i]) != 0 && !isspace((unsigned char)c) && c != '<'; i++) {}
-      if (z[n+i-1] == '.' || z[n+i-1] == '!' || z[n+i-1] == '?') sawdot = 2;
-      if (c == 0) goto incomplete;
-      if (fIPlaintext != 0 && z[n] == '<') {
-         switch (fIPlaintext) {
+         if (!gIsInit) {
+            HtmlHashInit();
+            gIsInit = 1;
+         }
+         c = argv[0][arglen[0]];
+         argv[0][arglen[0]] = 0;
+         h = HtmlHash(argv[0]);
+         for (pMap = gApMap[h]; pMap; pMap = pMap->fPCollide) {
+            if (strcasecmp(pMap->fZName, argv[0]) == 0) break;
+         }
+         argv[0][arglen[0]] = c;
+         if (pMap == 0) continue;  // Ignore unknown markup
+
+makeMarkupEntry:
+         // Construct a TGHtmlMarkupElement object for this markup.
+
+         pElem = MakeMarkupEntry(pMap->fObjType, pMap->fType, argc, arglen, argv);
+         if (pElem == 0) goto incomplete;
+
+         pElem->fElId = ++fIdind;
+         pElem->fOffs = n;
+
+         AddFormInfo(pElem);
+
+         // The new markup has now been constructed in pElem. But before
+         // appending it to the list, check to see if there is a special
+         // handler for this markup type.
+
+         if (ProcessToken(pElem, pMap->fZName, pMap->fType)) {
+            // delete pElem;
+
+            // Tricky, tricky. The user function might have caused the p->fZText
+            // pointer to change, so renew our copy of that pointer.
+
+            z = fZText;
+            if (z == 0) {
+               n = 0;
+               inpCol = 0;
+               goto incomplete;
+            }
+            continue;
+         }
+
+         // No special handler for this markup. Just append it to the
+         // list of all tokens.
+
+         AppendElement(pElem);
+         switch (pMap->fType) {
+            case Html_TABLE:
+               break;
+
+            case Html_PLAINTEXT:
             case Html_LISTING:
-               if (i >= 10 && strncasecmp(&z[n], "</listing>", 10) == 0) {
-                  fIPlaintext = 0;
-                  goto doMarkup;
-               }
-               break;
-
             case Html_XMP:
-               if (i >= 6 && strncasecmp(&z[n], "</xmp>", 6) == 0) {
-                  fIPlaintext = 0;
-                  goto doMarkup;
+            case Html_TEXTAREA:
+               fIPlaintext = pMap->fType;
+               break;
+
+            case Html_NOFRAMES:
+               if (!fHasFrames) break;
+               pIsInNoFrames = 1;
+            case Html_NOSCRIPT:
+               break;
+               if (!fHasScript) break;
+               pIsInNoScript = 1;
+            case Html_SCRIPT:
+               pIsInScript = 1;
+            case Html_STYLE:
+               fPScript = (TGHtmlScript *) pElem;
+               break;
+
+            case Html_LI:
+               if (!fAddEndTags) break;
+               if (inLi) {
+                  TGHtmlElement *e = new TGHtmlMarkupElement(Html_EndLI, 1, 0, 0);
+                  AppToken(e, pElem, n);
+               } else {
+                  inLi = 1;
                }
                break;
 
-            case Html_TEXTAREA:
-               if (i >= 11 && strncasecmp(&z[n], "</textarea>", 11) == 0) {
-                  fIPlaintext = 0;
-                  goto doMarkup;
+            case Html_EndLI:
+               inLi=0;
+               break;
+
+            case Html_EndOL:
+            case Html_EndUL:
+               if (!fAddEndTags) break;
+               if (inLi) {
+                  TGHtmlElement *e = new TGHtmlMarkupElement(Html_EndLI, 1, 0, 0);
+                  AppToken(e, pElem, n);
+               } else {
+                  inLi = 0;
                }
                break;
 
             default:
                break;
          }
-      }
-      pElem = new TGHtmlTextElement(i);
-      if (pElem == 0) goto incomplete;
-      TGHtmlTextElement *tpElem = (TGHtmlTextElement *) pElem;
-      tpElem->fElId = ++fIdind;
-      tpElem->fOffs = n;
-      strncpy(tpElem->fZText, &z[n], i);
-      tpElem->fZText[i] = 0;
-      AppendElement(pElem);
-      if (fIPlaintext == 0 || fIPlaintext == Html_TEXTAREA) {
-         HtmlTranslateEscapes(tpElem->fZText);
-      }
-      pElem->fCount = strlen(tpElem->fZText);
-      n += i;
-      inpCol += i;
 
-   } else if (strncmp(&z[n], "<!--", 4) == 0) {
+         // If this is self-closing markup (ex: <br/> or <img/>) then
+         // synthesize a closing token.
 
-      // An HTML comment. Just skip it.
-      for (i = 4; z[n+i]; i++) {
-        if (z[n+i] == '-' && strncmp(&z[n+i], "-->", 3) == 0) break;
-      }
-      if (z[n+i] == 0) goto incomplete;
-
-      pElem = new TGHtmlTextElement(i);
-      if (pElem == 0) goto incomplete;
-      TGHtmlTextElement *tpElem = (TGHtmlTextElement *) pElem;
-      tpElem->fType = Html_COMMENT;
-      tpElem->fElId = ++fIdind;
-      tpElem->fOffs = n;
-      strncpy(tpElem->fZText, &z[n+4], i-4);
-      tpElem->fZText[i-4] = 0;
-      tpElem->fCount = 0;
-      AppendElement(pElem);
-
-      pElem = new TGHtmlElement(Html_EndCOMMENT);
-      AppToken(pElem, 0, n+4);
-
-      for (j = 0; j < i+3; j++) {
-        inpCol = NextColumn(inpCol, z[n+j]);
-      }
-      n += i + 3;
-
-   } else {
-
-      // Markup.
-      //
-      // First get the name of the markup
-doMarkup:
-      argc = 1;
-      argv[0] = &z[n+1];
-      for (i = 1;
-          (c = z[n+i]) != 0 && !isspace((unsigned char)c) && c != '>' && (i < 2 || c != '/');
-          i++) {}
-      arglen[0] = i - 1;
-      if (c == 0) goto incomplete;
-
-      // Now parse up the arguments
-
-      while (isspace((unsigned char)z[n+i])) ++i;
-      while ((c = z[n+i]) != 0 && c != '>' && (c != '/' || z[n+i+1] != '>')) {
-         if (argc > mxARG - 3) argc = mxARG - 3;
-         argv[argc] = &z[n+i];
-         j = 0;
-         while ((c = z[n+i+j]) != 0 && !isspace((unsigned char)c) && c != '>' &&
-                c != '=' && (c != '/' || z[n+i+j+1] != '>')) ++j;
-         arglen[argc] = j;
-         if (c == 0) goto incomplete;
-         i += j;
-         while (isspace((unsigned char)c)) {
-            i++;
-            c = z[n+i];
+         if (selfClose && argv[0][0] != '/' &&
+             strcmp(&pMap[1].fZName[1], pMap->fZName) == 0) {
+            selfClose = 0;
+            pMap++;
+            argc = 1;
+            goto makeMarkupEntry;
          }
-         if (c == 0) goto incomplete;
-         argc++;
-         if (c != '=') {
-            argv[argc] = null;
-            arglen[argc] = 0;
-            argc++;
-            continue;
-         }
-         i++;
-         c = z[n+i];
-         while (isspace((unsigned char)c)) {
-            i++;
-            c = z[n+i];
-         }
-         if (c == 0) goto incomplete;
-         if (c == '\'' || c == '"') {
-            int cQuote = c;
-            i++;
-            argv[argc] = &z[n+i];
-            for (j = 0; (c = z[n+i+j]) != 0 && c != cQuote; j++) {}
-            if (c == 0) goto incomplete;
-            arglen[argc] = j;
-            i += j+1;
-         } else {
-            argv[argc] = &z[n+i];
-            for (j = 0; (c = z[n+i+j]) != 0 && !isspace((unsigned char)c) && c != '>'; j++) {}
-            if (c == 0) goto incomplete;
-            arglen[argc] = j;
-            i += j;
-         }
-         argc++;
-         while (isspace(z[n+i])) ++i;
       }
-      if (c == '/') {
-         i++;
-         c = z[n+i];
-         selfClose = 1;
-      } else {
-         selfClose = 0;
-      }
-      if (c == 0) goto incomplete;
-      for (j = 0; j < i+1; j++) {
-         inpCol = NextColumn(inpCol, z[n+j]);
-      }
-      n += i + 1;
-
-      // Lookup the markup name in the hash table
-
-      if (!gIsInit) {
-         HtmlHashInit();
-         gIsInit = 1;
-      }
-      c = argv[0][arglen[0]];
-      argv[0][arglen[0]] = 0;
-      h = HtmlHash(argv[0]);
-      for (pMap = gApMap[h]; pMap; pMap = pMap->fPCollide) {
-        if (strcasecmp(pMap->fZName, argv[0]) == 0) break;
-      }
-      argv[0][arglen[0]] = c;
-      if (pMap == 0) continue;  // Ignore unknown markup
-
-makeMarkupEntry:
-      // Construct a TGHtmlMarkupElement object for this markup.
-
-      pElem = MakeMarkupEntry(pMap->fObjType, pMap->fType, argc, arglen, argv);
-      if (pElem == 0) goto incomplete;
-
-      pElem->fElId = ++fIdind;
-      pElem->fOffs = n;
-
-      AddFormInfo(pElem);
-
-      // The new markup has now been constructed in pElem. But before
-      // appending it to the list, check to see if there is a special
-      // handler for this markup type.
-
-      if (ProcessToken(pElem, pMap->fZName, pMap->fType)) {
-        // delete pElem;
-
-        // Tricky, tricky. The user function might have caused the p->fZText
-        // pointer to change, so renew our copy of that pointer.
-
-        z = fZText;
-        if (z == 0) {
-          n = 0;
-          inpCol = 0;
-          goto incomplete;
-        }
-        continue;
-      }
-
-      // No special handler for this markup. Just append it to the
-      // list of all tokens.
-
-      AppendElement(pElem);
-      switch (pMap->fType) {
-        case Html_TABLE:
-          break;
-
-        case Html_PLAINTEXT:
-        case Html_LISTING:
-        case Html_XMP:
-        case Html_TEXTAREA:
-          fIPlaintext = pMap->fType;
-          break;
-
-        case Html_NOFRAMES:
-          if (!fHasFrames) break;
-          pIsInNoFrames = 1;
-        case Html_NOSCRIPT:
-          break;
-          if (!fHasScript) break;
-          pIsInNoScript = 1;
-        case Html_SCRIPT:
-          pIsInScript = 1;
-        case Html_STYLE:
-          fPScript = (TGHtmlScript *) pElem;
-          break;
-
-        case Html_LI:
-          if (!fAddEndTags) break;
-          if (inLi) {
-            TGHtmlElement *e = new TGHtmlMarkupElement(Html_EndLI, 1, 0, 0);
-            AppToken(e, pElem, n);
-          } else {
-            inLi = 1;
-          }
-          break;
-
-        case Html_EndLI:
-          inLi=0;
-          break;
-
-        case Html_EndOL:
-        case Html_EndUL:
-          if (!fAddEndTags) break;
-          if (inLi) {
-            TGHtmlElement *e = new TGHtmlMarkupElement(Html_EndLI, 1, 0, 0);
-            AppToken(e, pElem, n);
-          } else {
-            inLi = 0;
-          }
-          break;
-
-        default:
-          break;
-      }
-
-      // If this is self-closing markup (ex: <br/> or <img/>) then
-      // synthesize a closing token.
-
-      if (selfClose && argv[0][0] != '/' &&
-          strcmp(&pMap[1].fZName[1], pMap->fZName) == 0) {
-        selfClose = 0;
-        pMap++;
-        argc = 1;
-        goto makeMarkupEntry;
-      }
-    }
-  }
+   }
 
 incomplete:
-  fICol = inpCol;
-  ////fPScript = 0;
+   fICol = inpCol;
+   ////fPScript = 0;
 
-  return n;
+   return n;
 }
 
 /************************** End HTML Tokenizer Code ***************************/
 
 //______________________________________________________________________________
 TGHtmlMarkupElement *TGHtml::MakeMarkupEntry(int objType, int type, int argc,
-                                            int arglen[], char *argv[])
+                                             int arglen[], char *argv[])
 {
-   //
+   // Make one markup entry.
 
    TGHtmlMarkupElement *e;
 
@@ -1057,9 +1062,9 @@ TGHtmlMarkupElement *TGHtml::MakeMarkupEntry(int objType, int type, int argc,
     default:
       e = new TGHtmlMarkupElement(type, argc, arglen, argv);
       break;
-  }
+   }
 
-  return e;
+   return e;
 }
 
 //______________________________________________________________________________
@@ -1080,15 +1085,15 @@ void TGHtml::TokenizerAppend(const char *text)
       fZText = tmp;
    }
 
-  if (fZText == 0) {
-    fNText = 0;
-    UNTESTED;
-    return;
-  }
+   if (fZText == 0) {
+      fNText = 0;
+      UNTESTED;
+      return;
+   }
 
-  strcpy(&fZText[fNText], text);
-  fNText += len;
-  fNComplete = Tokenize();
+   strcpy(&fZText[fNText], text);
+   fNText += len;
+   fNComplete = Tokenize();
 }
 
 //______________________________________________________________________________

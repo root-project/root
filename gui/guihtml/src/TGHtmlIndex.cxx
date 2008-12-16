@@ -92,7 +92,7 @@ int TGHtml::TokenNumber(TGHtmlElement *p)
 }
 
 //______________________________________________________________________________
-void TGHtml::maxIndex(TGHtmlElement *p, int *pIndex, int isLast)
+void TGHtml::MaxIndex(TGHtmlElement *p, int *pIndex, int isLast)
 {
    // Find the maximum index for the given token
 
@@ -374,9 +374,9 @@ int TGHtml::DecodeBaseIndex(const char *baseIx,
             if (base[i] == 0) {
                *pIndex = 0;
             } else if (strcmp(&base[i], ".last") == 0) {
-               maxIndex(p, pIndex, 1);
+               MaxIndex(p, pIndex, 1);
             } else if (strcmp(&base[i], ".end") == 0) {
-               maxIndex(p, pIndex, 0);
+               MaxIndex(p, pIndex, 0);
                (*pIndex)++;
             } else {
                if (n == 1 && p && p->IsMarkup() && base[i] == '.' &&
@@ -401,7 +401,7 @@ int TGHtml::DecodeBaseIndex(const char *baseIx,
       case 'e':
          if (strcmp(base, "end") == 0) {
             p = *ppToken = fPLast;
-            maxIndex(p, pIndex, 0);
+            MaxIndex(p, pIndex, 0);
          } else {
             rc = 1;
          }
@@ -410,7 +410,7 @@ int TGHtml::DecodeBaseIndex(const char *baseIx,
       case 'l':
          if (strcmp(base, "last") == 0) {
             p = *ppToken = fPLast;
-            maxIndex(p, pIndex, 1);
+            MaxIndex(p, pIndex, 1);
          } else {
             rc = 1;
          }

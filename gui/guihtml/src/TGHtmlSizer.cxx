@@ -1017,7 +1017,7 @@ void TGHtml::AddStyle(TGHtmlElement *p)
 //______________________________________________________________________________
 void TGHtml::TableBgndImage(TGHtmlElement *p)
 {
-   //
+   // Set background picture of a html table.
 
    const char *z;
 

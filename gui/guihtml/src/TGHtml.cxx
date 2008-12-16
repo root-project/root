@@ -976,7 +976,7 @@ void TGHtml::HClear()
 //______________________________________________________________________________
 Bool_t TGHtml::HandleTimer(TTimer *t)
 {
-   // Handle timer event. 
+   // Handle timer event.
 
    if (t == fInsTimer) {
       if (fInsTimer) delete fInsTimer;
@@ -1138,7 +1138,7 @@ TGHtmlInput *TGHtml::GetInputElement(int x, int y)
           p->fX < vx + vw && p->fX + p->fW > vx) {
          if ((x > p->fX) && (y > p->fY) && (x < (p->fX + p->fW)) &&
              (y < (p->fY + p->fH)) ) {
-            return p;         
+            return p;
          }
       }
    }
@@ -1173,7 +1173,7 @@ Bool_t TGHtml::HandleHtmlInput(TGHtmlInput *pr, Event_t *event)
    eventSt.fUser[3]   = event->fUser[3];
    eventSt.fUser[4]   = event->fUser[4];
    gVirtualX->TranslateCoordinates(GetId(), pr->fFrame->GetId(),
-                                   event->fX, event->fY, eventSt.fX, 
+                                   event->fX, event->fY, eventSt.fX,
                                    eventSt.fY, childdum);
 
    const char *name = pr->MarkupArg("name", 0);
@@ -1338,9 +1338,9 @@ Bool_t TGHtml::HandleButton(Event_t *event)
       const char *uri = GetHref(x, y);
 
 #if 0  // insertion cursor test
-    char ix[20];
-    sprintf(ix, "begin");
-    SetInsert(ix);
+      char ix[20];
+      sprintf(ix, "begin");
+      SetInsert(ix);
 #endif
 
       if (uri) {
@@ -1536,7 +1536,7 @@ TGHtmlElement *TGHtml::GetMap(const char *name)
 }
 
 //______________________________________________________________________________
-float TGHtml::colorDistance(ColorStruct_t *pA, ColorStruct_t *pB)
+float TGHtml::ColorDistance(ColorStruct_t *pA, ColorStruct_t *pB)
 {
    // Compute the squared distance between two colors
 
@@ -1600,7 +1600,7 @@ int TGHtml::GetColorByName(const char *zColor)
 #define MIN(A,B)     ((A)<(B)?(A):(B))
 
 //______________________________________________________________________________
-int TGHtml::isDarkColor(ColorStruct_t *p)
+int TGHtml::IsDarkColor(ColorStruct_t *p)
 {
    // Check to see if the given color is too dark to be easily distinguished
    // from black.
@@ -1622,7 +1622,7 @@ int TGHtml::GetDarkShadowColor(int iBgColor)
    if (fIDark[iBgColor] == 0) {
       ColorStruct_t *pRef, val;
       pRef = fApColor[iBgColor];
-      if (isDarkColor(pRef)) {
+      if (IsDarkColor(pRef)) {
          int t1, t2;
          t1 = (int) MIN(MAX_COLOR, pRef->fRed * 1.2);
          t2 = (pRef->fRed * 3 + MAX_COLOR) / 4;
@@ -1645,7 +1645,7 @@ int TGHtml::GetDarkShadowColor(int iBgColor)
 }
 
 //______________________________________________________________________________
-int TGHtml::isLightColor(ColorStruct_t *p)
+int TGHtml::IsLightColor(ColorStruct_t *p)
 {
    // Check to see if the given color is too light to be easily distinguished
    // from white.
@@ -1662,7 +1662,7 @@ int TGHtml::GetLightShadowColor(int iBgColor)
    if (fILight[iBgColor] == 0) {
       ColorStruct_t *pRef, val;
       pRef = fApColor[iBgColor];
-      if (isLightColor(pRef)) {
+      if (IsLightColor(pRef)) {
          val.fRed = (unsigned short) (pRef->fRed * 0.9);
          val.fGreen = (unsigned short) (pRef->fGreen * 0.9);
          val.fBlue = (unsigned short) (pRef->fBlue * 0.9);
@@ -1735,9 +1735,9 @@ int TGHtml::GetColorByValue(ColorStruct_t *pRef)
    // Ok, find the existing color that is closest to the color requested
    // and use it.
    closest = 0;
-   closestDist = colorDistance(pRef, fApColor[0]);
+   closestDist = ColorDistance(pRef, fApColor[0]);
    for (i = 1; i < N_COLOR; i++) {
-      dist = colorDistance(pRef, fApColor[i]);
+      dist = ColorDistance(pRef, fApColor[i]);
       if (dist < closestDist) {
          closestDist = dist;
          closest = i;

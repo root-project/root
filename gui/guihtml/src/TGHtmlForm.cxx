@@ -188,7 +188,7 @@ static int InputType(TGHtmlElement *p)
 void TGHtml::SizeAndLink(TGFrame *frame, TGHtmlInput *pElem)
 {
    // 'frame' is the child widget that is used to implement an input
-   // element. Query the widget for its size and put that information 
+   // element. Query the widget for its size and put that information
    // in the pElem structure that represents the input.
 
 
@@ -240,7 +240,7 @@ void TGHtml::SizeAndLink(TGFrame *frame, TGHtmlInput *pElem)
 }
 
 //______________________________________________________________________________
-void TGHtml::AppendText(TGString *str, TGHtmlElement *pFirs, 
+void TGHtml::AppendText(TGString *str, TGHtmlElement *pFirs,
                         TGHtmlElement *pEnd)
 {
    // Append all text and space tokens between pStart and pEnd to
@@ -280,18 +280,18 @@ void TGHtml::AppendText(TGString *str, TGHtmlElement *pFirs,
 class TGHtmlLBEntry : public TGTextLBEntry {
 public:
    TGHtmlLBEntry(const TGWindow *p, TGString *s, TGString *val, int ID) :
-      TGTextLBEntry(p, s, ID) { _val = val; }
-   virtual ~TGHtmlLBEntry() { if (_val) delete _val; }
+      TGTextLBEntry(p, s, ID) { fVal = val; }
+   virtual ~TGHtmlLBEntry() { if (fVal) delete fVal; }
 
-   const char *GetValue() const { return _val ? _val->GetString() : 0; }
+   const char *GetValue() const { return fVal ? fVal->GetString() : 0; }
 
 protected:
-   TGString *_val;
+   TGString *fVal;
 };
 
 
 //______________________________________________________________________________
-void TGHtml::AddSelectOptions(TGListBox *lb, TGHtmlElement *p, 
+void TGHtml::AddSelectOptions(TGListBox *lb, TGHtmlElement *p,
                               TGHtmlElement *pEnd)
 {
    // The "p" argument points to a <select>.  This routine scans all
@@ -329,7 +329,7 @@ void TGHtml::AddSelectOptions(TGListBox *lb, TGHtmlElement *p,
             }
             p = p->fPNext;
          }
-         lb->AddEntry(new TGHtmlLBEntry(lb->GetContainer(), str, 
+         lb->AddEntry(new TGHtmlLBEntry(lb->GetContainer(), str,
                       new TGString(zValue), id),
                       new TGLayoutHints(kLHintsTop | kLHintsExpandX));
          //if (p->MarkupArg("selected", 0) != 0) lb->Select(id);
@@ -476,7 +476,7 @@ int TGHtml::ControlSize(TGHtmlInput *pElem)
                   width = TMath::Max(width, te->GetDefaultWidth());
             }
             height = lb->GetItemVsize() ? lb->GetItemVsize()+4 : 22;
-            cb->Resize(width > 0 ? width+30 : 200, 
+            cb->Resize(width > 0 ? width+30 : 200,
                        height > 22 ? height : 22);
             if (e) cb->Select(e->EntryId(), kFALSE);
             SizeAndLink(cb, pElem);
@@ -562,7 +562,7 @@ int TGHtml::FormCount(TGHtmlInput *p, int radio)
 void TGHtml::AddFormInfo(TGHtmlElement *p)
 {
    // Add the DOM control information for form elements.
-   
+
    TGHtmlElement *q;
    TGHtmlForm *f;
    const char *name, *z;

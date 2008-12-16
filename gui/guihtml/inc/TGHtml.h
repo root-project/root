@@ -998,9 +998,9 @@ protected:
    void RedrawEverything();
    void RedrawText(int y);
 
-   float colorDistance(ColorStruct_t *pA, ColorStruct_t *pB);
-   int isDarkColor(ColorStruct_t *p);
-   int isLightColor(ColorStruct_t *p);
+   float ColorDistance(ColorStruct_t *pA, ColorStruct_t *pB);
+   int IsDarkColor(ColorStruct_t *p);
+   int IsLightColor(ColorStruct_t *p);
    int GetColorByName(const char *zColor);
    int GetDarkShadowColor(int iBgColor);
    int GetLightShadowColor(int iBgColor);
@@ -1058,7 +1058,7 @@ protected:
    TGHtmlElement *TokenByIndex(int N, int flag);
    int  TokenNumber(TGHtmlElement *p);
 
-   void maxIndex(TGHtmlElement *p, int *pIndex, int isLast);
+   void MaxIndex(TGHtmlElement *p, int *pIndex, int isLast);
    int  IndexMod(TGHtmlElement **pp, int *ip, char *cp);
    void FindIndexInBlock(TGHtmlBlock *pBlock, int x,
                          TGHtmlElement **ppToken, int *pIndex);
@@ -1316,7 +1316,7 @@ protected:
 // REDRAW_IMAGES          One or more TGHtmlImageMarkup objects have their
 //                        redrawNeeded flag set.
 
-#define REDRAW_PENDING	     0x000001
+#define REDRAW_PENDING       0x000001
 #define GOT_FOCUS            0x000002
 #define HSCROLL              0x000004
 #define VSCROLL              0x000008
