@@ -616,7 +616,8 @@ void TSocket::SendStreamerInfos(const TMessage &mess)
          TMessage messinfo(kMESS_STREAMERINFO);
          messinfo.WriteObject(minilist);
          delete minilist;
-         messinfo.fInfos->Clear();
+         if (messinfo.fInfos)
+            messinfo.fInfos->Clear();
          Send(messinfo);
       }
    }
