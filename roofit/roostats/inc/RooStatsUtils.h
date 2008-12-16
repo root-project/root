@@ -28,7 +28,7 @@ namespace RooStats {
   // returns one-sided significance corresponding to a p-value
   inline Double_t PValueToSignificance(Double_t pvalue){
     // return sqrt(2.)*TMath::ErfInverse(1 - 2.*pvalue);
-    return TMath::Abs(TMath::NormQuantile(pvalue) ); 
+     return TMath::Abs(ROOT::Math::normal_quantile(pvalue,1) ); 
   }
 
   // returns p-value corresponding to a 1-sided significance

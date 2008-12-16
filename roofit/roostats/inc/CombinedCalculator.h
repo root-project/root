@@ -82,7 +82,7 @@ namespace RooStats {
          fOwnsWorkspace = false;
       }
 
-      CombinedCalculator(RooWorkspace* ws, RooAbsData* data, RooAbsPdf* pdf, RooArgSet* paramsOfInterest, 
+      CombinedCalculator(RooWorkspace& ws, RooAbsData& data, RooAbsPdf& pdf, RooArgSet& paramsOfInterest, 
                          Double_t size = 0.05, RooArgSet* nullParams = 0, RooArgSet* altParams = 0){
          // alternate constructor
          SetWorkspace(ws);
@@ -91,14 +91,14 @@ namespace RooStats {
          SetParameters(paramsOfInterest);
          SetSize(size);
          if(nullParams ) 
-            SetNullParameters(nullParams);
+            SetNullParameters(*nullParams);
          else
             SetNullParameters(paramsOfInterest);
-         SetAlternateParameters(altParams);
+         if (altParams) SetAlternateParameters(*altParams);
          fOwnsWorkspace = false;
       }
 
-      CombinedCalculator(RooAbsData* data, RooAbsPdf* pdf, RooArgSet* paramsOfInterest, 
+      CombinedCalculator(RooAbsData& data, RooAbsPdf& pdf, RooArgSet& paramsOfInterest, 
                          Double_t size = 0.05, RooArgSet* nullParams = 0, RooArgSet* altParams = 0){
          // alternate constructor
          fWS = new RooWorkspace();
@@ -108,10 +108,10 @@ namespace RooStats {
          SetParameters(paramsOfInterest);
          SetSize(size);
          if(nullParams ) 
-            SetNullParameters(nullParams);
+            SetNullParameters(*nullParams);
          else
             SetNullParameters(paramsOfInterest);
-         SetAlternateParameters(altParams);
+         if (altParams) SetAlternateParameters(*altParams);
       }
 
       virtual ~CombinedCalculator() {
@@ -143,57 +143,59 @@ namespace RooStats {
     
 
       // set a workspace that owns all the necessary components for the analysis
-      virtual void SetWorkspace(RooWorkspace* ws) {
+      virtual void SetWorkspace(RooWorkspace & ws) {
          if (!fWS)
-            fWS = ws;
+            fWS = &ws;
          else{
             RooMsgService::instance().setGlobalKillBelow(RooMsgService::ERROR) ;
-            fWS->merge(*ws);
+            fWS->merge(ws);
             RooMsgService::instance().setGlobalKillBelow(RooMsgService::DEBUG) ;
          }
 
       }
 
       // Set the DataSet, add to the the workspace if not already there
-      virtual void SetData(RooAbsData* data) {      
-         if (!fWS) 
+      virtual void SetData(RooAbsData & data) {      
+         if (!fWS) {
             fWS = new RooWorkspace();
-         if (! fWS->data( data->GetName() ) ){
+            fOwnsWorkspace = true; 
+         }
+         if (! fWS->data( data.GetName() ) ){
             RooMsgService::instance().setGlobalKillBelow(RooMsgService::ERROR) ;
-            fWS->import(*data);
+            fWS->import(data);
             RooMsgService::instance().setGlobalKillBelow(RooMsgService::DEBUG) ;
          }
-         SetData( data->GetName() );
+         SetData( data.GetName() );
 
       };
 
       // Set the Pdf, add to the the workspace if not already there
-      virtual void SetPdf(RooAbsPdf* pdf) {
+      virtual void SetPdf(RooAbsPdf& pdf) {
          if (!fWS) 
             fWS = new RooWorkspace();
-         if (! fWS->pdf( pdf->GetName() ) ){
+         if (! fWS->pdf( pdf.GetName() ) ){
             RooMsgService::instance().setGlobalKillBelow(RooMsgService::ERROR) ;
-            fWS->import(*pdf);
+            fWS->import(pdf);
             RooMsgService::instance().setGlobalKillBelow(RooMsgService::DEBUG) ;
          }
-         SetPdf( pdf->GetName() );
+         SetPdf( pdf.GetName() );
       }
 
       // Set the Pdf, add to the the workspace if not already there
-      virtual void SetCommonPdf(RooAbsPdf* pdf) { SetPdf(pdf);}
+      virtual void SetCommonPdf(RooAbsPdf& pdf) { SetPdf(pdf);}
       // Set the Pdf, add to the the workspace if not already there
-      virtual void SetNullPdf(RooAbsPdf* pdf) { SetPdf(pdf);}
+      virtual void SetNullPdf(RooAbsPdf& pdf) { SetPdf(pdf);}
       // Set the Pdf, add to the the workspace if not already there
-      virtual void SetAlternatePdf(RooAbsPdf* pdf) { SetPdf(pdf);}
+      virtual void SetAlternatePdf(RooAbsPdf& pdf) { SetPdf(pdf);}
 
       // specify the name of the PDF in the workspace to be used
       virtual void SetPdf(const char* name) {fPdfName = name;}
       // specify the name of the dataset in the workspace to be used
       virtual void SetData(const char* name){fDataName = name;}
       // specify the parameters of interest in the interval
-      virtual void SetParameters(RooArgSet* set) {fPOI = set;}
+      virtual void SetParameters(RooArgSet& set) {fPOI = &set;}
       // specify the nuisance parameters (eg. the rest of the parameters)
-      virtual void SetNuisanceParameters(RooArgSet* set) {fNuisParams = set;}
+      virtual void SetNuisanceParameters(RooArgSet& set) {fNuisParams = &set;}
     
       // from HypoTestCalculator
       // set the PDF for the null hypothesis.  Needs to be the common one
@@ -203,9 +205,9 @@ namespace RooStats {
       // set a common PDF for both the null and alternate hypotheses
       virtual void SetCommonPdf(const char* name) {SetPdf(name);}
       // set parameter values for the null if using a common PDF
-      virtual void SetNullParameters(RooArgSet* set) {fNullParams = set;}
+      virtual void SetNullParameters(RooArgSet& set) {fNullParams = &set;}
       // set parameter values for the alternate if using a common PDF
-      virtual void SetAlternateParameters(RooArgSet* set) {fAlternateParams = set;}
+      virtual void SetAlternateParameters(RooArgSet& set) {fAlternateParams = &set;}
     
 
    protected:

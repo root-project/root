@@ -71,12 +71,12 @@ namespace RooStats {
       // Get the Confidence level for the test
       virtual Double_t ConfidenceLevel()  const = 0;  
       // set a workspace that owns all the necessary components for the analysis
-      virtual void SetWorkspace(RooWorkspace* ws) = 0;
+      virtual void SetWorkspace(RooWorkspace& ws) = 0;
 
       // Set the DataSet, add to the the workspace if not already there
-      virtual void SetData(RooAbsData*) = 0;
+      virtual void SetData(RooAbsData&) = 0;
       // Set the Pdf, add to the the workspace if not already there
-      virtual void SetPdf(RooAbsPdf*) = 0;
+      virtual void SetPdf(RooAbsPdf&) = 0;
 
       // specify the name of the dataset in the workspace to be used
       virtual void SetData(const char* name) = 0;
@@ -84,9 +84,9 @@ namespace RooStats {
       virtual void SetPdf(const char* name) = 0;
 
       // specify the parameters of interest in the interval
-      virtual void SetParameters(RooArgSet*) = 0;
+      virtual void SetParameters(RooArgSet&) = 0;
       // specify the nuisance parameters (eg. the rest of the parameters)
-      virtual void SetNuisanceParameters(RooArgSet*) = 0;
+      virtual void SetNuisanceParameters(RooArgSet&) = 0;
       // set the size of the test (rate of Type I error) ( Eg. 0.05 for a 95% Confidence Interval)
       virtual void SetSize(Double_t size) = 0;
       // set the confidence level for the interval (eg. 0.95 for a 95% Confidence Interval)
