@@ -8,14 +8,14 @@ class HashTable
 {
 public:
 
-   HashTable() {}
+   HashTable() : endIter_(*this) {}
    ~HashTable(){}
-   HashTable(const HashTable&) {}
+   HashTable(const HashTable&) : endIter_(*this) {}
    class iterator
    {
    public:
+     iterator( Foam::HashTable<T, Key, Hash> &in) : curHashTable_(in) {} 
    private:
-      
 #if !defined(interp)
       HashTable<T, Key, Hash> &curHashTable_;
 #endif
