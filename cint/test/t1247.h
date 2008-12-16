@@ -25,7 +25,11 @@ class A2 {
 };
 
 class A3 {
+#if defined(__ICC) && __ICC==800
+ protected:
+#else
  private:
+#endif
   ~A3() { }
  public:
   friend class A2;
