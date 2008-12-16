@@ -208,14 +208,40 @@ implemented to help finding a good choice of this parameter.
 <h3>FitPanel</h3>
 Add a new revised version of the Fit Panel with the following functionality: 
 <ul>
- <li> Add support now for fitting, in addition to the TH1 and TGraph also for TH2, TH3, TMultiGraph and TGraph2D and TTree (with un-binned fits)
-  <li>Add possibility to select the data object directly from the Fit panel. The Fit Panel can also be open directly from the TCanvas menu (under Tools)
-  <li>Improve the function selection by having the possibility to support user defined function, predefined functions and functions used before for fitting. 
-  <li> Allow the opening of the  parameter dialog in case of linear fitter. This is needed for example for fixing some of the parameters
-  <li>Improve minimization panel by adding some extra methods, like combined for a combined migrad-simplex minimization (option "MINIMIZE" in Minuit).
-  <li>Improve the slider by adding a numeric entry. 
-  <li> Fix various bugs in setting the fit model function and in setting the parameters (values, limits, etc..)
-  </ul>
+
+ <li> Add support now for fitting, in addition to the TH1 and TGraph
+ also for TH2, TH3, TMultiGraph and TGraph2D and TTree (with un-binned
+ fits)</li>
+
+ <li>Add possibility to select the data object directly from the Fit
+ panel. The Fit Panel can also be open directly from the TCanvas menu
+ (under Tools)</li>
+
+ <li>Improve the function selection by having the possibility to
+ support user defined function, predefined functions and functions
+ used before for fitting. </li>
+
+ <li> Allow the opening of the parameter dialog in case of linear
+ fitter. This is needed for example for fixing some of the
+ parameters</li>
+
+ <li>Improve minimization panel by adding some extra methods, like
+ combined for a combined migrad-simplex minimization (option
+ "MINIMIZE" in Minuit).</li>
+
+ <li>Improve the slider by adding a numeric entry. </li>
+
+ <li>Add the Advanced Graphics dialog, that allows the user to perform
+ Contour and Scan operation on the last fit.</li>
+
+ <li> Fix various bugs in setting the fit model function and in
+  setting the parameters (values, limits, etc..)</li>
+
+ </ul>
 Here is how the fit panel is now: 
-  <p><img alt="Fit Panel" src="FitPanel.gif"></img>
+  <p><img alt="Fit Panel" src="FitPanel.gif"></img></p>
+These are the currently support methods for the new Advance Graphics dialog:
+  <p><img alt="Fit Panel" src="Contour.gif"></img>&nbsp;<img alt="Fit Panel" src="Scan.gif"></img></p>
+    
+
   
