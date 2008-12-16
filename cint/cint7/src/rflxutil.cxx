@@ -1947,8 +1947,14 @@ void Cint::Internal::G__BuilderInfo::AddParameter(int /* ifn */, int type, int n
    ::Reflex::Type paramType;
    ::Reflex::Type typenum = G__Dict::GetDict().GetTypedef(numerical_typenum);
    ::Reflex::Type tagnum = G__Dict::GetDict().GetScope(numerical_tagnum);
+   bool needpointer = isupper(type);
    if (typenum) {
       paramType = typenum;
+      // if the typenum is a typedef to a pointer, the pointer in 'type'
+      // is already taken in account.
+      if (needpointer && paramType.FinalType().IsPointer()) {
+         needpointer = false;
+      }
    } else if (tagnum) {
       paramType = tagnum;
    }
@@ -1957,7 +1963,7 @@ void Cint::Internal::G__BuilderInfo::AddParameter(int /* ifn */, int type, int n
    }
    int isconst = (reftype_const / 10) % 10;
    int reftype = reftype_const - (reftype_const / 10 % 10 * 10);
-   paramType = G__modify_type(paramType, isupper(type), reftype, isconst, 0, 0);
+   paramType = G__modify_type(paramType, needpointer, reftype, isconst, 0, 0);
    fParams_type.push_back(paramType);
    fDefault_vals.push_back(para_default);
    fParams_name.push_back(std::make_pair(para_name, para_def));
