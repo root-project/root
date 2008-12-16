@@ -15,7 +15,7 @@
 #include "TQpProbDens.h"
 #include "TGondzioSolver.h"
 
-// This macro shows in detail the use of the quadratic programming package quadp .
+//+ This macro shows in detail the use of the quadratic programming package quadp .
 // Running this macro :
 //     .x portfolio.C+
 // or  gSystem->Load("libQuadp"); .L portFolio.C+; portfolio()
