@@ -65,6 +65,7 @@ TSlaveLite::TSlaveLite(const char *ord, Int_t perf,
    fMsd = msd;
    fIntHandler = 0;
    fValid = kFALSE;
+   fProtocol = kPROOF_Protocol;
 
    if (fPerfIdx > 0) Init();
 }
