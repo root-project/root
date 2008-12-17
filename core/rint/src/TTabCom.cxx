@@ -1136,18 +1136,18 @@ TSeqCollection *TTabCom::NewListOfFilesInPath(const char path1[])
 #else
    istrstream path((char *) path1);
 #endif
-   TString dirName;
 
-   dirName.ReadToDelim(path, kDelim);
+   while (path.good())
+   {
+      TString dirName;
+      dirName.ReadToDelim(path, kDelim);
+      if (dirName.IsNull())
+         continue;
 
-   while (!dirName.IsNull()) {
       IfDebug(cerr << "NewListOfFilesInPath(): dirName = " << dirName <<
               endl);
 
       AppendListOfFilesInDirectory(dirName, pList);
-
-      // next
-      dirName.ReadToDelim(path, kDelim);
    }
 
    return pList;
