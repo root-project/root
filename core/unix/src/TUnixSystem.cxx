@@ -3829,7 +3829,7 @@ int TUnixSystem::UnixTcpConnect(const char *hostname, int port,
    // Use tcpwindowsize to specify the size of the receive buffer, it has
    // to be specified here to make sure the window scale option is set (for
    // tcpwindowsize > 65KB and for platforms supporting window scaling).
-   // Is called via the TSocket constructor.
+   // Is called via the TSocket constructor. Returns -1 in case of error.
 
    short  sport;
    struct servent *sp;
@@ -3862,11 +3862,15 @@ int TUnixSystem::UnixTcpConnect(const char *hostname, int port,
       gSystem->SetSockOpt(sock, kSendBuffer, tcpwindowsize);
    }
 
-   if (connect(sock, (struct sockaddr*) &server, sizeof(server)) < 0) {
-      ::SysError("TUnixSystem::UnixTcpConnect", "connect (%s:%d)",
-                 hostname, port);
-      close(sock);
-      return -1;
+   while (connect(sock, (struct sockaddr*) &server, sizeof(server)) == -1) {
+      if (GetErrno() == EINTR)
+         ResetErrno();
+      else {
+         ::SysError("TUnixSystem::UnixTcpConnect", "connect (%s:%d)",
+                    hostname, port);
+         close(sock);
+         return -1;
+      }
    }
    return sock;
 }
@@ -3882,7 +3886,7 @@ int TUnixSystem::UnixUnixConnect(int port)
 //______________________________________________________________________________
 int TUnixSystem::UnixUnixConnect(const char *sockpath)
 {
-   // Connect to a Unix domain socket.
+   // Connect to a Unix domain socket. Returns -1 in case of error.
 
    if (!sockpath || strlen(sockpath) <= 0) {
       ::SysError("TUnixSystem::UnixUnixConnect", "socket path undefined");
@@ -3900,10 +3904,14 @@ int TUnixSystem::UnixUnixConnect(const char *sockpath)
       return -1;
    }
 
-   if (connect(sock, (struct sockaddr*) &unserver, strlen(unserver.sun_path)+2) < 0) {
-      ::SysError("TUnixSystem::UnixUnixConnect", "connect");
-      close(sock);
-      return -1;
+   while (connect(sock, (struct sockaddr*) &unserver, strlen(unserver.sun_path)+2) == -1) {
+      if (GetErrno() == EINTR)
+         ResetErrno();
+      else {
+         ::SysError("TUnixSystem::UnixUnixConnect", "connect");
+         close(sock);
+         return -1;
+      }
    }
    return sock;
 }
