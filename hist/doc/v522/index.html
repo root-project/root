@@ -2,27 +2,37 @@
 <hr> 
 <a name="hist"></a> 
 <h3>Histogram package</h3>
-<uL>
-  <li>
-Modify implementation of the Fit function in the histograms and data classes to use a new common implementation, defined in the file <tt>HFitImpl.cxx</tt>.
-  <li>Combine files <tt>THistFitInterface.cxx</tt>  and
-	  <tt>TGraphFitInterface.cxx</tt> (and *.h) in the new file <tt>HFitInterface.cxx</tt> and <tt>HFitInterface.h</tt>. 
-In addition HFitInterface defines a function <tt>ROOT::Fit::FitObject</tt>
-	  passing
-	  option directly via Foption class and not by a string. They are
-	  used by the FitPanel.
+<p>
+Modify implementation of the Fit function in the histograms and data classes to use a new common implementation, defined in the file <tt>HFitImpl.cxx</tt>. This file provides the implementation of the function used for bin fitting of the data objects of the histogram package, TH1's, TGraph, TMultiGraph, TGraph2D,  and un-binned maximum likelihood fit for TTree data (used by the <tt>TTree::UnbinnedFit</tt> method).
 
-  <li>Add in <tt>HFitImpl.cxx</tt> a new function for fitting unbin data set. This function is now used by the TTree::UnbinnedFit for performing maximum likelihood unbinned fits.
+<h4><tt>HFitInterface.h</tt></h4>
+  Header file defining functions in the namespace <tt>ROOT::Fit</tt> providing functions required for fitting the data objects of the histogram package. These functions are used for example from other libraries like the FitPanel or the TTreePlayer for performing the fits. 
+  <ul>
+<li>
+    <tt>ROOT::Fit::FitObject</tt>: function for fitting the data objects. Requires the user to pass in addition to a pointer to the object,  the fit options (via the <tt>FOption</tt> class and not a string), the minimizer options and the fit data range.
+    <li>
+  <tt>ROOT::Fit::FillData</tt>: function for filling the fit data from the histogram data objects. Used for fitting an histogram using the <tt>ROOT::Fit::Fitter</tt> class.
+    <li>
+    <tt>ROOT::Fit::UnBinFit</tt>:: function for fitting an unbinned data sets, for example obtained from TTree data.  
+  using the fit data. 
   </li>
-  <li>
-  Add new class <tt>TBackCompFitter</tt>, providing a backward compatible
-	  implementation of
+  </ul>
+ 
+
+  <h4>TBackCompFitter</h4>
+  New class providing a backward compatible implementation of the 
 	  <tt>TVirtualFitter</tt> using the new fitting class. It is wrapping the functionality of
   the <tt>ROOT::Math::Fitter</tt> and it 
 	  can be used to retrieve the fit information (result and
 	  configuration) via the
 	  TVirtualFitter API from <tt>FitConfig</tt> and <tt>FitResult</tt>. A static instance of this class 
-	  is created after calling the histograms and graph Fit methods in order to retrieve the full fit information after having fit. This gives full backward compatibility functionality in fitting. 
+	  is created after calling the histograms and graph Fit methods in order to retrieve the full fit information after having fit. This gives full backward compatibility functionality in fitting.
+  This class in addition to the TVirtualFitter provides the following funcitonality:
+  <ul>
+    <li>access direct to references to <tt>ROOT::Fit::FitResult</tt>  and <tt>ROOT::FitConfig</tt> objects via the member functions <tt>TBackCompFitter::GetFitResult()</tt> and <tt>TBackCompFitter::GetFitConfig()</tt>
+    <li>Possibility to set the fit the fit function directly as a function pointer to a muldi-dimensional function interface instead of using the TMinuit FCN style API.
+    <li>New methods for making in a easy way contour , with <tt>TBackCompFitter::Contour</tt>, and scan plots of the objective function, with <tt>TBackCompFitter::Scan</tt>. Both Scan and Contour takes as input a TGraph which on exit will be filled with the scanned or contour points.  
+    
   </ul>
 
   <h4>TH1</h4>
@@ -31,12 +41,15 @@ In addition HFitInterface defines a function <tt>ROOT::Fit::FitObject</tt>
     <li>Add new function <tt>TH1::Interpolate</tt> to approximate the value via linear interpolation. Implementation from Any Mastbaum. </li>
     <li>Fixed a bug in rebinning in a new variable bin histogram.
     <li>Fixed a bug in copy constructor of histograms
+    <li>define now <tt>kNstat</tt> as an enumeration in the TH1 class, to avoid using wrong values for this constant variable. This fixes a previous bug in TProfile3D
     </ul>
   <h4>TH2</h4>
     <ul>
 <li>  Share a common implementation for (FitSlicesX,FitSclicesY) and (ProfileX, ProfileY) using a common protected method.
       <li>Add possibility to be used in the FitPanel (add a <tt>TH2::FitPanel()</tt> method).
     <li>Add also here the new function <tt>TH2::Interpolate</tt>. </li>
+    <li>fix a bug in the resulting statistics in TH2::ProjectionX(Y) when all range was used
+    <li>fix a bug in getting the right axis and limits in TH2::ProfileX(Y) 
       </ul>
 
   <h4>TH3</h4>
@@ -51,10 +64,20 @@ In addition HFitInterface defines a function <tt>ROOT::Fit::FitObject</tt>
 
 </ul>
 
+ <h4>TProfile</h4>
+<ul>
+  <li>Fix a bug in <tt>TProfile::Rebin</tt>. The underflow and overflow were not properly taken into account
+  </ul>
+
  <h4>TProfile3D</h4>
 <ul>
-  <li>Fix a bug in the copy constructor
+  <li>Fix a bug in the copy constructor and assignment operator
   </ul>
+
+  <h4>THnSparse</h4>
+  <li>fix a bug in SetBinError
+  <li>fix in THnSParse::Rebin
+  <li>fix error calculation in Multiply 
 
 <h4>TGraph</h4>
 
