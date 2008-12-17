@@ -125,7 +125,6 @@ t633.cxx
 t633.cxx  -Dmakecint
 t634.cxx 
 t674.cxx -DINTERPRET
-t676.cxx 
 t694.cxx  -Dmakecint
 t694.cxx -DINTERPRET
 t695.cxx 
@@ -215,8 +214,6 @@ t1115.cxx  -Dmakecint
 t1124.cxx 
 t1125.cxx 
 t1126.cxx 
-t1127.cxx 
-t1127.cxx  -Dmakecint
 t1128.cxx 
 t1129.cxx 
 t1134.cxx 
