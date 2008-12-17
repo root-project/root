@@ -15,7 +15,7 @@
 #include "RooStats/HybridResult.h"
 #include "RooStats/HybridPlot.h"
 
-void rs201_hybridcalculator()
+void rs201_hybridcalculator(int ntoys = 3000)
 {
   //***********************************************************************//
   // This macro show an example on how to use RooStats/HybridCalculator    //
@@ -60,14 +60,35 @@ void rs201_hybridcalculator()
 
   //***********************************************************************//
 
-  /// run HybridCalculator on those inputs
+  /// run HybridCalculator on those inputs 
+
+  // use interface from HypoTest calculator by default
+#ifndef USE_OLD_API
+
+    HybridCalculator myHybridCalc("myHybridCalc","HybridCalculator example",
+                                *data, tot_pdf , bkg_ext_pdf ,
+                                &nuisance_parameters, &bkg_yield_prior); 
+
+  myHybridCalc.SetNumberOfToys(ntoys); 
+  //myHybridCalc.UseNuisance(false);                            
+
+  // calculate by running ntoys for the S+B and B hypothesis and retrieve the result
+  HybridResult* myHybridResult = myHybridCalc.GetHypoTest(); 
+
+#else // use old api 
   HybridCalculator myHybridCalc("myHybridCalc","HybridCalculator example",tot_pdf,bkg_ext_pdf,observables,nuisance_parameters,bkg_yield_prior);
 
   // here I use the default test statistics: 2*lnQ (optional)
   myHybridCalc.SetTestStatistics(1);
 
-  /// run 1000 toys with gaussian prior on the background yield
-  HybridResult* myHybridResult = myHybridCalc.Calculate(*data,3000,true);
+  /// run ntoys toys with gaussian prior on the background yield
+  HybridResult* myHybridResult = myHybridCalc.Calculate(*data,ntoys,true);
+#endif
+
+  if (! myHybridResult) { 
+     std::cerr << "\nError returned from Hypothesis test" << std::endl;
+     return;
+  }
 
   /// run 1000 toys without gaussian prior on the background yield
   //HybridResult* myHybridResult = myHybridCalc.Calculate(*data,1000,false);
