@@ -1,4 +1,4 @@
-//Example to fit two histograms at the same time 
+//+ Example to fit two histograms at the same time 
 //Author: Rene Brun
 
 #include "TH2D.h"
