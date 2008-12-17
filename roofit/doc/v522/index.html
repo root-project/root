@@ -162,7 +162,9 @@ The concrete classes describing statistical tools implementing the above interfa
        <li><tt>LikelihoodInterval</tt>: concrete implementation of a ConfInterval interface. It implements connected N-dimensional intervals based on the contour of a likelihood ratio. The boundary of the interval is equivalent to a MINUIT/MINOS contour about the maximum likelihood estimator. </li>
 
        </li>
-       <li><tt>HybridCalculator</tt>: Hypothesis test calculator using a Bayesian-frequentist hybrid method (often called in HEP as CLs method). This class extends the functionality of the <tt>TLimit</tt> class by taking advantage of the RooFit package. The result of the calculator is returned as an <tt>HybridResult</tt> pointer. <tt>HybridResult</tt> implements the <tt>HypoTestResult</tt> interface. The class <tt>HybridPlot</tt> allows for a graphical representation of a HybridResult. 
+       <li><tt>HybridCalculator</tt>: hypothesis test calculator using a Bayesian-frequentist hybrid method (often called in HEP as CLs method). This class extends the functionality of the <tt>TLimit</tt> class by taking advantage of the RooFit package. The result of the calculator is returned as an <tt>HybridResult</tt> pointer. <tt>HybridResult</tt> implements the <tt>HypoTestResult</tt> interface. The class <tt>HybridPlot</tt> allows for a graphical representation of a <tt>HybridResult</tt>.
+       <br>
+       <tt>HybridCalculator</tt> implements the interface class <tt>HypoTestCalculator</tt>. A contructor exists taking as input the pdf's (expressed as RooAbsPdf instances) for the signal+background (alternate) and backgorund only (null) hypothesis and the data set (as RooAbsData instance).  One can provide optionally also the nuisance parameters and its pdf which will be marginalized by the calculator. The  <tt>HypoTestCalculator</tt> interface provides also the possibility of setting the model via a Rooworkspace class and names of the pdf. This possibility is not yet supported for the <tt>HybridCalculator</tt> class. 
        </li>
        
       </ul> 
