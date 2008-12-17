@@ -85,14 +85,14 @@ HybridPlot::HybridPlot(const char* name,
    fSb_histo = new TH1F ("SB_model",title,n_bins,min,max);
    fSb_histo->SetTitle(fSb_histo->GetTitle());
    fSb_histo->SetLineColor(kBlue);
-   fSb_histo->GetXaxis()->SetTitle("-2lnQ");
+   fSb_histo->GetXaxis()->SetTitle("test statistics");
    //fSb_histo->GetYaxis()->SetTitle("Entries");
    fSb_histo->SetLineWidth(2);
 
    fB_histo = new TH1F ("B_model",title,n_bins,min,max);
    fB_histo->SetTitle(fB_histo->GetTitle());
    fB_histo->SetLineColor(kRed);
-   fB_histo->GetXaxis()->SetTitle("-2lnQ");
+   fB_histo->GetXaxis()->SetTitle("test statistics");
    //fB_histo->GetYaxis()->SetTitle("Entries");
    fB_histo->SetLineWidth(2);
 
@@ -117,13 +117,13 @@ HybridPlot::HybridPlot(const char* name,
    double golden_section=(std::sqrt(5.)-1)/2;
 
    fLegend = new TLegend(0.75,0.95-0.2*golden_section,0.95,0.95);
-   TString title_leg="-2lnQ distributions ";
+   TString title_leg="test statistics distributions ";
    title_leg+=sb_vals.size();
    title_leg+=" toys";
    fLegend->SetName(title_leg.Data());
    fLegend->AddEntry(fSb_histo,"SB toy datasets");
    fLegend->AddEntry(fB_histo,"B toy datasets");
-   fLegend->AddEntry((TLine*)fData_m2lnQ_line,"-2lnQ on Data","L");
+   fLegend->AddEntry((TLine*)fData_m2lnQ_line,"test statistics on Data","L");
    fLegend->SetFillColor(0);
 
 }
@@ -224,7 +224,7 @@ void HybridPlot::DumpToFile (const char* RootFileName, const char* options){
    }
 
    // The line 
-   fData_m2lnQ_line->Write("Measured -2lnQ line tag");
+   fData_m2lnQ_line->Write("Measured test statistics line tag");
 
    // The legend
    fLegend->Write();
