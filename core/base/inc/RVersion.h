@@ -14,12 +14,12 @@
  *
 */
 
-#define ROOT_RELEASE "5.21/07"
-#define ROOT_RELEASE_DATE "Nov 26 2008"
-#define ROOT_RELEASE_TIME "09:40:53"
-#define ROOT_SVN_REVISION 26469
+#define ROOT_RELEASE "5.22/00"
+#define ROOT_RELEASE_DATE "Dec 17 2008"
+#define ROOT_RELEASE_TIME "18:11:02"
+#define ROOT_SVN_REVISION 26997
 #define ROOT_SVN_BRANCH "trunk"
-#define ROOT_VERSION_CODE 333063
+#define ROOT_VERSION_CODE 333312
 #define ROOT_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
 
 #endif
