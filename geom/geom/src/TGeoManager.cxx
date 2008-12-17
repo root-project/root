@@ -2390,7 +2390,7 @@ Bool_t TGeoManager::IsInPhiRange() const
 }
 
 //_____________________________________________________________________________
-TGeoNode *TGeoManager::InitTrack(Double_t *point, Double_t *dir)
+TGeoNode *TGeoManager::InitTrack(const Double_t *point, const Double_t *dir)
 {
 // Initialize current point and current direction vector (normalized)
 // in MARS. Return corresponding node.

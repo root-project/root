@@ -340,7 +340,7 @@ public:
    TGeoNode              *FindNode(Double_t x, Double_t y, Double_t z);
    Double_t              *FindNormal(Bool_t forward=kTRUE);
    Double_t              *FindNormalFast();
-   TGeoNode              *InitTrack(Double_t *point, Double_t *dir);
+   TGeoNode              *InitTrack(const Double_t *point, const Double_t *dir);
    TGeoNode              *InitTrack(Double_t x, Double_t y, Double_t z, Double_t nx, Double_t ny, Double_t nz);
    void                   ResetState();
    Double_t               Safety(Bool_t inside=kFALSE);

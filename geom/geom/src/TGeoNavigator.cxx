@@ -1369,7 +1369,7 @@ Double_t *TGeoNavigator::FindNormal(Bool_t /*forward*/)
 }
 
 //_____________________________________________________________________________
-TGeoNode *TGeoNavigator::InitTrack(Double_t *point, Double_t *dir)
+TGeoNode *TGeoNavigator::InitTrack(const Double_t *point, const Double_t *dir)
 {
 // Initialize current point and current direction vector (normalized)
 // in MARS. Return corresponding node.

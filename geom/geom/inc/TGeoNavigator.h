@@ -111,7 +111,7 @@ public :
    TGeoNode              *FindNode(Double_t x, Double_t y, Double_t z);
    Double_t              *FindNormal(Bool_t forward=kTRUE);
    Double_t              *FindNormalFast();
-   TGeoNode              *InitTrack(Double_t *point, Double_t *dir);
+   TGeoNode              *InitTrack(const Double_t *point, const Double_t *dir);
    TGeoNode              *InitTrack(Double_t x, Double_t y, Double_t z, Double_t nx, Double_t ny, Double_t nz);
    void                   ResetState();
    void                   ResetAll();
@@ -164,12 +164,12 @@ public :
    Int_t                  GetLevel() const         {return fLevel;}
    const char            *GetPath() const;
    Int_t                  GetStackLevel() const    {return fCache->GetStackLevel();}
-   void                   SetCurrentPoint(Double_t *point) {memcpy(fPoint,point,3*sizeof(Double_t));}
+   void                   SetCurrentPoint(const Double_t *point) {memcpy(fPoint,point,3*sizeof(Double_t));}
    void                   SetCurrentPoint(Double_t x, Double_t y, Double_t z) {
                                     fPoint[0]=x; fPoint[1]=y; fPoint[2]=z;}
    void                   SetLastPoint(Double_t x, Double_t y, Double_t z) {
                                     fLastPoint[0]=x; fLastPoint[1]=y; fLastPoint[2]=z;}
-   void                   SetCurrentDirection(Double_t *dir) {memcpy(fDirection,dir,3*sizeof(Double_t));}
+   void                   SetCurrentDirection(const Double_t *dir) {memcpy(fDirection,dir,3*sizeof(Double_t));}
    void                   SetCurrentDirection(Double_t nx, Double_t ny, Double_t nz) {
                                     fDirection[0]=nx; fDirection[1]=ny; fDirection[2]=nz;}
 //   void                   SetNormalChecked(Double_t norm) {fNormalChecked=norm;}
