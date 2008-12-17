@@ -64,12 +64,12 @@ function config_GCC_defaults {
     COPTFLAGS=-O2
     CMACROS="$CMACROS -DG__SHAREDLIB -DG__OSFDLL -DG__ANSI -DG__ERRORCALLBACK -DG__SIGNEDCHAR -DG__NEWSTDHEADER -DG__CINT_VER6 -DG__NATIVELONGLONG -DG__P2FCAST -DG__STD_EXCEPTION"
 
-    CXX="g++ -fno-stack-protector"
+    CXX="g++ "
     CXXDBGFLAGS="$CDBGFLAGS"
     CXXOPTFLAGS="$COPTFLAGS"
     CXXMACROS="$CXXMACROS $CMACROS"
 
-    LD="g++ -fno-stack-protector"
+    LD="g++ "
     DEFAULTLIBS="-lm -ldl"
     LDOUT="-o "
     SOOUT="$LDOUT"
