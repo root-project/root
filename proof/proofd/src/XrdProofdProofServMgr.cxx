@@ -101,8 +101,10 @@ void *XrdProofdProofServCron(void *p)
    int clnlostscale = 0;
 
    // Time of last full sessions check
-   int lastcheck = time(0), ckfreq = mgr->CheckFrequency(), waitt = 0;
+   int lastrun = time(0);
+   int lastcheck = lastrun, ckfreq = mgr->CheckFrequency(), waitt = 0;
    int deltat = ((int)(0.1*ckfreq) >= 1) ? (int)(0.1*ckfreq) : 1;
+   int maxdelay = 5*ckfreq; // Force check after 5 times the check frequency
    mgr->SetNextSessionsCheck(lastcheck + ckfreq);
    TRACE(ALL, "next full sessions check in "<<ckfreq<<" secs");
    while(1) {
@@ -186,13 +188,21 @@ void *XrdProofdProofServCron(void *p)
          int now = time(0);
 
          // If there is any activity in mgr->Process() we postpone the checks in 5 secs
-         if (mgr->CheckCounter(XrdProofdProofServMgr::kProcessCnt) > 0) {
-            // The current time
-            lastcheck = now + 5 - ckfreq;
-            mgr->SetNextSessionsCheck(now + 5);
-            // Notify
-            TRACE(ALL, "postponing sessions check (will retry in 5 secs)");
-            continue;
+         int cnt = mgr->CheckCounter(XrdProofdProofServMgr::kProcessCnt);
+         if (cnt > 0) {
+            if ((now - lastrun) < maxdelay) {
+               // The current time
+               lastcheck = now + 5 - ckfreq;
+               mgr->SetNextSessionsCheck(now + 5);
+               // Notify
+               TRACE(ALL, "postponing sessions check (will retry in 5 secs)");
+               continue;
+            } else {
+               // Max time without checks reached: force a check
+               TRACE(ALL, "Max time without checks reached ("<<maxdelay<<"): force a session check");
+               // Reset the counter
+               mgr->UpdateCounter(XrdProofdProofServMgr::kProcessCnt, -cnt);
+            }
          }
 
          bool full = (now > mgr->NextSessionsCheck() - deltat) ? 1 : 0;
@@ -210,6 +220,7 @@ void *XrdProofdProofServCron(void *p)
             int cursess = mgr->CurrentSessions(1);
             TRACE(ALL, cursess << " sessions are currently active");
             // Remember when ...
+            lastrun = now;
             lastcheck = now;
             mgr->SetNextSessionsCheck(lastcheck + mgr->CheckFrequency());
             // Notify

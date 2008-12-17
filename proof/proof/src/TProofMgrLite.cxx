@@ -331,8 +331,10 @@ TObjString *TProofMgrLite::ReadBuffer(const char *fin, const char *pattern)
       pat.ReplaceAll("-v ", "");
       excl = kTRUE;
    }
-   pat.Strip(TString::kLeading, ' ');
-   pat.Strip(TString::kTrailing, ' ');
+   pat = pat.Strip(TString::kLeading, ' ');
+   pat = pat.Strip(TString::kTrailing, ' ');
+   pat = pat.Strip(TString::kLeading, '\"');
+   pat = pat.Strip(TString::kTrailing, '\"');
 
    // Use a regular expression
    TRegexp re(pat);

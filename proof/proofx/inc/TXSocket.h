@@ -103,8 +103,6 @@ private:
    Int_t               fByteLeft;      // bytes left in the first buffer
    Int_t               fByteCur;       // current position in the first buffer
    TXSockBuf          *fBufCur;        // current read buffer
-   Bool_t              fEnabled;       // kTRUE if input from this socket is enabled
-   Int_t               fAQueued;       // Number of messages received while disabled
 
    // Interrupts
    TMutex             *fIMtx;          // To protect interrupt queue
@@ -243,13 +241,6 @@ public:
    void                DisableTimeout() { fDontTimeout = kTRUE; }
    void                EnableTimeout() { fDontTimeout = kFALSE; }
 
-   // Disable / Enable / Test input from this socket
-   inline Bool_t       IsEnabled() const { R__LOCKGUARD(fAMtx); return fEnabled; }
-   inline void         Enqueue() { R__LOCKGUARD(fAMtx); fAQueued++; }
-   inline Int_t        Enqueued() const { R__LOCKGUARD(fAMtx); return fAQueued; }
-   inline void         Disable() { R__LOCKGUARD(fAMtx); fEnabled = kFALSE; }
-   void                Enable();
-
    // Try reconnection after error
    virtual Int_t       Reconnect();
 
@@ -297,9 +288,9 @@ public:
    TXSocket    *GetLastReady();
 
    Int_t        GetRead() const { return fPipe[0]; }
-   Int_t        Post(TSocket *s=0);  // Notify socket ready via global pipe
-   Int_t        Clean(TSocket *s=0); // Clean previous pipe notification
-   Int_t        Flush(TSocket *s=0); // Remove any instance of 's' from the pipe
+   Int_t        Post(TSocket *s);  // Notify socket ready via global pipe
+   Int_t        Clean(TSocket *s); // Clean previous pipe notification
+   Int_t        Flush(TSocket *s); // Remove any instance of 's' from the pipe
    void         DumpReadySock();
 
    void         SetLoc(const char *loc = "") { fLoc = loc; }
@@ -309,7 +300,6 @@ private:
    Int_t        fPipe[2];   // Pipe for input monitoring
    TString      fLoc;       // Location string
    TList        fReadySock;    // List of sockets ready to be read
-   TMutex       fReadyMtx;     // Protect access to the sockets-ready list
 };
 
 #endif

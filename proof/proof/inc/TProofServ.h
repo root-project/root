@@ -121,8 +121,10 @@ private:
 
    TQueryResultManager *fQMgr;      //Query-result manager
 
-   TList        *fWaitingQueries;   //list of TProofQueryResult wating to be processed
+   TList        *fWaitingQueries;   //list of TProofQueryResult waiting to be processed
    Bool_t        fIdle;             //TRUE if idle
+
+   TList        *fQueuedMsg;        //list of messages waiting to be processed
 
    TString       fPrefix;           //Prefix identifying the node
 
@@ -180,8 +182,6 @@ protected:
    Int_t         SetupCommon();
    virtual void  MakePlayer();
    virtual void  DeletePlayer();
-
-   virtual void  SetInputSocket(Bool_t on = kTRUE);
 
    virtual Int_t Fork();
 

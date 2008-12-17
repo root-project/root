@@ -177,7 +177,8 @@ public:
    int               Recover(XpdClientSessions *cl);
 
    void              UpdateCounter(int t, int n) { if (PSMCNTOK(t)) {
-                                 XrdSysMutexHelper mhp(fMutex); fCounters[t] += n;} }
+                                 XrdSysMutexHelper mhp(fMutex); fCounters[t] += n;
+                                          if (fCounters[t] < 0) fCounters[t] = 0;} }
    int               CheckCounter(int t) { int cnt = -1; if (PSMCNTOK(t)) {
                                  XrdSysMutexHelper mhp(fMutex); cnt = fCounters[t];}
                                  return cnt; }

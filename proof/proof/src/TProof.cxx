@@ -716,9 +716,10 @@ Int_t TProof::Init(const char *, const char *conffile,
          }
       }
 
-      UserGroup_t *ug = gSystem->GetUserInfo();
-      fPackageLock = new TProofLockPath(Form("%s%s", kPROOF_PackageLockFile, ug->fUser.Data()));
-      delete ug;
+      TString lockpath(fPackageDir);
+      lockpath.ReplaceAll("/", "%");
+      lockpath.Insert(0, Form("%s/%s", gSystem->TempDirectory(), kPROOF_PackageLockFile));
+      fPackageLock = new TProofLockPath(lockpath.Data());
 
       fEnabledPackagesOnClient = new TList;
       fEnabledPackagesOnClient->SetOwner();
@@ -2357,7 +2358,7 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout, Int_t endtype)
          if (rc  == 1 || (rc == 2 && !savedMonitor)) {
             // Deactivate it if we are done with it
             mon->DeActivate(s);
-            if (gDebug > 2)
+            PDB(kGlobal, 2)
                Info("Collect","deactivating %p (active: %d, %p)",
                               s, mon->GetActive(),
                               mon->GetListOfActives()->First());
@@ -2366,8 +2367,8 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout, Int_t endtype)
             // Deactivate it if we are done with it
             if (savedMonitor) {
                savedMonitor->DeActivate(s);
-               if (gDebug > 2)
-                  Info("Collect","deactivating %p (active: %d, %p)",
+               PDB(kGlobal, 2)
+                  Info("Collect","save monitor: deactivating %p (active: %d, %p)",
                                  s, savedMonitor->GetActive(),
                                  savedMonitor->GetListOfActives()->First());
             }
@@ -4754,19 +4755,16 @@ Int_t TProof::SendFile(const char *file, Int_t opt, const char *rfile, TSlave *w
       // Don't send the kPROOF_SENDFILE command to real slaves when sendto
       // is false. Masters might still need to send the file to newly added
       // slaves.
+      PDB(kPackage,2) {
+         const char *snd = (sl->fSlaveType == TSlave::kSlave && sendto) ? "" : "not";
+         Info("SendFile", "%s sending file %s to: %s:%s (%d)", snd,
+                    file, sl->GetName(), sl->GetOrdinal(), sendto);
+      }
       if (sl->fSlaveType == TSlave::kSlave && !sendto)
          continue;
       // The value of 'size' is used as flag remotely, so we need to
       // reset it to 0 if we are not going to send the file
       Long64_t siz = sendto ? size : 0;
-
-      PDB(kPackage,2)
-         if (siz > 0) {
-            if (!nsl)
-               Info("SendFile", "sending file %s to:", file);
-            printf("   slave = %s:%s\n", sl->GetName(), sl->GetOrdinal());
-         }
-
       sprintf(buf, "%s %d %lld %d", fnam.Data(), bin, siz, fw);
       if (sl->GetSocket()->Send(buf, kPROOF_SENDFILE) == -1) {
          MarkBad(sl, "could not send kPROOF_SENDFILE request");
@@ -4802,12 +4800,11 @@ Int_t TProof::SendFile(const char *file, Int_t opt, const char *rfile, TSlave *w
 
          nsl++;
       }
+      // Wait for the operation to be done
+      Collect(sl, fCollectTimeout, kPROOF_SENDFILE);
    }
 
    close(fd);
-
-   // Wait for the operation to be done
-   Collect(&wsent, fCollectTimeout, kPROOF_SENDFILE);
 
    // Cleanup temporary list, if any
    if (slaves != fActiveSlaves && slaves != fUniqueSlaves)
@@ -6124,7 +6121,6 @@ Int_t TProof::Load(const char *macro, Bool_t notOnClient, Bool_t uniqueWorkers)
          while ((wrk = (TSlave *)nxw())) {
             if (!fUniqueSlaves->FindObject(wrk)) {
                others.Add(wrk);
-               Info("Load", "adding: %s:", wrk->GetOrdinal());
             }
          }
  
@@ -6139,7 +6135,7 @@ Int_t TProof::Load(const char *macro, Bool_t notOnClient, Bool_t uniqueWorkers)
          Collect(&others);
       }
 
-      Printf("Adding loaded macro: %s", macro);
+      PDB(kGlobal, 1) Info("Load", "adding loaded macro: %s", macro);
       if (!fLoadedMacros) {
          fLoadedMacros = new TList();
          fLoadedMacros->SetOwner();
@@ -6755,7 +6751,7 @@ void TProof::AddInputData(TObject *obj, Bool_t push)
    // Add data objects that might be needed during the processing of
    // the selector (see Process()). This object can be very large, so they
    // are distributed in an optimized way using a dedicated file.
-   // If push is TRUE the input data are snet over even if no apparent change
+   // If push is TRUE the input data are sent over even if no apparent change
    // occured to the list.
 
    if (obj) {

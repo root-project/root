@@ -538,6 +538,8 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
    fWaitingQueries  = new TList;
    fIdle            = kTRUE;
 
+   fQueuedMsg       = new TList;
+
    fRealTimeLog     = kFALSE;
 
    fShutdownTimer   = 0;
@@ -1068,18 +1070,45 @@ void TProofServ::HandleSocketInput()
 
    if (fProof) fProof->SetActive();
 
-   // Process the message
-   Int_t rc = HandleSocketInput(mess, all);
-   if (rc < 0) {
-      TString emsg;
-      if (rc == -1) {
-         emsg.Form("HandleSocketInput: command %d cannot be executed while processing", what);
-      } else if (rc == -3) {
-         emsg.Form("HandleSocketInput: message undefined ! Protocol error?", what);
-      } else {
-         emsg.Form("HandleSocketInput: unknown command %d ! Protocol error?", what);
+   Bool_t doit = kTRUE;
+
+   Int_t rc = 0;
+   while (doit) {
+
+      // Process the message
+      rc = HandleSocketInput(mess, all);
+      if (rc < 0) {
+         TString emsg;
+         if (rc == -1) {
+            emsg.Form("HandleSocketInput: command %d cannot be executed while processing", what);
+         } else if (rc == -3) {
+            emsg.Form("HandleSocketInput: message undefined ! Protocol error?", what);
+         } else {
+            emsg.Form("HandleSocketInput: unknown command %d ! Protocol error?", what);
+         }
+         SendAsynMessage(emsg.Data());
+      } else if (rc == 2) {
+         // Add to the queue
+         fQueuedMsg->Add(mess);
+         PDB(kGlobal, 1)
+            Info("HandleSocketInput", "message of type %d enqueued; sz: %d",
+                                       mess->What(), fQueuedMsg->GetSize());
+         mess = 0;
       }
-      SendAsynMessage(emsg.Data());
+
+      // Still somethign to do?
+      doit = 0;
+      if (fgRecursive == 1 && fQueuedMsg->GetSize() > 0) {
+         // Add to the queue
+         PDB(kGlobal, 1)
+            Info("HandleSocketInput", "processing enqueued message of type %d; left: %d",
+                                      mess->What(), fQueuedMsg->GetSize());
+         all = 1;
+         SafeDelete(mess);
+         mess = (TMessage *) fQueuedMsg->First();
+         fQueuedMsg->Remove(mess);
+         doit = 1;
+      }
    }
 
    fgRecursive--;
@@ -1096,7 +1125,8 @@ void TProofServ::HandleSocketInput()
       fProof->SetRunStatus(TProof::kRunning);
    }
 
-   delete mess;
+   // Cleanup
+   SafeDelete(mess);
 }
 
 //______________________________________________________________________________
@@ -1105,6 +1135,7 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
    // Process input coming from the client or from the master server.
    // Returns -1 if the message could not be processed, <-1 if something went
    // wrong. Returns 1 if the action may have changed the parallel state.
+   // Returns 2 if the message has to be enqueued.
    // Returns 0 otherwise
 
    static TStopwatch timer;
@@ -1356,14 +1387,20 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
          break;
 
       case kPROOF_CHECKFILE:
-         {
+         if (!all && fProtocol <= 19) {
+            // Come back later
+            rc = 2;
+         } else {
             // Handle file checking request
             HandleCheckFile(mess);
          }
          break;
 
       case kPROOF_SENDFILE:
-         {
+         if (!all && fProtocol <= 19) {
+            // Come back later
+            rc = 2;
+         } else {
             mess->ReadString(str, sizeof(str));
             Long_t size;
             Int_t  bin, fw = 1;
@@ -1389,9 +1426,7 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
                   opt |= TProof::kBinary;
                // Old clients do not wait for the termination of SendFile, so we need
                // to disable new inputs while doing this
-               if (fProtocol <= 19) SetInputSocket(kFALSE);
                fProof->SendFile(fnam, opt, (copytocache ? "cache" : ""));
-               if (fProtocol <= 19) SetInputSocket(kTRUE);
             }
             if (fProtocol > 19) fSocket->Send(kPROOF_SENDFILE);
          }
@@ -1429,7 +1464,10 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
          break;
 
       case kPROOF_CACHE:
-         {
+         if (!all && fProtocol <= 19) {
+            // Come back later
+            rc = 2;
+         } else {
             TProofServLogHandlerGuard hg(fLogFile, fSocket, "", fRealTimeLog);
             PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_CACHE","enter");
             Int_t status = HandleCache(mess);
@@ -5093,17 +5131,6 @@ void TProofServ::HandleFork(TMessage *)
    // Cloning itself via fork. Not implemented
 
    Info("HandleFork", "fork cloning not implemented");
-}
-
-//______________________________________________________________________________
-void TProofServ::SetInputSocket(Bool_t on)
-{
-   // Switch on / off input from the parent
-
-   if (on)
-      gSystem->AddFileHandler(fInputHandler);
-   else
-      gSystem->RemoveFileHandler(fInputHandler);
 }
 
 //______________________________________________________________________________
