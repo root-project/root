@@ -22,7 +22,15 @@
 #include "TROOT.h"
 #include "TSocket.h"
 #include "Bytes.h"
+#include "TError.h"
+#include "TSystem.h"
+#include <errno.h>
 #include <stdlib.h>
+
+#ifdef WIN32
+#define EADDRINUSE  10048
+#define EISCONN     10056
+#endif
 
 static const char *gUserAgent = "User-Agent: ROOT-TWebFile/1.0";
 
@@ -63,8 +71,23 @@ void TWebSocket::ReOpen()
 
    if (fWebFile->fSocket)
       delete fWebFile->fSocket;
-   fWebFile->fSocket = new TSocket(fWebFile->fUrl.GetHost(),
-                                   fWebFile->fUrl.GetPort());
+
+   for (Int_t i = 0; i < 5; i++) {
+      fWebFile->fSocket = new TSocket(fWebFile->fUrl.GetHost(),
+                                      fWebFile->fUrl.GetPort());
+      if (!fWebFile->fSocket->IsValid()) {
+         delete fWebFile->fSocket;
+         fWebFile->fSocket = 0;
+         if (gSystem->GetErrno() == EADDRINUSE || gSystem->GetErrno() == EISCONN) {
+            gSystem->Sleep(i*10);
+         } else {
+            ::Error("TWebSocket::ReOpen", "cannot connect to remote host %s (errno=%d)",
+                    fWebFile->fUrl.GetHost(), gSystem->GetErrno());
+            return;
+         }
+      } else
+         return;
+   }
 }
 
 
@@ -416,7 +439,7 @@ Int_t TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg)
    // open fSocket and close it when going out of scope
    TWebSocket ws(this);
 
-   if (!fSocket->IsValid()) {
+   if (!fSocket || !fSocket->IsValid()) {
       Error("GetFromWeb10", "cannot connect to remote host %s", fUrl.GetHost());
       return -1;
    }
@@ -599,24 +622,39 @@ Int_t TWebFile::GetHead()
    msg += gUserAgent;
    msg += "\r\n\r\n";
 
-   TSocket s(fUrl.GetHost(), fUrl.GetPort());
-   if (!s.IsValid()) {
-      Error("GetHead", "cannot connect to remote host %s", fUrl.GetHost());
-      return -1;
+   TSocket *s = 0;
+   for (Int_t i = 0; i < 5; i++) {
+      s = new TSocket(fUrl.GetHost(), fUrl.GetPort());
+      if (!s->IsValid()) {
+         delete s;
+         if (gSystem->GetErrno() == EADDRINUSE || gSystem->GetErrno() == EISCONN) {
+            s = 0;
+            gSystem->Sleep(i*10);
+         } else {
+            Error("GetHead", "cannot connect to remote host %s (errno=%d)", fUrl.GetHost(),
+                  gSystem->GetErrno());
+            return -1;
+         }
+      } else
+         break;
    }
+   if (!s)
+      return -1;
 
-   if (s.SendRaw(msg.Data(), msg.Length()) == -1) {
+   if (s->SendRaw(msg.Data(), msg.Length()) == -1) {
       Error("GetHead", "error sending command to remote host %s", fUrl.GetHost());
+      delete s;
       return -1;
    }
 
    char line[1024];
    Int_t n, ret = 0;
 
-   while ((n = GetLine(&s, line, 1024)) >= 0) {
+   while ((n = GetLine(s, line, 1024)) >= 0) {
       if (n == 0) {
          if (gDebug > 0)
             Info("GetHead", "got all headers");
+         delete s;
          return ret;
       }
 
@@ -644,6 +682,8 @@ Int_t TWebFile::GetHead()
          fSize = slen.Atoll();
       }
    }
+   delete s;
+
    return ret;
 }
 
