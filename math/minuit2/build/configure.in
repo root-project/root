@@ -19,7 +19,7 @@ dnl   for solaris
 CC=$CXX
 
 dnl disable static building
-AM_DISABLE_STATIC
+dnl AM_DISABLE_STATIC
 AM_PROG_LIBTOOL
 
 dnl Checks for libraries.
