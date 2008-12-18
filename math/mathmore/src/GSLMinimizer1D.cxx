@@ -100,7 +100,10 @@ void GSLMinimizer1D::SetFunction(  GSLFuncPointer f, void * p, double xmin, doub
    fXmin = xmin;
    fFunction->SetFuncPointer( f ); 
    fFunction->SetParams( p ); 
+
+#ifdef DEBUG
    std::cout << " [ "<< xlow << " , " << xup << " ]" << std::endl;
+#endif
 
    int status = gsl_min_fminimizer_set( fMinimizer->Get(), fFunction->GetFunc(), xmin, xlow, xup);
    if (status != GSL_SUCCESS) 
