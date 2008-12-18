@@ -1456,7 +1456,7 @@ void TClassDocOutput::WriteClassDocHeader(std::ostream& classFile)
    TModuleDocInfo* module = (TModuleDocInfo*) fHtml->GetListOfModules()->FindObject(modulename);
    WriteTopLinks(classFile, module, fCurrentClass->GetName());
 
-   classFile << "<div class=\"descrhead\">" << endl
+   classFile << "<div class=\"descrhead\">" << endl // descrhead line 3
       << "<span class=\"descrtitle\">Source:</span>" << endl;
 
    // make a link to the '.cxx' file
@@ -1534,9 +1534,9 @@ void TClassDocOutput::WriteClassDocHeader(std::ostream& classFile)
       classFile << "<a class=\"descrheadentry\" href=\"" << wikiLink << "\">wiki</a> ";
    }
 
-   classFile << endl << "</div>" << endl;
+   classFile << endl << "</div>" << endl; // descrhead line 3
 
-   classFile << "<div class=\"descrhead\">" << endl
+   classFile << "<div class=\"descrhead\">" << endl // descrhead line 4
       << "<span class=\"descrtitle\">Sections:</span>" << endl
       << "<a class=\"descrheadentry\" href=\"#" << currClassNameMangled;
    if (fHtml->IsNamespace(fCurrentClass))
@@ -1547,8 +1547,8 @@ void TClassDocOutput::WriteClassDocHeader(std::ostream& classFile)
       << "<a class=\"descrheadentry\" href=\"#" << currClassNameMangled << ":Function_Members\">function members</a>" << endl
       << "<a class=\"descrheadentry\" href=\"#" << currClassNameMangled << ":Data_Members\">data members</a>" << endl
       << "<a class=\"descrheadentry\" href=\"#" << currClassNameMangled << ":Class_Charts\">class charts</a>" << endl
-      << "</div>" << endl
-      << "</div>" << endl;
+      << "</div>" << endl // descrhead line 4
+      << "</div>" << endl; // toplinks, from TDocOutput::WriteTopLinks
 }
 
 

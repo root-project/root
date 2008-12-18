@@ -616,7 +616,7 @@ void TDocOutput::CreateHierarchy()
    WriteHtmlHeader(out, "Class Hierarchy");
 
    WriteTopLinks(out, 0);
-   out << "</div></div>" << endl;
+   out << "</div>" << endl;
 
    out << "<h1>Class Hierarchy</h1>" << endl;
 
@@ -671,7 +671,7 @@ void TDocOutput::CreateClassIndex()
    WriteHtmlHeader(indexFile, "Class Index");
 
    WriteTopLinks(indexFile, 0);
-   indexFile << "</div></div>" << endl;
+   indexFile << "</div>" << endl;
 
    indexFile << "<h1>Class Index</h1>" << endl;
 
@@ -804,7 +804,7 @@ void TDocOutput::CreateModuleIndex()
       WriteHtmlHeader(outputFile, htmltitle);
 
       WriteTopLinks(outputFile, module);
-      outputFile << "</div></div>" << endl;
+      outputFile << "</div>" << endl;
 
       outputFile << "<h2>" << htmltitle << "</h2>" << endl;
 
@@ -1061,7 +1061,7 @@ void TDocOutput::CreateModuleIndex()
    WriteHtmlHeader(out, "Library Dependencies");
 
    WriteTopLinks(out, 0);
-   out << "</div></div>" << endl;
+   out << "</div>" << endl;
 
    out << "<h1>Library Dependencies</h1>" << endl;
 
@@ -1095,7 +1095,7 @@ void TDocOutput::CreateProductIndex()
    WriteHtmlHeader(out, GetHtml()->GetProductName() + " Reference Guide");
 
    WriteTopLinks(out, 0);
-   out << "</div></div>" << endl;
+   out << "</div>" << endl;
 
    out << "<h1>" << GetHtml()->GetProductName() + " Reference Guide</h1>" << std::endl;
 
@@ -1190,7 +1190,7 @@ void TDocOutput::CreateClassTypeDefs()
          TModuleDocInfo* module = (TModuleDocInfo*) fHtml->GetListOfModules()->FindObject(modulename);
          WriteTopLinks(outfile, module, dt->GetName());
 
-         outfile << "</div><div class=\"dropshadow\"><div class=\"withshadow\">";
+         outfile << "<div class=\"dropshadow\"><div class=\"withshadow\">";
          outfile << "<h1>" << sTitle << "</h1>" << endl
             << "<div class=\"classdescr\">" << endl;
 
@@ -2310,13 +2310,13 @@ void TDocOutput::WriteSearch(std::ostream& out)
 void TDocOutput::WriteTopLinks(std::ostream& out, TModuleDocInfo* module, const char* classname)
 {
    // Write the first part of the links shown ontop of each doc page;
-   // two <div>s have to be closed by caller so additional items can still
+   // one <div> has to be closed by caller so additional items can still
    // be added.
 
    out << "<div id=\"toplinks\">" << endl;
 
    // make a link to the description
-   out << "<div class=\"descrhead\">" << endl
+   out << "<div class=\"descrhead\">" << endl // descrhead line 1
       << "<span class=\"descrtitle\">Location:</span>" << endl;
    const char *productName = fHtml->GetProductName();
    out << "<a class=\"descrheadentry\" href=\"index.html\">" << productName << "</a>" << endl;
@@ -2351,9 +2351,9 @@ void TDocOutput::WriteTopLinks(std::ostream& out, TModuleDocInfo* module, const 
       ReplaceSpecialChars(out, entityName);
       out << "</a>" << endl;
    }
-   out << "</div>" << endl;
+   out << "</div>" << endl; // descrhead line 1
 
-   out << "<div class=\"descrhead\">" << endl
+   out << "<div class=\"descrhead\">" << endl // descrhead line 2
       << "<span class=\"descrtitle\">Quick Links:</span>" << endl;
 
    // link to the user home page (if exist)
@@ -2366,6 +2366,8 @@ void TDocOutput::WriteTopLinks(std::ostream& out, TModuleDocInfo* module, const 
       << "<a class=\"descrheadentry\" href=\"./ClassIndex.html\">Class Index</a>" << endl
       << "<a class=\"descrheadentry\" href=\"./ClassHierarchy.html\">Class Hierarchy</a>" << endl;
    WriteSearch(out);
-   out << "</div>" << endl;
+   out << "</div>" << endl; // descrhead, line 2
+   // Closed by caller:
+   //out << "</div>" << endl; // toplinks
 
 }

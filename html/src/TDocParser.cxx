@@ -373,12 +373,14 @@ void TDocParser::Convert(std::ostream& out, std::istream& in, const char* relpat
       DecorateKeywords(fLineSource);
       ProcessComment();
 
-      if (fLineComment.Length() || InContext(kDirective)) {
-         GetDocOutput()->AdjustSourcePath(fLineComment, relpath);
-         out << fLineComment << endl;
-      } else {
-         GetDocOutput()->AdjustSourcePath(fLineSource, relpath);
-         out << fLineSource << endl;
+      if (!InContext(kDirective)) {
+         if (fLineComment.Length() ) {
+            GetDocOutput()->AdjustSourcePath(fLineComment, relpath);
+            out << fLineComment << endl;
+         } else {
+            GetDocOutput()->AdjustSourcePath(fLineSource, relpath);
+            out << fLineSource << endl;
+         }
       }
    }
 }
