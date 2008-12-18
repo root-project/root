@@ -46,7 +46,7 @@ TMVA::kNN::Event::Event()
 }
 
 //-------------------------------------------------------------------------------------------
-TMVA::kNN::Event::Event(const VarVec &var, const Double_t weight, const Short_t type)
+TMVA::kNN::Event::Event(const VarVec &var, Double_t weight, Short_t type)
    :fVar(var),
     fWeight(weight),
     fType(type)
@@ -186,7 +186,7 @@ void TMVA::kNN::ModulekNN::Add(const Event &event)
 }
 
 //-------------------------------------------------------------------------------------------
-Bool_t TMVA::kNN::ModulekNN::Fill(const UShort_t odepth, const UInt_t ifrac, const std::string &option)
+Bool_t TMVA::kNN::ModulekNN::Fill(UShort_t odepth, UInt_t ifrac, const std::string &option)
 {
    // fill the tree
    if (fTree) {
@@ -285,7 +285,7 @@ Bool_t TMVA::kNN::ModulekNN::Fill(const UShort_t odepth, const UInt_t ifrac, con
 }
 
 //-------------------------------------------------------------------------------------------
-Bool_t TMVA::kNN::ModulekNN::Find(Event event, const UInt_t nfind) const
+Bool_t TMVA::kNN::ModulekNN::Find(Event event, UInt_t nfind) const
 {  
    // find in tree
    // if tree has been filled then search for nfind closest events 
