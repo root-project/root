@@ -23,7 +23,9 @@ const char *XrdSysPlatformCVSID = "$Id$";
 #if defined(_LITTLE_ENDIAN) || defined(__LITTLE_ENDIAN__) || \
     defined(__IEEE_LITTLE_ENDIAN) || \
    (defined(__BYTE_ORDER) && __BYTE_ORDER == __LITTLE_ENDIAN)
-#if !defined(__GNUC__) || defined(__macos__)
+#if !defined(__GNUC__) || defined(__macos__) || defined(__solaris__)
+extern "C"
+{
 unsigned long long Swap_n2hll(unsigned long long x)
 {
  unsigned long long ret_val;
@@ -35,6 +37,7 @@ unsigned long long Swap_n2hll(unsigned long long x)
     *(((unsigned long *)(&ret_val)))    = ntohl(*(((unsigned long *)(&x))+1));
 #endif
     return ret_val;
+}
 }
 #endif
 
