@@ -30,23 +30,17 @@ you will get the same result with the precompiled version.
  You can also pre-compile Complex.h/C and encapsulate it into a customized C++
 interpreter named "Complex". First, create "Makefile" using the makecint.
 Following command creates "Makefile" and several cint implementation 
-dependent files whose file names start with G__.  In case of WinNT, you must
-rename source file name as Complex.cxx before doing makecint.
+dependent files whose file names start with G__.  
 
 	$ makecint -mk Makefile -o Complex -H Complex.h -C++ Complex.C
 
 You need to do above only once. After this, you can create the object 
 "Complex" simply by make.
 
-   UNIX
+   UNIX (and Windows using cygwin)
 	$ make -f Makefile
 
-   WinNT Visual C++
-        c:\> nmake /F Makefile CFG="Complex - Win32 Release"
-        c:\> move Release\Complex.exe Complex.exe
-
-   WinNT Symantec C++
-        c:\> smake -f Makefile
+   WinNT without cygwing is currently not supported.
 
 
 3) Using the "Complex"
@@ -63,18 +57,9 @@ installed cint with DLL capability, you can precompile Complex.C as a DLL.
 be set appropriately. Refer to $CINTSYSDIR/platform/README file for detail 
 of installation.)
 
-   UNIX
+   UNIX/Cygwin
 	$ makecint -mk Makefile -dl Complex.dll -H Complex.h -C++ Complex.C
 	$ make
-
-   WinNT Visual C++
-	c:\> makecint -mk Makefile -dl Complex.dll -H Complex.h -C++ Complex.cxx
-        c:\> nmake /F Makefile CFG="Complex - Win32 Release"
-        c:\> move Release\Complex.dll Complex.dll
-
-   WinNT Symantec C++
-	c:\> makecint -mk Makefile -dl Complex.dll -H Complex.h -C++ Complex.cxx
-        c:\> smake -f Makefile
 
  You can link Complex.dl to cint at run time.
 
