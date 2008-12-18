@@ -218,6 +218,8 @@ void TQtWidget::Init()
     TGQt::RegisterWid(this);
     fCanvas = new TCanvas(name(),minw,minh, TGQt::RegisterWid(this));
     gROOT->SetBatch(batch);
+    //   schedule the flush operation fCanvas->Flush(); via timer
+    QTimer::singleShot(0,this, SLOT(Refresh()));
   }
   fSizeHint = QWidget::sizeHint();
   setSizePolicy(QSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::MinimumExpanding));
@@ -684,9 +686,6 @@ void TQtWidget::resizeEvent(QResizeEvent *e)
          // real resize event
          fSizeChanged=TRUE;
          fNeedStretch=true;
-#if (QT_VERSION <0x40000)
-         stretchWidget(e);
-#endif
       } else {
 #else
       {
