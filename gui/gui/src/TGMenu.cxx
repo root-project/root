@@ -815,7 +815,7 @@ Bool_t TGMenuBar::HandleKey(Event_t *event)
                   if (!ce) ce = (TGMenuEntry*)menu->GetListOfEntries()->First();
                   break;
                case kKey_Enter:
-               case kKey_Return:
+               case kKey_Return: {
                   gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);
                   fCurrent->SetState(kFALSE);
                   menu->fStick = kFALSE;
@@ -824,6 +824,7 @@ Bool_t TGMenuBar::HandleKey(Event_t *event)
                   ev.fWindow = menu->GetId();
                   fCurrent = 0;
                   return menu->HandleButton(&ev);
+               }
                case kKey_Escape:
                   gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);
                   fCurrent->SetState(kFALSE);

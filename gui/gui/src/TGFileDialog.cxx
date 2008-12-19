@@ -433,7 +433,7 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      fFileInfo->fIniDir = StrDup(fFc->GetDirectory());
                      break;
 
-                  case kIDF_NEW_FOLDER:
+                  case kIDF_NEW_FOLDER: {
                      char answer[128];
                      strcpy(answer, "(empty)");
                      new TGInputDialog(gClient->GetRoot(), GetMainFrame(),
@@ -463,6 +463,7 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      }
                      gSystem->ChangeDirectory(sdir.Data());
                      break;
+                  }
 
                   case kIDF_LIST:
                      fFv->SetViewMode(kLVList);
