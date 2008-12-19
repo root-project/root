@@ -23,9 +23,6 @@ if [ "x$verbose" = "xx" ] ; then
    set -x
 fi 
 
-# No sub-process should ever used up more than one hour of CPU time.
-ulimit -t 3600
-
 MAKE=gmake
 REALTIME=n/a
 USERTIME=n/a
@@ -37,6 +34,8 @@ dir=`dirname $0`
 # and CONFIG_PLATFORM if necessary
 . $dir/run_cinttest.$host.config
 
+ulimit -t 3600
+
 error_handling() {
     cd $CINTSYSDIR
     write_summary
@@ -44,7 +43,7 @@ error_handling() {
 
     echo "Found an error on \"$host\" ("`uname`") in $ROOTLOC"
     echo "Error: $2"
-    echo "See full log file at http://www-root.fnal.gov/roottest/${CORE}cint_summary.shtml"
+    echo "See full log file at http://www-root.fnal.gov/roottest/cint_summary.shtml"
 
     if [ "x$mail" = "xx" ] ; then
 	mail -s "root $OSNAME test" $mailto <<EOF
@@ -196,8 +195,8 @@ runbuild() {
 
   eval export `grep G__CFG_ARCH Makefile.conf | sed -e 's/ := /=/'`
   cd test
-  echo "diff testdiff.${CORE}${G__CFG_ARCH}.ref testdiff.txt" > testdiff.log
-diff testdiff.${CORE}${G__CFG_ARCH}.ref testdiff.txt >> testdiff.log
+  echo "diff -ub testdiff.${CORE}${G__CFG_ARCH}.ref testdiff.txt" > testdiff.log
+diff -ub testdiff.${CORE}${G__CFG_ARCH}.ref testdiff.txt >> testdiff.log
   result=$?
 
   upload_log testdiff.log ${CORE}cint_
