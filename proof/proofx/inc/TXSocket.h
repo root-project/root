@@ -144,19 +144,6 @@ private:
    static void         InitEnvs(); // Initialize environment variables
 
 public:
-#if 0
-   // Should be the same as in proofd/inc/XProofProtocol.h (local definitions)
-   enum ECoordMsgType { kQuerySessions = 1000,
-                        kSessionTag, kSessionAlias, kGetWorkers, kQueryWorkers,
-                        kCleanupSessions,
-                        kQueryLogPaths,
-                        kReadBuffer,
-                        kQueryROOTVersions,
-                        kROOTVersion,
-                        kGroupProperties,
-                        kSendMsgToUser,
-                        kReleaseWorker};
-#endif
    // Should be the same as in proofd/src/XrdProofdProtocol::Urgent
    enum EUrgentMsgType { kStopProcess = 2000 };
 

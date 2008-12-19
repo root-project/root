@@ -82,8 +82,7 @@ enum EStaticSelOpt {
    kSSOLoadBased  = 2
 };
 
-// Should be the same as in proofx/inc/TXSocket.h and consistent with the related strings
-// for notification in XrdProofdAux::AdminMsgType(...)
+// Message types used in SendCoordinator(...)
 enum EAdminMsgType {
    kQuerySessions     = 1000,
    kSessionTag        = 1001,

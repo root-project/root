@@ -1671,7 +1671,7 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
                Error("HandleSocketInput", "unexpected answer");
                break;
             } else if (Int_t ret = fProof->AddWorkers(workerList) < 0) {
-               Error("HandleSocketInput", "Adding a list of worker nodes returned: %d",
+               Error("HandleSocketInput", "adding a list of worker nodes returned: %d",
                      ret);
                break;
             } else {
