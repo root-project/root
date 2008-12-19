@@ -82,11 +82,13 @@ private:
 //////////////////////////////////////////////////////////////////////////
 class XrdProofQuery
 {
+   XrdOucString      fTag;
    XrdOucString      fDSName;
    long              fDSSize;
 public:
-   XrdProofQuery(const char *n = 0, long s = 0) : fDSName(n), fDSSize(s) { }
+   XrdProofQuery(const char *t, const char *n = 0, long s = 0) : fTag(t), fDSName(n), fDSSize(s) { }
 
+   const char       *GetTag()     { return fTag.c_str(); }
    const char       *GetDSName()  { return fDSName.c_str(); }
    long              GetDSSize()  { return fDSSize; }
 };
@@ -142,7 +144,10 @@ public:
    inline void         PingSem() const { XrdSysMutexHelper mhp(fMutex); if (fPingSem) fPingSem->Post(); }
    inline XrdProofdProtocol *Protocol() const { XrdSysMutexHelper mhp(fMutex); return fProtocol; }
    inline XrdSrvBuffer *QueryNum() const { XrdSysMutexHelper mhp(fMutex); return fQueryNum; }
-
+   const char         *FirstQueryTag();
+   XrdProofQuery      *CurrentQuery() { return fQueries.empty()?0:fQueries.front(); }
+   void                SetWrksStr(XrdOucString &lw) { fWrksStr = lw; }
+   XrdOucString        GetWrksStr() { return fWrksStr; }
    void                RemoveWorker(const char *o);
    void                Reset();
    int                 Reset(const char *msg, int type);
@@ -187,6 +192,8 @@ public:
    int                 VerifyProofServ(bool fw);
    inline XrdOucHash<XrdProofWorker> *Workers() const
                       { XrdSysMutexHelper mhp(fMutex); return (XrdOucHash<XrdProofWorker> *)&fWorkers; }
+
+   int                 Resume();
 
    int                 CreateUNIXSock(XrdSysError *edest);
    void                DeleteUNIXSock();
@@ -245,6 +252,7 @@ public:
                              { XrdSysMutexHelper mhp(fMutex); fPingSem = new XrdSysSemWait(0);}
    void                      DeletePingSem()
                              { XrdSysMutexHelper mhp(fMutex); if (fPingSem) delete fPingSem; fPingSem = 0;}
+   XrdOucString              fWrksStr;   // the string is used when a session is being resumed.
    std::list<XrdProofQuery *> fQueries;  // the enqueued queries of this session
 };
 #endif

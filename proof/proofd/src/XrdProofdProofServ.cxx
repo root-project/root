@@ -130,14 +130,13 @@ static int DumpWorkerCounters(const char *k, XrdProofWorker *w, void *)
 void XrdProofdProofServ::ClearWorkers()
 {
    // Decrease worker counters and clean-up the list
-   // If called for a worker will do nothing (fWorkers.size() == 0)
-   // In normal operation the workers are cleared already before.
 
    XrdSysMutexHelper mhp(fMutex);
 
    // Decrease workers' counters and remove this from workers
    fWorkers.Apply(DecreaseWorkerCounters, this);
    fWorkers.Purge();
+   fWrksStr = "";
 }
 
 //__________________________________________________________________________
@@ -201,9 +200,7 @@ void XrdProofdProofServ::Reset()
    SafeDelete(fQueryNum);
    SafeDelete(fStartMsg);
    SafeDelete(fPingSem);
-   fStatus = kXPD_idle;
    fSrvPID = -1;
-   fSrvType = kXPD_AnyServer;
    fID = -1;
    fIsShutdown = false;
    fIsValid = false;
@@ -216,6 +213,9 @@ void XrdProofdProofServ::Reset()
    fROOT = 0;
    // Cleanup worker info
    ClearWorkers();
+   // ClearWorkers depends on the fSrvType and fStatus
+   fSrvType = kXPD_AnyServer;
+   fStatus = kXPD_idle;
    // Cleanup queries info
    fQueries.clear();
    // Strings
@@ -228,6 +228,7 @@ void XrdProofdProofServ::Reset()
    fTag = "";
    fUserEnvs = "";
    DeleteUNIXSock();
+   fWrksStr = "";
 }
 
 //__________________________________________________________________________
@@ -743,4 +744,43 @@ int XrdProofdProofServ::SetAdminPath(const char *a)
    }
    // Done
    return 0;
+}
+
+//______________________________________________________________________________
+int XrdProofdProofServ::Resume()
+{
+   // Send a resume message to the this session. It is assumed that the session
+   // has at least one async query to process and will immediately send
+   // a getworkers request (the workers are already assigned).
+   XPDLOC(SMGR, "ProofServ::Resume")
+
+   TRACE(DBG, "ord: " << fOrdinal<< ", pid: " << fSrvPID);
+
+   int rc = 0;
+   XrdOucString msg;
+
+   {  XrdSysMutexHelper mhp(fMutex);
+      // 
+      if (!fResponse || fResponse->Send(kXR_attn, kXPD_resume, 0, 0) != 0) {
+         msg = "could not propagate resume to proofsrv";
+         rc = -1;
+      }
+   }
+
+   // Notify errors, if any
+   if (rc != 0)
+      TRACE(XERR, msg);
+
+   // Done
+   return rc;
+}
+
+//______________________________________________________________________________
+const char *XrdProofdProofServ::FirstQueryTag()
+{
+
+   if (!fQueries.empty())
+      return fQueries.front()->GetTag();
+   else
+      return 0;
 }
