@@ -266,17 +266,38 @@ int XrdProofdAdmin::GetWorkers(XrdProofdProtocol *p)
    // We should query the chosen resource provider
    XrdOucString wrks;
 
-   if (fMgr->GetWorkers(wrks, xps) !=0 ) {
+   // Read the query tag
+   const char *msg = (const char *) p->Argp()->buff;
+   int len = p->Request()->header.dlen;
+   if (len > kXPROOFSRVTAGMAX - 1)
+      len = kXPROOFSRVTAGMAX - 1;
+
+   // If it is the second call for the same query
+   // just send the current list of workers
+   if (len > 0 && msg && xps->CurrentQuery()
+       && !strcmp(msg, xps->CurrentQuery()->GetTag())) {
+      wrks = xps->GetWrksStr();
+      // remove the query to be processed from the queue
+      XrdProofQuery *query = xps->GetQueries()->front();
+      xps->GetQueries()->pop_front();
+      delete query;
+   } else if (fMgr->GetWorkers(wrks, xps, msg) !=0 ) {
       // Something wrong
       response->Send(kXR_InvalidRequest,"failure");
       return 0;
-   } else {
-      // Send buffer
-      char *buf = (char *) wrks.c_str();
-      int len = wrks.length() + 1;
-      TRACEP(p, DBG, "sending: "<<buf);
+   }
 
-      // Send back to user
+   // Send buffer
+   // In case the session was enqueued, pass an empty list.
+   char *buf = (char *) wrks.c_str();
+   len = wrks.length() + 1;
+   TRACEP(p, DBG, "sending: "<<buf);
+
+   // Send back to user
+   if (buf)
+      response->Send(buf, len);
+   else {
+      buf = "";
       response->Send(buf, len);
    }
 
@@ -608,7 +629,7 @@ int XrdProofdAdmin::QueryLogPaths(XrdProofdProtocol *p)
 //______________________________________________________________________________
 int XrdProofdAdmin::CleanupSessions(XrdProofdProtocol *p)
 {
-   // Handle request of 
+   // Handle request of
    XPDLOC(ALL, "Admin::CleanupSessions")
 
    int rc = 0;

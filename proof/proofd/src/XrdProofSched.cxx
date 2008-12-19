@@ -246,7 +246,8 @@ int XrdProofSched::GetNumWorkers(XrdProofdProofServ *xps)
 
 //______________________________________________________________________________
 int XrdProofSched::GetWorkers(XrdProofdProofServ *xps,
-                              std::list<XrdProofWorker *> *wrks)
+                              std::list<XrdProofWorker *> *wrks,
+                              const char *)
 {
    // Get a list of workers that can be used by session 'xps'.
    XPDLOC(SCHED, "Sched::GetWorkers")

@@ -15,7 +15,7 @@
 //                                                                      //
 // Author: G. Ganis, CERN, 2007                                         //
 //                                                                      //
-// Class mapping manager fonctionality.                                 //
+// Class mapping manager functionality.                                 //
 // On masters it keeps info about the available worker nodes and allows //
 // communication with them.                                             //
 // On workers it handles the communication with the master.             //
@@ -425,7 +425,8 @@ XrdProofSched *XrdProofdManager::LoadScheduler()
 }
 
 //__________________________________________________________________________
-int XrdProofdManager::GetWorkers(XrdOucString &lw, XrdProofdProofServ *xps)
+int XrdProofdManager::GetWorkers(XrdOucString &lw, XrdProofdProofServ *xps,
+                                 const char* query)
 {
    // Get a list of workers from the available resource broker
    XPDLOC(ALL, "Manager::GetWorkers")
@@ -441,7 +442,7 @@ int XrdProofdManager::GetWorkers(XrdOucString &lw, XrdProofdProofServ *xps)
 
    // Query the scheduler for the list of workers
    std::list<XrdProofWorker *> wrks;
-   fProofSched->GetWorkers(xps, &wrks);
+   fProofSched->GetWorkers(xps, &wrks, query);
    TRACE(DBG, "list size: " << wrks.size());
 
    // The full list
@@ -462,7 +463,12 @@ int XrdProofdManager::GetWorkers(XrdOucString &lw, XrdProofdProofServ *xps)
          ord.form("%d", ii);
       ii++;
       xps->AddWorker(ord.c_str(), w);
-      w->fProofServs.push_back(xps);
+      // add proofserv and increase the counter
+      w->AddProofServ(xps);
+   }
+
+   if (lw.length()) {
+      xps->SetWrksStr(lw);
    }
 
    if (TRACING(REQ)) fNetMgr->Dump();
@@ -470,7 +476,7 @@ int XrdProofdManager::GetWorkers(XrdOucString &lw, XrdProofdProofServ *xps)
    return rc;
 }
 
-//__________________________________________________________________________
+//______________________________________________________________________________
 static int FillKeyValues(const char *k, int *d, void *s)
 {
    // Add the key value in the string passed via the void argument
@@ -493,7 +499,7 @@ static int FillKeyValues(const char *k, int *d, void *s)
    return 0;
 }
 
-//__________________________________________________________________________
+//______________________________________________________________________________
 int XrdProofdManager::Config(bool rcf)
 {
    // Run configuration and parse the entered config directives.
@@ -737,7 +743,7 @@ int XrdProofdManager::Config(bool rcf)
    return 0;
 }
 
-//__________________________________________________________________________
+//______________________________________________________________________________
 void XrdProofdManager::RegisterDirectives()
 {
    // Register directives for configuration

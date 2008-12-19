@@ -18,7 +18,7 @@
 //                                                                      //
 // Author: G. Ganis, CERN, 2007                                         //
 //                                                                      //
-// Class mapping manager fonctionality.                                 //
+// Class mapping manager functionality.                                 //
 // On masters it keeps info about the available worker nodes and allows //
 // communication with them. In particular, it reads the proof.conf file //
 // when working with static resources.                                  //
@@ -69,7 +69,7 @@ class XrdProofdManager : public XrdProofdConfig {
 
    int               ResolveKeywords(XrdOucString &s, XrdProofdClient *pcl);
 
-   int               GetWorkers(XrdOucString &workers, XrdProofdProofServ *);
+   int               GetWorkers(XrdOucString &workers, XrdProofdProofServ *, const char *);
 
    const char       *AdminPath() const { return fAdminPath.c_str(); }
    const char       *BareLibPath() const { return fBareLibPath.c_str(); }

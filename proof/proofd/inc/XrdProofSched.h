@@ -68,7 +68,8 @@ public:
 
    // Returns list of workers to be used by session 'xps'
    virtual int GetWorkers(XrdProofdProofServ *xps,
-                          std::list<XrdProofWorker *> */*wrks*/);
+                          std::list<XrdProofWorker *> */*wrks*/,
+                          const char *);
 
    // Max number of essions we are allowed to start
    virtual int MaxSessions() const { return fMaxSessions; }
