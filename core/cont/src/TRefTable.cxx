@@ -214,7 +214,7 @@ void TRefTable::ExpandPIDs(Int_t numpids)
 
    // else add to internal tables
    Int_t oldNumPIDs = fNumPIDs;
-   fNumPIDs += numpids;
+   fNumPIDs  = numpids;
 
    Int_t *temp = fAllocSize;
    fAllocSize = new Int_t[fNumPIDs];
