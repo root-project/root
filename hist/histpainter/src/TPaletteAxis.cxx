@@ -245,7 +245,7 @@ Int_t TPaletteAxis::GetBinColor(Int_t i, Int_t j)
 {
    // Returns the color index of the bin (i,j).
    //
-   // This funtion should be used after an histogram has been plotted with the
+   // This function should be used after an histogram has been plotted with the
    // option COL or COLZ like in the following example:
    //
    //   h2->Draw("COLZ");
@@ -300,7 +300,7 @@ Int_t TPaletteAxis::GetValueColor(Double_t zc)
 {
    // Returns the color index of the given z value
    //
-   // This funtion should be used after an histogram has been plotted with the
+   // This function should be used after an histogram has been plotted with the
    // option COL or COLZ like in the following example:
    //
    //   h2->Draw("COLZ");

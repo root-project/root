@@ -2,3 +2,29 @@
 <hr> 
 <a name="hist"></a> 
 <h3>Histogram package</h3>
+
+
+<h4>TPaletteAxis</h4>
+<ul>
+<li> New method <tt>Int_t TPaletteAxis::GetValueColor(z)</tt> to
+     return the color index of the given z value.
+     <br>
+     This funtion should be used after an histogram has been plotted with the
+     option COL or COLZ like in the following example:
+     <pre>
+       h2->Draw("COLZ");
+       gPad->Update();
+       TPaletteAxis *palette =
+          (TPaletteAxis*)h2->GetListOfFunctions()->FindObject("palette");
+       Int_t ci = palette->GetValueColor(30.);
+     </pre>
+     Then it is possible to retrieve the RGB components in the following way:
+     <pre>
+       TColor *c = gROOT->GetColor(ci);
+       float x,y,z;
+       c->GetRGB(x,y,z);
+     </pre>
+     This function is used by <tt>TPaletteAxis::GetBinColor()</tt>.
+</li>
+</ul>
+
