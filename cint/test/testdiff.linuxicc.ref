@@ -279,8 +279,6 @@ t1223.cxx
 t1224.cxx 
 t1228.cxx 
 t1247.cxx  -Dmakecint2
-t1247.cxx compiled:
-   1: Success
 t1276.cxx  -Dmakecint
 t1277.cxx  -Dmakecint
 t1278.cxx 
