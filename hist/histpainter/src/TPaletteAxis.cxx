@@ -260,31 +260,8 @@ Int_t TPaletteAxis::GetBinColor(Int_t i, Int_t j)
    //   float x,y,z;
    //   c->GetRGB(x,y,z);
 
-   Double_t zc    = fH->GetBinContent(i,j);
-   Double_t wmin  = fH->GetMinimum();
-   Double_t wmax  = fH->GetMaximum();
-   Double_t wlmin = wmin;
-   Double_t wlmax = wmax;
-
-   if (gPad->GetLogz()) {
-      if (wmin <= 0 && wmax > 0) wmin = TMath::Min((Double_t)1,
-                                                   (Double_t)0.001*wmax);
-      wlmin = TMath::Log10(wmin);
-      wlmax = TMath::Log10(wmax);
-   }
-
-   Int_t ncolors = gStyle->GetNumberOfColors();
-   Int_t ndivz   = TMath::Abs(fH->GetContour());
-   Int_t theColor,color;
-   Double_t scale = ndivz/(wlmax - wlmin);
-
-   if (fH->TestBit(TH1::kUserContour) && gPad->GetLogz()) zc = TMath::Log10(zc);
-   if (zc < wlmin) zc = wlmin;
-
-   color = Int_t(0.01+(zc-wlmin)*scale);
-
-   theColor = Int_t((color+0.99)*Double_t(ncolors)/Double_t(ndivz));
-   return gStyle->GetColorPalette(theColor);
+   Double_t zc = fH->GetBinContent(i,j);
+   return GetValueColor(zc);
 }
 
 
@@ -315,6 +292,53 @@ char *TPaletteAxis::GetObjectInfo(Int_t /* px */, Int_t py) const
 
    sprintf(info,"(z=%g)",z);
    return info;
+}
+
+
+//______________________________________________________________________________
+Int_t TPaletteAxis::GetValueColor(Double_t zc)
+{
+   // Returns the color index of the given z value
+   //
+   // This funtion should be used after an histogram has been plotted with the
+   // option COL or COLZ like in the following example:
+   //
+   //   h2->Draw("COLZ");
+   //   gPad->Update();
+   //   TPaletteAxis *palette =
+   //      (TPaletteAxis*)h2->GetListOfFunctions()->FindObject("palette");
+   //   Int_t ci = palette->GetValueColor(30.);
+   //
+   // Then it is possible to retrieve the RGB components in the following way:
+   //
+   //   TColor *c = gROOT->GetColor(ci);
+   //   float x,y,z;
+   //   c->GetRGB(x,y,z);
+
+   Double_t wmin  = fH->GetMinimum();
+   Double_t wmax  = fH->GetMaximum();
+   Double_t wlmin = wmin;
+   Double_t wlmax = wmax;
+
+   if (gPad->GetLogz()) {
+      if (wmin <= 0 && wmax > 0) wmin = TMath::Min((Double_t)1,
+                                                   (Double_t)0.001*wmax);
+      wlmin = TMath::Log10(wmin);
+      wlmax = TMath::Log10(wmax);
+   }
+
+   Int_t ncolors = gStyle->GetNumberOfColors();
+   Int_t ndivz   = TMath::Abs(fH->GetContour());
+   Int_t theColor,color;
+   Double_t scale = ndivz/(wlmax - wlmin);
+
+   if (fH->TestBit(TH1::kUserContour) && gPad->GetLogz()) zc = TMath::Log10(zc);
+   if (zc < wlmin) zc = wlmin;
+
+   color = Int_t(0.01+(zc-wlmin)*scale);
+
+   theColor = Int_t((color+0.99)*Double_t(ncolors)/Double_t(ndivz));
+   return gStyle->GetColorPalette(theColor);
 }
 
 

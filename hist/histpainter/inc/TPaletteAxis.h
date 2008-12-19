@@ -53,6 +53,7 @@ public:
    Int_t         GetBinColor(Int_t i, Int_t j);
    Option_t     *GetName() const {return fName.Data();}
    virtual char *GetObjectInfo(Int_t px, Int_t py) const;
+   Int_t         GetValueColor(Double_t zc);
    virtual void  Paint(Option_t *option="");
    virtual void  SavePrimitive(ostream &out, Option_t *option = "");
    virtual void  SetName(const char *name="") {fName = name;} // *MENU*
