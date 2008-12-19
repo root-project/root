@@ -180,6 +180,7 @@ private:
    TMatrixD     fX;              //values of x
    TVectorD     fE;              //the errors if they are known
    TFormula     *fInputFunction; //the function being fit
+   Double_t     fVal[1000];      //! temporary
 
    Int_t        fNpoints;        //number of points
    Int_t        fNfunctions;     //number of basis functions
@@ -199,8 +200,8 @@ private:
 
    Bool_t       *fFixedParams;   //[fNfixed] array of fixed/released params
 
-   void AddToDesign(Double_t *x, Double_t y, Double_t e);
-   void ComputeTValues();
+   void  AddToDesign(Double_t *x, Double_t y, Double_t e);
+   void  ComputeTValues();
    Int_t GraphLinearFitter(Double_t h);
    Int_t Graph2DLinearFitter(Double_t h);
    Int_t HistLinearFitter();
@@ -224,6 +225,7 @@ public:
    TLinearFitter& operator=(const TLinearFitter& tlf);
    virtual void       Add(TLinearFitter *tlf);
    virtual void       AddPoint(Double_t *x, Double_t y, Double_t e=1);
+   virtual void       AddTempMatrices();
    virtual void       AssignData(Int_t npoints, Int_t xncols, Double_t *x, Double_t *y, Double_t *e=0);
 
    virtual void       Clear(Option_t *option="");
@@ -254,6 +256,7 @@ public:
    virtual Double_t   GetParTValue(Int_t ipar);
    virtual Double_t   GetParSignificance(Int_t ipar);
    virtual void       GetFitSample(TBits& bits);
+   virtual Double_t   GetY2() const {return fY2;}
    virtual Bool_t     IsFixed(Int_t ipar) const {return fFixedParams[ipar];}
    virtual Int_t      Merge(TCollection *list);
    virtual void       PrintResults(Int_t level, Double_t amin=0) const;
@@ -263,6 +266,7 @@ public:
    virtual void       SetFormula(const char* formula);
    virtual void       SetFormula(TFormula *function);
    virtual void       StoreData(Bool_t store) {fStoreData=store;}
+
    virtual Bool_t     UpdateMatrix();
 
    //dummy functions for TVirtualFitter:
@@ -274,7 +278,7 @@ public:
    virtual void      SetFitMethod(const char * /*name*/) {;}
    virtual Int_t     SetParameter(Int_t /*ipar*/,const char * /*parname*/,Double_t /*value*/,Double_t /*verr*/,Double_t /*vlow*/, Double_t /*vhigh*/) {return 0;}
 
-   ClassDef(TLinearFitter, 1) //fit a set of data points with a linear combination of functions
+   ClassDef(TLinearFitter, 2) //fit a set of data points with a linear combination of functions
 };
 
 #endif

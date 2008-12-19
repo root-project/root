@@ -3088,12 +3088,13 @@ void TFormula::ProcessLinear(TString &formula)
    TObjArray *oa = formula2.Tokenize("|");
    for (Int_t i=0; i<nf; i++) {
       replaceformula = ((TObjString *)oa->UncheckedAt(i))->GetString();
-      TFormula *f = new TFormula("f", replaceformula.Data());
+      TFormula *f = new TFormula(replaceformula.Data(), replaceformula.Data());
       if (!f) {
          Error("TFormula", "f_linear not allocated");
          return;
       }
       gROOT->GetListOfFunctions()->Remove(f);
+      f->SetBit(kNotGlobal, 1);
       fLinearParts.Add(f);
    }
    oa->Delete();

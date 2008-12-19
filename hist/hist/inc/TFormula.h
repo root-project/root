@@ -80,7 +80,7 @@ protected:
    Double_t  *fParams;          //[fNpar] Array of fNpar parameters
    TString   *fNames;           //[fNpar] Array of parameter names
    TObjArray  fFunctions;       //Array of function calls to make
-   TObjArray  fLinearParts;     //! Linear parts if the formula is linear (contains '|')
+   TObjArray  fLinearParts;     //Linear parts if the formula is linear (contains '|' or "++")
 
    TBits      fAlreadyFound;    //! cache for information
 
@@ -256,7 +256,7 @@ public:
 
    static  void        SetMaxima(Int_t maxop=1000, Int_t maxpar=1000, Int_t maxconst=1000);
    
-   ClassDef(TFormula,7)  //The formula base class  f(x,y,z,par)
+   ClassDef(TFormula,8)  //The formula base class  f(x,y,z,par)
 };
 
 #endif

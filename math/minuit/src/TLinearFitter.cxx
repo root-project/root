@@ -208,18 +208,20 @@ TLinearFitter::TLinearFitter()
    //If you don't want to store the input data,
    //run the function StoreData(kFALSE) after constructor
 
-   fChisquare=0;
-   fNpoints=0;
-   fY2=0;
-   fY2Temp=0;
-   fNfixed=0;
-   fIsSet=kFALSE;
-   fFormula=0;
+   fChisquare =0;
+   fNpoints   =0;
+   fNdim      =0;
+   fY2        =0;
+   fY2Temp    =0;
+   fNfixed    =0;
+   fIsSet     =kFALSE;
+   fFormula   =0;
    fFixedParams=0;
-   fSpecial=0;
+   fSpecial   =0;
    fInputFunction=0;
-   fStoreData=kTRUE;
-   fRobust=kFALSE;
+   fStoreData =kTRUE;
+   fRobust    =kFALSE;
+   fNfunctions = 0;
 }
 
 //______________________________________________________________________________
@@ -229,18 +231,20 @@ TLinearFitter::TLinearFitter(Int_t ndim)
    //The input data is stored. If you don't want to store the input data,
    //run the function StoreData(kFALSE) after constructor
 
-   fNdim=ndim;
-   fNpoints=0;
-   fY2=0;
-   fNfixed=0;
+   fNdim    =ndim;
+   fNpoints =0;
+   fY2      =0;
+   fY2Temp  =0;
+   fNfixed  =0;
    fFixedParams=0;
-   fFormula=0;
-   fIsSet=kFALSE;
+   fFormula =0;
+   fIsSet   =kFALSE;
    fChisquare=0;
-   fSpecial=0;
+   fSpecial  =0;
    fInputFunction=0;
    fStoreData=kTRUE;
    fRobust = kFALSE;
+   fNfunctions = 0;
 }
 
 //______________________________________________________________________________
@@ -442,7 +446,6 @@ void TLinearFitter::Add(TLinearFitter *tlf)
    fAtbTemp3 += tlf->fAtbTemp3;
 
    if (fStoreData){
-      printf("copying points\n");
       Int_t size=fY.GetNoElements();
       Int_t newsize = fNpoints+tlf->fNpoints;
       if (size<newsize){
@@ -551,32 +554,32 @@ void TLinearFitter::AddToDesign(Double_t *x, Double_t y, Double_t e)
    Int_t i, j, ii;
    y/=e;
 
-   Double_t val[1000];
+//   Double_t fVal[1000];
 
    if ((fSpecial>100)&&(fSpecial<200)){
       //polynomial fitting
       Int_t npar=fSpecial-100;
-      val[0]=1;
+      fVal[0]=1;
       for (i=1; i<npar; i++)
-         val[i]=val[i-1]*x[0];
+         fVal[i]=fVal[i-1]*x[0];
       for (i=0; i<npar; i++)
-         val[i]/=e;
+         fVal[i]/=e;
    } else {
       if (fSpecial>200){
          //Hyperplane fitting. Constant term is added
          Int_t npar=fSpecial-201;
-         val[0]=1./e;
+         fVal[0]=1./e;
          for (i=0; i<npar; i++)
-            val[i+1]=x[i]/e;
+            fVal[i+1]=x[i]/e;
       } else {
          //general case
          for (ii=0; ii<fNfunctions; ii++){
             if (!fFunctions.IsEmpty()){
                TFormula *f1 = (TFormula*)(fFunctions.UncheckedAt(ii));
-               val[ii]=f1->EvalPar(x)/e;
+               fVal[ii]=f1->EvalPar(x)/e;
             } else {
                TFormula *f=(TFormula*)fInputFunction->GetLinearPart(ii);
-               val[ii]=f->EvalPar(x)/e;
+               fVal[ii]=f->EvalPar(x)/e;
             }
          }
       }
@@ -584,9 +587,9 @@ void TLinearFitter::AddToDesign(Double_t *x, Double_t y, Double_t e)
    //additional matrices for numerical stability
    for (i=0; i<fNfunctions; i++){
       for (j=0; j<i; j++)
-         fDesignTemp3(j, i)+=val[i]*val[j];
-      fDesignTemp3(i, i)+=val[i]*val[i];
-      fAtbTemp3(i)+=val[i]*y;
+         fDesignTemp3(j, i)+=fVal[i]*fVal[j];
+      fDesignTemp3(i, i)+=fVal[i]*fVal[i];
+      fAtbTemp3(i)+=fVal[i]*y;
 
    }
    fY2Temp+=y*y;
@@ -612,6 +615,28 @@ void TLinearFitter::AddToDesign(Double_t *x, Double_t y, Double_t e)
          }
       }
    }
+}
+
+//______________________________________________________________________________
+void TLinearFitter::AddTempMatrices()
+{
+   if (fDesignTemp3.GetNrows()>0){
+      fDesignTemp2+=fDesignTemp3;
+      fDesignTemp+=fDesignTemp2;
+      fDesign+=fDesignTemp;
+      fDesignTemp3.Zero();
+      fDesignTemp2.Zero();
+      fDesignTemp.Zero();
+      fAtbTemp2+=fAtbTemp3;
+      fAtbTemp+=fAtbTemp2;
+      fAtb+=fAtbTemp;
+      fAtbTemp3.Zero();
+      fAtbTemp2.Zero();
+      fAtbTemp.Zero();
+      
+      fY2+=fY2Temp;
+      fY2Temp=0;
+      }
 }
 
 //______________________________________________________________________________
@@ -785,7 +810,7 @@ Int_t TLinearFitter::Eval()
          fParSign.Zero();
          fChisquare=0;
          if (fInputFunction){
-            ((TF1*)fInputFunction)->SetParameters(fParams.GetMatrixArray());
+            fInputFunction->SetParameters(fParams.GetMatrixArray());
             for (Int_t i=0; i<fNfunctions; i++)
                ((TF1*)fInputFunction)->SetParError(i, 0);
             ((TF1*)fInputFunction)->SetChisquare(0);
@@ -795,24 +820,9 @@ Int_t TLinearFitter::Eval()
          return 1;
       }
    }
-   //
-   if (fDesignTemp3.GetNrows()>0){
-      fDesignTemp2+=fDesignTemp3;
-      fDesignTemp+=fDesignTemp2;
-      fDesign+=fDesignTemp;
-      fDesignTemp3.Zero();
-      fDesignTemp2.Zero();
-      fDesignTemp.Zero();
-      fAtbTemp2+=fAtbTemp3;
-      fAtbTemp+=fAtbTemp2;
-      fAtb+=fAtbTemp;
-      fAtbTemp3.Zero();
-      fAtbTemp2.Zero();
-      fAtbTemp.Zero();
-      
-      fY2+=fY2Temp;
-      fY2Temp=0;
-      }
+  
+   AddTempMatrices();
+
 //fixing fixed parameters, if there are any
    Int_t i, ii, j=0;
    if (fNfixed>0){
@@ -854,9 +864,11 @@ Int_t TLinearFitter::Eval()
       fParSign.Zero();
       if (fInputFunction){
          fInputFunction->SetParameters(fParams.GetMatrixArray());
-         ((TF1*)fInputFunction)->SetChisquare(0);
-         ((TF1*)fInputFunction)->SetNDF(fNpoints-fNfunctions+fNfixed);
-         ((TF1*)fInputFunction)->SetNumberFitPoints(fNpoints);
+         if (fInputFunction->InheritsFrom(TF1::Class())){
+            ((TF1*)fInputFunction)->SetChisquare(0);
+            ((TF1*)fInputFunction)->SetNDF(fNpoints-fNfunctions+fNfixed);
+            ((TF1*)fInputFunction)->SetNumberFitPoints(fNpoints);
+         }
       }
       return 1;
    }
@@ -865,14 +877,16 @@ Int_t TLinearFitter::Eval()
 
    if (fInputFunction){
       fInputFunction->SetParameters(fParams.GetMatrixArray());
-      for (i=0; i<fNfunctions; i++){
-         e = TMath::Sqrt(fParCovar(i, i));
-         ((TF1*)fInputFunction)->SetParError(i, e);
-      }
-      if (!fObjectFit)
-         ((TF1*)fInputFunction)->SetChisquare(GetChisquare());
-      ((TF1*)fInputFunction)->SetNDF(fNpoints-fNfunctions+fNfixed);
-      ((TF1*)fInputFunction)->SetNumberFitPoints(fNpoints);
+      if (fInputFunction->InheritsFrom(TF1::Class())){
+         for (i=0; i<fNfunctions; i++){
+            e = TMath::Sqrt(fParCovar(i, i));
+            ((TF1*)fInputFunction)->SetParError(i, e);
+         }
+         if (!fObjectFit)
+            ((TF1*)fInputFunction)->SetChisquare(GetChisquare());
+         ((TF1*)fInputFunction)->SetNDF(fNpoints-fNfunctions+fNfixed);
+         ((TF1*)fInputFunction)->SetNumberFitPoints(fNpoints);
+         }
    }
 
    //if parameters were fixed, change the design matrix back as it was before fixing
@@ -992,6 +1006,9 @@ void TLinearFitter::GetConfidenceIntervals(Int_t n, Int_t ndim, const Double_t *
 //    should be in order: (x0,y0, x1, y1, ... xn, yn)
 //ci - computed intervals are returned in this array
 //cl - confidence level, default=0.95
+//
+//NOTE, that this method can only be used when the fitting function inherits from a TF1,
+//so it's not possible when the fitting function was set as a string or as a pure TFormula
 
    if (fInputFunction){
       Double_t *grad = new Double_t[fNfunctions];
@@ -1933,6 +1950,28 @@ Int_t TLinearFitter::HistLinearFitter()
    return fitResult;
 }
 
+//____________________________________________________________________________
+void TLinearFitter::Streamer(TBuffer &R__b)
+{
+   if (R__b.IsReading()) {
+      Int_t old_matr_size = fNfunctions;
+      R__b.ReadClassBuffer(TLinearFitter::Class(),this); 
+      if (old_matr_size < fNfunctions) {
+         fDesignTemp.ResizeTo(fNfunctions, fNfunctions);
+         fAtbTemp.ResizeTo(fNfunctions);
+         
+         fDesignTemp2.ResizeTo(fNfunctions, fNfunctions);
+         fDesignTemp3.ResizeTo(fNfunctions, fNfunctions);
+         
+         fAtbTemp2.ResizeTo(fNfunctions);
+         fAtbTemp3.ResizeTo(fNfunctions);
+      }
+   } else {
+      if (fAtb.NonZeros()==0) AddTempMatrices();
+      R__b.WriteClassBuffer(TLinearFitter::Class(),this);
+   }
+} 
+
 //______________________________________________________________________________
 Int_t TLinearFitter::EvalRobust(Double_t h)
 {
@@ -2020,7 +2059,7 @@ Int_t TLinearFitter::EvalRobust(Double_t h)
          //printf("bestindex[%d]=%d\n", j, bestindex[j]);
          fFitsample.SetBitNumber(bestindex[j]);
       }
-      if (fInputFunction){
+      if (fInputFunction && fInputFunction->InheritsFrom(TF1::Class())) {
          ((TF1*)fInputFunction)->SetChisquare(bestchi2[maxind]);
          ((TF1*)fInputFunction)->SetNumberFitPoints(fH);
          ((TF1*)fInputFunction)->SetNDF(fH-fNfunctions);
