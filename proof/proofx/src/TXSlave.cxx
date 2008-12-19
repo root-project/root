@@ -34,6 +34,7 @@
 #include "TXSocket.h"
 #include "TXSocketHandler.h"
 #include "Varargs.h"
+#include "XProofProtocol.h"
 
 ClassImp(TXSlave)
 
@@ -497,7 +498,7 @@ void TXSlave::SetAlias(const char *alias)
    // Nothing to do if not in contact with coordinator
    if (!IsValid()) return;
 
-   ((TXSocket *)fSocket)->SendCoordinator(TXSocket::kSessionAlias, alias);
+   ((TXSocket *)fSocket)->SendCoordinator(kSessionAlias, alias);
 
    return;
 }
@@ -512,7 +513,7 @@ Int_t TXSlave::SendGroupPriority(const char *grp, Int_t priority)
    // Nothing to do if not in contact with coordinator
    if (!IsValid()) return -1;
 
-   ((TXSocket *)fSocket)->SendCoordinator(TXSocket::kGroupProperties, grp, priority);
+   ((TXSocket *)fSocket)->SendCoordinator(kGroupProperties, grp, priority);
 
    return 0;
 }

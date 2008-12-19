@@ -785,6 +785,11 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
          // Request for remote touch: post a message to do that
          PostMsg(kPROOF_TOUCH);
          break;
+      case kXPD_resume:
+         //
+         // process the next query (in the TXProofServ)
+         PostMsg(kPROOF_STARTPROCESS);
+         break;
      default:
          Error("ProcessUnsolicitedMsg","%p: unknown action code: %d received from '%s' - disabling",
                                        this, acod, GetTitle());
@@ -1685,7 +1690,9 @@ TObjString *TXSocket::SendCoordinator(Int_t kind, const char *msg, Int_t int2,
          break;
       case kGetWorkers:
          reqhdr.proof.sid = fSessionID;
-         reqhdr.header.dlen = 0;
+         reqhdr.header.dlen = (msg) ? strlen(msg) : 0;
+         if (msg)
+            buf = (const void *)msg;
          vout = (char **)&bout;
          break;
       case kReadBuffer:

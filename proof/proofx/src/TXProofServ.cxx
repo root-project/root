@@ -174,7 +174,7 @@ Int_t TXProofServ::CreateServer()
          Error("CreateServer", "resolving the log file description number");
          return -1;
       }
-      // Hide the session start-up logs unless we are in verbose mode 
+      // Hide the session start-up logs unless we are in verbose mode
       if (gProofDebugLevel <= 0)
          lseek(fLogFileDes, (off_t) 0, SEEK_END);
    }
@@ -685,10 +685,11 @@ Int_t TXProofServ::Setup()
 
 //______________________________________________________________________________
 TProofServ::EQueryAction TXProofServ::GetWorkers(TList *workers,
-                                                 Int_t & /* prioritychange */)
+                                                 Int_t & /* prioritychange */,
+                                                 Bool_t resume)
 {
    // Get list of workers to be used from now on.
-   // The list must be provide by the caller.
+   // The list must be provided by the caller.
 
    // Needs a list where to store the info
    if (!workers) {
@@ -705,14 +706,27 @@ TProofServ::EQueryAction TXProofServ::GetWorkers(TList *workers,
          return rc;
    }
 
+   // seqnum of the query for which we call getworkers
+   TString seqnum;
+   if (!fWaitingQueries->IsEmpty())
+      if (resume)
+         seqnum += ((TProofQueryResult *)(fWaitingQueries->First()))->GetSeqNum();
+      else
+         seqnum += ((TProofQueryResult *)(fWaitingQueries->Last()))->GetSeqNum();
    // Send request to the coordinator
-   TObjString *os = ((TXSocket *)fSocket)->SendCoordinator(TXSocket::kGetWorkers);
+   TObjString *os =
+      ((TXSocket *)fSocket)->SendCoordinator(kGetWorkers, seqnum.Data());
 
    // The reply contains some information about the master (image, workdir)
    // followed by the information about the workers; the tokens for each node
    // are separated by '&'
    if (os) {
       TString fl(os->GetName());
+      if (fl.Length() == 0) {
+         SendAsynMessage("GetWorkers: the job was enqueued");
+         return kQueryEnqueued;
+      }
+
       TString tok;
       Ssiz_t from = 0;
       if (fl.Tokenize(tok, from, "&")) {
@@ -1010,5 +1024,5 @@ void TXProofServ::ReleaseWorker(const char *ord)
 
    Info("ReleaseWorker","releasing: %s", ord);
 
-   ((TXSocket *)fSocket)->SendCoordinator(TXSocket::kReleaseWorker, ord);
+   ((TXSocket *)fSocket)->SendCoordinator(kReleaseWorker, ord);
 }

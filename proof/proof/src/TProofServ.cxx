@@ -1133,6 +1133,8 @@ void TProofServ::HandleSocketInput()
 Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
 {
    // Process input coming from the client or from the master server.
+   // If 'all' is kFALSE, process only those messages that can be handled
+   // during qurey processing.
    // Returns -1 if the message could not be processed, <-1 if something went
    // wrong. Returns 1 if the action may have changed the parallel state.
    // Returns 2 if the message has to be enqueued.
@@ -1424,8 +1426,6 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
                Int_t opt = TProof::kForward | TProof::kCp;
                if (bin)
                   opt |= TProof::kBinary;
-               // Old clients do not wait for the termination of SendFile, so we need
-               // to disable new inputs while doing this
                fProof->SendFile(fnam, opt, (copytocache ? "cache" : ""));
             }
             if (fProtocol > 19) fSocket->Send(kPROOF_SENDFILE);
@@ -1648,6 +1648,36 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
             rc = -1;
          }
          SendLogFile();
+         break;
+
+      case kPROOF_STARTPROCESS:
+         if (all) {
+            // This message resumes the session; should not come during processing.
+
+            if (fWaitingQueries->IsEmpty()) {
+               Error("HandleSocketInput", "no queries enqueued");
+               break;
+            }
+
+            // similar to handle process
+            // get the list of workers and start them
+            TList* workerList = new TList();
+            Int_t pc = 0;
+            EQueryAction retVal = GetWorkers(workerList, pc, kTRUE);
+            if (retVal == TProofServ::kQueryStop) {
+               Error("HandleSocketInput", "error getting list of worker nodes");
+               break;
+            } else if (retVal != TProofServ::kQueryOK) {
+               Error("HandleSocketInput", "unexpected answer");
+               break;
+            } else if (Int_t ret = fProof->AddWorkers(workerList) < 0) {
+               Error("HandleSocketInput", "Adding a list of worker nodes returned: %d",
+                     ret);
+               break;
+            } else {
+               ProcessNext();
+            }
+         }
          break;
 
       default:
@@ -2985,11 +3015,39 @@ void TProofServ::HandleProcess(TMessage *mess)
       // Add anyhow to the waiting lists
       fWaitingQueries->Add(pq);
 
-      // If the client submission was asynchronous or if we switched to asynchronous,
-      // signal the submission of the query and communicate the assigned sequential
-      // number for later identification
+      // Call get Workers
+      // if we are not idle the scheduler will just enqueue the query and
+      // send a resume message later.
+
+      Bool_t enqueued = kFALSE;
+      // if the session does not have workers and is in the dynamic mode
+      if (fProof->UseDynamicStartup()) {
+         // get the a list of workers and start them
+         TList* workerList = new TList();
+         Int_t pc = 0;
+         EQueryAction retVal = GetWorkers(workerList, pc);
+         if (retVal == TProofServ::kQueryStop) {
+            Error("HandleProcess", "error getting list of worker nodes");
+            return;
+         } else if (retVal == TProofServ::kQueryEnqueued) {
+            // change to an asynchronous query
+            enqueued = kTRUE;
+            Info("HandleProcess", "The query was enqueued");
+         } else if (Int_t ret = fProof->AddWorkers(workerList) < 0) {
+            Error("HandleProcess", "Adding a list of worker nodes returned: %d",
+                  ret);
+            return;
+         }
+
+      }
+
+
+      // If the client submission was asynchronous, signal the submission of
+      // the query and communicate the assigned sequential number for later
+      // identification
+
       TMessage m(kPROOF_QUERYSUBMITTED);
-      if (!sync) {
+      if (!sync || enqueued) {
          m << pq->GetSeqNum() << kFALSE;
          fSocket->Send(m);
       }
@@ -3003,227 +3061,15 @@ void TProofServ::HandleProcess(TMessage *mess)
       }
 
       // Process
-      while (fWaitingQueries->GetSize() > 0) {
+      // in the static mode, if a session is enqueued it will be processed after current query
+      // (there is no way to enqueue if idle).
+      // in the dynamic mode we will process here only if the session was idle and got workers!
+      while (fWaitingQueries->GetSize() > 0 && !enqueued) {
          //
-         // Set not idle
-         fIdle = kFALSE;
-         //
-         // Get query info
-         pq = (TProofQueryResult *)(fWaitingQueries->First());
-         if (pq) {
-
-            if (IsMaster() && fProof->UseDynamicStartup()) {
-               // get the a list of workers and start them
-               TList* workerList = new TList();
-               Int_t pc = 0;
-               if (GetWorkers(workerList, pc) == TProofServ::kQueryStop) {
-                  Error("HandleProcess", "getting list of worker nodes");
-                  return;
-               }
-               if (Int_t ret = fProof->AddWorkers(workerList) < 0) {
-                  Error("HandleProcess", "Adding a list of worker nodes returned: %d",
-                        ret);
-                  return;
-               }
-            }
-
-            opt      = pq->GetOptions();
-            input    = pq->GetInputList();
-            nentries = pq->GetEntries();
-            first    = pq->GetFirst();
-            filename = pq->GetSelecImp()->GetName();
-            Ssiz_t id = opt.Last('#');
-            if (id != kNPOS && id < opt.Length() - 1)
-               filename += opt(id + 1, opt.Length());
-            // Attach to data set and entry- (or event-) list (if any)
-            TObject *o = 0;
-            if ((o = pq->GetInputObject("TDSet")))
-               dset = (TDSet *) o;
-            elist = 0;
-            if ((o = pq->GetInputObject("TEntryList")))
-               elist = o;
-            else if ((o = pq->GetInputObject("TEventList")))
-               elist = o;
-            //
-            // Expand selector files
-            if (pq->GetSelecImp()) {
-               gSystem->Exec(Form("%s %s", kRM, pq->GetSelecImp()->GetName()));
-               pq->GetSelecImp()->SaveSource(pq->GetSelecImp()->GetName());
-            }
-            if (pq->GetSelecHdr() &&
-                !strstr(pq->GetSelecHdr()->GetName(), "TProofDrawHist")) {
-               gSystem->Exec(Form("%s %s", kRM, pq->GetSelecHdr()->GetName()));
-               pq->GetSelecHdr()->SaveSource(pq->GetSelecHdr()->GetName());
-            }
-            //
-            // Remove processed query from the list
-            fWaitingQueries->Remove(pq);
-         } else {
-            // Should never get here
-            Error("HandleProcess", "empty query in queue!");
-            continue;
-         }
-
-         // Set in running state
-         SetQueryRunning(pq);
-
-         // Save to queries dir, if not standard draw
-         if (fQMgr) {
-            if (!(pq->IsDraw()))
-               fQMgr->SaveQuery(pq);
-            else
-               fQMgr->IncrementDrawQueries();
-         }
-         fQMgr->ResetTime();
-
-         // Signal the client that we are starting a new query
-         m.Reset(kPROOF_STARTPROCESS);
-         m << TString(pq->GetSelecImp()->GetName())
-           << dset->GetListOfElements()->GetSize()
-           << pq->GetFirst() << pq->GetEntries();
-         fSocket->Send(m);
-
-         // Create player
-         MakePlayer();
-
-         // Add query results to the player lists
-         fPlayer->AddQueryResult(pq);
-
-         // Set query currently processed
-         fPlayer->SetCurrentQuery(pq);
-
-         // Setup data set
-         if (dset->IsA() == TDSetProxy::Class())
-            ((TDSetProxy*)dset)->SetProofServ(this);
-
-         // Add the unique query tag as TNamed object to the input list
-         // so that it is available in TSelectors for monitoring
-         input->Add(new TNamed("PROOF_QueryTag",Form("%s:%s",pq->GetTitle(),pq->GetName())));
-
-         // Set input
-         TIter next(input);
-         TObject *o = 0;
-         while ((o = next())) {
-            PDB(kGlobal, 2) Info("HandleProcess", "adding: %s", o->GetName());
-            fPlayer->AddInput(o);
-         }
-
-         // Remove the list of the missing files from the original list, if any
-         if ((o = input->FindObject("MissingFiles"))) input->Remove(o);
-
-         // Process
-         PDB(kGlobal, 1) Info("HandleProcess", "calling %s::Process()", fPlayer->IsA()->GetName());
-         fPlayer->Process(dset, filename, opt, nentries, first);
-
-         // Return number of events processed
-         if (fPlayer->GetExitStatus() != TVirtualProofPlayer::kFinished) {
-            Bool_t abort =
-              (fPlayer->GetExitStatus() == TVirtualProofPlayer::kAborted) ? kTRUE : kFALSE;
-            m.Reset(kPROOF_STOPPROCESS);
-            // message sent from worker to the master
-            if (fProtocol > 18) {
-               TProofProgressStatus* status = fPlayer->GetProgressStatus();
-               m << status << abort;
-               status = 0; // the status belongs to the player.
-            } else if (fProtocol > 8) {
-               m << fPlayer->GetEventsProcessed() << abort;
-            } else {
-               m << fPlayer->GetEventsProcessed();
-            }
-            fSocket->Send(m);
-         }
-
-         // Complete filling of the TQueryResult instance
-         if (fQMgr) {
-            fProof->AskStatistics();
-            if (fQMgr->FinalizeQuery(pq, fProof, fPlayer))
-               fQMgr->SaveQuery(pq, fMaxQueries);
-         }
-
-         // Send back the results
-         TQueryResult *pqr = pq->CloneInfo();
-         if (fPlayer->GetExitStatus() != TVirtualProofPlayer::kAborted && fPlayer->GetOutputList()) {
-
-            PDB(kGlobal, 2) Info("HandleProcess","Sending results");
-            if (fProtocol > 10) {
-               // Send objects one-by-one to optimize transfer and merging
-               TMessage mbuf(kPROOF_OUTPUTOBJECT);
-               // Objects in the output list
-               Int_t olsz = fPlayer->GetOutputList()->GetSize();
-               // Message for the client
-               SendAsynMessage(Form("%s: sending output: %d objs",fPrefix.Data(), olsz), kFALSE);
-               // Send light query info
-               mbuf << (Int_t) 0;
-               mbuf.WriteObject(pqr);
-               fSocket->Send(mbuf);
-
-               Int_t ns = 0;
-               Int_t totsz = 0;
-               TIter nxo(fPlayer->GetOutputList());
-               o = 0;
-               while ((o = nxo())) {
-                  ns++;
-                  mbuf.Reset();
-                  Int_t type = (Int_t) ((ns >= olsz) ? 2 : 1);
-                  mbuf << type;
-
-                  mbuf.WriteObject(o);
-                  totsz += mbuf.Length();
-                  SendAsynMessage(Form("%s: sending obj %d/%d (%d bytes)",fPrefix.Data(),
-                                       ns, olsz, mbuf.Length()), kFALSE);
-                  fSocket->Send(mbuf);
-               }
-               // Total size
-               SendAsynMessage(Form("%s: grand total: sent %d objects, size: %d bytes",
-                                    fPrefix.Data(), olsz, totsz));
-            } else if (fProtocol > 6) {
-
-               // Buffer to be sent
-               TMessage mbuf(kPROOF_OUTPUTLIST);
-               mbuf.WriteObject(pq);
-               // Sizes
-               Int_t blen = mbuf.Length();
-               Int_t olsz = fPlayer->GetOutputList()->GetSize();
-               // Message for the client
-               SendAsynMessage(Form("%s: sending output: %d objs, %d bytes",
-                                     fPrefix.Data(), olsz, blen));
-               fSocket->Send(mbuf);
-
-            } else {
-               // TQueryResult unknow to client: send the output list only
-               PDB(kGlobal, 2) Info("HandleProcess","Sending output list");
-               fSocket->SendObject(fPlayer->GetOutputList(), kPROOF_OUTPUTLIST);
-            }
-         } else {
-            if (fPlayer->GetExitStatus() != TVirtualProofPlayer::kAborted)
-               Warning("HandleProcess","The output list is empty!");
-            fSocket->SendObject(0, kPROOF_OUTPUTLIST);
-         }
-
-         // Remove aborted queries from the list
-         if (fPlayer->GetExitStatus() == TVirtualProofPlayer::kAborted) {
-            if (fQMgr) fQMgr->RemoveQuery(pq);
-         } else {
-            // Keep in memory only light infor about a query
-            if (!(pq->IsDraw())) {
-               if (fQMgr && fQMgr->Queries()) {
-                  if (pqr)
-                     fQMgr->Queries()->Add(pqr);
-                  // Remove from the fQueries list
-                  fQMgr->Queries()->Remove(pq);
-               }
-               // These removes 'pq' from the internal player list and
-               // deletes it; in this way we do not attempt a double delete
-               // when destroying the player
-               fPlayer->RemoveQueryResult(Form("%s:%s",
-                                          pq->GetTitle(), pq->GetName()));
-            }
-         }
-
-         DeletePlayer();
-         if (IsMaster() && fProof->UseDynamicStartup())
-            // stop the workers
-            fProof->RemoveWorkers(0);
+         ProcessNext();
+         // avoid processing async queries send during processing in dyn mode
+         if (fProof->UseDynamicStartup())
+            enqueued = kTRUE;
 
       } // Loop on submitted queries
 
@@ -3324,6 +3170,228 @@ void TProofServ::HandleProcess(TMessage *mess)
 
    // Done
    return;
+}
+
+//______________________________________________________________________________
+void TProofServ::ProcessNext()
+{
+   // process the next query from the queue of submitted jobs.
+   // to be called on the top master only.
+
+   TDSet *dset;
+   TString filename, opt;
+   TList *input;
+   Long64_t nentries, first;
+
+   TObject *elist;
+   TProofQueryResult *pq = 0;
+
+   // Process
+
+
+   // Get query info
+   pq = (TProofQueryResult *)(fWaitingQueries->First());
+   if (pq) {
+
+      // Set not idle
+      fIdle = kFALSE;
+      opt      = pq->GetOptions();
+      input    = pq->GetInputList();
+      nentries = pq->GetEntries();
+      first    = pq->GetFirst();
+      filename = pq->GetSelecImp()->GetName();
+      Ssiz_t id = opt.Last('#');
+      if (id != kNPOS && id < opt.Length() - 1)
+         filename += opt(id + 1, opt.Length());
+      // Attach to data set and entry- (or event-) list (if any)
+      TObject *o = 0;
+      if ((o = pq->GetInputObject("TDSet")))
+         dset = (TDSet *) o;
+      elist = 0;
+      if ((o = pq->GetInputObject("TEntryList")))
+         elist = o;
+      else if ((o = pq->GetInputObject("TEventList")))
+          elist = o;
+      //
+      // Expand selector files
+      if (pq->GetSelecImp()) {
+         gSystem->Exec(Form("%s %s", kRM, pq->GetSelecImp()->GetName()));
+         pq->GetSelecImp()->SaveSource(pq->GetSelecImp()->GetName());
+      }
+      if (pq->GetSelecHdr() &&
+          !strstr(pq->GetSelecHdr()->GetName(), "TProofDrawHist")) {
+         gSystem->Exec(Form("%s %s", kRM, pq->GetSelecHdr()->GetName()));
+         pq->GetSelecHdr()->SaveSource(pq->GetSelecHdr()->GetName());
+      }
+      //
+      // Remove processed query from the list
+      fWaitingQueries->Remove(pq);
+   } else {
+      // Should never get here
+      Error("HandleProcess", "empty fWaitingQueries queue!");
+      return;
+   }
+
+   // Set in running state
+   SetQueryRunning(pq);
+
+   // Save to queries dir, if not standard draw
+   if (fQMgr) {
+      if (!(pq->IsDraw()))
+         fQMgr->SaveQuery(pq);
+      else
+         fQMgr->IncrementDrawQueries();
+   }
+   fQMgr->ResetTime();
+
+   // Signal the client that we are starting a new query
+   TMessage m(kPROOF_STARTPROCESS);
+   m << TString(pq->GetSelecImp()->GetName())
+     << dset->GetListOfElements()->GetSize()
+     << pq->GetFirst() << pq->GetEntries();
+   fSocket->Send(m);
+
+   // Create player
+   MakePlayer();
+
+   // Add query results to the player lists
+   fPlayer->AddQueryResult(pq);
+
+   // Set query currently processed
+   fPlayer->SetCurrentQuery(pq);
+
+   // Setup data set
+   if (dset->IsA() == TDSetProxy::Class())
+      ((TDSetProxy*)dset)->SetProofServ(this);
+
+   // Add the unique query tag as TNamed object to the input list
+   // so that it is available in TSelectors for monitoring
+   input->Add(new TNamed("PROOF_QueryTag",Form("%s:%s",pq->GetTitle(),pq->GetName())));
+
+   // Set input
+   TIter next(input);
+   TObject *o = 0;
+   while ((o = next())) {
+      PDB(kGlobal, 2) Info("HandleProcess", "adding: %s", o->GetName());
+      fPlayer->AddInput(o);
+   }
+
+   // Remove the list of the missing files from the original list, if any
+   if ((o = input->FindObject("MissingFiles"))) input->Remove(o);
+
+   // Process
+   PDB(kGlobal, 1) Info("HandleProcess", "calling %s::Process()", fPlayer->IsA()->GetName());
+   fPlayer->Process(dset, filename, opt, nentries, first);
+
+   // Return number of events processed
+   if (fPlayer->GetExitStatus() != TVirtualProofPlayer::kFinished) {
+      Bool_t abort =
+         (fPlayer->GetExitStatus() == TVirtualProofPlayer::kAborted) ? kTRUE : kFALSE;
+      m.Reset(kPROOF_STOPPROCESS);
+      // message sent from worker to the master
+      if (fProtocol > 18) {
+         TProofProgressStatus* status = fPlayer->GetProgressStatus();
+         m << status << abort;
+         status = 0; // the status belongs to the player.
+      } else if (fProtocol > 8) {
+         m << fPlayer->GetEventsProcessed() << abort;
+      } else {
+         m << fPlayer->GetEventsProcessed();
+      }
+      fSocket->Send(m);
+   }
+
+   // Complete filling of the TQueryResult instance
+   if (fQMgr) {
+      fProof->AskStatistics();
+      if (fQMgr->FinalizeQuery(pq, fProof, fPlayer))
+         fQMgr->SaveQuery(pq, fMaxQueries);
+      }
+
+   // Send back the results
+   TQueryResult *pqr = pq->CloneInfo();
+   if (fPlayer->GetExitStatus() != TVirtualProofPlayer::kAborted && fPlayer->GetOutputList()) {
+
+      PDB(kGlobal, 2) Info("HandleProcess","Sending results");
+      if (fProtocol > 10) {
+         // Send objects one-by-one to optimize transfer and merging
+         TMessage mbuf(kPROOF_OUTPUTOBJECT);
+         // Objects in the output list
+         Int_t olsz = fPlayer->GetOutputList()->GetSize();
+         // Message for the client
+         SendAsynMessage(Form("%s: sending output: %d objs",fPrefix.Data(), olsz), kFALSE);
+         // Send light query info
+         mbuf << (Int_t) 0;
+         mbuf.WriteObject(pqr);
+         fSocket->Send(mbuf);
+
+         Int_t ns = 0;
+         Int_t totsz = 0;
+         TIter nxo(fPlayer->GetOutputList());
+         o = 0;
+         while ((o = nxo())) {
+            ns++;
+            mbuf.Reset();
+            Int_t type = (Int_t) ((ns >= olsz) ? 2 : 1);
+            mbuf << type;
+
+            mbuf.WriteObject(o);
+            totsz += mbuf.Length();
+            SendAsynMessage(Form("%s: sending obj %d/%d (%d bytes)",fPrefix.Data(),
+                                 ns, olsz, mbuf.Length()), kFALSE);
+            fSocket->Send(mbuf);
+         }
+         // Total size
+         SendAsynMessage(Form("%s: grand total: sent %d objects, size: %d bytes",
+                              fPrefix.Data(), olsz, totsz));
+      } else if (fProtocol > 6) {
+
+         // Buffer to be sent
+         TMessage mbuf(kPROOF_OUTPUTLIST);
+         mbuf.WriteObject(pq);
+         // Sizes
+         Int_t blen = mbuf.Length();
+         Int_t olsz = fPlayer->GetOutputList()->GetSize();
+         // Message for the client
+         SendAsynMessage(Form("%s: sending output: %d objs, %d bytes",
+                              fPrefix.Data(), olsz, blen));
+         fSocket->Send(mbuf);
+
+      } else {
+         // TQueryResult unknow to client: send the output list only
+         PDB(kGlobal, 2) Info("HandleProcess","Sending output list");
+         fSocket->SendObject(fPlayer->GetOutputList(), kPROOF_OUTPUTLIST);
+      }
+   } else {
+      if (fPlayer->GetExitStatus() != TVirtualProofPlayer::kAborted)
+         Warning("HandleProcess","The output list is empty!");
+      fSocket->SendObject(0, kPROOF_OUTPUTLIST);
+   }
+
+   // Remove aborted queries from the list
+   if (fPlayer->GetExitStatus() == TVirtualProofPlayer::kAborted) {
+      if (fQMgr) fQMgr->RemoveQuery(pq);
+   } else {
+      // Keep in memory only light infor about a query
+      if (!(pq->IsDraw())) {
+         if (fQMgr && fQMgr->Queries()) {
+            if (pqr)
+               fQMgr->Queries()->Add(pqr);
+            // Remove from the fQueries list
+            fQMgr->Queries()->Remove(pq);
+         }
+         // These removes 'pq' from the internal player list and
+         // deletes it; in this way we do not attempt a double delete
+         // when destroying the player
+         fPlayer->RemoveQueryResult(Form("%s:%s",
+                                    pq->GetTitle(), pq->GetName()));
+      }
+   }
+
+   DeletePlayer();
+   if (IsMaster() && fProof->UseDynamicStartup())
+      // stop the workers
+      fProof->RemoveWorkers(0);
 }
 
 //______________________________________________________________________________
@@ -4390,10 +4458,11 @@ void TProofServ::HandleWorkerLists(TMessage *mess)
 
 //______________________________________________________________________________
 TProofServ::EQueryAction TProofServ::GetWorkers(TList *workers,
-                                                Int_t & /* prioritychange */)
+                                                Int_t & /* prioritychange */,
+                                                Bool_t /* resume */)
 {
    // Get list of workers to be used from now on.
-   // The list must be provide by the caller.
+   // The list must be provided by the caller.
 
    // Needs a list where to store the info
    if (!workers) {

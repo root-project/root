@@ -33,6 +33,7 @@
 #include "TXProofMgr.h"
 #include "TXSocket.h"
 #include "TROOT.h"
+#include "XProofProtocol.h"
 
 ClassImp(TXProofMgr)
 
@@ -271,7 +272,7 @@ void TXProofMgr::ShowWorkers()
    }
 
    // Send the request
-   TObjString *os = fSocket->SendCoordinator(TXSocket::kQueryWorkers);
+   TObjString *os = fSocket->SendCoordinator(kQueryWorkers);
    if (os) {
       TObjArray *oa = TString(os->GetName()).Tokenize(TString("&"));
       if (oa) {
@@ -307,7 +308,7 @@ TList *TXProofMgr::QuerySessions(Option_t *opt)
 
    // Send the request
    TList *ocl = new TList;
-   TObjString *os = fSocket->SendCoordinator(TXSocket::kQuerySessions);
+   TObjString *os = fSocket->SendCoordinator(kQuerySessions);
    if (os) {
       TObjArray *oa = TString(os->GetName()).Tokenize(TString("|"));
       if (oa) {
@@ -442,7 +443,7 @@ Int_t TXProofMgr::Reset(Bool_t hard, const char *usr)
    }
 
    Int_t h = (hard) ? 1 : 0;
-   fSocket->SendCoordinator(TXSocket::kCleanupSessions, usr, h);
+   fSocket->SendCoordinator(kCleanupSessions, usr, h);
 
    return 0;
 }
@@ -477,7 +478,7 @@ TProofLog *TXProofMgr::GetSessionLogs(Int_t isess,
    isess = (isess > 0) ? -isess : isess;
 
    // Get the list of paths
-   TObjString *os = fSocket->SendCoordinator(TXSocket::kQueryLogPaths, stag, isess);
+   TObjString *os = fSocket->SendCoordinator(kQueryLogPaths, stag, isess);
 
    // Analyse it now
    Int_t ii = 0;
@@ -548,7 +549,7 @@ TObjString *TXProofMgr::ReadBuffer(const char *fin, Long64_t ofs, Int_t len)
    }
 
    // Send the request
-   return fSocket->SendCoordinator(TXSocket::kReadBuffer, fin, len, ofs, 0);
+   return fSocket->SendCoordinator(kReadBuffer, fin, len, ofs, 0);
 }
 
 //______________________________________________________________________________
@@ -572,7 +573,7 @@ TObjString *TXProofMgr::ReadBuffer(const char *fin, const char *pattern)
    buf[lfi+plen] = 0;
 
    // Send the request
-   return fSocket->SendCoordinator(TXSocket::kReadBuffer, buf, plen, 0, 1);
+   return fSocket->SendCoordinator(kReadBuffer, buf, plen, 0, 1);
 }
 
 //______________________________________________________________________________
@@ -587,7 +588,7 @@ void TXProofMgr::ShowROOTVersions()
    }
 
    // Send the request
-   TObjString *os = fSocket->SendCoordinator(TXSocket::kQueryROOTVersions);
+   TObjString *os = fSocket->SendCoordinator(kQueryROOTVersions);
    if (os) {
       // Display it
       Printf("----------------------------------------------------------\n");
@@ -613,7 +614,7 @@ void TXProofMgr::SetROOTVersion(const char *tag)
    }
 
    // Send the request
-   fSocket->SendCoordinator(TXSocket::kROOTVersion, tag);
+   fSocket->SendCoordinator(kROOTVersion, tag);
 
    // We are done
    return;
@@ -707,7 +708,7 @@ Int_t TXProofMgr::SendMsgToUsers(const char *msg, const char *usr)
 //   fprintf(stderr,"%s\n", buf);
 
    // Send the request
-   fSocket->SendCoordinator(TXSocket::kSendMsgToUser, buf);
+   fSocket->SendCoordinator(kSendMsgToUser, buf);
 
    return rc;
 }

@@ -54,7 +54,8 @@ public:
    void          DisableTimeout();
    void          EnableTimeout();
 
-   EQueryAction  GetWorkers(TList *workers, Int_t &prioritychange);
+   EQueryAction  GetWorkers(TList *workers, Int_t &prioritychange,
+                            Bool_t resume = kFALSE);
 
    Bool_t        HandleError(const void *in = 0); // Error Handler
    Bool_t        HandleInput(const void *in = 0); // Input handler
@@ -64,6 +65,7 @@ public:
    void          HandleTermination();
 
    void          ReleaseWorker(const char *ord);
+   void          SetInputSocket(Bool_t on = kTRUE);
    void          Terminate(Int_t status);
 
    ClassDef(TXProofServ,0)  //XRD PROOF Server Application Interface
