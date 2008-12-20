@@ -146,8 +146,8 @@ public:
    inline XrdSrvBuffer *QueryNum() const { XrdSysMutexHelper mhp(fMutex); return fQueryNum; }
    const char         *FirstQueryTag();
    XrdProofQuery      *CurrentQuery() { return fQueries.empty()?0:fQueries.front(); }
-   void                SetWrksStr(XrdOucString &lw) { fWrksStr = lw; }
-   XrdOucString        GetWrksStr() { return fWrksStr; }
+   void                SetWrksStr(const char *lw) { XrdSysMutexHelper mhp(fMutex); fWrksStr = lw; }
+   XrdOucString        GetWrksStr() { XrdSysMutexHelper mhp(fMutex); return fWrksStr; }
    void                RemoveWorker(const char *o);
    void                Reset();
    int                 Reset(const char *msg, int type);

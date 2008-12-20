@@ -62,6 +62,7 @@ XrdProofdProofServ::XrdProofdProofServ()
    fUserEnvs = "";
    fUNIXSock = 0;
    fUNIXSockPath = "";
+   fWrksStr = "";
 }
 
 //__________________________________________________________________________

@@ -708,11 +708,13 @@ TProofServ::EQueryAction TXProofServ::GetWorkers(TList *workers,
 
    // seqnum of the query for which we call getworkers
    TString seqnum;
-   if (!fWaitingQueries->IsEmpty())
-      if (resume)
+   if (!fWaitingQueries->IsEmpty()) {
+      if (resume) {
          seqnum += ((TProofQueryResult *)(fWaitingQueries->First()))->GetSeqNum();
-      else
+      } else {
          seqnum += ((TProofQueryResult *)(fWaitingQueries->Last()))->GetSeqNum();
+      }
+   }
    // Send request to the coordinator
    TObjString *os =
       ((TXSocket *)fSocket)->SendCoordinator(kGetWorkers, seqnum.Data());

@@ -264,7 +264,7 @@ int XrdProofdAdmin::GetWorkers(XrdProofdProtocol *p)
    TRACEP(p, REQ, "request from session "<<pid);
 
    // We should query the chosen resource provider
-   XrdOucString wrks;
+   XrdOucString wrks("");
 
    // Read the query tag
    const char *msg = (const char *) p->Argp()->buff;
@@ -297,8 +297,9 @@ int XrdProofdAdmin::GetWorkers(XrdProofdProtocol *p)
    if (buf)
       response->Send(buf, len);
    else {
-      buf = "";
-      response->Send(buf, len);
+      // Something wrong
+      response->Send(kXR_InvalidRequest,"failure");
+      return 0;
    }
 
    // Over

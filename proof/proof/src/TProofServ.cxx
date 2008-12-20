@@ -1611,7 +1611,7 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
             if (fProtocol > 16) {
                xrc = HandleDataSets(mess);
             } else {
-               Error("HandleProcess", "old client: no or incompatible dataset support");
+               Error("HandleSocketInput", "old client: no or incompatible dataset support");
             }
             SendLogFile(xrc);
          }
@@ -3041,11 +3041,9 @@ void TProofServ::HandleProcess(TMessage *mess)
 
       }
 
-
       // If the client submission was asynchronous, signal the submission of
       // the query and communicate the assigned sequential number for later
       // identification
-
       TMessage m(kPROOF_QUERYSUBMITTED);
       if (!sync || enqueued) {
          m << pq->GetSeqNum() << kFALSE;
@@ -3178,16 +3176,15 @@ void TProofServ::ProcessNext()
    // process the next query from the queue of submitted jobs.
    // to be called on the top master only.
 
-   TDSet *dset;
+   TDSet *dset = 0;
    TString filename, opt;
-   TList *input;
-   Long64_t nentries, first;
+   TList *input = 0;
+   Long64_t nentries = -1, first = 0;
 
-   TObject *elist;
+   TObject *elist = 0;
    TProofQueryResult *pq = 0;
 
    // Process
-
 
    // Get query info
    pq = (TProofQueryResult *)(fWaitingQueries->First());
@@ -3205,13 +3202,18 @@ void TProofServ::ProcessNext()
          filename += opt(id + 1, opt.Length());
       // Attach to data set and entry- (or event-) list (if any)
       TObject *o = 0;
-      if ((o = pq->GetInputObject("TDSet")))
+      if ((o = pq->GetInputObject("TDSet"))) {
          dset = (TDSet *) o;
+      } else {
+         // Should never get here
+         Error("ProcessNext", "no TDset object: cannot continue");
+         return;
+      }
       elist = 0;
       if ((o = pq->GetInputObject("TEntryList")))
          elist = o;
       else if ((o = pq->GetInputObject("TEventList")))
-          elist = o;
+         elist = o;
       //
       // Expand selector files
       if (pq->GetSelecImp()) {
@@ -3228,7 +3230,7 @@ void TProofServ::ProcessNext()
       fWaitingQueries->Remove(pq);
    } else {
       // Should never get here
-      Error("HandleProcess", "empty fWaitingQueries queue!");
+      Error("ProcessNext", "empty fWaitingQueries queue!");
       return;
    }
 
@@ -3272,7 +3274,7 @@ void TProofServ::ProcessNext()
    TIter next(input);
    TObject *o = 0;
    while ((o = next())) {
-      PDB(kGlobal, 2) Info("HandleProcess", "adding: %s", o->GetName());
+      PDB(kGlobal, 2) Info("ProcessNext", "adding: %s", o->GetName());
       fPlayer->AddInput(o);
    }
 
@@ -3280,7 +3282,7 @@ void TProofServ::ProcessNext()
    if ((o = input->FindObject("MissingFiles"))) input->Remove(o);
 
    // Process
-   PDB(kGlobal, 1) Info("HandleProcess", "calling %s::Process()", fPlayer->IsA()->GetName());
+   PDB(kGlobal, 1) Info("ProcessNext", "calling %s::Process()", fPlayer->IsA()->GetName());
    fPlayer->Process(dset, filename, opt, nentries, first);
 
    // Return number of events processed
@@ -3312,7 +3314,7 @@ void TProofServ::ProcessNext()
    TQueryResult *pqr = pq->CloneInfo();
    if (fPlayer->GetExitStatus() != TVirtualProofPlayer::kAborted && fPlayer->GetOutputList()) {
 
-      PDB(kGlobal, 2) Info("HandleProcess","Sending results");
+      PDB(kGlobal, 2) Info("ProcessNext","Sending results");
       if (fProtocol > 10) {
          // Send objects one-by-one to optimize transfer and merging
          TMessage mbuf(kPROOF_OUTPUTOBJECT);
@@ -3359,12 +3361,12 @@ void TProofServ::ProcessNext()
 
       } else {
          // TQueryResult unknow to client: send the output list only
-         PDB(kGlobal, 2) Info("HandleProcess","Sending output list");
+         PDB(kGlobal, 2) Info("ProcessNext","Sending output list");
          fSocket->SendObject(fPlayer->GetOutputList(), kPROOF_OUTPUTLIST);
       }
    } else {
       if (fPlayer->GetExitStatus() != TVirtualProofPlayer::kAborted)
-         Warning("HandleProcess","The output list is empty!");
+         Warning("ProcessNext","The output list is empty!");
       fSocket->SendObject(0, kPROOF_OUTPUTLIST);
    }
 

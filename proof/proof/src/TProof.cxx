@@ -6112,7 +6112,7 @@ Int_t TProof::Load(const char *macro, Bool_t notOnClient, Bool_t uniqueWorkers)
          Broadcast(mess, kUnique);
       } else {
          // Wait for the result of the previous sending
-          Collect(kUnique);
+         Collect(kUnique);
 
          // We then send a tuned loading request to the other workers
          TList others;
@@ -6123,7 +6123,7 @@ Int_t TProof::Load(const char *macro, Bool_t notOnClient, Bool_t uniqueWorkers)
                others.Add(wrk);
             }
          }
- 
+
          // Do not force compilation, if it was requested
          Int_t ld = basemacro.Last('.');
          if (ld != kNPOS) {
