@@ -16,7 +16,7 @@
 ############################################################################
 
 CINTTMP       = bin/cint_tmp$(G__CFG_EXEEXT)
-CINTLIBIMPORT = lib/libcint$(G__CFG_IMPLIBEXT)
+CINTLIBIMPORT = lib/libCint$(G__CFG_IMPLIBEXT)
 
 CXXAPIO    = $(addsuffix $(G__CFG_OBJEXT),$(addprefix $(G__CFG_COREVERSION)/src/,\
 	      Api Class BaseCls Type DataMbr Method MethodAr \
@@ -98,13 +98,20 @@ $(CINTLIBSTATIC): $(LIBOBJECTS) $(SETUPO)
 # Cint core as shared library
 shared: $(CINTLIBSHARED)
 
+CINTLIBIMPORTINSODIR:=$(subst $(dir $(CINTLIBIMPORT)),$(dir $(CINTLIBSHARED)),$(CINTLIBIMPORT))
 $(CINTLIBSHARED): $(LIBOBJECTS) $(SETUPO) $(REFLEXLIBDEP)
-	$(G__CFG_LD) $(subst @so@,lib/libcint,$(G__CFG_SOFLAGS)) \
+	$(G__CFG_LD) $(subst @so@,$(dir $@)/libCint,$(G__CFG_SOFLAGS)) \
 	  $(G__CFG_SOOUT)$@ $(LIBOBJECTS) $(SETUPO) \
 	  $(G__CFG_READLINELIB4SHLIB) $(G__CFG_CURSESLIB4SHLIB) $(G__CFG_DEFAULTLIBS) $(REFLEXLINK)
 ifneq ($(G__CFG_MAKEIMPLIB),)
-	$(subst @imp@,$(@:$(G__CFG_SOEXT)=$(G__CFG_IMPLIBEXT)),\
+	$(subst @imp@,$(CINTLIBIMPORT),\
 	  $(subst @so@,${PWD}/$@,$(G__CFG_MAKEIMPLIB)))
+endif
+ifneq ($(CINTLIBIMPORT),$(CINTLIBIMPORTINSODIR))
+# Windows automatically creates the import lib next to the DLL; move it to lib/
+	[ -f $(CINTLIBIMPORTINSODIR) ] \
+	  && mv -f $(CINTLIBIMPORTINSODIR) $(CINTLIBIMPORT) \
+	  || true
 endif
 
 ############################################################################

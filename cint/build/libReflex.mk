@@ -19,7 +19,11 @@ REFLEXIPATH  = $(G__CFG_INCP)reflex/inc
 REFLEXSRCDIR = reflex/src
 REFLEXLIB_OBJ= $(subst .cxx,$(G__CFG_OBJEXT),$(wildcard $(REFLEXSRCDIR)/*.cxx))
 REFLEXLIB    = lib/libReflex_static$(G__CFG_LIBEXT)
+ifeq ($(subst msvc,,$(G__CFG_ARCH)), $(G__CFG_ARCH))
 REFLEXSO     = lib/libReflex$(G__CFG_SOEXT)
+else
+REFLEXSO     = bin/libReflex$(G__CFG_SOEXT)
+endif
 REFLEXIMPLIB = lib/libReflex$(G__CFG_IMPLIBEXT)
 
 ifeq ($(G__CFG_COREVERSION),cint7)
@@ -63,6 +67,11 @@ $(REFLEXSO): $(REFLEXLIB_OBJ) $(REFLEXLIB_DEF)
 ifneq ($(G__CFG_MAKEIMPLIB),)
 	$(subst @imp@,$(@:$(G__CFG_SOEXT)=$(G__CFG_IMPLIBEXT)),\
 	  $(subst @so@,${PWD}/$@,$(G__CFG_MAKEIMPLIB)))
+endif
+ifneq ($(dir $(REFLEXIMPLIB)), $(dir $@))
+	@[ -f $(REFLEXIMPLIB:$(dir $(REFLEXIMPLIB))=$(dir $@)) ] \
+	  && mv -f $(REFLEXIMPLIB:$(dir $(REFLEXIMPLIB))=$(dir $@)) $(REFLEXIMPLIB) \
+	  || true
 endif
 
 $(REFLEXSRCDIR)/%$(G__CFG_OBJEXT): $(REFLEXSRCDIR)/%.cxx

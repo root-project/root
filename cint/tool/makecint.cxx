@@ -17,11 +17,10 @@
 #ifdef G__ROOT
 #include "RConfigure.h"
 #define G__EXTRA_TOPDIR "cint"
-#define G__CINT_LIBNAME "Cint"
 #else
 #define G__EXTRA_TOPDIR ""
-#define G__CINT_LIBNAME "cint"
 #endif
+#define G__CINT_LIBNAME "Cint"
 #if defined(G__HAVE_CONFIG)
 #include "configcint.h"
 #endif
@@ -572,7 +571,11 @@ void G__outputmakefile(int argc,char **argv)
 #ifdef G__CFG_LIBDIR
   if(builddir)
   {
+#if defined(G__WIN32)
+      out << "CINTLIB     := " << builddir << "/bin/lib" << G__CINT_LIBNAME << G__CFG_SOEXT << std::endl;
+#else
       out << "CINTLIB     := " << builddir << "/lib/lib" << G__CINT_LIBNAME << G__CFG_SOEXT << std::endl;
+#endif
   }
   else
   {
@@ -582,7 +585,11 @@ void G__outputmakefile(int argc,char **argv)
       //out << "CINTLIB     := " << G__CFG_LIBDIR << "/lib" << G__CINT_LIBNAME << G__CFG_SOEXT << std::endl;      
 
       // new code
+#if defined(G__WIN32)
+      out << "CINTLIB     := $(shell cint-config --unix --bindir)/lib" << G__CINT_LIBNAME << G__CFG_SOEXT << std::endl;
+#else
       out << "CINTLIB     := $(shell cint-config --unix --libdir)/lib" << G__CINT_LIBNAME << G__CFG_SOEXT << std::endl;
+#endif
       // changes end --------------------------------------------
       
   }
@@ -594,7 +601,11 @@ void G__outputmakefile(int argc,char **argv)
   //out << "CINTLIB     := $(CINTSYSDIRU)/lib/lib" << G__CINT_LIBNAME << G__CFG_SOEXT << std::endl;
 
   // new code
+#if defined(G__WIN32)
+  out << "CINTLIB     := $(shell cint-config --unix --bindir)/lib" << G__CINT_LIBNAME << G__CFG_SOEXT << std::endl;
+#else
   out << "CINTLIB     := $(shell cint-config --unix --libdir)/lib" << G__CINT_LIBNAME << G__CFG_SOEXT << std::endl;
+#endif
 
   // changes end --------------------------------------------
   
@@ -650,7 +661,7 @@ void G__outputmakefile(int argc,char **argv)
   // new code
   if(builddir)
   {
-      out << G__CFG_LIBP << "\"" << builddir << "/lib\" $(subst @imp@," << G__CINT_LIBNAME << "," << G__CFG_LIBL << ") ";
+     out << G__CFG_LIBP << "\"" << builddir << "/lib\" $(subst @imp@," << G__CINT_LIBNAME << "," << G__CFG_LIBL << ") ";
   }
   else
   {

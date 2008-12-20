@@ -32,9 +32,13 @@ ORDER_ := $(shell test $(MAKE_VERSION_MAJOR) -gt 3 || \
                   test $(MAKE_VERSION_MINOR) -ge 80 && echo '|')
 
 # libraries
-CINTLIBSHARED = lib/libcint$(G__CFG_SOEXT)
-CINTIMPLIB    = lib/libcint$(G__CFG_IMPLIBEXT)
-CINTLIBSTATIC = lib/libcint_static$(G__CFG_LIBEXT)
+ifeq ($(subst msvc,,$(G__CFG_ARCH)), $(G__CFG_ARCH))
+CINTLIBSHARED = lib/libCint$(G__CFG_SOEXT)
+else
+CINTLIBSHARED = bin/libCint$(G__CFG_SOEXT)
+endif
+CINTIMPLIB    = lib/libCint$(G__CFG_IMPLIBEXT)
+CINTLIBSTATIC = lib/libCint_static$(G__CFG_LIBEXT)
 CINT          = bin/cint$(G__CFG_EXEEXT)
 RMKDEPEND     = tool/rmkdepend/rmkdepend$(G__CFG_EXEEXT)
 CONFIGCINTH   = $(G__CFG_COREVERSION)/inc/configcint.h
@@ -103,6 +107,9 @@ ifneq ($(G__CFG_LIBEXT),)
 endif
 	find . -name \*.d -exec rm {} \; || true
 	find . -name \*.dll -exec rm {} \; || true
+	find . -name \*.manifest -exec rm {} \; || true
+	find . -name \*.exp -exec rm {} \; || true
+	find . -name \*.pdb -exec rm {} \; || true
 
 cintreflextest: REFLEXTESTFLAGS = -m -r
 

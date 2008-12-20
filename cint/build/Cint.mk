@@ -62,10 +62,10 @@ $(MAKECINT): $(MAKECINTO)
 ##############################################################
 ifeq ($(LINKSTATIC),yes)
 $(CINT) : $(CINTLIBSTATIC)
-LINKCINTLIB=$(G__CFG_LIBP)lib $(subst @imp@,cint_static,$(G__CFG_LIBL))
+LINKCINTLIB=$(G__CFG_LIBP)lib $(subst @imp@,Cint_static,$(G__CFG_LIBL))
 else
 $(CINT) : $(CINTLIBSHARED)
-LINKCINTLIB=$(G__CFG_LIBP)lib $(subst @imp@,cint,$(G__CFG_LIBL))
+LINKCINTLIB=$(G__CFG_LIBP)lib $(subst @imp@,Cint,$(G__CFG_LIBL))
 endif
 
 $(CINT): $(SETUPO) $(MAINO) $(G__CFG_READLINELIB) $(REFLEXLIBDEP)
@@ -88,7 +88,7 @@ clean::
 	  $(MAKECINTO) $(MAKECINTO:$(G__CFG_OBJEXT)=.d) \
 	  $(CINT) $(MAKECINT) $(MAKEINCL) \
 	  $(G__CFG_COREVERSION)/include/stdio.h $(G__CFG_COREVERSION)/include/iosenum.h \
-	  libcint.* libcint_static.* done
+	  lib/libCint.* bin/libCint.* lib/libCint_static.* done
 # NEVER ever remove "core"! It's our src subdir!
 
 

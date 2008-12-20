@@ -761,6 +761,7 @@ done
 
 $RM bin/cint-config
 echo Writing bin/cint-config...
+[ "x$BINDIR" = "x" ] && BINDIR='$CINTSYSDIR/bin'
 [ "x$INCLUDEDIR" = "x" ] && INCLUDEDIR='$CINTSYSDIR'/${COREVERSION}/inc && INCLUDEDIRCINT='$CINTSYSDIR'/${COREVERSION}/include
 [ "x$LIBDIR" = "x" ] && LIBDIR='$CINTSYSDIR/lib'
 [ "x$DATADIR" = "x" ] && DATADIR='$CINTSYSDIR/'${COREVERSION}'/'
@@ -772,6 +773,7 @@ cat <<_EOF
 
 Usage: cint-config [options]
 
+  --bindir         print the directory of cint executables
   --incdir         print the directory of cint header files
   --cflags         print the necessary flags for the compiler
   --libs           print the necessary libs for linking 
@@ -796,9 +798,10 @@ pathconvert=echo
 while [ \$# -gt 0 ] ; do
   case \$1 in
     --unix|-u) pathconvert="$MANGLEPATHSU" ;;
+    --bindir)  \$pathconvert "${BINDIR}" ;;
     --incdir)  \$pathconvert "${INCLUDEDIR}" ;;
     --cflags)  \$pathconvert "${INCP}${INCLUDEDIR}" ;;
-    --libs)    \$pathconvert "${LIBP}${LIBDIR} -lcint -lReflex" ;;
+    --libs)    \$pathconvert "${LIBP}${LIBDIR} -lCint -lReflex" ;;
     --libdir)  \$pathconvert "${LIBDIR}" ;;
     --datadir) \$pathconvert "${DATADIR}/cint" ;;
     --version|-v) echo "$CINTVERSION" ;;
