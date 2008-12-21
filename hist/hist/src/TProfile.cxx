@@ -952,7 +952,7 @@ char* TProfile::GetObjectInfo(Int_t px, Int_t py) const
    //   corresponding to cursor position px,py
    //
    if (!gPad) return (char*)"";
-   static char info[64];
+   static char info[200];
    Double_t x  = gPad->PadtoX(gPad->AbsPixeltoX(px));
    Double_t y  = gPad->PadtoY(gPad->AbsPixeltoY(py));
    Int_t binx   = GetXaxis()->FindFixBin(x);
