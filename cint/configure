@@ -328,7 +328,7 @@ function add_opt {
 
 add_opt "--help -h" 'Show this help.'
 add_opt "--arch=" "Architecture, one of ${ARCHS[*]}"
-add_opt "--coreversion=" "CINT core version, one of old, new"
+add_opt "--coreversion=" "CINT core version, one of old, new [new]"
 add_opt "--with-prefix" 'Prefix-based build (instead of using CINTSYSDIR)'
 add_opt "--prefix=" 'Topdir for architecture-independent files [/usr/local]'
 add_opt "--exec-prefix=" 'Topdir for architecture-dependent files [$PREFIX]'
@@ -602,8 +602,8 @@ if [ "$ARCH" = "" ]; then
 fi
 
 if [ "$COREVERSION" = "" ]; then
-    COREVERSION=cint
-    echo Using old CINT core
+    COREVERSION=cint7
+    echo Using new CINT core
 fi
 
 if [ "$DEBUG" = "1" ]; then

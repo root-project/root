@@ -677,3 +677,5 @@ Recent changes ************************************************************
 * === THIS WILL BE THE LAST CINT5 RELEASE, THE NEXT WILL BE A CINT7 RELEASE! ===
 * Starting from the next version, the new CINT core version will be the default: you will have to explicitly specify "./configure --coreversion=old" to get CINT5; we are only planning to support CINT7.
  
+* 7.3.00 Dec 21, 2008
+* First release of CINT7 using Reflex as reflection database.
