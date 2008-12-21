@@ -647,4 +647,33 @@ Recent changes ************************************************************
 * - Support obj*&operator()(int)
 * - Properly handle pragma link of operator in namespace
 * - Prevent the autoloader from destroying entries for templated classes that are defining in a namespace and/or class
+*
+* 5.17.00 Dec 21, 2008
+* 6.2.00  Dec 21, 2008
+* - CINT stand-alone can be checked out as svn co http://root.cern.ch/svn/root/trunk/cint (current development snapshot) or http://root.cern.ch/svn/root/tags/cint/cint-5.17.00 (release).
+* - libcint is now called libCint.
+* - CINT's files have been renamed (the "v6_" prefix is removed), its dictionary files are now moved to a new subdirectory of src called "dict".
+* - Support for new platforms (MacOSX 10.5, MIPS, HPPA, MSVC2008, FreeBSD 7.0).
+* - Makefile targets for RMP and debian packages, thanks to Daniel Barna.
+* - Don't automatically use /tmp directory for temporary files but rely on CINTTMPDIR, TMP, or TEMP environment variables.
+* - Remove loadfile of bool.h
+* - Simplify and fix parsing of cast to basic type.
+* - Fix parsing of templated operators and constness determination of conversion operators' (return) type.
+* - Better error message for dangling parentheses.
+* - Fixes concerning CINT's representation of size_t, char* vs. const char* in CINT's C API.
+* - Fix function overload resolution involving enums.
+* - Remove unused long.dll.
+* - Fix treatment of break in loops.
+* - Introduce cintdictversion.h holding a version number for the CINT dictionary API. This file is useful to determine when dictionaries need to be regenerated.
+* - Improved initialization of class static variable that are objects.
+* - Dictionaries for templated functions are now accessible both as func<int>(int) and func(int).
+* - Fixes for template parameters being arrays, functions returning templated classes, allowing CINT to parse T*const&.
+* - Support qt cintdll for Qt4.
+* - Corrected the handling of function parameter of type 'reference to bool'.
+* - Avoid incorrectly matching a non-static class member function when called without an object (i.e. typically TString::Form(...));). Previously this was allowed and lead to a segfault.
+* - Extended "#pragma link C++ defined_in filename;" to look for the file name in the same include paths as G__loadfile (i.e. previously defined_in was restrict to full path names and relative path names). Allow quote around the file name.
+* - CINT now also keeps track (see .files) of the libraries that have been loaded indirectly (i.e. via a hard link as opposed to via G__loadfile for example) and that contain a CINT dictionary.
+
+* === THIS WILL BE THE LAST CINT5 RELEASE, THE NEXT WILL BE A CINT7 RELEASE! ===
+* Starting from the next version, the new CINT core version will be the default: you will have to explicitly specify "./configure --coreversion=old" to get CINT5; we are only planning to support CINT7.
  
