@@ -29,10 +29,10 @@
 #define G__CINT_VER6  1
 #endif
 
-#define G__CINTVERSION_BC     60010017
-#define G__CINTVERSIONSTR_BC  "6.1.17, December 12, 2006"
-#define G__CINTVERSION        70010000
-#define G__CINTVERSIONSTR     "7.1.0, December 12, 2006"
+#define G__CINTVERSION_BC     60010099
+#define G__CINTVERSIONSTR_BC  "6.1.99, December 21, 2008"
+#define G__CINTVERSION        70010099
+#define G__CINTVERSIONSTR     "7.1.99, December 21, 2008"
 
 #define G__ALWAYS
 /* #define G__NEVER */
