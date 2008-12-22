@@ -348,6 +348,12 @@ void stressProof(const char *url, Int_t nwrks,
          gDynamicStartup = kFALSE;
       }
    }
+   // Notify dynamic startup ption, if any
+   if (gDynamicStartup) {
+      printf("*  Runnning in dynamic mode (per-job scheduling)                 *\n");
+      printf("******************************************************************\n");
+      gDynamicStartup = kFALSE;
+   }
 
    // Dataset option
    if (!skipds) {
