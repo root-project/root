@@ -40,7 +40,7 @@ TProof *getProof(const char *url = "proof://localhost:11093", Int_t nwrks = -1, 
    TUrl uu(url), uref(refloc);
    Bool_t ext = (strcmp(uu.GetHost(), uref.GetHost()) ||
                  (uu.GetPort() != uref.GetPort())) ? kTRUE : kFALSE;
-   if (url && strlen(url) > 0) {
+   if (ext && url && strlen(url) > 0) {
       if (!strcmp(url, "lite") && nwrks > 0)
          uu.SetOptions(Form("workers=%d", nwrks));
       p = TProof::Open(uu.GetUrl());
