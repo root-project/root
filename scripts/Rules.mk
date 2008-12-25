@@ -375,7 +375,7 @@ export CALLROOTEXE
 
 ifneq ($(MAKECMDGOALS),clean)
 ifeq ($(CINT_VERSION),)
-   export CINT_VERSION := Cint$(shell $(CALLROOTEXE) -q -b | grep CINT | sed -e 's/.*\([57]\).*/\1/' )
+   export CINT_VERSION := Cint$(shell $(CALLROOTEXE) -q -b | grep CINT | sed -e 's/.* \([57]\)\..*/\1/' )
 endif
 endif
 
