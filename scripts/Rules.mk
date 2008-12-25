@@ -561,6 +561,14 @@ define TestDiffW
 	fi
 endef
 
+define SuccessTestDiff
+	$(CMDECHO) if [ -f $@.ref$(ROOTBITS) ]; then \
+	   diff -u -b $(subst .success,.ref$(ROOTBITS),$@) $< ; \
+	else \
+	   diff -u -b $(subst .success,.ref,$@) $< ; \
+	fi
+endef
+
 
 define BuildFromObj
 $(CMDECHO) ( touch dummy$$$$.C && \
