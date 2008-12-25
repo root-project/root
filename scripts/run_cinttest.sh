@@ -123,7 +123,7 @@ runbuild() {
      CONFIG_CORE=--coreversion=new
      export TESTFLAGS="--hide -k"
   else
-     CONFIG_CORE=""
+     CONFIG_CORE=--coreversion=old
   fi
 
   cd ${TOPDIR}  
