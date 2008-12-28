@@ -2322,7 +2322,7 @@ static void G__if_ary_union_reset(const ::Reflex::Member& ifunc)
 {
    int k, m;
    int type;
-   char *p;
+   const char *p;
 
    m = ifunc.FunctionParameterSize();
 
@@ -4380,7 +4380,7 @@ void Cint::Internal::G__cppif_paratype(FILE* fp, const ::Reflex::Member& ifunc, 
       fprintf(fp, ", ");
    }
    if (param_name.size()) {
-      char* p = strchr(param_name.c_str(), '[');
+      const char* p = strchr(param_name.c_str(), '[');
       if (p) {
          fprintf(fp, "G__Ap%d->a", k);
          return;

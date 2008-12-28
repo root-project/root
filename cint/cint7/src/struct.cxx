@@ -1799,29 +1799,30 @@ extern "C" int G__defined_tagname(const char* tagname, int noerror)
    char* temp = temp_sb;
    G__StrBuf atom_tagname_sb(G__LONGLINE);
    char* atom_tagname = atom_tagname_sb;
-   switch (tagname[0]) {
+   strcpy(atom_tagname, tagname);
+   switch (atom_tagname[0]) {
       case '"':
       case '\'':
          return -1;
       case '\0': // Global namespace.
          return 0;
    }
-   if (strchr(tagname, '>')) { // There is a template-id in the given tagname.
+   if (strchr(atom_tagname, '>')) { // There is a template-id in the given tagname.
       // handles X<X<int>> as X<X<int> >
       {
-         char* p = strstr(tagname, ">>");
+         char* p = strstr(atom_tagname, ">>");
          while (p) {
             ++p;
             strcpy(temp, p);
             *p = ' ';
             ++p;
             strcpy(p, temp);
-            p = (char*) strstr(tagname, ">>");
+            p = (char*) strstr(atom_tagname, ">>");
          }
       }
       // handles X<int > as X<int>
       {
-         char* p = strstr(tagname, " >");
+         char* p = strstr(atom_tagname, " >");
          while (p) {
             if (p[-1] != '>') {
                strcpy(temp, p + 1);
@@ -1833,7 +1834,7 @@ extern "C" int G__defined_tagname(const char* tagname, int noerror)
       }
       // handles X <int> as X<int>
       {
-         char* p = strstr(tagname, " <");
+         char* p = strstr(atom_tagname, " <");
          while (p) {
             strcpy(temp, p + 1);
             strcpy(p, temp);
@@ -1843,7 +1844,7 @@ extern "C" int G__defined_tagname(const char* tagname, int noerror)
       }
       // handles "X<int> "  as "X<int>"
       {
-         char* p = strstr(tagname, "> ");
+         char* p = strstr(atom_tagname, "> ");
          while (p) {
             if (!strncmp(p, "> >", 3)) {
                p += 2;
@@ -1858,7 +1859,7 @@ extern "C" int G__defined_tagname(const char* tagname, int noerror)
       }
       // handles X< int> as X<int>
       {
-         char* p = strstr(tagname, "< ");
+         char* p = strstr(atom_tagname, "< ");
          while (p) {
             strcpy(temp, p + 2);
             strcpy(p + 1, temp);
@@ -1868,7 +1869,7 @@ extern "C" int G__defined_tagname(const char* tagname, int noerror)
       }
       // handles X<int, int> as X<int,int>
       {
-         char* p = strstr(tagname, ", ");
+         char* p = strstr(atom_tagname, ", ");
          while (p) {
             strcpy(temp, p + 2);
             strcpy(p + 1, temp);
@@ -1879,7 +1880,7 @@ extern "C" int G__defined_tagname(const char* tagname, int noerror)
    }
    // handle X<const const Y>
    {
-      char* p = strstr(tagname, "const const ");
+      char* p = strstr(atom_tagname, "const const ");
       while (p) {
          char* p1 = (p += 6);
          char* p2 = p + 6;
@@ -1890,11 +1891,11 @@ extern "C" int G__defined_tagname(const char* tagname, int noerror)
          p = strstr(p, "const const ");
       }
    }
-   if (isspace(tagname[0])) {
-      strcpy(temp, tagname + 1);
+   if (isspace(atom_tagname[0])) {
+      strcpy(temp, atom_tagname + 1);
    }
    else {
-      strcpy(temp, tagname);
+      strcpy(temp, atom_tagname);
    }
    //
    //  Now get the name to lookup and
