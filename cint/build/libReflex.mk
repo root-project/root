@@ -54,12 +54,14 @@ endif
 ALLDEPO += $(REFLEXLIB_OBJ)
 
 reflex: $(REFLEXLIB)
+
 $(REFLEXLIB): $(REFLEXLIB_OBJ)
 	echo $^
 	@[ ! -d `dirname $(REFLEXLIB)` ] && mkdir -p `dirname $(REFLEXLIB)` || true
 	$(G__CFG_AR)$(shell $(G__CFG_MANGLEPATHS) $(REFLEXLIB)) \
 	    $(shell $(G__CFG_MANGLEPATHS) $(REFLEXLIB_OBJ))
 
+REFLEXIMPLIBINSODIR:=$(subst $(dir $(REFLEXIMPLIB)),$(dir $(REFLEXSO)),$(REFLEXIMPLIB))
 $(REFLEXSO): $(REFLEXLIB_OBJ) $(REFLEXLIB_DEF)
 	@[ ! -d `dirname $(REFLEXLIB)` ] && mkdir -p `dirname $(REFLEXLIB)` || true
 	$(G__CFG_LD) $(subst @so@,$(shell $(G__CFG_MANGLEPATHS) $(@:$(G__CFG_SOEXT)=)),$(G__CFG_SOFLAGS)) \
@@ -68,9 +70,9 @@ ifneq ($(G__CFG_MAKEIMPLIB),)
 	$(subst @imp@,$(@:$(G__CFG_SOEXT)=$(G__CFG_IMPLIBEXT)),\
 	  $(subst @so@,${PWD}/$@,$(G__CFG_MAKEIMPLIB)))
 endif
-ifneq ($(dir $(REFLEXIMPLIB)), $(dir $@))
-	@[ -f $(REFLEXIMPLIB:$(dir $(REFLEXIMPLIB))=$(dir $@)) ] \
-	  && mv -f $(REFLEXIMPLIB:$(dir $(REFLEXIMPLIB))=$(dir $@)) $(REFLEXIMPLIB) \
+ifneq ($(REFLEXIMPLIB),$(REFLEXIMPLIBINSODIR))
+	@[ -f $(REFLEXIMPLIBINSODIR) ] \
+	  && mv -f $(REFLEXIMPLIBINSODIR) $(REFLEXIMPLIB) \
 	  || true
 endif
 
