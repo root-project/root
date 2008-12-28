@@ -918,6 +918,7 @@ void Tools::StringSplitPair( std::string & val1,
 void Tools::StringStrip( std::string & str ) {
 //-------------------------------------------------------------------------------
 // Strip spaces at the beginning and the end from a string.
+   if (str.empty()) return;
    size_t sPos = 0;
    size_t ePos = str.length() - 1;
    while ( ePos>=sPos && str[sPos] == ' ' ) { ++sPos; }
