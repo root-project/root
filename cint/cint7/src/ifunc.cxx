@@ -656,6 +656,7 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
    if (
       G__def_struct_member && // member of a class, enum, namespace, struct or union
       G__def_tagnum && // outer class is known
+      G__def_tagnum != Reflex::Scope::GlobalScope() &&
       (funcname == G__struct.name[G__get_tagnum(G__def_tagnum)]) // member name is same as class name
    ) {
       // -- This is a constructor, handle specially.
@@ -1215,7 +1216,8 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
          /* Destructor */
          G__struct.funcs[G__get_tagnum(G__def_tagnum)] |= G__HAS_DESTRUCTOR;
       }
-      else if (strcmp(G__struct.name[G__get_tagnum(G__def_tagnum)], funcname.c_str()) == 0) {
+      else if (G__def_tagnum != Reflex::Scope::GlobalScope() &&
+         strcmp(G__struct.name[G__get_tagnum(G__def_tagnum)], funcname.c_str()) == 0) {
          if (0 == newFunction.TypeOf().FunctionParameterSize() || newFunction.FunctionParameterDefaultAt(0).length()) {
             /* Default constructor */
             G__struct.funcs[G__get_tagnum(G__def_tagnum)] |= G__HAS_DEFAULTCONSTRUCTOR;
