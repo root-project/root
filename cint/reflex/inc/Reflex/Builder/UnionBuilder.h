@@ -109,7 +109,7 @@ private:
 * @date 30/3/2004
 * @ingroup RefBld
 */
-class UnionBuilder {
+class RFLX_API UnionBuilder {
 
 public:
 
