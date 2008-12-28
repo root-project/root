@@ -3865,7 +3865,7 @@ static G__value Cint::Internal::G__allocvariable(G__value result, G__value para[
          }
       }
    }
-   if (G__funcheader && var_varlabel.size()) {
+   if (G__funcheader && !var_varlabel.empty()) {
       // -- We are a function parameter of array type.
       // We share our storage with our caller, on function
       // exit, we must not free the memory.
@@ -4061,7 +4061,7 @@ static G__value Cint::Internal::G__allocvariable(G__value result, G__value para[
       }
    }
    // Note: We add only the first paran elements to the varlabel, the rest are from the typedef.
-   var_type = G__modify_type(var_type, var_ispointer, var_reftype, var_constvar, paran, &var_varlabel[0]);
+   var_type = G__modify_type(var_type, var_ispointer, var_reftype, var_constvar, paran, var_varlabel.empty() ? 0 : &var_varlabel[0]);
    //
    //  A variable of type void is not allowed.
    //
