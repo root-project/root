@@ -1568,7 +1568,10 @@ static char* G__expand_def_template_arg(char* str_in, G__Templatearg* def_para, 
       }
       {
          int rlen = strlen(reslt);
-         if (isconst && !strncmp(reslt, "const ", 6) && (rlen > 0) && (reslt[rlen-1] == '*')) {
+         if (isconst &&
+             !strncmp(reslt, "const ", 6) &&
+             (rlen > 0) &&
+             (reslt[rlen-1] == '*')) {
             strcpy(str_out + iout, reslt + 6);
             strcat(str_out, " const");
             iout += lreslt;
@@ -1584,6 +1587,17 @@ static char* G__expand_def_template_arg(char* str_in, G__Templatearg* def_para, 
             strcpy(str_out + iout - 6, reslt);
             strcat(str_out, " const");
             iout += lreslt;
+            isconst = 0;
+         }
+         else if (
+            isconst &&
+            (iout >= 6) &&
+            !strncmp(str_out + iout - 6, "const ", 6) &&
+            !strncmp(reslt, "const ", 6)
+         ) {
+            // const T with T="const A" becomes "const const A", so skip one const
+            strcpy(str_out + iout, reslt + 6);
+            iout += lreslt - 6;
             isconst = 0;
          }
          else {
