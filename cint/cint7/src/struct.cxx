@@ -1799,30 +1799,31 @@ extern "C" int G__defined_tagname(const char* tagname, int noerror)
    char* temp = temp_sb;
    G__StrBuf atom_tagname_sb(G__LONGLINE);
    char* atom_tagname = atom_tagname_sb;
-   strcpy(atom_tagname, tagname);
-   switch (atom_tagname[0]) {
+   G__StrBuf normalized_tagname(G__LONGLINE);
+   strcpy(normalized_tagname, tagname);
+   switch (normalized_tagname[0]) {
       case '"':
       case '\'':
          return -1;
       case '\0': // Global namespace.
          return 0;
    }
-   if (strchr(atom_tagname, '>')) { // There is a template-id in the given tagname.
+   if (strchr(normalized_tagname, '>')) { // There is a template-id in the given tagname.
       // handles X<X<int>> as X<X<int> >
       {
-         char* p = strstr(atom_tagname, ">>");
+         char* p = strstr(normalized_tagname, ">>");
          while (p) {
             ++p;
             strcpy(temp, p);
             *p = ' ';
             ++p;
             strcpy(p, temp);
-            p = (char*) strstr(atom_tagname, ">>");
+            p = (char*) strstr(normalized_tagname, ">>");
          }
       }
       // handles X<int > as X<int>
       {
-         char* p = strstr(atom_tagname, " >");
+         char* p = strstr(normalized_tagname, " >");
          while (p) {
             if (p[-1] != '>') {
                strcpy(temp, p + 1);
@@ -1834,7 +1835,7 @@ extern "C" int G__defined_tagname(const char* tagname, int noerror)
       }
       // handles X <int> as X<int>
       {
-         char* p = strstr(atom_tagname, " <");
+         char* p = strstr(normalized_tagname, " <");
          while (p) {
             strcpy(temp, p + 1);
             strcpy(p, temp);
@@ -1844,7 +1845,7 @@ extern "C" int G__defined_tagname(const char* tagname, int noerror)
       }
       // handles "X<int> "  as "X<int>"
       {
-         char* p = strstr(atom_tagname, "> ");
+         char* p = strstr(normalized_tagname, "> ");
          while (p) {
             if (!strncmp(p, "> >", 3)) {
                p += 2;
@@ -1859,7 +1860,7 @@ extern "C" int G__defined_tagname(const char* tagname, int noerror)
       }
       // handles X< int> as X<int>
       {
-         char* p = strstr(atom_tagname, "< ");
+         char* p = strstr(normalized_tagname, "< ");
          while (p) {
             strcpy(temp, p + 2);
             strcpy(p + 1, temp);
@@ -1869,7 +1870,7 @@ extern "C" int G__defined_tagname(const char* tagname, int noerror)
       }
       // handles X<int, int> as X<int,int>
       {
-         char* p = strstr(atom_tagname, ", ");
+         char* p = strstr(normalized_tagname, ", ");
          while (p) {
             strcpy(temp, p + 2);
             strcpy(p + 1, temp);
@@ -1880,7 +1881,7 @@ extern "C" int G__defined_tagname(const char* tagname, int noerror)
    }
    // handle X<const const Y>
    {
-      char* p = strstr(atom_tagname, "const const ");
+      char* p = strstr(normalized_tagname, "const const ");
       while (p) {
          char* p1 = (p += 6);
          char* p2 = p + 6;
@@ -1891,11 +1892,11 @@ extern "C" int G__defined_tagname(const char* tagname, int noerror)
          p = strstr(p, "const const ");
       }
    }
-   if (isspace(atom_tagname[0])) {
-      strcpy(temp, atom_tagname + 1);
+   if (isspace(normalized_tagname[0])) {
+      strcpy(temp, normalized_tagname + 1);
    }
    else {
-      strcpy(temp, atom_tagname);
+      strcpy(temp, normalized_tagname);
    }
    //
    //  Now get the name to lookup and
@@ -2050,33 +2051,33 @@ extern "C" int G__defined_tagname(const char* tagname, int noerror)
    //
    //  Not found, try instantiating a class template.
    //
-   len = std::strlen(tagname);
-   if ((tagname[len-1] == '>') && (noerror < 2) && ((len < 2) || (tagname[len-2] != '-'))) {
+   len = std::strlen(normalized_tagname);
+   if ((normalized_tagname[len-1] == '>') && (noerror < 2) && ((len < 2) || (tagname[len-2] != '-'))) {
       if (G__loadingDLL) {
-         G__fprinterr(G__serr, "Error: '%s' Incomplete template resolution in shared library", tagname);
+         G__fprinterr(G__serr, "Error: '%s' Incomplete template resolution in shared library", normalized_tagname.data());
          G__genericerror(0);
          G__fprinterr(G__serr, "Add following line in header for making dictionary\n");
-         G__fprinterr(G__serr, "   #pragma link C++ class %s;\n", tagname);
+         G__fprinterr(G__serr, "   #pragma link C++ class %s;\n", normalized_tagname.data());
          G__exit(-1);
          return -1;
       }
       // CAUTION: tagname may be modified in following function.
       char store_var_type = G__var_type;
-      i = G__instantiate_templateclass((char*) tagname, noerror);
+      i = G__instantiate_templateclass(normalized_tagname, noerror);
       G__var_type = store_var_type;
       return i;
    }
    else if (noerror < 2) {
-      G__Definedtemplateclass* deftmplt = G__defined_templateclass((char*) tagname);
+      G__Definedtemplateclass* deftmplt = G__defined_templateclass(normalized_tagname);
       if (deftmplt && deftmplt->def_para && deftmplt->def_para->default_parameter) {
-         i = G__instantiate_templateclass((char*) tagname, noerror);
+         i = G__instantiate_templateclass(normalized_tagname, noerror);
          return i;
       }
    }
    //
    //  Not found, try a typedef.
    //
-   ::Reflex::Type tp = env_tagnum.LookupType(atom_tagname);
+   ::Reflex::Type tp = env_tagnum.LookupType(std::string(normalized_tagname));
    if (tp && tp.IsTypedef() && (!p || (tp.DeclaringScope() == env_tagnum))) {
       i = G__get_tagnum(tp);
       if (i != -1) {
@@ -2099,7 +2100,7 @@ extern "C" int G__defined_tagname(const char* tagname, int noerror)
    {
       int i2 = 0;
       int cx;
-      while ((cx = tagname[i2++])) {
+      while ((cx = normalized_tagname[i2++])) {
          if (G__isoperator(cx)) {
             return -1;
          }
