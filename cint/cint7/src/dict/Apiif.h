@@ -28,7 +28,6 @@ extern void G__set_cpp_environmentG__API();
 
 
 #include "Api.h"
-#include "Shadow.h"
 #include <algorithm>
 namespace std { }
 using namespace std;
@@ -41,8 +40,6 @@ extern G__linked_taginfo G__G__APILN_G__value;
 extern G__linked_taginfo G__G__APILN_G__param;
 extern G__linked_taginfo G__G__APILN_G__friendtag;
 extern G__linked_taginfo G__G__APILN_G__bytecodefunc;
-extern G__linked_taginfo G__G__APILN_basic_ostreamlEcharcOchar_traitslEchargRsPgR;
-extern G__linked_taginfo G__G__APILN_string;
 extern G__linked_taginfo G__G__APILN_ReflexcLcLType;
 extern G__linked_taginfo G__G__APILN_Cint;
 extern G__linked_taginfo G__G__APILN_CintcLcLG__MethodInfo;
@@ -70,6 +67,5 @@ extern G__linked_taginfo G__G__APILN_G__ConstStringList;
 extern G__linked_taginfo G__G__APILN_G__Preprocessfilekey;
 extern G__linked_taginfo G__G__APILN_G__Deffuncmacro;
 extern G__linked_taginfo G__G__APILN_G__Definetemplatefunc;
-extern G__linked_taginfo G__G__APILN_CintcLcLG__ShadowMaker;
 
 /* STUB derived class for protected member access */

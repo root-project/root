@@ -1794,12 +1794,15 @@ extern "C" int G__defined_tagname(const char* tagname, int noerror)
    //
    static ::Reflex::NamespaceBuilder stdnp("std");
    int i;
-   int len;
-   G__StrBuf temp_sb(G__LONGLINE);
+   // Allow for 10 occurrences of T<S<U>> - the only case where tagname can grow
+   // due to typename normalization.
+   int len = strlen(tagname) + 10;
+   G__StrBuf temp_sb(len);
    char* temp = temp_sb;
-   G__StrBuf atom_tagname_sb(G__LONGLINE);
+   G__StrBuf atom_tagname_sb(len);
    char* atom_tagname = atom_tagname_sb;
-   G__StrBuf normalized_tagname(G__LONGLINE);
+   G__StrBuf normalized_tagname_sb(len);
+   char* normalized_tagname = normalized_tagname_sb;
    strcpy(normalized_tagname, tagname);
    switch (normalized_tagname[0]) {
       case '"':
@@ -1928,6 +1931,7 @@ extern "C" int G__defined_tagname(const char* tagname, int noerror)
          // -- A name qualified explicitly with std::, use the global scope for now.
          env_tagnum = ::Reflex::Scope::GlobalScope();
          tagname += 5;
+         normalized_tagname += 5;
          if (!*tagname) {
             // "std::"
          }
@@ -2052,12 +2056,14 @@ extern "C" int G__defined_tagname(const char* tagname, int noerror)
    //  Not found, try instantiating a class template.
    //
    len = std::strlen(normalized_tagname);
-   if ((normalized_tagname[len-1] == '>') && (noerror < 2) && ((len < 2) || (tagname[len-2] != '-'))) {
+   if ((normalized_tagname[len-1] == '>') &&
+       (noerror < 2) &&
+       ((len < 2) || (normalized_tagname[len-2] != '-'))) {
       if (G__loadingDLL) {
-         G__fprinterr(G__serr, "Error: '%s' Incomplete template resolution in shared library", normalized_tagname.data());
+         G__fprinterr(G__serr, "Error: '%s' Incomplete template resolution in shared library", normalized_tagname);
          G__genericerror(0);
          G__fprinterr(G__serr, "Add following line in header for making dictionary\n");
-         G__fprinterr(G__serr, "   #pragma link C++ class %s;\n", normalized_tagname.data());
+         G__fprinterr(G__serr, "   #pragma link C++ class %s;\n", normalized_tagname);
          G__exit(-1);
          return -1;
       }
@@ -2077,7 +2083,7 @@ extern "C" int G__defined_tagname(const char* tagname, int noerror)
    //
    //  Not found, try a typedef.
    //
-   ::Reflex::Type tp = env_tagnum.LookupType(std::string(normalized_tagname));
+   ::Reflex::Type tp = env_tagnum.LookupType(atom_tagname);
    if (tp && tp.IsTypedef() && (!p || (tp.DeclaringScope() == env_tagnum))) {
       i = G__get_tagnum(tp);
       if (i != -1) {
