@@ -707,7 +707,8 @@ class genDictionary(object) :
   def tmplclasses(self, local):
     import re
     result = []
-    lc_patterns = map(lambda lc: re.compile("\\b%s\\b" % lc['name']) , local)
+    lc_patterns = map(lambda lc: re.compile("\\b%s\\b" % lc['name']) ,
+                      filter(lambda l: 'name' in l, local))
     for c in self.classes :
       if not 'name' in c: continue
       name = c['name']
