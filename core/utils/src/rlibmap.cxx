@@ -284,11 +284,8 @@ int LibMap(const string &solib, const vector<string> &solibdeps,
                      continue;
                   type = strtok(0, " ");
                }
-               //the following statement had to be commented. Currently CINT
-               //cannot autoload when executing a typedef (must be fixed!!!)
-               //if (!strncmp(type, "class", 5) || !strcmp(type, "typedef")) {
-               // handles class, class+protected and class+private
-               if (!strncmp(type, "class", 5)) {
+               // handles class, class+protected and class+private, typedef
+               if (!strncmp(type, "class", 5) || !strcmp(type, "typedef")) {
                   char *cls = strtok(0, "-!+;");
                   // just in case remove trailing space and tab
                   while (*cls == ' ') cls++;
