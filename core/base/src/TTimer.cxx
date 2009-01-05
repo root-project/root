@@ -72,9 +72,6 @@ public:
    }
 };
 
-TSingleShotCleaner gSingleShotCleaner;  // single shot timer cleaner
-
-
 //______________________________________________________________________________
 TTimer::TTimer(Long_t ms, Bool_t mode) : fTime(ms)
 {
@@ -269,10 +266,12 @@ void TTimer::SingleShot(Int_t milliSec, const char *receiver_class,
    TQObject::Connect(singleShotTimer, "Timeout()",
                      receiver_class, receiver, method);
 
+   static TSingleShotCleaner singleShotCleaner;  // single shot timer cleaner
+
    // gSingleShotCleaner will delete singleShotTimer a
    // short period after Timeout() signal is emitted
    TQObject::Connect(singleShotTimer, "Timeout()",
-                     "TTimer", &gSingleShotCleaner, "TurnOn()");
+                     "TTimer", &singleShotCleaner, "TurnOn()");
 
    singleShotTimer->Start(milliSec, kTRUE);
 }
