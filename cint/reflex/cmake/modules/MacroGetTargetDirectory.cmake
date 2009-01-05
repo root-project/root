@@ -1,5 +1,5 @@
 # MACRO_GET_TARGET_DIRECTORY(target _location)
-#   This macro gets the absolute directory a target's final location
+#   This macro gets the absolute directory of a target's final location
 
 MACRO(MACRO_GET_TARGET_DIRECTORY target _location)
 

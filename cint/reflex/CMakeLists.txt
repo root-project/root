@@ -22,9 +22,10 @@ SET(REFLEX_VERSION_FULL "${REFLEX_VERSION}.${REFLEX_VERSION_RELEASE}.${REFLEX_VE
 
 #####################   options   ####################
 
-OPTION(BUILD_SHARED_LIBS "inhibits building of the static version of the Reflex lib" OFF)
-OPTION(BUILD_TESTS "builds and runs the unit test suite" ON)
+OPTION(BUILD_SHARED_LIBS "inhibits building of the static version of the Reflex lib" ON)
 OPTION(FORBID_IN_SOURCE_BUILDS "forbids in-source builds of Reflex" OFF)
+OPTION(REFLEX_ENABLE_TESTS "enables all testing-related activities" OFF)
+OPTION(REFLEX_BUILD_TESTS "builds the unit test suite" ON)
 
 #####################   checks    ####################
 
@@ -55,17 +56,15 @@ SET(DL_LIBRARY ${CMAKE_DL_LIBS})
 
 IF (WIN32)
 
-   SET(BIN_INSTALL_DIR      "bin"                             ) # The install dir for executables (default ${EXEC_INSTALL_PREFIX}/bin)
-   SET(LIB_INSTALL_DIR      "lib"                             ) # The subdirectory relative to the install prefix where libraries will be installed (default is ${EXEC_INSTALL_PREFIX}/lib${LIB_SUFFIX})
-   SET(INCLUDE_INSTALL_DIR  "include"                         ) # The subdirectory to the header prefix
+   SET(BIN_INSTALL_DIR      "bin"     ) # The install dir for executables (default ${EXEC_INSTALL_PREFIX}/bin)
+   SET(LIB_INSTALL_DIR      "lib"     ) # The subdirectory relative to the install prefix where libraries will be installed (default is ${EXEC_INSTALL_PREFIX}/lib${LIB_SUFFIX})
+   SET(INCLUDE_INSTALL_DIR  "include" ) # The subdirectory to the header prefix
 
 ELSE (WIN32)
 
-   SET(EXEC_INSTALL_PREFIX  "${CMAKE_INSTALL_PREFIX}"         ) # Base directory for executables and libraries
-
-   SET(BIN_INSTALL_DIR      "${EXEC_INSTALL_PREFIX}/bin"      ) # The install dir for executables (default ${EXEC_INSTALL_PREFIX}/bin)
-   SET(LIB_INSTALL_DIR      "${EXEC_INSTALL_PREFIX}/lib"      ) # The subdirectory relative to the install prefix where libraries will be installed (default is ${EXEC_INSTALL_PREFIX}/lib${LIB_SUFFIX})
-   SET(INCLUDE_INSTALL_DIR  "${CMAKE_INSTALL_PREFIX}/include" ) # The subdirectory to the header prefix
+   SET(BIN_INSTALL_DIR      "bin"     ) # The install dir for executables (default ${EXEC_INSTALL_PREFIX}/bin)
+   SET(LIB_INSTALL_DIR      "lib"     ) # The subdirectory relative to the install prefix where libraries will be installed (default is ${EXEC_INSTALL_PREFIX}/lib${LIB_SUFFIX})
+   SET(INCLUDE_INSTALL_DIR  "include" ) # The subdirectory to the header prefix
 
 ENDIF (WIN32)
 
@@ -114,7 +113,7 @@ ADD_SUBDIRECTORY(python)
 ADD_SUBDIRECTORY(src)
 
 # enable tests only if specified
-IF (BUILD_TESTS)
+IF (REFLEX_ENABLE_TESTS)
    ENABLE_TESTING()
    ADD_SUBDIRECTORY(test)
-ENDIF (BUILD_TESTS)
+ENDIF (REFLEX_ENABLE_TESTS)

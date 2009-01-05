@@ -1,5 +1,5 @@
 # MACRO (REFLEX_GENERATE_DICTIONARIES outfiles
-#          HEADERS f1 ... fN [SELECTION selection] [OPTIONS o1 ... oN])
+#        HEADERS f1 ... fN [SELECTION selection] [OPTIONS o1 ... oN])
 #
 #   Create Reflex dictionary files from a list of C++ header files.
 #   Options and a selection file may be given to genreflex.
@@ -19,7 +19,7 @@
 #   lookup path since they are built as modules and can't be linked against.
 
 
-MACRO (REFLEX_GET_GENREFLEX_INCLUDES _genreflex_includes)
+MACRO (_REFLEX_GET_GENREFLEX_INCLUDES _genreflex_includes)
 
    # extract the include dirs for reuse by genreflex
    SET(${_genreflex_includes})
@@ -29,10 +29,10 @@ MACRO (REFLEX_GET_GENREFLEX_INCLUDES _genreflex_includes)
       SET(${_genreflex_includes} ${${_genreflex_includes}} "-I${_arg}")
    ENDFOREACH (_arg ${_cmake_includes})
 
-ENDMACRO (REFLEX_GET_GENREFLEX_INCLUDES _genreflex_includes)
+ENDMACRO (_REFLEX_GET_GENREFLEX_INCLUDES _genreflex_includes)
 
 
-MACRO (REFLEX_GET_GENREFLEX_DEFINITIONS _genreflex_definitions)
+MACRO (_REFLEX_GET_GENREFLEX_DEFINITIONS _genreflex_definitions)
 
    SET(${_genreflex_definitions})
    GET_DIRECTORY_PROPERTY(_cmake_definitions COMPILE_DEFINITIONS)
@@ -41,53 +41,40 @@ MACRO (REFLEX_GET_GENREFLEX_DEFINITIONS _genreflex_definitions)
       SET(${_genreflex_definitions} ${${_genreflex_definitions}} "-D${_arg}")
    ENDFOREACH (_arg ${_cmake_definitions})
 
-ENDMACRO (REFLEX_GET_GENREFLEX_DEFINITIONS _genreflex_definitions)
+ENDMACRO (_REFLEX_GET_GENREFLEX_DEFINITIONS _genreflex_definitions)
 
 
-MACRO (REFLEX_ADD_GENREFLEX_COMMAND infile outfile genreflex_includes genreflex_definitions genreflex_options)
+MACRO (_REFLEX_ADD_GENREFLEX_COMMAND infile outfile genreflex_includes genreflex_definitions genreflex_selection genreflex_options)
+
+   GET_FILENAME_COMPONENT(_out_dir ${outfile} PATH)
+   FILE(RELATIVE_PATH _out_rel ${CMAKE_BINARY_DIR} ${outfile})
+   SET(_genreflex_options ${genreflex_options})
+
+   # create the selection option if provided
+   IF (NOT "${genreflex_selection}" STREQUAL "")
+      GET_FILENAME_COMPONENT(genreflex_selection "${genreflex_selection}" ABSOLUTE)
+      LIST(APPEND _genreflex_options -s "${genreflex_selection}")
+   ENDIF (NOT "${genreflex_selection}" STREQUAL "")
 
    # link src to target through a genreflex command
    ADD_CUSTOM_COMMAND(OUTPUT ${outfile}
                       COMMAND ${PYTHON_EXECUTABLE}
-                      ARGS "${GENREFLEX_SCRIPT}" "${infile}" -o "${outfile}" ${genreflex_options} ${genreflex_includes} ${genreflex_definitions}
+                      ARGS "${GENREFLEX_SCRIPT}" "${infile}" -o "${outfile}" ${_genreflex_options} ${genreflex_includes} ${genreflex_definitions}
                       IMPLICIT_DEPENDS CXX ${infile}
-                      DEPENDS ${GENREFLEX_OBJS}
+                      DEPENDS genreflex ${infile} ${genreflex_selection}
                       WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-                      COMMENT ${_genreflex_includes}
+                      COMMENT "Generating Reflex dictionary ${_out_rel}"
                       VERBATIM)
+
+   MACRO_ADDITIONAL_CLEAN_FILES(${outfile})
 
    # mark reflex dictionary files as generated
    SET_SOURCE_FILES_PROPERTIES(${outfile} PROPERTIES GENERATED 1)
 
-ENDMACRO (REFLEX_ADD_GENREFLEX_COMMAND infile outfile genreflex_includes genreflex_definitions genreflex_options)
+ENDMACRO (_REFLEX_ADD_GENREFLEX_COMMAND infile outfile genreflex_includes genreflex_definitions genreflex_selection genreflex_options)
 
 
-MACRO (REFLEX_MAKE_OUTPUT_FILE infile prefix suffix ext outfile)
-
-   STRING(LENGTH ${CMAKE_CURRENT_BINARY_DIR} _binlength)
-   STRING(LENGTH ${infile} _infileLength)
-
-   SET(_checkinfile ${CMAKE_CURRENT_SOURCE_DIR})
-   IF (_infileLength GREATER _binlength)
-      STRING(SUBSTRING "${infile}" 0 ${_binlength} _checkinfile)
-   ENDIF (_infileLength GREATER _binlength)
-
-   IF (CMAKE_CURRENT_BINARY_DIR MATCHES "${_checkinfile}")
-      FILE(RELATIVE_PATH rel ${CMAKE_CURRENT_BINARY_DIR} ${infile})
-   ELSE (CMAKE_CURRENT_BINARY_DIR MATCHES "${_checkinfile}")
-      FILE(RELATIVE_PATH rel ${CMAKE_CURRENT_SOURCE_DIR} ${infile})
-   ENDIF (CMAKE_CURRENT_BINARY_DIR MATCHES "${_checkinfile}")
-
-   SET(_outfile "${CMAKE_CURRENT_BINARY_DIR}/${rel}")
-   GET_FILENAME_COMPONENT(outpath ${_outfile} PATH)
-   GET_FILENAME_COMPONENT(_outfile ${_outfile} NAME_WE)
-   FILE(MAKE_DIRECTORY ${outpath})
-   SET(${outfile} ${outpath}/${prefix}${_outfile}${suffix}.${ext})
-
-ENDMACRO (REFLEX_MAKE_OUTPUT_FILE infile prefix suffix ext outfile)
-
-
-MACRO (REFLEX_EXTRACT_GENREFLEX_OPTIONS _genreflex_files _genreflex_selection _genreflex_options)
+MACRO (_REFLEX_EXTRACT_GENREFLEX_OPTIONS _genreflex_files _genreflex_selection _genreflex_options)
 
    MACRO_PARSE_ARGUMENTS(EXTRACT_OPTIONS "HEADERS;SELECTION;OPTIONS" "" "${ARGN}")
 
@@ -95,7 +82,7 @@ MACRO (REFLEX_EXTRACT_GENREFLEX_OPTIONS _genreflex_files _genreflex_selection _g
    SET(${_genreflex_options} ${EXTRACT_OPTIONS_OPTIONS})
    SET(${_genreflex_selection} ${EXTRACT_OPTIONS_SELECTION})
 
-ENDMACRO (REFLEX_EXTRACT_GENREFLEX_OPTIONS _genreflex_files _genreflex_selection _genreflex_options)
+ENDMACRO (_REFLEX_EXTRACT_GENREFLEX_OPTIONS _genreflex_files _genreflex_selection _genreflex_options)
 
 
 MACRO (REFLEX_GENERATE_DICTIONARY infile outfile)
@@ -105,7 +92,7 @@ MACRO (REFLEX_GENERATE_DICTIONARY infile outfile)
    GET_GENREFLEX_DEFINITIONS(genreflex_definitions)
 
    GET_FILENAME_COMPONENT(abs_infile ${infile} ABSOLUTE)
-   REFLEX_ADD_GENREFLEX_COMMAND(${abs_infile} ${outfile} "${genreflex_includes}" "${genreflex_definitions}" "")
+   _REFLEX_ADD_GENREFLEX_COMMAND(${abs_infile} ${outfile} "${genreflex_includes}" "${genreflex_definitions}" "" "")
 
 ENDMACRO (REFLEX_GENERATE_DICTIONARY infile outfile)
 
@@ -113,29 +100,30 @@ ENDMACRO (REFLEX_GENERATE_DICTIONARY infile outfile)
 MACRO (REFLEX_GENERATE_DICTIONARIES outfiles)
 
    # extract the includes and defintions for reuse by genreflex
-   REFLEX_GET_GENREFLEX_INCLUDES(genreflex_includes)
-   REFLEX_GET_GENREFLEX_DEFINITIONS(genreflex_definitions)
+   _REFLEX_GET_GENREFLEX_INCLUDES(genreflex_includes)
+   _REFLEX_GET_GENREFLEX_DEFINITIONS(genreflex_definitions)
 
    # separate the options and selection file from the input files
-   REFLEX_EXTRACT_GENREFLEX_OPTIONS(genreflex_files genreflex_selection genreflex_options ${ARGN})
+   _REFLEX_EXTRACT_GENREFLEX_OPTIONS(genreflex_files genreflex_selection genreflex_options ${ARGN})
 
-   # resolve and create the selection option
+   # resolve the selection option
    IF (NOT "${genreflex_selection}" STREQUAL "")
-      GET_FILENAME_COMPONENT(genreflex_selection ${genreflex_selection} ABSOLUTE)
-      LIST(APPEND genreflex_options -s ${genreflex_selection})
+      GET_FILENAME_COMPONENT(genreflex_selection "${genreflex_selection}" ABSOLUTE)
    ENDIF (NOT "${genreflex_selection}" STREQUAL "")
+
+   #CONFIGURE_FILE(${REFLEX_TEMPLATE_DIR}/genreflex.files.in ${_genreflex_source}.files)
 
    FOREACH (it ${genreflex_files})
       GET_FILENAME_COMPONENT(it ${it} ABSOLUTE)
-      REFLEX_MAKE_OUTPUT_FILE(${it} "" _rflx cpp outfile)
-      REFLEX_ADD_GENREFLEX_COMMAND(${it} ${outfile} "${genreflex_includes}" "${genreflex_definitions}" "${genreflex_options}")
+      MACRO_MAKE_OUTPUT_FILE(${it} "" _rflx cpp outfile)
+      _REFLEX_ADD_GENREFLEX_COMMAND(${it} ${outfile} "${genreflex_includes}" "${genreflex_definitions}" "${genreflex_selection}" "${genreflex_options}")
       SET(${outfiles} ${${outfiles}} ${outfile})
    ENDFOREACH (it ${genreflex_files})
 
 ENDMACRO (REFLEX_GENERATE_DICTIONARIES outfiles)
 
 
-MACRO(REFLEX_GET_DICTIONARIES_PATH dictionaries _path)
+MACRO (_REFLEX_GET_DICTIONARIES_PATH dictionaries _path)
 
    FOREACH (_d ${dictionaries})
 
@@ -154,7 +142,8 @@ MACRO(REFLEX_GET_DICTIONARIES_PATH dictionaries _path)
 
    ENDFOREACH (_d ${dictionaries})
 
-ENDMACRO(REFLEX_GET_DICTIONARIES_PATH dictionaries _path)
+ENDMACRO (_REFLEX_GET_DICTIONARIES_PATH dictionaries _path)
+
 
 MACRO (GET_TEST_SCOPED_NAME _name _scoped_name)
 
@@ -170,6 +159,7 @@ MACRO (GET_TEST_SCOPED_NAME _name _scoped_name)
    SET(${_scoped_name} ${_test_qname})
 
 ENDMACRO (GET_TEST_SCOPED_NAME _name _scoped_name)
+
 
 MACRO (REFLEX_ADD_SCOPED_TEST _name)
 
@@ -187,6 +177,74 @@ MACRO (REFLEX_ADD_SCOPED_TEST _name)
 
 ENDMACRO (REFLEX_ADD_SCOPED_TEST _name)
 
+
+MACRO (REFLEX_ADD_LIBRARY name)
+
+   MACRO_PARSE_ARGUMENTS(ADD_LIBRARY "" "TEST" "${ARGN}")
+
+   SET(_add_library_params)
+
+   IF (ADD_LIBRARY_TEST AND NOT REFLEX_BUILD_TESTS)
+      SET(_add_library_params ${_add_library_params} EXCLUDE_FROM_ALL)
+   ENDIF (ADD_LIBRARY_TEST AND NOT REFLEX_BUILD_TESTS)
+
+   ADD_LIBRARY(${name} ${_add_library_params} ${ADD_LIBRARY_DEFAULT_ARGS})
+
+   IF (ADD_LIBRARY_TEST AND NOT REFLEX_BUILD_TESTS)
+      ADD_DEPENDENCIES(build_tests ${name})
+   ENDIF (ADD_LIBRARY_TEST AND NOT REFLEX_BUILD_TESTS)
+
+ENDMACRO (REFLEX_ADD_LIBRARY name)
+
+
+MACRO (REFLEX_ADD_DICTIONARY name)
+
+   MACRO_PARSE_ARGUMENTS(ADD_DICTIONARY "SELECTION;OPTIONS" "WITH_PREFIX;TEST" "${ARGN}")
+
+   SET(_genreflex_files ${ADD_DICTIONARY_DEFAULT_ARGS})
+   SET(_genreflex_options ${ADD_DICTIONARY_OPTIONS})
+   SET(_genreflex_selection ${ADD_DICTIONARY_SELECTION})
+
+   REFLEX_GENERATE_DICTIONARIES(_dict_files
+                                HEADERS ${_genreflex_files}
+                                SELECTION ${_genreflex_selection}
+                                OPTIONS ${_genreflex_options})
+
+   SET(_add_library_params MODULE)
+
+   IF (ADD_DICTIONARY_TEST)
+      SET(_add_library_params ${_add_library_params} TEST)
+   ENDIF (ADD_DICTIONARY_TEST)
+
+   REFLEX_ADD_LIBRARY(${name} ${_add_library_params} ${_dict_files})
+   TARGET_LINK_LIBRARIES(${name} Reflex)
+
+   IF (ADD_DICTIONARY_WITH_PREFIX)
+      SET_TARGET_PROPERTIES(${name} PROPERTIES PREFIX "lib")
+   ENDIF (ADD_DICTIONARY_WITH_PREFIX)
+
+ENDMACRO (REFLEX_ADD_DICTIONARY name)
+
+
+MACRO (REFLEX_ADD_EXECUTABLE name)
+
+   MACRO_PARSE_ARGUMENTS(ADD_EXECUTABLE "" "TEST" "${ARGN}")
+
+   SET(_add_executable_params)
+
+   IF (ADD_EXECUTABLE_TEST AND NOT REFLEX_BUILD_TESTS)
+      SET(_add_executable_params ${_add_executable_params} EXCLUDE_FROM_ALL)
+   ENDIF (ADD_EXECUTABLE_TEST AND NOT REFLEX_BUILD_TESTS)
+
+   ADD_EXECUTABLE(${name} ${_add_executable_params} ${ADD_EXECUTABLE_DEFAULT_ARGS})
+
+   IF (ADD_EXECUTABLE_TEST AND NOT REFLEX_BUILD_TESTS)
+      ADD_DEPENDENCIES(build_tests ${name})
+   ENDIF (ADD_EXECUTABLE_TEST AND NOT REFLEX_BUILD_TESTS)
+
+ENDMACRO (REFLEX_ADD_EXECUTABLE name)
+
+
 MACRO (REFLEX_ADD_TEST name target)
 
    MACRO_PARSE_ARGUMENTS(REFLEX_ADD_TEST "DICTIONARIES" "" "${ARGN}")
@@ -203,7 +261,7 @@ MACRO (REFLEX_ADD_TEST name target)
       SET(_shell_wrapper ${_executable}.shell)
 
       # get the location path of the dictionaries that are modules
-      REFLEX_GET_DICTIONARIES_PATH("${REFLEX_ADD_TEST_DICTIONARIES}" _ld_library_path)
+      _REFLEX_GET_DICTIONARIES_PATH("${REFLEX_ADD_TEST_DICTIONARIES}" _ld_library_path)
 
       # use ADD_CUSTOM_TARGET() to have the sh-wrapper generated during build time instead of cmake time
       ADD_CUSTOM_COMMAND(TARGET ${target} POST_BUILD
@@ -225,7 +283,7 @@ MACRO (REFLEX_ADD_TEST name target)
 
       # get the location path of the dictionaries that are modules
       MACRO_GET_TARGET_DIRECTORY(Reflex _reflex_path)
-      REFLEX_GET_DICTIONARIES_PATH("${REFLEX_ADD_TEST_DICTIONARIES}" _ld_library_path)
+      _REFLEX_GET_DICTIONARIES_PATH("${REFLEX_ADD_TEST_DICTIONARIES}" _ld_library_path)
       SET(_ld_library_path "${_ld_library_path}\;${_reflex_path}")
 
       # use ADD_CUSTOM_TARGET() to have the batch-file-wrapper generated during build time instead of cmake time

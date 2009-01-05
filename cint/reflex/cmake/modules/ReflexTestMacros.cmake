@@ -167,11 +167,8 @@ MACRO (REFLEX_ADD_SINGLE_TEST _name)
 
    # create the dictionary
    SET(_dict_target ${_qname}_rflx)
-   REFLEX_GENERATE_DICTIONARIES(_dict_file
-                                HEADERS ${_TEST_HEADERS}
-                                OPTIONS --quiet)
-   ADD_LIBRARY(${_dict_target} MODULE ${_dict_file})
-   TARGET_LINK_LIBRARIES(${_dict_target} Reflex)
+   REFLEX_ADD_DICTIONARY(${_dict_target} TEST ${_TEST_HEADERS}
+                         OPTIONS --quiet)
 
    # TODO: needs to become a parameter or move to parent scope
    SET(UTIL_INCLUDE_DIR ${REFLEX_TEST_DIR})
@@ -179,7 +176,7 @@ MACRO (REFLEX_ADD_SINGLE_TEST _name)
 
    # create the test executable
    SET(_test_target ${_qname})
-   ADD_EXECUTABLE(${_test_target} ${_TEST_TEST})
+   REFLEX_ADD_EXECUTABLE(${_test_target} TEST ${_TEST_TEST})
    TARGET_LINK_LIBRARIES(${_test_target} Reflex ${DL_LIBRARY} ${CPPUNIT_LIBRARY})
 
    # determine the dictionary path relative to the test executable

@@ -8,16 +8,16 @@ FILE(GLOB_RECURSE Reflex_HDRS ${REFLEX_INCLUDE_DIR}/*.h)
 #####################    build    ####################
 
 INCLUDE_DIRECTORIES(${REFLEX_INCLUDE_DIR})
-ADD_LIBRARY(Reflex ${Reflex_SRCS} ${Reflex_HDRS})
+REFLEX_ADD_LIBRARY(Reflex ${Reflex_SRCS} ${Reflex_HDRS})
 TARGET_LINK_LIBRARIES(Reflex ${DL_LIBRARY} ${DEMANGLE_LIBRARY})
 
 # hack: unit tests currently use non-exported symbols that cause link
 # errors under msvc. possible solutions:
 # 1) stop testing non-API methods (preferred) and test API-visible features instead
 # 2) add a new RFLX_INTERNAL or equivalent macro that exports symbols.
-IF (MSVC AND BUILD_TESTS AND BUILD_SHARED_LIBS)
+IF (MSVC AND REFLEX_ENABLE_TESTS AND BUILD_SHARED_LIBS)
    MACRO_ADD_LINK_FLAGS(Reflex "/DEF:${CMAKE_CURRENT_SOURCE_DIR}/Reflex.def")
-ENDIF (MSVC AND BUILD_TESTS AND BUILD_SHARED_LIBS)
+ENDIF (MSVC AND REFLEX_ENABLE_TESTS AND BUILD_SHARED_LIBS)
 
 #####################   install   ####################
 
