@@ -3393,6 +3393,7 @@ extern "C" int G__process_cmd(char* line, char* prompt, int* more, int* err, G__
             G__RESET_TEMPENV;
          }
          if (!G__func_now) {
+            store.var_local = G__p_local;
             G__p_local = ::Reflex::Scope();
          }
          if (

@@ -3275,7 +3275,10 @@ multi_line_command:
 #endif
             G__RESET_TEMPENV;
          }
-         if (-1 == G__func_now) G__p_local = 0;
+         if (-1 == G__func_now) {
+            store.var_local = G__p_local;
+            G__p_local = 0;
+         }
          if (buf.type && 0 == G__atevaluate(buf)
                && !noprintflag
             ) fprintf(G__sout, "%s\n", syscom);
