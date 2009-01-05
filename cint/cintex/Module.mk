@@ -129,7 +129,7 @@ $(CINTEXTESTDICT): $(CINTEXTESTDICTO)
 $(CINTEXTESTDICTO): CXXFLAGSPCH =
 
 $(CINTEXTESTDICTS): $(CINTEXTESTDICTH) $(CINTEXTESTDICTD)/selection.xml
-		cd $(CINTEXTESTDICTD); $(GENREFLEX_CMD2) CintexTest.h -s selection.xml --rootmap=$(PWD)/$(CINTEXTESTDICT).rootmap --rootmap-lib=$(CINTEXTESTDICT) --quiet --comments
+		cd $(CINTEXTESTDICTD); $(GENREFLEX_CMD2) CintexTest.h -s selection.xml --rootmap=$(PWD)/$(CINTEXTESTDICT).rootmap --rootmap-lib=$(CINTEXTESTDICT) --comments
 
 ##### extra rules ######
 $(CINTEXO): CXXFLAGS += -Iinclude/cint

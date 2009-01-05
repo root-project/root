@@ -343,6 +343,7 @@ void test_Cintex()
   Cintex::Enable();
   Cintex::SetDebug(0);
   //gSystem->Load("test_CintexTestRflx");
+  gROOT->ProcessLine("#include <vector>");
 
   cout << "DoSomething: "        << (test_DoSomething()        ? "OK" : "FAIL") << endl;
   cout << "PrimitiveArgs: "      << (test_PrimitiveArgs()      ? "OK" : "FAIL") << endl;
