@@ -770,12 +770,19 @@ Int_t TCollectionPropertyBrowsable::GetBrowsables(TList& li, const TBranch* bran
    if (lastPart==kNPOS) lastPart=0;
    else lastPart++;
 
+   TString size_title("size of ");
+   size_title += clCollection->GetName();
+   if (clContained) {
+      size_title += " of ";
+      size_title += clContained->GetName();
+   }
+
    if (clCollection->GetCollectionProxy() || clCollection==TClonesArray::Class()) {
    // the collection is one for which TTree::Draw supports @coll.size()
 
       scope.Insert(lastPart, "@");
       TCollectionPropertyBrowsable* cpb=
-         new TCollectionPropertyBrowsable("@size", "size of the collection", 
+         new TCollectionPropertyBrowsable("@size", size_title, 
          scope+".size()", branch, parent);
       li.Add(cpb);
       return 1;
@@ -787,7 +794,7 @@ Int_t TCollectionPropertyBrowsable::GetBrowsables(TList& li, const TBranch* bran
          scope+="@.GetEntries()";
       else scope+="@.GetSize()";
       TCollectionPropertyBrowsable* cpb=
-         new TCollectionPropertyBrowsable("@size", "size of the collection", scope, branch, parent);
+         new TCollectionPropertyBrowsable("@size", size_title, scope, branch, parent);
       li.Add(cpb);
       return 1;
    }
