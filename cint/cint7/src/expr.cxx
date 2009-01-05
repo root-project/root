@@ -1265,6 +1265,9 @@ G__value Cint::Internal::G__getexpr(char* expression)
                ebuf[lenbuf++] = c;
                c = G__getstream_template(expression, &ig1, ebuf + lenbuf, ">");
                lenbuf = strlen(ebuf);
+               if ((c == '>') && (ebuf[lenbuf-1] == '>')) {
+                  ebuf[lenbuf++] = ' ';
+               }
                ebuf[lenbuf++] = c;
                ebuf[lenbuf] = '\0';
                --ig1;
