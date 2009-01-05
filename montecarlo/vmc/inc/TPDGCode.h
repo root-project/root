@@ -31,7 +31,7 @@ typedef enum {kRootino=0,kDown=1,kDownBar=-1,kUp=2,kUpBar=-2,kStrange=3,
 	  kA2_1320Plus=215,kProton=2212,kProtonBar=-2212,
 	  kNeutron=2112,kNeutronBar=-2112,kK0Short=310,kK0=311,
 	  kK0Bar=-311,kKPlus=321,kKMinus=-321,kLambda0=3122,
-	  kLambda0Bar=-3122,kSigmaMinus=3112,kSigmaBarPlus=-3112,
+	  kLambda1520=3124,kLambda0Bar=-3122,kSigmaMinus=3112,kSigmaBarPlus=-3112,
 	  kSigmaPlus=3222,kSigmaBarMinus=-3222,kSigma0=3212,
 	  kSigma0Bar=-3212,kXiMinus=3312,kXiPlusBar=-3312,
           kOmegaMinus=3334,kOmegaPlusBar=-3334}
