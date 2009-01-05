@@ -1320,10 +1320,11 @@ TClass *TROOT::LoadClass(const char *classname) const
 }
 
 //______________________________________________________________________________
-Int_t TROOT::LoadClass(const char *classname, const char *libname,
+Int_t TROOT::LoadClass(const char * /*classname*/, const char *libname,
                        Bool_t check)
 {
-   // Check if class "classname" is known to the interpreter. If
+   // Check if class "classname" is known to the interpreter (in fact,
+   // this check is not needed anymore, so classname is ignored). If
    // not it will load library "libname". If the library name does
    // not start with "lib", "lib" will be prepended and a search will
    // be made in the DynamicPath (see .rootrc). If not found a search
@@ -1334,10 +1335,6 @@ Int_t TROOT::LoadClass(const char *classname, const char *libname,
    // readable.
    // Returns 0 on successful loading, -1 in case libname does not
    // exist or in case of error and -2 in case of version mismatch.
-
-   if (TClassTable::GetDict(classname)) {
-      return 0;
-   }
 
    Int_t err = -1;
 
