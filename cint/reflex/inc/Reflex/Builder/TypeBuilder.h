@@ -19,7 +19,7 @@
 #include <vector>
 
 #if defined(__ICC)
-#define OffsetOf(c1,mem) (int(&((volatile const char&)((c1*)0)->mem)))
+#define OffsetOf(c1,mem) (long(&((volatile const char&)((c1*)0)->mem)))
 #else
 #define OffsetOf(c1,mem) ((size_t)(&reinterpret_cast<const volatile char&>(((c1*)64)->mem))-64)
 #endif
