@@ -234,8 +234,8 @@ void GetMacroTitle(const char *fullpath, TString &comment, Bool_t &compile) {
    // Find the best line with a title by scanning the first 50 lines of a macro.
    // "fullpath" location of the macro
    // "comment"  is set to the comment (i.e. title) found in the macro
-   // "compile"  is set to true if the macro should be compiled, i.e. one of the
-   //            comment lines starts with "//+ " (note the space)
+   // "compile"  is set to true if the macro should be compiled, i.e. the
+   //            title line starts with "//+ " (note the space)
    compile = kFALSE;
    FILE *fp = fopen(fullpath,"r");
    char line[250];
@@ -244,8 +244,6 @@ void GetMacroTitle(const char *fullpath, TString &comment, Bool_t &compile) {
       nlines++;
       char *com = strstr(line,"//");
       if (com) {
-         if (!strncmp(line,"//+ ", 4))
-            compile = kTRUE;
          if (strstr(line,"Author")) continue;
          if (strstr(line,"@(#)")) continue;
          if (strstr(line,"****")) continue;
@@ -255,6 +253,10 @@ void GetMacroTitle(const char *fullpath, TString &comment, Bool_t &compile) {
          if (strstr(line,"----")) continue;
          if (strstr(line,"____")) continue;
          if (strlen(com+1)  < 5)  continue;
+         if (!strncmp(com,"//+ ", 4)) {
+            compile = kTRUE;
+            com += 2; // skip "+ ", too.
+         }
          comment = com+2;
          break;
       }
