@@ -420,9 +420,7 @@ namespace ROOT { namespace Cintex {
                   return 0;
                }
                CollFuncTable* m = 0;
-               static Type tCollFuncTable = PointerBuilder(Type::ByTypeInfo(typeid(CollFuncTable)));
-               Object ret(tCollFuncTable, (void*)(&m));
-               method.Invoke(&ret);
+               method.Invoke(m);
 
                ::ROOT::TCollectionProxyInfo cpinfo(tid,
                                                    m->iter_size,
