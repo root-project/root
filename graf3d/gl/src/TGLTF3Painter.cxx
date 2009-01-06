@@ -282,10 +282,11 @@ void TGLTF3Painter::Pan(Int_t px, Int_t py)
       //Possibly, move box here
       py = fCamera->GetHeight() - py;
       if (!fHighColor) {
-         if (fBoxCut.IsActive() && (fSelectedPart >= kXAxis && fSelectedPart <= kZAxis))
+         if (fBoxCut.IsActive() && (fSelectedPart >= kXAxis && fSelectedPart <= kZAxis)) {
             fBoxCut.MoveBox(px, py, fSelectedPart);
-         else;
+         } else {
             //MoveSection(px, py);
+	 }
       } else {
          //MoveSection(px, py);
       }
@@ -641,10 +642,11 @@ void TGLIsoPainter::Pan(Int_t px, Int_t py)
       //Possibly, move box here
       py = fCamera->GetHeight() - py;
       if (!fHighColor) {
-         if (fBoxCut.IsActive() && (fSelectedPart >= kXAxis && fSelectedPart <= kZAxis))
+         if (fBoxCut.IsActive() && (fSelectedPart >= kXAxis && fSelectedPart <= kZAxis)) {
             fBoxCut.MoveBox(px, py, fSelectedPart);
-         else;
+         } else {
             //MoveSection(px, py);
+	 }
       } else {
          //MoveSection(px, py);
       }
