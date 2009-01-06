@@ -75,6 +75,17 @@ public:
 
    Bool_t IsInCut(Double_t xMin, Double_t xMax, Double_t yMin, Double_t yMax,
                   Double_t zMin, Double_t zMax)const;
+
+   template<class V>
+   Bool_t IsInCut(const V * v) const
+   {
+      //Check, if box defined by xmin/xmax etc. is in cut.
+      if (v[0] >= fXRange.first && v[0] < fXRange.second &&
+          v[1] >= fYRange.first && v[1] < fYRange.second &&
+          v[2] >= fZRange.first && v[2] < fZRange.second)
+         return kTRUE;
+      return kFALSE;
+   }
 private:
    void AdjustBox();
 
