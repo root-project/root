@@ -28,9 +28,6 @@ endif
 ifneq ($(PLATFORM),win32)
 ROOTNEXE     := bin/rootn.exe
 endif
-ifeq ($(PLATFORM),win32)
-ROOTICON     := icons/RootIcon.obj
-endif
 
 ##### proofserv #####
 PROOFSERVS   := $(MODDIRS)/pmain.cxx

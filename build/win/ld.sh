@@ -5,15 +5,19 @@
 
 args=
 dll=
+debug=
 while [ "$1" != "" ]; do
    case "$1" in
    -o) args="$args -out:$2"
        dll="$2"
        shift ;;
+   -debug) args="$args $1"
+           debug=-DDEBUG;;
    *) args="$args $1" ;;
    esac
    shift
 done
+
 if [ "$dll" != "bin/rmkdepend.exe" -a \
      "$dll" != "bin/bindexplib.exe" -a \
      "$dll" != "bin/cint.exe" -a \
@@ -34,8 +38,16 @@ if [ "$dll" != "bin/rmkdepend.exe" -a \
   args="$args base/src/precompile.o"
 fi
 
+if [ "$dll" != "" ]; then
+   build/win/makeresource.sh "$dll" \
+      && rc $debug -Iinclude /Fo"${dll}.res" "${dll}.rc" > /dev/null 2>&1 \
+      && args="$args ${dll}.res"
+   rm -f "${dll}.rc"
+fi
+
 WHICHLINK="`which cl.exe|sed 's,cl\.exe$,link.exe,'`"
 "${WHICHLINK}" $args || exit $?
+
 if [ "$dll" != "" -a -f $dll.manifest ]; then
    if [ "${dll%.dll}" == "$dll" ]
        then resourceID=1; # .exe
@@ -45,4 +57,8 @@ if [ "$dll" != "" -a -f $dll.manifest ]; then
    rm $dll.manifest
 fi
 
-exit $?
+if [ "$dll" != "" ]; then
+	rm -f "${dll}.res"
+fi
+
+exit 0

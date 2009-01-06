@@ -17,6 +17,9 @@ ifeq ($(VC_MAJOR),)
    VC_MINOR     := $(shell unset VS_UNICODE_OUTPUT ; cl.exe 2>&1 | \
                    awk '{ if (NR==1) print $$8 }' | \
                    cut -d'.' -f2)
+   VC_MICRO     := $(shell unset VS_UNICODE_OUTPUT ; cl.exe 2>&1 | \
+                   awk '{ if (NR==1) print $$8 }' | \
+                   cut -d'.' -f3)
 endif
 
 BUILDING_WITHIN_IDE = $(VS_UNICODE_OUTPUT)
@@ -88,6 +91,10 @@ LD            = build/win/ld.sh
 LDFLAGS       = -nologo -ignore:4049,4075,4217,4221 -incremental:no \
                 $(LDOPT) $(EXTRA_LDFLAGS) 
 SOFLAGS       = -DLL
+HAVEDYNAMICBASE := $(shell $(LD) /? 2>&1 | grep DYNAMICBASE > /dev/null)
+ifneq ($(HAVEDYNAMICBASE),)
+  SOFLAGS += -DYNAMICBASE
+endif
 SOEXT         = dll
 EXEEXT        = .exe
 
