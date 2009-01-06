@@ -312,15 +312,19 @@ void TImageDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
       iy = YtoPixel(yw[i]);
 
       switch (ms) {
-      // Dot (.)
-      case 1:
-         fImage->PutPixel((UInt_t)ix, (UInt_t)iy, col->AsHexString());
-         break;
-      case 6:
-         fImage->DrawCircle(ix, iy, 1, col->AsHexString(), 1);
-         break;
+      // Dots (.) big, medium and small
       case 7:
-         fImage->DrawCircle(ix, iy, 2, col->AsHexString(), 1);
+         fImage->PutPixel((UInt_t)ix-1, (UInt_t)iy-1, col->AsHexString());
+         fImage->PutPixel((UInt_t)ix-1, (UInt_t)iy+1, col->AsHexString());
+         fImage->PutPixel((UInt_t)ix+1, (UInt_t)iy+1, col->AsHexString());
+         fImage->PutPixel((UInt_t)ix+1, (UInt_t)iy-1, col->AsHexString());
+      case 6:
+         fImage->PutPixel((UInt_t)ix,   (UInt_t)iy-1, col->AsHexString());
+         fImage->PutPixel((UInt_t)ix,   (UInt_t)iy+1, col->AsHexString());
+         fImage->PutPixel((UInt_t)ix-1, (UInt_t)iy,   col->AsHexString());
+         fImage->PutPixel((UInt_t)ix+1, (UInt_t)iy,   col->AsHexString());
+      case 1:
+         fImage->PutPixel((UInt_t)ix,   (UInt_t)iy,   col->AsHexString());
          break;
       // Plus (+)
       case 2:
