@@ -932,7 +932,7 @@ const char *TSystem::DirName(const char *pathname)
          buf = new char [len+1];
       }
       strcpy(buf, pathname);
-      
+
       char *r = buf+pathlen-1;
       // First skip the trailing '/'
       while ( r>buf && *(r)=='/') { --r; }
@@ -940,10 +940,10 @@ const char *TSystem::DirName(const char *pathname)
       while ( r>buf && *(r)!='/') { --r; }
       // Then skip duplicate slashes
       // Note the 'r>buf' is a strict comparison to allows '/topdir' to return '/'
-      while ( r>buf && *(r)=='/') { --r; }            
+      while ( r>buf && *(r)=='/') { --r; }
       // And finally terminate the string to drop off the filename
       *(r+1) = '\0';
-      
+
       return buf;
    }
    return ".";
@@ -990,7 +990,7 @@ const char *TSystem::ExpandFileName(const char *fname)
 
    const int   kBufSize = kMAXPATHLEN;
    int         n, ier, iter, lx, ncopy;
-   char       *inp, *out, *c, *b, *e, *x, *t, buff[kBufSize*3];
+   char       *inp, *out, *c, *b, *e, *x, *t, buff[kBufSize*4];
    const char *p;
    static char xname[kBufSize];
 
@@ -1074,18 +1074,25 @@ again:
 #endif
             x++[0] = c[0];
          } else {                       // It is OK, copy result
-            strcpy(x,p); x += strlen(p); c = (b==c+1) ? e-1 : e;
+            int lp = strlen(p);
+            if (lp >= kBufSize) {
+               // make sure lx will be >= kBufSize (see below)
+               strncpy(x, p, kBufSize);
+               x += kBufSize;
+               break;
+            } else
+               strcpy(x,p); x += lp; c = (b==c+1) ? e-1 : e;
          }
       }
    }
 
    x[0] = 0; lx = x - out;
-   if (ier && iter < 3) { strcpy(inp,out); goto again; }
+   if (ier && iter < 3) { strcpy(inp, out); goto again; }
    ncopy = (lx >= kBufSize) ? kBufSize-1 : lx;
-   xname[0] = 0; strncat(xname,out,ncopy);
+   xname[0] = 0; strncat(xname, out, ncopy);
 
    if (ier || ncopy != lx)
-      Error("ExpandFileName", "input: %s, output: %s", fname, xname);
+      ::Error("TSystem::ExpandFileName", "input: %s, output: %s", fname, xname);
 
    return xname;
 }
@@ -2262,7 +2269,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    // directive fMakeExe to do so.
    // For both directives, before passing them to TSystem::Exec, it expands the
    // variables $SourceFiles, $SharedLib, $LibName, $IncludePath, $LinkedLibs,
-   // $DepLibs, $ExeName and $ObjectFiles. See SetMakeSharedLib() for more 
+   // $DepLibs, $ExeName and $ObjectFiles. See SetMakeSharedLib() for more
    // information on those variables.
    //
    // This method is used to implement the following feature:
@@ -2360,7 +2367,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
          mode=kDebug;
       }
    }
-   
+
    // if non-zero, build_loc indicates where to build the shared library.
    TString build_loc = ExpandFileName(GetBuildDir());
    if (build_dir && strlen(build_dir)) build_loc = build_dir;
@@ -2455,9 +2462,9 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
             build_loc = build_loc_store;
             mkdirFailed = kFALSE;
          } else if (!mkdirFailed && dirmode!=0) {
-            Chmod(build_loc,dirmode); 
+            Chmod(build_loc,dirmode);
          }
-      } 
+      }
    }
 
    // ======= Check if the library need to loaded or compiled
@@ -2527,7 +2534,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       incPath.ReplaceAll(" :",":");
    }
    incPath.Prepend(file_location+":.:");
-   
+
    // Extract the -D for the dependency generation.
    TString defines = " ";
    {
@@ -2550,7 +2557,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    } else {
       emergency_loc = TempDirectory();
    }
-   
+
    Bool_t canWrite = !gSystem->AccessPathName(build_loc,kWritePermission);
 
    Bool_t modified = kFALSE;
@@ -2623,7 +2630,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
             builddep += "\" > ";
             builddep += stderrfile;
             builddep += " 2>&1 ";
-            
+
             TString adddictdep = "echo ";
             adddictdep += filename;
             adddictdep += ": ";
@@ -2643,7 +2650,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
                ::Info("ACLiC",builddep.Data());
                ::Info("ACLiC",adddictdep.Data());
             }
-            
+
             Int_t depbuilt = !gSystem->Exec(touch);
             if (depbuilt) depbuilt = !gSystem->Exec(builddep);
             if (depbuilt) depbuilt = !gSystem->Exec(adddictdep);
@@ -2832,7 +2839,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
                 build_loc.Data());
       } else {
          ::Warning("ACLiC","%s is not writeable!",
-                   build_loc.Data());         
+                   build_loc.Data());
       }
       if (emergency_loc == build_dir ) {
          ::Error("ACLiC","%s is the last resort location (i.e. temp location)",build_loc.Data());
@@ -3007,7 +3014,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 
    Bool_t result = !dictResult;
    TString depLibraries;
-   
+
    // ======= Load the library the script might depend on
    if (result) {
       TString linkedlibs = GetLibraries("", "S");
@@ -3083,11 +3090,11 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    cmd.ReplaceAll("$IncludePath",includes);
    cmd.ReplaceAll("$SharedLib","\"$SharedLib\"");
    cmd.ReplaceAll("$SharedLib",library);
-   if (linkDepLibraries) { 
+   if (linkDepLibraries) {
       if (produceRootmap) {
          cmd.ReplaceAll("$DepLibs",depLibraries);
       } else {
-         cmd.ReplaceAll("$DepLibs",linkLibraries);         
+         cmd.ReplaceAll("$DepLibs",linkLibraries);
       }
    }
    cmd.ReplaceAll("$LinkedLibs",linkLibraries);
