@@ -9,7 +9,7 @@
 
 !IFNDEF DEBUG
 # Full optimization:
-OPTIMIZE = -Ox -MD
+OPTIMIZE = -O2 -MD
 !ELSE
 # Debugging:
 OPTIMIZE = -Zi -MDd
@@ -20,7 +20,11 @@ LINKDEBUG =/nodefaultlib
  
 # cl -? describes the options
 #CC = cl -G5 -GF $(OPTIMIZE) -W3 -nologo
-CC = cl -GR $(OPTIMIZE) -W3 -nologo $(NMCXXFLAGS)
+!if "$(NMCXXFLAGS)" == ""
+CC = cl -GR $(OPTIMIZE) -W3 -nologo
+!else
+CC = cl -nologo $(NMCXXFLAGS)
+!endif
 
 LDFLAGS = /link /machine:ix86 $(LINKDEBUG)
 
@@ -70,7 +74,9 @@ gdk-win32.lib : $(gdk_win32_OBJECTS)
 	$(CC) $(CFLAGS) -c -DGDK_COMPILATION -DG_LOG_DOMAIN=\"Gdk\" $<
 
 clean:
-	del *.obj
-	del *.lib
-	del *.err
-	del *.res
+	-@erase /q *.obj >nul 2>&1
+	-@erase /q *.lib >nul 2>&1
+	-@erase /q *.err >nul 2>&1
+	-@erase /q *.res >nul 2>&1
+	-@erase /q *.pdb >nul 2>&1
+	-@erase /q *.ilk >nul 2>&1
