@@ -75,9 +75,9 @@ endif
 NOOPT         =
 
 # Compiler:
-CXX           = cl
-CC            = cl
-CPPPREP       = cl -E -C -nologo
+CXX           = cl.exe
+CC            = cl.exe
+CPPPREP       = cl.exe -E -C -nologo
 CXXFLAGS      = -nologo -FIw32pragma.h \
                 $(BLDCXXFLAGS) $(EXTRA_CXXFLAGS)
 CXXOUT        = -Fo
