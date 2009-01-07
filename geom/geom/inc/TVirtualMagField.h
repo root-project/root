@@ -1,4 +1,4 @@
-// @(#)root/geom:$Id:$
+// @(#)root/geom:$Id$
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -59,7 +59,7 @@ public:
    TGeoUniformMagField(Double_t Bx, Double_t By, Double_t Bz);
    virtual ~TGeoUniformMagField() {}
    
-   void                    Field(const Double_t */*x*/, Double_t *B) {B[0]=fB[0]; B[1]=fB[1]; B[2]=fB[2];}
+   void Field(const Double_t * /*x*/, Double_t *B) {B[0]=fB[0]; B[1]=fB[1]; B[2]=fB[2];}
    
    ClassDef(TGeoUniformMagField, 1)  // Uniform magnetic field        
 };
