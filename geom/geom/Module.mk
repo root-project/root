@@ -35,7 +35,8 @@ GEOMH1       := TGeoAtt.h TGeoBoolNode.h \
 		TGeoPolygon.h TGeoXtru.h TGeoPhysicalNode.h \
                 TGeoHelix.h TGeoParaboloid.h TGeoElement.h TGeoHalfSpace.h \
                 TGeoBuilder.h TGeoNavigator.h
-GEOMH2       := TGeoPatternFinder.h TGeoCache.h
+GEOMH2       := TGeoPatternFinder.h TGeoCache.h TVirtualMagField.h \
+                TGeoUniformMagField.h TGeoGlobalMagField.h
 GEOMH1       := $(patsubst %,$(MODDIRI)/%,$(GEOMH1))
 GEOMH2       := $(patsubst %,$(MODDIRI)/%,$(GEOMH2))
 GEOMH        := $(GEOMH1) $(GEOMH2)

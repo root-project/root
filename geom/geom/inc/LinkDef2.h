@@ -30,6 +30,8 @@
 #pragma link C++ class TGeoPatternHoneycomb+;
 #pragma link C++ class TGeoNodeCache+;
 #pragma link C++ class TGeoCacheState+;
-
+#pragma link C++ class TVirtualMagField+;
+#pragma link C++ class TGeoUniformMagField+;
+#pragma link C++ class TGeoGlobalMagField;
 
 #endif
