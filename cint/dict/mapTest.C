@@ -1,5 +1,6 @@
 #include <map>
 #include "MyTemplateTestClass.h"
+#include "RConfig.h"
 
 void mapTest()
 {
@@ -29,7 +30,11 @@ void mapTest()
   
   MyTemplateClass<int> mtc(-5);
   std::map<int, MyTemplateClass<int> > tmpmap;
+#ifdef R__WIN32
+  tmpmap.insert( std::pair<const int, MyTemplateClass<int> >(1,mtc) );
+#else
   tmpmap.insert( std::pair<int, MyTemplateClass<int> >(1,mtc) );
+#endif
 
   
   /*TODO: CINT doesn't interpret the opearor -> properly
