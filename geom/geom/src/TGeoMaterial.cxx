@@ -522,10 +522,13 @@ void TGeoMixture::AverageProperties()
 }
 
 //_____________________________________________________________________________
-void TGeoMixture:: AddElement(Double_t a, Double_t z, Double_t weight)
+void TGeoMixture::AddElement(Double_t a, Double_t z, Double_t weight)
 {
 // add an element to the mixture using fraction by weight
    // Check if the element is already defined
+   TGeoElementTable *table = gGeoManager->GetElementTable();
+   if (z<1 || z>table->GetNelements()-1)
+      Fatal("AddElement", "Cannot add element having Z=%d to mixture %s", (Int_t)z, GetName());
    Int_t i;
    for (i=0; i<fNelements; i++) {
       if (TMath::Abs(z-fZmixture[i])<1.e-6  && TMath::Abs(a-fAmixture[i])<1.e-6) {
@@ -564,6 +567,7 @@ void TGeoMixture:: AddElement(Double_t a, Double_t z, Double_t weight)
    if (z - Int_t(z) > 1E-3)
       Warning("DefineElement", "Mixture %s has element defined with fractional Z=%f", GetName(), z);
    GetElement(i)->SetDefined();
+   table->GetElement((Int_t)z)->SetDefined();
    
    //compute equivalent radiation length (taken from Geant3/GSMIXT)
    AverageProperties();
@@ -665,7 +669,7 @@ void TGeoMixture::AddElement(TGeoElement *elem, Int_t natoms)
       fNatoms   = new Int_t[1];
    } else {   
       if (!fNatoms) {
-         Error("AddElement", "Cannot add element by natoms in mixture %s after defining elements by weight",
+         Fatal("AddElement", "Cannot add element by natoms in mixture %s after defining elements by weight",
                GetName());
          return;
       }         
@@ -701,6 +705,7 @@ void TGeoMixture::AddElement(TGeoElement *elem, Int_t natoms)
       amol += fAmixture[i]*fNatoms[i];
    }   
    for (i=0; i<fNelements; i++) fWeights[i] = fNatoms[i]*fAmixture[i]/amol;
+   table->GetElement(elem->Z())->SetDefined();
    AverageProperties();
 }          
 
