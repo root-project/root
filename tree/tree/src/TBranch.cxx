@@ -989,7 +989,13 @@ Int_t TBranch::FlushBaskets()
    UInt_t nerror = 0;
    Int_t nbytes = 0;
 
-   for(Int_t i=0; i<=fWriteBasket; ++i) {
+   Int_t maxbasket = fWriteBasket;
+   // The following protection is not necessary since we should always
+   // have fWriteBasket < fBasket.GetSize()
+   //if (fBaskets.GetSize() <= maxbasket) {
+   //   maxbasket = fBaskets.GetSize();
+   //}
+   for(Int_t i=0; i != maxbasket; ++i) {
       if (fBaskets.UncheckedAt(i)) {
          Int_t nwrite = FlushOneBasket(i);
          if (nwrite<0) {
@@ -1951,6 +1957,7 @@ void TBranch::Streamer(TBuffer& b)
       if (v > 9) {
          b.ReadClassBuffer(TBranch::Class(), this, v, R__s, R__c);
 
+         fBaskets.Expand(fWriteBasket+1);
          fDirectory = gDirectory;
          if (fFileName.Length() != 0) fDirectory = 0;
          fNleaves = fLeaves.GetEntriesFast();
