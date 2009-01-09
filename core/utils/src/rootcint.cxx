@@ -5410,7 +5410,7 @@ int main(int argc, char **argv)
          G__ClassInfo clFile;
          clFile.Init();
          while (clFile.Next()) {
-            if (clFile.Linkage() == G__CPPLINK) {
+            if (clFile.Linkage() == G__CPPLINK && !(clFile.Property() & G__BIT_ISNAMESPACE) ) {
                outputfile << clFile.Fullname() << endl;
             }
          }
