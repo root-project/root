@@ -23,7 +23,7 @@ mylist_C.so:
 
 VectorSort.log: VectorSort.C
 	$(CMDECHO) LINES=0 $(CALLROOTEXE) -q -l -b $(@:.log=.C) \
-	  | $(RemoveLeadingDirs) -e 's,::iterator)[[:digit:]]*$$,::iterator),' \
+	  | $(RemoveLeadingDirs) -e 's,^(vector,(class vector,' -e 's,::iterator)[x[:xdigit:]]*$$,::iterator),' \
 	  > $@ 2>&1
 
 VectorSort: VectorSort.log
