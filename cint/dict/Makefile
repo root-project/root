@@ -63,5 +63,8 @@ defaultargs_compiled: defaultargs.clog
 defaultargs_interpreted: defaultargs.log
 	$(TestDiff)
 
-templateAutodict: templateAutodict.log
+templateAutodict.shortlog: templateAutodict.log
+	$(CMDECHO) cat templateAutodict.log | grep -v -e _cint.\*cxx -e Creating -e AutoDict_.\*cxx > templateAutodict.shortlog
+
+templateAutodict: templateAutodict.shortlog
 	$(TestDiff)
