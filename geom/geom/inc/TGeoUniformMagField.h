@@ -1,4 +1,4 @@
-// @(#)root/geom:$Id:$
+// @(#)root/geom:$Id$
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -17,7 +17,7 @@
 
 ////////////////////////////////////////////////////////////////////////////
 //                                                                        //
-// TGeoUniformMagField - Uniform magnetic field class.                       //
+// TGeoUniformMagField - Uniform magnetic field class.                    //
 //                                                                        //
 ////////////////////////////////////////////////////////////////////////////
 

@@ -35,7 +35,8 @@ TVirtualMC::TVirtualMC(const char *name, const char *title,
   : TNamed(name,title),
     fStack(0),
     fDecayer(0),
-    fRandom(0)
+    fRandom(0),
+    fMagField(0)
 {
    //
    // Standard constructor
@@ -62,7 +63,8 @@ TVirtualMC::TVirtualMC()
     fApplication(0),
     fStack(0),
     fDecayer(0),
-    fRandom(0)
+    fRandom(0),
+    fMagField(0)
 {
    //
    // Default constructor
@@ -120,4 +122,13 @@ void TVirtualMC::SetRandom(TRandom* random)
 //
    gRandom = random;
    fRandom = random;
+}
+
+//_____________________________________________________________________________
+void TVirtualMC::SetMagField(TVirtualMagField* field)
+{
+//
+// Set magnetic field.
+//
+   fMagField = field;
 }

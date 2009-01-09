@@ -94,7 +94,7 @@ public:
    virtual Double_t TrackingZmax() const { return DBL_MAX; }
 
    // Calculate user field \a b at point \a x
-   virtual void     Field(const Double_t* x, Double_t* b) const = 0;
+   virtual void     Field(const Double_t* x, Double_t* b) const;
 
 private:
    // static data members
@@ -102,6 +102,11 @@ private:
 
    ClassDef(TVirtualMCApplication,1)  //Interface to MonteCarlo application
 };
+
+inline void TVirtualMCApplication::Field(const Double_t* /*x*/, Double_t* b) const {
+   // No magnetic field
+   b[0] = 0; b[1] = 0; b[2] = 0;
+}   
 
 #endif //ROOT_TVirtualMCApplication
 

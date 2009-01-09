@@ -27,6 +27,7 @@
 #include "TVirtualMCApplication.h"
 #include "TVirtualMCStack.h"
 #include "TVirtualMCDecayer.h"
+#include "TVirtualMagField.h"
 #include "TRandom.h"
 #include "TString.h"
 #include "TError.h"
@@ -861,6 +862,9 @@ public:
    // Set the random number generator
    virtual void SetRandom(TRandom* random);
 
+   // Set the magnetic field
+   virtual void SetMagField(TVirtualMagField* field);
+
     //
     // ------------------------------------------------
     // Get methods
@@ -876,6 +880,9 @@ public:
     // Return the random number generator
     virtual TRandom*           GetRandom() const  { return fRandom; }
 
+    // Return the magnetic field
+    virtual TVirtualMagField*  GetMagField() const  { return fMagField; }
+
 
 protected:
    TVirtualMCApplication* fApplication; //! User MC application
@@ -889,6 +896,7 @@ private:
    TVirtualMCStack*    fStack;   //! Particles stack
    TVirtualMCDecayer*  fDecayer; //! External decayer
    TRandom*            fRandom;  //! Random number generator
+   TVirtualMagField*   fMagField;//! Magnetic field
 
    ClassDef(TVirtualMC,1)  //Interface to Monte Carlo
 };
