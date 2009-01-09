@@ -7,7 +7,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog  branch.root treeobj.root abc*.ro
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += noname simple i_simple separate abc
+TEST_TARGETS += noname simple i_simple separate abc updates
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -116,3 +116,6 @@ abc: abc.cintcint.success abc.cintreflex.success abc.reflexcint.success abc.refl
 else
 abc: abc.cintcint.success
 endif
+
+updates: updates.log
+	$(TestDiff)
