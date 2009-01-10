@@ -915,6 +915,7 @@ struct G__DUMMY_FOR_CINT7 {
    void* fTypeName;
    unsigned int fModifiers;
 };
+
 #ifdef __cplusplus
 struct G__value {
 #else
@@ -923,7 +924,7 @@ typedef struct {
   union {
     double d;
     long    i; /* used to be int */
-#if defined(G__PRIVATE_GVALUE) && !defined(_WINDOWS)
+#if defined(G__PRIVATE_GVALUE) && !defined(_WIN32)
 #if defined(private) && defined(ROOT_RVersion)
 #define G__alt_private private
 #undef private
@@ -931,7 +932,7 @@ typedef struct {
 private:
 #endif
     struct G__p2p reftype;
-#if defined(G__PRIVATE_GVALUE) && !defined(_WINDOWS)
+#if defined(G__PRIVATE_GVALUE) && !defined(_WIN32)
 public:
 #endif
     char ch;
@@ -949,7 +950,7 @@ public:
 #ifdef G__REFERENCETYPE2
   long ref;
 #endif
-#if defined(G__PRIVATE_GVALUE) && !defined(_WINDOWS)
+#if defined(G__PRIVATE_GVALUE) && !defined(_WIN32)
 private:
 #if defined(G__alt_private) && defined(ROOT_RVersion)
 #define private public
