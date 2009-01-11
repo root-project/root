@@ -41,7 +41,7 @@ int VectorSort() {
 
    // check the availability and validity of the iterator type
    // (this should be "const_iterator" btw - it's a CINT bug)
-   gROOT->ProcessLine(Form("((const vector<unsigned int>*)%p)->end()", &vui));
+   gROOT->ProcessLine(Form("((const vector<unsigned int>*)0x%lx)->end()", &vui));
 
    // is the iterator dict valid? (not really - it ignores the const_)
    // a bit too noisy, so we skip it:
