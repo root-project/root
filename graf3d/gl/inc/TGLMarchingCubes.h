@@ -410,8 +410,8 @@ private:
    typedef TIsoMesh<ValueType>   MeshType_t;
 
 public:
-   TMeshBuilder(Bool_t averagedNormals)
-      : fAvgNormals(averagedNormals), fMesh(0), fIso()
+   TMeshBuilder(Bool_t averagedNormals, ValueType eps = 1e-7)
+      : fAvgNormals(averagedNormals), fMesh(0), fIso(), fEpsilon(eps)
    {
    }
 
@@ -424,6 +424,7 @@ private:
    SliceType_t fSlices[2];
    MeshType_t *fMesh;
    ValueType   fIso;
+   ValueType   fEpsilon;
 
    void NextStep(UInt_t depth, const SliceType_t *prevSlice, 
                  SliceType_t *curr)const;

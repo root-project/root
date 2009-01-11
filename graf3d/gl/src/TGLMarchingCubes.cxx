@@ -62,7 +62,7 @@ V GetOffset(E val1, E val2, V iso)
 
 //______________________________________________________________________
 template<class E, class V>
-void ConnectTriangles(TCell<E> &cell, TIsoMesh<V> *mesh)
+void ConnectTriangles(TCell<E> &cell, TIsoMesh<V> *mesh, V eps)
 {
    UInt_t t[3];
    for (UInt_t i = 0; i < 5; ++i) {
@@ -70,6 +70,26 @@ void ConnectTriangles(TCell<E> &cell, TIsoMesh<V> *mesh)
          break;
       for (Int_t j = 2; j >= 0; --j)
          t[j] = cell.fIds[conTbl[cell.fType][3 * i + j]];
+
+      const V *v0 = &mesh->fVerts[t[0] * 3];
+      const V *v1 = &mesh->fVerts[t[1] * 3];
+      const V *v2 = &mesh->fVerts[t[2] * 3];
+
+      if (std::abs(v0[0] - v1[0]) < eps && 
+          std::abs(v0[1] - v1[1]) < eps &&
+          std::abs(v0[2] - v1[2]) < eps)
+         continue;
+
+      if (std::abs(v2[0] - v1[0]) < eps && 
+          std::abs(v2[1] - v1[1]) < eps &&
+          std::abs(v2[2] - v1[2]) < eps)
+         continue;
+
+      if (std::abs(v0[0] - v2[0]) < eps && 
+          std::abs(v0[1] - v2[1]) < eps &&
+          std::abs(v0[2] - v2[2]) < eps)
+         continue;
+
       mesh->AddTriangle(t);
    }
 }
@@ -238,7 +258,7 @@ void TMeshBuilder<D, V>::BuildFirstCube(SliceType_t *s)const
          SplitEdge(cell, fMesh, i, this->fMinX, this->fMinY, this->fMinZ, fIso);
    }
 
-   ConnectTriangles(cell, fMesh);
+   ConnectTriangles(cell, fMesh, fEpsilon);
 }
 
 //______________________________________________________________________
@@ -300,7 +320,7 @@ void TMeshBuilder<D, V>::BuildRow(SliceType_t *s)const
       if (edges & k10)
          SplitEdge(cell, fMesh, 10, x, this->fMinY, this->fMinZ, fIso);
       //3. Connect new triangles.
-      ConnectTriangles(cell, fMesh);
+      ConnectTriangles(cell, fMesh, fEpsilon);
    }
 }
 
@@ -367,7 +387,7 @@ void TMeshBuilder<D, V>::BuildCol(SliceType_t *s)const
       if (edges & k11)
          SplitEdge(cell, fMesh, 11, this->fMinX, y, this->fMinZ, fIso);
 
-      ConnectTriangles(cell, fMesh);
+      ConnectTriangles(cell, fMesh, fEpsilon);
    }
 }
 
@@ -443,7 +463,7 @@ void TMeshBuilder<D, V>::BuildSlice(SliceType_t *s)const
          if (edges & k10)
             SplitEdge(cell, fMesh, 10, x, y, this->fMinZ, fIso);
 
-         ConnectTriangles(cell, fMesh);
+         ConnectTriangles(cell, fMesh, fEpsilon);
       }
    }
 }
@@ -510,7 +530,7 @@ void TMeshBuilder<D, V>::BuildFirstCube(UInt_t depth, const SliceType_t *prevSli
    if(edges & k11)
       SplitEdge(cell, fMesh, 11, this->fMinX, this->fMinY, z, fIso);
 
-   ConnectTriangles(cell, fMesh);
+   ConnectTriangles(cell, fMesh, fEpsilon);
 }
 
 //______________________________________________________________________
@@ -585,7 +605,7 @@ void TMeshBuilder<D, V>::BuildRow(UInt_t depth, const SliceType_t *prevSlice,
             SplitEdge(cell, fMesh, 10, x, this->fMinY, z, fIso);
       }
 
-      ConnectTriangles(cell, fMesh);
+      ConnectTriangles(cell, fMesh, fEpsilon);
    }
 }
 
@@ -656,7 +676,7 @@ void TMeshBuilder<D, V>::BuildCol(UInt_t depth, const SliceType_t *prevSlice,
       if(edges & k11)
          SplitEdge(cell, fMesh, 11, this->fMinX, y, z, fIso);
 
-      ConnectTriangles(cell, fMesh);
+      ConnectTriangles(cell, fMesh, fEpsilon);
    }
 }
 
@@ -731,7 +751,7 @@ void TMeshBuilder<D, V>::BuildSlice(UInt_t depth, const SliceType_t *prevSlice,
          if(edges & k10)
             SplitEdge(cell, fMesh, 10, x, y, z, fIso);
 
-         ConnectTriangles(cell, fMesh);
+         ConnectTriangles(cell, fMesh, fEpsilon);
       }
    }
 }
@@ -766,7 +786,7 @@ void TMeshBuilder<D, V>::BuildNormals()const
 
       const V len = std::sqrt(n[0] * n[0] + n[1] * n[1] + n[2] * n[2]);
 
-      if (len < 1e-7f)//degenerated triangle
+      if (len < fEpsilon)//degenerated triangle
          continue;
 
       n[0] /= len;
@@ -789,6 +809,8 @@ void TMeshBuilder<D, V>::BuildNormals()const
    for (size_type i = 0, e = fMesh->fNorms.size() / 3; i < e; ++i) {
       V * nn = &fMesh->fNorms[i * 3];
       const V len = std::sqrt(nn[0] * nn[0] + nn[1] * nn[1] + nn[2] * nn[2]);
+      if (len < fEpsilon)
+         continue;
       fMesh->fNorms[i * 3]     /= len;
       fMesh->fNorms[i * 3 + 1] /= len;
       fMesh->fNorms[i * 3 + 2] /= len;
