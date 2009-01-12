@@ -1824,7 +1824,8 @@ extern "C" int G__loadfile(const char* filenamein)
          //
          G__getcintsysdir();
          if (G__cintsysdir[0]) {
-            sprintf(G__ifile.name, "%s/%s/include/%s%s", G__cintsysdir, G__CFG_COREVERSION, filename, addpost[i2]);
+            sprintf(G__ifile.name,"%s%s%s%sinclude%s%s%s",G__cintsysdir,G__psep,G__CFG_COREVERSION
+                    ,G__psep,G__psep,filename,addpost[i2]);
 #ifndef G__WIN32
             G__ifile.fp = fopen(G__ifile.name, "r");
 #else // G__WIN32
@@ -1845,7 +1846,8 @@ extern "C" int G__loadfile(const char* filenamein)
          //
          G__getcintsysdir();
          if (G__cintsysdir[0]) {
-            sprintf(G__ifile.name, "%s/%s/stl/%s%s", G__cintsysdir, G__CFG_COREVERSION, filename, addpost[i2]);
+            sprintf(G__ifile.name,"%s%s%s%sstl%s%s%s",G__cintsysdir, G__psep, G__CFG_COREVERSION,
+                    G__psep, G__psep, filename,addpost[i2]);
 #ifndef G__WIN32
             G__ifile.fp = fopen(G__ifile.name, "r");
 #else // G__WIN32
@@ -1865,7 +1867,8 @@ extern "C" int G__loadfile(const char* filenamein)
          // try $CINTSYSDIR/lib
          //
          if (G__cintsysdir[0]) {
-            sprintf(G__ifile.name, "%s/%s/lib/%s%s", G__cintsysdir, G__CFG_COREVERSION, filename, addpost[i2]);
+            sprintf(G__ifile.name,"%s%s%s%slib%s%s%s",G__cintsysdir, G__psep, G__CFG_COREVERSION,
+                    G__psep, G__psep,filename,addpost[i2]);
 #ifndef G__WIN32
             G__ifile.fp = fopen(G__ifile.name, "r");
 #else // G__WIN32

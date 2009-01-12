@@ -542,7 +542,7 @@ void Cint::Internal::G__gen_cpplink()
       char *sysstl;
       G__getcintsysdir();
       sysstl = (char*)malloc(strlen(G__cintsysdir) + 20);
-      sprintf(sysstl, "%s/%s/stl/", G__cintsysdir, G__CFG_COREVERSION);
+      sprintf(sysstl,"%s%s%s%sstl%s",G__cintsysdir,G__psep,G__CFG_COREVERSION,G__psep,G__psep);
       lenstl = strlen(sysstl);
       for (filen = 0;filen < G__nfile;filen++) {
          fname = G__srcfile[filen].filename;
