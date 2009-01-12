@@ -843,7 +843,6 @@ TMatrixD *TUnfold::InvertMSparse(TMatrixDSparse const &A) {
   const Int_t *CAschurBDinv_col=CAschurBDinv->GetColIndexArray();
   const Double_t *CAschurBDinv_data=CAschurBDinv->GetMatrixArray();
   for(Int_t row=0;row<CAschurBDinv->GetNrows();row++) {
-    bool has_diagonal=false;
     for(Int_t i=CAschurBDinv_row[row];i<CAschurBDinv_row[row+1];i++) {
       Int_t col=CAschurBDinv_col[i];
       (*r)(row+nmin,col+nmin)=CAschurBDinv_data[i]*Dinv[row];
