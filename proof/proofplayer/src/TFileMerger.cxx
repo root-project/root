@@ -156,11 +156,13 @@ void TFileMerger::PrintFiles(Option_t *options)
 }
 
 //______________________________________________________________________________
-Bool_t TFileMerger::Merge()
+Bool_t TFileMerger::Merge(Bool_t cp_progressbar)
 {
    // Merge the files. If no output file was specified it will write into
    // the file "FileMerger.root" in the working directory. Returns true
    // on success, false in case of error.
+   // "cp_progressbar" is pass to TFile::Cp to control whether there is 
+   // visual feedback on the progress of the copy.
 
    if (!fOutputFile) {
       Info("Merge", "will merge the results to the file "
@@ -175,9 +177,10 @@ Bool_t TFileMerger::Merge()
    if (!result) {
       Error("Merge", "error during merge of your ROOT files");
    } else {
-      //fOutputFile->Write();  Not needed as already done in MergeRecursive()
+      //fOutputFile->Write();  Not needed as already done in MergeRecursive() ... well actually it is SaveSelf which is a bit different.
+      fOutputFile->Close(); // But Close is required so the file is complete.
       // copy the result file to the final destination
-      TFile::Cp(fOutputFilename1, fOutputFilename);
+      TFile::Cp(fOutputFilename1, fOutputFilename,cp_progressbar);
    }
 
    // Remove the temporary result file
