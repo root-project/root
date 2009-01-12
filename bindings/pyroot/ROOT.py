@@ -2,7 +2,7 @@ from __future__ import generators
 # @(#)root/pyroot:$Id$
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
-# Last: 11/07/08
+# Last: 12/18/08
 
 """PyROOT user module.
 
@@ -15,7 +15,7 @@ from __future__ import generators
 
 """
 
-__version__ = '5.2.0'
+__version__ = '5.2.1'
 __author__  = 'Wim Lavrijsen (WLavrijsen@lbl.gov)'
 
 
@@ -525,16 +525,13 @@ def cleanup():
  # destroy facade
    del sys.modules[ __name__ ], facade
 
- # run the gROOT shutdown sequence ... running it here ensures that it
- # is done before any ROOT libraries are off-loaded, with unspecified
- # order of static object destruction 
+ # run part the gROOT shutdown sequence ... running it here ensures that
+ # it is done before any ROOT libraries are off-loaded, with unspecified
+ # order of static object destruction; so far it only seemed needed for
+ # sockets with PROOF, whereas files should not be touched this early ...
    gROOT = sys.modules[ 'libPyROOT' ].gROOT
-   if gROOT.GetListOfFiles():
-      gROOT.GetListOfFiles().Delete( 'slow' )
    if gROOT.GetListOfSockets():
       gROOT.GetListOfSockets().Delete()
-   if gROOT.GetListOfMappedFiles():
-      gROOT.GetListOfMappedFiles().Delete( 'slow' )
    del gROOT
 
  # cleanup cached python strings
