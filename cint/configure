@@ -756,6 +756,9 @@ for exp in ${EXPORTS[*]}; do
     echo '#define 'G__CFG_$exp \""$value"\" >> $file
 done
 
+echo Removing Apiif.cxx
+rm ${COREVERSION}/src/dict/Apiif*.*
+
 # now write the cint-config script
 
 
