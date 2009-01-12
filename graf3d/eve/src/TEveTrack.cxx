@@ -652,13 +652,14 @@ TEveTrackList::TEveTrackList(TEveTrackPropagator* rs) :
    fMinPt (0), fMaxPt (0), fLimPt (0),
    fMinP  (0), fMaxP  (0), fLimP  (0)
 {
-   // Constructor. If TrackRenderStyle argument is 0, a new default
-   // render-style is created.
+   // Constructor. If track-propagator argument is 0, a new default
+   // one is created.
 
    fChildClass = TEveTrack::Class(); // override member from base TEveElementList
 
    fMainColorPtr = &fLineColor;
-   if (fPropagator== 0) rs = new TEveTrackPropagator;
+
+   if (rs == 0) rs = new TEveTrackPropagator;
    SetPropagator(rs);
 }
 
@@ -676,13 +677,14 @@ TEveTrackList::TEveTrackList(const Text_t* name, TEveTrackPropagator* rs) :
    fMinPt (0), fMaxPt (0), fLimPt (0),
    fMinP  (0), fMaxP  (0), fLimP  (0)
 {
-   // Constructor. If TrackRenderStyle argument is 0, a new default
-   // render-style is created.
+   // Constructor. If track-propagator argument is 0, a new default
+   // one is created.
 
    fChildClass = TEveTrack::Class(); // override member from base TEveElementList
 
    fMainColorPtr = &fLineColor;
-   if (fPropagator== 0) rs = new TEveTrackPropagator;
+
+   if (rs == 0) rs = new TEveTrackPropagator;
    SetPropagator(rs);
 }
 
