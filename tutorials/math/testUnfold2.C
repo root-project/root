@@ -1,10 +1,14 @@
-//  Test program for the class MyUnfold, derived from TUnfold
 // Author: Stefan Schmitt
 // DESY, 14.10.2008
 
-//  Version 6a, fix problem with dynamic array allocation under windows
+//  Version 11,  print chi**2 and number of degrees of freedom
 //
 //  History:
+//    Version 10, with bug-fix in TUnfold.cxx
+//    Version 9, with bug-fix in TUnfold.cxx, TUnfold.h
+//    Version 8, with bug-fix in TUnfold.cxx, TUnfold.h
+//    Version 7, with bug-fix in TUnfold.cxx, TUnfold.h
+//    Version 6a, fix problem with dynamic array allocation under windows
 //    Version 6, re-include class MyUnfold in the example
 //    Version 5, move class MyUnfold to seperate files
 //    Version 4, with bug-fix in TUnfold.C
@@ -67,7 +71,7 @@ protected:
   Int_t const *fBinMap; // bin mapping to extract the global correlation
   Double_t fTauBest;    // tau with the smallest correlation
   Double_t fRhoMin;     // smallest correlation
-  ClassDef(MyUnfold,0); 
+  //ClassDef(MyUnfold,0); 
 };
 
 //ClassImp(MyUnfold)
@@ -350,6 +354,8 @@ int testUnfold2()
   // finally, the unfolding is done for the best choice of tau
   iBest=unfold.ScanLcurve(nScan,tauMin,tauMax,&lCurve,&logTauX,&logTauY);
   std::cout<<"tau="<<unfold.GetTau()<<"\n";  
+  std::cout<<"chi**2="<<unfold.GetChi2A()<<"+"<<unfold.GetChi2L()
+           <<" / "<<unfold.GetNdf()<<"\n";
   Double_t t[1],x[1],y[1];
   logTauX->GetKnot(iBest,t[0],x[0]);
   logTauY->GetKnot(iBest,t[0],y[0]);
