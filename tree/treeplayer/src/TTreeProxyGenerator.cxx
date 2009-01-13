@@ -1743,7 +1743,6 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
       fprintf(hf,"#include <TBranchProxyDirector.h>\n");
       fprintf(hf,"#include <TBranchProxyTemplate.h>\n");
       fprintf(hf,"#include <TFriendProxy.h>\n");
-      fprintf(hf,"#include <TMethodCall.h>\n\n");
       fprintf(hf,"using namespace ROOT;\n"); // questionable
       fprintf(hf,"\n");
 
@@ -1768,8 +1767,21 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
       }
       fprintf(hf,"\n\n");
 
-      fprintf(hf, "class %s : public TSelector {\n", classname.Data());
-      fprintf(hf, "   public :\n");
+      fprintf(hf,"class %s_Interface {\n", scriptfunc.Data());
+      fprintf(hf,"   // This class defines the list of method directly used by %s,\n",classname.Data());
+      fprintf(hf,"   // and that can be overload in the user's script\n"); 
+      fprintf(hf,"public:\n");
+      fprintf(hf,"   void %s_Begin(TTree*) {}\n",scriptfunc.Data());
+      fprintf(hf,"   void %s_SlaveBegin(TTree*) {}\n",scriptfunc.Data());
+      fprintf(hf,"   Bool_t %s_Notify() { return kTRUE; }\n",scriptfunc.Data());
+      fprintf(hf,"   Bool_t %s_Process(Long64_t) { return kTRUE; }\n",scriptfunc.Data());
+      fprintf(hf,"   void %s_SlaveTerminate() {}\n",scriptfunc.Data());
+      fprintf(hf,"   void %s_Terminate() {}\n",scriptfunc.Data());
+      fprintf(hf,"};\n");
+      fprintf(hf,"\n\n");
+
+      fprintf(hf, "class %s : public TSelector, public %s_Interface {\n", classname.Data(), scriptfunc.Data());
+      fprintf(hf, "public :\n");
       fprintf(hf, "   TTree          *fChain;    //!pointer to the analyzed TTree or TChain\n");
       fprintf(hf, "   TSelectorDraw  *fHelper;   //!helper class to create the default histogram\n");
       fprintf(hf, "   TList          *fInput;    //!input list of the helper\n");
@@ -1778,12 +1790,6 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
 
       fprintf(hf, "   // Optional User methods\n");
       fprintf(hf, "   TClass         *fClass;    // Pointer to this class's description\n");
-      fprintf(hf, "   TMethodCall     fBeginMethod;\n");
-      fprintf(hf, "   TMethodCall     fSlaveBeginMethod;\n");
-      fprintf(hf, "   TMethodCall     fNotifyMethod;\n");
-      fprintf(hf, "   TMethodCall     fProcessMethod;\n");
-      fprintf(hf, "   TMethodCall     fSlaveTerminateMethod;\n");
-      fprintf(hf, "   TMethodCall     fTerminateMethod;\n");
 
       if (fListOfClasses.LastIndex()>=0) {
          fprintf(hf, "\n   // Wrapper class for each unwounded class\n");
@@ -1826,12 +1832,6 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
       fprintf(hf,   ",\n      htemp(0)");
       fprintf(hf,   ",\n      fDirector(tree,-1)");
       fprintf(hf,   ",\n      fClass                (TClass::GetClass(\"%s\"))",classname.Data());
-      fprintf(hf,   ",\n      fBeginMethod          (fClass,\"%s_Begin\",\"(TTree*)0\")",scriptfunc.Data());
-      fprintf(hf,   ",\n      fSlaveBeginMethod     (fClass,\"%s_SlaveBegin\",\"(TTree*)0\")",scriptfunc.Data());
-      fprintf(hf,   ",\n      fNotifyMethod         (fClass,\"%s_Notify\",\"\")",scriptfunc.Data());
-      fprintf(hf,   ",\n      fProcessMethod        (fClass,\"%s_Process\",\"0\")",scriptfunc.Data());
-      fprintf(hf,   ",\n      fSlaveTerminateMethod (fClass,\"%s_SlaveTerminate\",\"\")",scriptfunc.Data());
-      fprintf(hf,   ",\n      fTerminateMethod      (fClass,\"%s_Terminate\",\"\")",scriptfunc.Data());
       next = &fListOfTopProxies;
       while ( (data = (TBranchProxyDescriptor*)next()) ) {
          fprintf(hf,",\n      %-*s(&fDirector,\"%s\")",
@@ -1926,7 +1926,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
       fprintf(hf,"   // Called when loading a new file.\n");
       fprintf(hf,"   // Get branch pointers.\n");
       fprintf(hf,"   fDirector.SetTree(fChain);\n");
-      fprintf(hf,"   if (fNotifyMethod.IsValid()) fNotifyMethod.Execute(this);\n");
+      fprintf(hf,"   %s_Notify();\n",scriptfunc.Data());
       fprintf(hf,"   \n");
       fprintf(hf,"   return kTRUE;\n");
       fprintf(hf,"}\n");
@@ -1941,7 +1941,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
       fprintf(hf,"   // The tree argument is deprecated (on PROOF 0 is passed).\n");
       fprintf(hf,"\n");
       fprintf(hf,"   TString option = GetOption();\n");
-      fprintf(hf,"   if (fBeginMethod.IsValid()) fBeginMethod.Execute(this,Form(\"0x%%lx\",tree));\n");
+      fprintf(hf,"   %s_Begin(tree);\n",scriptfunc.Data());
       fprintf(hf,"\n");
       fprintf(hf,"}\n");
 
@@ -1965,9 +1965,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
          fprintf(hf,"   htemp->SetTitle(\"%s\");\n",fScript.Data());
       }
       fprintf(hf,"   fObject = htemp;\n");
-      fprintf(hf,"   if (fSlaveBeginMethod.IsValid()) {\n");
-      fprintf(hf,"      fSlaveBeginMethod.Execute(this,Form(\"0x%%lx\",tree));\n");
-      fprintf(hf,"   }\n");
+      fprintf(hf,"   %s_SlaveBegin(tree);\n",scriptfunc.Data());
       fprintf(hf,"\n");
       fprintf(hf,"}\n");
       fprintf(hf,"\n");
@@ -2008,7 +2006,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
             fprintf(hf,"   htemp->Fill(%s());\n",scriptfunc.Data());
          }
       }
-      fprintf(hf,"   if (fProcessMethod.IsValid()) fProcessMethod.Execute(this,Form(\"%%d\",entry));\n");
+      fprintf(hf,"   %s_Process(entry);\n",scriptfunc.Data());
       fprintf(hf,"   return kTRUE;\n");
       fprintf(hf,"\n");
       fprintf(hf,"}\n\n");
@@ -2020,7 +2018,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
               "   // have been processed. When running with PROOF SlaveTerminate() is called\n"
               "   // on each slave server.");
       fprintf(hf,"\n");
-      fprintf(hf,"   if (fSlaveTerminateMethod.IsValid()) fSlaveTerminateMethod.Execute(this);\n");
+      fprintf(hf,"   %s_SlaveTerminate();\n",scriptfunc.Data());
       fprintf(hf,"}\n\n");
 
       // generate code for class member function Terminate
@@ -2035,7 +2033,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
       fprintf(hf,"      if (fOption.Contains(\"goff\")) drawflag = false;\n");
       fprintf(hf,"      if (drawflag) htemp->Draw(fOption);\n");
       fprintf(hf,"   }\n");
-      fprintf(hf,"   if (fTerminateMethod.IsValid()) fTerminateMethod.Execute(this);\n");
+      fprintf(hf,"   %s_Terminate();\n",scriptfunc.Data());
       fprintf(hf,"   delete fHelper; fHelper = 0;\n");
       fprintf(hf,"}\n");
 

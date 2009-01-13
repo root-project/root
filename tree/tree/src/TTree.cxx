@@ -4861,12 +4861,12 @@ Int_t TTree::MakeProxy(const char* proxyClassname, const char* macrofilename, co
    // Concretely, with the script named h1analysisProxy.C,
    //
    // The method         calls the method (if it exist)
-   // Begin           -> h1analysisProxy_Begin
-   // SlaveBegin      -> h1analysisProxy_SlaveBegin
-   // Notify          -> h1analysisProxy_Notify
-   // Process         -> h1analysisProxy_Process
-   // SlaveTerminate  -> h1analysisProxy_SlaveTerminate
-   // Terminate       -> h1analysisProxy_Terminate
+   // Begin           -> void h1analysisProxy_Begin(TTree*);
+   // SlaveBegin      -> void h1analysisProxy_SlaveBegin(TTree*);
+   // Notify          -> Bool_t h1analysisProxy_Notify();
+   // Process         -> Bool_t h1analysisProxy_Process(Long64_t);
+   // SlaveTerminate  -> void h1analysisProxy_SlaveTerminate();
+   // Terminate       -> void h1analysisProxy_Terminate();
    //
    // If a file name macrofilename.h (or .hh, .hpp, .hxx, .hPP, .hXX) exist
    // it is included before the declaration of the proxy class.  This can
