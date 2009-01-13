@@ -116,7 +116,9 @@ cintreflextest: REFLEXTESTFLAGS = -m -r
 debugtest: TESTDEBUG = -DDEBUG
 
 ifeq ($(G__CFG_COREVERSION),cint)
-  TESTFLAGS ?= --ignore-diff-errors -k
+  TESTFLAGS ?= --ignore-diff-errors -k --hide-known-defects
+else
+  TESTFLAGS ?= -k --hide-known-defects
 endif
 
 test debugtest cintreflextest:
