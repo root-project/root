@@ -895,6 +895,14 @@ Ssiz_t TString::AdjustCapacity(Ssiz_t nc)
 }
 
 //______________________________________________________________________________
+void TString::Clear()
+{
+   // Clear string without changing its capacity.
+
+   Clobber(Capacity());
+}
+
+//______________________________________________________________________________
 void TString::Clobber(Ssiz_t nc)
 {
    // Clear string and make sure it has a capacity of nc.

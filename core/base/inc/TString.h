@@ -305,6 +305,7 @@ public:
    Ssiz_t       Capacity() const         { return Pref()->Capacity(); }
    Ssiz_t       Capacity(Ssiz_t n);
    TString     &Chop();
+   void         Clear();
    int          CompareTo(const char *cs,    ECaseCompare cmp = kExact) const;
    int          CompareTo(const TString &st, ECaseCompare cmp = kExact) const;
    Bool_t       Contains(const char *pat,    ECaseCompare cmp = kExact) const;
