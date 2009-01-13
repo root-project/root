@@ -127,9 +127,9 @@ void TEnvParser::Parse()
          state = 0;
          if (name.Length() > 0) {
             KeyValue(name, value, type);
-            name  = "";
-            value = "";
-            type  = "";
+            name.Clear();
+            value.Clear();
+            type.Clear();
          }
          Char(c);
          continue;
