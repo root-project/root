@@ -104,7 +104,7 @@ TH1F *hdmd;
 TH2F *h2;
 
 //_____________________________________________________________________
-void h1analysisProxy_Begin(TTree *tree)
+void h1analysisProxy_Begin(TTree * /* tree */ )
 {
 // function called before starting the event loop
 //  -it performs some cleanup
@@ -180,7 +180,7 @@ Double_t h1analysisProxy() {
 }
 
 //_____________________________________________________________________
-Bool_t h1analysisProxy_Process(Int_t entry)
+Bool_t h1analysisProxy_Process(Long64_t entry)
 {
 // entry is the entry number in the current Tree
 // Selection function to select D* and D0.
@@ -191,7 +191,7 @@ Bool_t h1analysisProxy_Process(Int_t entry)
       float f1 = md0_d;
       float f2 = md0_d-1.8646;
       bool test = TMath::Abs(md0_d-1.8646) >= 0.04;
-      if (gDebug>0) fprintf(stderr,"entry #%d f1=%f f2=%f test=%d\n",
+      if (gDebug>0) fprintf(stderr,"entry #%lld f1=%f f2=%f test=%d\n",
                             fChain->GetReadEntry(),f1,f2,test);
       
       if (TMath::Abs(md0_d-1.8646) >= 0.04) return kFALSE;
@@ -204,7 +204,7 @@ Bool_t h1analysisProxy_Process(Int_t entry)
       f1 = nhitrp[cik];
       f2 = nhitrp[cipi];
       test = nhitrp[cik]*nhitrp[cipi] <= 1;
-      if (gDebug>0) fprintf(stderr,"entry #%d f1=%f f2=%f test=%d\n",
+      if (gDebug>0) fprintf(stderr,"entry #%lld f1=%f f2=%f test=%d\n",
                             fChain->GetReadEntry(),f1,f2,test);
       
       if (nhitrp[cik]*nhitrp[cipi] <= 1) return kFALSE;
