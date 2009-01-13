@@ -2692,15 +2692,15 @@ TFile *TFile::Open(const char *url, Option_t *option, const char *ftitle,
    }
 
    // Try sequentially all names in 'names'
-   TString name;
+   TString name, n;
    Ssiz_t from = 0;
-   while (namelist.Tokenize(name, from, "|") && !f) {
+   while (namelist.Tokenize(n, from, "|") && !f) {
 
       // check if we read through a file cache
       if (!strcasecmp(option, "CACHEREAD") ||
          ((!strcasecmp(option,"READ") || !strlen(option)) && fgCacheFileForce)) {
          // Try opening the file from the cache
-         if ((f = TFile::OpenFromCache(name, option, ftitle, compress, netopt)))
+         if ((f = TFile::OpenFromCache(n, option, ftitle, compress, netopt)))
             return f;
       }
 
@@ -2708,7 +2708,7 @@ TFile *TFile::Open(const char *url, Option_t *option, const char *ftitle,
 
       // change names from e.g. /castor/cern.ch/alice/file.root to
       // castor:/castor/cern.ch/alice/file.root as recognized by the plugin manager
-      TUrl urlname(name, kTRUE);
+      TUrl urlname(n, kTRUE);
       name = urlname.GetUrl();
       // Check first if a pending async open request matches this one
       if (fgAsyncOpenRequests && (fgAsyncOpenRequests->GetSize() > 0)) {
@@ -2856,13 +2856,13 @@ TFileOpenHandle *TFile::AsyncOpen(const char *url, Option_t *option,
    }
 
    // Try sequentially all names in 'names'
-   TString name;
+   TString name, n;
    Ssiz_t from = 0;
-   while (namelist.Tokenize(name, from, "|") && !f) {
+   while (namelist.Tokenize(n, from, "|") && !f) {
 
       // change names from e.g. /castor/cern.ch/alice/file.root to
       // castor:/castor/cern.ch/alice/file.root as recognized by the plugin manager
-      TUrl urlname(name, kTRUE);
+      TUrl urlname(n, kTRUE);
       name = urlname.GetUrl();
 
       // Resolve the file type; this also adjusts names
@@ -2929,6 +2929,9 @@ TFile *TFile::Open(TFileOpenHandle *fh)
 
    // Note that the request may have failed
    if (fh && fgAsyncOpenRequests) {
+      // Remove it from the pending list: we need to do it at this level to avoid
+      // recursive calls in the standard TFile::Open
+      fgAsyncOpenRequests->Remove(fh);
       // Was asynchronous open functionality implemented?
       if ((f = fh->GetFile()) && !(f->IsZombie())) {
          // Yes: wait for the completion of the open phase, if needed
@@ -2945,9 +2948,6 @@ TFile *TFile::Open(TFileOpenHandle *fh)
       // Adopt the handle instance in the TFile instance so that it gets
       // automatically cleaned up
       f->fAsyncHandle = fh;
-
-      // Remove it from the pending list
-      fgAsyncOpenRequests->Remove(fh);
    }
 
    // We are done
