@@ -54,6 +54,7 @@ void G__scratch_globals_upto(G__dictposition* dictpos);
 
 static G__var_array* G__last_global = &G__global;
 static G__ifunc_table_internal* G__last_ifunc = &G__ifunc;
+static G__Definedtemplateclass *G__last_definedtemplateclass = &G__definedtemplateclass;
 
 //______________________________________________________________________________
 //
@@ -1026,6 +1027,7 @@ int G__scratch_upto_work(G__dictposition* dictpos, int doall)
       G__freedeffuncmacro(dictpos->deffuncmacro);
    }
    // Free template class list, and template function list.
+   G__last_definedtemplateclass = &G__definedtemplateclass;
    if (doall) {
       // --
 #ifdef G__TEMPLATECLASS
@@ -1124,10 +1126,11 @@ void G__store_dictposition(G__dictposition* dictpos)
       dictpos->deffuncmacro = dictpos->deffuncmacro->next;
    }
    // Template class.
-   dictpos->definedtemplateclass = &G__definedtemplateclass;
+   dictpos->definedtemplateclass = G__last_definedtemplateclass;
    while (dictpos->definedtemplateclass->next) {
       dictpos->definedtemplateclass = dictpos->definedtemplateclass->next;
    }
+   G__last_definedtemplateclass = dictpos->definedtemplateclass;
    // Function template.
    dictpos->definedtemplatefunc = &G__definedtemplatefunc;
    while (dictpos->definedtemplatefunc->next) {
