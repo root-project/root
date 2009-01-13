@@ -123,7 +123,7 @@ namespace ROOT {
       Bool_t Setup();
 
       Bool_t IsInitialized() {
-         return (fLastTree == fDirector->GetTree()) && (fLastTree);
+         return fLastTree && (fLastTree == fDirector->GetTree());
       }
 
       Bool_t IsaPointer() const {
@@ -148,8 +148,10 @@ namespace ROOT {
                fBranch->GetEntry(fDirector->GetReadEntry());
             }
             fRead = fDirector->GetReadEntry();
+            return kTRUE;
+         } else {
+            return IsInitialized();
          }
-         return IsInitialized();
       }
 
       Bool_t ReadEntries() {

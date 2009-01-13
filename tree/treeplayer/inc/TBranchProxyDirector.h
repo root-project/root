@@ -29,8 +29,8 @@ namespace ROOT {
    class TBranchProxyDirector {
 
       //This class could actually be the selector itself.
-      TTree   *fTree;
-      Long64_t fEntry;
+      TTree   *fTree;  // TTree we are currently looking at.
+      Long64_t fEntry; // Entry currently being read.
 
       std::list<TBranchProxy*> fDirected;
       std::list<TFriendProxy*> fFriends;
@@ -44,8 +44,8 @@ namespace ROOT {
 
       void     Attach(TBranchProxy* p);
       void     Attach(TFriendProxy* f);
-      Long64_t GetReadEntry() const;
-      TTree*   GetTree() const;
+      Long64_t GetReadEntry() const { return fEntry; }
+      TTree*   GetTree() const { return fTree; };
       // void   Print();
       void     SetReadEntry(Long64_t entry);
       TTree*   SetTree(TTree *newtree);

@@ -78,23 +78,13 @@ namespace ROOT {
       fFriends.push_back(p);
    }
 
-   Long64_t TBranchProxyDirector::GetReadEntry() const {
-      
-      // return the entry currently being read
-      return fEntry;
-   }
-
-   TTree* TBranchProxyDirector::GetTree() const {
-
-      // Returns the tree object currently looks at.
-      return fTree;
-   }
-
    void TBranchProxyDirector::SetReadEntry(Long64_t entry) {
 
       // move to a new entry to read
       fEntry = entry;
-      for_each(fFriends.begin(),fFriends.end(),ResetReadEntry);
+      if (!fFriends.empty()) {
+         for_each(fFriends.begin(),fFriends.end(),ResetReadEntry);
+      }
    }
 
    TTree* TBranchProxyDirector::SetTree(TTree *newtree) {
