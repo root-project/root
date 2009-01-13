@@ -1074,6 +1074,7 @@ namespace {
       NFp_t( "#define",            &CreateMacroConverter              ),
 
    // pointer/array factories
+      NFp_t( "unsigned char*",     &CreateCStringConverter            ),
       NFp_t( "short*",             &CreateShortArrayConverter         ),
       NFp_t( "unsigned short*",    &CreateUShortArrayConverter        ),
       NFp_t( "int*",               &CreateIntArrayConverter           ),
