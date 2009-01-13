@@ -60,7 +60,7 @@ protected:
    TEveVector fB;
 
 public:
- TEveMagFieldConst(Float_t x, Float_t y, Float_t z) : TEveMagField(), fB(x, y, z)
+   TEveMagFieldConst(Float_t x, Float_t y, Float_t z) : TEveMagField(), fB(x, y, z)
    { fFieldConstant = kTRUE; }
    virtual ~TEveMagFieldConst() {}
 

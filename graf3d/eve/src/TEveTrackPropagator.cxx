@@ -16,9 +16,12 @@
 
 #include <cassert>
 
-static Float_t kBMin = 1e-6;
-static Float_t kPtMinSqr = 1e-5;
-static Float_t kStepEps = 1e-3;
+namespace
+{
+   const Float_t kBMin     = 1e-6;
+   const Float_t kPtMinSqr = 1e-5;
+   const Float_t kStepEps  = 1e-3;
+}
 
 //______________________________________________________________________________
 TEveTrackPropagator::Helix_t::Helix_t() :
@@ -673,7 +676,8 @@ void TEveTrackPropagator::SetMagField(Float_t bX, Float_t bY, Float_t bZ)
 void TEveTrackPropagator::SetMagFieldObj(TEveMagField *mff)
 {
    // Set constant magnetic field and rebuild tracks.
-  if (fMagFieldObj) delete fMagFieldObj;
+
+   if (fMagFieldObj) delete fMagFieldObj;
 
    fMagFieldObj = mff;
    RebuildTracks();
@@ -813,7 +817,7 @@ void TEveTrackPropagator::SetMaxStep(Float_t x)
 
 //______________________________________________________________________________
 void TEveTrackPropagator::OneStepRungeKutta(Double_t charge, Double_t step,
-					Double_t* vect, Double_t* vout)
+                                            Double_t* vect, Double_t* vout)
 {
 
   // Wrapper to step with method RungeKutta.
