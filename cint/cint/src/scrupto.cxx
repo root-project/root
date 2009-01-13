@@ -52,6 +52,9 @@ void G__store_dictposition(G__dictposition* dictpos);
 int G__close_inputfiles();
 void G__scratch_globals_upto(G__dictposition* dictpos);
 
+static G__var_array* G__last_global = &G__global;
+static G__ifunc_table_internal* G__last_ifunc = &G__ifunc;
+
 //______________________________________________________________________________
 //
 //  Static functions.
@@ -125,6 +128,7 @@ static int G__free_ifunc_table_upto_ifunc(G__ifunc_table_internal* ifunc, G__ifu
 static int G__free_ifunc_table_upto(G__ifunc_table_internal* ifunc, G__ifunc_table_internal* dictpos, int ifn)
 {
    // -- FIXME: Describe this function!
+   G__last_ifunc = &G__ifunc;
    while (ifunc && ifunc != dictpos) {
       ifunc = ifunc->next;
    }
@@ -749,6 +753,7 @@ static int G__destroy_upto_vararray(G__var_array* var, int global, int ig15)
 int G__free_ifunc_table(G__ifunc_table_internal* passed_ifunc)
 {
    // -- Loop over the passed ifunc chain and free it.
+   G__last_ifunc = &G__ifunc;
    G__ifunc_table_internal* ifunc = passed_ifunc;
    G__ifunc_table_internal* nxt_func = 0;
    for (; ifunc; ifunc = nxt_func) {
@@ -796,6 +801,10 @@ int G__destroy_upto(G__var_array* var, int global, G__var_array* /* dictpos*/, i
    if (!var) {
       return 0;
    }
+   if (global == G__GLOBAL_VAR) {
+      G__last_global = &G__global;
+   }
+
    //
    //  Destroy any bytecode inner local variables first,
    //  they are chained off of the first variable.
@@ -1079,19 +1088,22 @@ void G__store_dictposition(G__dictposition* dictpos)
    // -- Mark a point in time in the interpreter state.
    G__LockCriticalSection();
    // Global variable position.
-   dictpos->var = &G__global;
+   dictpos->var = G__last_global;
    while (dictpos->var->next) {
       dictpos->var = dictpos->var->next;
    }
+   G__last_global = dictpos->var;
+
    dictpos->ig15 = dictpos->var->allvar;
    dictpos->tagnum = G__struct.alltag;
    dictpos->conststringpos = G__plastconststring;
    dictpos->typenum = G__newtype.alltype;
    // Global function position.
-   G__ifunc_table_internal* lastifunc = &G__ifunc;
+   G__ifunc_table_internal* lastifunc = G__last_ifunc;
    while (lastifunc->next) {
       lastifunc = lastifunc->next;
    }
+   G__last_ifunc = lastifunc;
    dictpos->ifunc = G__get_ifunc_ref(lastifunc);
    dictpos->ifn = lastifunc->allifunc;
    // Include path.
