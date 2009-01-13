@@ -753,6 +753,7 @@ struct G__filetable {
   int ispermanentsl;
   std::list<G__DLLINIT>* initsl;
   struct G__dictposition *hasonlyfunc;
+  int definedStruct; /* number of struct/class/namespace defined in this file */
   char hdrprop;
 #ifndef G__OLDIMPLEMENTATION1649
   char *str;
@@ -1356,6 +1357,7 @@ struct G__tagtable {
   char istrace[G__MAXSTRUCT];
   char isbreak[G__MAXSTRUCT];
   int  alltag;
+  int  nactives; // List of active (i.e. non disable, non autoload entries).
 
 #ifdef G__FRIEND
   struct G__friendtag *friendtag[G__MAXSTRUCT];

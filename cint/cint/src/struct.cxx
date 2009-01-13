@@ -1776,6 +1776,7 @@ int G__search_tagname(const char* tagname, int type)
    }
    // If name not found, create a tagtable entry for it.
    if ((i == -1) || (isstructdecl && (envtagnum != G__struct.parent_tagnum[i]))) {
+      ++G__struct.nactives;
       i = G__struct.alltag;
       if (i == G__MAXSTRUCT) {
          G__fprinterr(G__serr, "Limitation: Number of struct/union tag exceed %d FILE:%s LINE:%d\nFatal error, exit program. Increase G__MAXSTRUCT in G__ci.h and recompile %s\n", G__MAXSTRUCT, G__ifile.name, G__ifile.line_number, G__nam);
@@ -1924,6 +1925,7 @@ int G__search_tagname(const char* tagname, int type)
    }
    else if (!G__struct.type[i] || (G__struct.type[i] == 'a')) {
       G__struct.type[i] = type;
+      ++G__struct.nactives;
    }
 #ifndef G__OLDIMPLEMENTATION1823
    if (buf != temp) {

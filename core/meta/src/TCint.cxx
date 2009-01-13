@@ -193,9 +193,6 @@ TCint::TCint(const char *name, const char *title) : TInterpreter(name, title)
    }
    delete[] path;
 
-   fDictPos.ptype = 0;
-   fDictPosGlobals.ptype = 0;
-
    ResetAll();
 
 #ifndef R__WIN32
@@ -227,8 +224,6 @@ TCint::~TCint()
       G__close_inputfiles();
    }
 
-   free(fDictPos.ptype);
-   free(fDictPosGlobals.ptype);
    delete fMapfile;
    delete fRootmapFiles;
    gCint = 0;

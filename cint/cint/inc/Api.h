@@ -96,7 +96,7 @@ struct G__dictposition {
    /* function template */
    struct G__Definetemplatefunc *definedtemplatefunc;
    
-   char* ptype; /* struct,union,enum,class */
+   int nactives; /* number of 'active' classes */
 };
 
 namespace Cint {

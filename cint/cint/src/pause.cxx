@@ -342,7 +342,6 @@ void G__init_undo()
    undoindex = 0;
    for (i = 0;i < G__MAXUNDO;i++) {
       undodictpos[i].var = (struct G__var_array*)NULL;
-      undodictpos[i].ptype = (char*)NULL;
    }
 }
 
@@ -369,11 +368,6 @@ void G__cancel_undo_position()
 {
    G__decrement_undo_index(&undoindex);
    undodictpos[undoindex].var = (struct G__var_array*)NULL;
-   if (undodictpos[undoindex].ptype &&
-         undodictpos[undoindex].ptype != (char*)G__PVOID) {
-      free((void*)undodictpos[undoindex].ptype);
-      undodictpos[undoindex].ptype = (char*)NULL;
-   }
 }
 
 /******************************************************************
@@ -475,10 +469,7 @@ static struct G__input_file errorifile;
 ******************************************************************/
 void G__clear_errordictpos()
 {
-   if (0 != errordictpos.ptype && (char*)G__PVOID != errordictpos.ptype) {
-      free((void*)errordictpos.ptype);
-      errordictpos.ptype = (char*)NULL;
-   }
+   // Used to free the data member ptype from the global variable errordictpos.
 }
 
 /******************************************************************

@@ -176,6 +176,7 @@ static void G__close_inputfiles_upto(G__dictposition* pos)
             G__struct.alltag = itag + 1; // to only free itag
             G__free_struct_upto(itag);
             G__struct.alltag = alltag;
+            --G__struct.nactives;
             G__struct.name[itag] = name;
             G__struct.libname[itag] = libname;
             G__struct.type[itag] = 'a';
@@ -1059,27 +1060,6 @@ int G__scratch_upto_work(G__dictposition* dictpos, int doall)
       // --
    }
    else {
-      // --
-#ifndef G__OLDIMPLEMENTATION2190
-      {
-         int nfile = G__nfile;
-         while (nfile > dictpos->nfile) {
-            struct G__dictposition* dictposx = G__srcfile[nfile].dictpos;
-            if (dictposx && dictposx->ptype && (dictposx->ptype != (char*) G__PVOID)) {
-               free((void*) dictposx->ptype);
-               dictposx->ptype = 0;
-            }
-            --nfile;
-         }
-      }
-#endif // G__OLDIMPLEMENTATION2190
-      if (dictpos->ptype && (dictpos->ptype != (char*) G__PVOID)) {
-         for (int i = 0; i < G__struct.alltag; ++i) {
-            G__struct.type[i] = dictpos->ptype[i];
-         }
-         free((void*) dictpos->ptype);
-         dictpos->ptype = 0;
-      }
       // Close input files.
       G__close_inputfiles_upto(dictpos);
       G__tagdefining = -1;
@@ -1141,16 +1121,7 @@ void G__store_dictposition(G__dictposition* dictpos)
    while (dictpos->definedtemplatefunc->next) {
       dictpos->definedtemplatefunc = dictpos->definedtemplatefunc->next;
    }
-   if (dictpos->ptype && (dictpos->ptype != (char*) G__PVOID)) {
-      free((void*) dictpos->ptype);
-      dictpos->ptype = 0;
-   }
-   if (!dictpos->ptype) {
-      dictpos->ptype = (char*) malloc(G__struct.alltag + 1);
-      for (int i = 0; i < G__struct.alltag; ++i) {
-         dictpos->ptype[i] = G__struct.type[i];
-      }
-   }
+   dictpos->nactives = G__struct.nactives;
    G__UnlockCriticalSection();
 }
 
@@ -1166,10 +1137,6 @@ int G__close_inputfiles()
 #endif // G__DUMPFILE
    for (iarg = 0;iarg < G__nfile;iarg++) {
       if (G__srcfile[iarg].dictpos) {
-         if (G__srcfile[iarg].dictpos->ptype &&
-               G__srcfile[iarg].dictpos->ptype != (char*)G__PVOID) {
-            free((void*)G__srcfile[iarg].dictpos->ptype);
-         }
          free((void*)G__srcfile[iarg].dictpos);
          G__srcfile[iarg].dictpos = (struct G__dictposition*)NULL;
       }

@@ -544,7 +544,6 @@ int G__main(int argc, char** argv)
    static char clnull[1] = "";
    struct G__dictposition stubbegin;
    char* icom = 0;
-   stubbegin.ptype = (char*) G__PVOID;
    /*****************************************************************
     * Setting STDIOs.  May need to modify here.
     *  init.c, end.c, scrupto.c, pause.c
@@ -1219,7 +1218,6 @@ int G__main(int argc, char** argv)
          continue;
       }
       else if (strcmp(sourcefile, "+STUB") == 0) {
-         stubbegin.ptype = (char*)G__PVOID;
          G__store_dictposition(&stubbegin);
          continue;
       }
