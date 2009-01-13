@@ -316,7 +316,6 @@ static void G__init_undo()
    undoindex = 0;
    for (i = 0;i < G__MAXUNDO;i++) {
       undodictpos[i].var =::Reflex::Scope();
-      undodictpos[i].ptype = (char*)NULL;
    }
 }
 
@@ -341,10 +340,6 @@ static void G__cancel_undo_position()
 {
    G__decrement_undo_index(&undoindex);
    undodictpos[undoindex].var =::Reflex::Scope();
-   if (undodictpos[undoindex].ptype && undodictpos[undoindex].ptype != (char*)G__PVOID) {
-      free((void*)undodictpos[undoindex].ptype);
-      undodictpos[undoindex].ptype = 0;
-   }
 }
 
 //______________________________________________________________________________
@@ -441,10 +436,7 @@ static struct G__input_file errorifile;
 //______________________________________________________________________________
 void Cint::Internal::G__clear_errordictpos()
 {
-   if (0 != errordictpos.ptype && (char*)G__PVOID != errordictpos.ptype) {
-      free((void*)errordictpos.ptype);
-      errordictpos.ptype = 0;
-   }
+   // Used to free the data member ptype from the global variable errordictpos.
 }
 
 //______________________________________________________________________________

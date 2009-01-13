@@ -1374,7 +1374,6 @@ extern "C" int G__main(int argc, char** argv)
    char* dllid = 0;
    G__dictposition stubbegin;
    char* icom = 0;
-   stubbegin.ptype = (char*) G__PVOID;
    //
    // Setting STDIOs.  May need to modify in init.c, end.c, scrupto.c, pause.c.
    //
@@ -1987,7 +1986,6 @@ extern "C" int G__main(int argc, char** argv)
          continue;
       }
       else if (strcmp(sourcefile, "+STUB") == 0) {
-         stubbegin.ptype = (char*)G__PVOID;
          G__store_dictposition(&stubbegin);
          continue;
       }

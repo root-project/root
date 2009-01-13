@@ -234,7 +234,7 @@ struct G__dictposition
    G__Deffuncmacro* deffuncmacro; // macro table position
    G__Definedtemplateclass* definedtemplateclass; // class template table position
    G__Definetemplatefunc* definedtemplatefunc; // function template table position
-   char* ptype; // struct,union,enum,class
+   int nactives; // number of 'active' classes 
 };
 
 //

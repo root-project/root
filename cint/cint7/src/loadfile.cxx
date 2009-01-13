@@ -931,19 +931,18 @@ static int G__isbinaryfile(char* filename)
 //______________________________________________________________________________
 static void G__checkIfOnlyFunction(int fentry)
 {
-   int tagflag = 0;
    G__dictposition* dictpos = G__srcfile[fentry].dictpos;
-   if (dictpos->tagnum == G__struct.alltag) {
-      tagflag = 1;
-      if (dictpos->ptype && (dictpos->ptype != (char*) G__PVOID)) {
-         for (int i = 0; i < G__struct.alltag; ++i) {
-            if (dictpos->ptype[i] != G__struct.type[i]) {
-               tagflag = 0;
-               break;
-            }
-         }
-      }
+
+   // Sum the number of G__struct slot used by any of the file
+   // we enclosed:
+   int nSubdefined = 0;
+   for(int filecur = fentry+1; filecur < G__nfile; ++filecur) {
+     nSubdefined += G__srcfile[filecur].definedStruct;
    }
+   G__srcfile[fentry].definedStruct = G__struct.nactives - dictpos->nactives - nSubdefined;
+   
+   int tagflag = ( G__srcfile[fentry].definedStruct == 0 ); 
+  
    int varflag = 1;
    ::Reflex::Scope var = ::Reflex::Scope::GlobalScope();
    if (dictpos->var == var && dictpos->ig15 == var.DataMemberSize()) {
@@ -984,7 +983,6 @@ static void G__checkIfOnlyFunction(int fentry)
       (definedtemplatefunc == dictpos->definedtemplatefunc)
    ) {
       G__srcfile[fentry].hasonlyfunc = (G__dictposition*) malloc(sizeof(G__dictposition));
-      G__srcfile[fentry].hasonlyfunc->ptype = (char*) G__PVOID;
       G__store_dictposition(G__srcfile[fentry].hasonlyfunc);
    }
 }
@@ -1054,7 +1052,6 @@ int Cint::Internal::G__loadfile_tmpfile(FILE* fp)
    sprintf(G__ifile.name, "(tmp%d)", fentry);
    G__hash(G__ifile.name, hash, temp);
    G__srcfile[fentry].dictpos = (G__dictposition*) malloc(sizeof(G__dictposition));
-   G__srcfile[fentry].dictpos->ptype =  0;
    G__store_dictposition(G__srcfile[fentry].dictpos);
    G__srcfile[fentry].hdrprop = hdrprop;
    store_security = G__security;
@@ -2124,7 +2121,6 @@ extern "C" int G__loadfile(const char* filenamein)
    // so update G__ifile to point to fentry:
    G__ifile.filenum = fentry;
    G__srcfile[fentry].dictpos = (G__dictposition*) malloc(sizeof(G__dictposition));
-   G__srcfile[fentry].dictpos->ptype = 0;
    G__store_dictposition(G__srcfile[fentry].dictpos);
    if (null_entry == -1) {
       ++G__nfile;
@@ -2421,7 +2417,6 @@ int G__setfilecontext(const char* filename, G__input_file* ifile)
          fentry = G__nfile;
       }
       G__srcfile[fentry].dictpos = (G__dictposition*) malloc(sizeof(G__dictposition));
-      G__srcfile[fentry].dictpos->ptype = 0;
       G__store_dictposition(G__srcfile[fentry].dictpos);
       if (null_entry == -1) {
          ++G__nfile;
@@ -3104,7 +3099,6 @@ int Cint::Internal::G__register_sharedlib(const char *libname)
    
    G__srcfile[fentry].dictpos
    = (struct G__dictposition*)malloc(sizeof(struct G__dictposition));
-   G__srcfile[fentry].dictpos->ptype = (char*)NULL;
    G__store_dictposition(G__srcfile[fentry].dictpos);
    
    G__srcfile[fentry].hdrprop = G__NONCINTHDR;
