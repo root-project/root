@@ -3,28 +3,29 @@
 // Tests the generator TRandom3 against some ref values
 // and creates a timing table against TRandom, TRandom1 and TRandom2.
 //
-// E.g. on an MacOSX with 2 GHz Intel Dual Core and compiled with gcc 4.0.1
+// E.g. on an an Intel Xeon Quad-core Harpertown (E5410) 2.33 GHz running 
+// Linux SLC4 64 bit and compiled with gcc 3.4
 //
-//  Distribution            nanoseconds/call
+// Distribution            nanoseconds/call
+//                     TRandom  TRandom1 TRandom2 TRandom3
+// Rndm..............    5.000  105.000    7.000   10.000
+// RndmArray.........    4.000  104.000    6.000    9.000
+// Gaus..............   36.000  180.000   40.000   48.000
+// Rannor............  118.000  220.000  120.000  124.000
+// Landau............   22.000  123.000   26.000   31.000
+// Exponential.......   93.000  198.000   98.000  104.000
+// Binomial(5,0.5)...   30.000  548.000   46.000   65.000
+// Binomial(15,0.5)..   75.000 1615.000  125.000  178.000
+// Poisson(3)........   96.000  494.000  109.000  125.000
+// Poisson(10).......  138.000 1236.000  165.000  203.000
+// Poisson(70).......  818.000 1195.000  835.000  844.000
+// Poisson(100)......  837.000 1218.000  849.000  864.000
+// GausTF1...........   83.000  180.000   87.000   88.000
+// LandauTF1.........   80.000  180.000   83.000   86.000
+// GausUNURAN........   40.000  139.000   41.000   44.000
+// PoissonUNURAN(10).   85.000  271.000   92.000  102.000
+// PoissonUNURAN(100)   62.000  256.000   69.000   78.000
 //
-//                      TRandom  TRandom1 TRandom2 TRandom3
-//
-//  Rndm..............   24.000  137.000   29.000   30.000
-//  RndmArray.........   17.000  128.000   22.000   22.000
-//  Gaus..............   86.000  242.000   92.000   96.000
-//  Rannor............  141.000  258.000  148.000  147.000
-//  Landau............   68.000  173.000   73.000   74.000
-//  Binomial(5,0.5)...  152.000  695.000  171.000  179.000
-//  Binomial(15,0.5)..  414.000 2060.000  480.000  497.000
-//  Poisson(3)........  212.000  653.000  231.000  234.000
-//  Poisson(10).......  402.000 1618.000  456.000  460.000
-//  Poisson(70)....... 1225.000 1651.000 1253.000 1250.000
-//  Poisson(100)...... 1233.000 1664.000 1260.000 1262.000
-//  GausTF1...........  210.000  326.000  218.000  216.000
-//  LandauTF1.........  209.000  325.000  217.000  213.000
-//  GausUNURAN........   90.000  202.000   97.000   96.000
-//  PoissonUNURAN(10).  160.000  361.000  170.000  170.000
-//  PoissonUNURAN(100)  139.000  347.000  148.000  149.000
 //
 // Note that this tutorial can be executed in interpreted or compiled mode
 //  Root > .x testrandom.C
@@ -161,6 +162,27 @@ void testAll() {
   sw.Start();
   for (i=0;i<N;i++) {
      x = r3->Landau(0,1);
+  }
+  printf(" %8.3f\n",sw.CpuTime()*cpn);
+
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = r0->Exp(1);
+  }
+  printf("Exponential....... %8.3f",sw.CpuTime()*cpn);
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = r1->Exp(1);
+  }
+  printf(" %8.3f",sw.CpuTime()*cpn);
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = r2->Exp(1);
+  }
+  printf(" %8.3f",sw.CpuTime()*cpn);
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = r3->Exp(1);
   }
   printf(" %8.3f\n",sw.CpuTime()*cpn);
 
