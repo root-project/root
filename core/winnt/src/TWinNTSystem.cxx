@@ -890,7 +890,7 @@ namespace {
       if (gConsoleWindow) {
          // restore original window title
          ::ShowWindow((HWND)gConsoleWindow, SW_RESTORE);
-         ::SetForegroundWindow((HWND)gConsoleWindow);
+         //::SetForegroundWindow((HWND)gConsoleWindow);
          ::SetConsoleTitle("ROOT session");
       }
    }
