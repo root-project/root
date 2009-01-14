@@ -41,3 +41,8 @@ Some files have been modified compare to the official libAfterImage version:
      the X11 libraries. This is needed on the Mac Leopard system.
    - the compiling option -Winline has been removed because it produced many
      warnings with gcc 4.3.
+
+   libAfterImage.mak:
+   Remove the word "Warning" in the message
+   "Warning: cannot find "libAfterImage.dep" to prevent to SPI
+   nightly build to issue an error.
