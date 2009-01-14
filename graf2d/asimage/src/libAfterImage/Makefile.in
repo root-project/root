@@ -232,7 +232,7 @@ install.inc:
 		)
 
 install.apps: install.lib
-		@(if test -d apps; then cd apps; make install || exit 1; fi)
+		@(if test -d apps; then cd apps; $(MAKE) install || exit 1; fi)
 
 # uninstallation targets : 
 #
@@ -276,7 +276,7 @@ uninstall.bin:
 		done
 
 uninstall.apps:
-		@(if test -d apps; then cd apps; make uninstall || exit 1; fi)
+		@(if test -d apps; then cd apps; $(MAKE) uninstall || exit 1; fi)
 
 uninstall.lib:		@LIBUNINSTALL@ uninstall.inc uninstall.apps
 
@@ -287,11 +287,11 @@ uninstall.script:
 clean:
 		$(RMF) $(LIB_SHARED) $(LIB_SHARED_CYG) $(LIB_SHARED_CYG_AR) $(LIB_STATIC) *.so.* *.so *.o *~ *% *.bak \#* core ; \
 		for I in ${subdirs}; do $(RMF) $$I/*.o $$I/*.obj $$I/*.bak; done
-		@(if test -d apps; then cd apps; make clean || exit 1; fi)
+		@(if test -d apps; then cd apps; $(MAKE) clean || exit 1; fi)
 
 distclean: clean
 		$(RMF) $(LIB_SHARED) $(LIB_SHARED_CYG) $(LIB_SHARED_CYG_AR) $(LIB_STATIC)  *.o *.so.* *~ *% *.bak \#* *.orig core Makefile 
-		@(if test -d apps; then cd apps; make distclean || exit 1; fi)
+		@(if test -d apps; then cd apps; $(MAKE) distclean || exit 1; fi)
 
 indent:
 		@SRCS=`echo "$(AFTERIMAGE_OBJS) " | sed "s/.o /.c /g"`; \
@@ -302,7 +302,7 @@ indent:
 		    mv /tmp/$$i $$i; \
 		  fi; \
 		done ; \
-		(if test -d apps; then cd apps; make indent || exit 1; fi )
+		(if test -d apps; then cd apps; $(MAKE) indent || exit 1; fi )
 
 deps:
 		@echo -n > .depend ; \
@@ -336,10 +336,10 @@ deps:
 		  echo -n '		$$('$(LIB_NAME)_PATH')'/$$f >> .shared ; \
 		done; \
 		echo "" >> .shared ; \
-		(if test -d apps; then cd apps; make deps || exit 1; fi)
+		(if test -d apps; then cd apps; $(MAKE) deps || exit 1; fi)
 
 apps: 	@APPSDEPS@
-		@(if test -d apps; then cd apps; make; fi )
+		@(if test -d apps; then cd apps; $(MAKE); fi )
 
 
 $(LIB_STATIC):	$(LIB_OBJS) $(LIB_INCS) config.h

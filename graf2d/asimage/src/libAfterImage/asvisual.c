@@ -404,9 +404,9 @@ destroy_asvisual( ASVisual *asv, Bool reusable )
 		}
 #ifdef HAVE_GLX
 		if( asv->glx_scratch_gc_direct )
-			glXDestroyContext(dpy, asv->glx_scratch_gc_direct );
+			glXDestroyContext(asv->dpy, asv->glx_scratch_gc_direct );
 		if( asv->glx_scratch_gc_indirect )
-			glXDestroyContext(dpy, asv->glx_scratch_gc_indirect );
+			glXDestroyContext(asv->dpy, asv->glx_scratch_gc_indirect );
 #endif
 		if( asv->scratch_window ) 
 			XDestroyWindow( asv->dpy, asv->scratch_window );
