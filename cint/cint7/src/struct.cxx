@@ -1715,6 +1715,13 @@ extern "C" void G__set_class_autoloading_table(char* classname, char* libname)
    
    int store_enable_autoloading = G__enable_autoloading;
    G__enable_autoloading = 0;
+   // First check whether this is already defined as typedef.
+   Reflex::Type typedf( G__find_typedef(classname) );
+   if (typedf) {
+      // Let's do nothing in this case for now
+      G__enable_autoloading = store_enable_autoloading;
+      return;
+   }
    int ntagnum = G__search_tagname(classname, G__CLASS_AUTOLOAD);
    if (libname == (void*)-1) {
       if (G__struct.name[ntagnum][0]) {

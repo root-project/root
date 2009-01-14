@@ -945,11 +945,27 @@ next_name:
 
    if(typenum) {
       /*
-      *  return if the type is already defined
+      *  return if the type is already defined but could just be marked autoload
       */
-      //fprintf(stderr, "G__define_type: The typdef '%s' already existed!\n", type_name);
-      if(';'!=c) G__fignorestream(";");
-      return;
+      G__RflxProperties *prop = G__get_properties(typenum);
+      if (prop && prop->autoload) {
+         if (typenum.ToTypeBase()) {
+            typenum.ToTypeBase()->HideName();
+         }
+         if (prop->tagnum>0) {
+            char *old = G__struct.name[prop->tagnum];
+            G__struct.name[prop->tagnum] = (char*)malloc(strlen(old) + 50);
+            strcpy(G__struct.name[prop->tagnum], "@@ ex autload entry @@");
+            strcat(G__struct.name[prop->tagnum], old);
+            G__struct.type[prop->tagnum] = 0;
+            free(old);            
+         }
+         fprintf(stderr, "G__define_type: The typdef '%s' already existed as autoload!\n", type_name);
+      } else {
+         // fprintf(stderr, "G__define_type: The typdef '%s' already existed!\n", type_name);      
+         if(';'!=c) G__fignorestream(";");
+         return;
+      }
    }
 
    // Fix the name and the pointer type.
