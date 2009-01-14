@@ -78,8 +78,6 @@ bitfield.cxx
 cout1.cxx 
 longlong.cxx 
 explicitdtor.cxx 
-explicitdtor.cxx compiled:
-  13: ~A() 3
 nick3.cxx 
 nick4.cxx 
 nick4.cxx -DDEST
@@ -130,25 +128,7 @@ t674.cxx -DINTERPRET
 t676.cxx 
 t694.cxx  -Dmakecint
 t694.cxx -DINTERPRET
-t694.cxx compiled:
-   1: 5 1 f(0) f(789) g(0) g(123) 
-   2: 6 3 f(1) f(789) g(1) g(123) 
-t694.cxx interpreted:
-   1: 0 1 f(0) f(789) g(0) g(123) 
-   2: 1 3 f(1) f(789) g(1) g(123) 
 t695.cxx 
-t695.cxx compiled:
-  11: template specialization template specialization B() 6.28 0
-t695.cxx interpreted:
-  11: template template template template B() 6.28 0
-t695.cxx compiled:
-  13: template specialization template specialization B() 7.28 0
-t695.cxx interpreted:
-  13: template template template template B() 7.28 0
-t695.cxx compiled:
-  15: template specialization template specialization B() 8.28 0
-t695.cxx interpreted:
-  15: template template template template B() 8.28 0
 t705.cxx  -Dmakecint
 t705.cxx -DINTERPRET
 t714.cxx 
