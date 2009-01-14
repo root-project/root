@@ -5381,101 +5381,101 @@ void TASImage::DrawFillArea(UInt_t count, TPoint *ptsIn, TImage *tile)
    FreeStorage(SLLBlock.next);
 }
 
-//______________________________________________________________________________
-static void fill_hline_notile_argb32(ASDrawContext *ctx, int x_from, int y,
-                                     int x_to, CARD32)
-{
-   // Fill horizontal line
+/////______________________________________________________________________________
+///static void fill_hline_notile_argb32(ASDrawContext *ctx, int x_from, int y,
+///                                     int x_to, CARD32)
+///{
+///   // Fill horizontal line
+///
+///   int cw = ctx->canvas_width;
+///
+///   if ((x_to >= 0) && (x_from < cw) && (y >= 0) && (y < ctx->canvas_height)) {
+///      CARD32 value = ctx->tool->matrix[0]; //color
+///      CARD32 *dst = (CARD32 *)(ctx->canvas + y*cw);
+///      int x1 = x_from;
+///      int x2 = x_to;
+///
+///      if (x1 < 0) {
+///         x1 = 0;
+///      }
+///      if (x2 >= cw) {
+///         x2 = cw - 1;
+///      }
+///
+///      while (x1 <= x2) {
+///         _alphaBlend(&dst[x1], &value);
+///         ++x1;
+///      }
+///   }
+///}
 
-   int cw = ctx->canvas_width;
+/////______________________________________________________________________________
+///static void apply_tool_point_argb32(ASDrawContext *ctx, int curr_x, int curr_y, CARD32)
+///{
+///   // Apply tool point argb32.
+///
+///   int cw = ctx->canvas_width;
+///
+///   if (curr_x >= 0 && curr_x < cw && curr_y >= 0 && curr_y < ctx->canvas_height)  {
+///      CARD32 value = ctx->tool->matrix[0]; //color
+///      CARD32 *dst = (CARD32 *)(ctx->canvas);
+///      dst += curr_y * cw;
+///
+///      _alphaBlend(&dst[curr_x], &value);
+///   }
+///}
 
-   if ((x_to >= 0) && (x_from < cw) && (y >= 0) && (y < ctx->canvas_height)) {
-      CARD32 value = ctx->tool->matrix[0]; //color
-      CARD32 *dst = (CARD32 *)(ctx->canvas + y*cw);
-      int x1 = x_from;
-      int x2 = x_to;
-
-      if (x1 < 0) {
-         x1 = 0;
-      }
-      if (x2 >= cw) {
-         x2 = cw - 1;
-      }
-
-      while (x1 <= x2) {
-         _alphaBlend(&dst[x1], &value);
-         ++x1;
-      }
-   }
-}
-
-//______________________________________________________________________________
-static void apply_tool_point_argb32(ASDrawContext *ctx, int curr_x, int curr_y, CARD32)
-{
-   // Apply tool point argb32.
-
-   int cw = ctx->canvas_width;
-
-   if (curr_x >= 0 && curr_x < cw && curr_y >= 0 && curr_y < ctx->canvas_height)  {
-      CARD32 value = ctx->tool->matrix[0]; //color
-      CARD32 *dst = (CARD32 *)(ctx->canvas);
-      dst += curr_y * cw;
-
-      _alphaBlend(&dst[curr_x], &value);
-   }
-}
-
-//______________________________________________________________________________
-static void apply_tool_2D_argb32(ASDrawContext *ctx, int curr_x, int curr_y, CARD32)
-{
-   // Apply tool 2D argb32.
-
-   CARD32 *src = (CARD32 *)ctx->tool->matrix;
-   int corner_x = curr_x - ctx->tool->center_x;
-   int corner_y = curr_y - ctx->tool->center_y;
-   int tw = ctx->tool->width;
-   int th = ctx->tool->height;
-   int cw = ctx->canvas_width;
-   int ch = ctx->canvas_height;
-   int aw = tw;
-   int ah = th;
-   CARD32 *dst = (CARD32 *)ctx->canvas;
-   int x, y;
-
-   if ((corner_x+tw <= 0) || (corner_x >= cw) || (corner_y+th <= 0) || (corner_y >= ch)) {
-      return;
-   }
-
-   if (corner_y > 0) {
-      dst += corner_y*cw;
-   } else if (corner_y < 0) {
-      ah -= -corner_y;
-      src += -corner_y*tw;
-   }
-
-   if (corner_x  > 0) {
-      dst += corner_x;
-   } else if (corner_x < 0) {
-      src += -corner_x;
-      aw -= -corner_x;
-   }
-
-   if (corner_x + tw > cw) {
-      aw = cw - corner_x;
-   }
-
-   if (corner_y + th > ch) {
-      ah = ch - corner_y;
-   }
-
-   for (y = 0; y < ah; ++y) {
-      for (x = 0; x < aw; ++x) {
-         _alphaBlend(&dst[x], &src[x]);
-      }
-      src += tw;
-      dst += cw;
-   }
-}
+/////______________________________________________________________________________
+///static void apply_tool_2D_argb32(ASDrawContext *ctx, int curr_x, int curr_y, CARD32)
+///{
+///   // Apply tool 2D argb32.
+///
+///   CARD32 *src = (CARD32 *)ctx->tool->matrix;
+///   int corner_x = curr_x - ctx->tool->center_x;
+///   int corner_y = curr_y - ctx->tool->center_y;
+///   int tw = ctx->tool->width;
+///   int th = ctx->tool->height;
+///   int cw = ctx->canvas_width;
+///   int ch = ctx->canvas_height;
+///   int aw = tw;
+///   int ah = th;
+///   CARD32 *dst = (CARD32 *)ctx->canvas;
+///   int x, y;
+///
+///   if ((corner_x+tw <= 0) || (corner_x >= cw) || (corner_y+th <= 0) || (corner_y >= ch)) {
+///      return;
+///   }
+///
+///   if (corner_y > 0) {
+///      dst += corner_y*cw;
+///   } else if (corner_y < 0) {
+///      ah -= -corner_y;
+///      src += -corner_y*tw;
+///   }
+///
+///   if (corner_x  > 0) {
+///      dst += corner_x;
+///   } else if (corner_x < 0) {
+///      src += -corner_x;
+///      aw -= -corner_x;
+///   }
+///
+///   if (corner_x + tw > cw) {
+///      aw = cw - corner_x;
+///   }
+///
+///   if (corner_y + th > ch) {
+///      ah = ch - corner_y;
+///   }
+///
+///   for (y = 0; y < ah; ++y) {
+///      for (x = 0; x < aw; ++x) {
+///         _alphaBlend(&dst[x], &src[x]);
+///      }
+///      src += tw;
+///      dst += cw;
+///   }
+///}
 
 //______________________________________________________________________________
 static ASDrawContext *create_draw_context_argb32(ASImage *im, ASDrawTool *brush)
@@ -5489,14 +5489,8 @@ static ASDrawContext *create_draw_context_argb32(ASImage *im, ASDrawTool *brush)
    ctx->canvas = im->alt.argb32;
    ctx->scratch_canvas = 0;
 
-   ctx->tool = brush;
-   ctx->fill_hline_func = fill_hline_notile_argb32;
-
-   if ((ctx->tool->width == 1) && (ctx->tool->height == 1)) {
-      ctx->apply_tool_func = apply_tool_point_argb32;
-   } else {
-      ctx->apply_tool_func = apply_tool_2D_argb32;
-   }
+   ctx->flags = ASDrawCTX_CanvasIsARGB;
+   asim_set_custom_brush_colored( ctx, brush);
    return ctx;
 }
 
@@ -6220,7 +6214,6 @@ void TASImage::DrawCircle(Int_t x, Int_t y, Int_t r, const char *col, Int_t thic
    // Draw circle. If thick < 0 - draw filled circle
 
    thick = !thick ? 1 : thick;
-   if (thick<=1) thick=2;
    Int_t sz = thick*thick;
    CARD32 *matrix;
    Bool_t use_cache = (thick > 0) && ((UInt_t)thick < kBrushCacheSize);
@@ -6228,6 +6221,7 @@ void TASImage::DrawCircle(Int_t x, Int_t y, Int_t r, const char *col, Int_t thic
    ARGB32 color;
    parse_argb_color(col, &color);
 
+///matrix = new CARD32[sz];
    if (use_cache) {
       matrix = gBrushCache;
    } else {
@@ -6240,12 +6234,13 @@ void TASImage::DrawCircle(Int_t x, Int_t y, Int_t r, const char *col, Int_t thic
 
    ASDrawTool brush;
    brush.matrix = matrix;
-   brush.width = thick > 0 ? thick : 1;
-   brush.height = thick > 0 ? thick : 1;
+   brush.height = brush.width = thick > 0 ? thick : 1;
    brush.center_y = brush.center_x = thick > 0 ? thick/2 : 0;
+
    ASDrawContext *ctx = create_draw_context_argb32(fImage, &brush);
    asim_circle(ctx, x,  y, r, thick < 0);
 
+///free (matrix);
    if (!use_cache) {
       delete [] matrix;
    }

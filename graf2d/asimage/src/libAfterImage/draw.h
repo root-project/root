@@ -12,6 +12,8 @@ typedef struct ASDrawTool
 typedef struct ASDrawContext
 {
 #define ASDrawCTX_UsingScratch	(0x01<<0)	
+#define ASDrawCTX_CanvasIsARGB	(0x01<<1)
+#define ASDrawCTX_ToolIsARGB	(0x01<<2)
 	ASFlagType flags ;
 
 	ASDrawTool *tool ;
@@ -34,7 +36,7 @@ void destroy_asdraw_context( ASDrawContext *ctx );
 
 Bool asim_set_brush( ASDrawContext *ctx, int brush );
 Bool asim_set_custom_brush( ASDrawContext *ctx, ASDrawTool *brush);
-
+Bool asim_set_custom_brush_colored( ASDrawContext *ctx, ASDrawTool *brush);
 
 Bool asim_start_path( ASDrawContext *ctx );
 Bool asim_apply_path( ASDrawContext *ctx, int start_x, int start_y, Bool fill, int fill_start_x, int fill_start_y, CARD8 fill_threshold );

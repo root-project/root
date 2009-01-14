@@ -352,8 +352,7 @@ void TImageDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
       // Circle
       case 8:
       case 20:
-         if (m < 4) fImage->FillRectangle(col->AsHexString(), UInt_t(ix-m2), UInt_t(iy-m2), UInt_t(m), UInt_t(m));
-         else fImage->DrawCircle(ix, iy, Int_t(msize/4), col->AsHexString(), Int_t(msize/4)+1);
+         fImage->DrawCircle(ix, iy, Int_t(msize/2), col->AsHexString(), -1);
          break;
       // Square
       case 21:
